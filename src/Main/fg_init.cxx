@@ -508,6 +508,38 @@ do_options (int argc, char ** argv)
 }
 
 
+static string fgFindAircraftPath( const SGPath &path, const string &aircraft ) {
+    ulDirEnt* dire;
+    ulDir *dirp = ulOpenDir(path.str().c_str());
+    if (dirp == NULL) {
+        cerr << "Unable to open aircraft directory." << endl;
+        exit(-1);
+    }
+
+    while ((dire = ulReadDir(dirp)) != NULL) {
+        if (dire->d_isdir) {
+            if ( strcmp("CVS", dire->d_name) && strcmp(".", dire->d_name)
+                 && strcmp("..", dire->d_name) )
+            {
+                SGPath next = path;
+                next.append(dire->d_name);
+
+                string result = fgFindAircraftPath( next, aircraft );
+                if ( ! result.empty() ) {
+                    return result;
+                }
+            }
+        } else if ( !strcmp(dire->d_name, aircraft.c_str()) ) {
+            return path.str();
+        }
+    }
+
+    ulCloseDir(dirp);
+
+    return "";
+}
+
+
 // Read in configuration (file and command line)
 bool fgInitConfig ( int argc, char **argv ) {
 
@@ -527,42 +559,35 @@ bool fgInitConfig ( int argc, char **argv ) {
     // Scan user config files and command line for a specified aircraft.
     fgInitFGAircraft(argc, argv);
 
-    string aircraft = fgGetString("/sim/aircraft", "");
+    string aircraft = fgGetString( "/sim/aircraft", "" );
     if ( aircraft.size() > 0 ) {
-        SGPath aircraft_path(globals->get_fg_root());
-        aircraft_path.append("Aircraft");
-        aircraft_path.append(aircraft);
-        aircraft_path.concat("-set.xml");
+        SGPath aircraft_search( globals->get_fg_root() );
+        aircraft_search.append( "Aircraft" );
 
-        if ( !ulFileExists(aircraft_path.c_str()) ) {
-            string adir = aircraft;
-            int pos, alen = adir.length();
+        string aircraft_set = aircraft + "-set.xml";
 
-            if ( ((pos = adir.rfind("-jsbsim")) != string::npos) ||
-                 ((pos = adir.rfind("-yasim")) != string::npos) ||
-                 ((pos = adir.rfind("-uiuc")) != string::npos) )
-            {
-                adir.erase(pos, alen);
+        string result = fgFindAircraftPath( aircraft_search, aircraft_set );
+        if ( !result.empty() ) {
+            SGPath full_name( result );
+            full_name.append( aircraft_set );
+
+            SG_LOG(SG_INPUT, SG_INFO, "Reading default aircraft: " << aircraft
+                   << " from " << full_name.str());
+            try {
+                readProperties( full_name.str(), globals->get_props() );
+            } catch ( const sg_exception &e ) {
+                string message = "Error reading default aircraft: ";
+                message += e.getFormattedMessage();
+                SG_LOG(SG_INPUT, SG_ALERT, message);
+                exit(2);
             }
+        } else {
+            SG_LOG( SG_INPUT, SG_ALERT, "Cannot find specified aircraft: "
+                    << aircraft );
+        }
 
-            aircraft_path = globals->get_fg_root();
-            aircraft_path.append("Aircraft");
-            aircraft_path.append(adir);
-            aircraft_path.append(aircraft);
-            aircraft_path.concat("-set.xml");
-        }
-        SG_LOG(SG_INPUT, SG_INFO, "Reading default aircraft: " << aircraft
-               << " from " << aircraft_path.str());
-        try {
-            readProperties(aircraft_path.str(), globals->get_props());
-        } catch (const sg_exception &e) {
-            string message = "Error reading default aircraft: ";
-            message += e.getFormattedMessage();
-            SG_LOG(SG_INPUT, SG_ALERT, message);
-            exit(2);
-        }
     } else {
-        SG_LOG(SG_INPUT, SG_ALERT, "No default aircraft specified");
+        SG_LOG( SG_INPUT, SG_ALERT, "No default aircraft specified" );
     }
 
     // parse options after loading aircraft to ensure any user

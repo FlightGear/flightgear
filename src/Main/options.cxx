@@ -1521,7 +1521,7 @@ fgParseArgs (int argc, char **argv)
             else if (result == FG_OPTIONS_SHOW_AIRCRAFT) {
                SGPath path( globals->get_fg_root() );
                path.append("Aircraft");
-               fgShowAircraft(path);
+               fgShowAircraft(path, true);
                exit(0);
             }
 	  }
@@ -1714,17 +1714,9 @@ fgUsage (bool verbose)
     }
 }
 
-/*
- * Search in the current directory, and in on directory deeper
- * for <aircraft>-set.xml configuration files and show the aircaft name
- * and the contents of the<description> tag in a sorted manner.
- *
- * @parampath the directory to search for configuration files
- * @param recursive defines whether the directory should be searched recursively
- */
-void fgShowAircraft(const SGPath &path, bool recursive) {
-   static vector<string> aircraft;
-
+static void fgSearchAircraft(const SGPath &path, string_list &aircraft,
+                             bool recursive)
+{
    ulDirEnt* dire;
    ulDir *dirp = ulOpenDir(path.str().c_str());
    if (dirp == NULL) {
@@ -1742,7 +1734,7 @@ void fgShowAircraft(const SGPath &path, bool recursive) {
               SGPath next = path;
               next.append(dire->d_name);
 
-              fgShowAircraft(next, false);
+              fgSearchAircraft(next, aircraft, true);
           }
       } else if ((ptr = strstr(dire->d_name, "-set.xml")) && (ptr[8] == '\0')) {
 
@@ -1778,14 +1770,26 @@ void fgShowAircraft(const SGPath &path, bool recursive) {
       }
    }
 
-   if (recursive) {
-       sort(aircraft.begin(), aircraft.end());
-       cout << "Available aircraft:" << endl;
-       for ( unsigned int i = 0; i < aircraft.size(); i++ ) {
-           cout << aircraft[i] << endl;
-       }
+   ulCloseDir(dirp);
+}
 
-       aircraft.clear();
+
+/*
+ * Search in the current directory, and in on directory deeper
+ * for <aircraft>-set.xml configuration files and show the aircaft name
+ * and the contents of the<description> tag in a sorted manner.
+ *
+ * @parampath the directory to search for configuration files
+ * @param recursive defines whether the directory should be searched recursively
+ */
+void fgShowAircraft(const SGPath &path, bool recursive) {
+    string_list aircraft;
+
+    fgSearchAircraft( path, aircraft, recursive );
+
+    sort(aircraft.begin(), aircraft.end());
+    cout << "Available aircraft:" << endl;
+    for ( unsigned int i = 0; i < aircraft.size(); i++ ) {
+        cout << aircraft[i] << endl;
     }
-    ulCloseDir(dirp);
 }
