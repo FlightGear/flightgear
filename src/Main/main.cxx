@@ -53,9 +53,9 @@
 #  include <unistd.h>		// for stat()
 #endif
 
-#ifdef HAVE_LIBX11
-#  include <GL/glext.h>
-#endif
+// #ifdef HAVE_LIBX11
+// #  include <GL/glext.h>
+// #endif
 
 #include <plib/pu.h>
 #include <plib/ssg.h>
