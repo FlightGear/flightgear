@@ -70,12 +70,9 @@ bool FGNative::process() {
 	    return false;
 	}
     } else if ( get_direction() == in ) {
-	if ( io->read( (char *)(& buf), length ) == length ) {
+	while ( io->read( (char *)(& buf), length ) == length ) {
 	    FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
 	    *cur_fdm_state = buf;
-	} else {
-	    FG_LOG( FG_IO, FG_ALERT, "Error reading data." );
-	    return false;
 	}
     }
 
