@@ -490,7 +490,9 @@ void FGInterface::_updateGeodeticPosition( double lat, double lon, double alt )
     _set_Geodetic_Position( lat, lon, alt );
 
     _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET );
-    _set_Runway_altitude( getACModel()->get3DModel()->getFGLocation()->get_cur_elev_m() * SG_METER_TO_FEET );
+    if ( getACModel() != NULL ) {
+        _set_Runway_altitude( getACModel()->get3DModel()->getFGLocation()->get_cur_elev_m() * SG_METER_TO_FEET );
+    }
 
     _set_sin_lat_geocentric( lat_geoc );
     _set_cos_lat_geocentric( lat_geoc );
