@@ -15,6 +15,10 @@ noinst_LIBRARIES = libTriangle.a
 
 libTriangle_a_SOURCES = triangle.c triangle.h
 
+if HAVE_XWINDOWS
+
 bin_PROGRAMS = showme
 showme_SOURCES = showme.c
 showme_LDADD = -lX11
+
+endif
