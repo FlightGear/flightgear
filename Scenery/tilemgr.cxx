@@ -55,7 +55,7 @@
 
 #define FG_LOCAL_X_Y         81  // max(o->tile_diameter) ** 2
 
-#define FG_SQUARE(X) ((X) * (X))
+#define FG_SQUARE( X ) ( (X) * (X) )
 
 
 // closest (potentially viewable) tiles, centered on current tile.
@@ -564,6 +564,13 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.28  1998/08/12 21:13:06  curt
+// material.cxx: don't load textures if they are disabled
+// obj.cxx: optimizations from Norman Vine
+// tile.cxx: minor tweaks
+// tile.hxx: addition of num_faces
+// tilemgr.cxx: minor tweaks
+//
 // Revision 1.27  1998/07/24 21:42:09  curt
 // material.cxx: whups, double method declaration with no definition.
 // obj.cxx: tweaks to avoid errors in SGI's CC.

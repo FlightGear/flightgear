@@ -103,6 +103,9 @@ public:
     // face list (this indexes into the master tile vertex list)
     list < fgFACE > faces;
 
+    // number of faces in this fragment
+    int num_faces;
+
     // Add a face to the face list
     void add_face(int n1, int n2, int n3);
 
@@ -163,6 +166,13 @@ public:
 
 
 // $Log$
+// Revision 1.14  1998/08/12 21:13:06  curt
+// material.cxx: don't load textures if they are disabled
+// obj.cxx: optimizations from Norman Vine
+// tile.cxx: minor tweaks
+// tile.hxx: addition of num_faces
+// tilemgr.cxx: minor tweaks
+//
 // Revision 1.13  1998/07/24 21:42:08  curt
 // material.cxx: whups, double method declaration with no definition.
 // obj.cxx: tweaks to avoid errors in SGI's CC.

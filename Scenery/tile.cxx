@@ -30,7 +30,7 @@
 
 
 // return the sign of a value
-#define FG_SIGN( x )  ((x) >= 0 ? 1 : -1)
+#define FG_SIGN( x )  ((x) < 0 ? -1 : 1)
 
 // return min or max of two values
 #define FG_MIN(A,B)	((A) < (B) ? (A) :  (B))
@@ -74,7 +74,8 @@ fgFRAGMENT ::   fgFRAGMENT ( const fgFRAGMENT & rhs ) :
     material_ptr   ( rhs.material_ptr    ),
     tile_ptr       ( rhs.tile_ptr        ),
     display_list   ( rhs.display_list    ),
-    faces          ( rhs.faces           )
+    faces          ( rhs.faces           ),
+    num_faces      ( rhs.num_faces       )
 {
 }
 
@@ -101,6 +102,7 @@ void fgFRAGMENT::add_face(int n1, int n2, int n3) {
     face.n3 = n3;
 
     faces.push_back(face);
+    num_faces++;
 }
 
 
@@ -446,6 +448,13 @@ fgTILE::~fgTILE ( void ) {
 
 
 // $Log$
+// Revision 1.6  1998/08/12 21:13:05  curt
+// material.cxx: don't load textures if they are disabled
+// obj.cxx: optimizations from Norman Vine
+// tile.cxx: minor tweaks
+// tile.hxx: addition of num_faces
+// tilemgr.cxx: minor tweaks
+//
 // Revision 1.5  1998/07/24 21:42:08  curt
 // material.cxx: whups, double method declaration with no definition.
 // obj.cxx: tweaks to avoid errors in SGI's CC.

@@ -142,6 +142,9 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 	    } else {
 		fgPrintf( FG_TERRAIN, FG_INFO, "Bad alpha value '%s'\n", line );
 	    }
+	} else if ( (strncmp(line_ptr, "texture", 7) == 0) &&
+		    current_options.get_textures() ) {
+	    // do nothing
 	} else if ( strncmp(line_ptr, "texture", 7) == 0 ) {
 	    line_ptr += 7;
 	    while ( ( (line_ptr[0] == ' ') || (line_ptr[0] == '\t') || 
@@ -297,6 +300,13 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.11  1998/08/12 21:13:03  curt
+// material.cxx: don't load textures if they are disabled
+// obj.cxx: optimizations from Norman Vine
+// tile.cxx: minor tweaks
+// tile.hxx: addition of num_faces
+// tilemgr.cxx: minor tweaks
+//
 // Revision 1.10  1998/07/24 21:42:06  curt
 // material.cxx: whups, double method declaration with no definition.
 // obj.cxx: tweaks to avoid errors in SGI's CC.

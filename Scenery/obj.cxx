@@ -116,6 +116,8 @@ int fgObjLoad(char *path, fgTILE *t) {
     int shading;
     int in_fragment, in_faces, vncount, n1, n2, n3, n4;
     int last1, last2, odd;
+    double (*nodes)[3];
+    fgPoint3d *center;
 
     // First try "path.gz" (compressed format)
     strcpy(fgpath, path);
@@ -141,6 +143,8 @@ int fgObjLoad(char *path, fgTILE *t) {
     t->ncount = 1;
     vncount = 1;
     t->bounding_radius = 0.0;
+    nodes = t->nodes;
+    center = &t->center;
 
     while ( fggets(f, line, 250) != NULL ) {
 	if ( line[0] == '#' ) {
@@ -238,6 +242,10 @@ int fgObjLoad(char *path, fgTILE *t) {
 	    fragment.matrix[0] = fragment.matrix[5] =
 		fragment.matrix[10] = fragment.matrix[15] = 1.0;
 	    */
+	
+	    // initialize fragment face counter
+	    fragment.num_faces = 0;
+		
 	} else if ( line[0] == 't' ) {
 	    // start a new triangle strip
 
@@ -260,45 +268,51 @@ int fgObjLoad(char *path, fgTILE *t) {
 		// (averaged) normals
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
 		xglNormal3dv(normal);
-		pp = calc_tex_coords(t->nodes[n1], &t->center);
+		pp = calc_tex_coords(nodes[n1], center);
 		xglTexCoord2f(pp.lon, pp.lat);
-		xglVertex3d(t->nodes[n1][0], t->nodes[n1][1], t->nodes[n1][2]);
+		// xglVertex3d(t->nodes[n1][0],t->nodes[n1][1],t->nodes[n1][2]);
+		xglVertex3dv(nodes[n1]);		
 
 		MAT3_SCALE_VEC(normal, normals[n2], scale);
 		xglNormal3dv(normal);
-                pp = calc_tex_coords(t->nodes[n2], &t->center);
-                xglTexCoord2f(pp.lon, pp.lat);
-		xglVertex3d(t->nodes[n2][0], t->nodes[n2][1], t->nodes[n2][2]);
+		pp = calc_tex_coords(nodes[n2], center);
+		xglTexCoord2f(pp.lon, pp.lat);
+		//xglVertex3d(t->nodes[n2][0],t->nodes[n2][1],t->nodes[n2][2]);
+		xglVertex3dv(nodes[n2]);				
 
 		MAT3_SCALE_VEC(normal, normals[n3], scale);
 		xglNormal3dv(normal);
-                pp = calc_tex_coords(t->nodes[n3], &t->center);
+                pp = calc_tex_coords(nodes[n3], center);
                 xglTexCoord2f(pp.lon, pp.lat);
-		xglVertex3d(t->nodes[n3][0], t->nodes[n3][1], t->nodes[n3][2]);
+		// xglVertex3d(t->nodes[n3][0],t->nodes[n3][1],t->nodes[n3][2]);
+		xglVertex3dv(nodes[n3]);		
 	    } else {
 		// Shading model is "GL_FLAT" so calculate per face
 		// normals on the fly.
 		if ( odd ) {
-		    calc_normal(t->nodes[n1], t->nodes[n2], 
-				t->nodes[n3], approx_normal);
+		    calc_normal(nodes[n1], nodes[n2], 
+				nodes[n3], approx_normal);
 		} else {
-		    calc_normal(t->nodes[n2], t->nodes[n1], 
-				t->nodes[n3], approx_normal);
+		    calc_normal(nodes[n2], nodes[n1], 
+				nodes[n3], approx_normal);
 		}
 		MAT3_SCALE_VEC(normal, approx_normal, scale);
 		xglNormal3dv(normal);
 
-                pp = calc_tex_coords(t->nodes[n1], &t->center);
-                xglTexCoord2f(pp.lon, pp.lat);
-		xglVertex3d(t->nodes[n1][0], t->nodes[n1][1], t->nodes[n1][2]);
+		pp = calc_tex_coords(nodes[n1], center);
+		xglTexCoord2f(pp.lon, pp.lat);
+		// xglVertex3d(t->nodes[n1][0],t->nodes[n1][1],t->nodes[n1][2]);
+		xglVertex3dv(nodes[n1]);		
 
-                pp = calc_tex_coords(t->nodes[n2], &t->center);
-                xglTexCoord2f(pp.lon, pp.lat);
-		xglVertex3d(t->nodes[n2][0], t->nodes[n2][1], t->nodes[n2][2]);
+		pp = calc_tex_coords(nodes[n2], center);
+		xglTexCoord2f(pp.lon, pp.lat);
+		// xglVertex3d(t->nodes[n2][0],t->nodes[n2][1],t->nodes[n2][2]);
+		xglVertex3dv(nodes[n2]);		
 
-                pp = calc_tex_coords(t->nodes[n3], &t->center);
-                xglTexCoord2f(pp.lon, pp.lat);
-		xglVertex3d(t->nodes[n3][0], t->nodes[n3][1], t->nodes[n3][2]);
+		pp = calc_tex_coords(nodes[n3], center);
+		xglTexCoord2f(pp.lon, pp.lat);
+		// xglVertex3d(t->nodes[n3][0],t->nodes[n3][1],t->nodes[n3][2]);
+		xglVertex3dv(nodes[n3]);		
 	    }
 
 	    odd = 1 - odd;
@@ -313,14 +327,15 @@ int fgObjLoad(char *path, fgTILE *t) {
 		    MAT3_SCALE_VEC(normal, normals[n4], scale);
 		} else {
 		    // Shading model is "GL_FLAT"
-		    calc_normal(t->nodes[n3], t->nodes[n2], t->nodes[n4], 
+		    calc_normal(nodes[n3], nodes[n2], nodes[n4], 
 				approx_normal);
 		    MAT3_SCALE_VEC(normal, approx_normal, scale);
 		}
 		xglNormal3dv(normal);
-		pp = calc_tex_coords(t->nodes[n4], &t->center);
+		pp = calc_tex_coords(nodes[n4], center);
                 xglTexCoord2f(pp.lon, pp.lat);
-		xglVertex3d(t->nodes[n4][0], t->nodes[n4][1], t->nodes[n4][2]);
+		// xglVertex3d(t->nodes[n4][0],t->nodes[n4][1],t->nodes[n4][2]);
+		xglVertex3dv(nodes[n4]);		
 
 		odd = 1 - odd;
 		last1 = n3;
@@ -339,20 +354,26 @@ int fgObjLoad(char *path, fgTILE *t) {
 
 	    fragment.add_face(n1, n2, n3);
 
-            xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
-	    pp = calc_tex_coords(t->nodes[n1], &t->center);
+            // xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
+	    xglNormal3dv(normals[n1]);
+	    pp = calc_tex_coords(nodes[n1], center);
 	    xglTexCoord2f(pp.lon, pp.lat);
- 	    xglVertex3d(t->nodes[n1][0], t->nodes[n1][1], t->nodes[n1][2]);
+ 	    // xglVertex3d(t->nodes[n1][0], t->nodes[n1][1], t->nodes[n1][2]);
+ 	    xglVertex3dv(nodes[n1]);
 
-            xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
-            pp = calc_tex_coords(t->nodes[n2], &t->center);
+            // xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
+	    xglNormal3dv(normals[n2]);
+            pp = calc_tex_coords(nodes[n2], center);
             xglTexCoord2f(pp.lon, pp.lat);
-	    xglVertex3d(t->nodes[n2][0], t->nodes[n2][1], t->nodes[n2][2]);
+	    // xglVertex3d(t->nodes[n2][0], t->nodes[n2][1], t->nodes[n2][2]);
+	    xglVertex3dv(nodes[n2]);
 		
-            xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
-            pp = calc_tex_coords(t->nodes[n3], &t->center);
+            // xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
+	    xglNormal3dv(normals[n3]);
+            pp = calc_tex_coords(nodes[n3], center);
             xglTexCoord2f(pp.lon, pp.lat);
-	    xglVertex3d(t->nodes[n3][0], t->nodes[n3][1], t->nodes[n3][2]);
+	    // xglVertex3d(t->nodes[n3][0], t->nodes[n3][1], t->nodes[n3][2]);
+	    xglVertex3dv(nodes[n3]);
 	} else if ( line[0] == 'q' ) {
 	    // continue a triangle strip
 	    n1 = n2 = 0;
@@ -375,19 +396,20 @@ int fgObjLoad(char *path, fgTILE *t) {
 	    } else {
 		// Shading model is "GL_FLAT"
 		if ( odd ) {
-		    calc_normal(t->nodes[last1], t->nodes[last2], t->nodes[n1], 
+		    calc_normal(nodes[last1], nodes[last2], nodes[n1], 
 				approx_normal);
 		} else {
-		    calc_normal(t->nodes[last2], t->nodes[last1], t->nodes[n1], 
+		    calc_normal(nodes[last2], nodes[last1], nodes[n1], 
 				approx_normal);
 		}
 		MAT3_SCALE_VEC(normal, approx_normal, scale);
 		xglNormal3dv(normal);
 	    }
 
-            pp = calc_tex_coords(t->nodes[n1], &t->center);
+            pp = calc_tex_coords(nodes[n1], center);
             xglTexCoord2f(pp.lon, pp.lat);
-	    xglVertex3d(t->nodes[n1][0], t->nodes[n1][1], t->nodes[n1][2]);
+	    // xglVertex3d(t->nodes[n1][0], t->nodes[n1][1], t->nodes[n1][2]);
+	    xglVertex3dv(nodes[n1]);
     
 	    odd = 1 - odd;
 	    last1 = last2;
@@ -409,19 +431,20 @@ int fgObjLoad(char *path, fgTILE *t) {
 		} else {
 		    // Shading model is "GL_FLAT"
 		    if ( odd ) {
-			calc_normal(t->nodes[last1], t->nodes[last2], 
-				    t->nodes[n2], approx_normal);
+			calc_normal(nodes[last1], nodes[last2], 
+				    nodes[n2], approx_normal);
 		    } else {
-			calc_normal(t->nodes[last2], t->nodes[last1], 
-				    t->nodes[n2], approx_normal);
+			calc_normal(nodes[last2], nodes[last1], 
+				    nodes[n2], approx_normal);
 		    }
 		    MAT3_SCALE_VEC(normal, approx_normal, scale);
 		    xglNormal3dv(normal);
 		}
 
-		pp = calc_tex_coords(t->nodes[n2], &t->center);
+		pp = calc_tex_coords(nodes[n2], center);
 		xglTexCoord2f(pp.lon, pp.lat);
-		xglVertex3d(t->nodes[n2][0], t->nodes[n2][1], t->nodes[n2][2]);
+		// xglVertex3d(t->nodes[n2][0],t->nodes[n2][1],t->nodes[n2][2]);
+		xglVertex3dv(nodes[n2]);		
 
 		odd = 1 -odd;
 		last1 = last2;
@@ -467,6 +490,13 @@ int fgObjLoad(char *path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.21  1998/08/12 21:13:04  curt
+// material.cxx: don't load textures if they are disabled
+// obj.cxx: optimizations from Norman Vine
+// tile.cxx: minor tweaks
+// tile.hxx: addition of num_faces
+// tilemgr.cxx: minor tweaks
+//
 // Revision 1.20  1998/07/24 21:42:07  curt
 // material.cxx: whups, double method declaration with no definition.
 // obj.cxx: tweaks to avoid errors in SGI's CC.
