@@ -82,13 +82,13 @@ public:
     void init( void );
 
     // Check if the specified "bucket" exists in the cache
-    bool exists( const FGBucket& b );
+    bool exists( const SGBucket& b );
 
     // Ensure at least one entry is free in the cache
     void FGNewCache::make_space();
 
     // Fill in a tile cache entry with real data for the specified bucket 
-    void fill_in( const FGBucket& b );
+    void fill_in( const SGBucket& b );
 
     // Return a pointer to the specified tile cache entry 
     inline FGTileEntry *get_tile( const long tile_index ) {
@@ -101,7 +101,7 @@ public:
     }
 
     // Return a pointer to the specified tile cache entry 
-    inline FGTileEntry *get_tile( const FGBucket& b ) {
+    inline FGTileEntry *get_tile( const SGBucket& b ) {
 	return get_tile( b.gen_index() );
     }
 

@@ -159,7 +159,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     }
 
     // Calculate center point
-    FGBucket b = t->tile_bucket;
+    SGBucket b = t->tile_bucket;
     double clon = b.get_center_lon();
     double clat = b.get_center_lat();
     double height = b.get_height();

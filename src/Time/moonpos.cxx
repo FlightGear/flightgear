@@ -391,8 +391,8 @@ void fgUpdateMoonPos( void ) {
     //      << nmoon[2] << endl;
 
     l->moon_angle = acos( sgScalarProductVec3( nup, nmoon ) );
-    cout << "moon angle relative to current location = " 
-	 << l->moon_angle << endl;
+    FG_LOG( FG_EVENT, FG_INFO, "moon angle relative to current location = " 
+	    << l->moon_angle );
     
     // calculate vector to moon's position on the earth's surface
     Point3D vp( v->get_view_pos()[0],
@@ -421,7 +421,7 @@ void fgUpdateMoonPos( void ) {
     // v->surface_east.  We do this so we can sort out the acos()
     // ambiguity.  I wish I could think of a more efficient way ... :-(
     east_dot = sgScalarProductVec3( surface_to_moon, v->get_surface_east() );
-   // cout << "  East dot product = " << east_dot << endl;
+    // cout << "  East dot product = " << east_dot << endl;
 
     // calculate the angle between v->surface_to_moon and
     // v->surface_south.  this is how much we have to rotate the sky

@@ -100,7 +100,7 @@ void FGNewCache::init( void ) {
     
     for ( ; current != end; ++current ) {
 	long index = current->first;
-	cout << "clearing " << index << endl;
+	FG_LOG( FG_TERRAIN, FG_DEBUG, "clearing " << index );
 	FGTileEntry *e = current->second;
 	e->tile_bucket.make_bad();
 	entry_free(index);
@@ -114,7 +114,7 @@ void FGNewCache::init( void ) {
 
 
 // Search for the specified "bucket" in the cache
-bool FGNewCache::exists( const FGBucket& b ) {
+bool FGNewCache::exists( const SGBucket& b ) {
     long tile_index = b.gen_index();
     tile_map_iterator it = tile_cache.find( tile_index );
 
@@ -191,7 +191,7 @@ static ssgLeaf *gen_lights( ssgVertexArray *lights, int inc, float bright ) {
 
 
 // Fill in a tile cache entry with real data for the specified bucket
-void FGNewCache::fill_in( const FGBucket& b ) {
+void FGNewCache::fill_in( const SGBucket& b ) {
     FG_LOG( FG_TERRAIN, FG_INFO, "FILL IN CACHE ENTRY = " << b.gen_index() );
 
     // clear out a distant entry in the cache if needed.
@@ -239,13 +239,13 @@ void FGNewCache::fill_in( const FGBucket& b ) {
     }
   
     // load custom objects
-    cout << "CUSTOM OBJECTS" << endl;
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "CUSTOM OBJECTS" );
 
     FGPath index_path = tile_path;
     index_path.append( b.gen_index_str() );
     index_path.concat( ".ind" );
 
-    cout << "Looking in " << index_path.str() << endl;
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "Looking in " << index_path.str() );
 
     fg_gzifstream in( index_path.str() );
 
@@ -260,7 +260,8 @@ void FGNewCache::fill_in( const FGBucket& b ) {
 #else
 	    in >> skipws;
 #endif
-	    cout << "token = " << token << " name = " << name << endl;
+	    FG_LOG( FG_TERRAIN, FG_DEBUG, "token = " << token
+		    << " name = " << name );
 
 	    FGPath custom_path = tile_path;
 	    custom_path.append( name );
@@ -287,7 +288,7 @@ void FGNewCache::fill_in( const FGBucket& b ) {
     e->lights_range = NULL;
     /* uncomment this section for testing ground lights */
     if ( light_pts->getNum() ) {
-	cout << "generating lights" << endl;
+	FG_LOG( FG_TERRAIN, FG_DEBUG, "generating lights" );
 	e->lights_transform = new ssgTransform;
 	e->lights_range = new ssgRangeSelector;
 	e->lights_brightness = new ssgSelector;
@@ -316,8 +317,8 @@ void FGNewCache::make_space() {
     FG_LOG( FG_TERRAIN, FG_INFO, "Make space in cache" );
 
     
-    cout << "cache size = " << tile_cache.size() << endl;
-    cout << "max size = " << max_cache_size << endl;
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "cache entries = " << tile_cache.size() );
+    FG_LOG( FG_TERRAIN, FG_INFO, "max size = " << max_cache_size );
 
     if ( (int)tile_cache.size() < max_cache_size ) {
 	// space in the cache, return

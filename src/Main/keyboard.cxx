@@ -345,7 +345,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    globals->set_freeze( ! globals->get_freeze() );
 
 	    {
-		FGBucket p( f->get_Longitude() * RAD_TO_DEG,
+		SGBucket p( f->get_Longitude() * RAD_TO_DEG,
 			    f->get_Latitude() * RAD_TO_DEG );
 		FGPath tile_path( globals->get_options()->get_fg_root() );
 		tile_path.append( "Scenery" );

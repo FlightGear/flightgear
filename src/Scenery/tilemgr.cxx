@@ -111,7 +111,7 @@ int FGTileMgr::init() {
 
 
 // schedule a tile for loading
-void FGTileMgr::sched_tile( const FGBucket& b ) {
+void FGTileMgr::sched_tile( const SGBucket& b ) {
     // see if tile already exists in the cache
     FGTileEntry *t = global_tile_cache.get_tile( b );
 
@@ -123,7 +123,7 @@ void FGTileMgr::sched_tile( const FGBucket& b ) {
 
 
 // load a tile
-void FGTileMgr::load_tile( const FGBucket& b ) {
+void FGTileMgr::load_tile( const SGBucket& b ) {
     // see if tile already exists in the cache
     FGTileEntry *t = global_tile_cache.get_tile( b );
 
@@ -230,7 +230,7 @@ void FGTileMgr::schedule_needed() {
 
     for ( int x = -xrange; x <= xrange; ++x ) {
 	for ( int y = -yrange; y <= yrange; ++y ) {
-	    FGBucket b = fgBucketOffset( longitude, latitude, x, y );
+	    SGBucket b = sgBucketOffset( longitude, latitude, x, y );
 	    if ( ! global_tile_cache.exists( b ) ) {
 		sched_tile( b );
 	    }
@@ -269,7 +269,7 @@ void FGTileMgr::initialize_queue()
             FG_LOG( FG_TERRAIN, FG_DEBUG, 
                     "Load queue not empty, loading a tile" );
 
-            FGBucket pending = load_queue.front();
+            SGBucket pending = load_queue.front();
             load_queue.pop_front();
             load_tile( pending );
         }
@@ -327,7 +327,7 @@ int FGTileMgr::update( double lon, double lat ) {
 	FG_LOG( FG_TERRAIN, FG_INFO, "Load queue size = " << load_queue.size()
 		<< " loading a tile" );
 
-	FGBucket pending = load_queue.front();
+	SGBucket pending = load_queue.front();
 	load_queue.pop_front();
 	load_tile( pending );
     }

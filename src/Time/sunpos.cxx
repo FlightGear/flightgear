@@ -298,7 +298,8 @@ void fgUpdateSunPos( void ) {
     //      << nsun[2] << endl;
 
     l->sun_angle = acos( sgScalarProductVec3 ( nup, nsun ) );
-    cout << "sun angle relative to current location = " << l->sun_angle << endl;
+    FG_LOG( FG_EVENT, FG_INFO, "sun angle relative to current location = "
+	    << l->sun_angle );
     
     // calculate vector to sun's position on the earth's surface
     Point3D vp( v->get_view_pos()[0],

@@ -82,7 +82,7 @@ public:
     Point3D offset;
 
     // this tile's official location in the world
-    FGBucket tile_bucket;
+    SGBucket tile_bucket;
 
     // list of pointers to memory chunks that need to be freed when
     // tile entry goes away

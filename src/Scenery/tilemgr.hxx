@@ -67,7 +67,7 @@ private:
     load_state state;
 
     // pending tile load queue
-    list < FGBucket > load_queue;
+    list < SGBucket > load_queue;
 
     // initialize the cache
     void initialize_queue();
@@ -78,10 +78,10 @@ private:
     void destroy_queue();
 
     // schedule a tile for loading
-    void sched_tile( const FGBucket& b );
+    void sched_tile( const SGBucket& b );
 
     // load a tile
-    void load_tile( const FGBucket& b );
+    void load_tile( const SGBucket& b );
 
     // schedule a needed buckets for loading
     void FGTileMgr::schedule_needed();
@@ -95,9 +95,9 @@ private:
     // ssgEntity *last_hit;
     FGHitList hit_list;
 
-    FGBucket previous_bucket;
-    FGBucket current_bucket;
-    FGBucket pending;
+    SGBucket previous_bucket;
+    SGBucket current_bucket;
+    SGBucket pending;
 	
     FGTileEntry *current_tile;
 	
