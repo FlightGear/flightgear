@@ -114,6 +114,7 @@ FGTileEntry::free_tile()
 		FG_LOG( FG_TERRAIN, FG_DEBUG,
 			"Found a kid to delete " << kid);
 		found_kid = true;
+		parent->removeKid( i );
 	    }
 	}
 	if ( ! found_kid ) {
