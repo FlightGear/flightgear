@@ -359,6 +359,10 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
   mouse &m = _mouse_bindings[0];
   mouse_mode &mode = m.modes[m.current_mode];
 
+				// Let the property manager know.
+  if (b >= 0 && b < MAX_MOUSE_BUTTONS)
+    m.mouse_button_nodes[b]->setBoolValue(updown == GLUT_DOWN);
+
 				// Pass on to PUI and the panel if
 				// requested, and return if one of
 				// them consumes the event.
@@ -611,6 +615,17 @@ FGInput::_init_mouse ()
     SGPropertyNode * mouse_node = mouse_nodes->getChild("mouse", i, true);
     mouse &m = _mouse_bindings[i];
 
+				// Grab node pointers
+    char buf[64];
+    sprintf(buf, "/devices/status/mice/mouse[%d]/mode", i);
+    m.mode_node = fgGetNode(buf, true);
+    m.mode_node->setIntValue(0);
+    for (j = 0; j < MAX_MOUSE_BUTTONS; j++) {
+      sprintf(buf, "/devices/status/mice/mouse[%d]/button[%d]", i, j);
+      m.mouse_button_nodes[j] = fgGetNode(buf, true);
+      m.mouse_button_nodes[j]->setBoolValue(false);
+    }
+
 				// Read all the modes
     m.nModes = mouse_node->getIntValue("mode-count", 1);
     m.modes = new mouse_mode[m.nModes];
@@ -745,7 +760,7 @@ void
 FGInput::_update_mouse ()
 {
   mouse &m = _mouse_bindings[0];
-  int mode =  fgGetInt("/input/mice/mouse[0]/mode");
+  int mode =  m.mode_node->getIntValue();
   if (mode != m.current_mode) {
     m.current_mode = mode;
     if (mode >= 0 && mode < m.nModes) {
