@@ -88,9 +88,7 @@
 #include <Objects/materialmgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
-#include <Sky/skydome.hxx>
-#include <Sky/skymoon.hxx>
-#include <Sky/skysun.hxx>
+#include <Sky/sky.hxx>
 #include <Time/event.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/fg_timer.hxx>
@@ -158,10 +156,8 @@ ssgTransform *fgd_pos = NULL;
 FGInterface cur_view_fdm;
 
 // Sky structures
-FGEphemeris ephem;
-FGSkyDome current_sky;
-FGSkySun current_sun;
-FGSkyMoon current_moon;
+FGEphemeris *ephem;
+SGSky *thesky;
 
 // hack
 sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
@@ -354,90 +350,63 @@ void fgRenderFrame( void ) {
 	// set the opengl state to known default values
 	default_state->force();
 
-	xglDisable( GL_DEPTH_TEST );
-	xglDisable( GL_FOG );
-
 	// draw sky dome
 	if ( current_options.get_skyblend() ) {
+	    sgVec3 view_pos;
+	    sgSetVec3( view_pos,
+		       current_view.get_view_pos().x(),
+		       current_view.get_view_pos().y(),
+		       current_view.get_view_pos().z() );
+
 	    sgVec3 zero_elev;
 	    sgSetVec3( zero_elev,
 		       current_view.get_cur_zero_elev().x(),
 		       current_view.get_cur_zero_elev().y(),
 		       current_view.get_cur_zero_elev().z() );
 
-	    current_sky.repaint( cur_light_params.sky_color,
-				 cur_light_params.fog_color,
-				 cur_light_params.sun_angle );
+	    /* cout << "thesky->repaint() sky_color = "
+		 << cur_light_params.sky_color[0] << " "
+		 << cur_light_params.sky_color[1] << " "
+		 << cur_light_params.sky_color[2] << " "
+		 << cur_light_params.sky_color[3] << endl;
+	    cout << "    fog = "
+		 << cur_light_params.fog_color[0] << " "
+		 << cur_light_params.fog_color[1] << " "
+		 << cur_light_params.fog_color[2] << " "
+		 << cur_light_params.fog_color[3] << endl;
+	    cout << "    sun_angle = " << cur_light_params.sun_angle
+		 << "    moon_angle = " << cur_light_params.moon_angle
+                 << endl; */
+	    thesky->repaint( cur_light_params.sky_color,
+			     cur_light_params.fog_color,
+			     cur_light_params.sun_angle,
+			     cur_light_params.moon_angle,
+			     0, NULL, 0, NULL );
 
-	    current_sky.reposition( zero_elev, 
-				    cur_fdm_state->get_Longitude(),
-				    cur_fdm_state->get_Latitude(),
-				    cur_light_params.sun_rotation );
+	    /* cout << "thesky->reposition( view_pos = " << view_pos[0] << " "
+		 << view_pos[1] << " " << view_pos[2] << endl;
+	    cout << "    zero_elev = " << zero_elev[0] << " "
+		 << zero_elev[1] << " " << zero_elev[2]
+		 << " lon = " << cur_fdm_state->get_Longitude()
+		 << " lat = " << cur_fdm_state->get_Latitude() << endl;
+	    cout << "    sun_rot = " << cur_light_params.sun_rotation
+		 << " gst = " << FGTime::cur_time_params->getGst() << endl;
+	    cout << "    sun ra = " << ephem->getSunRightAscension()
+		 << " sun dec = " << ephem->getSunDeclination() 
+		 << " moon ra = " << ephem->getMoonRightAscension()
+		 << " moon dec = " << ephem->getMoonDeclination() << endl; */
 
-	    current_sky.draw();
+	    thesky->reposition( view_pos, zero_elev, 
+				cur_fdm_state->get_Longitude(),
+				cur_fdm_state->get_Latitude(),
+				cur_light_params.sun_rotation,
+				FGTime::cur_time_params->getGst(),
+				ephem->getSunRightAscension(),
+				ephem->getSunDeclination(), 50000.0,
+				ephem->getMoonRightAscension(),
+				ephem->getMoonDeclination(), 50000.0 );
 	}
 
-	// draw the sun
-	glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-	current_sun.repaint( cur_light_params.sun_angle );
-        sgVec3 view_pos;
-	sgSetVec3( view_pos,
-		   current_view.get_view_pos().x(),
-		   current_view.get_view_pos().y(),
-		   current_view.get_view_pos().z() );
-	current_sun.reposition( view_pos,
-			        t->getGst() * 15.041085,
-				ephem.getSunRightAscension(),
-				ephem.getSunDeclination() );
-	current_sun.draw();
-
-	// draw the moon
-	glBlendFunc ( GL_SRC_ALPHA, GL_ONE ) ;
-	current_moon.repaint( cur_light_params.moon_angle );
-	sgSetVec3( view_pos,
-		   current_view.get_view_pos().x(),
-		   current_view.get_view_pos().y(),
-		   current_view.get_view_pos().z() );
-	current_moon.reposition( view_pos,
-				 t->getGst() * 15.041085,
-				 ephem.getMoonRightAscension(),
-				 ephem.getMoonDeclination() );
-	current_moon.draw();
-
-	// xglDisable( GL_FOG );
-
-	/* 
-
-	// setup transformation for drawing astronomical objects
-	xglPushMatrix();
-	// Translate to view position
-	Point3D view_pos = current_view.get_view_pos();
-	xglTranslatef( view_pos.x(), view_pos.y(), view_pos.z() );
-	// Rotate based on gst (sidereal time)
-	// note: constant should be 15.041085, Curt thought it was 15
-	angle = t->getGst() * 15.041085;
-	// printf("Rotating astro objects by %.2f degrees\n",angle);
-	xglRotatef( angle, 0.0, 0.0, -1.0 );
-
-	// draw stars and planets
-	fgStarsRender();
-	xglDisable( GL_COLOR_MATERIAL ); // just to make sure ...
-	xglEnable( GL_CULL_FACE ); // for moon
-	xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
-	//xglEnable(GL_DEPTH_TEST);
-	SolarSystem::theSolarSystem->draw();
-	// reset blending function
-	glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
-
-	xglPopMatrix();
-	*/
-
-	// draw scenery
-	/* if ( current_options.get_shading() ) {
-	    xglShadeModel( GL_SMOOTH ); 
-	} else {
-	    xglShadeModel( GL_FLAT ); 
-	} */
 	xglEnable( GL_DEPTH_TEST );
 	if ( current_options.get_fog() > 0 ) {
 	    xglEnable( GL_FOG );
@@ -762,7 +731,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
     l->UpdateAdjFog();
 
     // Update solar system
-    ephem.update( t );
+    ephem->update( t, cur_fdm_state->get_Latitude() );
 }
 
 
@@ -857,7 +826,7 @@ static void fgMainLoop( void ) {
 	   cur_fdm_state->get_Altitude() * FEET_TO_METER); */
 
     // update "time"
-    t->update(*cur_fdm_state);
+    t->update( cur_fdm_state->get_Longitude() );
 
     // Get elapsed time (in usec) for this past frame
     elapsed = fgGetTimeInterval();
@@ -1348,6 +1317,14 @@ int main( int argc, char **argv ) {
     // fonts !!!
     guiInit();
 
+    // Initialize time
+    FGTime::cur_time_params = new FGTime();
+    // FGTime::cur_time_params->init( cur_fdm_state->get_Longitude(), 
+    //                                cur_fdm_state->get_Latitude() );
+    // FGTime::cur_time_params->update( cur_fdm_state->get_Longitude() );
+    FGTime::cur_time_params->init( 0.0, 0.0 );
+    FGTime::cur_time_params->update( 0.0 );
+
     // Do some quick general initializations
     if( !fgInitGeneral()) {
 	FG_LOG( FG_GENERAL, FG_ALERT, 
@@ -1375,18 +1352,24 @@ int main( int argc, char **argv ) {
     scene = new ssgRoot;
     scene->setName( "Scene" );
 
+    // Initialize the sky
+    ephem = new FGEphemeris;
+    ephem->update( FGTime::cur_time_params, 0.0 );
+    FGPath sky_tex_path( current_options.get_fg_root() );
+    sky_tex_path.append( "Textures" );
+    sky_tex_path.append( "Sky" );
+    thesky = new SGSky;
+    thesky->texture_path( sky_tex_path.str() );
+    ssgBranch *sky = thesky->build( 550.0, 550.0,
+				    ephem->getNumPlanets(), 
+				    ephem->getPlanets(), 60000.0,
+				    0, NULL, 60000.0 );
+    scene->addKid( sky );
+
     // Terrain branch
     terrain = new ssgBranch;
     terrain->setName( "Terrain" );
     scene->addKid( terrain );
-
-    // Initialize the sky
-    FGPath sky_tex_path( current_options.get_fg_root() );
-    sky_tex_path.append( "Textures" );
-    sky_tex_path.append( "Sky" );
-    current_sky.initialize();
-    current_sun.initialize( sky_tex_path );
-    current_moon.initialize( sky_tex_path );
 
     // temporary visible aircraft "own ship"
     penguin_sel = new ssgSelector;

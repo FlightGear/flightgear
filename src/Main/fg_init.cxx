@@ -224,8 +224,6 @@ bool fgInitGeneral( void ) {
 // gear, its initialization call should located in this routine.
 // Returns non-zero if a problem encountered.
 bool fgInitSubsystems( void ) {
-    FGTime::cur_time_params = new FGTime();
-
     fgLIGHT *l = &cur_light_params;
     FGTime *t = FGTime::cur_time_params;
 
@@ -374,8 +372,8 @@ bool fgInitSubsystems( void ) {
 			    fgEVENT::FG_EVENT_READY, 60000 );
 
     // Initialize the time dependent variables
-    t->init(*cur_fdm_state);
-    t->update(*cur_fdm_state);
+    t->init( cur_fdm_state->get_Longitude(), cur_fdm_state->get_Latitude() );
+    t->update( cur_fdm_state->get_Longitude() );
 
     // Initialize view parameters
     FG_LOG( FG_GENERAL, FG_DEBUG, "Before current_view.init()");

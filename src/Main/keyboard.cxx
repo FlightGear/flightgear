@@ -46,7 +46,6 @@
 #include <simgear/misc/fgpath.hxx>
 
 #include <Aircraft/aircraft.hxx>
-#include <Astro/solarsystem.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/hud.hxx>
 #include <GUI/gui.h>
@@ -71,8 +70,7 @@ extern void NewHeading( puObject *cb );
 
 // Force an update of the sky and lighting parameters
 static void local_update_sky_and_lighting_params( void ) {
-    // fgSunInit();
-    SolarSystem::theSolarSystem->rebuild();
+    FGTime::cur_time_params->updateLocal();
     cur_light_params.Update();
 }
 
