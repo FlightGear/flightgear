@@ -2,6 +2,9 @@
 | Done
 --------------------------------------------------------------------------
 
+5/27/98 -  Rewrote airport list manager using an STL "map" (associative
+           array) for quick lookup.
+
 5/26/98 -  Impose a maximum triangle area during scenery generation so
            even very flat areas will get split into a few smaller sub
            triangles.
