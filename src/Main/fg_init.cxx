@@ -1820,6 +1820,7 @@ void fgReInitSubsystems()
         fgSetBool("/sim/freeze/master", true);
     }
     fgSetBool("/sim/crashed", false);
+    fgSetBool("/sim/initialised", false);
 
     // Initialize the FDM
     fgInitFDM();
@@ -1843,5 +1844,6 @@ void fgReInitSubsystems()
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);
     }
+    fgSetBool("/sim/initialised", true);
 }
 

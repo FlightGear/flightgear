@@ -1350,6 +1350,8 @@ static void fgIdleFunction ( void ) {
     // printf("idle state == %d\n", idle_state);
 
     if ( idle_state == 0 ) {
+        fgSetBool("sim/initialised", false);
+
         // Initialize the splash screen right away
         if ( fgGetBool("/sim/startup/splash-screen") ) {
             fgSplashInit(fgGetString("/sim/startup/splash-texture"));
@@ -1433,6 +1435,7 @@ static void fgIdleFunction ( void ) {
     if ( idle_state == 1000 ) {
         // We've finished all our initialization steps, from now on we
         // run the main loop.
+        fgSetBool("sim/initialised",true);
 
         fgRegisterIdleHandler(fgMainLoop);
     } else {
