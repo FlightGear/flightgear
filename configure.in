@@ -336,6 +336,7 @@ AC_OUTPUT( \
 	Tools/Lib/DEM/Makefile \
 	Tools/Lib/Polygon/Makefile \
 	Tools/Prep/Makefile \
+	Tools/Prep/DemChop/Makefile \
 	Tools/Prep/DemInfo/Makefile \
 	Tools/Prep/DemRaw2ascii/Makefile \
 	Tools/Prep/GenAirports/Makefile \
