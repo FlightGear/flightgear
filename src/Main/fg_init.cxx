@@ -917,7 +917,10 @@ bool fgInitSubsystems( void ) {
         SGPath cloud_path(globals->get_fg_root());
         cloud_path.append("large.sky");
         SG_LOG(SG_GENERAL, SG_INFO, "Loading CLOUDS3d from: " << cloud_path.c_str());
-        if ( !sgCloud3d->Load( cloud_path.str() ) ) {
+        if ( !sgCloud3d->Load( cloud_path.str(),
+                               latitude->getDoubleValue(),
+                               longitude->getDoubleValue()) )
+        {
             fgSetBool("/sim/rendering/clouds3d", false);
             SG_LOG(SG_GENERAL, SG_INFO, "CLOUDS3d FAILED: ");
         }
