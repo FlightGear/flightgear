@@ -149,8 +149,8 @@ static void net2global( FGNetFDM *net ) {
     }
 
     net->num_wheels = htonl(net->num_wheels);
-
     // I don't need to convert the Wow flags, since they are one byte in size
+    htond(net->flap_deflection);
 
     net->cur_time = ntohl(net->cur_time);
     net->warp = ntohl(net->warp);
@@ -212,6 +212,8 @@ static void net2global( FGNetFDM *net ) {
 		= fgGetNode("/gear/gear", i, true);
 	    node->setDoubleValue("wow", net->wow[i] );
 	}
+
+        fgSetDouble("/surface-positions/flap-pos-norm", net->flap_deflection);
 
 	/* these are ignored for now  ... */
 	/*

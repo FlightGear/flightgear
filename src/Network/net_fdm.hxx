@@ -32,7 +32,7 @@
 
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 6;
+const int FG_NET_FDM_VERSION = 7;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -88,9 +88,10 @@ public:
     int num_tanks;		// Max number of fuel tanks
     double fuel_quantity[FG_MAX_TANKS];
 
-    // Gear status
+    // Gear and flaps status
     int num_wheels;
     bool wow[FG_MAX_WHEELS];
+    double flap_deflection;     // normalized from 0 = up to 1 = full deflection
 
     // Environment
     time_t cur_time;            // current unix time
