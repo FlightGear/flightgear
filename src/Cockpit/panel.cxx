@@ -249,8 +249,8 @@ FGPanel::update ()
       glColor4f(0.7, 0.2, 0.2, 1.0);
   }
   glBindTexture(GL_TEXTURE_2D, _bg->getHandle());
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
   glBegin(GL_POLYGON);
   glTexCoord2f(0.0, 0.0); glVertex3f(_winx, _winy, 0);
