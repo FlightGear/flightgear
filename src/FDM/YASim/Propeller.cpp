@@ -62,7 +62,7 @@ void Propeller::calc(float density, float v, float omega,
     // 0.25 and 4.  A prop pitch of 0.5 results in no change from the
     // base value.
     if (_manual) 
-        _j0 = _baseJ0 * Math::pow(2, 4*_proppitch - 2);
+        _j0 = _baseJ0 * Math::pow(2, 2 - 4*_proppitch);
     
     float tipspd = _r*omega;
     float V2 = v*v + tipspd*tipspd;
