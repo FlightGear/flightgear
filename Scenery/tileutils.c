@@ -120,7 +120,7 @@ void gen_base_path(struct bucket *p, char *path) {
 
 
 /* offset an bucket struct by the specified amounts in the X & Y direction */
-static void offset_bucket(struct bucket *in, struct bucket *out, int x, int y) {
+void offset_bucket(struct bucket *in, struct bucket *out, int x, int y) {
     int diff, temp;
     int dist_lat;
 
@@ -266,10 +266,13 @@ int main() {
 
 
 /* $Log$
-/* Revision 1.4  1998/01/13 00:23:12  curt
-/* Initial changes to support loading and management of scenery tiles.  Note,
-/* there's still a fair amount of work left to be done.
+/* Revision 1.5  1998/01/14 02:19:04  curt
+/* Makde offset_bucket visible to outside.
 /*
+ * Revision 1.4  1998/01/13 00:23:12  curt
+ * Initial changes to support loading and management of scenery tiles.  Note,
+ * there's still a fair amount of work left to be done.
+ *
  * Revision 1.3  1998/01/10 00:01:47  curt
  * Misc api changes and tweaks.
  *
