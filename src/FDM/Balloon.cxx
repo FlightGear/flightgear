@@ -192,7 +192,7 @@ bool FGBalloonSim::copy_from_BalloonSim() {
     //temp[1]: longitude
     //temp[2]: altitude (meters)
 
-    _updatePosition( temp[0], temp[1], temp[2] * SG_METER_TO_FEET  );
+    _updateGeocentricPosition( temp[0], temp[1], temp[2] * SG_METER_TO_FEET );
     
     current_balloon.getHPR( temp );
     set_Euler_Angles( temp[0], temp[1], temp[2] );

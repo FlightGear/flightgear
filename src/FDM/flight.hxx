@@ -355,7 +355,8 @@ public:
     void _setup();
 
     void _busdump(void);
-    void _updatePosition( double lat_geoc, double lon, double alt );
+    void _updateGeodeticPosition( double lat, double lon, double alt );
+    void _updateGeocentricPosition( double lat_geoc, double lon, double alt );
     void _updateWeather( void );
 
     inline void _set_Inertias( double m, double xx, double yy, 

@@ -507,7 +507,60 @@ bool FGInterface::update( int multi_loop ) {
 }
 
 
-void FGInterface::_updatePosition( double lat_geoc, double lon, double alt ) {
+void FGInterface::_updateGeodeticPosition( double lat, double lon, double alt )
+{
+    double lat_geoc, sl_radius;
+
+    // cout << "starting sea level rad = " << get_Sea_level_radius() << endl;
+
+    sgGeodToGeoc( lat, alt * SG_FEET_TO_METER, &sl_radius, &lat_geoc );
+
+    SG_LOG( SG_FLIGHT, SG_DEBUG, "lon = " << lon 
+	    << " lat_geod = " << lat
+	    << " lat_geoc = " << lat_geoc
+	    << " alt = " << alt 
+	    << " sl_radius = " << sl_radius * SG_METER_TO_FEET
+	    << " Equator = " << SG_EQUATORIAL_RADIUS_FT );
+
+    _set_Geocentric_Position( lat_geoc, lon, 
+			      sl_radius * SG_METER_TO_FEET + alt );
+	
+    _set_Geodetic_Position( lat, lon, alt );
+
+    _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET );
+    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET );
+
+    _set_sin_lat_geocentric( lat_geoc );
+    _set_cos_lat_geocentric( lat_geoc );
+
+    _set_sin_cos_longitude( lon );
+
+    _set_sin_cos_latitude( lat );
+
+    /* Norman's code for slope of the terrain */
+    /* needs to be tested -- get it on the HUD and taxi around */
+    /* double *tnorm = scenery.cur_normal;
+
+       double sy = sin ( -get_Psi() ) ;
+       double cy = cos ( -get_Psi() ) ;
+
+       double phitb, thetatb, psitb;
+       if ( tnorm[1] != 0.0 ) {
+           psitb = -atan2 ( tnorm[0], tnorm[1] );
+       }
+       if ( tnorm[2] != 0.0 ) {	
+	   thetatb =  atan2 ( tnorm[0] * cy - tnorm[1] * sy, tnorm[2] );
+	   phitb = -atan2 ( tnorm[1] * cy + tnorm[0] * sy, tnorm[2] );  
+       }	
+	
+       _set_terrain_slope(phitb, thetatb, psitb) 
+     */
+}
+
+
+void FGInterface::_updateGeocentricPosition( double lat_geoc, double lon,
+					     double alt )
+{
     double lat_geod, tmp_alt, sl_radius1, sl_radius2, tmp_lat_geoc;
 
     // cout << "starting sea level rad = " << get_Sea_level_radius() << endl;

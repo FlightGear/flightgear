@@ -425,9 +425,9 @@ bool FGJSBsim::copy_from_JSBsim() {
     _set_Mach_number( Translation->GetMach() );
 
     // Positions
-    _updatePosition( Position->GetLatitude(),
-                     Position->GetLongitude(),
-                     Position->Geth() );
+    _updateGeocentricPosition( Position->GetLatitude(),
+			       Position->GetLongitude(),
+			       Position->Geth() );
 
     _set_Altitude_AGL( Position->GetDistanceAGL() );
 

@@ -42,13 +42,13 @@ public:
     int version;		// increment when data values change
 
     // Positions
-    double longitude;		// radians
-    double latitude;		// radians
-    double altitude;		// meters (above sea level)
-    double agl;			// meters (altitude above ground level)
-    double phi;			// radians
-    double theta;		// radians
-    double psi;			// radians
+    double longitude;		// geodetic (radians)
+    double latitude;		// geodetic (radians)
+    double altitude;		// above sea level (meters)
+    double agl;			// above ground level (meters)
+    double phi;			// roll (radians)
+    double theta;		// pitch (radians)
+    double psi;			// yaw or true heading (radians)
 
     // Velocities
     double vcas;		// calibrated airspeed
