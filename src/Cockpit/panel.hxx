@@ -1,6 +1,8 @@
 //  panel.hxx -- instrument panel defines and prototypes
 // 
 //  Written by Friedemann Reinhard, started June 1998.
+//
+//  Major code reorganization by David Megginson, November 1999.
 // 
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License as
@@ -18,7 +20,6 @@
 //
 //  $Id$
 
-#define LETTER_OFFSET 0.03515625 
 
 #ifndef _PANEL_HXX
 #define _PANEL_HXX
@@ -40,212 +41,225 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-class FGInstrument;
+class FGInstrument;		// FIXME: rearrange to avoid this?
 
+
+/**
+ * Top-level class to hold an instance of a panel.
+ */
 class FGPanel{
-    
-    private:
-        int height, width;
-        GLuint FontList;
-        
-        GLubyte *background;
-        
-        // FGInstrument **instr_list;
-        FGInstrument *test_instr[7];
-        
-        void GetData(void);
-        
-    public:
-        static FGPanel *OurPanel;
-        
-        FGPanel(void);
-        
-        float   get_height(void){
-            return height;
-        }
-        
-        void    ReInit( int x, int y, int finx, int finy);
-        void    Update(void);
-        
-        void    DrawLetter(void){
-            glBegin(GL_POLYGON);
-            glTexCoord2f(0.0, 0.0);
-            glVertex2f(0.0, 0.0);
-            glTexCoord2f(LETTER_OFFSET + 0.004, 0.0);
-            glVertex2f(7.0, 0.0);
-            glTexCoord2f(LETTER_OFFSET + 0.004, 0.0390625);
-            glVertex2f(7.0, 9.0);
-            glTexCoord2f(0.0, 0.0390625);
-            glVertex2f(0.0, 9.0);
-            glEnd();
-        }
-        
-        void DrawTestLetter(float X, float Y);
-        void InitLists(void);
-        void TexString(char *s, float XPos, float YPos, float size);
-        
+
+public:
+  static FGPanel *OurPanel;	// current_panel would be better
+
+				// FIXME: a few other classes have a
+				// dependency on this information; it
+				// would be nice to fix that.
+  GLuint panel_tex_id[2];
+
+  FGPanel();
+  virtual ~FGPanel ();
+  virtual float get_height(void) { return height; }
+  virtual void ReInit( int x, int y, int finx, int finy);
+  virtual void Update(void);
+
+private:
+
+  int height;
+  int width;
+  GLubyte *background;
+  GLubyte *imag;
+  int imag_width, imag_height;
+  GLubyte *img;
+  int img_width, img_height;
+				// The instruments on the panel.
+  FGInstrument * horizonIndicator;
+  FGInstrument * turnCoordinator;
+  FGInstrument * rpmIndicator;
+  FGInstrument * airspeedIndicator;
+  FGInstrument * verticalSpeedIndicator;
+  FGInstrument * altimeter;
+  FGInstrument * altimeter2;
 };
 
+
+/**
+ * Abstract base class for all panel instruments.
+ */
 class FGInstrument{
-    friend class FGPanel;
-    
-    protected:
-        float XPos, YPos;
-        
-    public:
-        FGInstrument(void){
-        }
-        
-        virtual ~FGInstrument(void){}
-        
-        virtual void Init(void) = 0;
-        virtual void Render(void) = 0;
+
+public:
+  FGInstrument (void) {}
+  virtual ~FGInstrument (void) {}
+  virtual void Init(void) = 0;
+  virtual void Render(void) = 0;
+
+protected:
+  float XPos;
+  float YPos;
 };
 
-class FGHorizon : public FGInstrument {
-    private:
-        float texXPos;
-        float texYPos;
-        float radius;
-        float bottom;   // tell the program the offset between midpoint and bottom 
-        float top;      // guess what ;-)
-        float vertices[180][2];
-        float normals[180][3];
-        float texCoord[180][2];
+
+/**
+ * Instrument: the artificial horizon.
+ */
+class FGHorizon : public FGInstrument 
+{
+
+public:
+  FGHorizon (float inXPos, float inYPos);
+  virtual ~FGHorizon (void);
+  virtual void Init (void);
+  virtual void Render (void);
         
-    public:
-        FGHorizon(void){
-            XPos = 0.0; YPos = 0.0;
-            Init();
-        }
-        
-        FGHorizon(float inXPos, float inYPos){
-            XPos = inXPos; YPos = inYPos;
-            Init();
-        }
-        
-        virtual void Init(void);
-        virtual void Render(void);
-        
+private:
+  float texXPos;
+  float texYPos;
+  float radius;
+  float bottom;   // tell the program the offset between midpoint and bottom 
+  float top;      // guess what ;-)
+  float vertices[180][2];
+  float normals[180][3];
+  float texCoord[180][2];
 };
 
-class FGTurnCoordinator : public FGInstrument {
-    private:
-        float PlaneTexXPos;
-        float PlaneTexYPos;
-        float alpha;
-        float PlaneAlpha;
-        float alphahist[2];
-        float rollhist[2];
-        float BallXPos;
-        float BallYPos;
-        float BallTexXPos;
-        float BallTexYPos;
-        float BallRadius;
-        GLfloat vertices[72];
-        
-    public:
-        FGTurnCoordinator(void){
-            XPos = 0.0; YPos = 0.0;
-            Init();
-        }
-        
-        FGTurnCoordinator(float inXPos, float inYPos){
-            XPos = inXPos; YPos = inYPos;
-            Init();
-        }   
-        
-        virtual void Init (void);
-        virtual void Render(void);
-        
+
+/**
+ * Instrument: the turn co-ordinator.
+ */
+class FGTurnCoordinator : public FGInstrument 
+{
+
+public:
+  FGTurnCoordinator (float inXPos, float inYPos);
+  virtual FGTurnCoordinator::~FGTurnCoordinator (void);
+  virtual void Init (void);
+  virtual void Render(void);
+  
+private:
+  float PlaneTexXPos;
+  float PlaneTexYPos;
+  float alpha;
+  float PlaneAlpha;
+  float alphahist[2];
+  float rollhist[2];
+  float BallXPos;
+  float BallYPos;
+  float BallTexXPos;
+  float BallTexYPos;
+  float BallRadius;
+  GLfloat vertices[72];
+  static GLfloat wingArea[];
+  static GLfloat elevatorArea[];
+  static GLfloat rudderArea[];
 };
 
-class FGRpmGauge : public FGInstrument {
-    private:
-        GLuint list;
-        
-    public:
-        FGRpmGauge(void){
-            XPos = 0.0; YPos = 0.0;
-            Init();
-        }
-        
-        FGRpmGauge(float inXPos, float inYPos){
-            XPos = inXPos; YPos = inYPos;
-            Init();
-        }   
-        
-        virtual void Init(void);
-        virtual void Render(void);
+
+/**
+ * Abstract base class for gauges with needles and textured backgrounds.
+ *
+ * The airspeed indicator, vertical speed indicator, altimeter, and RPM 
+ * gauge are all derived from this class.
+ */
+class FGTexInstrument : public FGInstrument 
+{
+public:
+  FGTexInstrument (void);
+  virtual ~FGTexInstrument ();
+  virtual void Init(void);
+  virtual void Render(void);
+  
+protected:
+  virtual void CreatePointer(void);
+  virtual void UpdatePointer(void);
+  virtual double getValue () const = 0;
+
+  float radius;
+  float length;
+  float width;
+  float angle;
+  float tape[2];
+  float value1;
+  float value2;
+  float alpha1;
+  float alpha2;
+  float textureXPos;
+  float textureYPos;
+  GLfloat vertices[20];
 };
 
-// temporary class until I get the software-only routines for the 
-// instruments run
 
-class FGTexInstrument : public FGInstrument {
-    
-    private:
-        float radius;
-        float length;
-        float width;
-        float angle;
-        float tape[2];
-        float value1;
-        float value2;
-        float alpha1;
-        float alpha2;
-        float teXpos;
-        float texYpos;
-        int variable;
-        GLfloat vertices[20];
-        
-    public:
-        FGTexInstrument(void){
-            XPos = 0.0; YPos = 0.0;
-            Init();
-        }
-        
-        FGTexInstrument(float inXPos, float inYPos, float inradius,                                     float inlength, float inwidth, float inangle,                                   float invalue1, float invalue2, float inalpha1,                                 float inalpha2, float intexXPos, float intexYPos,                               int invariable){
-            
-            XPos = inXPos; YPos = inYPos;
-            radius = inradius; angle = inangle;
-            length = inlength; width = inwidth;
-            value1 = invalue1; value2 = invalue2;
-            alpha1 = inalpha1; alpha2 = inalpha2;
-            teXpos = intexXPos; texYpos = intexYPos;
-            variable = invariable; 
-            Init();
-        }
-        
-        void CreatePointer(void);
-        void UpdatePointer(void);
-        
-        void Init(void);
-        void Render(void);
+/**
+ * Instrument: the airspeed indicator.
+ */
+class FGAirspeedIndicator : public FGTexInstrument
+{
+public:
+  FGAirspeedIndicator (int x, int y);
+  virtual ~FGAirspeedIndicator ();
+
+protected:
+  double getValue () const;
 };
 
-typedef struct{
-    float XPos;
-    float YPos;
-    float radius;
-    float length;
-    float width;
-    float angle;
-    float tape[2];
-    float value1;
-    float value2;
-    float alpha1;
-    float alpha2;
-    float teXpos;
-    float texYpos;
-    int variable;
-    GLfloat vertices[20];
-}Pointer;
 
+/**
+ * Instrument: the vertical speed indicator.
+ */
+class FGVerticalSpeedIndicator : public FGTexInstrument
+{
+public:
+  FGVerticalSpeedIndicator (int x, int y);
+  virtual ~FGVerticalSpeedIndicator ();
+
+protected:
+  double getValue () const;
+};
+
+
+/**
+ * Instrument: the altimeter (big hand?)
+ */
+class FGAltimeter : public FGTexInstrument
+{
+public:
+  FGAltimeter (int x, int y);
+  virtual ~FGAltimeter ();
+
+protected:
+  double getValue () const;
+};
+
+
+/**
+ * Instrument: the altimeter (little hand?)
+ */
+class FGAltimeter2 : public FGTexInstrument
+{
+public:
+  FGAltimeter2 (int x, int y);
+  virtual ~FGAltimeter2 ();
+
+protected:
+  double getValue () const;
+};
+
+
+/**
+ * Instrument: the RPM gauge (actually manifold pressure right now).
+ */
+class FGRPMIndicator : public FGTexInstrument
+{
+public:
+  FGRPMIndicator (int x, int y);
+  virtual ~FGRPMIndicator ();
+
+protected:
+  double getValue () const;
+};
+
+
+				// FIXME: move to FGPanel, somehow
 void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,                                  GLfloat texYPos, GLfloat XPos, GLfloat YPos,                                    int Texid, float ScaleFactor);
-void DrawScale(float XPos, float YPos, float InnerRadius, float OuterRadius,                   float alpha1, float alpha2, int steps, float LineWidth,                       float red, float green, float blue, bool filled);
-void DrawBeechcraftLogo(float XPos, float YPos, float Width, float Height);
-
-void PrintMatrix( void);
 
 #endif // _PANEL_HXX 
