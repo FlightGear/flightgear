@@ -75,6 +75,7 @@ void FGNewMat::build_ssg_state( const string& path,
     tex_file.append( texture_name );
 
     state = new ssgStateSelector(2);
+    state->ref();
 
     textured = new ssgSimpleState();
     textured->ref();
@@ -133,6 +134,8 @@ void FGNewMat::build_ssg_state( const string& path,
 
 void FGNewMat::set_ssg_state( ssgSimpleState *s ) {
     state = new ssgStateSelector(2);
+    state->ref();
+
     textured = s;
 
     nontextured = new ssgSimpleState();
