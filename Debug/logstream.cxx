@@ -37,14 +37,14 @@ logbuf::logbuf()
 logbuf::~logbuf()
 {
     if ( sbuf )
-	sbuf->sync();
+	    sync();
 }
 
 void
 logbuf::set_sb( streambuf* sb )
 {
     if ( sbuf )
-	sbuf->sync();
+	    sync();
 
     sbuf = sb;
 }
@@ -63,6 +63,9 @@ logstream::setLogLevels( fgDebugClass c, fgDebugPriority p )
 }
 
 // $Log$
+// Revision 1.2  1999/01/19 20:53:34  curt
+// Portability updates by Bernie Bright.
+//
 // Revision 1.1  1998/11/06 21:20:41  curt
 // Initial revision.
 //

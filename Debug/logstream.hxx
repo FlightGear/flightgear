@@ -33,13 +33,19 @@
 
 #ifdef FG_HAVE_STD_INCLUDES
 # include <streambuf>
-# include <ostream>
+# include <iostream>
+//# include <ostream>
 #else
 # include <iostream.h>
 # include "Include/fg_traits.hxx"
 #endif
 
 #include "debug_types.h"
+
+FG_USING_STD(streambuf);
+FG_USING_STD(ostream);
+FG_USING_STD(cerr);
+FG_USING_STD(endl);
 
 //
 // TODO:
@@ -83,7 +89,7 @@ public:
 
 protected:
 
-    int sync() { return sbuf->sync(); }
+    inline virtual int sync();
     int_type overflow( int ch );
 //     int xsputn( const char* s, istreamsize n );
 
@@ -102,6 +108,16 @@ private:
     logbuf( const logbuf& );
     void operator= ( const logbuf& );
 };
+
+inline int
+logbuf::sync()
+{
+#ifdef FG_HAVE_STD_INCLUDES
+	return sbuf->pubsync();
+#else
+	return sbuf->sync();
+#endif
+}
 
 inline void
 logbuf::set_log_state( fgDebugClass c, fgDebugPriority p )
@@ -195,6 +211,9 @@ fglog()
 #endif // _LOGSTREAM_H
 
 // $Log$
+// Revision 1.3  1999/01/19 20:53:35  curt
+// Portability updates by Bernie Bright.
+//
 // Revision 1.2  1998/11/07 19:07:02  curt
 // Enable release builds using the --without-logging option to the configure
 // script.  Also a couple log message cleanups, plus some C to C++ comment
