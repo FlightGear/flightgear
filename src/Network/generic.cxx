@@ -79,9 +79,9 @@ FGGeneric::FGGeneric(string& config) {
 
         if ( line_sep_string == "newline" )
                 line_separator = '\n';
-        if ( line_sep_string == "tab" )
+        else if ( line_sep_string == "tab" )
                 line_separator = '\t';
-        if ( line_sep_string == "space" )
+        else if ( line_sep_string == "space" )
                 line_separator = ' ';
         else if ( line_sep_string == "formfeed" )
                 line_separator = '\f';
