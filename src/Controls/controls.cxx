@@ -27,6 +27,8 @@
 #include <Main/fg_props.hxx>
 
 
+static const int MAX_NAME_LEN = 128;
+
 
 ////////////////////////////////////////////////////////////////////////
 // Inline utility methods.
@@ -273,7 +275,7 @@ FGControls::bind ()
   fgSetArchivable("/controls/engines/throttle_idle");
 
   for (index = 0; index < MAX_ENGINES; index++) {
-    char name[32];
+    char name[MAX_NAME_LEN];
     sprintf(name, "/controls/engines/engine[%d]/throttle", index);
     fgTie(name, this, index,
 	  &FGControls::get_throttle, &FGControls::set_throttle);
@@ -376,7 +378,7 @@ FGControls::bind ()
   fgSetArchivable("/controls/fuel/dump-valve");
 
   for (index = 0; index < MAX_TANKS; index++) {
-    char name[32];
+    char name[MAX_NAME_LEN];
     sprintf(name, "/controls/fuel/tank[%d]/fuel_selector", index);
     fgTie(name, this, index,
 	  &FGControls::get_fuel_selector, 
@@ -394,7 +396,7 @@ FGControls::bind ()
     fgSetArchivable(name);  
 
     for (i = 0; i < MAX_BOOSTPUMPS; i++) {
-      char name[32];
+      char name[MAX_NAME_LEN];
       sprintf(name, 
          "/controls/fuel/tank[%d]/boost-pump[%d]", index, i);
       fgTie(name, this, index * 2 + i,
@@ -432,7 +434,7 @@ FGControls::bind ()
   fgSetArchivable("/controls/gear/tailwheel-lock");
 
   for (index = 0; index < MAX_WHEELS; index++) {
-      char name[32];
+      char name[MAX_NAME_LEN];
       sprintf(name, "/controls/gear/wheel[%d]/brake", index);
       fgTie(name, this, index,
             &FGControls::get_brake, &FGControls::set_brake);
@@ -463,7 +465,7 @@ FGControls::bind ()
   fgSetArchivable("/controls/anti-ice/window-heat");
 
   for (index = 0; index < MAX_ENGINES; index++) {
-      char name[32];
+      char name[MAX_NAME_LEN];
       sprintf(name, "/controls/anti-ice/engine[%d]/carb-heat", index);  
       fgTie(name, this, index,
 	&FGControls::get_carb_heat, &FGControls::set_carb_heat);
@@ -477,7 +479,7 @@ FGControls::bind ()
 
   // hydraulics
   for (index = 0; index < MAX_HYD_SYSTEMS; index++) {
-      char name[32];
+      char name[MAX_NAME_LEN];
       sprintf(name, 
          "/controls/hydraulic/system[%d]/engine-pump", index);  
       fgTie(name, this, index,
@@ -509,7 +511,7 @@ FGControls::bind ()
   fgSetArchivable("/controls/electric/APU-generator");
 
   for (index = 0; index < MAX_ENGINES; index++) {
-      char name[32];
+      char name[MAX_NAME_LEN];
       sprintf(name, 
          "/controls/electric/engine[%d]/generator", index);  
       fgTie(name, this, index,
@@ -531,7 +533,7 @@ FGControls::bind ()
   fgSetArchivable("/controls/pneumatic/APU-bleed");
 
   for (index = 0; index < MAX_ENGINES; index++) {
-      char name[32];
+      char name[MAX_NAME_LEN];
       sprintf(name, 
          "/controls/pneumatic/engine[%d]/bleed", index);  
       fgTie(name, this, index,
@@ -555,7 +557,7 @@ FGControls::bind ()
   fgSetArchivable("/controls/pressurization/outflow-valve");
 
   for (index = 0; index < MAX_PACKS; index++) {
-      char name[32];
+      char name[MAX_NAME_LEN];
       sprintf(name, "/controls/pressurization/pack[%d]/pack-on", index);  
       fgTie(name, this, index,
 	&FGControls::get_pack_on, &FGControls::set_pack_on);
@@ -623,7 +625,7 @@ FGControls::bind ()
   fgSetArchivable("/controls/armament/release-all");  
 
   for (index = 0; index < MAX_STATIONS; index++) {
-      char name[32];
+      char name[MAX_NAME_LEN];
       sprintf(name, "/controls/armament/station[%d]/stick-size", index);  
       fgTie(name, this, index,
 	&FGControls::get_stick_size, &FGControls::set_stick_size);
@@ -676,7 +678,7 @@ FGControls::bind ()
 
   // autoflight
   for (index = 0; index < MAX_AUTOPILOTS; index++) {
-      char name[32];
+      char name[MAX_NAME_LEN];
       sprintf(name, 
          "/controls/autoflight/autopilot[%d]/engage", index);  
       fgTie(name, this, index,
@@ -756,7 +758,7 @@ void FGControls::unbind ()
   fgUntie("/controls/flight/wing-fold");  
   fgUntie("/controls/flight/drag-chute");
   for (index = 0; index < MAX_ENGINES; index++) {
-    char name[32];
+    char name[MAX_NAME_LEN];
     sprintf(name, "/controls/engines/engine[%d]/throttle", index);
     fgUntie(name);
     sprintf(name, "/controls/engines/engine[%d]/starter", index);
@@ -798,7 +800,7 @@ void FGControls::unbind ()
   }
   fgUntie("/controls/fuel/dump-valve");
   for (index = 0; index < MAX_TANKS; index++) {
-    char name[32];
+    char name[MAX_NAME_LEN];
     sprintf(name, "/controls/fuel/tank[%d]/fuel_selector", index);
     fgUntie(name);
     sprintf(name, "/controls/fuel/tank[%d]/to_engine", index);
@@ -817,7 +819,7 @@ void FGControls::unbind ()
   fgUntie("/controls/gear/tailhook");
   fgUntie("/controls/gear/tailwheel-lock");
   for (index = 0; index < MAX_WHEELS; index++) {
-    char name[32];
+    char name[MAX_NAME_LEN];
     sprintf(name, "/controls/gear/wheel[%d]/brakes", index);
     fgUntie(name);
     sprintf(name, 
@@ -829,14 +831,14 @@ void FGControls::unbind ()
   fgUntie("/controls/anti-ice/wiper");
   fgUntie("/controls/anti-ice/window-heat");
   for (index = 0; index < MAX_ENGINES; index++) {
-    char name[32];
+    char name[MAX_NAME_LEN];
     sprintf(name, "/controls/anti-ice/engine[%d]/carb-heat", index);
     fgUntie(name);
     sprintf(name, "/controls/anti-ice/engine[%d]/inlet-heat", index);
     fgUntie(name);
   }
   for (index = 0; index < MAX_HYD_SYSTEMS; index++) {
-    char name[32];
+    char name[MAX_NAME_LEN];
     sprintf(name, 
        "/controls/hydraulic/system[%d]/engine-pump", index);
     fgUntie(name);
@@ -848,7 +850,7 @@ void FGControls::unbind ()
   fgUntie("/controls/electric/external-power");
   fgUntie("/controls/electric/APU-generator");    
   for (index = 0; index < MAX_ENGINES; index++) {
-    char name[32];
+    char name[MAX_NAME_LEN];
      sprintf(name, 
        "/controls/electric/engine[%d]/generator", index);
     fgUntie(name);
@@ -858,7 +860,7 @@ void FGControls::unbind ()
   }
   fgUntie("/controls/pneumatic/APU-bleed");
   for (index = 0; index < MAX_ENGINES; index++) {
-    char name[32];
+    char name[MAX_NAME_LEN];
      sprintf(name, 
        "/controls/pneumatic/engine[%d]/bleed", index);
     fgUntie(name);
@@ -866,7 +868,7 @@ void FGControls::unbind ()
   fgUntie("/controls/pressurization/mode");
   fgUntie("/controls/pressurization/dump");
   for (index = 0; index < MAX_PACKS; index++) {
-    char name[32];
+    char name[MAX_NAME_LEN];
     sprintf(name, 
        "/controls/pressurization/pack[%d]/pack-on", index);
     fgUntie(name);
@@ -887,7 +889,7 @@ void FGControls::unbind ()
   fgUntie("/controls/armament/station-select");  
   fgUntie("/controls/armament/release-all");  
   for (index = 0; index < MAX_STATIONS; index++) {
-    char name[32];
+    char name[MAX_NAME_LEN];
     sprintf(name, 
        "/controls/armament/station[%d]/stick-size", index);
     fgUntie(name);
@@ -908,7 +910,7 @@ void FGControls::unbind ()
   fgUntie("/controls/APU/off-start-run");  
   fgUntie("/controls/APU/fire-switch");  
   for (index = 0; index < MAX_AUTOPILOTS; index++) {
-    char name[32];
+    char name[MAX_NAME_LEN];
     sprintf(name, 
        "/controls/autoflight/autopilot[%d]/engage", index);
     fgUntie(name);
