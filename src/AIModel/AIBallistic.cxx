@@ -33,7 +33,8 @@ FGAIBallistic::FGAIBallistic(FGAIManager* mgr) {
     _otype = otBallistic;
     drag_area = 0.007;
     life_timer = 0.0;
-}
+    gravity = 32;
+    }
 
 FGAIBallistic::~FGAIBallistic() {
 }
@@ -41,7 +42,7 @@ FGAIBallistic::~FGAIBallistic() {
 
 bool FGAIBallistic::init() {
    FGAIBase::init();
-   aero_stabilized =  true;
+   aero_stabilized = true;
    hdg = azimuth;
    pitch = elevation;
    return true;
@@ -86,6 +87,11 @@ void FGAIBallistic::setLife(double seconds) {
    life = seconds;
 }
 
+void FGAIBallistic::setBuoyancy(double fpss) {
+   buoyancy = fpss;
+}
+
+
 void FGAIBallistic::Run(double dt) {
 
    life_timer += dt;
@@ -110,12 +116,12 @@ void FGAIBallistic::Run(double dt) {
    pos.setlat( pos.lat() + speed_north_deg_sec * dt);
    pos.setlon( pos.lon() + speed_east_deg_sec * dt); 
 
+   // adjust vertical speed for acceleration of gravity
+   vs -= (gravity - buoyancy) * dt;
+   
    // adjust altitude (feet)
    altitude += vs * dt;
    pos.setelev(altitude * SG_FEET_TO_METER); 
-
-   // adjust vertical speed for acceleration of gravity
-   vs -= 32.17 * dt;
 
    // recalculate pitch (velocity vector) if aerostabilized
    if (aero_stabilized) pitch = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
@@ -127,4 +133,3 @@ void FGAIBallistic::Run(double dt) {
    if (altitude < -1000.0) setDie(true);
 
 }
-

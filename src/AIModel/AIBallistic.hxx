@@ -41,7 +41,8 @@ public:
     void setStabilization( bool val );
     void setDragArea( double a );
     void setLife( double seconds );
-
+    void setBuoyancy( double fps2 );
+	
 private:
 
     double azimuth;         // degrees true
@@ -50,6 +51,9 @@ private:
     bool aero_stabilized;   // if true, object will point where it's going
     double drag_area;       // equivalent drag area in ft2
     double life_timer;      // seconds
+    double gravity;         // fps2
+    double buoyancy;        // fps2
+		
     void Run(double dt);
 };
 

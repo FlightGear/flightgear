@@ -32,7 +32,7 @@ public:
 
   typedef struct {
    string callsign;
-   string aitype;       // can be aircraft, ship, storm, thermal
+   string aitype;       // can be aircraft, ship, storm, thermal, ballistic, smoke
    string aircraft_class;
    string model_path;
    string flightplan;
@@ -50,6 +50,7 @@ public:
    double diameter;     // used by thermal objects
    double eda;          // used by ballistic objects
    double life;         // life span in seconds
+   double buoyancy;     // acceleration in ft per sec2
   } entry;
 
    FGAIScenario(string filename);
