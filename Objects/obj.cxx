@@ -119,6 +119,8 @@ int fgObjLoad( const string& path, fgTILE *t) {
     double (*nodes)[3];
     fgPoint3d *center;
 
+    // printf("loading %s\n", path.c_str() );
+
     // Attempt to open "path.gz" or "path"
     fg_gzifstream in( path );
     if ( ! in )
@@ -144,13 +146,18 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
     StopWatch stopwatch;
     stopwatch.start();
+
+    // ignore initial comments and blank lines. (priming the pump)
+    in.eat_comments();
+
     while ( ! in.eof() )
     {
-	// ignore comments and blank lines.
-	in.eat_comments();
 
 	string token;
 	in.stream() >> token;
+
+	// printf("token = %s\n", token.c_str() );
+
 	if ( token == "gbs" )
 	{
 	    // reference point (center offset)
@@ -202,6 +209,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		// close out the previous structure and start the next
 		xglEnd();
 		xglEndList();
+		// printf("xglEnd(); xglEndList();\n");
 
 		// update fragment
 		fragment.display_list = display_list;
@@ -212,8 +220,11 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		in_fragment = 1;
 	    }
 
+	    // printf("start of fragment (usemtl)\n");
+
 	    display_list = xglGenLists(1);
 	    xglNewList(display_list, GL_COMPILE);
+	    // printf("xglGenLists(); xglNewList();\n");
 	    in_faces = 0;
 
 	    // reset the existing face list
@@ -253,6 +264,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "(t) = ");
 
 	    xglBegin(GL_TRIANGLE_STRIP);
+	    // printf("xglBegin(tristrip) %d %d %d\n", n1, n2, n3);
 
 	    odd = 1; 
 	    scale = 1.0;
@@ -279,7 +291,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
                 pp = calc_tex_coords(nodes[n3], center);
                 xglTexCoord2f(pp.lon, pp.lat);
 		// xglVertex3d(t->nodes[n3][0],t->nodes[n3][1],t->nodes[n3][2]);
-		xglVertex3dv(nodes[n3]);		
+		xglVertex3dv(nodes[n3]);
 	    } else {
 		// Shading model is "GL_FLAT" so calculate per face
 		// normals on the fly.
@@ -308,10 +320,26 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		// xglVertex3d(t->nodes[n3][0],t->nodes[n3][1],t->nodes[n3][2]);
 		xglVertex3dv(nodes[n3]);		
 	    }
+	    // printf("some normals, texcoords, and vertices\n");
 
 	    odd = 1 - odd;
 	    last1 = n2;
 	    last2 = n3;
+
+	    // There can be three or four values 
+	    char c;
+	    while ( in.get(c) )
+	    {
+		if ( c == '\n' )
+		    break; // only the one
+
+		if ( isdigit(c) )
+		{
+		    in.putback(c);
+		    in.stream() >> n4;
+		    break;
+		}
+	    }
 
 	    if ( n4 > 0 ) {
 		fragment.add_face(n3, n2, n4);
@@ -334,12 +362,14 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		odd = 1 - odd;
 		last1 = n3;
 		last2 = n4;
+		// printf("a normal, texcoord, and vertex (4th)\n");
 	    }
 	} else if ( token[0] == 'f' ) {
 	    // unoptimized face
 
 	    if ( !in_faces ) {
 		xglBegin(GL_TRIANGLES);
+		// printf("xglBegin(triangles)\n");
 		in_faces = 1;
 	    }
 
@@ -367,6 +397,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
             xglTexCoord2f(pp.lon, pp.lat);
 	    // xglVertex3d(t->nodes[n3][0], t->nodes[n3][1], t->nodes[n3][2]);
 	    xglVertex3dv(nodes[n3]);
+	    // printf("some normals, texcoords, and vertices (tris)\n");
 	} else if ( token[0] == 'q' ) {
 	    // continue a triangle strip
 	    n1 = n2 = 0;
@@ -400,7 +431,6 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	    if ( shading ) {
 		// Shading model is "GL_SMOOTH"
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
-		xglNormal3dv(normal);
 	    } else {
 		// Shading model is "GL_FLAT"
 		if ( odd ) {
@@ -411,14 +441,15 @@ int fgObjLoad( const string& path, fgTILE *t) {
 				approx_normal);
 		}
 		MAT3_SCALE_VEC(normal, approx_normal, scale);
-		xglNormal3dv(normal);
 	    }
+	    xglNormal3dv(normal);
 
             pp = calc_tex_coords(nodes[n1], center);
             xglTexCoord2f(pp.lon, pp.lat);
 	    // xglVertex3d(t->nodes[n1][0], t->nodes[n1][1], t->nodes[n1][2]);
 	    xglVertex3dv(nodes[n1]);
-    
+	    // printf("a normal, texcoord, and vertex (4th)\n");
+   
 	    odd = 1 - odd;
 	    last1 = last2;
 	    last2 = n1;
@@ -435,7 +466,6 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		if ( shading ) {
 		    // Shading model is "GL_SMOOTH"
 		    MAT3_SCALE_VEC(normal, normals[n2], scale);
-		    xglNormal3dv(normal);
 		} else {
 		    // Shading model is "GL_FLAT"
 		    if ( odd ) {
@@ -446,13 +476,14 @@ int fgObjLoad( const string& path, fgTILE *t) {
 				    nodes[n2], approx_normal);
 		    }
 		    MAT3_SCALE_VEC(normal, approx_normal, scale);
-		    xglNormal3dv(normal);
 		}
-
+		xglNormal3dv(normal);
+		
 		pp = calc_tex_coords(nodes[n2], center);
 		xglTexCoord2f(pp.lon, pp.lat);
 		// xglVertex3d(t->nodes[n2][0],t->nodes[n2][1],t->nodes[n2][2]);
 		xglVertex3dv(nodes[n2]);		
+		// printf("a normal, texcoord, and vertex (4th)\n");
 
 		odd = 1 -odd;
 		last1 = last2;
@@ -462,15 +493,17 @@ int fgObjLoad( const string& path, fgTILE *t) {
 	    fgPrintf( FG_TERRAIN, FG_WARN, "Unknown token in %s = %s\n", 
 		      path.c_str(), token.c_str() );
 	}
+
+	// eat comments and blank lines before start of while loop so
+	// if we are done with useful input it is noticed before hand.
+	in.eat_comments();
     }
-    stopwatch.stop();
-    fgPrintf( FG_TERRAIN, FG_INFO, "Loaded %s in %f seconds\n",
-	      path.c_str(), stopwatch.elapsedSeconds() );
 
     if ( in_fragment ) {
 	// close out the previous structure and start the next
 	xglEnd();
 	xglEndList();
+	// printf("xglEnd(); xglEndList();\n");
 
 	// update fragment
 	fragment.display_list = display_list;
@@ -494,11 +527,22 @@ int fgObjLoad( const string& path, fgTILE *t) {
     xglEnd();
     */   
 
+    stopwatch.stop();
+    fgPrintf( FG_TERRAIN, FG_INFO, "Loaded %s in %f seconds\n",
+	      path.c_str(), stopwatch.elapsedSeconds() );
+
+    // printf("end of tile\n");
+
     return(1);
 }
 
 
 // $Log$
+// Revision 1.3  1998/09/03 21:27:03  curt
+// Fixed a serious bug caused by not-quite-correct comment/white space eating
+// which resulted in mismatched glBegin() glEnd() pairs, incorrect display lists,
+// and ugly display artifacts.
+//
 // Revision 1.2  1998/09/01 19:03:09  curt
 // Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
 //  - The new classes in libmisc.tgz define a stream interface into zlib.
