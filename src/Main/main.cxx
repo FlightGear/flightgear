@@ -1209,7 +1209,7 @@ static void fgMainLoop( void ) {
     if ( global_multi_loop > 0) {
         // first run the flight model each frame until it is intialized
         // then continue running each frame only after initial scenery load is complete.
-        if (!cur_fdm_state->get_inited() or fgGetBool("sim/sceneryloaded")) {
+        if (!cur_fdm_state->get_inited() || fgGetBool("sim/sceneryloaded")) {
             fgUpdateTimeDepCalcs();
         } else {
             // only during scenery load
@@ -1339,7 +1339,7 @@ static void fgMainLoop( void ) {
 
     // END Tile Manager udpates
 
-    if (!fgGetBool("sim/sceneryloaded") and globals->get_tile_mgr()->all_queues_empty() and cur_fdm_state->get_inited()) {
+    if (!fgGetBool("sim/sceneryloaded") && globals->get_tile_mgr()->all_queues_empty() && cur_fdm_state->get_inited()) {
         fgSetBool("sim/sceneryloaded",true);
         // probably not efficient way to popup msg,  but is done only during scenery load
         NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
@@ -1512,7 +1512,7 @@ void fgReshape( int width, int height ) {
 // which happens in the sound manager destructor.
 void fgExitCleanup() {
     delete globals;
-    fgOSExit(0);
+//    fgOSExit(0);
 }
 
 
