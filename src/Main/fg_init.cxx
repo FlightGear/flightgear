@@ -103,6 +103,7 @@
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
+#include "fg_commands.hxx"
 #include "options.hxx"
 #include "globals.hxx"
 #include "bfi.hxx"
@@ -670,6 +671,12 @@ bool fgInitSubsystems( void ) {
     SGPath p_fix( globals->get_fg_root() );
     p_fix.append( "Navaids/default.fix" );
     current_fixlist->init( p_fix );
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the built-in commands.
+    ////////////////////////////////////////////////////////////////////
+    fgInitCommands();
 
 
     ////////////////////////////////////////////////////////////////////
