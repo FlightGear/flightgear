@@ -33,6 +33,7 @@
 
 #include <list>
 #include <Include/fg_stl_config.h>
+#include <Scenery/scenery.hxx>
 
 #ifdef NEEDNAMESPACESTD
 using namespace std;
@@ -163,6 +164,17 @@ static double get_sideslip( void )
         return( FG_Beta );
 }
 
+static double fgAPget_agl( void )
+{
+        fgFLIGHT *f;
+        double agl;
+
+        f = current_aircraft.flight;
+        agl = FG_Altitude * FEET_TO_METER - scenery.cur_elev;
+
+        return( agl );
+}
+
 // End of copied section.  ( thanks for the wheel :-)
 
 // Local Prototype section
@@ -285,33 +297,52 @@ int fgAPRun( void )
     if ( APData->altitude_hold == 1 ) {
 	double error, size;
 	double prop_error, int_error;
-	double prop_adj, int_adj;
+	double prop_adj, int_adj, total_adj;
 
-	error = fgAPget_climb();
+	// normal altitude hold
+	// APData->TargetClimbRate = 
+	//    (APData->TargetAltitude - fgAPget_altitude()) * 8.0;
+
+	// brain dead ground hugging with no look ahead
+	APData->TargetClimbRate = 
+	    ( 500 - fgAPget_agl() ) * 8.0;
+
+	if ( APData->TargetClimbRate > 200.0 ) {
+	    APData->TargetClimbRate = 200.0;
+	}
+	if ( APData->TargetClimbRate < -200.0 ) {
+	    APData->TargetClimbRate = -200.0;
+	}
+
+	error = fgAPget_climb() - APData->TargetClimbRate;
 
 	// push current error onto queue and add into accumulator
 	alt_error_queue.push_back(error);
 	APData->alt_error_accum += error;
 
-	// if queue size larger than 20 ... pop front and subtract
+	// if queue size larger than 60 ... pop front and subtract
 	// from accumulator
 	size = alt_error_queue.size();
-	if ( size > 20 ) {
+	if ( size > 300 ) {
 	    APData->alt_error_accum -= alt_error_queue.front();
 	    alt_error_queue.pop_front();
 	    size--;
 	}
 
 	// calculate integral error, and adjustment amount
-	int_error = APData->alt_error_accum / size;
-	printf("int_error = %.2f\n", int_error);
+	int_error = APData->alt_error_accum / 10;
+	printf("error = %.2f  int_error = %.2f\n", error, int_error);
 	int_adj = int_error / 2000.0;
 	
 	// caclulate proportional error
-	prop_error = fgAPget_climb();
-	prop_adj = prop_error / 2000.0;
+	prop_error = error;
+	prop_adj = prop_error / 1000.0;
 
-	fgElevSet( int_adj );
+	total_adj = 0.9 * prop_adj + 0.1 * int_adj;
+	if ( total_adj >  0.5 ) { total_adj =  0.5; }
+	if ( total_adj < -0.5 ) { total_adj = -0.5; }
+
+	fgElevSet( total_adj );
     }
 
     /*
@@ -399,6 +430,8 @@ void fgAPToggleAltitude( void )
 	// turn on altitude hold, lock at current altitude
 	APData->altitude_hold = 1;
 	APData->TargetAltitude = fgAPget_altitude();
+	APData->alt_error_accum = 0.0;
+	alt_error_queue.erase( alt_error_queue.begin(), alt_error_queue.end() );
     }
 
     fgPrintf( FG_COCKPIT, FG_INFO, " fgAPSetAltitude: (%d) %.2f\n",

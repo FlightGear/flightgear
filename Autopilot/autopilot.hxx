@@ -44,6 +44,7 @@ typedef struct {
 
     double TargetHeading;     // the heading the AP should steer to.
     double TargetAltitude;    // altitude to hold
+    double TargetClimbRate;   // climb rate to shoot for
     double alt_error_accum;   // altitude error accumulator
 
     double TargetSlope; // the glide slope hold value
