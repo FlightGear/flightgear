@@ -87,8 +87,18 @@ FGJSBsim::FGJSBsim( double dt )
     Aerodynamics    = fdmex->GetAerodynamics();
     GroundReactions = fdmex->GetGroundReactions();  
   
-    
+#ifdef FG_WEATHERCM
     Atmosphere->UseInternal();
+#else
+    if (fgGetBool("/environment/params/control-fdm-atmosphere")) {
+      Atmosphere->UseExternal();
+      Atmosphere->SetExTemperature(get_Static_temperature());
+      Atmosphere->SetExPressure(get_Static_pressure());
+      Atmosphere->SetExDensity(get_Density());
+    } else {
+      Atmosphere->UseInternal();
+    }
+#endif
     
     fgic=new FGInitialCondition(fdmex);
     needTrim=true;
@@ -697,31 +707,31 @@ void FGJSBsim::set_Gamma_vert_rad( double gamma) {
     needTrim=true;
 }
 
-void FGJSBsim::set_Static_pressure(double p) {
-    SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Static_pressure: " << p );
+// void FGJSBsim::set_Static_pressure(double p) {
+//     SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Static_pressure: " << p );
     
-    update_ic();
-    Atmosphere->SetExPressure(p);
-    if(Atmosphere->External() == true)
-      needTrim=true;
-}
+//     update_ic();
+//     Atmosphere->SetExPressure(p);
+//     if(Atmosphere->External() == true)
+//       needTrim=true;
+// }
 
-void FGJSBsim::set_Static_temperature(double T) {
-    SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Static_temperature: " << T );
+// void FGJSBsim::set_Static_temperature(double T) {
+//     SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Static_temperature: " << T );
     
-    Atmosphere->SetExTemperature(T);
-    if(Atmosphere->External() == true)
-      needTrim=true;
-}
+//     Atmosphere->SetExTemperature(T);
+//     if(Atmosphere->External() == true)
+//       needTrim=true;
+// }
  
 
-void FGJSBsim::set_Density(double rho) {
-    SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Density: " << rho );
+// void FGJSBsim::set_Density(double rho) {
+//     SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Density: " << rho );
     
-    Atmosphere->SetExDensity(rho);
-    if(Atmosphere->External() == true)
-      needTrim=true;
-}
+//     Atmosphere->SetExDensity(rho);
+//     if(Atmosphere->External() == true)
+//       needTrim=true;
+// }
   
 void FGJSBsim::set_Velocities_Local_Airmass (double wnorth, 
                          double weast, 

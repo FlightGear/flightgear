@@ -185,15 +185,15 @@ public:
     //@{
     /** Sets the atmospheric static pressure
         @param p pressure in psf */
-    void set_Static_pressure(double p);
+//     void set_Static_pressure(double p);
 
     /** Sets the atmospheric temperature
         @param T temperature in degrees rankine */
-    void set_Static_temperature(double T);
+//     void set_Static_temperature(double T);
 
     /** Sets the atmospheric density.
         @param rho air density slugs/cubic foot */
-    void set_Density(double rho);
+//     void set_Density(double rho);
 
     /** Sets the velocity of the local airmass for wind modeling.
         @param wnorth velocity north in fps
