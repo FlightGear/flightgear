@@ -236,10 +236,17 @@ private:
     char msg[32];
     float x, y;
 public:
+    // note to Norman from Curt.  You had two constructors here that
+    // have defaults values for all parameters.  So, if a constructor
+    // is called with no parameters, which is chosen?  For the second,
+    // I've removed the default value for x which fixes the problem.
+    // However, it might be best to just delete the second redundant
+    // constructor, and fix the constructor variable ordering
+    // throughout the rest of the code.
     fgText( char *c = NULL, float x = 0, float y =0 )
         : x(x), y(y) {strncpy(msg,c,32-1);}
 
-    fgText( float x = 0, float y = 0, char *c = NULL )
+    fgText( float x, float y = 0, char *c = NULL )
         : x(x), y(y) {strncpy(msg,c,32-1);}
 
     fgText( const fgText & image )
