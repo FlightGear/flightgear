@@ -1,4 +1,4 @@
-// fg_sound.hxx -- Sound class implementation
+// fg_sound.cxx -- Sound class implementation
 //
 // Started by Erik Hofman, February 2002
 // (Reuses some code from  fg_fx.cxx created by David Megginson)
@@ -38,14 +38,14 @@
 #include "fg_sound.hxx"
 
 
-// static double _fg_lin(double v)   { return v; };
-static double _fg_inv(double v)   { return (v == 0) ? 1e99 : 1/v; };
-static double _fg_abs(double v)   { return (v >= 0) ? v : -v; };
-static double _fg_sqrt(double v)  { return (v < 0) ? sqrt(-v) : sqrt(v); };
-static double _fg_log10(double v) { return (v < 1) ? 0 : log10(v); };
-static double _fg_log(double v)   { return (v < 1) ? 0 : log(v); };
-// static double _fg_sqr(double v)   { return pow(v, 2); };
-// static double _fg_pow3(double v)  { return pow(v, 3); };
+// static double _fg_lin(double v)   { return v; }
+static double _fg_inv(double v)   { return (v == 0) ? 1e99 : 1/v; }
+static double _fg_abs(double v)   { return (v >= 0) ? v : -v; }
+static double _fg_sqrt(double v)  { return (v < 0) ? sqrt(-v) : sqrt(v); }
+static double _fg_log10(double v) { return (v < 1) ? 0 : log10(v); }
+static double _fg_log(double v)   { return (v < 1) ? 0 : log(v); }
+// static double _fg_sqr(double v)   { return pow(v, 2); }
+// static double _fg_pow3(double v)  { return pow(v, 3); }
 
 static const struct {
 	char *name;
@@ -94,10 +94,10 @@ FGSound::init(SGPropertyNode *node)
    // set global sound properties
    //
    
-   _name = node->getStringValue("name");
+   _name = node->getStringValue("name", "");
    SG_LOG(SG_GENERAL, SG_INFO, "Loading sound information for: " << _name );
 
-   const char *mode_str = node->getStringValue("mode");
+   const char *mode_str = node->getStringValue("mode", "");
    if ( !strcmp(mode_str, "looped") ) {
        _mode = FGSound::LOOPED;
 
@@ -111,7 +111,7 @@ FGSound::init(SGPropertyNode *node)
          SG_LOG(SG_GENERAL,SG_INFO, "  Unknown sound mode, default to 'once'");
    }
 
-   _property = fgGetNode(node->getStringValue("property"), true);
+   _property = fgGetNode(node->getStringValue("property", ""), true);
    SGPropertyNode *condition = node->getChild("condition");
    if (condition != NULL)
       _condition = fgReadCondition(condition);
@@ -130,9 +130,9 @@ FGSound::init(SGPropertyNode *node)
       _snd_prop volume = {NULL, NULL, NULL, 1.0, 0.0, 0.0, 0.0, false};
 
       if (strcmp(kids[i]->getStringValue("property"), ""))
-         volume.prop = fgGetNode(kids[i]->getStringValue("property"), true);
+         volume.prop = fgGetNode(kids[i]->getStringValue("property", ""), true);
 
-      const char *intern_str = kids[i]->getStringValue("internal");
+      const char *intern_str = kids[i]->getStringValue("internal", "");
       if (!strcmp(intern_str, "dt_play"))
          volume.intern = &_dt_play;
       else if (!strcmp(intern_str, "dt_stop"))
@@ -140,13 +140,13 @@ FGSound::init(SGPropertyNode *node)
       else if (!strcmp(intern_str, "random"))
          volume.intern = &_random;
 
-      if ((volume.factor = kids[i]->getDoubleValue("factor")) != 0.0)
+      if ((volume.factor = kids[i]->getDoubleValue("factor", 1.0)) != 0.0)
          if (volume.factor < 0.0) {
             volume.factor = -volume.factor;
             volume.subtract = true;
          }
 
-      const char *type_str = kids[i]->getStringValue("type");
+      const char *type_str = kids[i]->getStringValue("type", "");
       if ( strcmp(type_str, "") ) {
 
          for (int j=0; __fg_snd_fn[j].fn; j++)
@@ -160,13 +160,13 @@ FGSound::init(SGPropertyNode *node)
                    "  Unknown volume type, default to 'lin'");
       }
 
-      volume.offset = kids[i]->getDoubleValue("offset");
+      volume.offset = kids[i]->getDoubleValue("offset", 0.0);
 
-      if ((volume.min = kids[i]->getDoubleValue("min")) < 0.0)
+      if ((volume.min = kids[i]->getDoubleValue("min", 0.0)) < 0.0)
          SG_LOG( SG_GENERAL, SG_WARN,
           "Volume minimum value below 0. Forced to 0.");
 
-      volume.max = kids[i]->getDoubleValue("max");
+      volume.max = kids[i]->getDoubleValue("max", 0.0);
       if (volume.max && (volume.max < volume.min) )
          SG_LOG(SG_GENERAL,SG_ALERT,
                 "  Volume maximum below minimum. Neglected.");
@@ -185,22 +185,22 @@ FGSound::init(SGPropertyNode *node)
    for (i = 0; (i < kids.size()) && (i < FGSound::MAXPROP); i++) {
       _snd_prop pitch = {NULL, NULL, NULL, 1.0, 1.0, 0.0, 0.0, false};
 
-      if (strcmp(kids[i]->getStringValue("property"), ""))
-         pitch.prop = fgGetNode(kids[i]->getStringValue("property"), true);
+      if (strcmp(kids[i]->getStringValue("property", ""), ""))
+         pitch.prop = fgGetNode(kids[i]->getStringValue("property", ""), true);
 
-      const char *intern_str = kids[i]->getStringValue("internal");
+      const char *intern_str = kids[i]->getStringValue("internal", "");
       if (!strcmp(intern_str, "dt_play"))
          pitch.intern = &_dt_play;
       else if (!strcmp(intern_str, "dt_stop"))
          pitch.intern = &_dt_stop;
 
-      if ((pitch.factor = kids[i]->getDoubleValue("factor")) != 0.0)
+      if ((pitch.factor = kids[i]->getDoubleValue("factor", 1.0)) != 0.0)
          if (pitch.factor < 0.0) {
             pitch.factor = -pitch.factor;
             pitch.subtract = true;
          }
 
-      const char *type_str = kids[i]->getStringValue("type");
+      const char *type_str = kids[i]->getStringValue("type", "");
       if ( strcmp(type_str, "") ) {
 
          for (int j=0; __fg_snd_fn[j].fn; j++) 
@@ -214,13 +214,13 @@ FGSound::init(SGPropertyNode *node)
                    "  Unknown pitch type, default to 'lin'");
       }
      
-      pitch.offset = kids[i]->getDoubleValue("offset");
+      pitch.offset = kids[i]->getDoubleValue("offset", 1.0);
 
-      if ((pitch.min = kids[i]->getDoubleValue("min")) < 0.0)
+      if ((pitch.min = kids[i]->getDoubleValue("min", 0.0)) < 0.0)
          SG_LOG(SG_GENERAL,SG_WARN,
                 "  Pitch minimum value below 0. Forced to 0.");
 
-      pitch.max = kids[i]->getDoubleValue("max");
+      pitch.max = kids[i]->getDoubleValue("max", 0.0);
       if (pitch.max && (pitch.max < pitch.min) )
          SG_LOG(SG_GENERAL,SG_ALERT,
                 "  Pitch maximum below minimum. Neglected");
@@ -234,7 +234,7 @@ FGSound::init(SGPropertyNode *node)
    //
    _mgr = globals->get_soundmgr();
    if ((_sample = _mgr->find(_name)) == NULL)
-      _sample = _mgr->add(_name, node->getStringValue("path"));
+      _sample = _mgr->add(_name, node->getStringValue("path", ""));
 
    _sample->set_volume(v);
    _sample->set_pitch(p);
