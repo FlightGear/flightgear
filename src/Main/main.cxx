@@ -350,18 +350,21 @@ void fgRenderFrame( void ) {
 	if ( current_options.get_clouds() ) {
 	    double diff = fabs( cur_fdm_state->get_Altitude() * FEET_TO_METER -
 				current_options.get_clouds_asl() );
-	    cout << "altitude diff = " << diff << endl;
-	    if ( diff < 100 ) {
-		actual_visibility = cur_visibility * diff / 100.0;
+	    // cout << "altitude diff = " << diff << endl;
+	    if ( diff < 125 ) {
+		actual_visibility = cur_visibility * (diff - 25) / 100.0;
+		if ( actual_visibility < 0 ) {
+		    actual_visibility = 0;
+		}
 	    }
 	}
 
-	cout << "actual visibility = " << actual_visibility << endl;
+	// cout << "actual visibility = " << actual_visibility << endl;
 
 	if ( actual_visibility != last_visibility ) {
 	    last_visibility = actual_visibility;
 
-	    cout << "----> updating fog params" << endl;
+	    // cout << "----> updating fog params" << endl;
 		
 	    GLfloat fog_exp_density;
 	    GLfloat fog_exp2_density;
