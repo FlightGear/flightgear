@@ -558,7 +558,9 @@ void fgFDMForceAltitude(const string &model, double alt_meters) {
 		
     cur_fdm_state->set_Altitude( alt_meters * SG_METER_TO_FEET );
     cur_fdm_state->set_Sea_level_radius( sea_level_radius_meters * 
-                                         SG_METER_TO_FEET );			  
+                                         SG_METER_TO_FEET );
+    cur_fdm_state->set_Runway_altitude( scenery.get_cur_elev() *
+					SG_METER_TO_FEET );	
 
     // additional work needed for some flight models
     if ( model == "larcsim" ) {
