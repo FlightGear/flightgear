@@ -9,8 +9,11 @@
 #include <Math/mat3defs.h>
 
 #ifdef WIN32
-#include <memory.h>      /* required for memset() and memcpy() */
+#  include <memory.h>      /* required for memset() and memcpy() */
+#elif __MWERKS__
+#  include <string.h>      /* MetroWerks CodeWarrior: memset() & memcpy() */
 #endif
+
 
 /* #include "macros.h" */
 
