@@ -92,62 +92,6 @@ do_properties_dialog (const SGPropertyNode * arg)
     return true;
 }
 
-extern void fgPresetAirport (puObject *);
-static bool
-do_preset_airport_dialog (const SGPropertyNode * arg)
-{
-    fgPresetAirport(0);
-    return true;
-}
-
-extern void fgPresetRunway (puObject *);
-static bool
-do_preset_runway_dialog (const SGPropertyNode * arg)
-{
-    fgPresetRunway(0);
-    return true;
-}
-
-extern void fgPresetOffsetDistance (puObject *);
-static bool
-do_preset_offset_distance_dialog (const SGPropertyNode * arg)
-{
-    fgPresetOffsetDistance(0);
-    return true;
-}
-
-extern void fgPresetAltitude (puObject *);
-static bool
-do_preset_altitude_dialog (const SGPropertyNode * arg)
-{
-    fgPresetAltitude(0);
-    return true;
-}
-
-extern void fgPresetGlideslope (puObject *);
-static bool
-do_preset_glideslope_dialog (const SGPropertyNode * arg)
-{
-    fgPresetGlideslope(0);
-    return true;
-}
-
-extern void fgPresetAirspeed (puObject *);
-static bool
-do_preset_airspeed_dialog (const SGPropertyNode * arg)
-{
-    fgPresetAirspeed(0);
-    return true;
-}
-
-extern void fgPresetCommit (puObject *);
-static bool
-do_preset_commit_dialog (const SGPropertyNode * arg)
-{
-    fgPresetCommit(0);
-    return true;
-}
-
 extern void AddWayPoint (puObject *);
 static bool
 do_ap_add_waypoint_dialog (const SGPropertyNode * arg)
@@ -212,13 +156,6 @@ static struct {
     { "old-pilot-offset-dialog", do_pilot_offset_dialog },
     { "old-hud-alpha-dialog", do_hud_alpha_dialog },
     { "old-properties-dialog", do_properties_dialog },
-    { "old-preset-airport-dialog", do_preset_airport_dialog },
-    { "old-preset-runway-dialog", do_preset_runway_dialog },
-    { "old-preset-offset-distance-dialog", do_preset_offset_distance_dialog },
-    { "old-preset-altitude-dialog", do_preset_altitude_dialog },
-    { "old-preset-glideslope-dialog", do_preset_glideslope_dialog },
-    { "old-preset-airspeed-dialog", do_preset_airspeed_dialog },
-    { "old-preset-commit-dialog", do_preset_commit_dialog },
     { "old-ap-add-waypoint-dialog", do_ap_add_waypoint_dialog },
     { "old-ap-pop-waypoint-dialog", do_ap_pop_waypoint_dialog },
     { "old-ap-clear-route-dialog", do_ap_clear_route_dialog },
