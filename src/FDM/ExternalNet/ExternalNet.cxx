@@ -20,10 +20,15 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/lowlevel.hxx> // endian tests
 
 #include <Main/fg_props.hxx>
+#include <Network/native_ctrls.hxx>
 
 #include "ExternalNet.hxx"
 
@@ -63,128 +68,6 @@ static void htond (double &x)
     } else {
         return;
     }
-}
-
-
-static void global2net( FGNetCtrls *net ) {
-    int i;
-
-    // fill in values
-    SGPropertyNode * node = fgGetNode("/controls", true);
-    net->version = FG_NET_CTRLS_VERSION;
-    net->aileron = node->getDoubleValue( "aileron" );
-    net->elevator = node->getDoubleValue( "elevator" );
-    net->elevator_trim = node->getDoubleValue( "elevator-trim" );
-    net->rudder = node->getDoubleValue( "rudder" );
-    net->flaps = node->getDoubleValue( "flaps" );
-    net->flaps_power
-            = node->getDoubleValue( "/systems/electrical/outputs/flaps",
-                                    1.0 ) >= 1.0;
-    net->num_engines = FGNetCtrls::FG_MAX_ENGINES;
-    for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
-	net->throttle[i] = node->getDoubleValue( "throttle", 0.0 );
-	net->mixture[i] = node->getDoubleValue( "mixture", 0.0 );
-	net->fuel_pump_power[i]
-            = node->getDoubleValue( "/systems/electrical/outputs/fuel-pump",
-                                    1.0 ) >= 1.0;
-	net->prop_advance[i] = node->getDoubleValue( "propeller-pitch", 0.0 );
-	net->magnetos[i] = node->getIntValue( "magnetos", 0 );
-	if ( i == 0 ) {
-	  // cout << "Magnetos -> " << node->getIntValue( "magnetos", 0 );
-	}
-	net->starter_power[i]
-            = node->getDoubleValue( "/systems/electrical/outputs/starter",
-                                    1.0 ) >= 1.0;
-	if ( i == 0 ) {
-	  // cout << " Starter -> " << node->getIntValue( "stater", false )
-	  //      << endl;
-	}
-    }
-    net->num_tanks = FGNetCtrls::FG_MAX_TANKS;
-    for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
-        if ( node->getChild("fuel-selector", i) != 0 ) {
-            net->fuel_selector[i]
-                = node->getChild("fuel-selector", i)->getDoubleValue();
-        } else {
-            net->fuel_selector[i] = false;
-        }
-    }
-    net->num_wheels = FGNetCtrls::FG_MAX_WHEELS;
-    for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
-        if ( node->getChild("brakes", i) != 0 ) {
-            if ( node->getChild("parking-brake")->getDoubleValue() > 0.0 ) {
-                net->brake[i] = 1.0;
-           } else {
-                net->brake[i]
-                    = node->getChild("brakes", i)->getDoubleValue();
-            }
-        } else {
-            net->brake[i] = 0.0;
-        }
-    }
-
-    node = fgGetNode("/controls/switches", true);
-    net->master_bat = node->getChild("master-bat")->getBoolValue();
-    net->master_alt = node->getChild("master-alt")->getBoolValue();
-    net->master_avionics = node->getChild("master-avionics")->getBoolValue();
-
-    net->wind_speed_kt = fgGetDouble("/environment/wind-speed-kt");
-    net->wind_dir_deg = fgGetDouble("/environment/wind-from-heading-deg");
-
-    // cur_fdm_state->get_ground_elev_ft() is what we want ... this
-    // reports the altitude of the aircraft.
-    // "/environment/ground-elevation-m" reports the ground elevation
-    // of the current view point which could change substantially if
-    // the user is switching views.
-    net->hground = cur_fdm_state->get_ground_elev_ft() * SG_FEET_TO_METER;
-    net->magvar = fgGetDouble("/environment/magnetic-variation-deg");
-    net->speedup = fgGetInt("/sim/speed-up");
-    net->freeze = 0;
-    if ( fgGetBool("/sim/freeze/master") ) {
-        net->freeze |= 0x01;
-    }
-    if ( fgGetBool("/sim/freeze/position") ) {
-        net->freeze |= 0x02;
-    }
-    if ( fgGetBool("/sim/freeze/fuel") ) {
-        net->freeze |= 0x04;
-    }
-
-    // convert to network byte order
-    net->version = htonl(net->version);
-    htond(net->aileron);
-    htond(net->elevator);
-    htond(net->elevator_trim);
-    htond(net->rudder);
-    htond(net->flaps);
-    net->flaps_power = htonl(net->flaps_power);
-    for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
-	htond(net->throttle[i]);
-	htond(net->mixture[i]);
-        net->fuel_pump_power[i] = htonl(net->fuel_pump_power[i]);
-	htond(net->prop_advance[i]);
-	net->magnetos[i] = htonl(net->magnetos[i]);
-	net->starter_power[i] = htonl(net->starter_power[i]);
-    }
-    net->num_engines = htonl(net->num_engines);
-    for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
-        net->fuel_selector[i] = htonl(net->fuel_selector[i]);
-    }
-    net->num_tanks = htonl(net->num_tanks);
-    for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
-	htond(net->brake[i]);
-    }
-    net->num_wheels = htonl(net->num_wheels);
-    net->gear_handle = htonl(net->gear_handle);
-    net->master_bat = htonl(net->master_bat);
-    net->master_alt = htonl(net->master_alt);
-    net->master_avionics = htonl(net->master_avionics);
-    htond(net->wind_speed_kt);
-    htond(net->wind_dir_deg);
-    htond(net->hground);
-    htond(net->magvar);
-    net->speedup = htonl(net->speedup);
-    net->freeze = htonl(net->freeze);
 }
 
 
@@ -475,7 +358,7 @@ void FGExternalNet::update( double dt ) {
 
     // Send control positions to remote fdm
     length = sizeof(ctrls);
-    global2net( &ctrls );
+    FGProps2NetCtrls( &ctrls );
     if ( data_client.send( (char *)(& ctrls), length, 0 ) != length ) {
 	SG_LOG( SG_IO, SG_DEBUG, "Error writing data." );
     } else {

@@ -1,3 +1,5 @@
+EXTRA_DIST = README.txt
+
 bin_PROGRAMS = terrasync
 
 terrasync_SOURCES = terrasync.cxx
