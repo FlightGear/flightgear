@@ -77,57 +77,19 @@ FG_USING_NAMESPACE(std);
 
 
 fgDEM::fgDEM( void ) {
-    // printf("class fgDEM CONstructor called.\n");
+    // cout << "class fgDEM CONstructor called." << endl;
     dem_data = new float[DEM_SIZE_1][DEM_SIZE_1];
     output_data = new float[DEM_SIZE_1][DEM_SIZE_1];
 }
 
 
-#if 0
-#ifdef WIN32
+fgDEM::fgDEM( const string &file ) {
+    // cout << "class fgDEM CONstructor called." << endl;
+    dem_data = new float[DEM_SIZE_1][DEM_SIZE_1];
+    output_data = new float[DEM_SIZE_1][DEM_SIZE_1];
 
-// return the file path name ( foo/bar/file.ext = foo/bar )
-static void extract_path ( const char *in, char *base) {
-    int len, i;
-    
-    len = strlen (in);
-    strcpy (base, in);
-
-    i = len - 1;
-    while ( (i >= 0) && (in[i] != '/') ) {
-	i--;
-    }
-
-    base[i] = '\0';
+    fgDEM::open(file);
 }
-
-
-// Make a subdirectory
-static int my_mkdir (const char *dir) {
-    struct stat stat_buf;
-    int result;
-
-    printf ("mk_dir() ");
-
-    result = stat (dir, &stat_buf);
-
-    if (result != 0) {
-	MKDIR (dir);
-	result = stat (dir, &stat_buf);
-	if (result != 0) {
-	    printf ("problem creating %s\n", dir);
-	} else {
-	    printf ("%s created\n", dir);
-	}
-    } else {
-	printf ("%s already exists\n", dir);
-    }
-
-    return (result);
-}
-
-#endif // WIN32
-#endif //0
 
 
 // open a DEM file
@@ -868,6 +830,10 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.23  1999/03/10 01:09:12  curt
+// Tweaks to go along with scenery tools overhaul.
+// Added a new constructor that accepts the file name.
+//
 // Revision 1.22  1999/01/19 20:56:56  curt
 // MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
 //

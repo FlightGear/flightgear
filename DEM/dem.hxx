@@ -96,6 +96,7 @@ public:
 
     // Constructor
     fgDEM( void );
+    fgDEM( const string& file );
 
     // open a DEM file (use "-" if input is coming from stdin)
     int open ( const string& file );
@@ -113,8 +114,12 @@ public:
     void read_b_record();
 
     // Informational methods
-    double info_originx( void ) { return(originx); }
-    double info_originy( void ) { return(originy); }
+    double get_originx( void ) { return originx; }
+    double get_originy( void ) { return originy; }
+    int get_cols( void ) { return cols; }
+    int get_rows( void ) { return rows; }
+    double get_col_step( void ) { return col_step; }
+    double get_row_step( void ) { return row_step; }
 
     // return the current altitude based on mesh data.  We should
     // rewrite this to interpolate exact values, but for now this is
@@ -145,6 +150,10 @@ public:
 
 
 // $Log$
+// Revision 1.10  1999/03/10 01:09:13  curt
+// Tweaks to go along with scenery tools overhaul.
+// Added a new constructor that accepts the file name.
+//
 // Revision 1.9  1998/10/16 19:08:14  curt
 // Portability updates from Bernie Bright.
 //
