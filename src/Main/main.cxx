@@ -590,30 +590,7 @@ void fgRenderFrame() {
                     "    sun_angle = " << cur_light_params.sun_angle
              << "    moon_angle = " << cur_light_params.moon_angle );
             */
-
-            // Some insane defaults.
-            static int init = 50;
-            static double sun_pos_angle = 9999.0;
-            static double sun_pos_rotation = 9999.0;
-            static float view_heading = 9999.0;
-            static float view_heading_offset = 9999.0;
-
-            if ((fabs(sun_pos_rotation - cur_light_params.sun_rotation) > 5e-3)
-                || (fabs(sun_pos_angle - cur_light_params.sun_angle) > 5e-3)
-                || (fabs(view_heading - current__view->getHeading_deg()) > 5e-3)
-                || (fabs(view_heading_offset
-                                - current__view->getHeadingOffset_deg()) > 5e-3)
-                || init || fgGetBool("/sim/rendering/debug"))
-            {
-                if ( init )
-                   init--;
-
-                sun_pos_angle = cur_light_params.sun_angle;
-                sun_pos_rotation = cur_light_params.sun_rotation;
-                view_heading = current__view->getHeading_deg ();
-                view_heading_offset = current__view->getHeadingOffset_deg();
-
-                thesky->repaint( cur_light_params.sky_color,
+            thesky->repaint( cur_light_params.sky_color,
                              cur_light_params.adj_fog_color,
                              cur_light_params.sun_angle,
                              cur_light_params.moon_angle,
@@ -621,7 +598,6 @@ void fgRenderFrame() {
                              globals->get_ephem()->getPlanets(),
                              globals->get_ephem()->getNumStars(),
                              globals->get_ephem()->getStars() );
-            }
 
             /*
             SG_LOG( SG_GENERAL, SG_BULK,
