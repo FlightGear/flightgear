@@ -170,7 +170,7 @@ bool FGMaterialLib::load( const string& mpath ) {
     lights->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
     lights->setMaterial( GL_EMISSION, 0, 0, 0, 1 );
     lights->setMaterial( GL_SPECULAR, 0, 0, 0, 1 );
-    lights->disable( GL_BLEND );
+    lights->enable( GL_BLEND );
     lights->disable( GL_ALPHA_TEST );
     lights->disable( GL_LIGHTING );
 

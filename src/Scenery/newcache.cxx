@@ -133,20 +133,40 @@ static void print_refs( ssgSelector *sel, ssgTransform *trans,
 #endif
 
 
-static ssgLeaf *gen_lights( ssgVertexArray *lights, float bright ) {
+static ssgLeaf *gen_lights( ssgVertexArray *lights, int inc, float bright ) {
+    int size = lights->getNum() / inc;
+
     // Allocate ssg structure
+    ssgVertexArray   *vl = new ssgVertexArray( size + 1 );
     ssgNormalArray   *nl = NULL;
     ssgTexCoordArray *tl = NULL;
-    ssgColourArray   *cl = new ssgColourArray( 1 );
+    ssgColourArray   *cl = new ssgColourArray( size + 1 );
 
-    // default to slightly yellow lights for now
     sgVec4 color;
-    sgSetVec4( color, 1.0 * bright, 1.0 * bright, 0.7 * bright, 1.0 );
-    cl->add( color );
+    for ( int i = 0; i < lights->getNum(); i += inc ) {
+	vl->add( lights->get(i) );
+
+	// yellow = 1,1,0
+	float zombie = sg_random();
+	if ( zombie > 0.5 ) {
+	    // 50% chance of yellowish
+	    sgSetVec4( color, 0.9, 0.9, 0.3, bright );
+	} else if ( zombie > 0.15 ) {
+	    // 35% chance of whitish
+	    sgSetVec4( color, 0.9, 0.9, 0.6, bright );
+	} else if ( zombie > 0.05 ) {
+	    // 10% chance of orangish
+	    sgSetVec4( color, 0.9, 0.6, 0.2, bright );
+	} else {
+	    // 5% chance of redish
+	    sgSetVec4( color, 0.9, 0.2, 0.2, bright );
+	}
+	cl->add( color );
+    }
 
     // create ssg leaf
     ssgLeaf *leaf = 
-	new ssgVtxTable ( GL_POINTS, lights, nl, tl, cl );
+	new ssgVtxTable ( GL_POINTS, vl, nl, tl, cl );
 
     // assign state
     FGNewMat *newmat = material_lib.find( "LIGHTS" );
@@ -259,13 +279,13 @@ void FGNewCache::fill_in( const FGBucket& b ) {
 	e->lights_brightness = new ssgSelector;
 	ssgLeaf *lights;
 
-	lights = gen_lights( light_pts, 0.6 );
+	lights = gen_lights( light_pts, 4, 0.7 );
 	e->lights_brightness->addKid( lights );
 
-	lights = gen_lights( light_pts, 0.8 );
+	lights = gen_lights( light_pts, 2, 0.85 );
 	e->lights_brightness->addKid( lights );
 
-	lights = gen_lights( light_pts, 1.0 );
+	lights = gen_lights( light_pts, 1, 1.0 );
 	e->lights_brightness->addKid( lights );
 
 	e->lights_range->addKid( e->lights_brightness );
