@@ -193,7 +193,7 @@ float g, float b, float a)
     float inv_length = 1.0 / sqrt(x*x + y*y + z*z);
     x *= inv_length; y *= inv_length; z *= inv_length;
   
-    float cos_angular_size = cos(angular_size*(22.0/7.0)/180.0);
+    float cos_angular_size = cos(angular_size*SG_DEGREES_TO_RADIANS);
 
     for( int s = 0; s < TEXRES_X; s++) {
         for( int t = 0; t < TEXRES_Y; t++) {
@@ -258,11 +258,11 @@ void setColor2(float elevation_size,float azimuth_size, float r, float g, float 
 
             //get elevation => project t onto the x-z-plane
             float tz_proj1 = tz / sqrt(tx*tx + tz*tz);
-            float televation = acos( -tz_proj1 ) * 180.0 / 3.1415;
+            float televation = acos( -tz_proj1 ) * SG_RADIANS_TO_DEGREES;
 
             //get azi => project t onto the y-z-plane
             float tz_proj2 = tz / sqrt(ty*ty + tz*tz);
-            float tazimuth = acos( -tz_proj2 ) * 180.0 / 3.1415;
+            float tazimuth = acos( -tz_proj2 ) * SG_RADIANS_TO_DEGREES;
 
             //note televation and tazimuth are the angles *between* the
             //temporary vector and the normal (0,0,-1). They are *NOT*
