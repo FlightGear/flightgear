@@ -738,7 +738,8 @@ double
 FGNavCom::get_nav_reciprocal_radial () const
 {
     double recip = nav_radial + 180;
-    if (recip >= 360)
-        recip = 360;
+    if ( recip >= 360 ) {
+        recip -= 360;
+    }
     return recip;
 }

@@ -532,7 +532,8 @@ FGAutopilot::update (double dt)
 	    }
 
 	    // determine the target radial in "true" heading
-	    double tgt_radial = current_radiostack->get_navcom1()->get_nav_radial();
+	    double tgt_radial
+                = current_radiostack->get_navcom1()->get_nav_target_radial();
 	    if ( current_radiostack->get_navcom1()->get_nav_loc() ) {
 		// ILS localizers radials are already "true" in our
 		// database
