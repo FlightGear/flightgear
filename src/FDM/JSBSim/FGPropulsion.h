@@ -136,6 +136,9 @@ public:
                       if (index <= Engines.size()-1) return Engines[index];
                       else                           return 0L;      }
 
+  // Retrieves the number of tanks defined for the aircraft.
+  inline unsigned int GetNumTanks(void) {return Tanks.size();}
+
   /** Retrieves a tank object pointer from the list of tanks.
       @param index the tank index within the vector container
       @return the address of the specific tank, or zero if no such tank is

@@ -86,6 +86,7 @@ public:
 
   double Calculate(double PowerRequired);
   double GetPowerAvailable(void) {return PowerAvailable;}
+  double CalcFuelNeed(void);
 
 private:
   int crank_counter;

@@ -88,6 +88,9 @@ string FGConfigFile::GetNextConfigLine(void)
       comment_length = comment_ends_at + 2 - comment_starts_at + 1;
       LineComment = CurrentLine.substr(comment_starts_at+4, comment_length-4-3);
       CurrentLine.erase(comment_starts_at, comment_length);
+      if (CurrentLine.find_first_not_of(" ") == string::npos) {
+        CurrentLine.erase();
+      }
     } else if ( start_comment && !end_comment) {                       //  <!-- ...
       CommentsOn = true;
       comment_length = line_length - comment_starts_at;
@@ -108,11 +111,12 @@ string FGConfigFile::GetNextConfigLine(void)
       CommentString += CommentStringTemp + "\r\n";
       CurrentLine.erase(0, comment_length);
     }
-    
   } while (CommentsOn);
 
-  if (CurrentLine.length() == 0) GetNextConfigLine();
   CurrentIndex = 0;
+  if (CurrentLine.length() == 0) {
+    GetNextConfigLine();
+  }
   return CurrentLine;
 }
 

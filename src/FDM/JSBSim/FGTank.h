@@ -91,6 +91,8 @@ public:
   double inline GetY(void) {return Y;}
   double inline GetZ(void) {return Z;}
 
+  void SetContents(double contents) { Contents = contents; }
+
   enum TankType {ttUNKNOWN, ttFUEL, ttOXIDIZER};
 
 private:
