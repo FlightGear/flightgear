@@ -86,6 +86,7 @@ static fgPoint3d geod_to_cart(fgPoint3d geod) {
 
 #define FG_APT_BASE_TEX_CONSTANT 2000.0
 
+#ifdef OLD_TEX_COORDS
 // Calculate texture coordinates for a given point.
 static fgPoint3d
 calc_tex_coords(const fgPoint3d& p) {
@@ -109,6 +110,33 @@ calc_tex_coords(const fgPoint3d& p) {
     cout << "Texture coordinates = " << tex.x << "  " << tex.y << "\n";
 
     return tex;
+}
+#endif
+
+
+// Calculate texture coordinates for a given point.
+static fgPoint3d calc_tex_coords(double *node, fgPoint3d *ref) {
+    fgPoint3d cp;
+    fgPoint3d pp;
+
+    cp.x = node[0] + ref->x; 
+    cp.y = node[1] + ref->y;
+    cp.z = node[2] + ref->z;
+
+    pp = fgCartToPolar3d(cp);
+
+    pp.lon = fmod(FG_APT_BASE_TEX_CONSTANT * pp.lon, 10.0);
+    pp.lat = fmod(FG_APT_BASE_TEX_CONSTANT * pp.lat, 10.0);
+
+    if ( pp.lon < 0.0 ) {
+	pp.lon += 10.0;
+    }
+
+    if ( pp.lat < 0.0 ) {
+	pp.lat += 10.0;
+    }
+
+    return(pp);
 }
 
 
@@ -158,39 +186,42 @@ gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
     xglNewList(display_list, GL_COMPILE);
     xglBegin(GL_TRIANGLE_FAN);
 
-    // center of fan
+    // first point center of fan
     cart_trans.x = ave_cart.x - t->center.x;
     cart_trans.y = ave_cart.y - t->center.y;
     cart_trans.z = ave_cart.z - t->center.z;
     t->nodes[t->ncount][0] = cart_trans.x;
     t->nodes[t->ncount][1] = cart_trans.y;
     t->nodes[t->ncount][2] = cart_trans.z;
+    center_num = t->ncount;
     t->ncount++;
 
-    tex = calc_tex_coords( average );
+    tex = calc_tex_coords( t->nodes[t->ncount-1], &(t->center) );
     xglTexCoord2f(tex.x, tex.y);
     xglNormal3dv(normal);
-    xglVertex3d(cart_trans.x, cart_trans.y, cart_trans.z);
+    xglVertex3dv(t->nodes[t->ncount-1]);
 
-    // first point (center of fan)
+    // first point on perimeter
     iterator current = perimeter.begin();
     cart = geod_to_cart( *current );
     cart_trans.x = cart.x - t->center.x;
     cart_trans.y = cart.y - t->center.y;
     cart_trans.z = cart.z - t->center.z;
-    center_num = t->ncount;
     t->nodes[t->ncount][0] = cart_trans.x;
     t->nodes[t->ncount][1] = cart_trans.y;
     t->nodes[t->ncount][2] = cart_trans.z;
     t->ncount++;
 
-    tex = calc_tex_coords( *current );
+    i = 1;
+    tex = calc_tex_coords( t->nodes[i], &(t->center) );
     dist = calc_dist(ave_cart, cart);
     if ( dist > max_dist ) {
 	max_dist = dist;
     }
     xglTexCoord2f(tex.x, tex.y);
-    xglVertex3d(cart_trans.x, cart_trans.y, cart_trans.z);
+    xglVertex3dv(t->nodes[i]);
+    ++current;
+    ++i;
 
     const_iterator last = perimeter.end();
     for ( ; current != last; ++current ) {
@@ -202,15 +233,16 @@ gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
 	t->nodes[t->ncount][1] = cart_trans.y;
 	t->nodes[t->ncount][2] = cart_trans.z;
 	t->ncount++;
-	fragment.add_face(center_num, t->ncount - 2, t->ncount - 1);
+	fragment.add_face(center_num, i - 1, i);
 
-	tex = calc_tex_coords( *current );
+	tex = calc_tex_coords( t->nodes[i], &(t->center) );
 	dist = calc_dist(ave_cart, cart);
 	if ( dist > max_dist ) {
 	    max_dist = dist;
 	}
 	xglTexCoord2f(tex.x, tex.y);
-	xglVertex3d(cart_trans.x, cart_trans.y, cart_trans.z);
+	xglVertex3dv(t->nodes[i]);
+	i++;
     }
 
     // last point (first point in perimeter list)
@@ -219,11 +251,11 @@ gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
     cart_trans.x = cart.x - t->center.x;
     cart_trans.y = cart.y - t->center.y;
     cart_trans.z = cart.z - t->center.z;
-    fragment.add_face(center_num, t->ncount - 1, center_num + 1);
+    fragment.add_face(center_num, i - 1, 1);
 
-    tex = calc_tex_coords( *current );
+    tex = calc_tex_coords( t->nodes[1], &(t->center) );
     xglTexCoord2f(tex.x, tex.y);
-    xglVertex3d(cart_trans.x, cart_trans.y, cart_trans.z);
+    xglVertex3dv(t->nodes[1]);
 
     xglEnd();
     xglEndList();
@@ -323,6 +355,11 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.2  1998/09/14 12:44:30  curt
+// Don't recalculate perimeter points since it is not likely that they will match
+// exactly with the previously calculated points, which will leave an ugly gap
+// around the airport area.
+//
 // Revision 1.1  1998/09/14 02:14:01  curt
 // Initial revision of genapt.[ch]xx for generating airport scenery.
 //
