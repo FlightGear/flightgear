@@ -53,8 +53,6 @@ GLOBAL DATA
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_LGEAR;
 
-extern short debug_lvl;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -62,6 +60,9 @@ CLASS IMPLEMENTATION
 FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
                                                            vMoment(3),
                                                            vWhlBodyVec(3),
+                                                           vForce(3),
+                                                           vLocalForce(3),
+                                                           vWhlVelVec(3),
                                                            Exec(fdmex)
 {
   string tmp;
@@ -181,16 +182,12 @@ FGLGear::~FGLGear()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector FGLGear::Force(void)
+FGColumnVector3& FGLGear::Force(void)
 {
-  float SteerGain, SteerAngle, BrakeFCoeff;
+  float SteerGain;
   float SinWheel, CosWheel, SideWhlVel, RollingWhlVel;
   float RudderPedal, RollingForce, SideForce, FCoeff;
   float WheelSlip;
-
-  FGColumnVector vForce(3);
-  FGColumnVector vLocalForce(3);
-  FGColumnVector vWhlVelVec(3);     // Velocity of this wheel (Local)
 
   vWhlBodyVec     = (vXYZ - MassBalance->GetXYZcg()) / 12.0;
   vWhlBodyVec(eX) = -vWhlBodyVec(eX);
@@ -225,6 +222,7 @@ FGColumnVector FGLGear::Force(void)
 // wheel velocity.
 
     vWhlVelVec      =  State->GetTb2l() * (Rotation->GetPQR() * vWhlBodyVec);
+
     vWhlVelVec     +=  Position->GetVel();
 
     compressSpeed   =  vWhlVelVec(eZ);
@@ -247,30 +245,30 @@ FGColumnVector FGLGear::Force(void)
 
     switch (eBrakeGrp) {
     case bgLeft:
-      SteerGain = -maxSteerAngle;
+      SteerGain = -0.10;
       BrakeFCoeff = rollingFCoeff*(1.0 - FCS->GetBrake(bgLeft)) +
                                             staticFCoeff*FCS->GetBrake(bgLeft);
       break;
     case bgRight:
-      SteerGain = -maxSteerAngle;
+      SteerGain = -0.10;
       BrakeFCoeff = rollingFCoeff*(1.0 - FCS->GetBrake(bgRight)) +
                                            staticFCoeff*FCS->GetBrake(bgRight);
       break;
     case bgCenter:
-      SteerGain = -maxSteerAngle;
+      SteerGain = -0.10;
       BrakeFCoeff = rollingFCoeff*(1.0 - FCS->GetBrake(bgCenter)) +
                                            staticFCoeff*FCS->GetBrake(bgCenter);
       break;
     case bgNose:
-      SteerGain = maxSteerAngle;
+      SteerGain = 0.10;
       BrakeFCoeff = rollingFCoeff;
       break;
     case bgTail:
-      SteerGain = -maxSteerAngle;
+      SteerGain = -0.10;
       BrakeFCoeff = rollingFCoeff;
       break;
     case bgNone:
-      SteerGain = -maxSteerAngle;
+      SteerGain = -0.10;
       BrakeFCoeff = rollingFCoeff;
       break;
     default:
@@ -280,7 +278,7 @@ FGColumnVector FGLGear::Force(void)
 
     switch (eSteerType) {
     case stSteer:
-      SteerAngle = SteerGain*FCS->GetDrCmd();
+      SteerAngle = SteerGain*FCS->GetDrPos();
       break;
     case stFixed:
       SteerAngle = 0.0;
@@ -298,8 +296,8 @@ FGColumnVector FGLGear::Force(void)
 // For now, steering angle is assumed to happen in the Local Z axis,
 // not the strut axis as it should be.  Will fix this later.
 
-    SinWheel      = sin(Rotation->Getpsi() + SteerAngle*DEGTORAD);
-    CosWheel      = cos(Rotation->Getpsi() + SteerAngle*DEGTORAD);
+    SinWheel      = sin(Rotation->Getpsi() + SteerAngle);
+    CosWheel      = cos(Rotation->Getpsi() + SteerAngle);
     RollingWhlVel = vWhlVelVec(eX)*CosWheel + vWhlVelVec(eY)*SinWheel;
     SideWhlVel    = vWhlVelVec(eY)*CosWheel - vWhlVelVec(eX)*SinWheel;
 

@@ -47,6 +47,7 @@ INCLUDES
 #include "FGConfigFile.h"
 #include "FGDefs.h"
 #include "FGTable.h"
+#include "FGJSBBase.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -95,11 +96,11 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGCoefficient
+class FGCoefficient : public FGJSBBase
 {
 public:
   FGCoefficient(FGFDMExec*);
-  ~FGCoefficient();
+  virtual ~FGCoefficient();
   
   virtual bool Load(FGConfigFile* AC_cfg);
   

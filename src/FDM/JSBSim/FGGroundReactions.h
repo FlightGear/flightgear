@@ -55,6 +55,9 @@ INCLUDES
 
 #include "FGModel.h"
 #include "FGConfigFile.h"
+#include "FGLGear.h"
+#include "FGInertial.h"
+#include "FGMatrix33.h"
 
 #define ID_GROUNDREACTIONS "$Id$"
 
@@ -62,16 +65,27 @@ INCLUDES
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGGroundReactions : public FGModel {
-
+class FGGroundReactions : public FGModel
+{
 public:
   FGGroundReactions(FGFDMExec*);
-  ~FGGroundReactions();
+  ~FGGroundReactions() {};
 
   bool Run(void);
   bool Load(FGConfigFile* AC_cfg);
+  FGColumnVector3& GetForces(void) {return vForces;}
+  FGColumnVector3& GetMoments(void) {return vMoments;}
+  string GetGroundReactionStrings(void);
+  string GetGroundReactionValues(void);
 
 private:
+  vector <FGLGear> lGear;
+  bool GearUp;
+  FGColumnVector3 vForces;
+  FGColumnVector3 vMoments;
+  FGColumnVector3 vMaxStaticGrip;
+  FGColumnVector3 vMaxMomentResist;
+
   void Debug(void);
 };
 

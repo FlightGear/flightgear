@@ -54,20 +54,26 @@ INCLUDES
      SG_USING_STD(cout);
 #  endif
 #else
-#  include <fstream>
-#  include <iostream>
 #  include <string>
-   using std::string;
-   using std::ostream;
-   using std::istream;
-   using std::ifstream;
-   using std::ios;
-   using std::cerr;
-   using std::endl;
-   using std::cout;
+#  if defined(sgi) && !defined(__GNUC__)
+#    include <fstream.h>
+#    include <iostream.h>
+#  else
+#    include <fstream>
+#    include <iostream>
+     using std::ostream;
+     using std::istream;
+     using std::ifstream;
+     using std::ios;
+     using std::cerr;
+     using std::endl;
+     using std::cout;
+#  endif
+    using std::string;
 #endif
 
 #include "FGDefs.h"
+#include "FGJSBBase.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -98,7 +104,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGConfigFile
+class FGConfigFile : public FGJSBBase
 {
 public:
   /** Constructor

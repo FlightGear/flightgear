@@ -100,8 +100,8 @@ class FGFactorGroup: public FGCoefficient {
     
     bool Load(FGConfigFile *AC_cfg);
     float TotalValue(void);
-    string GetCoefficientStrings(void);
-    string GetCoefficientValues(void);
+    //string GetCoefficientStrings(void);
+    //string GetCoefficientValues(void);
     inline float GetSD(void) { return SDtotal; }
     inline float GetFactorSD(void) { return FGCoefficient::GetSD(); }
     

@@ -47,6 +47,7 @@ INCLUDES
 #include "FGMassBalance.h"
 #include "FGAerodynamics.h"
 #include "FGInertial.h"
+#include "FGGroundReactions.h"
 #include "FGAircraft.h"
 #include "FGTranslation.h"
 #include "FGRotation.h"
@@ -61,8 +62,6 @@ static const char *IdHdr = ID_MODEL;
 GLOBAL DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-extern short debug_lvl;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -72,19 +71,20 @@ FGModel::FGModel(FGFDMExec* fdmex)
   FDMExec     = fdmex;
   NextModel   = 0L;
 
-  State        = 0;
-  Atmosphere   = 0;
-  FCS          = 0;
-  Propulsion   = 0;
-  MassBalance  = 0;
-  Aerodynamics = 0;
-  Inertial     = 0;
-  Aircraft     = 0;
-  Translation  = 0;
-  Rotation     = 0;
-  Position     = 0;
-  Auxiliary    = 0;
-  Output       = 0;
+  State           = 0;
+  Atmosphere      = 0;
+  FCS             = 0;
+  Propulsion      = 0;
+  MassBalance     = 0;
+  Aerodynamics    = 0;
+  Inertial        = 0;
+  GroundReactions = 0;
+  Aircraft        = 0;
+  Translation     = 0;
+  Rotation        = 0;
+  Position        = 0;
+  Auxiliary       = 0;
+  Output          = 0;
 
   exe_ctr     = 1;
 
@@ -102,19 +102,20 @@ FGModel::~FGModel()
 
 bool FGModel::InitModel(void)
 {
-  State        = FDMExec->GetState();
-  Atmosphere   = FDMExec->GetAtmosphere();
-  FCS          = FDMExec->GetFCS();
-  Propulsion   = FDMExec->GetPropulsion();
-  MassBalance  = FDMExec->GetMassBalance();
-  Aerodynamics = FDMExec->GetAerodynamics();
-  Inertial     = FDMExec->GetInertial();
-  Aircraft     = FDMExec->GetAircraft();
-  Translation  = FDMExec->GetTranslation();
-  Rotation     = FDMExec->GetRotation();
-  Position     = FDMExec->GetPosition();
-  Auxiliary    = FDMExec->GetAuxiliary();
-  Output       = FDMExec->GetOutput();
+  State           = FDMExec->GetState();
+  Atmosphere      = FDMExec->GetAtmosphere();
+  FCS             = FDMExec->GetFCS();
+  Propulsion      = FDMExec->GetPropulsion();
+  MassBalance     = FDMExec->GetMassBalance();
+  Aerodynamics    = FDMExec->GetAerodynamics();
+  Inertial        = FDMExec->GetInertial();
+  GroundReactions = FDMExec->GetGroundReactions();
+  Aircraft        = FDMExec->GetAircraft();
+  Translation     = FDMExec->GetTranslation();
+  Rotation        = FDMExec->GetRotation();
+  Position        = FDMExec->GetPosition();
+  Auxiliary       = FDMExec->GetAuxiliary();
+  Output          = FDMExec->GetOutput();
 
   if (!State ||
       !Atmosphere ||
@@ -123,6 +124,7 @@ bool FGModel::InitModel(void)
       !MassBalance ||
       !Aerodynamics ||
       !Inertial ||
+      !GroundReactions ||
       !Aircraft ||
       !Translation ||
       !Rotation ||
@@ -148,9 +150,4 @@ bool FGModel::Run()
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGModel::Debug(void)
-{
-    //TODO: Add your source code here
-}
 

@@ -54,16 +54,22 @@ INCLUDES
      SG_USING_STD(endl);
 #  endif
 #else
-#  include <iostream>
-#  include <fstream>
 #  include <string>
-   using std::cout;
-   using std::endl;
+#  if defined(sgi) && !defined(__GNUC__)
+#    include <iostream.h>
+#    include <fstream.h>
+#  else
+#    include <iostream>
+#    include <fstream>
+     using std::cout;
+     using std::endl;
+#  endif
 #endif
 
 #include <sys/types.h>
+#include "FGJSBBase.h"
 
-#if defined(__BORLANDC__) || defined(_MSC_VER)
+#if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
   #include <winsock.h>
 #else
   #include <sys/socket.h>
@@ -84,7 +90,8 @@ CLASS DECLARATION
 
 using std::string;
 
-class FGfdmSocket {
+class FGfdmSocket : public FGJSBBase
+{
 public:
   FGfdmSocket(string, int);
   ~FGfdmSocket();

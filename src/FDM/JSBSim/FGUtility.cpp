@@ -50,7 +50,11 @@ INCLUDES
 #    include <math.h>
 #  endif
 #else
-#  include <cmath>
+#  if defined(sgi) && !defined(__GNUC__)
+#    include <math.h>
+#  else
+#    include <cmath>
+#  endif
 #endif
 
 #include "FGUtility.h"
@@ -59,8 +63,6 @@ INCLUDES
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_UTILITY;
-
-extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION

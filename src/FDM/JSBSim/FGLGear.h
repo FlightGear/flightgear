@@ -44,8 +44,11 @@ INCLUDES
 
 #include <string>
 #include "FGConfigFile.h"
-#include "FGMatrix.h"
+#include "FGMatrix33.h"
+#include "FGColumnVector3.h"
+#include "FGColumnVector4.h"
 #include "FGFDMExec.h"
+#include "FGJSBBase.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -172,7 +175,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGLGear
+class FGLGear : public FGJSBBase
 {
 public:
   /// Brake grouping enumerators
@@ -191,15 +194,15 @@ public:
 
 
   /// The Force vector for this gear
-  FGColumnVector Force(void);
+  FGColumnVector3& Force(void);
   /// The Moment vector for this gear
-  FGColumnVector Moment(void) {return vMoment;}
+  FGColumnVector3& Moment(void) {return vMoment;}
 
   /// Gets the location of the gear in Body axes
-  FGColumnVector GetBodyLocation(void) { return vWhlBodyVec; }
+  FGColumnVector3& GetBodyLocation(void) { return vWhlBodyVec; }
   float GetBodyLocation(int idx) { return vWhlBodyVec(idx); }
 
-  FGColumnVector GetLocalGear(void) { return vLocalGear; }
+  FGColumnVector3& GetLocalGear(void) { return vLocalGear; }
   float GetLocalGear(int idx) { return vLocalGear(idx); }
 
   /// Gets the name of the gear
@@ -212,6 +215,7 @@ public:
   inline float  GetCompVel(void)   {return compressSpeed; }
   /// Gets the gear compression force in pounds
   inline float  GetCompForce(void) {return Force()(3);    }
+  inline float  GetBrakeFCoeff(void) {return BrakeFCoeff;}
   
   /// Sets the brake value in percent (0 - 100)
   inline void SetBrake(double bp) {brakePct = bp;}
@@ -222,19 +226,25 @@ public:
   /** Get the console touchdown reporting feature
       @return true if reporting is turned on */
   inline bool GetReport(void)    { return ReportEnable; }
+  inline float GetSteerAngle(void) { return SteerAngle;}
+  inline float GetstaticFCoeff(void) { return staticFCoeff;}
 
 private:
-  enum {eX=1, eY, eZ};
-  FGColumnVector vXYZ;
-  FGColumnVector vMoment;
-  FGColumnVector vWhlBodyVec;
-  FGColumnVector vLocalGear;
+  FGColumnVector3 vXYZ;
+  FGColumnVector3 vMoment;
+  FGColumnVector3 vWhlBodyVec;
+  FGColumnVector3 vLocalGear;
+  FGColumnVector3 vForce;
+  FGColumnVector3 vLocalForce;
+  FGColumnVector3 vWhlVelVec;     // Velocity of this wheel (Local)
+  float SteerAngle;
   float kSpring;
   float bDamp;
   float compressLength;
   float compressSpeed;
   float staticFCoeff, dynamicFCoeff, rollingFCoeff;
   float brakePct;
+  float BrakeFCoeff;
   float maxCompLen;
   double SinkRate;
   double GroundSpeed;

@@ -60,60 +60,13 @@ INCLUDES
 #    include <time.h>
 #  endif
 #else
-#include <iostream>
-#include <ctime>
-#endif
-
-#if __BORLANDC__ > 0x540
-#include <condefs.h>
-USEUNIT("FGUtility.cpp");
-USEUNIT("FGAircraft.cpp");
-USEUNIT("FGAtmosphere.cpp");
-USEUNIT("FGAuxiliary.cpp");
-USEUNIT("FGCoefficient.cpp");
-USEUNIT("FGConfigFile.cpp");
-USEUNIT("FGEngine.cpp");
-USEUNIT("FGFCS.cpp");
-USEUNIT("FGFDMExec.cpp");
-USEUNIT("FGfdmSocket.cpp");
-USEUNIT("FGForce.cpp");
-USEUNIT("FGGroundReactions.cpp");
-USEUNIT("FGInertial.cpp");
-USEUNIT("FGInitialCondition.cpp");
-USEUNIT("FGLGear.cpp");
-USEUNIT("FGMassBalance.cpp");
-USEUNIT("FGMatrix.cpp");
-USEUNIT("FGModel.cpp");
-USEUNIT("FGNozzle.cpp");
-USEUNIT("FGOutput.cpp");
-USEUNIT("FGPiston.cpp");
-USEUNIT("FGPosition.cpp");
-USEUNIT("FGJSBBase.cpp");
-USEUNIT("FGPropulsion.cpp");
-USEUNIT("FGRocket.cpp");
-USEUNIT("FGRotation.cpp");
-USEUNIT("FGRotor.cpp");
-USEUNIT("FGState.cpp");
-USEUNIT("FGTable.cpp");
-USEUNIT("FGTank.cpp");
-USEUNIT("FGThruster.cpp");
-USEUNIT("FGTranslation.cpp");
-USEUNIT("FGTrim.cpp");
-USEUNIT("FGTrimAxis.cpp");
-USEUNIT("FGTurboJet.cpp");
-USEUNIT("FGTurboProp.cpp");
-USEUNIT("FGTurboShaft.cpp");
-USEUNIT("FGAerodynamics.cpp");
-USEUNIT("filtersjb\FGSwitch.cpp");
-USEUNIT("filtersjb\FGFCSComponent.cpp");
-USEUNIT("filtersjb\FGFilter.cpp");
-USEUNIT("filtersjb\FGFlaps.cpp");
-USEUNIT("filtersjb\FGGain.cpp");
-USEUNIT("filtersjb\FGGradient.cpp");
-USEUNIT("filtersjb\FGSummer.cpp");
-USEUNIT("filtersjb\FGDeadBand.cpp");
-USEUNIT("FGPropeller.cpp");
-//---------------------------------------------------------------------------
+#  if defined(sgi) && !defined(__GNUC__)
+#    include <iostream.h>
+#    include <time.h>
+#  else
+#    include <iostream>
+#    include <ctime>
+#  endif
 #endif
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -187,13 +140,16 @@ int main(int argc, char** argv)
       exit(-1);
     }
   } else {
-    result = FDMExec->LoadModel("aircraft", "engine", string(argv[1]));
+    // result = FDMExec->LoadModel("aircraft", "engine", string(argv[1]));
+    FGInitialCondition IC(FDMExec);
+    result = IC.Load("aircraft","engine",string(argv[1]));
+
     if (!result) {
     	cerr << "Aircraft file " << argv[1] << " was not found" << endl;
 	    exit(-1);
     }
     if ( ! FDMExec->GetState()->Reset("aircraft", string(argv[1]), string(argv[2])))
-                   FDMExec->GetState()->Initialize(2000,0,0,0,0,0,0.5,0.5,40000);
+                   FDMExec->GetState()->Initialize(2000,0,0,0,0,0,0.5,0.5,40000, 0, 0, 0);
   }
 
   while (FDMExec->Run()) {}

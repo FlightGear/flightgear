@@ -48,11 +48,6 @@ DEFINITIONS
 
 #define ID_PROPELLER "$Id$"
 
-#ifndef M_PI
-#  include <simgear/constants.h>
-#  define M_PI SG_PI
-#endif
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/

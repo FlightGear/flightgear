@@ -43,8 +43,6 @@ INCLUDES
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_TURBOSHAFT;
 
-extern short debug_lvl;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/

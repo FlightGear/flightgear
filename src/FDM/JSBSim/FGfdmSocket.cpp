@@ -42,8 +42,6 @@ INCLUDES
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FDMSOCKET;
 
-extern short debug_lvl;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -52,7 +50,7 @@ FGfdmSocket::FGfdmSocket(string address, int port)
 {
   size = 0;
 
-  #if defined(__BORLANDC__) || defined(_MSC_VER)
+#if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
     WSADATA wsaData;
     int PASCAL FAR wsaReturnCode;
     wsaReturnCode = WSAStartup(MAKEWORD(1,1), &wsaData);

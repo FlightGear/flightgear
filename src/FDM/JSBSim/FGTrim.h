@@ -49,6 +49,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFDMExec.h"
+#include "FGJSBBase.h"
 #include "FGRotation.h"
 #include "FGAtmosphere.h"
 #include "FGState.h"
@@ -69,11 +70,11 @@ DEFINITIONS
 
 #define ID_TRIM "$Id$"
 
+typedef enum { tLongitudinal, tFull, tGround, tCustom, tNone } TrimMode;
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-typedef enum { tLongitudinal, tFull, tGround, tCustom, tNone } TrimMode;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
@@ -135,7 +136,8 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGTrim {
+class FGTrim : public FGJSBBase
+{
 private:
 
   vector<FGTrimAxis*> TrimAxes;

@@ -111,15 +111,17 @@ public:
 
   /** Gets the total aerodynamic force vector.
       @return a force vector reference. */
-  FGColumnVector& GetForces(void) {return vForces;}
+  FGColumnVector3& GetForces(void) {return vForces;}
+  inline float GetForces(int n) {return vForces(n);}
 
   /** Gets the total aerodynamic moment vector.
       @return a moment vector reference. */
-  FGColumnVector& GetMoments(void) {return vMoments;}
+  FGColumnVector3& GetMoments(void) {return vMoments;}
+  inline float GetMoments(int n) {return vMoments(n);}
 
-  inline FGColumnVector GetvLastFs(void) { return vLastFs; }
+  inline FGColumnVector3& GetvLastFs(void) { return vLastFs; }
   inline float GetvLastFs(int axis) { return vLastFs(axis); }
-  inline FGColumnVector GetvFs(void) { return vFs; }
+  inline FGColumnVector3& GetvFs(void) { return vFs; }
   inline float GetvFs(int axis) { return vFs(axis); }
   float GetLoD(void);
 
@@ -140,11 +142,11 @@ private:
   AxisIndex AxisIdx;
   typedef vector<FGCoefficient*> CoeffArray;
   CoeffArray* Coeff;
-  FGColumnVector vFs;
-  FGColumnVector vForces;
-  FGColumnVector vMoments;
-  FGColumnVector vLastFs;
-  FGColumnVector vDXYZcg;
+  FGColumnVector3 vFs;
+  FGColumnVector3 vForces;
+  FGColumnVector3 vMoments;
+  FGColumnVector3 vLastFs;
+  FGColumnVector3 vDXYZcg;
 
   void Debug(void);
 };

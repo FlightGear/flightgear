@@ -55,7 +55,9 @@ INCLUDES
 #include "FGModel.h"
 #include "FGPropulsion.h"
 #include "FGConfigFile.h"
-#include "FGMatrix.h"
+#include "FGMatrix33.h"
+#include "FGColumnVector3.h"
+#include "FGColumnVector4.h"
 #include "FGLGear.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -70,9 +72,48 @@ FORWARD DECLARATIONS
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Longitudinal
+  CL0 - Reference lift at zero alpha
+  CD0 - Reference drag at zero alpha
+  CDM - Drag due to Mach
+  CLa - Lift curve slope (w.r.t. alpha)
+  CDa - Drag curve slope (w.r.t. alpha)
+  CLq - Lift due to pitch rate
+  CLM - Lift due to Mach
+  CLadt - Lift due to alpha rate
+ 
+  Cmadt - Pitching Moment due to alpha rate
+  Cm0 - Reference Pitching moment at zero alpha
+  Cma - Pitching moment slope (w.r.t. alpha)
+  Cmq - Pitch damping (pitch moment due to pitch rate)
+  CmM - Pitch Moment due to Mach
+ 
+Lateral
+  Cyb - Side force due to sideslip
+  Cyr - Side force due to yaw rate
+ 
+  Clb - Dihedral effect (roll moment due to sideslip)
+  Clp - Roll damping (roll moment due to roll rate)
+  Clr - Roll moment due to yaw rate
+  Cnb - Weathercocking stability (yaw moment due to sideslip)
+  Cnp - Rudder adverse yaw (yaw moment due to roll rate)
+  Cnr - Yaw damping (yaw moment due to yaw rate)
+ 
+Control
+  CLDe - Lift due to elevator
+  CDDe - Drag due to elevator
+  CyDr - Side force due to rudder
+  CyDa - Side force due to aileron
+ 
+  CmDe - Pitch moment due to elevator
+  ClDa - Roll moment due to aileron
+  ClDr - Roll moment due to rudder
+  CnDr - Yaw moment due to rudder
+  CnDa - Yaw moment due to aileron
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -107,11 +148,6 @@ CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 class FGAircraft : public FGModel {
-  enum {eL=1, eM, eN};
-  enum {eX=1, eY, eZ};
-  enum {eP=1, eQ, eR};
-  enum {ePhi=1, eTht, ePsi};
-
 public:
   /** Constructor
       @param Executive a pointer to the parent executive object */
@@ -151,12 +187,20 @@ public:
   inline float GetWingSpan(void) { return WingSpan; }
   /// Gets the average wing chord
   inline float Getcbar(void) { return cbar; }
-  inline FGColumnVector GetMoments(void) { return vMoments; }
-  inline FGColumnVector GetForces(void) { return vForces; }
-  inline FGColumnVector GetAeroBodyForces(void) { return vAeroBodyForces; }
-  inline float GetAeroBodyForces(int axis) { return vAeroBodyForces(axis); }
-  inline FGColumnVector GetXYZrp(void) { return vXYZrp; }
-  inline FGColumnVector GetXYZep(void) { return vXYZep; }
+  inline float GetWingIncidence(void) { return WingIncidence; }
+  inline float GetHTailArea(void) { return HTailArea; }
+  inline float GetHTailArm(void)  { return HTailArm; }
+  inline float GetVTailArea(void) { return VTailArea; }
+  inline float GetVTailArm(void)  { return VTailArm; }
+  inline float Getlbarh(void) { return lbarh; } // HTailArm / cbar
+  inline float Getlbarv(void) { return lbarv; } // VTailArm / cbar
+  inline float Getvbarh(void) { return vbarh; } // H. Tail Volume
+  inline float Getvbarv(void) { return vbarv; } // V. Tail Volume
+  inline FGColumnVector3& GetMoments(void) { return vMoments; }
+  inline FGColumnVector3& GetForces(void) { return vForces; }
+  inline FGColumnVector3& GetBodyAccel(void) { return vBodyAccel; }
+  inline FGColumnVector3& GetXYZrp(void) { return vXYZrp; }
+  inline FGColumnVector3& GetXYZep(void) { return vXYZep; }
   inline float GetXYZrp(int idx) { return vXYZrp(idx); }
   inline float GetXYZep(int idx) { return vXYZep(idx); }
   inline float GetAlphaCLMax(void) { return alphaclmax; }
@@ -167,9 +211,6 @@ public:
   inline void SetGearDown(bool tt) { GearUp = false; }
   inline void SetAlphaCLMax(float tt) { alphaclmax=tt; }
   inline void SetAlphaCLMin(float tt) { alphaclmin=tt; }
-
-  string GetGroundReactionStrings(void);
-  string GetGroundReactionValues(void);
 
   /// Subsystem types for specifying which will be output in the FDM data logging
   enum  SubSystems {
@@ -189,22 +230,17 @@ public:
   } subsystems;
 
 private:
-  void GetState(void);
-  void FMAero(void);
-  void FMGear(void);
-  void FMMass(void);
-  void FMProp(void);
-  FGColumnVector vMoments;
-  FGColumnVector vForces;
-  FGColumnVector vXYZrp;
-  FGColumnVector vXYZep;
-  FGColumnVector vEuler;
-  FGColumnVector vDXYZcg;
-  FGColumnVector vAeroBodyForces;
-  float alpha, beta;
-  float WingArea, WingSpan, cbar;
+  FGColumnVector3 vMoments;
+  FGColumnVector3 vForces;
+  FGColumnVector3 vXYZrp;
+  FGColumnVector3 vXYZep;
+  FGColumnVector3 vEuler;
+  FGColumnVector3 vDXYZcg;
+  FGColumnVector3 vBodyAccel;
+  float WingArea, WingSpan, cbar, WingIncidence;
+  float HTailArea, VTailArea, HTailArm, VTailArm;
+  float lbarh,lbarv,vbarh,vbarv;
   float alphaclmax,alphaclmin;
-  float dt;
   string CFGVersion;
   string AircraftName;
 

@@ -43,8 +43,6 @@ INCLUDES
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_AERODYNAMICS;
 
-extern short debug_lvl;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -109,16 +107,14 @@ bool FGAerodynamics::Run(void)
 
     vForces = State->GetTs2b(alpha, beta)*vFs;
 
-    // see http://home.earthlink.net/~apeden/jsbsim_moments_due_to_forces.txt
-    // for details on this
+    vDXYZcg(eX) = -(Aircraft->GetXYZrp(eX) 
+                      - MassBalance->GetXYZcg(eX))*INCHTOFT;
+    vDXYZcg(eY) =  (Aircraft->GetXYZrp(eY) 
+                      - MassBalance->GetXYZcg(eY))*INCHTOFT;
+    vDXYZcg(eZ) = -(Aircraft->GetXYZrp(eZ) 
+                      - MassBalance->GetXYZcg(eZ))*INCHTOFT;
 
-    vDXYZcg(eX) = -(Aircraft->GetXYZrp(eX) - MassBalance->GetXYZcg(eX))/12.0;
-    vDXYZcg(eY) =  (Aircraft->GetXYZrp(eY) - MassBalance->GetXYZcg(eY))/12.0;
-    vDXYZcg(eZ) = -(Aircraft->GetXYZrp(eZ) - MassBalance->GetXYZcg(eZ))/12.0;
-
-    vMoments(eL) = vForces(eZ)*vDXYZcg(eY) - vForces(eY)*vDXYZcg(eZ);
-    vMoments(eM) = vForces(eX)*vDXYZcg(eZ) - vForces(eZ)*vDXYZcg(eX);
-    vMoments(eN) = vForces(eY)*vDXYZcg(eX) - vForces(eX)*vDXYZcg(eY);
+    vMoments = vDXYZcg*vForces; // M = r X F
 
     for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
       for (ctr = 0; ctr < Coeff[axis_ctr+3].size(); ctr++) {

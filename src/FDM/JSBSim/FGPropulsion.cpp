@@ -57,8 +57,6 @@ INCLUDES
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_PROPULSION;
 
-extern short debug_lvl;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -70,8 +68,8 @@ FGPropulsion::FGPropulsion(FGFDMExec* exec) : FGModel(exec)
   numSelectedFuelTanks = numSelectedOxiTanks = 0;
   numTanks = numEngines = numThrusters = 0;
   numOxiTanks = numFuelTanks = 0;
-  Forces  = new FGColumnVector(3);
-  Moments = new FGColumnVector(3);
+  Forces  = new FGColumnVector3(3);
+  Moments = new FGColumnVector3(3);
 
   if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
 }
@@ -394,7 +392,7 @@ string FGPropulsion::GetPropulsionValues(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector& FGPropulsion::GetTanksCG(void)
+FGColumnVector3& FGPropulsion::GetTanksCG(void)
 {
   iTank = Tanks.begin();
   vXYZtank.InitMatrix();
@@ -423,7 +421,7 @@ float FGPropulsion::GetTanksWeight(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGPropulsion::GetTanksIxx(const FGColumnVector& vXYZcg)
+float FGPropulsion::GetTanksIxx(const FGColumnVector3& vXYZcg)
 {
   float I = 0.0;
   iTank = Tanks.begin();
@@ -436,7 +434,7 @@ float FGPropulsion::GetTanksIxx(const FGColumnVector& vXYZcg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGPropulsion::GetTanksIyy(const FGColumnVector& vXYZcg)
+float FGPropulsion::GetTanksIyy(const FGColumnVector3& vXYZcg)
 {
   float I = 0.0;
   iTank = Tanks.begin();
@@ -449,7 +447,7 @@ float FGPropulsion::GetTanksIyy(const FGColumnVector& vXYZcg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGPropulsion::GetTanksIzz(const FGColumnVector& vXYZcg)
+float FGPropulsion::GetTanksIzz(const FGColumnVector3& vXYZcg)
 {
   float I = 0.0;
   iTank = Tanks.begin();
@@ -462,7 +460,7 @@ float FGPropulsion::GetTanksIzz(const FGColumnVector& vXYZcg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGPropulsion::GetTanksIxz(const FGColumnVector& vXYZcg)
+float FGPropulsion::GetTanksIxz(const FGColumnVector3& vXYZcg)
 {
   float I = 0.0;
   iTank = Tanks.begin();
@@ -475,7 +473,7 @@ float FGPropulsion::GetTanksIxz(const FGColumnVector& vXYZcg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGPropulsion::GetTanksIxy(const FGColumnVector& vXYZcg)
+float FGPropulsion::GetTanksIxy(const FGColumnVector3& vXYZcg)
 {
   float I = 0.0;
   iTank = Tanks.begin();

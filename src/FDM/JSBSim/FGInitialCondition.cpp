@@ -54,11 +54,10 @@ INCLUDES
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 #include "FGDefs.h"
+#include "FGConfigFile.h"
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_INITIALCONDITION;
-
-extern short debug_lvl;
 
 //******************************************************************************
 
@@ -71,12 +70,17 @@ FGInitialCondition::FGInitialCondition(FGFDMExec *FDMExec){
   altitude=hdot=0;
   latitude=longitude=0;
   u=v=w=0;
-  vw=vw=ww=0;
+  uw=vw=ww=0;
   vnorth=veast=vdown=0;
+  wnorth=weast=wdown=0;
+  whead=wcross=0;
+  wdir=wmag=0;
   lastSpeedSet=setvt;
+  lastWindSet=setwned;
   sea_level_radius = EARTHRAD;
   radius_to_vehicle = EARTHRAD;
   terrain_altitude = 0;
+  
 
   salpha=sbeta=stheta=sphi=spsi=sgamma=0;
   calpha=cbeta=ctheta=cphi=cpsi=cgamma=1;
@@ -130,27 +134,19 @@ void FGInitialCondition::SetVequivalentKtsIC(float tt) {
 //******************************************************************************
 
 void FGInitialCondition::SetVgroundFpsIC(float tt) {
-  //float ua,va,wa;
+  float ua,va,wa;
   float vxz;
 
-  //cout << "FGInitialCondition::SetVgroundFpsIC" << endl;
   vg=tt;
   lastSpeedSet=setvg;
   vnorth = vg*cos(psi); veast = vg*sin(psi); vdown = 0;
   calcUVWfromNED();
-  //cout << "\tu,v,w: " << u << ", " << v << ", " << w << endl;
-  calcWindUVW();
-  //cout << "\tuw,vw,ww: " << uw << ", " << vw << ", " << ww << endl;
-  u = -uw; v = -vw; w = -ww;
-  //ua = u - uw; va = v - vw; wa = w - ww;
-  //cout << "\tua,va,wa: " << ua << ", " << va << ", " << wa << endl;
-  vt = sqrt( u*u + v*v + w*w );
+  ua = u + uw; va = v + vw; wa = w + ww;
+  vt = sqrt( ua*ua + va*va + wa*wa );
   alpha = beta = 0;
   vxz = sqrt( u*u + w*w );
   if( w != 0 ) alpha = atan2( w, u );
   if( vxz != 0 ) beta = atan2( v, vxz );
-  //cout << "\tvt,alpha,beta: " << vt << ", " << alpha*RADTODEG << ", "
-  //          << beta*RADTODEG << endl;
   mach=vt/fdmex->GetAtmosphere()->GetSoundSpeed();
   vc=calcVcas(mach);
   ve=vt*sqrt(fdmex->GetAtmosphere()->GetDensityRatio());
@@ -216,7 +212,6 @@ void FGInitialCondition::SetAlphaRadIC(float tt) {
 void FGInitialCondition::SetPitchAngleRadIC(float tt) {
   theta=tt;
   stheta=sin(theta); ctheta=cos(theta);
-  calcWindUVW();
   getAlpha();
 }
 
@@ -226,6 +221,7 @@ void FGInitialCondition::SetBetaRadIC(float tt) {
   beta=tt;
   sbeta=sin(beta); cbeta=cos(beta);
   getTheta();
+  
 }
 
 //******************************************************************************
@@ -274,7 +270,7 @@ float FGInitialCondition::GetUBodyFpsIC(void) {
     if(lastSpeedSet == setvg )
       return u;
     else
-      return vt*calpha*cbeta;
+      return vt*calpha*cbeta - uw;
 }
 
 //******************************************************************************
@@ -282,8 +278,9 @@ float FGInitialCondition::GetUBodyFpsIC(void) {
 float FGInitialCondition::GetVBodyFpsIC(void) {
     if( lastSpeedSet == setvg )
       return v;
-    else
-      return vt*sbeta;
+    else {
+      return vt*sbeta - vw;
+    }  
 }
 
 //******************************************************************************
@@ -291,26 +288,87 @@ float FGInitialCondition::GetVBodyFpsIC(void) {
 float FGInitialCondition::GetWBodyFpsIC(void) {
     if( lastSpeedSet == setvg )
       return w;
-    else {
-      return vt*salpha*cbeta;
-   }
+    else 
+      return vt*salpha*cbeta -ww;
 }
 
 //******************************************************************************
 
 void FGInitialCondition::SetWindNEDFpsIC(float wN, float wE, float wD ) {
   wnorth = wN; weast = wE; wdown = wD;
+  lastWindSet = setwned;
+  calcWindUVW();
   if(lastSpeedSet == setvg)
     SetVgroundFpsIC(vg);
-
-
 }
 
 //******************************************************************************
 
-void FGInitialCondition::calcWindUVW(void) {
-  if(lastSpeedSet == setvg ) {
+// positive from left
+void FGInitialCondition::SetHeadWindKtsIC(float head){ 
+    whead=head*KTSTOFPS;
+    lastWindSet=setwhc; 
+    calcWindUVW();
+    if(lastSpeedSet == setvg)
+      SetVgroundFpsIC(vg);
 
+} 
+
+//******************************************************************************
+
+void FGInitialCondition::SetCrossWindKtsIC(float cross){ 
+    wcross=cross*KTSTOFPS; 
+    lastWindSet=setwhc; 
+    calcWindUVW();
+    if(lastSpeedSet == setvg)
+      SetVgroundFpsIC(vg);
+
+} 
+
+//******************************************************************************
+
+void FGInitialCondition::SetWindDownKtsIC(float wD) { 
+    wdown=wD; 
+    calcWindUVW();
+    if(lastSpeedSet == setvg)
+      SetVgroundFpsIC(vg);
+} 
+
+//******************************************************************************
+
+void FGInitialCondition::SetWindMagKtsIC(float mag) {
+  wmag=mag*KTSTOFPS;
+  lastWindSet=setwmd;
+  calcWindUVW();    
+  if(lastSpeedSet == setvg)
+      SetVgroundFpsIC(vg);
+}
+
+//******************************************************************************
+
+void FGInitialCondition::SetWindDirDegIC(float dir) {
+  wdir=dir*DEGTORAD;
+  lastWindSet=setwmd;
+  calcWindUVW();    
+  if(lastSpeedSet == setvg)
+      SetVgroundFpsIC(vg);
+}
+
+
+//******************************************************************************
+
+void FGInitialCondition::calcWindUVW(void) {
+    
+    switch(lastWindSet) {
+      case setwmd:
+        wnorth=wmag*cos(wdir);
+        weast=wmag*sin(wdir);
+      break;
+      case setwhc:
+        wnorth=whead*cos(psi) + wcross*cos(psi+M_PI/2);
+        weast=whead*sin(psi) + wcross*sin(psi+M_PI/2);
+      break;
+    }    
     uw=wnorth*ctheta*cpsi +
        weast*ctheta*spsi -
        wdown*stheta;
@@ -320,6 +378,8 @@ void FGInitialCondition::calcWindUVW(void) {
     ww=wnorth*(cphi*stheta*cpsi + sphi*spsi) +
        weast*(cphi*stheta*spsi - sphi*cpsi) +
        wdown*cphi*ctheta;
+            
+   
     /* cout << "FGInitialCondition::calcWindUVW: wnorth, weast, wdown "
          << wnorth << ", " << weast << ", " << wdown << endl;
     cout << "FGInitialCondition::calcWindUVW: theta, phi, psi "
@@ -327,9 +387,6 @@ void FGInitialCondition::calcWindUVW(void) {
     cout << "FGInitialCondition::calcWindUVW: uw, vw, ww "
           << uw << ", " << vw << ", " << ww << endl;   */
 
-  } else {
-    uw=vw=ww=0;
-  }
 }
 
 //******************************************************************************
@@ -338,7 +395,6 @@ void FGInitialCondition::SetAltitudeFtIC(float tt) {
   altitude=tt;
   fdmex->GetPosition()->Seth(altitude);
   fdmex->GetAtmosphere()->Run();
-
   //lets try to make sure the user gets what they intended
 
   switch(lastSpeedSet) {
@@ -380,8 +436,6 @@ void FGInitialCondition::SetSeaLevelRadiusFtIC(double tt) {
 
 void FGInitialCondition::SetTerrainAltitudeFtIC(double tt) {
   terrain_altitude=tt;
-  fdmex->GetPosition()->SetDistanceAGL(altitude-terrain_altitude);
-  fdmex->GetPosition()->SetRunwayRadius(sea_level_radius + terrain_altitude);
 }
 
 //******************************************************************************
@@ -458,6 +512,7 @@ bool FGInitialCondition::getAlpha(void) {
       calpha=cos(alpha);
     }
   }
+  calcWindUVW();
   return result;
 }
 
@@ -476,6 +531,7 @@ bool FGInitialCondition::getTheta(void) {
       ctheta=cos(theta);
     }
   }
+  calcWindUVW();
   return result;
 }
 
@@ -590,49 +646,50 @@ bool FGInitialCondition::findInterval(float x,float guess) {
 
 //******************************************************************************
 
-bool FGInitialCondition::solve(float *y,float x) {
+bool FGInitialCondition::solve(float *y,float x)
+{
   float x1,x2,x3,f1,f2,f3,d,d0;
   float eps=1E-5;
   float const relax =0.9;
   int i;
   bool success=false;
 
-   //initializations
+  //initializations
   d=1;
 
-    x1=xlo;x3=xhi;
-    f1=(this->*sfunc)(x1)-x;
-    f3=(this->*sfunc)(x3)-x;
-    d0=fabs(x3-x1);
+  x1=xlo;x3=xhi;
+  f1=(this->*sfunc)(x1)-x;
+  f3=(this->*sfunc)(x3)-x;
+  d0=fabs(x3-x1);
 
-    //iterations
-    i=0;
-    while ((fabs(d) > eps) && (i < 100)) {
-      d=(x3-x1)/d0;
-      x2=x1-d*d0*f1/(f3-f1);
+  //iterations
+  i=0;
+  while ((fabs(d) > eps) && (i < 100)) {
+    d=(x3-x1)/d0;
+    x2=x1-d*d0*f1/(f3-f1);
 
-      f2=(this->*sfunc)(x2)-x;
-      //cout << "solve x1,x2,x3: " << x1 << "," << x2 << "," << x3 << endl;
-      //cout << "                " << f1 << "," << f2 << "," << f3 << endl;
+    f2=(this->*sfunc)(x2)-x;
+    //cout << "solve x1,x2,x3: " << x1 << "," << x2 << "," << x3 << endl;
+    //cout << "                " << f1 << "," << f2 << "," << f3 << endl;
 
-      if(fabs(f2) <= 0.001) {
-        x1=x3=x2;
-      } else if(f1*f2 <= 0.0) {
-        x3=x2;
-        f3=f2;
-        f1=relax*f1;
-      } else if(f2*f3 <= 0) {
-        x1=x2;
-        f1=f2;
-        f3=relax*f3;
-      }
-      //cout << i << endl;
-      i++;
-    }//end while
-    if(i < 100) {
-      success=true;
-      *y=x2;
+    if(fabs(f2) <= 0.001) {
+      x1=x3=x2;
+    } else if(f1*f2 <= 0.0) {
+      x3=x2;
+      f3=f2;
+      f1=relax*f1;
+    } else if(f2*f3 <= 0) {
+      x1=x2;
+      f1=f2;
+      f3=relax*f3;
     }
+    //cout << i << endl;
+    i++;
+  }//end while
+  if(i < 100) {
+    success=true;
+    *y=x2;
+  }
 
   //cout << "Success= " << success << " Vcas: " << vcas*jsbFPSTOKTS << " Mach: " << x2 << endl;
   return success;
@@ -640,8 +697,69 @@ bool FGInitialCondition::solve(float *y,float x) {
 
 //******************************************************************************
 
-void FGInitialCondition::Debug(void)
-{
-    //TODO: Add your source code here
-}
+float FGInitialCondition::GetWindDirDegIC(void) {
+  if(weast != 0.0) 
+    return atan2(weast,wnorth)*RADTODEG;
+  else if(wnorth > 0) 
+    return 0.0;
+  else
+    return 180.0;
+}        
 
+//******************************************************************************
+
+bool FGInitialCondition::Load(string path, string acname, string fname)
+{
+  string resetDef;
+  string token="";
+
+  float temp;
+
+# ifndef macintosh
+  resetDef = path + "/" + acname + "/" + fname + ".xml";
+# else
+  resetDef = path + ";" + acname + ";" + fname + ".xml";
+# endif
+
+  cout << resetDef << endl;
+  FGConfigFile resetfile(resetDef);
+  if (!resetfile.IsOpen()) return false;
+
+  resetfile.GetNextConfigLine();
+  token = resetfile.GetValue();
+  if (token != "initialize") {
+    cerr << "The reset file " << resetDef
+         << " does not appear to be a reset file" << endl;
+    return false;
+  }
+  
+  resetfile.GetNextConfigLine();
+  resetfile >> token;
+  while (token != "/initialize" && token != "EOF") {
+    if (token == "UBODY" ) { resetfile >> temp; SetUBodyFpsIC(temp); } 
+    if (token == "VBODY" ) { resetfile >> temp; SetVBodyFpsIC(temp); } 
+    if (token == "WBODY" ) { resetfile >> temp; SetWBodyFpsIC(temp); }  
+    if (token == "LATITUDE" ) { resetfile >> temp; SetLatitudeDegIC(temp); }
+    if (token == "LONGITUDE" ) { resetfile >> temp; SetLongitudeDegIC(temp); }
+    if (token == "PHI" ) { resetfile >> temp; SetRollAngleDegIC(temp); }
+    if (token == "THETA" ) { resetfile >> temp; SetPitchAngleDegIC(temp); }
+    if (token == "PSI" ) { resetfile >> temp; SetTrueHeadingDegIC(temp); }
+    if (token == "ALPHA" ) { resetfile >> temp; SetAlphaDegIC(temp); }
+    if (token == "BETA" ) { resetfile >> temp; SetBetaDegIC(temp); }
+    if (token == "GAMMA" ) { resetfile >> temp; SetFlightPathAngleDegIC(temp); }
+    if (token == "ROC" ) { resetfile >> temp; SetClimbRateFpmIC(temp); }
+    if (token == "ALTITUDE" ) { resetfile >> temp; SetAltitudeFtIC(temp); }
+    if (token == "WINDDIR" ) { resetfile >> temp; SetWindDirDegIC(temp); }
+    if (token == "VWIND" ) { resetfile >> temp; SetWindMagKtsIC(temp); }
+    if (token == "HWIND" ) { resetfile >> temp; SetHeadWindKtsIC(temp); }
+    if (token == "XWIND" ) { resetfile >> temp; SetCrossWindKtsIC(temp); }
+    if (token == "VC" ) { resetfile >> temp; SetVcalibratedKtsIC(temp); }
+    if (token == "MACH" ) { resetfile >> temp; SetMachIC(temp); }
+    if (token == "VGROUND" ) { resetfile >> temp; SetVgroundKtsIC(temp); }
+    resetfile >> token;
+  }
+
+  fdmex->RunIC(this);
+  
+  return true;
+}  

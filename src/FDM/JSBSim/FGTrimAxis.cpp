@@ -45,8 +45,6 @@ INCLUDES
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_TRIMAXIS;
 
-extern short debug_lvl;
-
 /*****************************************************************************/
 
 FGTrimAxis::FGTrimAxis(FGFDMExec* fdex, FGInitialCondition* ic, State st,

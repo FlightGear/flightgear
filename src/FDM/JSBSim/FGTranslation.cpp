@@ -72,8 +72,6 @@ INCLUDES
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_TRANSLATION;
 
-extern short debug_lvl;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -83,9 +81,6 @@ FGTranslation::FGTranslation(FGFDMExec* fdmex) : FGModel(fdmex),
     vUVW(3),
     vUVWdot(3),
     vNcg(3),
-    vPQR(3),
-    vForces(3),
-    vEuler(3),
     vlastUVWdot(3),
     mVel(3,3),
     vAero(3)
@@ -96,7 +91,6 @@ FGTranslation::FGTranslation(FGFDMExec* fdmex) : FGModel(fdmex),
   Mach = 0.0;
   alpha = beta = 0.0;
   adot = bdot = 0.0;
-  rho = 0.002378;
 
   if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
 }
@@ -110,11 +104,11 @@ FGTranslation::~FGTranslation()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGTranslation::Run(void) {
+bool FGTranslation::Run(void)
+{
+  float Tc = 0.5*State->Getdt()*rate;
 
   if (!FGModel::Run()) {
-
-    GetState();
 
     mVel(1,1) =  0.0;
     mVel(1,2) = -vUVW(eW);
@@ -126,37 +120,40 @@ bool FGTranslation::Run(void) {
     mVel(3,2) =  vUVW(eU);
     mVel(3,3) =  0.0;
 
-    vUVWdot = mVel*vPQR + vForces/Mass;
+    vUVWdot = mVel*Rotation->GetPQR() + Aircraft->GetForces()/MassBalance->GetMass();
 
     vNcg = vUVWdot*INVGRAVITY;
 
-    vUVW += 0.5*dt*rate*(vlastUVWdot + vUVWdot);
+    vUVW += Tc * (vlastUVWdot + vUVWdot);
     vAero = vUVW + State->GetTl2b()*Atmosphere->GetWindNED();
 
     Vt = vAero.Magnitude();
+    if ( Vt > 1) {
+      if (vAero(eW) != 0.0)
+        alpha = vAero(eU)*vAero(eU) > 0.0 ? atan2(vAero(eW), vAero(eU)) : 0.0;
+      if (vAero(eV) != 0.0)
+        beta = vAero(eU)*vAero(eU)+vAero(eW)*vAero(eW) > 0.0 ? atan2(vAero(eV),
+               sqrt(vAero(eU)*vAero(eU) + vAero(eW)*vAero(eW))) : 0.0;
 
-    if (vAero(eW) != 0.0)
-      alpha = vAero(eU)*vAero(eU) > 0.0 ? atan2(vAero(eW), vAero(eU)) : 0.0;
-    if (vAero(eV) != 0.0)
-      beta = vAero(eU)*vAero(eU)+vAero(eW)*vAero(eW) > 0.0 ? atan2(vAero(eV),
-             sqrt(vAero(eU)*vAero(eU) + vAero(eW)*vAero(eW))) : 0.0;
+      // stolen, quite shamelessly, from LaRCsim
+      float mUW = (vAero(eU)*vAero(eU) + vAero(eW)*vAero(eW));
+      float signU=1;
+      if (vAero(eU) != 0.0)
+        signU = vAero(eU)/fabs(vAero(eU));
 
-    // stolen, quite shamelessly, from LaRCsim
-    float mUW = (vAero(eU)*vAero(eU) + vAero(eW)*vAero(eW));
-    float signU=1;
-    if (vAero(eU) != 0.0)
-      signU = vAero(eU)/fabs(vAero(eU));
-
-    if ( (mUW == 0.0) || (Vt == 0.0) ) {
-      adot = 0.0;
-      bdot = 0.0;
+      if ( (mUW == 0.0) || (Vt == 0.0) ) {
+        adot = 0.0;
+        bdot = 0.0;
+      } else {
+        adot = (vAero(eU)*vAero(eW) - vAero(eW)*vUVWdot(eU))/mUW;
+        bdot = (signU*mUW*vUVWdot(eV) - vAero(eV)*(vAero(eU)*vUVWdot(eU)
+                + vAero(eW)*vUVWdot(eW)))/(Vt*Vt*sqrt(mUW));
+      }
     } else {
-      adot = (vAero(eU)*vAero(eW) - vAero(eW)*vUVWdot(eU))/mUW;
-      bdot = (signU*mUW*vUVWdot(eV) - vAero(eV)*(vAero(eU)*vUVWdot(eU)
-              + vAero(eW)*vUVWdot(eW)))/(Vt*Vt*sqrt(mUW));
+      alpha = beta = adot = bdot = 0;
     }
 
-    qbar = 0.5*rho*Vt*Vt;
+    qbar = 0.5*Atmosphere->GetDensity()*Vt*Vt;
     Mach = Vt / State->Geta();
 
     vlastUVWdot = vUVWdot;
@@ -167,20 +164,6 @@ bool FGTranslation::Run(void) {
   } else {
     return true;
   }
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGTranslation::GetState(void) {
-  dt = State->Getdt();
-
-  vPQR = Rotation->GetPQR();
-  vForces = Aircraft->GetForces();
-
-  Mass = MassBalance->GetMass();
-  rho = Atmosphere->GetDensity();
-
-  vEuler = Rotation->GetEuler();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -45,8 +45,13 @@ INCLUDES
 #  include STL_IOSTREAM
 #  include STL_FSTREAM
 #else
-#  include <iostream>
-#  include <fstream>
+#  if defined(sgi) && !defined(__GNUC__)
+#    include <iostream.h>
+#    include <fstream.h>
+#  else
+#    include <iostream>
+#    include <fstream>
+#  endif
 #endif
 
 #include "FGfdmSocket.h"
@@ -65,7 +70,6 @@ public:
 
   bool Run(void);
 
-  void DelimitedOutput(void);
   void DelimitedOutput(string);
   void SocketOutput(void);
   void SocketStatusOutput(string);
@@ -75,8 +79,6 @@ public:
   inline void Enable(void) { enabled = true; }
   inline void Disable(void) { enabled = false; }
   inline bool Toggle(void) {enabled = !enabled; return enabled;}
-
-protected:
 
 private:
   bool sFirstPass, dFirstPass, enabled;

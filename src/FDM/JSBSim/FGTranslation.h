@@ -64,11 +64,17 @@ INCLUDES
 #    include <math.h>
 #  endif
 #else
-#  include <cmath>
+#  if defined(sgi) && !defined(__GNUC__)
+#    include <math.h>
+#  else
+#    include <cmath>
+#  endif
 #endif
 
 #include "FGModel.h"
-#include "FGMatrix.h"
+#include "FGMatrix33.h"
+#include "FGColumnVector3.h"
+#include "FGColumnVector4.h"
 
 #define ID_TRANSLATION "$Id$"
 
@@ -81,14 +87,14 @@ public:
   FGTranslation(FGFDMExec*);
   ~FGTranslation();
 
-  inline FGColumnVector GetUVW   (void)    { return vUVW; }
-  inline float          GetUVW   (int idx) { return vUVW(idx); }
-  inline FGColumnVector GetUVWdot(void)    { return vUVWdot; }
-  inline float          GetUVWdot(int idx) { return vUVWdot(idx); }
-  inline FGColumnVector GetNcg   (void)    { return vNcg; }
-  inline float          GetNcg   (int idx) { return vNcg(idx); }
-  inline FGColumnVector GetvAero (void)    { return vAero; }
-  inline float          GetvAero (int idx) { return vAero(idx); }
+  inline FGColumnVector3& GetUVW   (void)    { return vUVW; }
+  inline float            GetUVW   (int idx) { return vUVW(idx); }
+  inline FGColumnVector3& GetUVWdot(void)    { return vUVWdot; }
+  inline float            GetUVWdot(int idx) { return vUVWdot(idx); }
+  inline FGColumnVector3& GetNcg   (void)    { return vNcg; }
+  inline float            GetNcg   (int idx) { return vNcg(idx); }
+  inline FGColumnVector3& GetvAero (void)    { return vAero; }
+  inline float            GetvAero (int idx) { return vAero(idx); }
 
   inline float Getalpha(void) { return alpha; }
   inline float Getbeta (void) { return beta; }
@@ -98,7 +104,7 @@ public:
   inline float Getadot (void) { return adot; }
   inline float Getbdot (void) { return bdot; }
 
-  void SetUVW(FGColumnVector tt) { vUVW = tt; }
+  void SetUVW(FGColumnVector3 tt) { vUVW = tt; }
 
   inline void Setalpha(float tt) { alpha = tt; }
   inline void Setbeta (float tt) { beta  = tt; }
@@ -112,26 +118,19 @@ public:
   
   bool Run(void);
 
-protected:
-
 private:
-  FGColumnVector vUVW;
-  FGColumnVector vUVWdot;
-  FGColumnVector vNcg;
-  FGColumnVector vPQR;
-  FGColumnVector vForces;
-  FGColumnVector vEuler;
-  FGColumnVector vlastUVWdot;
-  FGMatrix       mVel;
-  FGColumnVector vAero;
+  FGColumnVector3 vUVW;
+  FGColumnVector3 vUVWdot;
+  FGColumnVector3 vNcg;
+  FGColumnVector3 vlastUVWdot;
+  FGMatrix33       mVel;
+  FGColumnVector3 vAero;
 
   float Vt, qbar, Mach;
-  float Mass, dt;
+  float dt;
   float alpha, beta;
   float adot,bdot;
-  float rho;
 
-  void GetState(void);
   void Debug(void);
 };
 

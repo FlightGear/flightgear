@@ -42,6 +42,7 @@ INCLUDES
 
 #include "FGModel.h"
 #include "FGInitialCondition.h"
+#include "FGJSBBase.h"
 #include <vector>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -61,6 +62,7 @@ class FGPropulsion;
 class FGMassBalance;
 class FGAerodynamics;
 class FGInertial;
+class FGGroundReactions;
 class FGAircraft;
 class FGTranslation;
 class FGRotation;
@@ -194,7 +196,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGFDMExec
+class FGFDMExec : public FGJSBBase
 {
 public:
   /// Default constructor
@@ -275,6 +277,8 @@ public:
   inline FGAerodynamics* GetAerodynamics(void){return Aerodynamics;}
   /// Returns the FGInertial pointer.
   inline FGInertial* GetInertial(void)        {return Inertial;}
+  /// Returns the FGGroundReactions pointer.
+  inline FGGroundReactions* GetGroundReactions(void) {return GroundReactions;}
   /// Returns the FGAircraft pointer.
   inline FGAircraft* GetAircraft(void)        {return Aircraft;}
   /// Returns the FGTranslation pointer.
@@ -312,19 +316,20 @@ private:
   float  EndTime;
   vector <struct condition> Conditions;
 
-  FGState*        State;
-  FGAtmosphere*   Atmosphere;
-  FGFCS*          FCS;
-  FGPropulsion*   Propulsion;
-  FGMassBalance*  MassBalance;
-  FGAerodynamics* Aerodynamics;
-  FGInertial*     Inertial;
-  FGAircraft*     Aircraft;
-  FGTranslation*  Translation;
-  FGRotation*     Rotation;
-  FGPosition*     Position;
-  FGAuxiliary*    Auxiliary;
-  FGOutput*       Output;
+  FGState*           State;
+  FGAtmosphere*      Atmosphere;
+  FGFCS*             FCS;
+  FGPropulsion*      Propulsion;
+  FGMassBalance*     MassBalance;
+  FGAerodynamics*    Aerodynamics;
+  FGInertial*        Inertial;
+  FGGroundReactions* GroundReactions;
+  FGAircraft*        Aircraft;
+  FGTranslation*     Translation;
+  FGRotation*        Rotation;
+  FGPosition*        Position;
+  FGAuxiliary*       Auxiliary;
+  FGOutput*          Output;
 
   bool Allocate(void);
   bool DeAllocate(void);

@@ -58,6 +58,8 @@ INCLUDES
 #  include <string>
 #endif
 
+#include "FGJSBBase.h"
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -103,7 +105,8 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGEngine {
+class FGEngine : public FGJSBBase
+{
 public:
   FGEngine(FGFDMExec* exec);
   virtual ~FGEngine();
@@ -113,12 +116,29 @@ public:
   virtual float  GetThrottleMin(void) { return MinThrottle; }
   virtual float  GetThrottleMax(void) { return MaxThrottle; }
   float  GetThrottle(void) { return Throttle; }
+  float  GetMixture(void) { return Mixture; }
   float  GetThrust(void) { return Thrust; }
   bool   GetStarved(void) { return Starved; }
   bool   GetFlameout(void) { return Flameout; }
   bool   GetRunning(void) { return Running; }
   int    GetType(void) { return Type; }
   string GetName(void) { return Name; }
+
+  virtual float getManifoldPressure_inHg () const {
+    return ManifoldPressure_inHg;
+  }
+  virtual float getExhaustGasTemp_degF () const {
+    return (ExhaustGasTemp_degK - 273) * (9.0 / 5.0) + 32.0;
+  }
+  virtual float getCylinderHeadTemp_degF () const {
+    return (CylinderHeadTemp_degK - 273) * (9.0 / 5.0) + 32.0;
+  }
+  virtual float getOilPressure_psi () const {
+    return OilPressure_psi;
+  }
+  virtual float getOilTemp_degF () const {
+    return (OilTemp_degK - 273.0) * (9.0 / 5.0) + 32.0;
+  }
 
   void SetStarved(bool tt) {Starved = tt;}
   void SetStarved(void)    {Starved = true;}
@@ -174,6 +194,7 @@ protected:
 
   float Thrust;
   float Throttle;
+  float Mixture;
   float FuelNeed, OxidizerNeed;
   bool  Starved;
   bool  Flameout;
@@ -181,6 +202,12 @@ protected:
   float PctPower;
   int   EngineNumber;
   bool  TrimMode;
+
+  float ManifoldPressure_inHg;
+  float ExhaustGasTemp_degK;
+  float CylinderHeadTemp_degK;
+  float OilPressure_psi;
+  float OilTemp_degK;
 
   FGFDMExec*      FDMExec;
   FGState*        State;

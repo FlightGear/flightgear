@@ -45,18 +45,21 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include "FGDefs.h"
 #include "FGCoefficient.h"
 #include "FGFactorGroup.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
 
 #ifndef FGFS
-#  include <iomanip>
+#  if defined(sgi) && !defined(__GNUC__)
+#    include <iomanip.h>
+#  else
+#    include <iomanip>
+#  endif
 #else
 #  include STL_IOMANIP
 #endif
-
-extern short debug_lvl;
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FACTORGROUP;
@@ -125,41 +128,6 @@ float FGFactorGroup::TotalValue(void) {
   if (debug_lvl & 8) Debug();
   return totalsum;
 }        
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-string FGFactorGroup::GetCoefficientStrings(void) {
-  int i;
-  string CoeffStrings;
-  
-  CoeffStrings += name;
-  CoeffStrings += ", ";
-  CoeffStrings += FGCoefficient::Getname();
-  for(i=0;i<sum.size();i++) {
-    CoeffStrings += ", ";
-    CoeffStrings += sum[i]->Getname();
-  }
-  return CoeffStrings;    
-}
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-string FGFactorGroup::GetCoefficientValues(void) {
-    int i;
-    char buffer[10];
-    string values;
-    
-    snprintf(buffer,10,"%9.6f",SDtotal);
-    values += string(buffer);
-    values += ", ";
-    snprintf(buffer,10,"%9.6f",FGCoefficient::GetSD() );
-    values += string(buffer);
-    values += ", ";
-    for(i=0;i<sum.size();i++) {
-       values += sum[i]->GetCoefficientValues();
-    }
-    return values;
-}       
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 

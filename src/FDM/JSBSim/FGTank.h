@@ -45,6 +45,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGConfigFile.h"
+#include "FGJSBBase.h"
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
@@ -58,9 +59,11 @@ INCLUDES
 #else
 # include <string>
   using std::string;
-  using std::cerr;
-  using std::endl;
-  using std::cout;
+# if !defined(sgi) || defined(__GNUC__)
+   using std::cerr;
+   using std::endl;
+   using std::cout;
+# endif
 #endif
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -73,7 +76,7 @@ DEFINES
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGTank
+class FGTank : public FGJSBBase
 {
 public:
   FGTank(FGConfigFile*);

@@ -47,8 +47,6 @@ INCLUDES
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_TABLE;
 
-extern short debug_lvl;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -96,8 +94,8 @@ float** FGTable::Allocate(void)
 
 FGTable::~FGTable()
 {
-  for (int r=0; r<=nRows; r++) if (Data[r]) delete Data[r];
-  if (Data) delete Data;
+  for (int r=0; r<=nRows; r++) if (Data[r]) delete[] Data[r];
+  if (Data) delete[] Data;
   if (debug_lvl & 2) cout << "Destroyed:    FGTable" << endl;
 }
 

@@ -42,8 +42,6 @@ INCLUDES
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_INERTIAL;
 
-extern short debug_lvl;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -52,7 +50,8 @@ CLASS IMPLEMENTATION
 FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex),
     vForces(3),
     vOmegaLocal(3),
-    vRadius(3)
+    vRadius(3),
+    vGravity(3)
 {
   Name = "FGInertial";
 
@@ -81,9 +80,9 @@ bool FGInertial::Run(void)
     sphi = sin(Rotation->GetEuler(ePhi));
     cphi = cos(Rotation->GetEuler(ePhi));
 
-    vForces(eX) = -GRAVITY*stht;
-    vForces(eY) =  GRAVITY*sphi*ctht;
-    vForces(eZ) =  GRAVITY*cphi*ctht;
+    vGravity(eX) = vForces(eX) = -GRAVITY*stht;
+    vGravity(eY) = vForces(eY) =  GRAVITY*sphi*ctht;
+    vGravity(eZ) = vForces(eZ) =  GRAVITY*cphi*ctht;
     
     // The following equation for vOmegaLocal terms shows the angular velocity
     // calculation _for_the_local_frame_ given the earth's rotation (first set)

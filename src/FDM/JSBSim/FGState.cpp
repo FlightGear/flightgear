@@ -40,20 +40,17 @@ INCLUDES
 #  include <simgear/compiler.h>
 #  include <math.h>
 #else
-#  include <cmath>
-#endif
-
-#ifndef M_PI 
-#  include <simgear/constants.h>
-#  define M_PI SG_PI
+#  if defined(sgi) && !defined(__GNUC__)
+#    include <math.h>
+#  else
+#    include <cmath>
+#  endif
 #endif
 
 #include "FGState.h"
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_STATE;
-
-extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 MACROS
@@ -79,7 +76,10 @@ FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
     vlastQdot(4),
     vQdot(4),
     vTmp(4),
-    vEuler(3)
+    vEuler(3),
+    vUVW(3),
+    vLocalVelNED(3),
+    vLocalEuler(3)
 {
   FDMExec = fdex;
 
@@ -137,6 +137,14 @@ FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
   RegisterVariable(FG_LEFT_BRAKE_CMD, " left_brake_cmd " );
   RegisterVariable(FG_RIGHT_BRAKE_CMD," right_brake_cmd ");
   RegisterVariable(FG_CENTER_BRAKE_CMD," center_brake_cmd ");
+  RegisterVariable(FG_ALPHAH,          " h-tail alpha " );
+  RegisterVariable(FG_ALPHAW,          " wing alpha " );
+  RegisterVariable(FG_LBARH,           " h-tail arm " );
+  RegisterVariable(FG_LBARV,           " v-tail arm " );
+  RegisterVariable(FG_HTAILAREA,       " h-tail area " );
+  RegisterVariable(FG_VTAILAREA,       " v-tail area " );
+  RegisterVariable(FG_VBARH,           " h-tail volume " );
+  RegisterVariable(FG_VBARV,           " v-tail volume " );
   RegisterVariable(FG_SET_LOGGING,    " data_logging "   );
 
   if (debug_lvl & 2) cout << "Instantiated: FGState" << endl;
@@ -165,8 +173,22 @@ float FGState::GetParameter(eParam val_idx) {
     return Aircraft->GetWingSpan();
   case FG_CBAR:
     return Aircraft->Getcbar();
+  case FG_LBARH:
+    return Aircraft->Getlbarh();
+  case FG_LBARV:
+    return Aircraft->Getvbarh();
+  case FG_HTAILAREA:
+    return Aircraft->GetHTailArea();
+  case FG_VTAILAREA:
+    return Aircraft->GetVTailArea();
+  case FG_VBARH:
+    return Aircraft->Getvbarh();
+  case FG_VBARV:
+    return Aircraft->Getvbarv();
   case FG_ALPHA:
     return Translation->Getalpha();
+  case FG_ALPHAW:
+    return  Translation->Getalpha() + Aircraft->GetWingIncidence();
   case FG_ALPHADOT:
     return Translation->Getadot();
   case FG_BETA:
@@ -336,44 +358,63 @@ void FGState::SetParameter(eParam val_idx, float val) {
 // Reset: Assume all angles READ FROM FILE IN DEGREES !!
 //
 
-bool FGState::Reset(string path, string acname, string fname) {
+bool FGState::Reset(string path, string acname, string fname)
+{
   string resetDef;
+  string token="";
+
   float U, V, W;
   float phi, tht, psi;
   float latitude, longitude, h;
+  float wdir, wmag, wnorth, weast;
 
+# ifndef macintosh
   resetDef = path + "/" + acname + "/" + fname + ".xml";
+# else
+  resetDef = path + ";" + acname + ";" + fname + ".xml";
+# endif
 
-#if defined ( sgi ) && !defined( __GNUC__ )
-  ifstream resetfile(resetDef.c_str(), ios::in );
-#else
-  ifstream resetfile(resetDef.c_str(), ios::in | ios::binary );
-#endif
+  FGConfigFile resetfile(resetDef);
+  if (!resetfile.IsOpen()) return false;
 
-  if (resetfile) {
-    resetfile >> U;
-    resetfile >> V;
-    resetfile >> W;
-    resetfile >> latitude;
-    resetfile >> longitude;
-    resetfile >> phi;
-    resetfile >> tht;
-    resetfile >> psi;
-    resetfile >> h;
-    resetfile.close();
-
-    Position->SetLatitude(latitude*DEGTORAD);
-    Position->SetLongitude(longitude*DEGTORAD);
-    Position->Seth(h);
-
-    Initialize(U, V, W, phi*DEGTORAD, tht*DEGTORAD, psi*DEGTORAD,
-               latitude*DEGTORAD, longitude*DEGTORAD, h);
-
-    return true;
-  } else {
-    cerr << "Unable to load reset file " << fname << endl;
+  resetfile.GetNextConfigLine();
+  token = resetfile.GetValue();
+  if (token != "initialize") {
+    cerr << "The reset file " << resetDef
+         << " does not appear to be a reset file" << endl;
     return false;
   }
+  
+  resetfile.GetNextConfigLine();
+  resetfile >> token;
+  while (token != "/initialize" && token != "EOF") {
+    if (token == "UBODY") resetfile >> U;
+    if (token == "VBODY") resetfile >> V;
+    if (token == "WBODY") resetfile >> W;
+    if (token == "LATITUDE") resetfile >> latitude;
+    if (token == "LONGITUDE") resetfile >> longitude;
+    if (token == "PHI") resetfile >> phi;
+    if (token == "THETA") resetfile >> tht;
+    if (token == "PSI") resetfile >> psi;
+    if (token == "ALTITUDE") resetfile >> h;
+    if (token == "WINDDIR") resetfile >> wdir;
+    if (token == "VWIND") resetfile >> wmag;
+
+    resetfile >> token;
+  }
+  
+  
+  Position->SetLatitude(latitude*DEGTORAD);
+  Position->SetLongitude(longitude*DEGTORAD);
+  Position->Seth(h);
+
+  wnorth = wmag*KTSTOFPS*cos(wdir*DEGTORAD);
+  weast = wmag*KTSTOFPS*sin(wdir*DEGTORAD);
+  
+  Initialize(U, V, W, phi*DEGTORAD, tht*DEGTORAD, psi*DEGTORAD,
+               latitude*DEGTORAD, longitude*DEGTORAD, h, wnorth, weast, 0.0);
+
+  return true;
 }
 
 //***************************************************************************
@@ -383,33 +424,39 @@ bool FGState::Reset(string path, string acname, string fname) {
 
 void FGState::Initialize(float U, float V, float W,
                          float phi, float tht, float psi,
-                         float Latitude, float Longitude, float H) {
-  FGColumnVector vUVW(3);
-  FGColumnVector vLocalVelNED(3);
-  FGColumnVector vLocalEuler(3);
+                         float Latitude, float Longitude, float H,
+                         float wnorth, float weast, float wdown)
+{
   float alpha, beta;
   float qbar, Vt;
+  FGColumnVector3 vAero;
 
   Position->SetLatitude(Latitude);
   Position->SetLongitude(Longitude);
   Position->Seth(H);
 
   Atmosphere->Run();
-
-  if (W != 0.0)
-    alpha = U*U > 0.0 ? atan2(W, U) : 0.0;
-  else
-    alpha = 0.0;
-  if (V != 0.0)
-    beta = U*U+W*W > 0.0 ? atan2(V, (fabs(U)/U)*sqrt(U*U + W*W)) : 0.0;
-  else
-    beta = 0.0;
-
-  vUVW << U << V << W;
-  Translation->SetUVW(vUVW);
-
+  
   vLocalEuler << phi << tht << psi;
   Rotation->SetEuler(vLocalEuler);
+
+  InitMatrices(phi, tht, psi);
+  
+  vUVW << U << V << W;
+  Translation->SetUVW(vUVW);
+  
+  Atmosphere->SetWindNED(wnorth, weast, wdown);
+  
+  vAero = vUVW + mTl2b*Atmosphere->GetWindNED();
+  
+  if (vAero(eW) != 0.0)
+    alpha = vAero(eU)*vAero(eU) > 0.0 ? atan2(vAero(eW), vAero(eU)) : 0.0;
+  else
+    alpha = 0.0;
+  if (vAero(eV) != 0.0)
+    beta = vAero(eU)*vAero(eU)+vAero(eW)*vAero(eW) > 0.0 ? atan2(vAero(eV), (fabs(vAero(eU))/vAero(eU))*sqrt(vAero(eU)*vAero(eU) + vAero(eW)*vAero(eW))) : 0.0;
+  else
+    beta = 0.0;
 
   Translation->SetAB(alpha, beta);
 
@@ -420,8 +467,6 @@ void FGState::Initialize(float U, float V, float W,
 
   qbar = 0.5*(U*U + V*V + W*W)*Atmosphere->GetDensity();
   Translation->Setqbar(qbar);
-
-  InitMatrices(phi, tht, psi);
 
   vLocalVelNED = mTb2l*vUVW;
   Position->SetvVel(vLocalVelNED);
@@ -434,7 +479,8 @@ void FGState::Initialize(FGInitialCondition *FGIC) {
   float tht,psi,phi;
   float U, V, W, h;
   float latitude, longitude;
-
+  float wnorth,weast, wdown;
+  
   latitude = FGIC->GetLatitudeRadIC();
   longitude = FGIC->GetLongitudeRadIC();
   h = FGIC->GetAltitudeFtIC();
@@ -444,13 +490,16 @@ void FGState::Initialize(FGInitialCondition *FGIC) {
   tht = FGIC->GetThetaRadIC();
   phi = FGIC->GetPhiRadIC();
   psi = FGIC->GetPsiRadIC();
-
-  Initialize(U, V, W, phi, tht, psi, latitude, longitude, h);
+  wnorth = FGIC->GetWindNFpsIC();
+  weast = FGIC->GetWindEFpsIC();
+  wdown = FGIC->GetWindDFpsIC();
   
   Position->SetSeaLevelRadius( FGIC->GetSeaLevelRadiusFtIC() );
   Position->SetRunwayRadius( FGIC->GetSeaLevelRadiusFtIC() + 
                                              FGIC->GetTerrainAltitudeFtIC() );
 
+  // need to fix the wind speed args, here.  
+  Initialize(U, V, W, phi, tht, psi, latitude, longitude, h, wnorth, weast, wdown);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -546,7 +595,7 @@ void FGState::CalcMatrices(void) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGState::IntegrateQuat(FGColumnVector vPQR, int rate) {
+void FGState::IntegrateQuat(FGColumnVector3 vPQR, int rate) {
   vQdot(1) = -0.5*(vQtrn(2)*vPQR(eP) + vQtrn(3)*vPQR(eQ) + vQtrn(4)*vPQR(eR));
   vQdot(2) =  0.5*(vQtrn(1)*vPQR(eP) + vQtrn(3)*vPQR(eR) - vQtrn(4)*vPQR(eQ));
   vQdot(3) =  0.5*(vQtrn(1)*vPQR(eQ) + vQtrn(4)*vPQR(eP) - vQtrn(2)*vPQR(eR));
@@ -560,7 +609,7 @@ void FGState::IntegrateQuat(FGColumnVector vPQR, int rate) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector FGState::CalcEuler(void) {
+FGColumnVector3& FGState::CalcEuler(void) {
   if (mTl2b(3,3) == 0.0) mTl2b(3,3) = 0.0000001;
   if (mTl2b(1,1) == 0.0) mTl2b(1,1) = 0.0000001;
 
@@ -575,7 +624,8 @@ FGColumnVector FGState::CalcEuler(void) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGMatrix FGState::GetTs2b(float alpha, float beta) {
+FGMatrix33& FGState::GetTs2b(float alpha, float beta)
+{
   float ca, cb, sa, sb;
 
   ca = cos(alpha);
@@ -596,6 +646,76 @@ FGMatrix FGState::GetTs2b(float alpha, float beta) {
   return mTs2b;
 }
 
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGState::ReportState(void) {
+  char out[80], flap[10], gear[10];
+  
+  cout << endl << "  JSBSim State" << endl;
+  snprintf(out,80,"    Weight: %7.0f lbs.  CG: %5.1f, %5.1f, %5.1f inches\n",
+                   FDMExec->GetMassBalance()->GetWeight(),
+                   FDMExec->GetMassBalance()->GetXYZcg(1),
+                   FDMExec->GetMassBalance()->GetXYZcg(2),
+                   FDMExec->GetMassBalance()->GetXYZcg(3));
+  cout << out;             
+  if( FCS->GetDfPos() <= 0.01)
+    snprintf(flap,10,"Up");
+  else
+    snprintf(flap,10,"%2.0f",FCS->GetDfPos());
+  if(Aircraft->GetGearUp() == true)
+    snprintf(gear,10,"Up");
+  else
+    snprintf(gear,10,"Down");
+  snprintf(out,80, "    Flaps: %3s  Gear: %4s\n",flap,gear);
+  cout << out;
+  snprintf(out,80, "    Speed: %4.0f KCAS  Mach: %5.2f\n",
+                    FDMExec->GetAuxiliary()->GetVcalibratedKTS(),
+                    GetParameter(FG_MACH) );
+  cout << out;
+  snprintf(out,80, "    Altitude: %7.0f ft.  AGL Altitude: %7.0f ft.\n",
+                    Position->Geth(),
+                    Position->GetDistanceAGL() );
+  cout << out;
+  snprintf(out,80, "    Angle of Attack: %6.2f deg  Pitch Angle: %6.2f deg\n",
+                    GetParameter(FG_ALPHA)*RADTODEG,
+                    Rotation->Gettht()*RADTODEG );
+  cout << out;
+  snprintf(out,80, "    Flight Path Angle: %6.2f deg  Climb Rate: %5.0f ft/min\n",
+                    Position->GetGamma()*RADTODEG,
+                    Position->Gethdot()*60 );
+  cout << out;                  
+  snprintf(out,80, "    Normal Load Factor: %4.2f g's  Pitch Rate: %5.2f deg/s\n",
+                    Aerodynamics->GetNlf(),
+                    GetParameter(FG_PITCHRATE)*RADTODEG );
+  cout << out;
+  snprintf(out,80, "    Heading: %3.0f deg true  Sideslip: %5.2f deg\n",
+                    Rotation->Getpsi()*RADTODEG,
+                    GetParameter(FG_BETA)*RADTODEG );                  
+  cout << out;
+  snprintf(out,80, "    Bank Angle: %5.2f deg\n",
+                    Rotation->Getphi()*RADTODEG );
+  cout << out;
+  snprintf(out,80, "    Elevator: %5.2f deg  Left Aileron: %5.2f deg  Rudder: %5.2f deg\n",
+                    GetParameter(FG_ELEVATOR_POS)*RADTODEG,
+                    GetParameter(FG_AILERON_POS)*RADTODEG,
+                    GetParameter(FG_RUDDER_POS)*RADTODEG );
+  cout << out;                  
+  snprintf(out,80, "    Throttle: %5.2f%c\n",
+                    FCS->GetThrottlePos(0),'%' );
+  cout << out;
+  
+  snprintf(out,80, "    Wind Components: %5.2f kts head wind, %5.2f kts cross wind\n",
+                    FDMExec->GetAuxiliary()->GetHeadWind()*jsbFPSTOKTS,
+                    FDMExec->GetAuxiliary()->GetCrossWind()*jsbFPSTOKTS );
+  cout << out; 
+  
+  snprintf(out,80, "    Ground Speed: %4.0f knots , Ground Track: %3.0f deg true\n",
+                    Position->GetVground()*jsbFPSTOKTS,
+                    Position->GetGroundTrack()*RADTODEG );
+  cout << out;                                   
+
+} 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGState::Debug(void)

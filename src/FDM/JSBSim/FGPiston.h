@@ -26,6 +26,7 @@
 HISTORY
 --------------------------------------------------------------------------------
 09/12/2000  JSB  Created
+10/01/2001  DPM  Modified to use equations from Dave Luff's piston model.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES,  and NOTES
@@ -45,7 +46,30 @@ INCLUDES
 #include "FGEngine.h"
 #include "FGConfigFile.h"
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DEFINITIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 #define ID_PISTON "$Id$";
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+FORWARD DECLARATIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+COMMENTS, REFERENCES,  and NOTES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/** Models Dave Luff's engine model as ported into JSBSim by David Megginson.
+    @author Jon S. Berndt (Engine framework code and framework-related mods)
+    @author Dave Luff (engine operational code)
+    @author David Megginson (porting and additional code)
+    @version $Id$
+  */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -54,7 +78,9 @@ CLASS DECLARATION
 class FGPiston : public FGEngine
 {
 public:
+  /// Constructor
   FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg);
+  /// Destructor
   ~FGPiston();
 
   float Calculate(float PowerRequired);
@@ -66,9 +92,68 @@ private:
   float SpeedIntercept;
   float AltitudeSlope;
   float PowerAvailable;
+
+  // timestep
+  float dt;
+
+  // engine state
+  bool running;
+  bool cranking;
+
+  void doEngineStartup(void);
+  void doManifoldPressure(void);
+  void doAirFlow(void);
+  void doFuelFlow(void);
+  void doEnginePower(void);
+  void doEGT(void);
+  void doCHT(void);
+  void doOilPressure(void);
+  void doOilTemperature(void);
+
+  //
+  // constants
+  //
+  const float CONVERT_CUBIC_INCHES_TO_METERS_CUBED;
+
+  const float R_air;
+  const float rho_fuel;    // kg/m^3
+  const float calorific_value_fuel;  // W/Kg (approximate)
+  const float Cp_air;      // J/KgK
+  const float Cp_fuel;     // J/KgK
+
+  //
+  // Configuration
+  //
+  float MinManifoldPressure_inHg; // Inches Hg
+  float MaxManifoldPressure_inHg; // Inches Hg
+  float Displacement;             // cubic inches
+  float MaxHP;                    // horsepower
+  float Cycles;                   // cycles/power stroke
+  float IdleRPM;                  // revolutions per minute
+
+  //
+  // Inputs (in addition to those in FGEngine).
+  //
+  float p_amb;              // Pascals
+  float p_amb_sea_level;    // Pascals
+  float T_amb;              // degrees Kelvin
+  float RPM;                // revolutions per minute
+  float IAS;                // knots
+
+  //
+  // Outputs (in addition to those in FGEngine).
+  //
+  float rho_air;
+  float volumetric_efficiency;
+  float m_dot_air;
+  float equivalence_ratio;
+  float m_dot_fuel;
+  float Percentage_Power;
+  float HP;
+  float combustion_efficiency;
+
   void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
-

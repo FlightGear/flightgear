@@ -42,8 +42,6 @@ INCLUDES
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FILTER;
 
-extern short debug_lvl;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -113,6 +111,12 @@ FGFilter::FGFilter(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
       cc = (2.00*C3 - dt*C2) / denom;
       break;
     case eOrder2:
+      denom = 4.0*C3 + 2.0*C5*dt + C6*dt*dt;
+      ca = 4.0*C1 + 2.0*C2*dt + C3*dt*dt / denom;
+      cb = 2.0*C3*dt*dt - 8.0*C1 / denom;
+      cc = 4.0*C1 - 2.0*C2*dt + C3*dt*dt / denom;
+      cd = 2.0*C6*dt*dt - 8.0*C4 / denom;
+      ce = 4.0*C3 - 2.0*C5*dt + C6*dt*dt / denom;
       break;
     case eWashout:
       denom = 2.00 + dt*C1;
@@ -122,6 +126,9 @@ FGFilter::FGFilter(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
     case eIntegrator:
       ca = dt*C1 / 2.00;
       break;
+    case eUnknown:
+      cerr << "Unknown filter type" << endl;
+    break;
   }
 
   if (debug_lvl > 0) {
@@ -162,12 +169,13 @@ bool FGFilter::Run(void)
     switch (FilterType) {
       case eLag:
         Output = Input * ca + PreviousInput1 * ca + PreviousOutput1 * cb;
-//        Output = Input * ca + PreviousOutput1 * cb;
         break;
       case eLeadLag:
         Output = Input * ca + PreviousInput1 * cb + PreviousOutput1 * cc;
         break;
       case eOrder2:
+        Output = Input * ca + PreviousInput1 * cb + PreviousInput2 * cc
+	                          - PreviousOutput1 * cd - PreviousOutput2 * ce;
         break;
       case eWashout:
         Output = Input * ca - PreviousInput1 * ca + PreviousOutput1 * cb;

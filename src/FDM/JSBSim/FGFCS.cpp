@@ -61,8 +61,6 @@ INCLUDES
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FCS;
 
-extern short debug_lvl;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -84,6 +82,8 @@ FGFCS::~FGFCS()
 {
   ThrottleCmd.clear();
   ThrottlePos.clear();
+  MixtureCmd.clear();
+  MixturePos.clear();
 
   unsigned int i;
 
@@ -99,6 +99,7 @@ bool FGFCS::Run(void)
 
   if (!FGModel::Run()) {
     for (i=0; i<ThrottlePos.size(); i++) ThrottlePos[i] = ThrottleCmd[i];
+    for (i=0; i<MixturePos.size(); i++) MixturePos[i] = MixtureCmd[i];
     for (i=0; i<Components.size(); i++)  Components[i]->Run();
   } else {
   }
@@ -112,10 +113,16 @@ void FGFCS::SetThrottleCmd(int engineNum, float setting)
 {
   unsigned int ctr;
 
-  if (engineNum < 0) {
-    for (ctr=0;ctr<ThrottleCmd.size();ctr++) ThrottleCmd[ctr] = setting;
+  if ((int)ThrottleCmd.size() > engineNum) {
+    if (engineNum < 0) {
+      for (ctr=0;ctr<=ThrottleCmd.size();ctr++) ThrottleCmd[ctr] = setting;
+    } else {
+      ThrottleCmd[engineNum] = setting;
+    }
   } else {
-    ThrottleCmd[engineNum] = setting;
+    cerr << "Throttle " << engineNum << " does not exist! " << ThrottleCmd.size()
+         << " engines exist, but attempted throttle command is for engine "
+         << engineNum << endl;
   }
 }
 
@@ -125,10 +132,76 @@ void FGFCS::SetThrottlePos(int engineNum, float setting)
 {
   unsigned int ctr;
 
-  if (engineNum < 0) {
-    for (ctr=0;ctr<=ThrottleCmd.size();ctr++) ThrottlePos[ctr] = ThrottleCmd[ctr];
+  if ((int)ThrottlePos.size() > engineNum) {
+    if (engineNum < 0) {
+      for (ctr=0;ctr<=ThrottlePos.size();ctr++) ThrottlePos[ctr] = setting;
+    } else {
+      ThrottlePos[engineNum] = setting;
+    }
   } else {
-    ThrottlePos[engineNum] = setting;
+    cerr << "Throttle " << engineNum << " does not exist! " << ThrottlePos.size()
+         << " engines exist, but attempted throttle position setting is for engine "
+         << engineNum << endl;
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGFCS::GetThrottleCmd(int engineNum)
+{
+  if ((int)ThrottleCmd.size() > engineNum) {
+    if (engineNum < 0) {
+       cerr << "Cannot get throttle value for ALL engines" << endl;
+    } else {
+      return ThrottleCmd[engineNum];
+    }
+  } else {
+    cerr << "Throttle " << engineNum << " does not exist! " << ThrottleCmd.size()
+         << " engines exist, but throttle setting for engine " << engineNum
+	       << " is selected" << endl;
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGFCS::GetThrottlePos(int engineNum)
+{
+  if ((int)ThrottlePos.size() > engineNum) {
+    if (engineNum < 0) {
+       cerr << "Cannot get throttle value for ALL engines" << endl;
+    } else {
+      return ThrottlePos[engineNum];
+    }
+  } else {
+    cerr << "Throttle " << engineNum << " does not exist! " << ThrottlePos.size()
+         << " engines exist, but attempted throttle position setting is for engine "
+         << engineNum << endl;
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFCS::SetMixtureCmd(int engineNum, float setting)
+{
+  unsigned int ctr;
+
+  if (engineNum < 0) {
+    for (ctr=0;ctr<MixtureCmd.size();ctr++) MixtureCmd[ctr] = setting;
+  } else {
+    MixtureCmd[engineNum] = setting;
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFCS::SetMixturePos(int engineNum, float setting)
+{
+  unsigned int ctr;
+
+  if (engineNum < 0) {
+    for (ctr=0;ctr<=MixtureCmd.size();ctr++) MixturePos[ctr] = MixtureCmd[ctr];
+  } else {
+    MixturePos[engineNum] = setting;
   }
 }
 
@@ -138,7 +211,7 @@ bool FGFCS::Load(FGConfigFile* AC_cfg)
 {
   string token;
 
-  Name = AC_cfg->GetValue("NAME");
+  Name = Name + ":" + AC_cfg->GetValue("NAME");
   if (debug_lvl > 0) cout << "    Control System Name: " << Name << endl;
   AC_cfg->GetNextConfigLine();
   while ((token = AC_cfg->GetValue()) != "/FLIGHT_CONTROL") {
@@ -253,6 +326,8 @@ void FGFCS::AddThrottle(void)
 {
   ThrottleCmd.push_back(0.0);
   ThrottlePos.push_back(0.0);
+  MixtureCmd.push_back(0.0);	// assume throttle and mixture are coupled
+  MixturePos.push_back(0.0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

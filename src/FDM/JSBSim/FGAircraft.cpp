@@ -43,59 +43,6 @@ HISTORY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES,  and NOTES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-[1] Cooke, Zyda, Pratt, and McGhee, "NPSNET: Flight Simulation Dynamic Modeling
-      Using Quaternions", Presence, Vol. 1, No. 4, pp. 404-420  Naval Postgraduate
-      School, January 1994
-[2] D. M. Henderson, "Euler Angles, Quaternions, and Transformation Matrices",
-      JSC 12960, July 1977
-[3] Richard E. McFarland, "A Standard Kinematic Model for Flight Simulation at
-      NASA-Ames", NASA CR-2497, January 1975
-[4] Barnes W. McCormick, "Aerodynamics, Aeronautics, and Flight Mechanics",
-      Wiley & Sons, 1979 ISBN 0-471-03032-5
-[5] Bernard Etkin, "Dynamics of Flight, Stability and Control", Wiley & Sons,
-      1982 ISBN 0-471-08936-2
- 
-The aerodynamic coefficients used in this model are:
- 
-Longitudinal
-  CL0 - Reference lift at zero alpha
-  CD0 - Reference drag at zero alpha
-  CDM - Drag due to Mach
-  CLa - Lift curve slope (w.r.t. alpha)
-  CDa - Drag curve slope (w.r.t. alpha)
-  CLq - Lift due to pitch rate
-  CLM - Lift due to Mach
-  CLadt - Lift due to alpha rate
- 
-  Cmadt - Pitching Moment due to alpha rate
-  Cm0 - Reference Pitching moment at zero alpha
-  Cma - Pitching moment slope (w.r.t. alpha)
-  Cmq - Pitch damping (pitch moment due to pitch rate)
-  CmM - Pitch Moment due to Mach
- 
-Lateral
-  Cyb - Side force due to sideslip
-  Cyr - Side force due to yaw rate
- 
-  Clb - Dihedral effect (roll moment due to sideslip)
-  Clp - Roll damping (roll moment due to roll rate)
-  Clr - Roll moment due to yaw rate
-  Cnb - Weathercocking stability (yaw moment due to sideslip)
-  Cnp - Rudder adverse yaw (yaw moment due to roll rate)
-  Cnr - Yaw damping (yaw moment due to yaw rate)
- 
-Control
-  CLDe - Lift due to elevator
-  CDDe - Drag due to elevator
-  CyDr - Side force due to rudder
-  CyDa - Side force due to aileron
- 
-  CmDe - Pitch moment due to elevator
-  ClDa - Roll moment due to aileron
-  ClDr - Roll moment due to rudder
-  CnDr - Yaw moment due to rudder
-  CnDa - Yaw moment due to aileron
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
@@ -114,12 +61,17 @@ INCLUDES
 #    include <math.h>
 #  endif
 #else
-#  include <cmath>
+#  if defined (sgi) && !defined(__GNUC__)
+#    include <math.h>
+#  else
+#    include <cmath>
+#  endif
 #endif
 
 #include "FGAircraft.h"
 #include "FGMassBalance.h"
 #include "FGInertial.h"
+#include "FGGroundReactions.h"
 #include "FGAerodynamics.h"
 #include "FGTranslation.h"
 #include "FGRotation.h"
@@ -142,20 +94,6 @@ GLOBAL DATA
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_AIRCRAFT;
 
-extern char highint[5];
-extern char halfint[5];
-extern char normint[6];
-extern char reset[5];
-extern char underon[5];
-extern char underoff[6];
-extern char fgblue[6];
-extern char fgcyan[6];
-extern char fgred[6];
-extern char fggreen[6];
-extern char fgdef[6];
-
-extern short debug_lvl;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -165,15 +103,15 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex),
     vForces(3),
     vXYZrp(3),
     vXYZep(3),
-    vEuler(3),
     vDXYZcg(3),
-    vAeroBodyForces(3)
+    vBodyAccel(3)
 {
   Name = "FGAircraft";
-
   GearUp = false;
-
   alphaclmin = alphaclmax = 0;
+  HTailArea = VTailArea = HTailArm = VTailArm = 0.0;
+  lbarh = lbarv = vbarh = vbarv = 0.0;
+  WingIncidence=0;
 
   if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
 }
@@ -217,7 +155,7 @@ bool FGAircraft::Load(FGConfigFile* AC_cfg)
       ReadOutput(AC_cfg);
     }
   }
-
+  
   return true;
 }
 
@@ -226,70 +164,23 @@ bool FGAircraft::Load(FGConfigFile* AC_cfg)
 bool FGAircraft::Run(void)
 {
   if (!FGModel::Run()) {                 // if false then execute this Run()
-    GetState();
-
     vForces.InitMatrix();
+    vForces += Aerodynamics->GetForces();
+    vForces += Inertial->GetForces();
+    vForces += Propulsion->GetForces();
+    vForces += GroundReactions->GetForces();
+
     vMoments.InitMatrix();
-
-    FMProp();
-    FMAero();
-    FMMass();
-    FMGear();
-
+    vMoments += Aerodynamics->GetMoments();
+    vMoments += Propulsion->GetMoments();
+    vMoments += GroundReactions->GetMoments();
+    
+    vBodyAccel = vForces/MassBalance->GetMass();
+    
     return false;
   } else {                               // skip Run() execution this time
     return true;
   }
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGAircraft::FMAero(void)
-{
-    vForces += Aerodynamics->GetForces();
-    vMoments += Aerodynamics->GetMoments();
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGAircraft::FMGear(void)
-{
-  if ( !GearUp ) {
-    vector <FGLGear>::iterator iGear = lGear.begin();
-    while (iGear != lGear.end()) {
-      vForces  += iGear->Force();
-      vMoments += iGear->Moment();
-      iGear++;
-    }
-  } else {
-    // Crash Routine
-  }
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGAircraft::FMMass(void)
-{
-  vForces += Inertial->GetForces();
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGAircraft::FMProp(void)
-{
-  vForces += Propulsion->GetForces();
-  vMoments += Propulsion->GetMoments();
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGAircraft::GetState(void)
-{
-  dt = State->Getdt();
-
-  alpha = Translation->Getalpha();
-  beta = Translation->Getbeta();
-  vEuler = Rotation->GetEuler();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -299,7 +190,7 @@ void FGAircraft::ReadMetrics(FGConfigFile* AC_cfg)
   string token = "";
   string parameter;
   float EW, bixx, biyy, bizz, bixz, biyz;
-  FGColumnVector vbaseXYZcg(3);
+  FGColumnVector3 vbaseXYZcg(3);
 
   AC_cfg->GetNextConfigLine();
 
@@ -311,9 +202,24 @@ void FGAircraft::ReadMetrics(FGConfigFile* AC_cfg)
     } else if (parameter == "AC_WINGSPAN") {
       *AC_cfg >> WingSpan;
       if (debug_lvl > 0) cout << "    WingSpan: " << WingSpan  << endl;
+    } else if (parameter == "AC_WINGINCIDENCE") {
+      *AC_cfg >> WingIncidence;
+      if (debug_lvl > 0) cout << "    Chord: " << cbar << endl;
     } else if (parameter == "AC_CHORD") {
       *AC_cfg >> cbar;
       if (debug_lvl > 0) cout << "    Chord: " << cbar << endl;
+    } else if (parameter == "AC_HTAILAREA") {
+      *AC_cfg >> HTailArea;
+      if (debug_lvl > 0) cout << "    H. Tail Area: " << HTailArea << endl;
+    } else if (parameter == "AC_HTAILARM") {
+      *AC_cfg >> HTailArm;
+      if (debug_lvl > 0) cout << "    H. Tail Arm: " << HTailArm << endl;
+    } else if (parameter == "AC_VTAILAREA") {
+      *AC_cfg >> VTailArea;
+      if (debug_lvl > 0) cout << "    V. Tail Area: " << VTailArea << endl;
+    } else if (parameter == "AC_VTAILARM") {
+      *AC_cfg >> VTailArm;
+      if (debug_lvl > 0) cout << "    V. Tail Arm: " << VTailArm << endl;
     } else if (parameter == "AC_IXX") {
       *AC_cfg >> bixx;
       if (debug_lvl > 0) cout << "    baseIxx: " << bixx << endl;
@@ -355,11 +261,23 @@ void FGAircraft::ReadMetrics(FGConfigFile* AC_cfg)
              << endl;
     }
   }
+  
+  // calculate some derived parameters
+  if (cbar != 0.0) {
+    lbarh = HTailArm/cbar;
+    lbarv = VTailArm/cbar;
+    if (WingArea != 0.0) {
+      vbarh = HTailArm*HTailArea / (cbar*WingArea);
+      vbarv = VTailArm*VTailArea / (cbar*WingArea);
+    }
+  }     
+
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAircraft::ReadPropulsion(FGConfigFile* AC_cfg) {
+void FGAircraft::ReadPropulsion(FGConfigFile* AC_cfg)
+{
   if (!Propulsion->Load(AC_cfg)) {
     cerr << "Propulsion not successfully loaded" << endl;
   }
@@ -367,7 +285,8 @@ void FGAircraft::ReadPropulsion(FGConfigFile* AC_cfg) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAircraft::ReadFlightControls(FGConfigFile* AC_cfg) {
+void FGAircraft::ReadFlightControls(FGConfigFile* AC_cfg)
+{
   if (!FCS->Load(AC_cfg)) {
     cerr << "Flight Controls not successfully loaded" << endl;
   }
@@ -380,24 +299,21 @@ void FGAircraft::ReadAerodynamics(FGConfigFile* AC_cfg)
   if (!Aerodynamics->Load(AC_cfg)) {
     cerr << "Aerodynamics not successfully loaded" << endl;
   }
-
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAircraft::ReadUndercarriage(FGConfigFile* AC_cfg) {
-  string token;
-
-  AC_cfg->GetNextConfigLine();
-
-  while ((token = AC_cfg->GetValue()) != "/UNDERCARRIAGE") {
-    lGear.push_back(FGLGear(AC_cfg, FDMExec));
+void FGAircraft::ReadUndercarriage(FGConfigFile* AC_cfg)
+{
+  if (!GroundReactions->Load(AC_cfg)) {
+    cerr << "Ground Reactions not successfully loaded" << endl;
   }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAircraft::ReadOutput(FGConfigFile* AC_cfg) {
+void FGAircraft::ReadOutput(FGConfigFile* AC_cfg)
+{
   string token, parameter;
   int OutRate = 0;
   int subsystems = 0;
@@ -473,7 +389,8 @@ void FGAircraft::ReadOutput(FGConfigFile* AC_cfg) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAircraft::ReadPrologue(FGConfigFile* AC_cfg) {
+void FGAircraft::ReadPrologue(FGConfigFile* AC_cfg)
+{
   string token = AC_cfg->GetValue();
   string scratch;
   AircraftName = AC_cfg->GetValue("NAME");
@@ -492,46 +409,6 @@ void FGAircraft::ReadPrologue(FGConfigFile* AC_cfg) {
     cerr << "Current version needed is: " << NEEDED_CFG_VERSION << endl;
     cerr << "         You have version: " << CFGVersion << endl << fgdef << endl;
   }
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-string FGAircraft::GetGroundReactionStrings(void) {
-  string GroundReactionStrings = "";
-  bool firstime = true;
-
-  for (unsigned int i=0;i<lGear.size();i++) {
-    if (!firstime) GroundReactionStrings += ", ";
-    GroundReactionStrings += (lGear[i].GetName() + "_WOW, ");
-    GroundReactionStrings += (lGear[i].GetName() + "_compressLength, ");
-    GroundReactionStrings += (lGear[i].GetName() + "_compressSpeed, ");
-    GroundReactionStrings += (lGear[i].GetName() + "_Force");
-
-    firstime = false;
-  }
-
-  return GroundReactionStrings;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-string FGAircraft::GetGroundReactionValues(void) {
-  char buff[20];
-  string GroundReactionValues = "";
-
-  bool firstime = true;
-
-  for (unsigned int i=0;i<lGear.size();i++) {
-    if (!firstime) GroundReactionValues += ", ";
-    GroundReactionValues += string( lGear[i].GetWOW()?"1":"0" ) + ", ";
-    GroundReactionValues += (string(gcvt(lGear[i].GetCompLen(),    5, buff)) + ", ");
-    GroundReactionValues += (string(gcvt(lGear[i].GetCompVel(),    6, buff)) + ", ");
-    GroundReactionValues += (string(gcvt(lGear[i].GetCompForce(), 10, buff)));
-
-    firstime = false;
-  }
-
-  return GroundReactionValues;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

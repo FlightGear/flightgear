@@ -44,32 +44,23 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include "FGDefs.h"
 #include "FGCoefficient.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
 
 #ifndef FGFS
-#  include <iomanip>
+#  if defined(sgi) && !defined(__GNUC__)
+#    include <iomanip.h>
+#  else
+#    include <iomanip>
+#  endif
 #else
 #  include STL_IOMANIP
 #endif
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_COEFFICIENT;
-
-extern char highint[5];
-extern char halfint[5];
-extern char normint[6];
-extern char reset[5];
-extern char underon[5];
-extern char underoff[6];
-extern char fgblue[6];
-extern char fgcyan[6];
-extern char fgred[6];
-extern char fggreen[6];
-extern char fgdef[6];
-
-extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -286,10 +277,11 @@ void FGCoefficient::DisplayCoeffFactors(void)
 string FGCoefficient::GetCoefficientValues(void) {
   char buffer[10];
   string value;
-  //value = ", ";
-  snprintf(buffer,10,"%9.6f",SD);
-  value += string(buffer);
+
+  sprintf(buffer,"%9.6f",SD);
+  value = string(buffer);
   return value;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+

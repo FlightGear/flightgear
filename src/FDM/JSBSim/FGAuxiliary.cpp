@@ -50,12 +50,13 @@ INCLUDES
 #include "FGAircraft.h"
 #include "FGPosition.h"
 #include "FGOutput.h"
-#include "FGMatrix.h"
+#include "FGInertial.h"
+#include "FGMatrix33.h"
+#include "FGColumnVector3.h"
+#include "FGColumnVector4.h"
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_AUXILIARY;
-
-extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -109,12 +110,50 @@ bool FGAuxiliary::Run()
     vcas = sqrt(7*psl/rhosl*(A-1));
     veas = sqrt(2*qbar/rhosl);
 
-    // vPilotAccel = Translation->GetUVWdot() + Aircraft->GetXYZep() * Rotation->GetPQRdot();
-    
+    // Pilot sensed accelerations are calculated here. This is used
+    // for the coordinated turn ball instrument. Motion base platforms sometimes
+    // use the derivative of pilot sensed accelerations as the driving parameter,
+    // rather than straight accelerations.
+    //
+    // The theory behind pilot-sensed calculations is presented:
+    //
+    // For purposes of discussion and calculation, assume for a minute that the
+    // pilot is in space and motionless in inertial space. She will feel
+    // no accelerations. If the aircraft begins to accelerate along any axis or
+    // axes (without rotating), the pilot will sense those accelerations. If
+    // any rotational moment is applied, the pilot will sense an acceleration
+    // due to that motion in the amount:
+    //
+    // [wdot X R]  +  [w X (w X R)]
+    //   Term I          Term II
+    //
+    // where:
+    //
+    // wdot = omegadot, the rotational acceleration rate vector
+    // w    = omega, the rotational rate vector
+    // R    = the vector from the aircraft CG to the pilot eyepoint
+    //
+    // The sum total of these two terms plus the acceleration of the aircraft
+    // body axis gives the acceleration the pilot senses in inertial space.
+    // In the presence of a large body such as a planet, a gravity field also
+    // provides an accelerating attraction. This acceleration can be transformed
+    // from the reference frame of the planet so as to be expressed in the frame
+    // of reference of the aircraft. This gravity field accelerating attraction
+    // is felt by the pilot as a force on her tushie as she sits in her aircraft
+    // on the runway awaiting takeoff clearance.
+    //
+    // In JSBSim the acceleration of the body frame in inertial space is given
+    // by the F = ma relation. If the vForces vector is divided by the aircraft
+    // mass, the acceleration vector is calculated. The term wdot is equivalent
+    // to the JSBSim vPQRdot vector, and the w parameter is equivalent to vPQR.
+    // The radius R is calculated below in the vector vToEyePt.
+        
     vToEyePt = Aircraft->GetXYZep() - MassBalance->GetXYZcg();
-    vPilotAccel = Translation->GetUVWdot()
-                    + Rotation->GetPQRdot() * vToEyePt
-                    + Rotation->GetPQR() * (Rotation->GetPQR() * vToEyePt);
+
+    vPilotAccel = Aircraft->GetBodyAccel()
+                  + Rotation->GetPQRdot() * vToEyePt
+                  + Rotation->GetPQR() * (Rotation->GetPQR() * vToEyePt)
+                  + Inertial->GetGravity();
 
     earthPosAngle += State->Getdt()*OMEGA_EARTH;
     return false;
@@ -133,7 +172,7 @@ float FGAuxiliary::GetHeadWind(void)
   psi = Rotation->Getpsi();
   vw = Atmosphere->GetWindNED().Magnitude();
 
-  return -vw*cos(psiw - psi);
+  return vw*cos(psiw - psi);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

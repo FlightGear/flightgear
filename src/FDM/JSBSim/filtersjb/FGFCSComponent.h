@@ -43,6 +43,7 @@ INCLUDES
 
 #include <string>
 #include "../FGDefs.h"
+#include "../FGJSBBase.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -89,7 +90,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGFCSComponent
+class FGFCSComponent : public FGJSBBase
 {
 public:
   /// Constructor
@@ -115,7 +116,7 @@ protected:
   eParam OutputIdx;
   float Output;
   bool IsOutput;
-  void Debug(void);
+  virtual void Debug(void);
 };
 
 #include "../FGFCS.h"

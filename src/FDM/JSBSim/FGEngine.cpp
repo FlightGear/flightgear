@@ -46,7 +46,11 @@ INCLUDES
 #    include <fstream.h>
 #  endif
 #else
-#  include <fstream>
+#  if defined(sgi) && !defined(__GNUC__)
+#    include <fstream.h>
+#  else
+#    include <fstream>
+#  endif
 #endif
 
 #include "FGEngine.h"
@@ -54,8 +58,6 @@ INCLUDES
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_ENGINE;
-
-extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -75,6 +77,7 @@ FGEngine::FGEngine(FGFDMExec* exec) {
   Auxiliary   = FDMExec->GetAuxiliary();
   Output      = FDMExec->GetOutput();
 
+  Mixture = 1.0;		// FIXME: get actual value
   Thrust = PctPower = 0.0;
   Starved = Flameout = false;
   Running = true;

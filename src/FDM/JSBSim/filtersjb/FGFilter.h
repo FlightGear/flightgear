@@ -103,6 +103,7 @@ private:
   float cb;
   float cc;
   float cd;
+  float ce;
   float C1;
   float C2;
   float C3;
@@ -118,3 +119,4 @@ private:
 };
 
 #endif
+

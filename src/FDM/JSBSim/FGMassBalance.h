@@ -67,7 +67,7 @@ public:
   inline float GetIzz(void) {return Izz;}
   inline float GetIxz(void) {return Ixz;}
   inline float GetIyz(void) {return Iyz;}
-  inline FGColumnVector& GetXYZcg(void) {return vXYZcg;}
+  inline FGColumnVector3& GetXYZcg(void) {return vXYZcg;}
   inline float GetXYZcg(int axis) {return vXYZcg(axis);}
 
   inline void SetEmptyWeight(float EW) { EmptyWeight = EW;}
@@ -76,7 +76,7 @@ public:
   inline void SetBaseIzz(float bizz)   { baseIzz = bizz;}
   inline void SetBaseIxz(float bixz)   { baseIxz = bixz;}
   inline void SetBaseIyz(float biyz)   { baseIyz = biyz;}
-  inline void SetBaseCG(const FGColumnVector& CG) {vbaseXYZcg = CG;}
+  inline void SetBaseCG(const FGColumnVector3& CG) {vbaseXYZcg = CG;}
 
 private:
   float Weight;
@@ -92,9 +92,9 @@ private:
   float baseIzz;
   float baseIxz;
   float baseIyz;
-  FGColumnVector vXYZcg;
-  FGColumnVector vXYZtank;
-  FGColumnVector vbaseXYZcg;
+  FGColumnVector3 vXYZcg;
+  FGColumnVector3 vXYZtank;
+  FGColumnVector3 vbaseXYZcg;
   void Debug(void);
 };
 

@@ -60,16 +60,17 @@ INCLUDES
 #  include <simgear/compiler.h>
 #  include <math.h>
 #else
-#  include <cmath>
-#endif
-
-#ifndef M_PI
-#  include <simgear/constants.h>
-#  define M_PI SG_PI
+#  if defined (sgi) && !defined(__GNUC__)
+#    include <math.h>
+#  else
+#    include <cmath>
+#  endif
 #endif
 
 #include "FGModel.h"
-#include "FGMatrix.h"
+#include "FGMatrix33.h"
+#include "FGColumnVector3.h"
+#include "FGColumnVector4.h"
 
 #define ID_ROTATION "$Id$"
 
@@ -85,16 +86,16 @@ public:
 
   bool Run(void);
 
-  inline FGColumnVector GetPQR(void) {return vPQR;}
+  inline FGColumnVector3& GetPQR(void) {return vPQR;}
   inline float GetPQR(int axis) {return vPQR(axis);}
-  inline FGColumnVector GetPQRdot(void) {return vPQRdot;}
+  inline FGColumnVector3& GetPQRdot(void) {return vPQRdot;}
   inline float GetPQRdot(int idx) {return vPQRdot(idx);}
-  inline FGColumnVector GetEuler(void) {return vEuler;}
+  inline FGColumnVector3& GetEuler(void) {return vEuler;}
   inline float GetEuler(int axis) {return vEuler(axis);}
-  inline FGColumnVector GetEulerRates(void) { return vEulerRates; }
+  inline FGColumnVector3& GetEulerRates(void) { return vEulerRates; }
   inline float GetEulerRates(int axis) { return vEulerRates(axis); }
-  inline void SetPQR(FGColumnVector tt) {vPQR = tt;}
-  inline void SetEuler(FGColumnVector tt) {vEuler = tt;}
+  inline void SetPQR(FGColumnVector3 tt) {vPQR = tt;}
+  inline void SetEuler(FGColumnVector3 tt) {vEuler = tt;}
   
   inline float Getphi(void) {return vEuler(1);}
   inline float Gettht(void) {return vEuler(2);}
@@ -109,12 +110,12 @@ public:
   inline float GetSinpsi(void) {return sPsi;}
 
 private:
-  FGColumnVector vPQR;
-  FGColumnVector vPQRdot;
-  FGColumnVector vMoments;
-  FGColumnVector vEuler;
-  FGColumnVector vEulerRates;
-  FGColumnVector vlastPQRdot;
+  FGColumnVector3 vPQR;
+  FGColumnVector3 vPQRdot;
+  FGColumnVector3 vMoments;
+  FGColumnVector3 vEuler;
+  FGColumnVector3 vEulerRates;
+  FGColumnVector3 vlastPQRdot;
   
   float cTht,sTht;
   float cPhi,sPhi;

@@ -41,6 +41,7 @@ INCLUDES
 #include <string>
 
 #include "FGFDMExec.h"
+#include "FGJSBBase.h"
 #include "FGRotation.h"
 #include "FGAtmosphere.h"
 #include "FGState.h"
@@ -72,7 +73,8 @@ enum State { tUdot,tVdot,tWdot,tQdot,tPdot,tRdot,tHmgt };
 enum Control { tThrottle, tBeta, tAlpha, tElevator, tAileron, tRudder, tAltAGL,
                tTheta, tPhi, tGamma, tPitchTrim, tRollTrim, tYawTrim, tHeading };
 
-class FGTrimAxis {
+class FGTrimAxis : public FGJSBBase
+{
 public:
   FGTrimAxis(FGFDMExec* fdmex, FGInitialCondition *ic, State st,
              Control ctrl );

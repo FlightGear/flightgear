@@ -17,17 +17,22 @@ libJSBSim_a_SOURCES = \
 	FGAtmosphere.cpp FGAtmosphere.h \
 	FGAuxiliary.cpp FGAuxiliary.h \
 	FGCoefficient.cpp FGCoefficient.h \
+        FGColumnVector3.cpp FGColumnVector3.h \
+        FGColumnVector4.cpp FGColumnVector4.h \
 	FGConfigFile.cpp FGConfigFile.h \
 	FGDefs.h \
 	FGFCS.cpp FGFCS.h \
 	FGFDMExec.cpp FGFDMExec.h \
 	FGFactorGroup.cpp FGFactorGroup.h \
 	FGForce.cpp FGForce.h \
+        FGGroundReactions.cpp FGGroundReactions.h \
         FGInertial.cpp FGInertial.h \
 	FGInitialCondition.cpp FGInitialCondition.h \
+        FGJSBBase.cpp FGJSBBase.h \
 	FGLGear.cpp FGLGear.h \
         FGMassBalance.cpp FGMassBalance.h \
 	FGMatrix.cpp FGMatrix.h \
+        FGMatrix33.cpp FGMatrix33.h \
 	FGModel.cpp FGModel.h \
 	FGNozzle.cpp FGNozzle.h \
 	FGOutput.cpp FGOutput.h \

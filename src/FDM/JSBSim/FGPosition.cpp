@@ -63,8 +63,13 @@ INCLUDES
 #    include <iomanip.h>
 #  endif
 #else
-#  include <cmath>
-#  include <iomanip>
+#  if defined(sgi) && !defined(__GNUC__)
+#    include <math.h>
+#    include <iomanip.h>
+#  else
+#    include <cmath>
+#    include <iomanip>
+#  endif
 #endif
 
 #include "FGPosition.h"
@@ -81,8 +86,6 @@ INCLUDES
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_POSITION;
-
-extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION

@@ -39,6 +39,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGDefs.h"
+#include "FGJSBBase.h"
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
@@ -48,7 +49,11 @@ INCLUDES
 #    include <iostream.h>
 #  endif
 #else
-#  include <iostream>
+#  if defined(sgi) && !defined(__GNUC__)
+#    include <iostream.h>
+#  else
+#    include <iostream>
+#  endif
 #endif
 
 #include <string>
@@ -73,6 +78,7 @@ class FGPropulsion;
 class FGMassBalance;
 class FGAerodynamics;
 class FGInertial;
+class FGGroundReactions;
 class FGAircraft;
 class FGTranslation;
 class FGRotation;
@@ -97,7 +103,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGModel
+class FGModel : public FGJSBBase
 {
 public:
 
@@ -123,31 +129,24 @@ public:
   virtual int  GetRate(void)   {return rate;}
 
 protected:
-  enum {eU=1, eV, eW};
-  enum {eNorth=1, eEast, eDown};
-  enum {eP=1, eQ, eR};
-  enum {eL=1, eM, eN};
-  enum {eX=1, eY, eZ};
-  enum {ePhi=1, eTht, ePsi};
-
   int exe_ctr;
   int rate;
 
-  FGFDMExec*      FDMExec;
-  FGState*        State;
-  FGAtmosphere*   Atmosphere;
-  FGFCS*          FCS;
-  FGPropulsion*   Propulsion;
-  FGMassBalance*  MassBalance;
-  FGAerodynamics* Aerodynamics;
-  FGInertial*     Inertial;
-  FGAircraft*     Aircraft;
-  FGTranslation*  Translation;
-  FGRotation*     Rotation;
-  FGPosition*     Position;
-  FGAuxiliary*    Auxiliary;
-  FGOutput*       Output;
-  virtual void Debug(void);
+  FGFDMExec*         FDMExec;
+  FGState*           State;
+  FGAtmosphere*      Atmosphere;
+  FGFCS*             FCS;
+  FGPropulsion*      Propulsion;
+  FGMassBalance*     MassBalance;
+  FGAerodynamics*    Aerodynamics;
+  FGInertial*        Inertial;
+  FGGroundReactions* GroundReactions;
+  FGAircraft*        Aircraft;
+  FGTranslation*     Translation;
+  FGRotation*        Rotation;
+  FGPosition*        Position;
+  FGAuxiliary*       Auxiliary;
+  FGOutput*          Output;
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -43,14 +43,14 @@ and the cg.
 #include "FGFDMExec.h"
 #include "FGAircraft.h"
 #include "FGTranslation.h"
-#include "FGMatrix.h"
+#include "FGMatrix33.h"
+#include "FGColumnVector3.h"
+#include "FGColumnVector4.h"
 #include "FGDefs.h"
 #include "FGForce.h"
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FORCE;
-
-extern short debug_lvl;
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -82,7 +82,7 @@ FGForce::~FGForce()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector FGForce::GetBodyForces(void) {
+FGColumnVector3& FGForce::GetBodyForces(void) {
 
   vFb=Transform()*(vFn.multElementWise(vSense));
 
@@ -99,7 +99,7 @@ FGColumnVector FGForce::GetBodyForces(void) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGMatrix FGForce::Transform(void) {
+FGMatrix33 FGForce::Transform(void) {
   switch(ttype) {
   case tWindBody:
     return fdmex->GetState()->GetTs2b(fdmex->GetTranslation()->Getalpha(),fdmex->GetTranslation()->Getbeta());
