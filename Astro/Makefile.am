@@ -7,6 +7,7 @@ libAstro_a_SOURCES = \
 	mercury.cxx mercury.hxx \
 	moon.cxx moon.hxx \
 	neptune.cxx neptune.hxx \
+	pluto.hxx \
 	saturn.cxx saturn.hxx \
 	sky.cxx sky.hxx \
 	solarsystem.cxx solarsystem.hxx \

@@ -22,6 +22,15 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 #include <Debug/fg_debug.h>

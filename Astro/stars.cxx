@@ -261,9 +261,13 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.15  1998/09/17 18:25:12  curt
-/* Fixed output message.
+/* Revision 1.16  1998/09/24 15:25:24  curt
+/* Miscellaneous tweaks.
 /*
+ *
+ * Revision 1.15  1998/09/17 18:25:12  curt
+ * Fixed output message.
+ *
  * Revision 1.14  1998/09/15 04:26:22  curt
  * New textured moon and rewritten/restructured Astro code contributed by Durk
  * Talsma.

@@ -50,9 +50,13 @@ extern fgTIME cur_time_params;
 
 
 /* $Log$
-/* Revision 1.5  1998/09/17 18:25:13  curt
-/* Fixed output message.
+/* Revision 1.6  1998/09/24 15:25:26  curt
+/* Miscellaneous tweaks.
 /*
+ *
+ * Revision 1.5  1998/09/17 18:25:13  curt
+ * Fixed output message.
+ *
  * Revision 1.4  1998/09/15 04:26:23  curt
  * New textured moon and rewritten/restructured Astro code contributed by Durk
  * Talsma.
