@@ -125,7 +125,7 @@ addLoggingClass (const string &name)
       return;
     }
   }
-  SG_LOG(SG_GENERAL, SG_ALERT, "Unknown logging class: " << name);
+  SG_LOG(SG_GENERAL, SG_WARN, "Unknown logging class: " << name);
 }
 
 
@@ -196,6 +196,8 @@ getLoggingPriority ()
 static void
 setLoggingPriority (const char * p)
 {
+  if (p == 0)
+      return;
   string priority = p;
   if (priority == "bulk") {
     logbuf::set_log_priority(SG_BULK);
@@ -210,7 +212,7 @@ setLoggingPriority (const char * p)
   } else {
     SG_LOG(SG_GENERAL, SG_WARN, "Unknown logging priority " << priority);
   }
-  SG_LOG(SG_GENERAL, SG_INFO, "Logging priority is " << getLoggingPriority());
+  SG_LOG(SG_GENERAL, SG_DEBUG, "Logging priority is " << getLoggingPriority());
 }
 
 
@@ -314,7 +316,7 @@ setDateString (const char * date_string)
 				// if the save file has been edited
 				// by hand.
   if (ret != 6) {
-    SG_LOG(SG_INPUT, SG_ALERT, "Date/time string " << date_string
+    SG_LOG(SG_INPUT, SG_WARN, "Date/time string " << date_string
 	   << " not in YYYY-MM-DDTHH:MM:SS format; skipped");
     return;
   }
@@ -795,7 +797,7 @@ fgSetArchivable (const char * name, bool state)
 {
   SGPropertyNode * node = globals->get_props()->getNode(name);
   if (node == 0)
-    SG_LOG(SG_GENERAL, SG_ALERT,
+    SG_LOG(SG_GENERAL, SG_DEBUG,
 	   "Attempt to set archive flag for non-existant property "
 	   << name);
   else
@@ -807,7 +809,7 @@ fgSetReadable (const char * name, bool state)
 {
   SGPropertyNode * node = globals->get_props()->getNode(name);
   if (node == 0)
-    SG_LOG(SG_GENERAL, SG_ALERT,
+    SG_LOG(SG_GENERAL, SG_DEBUG,
 	   "Attempt to set read flag for non-existant property "
 	   << name);
   else
@@ -819,7 +821,7 @@ fgSetWritable (const char * name, bool state)
 {
   SGPropertyNode * node = globals->get_props()->getNode(name);
   if (node == 0)
-    SG_LOG(SG_GENERAL, SG_ALERT,
+    SG_LOG(SG_GENERAL, SG_DEBUG,
 	   "Attempt to set write flag for non-existant property "
 	   << name);
   else
