@@ -1,3 +1,70 @@
+New in 0.7.10
+* April 20, 2002
+
+* Much work on drawing and animating 3d aircraft models for things like the
+  chase and tower views.  Propellers spin, control surfaces move, gear
+  retracts, etc.
+* Overhauled mouse handling code and make it user configurable.
+* Added a new environment (as in weather) subsystem.
+* Added a new logging module
+* Aded a new ATC subsystem.
+* Virtual 3d Cessna cockpit (work in progress) but many things are
+  animated and working.
+* Instrument panel background can now be a set of tiled textures so we can
+  achieve *much* higher resolution.
+
+* Major property manager overhaul.
+* Major view code overhaul.  All views are now configurable via config files.
+* Major overhaul of the sound manager, it is now much more
+  configurable with many sound effect improvements.
+* Seperate XML I/O opertions into a separate header.
+* Impliment a standard FGSubsystem interface for module consistency.
+* Add waypoint dialog now shows entire current waypoint list in a scroll box.
+* Elevator trim position now shown on the HUD.
+* Use an LED font for radios (and added infrastructer/support for
+  additional fonts.)
+* Continued work on developing a generalized network interface to an external
+  flight dynamics model running as a separate process on the same or different
+  machine.
+* Initial glideslope and climb rate can be specified from the command line.
+* Fixes and improvements to make ground trimming more robust.
+* Many JSBSim updates and improvements, JSBSim now exports all it's 
+  interesting internal state via the property manager.
+* Many updates to UIUCsim including support for non-linear models, flaps.
+* Move tower view location when teleporting to a new airport.
+* Created a new /devices subtree in the property manager to display
+  current device status.
+
+* Many YASim updates and bug fixes, autogen contact points for
+  collision detection, support for full engine startup procedure,
+  minimal support for magnetos, support skid objects (non-rolling gear
+  objects), reduce idle power a bit, export gear compression amount to
+  the property tree, include wind when computing airspeed, 
+
+* Fixes to the property picker/browser.
+* Fixes and updates to the configure script.
+* Several potential memory abuse bugs detected (valgrind) and fixed (Melchior)
+* Fix an instrument panel text bug ... an integer overflow could prevent
+  the text from displaying if the panel was turned off for more than 37.8 
+  minutes.
+* Fixed a segfault when trying to audibly ident a nav station.  Changes in
+  the sound manager code broke some assumptions.
+* Fixed a bug (another int overflow) which could trick the event
+  manager into thinking the next time to run the events is *way* in
+  the future.
+* Various performance optimizations.
+* More work on saving/restoring flights
+* Of all the ILS stations of the specified frequency, pick the one the most
+  directly points at us.
+* Various restructures in the scenery loading code in preparation for
+  more flexible runway lighting support.
+* Fixes/improvements to the scenery/line interesection code.
+
+* Various IRIX fixes.
+* Various MSVC fixes.
+* Various compiler warning messages fixed.
+
+
 New in 0.7.9 (final)
 * February 16, 2002
 
