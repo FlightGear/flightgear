@@ -2,6 +2,12 @@
 | Done
 --------------------------------------------------------------------------
 
+4/27/98 -  Do a better job of translating scenery tiles towards (0,0,0)
+
+4/27/98 -  fgTIME fgVIEW struct -> typedef
+
+4/27/98 -  Add a option to disable texturing.
+
 4/25/98 -  Clean up initialization sequence and eliminate
            interdependencies between lighting and position.
 
