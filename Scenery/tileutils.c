@@ -1,7 +1,7 @@
 /**************************************************************************
- * areamgr.c -- routines to handle dynamic management of scenery areas
+ * tileutils.c -- support routines to handle dynamic management of scenery tiles
  *
- * Written by Curtis Olson, started October 1997.
+ * Written by Curtis Olson, started January 1998.
  *
  * Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
  *
@@ -24,33 +24,14 @@
  **************************************************************************/
 
 
-#ifdef WIN32
-#  include <windows.h>
-#endif
-
-#include <GL/glut.h>
-#include "../XGL/xgl.h"
-
 #include <math.h>
+#include <stdio.h>
 
+#include "tileutils.h"
 #include "../Include/constants.h"
-/* temporary */
-#include "../Math/fg_random.h"
 
 
-struct ai {
-    int lon;  /* longitude (-180 to 179) */
-    int lat;  /* latitude (-90 to 89) */
-    int x;    /* x (0 to 7) */
-    int y;    /* y (0 to 7) */
-};
-
-
-/* we're entering into hacking territory here ... what fun. ;-) */
-long int area_array[7][7];
-
-
-/* Generate the unique scenery area index containing the specified
+/* Generate the unique scenery tile index containing the specified
    lon/lat parameters.
 
    The index is constructed as follows:
@@ -58,12 +39,12 @@ long int area_array[7][7];
    9 bits - to represent 360 degrees of longitude (-180 to 179)
    8 bits - to represent 180 degrees of latitude (-90 to 89)
 
-   Each 1 degree by 1 degree area is further broken down into an 8x8
+   Each 1 degree by 1 degree tile is further broken down into an 8x8
    grid.  So we also need:
 
    3 bits - to represent x (0 to 7)
    3 bits - to represent y (0 to 7) */
-static long gen_index(struct ai *p) {
+static long gen_index(struct bucket *p) {
     long index = 0;
 
     index = ((p->lon + 180) << 14) + ((p->lat + 90) << 6) + (p->y << 3) + p->x;
@@ -73,8 +54,8 @@ static long gen_index(struct ai *p) {
 }
 
 
-/* Parse a unique scenery area index and find the lon, lat, x, and y */
-static void parse_index(long int index, struct ai *p) {
+/* Parse a unique scenery tile index and find the lon, lat, x, and y */
+static void parse_index(long int index, struct bucket *p) {
     p->lon = index >> 14;
     index -= p->lon << 14;
     p->lon -= 180;
@@ -90,9 +71,9 @@ static void parse_index(long int index, struct ai *p) {
 }
 
 
-/* Build a path name from an area index */
-static void gen_path(long int index, char *path) {
-    struct ai p;
+/* Build a path name from an tile index */
+void gen_path(long int index, char *path) {
+    struct bucket p;
     int top_lon, top_lat, main_lon, main_lat;
     char hem, pole;
 
@@ -141,8 +122,8 @@ static void gen_path(long int index, char *path) {
 }
 
 
-/* offset an ai struct by the specified amounts in the X & Y direction */
-static void offset_ai(struct ai *in, struct ai *out, int x, int y) {
+/* offset an bucket struct by the specified amounts in the X & Y direction */
+static void offset_bucket(struct bucket *in, struct bucket *out, int x, int y) {
     int diff, temp;
     int dist_lat;
 
@@ -197,95 +178,102 @@ static void offset_ai(struct ai *in, struct ai *out, int x, int y) {
 }
 
 
-/* Given a lat/lon, fill in the local area index array */
-static void gen_idx_array(double lon, double lat) {
-    struct ai p1, p2, p3;
+/* Given a lat/lon, find the "bucket" or tile that it falls within */
+void find_bucket(double lon, double lat, struct bucket *p) {
     double diff;
-    char path[256];
-    long int index = 0;
-    int i, j;
-
-    printf("lon = %.2f  lat = %.2f\n", lon, lat);
 
     diff = lon - (double)(int)lon;
-    printf("diff = %.2f\n", diff);
+    /* printf("diff = %.2f\n", diff); */
     if ( (lon >= 0) || (fabs(diff) < FG_EPSILON) ) {
-	p1.lon = (int)lon;
+	p->lon = (int)lon;
     } else {
-	p1.lon = (int)lon - 1;
+	p->lon = (int)lon - 1;
     }
-    printf("  p1.lon = %d\n", p1.lon);
+    /* printf("  p->lon = %d\n", p->lon); */
 
     diff = lat - (double)(int)lat;
-    printf("diff = %.2f\n", diff);
+    /* printf("diff = %.2f\n", diff); */
     if ( (lat >= 0) || (fabs(diff) < FG_EPSILON) ) {
-	p1.lat = (int)lat;
+	p->lat = (int)lat;
     } else {
-	p1.lat = (int)lat - 1;
+	p->lat = (int)lat - 1;
     }
-    printf("  p1.lat = %d\n", p1.lat);
+    /* printf("  p->lat = %d\n", p->lat); */
 
-    p1.x = (lon - p1.lon) * 8;
-    p1.y = (lat - p1.lat) * 8;
-    printf("  lon,lat = %d,%d  x,y index = %d,%d\n", 
-	   p1.lon, p1.lat, p1.x, p1.y);
+    p->x = (lon - p->lon) * 8;
+    p->y = (lat - p->lat) * 8;
+    printf("Bucket = lon,lat = %d,%d  x,y index = %d,%d\n", 
+	   p->lon, p->lat, p->x, p->y);
+}
 
-    for ( i = -3; i <= 3; i++ ) {
-	for ( j = -3; j <= 3; j++ ) {
-	    offset_ai(&p1, &p2, i, j);
-	    printf("  %d %d %d %d\n", p2.lon, p2.lat, p2.x, p2.y);
-	    area_array[i][j] = gen_index(&p2);
-	    printf("  generated index = %ld\n", area_array[i][j]);
 
-	    /* parse_index(area_array[i][j], &p3); */
-	    /* printf("  %d %d %d %d\n", p3.lon, p3.lat, p3.x, p3.y); */
-	    gen_path(area_array[i][j], path);
-	    printf("  path = %s\n\n", path);
+/* Given a lat/lon, fill in the local tile index array */
+void gen_idx_array(struct bucket *p1, long int *tile, 
+			  int width, int height) {
+    struct bucket p2;
+    int dw, dh, i, j;
+
+    dh = height / 2;
+    dw = width / 2;
+    for ( j = 0; j < height; j++ ) {
+	for ( i = 0; i < width; i++ ) {
+	    offset_bucket(p1, &p2, i - dw, j - dh);
+	    tile[(j*width)+i] = gen_index(&p2);
+	    printf("  bucket = %d %d %d %d  index = %ld\n", 
+		   p2.lon, p2.lat, p2.x, p2.y, tile[(j*width)+i]);
 	}
     }
 }
 
 
-main() {
-    struct ai p1;
-    int i, j, index;
+/* sample main for testing
+int main() {
+    struct bucket p1;
+    long int tile[49];
+    char path[256];
     double lon, lat;
-
-    fg_srandom();
+    int i, j;
 
     p1.lon = 180;
     p1.lat = 90;
     p1.x = 7;
     p1.y = 7;
 
-    /* printf("Max index = %ld\n", gen_index(&p1)); */
+    printf("Max index = %ld\n", gen_index(&p1));
 
     lon = -50.0;
     lat = -50.0;
-    gen_idx_array(lon, lat);
+    find_bucket(lon, lat, &p1);
+    gen_idx_array(&p1, tile, 7, 7);
+    for ( j = 0; j < 7; j++ ) {
+	for ( i = 0; i < 7; i++ ) {
+	    gen_path(tile[(j*7)+i], path);
+	    printf("  path = %s\n", path);
+	}
+    }
 
     lon = 50.0;
     lat = 50.0;
-    gen_idx_array(lon, lat);
-
-    for ( i = 0; i < 100; i++ ) {
-	lon = ( 360.0 * fg_random() ) - 180.0;
-	lat = ( 180.0 * fg_random() ) - 90.0;
-
-	gen_idx_array(lon, lat);
+    find_bucket(lon, lat, &p1);
+    gen_idx_array(&p1, tile, 7, 7);
+    for ( j = 0; j < 7; j++ ) {
+	for ( i = 0; i < 7; i++ ) {
+	    gen_path(tile[(j*7)+i], path);
+	    printf("  path = %s\n", path);
+	}
     }
-}
+
+    return(1);
+} */
 
 
 /* $Log$
-/* Revision 1.2  1998/01/07 03:29:29  curt
-/* Given an arbitrary lat/lon, we can now:
-/*   generate a unique index for the chunk containing the lat/lon
-/*   generate a path name to the chunk file
-/*   build a list of the indexes of all the nearby areas.
+/* Revision 1.1  1998/01/07 23:50:52  curt
+/* "area" renamed to "tile"
 /*
- * Revision 1.1  1998/01/07 02:05:48  curt
+ * Revision 1.1  1998/01/07 23:23:40  curt
  * Initial revision.
+ *
  * */
 
 
