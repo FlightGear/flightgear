@@ -138,13 +138,13 @@ fgOPTIONS::fgOPTIONS() :
     // if it is lower than the terrain
     altitude(-9999.0),
 
-    // Initialize current options velocities to 0.0
-    uBody(0.0), vBody(0.0), wBody(0.0),
-
     // Initial Orientation
     heading(270.0),      // heading (yaw) angle in degress (Psi)
     roll(0.0),           // roll angle in degrees (Phi)
     pitch(0.424),        // pitch angle in degrees (Theta)
+
+    // Initialize current options velocities to 0.0
+    uBody(0.0), vBody(0.0), wBody(0.0),
 
     // Miscellaneous
     game_mode(0),

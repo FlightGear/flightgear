@@ -150,6 +150,7 @@ public:
     // up vector for the view (usually point straight up through the
     // top of the aircraft
     MAT3vec view_up;
+    sgVec3 sgview_up;
 
     // the vector pointing straight out the nose of the aircraft
     MAT3vec view_forward;
@@ -160,6 +161,7 @@ public:
     // Transformation matrix for the view direction offset relative to
     // the AIRCRAFT matrix
     MAT3mat VIEW_OFFSET;
+    sgMat4 sgVIEW_OFFSET;
 
     // Current model view matrix;
     GLfloat MODEL_VIEW[16];
@@ -183,14 +185,6 @@ public:
 
     // Initialize a view class
     void Init( void );
-
-    // Basically, this is a modified version of the Mesa gluLookAt()
-    // function that's been modified slightly so we can capture the
-    // result (and use it later) otherwise this all gets calculated in
-    // OpenGL land and we don't have access to the results.
-    /* void LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
-		 GLdouble centerx, GLdouble centery, GLdouble centerz,
-		 GLdouble upx, GLdouble upy, GLdouble upz ); */
 
     // Update the view volume, position, and orientation
     void UpdateViewParams( void );
