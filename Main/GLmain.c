@@ -71,13 +71,13 @@ static GLfloat win_ratio = 1.0;
 static GLfloat sun_vec[4] = {-3.0, 1.0, 2.0, 0.0 };
 
 /* temporary hack */
-extern struct mesh *mesh_ptr;
+/* extern struct mesh *mesh_ptr; */
 /* Function prototypes */
-GLint fgSceneryCompile();
-static void fgSceneryDraw();
+/* GLint fgSceneryCompile_OLD(); */
+/* static void fgSceneryDraw_OLD(); */
 
 /* pointer to scenery structure */
-static GLint scenery, runway;
+/* static GLint scenery, runway; */
 
 /* Another hack */
 double fogDensity = 2000.0;
@@ -214,7 +214,7 @@ static void fgUpdateVisuals( void ) {
     /* glLoadIdentity(); */
 
     /* draw scenery */
-    fgSceneryDraw();
+    fgSceneryRender();
 
     #ifdef GLUT
       glutSwapBuffers();
@@ -285,25 +285,25 @@ void fgInitTimeDepCalcs() {
  * Scenery management routines
  **************************************************************************/
 
-static void fgSceneryInit() {
+/* static void fgSceneryInit_OLD() { */
     /* make scenery */
-    scenery = fgSceneryCompile();
-    runway = fgRunwayHack(0.69, 53.07);
-}
+/*     scenery = fgSceneryCompile_OLD();
+    runway = fgRunwayHack_OLD(0.69, 53.07);
+} */
 
 
 /* create the scenery */
-GLint fgSceneryCompile() {
+/* GLint fgSceneryCompile_OLD() {
     GLint scenery;
 
-    scenery = mesh2GL(mesh_ptr);
+    scenery = mesh2GL(mesh_ptr_OLD);
 
     return(scenery);
 }
-
+*/
 
 /* hack in a runway */
-GLint fgRunwayHack(double width, double length) {
+/* GLint fgRunwayHack_OLD(double width, double length) {
     static GLfloat concrete[4] = { 0.5, 0.5, 0.5, 1.0 };
     static GLfloat line[4]     = { 0.9, 0.9, 0.9, 1.0 };
     int i;
@@ -312,9 +312,9 @@ GLint fgRunwayHack(double width, double length) {
 
     runway = glGenLists(1);
     glNewList(runway, GL_COMPILE);
-
+    */
     /* draw concrete */
-    glBegin(GL_POLYGON);
+/*    glBegin(GL_POLYGON);
     glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, concrete );
     glNormal3f(0.0, 0.0, 1.0);
 
@@ -323,9 +323,9 @@ GLint fgRunwayHack(double width, double length) {
     glVertex3d(length,  width/2.0, 0.0);
     glVertex3d(length, -width/2.0, 0.0);
     glEnd();
-
+    */
     /* draw center line */
-    glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, line );
+/*    glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, line );
     line_len = length / ( 2 * num_lines + 1);
     printf("line_len = %.3f\n", line_len);
     line_width_2 = 0.02;
@@ -345,10 +345,10 @@ GLint fgRunwayHack(double width, double length) {
 
     return(runway);
 }
-
+*/
 
 /* draw the scenery */
-static void fgSceneryDraw() {
+/*static void fgSceneryDraw_OLD() {
     static float z = 32.35;
 
     glPushMatrix();
@@ -363,10 +363,10 @@ static void fgSceneryDraw() {
 
     glPopMatrix();
 }
-
+*/
 
 /* What should we do when we have nothing else to do?  How about get
- * ready for the next move?*/
+ * ready for the next move and update the display? */
 static void fgMainLoop( void ) {
     static int remainder = 0;
     int elapsed, multi_loop;
@@ -468,8 +468,10 @@ int main( int argc, char *argv[] ) {
     FG_Runway_heading = 102.0 * DEG_TO_RAD;
 
     /* Initial Position */
-    FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
-    FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
+    /* FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
+    FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD; */
+    FG_Latitude  = 0.0;
+    FG_Longitude = 0.0;
     FG_Altitude  = FG_Runway_altitude + 3.758099;
 
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", FG_Latitude, 
@@ -578,9 +580,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.24  1997/06/26 22:14:53  curt
-/* Beginning work on a scenery management system.
+/* Revision 1.25  1997/06/29 21:19:17  curt
+/* Working on scenery management system.
 /*
+ * Revision 1.24  1997/06/26 22:14:53  curt
+ * Beginning work on a scenery management system.
+ *
  * Revision 1.23  1997/06/26 19:08:33  curt
  * Restructuring make, adding automatic "make dep" support.
  *

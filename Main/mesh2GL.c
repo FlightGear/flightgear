@@ -24,12 +24,7 @@
  **************************************************************************/
 
 
-#ifdef GLUT
-    #include <GL/glut.h>
-#elif TIGER
-    /* assumes -I/usr/include/mesa in compile command */
-    #include "gltk.h"
-#endif
+#include <GL/glut.h>
 
 #include "../Scenery/mesh.h"
 #include "../mat3/mat3.h"
@@ -45,6 +40,8 @@ GLint mesh2GL(struct mesh *m) {
     MAT3vec v1, v2, normal; 
     int i, j, istep, jstep, iend, jend;
     float temp;
+
+    printf("In mesh2GL(), generating GL call list.\n");
 
     istep = jstep = 25;  /* Detail level 1 -- 1200 ... */
 
@@ -108,9 +105,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.21  1997/06/21 17:12:54  curt
-/* Capitalized subdirectory names.
+/* Revision 1.22  1997/06/29 21:19:17  curt
+/* Working on scenery management system.
 /*
+ * Revision 1.21  1997/06/21 17:12:54  curt
+ * Capitalized subdirectory names.
+ *
  * Revision 1.20  1997/06/18 04:10:32  curt
  * A couple more runway tweaks ...
  *

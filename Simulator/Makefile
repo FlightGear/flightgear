@@ -27,7 +27,7 @@
 include make.inc
 
 
-SUBSUBDIRS = Flight/LaRCsim Flight/Slew Scenery/ParseScn Scenery/ParseVRML
+SUBSUBDIRS = Flight/LaRCsim Flight/Slew
 SUBDIRS = Aircraft Controls Flight mat3 Scenery Timer
 MAIN = OpenGL
 
@@ -58,6 +58,9 @@ tar: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.14  1997/06/29 21:19:16  curt
+# Working on scenery management system.
+#
 # Revision 1.13  1997/06/28 00:49:02  curt
 # Tweaking Makefile structure ..
 #

@@ -24,14 +24,14 @@
 #---------------------------------------------------------------------------
 
 
-TARGET=fgfs0
+TARGET=fg0
 
 CFILES = GLmain.c $(INTERFACE_FILES) mesh2GL.c
 OFILES = $(CFILES:.c=.o)
 AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
 	../Flight/libFlight.a ../Flight/LaRCsim/libLaRCsim.a \
 	../Flight/Slew/libSlew.a ../mat3/libmat3.a \
-	../Scenery/ParseVRML/libParseVRML.a ../Scenery/libScenery.a \
+	../Scenery/libScenery.a \
 	../Timer/libTimer.a
 
 
@@ -76,6 +76,9 @@ mesh2GL.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.20  1997/06/29 21:19:17  curt
+# Working on scenery management system.
+#
 # Revision 1.19  1997/06/27 21:38:09  curt
 # Working on Makefile structure.
 #
