@@ -44,8 +44,6 @@ SG_USING_STD(istream);
 SG_USING_STD(ostream);
 #endif
 
-#define DEFAULT_AP_HEADING_LOCK FGAutopilot::FG_DG_HEADING_LOCK
-
 static double getWindNorth ();
 static double getWindEast ();
 static double getWindDown ();

@@ -44,8 +44,6 @@
 #include "newauto.hxx"
 
 
-#define DEFAULT_AP_HEADING_LOCK FGAutopilot::FG_DG_HEADING_LOCK
-
 FGAutopilot *current_autopilot;
 
 

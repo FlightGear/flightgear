@@ -211,5 +211,7 @@ public:
 
 extern FGAutopilot *current_autopilot;
 
+#define DEFAULT_AP_HEADING_LOCK FGAutopilot::FG_DG_HEADING_LOCK
+// #define DEFAULT_AP_HEADING_LOCK FGAutopilot::FG_TRUE_HEADING_LOCK
 
 #endif // _NEWAUTO_HXX
