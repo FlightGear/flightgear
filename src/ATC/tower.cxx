@@ -386,7 +386,8 @@ bool FGTower::OnActiveRunway(Point3D pt) {
 	if(!rwyGood) {
 		SG_LOG(SG_ATC, SG_WARN, "Unable to find runway " << activeRwy << " for airport ID " << ident << " in FGTower");
 	}
-	return(OnRunway(pt, &runway) ? true : false);
+	return false;	// TODO - this is an emergency patch to correct a framerate problem - FIXME properly!!!
+	//return(OnRunway(pt, &runway) ? true : false);
 }	
 
 
