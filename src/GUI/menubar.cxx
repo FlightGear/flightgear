@@ -286,6 +286,7 @@ FGMenuBar::~FGMenuBar ()
                                 // Delete all the character arrays
                                 // we were forced to keep around for
                                 // plib.
+    std::cerr << "Deleting char arrays\n";
     for (i = 0; i < _char_arrays.size(); i++) {
         for (int j = 0; _char_arrays[i][j] != 0; j++)
             free(_char_arrays[i][j]); // added with strdup
@@ -295,16 +296,21 @@ FGMenuBar::~FGMenuBar ()
                                 // Delete all the callback arrays
                                 // we were forced to keep around for
                                 // plib.
+    std::cerr << "Deleting callback arrays\n";
     for (i = 0; i < _callback_arrays.size(); i++)
         delete _callback_arrays[i];
 
                                 // Delete all those bindings
+    std::cerr << "Deleting bindings\n";
     map<string,vector<FGBinding *> >::iterator it;
     it = _bindings.begin();
-    while (it != _bindings.end()) {
+    for (it = _bindings.begin(); it != _bindings.end(); it++) {
+        std::cerr << "Deleting bindings for " << it->first << std::endl;
         for (int i = 0; i < it->second.size(); i++)
             delete it->second[i];
     }
+
+    std::cerr << "Done.\n";
 }
 
 void
@@ -346,8 +352,9 @@ FGMenuBar::fireItem (puObject * item)
 {
     const char * name = item->getLegend();
     vector<FGBinding *> &bindings = _bindings[name];
+    int nBindings = bindings.size();
 
-    for (int i = 0; i < bindings.size(); i++)
+    for (int i = 0; i < nBindings; i++)
         bindings[i]->fire();
 }
 
