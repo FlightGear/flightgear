@@ -121,6 +121,7 @@ An connector entry could look like the following:
     <input>Alternator 1</input>
     <output>Virtual Bus 1</output>
     <switch>/controls/switches/master-alt</switch>
+    <initial-state>off</initial-state>  <!-- optional tag -->
   </connector>
 
 A connector specifies and input, and output, and any number of
@@ -137,6 +138,18 @@ specify a bus or an output.
 You can have an arbitrary number of <switch> entries.  The switches
 are wired in series so all of them need to be on (i.e. true) in order
 for current to pass to the output.
+
+Note: by default the system forces any listed switches to be true.
+The assumption is that not every aircraft or cockpit may impliment
+every available switch, so rather than having systems be switched off,
+with no way to turn them on, we default to switched on.
+
+This is a problem however with the starter switch which we want to be
+initialized to "off".  To solve this problem you can specify
+<initial-state>off</initial-state> or
+<initial-state>on</initial-state> Switches default to on, so you
+really only need to specify this tag if you want the connector's
+switch to default to off.
 
 
 Summary
