@@ -7,8 +7,8 @@ SUBDIRS = \
 	DemInfo \
 	DemRaw2ascii \
 	FixNode \
-	GenAirports \
 	FixObj \
+	GenAirports \
 	SplitTris \
 	Stripe_w \
 	Tri2obj \
