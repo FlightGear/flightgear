@@ -270,6 +270,7 @@ bool FGCommList::FindByCode( string ICAO, ATCData& ad, atc_type tp ) {
 					ad = *itr;
 					return true;
 				}
+				++itr;
 			}
 		}
     } else {
