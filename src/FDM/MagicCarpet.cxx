@@ -44,8 +44,6 @@ FGMagicCarpet::~FGMagicCarpet() {
 // Initialize the Magic Carpet flight model, dt is the time increment
 // for each subsequent iteration through the EOM
 void FGMagicCarpet::init() {
-    // set valid time for this record
-    stamp_time();
 }
 
 

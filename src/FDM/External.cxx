@@ -37,9 +37,6 @@ FGExternal::~FGExternal() {
 // for each subsequent iteration through the EOM
 void FGExternal::init() {
     // cout << "FGExternal::init()" << endl;
-
-    // set valid time for this record
-    stamp_time();
 }
 
 

@@ -178,6 +178,7 @@ private:
     // jitter ( < dt ) but in practice seems to work well.
 
     double delta_t;		// delta "t"
+    SGTimeStamp time_stamp;	// time stamp of last run
     long elapsed;		// time elapsed since last run
     long remainder;		// remainder time from last run
     int multi_loop;		// number of iterations of "delta_t" to run
@@ -272,11 +273,11 @@ private:
     // Engine list
     engine_list engines;
 
-    SGTimeStamp valid_stamp;          // time this record is valid
-    SGTimeStamp next_stamp;           // time this record is valid
+    // SGTimeStamp valid_stamp;          // time this record is valid
+    // SGTimeStamp next_stamp;           // time this record is valid
 
 protected:
-     void _busdump(void);
+    void _busdump(void);
     void _updatePosition( double lat_geoc, double lon, double alt );
     void _updateWeather( void );
 
@@ -474,6 +475,9 @@ public:
     // time and update management values
     inline double get_delta_t() const { return delta_t; }
     inline void set_delta_t( double dt ) { delta_t = dt; }
+    inline SGTimeStamp get_time_stamp() const { return time_stamp; }
+    inline void set_time_stamp( SGTimeStamp s ) { time_stamp = s; }
+    inline void stamp() { time_stamp.stamp(); }
     inline long get_elapsed() const { return elapsed; }
     inline void set_elapsed( long e ) { elapsed = e; }
     inline long get_remainder() const { return remainder; }
@@ -1047,8 +1051,8 @@ public:
 
     inline double get_Climb_Rate() const { return climb_rate; }
 
-    inline SGTimeStamp get_time_stamp() const { return valid_stamp; }
-    inline void stamp_time() { valid_stamp = next_stamp; next_stamp.stamp(); }
+    // inline SGTimeStamp get_time_stamp() const { return valid_stamp; }
+    // inline void stamp_time() { valid_stamp = next_stamp; next_stamp.stamp(); }
 
     // Extrapolate FDM based on time_offset (in usec)
     void extrapolate( int time_offset );

@@ -730,22 +730,35 @@ void fgRenderFrame( void ) {
 
 
 // Update internal time dependent calculations (i.e. flight model)
-void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
-    static fdm_state_list fdm_list;
+void fgUpdateTimeDepCalcs() {
     fgLIGHT *l = &cur_light_params;
     int i;
 
-    // update the flight model
-    if ( multi_loop < 0 ) {
-	multi_loop = 1;
-    }
+    int multi_loop = 1;
 
     if ( !globals->get_freeze() && !initial_freeze ) {
-	// run Autopilot system
-	current_autopilot->run();
+	SGTimeStamp current;
+	current.stamp();
+	long elapsed = current - cur_fdm_state->get_time_stamp();
+	cur_fdm_state->set_time_stamp( current );
+	elapsed += cur_fdm_state->get_remainder();
+	// cout << "elapsed = " << elapsed << endl;
+	// cout << "dt = " << cur_fdm_state->get_delta_t() << endl;
+	multi_loop = (int)(((double)elapsed * 0.000001) /
+			       cur_fdm_state->get_delta_t() );
+	cur_fdm_state->set_multi_loop( multi_loop );
+	long remainder = elapsed - ( (multi_loop*1000000) *
+				     cur_fdm_state->get_delta_t() );
+	cur_fdm_state->set_remainder( remainder );
 
-	cur_fdm_state->update( multi_loop *
-			       fgGetInt("/sim/speed-up") );
+	// cout << "multi_loop = " << multi_loop << endl;
+	for ( i = 0; i < multi_loop; ++i ) {
+	    // run Autopilot system
+	    current_autopilot->run();
+
+	    // update autopiot
+	    cur_fdm_state->update( 1 * fgGetInt("/sim/speed-up") );
+	}
 	FGSteam::update( multi_loop * fgGetInt("/sim/speed-up") );
     } else {
 	cur_fdm_state->update( 0 );
@@ -756,17 +769,9 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	}
     }
 
-    fdm_list.push_back( *cur_fdm_state );
-    while ( fdm_list.size() > 15 ) {
-	fdm_list.pop_front();
-    }
-
     if ( fgGetString("/sim/view-mode") == "pilot" ) {
 	cur_view_fdm = *cur_fdm_state;
 	// do nothing
-    } else if ( fgGetString("/sim/view-mode") == "follow" )
-    {
-	cur_view_fdm = fdm_list.front();
     }
 
     // update the view angle
@@ -983,7 +988,7 @@ static void fgMainLoop( void ) {
 	
     // flight model
     if ( global_multi_loop > 0 ) {
-	fgUpdateTimeDepCalcs(global_multi_loop, remainder);
+	fgUpdateTimeDepCalcs();
     } else {
 	FG_LOG( FG_ALL, FG_DEBUG, 
 		"Elapsed time is zero ... we're zinging" );
@@ -1629,9 +1634,9 @@ int main( int argc, char **argv ) {
 
 void fgLoadDCS(void) {
 
-    ssgEntity *ship_obj;
-    double bz[3];
-    int j=0;
+    ssgEntity *ship_obj = NULL;
+    // double bz[3];
+    // int j=0;
     char obj_filename[25];
 
     for (int k=0;k<32;k++)
@@ -1707,11 +1712,11 @@ void fgLoadDCS(void) {
 
 void fgUpdateDCS (void) {
 
-    double eye_lat,eye_lon,eye_alt;
-    static double obj_head;
+    // double eye_lat,eye_lon,eye_alt;
+    // static double obj_head;
     double sl_radius,obj_latgc;
-    float nresultmat[4][4];
-    sgMat4 Trans,rothead,rotlon,rot180,rotlat,resultmat1,resultmat2,resultmat3;
+    // float nresultmat[4][4];
+    // sgMat4 Trans,rothead,rotlon,rot180,rotlat,resultmat1,resultmat2,resultmat3;
     double bz[3];
 
     // Instantaneous Geodetic Lat/Lon/Alt of moving object

@@ -489,6 +489,7 @@ bool fgInitSubsystems( void ) {
 	    scenery.cur_elev );
 
     double dt = 1.0 / fgGetInt("/sim/model-hz");
+    // cout << "dt = " << dt << endl;
 
     const string &model = fgGetString("/sim/flight-model");
     if (model == "larcsim") {
@@ -509,6 +510,8 @@ bool fgInitSubsystems( void ) {
 	       << ", can't init aircraft");
 	exit(-1);
     }
+    cur_fdm_state->stamp();
+    cur_fdm_state->set_remainder( 0 );
 
     // allocates structures so must happen before any of the flight
     // model or control parameters are set

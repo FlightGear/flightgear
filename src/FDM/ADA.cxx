@@ -158,9 +158,6 @@ void FGADA::init() {
 
     char Buffer[numberofbytes];
 
-    // set valid time for this record
-    stamp_time();
-
     printf("\nInitialising UDP sockets\n");
     // initialise a "udp" socket
     fdmsock = new SGSocket( "reddy_pc", "5001", "udp" );

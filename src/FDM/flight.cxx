@@ -164,20 +164,16 @@ FGInterface::bind ()
 {
                                 // Time management
   fgTie("/fdm/time/delta_t", this, 
-	&(FGInterface::get_delta_t),
-	&(FGInterface::set_delta_t));
+	&(FGInterface::get_delta_t));
 
   // The following two can't be uncommented until we have support for
   // the "long" data type in the property manager
   /*  fgTie("/fdm/time/elapsed", this, 
-	&(FGInterface::get_elapsed),
-	&(FGInterface::set_elapsed));
+	&(FGInterface::get_elapsed));
   fgTie("/fdm/time/remainder", this, 
-	&(FGInterface::get_remainder),
-	&(FGInterface::set_remainder)); */
+	&(FGInterface::get_remainder); */
   fgTie("/fdm/time/multi_loop", this, 
-	&(FGInterface::get_multi_loop),
-	&(FGInterface::set_multi_loop));
+	&(FGInterface::get_multi_loop));
 
 			// Aircraft position
   fgTie("/position/latitude", this,

@@ -40,6 +40,7 @@
 
 FGLaRCsim::FGLaRCsim( double dt ) {
     set_delta_t( dt );
+    cout << "dt = " << get_delta_t() << endl;
 
     ls_toplevel_init( 0.0, 
 		      (char *)fgGetString("/sim/aircraft").c_str() );
@@ -101,9 +102,6 @@ void FGLaRCsim::init() {
     if ( save_alt < -9000.0 ) {
 	set_Altitude( save_alt );
     }
-
-    // set valid time for this record
-    stamp_time();
 }
 
 
