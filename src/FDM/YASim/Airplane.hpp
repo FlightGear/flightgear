@@ -46,6 +46,7 @@ public:
     void setApproach(float speed, float altitude, float aoa); 
     void setCruise(float speed, float altitude);
 
+    void setElevatorControl(int control);
     void addApproachControl(int control, float val);
     void addCruiseControl(int control, float val);
 
@@ -67,6 +68,7 @@ public:
     float getLiftRatio();
     float getCruiseAoA();
     float getTailIncidence();
+    float getApproachElevator() { return _approachElevator.val; }
     char* getFailureMsg();
 
 private:
@@ -135,6 +137,7 @@ private:
     float _liftRatio;
     float _cruiseAoA;
     float _tailIncidence;
+    Control _approachElevator;
     char* _failureMsg;
 };
 

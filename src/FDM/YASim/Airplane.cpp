@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "Atmosphere.hpp"
 #include "ControlMap.hpp"
 #include "Gear.hpp"
@@ -9,6 +11,10 @@
 
 #include "Airplane.hpp"
 namespace yasim {
+
+// gadgets
+inline float norm(float f) { return f<1 ? 1/f : f; }
+inline float abs(float f) { return f<0 ? -f : f; }
 
 Airplane::Airplane()
 {
@@ -144,6 +150,13 @@ void Airplane::setCruise(float speed, float altitude)
     _cruiseT = Atmosphere::getStdTemperature(altitude);
     _cruiseAoA = 0;
     _tailIncidence = 0;
+}
+
+void Airplane::setElevatorControl(int control)
+{
+    _approachElevator.control = control;
+    _approachElevator.val = 0;
+    _approachControls.add(&_approachElevator);
 }
 
 void Airplane::addApproachControl(int control, float val)
@@ -804,6 +817,9 @@ void Airplane::solve()
 	// Run an approach iteration, and do likewise
 	runApproach();
 
+	_model.getBody()->getAngularAccel(tmp);
+	float apitch0 = tmp[1];
+
 	_model.getBody()->getAccel(tmp);
 	float alift = _approachWeight * tmp[2];
 
@@ -840,7 +856,23 @@ void Airplane::solve()
             return;
         }
 
-	// And apply:
+        // And the elevator control in the approach.  This works just
+        // like the tail incidence computation (it's solving for the
+        // same thing -- pitching moment -- by diddling a different
+        // variable).
+        const float ELEVDIDDLE = 0.0001f;
+        _approachElevator.val += ELEVDIDDLE;
+        runApproach();
+        _approachElevator.val -= ELEVDIDDLE;
+
+	_model.getBody()->getAngularAccel(tmp);
+	float apitch1 = tmp[1];
+        float elevDelta = -apitch0 * (ELEVDIDDLE/(apitch1-apitch0));
+
+        // Now apply the values we just computed.  Note that the
+        // "minor" variables are deferred until we get the lift/drag
+        // numbers in the right ballpark.
+
 	applyDragFactor(dragFactor);
 	applyLiftRatio(liftFactor);
 
@@ -851,15 +883,27 @@ void Airplane::solve()
 	    continue;
 	}
 
-	// OK, now we can adjust the minor variables
+	// OK, now we can adjust the minor variables:
 	_cruiseAoA += 0.5f*aoaDelta;
 	_tailIncidence += 0.5f*tailDelta;
+        _approachElevator.val += 0.5f*elevDelta;
 	
 	_cruiseAoA = clamp(_cruiseAoA, -0.174f, 0.174f);
 	_tailIncidence = clamp(_tailIncidence, -0.174f, 0.174f);
+        _approachElevator.val = clamp(_approachElevator.val, -1.f, 1.f);
 
-        if(dragFactor < 1.00001 && liftFactor < 1.00001 &&
-           aoaDelta < .000017   && tailDelta < .000017)
+        fprintf(stderr, "p0 %6f p1 %6f e %5f d %5f\n",
+                apitch0, apitch1, _approachElevator.val, elevDelta); // DEBUG
+
+        fprintf(stderr, "l %5f d %5f aoa %5f inc %5f ele %5f\n",
+                _liftRatio, _dragFactor, _cruiseAoA, _tailIncidence,
+                _approachElevator.val);
+
+        if(norm(dragFactor) < 1.00001 &&
+           norm(liftFactor) < 1.00001 &&
+           abs(aoaDelta) < .000017 &&
+           abs(tailDelta) < .000017 &&
+           abs(elevDelta) < 0.00001)
         {
             break;
         }

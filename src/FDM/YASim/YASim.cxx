@@ -74,11 +74,13 @@ void YASim::report()
     float drag = 1000 * a->getDragCoefficient();
 
     SG_LOG(SG_FLIGHT,SG_INFO,"YASim solution results:");
-    SG_LOG(SG_FLIGHT,SG_INFO,"      Iterations: "<<a->getSolutionIterations());
-    SG_LOG(SG_FLIGHT,SG_INFO,"Drag Coefficient: "<< drag);
-    SG_LOG(SG_FLIGHT,SG_INFO,"      Lift Ratio: "<<a->getLiftRatio());
-    SG_LOG(SG_FLIGHT,SG_INFO,"      Cruise AoA: "<< aoa);
-    SG_LOG(SG_FLIGHT,SG_INFO,"  Tail Incidence: "<< tail);
+    SG_LOG(SG_FLIGHT,SG_INFO,"       Iterations: "<<a->getSolutionIterations());
+    SG_LOG(SG_FLIGHT,SG_INFO," Drag Coefficient: "<< drag);
+    SG_LOG(SG_FLIGHT,SG_INFO,"       Lift Ratio: "<<a->getLiftRatio());
+    SG_LOG(SG_FLIGHT,SG_INFO,"       Cruise AoA: "<< aoa);
+    SG_LOG(SG_FLIGHT,SG_INFO,"   Tail Incidence: "<< tail);
+    SG_LOG(SG_FLIGHT,SG_INFO,"Approach Elevator: "<<a->getApproachElevator());
+    
 
     float cg[3];
     char buf[256];
