@@ -68,6 +68,8 @@
 
 **********************************************************************/
 
+#include <math.h>
+
 #include "uiuc_aerodeflections.h"
 
 void uiuc_aerodeflections( double dt )
