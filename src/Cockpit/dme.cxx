@@ -160,10 +160,7 @@ FGDME::update(double dt)
             SGTimeStamp current_time;
             station = Point3D( x, y, z );
             dist = aircraft.distance3D( station ) * SG_METER_TO_NM;
-            cout << "dist = " << dist << endl;
             dist -= bias;
-            cout << "  bias = " << bias << endl;
-            cout << "    dist = " << dist << endl;
 
             current_time.stamp();
             long dMs = (current_time - last_time) / 1000;
