@@ -371,10 +371,6 @@ bool fgInitSubsystems( void ) {
 						   &fgEVENT_MGR::PrintStats),
 			    fgEVENT::FG_EVENT_READY, 60000 );
 
-    // Initialize the time dependent variables
-    t->init( cur_fdm_state->get_Longitude(), cur_fdm_state->get_Latitude() );
-    t->update( cur_fdm_state->get_Longitude() );
-
     // Initialize view parameters
     FG_LOG( FG_GENERAL, FG_DEBUG, "Before current_view.init()");
     current_view.Init();
