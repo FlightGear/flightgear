@@ -354,7 +354,7 @@ int FGLaRCsim::copy_from_LaRCsim() {
     // set_V_equiv( V_equiv );
     set_V_equiv_kts( V_equiv_kts );
     // set_V_calibrated( V_calibrated );
-    // set_V_calibrated_kts( V_calibrated_kts );
+    set_V_calibrated_kts( V_calibrated_kts );
 
     set_Omega_Body( P_body, Q_body, R_body );
     // set_Omega_Local( P_local, Q_local, R_local );
@@ -362,6 +362,8 @@ int FGLaRCsim::copy_from_LaRCsim() {
     
     // set_Euler_Rates( Phi_dot, Theta_dot, Psi_dot );
     set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
+
+    set_Mach_number( mach_number );
 
     FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << Longitude 
 	    << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 

@@ -488,11 +488,11 @@ public:
     inline double get_V_equiv_kts() const { return v_equiv_kts; }
     inline void set_V_equiv_kts( double kts ) { v_equiv_kts = kts; }
 
-    // inline double get_V_calibrated() const { return v_calibrated; }
-    // inline void set_V_calibrated( double v ) { v_calibrated = v; }
+    //inline double get_V_calibrated() const { return v_calibrated; }
+    //inline void set_V_calibrated( double v ) { v_calibrated = v; }
 
-    // inline double get_V_calibrated_kts() const { return v_calibrated_kts; }
-    // inline void set_V_calibrated_kts( double kts ) { v_calibrated_kts = kts; }
+    inline double get_V_calibrated_kts() const { return v_calibrated_kts; }
+    inline void set_V_calibrated_kts( double kts ) { v_calibrated_kts = kts; }
 
     FG_VECTOR_3    omega_body_v;   // Angular B rates     
     // inline double * get_Omega_body_v() { return omega_body_v; }
@@ -697,8 +697,8 @@ public:
     // inline void set_Density( double d ) { density = d; }
     // inline double get_V_sound() const { return v_sound; }
     // inline void set_V_sound( double v ) { v_sound = v; }
-    // inline double get_Mach_number() const { return mach_number; }
-    // inline void set_Mach_number( double m ) { mach_number = m; }
+    inline double get_Mach_number() const { return mach_number; }
+    inline void set_Mach_number( double m ) { mach_number = m; }
 
     double    static_pressure, total_pressure, impact_pressure;
     double    dynamic_pressure;

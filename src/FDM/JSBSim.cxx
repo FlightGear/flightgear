@@ -44,6 +44,9 @@
 #include <FDM/JSBsim/FGRotation.h>
 #include <FDM/JSBsim/FGState.h>
 #include <FDM/JSBsim/FGTranslation.h>
+#include <FDM/JSBsim/FGAuxiliary.h>
+#include <FDM/JSBsim/FGDefs.h>
+
 
 #include "JSBsim.hxx"
 
@@ -67,26 +70,28 @@ int FGJSBsim::init( double dt ) {
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft" << 
 	    current_options.get_aircraft() );
 
-//    FDMExec.GetState()->Reset(aircraft_path.str(), "Reset00");
+    FG_LOG( FG_FLIGHT, FG_INFO, "Initializing JSBsim with:" );
+    FG_LOG( FG_FLIGHT, FG_INFO, "    U: " << current_options.get_uBody() );
+    FG_LOG( FG_FLIGHT, FG_INFO, "    V: " <<current_options.get_vBody() );
+    FG_LOG( FG_FLIGHT, FG_INFO, "    W: " <<current_options.get_wBody() );
+    FG_LOG( FG_FLIGHT, FG_INFO, "  phi: " <<get_Phi() );
+    FG_LOG( FG_FLIGHT, FG_INFO, "theta: " <<  get_Theta() );
+    FG_LOG( FG_FLIGHT, FG_INFO, "  psi: " <<  get_Psi() );
+    FG_LOG( FG_FLIGHT, FG_INFO, "  lat: " <<  get_Latitude() );
+    FG_LOG( FG_FLIGHT, FG_INFO, "  lon: " <<  get_Longitude() );
+    FG_LOG( FG_FLIGHT, FG_INFO, "  alt: " <<  get_Altitude() );
 
     FDMExec.GetState()->Initialize(
       current_options.get_uBody(),
       current_options.get_vBody(),
       current_options.get_wBody(),
-      get_Phi(),
-      get_Theta(),
-      get_Psi(),
+      get_Phi() * DEGTORAD,
+      get_Theta() * DEGTORAD,
+      get_Psi() * DEGTORAD,
       get_Latitude(),
       get_Longitude(),
       get_Altitude()
     );
-
-//    FDMExec.GetState()->Setlatitude(f.get_Latitude());
-//    FDMExec.GetState()->Setlongitude(f.get_Longitude());
-//    FDMExec.GetState()->Seth(f.get_Altitude());
-//    FDMExec.GetRotation()->Setphi(f.get_Phi());
-//    FDMExec.GetRotation()->Settht(f.get_Theta());
-//    FDMExec.GetRotation()->Setpsi(f.get_Psi());
 
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded initial conditions" );
 
@@ -176,8 +181,8 @@ int FGJSBsim::copy_from_JSBsim() {
 
     // Velocities
     set_Velocities_Local( FDMExec.GetPosition()->GetVn(), 
-			    FDMExec.GetPosition()->GetVe(), 
-			    FDMExec.GetPosition()->GetVd() );
+			  FDMExec.GetPosition()->GetVe(), 
+			  FDMExec.GetPosition()->GetVd() );
     // set_Velocities_Ground( V_north_rel_ground, V_east_rel_ground, 
     // 		     V_down_rel_ground );
     // set_Velocities_Local_Airmass( V_north_airmass, V_east_airmass,
@@ -194,18 +199,20 @@ int FGJSBsim::copy_from_JSBsim() {
     // set_V_ground_speed( V_ground_speed );
     // set_V_equiv( V_equiv );
 
-    /* ***FIXME*** */ set_V_equiv_kts( FDMExec.GetState()->GetVt() );
-    // set_V_calibrated( V_calibrated );
-    // set_V_calibrated_kts( V_calibrated_kts );
+    set_V_equiv_kts( FDMExec.GetAuxiliary()->GetVequivalentKTS() );
+    //set_V_calibrated( FDMExec.GetAuxiliary()->GetVcalibratedFPS() );
+    set_V_calibrated_kts( FDMExec.GetAuxiliary()->GetVcalibratedKTS() );
 
     set_Omega_Body( FDMExec.GetRotation()->GetP(), 
-		      FDMExec.GetRotation()->GetQ(), 
-		      FDMExec.GetRotation()->GetR() );
+		    FDMExec.GetRotation()->GetQ(), 
+		    FDMExec.GetRotation()->GetR() );
     // set_Omega_Local( P_local, Q_local, R_local );
     // set_Omega_Total( P_total, Q_total, R_total );
     
     // set_Euler_Rates( Phi_dot, Theta_dot, Psi_dot );
     // ***FIXME*** set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
+	
+    set_Mach_number( FDMExec.GetState()->GetMach());
 
     // Positions
     double lat_geoc = FDMExec.GetState()->Getlatitude();
@@ -227,8 +234,8 @@ int FGJSBsim::copy_from_JSBsim() {
 			       sl_radius2 * METER_TO_FEET + alt );
     set_Geodetic_Position( lat_geod, lon, alt );
     set_Euler_Angles( FDMExec.GetRotation()->Getphi(), 
-			FDMExec.GetRotation()->Gettht(),
-			FDMExec.GetRotation()->Getpsi() );
+		      FDMExec.GetRotation()->Gettht(),
+		      FDMExec.GetRotation()->Getpsi() );
 
     // Miscellaneous quantities
     // set_T_Local_to_Body(T_local_to_body_m);

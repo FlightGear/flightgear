@@ -51,7 +51,9 @@ int FGMagicCarpet::update( int multiloop ) {
     double dist = speed * time_step;
     double kts = speed * METER_TO_NM * 3600.0;
     set_V_equiv_kts( kts );
+    set_V_calibrated_kts( kts );
     set_V_ground_speed( kts );
+    set_Mach_number(0);
 
     // angle of turn
     double turn_rate = controls.get_aileron() * FG_PI_4; // radians/sec
