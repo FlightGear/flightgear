@@ -78,8 +78,8 @@ int fgJSBsimInit(double dt, FGInterface& f) {
       f.get_Phi(),
       f.get_Theta(),
       f.get_Psi(),
-      f.get_Latitude() * RAD_TO_DEG,
-      f.get_Longitude() * RAD_TO_DEG,
+      f.get_Latitude(),
+      f.get_Longitude(),
       f.get_Altitude()
     );
 
