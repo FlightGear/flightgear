@@ -59,13 +59,17 @@ void
 SubmodelSystem::update (double dt)
 {
   if (!(_serviceable_node->getBoolValue())) return;
-
+  int i=-1;
   submodel_iterator = submodels.begin();
   while(submodel_iterator != submodels.end()) {
-
+    i++;
     if ((*submodel_iterator)->trigger->getBoolValue()) {
         if ((*submodel_iterator)->count > 0) {
           release( (*submodel_iterator), dt);
+         // now update the "count" property for this submodel
+         char name[80];
+         snprintf(name, 80, "/systems/submodels/submodel[%d]/count", i);  
+         fgSetInt(name, (*submodel_iterator)->count);
         } 
     } 
     ++submodel_iterator;
@@ -82,9 +86,12 @@ SubmodelSystem::release (submodel* sm, double dt)
 
   transform(sm);  // calculate submodel's initial conditions in world-coordinates
 
+  //cout << "Creating a submodel." << endl; 
   int rval = ai->createBallistic( sm->model, IC.lat, IC.lon, IC.alt, IC.azimuth,
                                   IC.elevation, IC.speed );
-  sm->count--; 
+  //cout << "Submodel created." << endl;
+  (sm->count)--; 
+
   return true;                    
 }
 
@@ -117,7 +124,7 @@ SubmodelSystem::load ()
      SGPropertyNode * entry_node = root.getChild(i);
      sm->trigger        = fgGetNode(entry_node->getStringValue("trigger", "none"), true);
      sm->name           = entry_node->getStringValue("name", "none_defined");
-     sm->model          = entry_node->getStringValue("model", "Models/Geometry/tracer.ac");
+     sm->model          = entry_node->getStringValue("model", "Models/Geometry/rocket.ac");
      sm->speed          = entry_node->getDoubleValue("speed", 0.0);
      sm->repeat         = entry_node->getBoolValue  ("repeat", false); 
      sm->delay          = entry_node->getDoubleValue("delay", 0.25); 
@@ -131,22 +138,27 @@ SubmodelSystem::load ()
 
      sm->trigger->setBoolValue(false);
      sm->timer = 0.0;
-   }
 
+     char name[80];
+     snprintf(name, 80, "/systems/submodels/submodel[%d]/count", i);  
+     fgSetInt(name, sm->count);
+   }
 
   submodel_iterator = submodels.begin();
   // cout << submodels.size() << " submodels read." << endl;
 }
 
+
 void
 SubmodelSystem::transform( submodel* sm) 
 {
-IC.lat = _user_lat_node->getDoubleValue();
-IC.lon = _user_lon_node->getDoubleValue();
-IC.alt = _user_alt_node->getDoubleValue();
-IC.azimuth = _user_heading_node->getDoubleValue() + sm->yaw_offset;
-IC.elevation = _user_pitch_node->getDoubleValue() + sm->pitch_offset;
-IC.speed = _user_speed_node->getDoubleValue() + sm->speed;
+  IC.lat =       _user_lat_node->getDoubleValue();
+  IC.lon =       _user_lon_node->getDoubleValue();
+  IC.alt =       _user_alt_node->getDoubleValue();
+  IC.azimuth =   _user_heading_node->getDoubleValue() + sm->yaw_offset;
+  IC.elevation = _user_pitch_node->getDoubleValue() + sm->pitch_offset;
+  IC.speed =     _user_speed_node->getDoubleValue() + sm->speed;
 }
+
 
 // end of submodel.cxx
