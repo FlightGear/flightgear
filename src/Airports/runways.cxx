@@ -149,16 +149,21 @@ bool FGRunwayList::search( const string& aptid, FGRunway* r ) {
 bool FGRunwayList::search( const string& aptid, const string& rwyno,
                            FGRunway *r )
 {
-    // standardize input number
+    string revrwyno = "";
     string runwayno = rwyno;
-    string tmp = runwayno.substr(1, 1);
-    if (( tmp == "L" || tmp == "R" || tmp == "C" ) || (runwayno.size() == 1)) {
-	tmp = runwayno;
-	runwayno = "0" + tmp;
-        SG_LOG( SG_GENERAL, SG_INFO,
-                "Standardising rwy number from " << tmp << " to " << runwayno );
+    if ( runwayno.length() ) {
+        // standardize input number
+        string tmp = runwayno.substr(1, 1);
+        if (( tmp == "L" || tmp == "R" || tmp == "C" )
+            || (runwayno.size() == 1))
+        {
+            tmp = runwayno;
+            runwayno = "0" + tmp;
+            SG_LOG( SG_GENERAL, SG_INFO, "Standardising rwy number from "
+                    << tmp << " to " << runwayno );
+        }
+        revrwyno = GetReverseRunwayNo(runwayno);
     }
-    string revrwyno = GetReverseRunwayNo(runwayno);
 
     runway_map_iterator pos;
     for ( pos = runways.lower_bound( aptid );
