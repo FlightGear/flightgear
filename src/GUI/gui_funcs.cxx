@@ -107,7 +107,6 @@ extern void fgInitVisuals( void );
 extern void fgReshape( int width, int height );
 extern void fgRenderFrame( void );
 
-extern FGInterface cur_view_fdm;
 extern void fgHUDalphaAdjust( puObject * );
 
 // from cockpit.cxx

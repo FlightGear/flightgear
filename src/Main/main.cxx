@@ -205,9 +205,6 @@ ssgSelector *fgd_sel = NULL;
 ssgTransform *fgd_pos = NULL;
 #endif
 
-// current fdm/position used for view
-FGInterface cur_view_fdm;
-
 // Sky structures
 SGSky *thesky;
 
@@ -822,11 +819,6 @@ void fgUpdateTimeDepCalcs() {
 	globals->get_autopilot()->update(delta_time_sec);
 	cur_fdm_state->update(delta_time_sec);
 	globals->get_steam()->update(delta_time_sec);
-    }
-
-    if ( !strcmp(fgGetString("/sim/view-mode"), "pilot") ) {
-	cur_view_fdm = *cur_fdm_state;
-	// do nothing
     }
 
     globals->get_model_mgr()->update(delta_time_sec);
