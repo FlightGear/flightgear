@@ -57,7 +57,7 @@ void FGMagicCarpet::update( double dt ) {
 
     int multiloop = _calc_multiloop(dt);
 
-    double time_step = dt * multiloop;
+    double time_step = dt;
 
     // speed and distance traveled
     double speed = globals->get_controls()->get_throttle( 0 ) * 2000; // meters/sec

@@ -64,7 +64,7 @@ void FGUFO::update( double dt ) {
 
     int multiloop = _calc_multiloop(dt);
 
-    double time_step = dt * multiloop;
+    double time_step = dt;
 
     // read the throttle
     double th = globals->get_controls()->get_throttle( 0 );
