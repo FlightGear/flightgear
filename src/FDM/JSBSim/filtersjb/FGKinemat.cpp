@@ -154,6 +154,8 @@ bool FGKinemat::Run(void )
       if (Detents[ind] < ThisInput)     ThisInput = Detents[ind];
       // Compute the time to reach the value in ThisInput
       double ThisDt = fabs((ThisInput-Output)/Rate);
+      if (ThisDt == 0.0)
+         break;
       // and clip to the timestep size
       if (dt < ThisDt) ThisDt = dt;
       dt -= ThisDt;
