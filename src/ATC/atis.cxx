@@ -180,14 +180,11 @@ void FGATIS::UpdateTransmission() {
 #ifdef FG_WEATHERCM
     sprintf(buf, "%i", int(stationweather.Temperature - 273.15));
 #else
-    sprintf(buf, "%i", int(stationweather.get_temperature_degc()));
+    sprintf(buf, "%d", int(stationweather.get_temperature_degc()));
 #endif
     transmission += "  Temperature ";
     transmission += buf;
     transmission += " degrees Celsius";
-
-	// Get the pressure / altimeter
-        // pressure is: stationweather.AirPressure in Pascal
 
 	// Get the visibility
 #ifdef FG_WEATHERCM
@@ -202,8 +199,7 @@ void FGATIS::UpdateTransmission() {
 
 	// Get the cloudbase
 	// FIXME: kludge for now
-	if (!strcmp(fgGetString("/environment/clouds/layer[0]/type"),
-		    "clear")) {
+	if (strcmp(fgGetString("/environment/clouds/layer[0]/type"), "clear")) {
 	    double cloudbase =
 	      fgGetDouble("/environment/clouds/layer[0]/elevation-ft");
 	    // For some reason the altitude returned doesn't seem to correspond to the actual cloud altitude.
@@ -212,6 +208,15 @@ void FGATIS::UpdateTransmission() {
 	    sprintf(buf3, "%i", int(cloudbase));
 	    transmission = transmission + "  Cloudbase " + buf3 + " feet";
 	}
+
+	// Get the pressure / altimeter
+
+#ifndef FG_WEATHERCM
+      double altimeter = stationweather.get_pressure_sea_level_inhg();
+      sprintf(buf, "%.2f", altimeter);
+      transmission += "  Altimeter ";
+      transmission += buf;
+#endif
 
 	// Based on the airport-id and wind get the active runway
 	//FGRunway *r;
@@ -255,6 +260,7 @@ void FGATIS::UpdateTransmission() {
 	    char buf2[72];
 	    sprintf(buf2, "%s %i %s %i %s", "  Winds ", int(speed),
 		    " knots from ", int(hdg), " degrees");
+	    transmission += buf2;
 	}
 #endif
 
