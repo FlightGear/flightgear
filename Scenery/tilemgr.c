@@ -48,7 +48,7 @@ struct fgCartesianPoint local_refs[49];
 
 
 /* Initialize the Tile Manager subsystem */
-void fgTileMgrInit() {
+void fgTileMgrInit( void ) {
     printf("Initializing Tile Manager subsystem.\n");
     /* fgTileCacheInit(); */
 }
@@ -56,10 +56,11 @@ void fgTileMgrInit() {
 
 /* given the current lon/lat, fill in the array of local chunks.  If
  * the chunk isn't already in the cache, then read it from disk. */
-void fgTileMgrUpdate() {
+void fgTileMgrUpdate( void ) {
     struct fgFLIGHT *f;
     struct fgGENERAL *g;
     struct bucket p;
+    struct bucket p_last = {-1000, 0, 0, 0};
     char base_path[256];
     char file_name[256];
     int i, j;
@@ -69,6 +70,11 @@ void fgTileMgrUpdate() {
 
     find_bucket(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
     printf("Updating Tile list for %d,%d %d,%d\n", p.lon, p.lat, p.x, p.y);
+
+    if ( (p.lon == p_last.lon) && (p.lat == p_last.lat) && 
+	 (p.x == p_last.x) && (p.y == p_last.y) ) {
+	/* same bucket as last time */
+    }
 
     gen_idx_array(&p, local_tiles, 7, 7);
 
@@ -92,7 +98,7 @@ void fgTileMgrUpdate() {
 
 
 /* Render the local tiles --- hack, hack, hack */
-void fgTileMgrRender() {
+void fgTileMgrRender( void ) {
     static GLfloat terrain_color[4] = { 0.6, 0.8, 0.4, 1.0 };
     static GLfloat terrain_ambient[4];
     static GLfloat terrain_diffuse[4];
@@ -118,10 +124,14 @@ void fgTileMgrRender() {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/13 00:23:11  curt
-/* Initial changes to support loading and management of scenery tiles.  Note,
-/* there's still a fair amount of work left to be done.
+/* Revision 1.4  1998/01/19 18:40:38  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.3  1998/01/13 00:23:11  curt
+ * Initial changes to support loading and management of scenery tiles.  Note,
+ * there's still a fair amount of work left to be done.
+ *
  * Revision 1.2  1998/01/08 02:22:27  curt
  * Continue working on basic features.
  *

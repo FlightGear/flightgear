@@ -33,6 +33,10 @@
 $Header$
 
 $Log$
+Revision 1.2  1998/01/19 18:40:23  curt
+Tons of little changes to clean up the code and to remove fatal errors
+when building with the c++ compiler.
+
 Revision 1.1  1997/05/29 00:09:53  curt
 Initial Flight Gear revision.
 
@@ -71,8 +75,12 @@ Initial Flight Gear revision.
 
 --------------------------------------------------------------------------*/
 
-void inertias() 	{}
-void subsystems()	{}
+
+#include "ls_types.h"
+#include "default_model_routines.h"
+
+void inertias( SCALAR dt, int Initialize ) 	{}
+void subsystems( SCALAR dt, int Initialize )	{}
 /* void engine() 	{} */
 /* void gear()		{} */
 

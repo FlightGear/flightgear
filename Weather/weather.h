@@ -37,19 +37,23 @@ extern struct fgWEATHER current_weather;
 
 
 /* Initialize the weather modeling subsystem */
-void fgWeatherInit(void);
+void fgWeatherInit( void );
 
 /* Update the weather parameters for the current position */
-void fgWeatherUpdate();
+void fgWeatherUpdate( void );
 
 
 #endif /* WEATHER_H */
 
 
 /* $Log$
-/* Revision 1.6  1997/12/30 22:22:47  curt
-/* Further integration of event manager.
+/* Revision 1.7  1998/01/19 18:40:41  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.6  1997/12/30 22:22:47  curt
+ * Further integration of event manager.
+ *
  * Revision 1.5  1997/12/10 22:37:56  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

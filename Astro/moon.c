@@ -257,7 +257,7 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
 }
 
 
-void fgMoonInit() {
+void fgMoonInit( void ) {
     struct fgLIGHT *l;
     static int dl_exists = 0;
 
@@ -298,7 +298,7 @@ void fgMoonInit() {
 
 
 /* Draw the moon */
-void fgMoonRender() {
+void fgMoonRender( void ) {
     struct fgLIGHT *l;
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
@@ -320,9 +320,13 @@ void fgMoonRender() {
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 03:16:16  curt
-/* Moved from .../Src/Scenery/ to .../Src/Astro/
+/* Revision 1.2  1998/01/19 18:40:16  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.1  1998/01/07 03:16:16  curt
+ * Moved from .../Src/Scenery/ to .../Src/Astro/
+ *
  * Revision 1.16  1998/01/06 01:20:24  curt
  * Tweaks to help building with MSVC++
  *

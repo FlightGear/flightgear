@@ -33,10 +33,10 @@
 #define FG_MIN_STAR_MAG 0.738750 /* magnitude of weakest star we'll display */
 
 /* Initialize the Star Management Subsystem */
-void fgStarsInit();
+void fgStarsInit( void );
 
 /* Draw the Stars */
-void fgStarsRender();
+void fgStarsRender( void );
 extern struct OrbElements pltOrbElements[9];
 extern struct fgTIME cur_time_params;
 
@@ -44,9 +44,13 @@ extern struct fgTIME cur_time_params;
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 03:16:20  curt
-/* Moved from .../Src/Scenery/ to .../Src/Astro/
+/* Revision 1.2  1998/01/19 18:40:18  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.1  1998/01/07 03:16:20  curt
+ * Moved from .../Src/Scenery/ to .../Src/Astro/
+ *
  * Revision 1.6  1997/10/25 03:18:29  curt
  * Incorporated sun, moon, and planet position and rendering code contributed
  * by Durk Talsma.

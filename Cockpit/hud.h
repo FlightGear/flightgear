@@ -109,7 +109,7 @@ struct HUD_scale {
 	int with_minimum;
 	int minimum_value;
 	int width_units;
-	double (*load_value)();
+	double (*load_value)( void );
 };
 
 struct HUD_circular_scale {
@@ -122,7 +122,7 @@ struct HUD_circular_scale {
 	int orientation;
 	int label_position;
 	int width_units;
-	double (*load_value)();
+	double (*load_value)( void );
 };
 
 struct HUD_ladder {
@@ -135,8 +135,8 @@ struct HUD_ladder {
 	int div_units;
 	int label_position;
 	int width_units;
-	double (*load_roll)();
-	double (*load_pitch)();
+	double (*load_roll)( void );
+	double (*load_pitch)( void );
 };
 
 struct HUD_circular_ladder {
@@ -147,7 +147,7 @@ struct HUD_circular_ladder {
 	int orientation;
 	int label_position;
 	int width_units;
-	double (*load_value)();
+	double (*load_value)( void );
 };
 
 #define HORIZON_FIXED	1
@@ -159,7 +159,7 @@ struct HUD_horizon {
 	int y_pos;
 	int scr_width;
 	int scr_hole;
-	double (*load_value)();
+	double (*load_value)( void );
 };
 
 #define LABEL_COUNTER	1
@@ -175,7 +175,7 @@ struct HUD_label {
 	char *pre_str;
 	char *post_str;
 	char *format;
-	double (*load_value)();
+	double (*load_value)( void );
 };
 
 union HUD_instr_data {
@@ -208,14 +208,14 @@ struct HUD {
 typedef struct HUD *Hptr;
 
 Hptr fgHUDInit( struct fgAIRCRAFT cur_aircraft, int color );
-Hptr fgHUDAddHorizon( Hptr hud, int x_pos, int y_pos, int length, int hole_len, double (*load_value)() );
+Hptr fgHUDAddHorizon( Hptr hud, int x_pos, int y_pos, int length, int hole_len, double (*load_value)( void ) );
 Hptr fgHUDAddScale( Hptr hud, int type, int scr_pos, int scr_min, int scr_max, int div_min, int div_max, \
-					int orientation, int with_min, int min_value, int width_units, double (*load_value)() );
+					int orientation, int with_min, int min_value, int width_units, double (*load_value)( void ) );
 Hptr fgHUDAddLabel( Hptr hud, int x_pos, int y_pos, int size, int blink, int justify, \
-					char *pre_str, char *post_str, char *format, double (*load_value)() );
+					char *pre_str, char *post_str, char *format, double (*load_value)( void ) );
 Hptr fgHUDAddLadder( Hptr hud, int x_pos, int y_pos, int scr_width, int scr_height, \
 					int hole_len, int div_units, int label_pos, int max_value, \
-					double (*load_roll)(), double (*load_pitch)() );
+					double (*load_roll)( void ), double (*load_pitch)( void ) );
 					
 					
 					
@@ -225,7 +225,7 @@ struct HUD *fgHUDAddCircularLadder( Hptr hud, int scr_min, int scr_max, int div_
 					int max_value, double *(load_value) );
 struct HUD *fgHUDAddNumDisp( Hptr hud, int x_pos, int y_pos, int size, int blink, \
 					char *pre_str, char *post_str, double *(load_value) ); */
-void fgUpdateHUD();
+void fgUpdateHUD( Hptr hud );
 void fgUpdateHUD2( struct HUD *hud );
 
 
@@ -233,9 +233,13 @@ void fgUpdateHUD2( struct HUD *hud );
 
 
 /* $Log$
-/* Revision 1.3  1997/12/30 16:36:41  curt
-/* Merged in Durk's changes ...
+/* Revision 1.4  1998/01/19 18:40:21  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.3  1997/12/30 16:36:41  curt
+ * Merged in Durk's changes ...
+ *
  * Revision 1.2  1997/12/10 22:37:40  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

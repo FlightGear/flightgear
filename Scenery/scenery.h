@@ -47,7 +47,7 @@ extern struct fgSCENERY scenery;
 
 
 /* Initialize the Scenery Management system */
-void fgSceneryInit();
+void fgSceneryInit( void );
 
 
 /* Tell the scenery manager where we are so it can load the proper data, and
@@ -56,17 +56,21 @@ void fgSceneryUpdate(double lon, double lat, double elev);
 
 
 /* Render out the current scene */
-void fgSceneryRender();
+void fgSceneryRender( void );
 
 
 #endif /* SCENERY_H */
 
 
 /* $Log$
-/* Revision 1.12  1997/12/15 23:55:03  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.13  1998/01/19 18:40:38  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.12  1997/12/15 23:55:03  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.11  1997/12/10 22:37:52  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

@@ -37,6 +37,10 @@
 	CURRENT RCS HEADER INFO:
 $Header$
 $Log$
+Revision 1.2  1998/01/19 18:40:27  curt
+Tons of little changes to clean up the code and to remove fatal errors
+when building with the c++ compiler.
+
 Revision 1.1  1997/05/29 00:09:58  curt
 Initial Flight Gear revision.
 
@@ -74,13 +78,14 @@ Initial Flight Gear revision.
 
 --------------------------------------------------------------------------*/
 #include "ls_types.h"
+#include "ls_model.h"
+#include "default_model_routines.h"
 
-void ls_model( SCALAR dt, int Initialize )
 
-{
-  inertias( dt, Initialize );
-  subsystems( dt, Initialize );
-  aero( dt, Initialize );
-  engine( dt, Initialize );
-  gear( dt, Initialize );
+void ls_model( SCALAR dt, int Initialize ) {
+    inertias( dt, Initialize );
+    subsystems( dt, Initialize );
+    aero( dt, Initialize );
+    engine( dt, Initialize );
+    gear( dt, Initialize );
 }

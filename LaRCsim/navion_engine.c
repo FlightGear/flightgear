@@ -61,15 +61,15 @@ $Header$
 #include "ls_types.h"
 #include "ls_constants.h"
 #include "ls_generic.h"
-#include "ls_cockpit.h"
 #include "ls_sim_control.h"
+#include "ls_cockpit.h"
 
+extern SIM_CONTROL	sim_control_;
 
-void engine( SCALAR dt, int init )
-
-{
-    if (init || sim_control_.sim_type != cockpit) 
-	Throttle[3] = Throttle_pct;
+void engine( SCALAR dt, int init ) {
+    /* if (init) { */
+    Throttle[3] = Throttle_pct;
+    /* } */
 
     /* F_X_engine = Throttle[3]*813.4/0.2; */  /* original code */
     /* F_Z_engine = Throttle[3]*11.36/0.2; */  /* original code */

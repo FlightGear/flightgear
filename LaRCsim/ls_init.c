@@ -34,6 +34,10 @@
 
 $Header$
 $Log$
+Revision 1.4  1998/01/19 18:40:26  curt
+Tons of little changes to clean up the code and to remove fatal errors
+when building with the c++ compiler.
+
 Revision 1.3  1998/01/05 22:19:25  curt
 #ifdef'd out some unused code that was problematic for MSVC++ to compile.
 
@@ -90,6 +94,9 @@ static char rcsid[] = "$Id$";
 #include <stdio.h>
 #include "ls_types.h"
 #include "ls_sym.h"
+#include "ls_step.h"
+#include "ls_init.h"
+#include "navion_init.h"
 
 /* temp */
 #include "ls_generic.h"
@@ -117,16 +124,16 @@ typedef struct
 
 extern SCALAR Simtime;
 
-static int Symbols_loaded = 0;
+/* static int Symbols_loaded = 0; */
 static int Number_of_Continuous_States = 0;
 static int Number_of_Discrete_States = 0;
 static cont_state_rec	Continuous_States[ MAX_NUMBER_OF_CONTINUOUS_STATES ];
 static disc_state_rec	Discrete_States[  MAX_NUMBER_OF_DISCRETE_STATES ];
 
 
-void ls_init_init()
-{
-    int i, error;
+void ls_init_init( void ) {
+    int i;
+    /* int error; */
 
     if (Number_of_Continuous_States == 0)
 	{
@@ -178,9 +185,8 @@ void ls_init_init()
     */
 }
 
-void ls_init()
-{
-    int i;
+void ls_init( void ) {
+    /* int i; */
 
     Simtime = 0;
 
@@ -346,11 +352,10 @@ void ls_init_put_set( FILE *fp )
     return;
 }
 
-void ls_save_current_as_ic()
-{
+void ls_save_current_as_ic( void ) {
     /* Save current states as initial conditions */
 
-    int i, error;
+    /* int i, error; */
 
     /* commented out by CLO 
     for(i=0;i<Number_of_Continuous_States;i++)

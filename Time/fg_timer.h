@@ -33,20 +33,24 @@ extern unsigned long int fgSimTime;
 /* this routine initializes the interval timer to generate a SIGALRM
  * after the specified interval (dt) the function f() will be called
  * at each signal */
-void fgTimerInit(float dt, void (*f)());
+void fgTimerInit( float dt, void (*f)( void ) );
 
 /* This function returns the number of milleseconds since the last
    time it was called. */
-int fgGetTimeInterval();
+int fgGetTimeInterval( void );
 
 
 #endif /* FG_TIMER_H */
 
 
 /* $Log$
-/* Revision 1.2  1997/07/23 21:52:27  curt
-/* Put comments around the text after an #endif for increased portability.
+/* Revision 1.3  1998/01/19 18:40:40  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.2  1997/07/23 21:52:27  curt
+ * Put comments around the text after an #endif for increased portability.
+ *
  * Revision 1.1  1997/06/16 19:24:20  curt
  * Initial revision.
  *

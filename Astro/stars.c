@@ -56,7 +56,7 @@
 
 
 /* Initialize the Star Management Subsystem */
-void fgStarsInit() {
+void fgStarsInit( void ) {
     FILE *fd;
     struct fgGENERAL *g;
     struct CelestialCoord pltPos;
@@ -237,7 +237,7 @@ void fgStarsInit() {
 
 
 /* Draw the Stars */
-void fgStarsRender() {
+void fgStarsRender( void ) {
     struct fgFLIGHT *f;
     struct fgVIEW *v;
     struct fgLIGHT *l;
@@ -276,9 +276,13 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 03:16:20  curt
-/* Moved from .../Src/Scenery/ to .../Src/Astro/
+/* Revision 1.2  1998/01/19 18:40:18  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.1  1998/01/07 03:16:20  curt
+ * Moved from .../Src/Scenery/ to .../Src/Astro/
+ *
  * Revision 1.24  1997/12/30 22:22:39  curt
  * Further integration of event manager.
  *

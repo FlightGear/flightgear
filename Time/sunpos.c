@@ -261,7 +261,7 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
 
 
 /* update the cur_time_params structure with the current sun position */
-void fgUpdateSunPos() {
+void fgUpdateSunPos( void ) {
     struct fgLIGHT *l;
     struct fgTIME *t;
     struct fgVIEW *v;
@@ -373,9 +373,13 @@ void fgUpdateSunPos() {
 
 
 /* $Log$
-/* Revision 1.21  1997/12/30 23:10:19  curt
-/* Calculate lighting parameters here.
+/* Revision 1.22  1998/01/19 18:40:40  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.21  1997/12/30 23:10:19  curt
+ * Calculate lighting parameters here.
+ *
  * Revision 1.20  1997/12/30 22:22:43  curt
  * Further integration of event manager.
  *

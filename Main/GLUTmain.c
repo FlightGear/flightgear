@@ -70,7 +70,7 @@ static GLint winWidth, winHeight;
 /* pointer to scenery structure */
 /* static GLint scenery, runway; */
 
-double Simtime;
+/* double Simtime; */
 
 /* Another hack */
 int use_signals = 0;
@@ -86,7 +86,7 @@ int displayInstruments;
  * fgInitVisuals() -- Initialize various GL/view parameters
  **************************************************************************/
 
-static void fgInitVisuals() {
+static void fgInitVisuals( void ) {
     struct fgLIGHT *l;
     struct fgTIME *t;
     struct fgWEATHER *w;
@@ -121,7 +121,7 @@ static void fgInitVisuals() {
  * Update the view volume, position, and orientation
  **************************************************************************/
 
-static void fgUpdateViewParams() {
+static void fgUpdateViewParams( void ) {
     struct fgFLIGHT *f;
     struct fgLIGHT *l;
     struct fgTIME *t;
@@ -183,7 +183,7 @@ static void fgUpdateViewParams() {
 /*************************************************************************
  * Draw a basic instrument panel
  ************************************************************************/
-static void fgUpdateInstrViewParams() {
+static void fgUpdateInstrViewParams( void ) {
     xglViewport(0, 0 , (GLint)winWidth, (GLint)winHeight / 2);
   
     xglMatrixMode(GL_PROJECTION);
@@ -357,7 +357,7 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 }
 
 
-void fgInitTimeDepCalcs() {
+void fgInitTimeDepCalcs( void ) {
     /* initialize timer */
 
 #ifdef USE_ITIMER
@@ -517,7 +517,7 @@ static void fgMainLoop( void ) {
 	       FG_Altitude * FEET_TO_METER);
     }
 
-    /* fgAircraftOutputCurrent(a); */
+    fgAircraftOutputCurrent(a);
 
     /* see if we need to load any new scenery tiles */
     /* fgTileMgrUpdate(); */
@@ -636,9 +636,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.48  1998/01/19 18:35:46  curt
-/* Minor tweaks and fixes for cygwin32.
+/* Revision 1.49  1998/01/19 18:40:31  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.48  1998/01/19 18:35:46  curt
+ * Minor tweaks and fixes for cygwin32.
+ *
  * Revision 1.47  1998/01/13 00:23:08  curt
  * Initial changes to support loading and management of scenery tiles.  Note,
  * there's still a fair amount of work left to be done.

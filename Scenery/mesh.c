@@ -72,7 +72,7 @@ void mesh_init(struct MESH *m) {
 
 
 /* return a pointer to a new mesh structure (no data array allocated yet) */
-struct MESH *(new_mesh)() {
+struct MESH *(new_mesh)( void ) {
     struct MESH *mesh_ptr;
 
     mesh_ptr = (struct MESH *)malloc(sizeof(struct MESH));
@@ -396,9 +396,13 @@ GLint mesh_to_OpenGL(struct MESH *m) {
 
 
 /* $Log$
-/* Revision 1.25  1998/01/07 03:31:27  curt
-/* Miscellaneous tweaks.
+/* Revision 1.26  1998/01/19 18:40:36  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.25  1998/01/07 03:31:27  curt
+ * Miscellaneous tweaks.
+ *
  * Revision 1.24  1997/12/15 23:54:59  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

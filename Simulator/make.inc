@@ -38,7 +38,7 @@ FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 # Choose your weapons
 #---------------------------------------------------------------------------
 
-CC = gcc
+CC = g++
 FLEX = flex -f -L
 BISON = bison -v --no-lines
 AR = ar
@@ -159,6 +159,10 @@ FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.33  1998/01/19 18:40:15  curt
+# Tons of little changes to clean up the code and to remove fatal errors
+# when building with the c++ compiler.
+#
 # Revision 1.32  1998/01/19 18:35:40  curt
 # Minor tweaks and fixes for cygwin32.
 #

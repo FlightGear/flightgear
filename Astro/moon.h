@@ -36,10 +36,10 @@
 
 
  /* Initialize the Moon Display management Subsystem */
-void fgMoonInit();
+void fgMoonInit( void );
 
 /* Draw the Stars */
-void fgMoonRender();
+void fgMoonRender( void );
 
 struct CelestialCoord fgCalculateMoon(struct OrbElements Params,
                                       struct OrbElements sunParams,
@@ -51,9 +51,13 @@ extern struct OrbElements pltOrbElements[9];
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 03:16:16  curt
-/* Moved from .../Src/Scenery/ to .../Src/Astro/
+/* Revision 1.2  1998/01/19 18:40:17  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.1  1998/01/07 03:16:16  curt
+ * Moved from .../Src/Scenery/ to .../Src/Astro/
+ *
  * Revision 1.4  1997/12/11 04:43:56  curt
  * Fixed sun vector and lighting problems.  I thing the moon is now lit
  * correctly.

@@ -39,14 +39,18 @@ struct fgCOCKPIT {
 };
 
 struct fgCOCKPIT *fgCockpitInit( struct fgAIRCRAFT cur_aircraft );
-void fgCockpitUpdate();
+void fgCockpitUpdate( void );
 
 
 /* $Log$
-/* Revision 1.2  1997/12/10 22:37:39  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.3  1998/01/19 18:40:19  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.2  1997/12/10 22:37:39  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.1  1997/08/29 18:03:21  curt
  * Initial revision.
  *

@@ -60,8 +60,7 @@
 #include "ls_generic.h"
 #include "ls_cockpit.h"
 
-void model_init()
-{
+void model_init( void ) {
 
   Throttle[3] = 0.2; Rudder_pedal = 0; Lat_control = 0; Long_control = 0;
   

@@ -52,7 +52,7 @@ struct MESH {
 
 
 /* return a pointer to a new mesh structure (no data array allocated yet) */
-struct MESH *(new_mesh)();
+struct MESH *(new_mesh)( void );
 
 /* initialize the non-array mesh values */
 void mesh_init(struct MESH *m);
@@ -82,9 +82,13 @@ GLint mesh_to_OpenGL(struct MESH *m);
 
 
 /* $Log$
-/* Revision 1.7  1997/08/27 03:30:29  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.8  1998/01/19 18:40:37  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.7  1997/08/27 03:30:29  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.6  1997/08/02 19:10:15  curt
  * Incorporated mesh2GL.c into mesh.c
  *

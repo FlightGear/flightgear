@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include "flight.h"
+#include "LaRCsim/ls_interface.h"
 
 
 /* Initialize the flight model parameters */
@@ -67,9 +68,13 @@ int fgFlightModelUpdate(int model, struct fgFLIGHT *f, int multiloop) {
 
 
 /* $Log$
-/* Revision 1.6  1998/01/19 18:35:43  curt
-/* Minor tweaks and fixes for cygwin32.
+/* Revision 1.7  1998/01/19 18:40:23  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.6  1998/01/19 18:35:43  curt
+ * Minor tweaks and fixes for cygwin32.
+ *
  * Revision 1.5  1997/12/30 20:47:37  curt
  * Integrated new event manager with subsystem initializations.
  *

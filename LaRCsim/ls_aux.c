@@ -47,6 +47,10 @@
 
 $Header$
 $Log$
+Revision 1.2  1998/01/19 18:40:24  curt
+Tons of little changes to clean up the code and to remove fatal errors
+when building with the c++ compiler.
+
 Revision 1.1  1997/05/29 00:09:54  curt
 Initial Flight Gear revision.
 
@@ -115,15 +119,22 @@ Initial Flight Gear revision.
 #include "ls_types.h"
 #include "ls_constants.h"
 #include "ls_generic.h"
+
+#include "ls_aux.h"
+
+#include "atmos_62.h"
+#include "ls_geodesy.h"
+#include "ls_gravity.h"
+
 #include <math.h>
 
-void	ls_aux()
-{
+
+void ls_aux( void ) {
 
 	SCALAR	dx_pilot_from_cg, dy_pilot_from_cg, dz_pilot_from_cg;
-	SCALAR	inv_Mass;
+	/* SCALAR inv_Mass; */
 	SCALAR	v_XZ_plane_2, signU, v_tangential;
-	SCALAR	inv_radius_ratio;
+	/* SCALAR inv_radius_ratio; */
 	SCALAR	cos_rwy_hdg, sin_rwy_hdg;
 	SCALAR	mach2, temp_ratio, pres_ratio;
 	

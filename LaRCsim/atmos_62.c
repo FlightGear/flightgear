@@ -59,6 +59,9 @@
 
 #include "ls_types.h"
 #include "ls_constants.h"
+
+#include "atmos_62.h"
+
 #include <math.h>
 
 #define	alt_0	d_a_table[index  ][0]
@@ -211,7 +214,7 @@ void ls_atmos( SCALAR altitude, SCALAR * sigma, SCALAR * v_sound,
 	{ 240000.,	 1.08270E-07,	 9.47120E+02,	 0.00000E+00,	 0.00000E+00	}
     };
     
-    index = altitude / 2000;
+    index = (int)( altitude / 2000 );
     if (index > (MAX_ALT_INDEX-2))
     {
      index = MAX_ALT_INDEX-2; /* limit maximum altitude */

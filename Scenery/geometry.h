@@ -46,19 +46,23 @@ void vrmlGeomOptionsValue(char *value);
 /* We've finished parsing the current geometry.  Now do whatever needs
  * to be done with it (like generating the OpenGL call list for
  * instance */
-void vrmlHandleGeometry();
+void vrmlHandleGeometry( void );
 
 /* Finish up the current vrml geometry statement */
-int vrmlFreeGeometry();
+int vrmlFreeGeometry( void );
 
 
 #endif /* GEOMETRY_H */
 
 
 /* $Log$
-/* Revision 1.2  1997/07/23 21:52:25  curt
-/* Put comments around the text after an #endif for increased portability.
+/* Revision 1.3  1998/01/19 18:40:36  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.2  1997/07/23 21:52:25  curt
+ * Put comments around the text after an #endif for increased portability.
+ *
  * Revision 1.1  1997/06/29 21:16:48  curt
  * More twiddling with the Scenery Management system.
  *

@@ -95,7 +95,7 @@ void vrmlGeomOptionsValue(char *value) {
 /* We've finished parsing the current geometry.  Now do whatever needs
  * to be done with it (like generating the OpenGL call list for
  * instance */
-void vrmlHandleGeometry() {
+void vrmlHandleGeometry( void ) {
     switch(vrmlGeometryType) {
     case VRML_ELEV_GRID:
 	mesh_do_it(&eg);
@@ -104,7 +104,7 @@ void vrmlHandleGeometry() {
 
 
 /* Finish up the current vrml geometry statement */
-int vrmlFreeGeometry() {
+int vrmlFreeGeometry( void ) {
     printf("Freeing geometry type = %d\n", vrmlGeometryType);
 
     switch(vrmlGeometryType) {
@@ -120,9 +120,13 @@ int vrmlFreeGeometry() {
 
 
 /* $Log$
-/* Revision 1.5  1998/01/06 01:20:23  curt
-/* Tweaks to help building with MSVC++
+/* Revision 1.6  1998/01/19 18:40:35  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.5  1998/01/06 01:20:23  curt
+ * Tweaks to help building with MSVC++
+ *
  * Revision 1.4  1997/08/27 03:30:26  curt
  * Changed naming scheme of basic shared structures.
  *

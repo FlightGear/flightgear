@@ -8,6 +8,17 @@ moon.o: moon.c ../XGL/xgl.h orbits.h ../Time/fg_time.h \
  ../Include/general.h ../Main/views.h ../Main/../Include/types.h \
  ../Main/../Flight/flight.h ../Main/../Math/mat3.h \
  ../Main/../Time/fg_time.h
+old_astro.o: old_astro.c ../XGL/xgl.h old_astro.h stars.h moon.h \
+ orbits.h ../Time/fg_time.h ../Time/../Include/types.h \
+ ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
+ ../Time/../Flight/LaRCsim/ls_interface.h \
+ ../Time/../Flight/LaRCsim/../flight.h planets.h sun.h \
+ ../Include/constants.h ../Include/general.h ../Main/views.h \
+ ../Main/../Include/types.h ../Main/../Flight/flight.h \
+ ../Main/../Math/mat3.h ../Main/../Time/fg_time.h \
+ ../Aircraft/aircraft.h ../Aircraft/../Flight/flight.h \
+ ../Aircraft/../Controls/controls.h \
+ ../Aircraft/../Controls/../Include/limits.h
 orbits.o: orbits.c orbits.h ../Time/fg_time.h \
  ../Time/../Include/types.h ../Time/../Flight/flight.h \
  ../Time/../Flight/Slew/slew.h \

@@ -40,6 +40,10 @@
 
 $Header$
 $Log$
+Revision 1.2  1998/01/19 18:40:25  curt
+Tons of little changes to clean up the code and to remove fatal errors
+when building with the c++ compiler.
+
 Revision 1.1  1997/05/29 00:09:56  curt
 Initial Flight Gear revision.
 
@@ -90,6 +94,7 @@ Initial Flight Gear revision.
 
 #include "ls_types.h"
 #include "ls_constants.h"
+#include "ls_geodesy.h"
 #include <math.h>
 
 /* ONE_SECOND is pi/180/60/60, or about 100 feet at earths' equator */
@@ -97,12 +102,8 @@ Initial Flight Gear revision.
 #define HALF_PI 0.5*PI
 
 
-void ls_geoc_to_geod(  lat_geoc, radius, lat_geod, alt, sea_level_r )
-     SCALAR lat_geoc;
-     SCALAR radius;
-     SCALAR *lat_geod;
-     SCALAR *alt;
-     SCALAR *sea_level_r;
+void ls_geoc_to_geod( SCALAR lat_geoc, SCALAR radius, SCALAR *lat_geod, 
+		      SCALAR *alt, SCALAR *sea_level_r )
 {
 	SCALAR	t_lat, x_alpha, mu_alpha, delt_mu, r_alpha, l_point, rho_alpha;
 	SCALAR	sin_mu_a, denom,delt_lambda, lambda_sl, sin_lambda_sl;
@@ -137,11 +138,9 @@ void ls_geoc_to_geod(  lat_geoc, radius, lat_geod, alt, sea_level_r )
 	  }
 }
 
-void ls_geod_to_geoc( lat_geod, alt, sl_radius, lat_geoc )
-    SCALAR lat_geod;
-    SCALAR alt;
-    SCALAR *sl_radius;
-    SCALAR *lat_geoc;
+
+void ls_geod_to_geoc( SCALAR lat_geod, SCALAR alt, 
+		      SCALAR *sl_radius, SCALAR *lat_geoc )
 {
     SCALAR lambda_sl, sin_lambda_sl, cos_lambda_sl, sin_mu, cos_mu, px, py;
     

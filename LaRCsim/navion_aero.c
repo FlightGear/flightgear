@@ -112,8 +112,7 @@ ring is given below:
 extern COCKPIT cockpit_;
 
 
-void aero()
-{
+void aero( SCALAR dt, int Initialize ) {
   static int init = 0;
 
   SCALAR u, w;
@@ -123,7 +122,7 @@ void aero()
   static SCALAR yaw_scale  = -0.1;
   static SCALAR scale = 1.0;
   
-  static SCALAR trim_inc = 0.0002;
+  /* static SCALAR trim_inc = 0.0002; */
   /* static SCALAR long_trim; */
 
   static DATA U_0;

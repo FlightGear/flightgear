@@ -25,23 +25,27 @@
 
 
 /* Initialize the Tile Manager subsystem */
-void fgTileMgrInit();
+void fgTileMgrInit( void );
 
 
 /* given the current lon/lat, fill in the array of local chunks.  If
  * the chunk isn't already in the cache, then read it from disk. */
-void fgTileMgrUpdate();
+void fgTileMgrUpdate( void );
 
 
 /* Render the local tiles --- hack, hack, hack */
-void fgTileMgrRender();
+void fgTileMgrRender( void );
 
 
 /* $Log$
-/* Revision 1.2  1998/01/13 00:23:11  curt
-/* Initial changes to support loading and management of scenery tiles.  Note,
-/* there's still a fair amount of work left to be done.
+/* Revision 1.3  1998/01/19 18:40:38  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.2  1998/01/13 00:23:11  curt
+ * Initial changes to support loading and management of scenery tiles.  Note,
+ * there's still a fair amount of work left to be done.
+ *
  * Revision 1.1  1998/01/07 23:50:51  curt
  * "area" renamed to "tile"
  *

@@ -3,14 +3,16 @@ geometry.o: geometry.c geometry.h mesh.h
 mesh.o: mesh.c ../Include/constants.h ../Include/types.h \
  ../Math/fg_geodesy.h ../Math/fg_random.h ../Math/mat3.h \
  ../Math/polar.h ../Math/../Include/types.h mesh.h common.h scenery.h
-obj.o: obj.c ../XGL/xgl.h obj.h scenery.h ../Include/types.h \
+obj.o: obj.c ../XGL/xgl.h obj.h ../Include/types.h scenery.h \
  ../Math/mat3.h
-scenery.o: scenery.c ../XGL/xgl.h ../Include/general.h obj.h scenery.h \
- ../Include/types.h
-tilemgr.o: tilemgr.c ../XGL/xgl.h tileutils.h ../Aircraft/aircraft.h \
+scenery.o: scenery.c ../XGL/xgl.h ../Include/general.h obj.h \
+ ../Include/types.h scenery.h
+tilemgr.o: tilemgr.c ../XGL/xgl.h scenery.h ../Include/types.h \
+ tileutils.h obj.h ../Aircraft/aircraft.h \
  ../Aircraft/../Flight/flight.h ../Aircraft/../Flight/Slew/slew.h \
  ../Aircraft/../Flight/LaRCsim/ls_interface.h \
  ../Aircraft/../Flight/LaRCsim/../flight.h \
  ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../Include/limits.h
+ ../Aircraft/../Controls/../Include/limits.h ../Include/constants.h \
+ ../Include/general.h
 tileutils.o: tileutils.c tileutils.h ../Include/constants.h

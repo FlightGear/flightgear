@@ -79,7 +79,7 @@ struct fgCOCKPIT *fgCockpitAddHUD( struct fgCOCKPIT *cockpit, struct HUD *hud )
 	cockpit->hud = hud;
 }
 
-void fgCockpitUpdate()
+void fgCockpitUpdate( void )
 {
 
 	printf( "Cockpit: code %d   status %d\n", aircraft_cockpit->code, aircraft_cockpit->status );
@@ -90,9 +90,13 @@ void fgCockpitUpdate()
 
 
 /* $Log$
-/* Revision 1.4  1997/12/30 20:47:34  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.5  1998/01/19 18:40:19  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.4  1997/12/30 20:47:34  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.3  1997/12/15 23:54:33  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

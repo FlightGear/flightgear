@@ -36,6 +36,10 @@
 
 $Header$
 $Log$
+Revision 1.2  1998/01/19 18:40:29  curt
+Tons of little changes to clean up the code and to remove fatal errors
+when building with the c++ compiler.
+
 Revision 1.1  1997/05/29 00:10:02  curt
 Initial Flight Gear revision.
 
@@ -108,8 +112,7 @@ clear3( DATA v[] )
     v[0] = 0.; v[1] = 0.; v[2] = 0.;
 }
 
-gear()
-{
+void gear( SCALAR dt, int Initialize ) {
 char rcsid[] = "$Id$";
 
   /*

@@ -462,7 +462,7 @@ static void drawlabel( struct HUD_label label )
 	
 }
 
-double get_speed()
+double get_speed( void )
 {
 	struct fgFLIGHT *f;
               
@@ -470,7 +470,7 @@ double get_speed()
 	return( FG_V_equiv_kts );
 }
 
-double get_aoa()
+double get_aoa( void )
 {
 	struct fgFLIGHT *f;
               
@@ -478,7 +478,7 @@ double get_aoa()
 	return( FG_Gamma_vert_rad*RAD_TO_DEG );
 }
 
-double get_roll()
+double get_roll( void )
 {
 	struct fgFLIGHT *f;
               
@@ -486,7 +486,7 @@ double get_roll()
 	return( FG_Phi );
 }
 
-double get_pitch()
+double get_pitch( void )
 {
 	struct fgFLIGHT *f;
               
@@ -494,7 +494,7 @@ double get_pitch()
 	return( FG_Theta );
 }
 
-double get_heading()
+double get_heading( void )
 {
 	struct fgFLIGHT *f;
               
@@ -502,7 +502,7 @@ double get_heading()
 	return( FG_Psi*RAD_TO_DEG ); 
 }
 
-double get_altitude()
+double get_altitude( void )
 {
 	struct fgFLIGHT *f;
 	double rough_elev;
@@ -551,7 +551,6 @@ Hptr fgHUDInit( struct fgAIRCRAFT current_aircraft, int color )
 Hptr fgHUDAddHorizon( Hptr hud, int x_pos, int y_pos, int length, \
 						int hole_len, double (*load_value)() )
 {
-#ifndef WIN32
 	struct HUD_horizon *horizon;
 	struct HUD_instr *instrument;
 	HIptr tmp_first, tmp_next;
@@ -571,7 +570,7 @@ Hptr fgHUDAddHorizon( Hptr hud, int x_pos, int y_pos, int length, \
 		return( NULL );
 	
 	instrument->type = ARTIFICIAL_HORIZON;
-	instrument->instr = *horizon;
+	instrument->instr.horizon = *horizon;
 	instrument->instr.horizon.x_pos = x_pos;
 	instrument->instr.horizon.y_pos = y_pos;
 	instrument->instr.horizon.scr_width = length;
@@ -582,13 +581,11 @@ Hptr fgHUDAddHorizon( Hptr hud, int x_pos, int y_pos, int length, \
 	hud->instruments = instrument;
 
 	return( hud );
-#endif
 }
 
 Hptr fgHUDAddScale( Hptr hud, int type, int scr_pos, int scr_min, int scr_max, int div_min, int div_max, \
 					int orientation, int with_min, int min_value, int width_units, double (*load_value)() )
 {
-#ifndef WIN32
 	struct HUD_scale *scale;
 	struct HUD_instr *instrument;
 	HIptr tmp_first, tmp_next;
@@ -608,7 +605,7 @@ Hptr fgHUDAddScale( Hptr hud, int type, int scr_pos, int scr_min, int scr_max, i
 		return( NULL );
 	
 	instrument->type = SCALE;
-	instrument->instr = *scale;
+	instrument->instr.scale = *scale;
 	instrument->instr.scale.type = type;
 	instrument->instr.scale.scr_pos = scr_pos;
 	instrument->instr.scale.scr_min = scr_min;
@@ -625,13 +622,11 @@ Hptr fgHUDAddScale( Hptr hud, int type, int scr_pos, int scr_min, int scr_max, i
 	hud->instruments = instrument;
 
 	return( hud );
-#endif
 }
 
 Hptr fgHUDAddLabel( Hptr hud, int x_pos, int y_pos, int size, int blink, int justify, \
 					char *pre_str, char *post_str, char *format, double (*load_value)() )
 {
-#ifndef WIN32
 	struct HUD_label *label;
 	struct HUD_instr *instrument;
 	HIptr tmp_first, tmp_next;
@@ -651,7 +646,7 @@ Hptr fgHUDAddLabel( Hptr hud, int x_pos, int y_pos, int size, int blink, int jus
 		return( NULL );
 	
 	instrument->type = LABEL;
-	instrument->instr = *label;
+	instrument->instr.label = *label;
 	instrument->instr.label.x_pos = x_pos;
 	instrument->instr.label.y_pos = y_pos;
 	instrument->instr.label.size = size;
@@ -666,14 +661,12 @@ Hptr fgHUDAddLabel( Hptr hud, int x_pos, int y_pos, int size, int blink, int jus
 	hud->instruments = instrument;
 
 	return( hud );
-#endif
 }
 
 Hptr fgHUDAddLadder( Hptr hud, int x_pos, int y_pos, int scr_width, int scr_height, \
 					int hole_len, int div_units, int label_pos, int width_units, \
 					double (*load_roll)(), double (*load_pitch)() )
 {
-#ifndef WIN32
 	struct HUD_ladder *ladder;
 	struct HUD_instr *instrument;
 	HIptr tmp_first, tmp_next;
@@ -693,7 +686,7 @@ Hptr fgHUDAddLadder( Hptr hud, int x_pos, int y_pos, int scr_width, int scr_heig
 		return( NULL );
 
 	instrument->type = LADDER;
-	instrument->instr = *ladder;
+	instrument->instr.ladder = *ladder;
 	instrument->instr.ladder.type = 0;	// Not used.
 	instrument->instr.ladder.x_pos = x_pos;
 	instrument->instr.ladder.y_pos = y_pos;
@@ -710,7 +703,6 @@ Hptr fgHUDAddLadder( Hptr hud, int x_pos, int y_pos, int scr_width, int scr_heig
 	hud->instruments = instrument;
 
 	return( hud );
-#endif
 }
 
 /*
@@ -807,10 +799,14 @@ void fgUpdateHUD( Hptr hud )
 
 
 /* $Log$
-/* Revision 1.6  1997/12/15 23:54:34  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.7  1998/01/19 18:40:20  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.6  1997/12/15 23:54:34  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.5  1997/12/10 22:37:39  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

@@ -44,11 +44,12 @@
 
 /* reset flight params to a specific position */
 void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
-    struct FLIGHT *f;
+    struct fgFLIGHT *f;
 
     f = &current_aircraft.flight;
 
-    /*    f->pos_x = pos_x;
+    /*
+    f->pos_x = pos_x;
     f->pos_y = pos_y;
     f->pos_z = pos_z;
 
@@ -64,14 +65,15 @@ void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
     f->vel_Theta = 0.0;
     f->vel_Psi = 0.0;
 
-    f->Psi = heading; */
+    f->Psi = heading;
+    */
 }
 
 
 /* update position based on inputs, positions, velocities, etc. */
-void fgSlewUpdate() {
-    struct FLIGHT *f;
-    struct CONTROLS *c;
+void fgSlewUpdate( void ) {
+    struct fgFLIGHT *f;
+    struct fgCONTROLS *c;
 
     f = &current_aircraft.flight;
     c = &current_aircraft.controls;
@@ -91,10 +93,14 @@ void fgSlewUpdate() {
 
 
 /* $Log$
-/* Revision 1.7  1997/12/15 23:54:42  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.8  1998/01/19 18:40:30  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.7  1997/12/15 23:54:42  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.6  1997/08/27 03:30:11  curt
  * Changed naming scheme of basic shared structures.
  *

@@ -30,34 +30,39 @@
 
 
 /* Initialize the scheduling subsystem */
-void fgEventInit();
+void fgEventInit( void );
 
 /* Register an event with the scheduler, returns a pointer into the
  * event table */
-int fgEventRegister(char *desc, void (*event)(), int status, int interval);
+int fgEventRegister(char *desc, void (*event)( void ), int status, 
+		    int interval);
 
 /* Update the scheduling parameters for an event */
-void fgEventUpdate();
+void fgEventUpdate( void );
 
 /* Delete a scheduled event */
-void fgEventDelete();
+void fgEventDelete( void );
 
 /* Temporarily suspend scheduling of an event */
-void fgEventSuspend();
+void fgEventSuspend( void );
 
 /* Resume scheduling and event */
-void fgEventResume();
+void fgEventResume( void );
 
 /* Dump scheduling stats */
-void fgEventPrintStats();
+void fgEventPrintStats( void );
 
 /* Add pending jobs to the run queue and run the job at the front of
  * the queue */
-void fgEventProcess();
+void fgEventProcess( void );
 
 
 /* $Log$
-/* Revision 1.1  1997/12/30 04:19:22  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/19 18:40:39  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.1  1997/12/30 04:19:22  curt
+ * Initial revision.
+ *
  */

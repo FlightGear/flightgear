@@ -32,16 +32,20 @@
 void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading);
 
 /* update position based on inputs, positions, velocities, etc. */
-void fgSlewUpdate();
+void fgSlewUpdate( void );
 
 
 #endif /* SLEW_H */
 
 
 /* $Log$
-/* Revision 1.2  1997/07/23 21:52:20  curt
-/* Put comments around the text after an #endif for increased portability.
+/* Revision 1.3  1998/01/19 18:40:30  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.2  1997/07/23 21:52:20  curt
+ * Put comments around the text after an #endif for increased portability.
+ *
  * Revision 1.1  1997/05/29 02:29:43  curt
  * Moved to their own directory.
  *

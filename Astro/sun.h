@@ -31,19 +31,23 @@ struct SunPos fgCalcSunPos(struct OrbElements sunParams);
 extern struct OrbElements pltOrbElements[9];
 
 /* Initialize the Sun */
-void fgSunInit();
+void fgSunInit( void );
 
 /* Draw the Sun */
-void fgSunRender();
+void fgSunRender( void );
 
 
 #endif /* SUN_H */
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 03:16:21  curt
-/* Moved from .../Src/Scenery/ to .../Src/Astro/
+/* Revision 1.2  1998/01/19 18:40:19  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.1  1998/01/07 03:16:21  curt
+ * Moved from .../Src/Scenery/ to .../Src/Astro/
+ *
  * Revision 1.3  1997/12/11 04:43:56  curt
  * Fixed sun vector and lighting problems.  I thing the moon is now lit
  * correctly.

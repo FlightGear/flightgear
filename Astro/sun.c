@@ -94,7 +94,7 @@ struct CelestialCoord fgCalculateSun(struct OrbElements params, struct fgTIME t)
 
 
 /* Initialize the Sun */
-void fgSunInit() {
+void fgSunInit( void ) {
     static int dl_exists = 0;
 
     printf("  Initializing the Sun\n");
@@ -126,7 +126,7 @@ void fgSunInit() {
 
 
 /* Draw the Sun */
-void fgSunRender() {
+void fgSunRender( void ) {
     struct fgVIEW *v;
     struct fgTIME *t;
     struct fgLIGHT *l;
@@ -190,9 +190,13 @@ void fgSunRender() {
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 03:16:20  curt
-/* Moved from .../Src/Scenery/ to .../Src/Astro/
+/* Revision 1.2  1998/01/19 18:40:18  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.1  1998/01/07 03:16:20  curt
+ * Moved from .../Src/Scenery/ to .../Src/Astro/
+ *
  * Revision 1.12  1998/01/05 18:44:36  curt
  * Add an option to advance/decrease time from keyboard.
  *

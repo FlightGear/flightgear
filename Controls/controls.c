@@ -28,7 +28,7 @@
 #include "../Aircraft/aircraft.h"
 
 
-void fgControlsInit() {
+void fgControlsInit( void ) {
     int i;
     struct fgCONTROLS *c;
     c = &current_aircraft.controls;
@@ -167,10 +167,14 @@ void fgThrottleSet(int engine, double pos) {
 
 
 /* $Log$
-/* Revision 1.4  1997/12/10 22:37:41  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.5  1998/01/19 18:40:22  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.4  1997/12/10 22:37:41  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.3  1997/08/27 03:30:01  curt
  * Changed naming scheme of basic shared structures.
  *

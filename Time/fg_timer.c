@@ -44,7 +44,7 @@ unsigned long int fgSimTime;
 
 
 /* This routine catches the SIGALRM */
-void fgTimerCatch() {
+void fgTimerCatch( void ) {
     /* ignore any SIGALRM's until we come back from our EOM iteration */
     signal(SIGALRM, SIG_IGN);
 
@@ -87,7 +87,7 @@ void fgTimerInit(float dt, void (*f)()) {
 
 /* This function returns the number of milleseconds since the last
    time it was called. */
-int fgGetTimeInterval() {
+int fgGetTimeInterval( void ) {
     int interval;
     static int inited = 0;
 
@@ -131,9 +131,13 @@ int fgGetTimeInterval() {
 
 
 /* $Log$
-/* Revision 1.7  1997/12/30 13:06:58  curt
-/* A couple lighting tweaks ...
+/* Revision 1.8  1998/01/19 18:40:39  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.7  1997/12/30 13:06:58  curt
+ * A couple lighting tweaks ...
+ *
  * Revision 1.6  1997/07/12 02:13:04  curt
  * Add ftime() support for those that don't have gettimeofday()
  *

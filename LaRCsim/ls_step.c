@@ -50,6 +50,10 @@
 
 $Header$
 $Log$
+Revision 1.2  1998/01/19 18:40:28  curt
+Tons of little changes to clean up the code and to remove fatal errors
+when building with the c++ compiler.
+
 Revision 1.1  1997/05/29 00:09:59  curt
 Initial Flight Gear revision.
 
@@ -105,17 +109,18 @@ Initial Flight Gear revision.
 #include "ls_types.h"
 #include "ls_constants.h"
 #include "ls_generic.h"
+#include "ls_accel.h"
+#include "ls_aux.h"
+#include "ls_model.h"
+#include "ls_step.h"
+#include "ls_geodesy.h"
+#include "ls_gravity.h"
 /* #include "ls_sim_control.h" */
 #include <math.h>
 
 extern SCALAR Simtime;		/* defined in ls_main.c */
 
-void ls_step( dt, Initialize )
-
-SCALAR dt;
-int Initialize;
-
-{
+void ls_step( SCALAR dt, int Initialize ) {
 	static	int	inited = 0;
 		SCALAR	dth;
 	static	SCALAR	v_dot_north_past, v_dot_east_past, v_dot_down_past;
@@ -178,7 +183,7 @@ int Initialize;
 /*	Initialize vehicle model 			*/
 
 		ls_aux();
-		ls_model();
+		ls_model(0.0, 0);
 
 /* 	Calculate initial accelerations */
 

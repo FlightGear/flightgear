@@ -110,9 +110,21 @@ void fgInitSubsystems( void ) {
     FG_Runway_altitude = 3234.5;
     FG_Runway_heading = 102.0 * DEG_TO_RAD;
 
-    /* Initial Position at GLOBE airport */
+    /* Initial Position at (P13) GLOBE airport */
     FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
     FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
+    FG_Altitude = FG_Runway_altitude + 3.758099;
+    
+    /* Initial Position at (SEZ) SEDONA airport */
+    FG_Longitude = -111.7884614 * DEG_TO_RAD;
+    FG_Latitude  = 34.8486289 * DEG_TO_RAD;
+    FG_Runway_altitude = 4827;
+    FG_Altitude = FG_Runway_altitude + 3.758099;
+    
+    /* Initial Position at (ANE) Anoka County airport */
+    FG_Longitude = -93.2113889 * DEG_TO_RAD;
+    FG_Latitude  = 45.145 * DEG_TO_RAD;
+    FG_Runway_altitude = 912;
     FG_Altitude = FG_Runway_altitude + 3.758099;
     
     /* Initial Position north of the city of Globe */
@@ -137,10 +149,8 @@ void fgInitSubsystems( void ) {
     /* FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Latitude  = ( 93312.00 / 3600.0 ) * DEG_TO_RAD; */
 
-    FG_Runway_altitude = 4000.0;
-    FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    printf("Initial position is: (%.4f, %.4f, %.2f)\n", 
+ 
+   printf("Initial position is: (%.4f, %.4f, %.2f)\n", 
 	   FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, 
 	   FG_Altitude * FEET_TO_METER);
 
@@ -277,10 +287,14 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.30  1998/01/13 00:23:09  curt
-/* Initial changes to support loading and management of scenery tiles.  Note,
-/* there's still a fair amount of work left to be done.
+/* Revision 1.31  1998/01/19 18:40:32  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.30  1998/01/13 00:23:09  curt
+ * Initial changes to support loading and management of scenery tiles.  Note,
+ * there's still a fair amount of work left to be done.
+ *
  * Revision 1.29  1998/01/08 02:22:08  curt
  * Beginning to integrate Tile management subsystem.
  *

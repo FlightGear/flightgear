@@ -49,7 +49,7 @@ struct fgSCENERY scenery;
 
 
 /* Initialize the Scenery Management system */
-void fgSceneryInit() {
+void fgSceneryInit( void ) {
     printf("Initializing scenery subsystem\n");
 
     /* set the default terrain detail level */
@@ -81,7 +81,7 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
 
 
 /* Render out the current scene */
-void fgSceneryRender() {
+void fgSceneryRender( void ) {
     static GLfloat terrain_color[4] = { 0.6, 0.8, 0.4, 1.0 };
     static GLfloat terrain_ambient[4];
     static GLfloat terrain_diffuse[4];
@@ -100,10 +100,14 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.31  1998/01/13 00:23:11  curt
-/* Initial changes to support loading and management of scenery tiles.  Note,
-/* there's still a fair amount of work left to be done.
+/* Revision 1.32  1998/01/19 18:40:37  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.31  1998/01/13 00:23:11  curt
+ * Initial changes to support loading and management of scenery tiles.  Note,
+ * there's still a fair amount of work left to be done.
+ *
  * Revision 1.30  1998/01/07 03:22:29  curt
  * Moved astro stuff to .../Src/Astro/
  *

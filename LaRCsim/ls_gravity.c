@@ -35,6 +35,10 @@
 										
 $Header$
 $Log$
+Revision 1.2  1998/01/19 18:40:26  curt
+Tons of little changes to clean up the code and to remove fatal errors
+when building with the c++ compiler.
+
 Revision 1.1  1997/05/29 00:09:56  curt
 Initial Flight Gear revision.
 
@@ -71,6 +75,7 @@ Initial Flight Gear revision.
 --------------------------------------------------------------------------*/
 #include "ls_types.h"
 #include "ls_constants.h"
+#include "ls_gravity.h"
 #include <math.h>
 
 #define GM	1.4076431E16

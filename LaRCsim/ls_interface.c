@@ -235,6 +235,11 @@ $Original log: LaRCsim.c,v $
 #include "ls_sim_control.h"
 #include "ls_cockpit.h"
 #include "ls_interface.h"
+#include "ls_step.h"
+#include "ls_accel.h"
+#include "ls_aux.h"
+#include "ls_model.h"
+#include "ls_init.h"
 #include "../flight.h"
 #include "../../Aircraft/aircraft.h"
 
@@ -271,8 +276,7 @@ static char  matname[MAX_FILE_NAME_LENGTH]  = "run.m";
 
 
 
-void ls_stamp()
-{
+void ls_stamp( void ) {
     char rcsid[] = "$Id$";
     char revid[] = "$Revision$";
     char dateid[] = "$Date$";
@@ -297,8 +301,7 @@ void ls_stamp()
     return;
 }
 
-void ls_setdefopts()
-{
+void ls_setdefopts( void ) {
     /* set default values for most options */
 
     sim_control_.debug = 0;		/* change to non-zero if in dbx! */
@@ -307,7 +310,6 @@ void ls_setdefopts()
     sim_control_.write_mat = 0;		/* write matrix-x/matlab script */
     sim_control_.write_tab = 0;		/* write tab delim. history file */
     sim_control_.write_asc1 = 0;	/* write GetData file */
-    sim_control_.sim_type = GLmouse;	/* hook up to mouse */
     sim_control_.save_spacing = DEFAULT_SAVE_SPACING;	
 					/* interpolation on recording */
     sim_control_.write_spacing = DEFAULT_WRITE_SPACING;	
@@ -315,8 +317,8 @@ void ls_setdefopts()
     sim_control_.end_time = DEFAULT_END_TIME;
     sim_control_.model_hz = DEFAULT_MODEL_HZ;
     sim_control_.term_update_hz = DEFAULT_TERM_UPDATE_HZ;
-    sim_control_.time_slices = DEFAULT_END_TIME * DEFAULT_MODEL_HZ / 
-	DEFAULT_SAVE_SPACING;
+    sim_control_.time_slices = (long int)(DEFAULT_END_TIME * DEFAULT_MODEL_HZ / 
+	DEFAULT_SAVE_SPACING);
     sim_control_.paused = 0;
 
     speedup = 1.0;
@@ -482,12 +484,7 @@ int ls_checkopts(argc, argv)	/* check and set options flags */
 #endif /* COMPILE_THIS_CODE_THIS_USELESS_CODE */
 
 
-void ls_loop( dt, initialize )
-
-SCALAR dt;
-int initialize;
-
-{
+void ls_loop( SCALAR dt, int initialize ) {
     /* printf ("  In ls_loop()\n"); */
     ls_step( dt, initialize );
     /* if (sim_control_.sim_type == cockpit ) ls_ACES();  */
@@ -498,7 +495,7 @@ int initialize;
 
 
 
-int ls_cockpit() {
+int ls_cockpit( void ) {
     struct fgCONTROLS *c;
 
     sim_control_.paused = 0;
@@ -515,6 +512,7 @@ int ls_cockpit() {
     printf("%.4f,%.4f,%.2f  ", Latitude, Longitude, Altitude);
     printf("%.2f,%.2f,%.2f\n", Phi, Theta, Psi); */
 
+    return( 0 );
 }
 
 
@@ -734,6 +732,8 @@ int fgFlight_2_LaRCsim (struct fgFLIGHT *f) {
     X_pilot_rwy =       FG_X_pilot_rwy;
     Y_pilot_rwy =       FG_Y_pilot_rwy;
     H_pilot_rwy =       FG_H_pilot_rwy;
+
+    return( 0 );
 }
 
 
@@ -908,11 +908,17 @@ int fgLaRCsim_2_Flight (struct fgFLIGHT *f) {
     FG_X_pilot_rwy =    X_pilot_rwy;
     FG_Y_pilot_rwy =    Y_pilot_rwy;
     FG_H_pilot_rwy =    H_pilot_rwy;
+
+    return ( 0 );
 }
 
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.13  1998/01/19 18:40:26  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.12  1998/01/06 01:20:16  curt
  * Tweaks to help building with MSVC++
  *

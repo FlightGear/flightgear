@@ -72,7 +72,7 @@ static float outer_color[12][4];
 
 
 /* Calculate the sky structure vertices */
-void fgSkyVerticesInit() {
+void fgSkyVerticesInit( void ) {
     float theta;
     int i;
 
@@ -101,7 +101,7 @@ void fgSkyVerticesInit() {
 
 
 /* (Re)calculate the sky colors at each vertex */
-void fgSkyColorsInit() {
+void fgSkyColorsInit( void ) {
     struct fgLIGHT *l;
     float sun_angle, diff;
     float outer_param[3], outer_amt[3], outer_diff[3];
@@ -224,7 +224,7 @@ void fgSkyColorsInit() {
 
 
 /* Initialize the sky structure and colors */
-void fgSkyInit() {
+void fgSkyInit( void ) {
     printf("Initializing the sky\n");
 
     fgSkyVerticesInit();
@@ -236,7 +236,7 @@ void fgSkyInit() {
 
 
 /* Draw the Sky */
-void fgSkyRender() {
+void fgSkyRender( void ) {
     struct fgFLIGHT *f;
     struct fgLIGHT *l;
     struct fgVIEW *v;
@@ -329,9 +329,13 @@ void fgSkyRender() {
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 03:16:19  curt
-/* Moved from .../Src/Scenery/ to .../Src/Astro/
+/* Revision 1.2  1998/01/19 18:40:17  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.1  1998/01/07 03:16:19  curt
+ * Moved from .../Src/Scenery/ to .../Src/Astro/
+ *
  * Revision 1.11  1997/12/30 22:22:38  curt
  * Further integration of event manager.
  *

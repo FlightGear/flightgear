@@ -45,7 +45,7 @@
 struct fgEVENT {
     char description[256];
 
-    void (*event)();  /* pointer to function */
+    void (*event)( void );  /* pointer to function */
     int status;       /* status flag */
 
     long interval;    /* interval in ms between each iteration of this event */
@@ -80,13 +80,13 @@ int queue_end;
 
 
 /* initialize the run queue */
-void initq() {
+void initq( void ) {
     queue_front = queue_end = 0;
 }
 
 
 /* return queue empty status */
-int emptyq() {
+int emptyq( void ) {
     if ( queue_front == queue_end ) {
 	return(1);
     } else {
@@ -96,7 +96,7 @@ int emptyq() {
 
 
 /* return queue full status */
-int fullq() {
+int fullq( void ) {
     if ( (queue_end + 1) % MAX_RUN_QUEUE == queue_front ) {
 	return(1);
     } else {
@@ -121,7 +121,7 @@ void addq(int ptr) {
 
 
 /* remove a member from the front of the queue */
-int popq() {
+int popq( void ) {
     int ptr;
 
     if ( !emptyq() ) {
@@ -198,7 +198,7 @@ void fgEventRun(int ptr) {
 
 
 /* Initialize the scheduling subsystem */
-void fgEventInit() {
+void fgEventInit( void ) {
     printf("Initializing event manager\n");
     event_ptr = 0;
     initq();
@@ -207,7 +207,9 @@ void fgEventInit() {
 
 /* Register an event with the scheduler, returns a pointer into the
  * event table */
-int fgEventRegister(char *desc, void (*event)(), int status, int interval) {
+int fgEventRegister(char *desc, void (*event)( void ), int status, 
+		    int interval)
+{
     struct fgEVENT *e;
 
     e = &events[event_ptr];
@@ -240,27 +242,27 @@ int fgEventRegister(char *desc, void (*event)(), int status, int interval) {
 
 
 /* Update the scheduling parameters for an event */
-void fgEventUpdate() {
+void fgEventUpdate( void ) {
 }
 
 
 /* Delete a scheduled event */
-void fgEventDelete() {
+void fgEventDelete( void ) {
 }
 
 
 /* Temporarily suspend scheduling of an event */
-void fgEventSuspend() {
+void fgEventSuspend( void ) {
 }
 
 
 /* Resume scheduling and event */
-void fgEventResume() {
+void fgEventResume( void ) {
 }
 
 
 /* Dump scheduling stats */
-void fgEventPrintStats() {
+void fgEventPrintStats( void ) {
     int i;
 
     if ( event_ptr > 0 ) {
@@ -283,7 +285,7 @@ void fgEventPrintStats() {
 
 /* Add pending jobs to the run queue and run the job at the front of
  * the queue */
-void fgEventProcess() {
+void fgEventProcess( void ) {
 #ifdef USE_FTIME
     struct timeb current;
 #else
@@ -336,9 +338,13 @@ void fgEventProcess() {
 
 
 /* $Log$
-/* Revision 1.5  1998/01/06 01:20:27  curt
-/* Tweaks to help building with MSVC++
+/* Revision 1.6  1998/01/19 18:40:39  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.5  1998/01/06 01:20:27  curt
+ * Tweaks to help building with MSVC++
+ *
  * Revision 1.4  1997/12/31 17:46:50  curt
  * Tweaked fg_time.c to be able to use ftime() instead of gettimeofday()
  *

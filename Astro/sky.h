@@ -25,19 +25,23 @@
 
 
 /* (Re)generate the display list */
-void fgSkyInit();
+void fgSkyInit( void );
 
 /* (Re)calculate the sky colors at each vertex */
-void fgSkyColorsInit();
+void fgSkyColorsInit( void );
 
 /* Draw the Sky */
-void fgSkyRender();
+void fgSkyRender( void );
 
 
 /* $Log$
-/* Revision 1.1  1998/01/07 03:16:19  curt
-/* Moved from .../Src/Scenery/ to .../Src/Astro/
+/* Revision 1.2  1998/01/19 18:40:17  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.1  1998/01/07 03:16:19  curt
+ * Moved from .../Src/Scenery/ to .../Src/Astro/
+ *
  * Revision 1.2  1997/12/22 23:45:49  curt
  * First stab at sunset/sunrise sky glow effects.
  *

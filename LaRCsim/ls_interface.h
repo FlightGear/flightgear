@@ -37,14 +37,24 @@ int fgLaRCsimInit(double dt);
 /* update position based on inputs, positions, velocities, etc. */
 int fgLaRCsimUpdate(int multiloop);
 
+/* Convert from the fgFLIGHT struct to the LaRCsim generic_ struct */
+int fgFlight_2_LaRCsim (struct fgFLIGHT *f);
+
+/* Convert from the LaRCsim generic_ struct to the fgFLIGHT struct */
+int fgLaRCsim_2_Flight (struct fgFLIGHT *f);
+
 
 #endif /* LS_INTERFACE_H */
 
 
 /* $Log$
-/* Revision 1.3  1997/07/23 21:52:20  curt
-/* Put comments around the text after an #endif for increased portability.
+/* Revision 1.4  1998/01/19 18:40:27  curt
+/* Tons of little changes to clean up the code and to remove fatal errors
+/* when building with the c++ compiler.
 /*
+ * Revision 1.3  1997/07/23 21:52:20  curt
+ * Put comments around the text after an #endif for increased portability.
+ *
  * Revision 1.2  1997/05/29 22:39:59  curt
  * Working on incorporating the LaRCsim flight model.
  *
