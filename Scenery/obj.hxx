@@ -45,18 +45,26 @@
 
 #include <Include/fg_types.h>
 
+#include "tile.hxx"
 
-/* Load a .obj file and generate the GL call list */
-GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius);
+
+/* Load a .obj file and build the GL fragment list */
+int fgObjLoad(char *path, fgTILE *tile);
+// GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 
 
 #endif /* _OBJ_HXX */
 
 
 /* $Log$
-/* Revision 1.2  1998/05/02 01:52:15  curt
-/* Playing around with texture coordinates.
+/* Revision 1.3  1998/05/23 14:09:21  curt
+/* Added tile.cxx and tile.hxx.
+/* Working on rewriting the tile management system so a tile is just a list
+/* fragments, and the fragment record contains the display list for that fragment.
 /*
+ * Revision 1.2  1998/05/02 01:52:15  curt
+ * Playing around with texture coordinates.
+ *
  * Revision 1.1  1998/04/30 12:35:29  curt
  * Added a command line rendering option specify smooth/flat shading.
  *

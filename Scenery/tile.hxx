@@ -1,0 +1,106 @@
+// tile.hxx -- routines to handle a scenery tile
+//
+// Written by Curtis Olson, started May 1998.
+//
+// Copyright (C) 1998  Curtis L. Olson  - curt@infoplane.com
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+// (Log is kept at end of this file)
+
+
+#ifndef _TILE_HXX
+#define _TILE_HXX
+
+
+#ifndef __cplusplus                                                          
+# error This library requires C++
+#endif                                   
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
+#include <GL/glut.h>
+#include <XGL/xgl.h>
+
+#include <list.h>       // STL list
+
+#include <Bucket/bucketutils.h>
+#include <Include/fg_types.h>
+
+
+// Object fragment data class
+class fgFRAGMENT {
+
+public:
+
+    // culling data for this object fragment (fine grain culling)
+    fgCartesianPoint3d center;
+    double bounding_radius;
+
+    // material property pointer
+    int material_ptr;
+
+    // OpenGL display list for fragment data
+    GLint display_list;
+
+    // Constructor
+    fgFRAGMENT ( void );
+
+    // Destructor
+    ~fgFRAGMENT ( void );
+};
+
+
+// Scenery tile class
+class fgTILE {
+
+public:
+
+    // culling data for whole tile (course grain culling)
+    fgCartesianPoint3d center;
+    double bounding_radius;
+
+    // this tile's official location in the world
+    struct fgBUCKET tile_bucket;
+
+    // the tile cache will mark here if the tile is being used
+    int used;
+
+    list < fgFRAGMENT > fragment_list;
+
+    // Constructor
+    fgTILE ( void );
+
+    // Destructor
+    ~fgTILE ( void );
+};
+
+
+#endif // _TILE_HXX 
+
+
+// $Log$
+// Revision 1.1  1998/05/23 14:09:21  curt
+// Added tile.cxx and tile.hxx.
+// Working on rewriting the tile management system so a tile is just a list
+// fragments, and the fragment record contains the display list for that fragment.
+//

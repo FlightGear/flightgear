@@ -45,12 +45,16 @@
 #include <Bucket/bucketutils.h>
 #include <Include/fg_types.h>
 
+#include "tile.hxx"
+
+
 // For best results ... i.e. to avoid tile load problems and blank areas
 //
 // FG_TILE_CACHE_SIZE >= (o->tile_diameter + 1) ** 2 
 #define FG_TILE_CACHE_SIZE 121
 
 
+/*
 // Tile cache record 
 typedef struct {
     struct fgBUCKET tile_bucket;
@@ -60,6 +64,7 @@ typedef struct {
     int used;
     int priority;
 } fgTILE;
+*/
 
 
 // A class to store and manage a pile of tiles
@@ -82,14 +87,13 @@ public:
     int NextAvail( void );
 
     // Free a tile cache entry
-    void fgTILECACHE::EntryFree( int index );
+    void EntryFree( int index );
 
     // Fill in a tile cache entry with real data for the specified bucket 
     void EntryFillIn( int index, struct fgBUCKET *p );
 
-    // Return info for a tile cache entry 
-    void EntryInfo( int index, GLint *display_list, 
-		    fgCartesianPoint3d *local_ref, double *radius );
+    // Return a pointer to the specified tile cache entry 
+    fgTILE *GetTile( int index );
 
     // Destructor
     ~fgTILECACHE( void );
@@ -104,6 +108,11 @@ extern fgTILECACHE global_tile_cache;
 
 
 // $Log$
+// Revision 1.9  1998/05/23 14:09:22  curt
+// Added tile.cxx and tile.hxx.
+// Working on rewriting the tile management system so a tile is just a list
+// fragments, and the fragment record contains the display list for that fragment.
+//
 // Revision 1.8  1998/05/20 20:53:54  curt
 // Moved global ref point and radius (bounding sphere info, and offset) to
 // data file rather than calculating it on the fly.

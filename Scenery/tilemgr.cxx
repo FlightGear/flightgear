@@ -33,11 +33,12 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <Aircraft/aircraft.h>
+
 #include <Scenery/obj.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilecache.hxx>
 
-#include <Aircraft/aircraft.h>
 #include <Bucket/bucketutils.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
@@ -291,11 +292,13 @@ void fgTileMgrRender( void ) {
     fgTILECACHE *c;
     fgFLIGHT *f;
     fgOPTIONS *o;
+    fgTILE *t;
     fgVIEW *v;
     struct fgBUCKET p;
-    fgCartesianPoint3d local_ref, offset;
-    GLint display_list;
-    double radius;
+    fgCartesianPoint3d offset;
+    fgFRAGMENT fragment;
+    list < fgFRAGMENT > :: iterator current;
+    list < fgFRAGMENT > :: iterator last;
     int i;
     int index;
     int culled = 0;
@@ -309,7 +312,7 @@ void fgTileMgrRender( void ) {
     // Find current translation offset
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
     index = c->Exists(&p);
-    c->EntryInfo(index, &display_list, &scenery.next_center, &radius );
+    t = c->GetTile(index);
 
     fgPrintf( FG_TERRAIN, FG_DEBUG, 
 	      "Pos = (%.2f, %.2f) Current bucket = %d %d %d %d  Index = %ld\n", 
@@ -319,33 +322,48 @@ void fgTileMgrRender( void ) {
     for ( i = 0; i < (o->tile_diameter * o->tile_diameter); i++ ) {
 	index = tiles[i];
 	// fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index);
-	c->EntryInfo(index, &display_list, &local_ref, &radius );
+	t = c->GetTile(index);
 
-	if ( display_list >= 0 ) {
+	// calculate tile offset
+	offset.x = t->center.x - scenery.center.x;
+	offset.y = t->center.y - scenery.center.y;
+	offset.z = t->center.z - scenery.center.z;
 
-	    offset.x = local_ref.x - scenery.center.x;
-	    offset.y = local_ref.y - scenery.center.y;
-	    offset.z = local_ref.z - scenery.center.z;
+	if ( viewable(&offset, t->bounding_radius) ) {
+	    // at least a portion of this tile is viewable
+	    
+	    xglPushMatrix();
+	    xglTranslatef(offset.x, offset.y, offset.z);
 
-	    if ( viewable(&offset, radius) ) {
-		drawn++;
-		xglPushMatrix();
-		xglTranslatef(offset.x, offset.y, offset.z);
-		xglCallList(display_list);
-		xglPopMatrix();
-	    } else {
-		culled++;
+	    // traverse fragment list for tile
+	    current = t->fragment_list.begin();
+	    last = t->fragment_list.end();
+
+	    while ( current != last ) {
+		fragment = *current++;
+
+		if ( fragment.display_list >= 0 ) {
+		    xglCallList(fragment.display_list);
+		}
 	    }
+
+	    xglPopMatrix();
 	}
     }
 
-    v->vfc_ratio = (double)culled / (double)(drawn + culled);
+    // v->vfc_ratio = (double)culled / (double)(drawn + culled);
+    v->vfc_ratio = 0.0;
     // printf("drawn = %d  culled = %d  saved = %.2f\n", drawn, culled, 
     //        v->vfc_ratio);
 }
 
 
 // $Log$
+// Revision 1.12  1998/05/23 14:09:23  curt
+// Added tile.cxx and tile.hxx.
+// Working on rewriting the tile management system so a tile is just a list
+// fragments, and the fragment record contains the display list for that fragment.
+//
 // Revision 1.11  1998/05/20 20:53:55  curt
 // Moved global ref point and radius (bounding sphere info, and offset) to
 // data file rather than calculating it on the fly.

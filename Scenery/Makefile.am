@@ -6,6 +6,7 @@ libScenery_la_SOURCES = \
 	obj.cxx obj.hxx \
 	scenery.cxx scenery.hxx \
 	texload.c texload.h \
+	tile.cxx tile.hxx \
 	tilecache.cxx tilecache.hxx \
 	tilemgr.cxx tilemgr.hxx
 

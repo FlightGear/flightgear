@@ -47,6 +47,7 @@
 
 #include "obj.hxx"
 #include "scenery.hxx"
+#include "tile.hxx"
 
 
 #define MAXNODES 100000
@@ -94,21 +95,16 @@ fgPolarPoint3d calc_tex_coords(double *node, fgCartesianPoint3d *ref) {
 }
 
 
-// Calculate distance between (0,0,0) and the specified point
-static double calc_dist(double *p) {
-    return ( sqrt(p[0]*p[0] + p[1]*p[1] + p[2]*p[2]) );
-}
-
-
-/* Load a .obj file and generate the GL call list */
-GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
+/* Load a .obj file and build the GL fragment list */
+int fgObjLoad(char *path, fgTILE *tile) {
     fgOPTIONS *o;
+    fgFRAGMENT fragment;
     fgPolarPoint3d pp;
     char fgpath[256], line[256], material[256];
     double approx_normal[3], normal[3], scale;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
-    GLint tile;
+    GLint display_list;
     fgFile f;
     int first, ncount, vncount, n1, n2, n3, n4;
     int last1, last2, odd;
@@ -130,18 +126,18 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 		strcat(fgpath, ".obj");
 		fgPrintf( FG_TERRAIN, FG_ALERT, 
 			  "Cannot open file: %s\n", fgpath );
-		return(-1);
+		return(0);
 	    }
 	}
     }
 
-    tile = xglGenLists(1);
-    xglNewList(tile, GL_COMPILE);
+    display_list = xglGenLists(1);
+    xglNewList(display_list, GL_COMPILE);
 
     first = 1;
     ncount = 1;
     vncount = 1;
-    *radius = 0.0;
+    tile->bounding_radius = 0.0;
 
     while ( fggets(f, line, 250) != NULL ) {
 	if ( line[0] == '#' ) {
@@ -150,8 +146,9 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 	    /* empty line -- ignore */
 	} else if ( strncmp(line, "gb ", 3) == 0 ) {
 	    /* reference point (center offset) */
-	    sscanf(line, "gb %lf %lf %lf %lf\n", &ref->x, &ref->y, &ref->z, 
-		   radius);
+	    sscanf(line, "gb %lf %lf %lf %lf\n", 
+		   &tile->center.x, &tile->center.y, &tile->center.z, 
+		   &tile->bounding_radius);
 	} else if ( strncmp(line, "v ", 2) == 0 ) {
 	    /* node (vertex) */
 	    if ( ncount < MAXNODES ) {
@@ -217,19 +214,19 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 		// (averaged) normals
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
 		xglNormal3dv(normal);
-		pp = calc_tex_coords(nodes[n1], ref);
+		pp = calc_tex_coords(nodes[n1], &tile->center);
 		xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
 
 		MAT3_SCALE_VEC(normal, normals[n2], scale);
 		xglNormal3dv(normal);
-                pp = calc_tex_coords(nodes[n2], ref);
+                pp = calc_tex_coords(nodes[n2], &tile->center);
                 xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
 
 		MAT3_SCALE_VEC(normal, normals[n3], scale);
 		xglNormal3dv(normal);
-                pp = calc_tex_coords(nodes[n3], ref);
+                pp = calc_tex_coords(nodes[n3], &tile->center);
                 xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	    } else {
@@ -245,15 +242,15 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 		MAT3_SCALE_VEC(normal, approx_normal, scale);
 		xglNormal3dv(normal);
 
-                pp = calc_tex_coords(nodes[n1], ref);
+                pp = calc_tex_coords(nodes[n1], &tile->center);
                 xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
 
-                pp = calc_tex_coords(nodes[n2], ref);
+                pp = calc_tex_coords(nodes[n2], &tile->center);
                 xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
 
-                pp = calc_tex_coords(nodes[n3], ref);
+                pp = calc_tex_coords(nodes[n3], &tile->center);
                 xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	    }
@@ -272,7 +269,7 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 		    MAT3_SCALE_VEC(normal, approx_normal, scale);
 		}
 		xglNormal3dv(normal);
-		pp = calc_tex_coords(nodes[n4], ref);
+		pp = calc_tex_coords(nodes[n4], &tile->center);
                 xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n4][0], nodes[n4][1], nodes[n4][2]);
 
@@ -296,17 +293,17 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 	    sscanf(line, "f %d %d %d\n", &n1, &n2, &n3);
 
             xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
-	    pp = calc_tex_coords(nodes[n1], ref);
+	    pp = calc_tex_coords(nodes[n1], &tile->center);
 	    xglTexCoord2f(pp.lon, pp.lat);
  	    xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
 
             xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
-            pp = calc_tex_coords(nodes[n2], ref);
+            pp = calc_tex_coords(nodes[n2], &tile->center);
             xglTexCoord2f(pp.lon, pp.lat);
 	    xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
 		
             xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
-            pp = calc_tex_coords(nodes[n3], ref);
+            pp = calc_tex_coords(nodes[n3], &tile->center);
             xglTexCoord2f(pp.lon, pp.lat);
 	    xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	} else if ( line[0] == 'q' ) {
@@ -335,7 +332,7 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 		xglNormal3dv(normal);
 	    }
 
-            pp = calc_tex_coords(nodes[n1], ref);
+            pp = calc_tex_coords(nodes[n1], &tile->center);
             xglTexCoord2f(pp.lon, pp.lat);
 	    xglVertex3d(nodes[n1][0], nodes[n1][1], nodes[n1][2]);
     
@@ -363,7 +360,7 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 		    xglNormal3dv(normal);
 		}
 
-		pp = calc_tex_coords(nodes[n2], ref);
+		pp = calc_tex_coords(nodes[n2], &tile->center);
 		xglTexCoord2f(pp.lon, pp.lat);
 		xglVertex3d(nodes[n2][0], nodes[n2][1], nodes[n2][2]);
 
@@ -398,25 +395,31 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 
     fgclose(f);
 
-    /* reference point is the "center" (now included in input file) */
-    /*
-    ref->x = (xmin + xmax) / 2.0;
-    ref->y = (ymin + ymax) / 2.0;
-    ref->z = (zmin + zmax) / 2.0;
-    */
+    // temporary: create a fragment
+    fragment.center = tile->center;
+    fragment.bounding_radius = tile->bounding_radius;
+    fragment.display_list = display_list;
 
-    return(tile);
+    // temporary: push this fragment onto the tile's object list
+    tile->fragment_list.push_back(fragment);
+
+    return(1);
 }
 
 
 /* $Log$
-/* Revision 1.5  1998/05/20 20:53:53  curt
-/* Moved global ref point and radius (bounding sphere info, and offset) to
-/* data file rather than calculating it on the fly.
-/* Fixed polygon winding problem in scenery generation stage rather than
-/* compensating for it on the fly.
-/* Made a fgTILECACHE class.
+/* Revision 1.6  1998/05/23 14:09:20  curt
+/* Added tile.cxx and tile.hxx.
+/* Working on rewriting the tile management system so a tile is just a list
+/* fragments, and the fragment record contains the display list for that fragment.
 /*
+ * Revision 1.5  1998/05/20 20:53:53  curt
+ * Moved global ref point and radius (bounding sphere info, and offset) to
+ * data file rather than calculating it on the fly.
+ * Fixed polygon winding problem in scenery generation stage rather than
+ * compensating for it on the fly.
+ * Made a fgTILECACHE class.
+ *
  * Revision 1.4  1998/05/16 13:09:57  curt
  * Beginning to add support for view frustum culling.
  * Added some temporary code to calculate bouding radius, until the

@@ -78,6 +78,7 @@ libScenery_la_SOURCES = \
 	obj.cxx obj.hxx \
 	scenery.cxx scenery.hxx \
 	texload.c texload.h \
+	tile.cxx tile.hxx \
 	tilecache.cxx tilecache.hxx \
 	tilemgr.cxx tilemgr.hxx
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -96,8 +97,8 @@ X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 libScenery_la_LDFLAGS = 
 libScenery_la_LIBADD = 
-libScenery_la_OBJECTS =  obj.lo scenery.lo texload.lo tilecache.lo \
-tilemgr.lo
+libScenery_la_OBJECTS =  obj.lo scenery.lo texload.lo tile.lo \
+tilecache.lo tilemgr.lo
 CXXFLAGS = @CXXFLAGS@
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
@@ -113,7 +114,7 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP = --best
-DEP_FILES =  .deps/obj.P .deps/scenery.P .deps/texload.P \
+DEP_FILES =  .deps/obj.P .deps/scenery.P .deps/texload.P .deps/tile.P \
 .deps/tilecache.P .deps/tilemgr.P
 CXXMKDEP = $(CXX) -M $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 SOURCES = $(libScenery_la_SOURCES)

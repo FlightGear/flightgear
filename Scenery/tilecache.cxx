@@ -102,18 +102,23 @@ void fgTILECACHE::EntryFillIn( int index, struct fgBUCKET *p ) {
     tile_cache[index].tile_bucket.x = p->x;
     tile_cache[index].tile_bucket.y = p->y;
 
-    // Load the appropriate area and get the display list pointer
+    // Load the appropriate data file and built tile fragment list
     fgBucketGenBasePath(p, base_path);
     sprintf(file_name, "%s/Scenery/%s/%ld", o->fg_root, 
 	    base_path, fgBucketGenIndex(p));
+    fgObjLoad(file_name, &tile_cache[index]);
+    /*
     tile_cache[index].display_list = 
 	fgObjLoad(file_name, &tile_cache[index].local_ref,
 		  &tile_cache[index].bounding_radius);    
+		  */
 }
 
 
 // Free a tile cache entry
 void fgTILECACHE::EntryFree( int index ) {
+    fgFRAGMENT fragment;
+
     // Mark this cache entry as un-used
     tile_cache[index].used = 0;
 
@@ -125,25 +130,19 @@ void fgTILECACHE::EntryFree( int index ) {
 	      tile_cache[index].tile_bucket.x,
 	      tile_cache[index].tile_bucket.y );
 
-    // Load the appropriate area and get the display list pointer
-    if ( tile_cache[index].display_list >= 0 ) {
-	xglDeleteLists( tile_cache[index].display_list, 1 );
+    // Step through the fragment list, deleting the display list, then
+    // the fragment, until the list is empty.
+    while ( tile_cache[index].fragment_list.size() ) {
+	fragment = tile_cache[index].fragment_list.front();
+	xglDeleteLists( fragment.display_list, 1 );
+	tile_cache[index].fragment_list.pop_front();
     }
 }
 
 
-// Return info for a tile cache entry
-void fgTILECACHE::EntryInfo( int index, GLint *display_list, 
-			   fgCartesianPoint3d *local_ref,
-			   double *radius ) {
-    *display_list = tile_cache[index].display_list;
-    // fgPrintf(FG_TERRAIN, FG_DEBUG, "Display list = %d\n", *display_list);
-
-    local_ref->x = tile_cache[index].local_ref.x;
-    local_ref->y = tile_cache[index].local_ref.y;
-    local_ref->z = tile_cache[index].local_ref.z;
-
-    *radius = tile_cache[index].bounding_radius;
+// Return the specified tile cache entry 
+fgTILE *fgTILECACHE::GetTile( int index ) {
+    return ( &tile_cache[index] );
 }
 
 
@@ -170,12 +169,12 @@ int fgTILECACHE::NextAvail( void ) {
 		      v->abs_view_pos.x, v->abs_view_pos.y, v->abs_view_pos.z );
 	    fgPrintf( FG_TERRAIN, FG_DEBUG,
 		      "    ref point = %.4f, %.4f, %.4f\n", 
-		      tile_cache[i].local_ref.x, tile_cache[i].local_ref.y,
-		      tile_cache[i].local_ref.z);
+		      tile_cache[i].center.x, tile_cache[i].center.y,
+		      tile_cache[i].center.z);
 
-	    dx = fabs(tile_cache[i].local_ref.x - v->abs_view_pos.x);
-	    dy = fabs(tile_cache[i].local_ref.y - v->abs_view_pos.y);
-	    dz = fabs(tile_cache[i].local_ref.z - v->abs_view_pos.z);
+	    dx = fabs(tile_cache[i].center.x - v->abs_view_pos.x);
+	    dy = fabs(tile_cache[i].center.y - v->abs_view_pos.y);
+	    dz = fabs(tile_cache[i].center.z - v->abs_view_pos.z);
 
 	    max = dx; med = dy; min = dz;
 	    if ( max < med ) {
@@ -210,6 +209,11 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.10  1998/05/23 14:09:22  curt
+// Added tile.cxx and tile.hxx.
+// Working on rewriting the tile management system so a tile is just a list
+// fragments, and the fragment record contains the display list for that fragment.
+//
 // Revision 1.9  1998/05/20 20:53:54  curt
 // Moved global ref point and radius (bounding sphere info, and offset) to
 // data file rather than calculating it on the fly.
