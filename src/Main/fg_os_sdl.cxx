@@ -15,6 +15,7 @@
 
 static fgIdleHandler IdleHandler = 0;
 static fgDrawHandler DrawHandler = 0;
+static fgWindowResizeHandler WindowResizeHandler = 0;
 static fgKeyHandler KeyHandler = 0;
 static fgMouseClickHandler MouseClickHandler = 0;
 static fgMouseMotionHandler MouseMotionHandler = 0;
@@ -24,6 +25,7 @@ static int CurrentMouseX = 0;
 static int CurrentMouseY = 0;
 static int CurrentMouseCursor = MOUSE_CURSOR_POINTER;
 static bool NeedRedraw = false;
+static int VidMask = SDL_OPENGL|SDL_RESIZABLE;
 
 void fgRegisterIdleHandler(fgIdleHandler func)
 {
@@ -38,7 +40,7 @@ void fgRegisterDrawHandler(fgDrawHandler func)
 
 void fgRegisterWindowResizeHandler(fgWindowResizeHandler func)
 {
-    // Noop.  SDL does not support window resize.
+    WindowResizeHandler = func;
 }
 
 void fgRegisterKeyHandler(fgKeyHandler func)
@@ -84,11 +86,10 @@ void fgOSOpenWindow(int w, int h, int bpp,
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, zbits);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-    int vidmask = SDL_OPENGL;
     if(fullscreen) {
-        vidmask |= SDL_FULLSCREEN;
+        VidMask |= SDL_FULLSCREEN;
     }
-    if (SDL_SetVideoMode(w, h, 16, vidmask) == 0)
+    if (SDL_SetVideoMode(w, h, 16, VidMask) == 0)
         throw sg_throwable(string("Failed to set SDL video mode: ")
                                    + SDL_GetError());
 
@@ -213,6 +214,14 @@ void fgOSMainLoop()
                 CurrentMouseY = e.motion.y;
                 if(MouseMotionHandler)
                     (*MouseMotionHandler)(e.motion.x, e.motion.y);
+                break;
+            case SDL_VIDEORESIZE:
+                if (SDL_SetVideoMode(e.resize.w, e.resize.h, 16, VidMask) == 0)
+                    throw sg_throwable(string("Failed to set SDL video mode: ")
+                            + SDL_GetError());
+
+                if (WindowResizeHandler)
+                    (*WindowResizeHandler)(e.resize.w, e.resize.h);
                 break;
             }
         }
