@@ -751,10 +751,10 @@ void fgRenderFrame() {
 
 
 // Update internal time dependent calculations (i.e. flight model)
+// FIXME: this distinction is obsolete; all subsystems now get delta
+// time on update.
 void fgUpdateTimeDepCalcs() {
     static bool inited = false;
-    static const SGPropertyNode *master_freeze
-	= fgGetNode("/sim/freeze/master");
 
     //SG_LOG(SG_FLIGHT,SG_INFO, "Updating time dep calcs()");
 
@@ -787,40 +787,11 @@ void fgUpdateTimeDepCalcs() {
 	// we have been inited, and  we are good to go ...
 
 	if ( !inited ) {
-// 	    cur_fdm_state->stamp();
 	    inited = true;
 	}
 
-// 	SGTimeStamp current;
-// 	current.stamp();
-// 	long elapsed = current - cur_fdm_state->get_time_stamp();
-// 	cur_fdm_state->set_time_stamp( current );
-// 	elapsed += cur_fdm_state->get_remainder();
-// 	// cout << "elapsed = " << elapsed << endl;
-// 	// cout << "dt = " << cur_fdm_state->get_delta_t() << endl;
-// 	multi_loop = (long)(((double)elapsed * 0.000001) /
-// 			       cur_fdm_state->get_delta_t() );
-// 	cur_fdm_state->set_multi_loop( multi_loop );
-// 	long remainder = elapsed - (long)( (multi_loop*1000000) *
-// 				     cur_fdm_state->get_delta_t() );
-// 	cur_fdm_state->set_remainder( remainder );
-// 	// cout << "remainder = " << remainder << endl;
-
-// 	// chop max interations to something reasonable if the sim was
-// 	// delayed for an excesive amount of time
-// 	if ( multi_loop > 2.0 / cur_fdm_state->get_delta_t() ) {
-// 	    multi_loop = (int)(2.0 / cur_fdm_state->get_delta_t());
-// 	    cur_fdm_state->set_remainder( 0 );
-// 	}
-
-// 	// cout << "multi_loop = " << multi_loop << endl;
-// 	for ( i = 0; i < multi_loop * fgGetInt("/sim/speed-up"); ++i ) {
-// 	    // run Autopilot system
-	    globals->get_autopilot()->update(delta_time_sec);
-
-	    // update FDM
-	    cur_fdm_state->update(delta_time_sec);
-// 	}
+	globals->get_autopilot()->update(delta_time_sec);
+	cur_fdm_state->update(delta_time_sec);
 	FGSteam::update(delta_time_sec);
     }
 
@@ -828,7 +799,6 @@ void fgUpdateTimeDepCalcs() {
 	cur_view_fdm = *cur_fdm_state;
 	// do nothing
     }
-
 
     globals->get_model_mgr()->update(delta_time_sec);
     globals->get_aircraft_model()->update(delta_time_sec);
