@@ -55,7 +55,7 @@ class SGMagVar;
 class SGPropertyNode;
 class SGRoute;
 class SGTime;
-class SoundMgr;
+class SGSoundMgr;
 
 class FGAIMgr;
 class FGATCMgr;
@@ -130,7 +130,7 @@ private:
     FGPanel *current_panel;
 
     // sound manager
-    SoundMgr *soundmgr;
+    SGSoundMgr *soundmgr;
 
     // environment information
     FGEnvironmentMgr * environment_mgr;
@@ -257,8 +257,8 @@ public:
     inline FGPanel *get_current_panel() const { return current_panel; }
     inline void set_current_panel( FGPanel *cp ) { current_panel = cp; }
 
-    inline SoundMgr *get_soundmgr() const { return soundmgr; }
-    inline void set_soundmgr( SoundMgr *sm ) { soundmgr = sm; }
+    inline SGSoundMgr *get_soundmgr() const { return soundmgr; }
+    inline void set_soundmgr( SGSoundMgr *sm ) { soundmgr = sm; }
 
     inline FGControls *get_controls() const { return controls; }
     inline void set_controls( FGControls *c ) { controls = c; }

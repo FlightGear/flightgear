@@ -38,12 +38,12 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/scene/model/location.hxx>
+#include <simgear/scene/model/placement.hxx>
 #include <simgear/math/vector.hxx>
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <Model/acmodel.hxx>
-#include <Model/placement.hxx>
 
 #include "viewer.hxx"
 

@@ -124,7 +124,7 @@ public:
     bool init();
 
     // make a SimpleSound morse code transmission for the specified string
-    SimpleSound *make_ident( const string& id,
+    SGSimpleSound *make_ident( const string& id,
 			       const int freq = LO_FREQUENCY );
 };
 

@@ -1,12 +1,12 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/location.hxx>
+#include <simgear/scene/model/placement.hxx>
 #include <simgear/xml/easyxml.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Model/acmodel.hxx>
-#include <Model/placement.hxx>
 
 #include "FGFDM.hpp"
 #include "Atmosphere.hpp"

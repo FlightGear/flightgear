@@ -76,7 +76,7 @@ FGFX::init()
 
    node = root.getNode("fx");
    for (i = 0; i < node->nChildren(); i++) {
-      Sound *sound = new Sound();
+      SGSound *sound = new SGSound();
 
       sound->init(globals->get_props(), node->getChild(i),
                   globals->get_soundmgr(), globals->get_fg_root());

@@ -336,7 +336,7 @@ FGNavCom::update(double dt)
             nav_gs_dist = sqrt( dist );
             // cout << nav_gs_dist;
 
-            Point3D tmp( nav_gs_x, nav_gs_y, nav_gs_z );
+            // Point3D tmp( nav_gs_x, nav_gs_y, nav_gs_z );
             // cout << " (" << aircraft.distance3D( tmp ) << ")" << endl;
 
             // wgs84 heading to glide slope (to determine sign of distance)
@@ -410,7 +410,7 @@ FGNavCom::update(double dt)
 	if ( power_btn && (bus_power->getDoubleValue() > 1.0)
              && nav_ident_btn && audio_btn )
         {
-	    SimpleSound *sound;
+	    SGSimpleSound *sound;
 	    sound = globals->get_soundmgr()->find( nav_fx_name );
             if ( sound != NULL ) {
                 sound->set_volume( nav_vol_btn );
@@ -522,7 +522,7 @@ void FGNavCom::search()
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
 	    }
-	    SimpleSound *sound;
+	    SGSimpleSound *sound;
 	    sound = morse.make_ident( nav_trans_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    globals->get_soundmgr()->add( sound, nav_fx_name );
@@ -572,7 +572,7 @@ void FGNavCom::search()
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
 	    }
-	    SimpleSound *sound;
+	    SGSimpleSound *sound;
 	    sound = morse.make_ident( nav_trans_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    if ( globals->get_soundmgr()->add( sound, nav_fx_name ) ) {

@@ -25,9 +25,9 @@
 #include <plib/ssg.h>
 
 #include <simgear/math/point3d.hxx>
+#include <simgear/scene/model/placement.hxx>
 
 #include <Model/model.hxx>
-#include <Model/placement.hxx>
 
 
 /*****************************************************************
@@ -47,9 +47,9 @@ public:
     // Run the internal calculations
     virtual void Update(double dt);
 	
-	// Send a transmission *TO* the AIEntity.
-	// FIXME int code is a hack - eventually this will receive Alexander's coded messages.
-	virtual void RegisterTransmission(int code);
+    // Send a transmission *TO* the AIEntity.
+    // FIXME int code is a hack - eventually this will receive Alexander's coded messages.
+    virtual void RegisterTransmission(int code);
 
 protected:
 

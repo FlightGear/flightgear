@@ -174,13 +174,13 @@ FGPanel::FGPanel ()
     _mouseInstrument(0),
     _width(WIN_W), _height(int(WIN_H * 0.5768 + 1)),
     _view_height(int(WIN_H * 0.4232)),
-    _xsize_node(fgGetNode("/sim/startup/xsize", true)),
-    _ysize_node(fgGetNode("/sim/startup/ysize", true)),
     _visibility(fgGetNode("/sim/panel/visibility", true)),
     _x_offset(fgGetNode("/sim/panel/x-offset", true)),
     _y_offset(fgGetNode("/sim/panel/y-offset", true)),
     _jitter(fgGetNode("/sim/panel/jitter", true)),
-    _flipx(fgGetNode("/sim/panel/flip-x", true))
+    _flipx(fgGetNode("/sim/panel/flip-x", true)),
+    _xsize_node(fgGetNode("/sim/startup/xsize", true)),
+    _ysize_node(fgGetNode("/sim/startup/ysize", true))
 {
 }
 
@@ -432,13 +432,13 @@ FGPanel::draw()
 
   // Draw yellow "hotspots" if directed to.  This is a panel authoring
   // feature; not intended to be high performance or to look good.
-  if(fgGetBool("/sim/panel-hotspots")) {
+  if ( fgGetBool("/sim/panel-hotspots") ) {
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_TEXTURE_2D);
     glColor3f(1, 1, 0);
     
-    for(int i=0; i<_instruments.size(); i++)
+    for ( unsigned int i = 0; i < _instruments.size(); i++ )
       _instruments[i]->drawHotspots();
 
     glPopAttrib();
@@ -673,7 +673,7 @@ FGPanelInstrument::~FGPanelInstrument ()
 void
 FGPanelInstrument::drawHotspots()
 {
-  for(int i=0; i<_actions.size(); i++) {
+  for ( unsigned int i = 0; i < _actions.size(); i++ ) {
     FGPanelAction* a = _actions[i];
     float x1 = getXPos() + a->getX();
     float x2 = x1 + a->getWidth();

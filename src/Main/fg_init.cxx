@@ -1539,7 +1539,7 @@ bool fgInitSubsystems() {
     // Initialize the sound subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->set_soundmgr(new SoundMgr);
+    globals->set_soundmgr(new SGSoundMgr);
     globals->get_soundmgr()->init();
     globals->get_soundmgr()->bind();
 

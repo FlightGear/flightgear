@@ -165,8 +165,8 @@ bool FGMorse::cust_init(const int freq ) {
 }
 
 
-// make a SimpleSound morse code transmission for the specified string
-SimpleSound *FGMorse::make_ident( const string& id, const int freq ) {
+// make a SGSimpleSound morse code transmission for the specified string
+SGSimpleSound *FGMorse::make_ident( const string& id, const int freq ) {
     char *idptr = (char *)id.c_str();
 
     int length = 0;
@@ -260,7 +260,7 @@ SimpleSound *FGMorse::make_ident( const string& id, const int freq ) {
     buf_ptr += SPACE_SIZE;
 
     // 4. create the simple sound and return
-    SimpleSound *sample = new SimpleSound( buffer, length );
+    SGSimpleSound *sample = new SGSimpleSound( buffer, length );
 
     return sample;
 }

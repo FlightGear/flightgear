@@ -26,7 +26,7 @@
 
 #include <Main/fgfs.hxx>
 
-class Sound;
+class SGSound;
 
 /**
  * Generator for FlightGear sound effects.
@@ -51,7 +51,7 @@ public:
 
 private:
 
-  vector<Sound *> _sound;
+  vector<SGSound *> _sound;
 
 };
 

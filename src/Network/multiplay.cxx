@@ -28,8 +28,7 @@
 #include <iostream>
 
 #include <simgear/debug/logstream.hxx>
-
-#include <Model/placement.hxx>
+#include <simgear/scene/model/placement.hxx>
 
 #include "multiplay.hxx"
 

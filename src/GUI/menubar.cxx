@@ -208,7 +208,7 @@ FGMenuBar::~FGMenuBar ()
     hide();
     puDeleteObject(_menuBar);
 
-    int i;
+    unsigned int i;
 
                                 // Delete all the character arrays
                                 // we were forced to keep around for
@@ -233,7 +233,7 @@ FGMenuBar::~FGMenuBar ()
     it = _bindings.begin();
     for (it = _bindings.begin(); it != _bindings.end(); it++) {
         SG_LOG(SG_GENERAL, SG_INFO, "Deleting bindings for " << it->first);
-        for (int i = 0; i < it->second.size(); i++)
+        for ( i = 0; i < it->second.size(); i++ )
             delete it->second[i];
     }
 
@@ -296,7 +296,7 @@ FGMenuBar::make_menu (SGPropertyNode * node)
     char ** items = make_char_array(array_size);
     puCallback * callbacks = make_callback_array(array_size);
 
-    for (int i = 0, j = item_nodes.size() - 1;
+    for (unsigned int i = 0, j = item_nodes.size() - 1;
          i < item_nodes.size();
          i++, j--) {
         
@@ -308,7 +308,7 @@ FGMenuBar::make_menu (SGPropertyNode * node)
         vector<SGPropertyNode_ptr> binding_nodes =
             item_nodes[i]->getChildren("binding");
 
-        for (int k = 0; k < binding_nodes.size(); k++)
+        for (unsigned int k = 0; k < binding_nodes.size(); k++)
             _bindings[items[j]].push_back(new FGBinding(binding_nodes[k]));
     }
 
@@ -323,7 +323,7 @@ FGMenuBar::make_menubar ()
 
     fgLoadProps("gui/menubar.xml", &props);
     vector<SGPropertyNode_ptr> menu_nodes = props.getChildren("menu");
-    for (int i = 0; i < menu_nodes.size(); i++)
+    for (unsigned int i = 0; i < menu_nodes.size(); i++)
         make_menu(menu_nodes[i]);
 
     _menuBar->close();

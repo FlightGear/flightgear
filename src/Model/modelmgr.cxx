@@ -3,15 +3,22 @@
 //
 // This file is in the Public Domain, and comes with no warranty.
 
+#include <simgear/compiler.h>
+
+#include <vector>
+
 #include <plib/ssg.h>
+
+#include <simgear/scene/model/placement.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "model.hxx"
-#include "placement.hxx"
 
 #include "modelmgr.hxx"
+
+SG_USING_STD(vector);
 
 
 FGModelMgr::FGModelMgr ()

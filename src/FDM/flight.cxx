@@ -29,13 +29,13 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/scene/model/location.hxx>
+#include <simgear/scene/model/placement.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <Scenery/scenery.hxx>
 #include <FDM/LaRCsim/ls_interface.h>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Model/placement.hxx>
 #include <Model/acmodel.hxx>
 
 #include "flight.hxx"

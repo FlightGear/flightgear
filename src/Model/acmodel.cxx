@@ -16,6 +16,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/model/placement.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -23,7 +24,6 @@
 #include <Scenery/scenery.hxx>
 
 #include "model_panel.hxx"
-#include "placement.hxx"
 
 #include "acmodel.hxx"
 
