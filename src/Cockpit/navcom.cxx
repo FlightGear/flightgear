@@ -517,7 +517,7 @@ void FGNavCom::search()
 	}
     } else if ( (nav = current_navlist->findByFreq(nav_freq, lon, lat, elev)) != NULL ) {
 	nav_id = nav->get_ident();
-	nav_valid = true;
+	nav_valid = (nav->get_type() == 'V');
 	if ( last_nav_id != nav_id || !last_nav_vor ) {
 	    last_nav_id = nav_id;
 	    last_nav_vor = true;
