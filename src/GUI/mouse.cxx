@@ -503,7 +503,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     
                 case MOUSE_YOKE:
                     mouse_mode = MOUSE_VIEW;
-		    fgSetString("/sim/control/mode", "joystick");
+		    fgSetString("/sim/control-mode", "joystick");
                     x = fgGetInt("/sim/startup/xsize")/2;
                     y = fgGetInt("/sim/startup/ysize")/2;
                     _mVtoggle = 0;

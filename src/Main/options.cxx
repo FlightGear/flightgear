@@ -561,11 +561,11 @@ parse_option (const string& arg)
     } else if ( arg.find( "--lon=" ) != string::npos ) {
 	fgSetDouble("/position/longitude",
 			      parse_degree(arg.substr(6)));
-	fgSetString("/position/airport-id", "");
+	fgSetString("/sim/startup/airport-id", "");
     } else if ( arg.find( "--lat=" ) != string::npos ) {
 	fgSetDouble("/position/latitude",
 			      parse_degree(arg.substr(6)));
-	fgSetString("/position/airport-id", "");
+	fgSetString("/sim/startup/airport-id", "");
     } else if ( arg.find( "--altitude=" ) != string::npos ) {
 	fgSetBool("/sim/startup/onground", false);
 	if ( fgGetString("/sim/startup/units") == "feet" )
