@@ -44,6 +44,8 @@
 #include <Include/fg_constants.h>
 
 
+#define MAX_EX_NODES 10000
+
 #ifdef WIN32
 #  define MKDIR(a) mkdir(a,S_IRWXU)     // I am just guessing at this flag (NHV)
 #endif // WIN32
@@ -681,10 +683,15 @@ void fgDEM::outputmesh_set_pt( int i, int j, double value ) {
 }
 
 
-// Write out a node file that can be used by the "triangle" program
+// Write out a node file that can be used by the "triangle" program.
+// Check for an optional "index.node.ex" file in case there is a .poly
+// file to go along with this node file.  Include these nodes first
+// since they are referenced by position from the .poly file.
 void fgDEM::outputmesh_output_nodes( char *fg_root, fgBUCKET *p ) {
+    double exnodes[MAX_EX_NODES][3];
+    double junk1, junk2, junk3;
     struct stat stat_buf;
-    char base_path[256], dir[256], file[256];
+    char base_path[256], dir[256], file[256], exfile[256];
 #ifdef WIN32
     char tmp_path[256];
 #endif
@@ -692,7 +699,7 @@ void fgDEM::outputmesh_output_nodes( char *fg_root, fgBUCKET *p ) {
     FILE *fd;
     long int index;
     int colmin, colmax, rowmin, rowmax;
-    int i, j, count, result;
+    int i, j, count, excount, result;
 
     // determine dimensions
     colmin = p->x * ( (cols - 1) / 8);
@@ -744,10 +751,36 @@ void fgDEM::outputmesh_output_nodes( char *fg_root, fgBUCKET *p ) {
     index = fgBucketGenIndex(p);
     sprintf(file, "%s/%ld.node", dir, index);
 
+    // get (optional) extra node file name (in case there is matching
+    // .poly file.
+    strcpy(exfile, file);
+    strcat(exfile, ".ex");
+
+    // load extra nodes if they exist
+    excount = 0;
+    if ( (fd = fopen(exfile, "r")) != NULL ) {
+	fscanf(fd, "%d %d %d %d", &excount, &junk1, &junk2, &junk3);
+
+	if ( excount > MAX_EX_NODES - 1 ) {
+	    printf("Error, too many 'extra' nodes, increase array size\n");
+	    exit(-1);
+	} else {
+	    printf("    Expecting %d 'extra' nodes\n", excount);
+	}
+
+	for ( i = 1; i <= excount; i++ ) {
+	    fscanf(fd, "%d %lf %lf %lf\n", &junk1, 
+		   &exnodes[i][0], &exnodes[i][1], &exnodes[i][2]);
+	    printf("(extra) %d %.2f %.2f %.2f\n", 
+		    i, exnodes[i][0], exnodes[i][1], exnodes[i][2]);
+	}
+    }
+    fclose(fd);
+
     printf("Creating node file:  %s\n", file);
     fd = fopen(file, "w");
 
-    // first count nodes to generate header
+    // first count regular nodes to generate header
     count = 0;
     for ( j = rowmin; j <= rowmax; j++ ) {
 	for ( i = colmin; i <= colmax; i++ ) {
@@ -757,10 +790,16 @@ void fgDEM::outputmesh_output_nodes( char *fg_root, fgBUCKET *p ) {
 	}
 	// printf("    count = %d\n", count);
     }
-    fprintf(fd, "%d 2 1 0\n", count);
+    fprintf(fd, "%d 2 1 0\n", count + excount);
 
-    // now write out actual node data
-    count = 1;
+    // now write out extra node data
+    for ( i = 1; i <= excount; i++ ) {
+	fprintf(fd, "%d %.2f %.2f %.2f\n", 
+		i, exnodes[i][0], exnodes[i][1], exnodes[i][2]);
+    }
+
+    // write out actual node data
+    count = excount + 1;
     for ( j = rowmin; j <= rowmax; j++ ) {
 	for ( i = colmin; i <= colmax; i++ ) {
 	    if ( output_data[i][j] > -9000.0 ) {
@@ -786,6 +825,13 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.11  1998/07/20 12:46:11  curt
+// When outputing to a .node file, first check for an optional
+// "index.node.ex" file in case there is a .poly file to go along with this
+// node file.  Include these nodes first since they are referenced by position
+// from the .poly file.  This is my first pass at adding an area "cutout"
+// feature to the terrain generation pipeline.
+//
 // Revision 1.10  1998/07/13 20:58:02  curt
 // .
 //
