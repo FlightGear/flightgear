@@ -92,7 +92,7 @@ public:
     int parse( void );
 
     // read and parse DEM "A" record
-    void read_a_record( void );
+    int read_a_record( void );
 
     // read and parse DEM "B" record
     void read_b_record( void );
@@ -130,6 +130,10 @@ public:
 
 
 // $Log$
+// Revision 1.6  1998/06/05 18:14:40  curt
+// Abort out early when reading the "A" record if it doesn't look like
+// a proper DEM file.
+//
 // Revision 1.5  1998/04/22 13:14:46  curt
 // Fixed a bug in zlib usage.
 //

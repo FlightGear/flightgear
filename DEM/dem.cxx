@@ -198,7 +198,7 @@ static int next_exp(gzFile fd) {
 
 
 // read and parse DEM "A" record
-void fgDEM::read_a_record( void ) {
+int fgDEM::read_a_record( void ) {
     int i, inum;
     double dnum;
     char name[144];
@@ -224,6 +224,10 @@ void fgDEM::read_a_record( void ) {
     // DEM level code, 3 reflects processing by DMA
     inum = next_int(fd);
     printf("    DEM level code = %d\n", inum);
+
+    if ( inum > 3 ) {
+	return(0);
+    }
 
     // Pattern code, 1 indicates a regular elevation pattern
     inum = next_int(fd);
@@ -331,6 +335,8 @@ void fgDEM::read_a_record( void ) {
     // number of profiles
     dem_num_profiles = cols = next_int(fd);
     printf("    Expecting %d profiles\n", dem_num_profiles);
+
+    return(1);
 }
 
 
@@ -377,7 +383,9 @@ int fgDEM::parse( void ) {
 
     cur_col = 0;
 
-    read_a_record();
+    if ( !read_a_record() ) {
+	return(0);
+    }
 
     for ( i = 0; i < dem_num_profiles; i++ ) {
 	// printf("Ready to read next b record\n");
@@ -391,7 +399,7 @@ int fgDEM::parse( void ) {
 
     printf("    Done parsing\n");
 
-    return(0);
+    return(1);
 }
 
 
@@ -772,6 +780,10 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.7  1998/06/05 18:14:39  curt
+// Abort out early when reading the "A" record if it doesn't look like
+// a proper DEM file.
+//
 // Revision 1.6  1998/05/02 01:49:21  curt
 // Fixed a bug where the wrong variable was being initialized.
 //
