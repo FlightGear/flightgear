@@ -42,7 +42,7 @@
 #include <Debug/fg_debug.h>
 #include <Main/options.hxx>
 
-#include "obj.hxx"
+// #include "obj.hxx"
 #include "scenery.hxx"
 // #include "texload.h"
 
@@ -85,9 +85,13 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.7  1998/07/13 21:01:59  curt
-/* Wrote access functions for current fgOPTIONS.
+/* Revision 1.8  1998/08/25 16:52:40  curt
+/* material.cxx material.hxx obj.cxx obj.hxx texload.c texload.h moved to
+/*   ../Objects
 /*
+ * Revision 1.7  1998/07/13 21:01:59  curt
+ * Wrote access functions for current fgOPTIONS.
+ *
  * Revision 1.6  1998/07/12 03:18:27  curt
  * Added ground collision detection.  This involved:
  * - saving the entire vertex list for each tile with the tile records.

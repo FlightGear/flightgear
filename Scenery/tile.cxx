@@ -29,6 +29,7 @@
 #include "tile.hxx"
 
 
+#if 0
 // return the sign of a value
 #define FG_SIGN( x )  ((x) < 0 ? -1 : 1)
 
@@ -435,6 +436,7 @@ bool  fgFRAGMENT :: operator < ( const fgFRAGMENT &rhs)
 
     return bounding_radius < rhs.bounding_radius;
 }
+#endif
 
 
 // Constructor
@@ -450,6 +452,10 @@ fgTILE::~fgTILE ( void ) {
 
 
 // $Log$
+// Revision 1.10  1998/08/25 16:52:42  curt
+// material.cxx material.hxx obj.cxx obj.hxx texload.c texload.h moved to
+//   ../Objects
+//
 // Revision 1.9  1998/08/24 20:11:39  curt
 // Tweaks ...
 //

@@ -51,89 +51,11 @@ extern "C" void *memset(void *, int, size_t);
 #include <Bucket/bucketutils.h>
 #include <Include/fg_types.h>
 #include <Math/mat3.h>
+#include <Objects/fragment.hxx>
 
 #ifdef NEEDNAMESPACESTD
 using namespace std;
 #endif
-
-
-// Maximum nodes per tile
-#define MAX_NODES 2000
-
-
-// Forward declarations
-class fgTILE;
-class fgMATERIAL;
-
-
-class fgFACE {
-public:
-    int n1, n2, n3;
-
-    fgFACE();
-    ~fgFACE();
-    fgFACE( const fgFACE & image );
-    bool operator < ( const fgFACE & rhs );
-    bool operator == ( const fgFACE & rhs );
-};
-
-
-// Object fragment data class
-class fgFRAGMENT {
-
-public:
-    // culling data for this object fragment (fine grain culling)
-    fgPoint3d center;
-    double bounding_radius;
-
-    // variable offset data for this object fragment for this frame
-    // fgCartesianPoint3d tile_offset;
-
-    // saved transformation matrix for this fragment (used by renderer)
-    // GLfloat matrix[16];
-    
-    // tile_ptr & material_ptr are set so that when we traverse the
-    // list of fragments we can quickly reference back the tile or
-    // material property this fragment is assigned to.
-
-    // material property pointer
-    fgMATERIAL *material_ptr;
-
-    // tile pointer
-    fgTILE *tile_ptr;
-
-    // OpenGL display list for fragment data
-    GLint display_list;
-
-    // face list (this indexes into the master tile vertex list)
-    list < fgFACE > faces;
-
-    // number of faces in this fragment
-    int num_faces;
-
-    // Add a face to the face list
-    void add_face(int n1, int n2, int n3);
-
-    // test if line intesects with this fragment.  p0 and p1 are the
-    // two line end points of the line.  If side_flag is true, check
-    // to see that end points are on opposite sides of face.  Returns
-    // 1 if it intersection found, 0 otherwise.  If it intesects,
-    // result is the point of intersection
-    int intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
-		   fgPoint3d *result);
-
-    // Constructors
-    fgFRAGMENT ();
-    fgFRAGMENT ( const fgFRAGMENT &image );
-
-    // Destructor
-    ~fgFRAGMENT ( );
-
-    // operators
-    fgFRAGMENT & operator = ( const fgFRAGMENT & rhs );
-    bool operator == ( const fgFRAGMENT & rhs );
-    bool operator <  ( const fgFRAGMENT & rhs );
-};
 
 
 // Scenery tile class
@@ -171,7 +93,11 @@ public:
 
 
 // $Log$
-// Revision 1.17  1998/08/22 14:49:58  curt
+// Revision 1.18  1998/08/25 16:52:42  curt
+// material.cxx material.hxx obj.cxx obj.hxx texload.c texload.h moved to
+//   ../Objects
+//
+// Revision 1.17  1998/08/22  14:49:58  curt
 // Attempting to iron out seg faults and crashes.
 // Did some shuffling to fix a initialization order problem between view
 // position, scenery elevation.

@@ -37,8 +37,8 @@
 #include <Debug/fg_debug.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
+#include <Objects/obj.hxx>
 
-#include "obj.hxx"
 #include "tile.hxx"
 #include "tilecache.hxx"
 
@@ -212,6 +212,10 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.14  1998/08/25 16:52:43  curt
+// material.cxx material.hxx obj.cxx obj.hxx texload.c texload.h moved to
+//   ../Objects
+//
 // Revision 1.13  1998/07/13 21:02:00  curt
 // Wrote access functions for current fgOPTIONS.
 //

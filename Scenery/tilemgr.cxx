@@ -45,10 +45,10 @@
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
 #include <Math/vector.hxx>
+#include <Objects/material.hxx>
+#include <Objects/obj.hxx>
 #include <Weather/weather.h>
 
-#include "material.hxx"
-#include "obj.hxx"
 #include "scenery.hxx"
 #include "tilecache.hxx"
 
@@ -679,6 +679,10 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.32  1998/08/25 16:52:44  curt
+// material.cxx material.hxx obj.cxx obj.hxx texload.c texload.h moved to
+//   ../Objects
+//
 // Revision 1.31  1998/08/24 20:11:40  curt
 // Tweaks ...
 //
