@@ -129,18 +129,16 @@ istream& operator>>(istream& is, FGMatrix& M)
 FGMatrix& FGMatrix::operator=(const FGMatrix& M)
 {
   if (&M != this) {
-    if (data != NULL) dealloc(data,rows);
+    if (M.rows != rows || M.cols != cols) {
+      if (data != NULL) dealloc(data,rows);
 
-    width  = M.width;
-    prec   = M.prec;
-    delim  = M.delim;
-    origin = M.origin;
-    rows   = M.rows;
-    cols   = M.cols;
+      rows   = M.rows;
+      cols   = M.cols;
 
-    data = FGalloc(rows,cols);
-    for (unsigned int i=0; i<=rows; i++) {
-      for (unsigned int j=0; j<=cols; j++) {
+      data = FGalloc(rows,cols);
+    }
+    for (unsigned int i=1; i<=rows; i++) {
+      for (unsigned int j=1; j<=cols; j++) {
         data[i][j] = M.data[i][j];
       }
     }
@@ -166,10 +164,6 @@ unsigned int FGMatrix::Cols(void) const
 
 void FGMatrix::SetOParams(char delim,int width,int prec,int origin)
 {
-  FGMatrix::delim  = delim;
-  FGMatrix::width  = width;
-  FGMatrix::prec   = prec;
-  FGMatrix::origin = origin;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

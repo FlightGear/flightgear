@@ -65,17 +65,21 @@ static const char *IdHdr = ID_FACTORGROUP;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGFactorGroup::FGFactorGroup( FGFDMExec* fdmex ) : FGCoefficient( fdmex) {
+FGFactorGroup::FGFactorGroup( FGFDMExec* fdmex ) : FGCoefficient( fdmex)
+{
   FDMExec=fdmex;
+  if (debug_lvl & 2) cout << "Instantiated: FGFactorGroup" << endl;
 }  
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
                           
-FGFactorGroup::~FGFactorGroup() {
-    int i;
-    for (i=0; i<sum.size(); i++) {
-      delete sum[i];
-    }
+FGFactorGroup::~FGFactorGroup()
+{
+  int i;
+  for (i=0; i<sum.size(); i++) {
+    delete sum[i];
+  }
+  if (debug_lvl & 2) cout << "Destroyed:    FGFactorGroup" << endl;
 }
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -118,8 +122,7 @@ float FGFactorGroup::TotalValue(void) {
   }
   totalsum *= FGCoefficient::TotalValue();
   SDtotal *= FGCoefficient::GetSD();
-//   cout << "FGCoefficient::GetSD(): " << FGCoefficient::GetSD() << endl;
-//   cout << "FGFactorGroup::SDtotal: " << SDtotal << endl;
+  if (debug_lvl & 8) Debug();
   return totalsum;
 }        
 
@@ -157,4 +160,12 @@ string FGFactorGroup::GetCoefficientValues(void) {
     }
     return values;
 }       
-       
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+void FGFactorGroup::Debug(void)
+{
+  cout << "FGCoefficient::GetSD(): " << FGCoefficient::GetSD() << endl;
+  cout << "FGFactorGroup::SDtotal: " << SDtotal << endl;
+}
+

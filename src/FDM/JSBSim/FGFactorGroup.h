@@ -102,7 +102,7 @@ class FGFactorGroup: public FGCoefficient {
     float TotalValue(void);
     string GetCoefficientStrings(void);
     string GetCoefficientValues(void);
-    inline float GetSD(void) { return SDtotal; };
+    inline float GetSD(void) { return SDtotal; }
     inline float GetFactorSD(void) { return FGCoefficient::GetSD(); }
     
   private:
@@ -112,7 +112,7 @@ class FGFactorGroup: public FGCoefficient {
     typedef vector<FGCoefficient*> CoeffArray;
     CoeffArray sum;
     float SDtotal;
-        
-};    
+    void Debug(void);
+};
     
 #endif 

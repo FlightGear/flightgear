@@ -117,6 +117,7 @@ public:
   virtual void DisplayCoeffFactors(void);
   virtual inline string GetCoefficientStrings(void) { return name; }
   virtual string GetCoefficientValues(void);
+
 private:
   enum Type {UNKNOWN, VALUE, VECTOR, TABLE, EQUATION};
 
@@ -147,7 +148,7 @@ private:
   FGAuxiliary*    Auxiliary;
   FGOutput*       Output;
 
-  void Debug(void);
+  virtual void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
