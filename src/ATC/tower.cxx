@@ -736,6 +736,9 @@ void FGTower::Update(double dt) {
 	if(update_count >= update_count_max) {
 		update_count = 0;
 	}
+	
+	// Call the base class update for the response time handling.
+	FGATC::Update(dt);
 
 	if(ident == "KEMT") {	
 		// For AI debugging convienience - may be removed

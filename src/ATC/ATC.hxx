@@ -99,13 +99,15 @@ ostream& operator << (ostream& os, atc_type atc);
 
 class FGATC {
 	
-	public:
+public:
 	
 	FGATC();
 	virtual ~FGATC();
 	
 	// Run the internal calculations
-	virtual void Update(double dt);
+	// Derived classes should call this method from their own Update methods if they 
+	// wish to use the response timer functionality.
+	void Update(double dt);
 	
 	// Add plane to a stack
 	virtual void AddPlane(string pid);
@@ -120,10 +122,12 @@ class FGATC {
 	virtual void SetNoDisplay();
 	
 	// Returns true if OK to transmit on this frequency
-	inline bool FreqClear() { return freqClear; }
+	inline bool GetFreqClear() { return freqClear; }
 	// Indicate that the frequency is in use
-	inline void FreqInUse() { freqClear = false; }
-	// Under development!!
+	inline void SetFreqInUse() { freqClear = false; }
+	// Transmission to the ATC is finished and a response is required
+	void SetResponseReqd(string rid);
+	// The above 3 funcs under development!!
 	// The idea is that AI traffic or the user ATC dialog box calls FreqInUse() when they begin transmitting,
 	// and that the tower control sets freqClear back to true following a reply.
 	// AI traffic should check FreqClear() is true prior to transmitting.
@@ -156,7 +160,7 @@ class FGATC {
 	inline const char* get_name() {return name.c_str();}
 	inline void set_name(const string nm) {name = nm;}
 	
-	protected:
+protected:
 	
 	// Render a transmission
 	// Outputs the transmission either on screen or as audio depending on user preference
@@ -182,6 +186,13 @@ class FGATC {
 	FGATCVoice* vPtr;
 	
 	bool freqClear;		// Flag to indicate if the frequency is clear of ongoing dialog
+	bool responseReqd;	// Flag to indicate we should be responding to a request/report 
+	double responseTime;	// Time to take from end of request transmission to beginning of response
+							// The idea is that this will be slightly random.
+	double responseCounter;		// counter to implement the above
+	string responseID;	// ID of the plane to respond to
+	bool respond;	// Flag to indicate now is the time to respond - ie set following the count down of the response timer.
+	// Derived classes only need monitor this flag, and use the response ID, as long as they call FGATC::Update(...)
 };
 
 inline istream&

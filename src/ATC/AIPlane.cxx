@@ -52,7 +52,7 @@ FGAIPlane::~FGAIPlane() {
 void FGAIPlane::Update(double dt) {
 	if(_pending) {
 		if(tuned_station) {
-			if(tuned_station->FreqClear()) {
+			if(tuned_station->GetFreqClear()) {
 				_pending = false;
 				_transmit = true;
 				_transmitting = false;

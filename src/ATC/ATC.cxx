@@ -36,7 +36,25 @@ FGATC::FGATC() {
 FGATC::~FGATC() {
 }
 
+// Derived classes wishing to use the response counter should call this from their own Update(...).
 void FGATC::Update(double dt) {
+	if(responseReqd) {
+		if(responseCounter >= responseTime) {
+			responseReqd = false;
+			respond = true;
+		} else {
+			responseCounter += dt;
+		}
+	}
+}
+
+void FGATC::SetResponseReqd(string rid) {
+	responseReqd = true;
+	respond = false;	// TODO - this ignores the fact that more than one plane could call this before response
+						// Shouldn't happen with AI only, but user could confuse things??
+	responseID = rid;
+	responseCounter = 0.0;
+	responseTime = 2.5;		// TODO - randomize this slightly.
 }
 
 void FGATC::AddPlane(string pid) {
