@@ -45,9 +45,6 @@ HISTORY
 #include <simgear/constants.h>
 
 #include <Aircraft/aircraft.hxx>
-#ifdef FG_WEATHERCM
-# include <WeatherCM/FGLocalWeatherDatabase.h>
-#endif
 
 #include "BalloonSim.h"
 
@@ -171,35 +168,10 @@ void balloon::update()
     /* later, but currently was my main concern to get it going...          */
     /************************************************************************/
 
-#ifdef FG_WEATHERCM
-    sgVec3 v;
-
-    FGPhysicalProperty wdbpos = WeatherDatabase->get(position);
-
-    //get the current wind velocity and store it in v
-    //Point3D temp = wdbpos.Wind;
-    //sgSetVec3(v, temp.x(), temp.y(), temp.z());
-    sgCopyVec3(v, wdbpos.Wind );
-
-    sgSubVec3(v, velocity);
-    float speed = sgLengthVec3(v);
-    
-    // calculate the density of the gas inside
-    double rho = wdbpos.AirPressure / (287.14 * T);
-
-    // calculate the mass of the air
-    double mAir = rho * balloon_envelope_volume;
-
-    // loss of energy by cooling down:
-    float k = 1.0 / (1.0/4.8 + 1.0/(4.8+3.4*speed) + l_of_the_envelope/lambda);
-    float Q = k * balloon_envelope_area * (dt/3600.0) * (wdbpos.Temperature - T);   //(dt/3600.0) = time since last call in hours
-
-#else
    // I realy don't think there is a solution for this without WeatherCM
    // but this is a hack, and it's working -- EMH
    double mAir = 0;
    float Q = 0;
-#endif
 
     // gain of energy by heating:
     if (fuel_left > 0.0)	//but only with some fuel left ;-)
@@ -228,10 +200,6 @@ void balloon::update()
     sgVec3 fTotal, fFriction, fLift;
 
     sgScaleVec3(fTotal, gravity_vector, mTotal);
-#ifdef FG_WEATHERCM
-    sgScaleVec3(fFriction, v, cw_envelope * wind_facing_area_of_balloon * WeatherDatabase->getAirDensity(position) * speed / 2.0);  //wind resistance
-    sgScaleVec3(fLift, gravity_vector, -balloon_envelope_volume * wdbpos.AirPressure / (287.14 * wdbpos.Temperature));
-#endif
    
     sgAddVec3(fTotal, fLift);
     sgAddVec3(fTotal, fFriction);

@@ -1,9 +1,3 @@
-if ENABLE_WEATHERCM
-WEATHER_LIBS = $(top_builddir)/src/WeatherCM/libWeatherCM.a
-else
-WEATHER_LIBS = $(top_builddir)/src/Environment/libEnvironment.a
-endif
-
 if ENABLE_MPLAYER_AS
 MPLAYER_LIBS = $(top_builddir)/src/MultiPlayer/libMultiPlayer.a
 else
@@ -82,7 +76,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Replay/libReplay.a \
 	$(top_builddir)/src/Systems/libSystems.a \
 	$(top_builddir)/src/Time/libTime.a \
-	$(WEATHER_LIBS) \
+	$(top_builddir)/src/Environment/libEnvironment.a \
 	$(CLOUD3D_LIBS) \
 	-lsgroute -lsgsky -lsgsound -lsgephem -lsgmaterial -lsgtgdb -lsgmodel \
 	-lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket -lsgprops -lsgdebug \

@@ -36,12 +36,8 @@ SG_USING_STD(cout);
 
 #include <simgear/misc/sg_path.hxx>
 
-#ifdef FG_WEATHERCM
-# include <WeatherCM/FGLocalWeatherDatabase.h>
-#else
-# include <Environment/environment_mgr.hxx>
-# include <Environment/environment.hxx>
-#endif
+#include <Environment/environment_mgr.hxx>
+#include <Environment/environment.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -102,14 +98,9 @@ void FGATIS::UpdateTransmission() {
 	int hours;
 	// int minutes;
 	
-	#ifdef FG_WEATHERCM
-	sgVec3 position = { lat, lon, elev };
-	FGPhysicalProperty stationweather = WeatherDatabase->get(position);
-	#else
 	FGEnvironment stationweather =
             ((FGEnvironmentMgr *)globals->get_subsystem("environment"))
               ->getEnvironment(lat, lon, elev);
-	#endif
 	
 	transmission = "";
 	
@@ -139,11 +130,7 @@ void FGATIS::UpdateTransmission() {
 	
 	// Get the temperature
 	int temp;
-	#ifdef FG_WEATHERCM
-	temp = int(stationweather.Temperature - 273.15);
-	#else
 	temp = (int)stationweather.get_temperature_degc();
-	#endif
 	
 	// HACK ALERT - at the moment the new environment subsystem returns bogus temperatures
 	// FIXME - take out this hack when this gets fixed upstream
@@ -162,11 +149,7 @@ void FGATIS::UpdateTransmission() {
 	transmission += " degrees_Celsius";
 	
 	// Get the visibility
-	#ifdef FG_WEATHERCM
-	visibility = fgGetDouble("/environment/visibility-m");
-	#else
 	visibility = stationweather.get_visibility_m();
-	#endif
 	sprintf(buf, "%i", int(visibility/1600));
 	transmission += " / Visibility ";
 	tempstr1 = buf;
@@ -198,48 +181,9 @@ void FGATIS::UpdateTransmission() {
 	
 	// Get the pressure / altimeter
 	
-	#ifndef FG_WEATHERCM
-	double altimeter = stationweather.get_pressure_sea_level_inhg();
-	sprintf(buf, "%.2f", altimeter);
-	transmission += " / Altimeter ";
-	tempstr1 = buf;
-	transmission += ConvertNumToSpokenDigits(tempstr1);
-	#endif
-	
 	// Based on the airport-id and wind get the active runway
 	//FGRunway *r;
 
-	#ifdef FG_WEATHERCM
-	//Set the heading to into the wind
-	double wind_x = stationweather.Wind[0];
-	double wind_y = stationweather.Wind[1];
-	
-	double speed = sqrt( wind_x*wind_x + wind_y*wind_y ) * SG_METER_TO_NM / (60.0*60.0);
-	double hdg;
-	
-	//If no wind use 270degrees
-	if(speed == 0) {
-		hdg = 270;
-		transmission += " / Winds_light_and_variable";
-	} else {
-		// //normalize the wind to get the direction
-		//wind_x /= speed; wind_y /= speed;
-		
-		hdg = - atan2 ( wind_x, wind_y ) * SG_RADIANS_TO_DEGREES ;
-		if (hdg < 0.0)
-			hdg += 360.0;
-		
-		//add a description of the wind to the transmission
-		char buf5[10];
-		char buf6[10];
-		sprintf(buf5, "%i", int(speed));
-		sprintf(buf6, "%i", int(hdg));
-		tempstr1 = buf5;
-		tempstr2 = buf6;
-		transmission = transmission + " / Winds " + ConvertNumToSpokenDigits(tempstr1) + " knots from "
-		                            + ConvertNumToSpokenDigits(tempstr2) + " degrees";
-	}
-	#else
 	double speed = stationweather.get_wind_speed_kt();
 	double hdg = stationweather.get_wind_from_heading_deg();
 	if (speed == 0) {
@@ -257,7 +201,6 @@ void FGATIS::UpdateTransmission() {
 		transmission = transmission + " / Winds " + ConvertNumToSpokenDigits(tempstr1) + " knots from "
 		                            + ConvertNumToSpokenDigits(tempstr2) + " degrees";
 	}
-	#endif
 	
 	string rwy_no = globals->get_runways()->search(ident, int(hdg));
 	if(rwy_no != "NN") {

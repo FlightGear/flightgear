@@ -119,10 +119,6 @@ glPointParameterfvProc glPointParameterfvPtr = 0;
 bool glPointParameterIsSupported = false;
 
 
-#ifdef FG_WEATHERCM
-#  include <WeatherCM/FGLocalWeatherDatabase.h>
-#endif
-
 #ifdef macintosh
 #  include <console.h>		// -dw- for command line dialog
 #endif

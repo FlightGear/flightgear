@@ -70,18 +70,6 @@ fi
 AM_CONDITIONAL(ENABLE_MPLAYER_AS, test "x$with_multiplayer" != "xno")
 
 
-# Specify if we want to use WeatherCM instead of FGEnvironment.
-# default to with_weathercm=no
-AC_ARG_WITH(weathercm, [  --with-weathercm        Use WeatherCM instead of FGEnvironment])
-if test "x$with_weathercm" = "xyes" ; then
-    echo "Building with WeatherCM"
-    AC_DEFINE([FG_WEATHERCM], 1,
-              [Define to build with Christian Mayer's weather code])
-else
-    echo "Building with FGEnvironment"
-fi
-AM_CONDITIONAL(ENABLE_WEATHERCM, test "x$with_weathercm" = "xyes")
-
 dnl Thread related checks
 AC_ARG_WITH(threads, [  --with-threads          Include tile loading threads [default=no]])
 if test "x$with_threads" = "xyes"; then
@@ -522,7 +510,6 @@ AC_CONFIG_FILES([ \
 	src/Sound/Makefile \
 	src/Systems/Makefile \
 	src/Time/Makefile \
-	src/WeatherCM/Makefile \
 	tests/Makefile \
 	utils/Makefile \
 	utils/TerraSync/Makefile \
@@ -547,12 +534,6 @@ fi
 
 echo -n "Automake version: "
 automake --version | head -1
-
-if test "x$with_weathercm" != "x"; then
-    echo "WeatherCM instead of FGEnvironment: $with_weathercm"
-else
-    echo "Using FGEnvironment"
-fi
 
 if test "x$with_multiplayer" != "xno"; then
     echo "Building with multiplayer support"

@@ -34,12 +34,8 @@
 #  include <dirent.h>		// for directory reading
 #endif
 
-#ifdef FG_WEATHERCM
-# include <WeatherCM/FGLocalWeatherDatabase.h>
-#else
-# include <Environment/environment_mgr.hxx>
-# include <Environment/environment.hxx>
-#endif
+#include <Environment/environment_mgr.hxx>
+#include <Environment/environment.hxx>
 
 #include "AIMgr.hxx"
 #include "AILocalTraffic.hxx"
@@ -379,19 +375,10 @@ void FGAIMgr::GenerateSimpleAirportTraffic(string ident, double min_dist) {
 	
 	// Check that the visibility is OK for IFR operation.
 	double visibility;
-	#ifdef FG_WEATHERCM
-	//sgVec3 position = { aptpos.lat(), aptpos.lon(), aptpos.elev() };
-	//FGPhysicalProperty stationweather = WeatherDatabase->get(position);
-	#else
 	FGEnvironment stationweather =
             ((FGEnvironmentMgr *)globals->get_subsystem("environment"))
               ->getEnvironment(aptpos.lat(), aptpos.lon(), aptpos.elev());	// TODO - check whether this should take ft or m for elev.
-	#endif
-	#ifdef FG_WEATHERCM
-	visibility = fgGetDouble("/environment/visibility-m");
-	#else
 	visibility = stationweather.get_visibility_m();
-	#endif
 	// Technically we can do VFR down to 1 mile (1600m) but that's pretty murky!
 	//cout << "vis = " << visibility << '\n';
 	if(visibility < 3000) return;

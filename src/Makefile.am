@@ -1,9 +1,3 @@
-if ENABLE_WEATHERCM
-WEATHER_DIR = WeatherCM
-else
-WEATHER_DIR = Environment
-endif
-
 if ENABLE_MPLAYER_AS
 MPLAYER_DIRS = MultiPlayer
 else
@@ -18,6 +12,7 @@ SUBDIRS = \
         Autopilot \
         Cockpit \
         Controls \
+        Environment \
         FDM \
         GUI \
         Input \
@@ -34,5 +29,4 @@ SUBDIRS = \
         Sound \
         Systems \
         Time \
-        $(WEATHER_DIR) \
         Main

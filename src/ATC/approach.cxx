@@ -28,12 +28,8 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-#ifdef FG_WEATHERCM
-# include <WeatherCM/FGLocalWeatherDatabase.h>
-#else
-# include <Environment/environment_mgr.hxx>
-# include <Environment/environment.hxx>
-#endif
+#include <Environment/environment_mgr.hxx>
+#include <Environment/environment.hxx>
 
 
 #include <GUI/gui.h>
@@ -555,37 +551,11 @@ double FGApproach::round_alt( const bool hl, double alt ) {
 void FGApproach::get_active_runway() {
 	//cout << "Entering FGApproach::get_active_runway()\n";
 
-#ifdef FG_WEATHERCM
-  sgVec3 position = { lat, lon, elev };
-  FGPhysicalProperty stationweather = WeatherDatabase->get(position);
-#else
   FGEnvironment stationweather =
       ((FGEnvironmentMgr *)globals->get_subsystem("environment"))
         ->getEnvironment(lat, lon, elev);
-#endif
 
-#ifdef FG_WEATHERCM
-  //Set the heading to into the wind
-  double wind_x = stationweather.Wind[0];
-  double wind_y = stationweather.Wind[1];
-  
-  double speed = sqrt( wind_x*wind_x + wind_y*wind_y ) * SG_METER_TO_NM / (60.0*60.0);
-  double hdg;
-  
-  //If no wind use 270degrees
-  if(speed == 0) {
-    hdg = 270;
-  } else {
-    // //normalize the wind to get the direction
-    //wind_x /= speed; wind_y /= speed;
-    
-    hdg = - atan2 ( wind_x, wind_y ) * SG_RADIANS_TO_DEGREES ;
-    if (hdg < 0.0)
-      hdg += 360.0;
-  }
-#else
   double hdg = stationweather.get_wind_from_heading_deg();
-#endif
   
   FGRunway runway;
   if ( globals->get_runways()->search( ident, int(hdg), &runway) ) {

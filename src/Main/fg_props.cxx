@@ -37,11 +37,7 @@
 #include <Aircraft/aircraft.hxx>
 #include <Time/tmp.hxx>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
-#ifdef FG_WEATHERCM
-#  include <WeatherCM/FGLocalWeatherDatabase.h>
-#else
-#  include <Environment/environment.hxx>
-#endif // FG_WEATHERCM
+#include <Environment/environment.hxx>
 
 #include <GUI/gui.h>
 
@@ -50,12 +46,6 @@
 
 SG_USING_STD(istream);
 SG_USING_STD(ostream);
-
-#ifdef FG_WEATHERCM
-static double getWindNorth ();
-static double getWindEast ();
-static double getWindDown ();
-#endif // FG_WEATHERCM
 
 static bool winding_ccw = true; // FIXME: temporary
 
@@ -383,95 +373,6 @@ getHeadingMag ()
   return magheading;
 }
 
-
-#ifdef FG_WEATHERCM
-
-/**
- * Get the current visibility (meters).
- */
-static double
-getVisibility ()
-{
-  return WeatherDatabase->getWeatherVisibility();
-}
-
-
-/**
- * Set the current visibility (meters).
- */
-static void
-setVisibility (double visibility)
-{
-  WeatherDatabase->setWeatherVisibility(visibility);
-}
-
-/**
- * Get the current wind north velocity (feet/second).
- */
-static double
-getWindNorth ()
-{
-  return current_aircraft.fdm_state->get_V_north_airmass();
-}
-
-
-/**
- * Set the current wind north velocity (feet/second).
- */
-static void
-setWindNorth (double speed)
-{
-  current_aircraft.fdm_state
-    ->set_Velocities_Local_Airmass(speed, getWindEast(), getWindDown());
-}
-
-
-/**
- * Get the current wind east velocity (feet/second).
- */
-static double
-getWindEast ()
-{
-  return current_aircraft.fdm_state->get_V_east_airmass();
-}
-
-
-/**
- * Set the current wind east velocity (feet/second).
- */
-static void
-setWindEast (double speed)
-{
-  SG_LOG(SG_GENERAL, SG_INFO,, "Set wind-east to " << speed );
-  current_aircraft.fdm_state->set_Velocities_Local_Airmass(getWindNorth(),
-							   speed,
-							   getWindDown());
-}
-
-
-/**
- * Get the current wind down velocity (feet/second).
- */
-static double
-getWindDown ()
-{
-  return current_aircraft.fdm_state->get_V_down_airmass();
-}
-
-
-/**
- * Set the current wind down velocity (feet/second).
- */
-static void
-setWindDown (double speed)
-{
-  current_aircraft.fdm_state->set_Velocities_Local_Airmass(getWindNorth(),
-							   getWindEast(),
-							   speed);
-}
-
-#endif // FG_WEATHERCM
-
 static long
 getWarp ()
 {
@@ -584,18 +485,6 @@ FGProperties::bind ()
 				// Orientation
   fgTie("/orientation/heading-magnetic-deg", getHeadingMag);
 
-				// Environment
-#ifdef FG_WEATHERCM
-  fgTie("/environment/visibility-m", getVisibility, setVisibility);
-  fgSetArchivable("/environment/visibility-m");
-  fgTie("/environment/wind-from-north-fps", getWindNorth, setWindNorth);
-  fgSetArchivable("/environment/wind-from-north-fps");
-  fgTie("/environment/wind-from-east-fps", getWindEast, setWindEast);
-  fgSetArchivable("/environment/wind-from-east-fps");
-  fgTie("/environment/wind-from-down-fps", getWindDown, setWindDown);
-  fgSetArchivable("/environment/wind-from-down-fps");
-#endif
-
   fgTie("/environment/magnetic-variation-deg", getMagVar);
   fgTie("/environment/magnetic-dip-deg", getMagDip);
 
@@ -625,13 +514,6 @@ FGProperties::unbind ()
   fgUntie("/orientation/heading-magnetic-deg");
 
 				// Environment
-#ifdef FG_WEATHERCM
-  fgUntie("/environment/visibility-m");
-  fgUntie("/environment/wind-from-north-fps");
-  fgUntie("/environment/wind-from-east-fps");
-  fgUntie("/environment/wind-from-down-fps");
-#endif
-
   fgUntie("/environment/magnetic-variation-deg");
   fgUntie("/environment/magnetic-dip-deg");
 

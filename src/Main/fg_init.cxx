@@ -119,11 +119,7 @@
 #include <MultiPlayer/multiplayrxmgr.hxx>
 #endif
 
-#ifdef FG_WEATHERCM
-#  include <WeatherCM/FGLocalWeatherDatabase.h>
-#else
-#  include <Environment/environment_mgr.hxx>
-#endif
+#include <Environment/environment_mgr.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -1553,49 +1549,7 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
 
     // Initialize the weather modeling subsystem
-#ifdef FG_WEATHERCM
-    // Initialize the WeatherDatabase
-    SG_LOG(SG_GENERAL, SG_INFO, "Creating LocalWeatherDatabase");
-    sgVec3 position;
-    sgSetVec3( position, current_aircraft.fdm_state->get_Latitude(),
-               current_aircraft.fdm_state->get_Longitude(),
-               current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER );
-    double init_vis = fgGetDouble("/environment/visibility-m");
-
-    FGLocalWeatherDatabase::DatabaseWorkingType working_type;
-
-    if (!strcmp(fgGetString("/environment/weather/working-type"), "internet"))
-    {
-      working_type = FGLocalWeatherDatabase::use_internet;
-    } else {
-      working_type = FGLocalWeatherDatabase::default_mode;
-    }
-    
-    if ( init_vis > 0 ) {
-      FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
-        new FGLocalWeatherDatabase( position,
-                                    globals->get_fg_root(),
-                                    working_type,
-                                    init_vis );
-    } else {
-      FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
-        new FGLocalWeatherDatabase( position,
-                                    globals->get_fg_root(),
-                                    working_type );
-    }
-
-    // cout << theFGLocalWeatherDatabase << endl;
-    // cout << "visibility = " 
-    //      << theFGLocalWeatherDatabase->getWeatherVisibility() << endl;
-
-    WeatherDatabase = FGLocalWeatherDatabase::theFGLocalWeatherDatabase;
-
-    // register the periodic update of the weather
-    globals->get_event_mgr()->add( "weather update",
-                                   &fgUpdateWeatherDatabase, 30000);
-#else
     globals->add_subsystem("environment", new FGEnvironmentMgr);
-#endif
 
 
     ////////////////////////////////////////////////////////////////////

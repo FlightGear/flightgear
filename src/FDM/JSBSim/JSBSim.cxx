@@ -250,9 +250,6 @@ void FGJSBsim::init()
     // Explicitly call the superclass's
     // init method first.
 
-#ifdef FG_WEATHERCM
-    Atmosphere->UseInternal();
-#else
     if (fgGetBool("/environment/params/control-fdm-atmosphere")) {
       Atmosphere->UseExternal();
       Atmosphere->SetExTemperature(
@@ -269,7 +266,6 @@ void FGJSBsim::init()
     } else {
       Atmosphere->UseInternal();
     }
-#endif
 
     fgic->SetVnorthFpsIC( wind_from_north->getDoubleValue() );
     fgic->SetVeastFpsIC( wind_from_east->getDoubleValue() );

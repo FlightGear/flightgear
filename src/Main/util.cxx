@@ -98,18 +98,6 @@ fgSetupWind (double min_hdg, double max_hdg, double speed, double gust)
               min_hdg);
   fgSetDouble("/environment/config/aloft/entry[2]/wind-speed-kt",
               speed);
-
-#ifdef FG_WEATHERCM
-  // convert to fps
-  speed *= SG_NM_TO_METER * SG_METER_TO_FEET * (1.0/3600);
-  while (min_hdg > 360)
-    min_hdg -= 360;
-  while (min_hdg <= 0)
-    min_hdg += 360;
-  min_hdg *= SGD_DEGREES_TO_RADIANS;
-  fgSetDouble("/environment/wind-from-north-fps", speed * cos(dir));
-  fgSetDouble("/environment/wind-from-east-fps", speed * sin(dir));
-#endif // FG_WEATHERCM
 }
 
 
