@@ -349,8 +349,8 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.8  1998/04/28 01:24:14  curt
-# Updates ...
+# Revision 1.9  1998/05/02 01:54:36  curt
+# Converting to polar3d.h routines.
 #
 # Revision 1.4  1998/04/24 00:44:06  curt
 # Added zlib support.

@@ -38,12 +38,12 @@
 
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
-#include <Math/polar.h>
+#include <Math/polar3d.h>
 
 
 int nodecount, tricount;
 int normalcount = 0;
-static struct fgCartesianPoint nodes[MAX_NODES];
+static fgCartesianPoint3d nodes[MAX_NODES];
 static int tris[MAX_TRIS][3];
 
 static double normals[MAX_NODES][3];
@@ -54,8 +54,9 @@ struct fgBUCKET north_index, south_index, east_index, west_index;
 
 /* convert a geodetic point lon(arcsec), lat(arcsec), elev(meter) to
  * a cartesian point */
-struct fgCartesianPoint geod_to_cart(double geod[3]) {
-    struct fgCartesianPoint p;
+fgCartesianPoint3d geod_to_cart(double geod[3]) {
+    fgCartesianPoint3d cp;
+    fgPolarPoint3d pp;
     double gc_lon, gc_lat, sl_radius;
 
     /* printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
@@ -67,17 +68,20 @@ struct fgCartesianPoint geod_to_cart(double geod[3]) {
     /* printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
 	   gc_lat, sl_radius+geod[2]); */
 
-    p = fgPolarToCart(gc_lon, gc_lat, sl_radius+geod[2]);
+    pp.lon = gc_lon;
+    pp.lat = gc_lat;
+    pp.radius = sl_radius+geod[2];
+    cp = fgPolarToCart3d(pp);
     
-    /* printf("A cart point is (%.8f, %.8f, %.8f)\n", p.x, p.y, p.z); */
+    /* printf("A cart point is (%.8f, %.8f, %.8f)\n", cp.x, cp.y, cp.z); */
 
-    return(p);
+    return(cp);
 }
 
 
 /* given three points defining a triangle, calculate the normal */
-void calc_normal(struct fgCartesianPoint p1, struct fgCartesianPoint p2, 
-		 struct fgCartesianPoint p3, double normal[3])
+void calc_normal(fgCartesianPoint3d p1, fgCartesianPoint3d p2, 
+		 fgCartesianPoint3d p3, double normal[3])
 {
     double v1[3], v2[3];
     double temp;
@@ -640,9 +644,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.14  1998/04/18 04:01:32  curt
-/* Now use libMath rather than having local copies of math routines.
+/* Revision 1.15  1998/05/02 01:54:39  curt
+/* Converting to polar3d.h routines.
 /*
+ * Revision 1.14  1998/04/18 04:01:32  curt
+ * Now use libMath rather than having local copies of math routines.
+ *
  * Revision 1.13  1998/04/14 02:26:11  curt
  * Code reorganizations.  Added a Lib/ directory for more general libraries.
  *
