@@ -543,9 +543,9 @@ do_property_scale (const SGPropertyNode * arg, SGCommandState ** state)
   bool squared =
     ((PropertyCommandState *)(*state))->getSquared()->getBoolValue();
 
-  double result = (setting + offset) * factor;
   if (squared)
-    result = (result < 0 ? -1 : 1) * result * result;
+    setting = (setting < 0 ? -1 : 1) * setting * setting;
+  double result = (setting + offset) * factor;
 
   return prop->setDoubleValue(result);
 }
