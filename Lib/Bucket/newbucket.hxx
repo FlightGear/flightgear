@@ -122,7 +122,7 @@ public:
 // return the horizontal tile span factor based on latitude
 inline double bucket_span( double l ) {
     if ( l >= 89.0 ) {
-	return 0.0;
+	return 360.0;
     } else if ( l >= 88.0 ) {
 	return 8.0;
     } else if ( l >= 86.0 ) {
@@ -150,7 +150,7 @@ inline double bucket_span( double l ) {
     } else if ( l >= -89.0 ) {
 	return 8.0;
     } else {
-	return 0.0;
+	return 360.0;
     }
 }
 
