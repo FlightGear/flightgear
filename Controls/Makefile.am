@@ -1,7 +1,5 @@
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libControls.a
 
-lib_LTLIBRARIES = libControls.la
-
-libControls_la_SOURCES = controls.c controls.h
+libControls_a_SOURCES = controls.c controls.h
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Simulator

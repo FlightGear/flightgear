@@ -1,7 +1,6 @@
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libAstro.a
 
-lib_LTLIBRARIES = libAstro.la
-libAstro_la_SOURCES = \
+libAstro_a_SOURCES = \
 	moon.cxx moon.hxx \
 	orbits.cxx orbits.hxx \
 	planets.cxx planets.hxx \

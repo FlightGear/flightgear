@@ -1,8 +1,6 @@
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libLaRCsim.a
 
-lib_LTLIBRARIES = libLaRCsim.la
-
-libLaRCsim_la_SOURCES = \
+libLaRCsim_a_SOURCES = \
 	atmos_62.c atmos_62.h \
 	default_model_routines.c default_model_routines.h \
 	ls_accel.c ls_accel.h \

@@ -1,7 +1,5 @@
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libSlew.a
 
-lib_LTLIBRARIES = libSlew.la
-
-libSlew_la_SOURCES = slew.c slew.h
+libSlew_a_SOURCES = slew.c slew.h
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Simulator

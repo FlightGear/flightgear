@@ -1,6 +1,5 @@
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libAircraft.a
 
-lib_LTLIBRARIES = libAircraft.la
-libAircraft_la_SOURCES = aircraft.c aircraft.h
+libAircraft_a_SOURCES = aircraft.c aircraft.h
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Simulator
