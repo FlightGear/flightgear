@@ -904,7 +904,7 @@ parse_option (const string& arg)
 
         // convert to fps
 	speed *= SG_NM_TO_METER * SG_METER_TO_FEET * (1.0/3600);
-	// dir += 180;
+	dir += 180;
 	if (dir >= 360)
 	  dir -= 360;
 	dir *= SGD_DEGREES_TO_RADIANS;
