@@ -117,6 +117,11 @@ public:
   virtual void DisplayCoeffFactors(void);
   virtual inline string GetCoefficientStrings(void) { return name; }
   virtual string GetCoefficientValues(void);
+  
+  inline void setBias(double b) { bias=b; }
+  inline void setGain(double g) { gain=g; };
+  inline double getBias(void) { return bias; }
+  inline double getGain(void) { return gain; }
 
 private:
   enum Type {UNKNOWN, VALUE, VECTOR, TABLE, EQUATION};
@@ -133,6 +138,7 @@ private:
   double Value(double);
   double Value(void);
   double StaticValue;
+  double bias,gain;
   eParam LookupR, LookupC;
   MultVec multipliers;
   int rows, columns;

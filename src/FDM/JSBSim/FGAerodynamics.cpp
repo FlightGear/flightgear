@@ -138,9 +138,11 @@ bool FGAerodynamics::Load(FGConfigFile* AC_cfg)
         if( token == "COEFFICIENT" ) {
           ca.push_back( new FGCoefficient(FDMExec) );
           ca.back()->Load(AC_cfg);
+          cm[ca.back()->Getname()]=ca.back();
         } else if ( token == "GROUP" ) {
           ca.push_back( new FGFactorGroup(FDMExec) );
           ca.back()->Load(AC_cfg);
+          cm[ca.back()->Getname()]=ca.back();
         }
       }
       Coeff[AxisIdx[axis]] = ca;

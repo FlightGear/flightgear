@@ -133,6 +133,8 @@ public:
       @return a string containing the numeric values for the current set of
       coefficients */
   string GetCoefficientValues(void);
+  
+  inline FGCoefficient* GetCoefficient(string name) { return cm[name]; }
 
 
 private:
@@ -140,6 +142,8 @@ private:
   AxisIndex AxisIdx;
   typedef vector<FGCoefficient*> CoeffArray;
   CoeffArray* Coeff;
+  typedef map<string,FGCoefficient*> CoeffMap;
+  CoeffMap cm;
   FGColumnVector3 vFs;
   FGColumnVector3 vForces;
   FGColumnVector3 vMoments;
