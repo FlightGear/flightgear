@@ -32,6 +32,8 @@ void fgUpdate3DPanels()
 
 FGPanelNode::FGPanelNode(SGPropertyNode* props)
 {
+    int i;
+
     // Make an FGPanel object.  But *don't* call init() or bind() on
     // it -- those methods touch static state.
     _panel = fgReadPanel(props->getStringValue("path"));
@@ -44,7 +46,7 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props)
     // Initialize the matrices to the identity.  PLib prints warnings
     // when trying to invert singular matrices (e.g. when not using a
     // 3D panel).
-    for(int i=0; i<4; i++)
+    for(i=0; i<4; i++)
         for(int j=0; j<4; j++)
             _lastModelview[4*i+j] = _lastProjection[4*i+j] = i==j ? 1 : 0;
 
@@ -74,7 +76,6 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props)
     // perpendicular cross product.
     float *a = _bottomLeft, *b = _bottomRight, *c = _topLeft, *m = _xform;
     float u[3], v[3], w[3];
-    int i;
     for(i=0; i<3; i++) u[i] = b[i] - a[i]; // U = B - A
     for(i=0; i<3; i++) v[i] = c[i] - a[i]; // V = C - A
 
