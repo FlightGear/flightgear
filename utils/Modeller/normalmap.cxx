@@ -4,11 +4,12 @@
  *
  * This file is in public domain.
  */
+#include <simgear/compiler.h>
 
 #include <string.h>
 #include <stdlib.h>
-#include <simgear/compiler.h>
-#include GL_H
+#include SG_GL_H
+
 #include <simgear/screen/texture.hxx>
 
 
