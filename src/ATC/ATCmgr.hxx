@@ -37,6 +37,7 @@
 #include "ground.hxx"
 #include "ATC.hxx"
 #include "ATCVoice.hxx"
+#include "transmissionlist.hxx"
 
 SG_USING_STD(string);
 SG_USING_STD(list);
@@ -169,7 +170,7 @@ public:
 	void NoRender(string refname);
 	
 	// Display a dialog box with options relevant to the currently tuned ATC service.
-	void doStandardDialog();
+	void doPopupDialog();
 	
 	atc_type GetComm1ATCType() { return(comm_type[0]); }
 	FGATC* GetComm1ATCPointer() { return(comm_atc_ptr[0]); }
