@@ -980,11 +980,11 @@ static void set_hud_color(float r, float g, float b) {
 //
 void fgUpdateHUD( void ) {
   int brightness;
-//  int day_night_sw = current_aircraft.controls->day_night_switch;
+  // int day_night_sw = current_aircraft.controls->day_night_switch;
   int day_night_sw = global_day_night_switch;
   int hud_displays = HUD_deque.size();
   instr_item *pHUDInstr;
-  float line_width;
+  // float line_width;
 
   if( !hud_displays ) {  // Trust everyone, but ALWAYS cut the cards!
     return;
@@ -992,11 +992,11 @@ void fgUpdateHUD( void ) {
 
   HUD_TextList.erase();
   HUD_LineList.erase();
-//  HUD_StippleLineList.erase();
+  // HUD_StippleLineList.erase();
   
   pHUDInstr = HUD_deque[0];
   brightness = pHUDInstr->get_brightness();
-//  brightness = HUD_deque.at(0)->get_brightness();
+  // brightness = HUD_deque.at(0)->get_brightness();
 
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();

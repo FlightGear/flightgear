@@ -590,7 +590,7 @@ void TgtAptDialog_OK (puObject *)
 
     string tmp = s;
     double alt = 0.0;
-    int pos = tmp.find( "@" );
+    unsigned int pos = tmp.find( "@" );
     if ( pos != string::npos ) {
 	TgtAptId = tmp.substr( 0, pos );
 	string alt_str = tmp.substr( pos + 1 );

@@ -525,6 +525,9 @@ void dumpSnapShot ( puObject *obj ) {
 // do a screen snap shot
 void fgDumpSnapShot () {
     bool show_pu_cursor = false;
+    char *filename = new char [24];
+    string message;
+    static int count = 1;
 
     int freeze = globals->get_freeze();
     if(!freeze)
@@ -542,16 +545,32 @@ void fgDumpSnapShot () {
 	       fgGetInt("/sim/startup/ysize") );
 
     // we need two render frames here to clear the menu and cursor
-    // ... not sure why but doing an extra fgFenderFrame() shoulnd't
+    // ... not sure why but doing an extra fgRenderFrame() shouldn't
     // hurt anything
     fgRenderFrame();
     fgRenderFrame();
 
-    my_glDumpWindow( "fgfs-screen.ppm", 
-		     fgGetInt("/sim/startup/xsize"), 
-		     fgGetInt("/sim/startup/ysize") );
-    
-    mkDialog ("Snap shot saved to fgfs-screen.ppm");
+    while (count < 1000) {
+        FILE *fp;
+        snprintf(filename, 24, "fgfs-screen-%03d.ppm", count++);
+        if ( (fp = fopen(filename, "r")) == NULL )
+            break;
+        fclose(fp);
+    }
+
+    if ( sg_glDumpWindow( filename,
+			  fgGetInt("/sim/startup/xsize"), 
+			  fgGetInt("/sim/startup/ysize")) ) {
+	message = "Snap shot saved to ";
+	message += filename;
+    } else {
+        message = "Failed to save to ";
+	message += filename;
+    }
+
+    mkDialog (message.c_str());
+
+    delete [] filename;
 
     if ( show_pu_cursor ) {
 	puShowCursor();
