@@ -41,6 +41,12 @@ void PropEngine::setPropPitch(float proppitch)
     _prop->setPropPitch(proppitch);
 }
 
+void PropEngine::setPropFeather(int state)
+{
+    // toggle prop feathering on/off
+    _prop->setPropFeather(state);
+}
+
 void PropEngine::setVariableProp(float min, float max)
 {
     _variable = true;
@@ -99,6 +105,8 @@ void PropEngine::stabilize()
 
     _eng->setStarter(false);
     _eng->setMagnetos(3);
+
+    bool running_state = _eng->isRunning();
     _eng->setRunning(true);
 
     if(_variable) {
@@ -141,7 +149,7 @@ void PropEngine::stabilize()
     }
 
     // ...and back off
-    _eng->setRunning(false);
+    _eng->setRunning(running_state);
 }
 
 void PropEngine::init()

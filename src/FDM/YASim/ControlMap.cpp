@@ -2,6 +2,7 @@
 #include "Thruster.hpp"
 #include "PropEngine.hpp"
 #include "PistonEngine.hpp"
+#include "TurbineEngine.hpp"
 #include "Gear.hpp"
 #include "Wing.hpp"
 #include "Rotor.hpp"
@@ -186,10 +187,12 @@ void ControlMap::applyControls(float dt)
 	switch(o->type) {
 	case THROTTLE: ((Thruster*)obj)->setThrottle(lval);        break;
 	case MIXTURE:  ((Thruster*)obj)->setMixture(lval);         break;
+        case CONDLEVER: ((TurbineEngine*)((PropEngine*)obj)->getEngine())->setCondLever(lval); break;
 	case STARTER:  ((Thruster*)obj)->setStarter(lval != 0.0);  break;
 	case MAGNETOS: ((PropEngine*)obj)->setMagnetos((int)lval); break;
 	case ADVANCE:  ((PropEngine*)obj)->setAdvance(lval);       break;
-        case PROPPITCH: ((PropEngine*)obj)->setPropPitch(lval); break;
+        case PROPPITCH: ((PropEngine*)obj)->setPropPitch(lval);    break;
+        case PROPFEATHER: ((PropEngine*)obj)->setPropFeather((int)lval); break;
 	case REHEAT:   ((Jet*)obj)->setReheat(lval);               break;
 	case VECTOR:   ((Jet*)obj)->setRotation(lval);             break;
 	case BRAKE:    ((Gear*)obj)->setBrake(lval);               break;

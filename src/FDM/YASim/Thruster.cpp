@@ -50,6 +50,7 @@ void Thruster::setMixture(float mixture)
     _mixture = Math::clamp(mixture, 0, 1);
 }
 
+
 void Thruster::setStarter(bool starter)
 {
     _starter = starter;

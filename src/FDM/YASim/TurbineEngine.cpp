@@ -7,6 +7,8 @@ namespace yasim {
 TurbineEngine::TurbineEngine(float power, float omega, float alt,
                              float flatRating)
 {
+    // _cond_lever = 1.0;
+
     _rho0 = Atmosphere::getStdDensity(0);
     _maxTorque = (power/omega) * _rho0 / Atmosphere::getStdDensity(alt);
     _flatRating = flatRating;
@@ -19,6 +21,8 @@ TurbineEngine::TurbineEngine(float power, float omega, float alt,
     _n2 = _n2Target = _n2Min;
     _torque = 0;
     _fuelFlow = 0;
+
+    _running = true;
 }
 
 void TurbineEngine::setOutputFromN2()
@@ -46,7 +50,12 @@ void TurbineEngine::integrate(float dt)
 
 void TurbineEngine::calc(float pressure, float temp, float omega)
 {
-    _running = true;
+    if ( _cond_lever < 0.001 ) {
+        _running = false;
+    } else {
+        _running = true;
+    }
+
     _omega = omega;
     _rho = Atmosphere::calcStdDensity(pressure, temp);
 
@@ -56,7 +65,12 @@ void TurbineEngine::calc(float pressure, float temp, float omega)
         torque = _flatRating / omega;
 
     float frac = torque / (_maxTorque * (_rho / _rho0));
-    _n2Target = _n2Min + (_n2Max - _n2Min) * frac;
+
+    if ( _running ) {
+        _n2Target = _n2Min + (_n2Max - _n2Min) * frac;
+    } else {
+        _n2Target = 0;
+    }
 }
 
 }; // namespace yasim

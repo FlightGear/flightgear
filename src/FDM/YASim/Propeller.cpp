@@ -24,6 +24,7 @@ Propeller::Propeller(float radius, float v, float omega,
     _matchTakeoff = false;
     _manual = false;
     _proppitch = 0;
+    _propfeather = 0;
 }
 
 void Propeller::setTakeoff(float omega0, float power0)
@@ -53,6 +54,12 @@ void Propeller::setPropPitch(float proppitch)
 {
     // makes only positive range of axis effective.
     _proppitch = Math::clamp(proppitch, 0, 1);
+}
+
+void Propeller::setPropFeather(int state)
+{
+    // 0 = normal, 1 = feathered
+    _propfeather = (state != 0);
 }
 
 void Propeller::calc(float density, float v, float omega,

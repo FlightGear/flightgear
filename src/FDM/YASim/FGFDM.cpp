@@ -393,7 +393,7 @@ void FGFDM::getExternalInput(float dt)
 
 void FGFDM::setOutputProperties()
 {
-    char buf[256];
+    // char buf[256];
     int i;
 
     float grossWgt = _airplane.getModel()->getBody()->getTotalMass() * KG2LBS;
@@ -726,6 +726,7 @@ int FGFDM::parseAxis(const char* name)
     // Not there, make a new one.
     AxisRec* a = new AxisRec();
     a->name = dup(name);
+    fgGetNode( a->name, true ); // make sure the property name exists
     a->handle = _airplane.getControlMap()->newInput();
     _axes.add(a);
     return a->handle;
@@ -735,6 +736,7 @@ int FGFDM::parseOutput(const char* name)
 {
     if(eq(name, "THROTTLE"))  return ControlMap::THROTTLE;
     if(eq(name, "MIXTURE"))   return ControlMap::MIXTURE;
+    if(eq(name, "CONDLEVER")) return ControlMap::CONDLEVER;
     if(eq(name, "STARTER"))   return ControlMap::STARTER;
     if(eq(name, "MAGNETOS"))  return ControlMap::MAGNETOS;
     if(eq(name, "ADVANCE"))   return ControlMap::ADVANCE;
@@ -752,6 +754,7 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "SPOILER"))   return ControlMap::SPOILER;
     if(eq(name, "CASTERING")) return ControlMap::CASTERING;
     if(eq(name, "PROPPITCH")) return ControlMap::PROPPITCH;
+    if(eq(name, "PROPFEATHER")) return ControlMap::PROPFEATHER;
     if(eq(name, "COLLECTIVE")) return ControlMap::COLLECTIVE;
     if(eq(name, "CYCLICAIL")) return ControlMap::CYCLICAIL;
     if(eq(name, "CYCLICELE")) return ControlMap::CYCLICELE;

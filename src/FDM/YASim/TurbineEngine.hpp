@@ -17,12 +17,17 @@ public:
     virtual void stabilize();
     virtual void integrate(float dt);
 
+    void setCondLever( float lever ) {
+        _cond_lever = lever;
+    }
     virtual float getTorque() { return _torque; }
     virtual float getFuelFlow() { return _fuelFlow; }
     float getN2() { return _n2; }
 
 private:
     void setOutputFromN2();
+
+    float _cond_lever;
 
     float _maxTorque;
     float _flatRating;

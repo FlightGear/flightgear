@@ -19,6 +19,7 @@ public:
     void setAdvance(float advance);
     void setPropPitch(float proppitch);
     void setVariableProp(float min, float max);
+    void setPropFeather(int state);
     void setGearRatio(float ratio) { _gearRatio = ratio; }
 
     virtual PropEngine* getPropEngine() { return this; }
