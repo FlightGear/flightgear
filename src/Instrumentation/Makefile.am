@@ -13,6 +13,7 @@ libInstrumentation_a_SOURCES = \
         slip_skid_ball.cxx slip_skid_ball.hxx \
         heading_indicator.cxx heading_indicator.hxx \
         vertical_speed_indicator.cxx vertical_speed_indicator.hxx \
-        mag_compass.cxx mag_compass.hxx
+        mag_compass.cxx mag_compass.hxx \
+        clock.cxx clock.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
