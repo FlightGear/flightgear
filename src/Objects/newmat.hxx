@@ -76,6 +76,9 @@ private:
     // wrap texture?
     int wrapu, wrapv;
 
+    // use mipmapping?
+    int mipmap;
+
     // material properties
     sgVec4 ambient, diffuse, specular, emission;
 
