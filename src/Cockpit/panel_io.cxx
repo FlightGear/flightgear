@@ -36,6 +36,7 @@
 #include <string>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 #include "panel.hxx"
 #include "steam.hxx"
@@ -272,7 +273,7 @@ readAction (const SGPropertyNode * node, float hscale, float vscale)
 				// Adjust a property value
   if (type == "adjust") {
     string propName = node->getStringValue("property");
-    SGValue * value = globals->get_props()->getValue(propName, true);
+    SGValue * value = fgGetValue(propName, true);
     float increment = node->getFloatValue("increment", 1.0);
     float min = node->getFloatValue("min", 0.0);
     float max = node->getFloatValue("max", 0.0);
@@ -288,15 +289,15 @@ readAction (const SGPropertyNode * node, float hscale, float vscale)
   else if (type == "swap") {
     string propName1 = node->getStringValue("property1");
     string propName2 = node->getStringValue("property2");
-    SGValue * value1 = globals->get_props()->getValue(propName1, true);
-    SGValue * value2 = globals->get_props()->getValue(propName2, true);
+    SGValue * value1 = fgGetValue(propName1, true);
+    SGValue * value2 = fgGetValue(propName2, true);
     action = new FGSwapAction(button, x, y, w, h, value1, value2);
   } 
 
 				// Toggle a boolean value
   else if (type == "toggle") {
     string propName = node->getStringValue("property");
-    SGValue * value = globals->get_props()->getValue(propName, true);
+    SGValue * value = fgGetValue(propName, true);
     action = new FGToggleAction(button, x, y, w, h, value);
   } 
 
@@ -353,7 +354,7 @@ readTransformation (const SGPropertyNode * node, float hscale, float vscale)
   }
 
   if (propName != "") {
-    value = globals->get_props()->getValue(propName, true);
+    value = fgGetValue(propName, true);
   }
 
   t->value = value;
@@ -436,7 +437,7 @@ readTextChunk (const SGPropertyNode * node)
 				// The value of a string property.
   else if (type == "text-value") {
     SGValue * value =
-      globals->get_props()->getValue(node->getStringValue("property"), true);
+      fgGetValue(node->getStringValue("property"), true);
     chunk = new FGTextLayer::Chunk(FGTextLayer::TEXT_VALUE, value, format);
   }
 
@@ -444,7 +445,7 @@ readTextChunk (const SGPropertyNode * node)
   else if (type == "number-value") {
     string propName = node->getStringValue("property");
     float scale = node->getFloatValue("scale", 1.0);
-    SGValue * value = globals->get_props()->getValue(propName, true);
+    SGValue * value = fgGetValue(propName, true);
     chunk = new FGTextLayer::Chunk(FGTextLayer::DOUBLE_VALUE, value,
 				   format, scale);
   }
@@ -545,7 +546,7 @@ readLayer (const SGPropertyNode * node, float hscale, float vscale)
 				// A switch instrument layer.
   else if (type == "switch") {
     SGValue * value =
-      globals->get_props()->getValue(node->getStringValue("property"), true);
+      fgGetValue(node->getStringValue("property"), true);
     FGInstrumentLayer * layer1 =
       readLayer(node->getNode("layer1"), hscale, vscale);
     FGInstrumentLayer * layer2 =
@@ -756,7 +757,7 @@ fgReadPanel (istream &input)
     for (int i = 0; i < nInstruments; i++) {
       const SGPropertyNode * node = instrument_group->getChild(i);
       
-      FGPath path( globals->get_options()->get_fg_root() );
+      FGPath path( globals->get_fg_root() );
       path.append(node->getStringValue("path"));
       
       FG_LOG(FG_INPUT, FG_INFO, "Reading instrument "
@@ -811,7 +812,7 @@ FGPanel *
 fgReadPanel (const string &relative_path)
 {
   FGPanel * panel = 0;
-  FGPath path(globals->get_options()->get_fg_root());
+  FGPath path(globals->get_fg_root());
   path.append(relative_path);
   ifstream input(path.c_str());
   if (!input.good()) {

@@ -315,7 +315,10 @@ static void loadFlight(puObject *cb)
 // This is the accessor function
 void guiTogglePanel(puObject *cb)
 {
-    globals->get_options()->toggle_panel();
+  if (fgGetBool("/sim/panel/visibility"))
+    fgSetBool("/sim/panel/visiblity", false);
+  else
+    fgSetBool("/sim/panel/visibility", true);
 }
     
 //void MenuHideMenuCb(puObject *cb)
@@ -331,7 +334,7 @@ void goodBye(puObject *)
     cout << "Program exiting normally at user request." << endl;
 
 #ifdef FG_NETWORK_OLK    
-    if ( globals->get_options()->get_network_olk() ) {
+    if ( fgGetBool("/sim/networking/network-olk") ) {
 	if ( net_is_registered == 0 ) fgd_send_com( "8", FGFS_host);
     }
 #endif
@@ -351,8 +354,8 @@ void goAwayCb (puObject *me)
 void mkDialogInit (void)
 {
     //  printf("mkDialogInit\n");
-    int x = (globals->get_options()->get_xsize()/2 - 400/2);
-    int y = (globals->get_options()->get_ysize()/2 - 100/2);
+    int x = (fgGetInt("/sim/startup/xsize")/2 - 400/2);
+    int y = (fgGetInt("/sim/startup/ysize")/2 - 100/2);
     dialogBox = new puDialogBox (x, y); // 150, 50
     {
         dialogFrame = new puFrame (0,0,400,100);
@@ -384,8 +387,8 @@ void ConfirmExitDialogInit(void)
     //  printf("ConfirmExitDialogInit\n");
     int len = 200 - puGetStringWidth( puGetDefaultLabelFont(), msg )/2;
 
-    int x = (globals->get_options()->get_xsize()/2 - 400/2);
-    int y = (globals->get_options()->get_ysize()/2 - 100/2);
+    int x = (fgGetInt("/sim/startup/xsize")/2 - 400/2);
+    int y = (fgGetInt("/sim/startup/ysize")/2 - 100/2);
 	
     YNdialogBox = new puDialogBox (x, y); // 150, 50
     //  YNdialogBox = new puDialogBox (150, 50);
@@ -457,13 +460,13 @@ static GlBitmap *b1 = NULL;
 extern FGInterface cur_view_fdm;
 GLubyte *hiResScreenCapture( int multiplier )
 {
-    float oldfov = globals->get_options()->get_fov();
+    float oldfov = fgGetDouble("/sim/field-of-view");
     float fov = oldfov / multiplier;
     FGViewer *v = globals->get_current_view();
-    globals->get_options()->set_fov(fov);
+    fgSetDouble("/sim/field-of-view", fov);
     fgInitVisuals();
-    int cur_width = globals->get_options()->get_xsize( );
-    int cur_height = globals->get_options()->get_ysize( );
+    int cur_width = fgGetInt("/sim/startup/xsize");
+    int cur_height = fgGetInt("/sim/startup/ysize");
     if (b1) delete( b1 );
     // New empty (mostly) bitmap
     b1 = new GlBitmap( GL_RGB, 1, 1, (unsigned char *)"123" );
@@ -479,7 +482,7 @@ GLubyte *hiResScreenCapture( int multiplier )
 	    b1->copyBitmap( &b2, cur_width*x, cur_height*y );
 	}
     }
-    globals->get_options()->set_fov(oldfov);
+    fgSetDouble("/sim/field-of-view", oldfov);
     return b1->getBitmap();
 }
 #endif
@@ -498,8 +501,8 @@ void printScreen ( puObject *obj ) {
     mainMenuBar->hide();
 
     CGlPrinter p( CGlPrinter::PRINT_BITMAP );
-    int cur_width = globals->get_options()->get_xsize( );
-    int cur_height = globals->get_options()->get_ysize( );
+    int cur_width = fgGetInt("/sim/startup/xsize");
+    int cur_height = fgGetInt("/sim/startup/ysize");
     p.Begin( "FlightGear", cur_width*3, cur_height*3 );
 	p.End( hiResScreenCapture(3) );
 
@@ -536,8 +539,8 @@ void fgDumpSnapShot () {
     }
 
     fgInitVisuals();
-    fgReshape( globals->get_options()->get_xsize(),
-	       globals->get_options()->get_ysize() );
+    fgReshape( fgGetInt("/sim/startup/xsize"),
+	       fgGetInt("/sim/startup/ysize") );
 
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgFenderFrame() shoulnd't
@@ -546,8 +549,8 @@ void fgDumpSnapShot () {
     fgRenderFrame();
 
     my_glDumpWindow( "fgfs-screen.ppm", 
-		     globals->get_options()->get_xsize(), 
-		     globals->get_options()->get_ysize() );
+		     fgGetInt("/sim/startup/xsize"), 
+		     fgGetInt("/sim/startup/ysize") );
     
     mkDialog ("Snap shot saved to fgfs-screen.ppm");
 
@@ -725,7 +728,7 @@ void guiInit()
     if ( envp != NULL ) {
         fntpath.set( envp );
     } else {
-        fntpath.set( globals->get_options()->get_fg_root() );
+        fntpath.set( globals->get_fg_root() );
 	fntpath.append( "Fonts" );
     }
 
@@ -737,7 +740,7 @@ void guiInit()
     puSetDefaultFonts( GuiFont, GuiFont ) ;
     guiFnt = puGetDefaultLabelFont();
   
-    if ( globals->get_options()->get_mouse_pointer() == 0 ) {
+    if (!fgHasValue("/sim/startup/mouse-pointer")) {
         // no preference specified for mouse pointer, attempt to autodetect...
         // Determine if we need to render the cursor, or if the windowing
         // system will do it.  First test if we are rendering with glide.
@@ -752,9 +755,9 @@ void guiInit()
             }
         }
 //        mouse_active = ~mouse_active;
-    } else if ( globals->get_options()->get_mouse_pointer() == 1 ) {
+    } else if ( !fgGetBool("/sim/startup/mouse-pointer") ) {
         // don't show pointer
-    } else if ( globals->get_options()->get_mouse_pointer() == 2 ) {
+    } else {
         // force showing pointer
         puShowCursor();
 //        mouse_active = ~mouse_active;
@@ -782,7 +785,7 @@ void guiInit()
     mainMenuBar -> add_submenu ("Autopilot", autopilotSubmenu, autopilotSubmenuCb);
     // mainMenuBar -> add_submenu ("Options", optionsSubmenu, optionsSubmenuCb);
 #ifdef FG_NETWORK_OLK
-    if ( globals->get_options()->get_network_olk() ) {
+    if ( fgGetBool("/sim/networking/network-olk") ) {
     	mainMenuBar -> add_submenu ("Network", networkSubmenu, networkSubmenuCb);
     }
 #endif

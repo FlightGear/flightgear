@@ -56,6 +56,7 @@
 #include <simgear/misc/texcoord.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Scenery/tileentry.hxx>
 
 #include "matlib.hxx"
@@ -241,9 +242,6 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     leaf->setState( state );
 
     tile->addKid( leaf );
-    // if ( globals->get_options()->get_clouds() ) {
-    //    fgGenCloudTile(path, t, tile);
-    // }
 
     return tile;
 }
@@ -386,7 +384,7 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 	return NULL;
     }
 
-    shading = globals->get_options()->get_shading();
+    shading = fgGetBool("/sim/rendering/shading");
 
     if ( is_base ) {
 	t->ncount = 0;
@@ -790,11 +788,6 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
     FG_LOG( FG_TERRAIN, FG_DEBUG, 
 	    "Loaded " << path << " in " 
 	    << stopwatch.elapsedSeconds() << " seconds" );
-
-    // Generate a cloud layer above the tiles
-    // if ( globals->get_options()->get_clouds() ) {
-    //  	fgGenCloudTile(path, t, tile);
-    // }
 
     return tile;
 }

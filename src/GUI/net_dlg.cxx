@@ -39,7 +39,7 @@
 #include <simgear/xgl/xgl.h>
 
 #include <Main/globals.hxx>
-#include <Main/options.hxx>
+#include <Main/fg_props.hxx>
 #include <NetworkOLK/network.h>
 
 #include "gui.h"
@@ -80,9 +80,9 @@ void NetIdDialog_OK (puObject *)
 	NetId = net_callsign;
 
 	NetIdDialog_Cancel( NULL );
-	globals->get_options()->set_net_id( NetId.c_str() );
+	fgSetString("/networking/call-sign", NetId.c_str() );
 	strcpy( fgd_callsign, net_callsign);
-//    strcpy( fgd_callsign, globals->get_options()->get_net_id().c_str());
+//    strcpy( fgd_callsign, fgGetString("/sim/networking/call-sign").c_str());
 /* Entering a callsign indicates : user wants Net HUD Info */
 	net_hud_display = 1;
 
@@ -92,7 +92,7 @@ void NetIdDialog_OK (puObject *)
 
 void NewCallSign(puObject *cb)
 {
-	sprintf( NewNetId, "%s", globals->get_options()->get_net_id().c_str() );
+	sprintf( NewNetId, "%s", fgGetString("/sim/networking/call-sign").c_str() );
 //    sprintf( NewNetId, "%s", fgd_callsign );
 	NetIdDialogInput->setValue( NewNetId );
 
@@ -101,7 +101,7 @@ void NewCallSign(puObject *cb)
 
 void NewNetIdInit(void)
 {
-	sprintf( NewNetId, "%s", globals->get_options()->get_net_id().c_str() );
+	sprintf( NewNetId, "%s", fgGetString("/sim/networking/call-sign").c_str() );
 //    sprintf( NewNetId, "%s", fgd_callsign );
 	int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),
 									  NewNetIdLabel ) / 2;
@@ -234,7 +234,7 @@ void net_fgd_scan(puObject *cb)
 
 void NewNetFGDInit(void)
 {
-//    sprintf( NewNetId, "%s", globals->get_options()->get_net_id().c_str() );
+//    sprintf( NewNetId, "%s", fgGetString("/sim/networking/call-sign").c_str() );
 //    sprintf( NewNetId, "%s", fgd_callsign );
 	int len = 170 - puGetStringWidth( puGetDefaultLabelFont(),
 									  NewNetFGDLabel ) / 2;

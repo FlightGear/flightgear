@@ -87,11 +87,13 @@
 
 #include <list>
 #include <vector>
+#include <string>
 
 #include <simgear/timing/timestamp.hxx>
 
 FG_USING_STD(list);
 FG_USING_STD(vector);
+FG_USING_STD(string);
 
 
 typedef double FG_VECTOR_3[3];
@@ -1027,17 +1029,11 @@ extern FGInterface * cur_fdm_state;
 
 // General interface to the flight model routines
 
-// Initialize the flight model parameters
-int fgFDMInit(int model, FGInterface& f, double dt);
-
-// Run multiloop iterations of the flight model
-int fgFDMUpdate(int model, FGInterface& f, int multiloop, int jitter);
-
 // Set the altitude (force)
-void fgFDMForceAltitude(int model, double alt_meters);
+void fgFDMForceAltitude(const string &model, double alt_meters);
 
 // Set the local ground elevation
-void fgFDMSetGroundElevation(int model, double alt_meters);
+void fgFDMSetGroundElevation(const string &model, double alt_meters);
 
 
 #endif // _FLIGHT_HXX

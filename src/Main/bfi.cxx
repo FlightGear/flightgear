@@ -90,12 +90,9 @@ reinit ()
   double apHeadingMag = FGBFI::getAPHeadingMag();
   bool apAltitudeLock = FGBFI::getAPAltitudeLock();
   double apAltitude = FGBFI::getAPAltitude();
-  const string &targetAirport = FGBFI::getTargetAirport();
   bool gpsLock = FGBFI::getGPSLock();
   // double gpsLatitude = FGBFI::getGPSTargetLatitude();
   // double gpsLongitude = FGBFI::getGPSTargetLongitude();
-
-  FGBFI::setTargetAirport("");
 
   fgReInitSubsystems();
 
@@ -115,7 +112,6 @@ reinit ()
   FGBFI::setAPHeadingMag(apHeadingMag);
   FGBFI::setAPAltitudeLock(apAltitudeLock);
   FGBFI::setAPAltitude(apAltitude);
-  FGBFI::setTargetAirport(targetAirport);
   FGBFI::setGPSLock(gpsLock);
 
   _needReinit = false;
@@ -211,15 +207,11 @@ FGBFI::init ()
 {
   FG_LOG(FG_GENERAL, FG_INFO, "Starting BFI init");
 				// Simulation
-//   fgTie("/sim/flight-model", getFlightModel, setFlightModel);
-//   fgTie("/sim/aircraft", getAircraft, setAircraft);
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
   fgTie("/sim/time/gmt", getDateString, setDateString);
   fgTie("/sim/time/gmt-string", getGMTString);
-//   fgTie("/sim/hud/visibility", getHUDVisible, setHUDVisible);
 
 				// Position
-//   fgTie("/position/airport-id", getTargetAirport, setTargetAirport);
   fgTie("/position/latitude", getLatitude, setLatitude);
   fgTie("/position/longitude", getLongitude, setLongitude);
   fgTie("/position/altitude", getAltitude, setAltitude);
@@ -299,64 +291,12 @@ FGBFI::update ()
 
 
 /**
- * Return the flight model as an integer.
- *
- * TODO: use a string instead.
- */
-int
-FGBFI::getFlightModel ()
-{
-  return globals->get_options()->get_flight_model();
-}
-
-
-/**
- * Return the current aircraft as a string.
- */
-string
-FGBFI::getAircraft ()
-{
-  _temp = globals->get_options()->get_aircraft();
-  return _temp;
-}
-
-
-/**
  * Return the current aircraft directory (UIUC) as a string.
  */
 string 
 FGBFI::getAircraftDir ()
 {
-  _temp = aircraft_dir;
-  return _temp;
-}
-
-
-/**
- * Set the flight model as an integer.
- *
- * TODO: use a string instead.
- */
-void
-FGBFI::setFlightModel (int model)
-{
-  if (getFlightModel() != model) {
-    globals->get_options()->set_flight_model(model);
-    needReinit();
-  }
-}
-
-
-/**
- * Set the current aircraft.
- */
-void
-FGBFI::setAircraft (string aircraft)
-{
-  if (getAircraft() != aircraft) {
-    globals->get_options()->set_aircraft(aircraft);
-    needReinit();
-  }
+  return aircraft_dir;
 }
 
 
@@ -450,26 +390,6 @@ FGBFI::getGMTString ()
 	  t->tm_hour, t->tm_min, t->tm_sec);
   out = buf;
   return out;
-}
-
-
-/**
- * Return true if the HUD is visible.
- */
-bool
-FGBFI::getHUDVisible ()
-{
-  return globals->get_options()->get_hud_status();
-}
-
-
-/**
- * Ensure that the HUD is visible or hidden.
- */
-void
-FGBFI::setHUDVisible (bool visible)
-{
-  globals->get_options()->set_hud_status(visible);
 }
 
 
@@ -1279,30 +1199,6 @@ FGBFI::setGPSLock (bool lock)
 	     FGAutopilot::FG_HEADING_WAYPOINT) {
     current_autopilot->set_HeadingEnabled(false);
   }
-}
-
-
-/**
- * Get the GPS target airport code.
- */
-string 
-FGBFI::getTargetAirport ()
-{
-  // FIXME: not thread-safe
-  static string out;
-  out = globals->get_options()->get_airport_id();
-
-  return out;
-}
-
-
-/**
- * Set the GPS target airport code.
- */
-void
-FGBFI::setTargetAirport (string airportId)
-{
-  globals->get_options()->set_airport_id(airportId);
 }
 
 

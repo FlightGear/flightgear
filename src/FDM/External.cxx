@@ -42,7 +42,7 @@ bool FGExternal::init( double dt ) {
 bool FGExternal::update( int multiloop ) {
     // cout << "FGExternal::update()" << endl;
 
-    // double time_step = (1.0 / globals->get_options()->get_model_hz())
+    // double time_step = (1.0 / fgGetInt("/sim/model-hz"))
     //                     * multiloop;
 
 

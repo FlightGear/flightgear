@@ -147,7 +147,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    // unflipping yourself :-)
 	    {
 		double alt = cur_fdm_state->get_Altitude() + 1000;
-		fgFDMForceAltitude( globals->get_options()->get_flight_model(), 
+		fgFDMForceAltitude( fgGetString("/sim/flight-model"), 
 				    alt * FEET_TO_METER );
 	    }
 	    return;
@@ -176,16 +176,14 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->set_goal_view_offset( FG_PI * 1.75 );
 	    return;
 	case 65: // A key
-	    speed = globals->get_options()->get_speed_up();
+	    speed = fgGetInt("/sim/speed-up");
 	    speed--;
 	    if ( speed < 1 ) {
 		speed = 1;
 	    }
-	    globals->get_options()->set_speed_up( speed );
+	    fgSetInt("/sim/speed-up", speed);
 	    return;
 	case 72: // H key
-	    // status = globals->get_options()->get_hud_status();
-	    // globals->get_options()->set_hud_status(!status);
 	    HUD_brightkey( true );
 	    return;
 	case 73: // I key
@@ -197,7 +195,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 80: // P key
-	    globals->get_options()->toggle_panel();
+	    if (fgGetBool("/sim/panel/visibility"))
+	      fgSetBool("/sim/panel/visibility", false);
+	    else
+	      fgSetBool("/sim/panel/visibility", true);
+	    fgReshape(fgGetInt("/sim/startup/xsize"),
+		      fgGetInt("/sim/startup/ysize"));
 	    break;
 	case 84: // T key
 	    globals->inc_warp_delta( -30 );
@@ -306,9 +309,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 		    "Set flaps to " << controls.get_flaps() );
  	    return;
 	case 97: // a key
-	    speed = globals->get_options()->get_speed_up();
+	    speed = fgGetInt("/sim/speed-up");
 	    speed++;
-	    globals->get_options()->set_speed_up( speed );
+	    fgSetInt("/sim/speed-up", speed);
 	    return;
 	case 98: // b key
 	    int b_ret;
@@ -347,7 +350,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    {
 		SGBucket p( f->get_Longitude() * RAD_TO_DEG,
 			    f->get_Latitude() * RAD_TO_DEG );
-		FGPath tile_path( globals->get_options()->get_fg_root() );
+		FGPath tile_path( globals->get_fg_root() );
 		tile_path.append( "Scenery" );
 		tile_path.append( p.gen_base_path() );
 		tile_path.append( p.gen_index_str() );
@@ -373,8 +376,8 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    // handles GUI state as well as Viewer LookAt Direction
 	    CenterView();
 	    globals->set_current_view( globals->get_viewmgr()->next_view() );
-	    fgReshape( globals->get_options()->get_xsize(),
-		       globals->get_options()->get_ysize() );
+	    fgReshape( fgGetInt("/sim/startup/xsize"),
+		       fgGetInt("/sim/startup/ysize") );
 	    return;
 	case 120: // x key
 	    fov = globals->get_current_view()->get_fov();
@@ -447,8 +450,7 @@ void GLUTspecialkey(int k, int x, int y) {
  	}
 	case GLUT_KEY_F3: {
 	  string panel_path =
-	    globals->get_props()->getStringValue("/sim/panel/path",
-					      "Panels/Default/default.xml");
+	    fgGetString("/sim/panel/path", "Panels/Default/default.xml");
 	  FGPanel * new_panel = fgReadPanel(panel_path);
 	  if (new_panel == 0) {
 	    FG_LOG(FG_INPUT, FG_ALERT,
@@ -462,7 +464,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	  return;
 	}
 	case GLUT_KEY_F4: {
-	  FGPath props_path(globals->get_options()->get_fg_root());
+	  FGPath props_path(globals->get_fg_root());
 	  props_path.append("preferences.xml");
 	  FG_LOG(FG_INPUT, FG_INFO, "Rereading global preferences");
 	  if (!readProperties(props_path.str(), globals->get_props())) {
@@ -476,14 +478,14 @@ void GLUTspecialkey(int k, int x, int y) {
 	}
 	case GLUT_KEY_F5: {
 	  current_panel->setYOffset(current_panel->getYOffset() - 5);
-	  fgReshape(globals->get_options()->get_xsize(),
-		    globals->get_options()->get_ysize());
+	  fgReshape(fgGetInt("/sim/startup/xsize"),
+		    fgGetInt("/sim/startup/ysize"));
 	  return;
 	}
 	case GLUT_KEY_F6: {
 	  current_panel->setYOffset(current_panel->getYOffset() + 5);
-	  fgReshape(globals->get_options()->get_xsize(),
-		    globals->get_options()->get_ysize());
+	  fgReshape(fgGetInt("/sim/startup/xsize"),
+		    fgGetInt("/sim/startup/ysize"));
 	  return;
 	}
 	case GLUT_KEY_F7: {
@@ -560,33 +562,31 @@ void GLUTspecialkey(int k, int x, int y) {
 		    FGAutopilot::FG_HEADING_LOCK );
 	    }
 	    return;
-	case GLUT_KEY_F8: // F8 toggles fog ... off fastest nicest...
-	    globals->get_options()->cycle_fog();
-	
-	    if ( globals->get_options()->get_fog() ==
-		 FGOptions::FG_FOG_DISABLED )
-	    {
-		FG_LOG( FG_INPUT, FG_INFO, "Fog disabled" );
-	    } else if ( globals->get_options()->get_fog() == 
-			FGOptions::FG_FOG_FASTEST )
-	    {
-		FG_LOG( FG_INPUT, FG_INFO, 
-			"Fog enabled, hint set to fastest" );
-	    } else if ( globals->get_options()->get_fog() ==
-			FGOptions::FG_FOG_NICEST )
-	    {
-		FG_LOG( FG_INPUT, FG_INFO,
-			"Fog enabled, hint set to nicest" );
+	case GLUT_KEY_F8: {// F8 toggles fog ... off fastest nicest...
+	    const string &fog = fgGetString("/sim/rendering/fog");
+	    if (fog == "disabled") {
+	      fgSetString("/sim/rendering/fog", "fastest");
+	      FG_LOG(FG_INPUT, FG_INFO, "Fog enabled, hint=fastest");
+	    } else if (fog == "fastest") {
+	      fgSetString("/sim/rendering/fog", "nicest");
+	      FG_LOG(FG_INPUT, FG_INFO, "Fog enabled, hint=nicest");
+	    } else if (fog == "nicest") {
+	      fgSetString("/sim/rendering/fog", "disabled");
+	      FG_LOG(FG_INPUT, FG_INFO, "Fog disabled");
+	    } else {
+	      fgSetString("/sim/rendering/fog", "disabled");
+	      FG_LOG(FG_INPUT, FG_ALERT, "Unrecognized fog type "
+		     << fog << ", changed to 'disabled'");
 	    }
-
  	    return;
+	}
  	case GLUT_KEY_F9: // F9 toggles textures on and off...
 	    FG_LOG( FG_INPUT, FG_INFO, "Toggling texture" );
-	    if ( globals->get_options()->get_textures() ) {
-		globals->get_options()->set_textures( false );
+	    if ( fgGetBool("/sim/rendering/textures")) {
+		fgSetBool("/sim/rendering/textures", false);
 		material_lib.set_step( 1 );
 	    } else {
-		globals->get_options()->set_textures( true );
+		fgSetBool("/sim/rendering/textures", true);
 		material_lib.set_step( 0 );
 	    }
  	    return;

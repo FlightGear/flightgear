@@ -24,8 +24,8 @@
 #ifndef _CONTROLS_HXX
 #define _CONTROLS_HXX
 
+#include <simgear/misc/props.hxx>
 #include <Main/fgfs.hxx>
-#include <Main/globals.hxx>
 
 #ifndef __cplusplus                                                          
 # error This library requires C++
@@ -63,6 +63,8 @@ private:
     double prop_advance[MAX_ENGINES];
     double brake[MAX_WHEELS];
     bool throttle_idle;
+
+    SGValue * auto_coordination;
 
     inline void CLAMP(double *x, double min, double max ) {
 	if ( *x < min ) { *x = min; }
@@ -102,8 +104,7 @@ public:
 	CLAMP( &aileron, -1.0, 1.0 );
 			
 	// check for autocoordination
-	if ( globals->get_options()->get_auto_coordination() == 
-	     FGOptions::FG_AUTO_COORD_ENABLED ) 
+	if ( auto_coordination->getBoolValue() ) 
 	{
 	    set_rudder( aileron / 2.0 );
 	}
@@ -113,8 +114,7 @@ public:
 	CLAMP( &aileron, -1.0, 1.0 );
 			
 	// check for autocoordination
-	if ( globals->get_options()->get_auto_coordination() == 
-	     FGOptions::FG_AUTO_COORD_ENABLED ) 
+	if ( auto_coordination->getBoolValue() ) 
 	{
 	    set_rudder( aileron / 2.0 );
 	}

@@ -218,10 +218,10 @@ void FGNewCache::fill_in( const SGBucket& b ) {
     e->tile_bucket = b;
 
     FGPath tile_path;
-    if ( globals->get_options()->get_fg_scenery() != "" ) {
-	tile_path.set( globals->get_options()->get_fg_scenery() );
+    if ( globals->get_fg_scenery() != "" ) {
+	tile_path.set( globals->get_fg_scenery() );
     } else {
-	tile_path.set( globals->get_options()->get_fg_root() );
+	tile_path.set( globals->get_fg_root() );
 	tile_path.append( "Scenery" );
     }
     tile_path.append( b.gen_base_path() );

@@ -26,6 +26,7 @@
 
 #include <Scenery/scenery.hxx>
 
+#include <Main/fg_props.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
@@ -39,7 +40,7 @@
 
 FGLaRCsim::FGLaRCsim(void) {
     ls_toplevel_init( 0.0, 
-		      (char *)globals->get_options()->get_aircraft().c_str() );
+		      (char *)fgGetString("/sim/aircraft").c_str() );
     lsic=new LaRCsimIC; //this needs to be brought up after LaRCsim is
     copy_to_LaRCsim(); // initialize all of LaRCsim's vars
     //this should go away someday -- formerly done in fg_init.cxx
@@ -59,6 +60,8 @@ FGLaRCsim::~FGLaRCsim(void) {
 // Initialize the LaRCsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
 bool FGLaRCsim::init( double dt ) {
+
+    speed_up = fgGetValue("/sim/speed-up", true);
     
     ls_set_model_dt(dt);
     // Initialize our little engine that hopefully might
@@ -84,7 +87,7 @@ bool FGLaRCsim::init( double dt ) {
     copy_to_LaRCsim();
 
     // actual LaRCsim top level init
-    // ls_toplevel_init( dt, (char *)globals->get_options()->get_aircraft().c_str() );
+    // ls_toplevel_init( dt, (char *)fgGetString("/sim/aircraft").c_str() );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "FG pos = " << 
 	    get_Latitude() );
@@ -107,7 +110,7 @@ bool FGLaRCsim::init( double dt ) {
 // Run an iteration of the EOM (equations of motion)
 bool FGLaRCsim::update( int multiloop ) {
 
-    if ( globals->get_options()->get_aircraft() == "c172" ) {
+    if ( fgGetString("/sim/aircraft") == "c172" ) {
 	// set control inputs
 	eng.set_IAS( V_calibrated_kts );
 	eng.set_Throttle_Lever_Pos( controls.get_throttle( 0 ) * 100.0 );
@@ -161,14 +164,14 @@ bool FGLaRCsim::update( int multiloop ) {
 
     // copy control positions into the LaRCsim structure
     Lat_control = controls.get_aileron() /
-	globals->get_options()->get_speed_up();
+	speed_up->getIntValue();
     Long_control = controls.get_elevator();
     Long_trim = controls.get_elevator_trim();
     Rudder_pedal = controls.get_rudder() /
-	globals->get_options()->get_speed_up();
+        speed_up->getIntValue();
     Flap_handle = 30.0 * controls.get_flaps();
 
-    if ( globals->get_options()->get_aircraft() == "c172" ) {
+    if ( fgGetString("/sim/aircraft") == "c172" ) {
 	Use_External_Engine = 1;
     } else {
 	Use_External_Engine = 0;

@@ -41,6 +41,7 @@
 #include <Main/bfi.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Navaids/fixlist.hxx>
 
 #include "auto_gui.hxx"
@@ -292,7 +293,7 @@ void NewAltitudeInit(void)
 
     float alt = cur_fdm_state->get_Altitude();
 
-    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_METERS) {
+    if ( fgGetString("/sim/startup/units") == "meters") {
 	alt *= FEET_TO_METER;
     }
 
@@ -594,7 +595,7 @@ void TgtAptDialog_OK (puObject *)
 	TgtAptId = tmp.substr( 0, pos );
 	string alt_str = tmp.substr( pos + 1 );
 	alt = atof( alt_str.c_str() );
-	if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
+	if ( fgGetString("/sim/startup/units") == "feet" ) {
 	    alt *= FEET_TO_METER;
 	}
     } else {
@@ -635,16 +636,16 @@ void TgtAptDialog_OK (puObject *)
 
 void TgtAptDialog_Reset(puObject *)
 {
-    //  strncpy( NewAirportId, globals->get_options()->get_airport_id().c_str(), 16 );
-    sprintf( NewTgtAirportId, "%s", globals->get_options()->get_airport_id().c_str() );
+    //  strncpy( NewAirportId, fgGetString("/sim/startup/airport-id").c_str(), 16 );
+    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
     TgtAptDialogInput->setValue ( NewTgtAirportId );
     TgtAptDialogInput->setCursor( 0 ) ;
 }
 
 void AddWayPoint(puObject *cb)
 {
-    //  strncpy( NewAirportId, globals->get_options()->get_airport_id().c_str(), 16 );
-    sprintf( NewTgtAirportId, "%s", globals->get_options()->get_airport_id().c_str() );
+    //  strncpy( NewAirportId, fgGetString("/sim/startup/airport-id").c_str(), 16 );
+    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
     TgtAptDialogInput->setValue( NewTgtAirportId );
     
     FG_PUSH_PUI_DIALOG( TgtAptDialog );
@@ -675,8 +676,8 @@ void ClearRoute(puObject *cb)
 void NewTgtAirportInit(void)
 {
     FG_LOG( FG_AUTOPILOT, FG_INFO, " enter NewTgtAirportInit()" );
-    //	fgAPset_tgt_airport_id( globals->get_options()->get_airport_id() );	
-    sprintf( NewTgtAirportId, "%s", globals->get_options()->get_airport_id().c_str() );
+    //	fgAPset_tgt_airport_id( fgGetString("/sim/startup/airport-id") );	
+    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
     FG_LOG( FG_AUTOPILOT, FG_INFO, " NewTgtAirportId " << NewTgtAirportId );
     //	printf(" NewTgtAirportId %s\n", NewTgtAirportId);
     int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),

@@ -46,7 +46,8 @@
 bool
 fgPanelVisible ()
 {
-  return ((globals->get_options()->get_panel_status()) &&
+  return ((current_panel != 0) &&
+	  (current_panel->getVisibility()) &&
 	  (globals->get_viewmgr()->get_current() == 0) &&
 	  (globals->get_current_view()->get_view_offset() == 0.0));
 }
@@ -65,7 +66,7 @@ FGTextureManager::createTexture (const string &relativePath)
   ssgTexture * texture = _textureMap[relativePath];
   if (texture == 0) {
     cerr << "Texture " << relativePath << " does not yet exist" << endl;
-    FGPath tpath(globals->get_options()->get_fg_root());
+    FGPath tpath(globals->get_fg_root());
     tpath.append(relativePath);
     texture = new ssgTexture((char *)tpath.c_str(), false, false);
     _textureMap[relativePath] = texture;
@@ -342,8 +343,8 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
   }
 
 				// Scale for the real window size.
-  x = int(((float)x / globals->get_options()->get_xsize()) * _winw);
-  y = int(_winh - (((float)y / globals->get_options()->get_ysize())
+  x = int(((float)x / fgGetInt("/sim/startup/xsize")) * _winw);
+  y = int(_winh - (((float)y / fgGetInt("/sim/startup/ysize"))
 		   * _winh));
 
 				// Adjust for offsets.

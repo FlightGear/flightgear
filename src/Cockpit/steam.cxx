@@ -34,7 +34,6 @@
 #include <simgear/misc/props.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Main/bfi.hxx>
-#include <Main/globals.hxx>
 #include <NetworkOLK/features.hxx>
 
 FG_USING_NAMESPACE(std);
@@ -98,38 +97,25 @@ int FGSteam::_UpdatesPending = 1000000;  /* Forces filter to reset */
 
 				// FIXME: no need to use static
 				// functions any longer.
-#define DF1(getter) SGRawValueFunctions<double>(getter,0)
-#define DF2(getter, setter) SGRawValueFunctions<double>(getter,setter)
 
 void FGSteam::update ( int timesteps )
 {
         if (!isTied) {
 	  isTied = true;
-	  globals->get_props()->tie("/steam/airspeed",
-				   DF1(FGSteam::get_ASI_kias));
-	  globals->get_props()->tie("/steam/altitude",
-				   DF1(FGSteam::get_ALT_ft));
-	  globals->get_props()->tie("/steam/turn-rate",
-				   DF1(FGSteam::get_TC_std));
-	  globals->get_props()->tie("/steam/slip-skid",
-				   DF1(FGSteam::get_TC_rad));
-	  globals->get_props()->tie("/steam/vertical-speed",
-				   DF1(FGSteam::get_VSI_fps));
-	  globals->get_props()->tie("/steam/gyro-compass",
-				   DF1(FGSteam::get_DG_deg));
-	  globals->get_props()->tie("/steam/vor1",
-				   DF1(FGSteam::get_HackVOR1_deg));
-	  globals->get_props()->tie("/steam/vor2",
-				   DF1(FGSteam::get_HackVOR2_deg));
-	  globals->get_props()->tie("/steam/glidescope1",
-				   DF1(FGSteam::get_HackGS_deg));
-	  globals->get_props()->tie("/steam/adf",
-				   DF1(FGSteam::get_HackADF_deg));
-	  globals->get_props()->tie("/steam/gyro-compass-error",
-				   DF2(FGSteam::get_DG_err,
-				       FGSteam::set_DG_err));
-	  globals->get_props()->tie("/steam/mag-compass",
-				   DF1(FGSteam::get_MH_deg));
+	  fgTie("/steam/airspeed", FGSteam::get_ASI_kias);
+	  fgTie("/steam/altitude", FGSteam::get_ALT_ft);
+	  fgTie("/steam/turn-rate", FGSteam::get_TC_std);
+	  fgTie("/steam/slip-skid", FGSteam::get_TC_rad);
+	  fgTie("/steam/vertical-speed", FGSteam::get_VSI_fps);
+	  fgTie("/steam/gyro-compass", FGSteam::get_DG_deg);
+	  fgTie("/steam/vor1", FGSteam::get_HackVOR1_deg);
+	  fgTie("/steam/vor2", FGSteam::get_HackVOR2_deg);
+	  fgTie("/steam/glidescope1", FGSteam::get_HackGS_deg);
+	  fgTie("/steam/adf", FGSteam::get_HackADF_deg);
+	  fgTie("/steam/gyro-compass-error",
+		FGSteam::get_DG_err,
+		FGSteam::set_DG_err);
+	  fgTie("/steam/mag-compass", FGSteam::get_MH_deg);
 	}
 	_UpdatesPending += timesteps;
 }
@@ -175,7 +161,7 @@ void FGSteam::set_lowpass ( double *outthe, double inthe, double tc )
 void FGSteam::_CatchUp()
 { if ( _UpdatesPending != 0 )
   {	double dt = _UpdatesPending * 1.0 / 
-	    globals->get_options()->get_model_hz();
+	    fgGetInt("/sim/model-hz"); // FIXME: inefficient
         double AccN, AccE, AccU;
 	int i /*,j*/;
 	double d, the_ENGINE_rpm;

@@ -72,9 +72,6 @@ public:
 				// deprecated
   static string getGMTString ();
 
-  static bool getHUDVisible ();
-  static void setHUDVisible (bool hudVisible);
-
 				// Position
   static double getLatitude ();	// degrees
   static void setLatitude (double latitude); // degrees

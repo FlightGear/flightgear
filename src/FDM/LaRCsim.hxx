@@ -38,6 +38,7 @@ class FGLaRCsim: public FGInterface {
     void set_ls(void);
     void snap_shot(void);
     double time_step;
+    SGValue * speed_up;
     
 public:
     FGLaRCsim(void);

@@ -195,7 +195,7 @@ static FGProtocol *parse_port_config( const string& config )
 void fgIOInit() {
     FGProtocol *p;
     string_list channel_options_list = 
-	globals->get_options()->get_channel_options_list();
+	globals->get_channel_options_list();
 
     // we could almost do this in a single step except pushing a valid
     // port onto the port list copies the structure and destroys the

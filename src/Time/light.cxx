@@ -75,7 +75,7 @@ void fgLIGHT::Init( void ) {
 	    "Initializing Lighting interpolation tables." );
 
     // build the path name to the ambient lookup table
-    FGPath path( globals->get_options()->get_fg_root() );
+    FGPath path( globals->get_fg_root() );
     FGPath ambient = path;
     ambient.append( "Lighting/ambient" );
     FGPath diffuse = path;

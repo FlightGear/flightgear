@@ -64,8 +64,8 @@
 #include <Cockpit/panel.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
-#include <Main/options.hxx>
 #include <Main/fg_init.hxx>
+#include <Main/fg_props.hxx>
 //#include <Main/views.hxx>
 //#include <Network/network.h>
 //#include <Time/fg_time.hxx>
@@ -194,8 +194,8 @@ void TurnCursorOn( void )
     }
 #endif
 #if defined(X_CURSOR_TWEAKS)
-    glutWarpPointer( globals->get_options()->get_xsize()/2,
-		     globals->get_options()->get_ysize()/2);
+    glutWarpPointer( fgGetInt("/sim/startup/xsize")/2,
+		     fgGetInt("/sim/startup/ysize")/2);
 #endif
 }
 
@@ -205,8 +205,8 @@ void TurnCursorOff( void )
 #if defined(WIN32_CURSOR_TWEAKS)
     glutSetCursor(GLUT_CURSOR_NONE);
 #elif defined(X_CURSOR_TWEAKS)
-    glutWarpPointer( globals->get_options()->get_xsize(),
-		     globals->get_options()->get_ysize());
+    glutWarpPointer( fgGetInt("/sim/startup/xsize"),
+		     fgGetInt("/sim/startup/ysize"));
 #endif
 }
 
@@ -255,8 +255,8 @@ void BusyCursor( int restore )
 void CenterView( void ) {
     if( mouse_mode = MOUSE_VIEW ) {
 	mouse_mode = MOUSE_POINTER;
-	_savedX = globals->get_options()->get_xsize()/2;
-	_savedY = globals->get_options()->get_ysize()/2;
+	_savedX = fgGetInt("/sim/startup/xsize")/2;
+	_savedY = fgGetInt("/sim/startup/ysize")/2;
 	_mVtoggle = 0;
 	Quat0();
 	build_rotmatrix(GuiQuat_mat, curGuiQuat);
@@ -288,14 +288,14 @@ void guiMotionFunc ( int x, int y )
         // reset left click MOUSE_VIEW toggle feature
         _mVtoggle = 0;
         
-        ww = globals->get_options()->get_xsize();
-        wh = globals->get_options()->get_ysize();
+        ww = fgGetInt("/sim/startup/xsize");
+        wh = fgGetInt("/sim/startup/ysize");
         
         switch (mouse_mode) {
             case MOUSE_YOKE:
                 if( !mouse_joystick_control ) {
                     mouse_joystick_control = 1;
-                    globals->get_options()->set_control_mode( FGOptions::FG_MOUSE );
+		    fgSetString("/sim/control-mode", "mouse");
                 } else {
                     if ( left_button() ) {
                         offset = (_mX - x) * brake_sensitivity;
@@ -464,8 +464,8 @@ void guiMouseFunc(int button, int updown, int x, int y)
                         _quat[1] = curGuiQuat[1];
                         _quat[2] = curGuiQuat[2];
                         _quat[3] = curGuiQuat[3];
-                        x = globals->get_options()->get_xsize()/2;
-                        y = globals->get_options()->get_ysize()/2;
+                        x = fgGetInt("/sim/startup/xsize")/2;
+                        y = fgGetInt("/sim/startup/ysize")/2;
                         Quat0();
                         _view_offset =
 			    globals->get_current_view()->get_goal_view_offset();
@@ -487,8 +487,8 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     _savedX = x;
                     _savedY = y;
                     // start with zero point in center of screen
-                    _mX = globals->get_options()->get_xsize()/2;
-                    _mY = globals->get_options()->get_ysize()/2;
+                    _mX = fgGetInt("/sim/startup/xsize")/2;
+                    _mY = fgGetInt("/sim/startup/ysize")/2;
                     
                     // try to have the MOUSE_YOKE position
                     // reflect the current stick position
@@ -503,9 +503,9 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     
                 case MOUSE_YOKE:
                     mouse_mode = MOUSE_VIEW;
-                    globals->get_options()->set_control_mode( FGOptions::FG_JOYSTICK );
-                    x = globals->get_options()->get_xsize()/2;
-                    y = globals->get_options()->get_ysize()/2;
+		    fgSetString("/sim/control/mode", "joystick");
+                    x = fgGetInt("/sim/startup/xsize")/2;
+                    y = fgGetInt("/sim/startup/ysize")/2;
                     _mVtoggle = 0;
                     Quat0();
                     build_rotmatrix(GuiQuat_mat, curGuiQuat);

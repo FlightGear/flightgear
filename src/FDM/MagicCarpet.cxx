@@ -27,6 +27,7 @@
 
 #include <Controls/controls.hxx>
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 #include "MagicCarpet.hxx"
 
@@ -36,6 +37,7 @@
 bool FGMagicCarpet::init( double dt ) {
     // set valid time for this record
     stamp_time();
+    model_hz = fgGetValue("/sim/model-hz", true);
 
     return true;
 }
@@ -45,7 +47,7 @@ bool FGMagicCarpet::init( double dt ) {
 bool FGMagicCarpet::update( int multiloop ) {
     // cout << "FGLaRCsim::update()" << endl;
 
-    double time_step = (1.0 / globals->get_options()->get_model_hz()) *
+    double time_step = (1.0 / model_hz->getIntValue()) *
 	multiloop;
 
     // speed and distance traveled

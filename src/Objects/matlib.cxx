@@ -47,6 +47,7 @@
 
 #include <Include/general.hxx>
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Scenery/tileentry.hxx>
 
 #include "matlib.hxx"
@@ -128,14 +129,14 @@ bool FGMaterialLib::load( const string& mpath ) {
 		in >> m;
 
 		// build the ssgSimpleState
-		FGPath tex_path( globals->get_options()->get_fg_root() );
+		FGPath tex_path( globals->get_fg_root() );
 		tex_path.append( "Textures.high" );
 
 		FGPath tmp_path = tex_path;
 		tmp_path.append( m.get_texture_name() );
 		if ( ! local_file_exists(tmp_path.str())
 		     || general.get_glMaxTexSize() < 512 ) {
-		    tex_path = FGPath( globals->get_options()->get_fg_root() );
+		    tex_path = FGPath( globals->get_fg_root() );
 		    tex_path.append( "Textures" );
 		}
 	    
@@ -143,14 +144,14 @@ bool FGMaterialLib::load( const string& mpath ) {
 			<< material_name << " (" << tex_path.c_str() << ")");
 
 		GLenum shade_model = GL_SMOOTH;
-		if ( globals->get_options()->get_shading() == 1 ) {
+		if ( fgGetBool("/sim/rendering/shading") ) {
 		    shade_model = GL_SMOOTH;
 		} else {
 		    shade_model = GL_FLAT;
 		}
 
 		m.build_ssg_state( tex_path.str(), shade_model,
-				   globals->get_options()->get_textures() );
+				   fgGetBool("/sim/rendering/textures") );
 
 #if EXTRA_DEBUG
 		m.dump_info();
@@ -210,14 +211,14 @@ bool FGMaterialLib::add_item ( const string &mat_name, const string &full_path )
 #endif
 
     GLenum shade_model = GL_SMOOTH;
-    if ( globals->get_options()->get_shading() == 1 ) {
+    if ( fgGetBool("/sim/rendering/shading") ) {
 	shade_model = GL_SMOOTH;
     } else {
 	shade_model = GL_FLAT;
     }
 
     m.build_ssg_state( tex_path, shade_model,
-		       globals->get_options()->get_textures() );
+		       fgGetBool("/sim/rendering/textures") );
 
     material_lib.matlib[mat_name] = m;
 

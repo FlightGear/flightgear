@@ -39,6 +39,7 @@
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 #include <FDM/JSBSim/FGFDMExec.h>
 #include <FDM/JSBSim/FGAircraft.h>
@@ -66,17 +67,17 @@ FGJSBsim::FGJSBsim(void) {
     fgic=new FGInitialCondition(fdmex);
     needTrim=true;
   
-    FGPath aircraft_path( globals->get_options()->get_fg_root() );
+    FGPath aircraft_path( globals->get_fg_root() );
     aircraft_path.append( "Aircraft" );
 
-    FGPath engine_path( globals->get_options()->get_fg_root() );
+    FGPath engine_path( globals->get_fg_root() );
     engine_path.append( "Engine" );
-    float dt = 1.0 / globals->get_options()->get_model_hz();
+    float dt = 1.0 / fgGetInt("/sim/model-hz");
     fdmex->GetState()->Setdt( dt );
 
     result = fdmex->LoadModel( aircraft_path.str(),
 			       engine_path.str(),
-			       globals->get_options()->get_aircraft() );
+			       fgGetString("/sim/aircraft") );
     int Neng=fdmex->GetAircraft()->GetNumEngines();
     FG_LOG(FG_FLIGHT,FG_INFO, "Neng: " << Neng );
     for(int i=0;i<Neng;i++) {
@@ -105,24 +106,24 @@ bool FGJSBsim::init( double dt ) {
     FG_LOG( FG_FLIGHT, FG_INFO, "Starting and initializing JSBsim" );
 
 #if 0
-    FGPath aircraft_path( globals->get_options()->get_fg_root() );
+    FGPath aircraft_path( globals->get_fg_root() );
     aircraft_path.append( "Aircraft" );
 
-    FGPath engine_path( globals->get_options()->get_fg_root() );
+    FGPath engine_path( globals->get_fg_root() );
     engine_path.append( "Engine" );
 
     fdmex->GetState()->Setdt( dt );
 
     result = fdmex->LoadModel( aircraft_path.str(),
 			       engine_path.str(),
-			       globals->get_options()->get_aircraft() );
+			       fgGetString("/sim/aircraft") );
 #endif
 
     if (result) {
-	FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft " << globals->get_options()->get_aircraft() );
+	FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft " << fgGetString("/sim/aircraft") );
     } else {
 	FG_LOG( FG_FLIGHT, FG_INFO, "  aircraft "
-		<< globals->get_options()->get_aircraft()
+		<< fgGetString("/sim/aircraft")
 		<< " does not exist" );
 	return false;
     }
@@ -156,7 +157,6 @@ bool FGJSBsim::init( double dt ) {
       
     }
 
-    //FG_LOG( FG_FLIGHT, FG_INFO, "  gamma: " <<  globals->get_options()->get_Gamma());
     FG_LOG( FG_FLIGHT, FG_INFO, "  Bank Angle: " 
 	    <<  fdmex->GetRotation()->Getphi()*RADTODEG << " deg");
     FG_LOG( FG_FLIGHT, FG_INFO, "  Pitch Angle: " 
@@ -180,8 +180,8 @@ bool FGJSBsim::init( double dt ) {
        FG_LOG( FG_FLIGHT, FG_DEBUG, "  Calculated Aircraft AGL: " << endl 
        << "    " << "get_Altitude() + get_Sea_level_radius() - scenery.cur_radius*METER_TO_FEET= " 
        <<  get_Altitude() + get_Sea_level_radius()- scenery.cur_radius*METER_TO_FEET );
-       FG_LOG( FG_FLIGHT, FG_DEBUG, "  globals->get_options()->get_altitude(): " 
-       <<  globals->get_options()->get_altitude() );
+       FG_LOG( FG_FLIGHT, FG_DEBUG, "  fgGetDouble("/position/altitude"): " 
+       <<  fgGetDouble("/position/altitude") );
        FG_LOG( FG_FLIGHT, FG_DEBUG, "  FGBFI::getAltitude(): " 
        <<  FGBFI::getAltitude() );    */
 
@@ -208,7 +208,7 @@ bool FGJSBsim::update( int multiloop ) {
 
     copy_to_JSBsim();
     
-    if(needTrim && (globals->get_options()->get_trim_mode() > 0)) {
+    if(needTrim && fgGetBool("/sim/startup/trim")) {
 	//fgic->SetSeaLevelRadiusFtIC( get_Sea_level_radius() );
 	//fgic->SetTerrainAltitudeFtIC( scenery.cur_elev * METER_TO_FEET );
 	FGTrim *fgtrim;

@@ -22,8 +22,8 @@
 #include <Airports/simple.hxx>
 #include <FDM/flight.hxx>
 #include <Main/fg_init.hxx>
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Main/options.hxx>
 //#include <Time/fg_time.hxx>
 
 #include "gui.h"
@@ -51,7 +51,7 @@ void AptDialog_Cancel(puObject *)
 
 void AptDialog_OK (puObject *)
 {
-	FGPath path( globals->get_options()->get_fg_root() );
+	FGPath path( globals->get_fg_root() );
 	path.append( "Airports" );
 	path.append( "simple.mk4" );
 	FGAirports airports( path.c_str() );
@@ -78,8 +78,8 @@ void AptDialog_OK (puObject *)
 
 		if ( airports.search( AptId, &a ) )
 		{
-			globals->get_options()->set_airport_id( AptId.c_str() );
-			globals->get_options()->set_altitude( -9999.0 );
+			fgSetString("/sim/startup/airport-id",  AptId.c_str() );
+			fgSetDouble("/position/altitude", -9999.0 );
 		// fgSetPosFromAirportID( AptId );
 			fgSetPosFromAirportIDandHdg( AptId, 
 										 cur_fdm_state->get_Psi() * RAD_TO_DEG);
@@ -97,16 +97,16 @@ void AptDialog_OK (puObject *)
 
 void AptDialog_Reset(puObject *)
 {
-	//  strncpy( NewAirportId, globals->get_options()->get_airport_id().c_str(), 16 );
-	sprintf( NewAirportId, "%s", globals->get_options()->get_airport_id().c_str() );
+	//  strncpy( NewAirportId, fgGetString("/sim/startup/airport-id").c_str(), 16 );
+	sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
 	AptDialogInput->setValue ( NewAirportId );
 	AptDialogInput->setCursor( 0 ) ;
 }
 
 void NewAirport(puObject *cb)
 {
-	//  strncpy( NewAirportId, globals->get_options()->get_airport_id().c_str(), 16 );
-	sprintf( NewAirportId, "%s", globals->get_options()->get_airport_id().c_str() );
+	//  strncpy( NewAirportId, fgGetString("/sim/startup/airport-id").c_str(), 16 );
+	sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
 //	cout << "NewAirport " << NewAirportId << endl;
 	AptDialogInput->setValue( NewAirportId );
 
@@ -115,7 +115,7 @@ void NewAirport(puObject *cb)
 
 void NewAirportInit(void)
 {
-	sprintf( NewAirportId, "%s", globals->get_options()->get_airport_id().c_str() );
+	sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
 	int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),
 									  NewAirportLabel ) / 2;
 

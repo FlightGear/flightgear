@@ -241,7 +241,7 @@ void FGInterface::extrapolate( int time_offset ) {
 
 
 // Set the altitude (force)
-void fgFDMForceAltitude(int model, double alt_meters) {
+void fgFDMForceAltitude(const string &model, double alt_meters) {
     double sea_level_radius_meters;
     double lat_geoc;
 
@@ -255,14 +255,14 @@ void fgFDMForceAltitude(int model, double alt_meters) {
 					  
 
     // additional work needed for some flight models
-    if ( model == FGInterface::FG_LARCSIM ) {
+    if ( model == "larcsim" ) {
 	ls_ForceAltitude( base_fdm_state.get_Altitude() );
     }
 }
 
 
 // Set the local ground elevation
-void fgFDMSetGroundElevation(int model, double ground_meters) {
+void fgFDMSetGroundElevation(const string &model, double ground_meters) {
     FG_LOG( FG_FLIGHT,FG_INFO, "fgFDMSetGroundElevation: "
 	    << ground_meters*METER_TO_FEET ); 
     base_fdm_state.set_Runway_altitude( ground_meters * METER_TO_FEET );

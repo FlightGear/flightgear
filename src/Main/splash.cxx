@@ -46,6 +46,7 @@
 #include <Objects/texload.h>
 
 #include "globals.hxx"
+#include "fg_props.hxx"
 #include "splash.hxx"
 
 
@@ -78,7 +79,7 @@ void fgSplashInit ( void ) {
     char num_str[256];
     sprintf(num_str, "%d", num);
 
-    FGPath tpath( globals->get_options()->get_fg_root() );
+    FGPath tpath( globals->get_fg_root() );
     tpath.append( "Textures/Splash" );
     tpath.concat( num_str );
     tpath.concat( ".rgb" );
@@ -109,15 +110,15 @@ void fgSplashUpdate ( double progress ) {
     int xsize = 480;
     int ysize = 380;
 
-    if ( !globals->get_options()->get_xsize()
-	 || !globals->get_options()->get_ysize() ) {
+    if ( !fgGetInt("/sim/startup/xsize")
+	 || !fgGetInt("/sim/startup/ysize") ) {
 	return;
     }
 
-    xmin = (globals->get_options()->get_xsize() - xsize) / 2;
+    xmin = (fgGetInt("/sim/startup/xsize") - xsize) / 2;
     xmax = xmin + xsize;
 
-    ymin = (globals->get_options()->get_ysize() - ysize) / 2;
+    ymin = (fgGetInt("/sim/startup/ysize") - ysize) / 2;
     ymax = ymin + ysize;
 
     // first clear the screen;
@@ -128,8 +129,8 @@ void fgSplashUpdate ( double progress ) {
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
-    gluOrtho2D(0, globals->get_options()->get_xsize(),
-	       0, globals->get_options()->get_ysize());
+    gluOrtho2D(0, fgGetInt("/sim/startup/xsize"),
+	       0, fgGetInt("/sim/startup/ysize"));
     xglMatrixMode(GL_MODELVIEW);
     xglPushMatrix();
     xglLoadIdentity();

@@ -36,6 +36,9 @@ public:
 
     // update position based on inputs, positions, velocities, etc.
     bool update( int multiloop );
+
+private:
+    SGValue * model_hz;
 };
 
 

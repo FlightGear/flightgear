@@ -69,9 +69,9 @@ FGRadioStack::FGRadioStack() {
     nav2_radial = 0.0;
     nav2_dme_dist = 0.0;
     need_update = true;
-    longitudeVal = globals->get_props()->getValue("/position/longitude");
-    latitudeVal = globals->get_props()->getValue("/position/latitude");
-    altitudeVal = globals->get_props()->getValue("/position/altitude");
+    longitudeVal = fgGetValue("/position/longitude");
+    latitudeVal = fgGetValue("/position/latitude");
+    altitudeVal = fgGetValue("/position/altitude");
 }
 
 

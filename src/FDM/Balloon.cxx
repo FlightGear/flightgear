@@ -53,6 +53,7 @@ HISTORY
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 #include "Balloon.h"
 
@@ -89,9 +90,9 @@ bool FGBalloonSim::init( double dt ) {
 
     //set velocities
     sgSetVec3( temp,
-	globals->get_options()->get_uBody(), 
-	globals->get_options()->get_vBody(), 
-	globals->get_options()->get_wBody() );
+	       fgGetDouble("/velocities/uBody"),
+	       fgGetDouble("/velocities/vBody"),
+	       fgGetDouble("/velocities/wBody") );
     current_balloon.setVelocity( temp );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "Finished initializing BalloonSim" );

@@ -271,7 +271,7 @@ void fgInitVisuals( void ) {
 
 #ifndef GLUT_WRONG_VERSION
     // Go full screen if requested ...
-    if ( globals->get_options()->get_fullscreen() ) {
+    if ( fgGetBool("/sim/startup/fullscreen") ) {
 	glutFullScreen();
     }
 #endif
@@ -290,14 +290,14 @@ void fgInitVisuals( void ) {
 
     // glFogi (GL_FOG_MODE, GL_LINEAR);
     glFogi (GL_FOG_MODE, GL_EXP2);
-    if ( (globals->get_options()->get_fog() == 1) || 
-	 (globals->get_options()->get_shading() == 0) ) {
+    if ( (fgGetString("/sim/rendering/fog") == "disabled") || 
+	 (!fgGetBool("/sim/rendering/shading"))) {
 	// if fastest fog requested, or if flat shading force fastest
 	glHint ( GL_FOG_HINT, GL_FASTEST );
-    } else if ( globals->get_options()->get_fog() == 2 ) {
+    } else if ( fgGetString("/sim/rendering/fog") == "nicest" ) {
 	glHint ( GL_FOG_HINT, GL_NICEST );
     }
-    if ( globals->get_options()->get_wireframe() ) {
+    if ( fgGetBool("/sim/rendering/wireframe") ) {
 	// draw wire frame
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     }
@@ -333,7 +333,7 @@ void fgRenderFrame( void ) {
     
     if ( idle_state != 1000 ) {
 	// still initializing, draw the splash screen
-	if ( globals->get_options()->get_splash_screen() == 1 ) {
+	if ( fgGetBool("/sim/startup/splash-screen") ) {
 	    fgSplashUpdate(0.0);
 	}
     } else {
@@ -418,24 +418,24 @@ void fgRenderFrame( void ) {
 #endif
 
 	// update view port
-	fgReshape( globals->get_options()->get_xsize(),
-		   globals->get_options()->get_ysize() );
+	fgReshape( fgGetInt("/sim/startup/xsize"),
+		   fgGetInt("/sim/startup/ysize") );
 
 #if 0
 	// swing and a miss
 
 	if ( ! fgPanelVisible() ) {
 	    xglViewport( 0, 0 ,
-			 (GLint)(globals->get_options()->get_xsize()),
-			 (GLint)(globals->get_options()->get_ysize()) );
+			 (GLint)(fgGetInt("/sim/startup/xsize")),
+			 (GLint)(fgGetInt("/sim/startup/ysize")) );
 	} else {
 	    int view_h =
 		int( (current_panel->getViewHeight() -
 		      current_panel->getYOffset())
-		     * (globals->get_options()->get_ysize() / 768.0) );
+		     * (fgGetInt("/sim/startup/ysize") / 768.0) );
 	    glViewport( 0, 
-			(GLint)(globals->get_options()->get_ysize() - view_h),
-			(GLint)(globals->get_options()->get_xsize()),
+			(GLint)(fgGetInt("/sim/startup/ysize") - view_h),
+			(GLint)(fgGetInt("/sim/startup/xsize")),
 			(GLint)(view_h) );
 	}
 #endif
@@ -444,12 +444,12 @@ void fgRenderFrame( void ) {
 	glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
 	clear_mask = GL_DEPTH_BUFFER_BIT;
-	if ( globals->get_options()->get_wireframe() ) {
+	if ( fgGetBool("/sim/rendering/wireframe") ) {
 	    clear_mask |= GL_COLOR_BUFFER_BIT;
 	}
 
-	if ( globals->get_options()->get_skyblend() ) {
-	    if ( globals->get_options()->get_textures() ) {
+	if ( fgGetBool("/sim/rendering/skyblend") ) {
+	    if ( fgGetBool("/sim/rendering/textures") ) {
 		// glClearColor(black[0], black[1], black[2], black[3]);
 		glClearColor(l->adj_fog_color[0], l->adj_fog_color[1], 
 			     l->adj_fog_color[2], l->adj_fog_color[3]);
@@ -485,8 +485,8 @@ void fgRenderFrame( void ) {
 	thesky->modify_vis( cur_fdm_state->get_Altitude() * FEET_TO_METER,
 				
 			    ( global_multi_loop * 
-			      globals->get_options()->get_speed_up() ) /
-			    (double)globals->get_options()->get_model_hz() );
+			      fgGetInt("/sim/speed-up") ) /
+			    (double)fgGetInt("/sim/model-hz") );
 
 	double actual_visibility = thesky->get_visibility();
 	// cout << "actual visibility = " << actual_visibility << endl;
@@ -509,7 +509,7 @@ void fgRenderFrame( void ) {
 	glFogf (GL_FOG_DENSITY, fog_exp2_density);
 
 	// update the sky dome
-	if ( globals->get_options()->get_skyblend() ) {
+	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    /* cout << "thesky->repaint() sky_color = "
 		 << cur_light_params.sky_color[0] << " "
 		 << cur_light_params.sky_color[1] << " "
@@ -562,7 +562,7 @@ void fgRenderFrame( void ) {
 	}
 
 	glEnable( GL_DEPTH_TEST );
-	if ( globals->get_options()->get_fog() > 0 ) {
+	if ( fgGetString("/sim/rendering/fog") != "disabled" ) {
 	    glEnable( GL_FOG );
 	    glFogi( GL_FOG_MODE, GL_EXP2 );
 	    glFogfv( GL_FOG_COLOR, l->adj_fog_color );
@@ -662,7 +662,7 @@ void fgRenderFrame( void ) {
 	// $$$ end - added VS Renganthan 17 Oct 2K
 
 # ifdef FG_NETWORK_OLK
-	if ( globals->get_options()->get_network_olk() ) {
+	if ( fgGetBool("/sim/networking/network-olk") ) {
 	    sgCoord fgdpos;
 	    other = head->next;             /* put listpointer to start  */
 	    while ( other != tail) {        /* display all except myself */
@@ -747,17 +747,10 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	// run Autopilot system
 	current_autopilot->run();
 
-	// printf("updating flight model x %d\n", multi_loop);
-	/* fgFDMUpdate( globals->get_options()->get_flight_model(), 
-		     fdm_state, 
-		     multi_loop * globals->get_options()->get_speed_up(),
-		     remainder ); */
 	cur_fdm_state->update( multi_loop *
-			       globals->get_options()->get_speed_up() );
-	FGSteam::update( multi_loop * globals->get_options()->get_speed_up() );
+			       fgGetInt("/sim/speed-up") );
+	FGSteam::update( multi_loop * fgGetInt("/sim/speed-up") );
     } else {
-	// fgFDMUpdate( globals->get_options()->get_flight_model(), 
-	//              fdm_state, 0, remainder );
 	cur_fdm_state->update( 0 );
 	FGSteam::update( 0 );
 
@@ -771,11 +764,10 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	fdm_list.pop_front();
     }
 
-    if ( globals->get_options()->get_view_mode() == FGOptions::FG_VIEW_PILOT ) {
+    if ( fgGetString("/sim/view-mode") == "pilot" ) {
 	cur_view_fdm = *cur_fdm_state;
 	// do nothing
-    } else if ( globals->get_options()->get_view_mode()
-		== FGOptions::FG_VIEW_FOLLOW )
+    } else if ( fgGetString("/sim/view-mode") == "follow" )
     {
 	cur_view_fdm = fdm_list.front();
     }
@@ -839,7 +831,7 @@ void fgInitTimeDepCalcs( void ) {
     // initialize timer
 
     // #ifdef HAVE_SETITIMER
-    //   fgTimerInit( 1.0 / globals->get_options()->get_model_hz(), 
+    //   fgTimerInit( 1.0 / fgGetInt("/sim/model-hz"), 
     //                fgUpdateTimeDepCalcs );
     // #endif HAVE_SETITIMER
 }
@@ -868,7 +860,7 @@ static void fgMainLoop( void ) {
     FG_LOG( FG_ALL, FG_DEBUG, "======= ==== ====");
 
 #ifdef FG_NETWORK_OLK
-    if ( globals->get_options()->get_network_olk() ) {
+    if ( fgGetBool("/sim/networking/network-olk") ) {
 	if ( net_is_registered == 0 ) {	     // We first have to reg. to fgd
 	    // printf("FGD: Netupdate\n");
 	    fgd_send_com( "A", FGFS_host);   // Send Mat4 data
@@ -879,7 +871,7 @@ static void fgMainLoop( void ) {
 
 #if defined( ENABLE_PLIB_JOYSTICK )
     // Read joystick and update control settings
-    if ( globals->get_options()->get_control_mode() == FGOptions::FG_JOYSTICK )
+    if ( fgGetString("/sim/control-mode") == "joystick" )
     {
 	fgJoystickRead();
     }
@@ -909,7 +901,7 @@ static void fgMainLoop( void ) {
 		   cur_fdm_state->get_Altitude() * FEET_TO_METER,
 		   scenery.cur_elev + alt_adjust_m - 3.0,
 		   scenery.cur_elev + alt_adjust_m );
-	    fgFDMForceAltitude( globals->get_options()->get_flight_model(), 
+	    fgFDMForceAltitude( fgGetString("/sim/flight-model"), 
 				scenery.cur_elev + alt_adjust_m );
 
 	    FG_LOG( FG_ALL, FG_DEBUG, 
@@ -917,8 +909,6 @@ static void fgMainLoop( void ) {
 		    << cur_fdm_state->get_Altitude() * FEET_TO_METER
 		    << " meters" );
 	}
-	//fgFDMSetGroundElevation( globals->get_options()->get_flight_model(),
-	//			 scenery.cur_elev );  // meters
     }
 
     /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
@@ -987,9 +977,9 @@ static void fgMainLoop( void ) {
 	elapsed += remainder;
 
 	global_multi_loop = (int)(((double)elapsed * 0.000001) * 
-			   globals->get_options()->get_model_hz());
+			   fgGetInt("/sim/model-hz"));
 	remainder = elapsed - ( (global_multi_loop*1000000) / 
-				globals->get_options()->get_model_hz() );
+				fgGetInt("/sim/model-hz") );
 	FG_LOG( FG_ALL, FG_DEBUG, 
 		"Model iterations needed = " << global_multi_loop
 		<< ", new remainder = " << remainder );
@@ -1017,9 +1007,9 @@ static void fgMainLoop( void ) {
 
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
-    if ( globals->get_options()->get_sound() && !audio_sched->not_working() ) {
+    if ( fgGetBool("/sim/sound") && !audio_sched->not_working() ) {
 
-	if ( globals->get_options()->get_aircraft() == "c172" ) {
+	if ( fgGetString("/sim/aircraft") == "c172" ) {
 	    // pitch corresponds to rpm
 	    // volume corresponds to manifold pressure
 
@@ -1089,7 +1079,7 @@ static void fgIdleFunction ( void ) {
 
     if ( idle_state == 0 ) {
 	// Initialize the splash screen right away
-	if ( globals->get_options()->get_splash_screen() ) {
+	if ( fgGetBool("/sim/startup/splash-screen") ) {
 	    fgSplashInit();
 	}
 	
@@ -1097,9 +1087,9 @@ static void fgIdleFunction ( void ) {
     } else if ( idle_state == 1 ) {
 	// Start the intro music
 #if !defined(WIN32)
-	if ( globals->get_options()->get_intro_music() ) {
+	if ( fgGetBool("/sim/startup/intro-music") ) {
 	    string lockfile = "/tmp/mpg123.running";
-	    FGPath mp3file( globals->get_options()->get_fg_root() );
+	    FGPath mp3file( globals->get_fg_root() );
 	    mp3file.append( "Sounds/intro.mp3" );
 
 	    string command = "(touch " + lockfile + "; mpg123 "
@@ -1154,7 +1144,7 @@ static void fgIdleFunction ( void ) {
 #ifdef ENABLE_AUDIO_SUPPORT
 
 #if !defined(WIN32)
-	if ( globals->get_options()->get_intro_music() ) {
+	if ( fgGetBool("/sim/startup/intro-music") ) {
 	    // Let's wait for mpg123 to finish
 	    string lockfile = "/tmp/mpg123.running";
 	    struct stat stat_buf;
@@ -1170,13 +1160,13 @@ static void fgIdleFunction ( void ) {
 	}
 #endif // WIN32
 
-	if ( globals->get_options()->get_sound() ) {
+	if ( fgGetBool("/sim/sound") ) {
 	    audio_sched = new slScheduler ( 8000 );
 	    audio_mixer = new smMixer;
 	    audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
 	    audio_sched -> setSafetyMargin ( 1.0 ) ;
 
-	    FGPath slfile( globals->get_options()->get_fg_root() );
+	    FGPath slfile( globals->get_fg_root() );
 	    slfile.append( "Sounds/wasp.wav" );
 
 	    s1 = new slSample ( (char *)slfile.c_str() );
@@ -1212,8 +1202,8 @@ static void fgIdleFunction ( void ) {
 	idle_state = 1000;
 
 	cout << "Panel visible = " << fgPanelVisible() << endl;
-	fgReshape( globals->get_options()->get_xsize(),
-		   globals->get_options()->get_ysize() );
+	fgReshape( fgGetInt("/sim/startup/xsize"),
+		   fgGetInt("/sim/startup/ysize") );
     } 
 
     if ( idle_state == 1000 ) {
@@ -1222,7 +1212,7 @@ static void fgIdleFunction ( void ) {
 
 	fgMainLoop();
     } else {
-	if ( globals->get_options()->get_splash_screen() == 1 ) {
+	if ( fgGetBool("/sim/startup/splash-screen") ) {
 	    fgSplashUpdate(0.0);
 	}
     }
@@ -1256,8 +1246,8 @@ void fgReshape( int width, int height ) {
 		   (GLint)(width), (GLint)(view_h) );
     }
 
-    globals->get_options()->set_xsize( width );
-    globals->get_options()->set_ysize( height );
+    fgSetInt("/sim/startup/xsize", width);
+    fgSetInt("/sim/startup/ysize", height);
 
     float fov = globals->get_current_view()->get_fov();
     ssgSetFOV(fov, fov * globals->get_current_view()->get_win_ratio());
@@ -1279,15 +1269,15 @@ int fgGlutInit( int *argc, char **argv ) {
     glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
 
     FG_LOG( FG_GENERAL, FG_INFO, "Opening a window: " <<
-	    globals->get_options()->get_xsize() << "x"
-	    << globals->get_options()->get_ysize() );
+	    fgGetInt("/sim/startup/xsize") << "x"
+	    << fgGetInt("/sim/startup/ysize") );
 
     // Define initial window size
-    glutInitWindowSize( globals->get_options()->get_xsize(),
-			 globals->get_options()->get_ysize() );
+    glutInitWindowSize( fgGetInt("/sim/startup/xsize"),
+			fgGetInt("/sim/startup/ysize") );
 
     // Initialize windows
-    if ( globals->get_options()->get_game_mode() == 0 ) {
+    if ( !fgGetBool("/sim/startup/game-mode")) {
 	// Open the regular window
 	glutCreateWindow("FlightGear");
 #ifndef GLUT_WRONG_VERSION
@@ -1295,9 +1285,9 @@ int fgGlutInit( int *argc, char **argv ) {
 	// Open the cool new 'game mode' window
 	char game_mode_str[256];
 	sprintf( game_mode_str, "width=%d height=%d bpp=%d",
-		 globals->get_options()->get_xsize(),
-		 globals->get_options()->get_ysize(),
-		 globals->get_options()->get_bpp());
+		 fgGetInt("/sim/startup/xsize"),
+		 fgGetInt("/sim/startup/ysize"),
+		 fgGetInt("/sim/rendering/bits-per-pixel"));
 
 	FG_LOG( FG_GENERAL, FG_INFO, 
 		"game mode params = " << game_mode_str );
@@ -1377,9 +1367,6 @@ int main( int argc, char **argv ) {
     FG_LOG( FG_GENERAL, FG_INFO, "FlightGear:  Version "
 	    << version << endl );
 
-    // seed the random number generater
-    sg_srandom_time();
-
     // Allocate global data structures.  This needs to happen before
     // we parse command line options
 
@@ -1387,12 +1374,11 @@ int main( int argc, char **argv ) {
     globals = new FGGlobals;
     globals->set_props( props );
 
+    // seed the random number generater
+    sg_srandom_time();
+
     SGRoute *route = new SGRoute;
     globals->set_route( route );
-
-    FGOptions *options = new FGOptions;
-    globals->set_options( options );
-    options->init();
 
     FGViewMgr *viewmgr = new FGViewMgr;
     globals->set_viewmgr( viewmgr );
@@ -1442,18 +1428,18 @@ int main( int argc, char **argv ) {
     guiInit();
 
     // set current_options lon/lat if an airport id is specified
-    // cout << "3. airport_id = " << globals->get_options()->get_airport_id() << endl;
-    if ( globals->get_options()->get_airport_id().length() ) {
-	// fgSetPosFromAirportID( globals->get_options()->get_airport_id() );
-	fgSetPosFromAirportIDandHdg( globals->get_options()->get_airport_id(),
-				     globals->get_options()->get_heading() );
+    // cout << "3. airport_id = " << fgGetString("/sim/startup/airport-id") << endl;
+    if ( fgGetString("/sim/startup/airport-id").length() ) {
+	// fgSetPosFromAirportID( fgGetString("/sim/startup/airport-id") );
+	fgSetPosFromAirportIDandHdg( fgGetString("/sim/startup/airport-id"),
+				     fgGetDouble("/orientation/heading") );
     }
 
     // Initialize time
-    FGPath zone( globals->get_options()->get_fg_root() );
+    FGPath zone( globals->get_fg_root() );
     zone.append( "Timezone" );
-    SGTime *t = new SGTime( globals->get_options()->get_lon() * DEG_TO_RAD,
-			    globals->get_options()->get_lat() * DEG_TO_RAD,
+    SGTime *t = new SGTime( fgGetDouble("/position/longitude") * DEG_TO_RAD,
+			    fgGetDouble("/position/latitude") * DEG_TO_RAD,
 			    zone.str() );
 
     // Handle potential user specified time offsets
@@ -1464,34 +1450,24 @@ int main( int argc, char **argv ) {
 	sgTimeGetGMT( fgLocaltime(&cur_time, t->get_zonename() ) );
 
     // Okay, we now have six possible scenarios
-    switch ( globals->get_options()->get_time_offset_type() ) {
-    case FGOptions::FG_TIME_SYS_OFFSET:
-	globals->set_warp( globals->get_options()->get_time_offset() );
-	break;
-    case FGOptions::FG_TIME_GMT_OFFSET:
-	globals->set_warp( globals->get_options()->get_time_offset() - 
-			   (currGMT - systemLocalTime) );
-	break;
-    case FGOptions::FG_TIME_LAT_OFFSET:
-	globals->set_warp( globals->get_options()->get_time_offset() - 
-			   (aircraftLocalTime - systemLocalTime) );
-	break;
-    case FGOptions::FG_TIME_SYS_ABSOLUTE:
-	globals->set_warp( globals->get_options()->get_time_offset() -
-			   cur_time );
-	//printf("warp = %d\n", warp); 
-	break;
-    case FGOptions::FG_TIME_GMT_ABSOLUTE:
-	globals->set_warp( globals->get_options()->get_time_offset() -
-			   currGMT );
-	break;
-    case FGOptions::FG_TIME_LAT_ABSOLUTE:
-	globals->set_warp( globals->get_options()->get_time_offset() - 
-			   (aircraftLocalTime - systemLocalTime) - 
+    int offset = fgGetInt("/sim/startup/time-offset");
+    const string &offset_type = fgGetString("/sim/startup/time-offset-type");
+    if (offset_type == "system-offset") {
+	globals->set_warp( offset );
+    } else if (offset_type == "gmt-offset") {
+	globals->set_warp( offset - (currGMT - systemLocalTime) );
+    } else if (offset_type == "latitude-offset") {
+	globals->set_warp( offset - (aircraftLocalTime - systemLocalTime) );
+    } else if (offset_type == "system") {
+	globals->set_warp( offset - cur_time );
+    } else if (offset_type == "gmt") {
+	globals->set_warp( offset - currGMT );
+    } else if (offset_type == "latitude") {
+	globals->set_warp( offset - (aircraftLocalTime - systemLocalTime) - 
 			   cur_time ); 
-	break;
-    default:
-	FG_LOG( FG_GENERAL, FG_ALERT, "Unsupported type" );
+    } else {
+        FG_LOG( FG_GENERAL, FG_ALERT,
+		"Unsupported offset type " << offset_type );
 	exit( -1 );
     }
 
@@ -1511,7 +1487,7 @@ int main( int argc, char **argv ) {
 	exit(-1);
     }
 
-    FGPath modelpath( globals->get_options()->get_fg_root() );
+    FGPath modelpath( globals->get_fg_root() );
     ssgModelPath( (char *)modelpath.c_str() );
   
     // Scene graph root
@@ -1522,7 +1498,7 @@ int main( int argc, char **argv ) {
     lighting->setName( "Lighting" );
 
     // Initialize the sky
-    FGPath ephem_data_path( globals->get_options()->get_fg_root() );
+    FGPath ephem_data_path( globals->get_fg_root() );
     ephem_data_path.append( "Astro" );
     SGEphemeris *ephem = new SGEphemeris( ephem_data_path.c_str() );
     ephem->update( globals->get_time_params()->getMjd(),
@@ -1530,7 +1506,7 @@ int main( int argc, char **argv ) {
 		   0.0 );
     globals->set_ephem( ephem );
 
-    FGPath sky_tex_path( globals->get_options()->get_fg_root() );
+    FGPath sky_tex_path( globals->get_fg_root() );
     sky_tex_path.append( "Textures" );
     sky_tex_path.append( "Sky" );
     thesky = new SGSky;
@@ -1542,7 +1518,7 @@ int main( int argc, char **argv ) {
 		   globals->get_ephem()->getNumStars(),
 		   globals->get_ephem()->getStars(), 60000.0 );
 
-    if ( globals->get_options()->get_clouds() == true ) {
+    if ( fgGetBool("/environment/clouds/status") ) {
 	thesky->add_cloud_layer( 2600.0, 200.0, 50.0, 40000.0,
 				 SG_CLOUD_MOSTLY_SUNNY );
 	thesky->add_cloud_layer( 6000.0, 20.0, 10.0, 40000.0,
@@ -1576,10 +1552,9 @@ int main( int argc, char **argv ) {
     acmodel_pos = new ssgTransform;
 
     string acmodel_path =
-	globals->get_props()->getStringValue("/sim/model/path",
-					"Models/Geometry/glider.ac");
+	fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
 
-    string full_model = globals->get_options()->get_fg_root() + "/"
+    string full_model = globals->get_fg_root() + "/"
 	+ acmodel_path;
     int pos = full_model.rfind("/");
     
@@ -1618,18 +1593,12 @@ int main( int argc, char **argv ) {
     sgMat4 rot_matrix;
     sgMat4 off_matrix;
     sgMat4 res_matrix;
-    float h_rot =
-      globals->get_props()->getFloatValue("/sim/model/h-rotation", 0.0);
-    float p_rot =
-      globals->get_props()->getFloatValue("/sim/model/p-rotation", 0.0);
-    float r_rot =
-      globals->get_props()->getFloatValue("/sim/model/r-rotation", 0.0);
-    float x_off =
-      globals->get_props()->getFloatValue("/sim/model/x-offset", 0.0);
-    float y_off =
-      globals->get_props()->getFloatValue("/sim/model/y-offset", 0.0);
-    float z_off =
-      globals->get_props()->getFloatValue("/sim/model/z-offset", 0.0);
+    float h_rot = fgGetFloat("/sim/model/h-rotation", 0.0);
+    float p_rot = fgGetFloat("/sim/model/p-rotation", 0.0);
+    float r_rot = fgGetFloat("/sim/model/r-rotation", 0.0);
+    float x_off = fgGetFloat("/sim/model/x-offset", 0.0);
+    float y_off = fgGetFloat("/sim/model/y-offset", 0.0);
+    float z_off = fgGetFloat("/sim/model/z-offset", 0.0);
     sgMakeRotMat4(rot_matrix, h_rot, p_rot, r_rot);
     sgMakeTransMat4(off_matrix, x_off, y_off, z_off);
     sgMultMat4(res_matrix, off_matrix, rot_matrix);
@@ -1648,7 +1617,7 @@ int main( int argc, char **argv ) {
 
 #ifdef FG_NETWORK_OLK
     // Do the network intialization
-    if ( globals->get_options()->get_network_olk() ) {
+    if ( fgGetBool("/sim/networking/network-olk") ) {
 	printf("Multipilot mode %s\n", fg_net_init( scene ) );
     }
 #endif
@@ -1680,7 +1649,7 @@ void fgLoadDCS(void) {
         ship_pos[k]=NULL;
     }
 
-    FGPath tile_path( globals->get_options()->get_fg_root());
+    FGPath tile_path( globals->get_fg_root());
     tile_path.append( "Scenery" );
     tile_path.append( "Objects.txt" );
     fg_gzifstream in( tile_path.str() );
@@ -1688,11 +1657,11 @@ void fgLoadDCS(void) {
 	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << tile_path.str() );
     }
 
-    FGPath modelpath( globals->get_options()->get_fg_root() );
+    FGPath modelpath( globals->get_fg_root() );
     modelpath.append( "Models" );
     modelpath.append( "Geometry" );
   
-    FGPath texturepath( globals->get_options()->get_fg_root() );
+    FGPath texturepath( globals->get_fg_root() );
     texturepath.append( "Models" );
     texturepath.append( "Textures" );
  
@@ -1760,7 +1729,7 @@ void fgUpdateDCS (void) {
     
     // Deck should be the first object in objects.txt in case of fdm=ada
 
-    if ((globals->get_options()->get_flight_model()) == 4 )
+    if (fgGetString("/sim/flight-model") == "ada")
     {
       obj_lon[0] = fdm->get_aux5()*DEG_TO_RAD;
       obj_lat[0] = fdm->get_aux6()*DEG_TO_RAD;

@@ -16,6 +16,78 @@ extern bool fgLoadFlight (istream &input);
 
 
 ////////////////////////////////////////////////////////////////////////
+// Convenience functions for getting property values.
+////////////////////////////////////////////////////////////////////////
+
+/**
+ * Get an SGValue pointer that can be queried repeatedly.
+ *
+ * If the property value is going to be accessed within the loop,
+ * it is best to use this method for maximum efficiency.
+ */
+inline SGValue * fgGetValue (const string &name, bool create = false)
+{
+  return globals->get_props()->getValue(name, create);
+}
+
+inline bool fgHasValue (const string &name)
+{
+  return globals->get_props()->hasValue(name);
+}
+
+inline bool fgGetBool (const string &name, bool defaultValue = false)
+{
+  return globals->get_props()->getBoolValue(name, defaultValue);
+}
+
+inline int fgGetInt (const string &name, int defaultValue = 0)
+{
+  return globals->get_props()->getIntValue(name, defaultValue);
+}
+
+inline float fgGetFloat (const string &name, float defaultValue = 0.0)
+{
+  return globals->get_props()->getFloatValue(name, defaultValue);
+}
+
+inline double fgGetDouble (const string &name, double defaultValue = 0.0)
+{
+  return globals->get_props()->getDoubleValue(name, defaultValue);
+}
+
+inline string fgGetString (const string &name, string defaultValue = "")
+{
+  return globals->get_props()->getStringValue(name, defaultValue);
+}
+
+inline bool fgSetBool (const string &name, bool val)
+{
+  return globals->get_props()->setBoolValue(name, val);
+}
+
+inline bool fgSetInt (const string &name, int val)
+{
+  return globals->get_props()->setIntValue(name, val);
+}
+
+inline bool fgSetFloat (const string &name, float val)
+{
+  return globals->get_props()->setFloatValue(name, val);
+}
+
+inline bool fgSetDouble (const string &name, double val)
+{
+  return globals->get_props()->setDoubleValue(name, val);
+}
+
+inline bool fgSetString (const string &name, const string &val)
+{
+  return globals->get_props()->setStringValue(name, val);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
 // Convenience functions for tying properties, with logging.
 ////////////////////////////////////////////////////////////////////////
 

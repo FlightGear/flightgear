@@ -99,7 +99,7 @@ static inline double get_speed( void ) {
 static inline double get_ground_speed() {
     // starts in ft/s so we convert to kts
     double ft_s = cur_fdm_state->get_V_ground_speed() 
-	* globals->get_options()->get_speed_up();;
+      * fgGetInt("/sim/speed-up"); // FIXME: inefficient
     double kts = ft_s * FEET_TO_METER * 3600 * METER_TO_NM;
 
     return kts;
@@ -267,7 +267,7 @@ void FGAutopilot::reset() {
 	
     update_old_control_values();
 
-    sprintf( NewTgtAirportId, "%s", globals->get_options()->get_airport_id().c_str() );
+    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
 	
     // TargetLatitude = FGBFI::getLatitude();
     // TargetLongitude = FGBFI::getLongitude();
@@ -743,7 +743,7 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
 	// lock at current altitude
 	TargetAltitude = FGBFI::getAltitude() * FEET_TO_METER;
 
-	if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
+	if ( fgGetString("/sim/startup/units") == "feet" ) {
 	    MakeTargetAltitudeStr( TargetAltitude * METER_TO_FEET );
 	} else {
 	    MakeTargetAltitudeStr( TargetAltitude * METER_TO_FEET );
@@ -754,7 +754,7 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
     } else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
 	TargetAGL = FGBFI::getAGL() * FEET_TO_METER;
 
-	if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
+	if ( fgGetString("/sim/startup/units") == "feet" ) {
 	    MakeTargetAltitudeStr( TargetAGL * METER_TO_FEET );
 	} else {
 	    MakeTargetAltitudeStr( TargetAGL * METER_TO_FEET );
@@ -820,7 +820,7 @@ void FGAutopilot::AltitudeSet( double new_altitude ) {
 
     // cout << "new altitude = " << new_altitude << endl;
 
-    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
+    if ( fgGetString("/sim/startup/units") == "feet" ) {
 	target_alt = new_altitude * FEET_TO_METER;
     }
 
@@ -833,7 +833,7 @@ void FGAutopilot::AltitudeSet( double new_altitude ) {
 
     // cout << "TargetAltitude = " << TargetAltitude << endl;
 
-    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
+    if ( fgGetString("/sim/startup/units") == "feet" ) {
 	target_alt *= METER_TO_FEET;
     }
     // ApAltitudeDialogInput->setValue((float)target_alt);
@@ -847,7 +847,7 @@ void FGAutopilot::AltitudeAdjust( double inc )
 {
     double target_alt, target_agl;
 
-    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
+    if ( fgGetString("/sim/startup/units") == "feet" ) {
 	target_alt = TargetAltitude * METER_TO_FEET;
 	target_agl = TargetAGL * METER_TO_FEET;
     } else {
@@ -871,7 +871,7 @@ void FGAutopilot::AltitudeAdjust( double inc )
 	target_agl = ( int ) ( target_agl / inc ) * inc + inc;
     }
 
-    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
+    if ( fgGetString("/sim/startup/units") == "feet" ) {
 	target_alt *= FEET_TO_METER;
 	target_agl *= FEET_TO_METER;
     }
@@ -879,9 +879,9 @@ void FGAutopilot::AltitudeAdjust( double inc )
     TargetAltitude = target_alt;
     TargetAGL = target_agl;
 	
-    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET )
+    if ( fgGetString("/sim/startup/units") == "feet" )
 	target_alt *= METER_TO_FEET;
-    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET )
+    if ( fgGetString("/sim/startup/units") == "feet" )
 	target_agl *= METER_TO_FEET;
 
     if ( altitude_mode == FG_ALTITUDE_LOCK ) {

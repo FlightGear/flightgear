@@ -38,15 +38,6 @@ FGControls::FGControls() :
     rudder( 0.0 ),
     throttle_idle( true )
 {
-    for ( int engine = 0; engine < MAX_ENGINES; engine++ ) {
-	throttle[engine] = 0.0;
-	mixture[engine] = 1.0;
-	prop_advance[engine] = 1.0;
-    }
-
-    for ( int wheel = 0; wheel < MAX_WHEELS; wheel++ ) {
-        brake[wheel] = 0.0;
-    }
 }
 
 
@@ -69,6 +60,17 @@ FGControls::~FGControls() {
 void
 FGControls::init ()
 {
+    for ( int engine = 0; engine < MAX_ENGINES; engine++ ) {
+	throttle[engine] = 0.0;
+	mixture[engine] = 1.0;
+	prop_advance[engine] = 1.0;
+    }
+
+    for ( int wheel = 0; wheel < MAX_WHEELS; wheel++ ) {
+        brake[wheel] = 0.0;
+    }
+
+    auto_coordination = fgGetValue("/sim/auto-coordination", true);
 }
 
 

@@ -39,7 +39,7 @@
 
 // periodic time updater wrapper
 void fgUpdateLocalTime() {
-    FGPath zone( globals->get_options()->get_fg_root() );
+    FGPath zone( globals->get_fg_root() );
     zone.append( "Timezone" );
 
     globals->get_time_params()->updateLocal( cur_fdm_state->get_Longitude(),

@@ -24,6 +24,11 @@
 #ifndef _GLOBALS_HXX
 #define _GLOBALS_HXX
 
+#include <simgear/compiler.h>
+
+#include <vector>
+#include STL_STRING
+
 
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/magvar/magvar.hxx>
@@ -31,8 +36,12 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/props.hxx>
 
-#include "options.hxx"
 #include "viewmgr.hxx"
+
+FG_USING_STD( vector );
+FG_USING_STD( string );
+
+typedef vector<string> string_list;
 
 
 class FGGlobals {
@@ -67,9 +76,6 @@ private:
 
     // Global autopilot "route"
     SGRoute *route;
-
-    // options
-    class FGOptions *options;
 
     // viewer maneger
     FGViewMgr *viewmgr;
@@ -116,9 +122,6 @@ public:
 
     inline SGRoute *get_route() const { return route; }
     inline void set_route( SGRoute *r ) { route = r; }
-
-    inline FGOptions *get_options() const { return options; }
-    inline void set_options( FGOptions *o ) { options = o; }
 
     inline FGViewMgr *get_viewmgr() const { return viewmgr; }
     inline void set_viewmgr( FGViewMgr *vm ) { viewmgr = vm; }

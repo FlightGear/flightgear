@@ -44,6 +44,7 @@
 #include <Include/general.hxx>
 #include <FDM/ADA.hxx>
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 #include <GUI/gui.h>
@@ -154,7 +155,7 @@ float get_speed( void )
 {
     // Make an explicit function call.
     float speed = current_aircraft.fdm_state->get_V_calibrated_kts()
-	* globals->get_options()->get_speed_up();
+	* fgGetInt("/sim/speed-up"); // FIXME: inefficient
     return( speed );
 }
 
@@ -198,7 +199,7 @@ float get_altitude( void )
     //                         f->get_Latitude()  * RAD_TO_ARCSEC);
     float altitude;
 
-    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
+    if ( fgGetString("/sim/startup/units") == "feet" ) {
         altitude = current_aircraft.fdm_state->get_Altitude();
     } else {
         altitude = (current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER);
@@ -210,7 +211,7 @@ float get_agl( void )
 {
     float agl;
 
-    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
+    if ( fgGetString("/sim/startup/units") == "feet" ) {
         agl = (current_aircraft.fdm_state->get_Altitude()
                - scenery.cur_elev * METER_TO_FEET);
     } else {
@@ -262,7 +263,7 @@ float get_vfc_tris_culled   ( void )
 float get_climb_rate( void )
 {
     float climb_rate;
-    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
+    if ( fgGetString("/sim/startup/units") == "feet" ) {
         climb_rate = current_aircraft.fdm_state->get_Climb_Rate() * 60.0;
     } else {
         climb_rate = current_aircraft.fdm_state->get_Climb_Rate() * FEET_TO_METER * 60.0;
@@ -704,12 +705,15 @@ void fgCockpitUpdate( void ) {
         "Cockpit: code " << ac_cockpit->code() << " status " 
         << ac_cockpit->status() );
 
-	int iwidth   = globals->get_options()->get_xsize();
-	int iheight  = globals->get_options()->get_ysize();
+				// FIXME: inefficient
+	int iwidth   = fgGetInt("/sim/startup/xsize");
+				// FIXME: inefficient
+	int iheight  = fgGetInt("/sim/startup/ysize");
 	float width  = iwidth;
 	float height = iheight;
 
-    if ( globals->get_options()->get_hud_status() ) {
+				// FIXME: inefficient
+    if ( fgGetBool("/sim/hud/visibility") ) {
         // This will check the global hud linked list pointer.
         // If these is anything to draw it will.
         fgUpdateHUD();
@@ -728,8 +732,8 @@ void fgCockpitUpdate( void ) {
         glMatrixMode( GL_PROJECTION );
         glPushMatrix();
         glLoadIdentity();
-        gluOrtho2D( 0, globals->get_options()->get_xsize(),
-		    0, globals->get_options()->get_ysize() );
+        gluOrtho2D( 0, fgGetInt("/sim/startup/xsize"),
+		    0, fgGetInt("/sim/startup/ysize") );
         glMatrixMode( GL_MODELVIEW );
         glPushMatrix();
         glLoadIdentity();
@@ -752,7 +756,7 @@ void fgCockpitUpdate( void ) {
 #endif // #ifdef DISPLAY_COUNTER
     
     glViewport( 0, 0, 
-		globals->get_options()->get_xsize(),
-		globals->get_options()->get_ysize() );
+		fgGetInt("/sim/startup/xsize"),
+		fgGetInt("/sim/startup/ysize") );
 
 }

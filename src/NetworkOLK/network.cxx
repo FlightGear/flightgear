@@ -64,6 +64,7 @@ extern "C" {
 #include <plib/ssg.h>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 int  net_blast_toggle, net_hud_display, net_is_registered;
 char *net_callsign, *FGFS_host;
@@ -79,7 +80,7 @@ char *fg_net_init( ssgRoot *orig_scene ){
  // We enable display of netinfos only if user wishes it via cmd-line param
  net_hud_display = (net_hud_display == 0) ? 0 : 1; 
  // Get pilot's name from options, can be modified at runtime via menu
- net_callsign = (char *) globals->get_options()->get_net_id().c_str();
+ net_callsign = (char *)(fgGetString("/sim/networking/call-sign").c_str());
  // Disable Blast Mode -1 = Disable, 0 = Enable  
  net_blast_toggle = -1;
  // We start unregistered, we reg. later via menu to fgd 

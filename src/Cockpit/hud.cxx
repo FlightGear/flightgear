@@ -50,6 +50,7 @@
 #include <Autopilot/newauto.hxx>
 #include <GUI/gui.h>
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
@@ -418,7 +419,7 @@ readLabel(const SGPropertyNode * node)
 {
 	instr_item *p;
 
-	int font_size = (globals->get_options()->get_xsize() > 1000) ? LARGE : SMALL;
+	int font_size = (fgGetInt("/sim/startup/xsize") > 1000) ? LARGE : SMALL;
 
 				name				= node->getStringValue("name");
 				x                   = node->getIntValue("x");
@@ -602,7 +603,7 @@ int readInstrument(const SGPropertyNode * node)
 
 	instr_item *HIptr;
     
-    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
+    if ( fgGetString("/sim/startup/units") == "feet" ) {
     strcpy(units, " ft");
     } else {
     strcpy(units, " m");
@@ -683,7 +684,7 @@ int readHud( istream &input )
 		
 		const SGPropertyNode * node = instrument_group->getChild(i);
 
-		FGPath path( globals->get_options()->get_fg_root() );
+		FGPath path( globals->get_fg_root() );
 		path.append(node->getStringValue("path"));
 
 		FG_LOG(FG_INPUT, FG_INFO, "Reading Instrument "
@@ -712,9 +713,8 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 	FG_LOG( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD" );
 
     string hud_path =
-	globals->get_props()->getStringValue("/sim/hud/path",
-					  "Huds/Default/default.xml");
-	FGPath path(globals->get_options()->get_fg_root());
+	fgGetString("/sim/hud/path", "Huds/Default/default.xml");
+	FGPath path(globals->get_fg_root());
 	path.append(hud_path);
 	
 	ifstream input(path.c_str());
@@ -743,7 +743,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 
     FG_LOG( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD" );
 
-	FGPath path(globals->get_options()->get_fg_root());
+	FGPath path(globals->get_fg_root());
 	path.append("Huds/Minimal/default.xml");
 
 
@@ -766,14 +766,14 @@ int global_day_night_switch = DAY;
 
 void HUD_masterswitch( bool incr )
 {
-    if ( globals->get_options()->get_hud_status() ) {
+    if ( fgGetBool("/sim/hud/visibility") ) {
 	if ( global_day_night_switch == DAY ) {
 	    global_day_night_switch = NIGHT;
 	} else {
-	    globals->get_options()->set_hud_status( false );
+	    fgSetBool("/sim/hud/visiblity", false);
 	}
     } else {
-	globals->get_options()->set_hud_status( true );
+        fgSetBool("/sim/hud/visibility", true);
 	global_day_night_switch = DAY;
     }	
 }
@@ -783,7 +783,7 @@ void HUD_brightkey( bool incr_bright )
     instr_item *pHUDInstr = HUD_deque[0];
     int brightness        = pHUDInstr->get_brightness();
 
-    if( globals->get_options()->get_hud_status() ) {
+    if( fgGetBool("/sim/hud/visibility") ) {
 	if( incr_bright ) {
 	    switch (brightness)
 		{
@@ -826,11 +826,11 @@ void HUD_brightkey( bool incr_bright )
 		    break;
 
 		default:
-		    globals->get_options()->set_hud_status(0);
+		    fgSetBool("/sim/hud/visibility", false);
 		}
 	}
     } else {
-	globals->get_options()->set_hud_status(true);
+	fgSetBool("/sim/hud/visibility", true);
     }
 
     pHUDInstr->SetBrightness( brightness );
@@ -858,7 +858,7 @@ static void alpha_adj( puObject *hs ) {
 }
 
 void fgHUDalphaAdjust( puObject * ) {
-	globals->get_options()->set_anti_alias_hud(1);
+        fgSetBool("/sim/hud/antialiased", true);
 	FG_PUSH_PUI_DIALOG( HUDalphaDialog );
 }
 
@@ -869,7 +869,7 @@ static void goAwayHUDalphaAdjust (puObject *)
 
 static void cancelHUDalphaAdjust (puObject *)
 {
-	globals->get_options()->set_anti_alias_hud(0);
+	fgSetBool("/sim/hud/antialiased", false);
 	FG_POP_PUI_DIALOG( HUDalphaDialog );
 }
 
@@ -957,7 +957,7 @@ void fgHUDReshape(void) {
 	if ( HUDtext )
 		delete HUDtext;
 
-	HUD_TextSize = globals->get_options()->get_xsize() / 60;
+	HUD_TextSize = fgGetInt("/sim/startup/xsize") / 60;
         HUD_TextSize = 10;
 	HUDtext = new fntRenderer();
 	HUDtext -> setFont      ( guiFntHandle ) ;
@@ -967,7 +967,7 @@ void fgHUDReshape(void) {
 
 
 static void set_hud_color(float r, float g, float b) {
-	globals->get_options()->get_anti_alias_hud() ?
+	fgGetBool("/sim/hud/antialiased") ?
 			glColor4f(r,g,b,hud_trans_alpha) :
 			glColor3f(r,g,b);
 }
@@ -1010,7 +1010,7 @@ void fgUpdateHUD( void ) {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
 
-  if( globals->get_options()->get_anti_alias_hud() ) {
+  if( fgGetBool("/sim/hud/antialiased") ) {
 	  glEnable(GL_LINE_SMOOTH);
 //	  glEnable(GL_BLEND);
 	  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
@@ -1147,7 +1147,7 @@ void fgUpdateHUD( void ) {
 //  HUD_StippleLineList.draw();
 //  glDisable(GL_LINE_STIPPLE);
 
-  if( globals->get_options()->get_anti_alias_hud() ) {
+  if( fgGetBool("/sim/hud/antialiased") ) {
 //	  glDisable(GL_BLEND);
 	  glDisable(GL_LINE_SMOOTH);
 	  glLineWidth(1.0);
