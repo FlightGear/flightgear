@@ -46,7 +46,8 @@
 #include <Math/vector.hxx>
 #include <Objects/materialmgr.hxx>
 #include <Objects/obj.hxx>
-#include <Weather/weather.hxx>
+// #include <Weather/weather.hxx>
+#include <WeatherCM/FGLocalWeatherDatabase.h>
 
 #include "scenery.hxx"
 #include "tilecache.hxx"
@@ -688,7 +689,11 @@ void FGTileMgr::prep_ssg_nodes( void ) {
 	if ( t->is_loaded() ) {
 	    // set range selector (LOD trick) to be distance to center
 	    // of tile + bounding radius
-	    ranges[1] = current_weather.get_visibility() + t->bounding_radius;
+	    /*
+	     * ranges[1] = current_weather.get_visibility()+t->bounding_radius;
+	     */
+	    ranges[1] = WeatherDatabase->getWeatherVisibility()
+		+ t->bounding_radius;
 	    t->range_ptr->setRanges( ranges, 2 );
 
 	    // calculate tile offset
