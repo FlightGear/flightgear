@@ -184,6 +184,7 @@ fgSetDefaults ()
 				// Time options
     fgSetInt("/sim/startup/time-offset", 0);
     fgSetString("/sim/startup/time-offset-type", "system-offset");
+    fgSetLong("/sim/time/cur-time-override", 0);
 
     fgSetBool("/sim/networking/network-olk", false);
     fgSetString("/sim/networking/call-sign", "Johnny");
