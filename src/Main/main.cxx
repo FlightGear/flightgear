@@ -493,13 +493,13 @@ void fgRenderFrame() {
 	}
 	glClear( clear_mask );
 
-        cloud3d_imposter_state->force();
-	glDisable( GL_FOG );
-        glColor4f( 1.0, 1.0, 1.0, 1.0 );
-        glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-        glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
         if ( fgGetBool("/sim/rendering/clouds3d") ) {
+            cloud3d_imposter_state->force();
+            glDisable( GL_FOG );
+            glColor4f( 1.0, 1.0, 1.0, 1.0 );
+            glEnable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
             posit =  globals->get_scenery()->get_center();
             if ( _bcloud_orig ) {
                 sgClouds3d->Set_Cloud_Orig( _posit );
@@ -779,14 +779,14 @@ void fgRenderFrame() {
 	globals->get_model_mgr()->draw();
 	globals->get_aircraft_model()->draw();
 
-	glDisable( GL_FOG );
-	glEnable(GL_BLEND);
-        glEnable(GL_TEXTURE_2D);
-	glEnable(GL_ALPHA_TEST);
-        glBlendFunc ( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
-        glDisable( GL_DEPTH_TEST );
-        glDisable( GL_LIGHTING );
         if ( fgGetBool("/sim/rendering/clouds3d") ) {
+            glDisable( GL_FOG );
+            glEnable(GL_BLEND);
+            glEnable(GL_TEXTURE_2D);
+            glEnable(GL_ALPHA_TEST);
+            glBlendFunc ( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
+            glDisable( GL_DEPTH_TEST );
+            glDisable( GL_LIGHTING );
             // cout << "drawing new clouds" << endl;
             // set the opengl state to known default values
             // default_state->force();
