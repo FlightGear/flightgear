@@ -150,7 +150,7 @@ void FGTileMgr::sched_tile( const SGBucket& b ) {
 
 
 // schedule a needed buckets for loading
-void FGTileMgr::schedule_needed() {
+void FGTileMgr::schedule_needed( double vis) {
     // sanity check (unfortunately needed!)
     if ( longitude < -180.0 || longitude > 180.0 
          || latitude < -90.0 || latitude > 90.0 )
@@ -165,7 +165,7 @@ void FGTileMgr::schedule_needed() {
    SG_LOG( SG_TERRAIN, SG_INFO,
            "scheduling needed tiles for " << longitude << " " << latitude );
 
-   vis = fgGetDouble("/environment/visibility-m");
+//   vis = fgGetDouble("/environment/visibility-m");
 
     double tile_width = current_bucket.get_width_m();
     double tile_height = current_bucket.get_height_m();
@@ -227,7 +227,8 @@ void FGTileMgr::initialize_queue()
     // start with the center tile and work out in concentric
     // "rings"
 
-    schedule_needed();
+    double visibility_meters = fgGetDouble("/environment/visibility-m");
+    schedule_needed(visibility_meters);
 
     // do we really want to lose this? CLO
 #if 0
@@ -251,7 +252,7 @@ void FGTileMgr::initialize_queue()
 // given the current lon/lat (in degrees), fill in the array of local
 // chunks.  If the chunk isn't already in the cache, then read it from
 // disk.
-int FGTileMgr::update( double lon, double lat ) {
+int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
     //         << lon << " " << lat );
 
@@ -276,7 +277,7 @@ int FGTileMgr::update( double lon, double lat ) {
 	if ( !(current_bucket == previous_bucket) ) {
 	    // We've moved to a new bucket, we need to schedule any
 	    // needed tiles for loading.
-	    schedule_needed();
+	    schedule_needed(visibility_meters);
 	}
     } else if ( state == Start || state == Inited ) {
 	SG_LOG( SG_TERRAIN, SG_INFO, "State == Start || Inited" );
@@ -360,7 +361,7 @@ int FGTileMgr::update( double lon, double lat ) {
 	sgdSetVec3( tmp_abs_view_pos, tmp.x(), tmp.y(), tmp.z() );
 
 	// cout << "abs_view_pos = " << tmp_abs_view_pos << endl;
-	prep_ssg_nodes();
+	prep_ssg_nodes(visibility_meters);
 
 	double tmp_elev;
 	if ( fgCurrentElev(tmp_abs_view_pos, sc, &hit_list,
@@ -431,10 +432,10 @@ int FGTileMgr::update( double lon, double lat ) {
 }
 
 
-void FGTileMgr::prep_ssg_nodes() {
-    float vis = 0.0;
+void FGTileMgr::prep_ssg_nodes(float vis) {
+//    float vis = 0.0;
 
-    vis = fgGetDouble("/environment/visibility-m");
+//    vis = fgGetDouble("/environment/visibility-m");
 
     // traverse the potentially viewable tile list and update range
     // selector and transform
@@ -442,10 +443,13 @@ void FGTileMgr::prep_ssg_nodes() {
     FGTileEntry *e;
     tile_cache.reset_traversal();
 
+    sgVec3 up;
+    sgCopyVec3( up, globals->get_current_view()->get_world_up() );
+	
     while ( ! tile_cache.at_end() ) {
         // cout << "processing a tile" << endl;
 	if ( (e = tile_cache.get_current()) ) {
-	    e->prep_ssg_node( scenery.get_center(), vis);
+	    e->prep_ssg_node( scenery.get_center(), up, vis);
         } else {
 	    SG_LOG(SG_INPUT, SG_ALERT, "warning ... empty tile in cache");
         }

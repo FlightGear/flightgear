@@ -78,7 +78,7 @@ private:
     void sched_tile( const SGBucket& b );
 
     // schedule a needed buckets for loading
-    void schedule_needed();
+    void schedule_needed(double visibility_meters);
 
     // see comment at prep_ssg_nodes()
     void prep_ssg_node( int idx );
@@ -162,7 +162,7 @@ public:
     // given the current lon/lat (in degrees), fill in the array of
     // local chunks.  If the chunk isn't already in the cache, then
     // read it from disk.
-    int update( double lon, double lat );
+    int update( double lon, double lat, double visibility_meters );
 
     // Determine scenery altitude.  Normally this just happens when we
     // render the scene, but we'd also like to be able to do this
@@ -178,7 +178,7 @@ public:
     // Prepare the ssg nodes ... for each tile, set it's proper
     // transform and update it's range selector based on current
     // visibilty
-    void prep_ssg_nodes();
+    void prep_ssg_nodes(float visibility_meters);
 };
 
 

@@ -750,7 +750,7 @@ void FGTileEntry::free_tile() {
 
 // Update the ssg transform node for this tile so it can be
 // properly drawn relative to our (0,0,0) point
-void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
+void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
     if ( !loaded ) return;
 
     SetOffset( p );
@@ -759,10 +759,14 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 #ifdef USE_UP_AND_COMING_PLIB_FEATURE
     terra_range->setRange( 0, SG_ZERO );
     terra_range->setRange( 1, vis + bounding_radius );
+    if ( gnd_lights_range ) {
     gnd_lights_range->setRange( 0, SG_ZERO );
     gnd_lights_range->setRange( 1, vis * 1.5 + bounding_radius );
-    rwy_lights_range->setRange( 0, SG_ZERO );
-    rwy_lights_range->setRange( 1, vis * 1.5 + bounding_radius );
+    }
+    if ( rwy_lights_range ) {
+      rwy_lights_range->setRange( 0, SG_ZERO );
+      rwy_lights_range->setRange( 1, vis * 1.5 + bounding_radius );
+    }
 #else
     float ranges[2];
     ranges[0] = SG_ZERO;
@@ -786,8 +790,8 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 	// z-buffer fighting.  We do this based on our altitude and
 	// the distance this tile is away from scenery center.
 
-	sgVec3 up;
-	sgCopyVec3( up, globals->get_current_view()->get_world_up() );
+//	sgVec3 up;
+//	sgCopyVec3( up, globals->get_current_view()->get_world_up() );
 
 	double agl;
 	if ( current_aircraft.fdm_state ) {

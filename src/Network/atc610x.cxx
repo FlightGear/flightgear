@@ -32,7 +32,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>              //snprintf
-#if defined( _MSC_VER )
+#if defined( _MSC_VER ) || defined(__MINGW32__)
 #  include <io.h>                 //lseek, read, write
 #endif
 
@@ -52,7 +52,7 @@
 
 SG_USING_STD(string);
 
-#if defined( _MSC_VER )
+#if defined( _MSC_VER ) || defined(__MINGW32__)
 #  define snprintf _snprintf
 #endif
 

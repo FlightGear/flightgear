@@ -712,8 +712,11 @@ bool fgInitSubsystems( void ) {
 
     if ( global_tile_mgr.init() ) {
 	// Load the local scenery data
+	double visibility_meters = fgGetDouble("/environment/visibility-m");
+		
 	global_tile_mgr.update( longitude->getDoubleValue(),
-				latitude->getDoubleValue() );
+				latitude->getDoubleValue(),
+				visibility_meters );
     } else {
     	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
 	exit(-1);

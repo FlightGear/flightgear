@@ -30,6 +30,8 @@
 # error This library requires C++
 #endif                                   
 
+#include <time.h> // time_t
+
 const int FG_NET_FDM_VERSION = 5;
 
 // Define a structure containing the top level flight dynamics model

@@ -100,8 +100,10 @@ void AptDialog_OK (puObject *)
                                          SGD_RADIANS_TO_DEGREES);
             // BusyCursor(0);
             fgReInitSubsystems();
+	    double visibility_meters =
+	      fgGetDouble("/environment/visibility-m");
             global_tile_mgr.update( longitude->getDoubleValue(),
-                                    latitude->getDoubleValue() );
+                                    latitude->getDoubleValue(),visibility_meters );
             // BusyCursor(1);
         } else {
             AptId  += " not in database.";

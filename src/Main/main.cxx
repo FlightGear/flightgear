@@ -419,6 +419,8 @@ void fgRenderFrame( void ) {
     // Update the default (kludged) properties.
     fgUpdateProps();
 
+    FGViewer *current__view = globals->get_current_view();
+
     fgLIGHT *l = &cur_light_params;
     static double last_visibility = -9999;
 
@@ -492,13 +494,14 @@ void fgRenderFrame( void ) {
 	// ssg does to set up the model view matrix
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	ssgSetCamera( (sgVec4 *)globals->get_current_view()->get_VIEW() );
+	ssgSetCamera( (sgVec4 *)current__view->get_VIEW() );
 
 	// set the opengl state to known default values
 	default_state->force();
 
 	// update fog params if visibility has changed
-	thesky->set_visibility(fgGetDouble("/environment/visibility-m"));
+	double visibility_meters = fgGetDouble("/environment/visibility-m");
+	thesky->set_visibility(visibility_meters);
 
 	thesky->modify_vis( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
 			    ( global_multi_loop * fgGetInt("/sim/speed-up") )
@@ -544,9 +547,9 @@ void fgRenderFrame( void ) {
 		 << " moon ra = " << globals->get_ephem()->getMoonRightAscension()
 		 << " moon dec = " << globals->get_ephem()->getMoonDeclination() << endl; */
 
-	    thesky->reposition( globals->get_current_view()->get_view_pos(),
-				globals->get_current_view()->get_zero_elev(),
-				globals->get_current_view()->get_world_up(),
+	    thesky->reposition( current__view->get_view_pos(),
+				current__view->get_zero_elev(),
+				current__view->get_world_up(),
 				longitude->getDoubleValue()
 				  * SGD_DEGREES_TO_RADIANS,
 				latitude->getDoubleValue()
@@ -591,8 +594,8 @@ void fgRenderFrame( void ) {
 
 	// glMatrixMode( GL_PROJECTION );
 	// glLoadIdentity();
-	ssgSetFOV( globals->get_current_view()->get_h_fov(),
-		   globals->get_current_view()->get_v_fov() );
+	ssgSetFOV( current__view->get_h_fov(),
+		   current__view->get_v_fov() );
 
 	double agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
 	    - scenery.get_cur_elev();
@@ -614,7 +617,8 @@ void fgRenderFrame( void ) {
 	current_model.update(dt_ms);
 
 	// $$$ begin - added VS Renganthan 17 Oct 2K
-	fgUpdateDCS();
+	if(objc)
+	  fgUpdateDCS();
 	// $$$ end - added VS Renganthan 17 Oct 2K
 
 # ifdef FG_NETWORK_OLK
@@ -639,7 +643,7 @@ void fgRenderFrame( void ) {
 # endif
 
 	// position tile nodes and update range selectors
-	global_tile_mgr.prep_ssg_nodes();
+	global_tile_mgr.prep_ssg_nodes(visibility_meters);
 
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    // draw the sky backdrop
@@ -724,7 +728,7 @@ void fgRenderFrame( void ) {
 	}
 
         // if in cockpit view adjust nearfar...
-        if (globals->get_current_view()->getType() == 0 ) {
+        if (current__view->getType() == 0 ) {
           glClearDepth(1);
           glClear(GL_DEPTH_BUFFER_BIT);
           ssgSetNearFar( cockpit_nearplane, cockpit_farplane );
@@ -1088,8 +1092,9 @@ static void fgMainLoop( void ) {
 #endif
 
     // see if we need to load any new scenery tiles
+    double visibility_meters = fgGetDouble("/environment/visibility-m");
     global_tile_mgr.update( longitude->getDoubleValue(),
-			    latitude->getDoubleValue() );
+			    latitude->getDoubleValue(), visibility_meters );
 
     // see if we need to load any deferred-load textures
     material_lib.load_next_deferred();
@@ -1216,7 +1221,7 @@ static void fgIdleFunction ( void ) {
 	// We've finished all our initialization steps, from now on we
 	// run the main loop.
 
-	fgMainLoop();
+	glutIdleFunc(fgMainLoop);
     } else {
 	if ( fgGetBool("/sim/startup/splash-screen") ) {
 	    fgSplashUpdate(0.0);
@@ -1238,9 +1243,10 @@ void fgReshape( int width, int height ) {
     }
 
     // for all views
-    for ( int i = 0; i < globals->get_viewmgr()->size(); ++i ) {
-	globals->get_viewmgr()->get_view(i)->
-            set_aspect_ratio((float)view_h / (float)width);
+    FGViewMgr *viewmgr = globals->get_viewmgr();
+    for ( int i = 0; i < viewmgr->size(); ++i ) {
+      viewmgr->get_view(i)->
+	set_aspect_ratio((float)view_h / (float)width);
     }
 
     glViewport( 0, (GLint)(height - view_h), (GLint)(width), (GLint)(view_h) );
@@ -1249,12 +1255,11 @@ void fgReshape( int width, int height ) {
     fgSetInt("/sim/startup/ysize", height);
     guiInitMouse(width, height);
 
-    ssgSetFOV( globals->get_current_view()->get_h_fov(),
-	       globals->get_current_view()->get_v_fov() );
+    ssgSetFOV( viewmgr->get_current_view()->get_h_fov(),
+	       viewmgr->get_current_view()->get_v_fov() );
 
     fgHUDReshape();
 }
-
 
 // Initialize GLUT and define a main window
 int fgGlutInit( int *argc, char **argv ) {
@@ -1284,16 +1289,38 @@ int fgGlutInit( int *argc, char **argv ) {
     } else {
 	// Open the cool new 'game mode' window
 	char game_mode_str[256];
+//#define SYNC_OPENGL_WITH_DESKTOP_SETTINGS
+#if defined(WIN32) && defined(SYNC_OPENGL_WITH_DESKTOP_SETTINGS)
+#ifndef ENUM_CURRENT_SETTINGS
+#define ENUM_CURRENT_SETTINGS       ((DWORD)-1)
+#define ENUM_REGISTRY_SETTINGS      ((DWORD)-2)
+#endif
+
+	DEVMODE dm;
+	dm.dmSize = sizeof(DEVMODE);
+	EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dm);
+	fgSetInt("/sim/startup/xsize", dm.dmPelsWidth);
+	fgSetInt("/sim/startup/ysize", dm.dmPelsHeight);
+	glutInitWindowSize( fgGetInt("/sim/startup/xsize"),
+						fgGetInt("/sim/startup/ysize") );
+	sprintf( game_mode_str, "%dx%d:%d@%d",
+			 dm.dmPelsWidth,
+			 dm.dmPelsHeight,
+			 dm.dmBitsPerPel,
+			 dm.dmDisplayFrequency );
+#else
+	// Open the cool new 'game mode' window
 	sprintf( game_mode_str, "width=%d height=%d bpp=%d",
 		 fgGetInt("/sim/startup/xsize"),
 		 fgGetInt("/sim/startup/ysize"),
 		 fgGetInt("/sim/rendering/bits-per-pixel"));
 
+#endif // HAVE_WINDOWS_H
 	SG_LOG( SG_GENERAL, SG_INFO, 
 		"game mode params = " << game_mode_str );
 	glutGameModeString( game_mode_str );
 	glutEnterGameMode();
-#endif
+#endif // GLUT_WRONG_VERSION
     }
 
     // This seems to be the absolute earliest in the init sequence

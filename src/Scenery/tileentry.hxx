@@ -224,7 +224,7 @@ public:
 
     // Update the ssg transform node for this tile so it can be
     // properly drawn relative to our (0,0,0) point
-    void prep_ssg_node( const Point3D& p, float vis);
+    void prep_ssg_node( const Point3D& p, sgVec3 up, float vis);
 
     /**
      * Load tile data from a file.
