@@ -1,0 +1,322 @@
+/**************************************************************************
+ * autopilot.c -- autopilot subsystem
+ *
+ * Written by Jeff Goeke-Smith, started April 1998.
+ *
+ * Copyright (C) 1998  Jeff Goeke-Smith, jgoeke@voyager.net
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ * 
+ *
+ **************************************************************************/
+
+
+// I have no Idea how many of these are needed.  Some one tell me.
+#include <config.h>
+#include <assert.h>
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
+#include <GL/glut.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifdef HAVE_VALUES_H
+#  include <values.h>  // for MAXINT
+#endif
+ 
+#include "autopilot.h"
+
+#include <Include/fg_constants.h>
+#include <Aircraft/aircraft.h>
+#include <Main/fg_debug.h>
+#include <Math/fg_random.h>
+#include <Math/mat3.h>
+#include <Math/polar.h>
+#include <Scenery/scenery.h>
+#include <Time/fg_timer.h>
+#include <Weather/weather.h>
+#include <Controls/controls.h>
+
+
+// The below routines were copied right from hud.c ( I hate reinventing
+// the wheel more than necessary)
+//// The following routines obtain information concerntin the aircraft's
+//// current state and return it to calling instrument display routines.
+//// They should eventually be member functions of the aircraft.
+////
+
+double get_throttleval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->throttle[0];     // Hack limiting to one engine
+}
+
+double get_aileronval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->aileron;
+}
+
+double get_elevatorval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->elevator;
+}
+
+double get_elev_trimval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->elevator_trim;
+}
+
+double get_rudderval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->rudder;
+}
+
+double get_speed( void )
+{
+	fgFLIGHT *f;
+
+	f = current_aircraft.flight;
+	return( FG_V_equiv_kts );    // Make an explicit function call.
+}
+
+double get_aoa( void )
+{
+	fgFLIGHT *f;
+              
+	f = current_aircraft.flight;
+	return( FG_Gamma_vert_rad * RAD_TO_DEG );
+}
+
+double fgAPget_roll( void )
+{
+	fgFLIGHT *f;
+
+	f = current_aircraft.flight;
+	return( FG_Phi * RAD_TO_DEG );
+}
+
+double get_pitch( void )
+{
+	fgFLIGHT *f;
+              
+	f = current_aircraft.flight;
+	return( FG_Theta );
+}
+
+double fgAPget_heading( void )
+{
+	fgFLIGHT *f;
+
+	f = current_aircraft.flight;
+	return( FG_Psi * RAD_TO_DEG );
+}
+
+double get_altitude( void )
+{
+	fgFLIGHT *f;
+	// double rough_elev;
+
+	f = current_aircraft.flight;
+	// rough_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC,
+	//		                   FG_Latitude  * RAD_TO_ARCSEC);
+
+	return( FG_Altitude * FEET_TO_METER /* -rough_elev */ );
+}
+
+double get_sideslip( void )
+{
+        fgFLIGHT *f;
+        
+        f = current_aircraft.flight;
+        
+        return( FG_Beta );
+}
+
+// End of copied section.  ( thanks for the wheel :-)
+
+// Local Prototype section
+
+double LinearExtrapolate( double x,double x1, double y1, double x2, double y2);
+
+// End Local ProtoTypes
+
+fgAPDataPtr APDataGlobal; 	// global variable holding the AP info
+
+
+
+void fgAPInit( fgAIRCRAFT *current_aircraft )
+{
+	fgAPDataPtr APData ;
+
+	fgPrintf( FG_COCKPIT, FG_INFO, "Init AutoPilot Subsystem\n" );
+
+	APData  = (fgAPDataPtr)calloc(sizeof(fgAPData),1);
+	
+	if (APData == NULL) // I couldn't get the mem.  Dying
+		// return ( NULL);
+		exit(1);
+		
+	APData->Mode = 0 ; 		// turn the AP off
+	APData->Heading = 5 ; 		// default direction, due north
+	
+	// These eventually need to be read from current_aircaft somehow.
+	
+	APData->MaxRoll = 10;		// the maximum roll, in Deg
+	APData->RollOut = 10;		// the deg from heading to start rolling out at, in Deg
+	APData->MaxAileron= .1;		// how far can I move the aleron from center.
+	APData->RollOutSmooth = 5;	// Smoothing distance for alerion control
+	
+	//Remove at a later date
+	APDataGlobal = APData;
+	
+};
+
+int fgAPRun( void )
+{
+	
+	//Remove the following lines when the calling funcitons start passing in the data pointer
+	fgAPDataPtr APData;
+	
+	APData = APDataGlobal;
+	// end section
+	        
+	if (APData->Mode == 0) // the autopilot is shut off
+		return 0 ;
+		
+	if (APData->Mode == 1) // heading hold mode
+		{
+		double RelHeading;
+		double TargetRoll;
+		double RelRoll;
+		double AileronSet;
+		
+		RelHeading =  APData->Heading - fgAPget_heading();  // figure out how far off we are from desired heading
+		if (RelHeading > 180)				// Normalize the number to the range (-180,180]
+			RelHeading-= 360;			//               too much calc, sorry ^^^^^^^^^
+		if (RelHeading <= -180)
+			RelHeading+=360;
+		
+		//assert(RelHeading <= 180);
+		//assert(RelHeading > -180);
+		
+		// Now it is time to deterime how far we should be rolled.
+		fgPrintf( FG_COCKPIT, FG_INFO, "RelHeading:\n");
+		
+		
+		if ( abs(RelHeading) > APData->RollOut )  // We are further from heading than the roll out point
+			{
+			if (RelHeading < 0 )		  // set Target Roll to Max in desired direction
+				TargetRoll = 0-APData->MaxRoll;
+			else
+				TargetRoll = APData->MaxRoll;
+			}
+		else						// We have to calculate the Target roll
+			{
+			/*
+			* This calculation engine thinks that the Target roll should be a line from (RollOut,MaxRoll) to 
+			* (-RollOut, -MaxRoll)  I hope this works well.  If I get ambitious some day this might become a 
+			* fancier curve or something.
+			*/
+			TargetRoll = LinearExtrapolate(RelHeading,-APData->RollOut,-APData->MaxRoll,APData->RollOut,APData->MaxRoll);
+			};
+		
+		// Target Roll has now been Found.
+		
+		// Compare Target roll to Current Roll, Generate Rel Roll
+		fgPrintf( FG_COCKPIT, FG_INFO, "TargetRoll:\n");
+		
+		RelRoll = TargetRoll - fgAPget_roll();
+		 
+		if (RelRoll > 180)                           // Normalize the number to the range (-180,180]
+			RelRoll-= 360 ;                       //               too much calc, sorry ^^^^^^^^^
+		if (RelRoll <= -180)
+			RelRoll+=360 ;
+		
+		                                                                 
+		assert(RelRoll <= 180);
+		assert(RelRoll > -180);
+		
+		
+		if ( abs(RelRoll) > APData->RollOutSmooth )  // We are further from heading than the roll out smooth point
+		{
+			if (RelRoll < 0 )              // set Target Roll to Max in desired direction
+				AileronSet = 0-APData->MaxAileron;
+			else
+				AileronSet = APData->MaxAileron;
+		}
+		
+		else
+			AileronSet = LinearExtrapolate(RelRoll,-APData->RollOutSmooth,-APData->MaxAileron,APData->RollOutSmooth,APData->MaxAileron);
+		
+		fgAileronSet(AileronSet);
+		
+		//Cool, it is done.
+		return 0;
+		}
+	
+	//every thing else failed.  Not in a valid autopilot mode
+	return -1;
+
+}
+
+void fgAPSetMode( int mode)
+{
+	 //Remove the following line when the calling funcitons start passing in the data pointer
+	 fgAPDataPtr APData;
+	 
+	 APData = APDataGlobal;
+	 // end section
+	 
+	 fgPrintf( FG_COCKPIT, FG_INFO, "APSetMode : %d\n", mode );
+	 
+	 APData->Mode = mode;  // set the new mode
+	 
+}
+	         
+
+double LinearExtrapolate( double x,double x1,double y1,double x2,double y2)
+{
+	// This procedure extrapolates the y value for the x posistion on a line defined by x1,y1; x2,y2
+	//assert(x1 != x2); // Divide by zero error.  Cold abort for now
+	
+	double m, b, y; 		// the constants to find in y=mx+b
+	
+	m=(y2-y1)/(x2-x1);	// calculate the m
+	
+	b= y1- m * x1;		// calculate the b
+	
+	y = m * x + b;		// the final calculation
+	
+	return (y);
+	
+};
