@@ -2772,8 +2772,13 @@ void xglutIdleFunc ( void (*func)(void) )
 
 void xglutInit ( int* argcp, char** argv )
 {
+  if(!xglTraceFd ) {     // Not defined by any other means, must be here
+    xglTraceFd = stdout; // avoid a crash from a NULL ptr.
+    }
   if ( xglTraceIsEnabled("glutInit") )
-    fprintf ( xglTraceFd, "  /* glutInit ( (int *)0x%08x, (char **)0x%08x ) ; */\n" , argcp, argv ) ;
+    fprintf ( xglTraceFd,
+              "  /* glutInit ( (int *)0x%08x, (char **)0x%08x ) ; */\n" ,
+              argcp, argv ) ;
   if ( xglExecuteIsEnabled("glutInit") )
     glutInit ( argcp, argv ) ;
 }
