@@ -26,17 +26,19 @@
 #---------------------------------------------------------------------------
 
 
+$max_area = 10000;            # maximum triangle area
+
 $| = 1;                         # flush buffers after every write
 
-$do_dem2node =     0;
-$do_triangle_1 = 0;
-$do_fixnode =    0;
-$do_splittris =  0;
-$do_assemtris =  0;
-$do_triangle_2 = 0;
+$do_dem2node =   1;
+$do_triangle_1 = 1;
+$do_fixnode =    1;
+$do_splittris =  1;
+$do_assemtris =  1;
+$do_triangle_2 = 1;
 
-$do_tri2obj =    0;
-$do_strips =     0;
+$do_tri2obj =    1;
+$do_strips =     1;
 $do_fixobj =     1;
 
 
@@ -148,7 +150,7 @@ sub triangle_1 {
 	print $file;
 	chop($file);
 	if ( ($file =~ m/\.node$/) && ($file !~ m/\.\d\.node$/) ) {
-	    $command = "Triangle/triangle -q $subdir/$file";
+	    $command = "Triangle/triangle -a$max_area -q $subdir/$file";
 	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
@@ -388,6 +390,11 @@ sub fixobj {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.19  1998/05/27 02:25:26  curt
+# Added a flag to the first run of "triangle" to impose a maximum triangle
+# size.  This forces really flat areas to be subdivided a certain amount
+# anyways.  This makes for slightly more interesting scenery.
+#
 # Revision 1.18  1998/05/20 20:55:40  curt
 # Makefile tweaks
 #
