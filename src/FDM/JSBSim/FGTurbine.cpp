@@ -115,6 +115,7 @@ void FGTurbine::doTransition(void)
 
 bool FGTurbine::Load(FGConfigFile *AC_cfg)
 {
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

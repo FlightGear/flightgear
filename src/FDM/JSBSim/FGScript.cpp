@@ -108,7 +108,7 @@ bool FGScript::LoadScript(string script)
   ScriptName = Script.GetValue("name");
   Scripted = true;
 
-  if (debug_lvl > 0) cout << "Reading Script File " << ScriptName << endl;
+  if (debug_lvl > 0) cout << "Reading and running from script file " << ScriptName << endl << endl;
 
   while (Script.GetNextConfigLine() != string("EOF") && Script.GetValue() != string("/runscript")) {
     token = Script.GetValue();
