@@ -110,10 +110,6 @@ FGArray::close() {
 // parse Array file
 int
 FGArray::parse() {
-    int i;
-
-    // cur_col = 0;
-
     *in >> originx >> originy;
     *in >> cols >> col_step;
     *in >> rows >> row_step;
@@ -191,6 +187,7 @@ void FGArray::fit( double error ) {
     outputmesh_set_pt(colmax, rowmin, in_data[colmax][rowmin]);
 
     cout << "  Beginning best fit procedure" << endl;
+    lasty = 0;
 
     for ( row = rowmin; row < rowmax; row++ ) {
 	// fit  = fopen("fit.dat",  "w");
@@ -552,6 +549,10 @@ FGArray::~FGArray( void ) {
 
 
 // $Log$
+// Revision 1.3  1999/03/17 23:48:17  curt
+// Removed forced -g compile flag.
+// Fixed a couple compiler warnings.
+//
 // Revision 1.2  1999/03/13 23:50:26  curt
 // Tweaked output formatting a bit.
 //
