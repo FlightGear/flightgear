@@ -114,19 +114,21 @@ int FGJSBsim::update( int multiloop ) {
 
     // lets try to avoid really screwing up the JSBsim model
     if ( get_Altitude() < -9000 ) {
-	save_alt = get_Altitude();
-	set_Altitude( 0.0 );
+      save_alt = get_Altitude();
+      set_Altitude( 0.0 );
     }
 
     // copy control positions into the JSBsim structure
+
     FDMExec.GetFCS()->SetDaCmd( controls.get_aileron());
     FDMExec.GetFCS()->SetDeCmd( controls.get_elevator()
-			     + controls.get_elevator_trim() );
+                                               + controls.get_elevator_trim() );
     FDMExec.GetFCS()->SetDrCmd( controls.get_rudder());
     FDMExec.GetFCS()->SetDfCmd( 0.0 );
-    // FDMExec.GetFCS()->SetDsCmd( 0.0 );
+    FDMExec.GetFCS()->SetDsbCmd( 0.0 );
+    FDMExec.GetFCS()->SetDspCmd( 0.0 );
     FDMExec.GetFCS()->SetThrottleCmd( FGControls::ALL_ENGINES,
-				   controls.get_throttle( 0 ) * 100.0 );
+                                           controls.get_throttle( 0 ) * 100.0 );
     // FCS->SetBrake( controls.get_brake( 0 ) );
 
     // Inform JSBsim of the local terrain altitude
@@ -139,11 +141,11 @@ int FGJSBsim::update( int multiloop ) {
     // printf("Altitude = %.2f\n", Altitude * 0.3048);
     // printf("Radius to Vehicle = %.2f\n", Radius_to_vehicle * 0.3048);
 
-    /* FDMExec.GetState()->Setsim_time(State->Getsim_time() 
+    /* FDMExec.GetState()->Setsim_time(State->Getsim_time()
 				    + State->Getdt() * multiloop); */
 
     for ( int i = 0; i < multiloop; i++ ) {
-	FDMExec.Run();
+      FDMExec.Run();
     }
 
     // printf("%d FG_Altitude = %.2f\n", i, FG_Altitude * 0.3048);
@@ -157,13 +159,13 @@ int FGJSBsim::update( int multiloop ) {
 
     // but lets restore our original bogus altitude when we are done
     if ( save_alt < -9000.0 ) {
-	set_Altitude( save_alt );
+      set_Altitude( save_alt );
     }
 
     double end_elev = get_Altitude();
     if ( time_step > 0.0 ) {
-	// feet per second
-	set_Climb_Rate( (end_elev - start_elev) / time_step );
+      // feet per second
+      set_Climb_Rate( (end_elev - start_elev) / time_step );
     }
 
     return 1;
@@ -180,14 +182,14 @@ int FGJSBsim::copy_to_JSBsim() {
 int FGJSBsim::copy_from_JSBsim() {
 
     // Velocities
-    // set_Velocities_Local( FDMExec.GetPosition()->GetVn(),
-    //			  FDMExec.GetPosition()->GetVe(), 
-    //			  FDMExec.GetPosition()->GetVd() );
-    // set_Velocities_Ground( V_north_rel_ground, V_east_rel_ground, 
+    set_Velocities_Local( FDMExec.GetPosition()->GetVn(),
+			  FDMExec.GetPosition()->GetVe(),
+			  FDMExec.GetPosition()->GetVd() );
+    // set_Velocities_Ground( V_north_rel_ground, V_east_rel_ground,
     // 		     V_down_rel_ground );
     // set_Velocities_Local_Airmass( V_north_airmass, V_east_airmass,
     // 			    V_down_airmass );
-    // set_Velocities_Local_Rel_Airmass( V_north_rel_airmass, 
+    // set_Velocities_Local_Rel_Airmass( V_north_rel_airmass,
     //                          V_east_rel_airmass, V_down_rel_airmass );
     // set_Velocities_Gust( U_gust, V_gust, W_gust );
     // set_Velocities_Wind_Body( U_body, V_body, W_body );
