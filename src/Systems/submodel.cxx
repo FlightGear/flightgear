@@ -41,6 +41,7 @@ SubmodelSystem::init ()
     _user_yaw_node =     fgGetNode("/orientation/yaw-deg", true);
 
     _user_speed_node = fgGetNode("/velocities/uBody-fps", true);
+	
 
     ai = (FGAIManager*)globals->get_subsystem("ai_model");
 }
@@ -89,7 +90,8 @@ SubmodelSystem::release (submodel* sm, double dt)
 
   //cout << "Creating a submodel." << endl; 
   int rval = ai->createBallistic( sm->model, IC.lat, IC.lon, IC.alt, IC.azimuth,
-                                  IC.elevation, IC.speed, sm->drag_area, sm->life );
+                                  IC.elevation, IC.speed, sm->drag_area, sm->life,
+				  sm-> buoyancy );
   //cout << "Submodel created." << endl;
   if (sm->count > 0) (sm->count)--; 
 
@@ -138,6 +140,7 @@ SubmodelSystem::load ()
      sm->pitch_offset   = entry_node->getDoubleValue("pitch-offset", 0.0);
      sm->drag_area      = entry_node->getDoubleValue("eda", 0.007);
      sm->life           = entry_node->getDoubleValue("life", 900.0);
+     sm->buoyancy       = entry_node->getDoubleValue("buoyancy", 0);
 
      sm->trigger->setBoolValue(false);
      sm->timer = sm->delay;
@@ -156,13 +159,15 @@ SubmodelSystem::load ()
 void
 SubmodelSystem::transform( submodel* sm) 
 {
-  IC.lat =       _user_lat_node->getDoubleValue();
-  IC.lon =       _user_lon_node->getDoubleValue();
-  IC.alt =       _user_alt_node->getDoubleValue();
-  IC.azimuth =   _user_heading_node->getDoubleValue() + sm->yaw_offset;
-  IC.elevation = _user_pitch_node->getDoubleValue() + sm->pitch_offset;
-  IC.speed =     _user_speed_node->getDoubleValue() + sm->speed;
+  IC.lat =            _user_lat_node->getDoubleValue();
+  IC.lon =            _user_lon_node->getDoubleValue();
+  IC.alt =            _user_alt_node->getDoubleValue();
+  IC.azimuth =        _user_heading_node->getDoubleValue() + sm->yaw_offset;
+  IC.elevation =      _user_pitch_node->getDoubleValue() + sm->pitch_offset;
+  IC.speed =          _user_speed_node->getDoubleValue() + sm->speed;
+  
 }
 
 
 // end of submodel.cxx
+

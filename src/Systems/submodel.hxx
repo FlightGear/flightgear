@@ -43,6 +43,8 @@ public:
   double             pitch_offset;
   double             drag_area; 
   double             life;
+  double             buoyancy;
+  
  } submodel; 
 
  typedef struct {
@@ -52,6 +54,7 @@ public:
   double     azimuth;
   double     elevation;
   double     speed;
+ 
  } IC_struct;  
 
     SubmodelSystem ();
