@@ -21,7 +21,15 @@
 // $Id$
 
 
-#include <netinet/in.h>         // htonl() ntohl()
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef WIN32
+#  include <windows.h>
+#else
+#  include <netinet/in.h>	// htonl() ntohl()
+#endif
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/lowlevel.hxx> // endian tests
