@@ -44,6 +44,11 @@ FG_USING_STD(string);
 FG_USING_STD(ostream);
 #endif
 
+#ifdef __MWERKS__
+#include <math.h>
+#include <stdio.h>
+#endif
+
 #include <Include/fg_constants.h>
 
 
@@ -81,6 +86,7 @@ public:
 
     // Set the bucket params for the specified lat and lon
     void set_bucket( double dlon, double dlat );
+    void make_bad ( void );
 
     // Generate the unique scenery tile index for this bucket
     long int gen_index();
@@ -209,6 +215,7 @@ inline FGBucket::FGBucket(const double dlon, const double dlat) {
     set_bucket(dlon, dlat);
 }
 
+
 // create an impossible bucket if false
 inline FGBucket::FGBucket(const bool is_good) {
     set_bucket(0.0, 0.0);
@@ -295,6 +302,13 @@ inline double FGBucket::get_height() const {
     return FG_BUCKET_SPAN;
 }
 
+
+// create an impossible bucket
+inline void FGBucket::make_bad( void ) {
+    set_bucket(0.0, 0.0);
+	lon = -1000;
+}
+    
 
 // offset a bucket struct by the specified tile units in the X & Y
 // direction

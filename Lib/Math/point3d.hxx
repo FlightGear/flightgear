@@ -29,7 +29,7 @@
 # error This library requires C++
 #endif                                   
 
-#include "Include/compiler.h"
+#include <Include/compiler.h>
 
 #ifdef FG_MATH_EXCEPTION_CLASH
 # define exception c_exception
@@ -50,10 +50,11 @@ FG_USING_STD(ostream);
 FG_USING_STD(istream);
 #endif
 
-// -rp- assert.h is buggy under MWCWP3, as multiple #include undef assert !
+// -dw- someone seems to have forgotten this...
 #ifdef __MWERKS__
-#  define assert(x)
+FG_USING_STD(std);
 #endif
+
 
 const double fgPoint3_Epsilon = 0.0000001;
 

@@ -6,6 +6,8 @@ bin_PROGRAMS = testbucket
 
 testbucket_SOURCES = testbucket.cxx
 
-testbucket_LDADD = $(top_builddir)/Lib/Bucket/libBucket.a
+testbucket_LDADD = \
+	$(top_builddir)/Lib/Bucket/libBucket.a \
+	$(top_builddir)/Lib/Misc/libMisc.a
 
-INCLUDES += -I$(top_builddir)
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib

@@ -28,6 +28,8 @@
 #endif
 
 
+#include <Misc/fgpath.hxx>
+
 #include "newbucket.hxx"
 
 
@@ -36,12 +38,8 @@ string FGBucket::gen_base_path() const {
     // long int index;
     int top_lon, top_lat, main_lon, main_lat;
     char hem, pole;
-    char path[256];
+    char raw_path[256];
 
-    // index = gen_index();
-
-    path[0] = '\0';
-	
     top_lon = lon / 10;
     main_lon = lon;
     if ( (lon < 0) && (top_lon * 10 != lon) ) {
@@ -74,11 +72,13 @@ string FGBucket::gen_base_path() const {
 	main_lat *= -1;
     }
 
-    sprintf(path, "%c%03d%c%02d/%c%03d%c%02d", 
-	    hem, top_lon, pole, top_lat,
+    sprintf(raw_path, "%c%03d%c%02d/%c%03d%c%02d", 
+	    hem, top_lon, pole, top_lat, 
 	    hem, main_lon, pole, main_lat);
 
-    return path;
+    FGPath path( raw_path );
+
+    return path.get_path();
 }
 
 

@@ -25,6 +25,10 @@
 
 #include <Include/compiler.h>
 
+#ifdef __MWERKS__
+#include <stdlib.h> // for exit()
+#endif
+
 #include STL_STRING
 
 #include <Debug/logstream.hxx>
@@ -47,7 +51,7 @@ fgINTERPTABLE::fgINTERPTABLE( const string& file ) {
 
     size = 0;
     in >> skipcomment;
-    while ( ! in.eof() ){
+    while ( in ) {
 	if ( size < MAX_TABLE_SIZE ) {
 	    in >> table[size][0] >> table[size][1];
 	    size++;

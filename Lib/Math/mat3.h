@@ -37,16 +37,6 @@ extern "C" {
 
 #define USE_XTRA_MAT3_INLINES
 
-/* ------------------------------  Types  --------------------------------- */
-
-typedef double MAT3mat[4][4];		/* 4x4 matrix			 */
-typedef double MAT3vec[3];		/* Vector			 */
-typedef double MAT3hvec[4];             /* Vector with homogeneous coord */
-
-/* ------------------------------  Macros  -------------------------------- */
-
-extern MAT3mat identityMatrix;
-
 #if defined(i386)
 #define USE_X86_ASM
 #endif
@@ -69,9 +59,18 @@ static __inline int FloatToInt(float f)
    return r;
 }
 #else
-#define FloatToInt(F) ((int) (F))
+#define FloatToInt(F) ((int) ((F) < 0.0f ? (F)-0.5f : (F)+0.5f))
 #endif
 
+/* ------------------------------  Types  --------------------------------- */
+
+typedef double MAT3mat[4][4];		/* 4x4 matrix			 */
+typedef double MAT3vec[3];		/* Vector			 */
+typedef double MAT3hvec[4];             /* Vector with homogeneous coord */
+
+/* ------------------------------  Macros  -------------------------------- */
+
+extern MAT3mat identityMatrix;
 
 /* Tests if a number is within EPSILON of zero */
 #define MAT3_IS_ZERO(N) 	((N) < MAT3_EPSILON && (N) > -MAT3_EPSILON)

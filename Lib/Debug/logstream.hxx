@@ -47,6 +47,10 @@ FG_USING_STD(cerr);
 FG_USING_STD(endl);
 #endif
 
+#ifdef __MWERKS__
+FG_USING_STD(iostream);
+#endif
+
 //
 // TODO:
 //
@@ -204,6 +208,8 @@ fglog()
 
 #ifdef FG_NDEBUG
 # define FG_LOG(C,P,M)
+#elif defined( __MWERKS__ )
+# define FG_LOG(C,P,M) ::fglog() << ::loglevel(C,P) << M << std::endl
 #else
 # define FG_LOG(C,P,M) fglog() << loglevel(C,P) << M << endl
 #endif
