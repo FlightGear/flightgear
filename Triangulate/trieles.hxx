@@ -33,6 +33,10 @@
 
 #include <Include/compiler.h>
 
+#include <vector>
+
+FG_USING_STD(vector);
+
 
 // a segment is two integer pointers into the node list
 class FGTriEle {
@@ -55,10 +59,18 @@ public:
 };
 
 
+typedef vector < FGTriEle > triele_list;
+typedef triele_list::iterator triele_list_iterator;
+typedef triele_list::const_iterator const_triele_list_iterator;
+
+
 #endif // _TRIELES_HXX
 
 
 // $Log$
+// Revision 1.2  1999/03/23 22:02:53  curt
+// Refinements in naming and organization.
+//
 // Revision 1.1  1999/03/22 23:58:57  curt
 // Initial revision.
 //

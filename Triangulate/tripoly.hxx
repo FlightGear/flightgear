@@ -76,10 +76,18 @@ public:
 };
 
 
+typedef vector < FGTriPoly > tripoly_list;
+typedef tripoly_list::iterator tripoly_list_iterator;
+typedef tripoly_list::const_iterator const_tripoly_list_iterator;
+
+
 #endif // _TRIPOLY_HXX
 
 
 // $Log$
+// Revision 1.4  1999/03/23 22:02:56  curt
+// Refinements in naming and organization.
+//
 // Revision 1.3  1999/03/21 14:02:07  curt
 // Added a mechanism to dump out the triangle structures for viewing.
 // Fixed a couple bugs in first pass at triangulation.

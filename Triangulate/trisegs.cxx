@@ -41,14 +41,14 @@ int FGTriSegments::unique_add( const FGTriSeg& s ) {
     triseg_list_iterator current, last;
     int counter = 0;
 
-    cout << s.get_n1() << "," << s.get_n2() << endl;
+    // cout << s.get_n1() << "," << s.get_n2() << endl;
 
     // see if point already exists
     current = seg_list.begin();
     last = seg_list.end();
     for ( ; current != last; ++current ) {
 	if ( s == *current ) {
-	    cout << "found an existing segment match" << endl;
+	    // cout << "found an existing segment match" << endl;
 	    return counter;
 	}
 	
@@ -63,6 +63,9 @@ int FGTriSegments::unique_add( const FGTriSeg& s ) {
 
 
 // $Log$
+// Revision 1.3  1999/03/23 22:02:57  curt
+// Refinements in naming and organization.
+//
 // Revision 1.2  1999/03/20 20:32:59  curt
 // First mostly successful tile triangulation works.  There's plenty of tweaking
 // to do, but we are marching in the right direction.

@@ -208,11 +208,11 @@ int FGTriangle::run_triangulate() {
     int counter;
 
     // point list
-    trinode_list node_list = in_nodes.get_node_list();
+    point_list node_list = in_nodes.get_node_list();
     in.numberofpoints = node_list.size();
     in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
 
-    trinode_list_iterator tn_current, tn_last;
+    point_list_iterator tn_current, tn_last;
     tn_current = node_list.begin();
     tn_last = node_list.end();
     counter = 0;
@@ -371,6 +371,9 @@ int FGTriangle::run_triangulate() {
 
 
 // $Log$
+// Revision 1.11  1999/03/23 22:02:51  curt
+// Refinements in naming and organization.
+//
 // Revision 1.10  1999/03/22 23:49:02  curt
 // Modifications to facilitate conversion to output format.
 //

@@ -43,16 +43,16 @@ FG_USING_STD(vector);
 #define FG_PROXIMITY_EPSILON 0.000001
 
 
-typedef vector < Point3D > trinode_list;
-typedef trinode_list::iterator trinode_list_iterator;
-typedef trinode_list::const_iterator const_trinode_list_iterator;
+typedef vector < Point3D > point_list;
+typedef point_list::iterator point_list_iterator;
+typedef point_list::const_iterator const_point_list_iterator;
 
 
 class FGTriNodes {
 
 private:
 
-    trinode_list node_list;
+    point_list node_list;
 
     // return true of the two points are "close enough" as defined by
     // FG_PROXIMITY_EPSILON
@@ -72,7 +72,7 @@ public:
     int simple_add( const Point3D& p );
 
     // return the master node list
-    inline trinode_list get_node_list() const { return node_list; }
+    inline point_list get_node_list() const { return node_list; }
 
     // return the ith point
     inline Point3D get_node( int i ) const { return node_list[i]; }
@@ -83,6 +83,9 @@ public:
 
 
 // $Log$
+// Revision 1.5  1999/03/23 22:02:55  curt
+// Refinements in naming and organization.
+//
 // Revision 1.4  1999/03/22 23:49:05  curt
 // Modifications to facilitate conversion to output format.
 //

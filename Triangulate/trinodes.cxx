@@ -50,7 +50,7 @@ inline bool FGTriNodes::close_enough( const Point3D& p1, const Point3D& p2 ) {
 // Add a point to the point list if it doesn't already exist.  Returns
 // the index (starting at zero) of the point in the list.
 int FGTriNodes::unique_add( const Point3D& p ) {
-    trinode_list_iterator current, last;
+    point_list_iterator current, last;
     int counter = 0;
 
     // cout << p.x() << "," << p.y() << endl;
@@ -83,6 +83,9 @@ int FGTriNodes::simple_add( const Point3D& p ) {
 
 
 // $Log$
+// Revision 1.5  1999/03/23 22:02:54  curt
+// Refinements in naming and organization.
+//
 // Revision 1.4  1999/03/22 23:49:04  curt
 // Modifications to facilitate conversion to output format.
 //

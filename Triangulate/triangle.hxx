@@ -33,8 +33,6 @@
 
 #include <Include/compiler.h>
 
-#include <vector>
-
 #include <Array/array.hxx>
 #include <Clipper/clipper.hxx>
 #include <Math/point3d.hxx>
@@ -49,17 +47,6 @@ extern "C" {
 #include "trinodes.hxx"
 #include "tripoly.hxx"
 #include "trisegs.hxx"
-
-FG_USING_STD(vector);
-
-
-typedef vector < FGTriPoly > tripoly_list;
-typedef tripoly_list::iterator tripoly_list_iterator;
-typedef tripoly_list::const_iterator const_tripoly_list_iterator;
-
-typedef vector < FGTriEle > triele_list;
-typedef triele_list::iterator triele_list_iterator;
-typedef triele_list::const_iterator const_triele_list_iterator;
 
 
 class FGTriangle {
@@ -95,6 +82,7 @@ public:
     int run_triangulate();
 
     inline FGTriNodes get_out_nodes() const { return out_nodes; }
+    inline triele_list get_elelist() const { return elelist; }
 };
 
 
@@ -102,6 +90,9 @@ public:
 
 
 // $Log$
+// Revision 1.8  1999/03/23 22:02:52  curt
+// Refinements in naming and organization.
+//
 // Revision 1.7  1999/03/22 23:49:03  curt
 // Modifications to facilitate conversion to output format.
 //
