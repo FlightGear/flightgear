@@ -61,6 +61,53 @@ static pCockpit ac_cockpit;
 // They should eventually be member functions of the aircraft.
 //
 
+double get_latitude( void )
+{
+	fgFLIGHT *f;
+	f = current_aircraft.flight;
+
+//	return( toDM(FG_Latitude * RAD_TO_DEG) );
+	return((double)((int)( FG_Latitude * RAD_TO_DEG)) );
+}
+double get_lat_min( void )
+{
+	fgFLIGHT *f;
+	double      a, d;
+
+	f = current_aircraft.flight;
+	
+	a = FG_Latitude * RAD_TO_DEG;	
+	if (a < 0.0) {
+		a = -a;
+	}
+	d = (double) ( (int) a);
+	return( (a - d) * 60.0);
+}
+
+
+double get_longitude( void )
+{
+	fgFLIGHT *f;
+	f = current_aircraft.flight;
+
+//	return( toDM(FG_Longitude * RAD_TO_DEG) );
+	return((double)((int) (FG_Longitude * RAD_TO_DEG)) );
+}
+double get_long_min( void )
+{
+	fgFLIGHT *f;
+	double  a, d;
+
+	f = current_aircraft.flight;
+	
+	a = FG_Longitude * RAD_TO_DEG;	
+	if (a < 0.0) {
+		a = -a;
+	}
+	d = (double) ( (int) a);
+	return( (a - d) * 60.0);
+}
+
 double get_throttleval( void )
 {
 	fgCONTROLS *pcontrols;
@@ -217,9 +264,12 @@ void fgCockpitUpdate( void )
 }
 
 /* $Log$
-/* Revision 1.6  1998/05/13 18:27:53  curt
-/* Added an fov to hud display.
+/* Revision 1.7  1998/05/16 13:04:13  curt
+/* New updates from Charlie Hotchkiss.
 /*
+ * Revision 1.6  1998/05/13 18:27:53  curt
+ * Added an fov to hud display.
+ *
  * Revision 1.5  1998/05/11 18:13:10  curt
  * Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
  *

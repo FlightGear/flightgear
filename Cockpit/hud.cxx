@@ -1301,8 +1301,8 @@ void HudLadder :: draw( void )
   roll_value  = current_ch2();
   pitch_value = current_ch1() * RAD_TO_DEG;
 
-  vmin        = (int)pitch_value - (double)width_units/2.0;
-  vmax        = (int)pitch_value + (double)width_units/2.0;
+  vmin        = (int)(pitch_value - (double)width_units/2.0);
+  vmax        = (int)(pitch_value + (double)width_units/2.0);
 
   scr_min     = box.bottom; // centroid.y - ((box.top - box.bottom) >> 1);
 //  scr_max     = box.top;    // scr_min    + (box.top - box.bottom);
@@ -1689,7 +1689,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
         HIptr = (instr_item *) new instr_label ( loc,
                                                  get_sideslip,
                                                  "%5.2f",
-                                                 "Sideslip",
+                                                 "Sideslip ",
                                                  NULL,
                                                  ReadTOP,
                                                  RIGHT_JUST,
@@ -1702,10 +1702,10 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
         loc.left   = 440;
         loc.top    =  90; // Ignore
         loc.right  = 440; // Ignore
-        loc.bottom = 100;
+        loc.bottom =  90;
         HIptr = (instr_item *) new instr_label( loc, get_throttleval,
-                                                "%5.2f",
-                                                "Throttle",
+                                                "%.2f",
+                                                "Throttle ",
                                                 NULL,
                                                 ReadTOP,
                                                 RIGHT_JUST,
@@ -1718,7 +1718,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
         loc.left   = 440;
         loc.top    =  70; // Ignore
         loc.right  = 500; // Ignore
-        loc.bottom =  85;
+        loc.bottom =  75;
         HIptr = (instr_item *) new instr_label( loc, get_elevatorval,
                                                 "%5.2f",
                                                 "Elevator",
@@ -1899,9 +1899,12 @@ void fgUpdateHUD( void ) {
 }
 
 /* $Log$
-/* Revision 1.8  1998/05/13 18:27:54  curt
-/* Added an fov to hud display.
+/* Revision 1.9  1998/05/16 13:04:14  curt
+/* New updates from Charlie Hotchkiss.
 /*
+ * Revision 1.8  1998/05/13 18:27:54  curt
+ * Added an fov to hud display.
+ *
  * Revision 1.7  1998/05/11 18:13:11  curt
  * Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
  *

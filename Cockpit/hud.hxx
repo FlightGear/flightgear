@@ -144,6 +144,10 @@ extern double get_heading     ( void );
 extern double get_altitude    ( void );
 extern double get_sideslip    ( void );
 extern double get_frame_rate  ( void );
+extern double get_latitude    ( void );
+extern double get_lat_min     ( void );
+extern double get_longitude   ( void );
+extern double get_long_min    ( void );
 extern double get_fov         ( void );
 
 enum  hudinstype{ HUDno_instr,
@@ -205,7 +209,8 @@ class instr_item {  // An Abstract Base Class (ABC)
 };
 
 typedef instr_item *HIptr;
-extern deque< instr_item *> HUD_deque;
+
+extern deque< instr_item * > HUD_deque;
 
 // instr_item           This class has no other purpose than to maintain
 //                      a linked list of instrument and derived class
@@ -440,9 +445,12 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 /* $Log$
-/* Revision 1.3  1998/05/13 18:27:55  curt
-/* Added an fov to hud display.
+/* Revision 1.4  1998/05/16 13:04:15  curt
+/* New updates from Charlie Hotchkiss.
 /*
+ * Revision 1.3  1998/05/13 18:27:55  curt
+ * Added an fov to hud display.
+ *
  * Revision 1.2  1998/05/11 18:13:12  curt
  * Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
  *
