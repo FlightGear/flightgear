@@ -1,3 +1,6 @@
+New in 0.57
+* Support for an arbitrary number of serial ports.
+
 New in 0.56
 * Changed default HUD units to the more standard feet units.  You can still
   use meters by specifying the command line option "--units-meters".

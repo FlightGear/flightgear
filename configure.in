@@ -114,7 +114,6 @@ null_LIBS="$LIBS"
 AC_CHECK_LIB(m, cos)
 
 base_LIBS="$LIBS"
-LIBS="$null_LIBS"
 
 # AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(X11, XCreateWindow)
@@ -220,7 +219,7 @@ else
 fi
 
 opengl_LIBS="$LIBS"
-LIBS="$null_LIBS"
+LIBS="$base_LIBS"
 
 AC_SUBST(base_LIBS)
 AC_SUBST(opengl_LIBS)

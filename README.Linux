@@ -45,13 +45,8 @@ need.
 
 You will need the following files:
 
-	FlightGear-x.xx.tar.gz 
-	base-x.xx.tar.gz 
-	textures-x.xx.tar.gz
-
-to get started. Sound is optional.
-
-	sounds-x.xx.tar.gz
+	FlightGear-x.xx.tar.gz (source code)
+	base-x.xx.tar.gz       (data files)
 
 Unpack FlightGear-x.xx.tar.gz using :
 
@@ -101,7 +96,7 @@ That's it...
 
 If everything went ok, simply type
 
-	runfg
+	runfgfs
 
 at the prompt. You should see the FlightGear splash-screen and a few
 seconds later you'll find youself somewhere in the desert, ready for
