@@ -56,21 +56,44 @@ To make sure joystick support is included when building under Linux:
 IV. Procedure to build FGFS with Native SGI Irix Compilers from CVS Sources
 ===========================================================================
 
-(Contributed by Todd Smith <msmith@sikorsky.com>)
+(Contributed by Todd Smith <msmith@sikorsky.com> with modifications
+and updates by Curt Olson)
 
-Download the latest version of plib (1.0.13) from:
+Download the latest version of plib (1.0.18) from:
 
     http://www.woodsoup.org/~sbaker/plib/
 
-Install it with the default prefix of /usr/local which places
+Configure it with the default prefix of /usr/local which places
 everthing in a tree rooted at /usr/local/plib:
 
     sh$ CC="cc -Xcpluscomm" CXX=CC ./configure
 
-Fix up the Makefiles using the script provided with the Flight Gear
-distribution:
+*Before* running make, fix up the plib Makefiles using the script
+provided with the Flight Gear distribution:
 
-    find . -name Makefile -exec .../src/FlightGear-0.7.0/irix-hack.pl {} \;
+    find . -name Makefile -exec .../src/FlightGear-0.7.x/irix-hack.pl {} \;
+
+This applies a fix in all the Makefiles to the lib creation command
+(to use CC -ar rather than ar) as per a tip in the SGI pipeline
+periodical.
+
+Now, make and install plib.
+
+Download the latest fgfs source snapshot from:
+
+    ftp://ftp.flightgear.org/pub/fgfs/Source/Snapshots/
+
+Configure and build fgfs as you did plib:
+
+    sh$ CC="cc -Xcpluscomm" CXX=CC ./configure
+    sh$ find . -name Makefile -exec .../src/FlightGear-0.7.x/irix-hack.pl {} \;
+
+
+V. Additional Notes for Building from CVS Sources
+==================================================
+
+(Contributed by Todd Smith <msmith@sikorsky.com>)
+and updates by Curt Olson)
 
 Download the FlightGear-0.7.x via anonymous cvs as usual, then do:
 
@@ -129,16 +152,11 @@ warning(3303): type qualifier on return type is meaningless
 warning(3322): omission of explicit type is nonstandard ("int" assumed)
 
 
-V. Additional Native SGI Irix Compilers Notes
-=============================================
+VI. Additional Native SGI Irix Compilers Notes
+==============================================
 
-If you are building with native SGI compilers try running configure like the
-following (assuming sh syntax):
-
-  CC=cc CXX=CC CFLAGS="-Xcpluscomm -woff 1014" ./configure
-
-Then (and this step is *VERY* important for your success) run the following 
-command:
+Fixing all the Makefiles' with irix-hack.pl is *VERY* important for
+your success):
 
   find . -name Makefile -exec irix-hack.pl {} \;
 
@@ -171,7 +189,7 @@ just run:
   gmake
 
 Don't worry about the make failing in the Tools directory.  That's all
-under construction stuff right now (3/9/99) and if you get that far, 
+under construction stuff right now (10/7/99) and if you get that far, 
 rejoice because it means the simulator was successfully built in the 
 Simulator/Main subdirectory.
 
