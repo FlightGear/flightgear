@@ -39,11 +39,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>		// strcmp()
+#include <string.h>             // strcmp()
 
 
 #if defined( unix ) || defined( __CYGWIN__ )
-#  include <unistd.h>		// for gethostname()
+#  include <unistd.h>           // for gethostname()
 #endif
 
 // work around a stdc++ lib bug in some versions of linux, but doesn't
@@ -152,35 +152,35 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 #if defined( unix ) || defined( __CYGWIN__ )
     // Next check home directory for .fgfsrc.hostname file
     if ( root.empty() ) {
-	envp = ::getenv( "HOME" );
-	if ( envp != NULL ) {
-	    SGPath config( envp );
-	    config.append( ".fgfsrc" );
-	    char name[256];
-	    gethostname( name, 256 );
-	    config.concat( "." );
-	    config.concat( name );
- 	    root = fgScanForRoot(config.str());
-	}
+        envp = ::getenv( "HOME" );
+        if ( envp != NULL ) {
+            SGPath config( envp );
+            config.append( ".fgfsrc" );
+            char name[256];
+            gethostname( name, 256 );
+            config.concat( "." );
+            config.concat( name );
+            root = fgScanForRoot(config.str());
+        }
     }
 #endif
 
     // Next check home directory for .fgfsrc file
     if ( root.empty() ) {
-	envp = ::getenv( "HOME" );
-	if ( envp != NULL ) {
-	    SGPath config( envp );
-	    config.append( ".fgfsrc" );
-	    root = fgScanForRoot(config.str());
-	}
+        envp = ::getenv( "HOME" );
+        if ( envp != NULL ) {
+            SGPath config( envp );
+            config.append( ".fgfsrc" );
+            root = fgScanForRoot(config.str());
+        }
     }
     
     // Next check if fg-root is set as an env variable
     if ( root.empty() ) {
-	envp = ::getenv( "FG_ROOT" );
-	if ( envp != NULL ) {
-	    root = envp;
-	}
+        envp = ::getenv( "FG_ROOT" );
+        if ( envp != NULL ) {
+            root = envp;
+        }
     }
 
     // Otherwise, default to a random compiled-in location if we can't
@@ -189,11 +189,11 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 #if defined( __CYGWIN__ )
         root = "/FlightGear";
 #elif defined( WIN32 )
-	root = "\\FlightGear";
+        root = "\\FlightGear";
 #elif defined( macintosh )
-	root = "";
+        root = "";
 #else
-	root = PKGLIBDIR;
+        root = PKGLIBDIR;
 #endif
     }
 
@@ -211,14 +211,14 @@ string fgBasePackageVersion() {
 
     sg_gzifstream in( base_path.str() );
     if ( !in.is_open() ) {
-	SGPath old_path( globals->get_fg_root() );
-	old_path.append( "Thanks" );
-	sg_gzifstream old( old_path.str() );
-	if ( !old.is_open() ) {
-	    return "[none]";
-	} else {
-	    return "[old version]";
-	}
+        SGPath old_path( globals->get_fg_root() );
+        old_path.append( "Thanks" );
+        sg_gzifstream old( old_path.str() );
+        if ( !old.is_open() ) {
+            return "[none]";
+        } else {
+            return "[old version]";
+        }
     }
 
     string version;
@@ -231,7 +231,7 @@ string fgBasePackageVersion() {
 // Read in configuration (file and command line)
 bool fgInitConfig ( int argc, char **argv ) {
 
-				// First, set some sane default values
+                                // First, set some sane default values
     fgSetDefaults();
 
     // Read global preferences from $FG_ROOT/preferences.xml
@@ -249,14 +249,14 @@ bool fgInitConfig ( int argc, char **argv ) {
       aircraft_path.append(aircraft);
       aircraft_path.concat("-set.xml");
       SG_LOG(SG_INPUT, SG_INFO, "Reading default aircraft: " << aircraft
-	     << " from " << aircraft_path.str());
+             << " from " << aircraft_path.str());
       try {
-	readProperties(aircraft_path.str(), globals->get_props());
+        readProperties(aircraft_path.str(), globals->get_props());
       } catch (const sg_exception &e) {
-	string message = "Error reading default aircraft: ";
-	message += e.getFormattedMessage();
-	SG_LOG(SG_INPUT, SG_ALERT, message);
-	exit(2);
+        string message = "Error reading default aircraft: ";
+        message += e.getFormattedMessage();
+        SG_LOG(SG_INPUT, SG_ALERT, message);
+        exit(2);
       }
     } else {
       SG_LOG(SG_INPUT, SG_ALERT, "No default aircraft specified");
@@ -282,9 +282,9 @@ bool fgInitConfig ( int argc, char **argv ) {
     // Check for ~/.fgfsrc
     char* envp = ::getenv( "HOME" );
     if ( envp != NULL ) {
-	config.set( envp );
-	config.append( ".fgfsrc" );
-	fgParseOptions(config.str());
+        config.set( envp );
+        config.append( ".fgfsrc" );
+        fgParseOptions(config.str());
     }
 
 #if defined( unix ) || defined( __CYGWIN__ )
@@ -306,26 +306,26 @@ bool fgInitConfig ( int argc, char **argv ) {
 // find basic airport location info from airport database
 bool fgFindAirportID( const string& id, FGAirport *a ) {
     if ( id.length() ) {
-	SGPath path( globals->get_fg_root() );
-	path.append( "Airports" );
-	path.append( "simple.mk4" );
-	FGAirports airports( path.c_str() );
+        SGPath path( globals->get_fg_root() );
+        path.append( "Airports" );
+        path.append( "simple.mk4" );
+        FGAirports airports( path.c_str() );
 
-	SG_LOG( SG_GENERAL, SG_INFO, "Searching for airport code = " << id );
+        SG_LOG( SG_GENERAL, SG_INFO, "Searching for airport code = " << id );
 
-	if ( ! airports.search( id, a ) ) {
-	    SG_LOG( SG_GENERAL, SG_ALERT,
-		    "Failed to find " << id << " in " << path.str() );
-	    return false;
-	}
+        if ( ! airports.search( id, a ) ) {
+            SG_LOG( SG_GENERAL, SG_ALERT,
+                    "Failed to find " << id << " in " << path.str() );
+            return false;
+        }
     } else {
-	return false;
+        return false;
     }
 
     SG_LOG( SG_GENERAL, SG_INFO,
-	    "Position for " << id << " is ("
-	    << a->longitude << ", "
-	    << a->latitude << ")" );
+            "Position for " << id << " is ("
+            << a->longitude << ", "
+            << a->latitude << ")" );
 
     return true;
 }
@@ -337,19 +337,19 @@ bool fgSetPosFromAirportID( const string& id ) {
     // double lon, lat;
 
     SG_LOG( SG_GENERAL, SG_INFO,
-	    "Attempting to set starting position from airport code " << id );
+            "Attempting to set starting position from airport code " << id );
 
     if ( fgFindAirportID( id, &a ) ) {
-	fgSetDouble("/position/longitude-deg",  a.longitude );
-	fgSetDouble("/position/latitude-deg",  a.latitude );
-	SG_LOG( SG_GENERAL, SG_INFO,
-		"Position for " << id << " is ("
-		<< a.longitude << ", "
-		<< a.latitude << ")" );
+        fgSetDouble("/position/longitude-deg",  a.longitude );
+        fgSetDouble("/position/latitude-deg",  a.latitude );
+        SG_LOG( SG_GENERAL, SG_INFO,
+                "Position for " << id << " is ("
+                << a.longitude << ", "
+                << a.latitude << ")" );
 
-	return true;
+        return true;
     } else {
-	return false;
+        return false;
     }
 
 }
@@ -367,12 +367,12 @@ bool fgSetTowerPosFromAirportID( const string& id, double hdg ) {
     float fudge_lat = .003f - fudge_lon;
 
     if ( fgFindAirportID( id, &a ) ) {
-	fgSetDouble("/sim/tower/longitude-deg",  a.longitude + fudge_lon);
-	fgSetDouble("/sim/tower/latitude-deg",  a.latitude + fudge_lat);
+        fgSetDouble("/sim/tower/longitude-deg",  a.longitude + fudge_lon);
+        fgSetDouble("/sim/tower/latitude-deg",  a.latitude + fudge_lat);
         fgSetDouble("/sim/tower/altitude-ft", a.elevation + towerheight);
-	return true;
+        return true;
     } else {
-	return false;
+        return false;
     }
 
 }
@@ -452,7 +452,7 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
                 << " + " << found_dir );
 
     } else {
-	return false;
+        return false;
     }
 
     double heading = found_r.heading + found_dir;
@@ -463,37 +463,37 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
 
     SG_LOG( SG_GENERAL, SG_INFO,
-	    "runway =  " << found_r.lon << ", " << found_r.lat
-	    << " length = " << found_r.length * SG_FEET_TO_METER * 0.5 
-	    << " heading = " << azimuth );
+            "runway =  " << found_r.lon << ", " << found_r.lat
+            << " length = " << found_r.length * SG_FEET_TO_METER * 0.5 
+            << " heading = " << azimuth );
     
     geo_direct_wgs_84 ( 0, found_r.lat, found_r.lon, 
-			azimuth, found_r.length * SG_FEET_TO_METER * 0.5 - 5.0,
-			&lat2, &lon2, &az2 );
+                        azimuth, found_r.length * SG_FEET_TO_METER * 0.5 - 5.0,
+                        &lat2, &lon2, &az2 );
 
     if ( fabs( fgGetDouble("/sim/startup/offset-distance") ) > SG_EPSILON ) {
-	double olat, olon;
-	double odist = fgGetDouble("/sim/startup/offset-distance");
-	odist *= SG_NM_TO_METER;
-	double oaz = azimuth;
-	if ( fabs(fgGetDouble("/sim/startup/offset-azimuth")) > SG_EPSILON ) {
-	    oaz = fgGetDouble("/sim/startup/offset-azimuth") + 180;
-	}
-	while ( oaz >= 360.0 ) { oaz -= 360.0; }
-	geo_direct_wgs_84 ( 0, lat2, lon2, oaz, odist, &olat, &olon, &az2 );
-	lat2=olat;
-	lon2=olon;
+        double olat, olon;
+        double odist = fgGetDouble("/sim/startup/offset-distance");
+        odist *= SG_NM_TO_METER;
+        double oaz = azimuth;
+        if ( fabs(fgGetDouble("/sim/startup/offset-azimuth")) > SG_EPSILON ) {
+            oaz = fgGetDouble("/sim/startup/offset-azimuth") + 180;
+        }
+        while ( oaz >= 360.0 ) { oaz -= 360.0; }
+        geo_direct_wgs_84 ( 0, lat2, lon2, oaz, odist, &olat, &olon, &az2 );
+        lat2=olat;
+        lon2=olon;
     }
-	
+        
     fgSetDouble("/position/longitude-deg",  lon2 );
     fgSetDouble("/position/latitude-deg",  lat2 );
     fgSetDouble("/orientation/heading-deg", heading );
 
     SG_LOG( SG_GENERAL, SG_INFO,
-	    "Position for " << id << " is ("
-	    << lon2 << ", "
-	    << lat2 << ") new heading is "
-	    << heading );
+            "Position for " << id << " is ("
+            << lon2 << ", "
+            << lat2 << ") new heading is "
+            << heading );
 
     return true;
 }
@@ -507,25 +507,25 @@ void fgSetPosFromGlideSlope(void) {
     //if glideslope and offset-distance are set and altitude is
     //not, calculate the initial altitude
     if( fabs(gs) > 0.01 && fabs(od) > 0.1 && alt < -9990 ) {
-    	od *= SG_NM_TO_METER * SG_METER_TO_FEET;
-	alt = fabs(od*tan(gs));
-	fgSetDouble("/position/altitude-ft",alt);
-	fgSetBool("/sim/startup/onground", false);
-	SG_LOG(SG_GENERAL,SG_INFO, "Calculated altitude as: " << alt  << " ft");
+        od *= SG_NM_TO_METER * SG_METER_TO_FEET;
+        alt = fabs(od*tan(gs));
+        fgSetDouble("/position/altitude-ft",alt);
+        fgSetBool("/sim/startup/onground", false);
+        SG_LOG(SG_GENERAL,SG_INFO, "Calculated altitude as: " << alt  << " ft");
     } else if( fabs(gs) > 0.01 && alt > 0 && fabs(od) < 0.1) {
-    	od  = alt/tan(gs);
-	od *= -1*SG_FEET_TO_METER * SG_METER_TO_NM;
-	fgSetDouble("/sim/startup/offset-distance",od);
-	SG_LOG(SG_GENERAL,SG_INFO, "Calculated offset distance as: " 
-	                               << od  << " nm");
+        od  = alt/tan(gs);
+        od *= -1*SG_FEET_TO_METER * SG_METER_TO_NM;
+        fgSetDouble("/sim/startup/offset-distance",od);
+        SG_LOG(SG_GENERAL,SG_INFO, "Calculated offset distance as: " 
+                                       << od  << " nm");
     } else if( fabs(gs) > 0.01 ) {
-    	SG_LOG(SG_GENERAL,SG_ALERT, "Glideslope given but not altitude" 
-	                          << " or offset-distance.  Resetting"
-				  << " glideslope to zero" );
-        fgSetDouble("/velocities/glideslope",0);				  
-    }				   
-	                              
-}    			
+        SG_LOG(SG_GENERAL,SG_ALERT, "Glideslope given but not altitude" 
+                                  << " or offset-distance.  Resetting"
+                                  << " glideslope to zero" );
+        fgSetDouble("/velocities/glideslope",0);                                  
+    }                              
+                                      
+}                       
 
 // General house keeping initializations
 bool fgInitGeneral( void ) {
@@ -540,11 +540,11 @@ bool fgInitGeneral( void ) {
 
     root = globals->get_fg_root();
     if ( ! root.length() ) {
-	// No root path set? Then bail ...
-	SG_LOG( SG_GENERAL, SG_ALERT,
-		"Cannot continue without a path to the base package "
-		<< "being defined." );
-	exit(-1);
+        // No root path set? Then bail ...
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "Cannot continue without a path to the base package "
+                << "being defined." );
+        exit(-1);
     }
     SG_LOG( SG_GENERAL, SG_INFO, "FG_ROOT = " << '"' << root << '"' << endl );
 
@@ -552,14 +552,14 @@ bool fgInitGeneral( void ) {
     // initialize full screen flag
     globals->set_fullscreen(false);
     if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
-	// Test for the MESA_GLX_FX env variable
-	if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
-	    // test if we are fullscreen mesa/glide
-	    if ( (mesa_win_state[0] == 'f') ||
-		 (mesa_win_state[0] == 'F') ) {
-	        globals->set_fullscreen(true);
-	    }
-	}
+        // Test for the MESA_GLX_FX env variable
+        if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
+            // test if we are fullscreen mesa/glide
+            if ( (mesa_win_state[0] == 'f') ||
+                 (mesa_win_state[0] == 'F') ) {
+                globals->set_fullscreen(true);
+            }
+        }
     }
 #endif
 
@@ -583,23 +583,23 @@ void fgInitFDM() {
     const string &model = fgGetString("/sim/flight-model");
 
     try {
-	if ( model == "larcsim" ) {
-	    cur_fdm_state = new FGLaRCsim( dt );
-	} else if ( model == "jsb" ) {
-	    cur_fdm_state = new FGJSBsim( dt );
-	} else if ( model == "ada" ) {
-	    cur_fdm_state = new FGADA( dt );
-	} else if ( model == "balloon" ) {
-	    cur_fdm_state = new FGBalloonSim( dt );
-	} else if ( model == "magic" ) {
-	    cur_fdm_state = new FGMagicCarpet( dt );
-	} else if ( model == "ufo" ) {
-	    cur_fdm_state = new FGUFO( dt );
-	} else if ( model == "external" ) {
+        if ( model == "larcsim" ) {
+            cur_fdm_state = new FGLaRCsim( dt );
+        } else if ( model == "jsb" ) {
+            cur_fdm_state = new FGJSBsim( dt );
+        } else if ( model == "ada" ) {
+            cur_fdm_state = new FGADA( dt );
+        } else if ( model == "balloon" ) {
+            cur_fdm_state = new FGBalloonSim( dt );
+        } else if ( model == "magic" ) {
+            cur_fdm_state = new FGMagicCarpet( dt );
+        } else if ( model == "ufo" ) {
+            cur_fdm_state = new FGUFO( dt );
+        } else if ( model == "external" ) {
             // external is a synonym for "--fdm=null" and is
             // maintained here for backwards compatibility
-	    cur_fdm_state = new FGNullFDM( dt );
-	} else if ( model.find("network") == 0 ) {
+            cur_fdm_state = new FGNullFDM( dt );
+        } else if ( model.find("network") == 0 ) {
             string host = "localhost";
             int port1 = 5501;
             int port2 = 5502;
@@ -631,20 +631,20 @@ void fgInitFDM() {
                 port3 = atoi( net_options.substr(begin, end - begin).c_str() );
                 begin = end + 1;
             }
-	    cur_fdm_state = new FGExternalNet( dt, host, port1, port2, port3 );
-	} else if ( model == "null" ) {
-	    cur_fdm_state = new FGNullFDM( dt );
-	} else if ( model == "yasim" ) {
-	    cur_fdm_state = new YASim( dt );
-	} else {
-	    SG_LOG(SG_GENERAL, SG_ALERT,
-		   "Unrecognized flight model '" << model
-		   << "', cannot init flight dynamics model.");
-	    exit(-1);
-	}
+            cur_fdm_state = new FGExternalNet( dt, host, port1, port2, port3 );
+        } else if ( model == "null" ) {
+            cur_fdm_state = new FGNullFDM( dt );
+        } else if ( model == "yasim" ) {
+            cur_fdm_state = new YASim( dt );
+        } else {
+            SG_LOG(SG_GENERAL, SG_ALERT,
+                   "Unrecognized flight model '" << model
+                   << "', cannot init flight dynamics model.");
+            exit(-1);
+        }
     } catch ( ... ) {
-	SG_LOG(SG_GENERAL, SG_ALERT, "FlightGear aborting\n\n");
-	exit(-1);
+        SG_LOG(SG_GENERAL, SG_ALERT, "FlightGear aborting\n\n");
+        exit(-1);
     }
 }
 
@@ -675,11 +675,11 @@ void fgInitView() {
 SGTime *fgInitTime() {
     // Initialize time
     static const SGPropertyNode *longitude
-	= fgGetNode("/position/longitude-deg");
+        = fgGetNode("/position/longitude-deg");
     static const SGPropertyNode *latitude
-	= fgGetNode("/position/latitude-deg");
+        = fgGetNode("/position/latitude-deg");
     static const SGPropertyNode *cur_time_override
-	= fgGetNode("/sim/time/cur-time-override", true);
+        = fgGetNode("/sim/time/cur-time-override", true);
 
     SGPath zone( globals->get_fg_root() );
     zone.append( "Timezone" );
@@ -738,11 +738,11 @@ SGTime *fgInitTime() {
 // Returns non-zero if a problem encountered.
 bool fgInitSubsystems( void ) {
     static const SGPropertyNode *longitude
-	= fgGetNode("/position/longitude-deg");
+        = fgGetNode("/position/longitude-deg");
     static const SGPropertyNode *latitude
-	= fgGetNode("/position/latitude-deg");
+        = fgGetNode("/position/latitude-deg");
     static const SGPropertyNode *altitude
-	= fgGetNode("/position/altitude-ft");
+        = fgGetNode("/position/altitude-ft");
 
     fgLIGHT *l = &cur_light_params;
 
@@ -757,8 +757,8 @@ bool fgInitSubsystems( void ) {
     SGPath mpath( globals->get_fg_root() );
     mpath.append( "materials.xml" );
     if ( ! material_lib.load( mpath.str() ) ) {
-    	SG_LOG( SG_GENERAL, SG_ALERT, "Error loading material lib!" );
-	exit(-1);
+        SG_LOG( SG_GENERAL, SG_ALERT, "Error loading material lib!" );
+        exit(-1);
     }
 
     ////////////////////////////////////////////////////////////////////
@@ -769,8 +769,8 @@ bool fgInitSubsystems( void ) {
 
     // Output event stats every 60 seconds
     global_events.Register( "FGEventMgr::print_stats()",
-			    &global_events, &FGEventMgr::print_stats,
-			    60000 );
+                            &global_events, &FGEventMgr::print_stats,
+                            60000 );
 
 
     ////////////////////////////////////////////////////////////////////
@@ -778,25 +778,25 @@ bool fgInitSubsystems( void ) {
     ////////////////////////////////////////////////////////////////////
 
     if ( global_tile_mgr.init() ) {
-	// Load the local scenery data
-	double visibility_meters = fgGetDouble("/environment/visibility-m");
-		
-	global_tile_mgr.update( longitude->getDoubleValue(),
-				latitude->getDoubleValue(),
-				visibility_meters );
+        // Load the local scenery data
+        double visibility_meters = fgGetDouble("/environment/visibility-m");
+                
+        global_tile_mgr.update( longitude->getDoubleValue(),
+                                latitude->getDoubleValue(),
+                                visibility_meters );
     } else {
-    	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
-	exit(-1);
+        SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
+        exit(-1);
     }
 
     // cause refresh of viewer scenery timestamps every 15 seconds...
     global_events.Register( "FGTileMgr::refresh_view_timestamps()",
-			    &global_tile_mgr, &FGTileMgr::refresh_view_timestamps,
-			    15000 );
+                            &global_tile_mgr, &FGTileMgr::refresh_view_timestamps,
+                            15000 );
 
     SG_LOG( SG_GENERAL, SG_DEBUG,
-    	    "Current terrain elevation after tile mgr init " <<
-	    globals->get_scenery()->get_cur_elev() );
+            "Current terrain elevation after tile mgr init " <<
+            globals->get_scenery()->get_cur_elev() );
 
 
     ////////////////////////////////////////////////////////////////////
@@ -804,7 +804,7 @@ bool fgInitSubsystems( void ) {
     ////////////////////////////////////////////////////////////////////
 
     fgInitFDM();
-	
+        
     // allocates structures so must happen before any of the flight
     // model or control parameters are set
     fgAircraftInit();   // In the future this might not be the case.
@@ -827,9 +827,9 @@ bool fgInitSubsystems( void ) {
     fgUpdateSunPos();
     fgUpdateMoonPos();
     global_events.Register( "fgUpdateSunPos()", &fgUpdateSunPos,
-			    60000);
+                            60000);
     global_events.Register( "fgUpdateMoonPos()", &fgUpdateMoonPos,
-			    60000);
+                            60000);
 
     // Initialize Lighting interpolation tables
     l->Init();
@@ -838,8 +838,8 @@ bool fgInitSubsystems( void ) {
     l->Update();
     // update the lighting parameters (based on sun angle)
     global_events.Register( "fgLight::Update()",
-			    &cur_light_params, &fgLIGHT::Update,
-			    30000 );
+                            &cur_light_params, &fgLIGHT::Update,
+                            30000 );
 
 
     ////////////////////////////////////////////////////////////////////
@@ -857,7 +857,7 @@ bool fgInitSubsystems( void ) {
 
     // update the current timezone each 30 minutes
     global_events.Register( "fgUpdateLocalTime()", &fgUpdateLocalTime,
-			    30*60*1000 );
+                            30*60*1000 );
 
 
     ////////////////////////////////////////////////////////////////////
@@ -870,8 +870,8 @@ bool fgInitSubsystems( void ) {
     SG_LOG(SG_GENERAL, SG_INFO, "Creating LocalWeatherDatabase");
     sgVec3 position;
     sgSetVec3( position, current_aircraft.fdm_state->get_Latitude(),
-	       current_aircraft.fdm_state->get_Longitude(),
-	       current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER );
+               current_aircraft.fdm_state->get_Longitude(),
+               current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER );
     double init_vis = fgGetDouble("/environment/visibility-m");
 
     FGLocalWeatherDatabase::DatabaseWorkingType working_type;
@@ -885,14 +885,14 @@ bool fgInitSubsystems( void ) {
     
     if ( init_vis > 0 ) {
       FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
-	new FGLocalWeatherDatabase( position,
-				    globals->get_fg_root(),
+        new FGLocalWeatherDatabase( position,
+                                    globals->get_fg_root(),
                                     working_type,
                                     init_vis );
     } else {
       FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
-	new FGLocalWeatherDatabase( position,
-				    globals->get_fg_root(),
+        new FGLocalWeatherDatabase( position,
+                                    globals->get_fg_root(),
                                     working_type );
     }
 
@@ -1039,8 +1039,8 @@ bool fgInitSubsystems( void ) {
     // Initialize the radio stack subsystem.
     ////////////////////////////////////////////////////////////////////
 
-				// A textbook example of how FGSubsystem
-				// should work...
+                                // A textbook example of how FGSubsystem
+                                // should work...
     current_radiostack = new FGRadioStack;
     current_radiostack->init();
     current_radiostack->bind();
@@ -1051,10 +1051,10 @@ bool fgInitSubsystems( void ) {
     ////////////////////////////////////////////////////////////////////
 
     if( fgCockpitInit( &current_aircraft )) {
-	// Cockpit initialized ok.
+        // Cockpit initialized ok.
     } else {
-    	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Cockpit initialization!" );
-	exit(-1);
+        SG_LOG( SG_GENERAL, SG_ALERT, "Error in Cockpit initialization!" );
+        exit(-1);
     }
 
 
@@ -1066,8 +1066,8 @@ bool fgInitSubsystems( void ) {
     globals->get_autopilot()->init();
     globals->get_autopilot()->bind();
 
-				// FIXME: these should go in the
-				// GUI initialization code, not here.
+                                // FIXME: these should go in the
+                                // GUI initialization code, not here.
     fgAPAdjustInit();
     NewTgtAirportInit();
     NewHeadingInit();
@@ -1082,15 +1082,15 @@ bool fgInitSubsystems( void ) {
 
     // Initialize the 2D panel.
     string panel_path = fgGetString("/sim/panel/path",
-				    "Panels/Default/default.xml");
+                                    "Panels/Default/default.xml");
     current_panel = fgReadPanel(panel_path);
     if (current_panel == 0) {
-	SG_LOG( SG_INPUT, SG_ALERT, 
-		"Error reading new panel from " << panel_path );
+        SG_LOG( SG_INPUT, SG_ALERT, 
+                "Error reading new panel from " << panel_path );
     } else {
-	SG_LOG( SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path );
-	current_panel->init();
-	current_panel->bind();
+        SG_LOG( SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path );
+        current_panel->init();
+        current_panel->bind();
     }
 
     
@@ -1121,8 +1121,9 @@ bool fgInitSubsystems( void ) {
     // Initialize the input subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    current_input.init();
-    current_input.bind();
+    globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
+                                      "input",
+                                      new FGInput);
 
 
     ////////////////////////////////////////////////////////////////////
@@ -1139,8 +1140,8 @@ bool fgInitSubsystems( void ) {
 
     SG_LOG( SG_GENERAL, SG_INFO, endl);
 
-				// Save the initial state for future
-				// reference.
+                                // Save the initial state for future
+                                // reference.
     globals->saveInitialState();
 
     return true;
@@ -1150,21 +1151,21 @@ bool fgInitSubsystems( void ) {
 void fgReInitSubsystems( void )
 {
     static const SGPropertyNode *longitude
-	= fgGetNode("/position/longitude-deg");
+        = fgGetNode("/position/longitude-deg");
     static const SGPropertyNode *latitude
-	= fgGetNode("/position/latitude-deg");
+        = fgGetNode("/position/latitude-deg");
     static const SGPropertyNode *altitude
-	= fgGetNode("/position/altitude-ft");
+        = fgGetNode("/position/altitude-ft");
     static const SGPropertyNode *master_freeze
-	= fgGetNode("/sim/freeze/master");
+        = fgGetNode("/sim/freeze/master");
 
     SG_LOG( SG_GENERAL, SG_INFO,
-	    "fgReInitSubsystems(): /position/altitude = "
+            "fgReInitSubsystems(): /position/altitude = "
             << altitude->getDoubleValue() );
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
-	fgSetBool("/sim/freeze/master", true);
+        fgSetBool("/sim/freeze/master", true);
     }
     
     // Initialize the Scenery Management subsystem
@@ -1192,7 +1193,7 @@ void fgReInitSubsystems( void )
     fgUpdateLocalTime();
 
     if ( !freeze ) {
-	fgSetBool("/sim/freeze/master", false);
+        fgSetBool("/sim/freeze/master", false);
     }
 }
 

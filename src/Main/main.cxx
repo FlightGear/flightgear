@@ -126,8 +126,6 @@ SG_USING_STD(endl);
 #include <Time/sunpos.hxx>
 #include <Time/tmp.hxx>
 
-#include <Input/input.hxx>
-
 // ADA
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/math/point3d.hxx>
@@ -796,9 +794,6 @@ void fgRenderFrame() {
 	// glDisable( GL_CULL_FACE );
 	// glDisable( GL_TEXTURE_2D );
 
-	// update the input subsystem
-	current_input.update(delta_time_sec);
-
 	// update the controls subsystem
 	globals->get_controls()->update(delta_time_sec);
 
@@ -823,7 +818,6 @@ void fgRenderFrame() {
         glEnable( GL_DEPTH_TEST );
         glEnable( GL_FOG );
 
-// 	globals->get_logger()->update(delta_time_sec);
     }
 
     glutSwapBuffers();
@@ -1138,13 +1132,10 @@ static void fgMainLoop( void ) {
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( fgGetBool("/sim/sound/audible")
            && globals->get_soundmgr()->is_working() ) {
-//         globals->get_fx()->update( delta_time_sec );
         globals->get_soundmgr()->update( delta_time_sec );
     }
 #endif
 
-//     globals->get_systemmgr()->update( delta_time_sec );
-//     globals->get_instrumentmgr()->update( delta_time_sec );
     globals->get_subsystem_mgr()->update(delta_time_sec);
 
     //

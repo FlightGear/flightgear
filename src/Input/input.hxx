@@ -195,6 +195,18 @@ public:
 
 
   /**
+   * Control whether this is the default module to receive events.
+   *
+   * The first input module created will set itself as the default
+   * automatically.
+   *
+   * @param status true if this should be the default module for
+   * events, false otherwise.
+   */
+  virtual void makeDefault (bool status = true);
+
+
+  /**
    * Handle a single keystroke.
    *
    * <p>Note: for special keys, the integer key code will be the Glut
@@ -396,9 +408,6 @@ private:
   mouse _mouse_bindings[MAX_MICE];
 
 };
-
-
-extern FGInput current_input;
 
 
 

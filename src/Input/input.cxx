@@ -69,8 +69,11 @@ SG_USING_STD(vector);
 
 
 ////////////////////////////////////////////////////////////////////////
-// Local data structures.
+// Local variables.
 ////////////////////////////////////////////////////////////////////////
+
+static FGInput * default_input = 0;
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -173,17 +176,17 @@ FGBinding::fire (double setting) const
 				// From main.cxx
 extern void fgReshape( int width, int height );
 
-FGInput current_input;
-
 
 FGInput::FGInput ()
 {
-  // no op
+    if (default_input == 0)
+        default_input = this;
 }
 
 FGInput::~FGInput ()
 {
-  // no op
+    if (default_input == this)
+        default_input = 0;
 }
 
 void
@@ -220,6 +223,15 @@ FGInput::update (double dt)
   _update_keyboard();
   _update_joystick();
   _update_mouse();
+}
+
+void
+FGInput::makeDefault (bool status)
+{
+    if (status)
+        default_input = this;
+    else if (default_input == this)
+        default_input = 0;
 }
 
 void
@@ -1024,40 +1036,48 @@ void
 GLUTkey(unsigned char k, int x, int y)
 {
 				// Give PUI a chance to grab it first.
-  if (!puKeyboard(k, PU_DOWN))
-    current_input.doKey(k, get_mods(), x, y);
+    if (!puKeyboard(k, PU_DOWN)) {
+      if (default_input != 0)
+          default_input->doKey(k, get_mods(), x, y);
+    }
 }
 
 void
 GLUTkeyup(unsigned char k, int x, int y)
 {
-  current_input.doKey(k, get_mods()|FGInput::FG_MOD_UP, x, y);
+    if (default_input != 0)
+        default_input->doKey(k, get_mods()|FGInput::FG_MOD_UP, x, y);
 }
 
 void
 GLUTspecialkey(int k, int x, int y)
 {
 				// Give PUI a chance to grab it first.
-  if (!puKeyboard(k + PU_KEY_GLUT_SPECIAL_OFFSET, PU_DOWN))
-    current_input.doKey(k + 256, get_mods(), x, y);
+    if (!puKeyboard(k + PU_KEY_GLUT_SPECIAL_OFFSET, PU_DOWN)) {
+        if (default_input != 0)
+            default_input->doKey(k + 256, get_mods(), x, y);
+    }
 }
 
 void
 GLUTspecialkeyup(int k, int x, int y)
 {
-  current_input.doKey(k + 256, get_mods()|FGInput::FG_MOD_UP, x, y);
+    if (default_input != 0)
+        default_input->doKey(k + 256, get_mods()|FGInput::FG_MOD_UP, x, y);
 }
 
 void
 GLUTmouse (int button, int updown, int x, int y)
 {
-  current_input.doMouseClick(button, updown, x, y);
+    if (default_input != 0)
+        default_input->doMouseClick(button, updown, x, y);
 }
 
 void
 GLUTmotion (int x, int y)
 {
-  current_input.doMouseMotion(x, y);
+    if (default_input != 0)
+        default_input->doMouseMotion(x, y);
 }
 
 // end of input.cxx
