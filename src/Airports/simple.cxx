@@ -52,6 +52,8 @@ operator >> ( istream& in, FGAirport& a )
     in.getline( name, 256 );
     a.name = name;
 
+    a.has_metar = true;         // assume true
+
     return in;
 }
 
@@ -70,18 +72,42 @@ FGAirportList::FGAirportList( const string& file ) {
     in >> skipeol;
 
     FGAirport a;
+    int size = 0;
     while ( in ) {
         in >> a;
-        airports[a.id] = a;
-        airports2.push_back(&airports[a.id]);
+        airports_by_id[a.id] = a;
+        airports_array.push_back( &airports_by_id[a.id] );
+        size++;
     }
-
 }
 
 
 // search for the specified id
 FGAirport FGAirportList::search( const string& id) {
-    return airports[id];
+    
+    return airports_by_id[id];
+}
+
+
+// search for the airport nearest the specified position
+FGAirport FGAirportList::search( double lon_deg, double lat_deg,
+                                 bool with_metar ) {
+    int closest = 0;
+    double min_dist = 360.0;
+    unsigned int i;
+    for ( i = 0; i < airports_array.size(); ++i ) {
+        // crude manhatten distance based on lat/lon difference
+        double d = fabs(lon_deg - airports_array[i]->longitude)
+            + fabs(lat_deg - airports_array[i]->latitude);
+        if ( d < min_dist ) {
+            if ( !with_metar || (with_metar && airports_array[i]->has_metar) ) {
+                closest = i;
+                min_dist = d;
+            }
+        }
+    }
+
+    return *airports_array[closest];
 }
 
 
@@ -92,11 +118,18 @@ FGAirportList::~FGAirportList( void ) {
 int
 FGAirportList::size () const
 {
-    return airports2.size();
+    return airports_array.size();
 }
 
-const FGAirport *
-FGAirportList::getAirport (int index) const
+const FGAirport FGAirportList::getAirport( int index ) const
 {
-    return airports2[index];
+    return *airports_array[index];
+}
+
+
+/**
+ * Mark the specified airport record as not having metar
+ */
+void FGAirportList::no_metar( const string &id ) {
+    airports_by_id[id].has_metar = false;
 }

@@ -55,7 +55,7 @@ struct FGAirport {
     double elevation;
     string code;
     string name;
-
+    bool has_metar;
 };
 
 typedef map < string, FGAirport > airport_map;
@@ -69,8 +69,8 @@ class FGAirportList {
 
 private:
 
-    airport_map airports;
-    airport_list airports2;
+    airport_map airports_by_id;
+    airport_list airports_array;
 
 public:
 
@@ -86,16 +86,29 @@ public:
     // "airport" is not changed if "apt" is not found.
     FGAirport search( const string& id );
 
+    // search for the airport closest to the specified position
+    // (currently a linear inefficient search so it's probably not
+    // best to use this at runtime.)  If with_metar is true, then only
+    // return station id's marked as having metar data.
+    FGAirport search( double lon_deg, double lat_deg, bool with_metar );
+
+
     /**
      * Return the number of airports in the list.
      */
-    int size () const;
+    int size() const;
 
 
     /**
      * Return a specific airport, by position.
      */
-    const FGAirport * getAirport (int index) const;
+    const FGAirport getAirport( int index ) const;
+
+
+    /**
+     * Mark the specified airport record as not having metar
+     */
+    void no_metar( const string &id );
 
 };
 
