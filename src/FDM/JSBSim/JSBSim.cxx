@@ -543,7 +543,7 @@ bool FGJSBsim::copy_from_JSBsim() {
     elevator_pos_pct->setDoubleValue( FCS->GetDePos(ofNorm) );
     left_aileron_pos_pct->setDoubleValue( FCS->GetDaLPos(ofNorm) );
     right_aileron_pos_pct->setDoubleValue( -1*FCS->GetDaLPos(ofNorm) );
-    rudder_pos_pct->setDoubleValue( FCS->GetDrPos(ofNorm) );
+    rudder_pos_pct->setDoubleValue( -1*FCS->GetDrPos(ofNorm) );
     flap_pos_pct->setDoubleValue( FCS->GetDfPos(ofNorm) );
 
     
