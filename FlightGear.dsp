@@ -2373,21 +2373,6 @@ SOURCE=.\src\Main\options.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\Main\soundmgr.cxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\main"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\main"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\src\Main\splash.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -2867,6 +2852,40 @@ SOURCE=.\src\Scenery\tilemgr.cxx
 !ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
 
 # PROP Intermediate_Dir "Debug\Lib_Scenery"
+
+!ENDIF 
+
+# End Source File
+# End Group
+# Begin Group "Lib_Sound"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\src\Sound\morse.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Sound"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Sound"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Sound\soundmgr.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Sound"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Sound"
 
 !ENDIF 
 

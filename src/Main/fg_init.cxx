@@ -56,6 +56,7 @@
 #include <simgear/timing/sg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
+#include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
 #include <Autopilot/auto_gui.hxx>
@@ -518,6 +519,7 @@ bool fgInitSubsystems( void ) {
     double dt = 1.0 / fgGetInt("/sim/model-hz");
     // cout << "dt = " << dt << endl;
 
+    aircraft_dir = fgGetString("/sim/aircraft-dir");
     const string &model = fgGetString("/sim/flight-model");
     if (model == "larcsim") {
 	cur_fdm_state = new FGLaRCsim( dt );

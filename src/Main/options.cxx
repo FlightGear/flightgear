@@ -544,7 +544,7 @@ parse_option (const string& arg)
 	fgSetBool("/sim/hud/antialiased", false);
     } else if ( arg == "--enable-anti-alias-hud" ) {
         fgSetBool("/sim/hud/antialiased", true);
-    } else if ( arg.find( "--control=") != string::npos ) {
+    } else if ( arg.find( "--control=") == 0 ) {
         fgSetString("/sim/control-mode", arg.substr(10));
     } else if ( arg == "--disable-auto-coordination" ) {
         fgSetBool("/sim/auto-coordination", false);
@@ -562,29 +562,29 @@ parse_option (const string& arg)
 	fgSetBool("/sim/sound", false);
     } else if ( arg == "--enable-sound" ) {
 	fgSetBool("/sim/sound", true);
-    } else if ( arg.find( "--airport-id=") != string::npos ) {
+    } else if ( arg.find( "--airport-id=") == 0 ) {
 				// NB: changed property name!!!
 	fgSetString("/sim/startup/airport-id", arg.substr(13));
-    } else if ( arg.find( "--offset-distance=") != string::npos ) {
+    } else if ( arg.find( "--offset-distance=") == 0 ) {
 	fgSetDouble("/sim/startup/offset-distance", atof(arg.substr(18)));
-    } else if ( arg.find( "--offset-azimuth=") != string::npos ) {
+    } else if ( arg.find( "--offset-azimuth=") == 0 ) {
 	fgSetDouble("/sim/startup/offset-azimuth", atof(arg.substr(17))); 
-    } else if ( arg.find( "--lon=" ) != string::npos ) {
+    } else if ( arg.find( "--lon=" ) == 0 ) {
 	fgSetDouble("/position/longitude",
 			      parse_degree(arg.substr(6)));
 	fgSetString("/sim/startup/airport-id", "");
-    } else if ( arg.find( "--lat=" ) != string::npos ) {
+    } else if ( arg.find( "--lat=" ) == 0 ) {
 	fgSetDouble("/position/latitude",
 			      parse_degree(arg.substr(6)));
 	fgSetString("/sim/startup/airport-id", "");
-    } else if ( arg.find( "--altitude=" ) != string::npos ) {
+    } else if ( arg.find( "--altitude=" ) == 0 ) {
 	fgSetBool("/sim/startup/onground", false);
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	    fgSetDouble("/position/altitude", atof(arg.substr(11)));
 	else
 	    fgSetDouble("/position/altitude",
 			atof(arg.substr(11)) * METER_TO_FEET);
-    } else if ( arg.find( "--uBody=" ) != string::npos ) {
+    } else if ( arg.find( "--uBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
 				// FIXME: the units are totally confused here
 	if ( fgGetString("/sim/startup/units") == "feet" )
@@ -592,7 +592,7 @@ parse_option (const string& arg)
 	else
 	  fgSetDouble("/velocities/uBody",
 			       atof(arg.substr(8)) * FEET_TO_METER);
-    } else if ( arg.find( "--vBody=" ) != string::npos ) {
+    } else if ( arg.find( "--vBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
 				// FIXME: the units are totally confused here
 	if ( fgGetString("/sim/startup/units") == "feet" )
@@ -600,7 +600,7 @@ parse_option (const string& arg)
 	else
 	  fgSetDouble("/velocities/vBody",
 			       atof(arg.substr(8)) * FEET_TO_METER);
-    } else if ( arg.find( "--wBody=" ) != string::npos ) {
+    } else if ( arg.find( "--wBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
 				// FIXME: the units are totally confused here
 	if ( fgGetString("/sim/startup/units") == "feet" )
@@ -608,7 +608,7 @@ parse_option (const string& arg)
 	else
 	  fgSetDouble("/velocities/wBody",
 			       atof(arg.substr(8)) * FEET_TO_METER);
-    } else if ( arg.find( "--vNorth=" ) != string::npos ) {
+    } else if ( arg.find( "--vNorth=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
 				// FIXME: the units are totally confused here
 	if ( fgGetString("/sim/startup/units") == "feet" )
@@ -616,7 +616,7 @@ parse_option (const string& arg)
 	else
 	  fgSetDouble("/velocities/speed-north",
 			       atof(arg.substr(8)) * FEET_TO_METER);
-    } else if ( arg.find( "--vEast=" ) != string::npos ) {
+    } else if ( arg.find( "--vEast=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
 				// FIXME: the units are totally confused here
 	if ( fgGetString("/sim/startup/units") == "feet" )
@@ -624,7 +624,7 @@ parse_option (const string& arg)
 	else
 	  fgSetDouble("/velocities/speed-east",
 			       atof(arg.substr(8)) * FEET_TO_METER);
-    } else if ( arg.find( "--vDown=" ) != string::npos ) {
+    } else if ( arg.find( "--vDown=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
 				// FIXME: the units are totally confused here
 	if ( fgGetString("/sim/startup/units") == "feet" )
@@ -632,39 +632,39 @@ parse_option (const string& arg)
 	else
 	  fgSetDouble("/velocities/speed-down",
 			       atof(arg.substr(8)) * FEET_TO_METER);
-    } else if ( arg.find( "--vc=" ) != string::npos) {
+    } else if ( arg.find( "--vc=" ) == 0) {
         fgSetString("/sim/startup/speed-set", "knots");
 	fgSetDouble("/velocities/airspeed", atof(arg.substr(5)));
-    } else if ( arg.find( "--mach=" ) != string::npos) {
+    } else if ( arg.find( "--mach=" ) == 0) {
         fgSetString("/sim/startup/speed-set", "mach");
 	fgSetDouble("/velocities/mach", atof(arg.substr(7)));
-    } else if ( arg.find( "--heading=" ) != string::npos ) {
+    } else if ( arg.find( "--heading=" ) == 0 ) {
 	fgSetDouble("/orientation/heading", atof(arg.substr(10)));
-    } else if ( arg.find( "--roll=" ) != string::npos ) {
+    } else if ( arg.find( "--roll=" ) == 0 ) {
 	fgSetDouble("/orientation/roll", atof(arg.substr(7)));
-    } else if ( arg.find( "--pitch=" ) != string::npos ) {
+    } else if ( arg.find( "--pitch=" ) == 0 ) {
 	fgSetDouble("/orientation/pitch", atof(arg.substr(8)));
-    } else if ( arg.find( "--fg-root=" ) != string::npos ) {
+    } else if ( arg.find( "--fg-root=" ) == 0 ) {
 	globals->set_fg_root(arg.substr( 10 ));
-    } else if ( arg.find( "--fg-scenery=" ) != string::npos ) {
+    } else if ( arg.find( "--fg-scenery=" ) == 0 ) {
         globals->set_fg_scenery(arg.substr( 13 ));
-    } else if ( arg.find( "--fdm=" ) != string::npos ) {
+    } else if ( arg.find( "--fdm=" ) == 0 ) {
 	fgSetString("/sim/flight-model", arg.substr(6));
-    } else if ( arg.find( "--aircraft=" ) != string::npos ) {
+    } else if ( arg.find( "--aircraft=" ) == 0 ) {
 	fgSetString("/sim/aircraft", arg.substr(11));
-    } else if ( arg.find( "--aircraft-dir=" ) != string::npos ) {
+    } else if ( arg.find( "--aircraft-dir=" ) == 0 ) {
         fgSetString("/sim/aircraft-dir", arg.substr(15));
-    } else if ( arg.find( "--model-hz=" ) != string::npos ) {
+    } else if ( arg.find( "--model-hz=" ) == 0 ) {
 	fgSetInt("/sim/model-hz", atoi(arg.substr(11)));
-    } else if ( arg.find( "--speed=" ) != string::npos ) {
+    } else if ( arg.find( "--speed=" ) == 0 ) {
 	fgSetInt("/sim/speed-up", atoi(arg.substr(8)));
-    } else if ( arg.find( "--trim") != string::npos) {
+    } else if ( arg.find( "--trim") == 0) {
         fgSetBool("/sim/startup/trim", true);
-    } else if ( arg.find( "--notrim") != string::npos) {
+    } else if ( arg.find( "--notrim") == 0) {
         fgSetBool("/sim/startup/trim", false);
-    } else if ( arg.find( "--on-ground") != string::npos) {
+    } else if ( arg.find( "--on-ground") == 0) {
         fgSetBool("/sim/startup/onground", true);
-    } else if ( arg.find( "--in-air") != string::npos) {
+    } else if ( arg.find( "--in-air") == 0) {
         fgSetBool("/sim/startup/onground", false);
     } else if ( arg == "--fog-disable" ) {
 	fgSetString("/sim/rendering/fog", "disabled");
@@ -676,7 +676,7 @@ parse_option (const string& arg)
         fgSetBool("/environment/clouds/status", false);
     } else if ( arg == "--enable-clouds" ) {
         fgSetBool("/environment/clouds/status", true);
-    } else if ( arg.find( "--clouds-asl=" ) != string::npos ) {
+    } else if ( arg.find( "--clouds-asl=" ) == 0 ) {
 				// FIXME: check units
         if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/environment/clouds/altitude",
@@ -684,7 +684,7 @@ parse_option (const string& arg)
 	else
 	  fgSetDouble("/environment/clouds/altitude",
 				atof(arg.substr(13)));
-    } else if ( arg.find( "--fov=" ) != string::npos ) {
+    } else if ( arg.find( "--fov=" ) == 0 ) {
 	parse_fov( arg.substr(6) );
     } else if ( arg == "--disable-fullscreen" ) {
         fgSetBool("/sim/startup/fullscreen", false);
@@ -706,7 +706,7 @@ parse_option (const string& arg)
         fgSetBool("/sim/rendering/wireframe", false);
     } else if ( arg == "--enable-wireframe" ) {
         fgSetBool("/sim/rendering/wireframe", true);
-    } else if ( arg.find( "--geometry=" ) != string::npos ) {
+    } else if ( arg.find( "--geometry=" ) == 0 ) {
 	bool geometry_ok = true;
 	int xsize = 0, ysize = 0;
 	string geometry = arg.substr( 11 );
@@ -735,7 +735,7 @@ parse_option (const string& arg)
 	  fgSetInt("/sim/startup/xsize", xsize);
 	  fgSetInt("/sim/startup/ysize", ysize);
 	}
-    } else if ( arg.find( "--bpp=" ) != string::npos ) {
+    } else if ( arg.find( "--bpp=" ) == 0 ) {
 	string bits_per_pix = arg.substr( 6 );
 	if ( bits_per_pix == "16" ) {
 	    fgSetInt("/sim/rendering/bits-per-pixel", 16);
@@ -750,25 +750,25 @@ parse_option (const string& arg)
 	fgSetString("/sim/startup/units", "feet");
     } else if ( arg == "--units-meters" ) {
 	fgSetString("/sim/startup/units", "meters");
-    } else if ( arg.find( "--time-offset" ) != string::npos ) {
+    } else if ( arg.find( "--time-offset" ) == 0 ) {
         fgSetInt("/sim/startup/time-offset",
 			   parse_time_offset( (arg.substr(14)) ));
-    } else if ( arg.find( "--time-match-real") != string::npos ) {
+    } else if ( arg.find( "--time-match-real") == 0 ) {
         fgSetString("/sim/startup/time-offset-type",
 			      "system-offset");
-    } else if ( arg.find( "--time-match-local") != string::npos ) {
+    } else if ( arg.find( "--time-match-local") == 0 ) {
         fgSetString("/sim/startup/time-offset-type",
 			      "latitude-offset");
-    } else if ( arg.find( "--start-date-sys=") != string::npos ) {
+    } else if ( arg.find( "--start-date-sys=") == 0 ) {
         fgSetInt("/sim/startup/time-offset",
 			   parse_date((arg.substr(17))));
 	fgSetString("/sim/startup/time-offset-type", "system");
-    } else if ( arg.find( "--start-date-lat=") != string::npos ) {
+    } else if ( arg.find( "--start-date-lat=") == 0 ) {
         fgSetInt("/sim/startup/time-offset",
 			   parse_date((arg.substr(17))));
 	fgSetString("/sim/startup/time-offset-type",
 			   "latitude");
-    } else if ( arg.find( "--start-date-gmt=") != string::npos ) {
+    } else if ( arg.find( "--start-date-gmt=") == 0 ) {
         fgSetInt("/sim/startup/time-offset",
 			   parse_date((arg.substr(17))));
 	fgSetString("/sim/startup/time-offset-type", "gmt");
@@ -776,23 +776,23 @@ parse_option (const string& arg)
         fgSetString("/sim/hud/frame-stat-type", "tris");
     } else if ( arg == "--hud-culled" ) {
         fgSetString("/sim/hud/frame-stat-type", "culled");
-    } else if ( arg.find( "--atlas=" ) != string::npos ) {
+    } else if ( arg.find( "--atlas=" ) == 0 ) {
 	parse_channel( "atlas", arg.substr(8) );
-    } else if ( arg.find( "--native=" ) != string::npos ) {
+    } else if ( arg.find( "--native=" ) == 0 ) {
 	parse_channel( "native", arg.substr(9) );
-    } else if ( arg.find( "--garmin=" ) != string::npos ) {
+    } else if ( arg.find( "--garmin=" ) == 0 ) {
 	parse_channel( "garmin", arg.substr(9) );
-    } else if ( arg.find( "--nmea=" ) != string::npos ) {
+    } else if ( arg.find( "--nmea=" ) == 0 ) {
 	parse_channel( "nmea", arg.substr(7) );
-    } else if ( arg.find( "--props=" ) != string::npos ) {
+    } else if ( arg.find( "--props=" ) == 0 ) {
 	parse_channel( "props", arg.substr(8) );
-    } else if ( arg.find( "--pve=" ) != string::npos ) {
+    } else if ( arg.find( "--pve=" ) == 0 ) {
 	parse_channel( "pve", arg.substr(6) );
-    } else if ( arg.find( "--ray=" ) != string::npos ) {
+    } else if ( arg.find( "--ray=" ) == 0 ) {
 	parse_channel( "ray", arg.substr(6) );
-    } else if ( arg.find( "--rul=" ) != string::npos ) {
+    } else if ( arg.find( "--rul=" ) == 0 ) {
 	parse_channel( "rul", arg.substr(6) );
-    } else if ( arg.find( "--joyclient=" ) != string::npos ) {
+    } else if ( arg.find( "--joyclient=" ) == 0 ) {
 	parse_channel( "joyclient", arg.substr(12) );
 #ifdef FG_NETWORK_OLK
     } else if ( arg == "--disable-network-olk" ) {
@@ -802,7 +802,7 @@ parse_option (const string& arg)
     } else if ( arg == "--net-hud" ) {
         fgSetBool("/sim/hud/net-display", true);
 	net_hud_display = 1;	// FIXME
-    } else if ( arg.find( "--net-id=") != string::npos ) {
+    } else if ( arg.find( "--net-id=") == 0 ) {
         fgSetString("sim/networking/call-sign", arg.substr(9));
 #endif
     } else if ( arg.find( "--prop:" ) == 0 ) {
@@ -819,7 +819,7 @@ parse_option (const string& arg)
 	//        << name << " to \"" << value << '"');
     // $$$ begin - added VS Renganathan, 14 Oct 2K
     // for multi-window outside window imagery
-    } else if ( arg.find( "--view-offset=" ) != string::npos ) {
+    } else if ( arg.find( "--view-offset=" ) == 0 ) {
 	string woffset = arg.substr( 14 );
 	double default_view_offset = 0.0;
 	if ( woffset == "LEFT" ) {
@@ -837,9 +837,9 @@ parse_option (const string& arg)
 	pilot_view->set_goal_view_offset( default_view_offset );
 	fgSetDouble("/sim/startup/view-offset", default_view_offset);
     // $$$ end - added VS Renganathan, 14 Oct 2K
-    } else if ( arg.find( "--visibility=" ) != string::npos ) {
+    } else if ( arg.find( "--visibility=" ) == 0 ) {
 	fgSetDouble("/environment/visibility", atof(arg.substr(13)));
-    } else if ( arg.find( "--visibility-miles=" ) != string::npos ) {
+    } else if ( arg.find( "--visibility-miles=" ) == 0 ) {
         double visibility = atof(arg.substr(19)) * 5280.0 * FEET_TO_METER;
 	fgSetDouble("/environment/visibility", visibility);
     } else if ( arg.find( "--wind=" ) == 0 ) {
@@ -863,10 +863,17 @@ parse_option (const string& arg)
 					     speed * cos(dir));
 	fgSetDouble("/environment/wind-east",
 					     speed * sin(dir));
-    } else if ( arg.find( "--wp=" ) != string::npos ) {
+    } else if ( arg.find( "--wp=" ) == 0 ) {
 	parse_wp( arg.substr( 5 ) );
-    } else if ( arg.find( "--flight-plan=") != string::npos) {
+    } else if ( arg.find( "--flight-plan=") == 0) {
 	parse_flightplan ( arg.substr (14) );
+    } else if ( arg.find( "--file=" ) == 0 ) {
+        string file = arg.substr(7);
+        if (!readProperties(file, globals->get_props())) {
+	  FG_LOG(FG_IO, FG_ALERT,
+		 "--config: failed to read properties from " << file);
+	  return FG_OPTIONS_ERROR;
+	}
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown option '" << arg << "'" );
 	return FG_OPTIONS_ERROR;
@@ -889,7 +896,7 @@ fgScanForRoot (int argc, char **argv)
 	FG_LOG( FG_GENERAL, FG_DEBUG, "argv[" << i << "] = " << argv[i] );
 
 	string arg = argv[i];
-	if ( arg.find( "--fg-root=" ) != string::npos ) {
+	if ( arg.find( "--fg-root=" ) == 0 ) {
 	    return arg.substr( 10 );
 	}
 
@@ -928,7 +935,7 @@ fgScanForRoot (const string& path)
         getline( in, line );
 #endif
 
-	if ( line.find( "--fg-root=" ) != string::npos ) {
+	if ( line.find( "--fg-root=" ) == 0 ) {
 	    return line.substr( 10 );
 	}
 
@@ -1028,6 +1035,8 @@ fgUsage ()
     cout << "\t--enable-freeze:  start out in a frozen state" << endl;
     cout << "\t--control=mode:  primary control mode " 
 	 << "(joystick, keyboard, mouse)" << endl;
+    cout << "\t--prop:name=value:  set property <name> to <value>" << endl;
+    cout << "\t--file=path:  load additional properties from path" << endl;
     cout << endl;
 
     cout << "Features:" << endl;
