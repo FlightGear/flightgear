@@ -34,14 +34,19 @@
 // Initialize the joystick(s)
 int fgJoystickInit( void );
 
-// update the control parameters based on joystick intput
-int fgJoystickRead( void );
+#if defined( ENABLE_LINUX_JOYSTICK )
+    // update the control parameters based on joystick intput
+    int fgJoystickRead( void );
+#endif // ENABLE_LINUX_JOYSTICK
 
 
 #endif // _JOYSTICK_HXX
 
 
 // $Log$
+// Revision 1.3  1998/10/27 02:14:33  curt
+// Changes to support GLUT joystick routines as fall back.
+//
 // Revision 1.2  1998/10/25 10:56:27  curt
 // Completely rewritten to use Steve Baker's joystick interface class.
 //

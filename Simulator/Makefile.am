@@ -1,9 +1,3 @@
-if ENABLE_JOYSTICK_SUPPORT
-JOYSTICK_DIRS = Joystick
-else
-JOYSTICK_DIRS = 
-endif
-
 SUBDIRS = \
 	Aircraft \
 	Airports \
@@ -13,7 +7,7 @@ SUBDIRS = \
 	Controls \
 	Flight \
 	GUI \
-	$(JOYSTICK_DIRS) \
+	Joystick \
 	Objects \
 	Scenery \
 	Time \

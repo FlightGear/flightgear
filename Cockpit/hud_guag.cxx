@@ -77,7 +77,7 @@ void guage_instr :: draw (void)
   int marker_xs, marker_xe;
   int marker_ys, marker_ye;
   int text_x, text_y;
-  register i;
+  int i;
   char TextScale[80];
   bool condition;
   int disp_val;

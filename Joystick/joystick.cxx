@@ -22,25 +22,99 @@
 // (Log is kept at end of this file)
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>                     
+#endif
+
 #include <Aircraft/aircraft.hxx>
 #include <Debug/fg_debug.h>
-#include <Joystick/js.hxx>
+
+#if defined( ENABLE_LINUX_JOYSTICK )
+#  include <Joystick/js.hxx>
+#elif defined( ENABLE_GLUT_JOYSTICK )
+#  include <GL/glut.h>
+#  include <XGL/xgl.h>
+#endif
+
 
 #include "joystick.hxx"
 
 
-// joystick classes
-static jsJoystick *js0;
-static jsJoystick *js1;
+#if defined( ENABLE_LINUX_JOYSTICK )
 
-// these will hold the values of the axes
-static float *js_ax0, *js_ax1;
+    // joystick classes
+    static jsJoystick *js0;
+    static jsJoystick *js1;
+
+    // these will hold the values of the axes
+    static float *js_ax0, *js_ax1;
+
+#elif defined( ENABLE_GLUT_JOYSTICK )
+
+    // Joystick support using glut -- William Riley -- riley@technologist.com
+
+    // Joystick fixed values for calibration and scaling
+    static int joy_x_min=1000, /* joy_x_ctr=0, */ joy_x_max=-1000;
+    static int joy_y_min=1000, /* joy_y_ctr=0, */ joy_y_max=-1000;
+    static int joy_z_min=1000, /* joy_z_ctr=0, */ joy_z_max=-1000;
+    static int joy_x_dead_min=100, joy_x_dead_max=-100;
+    static int joy_y_dead_min=100, joy_y_dead_max=-100;
+    static int joy_z_dead_min=100, joy_z_dead_max=-100;
+
+#else
+#  error port me: no joystick support
+#endif
+
+
+
+#if defined( ENABLE_GLUT_JOYSTICK )
+
+// Function called by glutJoystickFunc(), adjusts read values and
+// passes them to the necessary aircraft control functions
+void joystick(unsigned int buttonMask, int js_x, int js_y, int js_z)
+{
+    double joy_x, joy_y, joy_z;
+    // adjust the values to fgfs's scale and allow a 'dead zone' to
+    // reduce jitter code adapted from joystick.c by Michele
+    // F. America - nomimarketing@mail.telepac.pt
+    if( js_x >= joy_x_dead_min && js_x <= joy_x_dead_max ) {
+	joy_x = 0.0;
+    } else {
+	joy_x = (double)js_x/(double)(joy_x_max-joy_x_min);
+    }	
+    if( js_y >= joy_y_dead_min && js_y <= joy_y_dead_max ) {
+	joy_y = 0.0;
+    } else {
+	joy_y = (double)js_y/(double)(joy_y_max-joy_y_min);
+    }
+    if( js_z >= joy_z_dead_min && js_z <= joy_z_dead_max ) {
+	joy_z = 0.0;
+    } else {
+	joy_z = (double)js_z/(double)(joy_z_max-joy_z_min);
+    }
+    // Scale the values up for full range of motion
+    joy_x *= 2.0;
+    joy_y *= 2.0;
+    joy_z = (((joy_z*2.0)+1.0)/2);
+    // Pass the values to the control routines
+    controls.set_elevator( joy_y );
+    controls.set_aileron( -joy_x ); 
+    controls.set_throttle( fgCONTROLS::FG_ALL_ENGINES, joy_z );
+}
+
+#endif // ENABLE_GLUT_JOYSTICK
 
 
 // Initialize the joystick(s)
 int fgJoystickInit( void ) {
 
     fgPrintf( FG_INPUT, FG_INFO, "Initializing joystick\n");
+
+#if defined( ENABLE_LINUX_JOYSTICK )
 
     js0 = new jsJoystick ( 0 );
     js1 = new jsJoystick ( 1 );
@@ -80,9 +154,19 @@ int fgJoystickInit( void ) {
 	return 0;
     }
 
+#elif defined( ENABLE_GLUT_JOYSTICK )
+
+    glutJoystickFunc(joystick, 100);
+
+#else
+#  error port me: no joystick support
+#endif
+
     return 1;
 }
 
+
+#if defined( ENABLE_LINUX_JOYSTICK )
 
 // update the control parameters based on joystick intput
 int fgJoystickRead( void ) {
@@ -103,8 +187,13 @@ int fgJoystickRead( void ) {
     return 1;
 }
 
+#endif // ENABLE_LINUX_JOYSTICK
+
 
 // $Log$
+// Revision 1.4  1998/10/27 02:14:32  curt
+// Changes to support GLUT joystick routines as fall back.
+//
 // Revision 1.3  1998/10/25 14:08:44  curt
 // Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
 //

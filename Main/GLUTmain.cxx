@@ -64,11 +64,7 @@
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
 #include <GUI/gui.h>
-
-#ifdef ENABLE_JOYSTICK_SUPPORT
-#  include <Joystick/joystick.hxx>
-#endif
-
+#include <Joystick/joystick.hxx>
 #include <Math/fg_geodesy.hxx>
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
@@ -511,9 +507,13 @@ static void fgMainLoop( void ) {
     // update "time"
     fgTimeUpdate(f, t);
 
-#ifdef ENABLE_JOYSTICK_SUPPORT
+#if defined( ENABLE_LINUX_JOYSTICK )
     // Read joystick and update control settings
     fgJoystickRead();
+#elif defined( ENABLE_GLUT_JOYSTICK )
+    // Glut joystick support works by feeding a joystick handler
+    // function to glut.  This is taken care of once in the joystick
+    // init routine and we don't have to worry about it again.
 #endif
 
     // Get elapsed time for this past frame
@@ -892,6 +892,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.62  1998/10/27 02:14:35  curt
+// Changes to support GLUT joystick routines as fall back.
+//
 // Revision 1.61  1998/10/25 14:08:47  curt
 // Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
 //

@@ -1,3 +1,9 @@
+if ENABLE_LINUX_JOYSTICK
+DEFS += -DENABLE_LINUX_JOYSTICK
+else
+DEFS += -DENABLE_GLUT_JOYSTICK
+endif
+
 EXTRA_DIST = js.cxx
 
 noinst_LIBRARIES = libJoystick.a
