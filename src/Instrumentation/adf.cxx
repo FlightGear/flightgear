@@ -6,6 +6,7 @@
 #include <simgear/compiler.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/sg_inlines.h>
 
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
@@ -197,8 +198,7 @@ ADF::update (double delta_time_sec)
         _in_range_node->setBoolValue(true);
 
         bearing -= heading;
-        if (bearing < 0)
-            bearing += 360;
+        SG_NORMALIZE_RANGE(bearing, 0.0, 360.0);
         set_bearing(delta_time_sec, bearing);
 
         // adf ident sound
@@ -291,13 +291,8 @@ ADF::set_bearing (double dt, double bearing_deg)
 {
     double old_bearing_deg = _bearing_node->getDoubleValue();
 
+    SG_NORMALIZE_RANGE(old_bearing_deg, 0.0, 360.0);
     bearing_deg += _error_node->getDoubleValue();
-
-    while ((bearing_deg - old_bearing_deg) >= 180)
-        old_bearing_deg += 360;
-    while ((bearing_deg - old_bearing_deg) <= -180)
-        old_bearing_deg -= 360;
-
     bearing_deg =
         fgGetLowPass(old_bearing_deg, bearing_deg, dt * RESPONSIVENESS);
 
