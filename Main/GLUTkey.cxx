@@ -40,9 +40,9 @@
 #include <Aircraft/aircraft.h>
 #include <Autopilot/autopilot.h> // Added autopilot.h to list, Jeff Goeke-Smith
 #include <Debug/fg_debug.h>
-#include <Gui/gui.h>
+#include <GUI/gui.h>
 #include <Include/fg_constants.h>
-#include <Pui/pu.h>
+#include <PUI/pu.h>
 #include <Weather/weather.h>
 
 #include "GLUTkey.hxx"
@@ -290,12 +290,15 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.11  1998/06/12 00:57:38  curt
-/* Added support for Pui/Gui.
-/* Converted fog to GL_FOG_EXP2.
-/* Link to static simulator parts.
-/* Update runfg.bat to try to be a little smarter.
+/* Revision 1.12  1998/06/12 14:27:26  curt
+/* Pui -> PUI, Gui -> GUI.
 /*
+ * Revision 1.11  1998/06/12 00:57:38  curt
+ * Added support for Pui/Gui.
+ * Converted fog to GL_FOG_EXP2.
+ * Link to static simulator parts.
+ * Update runfg.bat to try to be a little smarter.
+ *
  * Revision 1.10  1998/05/27 02:24:05  curt
  * View optimizations by Norman Vine.
  *

@@ -27,7 +27,7 @@ fg_LDADD = \
 	$(top_builddir)/Simulator/Flight/libFlight.a \
 	$(top_builddir)/Simulator/Flight/LaRCsim/libLaRCsim.a \
 	$(top_builddir)/Simulator/Flight/Slew/libSlew.a \
-	$(top_builddir)/Simulator/Gui/libGui.a \
+	$(top_builddir)/Simulator/GUI/libGUI.a \
 	$(top_builddir)/Simulator/Scenery/libScenery.a \
 	$(top_builddir)/Simulator/Time/libTime.a \
 	$(top_builddir)/Simulator/Weather/libWeather.a \
@@ -36,7 +36,7 @@ fg_LDADD = \
 	$(top_builddir)/Lib/Math/libMath.la \
 	$(top_builddir)/Lib/Bucket/libBucket.la \
 	$(top_builddir)/Lib/Debug/libDebug.la \
-	$(top_builddir)/Lib/Pui/libPui.la \
+	$(top_builddir)/Lib/PUI/libPUI.la \
 	$(top_builddir)/Lib/zlib/libz.la
 
 INCLUDES += \

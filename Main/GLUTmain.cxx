@@ -58,12 +58,12 @@
 
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
-#include <Gui/gui.h>
+#include <GUI/gui.h>
 #include <Joystick/joystick.h>
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
 #include <Math/polar3d.h>
-#include <Pui/pu.h>
+#include <PUI/pu.h>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
@@ -750,6 +750,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.25  1998/06/12 14:27:26  curt
+// Pui -> PUI, Gui -> GUI.
+//
 // Revision 1.24  1998/06/12 00:57:39  curt
 // Added support for Pui/Gui.
 // Converted fog to GL_FOG_EXP2.

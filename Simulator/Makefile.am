@@ -5,7 +5,7 @@ SUBDIRS = \
 	Cockpit \
 	Controls \
 	Flight \
-	Gui \
+	GUI \
 	Joystick \
 	Scenery \
 	Time \
