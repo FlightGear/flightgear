@@ -57,9 +57,9 @@ void FGAIShip::unbind() {
 
 void FGAIShip::update(double dt) {
 
+   FGAIBase::update(dt);
    Run(dt);
    Transform();
-   FGAIBase::update(dt);
 }
 
 

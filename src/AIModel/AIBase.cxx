@@ -66,6 +66,8 @@ FGAIBase::~FGAIBase() {
 }
 
 void FGAIBase::update(double dt) {
+    ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat()/SG_RADIANS_TO_DEGREES);
+    ft_per_deg_lon = 365228.16 * cos(pos.lat() / SG_RADIANS_TO_DEGREES);
 }
 
 
@@ -180,6 +182,91 @@ void FGAIBase::unbind() {
     props->untie("radar/rotation");
 
     props->untie("controls/lighting/nav-lights");
+}
+
+double FGAIBase::UpdateRadar(FGAIManager* manager)
+{
+   double radar_range_ft2 = fgGetDouble("/instrumentation/radar/range");
+   radar_range_ft2 *= SG_NM_TO_METER * SG_METER_TO_FEET * 1.1; // + 10%
+   radar_range_ft2 *= radar_range_ft2;
+
+   double user_latitude  = manager->get_user_latitude();
+   double user_longitude = manager->get_user_longitude();
+   double lat_range = fabs(pos.lat() - user_latitude) * ft_per_deg_lat;
+   double lon_range = fabs(pos.lon() - user_longitude) * ft_per_deg_lon;
+   double range_ft2 = lat_range*lat_range + lon_range*lon_range;
+
+   //
+   // Test whether the target is within radar range.
+   //
+   in_range = (range_ft2 && (range_ft2 <= radar_range_ft2));
+   if ( in_range )
+   {
+     props->setBoolValue("radar/in-range", true);
+
+     // copy values from the AIManager
+     double user_altitude  = manager->get_user_altitude();
+     double user_heading   = manager->get_user_heading();
+     double user_pitch     = manager->get_user_pitch();
+     double user_yaw       = manager->get_user_yaw();
+     double user_speed     = manager->get_user_speed();
+
+     // calculate range to target in feet and nautical miles
+     double range_ft = sqrt( range_ft2 );
+     range = range_ft / 6076.11549;
+
+     // calculate bearing to target
+     if (pos.lat() >= user_latitude) {
+        bearing = atan2(lat_range, lon_range) * SG_RADIANS_TO_DEGREES;
+        if (pos.lon() >= user_longitude) {
+           bearing = 90.0 - bearing;
+        } else {
+           bearing = 270.0 + bearing;
+        }
+     } else {
+        bearing = atan2(lon_range, lat_range) * SG_RADIANS_TO_DEGREES;
+        if (pos.lon() >= user_longitude) {
+           bearing = 180.0 - bearing;
+        } else {
+           bearing = 180.0 + bearing;
+        }
+     }
+
+     // calculate look left/right to target, without yaw correction
+     horiz_offset = bearing - user_heading;
+     if (horiz_offset > 180.0) horiz_offset -= 360.0;
+     if (horiz_offset < -180.0) horiz_offset += 360.0;
+
+     // calculate elevation to target
+     elevation = atan2( altitude * SG_METER_TO_FEET - user_altitude, range_ft )
+                        * SG_RADIANS_TO_DEGREES;
+
+     // calculate look up/down to target
+     vert_offset = elevation + user_pitch;
+
+     /* this calculation needs to be fixed, but it isn't important anyway
+     // calculate range rate
+     double recip_bearing = bearing + 180.0;
+     if (recip_bearing > 360.0) recip_bearing -= 360.0;
+     double my_horiz_offset = recip_bearing - hdg;
+     if (my_horiz_offset > 180.0) my_horiz_offset -= 360.0;
+     if (my_horiz_offset < -180.0) my_horiz_offset += 360.0;
+     rdot = (-user_speed * cos( horiz_offset * SG_DEGREES_TO_RADIANS ))
+             +(-speed * 1.686 * cos( my_horiz_offset * SG_DEGREES_TO_RADIANS ));
+*/
+
+     // now correct look left/right for yaw
+     horiz_offset += user_yaw;
+
+     // calculate values for radar display
+     y_shift = range * cos( horiz_offset * SG_DEGREES_TO_RADIANS);
+     x_shift = range * sin( horiz_offset * SG_DEGREES_TO_RADIANS);
+     rotation = hdg - user_heading;
+     if (rotation < 0.0) rotation += 360.0;
+
+   }
+
+   return range_ft2;
 }
 
 

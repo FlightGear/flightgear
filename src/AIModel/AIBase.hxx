@@ -76,6 +76,9 @@ protected:
     double altitude;    // meters above sea level
     double vs;          // vertical speed, feet per minute   
 
+    double ft_per_deg_lon;
+    double ft_per_deg_lat;
+
     // these describe the model's desired state
     double tgt_heading;  // target heading, degrees true
     double tgt_altitude; // target altitude, *feet* above sea level
@@ -108,6 +111,8 @@ protected:
     FGAIFlightPlan *fp;
 
     void Transform();
+
+    double UpdateRadar(FGAIManager* manager);
 
     string _type_str;
     object_type _otype;
@@ -182,5 +187,5 @@ inline int  FGAIBase::getID() { return id; }
 
 inline FGAIBase::object_type FGAIBase::getType() { return _otype; }
 
-#endif  // _FG_AIBASE_HXX
+#endif	// _FG_AIBASE_HXX
 
