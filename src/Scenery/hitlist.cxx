@@ -212,6 +212,7 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
             if( fgdPointInTriangle( point, tri ) ) {
                 // transform point into passed into desired coordinate frame
                 sgdXformPnt3( point, point, m );
+		sgdXformPnt4(plane,plane,m);
                 add(leaf,i,point,plane);
                 num_hits++;
             }
@@ -315,6 +316,7 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
         if( fgdPointInTriangle( point, tri ) ) {
             // transform point into passed coordinate frame
             sgdXformPnt3( point, point, m );
+	    sgdXformPnt4(plane,plane,m);
             add(leaf,n,point,plane);
             test_dist = tmp_dist;
             num_hits++;
@@ -535,12 +537,10 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
         sgVec3 tmp;
         sgMat4 TMP;
         sgSetVec3(tmp, hit_list->get_normal(this_hit));
-        // cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "
-        //      << tmp[2] << endl;
-        sgTransposeNegateMat4 ( TMP, globals->get_current_view()->get_UP() ) ;
-        sgXformVec3(tmp, tmp, TMP);
-        // cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
-        sgdSetVec3( normal, tmp[2], tmp[1], tmp[0] );
+        // cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "  << tmp[2] << endl;
+        sgdSetVec3( normal, tmp );
+        // float *up = globals->get_current_view()->get_world_up();
+	// cout << "world_up  : " << up[0] << " " << up[1] << " " << up[2] << endl;
         /* ssgState *IntersectedLeafState =
               ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
         return true;
@@ -602,9 +602,10 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
         sgVec3 tmp;
         sgMat4 TMP;
         sgSetVec3(tmp, hit_list->get_normal(this_hit));
-        sgTransposeNegateMat4 ( TMP, globals->get_current_view()->get_UP() ) ;
-        sgXformVec3(tmp, tmp, TMP);
-        sgdSetVec3( normal, tmp[2], tmp[1], tmp[0] );
+        // cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "  << tmp[2] << endl;
+        sgdSetVec3( normal, tmp );
+        // float *up = globals->get_current_view()->get_world_up();
+       // cout << "world_up  : " << up[0] << " " << up[1] << " " << up[2] << endl;
         /* ssgState *IntersectedLeafState =
               ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
         return true;
