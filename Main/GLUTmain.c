@@ -108,8 +108,8 @@ static void fgInitVisuals() {
 
     glEnable( GL_DEPTH_TEST );
     /* glFrontFace(GL_CW); */
-    /* glEnable( GL_CULL_FACE ); */
-
+    glEnable( GL_CULL_FACE );
+    
     /* If enabled, normal vectors specified with glNormal are scaled
        to unit length after transformation.  See glNormal. */
     glEnable( GL_NORMALIZE );
@@ -577,9 +577,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.24  1997/11/25 19:25:32  curt
-/* Changes to integrate Durk's moon/sun code updates + clean up.
+/* Revision 1.25  1997/12/08 22:54:09  curt
+/* Enabled GL_CULL_FACE.
 /*
+ * Revision 1.24  1997/11/25 19:25:32  curt
+ * Changes to integrate Durk's moon/sun code updates + clean up.
+ *
  * Revision 1.23  1997/11/15 18:16:34  curt
  * minor tweaks.
  *
