@@ -636,6 +636,14 @@ fgUpdateProps ()
 bool
 fgSaveFlight (ostream &output, bool write_all)
 {
+
+  fgSetBool("/sim/startup/onground", false);
+  fgSetArchivable("/sim/startup/onground");
+  fgSetBool("/sim/startup/trim", false);
+  fgSetArchivable("/sim/startup/trim");
+  fgSetString("/sim/startup/speed-set", "UVW");
+  fgSetArchivable("/sim/startup/speed-set");
+
   try {
     writeProperties(output, globals->get_props(), write_all);
   } catch (const sg_exception &e) {
@@ -659,6 +667,11 @@ fgLoadFlight (istream &input)
     guiErrorMessage("Error reading saved flight: ", e);
     return false;
   }
+
+  fgSetBool("/sim/startup/onground", false);
+  fgSetBool("/sim/startup/trim", false);
+  fgSetString("/sim/startup/speed-set", "UVW");
+
   copyProperties(&props, globals->get_props());
   // When loading a flight, make it the
   // new initial state.

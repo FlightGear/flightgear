@@ -708,7 +708,7 @@ readPanel (const SGPropertyNode * root)
 
   // conditional removed by jim wilson to allow panel xml code 
   // with y-offset defined to work...
-  // if (!fgHasNode("/sim/panel/y-offset"))
+  if (!fgHasNode("/sim/panel/y-offset"))
     fgSetInt("/sim/panel/y-offset", root->getIntValue("y-offset", 0));
 
   //
