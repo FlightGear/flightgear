@@ -57,7 +57,8 @@ private:
     FGTriNodes out_nodes;
 
     // list of segments
-    FGTriSegments trisegs;
+    FGTriSegments in_segs;
+    FGTriSegments out_segs;
 
     // polygon list
     poly_list polylist[FG_MAX_AREA_TYPES];

@@ -47,6 +47,10 @@ bool FGClipper::init() {
     v_list.num_vertices = 0;
     v_list.vertex = new gpc_vertex[FG_MAX_VERTICES];;
 
+    for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
+	polys_in.polys[i].clear();
+    }
+
     return true;
 }
 
@@ -178,8 +182,8 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
     // process polygons in priority order
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
-	// cout << "num polys of this type = " 
-	//       << polys_in.polys[i].size() << endl;
+	cout << "num polys of type (" << i << ") = " 
+	     << polys_in.polys[i].size() << endl;
 	current = polys_in.polys[i].begin();
 	last = polys_in.polys[i].end();
 	for ( ; current != last; ++current ) {
@@ -220,24 +224,24 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 	    }
 
 	    /*
-	    cout << "original contours = " << tmp.num_contours << endl;
+	      cout << "original contours = " << tmp.num_contours << endl;
 
-	    for ( int j = 0; j < tmp.num_contours; j++ ) {
-		for (int k = 0;k < tmp.contour[j].num_vertices;k++ ) {
-		    cout << tmp.contour[j].vertex[k].x << ","
-			 << tmp.contour[j].vertex[k].y << endl;
-		}
-	    }
+	      for ( int j = 0; j < tmp.num_contours; j++ ) {
+	      for (int k = 0;k < tmp.contour[j].num_vertices;k++ ) {
+	      cout << tmp.contour[j].vertex[k].x << ","
+	      << tmp.contour[j].vertex[k].y << endl;
+	      }
+	      }
 
-	    cout << "clipped contours = " << result_diff->num_contours << endl;
+	      cout << "clipped contours = " << result_diff->num_contours << endl;
 
-	    for ( int j = 0; j < result_diff->num_contours; j++ ) {
-		for (int k = 0;k < result_diff->contour[j].num_vertices;k++ ) {
-		    cout << result_diff->contour[j].vertex[k].x << ","
-			 << result_diff->contour[j].vertex[k].y << endl;
-		}
-	    }
-	    */
+	      for ( int j = 0; j < result_diff->num_contours; j++ ) {
+	      for (int k = 0;k < result_diff->contour[j].num_vertices;k++ ) {
+	      cout << result_diff->contour[j].vertex[k].x << ","
+	      << result_diff->contour[j].vertex[k].y << endl;
+	      }
+	      }
+	      */
 
 	    // only add to output list if the clip left us with a polygon
 	    if ( result_diff->num_contours > 0 ) {
@@ -259,15 +263,21 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 	polys_clipped.polys[0].push_back(remains);
     }
 
+    FILE *ofp;
+
     // tmp output accum
-    FILE *ofp= fopen("accum", "w");
-    gpc_write_polygon(ofp, 1, &accum);
-    fclose(ofp);
+    if ( accum.num_contours ) {
+	ofp = fopen("accum", "w");
+	gpc_write_polygon(ofp, 1, &accum);
+	fclose(ofp);
+    }
 
     // tmp output safety_base
-    ofp= fopen("remains", "w");
-    gpc_write_polygon(ofp, 1, remains);
-    fclose(ofp);
+    if ( remains->num_contours ) {
+	ofp= fopen("remains", "w");
+	gpc_write_polygon(ofp, 1, remains);
+	fclose(ofp);
+    }
 
     return true;
 }

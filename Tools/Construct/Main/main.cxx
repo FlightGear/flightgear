@@ -33,37 +33,14 @@
 #include <GenOutput/genobj.hxx>
 #include <Triangulate/triangle.hxx>
 
-
-// load regular grid of elevation data (dem based), return list of
-// fitted nodes
-int load_dem(const string& work_base, FGBucket& b, FGArray& array) {
-    point_list result;
-    string base = b.gen_base_path();
-
-    string dem_path = work_base + ".dem" + "/Scenery/" + base 
-	+ "/" + b.gen_index_str() + ".dem";
-    cout << "dem_path = " << dem_path << endl;
-
-    if ( ! array.open(dem_path) ) {
-	cout << "ERROR: cannot open " << dem_path << endl;
-    }
-
-    array.parse( b );
-
-    return 1;
-}
-
-// fit dem nodes, return number of fitted nodes
-int fit_dem(FGArray& array, int error) {
-    return array.fit( error );
-}
+#include "construct.hxx"
 
 
 // do actual scan of directory and loading of files
-int actual_load_polys( const string& dir, FGBucket& b, FGClipper& clipper ) {
+int actual_load_polys( const string& dir, FGConstruct& c, FGClipper& clipper ) {
     int counter = 0;
-    string base = b.gen_base_path();
-    string tile_str = b.gen_index_str();
+    string base = c.get_bucket().gen_base_path();
+    string tile_str = c.get_bucket().gen_index_str();
     string ext;
 
     DIR *d;
@@ -102,48 +79,79 @@ int actual_load_polys( const string& dir, FGBucket& b, FGClipper& clipper ) {
 
 // load all 2d polygons matching the specified base path and clip
 // against each other to resolve any overlaps
-int load_polys( const string& work_base, FGBucket& b, FGClipper& clipper) {
-    string base = b.gen_base_path();
+int load_polys( FGConstruct& c ) {
+    FGClipper clipper;
+
+    string base = c.get_bucket().gen_base_path();
     int result;
 
     // initialize clipper
     clipper.init();
 
     // load airports
-    string poly_path = work_base + ".apt" + "/Scenery/" + base;
+    string poly_path = c.get_work_base() + ".apt" + "/Scenery/" + base;
     cout << "poly_path = " << poly_path << endl;
-    result = actual_load_polys( poly_path, b, clipper );
+    result = actual_load_polys( poly_path, c, clipper );
     cout << "  loaded " << result << " polys" << endl;
 
     // load hydro
-    poly_path = work_base + ".hydro" + "/Scenery/" + base;
+    poly_path = c.get_work_base() + ".hydro" + "/Scenery/" + base;
     cout << "poly_path = " << poly_path << endl;
-    result = actual_load_polys( poly_path, b, clipper );
+    result = actual_load_polys( poly_path, c, clipper );
     cout << "  loaded " << result << " polys" << endl;
 
     point2d min, max;
-    min.x = b.get_center_lon() - 0.5 * b.get_width();
-    min.y = b.get_center_lat() - 0.5 * b.get_height();
-    max.x = b.get_center_lon() + 0.5 * b.get_width();
-    max.y = b.get_center_lat() + 0.5 * b.get_height();
+    min.x = c.get_bucket().get_center_lon() - 0.5 * c.get_bucket().get_width();
+    min.y = c.get_bucket().get_center_lat() - 0.5 * c.get_bucket().get_height();
+    max.x = c.get_bucket().get_center_lon() + 0.5 * c.get_bucket().get_width();
+    max.y = c.get_bucket().get_center_lat() + 0.5 * c.get_bucket().get_height();
 
     // do clipping
     cout << "clipping polygons" << endl;
     clipper.clip_all(min, max);
 
+    // update main data repository
+    c.set_clipped_polys( clipper.get_polys_clipped() );
     return 1;
 }
 
 
+// load regular grid of elevation data (dem based), return list of
+// fitted nodes
+int load_dem( FGConstruct& c, FGArray& array) {
+    point_list result;
+    string base = c.get_bucket().gen_base_path();
+
+    string dem_path = c.get_work_base() + ".dem" + "/Scenery/" + base 
+	+ "/" + c.get_bucket().gen_index_str() + ".dem";
+    cout << "dem_path = " << dem_path << endl;
+
+    if ( ! array.open(dem_path) ) {
+	cout << "ERROR: cannot open " << dem_path << endl;
+    }
+
+    FGBucket b = c.get_bucket();
+    array.parse( b );
+
+    return 1;
+}
+
+
+// fit dem nodes, return number of fitted nodes
+int fit_dem(FGArray& array, int error) {
+    return array.fit( error );
+}
+
+
 // triangulate the data for each polygon
-void do_triangulate( const FGArray& array, const FGClipper& clipper,
+void do_triangulate( FGConstruct& c, const FGArray& array,
 		     FGTriangle& t ) {
     // first we need to consolidate the points of the DEM fit list and
     // all the polygons into a more "Triangle" friendly format
 
     point_list corner_list = array.get_corner_node_list();
     point_list fit_list = array.get_fit_node_list();
-    FGgpcPolyList gpc_polys = clipper.get_polys_clipped();
+    FGgpcPolyList gpc_polys = c.get_clipped_polys();
 
     cout << "ready to build node list and polygons" << endl;
     t.build( corner_list, fit_list, gpc_polys );
@@ -155,37 +163,64 @@ void do_triangulate( const FGArray& array, const FGClipper& clipper,
 }
 
 
-// generate the flight gear scenery file
-void do_output( const string& base, const FGBucket &b, const FGTriangle& t, 
-		const FGArray& array, FGGenOutput& output ) {
-    output.build( array, t );
-    output.write( base, b );
+// build the wgs-84 point list
+static point_list gen_wgs84_points( FGConstruct& c, const FGArray& array ) {
+    point_list wgs84_nodes;
+    cout << "calculating wgs84 point" << endl;
+    Point3D geod, radians, cart;
+
+    point_list geod_nodes = c.get_tri_nodes().get_node_list();
+    const_point_list_iterator current = geod_nodes.begin();
+    const_point_list_iterator last = geod_nodes.end();
+
+    double real_z;
+
+    for ( ; current != last; ++current ) {
+	geod = *current;
+
+	real_z = array.interpolate_altitude( geod.x() * 3600.0, 
+					      geod.y() * 3600.0 );
+
+	// convert to radians
+	radians = Point3D( geod.x() * DEG_TO_RAD,
+			   geod.y() * DEG_TO_RAD,
+			   real_z );
+
+        cart = fgGeodToCart(radians);
+	// cout << cart << endl;
+        wgs84_nodes.push_back(cart);
+    }
+
+    return wgs84_nodes;
 }
 
 
-void construct_tile( const string& work_base, const string& output_base,
-		     FGBucket& b )
-{
-    cout << "Construct tile, bucket = " << b << endl;
+// generate the flight gear scenery file
+void do_output( FGConstruct& c, const FGTriangle& t, 
+		const FGArray& array, FGGenOutput& output ) {
+    output.build( c, array );
+    output.write( c );
+}
+
+
+// master construction routine
+void construct_tile( FGConstruct& c ) {
+    cout << "Construct tile, bucket = " << c.get_bucket() << endl;
 
     // fit with ever increasing error tolerance until we produce <=
     // 80% of max nodes.  We should really have the sim end handle
     // arbitrarily complex tiles.
-
-    const int min_nodes = 50;
-    const int max_nodes = (int)(MAX_NODES * 0.8);
 
     bool acceptable = false;
     double error = 200.0;
     int count = 0;
 
     // load and clip 2d polygon data
-    FGClipper clipper;
-    load_polys( work_base, b, clipper );
+    load_polys( c );
 
     // load grid of elevation data (dem)
     FGArray array;
-    load_dem( work_base, b, array );
+    load_dem( c, array );
 
     FGTriangle t;
 
@@ -195,13 +230,13 @@ void construct_tile( const string& work_base, const string& output_base,
 	array.fit( error );
 
 	// triangulate the data for each polygon
-	do_triangulate( array, clipper, t );
+	do_triangulate( c, array, t );
 
 	acceptable = true;
 
 	count = t.get_out_nodes_size();
 
-	if ( (count < min_nodes) && (error >= 25.0) ) {
+	if ( (count < c.get_min_nodes()) && (error >= 25.0) ) {
 	    // reduce error tolerance until number of points exceeds the
 	    // minimum threshold
 	    cout << "produced too few nodes ..." << endl;
@@ -213,7 +248,7 @@ void construct_tile( const string& work_base, const string& output_base,
 		 << endl;
 	}
 
-	if ( (count > max_nodes) && (error <= 1000.0) ) {
+	if ( (count > c.get_max_nodes()) && (error <= 1000.0) ) {
 	    // increase error tolerance until number of points drops below
 	    // the maximum threshold
 	    cout << "produced too many nodes ..." << endl;
@@ -229,9 +264,16 @@ void construct_tile( const string& work_base, const string& output_base,
     cout << "finished fit with error = " << error << " node count = " 
 	 << count << endl;
 
+    // save the results of the triangulation
+    c.set_tri_nodes( t.get_out_nodes() );
+    c.set_tri_elements( t.get_elelist() );
+
+    // calculate wgs84 (cartesian) form of node list
+    c.set_wgs84_nodes( gen_wgs84_points( c, array ) );
+    
     // generate the output
     FGGenOutput output;
-    do_output( output_base, b, t, array, output );
+    do_output( c, t, array, output );
 }
 
 
@@ -245,9 +287,15 @@ main(int argc, char **argv) {
 	exit(-1);
     }
 
-    string work_base = argv[1];
-    string output_base = argv[2];
-   
+    // main construction data management class
+    FGConstruct c;
+
+    c.set_work_base( argv[1] );
+    c.set_output_base( argv[2] );
+
+    c.set_min_nodes( 50 );
+    c.set_max_nodes( (int)(FG_MAX_NODES * 0.8) );
+
     // lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
     // lon = -110.664244; lat = 33.352890;     // P13
     // lon = -93.211389; lat = 45.145000;      // KANE
@@ -277,11 +325,13 @@ main(int argc, char **argv) {
     // FGBucket b_omit(-1L);
     // FGBucket b(1122504L);
     FGBucket b(-146.248360, 61.133950);
-    construct_tile( work_base, output_base, b );
+    c.set_bucket( b );
+    construct_tile( c );
     exit(0);
-
+    
     if ( b_min == b_max ) {
-	construct_tile( work_base, output_base, b_min );
+	c.set_bucket( b_min );
+	construct_tile( c );
     } else {
 	FGBucket b_cur;
 	int dx, dy, i, j;
@@ -299,7 +349,8 @@ main(int argc, char **argv) {
 		}
 
 		if ( do_tile ) {
-		    construct_tile( work_base, output_base, b_cur );
+		    c.set_bucket( b_cur );
+		    construct_tile( c );
 		} else {
 		    cout << "skipping " << b_cur << endl;
 		}

@@ -41,6 +41,7 @@
 
 #include <Combine/genfans.hxx>
 #include <Main/construct_types.hxx>
+#include <Main/construct.hxx>
 #include <Triangulate/triangle.hxx>
 
 FG_USING_STD(string);
@@ -56,11 +57,8 @@ class FGGenOutput {
 
 private:
 
-    // node list in geodetic coordinats
+    // node list in geodetic coordinates
     point_list geod_nodes;
-
-    // node list in cartesian coords (wgs84 model)
-    point_list wgs84_nodes;
 
     // face normal list (for flat shading)
     point_list face_normals;
@@ -82,33 +80,30 @@ private:
     Point3D gbs_center;
     double gbs_radius;
 
-    // build the wgs-84 point list
-    void gen_wgs84_points( const FGArray& array );
-
     // build the node -> element (triangle) reverse lookup table.
     // there is an entry for each point containing a list of all the
     // triangles that share that point.
-    void gen_node_ele_lookup_table();
+    void gen_node_ele_lookup_table( FGConstruct& c );
 
     // calculate the normals for each point in wgs84_nodes
-    void gen_normals();
+    void gen_normals( FGConstruct& c );
 
     // build the face normal list
-    void gen_face_normals();
+    void gen_face_normals( FGConstruct& c );
 
     // caclulate the normal for the specified triangle face
-    Point3D calc_normal( int i );
+    Point3D calc_normal( FGConstruct& c, int i );
 
     // calculate the global bounding sphere.  Center is the average of
     // the points.
-    void calc_gbs();
+    void calc_gbs( FGConstruct& c );
 
     // caclulate the bounding sphere for a list of triangle faces
-    void calc_group_bounding_sphere( const fan_list& fans, 
+    void calc_group_bounding_sphere( FGConstruct& c, const fan_list& fans, 
 				     Point3D *center, double *radius );
 
     // caclulate the bounding sphere for the specified triangle face
-    void calc_bounding_sphere( const FGTriEle& t, 
+    void calc_bounding_sphere( FGConstruct& c, const FGTriEle& t, 
 			       Point3D *center, double *radius );
 
 public:
@@ -119,10 +114,10 @@ public:
 
     // build the necessary output structures based on the
     // triangulation data
-    int build( const FGArray& array, const FGTriangle& t );
+    int build( FGConstruct& c, const FGArray& array );
 
     // write out the fgfs scenery file
-    int write( const string& base, const FGBucket& b );
+    int write( FGConstruct &c );
 };
 
 

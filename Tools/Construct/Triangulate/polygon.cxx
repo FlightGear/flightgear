@@ -153,8 +153,8 @@ void FGPolygon::calc_point_inside( const int contour,
     for ( int i = 0; i < (int)poly.size(); ++i ) {
 	cout << "contour = " << i << " size = " << poly[i].size() << endl;
 	for ( int j = 0; j < (int)(poly[i].size() - 1); ++j ) {
-	    cout << "  p1 = " << poly[i][j] << " p2 = " 
-		 << poly[i][j+1] << endl;
+	    // cout << "  p1 = " << poly[i][j] << " p2 = " 
+	    //      << poly[i][j+1] << endl;
 	    p1 = trinodes.get_node( poly[i][j] );
 	    p2 = trinodes.get_node( poly[i][j+1] );
 
@@ -166,8 +166,8 @@ void FGPolygon::calc_point_inside( const int contour,
 		}
 	    }
 	}
-	cout << "  p1 = " << poly[i][0] << " p2 = " 
-	     << poly[i][poly[i].size() - 1] << endl;
+	// cout << "  p1 = " << poly[i][0] << " p2 = " 
+	//      << poly[i][poly[i].size() - 1] << endl;
 	p1 = trinodes.get_node( poly[i][0] );
 	p2 = trinodes.get_node( poly[i][poly[i].size() - 1] );
 	if ( intersects(p1, p2, m.x(), &result) ) {

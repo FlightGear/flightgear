@@ -3,7 +3,7 @@ SUBDIRS = \
 	Clipper \
 	Combine \
 	GenOutput \
+	Match \
 	Triangulate \
 	Main
 
-#       Match

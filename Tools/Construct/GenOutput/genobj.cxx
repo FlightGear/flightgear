@@ -31,43 +31,16 @@
 #include "genobj.hxx"
 
 
-// build the wgs-84 point list
-void FGGenOutput::gen_wgs84_points( const FGArray& array ) {
-    cout << "calculating wgs84 point" << endl;
-    Point3D geod, radians, cart;
-
-    const_point_list_iterator current = geod_nodes.begin();
-    const_point_list_iterator last = geod_nodes.end();
-
-    double real_z;
-
-    for ( ; current != last; ++current ) {
-	geod = *current;
-
-	real_z = array.interpolate_altitude( geod.x() * 3600.0, 
-					      geod.y() * 3600.0 );
-
-	// convert to radians
-	radians = Point3D( geod.x() * DEG_TO_RAD,
-			   geod.y() * DEG_TO_RAD,
-			   real_z );
-
-        cart = fgGeodToCart(radians);
-	// cout << cart << endl;
-        wgs84_nodes.push_back(cart);
-    }
-}
-
-
 // build the node -> element (triangle) reverse lookup table.  there
 // is an entry for each point containing a list of all the triangles
 // that share that point.
-void FGGenOutput::gen_node_ele_lookup_table() {
+void FGGenOutput::gen_node_ele_lookup_table( FGConstruct& c ) {
     int_list ele_list;
     ele_list.erase( ele_list.begin(), ele_list.end() );
 
     // initialize reverse_ele_lookup structure by creating an empty
     // list for each point
+    point_list wgs84_nodes = c.get_wgs84_nodes();
     const_point_list_iterator w_current = wgs84_nodes.begin();
     const_point_list_iterator w_last = wgs84_nodes.end();
     for ( ; w_current != w_last; ++w_current ) {
@@ -88,9 +61,11 @@ void FGGenOutput::gen_node_ele_lookup_table() {
 
 
 // caclulate the normal for the specified triangle face
-Point3D FGGenOutput::calc_normal( int i ) {
+Point3D FGGenOutput::calc_normal( FGConstruct& c, int i ) {
     double v1[3], v2[3], normal[3];
     double temp;
+
+    point_list wgs84_nodes = c.get_wgs84_nodes();
 
     Point3D p1 = wgs84_nodes[ tri_elements[i].get_n1() ];
     Point3D p2 = wgs84_nodes[ tri_elements[i].get_n2() ];
@@ -107,23 +82,25 @@ Point3D FGGenOutput::calc_normal( int i ) {
 
 
 // build the face normal list
-void FGGenOutput::gen_face_normals() {
+void FGGenOutput::gen_face_normals( FGConstruct& c ) {
     // traverse triangle structure building the face normal table
 
     cout << "calculating face normals" << endl;
 
     for ( int i = 0; i < (int)tri_elements.size(); i++ ) {
 	// cout << calc_normal( i ) << endl;
-	face_normals.push_back( calc_normal( i ) );
+	face_normals.push_back( calc_normal( c, i ) );
     }
 
 }
 
 
 // calculate the normals for each point in wgs84_nodes
-void FGGenOutput::gen_normals() {
+void FGGenOutput::gen_normals( FGConstruct& c ) {
     Point3D normal;
     cout << "caculating node normals" << endl;
+
+    point_list wgs84_nodes = c.get_wgs84_nodes();
 
     // for each node
     for ( int i = 0; i < (int)wgs84_nodes.size(); ++i ) {
@@ -151,12 +128,13 @@ void FGGenOutput::gen_normals() {
 
 // calculate the global bounding sphere.  Center is the average of the
 // points.
-void FGGenOutput::calc_gbs() {
+void FGGenOutput::calc_gbs( FGConstruct& c ) {
     double dist_squared;
     double radius_squared = 0;
     
     gbs_center = Point3D( 0.0 );
 
+    point_list wgs84_nodes = c.get_wgs84_nodes();
     const_point_list_iterator current = wgs84_nodes.begin();
     const_point_list_iterator last = wgs84_nodes.end();
 
@@ -180,14 +158,14 @@ void FGGenOutput::calc_gbs() {
 
 // build the necessary output structures based on the triangulation
 // data
-int FGGenOutput::build( const FGArray& array, const FGTriangle& t ) {
-    FGTriNodes trinodes = t.get_out_nodes();
+int FGGenOutput::build( FGConstruct& c, const FGArray& array ) {
+    FGTriNodes trinodes = c.get_tri_nodes();
 
     // copy the geodetic node list into this class
     geod_nodes = trinodes.get_node_list();
 
     // copy the triangle list into this class
-    tri_elements = t.get_elelist();
+    tri_elements = c.get_tri_elements();
 
     // build the trifan list
     cout << "total triangles = " << tri_elements.size() << endl;
@@ -210,32 +188,32 @@ int FGGenOutput::build( const FGArray& array, const FGTriangle& t ) {
 	}
     }
 
-    // generate the point list in wgs-84 coordinates
-    gen_wgs84_points( array );
-
     // calculate the global bounding sphere
-    calc_gbs();
+    calc_gbs( c );
     cout << "center = " << gbs_center << " radius = " << gbs_radius << endl;
 
     // build the node -> element (triangle) reverse lookup table
-    gen_node_ele_lookup_table();
+    gen_node_ele_lookup_table( c );
 
     // build the face normal list
-    gen_face_normals();
+    gen_face_normals( c );
 
     // calculate the normals for each point in wgs84_nodes
-    gen_normals();
+    gen_normals( c );
 
     return 1;
 }
 
 
 // caclulate the bounding sphere for a list of triangle faces
-void FGGenOutput::calc_group_bounding_sphere( const fan_list& fans, 
+void FGGenOutput::calc_group_bounding_sphere( FGConstruct& c, 
+					      const fan_list& fans, 
 					      Point3D *center, double *radius )
 {
     cout << "calculate group bounding sphere for " << fans.size() << " fans." 
 	 << endl;
+
+    point_list wgs84_nodes = c.get_wgs84_nodes();
 
     // generate a list of unique points from the triangle list
     FGTriNodes nodes;
@@ -252,15 +230,15 @@ void FGGenOutput::calc_group_bounding_sphere( const fan_list& fans,
     }
 
     // find average of point list
-    Point3D c( 0.0 );
+    *center = Point3D( 0.0 );
     point_list points = nodes.get_node_list();
     // cout << "found " << points.size() << " unique nodes" << endl;
     point_list_iterator p_current = points.begin();
     point_list_iterator p_last = points.end();
     for ( ; p_current != p_last; ++p_current ) {
-	c += *p_current;
+	*center += *p_current;
     }
-    c /= points.size();
+    *center /= points.size();
 
     // find max radius
     double dist_squared;
@@ -269,56 +247,59 @@ void FGGenOutput::calc_group_bounding_sphere( const fan_list& fans,
     p_current = points.begin();
     p_last = points.end();
     for ( ; p_current != p_last; ++p_current ) {
-	dist_squared = c.distance3Dsquared(*p_current);
+	dist_squared = (*center).distance3Dsquared(*p_current);
 	if ( dist_squared > max_squared ) {
 	    max_squared = dist_squared;
 	}
     }
 
-    *center = c;
     *radius = sqrt(max_squared);
 }
 
 
 // caclulate the bounding sphere for the specified triangle face
-void FGGenOutput::calc_bounding_sphere( const FGTriEle& t, 
+void FGGenOutput::calc_bounding_sphere( FGConstruct& c, const FGTriEle& t, 
 					Point3D *center, double *radius )
 {
-    Point3D c( 0.0 );
+    point_list wgs84_nodes = c.get_wgs84_nodes();
+
+    *center = Point3D( 0.0 );
 
     Point3D p1 = wgs84_nodes[ t.get_n1() ];
     Point3D p2 = wgs84_nodes[ t.get_n2() ];
     Point3D p3 = wgs84_nodes[ t.get_n3() ];
 
-    c = p1 + p2 + p3;
-    c /= 3;
+    *center = p1 + p2 + p3;
+    *center /= 3;
 
     double dist_squared;
     double max_squared = 0;
 
-    dist_squared = c.distance3Dsquared(p1);
+    dist_squared = (*center).distance3Dsquared(p1);
     if ( dist_squared > max_squared ) {
 	max_squared = dist_squared;
     }
 
-    dist_squared = c.distance3Dsquared(p2);
+    dist_squared = (*center).distance3Dsquared(p2);
     if ( dist_squared > max_squared ) {
 	max_squared = dist_squared;
     }
 
-    dist_squared = c.distance3Dsquared(p3);
+    dist_squared = (*center).distance3Dsquared(p3);
     if ( dist_squared > max_squared ) {
 	max_squared = dist_squared;
     }
 
-    *center = c;
     *radius = sqrt(max_squared);
 }
 
 
 // write out the fgfs scenery file
-int FGGenOutput::write( const string& base, const FGBucket& b ) {
+int FGGenOutput::write( FGConstruct &c ) {
     Point3D p;
+
+    string base = c.get_output_base();
+    FGBucket b = c.get_bucket();
 
     string dir = base + "/Scenery/" + b.gen_base_path();
     string command = "mkdir -p " + dir;
@@ -350,6 +331,7 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
     fprintf(fp, "\n");
 
     // write nodes
+    point_list wgs84_nodes = c.get_wgs84_nodes();
     fprintf(fp, "# vertex list\n");
     const_point_list_iterator w_current = wgs84_nodes.begin();
     const_point_list_iterator w_last = wgs84_nodes.end();
@@ -379,7 +361,7 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	if ( (int)fans[i].size() > 0 ) {
 	    string attr_name = get_area_name( (AreaType)i );
-	    calc_group_bounding_sphere( fans[i], &center, &radius );
+	    calc_group_bounding_sphere( c, fans[i], &center, &radius );
 	    cout << "writing " << (int)fans[i].size() << " fans for " 
 		 << attr_name << endl;
 

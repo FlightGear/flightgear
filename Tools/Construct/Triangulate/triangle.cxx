@@ -45,7 +45,7 @@ FGTriangle::build( const point_list& corner_list,
     int index;
 
     in_nodes.clear();
-    trisegs.clear();
+    in_segs.clear();
 
     // Point3D junkp;
     // int junkc = 0;
@@ -93,7 +93,7 @@ FGTriangle::build( const point_list& corner_list,
 
 	    int j;
 
-	    for ( j = 0; j < gpc_poly->num_contours; j++ ) {
+	    for ( j = 0; j < gpc_poly->num_contours; ++j ) {
 		cout << "  processing contour = " << j << ", nodes = " 
 		     << gpc_poly->contour[j].num_vertices << ", hole = "
 		     << gpc_poly->hole[j] << endl;
@@ -109,7 +109,7 @@ FGTriangle::build( const point_list& corner_list,
 		    // junkp = in_nodes.get_node( index );
 		    // fprintf(junkfp, "%.4f %.4f\n", junkp.x(), junkp.y());
 		    poly.add_node(j, index);
-		    cout << "  - " << index << endl;
+		    // cout << "  - " << index << endl;
 		}
 		// fprintf(junkfp, "%.4f %.4f\n", 
 		//    gpc_poly->contour[j].vertex[0].x, 
@@ -123,7 +123,8 @@ FGTriangle::build( const point_list& corner_list,
 		poly.calc_point_inside( j, in_nodes );
 	    }
 
-	    // temporary ... write out/hole polygon info for debugging
+#if 0
+	    // temporary ... write out hole/polygon info for debugging
 	    for ( j = 0; j < (int)poly.contours(); ++j ) {
 		char pname[256];
 		sprintf(pname, "poly%02d-%02d-%02d", i, debug_counter, j);
@@ -147,6 +148,7 @@ FGTriangle::build( const point_list& corner_list,
 		fprintf( fh, "%.6f %.6f\n", point.x(), point.y() );
 		fclose(fh);
 	    }
+#endif
 
 	    polylist[i].push_back( poly );
 
@@ -188,12 +190,12 @@ FGTriangle::build( const point_list& corner_list,
 		    i1 = poly.get_pt_index( j, k );
 		    i2 = poly.get_pt_index( j, k + 1 );
 		    // calc_line_params(i1, i2, &m, &b);
-		    trisegs.unique_divide_and_add( node_list, FGTriSeg(i1, i2) );
+		    in_segs.unique_divide_and_add( node_list, FGTriSeg(i1, i2) );
 		}
 		i1 = poly.get_pt_index( j, 0 );
 		i2 = poly.get_pt_index( j, poly.contour_size(j) - 1 );
 		// calc_line_params(i1, i2, &m, &b);
-		trisegs.unique_divide_and_add( node_list, FGTriSeg(i1, i2) );
+		in_segs.unique_divide_and_add( node_list, FGTriSeg(i1, i2) );
 	    }
 	}
     }
@@ -206,7 +208,7 @@ static void write_out_data(struct triangulateio *out) {
     FILE *node = fopen("tile.node", "w");
     fprintf(node, "%d 2 %d 0\n", 
 	    out->numberofpoints, out->numberofpointattributes);
-    for (int i = 0; i < out->numberofpoints; i++) {
+    for (int i = 0; i < out->numberofpoints; ++i) {
 	fprintf(node, "%d %.6f %.6f %.2f\n", 
 		i, out->pointlist[2*i], out->pointlist[2*i + 1], 0.0);
     }
@@ -214,12 +216,12 @@ static void write_out_data(struct triangulateio *out) {
 
     FILE *ele = fopen("tile.ele", "w");
     fprintf(ele, "%d 3 0\n", out->numberoftriangles);
-    for (int i = 0; i < out->numberoftriangles; i++) {
+    for (int i = 0; i < out->numberoftriangles; ++i) {
         fprintf(ele, "%d ", i);
-        for (int j = 0; j < out->numberofcorners; j++) {
+        for (int j = 0; j < out->numberofcorners; ++j) {
 	    fprintf(ele, "%d ", out->trianglelist[i * out->numberofcorners + j]);
         }
-        for (int j = 0; j < out->numberoftriangleattributes; j++) {
+        for (int j = 0; j < out->numberoftriangleattributes; ++j) {
 	    fprintf(ele, "%.6f ", 
 		    out->triangleattributelist[i 
 					      * out->numberoftriangleattributes
@@ -238,12 +240,12 @@ static void write_out_data(struct triangulateio *out) {
 		i, out->segmentlist[2*i], out->segmentlist[2*i + 1]);
     }
     fprintf(fp, "%d\n", out->numberofholes);
-    for (int i = 0; i < out->numberofholes; i++) {
+    for (int i = 0; i < out->numberofholes; ++i) {
 	fprintf(fp, "%d %.6f %.6f\n", 
 		i, out->holelist[2*i], out->holelist[2*i + 1]);
     }
     fprintf(fp, "%d\n", out->numberofregions);
-    for (int i = 0; i < out->numberofregions; i++) {
+    for (int i = 0; i < out->numberofregions; ++i) {
 	fprintf(fp, "%d %.6f %.6f %.6f\n", 
 		i, out->regionlist[4*i], out->regionlist[4*i + 1],
 		out->regionlist[4*i + 2]);
@@ -277,12 +279,12 @@ int FGTriangle::run_triangulate() {
     in.pointattributelist = (REAL *) malloc(in.numberofpoints *
 					    in.numberofpointattributes *
 					    sizeof(REAL));
-    for ( int i = 0; i < in.numberofpoints * in.numberofpointattributes; i++) {
+    for ( int i = 0; i < in.numberofpoints * in.numberofpointattributes; ++i) {
 	in.pointattributelist[i] = 0.0;
     }
 
     in.pointmarkerlist = (int *) malloc(in.numberofpoints * sizeof(int));
-    for ( int i = 0; i < in.numberofpoints; i++) {
+    for ( int i = 0; i < in.numberofpoints; ++i) {
 	in.pointmarkerlist[i] = 0;
     }
 
@@ -290,7 +292,7 @@ int FGTriangle::run_triangulate() {
     in.numberoftriangles = 0;
 
     // segment list
-    triseg_list seg_list = trisegs.get_seg_list();
+    triseg_list seg_list = in_segs.get_seg_list();
     in.numberofsegments = seg_list.size();
     in.segmentlist = (int *) malloc(in.numberofsegments * 2 * sizeof(int));
     in.segmentmarkerlist = (int *) NULL;
@@ -314,7 +316,7 @@ int FGTriangle::run_triangulate() {
     counter = 0;
     for ( ; h_current != h_last; ++h_current ) {
 	poly = *h_current;
-	for ( int j = 0; j < poly.contours(); j++ ) {
+	for ( int j = 0; j < poly.contours(); ++j ) {
 	    p = poly.get_point_inside( j );
 	    in.holelist[counter++] = p.x();
 	    in.holelist[counter++] = p.y();
@@ -329,7 +331,7 @@ int FGTriangle::run_triangulate() {
 	h_last = polylist[i].end();
 	for ( ; h_current != h_last; ++h_current ) {
 	    poly = *h_current;
-	    for ( int j = 0; j < poly.contours(); j++ ) {
+	    for ( int j = 0; j < poly.contours(); ++j ) {
 		if ( ! poly.get_hole_flag( j ) ) {
 		    ++in.numberofregions;
 		}
@@ -345,7 +347,7 @@ int FGTriangle::run_triangulate() {
 	h_last = polylist[(int)i].end();
 	for ( ; h_current != h_last; ++h_current ) {
 	    poly = *h_current;
-	    for ( int j = 0; j < poly.contours(); j++ ) {
+	    for ( int j = 0; j < poly.contours(); ++j ) {
 		if ( ! poly.get_hole_flag( j ) ) {
 		    p = poly.get_point_inside( j );
 		    cout << "Region point = " << p << endl;
@@ -404,17 +406,24 @@ int FGTriangle::run_triangulate() {
 
     // nodes
     out_nodes.clear();
-    for ( int i = 0; i < out.numberofpoints; i++ ) {
+    for ( int i = 0; i < out.numberofpoints; ++i ) {
 	Point3D p( out.pointlist[2*i], out.pointlist[2*i + 1], 0.0 );
 	// cout << "point = " << p << endl;
 	out_nodes.simple_add( p );
+    }
+
+    // segments
+    out_segs.clear();
+    for ( int i = 0; i < out.numberofsegments; ++i ) {
+	out_segs.unique_add( FGTriSeg( out.segmentlist[2*i], 
+				       out.segmentlist[2*i+1] ) );
     }
 
     // triangles
     elelist.clear();
     int n1, n2, n3;
     double attribute;
-    for ( int i = 0; i < out.numberoftriangles; i++ ) {
+    for ( int i = 0; i < out.numberoftriangles; ++i ) {
 	n1 = out.trianglelist[i * 3];
 	n2 = out.trianglelist[i * 3 + 1];
 	n3 = out.trianglelist[i * 3 + 2];
