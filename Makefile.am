@@ -24,7 +24,7 @@ fgfs-base: fgfs-base-tar fgfs-base-zip
 fgfs-base-tar:
 	(cd $(HOME); \
 	tar czvf fgfs-base-$(VERSION).tar.gz \
-	FlightGear/[A-R]* \
+	FlightGear/[A-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
 	FlightGear/Sounds \
 	FlightGear/Textures FlightGear/Thanks \
@@ -33,7 +33,7 @@ fgfs-base-tar:
 fgfs-base-zip:
 	(cd $(HOME); \
 	zip -r fgfs-base-$(VERSION).zip \
-	FlightGear/[A-R]* \
+	FlightGear/[A-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
 	FlightGear/Sounds \
 	FlightGear/Textures FlightGear/Thanks \
@@ -62,7 +62,7 @@ fgfs-win32-bin:
 	(cd $(HOME); \
 	zip -r fgfs-win32-bin-$(VERSION).zip FlightGear/bin )
 
-# make the win32-libs distribution
+# make the win32-libs distribution (depricated)
 win32-libs:
 	( zip -r ../win32-libs-$(VERSION).zip Win32/Makefile \
 	Win32/README.glut Win32/cygwinb1.dll Win32/def \

@@ -92,6 +92,10 @@ if test "x$ac_cv_header_plib_pu_h" != "xyes"; then
     echo
     echo "configure aborted."
     exit
+    AM_CONDITIONAL(ENABLE_PLIB_JOYSTICK, false )
+else
+    dnl Use plib joystick lib
+    AM_CONDITIONAL(ENABLE_PLIB_JOYSTICK, true )
 fi
 
 dnl Using AM_CONDITIONAL is a step out of the protected little 
@@ -119,9 +123,6 @@ AM_CONDITIONAL(ENABLE_AUDIO_SUPPORT, \
 AM_CONDITIONAL(ENABLE_IRIX_AUDIO, test -r /usr/include/audio.h)
 
 AM_CONDITIONAL(ENABLE_WIN32_AUDIO, test "x$ac_cv_header_windows_h" = "xyes")
-
-dnl Check for (currently Linux only style) joystick support
-AM_CONDITIONAL(ENABLE_LINUX_JOYSTICK, test -r /usr/include/linux/joystick.h )
 
 dnl Enable serial support on Unix type systems
 AM_CONDITIONAL(ENABLE_UNIX_SERIAL, true)
