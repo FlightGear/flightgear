@@ -66,7 +66,6 @@
 
 #include <simgear/constants.h>  // for VERSION
 #include <simgear/debug/logstream.hxx>
-#include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/math/fg_geodesy.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/fg_random.h>
@@ -161,7 +160,6 @@ ssgTransform *fgd_pos = NULL;
 FGInterface cur_view_fdm;
 
 // Sky structures
-FGEphemeris *ephem;
 SGSky *thesky;
 
 // hack
@@ -418,8 +416,10 @@ void fgRenderFrame( void ) {
 			     cur_light_params.adj_fog_color,
 			     cur_light_params.sun_angle,
 			     cur_light_params.moon_angle,
-			     ephem->getNumPlanets(), ephem->getPlanets(),
-			     ephem->getNumStars(), ephem->getStars() );
+			     globals->get_ephem()->getNumPlanets(),
+			     globals->get_ephem()->getPlanets(),
+			     globals->get_ephem()->getNumStars(),
+			     globals->get_ephem()->getStars() );
  
 	    /* cout << "thesky->reposition( view_pos = " << view_pos[0] << " "
 		 << view_pos[1] << " " << view_pos[2] << endl;
@@ -429,10 +429,10 @@ void fgRenderFrame( void ) {
 		 << " lat = " << cur_fdm_state->get_Latitude() << endl;
 	    cout << "    sun_rot = " << cur_light_params.sun_rotation
 		 << " gst = " << SGTime::cur_time_params->getGst() << endl;
-	    cout << "    sun ra = " << ephem->getSunRightAscension()
-		 << " sun dec = " << ephem->getSunDeclination() 
-		 << " moon ra = " << ephem->getMoonRightAscension()
-		 << " moon dec = " << ephem->getMoonDeclination() << endl; */
+	    cout << "    sun ra = " << globals->get_ephem()->getSunRightAscension()
+		 << " sun dec = " << globals->get_ephem()->getSunDeclination() 
+		 << " moon ra = " << globals->get_ephem()->getMoonRightAscension()
+		 << " moon dec = " << globals->get_ephem()->getMoonDeclination() << endl; */
 
 	    thesky->reposition( view_pos, zero_elev,
 				current_view.get_local_up(),
@@ -441,10 +441,12 @@ void fgRenderFrame( void ) {
 				cur_fdm_state->get_Altitude() * FEET_TO_METER,
 				cur_light_params.sun_rotation,
 				globals->get_time_params()->getGst(),
-				ephem->getSunRightAscension(),
-				ephem->getSunDeclination(), 50000.0,
-				ephem->getMoonRightAscension(),
-				ephem->getMoonDeclination(), 50000.0 );
+				globals->get_ephem()->getSunRightAscension(),
+				globals->get_ephem()->getSunDeclination(),
+				50000.0,
+				globals->get_ephem()->getMoonRightAscension(),
+				globals->get_ephem()->getMoonDeclination(),
+				50000.0 );
 	}
 
 	glEnable( GL_DEPTH_TEST );
@@ -693,7 +695,9 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
     l->UpdateAdjFog();
 
     // Update solar system
-    ephem->update( globals->get_time_params(), cur_fdm_state->get_Latitude() );
+    globals->get_ephem()->update( globals->get_time_params()->getMjd(),
+				  globals->get_time_params()->getLst(),
+				  cur_fdm_state->get_Latitude() );
 
     // Update radio stack model
     current_radiostack->update( cur_fdm_state->get_Longitude(),
@@ -1390,8 +1394,11 @@ int main( int argc, char **argv ) {
     // Initialize the sky
     FGPath ephem_data_path( current_options.get_fg_root() );
     ephem_data_path.append( "Astro" );
-    ephem = new FGEphemeris( ephem_data_path.c_str() );
-    ephem->update( globals->get_time_params(), 0.0 );
+    SGEphemeris *ephem = new SGEphemeris( ephem_data_path.c_str() );
+    ephem->update( globals->get_time_params()->getMjd(),
+		   globals->get_time_params()->getLst(),
+		   0.0 );
+    globals->set_ephem( ephem );
 
     FGPath sky_tex_path( current_options.get_fg_root() );
     sky_tex_path.append( "Textures" );
@@ -1400,10 +1407,10 @@ int main( int argc, char **argv ) {
     thesky->texture_path( sky_tex_path.str() );
 
     thesky->build( 550.0, 550.0,
-		   ephem->getNumPlanets(), 
-		   ephem->getPlanets(), 60000.0,
-		   ephem->getNumStars(),
-		   ephem->getStars(), 60000.0 );
+		   globals->get_ephem()->getNumPlanets(), 
+		   globals->get_ephem()->getPlanets(), 60000.0,
+		   globals->get_ephem()->getNumStars(),
+		   globals->get_ephem()->getStars(), 60000.0 );
 
     thesky->add_cloud_layer( 2600.0, 200.0, 50.0, 40000.0,
 			     SG_CLOUD_MOSTLY_SUNNY );

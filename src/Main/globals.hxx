@@ -25,6 +25,7 @@
 #define _GLOBALS_HXX
 
 
+#include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/timing/sg_time.hxx>
 
 
@@ -46,6 +47,9 @@ private:
     // Time structure
     SGTime *time_params;
 
+    // Sky structures
+    SGEphemeris *ephem;
+
 public:
 
     FGGlobals();
@@ -64,6 +68,9 @@ public:
 
     inline SGTime *get_time_params() const { return time_params; }
     inline void set_time_params( SGTime *t ) { time_params = t; }
+
+    inline SGEphemeris *get_ephem() const { return ephem; }
+    inline void set_ephem( SGEphemeris *e ) { ephem = e; }
 };
 
 
