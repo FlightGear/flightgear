@@ -323,6 +323,7 @@ bool FGATC610x::open() {
 
     bool home = false;
     int timeout = 900;          // about 30 seconds
+    timeout = 0;
     while ( ! home && timeout > 0 ) {
         if ( timeout % 150 == 0 ) {
             SG_LOG( SG_IO, SG_INFO, "waiting for compass = " << timeout );
@@ -500,11 +501,6 @@ bool FGATC610x::open() {
 // Read analog inputs
 /////////////////////////////////////////////////////////////////////
 
-#define ATC_AILERON_CENTER 535
-#define ATC_ELEVATOR_TRIM_CENTER 512
-#define ATC_ELEVATOR_CENTER 543
-#define ATC_RUDDER_CENTER 519
-
 // scale a number between min and max (with center defined) to a scale
 // from -1.0 to 1.0
 static double scale( int center, int min, int max, int value ) {
@@ -588,17 +584,16 @@ bool FGATC610x::do_analog_in() {
     fgSetFloat( "/controls/mixture[1]", tmp );
 
     // throttle
-    tmp = scale( mixture_min->getIntValue(), mixture_max->getIntValue(),
+    tmp = scale( throttle_min->getIntValue(), throttle_max->getIntValue(),
                  analog_in_data[8] );
     fgSetFloat( "/controls/throttle[0]", tmp );
     fgSetFloat( "/controls/throttle[1]", tmp );
+    // cout << "throttle = " << tmp << endl;
 
-#if 0
     // rudder
     tmp = scale( rudder_center->getIntValue(), rudder_min->getIntValue(),
                  rudder_max->getIntValue(), analog_in_data[10] );
-    fgSetFloat( "/controls/rudder", tmp );
-#endif
+    fgSetFloat( "/controls/rudder", -tmp );
 
     // nav1 volume
     tmp = (float)analog_in_data[25] / 1024.0f;
@@ -1387,12 +1382,18 @@ bool FGATC610x::do_radio_display() {
         } else {
             radio_display_data[34] = digits[0] << 4 | digits[1];
         }
+        if ( adf_stby_mode->getIntValue() == 0 ) {
+	  radio_display_data[35] = 0xff;
+	} else {
+	  radio_display_data[35] = 0x0f;
+	}
     } else {
         radio_display_data[30] = 0xff;
         radio_display_data[31] = 0xff;
         radio_display_data[32] = 0xff;
         radio_display_data[33] = 0xff;
         radio_display_data[34] = 0xff;
+        radio_display_data[35] = 0xff;
     }
     
     // Transponder code and flight level
