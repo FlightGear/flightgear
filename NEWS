@@ -1,3 +1,45 @@
+New in 0.7.8
+* July 13, 2001
+* Updated to the latest JSBSim flight dynamics model (http://jsbsim.sf.net)
+* First release of a bundled utility: fgjs which assists you in creating
+  a joystick/button configuration for your setup.
+* Updated airport data file with taxiways at many major airports.
+* Better support for using an external browser to view online help
+  components.  Windows support for this will be included in the next
+  revision.
+* Now using plib-1.4.x which supports more than 3 concurrent sounds.
+* Most of the README's and documentation has been reviewed and brought
+  up to date.
+* Support for ultra-hires screen dumps suitable for large scale
+  printed output.
+* Updated, more flexible binary scenery format.
+* Support for using digital axes (i.e. a hat) as a pair of buttons
+  which can be mapped to any function a button could be mapped to.
+* External view panning fix ups.
+* Fixed the segfault on exit bug.
+* Lots of property manager tweaks.  Appened units to property name to
+  make it explicit, adjusted read/write/archive bits and defaults
+* MSVC fixups.
+* gcc-3.0 fixups.
+* Irix fixups.
+* Fixed a potential segfault in radio station lookup/search code.
+* Fixed a bug in the audio system intialization order that could cause
+  a segfault in some circumstances.
+* Fixed a typo in the 2nd tank property name so it's value is now accessible
+  from the instrument panel. 
+* Fixed a bug when loading the "old" binary scenery which prevented ground
+  lighting from being generated.
+* Jettison old conditionally compiled plib-1.2.x code, we now require
+  plib-1.4.x or higher.
+* Eliminated some convoluted that generated a harmless, but confusing
+  "*** NO TIMEZONE" error message,
+* Fixed doubled bindings for joystick buttons.
+* Threading fixups.
+* Fixed a bug with the time warping/offset code.  You can again
+  startup with a proper time offset if you like.
+* Fixed a couple memory problems ... attempting to access/use/write to
+  previously freed memory.
+
 New in 0.7.7
 * June 20, 2001
 
