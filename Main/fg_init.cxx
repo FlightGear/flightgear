@@ -71,47 +71,12 @@ int fgInitPosition( void ) {
     f = current_aircraft.flight;
     o = &current_options;
 
-    // Initial Position at (P13) Globe, AZ
+    // If nothing else is specified, default initial position is
+    // Globe, AZ (P13)
     FG_Longitude = ( -110.6642444 ) * DEG_TO_RAD;
     FG_Latitude  = (  33.3528917 ) * DEG_TO_RAD;
     FG_Runway_altitude = (3234.5 + 300);
     FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    // Initial Position at (E81) Superior, AZ
-    // FG_Longitude = ( -111.1270650 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  33.2778339 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = (2646 + 100);
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    // Initial Position at (TUS) Tucson, AZ
-    // FG_Longitude = ( -110.9412597 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  32.1162439 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = (2641 + 0);
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    // Initial Position at (SEZ) SEDONA airport
-    // FG_Longitude = (-111.7884614 + 0.01) * DEG_TO_RAD;
-    // FG_Latitude  = (  34.8486289 - 0.015) * DEG_TO_RAD;
-    // FG_Runway_altitude = (4827 + 450);
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-        
-    // Initial Position at near Anchoraze, AK
-    // FG_Longitude = ( -152.00 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  61.17 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = (0);
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    // Initial Position at (HSP) Hot Springs, VA
-    // FG_Longitude = (-79.8338964 + 0.01) * DEG_TO_RAD;
-    // FG_Latitude  = ( 37.9514564 + 0.008) * DEG_TO_RAD;
-    // FG_Runway_altitude = (3792 + 1300);
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-    
-    // Initial Position at (ANE) Anoka County airport
-    // FG_Longitude = -93.2113889 * DEG_TO_RAD;
-    // FG_Latitude  = 45.145 * DEG_TO_RAD;
-    // FG_Runway_altitude = 912;
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position north of the city of Globe
     // FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD;
@@ -138,12 +103,6 @@ int fgInitPosition( void ) {
     // FG_Runway_altitude = 8000.0;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
-    // Initial Position: (GCN) Grand Canyon Airport, AZ
-    // FG_Longitude = ( -112.1469647 ) * DEG_TO_RAD;
-    // FG_Latitude  = (   35.9523539 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 6606.0;
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
     // Initial Position: Jim Brennon's Kingmont Observatory
     // FG_Longitude = ( -121.1131667 ) * DEG_TO_RAD;
     // FG_Latitude  = (   38.8293917 ) * DEG_TO_RAD;
@@ -153,18 +112,6 @@ int fgInitPosition( void ) {
     // probably interesting for european team members
     // That is: If I can get the scenery to work -;) (Durk)
  
-    // Initial Position: Groningen Airport Eelde, the netherlands
-    // FG_Longitude = ( 6.583333 ) * DEG_TO_RAD;
-    // FG_Latitude  = (   53.125 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 920.0;
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
- 
-    // Initial Position: Schiphol Amsterdam Airport, the netherlands
-    // FG_Longitude = ( -4.7641667 ) * DEG_TO_RAD;
-    // FG_Latitude  = (   52.308056 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 920.0;
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-
     // Eclipse Watching w73.5 n10 (approx) 18:00 UT
     // FG_Longitude = ( -73.5 ) * DEG_TO_RAD;
     // FG_Latitude  = (  10.0 ) * DEG_TO_RAD;
@@ -188,7 +135,7 @@ int fgInitPosition( void ) {
 	airports.load("Airports");
 	a = airports.search(o->airport_id);
 	if ( strcmp(a.id, "none") == 0 ) {
-	    fgPrintf( FG_GENERAL, FG_INFO, 
+	    fgPrintf( FG_GENERAL, FG_EXIT, 
 		      "Failed to find %s in database.\n", o->airport_id);
 	} else {
 	    FG_Longitude = ( a.longitude ) * DEG_TO_RAD;
@@ -202,6 +149,8 @@ int fgInitPosition( void ) {
 	      "Initial position is: (%.4f, %.4f, %.2f)\n", 
 	      FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, 
 	      FG_Altitude * FEET_TO_METER);
+
+    return(1);
 }
 
 
@@ -210,6 +159,9 @@ int fgInitGeneral( void ) {
     fgGENERAL *g;
 
     g = &general;
+
+    fgPrintf( FG_GENERAL, FG_INFO, "General Initialization\n" );
+    fgPrintf( FG_GENERAL, FG_INFO, "======= ==============\n" );
 
     // determine the fg root path.  
     if( !(g->root_dir) ) { 
@@ -224,12 +176,6 @@ int fgInitGeneral( void ) {
 	}
     }
     fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", g->root_dir);
-
-    fgPrintf( FG_GENERAL, FG_INFO, "General Initialization\n" );
-    fgPrintf( FG_GENERAL, FG_INFO, "======= ==============\n" );
-
-    // seed the random number generater
-    fg_srandom();
 
     return ( 1 ); 
 }
@@ -253,6 +199,9 @@ int fgInitSubsystems( void ) {
 
     fgPrintf( FG_GENERAL, FG_INFO, "Initialize Subsystems\n");
     fgPrintf( FG_GENERAL, FG_INFO, "========== ==========\n");
+
+    // seed the random number generater
+    fg_srandom();
 
     // The following section sets up the flight model EOM parameters
     // and should really be read in from one or more files.
@@ -295,52 +244,21 @@ int fgInitSubsystems( void ) {
     FG_Dy_cg = 0.000000E+00;
     FG_Dz_cg = 0.000000E+00;
 
-    // Set initial position and slew parameters
-    // fgSlewInit(-398391.3, 120070.41, 244, 3.1415);  // GLOBE Airport
-    // fgSlewInit(-335340,162540, 15, 4.38);
-    // fgSlewInit(-398673.28,120625.64, 53, 4.38);
-
     // Initialize the event manager
     fgEventInit();
 
-    // Dump event stats every 60 seconds
+    // Output event stats every 60 seconds
     fgEventRegister( "fgEventPrintStats()", fgEventPrintStats,
 		     FG_EVENT_READY, 60000 );
 
-    // Initialize "time"
+    // Initialize the time dependent variables
     fgTimeInit(t);
     fgTimeUpdate(f, t);
 
-    // fgViewUpdate() needs the sun in the right place, while
-    // fgUpdateSunPos() needs to know the view position.  I'll get
-    // around this interdependency for now by calling fgUpdateSunPos()
-    // once, then moving on with normal initialization.
-    fgUpdateSunPos();
-
     // Initialize view parameters
+    // ---->
     fgViewInit(v);
     fgViewUpdate(f, v, l);
-
-    // Initialize Lighting interpolation tables
-    fgLightInit();
-
-    // update the lighting parameters (based on sun angle)
-    fgEventRegister( "fgLightUpdate()", fgLightUpdate,
-		     FG_EVENT_READY, 30000 );
-
-    // Initialize the weather modeling subsystem
-    fgWeatherInit();
-
-    // update the weather for our current position
-    fgEventRegister( "fgWeatherUpdate()", fgWeatherUpdate,
-		     FG_EVENT_READY, 120000 );
-
-    // Initialize the Cockpit subsystem
-    if( fgCockpitInit( &current_aircraft )) {
-	// Cockpit initialized ok.
-    } else {
-    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Cockpit initialization!\n" );
-    }
 
     // Initialize the orbital elements of sun, moon and mayor planets
     fgSolarSystemInit(*t);
@@ -361,7 +279,36 @@ int fgInitSubsystems( void ) {
     // Intialize the moon's position
     fgEventRegister( "fgMoonInit()", fgMoonInit, FG_EVENT_READY, 600000 );
 
+    // fgUpdateSunPos() needs a few position and view parameters set
+    // so it can calculate local relative sun angle and a few other
+    // things for correctly orienting the sky.
+    // ---->
+    fgUpdateSunPos();
+
+    // Initialize Lighting interpolation tables
+    // ---->
+    fgLightInit();
+
+    // update the lighting parameters (based on sun angle)
+    fgEventRegister( "fgLightUpdate()", fgLightUpdate,
+		     FG_EVENT_READY, 30000 );
+
+    // Initialize the weather modeling subsystem
+    fgWeatherInit();
+
+    // update the weather for our current position
+    fgEventRegister( "fgWeatherUpdate()", fgWeatherUpdate,
+		     FG_EVENT_READY, 120000 );
+
+    // Initialize the Cockpit subsystem
+    if( fgCockpitInit( &current_aircraft )) {
+	// Cockpit initialized ok.
+    } else {
+    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Cockpit initialization!\n" );
+    }
+
     // Initialize the "sky"
+    // ---->
     fgSkyInit();
 
     // Initialize the Scenery Management subsystem
@@ -382,35 +329,25 @@ int fgInitSubsystems( void ) {
 
     // I'm just sticking this here for now, it should probably move
     // eventually
-    // cur_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0,
-    //           FG_Latitude  * RAD_TO_DEG * 3600.0);
-    // fgPrintf( FG_GENERAL, FG_INFO,
-    //   "True ground elevation is %.2f meters here.\n",
-    //   cur_elev);
+        cur_elev = FG_Runway_altitude * FEET_TO_METER;
+        if ( cur_elev > -9990.0 ) {
+	    FG_Runway_altitude = cur_elev * METER_TO_FEET;
+        }
 
-    cur_elev = FG_Runway_altitude * FEET_TO_METER;
-    if ( cur_elev > -9990.0 ) {
-	FG_Runway_altitude = cur_elev * METER_TO_FEET;
-    }
+        if ( FG_Altitude < FG_Runway_altitude ) {
+	    FG_Altitude = FG_Runway_altitude + 3.758099;
+        }
 
-    if ( FG_Altitude < FG_Runway_altitude ) {
-	FG_Altitude = FG_Runway_altitude + 3.758099;
-    }
-
-    fgPrintf(FG_GENERAL, FG_INFO,
+        fgPrintf( FG_GENERAL, FG_INFO,
 	     "Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n",
 	     FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG,
 	     FG_Altitude * FEET_TO_METER);
-
     // end of thing that I just stuck in that I should probably move
 		
     // Initialize the flight model subsystem data structures base on
     // above values
 
     fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
-
-    // To HUD or not to HUD  - Now a command line issue
-    //              show_hud = 0;
 
     // Let's not show the instrument panel
     displayInstruments = 0;
@@ -425,9 +362,6 @@ int fgInitSubsystems( void ) {
     // Autopilot init added here, by Jeff Goeke-Smith
     fgAPInit(&current_aircraft);
     
-    // One more try here to get the sky synced up
-    fgSkyColorsInit();
-
     fgPrintf(FG_GENERAL, FG_INFO,"\n");
 
     return(1);
@@ -435,6 +369,11 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/04/25 20:24:01  curt
+// Cleaned up initialization sequence to eliminate interdependencies
+// between sun position, lighting, and view position.  This creates a
+// valid single pass initialization path.
+//
 // Revision 1.3  1998/04/25 15:11:11  curt
 // Added an command line option to set starting position based on airport ID.
 //

@@ -48,6 +48,11 @@ unsigned long int fgSimTime;
 
 /* This routine catches the SIGALRM */
 void fgTimerCatch( int dummy ) {
+    int warning_avoider;
+
+    // get past a compiler warning
+    warning_avoider = dummy;
+
     /* ignore any SIGALRM's until we come back from our EOM iteration */
     signal(SIGALRM, SIG_IGN);
 
@@ -112,11 +117,16 @@ int fgGetTimeInterval( void ) {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/24 00:52:29  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Fog color fixes.
-/* Separated out lighting calcs into their own file.
+/* Revision 1.2  1998/04/25 20:24:03  curt
+/* Cleaned up initialization sequence to eliminate interdependencies
+/* between sun position, lighting, and view position.  This creates a
+/* valid single pass initialization path.
 /*
+ * Revision 1.1  1998/04/24 00:52:29  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ * Fog color fixes.
+ * Separated out lighting calcs into their own file.
+ *
  * Revision 1.12  1998/04/21 17:01:44  curt
  * Fixed a problems where a pointer to a function was being passed around.  In
  * one place this functions arguments were defined as ( void ) while in another

@@ -1,5 +1,5 @@
 /*
- * sunpos.hxx
+ * sunpos.hxx (taken from XEarth)
  * kirk johnson
  * july 1993
  *

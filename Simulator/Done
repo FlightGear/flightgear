@@ -2,6 +2,9 @@
 | Done
 --------------------------------------------------------------------------
 
+4/25/98 -  Clean up initialization sequence and eliminate
+           interdependencies between lighting and position.
+
 4/23/98 -  encapsulate all #include <config.h>'s with #ifdef HAVE_CONFIG_H
 
 4/23/98 -  Give all textured polygons ambient and diffuse glMaterial()

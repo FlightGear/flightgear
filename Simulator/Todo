@@ -2,8 +2,11 @@
 | Todo 
 --------------------------------------------------------------------------
 
-4/24/98 -  Clean up initialization sequence and eliminate
-           interdependencies between lighting and position.
+4/25/98 -  Roll all of Time/sunpos.cxx into Astro/sun.cxx
+
+4/25/98 -  Overhaul view parameter generation ... see if we can piggy
+           back off of larcsim calcs, and consolate potentially
+           redundant code
 
 4/21/98 -  Tweak lighting parameter interpolation tables to better fit
            "perceived" reality

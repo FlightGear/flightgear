@@ -103,7 +103,7 @@ long timediff(fg_timestamp *first, fg_timestamp *last);
 void timesum(fg_timestamp *res, fg_timestamp *start, long millis);
 
 
-// Initialize the time dependent variables
+// Update time variables such as gmt, julian date, and sidereal time
 void fgTimeInit(struct fgTIME *t);
 
 
@@ -115,6 +115,11 @@ void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t);
 
 
 // $Log$
+// Revision 1.2  1998/04/25 20:24:03  curt
+// Cleaned up initialization sequence to eliminate interdependencies
+// between sun position, lighting, and view position.  This creates a
+// valid single pass initialization path.
+//
 // Revision 1.1  1998/04/24 00:52:28  curt
 // Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
 // Fog color fixes.

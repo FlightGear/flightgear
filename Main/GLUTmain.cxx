@@ -322,7 +322,6 @@ static void fgRenderFrame( void ) {
     struct fgVIEW *v;
     double angle;
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
-    GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
 
     l = &cur_light_params;
     o = &current_options;
@@ -694,6 +693,11 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.5  1998/04/25 20:24:01  curt
+// Cleaned up initialization sequence to eliminate interdependencies
+// between sun position, lighting, and view position.  This creates a
+// valid single pass initialization path.
+//
 // Revision 1.4  1998/04/24 14:19:30  curt
 // Fog tweaks.
 //

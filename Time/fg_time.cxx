@@ -79,7 +79,7 @@ void timestamp(fg_timestamp *timestamp) {
 #if defined( HAVE_GETTIMEOFDAY )
     struct timeval current;
     struct timezone tz;
-    fg_timestamp currtime;
+    // fg_timestamp currtime;
     gettimeofday(&current, &tz);
     timestamp->seconds = current.tv_sec;
     timestamp->millis = current.tv_usec / 1000;
@@ -311,8 +311,7 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 }
 
 
-// Update the time dependent variables
-
+// Update time variables such as gmt, julian date, and sidereal time
 void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t) {
     double gst_precise, gst_course;
 
@@ -376,6 +375,11 @@ void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t) {
 
 
 // $Log$
+// Revision 1.2  1998/04/25 20:24:02  curt
+// Cleaned up initialization sequence to eliminate interdependencies
+// between sun position, lighting, and view position.  This creates a
+// valid single pass initialization path.
+//
 // Revision 1.1  1998/04/24 00:52:27  curt
 // Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
 // Fog color fixes.

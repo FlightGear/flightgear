@@ -174,13 +174,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 		      "Fog density = %.4f\n", w->visibility);
 	    return;
 	case 27: /* ESC */
-	    if( fg_DebugOutput ) {
-		fclose( fg_DebugOutput );
-	    }
+	    // if( fg_DebugOutput ) {
+	    //   fclose( fg_DebugOutput );
+	    // }
 	    exit(0);
 	}
     }
-
 }
 
 
@@ -266,9 +265,14 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.3  1998/04/24 14:19:29  curt
-/* Fog tweaks.
+/* Revision 1.4  1998/04/25 20:24:00  curt
+/* Cleaned up initialization sequence to eliminate interdependencies
+/* between sun position, lighting, and view position.  This creates a
+/* valid single pass initialization path.
 /*
+ * Revision 1.3  1998/04/24 14:19:29  curt
+ * Fog tweaks.
+ *
  * Revision 1.2  1998/04/24 00:49:17  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Trying out some different option parsing code.
