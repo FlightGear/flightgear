@@ -635,7 +635,6 @@ void TgtAptDialog_OK (puObject *)
 
 void TgtAptDialog_Reset(puObject *)
 {
-    //  strncpy( NewAirportId, fgGetString("/sim/startup/airport-id").c_str(), 16 );
     sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
     TgtAptDialogInput->setValue ( NewTgtAirportId );
     TgtAptDialogInput->setCursor( 0 ) ;
@@ -643,7 +642,6 @@ void TgtAptDialog_Reset(puObject *)
 
 void AddWayPoint(puObject *cb)
 {
-    //  strncpy( NewAirportId, fgGetString("/sim/startup/airport-id").c_str(), 16 );
     sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
     TgtAptDialogInput->setValue( NewTgtAirportId );
     
@@ -664,7 +662,7 @@ void PopWayPoint(puObject *cb)
 
 	// use current heading
 	current_autopilot
-	  ->set_TargetHeading(fgGetDouble("/orientation/heading"));
+            ->set_TargetHeading(fgGetDouble("/orientation/heading"));
     }
 }
 
@@ -676,10 +674,9 @@ void ClearRoute(puObject *cb)
 void NewTgtAirportInit(void)
 {
     SG_LOG( SG_AUTOPILOT, SG_INFO, " enter NewTgtAirportInit()" );
-    //	fgAPset_tgt_airport_id( fgGetString("/sim/startup/airport-id") );	
-    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
+    sprintf( NewTgtAirportId, "%s",
+             fgGetString("/sim/startup/airport-id").c_str() );
     SG_LOG( SG_AUTOPILOT, SG_INFO, " NewTgtAirportId " << NewTgtAirportId );
-    //	printf(" NewTgtAirportId %s\n", NewTgtAirportId);
     int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),
                                       NewTgtAirportLabel ) / 2;
     

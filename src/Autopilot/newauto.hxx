@@ -27,6 +27,7 @@
 #define _NEWAUTO_HXX
 
 
+#include <simgear/misc/props.hxx>
 #include <simgear/route/waypoint.hxx>
 
 
@@ -70,6 +71,7 @@ private:
     double TargetAltitude;	// altitude to hold
     double TargetAGL;		// the terrain separation
     double TargetClimbRate;	// target climb rate
+    double TargetDecentRate;	// target decent rate
     double TargetSpeed;		// speed to shoot for
     double alt_error_accum;	// altitude error accumulator
     double climb_error_accum;	// climb error accumulator (for GS)
@@ -108,6 +110,14 @@ private:
     char TargetWP3Str[64];
     char TargetHeadingStr[64];
     char TargetAltitudeStr[64];
+
+    SGPropertyNode *latitude_node;
+    SGPropertyNode *longitude_node;
+    SGPropertyNode *altitude_node;
+    SGPropertyNode *altitude_agl_node;
+    SGPropertyNode *vertical_speed_node;
+    SGPropertyNode *heading_node;
+    SGPropertyNode *roll_node;
 
 public:
 
