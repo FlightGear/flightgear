@@ -28,7 +28,7 @@
 #include <stdio.h>
 
 #include <Scenery/bucketutils.h>
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 
 
 /* Generate the unique scenery tile index containing the specified
@@ -266,9 +266,13 @@ int main() {
 
 
 /* $Log$
-/* Revision 1.2  1998/01/24 00:03:28  curt
-/* Initial revision.
+/* Revision 1.3  1998/01/27 00:48:01  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.2  1998/01/24 00:03:28  curt
+ * Initial revision.
+ *
  * Revision 1.1  1998/01/23 20:06:51  curt
  * tileutils.* renamed to bucketutils.*
  *

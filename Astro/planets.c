@@ -27,7 +27,7 @@
 #include <Astro/orbits.h>
 #include <Astro/planets.h>
 #include <Astro/sun.h>
-
+#include <Main/fg_debug.h>
 
 struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
                                         struct OrbElements theSun,
@@ -118,25 +118,31 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 	result.magnitude = -6.90 + 5*log10 (r*R) + 0.001 *FV;
 	break;
       default:
-	printf("index %d out of range !!!!\n", idx);
+	fgPrintf( FG_ASTRO, FG_ALERT, "index %d out of range !!!!\n", idx);
       }
-    printf("    Planet found at %f (ra), %f (dec)\n", 
-	   result.RightAscension, result.Declination);
-    printf("      Geocentric dist     %f\n"
-           "      Heliocentric dist   %f\n"
-	   "      Distance to the sun %f\n"
-	   "      Phase angle         %f\n"
-	   "      Brightness          %f\n", R, r, s, FV, result.magnitude);
+    fgPrintf( FG_ASTRO, FG_DEBUG,
+	      "    Planet found at %f (ra), %f (dec)\n", 
+	      result.RightAscension, result.Declination);
+    fgPrintf( FG_ASTRO, FG_DEBUG,
+	      "      Geocentric dist     %f\n"
+	      "      Heliocentric dist   %f\n"
+	      "      Distance to the sun %f\n"
+	      "      Phase angle         %f\n"
+	      "      Brightness          %f\n", R, r, s, FV, result.magnitude);
     return result;
 }
 
 
 
 /* $Log$
-/* Revision 1.2  1998/01/19 19:26:59  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.3  1998/01/27 00:47:47  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.2  1998/01/19 19:26:59  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.1  1998/01/07 03:16:18  curt
  * Moved from .../Src/Scenery/ to .../Src/Astro/
  *

@@ -40,12 +40,12 @@
 #include <Astro/planets.h>
 #include <Astro/stars.h>
 
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 #include <Include/general.h>
 #include <Aircraft/aircraft.h>
 #include <Main/views.h>
 #include <Time/fg_time.h>
-
+#include <Main/fg_debug.h>
 
 #define EpochStart           (631065600)
 #define DaysSinceEpoch(secs) (((secs)-EpochStart)*(1.0/(24*3600)))
@@ -68,7 +68,7 @@ void fgStarsInit( void ) {
     double ra_save1, decl_save1;
     int count, i, j, max_stars;
 
-    printf("Initializing stars\n");
+    fgPrintf( FG_ASTRO, FG_INFO, "Initializing stars\n");
 
     g = &general;
 
@@ -81,10 +81,10 @@ void fgStarsInit( void ) {
     max_stars = FG_MAX_STARS;
 
     for ( i = 0; i < FG_STAR_LEVELS; i++ ) {
-	printf("  Loading %d Stars: %s\n", max_stars, path);
+	fgPrintf( FG_ASTRO, FG_INFO, "  Loading %d Stars: %s\n", max_stars, path);
 
 	if ( (fd = fopen(path, "r")) == NULL ) {
-	    printf("Cannot open star file: '%s'\n", path);
+	    fgPrintf( FG_ASTRO, FG_ALERT, "Cannot open star file: '%s'\n", path);
 	    return;
 	}
 	
@@ -276,10 +276,14 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/19 19:26:59  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.4  1998/01/27 00:47:49  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.3  1998/01/19 19:26:59  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.2  1998/01/19 18:40:18  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

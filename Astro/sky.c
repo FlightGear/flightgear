@@ -45,7 +45,7 @@
 
 #include <Aircraft/aircraft.h>
 #include <Flight/flight.h>
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 #include <Main/views.h>
 #include <Math/fg_random.h>
 
@@ -353,10 +353,14 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/01/26 15:54:28  curt
-/* Added a "skirt" to try to help hide gaps between scenery and sky.  This will
-/* have to be revisited in the future.
+/* Revision 1.5  1998/01/27 00:47:48  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.4  1998/01/26 15:54:28  curt
+ * Added a "skirt" to try to help hide gaps between scenery and sky.  This will
+ * have to be revisited in the future.
+ *
  * Revision 1.3  1998/01/19 19:26:59  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

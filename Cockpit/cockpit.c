@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <Cockpit/cockpit.h>
 
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 
 #include <Aircraft/aircraft.h>
 #include <Scenery/mesh.h>
@@ -39,6 +39,8 @@
 #include <Time/fg_timer.h>
 #include <Math/fg_random.h>
 #include <Weather/weather.h>
+
+#include <Main/fg_debug.h>
 
 // #define DEBUG
 
@@ -50,7 +52,7 @@ struct fgCOCKPIT *fgCockpitInit( struct fgAIRCRAFT cur_aircraft )
 	struct fgCOCKPIT *cockpit;
 	Hptr hud;
 	
-	printf("Initializing cockpit subsystem\n");
+	fgPrintf( FG_COCKPIT, FG_INFO, "Initializing cockpit subsystem\n");
 
 	cockpit = (struct fgCOCKPIT *)calloc(sizeof(struct fgCOCKPIT),1);
 	if( cockpit == NULL )
@@ -68,8 +70,8 @@ struct fgCOCKPIT *fgCockpitInit( struct fgAIRCRAFT cur_aircraft )
 	
 	aircraft_cockpit = cockpit;
 	
-	printf("  Code %d  Status %d\n", cockpit->hud->code, 
-	       cockpit->hud->status );
+	fgPrintf( FG_COCKPIT, FG_INFO,
+		  "  Code %d  Status %d\n", cockpit->hud->code, cockpit->hud->status );
 		
 	return( cockpit );
 }
@@ -77,12 +79,15 @@ struct fgCOCKPIT *fgCockpitInit( struct fgAIRCRAFT cur_aircraft )
 struct fgCOCKPIT *fgCockpitAddHUD( struct fgCOCKPIT *cockpit, struct HUD *hud )
 {
 	cockpit->hud = hud;
+	return(cockpit);
 }
 
 void fgCockpitUpdate( void )
 {
 
-	printf( "Cockpit: code %d   status %d\n", aircraft_cockpit->code, aircraft_cockpit->status );
+	fgPrintf( FG_COCKPIT, FG_INFO,
+		  "Cockpit: code %d   status %d\n", 
+		  aircraft_cockpit->code, aircraft_cockpit->status );
 	if( aircraft_cockpit->hud != NULL )			// That is, if the aircraft has a HUD,
 		fgUpdateHUD( aircraft_cockpit->hud );	// then draw it.
                 
@@ -90,10 +95,14 @@ void fgCockpitUpdate( void )
 
 
 /* $Log$
-/* Revision 1.6  1998/01/19 19:27:01  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.7  1998/01/27 00:47:51  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.6  1998/01/19 19:27:01  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.5  1998/01/19 18:40:19  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

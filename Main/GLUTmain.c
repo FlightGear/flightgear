@@ -34,9 +34,10 @@
 
 #include <Main/GLUTkey.h>
 #include <Main/fg_init.h>
+#include <Main/fg_debug.h>
 #include <Main/views.h>
 
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 #include <Include/general.h>
 
 #include <Aircraft/aircraft.h>
@@ -464,8 +465,8 @@ static void fgMainLoop( void ) {
     struct fgFLIGHT *f;
     struct fgTIME *t;
 
-    printf("Running Main Loop\n");
-    printf("======= ==== ====\n");
+    fgPrintf( FG_ALL, FG_DEBUG, "Running Main Loop\n");
+    fgPrintf( FG_ALL, FG_DEBUG, "======= ==== ====\n");
 
     a = &current_aircraft;
     f = &a->flight;
@@ -483,15 +484,15 @@ static void fgMainLoop( void ) {
 
     /* Calculate model iterations needed */
     elapsed = fgGetTimeInterval();
-    printf("Time interval is = %d, previous remainder is = %d\n", elapsed, 
-	   remainder);
-    printf("--> Frame rate is = %.2f\n", 1000.0 / (float)elapsed);
+    fgPrintf( FG_ALL, FG_BULK, "Time interval is = %d, previous remainder is = %d\n", 
+	      elapsed, remainder);
+    fgPrintf( FG_ALL, FG_BULK, "--> Frame rate is = %.2f\n", 1000.0 / (float)elapsed);
     elapsed += remainder;
 
     multi_loop = ((float)elapsed * 0.001) * DEFAULT_MODEL_HZ;
     remainder = elapsed - ((multi_loop*1000) / DEFAULT_MODEL_HZ);
-    printf("Model iterations needed = %d, new remainder = %d\n", multi_loop, 
-	   remainder);
+    fgPrintf( FG_ALL, FG_BULK, "Model iterations needed = %d, new remainder = %d\n", 
+	      multi_loop, remainder);
 
     /* Run flight model */
     if ( ! use_signals ) {
@@ -513,7 +514,7 @@ static void fgMainLoop( void ) {
 
 	/* now set aircraft altitude above ground */
 	FG_Altitude = cur_elev * METER_TO_FEET + 3.758099;
-	printf("<*> resetting altitude to %.0f meters\n", 
+	fgPrintf( FG_ALL, FG_BULK, "<*> resetting altitude to %.0f meters\n", 
 	       FG_Altitude * FEET_TO_METER);
     }
 
@@ -528,7 +529,7 @@ static void fgMainLoop( void ) {
     /* redraw display */
     fgRenderFrame();
 
-    printf("\n");
+    fgPrintf( FG_ALL, FG_DEBUG, "\n");
 }
 
 
@@ -635,9 +636,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.51  1998/01/26 15:57:05  curt
-/* Tweaks for dynamic scenery development.
+/* Revision 1.52  1998/01/27 00:47:56  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.51  1998/01/26 15:57:05  curt
+ * Tweaks for dynamic scenery development.
+ *
  * Revision 1.50  1998/01/19 19:27:07  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

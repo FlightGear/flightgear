@@ -24,6 +24,8 @@
  **************************************************************************/
 
 
+#include <stdio.h>
+
 #include <Weather/weather.h>
 #include <Aircraft/aircraft.h>
 #include <Math/fg_random.h>
@@ -50,6 +52,10 @@ void fgWeatherInit( void ) {
 
 /* Update the weather parameters for the current position */
 void fgWeatherUpdate( void ) {
+
+    /* temporarily remove the code of this do-nothing routine */
+
+#ifdef FG_WEATHER_UPDATE
     struct fgFLIGHT *f;
     struct fgWEATHER *w;
 
@@ -60,14 +66,19 @@ void fgWeatherUpdate( void ) {
     /* FG_U_gust = fg_random() * 1.0 - 0.5;
     FG_V_gust = fg_random() * 1.0 - 0.5;
     FG_W_gust = fg_random() * 1.0 - 0.5; */
+#endif FG_WEATHER_UPDATE
 }
 
 
 /* $Log$
-/* Revision 1.12  1998/01/19 19:27:22  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.13  1998/01/27 00:48:08  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.12  1998/01/19 19:27:22  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.11  1998/01/19 18:40:41  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

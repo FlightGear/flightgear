@@ -1,5 +1,5 @@
 /**************************************************************************
- * tilecache.h -- routines to hancle scenery tile caching
+ * tilecache.h -- routines to handle scenery tile caching
  *
  * Written by Curtis Olson, started January 1998.
  *
@@ -36,7 +36,7 @@
 #include <XGL/xgl.h>
 
 #include <Scenery/bucketutils.h>
-#include <Include/types.h>
+#include <Include/fg_types.h>
 
 
 #define FG_TILE_CACHE_SIZE 100   /* Must be > FG_LOCAL_X_Y */
@@ -48,6 +48,7 @@ struct fgTILE {
     GLint display_list;
     struct fgCartesianPoint local_ref;
     int used;
+    int priority;
 };
 
 /* tile cache */
@@ -72,9 +73,13 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 
 
 /* $Log$
-/* Revision 1.1  1998/01/24 00:03:29  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/27 00:48:04  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.1  1998/01/24 00:03:29  curt
+ * Initial revision.
+ *
  */
 
 

@@ -35,7 +35,7 @@
 #include <GL/glut.h>
 #include <time.h>
 
-#include <Include/types.h>
+#include <Include/fg_types.h>
 #include <Flight/flight.h>
 
 
@@ -99,9 +99,13 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t);
 
 
 /* $Log$
-/* Revision 1.14  1998/01/22 02:59:43  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.15  1998/01/27 00:48:06  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.14  1998/01/22 02:59:43  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.13  1998/01/19 19:27:20  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

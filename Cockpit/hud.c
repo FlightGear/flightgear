@@ -31,16 +31,16 @@
 #endif /* not WIN32 */
 #include "hud.h"
 
-#include "../Include/constants.h"
+#include <Include/fg_constants.h>
 
-#include "../Aircraft/aircraft.h"
-#include "../Scenery/mesh.h"
-#include "../Scenery/scenery.h"
-#include "../Math/mat3.h"
-#include "../Math/polar.h"
-#include "../Time/fg_timer.h"
-#include "../Math/fg_random.h"
-#include "../Weather/weather.h"
+#include <Aircraft/aircraft.h>
+#include <Scenery/mesh.h>
+#include <Scenery/scenery.h>
+#include <Math/mat3.h>
+#include <Math/polar.h>
+#include <Time/fg_timer.h>
+#include <Math/fg_random.h>
+#include <Weather/weather.h>
 
 // #define DEBUG
 
@@ -441,10 +441,10 @@ static void drawlabel( struct HUD_label label )
 	sprintf( string, buffer, (*label.load_value)() );
 
 #ifdef DEBUG	
-	printf( buffer );
-	printf( "\n" );
-	printf( string );
-	printf( "\n" );
+	fgPrintf( FG_COCKPIT, FG_DEBUG,  buffer );
+	fgPrintf( FG_COCKPIT, FG_DEBUG,  "\n" );
+	fgPrintf( FG_COCKPIT, FG_DEBUG, string );
+	fgPrintf( FG_COCKPIT, FG_DEBUG, "\n" );
 #endif
 
 	lenstr = strlen( string );
@@ -505,13 +505,13 @@ double get_heading( void )
 double get_altitude( void )
 {
 	struct fgFLIGHT *f;
-	double rough_elev;
+	/* double rough_elev; */
               
 	f = &current_aircraft.flight;
-	rough_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC,
-			                   FG_Latitude  * RAD_TO_ARCSEC);
+	/* rough_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC,
+			                   FG_Latitude  * RAD_TO_ARCSEC); */
                                                    
-	return( FG_Altitude*FEET_TO_METER-rough_elev );
+	return( FG_Altitude * FEET_TO_METER /* - rough_elev */ );
 }
 
 void add_instrument( Hptr hud, HIptr instrument )
@@ -749,14 +749,17 @@ void fgUpdateHUD( Hptr hud )
 	glColor3f (0.1, 0.9, 0.1);
                       
 #ifdef DEBUG    
-    printf( "HUD Code %d  Status %d\n", hud->code, hud->status ); 
+    fgPrintf( FG_COCKPIT, FG_DEBUG,  "HUD Code %d  Status %d\n", 
+	      hud->code, hud->status ); 
 #endif
     hud_instr = hud->instruments;
 	while( hud_instr != NULL )
 	{
 		instr_data = hud_instr->instr;
 #ifdef DEBUG
-		printf("Instr Type %d   SubType %d  Orient %d\n", hud_instr->type, hud_instr->sub_type, hud_instr->orientation );
+		fgPrintf( FG_COCKPIT, FG_DEBUG, 
+			  "Instr Type %d   SubType %d  Orient %d\n", 
+			  hud_instr->type, hud_instr->sub_type, hud_instr->orientation );
 #endif
 		if( hud_instr->type == ARTIFICIAL_HORIZON )
 		{
@@ -799,10 +802,14 @@ void fgUpdateHUD( Hptr hud )
 
 
 /* $Log$
-/* Revision 1.7  1998/01/19 18:40:20  curt
-/* Tons of little changes to clean up the code and to remove fatal errors
-/* when building with the c++ compiler.
+/* Revision 1.8  1998/01/27 00:47:51  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.7  1998/01/19 18:40:20  curt
+ * Tons of little changes to clean up the code and to remove fatal errors
+ * when building with the c++ compiler.
+ *
  * Revision 1.6  1997/12/15 23:54:34  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

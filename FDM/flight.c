@@ -26,21 +26,21 @@
 #include <stdio.h>
 #include <Flight/flight.h>
 #include <Flight/LaRCsim/ls_interface.h>
-
+#include <Main/fg_debug.h>
 
 /* Initialize the flight model parameters */
 int fgFlightModelInit(int model, struct fgFLIGHT *f, double dt) {
     int result;
 
-    printf("Initializing flight model\n");
+    fgPrintf(FG_FLIGHT,FG_INFO,"Initializing flight model\n");
 
     if ( model == FG_LARCSIM ) {
 	fgFlight_2_LaRCsim(f);  /* translate FG to LaRCsim structure */
 	fgLaRCsimInit(dt);
-	printf("FG pos = %.2f\n", FG_Latitude);
+	fgPrintf(FG_FLIGHT,FG_INFO,"FG pos = %.2f\n", FG_Latitude);
 	fgLaRCsim_2_Flight(f);  /* translate LaRCsim back to FG	structure */
     } else {
-	printf("Unimplemented flight model == %d\n", model);
+	fgPrintf(FG_FLIGHT,FG_WARN,"Unimplemented flight model == %d\n", model);
     }
 
     result = 1;
@@ -58,7 +58,7 @@ int fgFlightModelUpdate(int model, struct fgFLIGHT *f, int multiloop) {
 	fgLaRCsimUpdate(multiloop);
 	fgLaRCsim_2_Flight(f);  /* translate LaRCsim back to FG	structure */
     } else {
-	printf("Unimplemented flight model == %d\n", model);
+	fgPrintf(FG_FLIGHT,FG_WARN,"Unimplemented flight model == %d\n", model);
     }
 
     result = 1;
@@ -68,10 +68,14 @@ int fgFlightModelUpdate(int model, struct fgFLIGHT *f, int multiloop) {
 
 
 /* $Log$
-/* Revision 1.8  1998/01/19 19:27:03  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.9  1998/01/27 00:47:53  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.8  1998/01/19 19:27:03  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.7  1998/01/19 18:40:23  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

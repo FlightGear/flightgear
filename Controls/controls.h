@@ -28,7 +28,7 @@
 #define _CONTROLS_H
 
 
-#include "../Include/limits.h"
+#include "../Include/fg_limits.h"
 
 
 /* Define a structure containing the control parameters */
@@ -80,9 +80,13 @@ void fgThrottleSet(int engine, double pos);
 
 
 /* $Log$
-/* Revision 1.9  1998/01/22 02:59:31  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.10  1998/01/27 00:47:52  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.9  1998/01/22 02:59:31  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.8  1998/01/19 18:40:22  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

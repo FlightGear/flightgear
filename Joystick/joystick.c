@@ -33,6 +33,8 @@
 
 #endif
 
+#include <Main/fg_debug.h>
+
 static joy_x_min=0, joy_x_ctr=0, joy_x_max=0;
 static joy_y_min=0, joy_y_ctr=0, joy_y_max=0;
 static joy_x_dead_min=1000, joy_x_dead_max=-1000;
@@ -42,7 +44,8 @@ static joy_y_dead_min=1000, joy_y_dead_max=-1000;
 static int joystick_fd;
 
 int fgJoystickInit( int joy_num ) {
-    printf("Initializing joystick\n");
+
+    fgPrintf( FG_INPUT, FG_INFO, "Initializing joystick\n");
 
 #ifdef HAVE_JOYSTICK
 	int status;
@@ -69,7 +72,8 @@ int fgJoystickInit( int joy_num ) {
 		return( 1 );
 	}
 	
-	printf( "\nMove joystick around dead spot and press any joystick button.\n" );
+	fgPrintf( FG_INPUT,FG_ALERT,
+		  "\nMove joystick around dead spot and press any joystick button.\n" );
 	status = read(joystick_fd, &js, JS_RETURN);
 	if (status != JS_RETURN) {
 		perror("js");
@@ -101,12 +105,17 @@ int fgJoystickInit( int joy_num ) {
 		return( 1 );
 	}
 	
-	printf("\nJoystick calibration: X_dead_min = %d, X_dead_max = %d\n", joy_x_dead_min, joy_x_dead_max );
-	printf("                      Y_dead_min = %d, Y_dead_max = %d\n", joy_y_dead_min, joy_y_dead_max );
+	fgPrintf( FG_INPUT, FG_DEBUG, 
+		  "\nJoystick calibration: X_dead_min = %d, X_dead_max = %d\n", 
+		  joy_x_dead_min, joy_x_dead_max );
+	fgPrintf( FG_INPUT, FG_DEBUG,
+		  "                      Y_dead_min = %d, Y_dead_max = %d\n", 
+		  joy_y_dead_min, joy_y_dead_max );
 	
 	sleep( 1 );
 	
-	printf( "\nCenter joystick and press any joystick button.\n" );
+	fgPrintf( FG_INPUT, FG_DEBUG,
+		  "\nCenter joystick and press any joystick button.\n" );
 	status = read(joystick_fd, &js, JS_RETURN);
 	if (status != JS_RETURN) {
 		perror("js");
@@ -129,11 +138,14 @@ int fgJoystickInit( int joy_num ) {
 	joy_x_ctr = js.x;
 	joy_y_ctr = js.y;
 	
-	printf("Joystick calibration: X_ctr = %d, Y_ctr = %d\n", joy_x_ctr, joy_y_ctr );
+	fgPrintf( FG_INPUT, FG_DEBUG,
+		  "Joystick calibration: X_ctr = %d, Y_ctr = %d\n", 
+		  joy_x_ctr, joy_y_ctr );
 	
 	sleep( 1 );
 	
-	printf( "\nMove joystick to upper left and press any joystick button.\n" );
+	fgPrintf( FG_INPUT, FG_DEBUG,
+		  "\nMove joystick to upper left and press any joystick button.\n" );
 	status = read(joystick_fd, &js, JS_RETURN);
 	if (status != JS_RETURN) {
 		perror("js");
@@ -155,11 +167,14 @@ int fgJoystickInit( int joy_num ) {
 	}
 	joy_x_min = js.x;
 	joy_y_min = js.y;
-	printf("Joystick calibration: X_min = %d, Y_min = %d\n", joy_x_min, joy_y_min );
+       	fgPrintf( FG_INPUT, FG_DEBUG,
+		  "Joystick calibration: X_min = %d, Y_min = %d\n", 
+		  joy_x_min, joy_y_min );
 	
 	sleep( 1 );
 	
-	printf( "\nMove joystick to lower right and press any joystick button.\n" );
+	fgPrintf( FG_INPUT, FG_DEBUG,
+		  "\nMove joystick to lower right and press any joystick button.\n" );
 	status = read(joystick_fd, &js, JS_RETURN);
 	if (status != JS_RETURN) {
 		perror("js");
@@ -182,7 +197,9 @@ int fgJoystickInit( int joy_num ) {
 	joy_x_max = js.x;
 	joy_y_max = js.y;
 	
-	printf("Joystick calibration: X_max = %d, Y_max = %d\n", joy_x_max, joy_y_max );
+	fgPrintf( FG_INPUT, FG_DEBUG,
+		  "Joystick calibration: X_max = %d, Y_max = %d\n", 
+		  joy_x_max, joy_y_max );
 	
 	// joy_x_ctr = (joy_x_max-joy_x_min)/2;
 	// joy_y_ctr = (joy_y_max-joy_y_min)/2;
@@ -236,9 +253,13 @@ int fgJoystickRead( double *joy_x, double *joy_y, int *joy_b1, int *joy_b2 )
 
 
 /* $Log$
-/* Revision 1.2  1997/12/30 20:47:40  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.3  1998/01/27 00:47:54  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.2  1997/12/30 20:47:40  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.1  1997/08/29 18:06:54  curt
  * Initial revision.
  *

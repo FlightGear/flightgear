@@ -45,7 +45,7 @@
 
 #include <Time/sunpos.h>
 #include <Time/fg_time.h>
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 #include <Main/views.h>
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
@@ -373,10 +373,14 @@ void fgUpdateSunPos( void ) {
 
 
 /* $Log$
-/* Revision 1.23  1998/01/19 19:27:21  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.24  1998/01/27 00:48:07  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.23  1998/01/19 19:27:21  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.22  1998/01/19 18:40:40  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 
 #---------------------------------------------------------------------------
 # runfg -- front end for setting up the FG_ROOT env variable and launching 
@@ -59,6 +59,10 @@ exec($path);
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/01/27 00:47:43  curt
+# Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+# system and commandline/config file processing code.
+#
 # Revision 1.1  1997/10/28 18:47:27  curt
 # Initial revision.
 #

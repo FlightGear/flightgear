@@ -38,8 +38,8 @@
 
 #include <GL/glut.h>
 
-#include <Include/constants.h>
-#include <Include/types.h>
+#include <Include/fg_constants.h>
+#include <Include/fg_types.h>
 #include <Math/fg_geodesy.h>
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
@@ -396,10 +396,14 @@ GLint mesh_to_OpenGL(struct MESH *m) {
 
 
 /* $Log$
-/* Revision 1.27  1998/01/19 19:27:15  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.28  1998/01/27 00:48:02  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.27  1998/01/19 19:27:15  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.26  1998/01/19 18:40:36  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

@@ -34,7 +34,7 @@
 
 #include <GL/glut.h>
 
-#include <Include/types.h>
+#include <Include/fg_types.h>
 
 
 /* Load a .obj file and generate the GL call list */
@@ -45,9 +45,13 @@ GLint fgObjLoad(char *file, struct fgCartesianPoint *ref);
 
 
 /* $Log$
-/* Revision 1.4  1998/01/22 02:59:41  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.5  1998/01/27 00:48:03  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.4  1998/01/22 02:59:41  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.3  1998/01/19 19:27:17  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

@@ -37,8 +37,8 @@
 #include <Scenery/tilecache.h>
 
 #include <Aircraft/aircraft.h>
-#include <Include/constants.h>
-#include <Include/types.h>
+#include <Include/fg_constants.h>
+#include <Include/fg_types.h>
 
 
 #define FG_LOCAL_X           3   /* should be odd */
@@ -120,7 +120,8 @@ void fgTileMgrUpdate( void ) {
            AT ULTRA HIGH SPEEDS THIS ASSUMPTION MAY NOT BE VALID IF
            THE AIRCRAFT CAN SKIP A TILE IN A SINGLE ITERATION. */
 
-	if ( (p1.lon > p_last.lon) || (p1.x > p_last.x) ) {
+	if ( (p1.lon > p_last.lon) || 
+	     ( (p1.lon == p_last.lon) && (p1.x > p_last.x) ) ) {
 	    for ( j = 0; j < FG_LOCAL_Y; j++ ) {
 		/* scrolling East */
 		for ( i = 0; i < FG_LOCAL_X - 1; i++ ) {
@@ -130,7 +131,8 @@ void fgTileMgrUpdate( void ) {
 		fgBucketOffset(&p_last, &p2, dw + 1, j - dh);
 		fgTileMgrLoadTile(&p2, &tiles[(j*FG_LOCAL_Y) + FG_LOCAL_X - 1]);
 	    }
-	} else if ( (p1.lon < p_last.lon) || (p1.x < p_last.x) ) {
+	} else if ( (p1.lon < p_last.lon) || 
+		    ( (p1.lon == p_last.lon) && (p1.x < p_last.x) ) ) {
 	    for ( j = 0; j < FG_LOCAL_Y; j++ ) {
 		/* scrolling West */
 		for ( i = FG_LOCAL_X - 1; i > 0; i-- ) {
@@ -142,7 +144,8 @@ void fgTileMgrUpdate( void ) {
 	    }
 	}
 
-	if ( (p1.lat > p_last.lat) || (p1.y > p_last.y) ) {
+	if ( (p1.lat > p_last.lat) || 
+	     ( (p1.lat == p_last.lat) && (p1.y > p_last.y) ) ) {
 	    for ( i = 0; i < FG_LOCAL_X; i++ ) {
 		/* scrolling North */
 		for ( j = 0; j < FG_LOCAL_Y - 1; j++ ) {
@@ -154,7 +157,8 @@ void fgTileMgrUpdate( void ) {
 		fgTileMgrLoadTile(&p2, 
 		    &tiles[((FG_LOCAL_Y-1)*FG_LOCAL_Y) + i]);
 	    }
-	} else if ( (p1.lat < p_last.lat) || (p1.y < p_last.y) ) {
+	} else if ( (p1.lat < p_last.lat) || 
+		    ( (p1.lat == p_last.lat) && (p1.y < p_last.y) ) ) {
 	    for ( i = 0; i < FG_LOCAL_X; i++ ) {
 		/* scrolling South */
 		for ( j = FG_LOCAL_Y - 1; j > 0; j-- ) {
@@ -208,9 +212,13 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.7  1998/01/26 15:55:25  curt
-/* Progressing on building dynamic scenery system.
+/* Revision 1.8  1998/01/27 00:48:04  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.7  1998/01/26 15:55:25  curt
+ * Progressing on building dynamic scenery system.
+ *
  * Revision 1.6  1998/01/24 00:03:30  curt
  * Initial revision.
  *

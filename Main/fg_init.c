@@ -30,7 +30,7 @@
 #include <Main/fg_init.h>
 #include <Main/views.h>
 
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 #include <Include/general.h>
 
 #include <Aircraft/aircraft.h>
@@ -48,7 +48,7 @@
 #include <Time/fg_time.h>
 #include <Time/sunpos.h>
 #include <Weather/weather.h>
-
+#include <Main/fg_debug.h>
 
 extern int show_hud;             /* HUD state */
 extern int displayInstruments;
@@ -61,8 +61,10 @@ void fgInitGeneral( void ) {
 
     g = &general;
 
-    printf("General Initialization\n");
-    printf("======= ==============\n");
+    fgInitDebug();
+
+    fgPrintf( FG_GENERAL, FG_INFO, "General Initialization\n" );
+    fgPrintf( FG_GENERAL, FG_INFO, "======= ==============\n" );
 
     /* seed the random number generater */
     fg_srandom();
@@ -70,12 +72,10 @@ void fgInitGeneral( void ) {
     /* determine the fg root path */
     if ( (g->root_dir = getenv("FG_ROOT")) == NULL ) {
 	/* environment variable not defined */
-	printf("FG_ROOT needs to be defined!  See the documentation.\n");
-	exit(0);
+	fgPrintf(FG_GENERAL, FG_EXIT, "FG_ROOT needs to be defined!  "
+		                  "See the documentation.\n");
     } 
-    printf("FG_ROOT = %s\n", g->root_dir);
-
-    printf("\n");
+    fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", g->root_dir);
 }
 
 
@@ -96,8 +96,8 @@ void fgInitSubsystems( void ) {
     t = &cur_time_params;
     v = &current_view;
 
-    printf("Initialize Subsystems\n");
-    printf("========== ==========\n");
+    fgPrintf( FG_GENERAL, FG_INFO, "Initialize Subsystems\n");
+    fgPrintf( FG_GENERAL, FG_INFO, "========== ==========\n");
 
     /****************************************************************
      * The following section sets up the flight model EOM parameters and 
@@ -115,7 +115,7 @@ void fgInitSubsystems( void ) {
     FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
     FG_Runway_altitude = (3234.5 + 300);
     FG_Altitude = FG_Runway_altitude + 3.758099;
-    
+
     /* Initial Position at (SEZ) SEDONA airport */
     /* FG_Longitude = (-111.7884614 + 0.02) * DEG_TO_RAD; */
     /* FG_Latitude  = (  34.8486289 - 0.04) * DEG_TO_RAD; */
@@ -143,7 +143,7 @@ void fgInitSubsystems( void ) {
 
     /* Initial Posisition near where I used to live in Globe, AZ */
     /* FG_Longitude = ( -398757.6 / 3600.0 ) * DEG_TO_RAD; */
-    /* FG_Latitude  = (  120160.0 / 3600.0 ) * DEG_TO_RAD; */
+    /* FG_Latitude  = (  120160.0 / 3600.0 ) * DEG_TO_RAD;  */
     /* FG_Runway_altitude = 5000.0; */
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
 
@@ -156,11 +156,12 @@ void fgInitSubsystems( void ) {
     /* FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Latitude  = ( 93312.00 / 3600.0 ) * DEG_TO_RAD; */
 
-     printf("Initial position is: (%.4f, %.4f, %.2f)\n", 
-	   FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, 
-	   FG_Altitude * FEET_TO_METER);
+    fgPrintf( FG_GENERAL, FG_INFO, 
+	      "Initial position is: (%.4f, %.4f, %.2f)\n", 
+	      FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, 
+	      FG_Altitude * FEET_TO_METER);
 
-      /* Initial Velocity */
+    /* Initial Velocity */
     FG_V_north = 0.0 /*  7.287719E+00 */;
     FG_V_east  = 0.0 /*  1.521770E+03 */;
     FG_V_down  = 0.0 /* -1.265722E-05 */;
@@ -227,8 +228,7 @@ void fgInitSubsystems( void ) {
 
     /* Initialize the Cockpit subsystem */
     if( fgCockpitInit( current_aircraft ) == NULL ) {
-    	printf( "Error in Cockpit initialization!\n" );
-    	exit( 1 );
+    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Cockpit initialization!\n" );
     }
 
     /* Initialize the orbital elements of sun, moon and mayor planets */
@@ -259,7 +259,8 @@ void fgInitSubsystems( void ) {
      * eventually */
     cur_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0, 
 			     FG_Latitude  * RAD_TO_DEG * 3600.0);
-    printf("True ground elevation is %.2f meters here.\n", cur_elev);
+    fgPrintf( FG_GENERAL, FG_INFO, "True ground elevation is %.2f meters here.\n",
+	      cur_elev);
     if ( cur_elev > -9990.0 ) {
 	FG_Runway_altitude = cur_elev * METER_TO_FEET;
     }
@@ -267,7 +268,8 @@ void fgInitSubsystems( void ) {
     if ( FG_Altitude < FG_Runway_altitude ) {
 	FG_Altitude = FG_Runway_altitude + 3.758099;
     }
-    printf("Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n", 
+    fgPrintf(FG_GENERAL, FG_INFO,
+	   "Updated position (after elevation adj): (%.4f, %.4f, %.2f)\n", 
 	   FG_Latitude * RAD_TO_DEG, FG_Longitude * RAD_TO_DEG, 
 	   FG_Altitude * FEET_TO_METER);
     /* end of thing that I just stuck in that I should probably move */
@@ -288,14 +290,18 @@ void fgInitSubsystems( void ) {
     /* One more try here to get the sky synced up */
     fgSkyColorsInit();
 
-    printf("\n");
+    fgPrintf(FG_GENERAL, FG_INFO,"\n");
 }
 
 
 /* $Log$
-/* Revision 1.34  1998/01/22 02:59:37  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.35  1998/01/27 00:47:57  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.34  1998/01/22 02:59:37  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.33  1998/01/21 21:11:34  curt
  * Misc. tweaks.
  *

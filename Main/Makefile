@@ -25,7 +25,7 @@
 
 TARGET = fg-$(FG_VERSION)
 
-CFILES = fg_init.c views.c $(INTERFACE_FILES)
+CFILES = fg_init.c fg_debug.c views.c $(INTERFACE_FILES)
 
 FGLIBS = -lAircraft -lAstro -lCockpit -lControls -lFlight \
 	-lJoystick -lLaRCsim -lSlew -lScenery -lTime -lWeather -lMath \
@@ -51,6 +51,10 @@ include $(COMMONRULES)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.45  1998/01/27 00:47:57  curt
+# Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+# system and commandline/config file processing code.
+#
 # Revision 1.44  1998/01/22 22:04:00  curt
 # Tweaked extention stuff.
 #

@@ -33,9 +33,10 @@
 #include <stdio.h>
 
 #include <Main/GLUTkey.h>
+#include <Main/fg_debug.h>
 #include <Main/views.h>
 
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 
 #include <Aircraft/aircraft.h>
 #include <Weather/weather.h>
@@ -57,10 +58,10 @@ void GLUTkey(unsigned char k, int x, int y) {
     v = &current_view;
     w = &current_weather;
 
-    printf("Key hit = %d", k);
+    fgPrintf( FG_INPUT, FG_DEBUG, "Key hit = %d", k);
 
     if ( GLUT_ACTIVE_ALT && glutGetModifiers() ) {
-	printf(" SHIFTED\n");
+	fgPrintf( FG_INPUT, FG_DEBUG, " SHIFTED\n");
 	switch (k) {
 	case 49: /* numeric keypad 1 */
 	    v->goal_view_offset = FG_PI * 0.75;
@@ -101,11 +102,11 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 90: /* Z key */
 	    w->visibility /= 1.10;
 	    xglFogf(GL_FOG_END, w->visibility);
-	    printf("Fog density = %.4f\n", w->visibility);
+	    fgPrintf( FG_INPUT, FG_DEBUG, "Fog density = %.4f\n", w->visibility);
 	    return;
 	}
     } else {
-	printf("\n");
+	fgPrintf( FG_INPUT, FG_DEBUG, "\n");
 	switch (k) {
 	case 50: /* numeric keypad 2 */
 	    fgElevMove(-0.05);
@@ -151,7 +152,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 122: /* z key */
 	    w->visibility *= 1.10;
 	    xglFogf(GL_FOG_END, w->visibility);
-	    printf("Fog density = %.4f\n", w->visibility);
+	    fgPrintf( FG_INPUT, FG_DEBUG, "Fog density = %.4f\n", w->visibility);
 	    return;
 	case 27: /* ESC */
 	    exit(0);
@@ -169,10 +170,10 @@ void GLUTspecialkey(int k, int x, int y) {
     c = &current_aircraft.controls;
     v = &current_view;
 
-    printf("Special key hit = %d", k);
+    fgPrintf( FG_INPUT, FG_DEBUG, "Special key hit = %d", k);
 
     if ( GLUT_ACTIVE_SHIFT && glutGetModifiers() ) {
-	printf(" SHIFTED\n");
+	fgPrintf( FG_INPUT, FG_DEBUG, " SHIFTED\n");
 	switch (k) {
 	case GLUT_KEY_END: /* numeric keypad 1 */
 	    v->goal_view_offset = FG_PI * 0.75;
@@ -200,7 +201,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	    return;
 	}
     } else {
-	printf("\n");
+        fgPrintf( FG_INPUT, FG_DEBUG, "\n");
 	switch (k) {
 	case GLUT_KEY_UP:
 	    fgElevMove(0.05);
@@ -243,10 +244,14 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.26  1998/01/19 19:27:07  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.27  1998/01/27 00:47:55  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.26  1998/01/19 19:27:07  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.25  1998/01/05 18:44:34  curt
  * Add an option to advance/decrease time from keyboard.
  *

@@ -124,15 +124,16 @@ void addq(int ptr) {
 int popq( void ) {
     int ptr;
 
-    if ( !emptyq() ) {
+    if ( emptyq() ) {
+	printf("PANIC:  RUN QUEUE IS EMPTY!!!\n");
+	ptr = 0;
+    } else {
 	ptr = queue[queue_front];
 	/* printf("Popped position %d = %d\n", queue_front, ptr); */
 	queue_front = (queue_front + 1) % MAX_RUN_QUEUE;
-	return(ptr);
-    } else {
-	printf("PANIC:  RUN QUEUE IS EMPTY!!!\n");
-	exit(0);
     }
+
+    return(ptr);
 }
 
 
@@ -338,10 +339,14 @@ void fgEventProcess( void ) {
 
 
 /* $Log$
-/* Revision 1.7  1998/01/19 19:27:19  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.8  1998/01/27 00:48:05  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.7  1998/01/19 19:27:19  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.6  1998/01/19 18:40:39  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

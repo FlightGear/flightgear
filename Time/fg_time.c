@@ -37,13 +37,14 @@
 #endif /* USE_FTIME */
 
 #include <Time/fg_time.h>
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 #include <Flight/flight.h>
 
 
 #define DEGHR(x)        ((x)/15.)
 #define RADHR(x)        DEGHR(x*RAD_TO_DEG)
 
+#include <Main/fg_debug.h>
 
 struct fgTIME cur_time_params;
 struct fgLIGHT cur_light_params;
@@ -52,7 +53,7 @@ struct fgLIGHT cur_light_params;
 /* Initialize the time dependent variables */
 
 void fgTimeInit(struct fgTIME *t) {
-    printf("Initializing Time\n");
+    fgPrintf( FG_EVENT, FG_INFO, "Initializing Time\n");
 
     t->gst_diff = -9999.0;
     t->warp = (0) * 3600;
@@ -123,7 +124,7 @@ double utc_gst (double mjd) {
     x /= 3600.0;
     gst = (1.0/SIDRATE)*hr + x;
 
-    printf("  gst => %.4f\n", gst);
+   fgPrintf( FG_EVENT, FG_DEBUG, "  gst => %.4f\n", gst);
 
     return(gst);
 }
@@ -189,8 +190,8 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     start = mktime(&mt);
 
     /* printf("start1 = %ld\n", start);
-    printf("start2 = %s", ctime(&start));
-    printf("start3 = %ld\n", start); */
+   fgPrintf( FG_EVENT, FG_DEBUG, "start2 = %s", ctime(&start));
+   fgPrintf( FG_EVENT, FG_DEBUG, "start3 = %ld\n", start); */
 
     daylight = mt.tm_isdst;
 
@@ -202,7 +203,7 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     if ( daylight > 0 ) {
 	daylight = 1;
     } else if ( daylight < 0 ) {
-	printf("OOOPS, big time problem in fg_time.c, no daylight savings info.\n");
+	fgPrintf( FG_EVENT, FG_WARN, "OOOPS, big time problem in fg_time.c, no daylight savings info.\n");
     }
 
     offset = -(timezone / 3600 - daylight);
@@ -243,19 +244,21 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
     double gst_precise, gst_course;
 
-    printf("Updating time\n");
+    fgPrintf( FG_EVENT, FG_BULK, "Updating time\n");
 
     /* get current Unix calendar time (in seconds) */
     t->warp += t->warp_delta;
     t->cur_time = time(NULL) + t->warp;
-    printf("  Current Unix calendar time = %ld  warp = %ld  delta = %ld\n", 
-	   t->cur_time, t->warp, t->warp_delta);
+    fgPrintf( FG_EVENT, FG_BULK, 
+	      "  Current Unix calendar time = %ld  warp = %ld  delta = %ld\n", 
+	      t->cur_time, t->warp, t->warp_delta);
 
     /* get GMT break down for current time */
     t->gmt = gmtime(&t->cur_time);
-    printf("  Current GMT = %d/%d/%2d %d:%02d:%02d\n", 
-           t->gmt->tm_mon+1, t->gmt->tm_mday, t->gmt->tm_year,
-           t->gmt->tm_hour, t->gmt->tm_min, t->gmt->tm_sec);
+    fgPrintf( FG_EVENT, FG_BULK, 
+	      "  Current GMT = %d/%d/%2d %d:%02d:%02d\n", 
+	      t->gmt->tm_mon+1, t->gmt->tm_mday, t->gmt->tm_year,
+	      t->gmt->tm_hour, t->gmt->tm_min, t->gmt->tm_sec);
 
     /* calculate modified Julian date */
     t->mjd = cal_mjd ((int)(t->gmt->tm_mon+1), (double)t->gmt->tm_mday, 
@@ -267,7 +270,7 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
     /* convert "back" to Julian date + partial day (as a fraction of one) */
     t->jd = t->mjd + MJD0;
-    printf("  Current Julian Date = %.5f\n", t->jd);
+    fgPrintf( FG_EVENT, FG_BULK, "  Current Julian Date = %.5f\n", t->jd);
 
     /* printf("  Current Longitude = %.3f\n", FG_Longitude * RAD_TO_DEG); */
 
@@ -275,14 +278,14 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
     if ( t->gst_diff < -100.0 ) {
 	/* first time through do the expensive calculation & cheap
            calculation to get the difference. */
-	printf("  First time, doing precise gst\n");
-	t->gst = gst_precise = sidereal_precise(t->mjd, 0.00);
-	gst_course = sidereal_course(t->gmt, t->cur_time, 0.00);
-	t->gst_diff = gst_precise - gst_course;
+      fgPrintf( FG_EVENT, FG_INFO, "  First time, doing precise gst\n");
+      t->gst = gst_precise = sidereal_precise(t->mjd, 0.00);
+      gst_course = sidereal_course(t->gmt, t->cur_time, 0.00);
+      t->gst_diff = gst_precise - gst_course;
 
-	t->lst = 
-	    sidereal_course(t->gmt, t->cur_time, -(FG_Longitude * RAD_TO_DEG))
-	    + t->gst_diff;
+      t->lst = 
+	sidereal_course(t->gmt, t->cur_time, -(FG_Longitude * RAD_TO_DEG))
+	+ t->gst_diff;
     } else {
 	/* course + difference should drift off very slowly */
 	t->gst = 
@@ -299,9 +302,13 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.30  1998/01/21 21:11:35  curt
-/* Misc. tweaks.
+/* Revision 1.31  1998/01/27 00:48:06  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.30  1998/01/21 21:11:35  curt
+ * Misc. tweaks.
+ *
  * Revision 1.29  1998/01/19 19:27:20  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

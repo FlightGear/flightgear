@@ -27,8 +27,8 @@
 #include <stdio.h>
 
 #include <Aircraft/aircraft.h>
-#include <Include/constants.h>
-
+#include <Include/fg_constants.h>
+#include <Main/fg_debug.h>
 
 /* This is a record containing all the info for the aircraft currently
    being operated */
@@ -43,20 +43,26 @@ void fgAircraftOutputCurrent(struct fgAIRCRAFT *a) {
     f = &a->flight;
     c = &a->controls;
 
-    printf("Pos = (%.2f,%.2f,%.2f)  (Phi,Theta,Psi)=(%.2f,%.2f,%.2f)\n",
-	   FG_Longitude * 3600.0 * RAD_TO_DEG, 
-           FG_Latitude  * 3600.0 * RAD_TO_DEG,
-	   FG_Altitude, FG_Phi, FG_Theta, FG_Psi);
-    printf("Kts = %.0f  Elev = %.2f, Aileron = %.2f, Rudder = %.2f  Power = %.2f\n", 
-	   FG_V_equiv_kts, FG_Elevator, FG_Aileron, FG_Rudder, FG_Throttle[0]);
+    fgPrintf( FG_FLIGHT, FG_DEBUG,
+	      "Pos = (%.2f,%.2f,%.2f)  (Phi,Theta,Psi)=(%.2f,%.2f,%.2f)\n",
+	      FG_Longitude * 3600.0 * RAD_TO_DEG, 
+	      FG_Latitude  * 3600.0 * RAD_TO_DEG,
+	      FG_Altitude, FG_Phi, FG_Theta, FG_Psi);
+    fgPrintf( FG_FLIGHT, FG_DEBUG,
+	      "Kts = %.0f  Elev = %.2f, Aileron = %.2f, Rudder = %.2f  Power = %.2f\n", 
+	      FG_V_equiv_kts, FG_Elevator, FG_Aileron, FG_Rudder, FG_Throttle[0]);
 }
 
 
 /* $Log$
-/* Revision 1.14  1998/01/19 19:26:56  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.15  1998/01/27 00:47:46  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.14  1998/01/19 19:26:56  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.13  1997/12/15 23:54:30  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

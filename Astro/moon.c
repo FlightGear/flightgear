@@ -29,10 +29,11 @@
 #include <Astro/moon.h>
 
 #include <Aircraft/aircraft.h>
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 #include <Include/general.h>
 #include <Main/views.h>
 #include <Time/fg_time.h>
+#include <Main/fg_debug.h>
 
 struct CelestialCoord moonPos;
 
@@ -261,7 +262,7 @@ void fgMoonInit( void ) {
     struct fgLIGHT *l;
     static int dl_exists = 0;
 
-    printf("Initializing the Moon\n");
+    fgPrintf( FG_ASTRO, FG_INFO, "Initializing the Moon\n");
 
     l = &cur_light_params;
 
@@ -270,8 +271,9 @@ void fgMoonInit( void ) {
     moonPos = fgCalculateMoon(pltOrbElements[1], pltOrbElements[0], 
 			      cur_time_params);
 #ifdef DEBUG
-    printf("Moon found at %f (ra), %f (dec)\n", moonPos.RightAscension, 
-	   moonPos.Declination);
+    fgPrintf( FG_ASTRO, FG_DEBUG, 
+	      "Moon found at %f (ra), %f (dec)\n", moonPos.RightAscension, 
+	      moonPos.Declination);
 #endif
 
     xMoon = 60000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
@@ -320,10 +322,14 @@ void fgMoonRender( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/19 19:26:57  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.4  1998/01/27 00:47:46  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.3  1998/01/19 19:26:57  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.2  1998/01/19 18:40:16  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

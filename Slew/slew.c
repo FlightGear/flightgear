@@ -30,7 +30,7 @@
 #include <Flight/flight.h>
 #include <Aircraft/aircraft.h>
 #include <Controls/controls.h>
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 
 
 #ifndef M_PI                                    
@@ -93,10 +93,14 @@ void fgSlewUpdate( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/01/19 19:27:06  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.10  1998/01/27 00:47:53  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.9  1998/01/19 19:27:06  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.8  1998/01/19 18:40:30  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

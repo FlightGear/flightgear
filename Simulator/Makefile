@@ -23,6 +23,7 @@
 # (Log is kept at end of this file)
 #---------------------------------------------------------------------------
 
+
 include $(FG_ROOT_SRC)/commondefs
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew
@@ -101,6 +102,10 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.39  1998/01/27 00:47:41  curt
+# Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+# system and commandline/config file processing code.
+#
 # Revision 1.38  1998/01/22 22:03:22  curt
 # Tweaks.
 #

@@ -28,7 +28,7 @@
 #define _VIEWS_H
 
 
-#include <Include/types.h>
+#include <Include/fg_types.h>
 #include <Flight/flight.h>
 #include <Math/mat3.h>
 #include <Time/fg_time.h>
@@ -89,9 +89,13 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l);
 
 
 /* $Log$
-/* Revision 1.7  1998/01/22 02:59:38  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.8  1998/01/27 00:47:58  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.7  1998/01/22 02:59:38  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.6  1998/01/19 19:27:10  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

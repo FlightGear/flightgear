@@ -1,5 +1,5 @@
 /**************************************************************************
- * tilecache.c -- routines to hancle scenery tile caching
+ * tilecache.c -- routines to handle scenery tile caching
  *
  * Written by Curtis Olson, started January 1998.
  *
@@ -112,9 +112,13 @@ void fgTileCacheEntryFree( in index ) {
 
 
 /* $Log$
-/* Revision 1.2  1998/01/26 15:55:24  curt
-/* Progressing on building dynamic scenery system.
+/* Revision 1.3  1998/01/27 00:48:03  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.2  1998/01/26 15:55:24  curt
+ * Progressing on building dynamic scenery system.
+ *
  * Revision 1.1  1998/01/24 00:03:29  curt
  * Initial revision.
  *

@@ -26,7 +26,7 @@
 
 #include <Main/views.h>
 
-#include <Include/constants.h>
+#include <Include/fg_constants.h>
 
 #include <Flight/flight.h>
 #include <Math/mat3.h>
@@ -34,7 +34,7 @@
 #include <Math/vector.h>
 #include <Scenery/scenery.h>
 #include <Time/fg_time.h>
-
+#include <Main/fg_debug.h>
 
 /* This is a record containing current view parameters */
 struct fgVIEW current_view;
@@ -42,7 +42,7 @@ struct fgVIEW current_view;
 
 /* Initialize a view structure */
 void fgViewInit(struct fgVIEW *v) {
-    printf("Initializing View parameters\n");
+    fgPrintf( FG_VIEW, FG_INFO, "Initializing View parameters\n");
 
     v->view_offset = 0.0;
     v->goal_view_offset = 0.0;
@@ -69,7 +69,7 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
     v->view_pos.y -= scenery.center.y;
     v->view_pos.z -= scenery.center.z;
 
-    printf("View pos = %.4f, %.4f, %.4f\n", 
+    fgPrintf( FG_VIEW, FG_DEBUG, "View pos = %.4f, %.4f, %.4f\n", 
 	   v->view_pos.x, v->view_pos.y, v->view_pos.z);
 
     /* make a vector to the current view position */
@@ -182,10 +182,14 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
 
 
 /* $Log$
-/* Revision 1.10  1998/01/19 19:27:09  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.11  1998/01/27 00:47:58  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.10  1998/01/19 19:27:09  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.9  1998/01/13 00:23:09  curt
  * Initial changes to support loading and management of scenery tiles.  Note,
  * there's still a fair amount of work left to be done.

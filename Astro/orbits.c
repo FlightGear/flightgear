@@ -30,7 +30,7 @@
 
 #include <Include/general.h>
 #include <Time/fg_time.h>
-
+#include <Main/fg_debug.h>
 
 struct OrbElements pltOrbElements[9];
 
@@ -126,7 +126,7 @@ void fgSolarSystemInit(struct fgTIME t)
    int i;
    FILE *data;
 
-   printf("Initializing solar system\n");
+   fgPrintf( FG_ASTRO, FG_INFO, "Initializing solar system\n");
 
    /* build the full path name to the orbital elements database file */
    g = &general;
@@ -137,11 +137,11 @@ void fgSolarSystemInit(struct fgTIME t)
 
    if ( (data = fopen(path, "r")) == NULL )
    {
-	    printf("Cannot open data file: '%s'\n", path);
+	    fgPrintf( FG_ASTRO, FG_ALERT, "Cannot open data file: '%s'\n", path);
 	    return;
    }
    #ifdef DEBUG
-   printf("  reading datafile %s\n", path);
+   fgPrintf( FG_ASTRO, FG_INFO, "  reading datafile %s\n", path);
    #endif
 
    /* for all the objects... */
@@ -174,9 +174,13 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
 
 
 /* $Log$
-/* Revision 1.3  1998/01/22 02:59:27  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.4  1998/01/27 00:47:47  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.3  1998/01/22 02:59:27  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.2  1998/01/19 19:26:58  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

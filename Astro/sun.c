@@ -29,6 +29,7 @@
 #include <Main/views.h>
 #include <Astro/orbits.h>
 #include <Astro/sun.h>
+#include <Main/fg_debug.h>
 
 GLint sun_obj;
 
@@ -97,13 +98,14 @@ struct CelestialCoord fgCalculateSun(struct OrbElements params, struct fgTIME t)
 void fgSunInit( void ) {
     static int dl_exists = 0;
 
-    printf("  Initializing the Sun\n");
+    fgPrintf( FG_ASTRO, FG_INFO, "  Initializing the Sun\n");
 
     fgSolarSystemUpdate(&(pltOrbElements[0]), cur_time_params);
     sunPos = fgCalculateSun(pltOrbElements[0], cur_time_params);
 #ifdef DEBUG
-    printf("Sun found at %f (ra), %f (dec)\n", sunPos.RightAscension, 
-	   sunPos.Declination);
+    fgPrintf( FG_ASTRO, FG_INFO, 
+	      "Sun found at %f (ra), %f (dec)\n", 
+	      sunPos.RightAscension, sunPos.Declination);
 #endif
 
     xSun = 60000.0 * cos(sunPos.RightAscension) * cos(sunPos.Declination);
@@ -155,9 +157,10 @@ void fgSunRender( void ) {
     amb[2] = 0.00 + ((ambient * 6.66) - 1.6);
     amb[3] = 0.00;
 #ifdef DEBUG
-    printf("Color of the sun: %f, %f, %f\n"
-	   "Ambient value   : %f\n"
-	   "Sun Angle       : %f\n" , amb[0], amb[1], amb[2], ambient, t->sun_angle);
+    fgPrintf( FG_ASTRO, FG_INFO, 
+	      "Color of the sun: %f, %f, %f\n"
+	      "Ambient value   : %f\n"
+	      "Sun Angle       : %f\n" , amb[0], amb[1], amb[2], ambient, t->sun_angle);
 #endif
     diff[0] = 0.0;
     diff[1] = 0.0;
@@ -190,10 +193,14 @@ void fgSunRender( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/19 19:27:00  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.4  1998/01/27 00:47:50  curt
+/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+/* system and commandline/config file processing code.
 /*
+ * Revision 1.3  1998/01/19 19:27:00  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.2  1998/01/19 18:40:18  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

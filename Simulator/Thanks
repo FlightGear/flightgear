@@ -14,6 +14,16 @@ Steve Baker <sbaker@link.com>
   of the more sophisticated features of Flight Gear.
 
 
+Paul Bleisch <bleisch@chromatic.com>
+  Paul redid the "debug" system so that it would be much more
+  flexible, so it could be easily disabled for production system, and
+  so that messages for certain subsystems could be selectively
+  enabled.
+
+  Also contributed a first stab at a config file/command line parsing
+  system.
+
+
 Gene Buckle <geneb@nwlink.com>
   Gene has done a lot of work getting FG to compile with the MSVC++
   compiler.  Also, he has pushed, proded, and bugged me endlessly to
