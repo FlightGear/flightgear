@@ -113,6 +113,7 @@ public:
     double& operator [] ( int i);		 // indexing
     double operator[] (int i) const;		 // read-only indexing
 
+    inline const double *get_n() const { return n; };
     double x() const;      // cartesian x
     double y() const;      // cartesian y
     double z() const;      // cartesian z
