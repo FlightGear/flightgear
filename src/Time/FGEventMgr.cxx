@@ -36,6 +36,8 @@ FGEventMgr::FGEvent::FGEvent( const char* name,
       max_time(0),
       count(0)
 {
+    if (status == FG_EVENT_READY)
+	this->run();
 }
 
 
@@ -131,8 +133,6 @@ FGEventMgr::update( int dt )
 void
 FGEventMgr::Register( const FGEvent& event )
 {
-//     if (event.is_ready())
-// 	event.run();
     event_table.push_back( event );
 
     SG_LOG( SG_EVENT, SG_INFO, "Registered event " << event.name()
