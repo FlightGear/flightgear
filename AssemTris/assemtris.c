@@ -44,9 +44,9 @@ int nodecount = 0;
 static double nodes[MAX_NODES][3];
 
 
-struct fgBUCKET my_index;
-struct fgBUCKET ne_index, nw_index, sw_index, se_index;
-struct fgBUCKET north_index, south_index, east_index, west_index;
+fgBUCKET my_index;
+fgBUCKET ne_index, nw_index, sw_index, se_index;
+fgBUCKET north_index, south_index, east_index, west_index;
 
 
 /* return the file base name ( foo/bar/file.ext = file.ext ) */
@@ -462,10 +462,13 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.8  1998/06/01 17:58:19  curt
-/* Added a slight border overlap to try to minimize pixel wide gaps between
-/* tiles due to round off error.  This is not a perfect solution, but helps.
+/* Revision 1.9  1998/07/04 00:55:39  curt
+/* typedef'd struct fgBUCKET.
 /*
+ * Revision 1.8  1998/06/01 17:58:19  curt
+ * Added a slight border overlap to try to minimize pixel wide gaps between
+ * tiles due to round off error.  This is not a perfect solution, but helps.
+ *
  * Revision 1.7  1998/04/14 02:26:00  curt
  * Code reorganizations.  Added a Lib/ directory for more general libraries.
  *

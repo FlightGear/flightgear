@@ -51,8 +51,8 @@ static int tris[MAX_TRIS][3];
 
 static fgCartesianPoint3d nodes_cart[MAX_NODES];
 
-struct fgBUCKET ne_index, nw_index, sw_index, se_index;
-struct fgBUCKET north_index, south_index, east_index, west_index;
+fgBUCKET ne_index, nw_index, sw_index, se_index;
+fgBUCKET north_index, south_index, east_index, west_index;
 
 /* convert a geodetic point lon(arcsec), lat(arcsec), elev(meter) to
  * a cartesian point */
@@ -564,7 +564,7 @@ void dump_obj(char *basename, char *basepath) {
 
 int main(int argc, char **argv) {
     char basename[256], basepath[256], temp[256];
-    struct fgBUCKET p;
+    fgBUCKET p;
     long int index;
     int len;
 
@@ -616,9 +616,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.10  1998/05/02 01:54:37  curt
-/* Converting to polar3d.h routines.
+/* Revision 1.11  1998/07/04 00:56:40  curt
+/* typedef'd struct fgBUCKET.
 /*
+ * Revision 1.10  1998/05/02 01:54:37  curt
+ * Converting to polar3d.h routines.
+ *
  * Revision 1.9  1998/04/18 04:01:20  curt
  * Now use libMath rather than having local copies of math routines.
  *

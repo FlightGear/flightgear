@@ -48,9 +48,9 @@ static int tris[MAX_TRIS][3];
 
 static double normals[MAX_NODES][3];
 
-struct fgBUCKET my_index;
-struct fgBUCKET ne_index, nw_index, sw_index, se_index;
-struct fgBUCKET north_index, south_index, east_index, west_index;
+fgBUCKET my_index;
+fgBUCKET ne_index, nw_index, sw_index, se_index;
+fgBUCKET north_index, south_index, east_index, west_index;
 
 /* convert a geodetic point lon(arcsec), lat(arcsec), elev(meter) to
  * a cartesian point */
@@ -644,9 +644,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.16  1998/05/23 15:20:41  curt
-/* Output more digits after the decimal place.
+/* Revision 1.17  1998/07/04 00:56:40  curt
+/* typedef'd struct fgBUCKET.
 /*
+ * Revision 1.16  1998/05/23 15:20:41  curt
+ * Output more digits after the decimal place.
+ *
  * Revision 1.15  1998/05/02 01:54:39  curt
  * Converting to polar3d.h routines.
  *
