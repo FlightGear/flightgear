@@ -1,6 +1,15 @@
 New in 0.57
+* Converted to a simpler frame rate counting method.
+* Fixed the AOA reading on the HUD.
+* Removed gpc from the Lib section of distribution by request of the
+  gpc Author.  The gpc license is unfortunately not compatible with
+  the GPL.  I may look for an alternative library, or just require
+  that developers download this library separately.
+* First slew of changes from the MacOS porting effort contributed by
+ "Robert Puyol" <puyol@abvent.fr>.
 * Support for an arbitrary number of serial ports + additional serial port 
   output tweaks.
+* Serial output tweaks to make things more robust and act more like a GPS.
 * Portability enhancements for Borland, Solaris, and SGI.
 * Some internal class renaming and reorganizations.  fgFLIGHT becomes FGState.
   fgCONTROLS becomes FGControls.
