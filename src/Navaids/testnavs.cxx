@@ -48,14 +48,13 @@ int main() {
     current_ilslist = new FGILSList;
     SGPath p_ils( FG_DATA_DIR + "/Navaids/default.ils" );
     current_ilslist->init( p_ils );
-    FGILS i;
-    if ( current_ilslist->query( -93.1 * SG_DEGREES_TO_RADIANS,
-                                 45.24 * SG_DEGREES_TO_RADIANS,
-                                 3000, 110.30, &i) )
-    {
+    FGILS *i = current_ilslist->findByFreq( -93.1 * SG_DEGREES_TO_RADIANS,
+                                            45.24 * SG_DEGREES_TO_RADIANS,
+                                            3000, 110.30);
+    if ( i != NULL ) {
 	cout << "Found an ils station in range" << endl;
-	cout << " apt = " << i.get_aptcode() << endl;
-	cout << " rwy = " << i.get_rwyno() << endl;
+	cout << " apt = " << i->get_aptcode() << endl;
+	cout << " rwy = " << i->get_rwyno() << endl;
     } else {
 	cout << "not picking up ils. :-(" << endl;
     }

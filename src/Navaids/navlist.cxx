@@ -162,7 +162,7 @@ FGNav *FGNavList::findNavFromList( const Point3D &aircraft,
     FGNav *nav = NULL;
     Point3D station;
     double d2;
-    double min_dist;
+    double min_dist = 999999999.0;
 
     // prime the pump with info from stations[0]
     if ( stations.size() > 0 ) {
@@ -174,8 +174,9 @@ FGNav *FGNavList::findNavFromList( const Point3D &aircraft,
     // check if any of the remaining stations are closer
     for ( unsigned int i = 1; i < stations.size(); ++i ) {
 	// cout << "testing " << current->get_ident() << endl;
-	station = Point3D( stations[i]->get_x(), stations[i]->get_y(),
-                           stations[i]->get_z());
+	station = Point3D( stations[i]->get_x(),
+                           stations[i]->get_y(),
+                           stations[i]->get_z() );
 
 	d2 = aircraft.distance3Dsquared( station );
 

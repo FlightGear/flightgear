@@ -40,7 +40,7 @@ SG_USING_STD(vector);
 class FGILSList {
 
     // convenience types
-    typedef vector < FGILS > ils_list_type;
+    typedef vector < FGILS* > ils_list_type;
     typedef ils_list_type::iterator ils_list_iterator;
     typedef ils_list_type::const_iterator ils_list_const_iterator;
 
@@ -61,7 +61,14 @@ public:
 
     // query the database for the specified frequency, lon and lat are
     // in degrees, elev is in meters
-    bool query( double lon, double lat, double elev, double freq, FGILS *i );
+    // bool query( double lon, double lat, double elev, double freq, FGILS *i );
+
+    // Query the database for the specified frequency.  It is assumed
+    // that there will be multiple stations with matching frequencies
+    // so a position must be specified.  Lon and lat are in degrees,
+    // elev is in meters.
+    FGILS *findByFreq( double freq, double lon, double lat, double elev );
+
 };
 
 
