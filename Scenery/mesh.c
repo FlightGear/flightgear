@@ -302,7 +302,8 @@ GLint mesh_to_OpenGL(struct mesh *m) {
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
 
-    glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color );
+    /* glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color ); */
+    glColor3fv(color);
 
     iend = m->cols - 1;
     jend = m->rows - 1;
@@ -394,9 +395,12 @@ GLint mesh_to_OpenGL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.19  1997/08/06 00:24:28  curt
-/* Working on correct real time sun lighting.
+/* Revision 1.20  1997/08/19 23:55:08  curt
+/* Worked on better simulating real lighting.
 /*
+ * Revision 1.19  1997/08/06 00:24:28  curt
+ * Working on correct real time sun lighting.
+ *
  * Revision 1.18  1997/08/02 19:10:14  curt
  * Incorporated mesh2GL.c into mesh.c
  *

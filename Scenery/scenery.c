@@ -45,7 +45,7 @@ struct scenery_params scenery;
 /* Initialize the Scenery Management system */
 void fgSceneryInit() {
     /* set the default terrain detail level */
-    scenery.terrain_skip = 10;
+    scenery.terrain_skip = 5;
 }
 
 
@@ -69,9 +69,12 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.11  1997/08/13 20:24:22  curt
-/* Changed default detail level.
+/* Revision 1.12  1997/08/19 23:55:08  curt
+/* Worked on better simulating real lighting.
 /*
+ * Revision 1.11  1997/08/13 20:24:22  curt
+ * Changed default detail level.
+ *
  * Revision 1.10  1997/08/06 00:24:30  curt
  * Working on correct real time sun lighting.
  *

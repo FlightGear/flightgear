@@ -60,6 +60,12 @@ static GLfloat win_ratio = 1.0;
 /* sun direction */
 static GLfloat sun_vec[4] = {1.0, 0.0, 0.0, 0.0 };
 
+/* if the 4th field is 0.0, this specifies a direction ... */
+/* clear color (sky) */
+static GLfloat fgClearColor[4] = {0.60, 0.60, 0.90, 1.0};
+/* fog color */
+static GLfloat fgFogColor[4] =   {0.65, 0.65, 0.85, 1.0};
+
 /* temporary hack */
 /* extern struct mesh *mesh_ptr; */
 /* Function prototypes */
@@ -90,9 +96,6 @@ int use_signals = 0;
  **************************************************************************/
 
 static void fgInitVisuals() {
-    /* if the 4th field is 0.0, this specifies a direction ... */
-    static GLfloat fogColor[4] = {0.65, 0.65, 0.85, 1.0};
-    
     glEnable( GL_DEPTH_TEST );
     /* glFrontFace(GL_CW); */
     glEnable( GL_CULL_FACE );
@@ -111,11 +114,12 @@ static void fgInitVisuals() {
     glFogi (GL_FOG_MODE, GL_LINEAR);
     /* glFogf (GL_FOG_START, 1.0); */
     glFogf (GL_FOG_END, fogDensity);
-    glFogfv (GL_FOG_COLOR, fogColor);
+    glFogfv (GL_FOG_COLOR, fgFogColor);
     /* glFogf (GL_FOG_DENSITY, fogDensity); */
     /* glHint (GL_FOG_HINT, GL_FASTEST); */
 
-    glClearColor(0.6, 0.6, 0.9, 1.0);
+    glClearColor(fgClearColor[0], fgClearColor[1], fgClearColor[2], 
+		 fgClearColor[3]);
 }
 
 
@@ -129,9 +133,9 @@ static void fgUpdateViewParams() {
     struct time_params *t;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     MAT3vec vec, view_up, forward, view_forward, local_up, nup, nsun;
-    double sun_angle, temp, ambient, diffuse;
+    double sun_angle, temp, ambient, diffuse, sky;
     GLfloat color[4] = { 1.0, 1.0, 0.50, 1.0 };
-    GLfloat amb[4], diff[4];
+    GLfloat amb[3], diff[3], fog[4], clear[4];
 
     f = &current_aircraft.flight;
     t = &cur_time_params;
@@ -241,31 +245,43 @@ static void fgUpdateViewParams() {
     MAT3_NORMALIZE_VEC(nsun, temp);
 
     sun_angle = acos(MAT3_DOT_PRODUCT(nup, nsun));
-    printf("SUN ANGLE relative to current location = %.3f\n", sun_angle);
+    printf("SUN ANGLE relative to current location = %.3f rads.\n", sun_angle);
 
-    if ( (sun_angle >= -FG_PI) && (sun_angle <= FG_PI) ) {
-	/* day time */
-	/* ya kind'a have to plot this to see the magic */
-	ambient = 0.4 * cos(0.15*sun_angle*sun_angle);
-	diffuse = 0.4 * cos(0.45*sun_angle);
-    } else {
-	/* night time */
-	ambient = 0.4;
-	diffuse = 0.0;
-    }
+    /* ya kind'a have to plot this to see the magic */
+    ambient = 0.4 * pow(2.4, -sun_angle*sun_angle*sun_angle*sun_angle/3.0);
+    diffuse = 0.4 * cos(0.6*sun_angle*sun_angle);
+    sky = 0.85 * pow(1.6, -sun_angle*sun_angle*sun_angle*sun_angle/2.0) + 0.15;
+
+    if ( ambient < 0.1 ) { ambient = 0.1; }
+    if ( diffuse < 0.0 ) { diffuse = 0.0; }
+
+    if ( sky < 0.0 ) { sky = 0.0; }
 
     amb[0] = color[0] * ambient;
     amb[1] = color[1] * ambient;
     amb[2] = color[2] * ambient;
-    amb[3] = color[3];
 
     diff[0] = color[0] * diffuse;
     diff[1] = color[1] * diffuse;
     diff[2] = color[2] * diffuse;
-    diff[3] = color[3];
 
-    glMaterialfv(GL_FRONT, GL_AMBIENT, amb );
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, diff );
+    /* set lighting parameters */
+    glLightfv(GL_LIGHT0, GL_AMBIENT, amb );
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, diff );
+
+    /* set fog color */
+    fog[0] = fgFogColor[0] * (ambient + diffuse);
+    fog[1] = fgFogColor[1] * (ambient + diffuse);
+    fog[2] = fgFogColor[2] * (ambient + diffuse);
+    fog[3] = fgFogColor[3];
+    glFogfv (GL_FOG_COLOR, fog);
+
+    /* set sky color */
+    clear[0] = fgClearColor[0] * sky;
+    clear[1] = fgClearColor[1] * sky;
+    clear[2] = fgClearColor[2] * sky;
+    clear[3] = fgClearColor[3];
+    glClearColor(clear[0], clear[1], clear[2], clear[3]);
 }
 
 
@@ -684,9 +700,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.7  1997/08/16 12:22:38  curt
-/* Working on improving the lighting/shading.
+/* Revision 1.8  1997/08/19 23:55:03  curt
+/* Worked on better simulating real lighting.
 /*
+ * Revision 1.7  1997/08/16 12:22:38  curt
+ * Working on improving the lighting/shading.
+ *
  * Revision 1.6  1997/08/13 20:24:56  curt
  * Changes due to changing sunpos interface.
  *
