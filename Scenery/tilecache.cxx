@@ -34,7 +34,7 @@
 #include <XGL/xgl.h>
 
 #include <Airports/genapt.hxx>
-#include <Bucket/bucketutils.h>
+#include <Bucket/bucketutils.hxx>
 #include <Debug/logstream.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
@@ -69,21 +69,15 @@ fgTILECACHE::init( void )
 
 // Search for the specified "bucket" in the cache
 int
-fgTILECACHE::exists( fgBUCKET *p )
+fgTILECACHE::exists( const fgBUCKET& p )
 {
     int i;
 
     for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
-	if ( tile_cache[i].tile_bucket.lon == p->lon ) {
-	    if ( tile_cache[i].tile_bucket.lat == p->lat ) {
-		if ( tile_cache[i].tile_bucket.x == p->x ) {
-		    if ( tile_cache[i].tile_bucket.y == p->y ) {
-			FG_LOG( FG_TERRAIN, FG_DEBUG, 
-				"TILE EXISTS in cache ... index = " << i );
-			return( i );
-		    }
-		}
-	    }
+	if ( tile_cache[i].tile_bucket == p ) {
+	    FG_LOG( FG_TERRAIN, FG_DEBUG, 
+		    "TILE EXISTS in cache ... index = " << i );
+	    return( i );
 	}
     }
     
@@ -93,34 +87,22 @@ fgTILECACHE::exists( fgBUCKET *p )
 
 // Fill in a tile cache entry with real data for the specified bucket
 void
-fgTILECACHE::fill_in( int index, fgBUCKET *p )
+fgTILECACHE::fill_in( int index, const fgBUCKET& p )
 {
-    string root, tile_path, apt_path;
-    char index_str[256];
-    char base_path[256];
+    // Load the appropriate data file and build tile fragment list
+    string tile_path = current_options.get_fg_root() +
+	"/Scenery/" + fgBucketGenBasePath(p) + "/" + fgBucketGenIndex(p);
 
-    // Mark this cache entry as used
-    tile_cache[index].used = 1;
-
-    // Update the bucket
-    tile_cache[index].tile_bucket.lon = p->lon;
-    tile_cache[index].tile_bucket.lat = p->lat;
-    tile_cache[index].tile_bucket.x = p->x;
-    tile_cache[index].tile_bucket.y = p->y;
-
-    // Load the appropriate data file and built tile fragment list
-    fgBucketGenBasePath(p, base_path);
-    root = current_options.get_fg_root();
-    sprintf( index_str, "%ld", fgBucketGenIndex(p) );
-
-    tile_path = root + "/Scenery/" + base_path + "/" + index_str;
-    fgObjLoad( tile_path.c_str(), &tile_cache[index] );
+    tile_cache[index].used = true;
+    tile_cache[index].tile_bucket = p;
+    fgObjLoad( tile_path, &tile_cache[index] );
+//     tile_cache[ index ].ObjLoad( tile_path, p );
 
     // cout << " ncount before = " << tile_cache[index].ncount << "\n";
     // cout << " fragments before = " << tile_cache[index].fragment_list.size()
     //      << "\n";
 
-    apt_path = tile_path + ".apt";
+    string apt_path = tile_path + ".apt";
     fgAptGenerate( apt_path, &tile_cache[index] );
 
     // cout << " ncount after = " << tile_cache[index].ncount << "\n";
@@ -133,37 +115,7 @@ fgTILECACHE::fill_in( int index, fgBUCKET *p )
 void
 fgTILECACHE::entry_free( int index )
 {
-    fgFRAGMENT *fragment;
-
-    // Mark this cache entry as un-used
-    tile_cache[index].used = 0;
-
-    // Update the bucket
-    FG_LOG( FG_TERRAIN, FG_DEBUG, 
-	    "FREEING TILE = ("
-	    << tile_cache[index].tile_bucket.lon << " "
-	    << tile_cache[index].tile_bucket.lat << " "
-	    << tile_cache[index].tile_bucket.x << " "
-	    << tile_cache[index].tile_bucket.y << ")" );
-
-    // Step through the fragment list, deleting the display list, then
-    // the fragment, until the list is empty.
-    while ( tile_cache[index].fragment_list.size() ) {
-	list < fgFRAGMENT > :: iterator current =
-	    tile_cache[index].fragment_list.begin();
-	fragment = &(*current);
-	xglDeleteLists( fragment->display_list, 1 );
-
-	tile_cache[index].fragment_list.pop_front();
-    }
-}
-
-
-// Return the specified tile cache entry 
-fgTILE *
-fgTILECACHE::get_tile( int index )
-{
-    return ( &tile_cache[index] );
+    tile_cache[index].release_fragments();
 }
 
 
@@ -184,20 +136,14 @@ fgTILECACHE::next_avail( void )
     max_index = 0;
 
     for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
-	if ( tile_cache[i].used == 0 ) {
+	if ( ! tile_cache[i].used ) {
 	    return(i);
 	} else {
 	    // calculate approximate distance from view point
 	    FG_LOG( FG_TERRAIN, FG_DEBUG,
-		    "DIST Abs view pos = "
-		    << v->abs_view_pos.x() << ", "
-		    << v->abs_view_pos.y() << ", "
-		    << v->abs_view_pos.z() );
+		    "DIST Abs view pos = " << v->abs_view_pos );
 	    FG_LOG( FG_TERRAIN, FG_DEBUG,
-		    "    ref point = "
-		    << tile_cache[i].center.x() << ", "
-		    << tile_cache[i].center.y() << ", "
-		    << tile_cache[i].center.z() );
+		    "    ref point = " << tile_cache[i].center );
 
 	    delta.setx( fabs(tile_cache[i].center.x() - v->abs_view_pos.x() ) );
 	    delta.sety( fabs(tile_cache[i].center.y() - v->abs_view_pos.y() ) );
@@ -236,6 +182,34 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.20  1998/11/09 23:40:49  curt
+// Bernie Bright <bbright@c031.aone.net.au> writes:
+// I've made some changes to the Scenery handling.  Basically just tidy ups.
+// The main difference is in tile.[ch]xx where I've changed list<fgFRAGMENT> to
+// vector<fgFRAGMENT>.  Studying our usage patterns this seems reasonable.
+// Lists are good if you need to insert/delete elements randomly but we
+// don't do that.  All access seems to be sequential.  Two additional
+// benefits are smaller memory usage - each list element requires pointers
+// to the next and previous elements, and faster access - vector iterators
+// are smaller and faster than list iterators.  This should also help
+// Charlie Hotchkiss' problem when compiling with Borland and STLport.
+//
+// ./Lib/Bucket/bucketutils.hxx
+//   Convenience functions for fgBUCKET.
+//
+// ./Simulator/Scenery/tile.cxx
+// ./Simulator/Scenery/tile.hxx
+//   Changed fragment list to a vector.
+//   Added some convenience member functions.
+//
+// ./Simulator/Scenery/tilecache.cxx
+// ./Simulator/Scenery/tilecache.hxx
+//   use const fgBUCKET& instead of fgBUCKET* where appropriate.
+//
+// ./Simulator/Scenery/tilemgr.cxx
+// ./Simulator/Scenery/tilemgr.hxx
+//   uses all the new convenience functions.
+//
 // Revision 1.19  1998/11/06 21:18:21  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

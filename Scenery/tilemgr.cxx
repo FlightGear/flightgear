@@ -35,7 +35,7 @@
 
 #include <Aircraft/aircraft.hxx>
 
-#include <Bucket/bucketutils.h>
+#include <Bucket/bucketutils.hxx>
 #include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
@@ -88,22 +88,21 @@ int fgTileMgrInit( void ) {
 
 
 // load a tile
-void fgTileMgrLoadTile( fgBUCKET *p, int *index) {
+void fgTileMgrLoadTile( const fgBUCKET& p, int *index) {
     fgTILECACHE *c;
 
     c = &global_tile_cache;
 
-    FG_LOG( FG_TERRAIN, FG_DEBUG, 
-	    "Updating for bucket "
-	    << p->lon << " " << p->lat << " " << p->x << " " << p->y );
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "Updating for bucket " << p );
     
     // if not in cache, load tile into the next available slot
-    if ( (*index = c->exists(p)) < 0 ) {
+    *index = c->exists(p);
+    if ( *index < 0 ) {
 	*index = c->next_avail();
 	c->fill_in(*index, p);
     }
 
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "Selected cache index of " << *index);
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "Selected cache index: " << *index );
 }
 
 
@@ -126,8 +125,7 @@ int fgTileMgrUpdate( void ) {
     dw = tile_diameter / 2;
     dh = tile_diameter / 2;
 
-    if ( (p1.lon == p_last.lon) && (p1.lat == p_last.lat) &&
-	 (p1.x == p_last.x) && (p1.y == p_last.y) ) {
+    if ( p1 == p_last ) {
 	// same bucket as last time
 	FG_LOG( FG_TERRAIN, FG_DEBUG, "Same bucket as last time" );
     } else if ( p_last.lon == -1000 ) {
@@ -135,12 +133,9 @@ int fgTileMgrUpdate( void ) {
 	// relavant tiles
 
 	FG_LOG( FG_TERRAIN, FG_INFO, "  First time through ... " );
-	FG_LOG( FG_TERRAIN, FG_INFO, 
-		"  Updating Tile list for "
-		<< p1.lon << "," << p1.lat << " " << p1.x << "," << p1.y );
+	FG_LOG( FG_TERRAIN, FG_INFO, "  Updating Tile list for " << p1 );
 	FG_LOG( FG_TERRAIN, FG_INFO, "  Loading " 
-		<< tile_diameter * tile_diameter
-		<< " tiles" );
+		<< tile_diameter * tile_diameter << " tiles" );
 
 	// wipe/initialize tile cache
 	c->init();
@@ -149,7 +144,7 @@ int fgTileMgrUpdate( void ) {
 	for ( j = 0; j < tile_diameter; j++ ) {
 	    for ( i = 0; i < tile_diameter; i++ ) {
 		fgBucketOffset(&p1, &p2, i - dw, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*tile_diameter) + i]);
+		fgTileMgrLoadTile( p2, &tiles[(j*tile_diameter) + i]);
 	    }
 	}
     } else {
@@ -160,9 +155,7 @@ int fgTileMgrUpdate( void ) {
 	// AT ULTRA HIGH SPEEDS THIS ASSUMPTION MAY NOT BE VALID IF
 	// THE AIRCRAFT CAN SKIP A TILE IN A SINGLE ITERATION.
 
-	FG_LOG( FG_TERRAIN, FG_INFO, 
-		"Updating Tile list for "
-		<< p1.lon << "," << p1.lat << " " << p1.x << "," << p1.y );
+	FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << p1 );
 
 	if ( (p1.lon > p_last.lon) ||
 	     ( (p1.lon == p_last.lon) && (p1.x > p_last.x) ) ) {
@@ -176,7 +169,7 @@ int fgTileMgrUpdate( void ) {
 		}
 		// load in new column
 		fgBucketOffset(&p_last, &p2, dw + 1, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*tile_diameter) + 
+		fgTileMgrLoadTile( p2, &tiles[(j*tile_diameter) + 
 					     tile_diameter - 1]);
 	    }
 	} else if ( (p1.lon < p_last.lon) ||
@@ -191,7 +184,7 @@ int fgTileMgrUpdate( void ) {
 		}
 		// load in new column
 		fgBucketOffset(&p_last, &p2, -dw - 1, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*tile_diameter) + 0]);
+		fgTileMgrLoadTile( p2, &tiles[(j*tile_diameter) + 0]);
 	    }
 	}
 
@@ -207,7 +200,7 @@ int fgTileMgrUpdate( void ) {
 		}
 		// load in new column
 		fgBucketOffset(&p_last, &p2, i - dw, dh + 1);
-		fgTileMgrLoadTile(&p2, &tiles[((tile_diameter-1) * 
+		fgTileMgrLoadTile( p2, &tiles[((tile_diameter-1) * 
 					       tile_diameter) + i]);
 	    }
 	} else if ( (p1.lat < p_last.lat) ||
@@ -222,7 +215,7 @@ int fgTileMgrUpdate( void ) {
 		}
 		// load in new column
 		fgBucketOffset(&p_last, &p2, i - dw, -dh - 1);
-		fgTileMgrLoadTile(&p2, &tiles[0 + i]);
+		fgTileMgrLoadTile( p2, &tiles[0 + i]);
 	    }
 	}
     }
@@ -409,17 +402,16 @@ inrange( const double radius, const Point3D& center, const Point3D& vp,
 // render the scene, but we'd also like to be able to do this
 // explicitely.  lat & lon are in radians.  abs_view_pos in meters.
 // Returns result in meters.
-double fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
+double
+fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
     fgTILECACHE *c;
     fgTILE *t;
     // fgVIEW *v;
     fgFRAGMENT *frag_ptr;
     fgBUCKET p;
-    Point3D earth_center, result;
-    Point3D pp;
+    Point3D earth_center(0.0);
+    Point3D result;
     MAT3vec local_up;
-    list < fgFRAGMENT > :: iterator current;
-    list < fgFRAGMENT > :: iterator last;
     double dist, lat_geod, alt, sea_level_r;
     // double x, y, z;
     int index;
@@ -433,17 +425,21 @@ double fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
 
     // Find current translation offset
     fgBucketFind(lon * RAD_TO_DEG, lat * RAD_TO_DEG, &p);
-    index = c->exists(&p);
+    index = c->exists(p);
+    if ( index < 0 ) {
+	FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found" );
+	return 0.0;
+    }
+
     t = c->get_tile(index);
 
     scenery.next_center = t->center;
     
-    earth_center = Point3D(0.0, 0.0, 0.0);
+    // earth_center = Point3D(0.0, 0.0, 0.0);
 
     FG_LOG( FG_TERRAIN, FG_DEBUG, 
 	    "Pos = (" << lon * RAD_TO_DEG << ", " << lat * RAD_TO_DEG
-	    << "  Current bucket = " 
-	    << p.lon << " " << p.lat << " " << p.x << " " << p.y
+	    << ")  Current bucket = " << p 
 	    << "  Index = " << fgBucketGenIndex(&p) );
 
     // calculate tile offset
@@ -463,8 +459,8 @@ double fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
     if ( dist < FG_SQUARE(t->bounding_radius) ) {
 
 	// traverse fragment list for tile
-	current = t->fragment_list.begin();
-	last = t->fragment_list.end();
+        fgTILE::FragmentIterator current = t->begin();
+        fgTILE::FragmentIterator last = t->end();
 
 	for ( ; current != last; ++current ) {
 	    frag_ptr = &(*current);
@@ -480,7 +476,7 @@ double fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
 		if ( frag_ptr->intersect( abs_view_pos, 
 					  earth_center, 0, result ) ) {
 		    // compute geocentric coordinates of tile center
-		    pp = fgCartToPolar3d(result);
+		    Point3D pp = fgCartToPolar3d(result);
 		    // convert to geodetic coordinates
 		    fgGeocToGeod(pp.lat(), pp.radius(), &lat_geod, 
 				 &alt, &sea_level_r);
@@ -538,8 +534,6 @@ void fgTileMgrRender( void ) {
     Point3D frag_offset;
     fgFRAGMENT *frag_ptr;
     fgMATERIAL *mtl_ptr;
-    list < fgFRAGMENT > :: iterator current;
-    list < fgFRAGMENT > :: iterator last;
     int i;
     int tile_diameter;
     int index;
@@ -580,8 +574,8 @@ void fgTileMgrRender( void ) {
 	    // xglTranslatef(t->offset.x, t->offset.y, t->offset.z);
 
 	    // traverse fragment list for tile
-	    current = t->fragment_list.begin();
-	    last = t->fragment_list.end();
+            fgTILE::FragmentIterator current = t->begin();
+            fgTILE::FragmentIterator last = t->end();
 
 	    for ( ; current != last; ++current ) {
 		frag_ptr = &(*current);
@@ -638,6 +632,34 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.43  1998/11/09 23:40:52  curt
+// Bernie Bright <bbright@c031.aone.net.au> writes:
+// I've made some changes to the Scenery handling.  Basically just tidy ups.
+// The main difference is in tile.[ch]xx where I've changed list<fgFRAGMENT> to
+// vector<fgFRAGMENT>.  Studying our usage patterns this seems reasonable.
+// Lists are good if you need to insert/delete elements randomly but we
+// don't do that.  All access seems to be sequential.  Two additional
+// benefits are smaller memory usage - each list element requires pointers
+// to the next and previous elements, and faster access - vector iterators
+// are smaller and faster than list iterators.  This should also help
+// Charlie Hotchkiss' problem when compiling with Borland and STLport.
+//
+// ./Lib/Bucket/bucketutils.hxx
+//   Convenience functions for fgBUCKET.
+//
+// ./Simulator/Scenery/tile.cxx
+// ./Simulator/Scenery/tile.hxx
+//   Changed fragment list to a vector.
+//   Added some convenience member functions.
+//
+// ./Simulator/Scenery/tilecache.cxx
+// ./Simulator/Scenery/tilecache.hxx
+//   use const fgBUCKET& instead of fgBUCKET* where appropriate.
+//
+// ./Simulator/Scenery/tilemgr.cxx
+// ./Simulator/Scenery/tilemgr.hxx
+//   uses all the new convenience functions.
+//
 // Revision 1.42  1998/11/06 21:18:23  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

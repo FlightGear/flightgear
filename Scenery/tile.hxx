@@ -41,22 +41,20 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#if defined ( __sun__ )
-extern "C" void *memmove(void *, const void *, size_t);
-extern "C" void *memset(void *, int, size_t);
-#endif
+#include <vector>
+#include <string>
 
-#include <list>         // STL list
+#include "Include/compiler.h"
+#include STL_FUNCTIONAL
+#include STL_ALGORITHM
+FG_USING_NAMESPACE(std);
+// FG_USING_STD(string);
+// FG_USING_STD(vector);
 
 #include <Bucket/bucketutils.h>
-// #include <Include/fg_types.h>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
 #include <Objects/fragment.hxx>
-
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
 
 
 // Scenery tile class
@@ -64,6 +62,11 @@ class fgTILE {
 
 public:
 
+    typedef vector < fgFRAGMENT > container;
+    typedef container::iterator FragmentIterator;
+    typedef container::const_iterator FragmentConstIterator;
+
+public:
     // node list (the per fragment face lists reference this node list)
     double (*nodes)[3];
     int ncount;
@@ -78,9 +81,33 @@ public:
     fgBUCKET tile_bucket;
 
     // the tile cache will mark here if the tile is being used
-    int used;
+    bool used;
 
-    list < fgFRAGMENT > fragment_list;
+    container fragment_list;
+
+public:
+
+    FragmentIterator begin() { return fragment_list.begin(); }
+    FragmentConstIterator begin() const { return fragment_list.begin(); }
+
+    FragmentIterator end() { return fragment_list.end(); }
+    FragmentConstIterator end() const { return fragment_list.end(); }
+
+    void add_fragment( fgFRAGMENT& frag ) {
+ 	frag.tile_ptr = this;
+	fragment_list.push_back( frag );
+    }
+
+    //
+    size_t num_fragments() const {
+	return fragment_list.size();
+    }
+
+    // Step through the fragment list, deleting the display list, then
+    // the fragment, until the list is empty.
+    void release_fragments();
+
+//     int ObjLoad( const string& path, const fgBUCKET& p );
 
     // Constructor
     fgTILE ( void );
@@ -89,8 +116,7 @@ public:
     ~fgTILE ( void );
 
     // Calculate this tile's offset
-    void
-    fgTILE::SetOffset( const Point3D& off)
+    void SetOffset( const Point3D& off)
     {
 	offset = center - off;
     }
@@ -98,7 +124,7 @@ public:
 
     // Calculate the model_view transformation matrix for this tile
     inline void
-    fgTILE::UpdateViewMatrix(GLdouble *MODEL_VIEW)
+    UpdateViewMatrix(GLdouble *MODEL_VIEW)
     {
 
 #ifdef WIN32
@@ -108,17 +134,25 @@ public:
 #endif
 	
 	// This is equivalent to doing a glTranslatef(x, y, z);
-	model_view[12] += (model_view[0]*offset.x() + model_view[4]*offset.y() +
+	model_view[12] += (model_view[0]*offset.x() +
+			   model_view[4]*offset.y() +
 			   model_view[8]*offset.z());
-	model_view[13] += (model_view[1]*offset.x() + model_view[5]*offset.y() +
+	model_view[13] += (model_view[1]*offset.x() +
+			   model_view[5]*offset.y() +
 			   model_view[9]*offset.z());
-	model_view[14] += (model_view[2]*offset.x() + model_view[6]*offset.y() +
+	model_view[14] += (model_view[2]*offset.x() +
+			   model_view[6]*offset.y() +
 			   model_view[10]*offset.z() );
 	// m[15] += (m[3]*x + m[7]*y + m[11]*z);
 	// m[3] m7[] m[11] are 0.0 see LookAt() in views.cxx
 	// so m[15] is unchanged
     }
 
+private:
+
+    // not defined
+    fgTILE( const fgTILE& );
+    fgTILE& operator = ( const fgTILE& );
 };
 
 
@@ -126,6 +160,34 @@ public:
 
 
 // $Log$
+// Revision 1.21  1998/11/09 23:40:47  curt
+// Bernie Bright <bbright@c031.aone.net.au> writes:
+// I've made some changes to the Scenery handling.  Basically just tidy ups.
+// The main difference is in tile.[ch]xx where I've changed list<fgFRAGMENT> to
+// vector<fgFRAGMENT>.  Studying our usage patterns this seems reasonable.
+// Lists are good if you need to insert/delete elements randomly but we
+// don't do that.  All access seems to be sequential.  Two additional
+// benefits are smaller memory usage - each list element requires pointers
+// to the next and previous elements, and faster access - vector iterators
+// are smaller and faster than list iterators.  This should also help
+// Charlie Hotchkiss' problem when compiling with Borland and STLport.
+//
+// ./Lib/Bucket/bucketutils.hxx
+//   Convenience functions for fgBUCKET.
+//
+// ./Simulator/Scenery/tile.cxx
+// ./Simulator/Scenery/tile.hxx
+//   Changed fragment list to a vector.
+//   Added some convenience member functions.
+//
+// ./Simulator/Scenery/tilecache.cxx
+// ./Simulator/Scenery/tilecache.hxx
+//   use const fgBUCKET& instead of fgBUCKET* where appropriate.
+//
+// ./Simulator/Scenery/tilemgr.cxx
+// ./Simulator/Scenery/tilemgr.hxx
+//   uses all the new convenience functions.
+//
 // Revision 1.20  1998/10/16 00:55:46  curt
 // Converted to Point3D class.
 //

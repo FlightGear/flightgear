@@ -43,7 +43,6 @@
 #include <XGL/xgl.h>
 
 #include <Bucket/bucketutils.h>
-// #include <Include/fg_types.h>
 #include <Math/point3d.hxx>
 
 #include "tile.hxx"
@@ -54,24 +53,18 @@
 // FG_TILE_CACHE_SIZE >= (o->tile_diameter + 1) ** 2 
 #define FG_TILE_CACHE_SIZE 121
 
-
-/*
-// Tile cache record 
-typedef struct {
-    fgBUCKET tile_bucket;
-    GLint display_list;
-    fgCartesianPoint3d local_ref;
-    double bounding_radius;
-    int used;
-    int priority;
-} fgTILE;
-*/
-
-
 // A class to store and manage a pile of tiles
 class fgTILECACHE {
+
+//     enum
+//     {
+// 	// For best results... i.e. to avoid tile load problems and blank areas
+// 	// FG_TILE_CACHE_SIZE >= (o->tile_diameter + 1) ** 2 
+// 	FG_TILE_CACHE_SIZE = 121
+//     };
+
     // cache storage space
-    fgTILE tile_cache[FG_TILE_CACHE_SIZE];
+    fgTILE tile_cache[ FG_TILE_CACHE_SIZE ];
 
 public:
 
@@ -82,7 +75,7 @@ public:
     void init( void );
 
     // Search for the specified "bucket" in the cache 
-    int exists( fgBUCKET *p );
+    int exists( const fgBUCKET& p );
 
     // Return index of next available slot in tile cache 
     int next_avail( void );
@@ -91,10 +84,12 @@ public:
     void entry_free( int index );
 
     // Fill in a tile cache entry with real data for the specified bucket 
-    void fill_in( int index, fgBUCKET *p );
+    void fill_in( int index, const fgBUCKET& p );
 
     // Return a pointer to the specified tile cache entry 
-    fgTILE *get_tile( int index );
+    fgTILE *get_tile( int index ) {
+	return &tile_cache[index];
+    }
 
     // Destructor
     ~fgTILECACHE( void );
@@ -109,6 +104,34 @@ extern fgTILECACHE global_tile_cache;
 
 
 // $Log$
+// Revision 1.13  1998/11/09 23:40:51  curt
+// Bernie Bright <bbright@c031.aone.net.au> writes:
+// I've made some changes to the Scenery handling.  Basically just tidy ups.
+// The main difference is in tile.[ch]xx where I've changed list<fgFRAGMENT> to
+// vector<fgFRAGMENT>.  Studying our usage patterns this seems reasonable.
+// Lists are good if you need to insert/delete elements randomly but we
+// don't do that.  All access seems to be sequential.  Two additional
+// benefits are smaller memory usage - each list element requires pointers
+// to the next and previous elements, and faster access - vector iterators
+// are smaller and faster than list iterators.  This should also help
+// Charlie Hotchkiss' problem when compiling with Borland and STLport.
+//
+// ./Lib/Bucket/bucketutils.hxx
+//   Convenience functions for fgBUCKET.
+//
+// ./Simulator/Scenery/tile.cxx
+// ./Simulator/Scenery/tile.hxx
+//   Changed fragment list to a vector.
+//   Added some convenience member functions.
+//
+// ./Simulator/Scenery/tilecache.cxx
+// ./Simulator/Scenery/tilecache.hxx
+//   use const fgBUCKET& instead of fgBUCKET* where appropriate.
+//
+// ./Simulator/Scenery/tilemgr.cxx
+// ./Simulator/Scenery/tilemgr.hxx
+//   uses all the new convenience functions.
+//
 // Revision 1.12  1998/10/16 00:55:49  curt
 // Converted to Point3D class.
 //
