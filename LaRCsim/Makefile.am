@@ -1,3 +1,9 @@
+if ENABLE_CHEROKEE
+AIRCRAFT_MODEL = cherokee_aero.c cherokee_engine.c cherokee_gear.c cherokee_init.c navion_init.h
+else
+AIRCRAFT_MODEL = navion_aero.c navion_engine.c navion_gear.c navion_init.c navion_init.h
+endif
+
 noinst_LIBRARIES = libLaRCsim.a
 
 libLaRCsim_a_SOURCES = \
@@ -14,8 +20,7 @@ libLaRCsim_a_SOURCES = \
 	ls_sim_control.h \
         ls_step.c ls_step.h \
 	ls_sym.h ls_types.h \
-	navion_aero.c navion_engine.c navion_gear.c \
-	navion_init.c navion_init.h \
+	$(AIRCRAFT_MODEL) \
 	ls_interface.c ls_interface.h
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Simulator
