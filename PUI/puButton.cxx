@@ -18,7 +18,7 @@ void puButton::draw ( int dx, int dy )
     glColor4f ( colour [ PUCOL_LEGEND ][0],
                 colour [ PUCOL_LEGEND ][1],
                 colour [ PUCOL_LEGEND ][2],
-                colour [ PUCOL_LEGEND ][3] / 2.0 ) ; /* 50% more transparent */
+                colour [ PUCOL_LEGEND ][3] / 2.0f ) ; /* 50% more transparent */
 
   int xx = ( abox.max[0] - abox.min[0] - puGetStringWidth(legendFont,legend) ) / 2 ;
   int yy = ( abox.max[1] - abox.min[1] - puGetStringHeight(legendFont) ) / 2 ;

@@ -200,9 +200,26 @@ int puInterface::checkHit ( int button, int updown, int x, int y )
 
 void puInterface::draw ( int dx, int dy )
 {
-  if ( isVisible () )
-    for ( puObject *bo = dlist ; bo != NULL ; bo = bo->next )
-      bo -> draw ( dx + abox.min[0], dy + abox.min[1] ) ;
+  if ( ! isVisible () )
+    return ;
+
+  for ( puObject *bo = dlist ; bo != NULL ; bo = bo->next )
+  {
+    /* June 16th, 98, Shammi :
+     * The next if statement checks if the object is
+     * a menu bar and makes sure it is repositioned
+     * correctly.
+     */
+
+    if ( bo->getType() & PUCLASS_MENUBAR )
+    {
+      int obWidth, obHeight ;
+      bo -> getSize ( &obWidth, &obHeight ) ;
+      bo -> setPosition ( 0, puGetWindowHeight() - obHeight ) ;
+    }
+
+    bo -> draw ( dx + abox.min[0], dy + abox.min[1] ) ;
+  }
 }
 
 
@@ -241,5 +258,6 @@ puInterface::~puInterface ()
   for ( puObject *bo = dlist ; bo != NULL ; bo = bo->next )
     delete bo ;
 }
+
 
 

@@ -12,7 +12,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#ifdef PU_NOT_USING_GLUT
+#include <windows.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#else
 #include <GL/glut.h>
+#endif
 
 #ifndef TRUE
 #define TRUE  1
@@ -43,6 +50,24 @@
 
 typedef void *puFont ;
 
+#ifdef PU_NOT_USING_GLUT
+#define PU_LEFT_BUTTON		0
+#define PU_LEFT_BUTTON		0
+#define PU_MIDDLE_BUTTON	1
+#define PU_RIGHT_BUTTON		2
+#define PU_DOWN			0
+#define PU_UP		        1
+
+#define PUFONT_8_BY_13        ((void*)3)
+#define PUFONT_9_BY_15        ((void*)2)
+#define PUFONT_TIMES_ROMAN_10 ((void*)4)
+#define PUFONT_TIMES_ROMAN_24 ((void*)5)
+#define PUFONT_HELVETICA_10   ((void*)6)
+#define PUFONT_HELVETICA_12   ((void*)7)
+#define PUFONT_HELVETICA_18   ((void*)8)
+
+#else
+
 #define PUFONT_8_BY_13        GLUT_BITMAP_8_BY_13
 #define PUFONT_9_BY_15        GLUT_BITMAP_9_BY_15
 #define PUFONT_TIMES_ROMAN_10 GLUT_BITMAP_TIMES_ROMAN_10
@@ -51,16 +76,43 @@ typedef void *puFont ;
 #define PUFONT_HELVETICA_12   GLUT_BITMAP_HELVETICA_12
 #define PUFONT_HELVETICA_18   GLUT_BITMAP_HELVETICA_18
 
-#define PU_LEFT_BUTTON   GLUT_LEFT_BUTTON
-#define PU_MIDDLE_BUTTON GLUT_MIDDLE_BUTTON
-#define PU_RIGHT_BUTTON  GLUT_RIGHT_BUTTON
-#define PU_DOWN          GLUT_DOWN
-#define PU_UP            GLUT_UP
+#define PU_LEFT_BUTTON      GLUT_LEFT_BUTTON
+#define PU_MIDDLE_BUTTON    GLUT_MIDDLE_BUTTON
+#define PU_RIGHT_BUTTON     GLUT_RIGHT_BUTTON
+#define PU_DOWN             GLUT_DOWN
+#define PU_UP               GLUT_UP
+#endif	// PU_NOT_USING_GLUT
+
 #define PU_UP_AND_DOWN   254
 #define PU_DRAG          255
 #define PU_CONTINUAL     PU_DRAG
 
 #define PU_KEY_GLUT_SPECIAL_OFFSET  256
+
+#ifdef PU_NOT_USING_GLUT
+#define PU_KEY_F1        (1		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_F2        (2		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_F3        (3		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_F4        (4	    + PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_F5        (5		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_F6        (6		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_F7        (7		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_F8        (8		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_F9        (9		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_F10       (10		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_F11       (11		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_F12       (12		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_LEFT      (100		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_UP        (101		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_RIGHT     (102		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_DOWN      (103		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_PAGE_UP   (104		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_PAGE_DOWN (105		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_HOME      (106		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_END       (107		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+#define PU_KEY_INSERT    (108		+ PU_KEY_GLUT_SPECIAL_OFFSET)
+
+#else
 #define PU_KEY_F1        (GLUT_KEY_F1        + PU_KEY_GLUT_SPECIAL_OFFSET)
 #define PU_KEY_F2        (GLUT_KEY_F2        + PU_KEY_GLUT_SPECIAL_OFFSET)
 #define PU_KEY_F3        (GLUT_KEY_F3        + PU_KEY_GLUT_SPECIAL_OFFSET)
@@ -82,6 +134,7 @@ typedef void *puFont ;
 #define PU_KEY_HOME      (GLUT_KEY_HOME      + PU_KEY_GLUT_SPECIAL_OFFSET)
 #define PU_KEY_END       (GLUT_KEY_END       + PU_KEY_GLUT_SPECIAL_OFFSET)
 #define PU_KEY_INSERT    (GLUT_KEY_INSERT    + PU_KEY_GLUT_SPECIAL_OFFSET)
+#endif	// PU_NOT_USING_GLUT
 
 #define PUPLACE_DEFAULT  PUPLACE_RIGHT
 #define PUPLACE_ABOVE    0
@@ -102,7 +155,7 @@ typedef void *puFont ;
 
 /* These styles may be negated to get 'highlighted' graphics */
 
-#define PUSTYLE_DEFAULT    PUSTYLE_BEVELLED
+#define PUSTYLE_DEFAULT    PUSTYLE_SHADED
 #define PUSTYLE_NONE       0
 #define PUSTYLE_PLAIN      1
 #define PUSTYLE_BEVELLED   2
@@ -111,7 +164,9 @@ typedef void *puFont ;
 #define PUSTYLE_SPECIAL_UNDERLINED 5
 #define PUSTYLE_SMALL_BEVELLED     6
 #define PUSTYLE_RADIO      7
-#define PUSTYLE_MAX        8
+#define PUSTYLE_SHADED     8
+#define PUSTYLE_SMALL_SHADED   9
+#define PUSTYLE_MAX        10
 
 /* These are the gaps that we try to leave around text objects */
 
@@ -139,6 +194,12 @@ extern int puRefresh ;
 #define PUCLASS_BUTTONBOX        0x00000800
 #define PUCLASS_SLIDER           0x00001000
 #define PUCLASS_DIALOGBOX        0x00002000
+
+/* This function is not required for GLUT programs */
+void puSetWindowSize ( int width, int height ) ;
+
+int  puGetWindowHeight () ;
+int  puGetWindowWidth  () ;
 
 class puValue            ;
 class puObject           ;
@@ -236,7 +297,7 @@ public:
                               else
                               {
                                 integer = atoi(s) ;
-                                floater = atof(s) ;
+                                floater = (float)atof(s) ;
 
                                 if ( string != s ) strcpy ( string, s ) ;
                               }
@@ -581,14 +642,14 @@ public:
   }
 
   void setCBMode ( int m ) { cb_mode = m ; }
-  float getCBMode ( void ) { return cb_mode ; }
+  float getCBMode ( void ) { return (float)cb_mode ; }
 
   int  isVertical ( void ) { return vert ; }
 
-  void setDelta ( float f ) { cb_delta = (f<=0.0f) ? 0.1f : (f>=1.0) ? 0.9 : f ; }
+  void setDelta ( float f ) { cb_delta = (f<=0.0f) ? 0.1f : (f>=1.0f) ? 0.9f : f ; }
   float getDelta ( void ) { return cb_delta ; }
 
-  void setSliderFraction ( float f ) { slider_fraction = (f<=0.0f) ? 0.1f : (f>=1.0) ? 0.9 : f ; }
+  void setSliderFraction ( float f ) { slider_fraction = (f<=0.0f) ? 0.1f : (f>=1.0f) ? 0.9f : f ; }
   float getSliderFraction ( void ) { return slider_fraction ; }
 } ;
 
@@ -640,13 +701,13 @@ public:
   void close ( void ) ;
 } ;
 
-
 class puMenuBar : public puInterface
 {
 protected:
 public:
   puMenuBar ( int h = -1 ) :
-    puInterface ( 0, h < 0 ? glutGet((GLenum) GLUT_WINDOW_HEIGHT ) -
+
+  puInterface ( 0, h < 0 ? puGetWindowHeight() -
                       ( puGetStringHeight() + PUSTR_TGAP + PUSTR_BGAP ) : h )
   {
     type |= PUCLASS_MENUBAR ;
@@ -703,7 +764,7 @@ public:
     select_start_position = -1 ;
     select_end_position   = -1 ;
 
-    setColourScheme ( 0.8, 0.7, 0.7 ) ; /* Yeukky Pink */
+    setColourScheme ( 0.8f, 0.7f, 0.7f ) ; /* Yeukky Pink */
   }
 } ;
 

@@ -6,7 +6,8 @@ void puSlider::draw ( int dx, int dy )
   if ( !visible ) return ;
 
   abox . draw ( dx, dy,
-                style==PUSTYLE_BEVELLED ? -PUSTYLE_BOXED : -style,
+                (style==PUSTYLE_BEVELLED||
+                 style==PUSTYLE_SHADED) ? -PUSTYLE_BOXED : -style,
                 colour, FALSE ) ;
 
   int sd, od ;
@@ -31,7 +32,7 @@ void puSlider::draw ( int dx, int dy )
   bx . min [ od ] = abox . min [ od ] + 2 ;
   bx . max [ od ] = abox . max [ od ] - 2 ;
 
-  bx . draw ( dx, dy, PUSTYLE_SMALL_BEVELLED, colour, FALSE ) ;
+  bx . draw ( dx, dy, PUSTYLE_SMALL_SHADED, colour, FALSE ) ;
 
   /* If greyed out then halve the opacity when drawing the label and legend */
 
@@ -41,7 +42,7 @@ void puSlider::draw ( int dx, int dy )
     glColor4f ( colour [ PUCOL_LEGEND ][0],
                 colour [ PUCOL_LEGEND ][1],
                 colour [ PUCOL_LEGEND ][2],
-                colour [ PUCOL_LEGEND ][3] / 2.0 ) ; /* 50% more transparent */
+                colour [ PUCOL_LEGEND ][3] / 2.0f ) ; /* 50% more transparent */
 
   int xx = ( abox.max[0] - abox.min[0] - puGetStringWidth(legendFont,legend) ) / 2 ;
   int yy = ( abox.max[1] - abox.min[1] - puGetStringHeight(legendFont) ) / 2 ;

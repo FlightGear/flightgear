@@ -34,7 +34,8 @@ void puInput::draw ( int dx, int dy )
 
   /* 3D Input boxes look nicest if they are always in inverse style. */
 
-  abox . draw ( dx, dy, (style==PUSTYLE_SMALL_BEVELLED) ? -style :
+  abox . draw ( dx, dy, ( (style==PUSTYLE_SMALL_BEVELLED ||
+                           style==PUSTYLE_SMALL_SHADED) ) ? -style :
                         (accepting ? -style : style ), colour, FALSE ) ;
 
   int xx = puGetStringWidth ( legendFont, " " ) ;
@@ -55,7 +56,7 @@ void puInput::draw ( int dx, int dy )
       val [ select_start_position ] = '\0' ;
       int cpos1 = puGetStringWidth ( legendFont, val ) + xx + dx + abox.min[0] ;
 
-      glColor3f ( 1.0, 1.0, 0.7 ) ;
+      glColor3f ( 1.0f, 1.0f, 0.7f ) ;
       glRecti ( cpos1, dy + abox.min[1] + 6 ,
                 cpos2, dy + abox.max[1] - 6 ) ;
     }
@@ -72,7 +73,7 @@ void puInput::draw ( int dx, int dy )
       glColor4f ( colour [ PUCOL_LEGEND ][0],
 		  colour [ PUCOL_LEGEND ][1],
 		  colour [ PUCOL_LEGEND ][2],
-		  colour [ PUCOL_LEGEND ][3] / 2.0 ) ; /* 50% more transparent */
+		  colour [ PUCOL_LEGEND ][3] / 2.0f ) ; /* 50% more transparent */
 
     char val [ PUSTRING_MAX ] ;
     getValue ( val ) ;
@@ -97,7 +98,7 @@ void puInput::draw ( int dx, int dy )
 
       int cpos = puGetStringWidth ( legendFont, val ) + xx + dx + abox.min[0] ;
 
-      glColor3f ( 0.1, 0.1, 1.0 ) ;
+      glColor3f ( 0.1f, 0.1f, 1.0f ) ;
       glBegin   ( GL_LINES ) ;
       glVertex2i ( cpos    , dy + abox.min[1] + 7 ) ;
       glVertex2i ( cpos    , dy + abox.max[1] - 7 ) ;

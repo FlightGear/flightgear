@@ -3,7 +3,7 @@
 
 inline float clamp01 ( float x )
 {
-  return (x >= 1.0) ? 1.0 : x ;
+  return (x >= 1.0f) ? 1.0f : x ;
 }
 
 static void load_colour_scheme ( float col[][4], float r, float g,
@@ -11,8 +11,8 @@ static void load_colour_scheme ( float col[][4], float r, float g,
 {
   puSetColour ( col [ PUCOL_FOREGROUND ], r, g, b, a ) ;
   puSetColour ( col [ PUCOL_BACKGROUND ], r/2, g/2, b/2, a ) ;
-  puSetColour ( col [ PUCOL_HIGHLIGHT  ], clamp01(r*1.3), clamp01(g*1.3),
-                                             clamp01(b*1.3), a ) ;
+  puSetColour ( col [ PUCOL_HIGHLIGHT  ], clamp01(r*1.3f), clamp01(g*1.3f),
+                                             clamp01(b*1.3f), a ) ;
 
   if ( 4 * g + 3 * r + b > 0.5 )
     puSetColour ( col [ PUCOL_LEGEND ], 0.0, 0.0, 0.0, a ) ;
@@ -136,7 +136,7 @@ void puObject::draw_label ( int dx, int dy )
     glColor4f ( colour [ PUCOL_LABEL ][0],
                 colour [ PUCOL_LABEL ][1],
                 colour [ PUCOL_LABEL ][2],
-                colour [ PUCOL_LABEL ][3] / 2.0 ) ; /* 50% more transparent */
+                colour [ PUCOL_LABEL ][3] / 2.0f ) ; /* 50% more transparent */
 
   switch ( labelPlace )
   {

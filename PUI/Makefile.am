@@ -4,6 +4,7 @@ lib_LTLIBRARIES = libPUI.la
 
 libPUI_la_SOURCES = \
 	pu.h puLocal.h \
+	complex.cxx \
 	pu.cxx \
 	puBox.cxx \
 	puButton.cxx \

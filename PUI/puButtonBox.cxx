@@ -88,7 +88,7 @@ void puButtonBox::draw ( int dx, int dy )
       glColor4f ( colour [ PUCOL_LEGEND ][0],
                   colour [ PUCOL_LEGEND ][1],
                   colour [ PUCOL_LEGEND ][2],
-                  colour [ PUCOL_LEGEND ][3] / 2.0 ) ; /* 50% more transparent */
+                  colour [ PUCOL_LEGEND ][3] / 2.0f ) ; /* 50% more transparent */
 
     puDrawString ( legendFont, button_labels[i],
                    dx + tbox.min[0] + PU_RADIO_BUTTON_SIZE + PUSTR_LGAP,

@@ -1,20 +1,53 @@
 
 #include "puLocal.h"
 
+#ifdef PU_NOT_USING_GLUT
+#include <assert.h>
+#include <iostream.h>
+#endif
+
 #define PU_STRING_X_FUDGE 6
 #define PU_STRING_Y_FUDGE 6
 
 int puRefresh = TRUE ;
 
+#ifdef PU_NOT_USING_GLUT
+
+static int puWindowWidth  = 400 ;
+static int puWindowHeight = 400 ;
+
+int puGetWindowHeight () { return puWindowHeight ; }
+int puGetWindowWidth  () { return puWindowWidth  ; }
+
+void puSetWindowSize ( int width, int height )
+{
+  puWindowWidth  = width  ;
+  puWindowHeight = height ;
+}
+
+static int fontBase = 0;
+static int fontSize[257];
+#else
+
+int puGetWindowHeight () { return glutGet ( (GLenum) GLUT_WINDOW_HEIGHT ) ; }
+int puGetWindowWidth  () { return glutGet ( (GLenum) GLUT_WINDOW_WIDTH  ) ; }
+
+void puSetWindowSize ( int width, int height )
+{
+  fprintf ( stderr, "PUI: puSetWindowSize shouldn't be used with GLUT.\n" ) ;
+}
+
+#endif
+
 puColour _puDefaultColourTable[] =
 {
-  { 0.5, 0.5, 0.5, 1.0 }, /* PUCOL_FOREGROUND */
-  { 0.3, 0.3, 0.3, 1.0 }, /* PUCOL_BACKGROUND */
-  { 0.7, 0.7, 0.7, 1.0 }, /* PUCOL_HIGHLIGHT  */
-  { 0.0, 0.0, 0.0, 1.0 }, /* PUCOL_LABEL      */
-  { 1.0, 1.0, 1.0, 1.0 }, /* PUCOL_TEXT       */
+  { 0.5f, 0.5f, 0.5f, 1.0f }, /* PUCOL_FOREGROUND */
+  { 0.3f, 0.3f, 0.3f, 1.0f }, /* PUCOL_BACKGROUND */
+  { 0.7f, 0.7f, 0.7f, 1.0f }, /* PUCOL_HIGHLIGHT  */
+  { 0.0f, 0.0f, 0.0f, 1.0f }, /* PUCOL_LABEL      */
+  { 1.0f, 1.0f, 1.0f, 1.0f }, /* PUCOL_TEXT       */
 
-  { 0.0, 0.0, 0.0, 0.0 }  /* ILLEGAL */
+  { 0.0f, 0.0f, 0.0f, 0.0f }  /* ILLEGAL */
 } ;
  
 
@@ -39,15 +72,15 @@ void puCursor ( int x, int y )
 int puGetStringDescender ( void *fnt )
 {
   if ( fnt == NULL )
-    fnt = GLUT_BITMAP_9_BY_15 ;
+    fnt = PUFONT_9_BY_15 ;
 
-  if ( fnt == GLUT_BITMAP_8_BY_13        ) return 2 ;
-  if ( fnt == GLUT_BITMAP_9_BY_15        ) return 3 ;
-  if ( fnt == GLUT_BITMAP_TIMES_ROMAN_10 ) return 2 ;
-  if ( fnt == GLUT_BITMAP_TIMES_ROMAN_24 ) return 5 ;
-  if ( fnt == GLUT_BITMAP_HELVETICA_10   ) return 2 ;
-  if ( fnt == GLUT_BITMAP_HELVETICA_12   ) return 3 ;
-  if ( fnt == GLUT_BITMAP_HELVETICA_18   ) return 4 ;
+  if ( fnt == PUFONT_8_BY_13        ) return 2 ;
+  if ( fnt == PUFONT_9_BY_15        ) return 3 ;
+  if ( fnt == PUFONT_TIMES_ROMAN_10 ) return 2 ;
+  if ( fnt == PUFONT_TIMES_ROMAN_24 ) return 5 ;
+  if ( fnt == PUFONT_HELVETICA_10   ) return 2 ;
+  if ( fnt == PUFONT_HELVETICA_12   ) return 3 ;
+  if ( fnt == PUFONT_HELVETICA_18   ) return 4 ;
 
   return 0 ;
 }
@@ -55,36 +88,44 @@ int puGetStringDescender ( void *fnt )
 int puGetStringHeight ( void *fnt )
 {
   /* Height *excluding* descender */
-
   if ( fnt == NULL )
-    fnt = GLUT_BITMAP_9_BY_15 ;
+    fnt = PUFONT_9_BY_15 ;
 
-  if ( fnt == GLUT_BITMAP_8_BY_13        ) return  9 ;
-  if ( fnt == GLUT_BITMAP_9_BY_15        ) return 10 ;
-  if ( fnt == GLUT_BITMAP_TIMES_ROMAN_10 ) return  7 ;
-  if ( fnt == GLUT_BITMAP_TIMES_ROMAN_24 ) return 17 ;
-  if ( fnt == GLUT_BITMAP_HELVETICA_10   ) return  8 ;
-  if ( fnt == GLUT_BITMAP_HELVETICA_12   ) return  9 ;
-  if ( fnt == GLUT_BITMAP_HELVETICA_18   ) return 14 ;
+  if ( fnt == PUFONT_8_BY_13        ) return  9 ;
+  if ( fnt == PUFONT_9_BY_15        ) return 10 ;
+  if ( fnt == PUFONT_TIMES_ROMAN_10 ) return  7 ;
+  if ( fnt == PUFONT_TIMES_ROMAN_24 ) return 17 ;
+  if ( fnt == PUFONT_HELVETICA_10   ) return  8 ;
+  if ( fnt == PUFONT_HELVETICA_12   ) return  9 ;
+  if ( fnt == PUFONT_HELVETICA_18   ) return 14 ;
 
   return 0 ;
 }
 
 int puGetStringWidth ( void *fnt, char *str )
 {
+
   if ( str == NULL )
     return 0 ;
 
-  if ( fnt == NULL )
-    fnt = GLUT_BITMAP_9_BY_15 ;
-
   int res = 0 ;
+
+#ifdef PU_NOT_USING_GLUT
+  while ( *str != '\0' )
+  {
+    res += fontSize [ *str ] ;
+    str++ ;
+  }
+#else
+  if ( fnt == NULL )
+    fnt = PUFONT_9_BY_15 ;
 
   while ( *str != '\0' )
   {
     res += glutBitmapWidth ( fnt, *str ) ;
     str++ ;
   }
+#endif
 
   return res ;
 }
@@ -95,16 +136,31 @@ void puDrawString ( void *fnt, char *str, int x, int y )
   if ( str == NULL )
     return ;
 
-  if ( fnt == NULL )
-    fnt = GLUT_BITMAP_9_BY_15 ;
+  glRasterPos2f((float)x, (float)y); 
 
-  glRasterPos2f ( x, y ) ;
+#ifdef PU_NOT_USING_GLUT
+  /*
+    Display a string: 
+       indicate start of glyph display lists 
+  */
+
+  glListBase (fontBase);
+
+  /* Now draw the characters in a string */
+
+  int len = strlen(str);
+  glCallLists(len, GL_UNSIGNED_BYTE, str); 
+  glListBase(0);
+#else
+  if ( fnt == NULL )
+    fnt = PUFONT_9_BY_15 ;
 
   while ( *str != '\0' )
   {
     glutBitmapCharacter ( fnt, *str ) ;
     str++ ;
   }
+#endif
 }
 
 
@@ -153,13 +209,44 @@ void  puInit ( void )
     puPushInterface     ( base_interface ) ;
     puPushLiveInterface ( base_interface ) ;
     firsttime = FALSE ;
+#ifdef PU_NOT_USING_GLUT
+
+    /* Create bitmaps for the device context font's first 256 glyphs */
+
+    fontBase = glGenLists(256);
+    assert(fontBase);
+    HDC hdc = wglGetCurrentDC();
+
+    /* Make the system font the device context's selected font */
+
+    SelectObject (hdc, GetStockObject (SYSTEM_FONT)); 
+
+    int *tempSize = &fontSize[1];
+
+    if ( ! GetCharWidth32 ( hdc, 1, 255, tempSize ) )
+    {
+      LPVOID lpMsgBuf ;
+
+      FormatMessage ( FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                      FORMAT_MESSAGE_FROM_SYSTEM,
+		      NULL,
+		      GetLastError(),
+		      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		      (LPTSTR) &lpMsgBuf,
+		      0, NULL ) ;
+
+      fprintf ( stderr, "PUI: Error: %s\n" (char *)lpMsgBuf ) ;
+      LocalFree ( lpMsgBuf ) ;
+    }
+    wglUseFontBitmaps ( hdc, 0, 256, fontBase ) ;
+#endif
   }
 }
 
 static void puSetOpenGLState ( void )
 {
-  int w = glutGet ( (GLenum) GLUT_WINDOW_WIDTH  ) ;
-  int h = glutGet ( (GLenum) GLUT_WINDOW_HEIGHT ) ;
+  int w = puGetWindowWidth  () ;
+  int h = puGetWindowHeight () ;
 
   glPushAttrib   ( GL_ENABLE_BIT | GL_VIEWPORT_BIT | GL_TRANSFORM_BIT ) ;
   glDisable      ( GL_LIGHTING   ) ;
@@ -193,9 +280,11 @@ void  puDisplay ( void )
   puSetOpenGLState () ;
   puGetUltimateLiveInterface () -> draw ( 0, 0 ) ;
 
+  int h = puGetWindowHeight () ;
+
   if ( _puCursor_enable )
     puDrawCursor ( _puCursor_x,
-                   glutGet((GLenum)GLUT_WINDOW_HEIGHT) - _puCursor_y ) ;
+                   h - _puCursor_y ) ;
 
   puRestoreOpenGLState () ;
 }
@@ -207,10 +296,11 @@ int puKeyboard ( int key, int updown )
 
 
 static int last_buttons = 0 ;
-
 int puMouse ( int button, int updown, int x, int y )
 {
   puCursor ( x, y ) ;
+
+  int h = puGetWindowHeight () ;
 
   if ( updown == PU_DOWN )
     last_buttons |=  ( 1 << button ) ;
@@ -218,7 +308,7 @@ int puMouse ( int button, int updown, int x, int y )
     last_buttons &= ~( 1 << button ) ;
 
   return puGetBaseLiveInterface () -> checkHit ( button, updown, x,
-                                 glutGet((GLenum)GLUT_WINDOW_HEIGHT) - y ) ;
+                                 h - y ) ;
 }
 
 int puMouse ( int x, int y )
@@ -232,7 +322,9 @@ int puMouse ( int x, int y )
                (last_buttons & (1<<PU_MIDDLE_BUTTON)) ?  PU_MIDDLE_BUTTON :
                (last_buttons & (1<<PU_RIGHT_BUTTON )) ?  PU_RIGHT_BUTTON  : 0 ;
 
+  int h = puGetWindowHeight () ;
+
   return puGetBaseLiveInterface () -> checkHit ( button, PU_DRAG, x,
-                                 glutGet((GLenum)GLUT_WINDOW_HEIGHT) - y ) ;
+                                 h - y ) ;
 }
 

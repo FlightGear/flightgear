@@ -1,6 +1,3 @@
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +8,9 @@
 #include <unistd.h>
 #endif
 #include <math.h>
+
+#ifndef PU_NOT_USING_GLUT
 #include <GL/glut.h>
+#endif
 #include "pu.h"
 

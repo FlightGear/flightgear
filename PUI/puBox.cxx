@@ -1,10 +1,11 @@
+
 #include "puLocal.h"
 
 #define PU_BEVEL              5
 #define PU_SMALL_BEVEL        2
 #define PU_DFLT_OFFSET        8
 #define PU_BOX_WIDTH          2
-#define PU_DROPSHADOW_OFFSET 10
+#define PU_DROPSHADOW_OFFSET  5
 
 void puBox::extend ( puBox *bx )
 {
@@ -35,6 +36,8 @@ void puBox::draw ( int dx, int dy, int style, puColour colour[], int am_default 
       lo  = PUCOL_BACKGROUND ;
       break ;
 
+    case  PUSTYLE_SMALL_SHADED :
+    case  PUSTYLE_SHADED     :
     case  PUSTYLE_SMALL_BEVELLED :
     case  PUSTYLE_BEVELLED   :
     case  PUSTYLE_BOXED      :
@@ -58,6 +61,8 @@ void puBox::draw ( int dx, int dy, int style, puColour colour[], int am_default 
 
     case -PUSTYLE_SMALL_BEVELLED :
     case -PUSTYLE_BEVELLED   :
+    case -PUSTYLE_SMALL_SHADED :
+    case -PUSTYLE_SHADED     :
     case -PUSTYLE_BOXED      :
     case -PUSTYLE_SPECIAL_UNDERLINED :
       mid = PUCOL_FOREGROUND ;
@@ -79,6 +84,7 @@ void puBox::draw ( int dx, int dy, int style, puColour colour[], int am_default 
       break ;
 
     case  PUSTYLE_SMALL_BEVELLED   :
+    case  PUSTYLE_SMALL_SHADED     :
       glColor4fv ( colour [ hi  ] ) ;
       glBegin ( GL_QUAD_STRIP ) ;
 	glVertex2i ( dx + min[0] + PU_SMALL_BEVEL, dy + min[1] + PU_SMALL_BEVEL ) ;
@@ -97,12 +103,72 @@ void puBox::draw ( int dx, int dy, int style, puColour colour[], int am_default 
 	glVertex2i ( dx + max[0], dy + max[1] ) ;
 	glVertex2i ( dx + max[0] - PU_SMALL_BEVEL, dy + max[1] - PU_SMALL_BEVEL ) ;
       glEnd () ;
-      glColor4fv ( colour [ mid ] ) ;
-      glRecti ( dx + min[0] + PU_SMALL_BEVEL, dy + min[1] + PU_SMALL_BEVEL,
-		dx + max[0] - PU_SMALL_BEVEL, dy + max[1] - PU_SMALL_BEVEL ) ;
+
+      if ( abs(style) == PUSTYLE_SMALL_BEVELLED )
+      {
+        glColor4fv ( colour [ mid ] ) ;
+        glRecti ( dx + min[0] + PU_SMALL_BEVEL, dy + min[1] + PU_SMALL_BEVEL,
+		  dx + max[0] - PU_SMALL_BEVEL, dy + max[1] - PU_SMALL_BEVEL ) ;
+      }
+      else
+      {
+	glShadeModel(GL_SMOOTH);
+	glBegin(GL_POLYGON);
+	  glColor4fv( colour [ mid ] );
+	  glVertex2i( dx + min[0] + PU_SMALL_BEVEL , dy + min[1] + PU_SMALL_BEVEL );
+	  if(style==PUSTYLE_SMALL_SHADED)
+	    glColor4f( colour [mid][0] + (colour[lo][0] - colour[mid][0])/2.0,
+		       colour [mid][1] + (colour[lo][1] - colour[mid][1])/2.0,
+		       colour [mid][2] + (colour[lo][2] - colour[mid][2])/2.0,
+		       colour [lo][3] );
+	  else
+	    glColor4f( colour [mid][0] + (colour[hi][0] - colour[mid][0])/2.0,
+		       colour [mid][1] + (colour[hi][1] - colour[mid][1])/2.0,
+		       colour [mid][2] + (colour[hi][2] - colour[mid][2])/2.0,
+		       colour [hi][3] );
+	  glVertex2i( dx + min[0] + PU_SMALL_BEVEL , dy + max[1] - PU_SMALL_BEVEL );
+	  glColor4fv( colour [ mid ] );
+	  glVertex2i( dx + max[0] - PU_SMALL_BEVEL , dy + max[1] - PU_SMALL_BEVEL );
+	  if(style==-PUSTYLE_SMALL_SHADED)
+	    glColor4f( colour [mid][0] + (colour[lo][0] - colour[mid][0])/2.0,
+		       colour [mid][1] + (colour[lo][1] - colour[mid][1])/2.0,
+		       colour [mid][2] + (colour[lo][2] - colour[mid][2])/2.0,
+		       colour [lo][3] );
+	  else
+	    glColor4f( colour [mid][0] + (colour[hi][0] - colour[mid][0])/2.0,
+		       colour [mid][1] + (colour[hi][1] - colour[mid][1])/2.0,
+		       colour [mid][2] + (colour[hi][2] - colour[mid][2])/2.0,
+		       colour [hi][3] );
+	  glVertex2i( dx + max[0] - PU_SMALL_BEVEL , dy + min[1] + PU_SMALL_BEVEL );
+	glEnd();
+	glShadeModel(GL_FLAT);
+
+	if(style == -PUSTYLE_SMALL_SHADED)
+	{
+	  glColor4fv ( colour [ lo  ] ) ;
+	  glBegin ( GL_QUAD_STRIP ) ;
+	    glVertex2i ( dx + min[0] + PU_SMALL_BEVEL   , dy + min[1] + PU_SMALL_BEVEL   ) ;
+	    glVertex2i ( dx + min[0] + PU_SMALL_BEVEL/2 , dy + min[1] + PU_SMALL_BEVEL/2 ) ;
+	    glVertex2i ( dx + min[0] + PU_SMALL_BEVEL   , dy + max[1] - PU_SMALL_BEVEL   ) ;
+	    glVertex2i ( dx + min[0] + PU_SMALL_BEVEL/2 , dy + max[1] - PU_SMALL_BEVEL/2 ) ;
+	    glVertex2i ( dx + max[0] - PU_SMALL_BEVEL   , dy + max[1] - PU_SMALL_BEVEL   ) ;
+	    glVertex2i ( dx + max[0] - PU_SMALL_BEVEL/2 , dy + max[1] - PU_SMALL_BEVEL/2 ) ;
+	  glEnd () ;
+	  glColor4fv ( colour [ hi  ] ) ;
+	  glBegin ( GL_QUAD_STRIP ) ;
+	    glVertex2i ( dx + min[0] + PU_SMALL_BEVEL/2 , dy + min[1] + PU_SMALL_BEVEL/2 ) ;
+	    glVertex2i ( dx + min[0] + PU_SMALL_BEVEL   , dy + min[1] + PU_SMALL_BEVEL   ) ;
+	    glVertex2i ( dx + max[0] - PU_SMALL_BEVEL/2 , dy + min[1] + PU_SMALL_BEVEL/2 ) ;
+	    glVertex2i ( dx + max[0] - PU_SMALL_BEVEL   , dy + min[1] + PU_SMALL_BEVEL   ) ;
+	    glVertex2i ( dx + max[0] - PU_SMALL_BEVEL/2 , dy + max[1] - PU_SMALL_BEVEL/2 ) ;
+	    glVertex2i ( dx + max[0] - PU_SMALL_BEVEL   , dy + max[1] - PU_SMALL_BEVEL   ) ;
+	  glEnd () ;
+	}	
+      }
       break ;
 
     case  PUSTYLE_BEVELLED   :
+    case  PUSTYLE_SHADED     :
       glColor4fv ( colour [ hi  ] ) ;
       glBegin ( GL_QUAD_STRIP ) ;
 	glVertex2i ( dx + min[0] + PU_BEVEL, dy + min[1] + PU_BEVEL ) ;
@@ -121,9 +187,68 @@ void puBox::draw ( int dx, int dy, int style, puColour colour[], int am_default 
 	glVertex2i ( dx + max[0], dy + max[1] ) ;
 	glVertex2i ( dx + max[0] - PU_BEVEL, dy + max[1] - PU_BEVEL ) ;
       glEnd () ;
-      glColor4fv ( colour [ mid ] ) ;
-      glRecti ( dx + min[0] + PU_BEVEL, dy + min[1] + PU_BEVEL,
-		dx + max[0] - PU_BEVEL, dy + max[1] - PU_BEVEL ) ;
+
+      if ( abs(style) == PUSTYLE_BEVELLED )
+      {
+	glColor4fv ( colour [ mid ] ) ;
+	glRecti ( dx + min[0] + PU_BEVEL, dy + min[1] + PU_BEVEL,
+		  dx + max[0] - PU_BEVEL, dy + max[1] - PU_BEVEL ) ;
+      }
+      else
+      {
+	glShadeModel(GL_SMOOTH);
+	glBegin(GL_POLYGON);
+	  glColor4fv( colour [ mid ] );
+	  glVertex2i( dx + min[0] + PU_BEVEL , dy + min[1] + PU_BEVEL );
+	  if(style==PUSTYLE_SHADED)
+	    glColor4f( colour [mid][0] + (colour[lo][0] - colour[mid][0])/2.0,
+		       colour [mid][1] + (colour[lo][1] - colour[mid][1])/2.0,
+		       colour [mid][2] + (colour[lo][2] - colour[mid][2])/2.0,
+		       colour [lo][3] );
+	  else
+	    glColor4f( colour [mid][0] + (colour[hi][0] - colour[mid][0])/2.0,
+		       colour [mid][1] + (colour[hi][1] - colour[mid][1])/2.0,
+		       colour [mid][2] + (colour[hi][2] - colour[mid][2])/2.0,
+		       colour [hi][3] );
+	  glVertex2i( dx + min[0] + PU_BEVEL , dy + max[1] - PU_BEVEL );
+	  glColor4fv( colour [ mid ] );
+	  glVertex2i( dx + max[0] - PU_BEVEL , dy + max[1] - PU_BEVEL );
+	  if(style==-PUSTYLE_SHADED)
+	    glColor4f( colour [mid][0] + (colour[lo][0] - colour[mid][0])/2.0,
+		       colour [mid][1] + (colour[lo][1] - colour[mid][1])/2.0,
+		       colour [mid][2] + (colour[lo][2] - colour[mid][2])/2.0,
+		       colour [lo][3] );
+	  else
+	    glColor4f( colour [mid][0] + (colour[hi][0] - colour[mid][0])/2.0,
+		       colour [mid][1] + (colour[hi][1] - colour[mid][1])/2.0,
+		       colour [mid][2] + (colour[hi][2] - colour[mid][2])/2.0,
+		       colour [hi][3] );
+	  glVertex2i( dx + max[0] - PU_BEVEL , dy + min[1] + PU_BEVEL );
+	glEnd();
+	glShadeModel(GL_FLAT);
+
+	if(style == -PUSTYLE_SHADED)
+        {
+	  glColor4fv ( colour [ lo  ] ) ;
+	  glBegin ( GL_QUAD_STRIP ) ;
+	    glVertex2i ( dx + min[0] + PU_BEVEL   , dy + min[1] + PU_BEVEL   ) ;
+	    glVertex2i ( dx + min[0] + PU_BEVEL/2 , dy + min[1] + PU_BEVEL/2 ) ;
+	    glVertex2i ( dx + min[0] + PU_BEVEL   , dy + max[1] - PU_BEVEL   ) ;
+	    glVertex2i ( dx + min[0] + PU_BEVEL/2 , dy + max[1] - PU_BEVEL/2 ) ;
+	    glVertex2i ( dx + max[0] - PU_BEVEL   , dy + max[1] - PU_BEVEL   ) ;
+	    glVertex2i ( dx + max[0] - PU_BEVEL/2 , dy + max[1] - PU_BEVEL/2 ) ;
+	  glEnd () ;
+	  glColor4fv ( colour [ hi  ] ) ;
+	  glBegin ( GL_QUAD_STRIP ) ;
+	    glVertex2i ( dx + min[0] + PU_BEVEL/2 , dy + min[1] + PU_BEVEL/2 ) ;
+	    glVertex2i ( dx + min[0] + PU_BEVEL   , dy + min[1] + PU_BEVEL   ) ;
+	    glVertex2i ( dx + max[0] - PU_BEVEL/2 , dy + min[1] + PU_BEVEL/2 ) ;
+	    glVertex2i ( dx + max[0] - PU_BEVEL   , dy + min[1] + PU_BEVEL   ) ;
+	    glVertex2i ( dx + max[0] - PU_BEVEL/2 , dy + max[1] - PU_BEVEL/2 ) ;
+	    glVertex2i ( dx + max[0] - PU_BEVEL   , dy + max[1] - PU_BEVEL   ) ;
+	  glEnd () ;
+	}	
+      }	
       break ;
 
     case  PUSTYLE_BOXED      :
@@ -189,5 +314,6 @@ void puBox::draw ( int dx, int dy, int style, puColour colour[], int am_default 
     glDisable ( GL_LINE_STIPPLE ) ;
   }
 }
+
 
 
