@@ -210,6 +210,7 @@ void fgBuildRenderStates( void ) {
     hud_and_panel->disable( GL_CULL_FACE );
     hud_and_panel->disable( GL_TEXTURE_2D );
     hud_and_panel->disable( GL_LIGHTING );
+    hud_and_panel->enable( GL_BLEND );
 
     menus = new ssgSimpleState;
     menus->disable( GL_CULL_FACE );

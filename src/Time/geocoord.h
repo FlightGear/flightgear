@@ -44,7 +44,7 @@
 
 FG_USING_NAMESPACE(std);
 
-#include "mymath.h"
+#include <simgear/constants.h>
 
 class GeoCoord
 {
@@ -66,7 +66,7 @@ public:
   float getZ()   const { return sin(DEG_TO_RAD*lat); };
 
 
-  double getAngle(const GeoCoord& other) const;
+  //double getAngle(const GeoCoord& other) const;
   virtual void print() {} ; 
   virtual char *getDescription() {return 0;};
 };

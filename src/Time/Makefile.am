@@ -9,7 +9,6 @@ libTime_a_SOURCES = \
 	lowleveltime.cxx lowleveltime.h \
 	timezone.cxx timezone.h \
 	moonpos.cxx moonpos.hxx \
-	mymath.cxx mymath.h \
 	sunpos.cxx sunpos.hxx \
 	timestamp.hxx
 

@@ -29,6 +29,8 @@
 #  include <windows.h>                     
 #endif
 
+#include <simgear/compiler.h>
+
 #include <GL/glut.h>
 #include <simgear/xgl/xgl.h>
 
@@ -38,6 +40,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#include STL_FSTREAM
 
 #include <plib/pu.h>		// plib include
 

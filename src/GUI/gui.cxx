@@ -45,6 +45,7 @@
 #  include <GL/xmesa.h>
 #endif
 
+#include STL_FSTREAM
 #include STL_STRING
 
 #include <stdlib.h>
