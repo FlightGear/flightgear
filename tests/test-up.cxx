@@ -9,6 +9,9 @@
 #include <simgear/constants.h>
 #include <simgear/math/sg_geodesy.hxx>
 
+SG_USING_STD(cout);
+SG_USING_STD(endl);
+
 int main() {
     // for each lat/lon given in goedetic coordinates, calculate
     // geocentric coordinates, cartesian coordinates, the local "up"
