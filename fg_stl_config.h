@@ -23,18 +23,23 @@
 #define _FG_STL_CONFIG_H
 
 // What this file does.
-//  (1) Defines macros for some STL includes which may be affected
-//      by file name length limitations.
-//  (2) Defines macros for some features not supported by all C++ compilers.
-//  (3) Defines 'explicit' as a null macro if the compiler doesn't support
-//      the explicit keyword.
-//  (4) Defines 'typename' as a null macro if the compiler doesn't support
-//      the typename keyword.
-//  (5) Defines bool, true and false if the compiler doesn't do so.
-//  (6) Defines _FG_EXPLICIT_FUNCTION_TMPL_ARGS if the compiler
-//      supports calling a function template by providing its template
-//      arguments explicitly.
-//  (7) Defines _FG_NEED_AUTO_PTR if STL doesn't provide auto_ptr<>.
+//  (1)  Defines macros for some STL includes which may be affected
+//       by file name length limitations.
+//  (2)  Defines macros for some features not supported by all C++ compilers.
+//  (3)  Defines 'explicit' as a null macro if the compiler doesn't support
+//       the explicit keyword.
+//  (4)  Defines 'typename' as a null macro if the compiler doesn't support
+//       the typename keyword.
+//  (5)  Defines bool, true and false if the compiler doesn't do so.
+//  (6)  Defines _FG_EXPLICIT_FUNCTION_TMPL_ARGS if the compiler
+//       supports calling a function template by providing its template
+//       arguments explicitly.
+//  (7)  Defines _FG_NEED_AUTO_PTR if STL doesn't provide auto_ptr<>.
+//  (8)  Defines _FG_NO_ARROW_OPERATOR if the compiler is unable
+//       to support the -> operator for iterators.
+//  (9)  Defines _FG_USE_EXCEPTIONS if the compiler (in the current
+//       compilation mode) supports exceptions.
+//  (10) Define _FG_NAMESPACES if the compiler supports namespaces.
 
 #ifdef __GNUC__
 #  if __GNUC__ == 2 
@@ -52,6 +57,7 @@
 #      define _FG_NEED_AUTO_PTR
 #      define _FG_NO_DEFAULT_TEMPLATE_ARGS
 #      define _FG_INCOMPLETE_FUNCTIONAL
+#      define _FG_NO_ARROW_OPERATOR
 
 #    elif __GNUC_MINOR__ >= 8
 
@@ -67,6 +73,7 @@
 #      define _FG_EXPLICIT_FUNCTION_TMPL_ARGS
 #      define _FG_NEED_AUTO_PTR
 #      define _FG_MEMBER_TEMPLATES
+#      define _FG_NAMESPACES
 
 #    endif
 #  else
@@ -92,7 +99,8 @@
 #  define STL_STRSTREAM  <strstream>
 
 #  define _FG_NO_DEFAULT_TEMPLATE_ARGS
-#  define NEEDNAMESPACESTD
+#  define _FG_NAMESPACES
+#  define _FG_INCOMPLETE_FUNCTIONAL
 
 #endif
 
@@ -120,13 +128,28 @@
 #  define _FG_NULL_TMPL_ARGS
 #endif
 
-#ifdef _FG_INCOMPLETE_FUNCTIONAL
+// _FG_NO_NAMESPACES is a hook so that users can disable namespaces
+// without having to edit library headers.
+#if defined(_FG_NAMESPACES) && !defined(_FG_NO_NAMESPACES)
+#   define _FG_NAMESPACE(X) namespace X {
+#   define _FG_NAMESPACE_END }
+#   define _FG_USING_NAMESPACE(X) using namespace X
+# else
+#   define _FG_NAMESPACE(X)
+#   define _FG_NAMESPACE_END
+#   define _FG_USING_NAMESPACE(X)
+#endif
 
 // Additional <functional> implementation from SGI STL 3.11
 // Adapter function objects: pointers to member functions
+#ifdef _FG_INCOMPLETE_FUNCTIONAL
 
 template <class _Ret, class _Tp>
-class const_mem_fun_ref_t : public unary_function<_Tp,_Ret> {
+class const_mem_fun_ref_t
+#ifndef __BORLANDC__
+    : public unary_function<_Tp,_Ret>
+#endif // __BORLANDC__
+{
 public:
   explicit const_mem_fun_ref_t(_Ret (_Tp::*__pf)() const) : _M_f(__pf) {}
   _Ret operator()(const _Tp& __r) const { return (__r.*_M_f)(); }
@@ -138,11 +161,14 @@ template <class _Ret, class _Tp>
 inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
   { return const_mem_fun_ref_t<_Ret,_Tp>(__f); }
 
-#endif
+#endif // _FG_INCOMPLETE_FUNCTIONAL
 
 #endif // _FG_STL_CONFIG_H
 
 // $Log$
+// Revision 1.4  1998/10/13 00:09:55  curt
+// More portability changes to help with windoze compilation problems.
+//
 // Revision 1.3  1998/09/29 02:00:16  curt
 // Start of some borland c support
 //
