@@ -24,7 +24,9 @@
  **************************************************************************/
  
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
@@ -32,7 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef WIN32
+#ifdef HAVE_VALUES_H
 #  include <values.h>  // for MAXINT
 #endif
 
@@ -158,6 +160,81 @@ double get_sideslip( void )
         f = current_aircraft.flight;
         
         return( FG_Beta );
+}
+
+/****************************************************************************/
+/* Convert degrees to dd mm.mmm' (DMM-Format)                               */
+/****************************************************************************/
+#if 0
+char *toDM(double a)
+{
+  short        neg = 0;
+  double       d, m;
+  static char  dm[13];
+  
+  if (a < 0.0) {
+    a = -a;
+    neg = 1;
+  }
+
+  d = (double) ( (int) a);
+  m = (a - d) * 60.0;
+  
+  if (m > 59.5) {
+    m  = 0.0;
+    d += 1.0;
+  }
+  if (neg) d = -d;
+  
+  sprintf(dm, "%.0f°%06.3f'", d, m);
+  return dm;
+}
+#endif // 0
+double get_latitude( void )
+{
+	fgFLIGHT *f;
+	f = current_aircraft.flight;
+
+//	return( toDM(FG_Latitude * RAD_TO_DEG) );
+	return((double)((int)( FG_Latitude * RAD_TO_DEG)) );	
+}
+double get_lat_min( void )
+{
+	fgFLIGHT *f;
+	double      a, d;
+
+	f = current_aircraft.flight;
+	
+	a = FG_Latitude * RAD_TO_DEG;	
+	if (a < 0.0) {
+		a = -a;
+	}
+	d = (double) ( (int) a);
+	return( (a - d) * 60.0);
+}
+
+
+double get_longitude( void )
+{
+	fgFLIGHT *f;
+	f = current_aircraft.flight;
+
+//	return( toDM(FG_Longitude * RAD_TO_DEG) );
+	return((double)((int) (FG_Longitude * RAD_TO_DEG)) );
+}
+double get_long_min( void )
+{
+	fgFLIGHT *f;
+	double  a, d;
+
+	f = current_aircraft.flight;
+	
+	a = FG_Longitude * RAD_TO_DEG;	
+	if (a < 0.0) {
+		a = -a;
+	}
+	d = (double) ( (int) a);
+	return( (a - d) * 60.0);
 }
 
 //
@@ -472,7 +549,13 @@ static void drawladder( HUD_ladder *ladder )
   char TextLadder[80];
   int condition;
 
+  double cos_roll_value, sin_roll_value;
+//  double cos_pitch_value, sin_pitch_value;
+
   roll_value = (*ladder->load_roll)();
+  sin_roll_value = sin(roll_value);
+  cos_roll_value = cos(roll_value);
+  
   pitch_value = (*ladder->load_pitch)()*RAD_TO_DEG;
 
   vmin = pitch_value - ladder->width_units/2;
@@ -510,17 +593,17 @@ static void drawladder( HUD_ladder *ladder )
           x_end = ladder->scrn_pos.x + ladder->scr_width/2;
           y_end = marker_y;
           new_x_ini = (int)(ladder->scrn_pos.x +                             \
-                      (x_ini - ladder->scrn_pos.x) * cos(roll_value) - \
-                      (y_ini - ladder->scrn_pos.y) * sin(roll_value));
+                      (x_ini - ladder->scrn_pos.x) * cos_roll_value - \
+                      (y_ini - ladder->scrn_pos.y) * sin_roll_value);
           new_y_ini = (int)(ladder->scrn_pos.y +                             \
-                      (x_ini - ladder->scrn_pos.x) * sin(roll_value) + \
-                      (y_ini - ladder->scrn_pos.y) * cos(roll_value));
+                      (x_ini - ladder->scrn_pos.x) * sin_roll_value + \
+                      (y_ini - ladder->scrn_pos.y) * cos_roll_value);
           new_x_end = (int)(ladder->scrn_pos.x +                             \
-                      (x_end - ladder->scrn_pos.x) * cos(roll_value) - \
-                      (y_end - ladder->scrn_pos.y) * sin(roll_value));
+                      (x_end - ladder->scrn_pos.x) * cos_roll_value - \
+                      (y_end - ladder->scrn_pos.y) * sin_roll_value);
           new_y_end = (int)(ladder->scrn_pos.y +                             \
-                      (x_end - ladder->scrn_pos.x) * sin(roll_value) + \
-                      (y_end - ladder->scrn_pos.y) * cos(roll_value));
+                      (x_end - ladder->scrn_pos.x) * sin_roll_value + \
+                      (y_end - ladder->scrn_pos.y) * cos_roll_value);
 
           if( i >= 0 )
             {
@@ -552,17 +635,17 @@ static void drawladder( HUD_ladder *ladder )
           x_end = ladder->scrn_pos.x - ladder->scr_width/2 + ladder->scr_hole/2;
           y_end = marker_y;
           new_x_ini = (int)(ladder->scrn_pos.x+                             \
-                      (x_ini - ladder->scrn_pos.x) * cos(roll_value) -\
-                      (y_ini - ladder->scrn_pos.y) * sin(roll_value));
+                      (x_ini - ladder->scrn_pos.x) * cos_roll_value -\
+                      (y_ini - ladder->scrn_pos.y) * sin_roll_value);
           new_y_ini = (int)(ladder->scrn_pos.y+                             \
-                      (x_ini - ladder->scrn_pos.x) * sin(roll_value) +\
-                      (y_ini - ladder->scrn_pos.y) * cos(roll_value));
+                      (x_ini - ladder->scrn_pos.x) * sin_roll_value +\
+                      (y_ini - ladder->scrn_pos.y) * cos_roll_value);
           new_x_end = (int)(ladder->scrn_pos.x+                             \
-                      (x_end - ladder->scrn_pos.x) * cos(roll_value) -\
-                      (y_end - ladder->scrn_pos.y) * sin(roll_value));
+                      (x_end - ladder->scrn_pos.x) * cos_roll_value -\
+                      (y_end - ladder->scrn_pos.y) * sin_roll_value);
           new_y_end = (int)(ladder->scrn_pos.y+                             \
-                      (x_end - ladder->scrn_pos.x) * sin(roll_value) +\
-                      (y_end - ladder->scrn_pos.y) * cos(roll_value));
+                      (x_end - ladder->scrn_pos.x) * sin_roll_value +\
+                      (y_end - ladder->scrn_pos.y) * cos_roll_value);
 
           if( i >= 0 )
             {
@@ -589,17 +672,17 @@ static void drawladder( HUD_ladder *ladder )
             }
           y_end = marker_y;
           new_x_ini = (int)(ladder->scrn_pos.x +                        \
-                      (x_ini-ladder->scrn_pos.x)*cos(roll_value) -\
-                      (y_ini-ladder->scrn_pos.y)*sin(roll_value));
+                      (x_ini-ladder->scrn_pos.x)*cos_roll_value -\
+                      (y_ini-ladder->scrn_pos.y)*sin_roll_value);
           new_y_ini = (int)(ladder->scrn_pos.y +                        \
-                      (x_ini-ladder->scrn_pos.x)*sin(roll_value) +\
-                      (y_ini-ladder->scrn_pos.y)*cos(roll_value));
+                      (x_ini-ladder->scrn_pos.x)*sin_roll_value +\
+                      (y_ini-ladder->scrn_pos.y)*cos_roll_value);
           new_x_end = (int)(ladder->scrn_pos.x +                        \
-                      (x_end-ladder->scrn_pos.x)*cos(roll_value) -\
-           	      (y_end-ladder->scrn_pos.y)*sin(roll_value));
+                      (x_end-ladder->scrn_pos.x)*cos_roll_value -\
+           	      (y_end-ladder->scrn_pos.y)*sin_roll_value);
           new_y_end = (int)(ladder->scrn_pos.y +                        \
-                      (x_end-ladder->scrn_pos.x)*sin(roll_value) +\
-                      (y_end-ladder->scrn_pos.y)*cos(roll_value));
+                      (x_end-ladder->scrn_pos.x)*sin_roll_value +\
+                      (y_end-ladder->scrn_pos.y)*cos_roll_value);
 
           if( i >= 0 )
             {
@@ -782,6 +865,7 @@ static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 	/* int x_1, y_1; */
 	/* int x_2, y_2; */
 	fgCONTROLS *pCtls;
+	int tmp;
 
 	x_ini = ctrl_surf->scrn_pos.x;
 	y_ini = ctrl_surf->scrn_pos.y;
@@ -803,32 +887,28 @@ static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 	textString( x_ini + 1, y_end-11, "E", GLUT_BITMAP_8_BY_13 );
 	drawOneLine( x_ini + 15, y_ini + 5, x_ini + 15, y_ini + 55 );
 	drawOneLine( x_ini + 14, y_ini + 30, x_ini + 16, y_ini + 30 );
+	tmp = y_ini + 5 + (int)(((pCtls->elevator + 1.0)/2)*50.0);
 	if( pCtls->elevator <= -0.01 || pCtls->elevator >= 0.01 )
 	{
-		drawOneLine( x_ini + 10, y_ini + 5 + (int)(((pCtls->elevator + 1.0)/2)*50.0), \
-				x_ini + 20, y_ini + 5 + (int)(((pCtls->elevator + 1.0)/2)*50.0) );
+		drawOneLine( x_ini + 10, tmp, x_ini + 20, tmp );
 	}
 	else
 	{
-		drawOneLine( x_ini + 7, y_ini + 5 + (int)(((pCtls->elevator + 1.0)/2)*50.0), \
-				x_ini + 23, y_ini + 5 + (int)(((pCtls->elevator + 1.0)/2)*50.0) );
+		drawOneLine( x_ini + 7, tmp, x_ini + 23, tmp);
 	}
 
 	/* Draw aileron diagram */
 	textString( x_ini + 30 + 1, y_end-11, "A", GLUT_BITMAP_8_BY_13 );
 	drawOneLine( x_ini + 35, y_end-15, x_ini + 85, y_end-15 );
 	drawOneLine( x_ini + 60, y_end-14, x_ini + 60, y_end-16 );
+	tmp = x_ini + 35 + (int)(((pCtls->aileron + 1.0)/2)*50.0);
 	if( pCtls->aileron <= -0.01 || pCtls->aileron >= 0.01 )
 	{
-		drawOneLine( x_ini + 35 + (int)(((pCtls->aileron + 1.0)/2)*50.0), y_end-20, \
-				x_ini + 35 + (int)(((pCtls->aileron + 1.0)/2)*50.0), y_end-10 );
+		drawOneLine( tmp, y_end-20, tmp, y_end-10 );
 	}
 	else
 	{
-		drawOneLine( x_ini + 35 + (int)(((pCtls->aileron + 1.0) / 2) * 50.0),
-                 y_end - 25,
-                 x_ini + 35 + (int)(((pCtls->aileron + 1.0) / 2) * 50.0),
-                 y_end -  5 );
+		drawOneLine( tmp, y_end - 25, tmp, y_end -  5 );
 	}
 
 	/* Draw rudder diagram */
@@ -836,19 +916,14 @@ static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 	drawOneLine( x_ini + 35, y_ini + 15, x_ini + 85, y_ini + 15 );
 	drawOneLine( x_ini + 60, y_ini + 14, x_ini + 60, y_ini + 16 );
 
+	tmp = x_ini + 35 + (int)(((pCtls->rudder + 1.0) / 2) * 50.0);
 	if( pCtls->rudder <= -0.01 || pCtls->rudder >= 0.01 )
 	{
-		drawOneLine( x_ini + 35 + (int)(((pCtls->rudder + 1.0) / 2) * 50.0),
-                 y_ini + 20,
-				         x_ini + 35 + (int)(((pCtls->rudder + 1.0) / 2) * 50.0),
-                 y_ini + 10 );
+		drawOneLine( tmp, y_ini + 20, tmp, y_ini + 10 );
 	}
 	else
 	{
-		drawOneLine( x_ini + 35 + (int)(((pCtls->rudder + 1.0) / 2) * 50.0),
-                 y_ini + 25,
-                 x_ini + 35 + (int)(((pCtls->rudder + 1.0) / 2) * 50.0),
-                 y_ini +  5 );
+		drawOneLine( tmp, y_ini + 25, tmp, y_ini +  5 );
 	}
 
 
@@ -856,8 +931,8 @@ static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 	textString( x_ini + 90 + 1, y_end-11, "T", GLUT_BITMAP_8_BY_13 );
 	textString( x_ini + 90 + 1, y_end-21, "r", GLUT_BITMAP_8_BY_13 );
 	drawOneLine( x_ini + 105, y_ini + 5, x_ini + 105, y_ini + 55 );
-	drawOneLine( x_ini + 100, y_ini + 5 + (int)(pCtls->throttle[0]*50.0), \
-			x_ini + 110, y_ini + 5 + (int)(pCtls->throttle[0]*50.0) );
+	tmp = y_ini + 5 + (int)(pCtls->throttle[0]*50.0);
+	drawOneLine( x_ini + 100, tmp, x_ini + 110, tmp);
 
 
 	/* Draw elevator trim diagram */
@@ -865,15 +940,15 @@ static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 	textString( x_ini + 121, y_end-22, "m", GLUT_BITMAP_8_BY_13 );
 	drawOneLine( x_ini + 135, y_ini + 5, x_ini + 135, y_ini + 55 );
 	drawOneLine( x_ini + 134, y_ini + 30, x_ini + 136, y_ini + 30 );
+
+	tmp = y_ini + 5 + (int)(((pCtls->elevator_trim + 1)/2)*50.0);
 	if( pCtls->elevator_trim <= -0.01 || pCtls->elevator_trim >= 0.01 )
 	{
-		drawOneLine( x_ini + 130, y_ini + 5 + (int)(((pCtls->elevator_trim + 1)/2)*50.0), \
-				x_ini + 140, y_ini + 5 + (int)(((pCtls->elevator_trim + 1.0)/2)*50.0) );
+		drawOneLine( x_ini + 130, tmp, x_ini + 140, tmp);
 	}
 	else
 	{
-		drawOneLine( x_ini + 127, y_ini + 5 + (int)(((pCtls->elevator_trim + 1.0)/2)*50.0), \
-				x_ini + 143, y_ini + 5 + (int)(((pCtls->elevator_trim + 1.0)/2)*50.0) );
+		drawOneLine( x_ini + 127, tmp, x_ini + 143, tmp);
 	}
 
 }
@@ -1001,12 +1076,21 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
                       RIGHT_JUST, NULL, " m",        "%5.0f", get_altitude );
   fgHUDAddLabel  ( hud, 160, 120, SMALL, NOBLINK,
                       RIGHT_JUST, NULL, " Roll",     "%5.2f", get_roll );
+  fgHUDAddLabel  ( hud, 160, 105, SMALL, NOBLINK,
+                      RIGHT_JUST, "Lat  ", "d",     "%03.0f", get_latitude );
+  fgHUDAddLabel  ( hud, 160, 90,  SMALL, NOBLINK,
+                      RIGHT_JUST, NULL, " m",        "%05.2f", get_lat_min );
+  
   fgHUDAddLabel  ( hud, 440, 150, SMALL, NOBLINK,
                       RIGHT_JUST, NULL, " AOA",      "%5.2f", get_aoa );
   fgHUDAddLabel  ( hud, 440, 135, SMALL, NOBLINK,
                       RIGHT_JUST, NULL, " Heading",  "%5.0f", get_heading );
   fgHUDAddLabel  ( hud, 440, 120, SMALL, NOBLINK,
                       RIGHT_JUST, NULL, " Sideslip", "%5.2f", get_sideslip );
+  fgHUDAddLabel  ( hud, 440, 105, SMALL, NOBLINK,
+                      RIGHT_JUST, "Lon  ", "d",     "%04.0f", get_longitude );
+  fgHUDAddLabel  ( hud, 440, 90,  SMALL, NOBLINK,
+                      RIGHT_JUST, NULL, " m",        "%05.2f", get_long_min );
 
   fgHUDAddControlSurfaces( hud, 10, 10, NULL );
 
@@ -1519,9 +1603,13 @@ void fgHUDSetBrightness( Hptr hud, int brightness )
 }
 
 /* $Log$
-/* Revision 1.20  1998/03/09 22:48:40  curt
-/* Minor "formatting" tweaks.
+/* Revision 1.21  1998/04/03 21:55:28  curt
+/* Converting to Gnu autoconf system.
+/* Tweaks to hud.c
 /*
+ * Revision 1.20  1998/03/09 22:48:40  curt
+ * Minor "formatting" tweaks.
+ *
  * Revision 1.19  1998/02/23 20:18:28  curt
  * Incorporated Michele America's hud changes.
  *
