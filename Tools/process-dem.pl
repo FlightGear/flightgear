@@ -467,7 +467,11 @@ sub install {
 	die "Cannot open $install_dir/VERSION for writing\n";
     print VERSION "FGFS Scenery Version $scenery_format_version\n";
     $date = `date`; chop($date);
-    print VERSION "Created by $ENV{LOGNAME} on $date\n";
+    $hostname = `hostname`; chop($hostname);
+    print VERSION "Creator = $ENV{LOGNAME}\n";
+    print VERSION "Date = $date\n";
+    print VERSION "Machine = $hostname\n";
+    print VERSION "
     print VERSION "\n";
     print VERSION "DEM File Name = $dem_file\n";
     print VERSION "DEM Label = $quad_name\n";
@@ -511,6 +515,9 @@ sub install {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.30  1998/10/22 22:00:10  curt
+# Modified the info that is put in the VERSION file.
+#
 # Revision 1.29  1998/10/02 21:41:56  curt
 # Added Makedir + fixes for win32.
 #
