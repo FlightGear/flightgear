@@ -118,8 +118,8 @@ float FGFactorGroup::TotalValue(void) {
   }
   totalsum *= FGCoefficient::TotalValue();
   SDtotal *= FGCoefficient::GetSD();
-  cout << "FGCoefficient::GetSD(): " << FGCoefficient::GetSD() << endl;
-  cout << "FGFactorGroup::SDtotal: " << SDtotal << endl;
+//   cout << "FGCoefficient::GetSD(): " << FGCoefficient::GetSD() << endl;
+//   cout << "FGFactorGroup::SDtotal: " << SDtotal << endl;
   return totalsum;
 }        
 

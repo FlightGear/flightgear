@@ -159,7 +159,7 @@ fgSetDefaults ()
     fgSetBool("/sim/hud/antialiased", false);
 
 				// Flight Model options
-    fgSetString("/sim/flight-model", "larcsim");
+    fgSetString("/sim/flight-model", "jsb");
     fgSetString("/sim/aircraft", "c172");
     fgSetInt("/sim/model-hz", NEW_DEFAULT_MODEL_HZ);
     fgSetInt("/sim/speed-up", 1);

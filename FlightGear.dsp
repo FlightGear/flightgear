@@ -5188,6 +5188,36 @@ SOURCE=.\src\Network\native.hxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Network\native_ctrls.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\native_ctrls.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Network\nmea.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -5264,6 +5294,21 @@ SOURCE=.\src\Network\pve.cxx
 # Begin Source File
 
 SOURCE=.\src\Network\pve.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\raw_ctrls.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
