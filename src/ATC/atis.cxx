@@ -180,6 +180,11 @@ void FGATIS::UpdateTransmission() {
 	}
 	
 	// Get the pressure / altimeter
+	double pressure_inches = fgGetDouble("/environment/pressure-sea-level-inhg");
+	transmission += " / Altimeter ";
+	sprintf(buf, "%.2f", pressure_inches);
+	tempstr1 = buf;
+	transmission += ConvertNumToSpokenDigits(tempstr1);
 	
 	// Based on the airport-id and wind get the active runway
 	//FGRunway *r;
