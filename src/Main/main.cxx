@@ -72,7 +72,6 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sky/sky.hxx>
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/timing/lowleveltime.h>
 
 #include <Include/general.hxx>
 
