@@ -56,6 +56,10 @@ void FGMagicCarpet::update( int multiloop ) {
 
     // speed and distance traveled
     double speed = globals->get_controls()->get_throttle( 0 ) * 2000; // meters/sec
+    if ( globals->get_controls()->get_brake( 0 ) ) {
+        speed = -speed;
+    }
+
     double dist = speed * time_step;
     double kts = speed * SG_METER_TO_NM * 3600.0;
     _set_V_equiv_kts( kts );
@@ -73,7 +77,7 @@ void FGMagicCarpet::update( int multiloop ) {
 
     // update (lon/lat) position
     double lat2, lon2, az2;
-    if ( speed > SG_EPSILON ) {
+    if ( fabs( speed ) > SG_EPSILON ) {
 	geo_direct_wgs_84 ( get_Altitude(),
 			    get_Latitude() * SGD_RADIANS_TO_DEGREES,
 			    get_Longitude() * SGD_RADIANS_TO_DEGREES,
