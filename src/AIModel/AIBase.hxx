@@ -64,7 +64,7 @@ typedef struct {
    double wind_from_north;    // in feet per second
    double cd;                 // coefficient of drag
    bool wind;                 // if true, model reacts to parent wind
-   double weight;             // in lbs
+   double mass;               // in slugs
 } FGAIModelEntity;
 
 

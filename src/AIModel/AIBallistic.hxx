@@ -1,4 +1,4 @@
-// FGAIBallistic - AIBase derived class creates an AI ballistic object
+// FGAIBallistic.hxx - AIBase derived class creates an AI ballistic object
 //
 // Written by David Culp, started November 2003.
 // - davidculp2@comcast.net
@@ -47,7 +47,7 @@ public:
     void setWind_from_north( double fps );
     void setWind( bool val );
     void setCd( double c );
-    void setWeight( double w );
+    void setMass( double m );
 
     double _getTime() const;
 
@@ -66,9 +66,10 @@ private:
     double wind_from_north; // fps
     bool wind;              // if true, local wind will be applied to object
     double Cd;              // drag coefficient
-    double weight;          // lbs
+    double mass;            // slugs
 
     void Run(double dt);
 };
 
 #endif  // _FG_AIBALLISTIC_HXX
+

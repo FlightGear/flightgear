@@ -116,8 +116,8 @@ void FGAIBallistic::setCd(double c) {
    Cd = c;
 }
 
-void FGAIBallistic::setWeight(double w) {
-   weight = w;
+void FGAIBallistic::setMass(double m) {
+   mass = m;
 }
 
 void FGAIBallistic::Run(double dt) {
@@ -129,14 +129,10 @@ void FGAIBallistic::Run(double dt) {
    double speed_east_deg_sec;
    double wind_speed_from_north_deg_sec;
    double wind_speed_from_east_deg_sec;
-   double mass;
-   
-   // the drag calculations below assume sea-level density,
-   // rho = 0.023780  slugs/ft3
-   // calculate mass
-   mass = weight * lbs_to_slugs;
    
    // drag = Cd * 0.5 * rho * speed * speed * drag_area;
+   // rho is adjusted for altitude in void FGAIBase::update,
+   // using Standard Atmosphere (sealevel temperature 15C)
    // acceleration = drag/mass;
    // adjust speed by drag
    speed -= (Cd * 0.5 * rho * speed * speed * drag_area/mass) * dt; 
@@ -189,3 +185,4 @@ double FGAIBallistic::_getTime() const {
 }
 
 // end AIBallistic
+

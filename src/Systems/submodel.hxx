@@ -29,6 +29,7 @@ public:
  typedef struct {
   SGPropertyNode* trigger;
   SGPropertyNode* prop;
+  SGPropertyNode* contents_node;
   
   string             name;
   string             model;
@@ -50,7 +51,7 @@ public:
   bool               first_time;
   double             cd;
   double             weight;
-//  double             mass;
+  double             contents;
  } submodel; 
 
  typedef struct {
@@ -134,5 +135,6 @@ private:
 };
 
 #endif // __SYSTEMS_SUBMODEL_HXX
+
 
 

@@ -81,7 +81,8 @@ FGAIScenario::FGAIScenario(string &filename)
      en->wind_from_north = entry_node->getDoubleValue("wind_from_north", 0);
      en->wind            = entry_node->getBoolValue("wind", false);
      en->cd              = entry_node->getDoubleValue  ("cd", 0.029); 
-     en->weight          = entry_node->getDoubleValue  ("weight", 0.030); 
+     en->mass            = entry_node->getDoubleValue  ("mass", 0.007); 
+
 
      en->fp             = NULL;
      if (en->flightplan != ""){
@@ -118,3 +119,4 @@ int FGAIScenario::nEntries( void )
 }
 
 // end scenario.cxx
+

@@ -25,6 +25,7 @@ SubmodelSystem::SubmodelSystem ()
   
   out[0] = out[1] = out[2] = 0;
   in[3] = out[3] = 1;
+  string contents_node;
 }
 
 SubmodelSystem::~SubmodelSystem ()
@@ -127,7 +128,7 @@ SubmodelSystem::release (submodel* sm, double dt)
   entity.wind_from_north = IC.wind_from_north;
   entity.wind = sm->wind;
   entity.cd = sm->cd;
-  entity.weight = sm->weight;
+  entity.mass = IC.mass;
   ai->createBallistic( &entity );
  
   if (sm->count > 0) (sm->count)--; 
@@ -138,6 +139,7 @@ SubmodelSystem::release (submodel* sm, double dt)
 void
 SubmodelSystem::load ()
 {
+
     int i;
     SGPropertyNode *path = fgGetNode("/sim/systems/submodels/path");
     SGPropertyNode root;
@@ -182,13 +184,18 @@ SubmodelSystem::load ()
      sm->first_time     = false;
      sm->cd             = entry_node->getDoubleValue("cd", 0.295);
      sm->weight         = entry_node->getDoubleValue("weight", 0.25);
+     sm->contents_node    = fgGetNode(entry_node->getStringValue("contents", "none"), true);
 
      sm->trigger->setBoolValue(false);
      sm->timer = sm->delay;
-
+ 
+     sm->contents = sm->contents_node->getDoubleValue();
+ 
      sm->prop = fgGetNode("/systems/submodels/submodel", i, true);
      sm->prop->tie("count", SGRawValuePointer<int>(&(sm->count)));
 
+//   sm->prop->tie("contents", SGRawValuePointer<double>(&(sm->contents)));
+//   sm->prop->tie("contents path", SGRawValuePointer<const char *>(&(sm->contents_node)));
      submodels.push_back( sm );
    }
 
@@ -201,7 +208,16 @@ void
 SubmodelSystem::transform( submodel* sm) 
 {
 
- // get initial conditions 
+// get initial conditions 
+ 
+// get the weight of the contents (lbs) and convert to mass (slugs)
+  sm->contents = sm->contents_node->getDoubleValue();
+  
+  IC.mass = (sm->weight + sm->contents) * lbs_to_slugs;;
+//  cout << IC.mass << endl;
+    
+// set contents to 0 in the parent
+   sm->contents_node->setDoubleValue(0); 
     
   IC.lat =        _user_lat_node->getDoubleValue();    
   IC.lon =        _user_lon_node->getDoubleValue();   
@@ -222,9 +238,8 @@ SubmodelSystem::transform( submodel* sm)
   in[0] = sm->x_offset;
   in[1] = sm->y_offset;
   in[2] = sm->z_offset; 
+ 
   
-  IC.mass = sm->weight * lbs_to_slugs;
-   
 // pre-process the trig functions
 
     cosRx = cos(-IC.roll * SG_DEGREES_TO_RADIANS);
@@ -328,6 +343,7 @@ SubmodelSystem::updatelat(double lat)
 }
 
 // end of submodel.cxx
+
 
 
 
