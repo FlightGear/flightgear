@@ -79,7 +79,6 @@ SUBDIRS = Aircraft \
 	Controls \
 	Flight \
 	Joystick \
-	Linux \
 	Math \
 	Scenery \
 	Time \
@@ -90,7 +89,7 @@ SUBDIRS = Aircraft \
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../Src/Include/config.h
 CONFIG_CLEAN_FILES = 
-DIST_COMMON =  README COPYING Makefile.am Makefile.in
+DIST_COMMON =  README Makefile.am Makefile.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
