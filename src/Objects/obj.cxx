@@ -1390,7 +1390,6 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     int_list tex_index;
 
     group_list::size_type i;
-    bool is_lighting = false;
 
     // generate points
     string_list const& pt_materials = obj.get_pt_materials();
@@ -1403,6 +1402,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
             sgSetVec3( up, center->x(), center->y(), center->z() );
             ssgBranch *branch = gen_directional_lights( nodes, normals,
                                                         pts_v[i], pts_n[i],
+                                                        pt_materials[i],
                                                         up );
             float ranges[] = { 0, 12000 };
             branch->setCallback( SSG_CALLBACK_PREDRAW, runway_lights_predraw );
@@ -1426,12 +1426,12 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     ssgBranch * random_object_branch = 0;
     if (use_random_objects) {
         float ranges[] = { 0, 20000 }; // Maximum 20km range for random objects
-      ssgRangeSelector * object_lod = new ssgRangeSelector;
-      object_lod->setRanges(ranges, 2);
-      object_lod->setName("random-models");
-      geometry->addKid(object_lod);
-      random_object_branch = new ssgBranch;
-      object_lod->addKid(random_object_branch);
+        ssgRangeSelector * object_lod = new ssgRangeSelector;
+        object_lod->setRanges(ranges, 2);
+        object_lod->setName("random-models");
+        geometry->addKid(object_lod);
+        random_object_branch = new ssgBranch;
+        object_lod->addKid(random_object_branch);
     }
 
     // generate triangles

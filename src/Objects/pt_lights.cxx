@@ -30,7 +30,8 @@
 
 
 // Generate a directional light
-ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up ) {
+ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up, 
+                                const string &material ) {
 
     // calculate a vector perpendicular to dir and up
     sgVec3 perp;
@@ -96,7 +97,7 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up ) {
     ssgLeaf *leaf = 
         new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
 
-    FGNewMat *newmat = material_lib.find( "RUNWAY_LIGHTS" );
+    FGNewMat *newmat = material_lib.find( material );
     // FGNewMat *newmat = material_lib.find( "IrrCropPastureCover" );
     leaf->setState( newmat->get_state() );
 
@@ -136,6 +137,7 @@ ssgBranch *gen_directional_lights( const point_list &nodes,
                                    const point_list &normals,
                                    const int_list &pnt_i,
                                    const int_list &nml_i,
+                                   const string &material,
                                    sgVec3 up )
 {
     ssgBranch *result = new ssgBranch;
@@ -150,7 +152,7 @@ ssgBranch *gen_directional_lights( const point_list &nodes,
                    nodes[pnt_i[i]][2] );
         sgSetVec3( normal, normals[nml_i[i]][0], normals[nml_i[i]][1],
                    normals[nml_i[i]][2] );
-        ssgLeaf *light = gen_directional_light( pt, normal, nup );
+        ssgLeaf *light = gen_directional_light( pt, normal, nup, material );
         result->addKid( light );
         // light = gen_normal_line( pt, normal, nup );
         // result->addKid( light );

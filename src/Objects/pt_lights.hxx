@@ -103,6 +103,7 @@ ssgBranch *gen_directional_lights( const point_list &nodes,
                                    const point_list &normals,
                                    const int_list &pnt_i,
                                    const int_list &nml_i,
+                                   const string &material,
                                    sgVec3 up );
 
 

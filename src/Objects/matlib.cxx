@@ -106,8 +106,9 @@ static int gen_test_light_map() {
 }
 
 
-static int gen_light_map() {
-    static const int env_tex_res = 32;
+// generate the directional white light environment texture map
+static int gen_white_light_map() {
+    const int env_tex_res = 32;
     int half_res = env_tex_res / 2;
     unsigned char env_map[env_tex_res][env_tex_res][4];
     GLuint tex_name;
@@ -123,6 +124,49 @@ static int gen_light_map() {
             env_map[i][j][0] = 255;
             env_map[i][j][1] = 255;
             env_map[i][j][2] = 255;
+            env_map[i][j][3] = (int)(bright * 255);
+        }
+    }
+
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glGenTextures( 1, &tex_name );
+    glBindTexture( GL_TEXTURE_2D, tex_name );
+  
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, env_tex_res, env_tex_res, 0,
+                  GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+
+    return tex_name;
+}
+
+
+// generate the directional vasi light environment texture map
+static int gen_vasi_light_map() {
+    const int env_tex_res = 256;
+    int half_res = env_tex_res / 2;
+    unsigned char env_map[env_tex_res][env_tex_res][4];
+    GLuint tex_name;
+
+    for ( int i = 0; i < env_tex_res; ++i ) {
+        for ( int j = 0; j < env_tex_res; ++j ) {
+            double x = (i - half_res) / (double)half_res;
+            double y = (j - half_res) / (double)half_res;
+            double dist = sqrt(x*x + y*y);
+            if ( dist > 1.0 ) { dist = 1.0; }
+            double bright = cos( dist * SGD_PI_2 );
+
+            // top half white, bottom half red
+            env_map[i][j][0] = 255;
+            if ( i < half_res ) {
+                env_map[i][j][1] = 255;
+                env_map[i][j][2] = 255;
+            } else {
+                env_map[i][j][1] = 0;
+                env_map[i][j][2] = 0;
+            }
             env_map[i][j][3] = (int)(bright * 255);
         }
     }
@@ -191,23 +235,40 @@ bool FGMaterialLib::load( const string& mpath ) {
     gnd_lights->disable( GL_LIGHTING );
     matlib["GROUND_LIGHTS"] = new FGNewMat(gnd_lights);
 
-    // hard coded runway light state
-    ssgSimpleState *rwy_lights = new ssgSimpleState();
-    rwy_lights->ref();
+    // hard coded runway white light state
+    ssgSimpleState *rwy_white_lights = new ssgSimpleState();
+    rwy_white_lights->ref();
+    rwy_white_lights->disable( GL_LIGHTING );
+    rwy_white_lights->enable ( GL_CULL_FACE ) ;
+    rwy_white_lights->enable( GL_TEXTURE_2D );
+    rwy_white_lights->enable( GL_BLEND );
+    rwy_white_lights->enable( GL_ALPHA_TEST );
+    rwy_white_lights->enable( GL_COLOR_MATERIAL );
+    rwy_white_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_white_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_white_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_white_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_white_lights->setTexture( gen_white_light_map() );
+    matlib["RWY_WHITE_LIGHTS"] = new FGNewMat(rwy_white_lights);
+    // For backwards compatibility ... remove someday
+    matlib["RUNWAY_LIGHTS"] = new FGNewMat(rwy_white_lights);
+    // end of backwards compatitibilty
 
-    rwy_lights->disable( GL_LIGHTING );
-    rwy_lights->enable ( GL_CULL_FACE ) ;
-    rwy_lights->enable( GL_TEXTURE_2D );
-    rwy_lights->enable( GL_BLEND );
-    rwy_lights->enable( GL_ALPHA_TEST );
-    rwy_lights->enable( GL_COLOR_MATERIAL );
-    rwy_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
-    rwy_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
-    rwy_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
-    rwy_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
-
-    rwy_lights->setTexture( gen_light_map() );
-    matlib["RUNWAY_LIGHTS"] = new FGNewMat(rwy_lights);
+    // hard coded runway vasi light state
+    ssgSimpleState *rwy_vasi_lights = new ssgSimpleState();
+    rwy_vasi_lights->ref();
+    rwy_vasi_lights->disable( GL_LIGHTING );
+    rwy_vasi_lights->enable ( GL_CULL_FACE ) ;
+    rwy_vasi_lights->enable( GL_TEXTURE_2D );
+    rwy_vasi_lights->enable( GL_BLEND );
+    rwy_vasi_lights->enable( GL_ALPHA_TEST );
+    rwy_vasi_lights->enable( GL_COLOR_MATERIAL );
+    rwy_vasi_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    rwy_vasi_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    rwy_vasi_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    rwy_vasi_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    rwy_vasi_lights->setTexture( gen_vasi_light_map() );
+    matlib["RWY_VASI_LIGHTS"] = new FGNewMat(rwy_vasi_lights);
 
     return true;
 }

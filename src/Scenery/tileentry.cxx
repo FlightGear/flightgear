@@ -807,32 +807,17 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 
     SetOffset( p );
 
-// #define USE_UP_AND_COMING_PLIB_FEATURE
-#ifdef USE_UP_AND_COMING_PLIB_FEATURE
     terra_range->setRange( 0, SG_ZERO );
     terra_range->setRange( 1, vis + bounding_radius );
     if ( gnd_lights_range ) {
-    gnd_lights_range->setRange( 0, SG_ZERO );
-    gnd_lights_range->setRange( 1, vis * 1.5 + bounding_radius );
+        gnd_lights_range->setRange( 0, SG_ZERO );
+        gnd_lights_range->setRange( 1, vis * 1.5 + bounding_radius );
     }
     if ( rwy_lights_range ) {
-      rwy_lights_range->setRange( 0, SG_ZERO );
-      rwy_lights_range->setRange( 1, vis * 1.5 + bounding_radius );
+        rwy_lights_range->setRange( 0, SG_ZERO );
+        rwy_lights_range->setRange( 1, vis * 1.5 + bounding_radius );
     }
-#else
-    float ranges[2];
-    ranges[0] = SG_ZERO;
-    ranges[1] = vis + bounding_radius;
-    terra_range->setRanges( ranges, 2 );
-    if ( gnd_lights_range ) {
-        ranges[1] = vis * 1.5 + bounding_radius;
-        gnd_lights_range->setRanges( ranges, 2 );
-    }
-    if ( rwy_lights_range ) {
-        ranges[1] = vis * 1.5 + bounding_radius;
-        rwy_lights_range->setRanges( ranges, 2 );
-    }
-#endif
+
     sgVec3 sgTrans;
     sgSetVec3( sgTrans, offset.x(), offset.y(), offset.z() );
     terra_transform->setTransform( sgTrans );
@@ -1105,7 +1090,7 @@ bool FGTileEntry::obj_load( const std::string& path,
         }
     }
 
-    return (NULL != geometry);
+    return (geometry != NULL);
 }
 
 
@@ -1170,7 +1155,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
                 }
             } else if ( token == "OBJECT" ) {
                 in >> name >> ::skipws;
-                SG_LOG( SG_TERRAIN, SG_DEBUG, "token = " << token
+                SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
                         << " name = " << name );
 
                 SGPath custom_path = tile_path;
