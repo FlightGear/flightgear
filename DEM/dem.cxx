@@ -774,8 +774,8 @@ void fgDEM::outputmesh_output_nodes( char *fg_root, fgBUCKET *p ) {
 	    printf("(extra) %d %.2f %.2f %.2f\n", 
 		    i, exnodes[i][0], exnodes[i][1], exnodes[i][2]);
 	}
+	fclose(fd);
     }
-    fclose(fd);
 
     printf("Creating node file:  %s\n", file);
     fd = fopen(file, "w");
@@ -825,6 +825,10 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.13  1998/09/09 16:24:04  curt
+// Fixed a bug in the handling of exclude files which was causing
+// a crash by calling fclose() on an invalid file handle.
+//
 // Revision 1.12  1998/08/24 20:03:31  curt
 // Eliminated a possible memory overrun error.
 // Use the proper free() rather than the incorrect delete().
