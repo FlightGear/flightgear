@@ -1,4 +1,4 @@
-SUBDIRS = filtersjb tests
+SUBDIRS = filtersjb
 
 EXTRA_DIST = Makefile.solo
 
