@@ -200,11 +200,13 @@ void fgBuildRenderStates( void ) {
     default_state = new ssgSimpleState;
     default_state->disable( GL_TEXTURE_2D );
     default_state->enable( GL_CULL_FACE );
-    default_state->disable( GL_COLOR_MATERIAL );
+    default_state->enable( GL_COLOR_MATERIAL );
+    default_state->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
+    default_state->setMaterial( GL_EMISSION, 0, 0, 0, 1 );
+    default_state->setMaterial( GL_SPECULAR, 0, 0, 0, 1 );
     default_state->disable( GL_BLEND );
     default_state->disable( GL_ALPHA_TEST );
     default_state->disable( GL_LIGHTING );
-    default_state->setMaterial( GL_AMBIENT_AND_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
 
     hud_and_panel = new ssgSimpleState;
     hud_and_panel->disable( GL_CULL_FACE );
@@ -620,12 +622,14 @@ void fgRenderFrame( void ) {
 	global_tile_mgr.prep_ssg_nodes();
 
 	// force the default state so ssg can get back on track if
-	// we've changed things elsewhere
-	FGMaterialSlot m_slot;
-	FGMaterialSlot *m_ptr = &m_slot;
-	if ( material_mgr.find( "Default", m_ptr ) ) {
-	    m_ptr->get_state()->force();
-	}
+	// we've changed things elsewhere (this is now handled
+	// differently)
+	// 
+	// FGMaterialSlot m_slot;
+	// FGMaterialSlot *m_ptr = &m_slot;
+	// if ( material_mgr.find( "Default", m_ptr ) ) {
+	//    m_ptr->get_state()->force();
+	// }
 
 	// draw the ssg scene
 	ssgCullAndDraw( scene );
