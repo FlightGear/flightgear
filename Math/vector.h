@@ -24,7 +24,7 @@
  **************************************************************************/
 
 
-#include "../Math/mat3.h"
+#include <Math/mat3.h>
 
 
 /* Map a vector onto the plane specified by normal */
@@ -33,7 +33,11 @@ void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
 
 
 /* $Log$
-/* Revision 1.1  1997/12/22 04:13:18  curt
-/* Initial revision.
+/* Revision 1.2  1998/01/19 19:27:14  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.1  1997/12/22 04:13:18  curt
+ * Initial revision.
+ *
  */

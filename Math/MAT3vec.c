@@ -19,7 +19,7 @@
  * The two vectors involved may be the same.
  */
 
-#include "mat3.h"
+#include <Math/mat3.h>
 
 #ifndef TRUE
 #  define TRUE 1

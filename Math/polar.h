@@ -28,7 +28,7 @@
 #define POLAR_H
 
 
-#include "../Include/types.h"
+#include <Include/types.h>
 
 
 /* Convert a polar coordinate to a cartesian coordinate.  Lon and Lat
@@ -63,10 +63,14 @@ struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p);
 
 
 /* $Log$
-/* Revision 1.4  1997/12/15 23:54:55  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.5  1998/01/19 19:27:13  curt
+/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+/* This should simplify things tremendously.
 /*
+ * Revision 1.4  1997/12/15 23:54:55  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.3  1997/07/31 22:52:28  curt
  * Working on redoing internal coordinate systems & scenery transformations.
  *

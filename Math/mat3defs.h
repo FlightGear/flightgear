@@ -1,8 +1,8 @@
 /* Copyright 1988, Brown Computer Graphics Group.  All Rights Reserved. */
 
 #include <stdio.h>
-/* #include "mat3err.h" */
-#include "mat3.h"
+/* #include <Math/mat3err.h> */
+#include <Math/mat3.h>
 
 /* -----------------------------  Constants  ------------------------------ */
 

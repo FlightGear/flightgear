@@ -4,7 +4,7 @@
  * This file contains routines that operate solely on matrices.
  * -------------------------------------------------------------------------*/
 
-#include "mat3defs.h"
+#include <Math/mat3defs.h>
 
 /* --------------------------  Static Routines	---------------------------- */
 

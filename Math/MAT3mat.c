@@ -6,7 +6,7 @@
  * -------------------------------------------------------------------------*/
 
 #include <string.h>
-#include "mat3defs.h"
+#include <Math/mat3defs.h>
 
 #ifdef WIN32
 #include <memory.h>      /* required for memset() and memcpy() */
