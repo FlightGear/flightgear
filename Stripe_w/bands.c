@@ -93,7 +93,7 @@ void get_time()
 
 int main (int argc,char *argv[])
 {
-  char	*fname,*all,buff[255], *ptr, *ptr2;
+  char	*fname, *oname, *all,buff[255], *ptr, *ptr2;
 	FILE	*file, *bands;
 	int face_id=0;
   int vert_count=0;
@@ -125,27 +125,29 @@ int main (int argc,char *argv[])
 
   get_time();
 
-  /*   File that will contain the triangle strip data */
-  bands = fopen("stripe.objf","w");
-
   /*
-	Scan the file once to find out the number of vertices,
-	vertice normals, and faces so we can set up some memory
-	structures 
-	*/
-	/* Interpret the options specified */
-	norm_difference = get_options(argc,argv,&f,&t,&tr,&g);
+    Scan the file once to find out the number of vertices,
+    vertice normals, and faces so we can set up some memory
+    structures 
+    */
+  /* Interpret the options specified */
+  norm_difference = get_options(argc,argv,&f,&t,&tr,&g);
   if (f == BINARY)
-    file_open = "rb";
+      file_open = "rb";
   else
-    file_open = "r";
-
-	fname = argv[argc-1];
-
-  printf ("File: %s\n",fname);
-	printf ("Scanning...%s ",file_open);
+      file_open = "r";
+  
+  fname = argv[argc-2];
+  oname = argv[argc-1];
+  
+  printf ("Input file: %s  Output file: %s\n", fname, oname);
+  printf ("Scanning...%s ",file_open);
 
 	    
+  /*   File that will contain the triangle strip data */
+  
+  bands = fopen(oname, "w");
+
   /*   File can be in binary for faster reading */
   if (file = fopen (fname,file_open))
 	{

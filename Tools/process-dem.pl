@@ -30,7 +30,7 @@
 $scenery_format_version = "0.1";
 
 $max_area = 10000;            # maximum triangle area
-$remove_tmps = 0;
+$remove_tmps = 1;
 
 $| = 1;                         # flush buffers after every write
 
@@ -360,16 +360,18 @@ sub tri2obj {
 #     Strip the file.1.obj's.  Note, strips doesn't handle the minimal
 #     case of striping a square correctly.
 #
-# 7.  cp bands.d file.2.obj
+# 7.  cp stripe.objf file.2.obj
 #
-#     strips produces a file called "bands.d" ... copy this to file.2.obj
+#     strips produces a file called "stripe.objf" ... copy this to file.2.obj
 
 sub strips {
     @FILES = `ls $subdir`;
     foreach $file ( @FILES ) {
 	chop($file);
 	if ( $file =~ m/\.1\.obj$/ ) {
-	    $command = "Stripe_w/strips $subdir/$file";
+	    $newfile = $file;
+	    $newfile =~ s/\.1\.obj$//;
+	    $command = "Stripe_w/strips $subdir/$file $subdir/$newfile.2.obj";
 	    $command = fix_command($command);
 	    print "Running '$command'\n";
     	    # $input = <STDIN>;
@@ -380,17 +382,17 @@ sub strips {
 	    close(OUT);
 	    
 	    # copy to destination file
-	    $newfile = $file;
-	    $newfile =~ s/\.1\.obj$//;
-	    print "Copying to $subdir/$newfile.2.obj\n";
+	    # $newfile = $file;
+	    # $newfile =~ s/\.1\.obj$//;
+	    # print "Copying to $subdir/$newfile.2.obj\n";
 	    # open(IN, "<bands.d");
-	    open(IN, "<stripe.objf");
-	    open(OUT, ">$subdir/$newfile.2.obj");
-	    while ( <IN> ) {
-		print OUT $_;
-	    }
-	    close(IN);
-	    close(OUT);
+	    # open(IN, "<stripe.objf");
+	    # open(OUT, ">$subdir/$newfile.2.obj");
+	    # while ( <IN> ) {
+		# print OUT $_;
+	    # }
+	    # close(IN);
+	    # close(OUT);
 	    
 	    if ( $remove_tmps ) {
 		unlink("$subdir/$file");
@@ -487,6 +489,10 @@ sub install {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.28  1998/09/17 18:40:15  curt
+# Changes to allow multiple copies of the scenery processing tools
+# to be run concurrently.
+#
 # Revision 1.27  1998/09/09 20:58:35  curt
 # Fixes and tweaks to handle area cutouts for airports.
 #

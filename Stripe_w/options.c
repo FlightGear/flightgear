@@ -84,7 +84,7 @@ double get_options(int argc, char **argv, int *f, int *t, int *tr, int *group)
      /*      User has the wrong number of options */
 	if ((argc > 5) || (argc < 2))
 	{
-		printf("Usage: bands -[file_option][ties_option][triangulation_option][normal_difference] file_name\n");
+		printf("Usage: bands -[file_option][ties_option][triangulation_option][normal_difference] in_file_name out_file_name\n");
 		exit(0);
 	}
 	
