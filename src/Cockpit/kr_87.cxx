@@ -75,8 +75,14 @@ FGKR_87::FGKR_87() :
     alt_node(fgGetNode("/position/altitude-ft", true)),
     need_update(true),
     valid(false),
-    freq(0.0),
-    stby_freq(0.0),
+    inrange(false),
+    goal_needle_deg(0.0),
+    et_flash_time(0.0),
+    ant_mode(0),
+    stby_mode(0),
+    timer_mode(0),
+    count_mode(0),
+    rotation(0),
     on_off_vol_btn(0.5),
     adf_btn(true),
     bfo_btn(false),
@@ -86,15 +92,12 @@ FGKR_87::FGKR_87() :
     last_flt_et_btn(false),
     set_rst_btn(false),
     last_set_rst_btn(false),
-    goal_needle_deg(0.0),
+    freq(0.0),
+    stby_freq(0.0),
     needle_deg(0.0),
     flight_timer(0.0),
     elapsed_timer(0.0),
-    tmp_timer(0.0),
-    ant_mode(0),
-    stby_mode(0),
-    timer_mode(0),
-    count_mode(0)
+    tmp_timer(0.0)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;
@@ -130,83 +133,114 @@ FGKR_87::init ()
 void
 FGKR_87::bind ()
 {
-				// User inputs
-    fgTie("/radios/kr-87/frequencies/selected-khz", this,
-	  &FGKR_87::get_freq, &FGKR_87::set_freq);
-    fgSetArchivable("/radios/kr-87/frequencies/selected-khz");
-    fgTie("/radios/kr-87/frequencies/standby-khz", this,
-	  &FGKR_87::get_stby_freq, &FGKR_87::set_stby_freq);
-    fgSetArchivable("/radios/kr-87/frequencies/standby-khz");
-    fgTie("/radios/kr-87/rotation-deg", this,
-	  &FGKR_87::get_rotation, &FGKR_87::set_rotation);
-    fgSetArchivable("/radios/kr-87/rotation-deg");
-    fgTie("/radios/kr-87/needle-deg", this,
-	  &FGKR_87::get_needle_deg);
-    fgTie("/radios/kr-87/on-off-volume", this,
-	  &FGKR_87::get_on_off_vol_btn,
-	  &FGKR_87::set_on_off_vol_btn);
-    fgSetArchivable("/radios/kr-87/on-off-volume");
-    fgTie("/radios/kr-87/adf-btn", this,
-	  &FGKR_87::get_adf_btn,
-	  &FGKR_87::set_adf_btn);
-    fgTie("/radios/kr-87/bfo-btn", this,
-	  &FGKR_87::get_bfo_btn,
-	  &FGKR_87::set_bfo_btn);
-    fgTie("/radios/kr-87/frq-btn", this,
-	  &FGKR_87::get_frq_btn,
-	  &FGKR_87::set_frq_btn);
-    fgTie("/radios/kr-87/flt-et-btn", this,
-	  &FGKR_87::get_flt_et_btn,
-	  &FGKR_87::set_flt_et_btn);
-    fgTie("/radios/kr-87/set-rst-btn", this,
-	  &FGKR_87::get_set_rst_btn,
-	  &FGKR_87::set_set_rst_btn);
-    fgTie("/radios/kr-87/stby-mode", this,
-	  &FGKR_87::get_stby_mode);
-    fgTie("/radios/kr-87/timer-mode", this,
-	  &FGKR_87::get_timer_mode);
-    fgTie("/radios/kr-87/count-mode", this,
-	  &FGKR_87::get_count_mode);
-    fgTie("/radios/kr-87/ident", this,
+    // internal values
+    fgTie("/radios/kr-87/internal/ident", this,
 	  &FGKR_87::get_ident_btn,
 	  &FGKR_87::set_ident_btn);
-    fgSetArchivable("/radios/kr-87/ident");
+    fgSetArchivable("/radios/kr-87/internal/ident");
+    fgTie("/radios/kr-87/internal/inrange", this, &FGKR_87::get_inrange);
+    fgTie("/radios/kr-87/internal/heading", this, &FGKR_87::get_heading);
 
-                                // calculated values
-    fgTie("/radios/kr-87/inrange", this, &FGKR_87::get_inrange);
-    fgTie("/radios/kr-87/heading", this, &FGKR_87::get_heading);
-    fgTie("/radios/kr-87/flight-timer", this, &FGKR_87::get_flight_timer);
-    fgTie("/radios/kr-87/elapsed-timer", this,
+    // modes
+    fgTie("/radios/kr-87/modes/ant", this,
+	  &FGKR_87::get_ant_mode);
+    fgTie("/radios/kr-87/modes/stby", this,
+	  &FGKR_87::get_stby_mode);
+    fgTie("/radios/kr-87/modes/timer", this,
+	  &FGKR_87::get_timer_mode);
+    fgTie("/radios/kr-87/modes/count", this,
+	  &FGKR_87::get_count_mode);
+
+    // input and buttons
+    fgTie("/radios/kr-87/inputs/rotation-deg", this,
+	  &FGKR_87::get_rotation, &FGKR_87::set_rotation);
+    fgSetArchivable("/radios/kr-87/inputs/rotation-deg");
+    fgTie("/radios/kr-87/inputs/on-off-volume", this,
+	  &FGKR_87::get_on_off_vol_btn,
+	  &FGKR_87::set_on_off_vol_btn);
+    fgSetArchivable("/radios/kr-87/inputs/on-off-volume");
+    fgTie("/radios/kr-87/inputs/adf-btn", this,
+	  &FGKR_87::get_adf_btn,
+	  &FGKR_87::set_adf_btn);
+    fgTie("/radios/kr-87/inputs/bfo-btn", this,
+	  &FGKR_87::get_bfo_btn,
+	  &FGKR_87::set_bfo_btn);
+    fgTie("/radios/kr-87/inputs/frq-btn", this,
+	  &FGKR_87::get_frq_btn,
+	  &FGKR_87::set_frq_btn);
+    fgTie("/radios/kr-87/inputs/flt-et-btn", this,
+	  &FGKR_87::get_flt_et_btn,
+	  &FGKR_87::set_flt_et_btn);
+    fgTie("/radios/kr-87/inputs/set-rst-btn", this,
+	  &FGKR_87::get_set_rst_btn,
+	  &FGKR_87::set_set_rst_btn);
+
+    // outputs
+    fgTie("/radios/kr-87/outputs/selected-khz", this,
+	  &FGKR_87::get_freq, &FGKR_87::set_freq);
+    fgSetArchivable("/radios/kr-87/outputs/selected-khz");
+    fgTie("/radios/kr-87/outputs/standby-khz", this,
+	  &FGKR_87::get_stby_freq, &FGKR_87::set_stby_freq);
+    fgSetArchivable("/radios/kr-87/outputs/standby-khz");
+    fgTie("/radios/kr-87/outputs/needle-deg", this,
+	  &FGKR_87::get_needle_deg);
+    fgTie("/radios/kr-87/outputs/flight-timer", this, &FGKR_87::get_flight_timer);
+    fgTie("/radios/kr-87/outputs/elapsed-timer", this,
           &FGKR_87::get_elapsed_timer,
           &FGKR_87::set_elapsed_timer);
+
+    // annunciators
+    fgTie("/radios/kr-87/annunciators/ant", this, &FGKR_87::get_ant_ann );
+    fgTie("/radios/kr-87/annunciators/adf", this, &FGKR_87::get_adf_ann );
+    fgTie("/radios/kr-87/annunciators/bfo", this, &FGKR_87::get_bfo_ann );
+    fgTie("/radios/kr-87/annunciators/frq", this, &FGKR_87::get_frq_ann );
+    fgTie("/radios/kr-87/annunciators/flt", this, &FGKR_87::get_flt_ann );
+    fgTie("/radios/kr-87/annunciators/et", this, &FGKR_87::get_et_ann );
 }
 
 void
 FGKR_87::unbind ()
 {
-    fgUntie("/radios/kr-87/frequencies/selected-khz");
-    fgUntie("/radios/kr-87/frequencies/standby-khz");
-    fgUntie("/radios/kr-87/rotation-deg");
-    fgUntie("/radios/kr-87/needle-deg");
-    fgUntie("/radios/kr-87/on-off-volume");
-    fgUntie("/radios/kr-87/adf-btn");
-    fgUntie("/radios/kr-87/bfo-btn");
-    fgUntie("/radios/kr-87/frq-btn");
-    fgUntie("/radios/kr-87/flt-et-btn");
-    fgUntie("/radios/kr-87/set-rst-btn");
-    fgUntie("/radios/kr-87/timer-mode");
-    fgUntie("/radios/kr-87/count-mode");
-    fgUntie("/radios/kr-87/ident");
-    fgUntie("/radios/kr-87/inrange");
-    fgUntie("/radios/kr-87/heading");
-    fgUntie("/radios/kr-87/flight-timer");
-    fgUntie("/radios/kr-87/elapsed-timer");
+    // internal values
+    fgUntie("/radios/kr-87/internal/ident");
+    fgUntie("/radios/kr-87/internal/inrange");
+    fgUntie("/radios/kr-87/internal/heading");
+
+    // modes
+    fgUntie("/radios/kr-87/modes/ant");
+    fgUntie("/radios/kr-87/modes/stby");
+    fgUntie("/radios/kr-87/modes/timer");
+    fgUntie("/radios/kr-87/modes/count");
+
+    // input and buttons
+    fgUntie("/radios/kr-87/inputs/rotation-deg");
+    fgUntie("/radios/kr-87/inputs/on-off-volume");
+    fgUntie("/radios/kr-87/inputs/adf-btn");
+    fgUntie("/radios/kr-87/inputs/bfo-btn");
+    fgUntie("/radios/kr-87/inputs/frq-btn");
+    fgUntie("/radios/kr-87/inputs/flt-et-btn");
+    fgUntie("/radios/kr-87/inputs/set-rst-btn");
+
+    // outputs
+    fgUntie("/radios/kr-87/outputs/selected-khz");
+    fgUntie("/radios/kr-87/outputs/standby-khz");
+    fgUntie("/radios/kr-87/outputs/needle-deg");
+    fgUntie("/radios/kr-87/outputs/flight-timer");
+    fgUntie("/radios/kr-87/outputs/elapsed-timer");
+
+    // annunciators
+    fgUntie("/radios/kr-87/annunciators/ant");
+    fgUntie("/radios/kr-87/annunciators/adf");
+    fgUntie("/radios/kr-87/annunciators/bfo");
+    fgUntie("/radios/kr-87/annunciators/frq");
+    fgUntie("/radios/kr-87/annunciators/flt");
+    fgUntie("/radios/kr-87/annunciators/et");
 }
 
 
 // Update the various nav values based on position and valid tuned in navs
 void 
-FGKR_87::update(double dt) 
+FGKR_87::update( double dt ) 
 {
     double acft_lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double acft_lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
@@ -296,6 +330,25 @@ FGKR_87::update(double dt)
             }
         }
 
+        // annunciators
+        ant_ann = adf_btn;
+        adf_ann = !adf_btn;
+        bfo_ann = bfo_btn;
+        frq_ann = !stby_mode;
+        flt_ann = stby_mode && !timer_mode;
+        if ( count_mode < 2 ) {
+            et_ann = stby_mode && timer_mode;
+        } else {
+            et_flash_time += dt;
+            if ( et_ann && et_flash_time > 0.5 ) {
+                et_ann = false;
+                et_flash_time -= 0.5;
+            } else if ( !et_ann && et_flash_time > 0.2 ) {
+                et_ann = true;
+                et_flash_time -= 0.2;
+            }
+        }
+
         if ( valid ) {
             // staightline distance
             station = Point3D( x, y, z );
@@ -334,9 +387,16 @@ FGKR_87::update(double dt)
             goal_needle_deg = 90.0;
         }
     } else {
+        // unit turned off
         goal_needle_deg = 0.0;
         flight_timer = 0.0;
         elapsed_timer = 0.0;
+        ant_ann = false;
+        adf_ann = false;
+        bfo_ann = false;
+        frq_ann = false;
+        flt_ann = false;
+        et_ann = false;
     }
 
     

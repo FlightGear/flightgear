@@ -53,13 +53,11 @@ class FGKR_87 : public FGSubsystem
 
     bool need_update;
 
+    // internal values
     string ident;
     string trans_ident;
     bool valid;
     bool inrange;
-    double freq;
-    double stby_freq;
-    double rotation;
     double stn_lon;
     double stn_lat;
     double stn_elev;
@@ -70,7 +68,19 @@ class FGKR_87 : public FGSubsystem
     double x;
     double y;
     double z;
+    double goal_needle_deg;
+    double et_flash_time;
 
+    // modes
+    int ant_mode;               // 0 = ADF mode (needle active), 1 = ANT mode
+                                // (needle turned to 90, improved audio rcpt)
+    int stby_mode;              // 0 = show stby freq, 1 = show timer
+    int timer_mode;             // 0 = flt, 1 = et
+    int count_mode;             // 0 = count up, 1 = count down, 2 = set et
+                                // count down
+
+    // input and buttons
+    double rotation;            // compass faceplace rotation
     double on_off_vol_btn;
     bool adf_btn;               // 0 = normal, 1 = depressed
     bool bfo_btn;               // 0 = normal, 1 = depressed
@@ -79,21 +89,24 @@ class FGKR_87 : public FGSubsystem
     bool flt_et_btn;            // 0 = normal, 1 = depressed
     bool last_flt_et_btn;
     bool set_rst_btn;           // 0 = normal, 1 = depressed
-    bool last_set_rst_btn;           // 0 = normal, 1 = depressed
+    bool last_set_rst_btn;      // 0 = normal, 1 = depressed
     bool ident_btn;             // ???
 
-    double goal_needle_deg;
+    // outputs
+    double freq;
+    double stby_freq;
     double needle_deg;
     double flight_timer;
     double elapsed_timer;
     double tmp_timer;
 
-    int ant_mode;               // 0 = ADF mode (needle active), 1 = ANT mode
-                                // (needle turned to 90, improved audio rcpt)
-    int stby_mode;              // 0 = show stby freq, 1 = show timer
-    int timer_mode;             // 0 = flt, 1 = et
-    int count_mode;             // 0 = count up, 1 = count down, 2 = set et
-                                // count down
+    // annunciators
+    bool ant_ann;
+    bool adf_ann;
+    bool bfo_ann;
+    bool frq_ann;
+    bool flt_ann;
+    bool et_ann;
 
 public:
 
@@ -108,50 +121,60 @@ public:
     // Update nav/adf radios based on current postition
     void search ();
 
-    // ADF Setters
-    inline void set_freq( double f ) {
-	freq = f; need_update = true;
-    }
-    inline void set_stby_freq( double freq ) { stby_freq = freq; }
+    // internal values
+    inline bool get_inrange() const { return inrange; }
+    inline double get_stn_lon() const { return stn_lon; }
+    inline double get_stn_lat() const { return stn_lat; }
+    inline double get_heading() const { return heading; }
+
+    // modes
+    inline int get_ant_mode() const { return ant_mode; }
+    inline int get_stby_mode() const { return stby_mode; }
+    inline int get_timer_mode() const { return timer_mode; }
+    inline int get_count_mode() const { return count_mode; }
+
+    // input and buttons
+    inline double get_rotation () const { return rotation; }
     inline void set_rotation( double rot ) { rotation = rot; }
+    inline double get_on_off_vol_btn() const { return on_off_vol_btn; }
     inline void set_on_off_vol_btn( double val ) {
 	if ( val < 0.0 ) val = 0.0;
 	if ( val > 1.0 ) val = 1.0;
 	on_off_vol_btn = val;
     }
-    inline void set_ident_btn( bool val ) { ident_btn = val; }
+    inline bool get_adf_btn() const { return adf_btn; }
     inline void set_adf_btn( bool val ) { adf_btn = val; }
+    inline bool get_bfo_btn() const { return bfo_btn; }
     inline void set_bfo_btn( bool val ) { bfo_btn = val; }
+    inline bool get_frq_btn() const { return frq_btn; }
     inline void set_frq_btn( bool val ) { frq_btn = val; }
+    inline bool get_flt_et_btn() const { return flt_et_btn; }
     inline void set_flt_et_btn( bool val ) { flt_et_btn = val; }
+    inline bool get_set_rst_btn() const { return set_rst_btn; }
     inline void set_set_rst_btn( bool val ) { set_rst_btn = val; }
-    inline void set_elapsed_timer( double val ) { elapsed_timer = val; }
+    inline bool get_ident_btn() const { return ident_btn; }
+    inline void set_ident_btn( bool val ) { ident_btn = val; }
 
-    // ADF Accessors
+    // outputs
     inline double get_freq () const { return freq; }
+    inline void set_freq( double f ) {
+	freq = f;
+        need_update = true;
+    }
     double get_stby_freq () const;
-    inline double get_rotation () const { return rotation; }
-
-    // Calculated values
-    inline bool get_inrange() const { return inrange; }
-    inline double get_stn_lon() const { return stn_lon; }
-    inline double get_stn_lat() const { return stn_lat; }
-    inline double get_heading() const { return heading; }
+    inline void set_stby_freq( double freq ) { stby_freq = freq; }
     inline double get_needle_deg() const { return needle_deg; }
     inline double get_flight_timer() const { return flight_timer; }
     inline double get_elapsed_timer() const { return elapsed_timer; }
-    inline double get_on_off_vol_btn() const { return on_off_vol_btn; }
-    inline int get_stby_mode() const { return stby_mode; }
-    inline int get_timer_mode() const { return timer_mode; }
-    inline int get_count_mode() const { return count_mode; }
+    inline void set_elapsed_timer( double val ) { elapsed_timer = val; }
 
-    // physical inputs
-    inline bool get_ident_btn() const { return ident_btn; }
-    inline bool get_adf_btn() const { return adf_btn; }
-    inline bool get_bfo_btn() const { return bfo_btn; }
-    inline bool get_frq_btn() const { return frq_btn; }
-    inline bool get_flt_et_btn() const { return flt_et_btn; }
-    inline bool get_set_rst_btn() const { return set_rst_btn; }
+    // annunciators
+    inline bool get_ant_ann() const { return ant_ann; }
+    inline bool get_adf_ann() const { return adf_ann; }
+    inline bool get_bfo_ann() const { return bfo_ann; }
+    inline bool get_frq_ann() const { return frq_ann; }
+    inline bool get_flt_ann() const { return flt_ann; }
+    inline bool get_et_ann() const { return et_ann; }
 };
 
 

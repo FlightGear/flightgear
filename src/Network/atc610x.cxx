@@ -396,16 +396,23 @@ bool FGATC610x::open() {
     nav2_stby_freq
 	= fgGetNode( "/radios/nav[1]/frequencies/standby-mhz", true );
 
-    adf_on_off_vol = fgGetNode( "/radios/kr-87/on-off-volume", true );
-    adf_adf_btn = fgGetNode( "/radios/kr-87/adf-btn", true );
-    adf_bfo_btn = fgGetNode( "/radios/kr-87/bfo-btn", true );
-    adf_freq = fgGetNode( "/radios/kr-87/frequencies/selected-khz", true );
-    adf_stby_freq = fgGetNode( "/radios/kr-87/frequencies/standby-khz", true );
-    adf_stby_mode = fgGetNode( "/radios/kr-87/stby-mode", true );
-    adf_timer_mode = fgGetNode( "/radios/kr-87/timer-mode", true );
-    adf_count_mode = fgGetNode( "/radios/kr-87/count-mode", true );
-    adf_flight_timer = fgGetNode( "/radios/kr-87/flight-timer", true );
-    adf_elapsed_timer = fgGetNode( "/radios/kr-87/elapsed-timer", true );
+    adf_on_off_vol = fgGetNode( "/radios/kr-87/inputs/on-off-volume", true );
+    adf_adf_btn = fgGetNode( "/radios/kr-87/inputs/adf-btn", true );
+    adf_bfo_btn = fgGetNode( "/radios/kr-87/inputs/bfo-btn", true );
+    adf_freq = fgGetNode( "/radios/kr-87/outputs/selected-khz", true );
+    adf_stby_freq = fgGetNode( "/radios/kr-87/outputs/standby-khz", true );
+    adf_stby_mode = fgGetNode( "/radios/kr-87/modes/stby", true );
+    adf_timer_mode = fgGetNode( "/radios/kr-87/modes/timer", true );
+    adf_count_mode = fgGetNode( "/radios/kr-87/modes/count", true );
+    adf_flight_timer = fgGetNode( "/radios/kr-87/outputs/flight-timer", true );
+    adf_elapsed_timer = fgGetNode( "/radios/kr-87/outputs/elapsed-timer",
+                                   true );
+    adf_ant_ann = fgGetNode( "/radios/kr-87/annunciators/ant", true );
+    adf_adf_ann = fgGetNode( "/radios/kr-87/annunciators/adf", true );
+    adf_bfo_ann = fgGetNode( "/radios/kr-87/annunciators/bfo", true );
+    adf_frq_ann = fgGetNode( "/radios/kr-87/annunciators/frq", true );
+    adf_flt_ann = fgGetNode( "/radios/kr-87/annunciators/flt", true );
+    adf_et_ann = fgGetNode( "/radios/kr-87/annunciators/et", true );
 
     inner = fgGetNode( "/radios/marker-beacon/inner", true );
     middle = fgGetNode( "/radios/marker-beacon/middle", true );
@@ -472,7 +479,7 @@ bool FGATC610x::do_analog_in() {
 
     // adf volume
     tmp = (float)analog_in_data[26] / 1024.0f;
-    fgSetFloat( "/radios/kr-87/on-off-volume", tmp );
+    fgSetFloat( "/radios/kr-87/inputs/on-off-volume", tmp );
 
     // nav2 obs tuner
     tmp = (float)analog_in_data[29] * 360.0f / 1024.0f;
@@ -491,7 +498,7 @@ bool FGATC610x::do_analog_in() {
 // Write the lights
 /////////////////////////////////////////////////////////////////////
 
-bool FGATC610x::do_lights( double dt ) {
+bool FGATC610x::do_lights() {
 
     // Marker beacons
     ATC610xSetLamp( lamps_fd, 4, inner->getBoolValue() );
@@ -499,37 +506,12 @@ bool FGATC610x::do_lights( double dt ) {
     ATC610xSetLamp( lamps_fd, 3, outer->getBoolValue() );
 
     // ADF annunciators
-    if ( adf_on_off_vol->getDoubleValue() >= 0.01 ) {
-        ATC610xSetLamp( lamps_fd, 11, !adf_adf_btn->getBoolValue() ); // ANT
-        ATC610xSetLamp( lamps_fd, 12, adf_adf_btn->getBoolValue() ); // ADF
-        ATC610xSetLamp( lamps_fd, 13, adf_bfo_btn->getBoolValue() ); // BFO
-        ATC610xSetLamp( lamps_fd, 14, !adf_stby_mode->getBoolValue() ); // FRQ
-        ATC610xSetLamp( lamps_fd, 15, adf_stby_mode->getBoolValue() &&
-                        !adf_timer_mode->getBoolValue() ); // FLT
-
-        // ET needs to blink when we are in ET set countdown time
-        if ( adf_count_mode->getIntValue() < 2 ) {
-            ATC610xSetLamp( lamps_fd, 16, adf_stby_mode->getBoolValue() &&
-                            adf_timer_mode->getBoolValue() ); // ET
-        } else {
-            et_flash_time += dt;
-            if ( et_flash && et_flash_time > 0.5 ) {
-                et_flash = false;
-                et_flash_time -= 0.5;
-            } else if ( !et_flash && et_flash_time > 0.2 ) {
-                et_flash = true;
-                et_flash_time -= 0.2;
-            }
-            ATC610xSetLamp( lamps_fd, 16, et_flash ); // ET
-        }
-    } else {
-        ATC610xSetLamp( lamps_fd, 11, false ); // ANT
-        ATC610xSetLamp( lamps_fd, 12, false ); // ADF
-        ATC610xSetLamp( lamps_fd, 13, false ); // BFO
-        ATC610xSetLamp( lamps_fd, 14, false ); // FRQ
-        ATC610xSetLamp( lamps_fd, 15, false ); // FLT
-        ATC610xSetLamp( lamps_fd, 16, false ); // ET
-    }
+    ATC610xSetLamp( lamps_fd, 11, adf_ant_ann->getBoolValue() ); // ANT
+    ATC610xSetLamp( lamps_fd, 12, adf_adf_ann->getBoolValue() ); // ADF
+    ATC610xSetLamp( lamps_fd, 13, adf_bfo_ann->getBoolValue() ); // BFO
+    ATC610xSetLamp( lamps_fd, 14, adf_frq_ann->getBoolValue() ); // FRQ
+    ATC610xSetLamp( lamps_fd, 15, adf_flt_ann->getBoolValue() ); // FLT
+    ATC610xSetLamp( lamps_fd, 16, adf_et_ann->getBoolValue() ); // ET
 
     return true;
 }
@@ -865,21 +847,21 @@ bool FGATC610x::do_radio_switches() {
     last_adf_tuner_coarse = adf_tuner_coarse;
 
     if ( adf_count_mode->getIntValue() == 2 ) {
-        fgSetFloat( "/radios/kr-87/elapsed-timer", value );
+        fgSetFloat( "/radios/kr-87/outputs/elapsed-timer", value );
     } else {
         if ( adf_stby_mode->getIntValue() == 1 ) {
-            fgSetFloat( "/radios/kr-87/frequencies/selected-khz", value );
+            fgSetFloat( "/radios/kr-87/outputs/selected-khz", value );
         } else {
-            fgSetFloat( "/radios/kr-87/frequencies/standby-khz", value );
+            fgSetFloat( "/radios/kr-87/outputs/standby-khz", value );
         }
     }
 
     // ADF Modes 
-    fgSetInt( "/radios/kr-87/adf-btn", !(radio_switch_data[23] & 0x01) );
-    fgSetInt( "/radios/kr-87/bfo-btn", !(radio_switch_data[23] >> 1 & 0x01) );
-    fgSetInt( "/radios/kr-87/frq-btn", !(radio_switch_data[23] >> 2 & 0x01) );
-    fgSetInt( "/radios/kr-87/flt-et-btn", !(radio_switch_data[23] >> 3 & 0x01) );
-    fgSetInt( "/radios/kr-87/set-rst-btn", !(radio_switch_data[23] >> 4 & 0x01) );
+    fgSetInt( "/radios/kr-87/inputs/adf-btn", !(radio_switch_data[23] & 0x01) );
+    fgSetInt( "/radios/kr-87/inputs/bfo-btn", !(radio_switch_data[23] >> 1 & 0x01) );
+    fgSetInt( "/radios/kr-87/inputs/frq-btn", !(radio_switch_data[23] >> 2 & 0x01) );
+    fgSetInt( "/radios/kr-87/inputs/flt-et-btn", !(radio_switch_data[23] >> 3 & 0x01) );
+    fgSetInt( "/radios/kr-87/inputs/set-rst-btn", !(radio_switch_data[23] >> 4 & 0x01) );
     /* cout << "adf = " << !(radio_switch_data[23] & 0x01)
          << " bfo = " << !(radio_switch_data[23] >> 1 & 0x01)
          << " stby = " << !(radio_switch_data[23] >> 2 & 0x01)
@@ -1268,17 +1250,11 @@ bool FGATC610x::do_switches() {
 
 
 bool FGATC610x::process() {
-    SGTimeStamp current;
-    current.stamp();
-
-    double dt = (double)(current - last_time_stamp) / 1000000;
-    last_time_stamp.stamp();
-
     // Lock the hardware, skip if it's not ready yet
     if ( ATC610xLock( lock_fd ) > 0 ) {
 
 	do_analog_in();
-	do_lights( dt );
+	do_lights();
 	do_radio_switches();
 	do_radio_display();
 	do_steppers();
