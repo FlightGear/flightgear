@@ -687,13 +687,22 @@ ssgBranch* FGTileEntry::gen_runway_lights( ssgVertexArray *points,ssgVertexArray
 // is intended to spread the load of freeing a complex tile out over
 // several frames.
 static int fgPartialFreeSSGtree( ssgBranch *b, int n ) {
-    // ssgDeRefDelete( b );
-    // return 0;
+#if 0
+    // for testing: we could call the following two lines and replace
+    // the functionality of this entire function and everything will
+    // get properly freed, but it will happen all at once and could
+    // cause a huge frame rate hit.
+    ssgDeRefDelete( b );
+    return 0;
+#endif
 
     int num_deletes = 0;
 
     if ( n > 0 ) {
         // we still have some delete budget left
+        if ( b->getNumKids() > 100 ) {
+            cout << "large family = " << b->getNumKids() << endl;
+        }
         for ( int i = 0; i < b->getNumKids(); ++i ) {
             ssgEntity *kid = b->getKid(i);
             if ( kid->isAKindOf( ssgTypeBranch() ) && kid->getRef() <= 1 ) {
@@ -704,8 +713,10 @@ static int fgPartialFreeSSGtree( ssgBranch *b, int n ) {
                     break;
                 }
             }
-            // remove the kid if it is now empty
-            if ( kid->getNumKids() == 0 ) {
+            // remove the kid if (a) it is now empty -or- (b) it's ref
+            // count is > zero at which point we don't care if it's
+            // empty, we don't want to touch it's contents.
+            if ( kid->getNumKids() == 0 || kid->getRef() > 1 ) {
                 b->removeKid( kid );
                 num_deletes++;
                 n--;
