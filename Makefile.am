@@ -26,7 +26,7 @@ fgfs-base: fgfs-base-tar fgfs-base-zip fgfs-base-patch fgfs-textures-high
 
 fgfs-base-tar:
 	(cd $(HOME); \
-	tar czvf fgfs-base-$(VERSION).tar.gz \
+	tar --exclude=CVS -czvf fgfs-base-$(VERSION).tar.gz \
 	FlightGear/A[A-su-z]* \
 	FlightGear/[B-CE-R]* \
 	FlightGear/Scenery/w130n30/w123n37 \
@@ -46,7 +46,8 @@ fgfs-base-zip:
 	FlightGear/Sounds \
 	FlightGear/Textures \
 	FlightGear/T[A-Za-df-z]* \
-	FlightGear/[U-W]* FlightGear/[c-z]*)
+	FlightGear/[U-W]* FlightGear/[c-z]* \
+	-x '*/CVS/*' )
 
 fgfs-base-patch:
 	(cd $(HOME); \

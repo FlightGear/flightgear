@@ -267,7 +267,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 }
 
 
-static float sgTriArea( sgVec3 p0, sgVec3 p1, sgVec3 p2 ) {
+static float fgTriArea( sgVec3 p0, sgVec3 p1, sgVec3 p2 ) {
     /* 
        From comp.graph.algorithms FAQ
        2A(P) = abs(N.(sum_{i=0}^{n-1}(v_i x v_{i+1})))
@@ -295,7 +295,7 @@ static float sgTriArea( sgVec3 p0, sgVec3 p1, sgVec3 p2 ) {
 
 
 #if 0
-// this works too, but Norman claims sgTriArea() is more efficient :-)
+// this works too, but Norman claims fgTriArea() is more efficient :-)
 static double triangle_area_3d( float *p1, float *p2, float *p3 ) {
     // Heron's formula: A^2 = s(s-a)(s-b)(s-c) where A is the area,
     // a,b,c are the side lengths, s=(a+b+c)/2. In R^3 you can compute
@@ -352,7 +352,7 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 	    p1 = leaf->getVertex(n1);
 	    p2 = leaf->getVertex(n2);
 	    p3 = leaf->getVertex(n3);
-	    double area = sgTriArea( p1, p2, p3 );
+	    double area = fgTriArea( p1, p2, p3 );
 	    double num = area / factor;
 
 	    // generate a light point for each unit of area
