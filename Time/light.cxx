@@ -179,9 +179,9 @@ void fgLIGHT::UpdateAdjFog( void ) {
     // next check if we are in a sunset/sunrise situation
     sun_angle_deg = sun_angle * RAD_TO_DEG;
     if ( (sun_angle_deg > 80.0) && (sun_angle_deg < 100.0) ) {
-	/* 0.0 - 0.4 */
-	param1[0] = (10.0 - fabs(90.0 - sun_angle_deg)) / 25.0;
-	param1[1] = (10.0 - fabs(90.0 - sun_angle_deg)) / 35.0;
+	/* 0.0 - 0.6 */
+	param1[0] = (10.0 - fabs(90.0 - sun_angle_deg)) / 10.0;
+	param1[1] = (10.0 - fabs(90.0 - sun_angle_deg)) / 50.0;
 	param1[2] = 0.0;
     } else {
 	param1[0] = param1[1] = param1[2] = 0.0;
@@ -227,6 +227,9 @@ void fgLightUpdate ( void ) {
 
 
 // $Log$
+// Revision 1.14  1998/08/06 12:47:22  curt
+// Adjusted dusk/dawn lighting ...
+//
 // Revision 1.13  1998/07/24 21:42:26  curt
 // Output message tweaks.
 //
