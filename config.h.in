@@ -9,9 +9,6 @@
 /* Define if you have the vprintf function.  */
 #undef HAVE_VPRINTF
 
-/* Define if you need to in order for stat and other things to work.  */
-#undef _POSIX_SOURCE
-
 /* Define as the return type of signal handlers (int or void).  */
 #undef RETSIGTYPE
 
@@ -41,9 +38,6 @@
 
 /* Define to package name */
 #undef PACKAGE
-
-/* Define if you need to in order for stat and other things to work.  */
-#undef _POSIX_SOURCE
 
 /* Define as the return type of signal handlers (int or void).  */
 #undef RETSIGTYPE
