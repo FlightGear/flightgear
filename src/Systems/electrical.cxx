@@ -364,8 +364,8 @@ void FGElectricalSystem::update (double dt) {
     // naming conventions in the electrical system config) ... FIXME:
     // make this more generic
     double amps = 0.0;
-    if ( fgGetBool("/controls/switches/master-bat") ) {
-        if ( fgGetBool("/controls/switches/master-alt") &&
+    if ( fgGetBool("/controls/engines/engine[0]/master-bat") ) {
+        if ( fgGetBool("/controls/engines/engine[0]/master-alt") &&
              fgGetDouble("/engines/engine[0]/rpm") > 800 )
         {
             amps += 40.0 * alt_norm;
