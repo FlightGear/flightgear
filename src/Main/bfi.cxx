@@ -156,7 +156,7 @@ FGBFI::init ()
 			       getLeftBrake, setLeftBrake);
   current_properties.tieDouble("/controls/brakes/right",
 			       getRightBrake, setRightBrake);
-  current_properties.tieDouble("/controls/brakes/Center",
+  current_properties.tieDouble("/controls/brakes/center",
 			       getRightBrake, setCenterBrake);
 
 				// Deprecated...

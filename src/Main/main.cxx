@@ -1295,7 +1295,22 @@ int main( int argc, char **argv ) {
     // seed the random number generater
     fg_srandom();
 
-    aircraft_dir = ""; // Initialize the Aircraft directory to "" (UIUC)
+    // Read global preferences from $FG_ROOT/preferences.xml
+    // FIXME: this will *not* work with an --fg_root option because
+    // we have not read the command-line yet.  Suggestions?
+
+    FGPath props_path(current_options.get_fg_root());
+    props_path.append("preferences.xml");
+    FG_LOG(FG_INPUT, FG_INFO, "Reading global preferences");
+    if (!readPropertyList(props_path.str(), &current_properties)) {
+      FG_LOG(FG_INPUT, FG_ALERT, "Failed to read global preferences from "
+	     << props_path.str());
+    } else {
+      FG_LOG(FG_INPUT, FG_INFO, "Finished Reading global preferences");
+    }
+
+    // Initialize the Aircraft directory to "" (UIUC)
+    aircraft_dir = "";
 
     // needs to happen before we parse command line options
     globals = new FGGlobals;

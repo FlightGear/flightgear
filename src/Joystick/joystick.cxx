@@ -129,101 +129,6 @@ static joystick joysticks[MAX_JOYSTICKS];
 
 
 /**
- * Set up default values if properties are not specified.
- */
-static void
-setupDefaults ()
-{
-    SGPropertyList &props = current_properties;
-
-    // Default axis 0 to aileron
-    if (!props.getValue("/input/js0/axis0/control")) {
-	props.setStringValue("/input/js0/axis0/control", "/controls/aileron");
-	props.setDoubleValue("/input/js0/axis0/dead-band", 0.1);
-    }
-
-    // Default axis 1 to elevator
-    if (!props.getValue("/input/js0/axis1/control")) {
-	props.setStringValue("/input/js0/axis1/control", "/controls/elevator");
-	props.setDoubleValue("/input/js0/axis1/dead-band", 0.1);
-	props.setDoubleValue("/input/js0/axis1/factor", -1.0);
-    }
-
-    // Default axis 2 to rudder
-    if (!props.getValue("/input/js0/axis2/control")) {
-	props.setStringValue("/input/js0/axis2/control", "/controls/rudder");
-	props.setDoubleValue("/input/js0/axis2/dead-band", 0.1);
-    }
-
-    // Default axis 3 to throttle
-    // We need to fiddle with the offset
-    // and factor to make it work
-    if (!props.getValue("/input/js0/axis3/control")) {
-	props.setStringValue("/input/js0/axis3/control", "/controls/throttle");
-	props.setDoubleValue("/input/js0/axis3/dead-band", 0.0);
-	props.setDoubleValue("/input/js0/axis3/offset", -1.0);
-	props.setDoubleValue("/input/js0/axis3/factor", -0.5);
-    }
-
-    // Default button 0 to all brakes
-    if (!props.getValue("/input/js0/button0/control")) {
-	props.setStringValue("/input/js0/button0/action", "switch");
-	props.setStringValue("/input/js0/button0/control", "/controls/brakes/all");
-	props.setDoubleValue("/input/js0/button0/step", 1.0);
-	props.setDoubleValue("/input/js0/button0/repeatable", false);
-    }
-
-    // Default button 1 to left brake.
-    if (!props.getValue("/input/js0/button1/control")) {
-	props.setStringValue("/input/js0/button1/action", "switch");
-	props.setStringValue("/input/js0/button1/control",
-			     "/controls/brakes/left");
-	props.setDoubleValue("/input/js0/button1/step", 1.0);
-	props.setDoubleValue("/input/js0/button1/repeatable", false);
-    }
-
-    // Default button 2 to right brake.
-    if (!props.getValue("/input/js0/button2/control")) {
-	props.setStringValue("/input/js0/button2/action", "switch");
-	props.setStringValue("/input/js0/button2/control",
-			     "/controls/brakes/right");
-	props.setDoubleValue("/input/js0/button2/step", 1.0);
-	props.setDoubleValue("/input/js0/button2/repeatable", false);
-    }
-
-    // Default buttons 3 and 4 to elevator trim
-    if (!props.getValue("/input/js0/button3/control")) {
-	props.setStringValue("/input/js0/button3/action", "adjust");
-	props.setStringValue("/input/js0/button3/control",
-			     "/controls/elevator-trim");
-	props.setDoubleValue("/input/js0/button3/step", 0.001);
-	props.setBoolValue("/input/js0/button3/repeatable", true);
-    }
-    if (!props.getValue("/input/js0/button4/control")) {
-	props.setStringValue("/input/js0/button4/action", "adjust");
-	props.setStringValue("/input/js0/button4/control",
-			     "/controls/elevator-trim");
-	props.setDoubleValue("/input/js0/button4/step", -0.001);
-	props.setBoolValue("/input/js0/button4/repeatable", true);
-    }
-
-    // Default buttons 5 and 6 to flaps
-    if (!props.getValue("/input/js0/button5/control")) {
-	props.setStringValue("/input/js0/button5/action", "adjust");
-	props.setStringValue("/input/js0/button5/control", "/controls/flaps");
-	props.setDoubleValue("/input/js0/button5/step", -0.34);
-	props.setBoolValue("/input/js0/button5/repeatable", false);
-    }
-    if (!props.getValue("/input/js0/button6/control")) {
-	props.setStringValue("/input/js0/button6/action", "adjust");
-	props.setStringValue("/input/js0/button6/control", "/controls/flaps");
-	props.setDoubleValue("/input/js0/button6/step", 0.34);
-	props.setBoolValue("/input/js0/button6/repeatable", false);
-    }
-}
-
-
-/**
  * Initialize any joysticks found.
  */
 int
@@ -232,8 +137,6 @@ fgJoystickInit()
     bool seen_joystick = false;
 
     FG_LOG(FG_INPUT, FG_INFO, "Initializing joysticks");
-
-    setupDefaults();
 
     for (int i = 0; i < MAX_JOYSTICKS; i++) {
 	jsJoystick * js = new jsJoystick(i);
@@ -497,7 +400,7 @@ fgJoystickRead()
 	// Buttons
 	//
 	for (j = 0; j < joysticks[i].nbuttons; j++) {
-	    bool flag;
+	    bool flag = false;
 	    button &b = joysticks[i].buttons[j];
 	    if (b.value == 0)
 		continue;

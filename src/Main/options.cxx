@@ -647,15 +647,18 @@ int fgOPTIONS::parse_option( const string& arg ) {
     } else if ( arg.find( "--lon=" ) != string::npos ) {
 	lon = parse_degree( arg.substr(6) );
 	airport_id = "";
+	current_properties.setDoubleValue("/position/longitude", lon);
     } else if ( arg.find( "--lat=" ) != string::npos ) {
 	lat = parse_degree( arg.substr(6) );
 	airport_id = "";
+	current_properties.setDoubleValue("/position/latitude", lat);
     } else if ( arg.find( "--altitude=" ) != string::npos ) {
 	if ( units == FG_UNITS_FEET ) {
 	    altitude = atof( arg.substr(11) ) * FEET_TO_METER;
 	} else {
 	    altitude = atof( arg.substr(11) );
 	}
+	current_properties.setDoubleValue("/position/altitude", altitude);
     } else if ( arg.find( "--uBody=" ) != string::npos ) {
 	vkcas=mach=-1;
 	if ( units == FG_UNITS_FEET ) {
@@ -663,6 +666,7 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	} else {
 	    uBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
+	current_properties.setDoubleValue("/velocities/speed-north", uBody);
     } else if ( arg.find( "--vBody=" ) != string::npos ) {
 	vkcas=mach=-1;
 	if ( units == FG_UNITS_FEET ) {
@@ -670,6 +674,7 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	} else {
 	    vBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
+	current_properties.setDoubleValue("/velocities/speed-east", vBody);
     } else if ( arg.find( "--wBody=" ) != string::npos ) {
 	vkcas=mach=-1;
 	if ( units == FG_UNITS_FEET ) {
@@ -677,6 +682,7 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	} else {
 	    wBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
+	current_properties.setDoubleValue("/velocities/speed-down", wBody);
     } else if ( arg.find( "--vc=" ) != string::npos) {
 	mach=-1;
 	vkcas=atof( arg.substr(5) );
@@ -686,16 +692,20 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	mach=atof( arg.substr(7) );
     } else if ( arg.find( "--heading=" ) != string::npos ) {
 	heading = atof( arg.substr(10) );
+	current_properties.setDoubleValue("/orientation/heading", heading);
     } else if ( arg.find( "--roll=" ) != string::npos ) {
 	roll = atof( arg.substr(7) );
+	current_properties.setDoubleValue("/orientation/roll", roll);
     } else if ( arg.find( "--pitch=" ) != string::npos ) {
 	pitch = atof( arg.substr(8) );
+	current_properties.setDoubleValue("/orientation/pitch", pitch);
     } else if ( arg.find( "--fg-root=" ) != string::npos ) {
 	fg_root = arg.substr( 10 );
     } else if ( arg.find( "--fg-scenery=" ) != string::npos ) {
 	fg_scenery = arg.substr( 13 );
     } else if ( arg.find( "--fdm=" ) != string::npos ) {
 	flight_model = parse_fdm( arg.substr(6) );
+	current_properties.setIntValue("/sim/flight-model", flight_model);
     if((flight_model == FGInterface::FG_JSBSIM) && (get_trim_mode() == 0)) {
 	set_trim_mode(1);
     } else {
@@ -703,6 +713,7 @@ int fgOPTIONS::parse_option( const string& arg ) {
     }        
     } else if ( arg.find( "--aircraft=" ) != string::npos ) {
 	aircraft = arg.substr(11);
+	current_properties.setStringValue("/sim/aircraft", aircraft);
     } else if ( arg.find( "--aircraft-dir=" ) != string::npos ) {
 	aircraft_dir =  arg.substr(15); //  (UIUC)
     } else if ( arg.find( "--model-hz=" ) != string::npos ) {

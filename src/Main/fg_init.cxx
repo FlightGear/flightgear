@@ -171,6 +171,10 @@ bool fgSetPosFromAirportID( const string& id ) {
 	} else {
 	    current_options.set_lon( a.longitude );
 	    current_options.set_lat( a.latitude );
+	    current_properties.setDoubleValue("/position/longitude",
+					      a.longitude);
+	    current_properties.setDoubleValue("/position/latitude",
+					      a.latitude);
 	}
     } else {
 	return false;
@@ -279,6 +283,9 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     current_options.set_lon( lon2 );
     current_options.set_lat( lat2 );
     current_options.set_heading( heading );
+    current_properties.setDoubleValue("/position/longitude", lon2);
+    current_properties.setDoubleValue("/position/latitude", lat2);
+    current_properties.setDoubleValue("/orientation/heading", heading);
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Position for " << id << " is ("
@@ -612,15 +619,15 @@ bool fgInitSubsystems( void ) {
     // Initialize the underlying radio stack model
     current_radiostack = new FGRadioStack;
 
-    current_radiostack->set_nav1_freq( 117.30 );
-    current_radiostack->set_nav1_alt_freq( 110.30 );
-    current_radiostack->set_nav1_sel_radial( 119.0 );
+//     current_radiostack->set_nav1_freq( 117.30 );
+//     current_radiostack->set_nav1_alt_freq( 110.30 );
+//     current_radiostack->set_nav1_sel_radial( 119.0 );
 
-    current_radiostack->set_nav2_freq( 111.80 );
-    current_radiostack->set_nav2_alt_freq( 115.70 );
-    current_radiostack->set_nav2_sel_radial( 029.0 );
+//     current_radiostack->set_nav2_freq( 111.80 );
+//     current_radiostack->set_nav2_alt_freq( 115.70 );
+//     current_radiostack->set_nav2_sel_radial( 029.0 );
 
-    current_radiostack->set_adf_freq( 266.0 );
+//     current_radiostack->set_adf_freq( 266.0 );
 
 #if 0
     // This block of settings are Alex's defaults for San Diego
@@ -701,7 +708,7 @@ bool fgInitSubsystems( void ) {
 
     // Initialize the 2D panel.
     string panel_path =
-	current_properties.getStringValue("/sim/panel",
+	current_properties.getStringValue("/sim/panel/path",
 					  "Panels/Default/default.xml");
     current_panel = fgReadPanel(panel_path);
     if (current_panel == 0) {
@@ -709,7 +716,6 @@ bool fgInitSubsystems( void ) {
 	       "Error reading new panel from " << panel_path);
     }
     FG_LOG(FG_INPUT, FG_INFO, "Loaded new panel from " << panel_path);
-    // current_panel = fgCreateSmallSinglePropPanel(0, 0, 1024, 768);
 
     // Initialize the BFI
     FGBFI::init();
