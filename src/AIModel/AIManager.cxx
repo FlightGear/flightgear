@@ -42,25 +42,29 @@ FGAIManager::~FGAIManager() {
 
 void FGAIManager::init() {
   SGPropertyNode * node = fgGetNode("sim/ai", true);
+
   for (int i = 0; i < node->nChildren(); i++) {
     const SGPropertyNode * entry = node->getChild(i);
+
     if (!strcmp(entry->getName(), "entry")) {
       if (!strcmp(entry->getStringValue("type", ""), "aircraft")) { 
         FGAIAircraft* ai_plane = new FGAIAircraft;
         ai_list.push_back(ai_plane);
-        if (!strcmp(entry->getStringValue("class", ""), "light")) {
-          PERF_STRUCT ps = {2.0, 2.0, 450.0, 1000.0, 70.0, 80.0, 100.0, 80.0, 60.0};
-          ai_plane->SetPerformance(ps);
-        } else if (!strcmp(entry->getStringValue("class", ""), "ww2_fighter")) {
-          PERF_STRUCT ps = {4.0, 2.0, 3000.0, 1500.0, 110.0, 180.0, 250.0, 200.0, 100.0};
-          ai_plane->SetPerformance(ps);
-        } else if (!strcmp(entry->getStringValue("class", ""), "jet_transport")) {
-          PERF_STRUCT ps = {5.0, 2.0, 3000.0, 1500.0, 140.0, 300.0, 430.0, 300.0, 130.0};
-          ai_plane->SetPerformance(ps);
-        } else if (!strcmp(entry->getStringValue("class", ""), "jet_fighter")) {
-          PERF_STRUCT ps = {7.0, 3.0, 4000.0, 2000.0, 150.0, 350.0, 500.0, 350.0, 150.0};
-          ai_plane->SetPerformance(ps);
+
+        string model_class = entry->getStringValue("class", "");
+        if (model_class == "light") {
+          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::LIGHT]);
+
+        } else if (model_class == "ww2_fighter") {
+          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::WW2_FIGHTER]);
+
+        } else if (model_class ==  "jet_transport") {
+          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_TRANSPORT]);
+
+        } else if (model_class == "jet_fighter") {
+          ai_plane->SetPerformance(&FGAIAircraft::settings[FGAIAircraft::JET_FIGHTER]);
         }
+
         ai_plane->setHeading(entry->getDoubleValue("heading"));
         ai_plane->setSpeed(entry->getDoubleValue("speed-KTAS"));
         ai_plane->setPath(entry->getStringValue("path"));
@@ -92,7 +96,7 @@ void FGAIManager::init() {
         ai_ballistic->setLatitude(entry->getDoubleValue("latitude"));
         ai_ballistic->init();
       } 
-     }
+    }
   }
 
   initDone = true;

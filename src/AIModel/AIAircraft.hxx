@@ -29,8 +29,25 @@ SG_USING_STD(string);
 
 
 class FGAIAircraft : public FGAIBase {
+
+private:
+
+	typedef struct {
+            double accel;
+            double decel;
+            double climb_rate;
+            double descent_rate;
+            double takeoff_speed;
+            double climb_speed;
+            double cruise_speed;
+            double descent_speed;
+            double land_speed;
+	} PERF_STRUCT;
 	
 public:
+
+        enum aircraft_e {LIGHT=0, WW2_FIGHTER, JET_TRANSPORT, JET_FIGHTER};
+        static const PERF_STRUCT settings[];
 	
 	FGAIAircraft();
 	~FGAIAircraft();
@@ -38,7 +55,7 @@ public:
 	bool init();
 	void update(double dt);
 
-        void SetPerformance(PERF_STRUCT ps);
+        void SetPerformance(const PERF_STRUCT *ps);
         void AccelTo(double speed);
         void PitchTo(double angle);
         void RollTo(double angle);
@@ -53,7 +70,7 @@ private:
 
         double dt; 
 
-        PERF_STRUCT performance;
+        const PERF_STRUCT *performance;
 
 	void Run(double dt);
         double sign(double x);	

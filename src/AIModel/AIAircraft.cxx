@@ -33,6 +33,19 @@ SG_USING_STD(string);
 
 #include "AIAircraft.hxx"
 
+
+const FGAIAircraft::PERF_STRUCT FGAIAircraft::settings[] = {
+    // light aircraft
+    {2.0, 2.0,  450.0, 1000.0,  70.0,  80.0, 100.0,  80.0,  60.0},
+    // ww2_fighter
+    {4.0, 2.0, 3000.0, 1500.0, 110.0, 180.0, 250.0, 200.0, 100.0},
+    // jet_transport
+    {5.0, 2.0, 3000.0, 1500.0, 140.0, 300.0, 430.0, 300.0, 130.0},
+    // jet_fighter
+    {7.0, 3.0, 4000.0, 2000.0, 150.0, 350.0, 500.0, 350.0, 150.0}
+};
+
+
 FGAIAircraft::FGAIAircraft() {
 
    // set heading and altitude locks
@@ -57,7 +70,7 @@ void FGAIAircraft::update(double dt) {
    FGAIBase::update(dt);
 }
 
-void FGAIAircraft::SetPerformance(PERF_STRUCT ps) {
+void FGAIAircraft::SetPerformance(const PERF_STRUCT *ps) {
    
    performance = ps;
 } 
@@ -83,8 +96,8 @@ void FGAIAircraft::Run(double dt) {
    // adjust speed
    double speed_diff = tgt_speed - speed;
    if (fabs(speed_diff) > 0.2) {
-     if (speed_diff > 0.0) speed += performance.accel * dt;
-     if (speed_diff < 0.0) speed -= performance.decel * dt;
+     if (speed_diff > 0.0) speed += performance->accel * dt;
+     if (speed_diff < 0.0) speed -= performance->decel * dt;
    } 
    
    // convert speed to degrees per second
@@ -136,10 +149,10 @@ void FGAIAircraft::Run(double dt) {
      double altitude_ft = altitude * 3.28084;
      if (altitude_ft < tgt_altitude) {
       tgt_vs = tgt_altitude - altitude_ft;
-      if (tgt_vs > performance.climb_rate) tgt_vs = performance.climb_rate;
+      if (tgt_vs > performance->climb_rate) tgt_vs = performance->climb_rate;
      } else {
       tgt_vs = tgt_altitude - altitude_ft;
-      if (tgt_vs  < (-performance.descent_rate)) tgt_vs = -performance.descent_rate;
+      if (tgt_vs  < (-performance->descent_rate)) tgt_vs = -performance->descent_rate;
      }
    }
 

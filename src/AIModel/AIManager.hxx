@@ -27,20 +27,9 @@
 #include <Main/fg_props.hxx>
 #include <list>
 #include "AIBase.hxx"
+#include "AIAircraft.hxx"
 
 SG_USING_STD(list);
-
- struct PERF_STRUCT {
-   double accel;
-   double decel;
-   double climb_rate;
-   double descent_rate;
-   double takeoff_speed;
-   double climb_speed;
-   double cruise_speed;
-   double descent_speed;
-   double land_speed;
-  };
 
 
 class FGAIManager : public SGSubsystem
