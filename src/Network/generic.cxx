@@ -57,15 +57,18 @@ FGGeneric::FGGeneric(string& config) {
          return;
     }
 
+    _out_message.clear();
     SGPropertyNode *output = root.getNode("generic/output");
     read_config(output, _out_message);
 
+    _in_message.clear();
     SGPropertyNode *input = root.getNode("generic/input");
     read_config(input, _in_message);
 }
 
 FGGeneric::~FGGeneric() {
     _out_message.clear();
+    _in_message.clear();
 }
 
 
@@ -85,7 +88,7 @@ bool FGGeneric::gen_message() {
         switch (_out_message[i].type) {
         case FG_INT:
             val = _out_message[i].offset +
-                    _out_message[i].prop->getIntValue() * _out_message[i].factor;
+                  _out_message[i].prop->getIntValue() * _out_message[i].factor;
             snprintf(tmp, 255, _out_message[i].format.c_str(), (int)val);
             break;
 
@@ -96,13 +99,13 @@ bool FGGeneric::gen_message() {
 
         case FG_DOUBLE:
             val = _out_message[i].offset +
-                       _out_message[i].prop->getDoubleValue() * _out_message[i].factor;
-            snprintf(tmp, 255, _out_message[i].format.c_str(), val);
+                _out_message[i].prop->getFloatValue() * _out_message[i].factor;
+            snprintf(tmp, 255, _out_message[i].format.c_str(), (float)val);
             break;
 
         default: // SG_STRING
              snprintf(tmp, 255, _out_message[i].format.c_str(),
-                               _out_message[i].prop->getStringValue());
+                                _out_message[i].prop->getStringValue());
         }
 
         generic_sentence += tmp;
@@ -131,23 +134,23 @@ bool FGGeneric::parse_message() {
         if (p2)
             *(p2++) = 0;
 
-        switch (_out_message[i].type) {
+        switch (_in_message[i].type) {
         case FG_INT:
-            val = _out_message[i].offset + atoi(p1) * _out_message[i].factor;
-            _out_message[i].prop->setIntValue(val);
+            val = _in_message[i].offset + atoi(p1) * _in_message[i].factor;
+            _in_message[i].prop->setIntValue((int)val);
             break;
 
         case FG_BOOL:
-            _out_message[i].prop->setIntValue( atoi(p1) );
+            _in_message[i].prop->setBoolValue( atoi(p1) != 0 );
             break;
 
         case FG_DOUBLE:
-            val = _out_message[i].offset + strtod(p1, 0) * _out_message[i].factor;
-            _out_message[i].prop->setIntValue(val);
+            val = _in_message[i].offset + strtod(p1, 0) * _in_message[i].factor;
+            _in_message[i].prop->setFloatValue((float)val);
             break;
 
         default: // SG_STRING
-             _out_message[i].prop->setStringValue(p1);
+             _in_message[i].prop->setStringValue(p1);
         }
 
         p1 = p2;
@@ -267,9 +270,9 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
         _serial_prot chunk;
 
      // chunk.name = chunks[i]->getStringValue("name");
-        chunk.format = chunks[i]->getStringValue("format", "%f");
+        chunk.format = chunks[i]->getStringValue("format", "%d");
         chunk.offset = chunks[i]->getDoubleValue("offset");
-        chunk.factor = chunks[i]->getDoubleValue("offset", 1.0);
+        chunk.factor = chunks[i]->getDoubleValue("factor", 1.0);
 
         string node = chunks[i]->getStringValue("node");
         chunk.prop = fgGetNode(node.c_str(), true);
