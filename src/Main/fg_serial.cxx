@@ -541,6 +541,7 @@ static void send_pve_out( fgIOCHANNEL *p ) {
     FGInterface *f;
     FGTime *t;
 
+
     f = current_aircraft.fdm_state;
     t = FGTime::cur_time_params;
 
@@ -556,31 +557,43 @@ static void send_pve_out( fgIOCHANNEL *p ) {
     // }
     
     // get roll and pitch, convert to degrees
-    int roll_deg = (int)(f->get_Phi() * RAD_TO_DEG);
-    while ( roll_deg < -180 ) {
-	roll_deg += 360;
+    double roll_deg = f->get_Phi() * RAD_TO_DEG;
+    while ( roll_deg <= -180.0 ) {
+	roll_deg += 360.0;
     }
-    while ( roll_deg > 179 ) {
-	roll_deg -= 360;
-    }
-
-    int pitch_deg = (int)(f->get_Theta() * RAD_TO_DEG);
-    while ( pitch_deg < -180 ) {
-	pitch_deg += 360;
-    }
-    while ( pitch_deg > 179 ) {
-	pitch_deg -= 360;
+    while ( roll_deg > 180.0 ) {
+	roll_deg -= 360.0;
     }
 
-    int heave = (int)(f->get_W_body()) + 128;
+    double pitch_deg = f->get_Theta() * RAD_TO_DEG;
+    while ( pitch_deg <= -180.0 ) {
+	pitch_deg += 360.0;
+    }
+    while ( pitch_deg > 180.0 ) {
+	pitch_deg -= 360.0;
+    }
+
+    short int heave = (int)(f->get_W_body() * 128.0);
 
     // scale roll and pitch to output format (1 - 255)
     // straight && level == (128, 128)
 
-    int roll = (int)( (roll_deg+180.0) * 255.0 / 360.0) + 1;
-    int pitch = (int)( (pitch_deg+180.0) * 255.0 / 360.0) + 1;
+    short int roll = (int)(roll_deg * 32768 / 180.0);
+    short int pitch = (int)(pitch_deg * 32768 / 180.0);
 
-    sprintf( pve, "p%c%c%c\n", roll, pitch, heave);
+    unsigned char roll_b1, roll_b2, pitch_b1, pitch_b2, heave_b1, heave_b2;
+    roll_b1 = roll >> 8;
+    roll_b2 = roll & 0x00ff;
+    pitch_b1 = pitch >> 8;
+    pitch_b2 = pitch & 0x00ff;
+    heave_b1 = heave >> 8;
+    heave_b2 = heave & 0x00ff;
+
+    sprintf( pve, "p%c%c%c%c%c%c\n", 
+	     roll_b1, roll_b2, pitch_b1, pitch_b2, heave_b1, heave_b2 );
+
+    // printf( "p [ %u %u ]  [ %u %u ]  [ %u %u ]\n", 
+    //         roll_b1, roll_b2, pitch_b1, pitch_b2, heave_b1, heave_b2 );
 
     FG_LOG( FG_SERIAL, FG_INFO, "roll=" << roll << " pitch=" << pitch <<
 	    " heave=" << heave );
