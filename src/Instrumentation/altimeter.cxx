@@ -66,9 +66,9 @@ Altimeter::Altimeter ( SGPropertyNode *node )
         } else if ( cname == "static-port" ) {
             static_port = cval;
         } else {
-            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in altimeter config logic" );
+            SG_LOG( SG_INSTR, SG_WARN, "Error in altimeter config logic" );
             if ( name.length() ) {
-                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
             }
         }
     }

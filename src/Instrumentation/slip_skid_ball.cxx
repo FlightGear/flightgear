@@ -23,9 +23,9 @@ SlipSkidBall::SlipSkidBall ( SGPropertyNode *node)
         } else if ( cname == "number" ) {
             num = child->getIntValue();
         } else {
-            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in slip-skid-ball config logic" );
+            SG_LOG( SG_INSTR, SG_WARN, "Error in slip-skid-ball config logic" );
             if ( name.length() ) {
-                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
             }
         }
     }

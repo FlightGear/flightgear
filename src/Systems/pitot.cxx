@@ -24,9 +24,9 @@ PitotSystem::PitotSystem ( SGPropertyNode *node )
         } else if ( cname == "number" ) {
             num = child->getIntValue();
         } else {
-            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in systems config logic" );
+            SG_LOG( SG_SYSTEMS, SG_WARN, "Error in systems config logic" );
             if ( name.length() ) {
-                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+                SG_LOG( SG_SYSTEMS, SG_WARN, "Section = " << name );
             }
         }
     }

@@ -107,6 +107,9 @@ FGEngine::FGEngine(FGFDMExec* exec, int engine_number) : EngineNumber(engine_num
 
 FGEngine::~FGEngine()
 {
+  if (Thruster)
+    delete Thruster;
+
   Debug(1);
 }
 

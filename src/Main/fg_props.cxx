@@ -82,6 +82,8 @@ LogClassMapping log_class_mappings [] = {
   LogClassMapping(SG_IO, "io"),
   LogClassMapping(SG_CLIPPER, "clipper"),
   LogClassMapping(SG_NETWORK, "network"),
+  LogClassMapping(SG_INSTR, "instrumentation"),
+  LogClassMapping(SG_SYSTEMS, "systems"),
   LogClassMapping(SG_UNDEFD, "")
 };
 
