@@ -77,6 +77,7 @@ static void global2raw( FGRawCtrls *raw ) {
     for ( i = 0; i < FGRawCtrls::FG_MAX_ENGINES; ++i ) {
 	raw->throttle[i] = node->getDoubleValue( "throttle", 0.0 );
 	raw->mixture[i] = node->getDoubleValue( "mixture", 0.0 );
+	raw->fuel_pump[i] = node->getDoubleValue( "fuel-pump", false );
 	raw->prop_advance[i] = node->getDoubleValue( "propeller-pitch", 0.0 );
 	raw->magnetos[i] = node->getIntValue( "magnetos", 0 );
 	if ( i == 0 ) {
@@ -106,6 +107,12 @@ static void global2raw( FGRawCtrls *raw ) {
             raw->brake[i] = 0.0;
         }
     }
+
+    node = fgGetNode("/controls/switches", true);
+    raw->master_bat = node->getChild("master-bat")->getBoolValue();
+    raw->master_alt = node->getChild("master-alt")->getBoolValue();
+    raw->master_avionics = node->getChild("master-avionics")->getBoolValue();
+
     raw->hground = fgGetDouble( "/environment/ground-elevation-m" );
     raw->magvar = fgGetDouble("/environment/magnetic-variation-deg");
     raw->speedup = fgGetInt("/sim/speed-up");
@@ -120,6 +127,7 @@ static void global2raw( FGRawCtrls *raw ) {
     for ( i = 0; i < FGRawCtrls::FG_MAX_ENGINES; ++i ) {
 	htond(raw->throttle[i]);
 	htond(raw->mixture[i]);
+        raw->fuel_pump[i] = htonl(raw->fuel_pump[i]);
 	htond(raw->prop_advance[i]);
 	raw->magnetos[i] = htonl(raw->magnetos[i]);
 	raw->starter[i] = htonl(raw->starter[i]);
@@ -133,6 +141,10 @@ static void global2raw( FGRawCtrls *raw ) {
 	htond(raw->brake[i]);
     }
     raw->num_wheels = htonl(raw->num_wheels);
+    raw->gear_handle = htonl(raw->gear_handle);
+    raw->master_bat = htonl(raw->master_bat);
+    raw->master_alt = htonl(raw->master_alt);
+    raw->master_avionics = htonl(raw->master_avionics);
     htond(raw->hground);
     htond(raw->magvar);
     raw->speedup = htonl(raw->speedup);
