@@ -10,6 +10,12 @@ else
 NETWORK_DIRS = Network
 endif
 
+if HAVE_PLIB_PSL
+SCRIPTING_DIRS = Scripting
+else
+SCRIPTING_DIRS =
+endif
+
 SUBDIRS = \
         Include \
         Aircraft \
@@ -27,7 +33,7 @@ SUBDIRS = \
         $(NETWORK_DIRS) \
         Objects \
         Scenery \
-        Scripting \
+        $(SCRIPTING_DIRS) \
         Sound \
         Systems \
         Time \

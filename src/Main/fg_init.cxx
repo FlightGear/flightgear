@@ -109,7 +109,9 @@
 #include <Navaids/navlist.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
+#if defined(HAVE_PLIB_PSL)
 #include <Scripting/scriptmgr.hxx>
+#endif
 #include <Sound/fg_fx.hxx>
 #include <Sound/soundmgr.hxx>
 #include <Systems/system_mgr.hxx>
@@ -1478,11 +1480,13 @@ bool fgInitSubsystems() {
     globals->add_subsystem("logger", new FGLogger);
 
 
+#if defined(HAVE_PLIB_PSL)
     ////////////////////////////////////////////////////////////////////
     // Create and register the script manager.
     ////////////////////////////////////////////////////////////////////
 
     globals->add_subsystem("scripting", new FGScriptMgr);
+#endif // HAVE_PLIB_PSL
 
 
     ////////////////////////////////////////////////////////////////////

@@ -137,7 +137,6 @@ FGScriptMgr::update (double delta_time_sec)
 bool
 FGScriptMgr::run (const char * script) const
 {
-#if defined(FG_PSL_STRING_COMPILE)
                                 // FIXME: detect and report errors
     pslProgram program(extensions);
     if (program.compile(script, globals->get_fg_root().c_str()) > 0)
@@ -145,10 +144,6 @@ FGScriptMgr::run (const char * script) const
     while (program.step() != PSL_PROGRAM_END)
         ;
     return true;
-#else
-    SG_LOG(SG_INPUT, SG_ALERT, "Input-binding scripts not supported");
-    return false;
-#endif
 }
 
 bool

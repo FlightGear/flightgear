@@ -353,9 +353,9 @@ dnl joystick lib
 AC_DEFINE([ENABLE_PLIB_JOYSTICK], 1, [Define to enable plib joystick support])
 
 
-dnl Compiling an in-memory PSL script is available only in the CVS
+dnl Checking for PSL in plib
 dnl version of plib, so check for it.
-AC_MSG_CHECKING([for plib PSL in-memory script compilation support])
+AC_MSG_CHECKING([for plib PSL scripting support])
 AC_COMPILE_IFELSE([
 #include <plib/psl.h>
 
@@ -367,13 +367,10 @@ int main() {
 }
 ],
   [AC_MSG_RESULT(yes);
-   fg_psl_string_compile=yes],
+   have_plib_psl=yes],
   AC_MSG_RESULT(no)
 )
-if test "x$fg_psl_string_compile" = "xyes"; then
-  AC_DEFINE([FG_PSL_STRING_COMPILE], 1,
-            [Support for compiling PSL scripts from an in-memory string.])
-fi
+AM_CONDITIONAL(HAVE_PLIB_PSL, test "x$have_plib_psl" = "xyes")
 
 dnl Check for MetaKit
 AC_CHECK_HEADER(mk4.h)
@@ -597,13 +594,14 @@ echo "================="
 
 echo "Prefix: $prefix"
 
-if test "x$fg_psl_string_compile" = "xyes"; then
-    echo "Scripts for input bindings: yes"
+if test "x$have_plib_psl" = "xyes"; then
+    echo "Plib PSL scripting: yes"
 else
-    echo "Scripts for input bindings: $fg_psl_string_compile"
-    echo "  PSL scripts attached to input bindings will not"
-    echo "  work.  Download the latest CVS version of plib"
-    echo "  if you would like to enable them."
+    echo "Plib PSL scripting: $fg_psl_string_compile"
+    echo "  You will not be able to run scripts written in PSL"
+    echo "  and some advanced GUI and input features may not"
+    echo "  work.  Download and install the latest CVS version"
+    echo "  of plib if you would like to enable PSL support."
 fi
 
 if test "x$with_logging" != "x"; then

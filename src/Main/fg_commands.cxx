@@ -19,7 +19,9 @@
 #include <GUI/gui.h>
 #include <GUI/new_gui.hxx>
 #include <Scenery/tilemgr.hxx>
+#if defined(HAVE_PLIB_PSL)
 #include <Scripting/scriptmgr.hxx>
+#endif
 #include <Time/tmp.hxx>
 
 #include "fg_init.hxx"
@@ -129,6 +131,7 @@ do_null (const SGPropertyNode * arg)
   return true;
 }
 
+#if defined(HAVE_PLIB_PSL)
 /**
  * Built-in command: run a PSL script.
  */
@@ -140,6 +143,7 @@ do_script (const SGPropertyNode * arg)
 
     return mgr->run(arg->getStringValue("script"));
 }
+#endif // HAVE_PLIB_PSL
 
 
 /**
@@ -654,7 +658,9 @@ static struct {
   SGCommandMgr::command_t command;
 } built_ins [] = {
     { "null", do_null },
+#if defined(HAVE_PLIB_PSL)
     { "script", do_script },
+#endif // HAVE_PLIB_PSL
     { "exit", do_exit },
     { "load", do_load },
     { "save", do_save },

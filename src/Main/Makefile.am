@@ -19,6 +19,12 @@ else
 THREAD_LIBS =
 endif
 
+if HAVE_PLIB_PSL
+PSL_LIBS = -lplibpsl
+else
+PSL_LIBS =
+endif
+
 AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkglibdir)\"
 
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
@@ -78,7 +84,8 @@ fgfs_LDADD = \
 	-lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc -lsgxml \
 	-lsgserial \
 	$(THREAD_LIBS) \
-	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul -lplibpsl \
+	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
+        $(PSL_LIBS) \
 	-lmk4 -lz \
 	$(opengl_LIBS) \
 	$(audio_LIBS)
