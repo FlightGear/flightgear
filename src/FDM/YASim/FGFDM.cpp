@@ -301,7 +301,7 @@ void FGFDM::getExternalInput(float dt)
     // Weights
     for(i=0; i<_weights.size(); i++) {
 	WeightRec* wr = (WeightRec*)_weights.get(i);
-	_airplane.setWeight(wr->handle, fgGetFloat(wr->prop));
+	_airplane.setWeight(wr->handle, LBS2KG * fgGetFloat(wr->prop));
     }
 }
 
@@ -338,7 +338,7 @@ void FGFDM::setOutputProperties()
         Thruster* t = er->eng;
 
 	sprintf(buf, "%s/fuel-flow-gph", er->prefix);
-	fgSetFloat(buf, (t->getFuelFlow()/fuelDensity) * 3600 * CM2GALS);
+        fgSetFloat(buf, (t->getFuelFlow()/fuelDensity) * 3600 * CM2GALS);
 
 	if(t->getPropEngine()) {
             PropEngine* p = t->getPropEngine();
