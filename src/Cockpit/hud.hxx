@@ -87,43 +87,18 @@ enum VIEW_MODES{ HUD_VIEW, PANEL_VIEW, CHASE_VIEW, TOWER_VIEW };
 // controls can be used to set intensity and appropriate color. This will
 // be moved.
 // Hud general constants
-#define DAY                1
-#define NIGHT              2
-#define BRT_BLACK          3
-#define BRT_DARK           4
-#define BRT_MEDIUM         5
-#define BRT_LIGHT          6
-#define SIZE_SMALL         7
-#define SIZE_LARGE         8
+#define HUD_DAY                1
+#define HUD_NIGHT              2
+#define HUD_BRT_BLACK          3
+#define HUD_BRT_DARK           4
+#define HUD_BRT_MEDIUM         5
+#define HUD_BRT_LIGHT          6
 
 // Label constants
-#define SMALL              1
-#define LARGE              2
-
-#define BLINK              3
-#define NOBLINK            4
+#define HUD_FONT_SMALL     1
+#define HUD_FONT_LARGE     2
 
 enum fgLabelJust{ LEFT_JUST, CENTER_JUST, RIGHT_JUST } ;
-
-// Ladder constants
-#define NONE               1
-#define UPPER_LEFT         2
-#define UPPER_CENTER       3
-#define UPPER_RIGHT        4
-#define CENTER_RIGHT       5
-#define LOWER_RIGHT        6
-#define LOWER_CENTER       7
-#define LOWER_LEFT         8
-#define CENTER_LEFT        9
-#define SOLID_LINES       10
-#define DASHED_LINES      11
-#define DASHED_NEG_LINES  12
-
-
-#define HORIZON_FIXED   1
-#define HORIZON_MOVING  2
-#define LABEL_COUNTER   1
-#define LABEL_WARNING   2
 
 #define HUDS_AUTOTICKS           0x0001
 #define HUDS_VERT                0x0002
