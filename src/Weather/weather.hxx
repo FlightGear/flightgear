@@ -60,8 +60,8 @@ public:
 	xglFogi( GL_FOG_MODE, GL_EXP2 );
 
 	// FG_LOG( FG_INPUT, FG_DEBUG, "Fog density = " << fog_density );
-	FG_LOG( FG_INPUT, FG_INFO, 
-		"Fog exp2 density = " << fog_exp2_density );
+	// FG_LOG( FG_INPUT, FG_INFO, 
+	//     	   "Fog exp2 density = " << fog_exp2_density );
     }
 };
 

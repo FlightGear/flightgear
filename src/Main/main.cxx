@@ -389,8 +389,8 @@ static void fgRenderFrame( void ) {
 	double agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
 	    - scenery.cur_elev;
 
-	FG_LOG( FG_ALL, FG_INFO, "visibility is " 
-		<< current_weather.get_visibility() );
+	// FG_LOG( FG_ALL, FG_INFO, "visibility is " 
+	//         << current_weather.get_visibility() );
 	    
 	if ( agl > 10.0 ) {
 	    // ssgSetNearFar( 10.0f, current_weather.get_visibility() );
@@ -1079,10 +1079,10 @@ int main( int argc, char **argv ) {
     // distribution) specifically from the ssg tux example
     //
 
-    // ssgModelPath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    // ssgTexturePath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    ssgModelPath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    ssgTexturePath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgModelPath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgTexturePath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    // ssgModelPath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    // ssgTexturePath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
 
     scene = new ssgRoot;
     terrain = new ssgBranch;
