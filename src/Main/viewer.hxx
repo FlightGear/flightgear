@@ -31,6 +31,7 @@
 #endif                                   
 
 #include <simgear/compiler.h>
+#include <simgear/constants.h>
 
 #include <plib/sg.h>		// plib include
 
@@ -167,11 +168,11 @@ public:
     inline void set_goal_view_offset( double a) {
 	set_dirty();
 	goal_view_offset = a;
-	while ( goal_view_offset < 0 ) {
-	    goal_view_offset += 360.0;
+	while ( goal_view_offset < 0.0 ) {
+	    goal_view_offset += SGD_2PI;
 	}
-	while ( goal_view_offset > 360.0 ) {
-	    goal_view_offset -= 360.0;
+	while ( goal_view_offset > SGD_2PI ) {
+	    goal_view_offset -= SGD_2PI;
 	}
     }
     inline void set_reverse_view_offset( bool val ) {

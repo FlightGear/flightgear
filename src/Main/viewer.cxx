@@ -36,8 +36,8 @@
 
 // Constructor
 FGViewer::FGViewer( void ):
-    fov(55.0),
     scalingType(FG_SCALING_MAX),
+    fov(55.0),
     view_offset(0.0),
     goal_view_offset(0.0),
     view_tilt(0.0),
