@@ -56,6 +56,7 @@
 #include <Astro/solarsystem.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
+// #include <FDM/Balloon.h>
 #include <FDM/LaRCsim.hxx>
 #include <FDM/JSBsim.hxx>
 #include <Include/fg_constants.h>
@@ -231,6 +232,9 @@ bool fgInitSubsystems( void ) {
 	cur_fdm_state = new FGLaRCsim;
     } else if ( current_options.get_flight_model() == FGInterface::FG_JSBSIM ) {
 	cur_fdm_state = new FGJSBsim;
+    // } else if ( current_options.get_flight_model() == 
+    //             FGInterface::FG_BALLOONSIM ) {
+    //     cur_fdm_state = new FGBalloonSim;
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT,
 		"No flight model, can't init aircraft" );

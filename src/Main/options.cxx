@@ -501,6 +501,8 @@ fgOPTIONS::parse_fdm( const string& fm ) {
 	return FGInterface::FG_SLEW;
     } else if ( fm == "jsb" ) {
 	return FGInterface::FG_JSBSIM;
+    } else if ( fm == "balloon" ) {
+	return FGInterface::FG_BALLOONSIM;
     } else if ( (fm == "larcsim") || (fm == "LaRCsim") ) {
 	return FGInterface::FG_LARCSIM;
     } else if ( fm == "external" ) {
