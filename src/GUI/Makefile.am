@@ -7,7 +7,6 @@ NETWORK_SRCS =
 endif
 
 libGUI_a_SOURCES = \
-	apt_dlg.cxx apt_dlg.hxx \
         new_gui.cxx new_gui.hxx \
 	gui.cxx gui.h gui_funcs.cxx \
 	gui_local.cxx gui_local.hxx \
