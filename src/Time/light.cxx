@@ -66,7 +66,12 @@ SG_USING_STD(string);
 
 // Constructor
 FGLight::FGLight ()
-    : _prev_sun_angle(-9999.0),
+    : _ambient_tbl( NULL ),
+      _diffuse_tbl( NULL ),
+      _specular_tbl( NULL ),
+      _sky_tbl( NULL ),
+      _sun_rotation( 0.0 ),
+      _prev_sun_angle(-9999.0),
       _dt_total( 0.0 )
 {
 }
@@ -74,6 +79,10 @@ FGLight::FGLight ()
 // Destructor
 FGLight::~FGLight ()
 {
+    delete _ambient_tbl;
+    delete _diffuse_tbl;
+    delete _specular_tbl;
+    delete _sky_tbl;
 }
 
 
@@ -109,6 +118,13 @@ void FGLight::reinit () {
     _prev_sun_angle = -9999.0;
     _dt_total = 0;
 
+    delete _ambient_tbl;
+    delete _diffuse_tbl;
+    delete _specular_tbl;
+    delete _sky_tbl;
+
+    init();
+
     fgUpdateSunPos();
     fgUpdateMoonPos();
 
@@ -126,14 +142,14 @@ void FGLight::unbind () {
 // update lighting parameters based on current sun position
 void FGLight::update( double dt ) {
 
-    update_adj_fog_color();
-
     _dt_total += dt;
     if (_dt_total >= 0.5) {
         _dt_total -= 0.5;
         fgUpdateSunPos();
         fgUpdateMoonPos();
     }
+
+    update_adj_fog_color();
 
     if (_prev_sun_angle != _sun_angle) {
 	_prev_sun_angle = _sun_angle;
@@ -228,17 +244,17 @@ void FGLight::update_adj_fog_color () {
     // Do some sanity checking ...
     if ( _sun_rotation < -2.0 * SGD_2PI || _sun_rotation > 2.0 * SGD_2PI ) {
 	SG_LOG( SG_EVENT, SG_ALERT, "Sun rotation bad = " << _sun_rotation );
-	exit(-1);
+	return;
     }
 
     if ( heading < -2.0 * SGD_2PI || heading > 2.0 * SGD_2PI ) {
 	SG_LOG( SG_EVENT, SG_ALERT, "Heading rotation bad = " << heading );
-	exit(-1);
+	return;
     }
 
     if ( heading_offset < -2.0 * SGD_2PI || heading_offset > 2.0 * SGD_2PI ) {
 	SG_LOG( SG_EVENT, SG_ALERT, "Heading offset bad = " << heading_offset );
-	exit(-1);
+	return;
     }
 
     double rotation;
