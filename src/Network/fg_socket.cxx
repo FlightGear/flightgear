@@ -27,8 +27,10 @@
 #include <sys/types.h>		// socket(), bind(), select(), accept()
 #include <sys/socket.h>		// socket(), bind(), listen(), accept()
 #include <netinet/in.h>		// struct sockaddr_in
+#include <netinet/tcp.h>	// #define TCP_NODELAY, this attempts to 
+                                // disable the Nagle algorithm.
 #include <netdb.h>		// gethostbyname()
-#include <unistd.h>		// select()
+#include <unistd.h>		// select(), fsync()/fdatasync()
 
 #include STL_STRING
 
@@ -218,30 +220,35 @@ int FGSocket::readline( char *buf, int length ) {
 	char *buf_ptr = save_buf + save_len;
 	result = std::read( sock, buf_ptr, FG_MAX_MSG_SIZE - save_len );
 	save_len += result;
-
-	// look for the end of line in save_buf
-	int i;
-	for ( i = 0; i < save_len && save_buf[i] != '\n'; ++i );
-	if ( save_buf[i] == '\n' ) {
-	    result = i + 1;
-	} else {
-	    // no end of line yet
-	    return 0;
-	}
-
-	// we found an end of line
-
-	// copy to external buffer
-	strncpy( buf, save_buf, result );
-	buf[result] = '\0';
-	cout << "fg_serial line = " << buf << endl;
-
-	// shift save buffer
-	for ( i = result; i < save_len; ++i ) {
-	    save_buf[ i - result ] = save_buf[i];
-	}
-	save_len -= result;
+	cout << "current read = " << buf_ptr << endl;
+	cout << "current save_buf = " << save_buf << endl;
+	cout << "save_len = " << save_len << endl;
     }
+
+    // look for the end of line in save_buf
+    int i;
+    for ( i = 0; i < save_len && save_buf[i] != '\n'; ++i );
+    if ( save_buf[i] == '\n' ) {
+	result = i + 1;
+    } else {
+	// no end of line yet
+	cout << "no eol found" << endl;
+	return 0;
+    }
+    cout << "line length = " << result << endl;
+
+    // we found an end of line
+
+    // copy to external buffer
+    strncpy( buf, save_buf, result );
+    buf[result] = '\0';
+    cout << "fg_socket line = " << buf << endl;
+    
+    // shift save buffer
+    for ( i = result; i < save_len; ++i ) {
+	save_buf[ i - result ] = save_buf[i];
+    }
+    save_len -= result;
 
     return result;
 }
@@ -269,17 +276,44 @@ int FGSocket::write( char *buf, int length ) {
 	    FG_LOG( FG_IO, FG_ALERT, 
 		    "Error: accept() failed in write()" );
 	    return 0;
+	    int flag = 1;
+	    int result = setsockopt(sock,         /* socket affected */
+				    IPPROTO_TCP,  /* set option at TCP level */
+				    TCP_NODELAY,  /* name of option */
+				    (char *) &flag,/* the cast is historical
+                                                      cruft */
+				    sizeof(int)); /* length of option value */
+	    if (result < 0) {
+		FG_LOG( FG_IO, FG_ALERT, 
+			"Error: setsockopt() failed in write()" );
+		return 0;
+	
+	    }
 	} else {
 	    client_connections.push_back( msgsock );
 	}
     }
 
     bool error_condition = false;
+    FG_LOG( FG_IO, FG_INFO, "Client connections = " << 
+	    client_connections.size() );
     for ( int i = 0; i < (int)client_connections.size(); ++i ) {
 	int msgsock = client_connections[i];
+
+	// read and junk any possible incoming messages.
+	// char junk[ FG_MAX_MSG_SIZE ];
+	// std::read( msgsock, junk, FG_MAX_MSG_SIZE );
+
+	// write the interesting data to the socket
 	if ( std::write(msgsock, buf, length) < 0 ) {
 	    FG_LOG( FG_IO, FG_ALERT, "Error writing to socket: " << port );
 	    error_condition = true;
+	} else {
+#ifdef _POSIX_SYNCHRONIZED_IO
+	    // fdatasync(msgsock);
+#else
+	    // fsync(msgsock);
+#endif
 	}
     }
 
