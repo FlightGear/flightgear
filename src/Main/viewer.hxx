@@ -34,6 +34,8 @@
 
 #include <plib/sg.h>		// plib include
 
+#include "fgfs.hxx"
+
 
 #define FG_FOV_MIN 0.1
 #define FG_FOV_MAX 179.9
@@ -128,6 +130,11 @@ public:
 
     // Destructor
     virtual ~FGViewer( void );
+
+    virtual void init ();
+    virtual void bind ();
+    virtual void unbind ();
+    virtual void update (int dt);
 
     //////////////////////////////////////////////////////////////////////
     // setter functions

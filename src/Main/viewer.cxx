@@ -57,3 +57,51 @@ void FGViewer::update() {
 // Destructor
 FGViewer::~FGViewer( void ) {
 }
+
+void
+FGViewer::init ()
+{
+}
+
+void
+FGViewer::bind ()
+{
+}
+
+void
+FGViewer::unbind ()
+{
+}
+
+void
+FGViewer::update (int dt)
+{
+  for ( int i = 0; i < dt; i++ ) {
+    if ( fabs(get_goal_view_offset() - get_view_offset()) < 0.05 ) {
+      set_view_offset( get_goal_view_offset() );
+      break;
+    } else {
+      // move current_view.view_offset towards
+      // current_view.goal_view_offset
+      if ( get_goal_view_offset() > get_view_offset() )
+	{
+	  if ( get_goal_view_offset() - get_view_offset() < SGD_PI ){
+	    inc_view_offset( 0.01 );
+	  } else {
+	    inc_view_offset( -0.01 );
+	  }
+	} else {
+	  if ( get_view_offset() - get_goal_view_offset() < SGD_PI ){
+	    inc_view_offset( -0.01 );
+	  } else {
+	    inc_view_offset( 0.01 );
+	  }
+	}
+      if ( get_view_offset() > SGD_2PI ) {
+	inc_view_offset( -SGD_2PI );
+      } else if ( get_view_offset() < 0 ) {
+	inc_view_offset( SGD_2PI );
+      }
+    }
+  }
+}

@@ -69,7 +69,7 @@ public:
     ~FGViewerRPH( void );
 
     // Initialize a view class
-    void init( void );
+//      void init( void );
 
     //////////////////////////////////////////////////////////////////////
     // setter functions
