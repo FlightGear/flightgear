@@ -110,7 +110,7 @@ FGNewMat::Object::Object (const SGPropertyNode * node, double range_m)
 
 				// Note all the model paths
   vector <SGPropertyNode_ptr> path_nodes = node->getChildren("path");
-  for (int i = 0; i < path_nodes.size(); i++)
+  for (unsigned int i = 0; i < path_nodes.size(); i++)
     _paths.push_back(path_nodes[i]->getStringValue());
 
 				// Note the heading type
@@ -126,11 +126,14 @@ FGNewMat::Object::Object (const SGPropertyNode * node, double range_m)
     SG_LOG(SG_INPUT, SG_ALERT, "Unknown heading type: " << hdg
 	   << "; using 'fixed' instead.");
   }
+
+  // uncomment to preload models
+  // load_models();
 }
 
 FGNewMat::Object::~Object ()
 {
-  for (int i = 0; i < _models.size(); i++) {
+  for (unsigned int i = 0; i < _models.size(); i++) {
     if (_models[i] != 0) {
       _models[i]->deRef();
       _models[i] = 0;
@@ -147,13 +150,16 @@ FGNewMat::Object::get_model_count () const
 inline void
 FGNewMat::Object::load_models () const
 {
+  cout << "loading ground cover objects:" << endl;
+
 				// Load model only on demand
   if (!_models_loaded) {
-    for (int i = 0; i < _paths.size(); i++) {
+    for (unsigned int i = 0; i < _paths.size(); i++) {
       SGPath path = globals->get_fg_root();
       path.append(_paths[i]);
       ssgTexturePath((char *)path.dir().c_str());
       ssgEntity * entity = load_object((char *)path.c_str());
+      cout << "  " << path.str() << endl;
       if (entity != 0) {
 	float ranges[] = {0, _range_m};
 	ssgRangeSelector * lod = new ssgRangeSelector;
@@ -178,14 +184,14 @@ FGNewMat::Object::load_models () const
 ssgEntity *
 FGNewMat::Object::get_model (int index) const
 {
-  load_models();
+  load_models();                // comment this out if preloading models
   return _models[index];
 }
 
 ssgEntity *
 FGNewMat::Object::get_random_model () const
 {
-  load_models();
+  load_models();                // comment this out if preloading models
   int nModels = _models.size();
   int index = int(sg_random() * nModels);
   if (index >= nModels)
@@ -228,7 +234,7 @@ FGNewMat::ObjectGroup::ObjectGroup (SGPropertyNode * node)
 
 FGNewMat::ObjectGroup::~ObjectGroup ()
 {
-  for (int i = 0; i < _objects.size(); i++) {
+  for (unsigned int i = 0; i < _objects.size(); i++) {
     delete _objects[i];
     _objects[i] = 0;
   }
