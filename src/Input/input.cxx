@@ -261,26 +261,11 @@ FGInput::doKey (int k, int modifiers, int x, int y)
   if (modifiers&FG_MOD_UP)
     return;
 
-  // float fov, tmp;
-  static bool winding_ccw = true;
-  // int speed;
-  // FGInterface *f = current_aircraft.fdm_state;
-  // FGViewer *v = globals->get_current_view();
-  
   // everything after here will be removed sooner or later...
 
   if (modifiers & FG_MOD_SHIFT) {
 
 	switch (k) {
-	case 18: // Ctrl-R key
-	    // temporary
-	    winding_ccw = !winding_ccw;
-	    if ( winding_ccw ) {
-		glFrontFace ( GL_CCW );
-	    } else {
-		glFrontFace ( GL_CW );
-	    }
-	    return;
 	case 72: // H key
 	    HUD_brightkey( true );
 	    return;
@@ -288,25 +273,6 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 	    // Minimal Hud
 	    fgHUDInit2(&current_aircraft);
 	    return;
-	case 87: // W key
-#if defined(FX) && !defined(WIN32)
-	    global_fullscreen = ( !global_fullscreen );
-#  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
-	    XMesaSetFXmode( global_fullscreen ? 
-			    XMESA_FX_FULLSCREEN : XMESA_FX_WINDOW );
-#  endif
-#endif
-	    return;
-
-// START SPECIALS
-
-        case 256+GLUT_KEY_F10: {
-            fgToggleFDMdataLogging();
-            return;
-        }
-
-// END SPECIALS
-
 	}
 
 
