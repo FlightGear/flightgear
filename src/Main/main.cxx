@@ -619,6 +619,11 @@ void fgRenderFrame() {
               << " moon dec = " << globals->get_ephem()->getMoonDeclination() );
             */
 
+            // The sun and moon distances are scaled down versions
+            // of the actual distance to get both the moon and the sun
+            // within the range of the far clip plane.
+            // Moon distance:    384,467 kilometers
+            // Sun distance: 150,000,000 kilometers
             thesky->reposition( current__view->get_view_pos(),
                                 current__view->get_zero_elev(),
                                 current__view->get_world_up(),
@@ -635,7 +640,7 @@ void fgRenderFrame() {
                                 50000.0,
                                 globals->get_ephem()->getMoonRightAscension(),
                                 globals->get_ephem()->getMoonDeclination(),
-                                50000.0 );
+                                40000.0 );
         }
 
         glEnable( GL_DEPTH_TEST );
@@ -1756,8 +1761,13 @@ static bool fgMainInit( int argc, char **argv ) {
     sky_tex_path.append( "Sky" );
     thesky->texture_path( sky_tex_path.str() );
 
+    // The sun and moon diameters are scaled down numbers of the
+    // actual diameters. This was needed to fit bot the sun and the
+    // moon within the distance to the far clip plane.
+    // Moon diameter:    3,476 kilometers
+    // Sun diameter: 1,390,000 kilometers
     thesky->build( 80000.0, 80000.0,
-                   550.0, 550.0,
+                   463.3, 361.8,
                    globals->get_ephem()->getNumPlanets(), 
                    globals->get_ephem()->getPlanets(),
                    globals->get_ephem()->getNumStars(),
