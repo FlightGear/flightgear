@@ -52,7 +52,7 @@ FG_USING_STD(string);
 
 
 // Load a .obj file and build the fragment list
-ssgBranch *fgObjLoad(const string& path, FGTileEntry *tile);
+ssgBranch *fgObjLoad(const string& path, FGTileEntry *tile, const bool is_base);
 
 
 #endif // _OBJ_HXX

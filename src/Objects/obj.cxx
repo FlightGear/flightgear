@@ -269,7 +269,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 
 
 // Load a .obj file and build the fragment list
-ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
+ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
     fgFRAGMENT fragment;
     Point3D pp;
     double approx_normal[3] /*, normal[3], scale = 0.0 */;
@@ -312,10 +312,14 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     shading = current_options.get_shading();
 
     in_fragment = false;
-    t->ncount = 0;
+    if ( is_base ) {
+	t->ncount = 0;
+    }
     vncount = 0;
     vtcount = 0;
-    t->bounding_radius = 0.0;
+    if ( is_base ) {
+	t->bounding_radius = 0.0;
+    }
     center = t->center;
 
     StopWatch stopwatch;
@@ -355,7 +359,13 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		// cout << "scenery_version = " << scenery_version << endl;
 	    } else if ( token == "gbs" ) {
 		// reference point (center offset)
-		in >> t->center >> t->bounding_radius;
+		if ( is_base ) {
+		    in >> t->center >> t->bounding_radius;
+		} else {
+		    Point3D junk1;
+		    double junk2;
+		    in >> junk1 >> junk2;
+		}
 		center = t->center;
 		// cout << "center = " << center 
 		//      << " radius = " << t->bounding_radius << endl;
@@ -513,7 +523,9 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		       >> nodes[t->ncount][2]; */
 		    in >> node;
 		    nodes.push_back(node);
-		    t->ncount++;
+		    if ( is_base ) {
+			t->ncount++;
+		    }
 		} else {
 		    FG_LOG( FG_TERRAIN, FG_ALERT, 
 			    "Read too many nodes in " << path 
@@ -937,7 +949,9 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     xglEnd();
 #endif
 
-    t->nodes = nodes;
+    if ( is_base ) {
+	t->nodes = nodes;
+    }
 
     stopwatch.stop();
     FG_LOG( FG_TERRAIN, FG_DEBUG, 
