@@ -27,45 +27,47 @@
 #ifndef _HUD_HXX
 #define _HUD_HXX
 
-
 #ifndef __cplusplus
 # error This library requires C++
 #endif
-
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
 
-#ifdef __sun__
-extern "C" void *memmove(void *, const void *, size_t);
-extern "C" void *memset(void *, int, size_t);
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
+#include <GL/glut.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifdef HAVE_VALUES_H
+#  include <values.h>  // for MAXINT
 #endif
 
 #include <fg_typedefs.h>
 #include <fg_constants.h>
-
 #include <Aircraft/aircraft.h>
 #include <Flight/flight.h>
 #include <Controls/controls.h>
 
-//using namespace std;
 
-#include <deque>         // STL
-
+#include <deque>       // STL
+#ifdef NEEDNAMESPACESTD
+using namespace std;
+#endif
 
 #ifndef WIN32
-
   typedef struct {
       int x, y;
   } POINT;
-
+ 
   typedef struct {
       int top, bottom, left, right;
   } RECT;
-
 #endif
-
 
 // View mode definitions
 
@@ -111,6 +113,19 @@ enum fgLabelJust{ LEFT_JUST, CENTER_JUST, RIGHT_JUST } ;
 #define HORIZON_MOVING	2
 #define LABEL_COUNTER	1
 #define LABEL_WARNING	2
+
+#define HUDS_AUTOTICKS           0x0001
+#define HUDS_VERT                0x0002
+#define HUDS_HORZ                0x0000
+#define HUDS_TOP                 0x0004
+#define HUDS_BOTTOM              0x0008
+#define HUDS_LEFT     HUDS_TOP
+#define HUDS_RIGHT    HUDS_BOTTOM
+#define HUDS_BOTH     (HUDS_LEFT | HUDS_RIGHT)
+#define HUDS_NOTICKS             0x0010
+#define HUDS_ARITHTIC            0x0020
+#define HUDS_DECITICS            0x0040
+#define HUDS_NOTEXT              0x0080
 
 // Ladder orientaion
 // #define HUD_VERTICAL        1
@@ -170,8 +185,6 @@ enum  hudinstype{ HUDno_instr,
               HUDtbi
               };
 
-enum ReadOriented{ ReadRIGHT, ReadLEFT, ReadTOP, ReadBOTTOM };
-
 class instr_item {  // An Abstract Base Class (ABC)
   private:
     static UINT      instances;     // More than 64K instruments? Nah!
@@ -179,7 +192,7 @@ class instr_item {  // An Abstract Base Class (ABC)
     RECT             scrn_pos;      // Framing - affects scale dimensions
                                     // and orientation. Vert vs Horz, etc.
     DBLFNPTR         load_value_fn;
-    ReadOriented     oriented;
+    UINT             opts;
     bool             is_enabled;
     bool             broken;
     int              brightness;
@@ -187,9 +200,12 @@ class instr_item {  // An Abstract Base Class (ABC)
     POINT            mid_span;      //
 
   public:
-    instr_item( RECT           scrn_pos,
+    instr_item( int            x,
+                int            y,
+                UINT           height,
+                UINT           width,
                 DBLFNPTR       data_source,
-                ReadOriented   orient,
+                UINT           options,
                 bool           working      = true);
 
     instr_item( const instr_item & image );
@@ -204,7 +220,7 @@ class instr_item {  // An Abstract Base Class (ABC)
     double       get_value       ( void ) { return load_value_fn();}
     UINT         get_span        ( void ) { return scr_span;  }
     POINT        get_centroid    ( void ) { return mid_span;  }
-    ReadOriented get_orientation ( void ) { return oriented;  }
+    UINT         get_options     ( void ) { return opts;      }
 
     virtual void display_enable( bool working ) { is_enabled = !! working;}
 
@@ -212,13 +228,13 @@ class instr_item {  // An Abstract Base Class (ABC)
     virtual void update( void );
     virtual void break_display ( bool bad );
     virtual void SetBrightness( int illumination_level ); // fgHUDSetBright...
+    void         SetPosition  ( int x, int y, UINT width, UINT height );
     UINT    get_Handle( void );
     virtual void draw( void ) = 0;   // Required method in derived classes
 };
 
 typedef instr_item *HIptr;
-
-extern deque< instr_item * > HUD_deque;
+extern deque< instr_item *> HUD_deque;
 
 // instr_item           This class has no other purpose than to maintain
 //                      a linked list of instrument and derived class
@@ -235,16 +251,19 @@ class instr_label : public instr_item {
     int         blink;
 
   public:
-    instr_label( RECT         the_box,
+    instr_label( int          x,
+                 int          y,
+                 UINT         width,
+                 UINT         height,
                  DBLFNPTR     data_source,
                  const char  *label_format,
-                 const char  *pre_label_string    = 0,
-                 const char  *post_label_string   = 0,
-                 ReadOriented orientation         = ReadTOP,
-                 fgLabelJust  justification       = CENTER_JUST,
-                 int          font_size           = SMALL,
-                 int          blinking            = NOBLINK,
-                 bool         working             = true);
+                 const char  *pre_label_string  = 0,
+                 const char  *post_label_string = 0,
+                 UINT         options           = HUDS_TOP,
+                 fgLabelJust  justification     = CENTER_JUST,
+                 int          font_size         = SMALL,
+                 int          blinking          = NOBLINK,
+                 bool         working           = true);
 
     ~instr_label();
 
@@ -264,25 +283,32 @@ typedef instr_label * pInstlabel;
 
 class instr_scale : public instr_item {
   private:
-    int    range_shown;   // Width Units.
-    int    Maximum_value; //                ceiling.
-    int    Minimum_value; // Representation floor.
+    double range_shown;   // Width Units.
+    double Maximum_value; //                ceiling.
+    double Minimum_value; // Representation floor.
+    double scale_factor;  // factor => screen units/range values.
     UINT   Maj_div;       // major division marker units
     UINT   Min_div;       // minor division marker units
+    double disp_factor;   // Multiply by to get numbers shown on scale.
     UINT   Modulo;        // Roll over point
-    double scale_factor;  // factor => screen units/range values.
+    int    signif_digits; // digits to show to the right.
 
   public:
-    instr_scale( RECT         the_box,
+    instr_scale( int          x,
+                 int          y,
+                 UINT         width,
+                 UINT         height,
                  DBLFNPTR     load_fn,
-                 ReadOriented orient,
-                 int          show_range,
-                 int          max_value,
-                 int          min_value    =   0,
-                 UINT         major_divs   =  10,
-                 UINT         minor_divs   =   5,
-                 UINT         rollover     =   0,
-                 bool         working      = true);
+                 UINT         options,
+                 double       show_range,
+                 double       max_value    = 100.0,
+                 double       min_value    =   0.0,
+                 double       disp_scaling =   1.0,
+                 UINT         major_divs   =    10,
+                 UINT         minor_divs   =     5,
+                 UINT         rollover     =     0,
+                 int          dp_showing   =     2,
+                 bool         working      =  true);
 
     virtual ~instr_scale();
     instr_scale( const instr_scale & image);
@@ -291,57 +317,67 @@ class instr_scale : public instr_item {
     virtual void draw   ( void ) {}; // No-op here. Defined in derived classes.
     UINT   div_min      ( void ) { return Min_div;}
     UINT   div_max      ( void ) { return Maj_div;}
-    int    min_val      ( void ) { return Minimum_value;}
-    int    max_val      ( void ) { return Maximum_value;}
+    double min_val      ( void ) { return Minimum_value;}
+    double max_val      ( void ) { return Maximum_value;}
     UINT   modulo       ( void ) { return Modulo; }
     double factor       ( void ) { return scale_factor;}
     double range_to_show( void ) { return range_shown;}
 };
 
-// moving_scale_instr      This class displays the indicated quantity on
+// hud_card_               This class displays the indicated quantity on
 //                         a scale that moves past the pointer. It may be
 // horizontal or vertical, read above(left) or below(right) of the base
 // line.
 
-class moving_scale : public instr_scale {
+class hud_card : public instr_scale {
   private:
     double val_span;
     double half_width_units;
 
   public:
-    moving_scale( RECT         box,
-                  DBLFNPTR     load_fn,
-                  ReadOriented readway,
-                  int          maxValue,
-                  int          minValue,
-                  UINT         major_divs,
-                  UINT         minor_divs,
-                  UINT         modulator,
-                  double       value_span,
-                  bool         working = true);
+    hud_card( int      x,
+              int      y,
+              UINT     width,
+              UINT     height,
+              DBLFNPTR load_fn,
+              UINT     options,
+              double   maxValue      = 100.0,
+              double   minValue      =   0.0,
+              double   disp_scaling  =   1.0,
+              UINT     major_divs    =  10,
+              UINT     minor_divs    =   5,
+              UINT     modulator     = 100,
+              int      dp_showing    =   2,
+              double   value_span    = 100.0,
+              bool     working       = true);
 
-    ~moving_scale();
-    moving_scale( const moving_scale & image);
-    moving_scale & operator = (const moving_scale & rhs );
+    ~hud_card();
+    hud_card( const hud_card & image);
+    hud_card & operator = (const hud_card & rhs );
 //    virtual void display_enable( bool setting );
     virtual void draw( void );       // Required method in base class
 };
 
-typedef moving_scale * pMoveScale;
+typedef hud_card * pCardScale;
 
 class guage_instr : public instr_scale {
   private:
 
   public:
-    guage_instr( RECT         box,
-                 DBLFNPTR     load_fn,
-                 ReadOriented readway,
-                 int          maxValue,
-                 int          minValue,
-                 UINT         major_divs,
-                 UINT         minor_divs,
-                 UINT         modulus,
-                 bool         working = true);
+    guage_instr( int       x,
+                 int       y,
+                 UINT      width,
+                 UINT      height,
+                 DBLFNPTR  load_fn,
+                 UINT      options,
+                 double    disp_scaling = 1.0,
+                 double    maxValue     = 100,
+                 double    minValue     =   0,
+                 UINT      major_divs   =  50,
+                 UINT      minor_divs   =   0,
+                 int       dp_showing   =   2,
+                 UINT      modulus      =   0,
+                 bool      working      = true);
 
     ~guage_instr();
     guage_instr( const guage_instr & image);
@@ -359,11 +395,14 @@ class dual_instr_item : public instr_item {
     DBLFNPTR alt_data_source;
 
   public:
-    dual_instr_item ( RECT         the_box,
-                      DBLFNPTR     chn1_source,
-                      DBLFNPTR     chn2_source,
-                      bool         working     = true,
-                      ReadOriented readway  = ReadTOP);
+    dual_instr_item ( int       x,
+                      int       y,
+                      UINT      width,
+                      UINT      height,
+                      DBLFNPTR  chn1_source,
+                      DBLFNPTR  chn2_source,
+                      bool      working     = true,
+                      UINT      options  = HUDS_TOP);
 
     virtual ~dual_instr_item() {};
     dual_instr_item( const dual_instr_item & image);
@@ -381,12 +420,15 @@ class fgTBI_instr : public dual_instr_item {
     UINT scr_hole;
 
   public:
-    fgTBI_instr( RECT      the_box,
+    fgTBI_instr( int       x,
+                 int       y,
+                 UINT      width,
+                 UINT      height,
                  DBLFNPTR  chn1_source  = get_roll,
                  DBLFNPTR  chn2_source  = get_sideslip,
-                 UINT      maxBankAngle = 45,
-                 UINT      maxSlipAngle =  5,
-                 UINT      gap_width    =  5,
+                 double    maxBankAngle = 45.0,
+                 double    maxSlipAngle =  5.0,
+                 UINT      gap_width    =  5.0,
                  bool      working      =  true);
 
     fgTBI_instr( const fgTBI_instr & image);
@@ -409,19 +451,22 @@ class HudLadder : public dual_instr_item {
     UINT   minor_div;
     UINT   label_pos;
     UINT   scr_hole;
-    int    vmax;
-    int    vmin;
+    double vmax;
+    double vmin;
     double factor;
 
   public:
-    HudLadder( RECT      the_box,
+    HudLadder( int       x,
+               int       y,
+               UINT      width,
+               UINT      height,
                DBLFNPTR  ptch_source    = get_roll,
                DBLFNPTR  roll_source    = get_pitch,
-               UINT      span_units     = 45,
-               int       division_units = 10,
-               UINT      minor_division = 0,
-               UINT      screen_hole    = 70,
-               UINT      lbl_pos        = 0,
+               double    span_units     = 45.0,
+               double    division_units = 10.0,
+               double    minor_division =  0.0,
+               UINT      screen_hole    =   70,
+               UINT      lbl_pos        =    0,
                bool      working        = true );
 
     ~HudLadder();
@@ -438,6 +483,17 @@ class HudLadder : public dual_instr_item {
 extern int  fgHUDInit( fgAIRCRAFT * /* current_aircraft */ );
 extern void fgUpdateHUD( void );
 
+extern void drawOneLine ( UINT x1, UINT y1, UINT x2, UINT y2);
+extern void drawOneLine ( RECT &rect);
+extern void textString  ( int x,
+                          int y,
+                          char *msg,
+                          void *font = GLUT_BITMAP_8_BY_13);
+extern void strokeString( int x,
+                          int y,
+                          char *msg,
+                          void *font = GLUT_STROKE_ROMAN,
+                          float theta = 0);
 /*
 bool AddHUDInstrument( instr_item *pBlackBox );
 void DrawHUD ( void );
@@ -453,9 +509,8 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 /* $Log$
-/* Revision 1.7  1998/06/12 00:56:00  curt
-/* Build only static libraries.
-/* Declare memmove/memset for Sloaris.
+/* Revision 1.8  1998/07/03 13:16:29  curt
+/* Added Charlie Hotchkiss's HUD updates and improvementes.
 /*
  * Revision 1.6  1998/06/03 00:43:28  curt
  * No .h when including stl stuff.
