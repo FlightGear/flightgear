@@ -3,6 +3,22 @@
  *
  * Written by Curtis Olson, started May 1997.
  *
+ * Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
@@ -35,7 +51,7 @@ static void mat3_cross_product(float result_vec[3], register float vec1[3],
 
 
 /* walk through mesh and make ogl calls */
-GLint mesh_to_ogl(struct mesh *m) {
+GLint mesh2GL(struct mesh *m) {
     GLint mesh;
     /* static GLfloat color[4] = { 0.3, 0.7, 0.2, 1.0 }; */
 
@@ -44,7 +60,7 @@ GLint mesh_to_ogl(struct mesh *m) {
     int i, j, istep, jstep, iend, jend;
     float temp;
 
-    istep = jstep = 25;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 10;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -53,11 +69,11 @@ GLint mesh_to_ogl(struct mesh *m) {
     iend = m->cols - 1;
     jend = m->rows - 1;
     
-    y1 = 0.0; /* y1 = m->originy; */
+    y1 = m->originy;
     y2 = y1 + (m->col_step * istep);
     
     for ( i = 0; i < iend; i += istep ) {
-	x1 = 0.0; /* x1 = m->originx; */
+	x1 = m->originx;
 	x2 = x1 + (m->row_step * jstep);
 	for ( j = 0; j < jend; j += jstep ) {
 	    z11 = 0.03 * m->mesh_data[j         * m->rows + i        ];
@@ -112,9 +128,13 @@ GLint mesh_to_ogl(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.2  1997/05/23 00:35:13  curt
-/* Trying to get fog to work ...
+/* Revision 1.3  1997/05/23 15:40:26  curt
+/* Added GNU copyright headers.
+/* Fog now works!
 /*
+ * Revision 1.2  1997/05/23 00:35:13  curt
+ * Trying to get fog to work ...
+ *
  * Revision 1.1  1997/05/21 15:57:52  curt
  * Renamed due to added GLUT support.
  *
