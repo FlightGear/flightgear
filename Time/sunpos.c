@@ -263,7 +263,7 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
 void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
     struct fgLIGHT *l;
     struct fgTIME *t;
-    struct VIEW *v;
+    struct fgVIEW *v;
     MAT3vec nup, nsun;
     double sun_gd_lat, sl_radius, temp;
     static int time_warp = 0;
@@ -308,9 +308,13 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
 
 
 /* $Log$
-/* Revision 1.14  1997/12/09 04:25:39  curt
-/* Working on adding a global lighting params structure.
+/* Revision 1.15  1997/12/10 22:37:55  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.14  1997/12/09 04:25:39  curt
+ * Working on adding a global lighting params structure.
+ *
  * Revision 1.13  1997/11/25 19:25:42  curt
  * Changes to integrate Durk's moon/sun code updates + clean up.
  *

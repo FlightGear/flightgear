@@ -68,9 +68,9 @@ void fgAstroInit() {
 
 /* Render Astronomical Objects */
 void fgAstroRender() {
-    struct FLIGHT *f;
+    struct fgFLIGHT *f;
     struct fgLIGHT *l;
-    struct VIEW *v;
+    struct fgVIEW *v;
     struct fgTIME *t;
     double angle;
 
@@ -121,9 +121,13 @@ void fgAstroRender() {
 
 
 /* $Log$
-/* Revision 1.2  1997/12/09 04:25:33  curt
-/* Working on adding a global lighting params structure.
+/* Revision 1.3  1997/12/10 22:37:49  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.2  1997/12/09 04:25:33  curt
+ * Working on adding a global lighting params structure.
+ *
  * Revision 1.1  1997/11/25 23:20:22  curt
  * Initial revision.
  *

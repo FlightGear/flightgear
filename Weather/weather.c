@@ -29,9 +29,13 @@
 #include "../Math/fg_random.h"
 
 
+/* This is a record containing current weather info */
+struct fgWEATHER current_weather;
+
+
 /* Initialize the weather modeling subsystem */
 void fgWeatherInit(void) {
-    struct WEATHER *w;
+    struct fgWEATHER *w;
 
     w = &current_weather;
 
@@ -44,8 +48,8 @@ void fgWeatherInit(void) {
 
 /* Update the weather parameters for the current position */
 void fgWeatherUpdate(double lon, double lat, double alt) {
-    struct FLIGHT *f;
-    struct WEATHER *w;
+    struct fgFLIGHT *f;
+    struct fgWEATHER *w;
 
     f = &current_aircraft.flight;
     w = &current_weather;
@@ -58,9 +62,13 @@ void fgWeatherUpdate(double lon, double lat, double alt) {
 
 
 /* $Log$
-/* Revision 1.6  1997/08/27 03:30:38  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.7  1997/12/10 22:37:56  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.6  1997/08/27 03:30:38  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.5  1997/08/22 21:34:42  curt
  * Doing a bit of reorganizing and house cleaning.
  *

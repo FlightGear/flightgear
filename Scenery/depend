@@ -28,12 +28,8 @@ planets.o: planets.c ../Time/fg_time.h ../Time/../types.h \
  ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \
  ../Time/../Flight/LaRCsim/../flight.h orbits.h planets.h sun.h
-scenery.o: scenery.c ../general.h moon.h orbits.h ../Time/fg_time.h \
- ../Time/../types.h ../Time/../Flight/flight.h \
- ../Time/../Flight/Slew/slew.h \
- ../Time/../Flight/LaRCsim/ls_interface.h \
- ../Time/../Flight/LaRCsim/../flight.h obj.h scenery.h ../types.h \
- stars.h
+scenery.o: scenery.c ../general.h astro.h stars.h obj.h scenery.h \
+ ../types.h
 stars.o: stars.c orbits.h ../Time/fg_time.h ../Time/../types.h \
  ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \

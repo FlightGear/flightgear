@@ -226,7 +226,7 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 
 /* Update the time dependent variables */
 
-void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
+void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
     double gst_precise, gst_course;
     static long int warp = 0;
 
@@ -285,9 +285,13 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.14  1997/12/10 01:19:52  curt
-/* Tweaks for verion 0.15 release.
+/* Revision 1.15  1997/12/10 22:37:54  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.14  1997/12/10 01:19:52  curt
+ * Tweaks for verion 0.15 release.
+ *
  * Revision 1.13  1997/12/09 05:11:56  curt
  * Working on tweaking lighting.
  *

@@ -45,7 +45,7 @@ GLint area_terrain;
 
 
 /* Shared structure to hold current scenery parameters */
-struct SCENERY scenery;
+struct fgSCENERY scenery;
 
 
 /* Initialize the Scenery Management system */
@@ -58,7 +58,7 @@ void fgSceneryInit() {
 /* Tell the scenery manager where we are so it can load the proper data, and
  * build the proper structures. */
 void fgSceneryUpdate(double lon, double lat, double elev) {
-    struct GENERAL *g;
+    struct fgGENERAL *g;
     char path[1024];
 
     g = &general;
@@ -87,11 +87,15 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.24  1997/12/08 22:51:18  curt
-/* Enhanced to handle ccw and cw tri-stripe winding.  This is a temporary
-/* admission of defeat.  I will eventually go back and get all the stripes
-/* wound the same way (ccw).
+/* Revision 1.25  1997/12/10 22:37:51  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.24  1997/12/08 22:51:18  curt
+ * Enhanced to handle ccw and cw tri-stripe winding.  This is a temporary
+ * admission of defeat.  I will eventually go back and get all the stripes
+ * wound the same way (ccw).
+ *
  * Revision 1.23  1997/11/25 19:25:37  curt
  * Changes to integrate Durk's moon/sun code updates + clean up.
  *

@@ -52,18 +52,8 @@
 #include "../Weather/weather.h"
 
 
-/* This is a record containing all the info for the aircraft currently
-   being operated */
-struct AIRCRAFT current_aircraft;
-
 /* This is a record containing global housekeeping information */
-struct GENERAL general;
-
-/* This is a record containing current weather info */
-struct WEATHER current_weather;
-
-/* This is a record containing current view parameters */
-struct VIEW current_view;
+struct fgGENERAL general;
 
 /* view parameters */
 static GLfloat win_ratio = 1.0;
@@ -102,7 +92,7 @@ int show_hud;
 static void fgInitVisuals() {
     struct fgLIGHT *l;
     struct fgTIME *t;
-    struct WEATHER *w;
+    struct fgWEATHER *w;
 
     l = &cur_light_params;
     t = &cur_time_params;
@@ -140,10 +130,10 @@ static void fgInitVisuals() {
  **************************************************************************/
 
 static void fgUpdateViewParams() {
-    struct FLIGHT *f;
+    struct fgFLIGHT *f;
     struct fgLIGHT *l;
     struct fgTIME *t;
-    struct VIEW *v;
+    struct fgVIEW *v;
 
     double x_2, x_4, x_8, x_10;
     double ambient, diffuse, sky;
@@ -265,9 +255,9 @@ static void fgUpdateVisuals( void ) {
  **************************************************************************/
 
 void fgUpdateTimeDepCalcs(int multi_loop) {
-    struct FLIGHT *f;
+    struct fgFLIGHT *f;
     struct fgTIME *t;
-    struct VIEW *v;
+    struct fgVIEW *v;
     int i;
 
     f = &current_aircraft.flight;
@@ -417,8 +407,8 @@ static void fgMainLoop( void ) {
     double cur_elev;
     double joy_x, joy_y;
     int joy_b1, joy_b2;
-    struct AIRCRAFT *a;
-    struct FLIGHT *f;
+    struct fgAIRCRAFT *a;
+    struct fgFLIGHT *f;
     struct fgTIME *t;
 
     a = &current_aircraft;
@@ -507,7 +497,7 @@ static void fgReshape( int width, int height ) {
  **************************************************************************/
 
 int main( int argc, char *argv[] ) {
-    struct FLIGHT *f;
+    struct fgFLIGHT *f;
 
     f = &current_aircraft.flight;
 
@@ -583,9 +573,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.27  1997/12/09 05:11:54  curt
-/* Working on tweaking lighting.
+/* Revision 1.28  1997/12/10 22:37:45  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.27  1997/12/09 05:11:54  curt
+ * Working on tweaking lighting.
+ *
  * Revision 1.26  1997/12/09 04:25:29  curt
  * Working on adding a global lighting params structure.
  *

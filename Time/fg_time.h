@@ -85,16 +85,20 @@ extern struct fgLIGHT cur_light_params;
 void fgTimeInit(struct fgTIME *t);
 
 /* Update the time dependent variables */
-void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t);
+void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t);
 
 
 #endif /* FG_TIME_H */
 
 
 /* $Log$
-/* Revision 1.8  1997/12/09 04:25:38  curt
-/* Working on adding a global lighting params structure.
+/* Revision 1.9  1997/12/10 22:37:55  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.8  1997/12/09 04:25:38  curt
+ * Working on adding a global lighting params structure.
+ *
  * Revision 1.7  1997/11/25 19:25:41  curt
  * Changes to integrate Durk's moon/sun code updates + clean up.
  *

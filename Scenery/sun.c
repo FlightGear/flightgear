@@ -145,7 +145,7 @@ void fgSunInit()
 
 /* Draw the Sun */
 void fgSunRender() {
-    struct VIEW *v;
+    struct fgVIEW *v;
     struct fgTIME *t;
     GLfloat color[4] = { 0.85, 0.65, 0.05, 1.0 };
     /* double x_2, x_4, x_8, x_10; */
@@ -201,9 +201,13 @@ void fgSunRender() {
 
 
 /* $Log$
-/* Revision 1.3  1997/12/09 05:11:56  curt
-/* Working on tweaking lighting.
+/* Revision 1.4  1997/12/10 22:37:53  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.3  1997/12/09 05:11:56  curt
+ * Working on tweaking lighting.
+ *
  * Revision 1.2  1997/11/25 19:25:39  curt
  * Changes to integrate Durk's moon/sun code updates + clean up.
  *

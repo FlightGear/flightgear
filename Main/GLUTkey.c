@@ -45,9 +45,9 @@ extern int show_hud;             /* HUD state */
 
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
-    struct CONTROLS *c;
-    struct VIEW *v;
-    struct WEATHER *w;
+    struct fgCONTROLS *c;
+    struct fgVIEW *v;
+    struct fgWEATHER *w;
 
     c = &current_aircraft.controls;
     v = &current_view;
@@ -144,8 +144,8 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 /* Handle "special" keyboard events */
 void GLUTspecialkey(int k, int x, int y) {
-    struct CONTROLS *c;
-    struct VIEW *v;
+    struct fgCONTROLS *c;
+    struct fgVIEW *v;
 
     c = &current_aircraft.controls;
     v = &current_view;
@@ -224,9 +224,13 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.21  1997/08/27 21:32:23  curt
-/* Restructured view calculation code.  Added stars.
+/* Revision 1.22  1997/12/10 22:37:45  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.21  1997/08/27 21:32:23  curt
+ * Restructured view calculation code.  Added stars.
+ *
  * Revision 1.20  1997/08/27 03:30:13  curt
  * Changed naming scheme of basic shared structures.
  *

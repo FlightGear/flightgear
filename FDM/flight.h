@@ -47,7 +47,7 @@
 typedef double FG_VECTOR_3[3];
 
 /* This is based heavily on LaRCsim/ls_generic.h */
-struct FLIGHT {
+struct fgFLIGHT {
 
 /*================== Mass properties and geometry values ==================*/
 
@@ -386,19 +386,23 @@ struct FLIGHT {
 /* General interface to the flight model routines */
 
 /* Initialize the flight model parameters */
-int fgFlightModelInit(int model, struct FLIGHT *f, double dt);
+int fgFlightModelInit(int model, struct fgFLIGHT *f, double dt);
 
 /* Run multiloop iterations of the flight model */
-int fgFlightModelUpdate(int model, struct FLIGHT *f, int multiloop);
+int fgFlightModelUpdate(int model, struct fgFLIGHT *f, int multiloop);
 
 
 #endif /* FLIGHT_H */
 
 
 /* $Log$
-/* Revision 1.9  1997/09/04 02:17:33  curt
-/* Shufflin' stuff.
+/* Revision 1.10  1997/12/10 22:37:43  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.9  1997/09/04 02:17:33  curt
+ * Shufflin' stuff.
+ *
  * Revision 1.8  1997/08/27 03:30:06  curt
  * Changed naming scheme of basic shared structures.
  *

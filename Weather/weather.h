@@ -29,11 +29,11 @@
 
 
 /* holds the current weather values */
-struct WEATHER {
+struct fgWEATHER {
     float visibility;
 };
 
-extern struct WEATHER current_weather;
+extern struct fgWEATHER current_weather;
 
 
 /* Initialize the weather modeling subsystem */
@@ -47,9 +47,13 @@ void fgWeatherUpdate(double lon, double lat, double alt);
 
 
 /* $Log$
-/* Revision 1.4  1997/08/27 03:30:39  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.5  1997/12/10 22:37:56  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.4  1997/08/27 03:30:39  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.3  1997/08/22 21:34:43  curt
  * Doing a bit of reorganizing and house cleaning.
  *

@@ -57,7 +57,7 @@
 /* Initialize the Star Management Subsystem */
 void fgStarsInit() {
     FILE *fd;
-    struct GENERAL *g;
+    struct fgGENERAL *g;
     struct CelestialCoord pltPos;
     char path[1024];
     char line[256], name[256];
@@ -216,8 +216,8 @@ void fgStarsInit() {
 
 /* Draw the Stars */
 void fgStarsRender() {
-    struct FLIGHT *f;
-    struct VIEW *v;
+    struct fgFLIGHT *f;
+    struct fgVIEW *v;
     struct fgLIGHT *l;
     struct fgTIME *t;
     int i;
@@ -256,9 +256,13 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.17  1997/12/09 04:25:33  curt
-/* Working on adding a global lighting params structure.
+/* Revision 1.18  1997/12/10 22:37:52  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.17  1997/12/09 04:25:33  curt
+ * Working on adding a global lighting params structure.
+ *
  * Revision 1.16  1997/11/25 19:25:38  curt
  * Changes to integrate Durk's moon/sun code updates + clean up.
  *

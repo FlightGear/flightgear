@@ -386,7 +386,7 @@ static void drawhorizon( struct HUD_horizon horizon )
 {
 	int x_inc1, y_inc1;
 	int x_inc2, y_inc2;
-	struct FLIGHT *f;
+	struct fgFLIGHT *f;
 	double sin_bank, cos_bank;
 	double bank_angle;
               
@@ -464,7 +464,7 @@ static void drawlabel( struct HUD_label label )
 
 double get_speed()
 {
-	struct FLIGHT *f;
+	struct fgFLIGHT *f;
               
 	f = &current_aircraft.flight;
 	return( FG_V_equiv_kts );
@@ -472,7 +472,7 @@ double get_speed()
 
 double get_aoa()
 {
-	struct FLIGHT *f;
+	struct fgFLIGHT *f;
               
 	f = &current_aircraft.flight;
 	return( FG_Gamma_vert_rad*RAD_TO_DEG );
@@ -480,7 +480,7 @@ double get_aoa()
 
 double get_roll()
 {
-	struct FLIGHT *f;
+	struct fgFLIGHT *f;
               
 	f = &current_aircraft.flight;
 	return( FG_Phi );
@@ -488,7 +488,7 @@ double get_roll()
 
 double get_pitch()
 {
-	struct FLIGHT *f;
+	struct fgFLIGHT *f;
               
 	f = &current_aircraft.flight;
 	return( FG_Theta );
@@ -496,7 +496,7 @@ double get_pitch()
 
 double get_heading()
 {
-	struct FLIGHT *f;
+	struct fgFLIGHT *f;
               
 	f = &current_aircraft.flight;
 	return( FG_Psi*RAD_TO_DEG ); 
@@ -504,7 +504,7 @@ double get_heading()
 
 double get_altitude()
 {
-	struct FLIGHT *f;
+	struct fgFLIGHT *f;
 	double rough_elev;
               
 	f = &current_aircraft.flight;
@@ -522,7 +522,7 @@ void add_instrument( Hptr hud, HIptr instrument )
 	// while( ++instruments
 }
 
-Hptr fgHUDInit( struct AIRCRAFT current_aircraft, int color )
+Hptr fgHUDInit( struct fgAIRCRAFT current_aircraft, int color )
 {
 	Hptr hud;
 	
@@ -807,9 +807,13 @@ void fgUpdateHUD( Hptr hud )
 
 
 /* $Log$
-/* Revision 1.4  1997/09/23 00:29:32  curt
-/* Tweaks to get things to compile with gcc-win32.
+/* Revision 1.5  1997/12/10 22:37:39  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.4  1997/09/23 00:29:32  curt
+ * Tweaks to get things to compile with gcc-win32.
+ *
  * Revision 1.3  1997/09/05 14:17:26  curt
  * More tweaking with stars.
  *

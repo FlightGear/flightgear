@@ -203,7 +203,7 @@ struct HUD {
 
 typedef struct HUD *Hptr;
 
-Hptr fgHUDInit( struct AIRCRAFT cur_aircraft, int color );
+Hptr fgHUDInit( struct fgAIRCRAFT cur_aircraft, int color );
 Hptr fgHUDAddHorizon( Hptr hud, int x_pos, int y_pos, int length, int hole_len, double (*load_value)() );
 Hptr fgHUDAddScale( Hptr hud, int type, int scr_pos, int scr_min, int scr_max, int div_min, int div_max, \
 					int orientation, int with_min, int min_value, int width_units, double (*load_value)() );
@@ -226,7 +226,11 @@ void fgUpdateHUD2( struct HUD *hud );
 
 
 /* $Log$
-/* Revision 1.1  1997/08/29 18:03:22  curt
-/* Initial revision.
+/* Revision 1.2  1997/12/10 22:37:40  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.1  1997/08/29 18:03:22  curt
+ * Initial revision.
+ *
  */

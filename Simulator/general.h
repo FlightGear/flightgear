@@ -31,21 +31,25 @@
 
 
 /* the general house keeping structure definition */
-struct GENERAL {
+struct fgGENERAL {
     /* The flight gear "root" directory */
     char *root_dir;
 };
 
 /* general contains all the general house keeping parameters. */
-extern struct GENERAL general;
+extern struct fgGENERAL general;
 
 #endif /* GENERAL_H */
 
 
 /* $Log$
-/* Revision 1.2  1997/08/27 03:29:38  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.3  1997/12/10 22:37:34  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.2  1997/08/27 03:29:38  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.1  1997/08/23 11:37:12  curt
  * Initial revision.
  *

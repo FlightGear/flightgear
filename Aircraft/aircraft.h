@@ -32,29 +32,33 @@
 
 
 /* Define a structure containing all the parameters for an aircraft */
-struct AIRCRAFT {
-    struct FLIGHT flight;
-    struct CONTROLS controls;
+struct fgAIRCRAFT {
+    struct fgFLIGHT flight;
+    struct fgCONTROLS controls;
 };
 
 
 /* current_aircraft contains all the parameters of the aircraft
    currently being operated. */
-extern struct AIRCRAFT current_aircraft;
+extern struct fgAIRCRAFT current_aircraft;
 
 
 /* Display various parameters to stdout */
-void fgAircraftOutputCurrent(struct AIRCRAFT *a);
+void fgAircraftOutputCurrent(struct fgAIRCRAFT *a);
 
 
 #endif /* AIRCRAFT_H */
 
 
 /* $Log$
-/* Revision 1.6  1997/09/13 02:00:06  curt
-/* Mostly working on stars and generating sidereal time for accurate star
-/* placement.
+/* Revision 1.7  1997/12/10 22:37:38  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.6  1997/09/13 02:00:06  curt
+ * Mostly working on stars and generating sidereal time for accurate star
+ * placement.
+ *
  * Revision 1.5  1997/08/27 03:29:58  curt
  * Changed naming scheme of basic shared structures.
  *

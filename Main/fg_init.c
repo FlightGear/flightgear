@@ -51,7 +51,7 @@ extern int show_hud;             /* HUD state */
 /* General house keeping initializations */
 
 void fgInitGeneral( void ) {
-    struct GENERAL *g;
+    struct fgGENERAL *g;
 
     g = &general;
 
@@ -75,9 +75,9 @@ void fgInitGeneral( void ) {
 void fgInitSubsystems( void ) {
     double cur_elev;
 
-    struct FLIGHT *f;
+    struct fgFLIGHT *f;
     struct fgTIME *t;
-    struct VIEW *v;
+    struct fgVIEW *v;
 
     f = &current_aircraft.flight;
     t = &cur_time_params;
@@ -216,9 +216,13 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.13  1997/11/25 19:25:32  curt
-/* Changes to integrate Durk's moon/sun code updates + clean up.
+/* Revision 1.14  1997/12/10 22:37:47  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.13  1997/11/25 19:25:32  curt
+ * Changes to integrate Durk's moon/sun code updates + clean up.
+ *
  * Revision 1.12  1997/11/15 18:16:35  curt
  * minor tweaks.
  *

@@ -43,14 +43,14 @@
 // #define DEBUG
 
 /* This is a structure that contains all data related to cockpit/panel/hud system */
-static struct COCKPIT *aircraft_cockpit;
+static struct fgCOCKPIT *aircraft_cockpit;
 
-struct COCKPIT *fgCockpitInit( struct AIRCRAFT cur_aircraft )
+struct fgCOCKPIT *fgCockpitInit( struct fgAIRCRAFT cur_aircraft )
 {
-	struct COCKPIT *cockpit;
+	struct fgCOCKPIT *cockpit;
 	Hptr hud;
 	
-	cockpit = (struct COCKPIT *)calloc(sizeof(struct COCKPIT),1);
+	cockpit = (struct fgCOCKPIT *)calloc(sizeof(struct fgCOCKPIT),1);
 	if( cockpit == NULL )
 		return( NULL );
 		
@@ -71,7 +71,7 @@ struct COCKPIT *fgCockpitInit( struct AIRCRAFT cur_aircraft )
 	return( cockpit );
 }
 
-struct COCKPIT *fgCockpitAddHUD( struct COCKPIT *cockpit, struct HUD *hud )
+struct fgCOCKPIT *fgCockpitAddHUD( struct fgCOCKPIT *cockpit, struct HUD *hud )
 {
 	cockpit->hud = hud;
 }
@@ -87,7 +87,11 @@ void fgCockpitUpdate()
 
 
 /* $Log$
-/* Revision 1.1  1997/08/29 18:03:20  curt
-/* Initial revision.
+/* Revision 1.2  1997/12/10 22:37:38  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.1  1997/08/29 18:03:20  curt
+ * Initial revision.
+ *
  */

@@ -32,7 +32,7 @@
 
 
 /* Define a structure containing global scenery parameters */
-struct SCENERY {
+struct fgSCENERY {
     /* number of terrain data points to skip */
     int terrain_skip;
 
@@ -43,7 +43,7 @@ struct SCENERY {
     double sun_angle;
 };
 
-extern struct SCENERY scenery;
+extern struct fgSCENERY scenery;
 
 
 /* Initialize the Scenery Management system */
@@ -63,9 +63,13 @@ void fgSceneryRender();
 
 
 /* $Log$
-/* Revision 1.10  1997/09/04 02:17:37  curt
-/* Shufflin' stuff.
+/* Revision 1.11  1997/12/10 22:37:52  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.10  1997/09/04 02:17:37  curt
+ * Shufflin' stuff.
+ *
  * Revision 1.9  1997/08/27 03:30:33  curt
  * Changed naming scheme of basic shared structures.
  *

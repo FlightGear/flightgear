@@ -119,7 +119,7 @@ void fgReadOrbElements(struct OrbElements *dest, FILE *src)
 
 void fgSolarSystemInit(struct fgTIME t)
 {
-   struct GENERAL *g;
+   struct fgGENERAL *g;
    char path[80];
    int i;
    FILE *data;
@@ -170,9 +170,13 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
 
 
 /* $Log$
-/* Revision 1.3  1997/11/25 23:20:44  curt
-/* Changed planets.dat Planets.dat
+/* Revision 1.4  1997/12/10 22:37:51  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.3  1997/11/25 23:20:44  curt
+ * Changed planets.dat Planets.dat
+ *
  * Revision 1.2  1997/11/25 19:25:36  curt
  * Changes to integrate Durk's moon/sun code updates + clean up.
  *

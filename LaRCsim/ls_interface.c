@@ -495,7 +495,7 @@ int initialize;
 
 
 int ls_cockpit() {
-    struct CONTROLS *c;
+    struct fgCONTROLS *c;
 
     sim_control_.paused = 0;
 
@@ -559,8 +559,8 @@ int fgLaRCsimUpdate(int multiloop) {
 }
 
 
-/* Convert from the FG FLIGHT struct to the LaRCsim generic_ struct */
-int fgFlight_2_LaRCsim (struct FLIGHT *f) {
+/* Convert from the fgFLIGHT struct to the LaRCsim generic_ struct */
+int fgFlight_2_LaRCsim (struct fgFLIGHT *f) {
     Mass =      FG_Mass;
     I_xx =      FG_I_xx;
     I_yy =      FG_I_yy;
@@ -733,8 +733,8 @@ int fgFlight_2_LaRCsim (struct FLIGHT *f) {
 }
 
 
-/* Convert from the LaRCsim generic_ struct to the FG FLIGHT struct */
-int fgLaRCsim_2_Flight (struct FLIGHT *f) {
+/* Convert from the LaRCsim generic_ struct to the fgFLIGHT struct */
+int fgLaRCsim_2_Flight (struct fgFLIGHT *f) {
     FG_Mass =   Mass;
     FG_I_xx =   I_xx;
     FG_I_yy =   I_yy;
@@ -909,6 +909,10 @@ int fgLaRCsim_2_Flight (struct FLIGHT *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.10  1997/12/10 22:37:43  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.9  1997/08/27 03:30:08  curt
  * Changed naming scheme of basic shared structures.
  *

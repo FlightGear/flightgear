@@ -33,7 +33,7 @@
 
 /* Define a structure containing the control parameters */
 
-struct CONTROLS {
+struct fgCONTROLS {
     double aileron;
     double elevator;
     double elevator_trim;
@@ -81,9 +81,13 @@ void fgThrottleSet(int engine, double pos);
 
 
 /* $Log$
-/* Revision 1.5  1997/08/27 03:30:02  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.6  1997/12/10 22:37:41  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.5  1997/08/27 03:30:02  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.4  1997/07/23 21:52:18  curt
  * Put comments around the text after an #endif for increased portability.
  *

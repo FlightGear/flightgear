@@ -30,10 +30,15 @@
 #include "../constants.h"
 
 
+/* This is a record containing all the info for the aircraft currently
+   being operated */
+struct fgAIRCRAFT current_aircraft;
+
+
 /* Display various parameters to stdout */
-void fgAircraftOutputCurrent(struct AIRCRAFT *a) {
-    struct FLIGHT *f;
-    struct CONTROLS *c;
+void fgAircraftOutputCurrent(struct fgAIRCRAFT *a) {
+    struct fgFLIGHT *f;
+    struct fgCONTROLS *c;
 
     f = &a->flight;
     c = &a->controls;
@@ -48,10 +53,14 @@ void fgAircraftOutputCurrent(struct AIRCRAFT *a) {
 
 
 /* $Log$
-/* Revision 1.11  1997/09/13 02:00:05  curt
-/* Mostly working on stars and generating sidereal time for accurate star
-/* placement.
+/* Revision 1.12  1997/12/10 22:37:37  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.11  1997/09/13 02:00:05  curt
+ * Mostly working on stars and generating sidereal time for accurate star
+ * placement.
+ *
  * Revision 1.10  1997/08/27 03:29:56  curt
  * Changed naming scheme of basic shared structures.
  *

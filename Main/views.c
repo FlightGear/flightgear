@@ -34,15 +34,19 @@
 #include "../Scenery/scenery.h"
 
 
+/* This is a record containing current view parameters */
+struct fgVIEW current_view;
+
+
 /* Initialize a view structure */
-void fgViewInit(struct VIEW *v) {
+void fgViewInit(struct fgVIEW *v) {
     v->view_offset = 0.0;
     v->goal_view_offset = 0.0;
 }
 
 
 /* Update the view parameters */
-void fgViewUpdate(struct FLIGHT *f, struct VIEW *v) {
+void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v) {
     MAT3vec vec, forward;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
 
@@ -129,7 +133,11 @@ void fgViewUpdate(struct FLIGHT *f, struct VIEW *v) {
 
 
 /* $Log$
-/* Revision 1.1  1997/08/27 21:31:17  curt
-/* Initial revision.
+/* Revision 1.2  1997/12/10 22:37:48  curt
+/* Prepended "fg" on the name of all global structures that didn't have it yet.
+/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
 /*
+ * Revision 1.1  1997/08/27 21:31:17  curt
+ * Initial revision.
+ *
  */

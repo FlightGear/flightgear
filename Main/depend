@@ -26,11 +26,9 @@ fg_init.o: fg_init.c fg_init.h views.h ../types.h ../Flight/flight.h \
  ../Cockpit/hud.h ../Cockpit/../Aircraft/aircraft.h \
  ../Cockpit/../Flight/flight.h ../Cockpit/../Controls/controls.h \
  ../Joystick/joystick.h ../Math/fg_random.h ../Scenery/mesh.h \
- ../Scenery/moon.h ../Scenery/orbits.h ../Scenery/../Time/fg_time.h \
- ../Scenery/../Time/../types.h ../Scenery/../Time/../Flight/flight.h \
- ../Scenery/scenery.h ../Scenery/../types.h ../Scenery/stars.h \
- ../Time/fg_time.h ../Time/sunpos.h ../Time/../types.h \
- ../Weather/weather.h
+ ../Scenery/astro.h ../Scenery/stars.h ../Scenery/scenery.h \
+ ../Scenery/../types.h ../Time/fg_time.h ../Time/../types.h \
+ ../Time/../Flight/flight.h ../Time/sunpos.h ../Weather/weather.h
 views.o: views.c views.h ../types.h ../Flight/flight.h \
  ../Flight/Slew/slew.h ../Flight/LaRCsim/ls_interface.h \
  ../Flight/LaRCsim/../flight.h ../Math/mat3.h ../constants.h \
