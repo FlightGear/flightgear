@@ -216,6 +216,8 @@ void FGAutopilot::init ()
     roll_node = fgGetNode("/orientation/roll-deg", true);
     pitch_node = fgGetNode("/orientation/pitch-deg", true);
 
+
+
     // bind config property nodes...
     TargetClimbRate
         = fgGetNode("/autopilot/config/target-climb-rate-fpm", true);
@@ -231,6 +233,11 @@ void FGAutopilot::init ()
         = fgGetNode("/autopilot/config/zero-pitch-throttle", true);
     zero_pitch_trim_full_throttle
         = fgGetNode("/autopilot/config/zero-pitch-trim-full-throttle", true);
+    max_aileron_node = fgGetNode("/autopilot/config/max-aileron", true);
+    max_roll_node = fgGetNode("/autopilot/config/max-roll-deg", true);
+    roll_out_node = fgGetNode("/autopilot/config/roll-out-deg", true);
+    roll_out_smooth_node = fgGetNode("/autopilot/config/roll-out-smooth-deg", true);
+
     current_throttle = fgGetNode("/controls/throttle");
 
     // initialize config properties with defaults (in case config isn't there)
@@ -250,6 +257,14 @@ void FGAutopilot::init ()
         fgSetFloat( "/autopilot/config/zero-pitch-throttle", 0.60 );
     if ( zero_pitch_trim_full_throttle->getFloatValue() < 0.0000001 )
         fgSetFloat( "/autopilot/config/zero-pitch-trim-full-throttle", 0.15 );
+    if ( max_aileron_node->getFloatValue() < 0.0000001 )
+        fgSetFloat( "/autopilot/config/max-aileron", 0.2 );
+    if ( max_roll_node->getFloatValue() < 0.0000001 )
+        fgSetFloat( "/autopilot/config/max-roll-deg", 20 );
+    if ( roll_out_node->getFloatValue() < 0.0000001 )
+        fgSetFloat( "/autopilot/config/roll-out-deg", 20 );
+    if ( roll_out_smooth_node->getFloatValue() < 0.0000001 )
+        fgSetFloat( "/autopilot/config/roll-out-smooth-deg", 10 );
 
     /* set defaults */
     heading_hold = false ;      // turn the heading hold off
@@ -283,9 +298,6 @@ void FGAutopilot::init ()
     // the deg from heading to start rolling out at, in Deg
     RollOut = 20;
 
-    // how far can I move the aleron from center.
-    MaxAileron = .2;
-
     // Smoothing distance for alerion control
     RollOutSmooth = 10;
 
@@ -296,7 +308,7 @@ void FGAutopilot::init ()
 #if !defined( USING_SLIDER_CLASS )
     MaxRollAdjust = 2 * MaxRoll;
     RollOutAdjust = 2 * RollOut;
-    MaxAileronAdjust = 2 * MaxAileron;
+    //MaxAileronAdjust = 2 * MaxAileron;
     RollOutSmoothAdjust = 2 * RollOutSmooth;
 #endif  // !defined( USING_SLIDER_CLASS )
 
@@ -432,6 +444,12 @@ FGAutopilot::update (double dt)
     double lon = longitude_node->getDoubleValue();
     double alt = altitude_node->getDoubleValue() * SG_FEET_TO_METER;
 
+    // get config settings
+    MaxAileron = max_aileron_node->getDoubleValue();
+    MaxRoll = max_roll_node->getDoubleValue();
+    RollOut = roll_out_node->getDoubleValue();
+    RollOutSmooth = roll_out_smooth_node->getDoubleValue();
+
     SG_LOG( SG_ALL, SG_DEBUG, "FGAutopilot::run()  lat = " << lat <<
             "  lon = " << lon << "  alt = " << alt );
 	
@@ -508,6 +526,13 @@ FGAutopilot::update (double dt)
 		current_radiostack->get_nav1_heading_needle_deflection()
 		* (current_radiostack->get_nav1_loc_dist() * SG_METER_TO_NM);
 	    SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
+
+            // clamp closer when inside cone when beyond 5km...
+            if (current_radiostack->get_nav1_loc_dist() > 5000) {
+              double clamp_angle = fabs(current_radiostack->get_nav1_heading_needle_deflection()) * 3;
+              if (clamp_angle < 30)
+                SG_CLAMP_RANGE( adjustment, -clamp_angle, clamp_angle);
+            }
 
 	    // determine the target heading to fly to intercept the
 	    // tgt_radial
@@ -738,11 +763,17 @@ FGAutopilot::update (double dt)
 	// calculate integral error, and adjustment amount
 	int_error = alt_error_accum;
 	// printf("error = %.2f  int_error = %.2f\n", error, int_error);
-	int_adj = int_error / elevator_adj_factor->getFloatValue();
+        
+        // scale elev_adj_factor by speed of aircraft in relation to min climb 
+	double elev_adj_factor = elevator_adj_factor->getFloatValue();
+        elev_adj_factor *=
+	  pow(float(speed / min_climb->getFloatValue()), 3.0f);
+
+	int_adj = int_error / elev_adj_factor;
 
 	// caclulate proportional error
 	prop_error = error;
-	prop_adj = prop_error / elevator_adj_factor->getDoubleValue();
+	prop_adj = prop_error / elev_adj_factor;
 
 	total_adj = ((double) 1.0 - (double) integral_contrib->getFloatValue()) * prop_adj
             + (double) integral_contrib->getFloatValue() * int_adj;
@@ -1367,3 +1398,4 @@ FGAutopilot::setAPThrottleControl (double value)
 }
 
 // end of newauto.cxx
+
