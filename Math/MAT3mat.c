@@ -19,7 +19,12 @@
 #include <string.h>
 #include <Math/mat3defs.h>
 
-#define USE_MEM
+MAT3mat identityMatrix = {
+    { 1.0, 0.0, 0.0, 0.0 },
+    { 0.0, 1.0, 0.0, 0.0 },
+    { 0.0, 0.0, 1.0, 0.0 },
+    { 0.0, 0.0, 0.0, 1.0 }
+};
 
 /* #include "macros.h" */
 
@@ -31,54 +36,6 @@
 
 
 #if !defined( USE_XTRA_MAT3_INLINES )
-
-/*
- * Sets a matrix to identity.
- */
-
-void
-MAT3identity (register MAT3mat mat)
-{
-   register int i;
-
-#ifdef USE_MEM /* WIN32 */
-   memset(mat, 0x00, sizeof(MAT3mat));
-#else
-   bzero (mat, sizeof(MAT3mat));
-#endif
-
-   for (i = 0; i < 4; i++)
-      mat[i][i] = 1.0;
-}
-
-/*
- * Sets a matrix to zero.
- */
-
-void
-MAT3zero (MAT3mat mat)
-{
-#ifdef USE_MEM /* WIN32 */
-   memset(mat,0x00, sizeof(MAT3mat));
-#else
-   bzero (mat, sizeof(MAT3mat));
-#endif
-}
-
-
-/*
- * Copies one matrix to another.
- */
-
-void
-MAT3copy(MAT3mat to, MAT3mat from)
-{
-#ifdef USE_MEM /* WIN32 */
-    memcpy(to, from, sizeof(MAT3mat));
-#else
-    bcopy(from, to, sizeof(MAT3mat));
-#endif
-}
 
 /*
  * This multiplies two matrices, producing a third, which may the same as
