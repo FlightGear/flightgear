@@ -46,7 +46,6 @@
 #include <Misc/fgstream.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
-#include <Misc/texload.h>
 #include <Scenery/tile.hxx>
 
 #include "materialmgr.hxx"
@@ -61,6 +60,7 @@ fgMATERIAL_MGR material_mgr;
 
 // Constructor
 FGMaterialSlot::FGMaterialSlot ( void ) { }
+
 
 // Destructor
 FGMaterialSlot::~FGMaterialSlot ( void ) {
@@ -158,7 +158,7 @@ fgMATERIAL_MGR::load_lib ( void )
 	    in >> m;
 
 	    // if ( current_options.get_textures() ) {
-	    //     m.load_texture( current_options.get_fg_root() );
+	    //    m.load_texture( current_options.get_fg_root() );
 	    // }
 
 	    FGMaterialSlot m_slot;

@@ -46,7 +46,7 @@
 #include <map>           // STL associative "array"
 #include <vector>        // STL "array"
 
-#include <Misc/material.hxx>
+#include "material.hxx"
 
 FG_USING_STD(string);
 FG_USING_STD(map);
@@ -123,6 +123,7 @@ public:
 
     // friend istream& operator >> ( istream& in, FGMaterialSlot& m );
 
+    inline FGMaterial get_m() const { return m; }
     inline void set_m( FGMaterial new_m ) { m = new_m; }
 };
 

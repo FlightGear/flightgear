@@ -142,6 +142,7 @@ int fgObjLoad( const string& path, fgTILE *t) {
     int last1 = 0, last2 = 0, odd = 0;
     double (*nodes)[3];
     Point3D center;
+    double tex_width = 1000.0, tex_height = 1000.0;
 
     // printf("loading %s\n", path.c_str() );
 
@@ -242,7 +243,13 @@ int fgObjLoad( const string& path, fgTILE *t) {
 			    "Ack! unknown usemtl name = " << material 
 			    << " in " << path );
 		}
-		
+
+		// set the texture width and height values for this
+		// material
+		FGMaterial m = fragment.material_ptr->get_m();
+		tex_width = m.get_xsize();
+		tex_height = m.get_ysize();
+		cout << "(w) = " << tex_width << " (h) = " << tex_width << endl;
 		// initialize the fragment transformation matrix
 		/*
 		 for ( i = 0; i < 16; i++ ) {
@@ -414,8 +421,8 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		xglNormal3dv(normals[n1]);
 		if ( in.get( c ) && c == '/' ) {
 		    in >> tex;
-		    pp.setx( tex_coords[tex][0] );
-		    pp.sety( tex_coords[tex][1] );
+		    pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
+		    pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
 		} else {
 		    in.putback( c );
 		    pp = calc_tex_coords(nodes[n1], center);
@@ -427,8 +434,8 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		xglNormal3dv(normals[n2]);
 		if ( in.get( c ) && c == '/' ) {
 		    in >> tex;
-		    pp.setx( tex_coords[tex][0] );
-		    pp.sety( tex_coords[tex][1] );
+		    pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
+		    pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
 		} else {
 		    in.putback( c );
 		    pp = calc_tex_coords(nodes[n2], center);
@@ -454,8 +461,8 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		    xglNormal3dv(normals[n3]);
 		    if ( in.get( c ) && c == '/' ) {
 			in >> tex;
-			pp.setx( tex_coords[tex][0] );
-			pp.sety( tex_coords[tex][1] );
+			pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
+			pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
 		    } else {
 			in.putback( c );
 			pp = calc_tex_coords(nodes[n3], center);
