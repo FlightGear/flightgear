@@ -27,6 +27,11 @@
 #define _PLANETS_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
                                          struct OrbElements theSun,
                                          struct fgTIME t, int idx);
@@ -36,14 +41,22 @@ void fgPlanetsInit( void );
 void fgPlanetsRender( void );
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* PLANETS_H */
 
 
 /* $Log$
-/* Revision 1.4  1998/02/12 21:59:38  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.5  1998/04/21 17:02:31  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.4  1998/02/12 21:59:38  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.3  1998/02/02 20:53:23  curt
  * To version 0.29
  *

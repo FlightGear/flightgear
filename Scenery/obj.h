@@ -1,5 +1,5 @@
 /**************************************************************************
- * obj.h -- routines to handle WaveFront .obj format files.
+ * obj.h -- routines to handle WaveFront .obj-ish format files.
  *
  * Written by Curtis Olson, started October 1997.
  *
@@ -28,6 +28,11 @@
 #define _OBJ_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <config.h>
 
 #ifdef HAVE_WINDOWS_H
@@ -43,13 +48,21 @@
 GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius);
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _OBJ_H */
 
 
 /* $Log$
-/* Revision 1.7  1998/04/03 22:11:37  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.8  1998/04/21 17:02:43  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.7  1998/04/03 22:11:37  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.6  1998/01/31 00:43:25  curt
  * Added MetroWorks patches from Carmen Volpe.
  *

@@ -28,6 +28,11 @@
 #define _SCENERY_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <Include/fg_types.h>
 
 
@@ -62,13 +67,21 @@ void fgSceneryUpdate(double lon, double lat, double elev);
 void fgSceneryRender( void );
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _SCENERY_H */
 
 
 /* $Log$
-/* Revision 1.18  1998/03/14 00:30:51  curt
-/* Beginning initial terrain texturing experiments.
+/* Revision 1.19  1998/04/21 17:02:43  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.18  1998/03/14 00:30:51  curt
+ * Beginning initial terrain texturing experiments.
+ *
  * Revision 1.17  1998/02/20 00:16:24  curt
  * Thursday's tweaks.
  *

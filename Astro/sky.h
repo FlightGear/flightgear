@@ -28,6 +28,11 @@
 #define _SKY_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 /* (Re)generate the display list */
 void fgSkyInit( void );
 
@@ -38,13 +43,21 @@ void fgSkyColorsInit( void );
 void fgSkyRender( void );
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _SKY_H */
 
 
 /* $Log$
-/* Revision 1.3  1998/01/22 02:59:28  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.4  1998/04/21 17:02:32  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.3  1998/01/22 02:59:28  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.2  1998/01/19 18:40:17  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

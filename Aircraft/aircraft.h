@@ -27,6 +27,12 @@
 #ifndef _AIRCRAFT_H
 #define _AIRCRAFT_H
 
+
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <Flight/flight.h>
 #include <Controls/controls.h>
 
@@ -51,14 +57,22 @@ void fgAircraftInit( void );
 void fgAircraftOutputCurrent(fgAIRCRAFT *a);
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _AIRCRAFT_H */
 
 
 /* $Log$
-/* Revision 1.10  1998/02/07 15:29:32  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.11  1998/04/21 17:02:27  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.10  1998/02/07 15:29:32  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.9  1998/01/22 02:59:23  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *
@@ -71,10 +85,13 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a);
 
 
 /* $Log$
-/* Revision 1.10  1998/02/07 15:29:32  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.11  1998/04/21 17:02:27  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.10  1998/02/07 15:29:32  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.9  1998/01/22 02:59:23  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

@@ -28,6 +28,11 @@
 #define _GLUTKEY_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <config.h>
 
 #ifdef HAVE_WINDOWS_H
@@ -42,13 +47,21 @@ void GLUTkey(unsigned char k, int x, int y);
 void GLUTspecialkey(int k, int x, int y);
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _GLUTKEY_H */
 
 
 /* $Log$
-/* Revision 1.8  1998/04/03 22:09:02  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.9  1998/04/21 17:02:36  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.8  1998/04/03 22:09:02  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.7  1998/02/12 21:59:44  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

@@ -27,6 +27,11 @@
 #define _SUN_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 extern fgSUNPOS solarPosition;
 
 
@@ -40,13 +45,21 @@ void fgSunInit( void );
 void fgSunRender( void );
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _SUN_H */
 
 
 /* $Log$
-/* Revision 1.5  1998/03/09 22:47:26  curt
-/* Incorporated Durk's updates.
+/* Revision 1.6  1998/04/21 17:02:33  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.5  1998/03/09 22:47:26  curt
+ * Incorporated Durk's updates.
+ *
  * Revision 1.4  1998/02/23 19:07:57  curt
  * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
  * calculation code between sun display, and other FG sections that use this

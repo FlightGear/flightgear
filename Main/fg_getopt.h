@@ -30,8 +30,15 @@
 *
 ****************************************************************************/
 
+
 #ifndef __GETOPT_H
 #define __GETOPT_H
+
+
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
 
 //#ifndef __DEBUG_H
 //#include "debug.h"
@@ -100,9 +107,6 @@ typedef struct {
 
 #define NUM_OPT(a)  sizeof(a) / sizeof(Option)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*--------------------------- Global variables ---------------------------*/
 
@@ -126,7 +130,10 @@ extern void print_desc(int num_opt, Option **optarr);  // Not original code
 
 
 /* $Log$
-/* Revision 1.1  1998/02/13 00:23:39  curt
-/* Initial revision.
+/* Revision 1.2  1998/04/21 17:02:41  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.1  1998/02/13 00:23:39  curt
+ * Initial revision.
+ *
  */

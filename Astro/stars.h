@@ -28,6 +28,11 @@
 #define _STARS_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #define FG_MAX_STARS 500
 #define FG_STAR_LEVELS 4         /* how many star transitions */
 #define FG_MIN_STAR_MAG 0.738750 /* magnitude of weakest star we'll display */
@@ -40,14 +45,23 @@ void fgStarsRender( void );
 extern struct OrbElements pltOrbElements[9];
 extern struct fgTIME cur_time_params;
 
+
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _STARS_H */
 
 
 /* $Log$
-/* Revision 1.4  1998/02/12 21:59:39  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.5  1998/04/21 17:02:33  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.4  1998/02/12 21:59:39  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.3  1998/01/22 02:59:28  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

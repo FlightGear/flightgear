@@ -28,6 +28,11 @@
 #define _FG_INIT_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 // General house keeping initializations
 int fgInitGeneral ( void );
 
@@ -37,14 +42,22 @@ int fgInitGeneral ( void );
 int fgInitSubsystems( void );
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _FG_INIT_H */
 
 
 /* $Log$
-/* Revision 1.3  1998/02/12 21:59:50  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.4  1998/04/21 17:02:41  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.3  1998/02/12 21:59:50  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.2  1998/01/22 02:59:38  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

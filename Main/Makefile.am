@@ -6,7 +6,7 @@ bin_SCRIPTS = runfg runfg.bat
 
 fg_SOURCES = \
 	GLUTkey.c GLUTkey.h \
-	GLUTmain.c \
+	GLUTmain.cxx \
 	fg_config.h \
 	fg_getopt.c fg_getopt.h \
 	fg_init.c fg_init.h \

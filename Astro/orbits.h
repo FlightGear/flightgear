@@ -27,6 +27,11 @@
 #define _ORBITS_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <stdio.h>
 #include <math.h>
 
@@ -79,15 +84,23 @@ int  fgSolarSystemInit(struct fgTIME t);
 void fgSolarSystemUpdate(struct OrbElements *planets, struct fgTIME t);
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _ORBITS_H */
 
 
 /* $Log$
-/* Revision 1.6  1998/02/23 19:07:55  curt
-/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
-/* calculation code between sun display, and other FG sections that use this
-/* for things like lighting.
+/* Revision 1.7  1998/04/21 17:02:31  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.6  1998/02/23 19:07:55  curt
+ * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+ * calculation code between sun display, and other FG sections that use this
+ * for things like lighting.
+ *
  * Revision 1.5  1998/02/12 21:59:35  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

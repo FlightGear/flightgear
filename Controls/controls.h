@@ -28,6 +28,11 @@
 #define _CONTROLS_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <Include/fg_limits.h>
 
 
@@ -78,13 +83,21 @@ void fgThrottleMove(int engine, double amt);
 void fgThrottleSet(int engine, double pos);
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _CONTROLS_H */
 
 
 /* $Log$
-/* Revision 1.12  1998/02/09 22:56:48  curt
-/* Removed "depend" files from cvs control.  Other minor make tweaks.
+/* Revision 1.13  1998/04/21 17:02:35  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.12  1998/02/09 22:56:48  curt
+ * Removed "depend" files from cvs control.  Other minor make tweaks.
+ *
  * Revision 1.11  1998/02/07 15:29:36  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

@@ -28,6 +28,11 @@
 #define _TILEMGR_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 /* Initialize the Tile Manager subsystem */
 int fgTileMgrInit( void );
 
@@ -41,14 +46,22 @@ int fgTileMgrUpdate( void );
 void fgTileMgrRender( void );
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _TILEMGR_H */
 
 
 /* $Log$
-/* Revision 1.5  1998/02/12 21:59:53  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.6  1998/04/21 17:02:45  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.5  1998/02/12 21:59:53  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.4  1998/01/22 02:59:42  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

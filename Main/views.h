@@ -28,6 +28,11 @@
 #define _VIEWS_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <Include/fg_types.h>
 #include <Flight/flight.h>
 #include <Math/mat3.h>
@@ -88,14 +93,22 @@ void fgViewInit(struct fgVIEW *v);
 void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l);
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _VIEWS_H */
 
 
 /* $Log$
-/* Revision 1.10  1998/02/07 15:29:45  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.11  1998/04/21 17:02:42  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.10  1998/02/07 15:29:45  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.9  1998/01/29 00:50:29  curt
  * Added a view record field for absolute x, y, z position.
  *

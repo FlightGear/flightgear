@@ -79,7 +79,7 @@ bin_SCRIPTS = runfg runfg.bat
 
 fg_SOURCES = \
 	GLUTkey.c GLUTkey.h \
-	GLUTmain.c \
+	GLUTmain.cxx \
 	fg_config.h \
 	fg_getopt.c fg_getopt.h \
 	fg_init.c fg_init.h \
@@ -135,6 +135,10 @@ $(top_builddir)/Lib/Debug/libDebug.la $(top_builddir)/Lib/zlib/libz.la
 fg_LDFLAGS = 
 SCRIPTS =  $(bin_SCRIPTS)
 
+CXXFLAGS = @CXXFLAGS@
+CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
+CXXLINK = $(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
@@ -148,13 +152,14 @@ TAR = tar
 GZIP = --best
 DEP_FILES =  .deps/GLUTkey.P .deps/GLUTmain.P .deps/fg_getopt.P \
 .deps/fg_init.P .deps/views.P
+CXXMKDEP = $(CXX) -M $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 SOURCES = $(fg_SOURCES)
 OBJECTS = $(fg_OBJECTS)
 
 all: Makefile $(PROGRAMS) $(SCRIPTS)
 
 .SUFFIXES:
-.SUFFIXES: .S .c .lo .o .s
+.SUFFIXES: .S .c .cxx .lo .o .s
 $(srcdir)/Makefile.in: @MAINT@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && $(AUTOMAKE) --gnu Simulator/Main/Makefile
 
@@ -226,7 +231,7 @@ maintainer-clean-libtool:
 
 fg: $(fg_OBJECTS) $(fg_DEPENDENCIES)
 	@rm -f fg
-	$(LINK) $(fg_LDFLAGS) $(fg_OBJECTS) $(fg_LDADD) $(LIBS)
+	$(CXXLINK) $(fg_LDFLAGS) $(fg_OBJECTS) $(fg_LDADD) $(LIBS)
 
 install-binSCRIPTS: $(bin_SCRIPTS)
 	@$(NORMAL_INSTALL)
@@ -246,6 +251,10 @@ uninstall-binSCRIPTS:
 	list='$(bin_SCRIPTS)'; for p in $$list; do \
 	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed '$(transform)'`; \
 	done
+.cxx.o:
+	$(CXXCOMPILE) -c $<
+.cxx.lo:
+	$(LTCXXCOMPILE) -c $<
 
 tags: TAGS
 
@@ -309,6 +318,17 @@ maintainer-clean-depend:
 %.lo: %.c
 	@echo '$(LTCOMPILE) -c $<'; \
 	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).p -c $<
+	@-sed -e 's/^\([^:]*\)\.o:/\1.lo \1.o:/' \
+	  < .deps/$(*F).p > .deps/$(*F).P
+	@-rm -f .deps/$(*F).p
+
+%.o: %.cxx
+	@echo '$(CXXCOMPILE) -c $<'; \
+	$(CXXCOMPILE) -Wp,-MD,.deps/$(*F).P -c $<
+
+%.lo: %.cxx
+	@echo '$(LTCXXCOMPILE) -c $<'; \
+	$(LTCXXCOMPILE) -Wp,-MD,.deps/$(*F).p -c $<
 	@-sed -e 's/^\([^:]*\)\.o:/\1.lo \1.o:/' \
 	  < .deps/$(*F).p > .deps/$(*F).P
 	@-rm -f .deps/$(*F).p

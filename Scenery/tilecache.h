@@ -28,6 +28,11 @@
 #define _TILECACHE_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <config.h>
 
 #ifdef HAVE_WINDOWS_H
@@ -77,13 +82,21 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 			   struct fgCartesianPoint *local_ref );
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _TILECACHE_H */
 
 
 /* $Log$
-/* Revision 1.9  1998/04/14 02:23:17  curt
-/* Code reorganizations.  Added a Lib/ directory for more general libraries.
+/* Revision 1.10  1998/04/21 17:02:45  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.9  1998/04/14 02:23:17  curt
+ * Code reorganizations.  Added a Lib/ directory for more general libraries.
+ *
  * Revision 1.8  1998/04/08 23:30:08  curt
  * Adopted Gnu automake/autoconf system.
  *

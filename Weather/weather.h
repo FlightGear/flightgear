@@ -28,6 +28,11 @@
 #define _WEATHER_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 /* holds the current weather values */
 struct fgWEATHER {
     float visibility;
@@ -39,17 +44,26 @@ extern struct fgWEATHER current_weather;
 /* Initialize the weather modeling subsystem */
 void fgWeatherInit( void );
 
+
 /* Update the weather parameters for the current position */
 void fgWeatherUpdate( void );
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* _WEATHER_H */
 
 
 /* $Log$
-/* Revision 1.8  1998/01/22 02:59:44  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.9  1998/04/21 17:02:46  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.8  1998/01/22 02:59:44  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.7  1998/01/19 18:40:41  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

@@ -28,6 +28,11 @@
 #define _COCKPIT_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <Cockpit/hud.h>
 
 
@@ -46,14 +51,22 @@ fgCOCKPIT *fgCockpitInit( fgAIRCRAFT *cur_aircraft );
 void fgCockpitUpdate( void );
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _COCKPIT_H */
 
 
 /* $Log$
-/* Revision 1.6  1998/02/07 15:29:33  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.7  1998/04/21 17:02:34  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.6  1998/02/07 15:29:33  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.5  1998/01/22 02:59:29  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *
