@@ -22,6 +22,13 @@
 
 #define LST_MAGIC_TIME_1998 890481600
 
+// For now we assume that if daylight is not defined in
+// /usr/include/time.h that we have a machine with a BSD behaving
+// mktime()
+#if !defined(HAVE_DAYLIGHT)
+#  define MK_TIME_IS_GMT 1
+#endif
+
 
 // Fix up timezone if using ftime()
 long int fix_up_timezone( long int timezone_orig ) {
@@ -53,18 +60,6 @@ long int fix_up_timezone( long int timezone_orig ) {
 time_t get_start_gmt(int year) {
     struct tm mt;
 
-    // For now we assume that if daylight is not defined in
-    // /usr/include/time.h that we have a machine with a BSD behaving
-    // mktime()
-#   if !defined(HAVE_DAYLIGHT)
-#       define MK_TIME_IS_GMT 1
-#   endif
-
-    // timezone seems to work as a proper offset for Linux & Solaris
-#   if defined( __linux__ ) || defined( __sun__ ) 
-#       define TIMEZONE_OFFSET_WORKS 1
-#   endif
-
     mt.tm_mon = 2;
     mt.tm_mday = 21;
     mt.tm_year = year;
@@ -73,9 +68,16 @@ time_t get_start_gmt(int year) {
     mt.tm_sec = 0;
     mt.tm_isdst = -1; // let the system determine the proper time zone
 
-#   if defined( MK_TIME_IS_GMT )
+#if defined( HAVE_TIMEGM ) 
+    return ( timegm(&mt) );
+#elif defined( MK_TIME_IS_GMT )
     return ( mktime(&mt) );
-#   else // ! defined ( MK_TIME_IS_GMT )
+#else // ! defined ( MK_TIME_IS_GMT )
+
+    // timezone seems to work as a proper offset for Linux & Solaris
+#  if defined( __linux__ ) || defined( __sun__ ) 
+#   define TIMEZONE_OFFSET_WORKS 1
+#  endif
 
     long int start = mktime(&mt);
 
@@ -85,10 +87,10 @@ time_t get_start_gmt(int year) {
 
     timezone = fix_up_timezone( timezone );
 
-#   if defined( TIMEZONE_OFFSET_WORKS )
+#  if defined( TIMEZONE_OFFSET_WORKS )
     printf("start = %ld, timezone = %ld\n", start, timezone);
     return( start - timezone );
-#   else // ! defined( TIMEZONE_OFFSET_WORKS )
+#  else // ! defined( TIMEZONE_OFFSET_WORKS )
 
     daylight = mt.tm_isdst;
     if ( daylight > 0 ) {
@@ -108,8 +110,8 @@ time_t get_start_gmt(int year) {
     printf("  March 21 noon (CST) = %ld\n", start);
 
     return ( start_gmt );
-#   endif // ! defined( TIMEZONE_OFFSET_WORKS )
-#   endif // ! defined ( MK_TIME_IS_GMT )
+#  endif // ! defined( TIMEZONE_OFFSET_WORKS )
+#endif // ! defined ( MK_TIME_IS_GMT )
 }
 
 
@@ -120,13 +122,19 @@ int main() {
 
 
     if ( start_gmt == LST_MAGIC_TIME_1998 ) {
-#ifdef MK_TIME_IS_GMT
-	printf("mktime() assumes GMT on your system, lucky you!\n");
+	printf("Time test = PASSED\n\n");
+#ifdef HAVE_TIMEGM
+	printf("You have timegm() which is just like mktime() except that\n");
+	printf("it explicitely expects input in GMT ... lucky you!\n");
+#elif MK_TIME_IS_GMT
+	printf("You don't seem to have timegm(), but mktime() seems to\n");
+	printf("assume input is GMT on your system ... I guess that works\n");
 #else
 	printf("mktime() assumes local time zone on your system, but we can\n");
 	printf("compensate just fine.\n");
 #endif
     } else {
+	printf("Time test = FAILED\n\n");
 	printf("There is likely a problem with mktime() on your system.\n");
         printf("This will cause the sun/moon/stars/planets to be in the\n");
 	printf("wrong place in the sky and the rendered time of day will be\n");

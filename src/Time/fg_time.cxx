@@ -341,20 +341,31 @@ void FGTime::update(FGInterface *f)
 
 /******************************************************************
  * The following are some functions that were included as FGTime
- * members, although they currently don't make used of any of the
+ * members, although they currently don't make use of any of the
  * class's variables. Maybe this'll change in the future
  *****************************************************************/
 
 // Return time_t for Sat Mar 21 12:00:00 GMT
 //
-// I believe the mktime() has a SYSV vs. BSD behavior difference.
+// On many systems it is ambiguous if mktime() assumes the input is in
+// GMT, or local timezone.  To address this, a new function called
+// timegm() is appearing.  It works exactly like mktime() but
+// explicitely interprets the input as GMT.
 //
-// The BSD style mktime() is nice because it returns its result
-// assuming you have specified the input time in GMT
+// timegm() is available and documented under FreeBSD.  It is
+// available, but completely undocumented on my current Debian 2.1
+// distribution.
 //
-// The SYSV style mktime() is a pain because it returns its result
-// assuming you have specified the input time in your local timezone.
-// Therefore you have to go to extra trouble to convert back to GMT.
+// In the absence of timegm() we have to guess what mktime() might do.
+//
+// Many older BSD style systems have a mktime() that assumes the input
+// time in GMT.  But FreeBSD explicitly states that mktime() assumes
+// local time zone
+//
+// The mktime() on many SYSV style systems (such as Linux) usually
+// returns its result assuming you have specified the input time in
+// your local timezone.  Therefore, in the absence if timegm() you
+// have to go to extra trouble to convert back to GMT.
 //
 // If you are having problems with incorrectly positioned astronomical
 // bodies, this is a really good place to start looking.
@@ -362,18 +373,6 @@ void FGTime::update(FGInterface *f)
 time_t FGTime::get_gmt(int year, int month, int day, int hour, int min, int sec)
 {
     struct tm mt;
-
-    // For now we assume that if daylight is not defined in
-    // /usr/include/time.h that we have a machine with a BSD behaving
-    // mktime()
-#   if !defined(HAVE_DAYLIGHT)
-#       define MK_TIME_IS_GMT 1
-#   endif
-
-    // timezone seems to work as a proper offset for Linux & Solaris
-#   if defined( __linux__ ) || defined( __sun__ ) 
-#       define TIMEZONE_OFFSET_WORKS 1
-#   endif
 
     mt.tm_mon = month;
     mt.tm_mday = day;
@@ -383,9 +382,24 @@ time_t FGTime::get_gmt(int year, int month, int day, int hour, int min, int sec)
     mt.tm_sec = sec;
     mt.tm_isdst = -1; // let the system determine the proper time zone
 
-#   if defined( MK_TIME_IS_GMT )
+    // For now we assume that if daylight is not defined in
+    // /usr/include/time.h that we have a machine with a mktime() that
+    // assumes input is in GMT ... this only matters if we are
+    // building on a system that does not have timegm()
+#if !defined(HAVE_DAYLIGHT)
+#  define MK_TIME_IS_GMT 1
+#endif
+
+#if defined( HAVE_TIMEGM ) 
+    return ( timegm(&mt) );
+#elif defined( MK_TIME_IS_GMT )
     return ( mktime(&mt) );
-#   else // ! defined ( MK_TIME_IS_GMT )
+#else // ! defined ( MK_TIME_IS_GMT )
+
+    // timezone seems to work as a proper offset for Linux & Solaris
+#   if defined( __linux__ ) || defined( __sun__ ) 
+#       define TIMEZONE_OFFSET_WORKS 1
+#   endif
 
     long int start = mktime(&mt);
 
@@ -397,11 +411,11 @@ time_t FGTime::get_gmt(int year, int month, int day, int hour, int min, int sec)
 
     timezone = fix_up_timezone( timezone );
 
-#   if defined( TIMEZONE_OFFSET_WORKS )
+#  if defined( TIMEZONE_OFFSET_WORKS )
     FG_LOG( FG_EVENT, FG_DEBUG, 
 	    "start = " << start << ", timezone = " << timezone );
     return( start - timezone );
-#   else // ! defined( TIMEZONE_OFFSET_WORKS )
+#  else // ! defined( TIMEZONE_OFFSET_WORKS )
 
     daylight = mt.tm_isdst;
     if ( daylight > 0 ) {
@@ -422,8 +436,8 @@ time_t FGTime::get_gmt(int year, int month, int day, int hour, int min, int sec)
     FG_LOG( FG_EVENT, FG_DEBUG, "  March 21 noon (CST) = " << start );
 
     return ( start_gmt );
-#   endif // ! defined( TIMEZONE_OFFSET_WORKS )
-#   endif // ! defined ( MK_TIME_IS_GMT )
+#  endif // ! defined( TIMEZONE_OFFSET_WORKS )
+#endif // ! defined ( MK_TIME_IS_GMT )
 }
 
 // Fix up timezone if using ftime()

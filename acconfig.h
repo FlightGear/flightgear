@@ -153,6 +153,9 @@
 /* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
 #undef HAVE_SYS_WAIT_H
 
+/* Define if you have timegm() */
+#undef HAVE_TIMEGM
+
 /* Define if you external variables timezone.  */
 #undef HAVE_TIMEZONE
 
