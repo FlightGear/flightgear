@@ -104,9 +104,6 @@ FGMarkerBeacon::init ()
     morse.init();
     beacon.init();
     blink.stamp();
-
-    search();
-    update(0);			// FIXME: use dt
 }
 
 

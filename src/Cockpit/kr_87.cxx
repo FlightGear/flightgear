@@ -114,8 +114,6 @@ FGKR_87::~FGKR_87() {
 
 void FGKR_87::init () {
     morse.init();
-
-    update(0);			// FIXME: use dt
 }
 
 

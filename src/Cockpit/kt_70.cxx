@@ -64,7 +64,6 @@ FGKT_70::~FGKT_70() { }
 
 
 void FGKT_70::init () {
-    update(0);			// FIXME: use dt
 }
 
 

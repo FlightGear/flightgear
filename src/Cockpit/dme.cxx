@@ -99,8 +99,6 @@ FGDME::~FGDME()
 void
 FGDME::init ()
 {
-    search();
-    update(0);			// FIXME: use dt
 }
 
 void
