@@ -856,6 +856,7 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
 
 
 static void fgSetDistOrAltFromGlideSlope() {
+  cout << "fgSetDistOrAltFromGlideSlope()" << endl;
     string apt_id = fgGetString("/sim/presets/airport-id");
     double gs = fgGetDouble("/sim/presets/glideslope-deg")
         * SG_DEGREES_TO_RADIANS ;
@@ -1043,12 +1044,18 @@ fgInitNav ()
 
 // Set the initial position based on presets (or defaults)
 bool fgInitPosition() {
+  cout << "fgInitPosition()" << endl;
+    double gs = fgGetDouble("/sim/presets/glideslope-deg")
+        * SG_DEGREES_TO_RADIANS ;
+    double od = fgGetDouble("/sim/presets/offset-distance");
+    double alt = fgGetDouble("/sim/presets/altitude-ft");
+
     bool set_pos = false;
 
     // If glideslope is specified, then calculate offset-distance or
     // altitude relative to glide slope if either of those was not
     // specified.
-    if ( fgGetDouble("/sim/presets/glideslope-deg") > 0.1 ) {
+    if ( fabs( gs ) > 0.01 ) {
         fgSetDistOrAltFromGlideSlope();
     }
 
@@ -1130,6 +1137,13 @@ bool fgInitPosition() {
                  fgGetDouble("/sim/presets/latitude-deg") );
     fgSetDouble( "/orientation/heading-deg",
                  fgGetDouble("/sim/presets/heading-deg") );
+
+    // determine if this should be an on-ground or in-air start
+    if ( fabs(gs) > 0.01 || fabs(od) > 0.1 || alt > 0.1 ) {
+        fgSetBool("/sim/presets/onground", false);
+    } else {
+        fgSetBool("/sim/presets/onground", true);
+    }                              
 
     return true;
 }
