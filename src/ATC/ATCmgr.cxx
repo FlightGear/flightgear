@@ -237,6 +237,8 @@ bool FGATCMgr::AIRegisterAirport(string ident) {
 			a->numAI = 1;
 			airport_atc_map[ident] = a;
 			return(true);
+		} else {
+			SG_LOG(SG_ATC, SG_ALERT, "ERROR - can't find airport " << ident << " in AIRegisterAirport(...)");
 		}
 	}
 	return(false);
@@ -247,7 +249,7 @@ bool FGATCMgr::AIRegisterAirport(string ident) {
 // Channel is zero based
 bool FGATCMgr::CommRegisterAirport(string ident, int chan, atc_type tp) {
 	SG_LOG(SG_ATC, SG_BULK, "Comm channel " << chan << " registered airport " << ident);
-	//cout << "Comm channel " << chan << " registered airport " << ident << '\n';
+	//cout << "Comm channel " << chan << " registered airport " << ident << ' ' << tp << '\n';
 	if(airport_atc_map.find(ident) != airport_atc_map.end()) {
 		//cout << "IN MAP - flagging set by comm..." << endl;
 		airport_atc_map[ident]->set_by_comm[chan][tp] = true;
@@ -288,7 +290,7 @@ bool FGATCMgr::CommRegisterAirport(string ident, int chan, atc_type tp) {
 			// TODO - some airports will have a tower/ground frequency but be inactive overnight.
 			a->set_by_AI = false;
 			a->numAI = 0;
-			a->set_by_comm[chan][tp] = true;			
+			a->set_by_comm[chan][tp] = true;
 			airport_atc_map[ident] = a;
 			return(true);
 		}
@@ -334,7 +336,7 @@ void FGATCMgr::CommRemoveFromList(string id, atc_type tp, int chan) {
 				}
 				break;
 			}
-			airport_atc_map[id] = a;
+			//airport_atc_map[id] = a;
 			return;
 		} else {
 			switch(chan) {
@@ -395,7 +397,7 @@ FGATC* FGATCMgr::FindInList(string id, atc_type tp) {
 	atc_list_iterator it = atc_list.begin();
 	while(it != atc_list.end()) {
 		if( (!strcmp((*it)->get_ident(), id.c_str()))
-		&& ((*it)->GetType() == tp) ) {
+		    && ((*it)->GetType() == tp) ) {
 			return(*it);
 		}
 		++it;
@@ -425,7 +427,7 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 		//cout << "Unable to find " << icao << ' ' << type << " in the airport_atc_map" << endl;
 		return NULL;
 	}
-	//cout << "Found " << icao << ' ' << type << endl;
+	//cout << "In GetATCPointer, found " << icao << ' ' << type << endl;
 	AirportATC *a = airport_atc_map[icao];
 	//cout << "a->lon = " << a->lon << '\n';
 	//cout << "a->elev = " << a->elev << '\n';
@@ -434,7 +436,7 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 	case TOWER:
 		if(a->tower_active) {
 			// Get the pointer from the list
-			return(FindInList(icao.c_str(), type));
+			return(FindInList(icao, type));
 		} else {
 			ATCData data;
 			if(current_commlist->FindByFreq(a->lon, a->lat, a->elev, a->tower_freq, &data, TOWER)) {
@@ -443,7 +445,7 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 				atc_list.push_back(t);
 				a->tower_active = true;
 				airport_atc_map[icao] = a;
-				//cout << "Initing tower in GetATCPointer()\n";
+				//cout << "Initing tower " << icao << " in GetATCPointer()\n";
 				t->Init();
 				return(t);
 			} else {
@@ -460,7 +462,7 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 		//cout << "IN CASE GROUND" << endl;
 		if(a->ground_active) {
 			// Get the pointer from the list
-			return(FindInList(icao.c_str(), type));
+			return(FindInList(icao, type));
 		} else {
 			ATCData data;
 			if(current_commlist->FindByFreq(a->lon, a->lat, a->elev, a->ground_freq, &data, GROUND)) {
@@ -670,7 +672,7 @@ void FGATCMgr::AreaSearch() {
 		
 		for(app_itr = approaches.begin(); app_itr != approaches.end(); app_itr++) {
 			
-			FGATC* app = FindInList((app_itr->ident).c_str(), app_itr->type);
+			FGATC* app = FindInList(app_itr->ident, app_itr->type);
 			if(app != NULL) {
 				// The station is already in the ATC list
 				//cout << "In list adding player\n";
