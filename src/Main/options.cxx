@@ -557,6 +557,10 @@ parse_option (const string& arg)
         fgSetBool("/sim/freeze/master", false);
     } else if ( arg == "--enable-freeze" ) {
         fgSetBool("/sim/freeze/master", true);
+    } else if ( arg == "--disable-fuel-freeze" ) {
+        fgSetBool("/sim/freeze/fuel", false);
+    } else if ( arg == "--enable-fuel-freeze" ) {
+        fgSetBool("/sim/freeze/fuel", true);
     } else if ( arg == "--disable-anti-alias-hud" ) {
 	fgSetBool("/sim/hud/antialiased", false);
     } else if ( arg == "--enable-anti-alias-hud" ) {
@@ -1107,6 +1111,8 @@ fgUsage ()
     cout << "\t\tfull screen voodoo/voodoo-II based cards.)" << endl;
     cout << "\t--disable-freeze:  start out in a running state" << endl;
     cout << "\t--enable-freeze:  start out in a frozen state" << endl;
+    cout << "\t--disable-fuel-freeze:  fuel is consumed normally" << endl;
+    cout << "\t--enable-fuel-freeze:  fuel tanks magically maintain their current contents" << endl;
     cout << "\t--control=mode:  primary control mode " 
 	 << "(joystick, keyboard, mouse)" << endl;
     cout << "\t--enable-auto-coordination:  enable auto coordination" << endl;
