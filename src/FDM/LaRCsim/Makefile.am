@@ -3,7 +3,8 @@ EXTRA_DIST = \
 	c172_engine.c \
 	c172_gear.c \
 	c172_init.c \
-	navion_init.h \
+	ls_trim.c \
+        navion_init.h \
 	uiuc_aero.c
 
 AIRCRAFT_MODEL =  c172_aero.c c172_engine.c c172_gear.c c172_init.c \
@@ -27,7 +28,7 @@ libLaRCsim_a_SOURCES = \
 	ls_model.c ls_model.h \
 	ls_sim_control.h \
         ls_step.c ls_step.h \
-	ls_sym.h ls_trim.c ls_types.h \
+	ls_sym.h ls_types.h \
 	$(AIRCRAFT_MODEL) \
 	ls_interface.c ls_interface.h
 
