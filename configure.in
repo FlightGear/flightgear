@@ -10,7 +10,7 @@ AM_INIT_AUTOMAKE(FlightGear, 0.6.0)
 
 dnl configure other independant packages included with flight gear for
 dnl convenience
-AC_CONFIG_SUBDIRS( Lib/plib )
+dnl AC_CONFIG_SUBDIRS( Lib/plib )
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -70,14 +70,7 @@ if test "x$ac_cv_header_plib_pu_h" != "xyes"; then
     echo "You *must* have the plib library installed on your system to build"
     echo "the FGFS simulator!"
     echo
-    echo "You can get the original library from:"
-    echo 
-    echo "    http://www.woodsoup.org/projs/plib"
-    echo
-    echo "However, I recommend you grab a copy with a couple modifications I"
-    echo "have made which should eliminate a few plib-1.0 build problems:"
-    echo 
-    echo "    ftp://ftp.flightgear.org/pub/fgfs/Source/plib-1.0_fgfs_a.tar.gz"
+    echo "Please see README.plib for more details."
     echo
     echo "configure aborted."
     exit
@@ -281,8 +274,8 @@ if test "x$ac_cv_header_gpc_h" != "xyes"; then
     echo
     echo "Please see README.gpc for more details."
     echo
-    echo "(pausing 2 seconds)"
-    sleep 2
+    echo "(pausing 5 seconds)"
+    sleep 5
     echo
 fi
 
@@ -294,15 +287,8 @@ if test "x$ac_cv_header_gfc_gdbf_h" != "xyes"; then
     echo "You need to have the GFC library installed on your system to build"
     echo "some of the scenery generation tools, otherwise, they may fail."
     echo
-    echo "You can get the original library from:"
+    echo "Please see README.gfc for more details."
     echo 
-    echo "    http://www.geog.psu.edu/~qian/gfc/index.html"
-    echo
-    echo "However, I recommend you grab a copy with a couple modifications I"
-    echo "have made which should eliminate several gfc build problems:"
-    echo 
-    echo "    ftp://ftp.flightgear.org/pub/fgfs/Source/gfc-0.8.8.1a.tar.gz"
-    echo
     echo "(pausing 5 seconds)"
     sleep 5
     echo

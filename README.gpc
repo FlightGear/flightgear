@@ -19,13 +19,13 @@ directions.  So, here are some directions contributed by Riley Rainey
 
 	http://www.cs.man.ac.uk/aig/staff/alan/software
 
-2. Unpack it; the current version seems to be 2.22:
+2. Unpack it; the current version seems to be 2.30:
 
-	$ zcat gpc222.tar.Z | tar xvf -
+	$ zcat gpc230.tar.Z | tar xvf -
 
 3. Copy in the Makefile attached to this message:
 
-	$ cp Makefile ./gpc222
+	$ cp Makefile ./gpc230
 
 4. Check install paths.  Edit the Makefile and make sure the install
    paths are satisfactory.  Also make sure that all the make commands
@@ -34,7 +34,7 @@ directions.  So, here are some directions contributed by Riley Rainey
 
 5. Build and install it:
 
-	$ cd ./gpc222
+	$ cd ./gpc230
 	$ make
 	$ su
 	Password:
@@ -43,7 +43,7 @@ directions.  So, here are some directions contributed by Riley Rainey
 
 -------------------------- snip ------------------------------
 
-# Unix/Linux makefile for GPC 2.22
+# Unix/Linux makefile for GPC 2.30
 #
 # Riley Rainey  (riley.rainey@websimulations.com)
 

@@ -151,7 +151,26 @@ Bernhard H. Buckel
 <buckel@wmad95.mathematik.uni-wuerzburg.de>
 
 
-II.  Linux/AXP Notes
+II.  RedHat Linux Notes
+=======================
+
+Summary: There are known problems with the versions of libstdc++ that
+ships with both RedHat-5.1 and RedHat-5.2.  You need to upgrade your
+libstdc++ before attempting to build flight gear on a RedHat system.
+
+Raymond de Vries <vries@per.nl> writes: I ran into [this] problem on
+my RedHat 5.2 system (brand new). After some searching I found out
+that it's got to do with a 'bug' in the stdlibc++ libraries. I picked
+up libstdc++-2.9.0-2.i386.rpm, installed it and FGFS compiled just
+fine. However, some other packages must have the libstdc++-2.8
+libraries....
+
+BTW I also solved it with the 2.8 libraries by including
+/usr/include/g++/std/bastring.cc into the example programs. I believe
+this can be done since it's a template, correct me if I'm wrong.
+
+
+III.  Linux/AXP Notes
 ====================
 
 As of 2/19/99 I'm not aware of any glide port to Linux/AXP so it's

@@ -17,9 +17,9 @@ Michele America <nomimarketing@mail.telepac.pt>
 
 
 Steve Baker <sbaker@link.com>
-  - Author of PUI (a graphical interface written entirely on top of
-    OpenGL/GLUT)
-  - Contributed significantly to the basic Audio library.
+  - Author of plib which contains pui (portable opengl based user interface)
+    sl (portable audio library) js (linux joystick interface class)
+    sg (simple geometry library) ssg (simple scene graph library)
   - Steve has provided an immense amount of coaching and tutelage,
     both on the subjects of flight simulation and OpenGL.  It has been
     his comments and thoughts that have prompted the implementation of
@@ -138,6 +138,11 @@ Vasily Lewis <vlewis@woodsoup.org>  http://www.woodsoup.org
   shell accounts, email lists, dns services, etc.
 
 
+Christian Mayer <Vader@t-online.de>
+  Working on a multi-lingual conversion tools for fgfs.
+  Contributed code to read msfs formated texture files.
+
+
 Eric Mitchell <mitchell@mars.ark.com>
   Contributed some topnotch scenery textures.
 
@@ -200,6 +205,7 @@ Durk Talsma <pn_talsma@macmail.psy.uva.nl>
   Accurate Sun, Moon, and Planets.  Sun changes color based on
   position in sky.  Moon has correct phase and blends well into the
   sky.  Planets are correctly positioned and have proper magnitude.
+  Help with time functions, gui, and other misc stuff.
 
 
 Gary R. Van Sickle <tiberius@braemarinc.com>
