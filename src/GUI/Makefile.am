@@ -10,6 +10,8 @@ libGUI_a_SOURCES = \
 	preset_dlg.cxx preset_dlg.hxx \
 	prop_picker.cxx prop_picker.hxx \
 	sgVec3Slider.cxx sgVec3Slider.hxx \
-	trackball.c trackball.h
+	trackball.c trackball.h \
+	puList.cxx puList.hxx \
+	AirportList.cxx AirportList.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

@@ -5,6 +5,9 @@
 #include "dialog.hxx"
 #include "new_gui.hxx"
 
+#include "puList.hxx"
+#include "AirportList.hxx"
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -234,6 +237,14 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         puGroup * group = new puGroup(x, y);
         setupGroup(group, props, width, height, false);
         return group;
+    } else if (type == "list") {
+        puList * list = new puList(x, y, x + width, y + height);
+        setupObject(list, props);
+        return list;
+    } else if (type == "airport-list") {
+        AirportList * list = new AirportList(x, y, x + width, y + height);
+        setupObject(list, props);
+        return list;
     } else if (type == "input") {
         puInput * input = new puInput(x, y, x + width, y + height);
         setupObject(input, props);
