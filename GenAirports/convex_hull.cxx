@@ -94,7 +94,7 @@ bool test_point(point2d Pa, point2d Pb, point2d Pc) {
     a1 = calc_angle(a, b, origin);
     a2 = calc_angle(origin, b, c);
 
-    printf("a1 = %.2f  a2 = %.2f\n", a1 * RAD_TO_DEG, a2 * RAD_TO_DEG);
+    // printf("a1 = %.2f  a2 = %.2f\n", a1 * RAD_TO_DEG, a2 * RAD_TO_DEG);
 
     return ( (a1 + a2) < FG_PI );
 }
@@ -127,29 +127,26 @@ list_container convex_hull( list_container input_list )
     in_count = input_list.size();
     sum_x = sum_y = 0.0;
 
-    while ( current != last ) {
+    for ( ; current != last ; ++current ) {
 	sum_x += (*current).x;
 	sum_y += (*current).y;
-
-	++current;
     }
 
     average.x = sum_x / in_count;
     average.y = sum_y / in_count;
 
-    printf("Average center point is %.4f %.4f\n", average.x, average.y);
+    // printf("Average center point is %.4f %.4f\n", average.x, average.y);
 
     // STEP TWO:  Translate input points so average is at origin
     current = input_list.begin();
     last = input_list.end();
     trans_list.erase( trans_list.begin(), trans_list.end() );
 
-    while ( current != last ) {
+    for ( ; current != last ; ++current ) {
 	p.x = (*current).x - average.x;
 	p.y = (*current).y - average.y;
-	printf("%.6f %.6f\n", p.x, p.y);
+	// printf("%.6f %.6f\n", p.x, p.y);
 	trans_list.push_back(p);
-	++current;
     }
 
     // STEP THREE:  convert to radians and sort by theta
@@ -157,34 +154,31 @@ list_container convex_hull( list_container input_list )
     last = trans_list.end();
     radians_map.erase( radians_map.begin(), radians_map.end() );
 
-    while ( current != last ) {
+    for ( ; current != last ; ++current) {
 	p = cart_to_polar_2d(*current);
 	if ( p.dist > radians_map[p.theta] ) {
 	    radians_map[p.theta] = p.dist;
 	}
-	++current;
     }
 
-    printf("Sorted list\n");
+    // printf("Sorted list\n");
     map_current = radians_map.begin();
     map_last = radians_map.end();
-    while ( map_current != map_last ) {
+    for ( ; map_current != map_last ; ++map_current ) {
 	p.x = (*map_current).first;
 	p.y = (*map_current).second;
 
-	printf("p is %.6f %.6f\n", p.x, p.y);
-
-	++map_current;
+	// printf("p is %.6f %.6f\n", p.x, p.y);
     }
 
     // STEP FOUR: traverse the sorted list and eliminate everything
     // not on the perimeter.
-    printf("Traversing list\n");
+    // printf("Traversing list\n");
 
     // double check list size ... this should never fail because a
     // single runway will always generate four points.
     if ( radians_map.size() < 3 ) {
-	printf("convex hull not possible with < 3 points\n");
+	// printf("convex hull not possible with < 3 points\n");
 	exit(0);
     }
 
@@ -192,7 +186,7 @@ list_container convex_hull( list_container input_list )
     last_size = radians_map.size() + 1;
 
     while ( last_size > radians_map.size() ) {
-	printf("Running an iteration of the graham scan algorithm\n"); 
+	// printf("Running an iteration of the graham scan algorithm\n"); 
 	last_size = radians_map.size();
 
 	map_current = radians_map.begin();
@@ -224,11 +218,11 @@ list_container convex_hull( list_container input_list )
 	    // printf("Pc is %.6f %.6f\n", Pc.theta, Pc.dist);
 
 	    if ( test_point(Pa, Pb, Pc) ) {
-		printf("Accepted a point\n");
+		// printf("Accepted a point\n");
 		// accept point, advance Pa, Pb, and Pc.
 		++map_current;
 	    } else {
-		printf("REJECTED A POINT\n");
+		// printf("REJECTED A POINT\n");
 		// reject point, delete it and advance only Pb and Pc
 		map_next = map_current;
 		++map_next;
@@ -245,18 +239,16 @@ list_container convex_hull( list_container input_list )
     con_hull.erase( con_hull.begin(), con_hull.end() );
     map_current = radians_map.begin();
     map_last = radians_map.end();
-    while ( map_current != map_last ) {
+    for ( ; map_current != map_last ; ++map_current ) {
 	p.theta = (*map_current).first;
 	p.dist = (*map_current).second;
 
 	result.x = cos(p.theta) * p.dist + average.x;
-	result.y = sin(p.theta) * p.dist + average.x;
+	result.y = sin(p.theta) * p.dist + average.y;
 
 	printf("%.6f %.6f\n", result.x, result.y);
 
 	con_hull.push_back(result);
-
-	++map_current;
     }
 
     return con_hull;
@@ -264,6 +256,11 @@ list_container convex_hull( list_container input_list )
 
 
 // $Log$
+// Revision 1.3  1998/09/09 20:59:55  curt
+// Loop construct tweaks for STL usage.
+// Output airport file to be used to generate airport scenery on the fly
+//   by the run time sim.
+//
 // Revision 1.2  1998/09/09 16:26:32  curt
 // Continued progress in implementing the convex hull algorithm.
 //

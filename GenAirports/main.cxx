@@ -62,14 +62,15 @@ void process_airport( string last_airport, list < string > & runway_list,
     fgBUCKET b;
     long int index;
     char base[256], tmp[256];
-    string path, command, exfile, file;
+    string path, command, exfile, file, aptfile;
     int i, count;
 
     printf( "(apt) %s", last_airport.c_str() );
 
-    while ( runway_list.size() ) {
-	line_str = runway_list.front();
-	runway_list.pop_front();
+    list < string >::iterator last_runway = runway_list.end();
+    for ( list < string >::iterator current_runway = runway_list.begin();
+	  current_runway != last_runway ; ++current_runway ) {
+	line_str = (*current_runway);
 	printf( "%s", line_str.c_str() );
 
 	sscanf( line_str.c_str(), "%lf %lf %d %d %d %s %d %c %d\n",
@@ -83,19 +84,17 @@ void process_airport( string last_airport, list < string > & runway_list,
 	// add rwy_list to apt_list
 	current = rwy_list.begin();
 	last = rwy_list.end();
-	while ( current != last ) {
+	for ( ; current != last ; ++current ) {
 	    apt_list.push_back(*current);
-	    ++current;
 	}
     }
 
     printf("Runway points in degrees\n");
     current = apt_list.begin();
     last = apt_list.end();
-    while ( current != last ) {
+    for ( ; current != last; ++current ) {
 	// printf( "(%.4f, %.4f)\n", 
 	printf( "%.5f %.5f\n", current->lon, current->lat );
-	++current;
     }
     printf("\n");
 
@@ -108,20 +107,19 @@ void process_airport( string last_airport, list < string > & runway_list,
     current = hull_list.begin();
     last = hull_list.end();
     sum_x = sum_y = 0.0;
-    while ( current != last ) {
+    for ( ; current != last; ++current ) {
+	// printf("return = %.6f %.6f\n", (*current).x, (*current).y);
 	sum_x += (*current).x;
 	sum_y += (*current).y;
-
-	++current;
     }
 
     average.x = sum_x / count;
     average.y = sum_y / count;
 
-    // find bucket based on first point in hull list.  Eventually
-    // we'll need to handle cases where the area crosses bucket
-    // boundaries.
-    fgBucketFind( (*current).lon, (*current).lat, &b);
+    // find bucket based on average center point of hull list.
+    // Eventually we'll need to handle cases where the area crosses
+    // bucket boundaries.
+    fgBucketFind( average.lon, average.lat, &b);
     printf( "Bucket = lon,lat = %d,%d  x,y index = %d,%d\n", 
 	    b.lon, b.lat, b.x, b.y);
 
@@ -132,10 +130,12 @@ void process_airport( string last_airport, list < string > & runway_list,
     system( command.c_str() );
 
     sprintf(tmp, "%ld", index);
-    exfile = path + "/" + tmp + ".node.ex";
-    file =   path + "/" + tmp + ".poly";
+    exfile =  path + "/" + tmp + ".node.ex";
+    file =    path + "/" + tmp + ".poly";
+    aptfile = path + "/" + tmp + ".apt";
     printf( "extra node file = %s\n", exfile.c_str() );
     printf( "poly file = %s\n", file.c_str() );
+    printf( "apt file = %s\n", aptfile.c_str() );
 
     // output exclude nodes
     printf("Output exclude nodes\n");
@@ -149,16 +149,17 @@ void process_airport( string last_airport, list < string > & runway_list,
     current = hull_list.begin();
     last = hull_list.end();
     i = 1;
-    while ( current != last ) {
+    for ( ; current != last ; ++current ) {
 	// printf( "(%.4f, %.4f)\n", 
 	fprintf( fd, "%d %.2f %.2f %.2f\n", i, 
-		 (*current).lon * 3600.0, (*current).lat * 3600.0, elev);
-	++current;
+		 (*current).lon * 3600.0, (*current).lat * 3600.0, 
+		 (double)elev * FEET_TO_METER );
 	++i;
     }
     fclose(fd);
 
     // output poly
+    printf("Output poly\n");
     if ( (fd = fopen(file.c_str(), "w")) == NULL ) {
         printf("Cannot open file: %s\n", file.c_str());
         exit(-1);
@@ -177,6 +178,34 @@ void process_airport( string last_airport, list < string > & runway_list,
     // output hole center
     fprintf( fd, "1\n");
     fprintf( fd, "1 %.2f %.2f\n", average.x * 3600.0, average.y * 3600);
+
+    fclose(fd);
+
+    // output "apt" file
+    printf("Output airport\n");
+    if ( (fd = fopen(aptfile.c_str(), "w")) == NULL ) {
+        printf("Cannot open file: %s\n", aptfile.c_str());
+        exit(-1);
+    }
+
+    // write main airport identifier
+    fprintf(fd, "a %s", last_airport.c_str() );
+
+    // write perimeter polygon
+    current = hull_list.begin();
+    last = hull_list.end();
+    for ( ; current != last ; ++current ) {
+	fprintf( fd, "p %.7f %.7f %.2f\n", (*current).lon, (*current).lat, 
+		 (double)elev * FEET_TO_METER );
+    }
+
+    // write runway info
+    for ( list < string >::iterator current_runway = runway_list.begin();
+	  current_runway != last_runway ; ++current_runway ) {
+	line_str = (*current_runway);
+	line_str = line_str.substr(1, line_str.size());
+	fprintf(fd, "r %s", line_str.c_str() );
+    }
 
     fclose(fd);
 }
@@ -233,6 +262,9 @@ int main( int argc, char **argv ) {
 		process_airport(last_airport, runway_list, argv[2]);
 	    }
 
+	    // clear runway list for start of next airport
+	    runway_list.erase(runway_list.begin(), runway_list.end());
+
 	    last_airport = airport;
 	}
     }
@@ -248,78 +280,10 @@ int main( int argc, char **argv ) {
 }
 
 
-#if 0
-    // P13 (Globe, AZ)
-    // lon = -110.6642442;
-    // lat = 33.3528903;
-    // heading = 102.0 * DEG_TO_RAD;
-    // length = 1769;
-    // width = 23;
-
-    // KANE
-    lon = -93.2113889;
-    lat = 45.145;
-    elevation = 912 * FEET_TO_METER;
-    heading = 270.0 * DEG_TO_RAD;
-    length = 1220;
-    width = 23;
-
-    gen_runway_area( lon * DEG_TO_RAD, lat * DEG_TO_RAD, 
-		     heading, length, width, nodes, &count );
-
-    fgBucketFind(lon, lat, &b);
-    printf( "Bucket = lon,lat = %d,%d  x,y index = %d,%d\n", 
-	    b.lon, b.lat, b.x, b.y);
-
-    index = fgBucketGenIndex(&b);
-    fgBucketGenBasePath(&b, base);
-    sprintf(path, "%s/Scenery/%s", argv[1], base);
-    sprintf(command, "mkdir -p %s\n", path);
-    system(command);
-    
-    sprintf(exfile, "%s/%ld.node.ex", path, index);
-    sprintf(file, "%s/%ld.poly", path, index);
-    printf( "extra node file = %s\n", exfile);
-    printf( "poly file = %s\n", file);
-
-    // output extra nodes
-    if ( (fd = fopen(exfile, "w")) == NULL ) {
-        printf("Cannot open file: %s\n", exfile);
-        exit(-1);
-    }
-
-    fprintf(fd, "%d 2 0 0\n", count);
-    for ( i = 0; i < count; i++ ) {
-	fprintf( fd, "%d %.2f %.2f %.2f\n", i + 1, 
-		 nodes[i].lon * RAD_TO_ARCSEC, nodes[i].lat * RAD_TO_ARCSEC, 
-		 elevation);
-    }
-    fclose(fd);
-
-    // output poly
-    if ( (fd = fopen(file, "w")) == NULL ) {
-        printf("Cannot open file: %s\n", file);
-        exit(-1);
-    }
-
-    // output empty node list
-    fprintf(fd, "0 2 0 0\n");
-
-    // output segments
-    fprintf(fd, "%d 0\n", count);
-    for ( i = 0; i < count - 1; i++ ) {
-	fprintf( fd, "%d %d %d\n", i + 1, i + 1, i + 2 );
-    }
-    fprintf( fd, "%d %d %d\n", count, count, 1 );
-
-    // output hole center
-    fprintf( fd, "1\n");
-    fprintf( fd, "1 %.2f %.2f\n", lon * 3600.0, lat * 3600);
-
-    fclose(fd);
-
-#endif
-
-
-// $Log: main.c,v
+// $Log$
+// Revision 1.4  1998/09/09 20:59:56  curt
+// Loop construct tweaks for STL usage.
+// Output airport file to be used to generate airport scenery on the fly
+//   by the run time sim.
+//
 //

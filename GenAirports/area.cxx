@@ -80,10 +80,9 @@ batch_cart_to_polar_2d( list < point2d > in_list)
 
     current = in_list.begin();
     last = in_list.end();
-    while ( current != last ) {
+    for ( ; current != last ; ++current ) {
 	p = cart_to_polar_2d( *current );
 	out_list.push_back(p);
-	++current;
     }
 
     return out_list;
@@ -125,13 +124,12 @@ gen_area(point2d origin, double angle, list < point2d > cart_list)
     // printf("Rotating points by %.2f\n", angle);
     current = rad_list.begin();
     last = rad_list.end();
-    while ( current != last ) {
+    for ( ; current != last ; ++current ) {
 	current->theta -= angle;
 	while ( current->theta > FG_2PI ) {
 	    current->theta -= FG_2PI;
 	}
 	// printf("(%.2f, %.2f)\n", current->theta, current->dist);
-	++current;
     }
     // printf("\n");
 
@@ -140,14 +138,13 @@ gen_area(point2d origin, double angle, list < point2d > cart_list)
     //        origin.lon, origin.lat);
     current = rad_list.begin();
     last = rad_list.end();
-    while ( current != last ) {
+    for ( ; current != last ; ++current ) {
 	p = calc_lon_lat(origin_rad, *current);
 	// convert from radians to degress
 	p.lon *= RAD_TO_DEG;
 	p.lat *= RAD_TO_DEG;
 	// printf("(%.8f, %.8f)\n", p.lon, p.lat);
 	result_list.push_back(p);
-	++current;
     }
     // printf("\n");
 
@@ -218,6 +215,11 @@ gen_runway_area( double lon, double lat, double heading,
 
 
 // $Log$
+// Revision 1.4  1998/09/09 20:59:53  curt
+// Loop construct tweaks for STL usage.
+// Output airport file to be used to generate airport scenery on the fly
+//   by the run time sim.
+//
 // Revision 1.3  1998/09/09 16:26:31  curt
 // Continued progress in implementing the convex hull algorithm.
 //
