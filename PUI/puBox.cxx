@@ -117,27 +117,27 @@ void puBox::draw ( int dx, int dy, int style, puColour colour[], int am_default 
 	  glColor4fv( colour [ mid ] );
 	  glVertex2i( dx + min[0] + PU_SMALL_BEVEL , dy + min[1] + PU_SMALL_BEVEL );
 	  if(style==PUSTYLE_SMALL_SHADED)
-	    glColor4f( colour [mid][0] + (colour[lo][0] - colour[mid][0])/2.0,
-		       colour [mid][1] + (colour[lo][1] - colour[mid][1])/2.0,
-		       colour [mid][2] + (colour[lo][2] - colour[mid][2])/2.0,
+	    glColor4f( colour [mid][0] + (colour[lo][0] - colour[mid][0])/2.0f,
+		       colour [mid][1] + (colour[lo][1] - colour[mid][1])/2.0f,
+		       colour [mid][2] + (colour[lo][2] - colour[mid][2])/2.0f,
 		       colour [lo][3] );
 	  else
-	    glColor4f( colour [mid][0] + (colour[hi][0] - colour[mid][0])/2.0,
-		       colour [mid][1] + (colour[hi][1] - colour[mid][1])/2.0,
-		       colour [mid][2] + (colour[hi][2] - colour[mid][2])/2.0,
+	    glColor4f( colour [mid][0] + (colour[hi][0] - colour[mid][0])/2.0f,
+		       colour [mid][1] + (colour[hi][1] - colour[mid][1])/2.0f,
+		       colour [mid][2] + (colour[hi][2] - colour[mid][2])/2.0f,
 		       colour [hi][3] );
 	  glVertex2i( dx + min[0] + PU_SMALL_BEVEL , dy + max[1] - PU_SMALL_BEVEL );
 	  glColor4fv( colour [ mid ] );
 	  glVertex2i( dx + max[0] - PU_SMALL_BEVEL , dy + max[1] - PU_SMALL_BEVEL );
 	  if(style==-PUSTYLE_SMALL_SHADED)
-	    glColor4f( colour [mid][0] + (colour[lo][0] - colour[mid][0])/2.0,
-		       colour [mid][1] + (colour[lo][1] - colour[mid][1])/2.0,
-		       colour [mid][2] + (colour[lo][2] - colour[mid][2])/2.0,
+	    glColor4f( colour [mid][0] + (colour[lo][0] - colour[mid][0])/2.0f,
+		       colour [mid][1] + (colour[lo][1] - colour[mid][1])/2.0f,
+		       colour [mid][2] + (colour[lo][2] - colour[mid][2])/2.0f,
 		       colour [lo][3] );
 	  else
-	    glColor4f( colour [mid][0] + (colour[hi][0] - colour[mid][0])/2.0,
-		       colour [mid][1] + (colour[hi][1] - colour[mid][1])/2.0,
-		       colour [mid][2] + (colour[hi][2] - colour[mid][2])/2.0,
+	    glColor4f( colour [mid][0] + (colour[hi][0] - colour[mid][0])/2.0f,
+		       colour [mid][1] + (colour[hi][1] - colour[mid][1])/2.0f,
+		       colour [mid][2] + (colour[hi][2] - colour[mid][2])/2.0f,
 		       colour [hi][3] );
 	  glVertex2i( dx + max[0] - PU_SMALL_BEVEL , dy + min[1] + PU_SMALL_BEVEL );
 	glEnd();
@@ -201,27 +201,27 @@ void puBox::draw ( int dx, int dy, int style, puColour colour[], int am_default 
 	  glColor4fv( colour [ mid ] );
 	  glVertex2i( dx + min[0] + PU_BEVEL , dy + min[1] + PU_BEVEL );
 	  if(style==PUSTYLE_SHADED)
-	    glColor4f( colour [mid][0] + (colour[lo][0] - colour[mid][0])/2.0,
-		       colour [mid][1] + (colour[lo][1] - colour[mid][1])/2.0,
-		       colour [mid][2] + (colour[lo][2] - colour[mid][2])/2.0,
+	    glColor4f( colour [mid][0] + (colour[lo][0] - colour[mid][0])/2.0f,
+		       colour [mid][1] + (colour[lo][1] - colour[mid][1])/2.0f,
+		       colour [mid][2] + (colour[lo][2] - colour[mid][2])/2.0f,
 		       colour [lo][3] );
 	  else
-	    glColor4f( colour [mid][0] + (colour[hi][0] - colour[mid][0])/2.0,
-		       colour [mid][1] + (colour[hi][1] - colour[mid][1])/2.0,
-		       colour [mid][2] + (colour[hi][2] - colour[mid][2])/2.0,
+	    glColor4f( colour [mid][0] + (colour[hi][0] - colour[mid][0])/2.0f,
+		       colour [mid][1] + (colour[hi][1] - colour[mid][1])/2.0f,
+		       colour [mid][2] + (colour[hi][2] - colour[mid][2])/2.0f,
 		       colour [hi][3] );
 	  glVertex2i( dx + min[0] + PU_BEVEL , dy + max[1] - PU_BEVEL );
 	  glColor4fv( colour [ mid ] );
 	  glVertex2i( dx + max[0] - PU_BEVEL , dy + max[1] - PU_BEVEL );
 	  if(style==-PUSTYLE_SHADED)
-	    glColor4f( colour [mid][0] + (colour[lo][0] - colour[mid][0])/2.0,
-		       colour [mid][1] + (colour[lo][1] - colour[mid][1])/2.0,
-		       colour [mid][2] + (colour[lo][2] - colour[mid][2])/2.0,
+	    glColor4f( colour [mid][0] + (colour[lo][0] - colour[mid][0])/2.0f,
+		       colour [mid][1] + (colour[lo][1] - colour[mid][1])/2.0f,
+		       colour [mid][2] + (colour[lo][2] - colour[mid][2])/2.0f,
 		       colour [lo][3] );
 	  else
-	    glColor4f( colour [mid][0] + (colour[hi][0] - colour[mid][0])/2.0,
-		       colour [mid][1] + (colour[hi][1] - colour[mid][1])/2.0,
-		       colour [mid][2] + (colour[hi][2] - colour[mid][2])/2.0,
+	    glColor4f( colour [mid][0] + (colour[hi][0] - colour[mid][0])/2.0f,
+		       colour [mid][1] + (colour[hi][1] - colour[mid][1])/2.0f,
+		       colour [mid][2] + (colour[hi][2] - colour[mid][2])/2.0f,
 		       colour [hi][3] );
 	  glVertex2i( dx + max[0] - PU_BEVEL , dy + min[1] + PU_BEVEL );
 	glEnd();

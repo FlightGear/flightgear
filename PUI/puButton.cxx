@@ -1,4 +1,5 @@
 
+
 #include "puLocal.h"
 
 void puButton::draw ( int dx, int dy )
@@ -7,8 +8,15 @@ void puButton::draw ( int dx, int dy )
 
   /* If button is pushed or highlighted - use inverse style for button itself */
 
-  abox . draw ( dx, dy, ( getValue() ^ highlighted ) ? -style : style, colour,
-                                            isReturnDefault() ) ;
+  int tempStyle;
+
+  if ( parent && ( ( parent->getType() & PUCLASS_POPUPMENU ) ||
+                   ( parent->getType() & PUCLASS_MENUBAR   ) ) )
+    tempStyle =  ( getValue() ^ highlighted ) ? PUSTYLE_SMALL_SHADED : style ;
+  else
+    tempStyle =  ( getValue() ^ highlighted ) ? -style : style ;
+
+  abox . draw ( dx, dy, tempStyle, colour, isReturnDefault() ) ;
 
   /* If greyed out then halve the opacity when drawing the label and legend */
 
@@ -33,6 +41,8 @@ void puButton::draw ( int dx, int dy )
 
 void puButton::doHit ( int button, int updown, int, int )
 {
+
+
   if ( button == PU_LEFT_BUTTON )
   {
     if ( updown == active_mouse_edge || active_mouse_edge == PU_UP_AND_DOWN )
@@ -47,4 +57,5 @@ void puButton::doHit ( int button, int updown, int, int )
   else
     lowlight () ;
 }
+
 

@@ -32,7 +32,7 @@ puSlider    *rspeedSlider;
 *                                   *
 \***********************************/
 
-GLfloat light_diffuse [] = {1.0, 0.0, 0.0, 1.0} ;  /* Red diffuse light. */
+GLfloat light_diffuse [] = {0.0, 1.0, 0.0, 1.0} ;  /* Red diffuse light. */
 GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0} ;  /* Infinite light location. */
 
 GLfloat cube_n[6][3] =  /* Normals */
@@ -273,9 +273,11 @@ void sliderCB( puObject *sliderObj)
 
 int main ( int argc, char **argv )
 {
-
   firsttime = TRUE;
 
+#ifdef VOODOO
+  glutInitWindowPosition(   0,   0 ) ;
+#endif
   glutInitWindowSize    ( 640, 480 ) ;
   glutInit              ( &argc, argv ) ;
   glutInitDisplayMode   ( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH ) ;
@@ -290,12 +292,12 @@ int main ( int argc, char **argv )
 
   puInit () ;
 
-#ifdef USING_3DFX
+#ifdef VOODOO
   puShowCursor () ;
 #endif
 
   puSetDefaultStyle        ( PUSTYLE_SMALL_SHADED ) ;
-  puSetDefaultColourScheme ( 0.8, 0.2, 0.2 ) ;
+  puSetDefaultColourScheme ( 0.8, 0.8, 0.8 ) ;
 
   timer_text = new puText ( 300, 10 ) ;
   timer_text -> setColour ( PUCOL_LABEL, 1.0, 1.0, 1.0 ) ;

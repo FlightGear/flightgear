@@ -223,21 +223,23 @@ void  puInit ( void )
 
     int *tempSize = &fontSize[1];
 
-    if ( ! GetCharWidth32 ( hdc, 1, 255, tempSize ) )
+    if ( ! GetCharWidth32 ( hdc, 1, 255, tempSize ) &&
+         ! GetCharWidth   ( hdc, 1, 255, tempSize ) )
     {
       LPVOID lpMsgBuf ;
 
       FormatMessage ( FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                      FORMAT_MESSAGE_FROM_SYSTEM,
-		      NULL,
-		      GetLastError(),
-		      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		      (LPTSTR) &lpMsgBuf,
-		      0, NULL ) ;
+	              FORMAT_MESSAGE_FROM_SYSTEM,
+	              NULL,
+	              GetLastError(),
+	              MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+	              (LPTSTR) &lpMsgBuf,
+	              0, NULL ) ;
 
-      fprintf ( stderr, "PUI: Error: %s\n" (char *)lpMsgBuf ) ;
+      fprintf ( stderr, "PUI: Error: %s\n", (char *)lpMsgBuf ) ;
       LocalFree ( lpMsgBuf ) ;
     }
+
     wglUseFontBitmaps ( hdc, 0, 256, fontBase ) ;
 #endif
   }
