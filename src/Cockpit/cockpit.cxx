@@ -721,12 +721,11 @@ void fgCockpitUpdate( void ) {
         // This will check the global hud linked list pointer.
         // If these is anything to draw it will.
         fgUpdateHUD();
-    } else if ( fgGetBool( "/sim/hud/draw-fps-when-off", false ) ) {
+    }
+
+    if ( fgGetBool( "/sim/hud/draw-fps", false ) ) {
         char buf[64];
-        float fps    =       get_frame_rate();
-//      float tris   = fps * get_vfc_tris_drawn();
-//      float culled = fps * get_vfc_tris_culled();
-//      sprintf(buf,"%-4.1f  %7.0f  %7.0f", fps, tris, culled);
+        float fps = get_frame_rate();
         sprintf(buf,"%-5.1f", fps);
 
         glMatrixMode( GL_PROJECTION );
