@@ -98,7 +98,7 @@ DME::init ()
     _frequency_node = fnode->getChild("selected-mhz", 0, true);
     _in_range_node = node->getChild("in-range", 0, true);
     _distance_node = node->getChild("indicated-distance-nm", 0, true);
-    _speed_node = node->getChild("indicated-ground-speed", 0, true);
+    _speed_node = node->getChild("indicated-ground-speed-kt", 0, true);
     _time_node = node->getChild("indicated-time-min", 0, true);
 
     _serviceable_node->setBoolValue(true);
