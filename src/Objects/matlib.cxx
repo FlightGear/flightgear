@@ -279,6 +279,7 @@ FGMaterialLib::~FGMaterialLib ( void ) {
 	FGNewMat *slot = it->second;
         if ( slot != NULL ) {
             delete slot;
+	    it->second = NULL;
         }
     }
 }
