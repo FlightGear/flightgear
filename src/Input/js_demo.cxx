@@ -17,6 +17,8 @@ int main ( int, char ** )
   float      *ax[Z] ;
   int i, j, t, useful[Z];
 
+  jsInit();
+
   for ( i = 0; i < Z; i++ )
       js[i] = new jsJoystick ( i ) ;
 

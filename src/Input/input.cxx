@@ -377,6 +377,7 @@ FGInput::_init_keyboard ()
 void
 FGInput::_init_joystick ()
 {
+  jsInit();
                                 // TODO: zero the old bindings first.
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing joystick bindings");
   SGPropertyNode * js_nodes = fgGetNode("/input/joysticks");
@@ -456,7 +457,7 @@ FGInput::_init_joystick ()
     vector<SGPropertyNode_ptr> axes = js_node->getChildren("axis");
     size_t nb_axes = axes.size();
     int j;
-    for (j = 0; j < nb_axes; j++) {
+    for (j = 0; j < (int)nb_axes; j++) {
       const SGPropertyNode * axis_node = axes[j];
       const SGPropertyNode * num_node = axis_node->getChild("number");
       size_t n_axis = axis_node->getIndex();
@@ -490,7 +491,7 @@ FGInput::_init_joystick ()
     //
     vector<SGPropertyNode_ptr> buttons = js_node->getChildren("button");
     char buf[32];
-    for (j = 0; (j < buttons.size()) && (j < nbuttons); j++) {
+    for (j = 0; (j < (int)buttons.size()) && (j < nbuttons); j++) {
       const SGPropertyNode * button_node = buttons[j];
       const SGPropertyNode * num_node = button_node->getChild("number");
       size_t n_but = button_node->getIndex();

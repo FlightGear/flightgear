@@ -121,6 +121,8 @@ void writeButtonProperties(fstream &fs, int property,int joystick, int button) {
 
       
 int main(void) {
+  jsInit();
+
   jsSuper *jss=new jsSuper();
   jsInput *jsi=new jsInput(jss);
   jsi->displayValues(false);
