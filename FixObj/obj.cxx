@@ -144,7 +144,7 @@ void fix_cw_list(int *list, int list_ptr) {
 
 
 void dump_global_bounds( void ) {
-    double dist, radius;
+    double dist_squared, radius, radius_squared;
 
     radius = 0.0;
 
@@ -158,13 +158,15 @@ void dump_global_bounds( void ) {
     ++current;
 
     for ( ; current != last; ++current ) {
-	dist = ref.distance3D(*current);
-	// cout << "node = " << *current << " dist = " << dist << endl;
+	dist_squared = ref.distance3Dsquared(*current);
+	// cout << "node = " << *current << " dist = " << dist_squared << endl;
 
-	if ( dist > radius ) {
-	    radius = dist;
+	if ( dist_squared > radius_squared ) {
+	    radius_squared = dist_squared;
 	}
     }
+
+    radius = sqrt(radius_squared);
 
     fprintf( out, 
 	     "gbs %.5f %.5f %.5f %.2f\n", 
@@ -264,7 +266,8 @@ void dump_faces( void ) {
 // dump list
 void dump_list(int *list, int list_ptr) {
     Point3D p;
-    double xmax, xmin, ymax, ymin, zmax, zmin, dist, radius;
+    double xmax, xmin, ymax, ymin, zmax, zmin, dist_squared, radius_squared;
+    double radius;
     int i, j, len, n;
 
     if ( list_ptr < 3 ) {
@@ -318,13 +321,17 @@ void dump_list(int *list, int list_ptr) {
 
 	// calc bounding radius
 	n = list[i];
-	radius = p.distance3D(nodes[n]);
+	radius_squared = p.distance3Dsquared(nodes[n]);
 
 	for ( j = i + 1; j < i + len; j++ ) {
 	    n = list[j];
-	    dist = p.distance3D(nodes[n]);
-	    if ( dist > radius ) { radius = dist; }
+	    dist_squared = p.distance3Dsquared(nodes[n]);
+	    if ( dist_squared > radius_squared ) {
+		radius_squared = dist_squared;
+	    }
 	}
+	radius = sqrt(radius_squared);
+
 	// printf("radius = %.2f\n", radius);
 
 	// dump bounding sphere and header
@@ -577,6 +584,9 @@ void obj_fix(char *infile, char *outfile) {
 
 
 // $Log$
+// Revision 1.3  1999/02/01 21:09:40  curt
+// Optimizations from Norman Vine.
+//
 // Revision 1.2  1998/10/21 14:55:55  curt
 // Converted to Point3D class.
 //
@@ -635,4 +645,3 @@ void obj_fix(char *infile, char *outfile) {
 // Revision 1.1  1997/12/08 19:28:54  curt
 // Initial revision.
 //
-
