@@ -1,5 +1,5 @@
 Users Guide to FlightGear panel configuration
-Version 0.5, November 8 2000
+Version 0.6, March 1 2001
 Author: John Check <j4strngs@rockfish.net>  
 
 This document is an attempt to describe the configuration of 
@@ -124,10 +124,33 @@ applied *before* the transformation that describes the needle movement.
 About Textures:
 
 The texture files used to create the panel instruments are maximum 256x256
-pixels, red/green/blue/alpha format. When calling a section of a texture file
-the 0,0 lower left convention is used. There is a pair of x /y coordinates
-defining which section of the texture to use. 
+pixels, red/green/blue/alpha format. However the mechanism for specifying
+texture cropping coordinates is decimal in nature. When calling a section 
+of a texture file the 0,0 lower left convention is used.
+There is a pair of x/y coordinates defining which section of the texture 
+to use. 
 
+The following table can be used to calculate texture cropping specifications.
+
+# of divisions | width in pixels | decimal specification
+per axis
+        1   =   256 pixels              1
+        2   =   128 pixels,             0.5
+        4   =   64 pixels,              0.25
+        8   =   32 pixels,              0.125
+        16  =   16 pixels,              0.0625
+        32  =   8 pixels,               0.03125
+        64  =   4 pixels,               0.015625
+        128 =   2 pixels,               0.0078125
+
+The recommended procedure for generating gauge faces is to use a
+vector graphics package such as xfig, exporting the result as a
+poscript file. 3D modeling tools may also be used and are prefered
+for pretty items that don't require text such as levers, switches,
+bezels and so forth. Ideally, the size of the item in the final render
+should be of proportions that fit into the recommended pixel widths.
+The resulting files should be imported into a graphics manipulation
+package such as GIMP, et al for final processing.
 
 
 *  If there are *any* XML parsing errors, the panel will fail to load, 
@@ -140,4 +163,3 @@ defining which section of the texture to use.
    there may also be built-in layers for special things like a
    weather-radar display or a GPS (though the GPS could be handled with
    text properties).
-
