@@ -6,7 +6,7 @@
 # I think that it's permissible to list the same source files more
 # than once in a Makefile.am.  Hopefully this doesn't break anything.
 
-SHARED_SOURCES = \
+SHARED_SOURCE_FILES = \
         Airplane.cpp Airplane.hpp \
         Atmosphere.cpp Atmosphere.hpp \
         BodyEnvironment.hpp \
@@ -33,11 +33,11 @@ SHARED_SOURCES = \
 
 noinst_LIBRARIES = libYASim.a
 
-libYASim_a_SOURCES = YASim.cxx YASim.hxx $(SHARED_SOURCES)
+libYASim_a_SOURCES = YASim.cxx YASim.hxx $(SHARED_SOURCE_FILES)
 
 bin_PROGRAMS = yasim
 
-yasim_SOURCES = yasim-test.cpp $(SHARED_SOURCES)
+yasim_SOURCES = yasim-test.cpp $(SHARED_SOURCE_FILES)
 
 yasim_LDADD = -lsgxml -lsgprops -lsgdebug -lsgstructure  $(base_LIBS)
 
