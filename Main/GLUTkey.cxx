@@ -108,7 +108,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 90: /* Z key */
 	    w->visibility /= 1.10;
-	    xglFogf (GL_FOG_START, w->visibility / 10000000.0 );
+	    xglFogf (GL_FOG_START, w->visibility / 1000000.0 );
 	    xglFogf(GL_FOG_END, w->visibility);
 	    fgPrintf( FG_INPUT, FG_DEBUG, 
 		      "Fog density = %.4f\n", w->visibility );
@@ -168,7 +168,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 122: /* z key */
 	    w->visibility *= 1.10;
-	    xglFogf (GL_FOG_START, w->visibility / 10000000.0 );
+	    xglFogf (GL_FOG_START, w->visibility / 1000000.0 );
 	    xglFogf(GL_FOG_END, w->visibility);
 	    fgPrintf( FG_INPUT, FG_DEBUG, 
 		      "Fog density = %.4f\n", w->visibility);
@@ -266,11 +266,14 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.2  1998/04/24 00:49:17  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Trying out some different option parsing code.
-/* Some code reorganization.
+/* Revision 1.3  1998/04/24 14:19:29  curt
+/* Fog tweaks.
 /*
+ * Revision 1.2  1998/04/24 00:49:17  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ * Trying out some different option parsing code.
+ * Some code reorganization.
+ *
  * Revision 1.1  1998/04/22 13:25:40  curt
  * C++ - ifing the code.
  * Starting a bit of reorganization of lighting code.

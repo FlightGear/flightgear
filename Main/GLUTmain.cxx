@@ -200,7 +200,7 @@ static void fgInitVisuals( void ) {
     xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
     xglFogi (GL_FOG_MODE, GL_LINEAR);
-    xglFogf (GL_FOG_START, w->visibility / 10000000.0 );
+    xglFogf (GL_FOG_START, w->visibility / 1000000.0 );
     xglFogf (GL_FOG_END, w->visibility);
     // xglFogf (GL_FOG_DENSITY, w->visibility);
     xglHint (GL_FOG_HINT, GL_NICEST /* GL_FASTEST */ );
@@ -647,9 +647,8 @@ int main( int argc, char **argv ) {
 	fgPrintf( FG_GENERAL, FG_EXIT, "\nShutting down ...\n");
     }
 
-    // This is the general house keeping init routine. It initializes the
-    // debug trail scheme and then any other stuff.
-
+    // These are a few miscellaneous things that aren't really
+    // "subsystems" but still need to be initialized.
     if( !fgInitGeneral()) {
 	fgPrintf( FG_GENERAL, FG_EXIT, "General initializations failed ...\n" );
     }
@@ -663,22 +662,22 @@ int main( int argc, char **argv ) {
 		  "Subsystem initializations failed ...\n" );
     }
 
-    // setup view parameters, only makes GL calls
+    // setup OpenGL view parameters
     fgInitVisuals();
 
     if ( use_signals ) {
-	// init timer routines, signals, etc.  Arrange for an
-	// alarm signal to be generated, etc.
+	// init timer routines, signals, etc.  Arrange for an alarm
+	// signal to be generated, etc.
 	fgInitTimeDepCalcs();
     }
 
-    // Initialize the GLUT Event Handlers.
+    // Initialize the various GLUT Event Handlers.
     if( !fgGlutInitEvents() ) {
 	fgPrintf( FG_GENERAL, FG_EXIT, 
 		  "GLUT event handler initialization failed ...\n" );
     }
 
-    // pass control off to the GLUT event handler
+    // pass control off to the master GLUT event handler
     glutMainLoop();
 
     // we never actually get here ... but just in case ... :-)
@@ -695,6 +694,9 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.4  1998/04/24 14:19:30  curt
+// Fog tweaks.
+//
 // Revision 1.3  1998/04/24 00:49:18  curt
 // Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
 // Trying out some different option parsing code.
