@@ -963,6 +963,7 @@ fgOptLogLevel( const char *arg )
     fgSetString("/sim/logging/priority", arg);
 
     string priority = arg;
+    logbuf::set_log_classes(SG_ALL);
     if (priority == "bulk") {
       logbuf::set_log_priority(SG_BULK);
     } else if (priority == "debug") {
@@ -1545,6 +1546,7 @@ fgParseArgs (int argc, char **argv)
               verbose = true;
 
             else if (result == FG_OPTIONS_SHOW_AIRCRAFT) {
+               fgOptLogLevel( "alert" );
                SGPath path( globals->get_fg_root() );
                path.append("Aircraft");
                fgShowAircraft(path, true);
@@ -1560,6 +1562,7 @@ fgParseArgs (int argc, char **argv)
     }
 
     if (help) {
+       fgOptLogLevel( "alert" );
        fgUsage(verbose);
        exit(0);
     }
