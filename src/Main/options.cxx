@@ -548,7 +548,7 @@ fgOPTIONS::parse_fov( const string& arg ) {
 //
 // Socket exacmple "--fgfs=socket,dir,hz,machine,port" where
 // 
-//  machine = machine name or ip address if client, leave empty if server
+//  machine = machine name or ip address if client (leave empty if server)
 //  port = port, leave empty to let system choose
 //
 // File example "--garmin=file,dir,hz,filename" where
