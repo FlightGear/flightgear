@@ -123,19 +123,30 @@ void FGAIBallistic::setMass(double m) {
 void FGAIBallistic::Run(double dt) {
 
    life_timer += dt;
+//    cout << "life timer 1" << life_timer <<  dt << endl;
    if (life_timer > life) setDie(true); 
 
    double speed_north_deg_sec;
    double speed_east_deg_sec;
    double wind_speed_from_north_deg_sec;
    double wind_speed_from_east_deg_sec;
+   double Cdm;      // Cd adjusted by Mach Number
+   
+   // Adjust Cd by Mach number. The equations are based on curves
+   // for a conventional shell/bullet (no boat-tail). 
+   if ( Mach < 0.7 ) { Cdm = 0.0125 * Mach + Cd; }
+     else if ( 0.7 < Mach && Mach < 1.2 ) { 
+       Cdm = 0.3742 * pow ( Mach, 2) - 0.252 * Mach + 0.0021 + Cd; }
+     else { Cdm = 0.2965 * pow ( Mach, -1.1506 ) + Cd; }
+
+//   cout << " Mach , " << Mach << " , Cdm , " << Cdm << endl;
    
    // drag = Cd * 0.5 * rho * speed * speed * drag_area;
    // rho is adjusted for altitude in void FGAIBase::update,
    // using Standard Atmosphere (sealevel temperature 15C)
    // acceleration = drag/mass;
    // adjust speed by drag
-   speed -= (Cd * 0.5 * rho * speed * speed * drag_area/mass) * dt; 
+   speed -= (Cdm * 0.5 * rho * speed * speed * drag_area/mass) * dt; 
 
    // don't let speed become negative
    if ( speed < 0.0 ) speed = 0.0;
@@ -181,8 +192,8 @@ void FGAIBallistic::Run(double dt) {
 }  // end Run
 
 double FGAIBallistic::_getTime() const {
-   return life_timer;
+//    cout << "life timer 2" << life_timer << endl;
+  return life_timer;
 }
 
 // end AIBallistic
-
