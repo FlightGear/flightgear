@@ -22,9 +22,10 @@
 // $Id$
 
 
+#include <stdio.h>		// sprintf()
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/fg_geodesy.hxx>
-#include <simgear/timing/fg_time.hxx>
 
 #include <FDM/flight.hxx>
 

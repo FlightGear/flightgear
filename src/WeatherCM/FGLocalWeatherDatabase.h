@@ -54,6 +54,7 @@ HISTORY
 /* INCLUDES								    */
 /****************************************************************************/
 #include <vector>
+#include STL_STRING
 
 #include <plib/sg.h>
 
@@ -71,6 +72,7 @@ HISTORY
 /* DEFINES								    */
 /****************************************************************************/
 FG_USING_STD(vector);
+FG_USING_STD(string);
 FG_USING_NAMESPACE(std);
 
 /****************************************************************************/
@@ -110,19 +112,22 @@ public:
 
     DatabaseWorkingType DatabaseStatus;
 
-    void init( const WeatherPrecision visibility, const DatabaseWorkingType type );
+    void init( const WeatherPrecision visibility,
+	       const DatabaseWorkingType type,
+	       const string& root );
 
     /************************************************************************/
     /* Constructor and Destructor					    */
     /************************************************************************/
     FGLocalWeatherDatabase(
 	const sgVec3&             position,
+	const string&             root,
 	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILITY,
 	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE)
     {
 	sgCopyVec3( last_known_position, position );
 
-	init( visibility, type );
+	init( visibility, type, root );
 
 	theFGLocalWeatherDatabase = this;
     }
@@ -131,12 +136,13 @@ public:
 	const WeatherPrecision    position_lat,
 	const WeatherPrecision    position_lon,
 	const WeatherPrecision    position_alt,
+	const string&             root,
 	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILITY,
 	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE)
     {
 	sgSetVec3( last_known_position, position_lat, position_lon, position_alt );
 
-	init( visibility, type );
+	init( visibility, type, root );
 
 	theFGLocalWeatherDatabase = this;
     }

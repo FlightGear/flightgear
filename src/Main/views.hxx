@@ -31,7 +31,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/point3d.hxx>
-#include <simgear/timing/fg_time.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <list>
 

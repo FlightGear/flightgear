@@ -57,7 +57,8 @@ typedef float WeatherPrecision;
 #define MINIMUM_WEATHER_VISIBILITY 10.0    /* metres */
 #define DEFAULT_WEATHER_VISIBILITY 32000.0 /* metres */
 //prefered way the database is working
-#define PREFERED_WORKING_TYPE default_mode
+// #define PREFERED_WORKING_TYPE default_mode
+#define PREFERED_WORKING_TYPE use_internet
 
 #define FG_WEATHER_DEFAULT_TEMPERATURE   (15.0+273.16)	    /*15°C or 288.16°K*/
 #define FG_WEATHER_DEFAULT_VAPORPRESSURE (0.0)		    /*in Pascal 1 Pa = N/m^2*/

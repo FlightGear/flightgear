@@ -86,12 +86,29 @@ FGTileMgr::~FGTileMgr ( void ) {
 int FGTileMgr::init( void ) {
     FG_LOG( FG_TERRAIN, FG_INFO, "Initializing Tile Manager subsystem." );
 
+    if ( state != Start ) {
+	FG_LOG( FG_TERRAIN, FG_INFO,
+		"ReInitializing the Tile Manager subsystem." );
+
+	// This is necessay to keep bookeeping straight for the
+	// tile_cache   -- which actually handles all the
+	// (de)allocations  
+	while( load_queue.size() ) {
+	    FG_LOG( FG_TERRAIN, FG_INFO, 
+		    "Load queue not empty, popping a tile" );
+	    FGLoadRec pending = load_queue.front();
+	    load_queue.pop_front();
+	    load_tile( pending.b, pending.cache_index );
+	}
+    } else {
+	FG_LOG( FG_TERRAIN, FG_INFO,
+		"Initializing Tile Manager subsystem." );
+    }
+
     global_tile_cache.init();
     hit_list.clear();
 
     state = Inited;
-
-    // last_hit = 0;
 
     tile_diameter = current_options.get_tile_diameter();
     FG_LOG( FG_TERRAIN, FG_INFO, "Tile Diameter = " << tile_diameter);
@@ -108,15 +125,6 @@ int FGTileMgr::init( void ) {
     return 1;
 }
 
-#if 0
-// schedule a tile for loading
-static void disable_tile( int cache_index ) {
-    // see if tile already exists in the cache
-    // cout << "DISABLING CACHE ENTRY = " << cache_index << endl;
-    FGTileEntry *t = global_tile_cache.get_tile( cache_index );
-    t->ssg_disable();
-}
-#endif
 
 // schedule a tile for loading
 int FGTileMgr::sched_tile( const FGBucket& b ) {

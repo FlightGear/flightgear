@@ -25,6 +25,8 @@
 #define _FG_RAY_HXX
 
 
+#include <stdio.h>		// FILE
+
 #include <simgear/compiler.h>
 
 #include STL_STRING

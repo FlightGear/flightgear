@@ -23,7 +23,7 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/fg_geodesy.hxx>
-#include <simgear/timing/fg_time.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <FDM/flight.hxx>
 
@@ -67,7 +67,7 @@ bool FGGarmin::gen_message() {
     int deg;
     double min;
 
-    FGTime *t = FGTime::cur_time_params;
+    SGTime *t = SGTime::cur_time_params;
 
     char utc[10];
     sprintf( utc, "%02d%02d%02d", 

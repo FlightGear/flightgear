@@ -47,7 +47,7 @@ extern bool global_fullscreen;
 #endif
 
 #include <simgear/math/fg_types.hxx>
-#include <simgear/timing/fg_time.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include STL_STRING
 #include <vector>

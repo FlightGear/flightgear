@@ -48,7 +48,7 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
-#include <simgear/timing/fg_time.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Autopilot/auto_gui.hxx>
@@ -76,14 +76,14 @@
 // Handle keyboard events
 void GLUTkey(unsigned char k, int x, int y) {
     FGInterface *f;
-    FGTime *t;
+    SGTime *t;
     FGView *v;
     float fov, tmp;
     static bool winding_ccw = true;
     int speed;
 
     f = current_aircraft.fdm_state;
-    t = FGTime::cur_time_params;
+    t = SGTime::cur_time_params;
     v = &current_view;
 
     FG_LOG( FG_INPUT, FG_DEBUG, "Key hit = " << k );

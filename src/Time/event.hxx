@@ -31,7 +31,6 @@
 
 
 #include <simgear/compiler.h>
-#include <simgear/timing/fg_time.hxx>
 
 #include <Include/fg_callback.hxx>
 

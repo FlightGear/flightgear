@@ -33,7 +33,6 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/vector.hxx>
-#include <simgear/timing/fg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Cockpit/panel.hxx>

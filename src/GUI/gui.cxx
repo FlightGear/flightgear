@@ -55,7 +55,6 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 #include <simgear/screen/screen-dump.hxx>
-#include <simgear/timing/fg_time.hxx>
 
 #include <Include/general.hxx>
 #include <Aircraft/aircraft.hxx>

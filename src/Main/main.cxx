@@ -72,7 +72,7 @@
 #include <simgear/math/fg_random.h>
 #include <simgear/misc/fgpath.hxx>
 #include <simgear/sky/sky.hxx>
-#include <simgear/timing/fg_time.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Include/general.hxx>
 
@@ -276,7 +276,7 @@ void fgRenderFrame( void ) {
     FGBFI::update();
 
     fgLIGHT *l = &cur_light_params;
-    FGTime *t = FGTime::cur_time_params;
+    SGTime *t = SGTime::cur_time_params;
     // FGView *v = &current_view;
     static double last_visibility = -9999;
 
@@ -428,7 +428,7 @@ void fgRenderFrame( void ) {
 		 << " lon = " << cur_fdm_state->get_Longitude()
 		 << " lat = " << cur_fdm_state->get_Latitude() << endl;
 	    cout << "    sun_rot = " << cur_light_params.sun_rotation
-		 << " gst = " << FGTime::cur_time_params->getGst() << endl;
+		 << " gst = " << SGTime::cur_time_params->getGst() << endl;
 	    cout << "    sun ra = " << ephem->getSunRightAscension()
 		 << " sun dec = " << ephem->getSunDeclination() 
 		 << " moon ra = " << ephem->getMoonRightAscension()
@@ -440,7 +440,7 @@ void fgRenderFrame( void ) {
 				cur_fdm_state->get_Latitude(),
 				cur_fdm_state->get_Altitude() * FEET_TO_METER,
 				cur_light_params.sun_rotation,
-				FGTime::cur_time_params->getGst(),
+				SGTime::cur_time_params->getGst(),
 				ephem->getSunRightAscension(),
 				ephem->getSunDeclination(), 50000.0,
 				ephem->getMoonRightAscension(),
@@ -607,7 +607,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
     static fdm_state_list fdm_list;
     // FGInterface fdm_state;
     fgLIGHT *l = &cur_light_params;
-    FGTime *t = FGTime::cur_time_params;
+    SGTime *t = SGTime::cur_time_params;
     // FGView *v = &current_view;
     int i;
 
@@ -722,7 +722,7 @@ static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
-    FGTime *t;
+    SGTime *t;
     static long remainder = 0;
     long elapsed;
 #ifdef FANCY_FRAME_COUNTER
@@ -733,7 +733,7 @@ static void fgMainLoop( void ) {
     static int frames = 0;
 #endif // FANCY_FRAME_COUNTER
 
-    t = FGTime::cur_time_params;
+    t = SGTime::cur_time_params;
 
     FG_LOG( FG_ALL, FG_DEBUG, "Running Main Loop");
     FG_LOG( FG_ALL, FG_DEBUG, "======= ==== ====");
@@ -808,7 +808,7 @@ static void fgMainLoop( void ) {
     cur_magvar.update( cur_fdm_state->get_Longitude(),
 		       cur_fdm_state->get_Latitude(),
 		       cur_fdm_state->get_Altitude()* FEET_TO_METER,
-		       FGTime::cur_time_params->getJD() );
+		       SGTime::cur_time_params->getJD() );
 
     // Get elapsed time (in usec) for this past frame
     elapsed = fgGetTimeInterval();
@@ -1306,15 +1306,15 @@ int main( int argc, char **argv ) {
     guiInit();
 
     // Initialize time
-    FGTime::cur_time_params = new FGTime( current_options.get_fg_root() );
-    // FGTime::cur_time_params->init( cur_fdm_state->get_Longitude(), 
+    SGTime::cur_time_params = new SGTime( current_options.get_fg_root() );
+    // SGTime::cur_time_params->init( cur_fdm_state->get_Longitude(), 
     //                                cur_fdm_state->get_Latitude() );
-    // FGTime::cur_time_params->update( cur_fdm_state->get_Longitude() );
-    FGTime::cur_time_params->init( 0.0, 0.0,
+    // SGTime::cur_time_params->update( cur_fdm_state->get_Longitude() );
+    SGTime::cur_time_params->init( 0.0, 0.0,
 				   current_options.get_fg_root(), 
 				   current_options.get_time_offset(),
 				   current_options.get_time_offset_type() );
-    FGTime::cur_time_params->update( 0.0, 0.0, 0.0 );
+    SGTime::cur_time_params->update( 0.0, 0.0, 0.0 );
 
     // Do some quick general initializations
     if( !fgInitGeneral()) {
@@ -1347,7 +1347,7 @@ int main( int argc, char **argv ) {
     FGPath ephem_data_path( current_options.get_fg_root() );
     ephem_data_path.append( "Astro" );
     ephem = new FGEphemeris( ephem_data_path.c_str() );
-    ephem->update( FGTime::cur_time_params, 0.0 );
+    ephem->update( SGTime::cur_time_params, 0.0 );
 
     FGPath sky_tex_path( current_options.get_fg_root() );
     sky_tex_path.append( "Textures" );

@@ -54,7 +54,7 @@ FG_USING_STD(string);
 #include <simgear/math/interpolater.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/fgpath.hxx>
-#include <simgear/timing/fg_time.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Main/options.hxx>
@@ -100,7 +100,7 @@ void fgLIGHT::Init( void ) {
 // update lighting parameters based on current sun position
 void fgLIGHT::Update( void ) {
     FGInterface *f;
-    FGTime *t;
+    SGTime *t;
     // if the 4th field is 0.0, this specifies a direction ...
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     // base sky color
@@ -110,7 +110,7 @@ void fgLIGHT::Update( void ) {
     double deg, ambient, diffuse, sky_brightness;
 
     f = current_aircraft.fdm_state;
-    t = FGTime::cur_time_params;
+    t = SGTime::cur_time_params;
 
     FG_LOG( FG_EVENT, FG_INFO, "Updating light parameters." );
 

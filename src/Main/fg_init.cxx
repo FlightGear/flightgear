@@ -54,7 +54,7 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/fgpath.hxx>
-#include <simgear/timing/fg_time.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
@@ -245,7 +245,7 @@ bool fgInitGeneral( void ) {
 // Returns non-zero if a problem encountered.
 bool fgInitSubsystems( void ) {
     fgLIGHT *l = &cur_light_params;
-    FGTime *t = FGTime::cur_time_params;
+    SGTime *t = SGTime::cur_time_params;
 
     FG_LOG( FG_GENERAL, FG_INFO, "Initialize Subsystems");
     FG_LOG( FG_GENERAL, FG_INFO, "========== ==========");
@@ -454,7 +454,7 @@ bool fgInitSubsystems( void ) {
 	       current_aircraft.fdm_state->get_Longitude(),
 	       current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER );
     FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
-	new FGLocalWeatherDatabase( position );
+	new FGLocalWeatherDatabase( position, current_options.get_fg_root() );
     // cout << theFGLocalWeatherDatabase << endl;
     // cout << "visibility = " 
     //      << theFGLocalWeatherDatabase->getWeatherVisibility() << endl;

@@ -36,7 +36,7 @@
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/math/fg_types.hxx>
 #include <simgear/misc/props.hxx>
-#include <simgear/timing/fg_time.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
@@ -377,7 +377,7 @@ FGBFI::setAircraftDir (const string &dir)
 time_t
 FGBFI::getTimeGMT ()
 {
-  return FGTime::cur_time_params->get_cur_time();
+  return SGTime::cur_time_params->get_cur_time();
 }
 
 
@@ -391,12 +391,12 @@ FGBFI::setTimeGMT (time_t time)
 				// and solar system
   current_options.set_time_offset(time);
   current_options.set_time_offset_type(SG_TIME_GMT_ABSOLUTE);
-  FGTime::cur_time_params->init( cur_fdm_state->get_Longitude(),
+  SGTime::cur_time_params->init( cur_fdm_state->get_Longitude(),
 				 cur_fdm_state->get_Latitude(),
 				 current_options.get_fg_root(),
 				 current_options.get_time_offset(),
 				 current_options.get_time_offset_type() );
-  FGTime::cur_time_params->update( cur_fdm_state->get_Longitude(),
+  SGTime::cur_time_params->update( cur_fdm_state->get_Longitude(),
 				   cur_fdm_state->get_Latitude(),
 				   cur_fdm_state->get_Altitude()
 				   * FEET_TO_METER );

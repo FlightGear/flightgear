@@ -42,7 +42,7 @@ bool global_fullscreen = true;
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgstream.hxx>
 #include <simgear/misc/props.hxx>
-#include <simgear/timing/fg_time.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Include/general.hxx>
 #include <Cockpit/cockpit.hxx>
@@ -432,7 +432,7 @@ long int fgOPTIONS::parse_date( const string& date)
 	num[i] = '\0';
 	gmt.tm_sec = atoi(num);
     }
-    time_t theTime = FGTime::cur_time_params->get_gmt(gmt.tm_year,
+    time_t theTime = SGTime::cur_time_params->get_gmt(gmt.tm_year,
                                                       gmt.tm_mon,
 						      gmt.tm_mday,
 						      gmt.tm_hour,

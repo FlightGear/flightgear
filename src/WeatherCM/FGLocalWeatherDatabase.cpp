@@ -49,6 +49,7 @@ HISTORY
 /****************************************************************************/
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
+#include <simgear/misc/fgpath.hxx>
 
 #include <Aircraft/aircraft.hxx>
 
@@ -63,7 +64,9 @@ HISTORY
 FGLocalWeatherDatabase* FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 0;
 FGLocalWeatherDatabase *WeatherDatabase;
 
-void FGLocalWeatherDatabase::init(const WeatherPrecision visibility, const DatabaseWorkingType type)
+void FGLocalWeatherDatabase::init( const WeatherPrecision visibility,
+				   const DatabaseWorkingType type,
+				   const string& root )
 {
     cerr << "Initializing FGLocalWeatherDatabase\n";
     cerr << "-----------------------------------\n";
@@ -95,7 +98,10 @@ void FGLocalWeatherDatabase::init(const WeatherPrecision visibility, const Datab
 	{
 	    FGWeatherParse *parsed_data = new FGWeatherParse();
 
-	    parsed_data->input( "weather/current.gz" );
+	    FGPath file( root );
+	    file.append( "Weather" );
+	    file.append( "current.txt.gz" );
+	    parsed_data->input( file.c_str() );
 	    unsigned int n = parsed_data->stored_stations();
 
 	    sgVec2               *p = new sgVec2              [n];
@@ -263,15 +269,15 @@ void fgUpdateWeatherDatabase(void)
 
     FGPhysicalProperty my_value = WeatherDatabase->get(position);
     current_aircraft.fdm_state->set_Static_temperature(my_value.Temperature*KTOR);
-	current_aircraft.fdm_state->set_Static_pressure(my_value.AirPressure*PATOPSF);
-	float density=rho0 * 273.15 * my_value.AirPressure / (101300 *my_value.Temperature )*KGMTOSGF;
-	current_aircraft.fdm_state->set_Density(density*KGMTOSGF);
+    current_aircraft.fdm_state->set_Static_pressure(my_value.AirPressure*PATOPSF);
+    float density=rho0 * 273.15 * my_value.AirPressure / (101300 *my_value.Temperature )*KGMTOSGF;
+    current_aircraft.fdm_state->set_Density(density*KGMTOSGF);
 	
-	#define KPHTOFPS 0.9113 //km/hr to ft/s
-	#define MSTOFPS  3.2808 //m/s to ft/s
-	current_aircraft.fdm_state->set_Velocities_Local_Airmass(my_value.Wind[1]*KPHTOFPS,
-		my_value.Wind[0]*KPHTOFPS,
-		my_value.Wind[2]*KPHTOFPS);
+#define KPHTOFPS 0.9113 //km/hr to ft/s
+#define MSTOFPS  3.2808 //m/s to ft/s
+    current_aircraft.fdm_state->set_Velocities_Local_Airmass(my_value.Wind[1]*KPHTOFPS,
+							     my_value.Wind[0]*KPHTOFPS,
+							     my_value.Wind[2]*KPHTOFPS);
 	
 }
 
