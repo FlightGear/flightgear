@@ -311,6 +311,79 @@ void fgInitVisuals( void ) {
 }
 
 
+// For HiRes screen Dumps using Brian Pauls TR Library
+void trRenderFrame( void ) {
+
+    if ( fgPanelVisible() ) {
+        GLfloat height = fgGetInt("/sim/startup/ysize");
+        GLfloat view_h =
+            (current_panel->getViewHeight() - current_panel->getYOffset())
+            * (height / 768.0) + 1;
+        glTranslatef( 0.0, view_h, 0.0 );
+    }
+
+    static double m_log01      = -log( 0.01 );
+    static double sqrt_m_log01 = sqrt( m_log01 );
+
+    static GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
+    static GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
+
+    fgLIGHT *l = &cur_light_params;
+
+    glClearColor(l->adj_fog_color[0], l->adj_fog_color[1], 
+                 l->adj_fog_color[2], l->adj_fog_color[3]);
+
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+    // set the opengl state to known default values
+    default_state->force();
+
+    // update fog params
+    double actual_visibility       = thesky->get_visibility();
+    // GLfloat fog_exp_density        = m_log01 / actual_visibility;
+    GLfloat fog_exp2_density       = sqrt_m_log01 / actual_visibility;
+    GLfloat fog_exp2_punch_through = sqrt_m_log01 / ( actual_visibility * 1.5 );
+
+    glEnable( GL_FOG );
+    glFogf  ( GL_FOG_DENSITY, fog_exp2_density);
+    glFogi  ( GL_FOG_MODE,    GL_EXP2 );
+    glFogfv ( GL_FOG_COLOR,   l->adj_fog_color );
+
+    // GL_LIGHT_MODEL_AMBIENT has a default non-zero value so if
+    // we only update GL_AMBIENT for our lights we will never get
+    // a completely dark scene.  So, we set GL_LIGHT_MODEL_AMBIENT
+    // explicitely to black.
+    glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
+
+    ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient );
+
+    // texture parameters
+    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
+    glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
+
+    // we need a white diffuse light for the phase of the moon
+    ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
+    thesky->preDraw();
+
+    // draw the ssg scene
+    // return to the desired diffuse color
+    ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
+    glEnable( GL_DEPTH_TEST );
+    ssgCullAndDraw( scene );
+
+    // draw the lights
+    glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
+    ssgCullAndDraw( lighting );
+
+    thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
+
+    // need to do this here as hud_and_panel state is static to
+    // main.cxx  and HUD and Panel routines have to be called with
+    // knowledge of the the TR struct < see gui.cxx::HighResDump()
+    hud_and_panel->apply();
+}
+
+
 // Update all Visuals (redraws anything graphics related)
 void fgRenderFrame( void ) {
     // Update the default (kludged) properties.

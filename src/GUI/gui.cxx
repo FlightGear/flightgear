@@ -450,6 +450,202 @@ void helpCb (puObject *)
     //mkDialog (text.c_str());
     mkDialog ("Help started in netscape window.");
 }
+#define TR_HIRES_SNAP
+#if defined( TR_HIRES_SNAP)
+#include <simgear/screen/tr.h>
+extern void trRenderFrame( void );
+extern void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
+                         GLfloat x_end, GLfloat y_end );
+
+void fgHiResDump()
+{
+    FILE *f;
+    string message;
+    bool show_pu_cursor = false;
+    bool show_menu = false;
+    char *filename = new char [24];
+    static int count = 1;
+
+    int freeze = globals->get_freeze();
+    if(!freeze)
+        globals->set_freeze( true );
+
+    if(gui_menu_on) {
+        show_menu = true;
+        guiToggleMenu();
+    }
+	
+    if ( !puCursorIsHidden() ) {
+        show_pu_cursor = true;
+        puHideCursor();
+    }
+
+    fgInitVisuals();
+    fgReshape( fgGetInt("/sim/startup/xsize"),
+               fgGetInt("/sim/startup/ysize") );
+
+    // we need two render frames here to clear the menu and cursor
+    // ... not sure why but doing an extra fgRenderFrame() shouldn't
+    // hurt anything
+    fgRenderFrame();
+    fgRenderFrame();
+
+    // Make sure we have SSG projection primed for current view
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    ssgSetCamera( (sgVec4 *)globals->get_current_view()->get_VIEW() );
+    float fov = globals->get_current_view()->get_fov();
+    ssgSetFOV(fov, fov * globals->get_current_view()->get_win_ratio());
+    // ssgSetNearFar( 10.0f, 120000.0f );
+    ssgSetNearFar( 0.5f, 1200000.0f );
+
+	
+    // This ImageSize stuff is a temporary hack
+    // should probably use 128x128 tile size and
+    // support any image size
+
+    // This should be a requester to get multiplier from user
+    int multiplier = 3;
+    int width = fgGetInt("/sim/startup/xsize");
+    int height = fgGetInt("/sim/startup/ysize");
+	
+    /* allocate buffer large enough to store one tile */
+    GLubyte *tile = (GLubyte *)malloc(width * height * 3 * sizeof(GLubyte));
+    if (!tile) {
+        printf("Malloc of tile buffer failed!\n");
+        return;
+    }
+
+    int imageWidth  = multiplier*width;
+    int imageHeight = multiplier*height;
+
+    /* allocate buffer to hold a row of tiles */
+    GLubyte *buffer
+        = (GLubyte *)malloc(imageWidth * height * 3 * sizeof(GLubyte));
+    if (!buffer) {
+        free(tile);
+        printf("Malloc of tile row buffer failed!\n");
+        return;
+    }
+    TRcontext *tr = trNew();
+    trTileSize(tr, width, height, 0);
+    trTileBuffer(tr, GL_RGB, GL_UNSIGNED_BYTE, tile);
+    trImageSize(tr, imageWidth, imageHeight);
+    trRowOrder(tr, TR_TOP_TO_BOTTOM);
+    sgFrustum *frustum = ssgGetFrustum();
+    trFrustum(tr,
+              frustum->getLeft(), frustum->getRight(),
+              frustum->getBot(),  frustum->getTop(), 
+              frustum->getNear(), frustum->getFar());
+	
+    /* Prepare ppm output file */
+    while (count < 1000) {
+        snprintf(filename, 24, "fgfs-screen-%03d.ppm", count++);
+        if ( (f = fopen(filename, "r")) == NULL )
+            break;
+        fclose(f);
+    }
+    f = fopen(filename, "wb");
+    if (!f) {
+        printf("Couldn't open image file: %s\n", filename);
+        free(buffer);
+        free(tile);
+        return;
+    }
+    fprintf(f,"P6\n");
+    fprintf(f,"# ppm-file created by %s\n", "trdemo2");
+    fprintf(f,"%i %i\n", imageWidth, imageHeight);
+    fprintf(f,"255\n");
+
+    /* just to be safe... */
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+    /* Because the HUD and Panel change the ViewPort we will
+     * need to handle some lowlevel stuff ourselves */
+    int ncols = trGet(tr, TR_COLUMNS);
+    int nrows = trGet(tr, TR_ROWS);
+
+    bool do_hud = fgGetBool("/sim/hud/visibility");
+    GLfloat hud_col_step = 640.0 / ncols;
+    GLfloat hud_row_step = 480.0 / nrows;
+	
+    bool do_panel = fgPanelVisible();
+    GLfloat panel_col_step = current_panel->getWidth() / ncols;
+    GLfloat panel_row_step = current_panel->getHeight() / nrows;
+	
+    /* Draw tiles */
+    int more = 1;
+    while (more) {
+        trBeginTile(tr);
+        int curColumn = trGet(tr, TR_CURRENT_COLUMN);
+        int curRow =  trGet(tr, TR_CURRENT_ROW);
+        trRenderFrame();
+        if ( do_hud )
+            fgUpdateHUD( curColumn*hud_col_step,      curRow*hud_row_step,
+                         (curColumn+1)*hud_col_step, (curRow+1)*hud_row_step );
+        if (do_panel)
+            current_panel->update( curColumn*panel_col_step, panel_col_step,
+                                   curRow*panel_row_step,    panel_row_step );
+        more = trEndTile(tr);
+
+        /* save tile into tile row buffer*/
+        int curTileWidth = trGet(tr, TR_CURRENT_TILE_WIDTH);
+        int bytesPerImageRow = imageWidth * 3*sizeof(GLubyte);
+        int bytesPerTileRow = (width) * 3*sizeof(GLubyte);
+        int xOffset = curColumn * bytesPerTileRow;
+        int bytesPerCurrentTileRow = (curTileWidth) * 3*sizeof(GLubyte);
+        int i;
+        for (i=0;i<height;i++) {
+            memcpy(buffer + i*bytesPerImageRow + xOffset, /* Dest */
+                   tile + i*bytesPerTileRow,              /* Src */
+                   bytesPerCurrentTileRow);               /* Byte count*/
+        }
+
+        if (curColumn == trGet(tr, TR_COLUMNS)-1) {
+            /* write this buffered row of tiles to the file */
+            int curTileHeight = trGet(tr, TR_CURRENT_TILE_HEIGHT);
+            int bytesPerImageRow = imageWidth * 3*sizeof(GLubyte);
+            int i;
+            for (i=0;i<curTileHeight;i++) {
+                /* Remember, OpenGL images are bottom to top.  Have to reverse. */
+                GLubyte *rowPtr = buffer + (curTileHeight-1-i) * bytesPerImageRow;
+                fwrite(rowPtr, 1, imageWidth*3, f);
+            }
+        }
+
+    }
+
+    fgReshape( width, height );
+
+    trDelete(tr);
+
+    fclose(f);
+
+    message = "Snap shot saved to ";
+    message += filename;
+    mkDialog (message.c_str());
+
+    free(tile);
+    free(buffer);
+
+    //	message = "Snap shot saved to ";
+    //	message += filename;
+    //	mkDialog (message.c_str());
+
+    delete [] filename;
+
+    if( show_menu )
+        guiToggleMenu();
+
+    if ( show_pu_cursor ) {
+        puShowCursor();
+    }
+
+    if(!freeze)
+        globals->set_freeze( false );
+}
+#endif // #if defined( TR_HIRES_SNAP)
+
 
 #if defined( WIN32 ) && !defined( __CYGWIN__)
 
@@ -522,6 +718,11 @@ void printScreen ( puObject *obj ) {
 
 void dumpSnapShot ( puObject *obj ) {
     fgDumpSnapShot();
+}
+
+
+void dumpHiResSnapShot ( puObject *obj ) {
+    fgHiResDump();
 }
 
 
@@ -621,6 +822,7 @@ char *fileSubmenu               [] = {
     "Print",
 #endif
     "Snap Shot",
+    "Hires Snap Shot",
     "---------", 
     "Reset", 
     "Load flight",
@@ -634,6 +836,7 @@ puCallback fileSubmenuCb        [] = {
 #endif
     /* NULL, notCb, */
     dumpSnapShot,
+    dumpHiResSnapShot,
     NULL,
     reInit, 
     loadFlight,

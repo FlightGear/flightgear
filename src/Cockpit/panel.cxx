@@ -57,7 +57,7 @@
 /**
  * Calculate the aspect adjustment for the panel.
  */
-float
+static float
 get_aspect_adjust (int xsize, int ysize)
 {
   float ideal_aspect = float(WIN_W) / float(WIN_H);
@@ -240,32 +240,36 @@ FGPanel::unbind ()
 void
 FGPanel::update ()
 {
-  float aspect_adjust = get_aspect_adjust(_xsize_node->getIntValue(),
-					  _ysize_node->getIntValue());
-
 				// Do nothing if the panel isn't visible.
-  if (!fgPanelVisible())
-    return;
+    if (!fgPanelVisible())
+        return;
 
 				// If the mouse is down, do something
-  if (_mouseDown) {
-    _mouseDelay--;
-    if (_mouseDelay < 0) {
-      _mouseInstrument->doMouseAction(_mouseButton, _mouseX, _mouseY);
-      _mouseDelay = 2;
+    if (_mouseDown) {
+        _mouseDelay--;
+        if (_mouseDelay < 0) {
+            _mouseInstrument->doMouseAction(_mouseButton, _mouseX, _mouseY);
+            _mouseDelay = 2;
+        }
     }
-  }
 
 				// Now, draw the panel
+    float aspect_adjust = get_aspect_adjust(_xsize_node->getIntValue(),
+                                            _ysize_node->getIntValue());
+    if (aspect_adjust <1.0)
+        update(WIN_X, int(WIN_W * aspect_adjust), WIN_Y, WIN_H);
+    else
+        update(WIN_X, WIN_W, WIN_Y, int(WIN_H / aspect_adjust));
+}
+
+
+void
+FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
+{
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  if (aspect_adjust <1.0)
-    gluOrtho2D(WIN_X, WIN_X + int(WIN_W * aspect_adjust),
-	       WIN_Y, WIN_Y + WIN_H);
-  else
-    gluOrtho2D(WIN_X, WIN_X + WIN_W,
-	       WIN_Y, WIN_Y + int(WIN_H / aspect_adjust));
+  gluOrtho2D(winx, winx + winw, winy, winy + winh);
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();

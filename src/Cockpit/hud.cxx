@@ -964,7 +964,19 @@ static void set_hud_color(float r, float g, float b) {
 // all C++.
 //
 void fgUpdateHUD( void ) {
-    fgUpdateHUD( 0.0f, 0.0f, 640.0f, 480.0f );
+	
+    static const float normal_aspect = float(640) / float(480);
+    // note: win_ratio is Y/X
+    float current_aspect = 1.0f/globals->get_current_view()->get_win_ratio();
+    if( current_aspect > normal_aspect ) {
+        float aspect_adjust = current_aspect / normal_aspect;
+        float adjust = 320.0f*aspect_adjust - 320.0f;
+        fgUpdateHUD( -adjust, 0.0f, 640.0f+adjust, 480.0f );
+    } else {
+        float aspect_adjust = normal_aspect / current_aspect;
+        float adjust = 240.0f*aspect_adjust - 240.0f;
+        fgUpdateHUD( 0.0f, -adjust, 640.0f, 480.0f+adjust );
+    }
 }
 
 void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
@@ -1009,6 +1021,7 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
 //	  glEnable(GL_BLEND);
 	  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	  glHint(GL_LINE_SMOOTH_HINT,GL_DONT_CARE);
+//	  glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
 	  glLineWidth(1.5);
   } else {
 	  glLineWidth(1.0);
