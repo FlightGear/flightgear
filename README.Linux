@@ -8,9 +8,9 @@ FlightGear up and running under Linux.
 
 You need to understand the concepts of 3D acceleration under Linux and
 the needed libraries. An excellent source of information is the "Linux
-3Dfx HOWTO" which can be found at
+Quake-HOWTO" which can be found at
 
-       http://www.gamers.org/dEngine/xf3D/howto/3Dfx-HOWTO.html
+       http://www.linuxquake.com
 
 If anything seem to be wrong with your 3D setup, check there first!
 
@@ -48,6 +48,45 @@ need"
   Note: glut-3.7 is included with Mesa 3.0 so if you've already
   grabbed the latest version of mesa, you should have everything you
   need.
+
+  Alternatively, you can use the 3D-stuff that came along with your
+  Linux distribution. At least RedHat (5.3 and later) and S.u.S.E. 6.0
+  (or later) contain all the things you need.
+
+  - (optional) the 3DFX kernel module.
+
+  Without this thingy installed, access to your accelerator board
+  needs to be SUID root, which bad practice (and a _huge_ security
+  hole). Get the 3DFX module from
+	
+	http://www.xs4all.nl/~carlo17/3dfx/index.html
+
+  and install it:
+
+ 	mkdir 3dfx
+	cd 3dfx
+	tar xvfz ../Dev3Dfx-2.7.tar.gz 
+	make
+	cp 3dfx.o /lib/modules/`uname -r`/misc
+	mknod /dev/3dfx c 107 0
+	insmod 3dfx
+
+  alternatively, you can get the RPM from there ind use rpm for
+  installation.
+
+  - Steve Baker's plib library.
+
+  get it from    
+
+	http://www.woodsoup.org/projs/plib/ 
+
+  and follow the instructions in README.plib.
+
+  - (optional) the gpc and gfc libraries.
+
+  Read the README.g[fp]c files to understand what they are good for
+  and decide whether you need to download them. If you don't want to
+  build your own sceneries, you might not need them.
 
 2. Build FlightGear:
 
@@ -94,15 +133,9 @@ This will install the binaries in /usr/local/bin. Notice that the name
 of the FlightGear binary is "fgfs".
 
 Another problem with Linux/Glide is permission-related. All programs
-accessing the Accelerator board need root permissions. The solution is
-either to play as root or make the /usr/local/bin/fgfs binary "setuid
-root", i.e. when this binary is run root priviledges are given. Do
-this by issuing (as root)
+accessing the Accelerator board need root permissions (or the kernel
+module mentioned above installed). I _strongly_ recommend the latter.
 
-	chmod +s /usr/local/bin/fgfs
-
-A solution for this problem is upcoming, keep an eye on the 3Dfx
-website.
 
 3. Install the data files
 
@@ -196,3 +229,5 @@ adjusted for your specific architecture:
     export CFLAGS="-mieee -mcpu=ev56 -Wa,-m21164a -pipe -g"
     export CXXFLAGS="-mieee -mcpu=ev56 -Wa,-m21164a -pipe -g"
     ./configure
+
+
