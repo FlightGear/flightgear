@@ -1420,7 +1420,7 @@ int mainLoop( int argc, char **argv ) {
 
     // Check for the correct base package version
     string base_version = fgBasePackageVersion();
-    if ( !(base_version == "0.7.9") ) {
+    if ( !(base_version == "0.7.11pre1") ) {
         // tell the operator how to use this application
         fgUsage();
 
