@@ -179,6 +179,8 @@ void
 FGEnvironment::set_temperature_sea_level_degc (double t)
 {
   temperature_sea_level_degc = t;
+  if (dewpoint_sea_level_degc > t)
+      dewpoint_sea_level_degc = t;
   _recalc_alt_temperature();
   _recalc_density();
 }
@@ -195,6 +197,8 @@ void
 FGEnvironment::set_dewpoint_sea_level_degc (double t)
 {
   dewpoint_sea_level_degc = t;
+  if (temperature_sea_level_degc < t)
+      temperature_sea_level_degc = t;
   _recalc_alt_dewpoint();
   _recalc_density();
 }
