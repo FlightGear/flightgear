@@ -91,6 +91,7 @@ Point3D FGATCAlignedProjection::ConvertToLocal(Point3D pt) {
     return(Point3D(x,y,0.0));
 }
 
+// TODO - IMPLEMENT ME!!!
 Point3D FGATCAlignedProjection::ConvertFromLocal(Point3D pt) {
     return(Point3D(0,0,0));
 }

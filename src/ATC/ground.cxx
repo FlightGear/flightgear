@@ -457,6 +457,7 @@ Gate* FGGround::GetGateNode() {
 
 // WARNING - This is hardwired to my prototype logical network format
 // and will almost certainly change when Bernie's stuff comes on-line.
+// Returns NULL if it can't find a valid node.
 node* FGGround::GetThresholdNode(string rwyID) {
 	// For now go through all the nodes and parse their names
 	// Maybe in the future we'll map threshold nodes by ID
