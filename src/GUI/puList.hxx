@@ -7,7 +7,6 @@
 #  include <config.h>
 #endif
 
-#include <Main/fg_os.hxx> // To set toolkit for pu.h
 #include <plib/pu.h>
 
 

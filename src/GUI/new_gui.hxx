@@ -11,7 +11,6 @@
 #  include <config.h>
 #endif
 
-#include <Main/fg_os.hxx>
 #include <plib/pu.h>
 
 #include <simgear/compiler.h>	// for SG_USING_STD

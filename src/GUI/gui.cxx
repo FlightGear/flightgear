@@ -39,7 +39,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 
-#include <Main/fg_os.hxx> // Must come *before* pu.h!
 #include <plib/pu.h>
 
 #include <Include/general.hxx>
