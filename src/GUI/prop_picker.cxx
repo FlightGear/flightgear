@@ -501,6 +501,23 @@ void fgPropPicker::find_props ()
 
   files [ num_files ] = NULL ;
 
+  // Sort the entries.  This is a simple N^2 extraction sort.  More
+  // elaborate algorithms aren't necessary for the few dozen
+  // properties we're going to sort.
+  for(i=0; i<num_files; i++) {
+    int j, min = i;
+    char df, *tmp;
+    for(j=i+1; j<num_files; j++)
+      if(strcmp(names[j], names[min]) < 0)
+	min = j;
+    if(i != min) {
+      tmp =  names[min];  names[min] =  names[i];  names[i] = tmp;
+      tmp =  files[min];  files[min] =  files[i];  files[i] = tmp;
+      tmp = values[min]; values[min] = values[i]; values[i] = tmp;
+      df  =  dflag[min];  dflag[min] =  dflag[i];  dflag[i] = df;
+    }
+  }
+
   // printf("files pointer=%i/%i\n", files, num_files);
 
   proppath ->    setLabel          (startDir);
