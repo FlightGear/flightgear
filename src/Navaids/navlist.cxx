@@ -143,27 +143,36 @@ bool FGNavList::findNavFromList(const Point3D &aircraft,
     // double az1, az2, s;
     
     Point3D station;
-    double d;
+    double d2;
+    double min_dist = 99999999999999.9;
+    bool found_one = false;
     for ( ; current != end ; ++current ) {
 	// cout << "testing " << current->get_ident() << endl;
 	station = Point3D((*current)->get_x(), (*current)->get_y(),
                           (*current)->get_z());
 
-	d = aircraft.distance3Dsquared( station );
+	d2 = aircraft.distance3Dsquared( station );
 
 	// cout << "  dist = " << sqrt(d)
 	//      << "  range = " << current->get_range() * SG_NM_TO_METER
         //      << endl;
 
-	// match up to 2 * range^2 the published range so we can model
+	// match d^2 < 2 * range^2 the published range so we can model
 	// reduced signal strength
 	double twiceRange = 2 * (*current)->get_range() * SG_NM_TO_METER;
-	if ( d < (twiceRange * twiceRange)) {
-	    // cout << "matched = " << current->get_ident() << endl;
-	    *n = (**current);
-	    return true;
+	if ( d2 < (twiceRange * twiceRange)) {
+            // cout << "d2 = " << d2 << " min_dist = " << min_dist << endl;
+            if ( d2 < min_dist ) {
+                min_dist = d2;
+                found_one = true;
+                *n = (**current);
+                // cout << "matched = " << (*current)->get_ident() << endl;
+            } else {
+                // cout << "matched, but too far away = "
+                //      << (*current)->get_ident() << endl;
+            }
 	}
     }
 
-    return false;
+    return found_one;
 }
