@@ -43,7 +43,9 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
-#include <FDM/ADA.hxx>
+#ifdef ENABLE_SP_FMDS
+#include <FDM/SP/ADA.hxx>
+#endif
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
@@ -337,6 +339,7 @@ float get_anzg   ( void )
     return anzg;
 }
 
+#ifdef ENABLE_SP_FMDS
 int get_iaux1 (void)
 {
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
@@ -516,7 +519,7 @@ float get_aux18 (void)
     FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
     return fdm->get_faux(10);
 }
-// #endif
+#endif
 // $$$ end - added, VS Renganathan 13 Oct 2K
 
 

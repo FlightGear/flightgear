@@ -82,7 +82,10 @@
 #include <Cockpit/radiostack.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
-#include <FDM/ADA.hxx>
+#ifdef ENABLE_SP_FMDS
+#include <FDM/SP/ADA.hxx>
+#include <FDM/SP/ACMS.hxx>
+#endif
 #include <FDM/Balloon.h>
 #include <FDM/ExternalNet/ExternalNet.hxx>
 #include <FDM/ExternalPipe/ExternalPipe.hxx>
@@ -1252,8 +1255,12 @@ void fgInitFDM() {
             cur_fdm_state = new FGLaRCsim( dt );
         } else if ( model == "jsb" ) {
             cur_fdm_state = new FGJSBsim( dt );
+#ifdef ENABLE_SP_FMDS
         } else if ( model == "ada" ) {
             cur_fdm_state = new FGADA( dt );
+        } else if ( model == "acms" ) {
+            cur_fdm_state = new FGACMS( dt );
+#endif
         } else if ( model == "balloon" ) {
             cur_fdm_state = new FGBalloonSim( dt );
         } else if ( model == "magic" ) {
@@ -1708,7 +1715,6 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     // Initialize the radio stack subsystem.
     ////////////////////////////////////////////////////////////////////
-
     current_radiostack = new FGRadioStack;
     current_radiostack->init();
     current_radiostack->bind();
@@ -1717,7 +1723,6 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     // Initialize the cockpit subsystem
     ////////////////////////////////////////////////////////////////////
-
     if( fgCockpitInit( &current_aircraft )) {
         // Cockpit initialized ok.
     } else {

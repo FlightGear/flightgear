@@ -7,6 +7,12 @@ else
 MPLAYER_LIBS = 
 endif
 
+if ENABLE_SP_FDM
+SP_FDM_LIBS = $(top_builddir)/src/FDM/SP/libSPFDM.a
+else
+SP_FDM_LIBS = 
+endif
+
 if WITH_THREADS
 THREAD_LIBS = -lsgthreads $(thread_LIBS)
 else
@@ -69,6 +75,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/FDM/JSBSim/filtersjb/libfiltersjb.a \
 	$(top_builddir)/src/FDM/LaRCsim/libLaRCsim.a \
 	$(top_builddir)/src/FDM/UIUCModel/libUIUCModel.a \
+	$(SP_FDM_LIBS) \
 	$(top_builddir)/src/GUI/libGUI.a \
 	$(top_builddir)/src/Autopilot/libAutopilot.a \
 	$(top_builddir)/src/Input/libInput.a \

@@ -68,6 +68,10 @@ else
 fi
 AM_CONDITIONAL(ENABLE_MPLAYER_AS, test "x$with_multiplayer" != "xno")
 
+AC_ARG_ENABLE(sp_fdms, [  --enable-sp-fdms              Include special purpose Flight Models], [enable_sp_fdms="$enableval"] )
+AC_DEFINE([ENABLE_SP_FMDS], test "x$enable_sp_fdms" = "xyes", [Define to include special purpose FDMs])
+AM_CONDITIONAL(ENABLE_SP_FDM, test "x$enable_sp_fdms" != "xno")
+
 
 dnl Thread related checks
 # defaults to yes
@@ -219,7 +223,7 @@ AC_SEARCH_LIBS(dlclose, dl)
 base_LIBS="$LIBS"
 
 dnl Check for SDL if enabled.
-AC_ARG_ENABLE(sdl, [  --enable-sdl    Configure to use SDL instead of GLUT], enable_sdl="yes", enable_sdl="")
+AC_ARG_ENABLE(sdl, [  --enable-sdl                  Configure to use SDL instead of GLUT], [enable_sdl="$enableval"])
 AM_CONDITIONAL(USE_SDL, test "x$enable_sdl" = "xyes")
 if test "x$enable_sdl" = "xyes"; then
     AC_DEFINE([PU_USE_SDL], 1, [Define to use SDL])
@@ -545,6 +549,7 @@ AC_CONFIG_FILES([ \
 	src/FDM/JSBSim/Makefile \
 	src/FDM/JSBSim/filtersjb/Makefile \
 	src/FDM/LaRCsim/Makefile \
+	src/FDM/SP/Makefile \
 	src/FDM/UIUCModel/Makefile \
 	src/FDM/YASim/Makefile \
 	src/FDM/Makefile \
@@ -601,3 +606,10 @@ if test "x$with_threads" = "xyes"; then
 else
     echo "threads: no"
 fi
+
+if test "x$enable_sp_fdms" != "xno"; then
+    echo "Include special purpose flight models: yes"
+else
+    echo "Include special purpose flight models: no"
+fi
+

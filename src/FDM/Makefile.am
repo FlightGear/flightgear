@@ -1,9 +1,15 @@
-SUBDIRS	= Balloon ExternalNet ExternalPipe JSBSim LaRCsim UIUCModel YASim
+if ENABLE_SP_FDM
+SP_DIR = SP
+else
+SP_DIR =
+endif
+
+SUBDIRS	= Balloon JSBSim LaRCsim UIUCModel YASim \
+          $(SP_DIR) ExternalNet ExternalPipe
 
 noinst_LIBRARIES = libFlight.a
 
 libFlight_a_SOURCES = \
-	ADA.cxx ADA.hxx \
 	Balloon.cxx Balloon.h \
 	flight.cxx flight.hxx \
 	MagicCarpet.cxx MagicCarpet.hxx \

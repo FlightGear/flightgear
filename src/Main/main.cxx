@@ -68,7 +68,7 @@
 #include <Scenery/tilemgr.hxx>
 #include <FDM/flight.hxx>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
-#include <FDM/ADA.hxx>
+// #include <FDM/ADA.hxx>
 #include <ATC/ATCdisplay.hxx>
 #include <ATC/ATCmgr.hxx>
 #include <ATC/AIMgr.hxx>

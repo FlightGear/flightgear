@@ -1,0 +1,5 @@
+This directory contains special purpose FDM's that should not be of
+interest to the common user. At this time there is a special FDM to
+support ACMS files which are generated from flight recorder data
+(http://www.sasflightops.com/dlk/acms.htm).
+
