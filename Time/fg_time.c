@@ -55,8 +55,7 @@ void fgTimeInit(struct fgTIME *t) {
     printf("Initializing Time\n");
 
     t->gst_diff = -9999.0;
-    t->warp = 0;
-    t->warp = 0 * 3600;
+    t->warp = (0) * 3600;
     t->warp_delta = 0;
 }
 
@@ -300,10 +299,13 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.29  1998/01/19 19:27:20  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.30  1998/01/21 21:11:35  curt
+/* Misc. tweaks.
 /*
+ * Revision 1.29  1998/01/19 19:27:20  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.28  1998/01/19 18:35:49  curt
  * Minor tweaks and fixes for cygwin32.
  *

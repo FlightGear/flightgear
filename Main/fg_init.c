@@ -116,16 +116,28 @@ void fgInitSubsystems( void ) {
     FG_Altitude = FG_Runway_altitude + 3.758099;
     
     /* Initial Position at (SEZ) SEDONA airport */
-    FG_Longitude = -111.7884614 * DEG_TO_RAD;
-    FG_Latitude  = 34.8486289 * DEG_TO_RAD;
-    FG_Runway_altitude = 4827;
+    /* FG_Longitude = -111.774176 * DEG_TO_RAD; */
+    /* FG_Latitude  = 34.834343 * DEG_TO_RAD; */
+    /* FG_Runway_altitude = 4827; */
+    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+    
+    /* Initial Position SE of (SEZ) SEDONA airport */
+    /* FG_Longitude = -111.724176 * DEG_TO_RAD; */
+    /* FG_Latitude  = 34.744343 * DEG_TO_RAD; */
+    /* FG_Runway_altitude = 7427; */
+    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+    
+    /* Initial Position at (HSP) Hot Springs, VA */
+    FG_Longitude = (-79.8338964 /*+ 0.02*/) * DEG_TO_RAD;
+    FG_Latitude  = ( 37.9514564 /*+ 0.05*/) * DEG_TO_RAD;
+    FG_Runway_altitude = (792 /*+ 1500*/);
     FG_Altitude = FG_Runway_altitude + 3.758099;
     
     /* Initial Position at (ANE) Anoka County airport */
-    FG_Longitude = -93.2113889 * DEG_TO_RAD;
-    FG_Latitude  = 45.145 * DEG_TO_RAD;
-    FG_Runway_altitude = 912;
-    FG_Altitude = FG_Runway_altitude + 3.758099;
+    /* FG_Longitude = -93.2113889 * DEG_TO_RAD; */
+    /* FG_Latitude  = 45.145 * DEG_TO_RAD; */
+    /* FG_Runway_altitude = 912; */
+    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
     
     /* Initial Position north of the city of Globe */
     /* FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
@@ -150,7 +162,7 @@ void fgInitSubsystems( void ) {
     /* FG_Latitude  = ( 93312.00 / 3600.0 ) * DEG_TO_RAD; */
 
  
-   printf("Initial position is: (%.4f, %.4f, %.2f)\n", 
+    printf("Initial position is: (%.4f, %.4f, %.2f)\n", 
 	   FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, 
 	   FG_Altitude * FEET_TO_METER);
 
@@ -287,10 +299,13 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.32  1998/01/19 19:27:08  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.33  1998/01/21 21:11:34  curt
+/* Misc. tweaks.
 /*
+ * Revision 1.32  1998/01/19 19:27:08  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.31  1998/01/19 18:40:32  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

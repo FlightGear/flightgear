@@ -9,6 +9,7 @@ $(ARLIBRARY): $(OBJECTS)
 	$(RANLIB) $(ARLIBRARY)
 	echo $(VPATH)
 	$(MV) $(ARLIBRARY) $(FG_ROOT_LIB)
+	touch $(FG_ROOT_LIB)/stamp_libs
 
 $(LDLIBTARGET): $(OBJECTS)
 	$(LD) -o $(LDLIBRARY) $(LDFLAGS) $(OBJECTS)

@@ -13,8 +13,8 @@ FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 # Choose your weapons
 #---------------------------------------------------------------------------
 
-CC = g++
-CXX = g++
+CC = gcc
+CXX = gcc
 LD = ld
 AR = ar
 RANLIB = ranlib

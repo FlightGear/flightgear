@@ -37,6 +37,10 @@ Reto Koradi <kor@mol.biol.ethz.ch> http://www.mol.biol.ethz.ch/~kor
   Helped me get on track with setting up fog effects.
 
 
+Bob Kuehne <rpk@sgi.com>
+  Redid the Makefile system so it is simpler and more robust.
+
+
 Eric Mitchell <mitchell@mars.ark.com>
   Contributed some topnotch scenery textures.
 

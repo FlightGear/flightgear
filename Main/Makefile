@@ -44,7 +44,7 @@ include $(FG_ROOT_SRC)/commondefs
 # Rule for TARGET
 #---------------------------------------------------------------------------
 
-$(TARGET): $(OBJECTS)
+$(TARGET): $(OBJECTS) $(FG_ROOT_LIB)/stamp_libs
 	$(CC) -o $(TARGET) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
 	$(LN) -sf $(TARGET) fg$(FG_VERSION_MAJOR)
 
@@ -52,6 +52,9 @@ include $(COMMONRULES)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.42  1998/01/21 21:11:34  curt
+# Misc. tweaks.
+#
 # Revision 1.41  1998/01/19 19:27:08  curt
 # Merged in make system changes from Bob Kuehne <rpk@sgi.com>
 # This should simplify things tremendously.
