@@ -418,7 +418,7 @@ static void interpolate( double time, replay_list_type list ) {
  */
 
 void FGReplay::replay( double time ) {
-    cout << "replay: " << time << " ";
+    // cout << "replay: " << time << " ";
     // find the two frames to interpolate between
     double t1, t2;
 
@@ -428,10 +428,10 @@ void FGReplay::replay( double time ) {
         if ( time > t1 ) {
             // replay the most recent frame
             update_fdm( short_term.back() );
-            cout << "first frame" << endl;
+            // cout << "first frame" << endl;
         } else if ( time <= t1 && time >= t2 ) {
             interpolate( time, short_term );
-            cout << "from short term" << endl;
+            // cout << "from short term" << endl;
         } else if ( medium_term.size() > 0 ) {
             t1 = short_term.front().sim_time;
             t2 = medium_term.back().sim_time;
@@ -440,13 +440,13 @@ void FGReplay::replay( double time ) {
                                                    medium_term.back(),
                                                    short_term.front() );
                 update_fdm( result );
-                cout << "from short/medium term" << endl;
+                // cout << "from short/medium term" << endl;
             } else {
                 t1 = medium_term.back().sim_time;
                 t2 = medium_term.front().sim_time;
                 if ( time <= t1 && time >= t2 ) {
                     interpolate( time, medium_term );
-                    cout << "from medium term" << endl;
+                    // cout << "from medium term" << endl;
                 } else if ( long_term.size() > 0 ) {
                     t1 = medium_term.front().sim_time;
                     t2 = long_term.back().sim_time;
@@ -455,29 +455,29 @@ void FGReplay::replay( double time ) {
                                                            long_term.back(),
                                                            medium_term.front());
                         update_fdm( result );
-                       cout << "from medium/long term" << endl;
+                        // cout << "from medium/long term" << endl;
                     } else {
                         t1 = long_term.back().sim_time;
                         t2 = long_term.front().sim_time;
                         if ( time <= t1 && time >= t2 ) {
                             interpolate( time, long_term );
-                            cout << "from long term" << endl;
+                            // cout << "from long term" << endl;
                         } else {
                             // replay the oldest long term frame
                             update_fdm( long_term.front() );
-                            cout << "oldest long term frame" << endl;
+                            // cout << "oldest long term frame" << endl;
                         }
                     }
                 } else {
                     // replay the oldest medium term frame
                     update_fdm( medium_term.front() );
-                    cout << "oldest medium term frame" << endl;
+                    // cout << "oldest medium term frame" << endl;
                 }
             }
         } else {
             // replay the oldest short term frame
             update_fdm( short_term.front() );
-            cout << "oldest short term frame" << endl;
+            // cout << "oldest short term frame" << endl;
         }
     } else {
         // nothing to replay
