@@ -89,27 +89,21 @@ FGBinding::FGBinding ()
 }
 
 FGBinding::FGBinding (const SGPropertyNode * node)
-  : _command(0),
-    _arg(new SGPropertyNode),
-    _setting(0)
 {
+  FGBinding();
   read(node);
 }
 
 FGBinding::~FGBinding ()
 {
-//   delete _arg;                       // Delete the saved arguments
-//   delete _command_state;     // Delete the saved command state
 }
 
 void
 FGBinding::read (const SGPropertyNode * node)
 {
   const SGPropertyNode * conditionNode = node->getChild("condition");
-  if (conditionNode != 0) {
-    cerr << "Adding condition to binding" << endl;
+  if (conditionNode != 0)
     setCondition(fgReadCondition(conditionNode));
-  }
 
   _command_name = node->getStringValue("command", "");
   if (_command_name.empty()) {
@@ -125,10 +119,7 @@ FGBinding::read (const SGPropertyNode * node)
     return;
   }
 
-  delete _arg;
-  _arg = new SGPropertyNode;
-  _setting = 0;
-  copyProperties(node, _arg);  // FIXME: don't use whole node!!!
+  _arg = (SGPropertyNode *)node;
 }
 
 void

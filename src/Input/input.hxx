@@ -139,10 +139,14 @@ public:
 
 
 private:
+                                // just to be safe.
+  FGBinding (const FGBinding &binding);
+
+
   string _command_name;
   SGCommandMgr::command_t _command;
-  mutable SGPropertyNode * _arg;
-  mutable SGPropertyNode * _setting;
+  mutable SGPropertyNode_ptr _arg;
+  mutable SGPropertyNode_ptr _setting;
 };
 
 
