@@ -42,7 +42,7 @@ FGGlobals *globals;
 
 // Constructor
 FGGlobals::FGGlobals() :
-    elapsed_time_ms(0L),
+    sim_time_ms(0.0),
 #if defined(FX) && defined(XMESA)
     fullscreen( true ),
 #endif

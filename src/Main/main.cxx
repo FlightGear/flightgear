@@ -241,7 +241,7 @@ ssgSimpleState *default_state;
 ssgSimpleState *hud_and_panel;
 ssgSimpleState *menus;
 
-SGTimeStamp start_time_stamp;
+SGTimeStamp last_time_stamp;
 SGTimeStamp current_time_stamp;
 
 void fgBuildRenderStates( void ) {
@@ -393,10 +393,11 @@ void trRenderFrame( void ) {
 // Update all Visuals (redraws anything graphics related)
 void fgRenderFrame( void ) {
   
-    static long old_elapsed_ms = 0;
-
-    int dt_ms = int(globals->get_elapsed_time_ms() - old_elapsed_ms);
-    old_elapsed_ms = globals->get_elapsed_time_ms();
+    // Update the elapsed time.
+    current_time_stamp.stamp();
+    int dt_ms = (current_time_stamp - last_time_stamp) / 1000L;
+    globals->inc_sim_time_ms( dt_ms );
+    last_time_stamp = current_time_stamp;
 
     // Process/manage pending events
     global_events.update( dt_ms );
@@ -440,16 +441,12 @@ void fgRenderFrame( void ) {
 	if ( fgGetBool("/sim/startup/splash-screen") ) {
 	    fgSplashUpdate(0.0);
 	}
-	start_time_stamp.stamp(); // Keep resetting the start time
+        // Keep resetting sim time while the sim is initializing
+	globals->set_sim_time_ms( 0.0 );
     } else {
 	// idle_state is now 1000 meaning we've finished all our
 	// initializations and are running the main loop, so this will
 	// now work without seg faulting the system.
-
-        // Update the elapsed time.
-        current_time_stamp.stamp();
-	globals->set_elapsed_time_ms( (current_time_stamp - start_time_stamp)
-                                      / 1000L );
 
 	// calculate our current position in cartesian space
 	scenery.set_center( scenery.get_next_center() );

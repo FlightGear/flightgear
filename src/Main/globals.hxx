@@ -80,7 +80,7 @@ class FGGlobals
 private:
 
     // Number of milliseconds elapsed since the start of the program.
-    long elapsed_time_ms;
+    double sim_time_ms;
 
     // Root of FlightGear data tree
     string fg_root;
@@ -174,8 +174,9 @@ public:
     FGGlobals();
     ~FGGlobals();
 
-    inline long get_elapsed_time_ms () const { return elapsed_time_ms; }
-    inline void set_elapsed_time_ms (long t) { elapsed_time_ms = t; }
+    inline double get_sim_time_ms () const { return sim_time_ms; }
+    inline void inc_sim_time_ms (double dt) { sim_time_ms += dt; }
+    inline void set_sim_time_ms (double t) { sim_time_ms = t; }
 
     inline const string &get_fg_root () const { return fg_root; }
     inline void set_fg_root (const string &root) { fg_root = root; }

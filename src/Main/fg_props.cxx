@@ -264,10 +264,10 @@ setAircraftDir (const char * dir)
 /**
  * Return the number of milliseconds elapsed since simulation started.
  */
-static long
+static double
 getElapsedTime_ms ()
 {
-  return globals->get_elapsed_time_ms();
+  return globals->get_sim_time_ms();
 }
 
 

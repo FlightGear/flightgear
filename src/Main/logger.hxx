@@ -57,7 +57,7 @@ private:
     vector<SGPropertyNode *> nodes;
     ostream * output;
     long interval_ms;
-    long last_time_ms;
+    double last_time_ms;
     char delimiter;
   };
 
