@@ -392,7 +392,9 @@ FGInterface::bind ()
     char buf[64];
 
     sprintf(buf, "/engines/engine[%d]/rpm", i);
-    fgTie(buf, get_engine(i), &FGEngInterface::get_RPM);
+    fgTie(buf, get_engine(i),
+	  &FGEngInterface::get_RPM, &FGEngInterface::set_RPM);
+    fgSetArchivable(buf);
 
     sprintf(buf, "/engines/engine[%d]/egt-degf", i);
     fgTie(buf, get_engine(i), &FGEngInterface::get_EGT);

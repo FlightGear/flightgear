@@ -333,6 +333,7 @@ bool FGJSBsim::copy_to_JSBsim() {
       FCS->SetThrottleCmd(i, globals->get_controls()->get_throttle(i));
       FCS->SetMixtureCmd(i, globals->get_controls()->get_mixture(i));
       FCS->SetPropAdvanceCmd(i, globals->get_controls()->get_prop_advance(i));
+      Propulsion->GetThruster(i)->SetRPM(get_engine(i)->get_RPM());
     }
 
     Position->SetSeaLevelRadius( get_Sea_level_radius() );

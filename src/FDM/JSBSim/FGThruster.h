@@ -77,6 +77,7 @@ public:
   virtual double Calculate(double) {return 0.0;}
   void SetName(string name) {Name = name;}
   void SetThrusterNumber(int nn) {ThrusterNumber = nn;}
+  virtual void SetRPM(double rpm) {};
   virtual double GetPowerRequired(void) {return 0.0;}
   virtual void SetdeltaT(double dt) {deltaT = dt;}
   double GetThrust(void) {return Thrust;}
