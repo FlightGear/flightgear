@@ -507,7 +507,7 @@ void fgRenderFrame() {
 
         // update view port
         fgReshape( fgGetInt("/sim/startup/xsize"),
-               fgGetInt("/sim/startup/ysize") );
+                   fgGetInt("/sim/startup/ysize") );
 
         if ( fgGetBool("/sim/rendering/clouds3d") ) {
             glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
@@ -637,7 +637,14 @@ void fgRenderFrame() {
               << " moon dec = " << globals->get_ephem()->getMoonDeclination() );
             */
 
-            thesky->reposition( current__view->get_view_pos(),
+            if ((fabs(long_curr - current__view->getLongitude_deg()) > 5e-4)
+                || (fabs(lat_curr - current__view->getLatitude_deg()) > 5e-4)
+                || (init != 0))
+            {
+                lat_curr = current__view->getLatitude_deg();
+                long_curr = current__view->getLongitude_deg();
+
+                thesky->reposition( current__view->get_view_pos(),
                             current__view->get_zero_elev(),
                             current__view->get_world_up(),
                             current__view->getLongitude_deg()
@@ -654,6 +661,7 @@ void fgRenderFrame() {
                             globals->get_ephem()->getMoonRightAscension(),
                             globals->get_ephem()->getMoonDeclination(),
                             50000.0 );
+            }
         }
 
         glEnable( GL_DEPTH_TEST );
@@ -684,7 +692,7 @@ void fgRenderFrame() {
         // glMatrixMode( GL_PROJECTION );
         // glLoadIdentity();
         ssgSetFOV( current__view->get_h_fov(),
-               current__view->get_v_fov() );
+                   current__view->get_v_fov() );
 
         double agl =
             current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
