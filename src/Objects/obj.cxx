@@ -158,13 +158,14 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     int i;
     ssgSimpleState *state = NULL;
 
-    // printf("loading %s\n", path.c_str() );
+    ssgBranch *tile = new ssgBranch () ;
+    tile -> setName ( path.c_str() ) ;
 
     // Attempt to open "path.gz" or "path"
     fg_gzifstream in( path );
     if ( ! in.is_open() ) {
 	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << path );
-	return 0;
+	return NULL;
     }
 
     shading = current_options.get_shading();
@@ -178,9 +179,6 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 
     StopWatch stopwatch;
     stopwatch.start();
-
-    ssgBranch *tile = new ssgBranch () ;
-    tile -> setName ( path.c_str() ) ;
 
     // ignore initial comments and blank lines. (priming the pump)
     // in >> skipcomment;
