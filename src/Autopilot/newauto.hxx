@@ -40,19 +40,19 @@ class FGAutopilot : public FGSubsystem
 public:
 
     enum fgAutoHeadingMode {
-	FG_DG_HEADING_LOCK = 0,	  // follow bug on directional gryo (vacuum)
-	FG_TC_HEADING_LOCK = 1,   // keep turn coordinator zero'd
-	FG_TRUE_HEADING_LOCK = 2, // lock to true heading (i.e. a perfect world)
-	FG_HEADING_NAV1 = 3,      // follow nav1 radial
-	FG_HEADING_NAV2 = 4,      // follow nav2 radial
+        FG_DG_HEADING_LOCK = 0,   // follow bug on directional gryo (vacuum)
+        FG_TC_HEADING_LOCK = 1,   // keep turn coordinator zero'd
+        FG_TRUE_HEADING_LOCK = 2, // lock to true heading (i.e. a perfect world)
+        FG_HEADING_NAV1 = 3,      // follow nav1 radial
+        FG_HEADING_NAV2 = 4,      // follow nav2 radial
         FG_HEADING_WAYPOINT = 5   // track next waypoint
     };
 
     enum fgAutoAltitudeMode {
-	FG_ALTITUDE_LOCK = 0,     // lock to a specific altitude (indicated)
-	FG_ALTITUDE_TERRAIN = 1,  // try to maintain a specific AGL
-	FG_ALTITUDE_GS1 = 2,      // follow glide slope 1
-	FG_ALTITUDE_GS2 = 3,      // follow glide slope 2
+        FG_ALTITUDE_LOCK = 0,     // lock to a specific altitude (indicated)
+        FG_ALTITUDE_TERRAIN = 1,  // try to maintain a specific AGL
+        FG_ALTITUDE_GS1 = 2,      // follow glide slope 1
+        FG_ALTITUDE_GS2 = 3,      // follow glide slope 2
         FG_ALTITUDE_ARM = 4,      // ascend to selected altitude
         FG_TRUE_ALTITUDE_LOCK = 5 // lock to a specific true altitude
                                   // (i.e. a perfect world)
@@ -61,45 +61,45 @@ public:
 
 private:
 
-    bool heading_hold;		// the current state of the heading hold
-    bool altitude_hold;		// the current state of the altitude hold
-    bool auto_throttle;		// the current state of the auto throttle
+    bool heading_hold;          // the current state of the heading hold
+    bool altitude_hold;         // the current state of the altitude hold
+    bool auto_throttle;         // the current state of the auto throttle
 
     fgAutoHeadingMode heading_mode;
     fgAutoAltitudeMode altitude_mode;
 
-    SGWayPoint waypoint;	// the waypoint the AP should steer to.
+    SGWayPoint waypoint;        // the waypoint the AP should steer to.
 
-    // double TargetLatitude;	// the latitude the AP should steer to.
-    // double TargetLongitude;	// the longitude the AP should steer to.
-    double TargetDistance;	// the distance to Target.
+    // double TargetLatitude;   // the latitude the AP should steer to.
+    // double TargetLongitude;  // the longitude the AP should steer to.
+    double TargetDistance;      // the distance to Target.
     double DGTargetHeading;     // the apparent DG heading to steer towards.
-    double TargetHeading;	// the true heading the AP should steer to.
-    double TargetAltitude;	// altitude to hold
-    double TargetAGL;		// the terrain separation
+    double TargetHeading;       // the true heading the AP should steer to.
+    double TargetAltitude;      // altitude to hold
+    double TargetAGL;           // the terrain separation
 
-    double TargetSpeed;		// speed to shoot for
+    double TargetSpeed;         // speed to shoot for
     double alt_error_accum;     // altitude error accumulator
-    double climb_error_accum;	// climb error accumulator (for GS)
-    double speed_error_accum;	// speed error accumulator
+    double climb_error_accum;   // climb error accumulator (for GS)
+    double speed_error_accum;   // speed error accumulator
 
-    double TargetSlope;		// the glide slope hold value
-    
-    double MaxRoll ;		// the max the plane can roll for the turn
-    double RollOut;		// when the plane should roll out
-				// measured from Heading
-    double MaxAileron;		// how far to move the aleroin from center
-    double RollOutSmooth;	// deg to use for smoothing Aileron Control
-    double MaxElevator;		// the maximum elevator allowed
-    double SlopeSmooth;		// smoothing angle for elevator
-	
+    double TargetSlope;         // the glide slope hold value
+
+    double MaxRoll ;            // the max the plane can roll for the turn
+    double RollOut;             // when the plane should roll out
+                                // measured from Heading
+    double MaxAileron;          // how far to move the aleroin from center
+    double RollOutSmooth;       // deg to use for smoothing Aileron Control
+    double MaxElevator;         // the maximum elevator allowed
+    double SlopeSmooth;         // smoothing angle for elevator
+
     // following for testing disengagement of autopilot upon pilot
     // interaction with controls
     double old_aileron;
     double old_elevator;
     double old_elevator_trim;
     double old_rudder;
-	
+
     // manual controls override beyond this value
     double disengage_threshold; 
 
@@ -140,8 +140,8 @@ private:
     SGPropertyNode *roll_out_node; // start rollout offset from desired heading in degrees
     SGPropertyNode *roll_out_smooth_node; // rollout smoothing offset in degrees
 
-    SGPropertyNode *TargetClimbRate;	// target climb rate
-    SGPropertyNode *TargetDescentRate;	// target decent rate
+    SGPropertyNode *TargetClimbRate;    // target climb rate
+    SGPropertyNode *TargetDescentRate;  // target decent rate
     SGPropertyNode *current_throttle; // current throttle (engine 0)
 
 public:
@@ -186,14 +186,14 @@ public:
     void set_AutoThrottleEnabled( bool value );
 
     /* inline void set_WayPoint( const double lon, const double lat, 
-			      const double alt, const string s ) {
-	waypoint = SGWayPoint( lon, lat, alt, SGWayPoint::WGS84, "Current WP" );
+                              const double alt, const string s ) {
+        waypoint = SGWayPoint( lon, lat, alt, SGWayPoint::WGS84, "Current WP" );
     } */
     inline double get_TargetLatitude() const {
-	return waypoint.get_target_lat();
+        return waypoint.get_target_lat();
     }
     inline double get_TargetLongitude() const {
-	return waypoint.get_target_lon();
+        return waypoint.get_target_lon();
     }
     inline void set_old_lat( double val ) { old_lat = val; }
     inline void set_old_lon( double val ) { old_lon = val; }
@@ -231,15 +231,30 @@ public:
     void update_old_control_values();
 
     // accessors
-    inline double get_MaxRoll() const { return MaxRoll; }
-    inline void set_MaxRoll( double val ) { MaxRoll = val; }
-    inline double get_RollOut() const { return RollOut; }
-    inline void set_RollOut( double val ) { RollOut = val; }
-
-    inline double get_MaxAileron() const { return MaxAileron; }
-    inline void set_MaxAileron( double val ) { MaxAileron = val; }
-    inline double get_RollOutSmooth() const { return RollOutSmooth; }
-    inline void set_RollOutSmooth( double val ) { RollOutSmooth = val; }
+    inline double get_MaxRoll() {
+        return fgGetFloat( "/autopilot/config/max-roll-deg" );
+    }
+    inline double get_RollOut() {
+        return fgGetFloat( "/autopilot/config/roll-out-deg" );
+    }
+    inline double get_MaxAileron() {
+        return fgGetFloat( "/autopilot/config/max-aileron" );
+    }
+    inline double get_RollOutSmooth() {
+        return fgGetFloat( "/autopilot/config/roll-out-smooth-deg" );
+    }
+    inline void set_MaxRoll( double val ) {
+        fgSetFloat( "/autopilot/config/max-roll-deg", val );
+    }
+    inline void set_RollOut( double val ) {
+        fgSetFloat( "/autopilot/config/roll-out-deg", val );
+    }
+    inline void set_MaxAileron( double val ) {
+        fgSetFloat( "/autopilot/config/max-aileron", val );
+    }
+    inline void set_RollOutSmooth( double val ) {
+        fgSetFloat( "/autopilot/config/roll-out-smooth-deg", val );
+    }
 
 private:
 
