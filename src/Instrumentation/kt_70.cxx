@@ -25,7 +25,9 @@
 #  include <config.h>
 #endif
 
-#include <stdio.h>	// snprintf
+#include <iostream>
+#include <string>
+#include <sstream>
 
 #include <simgear/compiler.h>
 #include <simgear/math/sg_random.h>
@@ -36,12 +38,7 @@
 
 
 // Constructor
-FGKT_70::FGKT_70() :
-    lon_node(fgGetNode("/position/longitude-deg", true)),
-    lat_node(fgGetNode("/position/latitude-deg", true)),
-    alt_node(fgGetNode("/position/altitude-ft", true)),
-    bus_power(fgGetNode("/systems/electrical/outputs/transponder", true)),
-    serviceable_node(fgGetNode("/radios/kt-70/inputs/serviceable", true)),
+FGKT_70::FGKT_70(SGPropertyNode *node) :
     r_flash_time(0.0),
     ident_mode(false),
     ident_btn(false),
@@ -55,8 +52,28 @@ FGKT_70::FGKT_70() :
     gnd_ann(0),
     on_ann(0),
     sby_ann(0),
-    reply_ann(0)
+    reply_ann(0),
+    name("kt-70"),
+    num(0)
 {
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else {
+            SG_LOG( SG_INSTR, SG_WARN, 
+                    "Error in kt-70 config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
+            }
+        }
+    }
+
 }
 
 
@@ -64,76 +81,102 @@ FGKT_70::FGKT_70() :
 FGKT_70::~FGKT_70() { }
 
 
-void FGKT_70::init () {
+void FGKT_70::init ()
+{
+    string branch;
+    branch = "/instrumentation/" + name;
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    // Inputs
+    lon_node = fgGetNode("/position/longitude-deg", true);
+    lat_node = fgGetNode("/position/latitude-deg", true);
+    alt_node = fgGetNode("/position/altitude-ft", true);
+    bus_power = fgGetNode("/systems/electrical/outputs/transponder", true);
+    serviceable_node = (node->getChild("inputs", 0, true))
+	->getChild("serviceable", 0, true);
 }
 
 
 void FGKT_70::bind () {
+    std::ostringstream temp;
+    string branch;
+    temp << num;
+    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
     // internal values
 
     // modes
 
     // input and buttons
-    fgTie("/radios/kt-70/inputs/ident-btn", this,
+    fgTie((branch + "/inputs/ident-btn").c_str(), this,
 	  &FGKT_70::get_ident_btn, &FGKT_70::set_ident_btn);
-    fgSetArchivable("/radios/kt-70/inputs/rotation-deg");
-    fgTie("/radios/kt-70/inputs/digit1", this,
+    fgSetArchivable((branch + "/inputs/rotation-deg").c_str());
+    fgTie((branch + "/inputs/digit1").c_str(), this,
 	  &FGKT_70::get_digit1, &FGKT_70::set_digit1);
-    fgSetArchivable("/radios/kt-70/inputs/digit1");
-    fgTie("/radios/kt-70/inputs/digit2", this,
+    fgSetArchivable((branch + "/inputs/digit1").c_str());
+    fgTie((branch + "/inputs/digit2").c_str(), this,
 	  &FGKT_70::get_digit2, &FGKT_70::set_digit2);
-    fgSetArchivable("/radios/kt-70/inputs/digit2");
-    fgTie("/radios/kt-70/inputs/digit3", this,
+    fgSetArchivable((branch + "/inputs/digit2").c_str());
+    fgTie((branch + "/inputs/digit3").c_str(), this,
 	  &FGKT_70::get_digit3, &FGKT_70::set_digit3);
-    fgSetArchivable("/radios/kt-70/inputs/digit3");
-    fgTie("/radios/kt-70/inputs/digit4", this,
+    fgSetArchivable((branch + "/inputs/digit3").c_str());
+    fgTie((branch + "/inputs/digit4").c_str(), this,
 	  &FGKT_70::get_digit4, &FGKT_70::set_digit4);
-    fgSetArchivable("/radios/kt-70/inputs/digit4");
-    fgTie("/radios/kt-70/inputs/func-knob", this,
+    fgSetArchivable((branch + "/inputs/digit4").c_str());
+    fgTie((branch + "/inputs/func-knob").c_str(), this,
 	  &FGKT_70::get_func_knob, &FGKT_70::set_func_knob);
-    fgSetArchivable("/radios/kt-70/inputs/func-knob");
+    fgSetArchivable((branch + "/inputs/func-knob").c_str());
 
     // outputs
-    fgTie("/radios/kt-70/outputs/id-code", this,
+    fgTie((branch + "/outputs/id-code").c_str(), this,
 	  &FGKT_70::get_id_code, &FGKT_70::set_id_code);
-    fgSetArchivable("/radios/kt-70/outputs/id-code");
-    fgTie("/radios/kt-70/outputs/flight-level", this,
+    fgSetArchivable((branch + "/outputs/id-code").c_str());
+    fgTie((branch + "/outputs/flight-level").c_str(), this,
           &FGKT_70::get_flight_level);
 
     // annunciators
-    fgTie("/radios/kt-70/annunciators/fl", this, &FGKT_70::get_fl_ann );
-    fgTie("/radios/kt-70/annunciators/alt", this, &FGKT_70::get_alt_ann );
-    fgTie("/radios/kt-70/annunciators/gnd", this, &FGKT_70::get_gnd_ann );
-    fgTie("/radios/kt-70/annunciators/on", this, &FGKT_70::get_on_ann );
-    fgTie("/radios/kt-70/annunciators/sby", this, &FGKT_70::get_sby_ann );
-    fgTie("/radios/kt-70/annunciators/reply", this, &FGKT_70::get_reply_ann );
+    fgTie((branch + "/annunciators/fl").c_str(), this, 
+	  &FGKT_70::get_fl_ann );
+    fgTie((branch + "/annunciators/alt").c_str(), this, 
+	  &FGKT_70::get_alt_ann );
+    fgTie((branch + "/annunciators/gnd").c_str(), this, 
+	   &FGKT_70::get_gnd_ann );
+    fgTie((branch + "/annunciators/on").c_str(), this, 
+	  &FGKT_70::get_on_ann );
+    fgTie((branch + "/annunciators/sby").c_str(), this, 
+	  &FGKT_70::get_sby_ann );
+    fgTie((branch + "/annunciators/reply").c_str(), this, 
+	  &FGKT_70::get_reply_ann );
 }
 
 
 void FGKT_70::unbind () {
+    std::ostringstream temp;
+    string branch;
+    temp << num;
+    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
     // internal values
 
     // modes
 
     // input and buttons
-    fgUntie("/radios/kt-70/inputs/ident-btn");
-    fgUntie("/radios/kt-70/inputs/digit1");
-    fgUntie("/radios/kt-70/inputs/digit2");
-    fgUntie("/radios/kt-70/inputs/digit3");
-    fgUntie("/radios/kt-70/inputs/digit4");
-    fgUntie("/radios/kt-70/inputs/func-knob");
+    fgUntie((branch + "/inputs/ident-btn").c_str());
+    fgUntie((branch + "/inputs/digit1").c_str());
+    fgUntie((branch + "/inputs/digit2").c_str());
+    fgUntie((branch + "/inputs/digit3").c_str());
+    fgUntie((branch + "/inputs/digit4").c_str());
+    fgUntie((branch + "/inputs/func-knob").c_str());
 
     // outputs
-    fgUntie("/radios/kt-70/outputs/id-code");
-    fgUntie("/radios/kt-70/outputs/flight-level");
+    fgUntie((branch + "/outputs/id-code").c_str());
+    fgUntie((branch + "/outputs/flight-level").c_str());
 
     // annunciators
-    fgUntie("/radios/kt-70/annunciators/fl");
-    fgUntie("/radios/kt-70/annunciators/alt");
-    fgUntie("/radios/kt-70/annunciators/gnd");
-    fgUntie("/radios/kt-70/annunciators/on");
-    fgUntie("/radios/kt-70/annunciators/sby");
-    fgUntie("/radios/kt-70/annunciators/reply");
+    fgUntie((branch + "/annunciators/fl").c_str());
+    fgUntie((branch + "/annunciators/alt").c_str());
+    fgUntie((branch + "/annunciators/gnd").c_str());
+    fgUntie((branch + "/annunciators/on").c_str());
+    fgUntie((branch + "/annunciators/sby").c_str());
+    fgUntie((branch + "/annunciators/reply").c_str());
 }
 
 

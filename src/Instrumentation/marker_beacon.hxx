@@ -45,6 +45,7 @@ class FGMarkerBeacon : public SGSubsystem
     SGInterpTable *low_tbl;
     SGInterpTable *high_tbl;
 
+    // Inputs
     SGPropertyNode *lon_node;
     SGPropertyNode *lat_node;
     SGPropertyNode *alt_node;
@@ -64,6 +65,12 @@ class FGMarkerBeacon : public SGSubsystem
     bool middle_blink;
     bool inner_blink;
 
+    string name;
+    int num;
+
+    // internal periodic station search timer
+    double _time_before_search_sec;
+
 public:
 
     enum fgMkrBeacType {
@@ -73,7 +80,7 @@ public:
 	OUTER   
     };
 
-    FGMarkerBeacon();
+    FGMarkerBeacon(SGPropertyNode *node);
     ~FGMarkerBeacon();
 
     void init ();
@@ -81,7 +88,6 @@ public:
     void unbind ();
     void update (double dt);
 
-    // Update nav/adf radios based on current postition
     void search ();
 
     // Marker Beacon Accessors

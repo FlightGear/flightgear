@@ -40,19 +40,13 @@ SG_USING_STD(string);
 
 
 // Constructor
-FGMarkerBeacon::FGMarkerBeacon() :
-    lon_node(fgGetNode("/position/longitude-deg", true)),
-    lat_node(fgGetNode("/position/latitude-deg", true)),
-    alt_node(fgGetNode("/position/altitude-ft", true)),
-    bus_power(fgGetNode("/systems/electrical/outputs/navcom[0]", true)),
-    power_btn(fgGetNode("/radios/marker-beacon/power-btn", true)),
-    audio_btn(fgGetNode("/radios/marker-beacon/audio-btn", true)),
-    serviceable(fgGetNode("/instrumentation/marker-beacons/serviceable", true)),
-                 
+FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
     need_update(true),
     outer_blink(false),
     middle_blink(false),
-    inner_blink(false)
+    inner_blink(false),
+    name("marker-beacon"),
+    num(0)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;
@@ -66,9 +60,23 @@ FGMarkerBeacon::FGMarkerBeacon() :
     low_tbl = new SGInterpTable( low.str() );
     high_tbl = new SGInterpTable( high.str() );
 
-    power_btn->setBoolValue( true );
-    audio_btn->setBoolValue( true );
-    serviceable->setBoolValue( true );
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "number" ) {
+            num = child->getIntValue();
+        } else {
+            SG_LOG( SG_INSTR, SG_WARN, 
+                    "Error in marker beacon config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
+            }
+        }
+    }
 }
 
 
@@ -84,6 +92,23 @@ FGMarkerBeacon::~FGMarkerBeacon()
 void
 FGMarkerBeacon::init ()
 {
+    string branch;
+    branch = "/instrumentation/" + name;
+
+    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    // Inputs
+    lon_node = fgGetNode("/position/longitude-deg", true);
+    lat_node = fgGetNode("/position/latitude-deg", true);
+    alt_node = fgGetNode("/position/altitude-ft", true);
+    bus_power = fgGetNode("/systems/electrical/outputs/navcom[0]", true);
+    power_btn = node->getChild("power-btn", 0, true);
+    audio_btn = node->getChild("audio-btn", 0, true);
+    serviceable = node->getChild("serviceable", 0, true);
+
+    power_btn->setBoolValue( true );
+    audio_btn->setBoolValue( true );
+    serviceable->setBoolValue( true );
+
     morse.init();
     beacon.init();
     blink.stamp();
@@ -93,14 +118,16 @@ FGMarkerBeacon::init ()
 void
 FGMarkerBeacon::bind ()
 {
+    string branch;
+    branch = "/instrumentation/" + name;
 
-    fgTie("/radios/marker-beacon/inner", this,
+    fgTie((branch + "/inner").c_str(), this,
 	  &FGMarkerBeacon::get_inner_blink);
 
-    fgTie("/radios/marker-beacon/middle", this,
+    fgTie((branch + "/middle").c_str(), this,
 	  &FGMarkerBeacon::get_middle_blink);
 
-    fgTie("/radios/marker-beacon/outer", this,
+    fgTie((branch + "/outer").c_str(), this,
 	  &FGMarkerBeacon::get_outer_blink);
 }
 
@@ -108,9 +135,12 @@ FGMarkerBeacon::bind ()
 void
 FGMarkerBeacon::unbind ()
 {
-    fgUntie("/radios/marker-beacon/inner");
-    fgUntie("/radios/marker-beacon/middle");
-    fgUntie("/radios/marker-beacon/outer");
+    string branch;
+    branch = "/instrumentation/" + name;
+
+    fgUntie((branch + "/inner").c_str());
+    fgUntie((branch + "/middle").c_str());
+    fgUntie((branch + "/outer").c_str());
 }
 
 
@@ -121,6 +151,12 @@ FGMarkerBeacon::update(double dt)
     need_update = false;
 
     if ( has_power() && serviceable->getBoolValue() ) {
+
+	// On timeout, scan again
+	_time_before_search_sec -= dt;
+	if ( _time_before_search_sec < 0 ) {
+	    search();
+	}
         // marker beacon blinking
         bool light_on = ( outer_blink || middle_blink || inner_blink );
         SGTimeStamp current;
@@ -206,6 +242,10 @@ static bool check_beacon_range( double lon_rad, double lat_rad, double elev_m,
 // Update current nav/adf radio stations based on current postition
 void FGMarkerBeacon::search() 
 {
+
+    // reset search time
+    _time_before_search_sec = 1.0;
+
     static fgMkrBeacType last_beacon = NOBEACON;
 
     double lon_rad = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;

@@ -70,9 +70,12 @@ class FGKT_70 : public SGSubsystem
     bool sby_ann;               // standby
     bool reply_ann;             // reply
 
+    string name;
+    int num;
+
 public:
 
-    FGKT_70();
+    FGKT_70(SGPropertyNode *node);
     ~FGKT_70();
 
     void init ();
