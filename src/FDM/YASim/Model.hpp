@@ -5,6 +5,7 @@
 #include "RigidBody.hpp"
 #include "BodyEnvironment.hpp"
 #include "Vector.hpp"
+#include "Turbulence.hpp"
 
 namespace yasim {
 
@@ -24,6 +25,8 @@ public:
 
     RigidBody* getBody();
     Integrator* getIntegrator();
+
+    void setTurbulence(Turbulence* turb) { _turb = turb; }
 
     State* getState();
     void setState(State* s);
@@ -75,6 +78,8 @@ private:
 
     Integrator _integrator;
     RigidBody _body;
+
+    Turbulence* _turb;
 
     Vector _thrusters;
     Vector _surfaces;

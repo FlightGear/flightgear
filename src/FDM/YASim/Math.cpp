@@ -60,6 +60,11 @@ float Math::atan2(float y, float x)
     return (float)::atan2(y, x);
 }
 
+double Math::floor(double x)
+{
+    return ::floor(x);
+}
+
 double Math::abs(double f)
 {
     return ::fabs(f);

@@ -202,7 +202,6 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     out[1] *= _cy;
 
     // Diddle the induced drag
-    float IDMUL = 0.5;
     Math::mul3(-1*_inducedDrag*out[2]*lwind[2], lwind, lwind);
     Math::add3(lwind, out, out);
 

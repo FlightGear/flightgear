@@ -32,6 +32,7 @@ public:
     static double cos(double f);
     static double tan(double f);
     static double atan2(double y, double x);
+    static double floor(double x);
 
     // Some 3D vector stuff.  In all cases, it is permissible for the
     // "out" vector to be the same as one of the inputs.

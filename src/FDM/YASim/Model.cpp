@@ -53,6 +53,7 @@ Model::Model()
 
     _agl = 0;
     _crashed = false;
+    _turb = 0;
 }
 
 Model::~Model()
@@ -427,9 +428,24 @@ float Model::localGround(State* s, float* out)
 // specified aircraft velocity.
 void Model::localWind(float* pos, State* s, float* out)
 {
-    // Most of the input is in global coordinates.  Fix that.
-    float lwind[3], lrot[3], lv[3];
-    Math::vmul33(s->orient, _wind, lwind);
+    float tmp[3], lwind[3], lrot[3], lv[3];
+
+    // Get a global coordinate for our local position, and calculate
+    // turbulence.
+    // FIXME: modify turbulence for altitude, attenuating the vertical
+    // component near the ground.
+    if(_turb) {
+        double gpos[3];
+        Math::tmul33(s->orient, pos, tmp);
+        for(int i=0; i<3; i++) gpos[i] = s->pos[i] + tmp[i];
+        _turb->getTurbulence(gpos, lwind);
+        Math::add3(_wind, lwind, lwind);
+    } else {
+        Math::set3(_wind, lwind);
+    }
+
+    // Convert to local coordinates
+    Math::vmul33(s->orient, lwind, lwind);
     Math::vmul33(s->orient, s->rot, lrot);
     Math::vmul33(s->orient, s->v, lv);
 

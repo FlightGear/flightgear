@@ -48,6 +48,10 @@ FGFDM::FGFDM()
     // should probably be settable, but there are very few aircraft
     // who trim their approaches using things other than elevator.
     _airplane.setElevatorControl(parseAxis("/controls/flight/elevator-trim"));
+
+    // FIXME: read seed from somewhere?
+    int seed = 0;
+    _turb = new Turbulence(10, seed);
 }
 
 FGFDM::~FGFDM()
@@ -97,6 +101,8 @@ void FGFDM::init()
     // This has a nasty habit of being false at startup.  That's not
     // good.
     fgSetBool("/controls/gear/gear-down", true);
+
+    _airplane.getModel()->setTurbulence(_turb);
 }
 
 // Not the worlds safest parser.  But it's short & sweet.
@@ -307,6 +313,9 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 void FGFDM::getExternalInput(float dt)
 {
     char buf[256];
+
+    _turb->setMagnitude(fgGetFloat("/environment/turbulence/magnitude-norm"));
+    _turb->update(dt, fgGetFloat("/environment/turbulence/rate-hz"));
 
     // The control axes
     ControlMap* cm = _airplane.getControlMap();

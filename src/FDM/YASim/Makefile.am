@@ -29,7 +29,8 @@ SHARED_SOURCE_FILES = \
         Surface.cpp Surface.hpp \
         Thruster.cpp Thruster.hpp \
         Vector.hpp \
-        Wing.cpp Wing.hpp
+        Wing.cpp Wing.hpp \
+        Turbulence.cpp Turbulence.hpp
 
 noinst_LIBRARIES = libYASim.a
 
