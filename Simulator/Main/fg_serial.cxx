@@ -169,6 +169,16 @@ static bool config_port( fgIOCHANNEL &p )
 	    FG_LOG( FG_SERIAL, FG_ALERT, "Unknown direction" );
 	    return false;
 	}
+    } else if ( p.format == "rul" ) {
+	if ( p.direction == "out" ) {
+	    p.kind = fgIOCHANNEL::FG_SERIAL_RUL_OUT;
+	} else if ( p.direction == "in" ) {
+	    FG_LOG( FG_SERIAL, FG_ALERT, "RUL format is outgoing only" );
+	    return false;
+	} else {
+	    FG_LOG( FG_SERIAL, FG_ALERT, "Unknown direction" );
+	    return false;
+	}
     } else {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Unknown format" );
 	return false;
@@ -431,6 +441,71 @@ static void read_fgfs_in( fgIOCHANNEL *p ) {
 }
 
 
+// "RUL" output format (for some sort of motion platform)
+//
+// The Baud rate is 2400 , one start bit, eight data bits, 1 stop bit,
+// no parity.
+//
+// For position it requires a 3-byte data packet defined as follows:
+//
+// First bite: ascII character"p" ( 80 decimal )
+// Second byte X pos. (1-255) 1 being 0* and 255 being 359*
+// Third byte Y pos.( 1-255) 1 being 0* and 255 359*
+//
+// So sending 80 127 127 to the two axis motors will position on 180*
+// The RS- 232 port is a nine pin connector and the only pins used are
+// 3&5.
+
+static void send_rul_out( fgIOCHANNEL *p ) {
+    char rul[256];
+
+    FGInterface *f;
+    FGTime *t;
+
+    f = current_aircraft.fdm_state;
+    t = FGTime::cur_time_params;
+
+    // run as often as possibleonce per second
+
+    // this runs once per second
+    // if ( p->last_time == t->get_cur_time() ) {
+    //    return;
+    // }
+    // p->last_time = t->get_cur_time();
+    // if ( t->get_cur_time() % 2 != 0 ) {
+    //    return;
+    // }
+    
+    // get roll and pitch, convert to degrees
+    double roll_deg = f->get_Phi() * RAD_TO_DEG;
+    while ( roll_deg < 0.0 ) {
+	roll_deg += 360.0;
+    }
+    while ( roll_deg > 360.0 ) {
+	roll_deg -= 360.0;
+    }
+
+    double pitch_deg = f->get_Theta() * RAD_TO_DEG;
+    while ( pitch_deg < 0.0 ) {
+	pitch_deg += 360.0;
+    }
+    while ( pitch_deg > 360.0 ) {
+	pitch_deg -= 360.0;
+    }
+
+    // scale roll and pitch to output format (1 - 255)
+    int roll = (int)(roll_deg * 254.0 / 359.0) + 1;
+    int pitch = (int)(pitch_deg * 254.0 / 359.0) + 1;
+
+    sprintf( rul, "p%c%c\n", roll, pitch);
+
+    FG_LOG( FG_SERIAL, FG_DEBUG, "p " << roll << " " << pitch );
+
+    string rul_sentence = rul;
+    p->port.write_port(rul_sentence);
+}
+
+
 // one more level of indirection ...
 static void process_port( fgIOCHANNEL *p ) {
     if ( p->kind == fgIOCHANNEL::FG_SERIAL_NMEA_OUT ) {
@@ -445,6 +520,8 @@ static void process_port( fgIOCHANNEL *p ) {
 	send_fgfs_out(p);
     } else if ( p->kind == fgIOCHANNEL::FG_SERIAL_FGFS_IN ) {
 	read_fgfs_in(p);
+    } else if ( p->kind == fgIOCHANNEL::FG_SERIAL_RUL_OUT ) {
+	send_rul_out(p);
     }
 }
 

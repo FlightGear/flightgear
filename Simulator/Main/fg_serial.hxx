@@ -54,7 +54,9 @@ public:
 	FG_SERIAL_GARMIN_OUT = 3,
 	FG_SERIAL_GARMIN_IN = 4,
 	FG_SERIAL_FGFS_OUT = 5,
-	FG_SERIAL_FGFS_IN = 6
+	FG_SERIAL_FGFS_IN = 6,
+
+	FG_SERIAL_RUL_OUT = 7         // Raul E Horcasitas <rul@compuserve.com>
     };
 
     string device;
