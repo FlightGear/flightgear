@@ -289,7 +289,7 @@ void FGCoefficient::DisplayCoeffFactors(void)
 
 string FGCoefficient::GetSDstring(void)
 {
-  char buffer[10];
+  char buffer[16];
   string value;
 
   sprintf(buffer,"%9.6f",SD);
