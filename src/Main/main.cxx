@@ -1631,7 +1631,9 @@ int mainLoop( int argc, char **argv ) {
     if ( fgGetBool("/environment/clouds/status") ) {
 	// thesky->add_cloud_layer( 2000.0, 200.0, 50.0, 40000.0,
         //                          SG_CLOUD_OVERCAST );
-	thesky->add_cloud_layer( 2600.0, 200.0, 50.0, 40000.0,
+	thesky->add_cloud_layer( fgGetDouble("/environment/clouds/altitude-ft") *
+				 SG_FEET_TO_METER,
+				 200.0, 50.0, 40000.0,
 				 SG_CLOUD_MOSTLY_CLOUDY );
 	// thesky->add_cloud_layer( 3000.0, 200.0, 50.0, 40000.0,
 	//                          SG_CLOUD_MOSTLY_SUNNY );

@@ -687,10 +687,10 @@ parse_option (const string& arg)
 				// FIXME: check units
         if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/environment/clouds/altitude-ft",
-				atof(arg.substr(13)) * SG_FEET_TO_METER);
+				atof(arg.substr(13)));
 	else
 	  fgSetDouble("/environment/clouds/altitude-ft",
-				atof(arg.substr(13)));
+				atof(arg.substr(13)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--fov=" ) == 0 ) {
 	parse_fov( arg.substr(6) );
     } else if ( arg == "--disable-fullscreen" ) {
