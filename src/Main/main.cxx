@@ -308,6 +308,12 @@ void fgRenderFrame( void ) {
 
 	// update view volume parameters
 	// cout << "before pilot_view update" << endl;
+        if ( current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW ) {
+	  float * offset = pilot_view.get_pilot_offset();
+	  current_view.set_pilot_offset(offset[0], offset[1], offset[2]);
+	} else {
+	  current_view.set_pilot_offset(0.0, 0.0, 0.0);
+	}
 	pilot_view.UpdateViewParams(*cur_fdm_state);
 	// cout << "after pilot_view update" << endl;
 	current_view.UpdateViewParams(cur_view_fdm);
@@ -1106,7 +1112,7 @@ static void fgIdleFunction ( void ) {
 // options.cxx needs to see this for toggle_panel()
 // Handle new window size or exposure
 void fgReshape( int width, int height ) {
-    if ( ! current_options.get_panel_status() || idle_state != 1000 ) {
+    if ( ! fgPanelVisible() || idle_state != 1000 ) {
 	current_view.set_win_ratio( (float)height / (float)width );
 	glViewport(0, 0 , (GLint)(width), (GLint)(height) );
     } else {
@@ -1410,8 +1416,8 @@ int main( int argc, char **argv ) {
     //
 
     FGPath modelpath( current_options.get_fg_root() );
-    modelpath.append( "Models" );
-    modelpath.append( "Geometry" );
+    // modelpath.append( "Models" );
+    // modelpath.append( "Geometry" );
   
     FGPath texturepath( current_options.get_fg_root() );
     texturepath.append( "Models" );
@@ -1466,11 +1472,25 @@ int main( int argc, char **argv ) {
     // temporary visible aircraft "own ship"
     penguin_sel = new ssgSelector;
     penguin_pos = new ssgTransform;
-    // ssgBranch *tux_obj = ssgMakeSphere( 10.0, 10, 10 );
-    ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
-    // ssgEntity *tux_obj = ssgLoadAC( "Tower1x.ac" );
+    string tux_path =
+      current_properties.getStringValue("/sim/model/path",
+					"Models/Geometry/glider.ac");
+    ssgEntity *tux_obj = ssgLoad((char *)(tux_path.c_str()));
 
-    penguin_pos->addKid( tux_obj );
+    // align the model properly for FGFS
+    ssgTransform *tux_align = new ssgTransform;
+    tux_align->addKid(tux_obj);
+    sgMat4 tux_matrix;
+    float h_rot =
+      current_properties.getFloatValue("/sim/model/h-rotation", 0.0);
+    float p_rot =
+      current_properties.getFloatValue("/sim/model/p-rotation", 0.0);
+    float r_rot =
+      current_properties.getFloatValue("/sim/model/r-rotation", 0.0);
+    sgMakeRotMat4(tux_matrix, h_rot, h_rot, r_rot);
+    tux_align->setTransform(tux_matrix);
+
+    penguin_pos->addKid( tux_align );
     penguin_sel->addKid( penguin_pos );
     ssgFlatten( tux_obj );
     ssgStripify( penguin_sel );

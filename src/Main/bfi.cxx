@@ -111,7 +111,8 @@ FGBFI::init ()
   current_properties.tieDouble("/position/longitude",
 			       getLongitude, setLongitude);
   current_properties.tieDouble("/position/altitude",
-			       getAltitude, setAltitude);
+			       // getAltitude, setAltitude);
+			       getAltitude, setAltitude, false);
   current_properties.tieDouble("/position/altitude-agl",
 			       getAGL, 0);
 
@@ -233,6 +234,8 @@ FGBFI::init ()
 
   current_properties.tieDouble("/environment/visibility",
 			       getVisibility, setVisibility);
+
+  _needReinit = false;
 
   FG_LOG(FG_GENERAL, FG_INFO, "Ending BFI init");
 }

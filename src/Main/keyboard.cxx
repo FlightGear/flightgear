@@ -158,27 +158,59 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 49: // numeric keypad 1
 	    v->set_goal_view_offset( FG_PI * 0.75 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(-25.0, 25.0, 1.0);
+	      v->set_view_offset( FG_PI * 0.75 );
+	    }
 	    return;
 	case 50: // numeric keypad 2
 	    v->set_goal_view_offset( FG_PI );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(-25.0, 0.0, 1.0);
+	      v->set_view_offset( FG_PI );
+	    }
 	    return;
 	case 51: // numeric keypad 3
 	    v->set_goal_view_offset( FG_PI * 1.25 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(-25.0, -25.0, 1.0);
+	      v->set_view_offset( FG_PI * 1.25 );
+	    }
 	    return;
 	case 52: // numeric keypad 4
 	    v->set_goal_view_offset( FG_PI * 0.50 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(0.0, 25.0, 1.0);
+	      v->set_view_offset( FG_PI * 0.50 );
+	    }
 	    return;
 	case 54: // numeric keypad 6
 	    v->set_goal_view_offset( FG_PI * 1.50 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(0.0, -25.0, 1.0);
+	      v->set_view_offset( FG_PI * 1.50 );
+	    }
 	    return;
 	case 55: // numeric keypad 7
 	    v->set_goal_view_offset( FG_PI * 0.25 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(25.0, 25.0, 1.0);
+	      v->set_view_offset( FG_PI * 0.25 );
+	    }
 	    return;
 	case 56: // numeric keypad 8
 	    v->set_goal_view_offset( 0.00 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(25.0, 0.0, 1.0);
+	      v->set_view_offset( 0.00 );
+	    }
 	    return;
 	case 57: // numeric keypad 9
 	    v->set_goal_view_offset( FG_PI * 1.75 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(25.0, -25.0, 1.0);
+	      v->set_view_offset( FG_PI * 1.75 );
+	    }
 	    return;
 	case 65: // A key
 	    speed = current_options.get_speed_up();
@@ -375,7 +407,20 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 118: // v key
-	    current_options.cycle_view_mode();
+// 	    current_options.cycle_view_mode();
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      current_options.set_view_mode(fgOPTIONS::FG_VIEW_PILOT);
+	      v->set_goal_view_offset( 0.0 );
+	      v->set_view_offset( 0.0 );
+	    } else if (current_options.get_view_mode() ==
+		       fgOPTIONS::FG_VIEW_PILOT) {
+	      current_options.set_view_mode(fgOPTIONS::FG_VIEW_FOLLOW);
+	      v->set_goal_view_offset( FG_PI * 1.75 );
+	      v->set_view_offset( FG_PI * 1.75 );
+	      pilot_view.set_pilot_offset(25.0, -25.0, 1.0);
+	    }
+	    fgReshape( current_view.get_winWidth(),
+		       current_view.get_winHeight() );
 	    return;
 	case 120: // x key
 	    fov = current_options.get_fov();
@@ -496,27 +541,59 @@ void GLUTspecialkey(int k, int x, int y) {
 	}
 	case GLUT_KEY_END: // numeric keypad 1
 	    v->set_goal_view_offset( FG_PI * 0.75 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(-25.0, 25.0, 1.0);
+	      v->set_view_offset( FG_PI * 0.75 );
+	    }
 	    return;
 	case GLUT_KEY_DOWN: // numeric keypad 2
 	    v->set_goal_view_offset( FG_PI );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(-25.0, 0.0, 1.0);
+	      v->set_view_offset( FG_PI );
+	    }
 	    return;
 	case GLUT_KEY_PAGE_DOWN: // numeric keypad 3
 	    v->set_goal_view_offset( FG_PI * 1.25 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(-25.0, -25.0, 1.0);
+	      v->set_view_offset( FG_PI * 1.25 );
+	    }
 	    return;
 	case GLUT_KEY_LEFT: // numeric keypad 4
 	    v->set_goal_view_offset( FG_PI * 0.50 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(0.0, 25.0, 1.0);
+	      v->set_view_offset( FG_PI * 0.50 );
+	    }
 	    return;
 	case GLUT_KEY_RIGHT: // numeric keypad 6
 	    v->set_goal_view_offset( FG_PI * 1.50 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(0.0, -25.0, 1.0);
+	      v->set_view_offset( FG_PI * 1.50 );
+	    }
 	    return;
 	case GLUT_KEY_HOME: // numeric keypad 7
 	    v->set_goal_view_offset( FG_PI * 0.25 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(25.0, 25.0, 1.0);
+	      v->set_view_offset( FG_PI * 0.25 );
+	    }
 	    return;
 	case GLUT_KEY_UP: // numeric keypad 8
 	    v->set_goal_view_offset( 0.00 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(25.0, 0.0, 1.0);
+	      v->set_view_offset( 0.00 );
+	    }
 	    return;
 	case GLUT_KEY_PAGE_UP: // numeric keypad 9
 	    v->set_goal_view_offset( FG_PI * 1.75 );
+	    if (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_FOLLOW) {
+	      pilot_view.set_pilot_offset(25.0, -25.0, 1.0);
+	      v->set_view_offset( FG_PI * 1.75 );
+	    }
 	    return;
 	}
     } else {

@@ -1,5 +1,6 @@
 
 #include "hud.hxx"
+#include "panel.hxx"
 
 #define DO_PANEL_HACK
 
@@ -219,7 +220,7 @@ void HudLadder :: draw( void )
 
 	glEnable(GL_LINE_STIPPLE);
 #ifdef DO_PANEL_HACK
-	glLineStipple( 1, current_options.get_panel_status() ? 0x0F0F : 0x00FF );
+	glLineStipple( 1, fgPanelVisible() ? 0x0F0F : 0x00FF );
 #else
 	glLineStipple( 1, 0x00FF );
 #endif

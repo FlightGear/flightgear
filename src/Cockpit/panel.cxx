@@ -41,6 +41,15 @@
 #include "panel.hxx"
 
 
+bool
+fgPanelVisible ()
+{
+  return ((current_options.get_panel_status()) &&
+	  (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_PILOT) &&
+	  (current_view.get_view_offset() == 0.0));
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGTextureManager.
@@ -125,7 +134,7 @@ FGPanel::FGPanel (int window_x, int window_y, int window_w, int window_h)
     _width(_winw), _height(int(_winh * 0.5768 + 1)),
     _x_offset(0), _y_offset(0), _view_height(int(_winh * 0.4232))
 {
-  setVisibility(current_options.get_panel_status());
+  setVisibility(fgPanelVisible());
 }
 
 
@@ -160,7 +169,7 @@ void
 FGPanel::update () const
 {
 				// Do nothing if the panel isn't visible.
-  if (!_visibility)
+  if (!fgPanelVisible())
     return;
 
 				// If the mouse is down, do something

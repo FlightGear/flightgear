@@ -166,7 +166,7 @@ inline static void fgMakeLOCAL( sgMat4 dst, const double Theta,
 void FGView::UpdateViewParams( const FGInterface& f ) {
     UpdateViewMath(f);
     
-    if ( ! current_options.get_panel_status() ) {
+    if ( ! fgPanelVisible() ) {
 	xglViewport(0, 0 , (GLint)(winWidth), (GLint)(winHeight) );
     } else {
         int view_h =

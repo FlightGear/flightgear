@@ -346,6 +346,15 @@ bool fgInitPosition( void ) {
     fgFDMSetGroundElevation( current_options.get_flight_model(),
 			     f->get_Altitude() * FEET_TO_METER );
 
+#if 0
+    current_properties.setDoubleValue("/position/longitude",
+				      f->get_Longitude() * RAD_TO_DEG);
+    current_properties.setDoubleValue("/position/latitude",
+				      f->get_Latitude() * RAD_TO_DEG);
+    current_properties.setDoubleValue("/position/altitude",
+				      f->get_Altitude() * RAD_TO_DEG);
+#endif
+
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Initial position is: ("
 	    << (f->get_Longitude() * RAD_TO_DEG) << ", "
