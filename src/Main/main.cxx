@@ -81,6 +81,7 @@
 #include <Math/polar3d.hxx>
 #include <Math/fg_random.h>
 #include <Misc/fgpath.hxx>
+#include <Objects/materialmgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
@@ -131,7 +132,8 @@ slSample *s2;
 // ssg variables
 ssgRoot *scene = NULL;
 ssgBranch *terrain = NULL;
-ssgTransform *penguin = NULL;
+ssgSelector *penguin_sel = NULL;
+ssgTransform *penguin_pos = NULL;
 
 
 // The following defines flight gear options. Because glutlib will also
@@ -400,41 +402,55 @@ static void fgRenderFrame( void ) {
 	    ssgSetNearFar( 0.5f, 100000.0f );
 	}
 
-	sgMat4 sgTRANS;
-	sgMakeTransMat4( sgTRANS, 
-			 current_view.view_pos.x(),
-			 current_view.view_pos.y(),
-			 current_view.view_pos.z() );
-
-	// sgMat4 sgTMP;
-	sgMat4 sgTUX;
-	// sgMultMat4( sgTMP, current_view.sgUP, sgTRANS );
-	// sgMultMat4( sgTUX, current_view.sgLARC_TO_SSG, sgTMP );
-	sgMultMat4( sgTUX, current_view.sgVIEW_ROT, sgTRANS );
-	
-	sgCoord tuxpos;
-	sgSetCoord( &tuxpos, sgTUX );
-	penguin->setTransform( &tuxpos );
-
-	sgMakeTransMat4( sgTRANS, 
-			 current_view.view_pos.x(),
-			 current_view.view_pos.y(),
-			 current_view.view_pos.z() );
 	sgMat4 sgVIEW;
 
 	if ( current_view.view_mode == FGView::FG_VIEW_FIRST_PERSON ) {
+	    // select current view matrix
 	    sgCopyMat4( sgVIEW, current_view.sgVIEW );
+
+	    // disable TuX
+	    penguin_sel->select(0);
 	} else if ( current_view.view_mode == FGView::FG_VIEW_FOLLOW ) {
+	    // select view matrix from front of view matrix queue
 	    FGMat4Wrapper tmp = current_view.follow.front();
 	    sgCopyMat4( sgVIEW, tmp.m );
-	}
-	if ( current_view.follow.size() > 15 ) {
-	    current_view.follow.pop_front();
+	    while ( current_view.follow.size() > 10 ) {
+		current_view.follow.pop_front();
+	    }
+
+	    // enable TuX and set up his position and orientation
+	    penguin_sel->select(1);
+
+	    sgMat4 sgTRANS;
+	    sgMakeTransMat4( sgTRANS, 
+			     current_view.view_pos.x(),
+			     current_view.view_pos.y(),
+			     current_view.view_pos.z() );
+
+	    // sgMat4 sgTMP;
+	    sgMat4 sgTUX;
+	    // sgMultMat4( sgTMP, current_view.sgUP, sgTRANS );
+	    // sgMultMat4( sgTUX, current_view.sgLARC_TO_SSG, sgTMP );
+	    sgMultMat4( sgTUX, current_view.sgVIEW_ROT, sgTRANS );
+	
+	    sgCoord tuxpos;
+	    sgSetCoord( &tuxpos, sgTUX );
+	    penguin_pos->setTransform( &tuxpos );
 	}
 
 	ssgSetCamera( sgVIEW );
 
+	// position tile nodes and update range selectors
 	global_tile_mgr.prep_ssg_nodes();
+
+	// force the default state so ssg can get back on track if
+	// we've changed things elsewhere
+	FGMaterialSlot m_slot;
+	FGMaterialSlot *m_ptr = &m_slot;
+	if ( material_mgr.find( "Default", m_ptr ) );
+	m_ptr->get_state()->force();
+
+	// draw the ssg scene
 	ssgCullAndDraw( scene );
 
 	xglDisable( GL_TEXTURE_2D );
@@ -1088,23 +1104,25 @@ int main( int argc, char **argv ) {
     // distribution) specifically from the ssg tux example
     //
 
-    ssgModelPath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    ssgTexturePath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    // ssgModelPath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    // ssgTexturePath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    // ssgModelPath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    // ssgTexturePath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgModelPath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgTexturePath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
 
     scene = new ssgRoot;
     terrain = new ssgBranch;
     terrain->setName( "Terrain" );
-    penguin = new ssgTransform;
+    penguin_sel = new ssgSelector;
+    penguin_pos = new ssgTransform;
 
     ssgEntity *tux_obj = ssgLoadAC( "tuxedo.ac" );
-    penguin->addKid( tux_obj );
+    penguin_pos->addKid( tux_obj );
+    penguin_sel->addKid( penguin_pos );
     ssgFlatten( tux_obj );
-    ssgStripify( penguin );
+    ssgStripify( penguin_sel );
 
     scene->addKid( terrain );
-    scene->addKid( penguin );
+    scene->addKid( penguin_sel );
 
     // pass control off to the master GLUT event handler
     glutMainLoop();
