@@ -28,8 +28,6 @@
 #include "viewmgr.hxx"
 #include "fg_props.hxx"
 
-// strings 
-string viewpath, nodepath, strdata;
 
 // Constructor
 FGViewMgr::FGViewMgr( void ) :
@@ -48,6 +46,7 @@ void
 FGViewMgr::init ()
 {
   char stridx [ 20 ];
+  string viewpath, nodepath, strdata;
   bool from_model = false;
   bool at_model = false;
   int from_model_index = 0;
@@ -175,6 +174,7 @@ void
 FGViewMgr::update (double dt)
 {
   char stridx [20];
+  string viewpath, nodepath;
   double lon_deg, lat_deg, alt_ft, roll_deg, pitch_deg, heading_deg;
 
   FGViewer * view = get_current_view();
@@ -221,7 +221,7 @@ FGViewMgr::update (double dt)
   }
 
   // if lookat (type 1) then get target data...
-  if (loop_view->getType() == 1) {
+  if (loop_view->getType() == FG_LOOKAT) {
     nodepath = viewpath;
     nodepath += "/config/from-model";
     if (!fgGetBool(nodepath.c_str())) {
