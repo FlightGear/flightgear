@@ -144,7 +144,7 @@ AC_CHECK_HEADER(windows.h)
 
 # extra library and include directories
 if test "x$ac_cv_header_windows_h" != "xyes" ; then
-    EXTRA_DIRS="${EXTRA_DIRS} /usr/local /usr/X11R6"
+    EXTRA_DIRS="${EXTRA_DIRS} /usr/X11R6"
 
     if test -d /opt/X11R6 ; then
         EXTRA_DIRS="${EXTRA_DIRS} /opt/X11R6"
