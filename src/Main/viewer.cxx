@@ -529,7 +529,7 @@ FGViewer::recalc ()
   // multiple FDM can be done.
   recalcPositionVectors(fgGetDouble("/position/longitude-deg"),
                         fgGetDouble("/position/latitude-deg"),
-                        fgGetDouble("/position/altitude-deg"));
+                        fgGetDouble("/position/altitude-ft"));
 
 
 
