@@ -44,6 +44,11 @@
 #  define ios_badbit   ios_base::badbit
 #  define ios_failbit  ios_base::failbit
 
+FG_USING_STD(streambuf);
+FG_USING_STD(ios_base);
+FG_USING_STD(streampos);
+FG_USING_STD(streamoff);
+
 #else
 
 #  ifdef FG_HAVE_STREAMBUF
@@ -125,7 +130,7 @@ private:
     int ibuf_size;
     char* ibuffer;
 
-    static const int page_size = 4096;
+    enum { page_size = 4096 };
 
 private:
     // Not defined
@@ -147,6 +152,9 @@ struct gzifstream_base
 #endif // _zfstream_hxx
 
 // $Log$
+// Revision 1.7  1999/01/19 20:41:49  curt
+// Portability updates contributed by Bernie Bright.
+//
 // Revision 1.6  1998/12/07 21:10:26  curt
 // Portability improvements.
 //

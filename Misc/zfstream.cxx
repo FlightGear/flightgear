@@ -25,8 +25,6 @@
 #include <memory.h>
 #include "zfstream.hxx"
 
-const int gzfilebuf::page_size;
-
 //
 // Construct a gzfilebuf object.
 // Allocate memory for 'get' buffer and zero all buffer pointers.
@@ -311,6 +309,9 @@ gzifstream::close()
 #endif
 
 // $Log$
+// Revision 1.3  1999/01/19 20:41:48  curt
+// Portability updates contributed by Bernie Bright.
+//
 // Revision 1.2  1998/11/06 14:05:14  curt
 // More portability improvements by Bernie Bright.
 //

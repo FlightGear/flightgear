@@ -25,11 +25,15 @@
 #define STRUTILS_H
 
 #include <string>
-// #include <cstdlib>
-#include <stdlib.h>
+#include "Include/compiler.h"
 
-#include "Include/fg_stl_config.h"
-FG_USING_NAMESPACE(std);
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <cstdlib>
+#else
+#  include <stdlib.h>
+#endif
+
+FG_USING_STD(string);
 
 // Default characters to remove.
 extern const string whitespace;
@@ -60,6 +64,9 @@ atoi( const string& str )
 #endif // STRUTILS_H
 
 // $Log$
+// Revision 1.4  1999/01/19 20:41:47  curt
+// Portability updates contributed by Bernie Bright.
+//
 // Revision 1.3  1998/10/16 00:50:57  curt
 // Remove leading _ from a couple defines.
 //

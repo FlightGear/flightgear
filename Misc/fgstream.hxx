@@ -35,19 +35,17 @@
 #include <string>
 
 #include "Include/compiler.h"
-FG_USING_STD(string);
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <istream>
+#else
+#  include <istream.h>
+#endif
 
-// #ifdef FG_HAVE_STD_INCLUDES
-// #include <istream>
-// #else
-// #include <istream.h>
-// #endif
+FG_USING_STD(string);
+FG_USING_STD(istream);
+
 
 #include "zfstream.hxx"
-
-// Input stream manipulator function type.
-class fg_gzifstream;
-typedef fg_gzifstream& (*IManipFunc)( fg_gzifstream& );
 
 //-----------------------------------------------------------------------------
 //
@@ -72,6 +70,8 @@ public:
 
     void attach( int fd, ios_openmode io_mode = ios_in|ios_binary );
 
+    void close() { gzbuf.close(); }
+
 private:
     // Not defined!
     fg_gzifstream( const fg_gzifstream& );    
@@ -92,6 +92,9 @@ istream& skipcomment( istream& in );
 #endif /* _FGSTREAM_HXX */
 
 // $Log$
+// Revision 1.6  1999/01/19 20:41:46  curt
+// Portability updates contributed by Bernie Bright.
+//
 // Revision 1.5  1998/11/06 14:05:13  curt
 // More portability improvements by Bernie Bright.
 //
