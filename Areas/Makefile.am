@@ -28,13 +28,16 @@ bin_PROGRAMS = areas
 
 areas_SOURCES = area.cxx area.hxx main.cxx
 
-areas_LDADD = $(top_builddir)/Lib/Bucket/libBucket.la
+areas_LDADD = $(top_builddir)/Lib/Bucket/libBucket.a
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/07/30 23:49:18  curt
+# Removed libtool support.
+#
 # Revision 1.1  1998/07/20 12:54:53  curt
 # Whoops, need to commit Makefile.am, not Makefile.
 #

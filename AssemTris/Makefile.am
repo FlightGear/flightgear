@@ -29,13 +29,16 @@ bin_PROGRAMS = assemtris
 assemtris_SOURCES = assemtris.c assemtris.h
 
 assemtris_LDADD = \
-	$(top_builddir)/Lib/Bucket/libBucket.la
+	$(top_builddir)/Lib/Bucket/libBucket.a
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1998/07/30 23:49:23  curt
+# Removed libtool support.
+#
 # Revision 1.2  1998/04/14 02:25:59  curt
 # Code reorganizations.  Added a Lib/ directory for more general libraries.
 #

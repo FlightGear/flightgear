@@ -29,15 +29,18 @@ bin_PROGRAMS = fixobj
 fixobj_SOURCES = main.cxx obj.cxx obj.hxx
 
 fixobj_LDADD = \
-	$(top_builddir)/Lib/Math/libMath.la \
-	$(top_builddir)/Lib/Debug/libDebug.la \
-	$(top_builddir)/Lib/zlib/libz.la
+	$(top_builddir)/Lib/Math/libMath.a \
+	$(top_builddir)/Lib/Debug/libDebug.a \
+	$(top_builddir)/Lib/zlib/libz.a
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1998/07/30 23:49:25  curt
+# Removed libtool support.
+#
 # Revision 1.5  1998/06/08 17:11:44  curt
 # Renamed *.[ch] to *.[ch]xx
 #

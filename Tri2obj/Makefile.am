@@ -29,16 +29,19 @@ bin_PROGRAMS = tri2obj
 tri2obj_SOURCES = tri2obj.cxx tri2obj.hxx
 
 tri2obj_LDADD = \
-	$(top_builddir)/Lib/Bucket/libBucket.la \
-	$(top_builddir)/Lib/Math/libMath.la \
-        $(top_builddir)/Lib/Debug/libDebug.la \
-        $(top_builddir)/Lib/zlib/libz.la
+	$(top_builddir)/Lib/Bucket/libBucket.a \
+	$(top_builddir)/Lib/Math/libMath.a \
+        $(top_builddir)/Lib/Debug/libDebug.a \
+        $(top_builddir)/Lib/zlib/libz.a
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1998/07/30 23:49:26  curt
+# Removed libtool support.
+#
 # Revision 1.5  1998/07/08 14:49:14  curt
 # tweaks.
 #
