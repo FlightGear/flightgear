@@ -425,9 +425,24 @@ FGNewMat::build_ssg_state (bool defer_tex_load)
 	texture_loaded = false;
     }
     textured->enable( GL_COLOR_MATERIAL );
+#if 0
     textured->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
     textured->setMaterial( GL_EMISSION, 0, 0, 0, 1 );
     textured->setMaterial( GL_SPECULAR, 0, 0, 0, 1 );
+#else
+    textured->setMaterial ( GL_AMBIENT,
+                            ambient[0], ambient[1],
+                            ambient[2], ambient[3] ) ;
+    textured->setMaterial ( GL_DIFFUSE,
+                            diffuse[0], diffuse[1],
+                            diffuse[2], diffuse[3] ) ;
+    textured->setMaterial ( GL_SPECULAR,
+                            specular[0], specular[1],
+                            specular[2], specular[3] ) ;
+    textured->setMaterial ( GL_EMISSION,
+                            emission[0], emission[1],
+                            emission[2], emission[3] ) ;
+#endif
 
     // Set up the coloured state
     nontextured->enable( GL_LIGHTING );
