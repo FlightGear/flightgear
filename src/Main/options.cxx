@@ -60,6 +60,7 @@
 #include "fg_init.hxx"
 #include "fg_props.hxx"
 #include "options.hxx"
+#include "util.hxx"
 #include "viewmgr.hxx"
 
 
@@ -208,7 +209,6 @@ fgSetDefaults ()
     fgSetInt("/sim/rendering/bits-per-pixel", 16);
     fgSetString("/sim/view-mode", "pilot");
     fgSetDouble("/sim/current-view/heading-offset-deg", 0);
-    fgSetDouble("/environment/visibility-m", 20000);
 
 				// HUD options
     fgSetString("/sim/startup/units", "feet");
@@ -542,12 +542,8 @@ add_channel( const string& type, const string& channel_str ) {
 static void
 setup_wind (double min_hdg, double max_hdg, double speed, double gust)
 {
-  fgSetDouble("/environment/wind-from-heading-deg", min_hdg);
-  fgSetDouble("/environment/params/min-wind-from-heading-deg", min_hdg);
-  fgSetDouble("/environment/params/max-wind-from-heading-deg", max_hdg);
-  fgSetDouble("/environment/wind-speed-kt", speed);
-  fgSetDouble("/environment/params/base-wind-speed-kt", speed);
-  fgSetDouble("/environment/params/gust-wind-speed-kt", gust);
+  fgDefaultWeatherValue("wind-from-heading-deg", min_hdg);
+  fgDefaultWeatherValue("wind-speed-kt", speed);
 
   SG_LOG(SG_GENERAL, SG_INFO, "WIND: " << min_hdg << '@' << 
 	 speed << " knots" << endl);
@@ -956,10 +952,18 @@ fgOptViewOffset( const char *arg )
 }
 
 static int
+fgOptVisibilityMeters( const char *arg )
+{
+    double visibility = atof( arg );
+    fgDefaultWeatherValue("visibility-m", visibility);
+    return FG_OPTIONS_OK;
+}
+
+static int
 fgOptVisibilityMiles( const char *arg )
 {
     double visibility = atof( arg ) * 5280.0 * SG_FEET_TO_METER;
-    fgSetDouble("/environment/visibility-m", visibility);
+    fgDefaultWeatherValue("visibility-m", visibility);
     return FG_OPTIONS_OK;
 }
 
@@ -983,6 +987,13 @@ fgOptWind( const char *arg )
 	return FG_OPTIONS_ERROR;
     }
     setup_wind(min_hdg, max_hdg, speed, gust);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptTurbulence( const char *arg)
+{
+    fgDefaultWeatherValue("turbulence-norm", atof(arg));
     return FG_OPTIONS_OK;
 }
 
@@ -1187,11 +1198,11 @@ struct OptionDesc {
     {"trace-write",                  true,  OPTION_FUNC,   "", false, "", fgOptTraceWrite },
     {"log-level",                    true,  OPTION_INT,    "/sim/log-level", false, "", 0 },
     {"view-offset",                  true,  OPTION_FUNC,   "", false, "", fgOptViewOffset },
-    {"visibility",                   true,  OPTION_DOUBLE, "/environment/visibility-m", false, "", 0 },
+    {"visibility",                   true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMeters },
     {"visibility-miles",             true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMiles },
     {"random-wind",                  false, OPTION_FUNC,   "", false, "", fgOptRandomWind },
     {"wind",                         true,  OPTION_FUNC,   "", false, "", fgOptWind },
-    {"turbulence",                   true,  OPTION_DOUBLE,  "/environment/turbulence-norm", false, "", 0 },
+    {"turbulence",                   true,  OPTION_FUNC,   "", false, "", fgOptTurbulence },
     {"wp",                           true,  OPTION_FUNC,   "", false, "", fgOptWp },
     {"flight-plan",                  true,  OPTION_FUNC,   "", false, "", fgOptFlightPlan },
     {"config",                       true,  OPTION_FUNC,   "", false, "", fgOptConfig },

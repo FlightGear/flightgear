@@ -27,6 +27,17 @@
 
 
 /**
+ * Initialize a single value through all existing weather levels.
+ *
+ * This function is useful mainly from the command-line.
+ *
+ * @param propname The name of the subproperty to initialized.
+ * @param value The initial value.
+ */
+extern void fgDefaultWeatherValue (const char * propname, double value);
+
+
+/**
  * Clean up and exit FlightGear.
  *
  * This function makes sure that network connections and I/O streams

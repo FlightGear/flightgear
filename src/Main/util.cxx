@@ -18,7 +18,12 @@
 // $Id$
 
 
+#include <simgear/compiler.h>
+
 #include <math.h>
+
+#include <vector>
+SG_USING_STD(vector);
 
 #include <simgear/debug/logstream.hxx>
 
@@ -30,6 +35,23 @@
 #if defined(FG_NETWORK_OLK)
 #include <NetworkOLK/network.h>
 #endif
+
+
+void
+fgDefaultWeatherValue (const char * propname, double value)
+{
+    int i;
+
+    SGPropertyNode * branch = fgGetNode("/environment/config/boundary", true);
+    vector<SGPropertyNode_ptr> entries = branch->getChildren("entry");
+    for (i = 0; i < entries.size(); i++)
+        entries[i]->setDoubleValue(propname, value);
+
+    branch = fgGetNode("/environment/config/aloft", true);
+    entries = branch->getChildren("entry");
+    for (i = 0; i < entries.size(); i++)
+        entries[i]->setDoubleValue(propname, value);
+}
 
 
 void
