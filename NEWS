@@ -5,6 +5,11 @@ New in 0.53
   causing segfaults on some platforms, with some compilers using various
   optimization flags.
 * Assorted code optimizations submitted by Norman Vine.
+* Renamed fg -> fgfs
+* Shuffled files.  
+  - Created a new directory Simulator/Airports/ to handle airport data 
+    specific tasks 
+  - Created Simulator/Object/ to handle basic rendering objects
 
 New in 0.52
 * Stars added in 8 stages as sky gets darker for a smoother more realistic

@@ -1,11 +1,11 @@
 Starting the executable
 =======================
 
-Unix:    runfg
-Windows: runfg.bat
+Unix:    runfgfs
+Windows: runfgfs.bat
 
-"runfg" is a script which sets the FG_ROOT and LD_LIBRARY_PATH
-environment variables, then runs the Flight Gear executable.
+"runfgfs" is a script which runs the Flight Gear executable with
+(hopefully) the correct $FG_ROOT directory specified.
 
 
 Keyboard controls

@@ -8,8 +8,9 @@ suggest that I include the answer here.
 GLUT
 ====
 
-Flight Gear requires GLUT.  GLUT needs to be installed on your system
-before you can build Flight Gear.  GLUT can be found at:
+Flight Gear requires GLUT version 3.7 or later (aka GameGLUT._ GLUT
+needs to be installed on your system before you can build Flight Gear.
+GLUT can be found at:
 
     http://reality.sgi.com/opengl/glut3/glut3.html
 

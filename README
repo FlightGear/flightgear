@@ -5,11 +5,6 @@ The primary web page for this project is:
 
     http://www.menet.umn.edu/~curt/fgfs
 
-We are overhauling the make system and a lot of things are in a state of
-change, so let me know if you see incorrect information in the README's,
-extraneous files laying around, or any other anomylous things.   The
-coordinator of this project is Curt Olson <curt@me.umn.edu>.
-
 ===================================
 
 Please see .... for more information on .... 
@@ -28,7 +23,11 @@ Please see .... for more information on ....
 
 - README.Win32:  Specific Win32 compiling information and instructions
 
+- README.anoncvs:  Info on accessing the most current copies of the source.
+
 - README.autoconf:  Info on updating the make system (adding new source
                     files, etc.)
 
-- README.running:  Minimalist info for running the simulator
+- README.running:  Basic keyboard commands for running the simulator
+
+
