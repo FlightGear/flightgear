@@ -27,8 +27,6 @@
 
 #include <simgear/compiler.h>
 
-#include <Network/iochannel.hxx>
-
 
 // initialize I/O channels based on command line options (if any)
 void fgIOInit();
@@ -39,5 +37,3 @@ void fgIOProcess();
 
 
 #endif // _FG_IO_HXX
-
-

@@ -23,8 +23,8 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/fg_geodesy.hxx>
+#include <simgear/io/iochannel.hxx>
 
-#include "iochannel.hxx"
 #include "native.hxx"
 
 
@@ -43,7 +43,7 @@ bool FGNative::open() {
 	return false;
     }
 
-    FGIOChannel *io = get_io_channel();
+    SGIOChannel *io = get_io_channel();
 
     if ( ! io->open( get_direction() ) ) {
 	FG_LOG( FG_IO, FG_ALERT, "Error opening channel communication layer." );
@@ -58,18 +58,18 @@ bool FGNative::open() {
 
 // process work for this port
 bool FGNative::process() {
-    FGIOChannel *io = get_io_channel();
+    SGIOChannel *io = get_io_channel();
     int length = sizeof(*cur_fdm_state);
 
-    if ( get_direction() == out ) {
+    if ( get_direction() == SG_IO_OUT ) {
 	// cout << "size of cur_fdm_state = " << length << endl;
 	buf = *cur_fdm_state;
 	if ( ! io->write( (char *)(& buf), length ) ) {
 	    FG_LOG( FG_IO, FG_ALERT, "Error writing data." );
 	    return false;
 	}
-    } else if ( get_direction() == in ) {
-	if ( io->get_type() == fgFileType ) {
+    } else if ( get_direction() == SG_IO_IN ) {
+	if ( io->get_type() == sgFileType ) {
 	    if ( io->read( (char *)(& buf), length ) == length ) {
 		FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
 		*cur_fdm_state = buf;
@@ -88,7 +88,7 @@ bool FGNative::process() {
 
 // close the channel
 bool FGNative::close() {
-    FGIOChannel *io = get_io_channel();
+    SGIOChannel *io = get_io_channel();
 
     set_enabled( false );
 

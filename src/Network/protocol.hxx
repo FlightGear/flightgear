@@ -37,26 +37,17 @@ FG_USING_STD(vector);
 #define FG_MAX_MSG_SIZE 16384
 
 // forward declaration
-class FGIOChannel;
+class SGIOChannel;
 
 
 class FGProtocol {
-
-public:
-
-    enum fgProtocolDir {
-	none = 0,
-	in = 1,
-	out = 2,
-	bi = 3
-    };
 
 private:
 
     double hz;
     int count_down;
 
-    fgProtocolDir dir;
+    SGProtocolDir dir;
 
     // string protocol_str;
 
@@ -65,7 +56,7 @@ private:
 
     bool enabled;
 
-    FGIOChannel *io;
+    SGIOChannel *io;
 
 public:
 
@@ -76,16 +67,16 @@ public:
     virtual bool process();
     virtual bool close();
 
-    inline fgProtocolDir get_direction() const { return dir; }
+    inline SGProtocolDir get_direction() const { return dir; }
     inline void set_direction( const string& d ) {
 	if ( d == "in" ) {
-	    dir = in;
+	    dir = SG_IO_IN;
 	} else if ( d == "out" ) {
-	    dir = out;
+	    dir = SG_IO_OUT;
 	} else if ( d == "bi" ) {
-	    dir = bi;
+	    dir = SG_IO_BI;
 	} else {
-	    dir = none;
+	    dir = SG_IO_NONE;
 	}
     }
 
@@ -108,8 +99,8 @@ public:
     inline bool is_enabled() const { return enabled; }
     inline void set_enabled( const bool b ) { enabled = b; }
 
-    inline FGIOChannel *get_io_channel() const { return io; }
-    inline void set_io_channel( FGIOChannel *c ) { io = c; }
+    inline SGIOChannel *get_io_channel() const { return io; }
+    inline void set_io_channel( SGIOChannel *c ) { io = c; }
 };
 
 

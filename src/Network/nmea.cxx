@@ -23,11 +23,11 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/fg_geodesy.hxx>
+#include <simgear/io/iochannel.hxx>
 
 #include <FDM/flight.hxx>
 #include <Main/globals.hxx>
 
-#include "iochannel.hxx"
 #include "nmea.hxx"
 
 
@@ -453,7 +453,7 @@ bool FGNMEA::open() {
 	return false;
     }
 
-    FGIOChannel *io = get_io_channel();
+    SGIOChannel *io = get_io_channel();
 
     if ( ! io->open( get_direction() ) ) {
 	FG_LOG( FG_IO, FG_ALERT, "Error opening channel communication layer." );
@@ -468,15 +468,15 @@ bool FGNMEA::open() {
 
 // process work for this port
 bool FGNMEA::process() {
-    FGIOChannel *io = get_io_channel();
+    SGIOChannel *io = get_io_channel();
 
-    if ( get_direction() == out ) {
+    if ( get_direction() == SG_IO_OUT ) {
 	gen_message();
 	if ( ! io->write( buf, length ) ) {
 	    FG_LOG( FG_IO, FG_ALERT, "Error writing data." );
 	    return false;
 	}
-    } else if ( get_direction() == in ) {
+    } else if ( get_direction() == SG_IO_IN ) {
 	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
 	    parse_message();
 	} else {
@@ -497,7 +497,7 @@ bool FGNMEA::process() {
 
 // close the channel
 bool FGNMEA::close() {
-    FGIOChannel *io = get_io_channel();
+    SGIOChannel *io = get_io_channel();
 
     set_enabled( false );
 

@@ -25,11 +25,11 @@
 #include <stdio.h>		// sprintf()
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/io/iochannel.hxx>
 #include <simgear/math/fg_geodesy.hxx>
 
 #include <FDM/flight.hxx>
 
-#include "iochannel.hxx"
 #include "rul.hxx"
 
 
@@ -102,15 +102,15 @@ bool FGRUL::parse_message() {
 
 // process work for this port
 bool FGRUL::process() {
-    FGIOChannel *io = get_io_channel();
+    SGIOChannel *io = get_io_channel();
 
-    if ( get_direction() == out ) {
+    if ( get_direction() == SG_IO_OUT ) {
 	gen_message();
 	if ( ! io->write( buf, length ) ) {
 	    FG_LOG( FG_IO, FG_ALERT, "Error writing data." );
 	    return false;
 	}
-    } else if ( get_direction() == in ) {
+    } else if ( get_direction() == SG_IO_IN ) {
 	FG_LOG( FG_IO, FG_ALERT, "in direction not supported for RUL." );
 	return false;
     }

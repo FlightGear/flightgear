@@ -43,8 +43,6 @@ fgfs_SOURCES = \
 	splash.cxx splash.hxx \
 	views.cxx views.hxx
 
-#	fg_serial.cxx fg_serial.hxx \
-
 fgfs_LDADD = \
 	$(top_builddir)/src/Aircraft/libAircraft.a \
 	$(top_builddir)/src/Autopilot/libAutopilot.a \
@@ -65,9 +63,9 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Time/libTime.a \
 	$(WEATHER_LIBS) \
 	$(top_builddir)/src/Joystick/libJoystick.a \
-	$(SERIAL_LIBS) \
-	-lsgsky -lsgephem -lsgtiming -lsgscreen -lsgmath -lsgbucket \
+	-lsgsky -lsgephem -lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket \
 	-lsgdebug -lsgmagvar -lsgmisc \
+	$(SERIAL_LIBS) \
 	-lplibpu -lplibfnt -lplibssg -lplibsg \
 	-lmk4 -lz \
 	$(opengl_LIBS) \

@@ -22,8 +22,8 @@
 
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/io/iochannel.hxx>
 
-#include "iochannel.hxx"
 #include "protocol.hxx"
 
 
@@ -47,7 +47,7 @@ bool FGProtocol::open() {
 	return false;
     }
 
-    FGIOChannel *io = get_io_channel();
+    SGIOChannel *io = get_io_channel();
 
     if ( ! io->open( get_direction() ) ) {
 	FG_LOG( FG_IO, FG_ALERT, "Error opening channel communication layer." );
@@ -76,7 +76,7 @@ bool FGProtocol::close() {
 
 // standard I/O channel close routine
 bool FGProtocol::gen_message() {
-    FGIOChannel *io = get_io_channel();
+    SGIOChannel *io = get_io_channel();
 
     set_enabled( false );
 

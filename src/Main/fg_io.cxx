@@ -26,14 +26,14 @@
 #include STL_STRING
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/io/iochannel.hxx>
+#include <simgear/io/sg_file.hxx>
+#include <simgear/io/sg_serial.hxx>
+#include <simgear/io/sg_socket.hxx>
+
 #include <simgear/math/fg_types.hxx>
 
 #include <Main/options.hxx>
-
-#include <Network/iochannel.hxx>
-#include <Network/fg_file.hxx>
-#include <Network/fg_serial.hxx>
-#include <Network/fg_socket.hxx>
 
 #include <Network/protocol.hxx>
 #include <Network/native.hxx>
@@ -132,7 +132,7 @@ static FGProtocol *parse_port_config( const string& config )
     FG_LOG( FG_IO, FG_INFO, "  hertz = " << hertz );
 
     if ( medium == "serial" ) {
-	FGSerial *ch = new FGSerial;
+	SGSerial *ch = new SGSerial;
 	io->set_io_channel( ch );
 
 	// device name
@@ -151,14 +151,14 @@ static FGProtocol *parse_port_config( const string& config )
 
 	io->set_io_channel( ch );
     } else if ( medium == "file" ) {
-	FGFile *ch = new FGFile;
+	SGFile *ch = new SGFile;
 	io->set_io_channel( ch );
 
 	// file name
 	ch->set_file_name( config.substr(begin) );
 	FG_LOG( FG_IO, FG_INFO, "  file name = " << ch->get_file_name() );
     } else if ( medium == "socket" ) {
-	FGSocket *ch = new FGSocket;
+	SGSocket *ch = new SGSocket;
 	io->set_io_channel( ch );
 
 	// hostname

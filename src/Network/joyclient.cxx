@@ -22,10 +22,10 @@
 
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/io/iochannel.hxx>
 
 #include <Aircraft/aircraft.hxx>
 
-#include "iochannel.hxx"
 #include "joyclient.hxx"
 
 
@@ -44,7 +44,7 @@ bool FGJoyClient::open() {
 	return false;
     }
 
-    FGIOChannel *io = get_io_channel();
+    SGIOChannel *io = get_io_channel();
 
     if ( ! io->open( get_direction() ) ) {
 	FG_LOG( FG_IO, FG_ALERT, "Error opening channel communication layer." );
@@ -59,15 +59,15 @@ bool FGJoyClient::open() {
 
 // process work for this port
 bool FGJoyClient::process() {
-    FGIOChannel *io = get_io_channel();
+    SGIOChannel *io = get_io_channel();
     int length = sizeof(int[2]);
 
-    if ( get_direction() == out ) {
+    if ( get_direction() == SG_IO_OUT ) {
 	FG_LOG( FG_IO, FG_ALERT, "joyclient protocol is read only" );
 	return false;
-    } else if ( get_direction() == in ) {
+    } else if ( get_direction() == SG_IO_IN ) {
 	FG_LOG( FG_IO, FG_DEBUG, "Searching for data." );
-	if ( io->get_type() == fgFileType ) {
+	if ( io->get_type() == sgFileType ) {
 	    if ( io->read( (char *)(& buf), length ) == length ) {
 		FG_LOG( FG_IO, FG_DEBUG, "Success reading data." );
 		int *msg;
@@ -112,7 +112,7 @@ bool FGJoyClient::process() {
 
 // close the channel
 bool FGJoyClient::close() {
-    FGIOChannel *io = get_io_channel();
+    SGIOChannel *io = get_io_channel();
 
     set_enabled( false );
 
