@@ -6,7 +6,9 @@
  * -------------------------------------------------------------------------*/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef WIN32
 #  include <memory.h>      /* required for memset() and memcpy() */

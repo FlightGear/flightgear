@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>         /* for random(), srandom() */
@@ -73,9 +75,12 @@ double fg_random(void) {
 
 
 /* $Log$
-/* Revision 1.6  1998/04/18 03:53:42  curt
-/* Miscellaneous Tweaks.
+/* Revision 1.7  1998/04/24 00:43:13  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
 /*
+ * Revision 1.6  1998/04/18 03:53:42  curt
+ * Miscellaneous Tweaks.
+ *
  * Revision 1.5  1998/04/03 22:10:29  curt
  * Converting to Gnu autoconf system.
  *
