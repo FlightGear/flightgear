@@ -1,4 +1,3 @@
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  Header:       FGGain.h
@@ -44,7 +43,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <vector>
 #  else
 #    include <vector.h>
@@ -61,7 +60,7 @@ INCLUDES
 DEFINES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_GAIN "$Header"
+#define ID_GAIN "$Id$"
 
 class FGFCS;
 
@@ -69,8 +68,15 @@ class FGFCS;
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGGain  : public FGFCSComponent         
+class FGGain  : public FGFCSComponent
 {
+public:
+  FGGain(FGFCS* fcs, FGConfigFile* AC_cfg);
+  ~FGGain();
+
+  bool Run (void);
+
+private:
   FGConfigFile* AC_cfg;
   float Gain;
   float* lookup;
@@ -78,11 +84,7 @@ class FGGain  : public FGFCSComponent
   float Min, Max;
   eParam ScheduledBy;
 
-public:
-  FGGain(FGFCS* fcs, FGConfigFile* AC_cfg);
-  ~FGGain ( ) { }       //Destructor
-
-  bool Run (void);
+  void Debug(void);
 };
 
 #endif

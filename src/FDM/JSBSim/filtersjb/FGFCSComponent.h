@@ -48,7 +48,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FCSCOMPONENT "$Header"
+#define ID_FCSCOMPONENT "$Id$"
 
 using std::string;
 
@@ -91,14 +91,23 @@ CLASS DECLARATION
 
 class FGFCSComponent
 {
-private:
+public:
+  /// Constructor
+  FGFCSComponent(FGFCS*);
+  /// Destructor
+  virtual ~FGFCSComponent();
+
+  virtual bool Run(void);
+  virtual void SetOutput(void);
+  inline float GetOutput (void) {return Output;}
+  inline string GetName(void) {return Name;}
 
 protected:
+   /// Pilot/Aircraft, FCS, Autopilot inputs
+  enum eInputType {itPilotAC, itFCS, itAP} InputType;
   FGFCS* fcs;
   string Type;
   string Name;
-   /// Pilot/Aircraft, FCS, Autopilot inputs
-  enum eInputType {itPilotAC, itFCS, itAP} InputType;
   int ID;
   eParam InputIdx;
   float Input;
@@ -106,17 +115,7 @@ protected:
   eParam OutputIdx;
   float Output;
   bool IsOutput;
-
-public:
-  /// Constructor
-  FGFCSComponent(FGFCS*);
-  /// Destructor
-  virtual ~FGFCSComponent ( ) { }       //Destructor
-
-  virtual bool Run (void);
-  virtual void SetOutput(void);
-  inline float GetOutput (void) {return Output;}
-  inline string GetName(void) {return Name;}
+  void Debug(void);
 };
 
 #include "../FGFCS.h"

@@ -39,8 +39,10 @@ INCLUDES
 
 #include "FGFilter.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FILTER;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -50,25 +52,27 @@ FGFilter::FGFilter(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
                                                        AC_cfg(AC_cfg)
 {
   string token;
+  float denom;
 
   Type = AC_cfg->GetValue("TYPE");
   Name = AC_cfg->GetValue("NAME");
   AC_cfg->GetNextConfigLine();
+  dt = fcs->GetState()->Getdt();
 
   C1 = C2 = C3 = C4 = C5 = C6 = 0.0;
 
   if      (Type == "LAG_FILTER")          FilterType = eLag        ;
-  else if (Type == "RECT_LAG_FILTER")     FilterType = eRectLag    ;
   else if (Type == "LEAD_LAG_FILTER")     FilterType = eLeadLag    ;
   else if (Type == "SECOND_ORDER_FILTER") FilterType = eOrder2     ;
   else if (Type == "WASHOUT_FILTER")      FilterType = eWashout    ;
   else if (Type == "INTEGRATOR")          FilterType = eIntegrator ;
   else                                    FilterType = eUnknown    ;
 
-  while ((token = AC_cfg->GetValue()) != "/COMPONENT") {
+  while ((token = AC_cfg->GetValue()) != string("/COMPONENT")) {
     *AC_cfg >> token;
     if (token == "ID") {
       *AC_cfg >> ID;
+      cout << "      ID: " << ID << endl;
     } else if (token == "INPUT") {
       token = AC_cfg->GetValue("INPUT");
       if (token.find("FG_") != token.npos) {
@@ -79,63 +83,100 @@ FGFilter::FGFilter(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
         *AC_cfg >> InputIdx;
         InputType = itFCS;
       }
+      cout << "      INPUT: " << token << endl;
     } else if (token == "C1") {
       *AC_cfg >> C1;
+      cout << "      C1: " << C1 << endl;
     } else if (token == "C2") {
       *AC_cfg >> C2;
+      cout << "      C2: " << C2 << endl;
     } else if (token == "C3") {
       *AC_cfg >> C3;
+      cout << "      C3: " << C3 << endl;
     } else if (token == "C4") {
       *AC_cfg >> C4;
+      cout << "      C4: " << C4 << endl;
     } else if (token == "C5") {
       *AC_cfg >> C5;
+      cout << "      C5: " << C5 << endl;
     } else if (token == "C6") {
       *AC_cfg >> C6;
+      cout << "      C6: " << C6 << endl;
+    } else if (token == "OUTPUT") {
+      IsOutput = true;
+      *AC_cfg >> sOutputIdx;
+      OutputIdx = fcs->GetState()->GetParameterIndex(sOutputIdx);
+      cout << "      OUTPUT: " << sOutputIdx << endl;
     }
   }
 
+  Initialize = true;
+
   switch (FilterType) {
     case eLag:
-      ca = dt*C1 / (2.00 + dt*C1);
-      cb = (2.00 - dt*C1) / (2.00 + dt*C1);
-      break;
-    case eRectLag:
+      denom = 2.00 + dt*C1;
+      ca = dt*C1 / denom;
+      cb = (2.00 - dt*C1) / denom;
       break;
     case eLeadLag:
+      denom = 2.00*C3 + dt*C4;
+      ca = (2.00*C1 + dt*C2) / denom;
+      cb = (dt*C2 - 2.00*C1) / denom;
+      cc = (2.00*C3 - dt*C2) / denom;
       break;
     case eOrder2:
       break;
     case eWashout:
+      denom = 2.00 + dt*C1;
+      ca = 2.00 / denom;
+      cb = (2.00 - dt*C1) / denom;
       break;
     case eIntegrator:
+      ca = dt*C1 / 2.00;
       break;
   }
 
+  if (debug_lvl & 2) cout << "Instantiated: FGFilter" << endl;
 }
 
-// *****************************************************************************
-//  Function:   Run
-//  Purpose:
-//  Parameters: void
-//  Comments:
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGFilter::~FGFilter()
+{
+  if (debug_lvl & 2) cout << "Destroyed:    FGFilter" << endl;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGFilter::Run(void)
 {
   FGFCSComponent::Run(); // call the base class for initialization of Input
 
-  switch (FilterType) {
-    case eLag:
-      break;
-    case eRectLag:
-      break;
-    case eLeadLag:
-      break;
-    case eOrder2:
-      break;
-    case eWashout:
-      break;
-    case eIntegrator:
-      break;
+  if (Initialize) {
+
+    PreviousOutput1 = PreviousInput1 = Output = Input;
+    Initialize = false;
+
+  } else {
+
+    switch (FilterType) {
+      case eLag:
+        Output = Input * ca + PreviousInput1 * ca + PreviousOutput1 * cb;
+//        Output = Input * ca + PreviousOutput1 * cb;
+        break;
+      case eLeadLag:
+        Output = Input * ca + PreviousInput1 * cb + PreviousOutput1 * cc;
+        break;
+      case eOrder2:
+        break;
+      case eWashout:
+        Output = Input * ca - PreviousInput1 * ca + PreviousOutput1 * cb;
+        break;
+      case eIntegrator:
+        Output = Input * ca + PreviousInput1 * ca + PreviousOutput1;
+        break;
+    }
+
   }
 
   PreviousOutput2 = PreviousOutput1;
@@ -143,6 +184,15 @@ bool FGFilter::Run(void)
   PreviousInput2  = PreviousInput1;
   PreviousInput1  = Input;
 
+  if (IsOutput) SetOutput();
+
   return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFilter::Debug(void)
+{
+    //TODO: Add your source code here
 }
 

@@ -1,8 +1,8 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  Header:       FGFilter.h
- Author:       
- Date started: 
+ Author:       Jon S. Berndt
+ Date started: 4/2000
 
  ------------- Copyright (C)  -------------
 
@@ -27,10 +27,6 @@ HISTORY
 --------------------------------------------------------------------------------
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES,  and NOTES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -45,17 +41,63 @@ INCLUDES
 #include "../FGConfigFile.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DEFINES
+DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FILTER "$Header"
+#define ID_FILTER "$Id$"
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+FORWARD DECLARATIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/** Encapsulates a filter for the flight control system.
+    Filters are modeled using the Tustin Substitution method. These types of
+    filters can currently be modeled:
+    <ol><li>Lag</li>
+    <li>Lead-Lag</li>
+    <li>Washout</li>
+    <li>Integrator</li></ol>
+    The filter is specified in the config file like this:
+    <pre>
+    
+    &ltCOMPONENT NAME="Elevator Filter" TYPE="LAG_FILTER">
+      ID           16
+      INPUT        15
+      C1           600
+      OUTPUT       FG_ELEVATOR_POS
+    &lt/COMPONENT>
+    </pre>
+    @author Jon S. Berndt
+    @version $Id$
+    */
+   
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 class FGFilter  : public FGFCSComponent         
 {
+public:
+  FGFilter(FGFCS* fcs, FGConfigFile* AC_cfg);
+  ~FGFilter();
+
+  bool Run (void);
+
+  /** When true, causes previous values to be set to current values. This
+      is particularly useful for first pass. */
+  bool Initialize;
+
+  enum {eLag, eLeadLag, eOrder2, eWashout, eIntegrator, eUnknown} FilterType;
+
+private:
   float dt;
   float ca;
   float cb;
@@ -72,15 +114,7 @@ class FGFilter  : public FGFCSComponent
   float PreviousOutput1;
   float PreviousOutput2;
   FGConfigFile* AC_cfg;
-
-protected:
-  enum {eLag, eRectLag, eLeadLag, eOrder2, eWashout, eIntegrator, eUnknown} FilterType; 
-
-public:
-  FGFilter(FGFCS* fcs, FGConfigFile* AC_cfg);
-  ~FGFilter ( ) { }       //Destructor
-
-  bool Run (void);
+  void Debug(void);
 };
 
 #endif
