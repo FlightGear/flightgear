@@ -27,7 +27,8 @@
 include $(FG_ROOT_SRC)/commondefs
 
 
-SUBDIRS = AssemTris Dem2node FixNode FixObj SplitTris Stripe_u Tri2obj Triangle
+SUBDIRS = AssemTris Dem2node DemRaw2Ascii FixNode FixObj SplitTris Stripe_u \
+	Tri2obj Triangle
 ORDEREDDIRS = $(SUBDIRS)
 
 
@@ -39,7 +40,7 @@ all:
 depend:
 	for dir in $(ORDEREDDIRS); do \
 	    ( echo "Making depend in $$dir"; \
-	      cd $$dir; $(CC) -MM *.c > depend ) ; \
+	      cd $$dir; $(CC) $(CFLAGS) -M *.c > depend ) ; \
 	done
 
 Makefile-os2:
@@ -89,6 +90,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.9  1998/03/03 01:21:17  curt
+# Added DemRaw2Ascii
+#
 # Revision 1.8  1998/01/31 00:41:19  curt
 # Made a few changes converting floats to doubles.
 #
