@@ -165,10 +165,17 @@
 #define FG_FOV_MAX 179.9
 
 
+// Maximum nodes per tile
+#define MAX_NODES 2000
+
+
 #endif // _FG_CONSTANTS_H
 
 
 // $Log$
+// Revision 1.13  1999/04/05 02:12:59  curt
+// Define maximum nodes for a tile here.
+//
 // Revision 1.12  1999/03/01 15:33:43  curt
 // Truth in advertising.
 //
