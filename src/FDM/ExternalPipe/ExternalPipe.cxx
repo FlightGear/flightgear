@@ -244,24 +244,24 @@ void FGExternalPipe::update( double dt ) {
     *((int *)ptr) = iterations;
     ptr += sizeof(int);
     memcpy( ptr, (char *)(&ctrls), length );
-    cout << "writing control structure to remote fdm." << endl;
+    // cout << "writing control structure to remote fdm." << endl;
     result = write( pd1, buf, length + 1 );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: "
                 << fifo_name_1 );
     } else {
-        cout << "  write successful = " << length + 1 << endl;
+        // cout << "  write successful = " << length + 1 << endl;
     }
 
     // Read fdm values
     length = sizeof(fdm);
-    cout << "about to read fdm data from remote fdm." << endl;
+    // cout << "about to read fdm data from remote fdm." << endl;
     result = read( pd2, (char *)(& fdm), length );
     if ( result == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Read error from named pipe: "
                 << fifo_name_2 );
     } else {
-        cout << "  read successful." << endl;
+        // cout << "  read successful." << endl;
     }
     FGNetFDM2Props( &fdm, false );
 #endif
