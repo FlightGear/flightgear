@@ -89,6 +89,9 @@ exec("$savepath/$savefile --fg-root=$fg_root @ARGV");
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.1  1998/08/24 20:32:41  curt
+# runfg.in renamed to runfgfs.in
+#
 # Revision 1.3  1998/08/03 22:16:42  curt
 # Updated to be smarter about finding $FG_ROOT.
 #
