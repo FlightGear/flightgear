@@ -1,12 +1,16 @@
-if HAVE_AUDIO_SUPPORT
-DEFS += -DHAVE_AUDIO_SUPPORT
+if ENABLE_AUDIO_SUPPORT
+DEFS += -DENABLE_AUDIO_SUPPORT
 AUDIO_LIBS = \
 	$(top_builddir)/Lib/Audio/src/libsl.la \
 	$(top_builddir)/Lib/Audio/src/libsm.la
 endif
 
-if HAVE_WIN32_AUDIO
+if ENABLE_WIN32_AUDIO
 LIBS += -lwinmm
+endif
+
+if ENABLE_XMESA_FX
+DEFS += -DXMESA -DFX
 endif
 
 EXTRA_DIST = runfg.in runfg.bat.in

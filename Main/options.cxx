@@ -86,7 +86,7 @@ fgOPTIONS::fgOPTIONS( void ) {
     wireframe = 0;
 
     // Scenery options
-    tile_diameter = 7;
+    tile_diameter = 5;
 
     // Time options
     time_offset = 0;
@@ -488,6 +488,16 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.17  1998/07/16 17:33:38  curt
+// "H" / "h" now control hud brightness as well with off being one of the
+//   states.
+// Better checking for xmesa/fx 3dfx fullscreen/window support for deciding
+//   whether or not to build in the feature.
+// Translucent menu support.
+// HAVE_AUDIO_SUPPORT -> ENABLE_AUDIO_SUPPORT
+// Use fork() / wait() for playing mp3 init music in background under unix.
+// Changed default tile diameter to 5.
+//
 // Revision 1.16  1998/07/13 21:01:39  curt
 // Wrote access functions for current fgOPTIONS.
 //

@@ -45,7 +45,9 @@
 #include <sys/stat.h> /* for stat() */
 
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>   /* for stat() */
+#  include <unistd.h>    /* for fork() && stat() */
+#  include <sys/types.h> /* for wait() */
+#  include <sys/wait.h>  /* for wait() */
 #endif
 
 #include <Include/fg_constants.h>  // for VERSION
@@ -58,7 +60,7 @@
 #include <Astro/stars.hxx>
 #include <Astro/sun.hxx>
 
-#ifdef HAVE_AUDIO_SUPPORT
+#ifdef ENABLE_AUDIO_SUPPORT
 #  include <Audio/src/sl.h>
 #  include <Audio/src/sm.h>
 #endif
@@ -98,7 +100,7 @@ static idle_state = 0;
 int use_signals = 0;
 
 // Global structures for the Audio library
-#ifdef HAVE_AUDIO_SUPPORT
+#ifdef ENABLE_AUDIO_SUPPORT
 slScheduler *audio_sched;
 smMixer *audio_mixer;
 slSample *s1;
@@ -155,9 +157,9 @@ static void fgInitVisuals( void ) {
     if ( (current_options.get_fog() == 1) || 
 	 (current_options.get_shading() == 0) ) {
 	// if fastest fog requested, or if flat shading force fastest
-	xglHint (GL_FOG_HINT, GL_FASTEST );
+	xglHint ( GL_FOG_HINT, GL_FASTEST );
     } else if ( current_options.get_fog() == 2 ) {
-	xglHint (GL_FOG_HINT, GL_NICEST );
+	xglHint ( GL_FOG_HINT, GL_NICEST );
     }
     if ( current_options.get_wireframe() ) {
 	// draw wire frame
@@ -424,7 +426,12 @@ static void fgRenderFrame( void ) {
 	// if (!o->panel_status) {
 	// fgUpdateInstrViewParams();
 	// }
+
+	// We can do translucent menus, so why not. :-)
+	xglEnable    ( GL_BLEND ) ;
+	xglBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
 	puDisplay();
+	xglDisable   ( GL_BLEND ) ;
     }
 
     xglutSwapBuffers();
@@ -609,7 +616,7 @@ static void fgMainLoop( void ) {
     global_events.Process();
 
     // Run audio scheduler
-#ifdef HAVE_AUDIO_SUPPORT
+#ifdef ENABLE_AUDIO_SUPPORT
     audio_sched -> update();
 #endif
 
@@ -631,7 +638,7 @@ static void fgMainLoop( void ) {
 static void fgIdleFunction ( void ) {
     fgGENERAL *g;
     char path[256], mp3file[256], command[256], slfile[256];
-    static char *lockfile = "/tmp/mpg123.running";
+    // static char *lockfile = "/tmp/mpg123.running";
 
     g = &general;
 
@@ -651,12 +658,21 @@ static void fgIdleFunction ( void ) {
 	    current_options.get_fg_root(mp3file);
 	    strcat(mp3file, "/Sounds/");
 	    strcat(mp3file, "intro.mp3");
+	    /* 
 	    sprintf(command, 
 		    "(touch %s; mpg123 %s > /dev/null 2>&1; /bin/rm %s) &", 
 		    lockfile, mp3file, lockfile );
+		    */
+	    sprintf(command, "mpg123 %s > /dev/null 2>&1", mp3file);
 	    fgPrintf( FG_GENERAL, FG_INFO, 
 		      "Starting intro music: %s\n", mp3file);
-	    system(command);
+
+	    int pid = fork () ;
+
+	    if ( pid == 0 ) {
+		system ( command );
+		exit ( 0 ) ;
+	    }
 	}
 #endif
 
@@ -704,21 +720,25 @@ static void fgIdleFunction ( void ) {
 	idle_state++;
     } else if ( idle_state == 6 ) {
 	// Initialize audio support
-#ifdef HAVE_AUDIO_SUPPORT
+#ifdef ENABLE_AUDIO_SUPPORT
 
 #if !defined(WIN32)
 	if ( current_options.get_intro_music() ) {
 	    // Let's wait for mpg123 to finish
-	    struct stat stat_buf;
+	    // struct stat stat_buf;
 
 	    fgPrintf( FG_GENERAL, FG_INFO, 
-		      "Waiting for mpg123 player to finish " );
+		      "Waiting for mpg123 player to finish ...\n" );
+	    /*
 	    while ( stat(lockfile, &stat_buf) == 0 ) {
 		// file exist, wait ...
 		sleep(1);
 		fgPrintf( FG_GENERAL, FG_INFO, ".");
 	    }
 	    fgPrintf( FG_GENERAL, FG_INFO, "\n");
+	    */
+
+	    wait(0);
 	}
 #endif // WIN32
 
@@ -728,12 +748,12 @@ static void fgIdleFunction ( void ) {
 	audio_sched -> setSafetyMargin ( 1.0 ) ;
 	current_options.get_fg_root(path);
 	strcat(path, "/Sounds/");
-
 	strcpy(slfile, path);
-	strcat(slfile, "prpidle.wav");
-	// s1 = new slSample ( slfile );
-	s1 = new slSample ( "/dos/X-System-HSR/sounds/xp_recip.wav", 
-			    audio_sched );
+	strcat(slfile, "wasp.wav");
+
+	s1 = new slSample ( slfile );
+	// s1 = new slSample ( "/dos/X-System-HSR/sounds/xp_recip.wav", 
+	//   		       audio_sched );
 	printf("Rate = %d  Bps = %d  Stereo = %d\n", 
 	       s1 -> getRate(), s1 -> getBps(), s1 -> getStereo());
 	audio_sched -> loopSample ( s1 );
@@ -894,6 +914,16 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.36  1998/07/16 17:33:35  curt
+// "H" / "h" now control hud brightness as well with off being one of the
+//   states.
+// Better checking for xmesa/fx 3dfx fullscreen/window support for deciding
+//   whether or not to build in the feature.
+// Translucent menu support.
+// HAVE_AUDIO_SUPPORT -> ENABLE_AUDIO_SUPPORT
+// Use fork() / wait() for playing mp3 init music in background under unix.
+// Changed default tile diameter to 5.
+//
 // Revision 1.35  1998/07/13 21:01:36  curt
 // Wrote access functions for current fgOPTIONS.
 //

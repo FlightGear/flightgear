@@ -39,6 +39,7 @@
 
 #include <Aircraft/aircraft.h>
 #include <Autopilot/autopilot.h> // Added autopilot.h to list, Jeff Goeke-Smith
+#include <Cockpit/hud.hxx>
 #include <Debug/fg_debug.h>
 #include <GUI/gui.h>
 #include <Include/fg_constants.h>
@@ -99,8 +100,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->goal_view_offset = FG_PI * 1.75;
 	    return;
 	case 72: /* H key */
-	    status = current_options.get_hud_status();
-	    current_options.set_hud_status(!status);
+	    // status = current_options.get_hud_status();
+	    // current_options.set_hud_status(!status);
+	    HUD_brightkey( true );
 	    return;
 	case 77: /* M key */
 	    t->warp -= 60;
@@ -111,7 +113,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 87: /* W key */
 #if defined(FX) && !defined(WIN32)
 	    fullscreen = ( !fullscreen );
+#if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
 	    XMesaSetFXmode(fullscreen ? XMESA_FX_FULLSCREEN : XMESA_FX_WINDOW);
+#endif
 #endif
 	    return;
 	case 88: /* X key */
@@ -176,6 +180,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 51: /* numeric keypad 3 (Pg Dn) */
 	    fgThrottleMove(0, -0.01);
+	    return;
+	case 104: /* h key */
+	    HUD_brightkey( false );
 	    return;
 	case 109: /* m key */
 	    t->warp += 60;
@@ -298,9 +305,19 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.15  1998/07/13 21:01:34  curt
-/* Wrote access functions for current fgOPTIONS.
+/* Revision 1.16  1998/07/16 17:33:34  curt
+/* "H" / "h" now control hud brightness as well with off being one of the
+/*   states.
+/* Better checking for xmesa/fx 3dfx fullscreen/window support for deciding
+/*   whether or not to build in the feature.
+/* Translucent menu support.
+/* HAVE_AUDIO_SUPPORT -> ENABLE_AUDIO_SUPPORT
+/* Use fork() / wait() for playing mp3 init music in background under unix.
+/* Changed default tile diameter to 5.
 /*
+ * Revision 1.15  1998/07/13 21:01:34  curt
+ * Wrote access functions for current fgOPTIONS.
+ *
  * Revision 1.14  1998/07/06 02:42:02  curt
  * Added support for switching between fullscreen and window mode for
  * Mesa/3dfx/glide.
