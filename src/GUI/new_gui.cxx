@@ -140,6 +140,19 @@ NewGUI::clear ()
     _dialog_props.clear();
 }
 
+static bool
+test_extension (const char * path, const char * ext)
+{
+    int pathlen = strlen(path);
+    int extlen = strlen(ext);
+    
+    for (int i = 1; i <= pathlen && i <= extlen; i++) {
+        if (path[pathlen-i] != ext[extlen-i])
+            return false;
+    }
+    return true;
+}
+
 void
 NewGUI::readDir (const char * path)
 {
@@ -159,10 +172,7 @@ NewGUI::readDir (const char * path)
 
         ulMakePath(subpath, path, dirEnt->d_name);
 
-        if (dirEnt->d_isdir) {
-            if (dirEnt->d_name[0] != '.')
-                readDir(subpath);
-        } else {
+        if (!dirEnt->d_isdir && test_extension(subpath, ".xml")) {
             SGPropertyNode * props = new SGPropertyNode;
             try {
                 readProperties(subpath, props);
