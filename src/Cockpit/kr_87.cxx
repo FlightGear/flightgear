@@ -76,6 +76,8 @@ FGKR_87::FGKR_87() :
     need_update(true),
     valid(false),
     inrange(false),
+    dist(0.0),
+    heading(0.0),
     goal_needle_deg(0.0),
     et_flash_time(0.0),
     ant_mode(0),
