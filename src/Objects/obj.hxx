@@ -64,16 +64,4 @@ bool fgGenTile( const string& path, SGBucket b,
                 SGMaterialLib *matlib, ssgBranch* geometry );
 
 
-// Create a ssg leaf
-ssgLeaf *gen_leaf( const string& path,
-                   const GLenum ty,
-                   SGMaterialLib *matlib, const string& material,
-                   const point_list& nodes, const point_list& normals,
-                   const point_list& texcoords,
-                   const int_list& node_index,
-                   const int_list& normal_index,
-                   const int_list& tex_index,
-                   const bool calc_lights, ssgVertexArray *lights );
-
-
 #endif // _OBJ_HXX
