@@ -17,7 +17,7 @@
 #endif                                   
 
 
-const int FG_NET_GUI_VERSION = 4;
+const int FG_NET_GUI_VERSION = 5;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -64,7 +64,7 @@ public:
     // Approach
     float tuned_freq;           // currently tuned frequency
     float nav_radial;           // target nav radial
-    bool in_range;              // tuned navaid is in range?
+    int in_range;               // tuned navaid is in range?
     float dist_nm;              // distance to tuned navaid in nautical miles
     float course_deviation_deg; // degrees off target course
     float gs_deviation_deg;     // degrees off target glide slope
