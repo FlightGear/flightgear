@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 
 #include <DEM/dem.hxx>
 
@@ -37,8 +38,7 @@
 int main(int argc, char **argv) {
     // DEM data
     fgDEM dem;
-    char fg_root[256];
-    char filename[256];
+    string filename;
     double error;
     int i, j;
 
@@ -48,17 +48,16 @@ int main(int argc, char **argv) {
     }
 
     // set input dem file name
-    strcpy(filename, argv[1]);
+    filename = argv[1];
 
     dem.open(filename);
 
     if ( dem.read_a_record() ) {
-	printf("Results = %s  %.1f %.1f\n", 
-	       filename, 
-	       dem.info_originx() / 3600.0,
-	       dem.info_originy() / 3600.0 ) ;
+	cout << "Results = " << filename << "  "
+	     << dem.info_originx() / 3600.0 << " "
+	     << dem.info_originy() / 3600.0 << "\n";
     } else {
-	printf("Error parsing DEM file.\n");
+	cout << "Error parsing DEM file.\n";
     }
 
     dem.close();
@@ -68,6 +67,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.2  1998/09/19 18:01:22  curt
+// Support for changes to libDEM.a
+//
 // Revision 1.1  1998/06/04 19:18:05  curt
 // Initial revision.
 //

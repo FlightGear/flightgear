@@ -1,5 +1,5 @@
-// main.c -- read in a .node file and fix the z values of the interpolated 
-//           points
+// main.cxx -- read in a .node file and fix the z values of the interpolated 
+//             points
 //
 // Written by Curtis Olson, started November 1997.
 //
@@ -28,6 +28,7 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 
 #ifdef HAVE_STDLIB_H
 #  include <stdlib.h>
@@ -47,15 +48,15 @@ static double nodes[MAX_NODES][3];
 
 
 // find all the matching files in the specified directory and fix them
-void process_files(char *root_path) {
+void process_files(const string& root_path) {
     DIR *d;
     struct dirent *de;
-    char file_path[256];
+    string file_path;
     char *ptr;
     int len;
 
-    if ( (d = opendir(root_path)) == NULL ) {
-        printf("cannot open directory '%s'.", root_path);
+    if ( (d = opendir( root_path.c_str() )) == NULL ) {
+        cout << "cannot open directory " + root_path + "\n";
 	exit(-1);
     }
 
@@ -67,15 +68,13 @@ void process_files(char *root_path) {
 	    // printf("--> %s \n", ptr);
 
 	    if ( strcmp(ptr, ".1.node") == 0 ) {
-		strcpy(file_path, root_path);
-		strcat(file_path, "/");
-		strcat(file_path, de->d_name);
-		printf("File = %s\n", file_path);
+		file_path =  root_path + "/" + de->d_name;
+		cout << "File = " + file_path + "\n";
 
 		// load the input data files
-		triload(file_path, nodes);
+		triload(file_path.c_str(), nodes);
 
-		fixnodes(file_path, &dem, nodes);
+		fixnodes(file_path.c_str(), &dem, nodes);
 	    }
 	}
     }
@@ -84,17 +83,17 @@ void process_files(char *root_path) {
 
 // main
 int main(int argc, char **argv) {
-    char demfile[256], root_path[256];
+    string demfile, root_path;
 
     if ( argc != 3 ) {
 	printf("Usage %s demfile root_path\n", argv[0]);
 	exit(-1);
     }
 
-    printf("Starting fixnode\n");
+    cout << "Starting fixnode\n";
 
-    strcpy(demfile, argv[1]);
-    strcpy(root_path, argv[2]);
+    demfile = argv[1];
+    root_path = argv[2];
 
     // load the corresponding dem file so we can interpolate elev values
     dem.open(demfile);
@@ -109,6 +108,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.6  1998/09/19 18:01:27  curt
+// Support for changes to libDEM.a
+//
 // Revision 1.5  1998/07/22 21:46:41  curt
 // Fixed a bug that was triggering a seg fault.
 //

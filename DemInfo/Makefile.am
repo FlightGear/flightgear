@@ -32,6 +32,7 @@ deminfo_SOURCES = \
 deminfo_LDADD = \
 	$(top_builddir)/Lib/DEM/libDEM.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
+	$(top_builddir)/Lib/Misc/libMisc.a \
 	$(top_builddir)/Lib/zlib/libz.a
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
@@ -44,6 +45,9 @@ CXXFLAGS = -g
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1998/09/19 18:01:21  curt
+# Support for changes to libDEM.a
+#
 # Revision 1.2  1998/07/30 23:49:24  curt
 # Removed libtool support.
 #
