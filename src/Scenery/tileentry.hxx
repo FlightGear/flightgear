@@ -120,6 +120,7 @@ private:
 
     // pointer to ssg transform for this tile
     ssgTransform *terra_transform;
+    ssgTransform *vasi_lights_transform;
     ssgTransform *rwy_lights_transform;
     ssgTransform *taxi_lights_transform;
     ssgTransform *gnd_lights_transform;
@@ -136,6 +137,7 @@ private:
     // via a call back would be nifty, but then the call back needs to
     // know about the higher level application's global state which is
     // a problem if we move the code into simgear.)
+    ssgSelector *vasi_lights_selector;
     ssgSelector *rwy_lights_selector;
     ssgSelector *taxi_lights_selector;
 
@@ -155,6 +157,7 @@ private:
 
     bool obj_load( const string& path,
                    ssgBranch* geometry,
+                   ssgBranch* vasi_lights,
                    ssgBranch* rwy_lights,
                    ssgBranch* taxi_lights,
                    ssgVertexArray* gound_lights,
@@ -172,9 +175,10 @@ private:
         VEC_PTRS = 0x02,
         TERRA_NODE = 0x04,
         GROUND_LIGHTS = 0x08,
-        RWY_LIGHTS = 0x10,
-        TAXI_LIGHTS = 0x20,
-        LIGHTMAPS = 0x40
+        VASI_LIGHTS = 0x10,
+        RWY_LIGHTS = 0x20,
+        TAXI_LIGHTS = 0x40,
+        LIGHTMAPS = 0x80
     };
     int free_tracker;
 
@@ -238,10 +242,11 @@ public:
     /**
      * Add terrain mesh and ground lighting to scene graph.
      */
-    void add_ssg_nodes( ssgBranch* terrain_branch,
-			ssgBranch* gnd_lights_branch,
-			ssgBranch* rwy_lights_branch,
-			ssgBranch* taxi_lights_branch );
+    void add_ssg_nodes( ssgBranch *terrain_branch,
+			ssgBranch *gnd_lights_branch,
+                        ssgBranch *vasi_lights_branch,
+			ssgBranch *rwy_lights_branch,
+			ssgBranch *taxi_lights_branch );
 
     /**
      * disconnect terrain mesh and ground lighting nodes from scene
