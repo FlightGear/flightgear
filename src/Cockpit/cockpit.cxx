@@ -52,6 +52,7 @@
 #include <GUI/gui.h>
 
 #include "cockpit.hxx"
+#include "hud.hxx"
 
 
 // This is a structure that contains all data related to

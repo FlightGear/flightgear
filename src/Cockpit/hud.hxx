@@ -38,8 +38,7 @@
 #  include <windows.h>
 #endif
 
-#include GLUT_H
-
+#include <GL/glut.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -257,6 +256,14 @@ public:
     }
 };
 
+class DrawLineSeg2D {
+    public:
+        void operator() (fgLineSeg2D elem) const {
+            elem.draw();
+        }
+};
+
+
 #define USE_HUD_TextList
 extern float              HUD_TextSize;
 extern fntRenderer       *HUDtext;
@@ -369,27 +376,10 @@ public:
     void add( fgLineSeg2D seg ) { List.push_back(seg); }
     void erase( void ) { List.erase( List.begin(), List.end() ); }
     void draw( void ) {
-        vector < fgLineSeg2D > :: iterator curSeg;
-        vector < fgLineSeg2D > :: iterator lastSeg;
-        curSeg  = List.begin();
-        lastSeg = List.end();
         glBegin(GL_LINES);
-        for ( ; curSeg != lastSeg; curSeg++ ) {
-            curSeg->draw();
-        }
+        for_each( List.begin(), List.end(), DrawLineSeg2D());
         glEnd();
     }
-    /*    void draw( void ) {
-          vector < fgLineSeg2D > :: iterator curSeg;
-          vector < fgLineSeg2D > :: iterator lastSeg;
-          curSeg  = List.begin();
-          lastSeg = List.end();
-          glBegin(GL_LINES);
-          for ( ; curSeg != lastSeg; curSeg++ ) {
-          curSeg->draw();
-          }
-          glEnd();
-          } */
 };
 
 class fgTextList {
@@ -404,11 +394,11 @@ public:
     void erase( void ) { List.erase( List.begin(), List.end() ); }
     
     void draw( void ) {
-        vector < fgText > :: iterator curString;
-        vector < fgText > :: iterator lastString;
-        if( Font == 0 ) return;
-        curString  = List.begin();
-        lastString = List.end();
+        if( Font == 0 )
+            return;
+        vector < fgText > :: iterator curString = List.begin();
+        vector < fgText > :: iterator lastString = List.end();
+
         glPushAttrib( GL_COLOR_BUFFER_BIT );
         glEnable    ( GL_ALPHA_TEST   ) ;
         glEnable    ( GL_BLEND        ) ;
@@ -477,7 +467,6 @@ public:
                 UINT           options,
                 bool           working  = true,
                 int	       digit = 0); //suma
-
 
     instr_item( const instr_item & image );
 
@@ -553,6 +542,15 @@ public:
 };
 
 typedef instr_item *HIptr;
+
+class HUDdraw {
+    public:
+        void operator() (HIptr elem) const {
+            if( elem->enabled())
+                elem->draw();
+        }
+};
+
 //typedef deque <  instr_item * > hud_deque_type;
 //typedef hud_deque_type::iterator hud_deque_iterator;
 //typedef hud_deque_type::const_iterator hud_deque_const_iterator;
@@ -794,7 +792,8 @@ public:
               bool     working,
               float    radius, //suma
               int      divisions, //suma
-              int	   zoom); //suma
+              int       zoom //suma
+            );
 
 
     ~hud_card();
@@ -923,6 +922,7 @@ private:
     int		hat; //suma
     
 
+    // The Ladder has it's own temporary display lists
     fgTextList         TextList;
     fgLineList         LineList;
     fgLineList         StippleLineList;
@@ -955,7 +955,8 @@ public:
                bool  working,
                int   zenith, //suma
                int   nadir, //suma
-               int   hat); //suma
+               int      hat
+             ); //suma
 
 
     ~HudLadder();
@@ -993,23 +994,6 @@ extern int  fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ );
 extern void fgUpdateHUD( void );
 extern void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
                          GLfloat x_end, GLfloat y_end );
-
-extern void drawOneLine ( UINT x1, UINT y1, UINT x2, UINT y2);
-extern void drawOneLine ( RECT &rect);
-extern void textString  ( int x,
-                          int y,
-                          char *msg,
-                          void *font = GLUT_BITMAP_9_BY_15,int digit=0); //suma
-extern void strokeString( int x,
-                          int y,
-                          char *msg,
-                          void *font = GLUT_STROKE_ROMAN,
-                          float theta = 0);
-
-//extern void strokeString(float xx,
-//                       float yy,
-//                       char *msg,
-//                       void *font = GLUT_STROKE_ROMAN)
 
 /*
 bool AddHUDInstrument( instr_item *pBlackBox );

@@ -32,7 +32,6 @@
 #endif
 
 
-#include "hud.hxx"
 #include "panel.hxx"
 
 // Class fg_Cockpit          This class is a holder for the heads up display

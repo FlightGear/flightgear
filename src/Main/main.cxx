@@ -95,6 +95,7 @@ SG_USING_STD(endl);
 
 #include <Autopilot/newauto.hxx>
 
+#include <Cockpit/hud.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/radiostack.hxx>
 

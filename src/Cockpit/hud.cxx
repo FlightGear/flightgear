@@ -23,6 +23,9 @@
 #include <simgear/compiler.h>
 #include <simgear/misc/exception.hxx>
 
+#include STL_STRING
+#include STL_FSTREAM
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -34,15 +37,13 @@
 #ifdef __BORLANDC__
 #  define exception c_exception
 #endif
+
 #include <math.h>
 
-#include GLUT_H
-
+#include <GL/glut.h>
 #include <stdlib.h>
 #include <stdio.h>		// char related functions
 #include <string.h>		// strcmp()
-#include STL_STRING
-#include STL_FSTREAM
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -174,6 +175,9 @@ static instr_item * readLabel( const SGPropertyNode * node);
 static instr_item * readTBI( const SGPropertyNode * node);
 //$$$ end   - added, Neetha, 28 Nov 2k
 
+static void drawHUD();
+static void fgUpdateHUDVirtual();
+
 void fgHUDalphaInit( void );
 
 class locRECT {
@@ -193,78 +197,6 @@ locRECT :: locRECT( UINT left, UINT top, UINT right, UINT bottom)
 
 }
 // #define DEBUG
-
-#ifdef OLD_CODE
-void drawOneLine( UINT x1, UINT y1, UINT x2, UINT y2)
-{
-    glBegin(GL_LINES);
-    glVertex2f(x1, y1);
-    glVertex2f(x2, y2);
-    glEnd();
-}
-
-void drawOneLine( RECT &rect)
-{
-    glBegin(GL_LINES);
-    glVertex2f(rect.left, rect.top);
-    glVertex2f(rect.right, rect.bottom);
-    glEnd();
-}
-
-//
-// The following code deals with painting the "instrument" on the display
-//
-/* textString - Bitmap font string */
-
-void textString( int x, int y, char *msg, void *font,int digit) //suma
-{
-
-    if(*msg) {
-        //      puDrawString (  NULL, msg, x, y );
-        glRasterPos2f(x, y);
-        while (*msg) {
-            glutBitmapCharacter(font, *msg);
-            msg++;
-        }
-    }
-}
-
-
-/* strokeString - Stroke font string */
-void strokeString(int x, int y, char *msg, void *font, float theta)
-{
-    int xx;
-    int yy;
-    int c;
-    float sintheta,costheta;
-    
-
-    if(*msg) {
-        glPushMatrix();
-        glRotatef(theta * SGD_RADIANS_TO_DEGREES, 0.0, 0.0, 1.0);
-        sintheta = sin(theta);
-        costheta = cos(theta);
-        xx = (int)(x * costheta + y * sintheta);
-        yy = (int)(y * costheta - x * sintheta);
-        glTranslatef( xx, yy, 0);
-        glScalef(.1, .1, 0.0);
-        while( (c=*msg++) ) {
-            glutStrokeCharacter(font, c);
-        }
-        glPopMatrix();
-    }
-}
-
-int getStringWidth ( char *str )
-{
-    if ( HUDtext && str ) {
-        float r, l ;
-        guiFntHandle->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
-        return FloatToInt( r - l );
-    }
-    return 0 ;
-}
-#endif // OLD_CODE
 
 //========================= End of Class Implementations===================
 // fgHUDInit
@@ -310,11 +242,18 @@ readLadder(const SGPropertyNode * node)
     zenith			= node->getIntValue("zenith");  //suma
     nadir			= node->getIntValue("nadir");  //suma
     hat				= node->getIntValue("hat");
-
+    // The factor assumes a base of 55 degrees per 640 pixels.
+    // Invert to convert the "compression" factor to a
+    // pixels-per-degree number.
+    if( HUD_style == 1)
+    {
+//        if(factor == 0)
+            factor = 1;
+        factor = (640./55.) / factor;
+    }
 
     SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 	
-				
     p = (instr_item *) new HudLadder( name, x, y,
                                       width, height, factor,
                                       get_roll, get_pitch,
@@ -745,7 +684,6 @@ int readHud( istream &input )
                << " from "
                << path.str());
 
-
         SGPropertyNode root2;
         try {
             readProperties(path.str(), &root2);
@@ -762,7 +700,6 @@ int readHud( istream &input )
 
 int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 {
-
 
     HUD_style = 1;
 
@@ -785,6 +722,23 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
     fgHUDalphaInit();
     fgHUDReshape();
 
+    if ( HUDtext ) {
+        // this chunk of code is not necessarily thread safe if the
+        // compiler optimizer reorders these statements.  Note that
+        // "delete ptr" does not set "ptr = NULL".  We have to do that
+        // ourselves.
+        fntRenderer *tmp = HUDtext;
+        HUDtext = NULL;
+        delete tmp;
+    }
+
+//    HUD_TextSize = fgGetInt("/sim/startup/xsize") / 60;
+    HUD_TextSize = 10;
+    HUDtext = new fntRenderer();
+    HUDtext -> setFont      ( guiFntHandle ) ;
+    HUDtext -> setPointSize ( HUD_TextSize ) ;
+    HUD_TextList.setFont( HUDtext );
+    
     return 0;  // For now. Later we may use this for an error code.
 
 }
@@ -1006,6 +960,7 @@ void fgHUDalphaInit( void ) {
 
 
 void fgHUDReshape(void) {
+#if 0
     if ( HUDtext ) {
         // this chunk of code is not necessarily thread safe if the
         // compiler optimizer reorders these statements.  Note that
@@ -1022,6 +977,7 @@ void fgHUDReshape(void) {
     HUDtext -> setFont      ( guiFntHandle ) ;
     HUDtext -> setPointSize ( HUD_TextSize ) ;
     HUD_TextList.setFont( HUDtext );
+#endif
 }
 
 
@@ -1040,6 +996,12 @@ static void set_hud_color(float r, float g, float b) {
 //
 void fgUpdateHUD( void ) {
 	
+    if( HUD_style == 1)
+    {
+        fgUpdateHUDVirtual();
+        return;
+    }
+    
     static const float normal_aspect = float(640) / float(480);
     // note: aspect_ratio is Y/X
     float current_aspect = 1.0f/globals->get_current_view()->get_aspect_ratio();
@@ -1054,17 +1016,79 @@ void fgUpdateHUD( void ) {
     }
 }
 
+void fgUpdateHUDVirtual()
+{
+    FGViewer* view = globals->get_current_view();
+
+    // Standard fgfs projection, with essentially meaningless clip
+    // planes (we'll map the whole HUD plane to z=-1)
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluPerspective(view->get_v_fov(), 1/view->get_aspect_ratio(), 0.1, 10);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+  
+    // Standard fgfs view direction computation
+    float lookat[3];
+    lookat[0] = -sin(SG_DEGREES_TO_RADIANS * view->getHeadingOffset_deg());
+    lookat[1] = tan(SG_DEGREES_TO_RADIANS * view->getPitchOffset_deg());
+    lookat[2] = -cos(SG_DEGREES_TO_RADIANS * view->getHeadingOffset_deg());
+    if(fabs(lookat[1]) > 9999) lookat[1] = 9999; // FPU sanity
+    gluLookAt(0, 0, 0, lookat[0], lookat[1], lookat[2], 0, 1, 0);
+
+    // Map the -1:1 square to a 55.0x41.25 degree wide patch at z=1.
+    // This is the default fgfs field of view, which the HUD files are
+    // written to assume.
+    float dx = 0.52056705; // tan(55/2)
+    float dy = dx * 0.75;  // assumes 4:3 aspect ratio
+    float m[16];
+    m[0] = dx; m[4] =  0; m[ 8] = 0; m[12] = 0;
+    m[1] =  0; m[5] = dy; m[ 9] = 0; m[13] = 0;
+    m[2] =  0; m[6] =  0; m[10] = 1; m[14] = 0;
+    m[3] =  0; m[7] =  0; m[11] = 0; m[15] = 1;
+    glMultMatrixf(m);
+
+    // Convert the 640x480 "HUD standard" coordinate space to a square
+    // about the origin in the range [-1:1] at depth of -1
+    glScalef(1./320, 1./240, 1);
+    glTranslatef(-320, -240, -1);
+
+    // Do the deed
+    drawHUD();
+
+    // Clean up our mess
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
 void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
                   GLfloat x_end, GLfloat y_end )
 {
-    int brightness;
-    // int day_night_sw = current_aircraft.controls->day_night_switch;
-    int day_night_sw = global_day_night_switch;
-    int hud_displays = HUD_deque.size();
-    instr_item *pHUDInstr;
-    // float line_width;
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(x_start, x_end, y_start, y_end);
 
-    if( !hud_displays ) {  // Trust everyone, but ALWAYS cut the cards!
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    drawHUD();
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
+void drawHUD()
+{
+    if( !HUD_deque.size() ) {  // Trust everyone, but ALWAYS cut the cards!
         return;
     }
 
@@ -1072,19 +1096,6 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
     HUD_LineList.erase();
     // HUD_StippleLineList.erase();
   
-    pHUDInstr = HUD_deque[0];
-    brightness = pHUDInstr->get_brightness();
-    // brightness = HUD_deque.at(0)->get_brightness();
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-
-    glLoadIdentity();
-    gluOrtho2D(x_start, x_end, y_start, y_end);
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
 
@@ -1096,13 +1107,13 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
         //	  glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         glHint(GL_LINE_SMOOTH_HINT,GL_DONT_CARE);
-        glLineWidth(1.5);
+        glLineWidth(2.0);
     } else {
         glLineWidth(1.0);
     }
 
-    if( day_night_sw == HUD_DAY) {
-        switch (brightness)
+    if( global_day_night_switch == HUD_DAY) {
+        switch (HUD_deque[0]->get_brightness())
             {
             case HUD_BRT_LIGHT:
                 set_hud_color (0.1f, 0.9f, 0.1f);
@@ -1124,8 +1135,8 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
                 set_hud_color (0.1f, 0.9f, 0.1f);
             }
     } else {
-        if( day_night_sw == HUD_NIGHT) {
-            switch (brightness)
+        if( global_day_night_switch == HUD_NIGHT) {
+            switch (HUD_deque[0]->get_brightness())
                 {
                 case HUD_BRT_LIGHT:
                     set_hud_color (0.9f, 0.1f, 0.1f);
@@ -1151,22 +1162,9 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
         }
     }
 
-    deque < instr_item * > :: iterator current = HUD_deque.begin();
-    deque < instr_item * > :: iterator last = HUD_deque.end();
+    for_each(HUD_deque.begin(), HUD_deque.end(), HUDdraw());
 
-    for ( ; current != last; ++current ) {
-        pHUDInstr = *current;
-
-        if( pHUDInstr->enabled()) {
-            //  fgPrintf( SG_COCKPIT, SG_DEBUG, "HUD Code %d  Status %d\n",
-            //            hud->code, hud->status );
-            pHUDInstr->draw();
-		  
-        }
-    }
-
-    char *gmt_str = get_formated_gmt_time();
-    HUD_TextList.add( fgText(40, 10, gmt_str, 0) );
+    HUD_TextList.add( fgText(40, 10, get_formated_gmt_time(), 0) );
 
 #ifdef FG_NETWORK_OLK
     if ( net_hud_display ) {
@@ -1175,46 +1173,32 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
 #endif
 
 
-    // temporary
-    // extern bool fgAPAltitudeEnabled( void );
-    // extern bool fgAPHeadingEnabled( void );
-    // extern bool fgAPWayPointEnabled( void );
-    // extern char *fgAPget_TargetDistanceStr( void );
-    // extern char *fgAPget_TargetHeadingStr( void );
-    // extern char *fgAPget_TargetAltitudeStr( void );
-    // extern char *fgAPget_TargetLatLonStr( void );
-
     int apY = 480 - 80;
     // char scratch[128];
     // HUD_TextList.add( fgText( "AUTOPILOT", 20, apY) );
     // apY -= 15;
-    if( globals->get_autopilot()->get_HeadingEnabled() ) {
-        HUD_TextList.add( fgText( 40, apY, 
-                                  globals->get_autopilot()->get_TargetHeadingStr()) );
+    FGAutopilot *AP = globals->get_autopilot();
+    
+    if( AP->get_HeadingEnabled() ) {
+        HUD_TextList.add( fgText( 40, apY, AP->get_TargetHeadingStr()) );
         apY -= 15;
     }
-    if( globals->get_autopilot()->get_AltitudeEnabled() ) {
-        HUD_TextList.add( fgText( 40, apY, 
-                                  globals->get_autopilot()->get_TargetAltitudeStr()) );
+    if( AP->get_AltitudeEnabled() ) {
+        HUD_TextList.add( fgText( 40, apY, AP->get_TargetAltitudeStr()) );
         apY -= 15;
     }
-    if( globals->get_autopilot()->get_HeadingMode() == 
-        FGAutopilot::FG_HEADING_WAYPOINT )
+    if( AP->get_HeadingMode() == FGAutopilot::FG_HEADING_WAYPOINT )
     {
-        char *wpstr;
-        wpstr = globals->get_autopilot()->get_TargetWP1Str();
-        if ( strlen( wpstr ) ) {
-            HUD_TextList.add( fgText( 40, apY, wpstr ) );
+        if ( strlen( AP->get_TargetWP1Str() ) ) {
+            HUD_TextList.add( fgText( 40, apY, AP->get_TargetWP1Str() ) );
             apY -= 15;
         }
-        wpstr = globals->get_autopilot()->get_TargetWP2Str();
-        if ( strlen( wpstr ) ) {
-            HUD_TextList.add( fgText( 40, apY, wpstr ) );
+        if ( strlen( AP->get_TargetWP2Str() ) ) {
+            HUD_TextList.add( fgText( 40, apY, AP->get_TargetWP2Str() ) );
             apY -= 15;
         }
-        wpstr = globals->get_autopilot()->get_TargetWP3Str();
-        if ( strlen( wpstr ) ) {
-            HUD_TextList.add( fgText( 40, apY, wpstr ) );
+        if ( strlen( AP->get_TargetWP3Str() ) ) {
+            HUD_TextList.add( fgText( 40, apY, AP->get_TargetWP3Str() ) );
                 apY -= 15;
         }
     }
@@ -1236,9 +1220,5 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
 }
 
