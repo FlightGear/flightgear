@@ -60,17 +60,14 @@ public:
   static void update ();
 
 				// Simulation
-  static int getFlightModel ();
-  static void setFlightModel (int flightModel);
-
-  static string getAircraft ();
-  static void setAircraft (string aircraft);
-
   static string getAircraftDir ();
   static void setAircraftDir (string aircraftDir);
 
-//   static time_t getTimeGMT ();
-//   static void setTimeGMT (time_t time);
+  static double getViewOffset ();
+  static void setViewOffset (double offset);
+  static double getGoalViewOffset ();
+  static void setGoalViewOffset (double offset);
+
   static string getDateString ();// ISO 8601 subset
   static void setDateString (string time_string); // ISO 8601 subset
 
@@ -139,6 +136,9 @@ public:
 				// Autopilot
   static bool getAPAltitudeLock ();
   static void setAPAltitudeLock (bool lock);
+
+  static bool getAPGSLock ();
+  static void setAPGSLock (bool lock);
 
   static double getAPAltitude (); // feet
   static void setAPAltitude (double altitude); // feet
