@@ -2,6 +2,15 @@
 | Todo 
 --------------------------------------------------------------------------
 
+        -  M82, HSV , 3M5
+           Charlie Scanlon (757) 864-2034 LaRC
+           Geotif - geolocation tools for mapping.
+           Dr. Nevan Bryant (818) 354-7236
+           Position Integrity -- Terravoid Bob Servano (714) 854-2643
+              http://www.jpl.nasa.gov/releases/98/damds3.html
+           Press release # 
+           John G. Watson (818) 354-5011 release 98-52
+
 6/10/98 -  problem with view culling when not looking forward.  Need to 
            generate the correct matrix and work it into the calculations.
 
@@ -25,8 +34,6 @@
            Make sure all #ifdef _FILE_H or _FILE_HXX
 
 4/14/98 -  Convert gl__() calls in Cockpit/ to xgl__() calls
-
-1/5/98 -   Create a development "roadmap"
 
 12/29/97 - Add a mechanism to parse command line options
     * (done) A simple clear-screen sky.
