@@ -118,6 +118,10 @@ FGLocation::FGLocation( void ):
     _tile_center(0)
 {
     sgdZeroVec3(_absolute_view_pos);
+    sgZeroVec3(_relative_view_pos);
+    sgZeroVec3(_zero_elev_view_pos);
+    sgMakeRotMat4( UP, 0.0, 0.0, 0.0 );
+    sgMakeRotMat4( TRANS, 0.0, 0.0, 0.0 );
 }
 
 
