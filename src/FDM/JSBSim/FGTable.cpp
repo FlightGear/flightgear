@@ -225,7 +225,7 @@ void FGTable::Print(void)
     }
     cout << endl;
   }
-  cout.setf(0, ios::floatfield); // reset
+  cout.setf((ios_base::fmtflags)0, ios::floatfield); // reset
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

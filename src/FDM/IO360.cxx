@@ -668,7 +668,7 @@ void FGNewEngine::Do_Prop_Calcs()
     //cout << "RPM = " << RPM << '\n';
     //cout << "angular_velocity_SI = " << angular_velocity_SI << '\n';
     
-    prop_power_consumed_SI = Cp * rho_air * pow(FGProp1_RPS,3.0) * pow(prop_diameter,5.0);
+    prop_power_consumed_SI = Cp * rho_air * pow(FGProp1_RPS,3.0f) * pow(float(prop_diameter),5.0f);
     //cout << "prop HP consumed = " << prop_power_consumed_SI / 745.699 << '\n';
     if(angular_velocity_SI == 0)
         prop_torque = 0;

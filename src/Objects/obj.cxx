@@ -381,11 +381,7 @@ ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
     while ( ! in.eof() ) {
 #endif
 
-#if defined( macintosh ) || defined( _MSC_VER )
 	in >> ::skipws;
-#else
-	in >> skipws;
-#endif
 
 	if ( in.get( c ) && c == '#' ) {
 	    // process a comment line
@@ -628,11 +624,7 @@ ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 		
 		// read all subsequent numbers until next thing isn't a number
 		while ( true ) {
-#if defined( macintosh ) || defined( _MSC_VER )
 		    in >> ::skipws;
-#else
-		    in >> skipws;
-#endif
 
 		    char c;
 		    in.get(c);
@@ -740,11 +732,7 @@ ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 
 	    // eat white space before start of while loop so if we are
 	    // done with useful input it is noticed before hand.
-#if defined( macintosh ) || defined( _MSC_VER )
 	    in >> ::skipws;
-#else
-	    in >> skipws;
-#endif
 	}
     }
 

@@ -125,9 +125,7 @@ SG_USING_STD(map);
 #if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(iostream);
 #endif
-#if defined ( macintosh ) || defined ( _MSC_VER )
 SG_USING_STD(ofstream);
-#endif
 
 
 typedef stack :: iterator LIST;
