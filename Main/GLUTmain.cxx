@@ -98,6 +98,9 @@ static idle_state = 0;
 // Another hack
 int use_signals = 0;
 
+// Yet another hack, this time for the panel
+int panel_hist = 0;
+
 // Global structures for the Audio library
 #ifdef ENABLE_AUDIO_SUPPORT
 slScheduler *audio_sched;
@@ -230,6 +233,7 @@ static void fgRenderFrame( void ) {
     fgTIME *t;
     fgVIEW *v;
     double angle;
+    static int iteration = 0;
     // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
@@ -264,7 +268,9 @@ static void fgRenderFrame( void ) {
 	if ( current_options.get_wireframe() ) {
 	    clear_mask |= GL_COLOR_BUFFER_BIT;
 	}
-	if ( current_options.get_skyblend() ) {
+	if ( current_options.get_panel_status() ) {
+	    // we can't clear the screen when the panel is active
+	} else if ( current_options.get_skyblend() ) {
 	    if ( current_options.get_textures() ) {
 		// glClearColor(black[0], black[1], black[2], black[3]);
 		glClearColor(l->adj_fog_color[0], l->adj_fog_color[1], 
@@ -360,13 +366,17 @@ static void fgRenderFrame( void ) {
 
 	xglDisable( GL_TEXTURE_2D );
 
+	if ( (iteration == 0) && (current_options.get_panel_status()) ) {   
+	    // Did we run this loop before ?? ...and do we need the panel ??
+	    fgPanelReInit();
+	}
+
 	// display HUD && Panel
+	if ( current_options.get_panel_status() ) {
+	    xglViewport(0, 0, v->winWidth, v->winHeight);
+	}
 	fgCockpitUpdate();
-	
-	// display instruments
-	// if (!o->panel_status) {
-	// fgUpdateInstrViewParams();
-	// }
+	iteration = 1; // don't ReInit the panel in the future
 
 	// We can do translucent menus, so why not. :-)
 	xglEnable    ( GL_BLEND ) ;
@@ -728,7 +738,11 @@ static void fgReshape( int width, int height ) {
     // Do this so we can call fgReshape(0,0) ourselves without having
     // to know what the values of width & height are.
     if ( (height > 0) && (width > 0) ) {
-	v->win_ratio = (GLfloat) width / (GLfloat) height;
+	if ( ! current_options.get_panel_status() ) {
+	    v->win_ratio = (GLfloat) width / (GLfloat) height;
+	} else {
+	    v->win_ratio = (GLfloat) width / ((GLfloat) (height)*0.67);
+	}
     }
 
     v->winWidth = width;
@@ -741,6 +755,9 @@ static void fgReshape( int width, int height ) {
 	// the main loop, so this will now work without seg faulting
 	// the system.
 	v->UpdateViewParams();
+	if ( current_options.get_panel_status() ) {
+	    fgPanelReInit();
+	}
     }
     
     // xglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -754,7 +771,7 @@ int fgGlutInit( int *argc, char **argv ) {
     xglutInit(argc, argv);
 
     // Define Display Parameters
-    xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
+    xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
 
     // Define initial window size
     xglutInitWindowSize(640, 480);
@@ -867,6 +884,10 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.48  1998/08/28 18:15:03  curt
+// Added new cockpit code from Friedemann Reinhard
+// <mpt218@faupt212.physik.uni-erlangen.de>
+//
 // Revision 1.47  1998/08/27 17:02:04  curt
 // Contributions from Bernie Bright <bbright@c031.aone.net.au>
 // - use strings for fg_root and airport_id and added methods to return

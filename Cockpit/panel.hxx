@@ -40,17 +40,43 @@ typedef struct {
     unsigned char *data;
 } IMAGE;
 
+typedef struct {
+    int XPos;
+    int YPos;
+    float radius;
+    float length;
+    float width;
+    float angle;
+    float hist;
+    float value1;
+    float value2;
+    float alpha1;
+    float alpha2;
+    float teXpos;
+    float texYpos;
+    int variable;
+    GLfloat vertices[20];
+} Pointer;
 
-void fgPanelInit(void);
-void fgPanelUpdate(void);
-
+void fgPanelInit( void);
+void fgPanelReInit( void);
+void fgPanelUpdate( void);
+void horizont( void);
+void CreatePointer(Pointer *pointer);
+float UpdatePointer(Pointer pointer);
+void ErasePointer(Pointer pointer);
+void DrawBox(float x1, float y1, float x2, float y2);
 
 #endif /* _PANEL_HXX */
 
 
 /* $Log$
-/* Revision 1.1  1998/06/27 16:47:55  curt
-/* Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
-/* first pass at an isntrument panel.
+/* Revision 1.2  1998/08/28 18:14:41  curt
+/* Added new cockpit code from Friedemann Reinhard
+/* <mpt218@faupt212.physik.uni-erlangen.de>
 /*
+ * Revision 1.1  1998/06/27 16:47:55  curt
+ * Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
+ * first pass at an isntrument panel.
+ *
  */

@@ -272,9 +272,9 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
     fgHUDInit( cur_aircraft );
     ac_cockpit = new fg_Cockpit();
     
-#ifdef INCLUDE_PANEL
-    fgPanelInit();
-#endif
+    if ( current_options.get_panel_status() ) {
+	fgPanelInit();
+    }
 
     fgPrintf( FG_COCKPIT, FG_INFO,
 	      "  Code %d  Status %d\n",
@@ -299,20 +299,22 @@ void fgCockpitUpdate( void ) {
 	fgUpdateHUD();
     }
 
-#if INCLUDE_PANEL
     if ( current_options.get_panel_status() && 
 	 (fabs(pview->view_offset) < 0.2) ) {
 	fgPanelUpdate();
     }
-#endif
 }
 
 
 /* $Log$
-/* Revision 1.14  1998/08/24 20:05:15  curt
-/* Added a second minimalistic HUD.
-/* Added code to display the number of triangles rendered.
+/* Revision 1.15  1998/08/28 18:14:39  curt
+/* Added new cockpit code from Friedemann Reinhard
+/* <mpt218@faupt212.physik.uni-erlangen.de>
 /*
+ * Revision 1.14  1998/08/24 20:05:15  curt
+ * Added a second minimalistic HUD.
+ * Added code to display the number of triangles rendered.
+ *
  * Revision 1.13  1998/08/22 01:19:27  curt
  * Omit panel code because it's texture loading overruns array bounds.
  *
