@@ -18,8 +18,8 @@ extern bool glPointParameterIsSupported;
 class FGRenderer {
 
 public:
-    FGRenderer() {}
-    ~FGRenderer() {}
+    FGRenderer();
+    ~FGRenderer();
 
     void init();
 
