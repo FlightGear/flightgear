@@ -1,0 +1,522 @@
+#!/usr/bin/perl -w
+# FlightGear METAR proxy server
+# Melchior FRANZ (c) 2005, <mfranz@aon.at>, GPL V2
+# $Id$
+#
+# typical use
+# 1) fill cache, for example with:
+#    $ metarproxy --download 3h
+#
+# 2) run proxy with FlightGear:
+#    $ metarproxy -c -v &
+#    $ fgfs --enable-real-weather-fetch --proxy=localhost:5509 --start-date-lat=2005:01:11:12:00:00
+
+use strict;
+use IO::Socket;
+use Net::hostent;
+use Time::Local;
+
+my $HOME = $ENV{'HOME'} || ".";
+my $FG_HOME = $ENV{'FG_HOME'} || $HOME . "/.fgfs";
+my $BASE = $FG_HOME . "/metar";
+my $SERVER = "weather.noaa.gov";
+my $PORT = 5509;
+my $PROXY = $ENV{'http_proxy'};
+my $METAR_MAX_AGE = 250 * 60;
+my $METAR_DEFAULT = "00000KT 15KM CLR 15/00 A3000";
+my @COLOR = ("31;1", "31", "32", "", "36;1");
+my $USECOLOR = 0;
+
+
+my $help = <<EOF;
+Usage:
+       metarproxy [-v] [-b <path>] [-p <port>] [--serve]
+       metarproxy [-v] [-b <path>] [-y <proxy>] --download <list of: all|7|0-10|6h>
+       metarproxy [-v] [-b <path>] [-y <proxy>] --record  [<list of station IDs>] [-f <path>]
+       metarproxy [-v] [-b <path>]              --install  <list of metar files>
+       metarproxy [-V]
+       metarproxy [-h]
+
+server mode:
+       -s|--serve    start proxy server          (default)
+       -p|--port     set port                    (default: $PORT)
+
+download mode:
+       -d|--download <list of hours>
+                     "all"    ... whole day (24 files)
+                     <number> ... this hour      (example: 6)
+                     <range>  ... these hours    (example: 2-5)
+                     <period> ... last n hours   (example: 3h)
+       -y|--proxy    use proxy                   (default: off)
+
+install mode:
+       -i|--install  <list of files to install>
+
+record mode:
+       -r|--record   <list of METAR station IDs (ICAO)>
+       -f|--file     <file containing list of station IDs>
+       -y|--proxy    use proxy                   (default: off)
+
+all modes:
+       -b|--base     set base directory          (default: \$FG_HOME/metar)
+       -c|--color    toggle color mode           (default: off)
+       -v|--verbose  increase verbosity level    (default: off; maximum: -vvvv)
+
+       -q|--quiet    only show error messages
+       -h|--help     this help
+       -V|--version  return version number
+
+Environment:
+       FG_HOME    ... FlightGear home directory  (default: \$HOME/.fgfs)
+       METARPROXY ... default options (e.g. export METARPROXY='-vv --color')
+       http_proxy ... system wide proxy setting  (currently: '$PROXY')
+
+Examples:
+       \$ metarproxy -b\$HOME/.fgfs/metar --download 3h
+       \$ metarproxy --proxy=http://localhost:3128 --download all
+       \$ metarproxy --download 3h 7 21-23
+       \$ metarproxy --record -f/tmp/list LOWW LOWL
+       \$ metarproxy -b/var/tmp/metar --install /tmp/*Z.TXT
+       \$ metarproxy -p5600 & fgfs --proxy=localhost:5600 --enable-real-weather-fetch
+       \$ http_proxy= metarproxy --record LOXL
+
+Sources:
+       http://weather.noaa.gov/pub/data/observations/metar/{stations,cycles}/
+       ftp://weather.noaa.gov/data/observations/metar/{stations,cycles}/
+EOF
+
+
+my $ERR = 0;
+my $WARN = 1;
+my $INFO = 2;
+my $BULK = 3;
+my $DEBUG = 4;
+my $VERBOSITY = $INFO;
+
+my @ITEMS;
+my $PROXYHOST;
+my $PROXYPORT;
+
+
+# main =======================================================================
+
+
+sub parse_options()
+{
+	sub argument {
+		map { return $_ if defined $_ and $_ ne "" } @_;
+		shift @ARGV;
+		return $ARGV[0];
+	}
+	my $mode = 4;
+	unshift @ARGV, split / /, $ENV{'METARPROXY'} if defined $ENV{'METARPROXY'};
+	while (1) {
+		$_ = $ARGV[0];
+		defined $_ or last;
+		# dissolve glued together short options (e.g. -cvv)
+		if (/^-([^-]{2,})$/) {
+			shift @ARGV;
+			map { unshift @ARGV, "-$_" } split //, $1;
+			next;
+		}
+		if (!/^-/) {
+			push @ITEMS, $_;
+		} elsif (/^(-d|--download)$/) {
+			$mode = 1;
+		} elsif (/^(-i|--install)$/) {
+			$mode = 2;
+		} elsif (/^(-r|--record)$/) {
+			$mode = 3;
+		} elsif (/^(-s|--server?)$/) {
+			$mode = 4;
+		} elsif (/^(-b(.*)|--base(=(.*))?)/) {
+			my $path = &argument($2, $4);
+			defined $path or &fatal("-b|--base option lacks <path> argument");
+			$path =~ s/^~/$HOME/;
+			$BASE = $path;
+			&log($BULK, "set option --base: '$BASE'");
+		} elsif (/^(-f(.*)|--file(=(.*))?)$/) {
+			my $file = &argument($2, $4);
+			defined $file or &fatal("-f|--file option lacks <path> argument");
+			&log($BULK, "set option --file: '$file'");
+			&read_icao_file($file);
+		} elsif (/^(-p(.*)|--port(=(.*))?)$/) {
+			$PORT = &argument($2, $4);
+			defined $PORT or &fatal("--port option lacks <port number> argument");
+			&log($BULK, "set option --port: '$PORT'");
+		} elsif (/^(-y(.*)|--proxy(=(.*))?)$/) {
+			$PROXY = &argument($2, $4);
+			defined $PROXY or &fatal("--proxy option lacks <host> definition");
+			&log($BULK, "set option --proxy: '$PROXY'");
+		} elsif (/^(-v|--verbose)$/) {
+			$VERBOSITY++;
+		} elsif (/^(-q|--quiet)$/) {
+			$VERBOSITY = 0;
+		} elsif (/^(-h|--help)$/) {
+			print $help;
+			return 0;
+		} elsif (/^(-V|--version)$/) {
+			($_ = '$Revision$') =~ s/.*(\d+\.\d+).*/print "$1\n"/e;
+			return 0;
+		} elsif (/^(-c|--color)$/) {
+			$USECOLOR = !$USECOLOR;
+		} else {
+			&fatal("unknown option $_");
+		}
+		shift @ARGV;
+	}
+	return $mode;
+}
+
+
+sub main()
+{
+	undef $PROXY if $PROXY eq "";
+	my $mode = &parse_options();
+	exit if $mode == 0;
+
+	-d $FG_HOME or mkdir $FG_HOME or &fatal("cannot create directory $FG_HOME ($!)");
+	-d $BASE or mkdir $BASE or &fatal("cannot create directory $BASE ($!)");
+
+	if (defined $PROXY) {
+		$PROXY =~ m|^(http://)?([a-zA-Z][a-zA-Z0-9-.]*):(\d+)/?| or &fatal("invalid proxy address: '$PROXY'");
+		($PROXYHOST, $PROXYPORT) = ($2, $3);
+	}
+
+	my $ret = 0;
+	if ($mode == 1) {
+		$ret = &download;
+	} elsif ($mode == 2) {
+		$ret = &install();
+	} elsif ($mode == 3) {
+		$ret = &record();
+	} elsif ($mode == 4) {
+		&log($ERR, "ignoring command line args: " . (join ", ", @ITEMS)) if @ITEMS;
+		$ret = &serve();
+	}
+	exit $ret;
+}
+
+
+sub read_icao_file($)
+{
+	my $path = shift;
+	$path =~ s/^\~/$HOME/;
+
+	if (!open(F, "<$path")) {
+		&log($ERR, "cannot open station list $path ($!)");
+		return;
+	}
+	while (<F>) {
+		s/\s+$//;
+		foreach (split) {
+			if (/^[A-Z][A-Z0-9]{3}$/) {
+				push @ITEMS, $_;
+			} else {
+				&log($ERR, "discarding suspicious station from $path: $_");
+			}
+		}
+	}
+	close F or &log($ERR, "cannot close station list $path ($!)");
+}
+
+
+# download ===================================================================
+
+
+sub download()
+{
+	my %h;
+	sub norm {
+		my $i = shift;
+		$i = 0 if $i < 0;
+		$i = 23 if $i > 23;
+		return $i;
+	}
+	foreach (@ITEMS) {
+		if (/^all$/) {
+			map { $h{$_} = 1 } (0 .. 23);
+		} elsif (/^(\d+)-(\d+)$/) {
+			map { $h{$_} = 1 } (&norm($1) .. &norm($2));
+		} elsif (/^(\d+)h$/) {
+			my $to = (gmtime(time))[2];
+			my $from = $to - &norm($1) + 1;
+			if ($from < 0) {
+				map { $h{$_} = 1 } ((24 + $from) .. 23);
+				$from = 0;
+			}
+			map { $h{$_} = 1 } ($from .. $to);
+		} elsif (/^(\d+)$/) {
+			$h{&norm($1)} = 1;
+		} else {
+			&log($ERR, "illegal download argument '$_' ignored");
+		}
+	}
+	@ITEMS = sort { $a <=> $b } keys %h;
+	@ITEMS or &fatal("nothing to download");
+	&log($INFO, "downloading: " . (join ", ", @ITEMS));
+	foreach (@ITEMS) {
+		my $file = sprintf "/pub/data/observations/metar/cycles/%02dZ.TXT", $_;
+		&install_metar_http($SERVER, "80", $file);
+	}
+	return 0;
+}
+
+
+# install ====================================================================
+
+
+sub install()
+{
+	foreach my $file (@ITEMS) {
+		&log($INFO, "installing $file");
+		if (! -f $file) {
+			&log($ERR, "file $file doesn't exist");
+			next;
+		}
+		if (!open (IN, "<$file")) {
+			&log($ERR, "cannot open $file ($!)");
+			next;
+		}
+		local $/ = "";
+		&install_metar($_) foreach <IN>;
+		close IN or &log($ERR, "cannot close $file ($!)");
+	}
+	return 0;
+}
+
+
+# install a METAR string KSFO under $FG_HOME/metar/2005-01-12/K/KS/KSFO
+sub install_metar($)
+{
+	my $metar = shift;
+	return unless $metar =~ /^(\d{4})\/(\d+)\/(\d+)\s(\d+):(\d+).*\015?\012([A-Z])([A-Z0-9])([A-Z0-9]{2})\s/s;
+
+	my $name = sprintf "$BASE/%04d-%02d-%02d", $1, $2, $3;
+	-d $name or mkdir $name or &fatal("cannot create directory $name ($!)");
+	$name .= "/$6";
+	-d $name or mkdir $name or &fatal("cannot create directory $name ($!)");
+	$name .= "/$6$7";
+	-d $name or mkdir $name or &fatal("cannot create directory $name ($!)");
+	$name .= "/$6$7$8";
+
+	my $found;
+	if (open(F, "<$name")) {
+		local $/ = "";
+		while (<F>) {
+			if (m|^$1/$2/$3 $4:$5\s|s) {
+				$found = 1;
+				last;
+			}
+		}
+		close F or &log($ERR, "cannot close file $name ($!)");
+		return if defined $found;
+	}
+	&log($INFO, "writing to $name");
+
+	open(F, ">>$name") or &fatal("cannot append to file $name ($!)");
+	print F $metar;
+	close F or &log($ERR, "cannot close file $name ($!)");
+}
+
+
+
+sub install_metar_http($$$)
+{
+	my ($server, $port, $addr) = @_;
+	&log($INFO, "installing data from http://$server:$port$addr");
+	if (defined $PROXYHOST) {
+		&log($INFO, "via proxy http://$PROXYHOST:$PROXYPORT");
+		$addr = "http://$server" . $addr;
+		($server, $port) = ($PROXYHOST, $PROXYPORT);
+	}
+
+	my $socket = IO::Socket::INET->new(Proto => "tcp", PeerAddr => $server, PeerPort => $port);
+	$socket or &fatal("cannot connect to http://$server:$port$addr/ ($!)");
+	$socket->autoflush(1);
+	my $get = "GET $addr HTTP/1.0";
+	print $socket "$get\015\012\015\012";
+	&log($DEBUG, ":$get:");
+
+	# skip header
+	while (<$socket>) {
+		s/\s*$//;
+		last if /^$/;
+		&log($DEBUG, "[$_]");
+	}
+	local $/ = "";
+	foreach (<$socket>) {
+		&install_metar("$_\n");
+	}
+	close($socket) or &log($ERR, "cannot close INET socket ($!)");
+	return 0;
+}
+
+
+# record =====================================================================
+
+
+sub record()
+{
+	@ITEMS or &fatal("no stations given");
+
+	my %h;
+	# check for validity and remove duplicates
+	foreach (@ITEMS) {
+		if (/^[A-Z][A-Z0-9]{3}$/) {
+			$h{$_} = 1;
+		} else {
+			&log($ERR, "discarding invalid station '$_'");
+		}
+	}
+	@ITEMS = sort keys %h;
+
+	&log($INFO, "recording stations @ITEMS");
+	while (1) {
+		foreach (@ITEMS) {
+			&install_metar_http($SERVER, "80", "/pub/data/observations/metar/stations/$_.TXT");
+		}
+		&log($INFO, "sleeping ...");
+		sleep 15 * 60
+	}
+}
+
+
+# serve ======================================================================
+
+
+sub serve()
+{
+	my $server = IO::Socket::INET->new(Proto => 'tcp', LocalPort => $PORT, Listen => SOMAXCONN, Reuse => 1);
+	$server or &fatal("cannot setup server ($!)");
+	&log($BULK, "server $0 accepting clients on port $PORT");
+
+	while (my $client = $server->accept()) {
+		$client->autoflush(1);
+		my $hostinfo = gethostbyaddr($client->peeraddr);
+		my $clientname = $hostinfo->name || $client->peerhost;
+		my $addr = inet_ntoa(inet_aton($clientname));
+
+		my ($icao, $epoch);
+		while (<$client>) {
+			s/\s+$//;
+			&log($DEBUG, $_);
+
+			if (m|^GET\s+http://weather.noaa.gov/.*/([A-Z][A-Z0-9]{3}).TXT\s+HTTP/|) {
+				$icao = $1;
+			} elsif (/X-Time: (\d+)/) {
+				$epoch = $1;
+			} elsif (/^$/) {
+				last;
+			} else {
+				&log($INFO, "$_") if $VERBOSITY < $DEBUG;
+			}
+		}
+
+		if (defined $icao and defined $epoch) {
+			my ($min, $hour, $day, $mon, $year) = (gmtime($epoch))[1 .. 5];
+			$year += 1900;
+			$mon++;
+			&log($BULK, sprintf "client '$clientname' [$addr] requests data for station $icao "
+					. "at %04d/%02d/%02d %02d:%02d", $year, $mon, $day, $hour, $min);
+
+			my ($metar, $age) = &get_metar($icao, $epoch);
+			if (defined $metar) {
+				if ($age <= $METAR_MAX_AGE) {
+					&log($BULK, "found (" . int($age / 60) . " min old)");
+					$metar =~ s/\s*$//s;
+					$METAR_DEFAULT = $metar;
+					$METAR_DEFAULT =~ s/.*\015?\012[A-Z0-9]{4}\s+[0-9]{6}Z\s+//s;
+					&log($DEBUG, "setting default to '$METAR_DEFAULT'");
+					$metar =~ s/\015?\012/\015\012/g;
+				} else {
+					&log($INFO, "found, but too old (" . int($age / 60) . " min)");
+					undef $metar;
+				}
+			} else {
+				&log($WARN, "not found!");
+			}
+
+			if (!defined $metar) {
+				&log($INFO, "sending last successful data again");
+				$metar = sprintf "%04d/%02d/%02d %02d:%02d\015\012",
+						$year, $mon, $day, $hour, $min;
+				$metar .= sprintf "$icao %02d%02d%02dZ $METAR_DEFAULT",
+						$day, $hour, $min;
+			}
+			print $client "Content-Type: text/plain\015\012"
+					. "X-MetarProxy: nasse Maus\015\012"
+					. "\015\012"
+					. "$metar\015\012";
+			&log($INFO, $metar);
+		} else {
+			&log($WARN, "incomplete request");
+		}
+		&log($BULK, "closing connection");
+		close $client;
+	}
+}
+
+
+sub get_metar($$)
+{
+	my $icao = shift;
+	my $rq_epoch = shift;
+	$icao =~ /^([A-Z])([A-Z0-9])([A-Z0-9]{2})$/;
+
+	sub scan_file($$) {
+		my $time = shift;
+		my $list = shift;
+		my ($hour, $day, $mon, $year) = (gmtime($time))[2 .. 5];
+		my $name = sprintf "$BASE/%04d-%02d-%02d/$1/$1$2/$1$2$3", $year + 1900, $mon + 1, $day;
+		if (open (F, "<$name")) {
+			&log($BULK, "reading $name");
+			local $/ = "";
+			push @$list, <F>;
+			close F or &log($ERR, "cannot close file $name ($!)");
+		} else {
+			&log($BULK, "no file $name to read ($!)");
+		}
+		return $hour < 2;
+	}
+	my @list;	# "today" (and maybe "yesterday")
+	&scan_file($rq_epoch, \@list) and &scan_file($rq_epoch - 24 * 60 * 60, \@list);
+
+	my $age = 99999999;
+	my ($epoch, $metar);
+	foreach (@list) {
+		/^(\d{4})\/(\d+)\/(\d+)\s(\d+):(\d+).*\015?\012$icao\s/s or next;
+		$epoch = timegm(0, $5, $4, $3, $2 - 1, $1 - 1900);
+		next if $epoch > $rq_epoch;		# lies in the future
+		next if $rq_epoch - $epoch > $age;	# older than previous entry
+		$metar = $_;
+		$age = $rq_epoch - $epoch;
+	}
+	return ($metar, $age);
+}
+
+
+# ==================================================================
+
+
+sub fatal()
+{
+	&log($ERR, "$0: @_");
+	exit -1;
+}
+
+
+sub log()
+{
+	my $v = shift;
+	return if $v > $VERBOSITY;
+	$v = 4 if $v > 4;
+	print "\033[$COLOR[$v]m" if $USECOLOR;
+	print "@_";
+	print "\033[m" if $USECOLOR;
+	print "\n";
+}
+
+
+main
+

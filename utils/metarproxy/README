@@ -1,0 +1,280 @@
+                         FlightGear METAR proxy server
+                         =============================
+
+
+
+metarproxy is a caching proxy server for METAR data strings written in
+Perl. It can be used from the FlightGear flight simulator to:
+
+- provide METAR data for machines without internet connection
+- centralize METAR fetching: one machine in a network runs the proxy, all
+  other connect to the proxy
+- deliver defined and reproducible weather for educational purposes
+- save weather situations for later use
+
+
+
+
+
+Quick instructions to try out:
+
+  $ metarproxy --download 3h
+  $ metarproxy --color &
+  $ fgfs --proxy=localhost:5509 --time-offset=-2 --enable-real-weather-fetch
+
+
+
+
+
+
+To make use of the proxy, you have to:
+
+1. check if you want to use the default cache directory
+   and other default settings, or change them accordingly
+2. make sure the cache is filled with METAR strings
+3. start the proxy server
+4. run fgfs with appropriate time and proxy settings
+
+
+
+
+1. Basic setup and preparing the cache
+======================================
+If you are happy with the defaults, you can well skip to the
+next section.
+
+
+1a. The cache directory
+-----------------------
+All metarproxy operation modes need access to a cache, either for
+storing or retrieving METAR strings. By default, the cache directory
+is $FG_HOME/metar, whereby $FG_HOME is either to be set as environment
+variable, or defaults to $HOME/.fgfs. $HOME, in turn, defaults to "."
+(the current working directory). In other words: if no provisions are
+made, you end up with /home/$USER/.fgfs/metar as your cache directory
+on Linux-like operating systems, and ./.fgfs/metar elsewhere.
+
+There are several ways to change the cache path:
+
+- change one of the environment variables, ideally $FG_HOME. This can
+  be done in the system configuration in MS Windows, and in ~/.bashrc
+  or ~/.profile etc. on Linux-like systems
+
+    export FG_HOME=/var/tmp/metar
+
+- or on the command line when running metarproxy:
+
+    $ FG_HOME=/var/tmp/metar metarproxy
+
+- you can also set the cache directory directly as a command line option
+  --base or -b:
+
+    $ metarproxy --base=/var/tmp/metar
+
+- this command line option can, together with any of the other metarproxy
+  options, be stored again in an environment variable METARPROXY
+
+    export METARPROXY="-c -vv -b/var/tmp/metar"
+
+
+
+
+1b. set metarproxy's proxy server
+---------------------------------
+metarproxy isn't only a proxy server itself, it can also use one to
+download METAR strings. By default it uses the one defined in the
+environment variable http_proxy (which is commonly used on Linux-like
+systems, and is, for instance, used by the lynx browser), or none if
+unset. To set a particular proxy server for HTTP download, use one of
+these methods:
+
+- set http_proxy globally:     EXPORT http_proxy=http://localhost:3128/
+- or on the command line:      $ http_proxy=http://localhost:3128/ metarproxy
+- unset http_proxy:            $ http_proxy= metarproxy
+- use the command line option: $ metarproxy --proxy=http://localhost:3128/
+- set the option globally:     EXPORT METARPROXY="-yhttp://localhost:3128"
+
+
+
+
+
+
+
+2. Fill the cache with METAR data
+=================================
+
+There are three operation modes to do that:
+
+2a. --download mode   to download worldwide data sets
+2b. --install mode    to install files from your system
+2c. --record mode     to record a selection of stations over some period
+
+
+
+2a. --download mode
+-------------------
+You can download worldwide sets of METAR strings, each in a file of about
+1MB size from weather.noaa.gov[1]. This can be done with a separate ftp
+client or web browser, but it can also be done by metarproxy:
+
+  $ metarproxy --download 3h      ... download last three hours (~ 3MB)
+
+Note that the file for the *current* hour is only partly filled! You can
+use from 1h up to 24h. Alternatively, you can request particular hours:
+
+  $ metarproxy --download 0       ... download first hour after midnight GMT
+
+Ranges are allowed, too:
+
+  $ metarproxy --download 0-2     ... download first three hours after
+                                      midnight GMT
+
+These three methods can be use in combination:
+
+  $ metarproxy --download 6h 0-2 4
+
+Files downloaded this way aren't stored on your systems in the same form
+as they are offered under [1], but are already stored in the cache in a
+different way (see section 5). Redundant strings are not stored, so it's safe
+to --download the same hours more than once. This won't create duplicates.
+
+
+
+
+2b. --install mode
+------------------
+The --download mode needs a sufficiently cheap and fast internet
+connection. Sometimes it may be desirable to download the files directly
+from the links (see [1]) on one computer, to burn them on a CD and then
+to install them on the laptop. The downloaded files have names like
+00Z.TXT to 23Z.TXT, whereby the number stands for the hour when they
+were started. Only the last 24 hours are available for download.
+If GMT is 1800, then 18Z.TXT will be the currently written and most
+recent file. 19Z.TXT is already 23 hours old and will be overwritten
+in one hour. To install such files in the cache, do this:
+
+  $ metarproxy --install 00Z.TXT 01Z.TXT
+
+or
+
+  $ metarproxy --install ??Z.TXT
+
+etc.
+
+
+
+
+2c. --record mode
+-----------------
+To record a set of stations over a period, without the need to download
+several megabytes of data, you can use the record mode:
+
+  $ metarproxy --record KSFO KOAK KNUQ KSJC KCCR
+
+The stations are then checked every 15 minutes and the METAR data
+stored in the cache. Additionally, you can specify one or more files
+with station IDs:
+
+  $ metarproxy --record --file=$FG_HOME/station-list
+  $ metarproxy --record EDDM --file=tmp/Austria --file=/tmp/Hungary
+
+These files simply contain station IDs separated by spaces in one
+or more lines:
+
+  $ cat /tmp/Austria
+  LOWL LOWI LOWS LOWW LOWK LOWG
+  LOXL LOXA LOXT
+
+Some of the IDs are logically assigned, so that you can create a list
+of, lets say, all Austrian METAR stations from FlightGear's METAR list:
+
+  $ zgrep "^LO" $FG_ROOT/Airports/metar.dat.gz > /tmp/Austria
+  $ zgrep "^ED" $FG_ROOT/Airports/metar.dat.gz > /tmp/Germany
+  $ zgrep "^EG" $FG_ROOT/Airports/metar.dat.gz > /tmp/UK
+  $ zgrep "^K"  $FG_ROOT/Airports/metar.dat.gz > /tmp/USA
+
+Quit the --record mode by Ctrl-C or killing the program.
+
+
+
+
+
+3. run the metarproxy server
+============================
+
+assuming that the cache directory is already set, you just need to
+run the proxy:
+
+  $ metarproxy&
+
+or with colored output and more log messages:
+
+  $ metarproxy -c -vv
+
+The proxy listens to port 5509 by default, but you can easily let
+it use another port. As you can see, the proxy is quite liberal
+with respect to option syntax:
+
+  $ metarproxy --port 1234
+  $ metarproxy --port=1234
+  $ metarproxy -p 1234
+  $ metarproxy -p1234
+
+
+
+
+
+
+4. let fgfs use the metar proxy
+===============================
+
+All you need to do is point FlightGear to the metar proxy and let
+it run at a simulated time for which you actually have cached METAR
+data:
+
+  $ fgfs --proxy=localhost:5509 --start-date-lat=2005:01:12:12:00:00
+
+FlightGear will then fetch the metar data from the proxy as if it
+were weather.noaa.gov. If no appropriate data set is found at all,
+the proxy sends a default string. If data are found but older than
+250 minutes, then the last successful data are sent again.
+
+
+
+
+
+
+5. the cache organization
+=========================
+
+metarproxy puts all data for KSFO on 2005/1/19 into a directory
+2005-01-19/K/KS/KSFO. The date directory name is used to find all
+data for this day, but metarproxy will also look at the date in
+particular METAR strings. So, renaming the directory to 2005/1/20
+won't make the cached data available for the next day! You need
+to set fgfs' GMT date to 2005/1/19. Also, if the simulated GMT
+is midnight, then you will get midnight weather. You can't
+enjoy midnight weather at daylight. The cache always delivers
+the (past) real weather at simulated GMT.
+
+
+
+
+
+6. download addresses
+=====================
+Download addresses for the last 24 hours:
+
+  http://weather.noaa.gov/pub/data/observations/metar/cycles/
+  ftp://weather.noaa.gov/data/observations/metar/cycles/
+
+Addresses for the most recent METAR data strings of particular
+stations:
+
+      http://weather.noaa.gov/pub/data/observations/metar/stations/
+      ftp://weather.noaa.gov/data/observations/metar/stations/
+
+
+$Id$
+Melchior FRANZ <mfranz@aon.at>, 2005/1/24
+
