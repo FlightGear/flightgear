@@ -82,7 +82,7 @@ FGEngine::FGEngine(FGFDMExec* exec) {
   Thrust = PctPower = 0.0;
   Starved = Flameout = false;
   Running = false;
-  Cranking = false;
+  Cranking = Starter = false;
 
   if (debug_lvl & 2) cout << "Instantiated: FGEngine" << endl;
   TrimMode = false;

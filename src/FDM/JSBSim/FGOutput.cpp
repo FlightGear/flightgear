@@ -151,6 +151,7 @@ void FGOutput::DelimitedOutput(string fname)
     if (SubSystems & FGAircraft::ssAerosurfaces) {
       outstream << ", ";
       outstream << "Throttle, ";
+      outstream << "Mixture, ";
       outstream << "Aileron Cmd, ";
       outstream << "Elevator Cmd, ";
       outstream << "Rudder Cmd, ";
@@ -226,6 +227,7 @@ void FGOutput::DelimitedOutput(string fname)
   if (SubSystems & FGAircraft::ssAerosurfaces) {
     outstream << ", ";
     outstream << FCS->GetThrottlePos(0) << ", ";
+    outstream << FCS->GetMixturePos(0) << ", ";
     outstream << FCS->GetDaCmd() << ", ";
     outstream << FCS->GetDeCmd() << ", ";
     outstream << FCS->GetDrCmd() << ", ";

@@ -117,6 +117,8 @@ public:
   virtual float  GetThrottleMax(void) { return MaxThrottle; }
   float  GetThrottle(void) { return Throttle; }
   float  GetMixture(void) { return Mixture; }
+  int    GetMagnetos(void) { return Magnetos; }
+  bool    GetStarter(void) { return Starter; }
   float  GetThrust(void) { return Thrust; }
   bool   GetStarved(void) { return Starved; }
   bool   GetFlameout(void) { return Flameout; }
