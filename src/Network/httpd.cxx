@@ -178,12 +178,7 @@ void HttpdChannel::foundTerminator (void) {
 
             for (int i = 0; i < node->nChildren(); i++) {
                 SGPropertyNode *child = node->getChild(i);
-                string name = child->getName();
-                if ( node->getChild(name.c_str(), 1) ) {
-                    char buf[16];
-                    sprintf(buf, "[%d]", child->getIndex());
-                    name += buf;
-                }
+                string name = child->getDisplayName(true);
                 string line = "";
                 if ( child->nChildren() > 0 ) {
                     line += "<B><A HREF=\"";
