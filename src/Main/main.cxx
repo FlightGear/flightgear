@@ -1084,8 +1084,7 @@ static void fgMainLoop( void ) {
     if ( clock_freeze->getBoolValue() ) {
 	// clock freeze requested
 	if ( cur_time_override->getLongValue() == 0 ) {
-	    fgSetLong( "/sim/time/cur-time-override",
-		       t->get_cur_time() + globals->get_warp() );
+	    fgSetLong( "/sim/time/cur-time-override", t->get_cur_time() );
 	    globals->set_warp( 0 );
 	}
     } else {
