@@ -40,10 +40,6 @@
 #include "scenery.hxx"
 
 
-// Temporary hack until we get a better texture management system running
-GLint area_texture;
-
-
 // Shared structure to hold current scenery parameters
 struct fgSCENERY scenery;
 
@@ -56,17 +52,3 @@ int fgSceneryInit( void ) {
 
     return 1;
 }
-
-
-// Tell the scenery manager where we are so it can load the proper data, and
-// build the proper structures.
-void fgSceneryUpdate(double lon, double lat, double elev) {
-    // does nothing;
-}
-
-
-// Render out the current scene
-void fgSceneryRender( void ) {
-}
-
-

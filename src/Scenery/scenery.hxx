@@ -64,15 +64,6 @@ extern struct fgSCENERY scenery;
 int fgSceneryInit( void );
 
 
-// Tell the scenery manager where we are so it can load the proper
-// data, and build the proper structures.
-void fgSceneryUpdate(double lon, double lat, double elev);
-
-
-// Render out the current scene
-void fgSceneryRender( void );
-
-
 #endif // _SCENERY_HXX
 
 

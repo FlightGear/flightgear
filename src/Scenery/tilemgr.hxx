@@ -165,7 +165,8 @@ public:
 		     FGHitList *list );
 
     bool current_elev_ssg( sgdVec3 abs_view_pos, 
-			   sgVec3 view_pos );
+			   sgVec3 view_pos,
+			   double *terrain_elev );
 	
     // Prepare the ssg nodes ... for each tile, set it's proper
     // transform and update it's range selector based on current

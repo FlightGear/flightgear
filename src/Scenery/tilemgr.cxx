@@ -168,7 +168,8 @@ static void CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
 // explicitely.  lat & lon are in radians.  view_pos in current world
 // coordinate translated near (0,0,0) (in meters.)  Returns result in
 // meters.
-bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, sgVec3 view_pos ) {
+bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, sgVec3 view_pos,
+				  double *terrain_elev ) {
     sgdVec3 orig, dir;
 
     sgdSetVec3(orig, view_pos );
@@ -193,7 +194,7 @@ bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, sgVec3 view_pos ) {
     }
 
     if ( result > -9000 ) {
-	scenery.cur_elev = result;
+	*terrain_elev = result;
 	scenery.cur_radius = geoc.radius();
 	sgVec3 tmp;
 	sgSetVec3(tmp, hit_list.get_normal(this_hit));
@@ -205,7 +206,7 @@ bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, sgVec3 view_pos ) {
 	return true;
     } else {
 	FG_LOG( FG_TERRAIN, FG_INFO, "no terrain intersection" );
-	scenery.cur_elev = 0.0;
+	*terrain_elev = 0.0;
 	float *up = globals->get_current_view()->get_world_up();
 	sgdSetVec3(scenery.cur_normal, up[0], up[1], up[2]);
 	return false;
@@ -479,12 +480,24 @@ int FGTileMgr::update( double lon, double lat ) {
 	// cout << "abs_view_pos = " << tmp_abs_view_pos << endl;
 	prep_ssg_nodes();
 	sgSetVec3( tmp_view_pos, 0.0, 0.0, 0.0 );
-	current_elev_ssg( tmp_abs_view_pos, tmp_view_pos );
+	double tmp_elev;
+	if ( current_elev_ssg(tmp_abs_view_pos, tmp_view_pos, &tmp_elev) ) {
+	    scenery.cur_elev = tmp_elev;
+	} else {
+	    scenery.cur_elev = 0.0;
+	}
     } else {
 	// cout << "abs view pos = " << current_view.abs_view_pos
 	//      << " view pos = " << current_view.view_pos << endl;
-	current_elev_ssg( globals->get_current_view()->get_abs_view_pos(),
-			  globals->get_current_view()->get_view_pos() );
+	double tmp_elev;
+	if ( current_elev_ssg(globals->get_current_view()->get_abs_view_pos(),
+			      globals->get_current_view()->get_view_pos(),
+			      &tmp_elev) )
+	{
+	    scenery.cur_elev = tmp_elev;
+	} else {
+	    scenery.cur_elev = 0.0;
+	}  
     }
 
     // cout << "current elevation (ssg) == " << scenery.cur_elev << endl;
