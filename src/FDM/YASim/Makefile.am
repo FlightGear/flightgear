@@ -1,30 +1,3 @@
-noinst_LIBRARIES = libYASim.a
-
-libYASim_a_SOURCES = \
-        YASim.cxx YASim.hxx \
-        Airplane.cpp Airplane.hpp \
-        Atmosphere.cpp Atmosphere.hpp \
-        BodyEnvironment.hpp \
-        ControlMap.cpp ControlMap.hpp \
-        FGFDM.cpp FGFDM.hpp \
-        Gear.cpp Gear.hpp \
-        Glue.cpp Glue.hpp \
-        Integrator.cpp Integrator.hpp \
-        Jet.cpp Jet.hpp \
-        Math.cpp Math.hpp \
-        Model.cpp Model.hpp \
-        PistonEngine.cpp PistonEngine.hpp \
-        PropEngine.cpp PropEngine.hpp \
-        Propeller.cpp Propeller.hpp \
-        RigidBody.cpp RigidBody.hpp \
-        SimpleJet.cpp SimpleJet.hpp \
-        Surface.cpp Surface.hpp \
-        Thruster.cpp Thruster.hpp \
-        Vector.hpp \
-        Wing.cpp Wing.hpp
-
-bin_PROGRAMS = yasim
-
 # Link the yasim executable against the individual object files rather
 # than libYASim.  The library references other stuff in FlightGear,
 # and some linkers (Irix) do dependency checks per-library instead of
@@ -33,7 +6,7 @@ bin_PROGRAMS = yasim
 # I think that it's permissible to list the same source files more
 # than once in a Makefile.am.  Hopefully this doesn't break anything.
 
-yasim_SOURCES = yasim-test.cpp \
+SHARED_SOURCES = \
         Airplane.cpp Airplane.hpp \
         Atmosphere.cpp Atmosphere.hpp \
         BodyEnvironment.hpp \
@@ -55,6 +28,14 @@ yasim_SOURCES = yasim-test.cpp \
         Vector.hpp \
         Wing.cpp Wing.hpp
 
-yasim_LDADD = -lsgxml -lsgprops -lsgmisc -lsgdebug
+noinst_LIBRARIES = libYASim.a
+
+libYASim_a_SOURCES = YASim.cxx YASim.hxx $(SHARED_SOURCES)
+
+bin_PROGRAMS = yasim
+
+yasim_SOURCES = yasim-test.cpp $(SHARED_SOURCES)
+
+yasim_LDADD = -lsgxml -lsgprops -lsgmisc -lsgdebug $(base_LIBS)
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

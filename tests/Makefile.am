@@ -17,4 +17,4 @@ test_mktime_SOURCES = test-mktime.cxx
 test_text_SOURCES = test-text.cxx
 
 test_up_SOURCES = test-up.cxx
-test_up_LDADD = -lsgmath -lsgdebug -lplibsg -lplibul
+test_up_LDADD = -lsgmath -lsgdebug -lplibsg -lplibul $(base_LIBS)

@@ -7,6 +7,6 @@ libAirports_a_SOURCES = \
 	simple.cxx simple.hxx
 
 calc_loc_SOURCES = calc_loc.cxx
-calc_loc_LDADD = -lsgmath -lsgdebug -lsgmisc -lz
+calc_loc_LDADD = -lsgmath -lsgdebug -lsgmisc -lz $(base_LIBS)
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
