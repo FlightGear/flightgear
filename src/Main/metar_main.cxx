@@ -22,6 +22,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <string.h>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
@@ -426,21 +427,60 @@ void printArgs(SGMetar *m, double airport_elevation)
 }
 
 
+void getproxy(string& host, string& port)
+{
+	host = "";
+	port = "80";
+
+	const char *p = getenv("http_proxy");
+	if (!p)
+		return;
+	while (isspace(*p))
+		p++;
+	if (!strncmp(p, "http://", 7))
+		p += 7;
+	if (!*p)
+		return;
+
+	char s[256], *t;
+	strncpy(s, p, 255);
+	s[255] = '\0';
+
+	for (t = s + strlen(s); t > s; t--)
+		if (!isspace(t[-1]) && t[-1] != '/')
+			break;
+	*t = '\0';
+
+	t = strchr(s, ':');
+	if (t) {
+		*t++ = '\0';
+		port = t;
+	}
+	host = s;
+}
+
+
 void help()
 {
 	printf(
-		"Usage:    metar [-v] [-e elevation] [-r|-c] <list of ICAO airport ids or METAR strings>\n"
-		"          -h|--help            show this help\n"
-		"          -v|--verbose         verbose output\n"
-		"          -r|--report          print report (default)\n"
-		"          -c|--command-line    print command line\n"
-		"          -e E|--elevation E   set airport elevation to E meters\n"
-		"                               (added to cloud bases in command line mode)\n"
+		"Usage: metar [-v] [-e elevation] [-r|-c] <list of ICAO airport ids or METAR strings>\n"
+		"       metar -h\n"
 		"\n"
-		"Examples: metar ksfo koak\n"
-		"          metar -c ksfo -r ksfo\n"
-		"          metar \"LOWL 161500Z 19004KT 160V240 9999 FEW035 SCT300 29/23 Q1006 NOSIG\"\n"
-		"          fgfs  `metar -e 183 -c loww`\n"
+		"       -h|--help            show this help\n"
+		"       -v|--verbose         verbose output\n"
+		"       -r|--report          print report (default)\n"
+		"       -c|--command-line    print command line\n"
+		"       -e E|--elevation E   set airport elevation to E meters\n"
+		"                            (added to cloud bases in command line mode)\n"
+		"Environment:\n"
+		"       http_proxy           set proxy in the form \"http://host:port/\"\n"
+		"\n"
+		"Examples:\n"
+		"       $ metar ksfo koak\n"
+		"       $ metar -c ksfo -r ksfo\n"
+		"       $ metar \"LOWL 161500Z 19004KT 160V240 9999 FEW035 SCT300 29/23 Q1006 NOSIG\"\n"
+		"       $ fgfs  `metar -e 183 -c loww`\n"
+		"       $ http_proxy=http://localhost:3128/ metar ksfo\n"
 		"\n"
 	);
 }
@@ -457,6 +497,9 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
+	string proxy_host, proxy_port;
+	getproxy(proxy_host, proxy_port);
+
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help"))
 			help();
@@ -468,13 +511,20 @@ int main(int argc, char *argv[])
 			report = false;
 		else if (!strcmp(argv[i], "-e") || !strcmp(argv[i], "--elevation")) {
 			if (++i >= argc) {
-				cerr << "-e options used without elevation" << endl;
+				cerr << "-e option used without elevation" << endl;
 				return 1;
 			}
 			elevation = strtod(argv[i], 0);
 		} else {
+			static bool shown = false;
+			if (verbose && !shown) {
+				cout << "Proxy host: '" << proxy_host << "'" << endl;
+				cout << "Proxy port: '" << proxy_port << "'" << endl << endl;
+				shown = true;
+			}
+
 			try {
-				SGMetar *m = new SGMetar(argv[i]);
+				SGMetar *m = new SGMetar(argv[i], proxy_host, proxy_port);
 				//SGMetar *m = new SGMetar("2004/01/11 01:20\nLOWG 110120Z AUTO VRB01KT 0050 1600N R35/0600 FG M06/M06 Q1019 88//////\n");
 
 				if (verbose) {
@@ -483,6 +533,7 @@ int main(int argc, char *argv[])
 					const char *unused = m->getUnusedData();
 					if (*unused)
 						cerr << R"UNUSED: " << unused << ""N << endl;
+
 				}
 
 				if (report)
