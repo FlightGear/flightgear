@@ -444,6 +444,7 @@ bool FGATC610x::open() {
 #define ATC_AILERON_CENTER 535
 #define ATC_ELEVATOR_TRIM_CENTER 512
 #define ATC_ELEVATOR_CENTER 543
+#define ATC_RUDDER_CENTER 519
 
 bool FGATC610x::do_analog_in() {
     // Read raw data in byte form
@@ -482,9 +483,13 @@ bool FGATC610x::do_analog_in() {
     fgSetFloat( "/controls/mixture[1]", tmp );
 
     // throttle
-    tmp = (float)analog_in_data[8] / 690.0f;
+    tmp = ((float)analog_in_data[8] - 141.0) / 632.0f;
     fgSetFloat( "/controls/throttle[0]", tmp );
     fgSetFloat( "/controls/throttle[1]", tmp );
+
+    // rudder
+    tmp = (float)(ATC_RUDDER_CENTER - analog_in_data[10]) / 145.0f;
+    fgSetFloat( "/controls/rudder", tmp );
 
     // nav1 volume
     tmp = (float)analog_in_data[25] / 1024.0f;
@@ -815,6 +820,7 @@ bool FGATC610x::do_radio_switches() {
     static int last_adf_tuner_fine = adf_tuner_fine;
     static int last_adf_tuner_coarse = adf_tuner_coarse;
 
+    // cout << "adf_stby_mode = " << adf_stby_mode->getIntValue() << endl;
     if ( adf_count_mode->getIntValue() == 2 ) {
         // tune count down timer
         value = adf_elapsed_timer->getDoubleValue();
@@ -887,9 +893,9 @@ bool FGATC610x::do_radio_switches() {
     fgSetInt( "/radios/kr-87/inputs/bfo-btn",
               !(radio_switch_data[23] >> 1 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/frq-btn",
-              !(radio_switch_data[23] >> 2 & 0x01) );
+              (radio_switch_data[23] >> 2 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/flt-et-btn",
-              !(radio_switch_data[23] >> 3 & 0x01) );
+	      !(radio_switch_data[23] >> 3 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/set-rst-btn",
               !(radio_switch_data[23] >> 4 & 0x01) );
     /* cout << "adf = " << !(radio_switch_data[23] & 0x01)
