@@ -11,7 +11,6 @@ PistonEngine::PistonEngine(float power, float speed)
 {
     _boost = 1;
     _running = false;
-    _cranking = false;
     _fuel = true;
 
     // Presume a BSFC (in lb/hour per HP) of 0.45.  In SI that becomes
@@ -70,7 +69,7 @@ float PistonEngine::getMaxPower()
 
 bool PistonEngine::isCranking()
 {
-    return _cranking;
+    return _starter;
 }
 
 float PistonEngine::getTorque()
@@ -161,7 +160,7 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // speed on a 160HP engine, that comes out to about 160*.15/30 ==
     // 0.8 HP starter motor.  Which sounds about right to me.  I think
     // I've finally got this tuned. :)
-    if(_cranking && !_running)
+    if(_starter && !_running)
 	_torque += 0.15f * _power0/_omega0;
 
     // Also, add a negative torque of 8% of cruise, to represent

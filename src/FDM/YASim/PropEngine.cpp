@@ -97,6 +97,7 @@ void PropEngine::stabilize()
     _eng->setThrottle(_throttle);
     _eng->setMixture(_mixture);
 
+    _eng->setStarter(false);
     _eng->setMagnetos(3);
     _eng->setRunning(true);
 

@@ -37,7 +37,6 @@ private:
     float _compression;  // compression ratio (>1)
 
     // Runtime state/output:
-    bool _cranking;
     float _mp;
     float _torque;
     float _fuelFlow;
