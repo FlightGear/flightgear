@@ -57,10 +57,10 @@ INCLUDES
 #include "FGState.h"
 #include "FGFDMExec.h"
 
-#ifndef M_PI
+#ifndef M_PI_2
 /* get a definition for pi */
 #include <Include/fg_constants.h>
-#define M_PI FG_PI
+#define M_PI_2 FG_PI_2
 #endif
 
 /*******************************************************************************
