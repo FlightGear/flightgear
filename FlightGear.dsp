@@ -2373,6 +2373,21 @@ SOURCE=.\src\Main\options.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Main\soundmgr.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Main\splash.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"

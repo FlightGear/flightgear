@@ -83,6 +83,10 @@
 #endif
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
+#ifdef ENABLE_AUDIO_SUPPORT
+#  include <Sound/soundmgr.hxx>
+#  include <Sound/morse.hxx>
+#endif
 #include <Time/event.hxx>
 #include <Time/fg_timer.hxx>
 #include <Time/light.hxx>
@@ -117,12 +121,7 @@ int objc=0;
 #include "fg_io.hxx"
 #include "globals.hxx"
 #include "keyboard.hxx"
-#include "morse.hxx"
 #include "splash.hxx"
-
-#ifdef ENABLE_AUDIO_SUPPORT
-#  include "soundmgr.hxx"
-#endif
 
 #ifdef macintosh
 #  include <console.h>		// -dw- for command line dialog
@@ -1194,10 +1193,10 @@ static void fgIdleFunction ( void ) {
 
 	    // s2 = new FGSimpleSound( "Sounds/corflaps.wav" );
 	    // s2->set_volume( 2.0 );
-	    FGMorse mmm;
-	    mmm.init();
-	    s2 = mmm.make_ident( "JLI" );
-	    globals->get_soundmgr()->add( s2, "flaps" );
+	    // FGMorse mmm;
+	    // mmm.init();
+	    // s2 = mmm.make_ident( "JLI" );
+	    // globals->get_soundmgr()->add( s2, "flaps" );
 	}
 #endif
 

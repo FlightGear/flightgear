@@ -24,6 +24,7 @@ SUBDIRS = \
         $(NETWORK_DIRS) \
         Objects \
         Scenery \
+	Sound \
         Time \
         $(WEATHER_DIR) \
         Main

@@ -27,7 +27,8 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 
-#include "globals.hxx"
+#include <Main/globals.hxx>
+
 #include "soundmgr.hxx"
 
 

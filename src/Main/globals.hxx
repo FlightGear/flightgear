@@ -36,7 +36,7 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/props.hxx>
 
-#include "soundmgr.hxx"
+#include <Sound/soundmgr.hxx>
 #include "viewmgr.hxx"
 
 FG_USING_STD( vector );

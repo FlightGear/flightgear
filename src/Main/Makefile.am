@@ -42,9 +42,7 @@ fgfs_SOURCES = \
         fgfs.cxx fgfs.hxx \
 	globals.cxx globals.hxx \
 	keyboard.cxx keyboard.hxx \
-	morse.cxx morse.hxx \
 	options.cxx options.hxx \
-	soundmgr.cxx soundmgr.hxx \
 	splash.cxx splash.hxx \
 	viewer.cxx viewer.hxx \
 	viewer_lookat.cxx viewer_lookat.hxx \
@@ -65,6 +63,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/GUI/libGUI.a \
 	$(top_builddir)/src/Navaids/libNavaids.a \
 	$(top_builddir)/src/Scenery/libScenery.a \
+	$(top_builddir)/src/Sound/libSound.a \
 	$(top_builddir)/src/Airports/libAirports.a \
         $(NETWORK_LIBS) \
 	$(top_builddir)/src/Objects/libObjects.a \

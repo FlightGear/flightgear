@@ -24,6 +24,36 @@
 #include "morse.hxx"
 
 
+static const char alphabet[26][4] = {
+    { DI, DAH, end, end },	/* A */ 
+    { DA, DI, DI, DIT },	/* B */ 
+    { DA, DI, DA, DIT },	/* C */ 
+    { DA, DI, DIT, end },	/* D */ 
+    { DIT, end, end, end },	/* E */ 
+    { DI, DI, DA, DIT },	/* F */ 
+    { DA, DA, DIT, end },	/* G */ 
+    { DI, DI, DI, DIT },	/* H */ 
+    { DI, DIT, end, end },	/* I */ 
+    { DI, DA, DA, DAH },	/* J */ 
+    { DA, DI, DAH, end },	/* K */ 
+    { DI, DA, DI, DIT },	/* L */ 
+    { DA, DAH, end, end },	/* M */ 
+    { DA, DIT, end, end },	/* N */ 
+    { DA, DA, DAH, end },	/* O */ 
+    { DI, DA, DA, DIT },	/* P */ 
+    { DA, DA, DI, DAH },	/* Q */ 
+    { DI, DA, DIT, end },	/* R */ 
+    { DI, DI, DIT, end },	/* S */ 
+    { DAH, end, end, end },	/* T */ 
+    { DI, DI, DAH, end },	/* U */ 
+    { DI, DI, DI, DAH },	/* V */ 
+    { DI, DA, DAH, end },	/* W */ 
+    { DA, DI, DI, DAH },	/* X */ 
+    { DA, DI, DA, DAH },	/* Y */ 
+    { DA, DA, DI, DIT }		/* Z */ 
+};
+
+
 // constructor
 FGMorse::FGMorse() {
 }
