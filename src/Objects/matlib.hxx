@@ -63,7 +63,7 @@ class FGMaterialLib {
 private:
 
     // associative array of materials
-    typedef map < string, FGNewMat, less<string> > material_map;
+    typedef map < string, FGNewMat *, less<string> > material_map;
     typedef material_map::iterator material_map_iterator;
     typedef material_map::const_iterator const_material_map_iterator;
 

@@ -119,24 +119,29 @@ bool FGMaterialLib::load( const string& mpath ) {
 	    in >> dst_mat >> src_mat;
 	    SG_LOG( SG_GENERAL, SG_INFO, "  Material alias: " << dst_mat <<
 		    " mapped to " << src_mat );
-	    FGNewMat m = matlib[src_mat];
-	    matlib[dst_mat] = m;
+	    FGNewMat *m = matlib[src_mat];
+            if ( m != NULL ) {
+                matlib[dst_mat] = m;
+            } else {
+                SG_LOG( SG_GENERAL, SG_ALERT,
+                        "Bad material alias pointing to nonexistant material" );
+            }
 	} else {
 	    in >> token;
 
 	    if ( token == '{' ) {
-		FGNewMat m;
-		in >> m;
+		FGNewMat *m = new FGNewMat;
+		in >> *m;
 
 		// build the ssgSimpleState
 		SGPath tex_path( globals->get_fg_root() );
 		tex_path.append( "Textures.high" );
-		tex_path.append( m.get_texture_name() );
+		tex_path.append( m->get_texture_name() );
 		if ( ! local_file_exists(tex_path.str())
 		     || general.get_glMaxTexSize() < 512 ) {
 		    tex_path = SGPath( globals->get_fg_root() );
 		    tex_path.append( "Textures" );
-		    tex_path.append( m.get_texture_name() );
+		    tex_path.append( m->get_texture_name() );
 		}
 	    
 		SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material " 
@@ -149,13 +154,13 @@ bool FGMaterialLib::load( const string& mpath ) {
 		    shade_model = GL_FLAT;
 		}
 
-		m.set_texture_name( tex_path.str() );
-		m.build_ssg_state( shade_model,
-				   fgGetBool("/sim/rendering/textures"),
-				   false );
+		m->set_texture_name( tex_path.str() );
+		m->build_ssg_state( shade_model,
+                                    fgGetBool("/sim/rendering/textures"),
+                                    false );
 
 #if EXTRA_DEBUG
-		m.dump_info();
+		m->dump_info();
 #endif
 	    
 		matlib[material_name] = m;
@@ -176,8 +181,8 @@ bool FGMaterialLib::load( const string& mpath ) {
     lights->disable( GL_ALPHA_TEST );
     lights->disable( GL_LIGHTING );
 
-    FGNewMat m;
-    m.set_ssg_state( lights );
+    FGNewMat *m = new FGNewMat;
+    m->set_ssg_state( lights );
     matlib["LIGHTS"] = m;
 
     return true;
@@ -202,13 +207,13 @@ bool FGMaterialLib::add_item ( const string &mat_name, const string &full_path )
     string tex_name = full_path.substr( pos + 1 );
     string tex_path = full_path.substr( 0, pos );
 
-    FGNewMat m( mat_name, full_path );
+    FGNewMat *m = new FGNewMat( mat_name, full_path );
 
     SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material " 
 	    << mat_name << " (" << full_path << ")");
 
 #if EXTRA_DEBUG
-    m.dump_info();
+    m->dump_info();
 #endif
 
     GLenum shade_model = GL_SMOOTH;
@@ -218,8 +223,9 @@ bool FGMaterialLib::add_item ( const string &mat_name, const string &full_path )
 	shade_model = GL_FLAT;
     }
 
-    m.build_ssg_state( shade_model, fgGetBool("/sim/rendering/textures"),
-		       true );
+    m->build_ssg_state( shade_model,
+                        fgGetBool("/sim/rendering/textures"),
+                        true );
 
     material_lib.matlib[mat_name] = m;
 
@@ -230,14 +236,14 @@ bool FGMaterialLib::add_item ( const string &mat_name, const string &full_path )
 // Load a library of material properties
 bool FGMaterialLib::add_item ( const string &mat_name, ssgSimpleState *state )
 {
-    FGNewMat m( mat_name );
-    m.set_ssg_state( state );
+    FGNewMat *m = new FGNewMat( mat_name );
+    m->set_ssg_state( state );
 
     SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material given a premade "
 	    << "ssgSimpleState = " << mat_name );
 
 #if EXTRA_DEBUG
-    m.dump_info();
+    m->dump_info();
 #endif
 
     material_lib.matlib[mat_name] = m;
@@ -251,7 +257,7 @@ FGNewMat *FGMaterialLib::find( const string& material ) {
     FGNewMat *result = NULL;
     material_map_iterator it = matlib.find( material );
     if ( it != end() ) {
-	result = &((*it).second);
+	result = it->second;
 	return result;
     }
 
@@ -272,8 +278,8 @@ void FGMaterialLib::set_step ( int step )
 	const string &key = it->first;
 	SG_LOG( SG_GENERAL, SG_INFO,
 		"Updating material " << key << " to step " << step );
-	FGNewMat &slot = it->second;
-	slot.get_state()->selectStep(step);
+	FGNewMat *slot = it->second;
+	slot->get_state()->selectStep(step);
     }
 }
 
@@ -284,17 +290,19 @@ void FGMaterialLib::load_next_deferred() {
     // container::iterator it = begin();
     for ( material_map_iterator it = begin(); it != end(); it++ ) {
 	const string &key = it->first;
-	FGNewMat &slot = it->second;
-	if ( ! slot.get_texture_loaded() ) {
-            SG_LOG( SG_GENERAL, SG_INFO, "Loading texture for " << key );
+	FGNewMat *slot = it->second;
+        // SG_LOG( SG_GENERAL, SG_INFO, "slot = " << slot );
+	if ( ! slot->get_texture_loaded() ) {
+            SG_LOG( SG_GENERAL, SG_INFO, "Loading deferred texture for "
+                    << key );
 #ifdef PLIB_1_2_X
-            slot.get_textured()->
-                setTexture( (char *)slot.get_texture_name_c_str(), 0, 0 );
+            slot->get_textured()->
+                setTexture( (char *)slot->get_texture_name_c_str(), 0, 0 );
 #else
-            slot.get_textured()->
-                setTexture( (char *)slot.get_texture_name_c_str(), 0, 0, 1 );
+            slot->get_textured()->
+                setTexture( (char *)slot->get_texture_name_c_str(), 0, 0, 1 );
 #endif
-            slot.set_texture_loaded( true );
+            slot->set_texture_loaded( true );
         }
     }
 }
