@@ -51,6 +51,7 @@ public:
    FGAIFlightPlan(string filename);
   FGAIFlightPlan(FGAIModelEntity *entity,
 		 double course,
+		 time_t start,
 		 FGAirport *dep,
 		 FGAirport *arr);
    ~FGAIFlightPlan();
@@ -66,6 +67,7 @@ public:
    double getLeadDistance( void ) const {return lead_distance;}
    double getBearing(waypoint* previous, waypoint* next);
    double getBearing(double lat, double lon, waypoint* next);
+  time_t getStartTime() { return start_time; }; 
 
   void    create(FGAirport *dep, FGAirport *arr, double alt, double speed);
 
@@ -79,6 +81,7 @@ private:
 
     double distance_to_go;
     double lead_distance;
+    time_t start_time;
 
 };    
 

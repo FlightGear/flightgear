@@ -167,7 +167,6 @@ bool FGRunwayList::search( const string& aptid, const string& rwyno,
         }
         revrwyno = GetReverseRunwayNo(runwayno);
     }
-
     runway_map_iterator pos;
     for ( pos = runways.lower_bound( aptid );
           pos != runways.upper_bound( aptid ); ++pos)

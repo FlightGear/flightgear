@@ -22,6 +22,11 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
+#include <Airports/simple.hxx>
+#include <Traffic/SchedFlight.hxx>
+#include <Traffic/Schedule.hxx>
+#include <Traffic/TrafficMgr.hxx>
+
 #include <list>
 
 #include "AIManager.hxx"
@@ -53,6 +58,11 @@ FGAIManager::~FGAIManager() {
       ++ai_list_itr;
     }
   ai_list.clear();
+  ModelVecIterator i = loadedModels.begin();
+  while (i != loadedModels.end())
+    {
+      i->getModelId()->deRef();
+    }
 }
 
 
@@ -88,6 +98,7 @@ void FGAIManager::update(double dt) {
         // initialize these for finding nearest thermals
         range_nearest = 10000.0;
         strength = 0.0;
+	FGTrafficManager *tmgr = (FGTrafficManager*) globals->get_subsystem("Traffic Manager");
 
         if (!enabled)
             return;
@@ -97,6 +108,7 @@ void FGAIManager::update(double dt) {
         ai_list_itr = ai_list.begin();
         while(ai_list_itr != ai_list.end()) {
                 if ((*ai_list_itr)->getDie()) {      
+		  tmgr->release((*ai_list_itr)->getID());
                    --numObjects[(*ai_list_itr)->getType()];
                    --numObjects[0];
                    (*ai_list_itr)->unbind();
@@ -124,9 +136,9 @@ void FGAIManager::update(double dt) {
 
 
 void*
-FGAIManager::createAircraft( FGAIModelEntity *entity ) {
+FGAIManager::createAircraft( FGAIModelEntity *entity,   FGAISchedule *ref) {
      
-        FGAIAircraft* ai_plane = new FGAIAircraft(this);
+        FGAIAircraft* ai_plane = new FGAIAircraft(this, ref);
         ai_list.push_back(ai_plane);
         ++numObjects[0];
         ++numObjects[FGAIBase::otAircraft];
@@ -351,5 +363,26 @@ void FGAIManager::processScenario( string &filename ) {
 
   delete s;
 }
+
+// This code keeps track of models that have already been loaded
+// Eventually we'd prbably need to find a way to keep track of models
+// that are unloaded again
+ssgBranch * FGAIManager::getModel(const string& path)
+{
+  ModelVecIterator i = loadedModels.begin();
+  while (i != loadedModels.end())
+    {
+      if (i->getPath() == path)
+	return i->getModelId();
+      i++;
+    }
+  return 0;
+}
+
+void FGAIManager::setModel(const string& path, ssgBranch *model)
+{
+  loadedModels.push_back(FGModelID(path,model));
+}
+
 
 //end AIManager.cxx

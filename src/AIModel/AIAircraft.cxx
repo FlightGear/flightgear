@@ -51,7 +51,8 @@ const FGAIAircraft::PERF_STRUCT FGAIAircraft::settings[] = {
 };
 
 
-FGAIAircraft::FGAIAircraft(FGAIManager* mgr) {
+FGAIAircraft::FGAIAircraft(FGAIManager* mgr, FGAISchedule *ref) {
+  trafficRef = ref;
    manager = mgr;   
    _type_str = "aircraft";
    _otype = otAircraft;
@@ -114,7 +115,14 @@ void FGAIAircraft::Run(double dt) {
 
    FGAIAircraft::dt = dt;
 
-   if (fp) ProcessFlightPlan(dt);
+   if (fp) 
+     {
+       ProcessFlightPlan(dt);
+       time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+       if (now < fp->getStartTime())
+        return;
+       //ProcessFlightPlan(dt);
+     }
 	
    double turn_radius_ft;
    double turn_circum_ft;
@@ -295,6 +303,8 @@ void FGAIAircraft::SetFlightPlan(FGAIFlightPlan *f) {
 }
 
 void FGAIAircraft::ProcessFlightPlan( double dt ) {
+ 
+
   FGAIFlightPlan::waypoint* prev = 0; // the one behind you
   FGAIFlightPlan::waypoint* curr = 0; // the one ahead
   FGAIFlightPlan::waypoint* next = 0; // the next plus 1
@@ -348,10 +358,35 @@ void FGAIAircraft::ProcessFlightPlan( double dt ) {
 
     if ( dist_to_go < lead_dist ) {
       if (curr->finished) {  //end of the flight plan, so terminate
-        setDie(true);
-        return;
+	  if (trafficRef)
+	    {
+	      delete fp;
+	      //time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+	      trafficRef->next();
+
+	      FGAIModelEntity entity;
+              entity.m_class = "jet_transport";
+              //entity.path = modelPath.c_str();
+              entity.flightplan = "none";
+              entity.latitude = _getLatitude();
+              entity.longitude = _getLongitude();
+              entity.altitude = trafficRef->getCruiseAlt() * 100; // convert from FL to feet
+              entity.speed = 450;
+	      //entity.fp = new FGAIFlightPlan(&entity, courseToDest, i->getDepartureTime(), dep, arr);
+	      entity.fp = new FGAIFlightPlan(&entity, 
+					     999,  // A hack
+					     trafficRef->getDepartureTime(), 
+					     trafficRef->getDepartureAirport(), 
+					     trafficRef->getArrivalAirport());
+	      SetFlightPlan(entity.fp);
+	    }
+	  else 
+	    {
+	      setDie(true);
+	      return;
+	    }
       }
-      // we've reached the lead-point for the waypoint ahead 
+	// we've reached the lead-point for the waypoint ahead 
       if (next) tgt_heading = fp->getBearing(curr, next);  
       fp->IncrementWaypoint();
       prev = fp->getPreviousWaypoint();
@@ -385,6 +420,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt ) {
   }
 
 }
+
 
 bool FGAIAircraft::_getGearDown() const {
    return ((props->getFloatValue("position/altitude-agl-ft") < 900.0)

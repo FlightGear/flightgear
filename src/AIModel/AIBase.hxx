@@ -202,6 +202,10 @@ public:
     int _getID() const;
 
     inline double _getRange() { return range; };
+  ssgBranch * load3DModel(const string& fg_root, 
+			  const string &path,
+			  SGPropertyNode *prop_root, 
+			  double sim_time_sec);
 
     static bool _isNight();
 };

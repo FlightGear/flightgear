@@ -24,6 +24,9 @@
 #include "AIManager.hxx"
 #include "AIBase.hxx"
 
+#include <Traffic/SchedFlight.hxx>
+#include <Traffic/Schedule.hxx>
+
 #include <string>
 SG_USING_STD(string);
 
@@ -49,7 +52,7 @@ public:
         enum aircraft_e {LIGHT=0, WW2_FIGHTER, JET_TRANSPORT, JET_FIGHTER, TANKER};
         static const PERF_STRUCT settings[];
 	
-	FGAIAircraft(FGAIManager* mgr);
+	FGAIAircraft(FGAIManager* mgr,   FGAISchedule *ref=0);
 	~FGAIAircraft();
 	
 	bool init();
@@ -70,7 +73,8 @@ public:
         inline void SetTanker(bool setting) { isTanker = setting; };
 
 private:
-
+   FGAISchedule *trafficRef;
+  
         bool hdg_lock;
         bool alt_lock;
         double dt_count;  

@@ -30,6 +30,7 @@
 #define _FGSCHEDULE_HXX_
 
 
+
 class FGAISchedule
 {
  private:
@@ -43,6 +44,7 @@ class FGAISchedule
   void* AIManagerRef;
   bool firstRun;
 
+
  public:
   FGAISchedule();                                           // constructor
   FGAISchedule(string, string, string, bool, FGScheduledFlightVec);  // construct & init
@@ -51,6 +53,12 @@ class FGAISchedule
   ~FGAISchedule(); //destructor
 
   void update(time_t now);
+  void next();   // forces the schedule to move on to the next flight.
+
+  time_t      getDepartureTime    () { return flights.begin()->getDepartureTime   (); };
+  FGAirport * getDepartureAirport () { return flights.begin()->getDepartureAirport(); };
+  FGAirport * getArrivalAirport   () { return flights.begin()->getArrivalAirport  (); };
+  int         getCruiseAlt        () { return flights.begin()->getCruiseAlt       (); };
   // More member functions follow later
 
 };

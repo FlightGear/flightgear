@@ -44,6 +44,7 @@
 FGAIFlightPlan::FGAIFlightPlan(string filename)
 {
   int i;
+  start_time = 0;
   SGPath path( globals->get_fg_root() );
   path.append( ("/Data/AI/FlightPlans/" + filename).c_str() );
   SGPropertyNode root;
@@ -90,16 +91,30 @@ FGAIFlightPlan::FGAIFlightPlan(string filename)
 // as setting speeds and altitude computed by the
 // traffic manager. 
 FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
-			       double course, 
+			       double course,
+			       time_t start,
 			       FGAirport *dep,
 			       FGAirport *arr)
 {
+  start_time = start;
   bool useInitialWayPoint = true;
   bool useCurrentWayPoint = false;
   SGPath path( globals->get_fg_root() );
   path.append( "/Data/AI/FlightPlans" );
   path.append( entity->path );
   SGPropertyNode root;
+  
+  // This is a bit of a hack:
+  // Normally the value of course will be used to evaluate whether
+  // or not a waypoint will be used for midair initialization of 
+  // an AI aircraft. However, if a course value of 999 will be passed
+  // when an update request is received, which will by definition always be
+  // on the ground and should include all waypoints.
+  if (course == 999) 
+    {
+      useInitialWayPoint = false;
+      useCurrentWayPoint = true;
+    }
 
   try {
     readProperties(path.str(), &root);
@@ -160,7 +175,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
 		       (*i)->altitude);
       double crse, crsDiff;
       double dist;
-      first.CourseAndDistance(curr, &crse, &dist);
+      curr.CourseAndDistance(first, &crse, &dist);
       
       dist *= SG_METER_TO_NM;
       
@@ -182,8 +197,8 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
 	  // so once is the useWpt flag is set to true, we cannot reset it to false.
 	  //cerr << "Discarding waypoint: " << (*i)->name 
 	  //   << ": Course difference = " << crsDiff
-	  //   << "Course = " << course
-	  //   << "crse   = " << crse << endl;
+	  //  << "Course = " << course
+	  // << "crse   = " << crse << endl;
 	}
       else
 	useCurrentWayPoint = true;
@@ -192,10 +207,14 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIModelEntity *entity,
 	{
 	  if ((dist > 100.0) && (useInitialWayPoint))
 	    {
-	      //waypoints.push_back(init_waypoint);
+	      //waypoints.push_back(init_waypoint);;
 	      waypoints.insert(i, init_waypoint);
 	      //cerr << "Using waypoint : " << init_waypoint->name <<  endl;
 	    }
+	  //if (useInitialWayPoint)
+	  // {
+	  //    (*i)->speed = dist; // A hack
+	  //  }
 	  //waypoints.push_back( wpt );
 	  //cerr << "Using waypoint : " << (*i)->name 
 	  //  << ": course diff : " << crsDiff 
@@ -342,26 +361,35 @@ double FGAIFlightPlan::getBearing(double lat, double lon, waypoint* wp){
  */ 
 void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, double alt, double speed)
 {
-  double wind_speed;
+double wind_speed;
   double wind_heading;
   FGRunway rwy;
+  double lat, lon, az;
+  double lat2, lon2, az2;
+  int direction;
   
   //waypoints.push_back(wpt);
   // Create the outbound taxi leg, for now simplified as a 
   // Direct route from the airport center point to the start
   // of the runway.
   ///////////////////////////////////////////////////////////
-      //cerr << "Cruise Alt << " << alt << endl;
+    //cerr << "Cruise Alt << " << alt << endl;
+    // Temporary code to add some small random variation to aircraft parking positions;
+  direction = (rand() % 360);
+geo_direct_wgs_84 ( 0, dep->latitude, dep->longitude, direction, 
+      100,
+      &lat2, &lon2, &az2 );
   waypoint *wpt = new waypoint;
   wpt->name      = dep->id; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = dep->latitude;
-  wpt->longitude = dep->longitude;
+  wpt->latitude  = lat2;
+  wpt->longitude = lon2;
   wpt->altitude  = dep->elevation + 19; // probably need to add some model height to it
   wpt->speed     = 15; 
   wpt->crossat   = -10000;
   wpt->gear_down = true;
   wpt->flaps_down= true;
   wpt->finished  = false;
+  wpt->on_ground = true;
   waypoints.push_back(wpt);
   
   // Get the current active runway, based on code from David Luff
@@ -384,8 +412,7 @@ void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, double alt, double s
       exit(1);
     }
 
-  double lat, lon, az;
-  double lat2, lon2, az2;
+ 
   double heading = rwy.heading;
   double azimuth = heading + 180.0;
   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
@@ -546,7 +573,7 @@ void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, double alt, double s
   waypoints.push_back(wpt); 
   //Runway Threshold
  geo_direct_wgs_84 ( 0, rwy.lat, rwy.lon, azimuth, 
-		     rwy.length*0.45,
+		     rwy.length*0.45 * SG_FEET_TO_METER,
 		     &lat2, &lon2, &az2 );
   wpt = new waypoint;
   wpt->name      = "Threshold"; //wpt_node->getStringValue("name", "END");
@@ -575,28 +602,33 @@ void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, double alt, double s
   wpt->gear_down = true;
   wpt->flaps_down= true;
   wpt->finished  = false;
-  wpt->on_ground = false;
+  wpt->on_ground = true;
   waypoints.push_back(wpt); 
+
+direction = (rand() % 360);
+geo_direct_wgs_84 ( 0, arr->latitude, arr->longitude, direction, 
+  100,
+  &lat2, &lon2, &az2 );
 
   // Add the final destination waypoint
   wpt = new waypoint;
   wpt->name      = arr->id; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = arr->latitude;
-  wpt->longitude = arr->longitude;
+  wpt->latitude  = lat2;
+  wpt->longitude = lon2;
   wpt->altitude  = arr->elevation+19;
   wpt->speed     = 15; 
   wpt->crossat   = -10000;
   wpt->gear_down = true;
   wpt->flaps_down= true;
   wpt->finished  = false;
-  wpt->on_ground = false;
+  wpt->on_ground = true;
   waypoints.push_back(wpt); 
 
   // And finally one more named "END"
   wpt = new waypoint;
   wpt->name      = "END"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = arr->latitude;
-  wpt->longitude = arr->longitude;
+  wpt->latitude  = lat2;
+  wpt->longitude = lon2;
   wpt->altitude  = 19;
   wpt->speed     = 15; 
   wpt->crossat   = -10000;
@@ -609,14 +641,14 @@ void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, double alt, double s
  // And finally one more named "EOF"
   wpt = new waypoint;
   wpt->name      = "EOF"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = arr->latitude;
-  wpt->longitude = arr->longitude;
+  wpt->latitude  = lat2;
+  wpt->longitude = lon2;
   wpt->altitude  = 19;
   wpt->speed     = 15; 
   wpt->crossat   = -10000;
   wpt->gear_down = true;
   wpt->flaps_down= true;
   wpt->finished  = true;
-  wpt->finished  = true;
+  wpt->on_ground  = true;
   waypoints.push_back(wpt);
 }

@@ -34,6 +34,10 @@
 #include "Schedule.hxx"
 
 
+typedef vector<void *> IdList;
+typedef vector<void *>::iterator IdListIterator;
+
+
 class FGTrafficManager : public SGSubsystem, public XMLVisitor
 {
 private:
@@ -46,6 +50,8 @@ private:
     repeat;
   int cruiseAlt;
   bool heavy;
+
+  IdList releaseList;
     
   FGScheduledFlightVec flights;
 
@@ -54,6 +60,8 @@ public:
   
   void init();
   void update(double time);
+  void release(void *ref);
+  bool isReleased(void *id);
 
   // Some overloaded virtual XMLVisitor members
   virtual void startXML (); 

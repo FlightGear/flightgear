@@ -155,6 +155,14 @@ void FGAISchedule::update(time_t now)
   // of the first listed flight. 
   sort(flights.begin(), flights.end());
   FGScheduledFlightVecIterator i = flights.begin();
+  if (AIManagerRef)
+    {
+      // Check if this aircraft has been released. 
+      FGTrafficManager *tmgr = (FGTrafficManager *) globals->get_subsystem("Traffic Manager");
+      if (tmgr->isReleased(AIManagerRef))
+	AIManagerRef = 0;
+    }
+
   if (!AIManagerRef)
     {
       userLatitude  = fgGetDouble("/position/latitude-deg");
@@ -173,7 +181,11 @@ void FGAISchedule::update(time_t now)
       // This flight is in progress, so we need to calculate it's
       // approximate position and -if in range- create an AIAircraft
       // object for it. 
-      if ((i->getDepartureTime() < now) && (i->getArrivalTime() > now))
+      //if ((i->getDepartureTime() < now) && (i->getArrivalTime() > now))
+      
+
+      // Part of this flight is in the future.
+      if (i->getArrivalTime() > now)
 	{
 	  dep = i->getDepartureAirport();
 	  arr = i->getArrivalAirport  ();
@@ -205,6 +217,7 @@ void FGAISchedule::update(time_t now)
 	  // arrival airport, in degrees. From here we can interpolate the
 	  // position of the aircraft by calculating the ratio between 
 	  // total time enroute and elapsed time enroute. 
+ 
 	  totalTimeEnroute     = i->getArrivalTime() - i->getDepartureTime();
 	  elapsedTimeEnroute   = now - i->getDepartureTime();
 	  remainingTimeEnroute = i->getArrivalTime()   - now;  
@@ -226,8 +239,20 @@ void FGAISchedule::update(time_t now)
 
 	  temp = sgCartToPolar3d(Point3D(newPos[0], newPos[1],newPos[2]));
 
-	  lat = temp.lat() * SG_RADIANS_TO_DEGREES;
-	  lon = temp.lon() * SG_RADIANS_TO_DEGREES;
+	  if (now > i->getDepartureTime())
+	    {
+	      //cerr << "Lat = " << lat << ", lon = " << lon << endl;
+	      //cerr << "Time diff: " << now-i->getDepartureTime() << endl;
+	      lat = temp.lat() * SG_RADIANS_TO_DEGREES;
+	      lon = temp.lon() * SG_RADIANS_TO_DEGREES; 
+	      //err << "Lat = " << lat << ", lon = " << lon << endl;
+	      //cerr << "Time diff: " << now-i->getDepartureTime() << endl;
+	    }
+	  else
+	    {
+	      lat = dep->latitude;
+	      lon = dep->longitude;
+	    }
 	  
 	  SGWayPoint current  (lon,
 			       lat,
@@ -240,8 +265,8 @@ void FGAISchedule::update(time_t now)
 			      i->getCruiseAlt());
 	  // We really only need distance to user
 	  // and course to destination 
-	  current.CourseAndDistance(user, &courseToUser, &distanceToUser);
-	  current.CourseAndDistance(dest, &courseToDest, &distanceToDest);
+	  user.CourseAndDistance(current, &courseToUser, &distanceToUser);
+	  dest.CourseAndDistance(current, &courseToDest, &distanceToDest);
 	  speed =  (distanceToDest*SG_METER_TO_NM) / 
 	    ((double) remainingTimeEnroute/3600.0);
 	  
@@ -257,6 +282,15 @@ void FGAISchedule::update(time_t now)
 	    {
 	      string flightPlanName = dep->id + string("-") + arr->id + 
 		string(".xml");
+	      int alt;
+	      //if  ((i->getDepartureTime() < now))
+	      //{
+	      //	  alt = i->getCruiseAlt() *100;
+	      //	}
+	      //else
+	      //{
+	      //	  alt = dep->elevation+19;
+	      //	}
 
               FGAIModelEntity entity;
 
@@ -265,13 +299,13 @@ void FGAISchedule::update(time_t now)
               entity.flightplan = flightPlanName.c_str();
               entity.latitude = lat;
               entity.longitude = lon;
-              entity.altitude = i->getCruiseAlt() * 100; // convert from FL to feet
+              entity.altitude = i->getCruiseAlt() *100; // convert from FL to feet
               entity.speed = 450;
-	      entity.fp = new FGAIFlightPlan(&entity, courseToDest, dep, arr);
+	      entity.fp = new FGAIFlightPlan(&entity, courseToDest, i->getDepartureTime(), dep, arr);
 
 	      // Fixme: A non-existent model path results in an
 	      // abort, due to an unhandled exeption, in fg main loop.
-	      AIManagerRef = aimgr->createAircraft( &entity );
+	      AIManagerRef = aimgr->createAircraft( &entity, this);
 	      //cerr << "Created: " << AIManagerRef << endl;
 	    }
 	  return;
@@ -279,7 +313,7 @@ void FGAISchedule::update(time_t now)
 
       // Both departure and arrival time are in the future, so this
       // the aircraft is parked at the departure airport.
-      // Currently this status is mostly ignored, but in furture
+      // Currently this status is mostly ignored, but in future
       // versions, code should go here that -if within user range-
       // positions these aircraft at parking locations at the airport.
       if ((i->getDepartureTime() > now) && (i->getArrivalTime() > now))
@@ -289,3 +323,11 @@ void FGAISchedule::update(time_t now)
 	} 
     }
 }
+
+
+void FGAISchedule::next()
+{
+  flights.begin()->update();
+  sort(flights.begin(), flights.end());
+}
+

@@ -89,6 +89,26 @@ void FGTrafficManager::update(double something)
     currAircraft++;
 }
 
+void FGTrafficManager::release(void *id)
+{
+  releaseList.push_back(id);
+}
+
+bool FGTrafficManager::isReleased(void *id)
+{
+  IdListIterator i = releaseList.begin();
+  while (i != releaseList.end())
+    {
+      if ((*i) == id)
+	{
+	  releaseList.erase(i);
+	  return true;
+	}
+      i++;
+    }
+  return false;
+}
+
 void  FGTrafficManager::startXML () {
   //cout << "Start XML" << endl;
 }

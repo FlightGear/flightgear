@@ -136,7 +136,7 @@ bool FGAIBase::init() {
    props = root->getNode(_type_str.c_str(), index, true);
 
    if (model_path != "") {
-      model = sgLoad3DModel( globals->get_fg_root(),
+      model = load3DModel( globals->get_fg_root(),
 	                     model_path.c_str(),
                              props,
 	                     globals->get_sim_time_sec() );
@@ -155,6 +155,36 @@ bool FGAIBase::init() {
    setDie(false);
 
    return true;
+}
+
+
+ssgBranch * FGAIBase::load3DModel(const string& fg_root, 
+				  const string &path,
+				  SGPropertyNode *prop_root, 
+				  double sim_time_sec)
+{
+  // some more code here to check whether a model with this name has already been loaded
+  // if not load it, otherwise, get the memory pointer and do something like 
+  // SetModel as in ATC/AIEntity.cxx
+  //SSGBranch *model;
+  model = manager->getModel(path);
+  if (!(model))
+    {
+      model = sgLoad3DModel(fg_root,
+			    path,
+			    prop_root,
+			    sim_time_sec);
+      manager->setModel(path, model);
+      model->ref();
+    }
+  //else
+  //  {
+  //    model->ref();
+  //    aip.init(model);
+  //    aip.setVisible(false);
+  //    globals->get_scenery()->get_scene_graph()->addKid(aip.getSceneGraph());
+  // do some setModel stuff.
+  return model;
 }
 
 bool FGAIBase::isa( object_type otype ) {

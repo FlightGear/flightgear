@@ -33,7 +33,26 @@
 #include <AIModel/AIScenario.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 
+#include <Traffic/SchedFlight.hxx>
+#include <Traffic/Schedule.hxx>
+
 SG_USING_STD(list);
+SG_USING_STD(vector);
+
+class FGModelID
+{
+private:
+  ssgBranch * model;
+  string path;
+public:
+  FGModelID(const string& pth, ssgBranch * mdl) { path =pth; model=mdl;};
+  ssgBranch *getModelId() { return model;};
+  const string & getPath() { return path;};
+};
+
+typedef vector<FGModelID> ModelVec;
+typedef vector<FGModelID>::iterator ModelVecIterator;
+
 class FGAIThermal;
 
 
@@ -51,6 +70,7 @@ private:
     // on the heap and ***DELETED WHEN REMOVED!!!!!***
     ai_list_type ai_list;
     ai_list_iterator ai_list_itr;
+  ModelVec loadedModels;
 
 public:
 
@@ -63,7 +83,7 @@ public:
     void update(double dt);
 
     void* createBallistic( FGAIModelEntity *entity );
-    void* createAircraft( FGAIModelEntity *entity );
+    void* createAircraft( FGAIModelEntity *entity,   FGAISchedule *ref=0 );
     void* createThermal( FGAIModelEntity *entity );
     void* createStorm( FGAIModelEntity *entity );
     void* createShip( FGAIModelEntity *entity );
@@ -84,6 +104,9 @@ public:
     }
 
     void processScenario( string &filename );
+
+  ssgBranch * getModel(const string& path);
+  void setModel(const string& path, ssgBranch *model);
 
 private:
 
