@@ -223,12 +223,9 @@ while ( <MASTER> ) {
 
 	print OUT "<A HREF=\"$link/$linkname.html\">";
 	print OUT "<IMG WIDTH=$twidth HEIGHT=$theight SRC=\"$sdir/$i\" ALT=\"$linkname\">";
-	print OUT "</A>\n";
+	print OUT "</A><BR>\n";
 
 	if ( -f "$src/$linkname.txt" ) {
-	    if ( $twidth < $swidth ) {
-		print OUT "<BR>\n";
-	    }
 	    print OUT "<FONT SIZE=-1 id=\"fgfs\">\n";
 	    open( IN, "<$src/$linkname.txt" );
 	    while ( <IN> ) {
@@ -237,9 +234,6 @@ while ( <MASTER> ) {
 	    close( IN );
 	    print OUT "</FONT>\n";
 	} else {
-	    if ( $twidth < $swidth ) {
-		print OUT "<BR>\n";
-	    }
 	    print OUT "<FONT SIZE=-1 id=\"fgfs\">\n";
 	    print OUT "$linkname\n";
 	    print OUT "</FONT>\n";
