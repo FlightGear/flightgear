@@ -118,10 +118,10 @@ public:
     void togglePauseMode() { pause = !pause; }; 
 
     // Initialize the time dependent variables
-    void init(FGInterface *f);
+    void init(const FGInterface& f);
 
     // Update the time dependent variables
-    void update(FGInterface *f);
+    void update(const FGInterface& f);
 
     void cal_mjd (int mn, double dy, int yr);
     void utc_gst(); 

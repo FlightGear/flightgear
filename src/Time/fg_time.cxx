@@ -100,7 +100,7 @@ FGTime::~FGTime()
 
 // Initialize the time dependent variables (maybe I'll put this in the
 // constructor later)
-void FGTime::init(FGInterface *f) 
+void FGTime::init(const FGInterface& f) 
 {
     FG_LOG( FG_EVENT, FG_INFO, "Initializing Time" );
     gst_diff = -9999.0;
@@ -121,8 +121,8 @@ void FGTime::init(FGInterface *f)
     // printf ("Current greenwich mean time = %24s", asctime(gmtime(&cur_time)));
     // printf ("Current local time          = %24s", asctime(localtime(&cur_time)));
     // time_t tmp = cur_time;
-    GeoCoord location(RAD_TO_DEG * f->get_Latitude(), 
-		      RAD_TO_DEG * f->get_Longitude());
+    GeoCoord location(RAD_TO_DEG * f.get_Latitude(), 
+		      RAD_TO_DEG * f.get_Longitude());
 
     GeoCoord* nearestTz = tzContainer->getNearest(location);
 
@@ -316,7 +316,7 @@ double FGTime::sidereal_course(double lng)
 
 
 // Update time variables such as gmt, julian date, and sidereal time
-void FGTime::update(FGInterface *f) 
+void FGTime::update(const FGInterface& f) 
 {
     double gst_precise, gst_course;
 
@@ -368,17 +368,17 @@ void FGTime::update(FGInterface *f)
       
 	gst_diff = gst_precise - gst_course;
 
-	lst = sidereal_course(-(f->get_Longitude() * RAD_TO_DEG)) + gst_diff;
+	lst = sidereal_course(-(f.get_Longitude() * RAD_TO_DEG)) + gst_diff;
     } else {
 	// course + difference should drift off very slowly
 	gst = sidereal_course( 0.00                              ) + gst_diff;
-	lst = sidereal_course( -(f->get_Longitude() * RAD_TO_DEG)) + gst_diff;
+	lst = sidereal_course( -(f.get_Longitude() * RAD_TO_DEG)) + gst_diff;
     }
     FG_LOG( FG_EVENT, FG_DEBUG,
 	    "  Current lon=0.00 Sidereal Time = " << gst );
     FG_LOG( FG_EVENT, FG_DEBUG,
 	    "  Current LOCAL Sidereal Time = " << lst << " (" 
-	    << sidereal_precise(-(f->get_Longitude() * RAD_TO_DEG)) 
+	    << sidereal_precise(-(f.get_Longitude() * RAD_TO_DEG)) 
 	    << ") (diff = " << gst_diff << ")" );
 }
 

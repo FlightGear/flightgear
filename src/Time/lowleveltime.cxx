@@ -114,7 +114,7 @@ static size_t num_leaps;
 static struct leap *leaps = NULL;
 
 
-static void fgtzset_internal (int always, char*tz);
+static void fgtzset_internal (int always, const char *tz);
 static int fgtz_compute(time_t timer, const struct tm *tm);
 static int fgcompute_change(fgtz_rule *rule, int year);
 static struct ttinfo *fgfind_transition (time_t timer);
@@ -162,7 +162,7 @@ struct tm _fgtmbuf;
 
 
 /* Return the `struct tm' representation of *T in local time.  */
-struct tm * fgLocaltime (const time_t *t, char *tzName)
+struct tm * fgLocaltime (const time_t *t, const char *tzName)
 {
   return fgtz_convert (t, 1, &_fgtmbuf, tzName);
 }
@@ -170,7 +170,7 @@ struct tm * fgLocaltime (const time_t *t, char *tzName)
 
 /* Return the `struct tm' representation of *TIMER in the local timezone.
    Use local time if USE_LOCALTIME is nonzero, UTC otherwise.  */
-struct tm * fgtz_convert (const time_t *timer, int use_localtime, struct tm *tp, char *tzName)
+struct tm * fgtz_convert (const time_t *timer, int use_localtime, struct tm *tp, const char *tzName)
 {
   long int leap_correction;
   long int offsetCorr;                 // ADDED TO RESOLVE NON-ANSI FIELDS IN struct tm
@@ -276,7 +276,7 @@ static char *abbr(struct tm *tmp)
 
 
 /* Interpret the TZ envariable.  */
-static void fgtzset_internal (int always, char* tz)
+static void fgtzset_internal (int always, const char *tz)
 {
   time_t now;
   time(&now);

@@ -39,11 +39,11 @@
 void show (const char *zone, time_t t, int v);
 
 /* adapted from <time.h> */
-struct tm * fgLocaltime (const time_t *t, char *tzName);
+struct tm * fgLocaltime (const time_t *t, const char *tzName);
 
 /* Prototype for the internal function to get information based on TZ.  */
 extern struct tm *fgtz_convert (const time_t *t, int use_localtime,
-				     struct tm *tp, char *tzName);
+				     struct tm *tp, const char *tzName);
 
 /* This structure contains all the information about a
    timezone given in the POSIX standard TZ envariable.  */
