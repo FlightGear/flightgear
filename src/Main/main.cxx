@@ -661,14 +661,7 @@ void fgRenderFrame( void ) {
 	ssgSetFOV( globals->get_current_view()->get_h_fov(),
 		   globals->get_current_view()->get_v_fov() );
 
-	double agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
-	    - scenery.get_cur_elev();
-
-	if ( agl > 10.0 ) {
-	    ssgSetNearFar( 10.0f, 120000.0f );
-	} else {
-	    ssgSetNearFar( 0.5f, 120000.0f );
-	}
+	ssgSetNearFar( 0.1f, 120000.0f );
 
 	current_model.update(0); // FIXME: use real delta time
 
