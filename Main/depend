@@ -34,9 +34,10 @@ fg_init.o: fg_init.c fg_init.h views.h ../Include/types.h \
  ../Astro/stars.h ../Astro/sun.h ../Cockpit/cockpit.h ../Cockpit/hud.h \
  ../Cockpit/../Aircraft/aircraft.h ../Cockpit/../Flight/flight.h \
  ../Cockpit/../Controls/controls.h ../Joystick/joystick.h \
- ../Math/fg_random.h ../Scenery/mesh.h ../Scenery/scenery.h \
- ../Scenery/../Include/types.h ../Time/event.h ../Time/sunpos.h \
- ../Weather/weather.h
+ ../Math/fg_random.h ../Scenery/tilemgr.h ../Scenery/mesh.h \
+ ../Scenery/scenery.h ../Scenery/../Include/types.h ../Time/event.h \
+ ../Time/sunpos.h ../Weather/weather.h
+probdemo.o: probdemo.c ../XGL/xgl.h
 views.o: views.c views.h ../Include/types.h ../Flight/flight.h \
  ../Flight/Slew/slew.h ../Flight/LaRCsim/ls_interface.h \
  ../Flight/LaRCsim/../flight.h ../Math/mat3.h ../Time/fg_time.h \

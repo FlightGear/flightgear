@@ -51,6 +51,7 @@
 #include "../Math/polar.h"
 #include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
+#include "../Scenery/tilemgr.h"
 #include "../Time/event.h"
 #include "../Time/fg_time.h"
 #include "../Time/fg_timer.h"
@@ -514,6 +515,9 @@ static void fgMainLoop( void ) {
 
     /* fgAircraftOutputCurrent(a); */
 
+    /* see if we need to load any new scenery tiles */
+    fgTileMgrUpdate();
+
     /* Process/manage pending events */
     fgEventProcess();
 
@@ -628,9 +632,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.45  1998/01/07 03:18:55  curt
-/* Moved astronomical stuff from .../Src/Scenery to .../Src/Astro/
+/* Revision 1.46  1998/01/08 02:22:06  curt
+/* Beginning to integrate Tile management subsystem.
 /*
+ * Revision 1.45  1998/01/07 03:18:55  curt
+ * Moved astronomical stuff from .../Src/Scenery to .../Src/Astro/
+ *
  * Revision 1.44  1997/12/30 22:22:31  curt
  * Further integration of event manager.
  *

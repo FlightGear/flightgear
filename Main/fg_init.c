@@ -43,6 +43,7 @@
 #include "../Math/fg_random.h"
 #include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
+#include "../Scenery/tilemgr.h"
 #include "../Time/event.h"
 #include "../Time/fg_time.h"
 #include "../Time/sunpos.h"
@@ -223,6 +224,7 @@ void fgInitSubsystems( void ) {
     fgSkyInit();
 
     /* Initialize the Scenery Management subsystem */
+    fgTileMgrInit();
     fgSceneryInit();
 
     /* Tell the Scenery Management system where we are so it can load
@@ -267,9 +269,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.28  1998/01/07 03:18:58  curt
-/* Moved astronomical stuff from .../Src/Scenery to .../Src/Astro/
+/* Revision 1.29  1998/01/08 02:22:08  curt
+/* Beginning to integrate Tile management subsystem.
 /*
+ * Revision 1.28  1998/01/07 03:18:58  curt
+ * Moved astronomical stuff from .../Src/Scenery to .../Src/Astro/
+ *
  * Revision 1.27  1998/01/05 18:44:35  curt
  * Add an option to advance/decrease time from keyboard.
  *
