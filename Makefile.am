@@ -2,7 +2,7 @@ SUBDIRS = \
 	tests \
 	src
 
-EXTRA_DIST = Thanks VERSION acsite.m4 acconfig.h irix-hack.pl \
+EXTRA_DIST = Thanks acsite.m4 acconfig.h irix-hack.pl \
 	FlightGear.dsp FlightGear.dsw
 
 dist-hook:
@@ -50,7 +50,7 @@ fgfs-base-zip:
 
 fgfs-base-patch:
 	(cd $(HOME); \
-	tar --newer 9/18/2000 -czvf fgfs-base-patch-$(VERSION)b.tar.gz \
+	tar --newer 10/12/2000 -czvf fgfs-base-patch-$(VERSION)c.tar.gz \
 	FlightGear/A[A-su-z]* \
 	FlightGear/[B-CE-R]* \
 	FlightGear/Scenery/w130n30/w123n37 \
