@@ -44,14 +44,17 @@ int main(int argc, char **argv) {
     /* load the corresponding dem file so we can interpolate elev values */
     dem_parse(basename, &dem_mesh);
 
-    fixnodes(&dem_mesh);
+    fixnodes(basename, &dem_mesh);
 
     return(0);
 }
 
 
 /* $Log$
-/* Revision 1.1  1997/11/27 00:17:34  curt
-/* Initial revision.
+/* Revision 1.2  1997/12/02 13:12:07  curt
+/* Updated to fix every node.
 /*
+ * Revision 1.1  1997/11/27 00:17:34  curt
+ * Initial revision.
+ *
  */

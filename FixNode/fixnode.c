@@ -33,23 +33,51 @@
 
 
 /* load the node information */
-void fixnodes(struct MESH *m) {
+void fixnodes(char *basename, struct MESH *m) {
+    char file[256];
+    FILE *fd;
     int i;
 
-    for ( i = origcount + 1; i <= nodecount; i++ ) {
-	printf("Current: %d %.2f %.2f %.2f\n", i, nodes[i][0],
-	       nodes[i][1], nodes[i][2]);
+    printf("Fixing up node elevations\n");
+
+    /* we could just fix the new nodes as the first "for" statement
+     * would do, but that leads to funny results (I need to figure out
+     * why.)  So, let's try fixing all of them */
+
+    /* for ( i = origcount + 1; i <= nodecount; i++ ) { */
+    for ( i = 1; i <= nodecount; i++ ) {
+	/* printf("Current: %d %.2f %.2f %.2f\n", i, nodes[i][0],
+	       nodes[i][1], nodes[i][2]); */
 
 	nodes[i][2] = mesh_altitude(m, nodes[i][0], nodes[i][1]);
 
-	printf("Fixed: %d %.2f %.2f %.2f\n", i, nodes[i][0],
+	/* printf("Fixed: %d %.2f %.2f %.2f\n", i, nodes[i][0],
+	       nodes[i][1], nodes[i][2]); */
+    }
+
+    strcpy(file, basename);
+    strcat(file, ".1.node");
+
+    printf("Overwriting original node file: %s\n", file);
+
+    fd = fopen(file, "w");
+
+    fprintf(fd, "%d 2 1 0\n", nodecount);
+
+    for ( i = 1; i <= nodecount; i++ ) {
+	fprintf(fd, "%d %.2f %.2f %.2f 0\n", i, nodes[i][0],
 	       nodes[i][1], nodes[i][2]);
     }
+
+    fclose(fd);
 }
 
 
 /* $Log$
-/* Revision 1.1  1997/11/27 00:17:33  curt
-/* Initial revision.
+/* Revision 1.2  1997/12/02 13:12:07  curt
+/* Updated to fix every node.
 /*
+ * Revision 1.1  1997/11/27 00:17:33  curt
+ * Initial revision.
+ *
  */

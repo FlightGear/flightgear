@@ -36,14 +36,17 @@
 
 
 /* load the node information */
-void fixnodes(struct MESH *m);
+void fixnodes(char *basename, struct MESH *m);
 
 
 #endif /* FIXNODE_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/11/27 00:17:33  curt
-/* Initial revision.
+/* Revision 1.2  1997/12/02 13:12:07  curt
+/* Updated to fix every node.
 /*
+ * Revision 1.1  1997/11/27 00:17:33  curt
+ * Initial revision.
+ *
  */
