@@ -233,7 +233,7 @@ void uiuc_coef_pitch()
         case Cmfade_flag:
           {
 	    // compute the induced velocity on the tail to account for tail downwash
-	    gamma_wing = V_rel_wind * Sw * CL / (2.0 * bw);
+	    /* gamma_wing = V_rel_wind * Sw * CL / (2.0 * bw);
 	    w_coef = 0.036;
 	    w_induced  = w_coef * gamma_wing;
 	    downwash_angle = atan(w_induced/V_rel_wind);
@@ -244,8 +244,15 @@ void uiuc_coef_pitch()
                                            Cmfade_nAlphaArray,
                                            Cmfade_nde,
                                            AlphaTail,
+                                           elevator); */
+	    CmfadeI = uiuc_2Dinterpolation(Cmfade_aArray,
+                                           Cmfade_deArray,
+                                           Cmfade_CmArray,
+                                           Cmfade_nAlphaArray,
+                                           Cmfade_nde,
+                                           Alpha,
                                            elevator);
-	    // Cm += CmfadeI;
+		    // Cm += CmfadeI;
 	    if (eta_q_Cmfade_fac)
 	      {
 		Cm += CmfadeI * eta_q_Cmfade_fac;
