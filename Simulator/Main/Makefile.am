@@ -64,7 +64,7 @@ fgfs_LDADD = \
 	$(top_builddir)/Lib/Math/libMath.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Debug/libDebug.a \
-	-L$(top_builddir)/Lib/plib/src/pui -lpu \
+	-lpu -lfnt \
 	$(top_builddir)/Lib/zlib/libz.a \
 	$(top_builddir)/Lib/Misc/libMisc.a \
 	$(opengl_LIBS)

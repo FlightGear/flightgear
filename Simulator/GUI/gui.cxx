@@ -63,24 +63,42 @@
 
 FG_USING_STD(string);
 
-static puMenuBar    *mainMenuBar;
-static puButton     *hideMenuButton;
+// Pui hides low level access to the mouse and menu display states
+// so for now we track these in case we want to know about them
+puFont guiFnt = 0;               // Our High Level Gui Font
+fntTexFont *guiFntHandle = 0;    // lower level access to guiFnt's Font
+static int _mX = 0;              // current mouse x
+static int  _mY = 0;             //               y
+static int last_buttons = 0 ;    // mouse button state
+static int mouse_active = 0;     // is mouse displayed
+static int menu_on = 0;          //    menu  displayed
 
-static puDialogBox  *dialogBox;
-static puFrame      *dialogFrame;
-static puText       *dialogBoxMessage;
-static puOneShot    *dialogBoxOkButton;
 
+// PUI objects
+static puMenuBar    *mainMenuBar = 0;
+//static puButton     *hideMenuButton = 0;
+
+static puDialogBox  *dialogBox = 0;
+static puFrame      *dialogFrame = 0;
+static puText       *dialogBoxMessage = 0;
+static puOneShot    *dialogBoxOkButton = 0;
+
+
+static puDialogBox  *YNdialogBox = 0;
+static puFrame      *YNdialogFrame = 0;
+static puText       *YNdialogBoxMessage = 0;
+static puOneShot    *YNdialogBoxOkButton = 0;
+static puOneShot    *YNdialogBoxNoButton = 0;
+
+// Accessor CallBacks for external PUI Objects
+extern void NewAltitude( puObject *cb );
+extern void NewHeading( puObject *cb );
 extern void fgAPAdjust( puObject * );
-// extern void fgLatLonFormatToggle( puObject *);
+extern void fgLatLonFormatToggle( puObject *);
+
 /* --------------------------------------------------------------------
 Mouse stuff
 ---------------------------------------------------------------------*/
-
-static int _mX = 0;
-static int  _mY = 0;
-static int last_buttons = 0 ;
-
 void guiMotionFunc ( int x, int y )
 {
     _mX = x;
@@ -95,10 +113,10 @@ void guiMouseFunc(int button, int updown, int x, int y)
     _mX = x;
     _mY = y;
     if ( updown == PU_DOWN )
-	last_buttons |=  ( 1 << button ) ;
+        last_buttons |=  ( 1 << button ) ;
     else
-	last_buttons &= ~( 1 << button ) ;
-	
+        last_buttons &= ~( 1 << button ) ;
+    
     puMouse (button, updown, x,y);
     glutPostRedisplay ();
 }
@@ -114,78 +132,152 @@ void guiGetMouse(int *x, int *y)
     *y = _mY;
 };
 
-/* -----------------------------------------------------------------------
-  the Gui callback functions 
-  ____________________________________________________________________*/
-
-void reInit(puObject *cb)
+static inline void TurnCursorOn( void )
 {
-    FGView *v = &current_view;
-    fgReInitSubsystems();
+    mouse_active = ~0;
+#if defined ( WIN32 ) || defined(__CYGWIN32__)
+    glutSetCursor(GLUT_CURSOR_INHERIT);
+#endif
+#if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
+    glutWarpPointer( glutGet(GLUT_SCREEN_WIDTH)/2, glutGet(GLUT_SCREEN_HEIGHT)/2);
+#endif
+}
+
+static inline void TurnCursorOff( void )
+{
+    mouse_active = 0;
+#if defined ( WIN32 ) || defined(__CYGWIN32__)
+    glutSetCursor(GLUT_CURSOR_NONE);
+#else  // I guess this is what we want to do ??
+ #if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
+    glutWarpPointer( glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
+ #endif
+#endif
+}
+
+// If the gui isn't active try to hide the mouse
+// an if the qui requested show the mouse
+// this can get confused if it rerequesting the gui object
+// should resync things.
+// see PUI macros in gui.hxx for normal use
+void maybeToggleMouse( void )
+{
+    static int first_time = ~0;
+    static int mouse_changed = 0;
+
+    if ( first_time ) {
+        if(!mouse_active) {
+            mouse_changed = ~mouse_changed;
+            TurnCursorOn();
+        }
+    } else {
+        if( mouse_changed ) {
+            mouse_changed = ~mouse_changed;
+            if(mouse_active) {
+                TurnCursorOff();
+            }
+        }
+    }
+    first_time = ~first_time;
+}
+
+// Call with FALSE to init and TRUE to restore
+void BusyCursor( int restore )
+{
+    static int cursor = 0;
+    if( restore ) {
+        glutSetCursor(cursor);
+    } else {
+        cursor = glutGet( GLUT_WINDOW_CURSOR );
+        TurnCursorOn();
+        glutSetCursor( GLUT_CURSOR_WAIT );
+    }
+}
+/* ================ General Purpose Functions ================ */
+
+// Intercept the Escape Key
+void ConfirmExitDialog(void)
+{
+    string Msg("Really Quit");
+    YNdialogBoxMessage -> setLabel(Msg.c_str());    
+    YNdialogBoxNoButton-> makeReturnDefault  (TRUE );
+    FG_PUSH_PUI_DIALOG( YNdialogBox );
+}
+
+// General Purpose Message Box
+void mkDialog (char *txt)
+{
+    void goAwayCb(puObject *);
+    dialogBoxMessage->setLabel(txt);
+    dialogBoxOkButton -> setLegend          ("OK");
+    dialogBoxOkButton -> makeReturnDefault  (TRUE );
+    dialogBoxOkButton -> setCallback        (goAwayCb);
+    FG_PUSH_PUI_DIALOG( dialogBox );
+}
+
+// Repair any damage done to the Panel by other Gui Items
+// see PUI macros in gui.hxx for use
+void guiFixPanel( void )
+{
+    int toggle_pause;
+    
     if ( current_options.get_panel_status() ) {
-	// this seems to be the only way to do this :-(
-	// problem is the viewport has been mucked with
-	//		current_options.toggle_panel();
-	//		current_options.toggle_panel();
-	xglViewport(0, 0 ,
-		    (GLint)(v->winWidth), (GLint)(v->winHeight) );
-	FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
+        
+        FGView *v = &current_view;
+        FGTime *t = FGTime::cur_time_params;
+
+        if( (toggle_pause = !t->getPause()) )
+            t->togglePauseMode();
+    
+        // this seems to be the only way to do this :-(
+        // problem is the viewport has been mucked with
+        xglViewport(0, 0 , (GLint)(v->winWidth), (GLint)(v->winHeight) );
+        FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
+        
+        if(toggle_pause)
+            t->togglePauseMode();
     }
 }
 
+// Toggle the Menu and Mouse display state
 void guiToggleMenu(void)
 {
-    hideMenuButton -> 
-	setValue ((int) !(hideMenuButton -> getValue() ) );
-    hideMenuButton -> invokeCallback();
+    if( menu_on ) {
+        // printf("Hiding Menu\n");
+        mainMenuBar->hide  ();
+        TurnCursorOff();
+    } else {
+        // printf("Showing Menu\n");
+        mainMenuBar->reveal();
+        TurnCursorOn();
+    }
+    menu_on = ~menu_on;
+}
+    
+/* -----------------------------------------------------------------------
+the Gui callback functions 
+____________________________________________________________________*/
+
+void reInit(puObject *cb)
+{
+    BusyCursor(0);
+    fgReInitSubsystems();
+    BusyCursor(1);
 }
 	
+// This is the accessor function
 void guiTogglePanel(puObject *cb)
 {
     current_options.toggle_panel();
 }
-	
-void MenuHideMenuCb(puObject *cb)
-{
-    mainMenuBar -> hide  ();
-    //	printf("Hiding Menu\n");
-    hideMenuButton -> setLegend ("Show Menu");
-#if defined ( WIN32 ) || defined(__CYGWIN32__)
-    glutSetCursor(GLUT_CURSOR_NONE);
-#else  // I guess this is what we want to do ??
-#if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
-    glutWarpPointer( glutGet(GLUT_SCREEN_WIDTH), glutGet(GLUT_SCREEN_HEIGHT));
-#endif
-#endif
-}
-
+    
+//void MenuHideMenuCb(puObject *cb)
 void hideMenuCb (puObject *cb)
 {
-    if (cb -> getValue () ) {
-	mainMenuBar -> reveal();
-	// printf("Showing Menu\n");
-	hideMenuButton -> setLegend ("Hide Menu");
-#if defined ( WIN32 ) || defined(__CYGWIN32__)
-	glutSetCursor(GLUT_CURSOR_INHERIT);
-#else  // I guess this is what we want to do ??
-	glutWarpPointer( glutGet(GLUT_SCREEN_WIDTH)/2, 
-			 glutGet(GLUT_SCREEN_HEIGHT)/2 );
-#endif
-    } else{
-	mainMenuBar -> hide  ();
-	// printf("Hiding Menu\n");
-	hideMenuButton -> setLegend ("Show Menu");
-#if defined ( WIN32 ) || defined(__CYGWIN32__)
-	glutSetCursor(GLUT_CURSOR_NONE);
-#else  // I guess this is what we want to do ??
-#if (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
-	glutWarpPointer( glutGet(GLUT_SCREEN_WIDTH), 
-			 glutGet(GLUT_SCREEN_HEIGHT));
-#endif
-#endif
-    }
+    guiToggleMenu();
 }
 
+// This is the accessor function
 void goodBye(puObject *)
 {
     //	FG_LOG( FG_INPUT, FG_ALERT, 
@@ -201,33 +293,56 @@ void goodBye(puObject *)
 
 void goAwayCb (puObject *me)
 {
-    delete dialogBoxOkButton;
-    dialogBoxOkButton = NULL;
-	
-    delete dialogBoxMessage;
-    dialogBoxMessage = NULL;
-	
-    delete dialogFrame;
-    dialogFrame = NULL;
-
-    delete dialogBox;
-    dialogBox = NULL;
+    FG_POP_PUI_DIALOG( dialogBox );
 }
 
-void mkDialog (const char *txt)
+void mkDialogInit (void)
 {
+//  printf("mkDialogInit\n");
     dialogBox = new puDialogBox (150, 50);
     {
-	dialogFrame = new puFrame (0,0,400, 100);
-	dialogBoxMessage  =  new puText         (10, 70);
-	dialogBoxMessage  -> setLabel           (txt);
-	dialogBoxOkButton =  new puOneShot      (180, 10, 240, 50);
-	dialogBoxOkButton -> setLegend          ("OK");
-	dialogBoxOkButton -> makeReturnDefault  (TRUE );
-	dialogBoxOkButton -> setCallback        (goAwayCb);
+        dialogFrame = new puFrame (0,0,400, 100);
+        dialogBoxMessage  =  new puText         (10, 70);
+        dialogBoxMessage  -> setLabel           ("");
+        dialogBoxOkButton =  new puOneShot      (180, 10, 240, 50);
     }
-    dialogBox -> close();
-    dialogBox -> reveal();
+    FG_FINALIZE_PUI_DIALOG( dialogBox );
+}
+
+void MayBeGoodBye(puObject *)
+{
+    ConfirmExitDialog(); 
+}
+
+void goAwayYesNoCb(puObject *me)
+{
+    FG_POP_PUI_DIALOG( YNdialogBox);
+}
+
+void ConfirmExitDialogInit(void)
+{
+//  printf("ConfirmExitDialogInit\n");
+    string Msg("Really Quit");
+//  int len = 350/2 - puGetStringWidth( puGetDefaultLabelFont(), AptLabel )/2;
+    int len = 200 - puGetStringWidth( puGetDefaultLabelFont(), Msg.c_str() )/2;
+    
+    YNdialogBox = new puDialogBox (150, 50);
+    {
+        YNdialogFrame = new puFrame (0,0,400, 100);
+        
+        YNdialogBoxMessage  =  new puText         (len, 70);
+        YNdialogBoxMessage  -> setLabel           (Msg.c_str());
+        
+        YNdialogBoxOkButton =  new puOneShot      (100, 10, 160, 50);
+        YNdialogBoxOkButton -> setLegend          ("OK");
+        YNdialogBoxOkButton -> setCallback        (goodBye);
+        
+        YNdialogBoxNoButton =  new puOneShot      (240, 10, 300, 50);
+        YNdialogBoxNoButton -> setLegend          ("NO");
+//      YNdialogBoxNoButton -> makeReturnDefault  (TRUE );
+        YNdialogBoxNoButton -> setCallback        (goAwayYesNoCb);
+    }
+    FG_FINALIZE_PUI_DIALOG( YNdialogBox );
 }
 
 void notCb (puObject *)
@@ -242,8 +357,8 @@ void helpCb (puObject *)
 #if defined(FX) && !defined(WIN32)
 #  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
     if ( global_fullscreen ) {
-	global_fullscreen = false;
-	XMesaSetFXmode( XMESA_FX_WINDOW );
+        global_fullscreen = false;
+        XMesaSetFXmode( XMESA_FX_WINDOW );
     }
 #  endif
 #endif
@@ -269,156 +384,110 @@ void helpCb (puObject *)
 /// The beginnings of teleportation :-)
 //  Needs cleaning up but works
 //  These statics should disapear when this is a class
-static puDialogBox     *AptDialog;
-static puFrame         *AptDialogFrame;
-static puText          *AptDialogMessage;
-static puInput         *AptDialogInput;
+static puDialogBox     *AptDialog = 0;
+static puFrame         *AptDialogFrame = 0;
+static puText          *AptDialogMessage = 0;
+static puInput         *AptDialogInput = 0;
 
-static puOneShot       *AptDialogOkButton;
-static puOneShot       *AptDialogCancelButton;
-static puOneShot       *AptDialogResetButton;
-
-static string AptDialog_OldAptId;
-static string AptDialog_NewAptId;
-static int    AptDialog_ValidAptId;
-
-static void validateApt (puObject *inpApt)
-{
-    char *s;
-    AptDialog_ValidAptId = 0;
-
-    inpApt->getValue(&s);
-
-    AptDialog_NewAptId = s;
-
-    if ( AptDialog_NewAptId.length() ) {
-	// set initial position from airport id
-
-	fgAIRPORTS airports;
-	fgAIRPORT a;
-
-	FG_LOG( FG_GENERAL, FG_INFO, 
-		"Attempting to set starting position from airport code "
-		<< s );
-
-	airports.load("apt_simple");
-	if ( ! airports.search( AptDialog_NewAptId, &a ) ) {
-	    string err_string = "Failed to find ";
-	    err_string += s;
-	    err_string += " in database.";
-	    mkDialog(err_string.c_str());
-	    FG_LOG( FG_GENERAL, FG_ALERT,
-		    "Failed to find " << s << " in database." );
-	} else {
-	    AptDialog_ValidAptId = 1;
-	    AptDialog_OldAptId = s;
-	    current_options.set_airport_id(AptDialog_NewAptId);
-	}
-    }
-	
-    if( AptDialog_ValidAptId ) {
-	fgReInitSubsystems();
-    }
-}
+static puOneShot       *AptDialogOkButton = 0;
+static puOneShot       *AptDialogCancelButton = 0;
+static puOneShot       *AptDialogResetButton = 0;
 
 void AptDialog_Cancel(puObject *)
 {
-    FGTime *t = FGTime::cur_time_params;
-    FGView *v = &current_view;
-	
-    if ( current_options.get_panel_status() ) {
-	// this seems to be the only way to do this :-(
-	// problem is the viewport has been mucked with
-	//		current_options.toggle_panel();
-	//		current_options.toggle_panel();
-	xglViewport(0, 0 ,
-		    (GLint)(v->winWidth), (GLint)(v->winHeight) );
-	FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
-    }
-
-    delete AptDialogResetButton;
-    AptDialogResetButton = NULL;
-
-    delete AptDialogCancelButton;
-    AptDialogCancelButton = NULL;
-
-    delete AptDialogOkButton;
-    AptDialogOkButton = NULL;
-
-    delete AptDialogInput;
-    AptDialogInput = NULL;
-
-    delete AptDialogMessage;
-    AptDialogMessage = NULL;
-
-    delete AptDialogFrame;
-    AptDialogFrame = NULL;
-
-    delete AptDialog;
-    AptDialog = NULL;
-	
-    t->togglePauseMode();
+    AptDialogOkButton->makeReturnDefault(FALSE);
+    AptDialogInput->rejectInput();
+    FG_POP_PUI_DIALOG( AptDialog );
 }
 
-void AptDialog_OK (puObject *me)
+void AptDialog_OK (puObject *)
 {
-    validateApt(AptDialogInput);
-    AptDialog_Cancel(me);
+    string AptId;
+    
+    FGTime *t = FGTime::cur_time_params;
+    int PauseMode = t->getPause();
+    if(!PauseMode)
+        t->togglePauseMode();
+
+    char *s;
+    AptDialogInput->getValue(&s);
+    AptId = s;
+    
+    AptDialog_Cancel( NULL );
+    
+    if ( AptId.length() ) {
+        // set initial position from airport id
+        
+        fgAIRPORTS airports;
+        fgAIRPORT a;
+        
+        FG_LOG( FG_GENERAL, FG_INFO,
+                "Attempting to set starting position from airport code "
+                << s );
+        
+        airports.load("apt_simple");
+        if ( airports.search( AptId, &a ) )
+        {
+            current_options.set_airport_id( AptId.c_str() );
+            BusyCursor(0);
+            fgReInitSubsystems();
+            BusyCursor(1);
+        } else {
+            AptId  += " not in database.";
+            mkDialog(AptId.c_str());
+        }
+    }
+    if( PauseMode != t->getPause() )
+        t->togglePauseMode();
 }
 
 void AptDialog_Reset(puObject *)
 {
-    AptDialogInput->setValue ( AptDialog_OldAptId.c_str() );
+    AptDialogInput->setValue ( current_options.get_airport_id().c_str() );
     AptDialogInput->setCursor( 0 ) ;
 }
 
-void NewAirportInit(puObject *cb)
+
+// This is the accessor function
+void NewAirport(puObject *cb)
 {
-    FGInterface *f;
-    FGTime *t;
-	
-    f = current_aircraft.fdm_state;
-    t = FGTime::cur_time_params;
-	
-    char *AptLabel = "Enter New Airport ID";
-    int len = 350/2 - puGetStringWidth(NULL, AptLabel)/2;
+    string AptLabel("Enter New Airport ID");
+    AptDialogMessage ->setLabel( AptLabel.c_str() );
+    AptDialogInput   ->setValue( current_options.get_airport_id().c_str() );
+    AptDialogInput   ->acceptInput();
+    AptDialogOkButton->makeReturnDefault(TRUE);
+    
+    FG_PUSH_PUI_DIALOG( AptDialog );
+}
 
-    AptDialog_OldAptId = current_options.get_airport_id();
-    char *s            = AptDialog_OldAptId.c_str();
+static void NewAirportInit(void)
+{
+    cout << "NewAirportInit" << endl;
 
+    string AptLabel("Enter New Airport ID");
+//  int len = 350/2 - puGetStringWidth( puGetDefaultLabelFont(), AptLabel )/2;
+    int len = 150 - puGetStringWidth( puGetDefaultLabelFont(), AptLabel.c_str() )/2;
+    
     AptDialog = new puDialogBox (150, 50);
     {
-	AptDialogFrame   = new puFrame           (0,0,350, 150);
-	AptDialogMessage = new puText            (len, 110);
-	AptDialogMessage ->    setLabel          (AptLabel);
-
-	AptDialogInput   = new puInput           ( 50, 70, 300, 100 );
-	AptDialogInput   ->    setValue          ( s );
-	// Uncomment the next line to have input active on startup
-	AptDialogInput   ->    acceptInput       ( );
-	// cursor at begining or end of line ?
-	//len = strlen(s);
-	len = 0;
-	AptDialogInput   ->    setCursor         ( len );
-	AptDialogInput   ->    setSelectRegion   ( 5, 9 );
-		
-	AptDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
-	AptDialogOkButton     ->     setLegend         ("OK");
-	AptDialogOkButton     ->     makeReturnDefault (TRUE );
-	AptDialogOkButton     ->     setCallback       (AptDialog_OK);
-		
-	AptDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
-	AptDialogCancelButton ->     setLegend         ("Cancel");
-	AptDialogCancelButton ->     makeReturnDefault (TRUE );
-	AptDialogCancelButton ->     setCallback       (AptDialog_Cancel);
-		
-	AptDialogResetButton  =  new puOneShot         (240, 10, 300, 50);
-	AptDialogResetButton  ->     setLegend         ("Reset");
-	AptDialogResetButton  ->     makeReturnDefault (TRUE );
-	AptDialogResetButton  ->     setCallback       (AptDialog_Reset);
+        AptDialogFrame   = new puFrame           (0,0,350, 150);
+        AptDialogMessage = new puText            (len, 110);
+        
+        AptDialogInput   = new puInput           ( 50, 70, 300, 100 );
+        
+        AptDialogOkButton     =  new puOneShot   (50, 10, 110, 50);
+        AptDialogOkButton     ->     setLegend   ("OK");
+        AptDialogOkButton     ->     setCallback (AptDialog_OK);
+        
+        AptDialogCancelButton =  new puOneShot   (140, 10, 210, 50);
+        AptDialogCancelButton ->     setLegend   ("Cancel");
+        AptDialogCancelButton ->     setCallback (AptDialog_Cancel);
+        
+        AptDialogResetButton  =  new puOneShot   (240, 10, 300, 50);
+        AptDialogResetButton  ->     setLegend   ("Reset");
+        AptDialogResetButton  ->     setCallback (AptDialog_Reset);
     }
-    AptDialog -> close();
-    AptDialog -> reveal();
+    FG_FINALIZE_PUI_DIALOG( AptDialog );
 }
 
 
@@ -428,27 +497,27 @@ void NewAirportInit(puObject *cb)
 char *fileSubmenu               [] = {
     "Exit", "Close", "---------", "Print", "---------", "Save", "Reset", NULL };
 puCallback fileSubmenuCb        [] = {
-    goodBye, MenuHideMenuCb, NULL, notCb, NULL, notCb, reInit, NULL};
-	
+    MayBeGoodBye, hideMenuCb, NULL, notCb, NULL, notCb, reInit, NULL};  
+    
 char *editSubmenu               [] = {
     "Edit text", NULL };
 puCallback editSubmenuCb        [] = {
     notCb, NULL };
-	
+
 char *viewSubmenu               [] = {
     "Cockpit View > ", "View >","------------", "Toggle Panel...", NULL };
 puCallback viewSubmenuCb        [] = {
     notCb, notCb, NULL, guiTogglePanel, NULL };
 	
 char *aircraftSubmenu           [] = {
-    "Autopilot ...", "Engine ...", "Navigation", "Communication", NULL};
+    "Autopilot", "Heading", "Altitude", "Navigation", "Communication", NULL};
 puCallback aircraftSubmenuCb    [] = {
-    fgAPAdjust, notCb, notCb, notCb, NULL };
+    fgAPAdjust, NewHeading, NewAltitude, fgLatLonFormatToggle, notCb, NULL };
 
 char *environmentSubmenu        [] = {
     "Airport", "Terrain", "Weather", NULL};
 puCallback environmentSubmenuCb [] = {
-    NewAirportInit, notCb, notCb, NULL };
+    NewAirport, notCb, notCb, NULL };
 
 char *optionsSubmenu            [] = {
     "Preferences", "Realism & Reliablity...", NULL};
@@ -473,52 +542,56 @@ void guiInit()
 
     // Initialize PUI
     puInit();
+    puSetDefaultStyle         ( PUSTYLE_DEFAULT );
+    puSetDefaultColourScheme  (0.8, 0.8, 0.8, 0.4);
 
+    // Install our fast fonts
+    string fntpath = current_options.get_fg_root() + "/Fonts/" + 
+        "typewriter" + ".txf";
+    guiFntHandle = new fntTexFont ;
+    guiFntHandle -> load ( fntpath.c_str() ) ;
+    puFont GuiFont ( guiFntHandle, 15 ) ;
+    puSetDefaultFonts( GuiFont, GuiFont ) ;
+    guiFnt = puGetDefaultLabelFont();
+  
     if ( current_options.get_mouse_pointer() == 0 ) {
-	// no preference specified for mouse pointer, attempt to autodetect...
-	// Determine if we need to render the cursor, or if the windowing
-	// system will do it.  First test if we are rendering with glide.
-	if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
-	    // Test for the MESA_GLX_FX env variable
-	    if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
-		// test if we are fullscreen mesa/glide
-		if ( (mesa_win_state[0] == 'f') ||
-		     (mesa_win_state[0] == 'F') ) {
-		    puShowCursor ();
-		}
-	    }
-	}
+        // no preference specified for mouse pointer, attempt to autodetect...
+        // Determine if we need to render the cursor, or if the windowing
+        // system will do it.  First test if we are rendering with glide.
+        if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
+            // Test for the MESA_GLX_FX env variable
+            if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
+                // test if we are fullscreen mesa/glide
+                if ( (mesa_win_state[0] == 'f') ||
+                     (mesa_win_state[0] == 'F') ) {
+                    puShowCursor ();
+                }
+            }
+        }
+        mouse_active = ~mouse_active;
     } else if ( current_options.get_mouse_pointer() == 1 ) {
-	// don't show pointer
+        // don't show pointer
     } else if ( current_options.get_mouse_pointer() == 2 ) {
-	// force showing pointer
-	puShowCursor();
+        // force showing pointer
+        puShowCursor();
+        mouse_active = ~mouse_active;
     }
 
-    // puSetDefaultStyle         ( PUSTYLE_SMALL_BEVELLED );
-    puSetDefaultStyle         ( PUSTYLE_DEFAULT );
-    //    puSetDefaultColourScheme  (0.2, 0.4, 0.8, 0.5);
-    puSetDefaultColourScheme  (0.8, 0.8, 0.8, 0.4);
-    /* OK the rest is largely put in here to mimick Steve Baker's
-       "complex" example It should change in future versions */
-
-    /* Make a button to hide the menu bar */
-    hideMenuButton = new puButton       (10,10, 150, 50);
-    hideMenuButton -> setValue          (TRUE);
-    hideMenuButton -> setLegend         ("Hide Menu");
-    hideMenuButton -> setCallback       (hideMenuCb);
-    hideMenuButton -> makeReturnDefault (TRUE);
-    hideMenuButton -> hide();
-
+    // Set up our Dialog Boxes
+    ConfirmExitDialogInit();
+    NewAirportInit();
+    mkDialogInit();
+    
     // Make the menu bar
     mainMenuBar = new puMenuBar ();
     mainMenuBar -> add_submenu ("File", fileSubmenu, fileSubmenuCb);
     mainMenuBar -> add_submenu ("Edit", editSubmenu, editSubmenuCb);
     mainMenuBar -> add_submenu ("View", viewSubmenu, viewSubmenuCb);
     mainMenuBar -> add_submenu ("Aircraft", aircraftSubmenu, aircraftSubmenuCb);
-    mainMenuBar -> add_submenu ("Environment", environmentSubmenu,
-				environmentSubmenuCb);
+    mainMenuBar -> add_submenu ("Environment", environmentSubmenu, environmentSubmenuCb);
     mainMenuBar -> add_submenu ("Options", optionsSubmenu, optionsSubmenuCb);
     mainMenuBar -> add_submenu ("Help", helpSubmenu, helpSubmenuCb);
     mainMenuBar-> close ();
+    // Set up menu bar toggle
+    menu_on = ~0;
 }

@@ -56,6 +56,8 @@
 #include "options.hxx"
 #include "views.hxx"
 
+extern void NewAltitude( puObject *cb );
+extern void NewHeading( puObject *cb );
 
 // Force an update of the sky and lighting parameters
 static void local_update_sky_and_lighting_params( void ) {
@@ -136,7 +138,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    // current_options.set_hud_status(!status);
 	    HUD_brightkey( true );
 	    return;
-	case 73: // i key
+	case 73: // I key
 	    // Minimal Hud
 	    fgHUDInit2(&current_aircraft);
 	    return;
@@ -145,8 +147,8 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    local_update_sky_and_lighting_params();
 	    return;
 	case 80: // P key
-		current_options.toggle_panel();
-		break;
+	    current_options.toggle_panel();
+	    break;
 	case 84: // T key
 	    t->adjust_warp_delta(-30);
 	    local_update_sky_and_lighting_params();
@@ -290,7 +292,8 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    // }
 	    FG_LOG( FG_INPUT, FG_ALERT, 
 		    "Program exiting normally at user request." );
-	    exit(-1);
+	    ConfirmExitDialog();
+	    return;
 	}
     }
 }
@@ -368,7 +371,15 @@ void GLUTspecialkey(int k, int x, int y) {
 	case GLUT_KEY_F10: // F10 toggles menu on and off...
 	    FG_LOG(FG_INPUT, FG_INFO, "Invoking call back function");
 	    guiToggleMenu();
+	    return;
+	case GLUT_KEY_F11: // F11 Altitude Dialog.
+	    FG_LOG(FG_INPUT, FG_INFO, "Invoking Altitude call back function");
+	    NewAltitude( NULL );
 	    //exit(1);
+	    return;
+	case GLUT_KEY_F12: // F12 Heading Dialog...
+	    FG_LOG(FG_INPUT, FG_INFO, "Invoking Heading call back function");
+	    NewHeading( NULL );
 	    return;
 	case GLUT_KEY_UP:
 	    if( fgAPAltitudeEnabled() || fgAPTerrainFollowEnabled() ) {

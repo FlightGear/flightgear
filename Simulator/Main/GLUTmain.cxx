@@ -283,7 +283,7 @@ static void fgRenderFrame( void ) {
 		// glClearColor(black[0], black[1], black[2], black[3]);
 		glClearColor(l->adj_fog_color[0], l->adj_fog_color[1], 
 			     l->adj_fog_color[2], l->adj_fog_color[3]);
-		clear_mask |= GL_COLOR_BUFFER_BIT;		
+		clear_mask |= GL_COLOR_BUFFER_BIT;
 	    }
 	} else {
 	    glClearColor(l->sky_color[0], l->sky_color[1], 
@@ -394,10 +394,10 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 
 	// printf("updating flight model x %d\n", multi_loop);
 	fgFDMUpdate( current_options.get_flight_model(), 
-			     cur_fdm_state, multi_loop, remainder );
+		     cur_fdm_state, multi_loop, remainder );
     } else {
 	fgFDMUpdate( current_options.get_flight_model(), 
-			     cur_fdm_state, 0, remainder );
+		     cur_fdm_state, 0, remainder );
     }
 
     // update the view angle
@@ -1000,7 +1000,7 @@ int main( int argc, char **argv ) {
     // Parse remaining command line options
     // These will override anything specified in a config file
     if ( current_options.parse_command_line(argc, argv) !=
-	                              fgOPTIONS::FG_OPTIONS_OK )
+	 fgOPTIONS::FG_OPTIONS_OK )
     {
 	// Something must have gone horribly wrong with the command
 	// line parsing or maybe the user just requested help ... :-)
@@ -1022,16 +1022,16 @@ int main( int argc, char **argv ) {
 	exit(-1);
     }
 
+    // Init the user interface (we need to do this before passing off
+    // control to glut and before fgInitGeneral to get our fonts !!!
+    guiInit();
+
     // First do some quick general initializations
     if( !fgInitGeneral()) {
 	FG_LOG( FG_GENERAL, FG_ALERT, 
 		"General initializations failed ..." );
 	exit(-1);
     }
-
-    // Init the user interface (we need to do this before passing off
-    // control to glut
-    guiInit();
 
     // pass control off to the master GLUT event handler
     glutMainLoop();

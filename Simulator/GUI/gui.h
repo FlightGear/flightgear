@@ -27,10 +27,45 @@
 
 #include <plib/pu.h>
 
+extern void guiInit();
 extern void guiMotionFunc ( int x, int y );
 extern void guiMouseFunc(int button, int updown, int x, int y);
-extern void guiInit();
-extern void guiToggleMenu(void);
-void mkDialog (const char *txt);
+extern void maybeToggleMouse( void );
+extern void BusyCursor( int restore );
 
+extern void guiToggleMenu(void);
+extern void mkDialog(char *txt);
+extern void ConfirmExitDialog(void);
+extern void guiFixPanel( void );
+
+extern puFont guiFnt;
+extern fntTexFont *guiFntHandle;
+
+
+// MACROS TO HELP KEEP PUI LIVE INTERFACE STACK IN SYNC
+// These insure that the mouse is active when dialog is shown
+// and try to the maintain the original mouse state when hidden
+// These will also repair any damage done to the Panel if active
+
+// Activate Dialog Box
+#define FG_PUSH_PUI_DIALOG( X ) \
+    maybeToggleMouse(); \
+    puPushGroup( (X) ) ; \
+    puPushLiveInterface( (X) ) ; \
+    ( X )->reveal()
+
+// Deactivate Dialog Box
+#define FG_POP_PUI_DIALOG( X ) \
+    (X)->hide(); \
+    puPopLiveInterface(); \
+    puPopGroup(); \
+    guiFixPanel(); \
+    maybeToggleMouse();
+
+// Finalize Dialog Box Construction 
+#define FG_FINALIZE_PUI_DIALOG( X ) \
+    ( X )->close(); \
+    ( X )->hide(); \
+    puPopLiveInterface();
+            
 #endif // _GUI_H_
