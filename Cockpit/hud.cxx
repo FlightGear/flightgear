@@ -64,9 +64,7 @@ extern "C" {
 // They should eventually be member functions of the aircraft.
 //
 
-//using namespace std;
-
-deque< instr_item * > HUD_deque;
+deque< instr_item * > HUD_deque;
 
 class locRECT {
   public:
@@ -584,9 +582,12 @@ void fgUpdateHUD( void ) {
 }
 
 /* $Log$
-/* Revision 1.13  1998/07/03 13:16:28  curt
-/* Added Charlie Hotchkiss's HUD updates and improvementes.
+/* Revision 1.14  1998/07/06 21:31:20  curt
+/* Removed an extraneous ^M.
 /*
+ * Revision 1.13  1998/07/03 13:16:28  curt
+ * Added Charlie Hotchkiss's HUD updates and improvementes.
+ *
  * Revision 1.11  1998/06/05 18:17:10  curt
  * Added the declaration of memmove needed by the stl which apparently
  * solaris only defines for cc compilations and not for c++ (__STDC__)
