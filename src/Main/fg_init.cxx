@@ -239,9 +239,10 @@ bool fgInitConfig ( int argc, char **argv ) {
       aircraft_path.append("Aircraft");
       aircraft_path.append(aircraft);
       aircraft_path.concat("-set.xml");
-      SG_LOG(SG_INPUT, SG_INFO, "Reading default aircraft: " << aircraft);
+      SG_LOG(SG_INPUT, SG_INFO, "Reading default aircraft: " << aircraft
+	     << " from " << props_path.str());
       try {
-	readProperties(props_path.str(), globals->get_props());
+	readProperties(aircraft_path.str(), globals->get_props());
       } catch (const sg_exception &e) {
 	string message = "Error reading default aircraft: ";
 	message += e.getFormattedMessage();
