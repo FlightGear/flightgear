@@ -28,6 +28,10 @@
 #define _FG_CONSTANTS_H
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <math.h>
 
 
@@ -145,13 +149,16 @@
 
 
 /* $Log$
-/* Revision 1.7  1998/07/08 14:36:29  curt
-/* Changed name of EQUATORIAL_RADIUS_KM and RESQ_KM to "M" since they were
-/* in meters anyways.
+/* Revision 1.8  1998/07/12 03:07:13  curt
+/* Added #ifdef HAVE_CONFIG_H ...
 /*
-/* Unified fgCartesianPoint3d and fgPolarPoint3d in a single struct called
-/* fgPoint3d.
-/*
+ * Revision 1.7  1998/07/08 14:36:29  curt
+ * Changed name of EQUATORIAL_RADIUS_KM and RESQ_KM to "M" since they were
+ * in meters anyways.
+ *
+ * Unified fgCartesianPoint3d and fgPolarPoint3d in a single struct called
+ * fgPoint3d.
+ *
  * Revision 1.6  1998/07/03 14:36:11  curt
  * Added conversion constants to fg_constants.h to assist with converting
  *   between various world units and coordinate systems.
