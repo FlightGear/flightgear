@@ -143,6 +143,8 @@ private:
     SGPropertyNode *TargetClimbRate;    // target climb rate
     SGPropertyNode *TargetDescentRate;  // target decent rate
     SGPropertyNode *current_throttle; // current throttle (engine 0)
+    SGPropertyNode *terrain_follow_factor; // modifies the climb rate to
+                        // permit more control when using terrain following mode
 
 public:
 

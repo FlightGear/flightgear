@@ -241,6 +241,7 @@ void FGAutopilot::init ()
     max_roll_node = fgGetNode("/autopilot/config/max-roll-deg", true);
     roll_out_node = fgGetNode("/autopilot/config/roll-out-deg", true);
     roll_out_smooth_node = fgGetNode("/autopilot/config/roll-out-smooth-deg", true);
+    terrain_follow_factor = fgGetNode("/autopilot/config/terrain-follow-factor", true);
 
     current_throttle = fgGetNode("/controls/engines/engine/throttle");
 
@@ -269,6 +270,8 @@ void FGAutopilot::init ()
         fgSetFloat( "/autopilot/config/roll-out-deg", 20 );
     if ( roll_out_smooth_node->getFloatValue() < 0.0000001 )
         fgSetFloat( "/autopilot/config/roll-out-smooth-deg", 10 );
+    if (terrain_follow_factor->getFloatValue() < 1)
+        fgSetFloat( "/autopilot/config/terrain-follow-factor", 16 );
 
     /* set defaults */
     heading_hold = false ;      // turn the heading hold off
@@ -734,7 +737,8 @@ FGAutopilot::update (double dt)
 	    // brain dead ground hugging with no look ahead
 	    climb_rate =
 		( TargetAGL - altitude_agl_node->getDoubleValue()
-                  * SG_FEET_TO_METER ) * 16.0;
+                  * SG_FEET_TO_METER )
+                  * terrain_follow_factor->getFloatValue();
 	} else {
 	    // just try to zero out rate of climb ...
 	    climb_rate = 0.0;
