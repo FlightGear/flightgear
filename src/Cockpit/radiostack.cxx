@@ -33,6 +33,7 @@ FGRadioStack *current_radiostack;
 
 // Constructor
 FGRadioStack::FGRadioStack() {
+    nav1_dist = 0.0;
     need_update = true;
 }
 

@@ -483,11 +483,11 @@ bool fgInitSubsystems( void ) {
 
     current_radiostack->set_nav1_freq( 117.30 );
     current_radiostack->set_nav1_alt_freq( 110.30 );
-    current_radiostack->set_nav1_sel_radial( 299.0 );
+    current_radiostack->set_nav1_sel_radial( 119.0 );
 
-    current_radiostack->set_nav2_freq( 115.70 );
+    current_radiostack->set_nav2_freq( 111.80 );
     current_radiostack->set_nav2_alt_freq( 115.70 );
-    current_radiostack->set_nav2_sel_radial( 45.0 );
+    current_radiostack->set_nav2_sel_radial( 029.0 );
 
     current_radiostack->set_adf_freq( 266.0 );
 

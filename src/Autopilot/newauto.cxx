@@ -295,7 +295,7 @@ int FGAutopilot::run() {
     }
 #endif
 	
-    // heading hold enabled?
+    // heading hold
     if ( heading_hold == true ) {
 
 	if ( heading_mode == FG_HEADING_LOCK ) {
@@ -444,7 +444,7 @@ int FGAutopilot::run() {
 	// controls.set_rudder( 0.0 );
     }
 
-    // altitude hold?
+    // altitude hold
     if ( altitude_hold ) {
 	double speed, max_climb, error;
 	double prop_error, int_error;
@@ -537,7 +537,7 @@ int FGAutopilot::run() {
 	controls.set_elevator( total_adj );
     }
 
-    // auto throttle enabled?
+    // auto throttle
     if ( auto_throttle ) {
 	double error;
 	double prop_error, int_error;
