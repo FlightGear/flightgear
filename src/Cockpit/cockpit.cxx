@@ -30,7 +30,7 @@
 #endif
 
 #include <GL/glut.h>
-#include <simgear/xgl/xgl.h>
+// #include <simgear/xgl/xgl.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -45,7 +45,6 @@
 #include <Include/general.hxx>
 #include <FDM/ADA.hxx>
 #include <Main/globals.hxx>
-#include <Main/options.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 #include <GUI/gui.h>
@@ -700,8 +699,8 @@ void fgCockpitUpdate( void ) {
         "Cockpit: code " << ac_cockpit->code() << " status " 
         << ac_cockpit->status() );
 
-	int iwidth   = globals->get_current_view()->get_winWidth();
-	int iheight  = globals->get_current_view()->get_winHeight();
+	int iwidth   = globals->get_options()->get_xsize();
+	int iheight  = globals->get_options()->get_ysize();
 	float width  = iwidth;
 	float height = iheight;
 
@@ -721,33 +720,35 @@ void fgCockpitUpdate( void ) {
 //      sprintf(buf,"%-4.1f  %7.0f  %7.0f", fps, tris, culled);
         sprintf(buf,"%-5.1f", fps);
 
-        glMatrixMode(GL_PROJECTION);
+        glMatrixMode( GL_PROJECTION );
         glPushMatrix();
         glLoadIdentity();
-        gluOrtho2D(0, width, 0, height);
-        glMatrixMode(GL_MODELVIEW);
+        gluOrtho2D( 0, globals->get_options()->get_xsize(),
+		    0, globals->get_options()->get_ysize() );
+        glMatrixMode( GL_MODELVIEW );
         glPushMatrix();
         glLoadIdentity();
 
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_LIGHTING);
+        glDisable( GL_DEPTH_TEST );
+        glDisable( GL_LIGHTING );
         
-        glColor3f (0.9, 0.4, 0.2);
+        glColor3f( 0.9, 0.4, 0.2 );
 
         guiFnt.drawString( buf,
-			   // width/2 - guiFnt.getStringWidth(buf)/2,
 			   int(width - guiFnt.getStringWidth(buf) - 10),
                            10 );
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_LIGHTING);
-        glMatrixMode(GL_PROJECTION);
+        glEnable( GL_DEPTH_TEST );
+        glEnable( GL_LIGHTING );
+        glMatrixMode( GL_PROJECTION );
         glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
+        glMatrixMode( GL_MODELVIEW );
         glPopMatrix();
     }
 #endif // #ifdef DISPLAY_COUNTER
     
-    xglViewport( 0, 0, iwidth, iheight );
+    glViewport( 0, 0, 
+		globals->get_options()->get_xsize(),
+		globals->get_options()->get_ysize() );
 
     if (current_panel != 0)
       current_panel->update();

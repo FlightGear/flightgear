@@ -109,15 +109,15 @@ void fgSplashUpdate ( double progress ) {
     int xsize = 480;
     int ysize = 380;
 
-    if ( !globals->get_current_view()->get_winWidth()
-	 || !globals->get_current_view()->get_winHeight() ) {
+    if ( !globals->get_options()->get_xsize()
+	 || !globals->get_options()->get_ysize() ) {
 	return;
     }
 
-    xmin = (globals->get_current_view()->get_winWidth() - xsize) / 2;
+    xmin = (globals->get_options()->get_xsize() - xsize) / 2;
     xmax = xmin + xsize;
 
-    ymin = (globals->get_current_view()->get_winHeight() - ysize) / 2;
+    ymin = (globals->get_options()->get_ysize() - ysize) / 2;
     ymax = ymin + ysize;
 
     // first clear the screen;
@@ -128,8 +128,8 @@ void fgSplashUpdate ( double progress ) {
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
-    gluOrtho2D(0, globals->get_current_view()->get_winWidth(),
-	       0, globals->get_current_view()->get_winHeight());
+    gluOrtho2D(0, globals->get_options()->get_xsize(),
+	       0, globals->get_options()->get_ysize());
     xglMatrixMode(GL_MODELVIEW);
     xglPushMatrix();
     xglLoadIdentity();

@@ -41,7 +41,6 @@
 #include <Main/bfi.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/globals.hxx>
-#include <Main/options.hxx>
 #include <Navaids/fixlist.hxx>
 
 #include "auto_gui.hxx"

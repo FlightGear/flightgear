@@ -41,7 +41,6 @@
 #include <FDM/flight.hxx>
 #include <Time/light.hxx>
 
-#include "options.hxx"
 
 FG_USING_STD(list);
 
@@ -70,7 +69,7 @@ private:
     double win_ratio;
 
     // width & height of window
-    int winWidth, winHeight;
+    // int winWidth, winHeight;
 
     // absolute view position in earth coordinates
     Point3D abs_view_pos;
@@ -165,10 +164,10 @@ public:
     inline void set_goal_view_offset( double a) { goal_view_offset = a; }
     inline double get_win_ratio() const { return win_ratio; }
     inline void set_win_ratio( double r ) { win_ratio = r; }
-    inline int get_winWidth() const { return winWidth; }
-    inline void set_winWidth( int w ) { winWidth = w; }
-    inline int get_winHeight() const { return winHeight; }
-    inline void set_winHeight( int h ) { winHeight = h; }
+    // inline int get_winWidth() const { return winWidth; }
+    // inline void set_winWidth( int w ) { winWidth = w; }
+    // inline int get_winHeight() const { return winHeight; }
+    // inline void set_winHeight( int h ) { winHeight = h; }
     inline Point3D get_abs_view_pos() const { return abs_view_pos; }
     inline Point3D get_view_pos() const { return view_pos; }
     inline float *get_pilot_offset() { return pilot_offset; }

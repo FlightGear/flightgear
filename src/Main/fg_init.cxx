@@ -93,7 +93,6 @@
 #include "fg_init.hxx"
 #include "fg_io.hxx"
 #include "globals.hxx"
-#include "options.hxx"
 #include "bfi.hxx"
 
 #if defined(FX) && defined(XMESA)
@@ -103,6 +102,9 @@
 FG_USING_STD(string);
 
 extern const char *default_root;
+
+// from main.cxx
+extern void fgReshape( int width, int height );
 
 
 // Read in configuration (file and command line) and just set fg_root

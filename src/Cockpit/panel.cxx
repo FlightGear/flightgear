@@ -34,7 +34,6 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 #include <Main/globals.hxx>
-#include <Main/options.hxx>
 #include <Objects/texload.h>
 
 #include "hud.hxx"
@@ -305,8 +304,8 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
   }
 
 				// Scale for the real window size.
-  x = int(((float)x / globals->get_current_view()->get_winWidth()) * _winw);
-  y = int(_winh - (((float)y / globals->get_current_view()->get_winHeight())
+  x = int(((float)x / globals->get_options()->get_xsize()) * _winw);
+  y = int(_winh - (((float)y / globals->get_options()->get_ysize())
 		   * _winh));
 
 				// Adjust for offsets.

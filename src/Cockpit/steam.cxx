@@ -33,8 +33,8 @@
 #include <simgear/math/sg_types.hxx>
 #include <simgear/misc/props.hxx>
 #include <Aircraft/aircraft.hxx>
-#include <Main/options.hxx>
 #include <Main/bfi.hxx>
+#include <Main/globals.hxx>
 #include <NetworkOLK/features.hxx>
 
 FG_USING_NAMESPACE(std);

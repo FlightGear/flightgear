@@ -33,8 +33,6 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgstream.hxx>
 
-#include <Main/options.hxx>
-
 #include STL_STRING
 #include STL_FUNCTIONAL
 #include STL_ALGORITHM

@@ -38,7 +38,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
-#include <Main/options.hxx>
+#include <Main/globals.hxx>
 
 #include <FDM/JSBSim/FGFDMExec.h>
 #include <FDM/JSBSim/FGAircraft.h>

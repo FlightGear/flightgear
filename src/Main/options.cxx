@@ -60,7 +60,7 @@ bool global_fullscreen = true;
 FG_USING_STD(string);
 FG_USING_NAMESPACE(std);
 
-// from GLUTmain.cxx
+// from main.cxx
 extern void fgReshape( int width, int height );
 
 inline double
@@ -185,10 +185,6 @@ FGOptions::FGOptions() :
     wireframe(0),
     xsize(800),
     ysize(600),
-    xmin(0),
-    ymin(0),
-    xmax(800),
-    ymax(600),
     bpp(16),
     view_mode(FG_VIEW_PILOT),
     default_view_offset(0),
@@ -271,9 +267,7 @@ FGOptions::toggle_panel() {
 	fov *= (1.0 / 0.4232);
     } */
 
-    // fgReshape( xsize, ysize);
-    fgReshape( globals->get_current_view()->get_winWidth(),
-	       globals->get_current_view()->get_winHeight() );
+    fgReshape( xsize, ysize);
 
     if( !freeze )
         globals->set_freeze( false );
@@ -826,10 +820,6 @@ int FGOptions::parse_option( const string& arg ) {
  	    FG_LOG( FG_GENERAL, FG_ALERT,
  		    "Setting geometry to " << xsize << 'x' << ysize << '\n');
   	}
-
-	xmin = ymin = 0;
-	xmax = xsize;
-	ymax = ysize;
     } else if ( arg.find( "--bpp=" ) != string::npos ) {
 	string bits_per_pix = arg.substr( 6 );
 	if ( bits_per_pix == "16" ) {

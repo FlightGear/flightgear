@@ -70,7 +70,6 @@
 #include "bfi.hxx"
 #include "globals.hxx"
 #include "keyboard.hxx"
-#include "options.hxx"
 #include "save.hxx"
 
 				// From main.cxx
@@ -437,8 +436,8 @@ void GLUTkey(unsigned char k, int x, int y) {
 		v->set_view_offset( FG_PI * 1.75 );
 		globals->get_pilot_view()->set_pilot_offset(25.0, -25.0, 1.0);
 	    }
-	    fgReshape( globals->get_current_view()->get_winWidth(),
-		       globals->get_current_view()->get_winHeight() );
+	    fgReshape( globals->get_options()->get_xsize(),
+		       globals->get_options()->get_ysize() );
 	    return;
 	case 120: // x key
 	    fov = globals->get_options()->get_fov();
@@ -539,14 +538,14 @@ void GLUTspecialkey(int k, int x, int y) {
 	}
 	case GLUT_KEY_F5: {
 	  current_panel->setYOffset(current_panel->getYOffset() - 5);
-	  fgReshape(globals->get_current_view()->get_winWidth(),
-		    globals->get_current_view()->get_winHeight());
+	  fgReshape(globals->get_options()->get_xsize(),
+		    globals->get_options()->get_ysize());
 	  return;
 	}
 	case GLUT_KEY_F6: {
 	  current_panel->setYOffset(current_panel->getYOffset() + 5);
-	  fgReshape(globals->get_current_view()->get_winWidth(),
-		    globals->get_current_view()->get_winHeight());
+	  fgReshape(globals->get_options()->get_xsize(),
+		    globals->get_options()->get_ysize());
 	  return;
 	}
 	case GLUT_KEY_F7: {

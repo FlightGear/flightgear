@@ -28,7 +28,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 
 #include <FDM/LaRCsim/ls_interface.h>
-#include <Main/options.hxx>
+#include <Main/globals.hxx>
 #include <Time/timestamp.hxx>
 
 #include "External.hxx"

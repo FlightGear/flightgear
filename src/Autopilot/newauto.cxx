@@ -38,7 +38,6 @@
 #include <FDM/flight.hxx>
 #include <Main/bfi.hxx>
 #include <Main/globals.hxx>
-#include <Main/options.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "newauto.hxx"

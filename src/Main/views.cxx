@@ -41,7 +41,7 @@
 #include <Cockpit/panel.hxx>
 #include <Scenery/scenery.hxx>
 
-#include "options.hxx"
+#include "globals.hxx"
 #include "views.hxx"
 
 

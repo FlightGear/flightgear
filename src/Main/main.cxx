@@ -115,7 +115,6 @@ ssgTransform *ship_pos = NULL;
 #include "fg_io.hxx"
 #include "globals.hxx"
 #include "keyboard.hxx"
-#include "options.hxx"
 #include "splash.hxx"
 
 
@@ -142,6 +141,9 @@ static bool initial_freeze = true;
 
 // Another hack
 int use_signals = 0;
+
+// forward declaration
+void fgReshape( int width, int height );
 
 // Global structures for the Audio library
 #ifdef ENABLE_AUDIO_SUPPORT
@@ -1120,6 +1122,10 @@ static void fgIdleFunction ( void ) {
 
 	// sleep(1);
 	idle_state = 1000;
+
+	cout << "Panel visible = " << fgPanelVisible() << endl;
+	fgReshape( globals->get_options()->get_xsize(),
+		   globals->get_options()->get_ysize() );
     } 
 
     if ( idle_state == 1000 ) {
@@ -1151,8 +1157,8 @@ void fgReshape( int width, int height ) {
 		   (GLint)(width), (GLint)(view_h) );
     }
 
-    globals->get_current_view()->set_winWidth( width );
-    globals->get_current_view()->set_winHeight( height );
+    globals->get_options()->set_xsize( width );
+    globals->get_options()->set_ysize( height );
     globals->get_current_view()->force_update_fov_math();
 
     // set these fov to be the same as in fgRenderFrame()
@@ -1315,7 +1321,8 @@ int main( int argc, char **argv ) {
     // seed the random number generater
     fg_srandom();
 
-    // needs to happen before we parse command line options
+    // Allocate global data structures.  This needs to happen before
+    // we parse command line options
     globals = new FGGlobals;
 
     SGRoute *route = new SGRoute;

@@ -37,8 +37,6 @@
 
 #include <simgear/debug/logstream.hxx>
 
-#include <Main/options.hxx>
-
 #include "scenery.hxx"
 
 

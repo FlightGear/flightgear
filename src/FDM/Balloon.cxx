@@ -52,7 +52,7 @@ HISTORY
 
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
-#include <Main/options.hxx>
+#include <Main/globals.hxx>
 
 #include "Balloon.h"
 

@@ -68,7 +68,6 @@
 #include <Main/fg_init.hxx>
 #include <Main/fg_io.hxx>
 #include <Main/globals.hxx>
-#include <Main/options.hxx>
 #include <Main/save.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
@@ -299,8 +298,8 @@ static inline void TurnCursorOn( void )
     }
 #endif
 #if defined(X_CURSOR_TWEAKS)
-    glutWarpPointer( globals->get_current_view()->get_winWidth()/2,
-		     globals->get_current_view()->get_winHeight()/2);
+    glutWarpPointer( globals->get_options()->get_xsize()/2,
+		     globals->get_options()->get_ysize()/2);
 #endif
 }
 
@@ -310,8 +309,8 @@ static inline void TurnCursorOff( void )
 #if defined(WIN32_CURSOR_TWEAKS)
     glutSetCursor(GLUT_CURSOR_NONE);
 #elif defined(X_CURSOR_TWEAKS)
-    glutWarpPointer( globals->get_current_view()->get_winWidth(),
-		     globals->get_current_view()->get_winHeight());
+    glutWarpPointer( globals->get_options()->get_xsize(),
+		     globals->get_options()->get_ysize());
 #endif
 }
 
@@ -382,8 +381,8 @@ void guiMotionFunc ( int x, int y )
         // reset left click MOUSE_VIEW toggle feature
         _mVtoggle = 0;
         
-        ww = globals->get_current_view()->get_winWidth();
-        wh = globals->get_current_view()->get_winHeight();
+        ww = globals->get_options()->get_xsize();
+        wh = globals->get_options()->get_ysize();
         
         switch (mouse_mode) {
             case MOUSE_YOKE:
@@ -558,10 +557,11 @@ void guiMouseFunc(int button, int updown, int x, int y)
                         _quat[1] = curquat[1];
                         _quat[2] = curquat[2];
                         _quat[3] = curquat[3];
-                        x = globals->get_current_view()->get_winWidth()/2;
-                        y = globals->get_current_view()->get_winHeight()/2;
+                        x = globals->get_options()->get_xsize()/2;
+                        y = globals->get_options()->get_ysize()/2;
                         Quat0();
-                        _view_offset = globals->get_current_view()->get_goal_view_offset();
+                        _view_offset =
+			    globals->get_current_view()->get_goal_view_offset();
                         globals->get_current_view()->set_goal_view_offset(0.0);
 #ifdef NO_SMOOTH_MOUSE_VIEW
                         globals->get_current_view()->set_view_offset(0.0);
@@ -580,8 +580,8 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     _savedX = x;
                     _savedY = y;
                     // start with zero point in center of screen
-                    _mX = globals->get_current_view()->get_winWidth()/2;
-                    _mY = globals->get_current_view()->get_winHeight()/2;
+                    _mX = globals->get_options()->get_xsize()/2;
+                    _mY = globals->get_options()->get_ysize()/2;
                     
                     // try to have the MOUSE_YOKE position
                     // reflect the current stick position
@@ -597,8 +597,8 @@ void guiMouseFunc(int button, int updown, int x, int y)
                 case MOUSE_YOKE:
                     mouse_mode = MOUSE_VIEW;
                     globals->get_options()->set_control_mode( FGOptions::FG_JOYSTICK );
-                    x = globals->get_current_view()->get_winWidth()/2;
-                    y = globals->get_current_view()->get_winHeight()/2;
+                    x = globals->get_options()->get_xsize()/2;
+                    y = globals->get_options()->get_ysize()/2;
                     _mVtoggle = 0;
                     Quat0();
                     build_rotmatrix(quat_mat, curquat);
@@ -966,8 +966,8 @@ void fgDumpSnapShot () {
     }
 
     fgInitVisuals();
-    fgReshape( globals->get_current_view()->get_winWidth(),
-	       globals->get_current_view()->get_winHeight() );
+    fgReshape( globals->get_options()->get_xsize(),
+	       globals->get_options()->get_ysize() );
 
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgFenderFrame() shoulnd't

@@ -41,8 +41,6 @@
 #include <FDM/flight.hxx>
 #include <Time/light.hxx>
 
-#include "options.hxx"
-
 FG_USING_STD(list);
 
 

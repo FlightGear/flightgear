@@ -40,7 +40,7 @@
 #include <Cockpit/panel.hxx>
 #include <Scenery/scenery.hxx>
 
-#include "options.hxx"
+#include "globals.hxx"
 #include "viewer.hxx"
 
 
@@ -86,10 +86,8 @@ void FGViewer::Init( void ) {
     view_offset = goal_view_offset = globals->get_options()->get_default_view_offset();
     sgSetVec3( pilot_offset, 0.0, 0.0, 0.0 );
 
-    winWidth = globals->get_options()->get_xsize();
-    winHeight = globals->get_options()->get_ysize();
-
-    set_win_ratio( winHeight / winWidth );
+    set_win_ratio( globals->get_options()->get_xsize() /
+		   globals->get_options()->get_ysize() );
 
 #ifndef USE_FAST_VIEWROT
     // This never changes -- NHV
@@ -158,13 +156,16 @@ void FGViewer::UpdateViewParams( const FGInterface& f ) {
     UpdateViewMath(f);
     
     if ( ! fgPanelVisible() ) {
-	xglViewport(0, 0 , (GLint)(winWidth), (GLint)(winHeight) );
+	xglViewport( 0, 0 ,
+		     (GLint)(globals->get_options()->get_xsize()),
+		     (GLint)(globals->get_options()->get_ysize()) );
     } else {
         int view_h =
 	  int((current_panel->getViewHeight() - current_panel->getYOffset())
-	      * (winHeight / 768.0));
-	glViewport(0, (GLint)(winHeight - view_h),
-		   (GLint)(winWidth), (GLint)(view_h) );
+	      * (globals->get_options()->get_ysize() / 768.0));
+	glViewport( 0, (GLint)(globals->get_options()->get_ysize() - view_h),
+		    (GLint)(globals->get_options()->get_xsize()),
+		    (GLint)(view_h) );
     }
 }
 

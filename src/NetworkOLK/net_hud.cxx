@@ -51,7 +51,6 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <GUI/gui.h>
-#include <Main/options.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 
@@ -63,7 +62,6 @@ extern "C" {
 
 */
 
-#include <Main/options.hxx>
 #include <Cockpit/hud.hxx>
 #include <NetworkOLK/network.h>
 

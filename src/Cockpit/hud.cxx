@@ -46,7 +46,7 @@
 #include <Aircraft/aircraft.hxx>
 #include <Autopilot/newauto.hxx>
 #include <GUI/gui.h>
-#include <Main/options.hxx>
+#include <Main/globals.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif

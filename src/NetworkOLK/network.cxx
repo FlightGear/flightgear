@@ -50,7 +50,6 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <GUI/gui.h>
-#include <Main/options.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 
