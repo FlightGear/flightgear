@@ -44,14 +44,18 @@
 #  include <values.h>  // for MAXINT
 #endif
 
-#include <deque>        // STL double ended queue
 #include <vector>       // STL vector
+#include <deque>        // STL double ended queue
 
 #include <fg_typedefs.h>
 #include <fg_constants.h>
 #include <Aircraft/aircraft.hxx>
 #include <FDM/flight.hxx>
 #include <Controls/controls.hxx>
+
+//#include "glfont.h"
+
+//extern GLFONT *myFont;
 
 FG_USING_STD(deque);
 FG_USING_STD(vector);
@@ -107,10 +111,10 @@ enum fgLabelJust{ LEFT_JUST, CENTER_JUST, RIGHT_JUST } ;
 #define DASHED_NEG_LINES  12
 
 
-#define HORIZON_FIXED	1
-#define HORIZON_MOVING	2
-#define LABEL_COUNTER	1
-#define LABEL_WARNING	2
+#define HORIZON_FIXED   1
+#define HORIZON_MOVING  2
+#define LABEL_COUNTER   1
+#define LABEL_WARNING   2
 
 #define HUDS_AUTOTICKS           0x0001
 #define HUDS_VERT                0x0002
@@ -127,52 +131,60 @@ enum fgLabelJust{ LEFT_JUST, CENTER_JUST, RIGHT_JUST } ;
 
 // Ladder orientaion
 // #define HUD_VERTICAL        1
-// #define HUD_HORIZONTAL		2
-// #define HUD_FREEFLOAT		3
+// #define HUD_HORIZONTAL       2
+// #define HUD_FREEFLOAT        3
 
 // Ladder orientation modes
-// #define HUD_LEFT    		1
-// #define HUD_RIGHT         	2
-// #define HUD_TOP           	1
-// #define HUD_BOTTOM        	2
-// #define HUD_V_LEFT    		1
-// #define HUD_V_RIGHT         	2
-// #define HUD_H_TOP           	1
-// #define HUD_H_BOTTOM        	2
+// #define HUD_LEFT         1
+// #define HUD_RIGHT            2
+// #define HUD_TOP              1
+// #define HUD_BOTTOM           2
+// #define HUD_V_LEFT           1
+// #define HUD_V_RIGHT          2
+// #define HUD_H_TOP            1
+// #define HUD_H_BOTTOM         2
 
 
 // Ladder sub-types
-// #define HUD_LIM				1
-// #define HUD_NOLIM			2
-// #define HUD_CIRC			3
+// #define HUD_LIM              1
+// #define HUD_NOLIM            2
+// #define HUD_CIRC         3
 
-// #define HUD_INSTR_LADDER	1
-// #define HUD_INSTR_CLADDER	2
-// #define HUD_INSTR_HORIZON	3
-// #define HUD_INSTR_LABEL		4
+// #define HUD_INSTR_LADDER 1
+// #define HUD_INSTR_CLADDER    2
+// #define HUD_INSTR_HORIZON    3
+// #define HUD_INSTR_LABEL      4
 
-extern double get_throttleval ( void );
-extern double get_aileronval  ( void );
-extern double get_elevatorval ( void );
-extern double get_elev_trimval( void );
-extern double get_rudderval   ( void );
-extern double get_speed       ( void );
-extern double get_aoa         ( void );
-extern double get_roll        ( void );
-extern double get_pitch       ( void );
-extern double get_heading     ( void );
-extern double get_altitude    ( void );
-extern double get_agl         ( void );
-extern double get_sideslip    ( void );
-extern double get_frame_rate  ( void );
-extern double get_latitude    ( void );
-extern double get_lat_min     ( void );
-extern double get_longitude   ( void );
-extern double get_long_min    ( void );
-extern double get_fov         ( void );
-extern double get_vfc_ratio   ( void );
-extern double get_vfc_tris_drawn   ( void );
-extern double get_climb_rate  ( void );
+// in cockpit.cxx
+extern float get_throttleval ( void );
+extern float get_aileronval  ( void );
+extern float get_elevatorval ( void );
+extern float get_elev_trimval( void );
+extern float get_rudderval   ( void );
+extern float get_speed       ( void );
+extern float get_aoa         ( void );
+extern float get_roll        ( void );
+extern float get_pitch       ( void );
+extern float get_heading     ( void );
+extern float get_view_direction( void );
+extern float get_altitude    ( void );
+extern float get_agl         ( void );
+extern float get_sideslip    ( void );
+extern float get_frame_rate  ( void );
+extern float get_latitude    ( void );
+extern float get_lat_min     ( void );
+extern float get_longitude   ( void );
+extern float get_long_min    ( void );
+extern float get_fov         ( void );
+extern float get_vfc_ratio   ( void );
+extern float get_vfc_tris_drawn   ( void );
+extern float get_vfc_tris_culled   ( void );
+extern float get_climb_rate  ( void );
+extern char *coord_format_lat(float);
+extern char *coord_format_lon(float);
+//extern char *coord_format_latlon(float latitude, float longitude);  // cockpit.cxx
+
+extern char *get_formated_gmt_time( void );
 
 enum  hudinstype{ HUDno_instr,
               HUDscale,
@@ -191,6 +203,131 @@ typedef struct gltagRGBTRIPLE { // rgbt
     GLfloat Green;
     GLfloat Red;
 } glRGBTRIPLE;
+/*
+struct fgVertex2D {
+    UINT x, y;
+
+    fgVertex2D( UINT a = 0, UINT b =0 )
+        : x(a), y(b) {}
+
+    fgVertex2D( const fgVertex2D & image )
+        : x(image.x), y(image.y) {}
+
+    fgVertex2D& operator= ( const fgVertex2D & image ) {
+        x = image.x; y = image.y; return *this;
+    }
+
+    ~fgVertex2D() {}
+};
+*/
+class fgLineSeg2D {
+private:
+    GLfloat x0, y0, x1, y1;  //UINT
+
+public:
+    fgLineSeg2D( GLfloat a = 0, GLfloat b =0, GLfloat c = 0, GLfloat d =0 )
+        : x0(a), y0(b),  x1(c), y1(d) {}
+
+    fgLineSeg2D( const fgLineSeg2D & image )
+        : x0(image.x0), y0(image.y0), x1(image.x1), y1(image.y1) {}
+
+    fgLineSeg2D& operator= ( const fgLineSeg2D & image ) {
+        x0 = image.x0; y0 = image.y0; x1 = image.x1; y1 = image.y1; return *this;
+    }
+
+    ~fgLineSeg2D() {}
+    
+    void draw()
+    {
+        glVertex2f(x0, y0);
+        glVertex2f(x1, y1);
+    }
+};
+
+#define USE_HUD_TextList
+#ifdef USE_HUD_TextList
+
+//#define FAST_TEXT_TEST
+#ifdef FAST_TEXT_TEST
+extern void Font_Setup(void);
+extern unsigned int font_base;
+#endif
+
+class fgTextString {
+private:
+    void *font;
+    char msg[80];
+    float x, y;
+//  static GLfloat mat[16];
+
+public:
+    fgTextString( void *d = NULL, char *c = NULL, UINT x = 0, UINT y =0 )
+        :  font(d), x(x), y(y) {strcpy(msg,c);}
+
+    fgTextString( const fgTextString & image )
+        : font(image.font), x(image.x), y(image.y) {strcpy(msg,image.msg);}
+
+    fgTextString& operator = ( const fgTextString & image ) {
+        font = image.font; strcpy(msg,image.msg); x = image.x; y = image.y;
+        return *this;
+    }
+
+    ~fgTextString() {msg[0]='\0';}
+
+//  void set_mat(void) {
+//          glScalef(.075, .075, 0.0);
+//          glGetFloatv(GL_MODELVIEW_MATRIX, mat);
+//  }
+    
+
+    void draw()
+    {
+#ifdef FAST_TEXT_TEST
+        glRasterPos2f( x, y);
+        int len = (int) strlen(msg);
+        for (int i=0; i < len; i++) {
+            glCallList(font_base+msg[i]);
+        }
+//      glFontTextOut ( msg, x, y, 0.0f);
+        
+#else
+#define USE_STROKED_CHAR
+#ifdef USE_STROKED_CHAR
+        int c;
+        char *buf;
+        buf = msg;
+        if(*buf)
+        {
+//          glRasterPos2f( x, y);
+            glTranslatef( x, y, 0);
+            glScalef(.075, .075, 0.0);
+            while ((c=*buf++)) {
+                glutStrokeCharacter( GLUT_STROKE_MONO_ROMAN, c);
+            }
+        }
+#else
+        char *c = msg;
+        if(*c)
+        {
+            glRasterPos2f(x, y);
+            while (*c) {
+                glutBitmapCharacter(font, *c);
+                c++;
+            }
+        }
+#endif // #ifdef USE_STROKED_CHAR
+#endif // FAST_TEXT_TEST
+    }
+};
+
+typedef vector< fgTextString > TYPE_HUD_TextList;
+extern TYPE_HUD_TextList HUD_TextList;
+#endif //#ifdef USE_HUD_TextList
+
+
+typedef vector< fgLineSeg2D > TYPE_HUD_LineList;
+extern TYPE_HUD_LineList HUD_LineList;
+extern TYPE_HUD_LineList HUD_StippleLineList;
 
 class instr_item {  // An Abstract Base Class (ABC)
   private:
@@ -201,8 +338,8 @@ class instr_item {  // An Abstract Base Class (ABC)
     UINT               handle;
     RECT               scrn_pos;      // Framing - affects scale dimensions
                                     // and orientation. Vert vs Horz, etc.
-    DBLFNPTR           load_value_fn;
-    double             disp_factor;   // Multiply by to get numbers shown on scale.
+    FLTFNPTR           load_value_fn;
+    float              disp_factor;   // Multiply by to get numbers shown on scale.
     UINT               opts;
     bool               is_enabled;
     bool               broken;
@@ -214,8 +351,8 @@ class instr_item {  // An Abstract Base Class (ABC)
                 int            y,
                 UINT           height,
                 UINT           width,
-                DBLFNPTR       data_source,
-                double         data_scaling,
+                FLTFNPTR       data_source,
+                float         data_scaling,
                 UINT           options,
                 bool           working      = true);
 
@@ -229,14 +366,22 @@ class instr_item {  // An Abstract Base Class (ABC)
     bool         is_broken       ( void ) { return broken;    }
     bool         enabled         ( void ) { return is_enabled;}
     bool         data_available  ( void ) { return !!load_value_fn; }
-    double       get_value       ( void ) { return load_value_fn(); }
-    double       data_scaling    ( void ) { return disp_factor; }
+    float       get_value       ( void ) { return load_value_fn(); }
+    float       data_scaling    ( void ) { return disp_factor; }
     UINT         get_span        ( void ) { return scr_span;  }
     POINT        get_centroid    ( void ) { return mid_span;  }
     UINT         get_options     ( void ) { return opts;      }
 
+    UINT    huds_vert     (UINT options) { return( options  & HUDS_VERT ); }
+    UINT    huds_left     (UINT options) { return( options  & HUDS_LEFT ); }
+    UINT    huds_right    (UINT options) { return( options  & HUDS_RIGHT ); }
+    UINT    huds_both     (UINT options) { return( (options & HUDS_BOTH) == HUDS_BOTH ); }
+    UINT    huds_noticks  (UINT options) { return( options  & HUDS_NOTICKS ); }
+    UINT    huds_notext   (UINT options) { return( options  & HUDS_NOTEXT ); }
+    UINT    huds_top      (UINT options) { return( options  & HUDS_TOP ); }
+    UINT    huds_bottom   (UINT options) { return( options  & HUDS_BOTTOM ); }
+  
     virtual void display_enable( bool working ) { is_enabled = !! working;}
-
 
     virtual void update( void );
     virtual void break_display ( bool bad );
@@ -244,13 +389,41 @@ class instr_item {  // An Abstract Base Class (ABC)
     void         SetPosition  ( int x, int y, UINT width, UINT height );
     UINT    get_Handle( void );
     virtual void draw( void ) = 0;   // Required method in derived classes
+    
+    void drawOneLine( UINT x1, UINT y1, UINT x2, UINT y2)
+    {
+        HUD_LineList.push_back(fgLineSeg2D(x1,y1,x2,y2));
+//    glBegin(GL_LINES);
+//    glVertex2i(x1, y1);
+//    glVertex2i(x2, y2);
+//    glEnd();
+    }
+    void drawOneStippleLine( UINT x1, UINT y1, UINT x2, UINT y2)
+    {
+        HUD_StippleLineList.push_back(fgLineSeg2D(x1,y1,x2,y2));
+//      glEnable(GL_LINE_STIPPLE);
+//      glLineStipple( 1, 0x00FF );
+//      glBegin(GL_LINES);
+//      glVertex2i(x1, y1);
+//      glVertex2i(x2, y2);
+//      glEnd();
+//      glDisable(GL_LINE_STIPPLE);
+    }
+#ifdef USE_HUD_TextList
+    void TextString( void *font, char *msg, UINT x, UINT y )
+    {
+        HUD_TextList.push_back(fgTextString(font, msg, x, y));      
+    }
+#endif
 };
 
-typedef deque< instr_item * > HudContainerType;
-typedef HudContainerType::iterator HudIterator;
-
 typedef instr_item *HIptr;
-extern HudContainerType HUD_deque;
+//typedef deque <  instr_item * > hud_deque_type;
+//typedef hud_deque_type::iterator hud_deque_iterator;
+//typedef hud_deque_type::const_iterator hud_deque_const_iterator;
+
+extern deque< instr_item *> HUD_deque;
+//extern hud_deque_type HUD_deque;
 
 // instr_item           This class has no other purpose than to maintain
 //                      a linked list of instrument and derived class
@@ -265,17 +438,18 @@ class instr_label : public instr_item {
     fgLabelJust justify;
     int         fontSize;
     int         blink;
+    char format_buffer[80];
 
   public:
     instr_label( int          x,
                  int          y,
                  UINT         width,
                  UINT         height,
-                 DBLFNPTR     data_source,
+                 FLTFNPTR     data_source,
                  const char  *label_format,
                  const char  *pre_label_string  = 0,
                  const char  *post_label_string = 0,
-                 double       scale_data        = 1.0,
+                 float       scale_data        = 1.0,
                  UINT         options           = HUDS_TOP,
                  fgLabelJust  justification     = CENTER_JUST,
                  int          font_size         = SMALL,
@@ -291,6 +465,77 @@ class instr_label : public instr_item {
 
 typedef instr_label * pInstlabel;
 
+
+class lat_label : public instr_item {
+  private:
+    const char *pformat;
+    const char *pre_str;
+    const char *post_str;
+    fgLabelJust justify;
+    int         fontSize;
+    int         blink;
+    char format_buffer[80];
+
+  public:
+    lat_label( int          x,
+                 int          y,
+                 UINT         width,
+                 UINT         height,
+                 FLTFNPTR     data_source,
+                 const char  *label_format,
+                 const char  *pre_label_string  = 0,
+                 const char  *post_label_string = 0,
+                 float       scale_data        = 1.0,
+                 UINT         options           = HUDS_TOP,
+                 fgLabelJust  justification     = CENTER_JUST,
+                 int          font_size         = SMALL,
+                 int          blinking          = NOBLINK,
+                 bool         working           = true);
+
+    ~lat_label();
+
+    lat_label( const lat_label & image);
+    lat_label & operator = (const lat_label & rhs );
+    virtual void draw( void );       // Required method in base class
+};
+
+typedef lat_label * pLatlabel;
+
+class lon_label : public instr_item {
+  private:
+    const char *pformat;
+    const char *pre_str;
+    const char *post_str;
+    fgLabelJust justify;
+    int         fontSize;
+    int         blink;
+    char format_buffer[80];
+
+  public:
+    lon_label( int          x,
+                 int          y,
+                 UINT         width,
+                 UINT         height,
+                 FLTFNPTR     data_source,
+                 const char  *label_format,
+                 const char  *pre_label_string  = 0,
+                 const char  *post_label_string = 0,
+                 float       scale_data        = 1.0,
+                 UINT         options           = HUDS_TOP,
+                 fgLabelJust  justification     = CENTER_JUST,
+                 int          font_size         = SMALL,
+                 int          blinking          = NOBLINK,
+                 bool         working           = true);
+
+    ~lon_label();
+
+    lon_label( const lon_label & image);
+    lon_label & operator = (const lon_label & rhs );
+    virtual void draw( void );       // Required method in base class
+};
+
+typedef lon_label * pLonlabel;
+
 //
 // instr_scale           This class is an abstract base class for both moving
 //                       scale and moving needle (fixed scale) indicators. It
@@ -299,10 +544,10 @@ typedef instr_label * pInstlabel;
 
 class instr_scale : public instr_item {
   private:
-    double range_shown;   // Width Units.
-    double Maximum_value; //                ceiling.
-    double Minimum_value; // Representation floor.
-    double scale_factor;  // factor => screen units/range values.
+    float range_shown;   // Width Units.
+    float Maximum_value; //                ceiling.
+    float Minimum_value; // Representation floor.
+    float scale_factor;  // factor => screen units/range values.
     UINT   Maj_div;       // major division marker units
     UINT   Min_div;       // minor division marker units
     UINT   Modulo;        // Roll over point
@@ -313,12 +558,12 @@ class instr_scale : public instr_item {
                  int          y,
                  UINT         width,
                  UINT         height,
-                 DBLFNPTR     load_fn,
+                 FLTFNPTR     load_fn,
                  UINT         options,
-                 double       show_range,
-                 double       max_value    = 100.0,
-                 double       min_value    =   0.0,
-                 double       disp_scaling =   1.0,
+                 float       show_range,
+                 float       max_value    = 100.0,
+                 float       min_value    =   0.0,
+                 float       disp_scaling =   1.0,
                  UINT         major_divs   =    10,
                  UINT         minor_divs   =     5,
                  UINT         rollover     =     0,
@@ -332,11 +577,11 @@ class instr_scale : public instr_item {
     virtual void draw   ( void ) {}; // No-op here. Defined in derived classes.
     UINT   div_min      ( void ) { return Min_div;}
     UINT   div_max      ( void ) { return Maj_div;}
-    double min_val      ( void ) { return Minimum_value;}
-    double max_val      ( void ) { return Maximum_value;}
+    float min_val      ( void ) { return Minimum_value;}
+    float max_val      ( void ) { return Maximum_value;}
     UINT   modulo       ( void ) { return Modulo; }
-    double factor       ( void ) { return scale_factor;}
-    double range_to_show( void ) { return range_shown;}
+    float factor       ( void ) { return scale_factor;}
+    float range_to_show( void ) { return range_shown;}
 };
 
 // hud_card_               This class displays the indicated quantity on
@@ -346,24 +591,24 @@ class instr_scale : public instr_item {
 
 class hud_card : public instr_scale {
   private:
-    double val_span;
-    double half_width_units;
-
+    float val_span;
+    float half_width_units;
+    
   public:
     hud_card( int      x,
               int      y,
               UINT     width,
               UINT     height,
-              DBLFNPTR load_fn,
+              FLTFNPTR load_fn,
               UINT     options,
-              double   maxValue      = 100.0,
-              double   minValue      =   0.0,
-              double   disp_scaling  =   1.0,
+              float   maxValue      = 100.0,
+              float   minValue      =   0.0,
+              float   disp_scaling  =   1.0,
               UINT     major_divs    =  10,
               UINT     minor_divs    =   5,
               UINT     modulator     = 100,
               int      dp_showing    =   2,
-              double   value_span    = 100.0,
+              float   value_span    = 100.0,
               bool     working       = true);
 
     ~hud_card();
@@ -376,18 +621,16 @@ class hud_card : public instr_scale {
 typedef hud_card * pCardScale;
 
 class guage_instr : public instr_scale {
-  private:
-
   public:
     guage_instr( int       x,
                  int       y,
                  UINT      width,
                  UINT      height,
-                 DBLFNPTR  load_fn,
+                 FLTFNPTR  load_fn,
                  UINT      options,
-                 double    disp_scaling = 1.0,
-                 double    maxValue     = 100,
-                 double    minValue     =   0,
+                 float    disp_scaling = 1.0,
+                 float    maxValue     = 100,
+                 float    minValue     =   0,
                  UINT      major_divs   =  50,
                  UINT      minor_divs   =   0,
                  int       dp_showing   =   2,
@@ -407,15 +650,15 @@ typedef guage_instr * pGuageInst;
 
 class dual_instr_item : public instr_item {
   private:
-    DBLFNPTR alt_data_source;
+    FLTFNPTR alt_data_source;
 
   public:
     dual_instr_item ( int       x,
                       int       y,
                       UINT      width,
                       UINT      height,
-                      DBLFNPTR  chn1_source,
-                      DBLFNPTR  chn2_source,
+                      FLTFNPTR  chn1_source,
+                      FLTFNPTR  chn2_source,
                       bool      working     = true,
                       UINT      options  = HUDS_TOP);
 
@@ -423,8 +666,8 @@ class dual_instr_item : public instr_item {
     dual_instr_item( const dual_instr_item & image);
     dual_instr_item & operator = (const dual_instr_item & rhs );
 
-    double current_ch1( void ) { return alt_data_source();}
-    double current_ch2( void ) { return get_value();}
+    float current_ch1( void ) { return (float)alt_data_source();}
+    float current_ch2( void ) { return (float)get_value();}
     virtual void draw ( void ) { }
 };
 
@@ -439,11 +682,11 @@ class fgTBI_instr : public dual_instr_item {
                  int       y,
                  UINT      width,
                  UINT      height,
-                 DBLFNPTR  chn1_source  = get_roll,
-                 DBLFNPTR  chn2_source  = get_sideslip,
-                 double    maxBankAngle = 45.0,
-                 double    maxSlipAngle =  5.0,
-                 UINT      gap_width    =  5.0,
+                 FLTFNPTR  chn1_source  = get_roll,
+                 FLTFNPTR  chn2_source  = get_sideslip,
+                 float    maxBankAngle = 45.0,
+                 float    maxSlipAngle =  5.0,
+                 UINT      gap_width    =  5,
                  bool      working      =  true);
 
     fgTBI_instr( const fgTBI_instr & image);
@@ -466,20 +709,20 @@ class HudLadder : public dual_instr_item {
     UINT   minor_div;
     UINT   label_pos;
     UINT   scr_hole;
-    double vmax;
-    double vmin;
-    double factor;
+    float vmax;
+    float vmin;
+    float factor;
 
   public:
     HudLadder( int       x,
                int       y,
                UINT      width,
                UINT      height,
-               DBLFNPTR  ptch_source    = get_roll,
-               DBLFNPTR  roll_source    = get_pitch,
-               double    span_units     = 45.0,
-               double    division_units = 10.0,
-               double    minor_division =  0.0,
+               FLTFNPTR  ptch_source    = get_roll,
+               FLTFNPTR  roll_source    = get_pitch,
+               float    span_units     = 45.0,
+               float    division_units = 10.0,
+               float    minor_division =  0.0,
                UINT      screen_hole    =   70,
                UINT      lbl_pos        =    0,
                bool      working        = true );
@@ -511,6 +754,11 @@ extern void strokeString( int x,
                           char *msg,
                           void *font = GLUT_STROKE_ROMAN,
                           float theta = 0);
+//extern void strokeString(float xx,
+//                       float yy,
+//                       char *msg,
+//                       void *font = GLUT_STROKE_ROMAN)
+
 /*
 bool AddHUDInstrument( instr_item *pBlackBox );
 void DrawHUD ( void );
@@ -524,4 +772,3 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 */
 
 #endif // _HUD_H
-

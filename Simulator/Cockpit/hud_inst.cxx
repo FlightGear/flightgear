@@ -31,8 +31,8 @@ instr_item  ::
                int              y,
                UINT             width,
                UINT             height,
-               DBLFNPTR         data_source,
-               double           data_scaling,
+               FLTFNPTR         data_source,
+               float           data_scaling,
                UINT             options,
                bool             working) :
                       handle         ( ++instances  ),

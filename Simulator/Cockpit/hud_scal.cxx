@@ -34,12 +34,12 @@ instr_scale ( int       x,
               int       y,
               UINT      width,
               UINT      height,
-              DBLFNPTR  load_fn,
+              FLTFNPTR  load_fn,
               UINT      options,
-              double    show_range,
-              double    maxValue,
-              double    minValue,
-              double    disp_scale,
+              float    show_range,
+              float    maxValue,
+              float    minValue,
+              float    disp_scale,
               UINT      major_divs,
               UINT      minor_divs,
               UINT      rollover,
@@ -57,11 +57,11 @@ instr_scale ( int       x,
 {
 int temp;
 
-  scale_factor   = (double)get_span() / range_shown;
+  scale_factor   = (float)get_span() / range_shown;
   if( show_range < 0 ) {
     range_shown = -range_shown;
     }
-  temp = (Maximum_value - Minimum_value) / 100;
+  temp = FloatToInt(Maximum_value - Minimum_value) / 100;
   if( range_shown < temp ) {
     range_shown = temp;
     }

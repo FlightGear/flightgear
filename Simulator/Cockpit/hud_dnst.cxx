@@ -25,8 +25,8 @@ dual_instr_item ::
                     int          y,
                     UINT         width,
                     UINT         height,
-                    DBLFNPTR     chn1_source,
-                    DBLFNPTR     chn2_source,
+                    FLTFNPTR     chn1_source,
+                    FLTFNPTR     chn2_source,
                     bool         working,
                     UINT         options ):
                   instr_item( x, y, width, height,

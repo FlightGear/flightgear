@@ -17,7 +17,7 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 //  $Id$
- 
+
 #define LETTER_OFFSET 0.03515625 
 
 #ifndef _PANEL_HXX
@@ -43,190 +43,190 @@
 class FGInstrument;
 
 class FGPanel{
-
-private:
-int height, width;
-GLuint FontList;
-
-GLubyte *background;
-
-// FGInstrument **instr_list;
-FGInstrument *test_instr[7];
-
-void GetData(void);
-
-public:
-static FGPanel *OurPanel;
-
-	FGPanel(void);
-
-float   get_height(void){
-	return height;
-	}
-
-void    ReInit( int x, int y, int finx, int finy);
-void    Update(void);
-
-void    DrawLetter(void){
-        glBegin(GL_POLYGON);
-        glTexCoord2f(0.0, 0.0);
-        glVertex2f(0.0, 0.0);
-        glTexCoord2f(LETTER_OFFSET + 0.004, 0.0);
-        glVertex2f(7.0, 0.0);
-        glTexCoord2f(LETTER_OFFSET + 0.004, 0.0390625);
-        glVertex2f(7.0, 9.0);
-        glTexCoord2f(0.0, 0.0390625);
-        glVertex2f(0.0, 9.0);
-        glEnd();
+    
+    private:
+        int height, width;
+        GLuint FontList;
+        
+        GLubyte *background;
+        
+        // FGInstrument **instr_list;
+        FGInstrument *test_instr[7];
+        
+        void GetData(void);
+        
+    public:
+        static FGPanel *OurPanel;
+        
+        FGPanel(void);
+        
+        float   get_height(void){
+            return height;
         }
         
-void DrawTestLetter(float X, float Y);
-void InitLists(void);
-void TexString(char *s, float XPos, float YPos, float size);
-
+        void    ReInit( int x, int y, int finx, int finy);
+        void    Update(void);
+        
+        void    DrawLetter(void){
+            glBegin(GL_POLYGON);
+            glTexCoord2f(0.0, 0.0);
+            glVertex2f(0.0, 0.0);
+            glTexCoord2f(LETTER_OFFSET + 0.004, 0.0);
+            glVertex2f(7.0, 0.0);
+            glTexCoord2f(LETTER_OFFSET + 0.004, 0.0390625);
+            glVertex2f(7.0, 9.0);
+            glTexCoord2f(0.0, 0.0390625);
+            glVertex2f(0.0, 9.0);
+            glEnd();
+        }
+        
+        void DrawTestLetter(float X, float Y);
+        void InitLists(void);
+        void TexString(char *s, float XPos, float YPos, float size);
+        
 };
 
 class FGInstrument{
-friend class FGPanel;
-
-protected:
-float XPos, YPos;
-
-public:
-	FGInstrument(void){
-	}
-	
-	virtual ~FGInstrument(void){}
-	
-virtual void Init(void) = 0;
-virtual void Render(void) = 0;
+    friend class FGPanel;
+    
+    protected:
+        float XPos, YPos;
+        
+    public:
+        FGInstrument(void){
+        }
+        
+        virtual ~FGInstrument(void){}
+        
+        virtual void Init(void) = 0;
+        virtual void Render(void) = 0;
 };
 
 class FGHorizon : public FGInstrument {
-private:
-    float texXPos;
-    float texYPos;
-    float radius;
-    float bottom;   // tell the program the offset between midpoint and bottom 
-    float top;      // guess what ;-)
-    float vertices[180][2];
-    float normals[180][3];
-    float texCoord[180][2];
-    
-public:
-	FGHorizon(void){
-	XPos = 0.0; YPos = 0.0;
-	Init();
-	}
-
-        FGHorizon(float inXPos, float inYPos){
-        XPos = inXPos; YPos = inYPos;
-        Init();
+    private:
+        float texXPos;
+        float texYPos;
+        float radius;
+        float bottom;   // tell the program the offset between midpoint and bottom 
+        float top;      // guess what ;-)
+        float vertices[180][2];
+        float normals[180][3];
+        float texCoord[180][2];
+        
+    public:
+        FGHorizon(void){
+            XPos = 0.0; YPos = 0.0;
+            Init();
         }
         
-virtual void Init(void);
-virtual void Render(void);
-
+        FGHorizon(float inXPos, float inYPos){
+            XPos = inXPos; YPos = inYPos;
+            Init();
+        }
+        
+        virtual void Init(void);
+        virtual void Render(void);
+        
 };
 
 class FGTurnCoordinator : public FGInstrument {
-private:
-    float PlaneTexXPos;
-    float PlaneTexYPos;
-    float alpha;
-    float PlaneAlpha;
-    float alphahist[2];
-    float rollhist[2];
-    float BallXPos;
-    float BallYPos;
-    float BallTexXPos;
-    float BallTexYPos;
-    float BallRadius;
-  GLfloat vertices[72];
-
-public:
-	FGTurnCoordinator(void){
-	XPos = 0.0; YPos = 0.0;
-	Init();
-	}
-
-	FGTurnCoordinator(float inXPos, float inYPos){
-	XPos = inXPos; YPos = inYPos;
-	Init();
-	}	
-
-virtual void Init (void);
-virtual void Render(void);
-
+    private:
+        float PlaneTexXPos;
+        float PlaneTexYPos;
+        float alpha;
+        float PlaneAlpha;
+        float alphahist[2];
+        float rollhist[2];
+        float BallXPos;
+        float BallYPos;
+        float BallTexXPos;
+        float BallTexYPos;
+        float BallRadius;
+        GLfloat vertices[72];
+        
+    public:
+        FGTurnCoordinator(void){
+            XPos = 0.0; YPos = 0.0;
+            Init();
+        }
+        
+        FGTurnCoordinator(float inXPos, float inYPos){
+            XPos = inXPos; YPos = inYPos;
+            Init();
+        }   
+        
+        virtual void Init (void);
+        virtual void Render(void);
+        
 };
 
 class FGRpmGauge : public FGInstrument {
-private:
-    GLuint list;
-    
-public:
-	FGRpmGauge(void){
-	XPos = 0.0; YPos = 0.0;
-	Init();
-	}
-
-	FGRpmGauge(float inXPos, float inYPos){
-	XPos = inXPos; YPos = inYPos;
-	Init();
-	}	
-
-virtual void Init(void);
-virtual void Render(void);
+    private:
+        GLuint list;
+        
+    public:
+        FGRpmGauge(void){
+            XPos = 0.0; YPos = 0.0;
+            Init();
+        }
+        
+        FGRpmGauge(float inXPos, float inYPos){
+            XPos = inXPos; YPos = inYPos;
+            Init();
+        }   
+        
+        virtual void Init(void);
+        virtual void Render(void);
 };
 
 // temporary class until I get the software-only routines for the 
 // instruments run
 
 class FGTexInstrument : public FGInstrument {
-
-private:
-    float radius;
-    float length;
-    float width;
-    float angle;
-    float tape[2];
-    float value1;
-    float value2;
-    float alpha1;
-    float alpha2;
-    float teXpos;
-    float texYpos;
-    int variable;
-    GLfloat vertices[20];
     
-public:
-	FGTexInstrument(void){
-	XPos = 0.0; YPos = 0.0;
-	Init();
-	}
-
-	FGTexInstrument(float inXPos, float inYPos, float inradius,                                     float inlength, float inwidth, float inangle,                                   float invalue1, float invalue2, float inalpha1,                                 float inalpha2, float intexXPos, float intexYPos,                               int invariable){
-
-	XPos = inXPos; YPos = inYPos;
-	radius = inradius; angle = inangle;
-	length = inlength; width = inwidth;
-	value1 = invalue1; value2 = invalue2;
-	alpha1 = inalpha1; alpha2 = inalpha2;
-	teXpos = intexXPos; texYpos = intexYPos;
-	variable = invariable; 
-	Init();
-	}
-
-   void CreatePointer(void);
-   void UpdatePointer(void);
-
-   void Init(void);
-   void Render(void);
+    private:
+        float radius;
+        float length;
+        float width;
+        float angle;
+        float tape[2];
+        float value1;
+        float value2;
+        float alpha1;
+        float alpha2;
+        float teXpos;
+        float texYpos;
+        int variable;
+        GLfloat vertices[20];
+        
+    public:
+        FGTexInstrument(void){
+            XPos = 0.0; YPos = 0.0;
+            Init();
+        }
+        
+        FGTexInstrument(float inXPos, float inYPos, float inradius,                                     float inlength, float inwidth, float inangle,                                   float invalue1, float invalue2, float inalpha1,                                 float inalpha2, float intexXPos, float intexYPos,                               int invariable){
+            
+            XPos = inXPos; YPos = inYPos;
+            radius = inradius; angle = inangle;
+            length = inlength; width = inwidth;
+            value1 = invalue1; value2 = invalue2;
+            alpha1 = inalpha1; alpha2 = inalpha2;
+            teXpos = intexXPos; texYpos = intexYPos;
+            variable = invariable; 
+            Init();
+        }
+        
+        void CreatePointer(void);
+        void UpdatePointer(void);
+        
+        void Init(void);
+        void Render(void);
 };
 
 typedef struct{
-float XPos;
-float YPos;
+    float XPos;
+    float YPos;
     float radius;
     float length;
     float width;
@@ -249,6 +249,3 @@ void DrawBeechcraftLogo(float XPos, float YPos, float Width, float Height);
 void PrintMatrix( void);
 
 #endif // _PANEL_HXX 
-
-
-
