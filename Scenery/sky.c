@@ -99,7 +99,7 @@ void fgSkyRender() {
     struct fgFLIGHT *f;
     struct fgLIGHT *l;
     struct fgVIEW *v;
-    float inner_color[4], middle_color[4], diff;
+    float inner_color[4], middle_color[4], diff, east_dot, dot, angle;
     int i;
 
     f = &current_aircraft.flight;
@@ -125,6 +125,25 @@ void fgSkyRender() {
 
     xglPushMatrix();
 
+    /* calculate the angle between v->surface_to_sun and
+     * v->surface_east.  We do this so we can sort out the acos()
+     * ambiguity.  I wish I could think of a more efficient way ... :-( */
+    east_dot = MAT3_DOT_PRODUCT(v->surface_to_sun, v->surface_east);
+    printf("  East dot product = %.2f\n", east_dot);
+
+    /* calculate the angle between v->surface_to_sun and
+     * v->surface_south.  this is how much we have to rotate the sky
+     * for it to align with the sun */
+    dot = MAT3_DOT_PRODUCT(v->surface_to_sun, v->surface_south);
+    printf("  Dot product = %.2f\n", dot);
+    if ( east_dot >= 0 ) {
+	angle = acos(dot);
+    } else {
+	angle = -acos(dot);
+    }
+    printf("  Sky needs to rotate = %.3f rads = %.1f degrees.\n", 
+	   angle, angle * RAD_TO_DEG);
+
     /* Translate to view position */
     xglTranslatef( v->cur_zero_elev.x, v->cur_zero_elev.y, v->cur_zero_elev.z );
     /* printf("  Translated to %.2f %.2f %.2f\n", 
@@ -135,6 +154,7 @@ void fgSkyRender() {
 	   FG_Latitude * RAD_TO_DEG);
     xglRotatef( FG_Longitude * RAD_TO_DEG, 0.0, 0.0, 1.0 );
     xglRotatef( 90.0 - FG_Latitude * RAD_TO_DEG, 0.0, 1.0, 0.0 );
+    xglRotatef( angle * RAD_TO_DEG, 0.0, 0.0, 1.0 );
 
     /* Draw inner/center section of sky*/
     xglBegin( GL_TRIANGLE_FAN );
@@ -156,8 +176,10 @@ void fgSkyRender() {
 	xglVertex3fv( sky_inner[i] );
     }
     xglColor4fv( middle_color );
+      xglColor4f(1.0, 0.0, 0.0, 1.0);
     xglVertex3fv( sky_middle[0] );
     xglColor4fv( inner_color );
+      xglColor4f(1.0, 0.0, 0.0, 1.0);
     xglVertex3fv( sky_inner[0] );
     xglEnd();
 
@@ -180,9 +202,12 @@ void fgSkyRender() {
 
 
 /* $Log$
-/* Revision 1.5  1997/12/19 23:34:59  curt
-/* Lot's of tweaking with sky rendering and lighting.
+/* Revision 1.6  1997/12/22 04:14:34  curt
+/* Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
 /*
+ * Revision 1.5  1997/12/19 23:34:59  curt
+ * Lot's of tweaking with sky rendering and lighting.
+ *
  * Revision 1.4  1997/12/19 16:45:02  curt
  * Working on scene rendering order and options.
  *

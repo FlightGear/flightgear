@@ -9,6 +9,6 @@ sunpos.o: sunpos.c sunpos.h ../Include/types.h fg_time.h \
  ../Flight/LaRCsim/ls_interface.h ../Flight/LaRCsim/../flight.h \
  ../Include/constants.h ../Main/views.h ../Main/../Include/types.h \
  ../Main/../Flight/flight.h ../Main/../Math/mat3.h \
- ../Math/fg_geodesy.h ../Math/mat3.h ../Math/polar.h \
- ../Math/../Include/types.h
+ ../Main/../Time/fg_time.h ../Math/fg_geodesy.h ../Math/mat3.h \
+ ../Math/polar.h ../Math/../Include/types.h
 ttest.o: ttest.c

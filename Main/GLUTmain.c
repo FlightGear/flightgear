@@ -124,8 +124,7 @@ static void fgUpdateViewParams() {
     /* base sky color */
     GLfloat base_sky_color[4] =        {0.60, 0.60, 0.90, 1.0};
     /* base fog color */
-    /* GLfloat base_fog_color[4] = {0.70, 0.70, 0.70, 1.0}; */
-     GLfloat base_fog_color[4] = {1.00, 0.00, 0.00, 1.0};
+    GLfloat base_fog_color[4] = {0.70, 0.70, 0.70, 1.0};
 
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
@@ -134,7 +133,7 @@ static void fgUpdateViewParams() {
     t = &cur_time_params;
     v = &current_view;
 
-    fgViewUpdate(f, v);
+    fgViewUpdate(f, v, l);
 
     /* Tell GL we are about to modify the projection parameters */
     xglMatrixMode(GL_PROJECTION);
@@ -144,12 +143,26 @@ static void fgUpdateViewParams() {
     xglMatrixMode(GL_MODELVIEW);
     xglLoadIdentity();
     
-    /* set up our view volume */
+    /* set up our view volume (default) */
     gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
 	       v->view_pos.x + v->view_forward[0], 
 	       v->view_pos.y + v->view_forward[1], 
 	       v->view_pos.z + v->view_forward[2],
 	       v->view_up[0], v->view_up[1], v->view_up[2]);
+
+    /* lock view horizontally towards sun (testing) */
+    /* gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
+	       v->view_pos.x + v->surface_to_sun[0], 
+	       v->view_pos.y + v->surface_to_sun[1], 
+	       v->view_pos.z + v->surface_to_sun[2],
+	       v->view_up[0], v->view_up[1], v->view_up[2]); */
+
+    /* lock view horizontally towards south (testing) */
+    /* gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
+	       v->view_pos.x + v->surface_south[0], 
+	       v->view_pos.y + v->surface_south[1], 
+	       v->view_pos.z + v->surface_south[2],
+	       v->view_up[0], v->view_up[1], v->view_up[2]); */
 
     /* set the sun position */
     xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
@@ -203,7 +216,7 @@ static void fgUpdateViewParams() {
  * Update all Visuals (redraws anything graphics related)
  **************************************************************************/
 
-static void fgUpdateVisuals( void ) {
+static void fgRenderFrame( void ) {
     struct fgLIGHT *l;
     struct fgTIME *t;
     struct fgVIEW *v;
@@ -502,7 +515,7 @@ static void fgMainLoop( void ) {
     fgAircraftOutputCurrent(a);
 
     /* redraw display */
-    fgUpdateVisuals();
+    fgRenderFrame();
 }
 
 
@@ -589,7 +602,7 @@ int main( int argc, char *argv[] ) {
       xglutIdleFunc( fgMainLoop );
 
       /* draw the scene */
-      xglutDisplayFunc( fgUpdateVisuals );
+      xglutDisplayFunc( fgRenderFrame );
 
       /* pass control off to the GLUT event handler */
       glutMainLoop();
@@ -607,9 +620,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.37  1997/12/19 23:34:03  curt
-/* Lot's of tweaking with sky rendering and lighting.
+/* Revision 1.38  1997/12/22 04:14:28  curt
+/* Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
 /*
+ * Revision 1.37  1997/12/19 23:34:03  curt
+ * Lot's of tweaking with sky rendering and lighting.
+ *
  * Revision 1.36  1997/12/19 16:44:57  curt
  * Working on scene rendering order and options.
  *

@@ -31,7 +31,9 @@
 #include "../Flight/flight.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
+#include "../Math/vector.h"
 #include "../Scenery/scenery.h"
+#include "../Time/fg_time.h"
 
 
 /* This is a record containing current view parameters */
@@ -46,9 +48,10 @@ void fgViewInit(struct fgVIEW *v) {
 
 
 /* Update the view parameters */
-void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v) {
-    MAT3vec vec, forward;
+void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
+    MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
+    double ntmp;
 
     /* calculate the cartesion coords of the current lat/lon/0 elev */
     v->cur_zero_elev = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
@@ -66,6 +69,16 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v) {
 
     printf("View pos = %.4f, %.4f, %.4f\n", 
 	   v->view_pos.x, v->view_pos.y, v->view_pos.z);
+
+    /* make a vector to the current view position */
+    MAT3_SET_VEC(v0, v->view_pos.x, v->view_pos.y, v->view_pos.z);
+
+    /* calculate vector to sun's position on the earth's surface */
+    v->to_sun[0] = l->fg_sunpos.x - (v->view_pos.x + scenery.center.x);
+    v->to_sun[1] = l->fg_sunpos.y - (v->view_pos.y + scenery.center.y);
+    v->to_sun[2] = l->fg_sunpos.z - (v->view_pos.z + scenery.center.z);
+    printf("Vector to sun = %.2f %.2f %.2f\n", 
+	   v->to_sun[0], v->to_sun[1], v->to_sun[2]);
 
     /* Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw) */
     MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
@@ -136,13 +149,44 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v) {
     MAT3rotate(TMP, v->view_up, v->view_offset);
     MAT3mult_vec(v->view_forward, forward, TMP);
 
+    /* Given a vector from the view position to the point on the
+     * earth's surface the sun is directly over, map into onto the
+     * local plane representing "horizontal". */
+    map_vec_onto_cur_surface_plane(v->local_up, v0, v->to_sun, 
+				   v->surface_to_sun);
+    MAT3_NORMALIZE_VEC(v->surface_to_sun, ntmp);
+    printf("Surface direction to sun is %.2f %.2f %.2f\n",
+	   v->surface_to_sun[0], v->surface_to_sun[1], v->surface_to_sun[2]);
+
+    /* printf("Should be close to zero = %.2f\n", 
+	   MAT3_DOT_PRODUCT(v->local_up, v->surface_to_sun)); */
+
+    /* Given a vector pointing straight down (-Z), map into onto the
+     * local plane representing "horizontal".  This should give us the
+     * local direction for moving "south". */
+    MAT3_SET_VEC(minus_z, 0.0, 0.0, -1.0);
+    map_vec_onto_cur_surface_plane(v->local_up, v0, minus_z, v->surface_south);
+    MAT3_NORMALIZE_VEC(v->surface_south, ntmp);
+    /* printf("Surface direction directly south %.2f %.2f %.2f\n",
+	   v->surface_south[0], v->surface_south[1], v->surface_south[2]); */
+
+    /* now calculate the surface east vector */
+    MAT3rotate(TMP, v->view_up, FG_PI_2);
+    MAT3mult_vec(v->surface_east, v->surface_south, TMP);
+    /* printf("Surface direction directly east %.2f %.2f %.2f\n",
+	   v->surface_east[0], v->surface_east[1], v->surface_east[2]); */
+    /* printf("Should be close to zero = %.2f\n", 
+	   MAT3_DOT_PRODUCT(v->surface_south, v->surface_east)); */
 }
 
 
 /* $Log$
-/* Revision 1.5  1997/12/18 04:07:02  curt
-/* Worked on properly translating and positioning the sky dome.
+/* Revision 1.6  1997/12/22 04:14:32  curt
+/* Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
 /*
+ * Revision 1.5  1997/12/18 04:07:02  curt
+ * Worked on properly translating and positioning the sky dome.
+ *
  * Revision 1.4  1997/12/17 23:13:36  curt
  * Began working on rendering a sky.
  *
