@@ -567,5 +567,5 @@ void FGPiston::Debug(int from)
 double
 FGPiston::CalcFuelNeed(void)
 {
-  return FuelFlow_gph / 3600 * State->Getdt() * Propulsion->GetRate();
+  return FuelFlow_gph / 3600 * 6 * State->Getdt() * Propulsion->GetRate();
 }
