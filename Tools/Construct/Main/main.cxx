@@ -85,19 +85,26 @@ int load_polys( FGConstruct& c ) {
     FGClipper clipper;
 
     string base = c.get_bucket().gen_base_path();
+    string poly_path;
     int result;
 
     // initialize clipper
     clipper.init();
 
     // load airports
-    string poly_path = c.get_work_base() + ".apt" + "/Scenery/" + base;
+    poly_path = c.get_work_base() + ".apt" + "/Scenery/" + base;
     cout << "poly_path = " << poly_path << endl;
     result = actual_load_polys( poly_path, c, clipper );
     cout << "  loaded " << result << " polys" << endl;
 
     // load hydro
     poly_path = c.get_work_base() + ".hydro" + "/Scenery/" + base;
+    cout << "poly_path = " << poly_path << endl;
+    result = actual_load_polys( poly_path, c, clipper );
+    cout << "  loaded " << result << " polys" << endl;
+
+    // load land masses
+    poly_path = c.get_work_base() + ".states" + "/Scenery/" + base;
     cout << "poly_path = " << poly_path << endl;
     result = actual_load_polys( poly_path, c, clipper );
     cout << "  loaded " << result << " polys" << endl;
