@@ -79,7 +79,9 @@ FGInterface::_calc_multiloop (double dt)
   dt += remainder;
   remainder = 0;
   double ml = dt * hz;
-  int multiloop = int(floor(ml));
+  // Avoid roundoff problems by adding the roundoff itself.
+  // ... ok, two times the roundoff to have enough room.
+  int multiloop = int(floor(ml * (1.0 + 2.0*DBL_EPSILON)));
   remainder = (ml - multiloop) / hz;
   return (multiloop * speedup);
 }

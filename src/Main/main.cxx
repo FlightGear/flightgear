@@ -240,6 +240,18 @@ static void fgMainLoop( void ) {
 
     real_delta_time_sec
         = double(current_time_stamp - last_time_stamp) / 1000000.0;
+    // round the real time down to a multiple of 1/model-hz.
+    // this way all systems are updated the _same_ amount of dt.
+    {
+      static double rem = 0.0;
+      real_delta_time_sec += rem;
+      double hz = model_hz;
+      double nit = floor(real_delta_time_sec*hz);
+      rem = real_delta_time_sec - nit/hz;
+      real_delta_time_sec = nit/hz;
+    }
+
+
     if ( clock_freeze->getBoolValue() ) {
         delta_time_sec = 0;
     } else {
