@@ -708,7 +708,7 @@ GLubyte *hiResScreenCapture( int multiplier )
     globals->get_renderer()->init();
     int cur_width = fgGetInt("/sim/startup/xsize");
     int cur_height = fgGetInt("/sim/startup/ysize");
-    if (b1) delete( b1 );
+    delete( b1 );
     // New empty (mostly) bitmap
     b1 = new GlBitmap( GL_RGB, 1, 1, (unsigned char *)"123" );
     int x,y;

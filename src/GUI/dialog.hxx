@@ -155,6 +155,7 @@ class fgPopup : public puPopup {
 public:
     fgPopup(int x, int y) : puPopup(x, y) { _dragging = false; }
     int checkHit(int b, int up, int x, int y);
+    int getHitObjects(puObject *, int x, int y);
 private:
     bool _dragging;
     int _dX, _dY;

@@ -18,20 +18,15 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
     // tells us is that the pointer is inside the dialog.  So do the
     // intersection test (again) to make sure we don't start a drag
     // when inside controls.
-    if(!result) return result;
-    puObject* child = getFirstChild();
-    if(child) child = child->getNextObject(); // Skip the puFrame
-    while(child) {
-        int cx, cy, cw, ch;
-        child->getAbsolutePosition(&cx, &cy);
-        child->getSize(&cw, &ch);
-        if(x >= cx && x < cx + cw && y >= cy && y < cy + ch)
-            return result;
-        child = child->getNextObject();
-    }
 
-    // Finally, handle the mouse event
-    if(updown == PU_DOWN) {
+    if(updown == PU_DOWN && !_dragging) {
+        if(!result)
+            return 0;
+
+        int hit = getHitObjects(this, x, y);
+        if(hit & (PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT))
+            return result;
+
         int px, py;
         getPosition(&px, &py);
         _dragging = true;
@@ -42,8 +37,25 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
     } else {
         _dragging = false;
     }
-    return 1;
+    return result;
 }
+
+int fgPopup::getHitObjects(puObject *object, int x, int y)
+{
+    int type = 0;
+    if(object->getType() & PUCLASS_GROUP)
+        for (puObject *obj = ((puGroup *)object)->getFirstChild();
+                obj; obj = obj->getNextObject())
+            type |= getHitObjects(obj, x, y);
+
+    int cx, cy, cw, ch;
+    object->getAbsolutePosition(&cx, &cy);
+    object->getSize(&cw, &ch);
+    if(x >= cx && x < cx + cw && y >= cy && y < cy + ch)
+        type |= object->getType();
+    return type;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -249,8 +261,13 @@ FGDialog::applyValues ()
 void
 FGDialog::update ()
 {
-    for (unsigned int i = 0; i < _liveObjects.size(); i++)
-        copy_to_pui(_liveObjects[i]->node, _liveObjects[i]->object);
+    for (unsigned int i = 0; i < _liveObjects.size(); i++) {
+        puObject *obj = _liveObjects[i]->object;
+        if (obj->getType() & PUCLASS_INPUT && ((puInput *)obj)->isAcceptingInput())
+            continue;
+
+        copy_to_pui(_liveObjects[i]->node, obj);
+    }
 }
 
 void

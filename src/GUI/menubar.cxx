@@ -216,10 +216,8 @@ FGMenuBar::~FGMenuBar ()
 void
 FGMenuBar::init ()
 {
-    if (_menuBar != 0)          // FIXME: check if PUI owns the pointer
-        delete _menuBar;
+    delete _menuBar;            // FIXME: check if PUI owns the pointer
     make_menubar();
-
                                 // FIXME: temporary commands to get at
                                 // old, hard-coded dialogs.
     add_deprecated_dialogs();
