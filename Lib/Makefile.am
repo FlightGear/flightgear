@@ -1,3 +1,4 @@
 SUBDIRS = \
 	DEM \
-	Polygon
+	Polygon \
+	Triangle
