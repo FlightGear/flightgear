@@ -105,7 +105,8 @@ fixnode_SOURCES = \
 
 fixnode_LDADD = \
 	$(top_builddir)/Lib/DEM/libDEM.la \
-        $(top_builddir)/Lib/Bucket/libBucket.la
+        $(top_builddir)/Lib/Bucket/libBucket.la \
+        $(top_builddir)/Lib/zlib/libz.la
 
 # We can't build this with "-O2" (optimization) since this causes a seg fault
 # I haven't found a way to strip this out of the CXXFLAGS, so I'm just
@@ -127,7 +128,8 @@ X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
 fixnode_OBJECTS =  fixnode.o main.o triload.o
 fixnode_DEPENDENCIES =  $(top_builddir)/Lib/DEM/libDEM.la \
-$(top_builddir)/Lib/Bucket/libBucket.la
+$(top_builddir)/Lib/Bucket/libBucket.la \
+$(top_builddir)/Lib/zlib/libz.la
 fixnode_LDFLAGS = 
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
@@ -369,7 +371,10 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.2  1998/04/14 02:26:03  curt
+# Revision 1.3  1998/04/18 04:02:54  curt
+# Added zlib support in placed and other misc. tweaks.
+#
+# Revision 1.2  1998/04/14 02:26:02  curt
 # Code reorganizations.  Added a Lib/ directory for more general libraries.
 #
 # Revision 1.1  1998/04/08 23:05:54  curt

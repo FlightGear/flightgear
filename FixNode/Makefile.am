@@ -33,7 +33,8 @@ fixnode_SOURCES = \
 
 fixnode_LDADD = \
 	$(top_builddir)/Lib/DEM/libDEM.la \
-        $(top_builddir)/Lib/Bucket/libBucket.la
+        $(top_builddir)/Lib/Bucket/libBucket.la \
+        $(top_builddir)/Lib/zlib/libz.la
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
@@ -45,6 +46,9 @@ CXXFLAGS = -g
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1998/04/18 04:02:54  curt
+# Added zlib support in placed and other misc. tweaks.
+#
 # Revision 1.2  1998/04/14 02:26:02  curt
 # Code reorganizations.  Added a Lib/ directory for more general libraries.
 #
