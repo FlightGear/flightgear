@@ -92,7 +92,7 @@ void
 FGAircraftModel::update (double dt)
 {
   int view_number = globals->get_viewmgr()->get_current();
-  int is_internal = globals->get_current_view()->getInternal();
+  int is_internal = fgGetBool("/sim/current-view/internal");
 
   if (view_number == 0 && !is_internal) {
     _aircraft->setVisible(false);

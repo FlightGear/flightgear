@@ -405,6 +405,12 @@ private:
 	_pitch_offset_deg += amt;
     }
 
+    // add to _roll_offset_deg
+    inline void incRollOffset_deg( double amt ) {
+	set_dirty();
+	_roll_offset_deg += amt;
+    }
+
     inline void set_reverse_view_offset( bool val ) {
 	_reverse_view_offset = val;
     }

@@ -271,6 +271,14 @@ FGViewMgr::bind ()
 	&FGViewMgr::getGoalViewPitchOffset_deg,
         &FGViewMgr::setGoalViewPitchOffset_deg);
   fgSetArchivable("/sim/current-view/goal-pitch-offset-deg");
+  fgTie("/sim/current-view/roll-offset-deg", this,
+	&FGViewMgr::getViewRollOffset_deg,
+        &FGViewMgr::setViewRollOffset_deg);
+  fgSetArchivable("/sim/current-view/roll-offset-deg");
+  fgTie("/sim/current-view/goal-roll-offset-deg", this,
+	&FGViewMgr::getGoalViewRollOffset_deg,
+        &FGViewMgr::setGoalViewRollOffset_deg);
+  fgSetArchivable("/sim/current-view/goal-roll-offset-deg");
 
   fgTie("/sim/current-view/view-number", this, 
                       &FGViewMgr::getView, &FGViewMgr::setView);
@@ -435,6 +443,12 @@ FGViewMgr::copyToCurrent()
     fgSetDouble("/sim/current-view/config/default-field-of-view-deg",
                 fgGetDouble(nodepath.c_str()));
 
+    nodepath = viewpath;
+    nodepath += "/config/from-model";
+    fgSetBool("/sim/current-view/config/from-model",
+                fgGetBool(nodepath.c_str()));
+
+
     // copy view data
     fgSetDouble("/sim/current-view/x-offset-m", getViewXOffset_m());
     fgSetDouble("/sim/current-view/y-offset-m", getViewYOffset_m());
@@ -457,6 +471,10 @@ FGViewMgr::copyToCurrent()
                 get_current_view()->getTargetYOffset_m());
     fgSetDouble("/sim/current-view/target-z-offset-m",
                 get_current_view()->getTargetZOffset_m());
+
+    fgSetBool("/sim/current-view/internal",
+                get_current_view()->getInternal());
+
 }
 
 
@@ -522,6 +540,38 @@ FGViewMgr::setGoalViewPitchOffset_deg (double tilt)
   FGViewer * view = get_current_view();
   if (view != 0)
     view->setGoalPitchOffset_deg(tilt);
+}
+
+double
+FGViewMgr::getViewRollOffset_deg () const
+{
+  const FGViewer * view = get_current_view();
+  return (view == 0 ? 0 : view->getRollOffset_deg());
+}
+
+void
+FGViewMgr::setViewRollOffset_deg (double tilt)
+{
+  FGViewer * view = get_current_view();
+  if (view != 0) {
+    view->setGoalRollOffset_deg(tilt);
+    view->setRollOffset_deg(tilt);
+  }
+}
+
+double
+FGViewMgr::getGoalViewRollOffset_deg () const
+{
+  const FGViewer * view = get_current_view();
+  return (view == 0 ? 0 : view->getGoalRollOffset_deg());
+}
+
+void
+FGViewMgr::setGoalViewRollOffset_deg (double tilt)
+{
+  FGViewer * view = get_current_view();
+  if (view != 0)
+    view->setGoalRollOffset_deg(tilt);
 }
 
 double

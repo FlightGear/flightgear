@@ -57,7 +57,8 @@
 // by considering them to be 3x3 until the very end -- NHV
 static void MakeVIEW_OFFSET( sgMat4 dst,
                       const float angle1, const sgVec3 axis1,
-                      const float angle2, const sgVec3 axis2 )
+                      const float angle2, const sgVec3 axis2,
+                      const float angle3, const sgVec3 axis3 )
 {
     // make rotmatrix1 from angle and axis
     float s = (float) sin ( angle1 ) ;
@@ -101,19 +102,58 @@ static void MakeVIEW_OFFSET( sgMat4 dst,
     mat2[2][1] = tmp * axis2[1] - s * axis2[0] ;
     mat2[2][2] = tmp * axis2[2] + c ;
 
+
+    // make rotmatrix3 from angle and axis (roll)
+    s = (float) sin ( angle3 ) ;
+    c = (float) cos ( angle3 ) ;
+    t = SG_ONE - c ;
+
+    sgMat3 mat3;
+    tmp = t * axis3[0];
+    mat3[0][0] = tmp * axis3[0] + c ;
+    mat3[0][1] = tmp * axis3[1] + s * axis3[2] ;
+    mat3[0][2] = tmp * axis3[2] - s * axis3[1] ;
+
+    tmp = t * axis2[1];
+    mat3[1][0] = tmp * axis3[0] - s * axis3[2] ;
+    mat3[1][1] = tmp * axis3[1] + c ;
+    mat3[1][2] = tmp * axis3[2] + s * axis3[0] ;
+
+    tmp = t * axis3[2];
+    mat3[2][0] = tmp * axis3[0] + s * axis3[1] ;
+    mat3[2][1] = tmp * axis3[1] - s * axis3[0] ;
+    mat3[2][2] = tmp * axis3[2] + c ;
+
+    sgMat3 matt;
+
     // multiply matrices
     for ( int j = 0 ; j < 3 ; j++ ) {
-        dst[0][j] = mat2[0][0] * mat1[0][j] +
+        matt[0][j] = mat2[0][0] * mat1[0][j] +
                     mat2[0][1] * mat1[1][j] +
                     mat2[0][2] * mat1[2][j];
 
-        dst[1][j] = mat2[1][0] * mat1[0][j] +
+        matt[1][j] = mat2[1][0] * mat1[0][j] +
                     mat2[1][1] * mat1[1][j] +
                     mat2[1][2] * mat1[2][j];
 
-        dst[2][j] = mat2[2][0] * mat1[0][j] +
+        matt[2][j] = mat2[2][0] * mat1[0][j] +
                     mat2[2][1] * mat1[1][j] +
                     mat2[2][2] * mat1[2][j];
+    }
+
+    // multiply matrices
+    for ( int j = 0 ; j < 3 ; j++ ) {
+        dst[0][j] = mat3[0][0] * matt[0][j] +
+                    mat3[0][1] * matt[1][j] +
+                    mat3[0][2] * matt[2][j];
+
+        dst[1][j] = mat3[1][0] * matt[0][j] +
+                    mat3[1][1] * matt[1][j] +
+                    mat3[1][2] * matt[2][j];
+
+        dst[2][j] = mat3[2][0] * matt[0][j] +
+                    mat3[2][1] * matt[1][j] +
+                    mat3[2][2] * matt[2][j];
     }
     // fill in 4x4 matrix elements
     dst[0][3] = SG_ZERO; 
@@ -566,7 +606,6 @@ FGViewer::recalcLookFrom ()
   sgSetVec3( right, LOCAL[1][0], LOCAL[1][1], LOCAL[1][2] );
   sgSetVec3( forward, -LOCAL[0][0], -LOCAL[0][1], -LOCAL[0][2] );
 
-
   // Note that when in "lookfrom" view the "view up" vector is always applied
   // to the viewer.  View up is based on verticle of the aircraft itself. (see
   // "LOCAL" matrix above)
@@ -574,7 +613,8 @@ FGViewer::recalcLookFrom ()
   // Orientation Offsets matrix
   MakeVIEW_OFFSET( VIEW_OFFSET,
     _heading_offset_deg  * SG_DEGREES_TO_RADIANS, _view_up,
-    _pitch_offset_deg  * SG_DEGREES_TO_RADIANS, right );
+    _pitch_offset_deg  * SG_DEGREES_TO_RADIANS, right,
+    _roll_offset_deg * SG_DEGREES_TO_RADIANS, forward );
 
   // Make the VIEW matrix.
   sgSetVec4(VIEW[0], right[0], right[1], right[2],SG_ZERO);
@@ -608,7 +648,7 @@ void
 FGViewer::recalcLookAt ()
 {
 
-  sgVec3 right;
+  sgVec3 right, forward;
   sgVec3 eye_pos, at_pos;
   sgVec3 position_offset; // eye position offsets (xyz)
   sgVec3 target_position_offset; // target position offsets (xyz)
@@ -653,6 +693,7 @@ FGViewer::recalcLookAt ()
   // make sg vectors view up, right and forward vectors from LOCAL
   sgSetVec3( _view_up, LOCAL[2][0], LOCAL[2][1], LOCAL[2][2] );
   sgSetVec3( right, LOCAL[1][0], LOCAL[1][1], LOCAL[1][2] );
+  sgSetVec3( forward, -LOCAL[0][0], -LOCAL[0][1], -LOCAL[0][2] );
 
   // rotate model or local matrix to get a matrix to apply Eye Position Offsets
   sgMat4 VIEW_UP; // L0 forward L1 right L2 up
@@ -664,7 +705,8 @@ FGViewer::recalcLookAt ()
   // get Orientation Offsets matrix
   MakeVIEW_OFFSET( VIEW_OFFSET,
     (_heading_offset_deg - 180) * SG_DEGREES_TO_RADIANS, _view_up,
-    _pitch_offset_deg * SG_DEGREES_TO_RADIANS, right );
+    _pitch_offset_deg * SG_DEGREES_TO_RADIANS, right,
+    _roll_offset_deg * SG_DEGREES_TO_RADIANS, forward );
 
   // add in the position offsets
   sgSetVec3( position_offset, _y_offset_m, _x_offset_m, _z_offset_m );
@@ -887,4 +929,27 @@ FGViewer::update (double dt)
       }
     }
   }
+
+
+  for ( i = 0; i < dt_ms; i++ ) {
+    if ( fabs( _goal_roll_offset_deg - _roll_offset_deg ) < 1 ) {
+      setRollOffset_deg( _goal_roll_offset_deg );
+      break;
+    } else {
+      // move current_view.roll_offset_deg towards
+      // current_view.goal_roll_offset
+      if ( _goal_roll_offset_deg > _roll_offset_deg )
+	{
+	  incRollOffset_deg( 1.0 );
+	} else {
+	    incRollOffset_deg( -1.0 );
+	}
+      if ( _roll_offset_deg > 90 ) {
+	setRollOffset_deg(90);
+      } else if ( _roll_offset_deg < -90 ) {
+	setRollOffset_deg( -90 );
+      }
+    }
+  }
+
 }

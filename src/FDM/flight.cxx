@@ -28,7 +28,6 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/scene/model/location.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/timing/timestamp.hxx>
 
@@ -36,7 +35,6 @@
 #include <FDM/LaRCsim/ls_interface.h>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Model/acmodel.hxx>
 
 #include "flight.hxx"
 
@@ -163,7 +161,6 @@ FGInterface::_setup ()
     sin_latitude=cos_latitude=0;
     sin_longitude=cos_longitude=0;
     altitude_agl=0;
-    _acmodel = 0;
 }
 
 void
@@ -187,12 +184,6 @@ FGInterface::common_init ()
 //     stamp();
 //     set_remainder( 0 );
 
-    // linking in FGAircraft instance...
-    // FIXME: when using multiple instances, then there will be more than
-    // one model so get_aircraft_model will have to be indexed to the correct
-    // model.
-    _acmodel = globals->get_aircraft_model();
-
     // Set initial position
     SG_LOG( SG_FLIGHT, SG_INFO, "...initializing position..." );
     set_Longitude( fgGetDouble("/sim/presets/longitude-deg")
@@ -201,7 +192,7 @@ FGInterface::common_init ()
                   * SGD_DEGREES_TO_RADIANS );
     double ground_elev_m = globals->get_scenery()->get_cur_elev();
     double ground_elev_ft = ground_elev_m * SG_METER_TO_FEET;
-    _acmodel->get3DModel()->getSGLocation()->set_cur_elev_m( ground_elev_m );
+    fgSetDouble("/position/ground-elev-m", ground_elev_m);
     _set_Runway_altitude ( ground_elev_ft );
     if ( fgGetBool("/sim/presets/onground")
          || fgGetDouble("/sim/presets/altitude-ft") < ground_elev_ft ) {
@@ -503,9 +494,7 @@ void FGInterface::_updateGeodeticPosition( double lat, double lon, double alt )
     _set_Geodetic_Position( lat, lon, alt );
 
     _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET );
-    if ( getACModel() != NULL ) {
-        _set_Runway_altitude( getACModel()->get3DModel()->getSGLocation()->get_cur_elev_m() * SG_METER_TO_FEET );
-    }
+    _set_Runway_altitude( fgGetDouble("/position/ground-elev-m") * SG_METER_TO_FEET );
 
     _set_sin_lat_geocentric( lat_geoc );
     _set_cos_lat_geocentric( lat_geoc );
@@ -561,7 +550,7 @@ void FGInterface::_updateGeocentricPosition( double lat_geoc, double lon,
     _set_Geodetic_Position( lat_geod, lon, alt );
 
     _set_Sea_level_radius( sl_radius2 * SG_METER_TO_FEET );
-    _set_Runway_altitude( getACModel()->get3DModel()->getSGLocation()->get_cur_elev_m() * SG_METER_TO_FEET );
+    _set_Runway_altitude(  fgGetDouble("/position/ground-elev-m") * SG_METER_TO_FEET );
 
     _set_sin_lat_geocentric( lat_geoc );
     _set_cos_lat_geocentric( lat_geoc );

@@ -2,13 +2,11 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/scene/model/location.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/xml/easyxml.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Model/acmodel.hxx>
 
 #include "FGFDM.hpp"
 #include "Atmosphere.hpp"
@@ -211,8 +209,8 @@ void YASim::copyToYASim(bool copyState)
     wind[1] = get_V_east_airmass() * FT2M * -1.0;
     wind[2] = get_V_down_airmass() * FT2M * -1.0;
 
-    // Get ground elevation from the FGinterface's FGlocation data
-    double ground = getACModel()->get3DModel()->getSGLocation()->get_cur_elev_m();
+    // Get ground elevation
+    double ground = fgGetDouble("/position/ground-elev-m");
     // cout << "YASIM: ground = " << ground << endl;
 
     float pressure = fgGetFloat("/environment/pressure-inhg") * INHG2PA;

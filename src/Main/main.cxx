@@ -367,8 +367,6 @@ void fgRenderFrame() {
     static const SGPropertyNode *groundlevel_nearplane
         = fgGetNode("/sim/current-view/ground-level-nearplane-m");
 
-    FGViewer *current__view = globals->get_current_view();
-
     FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
     static double last_visibility = -9999;
 
@@ -412,6 +410,8 @@ void fgRenderFrame() {
         // idle_state is now 1000 meaning we've finished all our
         // initializations and are running the main loop, so this will
         // now work without seg faulting the system.
+
+        FGViewer *current__view = globals->get_current_view();
 
         // calculate our current position in cartesian space
         globals->get_scenery()->set_center( globals->get_scenery()->get_next_center() );
@@ -980,11 +980,6 @@ static void fgMainLoop( void ) {
 
     globals->get_event_mgr()->update(delta_time_sec);
 
-    SGLocation * acmodel_location = 0;
-    if(cur_fdm_state->getACModel() != 0) {
-      acmodel_location = (SGLocation *)  cur_fdm_state->getACModel()->get3DModel()->getSGLocation();
-    }
-
     SG_LOG( SG_ALL, SG_DEBUG, "Running Main Loop");
     SG_LOG( SG_ALL, SG_DEBUG, "======= ==== ====");
 
@@ -1154,9 +1149,13 @@ static void fgMainLoop( void ) {
     double visibility_meters = fgGetDouble("/environment/visibility-m");
     FGViewer *current_view = globals->get_current_view();
 
+    // get the location data for the primary FDM (now hardcoded to ac model)...
+    SGLocation * acmodel_location = 0;
+    acmodel_location = (SGLocation *)  globals->get_aircraft_model()->get3DModel()->getSGLocation();
+
     // update tile manager for FDM...
-    // ...only if location is different than the viewer (to avoid duplicating effort)
-    if( acmodel_location != current_view->getSGLocation() ) {
+    // ...only if location is different than the current-view location (to avoid duplicating effort)
+    if( !fgGetBool("/sim/current-view/config/from-model") ) {
       if( acmodel_location != 0 ) {
         globals->get_tile_mgr()->prep_ssg_nodes( acmodel_location,
                                                  visibility_meters );
@@ -1167,6 +1166,7 @@ static void fgMainLoop( void ) {
         if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
           acmodel_location->
               set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
+          fgSetDouble("/position/ground-elev-m", globals->get_scenery()->get_cur_elev());
         }
         acmodel_location->
             set_tile_center( globals->get_scenery()->get_next_center() );
@@ -1190,10 +1190,11 @@ static void fgMainLoop( void ) {
 
     // If fdm location is same as viewer's then we didn't do the update for fdm location 
     //   above so we need to save the viewer results in the fdm SGLocation as well...
-    if( acmodel_location == current_view->getSGLocation() ) {
+    if( fgGetBool("/sim/current-view/config/from-model") ) {
       if( acmodel_location != 0 ) {
         if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
           acmodel_location->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
+          fgSetDouble("/position/ground-elev-m", globals->get_scenery()->get_cur_elev());
         }
         acmodel_location->set_tile_center( globals->get_scenery()->get_next_center() );
       }
@@ -1332,28 +1333,30 @@ void fgReshape( int width, int height ) {
         view_h = height;
     }
 
-    // for all views
-    FGViewMgr *viewmgr = globals->get_viewmgr();
-    for ( int i = 0; i < viewmgr->size(); ++i ) {
-      viewmgr->get_view(i)->
-        set_aspect_ratio((float)view_h / (float)width);
-    }
-
     glViewport( 0, (GLint)(height - view_h), (GLint)(width), (GLint)(view_h) );
 
     fgSetInt("/sim/startup/xsize", width);
     fgSetInt("/sim/startup/ysize", height);
     guiInitMouse(width, height);
 
-    ssgSetFOV( viewmgr->get_current_view()->get_h_fov(),
+    // for all views
+    FGViewMgr *viewmgr = globals->get_viewmgr();
+    if (viewmgr) {
+      for ( int i = 0; i < viewmgr->size(); ++i ) {
+        viewmgr->get_view(i)->
+          set_aspect_ratio((float)view_h / (float)width);
+      }
+
+      ssgSetFOV( viewmgr->get_current_view()->get_h_fov(),
                viewmgr->get_current_view()->get_v_fov() );
 
-    fgHUDReshape();
-
 #ifdef FG_USE_CLOUDS_3D
-    sgClouds3d->Resize( viewmgr->get_current_view()->get_h_fov(),
-                        viewmgr->get_current_view()->get_v_fov() );
+      sgClouds3d->Resize( viewmgr->get_current_view()->get_h_fov(),
+               viewmgr->get_current_view()->get_v_fov() );
 #endif
+    }
+
+    fgHUDReshape();
 
 }
 
