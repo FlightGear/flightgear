@@ -140,8 +140,8 @@ Bob Kuehne <rpk@sgi.com>
 Christian Mayer <Vader@t-online.de>
   Working on a multi-lingual conversion tools for fgfs.
   Contributed code to read msfs formated texture files.
-  Contributed a completely new weather subsystem.
-  Contributed a balloon simulator.
+  Working on a completely new weather subsystem.
+  Working on a balloon simulator.
 
 
 David Megginson <david@megginson.com>
@@ -149,6 +149,8 @@ David Megginson <david@megginson.com>
   Contributed a patch to allow mouse input to control the yoke.
   Contributed financially towards hard drive space for use by the flight
   gear project.
+  Updates to README.running.
+  Working on getting fgfs and ssg to work without textures.
 
 
 Eric Mitchell <mitchell@mars.ark.com>
