@@ -161,6 +161,9 @@ FGDME::update(double dt)
             station = Point3D( x, y, z );
             dist = aircraft.distance3D( station ) * SG_METER_TO_NM;
             dist -= bias;
+            if ( dist < 0.0 ) {
+                dist = 0.0;
+            }
 
             current_time.stamp();
             long dMs = (current_time - last_time) / 1000;

@@ -128,7 +128,11 @@ DME::update (double delta_time_sec)
         _last_distance_nm = distance_nm;
 
         _in_range_node->setBoolValue(true);
-        _distance_node->setDoubleValue(distance_nm - _transmitter_bias);
+        double tmp_dist = distance_nm - _transmitter_bias;
+        if ( tmp_dist < 0.0 ) {
+            tmp_dist = 0.0;
+        }
+        _distance_node->setDoubleValue( tmp_dist );
         _speed_node->setDoubleValue(speed_kt);
         _time_node->setDoubleValue(distance_nm/speed_kt*60.0);
         
