@@ -311,22 +311,29 @@ PropsChannel::foundTerminator()
 	}
 	else if ( command == "set" )
 	{
-	    if ( tokens.size() == 3 )
-	    {
-		node->getNode( tokens[1].c_str(), true )->setStringValue(tokens[2].c_str());
+	    if ( tokens.size() >= 2 )
+            {
+                string value, tmp;
+                if ( tokens.size() == 3 ) {
+                    value = tokens[2];
+                } else {
+                    value = "";
+                }
+                node->getNode( tokens[1].c_str(), true )
+                    ->setStringValue(value.c_str());
 
 		if ( mode == PROMPT )
 		{
 		    // now fetch and write out the new value as confirmation
 		    // of the change
-		    string value = node->getStringValue ( tokens[1].c_str(), "" );
-		    string tmp = tokens[1] + " = '" + value + "' (";
+		    value = node->getStringValue ( tokens[1].c_str(), "" );
+		    tmp = tokens[1] + " = '" + value + "' (";
 		    tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
 		    tmp += ")";
 		    push( tmp.c_str() );
 		    push( getTerminator() );
 		}
-	    }
+	    } 
 	}
 	else if ( command == "run" )
 	{

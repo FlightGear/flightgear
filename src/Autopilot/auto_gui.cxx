@@ -641,8 +641,7 @@ void TgtAptDialog_OK (puObject *)
          globals->get_autopilot()->set_HeadingEnabled( true );
          globals->get_autopilot()->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
 
-    } else if ( current_fixlist->query( TgtAptId, 0.0, 0.0, 0.0,
-					&f, &t1, &t2 ) )
+    } else if ( current_fixlist->query( TgtAptId, &f ) )
     {
 	 SG_LOG( SG_GENERAL, SG_INFO,
 		 "Adding waypoint (fix) = " << TgtAptId );

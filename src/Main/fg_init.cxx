@@ -955,6 +955,104 @@ static void fgSetDistOrAltFromGlideSlope() {
 }                       
 
 
+// Set current_options lon/lat given an airport id and heading (degrees)
+static bool fgSetPosFromNAV( const string& id, const double& freq ) {
+    FGNav nav;
+
+    // set initial position from runway and heading
+    if ( current_navlist->findByIdentAndFreq( id.c_str(), freq, &nav ) ) {
+        SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
+                << id << ":" << freq );
+
+        double lon = nav.get_lon();
+        double lat = nav.get_lat();
+
+        if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON )
+        {
+            double odist = fgGetDouble("/sim/presets/offset-distance")
+                * SG_NM_TO_METER;
+            double oaz = fabs(fgGetDouble("/sim/presets/offset-azimuth"))
+                + 180.0;
+            while ( oaz >= 360.0 ) { oaz -= 360.0; }
+            double olat, olon, az2;
+            geo_direct_wgs_84 ( 0, lat, lon, oaz, odist, &olat, &olon, &az2 );
+
+            lat = olat;
+            lon = olon;
+        }
+
+        // presets
+        fgSetDouble("/sim/presets/longitude-deg",  lon );
+        fgSetDouble("/sim/presets/latitude-deg",  lat );
+
+        // other code depends on the actual values being set ...
+        fgSetDouble("/position/longitude-deg",  lon );
+        fgSetDouble("/position/latitude-deg",  lat );
+        fgSetDouble("/orientation/heading-deg", 
+                    fgGetDouble("/sim/presets/heading-deg") );
+
+        SG_LOG( SG_GENERAL, SG_INFO,
+                "Position for " << id << ":" << freq << " is ("
+                << lon << ", "<< lat << ")" );
+
+        return true;
+    } else {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = "
+                << id << ":" << freq );
+        return false;
+    }
+}
+
+
+// Set current_options lon/lat given an airport id and heading (degrees)
+static bool fgSetPosFromFix( const string& id ) {
+    FGFix fix;
+
+    // set initial position from runway and heading
+    if ( current_fixlist->query( id.c_str(), &fix ) ) {
+        SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
+                << id );
+
+        double lon = fix.get_lon();
+        double lat = fix.get_lat();
+
+        if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON )
+        {
+            double odist = fgGetDouble("/sim/presets/offset-distance")
+                * SG_NM_TO_METER;
+            double oaz = fabs(fgGetDouble("/sim/presets/offset-azimuth"))
+                + 180.0;
+            while ( oaz >= 360.0 ) { oaz -= 360.0; }
+            double olat, olon, az2;
+            geo_direct_wgs_84 ( 0, lat, lon, oaz, odist, &olat, &olon, &az2 );
+
+            lat = olat;
+            lon = olon;
+        }
+
+        // presets
+        fgSetDouble("/sim/presets/longitude-deg",  lon );
+        fgSetDouble("/sim/presets/latitude-deg",  lat );
+
+        // other code depends on the actual values being set ...
+        fgSetDouble("/position/longitude-deg",  lon );
+        fgSetDouble("/position/latitude-deg",  lat );
+        fgSetDouble("/orientation/heading-deg", 
+                    fgGetDouble("/sim/presets/heading-deg") );
+
+        SG_LOG( SG_GENERAL, SG_INFO,
+                "Position for " << id << " is ("
+                << lon << ", "<< lat << ")" );
+
+        return true;
+    } else {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = "
+                << id );
+        return false;
+    }
+}
+
+
 // Set the initial position based on presets (or defaults)
 bool fgInitPosition() {
     bool set_pos = false;
@@ -981,23 +1079,61 @@ bool fgInitPosition() {
     string apt = fgGetString("/sim/presets/airport-id");
     string rwy_no = fgGetString("/sim/presets/runway");
     double hdg = fgGetDouble("/sim/presets/heading-deg");
+    string vor = fgGetString("/sim/presets/vor-id");
+    double vor_freq = fgGetDouble("/sim/presets/vor-freq");
+    string ndb = fgGetString("/sim/presets/ndb-id");
+    double ndb_freq = fgGetDouble("/sim/presets/ndb-freq");
+    string fix = fgGetString("/sim/presets/fix");
     if ( !set_pos && !apt.empty() && !rwy_no.empty() ) {
         // An airport + runway is requested
         if ( fgSetPosFromAirportIDandRwy( apt, rwy_no ) ) {
-            // set tower position (a little off the heading for single
+            // set position (a little off the heading for single
             // runway airports)
             fgSetTowerPosFromAirportID( apt, hdg );
 
             set_pos = true;
         }
     }
-
     if ( !set_pos && !apt.empty() ) {
+        // An airport is requested (find runway closest to hdg)
         if ( fgSetPosFromAirportIDandHdg( apt, hdg ) ) {
-            // set tower position (a little off the heading for single
+            // set position (a little off the heading for single
             // runway airports)
             fgSetTowerPosFromAirportID( apt, hdg );
 
+            set_pos = true;
+        }
+    }
+    if ( !set_pos && !vor.empty() ) {
+        // a VOR is requested
+        if ( fgSetPosFromNAV( vor, vor_freq ) ) {
+            if ( fgGetDouble("/sim/presets/altitude-ft") > -9990.0 ) {
+                fgSetBool("/sim/presets/onground", false);
+            } else {
+                fgSetBool("/sim/presets/onground", true);
+            }
+            set_pos = true;
+        }
+    }
+    if ( !set_pos && !ndb.empty() ) {
+        // an NDB is requested
+        if ( fgSetPosFromNAV( ndb, ndb_freq ) ) {
+            if ( fgGetDouble("/sim/presets/altitude-ft") > -9990.0 ) {
+                fgSetBool("/sim/presets/onground", false);
+            } else {
+                fgSetBool("/sim/presets/onground", true);
+            }
+            set_pos = true;
+        }
+    }
+    if ( !set_pos && !fix.empty() ) {
+        // a Fix is requested
+        if ( fgSetPosFromFix( fix ) ) {
+            if ( fgGetDouble("/sim/presets/altitude-ft") > -9990.0 ) {
+                fgSetBool("/sim/presets/onground", false);
+            } else {
+                fgSetBool("/sim/presets/onground", true);
+            }
             set_pos = true;
         }
     }

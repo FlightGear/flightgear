@@ -662,7 +662,7 @@ static struct {
     { "dialog-show", do_dialog_show },
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },
-    { "presets_commit", do_presets_commit },
+    { "presets-commit", do_presets_commit },
     { 0, 0 }			// zero-terminated
 };
 

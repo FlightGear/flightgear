@@ -66,9 +66,10 @@ int main() {
     // attempting to get the position relative to the OTR VOR; heading
     // should be 108 degrees, distance 74nm (according to my SimCharts
     // v1.5)
-    if ( current_fixlist->query( "DOGGA", -0.103 * SG_DEGREES_TO_RADIANS,
-                                 53.698 * SG_DEGREES_TO_RADIANS, 3000,
-				 &fix, &heading, &dist) )
+    if ( current_fixlist->query_and_offset( "DOGGA",
+                                            -0.103 * SG_DEGREES_TO_RADIANS,
+                                            53.698 * SG_DEGREES_TO_RADIANS,
+                                            3000, &fix, &heading, &dist) )
     {
 	cout << "Found a matching fix" << endl;
 	cout << " id = " << fix.get_ident() << endl;

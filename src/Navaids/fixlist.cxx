@@ -87,10 +87,23 @@ bool FGFixList::init( SGPath path ) {
 }
 
 
-// query the database for the specified frequency, lon and lat are in
+// query the database for the specified fix, lon and lat are in
 // degrees, elev is in meters
-bool FGFixList::query( const string& ident, double lon, double lat, double elev,
-		       FGFix *fix, double *heading, double *dist )
+bool FGFixList::query( const string& ident, FGFix *fix ) {
+    *fix = fixlist[ident];
+    if ( ! fix->get_ident().empty() ) {
+	return true;
+    } else {
+        return false;
+    }
+}
+
+
+// query the database for the specified fix, lon and lat are in
+// degrees, elev is in meters
+bool FGFixList::query_and_offset( const string& ident, double lon, double lat,
+                                  double elev, FGFix *fix, double *heading,
+                                  double *dist )
 {
     *fix = fixlist[ident];
     if ( fix->get_ident().empty() ) {

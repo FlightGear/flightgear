@@ -56,10 +56,14 @@ public:
     // load the navaids and build the map
     bool init( SGPath path );
 
-    // query the database for the specified frequency, lon and lat are
+    // query the database for the specified fix
+    bool query( const string& ident, FGFix *f );
+
+    // query the database for the specified fix, lon and lat are
     // in degrees, elev is in meters
-    bool query( const string& ident, double lon, double lat, double elev,
-		FGFix *f, double *heading, double *dist);
+    bool query_and_offset( const string& ident, double lon, double lat,
+                           double elev, FGFix *f, double *heading,
+                           double *dist );
 };
 
 

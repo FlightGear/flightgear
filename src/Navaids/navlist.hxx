@@ -71,10 +71,13 @@ public:
 
     // query the database for the specified frequency, lon and lat are
     // in degrees, elev is in meters
-    bool query( double lon, double lat, double elev, double freq, FGNav *n );
+    bool query( double lon, double lat, double elev, double freq, FGNav *nav );
 
     // locate closest item in the DB matching the requested ident
     bool findByIdent(const char* ident, double lon, double lat, FGNav *nav);
+
+    // locate item in the DB matching the requested ident
+    bool findByIdentAndFreq(const char* ident, const double& freq, FGNav *nav);
 };
 
 

@@ -111,7 +111,7 @@ bool FGNavList::init( SGPath path ) {
 // query the database for the specified frequency, lon and lat are in
 // degrees, elev is in meters
 bool FGNavList::query( double lon, double lat, double elev, double freq,
-		       FGNav *n )
+		       FGNav *nav )
 {
     nav_list_type stations = navaids[(int)(freq*100.0 + 0.5)];
 
@@ -119,7 +119,7 @@ bool FGNavList::query( double lon, double lat, double elev, double freq,
     nav_list_iterator last = stations.end();
 
     Point3D aircraft = sgGeodToCart( Point3D(lon, lat, elev) );
-    return findNavFromList(aircraft, current, last, n);
+    return findNavFromList(aircraft, current, last, nav);
 }
 
 
@@ -136,9 +136,36 @@ bool FGNavList::findByIdent(const char* ident, double lon, double lat,
 }
 
 
+bool FGNavList::findByIdentAndFreq(const char* ident, const double& freq,
+                                   FGNav *nav)
+{
+    cout << "ident = " << ident << endl;
+    nav_list_type stations = ident_navaids[ident];
+    cout << " matches = " << stations.size() << endl;
+    nav_list_iterator current = stations.begin();
+    nav_list_iterator last = stations.end();
+
+    if ( stations.size() > 1 ) {
+        // more than one match on this ident, use freq to refine
+        int f = (int)(freq*100.0 + 0.5);
+        for ( ; current != last ; ++current ) {
+            if ( f == (*current)->get_freq() ) {
+                *nav = (**current);
+                return true;
+            }
+        }
+    } else {
+        *nav = (**current);
+        return true;
+    }
+
+    return false;
+}
+
+
 bool FGNavList::findNavFromList(const Point3D &aircraft, 
                                 nav_list_iterator current,
-                                nav_list_iterator end, FGNav *n)
+                                nav_list_iterator end, FGNav *nav)
 {
     // double az1, az2, s;
     
@@ -165,7 +192,7 @@ bool FGNavList::findNavFromList(const Point3D &aircraft,
             if ( d2 < min_dist ) {
                 min_dist = d2;
                 found_one = true;
-                *n = (**current);
+                *nav = (**current);
                 // cout << "matched = " << (*current)->get_ident() << endl;
             } else {
                 // cout << "matched, but too far away = "
