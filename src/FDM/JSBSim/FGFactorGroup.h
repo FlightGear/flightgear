@@ -117,6 +117,9 @@ private:
   CoeffArray sum;
   double SDtotal;
   double totalValue;
+  string description;
+  string name;
+  FGPropertyManager *node;
   void Debug(int from);
 };
     

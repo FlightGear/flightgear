@@ -133,14 +133,14 @@ public:
 
 protected:
   FGFDMExec* FDMExec;
-  string description;
-  string name;
-  FGPropertyManager *node;
+  
 
 private:
   enum Type {UNKNOWN, VALUE, VECTOR, TABLE, EQUATION};
 
   int numInstances;
+  string description;
+  string name;
   string filename;
   string method;
   string multparms;
@@ -153,6 +153,8 @@ private:
   double totalValue;
   double bias,gain;
   FGPropertyManager *LookupR, *LookupC;
+  
+  FGPropertyManager *node; // must be private!!
   
   MultVec multipliers;
   int rows, columns;

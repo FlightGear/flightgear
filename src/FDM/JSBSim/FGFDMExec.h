@@ -207,7 +207,7 @@ public:
   FGPropertyManager* GetPropertyManager(void);
   vector <string> EnumerateFDMs(void);
   void SetSlave(void) {IsSlave = true;}
-
+  
 private:
   FGModel* FirstModel;
 
@@ -221,7 +221,7 @@ private:
   bool IsSlave;
   static FGPropertyManager *master;
   FGPropertyManager *instance;
-
+  
   struct slaveData {
     FGFDMExec* exec;
     string info;

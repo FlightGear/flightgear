@@ -29,6 +29,7 @@ HISTORY
 11/24/98   JSB   Created
 07/23/99   TP   Added implementation of 1959 Standard Atmosphere
            Moved calculation of Mach number to FGTranslation
+                Updated to '76 model
  
  
 ********************************************************************************

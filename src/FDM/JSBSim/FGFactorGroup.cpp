@@ -147,7 +147,6 @@ void FGFactorGroup::bind(FGPropertyManager* parent)
 void FGFactorGroup::unbind(void)
 {
   unsigned i;
-  
   FGCoefficient::unbind();
   for (i=0; i < sum.size(); i++) { 
     sum[i]->unbind();

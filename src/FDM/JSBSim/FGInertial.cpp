@@ -129,12 +129,13 @@ bool FGInertial::LoadInertial(FGConfigFile* AC_cfg)
 
 void FGInertial::bind(void)
 {
+  typedef double (FGInertial::*PMF)(int) const;
   PropertyManager->Tie("forces/fbx-inertial-lbs", this,1,
-                       &FGInertial::GetForces);
+                       (PMF)&FGInertial::GetForces);
   PropertyManager->Tie("forces/fby-inertial-lbs", this,2,
-                       &FGInertial::GetForces);
+                       (PMF)&FGInertial::GetForces);
   PropertyManager->Tie("forces/fbz-inertial-lbs", this,3,
-                       &FGInertial::GetForces);
+                       (PMF)&FGInertial::GetForces);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -166,21 +166,22 @@ string FGGroundReactions::GetGroundReactionValues(void)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGGroundReactions::bind(void)
-{
+{ 
+  typedef double (FGGroundReactions::*PMF)(int) const;
   PropertyManager->Tie("gear/num-units", this,
                        &FGGroundReactions::GetNumGearUnits);  
   PropertyManager->Tie("moments/l-gear-lbsft", this,1,
-                       &FGGroundReactions::GetMoments);
+                       (PMF)&FGGroundReactions::GetMoments);
   PropertyManager->Tie("moments/m-gear-lbsft", this,2,
-                       &FGGroundReactions::GetMoments);
+                       (PMF)&FGGroundReactions::GetMoments);
   PropertyManager->Tie("moments/n-gear-lbsft", this,3,
-                       &FGGroundReactions::GetMoments);
+                       (PMF)&FGGroundReactions::GetMoments);
   PropertyManager->Tie("forces/fbx-gear-lbs", this,1,
-                       &FGGroundReactions::GetForces);
+                       (PMF)&FGGroundReactions::GetForces);
   PropertyManager->Tie("forces/fby-gear-lbs", this,2,
-                       &FGGroundReactions::GetForces);
+                       (PMF)&FGGroundReactions::GetForces);
   PropertyManager->Tie("forces/fbz-gear-lbs", this,3,
-                       &FGGroundReactions::GetForces);
+                       (PMF)&FGGroundReactions::GetForces);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

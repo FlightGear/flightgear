@@ -610,23 +610,26 @@ void FGTrim::setupTurn(void){
     g = fdmex->GetInertial()->gravity(); 
     psidot = g*tan(phi) / fgic->GetUBodyFpsIC();
     cout << targetNlf << ", " << psidot << endl;
-  }  
+  }
+   
 }  
 
 void FGTrim::updateRates(void){
   if( mode == tTurn ) {
     double phi = fgic->GetRollAngleRadIC();
     double g = fdmex->GetInertial()->gravity(); 
+    double p,q,r,theta;
     if(fabs(phi) > 0.001 && fabs(phi) < 1.56 ) {
-      double p,q,r,theta,phi;
       theta=fgic->GetPitchAngleRadIC();
       phi=fgic->GetRollAngleRadIC();
       psidot = g*tan(phi) / fgic->GetUBodyFpsIC();
       p=-psidot*sin(theta);
       q=psidot*cos(theta)*sin(phi);
       r=psidot*cos(theta)*cos(phi);
-      fdmex->GetRotation()->SetPQR(p,q,r);
-    }
+    } else {
+      p=q=r=0;
+    }      
+    fdmex->GetRotation()->SetPQR(p,q,r);
   } else if( mode == tPullup && fabs(targetNlf-1) > 0.01) {
       float g,q,cgamma;
       FGColumnVector3 vPQR;
