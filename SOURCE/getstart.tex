@@ -1,0 +1,77 @@
+%%
+%% getstart.tex -- Flight Gear documentation: Installation and Getting Started
+%% Master file
+%%
+%% Written by Michael Basler % Bernhard Buckel, starting September 1998.
+%%
+%% Copyright (C) 1999 Michael Basler  (pmb@knUUt.de)
+%%                  & Bernhard Buckel (buckel@wmad95.mathematik.uni-wuerzburg.de)
+%%
+%% This program is free software; you can redistribute it and/or
+%% modify it under the terms of the GNU General Public License as
+%% published by the Free Software Foundation; either version 2 of the
+%% License, or (at your option) any later version.
+%%
+%% This program is distributed in the hope that it will be useful, but
+%% WITHOUT ANY WARRANTY; without even the implied warranty of
+%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%% General Public License for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with this program; if not, write to the Free Software
+%% Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+%%
+%% $Id: getstart.tex,v 0.12 1999/03/07 michael
+%% (Log is kept at end of this file)
+
+\documentclass[11pt,openany]{book}
+\usepackage{makeidx}
+\usepackage[dvips]{graphicx}
+\usepackage{times}
+\usepackage{hyperref}
+
+\newcommand{\Index}[1]{#1\index{#1}}
+\newcommand{\FlightGear}{{\itshape FlightGear }}
+\newcommand{\web}[1]{\href{#1}{#1}}
+\newcommand{\mail}[1]{\href{mailto:#1}{#1}}
+
+\newcommand{\longpage}{\enlargethispage{\baselineskip}}
+\newcommand{\shortpage}{\enlargethispage{-\baselineskip}}
+
+\makeindex
+
+\begin{document}
+
+\include{title}
+
+\include{free}
+\include{opengl}
+\include{building}
+\include{prefligh}
+\include{takeoff}
+\include{flight}
+\include{landing}
+\include{missed}
+
+\include{index}
+
+\end{document}
+
+%% Revision 0.00  1998/09/08  michael
+%% Initial revision for version 0.53.
+%% incl. Linux stuff from b buckel
+%% Revision 0.01  1998/09/20  michael
+%% several extensions and corrections, added Fig.1.
+%% Revision 0.02  1998/09/29  michael
+%% added chapter takeoff from b buckel
+%% revision 0.10  1998/10/01  michael
+%% added chapter missed approach from b buckel
+%% inclusion file splitting
+%% final proofreading for release
+%% revision 0.11  1998/11/01 michael
+%% corrected ~, _ ind URLs
+%% revision 0.12  1999/03/07  michael
+%% changed Font to Times in print version
+%% dropped .ps file
+%% working URLs in .html version
+%% corrected misspellings

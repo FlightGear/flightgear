@@ -1,0 +1,2971 @@
+  <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+           "http://www.w3.org/TR/REC-html40/loose.dtd"><HTML>
+<META NAME="GENERATOR" CONTENT="TtH 1.57">                                                 
+<title>FlightGear Flight Simulator - Installation and Getting Started</title>
+<H1 align=center>FlightGear Flight Simulator - Installation and Getting Started</H1>
+
+
+<p>
+
+<H3 align=center> Michael Basler (<a href="mailto:pmb@knUUt.de">pmb@knUUt.de</a>)<br>
+ Bernhard Buckel
+ (<a href="mailto:buckel@wmad95.mathematik.uni-wuerzburg.de">buckel@wmad95.mathematik.uni-wuerzburg.de</a>)<br>
+  
+<p>
+<img src="start.gif"><br> </H3>
+<H3 align=center>March 7, 1999</H3>
+
+<p>
+
+<H1>Contents </H1><A href="#tth_chAp1"
+>1&nbsp; Want to have a free flight? Take <i>FlightGear </i>!</A><br>chapter.1
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc1.1"
+>1.1&nbsp; Yet another Flight Simulator?</A><br>section.1.1
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc1.2"
+>1.2&nbsp; A short history of <i>FlightGear </i></A><br>section.1.2
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc1.3"
+>1.3&nbsp; System requirements</A><br>section.1.3
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc1.4"
+>1.4&nbsp; Whom this guide is addressed to and how it is organized</A><br>section.1.4
+<A href="#tth_chAp2"
+>2&nbsp; Getting the engine: Installing OpenGL graphics drivers</A><br>chapter.2
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc2.1"
+>2.1&nbsp; 3DFX under Linux</A><br>section.2.1
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc2.2"
+>2.2&nbsp; Rendition Chipset under Windows 98/NT</A><br>section.2.2
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc2.3"
+>2.3&nbsp; RIVA TNT Chipset under Windows 98/NT</A><br>section.2.3
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc2.4"
+>2.4&nbsp; 3DFX chip based boards under Windows 98/NT</A><br>section.2.4
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc2.5"
+>2.5&nbsp; OpenGL software rendering under Windows 98/NT</A><br>section.2.5
+<A href="#tth_chAp3"
+>3&nbsp; Building the plane: Compiling the program</A><br>chapter.3
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc3.1"
+>3.1&nbsp; Compiling under Linux</A><br>section.3.1
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc3.2"
+>3.2&nbsp; Compiling under Windows 98/NT</A><br>section.3.2
+<A href="#tth_chAp4"
+>4&nbsp; Preflight: Installing <i>FlightGear </i></A><br>chapter.4
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc4.1"
+>4.1&nbsp; Installing the Binaries</A><br>section.4.1
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc4.2"
+>4.2&nbsp; Installing Support files</A><br>section.4.2
+<A href="#tth_chAp5"
+>5&nbsp; Takeoff: How to start the program</A><br>chapter.5
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc5.1"
+>5.1&nbsp; Starting under Linux</A><br>section.5.1
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc5.2"
+>5.2&nbsp; Starting under Windows 98/NT</A><br>section.5.2
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc5.3"
+>5.3&nbsp; Command line parameters</A><br>section.5.3
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc5.3.1"
+>5.3.1&nbsp; General Options</A><br>subsection.5.3.1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc5.3.2"
+>5.3.2&nbsp; Features</A><br>subsection.5.3.2
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc5.3.3"
+>5.3.3&nbsp; Initial Position and Orientation</A><br>subsection.5.3.3
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc5.3.4"
+>5.3.4&nbsp; Rendering Options</A><br>subsection.5.3.4
+<A href="#tth_chAp6"
+>6&nbsp; Flight: Keystrokes, the HUD and all that</A><br>chapter.6
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc6.1"
+>6.1&nbsp; Keyboard commands</A><br>section.6.1
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc6.2"
+>6.2&nbsp; The head up display</A><br>section.6.2
+<A href="#tth_chAp7"
+>7&nbsp; Landing: Some further thoughts before leaving the plane</A><br>chapter.7
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc7.1"
+>7.1&nbsp; Those, who did the work</A><br>section.7.1
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc7.2"
+>7.2&nbsp; What remains to be done</A><br>section.7.2
+<A href="#tth_chAp8"
+>8&nbsp; Missed approach: If anything refuses to work</A><br>chapter.8
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc8.1"
+>8.1&nbsp; General problems</A><br>section.8.1
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc8.2"
+>8.2&nbsp; Potential problems under Linux</A><br>section.8.2
+&nbsp;&nbsp;&nbsp;&nbsp;<A href="#tth_sEc8.3"
+>8.3&nbsp; Potential problems under Windows95/NT</A><br>section.8.3
+ 
+<p>
+      <H1><A NAME="tth_chAp1">
+Chapter 1     </A><br>Want to have a free flight? Take <i>FlightGear </i>!<A NAME="free">
+</A></H1>
+
+<p>
+      <H2><A NAME="tth_sEc1.1">
+1.1</A>&nbsp;&nbsp;Yet another Flight Simulator?</H2>
+Did you ever want to fly a plane yourself, but lacked the money or
+skills to do so? Do you belong to those real pilots, who want to
+improve their skills without having to take off? Do you want to
+try some dangerous maneuvers without risking your life? Or do you
+just want to have fun with a more serious game not killing any
+people? If any of these questions applies, PC flight simulators
+are just for you.
+
+<p>
+If you are reading this you might have got already some experience
+either using Microsoft<a NAME="Microsoft11">
+</a>'s &#169; FS98<a NAME="FS9811">
+</a>,
+Looking Glass<a NAME="Looking Glass11">
+</a>' &#169; Flight Unlimited II<a NAME="Flight Unlimited II11">
+</a> or any
+other of the commercially available PC flight simulators. As the price
+tag of those is usually within the 50$ range buying one of it should
+not be a serious problem given the fact, that running any serious PC
+flight simulator requires a hardware within the 1500$ range, despite
+dropping prices, at least.
+
+<p>
+Why then that effort of spending hundreds or thousands of hours of
+programming to build a free simulator? Obviously there must be
+good reason to do so:
+
+<p>
+
+<UL> 
+<li> All of the commercial programs have a serious drawback: They are made
+ by a small group of developers defining their properties - often
+ quite inert and not listening too much to the customer.
+ Anyone ever trying to contact Microsoft<a NAME="Microsoft11">
+</a> will
+ immediately agree.
+ 
+<li> Commercial PC flight simulators usually try to cover a market
+ segment as broad as possible. For obvious reason, most of them want
+ to serve the serious pilot as well as the beginner and the gamer.
+ The result are compromises. As <i>FlightGear </i>is free, there is no need
+ for such compromises; it just can be given the properties its users
+ want. It defines itself via building.
+ 
+<li> Building a flight simulator is a challenge to the art of
+ programming. Contributing to that project makes you belong to
+ those being able to contribute to serious, ambitious and
+ advanced software projects.
+ 
+<li> It is fun. Not only is it fun to write the code (... or
+ documentation...) but also to belong to that - temporarily changing
+ - club of clever people on the net having discussed, struggled and finally
+ succeeded in creating that project. Even reading the <i>FlightGear </i>
+ mailing lists is informative and fun for itself.
+</UL>
+<p>
+The above-mentioned points make <i>FlightGear </i>different from other
+competitors in several respect. <i>FlightGear </i>aims to be a
+civilian,<a NAME="Flight simulator+civilian11">
+</a>
+multi-platform,<a NAME="Flight simulator+multi-platform11">
+</a>
+open,<a NAME="Flight simulator+open11">
+</a> user-supported,<a NAME="Flight
+simulator+user-sported11">
+</a> user-extensible<a NAME="Flight
+simulator+user-extensible11">
+</a> simulator:
+
+<p>
+
+<UL> 
+<li> <b>Civilian:</b><a NAME="Flight simulator+civilian11">
+</a> The <i>FlightGear </i>
+ project is primarily aimed to civilian flight simulation.
+ It should be appropriate for simulating
+ general aviation as well as civilian aircraft. However, according to
+ the open concept of development, that sure does not exclude someone
+ taking the code and integrating military components<a NAME="military components11">
+</a>.
+
+<p>
+ 
+<li><b>Multi-platform:</b><a NAME="Flight simulator+multi-platform11">
+</a> The
+ developers are attempting to keep the code as platform-independent
+ as possible. This is based on their observation that
+ people interested in flight simulations run quite
+  a variety of computer hardware and operating systems. The present code
+  supports the following Operating Systems<a NAME="Operating Systems11">
+</a>:
+  
+<UL>
+<p>
+  
+<li>Linux<a NAME="Linux11">
+</a> (any platform),
+  
+<li>Windows NT<a NAME="Windows NT11">
+</a> (i86 platform),
+  
+<li>Windows 95/98<a NAME="Windows 95/9811">
+</a>,
+  
+<li>BSD UNIX<a NAME="BSD UNIX11">
+</a>,
+  
+<li>SGI IRIX<a NAME="SGI IRIX11">
+</a>,
+  
+<li>SunOS<a NAME="SunOS11">
+</a>.
+  </UL>
+<p>
+  There is ongoing effort to support more platforms such as the
+  MacIntosh<a NAME="MacIntosh11">
+</a>. At this time we are not aware of the existence of any other
+  serious multi-platform flight simulator - neither commercial nor free.
+  Initial ideas on support for DOS<a NAME="DOS11">
+</a> or OS/2<a NAME="OS/211">
+</a> were dropped later because of
+  diminishing interest in these platforms and the non-availability of OpenGL for DOS.
+
+<p>
+  
+<li><b>Open:</b><a NAME="Flight simulator+open11">
+</a> The project is not
+  restricted to a closed club of developers. Anyone who feels he or she
+  being able to contribute is highly welcome.
+  The code (including documentation) is copyrighted under the
+  terms of the Gnu Public License<a NAME="Gnu Public License11">
+</a>.
+
+<p>
+  The Gnu Public License is often misunderstood. In simple terms it
+  states that you can copy and freely distribute the program(s) licensed
+  to it. You can modify them, if you like. You are even allowed to charge
+  as much money for the distribution of the modified or original program as you want.
+  However, you must distribute it complete with the entire source code
+  and it must retain the original copyrights. In short:
+<p><br>
+<p>
+
+<center><i>''You can do anything with the software except
+making it non-free''</i>.</center><br>
+
+<p>
+At present, the Gnu Public License<a NAME="Gnu Public License11">
+</a> is not included in this
+document, but can be obtained from
+
+<p>
+<a href="http://www.gnu.org/copyleft/gpl.html">http://www.gnu.org/copyleft/gpl.html</a>.
+
+<p>
+
+<li><b>User-supported, user-extensible:</b><a NAME="Flight simulator+user-supported11">
+</a>
+  <a NAME="Flight simulator+user-extensible11">
+</a>Contrary to the various
+  commercial simulators available, scenery and aircraft format,
+  internal variables, etc. are user accessible and documented
+  from the beginning. Even without an explicit developmental documentation<a NAME="documentation11">
+</a>,
+  which sure has to be written at some point, this is guaranteed by supplying the
+  source code<a NAME="source code11">
+</a>. It is the goal of the developers to build a basic
+  engine to which scenery designers, panel engineers, maybe adventure
+  or ATC routine writers, sound capturers and others can (and are asked to)
+  add. It is our hope, that the project will finally gain from the creativeness
+  and ideas of hundreds of talented simmers across the world.
+
+<p>
+  Without doubt, the success of the Linux<a NAME="Linux11">
+</a> project initiated by Linus
+  Torvalds<a NAME="Torvalds, Linus11">
+</a> inspired several of the developers.
+  Not only has it shown that distributed development of even highly sophisticated
+  software projects over the Internet is possible. It led to a product which,
+  in several respect, is better than its commercial competitors.
+</UL>
+<p>
+      <H2><A NAME="tth_sEc1.2">
+1.2</A>&nbsp;&nbsp;A short history<a NAME="history12">
+</a> of <i>FlightGear </i></H2>
+
+<p>
+This project goes back to a discussion of a group of net-citizens
+in 1996. This resulted in a proposal written by David
+Murr<a NAME="Murr, David12">
+</a> who, unfortunately, dropped out from the
+project (as well as the net) later. His proposal<a NAME="proposal12">
+</a> is still
+available from the <i>FlightGear </i>web site and can be found under
+
+<p>
+<a href="http://www.flightgear.org/proposal-3.0">http://www.flightgear.org/proposal-3.0</a>.
+
+<p>
+Although the names of the people and several of the details
+naturally changed in time, the spirit of that proposal was clearly
+retained up to the present status of the project.
+
+<p>
+Actual coding started in summer 1996 and by the end of that year essential graphics
+routines were completed. At that time, programming was mainly done and coordinated by
+Eric Korpela<a NAME="Korpela, Eric12">
+</a> from Berkeley University
+(<a href="mailto:korpela@ssl.Berkeley.EDU">korpela@ssl.Berkeley.EDU</a>). Early code was running under Linux<a NAME="Linux12">
+</a> as well as
+under DOS<a NAME="DOS12">
+</a>, OS/2<a NAME="OS/212">
+</a>, Windows 95/NT<a NAME="Windows 95/NT12">
+</a>, and Sun-OS<a NAME="Sun-OS12">
+</a>. This was
+quite an ambitious project, as it involved, among others, writing all the graphics
+routines<a NAME="graphics
+routines12">
+</a> in a system-independent way just from scratch.
+
+<p>
+Development slowed down and finally stopped at the beginning of 1997 when Eric had to
+complete his thesis. At this point, the project seemed to be dead and traffic on the
+mailing list went down to nearly nothing.
+
+<p>
+It was Curt Olson<a NAME="Olson, Curt12">
+</a> from the University of Minnesota
+(<a href="mailto:curt@flightgear.org">curt@flightgear.org</a>) who re-started the project in the middle of 1997. His idea
+was as simple as successful: Why invent the wheel a second time? There have been several
+free flight simulators<a NAME="Flight simulator+free12">
+</a> available running on
+workstation<a NAME="workstation12">
+</a>s under several flavors of UNIX<a NAME="UNIX12">
+</a>. One of these,
+LaRCsim<a NAME="LaRCsim12">
+</a>, which was developed by Bruce Jackson<a NAME="Jackson, Bruce12">
+</a> from NASA
+(<a href="mailto:jackson@larc.nasa.gov">jackson@larc.nasa.gov</a>) seemed to be well-adapted for the present approach. Curt
+took this one apart and re-wrote several of the routines in a way making them build-able
+as well as run-able on the intended target platforms. The key idea in doing so was
+selecting a system-independent graphics platform, i.&nbsp;e. OpenGL<a NAME="OpenGL12">
+</a>, for the basic
+graphics routines<a NAME="graphics routines12">
+</a>.
+<p><br>
+<p>
+ 
+<center><img src="navion.gif"><br></center><br> Fig.&nbsp;1: <i>The Navion<a NAME="Navion12">
+</a> flight model is one of the
+features <i>FlightGear </i>inherited from LaRCsim<a NAME="LaRCsim12">
+</a>. Until now it
+is the only one plane being realized in <i>FlightGear </i>.</i>
+<p><br>
+<p>
+In addition, a clever decision on the selection of the basic
+scenery<a NAME="scenery12">
+</a> data was already made in this very first version.
+<i>FlightGear </i>Scenery is created on the basis of satellite data
+published by the U.&nbsp;S. Geological Survey<a NAME="U.\,S. Geological Survey12">
+</a>. These terrain
+data are available for the whole world over the Internet for free
+from
+
+<p>
+ <a href="http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html">http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html</a>
+
+<p>
+ for the US resp.
+
+<p>
+ <a href="http://edcwww.cr.usgs.gov/landdaac/gtopo30/gtopo30.html">http://edcwww.cr.usgs.gov/landdaac/gtopo30/gtopo30.html</a>
+
+<p>
+ for other countries. Those freely accessible scenery data in
+ conjunction with scenery building tools provided with
+ <i>FlightGear </i>are an important prerequisite enabling anyone to
+  create his or her own scenery, at least in principle.
+
+<p>
+This new FlightGear code - still largely being based on original LaRCsim<a NAME="LaRCsim12">
+</a> code -
+was released in July 1997. From that moment the project gained momentum again. Here are
+some milestones from the further history of development:
+
+<p>
+
+<UL>
+<li> Sun, moon and stars are a field where PC flight simulators
+ have been notoriously weak for ages. It is one of the great
+ achievements of <i>FlightGear </i>that it includes accurate sun (watch, Microsoft!),
+ moon, and planets being moreover placed on their proper positions.
+ The corresponding astronomy code<a NAME="astronomy code12">
+</a> was implemented in fall 1997 by Durk
+ Talsma<a NAME="Talsma, Durk12">
+</a>
+ (<a href="mailto:pn_talsma@macmail.psy.uva.nl">pn_talsma@macmail.psy.uva.nl</a>.
+
+<p>
+
+<li> Texture support<a NAME="textures12">
+</a> was added by Curt
+Olson<a NAME="Olson, Curt12">
+</a>
+ (<a href="mailto:curt@flightgear.org">curt@flightgear.org</a>) in spring 1998. This marked a
+ significant improvement in terms of reality. You may recall: MSFS had
+ untextured scenery up to version 4.0. For this purpose, some high-quality
+ textures were submitted by Eric Mitchell<a NAME="Mitchell, Eric12">
+</a>
+ (<a href="mailto:mitchell@mars.ark.com">mitchell@mars. ark.com</a>.
+
+<p>
+
+<li> A HUD<a NAME="HUD12">
+</a> (head up display<a NAME="head up display12">
+</a>) was added based on code
+ provided by Michele America<a NAME="America, Michele12">
+</a> (<a href="mailto:nomimarketing@mail.telepac.pt">nomimarketing@mail.telepac.pt</a>)
+and Charlie Hotchkiss<a NAME="Hotchkiss, Charlie12">
+</a>
+(<a href="mailto:chotchkiss@namg.us.anritsu.com">chotch kiss@namg.us.anritsu.com</a>)
+ in fall 1997 and continuously improved later.
+ While being probably not a substitute for a panel<a NAME="panel12">
+</a> and moreover
+ possibly being a bit odd in that tiny Navion<a NAME="Navion12">
+</a>, this HUD<a NAME="HUD12">
+</a> has proven
+ extremely useful in navigation until now.
+
+<p>
+
+<li> After improving scenery<a NAME="scenery12">
+</a> and
+texture<a NAME="textures12">
+</a> support and adding some more
+ features there was a disappointing side-effect in spring 1998: Frame
+ rates<a NAME="frame rate12">
+</a> dropped down to a point where <i>FlightGear </i>became inflyable. There
+ were two main achievements overcoming this problem. First, with the advent
+ of hardware OpenGL<a NAME="OpenGL12">
+</a> support and corresponding drivers for most of
+ the graphics cards these features could be exploited in
+ <i>FlightGear </i>as well, leading to a frame rate<a NAME="frame rate12">
+</a> boost by a
+ factor up to 10. Second, Curt Olson<a NAME="Olson, Curt12">
+</a> (<a href="mailto:curt@flightgear.org">curt@flightgear.org</a>)
+ implemented so-called view frustrum culling<a NAME="view frustrum culling12">
+</a> (a procedure to except part of
+ the scenery not required from  rendering) which gave another 20% or so of
+ frame rate boost in May 1998.
+
+<p>
+ With these two achievements <i>FlightGear </i>became flyable again even on weaker
+ machines as long as they included a 3D graphics board with
+ hardware OpenGL<a NAME="OpenGL12">
+</a> support. (With respect to this point one should keep in mind that the code
+ at present is in no way optimized leaving a lot of room for further
+ improvements of frame rate.)
+
+<p>
+
+<li> A rudimentary autopilot<a NAME="autopilot12">
+</a> implementing heading hold was
+contributed by Jeff Goeke-Smith<a NAME="Goeke-Smith, Jeff12">
+</a> (<a href="mailto:jgoeke@voyager.net">jgoeke@voyager.net</a>) in
+April 1998. This autopilot was improved to cover altitude hold and a terrain follow
+switch in October 1998.
+
+<p>
+
+<li> Although detailed menus are still missing there is a first
+ approach on developing a menu system<a NAME="menu system12">
+</a> based on Steve Baker's<a NAME="Baker, Steve12">
+</a>
+  (<a href="mailto:sjbaker@hti.com">sjbaker@hti.com</a>) menu library PUI<a NAME="PUI12">
+</a>. This first menu
+  system was added in June 1998.
+
+<p>
+
+<li> Friedemann Reinhard <a NAME="Reinhard, Friedemann12">
+</a>
+(<a href="mailto:mpt218@faupt212.physik.uni-erlangen.de">mpt218@faupt212.physik.uni-erlangen.de</a>)
+ developed early panel code<a NAME="panel code12">
+</a> including a working airspeed
+ indicator<a NAME="airspeed
+ indicator12">
+</a> which was added in June 1998 and has been considerably improved until today.
+
+<p>
+
+<li> There was basic audio support<a NAME="audio support12">
+</a>
+i.&nbsp;e. an audio library and some basic background engine sound,
+contributed by Steve Baker (<a href="mailto:sjbaker@hti.com">sjbaker@hti.com</a>)<a NAME="Baker,
+Steve12">
+</a> and Tom Knienieder<a NAME="Knienieder, Tom12">
+</a>
+(<a href="mailto:knienieder@ms.netwing.at">knienieder@ms.netwing.at</a>) in Summer 1998.
+
+<p>
+
+<li> Steve Baker<a NAME="Baker, Steve12">
+</a>
+(<a href="mailto:sjbaker@hti.com">sjbaker@hti.com</a>) and Curt Olson<a NAME="Olson, Curt12">
+</a> (<a href="mailto:curt@flightgear.org">curt@flightgear.org</a>)
+got basic joystick/yoke support running in October 1998. While implementation may change
+and pedals do not yet work under Windows this marks a huge improvement in terms of
+realism.
+
+<p>
+
+<li> In September 1998 Curt Olson<a NAME="Olson, Curt12">
+</a>
+(<a href="mailto:curt@flightgear.org">curt@flightgear.org</a>) succeeded in creating complete terrain Scenery for the USA,
+which is available for download from
+
+<p>
+<a href="ftp://ftp.kingmont.com/pub/kingmont/">ftp://ftp.kingmont.com/pub/kingmont/</a>.
+
+<p>
+</UL>This is by no way a complete history and a lot of people making even important
+contributions were left out here. Besides the named achievements which are more on the
+surface, there was a lot of work done concerning the internal structure, by Steve
+Baker<a NAME="Baker, Steve12">
+</a> (<a href="mailto:sjbaker@hti.com">sjbaker@hti.com</a>)<a NAME="Baker, Steve12">
+</a>, Norman
+Vine<a NAME="Vine, Norman12">
+</a> (<a href="mailto:nhv@laserplot.com">nhv@laserplot.com</a>), Gary R. Van Sickle<a NAME="Van Sickle,
+Gary, R.12">
+</a> (<a href="mailto:tiberius@braemarinc.com">tiberius@braemarinc.com</a>), and others. A more complete list of
+contributors to the project can be found in <i>Landing: Some further thoughts before
+leaving the plane</i>, chapter <A href="#landing">7</A> as well as in the file <tt>Thanks</tt> provided
+with the code. Moreover, the <i>FlightGear </i>Website<a NAME="\FlightGear Website12">
+</a> contains a detailed history of
+all of the development under
+
+<p>
+<a href="http://www.flightgear.org/News/">http://www.flightgear.org/News/</a>.
+
+<p>
+      <H2><A NAME="tth_sEc1.3">
+1.3</A>&nbsp;&nbsp;System requirements</H2><a NAME="system requirements13">
+</a>
+Compared to other recent flight simulators the system requirements
+for <i>FlightGear </i>are rather decent. A P100 is already sufficient,
+given you have a proper 3D graphics card, but of course for
+getting good performance we recommend a P200 or better, if you run
+it on a PC. On the other hand, any not too ancient UNIX<a NAME="UNIX13">
+</a>
+workstation<a NAME="workstation13">
+</a> will run <i>FlightGear </i>as well.
+
+<p>
+While in principle you can run <i>FlightGear </i>on 3D boards without OpenGL support or even on
+systems without 3D graphics hardware, missing hardware OpenGL support can force even the
+fastest PII to its knees (frame rate<a NAME="frame rate13">
+</a>s typically below 1 fps even on fast
+machines). Any cheap 3D graphics card will do as long as it features hardware
+OpenGL<a NAME="OpenGL13">
+</a> support. For Windows 98/NT<a NAME="Windows 98/NT13">
+</a> drivers, you may contact the home page
+of the manufacturer. Moreover, you should have in mind that most OpenGL
+drivers<a NAME="OpenGL+drivers13">
+</a> are still marked as beta and moreover, often these drivers
+are provided by the makers of the graphics chip instead of the makers of the board. More
+detail on OpenGL drivers can be found under
+
+<p>
+<a href="http://www.x-plane.com/v4ibm.html">http://www.x-plane.com/v4ibm.html</a>
+
+<p>
+  as well as under
+
+<p>
+<a href="http://www.flightgear.org/Hardware">http://www.flightgear.org/Hardware</a>.
+
+<p>
+Moreover, you need around 16MB of free disk space for installing the
+executable including most of the scenery. In case you want to compile
+the program yourself you need around 50MB for the source code and for
+temporary files created during compilation, independent of the
+operating system.
+
+<p>
+If you want to hear the sound effects<a NAME="sound effects13">
+</a> any decent sound card<a NAME="sound card13">
+</a> should serve.
+At present, support for using a joystick<a NAME="joystick13">
+</a> or yoke<a NAME="yoke13">
+</a> is just in its early
+stages, but is expected to work on most systems. At present, Pedals are supported under
+UNIX/Linux only.
+
+<p>
+With respect to operating systems, <i>FlightGear </i>is being primarily developed under
+Linux<a NAME="Linux13">
+</a>, a free UNIX clone developed cooperatively over the net in much the same
+way as the <i>FlightGear </i>project itself. Moreover, <i>FlightGear </i>runs under Windows
+95<a NAME="Windows
+9513">
+</a>, Windows 98<a NAME="Windows 9813">
+</a> and Windows NT<a NAME="Windows NT13">
+</a> and given you have a proper
+compiler<a NAME="compiler13">
+</a> installed it can be build under all of these platform as well. The
+primary compiler for all platforms is GNU C++<a NAME="GNU C++13">
+</a> (i.&nbsp;e. the Cygnus<a NAME="Cygnus13">
+</a> compiler
+under Win32), however there is some support for MSVC<a NAME="MSVC13">
+</a>5 as well. Moreover,
+<i>FlightGear </i>runs and can be build on several UNIX<a NAME="UNIX13">
+</a>/X11 platforms with GNU C++
+installed.
+
+<p>
+      <H2><A NAME="tth_sEc1.4">
+1.4</A>&nbsp;&nbsp;Whom this guide is addressed to and how it is organized</H2>
+
+<p>
+At first: There is not much of the material in this Guide being originally invented by
+ourself. You could even say with Montaigne that we ''merely gathered here a big bunch of
+other men's flowers, having furnished nothing of my own but the strip to hold them
+together''. Most (but fortunately not all) of the information can as well be grabbed from
+the <i>FlightGear </i>home page<a NAME="\FlightGear home page14">
+</a> being situated at
+
+<p>
+<a href="http://www.flightgear.org/">http://www.flightgear.org/</a>
+
+<p>
+  and its various sub pages. However, there still seem to
+be a small group of people preferring neatly printed manuals over
+loosely scattered Readmes and those may acknowledge our effort.
+
+<p>
+This <i>Installation and Getting Started</i> is intended as being a first step towards
+a more complete <i>FlightGear </i>documentation<a NAME="\FlightGear documentation14">
+</a> (with the other parts, supposedly, to
+be written by others). Its main addressee is the end-user who is not interested in the
+internal workings of OpenGL<a NAME="OpenGL14">
+</a> or in building his or her own scenery, for instance.
+It is our hope, that sometime there will be an accompanying <i><i>FlightGear </i>
+Programmer's Guide<a NAME="\FlightGear
+Programmer's Guide14">
+</a></i>, which could be based on some of the documentation under
+
+<p>
+<a href="http://www.flightgear.org/Docs">http://www.flightgear.org/Docs</a>,
+
+<p>
+ a <i><i>FlightGear </i>Scenery Design Guide<a NAME="\FlightGear Scenery Design Guide14">
+</a></i>, and a
+<i><i>FlightGear </i>Flight School<a NAME="\FlightGear Flight School14">
+</a></i>, at least.
+
+<p>
+This <i>Installation and Getting Started</i> is organized as
+follows:
+
+<p>
+The first chapter <A href="#opengl">2</A>, <i>Getting the engine: Installing OpenGL graphics
+drivers</i>, describes how to prepare the computer for handling <i>FlightGear </i>'s graphics
+routines. <i>FlightGear </i>is based on a graphics library called OpenGL, thus you must install
+either hardware or software OpenGL support for your graphics board (except, you did so
+before, of course).
+
+<p>
+Chapter <A href="#building">3</A>, <i>Building the plane: Compiling the program</i>, explains how
+to build, i.&nbsp;e. compile the simulator. Depending on your platform this may or may not be
+required for you. There will at least be binaries available for those working on a Win32
+(i.&nbsp;e. Windows 98 &#169; or Windows NT &#169;) platform. For those on such
+systems, who want to take off immediately without going through the potentially
+troublesome process of compiling, we recommend just skipping that chapter and going
+directly to the next one.
+
+<p>
+In chapter <A href="#prefligh">4</A>, <i>Preflight: Installing <i>FlightGear </i></i>, you find
+instructions for installing the binaries in case you did not so by building them in the
+previous chapter. Moreover, you'll have to install scenery and texture files, which will
+be described there, too.
+
+<p>
+The following chapter <A href="#takeoff">5</A>, <i>Takeoff: How to start the program</i>,
+describes how to start the program including an overview on the command line options.
+
+<p>
+<i>Flight: Keystrokes, HUD, and all that</i>, chapter <A href="#flight">6</A>, describes how to
+operate the program, i.&nbsp;e. to actually fly with <i>FlightGear </i>. This includes several lists
+of key strokes as well as a detailed description of the HUD (head up display) as the
+primary instrument for controlling the plane.
+
+<p>
+In chapter <A href="#landing">7</A>, <i>Landing: Some further thoughts before leaving the
+plane</i>, we would like to give credits to those who did the hard work and give an outlook
+on what remains to be done.
+
+<p>
+Finally: <b>We kindly ask others to help us improving this document by submitting
+corrections, improvements, and more. Notably, we invite others to contribute descriptions
+referring to alternative setups (graphics cards, operating systems, and compilers etc.).
+We will be more than happy to include those into forthcoming versions of this
+<i>Installation and Getting Started</i> (of course not without giving credit to the
+authors).</b>
+
+<p>
+We hope to continuously maintain this document at least for a foreseeable future, but
+probably will not be able to produce a new one for any single release of <i>FlightGear </i>.
+While we are both watching the mailing lists, it might help, if developers adding new
+functionality could send us a short note.
+
+<p>
+      <H1><A NAME="tth_chAp2">
+Chapter 2     </A><br>Getting the engine: Installing OpenGL<a NAME="OpenGL20">
+</a> graphics drivers<a NAME="graphics drivers20">
+</a><A NAME="opengl">
+</A></H1>
+<i>FlightGear </i>'s graphics engine is based on a graphics library<a NAME="graphics library20">
+</a> called
+OpenGL<a NAME="OpenGL20">
+</a>. Its primary advantage is it's platform independence, i.&nbsp;e., programs
+written with OpenGL<a NAME="OpenGL20">
+</a> support can be compiled and executed on several platforms,
+given the proper drivers having been installed in advance. Thus, independent of if you
+want to run the binaries only or if you want to compile the program yourself you must
+install some sort of OpenGL<a NAME="OpenGL20">
+</a> support for your video card<a NAME="video card20">
+</a>. Naturally, you
+can skip this chapter in case you already did (maybe for Quake or some other game).
+
+<p>
+Unfortunately, there are so many graphics boards, graphics chips and
+drivers that we are unable to provide a complete description for all
+systems at present, but we hope to be able to extend that section with
+the help of others soon. To give beginners a hand, we just describe
+what we did to install drivers on our systems.
+
+<p>
+By any means, should you try getting hardware OpenGL<a NAME="OpenGL20">
+</a> drivers for your system,
+which is exemplary described in sections <A href="#3dfxlinux">2.1</A> to <A href="#3DFXwin98">2.4</A>, resp. If you
+are unable to locate any such drivers you can try software support<a NAME="OpenGL+software
+support20">
+</a> as detailed under <A href="#softrend">2.5</A>.
+
+<p>
+      <H2><A NAME="tth_sEc2.1">
+2.1</A>&nbsp;&nbsp;3DFX<a NAME="3DFX21">
+</a> under Linux<a NAME="Linux21">
+</a><A NAME="3dfxlinux">
+</A></H2>
+
+<p>
+An excellent place to search for documentation about Linux and 3D
+accelerators is the <i>Linux 3Dfx HOWTO</i> at
+
+<p>
+<a href="http://www.gamers.org/dEngine/xf3D/howto/3Dfx-HOWTO.html">http://www.gamers.org/dEngine/xf3D/howto/3Dfx-HOWTO.html</a>.
+
+<p>
+It describes all the following steps in an in-depth fashion and
+should be your first aid in case something goes wrong with your 3D
+setup.
+
+<p>
+The 3DFX<a NAME="3DFX21">
+</a> graphics card is a quite popular one (We tested
+the Voodoo<a NAME="Voodoo21">
+</a>1 to work). At first, you need the GLIDE<a NAME="GLIDE21">
+</a>
+library installed. Grab it at:
+
+<p>
+<a href="http://www.3dfx.com/software/download_glidel.html">http://www.3dfx.com/software/download_glidel.html</a>
+
+<p>
+ and install it.
+Be careful, you need different Glide libraries for the different types of VooDoos (I, II, Banshee).
+There is even an install script included that will do things for you. The canonical place
+for GLIDE<a NAME="GLIDE21">
+</a> is <tt>/usr/local/glide</tt>, if you prefer another location, you'll
+have to edit the Makefile for <i>FlightGear </i>by hand. Be sure to read and understand the
+file <tt>/usr/local/glide/README</tt>. Next, you need to install the MESA<a NAME="MESA21">
+</a> library
+version 3.0 (or later). Grab it at
+
+<p>
+ <a href="ftp://iris.ssec.wisc.edu/pub/Mesa">ftp://iris.ssec.wisc.edu/pub/Mesa</a>,
+
+<p>
+ unpack it and run
+
+<p>
+  <tt>make linux-glide</tt>
+
+<p>
+ in the Mesa directory. Follow the instructions in the <tt>README</tt>
+file, take a close look at <tt>README.3DFX</tt> and play with the demo
+programs.
+
+<p>
+Besides these, you need the GLUT<a NAME="GLUT21">
+</a> library version 3.7 (or
+greater, aka GameGLUT) installed. Grab it at:
+
+<p>
+   <a href="http://reality.sgi.com/opengl/glut3/glut3.html">http://reality.sgi.com/opengl/glut3/glut3.html</a>.
+
+<p>
+ Note: Glut-3.7 is included with Mesa 3.0 so if you've already grabbed
+the latest version of mesa, you should have everything you need.
+
+<p>
+Finally, some more notes on the behavior of Voodoo<a NAME="Voodoo21">
+</a> boards:
+
+<p>
+Your card comes packaged with a loop-through-cable<a NAME="loop-through-cable21">
+</a>. If you
+have only one monitor, then the Voodoo will take it over when
+used. This means that all the applications on your desktop will
+continue running but you'll only see the <i>FlightGear </i>screen. If
+your window manager uses a focus-follows-mouse policy, don't move
+the mouse. If you lose the focus, there's no way to shut down
+<i>FlightGear </i>graciously! Better solution: Use two monitors, one for
+your desktop, connect the other one to your accelerator. You'll
+then get a window on your desktop which manages all keyboard
+events and you're still able to see your desktop.
+
+<p>
+Running <i>FlightGear </i>under Linux using a 3DFX accelerator board is
+somewhat tricky. Most of the boards behavior is controlled by
+environment variables.<a NAME="environment variable21">
+</a> The two most
+important are:
+
+<p>
+
+<UL>
+<li><tt>MESA_GLX_FX</tt>: When set to <tt>f</tt> rendering will be in
+  fullscreen mode,
+    <tt>w</tt> will perform rendering in a window at a significant speed penalty.
+  
+<p>
+
+<li> <tt>FX_GLIDE_NO_SPLASH</tt>:
+  When set to <tt>1</tt> the rotating 3DFX logo
+  won't appear. For a description of all environment
+  variables<a NAME="environment variable21">
+</a> for  VooDooI/II have a look at
+
+<p>
+<a href="http://www.bahnhof.se/~engstrom/e_3dfxvars.htm">http://www.bahnhof.se/&#126;engstrom/e_3dfxvars.htm</a>.
+
+<p>
+</UL>This completes preparing your 3DFX<a NAME="3DFX21">
+</a> equipped Linux PC for
+running <i>FlightGear </i> .
+Now proceed and install the support files as described later in this document.
+
+<p>
+      <H2><A NAME="tth_sEc2.2">
+2.2</A>&nbsp;&nbsp;Rendition Chipset<a NAME="Rendition chipset22">
+</a> under
+ Windows 98/NT<a NAME="Windows 98/NT22">
+</a><A NAME="renditionwin">
+</A></H2>
+
+<p>
+This section serves as an example for installing OpenGL<a NAME="OpenGL22">
+</a>
+drivers under Windows 98/NT<a NAME="Windows 98/NT22">
+</a>. The Rendition 2100
+chipset<a NAME="Rendition 2100
+chipset22">
+</a> is, for instance, part of the Diamond Stealth II<a NAME="Diamond Stealth II22">
+</a>
+card performing especially well in somewhat weaker machines.
+
+<p>
+Diamond itself does not provide any OpenGL<a NAME="OpenGL22">
+</a> driver support for that board.
+However, Rendition, who make the graphics chip, do. Go to their Web site and grab the
+latest OpenGL<a NAME="OpenGL22">
+</a> Windows drivers<a NAME="Windows drivers22">
+</a> from
+
+<p>
+   <a href="http://www.rendition.com/download.html">http://www.rendition.com/download.html</a>
+
+<p>
+ Follow the description in <tt>readme.txt</tt>. We recommend making
+the drivers the default ones by copying them to
+<tt>\windows\system</tt> (which avoids the
+hassle of not being sure which driver actually runs).
+
+<p>
+With this step you're already done.
+
+<p>
+According to our experience, so-called mini-OpenGL<a NAME="mini-OpenGL22">
+</a> drivers
+provided by some manufacturers for making Quake playable do not
+provide the level of OpenGL support required by <i>FlightGear </i>. At
+least, Rendition's mini-OpenGL<a NAME="mini-OpenGL22">
+</a> driver definitely does not.
+
+<p>
+      <H2><A NAME="tth_sEc2.3">
+2.3</A>&nbsp;&nbsp;RIVA TNT Chipset<a NAME="RIVA TNT chipset23">
+</a> under
+ Windows 98/NT<a NAME="Windows 98/NT23">
+</a><A NAME="rivatnt">
+</A></H2>
+
+<p>
+Because of its high performance, the RIVA TNT is one of the most popular chipsets today.
+The Diamond Viper 550<a NAME="Diamond Viper 55023">
+</a>,  ELSA Erazor-2, Creative Graphics Blaster<a NAME="Creative Graphics Blaster23">
+</a>, and
+more cards are equipped with this chip. At least the default Viper 550 drivers are known
+to us having native built-in OpenGL support making any add-on OpenGL drivers obsolete.
+Similar things should apply to the other RIVA TNT based cards. In any case, NVIDIA's
+reference drivers being available from
+
+<p>
+    <a href="http://www.nvidia.com/">http://www.nvidia.com/</a>
+
+<p>
+ do the job as well.
+
+<p>
+      <H2><A NAME="tth_sEc2.4">
+2.4</A>&nbsp;&nbsp;3DFX chip based boards<a NAME="3DFX chip24">
+</a> under
+ Windows 98/NT<a NAME="Windows 98/NT24">
+</a><A NAME="3DFXwin98">
+</A></H2>
+
+<p>
+The 3DXF<a NAME="3DXF24">
+</a> based 3D add-on or 2D/3D boards are perhaps the
+most popular ones today at all. 3DFX<a NAME="3DFX24">
+</a> made Beta OpenGL
+Windows 98 drivers available on their Website at
+
+<p>
+<a href="http://www.3dfx.com">http://www.3dfx.com</a>.
+
+<p>
+ From the main page go to <tt>Develop 3DFX</tt> and further to <tt>SDKs and
+Demos</tt> and grab them there.
+
+<p>
+First, make sure you have the file <tt>glu32.dll</tt> either under
+<tt>\Windows\System</tt> or elsewhere in your path. If not, install
+the MS OpenGL kit <tt>opengl95</tt> available from Microsoft or elsewhere on the net.
+(Which by itself only provides software rendering.)
+
+<p>
+Next, locate the file <tt>3dfxopengl.dll</tt>. in the 3DFX driver package, rename it to
+<tt>opengl32.dll</tt> and copy it into <tt>\Windows\System</tt>
+overwriting the file with the same name installed from the MS kit. This should get you
+going.
+
+<p>
+      <H2><A NAME="tth_sEc2.5">
+2.5</A>&nbsp;&nbsp;OpenGL<a NAME="OpenGL25">
+</a> software rendering<a NAME="OpenGL+software rendering25">
+</a>
+under Windows 98/NT<A NAME="softrend">
+</A></H2>
+
+<p>
+If you have an accelerated 3D card, it is highly recommended you
+install hardware OpenGL<a NAME="OpenGL25">
+</a> drivers for your specific card.
+
+<p>
+However, in case you are really unable to find such drivers and
+want to try <i>FlightGear </i>despite this you can install SGI software
+OpenGL<a NAME="OpenGL25">
+</a> rendering. For this purpose, get the file
+<tt>sgi-opengl2.exe</tt> from
+
+<p>
+<a href="http://www.flightgear.org/Downloads/">http://www.flightgear.org/Downloads/</a>.
+
+<p>
+ This is a Windows 98/NT<a NAME="Windows 98/NT25">
+</a> self extracting installation
+program. Install it by double-clicking in Windows explorer. The
+package includes some demo games you may wish to try by invoking
+them from the Start menu.
+
+<p>
+      <H1><A NAME="tth_chAp3">
+Chapter 3     </A><br>Building the plane: Compiling<a NAME="compiling30">
+</a> the program<A NAME="building">
+</A></H1>
+This major chapter describes how to build <i>FlightGear </i>on several systems. In case you are
+on a Win32 (i.&nbsp;e. Windows 98 or Windows NT) platform you may not want to go though that
+potentially troublesome process but instead skip that chapter and straightly go to the
+next one. (Not everyone wants to build his or her plane himself or herself, right?)
+However, there may be good reason at least to try building the simulator:
+
+<p>
+
+<UL>
+<li> In case you are on a UNIX<a NAME="UNIX30">
+</a>/Linux<a NAME="Linux30">
+</a> platform there may be no
+pre-compiled binaries<a NAME="binaries, pre-compiled30">
+</a> available for your system. We do not
+see any reason why the distribution of pre-compiled binaries (with statically linked
+libraries) should not be possible for UNIX<a NAME="UNIX30">
+</a> systems in principle as well, but in
+practice it is common to install programs like this one on UNIX<a NAME="UNIX30">
+</a> systems by
+recompiling them.
+
+<p>
+
+<li> There are several options you can set only during
+compile time. One such option is the decision to compile with
+hardware or software OpenGL<a NAME="OpenGL30">
+</a> rendering enabled. A more
+complete list goes beyond this <i>Installation and Getting
+Started</i> and should be included in a future
+<i><i>FlightGear </i>Programmer's Guide<a NAME="\FlightGear Programmer's Guide30">
+</a></i>.
+
+<p>
+
+<li> You may be proud you did.
+</UL>
+<p>
+As you will note, this chapter is far from being complete. Basically, we describe
+compiling for two operating systems only, Windows 98/NT<a NAME="Windows 98/NT30">
+</a> and Linux<a NAME="Linux30">
+</a>. There
+is a simple explanation for this: These are just the systems we are working on. We hope
+to be able to provide descriptions for more systems based on contributions written by
+others.
+
+<p>
+      <H2><A NAME="tth_sEc3.1">
+3.1</A>&nbsp;&nbsp;Compiling<a NAME="compiling+Linux31">
+</a> under Linux<a NAME="Linux31">
+</a></H2>
+
+<p>
+If you are running Linux you probably have to build your own
+binaries<a NAME="binaries31">
+</a>. The following is one way to do so.
+
+<p>
+
+<OL type="1">
+<li> Get the file <tt>FlightGear-x.xx.tar.gz</tt> from the
+<tt>source</tt> subdirectory under
+
+<p>
+ <a href="http://www.flightgear.org/Downloads/">http://www.flightgear.org/Downloads/</a>
+
+<p>
+ 
+<li> Unpack it using :
+
+<p>
+        <tt>tar xvfz FlightGear-x.xx.tar.gz</tt>.
+
+<p>
+
+<li> <tt>cd</tt> into <tt>FlightGear-x.xx</tt>. Run:
+
+<p>
+        <tt>./configure</tt>
+
+<p>
+ and wait a few minutes. configure<a NAME="configure31">
+</a> knows about a lot of
+options. Have a look at the file <tt>INSTALL</tt> in the
+<i>FlightGear </i>source directory to learn about them. If run without
+options, configure assumes that you will install the data files
+under <tt>/usr/local/lib/FlightGear</tt>.
+
+<p>
+
+<li> Assuming configure finished successfully, simply run
+
+<p>
+        <tt>make</tt>
+
+<p>
+ and wait for the make process to finish.
+
+<p>
+
+<li> Now become root (for example by using the su command) and
+type
+
+<p>
+        <tt>make install</tt>.
+
+<p>
+ This will install the binaries<a NAME="binaries31">
+</a> in <tt>/usr/local/bin</tt>.
+
+<p>
+There is a problem concerning permissions under Linux/Glide. All
+programs accessing the accelerator board need root permissions.
+The solution is either to play as root or make the
+<tt>/usr/local/bin/fgfs</tt> binary <tt>setuid root</tt>, i.e.
+when this binary is run root privileges are given. Do this by
+issuing (as root)
+
+<p>
+   <tt>chmod +s /usr/local/bin/fgfs</tt>.
+
+<p>
+ A solution for this problem is upcoming, keep an eye on the 3Dfx
+website if you run a 3Dfx board.
+
+<p>
+</OL>      <H2><A NAME="tth_sEc3.2">
+3.2</A>&nbsp;&nbsp;Compiling<a NAME="compiling+Windows 98/NT32">
+</a> under Windows 98/NT<a NAME="Windows 98/NT32">
+</a></H2>
+
+<p>
+
+<OL type="1">
+<li> Contrary to Linux which brings its own compiler Windows comes
+not equipped with developmental tools. Several compilers have been shown to work for
+compiling <i>FlightGear </i>, including the Cygnus Win32 port of GNU C<a NAME="Cygnus Win32 port of GNU C32">
+</a>++ and the
+MS Visual C5<a NAME="MS Visual C532">
+</a> compiler. Given that the project will be a free one we prefer the
+Cygnus Compiler as it provides a free development environment. However, we will be happy
+to include a proper description in case those who worked out how to compile with MSVC or
+other Compilers provide one to us.
+
+<p>
+
+<li>  Install and configure the Cygnus<a NAME="Cygnus32">
+</a> Gnu-Win32 development
+    environment. The latest version is Beta 20. The main
+    Cygnus Gnu-Win32 page is at:
+
+<p>
+        <a href="http://www.cygnus.com/misc/gnu-win32/">http://www.cygnus.com/misc/gnu-win32/</a>.
+
+<p>
+     You can download the Cygnus Gnu-Win32 compiler from:
+
+<p>
+        <a href="ftp://ftp.cygnus.com/pub/gnu-win32/latest/cdk.exe">ftp://ftp.cygnus.com/pub/gnu-win32/latest/cdk.exe</a>.
+
+<p>
+     To install it, just run the file <tt>cdk.exe</tt> by double-clicking in
+    Windows explorer. Be sure to read this package's README :
+
+<p>
+        <a href="http://www.cygnus.com/misc/gnu-win32/readme\_toc.html">http://www.cygnus.com/misc/gnu-win32/readme_toc.html</a>.
+
+<p>
+     Next, you need several UNIX developmental tools, being compiled for
+    Windows 98/NT. These are bundled in the package <tt>usertools</tt>. Get it
+    from
+
+<p>
+    <a href="ftp://ftp.cygnus.com/pub/gnu-win32/latest/usertools.exe">ftp://ftp.cygnus.com/pub/gnu-win32/latest/usertools.exe</a>
+
+<p>
+     and install it by double-clicking as well. After doing so you should
+    find a program group called <tt>Cygnus Solutions</tt> in your start menu.
+
+<p>
+
+<li>  Compiling <i>FlightGear </i>requires you to install the EGCS<a NAME="EGCS32">
+</a>
+upgrade to the Cygnus<a NAME="Cygnus32">
+</a> environment being available from:
+
+<p>
+<a href="http://www.xraylith.wisc.edu/~khan/software/gnu-win32/egcs.html">http://www.xraylith.wisc.edu/&#126;khan/software/gnu-win32/egcs.html</a>
+
+<p>
+     Again, make sure you follow the directions. It is recommended that you unroll the
+    EGCS<a NAME="EGCS32">
+</a> stuff over top of your Cygwin32 installation.  It will replace many of
+    the files.
+
+<p>
+
+<li>  Open the Cygnus bash via its entry in the Start menu.
+    Mount the drive as follows (assuming your <i>FlightGear </i>drive is <tt>d:</tt>):
+
+<p>
+         <tt>mkdir /mnt</tt><br>
+         <tt>mount d: /mnt</tt>
+
+<p>
+     You only have to do this once. The drive stays mounted (until you
+    umount it) even through reboots and switching off the machine.
+
+<p>
+
+<li>  Fetch the Flight Gear code and special Win32 libraries<a NAME="Win32 libraries32">
+</a>.  These
+can  be found at:
+
+<p>
+ <a href="http://www.flightgear.org/Downloads/Source">http://www.flightgear.org/Downloads/Source</a>
+
+<p>
+     Grab the latest <tt>FlightGear-X.XX.zip</tt> and
+    <tt>win32-libs-X.XX.zip</tt> files.
+
+<p>
+
+<li> Unpack the <i>FlightGear </i>source code via
+
+<p>
+        <tt>pkunzip -d FlightGear-X.XX.zip</tt>.
+
+<p>
+     (Be sure to use the -d option.  This will create all the needed
+    subdirectories.  Otherwise you will have one big mess!)
+
+<p>
+
+<li>  Change to the newly created <tt>FlightGear-X.XX directory</tt> with e.&nbsp;g.
+
+<p>
+<tt>cd //D/FlightGear-X.XX</tt>
+
+<p>
+ and unpack the Win32 libraries:
+
+<p>
+     <tt>pkunzip -d win32-libs-X.XX.zip</tt>.
+
+<p>
+
+<li>  You will find a file called <tt>install.exe</tt> in the Win32
+directory after unzipping <tt>win32-libs-X.XX.zip</tt>. This
+version of <tt>install.exe</tt> should replace the one in your
+\<tt>H-i386-cygwin32\bin</tt> directory -
+it's sole claim to fame is that it understands that when many
+calls to it say <tt>install foo</tt> they mean <tt>install
+foo.exe</tt>. If you skip this step and attempt an install with the
+older version present <tt>make install</tt> will fail.
+
+<p>
+Side Note: We need to make a distinction between the
+<tt>build tree<a NAME="build tree32">
+</a></tt> and the <tt>install tree<a NAME="install tree32">
+</a></tt>.
+The <tt>build tree</tt> is what we've been talking about up until
+this point.  This is where the source code lives and all the
+compiling takes place.  Once the executables are built, they need
+to be installed someplace.  We shall call this install location
+the <tt>install tree</tt>.  This is where the executables, the
+scenery, the textures, and any other run-time files will be
+located.
+
+<p>
+
+<li> Configure the make system for your environment and your
+<tt>install tree</tt>. Tell the configure script where you would like to install the
+binaries<a NAME="binaries32">
+</a> and all the scenery<a NAME="scenery32">
+</a> and textures<a NAME="textures32">
+</a> by using the
+<tt>--prefix</tt> option. In the following example the base of the <tt>install
+tree</tt> is <tt>FlightGear</tt>. Make your you are within <i>FlightGear </i>'s root directory or
+change to it.
+
+<p>
+
+<li> Run:<a NAME="configure32">
+</a>
+
+<p>
+        <tt>./configure --prefix=/mnt/FlightGear</tt>.
+
+<p>
+ Side note: The make procedure is designed to link against opengl32.dll, glu32.dll, and
+glut32.dll which most accelerated boards require. If this does not apply to yours or if
+you installed SGI's software rendering<a NAME="software rendering32">
+</a> as mentioned in subsection <A href="#softrend">2.5</A>
+you may have to change these to opengl.dll, glu.dll, and glut.dll. (In case you're in
+doubt check your <tt>\windows\system</tt> directory what you've
+got.)
+
+<p>
+ If this is the case for your video card<a NAME="video card32">
+</a>, you can edit
+ <tt>.../Simulator/Main/ Makefile</tt> and rename these three libraries to
+    their "non-32" counterparts.  There is only one place in this
+    <tt>Makefile</tt> where these files are listed.
+
+<p>
+
+<li> Build the executable.  Run:
+
+<p>
+        <tt>make</tt>.
+
+<p>
+
+<li> Assuming you have installed the updated version of
+<tt>install.exe</tt> (see earlier instructions) you can now create
+and populate the install tree.  Run:
+
+<p>
+        <tt>make install</tt>.
+
+<p>
+    You can save a significant amount of space by stripping all the
+    debugging symbols off of the executable.  To do this, change to the
+    directory in the <tt>install tree</tt> where your binary lives and run:
+
+<p>
+        <tt>strip fgfs.exe</tt> resp. <tt>strip fgfs-sgi.exe</tt>.
+
+<p>
+</OL>      <H1><A NAME="tth_chAp4">
+Chapter 4     </A><br>Preflight: Installing <i>FlightGear </i><A NAME="prefligh">
+</A></H1>
+
+<p>
+      <H2><A NAME="tth_sEc4.1">
+4.1</A>&nbsp;&nbsp;Installing the Binaries</H2><a NAME="binaries+installation41">
+</a>
+You can skip this section and go to the installation of scenery in
+case you built <i>FlightGear </i>along the lines describes during the
+previous chapter. If you did not and you're jumping in here your
+first step consists in installing the binaries. At present, there
+are only pre-compiled binaries<a NAME="binaries41">
+</a> available for
+Windows 98/NT<a NAME="Windows 98/NT41">
+</a> while in principle it might be possible to
+create (statically linked) binaries for Linux<a NAME="Linux41">
+</a> as well.
+
+<p>
+The following supposes you are on a Windows 98 or Windows
+NT<a NAME="Windows 98/NT41">
+</a> system. Installing the binaries is quite
+simple. Go to the <i>FlightGear </i>downloads page
+
+<p>
+ <a href="http://www.flightgear.org/Downloads/">http://www.flightgear.org/Downloads/</a>
+
+<p>
+ and get the latest binaries from the binaries subdirectory named
+
+<p>
+<tt>fg-win32-bin-X.XX.exe</tt>
+
+<p>
+ and unpack them via double clicking. This will create a directory <tt>FlightGear</tt>
+with several subdirectories. You are done.
+
+<p>
+      <H2><A NAME="tth_sEc4.2">
+4.2</A>&nbsp;&nbsp;Installing Support files<a NAME="Support files42">
+</a></H2>
+
+<p>
+Independent on your operating system and independent on if you
+built the binaries yourself or installed the precompiled ones as
+described above you will need scenery<a NAME="scenery42">
+</a>, texture<a NAME="texture42">
+</a>,
+and sound<a NAME="sound42">
+</a> files. A basic package of all these is contained
+in the binaries directory mentioned above as
+
+<p>
+ <tt>fgfs-base-X.XX</tt>.
+
+<p>
+  Preferably, you may want to download the <tt>.tar.gz</tt> version
+if you are working under Linux<a NAME="Linux42">
+</a>/UNIX<a NAME="UNIX42">
+</a> and the <tt>.exe</tt> version if you
+are under Windows 98/NT<a NAME="Windows 98/NT42">
+</a>. Make sure you get the <b>most recent</b> version.
+
+<p>
+If you're working under Linux<a NAME="Linux42">
+</a> or UNIX<a NAME="UNIX42">
+</a>, unpack the
+previously downloaded file with
+
+<p>
+        <tt>tar xvfz fgfs-base-X.XX.tar.gz</tt>,
+
+<p>
+ while under Windows 98/NT<a NAME="Windows 98/NT42">
+</a> just double click on the file (being situated in the
+root of your <i>FlightGear </i>drive.).
+
+<p>
+This already completes installing <i>FlightGear </i>and should enable
+you to invoke the program.
+
+<p>
+Some more scenery which, however, is not a substitute for the
+package mentioned above but rather is based on it can be found in
+the scenery subdirectory under
+
+<p>
+ <a href="http://www.flightgear.org/Downloads/">http://www.flightgear.org/Downloads/</a>
+
+<p>
+ These may be older versions which may or may not work with the
+most recent binaries.
+
+<p>
+In addition, there is a complete set of USA Scenery files<a NAME="USA Scenery files42">
+</a>
+available created by Curt Olson<a NAME="Olson, Curt42">
+</a> which can be
+downloaded from
+
+<p>
+<a href="ftp://ftp.kingmont.com/pub/kingmont/index.html">ftp://ftp.kingmont.com/pub/kingmont/index.html</a>.
+
+<p>
+ The complete set covers several 100's of MBytes. Thus, Curt
+provides the complete set on CD-ROM for those who really would
+like to fly over all of the USA. For more detail, check the
+remarks in the downloads page above.
+
+<p>
+Finally, the binaries directory mentioned contain the complete
+<i>FlightGear </i>documentation including a .pdf version of this
+<i>Installation and Getting Started</i> guide intended for
+pretty printing using Adobe's Acrobat reader being available from
+
+<p>
+<a href="http://www.adobe.com/acrobat">http://www.adobe.com/acrobat</a>.
+
+<p>
+ on any printer.
+
+<p>
+      <H1><A NAME="tth_chAp5">
+Chapter 5     </A><br>Takeoff: How to start the program<A NAME="takeoff">
+</A></H1>
+
+<p>
+      <H2><A NAME="tth_sEc5.1">
+5.1</A>&nbsp;&nbsp;Starting under Linux</H2>
+Under Linux, <i>FlightGear </i>is invoked by
+
+<p>
+  <tt>fgfs --option1 --option2...</tt>,
+
+<p>
+ where the options are described in section <A href="#options">5.3</A> below.
+
+<p>
+      <H2><A NAME="tth_sEc5.2">
+5.2</A>&nbsp;&nbsp;Starting under Windows 98/NT<a NAME="Windows 98/NT52">
+</a></H2>
+
+<p>
+In Windows explorer, change to <tt>\FlightGear\</tt>. Call
+<tt>runfgfs.bat</tt> by double-clicking if you want to invoke the hardware accelerated
+version of <i>FlightGear </i><tt>fgfs.exe</tt>, or <tt>runfgfs-sgi.bat</tt> if you installed
+SGI's software OpenGL<a NAME="OpenGL52">
+</a> support.
+
+<p>
+Alternatively, if for one or the other reason the batch does not work, you can open an
+MS-DOS shell, change to the directory where your binary resides (typically something like
+<tt>d:\FlightGear\bin</tt> where you might have to substitute
+<tt>d:</tt> in favor of your <i>FlightGear </i>directory), set the environment variable with
+
+<p>
+<tt>SET FG_ROOT=d:\FlightGear\bin</tt>
+
+<p>
+ and invoke <i>FlightGear </i>(within the same shell - Windows environment
+ settings are only valid locally within the same shell) via
+
+<p>
+<tt>fgfs --option1 --option2...</tt>.
+
+<p>
+For getting maximum performance it is highly recommended to
+minimize (iconize) the non-graphics window while running
+<i>FlightGear </i>.
+ <p><br>
+<p>
+ 
+<center><img src="arizona.gif"><br></center><br> Fig.&nbsp;2: <i>Ready for takeoff. We are at the default startup
+position in Arizona.</i>
+<p><br>
+<p>
+      <H2><A NAME="tth_sEc5.3">
+5.3</A>&nbsp;&nbsp;Command line parameters<A NAME="options">
+</A></H2>
+<a NAME="command line options53">
+</a>
+
+<p>
+Following is a list and short description of the command line options available. In case
+of Windows 98/NT it is recommended to include these in <tt>runfgfs.bat</tt>.
+
+<p>
+      <H3><A NAME="tth_sEc5.3.1">
+5.3.1</A>&nbsp;&nbsp;General Options</H3>
+
+<p>
+
+<UL>
+<li><tt>--help</tt>: gives a small help text, kind of a short version of this section.
+
+<p>
+
+<li><tt>--fg-root=<i>path</i></tt>: tells <i>FlightGear </i>where to look for its data
+  files if you didn't compile it with the default settings.
+
+<p>
+
+<li><tt>--disable-game-mode</tt>: Disables fullscreen display<a NAME="fullscreen display53">
+</a>.
+
+<p>
+
+<li><tt>--enable-game-mode</tt>: Enables fullscreen rendering.
+
+<p>
+
+<li><tt>--disable-splash-screen</tt>: Turns off the rotating 3DFX
+logo<a NAME="3DFX
+logo53">
+</a> when the accelerator board gets initialized.
+
+<p>
+
+<li><tt>--enable-splash-screen</tt>: If you like advertising, set this!
+
+<p>
+
+<li><tt>--disable-intro-music</tt>: No MP3-sample is being played when
+  <i>FlightGear </i>starts up.
+
+<p>
+
+<li><tt>--enable-intro-music</tt>: If your machine is powerful enough, enjoy
+  this setting.
+
+<p>
+
+<li><tt>--disable-mouse-pointer</tt>: In the future, <i>FlightGear </i>will
+  feature a mouse interface so that options can be set at runtime.  As
+  this feature is not implemented yet it seems wise to disable the
+  mouse interface.
+
+<p>
+
+<li><tt>--enable-mouse-pointer</tt>: Enables another mouse pointer in the
+  <i>FlightGear </i>window. This is useful when running <i>FlightGear </i>in full
+  screen mode and will allow access to the - yet to be implemented -
+  mouse interface of <i>FlightGear </i> .
+
+<p>
+
+<li><tt>--disable-pause</tt>: This will put you into <i>FlightGear </i>with the
+  engine running, ready for Take-Off.
+
+<p>
+
+<li><tt>--enable-pause</tt>: Starts <i>FlightGear </i>in pause mode.
+
+<p>
+</UL>      <H3><A NAME="tth_sEc5.3.2">
+5.3.2</A>&nbsp;&nbsp;Features</H3>
+
+<p>
+
+<UL>
+<li><tt>--disable-hud</tt>: Switches off the HUD<a NAME="HUD53">
+</a> (<b>H</b>ead <b>U</b>p
+  <b>D</b>isplay).
+
+<p>
+
+<li><tt>--enable-hud</tt>: Turns the  HUD<a NAME="HUD53">
+</a> on. This is the default.
+
+<p>
+
+<li><tt>--disable-panel</tt>: Turns off the instrument panel<a NAME="instrument panel53">
+</a>. This is the
+  default, as the instrument panel is still in its early beginnings - but in our opinion
+  you should give it a try.
+
+<p>
+
+<li><tt>--enable-panel</tt>: This will give you the look of a real cockpit<a NAME="cockpit53">
+</a>.
+
+<p>
+
+<li><tt>--disable-sound</tt>: Pretty self explaining, isn't it?
+
+<p>
+
+<li><tt>--enable-sound</tt>:
+
+<p>
+</UL>      <H3><A NAME="tth_sEc5.3.3">
+5.3.3</A>&nbsp;&nbsp;Initial Position and Orientation<a NAME="orientation53">
+</a></H3>
+
+<p>
+
+<UL>
+<li><tt>--airport-id=ABCD</tt>: If you want to start directly at an airport,
+  enter its international code, i.e. KJFK for JFK airport in New York.
+  A long/short list of the IDs of the airports being implemented can
+  be found in <tt>/Flight Gear/Airports</tt>. You only have to unpack
+  one of the files with gnuzip. Keep in mind, you need the
+  terrain data for the relevant region!<a NAME="airport code53">
+</a>
+
+<p>
+
+<li><tt>--lon=degrees</tt>: This is the starting longitude in degrees (west = -)
+
+<p>
+
+<li><tt>--lat=degrees</tt>: This is the starting latitude in degrees (south = -)
+
+<p>
+
+<li><tt>--altitude=meters</tt>: You may start in free flight at the given
+  altitude. Watch for the next options to insert the plane with a
+  given heading etc.
+
+<p>
+
+<li><tt>--heading=degrees</tt>: Sets the initial heading<a NAME="initial heading53">
+</a>.
+
+<p>
+
+<li><tt>--roll=degrees</tt>: Initial roll angle.<a NAME="initial roll angle53">
+</a>
+
+<p>
+
+<li><tt>--pitch=degrees</tt>: Initial pitch angle.<a NAME="initial pitch angle53">
+</a>
+
+<p>
+</UL>      <H3><A NAME="tth_sEc5.3.4">
+5.3.4</A>&nbsp;&nbsp;Rendering Options<a NAME="rendering options53">
+</a></H3>
+
+<p>
+
+<UL>
+<li><tt>--fog-disable</tt>: To cut down the rendering efforts, distant
+  regions are vanishing in fog<a NAME="fog53">
+</a> by default. If you disable fogging,
+  you'll see farther but your frame rates will drop.
+
+<p>
+
+<li><tt>--fog-fastest</tt>: The scenery will not look very nice but
+  frame rates will increase.
+
+<p>
+
+<li><tt>--fog-nicest</tt>: This option will give you a fairly realistic
+  view of flying on a hazy day.
+
+<p>
+
+<li><tt>--fov=xx.x</tt>: Sets the field of view<a NAME="field of view53">
+</a> in degrees.
+The value is displayed on the HUD. Default is 55.0.
+
+<p>
+
+<li><tt>--disable-fullscreen</tt>: Self explaining, isn't it?
+
+<p>
+
+<li><tt>--enable-fullscreen</tt>:
+
+<p>
+
+<li><tt>--shading-flat</tt>: This is the fastest mode but the terrain will look ugly! This option might help if your video accelerator is really slow.
+
+<p>
+
+<li><tt>--shading-smooth</tt>: This is the recommended (and default) setting - things will look really nice.
+
+<p>
+
+<li><tt>--disable-skyblend</tt>: No fogging or haze<a NAME="haze53">
+</a>, sky will be displayed
+  using just one color. Fast but ugly!
+
+<p>
+
+<li><tt>--enable-skyblend</tt>: Fogging/haze is enabled, sky and terrain<a NAME="terrain53">
+</a> look realistic. This is the default and recommended setting.
+
+<p>
+
+<li><tt>--disable-textures</tt>: Terrain details will be disabled. Looks ugly, but might help if your video board is slow.
+
+<p>
+
+<li><tt>--enable-textures</tt>: Default and recommended.
+
+<p>
+
+<li><tt>--enable-wireframe</tt>: If you want to know how the world of <i>FlightGear </i>internally looks like, try this!
+
+<p>
+</UL>      <H1><A NAME="tth_chAp6">
+Chapter 6     </A><br>Flight: Keystrokes,<a NAME="keystrokes60">
+</a> the HUD<a NAME="HUD60">
+</a>  and all that<A NAME="flight">
+</A></H1>
+
+<p>
+      <H2><A NAME="tth_sEc6.1">
+6.1</A>&nbsp;&nbsp;Keyboard commands</H2>
+
+<p>
+At present, support for using a joystick<a NAME="joystick61">
+</a> or yoke<a NAME="yoke61">
+</a>
+is just in its early stages. It may or may not work - just try
+it! In any case, you can use keyboard commands<a NAME="keyboard commands61">
+</a> instead.
+For proper controlling via keyboard (i) the
+<tt>NumLock<a NAME="NumLock61">
+</a></tt> key must be switched on (ii) the
+<i>FlightGear </i>window must have focus (if not, click with the mouse
+on the graphics window).
+
+<p>
+After activating <tt>NumLock</tt> the following keyboard
+commands<a NAME="keyboard
+commands61">
+</a> should work:
+<p><br>
+<p>
+ Tab.&nbsp;1: <i>Main keyboard commands<a NAME="keyboard commands61">
+</a> for <i>FlightGear </i></i>.
+<p><br>
+<p>
+
+<center>
+<table border><tr><td>
+<tr><td>Key                       </td><td>Action
+<tr><td>Pg Up/Pg Dn               </td><td>Throttle
+<tr><td>Left Arrow/Right Arrow    </td><td>Aileron
+<tr><td>Up Arrow/Down Arrow       </td><td>Elevator
+<tr><td>Ins/Enter                 </td><td>Rudder
+<tr><td>5                         </td><td>Center aileron/elevator/rudder
+<tr><td>Home/End                  </td><td>Elevator trim</table>
+
+</center><br>
+<p>
+
+
+For changing views you have to de-activate <tt>NumLock</tt>. Now
+<tt>Shift</tt> + <font face=symbol> &lt; </font
+><tt>Numeric Keypad Key</tt><font face=symbol> &gt; </font
+> changes the
+view as follows:
+ <p>
+
+<p>
+ Tab.&nbsp;2: <i>View directions<a NAME="view directions61">
+</a>
+accessible after de-activating <tt>NumLock</tt>.</i>
+<p><br>
+<p>
+
+<center>
+<table border><tr><td>
+<tr><td>Numeric Key  </td><td>View direction
+<tr><td>Shift-8 </td><td>forward
+<tr><td>Shift-7 </td><td>left/forward
+<tr><td>Shift-4 </td><td>left
+<tr><td>Shift-1 </td><td>left/back
+<tr><td>Shift-2 </td><td>back
+<tr><td>Shift-3 </td><td>right/back
+<tr><td>Shift-6 </td><td>right
+<tr><td>Shift-9 </td><td>right/forward</table>
+
+</center><br>
+<p>
+
+
+Moreover, the autopilot<a NAME="autopilot61">
+</a> is controlled via the following
+controls:
+<p><br>
+<p>
+ Tab.&nbsp;3: <i>Autopilot controls.<a NAME="autopilot controls61">
+</a></i>
+<p><br>
+<p>
+
+<center>
+<table border><tr><td>
+<tr><td>Key               </td><td>Action
+<tr><td>Ctrl + A      </td><td>Altitude hold toggle on/off
+<tr><td>Ctrl + H      </td><td>Heading hold toggle on/off
+<tr><td>Ctrl + S      </td><td>Autothrottle toggle on/off
+<tr><td>Ctrl + T      </td><td>Terrain follow toggle on/off</table>
+
+</center><br>
+<p>
+<p><br>The last one is especially interesting as it makes your
+Navion<a NAME="Navion61">
+</a> behave like a cruise missile.
+
+<p>
+Besides these basic keys there are some more special ones; most of
+these you'll probably not want to try during your first flight:
+<p><br>
+<p>
+ Tab.&nbsp;4: <i>More control commands.</i>
+<p><br>
+<p>
+
+<center>
+<table border><tr><td>
+<tr><td>Key                       </td><td>Action
+<tr><td>H/h    </td><td>Change color  of HUD/toggle HUD off forward/backward      
+<tr><td>i/I     </td><td>Minimize/maximize HUD              
+<tr><td>m/M  </td><td>Change time offset (warp) used by t/T forward/backward              
+<tr><td>t/T  </td><td>Time speed up/slow down  forward/backward            
+<tr><td>x/X  </td><td>Zoom in/out
+<tr><td>z/Z </td><td>Change visibility (fog)  forward/backward 
+<tr><td>b </td><td>Toggle brakes on/off
+<tr><td>p </td><td>Toggle pause on/off
+<tr><td>W </td><td>Toggle fullscreen mode on/off (Mesa/3dfx/Glide only)
+<tr><td>F8 </td><td>Toggle fog on/off
+<tr><td>F9 </td><td>Toggle texturing on/off
+<tr><td>F10 </td><td>Toggle menu on/off
+<tr><td>ESC </td><td>Exit program</table>
+
+</center><br>
+<p>
+<p><br>      <H2><A NAME="tth_sEc6.2">
+6.2</A>&nbsp;&nbsp;The head up display</H2>
+
+<p>
+At present, the main instrument for controlling the plane is the
+HUD<a NAME="HUD62">
+</a>  (<b>H</b>ead <b>U</b>p <b>D</b>isplay
+<a NAME="head up display62">
+</a>, see Fig.&nbsp;1). Neither are HUD<a NAME="HUD62">
+</a>s
+used in usual general aviation planes nor in civilian ones. Rather
+they belong to the equipment of modern military jets. However, in
+view of the fact that the panel<a NAME="panel62">
+</a> is still in the early
+stages of development the HUD<a NAME="HUD62">
+</a> is the main instrument for
+controlling the plane for now. Besides, it might be easier to fly
+using this one than exploiting a panel<a NAME="panel62">
+</a> and several of the
+real pilots might prefer it because of combining the readouts of
+critical parameters with an outside view onto the real world.
+(Several Cessna<a NAME="Cessna62">
+</a> pilots might love to have one, but
+technology is simply too expensive for implementing HUDs in
+general aviation aircrafts.)
+ <p><br>
+<p>
+ 
+<center><img src="hud.gif"><br></center><br> Fig.&nbsp;3: <i>The HUD, or head up display, as the present main
+<i>FlightGear </i>instrument.</i>
+<p><br>
+<p>
+The most important information for navigating, i.&nbsp;e.
+throttle<a NAME="throttle62">
+</a>, elevation<a NAME="elevation62">
+</a>, aileron<a NAME="aileron62">
+</a> can be found
+on the r.h.s of the HUD<a NAME="HUD62">
+</a>. These are just given on a scale
+between 0 and 1. Above these you find the AOA<a NAME="AOA62">
+</a>
+(angle of attack<a NAME="angle of attack62">
+</a>; the angle between the wings and the
+relative wind i.&nbsp;e. the direction of airflow), the
+heading<a NAME="heading62">
+</a> given in degrees, and the sideslip<a NAME="sideslip62">
+</a>.
+
+<p>
+On the left hand side you find the speed<a NAME="speed62">
+</a> in kts and the
+roll<a NAME="roll62">
+</a> given in degrees. You may recall the Navion<a NAME="Navion62">
+</a>
+taking off at a speed of 100 kts. Still further left you find the
+FOV<a NAME="FOV62">
+</a> (= field of view<a NAME="field of view62">
+</a>) in degrees.
+Zooming<a NAME="zoom62">
+</a> in and out with the x/X keys changes this one.
+The value below that, the number of triangles<a NAME="number of triangles62">
+</a> rendered is
+usually not of importance for you as a pilot (and can be switched
+off via a corresponding startup option). Below you find the
+frame rate<a NAME="frame rate62">
+</a>, displaying the frames per second.
+
+<p>
+Besides these figures, most of the flight parameters and flight
+characteristics are displayed graphically in the upper half of the
+screen. In the center you find the pitch indicator<a NAME="pitch indicator62">
+</a> (in
+degrees) with the aileron indicator<a NAME="aileron indicator62">
+</a> above and the
+rudder indicator<a NAME="rudder indicator62">
+</a> below. A corresponding readoff for the
+elevation<a NAME="elevation indicator62">
+</a> can be found to the left of
+the pitch scale. Below the pitch indicator<a NAME="pitch indicator62">
+</a> you will find a
+simple turn indicator<a NAME="turn indicator62">
+</a>.
+
+<p>
+There are two scales further left: The inner one displays the
+speed<a NAME="speed62">
+</a> (in kts) while the outer one gives the
+vertical speed<a NAME="vertical speed62">
+</a> (climb/sink rate<a NAME="climb/sink rate62">
+</a>). The two scales
+on the r.h.s display your height<a NAME="height62">
+</a>, i.&nbsp;e. the left of it
+shows the height above ground while the right of it gives that
+above zero, both being displayed in feet.
+
+<p>
+Based on these keystrokes and the HUD you should be able to
+properly control the plane. Try it! The functions already
+implemented are completely sufficient for even doing complicated
+manoeuvres.
+
+<p>
+In addition, <i>FlightGear </i>has a rudimentary menu which, however, is
+not yet working. If you're done and are about to leave the plane,
+just hit the ESC key to exit the program.
+
+<p>
+If you are looking for some interesting places to discover with
+<i>FlightGear </i>(which may or may not require downloading additional
+scenery) you may want to check
+
+<p>
+ <a href="http://www.flightgear.org/Downloads/Places">http://www.flightgear.org/Downloads/Places</a>.
+
+<p>
+      <H1><A NAME="tth_chAp7">
+Chapter 7     </A><br>Landing: Some further thoughts before leaving the plane<A NAME="landing">
+</A></H1>
+
+<p>
+      <H2><A NAME="tth_sEc7.1">
+7.1</A>&nbsp;&nbsp;Those, who did the work</H2>
+
+<p>
+Did you enjoy the flight? In case you did, don't forget those who devoted hundreds of
+hours to that project. All of this work is done on a voluntary basis within spare time,
+thus bare with the programmers<a NAME="programmers71">
+</a> in case something does not work the way you want
+it to. Instead, sit down and write them a kind (!) letter proposing what to change.
+Alternatively, you can subscribe to the <i>FlightGear </i>mailing lists<a NAME="mailing lists71">
+</a> and contribute
+your thoughts there. Instructions to do so can be found under
+
+<p>
+ <a href="http://www.flightgear.org/mail.html">http://www.flightgear.org/mail.html</a>.
+
+<p>
+Essentially there are two lists, one of which being mainly for the developers and the
+other one for users.
+
+<p>
+ These are the people who did the job (This information was
+essentially taken from the file <tt>Thanks</tt> accompanying the
+code):
+ <p><br>
+<p>
+ Raul Alonzo<a NAME="Alonzo, Raul71">
+</a> (<a href="mailto:amil@las.es">amil@las.es</a>)<br> Author of Ssystem and
+moon texture.
+ <p><br>
+<p>
+ Michele America<a NAME="America, Michele71">
+</a>
+(<a href="mailto:nomimarketing@mail.telepac.pt">nomimarketing@mail.telepac.pt</a>)<br>
+  Contributed to the HUD<a NAME="HUD71">
+</a> code.
+ <p><br>
+<p>
+ Steve Baker<a NAME="Baker, Steve71">
+</a> (<a href="mailto:sjbaker@hti.com">sjbaker@hti.com</a>)<br>
+  Author of PUI<a NAME="PUI71">
+</a> (a graphical interface written entirely on top of
+    OpenGL<a NAME="OpenGL71">
+</a>/GLUT<a NAME="GLUT71">
+</a>). Author of the basic
+    audio library<a NAME="audio library71">
+</a> used in <i>FlightGear </i>. An immense amount of coaching and tutelage,
+    both on the subjects of flight simulation and OpenGL<a NAME="OpenGL71">
+</a>.  It has been
+    his comments and thoughts that have prompted the implementation of
+    most of the more sophisticated features of <i>FlightGear </i> .
+ <p><br>
+<p>
+ Michael Basler<a NAME="Basler, Michael71">
+</a> (<a href="mailto:pmb@knUUt.de">pmb@knUUt.de</a>)<br>
+ Coauthor of Installation and Getting Started (together with Bernhard
+ Buckel).
+<p><br>
+<p>
+ John S. Berndt<a NAME="Berndt, John, S.71">
+</a> (<a href="mailto:jsb@hal-pc.org">jsb@hal-pc.org</a>)<br>
+ Working on a complete C++rewrite/reimplimentation of the core FDM.
+  Initially he is using X15 data to test his code, but once things are
+  all in place we should be able to simulator arbitrary aircraft.
+<p><br>
+<p>
+ Paul Bleisch<a NAME="Bleisch, Paul71">
+</a> (<a href="mailto:pbleisch@acm.org">pbleisch@acm.org</a>)<br>
+  Paul redid the debug system so that it would be much more
+  flexible, so it could be easily disabled for production system, and
+  so that messages for certain subsystems could be selectively
+  enabled.
+
+<p>
+  Also contributed a first stab at a config file/command line parsing
+  system.
+ <p><br>
+<p>
+ Jim Brennan<a NAME="Brennan, Jim71">
+</a> (<a href="mailto:jjb@foothill.net">jjb@foothill.net</a>)<br>
+  Provided a big chunk of online space to store USA scenery for Flight Gear.
+ <p><br>
+<p>
+ Bernie Bright<a NAME="Bright, Bernie71">
+</a> (<a href="mailto:bbright@c031.aone.net.au">bbright@c031.aone.net.au</a>)<br>
+  Many C++ style, usage, and implementation improvements, STL
+  portability and much, much more.
+ <p><br>
+<p>
+ Bernhard H. Buckel<a NAME="Buckel, Bernhard H.71">
+</a>
+(<a href="mailto:buckel@wmad95.mathematik.uni-wuerzburg.de">buckel@wmad95.mathematik.uni-wuerzburg.de</a>)<br>
+  Contributed the README.Linux.  Coauthor of Installation
+  and Getting Started (together with Michael Basler).
+ <p><br>
+<p>
+ Gene Buckle<a NAME="Buckle, Gene71">
+</a> (<a href="mailto:geneb@nwlink.com">geneb@nwlink.com</a>)<br>
+  Gene has done a lot of work getting <i>FlightGear </i>to compile with the MSVC<a NAME="MSVC71">
+</a>++
+  compiler. Numerous hints on detailed improvements.
+ <p><br>
+<p>
+ Didier Chauveau<a NAME="Chauveau, Didier71">
+</a> (<a href="mailto:chauveau@math.univ-mlv.fr">chauveau@math.univ-mlv.fr</a>)<br>
+  Provided some initial code to parse the 30 arcsec DEM files found at:
+
+<p>
+  <a href="http://edcwww.cr.usgs.gov/landdaac/gtopo30/gtopo30.html">http://edcwww.cr.usgs.gov/landdaac/gtopo30/gtopo30.html</a>.
+ <p><br>
+<p>
+ Jean-Francois Doue<a NAME="Doue, Jean-Francois71">
+</a><br>
+  Vector 2D, 3D, 4D and Matrix 3D and 4D inlined C++ classes.  (Based on
+  Graphics Gems IV ed. Paul S. Heckbert)
+
+<p>
+<a href="http://www.animats.com/simpleppp/ftp/public_html/topics/developers.html">http://www.animats.com/simpleppp/ftp/public_html/topics/developers.html</a>.
+ <p><br>
+<p>
+ Francine Evans<a NAME="Evans, Francine71">
+</a> (<a href="mailto:evans@cs.sunysb.edu">evans@cs.sunysb.edu</a>)
+
+<p>
+<a href="http://www.cs.sunysb.edu/~evans/stripe.html">http://www.cs.sunysb.edu/&#126;evans/stripe.html</a>
+
+<p>
+    Wrote the GPL'd tri-striper.
+ <p><br>
+<p>
+ Oscar Everitt<a NAME="Everitt, Oscar71">
+</a> (<a href="mailto:bigoc@premier.net">bigoc@premier.net</a>)<br>
+  Created single engine piston engine sounds as part of an F4U package
+  for FS98<a NAME="FS9871">
+</a>.  They are pretty cool and Oscar was happy to contribute
+  them to our little project.
+ <p><br>
+<p>
+ Jean-loup Gailly<a NAME="Gailly, Jean-loup71">
+</a> and Mark Adler<a NAME="Adler, Mark71">
+</a>
+(<a href="mailto:zlib@quest.jpl.nasa.gov">zlib@quest.jpl.nasa.gov</a>)<br>
+  Authors of the zlib library<a NAME="zlib library71">
+</a>.  Used for on-the-fly compression and
+  decompression routines,
+
+<p>
+  <a href="http://www.cdrom.com/pub/infozip/zlib/">http://www.cdrom.com/pub/infozip/zlib/</a>.
+ <p><br>
+<p>
+ Thomas Gellekum<a NAME="Gellekum, Thomas71">
+</a> (<a href="mailto:tg@ihf.rwth-aachen.de">tg@ihf.rwth-aachen.de</a>)<br>
+  Changes and updates for compiling on FreeBSD<a NAME="FreeBSD71">
+</a>.
+ <p><br>
+<p>
+ Jeff Goeke-Smith<a NAME="Goeke-Smith, Jeff71">
+</a> (<a href="mailto:jgoeke@voyager.net">jgoeke@voyager.net</a>)<br>
+  Contributed our first autopilot<a NAME="autopilot71">
+</a> (Heading Hold).
+  Better autoconf check for external timezone/daylight variables.
+ <p><br>
+<p>
+ Michael I. Gold<a NAME="Gold, Michael, I.71">
+</a> (<a href="mailto:gold@puck.asd.sgi.com">gold@puck.asd.sgi.com</a>)<br>
+ Patiently answered questions on OpenGL<a NAME="OpenGL71">
+</a>.
+ <p><br>
+<p>
+ Charlie Hotchkiss<a NAME="Hotchkiss, Charlie71">
+</a>
+(<a href="mailto:chotchkiss@namg.us.anritsu.com">chotchkiss@namg.us.anritsu.com</a>)<br> Worked on improving and enhancing the
+HUD<a NAME="HUD71">
+</a> code.  Lots of code style tips and code tweaks...
+ <p><br>
+<p>
+ Bruce Jackson<a NAME="Jackson, Bruce71">
+</a> (NASA) (<a href="mailto:e.b.jackson@larc.nasa.gov">e.b.jackson@larc.nasa.gov</a>)
+
+<p>
+  <a href="http://agcbwww.larc.nasa.gov/People/ebj.html">http://agcbwww.larc.nasa.gov/People/ebj.html</a>
+
+<p>
+    Developed the LaRCsim<a NAME="LaRCsim71">
+</a> code under funding by NASA which we use to provide the
+   flight model. Bruce has patiently answered many, many questions.
+ <p><br>
+<p>
+ Tom Knienieder<a NAME="Knienieder, Tom71">
+</a> (<a href="mailto:knienieder@ms.netwing.at">knienieder@ms.netwing.at</a>)<br>
+  Ported Steve Bakers's audio library<a NAME="audio library71">
+</a> to Win32.
+ <p><br>
+<p>
+ Reto Koradi<a NAME="Koradi, Reto71">
+</a> (<a href="mailto:kor@mol.biol.ethz.ch">kor@mol.biol.ethz.ch</a>)
+
+<p>
+<a href="\web{http://www.mol.biol.ethz.ch/~kor}"><a href="http://www.mol.biol.ethz.ch/\~{}kor">http://www.mol.biol.ethz.ch/&#126;kor</a></a>
+
+<p>
+  Helped with setting up fog effects<a NAME="fog effects71">
+</a>.
+ <p><br>
+<p>
+ Bob Kuehne<a NAME="Kuehne, Bob71">
+</a> (<a href="mailto:rpk@sgi.com">rpk@sgi.com</a>)<br>
+  Redid the Makefile system so it is simpler and more robust.
+ <p><br>
+<p>
+ Vasily Lewis<a NAME="Lewis, Vasily71">
+</a> (<a href="mailto:vlewis@woodsoup.org">vlewis@woodsoup.org</a>)
+
+<p>
+ <a href="http://www.woodsoup.org">http://www.woodsoup.org</a>
+
+<p>
+   Provided computing resources and services so that the Flight Gear
+  project could have real home.  This includes web services, ftp
+  services, shell accounts, email lists, dns services, etc.
+ <p><br>
+<p>
+ Eric Mitchell<a NAME="Mitchell, Eric71">
+</a> (<a href="mailto:mitchell@mars.ark.com">mitchell@mars.ark.com</a>)<br>
+  Contributed some topnotch scenery textures<a NAME="textures71">
+</a>.
+ <p><br>
+<p>
+ Anders Morken<a NAME="Morken, Anders71">
+</a> (<a href="mailto:amrken@online.no">amrken@online.no</a>)<br>
+  Maintains the European mirror of the <i>FlightGear </i>web pages.
+ <p><br>
+<p>
+ Alan Murta<a NAME="Murta, Alan71">
+</a> (<a href="mailto:amurta@cs.man.ac.uk">amurta@cs.man.ac.uk</a>)
+
+<p>
+  <a href="http://www.cs.man.ac.uk/aig/staff/alan/software/">http://www.cs.man.ac.uk/aig/staff/alan/software/</a>
+
+<p>
+    Created the Generic Polygon Clipping library.
+ <p><br>
+<p>
+ Curt Olson<a NAME="Olson, Curt71">
+</a> (<a href="mailto:curt@flightgear.org">curt@flightgear.org</a>)<br>
+ Primary organization of the project. First implementation
+ and modifications based on LaRCsim<a NAME="LaRCsim71">
+</a>. Besides putting together all
+ the pieces provided by others mainly concentrating on the scenery
+ engine<a NAME="scenery
+ engine71">
+</a> as well as the graphics stuff.
+ <p><br>
+<p>
+ Friedemann Reinhard<a NAME="Reinhard, Friedemann71">
+</a>
+(<a href="mailto:mpt218@faupt212.physik.uni-erlangen.de">mpt218@faupt212.physik.uni-erlangen.de</a>)<br>
+  Development of textured instrument panel<a NAME="panel71">
+</a>.
+ <p><br>
+<p>
+ Petter Reinholdtsen<a NAME="Reinholdtsen, Petter71">
+</a> (<a href="mailto:pere@games.no">pere@games.no</a>)<br>
+  Incorporated the Gnu automake/autoconf system (with libtool).
+  This should streamline and standardize the build process for all
+  UNIX-like platforms.  It should have little effect on IDE type
+  environments since they don't use the UNIX make system.
+ <p><br>
+<p>
+ William Riley<a NAME="Riley, William71">
+</a> (<a href="mailto:riley@technologist.com">riley@technologist.com</a>)<br>
+  Contributed code to add ''brakes''.
+ <p><br>
+<p>
+ Paul Schlyter<a NAME="Schlyter, Paul71">
+</a> (<a href="mailto:pausch@saaf.se">pausch@saaf.se</a>)<br>
+  Provided Durk Talsma with all the information he needed to write the astro code.
+ <p><br>
+<p>
+ Chris Schoeneman<a NAME="Schoenemann, Chris71">
+</a> (<a href="mailto:crs@millpond.engr.sgi.com">crs@millpond.engr.sgi.com</a>)<br>
+  Contributed ideas on audio support.
+ <p><br>
+<p>
+ Jonathan R Shewchuk<a NAME="Shewchuk, Jonathan71">
+</a>
+(<a href="mailto:Jonathan\_R\_Shewchuk@ux4.sp.cs.cmu.edu">Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu</a>)<br>
+  Author of the Triangle<a NAME="triangle program71">
+</a> program.  Triangle
+  is used to calculate the  Delauney triangulation of our irregular terrain.
+ <p><br>
+<p>
+ Gordan Sikic<a NAME="Sikic, Gordan71">
+</a> (<a href="mailto:gsikic@public.srce.hr">gsikic@public.srce.hr</a>)<br>
+  Contributed a Cherokee flight model<a NAME="Cherokee flight model71">
+</a> for LaRCsim<a NAME="LaRCsim71">
+</a>.  Currently is not
+  working and needs to be debugged.  Use configure
+  <tt>--with-flight-model=cherokee</tt>
+  to build the cherokee instead of the Navion<a NAME="Navion71">
+</a>.
+ <p><br>
+<p>
+ Michael Smith<a NAME="Smith, Michael71">
+</a> (<a href="mailto:msmith99@flash.net">msmith99@flash.net</a>)<br>
+  Contributed cockpit graphics, 3d models, logos, and other images.
+  Project Bonanza
+
+<p>
+  <a href="http://members.xoom.com/ConceptSim/index.html">http://members.xoom.com/ConceptSim/index.html</a>.
+ <p><br>
+<p>
+ U.&nbsp;S. Geological Survey<a NAME="U.\,S. Geological Survey71">
+</a>
+
+<p>
+<a href="http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html">http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html</a>
+
+<p>
+   Provided geographic data used by this project.
+ <p><br>
+<p>
+ Durk Talsma<a NAME="Talsma, Durk71">
+</a> (<a href="mailto:pn\_talsma@macmail.psy.uva.nl">pn_talsma@macmail.psy.uva.nl</a>)<br>
+  Accurate Sun, Moon, and Planets.  Sun changes color based on
+  position in sky. Moon has correct phase and blends well into the
+  sky.  Planets are correctly positioned and have proper magnitude.
+ <p><br>
+<p>
+ Gary R. Van Sickle<a NAME="van Sickle, Gary R.71">
+</a>
+(<a href="mailto:tiberius@braemarinc.com">tiberius@braemarinc.com</a>)<br>
+  Contributed some initial GameGLUT<a NAME="GameGLUT71">
+</a> support and other fixes.
+ <p><br>
+<p>
+ Norman Vine<a NAME="Vine, Norman71">
+</a> (<a href="mailto:nhv@laserplot.com">nhv@laserplot.com</a>)<br>
+  Many performance optimizations throughout the code.  Many contributions
+  and much advice for the scenery generation section.  Lots of Windows
+  related contributions.
+<p><br>
+<p>
+ Carmelo Volpe<a NAME="Volpe, Carmelo71">
+</a> (<a href="mailto:carmelo.volpe@csb.ki.se">carmelo.volpe@csb.ki.se</a>)<br>
+  Porting <i>FlightGear </i>to the Metro Works<a NAME="Metro Works71">
+</a> development environment
+  (PC/Mac).
+ <p><br>
+<p>
+ Robert Allan Zeh<a NAME="Zeh, Allan71">
+</a> (<a href="mailto:raz@cmg.FCNBD.COM">raz@cmg.FCNBD.COM</a>)<br>
+  Helped tremendously in figuring out the Cygnus<a NAME="Cygnus71">
+</a> Win32 compiler and
+  how to link with .dll's.  Without him the first run-able Win32
+  version of <i>FlightGear </i>would have been impossible.
+
+<p>
+      <H2><A NAME="tth_sEc7.2">
+7.2</A>&nbsp;&nbsp;What remains to be done</H2>
+At first: If you read (and, maybe, followed) this guide until this
+point you may probably agree that <i>FlightGear </i> , even
+in its present state, is not at all for the birds. It is already a
+flight simulator which has a flight model, a plane, terrain
+scenery, texturing and simple controls.
+
+<p>
+Despite, <i>FlightGear </i>needs - and gets - further development. Except internal tweakings,
+there are several fields where <i>FlightGear </i>needs basics improvement and development.
+
+<p>
+A first direction is adding airports<a NAME="airports72">
+</a>, streets, rivers and
+all that bringing the Scenery to real life.
+
+<p>
+Second, the panel<a NAME="panel72">
+</a> (being disabled by default at present)
+needs further improvement including more working gauges.
+
+<p>
+Besides, there should be support for adding more planes<a NAME="planes72">
+</a>
+and for implementing corresponding flight models differing from
+the basic Navion<a NAME="Navion72">
+</a>.
+
+<p>
+Another major task is further implementation of the menu
+system<a NAME="menu
+system72">
+</a>, which at its present state basically does nothing.
+
+<p>
+Another direction concerns audio support<a NAME="audio support72">
+</a>. While the audio
+library itself is essentially complete there is a need for more
+sounds to play and for code to drive it.
+
+<p>
+There are already people working in all of these directions. But if you're a programmer
+and think you can contribute, you are invited to do so.
+
+<p>
+
+<H3>Achnowledgements</H3>
+Obviously this document could not have been written without all
+those contributors mentioned above making <i>FlightGear </i>a reality.
+
+<p>
+Beyond this we would like to say special thanks to Curt
+Olson,<a NAME="Olson, Curt72">
+</a> whose numerous scattered Readmes,
+Thanks, Webpages, and personal eMails were of special help to us
+and were freely exploited in the making of this booklet.
+
+<p>
+Further, we would like to thank Kai Troester<a NAME="Troester, Kai72">
+</a> for donating the
+solution of some of his compile problems to our Chapter <A href="#missed">8</A>.
+
+<p>
+In addition, we would like to thank Steve Baker<a NAME="Baker,
+Steve72">
+</a> for a careful reading and for numerous hints on the first
+draft of this guide.
+
+<p>
+In addition we gained from hints given to Newcomers on the Mailing lists, notably from
+those given by Norman Vine <a NAME="Vine, Norman72">
+</a>, to name only one.
+
+<p>
+      <H1><A NAME="tth_chAp8">
+Chapter 8     </A><br>Missed approach: If anything refuses to work<A NAME="missed">
+</A></H1>
+We tried to sort problems<a NAME="problems80">
+</a> according to operating system to
+a certain extent , but if you encounter a problem it may be a wise
+idea to look beyond ''your'' operating system - just in case.
+
+<p>
+      <H2><A NAME="tth_sEc8.1">
+8.1</A>&nbsp;&nbsp;General problems</H2>
+
+<UL>
+<p>
+
+<li><i>FlightGear </i>runs SOOO slow<br>
+ If the HUD<a NAME="HUD81">
+</a> indicates you are getting something like 1&nbsp;fps
+ (frame per second) or below you typically don't have working hardware
+ OpenGL<a NAME="OpenGL81">
+</a> support. There may be several reasons for this. First,
+ there may be no OpenGL hardware drivers available for older
+ cards. In this case it is highly recommended to get a new board.
+
+<p>
+ Second, check if your drivers are properly installed. Several
+ cards need additional OpenGL support drivers besides the
+ ''native'' windows ones. For more detail check chapter
+ <A href="#opengl">2</A>.
+
+<p>
+ Third, check if your hardware driver is called <tt>opengl32.dll</tt>
+ or just merely <tt>opengl.dll</tt>. By the default compilation, binaries are linked against
+ <tt>open</tt> <tt>gl32.dll</tt>. If you require the non-32 version,
+ consider rebuilding <i>FlightGear </i>with the libraries <tt>opengl32.dll</tt>,
+ <tt>glut32.dll</tt>, and <tt>glu32.dll</tt> replaced by their
+ non-32 counterparts. For more details check chapter
+ <A href="#building">3</A>.
+
+<p>
+ If you installed the pre-compiled binaries <tt>runfgfs.bat</tt> invokes
+ <tt>fgfs.exe</tt> while <tt>runfgfs.sgi.bat</tt> invokes
+ <tt>fgfs.sgi.exe</tt> with the first ones being linked against the 32-versions.
+
+<p>
+ Usually, hardware accelerated drivers use the 32-libraries.
+
+<p>
+
+<li>The menu items do not work<br>
+ No wonder - they are not implemented yet.
+
+<p>
+ </UL>      <H2><A NAME="tth_sEc8.2">
+8.2</A>&nbsp;&nbsp;Potential problems under Linux</H2>
+
+<p>
+Since we don't have access to all possible flavors of Linux distributions, here are some
+thoughts on possible causes of problems. (This section includes contributions by Kai
+Troester <a href="mailto:Kai.Troester@rz.tu-ilmenau.de">Kai.Troester@rz.tu-ilmenau.de</a>.)
+
+<p>
+
+<UL>
+<li>Wrong library versions<br>
+  This is a rather common cause of grief especially when you prefer to
+  install the libraries needed by <i>FlightGear </i>by hand. Be sure that
+  especially the Mesa library contains support for the 3DFX board<a NAME="3DFX board82">
+</a> and
+  that Glide<a NAME="Glide82">
+</a> libraries are installed and can be found. If a
+  <tt>ldd `which fgfs`</tt> complains about missing libraries you are  in trouble.
+
+<p>
+
+<li>Missing permissions<a NAME="permissions82">
+</a><br>
+  <i>FlightGear </i>needs to be setuid root in order to be capable of
+  accessing the accelerator board. Be sure to issue a
+
+<p>
+  <tt>chown root.root /usr/local/bin/fgfs ;</tt><br>
+  <tt>chmod 4755 /usr/local/bin/fgfs</tt>
+
+<p>
+  to give the <i>FlightGear </i>binary the proper rights. There is development
+  of a device named <tt>/dev/3dfx</tt> underway, so this probably
+  being remedied in the near future.
+
+<p>
+
+<li>Non-default install options<br>
+  <i>FlightGear </i>will display a lot of diagnostics when being started up.
+  If it complains about bad looking or missing files, check that you
+  installed them in the way they are supposed to be, i.e. latest
+  version and proper location. The canonical location <i>FlightGear </i>
+  wants its data files under <tt>/usr/local/lib</tt>. Be sure to
+  grab the latest versions of everything that might be needed!
+
+<p>
+
+<li>Compile problems<br>
+  Check as far as you can, as a last resort (and a great information
+  source, too) there are mailing lists for which information can be
+  gotten at
+
+<p>
+  <a href="http://www.flightgear.org/mail.html">http://www.flightgear.org/mail.html</a>.
+
+<p>
+This will give you direct contact to the developers.
+
+<p>
+
+<li>Configure could not find Mesa and Glut though they are
+installed
+
+<p>
+If the configure script could not find your Mesa and Glut libraries you should add the
+Mesa library-path (i.e. <tt>/usr/local/Mesa</tt>) to the EXTRA_DIRS variable in the file
+configure.in (i.e. <tt>EXTRA_DIRS=''/usr/local/usr/</tt>
+<tt>X11R6/usr/local/Mesa''</tt>). After this you have to run autoconf. (Please read
+README.autoconf for running autoconf )
+
+<p>
+
+<li>SuSE Distribution
+
+<UL>
+<p>
+ 
+<li> If you have a SuSE distribution use the egcs compiler instead
+of the compiler delivered with SuSE. Grab it at
+
+<p>
+<a href="http://egcs.cygnus.com">http://egcs.cygnus.com</a>
+
+<p>
+ 
+<li> SuSE 6.0 users should also use the Glide,
+Mesa and Glut Libraries delivered with the distribution
+ 
+<li> A known problem of Flight Gear until version Version 0.57 with SuSE concerns
+  <tt>acconfig.h</tt>. If 'make' stops and reports an error in relation with acconfig.h
+insert the following lines to <tt>/usr/share/autoconf/</tt> <tt>acconfig.h</tt>:
+
+<p>
+        <tt>/* needed to compile fgfs properly*/</tt><br>
+        <tt>#undef FG_NDEBUG</tt><br>
+        <tt>#undef PACKAGE</tt><br>
+        <tt>#undef VERSION</tt><br>
+        <tt>#undef WIN32a</tt>
+
+<p>
+(a solution for this problem is coming soon )
+</UL>
+<p>
+    Additionally there are two versions of the GNU C compiler around:
+  egcs and gcc (the classic one). gcc seems to have its own notion of
+  some C++ constructs, so updating to egcs won't hurt and maybe help
+  to compile the program.
+  
+<p>
+</UL>      <H2><A NAME="tth_sEc8.3">
+8.3</A>&nbsp;&nbsp;Potential problems under Windows95/NT</H2>
+
+<p>
+
+<UL>
+<li>The executable refuses to run.<br>
+ You may have tried to start the executable directly either by
+ double-clicking <tt>fgfs.exe</tt> in Windows explorer or by invoking it
+ in a MS-DOS shell. Double-clicking via explorer does never work
+ (except you set the environment variable <tt>FG_ROOT</tt>
+ in the autoexec.bat or otherwise). Rather double-click <tt>runfgfs.bat</tt> or
+ <tt>runfgfs-sgi.bat</tt>  For more detail, check chapter <A href="#takeoff">5</A>.
+
+<p>
+ Another potential problem might be you did not download the
+ most recent versions of scenery and textures required by <i>FlightGear </i>, or
+ you did not load any scenery or texture at all. Have a close look
+ at this, as the scenery/texture format is still under development and may
+ change frequently. For more detail, check chapter <A href="#prefligh">4</A>.
+
+<p>
+ A further potential source of trouble are so-called
+ mini-OpenGL<a NAME="mini-OpenGL83">
+</a> drivers provided by some manufacturers. In this case,
+ <i>FlightGear </i>'s typically hangs while opening the graphics window.
+ In this case, either replace the mini-OpenGL<a NAME="mini-OpenGL83">
+</a> driver by a
+ full OpenGL driver or or in case such is not available install
+ software OpenGL support (see section <A href="#softrend">2.5</A>).
+
+<p>
+
+<li><i>FlightGear </i>ignores the command line parameters.<br>
+ There is a problem with passing command line options containing a
+ ''='' to windows batch files. Instead, include the options into
+ <tt>runfgfs.bat</tt>.
+
+<p>
+
+<li>While compiling with the Cygnus Compiler <tt>Configure</tt>
+complains not to find <tt>glu32.dll</tt>.
+
+<p>
+Make sure you change to the Main FlightGear directory, e.&nbsp;g. with
+
+<p>
+<tt>cd //D/FlightGear-X.XX</tt>
+
+<p>
+before running <tt>Configure</tt> and <tt>Make</tt>.
+
+<p>
+
+<li>I am unable to build <i>FlightGear </i>under MSVC<a NAME="MSVC83">
+</a>/MS DevStudio<a NAME="MS DevStudio83">
+</a><br>
+ By default, <i>FlightGear </i>is bild with GNU C++, i.&nbsp;e. the
+ Cygnus<a NAME="Cygnus83">
+</a> compiler for Win32. For hints or Makefiles
+ required for MSVC for MSC DevStudio have a look into
+
+<p>
+ <a href="http://www.flightgear.org/Downloads/Source">http://www.flightgear.org/Downloads/Source</a>.
+
+<p>
+</UL><p>
+  <font size="-2">  <a name="tth_sEcindex"></a>
+
+<H2> Index (showing section)</H2>
+
+<DL compact>  <dt></dt><dd> <i>FlightGear </i>Flight School, 
+		<a href="#\FlightGear Flight School14">1-4</a>
+  <dt></dt><dd> <i>FlightGear </i>Programmer's Guide, 
+		<a href="#\FlightGear Programmer's Guide30">3-0</a>
+  <dt></dt><dd> <i>FlightGear </i>Scenery Design Guide, 
+		<a href="#\FlightGear Scenery Design Guide14">1-4</a>
+  <dt></dt><dd> <i>FlightGear </i>Website, <a href="#\FlightGear Website12">1-2</a>
+  <dt></dt><dd> <i>FlightGear </i>documentation, 
+		<a href="#\FlightGear documentation14">1-4</a>
+  <dt></dt><dd> <i>FlightGear </i>home page, <a href="#\FlightGear home page14">1-4</a>
+  <dt></dt><dd> 3DFX, <a href="#3DFX21">2-1</a>, <a href="#3DFX24">2-4</a>
+  <dt></dt><dd> 3DFX board, <a href="#3DFX board82">8-2</a>
+  <dt></dt><dd> 3DFX chip, <a href="#3DFX chip24">2-4</a>
+  <dt></dt><dd> 3DXF, <a href="#3DXF24">2-4</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> Adler, Mark, <a href="#Adler, Mark71">7-1</a>
+  <dt></dt><dd> aileron, <a href="#aileron62">6-2</a>
+  <dt></dt><dd> aileron indicator, <a href="#aileron indicator62">6-2</a>
+  <dt></dt><dd> airport code, <a href="#airport code53">5-3</a>
+  <dt></dt><dd> airports, <a href="#airports72">7-2</a>
+  <dt></dt><dd> Alonzo, Raul, <a href="#Alonzo, Raul71">7-1</a>
+  <dt></dt><dd> America, Michele, <a href="#America, Michele12">1-2</a>, 
+		<a href="#America, Michele71">7-1</a>
+  <dt></dt><dd> angle of attack, <a href="#angle of attack62">6-2</a>
+  <dt></dt><dd> AOA, <a href="#AOA62">6-2</a>
+  <dt></dt><dd> astronomy code, <a href="#astronomy code12">1-2</a>
+  <dt></dt><dd> audio library, <a href="#audio library71">7-1</a>
+  <dt></dt><dd> audio support, <a href="#audio support12">1-2</a>, 
+		<a href="#audio support72">7-2</a>
+  <dt></dt><dd> autopilot, <a href="#autopilot12">1-2</a>, <a href="#autopilot61">6-1</a>, 
+		<a href="#autopilot71">7-1</a>
+  <dt></dt><dd> autopilot controls, <a href="#autopilot controls61">6-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> Baker, Steve, <a href="#Baker, Steve12">1-2</a>, 
+		<a href="#Baker, Steve71">7-1</a>
+  <dt></dt><dd> Basler, Michael, <a href="#Basler, Michael71">7-1</a>
+  <dt></dt><dd> Berndt, John, S., <a href="#Berndt, John, S.71">7-1</a>
+  <dt></dt><dd> binaries, <a href="#binaries31">3-1</a>, <a href="#binaries32">3-2</a>, 
+		<a href="#binaries41">4-1</a>
+    <dt></dt><dd>&nbsp;&nbsp;&nbsp;&nbsp; installation, <a href="#binaries+installation41">4-1</a>
+  <dt></dt><dd> binaries, pre-compiled, <a href="#binaries, pre-compiled30">3-0</a>
+  <dt></dt><dd> Bleisch, Paul, <a href="#Bleisch, Paul71">7-1</a>
+  <dt></dt><dd> Brennan, Jim, <a href="#Brennan, Jim71">7-1</a>
+  <dt></dt><dd> Bright, Bernie, <a href="#Bright, Bernie71">7-1</a>
+  <dt></dt><dd> BSD UNIX, <a href="#BSD UNIX11">1-1</a>
+  <dt></dt><dd> Buckel, Bernhard H., <a href="#Buckel, Bernhard H.71">7-1</a>
+  <dt></dt><dd> Buckle, Gene, <a href="#Buckle, Gene71">7-1</a>
+  <dt></dt><dd> build tree, <a href="#build tree32">3-2</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> Cessna, <a href="#Cessna62">6-2</a>
+  <dt></dt><dd> Chauveau, Didier, <a href="#Chauveau, Didier71">7-1</a>
+  <dt></dt><dd> Cherokee flight model, <a href="#Cherokee flight model71">7-1</a>
+  <dt></dt><dd> climb/sink rate, <a href="#climb/sink rate62">6-2</a>
+  <dt></dt><dd> cockpit, <a href="#cockpit53">5-3</a>
+  <dt></dt><dd> command line options, <a href="#command line options53">5-3</a>
+  <dt></dt><dd> compiler, <a href="#compiler13">1-3</a>
+  <dt></dt><dd> compiling, <a href="#compiling30">3-0</a>
+    <dt></dt><dd>&nbsp;&nbsp;&nbsp;&nbsp; Linux, <a href="#compiling+Linux31">3-1</a>
+    <dt></dt><dd>&nbsp;&nbsp;&nbsp;&nbsp; Windows 98/NT, <a href="#compiling+Windows 98/NT32">3-2</a>
+  <dt></dt><dd> configure, <a href="#configure31">3-1</a>, <a href="#configure32">3-2</a>
+  <dt></dt><dd> Creative Graphics Blaster, 
+		<a href="#Creative Graphics Blaster23">2-3</a>
+  <dt></dt><dd> Cygnus, <a href="#Cygnus13">1-3</a>, <a href="#Cygnus32">3-2</a>, 
+		<a href="#Cygnus71">7-1</a>, <a href="#Cygnus83">8-3</a>
+  <dt></dt><dd> Cygnus Win32 port of GNU C, 
+		<a href="#Cygnus Win32 port of GNU C32">3-2</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> Diamond Stealth II, <a href="#Diamond Stealth II22">2-2</a>
+  <dt></dt><dd> Diamond Viper 550, <a href="#Diamond Viper 55023">2-3</a>
+  <dt></dt><dd> documentation, <a href="#documentation11">1-1</a>
+  <dt></dt><dd> DOS, <a href="#DOS11">1-1</a>, <a href="#DOS12">1-2</a>
+  <dt></dt><dd> Doue, Jean-Francois, <a href="#Doue, Jean-Francois71">7-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> EGCS, <a href="#EGCS32">3-2</a>
+  <dt></dt><dd> elevation, <a href="#elevation62">6-2</a>
+  <dt></dt><dd> elevation indicator, <a href="#elevation indicator62">6-2</a>
+  <dt></dt><dd> environment variable, <a href="#environment variable21">2-1</a>
+  <dt></dt><dd> Evans, Francine, <a href="#Evans, Francine71">7-1</a>
+  <dt></dt><dd> Everitt, Oscar, <a href="#Everitt, Oscar71">7-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> field of view, <a href="#field of view53">5-3</a>, 
+		<a href="#field of view62">6-2</a>
+  <dt></dt><dd> Flight simulator
+    <dt></dt><dd>&nbsp;&nbsp;&nbsp;&nbsp; civilian, <a href="#Flight simulator+civilian11">1-1</a>
+    <dt></dt><dd>&nbsp;&nbsp;&nbsp;&nbsp; free, <a href="#Flight simulator+free12">1-2</a>
+    <dt></dt><dd>&nbsp;&nbsp;&nbsp;&nbsp; multi-platform, 
+		<a href="#Flight simulator+multi-platform11">1-1</a>
+    <dt></dt><dd>&nbsp;&nbsp;&nbsp;&nbsp; open, <a href="#Flight simulator+open11">1-1</a>
+    <dt></dt><dd>&nbsp;&nbsp;&nbsp;&nbsp; user-extensible, 
+		<a href="#Flight simulator+user-extensible11">1-1</a>
+    <dt></dt><dd>&nbsp;&nbsp;&nbsp;&nbsp; user-supported, 
+		<a href="#Flight simulator+user-supported11">1-1</a>
+  <dt></dt><dd> Flight Unlimited II, <a href="#Flight Unlimited II11">1-1</a>
+  <dt></dt><dd> fog, <a href="#fog53">5-3</a>
+  <dt></dt><dd> fog effects, <a href="#fog effects71">7-1</a>
+  <dt></dt><dd> FOV, <a href="#FOV62">6-2</a>
+  <dt></dt><dd> frame rate, <a href="#frame rate12">1-2</a>, 
+		<a href="#frame rate13">1-3</a>, <a href="#frame rate62">6-2</a>
+  <dt></dt><dd> FreeBSD, <a href="#FreeBSD71">7-1</a>
+  <dt></dt><dd> FS98, <a href="#FS9811">1-1</a>, <a href="#FS9871">7-1</a>
+  <dt></dt><dd> fullscreen display, <a href="#fullscreen display53">5-3</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> Gailly, Jean-loup, <a href="#Gailly, Jean-loup71">7-1</a>
+  <dt></dt><dd> GameGLUT, <a href="#GameGLUT71">7-1</a>
+  <dt></dt><dd> Gellekum, Thomas, <a href="#Gellekum, Thomas71">7-1</a>
+  <dt></dt><dd> GLIDE, <a href="#GLIDE21">2-1</a>
+  <dt></dt><dd> Glide, <a href="#Glide82">8-2</a>
+  <dt></dt><dd> GLUT, <a href="#GLUT21">2-1</a>, <a href="#GLUT71">7-1</a>
+  <dt></dt><dd> GNU C++, <a href="#GNU C++13">1-3</a>
+  <dt></dt><dd> Gnu Public License, <a href="#Gnu Public License11">1-1</a>
+  <dt></dt><dd> Goeke-Smith, Jeff, <a href="#Goeke-Smith, Jeff12">1-2</a>, 
+		<a href="#Goeke-Smith, Jeff71">7-1</a>
+  <dt></dt><dd> Gold, Michael, I., <a href="#Gold, Michael, I.71">7-1</a>
+  <dt></dt><dd> graphics drivers, <a href="#graphics drivers20">2-0</a>
+  <dt></dt><dd> graphics library, <a href="#graphics library20">2-0</a>
+  <dt></dt><dd> graphics routines, <a href="#graphics routines12">1-2</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> haze, <a href="#haze53">5-3</a>
+  <dt></dt><dd> head up display, <a href="#head up display12">1-2</a>, 
+		<a href="#head up display62">6-2</a>
+  <dt></dt><dd> heading, <a href="#heading62">6-2</a>
+  <dt></dt><dd> height, <a href="#height62">6-2</a>
+  <dt></dt><dd> history, <a href="#history12">1-2</a>
+  <dt></dt><dd> Hotchkiss, Charlie, <a href="#Hotchkiss, Charlie12">1-2</a>, 
+		<a href="#Hotchkiss, Charlie71">7-1</a>
+  <dt></dt><dd> HUD, <a href="#HUD12">1-2</a>, <a href="#HUD53">5-3</a>, <a href="#HUD60">6-0</a>, 
+		<a href="#HUD62">6-2</a>, <a href="#HUD71">7-1</a>, 
+		<a href="#HUD81">8-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> initial heading, <a href="#initial heading53">5-3</a>
+  <dt></dt><dd> initial pitch angle, <a href="#initial pitch angle53">5-3</a>
+  <dt></dt><dd> initial roll angle, <a href="#initial roll angle53">5-3</a>
+  <dt></dt><dd> install tree, <a href="#install tree32">3-2</a>
+  <dt></dt><dd> instrument panel, <a href="#instrument panel53">5-3</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> Jackson, Bruce, <a href="#Jackson, Bruce12">1-2</a>, 
+		<a href="#Jackson, Bruce71">7-1</a>
+  <dt></dt><dd> joystick, <a href="#joystick13">1-3</a>, <a href="#joystick61">6-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> keyboard commands, <a href="#keyboard commands61">6-1</a>
+  <dt></dt><dd> keystrokes, <a href="#keystrokes60">6-0</a>
+  <dt></dt><dd> Knienieder, Tom, <a href="#Knienieder, Tom12">1-2</a>, 
+		<a href="#Knienieder, Tom71">7-1</a>
+  <dt></dt><dd> Koradi, Reto, <a href="#Koradi, Reto71">7-1</a>
+  <dt></dt><dd> Korpela, Eric, <a href="#Korpela, Eric12">1-2</a>
+  <dt></dt><dd> Kuehne, Bob, <a href="#Kuehne, Bob71">7-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> LaRCsim, <a href="#LaRCsim12">1-2</a>, <a href="#LaRCsim71">7-1</a>
+  <dt></dt><dd> Lewis, Vasily, <a href="#Lewis, Vasily71">7-1</a>
+  <dt></dt><dd> Linux, <a href="#Linux11">1-1</a>, <a href="#Linux12">1-2</a>, 
+		<a href="#Linux13">1-3</a>, <a href="#Linux21">2-1</a>, 
+		<a href="#Linux30">3-0</a>, <a href="#Linux31">3-1</a>, 
+		<a href="#Linux41">4-1</a>, <a href="#Linux42">4-2</a>
+  <dt></dt><dd> Looking Glass, <a href="#Looking Glass11">1-1</a>
+  <dt></dt><dd> loop-through-cable, <a href="#loop-through-cable21">2-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> MacIntosh, <a href="#MacIntosh11">1-1</a>
+  <dt></dt><dd> mailing lists, <a href="#mailing lists71">7-1</a>
+  <dt></dt><dd> menu system, <a href="#menu system12">1-2</a>
+  <dt></dt><dd> MESA, <a href="#MESA21">2-1</a>
+  <dt></dt><dd> Metro Works, <a href="#Metro Works71">7-1</a>
+  <dt></dt><dd> Microsoft, <a href="#Microsoft11">1-1</a>
+  <dt></dt><dd> military components, <a href="#military components11">1-1</a>
+  <dt></dt><dd> mini-OpenGL, <a href="#mini-OpenGL22">2-2</a>, 
+		<a href="#mini-OpenGL83">8-3</a>
+  <dt></dt><dd> Mitchell, Eric, <a href="#Mitchell, Eric12">1-2</a>, 
+		<a href="#Mitchell, Eric71">7-1</a>
+  <dt></dt><dd> Morken, Anders, <a href="#Morken, Anders71">7-1</a>
+  <dt></dt><dd> MS DevStudio, <a href="#MS DevStudio83">8-3</a>
+  <dt></dt><dd> MS Visual C5, <a href="#MS Visual C532">3-2</a>
+  <dt></dt><dd> MSVC, <a href="#MSVC13">1-3</a>, <a href="#MSVC71">7-1</a>, 
+		<a href="#MSVC83">8-3</a>
+  <dt></dt><dd> Murr, David, <a href="#Murr, David12">1-2</a>
+  <dt></dt><dd> Murta, Alan, <a href="#Murta, Alan71">7-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> Navion, <a href="#Navion12">1-2</a>, <a href="#Navion61">6-1</a>, 
+		<a href="#Navion62">6-2</a>, <a href="#Navion71">7-1</a>, 
+		<a href="#Navion72">7-2</a>
+  <dt></dt><dd> number of triangles, <a href="#number of triangles62">6-2</a>
+  <dt></dt><dd> NumLock, <a href="#NumLock61">6-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> Olson, Curt, <a href="#Olson, Curt12">1-2</a>, 
+		<a href="#Olson, Curt42">4-2</a>, <a href="#Olson, Curt71">7-1</a>, 
+		<a href="#Olson, Curt72">7-2</a>
+  <dt></dt><dd> OpenGL, <a href="#OpenGL12">1-2</a>, <a href="#OpenGL13">1-3</a>, 
+		<a href="#OpenGL14">1-4</a>, <a href="#OpenGL20">2-0</a>, 
+		<a href="#OpenGL22">2-2</a>, <a href="#OpenGL25">2-5</a>, 
+		<a href="#OpenGL30">3-0</a>, <a href="#OpenGL52">5-2</a>, 
+		<a href="#OpenGL71">7-1</a>, <a href="#OpenGL81">8-1</a>
+    <dt></dt><dd>&nbsp;&nbsp;&nbsp;&nbsp; drivers, <a href="#OpenGL+drivers13">1-3</a>
+    <dt></dt><dd>&nbsp;&nbsp;&nbsp;&nbsp; software rendering, 
+		<a href="#OpenGL+software rendering25">2-5</a>
+  <dt></dt><dd> Operating Systems, <a href="#Operating Systems11">1-1</a>
+  <dt></dt><dd> orientation, <a href="#orientation53">5-3</a>
+  <dt></dt><dd> OS/2, <a href="#OS/211">1-1</a>, <a href="#OS/212">1-2</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> panel, <a href="#panel12">1-2</a>, <a href="#panel62">6-2</a>, 
+		<a href="#panel71">7-1</a>, <a href="#panel72">7-2</a>
+  <dt></dt><dd> panel code, <a href="#panel code12">1-2</a>
+  <dt></dt><dd> permissions, <a href="#permissions82">8-2</a>
+  <dt></dt><dd> pitch indicator, <a href="#pitch indicator62">6-2</a>
+  <dt></dt><dd> planes, <a href="#planes72">7-2</a>
+  <dt></dt><dd> problems, <a href="#problems80">8-0</a>
+  <dt></dt><dd> programmers, <a href="#programmers71">7-1</a>
+  <dt></dt><dd> proposal, <a href="#proposal12">1-2</a>
+  <dt></dt><dd> PUI, <a href="#PUI12">1-2</a>, <a href="#PUI71">7-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> Reinhard, Friedemann, <a href="#Reinhard, Friedemann12">1-2</a>, 
+		<a href="#Reinhard, Friedemann71">7-1</a>
+  <dt></dt><dd> Reinholdtsen, Petter, <a href="#Reinholdtsen, Petter71">7-1</a>
+  <dt></dt><dd> rendering options, <a href="#rendering options53">5-3</a>
+  <dt></dt><dd> Rendition chipset, <a href="#Rendition chipset22">2-2</a>
+  <dt></dt><dd> Riley, William, <a href="#Riley, William71">7-1</a>
+  <dt></dt><dd> RIVA TNT chipset, <a href="#RIVA TNT chipset23">2-3</a>
+  <dt></dt><dd> roll, <a href="#roll62">6-2</a>
+  <dt></dt><dd> rudder indicator, <a href="#rudder indicator62">6-2</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> scenery, <a href="#scenery12">1-2</a>, <a href="#scenery32">3-2</a>, 
+		<a href="#scenery42">4-2</a>
+  <dt></dt><dd> Schlyter, Paul, <a href="#Schlyter, Paul71">7-1</a>
+  <dt></dt><dd> Schoenemann, Chris, <a href="#Schoenemann, Chris71">7-1</a>
+  <dt></dt><dd> SGI IRIX, <a href="#SGI IRIX11">1-1</a>
+  <dt></dt><dd> Shewchuk, Jonathan, <a href="#Shewchuk, Jonathan71">7-1</a>
+  <dt></dt><dd> sideslip, <a href="#sideslip62">6-2</a>
+  <dt></dt><dd> Sikic, Gordan, <a href="#Sikic, Gordan71">7-1</a>
+  <dt></dt><dd> Smith, Michael, <a href="#Smith, Michael71">7-1</a>
+  <dt></dt><dd> software rendering, <a href="#software rendering32">3-2</a>
+  <dt></dt><dd> sound, <a href="#sound42">4-2</a>
+  <dt></dt><dd> sound card, <a href="#sound card13">1-3</a>
+  <dt></dt><dd> sound effects, <a href="#sound effects13">1-3</a>
+  <dt></dt><dd> source code, <a href="#source code11">1-1</a>
+  <dt></dt><dd> speed, <a href="#speed62">6-2</a>
+  <dt></dt><dd> Sun-OS, <a href="#Sun-OS12">1-2</a>
+  <dt></dt><dd> SunOS, <a href="#SunOS11">1-1</a>
+  <dt></dt><dd> Support files, <a href="#Support files42">4-2</a>
+  <dt></dt><dd> system requirements, <a href="#system requirements13">1-3</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> Talsma, Durk, <a href="#Talsma, Durk12">1-2</a>, 
+		<a href="#Talsma, Durk71">7-1</a>
+  <dt></dt><dd> terrain, <a href="#terrain53">5-3</a>
+  <dt></dt><dd> texture, <a href="#texture42">4-2</a>
+  <dt></dt><dd> textures, <a href="#textures12">1-2</a>, <a href="#textures32">3-2</a>, 
+		<a href="#textures71">7-1</a>
+  <dt></dt><dd> throttle, <a href="#throttle62">6-2</a>
+  <dt></dt><dd> Torvalds, Linus, <a href="#Torvalds, Linus11">1-1</a>
+  <dt></dt><dd> triangle program, <a href="#triangle program71">7-1</a>
+  <dt></dt><dd> Troester, Kai, <a href="#Troester, Kai72">7-2</a>
+  <dt></dt><dd> turn indicator, <a href="#turn indicator62">6-2</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> U.&nbsp;S. Geological Survey, 
+		<a href="#U.\,S. Geological Survey12">1-2</a>, 
+		<a href="#U.\,S. Geological Survey71">7-1</a>
+  <dt></dt><dd> UNIX, <a href="#UNIX12">1-2</a>, <a href="#UNIX13">1-3</a>, 
+		<a href="#UNIX30">3-0</a>, <a href="#UNIX42">4-2</a>
+  <dt></dt><dd> USA Scenery files, <a href="#USA Scenery files42">4-2</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> van Sickle, Gary R., <a href="#van Sickle, Gary R.71">7-1</a>
+  <dt></dt><dd> vertical speed, <a href="#vertical speed62">6-2</a>
+  <dt></dt><dd> video card, <a href="#video card20">2-0</a>, 
+		<a href="#video card32">3-2</a>
+  <dt></dt><dd> view directions, <a href="#view directions61">6-1</a>
+  <dt></dt><dd> view frustrum culling, <a href="#view frustrum culling12">1-2</a>
+  <dt></dt><dd> Vine, Norman, <a href="#Vine, Norman12">1-2</a>, 
+		<a href="#Vine, Norman71">7-1</a>, 
+		<a href="#Vine, Norman72">7-2</a>
+  <dt></dt><dd> Volpe, Carmelo, <a href="#Volpe, Carmelo71">7-1</a>
+  <dt></dt><dd> Voodoo, <a href="#Voodoo21">2-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> Win32 libraries, <a href="#Win32 libraries32">3-2</a>
+  <dt></dt><dd> Windows 95/98, <a href="#Windows 95/9811">1-1</a>
+  <dt></dt><dd> Windows 95/NT, <a href="#Windows 95/NT12">1-2</a>
+  <dt></dt><dd> Windows 98, <a href="#Windows 9813">1-3</a>
+  <dt></dt><dd> Windows 98/NT, <a href="#Windows 98/NT13">1-3</a>, 
+		<a href="#Windows 98/NT22">2-2</a>, 
+		<a href="#Windows 98/NT23">2-3</a>, 
+		<a href="#Windows 98/NT24">2-4</a>, 
+		<a href="#Windows 98/NT25">2-5</a>, 
+		<a href="#Windows 98/NT30">3-0</a>, 
+		<a href="#Windows 98/NT32">3-2</a>, 
+		<a href="#Windows 98/NT41">4-1</a>, 
+		<a href="#Windows 98/NT42">4-2</a>, 
+		<a href="#Windows 98/NT52">5-2</a>
+  <dt></dt><dd> Windows drivers, <a href="#Windows drivers22">2-2</a>
+  <dt></dt><dd> Windows NT, <a href="#Windows NT11">1-1</a>, 
+		<a href="#Windows NT13">1-3</a>
+  <dt></dt><dd> workstation, <a href="#workstation12">1-2</a>, 
+		<a href="#workstation13">1-3</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> yoke, <a href="#yoke13">1-3</a>, <a href="#yoke61">6-1</a>
+
+<p>
+  <dt></dt><dd>   <dt></dt><dd> Zeh, Allan, <a href="#Zeh, Allan71">7-1</a>
+  <dt></dt><dd> zlib library, <a href="#zlib library71">7-1</a>
+  <dt></dt><dd> zoom, <a href="#zoom62">6-2</a>
+
+<p>
+</DL> </font>
+<p><hr><small>File translated from T<sub><font size="-1">E</font></sub>X by <a href="http://hutchinson.belmont.ma.us/tth/">T<sub><font size="-1">T</font></sub>H</a>, version 1.57.</small>
+</HTML>

@@ -1,0 +1,213 @@
+%%
+%% getstart.tex -- Flight Gear documentation: Installation and Getting Started
+%% Chapter file
+%%
+%% Written by Michael Basler % Bernhard Buckel, starting September 1998.
+%%
+%% Copyright (C) 1999 Michael Basler (pmb@knUUt.de)
+%%                  & Bernhard Buckel (buckel@wmad95.mathematik.uni-wuerzburg.de)
+%%
+%% This program is free software; you can redistribute it and/or
+%% modify it under the terms of the GNU General Public License as
+%% published by the Free Software Foundation; either version 2 of the
+%% License, or (at your option) any later version.
+%%
+%% This program is distributed in the hope that it will be useful, but
+%% WITHOUT ANY WARRANTY; without even the implied warranty of
+%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%% General Public License for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with this program; if not, write to the Free Software
+%% Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+%%
+%% $Id: getstart.tex,v 0.12 1999/03/07 michael
+%% (Log is kept at end of this file)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Missed approach: If anything refuses to work\label{missed}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\markboth{\thechapter.\hspace*{1mm} MISSED APPROACH
+}{\thesection\hspace*{1mm} ???}
+
+We tried to sort \Index{problems} according to operating system to
+a certain extent , but if you encounter a problem it may be a wise
+idea to look beyond ''your'' operating system -- just in case.
+
+\section{General problems}
+\begin{itemize}
+\item{\FlightGear runs SOOO slow}\\
+ If the \Index{HUD} indicates you are getting something like 1\,fps
+ (frame per second) or below you typically don't have working hardware
+ \Index{OpenGL} support. There may be several reasons for this. First,
+ there may be no OpenGL hardware drivers available for older
+ cards. In this case it is highly recommended to get a new board.
+
+ Second, check if your drivers are properly installed. Several
+ cards need additional OpenGL support drivers besides the
+ ''native'' windows ones. For more detail check chapter
+ \ref{opengl}.
+
+ Third, check if your hardware driver is called \texttt{opengl32.dll}
+ or just merely \texttt{opengl.dll}. By the default compilation, binaries are linked against
+ \texttt{open} \texttt{gl32.dll}. If you require the non-32 version,
+ consider rebuilding \FlightGear with the libraries \texttt{opengl32.dll},
+ \texttt{glut32.dll}, and \texttt{glu32.dll} replaced by their
+ non-32 counterparts. For more details check chapter
+ \ref{building}.
+
+ If you installed the pre-compiled binaries \texttt{runfgfs.bat} invokes
+ \texttt{fgfs.exe} while \texttt{runfgfs.sgi.bat} invokes
+ \texttt{fgfs.sgi.exe} with the first ones being linked against the 32-versions.
+
+ Usually, hardware accelerated drivers use the 32-libraries.
+
+\item{The menu items do not work}\\
+ No wonder -- they are not implemented yet.
+
+ \end{itemize}
+
+\section{Potential problems under Linux}
+
+Since we don't have access to all possible flavors of Linux distributions, here are some
+thoughts on possible causes of problems. (This section includes contributions by Kai
+Troester \mail{Kai.Troester@rz.tu-ilmenau.de}.)
+
+\begin{itemize}
+
+\item{Wrong library versions}\\
+  This is a rather common cause of grief especially when you prefer to
+  install the libraries needed by \FlightGear by hand. Be sure that
+  especially the Mesa library contains support for the \Index{3DFX board} and
+  that \Index{Glide} libraries are installed and can be found. If a
+  \texttt{ldd `which fgfs`} complains about missing libraries you are  in trouble.
+
+\item{Missing \Index{permissions}}\\
+  \FlightGear needs to be setuid root in order to be capable of
+  accessing the accelerator board. Be sure to issue a
+
+  \texttt{chown root.root /usr/local/bin/fgfs ;}\\
+  \texttt{chmod 4755 /usr/local/bin/fgfs}
+
+  to give the \FlightGear binary the proper rights. There is development
+  of a device named \texttt{/dev/3dfx} underway, so this probably
+  being remedied in the near future.
+
+\item{Non-default install options}\\
+  \FlightGear will display a lot of diagnostics when being started up.
+  If it complains about bad looking or missing files, check that you
+  installed them in the way they are supposed to be, i.e. latest
+  version and proper location. The canonical location \FlightGear
+  wants its data files under \texttt{/usr/local/lib}. Be sure to
+  grab the latest versions of everything that might be needed!
+
+\item{Compile problems}\\
+  Check as far as you can, as a last resort (and a great information
+  source, too) there are mailing lists for which information can be
+  gotten at
+
+  \web{http://www.flightgear.org/mail.html}.
+
+This will give you direct contact to the developers.
+
+\item{Configure could not find Mesa and Glut though they are
+installed}
+
+If the configure script could not find your Mesa and Glut libraries you should add the
+Mesa library-path (i.e. \texttt{/usr/local/Mesa}) to the EXTRA\_DIRS variable in the file
+configure.in (i.e. \texttt{EXTRA\_DIRS=''/usr/local/usr/}
+\texttt{X11R6/usr/local/Mesa''}). After this you have to run autoconf. (Please read
+README.autoconf for running autoconf )
+
+\item{SuSE Distribution}
+\begin{itemize}
+ \item If you have a SuSE distribution use the egcs compiler instead
+of the compiler delivered with SuSE. Grab it at
+
+\web{http://egcs.cygnus.com}
+
+ \item SuSE 6.0 users should also use the Glide,
+Mesa and Glut Libraries delivered with the distribution
+ \item A known problem of Flight Gear until version Version 0.57 with SuSE concerns
+  \texttt{acconfig.h}. If 'make' stops and reports an error in relation with acconfig.h
+insert the following lines to \texttt{/usr/share/autoconf/} \texttt{acconfig.h}:
+
+        \texttt{/* needed to compile fgfs properly*/}\\
+        \texttt{{\#}undef FG\_NDEBUG}\\
+        \texttt{{\#}undef PACKAGE}\\
+        \texttt{{\#}undef VERSION}\\
+        \texttt{{\#}undef WIN32a}
+
+(a solution for this problem is coming soon )
+\end{itemize}
+
+  %%B.B. 21.2.99
+  Additionally there are two versions of the GNU C compiler around:
+  egcs and gcc (the classic one). gcc seems to have its own notion of
+  some C++ constructs, so updating to egcs won't hurt and maybe help
+  to compile the program.
+  %%
+
+
+\end{itemize}
+
+\section{Potential problems under Windows95/NT}
+
+\begin{itemize}
+\item{The executable refuses to run.}\\
+ You may have tried to start the executable directly either by
+ double-clicking \texttt{fgfs.exe} in Windows explorer or by invoking it
+ in a MS-DOS shell. Double-clicking via explorer does never work
+ (except you set the environment variable \texttt{FG\_ROOT}
+ in the autoexec.bat or otherwise). Rather double-click \texttt{runfgfs.bat} or
+ \texttt{runfgfs-sgi.bat}  For more detail, check chapter \ref{takeoff}.
+
+ Another potential problem might be you did not download the
+ most recent versions of scenery and textures required by \FlightGear, or
+ you did not load any scenery or texture at all. Have a close look
+ at this, as the scenery/texture format is still under development and may
+ change frequently. For more detail, check chapter \ref{prefligh}.
+
+ A further potential source of trouble are so-called
+ \Index{mini-OpenGL} drivers provided by some manufacturers. In this case,
+ {\FlightGear}'s typically hangs while opening the graphics window.
+ In this case, either replace the \Index{mini-OpenGL} driver by a
+ full OpenGL driver or or in case such is not available install
+ software OpenGL support (see section \ref{softrend}).
+
+\item{\FlightGear ignores the command line parameters.}\\
+ There is a problem with passing command line options containing a
+ ''='' to windows batch files. Instead, include the options into
+ \texttt{runfgfs.bat}.
+
+\item{While compiling with the Cygnus Compiler \texttt{Configure}
+complains not to find \texttt{glu32.dll}}.
+
+Make sure you change to the Main FlightGear directory, e.\,g. with
+
+\texttt{cd //D/FlightGear-X.XX}
+
+before running \texttt{Configure} and \texttt{Make}.
+
+\item{I am unable to build \FlightGear under \Index{MSVC}/\Index{MS DevStudio}}\\
+ By default, \FlightGear is bild with GNU C++, i.\,e. the
+ \Index{Cygnus} compiler for Win32. For hints or Makefiles
+ required for MSVC for MSC DevStudio have a look into
+
+ \web{http://www.flightgear.org/Downloads/Source}.
+
+\end{itemize}
+
+
+%% revision 0.10  1998/10/01  bernhard
+%% added win stuff michael
+%% final proofreading for release
+%% revision 0.11  1998/11/01  michael
+%% Remark on mini-OpenGL drivers, new general section
+%% Access violation error under win32 added
+%% Command line problem in win32 added
+%% revision 0.12  1999/03/07  bernhard
+%% Remark on EGCS compiler
+%% revision 0.12  1999/03/07  michael
+%% Added Contribution by Kai Troester
+%% Reworked Win32 Stuff
