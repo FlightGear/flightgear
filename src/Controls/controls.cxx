@@ -100,6 +100,7 @@ FGControls::init ()
         brake[wheel] = 0.0;
     }
 
+    parking_brake = 0.0;
     auto_coordination = fgGetNode("/sim/auto-coordination", true);
 }
 
