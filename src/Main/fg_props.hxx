@@ -101,50 +101,57 @@ fgUntie (const string &name)
 
 				// Templates cause ambiguity here
 inline void
-fgTie (const string &name, bool *pointer)
+fgTie (const string &name, bool *pointer, bool useDefault = true)
 {
-  if (!globals->get_props()->tie(name, SGRawValuePointer<bool>(pointer)))
+  if (!globals->get_props()->tie(name, SGRawValuePointer<bool>(pointer),
+				 useDefault))
     FG_LOG(FG_GENERAL, FG_WARN,
 	   "Failed to tie property " << name << " to a pointer");
 }
 
 inline void
-fgTie (const string &name, int *pointer)
+fgTie (const string &name, int *pointer, bool useDefault = true)
 {
-  if (!globals->get_props()->tie(name, SGRawValuePointer<int>(pointer)))
+  if (!globals->get_props()->tie(name, SGRawValuePointer<int>(pointer),
+				 useDefault))
     FG_LOG(FG_GENERAL, FG_WARN,
 	   "Failed to tie property " << name << " to a pointer");
 }
 
 inline void
-fgTie (const string &name, float *pointer)
+fgTie (const string &name, float *pointer, bool useDefault = true)
 {
-  if (!globals->get_props()->tie(name, SGRawValuePointer<float>(pointer)))
+  if (!globals->get_props()->tie(name, SGRawValuePointer<float>(pointer),
+				 useDefault))
     FG_LOG(FG_GENERAL, FG_WARN,
 	   "Failed to tie property " << name << " to a pointer");
 }
 
 inline void
-fgTie (const string &name, double *pointer)
+fgTie (const string &name, double *pointer, bool useDefault = true)
 {
-  if (!globals->get_props()->tie(name, SGRawValuePointer<double>(pointer)))
+  if (!globals->get_props()->tie(name, SGRawValuePointer<double>(pointer),
+				 useDefault))
     FG_LOG(FG_GENERAL, FG_WARN,
 	   "Failed to tie property " << name << " to a pointer");
 }
 
 inline void
-fgTie (const string &name, string *pointer)
+fgTie (const string &name, string *pointer, bool useDefault = true)
 {
-  if (!globals->get_props()->tie(name, SGRawValuePointer<string>(pointer)))
+  if (!globals->get_props()->tie(name, SGRawValuePointer<string>(pointer),
+				 useDefault))
     FG_LOG(FG_GENERAL, FG_WARN,
 	   "Failed to tie property " << name << " to a pointer");
 }
 
 template <class V>
 inline void
-fgTie (const string &name, V (*getter)(), void (*setter)(V) = 0)
+fgTie (const string &name, V (*getter)(), void (*setter)(V) = 0,
+       bool useDefault = true)
 {
-  if (!globals->get_props()->tie(name, SGRawValueFunctions<V>(getter, setter)))
+  if (!globals->get_props()->tie(name, SGRawValueFunctions<V>(getter, setter),
+				 useDefault))
     FG_LOG(FG_GENERAL, FG_WARN,
 	   "Failed to tie property " << name << " to functions");
 }
@@ -152,12 +159,13 @@ fgTie (const string &name, V (*getter)(), void (*setter)(V) = 0)
 template <class V>
 inline void
 fgTie (const string &name, int index, V (*getter)(int),
-       void (*setter)(int, V) = 0)
+       void (*setter)(int, V) = 0, bool useDefault = true)
 {
   if (!globals->get_props()->tie(name,
 				 SGRawValueFunctionsIndexed<V>(index,
 							       getter,
-							       setter)))
+							       setter),
+				 useDefault))
     FG_LOG(FG_GENERAL, FG_WARN,
 	   "Failed to tie property " << name << " to indexed functions");
 }
@@ -165,10 +173,11 @@ fgTie (const string &name, int index, V (*getter)(int),
 template <class T, class V>
 inline void
 fgTie (const string &name, T * obj, V (T::*getter)() const,
-       void (T::*setter)(V) = 0)
+       void (T::*setter)(V) = 0, bool useDefault = true)
 {
   if (!globals->get_props()->tie(name,
-				 SGRawValueMethods<T,V>(*obj, getter, setter)))
+				 SGRawValueMethods<T,V>(*obj, getter, setter),
+				 useDefault))
     FG_LOG(FG_GENERAL, FG_WARN,
 	   "Failed to tie property " << name << " to object methods");
 }
@@ -176,13 +185,15 @@ fgTie (const string &name, T * obj, V (T::*getter)() const,
 template <class T, class V>
 inline void 
 fgTie (const string &name, T * obj, int index,
-       V (T::*getter)(int) const, void (T::*setter)(int, V) = 0)
+       V (T::*getter)(int) const, void (T::*setter)(int, V) = 0,
+       bool useDefault = true)
 {
   if (!globals->get_props()->tie(name,
 				 SGRawValueMethodsIndexed<T,V>(*obj,
 							       index,
 							       getter,
-							       setter)))
+							       setter),
+				 useDefault))
     FG_LOG(FG_GENERAL, FG_WARN,
 	   "Failed to tie property " << name << " to indexed object methods");
 }

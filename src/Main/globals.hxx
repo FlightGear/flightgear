@@ -83,6 +83,7 @@ private:
 
     // properties
     SGPropertyNode *props;
+    SGPropertyNode *initial_state;
 
     // list of serial port-like configurations
     string_list channel_options_list;
@@ -134,7 +135,19 @@ public:
     inline string_list get_channel_options_list () {
       return channel_options_list;
     }
-    
+
+
+    /**
+     * Save the current state as the initial state.
+     */
+    void saveInitialState ();
+
+
+    /**
+     * Restore the saved initial state, if any.
+     */
+    void restoreInitialState ();
+
 };
 
 

@@ -25,6 +25,11 @@
 #include "fg_props.hxx"
 
 
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGGlobals.
+////////////////////////////////////////////////////////////////////////
+
 // global global :-)
 FGGlobals *globals;
 
@@ -33,21 +38,44 @@ FGGlobals *globals;
 FGGlobals::FGGlobals() :
     freeze( false ),
     warp( 0 ),
-    warp_delta( 0 )
+    warp_delta( 0 ),
+    props(0),
+    initial_state(0)
 {
-				// TODO: move to a proper bind method
-//   fgTie("/sim/freeze", &freeze);
-//   fgTie("/sim/warp", &warp);
-//   fgTie("/sim/warp-delta", &warp_delta);
 }
 
 
 // Destructor
 FGGlobals::~FGGlobals() 
 {
-				// TODO: move to a proper unbind method
-//   fgUntie("/sim/freeze");
-//   fgUntie("/sim/warp");
-//   fgUntie("/sim/warp-delta");
+  delete initial_state;
 }
 
+
+// Save the current state as the initial state.
+void
+FGGlobals::saveInitialState ()
+{
+  delete initial_state;
+  initial_state = new SGPropertyNode();
+  if (!copyProperties(props, initial_state))
+    FG_LOG(FG_GENERAL, FG_ALERT, "Error saving initial state");
+}
+
+
+// Restore the saved initial state, if any
+void
+FGGlobals::restoreInitialState ()
+{
+  if (initial_state == 0) {
+    FG_LOG(FG_GENERAL, FG_ALERT, "No initial state available to restore!!!");
+  } else if (!copyProperties(initial_state, props)) {
+    FG_LOG(FG_GENERAL, FG_INFO,
+	   "Some errors restoring initial state (probably just read-only props)");
+  } else {
+    FG_LOG(FG_GENERAL, FG_INFO, "Initial state restored successfully");
+  }
+}
+
+
+// end of globals.cxx

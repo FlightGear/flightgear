@@ -45,7 +45,16 @@ fgSaveFlight (ostream &output)
 bool
 fgLoadFlight (istream &input)
 {
-  return readProperties(input, globals->get_props());
+  SGPropertyNode props;
+  if (readProperties(input, &props)) {
+    copyProperties(&props, globals->get_props());
+				// When loading a flight, make it the
+				// new initial state.
+    globals->saveInitialState();
+  } else {
+    FG_LOG(FG_INPUT, FG_ALERT, "Error restoring flight; aborted");
+    return false;
+  }
 }
 
 // end of fg_props.cxx

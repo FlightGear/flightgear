@@ -2,6 +2,7 @@
 #include <plib/pu.h>		// plib include
 
 
+#include <Main/globals.hxx>
 #include <Main/fg_init.hxx>
 
 #include "gui.h"
@@ -38,6 +39,7 @@ void reInit(puObject *cb)
 	BusyCursor(0);
 	Quat0();
 	build_rotmatrix(GuiQuat_mat, curGuiQuat);
+	/* check */ globals->restoreInitialState();
 	fgReInitSubsystems();
 	BusyCursor(1);
 }

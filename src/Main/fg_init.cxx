@@ -778,6 +778,10 @@ bool fgInitSubsystems( void ) {
 
     FG_LOG( FG_GENERAL, FG_INFO, endl);
 
+				// Save the initial state for future
+				// reference.
+    globals->saveInitialState();
+
     return true;
 }
 
@@ -867,7 +871,7 @@ void fgReInitSubsystems( void )
 	    << globals->get_current_view()->get_abs_view_pos());
 
     cur_fdm_state->init();
-    cur_fdm_state->bind();
+//     cur_fdm_state->bind();
 //     cur_fdm_state->init( 1.0 / fgGetInt("/sim/model-hz") );
 
     scenery.cur_elev = cur_fdm_state->get_Runway_altitude() * FEET_TO_METER;
