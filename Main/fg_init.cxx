@@ -158,7 +158,7 @@ int fgInitSubsystems( void )
     fgLIGHT *l;
     fgTIME *t;
     fgVIEW *v;
-    Point3D geod_pos, abs_view_pos;
+    Point3D geod_pos, tmp_abs_view_pos;
 
     l = &cur_light_params;
     t = &cur_time_params;
@@ -195,21 +195,23 @@ int fgInitSubsystems( void )
     }
 
     // Calculate ground elevation at starting point (we didn't have
-    // abs_view_pos calculated when fgTileMgrUpdate() was called above
+    // tmp_abs_view_pos calculated when fgTileMgrUpdate() was called above
 
     // calculalate a cartesian point somewhere along the line between
     // the center of the earth and our view position.  Doesn't have to
     // be the exact elevation (this is good because we don't know it
     // yet :-)
     geod_pos = Point3D( f->get_Longitude(), f->get_Latitude(), 0.0);
-    abs_view_pos = fgGeodToCart(geod_pos);
+    tmp_abs_view_pos = fgGeodToCart(geod_pos);
 
     FG_LOG( FG_GENERAL, FG_DEBUG, 
     	    "Altitude before update " << scenery.cur_elev );
+    FG_LOG( FG_GENERAL, FG_DEBUG, 
+    	    "Initial abs_view_pos = " << tmp_abs_view_pos );
     scenery.cur_elev = 
 	fgTileMgrCurElevOLD( f->get_Longitude(), 
 			     f->get_Latitude(),
-			     abs_view_pos );
+			     tmp_abs_view_pos );
     FG_LOG( FG_GENERAL, FG_DEBUG, 
 	    "Altitude after update " << scenery.cur_elev );
     f->set_Runway_altitude( scenery.cur_elev * METER_TO_FEET );
@@ -224,8 +226,21 @@ int fgInitSubsystems( void )
 	    << (f->get_Latitude() * RAD_TO_DEG) << ", " 
 	    << (f->get_Longitude() * RAD_TO_DEG) << ", " 
 	    << (f->get_Altitude() * FEET_TO_METER) << ")" );
-    // end of thing that I just stuck in that I should probably move
-		
+
+    // We need to calculate a few more values here that would normally
+    // be calculated by the FDM so that the v->UpdateViewMath()
+    // routine doesn't get hosed.
+
+    double sea_level_radius_meters;
+    double lat_geoc;
+    // Set the FG variables first
+    fgGeodToGeoc( f->get_Latitude(), f->get_Altitude(), 
+		  &sea_level_radius_meters, &lat_geoc);
+    f->set_Geocentric_Position( lat_geoc, f->get_Longitude(), 
+				f->get_Altitude() + 
+				(sea_level_radius_meters * METER_TO_FEET) );
+    f->set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET );
+
     // The following section sets up the flight model EOM parameters
     // and should really be read in from one or more files.
 
@@ -370,6 +385,14 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.57  1998/12/06 14:52:56  curt
+// Fixed a problem with the initial starting altitude.  "v->abs_view_pos" wasn't
+// being calculated correctly at the beginning causing the first terrain
+// intersection to fail, returning a ground altitude of zero, causing the plane
+// to free fall for one frame, until the ground altitude was corrected, but now
+// being under the ground we got a big bounce and the plane always ended up
+// upside down.
+//
 // Revision 1.56  1998/12/06 13:51:23  curt
 // Turned "struct fgWEATHER" into "class FGWeather".
 //

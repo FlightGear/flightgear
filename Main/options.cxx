@@ -414,7 +414,11 @@ int fgOPTIONS::parse_option( const string& arg ) {
     } else if ( arg.find( "--lat=" ) != string::npos ) {
 	lat = parse_degree( arg.substr(6) );
     } else if ( arg.find( "--altitude=" ) != string::npos ) {
-	altitude = atof( arg.substr(11) );
+	if ( units == FG_UNITS_FEET ) {
+	    altitude = atof( arg.substr(11) ) * FEET_TO_METER;
+	} else {
+	    altitude = atof( arg.substr(11) );
+	}
     } else if ( arg.find( "--heading=" ) != string::npos ) {
 	heading = atof( arg.substr(10) );
     } else if ( arg.find( "--roll=" ) != string::npos ) {
@@ -579,7 +583,8 @@ void fgOPTIONS::usage ( void ) {
     printf("\t--airport-id=ABCD:  specify starting postion by airport id\n");
     printf("\t--lon=degrees:  starting longitude in degrees (west = -)\n");
     printf("\t--lat=degrees:  starting latitude in degrees (south = -)\n");
-    printf("\t--altitude=meters:  starting altitude in meters\n");
+    printf("\t--altitude=feet:  starting altitude in feet\n");
+    printf("\t\t(unless --units-meters specified\n");
     printf("\t--heading=degrees:  heading (yaw) angle in degress (Psi)\n");
     printf("\t--roll=degrees:  roll angle in degrees (Phi)\n");
     printf("\t--pitch=degrees:  pitch angle in degrees (Theta)\n");
@@ -624,6 +629,14 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.35  1998/12/06 14:52:57  curt
+// Fixed a problem with the initial starting altitude.  "v->abs_view_pos" wasn't
+// being calculated correctly at the beginning causing the first terrain
+// intersection to fail, returning a ground altitude of zero, causing the plane
+// to free fall for one frame, until the ground altitude was corrected, but now
+// being under the ground we got a big bounce and the plane always ended up
+// upside down.
+//
 // Revision 1.34  1998/12/05 15:54:22  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

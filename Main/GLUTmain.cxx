@@ -474,10 +474,10 @@ static void fgMainLoop( void ) {
     // Fix elevation.  I'm just sticking this here for now, it should
     // probably move eventually
 
-    printf("Before - ground = %.2f  runway = %.2f  alt = %.2f\n",
+    /* printf("Before - ground = %.2f  runway = %.2f  alt = %.2f\n",
 	   scenery.cur_elev,
 	   f->get_Runway_altitude() * FEET_TO_METER,
-	   f->get_Altitude() * FEET_TO_METER);
+	   f->get_Altitude() * FEET_TO_METER); */
 
     if ( scenery.cur_elev > -9990 ) {
 	if ( f->get_Altitude() * FEET_TO_METER < 
@@ -498,10 +498,10 @@ static void fgMainLoop( void ) {
 	f->set_Runway_altitude( scenery.cur_elev * METER_TO_FEET );
     }
 
-    printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
+    /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
 	   scenery.cur_elev,
 	   f->get_Runway_altitude() * FEET_TO_METER,
-	   f->get_Altitude() * FEET_TO_METER);
+	   f->get_Altitude() * FEET_TO_METER); */
 
     // update "time"
     fgTimeUpdate(f, t);
@@ -1012,6 +1012,14 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.74  1998/12/06 14:52:54  curt
+// Fixed a problem with the initial starting altitude.  "v->abs_view_pos" wasn't
+// being calculated correctly at the beginning causing the first terrain
+// intersection to fail, returning a ground altitude of zero, causing the plane
+// to free fall for one frame, until the ground altitude was corrected, but now
+// being under the ground we got a big bounce and the plane always ended up
+// upside down.
+//
 // Revision 1.73  1998/12/06 13:51:22  curt
 // Turned "struct fgWEATHER" into "class FGWeather".
 //
