@@ -121,6 +121,79 @@ set_translation (sgMat4 &matrix, double position_m, sgVec3 &axis)
   sgMakeTransMat4(matrix, xyz);
 }
 
+/**
+ * make model transformation Matrix - based on optimizations by NHV
+ */
+static void MakeTRANS( sgMat4 dst, const double Theta,
+			const double Phi, const double Psi, 
+                        const double lon, const double lat)
+{
+    SGfloat cosTheta = (SGfloat) cos(Theta);
+    SGfloat sinTheta = (SGfloat) sin(Theta);
+    SGfloat cosPhi   = (SGfloat) cos(Phi);
+    SGfloat sinPhi   = (SGfloat) sin(Phi);
+    SGfloat sinPsi   = (SGfloat) sin(Psi) ;
+    SGfloat cosPsi   = (SGfloat) cos(Psi) ;
+
+    SGfloat cosLon = SGD_ONE;
+    SGfloat sinLon = SGD_ZERO;
+    SGfloat cosLat = SGD_ONE;
+    SGfloat sinLat = SGD_ZERO;
+
+    if ( lon != SG_ZERO ) { 
+      sinLon = (SGfloat) sin( lon ) ;
+      cosLon = (SGfloat) cos( lon ) ;
+    }
+    if ( lat != SG_ZERO ) {
+      sinLat   = (SGfloat) sin( lat ) ;
+      cosLat   = (SGfloat) cos( lat ) ;
+    }
+
+
+    sgMat4 tmp;
+	
+    tmp[0][0] = cosPhi * cosTheta;
+    tmp[0][1] =	sinPhi * cosPsi + cosPhi * -sinTheta * -sinPsi;
+    tmp[0][2] =	sinPhi * sinPsi + cosPhi * -sinTheta * cosPsi;
+
+    tmp[1][0] = -sinPhi * cosTheta;
+    tmp[1][1] =	cosPhi * cosPsi + -sinPhi * -sinTheta * -sinPsi;
+    tmp[1][2] =	cosPhi * sinPsi + -sinPhi * -sinTheta * cosPsi;
+	
+    tmp[2][0] = sinTheta;
+    tmp[2][1] =	cosTheta * -sinPsi;
+    tmp[2][2] =	cosTheta * cosPsi;
+	
+    float a = cosLon * cosLat;  // world up [0]
+    float b = -sinLon;
+    float c = sinLat * cosLon;
+    dst[2][0] = a*tmp[0][0] + b*tmp[0][1] + c*tmp[0][2] ;
+    dst[1][0] = a*tmp[1][0] + b*tmp[1][1] + c*tmp[1][2] ;
+    dst[0][0] = -(a*tmp[2][0] + b*tmp[2][1] + c*tmp[2][2]) ;
+    dst[3][0] = SG_ZERO ;
+
+    a = cosLat * sinLon;  // world up [1]
+    b = cosLon;
+    c = sinLat * sinLon;
+    dst[2][1] = a*tmp[0][0] + b*tmp[0][1] + c*tmp[0][2] ;
+    dst[1][1] = a*tmp[1][0] + b*tmp[1][1] + c*tmp[1][2] ;
+    dst[0][1] = -(a*tmp[2][0] + b*tmp[2][1] + c*tmp[2][2]) ;
+    dst[3][1] = SG_ZERO ;
+
+    a = -sinLat;  // world up [2]
+    c = cosLat;
+    dst[2][2] = a*tmp[0][0] + c*tmp[0][2] ;
+    dst[1][2] = a*tmp[1][0] + c*tmp[1][2] ;
+    dst[0][2] = -(a*tmp[2][0] + c*tmp[2][2]) ;
+    dst[3][2] = SG_ZERO ;
+
+    dst[2][3] = SG_ZERO ;
+    dst[1][3] = SG_ZERO ;
+    dst[0][3] = SG_ZERO ;
+    dst[3][3] = SG_ONE ;
+
+}
+
 
 // TODO: once this is working, look at Norm's optimized version
 static void
@@ -152,25 +225,14 @@ world_coordinate( sgCoord *obj_pos,
   sgMat4 POS;
   sgMakeTransMat4( POS, offset.x(), offset.y(), offset.z() );
 
-  // setup transforms
-  sgVec3 obj_bk, obj_rt, obj_up;
-  sgSetVec3( obj_bk, 1.0, 0.0, 0.0); // X axis
-  sgSetVec3( obj_rt, 0.0, 1.0, 0.0); // Y axis
-  sgSetVec3( obj_up, 0.0, 0.0, 1.0); // Z axis
-
-  sgMat4 ROT_lon, ROT_lat, ROT_hdg, ROT_pitch, ROT_roll;
-  sgMakeRotMat4( ROT_lon, lon_deg, obj_up );
-  sgMakeRotMat4( ROT_lat, 90 - lat_deg, obj_rt );
-  sgMakeRotMat4( ROT_hdg, -hdg_deg, obj_up );
-  sgMakeRotMat4( ROT_pitch, pitch_deg, obj_rt );
-  sgMakeRotMat4( ROT_roll, -roll_deg, obj_bk );
-
   sgMat4 TRANS;
-  sgCopyMat4( TRANS, ROT_roll );
-  sgPostMultMat4( TRANS, ROT_pitch );
-  sgPostMultMat4( TRANS, ROT_hdg );
-  sgPostMultMat4( TRANS, ROT_lat );
-  sgPostMultMat4( TRANS, ROT_lon );
+
+  MakeTRANS( TRANS, pitch_deg * SG_DEGREES_TO_RADIANS, 
+                    roll_deg * SG_DEGREES_TO_RADIANS,
+                    -hdg_deg * SG_DEGREES_TO_RADIANS, 
+                    lon_deg * SG_DEGREES_TO_RADIANS, 
+                    -lat_deg * SG_DEGREES_TO_RADIANS );
+
   sgPostMultMat4( TRANS, POS );
 
   sgSetCoord( obj_pos, TRANS );
@@ -608,3 +670,5 @@ FG3DModel::TranslateAnimation::update (int dt)
 
 
 // end of model.cxx
+
+
