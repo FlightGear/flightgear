@@ -31,6 +31,7 @@
 #include <simgear/compiler.h>
 
 #include <simgear/math/interpolater.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
@@ -133,6 +134,11 @@ class FGRadioStack : public FGSubsystem
     bool middle_marker;
     bool inner_marker;
 
+    SGTimeStamp blink;
+    bool outer_blink;
+    bool middle_blink;
+    bool inner_blink;
+
     string adf_ident;
     string adf_trans_ident;
     bool adf_valid;
@@ -232,6 +238,11 @@ public:
     inline double get_adf_freq () const { return adf_freq; }
     inline double get_adf_alt_freq () const { return adf_alt_freq; }
     inline double get_adf_rotation () const { return adf_rotation; }
+
+    // Marker Beacon Accessors
+    inline bool get_inner_blink () const { return inner_blink; }
+    inline bool get_middle_blink () const { return middle_blink; }
+    inline bool get_outer_blink () const { return outer_blink; }
 
     // Calculated values.
     inline bool get_nav1_inrange() const { return nav1_inrange; }

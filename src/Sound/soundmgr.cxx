@@ -126,7 +126,7 @@ bool FGSoundMgr::update() {
     if ( safety > 0.5 ) {
 	safety = 0.5;
     }
-    cout << "safety = " << safety << endl;
+    // cout << "safety = " << safety << endl;
     audio_sched -> setSafetyMargin ( 2 * safety ) ;
 
     if ( !audio_sched->not_working() ) {

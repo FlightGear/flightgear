@@ -103,6 +103,7 @@ FGRadioStack::init ()
 {
     morse.init();
     beacon.init();
+    blink.stamp();
 
     search();
     update();
@@ -196,6 +197,13 @@ FGRadioStack::bind ()
     fgTie("/radios/adf/ident", this,
 	  &FGRadioStack::get_adf_ident_btn,
 	  &FGRadioStack::set_adf_ident_btn);
+
+    fgTie("/radios/marker-beacons/inner", this,
+	  &FGRadioStack::get_inner_blink);
+    fgTie("/radios/marker-beacons/middle", this,
+	  &FGRadioStack::get_middle_blink);
+    fgTie("/radios/marker-beacons/outer", this,
+	  &FGRadioStack::get_outer_blink);
 }
 
 void
@@ -234,6 +242,10 @@ FGRadioStack::unbind ()
     fgUntie("/radios/adf/rotation");
     fgUntie("/radios/adf/on");
     fgUntie("/radios/adf/ident");
+
+    fgUntie("/radios/marker-beacons/inner");
+    fgUntie("/radios/marker-beacons/middle");
+    fgUntie("/radios/marker-beacons/outer");
 }
 
 
@@ -545,6 +557,39 @@ FGRadioStack::update()
 	    globals->get_soundmgr()->stop( "adf-ident" );
 	}
     }
+
+    // marker beacon blinking
+    bool light_on = ( outer_blink || middle_blink || inner_blink );
+    SGTimeStamp current;
+    current.stamp();
+
+    if ( light_on && (current - blink > 400000) ) {
+	light_on = false;
+	blink.stamp();
+    } else if ( !light_on && (current - blink > 100000) ) {
+	light_on = true;
+	blink.stamp();
+    }
+
+    if ( outer_marker ) {
+	outer_blink = light_on;
+    } else {
+	outer_blink = false;
+    }
+
+    if ( middle_marker ) {
+	middle_blink = light_on;
+    } else {
+	middle_blink = false;
+    }
+
+    if ( inner_marker ) {
+	inner_blink = light_on;
+    } else {
+	inner_blink = false;
+    }
+
+    cout << outer_blink << " " << middle_blink << " " << inner_blink << endl;
 }
 
 
@@ -817,7 +862,7 @@ void FGRadioStack::search()
 
     if ( beacon_type == FGMkrBeacon::OUTER ) {
 	outer_marker = true;
-	cout << "OUTER MARKER" << endl;
+	// cout << "OUTER MARKER" << endl;
 	if ( last_beacon != FGMkrBeacon::OUTER ) {
 	    if ( ! globals->get_soundmgr()->exists( "outer-marker" ) ) {
 		FGSimpleSound *sound = beacon.get_outer();
@@ -830,7 +875,7 @@ void FGRadioStack::search()
 	}
     } else if ( beacon_type == FGMkrBeacon::MIDDLE ) {
 	middle_marker = true;
-	cout << "MIDDLE MARKER" << endl;
+	// cout << "MIDDLE MARKER" << endl;
 	if ( last_beacon != FGMkrBeacon::MIDDLE ) {
 	    if ( ! globals->get_soundmgr()->exists( "middle-marker" ) ) {
 		FGSimpleSound *sound = beacon.get_middle();
@@ -843,7 +888,7 @@ void FGRadioStack::search()
 	}
     } else if ( beacon_type == FGMkrBeacon::INNER ) {
 	inner_marker = true;
-	cout << "INNER MARKER" << endl;
+	// cout << "INNER MARKER" << endl;
 	if ( last_beacon != FGMkrBeacon::INNER ) {
 	    if ( ! globals->get_soundmgr()->exists( "inner-marker" ) ) {
 		FGSimpleSound *sound = beacon.get_inner();
@@ -855,7 +900,7 @@ void FGRadioStack::search()
 	    }
 	}
     } else {
-	cout << "no marker" << endl;
+	// cout << "no marker" << endl;
 	globals->get_soundmgr()->stop( "outer-marker" );
 	globals->get_soundmgr()->stop( "middle-marker" );
 	globals->get_soundmgr()->stop( "inner-marker" );

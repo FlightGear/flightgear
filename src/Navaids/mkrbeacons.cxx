@@ -204,14 +204,14 @@ FGMkrBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
 	// match up to twice the published range so we can model
 	// reduced signal strength
 	if ( d < maxrange2 ) {
-	    cout << "lon = " << lon << " lat = " << lat
-	         << "  closest beacon = " << sqrt( min_dist ) << endl;
+	    // cout << "lon = " << lon << " lat = " << lat
+	    //      << "  closest beacon = " << sqrt( min_dist ) << endl;
 	    return current->get_type();
 	}
     }
 
-    cout << "lon = " << lon << " lat = " << lat
-         << "  closest beacon = " << sqrt( min_dist ) << endl;
+    // cout << "lon = " << lon << " lat = " << lat
+    //      << "  closest beacon = " << sqrt( min_dist ) << endl;
 
     return FGMkrBeacon::NOBEACON;
 }
