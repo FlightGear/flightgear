@@ -5,7 +5,7 @@ dnl
 AC_INIT(Simulator/Aircraft/aircraft.c)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.41)
+AM_INIT_AUTOMAKE(FlightGear, 0.42)
 
 dnl Checks for programs.
 
@@ -42,6 +42,9 @@ AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(X11, XCreateWindow)
 AC_CHECK_LIB(Xext, XShmCreateImage)
 AC_CHECK_LIB(Xi, XGetExtensionVersion)
+AC_CHECK_LIB(ICE, IceOpenConnection)
+AC_CHECK_LIB(SM, SmcOpenConnection)
+AC_CHECK_LIB(Xt, XtMalloc)
 AC_CHECK_LIB(Xmu, XmuLookupStandardColormap)
 
 AC_CHECK_LIB(GLcore, glNewList)
@@ -122,33 +125,35 @@ if test "x$ac_cv_lib_glut_glutGetModifiers" = "xno"; then
     exit 1
 fi
 
-AM_CONFIG_HEADER(Simulator/Include/config.h)
+AM_CONFIG_HEADER(Include/config.h)
 
 AC_OUTPUT( \
 	Makefile \
+	Include/Makefile \
+	Lib/Makefile \
+	Lib/Bucket/Makefile \
+	Lib/DEM/Makefile \
+	Lib/XGL/Makefile \
 	Simulator/Makefile \
 	Simulator/Aircraft/Makefile \
 	Simulator/Astro/Makefile \
+	Simulator/Autopilot/Makefile \
 	Simulator/Cockpit/Makefile \
 	Simulator/Controls/Makefile \
 	Simulator/Flight/LaRCsim/Makefile \
 	Simulator/Flight/Slew/Makefile \
 	Simulator/Flight/Makefile \
-	Simulator/Include/Makefile \
 	Simulator/Joystick/Makefile \
 	Simulator/Main/Makefile \
 	Simulator/Main/runfg \
 	Simulator/Main/runfg.bat \
 	Simulator/Makefile \
 	Simulator/Math/Makefile \
-	Simulator/Scenery/Bucket/Makefile \
 	Simulator/Scenery/Makefile \
 	Simulator/Time/Makefile \
 	Simulator/Weather/Makefile \
-	Simulator/XGL/Makefile \
 	Tools/Makefile \
 	Tools/AssemTris/Makefile \
-	Tools/DEM/Makefile \
 	Tools/Dem2node/Makefile \
 	Tools/FixNode/Makefile \
 	Tools/FixObj/Makefile \

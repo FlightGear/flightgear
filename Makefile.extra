@@ -8,7 +8,10 @@ ROOT=fg-$(VERSION)
 
 # clean up dependencies
 clean-deps:
-	rm -rf .deps Src/.deps Src/*/.deps Src/*/*/.deps
+	rm -rf .deps \
+	Lib/.deps Simulator/.deps Tools/.deps \
+	Lib/*/.deps Simulator/*/.deps Tools/*/.deps \
+	Lib/*/*/.deps Simulator/*/*/.deps Tools/*/*/.deps
 
 clean-libs:
 	rm -rf .libs Src/.libs Src/*/.libs Src/*/*/.libs
