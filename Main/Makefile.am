@@ -53,13 +53,15 @@ fgfs_LDADD = \
 	$(top_builddir)/Simulator/Time/libTime.a \
 	$(top_builddir)/Simulator/Weather/libWeather.a \
 	$(top_builddir)/Simulator/Joystick/libJoystick.a \
-	 $(AUDIO_LIBS) \
+	$(AUDIO_LIBS) \
 	$(top_builddir)/Lib/Math/libMath.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Debug/libDebug.a \
 	$(top_builddir)/Lib/PUI/libPUI.a \
 	$(top_builddir)/Lib/zlib/libz.a \
-	$(top_builddir)/Lib/Misc/libMisc.a
+	$(top_builddir)/Lib/Misc/libMisc.a \
+	$(opengl_LIBS) \
+	$(base_LIBS)
 
 INCLUDES += \
 	-I$(top_builddir) \
