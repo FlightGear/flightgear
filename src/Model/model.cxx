@@ -229,9 +229,15 @@ fgLoad3DModel (const string &path)
   SGPropertyNode props;
 
                                 // Load the 3D aircraft object itself
-  SGPath xmlpath = globals->get_fg_root();
+  SGPath xmlpath;
   SGPath modelpath = path;
-  xmlpath.append(modelpath.str());
+  if ( path[ 0 ] == '/' || path[ 0 ] == '\\' || ( isalpha( path[ 0 ] ) && path[ 1 ] == ':' ) ) {
+    xmlpath = modelpath;
+  }
+  else {
+    xmlpath = globals->get_fg_root();
+    xmlpath.append(modelpath.str());
+  }
 
                                 // Check for an XML wrapper
   if (xmlpath.str().substr(xmlpath.str().size() - 4, 4) == ".xml") {
