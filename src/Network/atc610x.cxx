@@ -949,7 +949,7 @@ bool FGATC610x::do_radio_switches() {
     fgSetInt( "/radios/kt-70/inputs/digit4", digit[3] );
 
     int tmp = 0;
-    for ( int i = 0; i < 5; ++i ) {
+    for ( i = 0; i < 5; ++i ) {
         if ( radio_switch_data[27] >> i & 0x01 ) {
             tmp = i + 1;
         }
@@ -1162,22 +1162,22 @@ bool FGATC610x::do_radio_display() {
             min = (int)(time / 60.0);
             time -= min * 60.0;
             sec = (int)time;
-            int big, small;
+            int big, little;
             if ( hours > 0 ) {
                 big = hours;
                 if ( big > 99 ) {
                     big = 99;
                 }
-                small = min;
+                little = min;
             } else {
                 big = min;
-                small = sec;
+                little = sec;
             }
             if ( big > 99 ) {
                 big = 99;
             }
-            // cout << big << ":" << small << endl;
-            sprintf(digits, "%02d%02d", big, small);
+            // cout << big << ":" << little << endl;
+            sprintf(digits, "%02d%02d", big, little);
             for ( i = 0; i < 6; ++i ) {
                 digits[i] -= '0';
             }
