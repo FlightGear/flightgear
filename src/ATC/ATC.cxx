@@ -51,6 +51,8 @@ FGATC::FGATC() {
 	_transmitting = false;
 	_counter = 0.0;
 	_max_count = 5.0;
+	
+	_voiceOK = false;
 }
 
 FGATC::~FGATC() {
@@ -105,8 +107,9 @@ void FGATC::Update(double dt) {
 		//cout << "Transmission = " << pending_transmission << '\n';
 		if(_display) {
 			//Render(pending_transmission, ident, false);
+			Render(pending_transmission);
 			// At the moment Render only works for ATIS
-			globals->get_ATC_display()->RegisterSingleMessage(pending_transmission);
+			//globals->get_ATC_display()->RegisterSingleMessage(pending_transmission);
 		}
 		// Run the callback regardless of whether on same freq as user or not.
 		//cout << "_callback_code = " << _callback_code << '\n';
@@ -179,8 +182,9 @@ void FGATC::ImmediateTransmit(int callback_code) {
 	SG_LOG(SG_ATC, SG_INFO, "Immediate transmit called by " << ident << " " << _type << ", msg = " << pending_transmission);
 	if(_display) {
 		//Render(pending_transmission, ident, false);
+		Render(pending_transmission);
 		// At the moment Render doesn't work except for ATIS
-		globals->get_ATC_display()->RegisterSingleMessage(pending_transmission);
+		//globals->get_ATC_display()->RegisterSingleMessage(pending_transmission);
 	}
 	if(callback_code) {
 		ProcessCallback(callback_code);
@@ -217,11 +221,11 @@ void FGATC::SetData(ATCData* d) {
 // The repeating flag indicates whether the message should be repeated continuously or played once.
 void FGATC::Render(string msg, string refname, bool repeating) {
 	#ifdef ENABLE_AUDIO_SUPPORT
-	voice = (voiceOK && fgGetBool("/sim/sound/voice"));
-	if(voice) {
+	_voice = (_voiceOK && fgGetBool("/sim/sound/voice"));
+	if(_voice) {
 		int len;
-		unsigned char* buf = vPtr->WriteMessage((char*)msg.c_str(), len, voice);
-		if(voice) {
+		unsigned char* buf = _vPtr->WriteMessage((char*)msg.c_str(), len, _voice);
+		if(_voice) {
 			SGSoundSample *simple
                             = new SGSoundSample(buf, len, 8000, false);
 			// TODO - at the moment the volume is always set off comm1 
@@ -237,23 +241,27 @@ void FGATC::Render(string msg, string refname, bool repeating) {
 		delete[] buf;
 	}
 	#endif	// ENABLE_AUDIO_SUPPORT
-	if(!voice) {
+	if(!_voice) {
 		// first rip the underscores and the pause hints out of the string - these are for the convienience of the voice parser
 		for(unsigned int i = 0; i < msg.length(); ++i) {
 			if((msg.substr(i,1) == "_") || (msg.substr(i,1) == "/")) {
 				msg[i] = ' ';
 			}
 		}
-		globals->get_ATC_display()->RegisterRepeatingMessage(msg);
+		if(repeating) {
+			globals->get_ATC_display()->RegisterRepeatingMessage(msg);
+		} else {
+			globals->get_ATC_display()->RegisterSingleMessage(msg);
+		}
 	}
-	playing = true;	
+	_playing = true;	
 }
 
 
 // Cease rendering a transmission.
 void FGATC::NoRender(string refname) {
-	if(playing) {
-		if(voice) {
+	if(_playing) {
+		if(_voice) {
 			#ifdef ENABLE_AUDIO_SUPPORT		
 			globals->get_soundmgr()->stop(refname);
 			globals->get_soundmgr()->remove(refname);
@@ -261,7 +269,7 @@ void FGATC::NoRender(string refname) {
 		} else {
 			globals->get_ATC_display()->CancelRepeatingMessage();
 		}
-		playing = false;
+		_playing = false;
 	}
 }
 

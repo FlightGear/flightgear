@@ -56,8 +56,8 @@ FGATIS::FGATIS() :
 	refname("atis")
 	//type(ATIS)
 {
-	vPtr = globals->get_ATC_mgr()->GetVoicePointer(ATIS);
-	voiceOK = (vPtr == NULL ? false : true);
+	_vPtr = globals->get_ATC_mgr()->GetVoicePointer(ATIS);
+	_voiceOK = (_vPtr == NULL ? false : true);
 	_type = ATIS;
 }
 

@@ -180,9 +180,9 @@ protected:
 	// Outputs the transmission either on screen or as audio depending on user preference
 	// The refname is a string to identify this sample to the sound manager
 	// The repeating flag indicates whether the message should be repeated continuously or played once.
-	void Render(string msg, string refname, bool repeating);
+	void Render(string msg, string refname = "", bool repeating = false);
 	
-	// Cease rendering a transmission.
+	// Cease rendering all transmission from this station.
 	// Requires the sound manager refname if audio, else "".
 	void NoRender(string refname);
 	
@@ -206,10 +206,10 @@ protected:
 	atc_type _type;
 	
 	// Rendering related stuff
-	bool voice;			// Flag - true if we are using voice
-	bool playing;		// Indicates a message in progress	
-	bool voiceOK;		// Flag - true if at least one voice has loaded OK
-	FGATCVoice* vPtr;
+	bool _voice;			// Flag - true if we are using voice
+	bool _playing;		// Indicates a message in progress	
+	bool _voiceOK;		// Flag - true if at least one voice has loaded OK
+	FGATCVoice* _vPtr;
 
 	string pending_transmission;	// derived classes set this string before calling Transmit(...)	
 	bool freqClear;		// Flag to indicate if the frequency is clear of ongoing dialog

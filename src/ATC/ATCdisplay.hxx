@@ -56,7 +56,7 @@ private:
     bool rep_msg;		// Flag to indicate there is a repeating transmission to display
     bool change_msg_flag;	// Flag to indicate that the repeating message has changed
     double dsp_offset1;		// Used to set the correct position of scrolling display
-    double dsp_offset2;	
+    double dsp_offset2;
     string rep_msg_str;		// The repeating transmission to play
     atcMessageList msgList;
     atcMessageListIterator msgList_itr;

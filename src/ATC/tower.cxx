@@ -508,7 +508,9 @@ void FGTower::Respond() {
 			}
 			trns += ConvertRwyNumToSpokenString(activeRwy);
 			if(_display) {
-				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+				//globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+				pending_transmission = trns;
+				Transmit();
 			} else {
 				//cout << "Not displaying, trns was " << trns << '\n';
 			}
@@ -543,7 +545,9 @@ void FGTower::Respond() {
 				string trns = t->plane.callsign;
 				trns += " hold position";
 				if(_display) {
-					globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+					//globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+					pending_transmission = trns;
+					Transmit();
 				}
 				// TODO - add some idea of what traffic is blocking him.
 			}
@@ -581,7 +585,9 @@ void FGTower::Respond() {
 				t->clearedToLand = false;
 			}
 			if(_display && disp) {
-				globals->get_ATC_display()->RegisterSingleMessage(trns);
+				//globals->get_ATC_display()->RegisterSingleMessage(trns);
+				pending_transmission = trns;
+				Transmit();
 			}
 			t->finalAcknowledged = true;
 		} else if(t->rwyVacatedReported && !(t->rwyVacatedAcknowledged)) {
@@ -676,7 +682,9 @@ void FGTower::ProcessDownwindReport(TowerPlaneRec* t) {
 		}
 	}
 	if(_display) {
-		globals->get_ATC_display()->RegisterSingleMessage(trns);
+		//globals->get_ATC_display()->RegisterSingleMessage(trns);
+		pending_transmission = trns;
+		Transmit();
 	}
 	if(t->isUser) {
 		if(t->opType == TTT_UNKNOWN) t->opType = CIRCUIT;
@@ -708,7 +716,9 @@ void FGTower::ProcessRunwayVacatedReport(TowerPlaneRec* t) {
 	}
 	//cout << "trns = " << trns << '\n';
 	if(_display) {
-		globals->get_ATC_display()->RegisterSingleMessage(trns);
+		//globals->get_ATC_display()->RegisterSingleMessage(trns);
+		pending_transmission = trns;
+		Transmit();
 	}
 	RemoveFromRwyList(t->plane.callsign);
 	AddToVacatedList(t);
@@ -819,7 +829,9 @@ void FGTower::ClearHoldingPlane(TowerPlaneRec* t) {
 		timeSinceLastDeparture = 0.0;
 	}
 	if(_display) {
-		globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+		//globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+		pending_transmission = trns;
+		Transmit();
 	}
 	//cout << "Done ClearHoldingPlane " << endl;
 }

@@ -404,6 +404,7 @@ void FGATCDialog::PopupCallback() {
 				//cout << "Doing callback...\n";
 				ATCMenuEntry a = atcmlist[atcDialogCommunicationOptions->getValue()];
 				atcptr->SetFreqInUse();
+				// This is the user's speech getting displayed.
 				globals->get_ATC_display()->RegisterSingleMessage(atcptr->GenText(a.transmission, a.callback_code));
 				_callbackPending = true;
 				_callbackTimer = 0.0;
