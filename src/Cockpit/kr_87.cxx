@@ -56,10 +56,10 @@ static double kludgeRange ( double stationElev, double aircraftElev,
   double range = fabs(nominalRange * factor);
 
 				// Clamp the range to keep it sane; for
-				// now, never less than 25% or more than
+				// now, never less than 50% or more than
 				// 500% of nominal range.
-  if (range < nominalRange/4.0) {
-    range = nominalRange/4.0;
+  if (range < nominalRange/2.0) {
+    range = nominalRange/2.0;
   } else if (range > nominalRange*5.0) {
     range = nominalRange*5.0;
   }
@@ -131,52 +131,52 @@ void
 FGKR_87::bind ()
 {
 				// User inputs
-    fgTie("/radios/adf/frequencies/selected-khz", this,
+    fgTie("/radios/kr-87/frequencies/selected-khz", this,
 	  &FGKR_87::get_freq, &FGKR_87::set_freq);
-    fgSetArchivable("/radios/adf/frequencies/selected-khz");
-    fgTie("/radios/adf/frequencies/standby-khz", this,
+    fgSetArchivable("/radios/kr-87/frequencies/selected-khz");
+    fgTie("/radios/kr-87/frequencies/standby-khz", this,
 	  &FGKR_87::get_stby_freq, &FGKR_87::set_stby_freq);
-    fgSetArchivable("/radios/adf/frequencies/standby-khz");
-    fgTie("/radios/adf/rotation-deg", this,
+    fgSetArchivable("/radios/kr-87/frequencies/standby-khz");
+    fgTie("/radios/kr-87/rotation-deg", this,
 	  &FGKR_87::get_rotation, &FGKR_87::set_rotation);
-    fgSetArchivable("/radios/adf/rotation-deg");
-    fgTie("/radios/adf/needle-deg", this,
+    fgSetArchivable("/radios/kr-87/rotation-deg");
+    fgTie("/radios/kr-87/needle-deg", this,
 	  &FGKR_87::get_needle_deg);
-    fgTie("/radios/adf/on-off-volume", this,
+    fgTie("/radios/kr-87/on-off-volume", this,
 	  &FGKR_87::get_on_off_vol_btn,
 	  &FGKR_87::set_on_off_vol_btn);
-    fgSetArchivable("/radios/adf/on-off-volume");
-    fgTie("/radios/adf/adf-btn", this,
+    fgSetArchivable("/radios/kr-87/on-off-volume");
+    fgTie("/radios/kr-87/adf-btn", this,
 	  &FGKR_87::get_adf_btn,
 	  &FGKR_87::set_adf_btn);
-    fgTie("/radios/adf/bfo-btn", this,
+    fgTie("/radios/kr-87/bfo-btn", this,
 	  &FGKR_87::get_bfo_btn,
 	  &FGKR_87::set_bfo_btn);
-    fgTie("/radios/adf/frq-btn", this,
+    fgTie("/radios/kr-87/frq-btn", this,
 	  &FGKR_87::get_frq_btn,
 	  &FGKR_87::set_frq_btn);
-    fgTie("/radios/adf/flt-et-btn", this,
+    fgTie("/radios/kr-87/flt-et-btn", this,
 	  &FGKR_87::get_flt_et_btn,
 	  &FGKR_87::set_flt_et_btn);
-    fgTie("/radios/adf/set-rst-btn", this,
+    fgTie("/radios/kr-87/set-rst-btn", this,
 	  &FGKR_87::get_set_rst_btn,
 	  &FGKR_87::set_set_rst_btn);
-    fgTie("/radios/adf/stby-mode", this,
+    fgTie("/radios/kr-87/stby-mode", this,
 	  &FGKR_87::get_stby_mode);
-    fgTie("/radios/adf/timer-mode", this,
+    fgTie("/radios/kr-87/timer-mode", this,
 	  &FGKR_87::get_timer_mode);
-    fgTie("/radios/adf/count-mode", this,
+    fgTie("/radios/kr-87/count-mode", this,
 	  &FGKR_87::get_count_mode);
-    fgTie("/radios/adf/ident", this,
+    fgTie("/radios/kr-87/ident", this,
 	  &FGKR_87::get_ident_btn,
 	  &FGKR_87::set_ident_btn);
-    fgSetArchivable("/radios/adf/ident");
+    fgSetArchivable("/radios/kr-87/ident");
 
                                 // calculated values
-    fgTie("/radios/adf/inrange", this, &FGKR_87::get_inrange);
-    fgTie("/radios/adf/heading", this, &FGKR_87::get_heading);
-    fgTie("/radios/adf/flight-timer", this, &FGKR_87::get_flight_timer);
-    fgTie("/radios/adf/elapsed-timer", this,
+    fgTie("/radios/kr-87/inrange", this, &FGKR_87::get_inrange);
+    fgTie("/radios/kr-87/heading", this, &FGKR_87::get_heading);
+    fgTie("/radios/kr-87/flight-timer", this, &FGKR_87::get_flight_timer);
+    fgTie("/radios/kr-87/elapsed-timer", this,
           &FGKR_87::get_elapsed_timer,
           &FGKR_87::set_elapsed_timer);
 }
@@ -184,23 +184,23 @@ FGKR_87::bind ()
 void
 FGKR_87::unbind ()
 {
-    fgUntie("/radios/adf/frequencies/selected-khz");
-    fgUntie("/radios/adf/frequencies/standby-khz");
-    fgUntie("/radios/adf/rotation-deg");
-    fgUntie("/radios/adf/needle-deg");
-    fgUntie("/radios/adf/on-off-volume");
-    fgUntie("/radios/adf/adf-btn");
-    fgUntie("/radios/adf/bfo-btn");
-    fgUntie("/radios/adf/frq-btn");
-    fgUntie("/radios/adf/flt-et-btn");
-    fgUntie("/radios/adf/set-rst-btn");
-    fgUntie("/radios/adf/timer-mode");
-    fgUntie("/radios/adf/count-mode");
-    fgUntie("/radios/adf/ident");
-    fgUntie("/radios/adf/inrange");
-    fgUntie("/radios/adf/heading");
-    fgUntie("/radios/adf/flight-timer");
-    fgUntie("/radios/adf/elapsed-timer");
+    fgUntie("/radios/kr-87/frequencies/selected-khz");
+    fgUntie("/radios/kr-87/frequencies/standby-khz");
+    fgUntie("/radios/kr-87/rotation-deg");
+    fgUntie("/radios/kr-87/needle-deg");
+    fgUntie("/radios/kr-87/on-off-volume");
+    fgUntie("/radios/kr-87/adf-btn");
+    fgUntie("/radios/kr-87/bfo-btn");
+    fgUntie("/radios/kr-87/frq-btn");
+    fgUntie("/radios/kr-87/flt-et-btn");
+    fgUntie("/radios/kr-87/set-rst-btn");
+    fgUntie("/radios/kr-87/timer-mode");
+    fgUntie("/radios/kr-87/count-mode");
+    fgUntie("/radios/kr-87/ident");
+    fgUntie("/radios/kr-87/inrange");
+    fgUntie("/radios/kr-87/heading");
+    fgUntie("/radios/kr-87/flight-timer");
+    fgUntie("/radios/kr-87/elapsed-timer");
 }
 
 

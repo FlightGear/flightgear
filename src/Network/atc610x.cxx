@@ -396,16 +396,16 @@ bool FGATC610x::open() {
     nav2_stby_freq
 	= fgGetNode( "/radios/nav[1]/frequencies/standby-mhz", true );
 
-    adf_on_off_vol = fgGetNode( "/radios/adf/on-off-volume", true );
-    adf_adf_btn = fgGetNode( "/radios/adf/adf-btn", true );
-    adf_bfo_btn = fgGetNode( "/radios/adf/bfo-btn", true );
-    adf_freq = fgGetNode( "/radios/adf/frequencies/selected-khz", true );
-    adf_stby_freq = fgGetNode( "/radios/adf/frequencies/standby-khz", true );
-    adf_stby_mode = fgGetNode( "/radios/adf/stby-mode", true );
-    adf_timer_mode = fgGetNode( "/radios/adf/timer-mode", true );
-    adf_count_mode = fgGetNode( "/radios/adf/count-mode", true );
-    adf_flight_timer = fgGetNode( "/radios/adf/flight-timer", true );
-    adf_elapsed_timer = fgGetNode( "/radios/adf/elapsed-timer", true );
+    adf_on_off_vol = fgGetNode( "/radios/kr-87/on-off-volume", true );
+    adf_adf_btn = fgGetNode( "/radios/kr-87/adf-btn", true );
+    adf_bfo_btn = fgGetNode( "/radios/kr-87/bfo-btn", true );
+    adf_freq = fgGetNode( "/radios/kr-87/frequencies/selected-khz", true );
+    adf_stby_freq = fgGetNode( "/radios/kr-87/frequencies/standby-khz", true );
+    adf_stby_mode = fgGetNode( "/radios/kr-87/stby-mode", true );
+    adf_timer_mode = fgGetNode( "/radios/kr-87/timer-mode", true );
+    adf_count_mode = fgGetNode( "/radios/kr-87/count-mode", true );
+    adf_flight_timer = fgGetNode( "/radios/kr-87/flight-timer", true );
+    adf_elapsed_timer = fgGetNode( "/radios/kr-87/elapsed-timer", true );
 
     inner = fgGetNode( "/radios/marker-beacon/inner", true );
     middle = fgGetNode( "/radios/marker-beacon/middle", true );
@@ -472,7 +472,7 @@ bool FGATC610x::do_analog_in() {
 
     // adf volume
     tmp = (float)analog_in_data[26] / 1024.0f;
-    fgSetFloat( "/radios/adf/on-off-volume", tmp );
+    fgSetFloat( "/radios/kr-87/on-off-volume", tmp );
 
     // nav2 obs tuner
     tmp = (float)analog_in_data[29] * 360.0f / 1024.0f;
@@ -865,21 +865,21 @@ bool FGATC610x::do_radio_switches() {
     last_adf_tuner_coarse = adf_tuner_coarse;
 
     if ( adf_count_mode->getIntValue() == 2 ) {
-        fgSetFloat( "/radios/adf/elapsed-timer", value );
+        fgSetFloat( "/radios/kr-87/elapsed-timer", value );
     } else {
         if ( adf_stby_mode->getIntValue() == 1 ) {
-            fgSetFloat( "/radios/adf/frequencies/selected-khz", value );
+            fgSetFloat( "/radios/kr-87/frequencies/selected-khz", value );
         } else {
-            fgSetFloat( "/radios/adf/frequencies/standby-khz", value );
+            fgSetFloat( "/radios/kr-87/frequencies/standby-khz", value );
         }
     }
 
     // ADF Modes 
-    fgSetInt( "/radios/adf/adf-btn", !(radio_switch_data[23] & 0x01) );
-    fgSetInt( "/radios/adf/bfo-btn", !(radio_switch_data[23] >> 1 & 0x01) );
-    fgSetInt( "/radios/adf/frq-btn", !(radio_switch_data[23] >> 2 & 0x01) );
-    fgSetInt( "/radios/adf/flt-et-btn", !(radio_switch_data[23] >> 3 & 0x01) );
-    fgSetInt( "/radios/adf/set-rst-btn", !(radio_switch_data[23] >> 4 & 0x01) );
+    fgSetInt( "/radios/kr-87/adf-btn", !(radio_switch_data[23] & 0x01) );
+    fgSetInt( "/radios/kr-87/bfo-btn", !(radio_switch_data[23] >> 1 & 0x01) );
+    fgSetInt( "/radios/kr-87/frq-btn", !(radio_switch_data[23] >> 2 & 0x01) );
+    fgSetInt( "/radios/kr-87/flt-et-btn", !(radio_switch_data[23] >> 3 & 0x01) );
+    fgSetInt( "/radios/kr-87/set-rst-btn", !(radio_switch_data[23] >> 4 & 0x01) );
     /* cout << "adf = " << !(radio_switch_data[23] & 0x01)
          << " bfo = " << !(radio_switch_data[23] >> 1 & 0x01)
          << " stby = " << !(radio_switch_data[23] >> 2 & 0x01)

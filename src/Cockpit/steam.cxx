@@ -467,24 +467,4 @@ double FGSteam::get_HackOBS2_deg () {
 }
 
 
-#if 0
-double FGSteam::get_HackADF_deg () {
-    static SGPropertyNode *adf_inrange = fgGetNode("/radios/adf/inrange", true);
-    static SGPropertyNode *adf_heading = fgGetNode("/radios/adf/heading", true);
-    static double last_r = 0;
-
-    if ( adf_inrange->getBoolValue() ) {
-	double r = adf_heading->getDoubleValue()
-            - fgGetDouble("/orientation/heading-deg");
-	last_r = r;
-	// cout << "Radial = " << adf_heading->getDoubleValue() << endl;
-        // cout << "/orientation/heading-deg = "
-        //      << fgGetDouble("/orientation/heading-deg") << endl;
-	return r;
-    } else {
-	return last_r;
-    }
-}
-#endif
-
 // end of steam.cxx

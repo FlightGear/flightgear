@@ -81,7 +81,6 @@ public:
   // static double get_HackGS_deg ();
   // static double get_HackVOR2_deg ();
   static double get_HackOBS2_deg ();
-  // static double get_HackADF_deg ();
 
 
 private:
