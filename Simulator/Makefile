@@ -60,17 +60,20 @@ clean:
 
 tar: clean
 	(cd ../..; \
-	tar cvf prototype-$(VERSION).tar FlightGear/COPYING FlightGear/Docs \
+	tar cvf source-$(VERSION).tar FlightGear/COPYING FlightGear/Docs \
 	FlightGear/Src FlightGear/Thanks)
 
 zip: clean
 	(cd ../..; \
-	zip -r prototype-$(VERSION).zip FlightGear/COPYING FlightGear/Docs \
+	zip -r source-$(VERSION).zip FlightGear/COPYING FlightGear/Docs \
 	FlightGear/Src FlightGear/Thanks)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.24  1997/08/16 12:22:17  curt
+# Tweaks for new version.
+#
 # Revision 1.23  1997/08/13 20:22:55  curt
 # Renamed OpenGL/ to GLUT/
 #
