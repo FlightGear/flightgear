@@ -592,30 +592,47 @@ FGInput::_init_joystick ()
       center[j] = axis_node->getDoubleValue("center", center[j]);
 
       _read_bindings(axis_node, a.bindings, FG_MOD_NONE);
+
+      // Initialize the virtual axis buttons.
+      _init_button(axis_node->getChild("low"), a.low, "low");
+      a.low_threshold = axis_node->getDoubleValue("low-threshold", -0.9);
+      
+      _init_button(axis_node->getChild("high"), a.high, "high");
+      a.high_threshold = axis_node->getDoubleValue("high-threshold", 0.9);
     }
 
     //
     // Initialize the buttons.
     //
+    char buf[8];
     for (j = 0; j < nbuttons; j++) {
-      const SGPropertyNode * button_node = js_node->getChild("button", j);
-      if (button_node == 0) {
-	SG_LOG(SG_INPUT, SG_INFO, "No bindings for button " << j);
-	continue;
-      }
-
-      button &b = _joystick_bindings[i].buttons[j];
-      
-      b.is_repeatable =
-	button_node->getBoolValue("repeatable", b.is_repeatable);
-
-				// Get the bindings for the button
-      _read_bindings(button_node, b.bindings, FG_MOD_NONE);
+      sprintf(buf, "%d", j);
+      _init_button(js_node->getChild("button", j),
+		   _joystick_bindings[i].buttons[j],
+		   buf);
+		   
     }
 
     js->setMinRange(minRange);
     js->setMaxRange(maxRange);
     js->setCenter(center);
+  }
+}
+
+
+inline void
+FGInput::_init_button (const SGPropertyNode * node,
+		       button &b,
+		       const string name)
+{	
+  if (node == 0)
+    SG_LOG(SG_INPUT, SG_INFO, "No bindings for button " << name);
+  else {
+    _read_bindings(node, b.bindings, FG_MOD_NONE);
+    b.is_repeatable = node->getBoolValue("repeatable", b.is_repeatable);
+    
+    		// Get the bindings for the button
+    _read_bindings(node, b.bindings, FG_MOD_NONE);
   }
 }
 
@@ -663,32 +680,48 @@ FGInput::_update_joystick ()
 	for (unsigned int k = 0; k < a.bindings[modifiers].size(); k++)
 	  a.bindings[modifiers][k].fire(axis_values[j]);
       }
+     
+				// do we have to emulate axis buttons?
+      if (a.low.bindings[modifiers].size())
+	_update_button(_joystick_bindings[i].axes[j].low,
+		       modifiers,
+		       axis_values[j] < a.low_threshold);
+      
+      if (a.high.bindings[modifiers].size())
+	_update_button(_joystick_bindings[i].axes[j].high,
+		       modifiers,
+		       axis_values[j] > a.high_threshold);
     }
 
 				// Fire bindings for the buttons.
-    for (j = 0; j < _joystick_bindings[i].nbuttons; j++) {
-      bool pressed = ((buttons & (1 << j)) > 0);
-      button &b = _joystick_bindings[i].buttons[j];
-
-      if (pressed) {
-				// The press event may be repeated.
-	if (!b.last_state || b.is_repeatable) {
-// 	  SG_LOG(SG_INPUT, SG_INFO, "Button " << j << " has been pressed");
-	  for (unsigned int k = 0; k < b.bindings[modifiers].size(); k++)
-	    b.bindings[modifiers][k].fire();
-	}
-      } else {
-				// The release event is never repeated.
-	if (b.last_state)
-// 	  SG_LOG(SG_INPUT, SG_INFO, "Button " << j << " has been released");
-	  for (unsigned int k = 0; k < b.bindings[modifiers|FG_MOD_UP].size(); k++)
-	    b.bindings[modifiers|FG_MOD_UP][k].fire();
-      }
-	  
-      b.last_state = pressed;
-    }
+    for (j = 0; j < _joystick_bindings[i].nbuttons; j++)
+      _update_button(_joystick_bindings[i].buttons[j],
+		     modifiers,
+		     (buttons & (1 << j)) > 0);
   }
 }
+
+
+inline void
+FGInput::_update_button (button &b, int modifiers, bool pressed)
+{
+  if (pressed) {
+				// The press event may be repeated.
+    if (!b.last_state || b.is_repeatable) {
+//    SG_LOG(SG_INPUT, SG_INFO, "Button " << j << " has been pressed");
+      for (unsigned int k = 0; k < b.bindings[modifiers].size(); k++)
+	b.bindings[modifiers][k].fire();
+    }
+  } else {
+				// The release event is never repeated.
+    if (b.last_state)
+//    SG_LOG(SG_INPUT, SG_INFO, "Button " << j << " has been released");
+      for (unsigned int k = 0; k < b.bindings[modifiers|FG_MOD_UP].size(); k++)
+	b.bindings[modifiers|FG_MOD_UP][k].fire();
+  }
+	  
+  b.last_state = pressed;
+}  
 
 
 void

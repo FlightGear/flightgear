@@ -184,8 +184,6 @@ public:
 
 private:
 
-  typedef vector<FGBinding> binding_list_t;
-
 				// Constants
   enum 
   {
@@ -200,6 +198,8 @@ private:
     MAX_BUTTONS = 32
   };
 
+
+  typedef vector<FGBinding> binding_list_t;
 
   /**
    * Settings for a key or button.
@@ -221,11 +221,17 @@ private:
   struct axis {
     axis ()
       : last_value(9999999),
-	tolerance(0.002)
+	tolerance(0.002),
+	low_threshold(-0.9),
+	high_threshold(0.9)
     {}
     float last_value;
     float tolerance;
     binding_list_t bindings[FG_MOD_MAX];
+    float low_threshold;
+    float high_threshold;
+    struct button low;
+    struct button high;
   };
 
 
@@ -259,6 +265,14 @@ private:
 
 
   /**
+   * Initialize a single button.
+   */
+  inline void _init_button (const SGPropertyNode * node,
+			    button &b,
+			    const string name);
+
+
+  /**
    * Update the keyboard.
    */
   void _update_keyboard ();
@@ -268,6 +282,12 @@ private:
    * Update the joystick.
    */
   void _update_joystick ();
+
+
+  /**
+   * Update a single button.
+   */
+  inline void _update_button (button &b, int modifiers, bool pressed);
 
 
   /**
