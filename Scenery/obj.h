@@ -28,7 +28,9 @@
 #define _OBJ_H
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -57,9 +59,14 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius);
 
 
 /* $Log$
-/* Revision 1.9  1998/04/22 13:22:45  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.10  1998/04/24 00:51:07  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Tweaked the scenery file extentions to be "file.obj" (uncompressed)
+/* or "file.obz" (compressed.)
 /*
+ * Revision 1.9  1998/04/22 13:22:45  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.8  1998/04/21 17:02:43  curt
  * Prepairing for C++ integration.
  *

@@ -25,7 +25,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -114,9 +116,14 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.40  1998/04/18 04:14:06  curt
-/* Moved fg_debug.c to it's own library.
+/* Revision 1.41  1998/04/24 00:51:08  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Tweaked the scenery file extentions to be "file.obj" (uncompressed)
+/* or "file.obz" (compressed.)
 /*
+ * Revision 1.40  1998/04/18 04:14:06  curt
+ * Moved fg_debug.c to it's own library.
+ *
  * Revision 1.39  1998/04/08 23:30:07  curt
  * Adopted Gnu automake/autoconf system.
  *

@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -100,7 +102,7 @@ void fgTileCacheEntryFillIn( int index, struct fgBUCKET *p ) {
 
     /* Load the appropriate area and get the display list pointer */
     fgBucketGenBasePath(p, base_path);
-    sprintf(file_name, "%s/Scenery/%s/%ld.obj", g->root_dir, 
+    sprintf(file_name, "%s/Scenery/%s/%ld", g->root_dir, 
 	    base_path, fgBucketGenIndex(p));
     tile_cache[index].display_list = 
 	fgObjLoad(file_name, &tile_cache[index].local_ref,
@@ -198,9 +200,14 @@ int fgTileCacheNextAvail( void ) {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:22:46  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.2  1998/04/24 00:51:08  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Tweaked the scenery file extentions to be "file.obj" (uncompressed)
+/* or "file.obz" (compressed.)
 /*
+ * Revision 1.1  1998/04/22 13:22:46  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.11  1998/04/18 04:14:07  curt
  * Moved fg_debug.c to it's own library.
  *

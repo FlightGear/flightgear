@@ -25,7 +25,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -102,11 +104,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
     int winding;
     int last1, last2, odd;
 
-    // First try "path.gz"
+    // First try "path.obz" (compressed format)
     strcpy(gzpath, path);
-    strcat(gzpath, ".gz");
+    strcat(gzpath, ".obz");
     if ( (f = gzopen(gzpath, "r")) == NULL ) {
-	// Next try "path"
+	// Next try "path.obj" (uncompressed format)
+	strcat(path, ".obj");
 	if ( (f = gzopen(path, "r")) == NULL ) {
 	    fgPrintf(FG_TERRAIN, FG_ALERT, "Cannot open file: %s\n", path);
 	    return(-1);
@@ -398,9 +401,14 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.28  1998/04/22 13:22:44  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.29  1998/04/24 00:51:07  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Tweaked the scenery file extentions to be "file.obj" (uncompressed)
+/* or "file.obz" (compressed.)
 /*
+ * Revision 1.28  1998/04/22 13:22:44  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.27  1998/04/18 04:13:17  curt
  * Added zlib on the fly decompression support for loading scenery objects.
  *

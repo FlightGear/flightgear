@@ -25,7 +25,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -219,9 +221,14 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:22:48  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.2  1998/04/24 00:51:09  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Tweaked the scenery file extentions to be "file.obj" (uncompressed)
+/* or "file.obz" (compressed.)
 /*
+ * Revision 1.1  1998/04/22 13:22:48  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.25  1998/04/18 04:14:07  curt
  * Moved fg_debug.c to it's own library.
  *

@@ -33,7 +33,9 @@
 #endif                                   
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -86,9 +88,14 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:22:47  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.2  1998/04/24 00:51:08  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Tweaked the scenery file extentions to be "file.obj" (uncompressed)
+/* or "file.obz" (compressed.)
 /*
+ * Revision 1.1  1998/04/22 13:22:47  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.10  1998/04/21 17:02:45  curt
  * Prepairing for C++ integration.
  *
