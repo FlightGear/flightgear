@@ -149,7 +149,7 @@ void FGATCMgr::RemoveFromList(const char* id, atc_type tp) {
 // Returns true if the airport is found in the map
 bool FGATCMgr::GetAirportATCDetails(string icao, AirportATC* a) {
     if(airport_atc_map.find(icao) != airport_atc_map.end()) {
-	a = airport_atc_map[icao];
+        *a = *airport_atc_map[icao];
 	return(true);
     } else {
 	return(false);
