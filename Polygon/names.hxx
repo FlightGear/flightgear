@@ -37,23 +37,25 @@
 #undef RAD_TO_DEG
 
 
-// Posible shape file types
+// Posible shape file types.  Note the order of these is important and
+// defines the priority of these shapes if they should intersect.  The
+// smaller the number, the higher the priority.
 enum AreaType {
-    AirportKeepArea = 0,
+    AirportKeepArea   = 0,
     AirportIgnoreArea = 1,
-    MarshArea = 2,
-    OceanArea = 3,
-    LakeArea = 4,
-    DryLakeArea = 5,
-    IntLakeArea = 6,
-    ReservoirArea = 7,
-    IntReservoirArea = 8,
-    StreamArea = 9,
-    CanalArea = 10,
-    GlacierArea = 11,
-    VoidArea = 9997,
-    NullArea = 9998,
-    UnknownArea = 9999
+    OceanArea         = 2,
+    LakeArea          = 3,
+    DryLakeArea       = 4,
+    IntLakeArea       = 5,
+    ReservoirArea     = 6,
+    IntReservoirArea  = 7,
+    StreamArea        = 8,
+    CanalArea         = 9,
+    GlacierArea       = 10,
+    MarshArea         = 11,
+    VoidArea          = 9997,
+    NullArea          = 9998,
+    UnknownArea       = 9999
 };
 
 
@@ -68,6 +70,9 @@ string get_area_name( AreaType area );
 
 
 // $Log$
+// Revision 1.2  1999/02/26 22:10:42  curt
+// Updated names and priorities of area types.
+//
 // Revision 1.1  1999/02/25 21:30:24  curt
 // Initial revision.
 //
