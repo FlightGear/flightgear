@@ -89,8 +89,8 @@ int displayInstruments;
 #ifdef HAVE_OSS_AUDIO
 slScheduler audio_sched ( 8000 ) ;
 smMixer audio_mixer ;
-slSample s1;
-slSample s2;
+slSample *s1;
+slSample *s2;
 #endif
 
 
@@ -714,17 +714,16 @@ int main( int argc, char **argv ) {
 
     strcpy(slfile, path);
     strcat(slfile, "prpidle.wav");
-    // s1 . loadFile ( slfile );
-    s1 . loadFile ( slfile );
+    s1 = new slSample ( slfile );
     printf("Rate = %d  Bps = %d  Stereo = %d\n", 
-	   s1.getRate(), s1.getBps(), s1.getStereo());
-    audio_sched . playSample ( &s1 );
+	   s1 -> getRate(), s1 -> getBps(), s1 -> getStereo());
+    audio_sched . playSample ( s1 );
 
-    strcpy(slfile, path);
-    strcat(slfile, "thunder.wav");
-    // s2 . loadFile ( slfile );
-    // s2 . adjustVolume(0.5);
-    // audio_sched . playSample ( &s2 );
+    // strcpy(slfile, path);
+    // strcat(slfile, "thunder.wav");
+    // s2 -> loadFile ( slfile );
+    // s2 -> adjustVolume(0.5);
+    // audio_sched -> playSample ( s2 );
 #endif
 
     // pass control off to the master GLUT event handler
@@ -735,15 +734,10 @@ int main( int argc, char **argv ) {
 }
 
 
-#ifdef __SUNPRO_CC
-extern "C" {
-    void __eprintf( void ) {
-    }
-}
-#endif
-
-
 // $Log$
+// Revision 1.22  1998/06/05 18:18:40  curt
+// A bit of fiddling with audio ...
+//
 // Revision 1.21  1998/06/03 22:01:06  curt
 // Tweaking sound library usage.
 //

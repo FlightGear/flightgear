@@ -1,9 +1,6 @@
 if HAVE_OSS_AUDIO
-AUDIO_DEFS = -DHAVE_OSS_AUDIO
+DEFS += -DHAVE_OSS_AUDIO
 AUDIO_LIBS = $(top_builddir)/Lib/Audio/libAudio.la
-else
-AUDIO_DEFS = 
-AUDIO_LIBS = 
 endif
 
 EXTRA_DIST = runfg.in runfg.bat.in
@@ -39,8 +36,6 @@ fg_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.la \
 	$(top_builddir)/Lib/Debug/libDebug.la \
 	$(top_builddir)/Lib/zlib/libz.la
-
-DEFS += $(AUDIO_DEFS)
 
 INCLUDES += \
 	-I$(top_builddir) \
