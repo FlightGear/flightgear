@@ -80,5 +80,3 @@ void engine( SCALAR dt, int init ) {
 
     Throttle_pct = Throttle[3];
 }
-
-

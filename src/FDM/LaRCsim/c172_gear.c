@@ -37,8 +37,8 @@
 
 $Header$
 $Log$
-Revision 1.2  1999/06/21 03:01:47  curt
-Updated for both JSBsim and Tony Peden's c172 flight model.
+Revision 1.3  1999/07/31 02:57:36  curt
+Improvements to Tony's c172 model.
 
 Revision 1.1.1.1  1999/04/05 21:32:45  curt
 Start of 0.6.x branch.
@@ -93,7 +93,6 @@ Initial Flight Gear revision.
 #include "ls_generic.h"
 #include "ls_cockpit.h"
 
-
 void sub3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[0] - v2[0];
@@ -137,6 +136,8 @@ void clear3( DATA v[] )
 void gear( SCALAR dt, int Initialize ) {
 char rcsid[] = "$Id$";
 
+  
+  
   /*
    * Aircraft specific initializations and data goes here
    */
@@ -181,7 +182,7 @@ char rcsid[] = "$Id$";
      *	               V     V
      */
   
-  
+    
     static DATA sliding_mu   = 0.5;	
     static DATA rolling_mu   = 0.01;	
     static DATA max_brake_mu = 0.6;	
@@ -207,6 +208,8 @@ char rcsid[] = "$Id$";
     DATA forward_wheel_force, sideward_wheel_force;
 
     int i;				/* per wheel loop counter */
+  
+   Brake_pct=0; 
   
   /*
    * Execution starts here
