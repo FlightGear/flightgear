@@ -54,7 +54,7 @@
 #include <Astro/sky.hxx>
 #include <Astro/solarsystem.hxx>
 #include <Debug/logstream.hxx>
-#include <Flight/flight.hxx>
+#include <FDM/flight.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Time/light.hxx>
@@ -399,6 +399,10 @@ void fgTimeUpdate(FGState *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.30  1999/02/01 21:33:37  curt
+// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
+// Jon accepted my offer to do this and thought it was a good idea.
+//
 // Revision 1.29  1999/01/19 20:57:08  curt
 // MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
 //

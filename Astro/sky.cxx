@@ -37,7 +37,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
-#include <Flight/flight.hxx>
+#include <FDM/flight.hxx>
 #include <Include/fg_constants.h>
 #include <Main/views.hxx>
 #include <Math/fg_random.h>
@@ -362,6 +362,10 @@ void fgSkyRender( void ) {
 
 
 // $Log$
+// Revision 1.19  1999/02/01 21:33:26  curt
+// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
+// Jon accepted my offer to do this and thought it was a good idea.
+//
 // Revision 1.18  1999/02/01 21:09:00  curt
 // Bug fix in vertex order of inner disk (fan) of the sky dome.
 //

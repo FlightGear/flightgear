@@ -28,7 +28,7 @@
                        
 
 #include <Aircraft/aircraft.hxx>
-#include <Flight/flight.hxx>
+#include <FDM/flight.hxx>
 #include <Controls/controls.hxx>
                        
                        

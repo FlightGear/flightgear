@@ -26,7 +26,7 @@
 
 #include "slew.hxx"
 
-#include <Flight/flight.hxx>
+#include <FDM/flight.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
 #include <Include/fg_constants.h>
@@ -83,6 +83,10 @@ void fgSlewUpdate( void ) {
 
 
 // $Log$
+// Revision 1.5  1999/02/01 21:33:33  curt
+// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
+// Jon accepted my offer to do this and thought it was a good idea.
+//
 // Revision 1.4  1998/12/05 16:13:14  curt
 // Renamed class fgCONTROLS to class FGControls.
 //

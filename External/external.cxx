@@ -26,7 +26,7 @@
 
 #include "external.hxx"
 
-#include <Flight/flight.hxx>
+#include <FDM/flight.hxx>
 #include <Include/fg_constants.h>
 
 
@@ -42,6 +42,10 @@ void fgExternalUpdate( FGState& f, int multiloop ) {
 
 
 // $Log$
+// Revision 1.4  1999/02/01 21:33:32  curt
+// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
+// Jon accepted my offer to do this and thought it was a good idea.
+//
 // Revision 1.3  1999/01/19 17:52:11  curt
 // Working on being able to extrapolate a new position and orientation
 // based on a position, orientation, and time offset.

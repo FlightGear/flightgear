@@ -5,7 +5,7 @@ SUBDIRS = \
 	Autopilot \
 	Cockpit \
 	Controls \
-	Flight \
+	FDM \
 	GUI \
 	Joystick \
 	Objects \

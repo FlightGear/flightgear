@@ -26,10 +26,10 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
-#include <Flight/flight.hxx>
-#include <Flight/LaRCsim/ls_cockpit.h>
-#include <Flight/LaRCsim/ls_generic.h>
-#include <Flight/LaRCsim/ls_interface.h>
+#include <FDM/flight.hxx>
+#include <FDM/LaRCsim/ls_cockpit.h>
+#include <FDM/LaRCsim/ls_generic.h>
+#include <FDM/LaRCsim/ls_interface.h>
 
 
 // Initialize the LaRCsim flight model, dt is the time increment for
@@ -389,6 +389,10 @@ int fgLaRCsim_2_FGState (FGState& f) {
 
 
 // $Log$
+// Revision 1.10  1999/02/01 21:33:30  curt
+// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
+// Jon accepted my offer to do this and thought it was a good idea.
+//
 // Revision 1.9  1999/01/08 19:27:36  curt
 // Fixed AOA reading on HUD.
 // Continued work on time jitter compensation.

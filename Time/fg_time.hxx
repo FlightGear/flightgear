@@ -49,7 +49,7 @@
 #  include <time.h>
 #endif
 
-#include <Flight/flight.hxx>
+#include <FDM/flight.hxx>
 
 
 // Define a structure containing global time parameters
@@ -105,6 +105,10 @@ void fgTimeUpdate(FGState *f, fgTIME *t);
 
 
 // $Log$
+// Revision 1.13  1999/02/01 21:33:39  curt
+// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
+// Jon accepted my offer to do this and thought it was a good idea.
+//
 // Revision 1.12  1999/01/07 20:25:35  curt
 // Portability changes and updates from Bernie Bright.
 //

@@ -28,8 +28,8 @@
 #include "LaRCsim.hxx"
 
 #include <Debug/logstream.hxx>
-#include <Flight/External/external.hxx>
-#include <Flight/LaRCsim/ls_interface.h>
+#include <FDM/External/external.hxx>
+#include <FDM/LaRCsim/ls_interface.h>
 #include <Include/fg_constants.h>
 #include <Math/fg_geodesy.hxx>
 #include <Time/timestamp.hxx>
@@ -189,6 +189,10 @@ void fgFDMSetGroundElevation(int model, double ground_meters) {
 
 
 // $Log$
+// Revision 1.14  1999/02/01 21:33:31  curt
+// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
+// Jon accepted my offer to do this and thought it was a good idea.
+//
 // Revision 1.13  1999/01/27 04:48:39  curt
 // Set the runway height in cur_fdm_state as well as base_fdm_state.
 //

@@ -33,7 +33,7 @@
 #include <string>
 
 #include <Debug/logstream.hxx>
-#include <Flight/flight.hxx>
+#include <FDM/flight.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Misc/fgstream.hxx>
@@ -629,6 +629,10 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.38  1999/02/01 21:33:35  curt
+// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
+// Jon accepted my offer to do this and thought it was a good idea.
+//
 // Revision 1.37  1999/01/19 20:57:05  curt
 // MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
 //

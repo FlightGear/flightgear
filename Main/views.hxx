@@ -31,7 +31,7 @@
 #endif                                   
 
 
-#include <Flight/flight.hxx>
+#include <FDM/flight.hxx>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
 #include <Time/fg_time.hxx>
@@ -230,6 +230,10 @@ extern FGView current_view;
 
 
 // $Log$
+// Revision 1.19  1999/02/01 21:33:36  curt
+// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
+// Jon accepted my offer to do this and thought it was a good idea.
+//
 // Revision 1.18  1998/12/11 20:26:30  curt
 // Fixed view frustum culling accuracy bug so we can look out the sides and
 // back without tri-stripes dropping out.

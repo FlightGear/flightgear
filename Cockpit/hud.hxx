@@ -48,7 +48,7 @@
 #include <fg_typedefs.h>
 #include <fg_constants.h>
 #include <Aircraft/aircraft.hxx>
-#include <Flight/flight.hxx>
+#include <FDM/flight.hxx>
 #include <Controls/controls.hxx>
 
 #include <deque>        // STL double ended queue
@@ -524,6 +524,10 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 // $Log$
+// Revision 1.17  1999/02/01 21:33:28  curt
+// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
+// Jon accepted my offer to do this and thought it was a good idea.
+//
 // Revision 1.16  1998/10/17 01:33:59  curt
 // C++ ifying ...
 //

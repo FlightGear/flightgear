@@ -33,7 +33,7 @@
 #endif                                   
 
 
-#include <Flight/flight.hxx>
+#include <FDM/flight.hxx>
 #include <Controls/controls.hxx>
 
 
@@ -61,6 +61,10 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a);
 
 
 // $Log$
+// Revision 1.5  1999/02/01 21:33:24  curt
+// Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
+// Jon accepted my offer to do this and thought it was a good idea.
+//
 // Revision 1.4  1998/12/05 16:13:10  curt
 // Renamed class fgCONTROLS to class FGControls.
 //
