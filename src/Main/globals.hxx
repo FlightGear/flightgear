@@ -64,6 +64,7 @@ class FGFX;
 class FGViewer;
 class FGATCMgr;
 class FGATCDisplay;
+class FGAIMgr;
 
 
 /**
@@ -133,6 +134,9 @@ private:
 
     // ATC Renderer
     FGATCDisplay *ATC_display;
+
+    // AI manager
+    FGAIMgr *AI_mgr;
 
     // control input state
     FGControls *controls;
@@ -215,7 +219,10 @@ public:
     inline void set_ATC_mgr( FGATCMgr *a ) {ATC_mgr = a; }
 
     inline FGATCDisplay *get_ATC_display() const { return ATC_display; }
-    inline void set_ATC_display( FGATCDisplay *d ) {ATC_display = d; }  
+    inline void set_ATC_display( FGATCDisplay *d ) {ATC_display = d; } 
+    
+    inline FGAIMgr *get_AI_mgr() const { return AI_mgr; }
+    inline void set_AI_mgr( FGAIMgr *a ) {AI_mgr = a; }
 
     inline FGSoundMgr *get_soundmgr() const { return soundmgr; }
     inline void set_soundmgr( FGSoundMgr *sm ) { soundmgr = sm; }

@@ -1,4 +1,4 @@
-// atislist.cxx -- navaids management class
+// atislist.cxx -- ATIS data management class
 //
 // Written by David Luff, started October 2001.
 // Based on navlist.cxx by Curtis Olson, started April 2000.
@@ -58,18 +58,14 @@ bool FGATISList::init( SGPath path ) {
 
     // read in each line of the file
 
-    // in >> skipeol;
     in >> skipcomment;
-
-    // double min = 100000;
-    // double max = 0;
 
 #ifdef __MWERKS__
     char c = 0;
     while ( in.get(c) && c != '\0' ) {
         in.putback(c);
 #else
-    while ( ! in.eof() ) {
+    while ( !in.eof() ) {
 #endif
     
         FGATIS a;
@@ -89,18 +85,7 @@ bool FGATISList::init( SGPath path ) {
         atislist[a.get_freq()].push_back(a);
         in >> skipcomment;
 
-	/* if ( a.get_type() != 'N' ) {
-	    if ( a.get_freq() < min ) {
-		min = a.get_freq();
-	    }
-	    if ( a.get_freq() > max ) {
-		max = a.get_freq();
-	    }
-	} */
     }
-
-    // cout << "min freq = " << min << endl;
-    // cout << "max freq = " << max << endl;
 
     return true;
 }
@@ -111,6 +96,9 @@ bool FGATISList::init( SGPath path ) {
 bool FGATISList::query( double lon, double lat, double elev, double freq,
 		       FGATIS *a )
 {
+    lon *= SGD_DEGREES_TO_RADIANS;
+    lat *= SGD_DEGREES_TO_RADIANS;
+
     atis_list_type stations = atislist[(int)(freq*100.0 + 0.5)];
 
     atis_list_iterator current = stations.begin();

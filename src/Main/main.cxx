@@ -81,6 +81,8 @@
 
 #include <ATC/ATCmgr.hxx>
 #include <ATC/ATCdisplay.hxx>
+#include <ATC/AIMgr.hxx>
+
 #include <Autopilot/newauto.hxx>
 
 #include <Cockpit/cockpit.hxx>
@@ -1045,7 +1047,10 @@ static void fgMainLoop( void ) {
 #endif
 
     // Run ATC subsystem
-    globals->get_ATC_mgr()->update(1);  // FIXME: use real dt
+    globals->get_ATC_mgr()->update(1);	// FIXME - use real dt.
+
+    // Run the AI subsystem
+    globals->get_AI_mgr()->update(1);	// FIXME - use real dt.
 
     // Run flight model
 

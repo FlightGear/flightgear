@@ -22,6 +22,9 @@
 #ifndef _FG_ATC_HXX
 #define _FG_ATC_HXX
 
+#include <iostream>
+#include <string>
+
 // Possible types of ATC type that the radios may be tuned to.
 // INVALID implies not tuned in to anything.
 enum atc_type {
@@ -32,7 +35,9 @@ enum atc_type {
     APPROACH,
     DEPARTURE,
     ENROUTE
-};  
+}; 
+
+ostream& operator << (ostream& os, atc_type atc);
 
 class FGATC {
 
@@ -42,6 +47,12 @@ public:
 
     // Run the internal calculations
     virtual void Update();
+
+    // Add plane to a stack
+    virtual void AddPlane(string pid);
+
+    // Remove plane from stack
+    virtual int RemovePlane();
 
     // Indicate that this instance should output to the display if appropriate 
     virtual void SetDisplay();

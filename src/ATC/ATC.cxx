@@ -27,6 +27,12 @@ FGATC::~FGATC() {
 void FGATC::Update() {
 }
 
+void FGATC::AddPlane(string pid) {
+}
+
+int FGATC::RemovePlane() {
+}
+
 void FGATC::SetDisplay() {
 }
 
@@ -39,4 +45,24 @@ const char* FGATC::GetIdent() {
 
 atc_type FGATC::GetType() {
     return INVALID;
+}
+
+ostream& operator << (ostream& os, atc_type atc) {
+    switch(atc) {
+    case(INVALID):
+	return(os << "INVALID");
+    case(ATIS):
+ 	return(os << "ATIS");
+    case(GROUND):
+	return(os << "GROUND");
+    case(TOWER):
+	return(os << "TOWER");
+    case(APPROACH):
+	return(os << "APPROACH");
+    case(DEPARTURE):
+	return(os << "DEPARTURE");
+    case(ENROUTE):
+	return(os << "ENROUTE");
+    }
+    return(os << "ERROR - Unknown switch in atc_type operator << ");
 }
