@@ -645,6 +645,15 @@ void fgInitFDM() {
     }
 }
 
+static void printMat(const sgVec4 *mat, char *name="")
+{
+    int i;
+    cout << name << endl;
+    for(i=0; i<4; i++) {
+        cout <<"  "<<mat[i][0]<<" "<<mat[i][1]<<" "<<mat[i][2]<<" "<<mat[i][3]<<endl;
+    }
+    cout << endl;
+}
 
 // Initialize view parameters
 void fgInitView() {
@@ -652,6 +661,11 @@ void fgInitView() {
   globals->get_aircraft_model()->update(0);
   // run update for current view so that data is current...
   globals->get_viewmgr()->update(0);
+
+  printMat(globals->get_current_view()->get_VIEW(),"VIEW");
+  printMat(globals->get_current_view()->get_UP(),"UP");
+  // printMat(globals->get_current_view()->get_LOCAL(),"LOCAL");
+  
 }
 
 
@@ -896,15 +910,16 @@ bool fgInitSubsystems( void ) {
     ////////////////////////////////////////////////////////////////////
     // Initialize the 3D cloud subsystem.
     ////////////////////////////////////////////////////////////////////
-
     if ( fgGetBool("/sim/rendering/clouds3d") ) {
         SGPath cloud_path(globals->get_fg_root());
         cloud_path.append("large.sky");
+        SG_LOG(SG_GENERAL, SG_INFO, "Loading CLOUDS3d from: " << cloud_path.c_str());
         if ( !sgCloud3d->Load( cloud_path.str() ) ) {
             fgSetBool("/sim/rendering/clouds3d", false);
+            SG_LOG(SG_GENERAL, SG_INFO, "CLOUDS3d FAILED: ");
         }
+        SG_LOG(SG_GENERAL, SG_INFO, "CLOUDS3d Loaded: ");
     }
-
 
     ////////////////////////////////////////////////////////////////////
     // Initialize vor/ndb/ils/fix list management and query systems

@@ -98,7 +98,8 @@ fgfs-manual-zip:
 
 fgfs-win32-bin:
 	(cd $(HOME); \
-	zip -r fgfs-win32-bin-$(VERSION).zip FlightGear/bin )
+	zip -r fgfs-win32-bin-$(VERSION).zip FlightGear/runfgfs.bat \
+        FlightGear/bin/Win32 )
 
 # make the win32-libs distribution (depricated)
 win32-libs:

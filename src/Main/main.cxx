@@ -391,11 +391,6 @@ void trRenderFrame( void ) {
 
     globals->get_model_mgr()->draw();
     globals->get_aircraft_model()->draw();
-
-    // need to do this here as hud_and_panel state is static to
-    // main.cxx  and HUD and Panel routines have to be called with
-    // knowledge of the the TR struct < see gui.cxx::HighResDump()
-    hud_and_panel->apply();
 }
 
 
@@ -454,18 +449,6 @@ void fgRenderFrame() {
 	// calculate our current position in cartesian space
 	globals->get_scenery()->set_center( globals->get_scenery()->get_next_center() );
 
-	// do it here. at init time the clouds are loaded BEFORE our position is known
-	if ( fgGetBool("/sim/rendering/clouds3d") ) {
-            if ( _bcloud_orig ) {
-                // cloud center can be  anywhere in fgfs coordinates, but the tile
-                // cener is a good place as we'll have some  visible when starting
-                posit =  globals->get_scenery()->get_center();
-                sgClouds3d->Set_Cloud_Orig( _posit );
-                _bcloud_orig = false;
-            }
-            sgClouds3d->Update( current__view->get_absolute_view_pos() );
-        }
-		
 	// update view port
 	fgReshape( fgGetInt("/sim/startup/xsize"),
 		   fgGetInt("/sim/startup/ysize") );
@@ -491,6 +474,15 @@ void fgRenderFrame() {
 	    clear_mask |= GL_COLOR_BUFFER_BIT;
 	}
 	glClear( clear_mask );
+
+        if ( fgGetBool("/sim/rendering/clouds3d") ) {
+            posit =  globals->get_scenery()->get_center();
+            if ( _bcloud_orig ) {
+                sgClouds3d->Set_Cloud_Orig( _posit );
+                _bcloud_orig = false;
+            }
+            sgClouds3d->Update( current__view->get_absolute_view_pos() );
+        }
 
 	// Tell GL we are switching to model view parameters
 
@@ -765,15 +757,6 @@ void fgRenderFrame() {
 	globals->get_model_mgr()->draw();
 	globals->get_aircraft_model()->draw();
 
-	// draw the 3D clouds	
-	if ( fgGetBool("/sim/rendering/clouds3d") ) {
-            //glPushAttrib(GL_ALL_ATTRIB_BITS);
-            // transform the current view matrix with camera offset position
-            sgClouds3d->Draw( (sgVec4 *)current__view->get_VIEW() );
-            //sgClouds3d->Draw();
-            //glPopAttrib();
-        }
-	
 	// display HUD && Panel
 	glDisable( GL_FOG );
 	glDisable( GL_DEPTH_TEST );
@@ -804,7 +787,15 @@ void fgRenderFrame() {
 	puDisplay();
 	// glDisable ( GL_BLEND ) ;
 
-	// glEnable( GL_FOG );
+        if ( fgGetBool("/sim/rendering/clouds3d") ) {
+            // cout << "drawing new clouds" << endl;
+            // set the opengl state to known default values
+            // default_state->force();
+            sgClouds3d->Draw((sgVec4 *)current__view->get_VIEW());
+        }
+
+        glEnable( GL_DEPTH_TEST );
+        glEnable( GL_FOG );
 
 	globals->get_logger()->update(delta_time_sec);
     }

@@ -381,6 +381,7 @@ private:
 
   // material properties
   sgVec4 ambient, diffuse, specular, emission;
+  double shininess;
 
   // true if texture loading deferred, and not yet loaded
   bool texture_loaded;

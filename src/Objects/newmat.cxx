@@ -318,6 +318,8 @@ FGNewMat::read_properties (const SGPropertyNode * props)
   emission[2] = props->getDoubleValue("emissive/b", 0.0);
   emission[3] = props->getDoubleValue("emissive/a", 0.0);
 
+  shininess = props->getDoubleValue("shininess", 0.0);
+
   vector<SGPropertyNode_ptr> object_group_nodes =
     ((SGPropertyNode *)props)->getChildren("object-group");
   for (unsigned int i = 0; i < object_group_nodes.size(); i++)
@@ -345,6 +347,7 @@ FGNewMat::init ()
   light_coverage = 0.0;
   texture_loaded = false;
   refcount = 0;
+  shininess = 0.0;
   for (int i = 0; i < 4; i++)
     ambient[i] = diffuse[i] = specular[i] = emission[i] = 0.0;
 }
@@ -416,10 +419,10 @@ FGNewMat::build_ssg_state (bool defer_tex_load)
     textured->setMaterial ( GL_SPECULAR,
                             specular[0], specular[1],
                             specular[2], specular[3] ) ;
-    textured->setShininess( 75.0 );
     textured->setMaterial ( GL_EMISSION,
                             emission[0], emission[1],
                             emission[2], emission[3] ) ;
+    textured->setShininess ( shininess );
 #endif
 
     // Set up the coloured state
@@ -443,6 +446,7 @@ FGNewMat::build_ssg_state (bool defer_tex_load)
     nontextured->setMaterial ( GL_EMISSION, 
 			       emission[0], emission[1], 
 			       emission[2], emission[3] ) ;
+    nontextured->setShininess ( shininess );
 
     state->setStep( 0, textured );    // textured
     state->setStep( 1, nontextured ); // untextured
@@ -489,6 +493,7 @@ void FGNewMat::set_ssg_state( ssgSimpleState *s )
     nontextured->setMaterial ( GL_EMISSION, 
 			       emission[0], emission[1], 
 			       emission[2], emission[3] ) ;
+    nontextured->setShininess ( shininess );
 
     state->setStep( 0, textured );    // textured
     state->setStep( 1, nontextured ); // untextured
