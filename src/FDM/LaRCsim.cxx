@@ -558,7 +558,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     //        get_sin_longitude(), get_cos_longitude());
 
     _set_Climb_Rate( -1 * V_down );
-
+    // cout << "climb rate = " << -V_down * 60 << endl;
     return true;
 }
 
