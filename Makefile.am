@@ -1,6 +1,5 @@
-includedir	= ${exec_prefix}/include/private
-
-include_HEADERS	= \
+EXTRA_DIST = \
+	config.h.in \
 	cmdargs.h \
 	fg_constants.h \
 	fg_limits.h \

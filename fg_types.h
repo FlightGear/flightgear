@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef _TYPES_H
-#define _TYPES_H
+#ifndef _FG_TYPES_H
+#define _FG_TYPES_H
 
 
 /* A simple cartesian point */
@@ -40,14 +40,17 @@ struct fgGeodeticPoint {
 };
 
 
-#endif /* _TYPES_H */
+#endif /* _FG_TYPES_H */
 
 
 /* $Log$
-/* Revision 1.1  1998/01/27 00:46:51  curt
-/* prepended "fg_" on the front of these to avoid potential conflicts with
-/* system include files.
+/* Revision 1.2  1998/04/08 23:35:33  curt
+/* Tweaks to Gnu automake/autoconf system.
 /*
+ * Revision 1.1  1998/01/27 00:46:51  curt
+ * prepended "fg_" on the front of these to avoid potential conflicts with
+ * system include files.
+ *
  * Revision 1.2  1998/01/22 02:59:36  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

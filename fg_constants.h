@@ -24,14 +24,14 @@
  **************************************************************************/
 
 
-#ifndef _CONSTANTS_H
-#define _CONSTANTS_H
+#ifndef _FG_CONSTANTS_H
+#define _FG_CONSTANTS_H
 
 
 #include <math.h>
 
 
-/* This should be defined in the toplevel make.inc */
+/* This should be defined via autoconf in configure.in */
 #ifndef VERSION
 #define VERSION "\"not defined\""
 #endif
@@ -118,13 +118,16 @@
 #define DEFAULT_MODEL_HZ (DEFAULT_TIMER_HZ * DEFAULT_MULTILOOP)
 
 
-#endif /* _CONSTANTS_H */
+#endif /* _FG_CONSTANTS_H */
 
 
 /* $Log$
-/* Revision 1.2  1998/03/23 21:18:37  curt
-/* Made FG_EPSILON smaller.
+/* Revision 1.3  1998/04/08 23:35:32  curt
+/* Tweaks to Gnu automake/autoconf system.
 /*
+ * Revision 1.2  1998/03/23 21:18:37  curt
+ * Made FG_EPSILON smaller.
+ *
  * Revision 1.1  1998/01/27 00:46:50  curt
  * prepended "fg_" on the front of these to avoid potential conflicts with
  * system include files.
