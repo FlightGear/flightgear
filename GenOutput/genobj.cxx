@@ -25,27 +25,33 @@
 
 #include <time.h>
 
-#include <Tools/scenery_version.hxx>
 #include <Math/mat3.h>
+#include <Polygon/names.hxx>
+#include <Tools/scenery_version.hxx>
 
 #include "genobj.hxx"
 
 
 // build the wgs-84 point list
-void FGGenOutput::gen_wgs84_points() {
+void FGGenOutput::gen_wgs84_points( const FGArray& array ) {
     cout << "calculating wgs84 point" << endl;
     Point3D geod, radians, cart;
 
     const_point_list_iterator current = geod_nodes.begin();
     const_point_list_iterator last = geod_nodes.end();
 
+    double real_z;
+
     for ( ; current != last; ++current ) {
 	geod = *current;
+
+	real_z = array.interpolate_altitude( geod.x() * 3600.0, 
+					      geod.y() * 3600.0 );
 
 	// convert to radians
 	radians = Point3D( geod.x() * DEG_TO_RAD,
 			   geod.y() * DEG_TO_RAD,
-			   geod.z() );
+			   real_z );
 
         cart = fgGeodToCart(radians);
 	// cout << cart << endl;
@@ -183,7 +189,7 @@ void FGGenOutput::calc_gbs() {
 
 // build the necessary output structures based on the triangulation
 // data
-int FGGenOutput::build( const FGTriangle& t ) {
+int FGGenOutput::build( const FGArray& array, const FGTriangle& t ) {
     FGTriNodes trinodes = t.get_out_nodes();
 
     // copy the geodetic node list into this class
@@ -193,7 +199,7 @@ int FGGenOutput::build( const FGTriangle& t ) {
     tri_elements = t.get_elelist();
 
     // generate the point list in wgs-84 coordinates
-    gen_wgs84_points();
+    gen_wgs84_points( array );
 
     // calculate the global bounding sphere
     calc_gbs();
@@ -248,12 +254,19 @@ void FGGenOutput::calc_bounding_sphere( int i, Point3D *center,
 
 
 // write out the fgfs scenery file
-int FGGenOutput::write( const FGBucket& b, const string& path ) {
+int FGGenOutput::write( const string& base, const FGBucket& b ) {
     Point3D p;
 
+    string dir = base + "/Scenery/" + b.gen_base_path();
+    string command = "mkdir -p " + dir;
+    system(command.c_str());
+
+    string file = dir + "/" + b.gen_index_str();
+    cout << "Output file = " << file << endl;
+
     FILE *fp;
-    if ( (fp = fopen( path.c_str(), "w" )) == NULL ) {
-	cout << "ERROR: opening " << path << " for writing!" << endl;
+    if ( (fp = fopen( file.c_str(), "w" )) == NULL ) {
+	cout << "ERROR: opening " << file << " for writing!" << endl;
 	exit(-1);
     }
 
@@ -301,9 +314,13 @@ int FGGenOutput::write( const FGBucket& b, const string& path ) {
     const_triele_list_iterator t_current = tri_elements.begin();
     const_triele_list_iterator t_last = tri_elements.end();
     int counter = 0;
+    int attribute;
+    string attr_name;
     for ( ; t_current != t_last; ++t_current ) {
+	attribute = (int)t_current->get_attribute();
 	calc_bounding_sphere( counter, &center, &radius );
-	fprintf(fp, "# usemtl desert1\n");
+	attr_name = get_area_name( (AreaType)attribute );
+	fprintf(fp, "# usemtl %s\n", attr_name.c_str() );
 	fprintf(fp, "# bs %.2f %.2f %.2f %.2f\n", 
 		center.x(), center.y(), center.z(), radius);
 	fprintf(fp, "f %d %d %d\n", 
@@ -312,11 +329,21 @@ int FGGenOutput::write( const FGBucket& b, const string& path ) {
 	++counter;
     }
 
+    fclose(fp);
+
+    command = "gzip --force --best " + file;
+    system(command.c_str());
+
     return 1;
 }
 
 
 // $Log$
+// Revision 1.4  1999/03/27 05:23:22  curt
+// Interpolate real z value of all nodes from dem data.
+// Write scenery file to correct location.
+// Pass along correct triangle attributes and write to output file.
+//
 // Revision 1.3  1999/03/25 19:04:21  curt
 // Preparations for outputing scenery file to correct location.
 //

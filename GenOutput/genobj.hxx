@@ -32,10 +32,17 @@
 #endif                                   
 
 
+#include <Include/compiler.h>
+
+#include STL_STRING
+
 #include <Bucket/newbucket.hxx>
 #include <Math/fg_geodesy.hxx>
 #include <Math/point3d.hxx>
 #include <Triangulate/triangle.hxx>
+
+FG_USING_STD(string);
+FG_USING_STD(vector);
 
 
 typedef vector < int > belongs_to;
@@ -75,7 +82,7 @@ private:
     double gbs_radius;
 
     // build the wgs-84 point list
-    void gen_wgs84_points();
+    void gen_wgs84_points( const FGArray& array );
 
     // build the node -> element (triangle) reverse lookup table.
     // there is an entry for each point containing a list of all the
@@ -106,10 +113,10 @@ public:
 
     // build the necessary output structures based on the
     // triangulation data
-    int build( const FGTriangle& t );
+    int build( const FGArray& array, const FGTriangle& t );
 
     // write out the fgfs scenery file
-    int write( const FGBucket& b, const string& path );
+    int write( const string& base, const FGBucket& b );
 };
 
 
@@ -117,6 +124,11 @@ public:
 
 
 // $Log$
+// Revision 1.5  1999/03/27 05:23:23  curt
+// Interpolate real z value of all nodes from dem data.
+// Write scenery file to correct location.
+// Pass along correct triangle attributes and write to output file.
+//
 // Revision 1.4  1999/03/25 19:04:22  curt
 // Preparations for outputing scenery file to correct location.
 //
