@@ -38,13 +38,15 @@ private:
   {
     enum Type {
       None,
-      Spin
+      Spin,
+      Rotate
     };
     string name;
     Type type;
     ssgTransform * transform;
     sgMat4 matrix;
     SGPropertyNode * prop;
+    float factor;
     float position;
     float center_x;
     float center_y;

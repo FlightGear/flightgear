@@ -182,6 +182,13 @@ FGAircraftModel::read_animation (const SGPropertyNode * node)
   if (type_name == "spin") {
     SG_LOG(SG_INPUT, SG_INFO, "Reading spin animation");
     animation.type = Animation::Spin;
+  } else if (type_name == "rotate") {
+    SG_LOG(SG_INPUT, SG_INFO, "Reading rotate animation");
+    animation.type = Animation::Rotate;
+  } else if (type_name == "none") {
+    SG_LOG(SG_INPUT, SG_INFO, "Reading disabled animation");
+    animation.type = Animation::None;
+    return animation;
   } else {
     animation.type = Animation::None;
     SG_LOG(SG_INPUT, SG_ALERT, "Unknown animation type " << type_name);
@@ -213,6 +220,9 @@ FGAircraftModel::read_animation (const SGPropertyNode * node)
   animation.prop =
     fgGetNode(node->getStringValue("property", "/null"), true);
 
+  animation.position = node->getFloatValue("initial-position", 0);
+  animation.factor = node->getFloatValue("factor", 1);
+
 				// Get the center and axis
   animation.center_x = node->getFloatValue("center/x-m", 0);
   animation.center_y = node->getFloatValue("center/y-m", 0);
@@ -231,10 +241,26 @@ FGAircraftModel::do_animation (Animation &animation, long elapsed_ms)
   case Animation::None:
     return;
   case Animation::Spin: {
-    float velocity_rpms = animation.prop->getDoubleValue() / 60000.0;
+    float velocity_rpms = animation.prop->getDoubleValue()
+      * animation.factor / 60000.0;
     animation.position += (elapsed_ms * velocity_rpms * 360);
     while (animation.position >= 360)
       animation.position -= 360;
+    sgMakeTransMat4(animation.matrix, -animation.center_x,
+		    -animation.center_y, -animation.center_z);
+    sgVec3 axis;
+    sgSetVec3(axis, animation.axis_x, animation.axis_y, animation.axis_z);
+    sgMat4 tmp;
+    sgMakeRotMat4(tmp, animation.position, axis);
+    sgPostMultMat4(animation.matrix, tmp);
+    sgMakeTransMat4(tmp, animation.center_x,
+		    animation.center_y, animation.center_z);
+    sgPostMultMat4(animation.matrix, tmp);
+    animation.transform->setTransform(animation.matrix);
+    return;
+  }
+  case Animation::Rotate: {
+    animation.position = animation.prop->getFloatValue() * animation.factor;
     sgMakeTransMat4(animation.matrix, -animation.center_x,
 		    -animation.center_y, -animation.center_z);
     sgVec3 axis;
