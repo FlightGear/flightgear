@@ -140,8 +140,11 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.5  1998/04/25 22:06:23  curt
+Edited cvs log messages in source files ... bad bad bad!
+
 Revision 1.4  1998/01/27 00:47:59  curt
-Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
 system and commandline/config file processing code.
 
 Revision 1.3  1998/01/19 19:27:12  curt
@@ -205,10 +208,13 @@ Initial Flight Gear revision.
 
 
 /* $Log$
-/* Revision 1.4  1998/01/27 00:47:59  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.5  1998/04/25 22:06:23  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.4  1998/01/27 00:47:59  curt
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.3  1998/01/19 19:27:12  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

@@ -75,9 +75,12 @@ double fg_random(void) {
 
 
 /* $Log$
-/* Revision 1.7  1998/04/24 00:43:13  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Revision 1.8  1998/04/25 22:06:23  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.7  1998/04/24 00:43:13  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ *
  * Revision 1.6  1998/04/18 03:53:42  curt
  * Miscellaneous Tweaks.
  *
@@ -91,7 +94,7 @@ double fg_random(void) {
  * by Michele America.
  *
  * Revision 1.3  1998/01/27 00:47:59  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.2  1997/12/30 20:47:48  curt

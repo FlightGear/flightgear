@@ -73,11 +73,14 @@ struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p);
 
 
 /* $Log$
-/* Revision 1.8  1998/04/21 17:03:50  curt
-/* Prepairing for C++ integration.
+/* Revision 1.9  1998/04/25 22:06:23  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.8  1998/04/21 17:03:50  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.7  1998/01/27 00:48:00  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.6  1998/01/22 02:59:39  curt

@@ -267,9 +267,12 @@ int main() {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/08 23:28:58  curt
-/* Adopted Gnu automake/autoconf system.
+/* Revision 1.2  1998/04/25 22:06:22  curt
+/* Edited cvs log messages in source files ... bad bad bad!
 /*
+ * Revision 1.1  1998/04/08 23:28:58  curt
+ * Adopted Gnu automake/autoconf system.
+ *
  * Revision 1.6  1998/02/09 15:07:51  curt
  * Minor tweaks.
  *
@@ -280,7 +283,7 @@ int main() {
  * Playing with new fgPrintf command.
  *
  * Revision 1.3  1998/01/27 00:48:01  curt
- * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.2  1998/01/24 00:03:28  curt
