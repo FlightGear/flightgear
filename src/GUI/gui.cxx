@@ -750,67 +750,73 @@ static void net_blaster_toggle( puObject *cb)
 The menu stuff 
 ---------------------------------------------------------------------*/
 char *fileSubmenu               [] = {
-    "Exit", "Close", "---------", "Print", "---------", "Save", "Reset", NULL
+    "Exit", /* "Close", "---------", "Print", "---------", "Save", */ 
+    "Reset", NULL
 };
 puCallback fileSubmenuCb        [] = {
-    MayBeGoodBye, hideMenuCb, NULL, notCb, NULL, notCb, reInit, NULL
+    MayBeGoodBye, /* hideMenuCb, NULL, notCb, NULL, notCb, */ reInit, NULL
 };
 
+/*
 char *editSubmenu               [] = {
     "Edit text", NULL
 };
 puCallback editSubmenuCb        [] = {
     notCb, NULL
 };
+*/
 
 char *viewSubmenu               [] = {
-    "Cockpit View > ", "View >","------------", "Toggle Panel...", NULL
+    /* "Cockpit View > ", "View >","------------", */ "Toggle Panel...", NULL
 };
 puCallback viewSubmenuCb        [] = {
-    notCb, notCb, NULL, guiTogglePanel, NULL
+    /* notCb, notCb, NULL, guiTogglePanel, */ NULL
 };
 
 char *aircraftSubmenu           [] = {
     "Autopilot", "Heading", "Altitude", "Navigation", "Airport", 
-    "Communication", NULL
+    /* "Communication", */ NULL
 };
 puCallback aircraftSubmenuCb    [] = {
     fgAPAdjust, NewHeading, NewAltitude, fgLatLonFormatToggle, NewTgtAirport, 
-    notCb, NULL
+    /* notCb, */ NULL
 };
 
 char *environmentSubmenu        [] = {
-    "Airport", "Terrain", "Weather", NULL
+    "Airport", /* "Terrain", "Weather", */ NULL
 };
 puCallback environmentSubmenuCb [] = {
-    NewAirport, notCb, notCb, NULL
+    NewAirport, /* notCb, notCb, */ NULL
 };
 
+/*
 char *optionsSubmenu            [] = {
     "Preferences", "Realism & Reliablity...", NULL
 };
 puCallback optionsSubmenuCb     [] = {
     notCb, notCb, NULL
 };
+*/
 
 #ifdef FG_NETWORK_OLK
 char *networkSubmenu            [] = {
-    "Unregister from FGD ", "Send MSG to All", "Send MSG", "Show Pilots", 
-    "Register to FGD",
-    "Scan for Deamons", "Enter Callsign", "Display Netinfos", "Toggle Display",
+    /* "Unregister from FGD ", "Send MSG to All", "Send MSG", "Show Pilots", */
+    /* "Register to FGD", */
+    /* "Scan for Deamons", */ "Enter Callsign", /* "Display Netinfos", */
+    "Toggle Display",
     "Hyper Blast", NULL
 };
 puCallback networkSubmenuCb     [] = {
-    notCb, notCb, notCb, notCb, notCb, notCb, NewCallSign, notCb,
+    /* notCb, notCb, notCb, notCb, notCb, notCb, */ NewCallSign, /* notCb, */
     net_display_toggle, net_blaster_toggle, NULL
 };
 #endif
 
 char *helpSubmenu               [] = {
-    "About...", "Help", NULL
+    /* "About...", */ "Help", NULL
 };
 puCallback helpSubmenuCb        [] = {
-    notCb, helpCb, NULL
+    /* notCb, */ helpCb, NULL
 };
 
 
@@ -887,11 +893,11 @@ void guiInit()
     // Make the menu bar
     mainMenuBar = new puMenuBar ();
     mainMenuBar -> add_submenu ("File", fileSubmenu, fileSubmenuCb);
-    mainMenuBar -> add_submenu ("Edit", editSubmenu, editSubmenuCb);
+    // mainMenuBar -> add_submenu ("Edit", editSubmenu, editSubmenuCb);
     mainMenuBar -> add_submenu ("View", viewSubmenu, viewSubmenuCb);
     mainMenuBar -> add_submenu ("Aircraft", aircraftSubmenu, aircraftSubmenuCb);
     mainMenuBar -> add_submenu ("Environment", environmentSubmenu, environmentSubmenuCb);
-    mainMenuBar -> add_submenu ("Options", optionsSubmenu, optionsSubmenuCb);
+    // mainMenuBar -> add_submenu ("Options", optionsSubmenu, optionsSubmenuCb);
 #ifdef FG_NETWORK_OLK
     mainMenuBar -> add_submenu ("Network", networkSubmenu, networkSubmenuCb);
 #endif
