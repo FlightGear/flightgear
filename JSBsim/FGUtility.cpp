@@ -51,7 +51,7 @@ INCLUDES
 #include "FGState.h"
 #include <math.h>
 
-#ifndef __BORLANDC__
+#ifdef HAVE_NCURSES
   #include <ncurses.h>
 #endif
 
