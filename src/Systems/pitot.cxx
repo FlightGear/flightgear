@@ -22,7 +22,7 @@ PitotSystem::init ()
     _serviceable_node = fgGetNode("/systems/pitot[0]/serviceable", true);
     _pressure_node = fgGetNode("/environment/pressure-inhg", true);
     _density_node = fgGetNode("/environment/density-slugft3", true);
-    _velocity_node = fgGetNode("/velocities/uBody-fps", true);
+    _velocity_node = fgGetNode("/velocities/airspeed-kt", true);
     _total_pressure_node =
         fgGetNode("/systems/pitot[0]/total-pressure-inhg", true);
 }
@@ -41,6 +41,11 @@ PitotSystem::unbind ()
 # define INHGTOPSF (2116.217/29.9212)
 #endif
 
+#ifndef KTTOFPS
+# define KTTOFPS 1.68781
+#endif
+
+
 void
 PitotSystem::update (double dt)
 {
@@ -49,7 +54,7 @@ PitotSystem::update (double dt)
                                 // velocity in the body axis.
         double p = _pressure_node->getDoubleValue(); // static
         double r = _density_node->getDoubleValue();
-        double v = _velocity_node->getDoubleValue();
+        double v = _velocity_node->getDoubleValue() * KTTOFPS;
         double q = 0.5 * r * v * v / INHGTOPSF; // dynamic
         _total_pressure_node->setDoubleValue(p + q);
     }

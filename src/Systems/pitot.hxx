@@ -26,7 +26,7 @@
  * /systems/pitot[0]/serviceable
  * /environment/pressure-slugft3
  * /environment/density-slugft3
- * /velocities/uBody-fps
+ * /velocities/airspeed-kt
  *
  * Output properties:
  *
