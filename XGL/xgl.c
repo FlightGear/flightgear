@@ -1,3 +1,14 @@
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
+#include "xgl.h"
+#include <GL/glut.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -5,8 +16,6 @@
 #  include <unistd.h>
 #endif
 
-#include "xgl.h"
-#include <GL/glut.h>
 
 #ifdef XGL_TRACE
 
