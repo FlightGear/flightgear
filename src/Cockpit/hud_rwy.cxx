@@ -20,6 +20,8 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
+#include <simgear/compiler.h>
+
 #include "hud.hxx"
 
 #include <math.h>
@@ -31,7 +33,7 @@
 #include <Environment/environment_mgr.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/polar3d.hxx>
-#include <GL/glu.h>
+#include SG_GLU_H
 #include <ATC/ATCutils.hxx>
 
 runway_instr::runway_instr(int x,
