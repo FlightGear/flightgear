@@ -178,6 +178,14 @@ ssgBranch *terrain_branch = NULL;
 ssgBranch *gnd_lights_branch = NULL;
 ssgBranch *rwy_lights_branch = NULL;
 
+// fog constants.  I'm a little nervous about putting actual code out
+// here but it seems to work (?)
+static const double m_log01 = -log( 0.01 );
+static const double sqrt_m_log01 = sqrt( m_log01 );
+static GLfloat fog_exp_density;
+static GLfloat fog_exp2_density;
+static GLfloat fog_exp2_punch_through;
+
 ssgRoot *lighting = NULL;
 // ssgBranch *airport = NULL;
 
@@ -334,9 +342,6 @@ void trRenderFrame( void ) {
         glTranslatef( 0.0, view_h, 0.0 );
     }
 
-    static double m_log01      = -log( 0.01 );
-    static double sqrt_m_log01 = sqrt( m_log01 );
-
     static GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     static GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
@@ -349,12 +354,6 @@ void trRenderFrame( void ) {
 
     // set the opengl state to known default values
     default_state->force();
-
-    // update fog params
-    double actual_visibility       = thesky->get_visibility();
-    // GLfloat fog_exp_density        = m_log01 / actual_visibility;
-    GLfloat fog_exp2_density       = sqrt_m_log01 / actual_visibility;
-    GLfloat fog_exp2_punch_through = sqrt_m_log01 / ( actual_visibility * 1.5 );
 
     glEnable( GL_FOG );
     glFogf  ( GL_FOG_DENSITY, fog_exp2_density);
@@ -411,10 +410,16 @@ void fgRenderFrame( void ) {
     fgLIGHT *l = &cur_light_params;
     static double last_visibility = -9999;
 
-    static GLfloat fog_exp_density;
-    static GLfloat fog_exp2_density;
-    static GLfloat fog_exp2_punch_through;
-    
+    // update fog params
+    double actual_visibility       = thesky->get_visibility();
+    if ( actual_visibility != last_visibility ) {
+        last_visibility = actual_visibility;
+
+        fog_exp_density = m_log01 / actual_visibility;
+        fog_exp2_density = sqrt_m_log01 / actual_visibility;
+        fog_exp2_punch_through = sqrt_m_log01 / ( actual_visibility * 4.0 );
+    }
+
     // double angle;
     // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     // GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
@@ -531,23 +536,6 @@ void fgRenderFrame( void ) {
 	thesky->modify_vis( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
 			    ( global_multi_loop * fgGetInt("/sim/speed-up") )
                             / (double)fgGetInt("/sim/model-hz") );
-
-	double actual_visibility = thesky->get_visibility();
-	// cout << "actual visibility = " << actual_visibility << endl;
-
-	if ( actual_visibility != last_visibility ) {
-	    last_visibility = actual_visibility;
-
-	    // cout << "----> updating fog params" << endl;
-		
-	    // for GL_FOG_EXP
-	    fog_exp_density = -log(0.01) / actual_visibility;
-    
-	    // for GL_FOG_EXP2
-	    fog_exp2_density = sqrt( -log(0.01) ) / actual_visibility;
-	    fog_exp2_punch_through = sqrt( -log(0.01) ) / 
-		( actual_visibility * 1.5 );
-	}
 
 	// Set correct opengl fog density
 	glFogf (GL_FOG_DENSITY, fog_exp2_density);
