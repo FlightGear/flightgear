@@ -42,6 +42,7 @@ bin_SCRIPTS = runfgfs
 fgfs_SOURCES = \
 	main.cxx \
 	bfi.cxx bfi.hxx \
+	fg_commands.cxx fg_commands.hxx \
 	fg_init.cxx fg_init.hxx \
 	fg_io.cxx fg_io.hxx \
 	fg_props.cxx fg_props.hxx \
