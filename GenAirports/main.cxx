@@ -73,13 +73,20 @@ void write_airport( int p_index, list_container hull_list, FGBucket b,
         exit(-1);
     }
 
+    // polygon type
     if ( cut_and_keep ) {
 	fprintf( fd, "AirportKeep\n" );
     } else {
 	fprintf( fd, "AirportIgnore\n" );
     }
+
+    // number of contours
+    fprintf( fd, "1\n" );
+
+    // size of first contour
     fprintf( fd, "%d\n", hull_list.size() );
-    // write perimeter polygon
+
+    // write contour (polygon) points
     list_iterator current = hull_list.begin();
     list_iterator last = hull_list.end();
     for ( ; current != last ; ++current ) {
@@ -337,6 +344,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.8  1999/03/01 15:35:26  curt
+// Fixed bug in output format generated.
+//
 // Revision 1.7  1999/02/25 21:32:49  curt
 // Modified to adhere to new polygon naming convention, and also to read the
 // new Robin Peel aiport format.
