@@ -133,7 +133,7 @@ void find_tris(int n, int *t1, int *t2, int *t3, int *t4, int *t5) {
 // Initialize a new mesh structure
 void triload(const string& basename) {
     string nodename, elename;
-    Point3D node1, node2;
+    Point3D node1, node2, p;
     triangle tri;
     int nodecount, tricount, dim, junk1, junk2;
     int i;
@@ -163,8 +163,13 @@ void triload(const string& basename) {
 	node_in.stream() >> junk1 >> node1 >> junk2;
 	nodes_orig.push_back(node1);
 	// printf("%d %.2f %.2f %.2f\n", junk1, node1.x, node1.y, node1.z);
+	
+	// convert to radians (before we can convert to cartesian)
+	p = Point3D( node1.x() * ARCSEC_TO_RAD,
+	             node1.y() * ARCSEC_TO_RAD,
+		     node1.z() );
 
-	node2 = fgGeodToCart(node1);
+	node2 = fgGeodToCart(p);
 	nodes_cart.push_back(node2);
 	// printf("%d %.2f %.2f %.2f\n", junk1, node2.x, node2.y, node2.z);
 
@@ -611,6 +616,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.6  1998/10/21 14:56:20  curt
+// Fixed a units conversion bug.
+//
 // Revision 1.5  1998/10/20 15:50:33  curt
 // whitespace tweak.
 //
