@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <utmp.h>
+
 #include <stdio.h>
 #include <stdlib.h>  // atoi()
 #include <string.h>  // bcopy()
@@ -20,6 +22,47 @@
 
 
 #define MAXBUF 1024
+#define BUSY_WAIT_TIME 30
+
+
+string work_base = "";
+string output_base = "";
+
+
+// check if it is ok to run
+void check_master_switch() {
+    string file = work_base + ".status/MASTER_ON";
+
+    FILE *fp = fopen( file.c_str(), "r" );
+    if ( fp == NULL ) {
+	cout << "MASTER_ON file not found ... exiting." << endl;
+	exit(0);
+    }
+
+    fclose( fp );
+}
+
+
+// check if the host system is free of interactive users
+int system_free() {
+    struct utmp *uptr;
+
+    setutent();
+
+    while ( (uptr = getutent()) != NULL ) {
+	// cout << "NULL = " << NULL << "  uptr = " << uptr << endl;
+	// cout << "user =  ut_user = " << uptr->ut_user << endl;
+	// cout << "user =  ut_type = " << uptr->ut_type << endl;
+	if (uptr->ut_type == USER_PROCESS) {
+	    // found someone
+	    endutent();
+	    return 0;
+	}
+    }
+
+    endutent();
+    return 1;
+}
 
 
 int make_socket (char *host, unsigned short int port) {
@@ -64,8 +107,11 @@ long int get_next_task( const string& host, int port, long int last_tile ) {
     fd_set ready;
     char message[256];
 
+    // loop till we get a socket connection
     while ( (sock = make_socket( host.c_str(), port )) < 0 ) {
-	// loop till we get a socket connection
+	// check if the master switch is on
+	check_master_switch();
+
 	sleep(1);
     }
 
@@ -108,8 +154,7 @@ long int get_next_task( const string& host, int port, long int last_tile ) {
 
 // build the specified tile, return true if contruction completed
 // successfully
-bool construct_tile( const string& work_base, const string& output_base, 
-		     const FGBucket& b, const string& result_file ) {
+bool construct_tile( const FGBucket& b, const string& result_file ) {
     double angle = 10.0;
     bool still_trying = true;
 
@@ -117,7 +162,7 @@ bool construct_tile( const string& work_base, const string& output_base,
 	still_trying = false; 
 	char angle_str[256];
 	sprintf(angle_str, "%.0f", angle);
-	string command = "../Main/construct ";
+	string command = "fgfs-construct ";
 	command += angle_str;
 	command += " " + work_base + " " + output_base + " "
 	    + b.gen_index_str() + " > " + result_file + " 2>&1";
@@ -130,7 +175,7 @@ bool construct_tile( const string& work_base, const string& output_base,
 	while ( fgets( line, 256, fp ) != NULL ) {
 	    string line_str = line;
 	    line_str = line_str.substr(0, line_str.length() - 1);
-	    cout << line_str << endl;
+	    // cout << line_str << endl;
 	    if ( line_str == "[Finished successfully]" ) {
 		fclose(fp);
 		return true;
@@ -163,20 +208,28 @@ bool construct_tile( const string& work_base, const string& output_base,
 
 main(int argc, char *argv[]) {
     long int tile, last_tile;
+    bool rude = false;
     bool result;
 
     // Check usage
     if ( argc < 5 ) {
-	printf("Usage: %s remote_machine port work_base output_base\n",
+	printf("Usage: %s remote_machine port work_base output_base [ -r ]\n",
 	       argv[0]);
 	exit(1);
     }
 
     string host = argv[1];
     int port = atoi( argv[2] );
-    string work_base = argv[3];
-    string output_base = argv[4];
+    work_base = argv[3];
+    output_base = argv[4];
 
+    if ( argc == 6 ) {
+	string option = argv[5];
+	if ( option == "-r" ) {
+	    cout << "Running in RUDE mode!" << endl;
+	    rude = true;
+	}
+    }
     // get hostname and pid
     char hostname[MAXBUF];
     gethostname( hostname, MAXBUF );
@@ -188,13 +241,28 @@ main(int argc, char *argv[]) {
 
     last_tile = 0;
 
+    // check if the master switch is on
+    check_master_switch();
+
     while ( (tile = get_next_task( host, port, last_tile )) >= 0 ) {
-	result = construct_tile( work_base, output_base, 
-				 FGBucket(tile), result_file );
+	result = construct_tile( FGBucket(tile), result_file );
 	if ( result ) {
 	    last_tile = tile;
 	} else {
 	    last_tile = -tile;
+	}
+
+	// check if the master switch is on
+	check_master_switch();
+
+	// niceness policy: This whole process should run niced.  But
+	// additionally, if there is interactive use, we will sleep
+	// for 60 seconds between each tile to stagger out the load
+	// and impose less of an impact on the machine.
+	if ( !system_free() && !rude) {
+	    cout << "System has interactive use, sleeping for " 
+		 << BUSY_WAIT_TIME << " seconds..." << endl;
+	    sleep( BUSY_WAIT_TIME );
 	}
     }
 }

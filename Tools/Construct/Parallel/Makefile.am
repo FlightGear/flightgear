@@ -1,14 +1,14 @@
-bin_PROGRAMS = server client
+bin_PROGRAMS = fgfs-tools-server fgfs-tools-client
 
-server_SOURCES = server.cxx
+fgfs_tools_server_SOURCES = server.cxx
 
-server_LDADD = \
+fgfs_tools_server_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Misc/libMisc.a
 
-client_SOURCES = client.cxx
+fgfs_tools_client_SOURCES = client.cxx
 
-client_LDADD = \
+fgfs_tools_client_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Misc/libMisc.a
 

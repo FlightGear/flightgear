@@ -2,7 +2,7 @@ noinst_LIBRARIES = libClipper.a
 
 libClipper_a_SOURCES = clipper.cxx clipper.hxx
 
-bin_PROGRAMS = testclipper
+noinst_PROGRAMS = testclipper
 
 testclipper_SOURCES = testclipper.cxx
 

@@ -1,8 +1,11 @@
-bin_PROGRAMS = construct master
+bin_PROGRAMS = fgfs-construct fgfs-master
 
-construct_SOURCES = construct.cxx construct.hxx main.cxx construct_types.hxx
+fgfs_construct_SOURCES = \
+	construct_types.hxx \
+	construct.cxx construct.hxx \
+	main.cxx
 
-construct_LDADD = \
+fgfs_construct_LDADD = \
 	$(top_builddir)/Tools/Construct/Array/libArray.a \
 	$(top_builddir)/Tools/Construct/Clipper/libClipper.a \
 	$(top_builddir)/Tools/Construct/GenOutput/libGenOutput.a \
@@ -18,9 +21,9 @@ construct_LDADD = \
 	$(top_builddir)/Lib/zlib/libz.a \
 	-lgpc -lgfc
 
-master_SOURCES = master.cxx
+fgfs_master_SOURCES = master.cxx
 
-master_LDADD = \
+fgfs_master_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Misc/libMisc.a
 

@@ -26,7 +26,7 @@ static double lat = 0.0;
 static double lon = 0.0;
 static double dy = 0.0;
 static int pass = 0;
-
+static bool first_time = false;
 
 int make_socket (unsigned short int* port) {
     int sock;
@@ -134,7 +134,12 @@ long int get_next_tile( const string& work_base )
 	// reset lat
 	// lat = -89.0 + (shift_up*dy) - (dy*0.5);
 	// lat = 27.0 + (0*dy) + (dy*0.5);
-	lat = 15.0 + (shift_up*dy) + (dy*0.5);
+	if ( first_time ) {
+	    first_time = false;
+	    lat = 54.0 + (dy*0.5);
+	} else {
+	    lat = 15.0 + (shift_up*dy) + (dy*0.5);
+        }
 
 	// reset lon
 	FGBucket tmp( 0.0, lat );
@@ -164,7 +169,6 @@ long int get_next_tile( const string& work_base )
     }
 
     b = FGBucket( lon, lat );
-    cout << "Bucket = " << b << " (" << pass << ")" << endl;
 
     // increment to next tile
     FGBucket tmp( 0.0, lat );
@@ -264,6 +268,9 @@ int main( int argc, char **argv ) {
 		next_tile = get_next_tile( work_base );
 	    }
 
+	    cout << "Bucket = " << FGBucket(next_tile) 
+		 << " (" << pass << ")" << endl;
+    
 	    log_pending_tile( status_dir, next_tile );
 	    // cout << "next tile = " << next_tile << endl;;
 
