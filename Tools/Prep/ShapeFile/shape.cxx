@@ -128,10 +128,12 @@ static void clip_and_write_poly( string root, long int p_index, AreaType area,
 	fprintf( rfp, "%s\n", poly_type.c_str() );
 	gpc_write_polygon( rfp, 1, &result );
 	fclose( rfp );
+
+	// only free result if it is not empty
+	gpc_free_polygon(&result);
     }
 
     gpc_free_polygon(&base);
-    gpc_free_polygon(&result);
 }
 
 
@@ -151,7 +153,8 @@ void init_shape(gpc_polygon *shape) {
 }
 
 
-// make a gpc_polygon
+// make a gpc_polygon, first contour is outline, remaining contours
+// are holes
 void add_to_shape(int count, double *coords, gpc_polygon *shape) {
     
     for ( int i = 0; i < count; i++ ) {
@@ -160,7 +163,14 @@ void add_to_shape(int count, double *coords, gpc_polygon *shape) {
     }
 
     v_list.num_vertices = count;
-    gpc_add_contour( shape, &v_list, 0 );
+
+    if ( shape->num_contours == 0 ) {
+	// outline
+	gpc_add_contour( shape, &v_list, 0 );
+    } else {
+	// hole
+	gpc_add_contour( shape, &v_list, 1 );
+    }
 }
 
 
