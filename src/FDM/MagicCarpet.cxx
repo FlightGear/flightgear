@@ -84,6 +84,9 @@ int FGMagicCarpet::update( int multiloop ) {
 
     set_Geocentric_Position( lat_geoc, get_Longitude(), 
 			     sl_radius + get_Altitude() + climb );
+    // cout << "sea level radius (ft) = " << sl_radius << endl;
+    // cout << "(setto) sea level radius (ft) = " << get_Sea_level_radius() << endl;
+    set_Sea_level_radius( sl_radius * METER_TO_FEET);
     set_Altitude( get_Altitude() + climb );
 
     return 1;
