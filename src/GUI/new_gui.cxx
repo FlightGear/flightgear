@@ -185,8 +185,9 @@ NewGUI::newDialog (SGPropertyNode* props)
         SG_LOG(SG_GENERAL, SG_ALERT, "New dialog has no <name> property");
         return;
     }
-    string name = props->getStringValue("name");
-    _dialog_props[name] = props;
+    string name = cname;
+    if(!_active_dialogs[name])
+        _dialog_props[name] = props;
 }
 
 void
@@ -218,13 +219,18 @@ NewGUI::readDir (const char * path)
                 delete props;
                 continue;
             }
-            if (!props->hasValue("name")) {
+            SGPropertyNode *nameprop = props->getNode("name");
+            if (!nameprop) {
                 SG_LOG(SG_INPUT, SG_WARN, "dialog " << subpath
                    << " has no name; skipping.");
                 delete props;
                 continue;
             }
-            newDialog(props);
+            string name = nameprop->getStringValue();
+            if (_dialog_props[name])
+                delete (SGPropertyNode *)_dialog_props[name];
+
+            _dialog_props[name] = props;
         }
     }
     ulCloseDir(dir);

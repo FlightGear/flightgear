@@ -101,7 +101,7 @@ format_callback(puObject *obj, int dx, int dy, void *n)
 {
     SGPropertyNode *node = (SGPropertyNode *)n;
     const char *format = node->getStringValue("format"), *f = format;
-    bool number;
+    bool number, l = false;
     // make sure the format matches '[ -+#]?\d*(\.\d*)?l?[fs]'
     for (; *f; f++) {
         if (*f == '%') {
@@ -123,13 +123,15 @@ format_callback(puObject *obj, int dx, int dy, void *n)
             f++;
     }
     if (*f == 'l')
-        f++;
+        l = true, f++;
 
     if (*f == 'f')
         number = true;
-    else if (*f == 's')
+    else if (*f == 's') {
+        if (l)
+            return;
         number = false;
-    else
+    } else
         return;
 
     for (++f; *f; f++) {
@@ -420,8 +422,13 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         puText * text = new puText(x, y);
         setupObject(text, props);
 
-        if (props->getNode("format"))
-            text->setRenderCallback(format_callback, props);
+        if (props->getNode("format")) {
+            SGPropertyNode *live = props->getNode("live");
+            if (live && live->getBoolValue())
+                text->setRenderCallback(format_callback, props);
+            else
+                format_callback(text, x, y, props);
+        }
         // Layed-out objects need their size set, and non-layout ones
         // get a different placement.
         if(presetSize) text->setSize(width, height);
