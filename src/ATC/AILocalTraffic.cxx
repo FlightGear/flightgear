@@ -65,7 +65,7 @@ FGAILocalTraffic::FGAILocalTraffic() {
 	nominal_final_speed = 65.0;
 	//nominal_approach_speed;
 	//stall_speed_landing_config;
-	nominalTaxiSpeed = 8.0;
+	nominalTaxiSpeed = 7.5;
 	taxiTurnRadius = 8.0;
 	wheelOffset = 1.45;	// Warning - hardwired to the C172 - we need to read this in from file.
 	elevInitGood = false;
@@ -183,7 +183,7 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 			}
 			//cout << "AILocalTraffic freq is " << freq << '\n';
 		} else {
-			// Check CTAF, unicom etc
+			// TODO - Check CTAF, unicom etc
 		}
 	} else {
 		//cout << "Unable to find airport details in FGAILocalTraffic::Init()\n";
