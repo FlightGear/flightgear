@@ -13,6 +13,7 @@
 #include <simgear/misc/props.hxx>
 
 #include <GUI/gui.h>
+#include <GUI/new_gui.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -580,6 +581,14 @@ do_property_scale (const SGPropertyNode * arg)
   return prop->setDoubleValue((setting + offset) * factor);
 }
 
+static bool
+do_gui (const SGPropertyNode * arg)
+{
+    NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
+    gui->display(arg->getStringValue("name"));
+    return true;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -614,6 +623,7 @@ static struct {
     { "property-multiply", do_property_multiply },
     { "property-swap", do_property_swap },
     { "property-scale", do_property_scale },
+    { "gui", do_gui },
     { 0, 0 }			// zero-terminated
 };
 

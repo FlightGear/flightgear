@@ -94,6 +94,7 @@
 #include <FDM/UFO.hxx>
 #include <FDM/NullFDM.hxx>
 #include <FDM/YASim/YASim.hxx>
+#include <GUI/new_gui.hxx>
 #include <Include/general.hxx>
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
@@ -965,12 +966,21 @@ bool fgInitSubsystems( void ) {
 
 
     ////////////////////////////////////////////////////////////////////
-    // Initialize the logger.
+    // Create and register the logger.
     ////////////////////////////////////////////////////////////////////
     
     globals->get_subsystem_mgr()->add(FGSubsystemMgr::GENERAL,
                                       "logger",
                                       new FGLogger);
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Create and register the XML GUI.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->get_subsystem_mgr()->add(FGSubsystemMgr::INIT,
+                                      "gui",
+                                      new NewGUI);
 
 
     ////////////////////////////////////////////////////////////////////
