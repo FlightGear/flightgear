@@ -48,6 +48,7 @@ FGAIBase::FGAIBase() {
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
     bearing = elevation = range = rdot = 0.0;
     x_shift = y_shift = rotation = 0.0;
+    in_range = false;
     invisible = true;
     no_roll = true;
     model_path = "";
@@ -139,6 +140,7 @@ void FGAIBase::bind() {
    props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
    props->tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
 
+   props->tie("radar/in-range", SGRawValuePointer<bool>(&in_range));
    props->tie("radar/bearing-deg",   SGRawValuePointer<double>(&bearing));
    props->tie("radar/elevation-deg", SGRawValuePointer<double>(&elevation));
    props->tie("radar/range-nm", SGRawValuePointer<double>(&range));
@@ -167,6 +169,7 @@ void FGAIBase::unbind() {
     props->untie("orientation/roll-deg");
     props->untie("orientation/true-heading-deg");
 
+    props->untie("radar/in-range");
     props->untie("radar/bearing-deg");
     props->untie("radar/elevation-deg");
     props->untie("radar/range-nm");

@@ -86,6 +86,7 @@ protected:
     double tgt_vs;
 
     // these describe radar information for the user
+    bool in_range;       // true if in range of the radar, otherwise false
     double bearing;      // true bearing from user to this model
     double elevation;    // elevation in degrees from user to this model
     double range;        // range from user to this model, nm
