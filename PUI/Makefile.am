@@ -1,8 +1,8 @@
 libdir	= ${exec_prefix}/lib
 
-lib_LTLIBRARIES = libPui.la
+lib_LTLIBRARIES = libPUI.la
 
-libPui_la_SOURCES = \
+libPUI_la_SOURCES = \
 	pu.h puLocal.h \
 	pu.cxx \
 	puBox.cxx \
