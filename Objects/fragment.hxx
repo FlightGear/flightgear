@@ -66,30 +66,21 @@ using namespace std;
 class fgTILE;
 class fgMATERIAL;
 
-
-class fgFACE {
-public:
-    int n1, n2, n3;
-
-    explicit fgFACE( int a = 0, int b =0, int c =0 )
-	: n1(a), n2(b), n3(c) {}
-
-    fgFACE( const fgFACE & image )
-	: n1(image.n1), n2(image.n2), n3(image.n3) {}
-
-    ~fgFACE() {}
-
-    bool operator < ( const fgFACE & rhs ) { return n1 < rhs.n1; }
-};
-
-inline bool
-operator == ( const fgFACE& lhs, const fgFACE & rhs )
-{
-    return (lhs.n1 == rhs.n1) && (lhs.n2 == rhs.n2) && (lhs.n3 == rhs.n3);
-}
-
 // Object fragment data class
 class fgFRAGMENT {
+
+private:
+    struct fgFACE {
+	int n1, n2, n3;
+
+	fgFACE( int a = 0, int b =0, int c =0 )
+	    : n1(a), n2(b), n3(c) {}
+
+	fgFACE( const fgFACE & image )
+	    : n1(image.n1), n2(image.n2), n3(image.n3) {}
+
+	~fgFACE() {}
+    };
 
 public:
     // culling data for this object fragment (fine grain culling)
@@ -151,7 +142,7 @@ public:
     // operators
     fgFRAGMENT & operator = ( const fgFRAGMENT & rhs );
 
-    bool operator <  ( const fgFRAGMENT & rhs ) {
+    bool operator <  ( const fgFRAGMENT & rhs ) const {
 	// This is completely arbitrary. It satisfies RW's STL implementation
 	return bounding_radius < rhs.bounding_radius;
     }
@@ -167,6 +158,13 @@ public:
 };
 
 inline bool
+operator == ( const fgFRAGMENT::fgFACE& lhs,
+	      const fgFRAGMENT::fgFACE& rhs )
+{
+    return (lhs.n1 == rhs.n1) && (lhs.n2 == rhs.n2) && (lhs.n3 == rhs.n3);
+}
+
+inline bool
 operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
     return (( lhs.center.x - rhs.center.x ) < FG_EPSILON &&
 	    ( lhs.center.y - rhs.center.y ) < FG_EPSILON &&
@@ -178,6 +176,33 @@ operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
 
 
 // $Log$
+// Revision 1.4  1998/09/10 19:07:09  curt
+// /Simulator/Objects/fragment.hxx
+//   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.
+//
+// ./Simulator/Objects/material.cxx
+// ./Simulator/Objects/material.hxx
+//   Made fgMATERIAL and fgMATERIAL_MGR bona fide classes with private
+//   data members - that should keep the rabble happy :)
+//
+// ./Simulator/Scenery/tilemgr.cxx
+//   In viewable() delay evaluation of eye[0] and eye[1] in until they're
+//   actually needed.
+//   Change to fgTileMgrRender() to call fgMATERIAL_MGR::render_fragments()
+//   method.
+//
+// ./Include/fg_stl_config.h
+// ./Include/auto_ptr.hxx
+//   Added support for g++ 2.7.
+//   Further changes to other files are forthcoming.
+//
+// Brief summary of changes required for g++ 2.7.
+//   operator->() not supported by iterators: use (*i).x instead of i->x
+//   default template arguments not supported,
+//   <functional> doesn't have mem_fun_ref() needed by callbacks.
+//   some std include files have different names.
+//   template member functions not supported.
+//
 // Revision 1.3  1998/09/08 21:40:44  curt
 // Updates from Bernie Bright.
 //

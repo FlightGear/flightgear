@@ -63,7 +63,7 @@ class fgFRAGMENT;
 // Material property class
 class fgMATERIAL {
 
-public:
+private:
     // OpenGL texture name
     GLuint texture_id;
 
@@ -80,10 +80,15 @@ public:
     // transient list of objects with this material type (used for sorting
     // by material to reduce GL state changes when rendering the scene
     fgFRAGMENT * list[FG_MAX_MATERIAL_FRAGS];
-    int list_size;
+    size_t list_size;
+
+public:
 
     // Constructor
     fgMATERIAL ( void );
+
+    size_t size() const { return list_size; }
+    bool empty() const { return list_size == 0; }
 
     // Sorting routines
     void init_sort_list( void ) {
@@ -92,10 +97,14 @@ public:
 
     int append_sort_list( fgFRAGMENT *object );
 
+    void render_fragments();
+
     void load_texture();
 
     // Destructor
     ~fgMATERIAL ( void );
+
+    friend istream& operator >> ( istream& in, fgMATERIAL& m );
 };
 
 istream& operator >> ( istream& in, fgMATERIAL& m );
@@ -110,7 +119,11 @@ public:
     typedef container::iterator iterator;
     typedef container::const_iterator const_iterator;
 
-    container material_map;
+    iterator begin() { return material_map.begin(); }
+    const_iterator begin() const { return material_map.begin(); }
+
+    iterator end() { return material_map.end(); }
+    const_iterator end() const { return material_map.end(); }
 
     // Constructor
     fgMATERIAL_MGR ( void );
@@ -123,8 +136,14 @@ public:
 
     bool find( const string& material, fgMATERIAL*& mtl_ptr );
 
+    void render_fragments();
+
     // Destructor
     ~fgMATERIAL_MGR ( void );
+
+private:
+
+    container material_map;
 };
 
 
@@ -136,6 +155,33 @@ extern fgMATERIAL_MGR material_mgr;
 
 
 // $Log$
+// Revision 1.3  1998/09/10 19:07:12  curt
+// /Simulator/Objects/fragment.hxx
+//   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.
+//
+// ./Simulator/Objects/material.cxx
+// ./Simulator/Objects/material.hxx
+//   Made fgMATERIAL and fgMATERIAL_MGR bona fide classes with private
+//   data members - that should keep the rabble happy :)
+//
+// ./Simulator/Scenery/tilemgr.cxx
+//   In viewable() delay evaluation of eye[0] and eye[1] in until they're
+//   actually needed.
+//   Change to fgTileMgrRender() to call fgMATERIAL_MGR::render_fragments()
+//   method.
+//
+// ./Include/fg_stl_config.h
+// ./Include/auto_ptr.hxx
+//   Added support for g++ 2.7.
+//   Further changes to other files are forthcoming.
+//
+// Brief summary of changes required for g++ 2.7.
+//   operator->() not supported by iterators: use (*i).x instead of i->x
+//   default template arguments not supported,
+//   <functional> doesn't have mem_fun_ref() needed by callbacks.
+//   some std include files have different names.
+//   template member functions not supported.
+//
 // Revision 1.2  1998/09/01 19:03:09  curt
 // Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
 //  - The new classes in libmisc.tgz define a stream interface into zlib.

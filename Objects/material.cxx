@@ -35,20 +35,28 @@
 
 #include <string.h>
 
+#include "Include/fg_stl_config.h"
 #include <Debug/fg_debug.h>
 #include <Main/options.hxx>
 #include <Misc/fgstream.hxx>
+#include <Main/views.hxx>
+#include <Scenery/tile.hxx>
 
 #include "material.hxx"
+#include "fragment.hxx"
 #include "texload.h"
+
 
 // global material management class
 fgMATERIAL_MGR material_mgr;
 
 
 // Constructor
-fgMATERIAL::fgMATERIAL ( void ) {
-    alpha = 0;
+fgMATERIAL::fgMATERIAL ( void )
+    : texture_name(""),
+      alpha(0),
+      list_size(0)
+{
     ambient[0]  = ambient[1]  = ambient[2]  = ambient[3]  = 0.0;
     diffuse[0]  = diffuse[1]  = diffuse[2]  = diffuse[3]  = 0.0;
     specular[0] = specular[1] = specular[2] = specular[3] = 0.0;
@@ -60,11 +68,11 @@ int fgMATERIAL::append_sort_list( fgFRAGMENT *object ) {
     if ( list_size < FG_MAX_MATERIAL_FRAGS )
     {
 	list[ list_size++ ] = object;
-	return 0;
+	return 1;
     }
     else
     {
-	return 1;
+	return 0;
     }
 }
 
@@ -220,6 +228,45 @@ fgMATERIAL_MGR::fgMATERIAL_MGR ( void ) {
 }
 
 
+void
+fgMATERIAL::render_fragments()
+{
+    if ( empty() )
+	return;
+
+    if ( current_options.get_textures() )
+    {
+#ifdef GL_VERSION_1_1
+	xglBindTexture(GL_TEXTURE_2D, texture_id);
+#elif GL_EXT_texture_object
+	xglBindTextureEXT(GL_TEXTURE_2D, texture_id);
+#else
+#  error port me
+#endif
+    } else {
+	xglMaterialfv (GL_FRONT, GL_AMBIENT, ambient);
+	xglMaterialfv (GL_FRONT, GL_DIFFUSE, diffuse);
+    }
+
+    fgTILE* last_tile_ptr = NULL;
+    for ( size_t i = 0; i < list_size; ++i )
+    {
+	fgFRAGMENT* frag_ptr = list[i];
+	current_view.tris_rendered += frag_ptr->num_faces;
+	if ( frag_ptr->tile_ptr != last_tile_ptr )
+	{
+	    // new tile, new translate
+	    xglLoadMatrixd( frag_ptr->tile_ptr->model_view );
+	}
+
+	// Woohoo!!!  We finally get to draw something!
+	// printf("  display_list = %d\n", frag_ptr->display_list);
+	xglCallList( frag_ptr->display_list );
+	last_tile_ptr = frag_ptr->tile_ptr;
+    }
+}
+
+
 // Load a library of material properties
 int fgMATERIAL_MGR::load_lib ( void ) {
     string material_name;
@@ -244,18 +291,19 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 	in.stream() >> material_name >> token;
 
 	if ( token == '{' ) {
-	    cout << "Loading material " << material_name << endl;
+	    printf( "  Loading material %s\n", material_name.c_str() );
 	    fgMATERIAL m;
 	    in.stream() >> m;
+	    m.load_texture();
 	    material_mgr.material_map[material_name] = m;
 	}
     }
 
-    for ( iterator it = material_map.begin();
-	  it != material_map.end(); ++it )
-    {
-	it->second.load_texture();
-    }
+//     iterator last = end();
+//     for ( iterator it = begin(); it != last; ++it )
+//     {
+// 	(*it).second.load_texture();
+//     }
 
     return(1);
 }
@@ -263,10 +311,10 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 
 // Initialize the transient list of fragments for each material property
 void fgMATERIAL_MGR::init_transient_material_lists( void ) {
-    for ( iterator it = material_map.begin();
-	  it != material_map.end(); ++it )
+    iterator last = end();
+    for ( iterator it = begin(); it != last; ++it )
     {
-	it->second.init_sort_list();
+	(*it).second.init_sort_list();
     }
 }
 
@@ -274,9 +322,9 @@ bool
 fgMATERIAL_MGR::find( const string& material, fgMATERIAL*& mtl_ptr )
 {
     iterator it = material_map.find( material );
-    if ( it != material_map.end() )
+    if ( it != end() )
     {
-	mtl_ptr = &(it->second);
+	mtl_ptr = &((*it).second);
 	return true;
     }
 
@@ -289,7 +337,44 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 }
 
 
+void
+fgMATERIAL_MGR::render_fragments()
+{
+    current_view.tris_rendered = 0;
+    iterator last = end();
+    for ( iterator current = begin(); current != last; ++current )
+	(*current).second.render_fragments();
+}
+
+
 // $Log$
+// Revision 1.5  1998/09/10 19:07:11  curt
+// /Simulator/Objects/fragment.hxx
+//   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.
+//
+// ./Simulator/Objects/material.cxx
+// ./Simulator/Objects/material.hxx
+//   Made fgMATERIAL and fgMATERIAL_MGR bona fide classes with private
+//   data members - that should keep the rabble happy :)
+//
+// ./Simulator/Scenery/tilemgr.cxx
+//   In viewable() delay evaluation of eye[0] and eye[1] in until they're
+//   actually needed.
+//   Change to fgTileMgrRender() to call fgMATERIAL_MGR::render_fragments()
+//   method.
+//
+// ./Include/fg_stl_config.h
+// ./Include/auto_ptr.hxx
+//   Added support for g++ 2.7.
+//   Further changes to other files are forthcoming.
+//
+// Brief summary of changes required for g++ 2.7.
+//   operator->() not supported by iterators: use (*i).x instead of i->x
+//   default template arguments not supported,
+//   <functional> doesn't have mem_fun_ref() needed by callbacks.
+//   some std include files have different names.
+//   template member functions not supported.
+//
 // Revision 1.4  1998/09/01 19:03:08  curt
 // Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
 //  - The new classes in libmisc.tgz define a stream interface into zlib.

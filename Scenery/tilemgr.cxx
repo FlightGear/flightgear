@@ -266,8 +266,6 @@ static int viewable( fgPoint3d *cp, double radius ) {
 	
     mat = (double *)(current_view.WORLD_TO_EYE);
 	
-    eye[0] = (x*mat[0] + y*mat[4] + z*mat[8] + mat[12]) * current_view.slope_x;
-    eye[1] = (x*mat[1] + y*mat[5] + z*mat[9] + mat[13]) * current_view.slope_y; 
     eye[2] =  x*mat[2] + y*mat[6] + z*mat[10] + mat[14];
 	
     // Check near and far clip plane
@@ -277,6 +275,8 @@ static int viewable( fgPoint3d *cp, double radius ) {
 	return(0);
     }
 	
+    eye[0] = (x*mat[0] + y*mat[4] + z*mat[8] + mat[12]) * current_view.slope_x;
+
     // check right and left clip plane (from eye perspective)
     x1 = radius * current_view.fov_x_clip;
     if( (eye[2] > -(eye[0]+x1)) || (eye[2] > (eye[0]-x1)) )
@@ -284,6 +284,8 @@ static int viewable( fgPoint3d *cp, double radius ) {
 	return(0);
     }
 	
+    eye[1] = (x*mat[1] + y*mat[5] + z*mat[9] + mat[13]) * current_view.slope_y;
+
     // check bottom and top clip plane (from eye perspective)
     y1 = radius * current_view.fov_y_clip;
     if( (eye[2] > -(eye[1]+y1)) || (eye[2] > (eye[1]-y1)) )
@@ -302,12 +304,17 @@ static int viewable( fgPoint3d *cp, double radius ) {
     v = &current_view;
 
     MAT3_SET_HVEC(world, cp->x, cp->y, cp->z, 1.0);
-    MAT3mult_vec(eye, world, v->WORLD_TO_EYE);
+    // MAT3mult_vec(eye, world, v->WORLD_TO_EYE);
     // printf( "\nworld -> eye = %.2f %.2f %.2f  radius = %.2f\n", 
     //         eye[0], eye[1], eye[2], radius);
 
+    // Use lazy evaluation for calculating eye hvec.
+#define vec world
+#define mat v->WORLD_TO_EYE
+    eye[2] = vec[0]*mat[0][2]+vec[1]*mat[1][2]+vec[2]*mat[2][2]+mat[3][2];
+
     // Check near clip plane
-    if ( eye[2] - radius > 0.0 ) {
+    if ( eye[2] > radius ) {
 	return(0);
     }
 
@@ -321,58 +328,32 @@ static int viewable( fgPoint3d *cp, double radius ) {
     x1 = v->cos_fov_x * radius;
     y1 = v->sin_fov_x * radius;
     slope = v->slope_x;
-    x0 = x1 - y1 / slope;
+    eye[0] = vec[0]*mat[0][0]+vec[1]*mat[1][0]+vec[2]*mat[2][0]+mat[3][0];
 
-    // printf("(r) x1 = %.2f  y1 = %.2f\n", x1, y1);
-    // printf("eye[0] = %.2f  eye[2] = %.2f\n", eye[0], eye[2]);
-    // printf("(r) x0 = %.2f  slope_x = %.2f  radius = %.2f\n", 
-    //        x0, slope, radius);
-
-    if ( eye[2] > slope * (eye[0] - x0) ) {
-	return(0);
+    if ( eye[2] > ((slope * (eye[0] - x1)) + y1) ) {
+	return( false );
     }
 
     // check left clip plane (from eye perspective)
-    x1 = -x1;
-    slope = -slope;
-    x0 = x1 - y1 / slope;
-
-    // printf("(r) x1 = %.2f  y1 = %.2f\n", x1, y1);
-    // printf("eye[0] = %.2f  eye[2] = %.2f\n", eye[0], eye[2]);
-    // printf("(r) x0 = %.2f  slope_x = %.2f  radius = %.2f\n", 
-    //        x0, slope, radius);
-
-    if ( eye[2] > slope * (eye[0] - x0) ) {
-	return(0);
+    if ( eye[2] > -((slope * (eye[0] + x1)) - y1) ) {
+	return( false );
     }
 
     // check bottom clip plane (from eye perspective)
     x1 = -(v->cos_fov_y) * radius;
     y1 = v->sin_fov_y * radius;
     slope = v->slope_y;
-    x0 = x1 - y1 / slope;
+    eye[1] = vec[0]*mat[0][1]+vec[1]*mat[1][1]+vec[2]*mat[2][1]+mat[3][1];
+#undef vec
+#undef mat
 
-    // printf("(r) x1 = %.2f  y1 = %.2f\n", x1, y1);
-    // printf("eye[1] = %.2f  eye[2] = %.2f\n", eye[1], eye[2]);
-    // printf("(r) x0 = %.2f  slope_y = %.2f  radius = %.2f\n", 
-    //       x0, slope, radius);
-
-    if ( eye[2] > slope * (eye[1] - x0) ) {
-	return(0);
+    if ( eye[2] > ((slope * (eye[1] - x1)) + y1) ) {
+	return( false );
     }
 
     // check top clip plane (from eye perspective)
-    x1 = -x1;
-    slope = -slope;
-    x0 = x1 - y1 / slope;
-
-    // printf("(r) x1 = %.2f  y1 = %.2f\n", x1, y1);
-    // printf("eye[1] = %.2f  eye[2] = %.2f\n", eye[1], eye[2]);
-    // printf("(r) x0 = %.2f  slope_y = %.2f  radius = %.2f\n", 
-    //        x0, slope, radius);
-
-    if ( eye[2] > slope * (eye[1] - x0) ) {
-	return(0);
+    if ( eye[2] > -((slope * (eye[1] + x1)) - y1) ) {
+	return( false );
     }
 
 #endif // defined( USE_FAST_FOV_CLIP )
@@ -669,10 +650,7 @@ void fgTileMgrRender( void ) {
 
 			mtl_ptr = frag_ptr->material_ptr;
 			// printf(" lookup = %s\n", mtl_ptr->texture_name);
-			if ( mtl_ptr->list_size < FG_MAX_MATERIAL_FRAGS ) {
-			    mtl_ptr->list[mtl_ptr->list_size] = frag_ptr;
-			    (mtl_ptr->list_size)++;
-			} else {
+			if ( ! mtl_ptr->append_sort_list( frag_ptr ) ) {
 			    fgPrintf( FG_TERRAIN, FG_ALERT,
 				      "Overran material sorting array\n" );
 			}
@@ -705,72 +683,40 @@ void fgTileMgrRender( void ) {
     // Pass 2
     // traverse the transient per-material fragment lists and render
     // out all fragments for each material property.
-    map < string, fgMATERIAL, less<string> > :: iterator mapcurrent = 
-	material_mgr.material_map.begin();
-    map < string, fgMATERIAL, less<string> > :: iterator maplast = 
-	material_mgr.material_map.end();
-
     xglPushMatrix();
-
-    for ( ; mapcurrent != maplast; ++mapcurrent ) {
-        // (char *)key = (*mapcurrent).first;
-        // (fgMATERIAL)value = (*mapcurrent).second;
-	mtl_ptr = &(*mapcurrent).second;
-
-	last_tile_ptr = NULL;
-
-	size = mtl_ptr->list_size;
-	if ( size > 0 ) {
-	    if ( textures ) {
-#ifdef GL_VERSION_1_1
-		xglBindTexture(GL_TEXTURE_2D, mtl_ptr->texture_id);
-#elif GL_EXT_texture_object
-		xglBindTextureEXT(GL_TEXTURE_2D, mtl_ptr->texture_id);
-#else
-#  error port me
-#endif
-	    } else {
-		xglMaterialfv (GL_FRONT, GL_AMBIENT, mtl_ptr->ambient);
-		xglMaterialfv (GL_FRONT, GL_DIFFUSE, mtl_ptr->diffuse);
-	    }
-
-	    // printf("traversing = %s, size = %d\n", 
-	    //       mtl_ptr->texture_name, size);
-	    for ( i = 0; i < size; i++ ) {
-		frag_ptr = mtl_ptr->list[i];
-		
-		// count up the number of polygons we are drawing in
-		// case someone is interested.
-		total_faces += frag_ptr->num_faces;
-
-		if ( frag_ptr->tile_ptr == last_tile_ptr ) {
-		    // same tile as last time, no transform necessary
-		} else {
-		    // new tile, new translate
-		    // xglLoadMatrixf( frag_ptr->matrix );
-		    t = frag_ptr->tile_ptr;
-		    xglLoadMatrixd(t->model_view );
-		}
-	    
-		// Woohoo!!!  We finally get to draw something!
-		// printf("  display_list = %d\n", frag_ptr->display_list);
-		xglCallList(frag_ptr->display_list);
-
-		last_tile_ptr = frag_ptr->tile_ptr;
-	    }
-	}
-    }
-
+    material_mgr.render_fragments();
     xglPopMatrix();
-
-    v->tris_rendered = total_faces;
-
-    fgPrintf( FG_TERRAIN, FG_DEBUG, "Rendered %d polygons this frame.\n", 
-	      total_faces);
 }
 
 
 // $Log$
+// Revision 1.35  1998/09/10 19:07:16  curt
+// /Simulator/Objects/fragment.hxx
+//   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.
+//
+// ./Simulator/Objects/material.cxx
+// ./Simulator/Objects/material.hxx
+//   Made fgMATERIAL and fgMATERIAL_MGR bona fide classes with private
+//   data members - that should keep the rabble happy :)
+//
+// ./Simulator/Scenery/tilemgr.cxx
+//   In viewable() delay evaluation of eye[0] and eye[1] in until they're
+//   actually needed.
+//   Change to fgTileMgrRender() to call fgMATERIAL_MGR::render_fragments()
+//   method.
+//
+// ./Include/fg_stl_config.h
+// ./Include/auto_ptr.hxx
+//   Added support for g++ 2.7.
+//   Further changes to other files are forthcoming.
+//
+// Brief summary of changes required for g++ 2.7.
+//   operator->() not supported by iterators: use (*i).x instead of i->x
+//   default template arguments not supported,
+//   <functional> doesn't have mem_fun_ref() needed by callbacks.
+//   some std include files have different names.
+//   template member functions not supported.
+//
 // Revision 1.34  1998/09/09 20:58:09  curt
 // Tweaks to loop constructs with STL usage.
 //
