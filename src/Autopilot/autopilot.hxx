@@ -23,20 +23,31 @@
                        
 #ifndef _AUTOPILOT_HXX
 #define _AUTOPILOT_HXX
+
+#include <Include/compiler.h>
                        
+#include STL_STRING
+
+#include <string.h>
 
 #include <Aircraft/aircraft.hxx>
 #include <FDM/flight.hxx>
 #include <Controls/controls.hxx>
                        
-                       
+FG_USING_STD(string);
+
+                  
 // Structures
 typedef struct {
-    bool heading_hold;   // the current state of the heading hold
-    bool altitude_hold;  // the current state of the altitude hold
-    bool terrain_follow; // the current state of the terrain follower
-    bool auto_throttle;  // the current state of the auto throttle
+    bool waypoint_hold;       // the current state of the target hold
+    bool heading_hold;        // the current state of the heading hold
+    bool altitude_hold;       // the current state of the altitude hold
+    bool terrain_follow;      // the current state of the terrain follower
+    bool auto_throttle;       // the current state of the auto throttle
 
+    double TargetLatitude;    // the latitude the AP should steer to.
+    double TargetLongitude;   // the longitude the AP should steer to.
+    double TargetDistance;    // the distance to Target.
     double TargetHeading;     // the heading the AP should steer to.
     double TargetAltitude;    // altitude to hold
     double TargetAGL;         // the terrain separation
@@ -54,7 +65,31 @@ typedef struct {
     double RollOutSmooth; // deg to use for smoothing Aileron Control
     double MaxElevator; // the maximum elevator allowed
     double SlopeSmooth; // smoothing angle for elevator
-    
+	
+	// following for testing disengagement of autopilot
+	// apon pilot interaction with controls
+    double old_aileron;
+    double old_elevator;
+    double old_elevator_trim;
+    double old_rudder;
+	
+	// manual controls override beyond this value
+	double disengage_threshold; 
+
+	// For future cross track error adjust
+	double old_lat;
+	double old_lon;
+
+	// keeping these locally to save work inside main loop
+	char TargetLatitudeStr[32];
+	char TargetLongitudeStr[32];
+    char TargetLatLonStr[32];
+	char TargetDistanceStr[32];
+    char TargetHeadingStr[32];
+    char TargetAltitudeStr[32];
+//	char jnk[32];
+	// using current_options.airport_id for now
+//	string tgt_airport_id;  // ID of initial starting airport    
 } fgAPData, *fgAPDataPtr ;
 		
 
@@ -66,6 +101,7 @@ typedef struct {
 void fgAPInit( fgAIRCRAFT *current_aircraft );
 int fgAPRun( void );
 
+void fgAPToggleWayPoint( void );
 void fgAPToggleHeading( void );
 void fgAPToggleAltitude( void );
 void fgAPToggleTerrainFollow( void );
@@ -74,6 +110,7 @@ void fgAPToggleAutoThrottle( void );
 bool fgAPTerrainFollowEnabled( void );
 bool fgAPAltitudeEnabled( void );
 bool fgAPHeadingEnabled( void );
+bool fgAPWayPointEnabled( void );
 bool fgAPAutoThrottleEnabled( void );
 
 void fgAPAltitudeAdjust( double inc );
@@ -82,11 +119,37 @@ void fgAPAutoThrottleAdjust( double inc );
 
 void fgAPHeadingSet( double value );
 
+double fgAPget_TargetLatitude( void );
+double fgAPget_TargetLongitude( void );
+double fgAPget_TargetHeading( void );
+double fgAPget_TargetDistance( void );
+double fgAPget_TargetAltitude( void );
+
+char *fgAPget_TargetLatitudeStr( void );
+char *fgAPget_TargetLongitudeStr( void );
+char *fgAPget_TargetDistanceStr( void );
+char *fgAPget_TargetHeadingStr( void );
+char *fgAPget_TargetAltitudeStr( void );
+char *fgAPget_TargetLatLonStr( void );
+
+//void fgAPset_tgt_airport_id( const string );
+//string fgAPget_tgt_airport_id( void );
+
 void fgAPReset(void);
+
+int geo_inverse_wgs_84( double alt,
+						double lat1, double lon1,
+						double lat2, double lon2,
+						double *az1, double *az2,
+						double *s );
+
+int geo_direct_wgs_84(  double alt,
+						double lat1, double lon1,
+						double az1, double s,
+						double *lat2, double *lon2,
+						double *az2 );
 
 class puObject;
 void fgAPAdjust( puObject * );
 
 #endif // _AUTOPILOT_HXX
-
-

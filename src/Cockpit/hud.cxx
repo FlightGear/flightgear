@@ -993,6 +993,7 @@ int brightness        = pHUDInstr->get_brightness();
   pHUDInstr->SetBrightness( brightness );
 }
 
+#if 0
 // fgUpdateHUD
 //
 // Performs a once around the list of calls to instruments installed in
@@ -1132,3 +1133,168 @@ void fgUpdateHUD( void ) {
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 }
+#endif
+
+
+// fgUpdateHUD
+//
+// Performs a once around the list of calls to instruments installed in
+// the HUD object with requests for redraw. Kinda. It will when this is
+// all C++.
+//
+void fgUpdateHUD( void ) {
+  int brightness;
+//  int day_night_sw = current_aircraft.controls->day_night_switch;
+  int day_night_sw = global_day_night_switch;
+  int hud_displays = HUD_deque.size();
+  instr_item *pHUDInstr;
+  float line_width;
+
+  if( !hud_displays ) {  // Trust everyone, but ALWAYS cut the cards!
+    return;
+    }
+
+  HUD_TextList.erase();
+  HUD_LineList.erase();
+//  HUD_StippleLineList.erase();
+  
+  pHUDInstr = HUD_deque[0];
+  brightness = pHUDInstr->get_brightness();
+//  brightness = HUD_deque.at(0)->get_brightness();
+
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+
+  glLoadIdentity();
+  gluOrtho2D(0, 640, 0, 480);
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+
+  glColor3f(1.0, 1.0, 1.0);
+  glIndexi(7);
+
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+
+  // We can do translucency, so why not. :-)
+//  glEnable    ( GL_BLEND ) ;
+//  glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
+  
+  if( day_night_sw == DAY) {
+	  switch (brightness) {
+		  case BRT_LIGHT:
+//            glColor4f (0.1, 0.9, 0.1, 0.75);
+            glColor3f (0.1, 0.9, 0.1);
+            break;
+
+          case BRT_MEDIUM:
+//            glColor4f (0.1, 0.7, 0.0, 0.75);
+            glColor3f (0.1, 0.7, 0.0);
+            break;
+
+          case BRT_DARK:
+//            glColor4f (0.0, 0.6, 0.0, 0.75);
+            glColor3f(0.0, 0.6, 0.0);
+            break;
+
+          case BRT_BLACK:
+//            glColor4f( 0.0, 0.0, 0.0, 0.75);
+            glColor3f( 0.0, 0.0, 0.0);
+            break;
+
+          default:;
+	  }
+  }
+  else {
+	  if( day_night_sw == NIGHT) {
+		  switch (brightness) {
+			  case BRT_LIGHT:
+//                glColor4f (0.9, 0.1, 0.1, 0.75);
+                glColor3f (0.9, 0.1, 0.1);
+                break;
+
+              case BRT_MEDIUM:
+//                glColor4f (0.7, 0.0, 0.1, 0.75);
+                glColor3f (0.7, 0.0, 0.1);
+                break;
+
+			  case BRT_DARK:
+			  default:
+//				  glColor4f (0.6, 0.0, 0.0, 0.75);
+				  glColor3f (0.6, 0.0, 0.0);
+		  }
+	  }
+          else {     // Just in case default
+//			  glColor4f (0.1, 0.9, 0.1, 0.75);
+			  glColor3f (0.1, 0.9, 0.1);
+		  }
+  }
+
+  deque < instr_item * > :: iterator current = HUD_deque.begin();
+  deque < instr_item * > :: iterator last = HUD_deque.end();
+
+  for ( ; current != last; ++current ) {
+	  pHUDInstr = *current;
+
+	  if( pHUDInstr->enabled()) {
+		  //  fgPrintf( FG_COCKPIT, FG_DEBUG, "HUD Code %d  Status %d\n",
+		  //            hud->code, hud->status );
+		  pHUDInstr->draw();
+//	      HUD_deque.at(i)->draw(); // Responsible for broken or fixed variants.
+                              // No broken displays honored just now.
+	  }
+  }
+
+  char *gmt_str = get_formated_gmt_time();
+  HUD_TextList.add( fgText(40, 10, gmt_str) );
+
+  // temporary
+  extern bool fgAPAltitudeEnabled( void );
+  extern bool fgAPHeadingEnabled( void );
+  extern bool fgAPWayPointEnabled( void );
+  extern char *fgAPget_TargetDistanceStr( void );
+  extern char *fgAPget_TargetHeadingStr( void );
+  extern char *fgAPget_TargetAltitudeStr( void );
+  extern char *fgAPget_TargetLatLonStr( void );
+
+  int apY = 480 - 80;
+  char scratch[128];
+//  HUD_TextList.add( fgText( "AUTOPILOT", 20, apY) );
+//  apY -= 15;
+  if( fgAPHeadingEnabled() ) {
+	  HUD_TextList.add( fgText( 40, apY, fgAPget_TargetHeadingStr()) );	  
+	  apY -= 15;
+  }
+  if( fgAPAltitudeEnabled() ) {
+	  HUD_TextList.add( fgText( 40, apY, fgAPget_TargetAltitudeStr()) );	  
+	  apY -= 15;
+  }
+  if( fgAPWayPointEnabled() ) {
+	  HUD_TextList.add( fgText( 40, apY, fgAPget_TargetLatLonStr()) );
+	  apY -= 15;
+	  HUD_TextList.add( fgText( 40, apY, fgAPget_TargetDistanceStr() ) );	  
+	  apY -= 15;
+  }
+  
+  HUD_TextList.draw();
+
+  line_width = (current_options.get_xsize() > 1000) ? 1.0 : 0.5;
+  glLineWidth(line_width);
+  HUD_LineList.draw();
+
+//  glEnable(GL_LINE_STIPPLE);
+//  glLineStipple( 1, 0x00FF );
+//  HUD_StippleLineList.draw();
+//  glDisable(GL_LINE_STIPPLE);
+
+//  glDisable( GL_BLEND );
+  
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_LIGHTING);
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+}
+

@@ -107,6 +107,7 @@ extern void NewAltitude( puObject *cb );
 extern void NewHeading( puObject *cb );
 extern void fgAPAdjust( puObject * );
 extern void fgLatLonFormatToggle( puObject *);
+extern void NewTgtAirport( puObject *cb );
 
 /* --------------------------------------------------------------------
 Mouse stuff
@@ -714,10 +715,12 @@ puCallback viewSubmenuCb        [] = {
 };
 
 char *aircraftSubmenu           [] = {
-    "Autopilot", "Heading", "Altitude", "Navigation", "Communication", NULL
+    "Autopilot", "Heading", "Altitude", "Navigation", "Airport", 
+    "Communication", NULL
 };
 puCallback aircraftSubmenuCb    [] = {
-    fgAPAdjust, NewHeading, NewAltitude, fgLatLonFormatToggle, notCb, NULL
+    fgAPAdjust, NewHeading, NewAltitude, fgLatLonFormatToggle, NewTgtAirport, 
+    notCb, NULL
 };
 
 char *environmentSubmenu        [] = {
@@ -736,7 +739,8 @@ puCallback optionsSubmenuCb     [] = {
 
 #ifdef FG_NETWORK_OLK
 char *networkSubmenu            [] = {
-    "Unregister from FGD ", "Send MSG to All", "Send MSG", "Show Pilots", "Register to FGD",
+    "Unregister from FGD ", "Send MSG to All", "Send MSG", "Show Pilots", 
+    "Register to FGD",
     "Scan for Deamons", "Enter Callsign", "Display Netinfos", "Toggle Display",
     "Hyper Blast", NULL
 };
