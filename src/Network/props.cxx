@@ -63,6 +63,7 @@ bool FGProps::open() {
     }
 
     set_enabled( true );
+    FG_LOG( FG_IO, FG_INFO, "Opening properties channel communication layer." );
 
     return true;
 }
@@ -129,6 +130,22 @@ bool FGProps::process_command( const char *cmd ) {
 	    }
 	    io->writestring( line.c_str() );
 	}
+    } else if ( command == "dump" ) {
+	strstream buf;
+	if ( tokens.size() <= 1 ) {
+	    writeProperties ( buf, node);
+	    io->writestring( buf.str() );
+	}
+	else {
+	    SGPropertyNode *child = node->getNode(tokens[1]);
+	    if ( child ) {
+		writeProperties ( buf, child );
+		io->writestring( buf.str() );
+	    } else {
+		tokens[1] += " Not Found\n";
+		io->writestring( tokens[1].c_str() );
+	    }
+	}
     } else if ( command == "cd" ) {
 	// string tmp = "current path = " + node.getPath() + "\n";
 	// io->writestring( tmp.c_str() );
@@ -136,8 +153,13 @@ bool FGProps::process_command( const char *cmd ) {
         if ( tokens.size() <= 1 ) {
 	    // do nothing
 	} else {
-	    node = node->getNode(tokens[1]);
-	    path = node->getPath();
+	    SGPropertyNode *child = node->getNode(tokens[1]);
+	    if ( child ) {
+		path = child->getPath();
+	    } else {
+		tokens[1] += " Not Found\n";
+		io->writestring( tokens[1].c_str() );
+	    }
 	}
     } else if ( command == "pwd" ) {
 	string ttt = node->getPath();
@@ -146,7 +168,7 @@ bool FGProps::process_command( const char *cmd ) {
 	}
 	ttt += "\n";
 	io->writestring( ttt.c_str() );
-    } else if ( command == "show" ) {
+    } else if ( command == "get" || command == "show" ) {
 	if ( tokens.size() <= 1 ) {
 	    // do nothing
 	} else {
@@ -183,9 +205,11 @@ bool FGProps::process_command( const char *cmd ) {
 	io->writestring( "\n" );
 	io->writestring( "help             show help message\n" );
 	io->writestring( "ls               list current directory\n" );
+	io->writestring( "dump             dump current state (in xml)\n" );
 	io->writestring( "cd <dir>         cd to a directory, '..' to move back\n" );
 	io->writestring( "pwd              display your current path\n" );
-	io->writestring( "show <var>       show the value of a parameter\n" );
+	io->writestring( "get <var>        show the value of a parameter\n" );
+	io->writestring( "show <var>       synonym for get\n" );
 	io->writestring( "set <var> <val>  set <var> to a new <val>\n" );
 	io->writestring( "quit             terminate connection\n" );
 	io->writestring( "\n" );
