@@ -43,11 +43,6 @@
 
 //#define printf //
 
-/* Work around Cygwin link trouble, missing errno */
-#if defined( __MINGW32__ ) || defined( __CYGWIN__ )
-int errno;
-#endif
-
 /* Netstuff */
 #include <arpa/inet.h>
 int sock = -1;
@@ -55,8 +50,15 @@ int my_sock;
 struct sockaddr_in address;
 struct sockaddr_in my_address;
 int result;
-extern const char *const sys_errlist[];
+
+#if defined( __CYGWIN__ )
+#include <errno.h>
+#else
 extern int errno;
+#endif
+
+extern const char *const sys_errlist[];
+
 int current_port  = 10000; 
 u_short base_port = 10000;
 u_short end_port  = 10010;
