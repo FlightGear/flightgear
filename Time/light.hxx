@@ -1,4 +1,3 @@
-//
 // light.hxx -- lighting routines
 //
 // Written by Curtis Olson, started April 1998.
@@ -43,10 +42,18 @@
 #include <XGL/xgl.h>
 
 #include <Include/fg_types.h>
+#include <Math/interpolater.hxx>
 
 
 // Define a structure containing the global lighting parameters
-typedef struct {
+class fgLIGHT {
+
+    // Lighting look up tables (based on sun angle with local horizon)
+    fgINTERPTABLE *ambient_tbl;
+    fgINTERPTABLE *diffuse_tbl;
+    fgINTERPTABLE *sky_tbl;
+
+public:
 
     ///////////////////////////////////////////////////////////
     // position of the sun in various forms
@@ -80,24 +87,36 @@ typedef struct {
 
     // clear screen color
     GLfloat sky_color[4];
-} fgLIGHT;
+
+    // Constructor
+    fgLIGHT( void );
+
+    // initialize lighting tables
+    void Init( void );
+
+    // update lighting parameters based on current sun position
+    void Update( void);
+
+    // Destructor
+    ~fgLIGHT( void );
+};
 
 
+// Global shared light parameter structure
 extern fgLIGHT cur_light_params;
 
 
-// initialize lighting tables
-void fgLightInit( void );
-
-
-// update lighting parameters based on current sun position
-void fgLightUpdate( void);
+// wrapper function for updating light parameters via the event scheduler
+void fgLightUpdate ( void );
 
 
 #endif // _LIGHT_HXX
 
 
 // $Log$
+// Revision 1.4  1998/05/20 20:54:17  curt
+// Converted fgLIGHT to a C++ class.
+//
 // Revision 1.3  1998/05/02 01:53:18  curt
 // Fine tuning mktime() support because of varying behavior on different
 // platforms.

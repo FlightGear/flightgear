@@ -51,13 +51,14 @@
 
 fgLIGHT cur_light_params;
 
-static fgINTERPTABLE *ambient_tbl;
-static fgINTERPTABLE *diffuse_tbl;
-static fgINTERPTABLE *sky_tbl;
+
+// Constructor
+fgLIGHT::fgLIGHT( void ) {
+}
 
 
 // initialize lighting tables
-void fgLightInit( void ) {
+void fgLIGHT::Init( void ) {
     fgOPTIONS *o;
     char path[256];
 
@@ -93,28 +94,26 @@ void fgLightInit( void ) {
 
 
 // update lighting parameters based on current sun position
-void fgLightUpdate( void ) {
-    fgLIGHT *l;
+void fgLIGHT::Update( void ) {
     fgTIME *t;
     fgVIEW *v;
-    /* if the 4th field is 0.0, this specifies a direction ... */
+    // if the 4th field is 0.0, this specifies a direction ...
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
-    /* base sky color */
+    // base sky color
     GLfloat base_sky_color[4] =        {0.60, 0.60, 0.90, 1.0};
-    /* base fog color */
+    // base fog color
     GLfloat base_fog_color[4] = {0.90, 0.90, 1.00, 1.0};
     double deg, ambient, diffuse, sky_brightness;
 
-    l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
 
     fgPrintf( FG_EVENT, FG_INFO, "Updating light parameters.\n" );
 
-    /* calculate lighting parameters based on sun's relative angle to
-     * local up */
+    // calculate lighting parameters based on sun's relative angle to
+    // local up
 
-    deg = l->sun_angle * 180.0 / FG_PI;
+    deg = sun_angle * 180.0 / FG_PI;
     fgPrintf( FG_EVENT, FG_INFO, "  Sun angle = %.2f.\n", deg );
 
     ambient = ambient_tbl->interpolate( deg );
@@ -131,33 +130,46 @@ void fgLightUpdate( void ) {
     // if ( diffuse < 0.0 ) { diffuse = 0.0; }
     // if ( sky_brightness < 0.1 ) { sky_brightness = 0.1; }
 
-    l->scene_ambient[0] = white[0] * ambient;
-    l->scene_ambient[1] = white[1] * ambient;
-    l->scene_ambient[2] = white[2] * ambient;
+    scene_ambient[0] = white[0] * ambient;
+    scene_ambient[1] = white[1] * ambient;
+    scene_ambient[2] = white[2] * ambient;
 
-    l->scene_diffuse[0] = white[0] * diffuse;
-    l->scene_diffuse[1] = white[1] * diffuse;
-    l->scene_diffuse[2] = white[2] * diffuse;
+    scene_diffuse[0] = white[0] * diffuse;
+    scene_diffuse[1] = white[1] * diffuse;
+    scene_diffuse[2] = white[2] * diffuse;
 
-    /* set fog color */
-    // l->fog_color[0] = base_fog_color[0] * (ambient + diffuse);
-    // l->fog_color[1] = base_fog_color[1] * (ambient + diffuse);
-    // l->fog_color[2] = base_fog_color[2] * (ambient + diffuse);
-    // l->fog_color[3] = base_fog_color[3];
-    l->fog_color[0] = base_fog_color[0] * sky_brightness;
-    l->fog_color[1] = base_fog_color[1] * sky_brightness;
-    l->fog_color[2] = base_fog_color[2] * sky_brightness;
-    l->fog_color[3] = base_fog_color[3];
+    // set fog color
+    fog_color[0] = base_fog_color[0] * sky_brightness;
+    fog_color[1] = base_fog_color[1] * sky_brightness;
+    fog_color[2] = base_fog_color[2] * sky_brightness;
+    fog_color[3] = base_fog_color[3];
 
-    /* set sky color */
-    l->sky_color[0] = base_sky_color[0] * sky_brightness;
-    l->sky_color[1] = base_sky_color[1] * sky_brightness;
-    l->sky_color[2] = base_sky_color[2] * sky_brightness;
-    l->sky_color[3] = base_sky_color[3];
+    // set sky color
+    sky_color[0] = base_sky_color[0] * sky_brightness;
+    sky_color[1] = base_sky_color[1] * sky_brightness;
+    sky_color[2] = base_sky_color[2] * sky_brightness;
+    sky_color[3] = base_sky_color[3];
+}
+
+
+// Destructor
+fgLIGHT::~fgLIGHT( void ) {
+}
+
+
+// wrapper function for updating light parameters via the event scheduler
+void fgLightUpdate ( void ) {
+    fgLIGHT *l;
+    l = &cur_light_params;
+   
+    l->Update();
 }
 
 
 // $Log$
+// Revision 1.8  1998/05/20 20:54:16  curt
+// Converted fgLIGHT to a C++ class.
+//
 // Revision 1.7  1998/05/13 18:26:50  curt
 // Root path info moved to fgOPTIONS.
 //
@@ -181,5 +193,4 @@ void fgLightUpdate( void ) {
 // Revision 1.1  1998/04/22 13:24:06  curt
 // C++ - ifiing the code a bit.
 // Starting to reorginize some of the lighting calcs to use a table lookup.
-//
 //
