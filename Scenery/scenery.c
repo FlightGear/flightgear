@@ -61,6 +61,7 @@ void fgSceneryInit( void ) {
  * build the proper structures. */
 void fgSceneryUpdate(double lon, double lat, double elev) {
     struct fgGENERAL *g;
+    double max_radius;
     char path[1024];
 
     g = &general;
@@ -76,7 +77,7 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
 
     fgPrintf(FG_TERRAIN, FG_DEBUG, "  Loading Scenery: %s\n", path);
 
-    area_terrain = fgObjLoad(path, &scenery.center);
+    area_terrain = fgObjLoad(path, &scenery.center, &max_radius);
 }
 
 
@@ -100,9 +101,12 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.34  1998/01/27 03:26:43  curt
-/* Playing with new fgPrintf command.
+/* Revision 1.35  1998/01/31 00:43:26  curt
+/* Added MetroWorks patches from Carmen Volpe.
 /*
+ * Revision 1.34  1998/01/27 03:26:43  curt
+ * Playing with new fgPrintf command.
+ *
  * Revision 1.33  1998/01/19 19:27:17  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

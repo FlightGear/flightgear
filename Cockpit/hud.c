@@ -34,7 +34,7 @@
 #include <Include/fg_constants.h>
 
 #include <Aircraft/aircraft.h>
-#include <Scenery/mesh.h>
+/* #include <Scenery/mesh.h> */
 #include <Scenery/scenery.h>
 #include <Math/mat3.h>
 #include <Math/polar.h>
@@ -59,18 +59,17 @@ static void textString(int x, int y, char *msg, void *font)
 }
 
 /* strokeString - Stroke font string */
-
-static void strokeString(int x, int y, char *msg, void *font)
-{
-	glPushMatrix();
-	glTranslatef(x, y, 0);
-	glScalef(.04, .04, .04);
-	while (*msg) {
-		glutStrokeCharacter(font, *msg);
-		msg++;
-	}
-	glPopMatrix();
-}
+/* static void strokeString(int x, int y, char *msg, void *font) */
+/* { */
+/* 	glPushMatrix(); */
+/* 	glTranslatef(x, y, 0); */
+/* 	glScalef(.04, .04, .04); */
+/* 	while (*msg) { */
+/* 		glutStrokeCharacter(font, *msg); */
+/* 		msg++; */
+/* 	} */
+/* 	glPopMatrix(); */
+/* } */
 
 /*
 
@@ -226,7 +225,7 @@ static void drawladder( struct HUD_ladder ladder )
 {
     double vmin, vmax;
     double roll_value, pitch_value;
-    double cos_roll, sin_roll;
+    /* double cos_roll, sin_roll; */
     int marker_x, marker_y;
     int mid_scr;
     int scr_min, scr_max;
@@ -336,7 +335,7 @@ static void drawladder( struct HUD_ladder ladder )
            			new_x_ini = ladder.x_pos+(x_ini-ladder.x_pos)*cos(roll_value)-\
            				(y_ini-ladder.y_pos)*sin(roll_value);
            			new_y_ini = ladder.y_pos+(x_ini-ladder.x_pos)*sin(roll_value)+\
-           				(y_ini-ladder.y_pos)*cos(roll_value);
+				    (y_ini-ladder.y_pos)*cos(roll_value);
            			new_x_end = ladder.x_pos+(x_end-ladder.x_pos)*cos(roll_value)-\
            				(y_end-ladder.y_pos)*sin(roll_value);
            			new_y_end = ladder.y_pos+(x_end-ladder.x_pos)*sin(roll_value)+\
@@ -386,11 +385,11 @@ static void drawhorizon( struct HUD_horizon horizon )
 {
 	int x_inc1, y_inc1;
 	int x_inc2, y_inc2;
-	struct fgFLIGHT *f;
+	/* struct fgFLIGHT *f; */
 	double sin_bank, cos_bank;
 	double bank_angle;
               
-	// f = &current_aircraft.flight;
+	/* f = &current_aircraft.flight; */
 	
 	bank_angle = (*horizon.load_value)();
 
@@ -802,10 +801,13 @@ void fgUpdateHUD( Hptr hud )
 
 
 /* $Log$
-/* Revision 1.8  1998/01/27 00:47:51  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.9  1998/01/31 00:43:04  curt
+/* Added MetroWorks patches from Carmen Volpe.
 /*
+ * Revision 1.8  1998/01/27 00:47:51  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.7  1998/01/19 18:40:20  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

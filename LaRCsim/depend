@@ -12,9 +12,11 @@ ls_init.o: ls_init.c ls_types.h ls_sym.h ls_step.h ls_init.h \
 ls_interface.o: ls_interface.c ls_types.h ls_constants.h ls_generic.h \
  ls_sim_control.h ls_cockpit.h ls_interface.h ls_step.h ls_accel.h \
  ls_aux.h ls_model.h ls_init.h
+ls_matrix.o: ls_matrix.c ls_matrix.h
 ls_model.o: ls_model.c ls_types.h ls_model.h default_model_routines.h
 ls_step.o: ls_step.c ls_types.h ls_constants.h ls_generic.h ls_accel.h \
  ls_aux.h ls_model.h ls_step.h ls_geodesy.h ls_gravity.h
+ls_trim.o: ls_trim.c ls_constants.h ls_types.h ls_sym.h ls_matrix.h
 mymain.o: mymain.c ls_types.h ls_cockpit.h ls_generic.h
 navion_aero.o: navion_aero.c ls_types.h ls_generic.h ls_cockpit.h
 navion_engine.o: navion_engine.c ls_types.h ls_constants.h \

@@ -29,6 +29,10 @@
 
 #ifdef USE_FTIME
 #  include <sys/timeb.h> /* for ftime() and struct timeb */
+#elif defined(__MWERKS__)
+#  include <windows.h>	/* For Metrowerks environment */
+#  include <winbase.h>	/* There is no ANSI/MSL time function that */
+                        /* contains milliseconds */
 #else
 #  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
 #endif /* USE_FTIME */
@@ -94,6 +98,9 @@ int fgGetTimeInterval( void ) {
 #ifdef USE_FTIME
     static struct timeb last;
     static struct timeb current;
+#elif defined (__MWERKS__)
+    SYSTEMTIME last;
+    SYSTEMTIME current;
 #else
     static struct timeval last;
     static struct timeval current;
@@ -105,6 +112,8 @@ int fgGetTimeInterval( void ) {
 
 #ifdef USE_FTIME
 	ftime(&last);
+#elif defined (__MWERKS__)
+	GetLocalTime(&last);
 #else
 	gettimeofday(&last, &tz);
 #endif /* USE_FTIME */
@@ -116,6 +125,10 @@ int fgGetTimeInterval( void ) {
 	ftime(&current);
 	interval = 1000 * (current.time - last.time) + 
 	    (current.millitm - last.millitm);
+#elif defined (__MWERKS__)
+	GetLocalTime(&current);
+	interval = 1000 * (current.wSecond - last.wSecond) + 
+	    (current.wMilliseconds - last.wMilliseconds);
 #else
 	gettimeofday(&current, &tz);
 	interval = 1000000 * (current.tv_sec - last.tv_sec) + 
@@ -131,10 +144,13 @@ int fgGetTimeInterval( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/01/19 19:27:21  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.10  1998/01/31 00:43:45  curt
+/* Added MetroWorks patches from Carmen Volpe.
 /*
+ * Revision 1.9  1998/01/19 19:27:21  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.8  1998/01/19 18:40:39  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

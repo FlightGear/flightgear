@@ -55,8 +55,6 @@ int tiles[FG_LOCAL_X_Y];
 /* Initialize the Tile Manager subsystem */
 void fgTileMgrInit( void ) {
     fgPrintf( FG_TERRAIN, FG_INFO, "Initializing Tile Manager subsystem.\n");
-
-    fgTileCacheInit();
 }
 
 
@@ -71,9 +69,7 @@ void fgTileMgrLoadTile( struct fgBUCKET *p, int *index) {
 	fgTileCacheEntryFillIn(*index, p);
     }
 
-    printf( "SELECTED cache index of %d\n", *index);
     fgPrintf( FG_TERRAIN, FG_DEBUG, "Selected cache index of %d\n", *index);
-    
 }
 
 
@@ -213,9 +209,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.10  1998/01/29 00:51:40  curt
-/* First pass at tile cache, dynamic tile loading and tile unloading now works.
+/* Revision 1.11  1998/01/31 00:43:27  curt
+/* Added MetroWorks patches from Carmen Volpe.
 /*
+ * Revision 1.10  1998/01/29 00:51:40  curt
+ * First pass at tile cache, dynamic tile loading and tile unloading now works.
+ *
  * Revision 1.9  1998/01/27 03:26:44  curt
  * Playing with new fgPrintf command.
  *

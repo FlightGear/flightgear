@@ -32,7 +32,12 @@ static int fg_DebugSem = 1;
 static fgDebugClass fg_DebugClass = FG_ALL;
 static fgDebugPriority fg_DebugPriority = FG_INFO;
 static fgDebugCallback fg_DebugCallback = NULL;
-static FILE *fg_DebugOutput = stderr;
+
+#ifndef __CYGWIN32__
+    static FILE *fg_DebugOutput = stderr;
+#else /* __CYGWIN32__ */
+    static FILE *fg_DebugOutput = NULL;
+#endif /* __CYGWIN32 */
 
 /* TODO: Actually make this thing thread safe */
 #ifdef USETHREADS
@@ -72,6 +77,10 @@ static fgDebugClass fgDebugStrToClass( char *str );
 void fgInitDebug( void )
 {
   char *pszClass, *pszPrio;
+
+#ifdef __CYGWIN32__
+    fg_DebugOutput = stderr;
+#endif /* __CYGWIN32 */
 
   FG_GRABDEBUGSEM;
   fg_DebugSem=fg_DebugSem;  /* shut up GCC */

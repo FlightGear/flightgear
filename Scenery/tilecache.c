@@ -64,7 +64,8 @@ int fgTileCacheExists( struct fgBUCKET *p ) {
 	    if ( tile_cache[i].tile_bucket.lat == p->lat ) {
 		if ( tile_cache[i].tile_bucket.x == p->x ) {
 		    if ( tile_cache[i].tile_bucket.y == p->y ) {
-			printf("TILE EXISTS in cache ... index = %d\n", i);
+			fgPrintf( FG_TERRAIN, FG_DEBUG, 
+				  "TILE EXISTS in cache ... index = %d\n", i );
 			return( i );
 		    }
 		}
@@ -98,7 +99,8 @@ void fgTileCacheEntryFillIn( int index, struct fgBUCKET *p ) {
     sprintf(file_name, "%s/Scenery/%s/%ld.obj", g->root_dir, 
 	    base_path, fgBucketGenIndex(p));
     tile_cache[index].display_list = 
-	fgObjLoad(file_name, &tile_cache[index].local_ref);    
+	fgObjLoad(file_name, &tile_cache[index].local_ref,
+		  &tile_cache[index].bounding_radius);    
 }
 
 
@@ -108,10 +110,12 @@ void fgTileCacheEntryFree( int index ) {
     tile_cache[index].used = 0;
 
     /* Update the bucket */
-    printf( "FREEING TILE = (%d %d %d %d)\n",
-	    tile_cache[index].tile_bucket.lon, 
-	    tile_cache[index].tile_bucket.lat, tile_cache[index].tile_bucket.x,
-	    tile_cache[index].tile_bucket.y );
+    fgPrintf( FG_TERRAIN, FG_DEBUG, 
+	      "FREEING TILE = (%d %d %d %d)\n",
+	      tile_cache[index].tile_bucket.lon, 
+	      tile_cache[index].tile_bucket.lat, 
+	      tile_cache[index].tile_bucket.x,
+	      tile_cache[index].tile_bucket.y );
 
     /* Load the appropriate area and get the display list pointer */
     xglDeleteLists( tile_cache[index].display_list, 1 );
@@ -148,11 +152,13 @@ int fgTileCacheNextAvail( void ) {
 	    return(i);
 	} else {
 	    /* calculate approximate distance from view point */
-	    printf( "DIST Abs view pos = %.4f, %.4f, %.4f\n", 
-		    v->abs_view_pos.x, v->abs_view_pos.y, v->abs_view_pos.z);
-	    printf( "    ref point = %.4f, %.4f, %.4f\n", 
-		    tile_cache[i].local_ref.x, tile_cache[i].local_ref.y,
-		    tile_cache[i].local_ref.z);
+	    fgPrintf( FG_TERRAIN, FG_DEBUG,
+		      "DIST Abs view pos = %.4f, %.4f, %.4f\n", 
+		      v->abs_view_pos.x, v->abs_view_pos.y, v->abs_view_pos.z );
+	    fgPrintf( FG_TERRAIN, FG_DEBUG,
+		      "    ref point = %.4f, %.4f, %.4f\n", 
+		      tile_cache[i].local_ref.x, tile_cache[i].local_ref.y,
+		      tile_cache[i].local_ref.z);
 
 	    dx = fabs(tile_cache[i].local_ref.x - v->abs_view_pos.x);
 	    dy = fabs(tile_cache[i].local_ref.y - v->abs_view_pos.y);
@@ -167,7 +173,7 @@ int fgTileCacheNextAvail( void ) {
 	    }
 	    dist = max + (med + min) / 4;
 
-	    printf("    distance = %.2f\n", dist);
+	    fgPrintf( FG_TERRAIN, FG_DEBUG, "    distance = %.2f\n", dist);
 
 	    if ( dist > max_dist ) {
 		max_dist = dist;
@@ -186,9 +192,12 @@ int fgTileCacheNextAvail( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/01/29 00:51:39  curt
-/* First pass at tile cache, dynamic tile loading and tile unloading now works.
+/* Revision 1.6  1998/01/31 00:43:26  curt
+/* Added MetroWorks patches from Carmen Volpe.
 /*
+ * Revision 1.5  1998/01/29 00:51:39  curt
+ * First pass at tile cache, dynamic tile loading and tile unloading now works.
+ *
  * Revision 1.4  1998/01/27 03:26:43  curt
  * Playing with new fgPrintf command.
  *

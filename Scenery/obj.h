@@ -38,17 +38,20 @@
 
 
 /* Load a .obj file and generate the GL call list */
-GLint fgObjLoad(char *file, struct fgCartesianPoint *ref);
+GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius);
 
 
 #endif /* _OBJ_H */
 
 
 /* $Log$
-/* Revision 1.5  1998/01/27 00:48:03  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.6  1998/01/31 00:43:25  curt
+/* Added MetroWorks patches from Carmen Volpe.
 /*
+ * Revision 1.5  1998/01/27 00:48:03  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.4  1998/01/22 02:59:41  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

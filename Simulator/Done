@@ -2,6 +2,17 @@
 | Done
 --------------------------------------------------------------------------
 
+1/30/98 -  remove Scenery/geometry.c and Scenery/mesh.c
+   
+1/28/98 -  Dynamic unloading of scenery.
+
+1/26/98 -  Debug message system.
+
+1/26/98 -  Dynamic loading of scenery
+
+1/24/98 -  Remove some of the unused files such as ls_sync.c
+
+1/23/98 -  in all .h's change #ifdef FILE_H -> #ifdef _FILE_H
 
 --------------------------------------------------------------------------
 

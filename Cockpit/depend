@@ -1,8 +1,2 @@
 cockpit.o: cockpit.c
-hud.o: hud.c hud.h ../Include/constants.h ../Aircraft/aircraft.h \
- ../Scenery/mesh.h ../Scenery/scenery.h ../Math/mat3.h ../Math/polar.h \
- ../Time/fg_timer.h ../Math/fg_random.h ../Weather/weather.h
-test.o: test.c test.h ../Aircraft/aircraft.h ../Flight/flight.h \
- ../Controls/controls.h ../Include/constants.h ../Scenery/mesh.h \
- ../Scenery/scenery.h ../Math/mat3.h ../Math/polar.h \
- ../Time/fg_timer.h ../Math/fg_random.h ../Weather/weather.h
+hud.o: hud.c hud.h

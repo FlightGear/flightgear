@@ -41,7 +41,6 @@
 #include <Cockpit/cockpit.h>
 #include <Joystick/joystick.h>
 #include <Math/fg_random.h>
-#include <Scenery/mesh.h>
 #include <Scenery/scenery.h>
 #include <Scenery/tilemgr.h>
 #include <Time/event.h>
@@ -257,10 +256,12 @@ void fgInitSubsystems( void ) {
 
     /* I'm just sticking this here for now, it should probably move 
      * eventually */
-    cur_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0, 
-			     FG_Latitude  * RAD_TO_DEG * 3600.0);
-    fgPrintf( FG_GENERAL, FG_INFO, "True ground elevation is %.2f meters here.\n",
-	      cur_elev);
+    /* cur_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0, 
+			     FG_Latitude  * RAD_TO_DEG * 3600.0); */
+    /* fgPrintf( FG_GENERAL, FG_INFO, 
+       "True ground elevation is %.2f meters here.\n",
+       cur_elev); */
+    cur_elev = FG_Runway_altitude * FEET_TO_METER;
     if ( cur_elev > -9990.0 ) {
 	FG_Runway_altitude = cur_elev * METER_TO_FEET;
     }
@@ -295,10 +296,13 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.35  1998/01/27 00:47:57  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.36  1998/01/31 00:43:13  curt
+/* Added MetroWorks patches from Carmen Volpe.
 /*
+ * Revision 1.35  1998/01/27 00:47:57  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.34  1998/01/22 02:59:37  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

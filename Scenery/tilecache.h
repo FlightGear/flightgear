@@ -49,6 +49,7 @@ struct fgTILE {
     struct fgBUCKET tile_bucket;
     GLint display_list;
     struct fgCartesianPoint local_ref;
+    double bounding_radius;
     int used;
     int priority;
 };
@@ -78,9 +79,12 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 
 
 /* $Log$
-/* Revision 1.3  1998/01/29 00:51:40  curt
-/* First pass at tile cache, dynamic tile loading and tile unloading now works.
+/* Revision 1.4  1998/01/31 00:43:27  curt
+/* Added MetroWorks patches from Carmen Volpe.
 /*
+ * Revision 1.3  1998/01/29 00:51:40  curt
+ * First pass at tile cache, dynamic tile loading and tile unloading now works.
+ *
  * Revision 1.2  1998/01/27 00:48:04  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

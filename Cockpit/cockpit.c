@@ -32,7 +32,6 @@
 #include <Include/fg_constants.h>
 
 #include <Aircraft/aircraft.h>
-#include <Scenery/mesh.h>
 #include <Scenery/scenery.h>
 #include <Math/mat3.h>
 #include <Math/polar.h>
@@ -95,10 +94,13 @@ void fgCockpitUpdate( void )
 
 
 /* $Log$
-/* Revision 1.7  1998/01/27 00:47:51  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.8  1998/01/31 00:43:03  curt
+/* Added MetroWorks patches from Carmen Volpe.
 /*
+ * Revision 1.7  1998/01/27 00:47:51  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.6  1998/01/19 19:27:01  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

@@ -2,22 +2,13 @@
 | Todo 
 --------------------------------------------------------------------------
 
-1/17/98 -  in all .h's change #ifdef FILE_H -> #ifdef _FILE_H
-
-1/21/98 -  Fix warning when compiling with c++
-
-1/17/98 -  Remove some of the unused files such as ls_sync.c
-
-12/29/97 - Scenery area manager
-
 12/29/97 - View frustum culling
 
-1/17/98 -  See about building with C++ compiler
+1/21/98 -  Fix warning when compiling with c++ ... still can't build
+           with cygnus-g++
 
 1/5/98 -   Create a development "roadmap"
 
-1/5/98 -   remove Scenery/geometry.c and Scenery/mesh.c
-   
 12/30/97 - fix winding problem with tri-strips in obj.c (invert normals)
 
 12/29/97 - Unify sun position render code with existing sunpos

@@ -1,8 +1,6 @@
 event.o: event.c
 fg_time.o: fg_time.c
 fg_timer.o: fg_timer.c
-old-sidereal.o: old-sidereal.c ../Include/constants.h
-scheduler.o: scheduler.c
 sunpos.o: sunpos.c
 test_event.o: test_event.c event.h
 ttest.o: ttest.c

@@ -64,6 +64,10 @@ U.S. Geological Survey - http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html
   Provided geographic data used by this project
 
 
+Carmelo Volpe <carmelo.volpe@csb.ki.se>
+  Porting Flight Gear to the Metro Works development environment (PC/Mac)
+
+
 Robert Allan Zeh <raz@cmg.FCNBD.COM>
   Helped me tremendously in figuring out the Cygnus win32 compiler and
   how to link with .dll's.  With out him the first runable win32

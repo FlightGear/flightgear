@@ -42,15 +42,15 @@
 
 #define MAXNODES 100000
 
-float nodes[MAXNODES][3];
-float normals[MAXNODES][3];
+double nodes[MAXNODES][3];
+double normals[MAXNODES][3];
 
 
 /* given three points defining a triangle, calculate the normal */
-void calc_normal(float p1[3], float p2[3], float p3[3], double normal[3])
+void calc_normal(double p1[3], double p2[3], double p3[3], double normal[3])
 {
     double v1[3], v2[3];
-    float temp;
+    double temp;
 
     v1[0] = p2[0] - p1[0]; v1[1] = p2[1] - p1[1]; v1[2] = p2[2] - p1[2];
     v2[0] = p3[0] - p1[0]; v2[1] = p3[1] - p1[1]; v2[2] = p3[2] - p1[2];
@@ -64,10 +64,10 @@ void calc_normal(float p1[3], float p2[3], float p3[3], double normal[3])
 
 
 /* Load a .obj file and generate the GL call list */
-GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
+GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
     char line[256], winding_str[256];
     double approx_normal[3], normal[3], scale;
-    float x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
+    double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     GLint tile;
     FILE *f;
     int first, ncount, vncount, n1, n2, n3, n4;
@@ -97,7 +97,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 	    /* node (vertex) */
 	    if ( ncount < MAXNODES ) {
 		/* fgPrintf( FG_TERRAIN, FG_DEBUG, "vertex = %s", line); */
-		sscanf(line, "v %f %f %f\n", &x, &y, &z);
+		sscanf(line, "v %lf %lf %lf\n", &x, &y, &z);
 		nodes[ncount][0] = x;
 		nodes[ncount][1] = y;
 		nodes[ncount][2] = z;
@@ -137,7 +137,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 	    /* vertex normal */
 	    if ( vncount < MAXNODES ) {
 		/* fgPrintf( FG_TERRAIN, FG_DEBUG, "vertex normal = %s", line); */
-		sscanf(line, "vn %f %f %f\n", 
+		sscanf(line, "vn %lf %lf %lf\n", 
 		       &normals[vncount][0], &normals[vncount][1], 
 		       &normals[vncount][2]);
 		vncount++;
@@ -355,9 +355,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 
 
 /* $Log$
-/* Revision 1.20  1998/01/29 00:51:39  curt
-/* First pass at tile cache, dynamic tile loading and tile unloading now works.
+/* Revision 1.21  1998/01/31 00:43:25  curt
+/* Added MetroWorks patches from Carmen Volpe.
 /*
+ * Revision 1.20  1998/01/29 00:51:39  curt
+ * First pass at tile cache, dynamic tile loading and tile unloading now works.
+ *
  * Revision 1.19  1998/01/27 03:26:42  curt
  * Playing with new fgPrintf command.
  *

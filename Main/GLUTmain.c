@@ -50,7 +50,6 @@
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
 #include <Math/polar.h>
-#include <Scenery/mesh.h>
 #include <Scenery/scenery.h>
 #include <Scenery/tilemgr.h>
 #include <Time/event.h>
@@ -502,8 +501,12 @@ static void fgMainLoop( void ) {
 
     /* I'm just sticking this here for now, it should probably move 
      * eventually */
-    cur_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC, 
-			       FG_Latitude  * RAD_TO_ARCSEC);
+    /* cur_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC, 
+			       FG_Latitude  * RAD_TO_ARCSEC); */
+    /* there is no ground collision detection really, so for now I
+     * just hard code the ground elevation to be 0 */
+    cur_elev = 0;
+
     /* printf("Ground elevation is %.2f meters here.\n", cur_elev); */
     /* FG_Runway_altitude = cur_elev * METER_TO_FEET; */
 
@@ -630,9 +633,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.53  1998/01/27 18:35:54  curt
-/* Minor tweaks.
+/* Revision 1.54  1998/01/31 00:43:10  curt
+/* Added MetroWorks patches from Carmen Volpe.
 /*
+ * Revision 1.53  1998/01/27 18:35:54  curt
+ * Minor tweaks.
+ *
  * Revision 1.52  1998/01/27 00:47:56  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

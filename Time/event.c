@@ -30,6 +30,10 @@
 #ifdef USE_FTIME
 #  include <stdlib.h>
 #  include <sys/timeb.h> /* for ftime() and struct timeb */
+#elif defined(__MWERKS__)
+#  include <windows.h>	 /* For Metrowerks environment */
+#  include <winbase.h>	 /* There is no ANSI/MSL time function that */
+                         /* contains milliseconds */
 #else
 #  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
 #endif /* USE_FTIME */
@@ -54,6 +58,10 @@ struct fgEVENT {
     struct timeb last_run;    /* absolute time for last run */
     struct timeb current;     /* current time */
     struct timeb next_run;    /* absolute time for next run */
+#elif defined(__MWERKS__)
+    SYSTEMTIME last_run;      /* A type defed structure that holds */
+    SYSTEMTIME current;	      /* the only structure that contains */
+    SYSTEMTIME next_run;      /* millisecond timing */
 #else
     struct timeval last_run;  /* absolute time for last run */
     struct timeval current;   /* current time */
@@ -149,6 +157,8 @@ void fgEventRun(int ptr) {
     /* record starting time */
 #ifdef USE_FTIME
     ftime(&e->last_run);
+#elif defined(__MWERKS__)
+    GetLocalTime(&e->last_run);
 #else
     gettimeofday(&e->last_run, &e->tz);
 #endif /* USE_FTIME */
@@ -167,6 +177,10 @@ void fgEventRun(int ptr) {
     ftime(&e->current);
     duration = 1000 * (e->current.time - e->last_run.time) + 
 	(e->current.millitm - e->last_run.millitm);
+#elif defined(__MWERKS__)
+    GetLocalTime(&e->current);
+    duration = 1000 * (e->current.wSecond - e->last_run.wSecond) + 
+	(e->current.wMilliseconds - e->last_run.wMilliseconds);
 #else
     gettimeofday(&e->current, &e->tz);
     duration = 1000000 * (e->current.tv_sec - e->last_run.tv_sec) + 
@@ -189,12 +203,16 @@ void fgEventRun(int ptr) {
     e->next_run.time = e->last_run.time + 
 	(e->last_run.millitm + e->interval) / 1000;
     e->next_run.millitm = (e->last_run.millitm + e->interval) % 1000;
+#elif defined(__MWERKS__)
+    e->next_run.wSecond = e->last_run.wSecond +
+	(e->last_run.wMilliseconds + e->interval) / 1000;
+    e->next_run.wMilliseconds = 
+	(e->last_run.wMilliseconds + e->interval) % 1000;
 #else
     e->next_run.tv_sec = e->last_run.tv_sec +
 	(e->last_run.tv_usec + e->interval * 1000) / 1000000;
     e->next_run.tv_usec = (e->last_run.tv_usec + e->interval * 1000) % 1000000;
 #endif /* USE_FTIME */
-
 }
 
 
@@ -289,6 +307,8 @@ void fgEventPrintStats( void ) {
 void fgEventProcess( void ) {
 #ifdef USE_FTIME
     struct timeb current;
+#elif defined(__MWERKS__)
+    SYSTEMTIME current;		/* current time */
 #else
     struct timeval current;
     struct timezone tz;
@@ -300,6 +320,8 @@ void fgEventProcess( void ) {
     /* get the current time */
 #ifdef USE_FTIME
     ftime(&current);
+#elif defined(__MWERKS__)
+    GetLocalTime(&current);
 #else
     gettimeofday(&current, &tz);
 #endif /* USE_FTIME */
@@ -314,6 +336,15 @@ void fgEventProcess( void ) {
 		addq(i);
 	    } else if ( (current.time == events[i].next_run.time) && 
 			(current.millitm >= events[i].next_run.millitm) ) {
+		addq(i);
+	    }
+#elif defined(__MWERKS__)
+	    if (current.wSecond > events[i].next_run.wSecond) {
+		addq(i);
+	    }
+	    else if ( (current.wSecond == events[i].next_run.wSecond) && 
+		      (current.wMilliseconds >= 
+		       events[i].next_run.wMilliseconds)) {
 		addq(i);
 	    }
 #else
@@ -339,10 +370,13 @@ void fgEventProcess( void ) {
 
 
 /* $Log$
-/* Revision 1.8  1998/01/27 00:48:05  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.9  1998/01/31 00:43:44  curt
+/* Added MetroWorks patches from Carmen Volpe.
 /*
+ * Revision 1.8  1998/01/27 00:48:05  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.7  1998/01/19 19:27:19  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.
