@@ -12,6 +12,19 @@
 ////////////////////////////////////////////////////////////////////////
 
 /**
+ * User data for a GUI object.
+ */
+struct GUIInfo
+{
+    GUIInfo (FGDialog * d);
+    virtual ~GUIInfo ();
+
+    FGDialog * dialog;
+    vector <FGBinding *> bindings;
+};
+
+
+/**
  * Action callback.
  */
 static void
@@ -19,14 +32,14 @@ action_callback (puObject * object)
 {
     GUIInfo * info = (GUIInfo *)object->getUserData();
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-    gui->setCurrentWidget(info->widget);
+    gui->setActiveDialog(info->dialog);
     int nBindings = info->bindings.size();
     for (int i = 0; i < nBindings; i++) {
         info->bindings[i]->fire();
-        if (gui->getCurrentWidget() == 0)
+        if (gui->getActiveDialog() == 0)
             break;
     }
-    gui->setCurrentWidget(0);
+    gui->setActiveDialog(0);
 }
 
 
@@ -83,8 +96,8 @@ copy_from_pui (puObject * object, SGPropertyNode * node)
 // Implementation of GUIInfo.
 ////////////////////////////////////////////////////////////////////////
 
-GUIInfo::GUIInfo (FGDialog * w)
-    : widget(w)
+GUIInfo::GUIInfo (FGDialog * d)
+    : dialog(d)
 {
 }
 
@@ -110,14 +123,29 @@ FGDialog::FGDialog (SGPropertyNode_ptr props)
 
 FGDialog::~FGDialog ()
 {
-    delete _object;
+    puDeleteObject(_object);
 
     int i;
+
+                                // Delete all the arrays we made
+                                // and were forced to keep around
+                                // because PUI won't do its own
+                                // memory management.
+    for (i = 0; i < _char_arrays.size(); i++) {
+        for (int j = 0; _char_arrays[i][j] != 0; j++)
+            free(_char_arrays[i][j]); // added with strdup
+        delete _char_arrays[i];
+    }
+
+                                // Delete all the info objects we
+                                // were forced to keep around because
+                                // PUI cannot delete its own user data.
     for (i = 0; i < _info.size(); i++) {
-        delete _info[i];
+        delete (GUIInfo *)_info[i];
         _info[i] = 0;
     }
 
+                                // Finally, delete the property links.
     for (i = 0; i < _propertyObjects.size(); i++) {
         delete _propertyObjects[i];
         _propertyObjects[i] = 0;
@@ -232,18 +260,30 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return b;
     } else if (type == "combo") {
         vector<SGPropertyNode_ptr> value_nodes = props->getChildren("value");
-        char ** entries = new char*[value_nodes.size()+1];
+        char ** entries = make_char_array(value_nodes.size());
         for (int i = 0, j = value_nodes.size() - 1;
              i < value_nodes.size();
              i++, j--)
-            entries[i] = (char *)value_nodes[i]->getStringValue();
-        entries[value_nodes.size()] = 0;
+            entries[i] = strdup((char *)value_nodes[i]->getStringValue());
         puComboBox * combo =
             new puComboBox(x, y, x + width, y + height, entries,
                            props->getBoolValue("editable", false));
-//         delete entries;
         setupObject(combo, props);
         return combo;
+    } else if (type == "slider") {
+        bool vertical = props->getBoolValue("vertical", false);
+        puSlider * slider = new puSlider(x, y, (vertical ? height : width));
+        slider->setMinValue(props->getFloatValue("min", 0.0));
+        slider->setMaxValue(props->getFloatValue("max", 1.0));
+        setupObject(slider, props);
+        return slider;
+    } else if (type == "dial") {
+        puDial * dial = new puDial(x, y, width);
+        dial->setMinValue(props->getFloatValue("min", 0.0));
+        dial->setMaxValue(props->getFloatValue("max", 1.0));
+        dial->setWrap(props->getBoolValue("wrap", true));
+        setupObject(dial, props);
+        return dial;
     } else {
         return 0;
     }
@@ -296,6 +336,16 @@ FGDialog::setupGroup (puGroup * group, SGPropertyNode * props,
     for (int i = 0; i < nChildren; i++)
         makeObject(props->getChild(i), width, height);
     group->close();
+}
+
+char **
+FGDialog::make_char_array (int size)
+{
+    char ** list = new char*[size+1];
+    for (int i = 0; i <= size; i++)
+        list[i] = 0;
+    _char_arrays.push_back(list);
+    return list;
 }
 
 
