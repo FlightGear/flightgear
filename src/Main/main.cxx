@@ -333,8 +333,11 @@ void trRenderFrame( void ) {
     glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
     glLightModeli( GL_LIGHT_MODEL_LOCAL_VIEWER, GL_FALSE );
 
-    if (fgGetBool("/sim/rendering/specular-highlight"))
+    if (fgGetBool("/sim/rendering/specular-highlight")) {
         glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
+    } else {
+        glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SINGLE_COLOR);
+    }
 
     ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient );
 
@@ -612,9 +615,13 @@ void fgRenderFrame() {
         // a completely dark scene.  So, we set GL_LIGHT_MODEL_AMBIENT
         // explicitely to black.
         glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
-        if (fgGetBool("/sim/rendering/specular-highlight"))
+        if (fgGetBool("/sim/rendering/specular-highlight")) {
             glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL,
                           GL_SEPARATE_SPECULAR_COLOR);
+        } else {
+            glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL,
+			  GL_SINGLE_COLOR);
+        }
 
         ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient );
         ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
