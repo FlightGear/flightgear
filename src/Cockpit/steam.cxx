@@ -47,6 +47,9 @@ FG_USING_NAMESPACE(std);
 // Anything that reads the BFI directly is not implemented at all!
 
 
+#define VARY_E		(14)
+
+
 double FGSteam::the_STATIC_inhg = 29.92;
 double FGSteam::the_ALT_ft = 0.0;
 double FGSteam::get_ALT_ft() { _CatchUp(); return the_ALT_ft; }
@@ -60,12 +63,11 @@ double FGSteam::get_VSI_fps() { _CatchUp(); return the_VSI_fps; }
 double FGSteam::the_VACUUM_inhg = 0.0;
 double FGSteam::get_VACUUM_inhg() { _CatchUp(); return the_VACUUM_inhg; }
 
-double FGSteam::get_MH_deg () { return FGBFI::getHeading (); }
-double FGSteam::get_DG_deg () { return FGBFI::getHeading (); }
+double FGSteam::get_MH_deg () { return FGBFI::getHeading () - VARY_E; }
+double FGSteam::get_DG_deg () { return FGBFI::getHeading () - VARY_E; }
 
 double FGSteam::get_TC_rad   () { return FGBFI::getSideSlip (); }
 double FGSteam::get_TC_radps () { return FGBFI::getRoll (); }
-
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -167,8 +169,8 @@ void FGSteam::_CatchUp()
 	NO capability to have a scaling error of maybe a factor of two.
 	*/
 	the_VSI_fps = ( the_VSI_case - the_STATIC_inhg )
-		    * 7000.0; /* manual scaling factor */	
-	set_lowpass ( & the_VSI_case, the_STATIC_inhg, dt/9.0 );
+		    * 10000.0; /* manual scaling factor */	
+	set_lowpass ( & the_VSI_case, the_STATIC_inhg, dt/6.0 );
 
 	/**************************
 	The engine driven vacuum pump is directly attached
@@ -200,6 +202,93 @@ void FGSteam::_CatchUp()
 	*/
 	_UpdatesPending = 0;
   }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// Everything below is a transient hack; expect it to disappear
+////////////////////////////////////////////////////////////////////////
+
+/* KMYF ILS */
+#define NAV1_LOC	(1)
+#define NAV1_Lat	(  32.0 + 48.94/60.0)
+#define NAV1_Lon	(-117.0 - 08.37/60.0)
+#define NAV1_Rad  	280.0
+#define NAV1_Alt	423
+
+/* MZB stepdown radial */
+#define NAV2_Lat	(  32.0 + 46.93/60.0)
+#define NAV2_Lon	(-117.0 - 13.53/60.0)
+#define NAV2_Rad	068.0
+
+/* HAILE intersection */
+#define ADF_Lat		(  32.0 + 46.79/60.0)
+#define ADF_Lon		(-117.0 - 02.70/60.0)
+
+
+
+double FGSteam::get_HackGS_deg   ()
+{	double x,y,dme;
+	if (0==NAV1_LOC) return 0.0;
+	y = 60.0 * ( NAV1_Lat - FGBFI::getLatitude () );
+	x = 60.0 * ( NAV1_Lon - FGBFI::getLongitude() )
+	                * cos ( FGBFI::getLatitude () / RAD_TO_DEG );
+	dme = x*x + y*y;
+	if ( dme > 0.1 ) x = sqrt ( dme ); else x = 0.3;
+	y = FGBFI::getAltitude() - NAV1_Alt;
+	return 3.0 - (y/x) * 60.0 / 6000.0;
+}
+
+
+double FGSteam::get_HackVOR1_deg ()
+{	double r;
+	double x,y;
+	y = 60.0 * ( NAV1_Lat - FGBFI::getLatitude () );
+	x = 60.0 * ( NAV1_Lon - FGBFI::getLongitude() )
+	                * cos ( FGBFI::getLatitude () / RAD_TO_DEG );
+	r = atan2 ( x, y ) * RAD_TO_DEG - NAV1_Rad - VARY_E;
+	if (r> 180.0) r-=360.0; else
+	if (r<-180.0) r+=360.0;
+	if ( fabs(r) > 90.0 )
+		r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+	if (NAV1_LOC) r*=5.0;
+	return r;
+}
+
+
+double FGSteam::get_HackVOR2_deg ()
+{	double r;
+	double x,y;
+	y = 60.0 * ( NAV2_Lat - FGBFI::getLatitude () );
+	x = 60.0 * ( NAV2_Lon - FGBFI::getLongitude() )
+	                * cos ( FGBFI::getLatitude () / RAD_TO_DEG );
+	r = atan2 ( x, y ) * RAD_TO_DEG - NAV2_Rad - VARY_E;
+	if (r> 180.0) r-=360.0; else
+	if (r<-180.0) r+=360.0;
+	if ( fabs(r) > 90.0 )
+		r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+	return r;
+}
+
+
+double FGSteam::get_HackOBS1_deg ()
+{	return  NAV1_Rad; 
+}
+
+
+double FGSteam::get_HackOBS2_deg ()
+{	return  NAV2_Rad; 
+}
+
+
+double FGSteam::get_HackADF_deg ()
+{	double r;
+	double x,y;
+	y = 60.0 * ( ADF_Lat - FGBFI::getLatitude () );
+	x = 60.0 * ( ADF_Lon - FGBFI::getLongitude() )
+	               * cos ( FGBFI::getLatitude () / RAD_TO_DEG );
+	r = atan2 ( x, y ) * RAD_TO_DEG - FGBFI::getHeading ();
+	return r;
 }
 
 

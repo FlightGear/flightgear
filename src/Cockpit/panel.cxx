@@ -206,7 +206,7 @@ createTurnCoordinator (int x, int y)
 				// moves with slip/skid
   inst->addLayer(2, createTexture("Textures/Panel/ball.rgb"));
   inst->addTransformation(2, FGInstrumentLayer::ROTATION,
-			  FGSteam::get_TC_radps,
+			  FGSteam::get_TC_rad,
 			  -0.1, 0.1, 450.0, 0.0);
 
   return inst;
@@ -382,7 +382,7 @@ createControls (int x, int y)
 
 
 /**
- * Construct a NAV1 gauge (dummy for now).
+ * Construct a NAV1 gauge (hardwired).
  */
 static FGPanelInstrument *
 createNAV1 (int x, int y)
@@ -391,13 +391,31 @@ createNAV1 (int x, int y)
 
 				// Layer 0: background
   inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
+  inst->addTransformation(0, FGInstrumentLayer::ROTATION,
+			  FGSteam::get_HackOBS1_deg,
+			  -360.0, 360.0, -1.0, 0.0);
+				// Layer 1: long needle
+  inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
+  inst->addTransformation(1, FGInstrumentLayer::XSHIFT,
+			  FGSteam::get_HackVOR1_deg,
+			  -10.0, 10.0, SIX_W / 40.0, 0.0);
+  inst->addTransformation(1, FGInstrumentLayer::YSHIFT,
+			  -SIX_W / 4.4 );
+  inst->addLayer(2, createTexture("Textures/Panel/long-needle.rgb"));
+  inst->addTransformation(2, FGInstrumentLayer::YSHIFT,
+			  FGSteam::get_HackGS_deg,
+			  -1.0, 1.0, SIX_W / 5.0, 0.0);
+  inst->addTransformation(2, FGInstrumentLayer::XSHIFT,
+			  -SIX_W / 4.4 );
+  inst->addTransformation(2, FGInstrumentLayer::ROTATION,
+			  90 );
 
   return inst;
 }
 
 
 /**
- * Construct a NAV2 gauge (dummy for now).
+ * Construct a NAV2 gauge (hardwired).
  */
 static FGPanelInstrument *
 createNAV2 (int x, int y)
@@ -406,13 +424,22 @@ createNAV2 (int x, int y)
 
 				// Layer 0: background
   inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
+  inst->addTransformation(0, FGInstrumentLayer::ROTATION,
+			  FGSteam::get_HackOBS2_deg,
+			  -360.0, 360.0, -1.0, 0.0);
+  inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
+  inst->addTransformation(1, FGInstrumentLayer::XSHIFT,
+			  FGSteam::get_HackVOR2_deg,
+			  -10.0, 10.0, SIX_W / 40.0, 0.0);
+  inst->addTransformation(1, FGInstrumentLayer::YSHIFT,
+			  -SIX_W / 4.4 );
 
   return inst;
 }
 
 
 /**
- * Construct an ADF gauge (dummy for now).
+ * Construct an ADF gauge (hardwired).
  */
 static FGPanelInstrument *
 createADF (int x, int y)
@@ -421,6 +448,10 @@ createADF (int x, int y)
 
 				// Layer 0: background
   inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
+  inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
+  inst->addTransformation(1, FGInstrumentLayer::ROTATION,
+			  FGSteam::get_HackADF_deg,
+			  -720.0, 720.0, 1.0, 0.0);
 
   return inst;
 }
