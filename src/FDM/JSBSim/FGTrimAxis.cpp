@@ -437,7 +437,7 @@ void FGTrimAxis::AxisReport(void) {
            GetStateName().c_str(), GetState()+state_target, GetTolerance());
   cout << out;
 
-  if( abs(GetState()+state_target) < abs(GetTolerance()) )
+  if( fabs(GetState()+state_target) < fabs(GetTolerance()) )
      cout << "  Passed" << endl;
   else
      cout << "  Failed" << endl;

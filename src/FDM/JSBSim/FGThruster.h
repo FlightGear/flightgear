@@ -95,6 +95,8 @@ public:
   virtual string GetThrusterLabels(int id);
   virtual string GetThrusterValues(int id);
 
+  inline void SetThrustCoefficient(double ct) { ThrustCoeff = ct; }
+
 protected:
   eType Type;
   string Name;

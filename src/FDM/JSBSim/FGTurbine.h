@@ -233,12 +233,12 @@ private:
   double NozzlePosition;
 
   double Off(void);
-  double Run(void);
+  double Run(double &CT);
   double SpinUp(void);
   double Start(void);
   double Stall(void);
   double Seize(void);
-  double Trim(void);
+  double Trim(double &CT);
 
   void SetDefaults(void);
   bool Load(FGConfigFile *ENG_cfg);

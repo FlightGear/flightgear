@@ -97,7 +97,7 @@ double FGNozzle::Calculate(double CfPc)
   Thrust = max((double)0.0, (CfPc * AreaT + (PE - pAtm)*Area2) * nzlEff);
   vFn(1) = Thrust * cos(ReverserAngle);
 
-  ThrustCoeff = CfPc / ((pAtm - PE) * Area2);
+  ThrustCoeff = max((double)0.0, CfPc / ((pAtm - PE) * Area2));
 
   return Thrust;
 }
