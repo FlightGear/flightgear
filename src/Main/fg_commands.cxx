@@ -25,6 +25,7 @@
 #if defined(HAVE_PLIB_PSL)
 #  include <Scripting/scriptmgr.hxx>
 #endif
+#include <Time/sunsolver.hxx>
 #include <Time/tmp.hxx>
 
 #include "fg_init.hxx"
@@ -479,6 +480,67 @@ do_lighting_update (const SGPropertyNode * arg)
 
 
 /**
+ * Update the lighting manually.
+ */
+static bool
+do_timeofday (const SGPropertyNode * arg)
+{
+    const string &offset_type = arg->getStringValue("timeofday", "noon");
+
+    static const SGPropertyNode *longitude
+        = fgGetNode("/position/longitude-deg");
+    static const SGPropertyNode *latitude
+        = fgGetNode("/position/latitude-deg");
+    static const SGPropertyNode *cur_time_override
+        = fgGetNode("/sim/time/cur-time-override", true);
+
+    SGTime *t = globals->get_time_params();
+    int orig_warp = globals->get_warp();
+    time_t cur_time = t->get_cur_time();
+    cout << "cur_time = " << cur_time << endl;
+    cout << "orig_warp = " << orig_warp << endl;
+
+    int warp = 0;
+    if ( offset_type == "noon" ) {
+        warp = fgTimeSecondsUntilNoon( cur_time,
+                                       longitude->getDoubleValue()
+                                         * SGD_DEGREES_TO_RADIANS,
+                                       latitude->getDoubleValue()
+                                         * SGD_DEGREES_TO_RADIANS ); 
+    } else if ( offset_type == "midnight" ) {
+        warp = fgTimeSecondsUntilMidnight( cur_time,
+                                           longitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           latitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS ); 
+    } else if ( offset_type == "dawn" ) {
+        warp = fgTimeSecondsUntilDawn( cur_time,
+                                       longitude->getDoubleValue()
+                                         * SGD_DEGREES_TO_RADIANS,
+                                       latitude->getDoubleValue()
+                                         * SGD_DEGREES_TO_RADIANS ); 
+     } else if ( offset_type == "dusk" ) {
+        warp = fgTimeSecondsUntilDusk( cur_time,
+                                       longitude->getDoubleValue()
+                                         * SGD_DEGREES_TO_RADIANS,
+                                       latitude->getDoubleValue()
+                                         * SGD_DEGREES_TO_RADIANS ); 
+    }
+    cout << "warp = " << warp << endl;
+    globals->set_warp( orig_warp + warp );
+
+    t->update( longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
+               latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
+               cur_time_override->getLongValue(),
+               globals->get_warp() );
+
+    fgUpdateSkyAndLightingParams();
+
+    return true;
+}
+
+
+/**
  * Built-in command: toggle a bool property value.
  *
  * property: The name of the property to toggle.
@@ -906,6 +968,7 @@ static struct {
     { "screen-capture", do_screen_capture },
     { "tile-cache-reload", do_tile_cache_reload },
     { "lighting-update", do_lighting_update },
+    { "timeofday", do_timeofday },
     { "property-toggle", do_property_toggle },
     { "property-assign", do_property_assign },
     { "property-adjust", do_property_adjust },

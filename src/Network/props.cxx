@@ -332,6 +332,14 @@ PropsChannel::foundTerminator()
                             = args.getNode("subsystem", i-2, true);
                         node->setStringValue( tokens[i].c_str() );
                     }
+                } else if ( tokens[1] == "timeofday" ) {
+                    for ( unsigned int i = 2; i < tokens.size(); ++i ) {
+                        cout << "props: adding subsystem = " << tokens[i]
+                             << endl;
+                        SGPropertyNode *node
+                            = args.getNode("timeofday", i-2, true);
+                        node->setStringValue( tokens[i].c_str() );
+                    }
                 }
                 if ( !globals->get_commands()
                          ->execute(tokens[1].c_str(), &args) )
