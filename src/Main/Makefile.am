@@ -1,3 +1,6 @@
+EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in \
+             fg_os_sdl.cxx fg_os.cxx fg_os.hxx
+
 if ENABLE_MPLAYER_AS
 MPLAYER_LIBS = $(top_builddir)/src/MultiPlayer/libMultiPlayer.a
 else
@@ -23,8 +26,6 @@ CLOUD3D_LIBS =
 endif
 
 AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkgdatadir)\"
-
-EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
 
 bin_PROGRAMS = fgfs metar
 
