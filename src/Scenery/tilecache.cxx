@@ -129,34 +129,39 @@ FGTileCache::exists( const FGBucket& p )
 void
 FGTileCache::fill_in( int index, const FGBucket& p )
 {
+    // cout << "FILL IN CACHE ENTRY = " << index << endl;
+
     // Load the appropriate data file and build tile fragment list
     FGPath tile_path( current_options.get_fg_root() );
     tile_path.append( "Scenery" );
     tile_path.append( p.gen_base_path() );
     tile_path.append( p.gen_index_str() );
 
-    tile_cache[index].mark_loaded();
     tile_cache[index].tile_bucket = p;
-    tile_cache[index].branch_ptr = new ssgTransform;
+
+    tile_cache[index].select_ptr = new ssgSelector;
+    tile_cache[index].transform_ptr = new ssgTransform;
     tile_cache[index].range_ptr = new ssgRangeSelector;
+
     ssgBranch *new_tile = fgObjLoad( tile_path.str(), &tile_cache[index] );
     if ( new_tile != NULL ) {
 	tile_cache[index].range_ptr->addKid( new_tile );
     }
-    tile_cache[index].branch_ptr->addKid( tile_cache[index].range_ptr );
-    terrain->addKid( tile_cache[index].branch_ptr );
+    tile_cache[index].transform_ptr->addKid( tile_cache[index].range_ptr );
+    tile_cache[index].select_ptr->addKid( tile_cache[index].transform_ptr );
+    terrain->addKid( tile_cache[index].select_ptr );
 
-    // cout << " ncount before = " << tile_cache[index].ncount << "\n";
-    // cout << " fragments before = " << tile_cache[index].fragment_list.size()
-    //      << "\n";
-
-    string apt_path = tile_path.str();
-    apt_path += ".apt";
-    fgAptGenerate( apt_path, &tile_cache[index] );
-
-    // cout << " ncount after = " << tile_cache[index].ncount << "\n";
-    // cout << " fragments after = " << tile_cache[index].fragment_list.size()
-    //      << "\n";
+    if ( tile_cache[index].is_scheduled_for_cache() ) {
+	// cout << "FOUND ONE SCHEDULED FOR CACHE" << endl;
+	// load, but not needed now so disable
+	tile_cache[index].mark_loaded();
+	tile_cache[index].ssg_disable();
+	tile_cache[index].select_ptr->select(0);
+    } else {
+	// cout << "FOUND ONE READY TO LOAD" << endl;
+	tile_cache[index].mark_loaded();
+	tile_cache[index].select_ptr->select(1);
+    }
 }
 
 

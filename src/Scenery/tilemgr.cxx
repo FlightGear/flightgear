@@ -61,6 +61,9 @@
 #endif
 
 
+extern ssgRoot *scene;
+
+
 // the tile manager
 FGTileMgr global_tile_mgr;
 
@@ -93,21 +96,40 @@ int FGTileMgr::init( void ) {
 
 
 // schedule a tile for loading
-void FGTileMgr::sched_tile( const FGBucket& b, int *index ) {
+static void disable_tile( int cache_index ) {
     // see if tile already exists in the cache
-    *index = global_tile_cache.exists( b );
-    if ( *index < 0 ) {
-	// find the next availabel cache entry and mark it as scheduled
-	*index = global_tile_cache.next_avail();
-	FGTileEntry *t = global_tile_cache.get_tile( *index );
-	t->mark_scheduled();
+    // cout << "DISABLING CACHE ENTRY = " << cache_index << endl;
+    FGTileEntry *t = global_tile_cache.get_tile( cache_index );
+    t->ssg_disable();
+}
+
+
+// schedule a tile for loading
+int FGTileMgr::sched_tile( const FGBucket& b ) {
+    // see if tile already exists in the cache
+    int cache_index = global_tile_cache.exists( b );
+
+    if ( cache_index >= 0 ) {
+	// tile exists in cache, reenable it.
+	// cout << "REENABLING DISABLED TILE" << endl;
+	FGTileEntry *t = global_tile_cache.get_tile( cache_index );
+	t->select_ptr->select( 1 );
+	t->mark_loaded();
+    } else {
+	// find the next available cache entry and mark it as
+	// scheduled
+	cache_index = global_tile_cache.next_avail();
+	FGTileEntry *t = global_tile_cache.get_tile( cache_index );
+	t->mark_scheduled_for_use();
 
 	// register a load request
 	FGLoadRec request;
 	request.b = b;
-	request.index = *index;
+	request.cache_index = cache_index;
 	load_queue.push_back( request );
     }
+
+    return cache_index;
 }
 
 
@@ -340,6 +362,40 @@ FGTileMgr::current_elev( double lon, double lat, const Point3D& abs_view_pos ) {
 }
 
 
+// Determine scenery altitude via ssg.  Normally this just happens
+// when we render the scene, but we'd also like to be able to do this
+// explicitely.  lat & lon are in radians.  view_pos in current world
+// coordinate translated near (0,0,0) (in meters.)  Returns result in
+// meters.
+double
+FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos, 
+			     const Point3D& view_pos )
+{
+    ssgHit *results ;
+
+    // cout << "view pos = " << view_pos << endl;
+    // cout << "abs view pos = " << abs_view_pos << endl;
+
+    sgMat4 m;
+    sgMakeTransMat4( m, view_pos.x(), view_pos.y(), view_pos.z() );
+
+    sgVec3 s;
+    sgSetVec3(s, -abs_view_pos.x(), -abs_view_pos.y(), -abs_view_pos.z() );
+
+    int num_hits = ssgLOS ( scene, s, m, &results ) ;
+
+    for ( int i = 0 ; i < num_hits ; i++ ) {
+	ssgHit *h = &(results [ i ]) ;
+	cout << "got a hit!" << endl;
+	/* Do something with 'h' */
+    }
+
+    FG_LOG( FG_TERRAIN, FG_INFO, "(ssg) no terrain intersection found" );
+
+    return 0.0;
+}
+
+
 // given the current lon/lat, fill in the array of local chunks.  If
 // the chunk isn't already in the cache, then read it from disk.
 int FGTileMgr::update( void ) {
@@ -368,7 +424,7 @@ int FGTileMgr::update( void ) {
     } else if ( (state == Start) || (state == Inited) ) {
 	state = Running;
 
-	// First time through or we have teleporte, initialize the
+	// First time through or we have teleported, initialize the
 	// system and load all relavant tiles
 
 	FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << p1 );
@@ -389,7 +445,7 @@ int FGTileMgr::update( void ) {
 	p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 			     f->get_Latitude() * RAD_TO_DEG,
 			     0, 0 );
-	sched_tile( p2, &tiles[(dh*tile_diameter) + dw]);
+	tiles[(dh*tile_diameter) + dw] = sched_tile( p2 );
 
 	for ( i = 3; i <= tile_diameter; i = i + 2 ) {
 	    int span = i / 2;
@@ -399,7 +455,7 @@ int FGTileMgr::update( void ) {
 		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 				     f->get_Latitude() * RAD_TO_DEG,
 				     j, -span );
-		sched_tile( p2, &tiles[((dh-span)*tile_diameter) + dw+j]);
+		tiles[((dh-span)*tile_diameter) + dw+j] = sched_tile( p2 );
 	    }
 
 	    // top row
@@ -407,7 +463,7 @@ int FGTileMgr::update( void ) {
 		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 				     f->get_Latitude() * RAD_TO_DEG,
 				     j, span );
-		sched_tile( p2, &tiles[((dh+span)*tile_diameter) + dw+j]);
+		tiles[((dh+span)*tile_diameter) + dw+j] = sched_tile( p2 );
 	    }
 
 	    // middle rows
@@ -415,11 +471,11 @@ int FGTileMgr::update( void ) {
 		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 				     f->get_Latitude() * RAD_TO_DEG,
 				     -span, j );
-		sched_tile( p2, &tiles[((dh+j)*tile_diameter) + dw-span]);
+		tiles[((dh+j)*tile_diameter) + dw-span] = sched_tile( p2 );
 		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 				     f->get_Latitude() * RAD_TO_DEG,
 				     span, j );
-		sched_tile( p2, &tiles[((dh+j)*tile_diameter) + dw+span]);
+		tiles[((dh+j)*tile_diameter) + dw+span] = sched_tile( p2 );
 	    }
 
 	}
@@ -430,7 +486,7 @@ int FGTileMgr::update( void ) {
 		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 				     f->get_Latitude() * RAD_TO_DEG,
 				     i - dw, j -dh );
-		sched_tile( p2, &tiles[(j*tile_diameter) + i]);
+		tiles[(j*tile_diameter) + i] = sched_tile( p2 );
 	    }
 	} */
 
@@ -443,13 +499,25 @@ int FGTileMgr::update( void ) {
 	    
 		FGLoadRec pending = load_queue.front();
 		load_queue.pop_front();
-		load_tile( pending.b, pending.index );
+		load_tile( pending.b, pending.cache_index );
 	    }
 	}
 
     } else {
 	// We've moved to a new bucket, we need to scroll our
         // structures, and load in the new tiles
+
+#if 0 
+	// make sure load queue is flushed before doing shift
+	while ( load_queue.size() ) {
+	    FG_LOG( FG_TERRAIN, FG_INFO, 
+		    "Load queue not empty, flushing queue before tile shift." );
+	    
+	    FGLoadRec pending = load_queue.front();
+	    load_queue.pop_front();
+	    load_tile( pending.b, pending.index );
+	}
+#endif
 
 	// CURRENTLY THIS ASSUMES WE CAN ONLY MOVE TO ADJACENT TILES.
 	// AT ULTRA HIGH SPEEDS THIS ASSUMPTION MAY NOT BE VALID IF
@@ -460,66 +528,66 @@ int FGTileMgr::update( void ) {
 	if ( (p1.get_lon() > p_last.get_lon()) ||
 	     ( (p1.get_lon() == p_last.get_lon()) && (p1.get_x() > p_last.get_x()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "  Loading " << tile_diameter << "tiles" );
+		    "  Loading " << tile_diameter << " tiles" );
 	    for ( j = 0; j < tile_diameter; j++ ) {
 		// scrolling East
+		disable_tile( tiles[(j*tile_diameter) + 0] );
 		for ( i = 0; i < tile_diameter - 1; i++ ) {
 		    tiles[(j*tile_diameter) + i] = 
 			tiles[(j*tile_diameter) + i + 1];
 		}
 		// load in new column
-		// fgBucketOffset(&p_last, &p2, dw + 1, j - dh);
 		p2 = fgBucketOffset( last_lon, last_lat, dw + 1, j - dh );
-		sched_tile( p2, &tiles[(j*tile_diameter) + 
-					     tile_diameter - 1]);
+		tiles[(j*tile_diameter) + tile_diameter - 1] = sched_tile( p2 );
 	    }
 	} else if ( (p1.get_lon() < p_last.get_lon()) ||
-		    ( (p1.get_lon() == p_last.get_lon()) && (p1.get_x() < p_last.get_x()) ) ) {
+		    ( (p1.get_lon() == p_last.get_lon()) && 
+		      (p1.get_x() < p_last.get_x()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "  Loading " << tile_diameter << "tiles" );
+		    "  Loading " << tile_diameter << " tiles" );
 	    for ( j = 0; j < tile_diameter; j++ ) {
 		// scrolling West
+		disable_tile( tiles[(j*tile_diameter) + tile_diameter - 1] );
 		for ( i = tile_diameter - 1; i > 0; i-- ) {
 		    tiles[(j*tile_diameter) + i] = 
 			tiles[(j*tile_diameter) + i - 1];
 		}
 		// load in new column
-		// fgBucketOffset(&p_last, &p2, -dw - 1, j - dh);
 		p2 = fgBucketOffset( last_lon, last_lat, -dw - 1, j - dh );
-		sched_tile( p2, &tiles[(j*tile_diameter) + 0]);
+		tiles[(j*tile_diameter) + 0] = sched_tile( p2 );
 	    }
 	}
 
 	if ( (p1.get_lat() > p_last.get_lat()) ||
 	     ( (p1.get_lat() == p_last.get_lat()) && (p1.get_y() > p_last.get_y()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "  Loading " << tile_diameter << "tiles" );
+		    "  Loading " << tile_diameter << " tiles" );
 	    for ( i = 0; i < tile_diameter; i++ ) {
 		// scrolling North
+		disable_tile( tiles[0 + i] );
 		for ( j = 0; j < tile_diameter - 1; j++ ) {
 		    tiles[(j * tile_diameter) + i] =
 			tiles[((j+1) * tile_diameter) + i];
 		}
 		// load in new column
-		// fgBucketOffset(&p_last, &p2, i - dw, dh + 1);
 		p2 = fgBucketOffset( last_lon, last_lat, i - dw, dh + 1);
-		sched_tile( p2, &tiles[((tile_diameter-1) * 
-					       tile_diameter) + i]);
+		tiles[((tile_diameter-1) * tile_diameter) + i] = 
+		    sched_tile( p2 );
 	    }
 	} else if ( (p1.get_lat() < p_last.get_lat()) ||
 		    ( (p1.get_lat() == p_last.get_lat()) && (p1.get_y() < p_last.get_y()) ) ) {
 	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "  Loading " << tile_diameter << "tiles" );
+		    "  Loading " << tile_diameter << " tiles" );
 	    for ( i = 0; i < tile_diameter; i++ ) {
 		// scrolling South
+		disable_tile( tiles[((tile_diameter-1) * tile_diameter) + i] );
 		for ( j = tile_diameter - 1; j > 0; j-- ) {
 		    tiles[(j * tile_diameter) + i] = 
 			tiles[((j-1) * tile_diameter) + i];
 		}
 		// load in new column
-		// fgBucketOffset(&p_last, &p2, i - dw, -dh - 1);
 		p2 = fgBucketOffset( last_lon, last_lat, i - dw, -dh - 1);
-		sched_tile( p2, &tiles[0 + i]);
+		tiles[0 + i] = sched_tile( p2 );
 	    }
 	}
     }
@@ -529,7 +597,7 @@ int FGTileMgr::update( void ) {
 
 	FGLoadRec pending = load_queue.front();
 	load_queue.pop_front();
-	load_tile( pending.b, pending.index );
+	load_tile( pending.b, pending.cache_index );
     }
 
     // find our current elevation (feed in the current bucket to save work)
@@ -538,7 +606,11 @@ int FGTileMgr::update( void ) {
 
     scenery.cur_elev = 
 	current_elev( f->get_Longitude(), f->get_Latitude(), tmp_abs_view_pos );
-
+    // cout << "current elevation == " << scenery.cur_elev << endl;
+    // double junk = current_elev_ssg( current_view.abs_view_pos,
+    //                                 current_view.view_pos );
+    // cout << "current elevation (ssg) == " << 
+	
     p_last = p1;
     last_lon = f->get_Longitude() * RAD_TO_DEG;
     last_lat = f->get_Latitude() * RAD_TO_DEG;
@@ -765,7 +837,7 @@ void FGTileMgr::prep_ssg_nodes( void ) {
 	    sgSetCoord( &sgcoord,
 			t->offset.x(), t->offset.y(), t->offset.z(),
 			0.0, 0.0, 0.0 );
-	    t->branch_ptr->setTransform( &sgcoord );
+	    t->transform_ptr->setTransform( &sgcoord );
 	}
     }
 }

@@ -89,17 +89,17 @@ FGTileEntry::free_tile()
     // delete the ssg branch
 
     // make sure we have a sane number of parents
-    int pcount = branch_ptr->getNumParents();
+    int pcount = select_ptr->getNumParents();
     if ( pcount > 0 ) {
 	// find the first parent (should only be one)
-	ssgBranch *parent = branch_ptr->getParent( 0 ) ;
+	ssgBranch *parent = select_ptr->getParent( 0 ) ;
 	// find the number of kids this parent has
 	int kcount = parent->getNumKids();
-	// find the kid that matches our original branch_ptr
+	// find the kid that matches our original select_ptr
 	bool found_kid = false;
 	for ( int i = 0; i < kcount; ++i ) {
 	    ssgEntity *kid = parent->getKid( i );
-	    if ( kid == branch_ptr ) {
+	    if ( kid == select_ptr ) {
 		FG_LOG( FG_TERRAIN, FG_INFO,
 			"Found a kid to delete " << kid);
 		found_kid = true;
@@ -118,3 +118,37 @@ FGTileEntry::free_tile()
 }
 
 
+// when a tile is still in the cache, but not in the immediate draw l
+// ist, it can still remain in the scene graph, but we use a range
+// selector to disable it from ever being drawn.
+void 
+FGTileEntry::ssg_disable() {
+    // cout << "TILE STATE = " << state << endl;
+    if ( state == Scheduled_for_use ) {
+	state = Scheduled_for_cache;
+    } else if ( (state == Loaded) || (state == Cached) ) {
+	state = Cached;
+	// cout << "DISABLING SSG NODE" << endl;
+	select_ptr->select(0);
+
+#if 0
+	// set a really tiny range
+	// cout << "SETTING TINY RANGE" << endl;
+	float ranges[2];
+	ranges[0] = 0.0f;
+	ranges[1] = 0.00001f;
+	range_ptr->setRanges( ranges, 2 );
+
+	// transform to a long way away
+	// cout << "MOVING FAR AWAY" << endl;
+	sgCoord sgcoord;
+	sgSetCoord( &sgcoord, 999999.0, 999999.0, 999999.0, 0.0, 0.0, 0.0 );
+	transform_ptr->setTransform( &sgcoord );
+#endif 
+    } else {
+	FG_LOG( FG_TERRAIN, FG_ALERT,
+		"Trying to disable an unused tile!  Dying" );
+	exit(-1);
+    }	
+    // cout << "TILE STATE = " << state << endl;
+}

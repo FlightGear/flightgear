@@ -73,8 +73,10 @@ private:
     // Tile state
     enum tile_state {
 	Unused = 0,
-	Scheduled = 1,
-	Loaded = 2
+	Scheduled_for_use = 1,
+	Scheduled_for_cache = 2,
+	Loaded = 3,
+	Cached = 4
     };
 
 public:
@@ -112,6 +114,7 @@ public:
     // ssg tree structure for this tile is as follows:
     // ssgRoot(scene)
     //     - ssgBranch(terrain)
+    //      - ssgSelector(tile)
     //        - ssgTransform(tile)
     //           - ssgRangeSelector(tile)
     //              - ssgEntity(tile)
@@ -120,11 +123,14 @@ public:
     //                   ...
     //                 - kidn(fan)
 
-    // pointer to ssg range selector for this tile
-    ssgRangeSelector *range_ptr;
+    // selector (turn tile on/off)
+    ssgSelector *select_ptr;
 
     // pointer to ssg transform for this tile
-    ssgTransform *branch_ptr;
+    ssgTransform *transform_ptr;
+
+    // pointer to ssg range selector for this tile
+    ssgRangeSelector *range_ptr;
 
 public:
 
@@ -189,11 +195,24 @@ public:
     }
 
     inline bool is_unused() const { return state == Unused; }
+    inline bool is_scheduled_for_use() const { 
+	return state == Scheduled_for_use;
+    }
+    inline bool is_scheduled_for_cache() const {
+	return state == Scheduled_for_cache;
+    }
     inline bool is_loaded() const { return state == Loaded; }
 
     inline void mark_unused() { state = Unused; }
-    inline void mark_scheduled() { state = Scheduled; }
+    inline void mark_scheduled_for_use() { state = Scheduled_for_use; }
+    inline void mark_scheduled_for_cache() { state = Scheduled_for_use; }
     inline void mark_loaded() { state = Loaded; }
+
+
+    // when a tile is still in the cache, but not in the immediate
+    // draw l ist, it can still remain in the scene graph, but we use
+    // a range selector to disable it from ever being drawn.
+    void ssg_disable();
 };
 
 

@@ -55,7 +55,7 @@ class FGLoadRec {
 public:
 
     FGBucket b;
-    int index;
+    int cache_index;
 };
 
 
@@ -80,7 +80,7 @@ private:
     list < FGLoadRec > load_queue;
 
     // schedule a tile for loading
-    void sched_tile( const FGBucket& b, int *index );
+    int sched_tile( const FGBucket& b );
 
     // load a tile
     void load_tile( const FGBucket& b, int cache_index );
@@ -105,8 +105,10 @@ public:
     // render the scene, but we'd also like to be able to do this
     // explicitely.  lat & lon are in radians.  abs_view_pos in
     // meters.  Returns result in meters.
-    double current_elev_new( const FGBucket& p );
     double current_elev( double lon, double lat, const Point3D& abs_view_pos );
+    double current_elev_ssg( const Point3D& abs_view_pos, 
+			     const Point3D& view_pos );
+    double current_elev_new( const FGBucket& p );
 
     // Prepare the ssg nodes ... for each tile, set it's proper
     // transform and update it's range selector based on current
