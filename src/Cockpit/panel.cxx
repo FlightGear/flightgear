@@ -48,6 +48,11 @@
 #define WIN_W 1024
 #define WIN_H 768
 
+#ifdef NONE
+#pragma warn A sloppy coder has defined NONE as a macro!!!
+#undef NONE
+#endif
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -460,9 +465,11 @@ FGPanelAction::addBinding (const FGBinding &binding)
 void
 FGPanelAction::doAction ()
 {
-  int nBindings = _bindings.size();
-  for (int i = 0; i < nBindings; i++) {
-    _bindings[i].fire();
+  if (test()) {
+    int nBindings = _bindings.size();
+    for (int i = 0; i < nBindings; i++) {
+      _bindings[i].fire();
+    }
   }
 }
 
@@ -558,12 +565,14 @@ FGPanelInstrument::addAction (FGPanelAction * action)
 bool
 FGPanelInstrument::doMouseAction (int button, int x, int y)
 {
-  action_list_type::iterator it = _actions.begin();
-  action_list_type::iterator last = _actions.end();
-  for ( ; it != last; it++) {
-    if ((*it)->inArea(button, x, y)) {
-      (*it)->doAction();
-      return true;
+  if (test()) {
+    action_list_type::iterator it = _actions.begin();
+    action_list_type::iterator last = _actions.end();
+    for ( ; it != last; it++) {
+      if ((*it)->inArea(button, x, y)) {
+	(*it)->doAction();
+	return true;
+      }
     }
   }
   return false;
@@ -591,11 +600,13 @@ FGLayeredInstrument::~FGLayeredInstrument ()
 void
 FGLayeredInstrument::draw ()
 {
-  for (int i = 0; i < (int)_layers.size(); i++) {
-    glPushMatrix();
-    glTranslatef(0.0, 0.0, (i / 100.0) + 0.1);
-    _layers[i]->draw();
-    glPopMatrix();
+  if (test()) {
+    for (int i = 0; i < (int)_layers.size(); i++) {
+      glPushMatrix();
+      glTranslatef(0.0, 0.0, (i / 100.0) + 0.1);
+      _layers[i]->draw();
+      glPopMatrix();
+    }
   }
 }
 
@@ -656,28 +667,30 @@ FGInstrumentLayer::transform () const
   transformation_list::const_iterator last = _transformations.end();
   while (it != last) {
     FGPanelTransformation *t = *it;
-    float val = (t->node == 0 ? 0.0 : t->node->getFloatValue());
-    if (val < t->min) {
-      val = t->min;
-    } else if (val > t->max) {
-      val = t->max;
-    }
-    if(t->table==0) {
+    if (t->test()) {
+      float val = (t->node == 0 ? 0.0 : t->node->getFloatValue());
+      if (val < t->min) {
+	val = t->min;
+      } else if (val > t->max) {
+	val = t->max;
+      }
+      if(t->table==0) {
 	val = val * t->factor + t->offset;
-    } else {
+      } else {
 	val = t->table->interpolate(val) * t->factor + t->offset;
-    }
-
-    switch (t->type) {
-    case FGPanelTransformation::XSHIFT:
-      glTranslatef(val, 0.0, 0.0);
-      break;
-    case FGPanelTransformation::YSHIFT:
-      glTranslatef(0.0, val, 0.0);
-      break;
-    case FGPanelTransformation::ROTATION:
-      glRotatef(-val, 0.0, 0.0, 1.0);
-      break;
+      }
+      
+      switch (t->type) {
+      case FGPanelTransformation::XSHIFT:
+	glTranslatef(val, 0.0, 0.0);
+	break;
+      case FGPanelTransformation::YSHIFT:
+	glTranslatef(0.0, val, 0.0);
+	break;
+      case FGPanelTransformation::ROTATION:
+	glRotatef(-val, 0.0, 0.0, 1.0);
+	break;
+      }
     }
     it++;
   }
@@ -687,6 +700,38 @@ void
 FGInstrumentLayer::addTransformation (FGPanelTransformation * transformation)
 {
   _transformations.push_back(transformation);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGGroupLayer.
+////////////////////////////////////////////////////////////////////////
+
+FGGroupLayer::FGGroupLayer ()
+{
+}
+
+FGGroupLayer::~FGGroupLayer ()
+{
+  for (int i = 0; i < _layers.size(); i++)
+    delete _layers[i];
+}
+
+void
+FGGroupLayer::draw ()
+{
+  if (test()) {
+    int nLayers = _layers.size();
+    for (int i = 0; i < nLayers; i++)
+      _layers[i]->draw();
+  }
+}
+
+void
+FGGroupLayer::addLayer (FGInstrumentLayer * layer)
+{
+  _layers.push_back(layer);
 }
 
 
@@ -711,27 +756,29 @@ FGTexturedLayer::~FGTexturedLayer ()
 void
 FGTexturedLayer::draw ()
 {
-  int w2 = _w / 2;
-  int h2 = _h / 2;
-
-  transform();
-  glBindTexture(GL_TEXTURE_2D, _texture.getTexture()->getHandle());
-  glBegin(GL_POLYGON);
-
+  if (test()) {
+    int w2 = _w / 2;
+    int h2 = _h / 2;
+    
+    transform();
+    glBindTexture(GL_TEXTURE_2D, _texture.getTexture()->getHandle());
+    glBegin(GL_POLYGON);
+    
 				// From Curt: turn on the panel
 				// lights after sundown.
-  if ( cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES < 95.0 ) {
+    if ( cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES < 95.0 ) {
       glColor4fv( cur_light_params.scene_diffuse );
-  } else {
+    } else {
       glColor4f(0.7, 0.2, 0.2, 1.0);
+    }
+
+
+    glTexCoord2f(_texture.getMinX(), _texture.getMinY()); glVertex2f(-w2, -h2);
+    glTexCoord2f(_texture.getMaxX(), _texture.getMinY()); glVertex2f(w2, -h2);
+    glTexCoord2f(_texture.getMaxX(), _texture.getMaxY()); glVertex2f(w2, h2);
+    glTexCoord2f(_texture.getMinX(), _texture.getMaxY()); glVertex2f(-w2, h2);
+    glEnd();
   }
-
-
-  glTexCoord2f(_texture.getMinX(), _texture.getMinY()); glVertex2f(-w2, -h2);
-  glTexCoord2f(_texture.getMaxX(), _texture.getMinY()); glVertex2f(w2, -h2);
-  glTexCoord2f(_texture.getMaxX(), _texture.getMaxY()); glVertex2f(w2, h2);
-  glTexCoord2f(_texture.getMinX(), _texture.getMaxY()); glVertex2f(-w2, h2);
-  glEnd();
 }
 
 
@@ -760,24 +807,26 @@ FGTextLayer::~FGTextLayer ()
 void
 FGTextLayer::draw ()
 {
-  glPushMatrix();
-  glColor4fv(_color);
-  transform();
-  text_renderer.setFont(guiFntHandle);
-  text_renderer.setPointSize(_pointSize);
-  text_renderer.begin();
-  text_renderer.start3f(0, 0, 0);
+  if (test()) {
+    glPushMatrix();
+    glColor4fv(_color);
+    transform();
+    text_renderer.setFont(guiFntHandle);
+    text_renderer.setPointSize(_pointSize);
+    text_renderer.begin();
+    text_renderer.start3f(0, 0, 0);
 
-  _now.stamp();
-  if (_now - _then > 100000) {
-    recalc_value();
-    _then = _now;
+    _now.stamp();
+    if (_now - _then > 100000) {
+      recalc_value();
+      _then = _now;
+    }
+    text_renderer.puts((char *)(_value.c_str()));
+
+    text_renderer.end();
+    glColor4f(1.0, 1.0, 1.0, 1.0);	// FIXME
+    glPopMatrix();
   }
-  text_renderer.puts((char *)(_value.c_str()));
-
-  text_renderer.end();
-  glColor4f(1.0, 1.0, 1.0, 1.0);	// FIXME
-  glPopMatrix();
 }
 
 void
@@ -849,18 +898,22 @@ FGTextLayer::Chunk::Chunk (ChunkType type, const SGPropertyNode * node,
 const char *
 FGTextLayer::Chunk::getValue () const
 {
-  switch (_type) {
-  case TEXT:
-    sprintf(_buf, _fmt.c_str(), _text.c_str());
+  if (test()) {
+    switch (_type) {
+    case TEXT:
+      sprintf(_buf, _fmt.c_str(), _text.c_str());
+      return _buf;
+    case TEXT_VALUE:
+      sprintf(_buf, _fmt.c_str(), _node->getStringValue().c_str());
+      break;
+    case DOUBLE_VALUE:
+      sprintf(_buf, _fmt.c_str(), _node->getFloatValue() * _mult);
+      break;
+    }
     return _buf;
-  case TEXT_VALUE:
-    sprintf(_buf, _fmt.c_str(), _node->getStringValue().c_str());
-    break;
-  case DOUBLE_VALUE:
-    sprintf(_buf, _fmt.c_str(), _node->getFloatValue() * _mult);
-    break;
+  } else {
+    return "";
   }
-  return _buf;
 }
 
 
@@ -885,11 +938,13 @@ FGSwitchLayer::~FGSwitchLayer ()
 void
 FGSwitchLayer::draw ()
 {
-  transform();
-  if (_node->getBoolValue()) {
-    _layer1->draw();
-  } else {
-    _layer2->draw();
+  if (test()) {
+    transform();
+    if (_node->getBoolValue()) {
+      _layer1->draw();
+    } else {
+      _layer2->draw();
+    }
   }
 }
 

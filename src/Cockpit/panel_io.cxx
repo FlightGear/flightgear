@@ -185,6 +185,24 @@ readTexture (const SGPropertyNode * node)
 
 
 /**
+ * Test for a condition in the current node.
+ */
+
+////////////////////////////////////////////////////////////////////////
+// Read a condition and use it if necessary.
+////////////////////////////////////////////////////////////////////////
+
+static void
+readConditions (FGConditional * component, const SGPropertyNode * node)
+{
+  const SGPropertyNode * conditionNode = node->getChild("condition");
+  if (conditionNode != 0)
+				// The top level is implicitly AND
+    component->setCondition(fgReadCondition(conditionNode));
+}
+
+
+/**
  * Read an action from the instrument's property list.
  *
  * The action will be performed when the user clicks a mouse button
@@ -230,6 +248,7 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
     action->addBinding(FGBinding(bindings[i])); // TODO: allow modifiers
   }
 
+  readConditions(action, node);
   return action;
 }
 
@@ -340,6 +359,7 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
     return 0;
   }
 
+  readConditions(t, node);
   SG_LOG( SG_COCKPIT, SG_DEBUG, "Read transformation " << name );
   return t;
 }
@@ -405,6 +425,7 @@ readTextChunk (const SGPropertyNode * node)
     return 0;
   }
 
+  readConditions(chunk, node);
   return chunk;
 }
 
@@ -456,6 +477,19 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
   if (type == "texture") {
     FGCroppedTexture texture = readTexture(node->getNode("texture"));
     layer = new FGTexturedLayer(texture, w, h);
+  }
+
+				// A group of sublayers.
+  else if (type == "group") {
+    layer = new FGGroupLayer();
+    for (int i = 0; i < node->nChildren(); i++) {
+      const SGPropertyNode * child = node->getChild(i);
+      cerr << "Trying child " << child->getName() << endl;
+      if (child->getName() == "layer") {
+	cerr << "succeeded!" << endl;
+	((FGGroupLayer *)layer)->addLayer(readLayer(child, w_scale, h_scale));
+      }
+    }
   }
 
 
@@ -551,7 +585,8 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
       }
     }
   }
-  
+
+  readConditions(layer, node);
   SG_LOG( SG_COCKPIT, SG_DEBUG, "Read layer " << name );
   return layer;
 }
@@ -638,7 +673,8 @@ readInstrument (const SGPropertyNode * node)
       }
     }
   }
-    
+
+  readConditions(instrument, node);
   SG_LOG( SG_COCKPIT, SG_DEBUG, "Done reading instrument " << name );
   return instrument;
 }
