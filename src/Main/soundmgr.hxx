@@ -1,6 +1,9 @@
 // soundmgr.hxx -- Sound effect management class
 //
-// Written by Curtis Olson, started March 2001.
+// Sound manager initially written by David Findlay
+// <david_j_findlay@yahoo.com.au> 2001
+//
+// C++-ified by Curtis Olson, started March 2001.
 //
 // Copyright (C) 2001  Curtis L. Olson - curt@flightgear.org
 //
