@@ -62,7 +62,7 @@
 #include <Main/fg_init.hxx>
 #include <Main/views.hxx>
 #include <Misc/fgpath.hxx>
-#include <Network/network.h>
+#include <NetworkOLK/network.h>
 #include <Screen/screen-dump.hxx>
 #include <Time/fg_time.hxx>
 
@@ -738,6 +738,10 @@ void goodBye(puObject *)
     //      "Program exiting normally at user request." );
     cout << "Program exiting normally at user request." << endl;
 
+#ifdef FG_NETWORK_OLK    
+    if ( net_is_registered == 0 ) fgd_send_com( "8", FGFS_host);
+#endif
+
     //  if(gps_bug)
     //      fclose(gps_bug);
 
@@ -1086,6 +1090,7 @@ static puInput         *NetIdDialogInput = 0;
 
 static char NewNetId[16];
 static char NewNetIdLabel[] = "Enter New Callsign"; 
+extern char *fgd_callsign;
 
 static puOneShot       *NetIdDialogOkButton = 0;
 static puOneShot       *NetIdDialogCancelButton = 0;
@@ -1112,6 +1117,8 @@ void NetIdDialog_OK (puObject *)
     
     NetIdDialog_Cancel( NULL );
     current_options.set_net_id( NetId.c_str() );
+    strcpy( fgd_callsign, net_callsign);
+//    strcpy( fgd_callsign, current_options.get_net_id().c_str());
 /* Entering a callsign indicates : user wants Net HUD Info */
     net_hud_display = 1;
 
@@ -1122,6 +1129,7 @@ void NetIdDialog_OK (puObject *)
 void NewCallSign(puObject *cb)
 {
     sprintf( NewNetId, "%s", current_options.get_net_id().c_str() );
+//    sprintf( NewNetId, "%s", fgd_callsign );
     NetIdDialogInput->setValue( NewNetId );
 
     FG_PUSH_PUI_DIALOG( NetIdDialog );
@@ -1130,6 +1138,7 @@ void NewCallSign(puObject *cb)
 static void NewNetIdInit(void)
 {
     sprintf( NewNetId, "%s", current_options.get_net_id().c_str() );
+//    sprintf( NewNetId, "%s", fgd_callsign );
     int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),
                                       NewNetIdLabel ) / 2;
 
@@ -1162,12 +1171,173 @@ static void net_display_toggle( puObject *cb)
         printf("Toggle net_hud_display : %d\n", net_hud_display);
 }
 
-static void net_blaster_toggle( puObject *cb)
+static void net_register( puObject *cb)
 {
-	net_blast_toggle = (net_blast_toggle) ? 0 : -1;
-        printf("Toggle net_blast : %d\n", net_blast_toggle);
+	fgd_send_com( "1", FGFS_host );
+        net_is_registered = 0;
+        printf("Registering to deamon\n");
 }
 
+static void net_unregister( puObject *cb)
+{
+	fgd_send_com( "8", FGFS_host );
+        net_is_registered = -1;
+        printf("Unregistering from deamon\n");
+}
+
+
+/*************** Deamon communication **********/
+
+//  These statics should disapear when this is a class
+static puDialogBox     *NetFGDDialog = 0;
+static puFrame         *NetFGDDialogFrame = 0;
+static puText          *NetFGDDialogMessage = 0;
+//static puInput         *NetFGDDialogInput = 0;
+
+//static char NewNetId[16];
+static char NewNetFGDLabel[] = "Scan for deamon                        "; 
+static char NewFGDHost[64] = "olk.mcp.de"; 
+static int  NewFGDPortLo = 10000;
+static int  NewFGDPortHi = 10001;
+ 
+//extern char *fgd_callsign;
+extern u_short base_port, end_port;
+extern int fgd_ip, verbose, current_port;
+extern char *fgd_host;
+
+
+static puOneShot       *NetFGDDialogOkButton = 0;
+static puOneShot       *NetFGDDialogCancelButton = 0;
+static puOneShot       *NetFGDDialogScanButton = 0;
+
+static puInput         *NetFGDHostDialogInput = 0;
+static puInput         *NetFGDPortLoDialogInput = 0;
+static puInput         *NetFGDPortHiDialogInput = 0;
+
+void NetFGDDialog_Cancel(puObject *)
+{
+    FG_POP_PUI_DIALOG( NetFGDDialog );
+}
+
+void NetFGDDialog_OK (puObject *)
+{
+    char *NetFGD;    
+
+    FGTime *t = FGTime::cur_time_params;
+    int PauseMode = t->getPause();
+    if(!PauseMode) t->togglePauseMode();
+    NetFGDHostDialogInput->getValue( &NetFGD );
+    strcpy( fgd_host, NetFGD);
+    NetFGDPortLoDialogInput->getValue( (int *) &base_port );
+    NetFGDPortHiDialogInput->getValue( (int *) &end_port );
+    NetFGDDialog_Cancel( NULL );
+    if( PauseMode != t->getPause() )
+        t->togglePauseMode();
+}
+
+void NetFGDDialog_SCAN (puObject *)
+{
+    char *NetFGD;
+    int fgd_port;
+    
+    FGTime *t = FGTime::cur_time_params;
+    int PauseMode = t->getPause();
+    if(!PauseMode) t->togglePauseMode();
+//    printf("Vor getvalue %s\n");
+    NetFGDHostDialogInput->getValue( &NetFGD );
+//    printf("Vor strcpy %s\n", (char *) NetFGD);
+    strcpy( fgd_host, NetFGD);
+    NetFGDPortLoDialogInput->getValue( (int *) &base_port );
+    NetFGDPortHiDialogInput->getValue( (int *) &end_port );
+    printf("FGD: %s  Port-Start: %d Port-End: %d\n", fgd_host, 
+                 base_port, end_port);
+    net_resolv_fgd(fgd_host);
+    printf("Resolve : %d\n", net_r);
+    if( PauseMode != t->getPause() )  t->togglePauseMode();
+    if ( net_r == 0 ) {
+      fgd_port = 10000;
+      strcpy( fgd_name, "");
+      for( current_port = base_port; ( current_port <= end_port); current_port++) {
+          fgd_send_com("0" , FGFS_host);
+          sprintf( NewNetFGDLabel , "Scanning for deamon Port: %d", current_port); 
+          printf("FGD: searching %s\n", fgd_name);
+          if ( strcmp( fgd_name, "") != 0 ) {
+             sprintf( NewNetFGDLabel , "Found %s at Port: %d", 
+                                              fgd_name, current_port);
+             fgd_port = current_port;
+             current_port = end_port+1;
+          }
+      }
+      current_port = end_port = base_port = fgd_port;
+    }
+    NetFGDDialog_Cancel( NULL );
+}
+
+
+void net_fgd_scan(puObject *cb)
+{
+    NewFGDPortLo = base_port;
+    NewFGDPortHi = end_port;
+    strcpy( NewFGDHost, fgd_host);
+    NetFGDPortLoDialogInput->setValue( NewFGDPortLo );
+    NetFGDPortHiDialogInput->setValue( NewFGDPortHi );
+    NetFGDHostDialogInput->setValue( NewFGDHost );
+
+    FG_PUSH_PUI_DIALOG( NetFGDDialog );
+}
+
+
+static void NewNetFGDInit(void)
+{
+//    sprintf( NewNetId, "%s", current_options.get_net_id().c_str() );
+//    sprintf( NewNetId, "%s", fgd_callsign );
+    int len = 170 - puGetStringWidth( puGetDefaultLabelFont(),
+                                      NewNetFGDLabel ) / 2;
+
+    NetFGDDialog = new puDialogBox (310, 30);
+    {
+        NetFGDDialogFrame   = new puFrame           (0,0,320, 170);
+        NetFGDDialogMessage = new puText            (len, 140);
+        NetFGDDialogMessage ->    setLabel          (NewNetFGDLabel);
+
+        NetFGDPortLoDialogInput   = new puInput           (50, 70, 127, 100);
+        NetFGDPortLoDialogInput   ->    setValue          (NewFGDPortLo);
+        NetFGDPortLoDialogInput   ->    acceptInput();
+
+        NetFGDPortHiDialogInput   = new puInput           (199, 70, 275, 100);
+        NetFGDPortHiDialogInput   ->    setValue          (NewFGDPortHi);
+        NetFGDPortHiDialogInput   ->    acceptInput();
+
+        NetFGDHostDialogInput   = new puInput           (50, 100, 275, 130);
+        NetFGDHostDialogInput   ->    setValue          (NewFGDHost);
+        NetFGDHostDialogInput   ->    acceptInput();
+
+        NetFGDDialogScanButton     =  new puOneShot   (130, 10, 200, 50);
+        NetFGDDialogScanButton     ->     setLegend   ("Scan");
+        NetFGDDialogScanButton     ->     setCallback (NetFGDDialog_SCAN);
+        NetFGDDialogScanButton     ->     makeReturnDefault(FALSE);
+
+        NetFGDDialogOkButton     =  new puOneShot   (50, 10, 120, 50);
+        NetFGDDialogOkButton     ->     setLegend   (gui_msg_OK);
+        NetFGDDialogOkButton     ->     setCallback (NetFGDDialog_OK);
+        NetFGDDialogOkButton     ->     makeReturnDefault(TRUE);
+
+        NetFGDDialogCancelButton =  new puOneShot   (210, 10, 280, 50);
+        NetFGDDialogCancelButton ->     setLegend   (gui_msg_CANCEL);
+        NetFGDDialogCancelButton ->     setCallback (NetFGDDialog_Cancel);
+
+    }
+    FG_FINALIZE_PUI_DIALOG( NetFGDDialog );
+}
+
+/*
+static void net_display_toggle( puObject *cb)
+{
+	net_hud_display = (net_hud_display) ? 0 : 1;
+        printf("Toggle net_hud_display : %d\n", net_hud_display);
+}
+
+*/
 /***************  End Networking  **************/
 
 
@@ -1237,15 +1407,17 @@ puCallback optionsSubmenuCb     [] = {
 
 #ifdef FG_NETWORK_OLK
 char *networkSubmenu            [] = {
-    /* "Unregister from FGD ", "Send MSG to All", "Send MSG", "Show Pilots", */
-    /* "Register to FGD", */
-    /* "Scan for Deamons", */ "Enter Callsign", /* "Display Netinfos", */
-    "Toggle Display",
-    "Hyper Blast", NULL
+    "Unregister from FGD ", /* "Send MSG to All", "Send MSG", "Show Pilots", */
+    "Register to FGD",
+    "Scan for Deamons", "Enter Callsign", /* "Display Netinfos", */
+    "Toggle Display", NULL
 };
 puCallback networkSubmenuCb     [] = {
-    /* notCb, notCb, notCb, notCb, notCb, notCb, */ NewCallSign, /* notCb, */
-    net_display_toggle, net_blaster_toggle, NULL
+    /* notCb, notCb, notCb, notCb, */ 
+    net_unregister, 
+    net_register, 
+    net_fgd_scan, NewCallSign, 
+    net_display_toggle, NULL
 };
 #endif
 
@@ -1329,6 +1501,7 @@ void guiInit()
     NewAirportInit();
 #ifdef FG_NETWORK_OLK
     NewNetIdInit();
+    NewNetFGDInit();
 #endif
     mkDialogInit();
     
