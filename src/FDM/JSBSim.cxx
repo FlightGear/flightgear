@@ -59,7 +59,9 @@
 
 FGJSBsim::FGJSBsim(void) {
     bool result;
-  
+   
+    runcount=0;
+   
     fdmex=new FGFDMExec;
     fgic=new FGInitialCondition(fdmex);
     needTrim=true;
@@ -203,12 +205,6 @@ bool FGJSBsim::update( int multiloop ) {
   
     double save_alt = 0.0;
     
-  
-    // lets try to avoid really screwing up the JSBsim model
-    if ( get_Altitude() < -9000 ) {
-	save_alt = get_Altitude();
-	set_Altitude( 0.0 );
-    }
 
     copy_to_JSBsim();
     
@@ -228,8 +224,9 @@ bool FGJSBsim::update( int multiloop ) {
 	}  
 	fgtrim->ReportState();
 	delete fgtrim;
-    
-	needTrim=false;
+  
+	
+  needTrim=false;
     
          
 	controls.set_elevator_trim(fdmex->GetFCS()->GetPitchTrimCmd());
@@ -264,9 +261,7 @@ bool FGJSBsim::update( int multiloop ) {
 
     // but lets restore our original bogus altitude when we are done
 
-    if ( save_alt < -9000.0 ) {
-	set_Altitude( save_alt );
-    }
+
   
     //climb rate now set from FDM in copy_from_x()
     return true;

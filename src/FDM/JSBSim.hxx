@@ -200,6 +200,7 @@ private:
     FGInitialCondition *fgic;
     bool needTrim;
 
+    int runcount;
     bool trimmed;
     float trim_elev;
     float trim_throttle;

@@ -27,7 +27,7 @@ libLaRCsim_a_SOURCES = \
 	ls_model.c ls_model.h \
 	ls_sim_control.h \
         ls_step.c ls_step.h \
-	ls_sym.h ls_types.h \
+	ls_sym.h ls_trim.c ls_types.h \
 	$(AIRCRAFT_MODEL) \
 	ls_interface.c ls_interface.h
 
