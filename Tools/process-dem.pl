@@ -87,15 +87,16 @@ if ( $do_demfit ) {
     open(OUT, "$command |");
     while ( <OUT> ) {
 	print $_;
-	if ( m/Scenery/ ) {
+	if ( m/^Dir = / ) {
 	    $subdir = $_;
-	    $subdir =~ s/Dir = //;
+	    $subdir =~ s/^Dir = //;
+	    chop($subdir);
 	}
     }
     close(OUT);
 } else {
     $subdir = "../Scenery/w120n030/w111n033";
-    printf("WARNING:  Hardcoding subdir = $subdir
+    print "WARNING:  Hardcoding subdir = $subdir\n";
 }
 
 # 3.  triangle -q file (Takes file.node and produces file.1.node and
@@ -169,15 +170,36 @@ if ( $do_splittris ) {
 		print $_;
 	    }
 	    close(OUT);
+
+	    unlink("$subdir/$file.node");
+	    unlink("$subdir/$file.node.orig");
+	    unlink("$subdir/$file.ele");
 	}
     }
 }
 
 
-# 4.2 read in tile sections/ele) skipping edges, read edges out of
-#     edge files, save including proper shared edges (as node/ele)
-#     files.  If my edge and adjacent edge both exist, use other,
-#     delete mine.  If only mine exists, use it.
+# 4.2 read in the split of version of the tiles, reconstruct the tile
+#     using the proper shared corners and edges.  Save as a node file
+#     so we can retriangulate.
+
+if ( $do_assemtris ) {
+    @FILES = `ls $subdir`;
+    foreach $file ( @FILES ) {
+	chop($file);
+	if ( $file =~ m/\.1\.body$/ ) {
+	    $file =~ s/\.body$//;  # strip off the ".node"
+	
+	    $command = "./AssemTris/assemtris $subdir/$file";
+	    print "Running '$command'\n";
+	    open(OUT, "$command |");
+	    while ( <OUT> ) {
+		print $_;
+	    }
+	    close(OUT);
+	}
+    }
+}
 
 
 # 4.3 Retriangulate fixed up files (without -q option)
@@ -277,6 +299,9 @@ if ( $do_fixobj ) {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1998/01/15 02:50:08  curt
+# Tweaked to add next stage.
+#
 # Revision 1.4  1998/01/14 15:55:34  curt
 # Finished splittris, started assemtris.
 #
