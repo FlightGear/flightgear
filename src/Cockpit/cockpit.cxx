@@ -286,7 +286,7 @@ float get_view_direction( void )
 float get_dme( void )
 {
     static const SGPropertyNode * dme_node =
-        fgGetNode("/radios/dme/distance-nm");
+        fgGetNode("/instrumentation/dme/indicated-distance-nm");
 
     return dme_node->getFloatValue();
 }
