@@ -82,57 +82,10 @@ FGUtility::~FGUtility()
 
 float FGUtility::ToGeodetic()
 {
-  float Latitude, Radius, Altitude;
-  float tanLat, xAlpha, muAlpha, sinmuAlpha, denom, rhoAlpha, dMu;
-  float lPoint, lambdaSL, sinlambdaSL, dLambda, rAlpha;
-
-  Latitude = State->Getlatitude();
-  Radius = State->Geth() + EARTHRAD;
-
-  if (( M_PI_2 - Latitude < ONESECOND) ||
-      ( M_PI_2 + Latitude < ONESECOND)) { // Near a pole
-  } else {
-    tanLat = tan(Latitude);
-    xAlpha = ECCENT*EARTHRAD /
-                                sqrt(tanLat*tanLat + ECCENTSQRD);
-    muAlpha = atan2(sqrt(EARTHRADSQRD - xAlpha*xAlpha), ECCENT*xAlpha);
-
-    if (Latitude < 0.0) muAlpha = -muAlpha;
-
-    sinmuAlpha  = sin(muAlpha);
-    dLambda     = muAlpha - Latitude;
-    rAlpha      = xAlpha / cos(Latitude);
-    lPoint      = Radius - rAlpha;
-    Altitude    = lPoint*cos(dLambda);
-    denom       = sqrt(1-EPS*EPS*sinmuAlpha*sinmuAlpha);
-    rhoAlpha    = EARTHRAD*(1.0 - EPS) / (denom*denom*denom);
-    dMu         = atan2(lPoint*sin(dLambda),rhoAlpha + Altitude);
-    State->SetGeodeticLat(muAlpha - dMu);
-    lambdaSL    = atan(ECCENTSQRD*tan(muAlpha - dMu));
-    sinlambdaSL = sin(lambdaSL);
-    SeaLevelR   = sqrt(EARTHRADSQRD / (1 + INVECCENTSQRDM1* sinlambdaSL*sinlambdaSL));
-  }
-  return 0.0;
 }
 
 
 float FGUtility:: FromGeodetic()
 {
-  float lambdaSL, sinlambdaSL, coslambdaSL, sinMu, cosMu, py, px;
-  float Altitude, SeaLevelR, Radius;
-
-  Radius = State->Geth() + EARTHRAD;
-  lambdaSL = atan(ECCENTSQRD*tan(State->GetGeodeticLat()));
-  sinlambdaSL = sin(lambdaSL);
-  coslambdaSL = cos(lambdaSL);
-  sinMu = sin(State->GetGeodeticLat());
-  cosMu = cos(State->GetGeodeticLat());
-  SeaLevelR = sqrt(EARTHRADSQRD /
-             (1 + INVECCENTSQRDM1*sinlambdaSL*sinlambdaSL));
-  Altitude  = Radius - SeaLevelR;
-  px = SeaLevelR*coslambdaSL + Altitude*cosMu;
-  py = SeaLevelR*sinlambdaSL + Altitude*sinMu;
-  State->Setlatitude(atan2(py,px));
-  return 0.0;
 }
 

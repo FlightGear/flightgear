@@ -154,6 +154,7 @@ public:
   inline float GetIyy(void) {return Iyy;}
   inline float GetIzz(void) {return Izz;}
   inline float GetIxz(void) {return Ixz;}
+  inline float GetXcg(void) {return Xcg;}
   inline int   GetNumEngines(void) {return numEngines;}
 
 private:

@@ -130,7 +130,7 @@ FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, int nu
 
     enginefile.close();
   } else {
-    cerr << "Unable to open engine definition file " << engineName << endl;
+    cerr << "Unable to open engine definition file " << fullpath << endl;
   }
 
   EngineNumber = num;
@@ -172,6 +172,8 @@ float FGEngine::CalcPistonThrust(void)
   float v,h,pa;
 
   Throttle = FCS->GetThrottle(EngineNumber);
+  Throttle /= 100;
+ 
   v=State->GetVt();
   h=State->Geth();
   if(v < 10)

@@ -61,9 +61,9 @@ public:
 	inline float GetDs(void) {return Ds;}
 	inline float GetThrottle(int ii) {return Throttle[ii];}
 
-	inline void SetDa(float tt) {Da = tt*0.17;}
+	inline void SetDa(float tt) {Da = tt*0.30;}
 	inline void SetDe(float tt) {De = tt*0.60;}
-	inline void SetDr(float tt) {Dr = tt*1.09;}
+	inline void SetDr(float tt) {Dr = -1*tt*0.50;}
 	inline void SetDf(float tt) {Df = tt;}
 	inline void SetDs(float tt) {Ds = tt;}
 	void SetThrottle(int ii, float tt);

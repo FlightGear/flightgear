@@ -73,7 +73,8 @@ FGState::FGState(FGFDMExec* fdex)
   h = 0.0;
   a = 1000.0;
   qbar = 0.0;
-  sim_time = dt = 0.1;
+  sim_time = 0.0;
+  dt = 1.0/120.0;
 }
 
 

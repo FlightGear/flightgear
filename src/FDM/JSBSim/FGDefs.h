@@ -55,7 +55,7 @@ SENTRY
 #define NEEDED_CFG_VERSION 1.10
 
 #define HPTOFTLBSSEC 550
-
+#define METERS_TO_FEET 3.2808
 
 
 /******************************************************************************/

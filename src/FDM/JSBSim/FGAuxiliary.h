@@ -26,6 +26,7 @@
 HISTORY
 --------------------------------------------------------------------------------
 11/22/98   JSB   Created
+  1/1/00   TP    Added calcs and getters for VTAS, VCAS, VEAS, Vground, in knots
 
 ********************************************************************************
 SENTRY
@@ -57,9 +58,23 @@ public:
    
   bool Run(void);
   
+  
+  inline float GetVcalibratedFPS(void) { return vcas; }
+  inline float GetVcalibratedKTS(void) { return vcas*FPSTOKTS; }
+  inline float GetVequivalentFPS(void) { return veas; }
+  inline float GetVequivalentKTS(void) { return veas*FPSTOKTS; }
+  
+  
 protected:
 
 private:
+  float vcas;
+  float veas;
+  float mach;
+  float qbar,rhosl,rho,p,psl,pt;
+  
+  void GetState(void);
+  void PutState(void);
 
 };
 

@@ -58,10 +58,10 @@ FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGOutput";
   sFirstPass = dFirstPass = true;
-
-#ifdef FG_WITH_JSBSIM_SOCKET
+  socket = 0;
+//#ifdef FG_WITH_JSBSIM_SOCKET
   socket = new FGfdmSocket("localhost",1138);
-#endif
+//#endif
 }
 
 
@@ -75,7 +75,8 @@ bool FGOutput::Run(void)
 {
   if (!FGModel::Run()) {
 //    SocketOutput();
-    DelimitedOutput("JSBSimData.csv");
+//    DelimitedOutput("JSBSimData.csv");
+//    DelimitedOutput();
   } else {
   }
   return false;
@@ -120,7 +121,13 @@ void FGOutput::DelimitedOutput(void)
     cout << "Throttle,";
     cout << "Aileron,";
     cout << "Elevator,";
-    cout << "Rudder";
+    cout << "Rudder,";
+    cout << "Ixx,";
+    cout << "Iyy,";
+    cout << "Izz,";
+    cout << "Ixz,";
+    cout << "Mass,";
+    cout << "X CG";
     cout << endl;
     dFirstPass = false;
   }
@@ -160,7 +167,13 @@ void FGOutput::DelimitedOutput(void)
   cout << FCS->GetThrottle(0) << ",";
   cout << FCS->GetDa() << ",";
   cout << FCS->GetDe() << ",";
-  cout << FCS->GetDr() << "";
+  cout << FCS->GetDr() << ",";
+  cout << Aircraft->GetIxx() << ",";
+  cout << Aircraft->GetIyy() << ",";
+  cout << Aircraft->GetIzz() << ",";
+  cout << Aircraft->GetIxz() << ",";
+  cout << Aircraft->GetMass() << ",";
+  cout << Aircraft->GetXcg() << "";
   cout << endl;
 
 }
@@ -205,7 +218,13 @@ void FGOutput::DelimitedOutput(string fname)
     datafile << "Throttle,";
     datafile << "Aileron,";
     datafile << "Elevator,";
-    datafile << "Rudder";
+    datafile << "Rudder,";
+    datafile << "Ixx,";
+    datafile << "Iyy,";
+    datafile << "Izz,";
+    datafile << "Ixz,";
+    datafile << "Mass,";
+    datafile << "X CG";
     datafile << endl;
     sFirstPass = false;
   }
@@ -245,7 +264,13 @@ void FGOutput::DelimitedOutput(string fname)
   datafile << FCS->GetThrottle(0) << ",";
   datafile << FCS->GetDa() << ",";
   datafile << FCS->GetDe() << ",";
-  datafile << FCS->GetDr() << "";
+  datafile << FCS->GetDr() << ",";
+  datafile << Aircraft->GetIxx() << ",";
+  datafile << Aircraft->GetIyy() << ",";
+  datafile << Aircraft->GetIzz() << ",";
+  datafile << Aircraft->GetIxz() << ",";
+  datafile << Aircraft->GetMass() << ",";
+  datafile << Aircraft->GetXcg() << "";
   datafile << endl;
   datafile.flush();
 }
@@ -291,6 +316,10 @@ void FGOutput::SocketOutput(void)
     socket->Append("L");
     socket->Append("M");
     socket->Append("N");
+    socket->Append("Throttle");
+    socket->Append("Aileron");
+    socket->Append("Elevator");
+    socket->Append("Rudder");
     sFirstPass = false;
     socket->Send();
   }
@@ -328,6 +357,10 @@ void FGOutput::SocketOutput(void)
   socket->Append(Aircraft->GetL());
   socket->Append(Aircraft->GetM());
   socket->Append(Aircraft->GetN());
+  socket->Append(FCS->GetThrottle(0));
+  socket->Append(FCS->GetDa());
+  socket->Append(FCS->GetDe());
+  socket->Append(FCS->GetDr());
   socket->Send();
 }
 

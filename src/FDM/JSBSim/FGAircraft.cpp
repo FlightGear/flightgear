@@ -165,7 +165,7 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
   aircraftDef = aircraft_path + "/" + fname + "/" + fname + ".cfg";
   ifstream aircraftfile(aircraftDef.c_str());
   cout << "Reading Aircraft Configuration File: " << aircraftDef << endl;
-  Output->SocketStatusOutput("Reading Aircraft Configuration File: " + aircraftDef);
+  // Output->SocketStatusOutput("Reading Aircraft Configuration File: " + aircraftDef);
 
   numTanks = numEngines = 0;
   numSelectedOxiTanks = numSelectedFuelTanks = 0;
@@ -315,7 +315,7 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
     }
   }
   
-    if(!readAeroRp) {
+  if (!readAeroRp) {
     Xrp = Xcg;
     Yrp = Ycg;
     Zrp = Zcg;
@@ -450,7 +450,7 @@ void FGAircraft::FMAero(void)
   for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
     for (ctr=0; ctr < coeff_ctr[axis_ctr]; ctr++) {
       F[axis_ctr] += Coeff[axis_ctr][ctr]->TotalValue();
-      Coeff[axis_ctr][ctr]->DumpSD();
+//      Coeff[axis_ctr][ctr]->DumpSD();
     }
   }
 
@@ -485,7 +485,7 @@ void FGAircraft::FMAero(void)
   for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
     for (ctr = 0; ctr < coeff_ctr[axis_ctr+3]; ctr++) {
       Moments[axis_ctr] += Coeff[axis_ctr+3][ctr]->TotalValue();
-      Coeff[axis_ctr+3][ctr]->DumpSD();
+//      Coeff[axis_ctr+3][ctr]->DumpSD();
     }
   }
 }

@@ -30,6 +30,9 @@ FUNCTIONAL DESCRIPTION
 This class calculates various auxiliary parameters, mostly used by the visual
 system
 
+REFERENCES
+	Anderson, John D. "Introduction to Flight", 3rd Edition, McGraw-Hill, 1989
+	                  pgs. 112-126
 HISTORY
 --------------------------------------------------------------------------------
 01/26/99   JSB   Created
@@ -56,6 +59,8 @@ INCLUDES
 FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGAuxiliary";
+  vcas=veas=mach=qbar=pt=0;
+  psl=rhosl=1;
 }
 
 
@@ -66,10 +71,38 @@ FGAuxiliary::~FGAuxiliary()
 
 bool FGAuxiliary::Run()
 {
+  float A,B,D;
   if (!FGModel::Run()) {
+	GetState();
+	if(mach < 1)
+	    //calculate total pressure assuming isentropic flow
+		pt=p*pow((1 + 0.2*mach*mach),3.5); 
+	else
+	{
+	    // shock in front of pitot tube, we'll assume its normal and use
+		// the Rayleigh Pitot Tube Formula, i.e. the ratio of total 
+		// pressure behind the shock to the static pressure in front
+		B=5.76*mach*mach/(5.6*mach*mach - 0.8); 
+		// The denominator above is zero for Mach ~ 0.38, for which 
+		// we'll never be here, so we're safe
+		D=(2.8*mach*mach-0.4)*0.4167;
+		pt=p*pow(B,3.5)*D;
+	}	
+	A=pow(((pt-p)/psl+1),0.28571);
+	vcas=sqrt(7*psl/rhosl*(A-1)); 
+	veas=sqrt(2*qbar/rhosl);
   } else {
   }
   return false;
 }
 
+void FGAuxiliary::GetState(void)
+{
+	qbar=State->Getqbar();
+	mach=State->GetMach();
+	p=Atmosphere->GetPressure();
+	rhosl=Atmosphere->GetDensity(0);
+	psl=Atmosphere->GetPressure(0);
+}	
 
+void FGAuxiliary::PutState(void){}
