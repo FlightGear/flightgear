@@ -127,6 +127,10 @@ class FGRadioStack : public FGSubsystem
     double nav2_vol_btn;
     bool nav2_ident_btn;
 
+    bool outer_marker;
+    bool middle_marker;
+    bool inner_marker;
+
     string adf_ident;
     string adf_trans_ident;
     bool adf_valid;

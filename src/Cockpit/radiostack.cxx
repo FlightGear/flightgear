@@ -26,6 +26,7 @@
 #include <Aircraft/aircraft.hxx>
 #include <Main/bfi.hxx>
 #include <Navaids/ilslist.hxx>
+#include <Navaids/mkrbeacons.hxx>
 #include <Navaids/navlist.hxx>
 #include <Time/event.hxx>
 
@@ -798,6 +799,22 @@ void FGRadioStack::search()
 	globals->get_soundmgr()->remove( "nav2-vor-ident" );
 	globals->get_soundmgr()->remove( "nav2-dme-ident" );
 	// cout << "not picking up vor1. :-(" << endl;
+    }
+
+    FGBeacon::fgMkrBeacType beacon_type
+	= current_beacons->query( lon * RAD_TO_DEG, lat * RAD_TO_DEG, elev );
+
+    outer_marker = middle_marker = inner_marker = false;
+
+    if ( beacon_type == FGBeacon::OUTER ) {
+	outer_marker = true;
+	cout << "OUTER MARKER" << endl;
+    } else if ( beacon_type == FGBeacon::MIDDLE ) {
+	middle_marker = true;
+	cout << "MIDDLE MARKER" << endl;
+    } else if ( beacon_type == FGBeacon::INNER ) {
+	inner_marker = true;
+	cout << "INNER MARKER" << endl;
     }
 
     // adf

@@ -2482,6 +2482,21 @@ SOURCE=.\src\Navaids\ilslist.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Navaids\mkrbeacons.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Navaids"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Navaids"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Navaids\navlist.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"

@@ -76,6 +76,7 @@
 #include <Objects/matlib.hxx>
 #include <Navaids/fixlist.hxx>
 #include <Navaids/ilslist.hxx>
+#include <Navaids/mkrbeacons.hxx>
 #include <Navaids/navlist.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -698,7 +699,9 @@ bool fgInitSubsystems( void ) {
     p_nav.append( "Navaids/default.nav" );
     current_navlist->init( p_nav );
 
-    FG_LOG(FG_GENERAL, FG_INFO, "  ILS");
+    FG_LOG(FG_GENERAL, FG_INFO, "  ILS and Marker Beacons");
+    current_beacons = new FGMarkerBeacons;
+    current_beacons->init();
     current_ilslist = new FGILSList;
     FGPath p_ils( globals->get_fg_root() );
     p_ils.append( "Navaids/default.ils" );
