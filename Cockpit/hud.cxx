@@ -621,9 +621,18 @@ void fgUpdateHUD( void ) {
 
   glLineWidth(1);
 
-  for( i = hud_displays; i; --i) { // Draw everything
-//    if( HUD_deque.at(i)->enabled()) {
-    pHUDInstr = HUD_deque[i - 1];
+  deque < instr_item * > :: iterator current;
+  deque < instr_item * > :: iterator last;
+
+  current = HUD_deque.begin();
+  last = HUD_deque.end();
+  while ( current != last ) {
+    pHUDInstr = *current;
+    current++;
+
+    // for( i = hud_displays; i; --i) { // Draw everything
+    // if( HUD_deque.at(i)->enabled()) {
+    // pHUDInstr = HUD_deque[i - 1];
     if( pHUDInstr->enabled()) {
                                    // We should to respond to a dial instead
                                    // or as well to the of time of day. Of
@@ -686,9 +695,14 @@ void fgUpdateHUD( void ) {
 }
 
 /* $Log$
-/* Revision 1.17  1998/07/13 21:28:02  curt
-/* Converted the aoa scale to a radio altimeter.
+/* Revision 1.18  1998/07/20 12:47:55  curt
+/* Replace the hud rendering for loop (which linearly searches the the hud
+/* list to find the entry with the proper position) with a simple linear
+/* traversal using an "iterator."
 /*
+ * Revision 1.17  1998/07/13 21:28:02  curt
+ * Converted the aoa scale to a radio altimeter.
+ *
  * Revision 1.16  1998/07/13 21:00:47  curt
  * Integrated Charlies latest HUD updates.
  * Wrote access functions for current fgOPTIONS.
