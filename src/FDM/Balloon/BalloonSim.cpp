@@ -45,7 +45,9 @@ HISTORY
 #include <simgear/constants.h>
 
 #include <Aircraft/aircraft.hxx>
-#include <WeatherCM/FGLocalWeatherDatabase.h>
+#ifdef FG_WEATHERCM
+# include <WeatherCM/FGLocalWeatherDatabase.h>
+#endif
 
 #include "BalloonSim.h"
 
