@@ -262,6 +262,7 @@ fi
 AM_CONFIG_HEADER(Include/config.h)
 
 AC_OUTPUT( \
+	VERSION \
 	Makefile \
 	Include/Makefile \
 	Lib/Makefile \

@@ -1,5 +1,15 @@
 New in 0.57
-* Support for an arbitrary number of serial ports.
+* Support for an arbitrary number of serial ports + additional serial port 
+  output tweaks.
+* Portability enhancements for Borland, Solaris, and SGI.
+* Some internal class renaming and reorganizations.  fgFLIGHT becomes FGState.
+  fgCONTROLS becomes FGControls.
+* Started work on an "external" flight model so the sim can be driven from
+  external input (serial port, network, file, etc.)
+* Fixed a problem that creeped in with setting the initial startup altitude.
+  This could cause an unrecoverable bounce and you'd end up flipped on your
+  back.  Should be fixed now.
+* Sun now appears to grow in size as it gets very low in the horizon.
 
 New in 0.56
 * Changed default HUD units to the more standard feet units.  You can still
