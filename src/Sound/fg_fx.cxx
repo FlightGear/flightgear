@@ -170,6 +170,15 @@ FGFX::init ()
   mgr->add(_squeal, "squeal");
 
   //
+  // Simplistic wheel spin model for audio effect purposes only.  We
+  // don't want to play a full squeel, if the wheel has only departed
+  // from the ground for a split second.
+  //
+  for (i = 0; i < MAX_GEAR; i++) {
+      _wheel_spin[i] = 0.0;
+  }
+
+  //
   // Create and add the click noise.
   _click = new FGSimpleSound(fgGetString("/sim/sounds/click/path",
 					 "Sounds/click.wav"));
@@ -313,22 +322,47 @@ FGFX::update ()
 				// FIXME: take rotational velocities
 				// into account as well.
   for (i = 0; i < totalGear; i++) {
+    // cout << "air speed = " << cur_fdm_state->get_V_equiv_kts();
+    // cout << "  wheel " << i << " speed = " << _wheel_spin[i];
     if (cur_fdm_state->get_gear_unit(i)->GetWoW()) {
       gearOnGround++;
       if (!_gear_on_ground[i]) {
-        // 3 parts horizontal velocity + 1 part vertical velocity
-	double squeal_volume = 0.75 * cur_fdm_state->get_V_equiv_kts() / 90.0 +
-            0.25 * cur_fdm_state->get_V_down() / 5.0;
-	if (squeal_volume > 0.1) {
-	  _squeal->set_volume(squeal_volume);
-	  _squeal->set_pitch(1.25);
-	  mgr->play_once("squeal");
-	}
-	_gear_on_ground[i] = true;
+          // wheel just touched down
+          // 3 parts horizontal velocity + 1 part vertical velocity
+          double squeal_volume = 0.75 * cur_fdm_state->get_V_equiv_kts() / 90.0
+              + 0.25 * cur_fdm_state->get_V_down() / 5.0;
+
+          // scale volume by difference between wheel spin speed and
+          // ground speed
+          double diff = fabs( cur_fdm_state->get_V_equiv_kts()
+                              - _wheel_spin[i] );
+          // cout << " speed diff = " << diff;
+          double scale_factor = 0.0;
+          if ( diff > 10 ) {
+              scale_factor = ( diff - 10.0 ) / 30.0f;
+              if ( scale_factor > 1.0 ) { scale_factor = 1.0; }
+          }
+          // cout << " scale_factor = " << scale_factor;
+          squeal_volume *= scale_factor;
+
+          if (squeal_volume > 0.1) {
+              _squeal->set_volume(squeal_volume);
+              _squeal->set_pitch(1.25);
+              mgr->play_once("squeal");
+          }
+          _gear_on_ground[i] = true;
       }
+      // cout << " wow";
+      _wheel_spin[i] = cur_fdm_state->get_V_equiv_kts();
     } else {
-      _gear_on_ground[i] = false;
+        // cout << " airborn";
+        _gear_on_ground[i] = false;
+        /* fix me: wheel spindown is currently frame rate dependent which
+           it shouldn't be */
+        _wheel_spin[i] -= 0.2;
+        if ( _wheel_spin[i] < 0.0 ) { _wheel_spin[i] = 0.0; }
     }
+    // cout << endl;
   }
 
 				// Now, if any of the gear is in
