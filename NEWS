@@ -1,5 +1,5 @@
 New in 0.9.8
-* December 20, 2004
+* January 18, 2005
 
 * Added an encoder and transponder to the available avionics modules.
 
@@ -40,9 +40,9 @@ New in 0.9.8
 * gcc 2.95 and 4.0 fixes.
 
 * Updated aircraft: 737, A-10, AN-225, B-52, BAC-TSR2, Concorde,
-  Spitfire, BO-105 Helicopter, F-15 (updated flight control system),
-  Fokker DR1, Fokker 50, Fokker 100, Seahawk made carrier capable (working
-  arresting hook), 
+  Spitfire, BO-105 Eurocopter, DHC2, F-15 (updated flight control system),
+  Fokker DR1, Fokker 50, Fokker 100, OV10, Seahawk made carrier
+  capable (working arresting hook), 
 
 * New aircraft: Cessna Citation-II (wip), Beech 1900D, DHC-2 Beaver
   (on floats)
@@ -52,6 +52,7 @@ New in 0.9.8
 * Updated Nimitz model (aircraft carrier), updated radio tower models,
   added Oracle head quarters to bay area scenery, added Dumbarton
   bridge at the south end of the SFO bay, added a model of Alcatraz, 
+
 
 New in 0.9.6
 * October 12, 2004
