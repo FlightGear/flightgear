@@ -10,9 +10,17 @@
 /*   STRIPE: polvertsex.h
 -----------------------------------------------------------------------*/
 
-#include "queue.h"
-#include <malloc.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
+#ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+#else
+#  include <malloc.h>
+#endif
+
+#include "queue.h"
 
 /*      external functions */
 void Start_Vert_Struct();

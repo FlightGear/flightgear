@@ -35,15 +35,22 @@
 
 /*   TIMING for Windows */
 #ifdef WIN32
-#include <sys/timeb.h>
-#include <time.h>
+#  include <sys/timeb.h>
+#  include <time.h>
 /*   TIMING for UNIX */
 #else
-#include <sys/types.h>
-#include <sys/param.h>
-#include <sys/times.h>
-extern long times( );
-long elapsed()
+#  include <sys/types.h>
+#  include <sys/param.h>
+#  include <sys/times.h>
+#  if defined(__FreeBSD__)
+#    ifndef HZ
+#      include <time.h>
+#      define HZ CLK_TCK
+#    endif /* HZ */
+#  else
+     extern long times( );
+#  endif /* __FreeBSD__ */
+  long elapsed()
 {
   static long total = 0;
   long cpu_time, dummy;
@@ -55,7 +62,7 @@ long elapsed()
   total    = dummy;
   return(cpu_time);
 }
-#endif
+#endif /* WIN32 */
 
 
 int     norms[STRIP_MAX];
