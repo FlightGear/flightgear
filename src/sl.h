@@ -24,14 +24,13 @@ typedef unsigned short Ushort ;
 
 #define SL_DEFAULT_SAMPLING_RATE 11025
 
-/* Set if the next slScheduler::update will die */
-extern char *__slPendingError ;
-
 class slSample       ;
 class slSamplePlayer ;
 class slEnvelope     ;
 class slScheduler    ;
 class slDSP          ;
+
+extern char *__slPendingError ;
 
 class slDSP
 {
@@ -167,12 +166,9 @@ public:
 
  ~slSample ()
   {
-    if ( ref_count != 0 )
-    {
-    if ( __slPendingError == NULL )
+    if ( ref_count != 0 && __slPendingError == NULL )
       __slPendingError =
-            "slXXXX: FATAL ERROR - Application deleted a sample while it was playing.\n" ;
-    }
+        "slSample: FATAL ERROR - Application deleted a sample while it was playing.\n" ;
 
     delete buffer ;
   }
@@ -331,12 +327,9 @@ public:
  
  ~slEnvelope ()
   {
-    if ( ref_count != 0 )
-    {
-    if ( __slPendingError == NULL )
+    if ( ref_count != 0 && __slPendingError == NULL )
       __slPendingError =
-            "slXXXX: FATAL ERROR - Application deleted an envelope while it was playing.\n" ;
-    }
+      "slEnvelope: FATAL ERROR - Application deleted an envelope while it was playing.\n" ;
 
     delete time ;
     delete value ;

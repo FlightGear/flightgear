@@ -9,12 +9,22 @@
 *                                              *
 \**********************************************/
 
+* 28th Sept 1889 -- Fixed a bug associated with exiting the
+                      program with sounds still playing.
+                    Fixed a bug associated with using the
+                      package in the absence of a sound card.
+                    Added a new member function "working"
+                      which is the opposite of "not_working",
+                      (as demanded by a bunch of rabid optimists)!
+                    Fixed a couple of typo's in the manual.
+
 * 23rd Sept 1998 -- The Good News: Finally got around to
                          getting the pitch envelope working. (Hooray) 
                     The Bad News: This costs quite a bit in
                          performance - and it was a MAJOR rewrite
                          of significant parts of the internals,
                          so we may need some bug fixes.
+                    This version is 0.5
 
 * 7th  July 1998 -- Fixed some error checking in slSample.cxx and
                     a missing declaration in sl.h

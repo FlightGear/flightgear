@@ -1,8 +1,9 @@
 
 #include "sl.h"
 
-slScheduler *slScheduler::current = NULL ;
 char *__slPendingError = NULL ;
+
+slScheduler *slScheduler::current = NULL ;
 
 void slScheduler::init ()
 {
@@ -49,7 +50,8 @@ void slScheduler::init ()
 
 void slScheduler::initBuffers ()
 {
-  if ( not_working () ) return ;
+  if ( not_working () )
+    return ;
 
   delete mixer_buffer ;
   delete spare_buffer0 ;
@@ -118,16 +120,16 @@ void slScheduler::mixBuffer ( slSamplePlayer *spa, slSamplePlayer *spb,
 
 void slScheduler::realUpdate ( int dump_first )
 {
-  int i ;
-
   if ( not_working () )
     return ;
 
   if ( __slPendingError != NULL )
   {
-      fprintf ( stderr, __slPendingError ) ;
-      exit ( 1 ) ;
+    fprintf ( stderr, "%s", __slPendingError ) ;
+    exit ( 1 ) ;
   }
+
+  int i ;
 
   while ( secondsUsed() <= safety_margin )
   {
@@ -208,6 +210,9 @@ void slScheduler::realUpdate ( int dump_first )
 
 void slScheduler::addCallBack ( slCallBack c, slSample *s, slEvent e, int m )
 {
+  if ( not_working () )
+    return ;
+
   if ( num_pending_callbacks >= SL_MAX_CALLBACKS )
   {
     fprintf ( stderr, "slScheduler: Too many pending callback events!\n" ) ;
@@ -224,6 +229,9 @@ void slScheduler::addCallBack ( slCallBack c, slSample *s, slEvent e, int m )
 
 void slScheduler::flushCallBacks ()
 {
+  if ( not_working () )
+    return ;
+
   /*
     Execute all the callbacks that we accumulated
     in this iteration.

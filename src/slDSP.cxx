@@ -336,6 +336,9 @@ void slDSP::sync ()
 
 void slDSP::stop ()
 {
+   if ( error )
+     return ;
+
    waveOutReset( hWaveOut );
 }
 
@@ -647,6 +650,9 @@ float slDSP::secondsUsed ()
 
 void slDSP::sync ()
 { 
+   if ( error )
+     return ;
+
   /* found this in the header file - but no description
    * or example for the long parameter.
    */
