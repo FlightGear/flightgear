@@ -372,6 +372,7 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters,
     current_bucket.set_bucket( longitude, latitude );
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "Updating tile list for "
     //         << current_bucket );
+    fgSetInt( "/environment/current-tile-id", current_bucket.gen_index() );
 
     // set global scenery center from current tile center
     current_tile = tile_cache.get_tile( current_bucket );
