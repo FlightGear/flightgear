@@ -40,17 +40,19 @@ SG_USING_STD(vector);
 void
 fgDefaultWeatherValue (const char * propname, double value)
 {
-    int i;
+    unsigned int i;
 
     SGPropertyNode * branch = fgGetNode("/environment/config/boundary", true);
     vector<SGPropertyNode_ptr> entries = branch->getChildren("entry");
-    for (i = 0; i < entries.size(); i++)
+    for (i = 0; i < entries.size(); i++) {
         entries[i]->setDoubleValue(propname, value);
+    }
 
     branch = fgGetNode("/environment/config/aloft", true);
     entries = branch->getChildren("entry");
-    for (i = 0; i < entries.size(); i++)
+    for (i = 0; i < entries.size(); i++) {
         entries[i]->setDoubleValue(propname, value);
+    }
 }
 
 
