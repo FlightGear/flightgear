@@ -30,7 +30,7 @@
 
 // return the type of the shapefile record
 AreaType get_shapefile_type(GDBFile *dbf, int rec) {
-    GDBFieldDesc *fdesc[128];	// 128 is an arbitrary number here
+    // GDBFieldDesc *fdesc[128];	// 128 is an arbitrary number here
     GDBFValue *fields;		//an array of field values
     char* dbf_rec;		//a record containing all the fields
 
@@ -151,6 +151,9 @@ string get_area_name( AreaType area ) {
 
 
 // $Log$
+// Revision 1.4  1999/03/13 18:47:04  curt
+// Removed an unused variable.
+//
 // Revision 1.3  1999/03/02 01:03:58  curt
 // Added more reverse lookup support.
 //
