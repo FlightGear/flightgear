@@ -709,10 +709,11 @@ FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos,
     sgdSetVec3(sgavp, abs_view_pos.x(), abs_view_pos.y(), abs_view_pos.z() );
     sgdSetVec3(sgvp, view_pos.x(), view_pos.y(), view_pos.z() );
 
-    // cout << "starting ssg_los, abs view pos = " << abs_view_pos[0] << " "
-    //      << abs_view_pos[1] << " " << abs_view_pos[2] << endl;
-    // cout << "starting ssg_los, view pos = " << view_pos[0] << " "
-    //      << view_pos[1] << " " << view_pos[2] << endl;
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "starting ssg_los, abs view pos = "
+	    << abs_view_pos[0] << " " << abs_view_pos[1] << " " 
+	    << abs_view_pos[2] );
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "starting ssg_los, view pos = "
+	    << view_pos[0] << " " << view_pos[1] << " " << view_pos[2] );
     my_ssg_los( "", scene, m, sgvp, sgavp );
     
     double result = -9999;
@@ -726,6 +727,7 @@ FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos,
 	double lat_geod, alt, sea_level_r;
 	fgGeocToGeod(pp.lat(), pp.radius(), &lat_geod, 
 		     &alt, &sea_level_r);
+	FG_LOG( FG_TERRAIN, FG_DEBUG, "  alt (meters) = " << alt );
 
 	// printf("alt = %.2f\n", alt);
 	// exit since we found an intersection
@@ -950,7 +952,7 @@ int FGTileMgr::update( void ) {
 
     // find our current elevation (feed in the current bucket to save work)
     Point3D geod_pos = Point3D( f->get_Longitude(), f->get_Latitude(), 0.0);
-    Point3D tmp_abs_view_pos = fgGeodToCart(geod_pos);
+    // Point3D tmp_abs_view_pos = fgGeodToCart(geod_pos);
 
     // cout << "current elevation (old) == " 
     //      << current_elev( f->get_Longitude(), f->get_Latitude(), 
