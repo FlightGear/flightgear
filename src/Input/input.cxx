@@ -180,7 +180,8 @@ FGInput current_input;
 
 
 FGInput::FGInput ()
-  : _mouse_mode(0)
+  : _current_mouse_mode(-1),
+    _last_mouse_mode(-1)
 {
   // no op
 }
@@ -351,6 +352,12 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
   std::cout << "Mouse click " << b << ',' << updown << std::endl;
   int modifiers = FG_MOD_NONE;	// FIXME: any way to get the real ones?
 
+  if (b >= MAX_MOUSE_BUTTONS) {
+    SG_LOG(SG_INPUT, SG_ALERT, "Mouse button " << b
+	   << " where only " << MAX_MOUSE_BUTTONS << " expected");
+    return;
+  }
+
   _update_button(_mouse_bindings[0].buttons[b], modifiers, updown, x, y);
 }
 
@@ -484,6 +491,40 @@ FGInput::_init_joystick ()
   }
 }
 
+// 
+// Map of all known GLUT cursor names
+//
+struct {
+  const char * name;
+  int cursor;
+} mouse_cursor_map[] = {
+  { "right-arrow", GLUT_CURSOR_RIGHT_ARROW },
+  { "left-arrow", GLUT_CURSOR_LEFT_ARROW },
+  { "info", GLUT_CURSOR_INFO },
+  { "destroy", GLUT_CURSOR_DESTROY },
+  { "help", GLUT_CURSOR_HELP },
+  { "cycle", GLUT_CURSOR_CYCLE },
+  { "spray", GLUT_CURSOR_SPRAY },
+  { "wait", GLUT_CURSOR_WAIT },
+  { "text", GLUT_CURSOR_TEXT },
+  { "crosshair", GLUT_CURSOR_CROSSHAIR },
+  { "up-down", GLUT_CURSOR_UP_DOWN },
+  { "left-right", GLUT_CURSOR_LEFT_RIGHT },
+  { "top-side", GLUT_CURSOR_TOP_SIDE },
+  { "bottom-side", GLUT_CURSOR_BOTTOM_SIDE },
+  { "left-side", GLUT_CURSOR_LEFT_SIDE },
+  { "right-side", GLUT_CURSOR_RIGHT_SIDE },
+  { "top-left-corner", GLUT_CURSOR_TOP_LEFT_CORNER },
+  { "top-right-corner", GLUT_CURSOR_TOP_RIGHT_CORNER },
+  { "bottom-right-corner", GLUT_CURSOR_BOTTOM_RIGHT_CORNER },
+  { "bottom-left-corner", GLUT_CURSOR_BOTTOM_LEFT_CORNER },
+  { "inherit", GLUT_CURSOR_INHERIT },
+  { "none", GLUT_CURSOR_NONE },
+  { "full-crosshair", GLUT_CURSOR_FULL_CROSSHAIR },
+  { 0, 0 }
+};
+
+
 
 void
 FGInput::_init_mouse ()
@@ -496,15 +537,37 @@ FGInput::_init_mouse ()
     mouse_nodes = fgGetNode("/input/mice", true);
   }
 
+  int j;
   for (int i = 0; i < MAX_MICE; i++) {
-    const SGPropertyNode * mouse_node = mouse_nodes->getChild("mouse", i);
+    SGPropertyNode * mouse_node = mouse_nodes->getChild("mouse", i);
+
+				// Read the cursor type for each mode.
+    _mouse_bindings[i].nModes = mouse_node->getIntValue("mode-count", 1);
+    _mouse_bindings[i].cursors = new int[_mouse_bindings[i].nModes];
+    SGPropertyNode * cursor_nodes =
+      mouse_node->getChild("mode-cursors", 0, true);
+    for (j = 0; j < _mouse_bindings[i].nModes; j++) {
+      const char * name = cursor_nodes->getChild("cursor", j, true)
+	->getStringValue();
+      if (name[0] == '\0')
+	name = "inherit";
+      _mouse_bindings[i].cursors[j] = GLUT_CURSOR_INHERIT;
+      for (int k = 0; mouse_cursor_map[k].name != 0; k++) {
+	if (!strcmp(mouse_cursor_map[k].name, name)) {
+	  _mouse_bindings[i].cursors[j] = mouse_cursor_map[k].cursor;
+	  break;
+	}
+      }
+    }
+
+				// Read the binding for each button
     _mouse_bindings[i].buttons = new button[MAX_MOUSE_BUTTONS];
     if (mouse_node == 0) {
       SG_LOG(SG_INPUT, SG_DEBUG, "No bindings for mouse " << i);
       mouse_node = mouse_nodes->getChild("mouse", i, true);
     }
     char buf[8];
-    for (int j = 0; j < MAX_MOUSE_BUTTONS; j++) {
+    for (j = 0; j < MAX_MOUSE_BUTTONS; j++) {
       sprintf(buf, "%d", j);
       SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse button " << j);
       _init_button(mouse_node->getChild("button", j),
@@ -602,7 +665,16 @@ FGInput::_update_joystick ()
 void
 FGInput::_update_mouse ()
 {
-  // no-op
+  _current_mouse_mode = fgGetInt("/input/mice/mouse[0]/mode");
+  if (_current_mouse_mode != _last_mouse_mode) {
+    _last_mouse_mode = _current_mouse_mode;
+    if (mode >= 0 && mode < _mouse_bindings[0].nModes) {
+      glutSetCursor(_mouse_bindings[0].cursors[mode]);
+    } else {
+      SG_LOG(SG_INPUT, SG_DEBUG, "Mouse mode " << mode << " out of range");
+      glutSetCursor(GLUT_CURSOR_INHERIT);
+    }
+  }
 }
 
 void
@@ -757,11 +829,15 @@ FGInput::joystick::~joystick ()
 ////////////////////////////////////////////////////////////////////////
 
 FGInput::mouse::mouse ()
+  : nModes(0),
+    cursors(0),
+    buttons(0)
 {
 }
 
 FGInput::mouse::~mouse ()
 {
+  delete [] cursors;
   delete [] buttons;
 }
 

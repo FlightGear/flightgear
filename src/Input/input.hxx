@@ -246,9 +246,8 @@ private:
     MAX_JOYSTICK_BUTTONS = 32,
 
     MAX_MICE = 1,
-    MAX_MOUSE_BUTTONS
+    MAX_MOUSE_BUTTONS = 3
   };
-
 
   typedef vector<FGBinding *> binding_list_t;
 
@@ -301,6 +300,8 @@ private:
   struct mouse {
     mouse ();
     virtual ~mouse ();
+    int nModes;
+    int * cursors;
     button * buttons;
   };
 
@@ -373,7 +374,8 @@ private:
   joystick _joystick_bindings[MAX_JOYSTICKS];
   mouse _mouse_bindings[MAX_MICE];
 
-  int _mouse_mode;
+  int _current_mouse_mode;
+  int _last_mouse_mode;
 
 };
 
