@@ -56,6 +56,28 @@ FG_USING_STD(vector);
 #define MAX_NODES 2000
 
 
+struct fgFACE {
+    int n1, n2, n3;
+
+    fgFACE( int a = 0, int b =0, int c =0 )
+	: n1(a), n2(b), n3(c) {}
+
+    fgFACE( const fgFACE & image )
+	: n1(image.n1), n2(image.n2), n3(image.n3) {}
+
+    fgFACE& operator= ( const fgFACE & image ) {
+	n1 = image.n1; n2 = image.n2; n3 = image.n3; return *this;
+    }
+
+    ~fgFACE() {}
+};
+
+inline bool
+operator== ( const fgFACE& lhs, const fgFACE& rhs )
+{
+    return (lhs.n1 == rhs.n1) && (lhs.n2 == rhs.n2) && (lhs.n3 == rhs.n3);
+}
+
 // Forward declarations
 class fgTILE;
 class fgMATERIAL;
@@ -64,21 +86,6 @@ class fgMATERIAL;
 class fgFRAGMENT {
 
 private:
-    struct fgFACE {
-	int n1, n2, n3;
-
-	fgFACE( int a = 0, int b =0, int c =0 )
-	    : n1(a), n2(b), n3(c) {}
-
-	fgFACE( const fgFACE & image )
-	    : n1(image.n1), n2(image.n2), n3(image.n3) {}
-
-	fgFACE& operator= ( const fgFACE & image ) {
-	    n1 = image.n1; n2 = image.n2; n3 = image.n3; return *this;
-	}
-
-	~fgFACE() {}
-    };
 
 public:
     // culling data for this object fragment (fine grain culling)
@@ -152,21 +159,12 @@ public:
 	faces.erase( faces.begin(), faces.end() );
     }
 
-    int deleteDisplayList() const {
+    int deleteDisplayList() {
 	xglDeleteLists( display_list, 1 ); return 0;
     }
 
-    friend bool operator== ( const fgFRAGMENT::fgFACE & lhs,
-			     const fgFRAGMENT::fgFACE & rhs );
     friend bool operator== ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs );
 };
-
-inline bool
-operator== ( const fgFRAGMENT::fgFACE& lhs,
-	     const fgFRAGMENT::fgFACE& rhs )
-{
-    return (lhs.n1 == rhs.n1) && (lhs.n2 == rhs.n2) && (lhs.n3 == rhs.n3);
-}
 
 inline bool
 operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
@@ -178,6 +176,11 @@ operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
 
 
 // $Log$
+// Revision 1.10  1999/03/15 17:59:12  curt
+// MSVC++ portability tweaks contributed by Bernie Bright.
+//   Un-nested struct fgFace.
+//   Made fgFragment::deleteDisplayList() a non-const member.
+//
 // Revision 1.9  1999/03/02 01:03:23  curt
 // Tweaks for building with native SGI compilers.
 //
