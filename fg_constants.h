@@ -1,4 +1,4 @@
-// fg_constants.hxx -- various constant definitions
+// fg_constants.h -- various constant definitions
 //
 // Written by Curtis Olson, started July 1997.
 //
@@ -22,8 +22,8 @@
 // (Log is kept at end of this file)
 
 
-#ifndef _FG_CONSTANTS_HXX
-#define _FG_CONSTANTS_HXX
+#ifndef _FG_CONSTANTS_H
+#define _FG_CONSTANTS_H
 
 
 /*
@@ -165,10 +165,13 @@
 #define FG_FOV_MAX 179.9
 
 
-#endif // _FG_CONSTANTS_HXX
+#endif // _FG_CONSTANTS_H
 
 
 // $Log$
+// Revision 1.12  1999/03/01 15:33:43  curt
+// Truth in advertising.
+//
 // Revision 1.11  1999/02/01 21:14:10  curt
 // Converted to C++ style comments.
 //
