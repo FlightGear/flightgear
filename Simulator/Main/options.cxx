@@ -468,7 +468,7 @@ fgOPTIONS::parse_fov( const string& arg ) {
 // Format is "--serial=device,format,baud,direction" where
 // 
 //  device = OS device name to be open()'ed
-//  format = {nmea, fgfs}
+//  format = {nmea, garmin,fgfs,rul}
 //  baud = {300, 1200, 2400, ..., 230400}
 //  direction = {in, out, bi}
 
