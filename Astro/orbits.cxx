@@ -82,7 +82,8 @@ double fgCalcEccAnom(double M, double e)
 
 int fgReadOrbElements(struct OrbElements *dest, gzFile src) {
     char line[256];
-    int i,j;
+    int i, j, len;
+
     j = 0;
     do {
     	if ( fggets(src, line, 256) == NULL ) {
@@ -90,7 +91,9 @@ int fgReadOrbElements(struct OrbElements *dest, gzFile src) {
 		      "End of file found while reading planetary positions:\n");
  	    return 0;
  	}
-        for (i = 0; i < 256; i++) {
+	len = strlen(line);
+
+        for (i = 0; i < len; i++) {
 	    if (line[i] == '#')
             	line[i] = 0;
        	}
@@ -167,9 +170,12 @@ void fgSolarSystemUpdate(struct OrbElements *planet, fgTIME t)
 
 
 /* $Log$
-/* Revision 1.7  1998/07/13 21:00:09  curt
-/* Wrote access functions for current fgOPTIONS.
+/* Revision 1.8  1998/08/22 01:18:59  curt
+/* Minor tweaks to avoid using unitialized memory.
 /*
+ * Revision 1.7  1998/07/13 21:00:09  curt
+ * Wrote access functions for current fgOPTIONS.
+ *
  * Revision 1.6  1998/05/29 20:35:41  curt
  * Added zlib support for reading in compressed data files.
  *

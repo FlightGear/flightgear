@@ -286,6 +286,7 @@ void fgSkyRender( void ) {
 	middle_color[i] = l->sky_color[i] - diff * 0.9;
 	outer_color[i] = l->adj_fog_color[i];
     }
+    inner_color[3] = middle_color[3] = outer_color[3] = l->adj_fog_color[3];
 
     xglPushMatrix();
 
@@ -367,9 +368,12 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.8  1998/08/12 21:40:44  curt
-/* Sky now tracks adjusted fog color so it blends well with terrain.
+/* Revision 1.9  1998/08/22 01:18:59  curt
+/* Minor tweaks to avoid using unitialized memory.
 /*
+ * Revision 1.8  1998/08/12 21:40:44  curt
+ * Sky now tracks adjusted fog color so it blends well with terrain.
+ *
  * Revision 1.7  1998/07/22 21:39:21  curt
  * Lower skirt tracks adjusted fog color, not fog color.
  *
