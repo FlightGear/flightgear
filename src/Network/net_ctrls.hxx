@@ -17,7 +17,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_CTRLS_VERSION = 25;
+const int FG_NET_CTRLS_VERSION = 24;
 
 
 // Define a structure containing the control parameters
@@ -69,7 +69,7 @@ public:
 
     // Fuel management
     int num_tanks;                       // number of valid tanks
-    int fuel_selector[FG_MAX_TANKS];    // false = off, true = on
+    bool fuel_selector[FG_MAX_TANKS];    // false = off, true = on
 
     // Brake controls
     double brake_left;
