@@ -847,22 +847,27 @@ FGInput::_read_bindings (const SGPropertyNode * node,
 const vector<FGBinding *> &
 FGInput::_find_key_bindings (unsigned int k, int modifiers)
 {
+  unsigned char kc = (unsigned char)k;
   button &b = _key_bindings[k];
 
                                 // Try it straight, first.
   if (b.bindings[modifiers].size() > 0)
     return b.bindings[modifiers];
 
+                                // Alt-Gr is CTRL+ALT
+  else if (modifiers&(FG_MOD_CTRL|FG_MOD_ALT))
+    return _find_key_bindings(k, modifiers&~(FG_MOD_CTRL|FG_MOD_ALT));
+
                                 // Try removing the control modifier
                                 // for control keys.
-  else if ((modifiers&FG_MOD_CTRL) && iscntrl(k))
+  else if ((modifiers&FG_MOD_CTRL) && iscntrl(kc))
     return _find_key_bindings(k, modifiers&~FG_MOD_CTRL);
 
                                 // Try removing shift modifier 
                                 // for upper case or any punctuation
                                 // (since different keyboards will
                                 // shift different punctuation types)
-  else if ((modifiers&FG_MOD_SHIFT) && (isupper(k) || ispunct(k)))
+  else if ((modifiers&FG_MOD_SHIFT) && (isupper(kc) || ispunct(kc)))
     return _find_key_bindings(k, modifiers&~FG_MOD_SHIFT);
 
                                 // Try removing alt modifier for
