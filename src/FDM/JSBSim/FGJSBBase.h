@@ -199,7 +199,6 @@ public:
     return celsius * 1.8 + 32.0;
   }
 
-
   /** Finite precision comparison.
       @param a first value to compare
       @param b second value to compare

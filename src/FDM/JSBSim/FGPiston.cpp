@@ -54,7 +54,8 @@ static const char *IdHdr = ID_PISTON;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGPiston::FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec),
+FGPiston::FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg, int engine_number)
+  : FGEngine(exec, engine_number),
   R_air(287.3),
   rho_fuel(800),                 // estimate
   calorific_value_fuel(47.3e6),
@@ -65,7 +66,6 @@ FGPiston::FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec),
 
   Type = etPiston;
   crank_counter = 0;
-  EngineNumber = 0;
   OilTemp_degK = 298;
   MinManifoldPressure_inHg = 6.5;
   MaxManifoldPressure_inHg = 28.5;

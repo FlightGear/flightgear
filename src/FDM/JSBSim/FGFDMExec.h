@@ -152,8 +152,11 @@ public:
       be looked for in the directory specified in the AircraftPath variable,
       and in turn under the directory with the same name as the model. For
       instance: "aircraft/x15/x15.xml"
+      @param addModelToPath set to true to add the model name to the
+      AircraftPath, defaults to true
       @return true if successful*/
-  bool LoadModel(string AircraftPath, string EnginePath, string model);
+  bool LoadModel(string AircraftPath, string EnginePath, string model,
+                 bool addModelToPath = true);
 
 
   /** Loads an aircraft model.  The paths to the aircraft and engine
@@ -163,8 +166,10 @@ public:
       be looked for in the directory specified in the AircraftPath variable,
       and in turn under the directory with the same name as the model. For
       instance: "aircraft/x15/x15.xml"
+      @param addModelToPath set to true to add the model name to the
+      AircraftPath, defaults to true
       @return true if successful*/
-  bool LoadModel(string model);
+  bool LoadModel(string model, bool addModelToPath = true);
 
 
   /** Sets the path to the engine config file directories.

@@ -74,7 +74,7 @@ class FGElectric : public FGEngine
 {
 public:
   /// Constructor
-  FGElectric(FGFDMExec* exec, FGConfigFile* Eng_cfg);
+  FGElectric(FGFDMExec* exec, FGConfigFile* Eng_cfg, int engine_number);
   /// Destructor
   ~FGElectric();
 

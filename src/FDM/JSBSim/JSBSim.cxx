@@ -133,7 +133,7 @@ FGJSBsim::FGJSBsim( double dt )
 
     result = fdmex->LoadModel( aircraft_path.str(),
                                engine_path.str(),
-                               fgGetString("/sim/aero") );
+                               fgGetString("/sim/aero"), false );
 
     if (result) {
       SG_LOG( SG_FLIGHT, SG_INFO, "  loaded aero.");

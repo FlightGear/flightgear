@@ -747,7 +747,6 @@ void FGFCS::bindModel(void)
   unsigned i;
   char tmp[80];
 
-
   for (i=0; i<ThrottleCmd.size(); i++) {
     snprintf(tmp,80,"fcs/throttle-cmd-norm[%u]",i);
     PropertyManager->Tie( tmp,this,i,

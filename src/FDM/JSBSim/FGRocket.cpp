@@ -51,7 +51,8 @@ static const char *IdHdr = ID_ROCKET;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGRocket::FGRocket(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec)
+FGRocket::FGRocket(FGFDMExec* exec, FGConfigFile* Eng_cfg, int engine_number)
+  : FGEngine(exec, engine_number)
 {
   string token;
 
@@ -73,7 +74,6 @@ FGRocket::FGRocket(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec)
 
   Debug(0);
 
-  EngineNumber = 0;
   Type = etRocket;
   Flameout = false;
 
@@ -105,6 +105,10 @@ double FGRocket::Calculate(void)
   } else {
     PctPower = Throttle / MaxThrottle;
     PC = maxPC*PctPower * (1.0 + Variance * ((double)rand()/(double)RAND_MAX - 0.5));
+    // The Cf (below) is CF from Eqn. 3-30, "Rocket Propulsion Elements", Fifth Edition,
+    // George P. Sutton. Note that the thruster function GetPowerRequired() might
+    // be better called GetResistance() or something; this function returns the
+    // nozzle exit pressure.
     Cf = sqrt(kFactor*(1 - pow(Thruster->GetPowerRequired()/(PC), (SHR-1)/SHR)));
     Flameout = false;
   }

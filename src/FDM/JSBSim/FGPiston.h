@@ -142,7 +142,7 @@ class FGPiston : public FGEngine
 {
 public:
   /// Constructor
-  FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg);
+  FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg, int engine_number);
   /// Destructor
   ~FGPiston();
 

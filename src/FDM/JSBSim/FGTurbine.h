@@ -139,8 +139,9 @@ class FGTurbine : public FGEngine
 public:
   /** Constructor
       @param Executive pointer to executive structure
-      @param Eng_cfg pointer to engine config file instance */
-  FGTurbine(FGFDMExec* Executive, FGConfigFile* Eng_cfg);
+      @param Eng_cfg pointer to engine config file instance
+      @param engine_number engine number*/
+  FGTurbine(FGFDMExec* Executive, FGConfigFile* Eng_cfg, int engine_number);
   /// Destructor
   ~FGTurbine();
 
@@ -241,6 +242,8 @@ private:
 
   void SetDefaults(void);
   bool Load(FGConfigFile *ENG_cfg);
+  void bindmodel(void);
+  void unbind(void);
   void Debug(int from);
 
 };

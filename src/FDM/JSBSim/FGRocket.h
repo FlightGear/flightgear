@@ -103,8 +103,9 @@ class FGRocket : public FGEngine
 public:
   /** Constructor.
       @param exec pointer to JSBSim parent object, the FDM Executive.
-      @param Eng_cfg pointer to the config file object. */
-  FGRocket(FGFDMExec* exec, FGConfigFile* Eng_cfg);
+      @param Eng_cfg pointer to the config file object.
+      @param engine_number engine number */
+  FGRocket(FGFDMExec* exec, FGConfigFile* Eng_cfg, int engine_number);
 
   /** Destructor */
   ~FGRocket(void);

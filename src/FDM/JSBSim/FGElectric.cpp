@@ -50,12 +50,12 @@ static const char *IdHdr = ID_ELECTRIC;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGElectric::FGElectric(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec)
+FGElectric::FGElectric(FGFDMExec* exec, FGConfigFile* Eng_cfg, int engine_number)
+  : FGEngine(exec, engine_number)
 {
   string token;
 
   Type = etElectric;
-  EngineNumber = 0;
   PowerWatts = 745.7;
   hptowatts = 745.7;
 

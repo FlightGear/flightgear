@@ -54,7 +54,8 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGTurbine::FGTurbine(FGFDMExec* exec, FGConfigFile* cfg) : FGEngine(exec)
+FGTurbine::FGTurbine(FGFDMExec* exec, FGConfigFile* cfg, int engine_number)
+  : FGEngine(exec, engine_number)
 {
   SetDefaults();
 
@@ -66,6 +67,7 @@ FGTurbine::FGTurbine(FGFDMExec* exec, FGConfigFile* cfg) : FGEngine(exec)
 
 FGTurbine::~FGTurbine()
 {
+  unbind();
   Debug(1);
 }
 
@@ -183,14 +185,16 @@ double FGTurbine::Run(void)
     NozzlePosition = Seek(&NozzlePosition, 1.0, 0.8, 0.8);
   }
 
-  if ((AugmentCmd > 0.0) && (AugMethod == 2)) {
-    Augmentation = true;
-    double tdiff = (MaxThrust * ThrustTables[2]->TotalValue()) - thrust;
-    thrust += (tdiff * AugmentCmd);
-    FuelFlow_pph = Seek(&FuelFlow_pph, thrust * ATSFC, 5000.0, 10000.0);
-    NozzlePosition = Seek(&NozzlePosition, 1.0, 0.8, 0.8);
-  } else {
-    Augmentation = false;
+  if (AugMethod == 2) {
+    if (AugmentCmd > 0.0) {
+      Augmentation = true;
+      double tdiff = (MaxThrust * ThrustTables[2]->TotalValue()) - thrust;
+      thrust += (tdiff * AugmentCmd);
+      FuelFlow_pph = Seek(&FuelFlow_pph, thrust * ATSFC, 5000.0, 10000.0);
+      NozzlePosition = Seek(&NozzlePosition, 1.0, 0.8, 0.8);
+    } else {
+      Augmentation = false;
+    }
   }
 
   if ((Injected == 1) && Injection)
@@ -402,6 +406,7 @@ bool FGTurbine::Load(FGConfigFile *Eng_cfg)
   OilTemp_degK = (Auxiliary->GetTotalTemperature() - 491.69) * 0.5555556 + 273.0;
   IdleFF = pow(MilThrust, 0.2) * 107.0;  // just an estimate
 
+  bindmodel();
   return true;
 }
 
@@ -429,6 +434,30 @@ string FGTurbine::GetEngineValues(void)
       << Thruster->GetThrusterValues(EngineNumber);
 
   return buf.str();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGTurbine::bindmodel()
+{
+  char property_name[80];
+
+  snprintf(property_name, 80, "propulsion/n1[%u]", EngineNumber);
+  PropertyManager->Tie( property_name, &N1);
+  snprintf(property_name, 80, "propulsion/n2[%u]", EngineNumber);
+  PropertyManager->Tie( property_name, &N2);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGTurbine::unbind()
+{
+  char property_name[80];
+
+  snprintf(property_name, 80, "propulsion/n1[%u]", EngineNumber);
+  PropertyManager->Untie(property_name);
+  snprintf(property_name, 80, "propulsion/n2[%u]", EngineNumber);
+  PropertyManager->Untie(property_name);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -107,7 +107,7 @@ CLASS DECLARATION
 class FGEngine : public FGJSBBase
 {
 public:
-  FGEngine(FGFDMExec* exec);
+  FGEngine(FGFDMExec* exec, int engine_number);
   virtual ~FGEngine();
 
   enum EngineType {etUnknown, etRocket, etPiston, etTurbine, etElectric};
@@ -164,9 +164,6 @@ public:
   /// Sets engine placement information
   virtual void SetPlacement(double x, double y, double z, double pitch, double yaw);
 
-  /// Sets the engine number
-  virtual void SetEngineNumber(int nn) {EngineNumber = nn;}
-
   virtual double GetPowerAvailable(void) {return 0.0;};
 
   virtual bool GetTrimMode(void) {return TrimMode;}
@@ -184,6 +181,7 @@ public:
 protected:
   FGPropertyManager* PropertyManager;
   string Name;
+  const int   EngineNumber;
   EngineType Type;
   double X, Y, Z;
   double EnginePitch;
@@ -199,7 +197,6 @@ protected:
   double FuelNeed;
   double OxidizerNeed;
   double PctPower;
-  int   EngineNumber;
   bool  Starter;
   bool  Starved;
   bool  Running;

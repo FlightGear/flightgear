@@ -384,18 +384,22 @@ vector <string> FGFDMExec::EnumerateFDMs(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGFDMExec::LoadModel(string AircraftPath, string EnginePath, string model)
+bool FGFDMExec::LoadModel(string AircraftPath, string EnginePath, string model,
+                bool addModelToPath)
 {
+
   FGFDMExec::AircraftPath = AircraftPath;
   FGFDMExec::EnginePath = EnginePath;
 
-  return LoadModel(model);
+  return LoadModel(model, addModelToPath);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGFDMExec::LoadModel(string model)
+
+bool FGFDMExec::LoadModel(string model, bool addModelToPath)
 {
+  
   bool result = true;
   string token;
   string aircraftCfgFileName;
@@ -406,10 +410,13 @@ bool FGFDMExec::LoadModel(string model)
     return false;
   }
 
+  aircraftCfgFileName = AircraftPath;
 # ifndef macintosh
-  aircraftCfgFileName = AircraftPath + "/"  + model + ".xml";
+  if (addModelToPath) aircraftCfgFileName += "/" + model;
+  aircraftCfgFileName += "/" + model + ".xml";
 # else
-  aircraftCfgFileName = AircraftPath + ";"  + model + ".xml";
+  if (addModelToPath) aircraftCfgFileName += ";"  + model;
+  aircraftCfgFileName += ";"  + model + ".xml";
 # endif
 
   FGConfigFile AC_cfg(aircraftCfgFileName);
