@@ -1,4 +1,4 @@
-// radiostack.hxx -- class to manage an instance of the radio stack
+// marker_beacon.hxx -- class to manage the marker beacons
 //
 // Written by Curtis Olson, started April 2000.
 //
@@ -21,8 +21,8 @@
 // $Id$
 
 
-#ifndef _FG_RADIOSTACK_HXX
-#define _FG_RADIOSTACK_HXX
+#ifndef _FG_MARKER_BEACON_HXX
+#define _FG_MARKER_BEACON_HXX
 
 
 #include <Main/fgfs.hxx>
@@ -33,31 +33,38 @@
 #include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
-#include <Navaids/ilslist.hxx>
-#include <Navaids/navlist.hxx>
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 
-#include "dme.hxx"
-#include "kr_87.hxx"            // ADF
-#include "kt_70.hxx"            // Transponder
-#include "marker_beacon.hxx"
-#include "navcom.hxx"
 
-
-class FGRadioStack : public FGSubsystem
+class FGMarkerBeacon : public FGSubsystem
 {
-    FGDME dme;
-    FGKR_87 adf;                // King KR 87 Digital ADF model
-    FGKT_70 xponder;            // Bendix/King KT 70 Panel-Mounted Transponder
-    FGMarkerBeacon beacon;
-    FGNavCom navcom1;
-    FGNavCom navcom2;
+    FGBeacon beacon;
+    FGMorse morse;
+
+    SGInterpTable *term_tbl;
+    SGInterpTable *low_tbl;
+    SGInterpTable *high_tbl;
+
+    SGPropertyNode *lon_node;
+    SGPropertyNode *lat_node;
+    SGPropertyNode *alt_node;
+
+    bool need_update;
+
+    bool outer_marker;
+    bool middle_marker;
+    bool inner_marker;
+
+    SGTimeStamp blink;
+    bool outer_blink;
+    bool middle_blink;
+    bool inner_blink;
 
 public:
 
-    FGRadioStack();
-    ~FGRadioStack();
+    FGMarkerBeacon();
+    ~FGMarkerBeacon();
 
     void init ();
     void bind ();
@@ -67,11 +74,11 @@ public:
     // Update nav/adf radios based on current postition
     void search ();
 
-    inline FGNavCom *get_navcom1() { return &navcom1; }
-    inline FGNavCom *get_navcom2() { return &navcom2; }
+    // Marker Beacon Accessors
+    inline bool get_inner_blink () const { return inner_blink; }
+    inline bool get_middle_blink () const { return middle_blink; }
+    inline bool get_outer_blink () const { return outer_blink; }
 };
 
 
-extern FGRadioStack *current_radiostack;
-
-#endif // _FG_RADIOSTACK_HXX
+#endif // _FG_MARKER_BEACON_HXX
