@@ -342,12 +342,12 @@ void fgUpdateSunPos( void ) {
     // cout << "  Dot product = " << dot << endl;
 
     if (dot > 1.0) {
-        SG_LOG( SG_ASTRO, SG_WARN,
+        SG_LOG( SG_ASTRO, SG_INFO,
                 "Dot product  = " << dot << " is greater than 1.0" );
         dot = 1.0;
     }
     else if (dot < -1.0) {
-         SG_LOG( SG_ASTRO, SG_WARN,
+         SG_LOG( SG_ASTRO, SG_INFO,
                  "Dot product  = " << dot << " is less than -1.0" );
          dot = -1.0;
      }
