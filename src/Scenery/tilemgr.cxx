@@ -93,6 +93,7 @@ int FGTileMgr::init( void ) {
     }
 
     global_tile_cache.init();
+    hit_list.clear();
 
     state = Inited;
 
