@@ -183,7 +183,7 @@ void FGClipper::move_slivers( FGPolygon& in, FGPolygon& out ) {
 	cout << "  area = " << area << endl;
 
 	if ( ((min_angle < angle_cutoff) && (area < area_cutoff)) ||
-	     (area < area_cutoff / 10.0) )
+	     ( area < area_cutoff / 10.0) )
 	{
 	    cout << "      WE THINK IT'S A SLIVER!" << endl;
 
@@ -192,6 +192,7 @@ void FGClipper::move_slivers( FGPolygon& in, FGPolygon& out ) {
 
 	    if ( hole_flag ) {
 		// just delete/eliminate/remove sliver holes
+		cout << "just deleting a sliver hole" << endl;
 		in.delete_contour( i );
 	    } else {
 		// move sliver contour to out polygon
@@ -258,6 +259,9 @@ void FGClipper::merge_slivers( FGPolyList& clipped, FGPolygon& slivers ) {
 		    }
 		}
 	    }
+	}
+	if ( !done ) {
+	    cout << "no suitable polys found for sliver merge" << endl;
 	}
     }
 }

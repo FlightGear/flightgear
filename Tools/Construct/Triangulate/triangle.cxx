@@ -41,7 +41,6 @@ FGTriangle::build( const point_list& corner_list,
 		   const FGPolyList& gpc_polys )
 {
     int debug_counter = 0;
-    FGPolygon poly;
     int index;
 
     in_nodes.clear();
@@ -75,12 +74,13 @@ FGTriangle::build( const point_list& corner_list,
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	polylist[i].clear();
 
-	// cout << "area type = " << i << endl;
+	cout << "area type = " << i << endl;
 	debug_counter = 0;
 	current = gpc_polys.polys[i].begin();
 	last = gpc_polys.polys[i].end();
 	for ( ; current != last; ++current ) {
 	    gpc_poly = *current;
+
 	    cout << "processing a polygon, contours = " 
 		 << gpc_poly.contours() << endl;
 
@@ -89,10 +89,7 @@ FGTriangle::build( const point_list& corner_list,
 		exit(-1);
 	    }
 
-	    poly.erase();
-
 	    int j;
-
 	    for ( j = 0; j < gpc_poly.contours(); ++j ) {
 		cout << "  processing contour = " << j << ", nodes = " 
 		     << gpc_poly.contour_size( j ) << ", hole = "
@@ -106,47 +103,49 @@ FGTriangle::build( const point_list& corner_list,
 		    index = in_nodes.unique_add( p );
 		    // junkp = in_nodes.get_node( index );
 		    // fprintf(junkfp, "%.4f %.4f\n", junkp.x(), junkp.y());
-		    poly.add_node(j, p);
 		    // cout << "  - " << index << endl;
 		}
 		// fprintf(junkfp, "%.4f %.4f\n", 
 		//    gpc_poly->contour[j].vertex[0].x, 
 		//    gpc_poly->contour[j].vertex[0].y);
 		// fclose(junkfp);
-
-		poly.set_hole_flag( j, gpc_poly.get_hole_flag( j ) );
 	    }
 
 	    for ( j = 0; j < gpc_poly.contours(); ++j ) {
-		poly.calc_point_inside( j, in_nodes );
+		gpc_poly.calc_point_inside( j, in_nodes );
 	    }
+
+	    polylist[i].push_back( gpc_poly );
 
 #if 0
 	    // temporary ... write out hole/polygon info for debugging
-	    for ( j = 0; j < (int)poly.contours(); ++j ) {
+	    for ( j = 0; j < (int)gpc_poly.contours(); ++j ) {
 		char pname[256];
 		sprintf(pname, "poly%02d-%02d-%02d", i, debug_counter, j);
+		cout << "writing to " << pname << endl;
 		FILE *fp = fopen( pname, "w" );
 		Point3D point;
-		for ( int k = 0; k < poly.contour_size( j ); ++k ) {
-		    point = poly.get_pt( j, k );
+		for ( int k = 0; k < gpc_poly.contour_size( j ); ++k ) {
+		    point = gpc_poly.get_pt( j, k );
 		    fprintf( fp, "%.6f %.6f\n", point.x(), point.y() );
 		}
-		point = poly.get_pt( j, 0 );
+		point = gpc_poly.get_pt( j, 0 );
 		fprintf( fp, "%.6f %.6f\n", point.x(), point.y() );
 		fclose(fp);
 
 		char hname[256];
 		sprintf(hname, "hole%02d-%02d-%02d", i, debug_counter, j);
 		FILE *fh = fopen( hname, "w" );
-		point = poly.get_point_inside( j );
+		point = gpc_poly.get_point_inside( j );
 		fprintf( fh, "%.6f %.6f\n", point.x(), point.y() );
 		fclose(fh);
 	    }
+
+	    // cout << "type a letter + enter to continue: ";
+	    // string input;
+	    // cin >> input;
 #endif
-
-	    polylist[i].push_back( poly );
-
+		
 	    ++debug_counter;
 	}
     }
@@ -172,6 +171,8 @@ FGTriangle::build( const point_list& corner_list,
     int i1, i2;
     Point3D p1, p2;
     point_list node_list = in_nodes.get_node_list();
+    FGPolygon poly;
+
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	cout << "area type = " << i << endl;
 	poly_list_iterator tp_current, tp_last;

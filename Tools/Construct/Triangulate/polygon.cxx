@@ -88,8 +88,19 @@ static double calc_angle(point2d a, point2d b, point2d c) {
 // the y value of a point on the line that intersects with the
 // verticle line through x.  Return true if an intersection is found,
 // false otherwise.
-static bool intersects( const Point3D& p0, const Point3D& p1, double x, 
-			 Point3D *result ) {
+static bool intersects( Point3D p0, Point3D p1, double x, Point3D *result ) {
+    // sort the end points
+    if ( p0.x() > p1.x() ) {
+	Point3D tmp = p0;
+	p0 = p1;
+	p1 = tmp;
+    }
+    
+    if ( (x < p0.x()) || (x > p1.x()) ) {
+	// out of range of line segment, bail right away
+	return false;
+    }
+
     // equation of a line through (x0,y0) and (x1,y1):
     // 
     //     y = y1 + (x - x1) * (y0 - y1) / (x0 - x1)
@@ -206,7 +217,7 @@ void FGPolygon::calc_point_inside( const int contour,
 	    p2_index = trinodes.find( p2 );
 	
 	    if ( intersects(p1, p2, m.x(), &result) ) {
-		// cout << "intersection = " << result << endl;
+		cout << "intersection = " << result << endl;
 		if ( ( result.y() < p3.y() ) &&
 		     ( result.y() > m.y() ) &&
 		     ( base_leg != FGTriSeg(p1_index, p2_index) ) ) {
@@ -221,7 +232,7 @@ void FGPolygon::calc_point_inside( const int contour,
 	p1_index = trinodes.find( p1 );
 	p2_index = trinodes.find( p2 );
 	if ( intersects(p1, p2, m.x(), &result) ) {
-	    // cout << "intersection = " << result << endl;
+	    cout << "intersection = " << result << endl;
 	    if ( ( result.y() < p3.y() ) &&
 		 ( result.y() > m.y() ) &&
 		 ( base_leg != FGTriSeg(p1_index, p2_index) ) ) {
@@ -259,7 +270,9 @@ double FGPolygon::area_contour( const int contour ) {
 	sum += c[(i+1)%size].x() * c[i].y() - c[i].x() * c[(i+1)%size].y();
     }
 
-    return sum / 2.0;
+    // area can be negative or positive depending on the polygon
+    // winding order
+    return fabs(sum / 2.0);
 }
 
 
@@ -454,6 +467,3 @@ FGPolygon polygon_xor( const FGPolygon& subject, const FGPolygon& clip ) {
 FGPolygon polygon_union( const FGPolygon& subject, const FGPolygon& clip ) {
     return polygon_clip( POLY_UNION, subject, clip );
 }
-
-
-
