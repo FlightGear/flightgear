@@ -1,4 +1,3 @@
-SUBDIRS = \
-	Makedir
+# SUBDIRS = Makedir
 
 EXTRA_DIST = mirror-dem
