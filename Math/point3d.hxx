@@ -33,8 +33,11 @@
 
 #include <iostream>
 #include <assert.h>
-#include <math.h>
-
+#if defined( __BORLANDC__ )
+#  define exception c_exception
+#elif defined( __FreeBSD__ )
+#  include <math.h>
+#endif
 
 const double fgPoint3_Epsilon = 0.0000001;
 
@@ -295,6 +298,9 @@ Point3D::distance3D(const Point3D& a ) const
 
 
 // $Log$
+// Revision 1.6  1998/11/23 21:46:37  curt
+// Borland portability tweaks.
+//
 // Revision 1.5  1998/11/20 01:00:38  curt
 // Patch in fgGeoc2Geod() to avoid a floating explosion.
 // point3d.hxx include math.h for FreeBSD

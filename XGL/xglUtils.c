@@ -5,16 +5,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if !defined( __CYGWIN__ ) && !defined( __CYGWIN32__ )
-#  include <malloc.h>
+#  if !defined( HAVE_STL_SGI_PORT )    // Avoid malloc with STLport
+#    include <malloc.h>
+#  endif
 #endif
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
 
-#include <string.h>
 
 #include "xgl.h"
 

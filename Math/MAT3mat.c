@@ -11,7 +11,9 @@
 #endif
 
 #ifdef WIN32
-#  include <memory.h>      /* required for memset() and memcpy() */
+#  ifndef HAVE_STL_SGI_PORT
+#    include <memory.h>      /* required for memset() and memcpy() */
+#  endif
 #endif
 
 #include <string.h>
