@@ -142,8 +142,6 @@ FGTileEntry *dummy_tile;
 sgVec3 rway_ols;
 // ADA
 // Clip plane settings...
-float cockpit_nearplane = 0.01f;
-float cockpit_farplane = 5000.0f;
 float scene_nearplane = 0.5f;
 float scene_farplane = 120000.0f;
 
@@ -186,7 +184,6 @@ void fgReshape( int width, int height );
 
 // ssg variables
 ssgRoot *scene = NULL;
-ssgRoot *cockpit = NULL;
 ssgBranch *terrain_branch = NULL;
 ssgBranch *gnd_lights_branch = NULL;
 ssgBranch *rwy_lights_branch = NULL;
@@ -379,10 +376,7 @@ void trRenderFrame( void ) {
     ssgSetNearFar( scene_nearplane, scene_farplane );
     ssgCullAndDraw( scene );
 
-    // if in cockpit view adjust nearfar...
-    if (globals->get_current_view()->getType() == 0 )
-      ssgSetNearFar( cockpit_nearplane, cockpit_farplane );
-    ssgCullAndDraw( cockpit );
+    globals->get_aircraft_model()->update(0);
 
     // draw the lights
     glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
@@ -614,8 +608,6 @@ void fgRenderFrame( void ) {
 
         ssgSetNearFar( scene_nearplane, scene_farplane );
 
-	globals->get_aircraft_model()->update(dt_ms);
-
 	// $$$ begin - added VS Renganthan 17 Oct 2K
 	if(objc)
 	  fgUpdateDCS();
@@ -662,6 +654,8 @@ void fgRenderFrame( void ) {
 
         ssgSetNearFar( scene_nearplane, scene_farplane );
 	ssgCullAndDraw( scene );
+
+	globals->get_aircraft_model()->update(dt_ms);
 
 	// change state for lighting here
 
@@ -726,16 +720,6 @@ void fgRenderFrame( void ) {
 	    // draw the sky cloud layers
 	    thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 	}
-
-        // if in cockpit view adjust nearfar...
-        if (current__view->getType() == 0 ) {
-          glClearDepth(1);
-          glClear(GL_DEPTH_BUFFER_BIT);
-          ssgSetNearFar( cockpit_nearplane, cockpit_farplane );
-  	  ssgCullAndDraw( cockpit );
-        } else {
-  	  ssgCullAndDraw( cockpit );
-        }
 
 	// display HUD && Panel
 	glDisable( GL_FOG );
@@ -1500,10 +1484,6 @@ int mainLoop( int argc, char **argv ) {
     // Scene graph root
     scene = new ssgRoot;
     scene->setName( "Scene" );
-
-    // Scene graph root for cockpit
-    cockpit = new ssgRoot;
-    cockpit->setName( "Cockpit" );
 
     lighting = new ssgRoot;
     lighting->setName( "Lighting" );
