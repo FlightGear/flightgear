@@ -8,8 +8,8 @@ dnl working configure script.
 AC_INIT
 AC_CONFIG_SRCDIR([src/Aircraft/aircraft.cxx])
 
-# Require at least automake 2.53
-AC_PREREQ(2.53)
+# Require at least automake 2.52
+AC_PREREQ(2.52)
 
 # Initialize the automake stuff
 AM_INIT_AUTOMAKE(FlightGear, 0.7.11pre1)
