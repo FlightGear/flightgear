@@ -378,7 +378,7 @@ static void fgRenderFrame( void ) {
 	    // xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
 	}
 
-	global_tile_mgr.render();
+	// global_tile_mgr.render();
 
 	// ssg test
 
@@ -425,7 +425,8 @@ static void fgRenderFrame( void ) {
 	sgMat4 sgVIEW;
 	sgMultMat4( sgVIEW, current_view.sgVIEW, sgTRANS );
 	ssgSetCamera( sgVIEW );
-	// ssgSetCamera( current_view.sgVIEW );
+
+	global_tile_mgr.prep_ssg_nodes();
 	ssgCullAndDraw( scene );
 
 	xglDisable( GL_TEXTURE_2D );

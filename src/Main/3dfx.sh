@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ $1 = "--full" ]; then
+if [ "x$1" = "x--full" ]; then
     echo "Running full screen ..."
     shift
     WINDOW=NO
