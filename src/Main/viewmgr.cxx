@@ -56,6 +56,7 @@ FGViewMgr::init ()
   double heading_offset_deg, pitch_offset_deg, roll_offset_deg;
   double target_x_offset_m, target_y_offset_m, target_z_offset_m;
   double near_m;
+  bool internal;
 
   for (int i = 0; i < fgGetInt("/sim/number-views"); i++) {
     viewpath = "/sim/view";
@@ -66,6 +67,12 @@ FGViewMgr::init ()
     nodepath = viewpath;
     nodepath += "/type";
     strdata = fgGetString(nodepath.c_str());
+
+    // find out if this is an internal view (e.g. in cockpit, low near plane)
+    internal = false; // default
+    nodepath = viewpath;
+    nodepath += "/internal";
+    internal = fgGetBool(nodepath.c_str());
 
     // FIXME:
     // this is assumed to be an aircraft model...we will need to read
@@ -155,13 +162,14 @@ FGViewMgr::init ()
                               heading_offset_deg, pitch_offset_deg,
                               roll_offset_deg, fov_deg,
                               target_x_offset_m, target_y_offset_m,
-                              target_z_offset_m, near_m ));
+                              target_z_offset_m, near_m, internal ));
     else
       add_view(new FGViewer ( FG_LOOKFROM, from_model, from_model_index,
                               false, 0, 0.0, 0.0, 0.0,
                               x_offset_m, y_offset_m, z_offset_m,
                               heading_offset_deg, pitch_offset_deg,
-                              roll_offset_deg, fov_deg, 0, 0, 0, near_m ));
+                              roll_offset_deg, fov_deg, 0, 0, 0, near_m,
+                              internal ));
   }
 
   copyToCurrent();

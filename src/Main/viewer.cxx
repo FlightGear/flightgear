@@ -138,7 +138,7 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
                     double heading_offset_deg, double pitch_offset_deg,
                     double roll_offset_deg, double fov_deg,
                     double target_x_offset_m, double target_y_offset_m,
-                    double target_z_offset_m, double near_m ):
+                    double target_z_offset_m, double near_m, bool internal ):
     _dirty(true),
     _lon_deg(0),
     _lat_deg(0),
@@ -161,6 +161,8 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     _from_model_index = from_model_index;
     _at_model = at_model;
     _at_model_index = at_model_index;
+
+    _internal = internal;
 
     if (damp_roll > 0.0)
       _damp_roll = 1.0 / pow(10, fabs(damp_roll));
@@ -228,6 +230,12 @@ FGViewer::setType ( int type )
     _type = FG_LOOKFROM;
   if (type == 1)
     _type = FG_LOOKAT;
+}
+
+void
+FGViewer::setInternal ( bool internal )
+{
+  _internal = internal;
 }
 
 void

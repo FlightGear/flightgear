@@ -67,7 +67,7 @@ public:
               double heading_offset_deg, double pitch_offset_deg,
               double roll_offset_deg, double fov_deg,
               double target_x_offset_m, double target_y_offset_m,
-              double target_z_offset_m, double near_m );
+              double target_z_offset_m, double near_m, bool internal );
 
     // Destructor
     virtual ~FGViewer( void );
@@ -88,6 +88,9 @@ public:
 
     virtual fgViewType getType() const { return _type; }
     virtual void setType( int type );
+
+    virtual bool getInternal() const { return _internal; }
+    virtual void setInternal( bool internal );
 
     // Reference geodetic position of view from position...
     //   These are the actual aircraft position (pilot in
@@ -322,6 +325,9 @@ private:
 
     fgViewType _type;
     fgScalingType _scaling_type;
+
+    // internal view (e.g. cockpit) flag
+    bool _internal;
 
     // view is looking from a model
     bool _from_model;

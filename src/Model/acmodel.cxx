@@ -21,6 +21,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
+#include <Main/viewer.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "model_panel.hxx"
@@ -91,8 +92,9 @@ void
 FGAircraftModel::update (double dt)
 {
   int view_number = globals->get_viewmgr()->get_current();
+  int is_internal = globals->get_current_view()->getInternal();
 
-  if (view_number == 0 && !fgGetBool("/sim/view/internal")) {
+  if (view_number == 0 && !is_internal) {
     _aircraft->setVisible(false);
   } else {
     _aircraft->setVisible(true);
@@ -114,8 +116,8 @@ FGAircraftModel::draw ()
 				// OK, now adjust the clip planes and draw
 				// FIXME: view number shouldn't be 
 				// hard-coded.
-  int view_number = globals->get_viewmgr()->get_current();
-  if (_aircraft->getVisible() && view_number == 0) {
+  bool is_internal = globals->get_current_view()->getInternal();
+  if (_aircraft->getVisible() && is_internal) {
     glClearDepth(1);
     glClear(GL_DEPTH_BUFFER_BIT);
     ssgSetNearFar(_nearplane, _farplane);
