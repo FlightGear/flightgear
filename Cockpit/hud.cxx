@@ -1,5 +1,5 @@
 /**************************************************************************
- * hud.c -- hud defines and prototypes
+ * hud.cxx -- hud defines and prototypes
  *
  * Written by Michele America, started September 1997.
  *
@@ -22,7 +22,7 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
- 
+
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -43,7 +43,6 @@
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
-#include <Include/general.h>
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
 #include <Math/polar3d.h>
@@ -53,199 +52,80 @@
 
 #include "hud.hxx"
 
-// #define DEBUG
-
-#define drawOneLine(x1,y1,x2,y2)  glBegin(GL_LINES);  \
-	glVertex2f ((x1),(y1)); glVertex2f ((x2),(y2)); glEnd();
-
-
 // The following routines obtain information concerntin the aircraft's
 // current state and return it to calling instrument display routines.
 // They should eventually be member functions of the aircraft.
 //
 
-double get_frame_rate(void) {
-    fgGENERAL *g;
+//using namespace std;
 
-    g = &general;
+/*
 
-    return g->frame_rate;
+class instr_ptr {
+  private:
+    instr_item *pHI;
+
+  public:
+    instr_ptr ( instr_item * pHudInstr = 0) : pHI( pHudInstr){}
+    ~instr_ptr() { if( pHI ) delete pHI; }
+    instr_ptr & operator = (const instr_ptr & rhs);
+    instr_ptr( const instr_ptr & image );
 }
 
-double get_throttleval( void )
+instr_ptr &
+instr_ptr ::
+operator = ( const instr_ptr & rhs )
 {
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->throttle[0];     // Hack limiting to one engine
+  if( !(this == &rhs )) {
+    pHI = new instr_item( *(rhs.pHI));
+    }
+  return *this;
 }
 
-double get_aileronval( void )
+instr_ptr ::
+instr_ptr ( const instr_ptr & image ) :
 {
-	fgCONTROLS *pcontrols;
+  pHI = new instr_item( *(image.pHI));
+}
+*/
+deque< instr_item * > HUD_deque;
 
-  pcontrols = current_aircraft.controls;
-  return pcontrols->aileron;
+class locRECT {
+  public:
+    RECT rect;
+
+    locRECT( UINT left, UINT top, UINT right, UINT bottom);
+    RECT get_rect(void) { return rect;}
+};
+
+locRECT :: locRECT( UINT left, UINT top, UINT right, UINT bottom)
+{
+  rect.left   =  left;
+  rect.top    =  top;
+  rect.right  =  right;
+  rect.bottom =  bottom;
+
+}
+// #define DEBUG
+
+// #define drawOneLine(x1,y1,x2,y2)  glBegin(GL_LINES);
+//   glVertex2f ((x1),(y1)); glVertex2f ((x2),(y2)); glEnd();
+//
+
+void drawOneLine( UINT x1, UINT y1, UINT x2, UINT y2)
+{
+  glBegin(GL_LINES);
+  glVertex2f(x1, y1);
+  glVertex2f(x2, y2);
+  glEnd();
 }
 
-double get_elevatorval( void )
+void drawOneLine( RECT &rect)
 {
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->elevator;
-}
-
-double get_elev_trimval( void )
-{
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->elevator_trim;
-}
-
-double get_rudderval( void )
-{
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->rudder;
-}
-
-double get_speed( void )
-{
-	fgFLIGHT *f;
-
-	f = current_aircraft.flight;
-	return( FG_V_equiv_kts );    // Make an explicit function call.
-}
-
-double get_aoa( void )
-{
-	fgFLIGHT *f;
-              
-	f = current_aircraft.flight;
-	return( FG_Gamma_vert_rad * RAD_TO_DEG );
-}
-
-double get_roll( void )
-{
-	fgFLIGHT *f;
-
-	f = current_aircraft.flight;
-	return( FG_Phi );
-}
-
-double get_pitch( void )
-{
-	fgFLIGHT *f;
-              
-	f = current_aircraft.flight;
-	return( FG_Theta );
-}
-
-double get_heading( void )
-{
-	fgFLIGHT *f;
-
-	f = current_aircraft.flight;
-	return( FG_Psi * RAD_TO_DEG );
-}
-
-double get_altitude( void )
-{
-	fgFLIGHT *f;
-	// double rough_elev;
-
-	f = current_aircraft.flight;
-	// rough_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC,
-	//		                   FG_Latitude  * RAD_TO_ARCSEC);
-
-	return( FG_Altitude * FEET_TO_METER /* -rough_elev */ );
-}
-
-double get_sideslip( void )
-{
-        fgFLIGHT *f;
-        
-        f = current_aircraft.flight;
-        
-        return( FG_Beta );
-}
-
-/****************************************************************************/
-/* Convert degrees to dd mm.mmm' (DMM-Format)                               */
-/****************************************************************************/
-#if 0
-char *toDM(double a)
-{
-  short        neg = 0;
-  double       d, m;
-  static char  dm[13];
-  
-  if (a < 0.0) {
-    a = -a;
-    neg = 1;
-  }
-
-  d = (double) ( (int) a);
-  m = (a - d) * 60.0;
-  
-  if (m > 59.5) {
-    m  = 0.0;
-    d += 1.0;
-  }
-  if (neg) d = -d;
-  
-  sprintf(dm, "%.0f°%06.3f'", d, m);
-  return dm;
-}
-#endif // 0
-double get_latitude( void )
-{
-	fgFLIGHT *f;
-	f = current_aircraft.flight;
-
-//	return( toDM(FG_Latitude * RAD_TO_DEG) );
-	return((double)((int)( FG_Latitude * RAD_TO_DEG)) );	
-}
-double get_lat_min( void )
-{
-	fgFLIGHT *f;
-	double      a, d;
-
-	f = current_aircraft.flight;
-	
-	a = FG_Latitude * RAD_TO_DEG;	
-	if (a < 0.0) {
-		a = -a;
-	}
-	d = (double) ( (int) a);
-	return( (a - d) * 60.0);
-}
-
-
-double get_longitude( void )
-{
-	fgFLIGHT *f;
-	f = current_aircraft.flight;
-
-//	return( toDM(FG_Longitude * RAD_TO_DEG) );
-	return((double)((int) (FG_Longitude * RAD_TO_DEG)) );
-}
-double get_long_min( void )
-{
-	fgFLIGHT *f;
-	double  a, d;
-
-	f = current_aircraft.flight;
-	
-	a = FG_Longitude * RAD_TO_DEG;	
-	if (a < 0.0) {
-		a = -a;
-	}
-	d = (double) ( (int) a);
-	return( (a - d) * 60.0);
+  glBegin(GL_LINES);
+  glVertex2f(rect.left, rect.top);
+  glVertex2f(rect.right, rect.bottom);
+  glEnd();
 }
 
 //
@@ -277,15 +157,373 @@ static void strokeString(int x, int y, char *msg, void *font)
 }
 */
 
-/*
-
-	Draws a measuring scale anywhere on the HUD
 
 
-	Needs: HUD_scale struct
+// Abstract Base Class instr_item
+//
+UINT instr_item :: instances;  // Initial value of zero
 
-*/
-static void drawscale( HUD_scale * pscale )
+// constructor    ( No default provided )
+
+instr_item  ::
+   instr_item( RECT             scr_pos,
+               DBLFNPTR         data_source,
+               ReadOriented     orientation,
+               bool             working) :
+                      handle         ( ++instances  ),
+                      scrn_pos       ( scr_pos      ),
+                      load_value_fn  ( data_source  ),
+                      oriented       ( orientation  ),
+                      is_enabled     ( working      ),
+                      broken         ( FALSE        ),
+                      brightness     ( BRT_DARK     )
+{
+int hitemp, widetemp;
+int xtemp;
+
+         // Check for inverted rect coords.  We must have top/right > bottom
+         // left corners or derived classes will draw their boxes very oddly.
+         // This is the only place we can reliably validate this data. Note
+         // that the box may be entirely or partly located off the screen.
+         // This needs consideration and possibly a member function to move
+         // the box, a keen idea for supporting "editing" of the HUD.
+  if( scrn_pos.top < scrn_pos.bottom ) {
+    xtemp           = scrn_pos.bottom;
+    scrn_pos.bottom = scrn_pos.top;
+    scrn_pos.top    = xtemp;
+    }
+  if( scrn_pos.left > scrn_pos.right ) {
+    xtemp           = scrn_pos.left;
+    scrn_pos.left   = scrn_pos.right;
+    scrn_pos.right  = xtemp;
+    }
+
+         // Insure that the midpoint marker will fall exactly at the
+         // middle of the bar.
+  if( !((scr_pos.top-scr_pos.bottom) % 2)) {
+    scrn_pos.top++;
+    }
+  if( !((scr_pos.right - scr_pos.left ) % 2)) {
+    scrn_pos.right++;
+    }
+         // Set up convenience values for centroid of the box and
+         // the span values according to orientation
+
+  hitemp   = scr_pos.top - scr_pos.bottom;
+  widetemp = scr_pos.right - scr_pos.left;
+  if((orientation == ReadTOP) || (orientation == ReadBOTTOM)) {
+    scr_span = widetemp;
+    }
+  else {
+    scr_span = hitemp;
+    }
+         // Here we work out the centroid for the corrected box.
+  mid_span.x = scr_pos.left   + ((scr_pos.right - scr_pos.left) >> 1);
+  mid_span.y = scr_pos.bottom + ((scr_pos.top - scr_pos.bottom) >> 1);
+}
+
+// copy constructor
+instr_item  ::
+     instr_item ( const instr_item & image ):
+                         handle       ( ++instances        ),
+                         scrn_pos     ( image.scrn_pos     ),
+                         load_value_fn( image.load_value_fn),
+                         oriented     ( image.oriented     ),
+                         is_enabled   ( image.is_enabled   ),
+                         broken       ( image.broken       ),
+                         brightness   ( image.brightness   ),
+                         scr_span     ( image.scr_span     ),
+                         mid_span     ( image.mid_span     )
+{
+}
+
+// assignment operator
+
+instr_item & instr_item :: operator = ( const instr_item & rhs )
+{
+  if( !(this == &rhs )) { // Not an identity assignment
+    scrn_pos      = rhs.scrn_pos;
+    load_value_fn = rhs.load_value_fn;
+    oriented      = rhs.oriented;
+    is_enabled    = rhs.is_enabled;
+    broken        = rhs.broken;
+    brightness    = rhs.brightness;
+    }
+  return *this;
+}
+
+// destructor
+
+instr_item :: ~instr_item ()
+{
+  if( instances ) {
+    instances--;
+    }
+}
+
+void instr_item ::
+    update( void )
+{
+}
+
+// break_display       This is emplaced to provide hooks for making
+//                     instruments unreliable. The default behavior is
+// to simply not display, but more sophisticated behavior is available
+// by over riding the function which is virtual in this class.
+
+void instr_item ::
+    break_display ( bool bad )
+{
+  broken = !!bad;
+  is_enabled = FALSE;
+}
+
+void instr_item ::
+    SetBrightness  ( int level  )
+{
+  brightness = level;   // This is all we will do for now. Later the
+                        // brightness levels will be sensitive both to
+                        // the control knob and the outside light levels
+                        // to emulated night vision effects.
+}
+
+UINT instr_item :: get_Handle( void )
+{
+  return handle;
+}
+
+//======================= Top of instr_label class =========================
+instr_label ::
+         instr_label( RECT          region,
+                      DBLFNPTR      data_source,
+                      const char   *label_format,
+                      const char   *pre_label_string,
+                      const char   *post_label_string,
+                      ReadOriented  orientation,
+                      fgLabelJust   justification,
+                      int           font_size,
+                      int           blinking,
+                      bool          working ):
+                           instr_item( region, data_source,
+                                            orientation, working ),
+                           pformat  ( label_format      ),
+                           pre_str  ( pre_label_string  ),
+                           post_str ( post_label_string ),
+                           justify  ( justification     ),
+                           fontSize ( font_size         ),
+                           blink    ( blinking          )
+{
+}
+
+// I put this in to make it easy to construct a class member using the current
+// C code.
+
+
+instr_label :: ~instr_label()
+{
+}
+
+// Copy constructor
+instr_label :: instr_label( const instr_label & image) :
+                              instr_item((const instr_item &)image),
+                              pformat    ( image.pformat    ),
+                              pre_str  ( image.pre_str  ),
+                              post_str ( image.post_str ),
+                              blink    ( image.blink    )
+{
+}
+
+instr_label & instr_label ::operator = (const instr_label & rhs )
+{
+  if( !(this == &rhs)) {
+    instr_item::operator = (rhs);
+    pformat      = rhs.pformat;
+    fontSize   = rhs.fontSize;
+    blink      = rhs.blink;
+    justify    = rhs.justify;
+    pre_str    = rhs.pre_str;
+    post_str   = rhs.post_str;
+    }
+	return *this;
+}
+
+
+//
+// draw                    Draws a label anywhere in the HUD
+//
+//
+void instr_label ::
+draw( void )       // Required method in base class
+{
+  char format_buffer[80];
+  char label_buffer[80];
+  int posincr;
+  int lenstr;
+  RECT  scrn_rect = get_location();
+
+  if( pre_str != NULL) {
+    if( post_str != NULL ) {
+      sprintf( format_buffer, "%s%s%s", pre_str, pformat, post_str );
+      }
+    else {
+      sprintf( format_buffer, "%s%s",   pre_str, pformat );
+      }
+    }
+  else {
+    if( post_str != NULL ) {
+      sprintf( format_buffer, "%s%s",   pformat, post_str );
+      }
+    } // else do nothing if both pre and post strings are nulls. Interesting.
+
+  sprintf( label_buffer, format_buffer, get_value() );
+#ifdef DEBUGHUD
+	fgPrintf( FG_COCKPIT, FG_DEBUG,  format_buffer );
+	fgPrintf( FG_COCKPIT, FG_DEBUG,  "\n" );
+	fgPrintf( FG_COCKPIT, FG_DEBUG, label_buffer );
+	fgPrintf( FG_COCKPIT, FG_DEBUG, "\n" );
+#endif
+  lenstr = strlen( label_buffer );
+
+  posincr = 0;   //  default to RIGHT_JUST ... center located calc: -lenstr*8;
+
+  if( justify == CENTER_JUST ) {
+    posincr =  - (lenstr << 2); //  -lenstr*4;
+    }
+  else {
+    if( justify == LEFT_JUST ) {
+      posincr = - (lenstr << 8);  // 0;
+      }
+    }
+
+  if( fontSize == SMALL ) {
+    textString( scrn_rect.left + posincr, scrn_rect.bottom,
+                label_buffer, GLUT_BITMAP_8_BY_13);
+    }
+  else  {
+    if( fontSize == LARGE ) {
+      textString( scrn_rect.left + posincr, scrn_rect.bottom,
+                  label_buffer, GLUT_BITMAP_9_BY_15);
+      }
+    }
+}
+
+//============== Top of instr_scale class memeber definitions ===============
+//
+// Notes:
+// 1. instr_scales divide the specified location into half and then
+//    the half opposite the read direction in half again. A bar is
+//    then drawn along the second divider. Scale ticks are drawn
+//    between the middle and quarter section lines (minor division
+//    markers) or just over the middle line.
+//
+// 2.  This class was not intended to be instanciated. See moving_scale
+//     and guage_instr classes.
+//============================================================================
+instr_scale ::
+instr_scale ( RECT         the_box,
+              DBLFNPTR     load_fn,
+              ReadOriented orient,
+              int          show_range,
+              int          maxValue,
+              int          minValue,
+              UINT         major_divs,
+              UINT         minor_divs,
+              UINT         rollover,
+              bool         working ) :
+                instr_item( the_box, load_fn, orient, working),
+                range_shown  ( show_range ),
+                Maximum_value( maxValue   ),
+                Minimum_value( minValue   ),
+                Maj_div      ( major_divs ),
+                Min_div      ( minor_divs ),
+                Modulo       ( rollover   )
+{
+int temp;
+
+  scale_factor   = (double)get_span() / range_shown;
+  if( show_range < 0 ) {
+    range_shown = -range_shown;
+    }
+  temp = (Maximum_value - Minimum_value) / 100;
+  if( range_shown < temp ) {
+    range_shown = temp;
+    }
+}
+
+instr_scale ::
+  instr_scale( const instr_scale & image ) :
+            instr_item( (const instr_item &) image),
+            range_shown  ( image.range_shown   ),
+            Maximum_value( image.Maximum_value ),
+            Minimum_value( image.Minimum_value ),
+            Maj_div      ( image.Maj_div       ),
+            Min_div      ( image.Min_div       ),
+            Modulo       ( image.Modulo        ),
+            scale_factor ( image.scale_factor  )
+{
+}
+
+instr_scale & instr_scale :: operator = (const instr_scale & rhs )
+{
+  if( !(this == &rhs)) {
+    instr_item::operator = (rhs);
+    Minimum_value = rhs.Minimum_value;
+    Maximum_value = rhs.Maximum_value;
+    Maj_div       = rhs.Maj_div;
+    Min_div       = rhs.Min_div;
+    Modulo        = rhs.Modulo;
+    scale_factor  = rhs.scale_factor;
+    range_shown   = rhs.range_shown;
+    }
+  return *this;
+}
+
+instr_scale :: ~ instr_scale () {}
+
+//========== Top of moving_scale_instr class member definitions =============
+
+moving_scale ::
+moving_scale( RECT         the_box,
+              DBLFNPTR     data_source,
+              ReadOriented orientation,
+              int          max_value,
+              int          min_value,
+              UINT         major_divs,
+              UINT         minor_divs,
+              UINT         modulus,
+              double       value_span,
+              bool         working) :
+                instr_scale( the_box,
+                             data_source, orientation,
+                             (int)value_span,
+                             max_value, min_value,
+                             major_divs, minor_divs, modulus,
+                             working),
+                val_span   ( value_span)
+{
+  half_width_units = range_to_show() / 2.0;
+}
+
+moving_scale ::
+~moving_scale() { }
+
+moving_scale ::
+moving_scale( const moving_scale & image):
+      instr_scale( (const instr_scale & ) image)
+{
+}
+
+moving_scale & moving_scale ::
+operator = (const moving_scale & rhs )
+{
+  if( !( this == &rhs)){
+    instr_scale::operator = (rhs);
+    }
+  return *this;
+}
+
+void moving_scale ::
+draw( void ) //  (HUD_scale * pscale )
 {
   double vmin, vmax;
   int marker_x;
@@ -293,127 +531,391 @@ static void drawscale( HUD_scale * pscale )
   register i;
   char TextScale[80];
   int condition;
-  double cur_value = (*(pscale->load_value))();
   int disp_val;
+  POINT mid_scr = get_centroid();
+  POINT bias_bar;                  // eliminates some orientation checks
+  double cur_value = get_value();
+  RECT   scrn_rect = get_location();
+  ReadOriented orientation = get_orientation();
 
-  vmin = cur_value - pscale->half_width_units; // width units == needle travel
-  vmax = cur_value + pscale->half_width_units; // or picture unit span.
+  vmin = cur_value - half_width_units; // width units == needle travel
+  vmax = cur_value + half_width_units; // or picture unit span.
 
 
-  if( pscale->type == VERTICAL )     // Vertical scale
+  if( (orientation == ReadLEFT) ||( orientation == ReadRIGHT))  // Vertical scale
     {
-      drawOneLine( pscale->scrn_pos.right,    // Vertical scale bar
-                   pscale->scrn_pos.bottom,
-                   pscale->scrn_pos.right,
-                   pscale->scrn_pos.top );
-
-    if( pscale->orientation == LEFT )     // Calculate x marker offset
-      marker_x = pscale->scrn_pos.left - 6;
-    else
-      if( pscale->orientation == RIGHT )
-        marker_x = pscale->scrn_pos.right;
+    if( orientation == ReadLEFT ) {    // Calculate x marker offset
+      marker_x = scrn_rect.left - 6;
+      bias_bar.x = ((scrn_rect.right - mid_scr.x)>>1) + mid_scr.x;
+      }
+    else {                             // We'll default this for now.
+      marker_x = mid_scr.x;            // scrn_rect.right;
+      bias_bar.x = ((mid_scr.x - scrn_rect.left)>>1) + scrn_rect.left;
+      }
 
     // Draw the basic markings for the scale...
 
-    if( pscale->orientation == LEFT )
+    drawOneLine( bias_bar.x,    // Vertical scale bar
+                 scrn_rect.bottom,
+                 bias_bar.x,
+                 scrn_rect.top );
+
+
+    if( orientation == ReadLEFT )
       {
 
-      drawOneLine( pscale->scrn_pos.right - 3,     // Bottom tick bar
-                   pscale->scrn_pos.bottom,
-                   pscale->scrn_pos.right,
-                   pscale->scrn_pos.bottom );
+      drawOneLine( bias_bar.x,     // Bottom tick bar
+                   scrn_rect.bottom,
+                   mid_scr.x,
+                   scrn_rect.bottom );
 
-      drawOneLine( pscale->scrn_pos.right - 3,     // Top tick bar
-                   pscale->scrn_pos.top,
-                   pscale->scrn_pos.right,
-                   pscale->scrn_pos.top );
+      drawOneLine( bias_bar.x,     // Top tick bar
+                   scrn_rect.top,
+                   mid_scr.x,
+                   scrn_rect.top );
 
-      drawOneLine( pscale->scrn_pos.right,       // Middle tick bar /Index
-                   pscale->mid_scr,
-                   pscale->scrn_pos.right + 6,
-                   pscale->mid_scr );
+      drawOneLine( scrn_rect.right,       // Middle tick bar /Index
+                   mid_scr.y,
+                   bias_bar.x,
+                   mid_scr.y );
 
       }
-    else
-      if( pscale->orientation == RIGHT )
-        {
-        drawOneLine( pscale->scrn_pos.right,
-                     pscale->scrn_pos.bottom,
-                     pscale->scrn_pos.right+3,
-                     pscale->scrn_pos.bottom );
+    else       { // ReadRight
+      drawOneLine( bias_bar.x,
+                   scrn_rect.bottom,
+                   mid_scr.x,
+                   scrn_rect.bottom );
 
-        drawOneLine( pscale->scrn_pos.right,
-                     pscale->scrn_pos.top,
-                     pscale->scrn_pos.right+3,
-                     pscale->scrn_pos.top );
+      drawOneLine( bias_bar.x,
+                   scrn_rect.top,
+                   mid_scr.x,
+                   scrn_rect.top );
 
-        drawOneLine( pscale->scrn_pos.right,
-                     pscale->mid_scr,
-                     pscale->scrn_pos.right-6,
-                     pscale->mid_scr );
-        }
+      drawOneLine( scrn_rect.left,
+                   mid_scr.y,
+                   bias_bar.x,
+                   mid_scr.y );
+      }
 
     // Work through from bottom to top of scale. Calculating where to put
     // minor and major ticks.
 
-    for( i = (int)(vmin); i <= (int)(vmax); i++ )
+    for( i = (int)vmin; i <= (int)vmax; i++ )
       {
-      if( pscale->sub_type == LIMIT ) {           // Don't show ticks
-        condition = (i >= pscale->minimum_value); // below Minimum value.
-        }
-      else {
-        if( pscale->sub_type == NOLIMIT ) {
-          condition = 1;
-          }
-        }
+//      if( sub_type == LIMIT ) {           // Don't show ticks
+        condition = (i >= min_val()); // below Minimum value.
+//        }
+//      else {
+//        if( sub_type == NOLIMIT ) {
+//          condition = 1;
+//          }
+//        }
       if( condition )   // Show a tick if necessary
         {
         // Calculate the location of this tick
-        marker_y = (int)(pscale->scrn_pos.bottom + (i - vmin) * pscale->factor);
+        marker_y = scrn_rect.bottom + (int)((i - vmin) * factor());
 
         // Block calculation artifact from drawing ticks below min coordinate.
         // Calculation here accounts for text height.
 
-        if( marker_y < (pscale->scrn_pos.bottom + 4)) {  // Magic number!!!
+        if( marker_y < (scrn_rect.bottom + 4)) {  // Magic number!!!
           continue;
           }
-        if( (i%pscale->div_min) == 0) {
-          if( pscale->orientation == LEFT )
+        if( div_min()) {
+          if( (i%div_min()) == 0) {
+//            if( orientation == ReadLEFT )
+//              {
+//              drawOneLine( marker_x + 3, marker_y, marker_x + 6, marker_y );
+              drawOneLine( bias_bar.x, marker_y, mid_scr.x, marker_y );
+//              }
+//            else {
+//              if( orientation == ReadRIGHT )
+//                {
+//                drawOneLine( marker_x, marker_y, marker_x + 3, marker_y );
+//                drawOneLine( bias_bar.x, marker_y, mid_scr.x, marker_y );
+//                }
+//              }
+            }
+          }
+        if( div_max()) {
+          if( (i%div_max()) == 0 )            {
+//            drawOneLine( marker_x,     marker_y,
+//                         marker_x + 6, marker_y );
+            if(modulo()) {
+              disp_val = i % modulo();
+              if( disp_val < 0) {
+                disp_val += modulo();
+                }
+              }
+            else {
+              disp_val = i;
+              }
+            sprintf( TextScale, "%d", disp_val );
+            if( orientation == ReadLEFT )              {
+              drawOneLine( mid_scr.x - 3, marker_y, bias_bar.x, marker_y );
+
+              textString( marker_x -  8 * strlen(TextScale) - 2, marker_y - 4,
+                          TextScale, GLUT_BITMAP_8_BY_13 );
+              }
+            else  {
+              drawOneLine( mid_scr.x + 3, marker_y, bias_bar.x, marker_y );
+              textString( marker_x + 10,                         marker_y - 4,
+                          TextScale, GLUT_BITMAP_8_BY_13 );
+              } // Else read oriented right
+            } // End if modulo division by major interval is zero
+          }  // End if major interval divisor non-zero
+        } // End if condition
+      } // End for range of i from vmin to vmax
+    }  // End if VERTICAL SCALE TYPE
+  else {                                // Horizontal scale by default
+    {
+    if( orientation == ReadTOP ) {
+      bias_bar.y = ((mid_scr.y - scrn_rect.bottom)>>1 ) + scrn_rect.bottom;
+      marker_y = bias_bar.y;  // Don't use now
+      }
+    else {  // We will assume no other possibility at this time.
+      bias_bar.y = ((scrn_rect.top - mid_scr.y)>>1 ) + mid_scr.y;
+      marker_y = bias_bar.y;  // Don't use now
+      }
+
+    drawOneLine( scrn_rect.left,
+                 bias_bar.y,
+                 scrn_rect.right,
+                 bias_bar.y );
+
+    if( orientation == ReadTOP )
+      {
+      drawOneLine( scrn_rect.left,
+                   bias_bar.y,
+                   scrn_rect.left,
+                   mid_scr.y);
+
+      drawOneLine( scrn_rect.right,
+                   bias_bar.y,
+                   scrn_rect.right,
+                   mid_scr.y );
+
+      drawOneLine( mid_scr.x,
+                   scrn_rect.bottom,
+                   mid_scr.x,
+                   bias_bar.y );
+
+      }
+    else {
+      if( orientation == ReadBOTTOM )
+        {
+        drawOneLine( scrn_rect.left,
+                     bias_bar.y,
+                     scrn_rect.left,
+                     mid_scr.y );
+
+        drawOneLine( scrn_rect.right,
+                     bias_bar.y,
+                     scrn_rect.right,
+                     mid_scr.y );
+
+        drawOneLine( mid_scr.x,
+                     scrn_rect.top,
+                     mid_scr.x,
+                     bias_bar.y );
+        }
+      }
+
+    for( i = (int)vmin; i <= (int)vmax; i++ )  // increment is faster than addition
+      {
+//      if( sub_type == LIMIT ) {
+        condition = (i >= min_val());
+//        }
+//      else {
+//        if( sub_type == NOLIMIT ) {
+//          condition = 1;
+//          }
+//        }
+      if( condition )        {
+        marker_x = scrn_rect.left + (int)((i - vmin) * factor());
+        if( div_min()){
+          if( (i%(int)div_min()) == 0 ) {
+//            if( orientation == ReadTOP )
+//              {
+//              drawOneLine( marker_x, marker_y, marker_x, marker_y + 3 );
+              drawOneLine( marker_x, bias_bar.y, marker_x, mid_scr.y );
+//              }
+//            else {
+//            drawOneLine( marker_x, marker_y + 3, marker_x, marker_y + 6 );
+//              drawOneLine( marker_x, bias_bar.y, marker_x, mid_scr.y );
+//              }
+            }
+           }
+        if( div_max()) {
+          if( (i%(int)div_max())==0 )
+            {
+            if(modulo()) {
+              disp_val = i % modulo();
+              if( disp_val < 0) {
+                disp_val += modulo();
+                }
+              }
+            else {
+              disp_val = i;
+              }
+              sprintf( TextScale, "%d", disp_val );
+            if( orientation == ReadTOP )
+              {
+//              drawOneLine( marker_x, marker_y, marker_x, marker_y+6 );
+              drawOneLine( marker_x, mid_scr.y + 3,marker_x, bias_bar.y );
+              textString ( marker_x - 4 * strlen(TextScale), marker_y + 14,
+                           TextScale, GLUT_BITMAP_8_BY_13 );
+              }
+            else {
+//            drawOneLine( marker_x, marker_y, marker_x, marker_y+6 );
+              drawOneLine( marker_x, mid_scr.y - 3,marker_x, bias_bar.y );
+              textString ( marker_x - 4 * strlen(TextScale), mid_scr.y - 14,
+                           TextScale, GLUT_BITMAP_8_BY_13 );
+              }
+            }
+          }  
+        }
+      }
+    }
+   }
+}
+
+//============== Top of guage_instr class member definitions ==============
+
+guage_instr ::
+    guage_instr( RECT         the_box,
+                 DBLFNPTR     load_fn,
+                 ReadOriented readway,
+                 int          maxValue,
+                 int          minValue,
+                 UINT         major_divs,
+                 UINT         minor_divs,
+                 UINT         modulus,
+                 bool         working) :
+           instr_scale( the_box,
+                        load_fn, readway,
+                        maxValue, maxValue, minValue,
+                        major_divs, minor_divs,
+                        modulus,
+                        working)
+{
+}
+
+guage_instr ::
+   ~guage_instr()
+{
+}
+
+guage_instr ::
+    guage_instr( const guage_instr & image):
+       instr_scale( (instr_scale &) image)
+{
+}
+
+guage_instr & guage_instr ::
+    operator = (const guage_instr & rhs )
+{
+  if( !(this == &rhs)) {
+    instr_scale::operator = (rhs);
+    }
+  return *this;
+}
+
+// As implemented, draw only correctly draws a horizontal or vertical
+// scale. It should contain a variation that permits clock type displays.
+// Now is supports "tickless" displays such as control surface indicators.
+// This routine should be worked over before using. Current value would be
+// fetched and not used if not commented out. Clearly that is intollerable.
+
+void guage_instr :: draw (void)
+{
+  int marker_x;
+  int marker_y;
+  register i;
+  char TextScale[80];
+//  int condition;
+  int disp_val;
+  double vmin              = min_val();
+  double vmax              = max_val();
+  POINT mid_scr            = get_centroid();
+//  double cur_value         = get_value();
+  RECT   scrn_rect         = get_location();
+  ReadOriented orientation = get_orientation();
+
+  if( (orientation == ReadLEFT) ||( orientation == ReadRIGHT))  // Vertical scale
+    {
+    mid_scr = get_centroid();
+    if( orientation == ReadLEFT )     // Calculate x marker offset
+      marker_x = scrn_rect.left - 6;
+    else                              // We'll default this for now.
+      marker_x = scrn_rect.right;
+
+    // Draw the basic markings for the scale...
+
+    if( orientation == ReadLEFT )
+      {
+
+      drawOneLine( scrn_rect.right - 3,     // Bottom tick bar
+                   scrn_rect.bottom,
+                   scrn_rect.right,
+                   scrn_rect.bottom );
+
+      drawOneLine( scrn_rect.right - 3,     // Top tick bar
+                   scrn_rect.top,
+                   scrn_rect.right,
+                   scrn_rect.top );
+      }
+    else       {
+      drawOneLine( scrn_rect.right,
+                   scrn_rect.bottom,
+                   scrn_rect.right+3,
+                   scrn_rect.bottom );
+
+      drawOneLine( scrn_rect.right,
+                   scrn_rect.top,
+                   scrn_rect.right+3,
+                   scrn_rect.top );
+      }
+
+    // Work through from bottom to top of scale. Calculating where to put
+    // minor and major ticks.
+
+    for( i = (int)vmin; i <= (int)vmax; i++ )
+      {
+        // Calculate the location of this tick
+      marker_y = scrn_rect.bottom + (int)((i - vmin) * factor());
+
+      if( div_min()) {
+        if( (i%div_min()) == 0) {
+          if( orientation == ReadLEFT )
             {
             drawOneLine( marker_x + 3, marker_y, marker_x + 6, marker_y );
             }
           else {
-            if( pscale->orientation == RIGHT )
-              {
-              drawOneLine( marker_x, marker_y, marker_x + 3, marker_y );
-              }
+            drawOneLine( marker_x, marker_y, marker_x + 3, marker_y );
             }
           }
-        if( (i%pscale->div_max) == 0 )            {
+        }
+      if( div_max()) {
+        if( (i%div_max()) == 0 )            {
           drawOneLine( marker_x,     marker_y,
                        marker_x + 6, marker_y );
-          if(pscale->modulo) {
-            disp_val = i % pscale->modulo;
-            if( !disp_val ) {
-              disp_val = pscale->modulo;
-              }
+          if(modulo()) {
+            disp_val = i % modulo();
             if( disp_val < 0) {
-              disp_val += pscale->modulo;
-              }
-            if( disp_val == pscale->modulo ) {
-              disp_val = 0;
+              disp_val += modulo();
               }
             }
           else {
             disp_val = i;
             }
           sprintf( TextScale, "%d", disp_val );
-          if( pscale->orientation == LEFT )              {
+          if( orientation == ReadLEFT )              {
             textString( marker_x -  8 * strlen(TextScale) - 2, marker_y - 4,
                         TextScale, GLUT_BITMAP_8_BY_13 );
             }
           else  {
-            if( pscale->orientation == RIGHT )              {
+            if( orientation == ReadRIGHT )              {
             textString( marker_x + 10,                         marker_y - 4,
                         TextScale, GLUT_BITMAP_8_BY_13 );
               }
@@ -422,353 +924,212 @@ static void drawscale( HUD_scale * pscale )
         } // End if condition
       } // End for range of i from vmin to vmax
     }  // End if VERTICAL SCALE TYPE
-  if( pscale->type == HORIZONTAL )     // Horizontal scale
+  else {                                // Horizontal scale by default
     {
-    if( pscale->orientation == TOP ) {
-      marker_y = pscale->scrn_pos.bottom;
+    if( orientation == ReadTOP ) {
+      marker_y = scrn_rect.bottom;
       }
     else {
-      if( pscale->orientation == BOTTOM ) {
-        marker_y = pscale->scrn_pos.bottom - 6;
+      if( orientation == ReadBOTTOM ) {
+        marker_y = scrn_rect.bottom - 6;
         }
       }
-    drawOneLine( pscale->scrn_pos.left,
-                 pscale->scrn_pos.bottom,
-                 pscale->scrn_pos.right,
-                 pscale->scrn_pos.bottom );
+    drawOneLine( scrn_rect.left,
+                 scrn_rect.bottom,
+                 scrn_rect.right,
+                 scrn_rect.bottom );
 
-    if( pscale->orientation == TOP )
+    if( orientation == ReadTOP )
       {
-      drawOneLine( pscale->scrn_pos.left,
-                   pscale->scrn_pos.bottom,
-                   pscale->scrn_pos.left,
-                   pscale->scrn_pos.bottom + 3 );
+      drawOneLine( scrn_rect.left,
+                   scrn_rect.bottom,
+                   scrn_rect.left,
+                   scrn_rect.bottom + 3 );
 
-      drawOneLine( pscale->scrn_pos.right,
-                   pscale->scrn_pos.bottom,
-                   pscale->scrn_pos.right,
-                   pscale->scrn_pos.bottom + 6 );
-
-      drawOneLine( pscale->mid_scr,
-                   pscale->scrn_pos.bottom,
-                   pscale->mid_scr,
-                   pscale->scrn_pos.bottom - 6 );
-
+      drawOneLine( scrn_rect.right,
+                   scrn_rect.bottom,
+                   scrn_rect.right,
+                   scrn_rect.bottom + 6 );
       }
     else {
-      if( pscale->orientation == BOTTOM )
+      if( orientation == ReadBOTTOM )
         {
-        drawOneLine( pscale->scrn_pos.left,
-                     pscale->scrn_pos.bottom,
-                     pscale->scrn_pos.left,
-                     pscale->scrn_pos.bottom - 6 );
+        drawOneLine( scrn_rect.left,
+                     scrn_rect.bottom,
+                     scrn_rect.left,
+                     scrn_rect.bottom - 6 );
 
-        drawOneLine( pscale->scrn_pos.right,
-                     pscale->scrn_pos.bottom,
-                     pscale->scrn_pos.right,
-                     pscale->scrn_pos.bottom - 6 );
-
-        drawOneLine( pscale->mid_scr,
-                     pscale->scrn_pos.bottom,
-                     pscale->mid_scr,
-                     pscale->scrn_pos.bottom + 6 );
+        drawOneLine( scrn_rect.right,
+                     scrn_rect.bottom,
+                     scrn_rect.right,
+                     scrn_rect.bottom - 6 );
         }
       }
 
-    for( i = (int)(vmin); i <= (int)(vmax); i++ )  // increment is faster than addition
+    for( i = (int)vmin; i <= (int)vmax; i++ )  // increment is faster than addition
       {
-      if( pscale->sub_type == LIMIT ) {
-        condition = (i >= pscale->minimum_value);
-        }
-      else {
-        if( pscale->sub_type == NOLIMIT ) {
-          condition = 1;
-          }
-        }
-      if( condition )        {
-        marker_x = (int)(pscale->scrn_pos.left + (i - vmin) * pscale->factor);
-        if( (i%pscale->div_min) == 0 ) {
-          if( pscale->orientation == TOP )
+      marker_x = scrn_rect.left + (int)((i - vmin) * factor());
+      if( div_min()) {
+        if( (i%div_min()) == 0 ) {
+          if( orientation == ReadTOP )
             {
             drawOneLine( marker_x, marker_y, marker_x, marker_y + 3 );
             }
           else {
-            if( pscale->orientation == BOTTOM )
+            if( orientation == ReadBOTTOM )
               {
               drawOneLine( marker_x, marker_y + 3, marker_x, marker_y + 6 );
               }
             }
-          }
-        if( (i%pscale->div_max)==0 )
+          }  // End if minor tick called for.
+        }  // End if minor ticks are of interest
+      if( div_max()) {
+        if( (i%div_max())==0 )
           {
-          if(pscale->modulo) {
-            disp_val = i % pscale->modulo;
-            if( !disp_val ) {
-              disp_val = pscale->modulo;
-              }
+          // Modulo implies a "clock" style instrument. Needs work.
+          if(modulo()) {
+            disp_val = i % modulo();
             if( disp_val < 0) {
-              disp_val += pscale->modulo;
-              }
-            if( disp_val == pscale->modulo ) {
-              disp_val = 0;
+              disp_val += modulo();
               }
             }
-          else {
+          else {   // Scale doesn't roll around.
             disp_val = i;
             }
             sprintf( TextScale, "%d", disp_val );
-          if( pscale->orientation == TOP )
+          if( orientation == ReadTOP )
             {
             drawOneLine( marker_x, marker_y, marker_x, marker_y+6 );
             textString ( marker_x - 4 * strlen(TextScale), marker_y + 14,
                          TextScale, GLUT_BITMAP_8_BY_13 );
             }
           else {
-            if( pscale->orientation == BOTTOM )
+            if( orientation == ReadBOTTOM )
               {
               drawOneLine( marker_x, marker_y, marker_x, marker_y+6 );
               textString ( marker_x - 4 * strlen(TextScale), marker_y - 14,
                            TextScale, GLUT_BITMAP_8_BY_13 );
-              }
-            }
-          }
-        }
+              } // End if bottom
+            } // End else if not ReadTOP
+          } // End if major division point.
+        } // End if major divisions of interest.
       }
     }
-
+   }
 }
 
-//
-//	Draws a climb ladder in the center of the HUD
-//
+//============ Top of dual_instr_item class member definitions ============
 
-static void drawladder( HUD_ladder *ladder )
+dual_instr_item ::
+  dual_instr_item ( RECT         the_box,
+                    DBLFNPTR     chn1_source,
+                    DBLFNPTR     chn2_source,
+                    bool         working,
+                    ReadOriented readway ):
+                  instr_item( the_box, chn1_source, readway, working),
+                  alt_data_source( chn2_source )
 {
-  double vmin, vmax;
-  double roll_value, pitch_value;
-  int marker_x, marker_y;
-#ifdef DEBUGHUD
-  int mid_scr;
-#endif
-  int scr_min, scr_max;
-  int x_ini, x_end;
-  int y_ini, y_end;
-  int new_x_ini, new_x_end;
-  int new_y_ini, new_y_end;
-  register i;
-  double factor;
-  char TextLadder[80];
-  int condition;
+}
 
-  double cos_roll_value, sin_roll_value;
-//  double cos_pitch_value, sin_pitch_value;
+dual_instr_item ::
+  dual_instr_item( const dual_instr_item & image) :
+                 instr_item ((instr_item &) image ),
+                 alt_data_source( image.alt_data_source)
+{
+}
 
-  roll_value = (*ladder->load_roll)();
-  sin_roll_value = sin(roll_value);
-  cos_roll_value = cos(roll_value);
-  
-  pitch_value = (*ladder->load_pitch)()*RAD_TO_DEG;
-
-  vmin = pitch_value - ladder->width_units/2;
-  vmax = pitch_value + ladder->width_units/2;
-
-  scr_min = ladder->scrn_pos.y - (ladder->scr_height/2);
-  scr_max = scr_min       + ladder->scr_height;
-
-#ifdef DEBUGHUD
-  mid_scr = scr_min       + (scr_max-scr_min)/2;
-#endif
-
-  marker_x = ladder->scrn_pos.x - ladder->scr_width/2;
-
-  factor = (scr_max-scr_min)/ladder->width_units;
-
-  for( i=(int)(vmin); i<=(int)(vmax); i+=1 )
-    {
-    condition = 1;
-    if( condition )
-      {
-      marker_y = (int)(scr_min+(i-vmin)*factor);
-      if( i%ladder->div_units==0 )
-        {
-        sprintf( TextLadder, "%d", i );
-        if( ladder->scr_hole == 0 )
-          {
-          if( i ) {
-            x_ini = ladder->scrn_pos.x - ladder->scr_width/2;
-            }
-          else {
-            x_ini = ladder->scrn_pos.x - ladder->scr_width/2 - 10;
-            }
-          y_ini = marker_y;
-          x_end = ladder->scrn_pos.x + ladder->scr_width/2;
-          y_end = marker_y;
-          new_x_ini = (int)(ladder->scrn_pos.x +                             \
-                      (x_ini - ladder->scrn_pos.x) * cos_roll_value - \
-                      (y_ini - ladder->scrn_pos.y) * sin_roll_value);
-          new_y_ini = (int)(ladder->scrn_pos.y +                             \
-                      (x_ini - ladder->scrn_pos.x) * sin_roll_value + \
-                      (y_ini - ladder->scrn_pos.y) * cos_roll_value);
-          new_x_end = (int)(ladder->scrn_pos.x +                             \
-                      (x_end - ladder->scrn_pos.x) * cos_roll_value - \
-                      (y_end - ladder->scrn_pos.y) * sin_roll_value);
-          new_y_end = (int)(ladder->scrn_pos.y +                             \
-                      (x_end - ladder->scrn_pos.x) * sin_roll_value + \
-                      (y_end - ladder->scrn_pos.y) * cos_roll_value);
-
-          if( i >= 0 )
-            {
-            drawOneLine( new_x_ini, new_y_ini, new_x_end, new_y_end );
-            }
-          else
-            {
-            glEnable(GL_LINE_STIPPLE);
-            glLineStipple( 1, 0x00FF );
-            drawOneLine( new_x_ini, new_y_ini, new_x_end, new_y_end );
-            glDisable(GL_LINE_STIPPLE);
-            }
-          textString( new_x_ini -  8 * strlen(TextLadder) - 8,
-                      new_y_ini -  4,
-                      TextLadder, GLUT_BITMAP_8_BY_13 );
-          textString( new_x_end + 10,
-                      new_y_end -  4,
-                      TextLadder, GLUT_BITMAP_8_BY_13 );
-          }
-        else
-          {
-          if( i != 0 )  {
-            x_ini = ladder->scrn_pos.x - ladder->scr_width/2;
-            }
-          else          {
-            x_ini = ladder->scrn_pos.x - ladder->scr_width/2 - 10;
-            }
-          y_ini = marker_y;
-          x_end = ladder->scrn_pos.x - ladder->scr_width/2 + ladder->scr_hole/2;
-          y_end = marker_y;
-          new_x_ini = (int)(ladder->scrn_pos.x+                             \
-                      (x_ini - ladder->scrn_pos.x) * cos_roll_value -\
-                      (y_ini - ladder->scrn_pos.y) * sin_roll_value);
-          new_y_ini = (int)(ladder->scrn_pos.y+                             \
-                      (x_ini - ladder->scrn_pos.x) * sin_roll_value +\
-                      (y_ini - ladder->scrn_pos.y) * cos_roll_value);
-          new_x_end = (int)(ladder->scrn_pos.x+                             \
-                      (x_end - ladder->scrn_pos.x) * cos_roll_value -\
-                      (y_end - ladder->scrn_pos.y) * sin_roll_value);
-          new_y_end = (int)(ladder->scrn_pos.y+                             \
-                      (x_end - ladder->scrn_pos.x) * sin_roll_value +\
-                      (y_end - ladder->scrn_pos.y) * cos_roll_value);
-
-          if( i >= 0 )
-            {
-            drawOneLine( new_x_ini, new_y_ini, new_x_end, new_y_end );
-            }
-          else
-            {
-            glEnable(GL_LINE_STIPPLE);
-            glLineStipple( 1, 0x00FF );
-            drawOneLine( new_x_ini, new_y_ini, new_x_end, new_y_end );
-            glDisable(GL_LINE_STIPPLE);
-            }
-          textString( new_x_ini - 8 * strlen(TextLadder) - 8,
-                      new_y_ini - 4,
-                      TextLadder, GLUT_BITMAP_8_BY_13 );
-
-          x_ini = ladder->scrn_pos.x + ladder->scr_width/2 - ladder->scr_hole/2;
-          y_ini = marker_y;
-          if( i != 0 )  {
-            x_end = ladder->scrn_pos.x + ladder->scr_width/2;
-            }
-          else          {
-            x_end = ladder->scrn_pos.x + ladder->scr_width/2 + 10;
-            }
-          y_end = marker_y;
-          new_x_ini = (int)(ladder->scrn_pos.x +                        \
-                      (x_ini-ladder->scrn_pos.x)*cos_roll_value -\
-                      (y_ini-ladder->scrn_pos.y)*sin_roll_value);
-          new_y_ini = (int)(ladder->scrn_pos.y +                        \
-                      (x_ini-ladder->scrn_pos.x)*sin_roll_value +\
-                      (y_ini-ladder->scrn_pos.y)*cos_roll_value);
-          new_x_end = (int)(ladder->scrn_pos.x +                        \
-                      (x_end-ladder->scrn_pos.x)*cos_roll_value -\
-           	      (y_end-ladder->scrn_pos.y)*sin_roll_value);
-          new_y_end = (int)(ladder->scrn_pos.y +                        \
-                      (x_end-ladder->scrn_pos.x)*sin_roll_value +\
-                      (y_end-ladder->scrn_pos.y)*cos_roll_value);
-
-          if( i >= 0 )
-            {
-            drawOneLine( new_x_ini, new_y_ini, new_x_end, new_y_end );
-            }
-          else
-            {
-            glEnable(GL_LINE_STIPPLE);
-            glLineStipple( 1, 0x00FF );
-            drawOneLine( new_x_ini, new_y_ini, new_x_end, new_y_end );
-            glDisable(GL_LINE_STIPPLE);
-            }
-          textString( new_x_end+10, new_y_end-4,
-                      TextLadder, GLUT_BITMAP_8_BY_13 );
-          }
-        }
-            /* if( i%pscale->div_max==0 )
-            {
-            	drawOneLine( marker_x, marker_y, marker_x+6, marker_y );
-                sprintf( TextScale, "%d", i );
-                if( pscale->orientation == LEFT )
-                {
-                	textString( marker_x-8*strlen(TextScale)-2, marker_y-4,
-                              TextScale, GLUT_BITMAP_8_BY_13 );
-                }
-                else if( pscale->orientation == RIGHT )
-                {
-                	textString( marker_x+10, marker_y-4,
-                              TextScale, GLUT_BITMAP_8_BY_13 );
-                }
-            } */
-        }
+dual_instr_item & dual_instr_item ::
+  operator = (const dual_instr_item & rhs )
+{
+  if( !(this == &rhs)) {
+    instr_item::operator = (rhs);
+    alt_data_source = rhs.alt_data_source;
     }
+  return *this;
+}
 
+//============ Top of fgTBI_instr class member definitions ==============
+
+fgTBI_instr ::
+fgTBI_instr( RECT      the_box,
+             DBLFNPTR  chn1_source,
+             DBLFNPTR  chn2_source,
+             UINT      maxBankAngle,
+             UINT      maxSlipAngle,
+             UINT      gap_width,
+             bool      working ) :
+               dual_instr_item( the_box,
+                                chn1_source,
+                                chn2_source,
+                                working,
+                                ReadTOP),
+               BankLimit      (maxBankAngle),
+               SlewLimit      (maxSlipAngle),
+               scr_hole       (gap_width   )
+{
+}
+
+fgTBI_instr :: ~fgTBI_instr() {}
+
+fgTBI_instr :: fgTBI_instr( const fgTBI_instr & image):
+                 dual_instr_item( (const dual_instr_item &) image),
+                 BankLimit( image.BankLimit),
+                 SlewLimit( image.SlewLimit),
+                 scr_hole ( image.scr_hole )
+{
+}
+
+fgTBI_instr & fgTBI_instr ::
+operator = (const fgTBI_instr & rhs )
+{
+  if( !(this == &rhs)) {
+    dual_instr_item::operator = (rhs);
+    BankLimit = rhs.BankLimit;
+    SlewLimit = rhs.SlewLimit;
+    scr_hole  = rhs.scr_hole;
+    }
+   return *this;
 }
 
 //
-//	Draws an artificial horizon line in the center of the HUD
-//	(with or without a center hole)
-//
-//	Needs: x_center, y_center, length, hole
+//	Draws a Turn Bank Indicator on the screen
 //
 
-static void drawhorizon( HUD_horizon *horizon )
+ void fgTBI_instr :: draw( void )
 {
   int x_inc1, y_inc1;
   int x_inc2, y_inc2;
   int x_t_inc1, y_t_inc1;
-  
+
   int d_bottom_x, d_bottom_y;
   int d_right_x, d_right_y;
   int d_top_x, d_top_y;
   int d_left_x, d_left_y;
-  
+
   int inc_b_x, inc_b_y;
   int inc_r_x, inc_r_y;
   int inc_t_x, inc_t_y;
   int inc_l_x, inc_l_y;
+  RECT My_box = get_location();
+  POINT centroid = get_centroid();
+  int tee_height = My_box.top - My_box.bottom; // Hack, hack.
   
 //	struct fgFLIGHT *f = &current_aircraft.flight;
   double sin_bank, cos_bank;
   double bank_angle, sideslip_angle;
   double ss_const; // sideslip angle pixels per rad
 
-  bank_angle     = (*horizon->load_roll)();     // Roll limit +/- 30 degrees
+  bank_angle     = current_ch2();  // Roll limit +/- 30 degrees
   if( bank_angle < -FG_PI_2/3 ) {
     bank_angle = -FG_PI_2/3;
   }else if( bank_angle > FG_PI_2/3 ) {
     bank_angle = FG_PI_2/3;
   }
-  sideslip_angle = (*horizon->load_sideslip)(); // Sideslip limit +/- 5 degrees
-  if( sideslip_angle < -FG_PI/36.0 ) {
-    sideslip_angle = -FG_PI/36.0;
-  } else if( sideslip_angle > FG_PI/36.0 ) {
-    sideslip_angle = FG_PI/36.0;
+  sideslip_angle = current_ch1(); // Sideslip limit +/- 20 degrees
+  if( sideslip_angle < -FG_PI/9 ) {
+    sideslip_angle = -FG_PI/9;
+  } else if( sideslip_angle > FG_PI/9 ) {
+    sideslip_angle = FG_PI/9;
   }
 
 	// sin_bank = sin( FG_2PI-FG_Phi );
@@ -776,24 +1137,24 @@ static void drawhorizon( HUD_horizon *horizon )
   sin_bank = sin(FG_2PI-bank_angle);
   cos_bank = cos(FG_2PI-bank_angle);
   
-  x_inc1 = (int)(horizon->scr_width * cos_bank);
-  y_inc1 = (int)(horizon->scr_width * sin_bank);
-  x_inc2 = (int)(horizon->scr_hole  * cos_bank);
-  y_inc2 = (int)(horizon->scr_hole  * sin_bank);
+  x_inc1 = (int)(get_span() * cos_bank);
+  y_inc1 = (int)(get_span() * sin_bank);
+  x_inc2 = (int)(scr_hole  * cos_bank);
+  y_inc2 = (int)(scr_hole  * sin_bank);
 
-  x_t_inc1 = (int)(horizon->tee_height * sin_bank);
-  y_t_inc1 = (int)(horizon->tee_height * cos_bank);
+  x_t_inc1 = (int)(tee_height * sin_bank);
+  y_t_inc1 = (int)(tee_height * cos_bank);
   
   d_bottom_x = 0;
-  d_bottom_y = (int)(-horizon->scr_hole);
-  d_right_x  = (int)(horizon->scr_hole);
+  d_bottom_y = (int)(-scr_hole);
+  d_right_x  = (int)(scr_hole);
   d_right_y  = 0;
   d_top_x    = 0;
-  d_top_y    = (int)(horizon->scr_hole);
-  d_left_x   = (int)(-horizon->scr_hole);
+  d_top_y    = (int)(scr_hole);
+  d_left_x   = (int)(-scr_hole);
   d_left_y   = 0;
-  
-  ss_const = (horizon->scr_width*2)/(FG_2PI/36.0);// width represents 10 degrees
+
+  ss_const = (get_span()*2)/(FG_2PI/9);  // width represents 40 degrees
 
   d_bottom_x += (int)(sideslip_angle*ss_const);
   d_right_x  += (int)(sideslip_angle*ss_const);
@@ -808,233 +1169,301 @@ static void drawhorizon( HUD_horizon *horizon )
   inc_t_y = (int)(d_top_x*sin_bank+d_top_y*cos_bank);
   inc_l_x = (int)(d_left_x*cos_bank-d_left_y*sin_bank);
   inc_l_y = (int)(d_left_x*sin_bank+d_left_y*cos_bank);
-  
-  if( horizon->scr_hole == 0 )
+
+  if( scr_hole == 0 )
     {
-    drawOneLine( horizon->scrn_pos.x - x_inc1, horizon->scrn_pos.y - y_inc1, \
-                 horizon->scrn_pos.x + x_inc1, horizon->scrn_pos.y + y_inc1 );
+    drawOneLine( centroid.x - x_inc1, centroid.y - y_inc1, \
+                 centroid.x + x_inc1, centroid.y + y_inc1 );
     }
   else
     {
-    drawOneLine( horizon->scrn_pos.x - x_inc1, horizon->scrn_pos.y - y_inc1, \
-                 horizon->scrn_pos.x - x_inc2, horizon->scrn_pos.y - y_inc2 );
-    drawOneLine( horizon->scrn_pos.x + x_inc2, horizon->scrn_pos.y + y_inc2, \
-                 horizon->scrn_pos.x + x_inc1, horizon->scrn_pos.y + y_inc1 );
+    drawOneLine( centroid.x - x_inc1, centroid.y - y_inc1, \
+                 centroid.x - x_inc2, centroid.y - y_inc2 );
+    drawOneLine( centroid.x + x_inc2, centroid.y + y_inc2, \
+                 centroid.x + x_inc1, centroid.y + y_inc1 );
     }
 
-  // draw teemarks (?)
-  drawOneLine( horizon->scrn_pos.x + x_inc2, horizon->scrn_pos.y + y_inc2, \
-               horizon->scrn_pos.x + x_inc2 + x_t_inc1, horizon->scrn_pos.y + y_inc2 - y_t_inc1 );
-  drawOneLine( horizon->scrn_pos.x - x_inc2, horizon->scrn_pos.y - y_inc2, \
-               horizon->scrn_pos.x - x_inc2 + x_t_inc1, horizon->scrn_pos.y - y_inc2 - y_t_inc1 );
+  // draw teemarks
+  drawOneLine( centroid.x + x_inc2,            \
+                 centroid.y + y_inc2,          \
+               centroid.x + x_inc2 + x_t_inc1, \
+                 centroid.y + y_inc2 - y_t_inc1 );
+  drawOneLine( centroid.x - x_inc2,            \
+                 centroid.y - y_inc2,          \
+               centroid.x - x_inc2 + x_t_inc1, \
+                 centroid.y - y_inc2 - y_t_inc1 );
                
   // draw sideslip diamond (it is not yet positioned correctly )
-  drawOneLine( horizon->scrn_pos.x + inc_b_x, \
-               horizon->scrn_pos.y + inc_b_y, \
-               horizon->scrn_pos.x + inc_r_x, \
-               horizon->scrn_pos.y + inc_r_y )
-  drawOneLine( horizon->scrn_pos.x + inc_r_x, \
-               horizon->scrn_pos.y + inc_r_y, \
-               horizon->scrn_pos.x + inc_t_x, \
-               horizon->scrn_pos.y + inc_t_y );
-  drawOneLine( horizon->scrn_pos.x + inc_t_x, \
-               horizon->scrn_pos.y + inc_t_y, \
-               horizon->scrn_pos.x + inc_l_x, \
-               horizon->scrn_pos.y + inc_l_y );
-  drawOneLine( horizon->scrn_pos.x + inc_l_x, \
-               horizon->scrn_pos.y + inc_l_y, \
-               horizon->scrn_pos.x + inc_b_x, \
-               horizon->scrn_pos.y + inc_b_y );
-  
-  /* drawOneLine( horizon->scrn_pos.x + inc_b_x, \
-               horizon->scrn_pos.y + inc_b_y, \
-               horizon->scrn_pos.x + inc_r_x, \
-               horizon->scrn_pos.y + inc_r_y )
-  drawOneLine( horizon->scrn_pos.x + inc_r_x, \
-               horizon->scrn_pos.y + inc_r_y, \
-               horizon->scrn_pos.x + inc_t_x, \
-               horizon->scrn_pos.y + inc_t_y );
-  drawOneLine( horizon->scrn_pos.x + inc_t_x, \
-               horizon->scrn_pos.y + inc_t_y, \
-               horizon->scrn_pos.x + inc_l_x, \
-               horizon->scrn_pos.y + inc_l_y );
-  drawOneLine( horizon->scrn_pos.x + inc_l_x, \
-               horizon->scrn_pos.y + inc_l_y, \
-               horizon->scrn_pos.x + inc_b_x, \
-               horizon->scrn_pos.y + inc_b_y ); */
-}
-
-//  drawControlSurfaces()
-//	Draws a representation of the control surfaces in their current state
-//	anywhere in the HUD
-//
-
-static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
-{
-	int x_ini, y_ini;
-	int x_end, y_end;
-	/* int x_1, y_1; */
-	/* int x_2, y_2; */
-	fgCONTROLS *pCtls;
-	int tmp;
-
-	x_ini = ctrl_surf->scrn_pos.x;
-	y_ini = ctrl_surf->scrn_pos.y;
-	x_end = x_ini + 150;
-	y_end = y_ini + 60;
-
-	drawOneLine( x_ini, y_ini, x_end, y_ini );
-	drawOneLine( x_ini, y_ini, x_ini, y_end );
-	drawOneLine( x_ini, y_end, x_end, y_end );
-	drawOneLine( x_end, y_end, x_end, y_ini );
-	drawOneLine( x_ini + 30, y_ini, x_ini + 30, y_end );
-	drawOneLine( x_ini + 30, y_ini + 30, x_ini + 90, y_ini + 30 );
-	drawOneLine( x_ini + 90, y_ini, x_ini + 90, y_end );
-	drawOneLine( x_ini + 120, y_ini, x_ini + 120, y_end );
-
-	pCtls = current_aircraft.controls;
-
-	/* Draw elevator diagram */
-	textString( x_ini + 1, y_end-11, "E", GLUT_BITMAP_8_BY_13 );
-	drawOneLine( x_ini + 15, y_ini + 5, x_ini + 15, y_ini + 55 );
-	drawOneLine( x_ini + 14, y_ini + 30, x_ini + 16, y_ini + 30 );
-	tmp = y_ini + 5 + (int)(((pCtls->elevator + 1.0)/2)*50.0);
-	if( pCtls->elevator <= -0.01 || pCtls->elevator >= 0.01 )
-	{
-		drawOneLine( x_ini + 10, tmp, x_ini + 20, tmp );
-	}
-	else
-	{
-		drawOneLine( x_ini + 7, tmp, x_ini + 23, tmp);
-	}
-
-	/* Draw aileron diagram */
-	textString( x_ini + 30 + 1, y_end-11, "A", GLUT_BITMAP_8_BY_13 );
-	drawOneLine( x_ini + 35, y_end-15, x_ini + 85, y_end-15 );
-	drawOneLine( x_ini + 60, y_end-14, x_ini + 60, y_end-16 );
-	tmp = x_ini + 35 + (int)(((pCtls->aileron + 1.0)/2)*50.0);
-	if( pCtls->aileron <= -0.01 || pCtls->aileron >= 0.01 )
-	{
-		drawOneLine( tmp, y_end-20, tmp, y_end-10 );
-	}
-	else
-	{
-		drawOneLine( tmp, y_end - 25, tmp, y_end -  5 );
-	}
-
-	/* Draw rudder diagram */
-	textString ( x_ini + 30 + 1, y_ini + 21, "R", GLUT_BITMAP_8_BY_13 );
-	drawOneLine( x_ini + 35, y_ini + 15, x_ini + 85, y_ini + 15 );
-	drawOneLine( x_ini + 60, y_ini + 14, x_ini + 60, y_ini + 16 );
-
-	tmp = x_ini + 35 + (int)(((pCtls->rudder + 1.0) / 2) * 50.0);
-	if( pCtls->rudder <= -0.01 || pCtls->rudder >= 0.01 )
-	{
-		drawOneLine( tmp, y_ini + 20, tmp, y_ini + 10 );
-	}
-	else
-	{
-		drawOneLine( tmp, y_ini + 25, tmp, y_ini +  5 );
-	}
-
-
-	/* Draw throttle diagram */
-	textString( x_ini + 90 + 1, y_end-11, "T", GLUT_BITMAP_8_BY_13 );
-	textString( x_ini + 90 + 1, y_end-21, "r", GLUT_BITMAP_8_BY_13 );
-	drawOneLine( x_ini + 105, y_ini + 5, x_ini + 105, y_ini + 55 );
-	tmp = y_ini + 5 + (int)(pCtls->throttle[0]*50.0);
-	drawOneLine( x_ini + 100, tmp, x_ini + 110, tmp);
-
-
-	/* Draw elevator trim diagram */
-	textString( x_ini + 121, y_end-11, "T", GLUT_BITMAP_8_BY_13 );
-	textString( x_ini + 121, y_end-22, "m", GLUT_BITMAP_8_BY_13 );
-	drawOneLine( x_ini + 135, y_ini + 5, x_ini + 135, y_ini + 55 );
-	drawOneLine( x_ini + 134, y_ini + 30, x_ini + 136, y_ini + 30 );
-
-	tmp = y_ini + 5 + (int)(((pCtls->elevator_trim + 1)/2)*50.0);
-	if( pCtls->elevator_trim <= -0.01 || pCtls->elevator_trim >= 0.01 )
-	{
-		drawOneLine( x_ini + 130, tmp, x_ini + 140, tmp);
-	}
-	else
-	{
-		drawOneLine( x_ini + 127, tmp, x_ini + 143, tmp);
-	}
+  drawOneLine( centroid.x + inc_b_x, \
+               centroid.y + inc_b_y, \
+               centroid.x + inc_r_x, \
+               centroid.y + inc_r_y );
+  drawOneLine( centroid.x + inc_r_x, \
+               centroid.y + inc_r_y, \
+               centroid.x + inc_t_x, \
+               centroid.y + inc_t_y );
+  drawOneLine( centroid.x + inc_t_x, \
+               centroid.y + inc_t_y, \
+               centroid.x + inc_l_x, \
+               centroid.y + inc_l_y );
+  drawOneLine( centroid.x + inc_l_x, \
+               centroid.y + inc_l_y, \
+               centroid.x + inc_b_x, \
+               centroid.y + inc_b_y );
 
 }
 
-//
-// Draws a label anywhere in the HUD
-//
-//
-
-static void drawlabel( HUD_label *label )
+//====================== Top of HudLadder Class =======================
+HudLadder ::
+  HudLadder(  RECT      the_box,
+              DBLFNPTR  ptch_source,
+              DBLFNPTR  roll_source,
+              UINT      span_units,
+              int       major_div,
+              UINT      minor_div,
+              UINT      screen_hole,
+              UINT      lbl_pos,
+              bool      working) :
+               dual_instr_item( the_box,
+                                ptch_source,
+                                roll_source,
+                                working,
+                                ReadRIGHT ),
+               width_units    ( span_units   ),
+               div_units      ( major_div < 0? -major_div: major_div ),
+               minor_div      ( minor_div    ),
+               label_pos      ( lbl_pos      ),
+               scr_hole       ( screen_hole  ),
+               vmax           ( span_units/2 ),
+               vmin           ( -vmax        )
 {
-  char buffer[80];
-  char string[80];
-  int posincr;
-  int lenstr;
-
-  if( !label ) { // Eliminate the possible, but absurd case.
-    return;
+  if( !width_units ) {
+    width_units = 45;
     }
+  factor = (double)get_span() / (double) width_units;
+}
 
-  if( label->pre_str != NULL) {
-    if( label->post_str != NULL ) {
-      sprintf( buffer, "%s%s%s", label->pre_str,  \
-                                 label->format,   \
-                                 label->post_str );
-      }
-    else {
-      sprintf( buffer, "%s%s",   label->pre_str, \
-                                 label->format );
-      }
+HudLadder ::
+  ~HudLadder()
+{
+}
+
+HudLadder ::
+  HudLadder( const HudLadder & image ) :
+        dual_instr_item( (dual_instr_item &) image),
+        width_units    ( image.width_units   ),
+        div_units      ( image.div_units     ),
+        label_pos      ( image.label_pos     ),
+        scr_hole       ( image.scr_hole      ),
+        vmax           ( image.vmax ),
+        vmin           ( image.vmin ),
+        factor         ( image.factor        )
+{
+}
+HudLadder & HudLadder ::
+  operator = ( const HudLadder & rhs )
+{
+  if( !(this == &rhs)) {
+    (dual_instr_item &)(*this) = (dual_instr_item &)rhs;
+    width_units  = rhs.width_units;
+    div_units    = rhs.div_units;
+    label_pos    = rhs.label_pos;
+    scr_hole     = rhs.scr_hole;
+    vmax         = rhs.vmax;
+    vmin         = rhs.vmin;
+    factor       = rhs.factor;
     }
-  else {
-    if( label->post_str != NULL ) {
-      sprintf( buffer, "%s%s",   label->format,  \
-                                 label->post_str );
-      }
-    } // else do nothing if both pre and post strings are nulls. Interesting.
+  return *this;
+}
 
+//
+//	Draws a climb ladder in the center of the HUD
+//
 
-  sprintf( string, buffer, (*label->load_value)() );
-#ifdef DEBUGHUD
-	fgPrintf( FG_COCKPIT, FG_DEBUG,  buffer );
-	fgPrintf( FG_COCKPIT, FG_DEBUG,  "\n" );
-	fgPrintf( FG_COCKPIT, FG_DEBUG, string );
-	fgPrintf( FG_COCKPIT, FG_DEBUG, "\n" );
-#endif
-  lenstr = strlen( string );
-  if( label->justify == LEFT_JUST ) {
-   posincr = -lenstr*8;
-   }
-  else {
-    if( label->justify == CENTER_JUST ) {
-      posincr = -lenstr*4;
-      }
-    else {
-      if( label->justify == RIGHT_JUST ) {
-        posincr = 0;
+void HudLadder :: draw( void )
+{
+  double roll_value, pitch_value;
+//  int marker_x;
+  int marker_y;
+  int scr_min;
+//  int scr_max;
+  int x_ini, x_end;
+  int y_ini, y_end;
+  int new_x_ini, new_x_end;
+  int new_y_ini, new_y_end;
+  register i;
+  POINT centroid = get_centroid();
+  RECT  box      = get_location();
+  int half_span  = (box.right - box.left) >> 1;
+  char TextLadder[80];
+  int condition;
+
+  roll_value  = current_ch2();
+  pitch_value = current_ch1() * RAD_TO_DEG;
+
+  vmin        = (int)pitch_value - (double)width_units/2.0;
+  vmax        = (int)pitch_value + (double)width_units/2.0;
+
+  scr_min     = box.bottom; // centroid.y - ((box.top - box.bottom) >> 1);
+//  scr_max     = box.top;    // scr_min    + (box.top - box.bottom);
+//  marker_x    = centroid.x - half_span;
+
+// Box the target.
+  drawOneLine( centroid.x - 5, centroid.y,     centroid.x,     centroid.y + 5);
+  drawOneLine( centroid.x,     centroid.y + 5, centroid.x + 5, centroid.y);
+  drawOneLine( centroid.x + 5, centroid.y,     centroid.x,     centroid.y - 5);
+  drawOneLine( centroid.x,     centroid.y - 5, centroid.x - 5, centroid.y);
+
+  for( i=(int)vmin; i<=(int)vmax; i+=1 )
+    {
+    condition = 1;
+    if( condition )
+      {
+      marker_y = scr_min + (int)((i-vmin)*factor);
+      if( div_units ) {
+        if( i%div_units==0 )
+          {
+          sprintf( TextLadder, "%d", i );
+          if( scr_hole == 0 )
+            {
+            if( i ) {
+              x_ini = centroid.x - half_span;
+              }
+            else {
+              x_ini = centroid.x - half_span - 10;
+              }
+            y_ini = marker_y;
+            x_end = centroid.x + half_span;
+            y_end = marker_y;
+            new_x_ini = centroid.x + (int)(                     \
+                       (x_ini - centroid.x) * cos(roll_value) - \
+                       (y_ini - centroid.y) * sin(roll_value));
+            new_y_ini = centroid.y + (int)(                     \
+                       (x_ini - centroid.x) * sin(roll_value) + \
+                       (y_ini - centroid.y) * cos(roll_value));
+            new_x_end = centroid.x + (int)(                       \
+                       (x_end - centroid.x) * cos(roll_value) - \
+                       (y_end - centroid.y) * sin(roll_value));
+            new_y_end = centroid.y + (int)(                            \
+                       (x_end - centroid.x) * sin(roll_value) + \
+                       (y_end - centroid.y) * cos(roll_value));
+
+            if( i >= 0 )
+              {
+              drawOneLine( new_x_ini, new_y_ini, new_x_end, new_y_end );
+              }
+            else
+              {
+              glEnable(GL_LINE_STIPPLE);
+              glLineStipple( 1, 0x00FF );
+              drawOneLine( new_x_ini, new_y_ini, new_x_end, new_y_end );
+              glDisable(GL_LINE_STIPPLE);
+              }
+            textString( new_x_ini -  8 * strlen(TextLadder) - 8,
+                        new_y_ini -  4,
+                        TextLadder, GLUT_BITMAP_8_BY_13 );
+            textString( new_x_end + 10,
+                        new_y_end -  4,
+                        TextLadder, GLUT_BITMAP_8_BY_13 );
+            }
+          else
+            {
+            if( i != 0 )  {
+              x_ini = centroid.x - half_span;
+              }
+            else          {
+              x_ini = centroid.x - half_span - 10;
+              }
+            y_ini = marker_y;
+            x_end = centroid.x - half_span + scr_hole/2;
+            y_end = marker_y;
+            new_x_ini = centroid.x+ (int)(                      \
+                        (x_ini - centroid.x) * cos(roll_value) -\
+                        (y_ini - centroid.y) * sin(roll_value));
+            new_y_ini = centroid.y+  (int)(                     \
+                        (x_ini - centroid.x) * sin(roll_value) +\
+                        (y_ini - centroid.y) * cos(roll_value));
+            new_x_end = centroid.x+  (int)(                     \
+                        (x_end - centroid.x) * cos(roll_value) -\
+                        (y_end - centroid.y) * sin(roll_value));
+            new_y_end = centroid.y+ (int)(                      \
+                        (x_end - centroid.x) * sin(roll_value) +\
+                        (y_end - centroid.y) * cos(roll_value));
+
+            if( i >= 0 )
+              {
+              drawOneLine( new_x_ini, new_y_ini, new_x_end, new_y_end );
+              }
+            else
+              {
+              glEnable(GL_LINE_STIPPLE);
+              glLineStipple( 1, 0x00FF );
+              drawOneLine( new_x_ini, new_y_ini, new_x_end, new_y_end );
+              glDisable(GL_LINE_STIPPLE);
+              }
+            textString( new_x_ini - 8 * strlen(TextLadder) - 8,
+                        new_y_ini - 4,
+                        TextLadder, GLUT_BITMAP_8_BY_13 );
+
+            x_ini = centroid.x + half_span - scr_hole/2;
+            y_ini = marker_y;
+            if( i != 0 )  {
+              x_end = centroid.x + half_span;
+              }
+            else          {
+              x_end = centroid.x + half_span + 10;
+              }
+            y_end = marker_y;
+            new_x_ini = centroid.x + (int)(                 \
+                        (x_ini-centroid.x)*cos(roll_value) -\
+                        (y_ini-centroid.y)*sin(roll_value));
+            new_y_ini = centroid.y + (int)(                 \
+                        (x_ini-centroid.x)*sin(roll_value) +\
+                        (y_ini-centroid.y)*cos(roll_value));
+            new_x_end = centroid.x + (int)(                 \
+                        (x_end-centroid.x)*cos(roll_value) -\
+                        (y_end-centroid.y)*sin(roll_value));
+            new_y_end = centroid.y +  (int)(                  \
+                        (x_end-centroid.x)*sin(roll_value) +\
+                        (y_end-centroid.y)*cos(roll_value));
+
+            if( i >= 0 )
+              {
+              drawOneLine( new_x_ini, new_y_ini, new_x_end, new_y_end );
+              }
+            else
+              {
+              glEnable(GL_LINE_STIPPLE);
+              glLineStipple( 1, 0x00FF );
+              drawOneLine( new_x_ini, new_y_ini, new_x_end, new_y_end );
+              glDisable(GL_LINE_STIPPLE);
+              }
+            textString( new_x_end+10, new_y_end-4,
+                        TextLadder, GLUT_BITMAP_8_BY_13 );
+            }
+          }
+         }
+            /* if( i%div_max()==0 )
+            {
+            	drawOneLine( marker_x, marker_y, marker_x+6, marker_y );
+                sprintf( TextScale, "%d", i );
+                if( orientation == LEFT )
+                {
+                	textString( marker_x-8*strlen(TextScale)-2, marker_y-4,
+                              TextScale, GLUT_BITMAP_8_BY_13 );
+                }
+                else if( orientation == RIGHT )
+                {
+                	textString( marker_x+10, marker_y-4,
+                              TextScale, GLUT_BITMAP_8_BY_13 );
+                }
+            } */
         }
-      }
     }
 
-  if( label->size == SMALL ) {
-    textString( label->scrn_pos.x + posincr, label->scrn_pos.y,
-                string, GLUT_BITMAP_8_BY_13);
-    }
-  else  {
-    if( label->size == LARGE ) {
-      textString( label->scrn_pos.x + posincr, label->scrn_pos.y,
-                  string, GLUT_BITMAP_9_BY_15);
-      }
-    }
 }
-// The following routines concern HUD object/component object construction
-//
 
+//========================= End of Class Implementations===================
 // fgHUDInit
 //
 // Constructs a HUD object and then adds in instruments. At the present
@@ -1043,460 +1472,317 @@ static void drawlabel( HUD_label *label )
 // display for a Piper Cub doesn't show the speed range of a North American
 // mustange and the engine readouts of a B36!
 //
-Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
+
+#define INSTRDEFS 15
+
+int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 {
-  Hptr hud;
+  instr_item *HIptr;
+  int index;
+  RECT loc;
 
-  fgPrintf( FG_COCKPIT, FG_INFO, "Initializing HUD\n" );
+  fgPrintf( FG_COCKPIT, FG_INFO, "Initializing current aircraft HUD\n" );
 
-  hud = (Hptr)calloc(sizeof( HUD),1);
-  if( hud == NULL )
-    return( NULL );
+  HUD_deque.erase( HUD_deque.begin(), HUD_deque.end());  // empty the HUD deque
 
-  hud->code = 1;
-  hud->status = 0;
+//  hud->code = 1;
+//  hud->status = 0;
 
   // For now lets just hardcode the hud here.
   // In the future, hud information has to come from the same place
   // aircraft information came from.
 
-  fgHUDSetTimeMode( hud, NIGHT );
-  fgHUDSetBrightness( hud, BRT_LIGHT );
+//  fgHUDSetTimeMode( hud, NIGHT );
+//  fgHUDSetBrightness( hud, BRT_LIGHT );
 
-     // TBI
-  fgHUDAddHorizon( hud, 330, 100, 40, 5, 10, get_roll, get_sideslip );
+  for( index = 0; index <= INSTRDEFS; index++) {
+    switch ( index ) {
+      case 0:     // TBI
+      //  fgHUDAddHorizon( hud, 330, 100, 40, 5, 10, get_roll, get_sideslip );
+        loc.left   =  330 - 40;
+        loc.top    =  110;
+        loc.right  =  330 + 40;
+        loc.bottom =  100;
+        HIptr = (instr_item *) new fgTBI_instr( loc );
+        break;
 
-  fgHUDAddLadder ( hud, 330, 285, 120, 180, 70, 10,
-                   NONE, 45, get_roll, get_pitch );
-     // KIAS
-  fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 200, 180, 380,  5,  10,
-                      LEFT,     0,  100,   50,   0, get_speed );
-     // Angle of Attack
-  fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 180, 250, 410,  1,   5,
-                      BOTTOM, -40,   50,   21,   0, get_aoa );
-     // GYRO COMPASS
-  fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 380, 200, 460,  5,  10,
-                      TOP,      0,   50,   50, 360, get_heading );
-     // AMSL
-  fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 460, 180, 380, 25, 100,
-                      RIGHT,    0, 15000, 250,   0, get_altitude);
+      case 1:     // Artificial Horizon
+      //  fgHUDAddLadder ( hud, 330, 285, 120, 180, 70, 10,
+      //                   NONE, 45, get_roll, get_pitch );
+        loc.left   =  270; // 330 -  60
+        loc.top    =  375; // 285 +  90
+        loc.right  =  390; // 330 +  60
+        loc.bottom =  195; // 285 -  90
+        HIptr = (instr_item *) new HudLadder( loc );
+        break;
 
-  fgHUDAddLabel  ( hud, 160, 150, SMALL, NOBLINK,
-                      RIGHT_JUST, NULL, " Kts",      "%5.0f", get_speed );
-  fgHUDAddLabel  ( hud, 160, 135, SMALL, NOBLINK,
-                      RIGHT_JUST, NULL, " m",        "%5.0f", get_altitude );
-  fgHUDAddLabel  ( hud, 160, 120, SMALL, NOBLINK,
-                      RIGHT_JUST, NULL, " Roll",     "%5.2f", get_roll );
-  fgHUDAddLabel  ( hud, 160, 105, SMALL, NOBLINK,
-                      RIGHT_JUST, "Lat  ", "d",     "%03.0f", get_latitude );
-  fgHUDAddLabel  ( hud, 160, 90,  SMALL, NOBLINK,
-                      RIGHT_JUST, NULL, " m",        "%05.2f", get_lat_min );
-  
-  fgHUDAddLabel  ( hud, 440, 150, SMALL, NOBLINK,
-                      RIGHT_JUST, NULL, " AOA",      "%5.2f", get_aoa );
-  fgHUDAddLabel  ( hud, 440, 135, SMALL, NOBLINK,
-                      RIGHT_JUST, NULL, " Heading",  "%5.0f", get_heading );
-  fgHUDAddLabel  ( hud, 440, 120, SMALL, NOBLINK,
-                      RIGHT_JUST, NULL, " Sideslip", "%5.2f", get_sideslip );
-  fgHUDAddLabel  ( hud, 440, 105, SMALL, NOBLINK,
-                      RIGHT_JUST, "Lon  ", "d",     "%04.0f", get_longitude );
-  fgHUDAddLabel  ( hud, 440, 90,  SMALL, NOBLINK,
-                      RIGHT_JUST, NULL, " m",        "%05.2f", get_long_min );
-  fgHUDAddLabel  ( hud, 10,470, SMALL, NOBLINK,
-		      RIGHT_JUST, "Frame rate = ", NULL,  "%.1f ", get_frame_rate);
+      case 2:    // KIAS
+      //  fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 200, 180, 380,  5,  10,
+      //                      LEFT,     0,  100,   50,   0, get_speed );
+        loc.left   =  160;
+        loc.top    =  380;
+        loc.right  =  200;
+        loc.bottom =  180;
+        HIptr = (instr_item *) new moving_scale( loc,
+                                                 get_speed,
+                                                 ReadLEFT,
+                                                 200, 0,
+                                                 10,  5,
+                                                 0,
+                                                 50.0,
+                                                 TRUE);
+        break;
 
-  fgHUDAddControlSurfaces( hud, 10, 10, NULL );
+      case 3:    // Angle of Attack
+      //  fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 180, 250, 410,  1,   5,
+      //                      BOTTOM, -40,   50,   21,   0, get_aoa );
+        loc.left   =  250;
+        loc.top    =  190;
+        loc.right  =  410;
+        loc.bottom =  160;
+        HIptr = (instr_item *) new moving_scale( loc,
+                                                 get_aoa,
+                                                 ReadBOTTOM,
+                                                 50, -40,
+                                                 5,    1,
+                                                 0,
+                                                 21.0,
+                                                 TRUE);
+        break;
+
+      case 4:    // GYRO COMPASS
+      // fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 380, 200, 460,  5,  10,
+      //                      TOP,      0,   50,   50, 360, get_heading );
+        loc.left   =  200;
+        loc.top    =  410;
+        loc.right  =  460;
+        loc.bottom =  380;
+        HIptr = (instr_item *) new moving_scale( loc,
+                                                 get_heading,
+                                                 ReadTOP,
+                                                 360, 0,
+                                                 10,   5,
+                                                 360,
+                                                 50,
+                                                 TRUE);
+        break;
+
+      case 5:    // AMSL
+      //  fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 460, 180, 380, 25, 100,
+      //                      RIGHT,    0, 15000, 250,   0, get_altitude);
+        loc.left   =  460;
+        loc.top    =  380;
+        loc.right  =  490;
+        loc.bottom =  180;
+        HIptr = (instr_item *) new moving_scale( loc,
+                                                 get_altitude,
+                                                 ReadRIGHT,
+                                                 15000, 0,
+                                                 100,  25,
+                                                 0,
+                                                 250,
+                                                 TRUE);
+        break;
+
+      case 6:    // Digital KIAS
+      //  fgHUDAddLabel  ( hud, 160, 150, SMALL, NOBLINK,
+      //                 RIGHT_JUST, NULL, " Kts",      "%5.0f", get_speed );
+        loc.left   =  160;
+        loc.top    =  180; // Ignore
+        loc.right  =  200; // Ignore
+        loc.bottom =  150;
+        HIptr = (instr_item *) new instr_label ( loc,
+                                                 get_speed,
+                                                 "%5.0f",
+                                                 NULL,
+                                                 " Kts",
+                                                 ReadTOP,
+                                                 RIGHT_JUST,
+                                                 SMALL,
+                                                 0,
+                                                 TRUE );
+        break;
+
+      case 7:    // Digital Altimeter
+      //  fgHUDAddLabel  ( hud, 160, 135, SMALL, NOBLINK,
+      //              RIGHT_JUST, NULL, " m",        "%5.0f", get_altitude );
+        loc.left   =  160;
+        loc.top    =  145; // Ignore
+        loc.right  =  200; // Ignore
+        loc.bottom =  135;
+        HIptr = (instr_item *) new instr_label ( loc,
+                                                 get_altitude,
+                                                 "MSL  %5.0f",
+                                                 NULL,
+                                                 " m",
+                                                 ReadTOP,
+                                                 LEFT_JUST,
+                                                 SMALL,
+                                                 0,
+                                                 TRUE );
+        break;
+
+      case 8:    // Roll indication diagnostic
+      // fgHUDAddLabel  ( hud, 160, 120, SMALL, NOBLINK,
+      //                  RIGHT_JUST, NULL, " Roll",     "%5.2f", get_roll );
+        loc.left   =  160;
+        loc.top    =  130; // Ignore
+        loc.right  =  200; // Ignore
+        loc.bottom =  120;
+        HIptr = (instr_item *) new instr_label ( loc,
+                                                 get_roll,
+                                                 "%5.2f",
+                                                 " Roll",
+                                                 " Deg",
+                                                 ReadTOP,
+                                                 RIGHT_JUST,
+                                                 SMALL,
+                                                 0,
+                                                 TRUE );
+        break;
+
+      case 9:    // Angle of attack diagnostic
+      //  fgHUDAddLabel  ( hud, 440, 150, SMALL, NOBLINK,
+      //                   RIGHT_JUST, NULL, " AOA",      "%5.2f", get_aoa );
+        loc.left   =  440;
+        loc.top    =  160; // Ignore
+        loc.right  =  500; // Ignore
+        loc.bottom =  150;
+        HIptr = (instr_item *) new instr_label ( loc,
+                                                 get_aoa,
+                                                 "    %5.2f",
+                                                 " AOA",
+                                                 " Deg",
+                                                 ReadTOP,
+                                                 RIGHT_JUST,
+                                                 SMALL,
+                                                 0,
+                                                 TRUE );
+        break;
+
+      case 10:
+      //  fgHUDAddLabel  ( hud, 440, 135, SMALL, NOBLINK,
+      //               RIGHT_JUST, NULL, " Heading",  "%5.0f", get_heading );
+        loc.left   =  440;
+        loc.top    =  145; // Ignore
+        loc.right  =  500; // Ignore
+        loc.bottom =  135;
+        HIptr = (instr_item *) new instr_label ( loc,
+                                                 get_heading,
+                                                 "%5.0f",
+                                                 "Heading",
+                                                 " Deg",
+                                                 ReadTOP,
+                                                 RIGHT_JUST,
+                                                 SMALL,
+                                                 0,
+                                                 TRUE );
+        break;
+
+      case 11:
+      //  fgHUDAddLabel  ( hud, 440, 120, SMALL, NOBLINK,
+      //              RIGHT_JUST, NULL, " Sideslip", "%5.2f", get_sideslip );
+        loc.left   =  440;
+        loc.top    =  130; // Ignore
+        loc.right  =  500; // Ignore
+        loc.bottom =  120;
+        HIptr = (instr_item *) new instr_label ( loc,
+                                                 get_sideslip,
+                                                 "%5.2f",
+                                                 "Sideslip",
+                                                 NULL,
+                                                 ReadTOP,
+                                                 RIGHT_JUST,
+                                                 SMALL,
+                                                 0,
+                                                 TRUE );
+        break;
+
+      case 12:
+        loc.left   = 440;
+        loc.top    =  90; // Ignore
+        loc.right  = 440; // Ignore
+        loc.bottom = 100;
+        HIptr = (instr_item *) new instr_label( loc, get_throttleval,
+                                                "%5.2f",
+                                                "Throttle",
+                                                NULL,
+                                                ReadTOP,
+                                                RIGHT_JUST,
+                                                SMALL,
+                                                0,
+                                                TRUE );
+        break;
+
+      case 13:
+        loc.left   = 440;
+        loc.top    =  70; // Ignore
+        loc.right  = 500; // Ignore
+        loc.bottom =  85;
+        HIptr = (instr_item *) new instr_label( loc, get_elevatorval,
+                                                "%5.2f",
+                                                "Elevator",
+                                                NULL,
+                                                ReadTOP,
+                                                RIGHT_JUST,
+                                                SMALL,
+                                                0,
+                                                TRUE );
+        break;
+
+      case 14:
+        loc.left   = 440;
+        loc.top    = 100; // Ignore
+        loc.right  = 500; // Ignore
+        loc.bottom =  60;
+        HIptr = (instr_item *) new instr_label( loc, get_aileronval,
+                                                "%5.2f",
+                                                "Aileron",
+                                                NULL,
+                                                ReadTOP,
+                                                RIGHT_JUST,
+                                                SMALL,
+                                                0,
+                                                TRUE );
+        break;
+
+      case 15:
+        loc.left   = 10;
+        loc.top    = 100; // Ignore
+        loc.right  = 500; // Ignore
+        loc.bottom =  10;
+        HIptr = (instr_item *) new instr_label( loc, get_frame_rate,
+                                                "%.1f",
+                                                "Frame rate = ",
+                                                NULL,
+                                                ReadTOP,
+                                                RIGHT_JUST,
+                                                SMALL,
+                                                0,
+                                                TRUE );
+        break;
+
+      //  fgHUDAddControlSurfaces( hud, 10, 10, NULL );
+//        loc.left   =  250;
+//        loc.top    =  190;
+//        loc.right  =  410;
+//        loc.bottom =  180;
+//        HIptr = (instr_item *) new
+//        break;
+
+      default:;
+      }
+    if( HIptr ) {                   // Anything to install?
+      HUD_deque.insert( HUD_deque.begin(), HIptr);
+      }
+    }
 
 //  fgHUDAddControl( hud, HORIZONTAL, 50,  25, get_aileronval  ); // was 10, 10
 //  fgHUDAddControl( hud, VERTICAL,   150, 25, get_elevatorval ); // was 10, 10
 //  fgHUDAddControl( hud, HORIZONTAL, 250, 25, get_rudderval   ); // was 10, 10
-
-  return( hud );
+  return 0;  // For now. Later we may use this for an error code.
 }
 
-
-// add_instrument
-//
-// This is a stand in for linked list code that will get replaced later
-// by some more elegant list handling code.
-
-void add_instrument( Hptr hud, HIptr pinstrument )
-{
-    if( !hud || !pinstrument ) {
-	return;
-    }
-
-    pinstrument->next = hud->instruments;
-    hud->instruments = pinstrument;
-}
-
-
-// fgHUDAddHorizon
-//
-// Constructs a HUD_horizon "object" and installs it into the hud instrument
-// list.
-
-Hptr fgHUDAddHorizon( Hptr hud,     \
-                      int x_pos,    \
-                      int y_pos,    \
-                      int length,   \
-                      int hole_len, \
-                      int tee_height,\
-                      double (*load_roll)(),
-                      double (*load_sideslip)() )
-{
-    HUD_horizon *phorizon;
-    HUD_instr   *pinstrument;
-
-    if( !hud ) {
-	return NULL;
-    }
-                                       // construct the parent object
-    pinstrument = (HIptr)calloc(sizeof(HUD_instr),1);
-    if( pinstrument == NULL ) {
-	return( NULL );
-    }
-    pinstrument->type    = HUDhorizon;  //  ARTIFICIAL_HORIZON;
-
-                                      // Construct the horizon
-    phorizon = (HUD_horizon *) calloc( sizeof(HUD_horizon),1);
-    if( phorizon == NULL )   {
-	return( NULL );
-    }
-
-    phorizon->scrn_pos.x    = x_pos;
-    phorizon->scrn_pos.y    = y_pos;
-    phorizon->scr_width     = length | 1;
-    phorizon->scr_hole      = hole_len;
-    phorizon->tee_height    = tee_height;
-    phorizon->load_roll     = load_roll;
-    phorizon->load_sideslip = load_sideslip;
-    //  Install the horizon in the parent.
-    pinstrument->instr   = phorizon;
-    //  Install the instrument into hud.
-    add_instrument( hud, pinstrument);
-
-    return( hud );
-}
-
-// fgHUDAddScale
-//
-// Constructs a HUD_scale "object" and installs it into the hud instrument
-// list.
-
-Hptr fgHUDAddScale( Hptr hud,        \
-                    int type,        \
-                    int sub_type,    \
-                    int scr_pos,     \
-                    int scr_min,     \
-                    int scr_max,     \
-                    int div_min,     \
-                    int div_max,     \
-                    int orientation, \
-                    int min_value,   \
-                    int max_value,   \
-                    int width_units, \
-                    int modulus,     \
-                    double (*load_value)() )
-{
-  HUD_scale *pscale;
-  HUD_instr *pinstrument;
-
-  if( !hud ) {
-    return NULL;
-    }
-
-	pinstrument = (HIptr)calloc(sizeof(HUD_instr),1);
-	if( pinstrument == NULL ) {
-     return( NULL );
-     }
-
-  pinstrument->type = HUDscale;
-
-  pscale = ( HUD_scale *)calloc(sizeof(HUD_scale),1);
-  if( pscale == NULL )   {
-     return( NULL );
-    }
-
-  pscale->type             = type;
-  pscale->sub_type         = sub_type;
-  pscale->div_min          = div_min;
-  pscale->div_max          = div_max;
-  pscale->orientation      = orientation;
-  pscale->minimum_value    = min_value;
-  pscale->maximum_value    = max_value;
-  pscale->modulo           = modulus;
-  pscale->load_value       = load_value;
-
-  pscale->half_width_units = width_units / 2.0;
-  pscale->scr_span = scr_max - scr_min; // Run of scan in pix coord
-  pscale->scr_span |= 1;                // Force odd span of units.
-             // If span is odd number of units, mid will be correct.
-             // If not it will be high by one coordinate unit. This is
-             // an artifact of integer division needed for screen loc's.
-
-  pscale->mid_scr  = (pscale->scr_span >> 1) + scr_min;
-
-             // Calculate the number of screen units per indicator unit
-             // We must force floating point calculation or the factor
-             // will be low and miss locate tics by several units.
-
-  pscale->factor   = (double)pscale->scr_span / (double)width_units;
-
-  switch( type ) {
-    case HORIZONTAL:
-      pscale->scrn_pos.left    = scr_min;
-      pscale->scrn_pos.top     = scr_pos;
-      pscale->scrn_pos.right   = scr_max;
-      pscale->scrn_pos.bottom  = scr_pos;
-      break;
-
-    case VERTICAL:
-    default:
-      pscale->scrn_pos.left    = scr_pos;
-      pscale->scrn_pos.top     = scr_max;
-      pscale->scrn_pos.right   = scr_pos;
-      pscale->scrn_pos.bottom  = scr_min;
-    }
-
-                                     // Install the scale
-  pinstrument->instr = pscale;
-                                      //  Install the instrument into hud.
-  add_instrument( hud, pinstrument);
-
-  return( hud );
-}
-
-// fgHUDAddLabel
-//
-// Constructs a HUD_Label object and installs it into the hud instrument
-// list.
-Hptr fgHUDAddLabel( Hptr hud,       \
-                    int x_pos,      \
-                    int y_pos,      \
-                    int size,       \
-                    int blink,      \
-                    int justify,    \
-					          char *pre_str,  \
-                    char *post_str, \
-                    char *format,   \
-                    double (*load_value)() )
-{
-	HUD_label *plabel;
-	HUD_instr *pinstrument;
-
-  if( !hud ) {
-    return NULL;
-    }
-
-	pinstrument = (HIptr)calloc(sizeof(HUD_instr),1);
-	if( pinstrument == NULL ) {
-    return NULL;
-    }
-	pinstrument->type = HUDlabel;
-
-	plabel = (HUD_label *)calloc(sizeof(HUD_label),1);
-	if( plabel == NULL ){
-    return NULL;
-    }
-
-  plabel->scrn_pos.x      = x_pos;
-  plabel->scrn_pos.y      = y_pos;
-  plabel->size       = size;
-  plabel->blink      = blink;
-  plabel->justify    = justify;
-  plabel->pre_str    = pre_str;
-  plabel->post_str   = post_str;
-  plabel->format     = format;
-  plabel->load_value = load_value;
-                                      // Install the label
-	pinstrument->instr = plabel;
-                                      //  Install the instrument into hud.
-  add_instrument( hud, pinstrument);
-
-	return( hud );
-}
-
-// fgHUDAddLadder
-//
-// Contains code that constructs a ladder "object" and installs it as
-// a hud instrument in the hud instrument list.
-//
-Hptr fgHUDAddLadder( Hptr hud,        \
-                     int x_pos,       \
-                     int y_pos,       \
-                     int scr_width,   \
-                     int scr_height,  \
-					           int hole_len,    \
-                     int div_units,   \
-                     int label_pos,   \
-                     int width_units, \
-					           double (*load_roll)(),
-                     double (*load_pitch)() )
-{
-	HUD_ladder *pladder;
-	HUD_instr  *pinstrument;
-
-  if( !hud ) {
-    return NULL;
-    }
-
-	pinstrument = (HIptr)calloc(sizeof(HUD_instr),1);
-	if( pinstrument == NULL )
-		return( NULL );
-
-	pinstrument->type = HUDladder;
-
-	pladder = (HUD_ladder *)calloc(sizeof(HUD_ladder),1);
-	if( pladder == NULL )
-		return( NULL );
-
-  pladder->type           = 0; // Not used.
-  pladder->scrn_pos.x          = x_pos;
-  pladder->scrn_pos.y          = y_pos;
-  pladder->scr_width      = scr_width;
-  pladder->scr_height     = scr_height;
-  pladder->scr_hole       = hole_len;
-  pladder->div_units      = div_units;
-  pladder->label_position = label_pos;
-  pladder->width_units    = width_units;
-  pladder->load_roll      = load_roll;
-  pladder->load_pitch     = load_pitch;
-
-  pinstrument->instr      = pladder;
-                                      //  Install the instrument into hud.
-  add_instrument( hud, pinstrument);
-	return hud;
-}
-
-//   fgHUDAddControlSurfaces()
-//
-//   Adds the control surface indicators which make up for the lack of seat
-//   of the pants feel. Should be unnecessary with joystick and pedals
-//   enabled. But that is another improvement. Also, what of flaps? Spoilers?
-//   This may need to be expanded or flattened into multiple indicators,
-//   vertical and horizontal.
-
-Hptr fgHUDAddControlSurfaces( Hptr hud,
-                              int x_pos,
-                              int y_pos,
-                              double (*load_value)() )
-{
-	HUD_control_surfaces *pcontrol_surfaces;
-	HUD_instr *pinstrument;
-
-    if( !hud ) {
-      return NULL;
-    }
-
-    // Construct shell
-    pinstrument = (HIptr)calloc(sizeof(HUD_instr),1);
-    if( !pinstrument ) {
-      return NULL;
-      }
-    pinstrument->type = HUDcontrol_surfaces;
-
-    // Construct core
-    pcontrol_surfaces = (HUD_control_surfaces *)calloc(sizeof(HUD_control),1);
-    if( !pcontrol_surfaces ) {
-      return( NULL );
-      }
-
-    pcontrol_surfaces->scrn_pos.x = x_pos;
-    pcontrol_surfaces->scrn_pos.y = y_pos;
-    pcontrol_surfaces->load_value = load_value;
-
-    pinstrument->instr     = pcontrol_surfaces;
-                                                   // Install
-    add_instrument( hud, pinstrument);
-
-    return hud;
-}
-
-// fgHUDAddControl
-//
-//
-
-Hptr fgHUDAddControl( Hptr hud,        \
-                      int ctrl_x,      \
-                      int ctrl_y,      \
-                      int ctrl_length, \
-                      int orientation, \
-                      int alignment,   \
-                      int min_value,   \
-                      int max_value,   \
-                      int width_units, \
-                      double (*load_value)() )
-{
-    HUD_control *pcontrol;
-    HUD_instr *pinstrument;
-
-    if( !hud ) {
-      return NULL;
-    }
-
-    // Construct shell
-    pinstrument = (HIptr)calloc(sizeof(HUD_instr),1);
-    if( !pinstrument ) {
-      return NULL;
-      }
-    pinstrument->type = HUDcontrol;
-
-    // Construct core
-    pcontrol = (HUD_control *)calloc(sizeof(HUD_control),1);
-    if( !(pcontrol == NULL) ) {
-      return( NULL );
-      }
-    pcontrol->scrn_pos.x    = ctrl_x;
-    pcontrol->scrn_pos.y    = ctrl_y;
-    pcontrol->ctrl_length   = ctrl_length;
-    pcontrol->orientation   = orientation;
-    pcontrol->alignment     = alignment;
-    pcontrol->min_value     = min_value;
-    pcontrol->max_value     = max_value;
-    pcontrol->width_units   = width_units;
-    pcontrol->load_value    = load_value;
-                                                   // Integrate
-    pinstrument->instr     = pcontrol;
-                                                   // Install
-    add_instrument( hud, pinstrument);
-
-    return hud;
-}
-
-/*
-Hptr fgHUDAddMovingHorizon(  Hptr hud,     \
-                             int x_pos,    \
-                             int y_pos,    \
-                             int length,   \
-                             int hole_len, \
-                             int color )
-{
-
-}
-
-Hptr fgHUDAddCircularLadder( Hptr hud,    \
-                             int scr_min, \
-                             int scr_max, \
-                             int div_min, \
-                             int div_max, \
-                             int max_value )
-{
-
-}
-
-Hptr fgHUDAddNumDisp( Hptr hud,           \
-                      int x_pos,          \
-                      int y_pos,          \
-                      int size,           \
-                      int color,          \
-                      int blink,          \
-						          char *pre_str,      \
-                      char *post_str )
-{
-
-}
-*/
 
 // fgUpdateHUD
 //
@@ -1504,94 +1790,89 @@ Hptr fgHUDAddNumDisp( Hptr hud,           \
 // the HUD object with requests for redraw. Kinda. It will when this is
 // all C++.
 //
+int global_day_night_switch = DAY;
 
-void fgUpdateHUD( Hptr hud ) {
-    HIptr phud_instr;
+void fgUpdateHUD( void ) {
+  int i;
+  int brightness;
+//  int day_night_sw = current_aircraft.controls->day_night_switch;
+  int day_night_sw = global_day_night_switch;
+  int hud_displays = HUD_deque.size();
+  instr_item *pHUDInstr;
 
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-
-    glLoadIdentity();
-    gluOrtho2D(0, 640, 0, 480);
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glColor3f(1.0, 1.0, 1.0);
-    glIndexi(7);
-
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-
-    glLineWidth(1);
-                                   // This is a good improvement, but needs
-                                   // to respond to a dial instead of time
-                                   // of day. Of course, we have no dial!
-    if( hud->time_of_day==DAY) {
-      switch (hud->brightness) {
-         case BRT_LIGHT:
-           glColor3f (0.1, 0.9, 0.1);
-           break;
-         case BRT_MEDIUM:
-           glColor3f (0.1, 0.7, 0.0);
-           break;
-         case BRT_DARK:
-           glColor3f (0.0, 0.5, 0.0);
-         }
-      }
-    else if( hud->time_of_day==NIGHT) {
-      switch (hud->brightness) {
-         case BRT_LIGHT:
-           glColor3f (0.9, 0.1, 0.1);
-           break;
-         case BRT_MEDIUM:
-           glColor3f (0.7, 0.0, 0.1);
-           break;
-         case BRT_DARK:
-           glColor3f (0.5, 0.0, 0.0);
-         }
-      }
-    else {
-      glColor3f (0.1, 0.9, 0.1);
-      }
-
-    fgPrintf( FG_COCKPIT, FG_DEBUG, "HUD Code %d  Status %d\n",
-              hud->code, hud->status );
-
-    phud_instr = hud->instruments;
-    while( phud_instr ) {
-	/* printf("Drawing Instrument %d\n", phud_instr->type); */
-
-	switch (phud_instr->type) {
-    case HUDhorizon:   // ARTIFICIAL HORIZON
-	    drawhorizon( (pHUDhorizon)phud_instr->instr );
-	    break;
-
-    case HUDscale:     // Need to simplify this call.
-	    drawscale (  (pHUDscale)  phud_instr->instr  );
-	    break;
-
-    case HUDlabel:
-	    drawlabel (  (pHUDlabel)  phud_instr->instr  );
-	    break;
-
-    case HUDladder:
-	    drawladder(  (pHUDladder) phud_instr->instr  );
-	    break;
-
-//    case HUDcontrol:
-//      drawControl( (pHUDcontrol) phud_instr->instr );
-//      break;
-
-    case HUDcontrol_surfaces:
-	    drawControlSurfaces( (pHUDControlSurfaces) phud_instr->instr );
-	    break;
-
-    default:; // Ignore anything you don't know about.
+  if( !hud_displays ) {  // Trust everyone, but ALWAYS cut the cards!
+    return;
     }
 
-  phud_instr = phud_instr->next;
-  }
+  pHUDInstr = HUD_deque[0];
+  brightness = pHUDInstr->get_brightness();
+//  brightness = HUD_deque.at(0)->get_brightness();
+
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+
+  glLoadIdentity();
+  gluOrtho2D(0, 640, 0, 480);
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+
+  glColor3f(1.0, 1.0, 1.0);
+  glIndexi(7);
+
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+
+  glLineWidth(1);
+
+  for( i = hud_displays; i; --i) { // Draw everything
+//    if( HUD_deque.at(i)->enabled()) {
+    pHUDInstr = HUD_deque[i - 1];
+    if( pHUDInstr->enabled()) {
+                                   // We should to respond to a dial instead
+                                   // or as well to the of time of day. Of
+                                   // course, we have no dial!
+      if( day_night_sw == DAY) {
+        switch (brightness) {
+          case BRT_LIGHT:
+            glColor3f (0.1, 0.9, 0.1);
+            break;
+
+          case BRT_MEDIUM:
+            glColor3f (0.1, 0.7, 0.0);
+            break;
+
+          case BRT_DARK:
+            glColor3f (0.0, 0.5, 0.0);
+            }
+          }
+        else {
+          if( day_night_sw == NIGHT) {
+            switch (brightness) {
+              case BRT_LIGHT:
+                glColor3f (0.9, 0.1, 0.1);
+                break;
+
+              case BRT_MEDIUM:
+                glColor3f (0.7, 0.0, 0.1);
+                break;
+
+              case BRT_DARK:
+              default:
+                glColor3f (0.5, 0.0, 0.0);
+              }
+            }
+          else {     // Just in case default
+            glColor3f (0.1, 0.9, 0.1);
+            }
+          }
+    //  fgPrintf( FG_COCKPIT, FG_DEBUG, "HUD Code %d  Status %d\n",
+    //            hud->code, hud->status );
+      pHUDInstr->draw();
+//      HUD_deque.at(i)->draw(); // Responsible for broken or fixed variants.
+                              // No broken displays honored just now.
+      }
+    }
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
@@ -1601,40 +1882,10 @@ void fgUpdateHUD( Hptr hud ) {
   glPopMatrix();
 }
 
-void fgHUDSetTimeMode( Hptr hud, int time_of_day )
-{
-
-  hud->time_of_day = time_of_day;
-
-}
-
-void fgHUDSetBrightness( Hptr hud, int brightness )
-{
-
-  hud->brightness = brightness;
-
-}
-
 /* $Log$
-/* Revision 1.6  1998/05/07 23:12:31  curt
-/* Changed frame rate formatting a bit.
+/* Revision 1.7  1998/05/11 18:13:11  curt
+/* Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
 /*
- * Revision 1.5  1998/05/06 03:15:08  curt
- * Durk Talsma contributed a graphical frame rate counter which is displayed
- * as part of the HUD.
- *
- * Revision 1.4  1998/05/03 00:46:46  curt
- * polar.h -> polar3d.h
- *
- * Revision 1.3  1998/04/30 12:36:02  curt
- * C++-ifying a couple source files.
- *
- * Revision 1.2  1998/04/25 22:06:27  curt
- * Edited cvs log messages in source files ... bad bad bad!
- *
- * Revision 1.1  1998/04/24 00:45:57  curt
- * C++-ifing the code a bit.
- *
  * Revision 1.22  1998/04/18 04:14:02  curt
  * Moved fg_debug.c to it's own library.
  *
@@ -1683,7 +1934,7 @@ void fgHUDSetBrightness( Hptr hud, int brightness )
  * Added MetroWorks patches from Carmen Volpe.
  *
  * Revision 1.8  1998/01/27 00:47:51  curt
- * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.7  1998/01/19 18:40:20  curt

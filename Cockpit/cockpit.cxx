@@ -36,10 +36,10 @@
 
 #include <stdlib.h>
 
-#include <Include/fg_constants.h>
-
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
+#include <Include/fg_constants.h>
+#include <Include/general.h>
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
 #include <Math/polar3d.h>
@@ -49,64 +49,170 @@
 
 #include "cockpit.hxx"
 
+
 // This is a structure that contains all data related to
 // cockpit/panel/hud system
 
-static fgCOCKPIT *aircraft_cockpit;
+static pCockpit ac_cockpit;
 
-fgCOCKPIT *fgCockpitInit( fgAIRCRAFT *cur_aircraft )
+// The following routines obtain information concerntin the aircraft's
+// current state and return it to calling instrument display routines.
+// They should eventually be member functions of the aircraft.
+//
+
+double get_throttleval( void )
 {
-	fgCOCKPIT *cockpit;
-	Hptr hud;
+	fgCONTROLS *pcontrols;
 
-	fgPrintf( FG_COCKPIT, FG_INFO, "Initializing cockpit subsystem\n");
-
-	cockpit = (fgCOCKPIT *)calloc(sizeof(fgCOCKPIT),1);
-	if( cockpit == NULL )
-		return( NULL );
-
-	cockpit->code = 1;	/* It will be aircraft dependent */
-	cockpit->status = 0;
-
-	// If aircraft has HUD
-	hud = fgHUDInit( cur_aircraft );  // Color no longer in parameter list
-	if( hud == NULL )
-		return( NULL );
-
-	cockpit->hud = hud;
-
-	aircraft_cockpit = cockpit;
-
-	fgPrintf( FG_COCKPIT, FG_INFO,
-		  "  Code %d  Status %d\n", 
-		  cockpit->hud->code, cockpit->hud->status );
-
-	return( cockpit );
+  pcontrols = current_aircraft.controls;
+  return pcontrols->throttle[0];     // Hack limiting to one engine
 }
 
-fgCOCKPIT *fgCockpitAddHUD( fgCOCKPIT *cockpit, HUD *hud )
+double get_aileronval( void )
 {
-	cockpit->hud = hud;
-	return(cockpit);
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->aileron;
+}
+
+double get_elevatorval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->elevator;
+}
+
+double get_elev_trimval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->elevator_trim;
+}
+
+double get_rudderval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->rudder;
+}
+
+double get_speed( void )
+{
+	fgFLIGHT *f;
+
+	f = current_aircraft.flight;
+	return( FG_V_equiv_kts );    // Make an explicit function call.
+}
+
+double get_aoa( void )
+{
+	fgFLIGHT *f;
+              
+	f = current_aircraft.flight;
+	return( FG_Gamma_vert_rad * RAD_TO_DEG );
+}
+
+double get_roll( void )
+{
+	fgFLIGHT *f;
+
+	f = current_aircraft.flight;
+	return( FG_Phi );
+}
+
+double get_pitch( void )
+{
+	fgFLIGHT *f;
+              
+	f = current_aircraft.flight;
+	return( FG_Theta );
+}
+
+double get_heading( void )
+{
+	fgFLIGHT *f;
+
+	f = current_aircraft.flight;
+	return( FG_Psi * RAD_TO_DEG );
+}
+
+double get_altitude( void )
+{
+	fgFLIGHT *f;
+	// double rough_elev;
+
+	f = current_aircraft.flight;
+	// rough_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC,
+	//		                   FG_Latitude  * RAD_TO_ARCSEC);
+
+	return( FG_Altitude * FEET_TO_METER /* -rough_elev */ );
+}
+
+double get_sideslip( void )
+{
+        fgFLIGHT *f;
+        
+        f = current_aircraft.flight;
+        
+        return( FG_Beta );
+}
+
+double get_frame_rate( void )
+{
+    fgGENERAL *g;                                                               
+ 
+    g = &general;                     
+ 
+    return g->frame_rate;                                                      
+}
+
+bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
+{
+	fgPrintf( FG_COCKPIT, FG_INFO, "Initializing cockpit subsystem\n");
+
+//	cockpit->code = 1;	/* It will be aircraft dependent */
+//	cockpit->status = 0;
+
+	// If aircraft has HUD specified we will get the specs from its def
+  // file. For now we will depend upon hard coding in hud?
+
+  // We must insure that the existing instrument link is purged.
+  // This is done by deleting the links in the list.
+
+  // HI_Head is now a null pointer so we can generate a new list from the
+  // current aircraft.
+
+  fgHUDInit( cur_aircraft );
+  ac_cockpit = new fg_Cockpit();
+
+	fgPrintf( FG_COCKPIT, FG_INFO,
+		  "  Code %d  Status %d\n",
+		  ac_cockpit->code(), ac_cockpit->status() );
+
+	return true;
 }
 
 void fgCockpitUpdate( void )
 {
 
 	fgPrintf( FG_COCKPIT, FG_DEBUG,
-		  "Cockpit: code %d   status %d\n", 
-		  aircraft_cockpit->code, aircraft_cockpit->status );
-	if( aircraft_cockpit->hud != NULL ) {
-	    // That is, if the aircraft has a HUD, then draw it.
-	    fgUpdateHUD( aircraft_cockpit->hud );
-	}
+		  "Cockpit: code %d   status %d\n",
+		  ac_cockpit->code(), ac_cockpit->status() );
+	fgUpdateHUD();	// This will check the global hud linked list pointer.
+                  // If these is anything to draw it will.
 }
 
-
 /* $Log$
-/* Revision 1.4  1998/05/03 00:46:45  curt
-/* polar.h -> polar3d.h
+/* Revision 1.5  1998/05/11 18:13:10  curt
+/* Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
 /*
+ * Revision 1.4  1998/05/03 00:46:45  curt
+ * polar.h -> polar3d.h
+ *
  * Revision 1.3  1998/04/30 12:36:02  curt
  * C++-ifying a couple source files.
  *
@@ -139,7 +245,7 @@ void fgCockpitUpdate( void )
  * Added MetroWorks patches from Carmen Volpe.
  *
  * Revision 1.7  1998/01/27 00:47:51  curt
- * Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.
  *
  * Revision 1.6  1998/01/19 19:27:01  curt

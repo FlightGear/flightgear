@@ -35,19 +35,32 @@
 # error This library requires C++
 #endif                                   
 
+//typedef struct  {
+//	int code;
+//	Hptr hud;
+//	// As above.
+//	// PANEL *panel;
+//	int status;
+//}fgCOCKPIT, *pfgCockpit;
 
 // And in the future (near future i hope).
 // #include <Cockpit/panel.h>
+// Class fg_Cockpit          This class is a holder for the heads up display
+//                          and is initialized with a
+class fg_Cockpit  {
+  private:
+    int  Code;
+    int  Status;
 
-typedef struct  {
-	int code;
-	Hptr hud;
-	// As above.
-	// PANEL *panel;
-	int status;
-}fgCOCKPIT, *pfgCockpit;
+  public:
+    fg_Cockpit   () : Code(1), Status(0) {};
+    int   code  ( void ) { return Code; }
+    int   status( void ) { return Status; }
+};
 
-fgCOCKPIT *fgCockpitInit( fgAIRCRAFT *cur_aircraft );
+typedef fg_Cockpit * pCockpit;
+
+bool fgCockpitInit( fgAIRCRAFT *cur_aircraft );
 void fgCockpitUpdate( void );
 
 
@@ -55,9 +68,12 @@ void fgCockpitUpdate( void );
 
 
 /* $Log$
-/* Revision 1.1  1998/04/24 00:45:55  curt
-/* C++-ifing the code a bit.
+/* Revision 1.2  1998/05/11 18:13:10  curt
+/* Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
 /*
+ * Revision 1.1  1998/04/24 00:45:55  curt
+ * C++-ifing the code a bit.
+ *
  * Revision 1.8  1998/04/22 13:26:19  curt
  * C++ - ifing the code a bit.
  *

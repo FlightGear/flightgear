@@ -28,19 +28,45 @@
 #define _HUD_HXX
 
 
-#ifndef __cplusplus                                                          
+#ifndef __cplusplus
 # error This library requires C++
-#endif                                   
+#endif
 
 
+#include <config.h>
+
+
+#include <fg_typedefs.h>
+#include <fg_constants.h>
 #include <Aircraft/aircraft.h>
 #include <Flight/flight.h>
 #include <Controls/controls.h>
 
+//using namespace std;
+
+#include <deque.h>       // STL
+
+
+#ifndef WIN32
+
+  typedef struct {
+      int x, y;
+  } POINT;
+
+  typedef struct {
+      int top, bottom, left, right;
+  } RECT;
+
+#endif
+
+
 // View mode definitions
 
-enum VIEW_MODES { HUD_VIEW, PANEL_VIEW, CHASE_VIEW, TOWER_VIEW };
+enum VIEW_MODES{ HUD_VIEW, PANEL_VIEW, CHASE_VIEW, TOWER_VIEW };
 
+// DAY, NIGHT and brightness levels need to be visible where dialogs and
+// controls can be used to set intensity and appropriate color. This will
+// be moved.
 // Hud general constants
 #define DAY                1
 #define NIGHT              2
@@ -50,31 +76,14 @@ enum VIEW_MODES { HUD_VIEW, PANEL_VIEW, CHASE_VIEW, TOWER_VIEW };
 #define SIZE_SMALL         6
 #define SIZE_LARGE         7
 
-// Instrument types
-#define ARTIFICIAL_HORIZON	1
-#define SCALE              2
-#define LADDER             3
-#define LABEL              4
-
-// Scale constants
-#define HORIZONTAL         1
-#define TOP                2
-#define BOTTOM             3
-#define VERTICAL           4
-#define LEFT               5
-#define RIGHT              6
-#define LIMIT              7
-#define NOLIMIT            8
-#define ROUNDROB           9
-
 // Label constants
 #define SMALL              1
 #define LARGE              2
+
 #define BLINK              3
 #define NOBLINK            4
-#define LEFT_JUST          5
-#define CENTER_JUST        6
-#define RIGHT_JUST         7
+
+enum fgLabelJust{ LEFT_JUST, CENTER_JUST, RIGHT_JUST } ;
 
 // Ladder constants
 #define NONE               1
@@ -89,6 +98,12 @@ enum VIEW_MODES { HUD_VIEW, PANEL_VIEW, CHASE_VIEW, TOWER_VIEW };
 #define SOLID_LINES       10
 #define DASHED_LINES      11
 #define DASHED_NEG_LINES  12
+
+
+#define HORIZON_FIXED	1
+#define HORIZON_MOVING	2
+#define LABEL_COUNTER	1
+#define LABEL_WARNING	2
 
 // Ladder orientaion
 // #define HUD_VERTICAL        1
@@ -116,275 +131,316 @@ enum VIEW_MODES { HUD_VIEW, PANEL_VIEW, CHASE_VIEW, TOWER_VIEW };
 // #define HUD_INSTR_HORIZON	3
 // #define HUD_INSTR_LABEL		4
 
-// The following structs will become classes with a derivation from
-// an ABC instrument_pack. Eventually the instruments may well become
-// dll's. This would open the instrumentation issue to all commers.
-//
-// Methods Needed:
-//    Constructor()
-//    Initialization();  // For dynamic scenario settups?
-//    Update();          // Follow the data changes.
-//    Repaint();         // Respond to uncover/panel repaints.
-//    Break();           // Show a frown.
-//    Fix();             // Return to normal appearance and function.
-//    Night_Day();       // Illumination changes appearance/bitmaps.
-//
+extern double get_throttleval ( void );
+extern double get_aileronval  ( void );
+extern double get_elevatorval ( void );
+extern double get_elev_trimval( void );
+extern double get_rudderval   ( void );
+extern double get_speed       ( void );
+extern double get_aoa         ( void );
+extern double get_roll        ( void );
+extern double get_pitch       ( void );
+extern double get_heading     ( void );
+extern double get_altitude    ( void );
+extern double get_sideslip    ( void );
+extern double get_frame_rate  ( void );
 
-// CLO 2/21/98 - added to fix compile error
-typedef struct  {
-  int x;
-  int y;
-} FG_POINT;
-
-// CLO 2/21/98 - added to fix compile error
-typedef struct  {
-  int left;
-  int right;
-  int top;
-  int bottom;
-} FG_RECT;
-
-typedef struct  {
-       // Parametric defined members
-  int  type;
-  int  sub_type;
-  int  div_min;
-  int  div_max;
-  int  orientation;
-  int  minimum_value;
-  int  maximum_value;
-  int  width_units;
-  int  modulo;    // for compass, etc. Set to 0 for non_modulo scales.
-
-  double (*load_value)( void );
-
-  // Pre-calculated members.
-  int scr_span;
-  int mid_scr;
-  FG_RECT scrn_pos; // Screen rectangle for inicator
-                 //  Replaces previous parameters as:
-                 //  scr_pos -> left,bottom
-                 //  scr_max -> top, right
-                 //  scr_min -> left,bottom
-  double factor;
-  double half_width_units;
-}HUD_scale,  *pHUDscale;
-
-typedef struct  {
-	int type;
-  FG_RECT  position;
-	int div_min;
-	int div_max;
-	int orientation;
-	int label_position;
-	int width_units;
-  int  modulo;  // for compass, etc. Set to 0 for non_modulo scales.
-	double (*load_value)( void );
-}HUD_circular_scale, *pHUD_circscale;
-
-typedef struct  {
-	int type;
-  FG_POINT scrn_pos;
-	int scr_width;
-	int scr_height;
-	int scr_hole;
-	int div_units;
-	int label_position;
-	int width_units;
-	double (*load_roll)( void );
-	double (*load_pitch)( void );
-}HUD_ladder, *pHUDladder;
-
-typedef struct {
-	int scr_min;
-	int scr_max;
-	int div_min;
-	int div_max;
-	int orientation;
-	int label_position;
-	int width_units;
-	double (*load_value)( void );
-} HUD_circular_ladder, *pHUDcircladder;
-
-#define HORIZON_FIXED	1
-#define HORIZON_MOVING	2
-
-typedef struct{
-	int type;
-  FG_POINT scrn_pos;
-	int scr_width;
-	int scr_hole;
-	int tee_height;
-	double (*load_roll)( void );
-	double (*load_sideslip)( void );
-} HUD_horizon, *pHUDhorizon;
-
-typedef struct {
-  FG_POINT scrn_pos;
-  double(*load_value)(void);
-} HUD_control_surfaces, *pHUDControlSurfaces;
-
-typedef struct {
-  FG_POINT scrn_pos;    // ctrl_x, ctrl_y
-  int ctrl_length;
-  int orientation;
-  int alignment;
-  int min_value;
-  int max_value;
-  int width_units;
-  double (*load_value)(void);
-} HUD_control, *pHUDControl;
-#define LABEL_COUNTER	1
-#define LABEL_WARNING	2
-
-typedef struct {
-	int type;
-  FG_POINT scrn_pos;
-	int size;
-	int blink;
-	int justify;
-	char *pre_str;
-	char *post_str;
-	char *format;
-	double (*load_value)( void ); // pointer to routine to get the data
-} HUD_label, *pHUDlabel;
-
-// Removed union HUD_instr_data to evolve this to oop code.
-
-typedef enum{ HUDno_instr,
+enum  hudinstype{ HUDno_instr,
               HUDscale,
-              HUDcirc_scale,
+              HUDlabel,
               HUDladder,
               HUDcirc_ladder,
               HUDhorizon,
-              HUDlabel,
-              HUDcontrol_surfaces,
-              HUDcontrol
-              } hudinstype;
+              HUDguage,
+              HUDdual_inst,
+              HUDmoving_scale,
+              HUDtbi
+              };
 
-typedef struct HUD_INSTR_STRUCT{
-  hudinstype  type;
-  int sub_type;
-  int orientation;
-  void *instr;   // For now we will cast this pointer accoring to the value
-                 // of the type member.
-  struct HUD_INSTR_STRUCT *next;
-} HUD_instr, *HIptr;
+enum ReadOriented{ ReadRIGHT, ReadLEFT, ReadTOP, ReadBOTTOM };
 
-typedef struct  {
-	int code;
-	HIptr instruments;
-	int status;
-	int time_of_day;
-	int brightness;
-	int size; // possibly another name for this ? (michele)
-}HUD, *Hptr;
+class instr_item {  // An Abstract Base Class (ABC)
+  private:
+    static UINT      instances;     // More than 64K instruments? Nah!
+    UINT             handle;
+    RECT             scrn_pos;      // Framing - affects scale dimensions
+                                    // and orientation. Vert vs Horz, etc.
+    DBLFNPTR         load_value_fn;
+    ReadOriented     oriented;
+    bool             is_enabled;
+    bool             broken;
+    int              brightness;
+    UINT             scr_span;      // Working values for draw;
+    POINT            mid_span;      //
 
-Hptr fgHUDInit      ( fgAIRCRAFT *cur_aircraft );
+  public:
+    instr_item( RECT           scrn_pos,
+                DBLFNPTR       data_source,
+                ReadOriented   orient,
+                bool           working      = true);
 
-void fgHUDSetTimeMode( Hptr hud, int time_of_day );
-void fgHUDSetBrightness( Hptr hud, int brightness );
+    instr_item( const instr_item & image );
 
-Hptr fgHUDAddHorizon( Hptr hud,
-                      int x_pos,
-                      int y_pos,
-                      int length,
-                      int hole_len,
-                      int tee_height,
-                      double (*load_roll)( void ),
-                      double (*load_sideslip)( void ) );
+    instr_item & operator = ( const instr_item & rhs );
+    virtual ~instr_item ();
 
-Hptr fgHUDAddScale  ( Hptr hud,                    \
-                      int type,                    \
-                      int subtype,                 \
-                      int scr_pos,                 \
-                      int scr_min,                 \
-                      int scr_max,                 \
-                      int div_min,                 \
-                      int div_max,                 \
-                      int orientation,             \
-                      int min_value,               \
-                      int max_value,               \
-                      int width_units,             \
-                      int modulus,                 \
-                      double (*load_value)( void ) );
+    int          get_brightness  ( void ) { return brightness;}
+    RECT         get_location    ( void ) { return scrn_pos;  }
+    bool         is_broken       ( void ) { return broken;    }
+    bool         enabled         ( void ) { return is_enabled;}
+    double       get_value       ( void ) { return load_value_fn();}
+    UINT         get_span        ( void ) { return scr_span;  }
+    POINT        get_centroid    ( void ) { return mid_span;  }
+    ReadOriented get_orientation ( void ) { return oriented;  }
 
-Hptr fgHUDAddLabel  ( Hptr hud,                    \
-                      int x_pos,                   \
-                      int y_pos,                   \
-                      int size,                    \
-                      int blink,                   \
-                      int justify,                 \
-                      char *pre_str,               \
-                      char *post_str,              \
-                      char *format,                \
-                      double (*load_value)( void ) );
+    virtual void display_enable( bool working ) { is_enabled = !! working;}
 
-Hptr fgHUDAddLadder ( Hptr hud,                    \
-                      int x_pos,                   \
-                      int y_pos,                   \
-                      int scr_width,               \
-                      int scr_height,              \
-                      int hole_len,                \
-                      int div_units,               \
-                      int label_pos,               \
-                      int max_value,               \
-                      double (*load_roll)( void ), \
-                      double (*load_pitch)( void ) );
 
-Hptr fgHUDAddControlSurfaces( Hptr hud,                    \
-                              int x_pos,                   \
-                              int y_pos,                   \
-                              double (*load_value)( void) );
+    virtual void update( void );
+    virtual void break_display ( bool bad );
+    virtual void SetBrightness( int illumination_level ); // fgHUDSetBright...
+    UINT    get_Handle( void );
+    virtual void draw( void ) = 0;   // Required method in derived classes
+};
 
-Hptr fgHUDAddControl( Hptr hud,                    \
-                      int ctrl_x,                  \
-                      int ctrl_y,                  \
-                      int ctrl_length,             \
-                      int orientation,             \
-                      int alignment,               \
-                      int min_value,               \
-                      int max_value,               \
-                      int width_units,             \
-                      double (*load_value)( void) );
+typedef instr_item *HIptr;
+extern deque< instr_item *> HUD_deque;
+
+// instr_item           This class has no other purpose than to maintain
+//                      a linked list of instrument and derived class
+// object pointers.
+
+
+class instr_label : public instr_item {
+  private:
+    const char *pformat;
+    const char *pre_str;
+    const char *post_str;
+    fgLabelJust justify;
+    int         fontSize;
+    int         blink;
+
+  public:
+    instr_label( RECT         the_box,
+                 DBLFNPTR     data_source,
+                 const char  *label_format,
+                 const char  *pre_label_string    = 0,
+                 const char  *post_label_string   = 0,
+                 ReadOriented orientation         = ReadTOP,
+                 fgLabelJust  justification       = CENTER_JUST,
+                 int          font_size           = SMALL,
+                 int          blinking            = NOBLINK,
+                 bool         working             = true);
+
+    ~instr_label();
+
+    instr_label( const instr_label & image);
+    instr_label & operator = (const instr_label & rhs );
+
+    virtual void draw( void );       // Required method in base class
+};
+
+typedef instr_label * pInstlabel;
+
+//
+// instr_scale           This class is an abstract base class for both moving
+//                       scale and moving needle (fixed scale) indicators. It
+// does not draw itself, but is not instanciable.
+//
+
+class instr_scale : public instr_item {
+  private:
+    int    range_shown;   // Width Units.
+    int    Maximum_value; //                ceiling.
+    int    Minimum_value; // Representation floor.
+    UINT   Maj_div;       // major division marker units
+    UINT   Min_div;       // minor division marker units
+    UINT   Modulo;        // Roll over point
+    double scale_factor;  // factor => screen units/range values.
+
+  public:
+    instr_scale( RECT         the_box,
+                 DBLFNPTR     load_fn,
+                 ReadOriented orient,
+                 int          show_range,
+                 int          max_value,
+                 int          min_value    =   0,
+                 UINT         major_divs   =  10,
+                 UINT         minor_divs   =   5,
+                 UINT         rollover     =   0,
+                 bool         working      = true);
+
+    virtual ~instr_scale();
+    instr_scale( const instr_scale & image);
+    instr_scale & operator = (const instr_scale & rhs);
+
+    virtual void draw   ( void ) {}; // No-op here. Defined in derived classes.
+    UINT   div_min      ( void ) { return Min_div;}
+    UINT   div_max      ( void ) { return Maj_div;}
+    int    min_val      ( void ) { return Minimum_value;}
+    int    max_val      ( void ) { return Maximum_value;}
+    UINT   modulo       ( void ) { return Modulo; }
+    double factor       ( void ) { return scale_factor;}
+    double range_to_show( void ) { return range_shown;}
+};
+
+// moving_scale_instr      This class displays the indicated quantity on
+//                         a scale that moves past the pointer. It may be
+// horizontal or vertical, read above(left) or below(right) of the base
+// line.
+
+class moving_scale : public instr_scale {
+  private:
+    double val_span;
+    double half_width_units;
+
+  public:
+    moving_scale( RECT         box,
+                  DBLFNPTR     load_fn,
+                  ReadOriented readway,
+                  int          maxValue,
+                  int          minValue,
+                  UINT         major_divs,
+                  UINT         minor_divs,
+                  UINT         modulator,
+                  double       value_span,
+                  bool         working = true);
+
+    ~moving_scale();
+    moving_scale( const moving_scale & image);
+    moving_scale & operator = (const moving_scale & rhs );
+//    virtual void display_enable( bool setting );
+    virtual void draw( void );       // Required method in base class
+};
+
+typedef moving_scale * pMoveScale;
+
+class guage_instr : public instr_scale {
+  private:
+
+  public:
+    guage_instr( RECT         box,
+                 DBLFNPTR     load_fn,
+                 ReadOriented readway,
+                 int          maxValue,
+                 int          minValue,
+                 UINT         major_divs,
+                 UINT         minor_divs,
+                 UINT         modulus,
+                 bool         working = true);
+
+    ~guage_instr();
+    guage_instr( const guage_instr & image);
+    guage_instr & operator = (const guage_instr & rhs );
+    virtual void draw( void );       // Required method in base class
+};
+
+typedef guage_instr * pGuageInst;
+//
+// dual_instr_item         This class was created to form the base class
+//                         for both panel and HUD Turn Bank Indicators.
+
+class dual_instr_item : public instr_item {
+  private:
+    DBLFNPTR alt_data_source;
+
+  public:
+    dual_instr_item ( RECT         the_box,
+                      DBLFNPTR     chn1_source,
+                      DBLFNPTR     chn2_source,
+                      bool         working     = true,
+                      ReadOriented readway  = ReadTOP);
+
+    virtual ~dual_instr_item() {};
+    dual_instr_item( const dual_instr_item & image);
+    dual_instr_item & operator = (const dual_instr_item & rhs );
+
+    double current_ch1( void ) { return alt_data_source();}
+    double current_ch2( void ) { return get_value();}
+    virtual void draw ( void ) { }
+};
+
+class fgTBI_instr : public dual_instr_item {
+  private:
+    UINT BankLimit;
+    UINT SlewLimit;
+    UINT scr_hole;
+
+  public:
+    fgTBI_instr( RECT      the_box,
+                 DBLFNPTR  chn1_source  = get_roll,
+                 DBLFNPTR  chn2_source  = get_sideslip,
+                 UINT      maxBankAngle = 45,
+                 UINT      maxSlipAngle =  5,
+                 UINT      gap_width    =  5,
+                 bool      working      =  true);
+
+    fgTBI_instr( const fgTBI_instr & image);
+    fgTBI_instr & operator = (const fgTBI_instr & rhs );
+
+    ~fgTBI_instr();
+
+    UINT bank_limit( void ) { return BankLimit;}
+    UINT slew_limit( void ) { return SlewLimit;}
+
+    virtual void draw( void );       // Required method in base class
+};
+
+typedef fgTBI_instr * pTBI;
+
+class HudLadder : public dual_instr_item {
+  private:
+    UINT   width_units;
+    int    div_units;
+    UINT   minor_div;
+    UINT   label_pos;
+    UINT   scr_hole;
+    int    vmax;
+    int    vmin;
+    double factor;
+
+  public:
+    HudLadder( RECT      the_box,
+               DBLFNPTR  ptch_source    = get_roll,
+               DBLFNPTR  roll_source    = get_pitch,
+               UINT      span_units     = 45,
+               int       division_units = 10,
+               UINT      minor_division = 0,
+               UINT      screen_hole    = 70,
+               UINT      lbl_pos        = 0,
+               bool      working        = true );
+
+    ~HudLadder();
+
+    HudLadder( const HudLadder & image );
+    HudLadder & operator = ( const HudLadder & rhs );
+    virtual void draw( void );
+};
+
+
+//using namespace std;
+//deque <instr_item>  * Hdeque_ptr;
+
+extern int  fgHUDInit( fgAIRCRAFT * /* current_aircraft */ );
+extern void fgUpdateHUD( void );
 
 /*
-Hptr fgHUDAddLadder ( Hptr hud,
-                      int scr_min,
-                      int scr_max,
-                      int div_min,
-                      int div_max, \
-					            int orientation,
-                      int max_value,
-                      double *(load_value);
+bool AddHUDInstrument( instr_item *pBlackBox );
+void DrawHUD ( void );
+bool DamageInstrument( INSTR_HANDLE unit );
+bool RepairInstrument( INSTR_HANDLE unit );
 
-Hptr fgHUDAddCircularLadder( Hptr hud,
-                             int scr_min,
-                             int scr_max,
-                             int div_min,
-                             int div_max, \
-					                   int max_value,
-                             double *(load_value) );
-
-Hptr fgHUDAddNumDisp( Hptr hud,
-                      int x_pos,
-                      int y_pos,
-                      int size,
-                      int blink, \
-					            char *pre_str,
-                      char *post_str,
-                      double *(load_value) );
-*/
 
 void fgUpdateHUD ( Hptr hud );
 void fgUpdateHUD2( Hptr hud ); // Future use?
+void fgHUDSetTimeMode( Hptr hud, int time_of_day );
+*/
 
-
-#endif // _HUD_HXX
+#endif // _HUD_H
 
 /* $Log$
-/* Revision 1.1  1998/04/24 00:45:58  curt
-/* C++-ifing the code a bit.
+/* Revision 1.2  1998/05/11 18:13:12  curt
+/* Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
 /*
  * Revision 1.15  1998/02/23 19:07:57  curt
  * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
@@ -401,6 +457,9 @@ void fgUpdateHUD2( Hptr hud ); // Future use?
  * Incorporated some HUD tweaks from Michelle America.
  * Tweaked the sky's sunset/rise colors.
  * Other misc. tweaks.
+ *
+ * Revision 1.11  1998/02/16 13:38:42  curt
+ * Integrated changes from Charlie Hotchkiss.
  *
  * Revision 1.11  1998/02/16 13:38:42  curt
  * Integrated changes from Charlie Hotchkiss.
