@@ -53,7 +53,7 @@ public:
 
     FGHitList();
     ~FGHitList();
-	
+
     void init(void) { list.clear(); test_dist=DBL_MAX; }
     void clear(void) { init(); last = NULL; }
     void add( ssgEntity *ent, int idx, sgdVec3 point, sgdVec3 normal ) {

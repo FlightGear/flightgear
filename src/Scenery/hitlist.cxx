@@ -499,61 +499,61 @@ static void ssgGetCurrentBSphere( ssgEntity *entity, sgVec3 center, float *radiu
 // Determine scenery altitude via ssg.
 // returned results are in meters
 bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
-					FGHitList *hit_list,
-					double *terrain_elev, double *radius, double *normal)
+                    FGHitList *hit_list,
+                    double *terrain_elev, double *radius, double *normal)
 {
-	sgdVec3 view_pos;
-	sgdSubVec3( view_pos, abs_view_pos, scenery_center );
+    sgdVec3 view_pos;
+    sgdSubVec3( view_pos, abs_view_pos, scenery_center );
 
-	sgdVec3 orig, dir;
-	sgdCopyVec3(orig, view_pos );
-	sgdCopyVec3(dir, abs_view_pos );
+    sgdVec3 orig, dir;
+    sgdCopyVec3(orig, view_pos );
+    sgdCopyVec3(dir, abs_view_pos );
 
-	// !! why is terrain not globals->get_terrain()
-	hit_list->Intersect( terrain_branch, orig, dir );
+    // !! why is terrain not globals->get_terrain()
+    hit_list->Intersect( terrain_branch, orig, dir );
 
-	int this_hit=0;
-	Point3D geoc;
-	double result = -9999;
-	Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
+    int this_hit=0;
+    Point3D geoc;
+    double result = -9999;
+    Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
 
-	// cout << "hits = ";
-	int hitcount = hit_list->num_hits();
-	for ( int i = 0; i < hitcount; ++i ) {
-		geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );
-		double lat_geod, alt, sea_level_r;
-		sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod,
-					 &alt, &sea_level_r);
-		// cout << alt << " ";
-		if ( alt > result && alt < 10000 ) {
-			result = alt;
-			this_hit = i;
-		}
-	}
-	// cout << endl;
+    // cout << "hits = ";
+    int hitcount = hit_list->num_hits();
+    for ( int i = 0; i < hitcount; ++i ) {
+        geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );
+        double lat_geod, alt, sea_level_r;
+        sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod,
+                     &alt, &sea_level_r);
+        // cout << alt << " ";
+        if ( alt > result && alt < 10000 ) {
+            result = alt;
+            this_hit = i;
+        }
+    }
+    // cout << endl;
 
-	if ( result > -9000 ) {
-		*terrain_elev = result;
-		*radius = geoc.radius();
-		sgVec3 tmp;
-		sgMat4 TMP;
-		sgSetVec3(tmp, hit_list->get_normal(this_hit));
-		// cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "
-		//      << tmp[2] << endl;
-		sgTransposeNegateMat4 ( TMP, globals->get_current_view()->get_UP() ) ;
-		sgXformVec3(tmp, tmp, TMP);
-		// cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
-		sgdSetVec3( normal, tmp[2], tmp[1], tmp[0] );
-		/* ssgState *IntersectedLeafState =
-        ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
-		return true;
-	} else {
-		SG_LOG( SG_TERRAIN, SG_INFO, "no terrain intersection" );
-		*terrain_elev = 0.0;
-		float *up = globals->get_current_view()->get_world_up();
-		sgdSetVec3(normal, up[0], up[1], up[2]);
-		return false;
-	}
+    if ( result > -9000 ) {
+        *terrain_elev = result;
+        *radius = geoc.radius();
+        sgVec3 tmp;
+        sgMat4 TMP;
+        sgSetVec3(tmp, hit_list->get_normal(this_hit));
+        // cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "
+        //      << tmp[2] << endl;
+        sgTransposeNegateMat4 ( TMP, globals->get_current_view()->get_UP() ) ;
+        sgXformVec3(tmp, tmp, TMP);
+        // cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
+        sgdSetVec3( normal, tmp[2], tmp[1], tmp[0] );
+        /* ssgState *IntersectedLeafState =
+              ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
+        return true;
+    } else {
+        SG_LOG( SG_TERRAIN, SG_INFO, "no terrain intersection" );
+        *terrain_elev = 0.0;
+        float *up = globals->get_current_view()->get_world_up();
+        sgdSetVec3(normal, up[0], up[1], up[2]);
+        return false;
+    }
 }
 
 
@@ -561,60 +561,60 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
 // Determine scenery altitude via ssg.
 // returned results are in meters
 bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
-					ssgTransform *terra_transform,
-					FGHitList *hit_list,
-					double *terrain_elev, double *radius, double *normal)
+                    ssgTransform *terra_transform,
+                    FGHitList *hit_list,
+                    double *terrain_elev, double *radius, double *normal)
 {
-	sgdVec3 view_pos;
-	sgdSubVec3( view_pos, abs_view_pos, scenery_center );
+    sgdVec3 view_pos;
+    sgdSubVec3( view_pos, abs_view_pos, scenery_center );
 
-	sgdVec3 orig, dir;
-	sgdCopyVec3(orig, view_pos );
+    sgdVec3 orig, dir;
+    sgdCopyVec3(orig, view_pos );
 
-	sgdCopyVec3(dir, abs_view_pos );
-	sgdNormalizeVec3(dir);
+    sgdCopyVec3(dir, abs_view_pos );
+    sgdNormalizeVec3(dir);
 
-	sgMat4 fxform;
-	sgMakeIdentMat4 ( fxform ) ;
-	ssgGetEntityTransform( terra_transform, fxform );
+    sgMat4 fxform;
+    sgMakeIdentMat4 ( fxform ) ;
+    ssgGetEntityTransform( terra_transform, fxform );
 
-	sgdMat4 xform;
-	sgdSetMat4(xform,fxform);
-	hit_list->Intersect( terra_transform, xform, orig, dir );
+    sgdMat4 xform;
+    sgdSetMat4(xform,fxform);
+    hit_list->Intersect( terra_transform, xform, orig, dir );
 
-	int this_hit=0;
-	Point3D geoc;
-	double result = -9999;
-	Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
+    int this_hit=0;
+    Point3D geoc;
+    double result = -9999;
+    Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
 
-	int hitcount = hit_list->num_hits();
-	for ( int i = 0; i < hitcount; ++i ) {
-		geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );
-		double lat_geod, alt, sea_level_r;
-		sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod,
-					 &alt, &sea_level_r);
-		if ( alt > result && alt < 20000 ) {
-			result = alt;
-			this_hit = i;
-		}
-	}
+    int hitcount = hit_list->num_hits();
+    for ( int i = 0; i < hitcount; ++i ) {
+        geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );
+        double lat_geod, alt, sea_level_r;
+        sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod,
+                     &alt, &sea_level_r);
+        if ( alt > result && alt < 20000 ) {
+            result = alt;
+            this_hit = i;
+        }
+    }
 
-	if ( result > -9000 ) {
-		*terrain_elev = result;
-		*radius = geoc.radius();
-		sgVec3 tmp;
-		sgMat4 TMP;
-		sgSetVec3(tmp, hit_list->get_normal(this_hit));
-		sgTransposeNegateMat4 ( TMP, globals->get_current_view()->get_UP() ) ;
-		sgXformVec3(tmp, tmp, TMP);
-		sgdSetVec3( normal, tmp[2], tmp[1], tmp[0] );
-		/* ssgState *IntersectedLeafState =
-        ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
-		return true;
-	} else {
-		SG_LOG( SG_TERRAIN, SG_DEBUG, "DOING FULL TERRAIN INTERSECTION" );
-		return fgCurrentElev( abs_view_pos, scenery_center, hit_list,
-							  terrain_elev,radius,normal);
-	}
+    if ( result > -9000 ) {
+        *terrain_elev = result;
+        *radius = geoc.radius();
+        sgVec3 tmp;
+        sgMat4 TMP;
+        sgSetVec3(tmp, hit_list->get_normal(this_hit));
+        sgTransposeNegateMat4 ( TMP, globals->get_current_view()->get_UP() ) ;
+        sgXformVec3(tmp, tmp, TMP);
+        sgdSetVec3( normal, tmp[2], tmp[1], tmp[0] );
+        /* ssgState *IntersectedLeafState =
+              ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
+        return true;
+    } else {
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "DOING FULL TERRAIN INTERSECTION" );
+        return fgCurrentElev( abs_view_pos, scenery_center, hit_list,
+                              terrain_elev,radius,normal);
+    }
 }
 
