@@ -378,9 +378,9 @@ FGNavCom::update(double dt)
             double dist = sgdClosestPointToLineDistSquared( p, p0,
                                                             gs_base_vec );
             nav_gs_dist = sqrt( dist );
-            // cout << nav_gs_dist;
+            // cout << "nav_gs_dist = " << nav_gs_dist << endl;
 
-            // Point3D tmp( nav_gs_x, nav_gs_y, nav_gs_z );
+            Point3D tmp( nav_gs_x, nav_gs_y, nav_gs_z );
             // cout << " (" << aircraft.distance3D( tmp ) << ")" << endl;
 
             // wgs84 heading to glide slope (to determine sign of distance)
@@ -619,6 +619,14 @@ void FGNavCom::search()
 	nav_valid = true;
 	if ( last_nav_id != nav_id || last_nav_vor ) {
 	    nav_trans_ident = loc->get_trans_ident();
+	    nav_target_radial = loc->get_multiuse();
+	    while ( nav_target_radial <   0.0 ) { nav_target_radial += 360.0; }
+	    while ( nav_target_radial > 360.0 ) { nav_target_radial -= 360.0; }
+	    nav_loclon = loc->get_lon();
+	    nav_loclat = loc->get_lat();
+	    nav_x = loc->get_x();
+	    nav_y = loc->get_y();
+	    nav_z = loc->get_z();
 	    last_nav_id = nav_id;
 	    last_nav_vor = false;
 	    nav_loc = true;
@@ -634,11 +642,14 @@ void FGNavCom::search()
                 nav_gs_y = gs->get_y();
                 nav_gs_z = gs->get_z();
 
-                // derive GS baseline
+                // derive GS baseline (perpendicular to the runay
+                // along the ground)
                 double tlon, tlat, taz;
                 geo_direct_wgs_84 ( 0.0, nav_gslat, nav_gslon,
                                     nav_target_radial + 90,  
                                     100.0, &tlat, &tlon, &taz );
+                // cout << "nav_target_radial = " << nav_target_radial << endl;
+                // cout << "nav_loc = " << nav_loc << endl;
                 // cout << nav_gslon << "," << nav_gslat << "  "
                 //      << tlon << "," << tlat << "  (" << nav_elev << ")"
                 //      << endl;
@@ -656,17 +667,9 @@ void FGNavCom::search()
             } else {
                 nav_elev = loc->get_elev_ft();
             }
-	    nav_loclon = loc->get_lon();
-	    nav_loclat = loc->get_lat();
 	    nav_twist = 0;
 	    nav_range = FG_LOC_DEFAULT_RANGE;
 	    nav_effective_range = nav_range;
-	    nav_target_radial = loc->get_multiuse();
-	    while ( nav_target_radial <   0.0 ) { nav_target_radial += 360.0; }
-	    while ( nav_target_radial > 360.0 ) { nav_target_radial -= 360.0; }
-	    nav_x = loc->get_x();
-	    nav_y = loc->get_y();
-	    nav_z = loc->get_z();
 
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
