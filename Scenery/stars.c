@@ -153,9 +153,9 @@ void fgStarsInit() {
 
 		xglColor3f( magnitude, magnitude, magnitude );
 		/*xglColor3f(0,0,0);*/
-		xglVertex3f( 190000.0 * cos(right_ascension) * cos(declination),
-			     190000.0 * sin(right_ascension) * cos(declination),
-			     190000.0 * sin(declination) );
+		xglVertex3f( 50000.0 * cos(right_ascension) * cos(declination),
+			     50000.0 * sin(right_ascension) * cos(declination),
+			     50000.0 * sin(declination) );
 		
 		count++;
 	    } /* if valid line */
@@ -172,47 +172,47 @@ void fgStarsInit() {
 		   pltPos.RightAscension, pltPos.Declination);
 	    /* give the planets a temporary color, for testing purposes */
 	    xglColor3f( 1.0, 0.0, 0.0);
-	    xglVertex3f( 190000.0 * cos(pltPos.RightAscension) * 
+	    xglVertex3f( 50000.0 * cos(pltPos.RightAscension) * 
 			 cos(pltPos.Declination),
-			 190000.0 * sin(pltPos.RightAscension) * 
+			 50000.0 * sin(pltPos.RightAscension) * 
 			 cos(pltPos.Declination),
-			 190000.0 * sin(pltPos.Declination) );
+			 50000.0 * sin(pltPos.Declination) );
 	}
 	xglEnd();
 
 	/*
 	xglBegin(GL_LINE_LOOP);
         xglColor3f(1.0, 0.0, 0.0);
-	xglVertex3f( 190000.0 * cos(ra_save-0.2) * cos(decl_save-0.2),
-		    190000.0 * sin(ra_save-0.2) * cos(decl_save-0.2),
-		    190000.0 * sin(decl_save-0.2) );
-	xglVertex3f( 190000.0 * cos(ra_save+0.2) * cos(decl_save-0.2),
-		    190000.0 * sin(ra_save+0.2) * cos(decl_save-0.2),
-		    190000.0 * sin(decl_save-0.2) );
- 	xglVertex3f( 190000.0 * cos(ra_save+0.2) * cos(decl_save+0.2),
-		    190000.0 * sin(ra_save+0.2) * cos(decl_save+0.2),
-		    190000.0 * sin(decl_save+0.2) );
- 	xglVertex3f( 190000.0 * cos(ra_save-0.2) * cos(decl_save+0.2),
-		    190000.0 * sin(ra_save-0.2) * cos(decl_save+0.2),
-		    190000.0 * sin(decl_save+0.2) );
+	xglVertex3f( 50000.0 * cos(ra_save-0.2) * cos(decl_save-0.2),
+		    50000.0 * sin(ra_save-0.2) * cos(decl_save-0.2),
+		    50000.0 * sin(decl_save-0.2) );
+	xglVertex3f( 50000.0 * cos(ra_save+0.2) * cos(decl_save-0.2),
+		    50000.0 * sin(ra_save+0.2) * cos(decl_save-0.2),
+		    50000.0 * sin(decl_save-0.2) );
+ 	xglVertex3f( 50000.0 * cos(ra_save+0.2) * cos(decl_save+0.2),
+		    50000.0 * sin(ra_save+0.2) * cos(decl_save+0.2),
+		    50000.0 * sin(decl_save+0.2) );
+ 	xglVertex3f( 50000.0 * cos(ra_save-0.2) * cos(decl_save+0.2),
+		    50000.0 * sin(ra_save-0.2) * cos(decl_save+0.2),
+		    50000.0 * sin(decl_save+0.2) );
 	xglEnd();
 	*/
 
 	/*
 	xglBegin(GL_LINE_LOOP);
         xglColor3f(0.0, 1.0, 0.0);
-	xglVertex3f( 190000.0 * cos(ra_save1-0.2) * cos(decl_save1-0.2),
-		    190000.0 * sin(ra_save1-0.2) * cos(decl_save1-0.2),
-		    190000.0 * sin(decl_save1-0.2) );
-	xglVertex3f( 190000.0 * cos(ra_save1+0.2) * cos(decl_save1-0.2),
-		    190000.0 * sin(ra_save1+0.2) * cos(decl_save1-0.2),
-		    190000.0 * sin(decl_save1-0.2) );
- 	xglVertex3f( 190000.0 * cos(ra_save1+0.2) * cos(decl_save1+0.2),
-		    190000.0 * sin(ra_save1+0.2) * cos(decl_save1+0.2),
-		    190000.0 * sin(decl_save1+0.2) );
- 	xglVertex3f( 190000.0 * cos(ra_save1-0.2) * cos(decl_save1+0.2),
-		    190000.0 * sin(ra_save1-0.2) * cos(decl_save1+0.2),
-		    190000.0 * sin(decl_save1+0.2) );
+	xglVertex3f( 50000.0 * cos(ra_save1-0.2) * cos(decl_save1-0.2),
+		    50000.0 * sin(ra_save1-0.2) * cos(decl_save1-0.2),
+		    50000.0 * sin(decl_save1-0.2) );
+	xglVertex3f( 50000.0 * cos(ra_save1+0.2) * cos(decl_save1-0.2),
+		    50000.0 * sin(ra_save1+0.2) * cos(decl_save1-0.2),
+		    50000.0 * sin(decl_save1-0.2) );
+ 	xglVertex3f( 50000.0 * cos(ra_save1+0.2) * cos(decl_save1+0.2),
+		    50000.0 * sin(ra_save1+0.2) * cos(decl_save1+0.2),
+		    50000.0 * sin(decl_save1+0.2) );
+ 	xglVertex3f( 50000.0 * cos(ra_save1-0.2) * cos(decl_save1+0.2),
+		    50000.0 * sin(ra_save1-0.2) * cos(decl_save1+0.2),
+		    50000.0 * sin(decl_save1+0.2) );
 	xglEnd();
 	*/
        
@@ -265,10 +265,13 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.20  1997/12/15 23:55:03  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.21  1997/12/19 23:35:00  curt
+/* Lot's of tweaking with sky rendering and lighting.
 /*
+ * Revision 1.20  1997/12/15 23:55:03  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.19  1997/12/12  19:53:00  curt
  * Working on lightling and material properties.
  *

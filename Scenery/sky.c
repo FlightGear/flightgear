@@ -52,34 +52,32 @@
 */
 
 /* in meters of course */
+#define CENTER_ELEV   25000.0
 #define INNER_RADIUS  50000.0
 #define INNER_ELEV    20000.0
 #define MIDDLE_RADIUS 70000.0
-#define MIDDLE_ELEV    4000.0
+#define MIDDLE_ELEV    8000.0
 #define OUTER_RADIUS  80000.0
 #define OUTER_ELEV        0.0
 
 
-static float sky_center[12][3];
+static float sky_inner[12][3];
 static float sky_middle[12][3];
 static float sky_outer[12][3];
 
-/* (Re)generate the display list */
+/* Calculate the sky structure verticies */
 void fgSkyInit() {
-    struct fgLIGHT *l;
     float theta;
     int i;
-
-    l = &cur_light_params;
 
     printf("Generating the sky dome vertices.\n");
 
     for ( i = 0; i < 12; i++ ) {
 	theta = (i * 30.0) * DEG_TO_RAD;
 	
-	sky_center[i][0] = cos(theta) * INNER_RADIUS;
-	sky_center[i][1] = sin(theta) * INNER_RADIUS;
-	sky_center[i][2] = INNER_ELEV;
+	sky_inner[i][0] = cos(theta) * INNER_RADIUS;
+	sky_inner[i][1] = sin(theta) * INNER_RADIUS;
+	sky_inner[i][2] = INNER_ELEV;
 	
 	printf(" %.2f %.2f\n", cos(theta) * INNER_RADIUS, 
 	       sin(theta) * INNER_RADIUS);
@@ -99,13 +97,31 @@ void fgSkyInit() {
 /* Draw the Sky */
 void fgSkyRender() {
     struct fgFLIGHT *f;
+    struct fgLIGHT *l;
     struct fgVIEW *v;
+    float inner_color[4], middle_color[4], diff;
     int i;
 
     f = &current_aircraft.flight;
+    l = &cur_light_params;
     v = &current_view;
 
     printf("Rendering the sky.\n");
+
+    /*
+    l->fog_color[0] = 1.0;
+    l->fog_color[1] = 0.0;
+    l->fog_color[2] = 0.0;
+    l->fog_color[3] = 1.0;
+    */
+
+    /* calculate transition colors between sky and fog */
+    for ( i = 0; i < 3; i++ ) {
+	diff = l->sky_color[i] - l->fog_color[i];
+	inner_color[i] = l->sky_color[i] - diff * 0.3;
+	middle_color[i] = l->sky_color[i] - diff * 1.0;
+    }
+    inner_color[3] = middle_color[3] = l->sky_color[3];
 
     xglPushMatrix();
 
@@ -120,37 +136,42 @@ void fgSkyRender() {
     xglRotatef( FG_Longitude * RAD_TO_DEG, 0.0, 0.0, 1.0 );
     xglRotatef( 90.0 - FG_Latitude * RAD_TO_DEG, 0.0, 1.0, 0.0 );
 
-    /* xglMaterialfv(GL_FRONT, GL_AMBIENT, l->scene_clear);
-       xglMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color); */
-
     /* Draw inner/center section of sky*/
     xglBegin( GL_TRIANGLE_FAN );
-    xglColor4f(0.0, 0.0, 1.0, 1.0);
-    xglVertex3f(0.0, 0.0, INNER_ELEV);
-    xglColor4f(0.2, 0.2, 0.8, 1.0);
+    xglColor4fv(l->sky_color);
+    xglVertex3f(0.0, 0.0, CENTER_ELEV);
+    xglColor4fv( inner_color );
     for ( i = 0; i < 12; i++ ) {
-	xglVertex3fv( sky_center[i] );
+	xglVertex3fv( sky_inner[i] );
     }
-    xglVertex3fv( sky_center[0] );
+    xglVertex3fv( sky_inner[0] );
     xglEnd();
 
     /* Draw the middle ring */
     xglBegin( GL_TRIANGLE_STRIP );
     for ( i = 0; i < 12; i++ ) {
+	xglColor4fv( middle_color );
 	xglVertex3fv( sky_middle[i] );
-	xglVertex3fv( sky_center[i] );
+	xglColor4fv( inner_color );
+	xglVertex3fv( sky_inner[i] );
     }
+    xglColor4fv( middle_color );
     xglVertex3fv( sky_middle[0] );
-    xglVertex3fv( sky_center[0] );
+    xglColor4fv( inner_color );
+    xglVertex3fv( sky_inner[0] );
     xglEnd();
 
     /* Draw the outer ring */
     xglBegin( GL_TRIANGLE_STRIP );
     for ( i = 0; i < 12; i++ ) {
+	xglColor4fv( l->fog_color );
 	xglVertex3fv( sky_outer[i] );
+	xglColor4fv( middle_color );
 	xglVertex3fv( sky_middle[i] );
     }
+    xglColor4fv( l->fog_color );
     xglVertex3fv( sky_outer[0] );
+    xglColor4fv( middle_color );
     xglVertex3fv( sky_middle[0] );
     xglEnd();
 
@@ -159,9 +180,12 @@ void fgSkyRender() {
 
 
 /* $Log$
-/* Revision 1.4  1997/12/19 16:45:02  curt
-/* Working on scene rendering order and options.
+/* Revision 1.5  1997/12/19 23:34:59  curt
+/* Lot's of tweaking with sky rendering and lighting.
 /*
+ * Revision 1.4  1997/12/19 16:45:02  curt
+ * Working on scene rendering order and options.
+ *
  * Revision 1.3  1997/12/18 23:32:36  curt
  * First stab at sky dome actually starting to look reasonable. :-)
  *

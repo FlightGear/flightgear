@@ -268,24 +268,17 @@ void fgMoonInit() {
 /* Draw the moon */
 void fgMoonRender() {
     struct fgLIGHT *l;
-    GLfloat moon_color[4] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
     l = &cur_light_params;
 
-    /* set lighting parameters */
-    xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_clear );
-    xglLightfv(GL_LIGHT0, GL_DIFFUSE, moon_color );
-
-    xglMaterialfv(GL_FRONT, GL_AMBIENT, l->scene_clear );
-    xglMaterialfv(GL_FRONT, GL_AMBIENT, moon_color );
-    xglMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color);
+    xglMaterialfv(GL_FRONT, GL_AMBIENT, l->sky_color );
+    xglMaterialfv(GL_FRONT, GL_DIFFUSE, white);
 
     xglPushMatrix();
     xglTranslatef(xMoon, yMoon, zMoon);
     xglScalef(1400, 1400, 1400);
 
-    xglColor3fv(moon_color);
-    /* glutSolidSphere(1.0, 25, 25); */
     xglCallList(moon);
 
     xglPopMatrix();

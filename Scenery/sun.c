@@ -169,10 +169,8 @@ void fgSunRender() {
     xglTranslatef(xSun, ySun, zSun);
     xglScalef(1400, 1400, 1400);
 
-    xglColor3f(0.85, 0.65, 0.05);
+    xglColor4f(0.85, 0.65, 0.05, 1.0);
 
-    /* xglColor3fv( color ); */
-    /* xglutSolidSphere(1.0, 25, 25); */
     xglCallList(sun_obj);
 
     xglPopMatrix();
@@ -182,9 +180,12 @@ void fgSunRender() {
 
 
 /* $Log$
-/* Revision 1.7  1997/12/17 23:12:16  curt
-/* Fixed so moon and sun display lists aren't recreate periodically.
+/* Revision 1.8  1997/12/19 23:35:00  curt
+/* Lot's of tweaking with sky rendering and lighting.
 /*
+ * Revision 1.7  1997/12/17 23:12:16  curt
+ * Fixed so moon and sun display lists aren't recreate periodically.
+ *
  * Revision 1.6  1997/12/15 23:55:04  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

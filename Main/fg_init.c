@@ -185,13 +185,13 @@ void fgInitSubsystems( void ) {
     fgSolarSystemInit(*t);
 
     /* Initialize the Stars subsystem */
-    fgStarsInit();             
+    fgStarsInit();
 
     /* Initialize the sun's position */
-    fgSunInit();       
+    fgSunInit();
 
     /* Intialize the moon's position */
-    fgMoonInit(); 
+    fgMoonInit();
 
     /* Initialize the "sky" */
     fgSkyInit();
@@ -202,7 +202,6 @@ void fgInitSubsystems( void ) {
     /* Tell the Scenery Management system where we are so it can load
      * the correct scenery data */
     fgSceneryUpdate(FG_Latitude, FG_Longitude, FG_Altitude);
-
 
     /* I'm just sticking this here for now, it should probably move 
      * eventually */
@@ -235,9 +234,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.21  1997/12/19 16:45:00  curt
-/* Working on scene rendering order and options.
+/* Revision 1.22  1997/12/19 23:34:05  curt
+/* Lot's of tweaking with sky rendering and lighting.
 /*
+ * Revision 1.21  1997/12/19 16:45:00  curt
+ * Working on scene rendering order and options.
+ *
  * Revision 1.20  1997/12/18 23:32:33  curt
  * First stab at sky dome actually starting to look reasonable. :-)
  *

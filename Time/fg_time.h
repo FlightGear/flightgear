@@ -74,8 +74,8 @@ struct fgLIGHT {
     /* Derived lighting values */
     GLfloat scene_ambient[3];           /* ambient component */
     GLfloat scene_diffuse[3];           /* diffuse component */
-    GLfloat scene_fog[4];               /* fog color */
-    GLfloat scene_clear[4];             /* clear screen color */
+    GLfloat fog_color[4];               /* fog color */
+    GLfloat sky_color[4];               /* clear screen color */
 };
 
 extern struct fgLIGHT cur_light_params;
@@ -92,10 +92,13 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t);
 
 
 /* $Log$
-/* Revision 1.10  1997/12/15 23:55:07  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.11  1997/12/19 23:35:07  curt
+/* Lot's of tweaking with sky rendering and lighting.
 /*
+ * Revision 1.10  1997/12/15 23:55:07  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.9  1997/12/10 22:37:55  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

@@ -63,9 +63,6 @@ struct fgGENERAL general;
 /* view parameters */
 static GLfloat win_ratio = 1.0;
 
-/* fog color */
-static GLfloat fgFogColor[4] =   {0.65, 0.65, 0.85, 1.0};
-
 /* temporary hack */
 /* pointer to scenery structure */
 /* static GLint scenery, runway; */
@@ -103,18 +100,11 @@ static void fgInitVisuals() {
     xglEnable( GL_LIGHT0 );
     xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
-    xglShadeModel( GL_FLAT ); /* xglShadeModel( GL_SMOOTH ); */
-
-    xglEnable( GL_FOG );
     xglFogi (GL_FOG_MODE, GL_LINEAR);
     /* xglFogf (GL_FOG_START, 1.0); */
     xglFogf (GL_FOG_END, w->visibility);
-    xglFogfv (GL_FOG_COLOR, fgFogColor);
     /* xglFogf (GL_FOG_DENSITY, w->visibility); */
     /* xglHint (GL_FOG_HINT, GL_FASTEST); */
-
-    /* initial screen color */
-    xglClearColor(0.0, 0.0, 0.0, 1.0);
 }
 
 
@@ -131,8 +121,12 @@ static void fgUpdateViewParams() {
     double x_2, x_4, x_8, x_10;
     double light, ambient, diffuse, sky_brightness;
     /* if the 4th field is 0.0, this specifies a direction ... */
-    /* clear color (sky) */
-    GLfloat sky_color[4] = {0.60, 0.60, 0.90, 1.0};
+    /* base sky color */
+    GLfloat base_sky_color[4] =        {0.60, 0.60, 0.90, 1.0};
+    /* base fog color */
+    /* GLfloat base_fog_color[4] = {0.70, 0.70, 0.70, 1.0}; */
+     GLfloat base_fog_color[4] = {1.00, 0.00, 0.00, 1.0};
+
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
     f = &current_aircraft.flight;
@@ -145,7 +139,7 @@ static void fgUpdateViewParams() {
     /* Tell GL we are about to modify the projection parameters */
     xglMatrixMode(GL_PROJECTION);
     xglLoadIdentity();
-    gluPerspective(55.0, 1.0/win_ratio, 1.0, 200000.0);
+    gluPerspective(55.0, 1.0/win_ratio, 1.0, 100000.0);
 
     xglMatrixMode(GL_MODELVIEW);
     xglLoadIdentity();
@@ -162,7 +156,7 @@ static void fgUpdateViewParams() {
 
     /* calculate lighting parameters based on sun's relative angle to
      * local up */
-    /* ya kind'a have to plot this to see the magic */
+    /* ya kind'a have to plot this to see how it works */
 
     /* x = t->sun_angle^8 */
     x_2 = l->sun_angle * l->sun_angle;
@@ -181,7 +175,7 @@ static void fgUpdateViewParams() {
     if ( ambient < 0.1 ) { ambient = 0.1; }
     if ( diffuse < 0.0 ) { diffuse = 0.0; }
 
-    if ( sky_brightness < 0.0 ) { sky_brightness = 0.0; }
+    if ( sky_brightness < 0.1 ) { sky_brightness = 0.1; }
 
     l->scene_ambient[0] = white[0] * ambient;
     l->scene_ambient[1] = white[1] * ambient;
@@ -191,25 +185,17 @@ static void fgUpdateViewParams() {
     l->scene_diffuse[1] = white[1] * diffuse;
     l->scene_diffuse[2] = white[2] * diffuse;
 
-    /* set lighting parameters */
-    xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
-    xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
-
     /* set fog color */
-    l->scene_fog[0] = fgFogColor[0] * (ambient + diffuse);
-    l->scene_fog[1] = fgFogColor[1] * (ambient + diffuse);
-    l->scene_fog[2] = fgFogColor[2] * (ambient + diffuse);
-    l->scene_fog[3] = fgFogColor[3];
-    xglFogfv (GL_FOG_COLOR, l->scene_fog);
+    l->fog_color[0] = base_fog_color[0] * (ambient + diffuse);
+    l->fog_color[1] = base_fog_color[1] * (ambient + diffuse);
+    l->fog_color[2] = base_fog_color[2] * (ambient + diffuse);
+    l->fog_color[3] = base_fog_color[3];
 
     /* set sky color */
-    l->scene_clear[0] = sky_color[0] * sky_brightness;
-    l->scene_clear[1] = sky_color[1] * sky_brightness;
-    l->scene_clear[2] = sky_color[2] * sky_brightness;
-    l->scene_clear[3] = sky_color[3];
-
-    xglClearColor(l->scene_clear[0], l->scene_clear[1], 
-		  l->scene_clear[2], l->scene_clear[3]);
+    l->sky_color[0] = base_sky_color[0] * sky_brightness;
+    l->sky_color[1] = base_sky_color[1] * sky_brightness;
+    l->sky_color[2] = base_sky_color[2] * sky_brightness;
+    l->sky_color[3] = base_sky_color[3];
 }
 
 
@@ -218,11 +204,14 @@ static void fgUpdateViewParams() {
  **************************************************************************/
 
 static void fgUpdateVisuals( void ) {
+    struct fgLIGHT *l;
     struct fgTIME *t;
     struct fgVIEW *v;
     double angle;
     static double lastAstroUpdate = 0;
+    GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
+    l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
 
@@ -239,6 +228,7 @@ static void fgUpdateVisuals( void ) {
     xglDisable( GL_DEPTH_TEST );
     xglDisable( GL_LIGHTING );
     xglDisable( GL_CULL_FACE );
+    xglDisable( GL_FOG );
     xglShadeModel( GL_SMOOTH );
     fgSkyRender();
 
@@ -259,7 +249,6 @@ static void fgUpdateVisuals( void ) {
     xglRotatef( angle, 0.0, 0.0, -1.0 );
 
     /* draw stars and planets */
-    xglDisable( GL_FOG );
     fgStarsRender();
 
     /* draw the sun */
@@ -267,6 +256,9 @@ static void fgUpdateVisuals( void ) {
 
     /* render the moon */
     xglEnable( GL_LIGHTING );
+    /* set lighting parameters */
+    xglLightfv(GL_LIGHT0, GL_AMBIENT, white );
+    xglLightfv(GL_LIGHT0, GL_DIFFUSE, white );
     xglEnable( GL_CULL_FACE );
     fgMoonRender();
 
@@ -276,6 +268,10 @@ static void fgUpdateVisuals( void ) {
     xglShadeModel( GL_FLAT ); 
     xglEnable( GL_DEPTH_TEST );
     xglEnable( GL_FOG );
+    xglFogfv (GL_FOG_COLOR, l->fog_color);
+    /* set lighting parameters */
+    xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
+    xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
     fgSceneryRender();
 
     /* display HUD */
@@ -611,9 +607,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.36  1997/12/19 16:44:57  curt
-/* Working on scene rendering order and options.
+/* Revision 1.37  1997/12/19 23:34:03  curt
+/* Lot's of tweaking with sky rendering and lighting.
 /*
+ * Revision 1.36  1997/12/19 16:44:57  curt
+ * Working on scene rendering order and options.
+ *
  * Revision 1.35  1997/12/18 23:32:32  curt
  * First stab at sky dome actually starting to look reasonable. :-)
  *
