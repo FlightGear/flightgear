@@ -161,6 +161,9 @@ void PropEngine::integrate(float dt)
     // Runge-Kutta stuff.
     float rotacc = (engTorque-propTorque)/Math::abs(_moment);
     _omega += dt * rotacc;
+    if (_omega < 0)
+        _omega = 0 - _omega;    // don't allow negative RPM
+                                // FIXME: introduce proper windmilling
 
     // Store the total angular momentum into _gyro
     Math::mul3(_omega*_moment, _dir, _gyro);
