@@ -833,7 +833,14 @@ int fgGlutInit( int *argc, char **argv ) {
     xglutInitWindowSize(640, 480);
 
     // Initialize windows
-    xglutCreateWindow("Flight Gear");
+    if ( current_options.get_game_mode() == 0 ) {
+	// Open the regular window
+	xglutCreateWindow("Flight Gear");
+    } else {
+	// Open the cool new 'game mode' window
+	glutGameModeString("width=640 height=480 bpp=16");
+	glutEnterGameMode();
+    }
 
     return(1);
 }
@@ -881,17 +888,6 @@ int main( int argc, char **argv ) {
 
     fgPrintf(FG_GENERAL, FG_INFO, "Flight Gear:  Version %s\n\n", VERSION);
 
-    // Initialize the Window/Graphics environment.
-    if( !fgGlutInit(&argc, argv) ) {
-	fgPrintf( FG_GENERAL, FG_EXIT, "GLUT initialization failed ...\n" );
-    }
-
-    // Initialize the various GLUT Event Handlers.
-    if( !fgGlutInitEvents() ) {
-	fgPrintf( FG_GENERAL, FG_EXIT, 
-		  "GLUT event handler initialization failed ...\n" );
-    }
-
     // Attempt to locate and parse a config file
     // First check fg_root
     current_options.get_fg_root(config);
@@ -915,6 +911,17 @@ int main( int argc, char **argv ) {
 	fgPrintf( FG_GENERAL, FG_EXIT, "\nExiting ...\n");
     }
     
+    // Initialize the Window/Graphics environment.
+    if( !fgGlutInit(&argc, argv) ) {
+	fgPrintf( FG_GENERAL, FG_EXIT, "GLUT initialization failed ...\n" );
+    }
+
+    // Initialize the various GLUT Event Handlers.
+    if( !fgGlutInitEvents() ) {
+	fgPrintf( FG_GENERAL, FG_EXIT, 
+		  "GLUT event handler initialization failed ...\n" );
+    }
+
     // First do some quick general initializations
     if( !fgInitGeneral()) {
 	fgPrintf( FG_GENERAL, FG_EXIT, 
@@ -934,6 +941,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.44  1998/08/20 15:10:33  curt
+// Added GameGLUT support.
+//
 // Revision 1.43  1998/08/12 21:01:47  curt
 // Master volume from 30% -> 80%
 //

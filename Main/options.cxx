@@ -133,6 +133,7 @@ fgOPTIONS::fgOPTIONS( void ) {
     pitch   =   0.424;       // pitch angle in degrees (Theta)
 
     // Miscellaneous
+    game_mode = 0;
     splash_screen = 1;
     intro_music = 1;
     mouse_pointer = 0;
@@ -141,6 +142,7 @@ fgOPTIONS::fgOPTIONS( void ) {
     // Features
     hud_status = 1;
     panel_status = 0;
+    sound = 1;
 
     // Flight Model options
     flight_model = FG_LARCSIM;
@@ -394,6 +396,10 @@ int fgOPTIONS::parse_option( char *arg ) {
 	 (strcmp(arg, "-h") == 0) ) {
 	// help/usage request
 	return(FG_OPTIONS_HELP);
+    } else if ( strcmp(arg, "--disable-game-mode") == 0 ) {
+	game_mode = 0;
+    } else if ( strcmp(arg, "--enable-game-mode") == 0 ) {
+	game_mode = 1;
     } else if ( strcmp(arg, "--disable-splash-screen") == 0 ) {
 	splash_screen = 0;
     } else if ( strcmp(arg, "--enable-splash-screen") == 0 ) {
@@ -558,6 +564,8 @@ void fgOPTIONS::usage ( void ) {
     printf("General Options:\n");
     printf("\t--help -h:  print usage\n");
     printf("\t--fg-root=path:  specify the root path for all the data files\n");
+    printf("\t--disable-gamemode:  disable full-screen game mode\n");
+    printf("\t--enable-gamemode:  enable full-screen game mode\n");
     printf("\t--disable-splash-screen:  disable splash screen\n");
     printf("\t--enable-splash-screen:  enable splash screen\n");
     printf("\t--disable-intro-music:  disable introduction music\n");
@@ -623,6 +631,7 @@ double fgOPTIONS::get_altitude( void ) { return(altitude); }
 double fgOPTIONS::get_heading( void ) { return(heading); }
 double fgOPTIONS::get_roll( void ) { return(roll); }
 double fgOPTIONS::get_pitch( void ) { return(pitch); }
+int fgOPTIONS::get_game_mode( void ) { return(game_mode); }
 int fgOPTIONS::get_splash_screen( void ) { return(splash_screen); }
 int fgOPTIONS::get_intro_music( void ) { return(intro_music); }
 int fgOPTIONS::get_mouse_pointer( void ) { return(mouse_pointer); }
@@ -653,6 +662,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.21  1998/08/20 15:10:34  curt
+// Added GameGLUT support.
+//
 // Revision 1.20  1998/07/30 23:48:28  curt
 // Output position & orientation when pausing.
 // Eliminated libtool use.

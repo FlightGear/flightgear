@@ -52,6 +52,7 @@ class fgOPTIONS {
     double pitch;       // pitch angle in degrees (Theta)
 
     // Miscellaneous
+    int game_mode;      // Game mode enabled/disabled
     int splash_screen; // show splash screen
     int intro_music;   // play introductory music
     int mouse_pointer; // show mouse pointer
@@ -111,6 +112,7 @@ public:
     double get_heading( void );
     double get_roll( void );
     double get_pitch( void );
+    int get_game_mode( void );
     int get_splash_screen( void );
     int get_intro_music( void );
     int get_mouse_pointer( void );
@@ -147,6 +149,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.14  1998/08/20 15:10:35  curt
+// Added GameGLUT support.
+//
 // Revision 1.13  1998/07/30 23:48:29  curt
 // Output position & orientation when pausing.
 // Eliminated libtool use.
