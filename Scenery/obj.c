@@ -95,7 +95,7 @@ float calc_lat(double x, double y, double z) {
 GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
     char gzpath[256], line[256], winding_str[256];
     double approx_normal[3], normal[3], scale;
-    double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
+    // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     GLint tile;
     gzFile f;
@@ -143,16 +143,18 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	    /* comment -- ignore */
 	} else if ( line[0] == '\n' ) {
 	    /* empty line -- ignore */
+	} else if ( strncmp(line, "ref ", 4) == 0 ) {
+	    /* reference point (center offset) */
+	    sscanf(line, "ref %lf %lf %lf\n", &ref->x, &ref->y, &ref->z);
 	} else if ( strncmp(line, "v ", 2) == 0 ) {
 	    /* node (vertex) */
 	    if ( ncount < MAXNODES ) {
 		/* fgPrintf( FG_TERRAIN, FG_DEBUG, "vertex = %s", line); */
-		sscanf(line, "v %lf %lf %lf\n", &x, &y, &z);
-		nodes[ncount][0] = x;
-		nodes[ncount][1] = y;
-		nodes[ncount][2] = z;
+		sscanf(line, "v %lf %lf %lf\n", 
+		       &nodes[ncount][0], &nodes[ncount][1], &nodes[ncount][2]);
 
 		/* first time through set min's and max'es */
+		/*
 		if ( ncount == 1 ) {
 		    xmin = x;
 		    xmax = x;
@@ -161,14 +163,17 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		    zmin = z;
 		    zmax = z;
 		}
+		*/
     
 		/* keep track of min/max vertex values */
+		/*
 		if ( x < xmin ) xmin = x;
 		if ( x > xmax ) xmax = x;
 		if ( y < ymin ) ymin = y;
 		if ( y > ymax ) ymax = y;
 		if ( z < zmin ) zmin = z;
 		if ( z > zmax ) zmax = z;		
+		*/
 
 		ncount++;
 	    } else {
@@ -395,19 +400,28 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
     gzclose(f);
 
-    /* reference point is the "center" */
+    /* reference point is the "center" (now included in input file) */
+    /*
     ref->x = (xmin + xmax) / 2.0;
     ref->y = (ymin + ymax) / 2.0;
     ref->z = (zmin + zmax) / 2.0;
+    */
 
     return(tile);
 }
 
 
 /* $Log$
-/* Revision 1.31  1998/04/25 15:09:57  curt
-/* Changed "r" to "rb" in gzopen() options.  This fixes bad behavior in win32.
+/* Revision 1.32  1998/04/27 03:30:13  curt
+/* Minor transformation adjustments to try to keep scenery tiles closer to
+/* (0, 0, 0)  GLfloats run out of precision at the distances we need to model
+/* the earth, but we can do a bunch of pre-transformations using double math
+/* and then cast to GLfloat once everything is close in where we have less
+/* precision problems.
 /*
+ * Revision 1.31  1998/04/25 15:09:57  curt
+ * Changed "r" to "rb" in gzopen() options.  This fixes bad behavior in win32.
+ *
  * Revision 1.30  1998/04/24 14:21:08  curt
  * Added "file.obj.gz" support.
  *

@@ -208,11 +208,11 @@ void fgTileMgrRender( void ) {
 
 	if ( display_list >= 0 ) {
 	    xglPushMatrix();
-	    /* xglTranslatef(local_ref.x - scenery.center.x,
+	    xglTranslatef(local_ref.x - scenery.center.x,
 			  local_ref.y - scenery.center.y,
-			  local_ref.z - scenery.center.z); */
-	    xglTranslatef(-scenery.center.x, -scenery.center.y, 
-			  -scenery.center.z);
+			  local_ref.z - scenery.center.z);
+	    /* xglTranslatef(-scenery.center.x, -scenery.center.y, 
+			  -scenery.center.z); */
 	    xglCallList(display_list);
 	    xglPopMatrix();
 	}
@@ -221,9 +221,16 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/04/25 22:06:32  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.4  1998/04/27 03:30:14  curt
+/* Minor transformation adjustments to try to keep scenery tiles closer to
+/* (0, 0, 0)  GLfloats run out of precision at the distances we need to model
+/* the earth, but we can do a bunch of pre-transformations using double math
+/* and then cast to GLfloat once everything is close in where we have less
+/* precision problems.
 /*
+ * Revision 1.3  1998/04/25 22:06:32  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.2  1998/04/24 00:51:09  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Tweaked the scenery file extentions to be "file.obj" (uncompressed)
