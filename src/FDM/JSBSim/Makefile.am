@@ -2,9 +2,9 @@ SUBDIRS = filtersjb
 
 EXTRA_DIST = JSBSim.cpp Makefile.solo
 
-noinst_LIBRARIES = libJSBsim.a
+noinst_LIBRARIES = libJSBSim.a
 
-libJSBsim_a_SOURCES = FGAircraft.cpp FGAircraft.h \
+libJSBSim_a_SOURCES = FGAircraft.cpp FGAircraft.h \
 	FGAtmosphere.cpp FGAtmosphere.h \
 	FGAuxiliary.cpp FGAuxiliary.h \
 	FGCoefficient.cpp FGCoefficient.h \
@@ -32,7 +32,7 @@ noinst_PROGRAMS = testJSBsim
 
 testJSBsim_SOURCES = JSBSim.cpp
 
-testJSBsim_LDADD = libJSBsim.a filtersjb/libfiltersjb.a
+testJSBsim_LDADD = libJSBSim.a filtersjb/libfiltersjb.a
 
 INCLUDES += -I$(top_builddir)/src
 

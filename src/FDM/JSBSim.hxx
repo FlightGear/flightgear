@@ -24,7 +24,7 @@
 #ifndef _JSBSIM_HXX
 #define _JSBSIM_HXX
 
-#include <FDM/JSBsim/FGFDMExec.h>
+#include <FDM/JSBSim/FGFDMExec.h>
 #undef MAX_ENGINES
 
 #include <Aircraft/aircraft.hxx>

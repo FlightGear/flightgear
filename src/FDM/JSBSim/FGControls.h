@@ -177,8 +177,9 @@ extern FGControls controls;
 
 
 // $Log$
-// Revision 1.12  2000/07/06 19:02:46  curt
-// Updates from Jon's official CVS tree.
+// Revision 1.13  2000/07/24 15:26:06  curt
+// Sync the JSBSim code with the Jon & Tony's devel version.
+// Renamed JSBsim -> the official JSBSim.
 //
 // Revision 1.6  2000/06/03 13:59:52  jsb
 // Changes for compatibility with MSVC

@@ -40,20 +40,20 @@
 #include <Controls/controls.hxx>
 #include <Main/options.hxx>
 
-#include <FDM/JSBsim/FGFDMExec.h>
-#include <FDM/JSBsim/FGAircraft.h>
-#include <FDM/JSBsim/FGFCS.h>
-#include <FDM/JSBsim/FGPosition.h>
-#include <FDM/JSBsim/FGRotation.h>
-#include <FDM/JSBsim/FGState.h>
-#include <FDM/JSBsim/FGTranslation.h>
-#include <FDM/JSBsim/FGAuxiliary.h>
-#include <FDM/JSBsim/FGDefs.h>
-#include <FDM/JSBsim/FGInitialCondition.h>
-#include <FDM/JSBsim/FGTrimLong.h>
-#include <FDM/JSBsim/FGAtmosphere.h>
+#include <FDM/JSBSim/FGFDMExec.h>
+#include <FDM/JSBSim/FGAircraft.h>
+#include <FDM/JSBSim/FGFCS.h>
+#include <FDM/JSBSim/FGPosition.h>
+#include <FDM/JSBSim/FGRotation.h>
+#include <FDM/JSBSim/FGState.h>
+#include <FDM/JSBSim/FGTranslation.h>
+#include <FDM/JSBSim/FGAuxiliary.h>
+#include <FDM/JSBSim/FGDefs.h>
+#include <FDM/JSBSim/FGInitialCondition.h>
+#include <FDM/JSBSim/FGTrimLong.h>
+#include <FDM/JSBSim/FGAtmosphere.h>
 
-#include "JSBsim.hxx"
+#include "JSBSim.hxx"
 
 /******************************************************************************/
 
@@ -130,6 +130,7 @@ int FGJSBsim::init( double dt ) {
 
   //must check > 0, != 0 will give bad result if --notrim set
   if(current_options.get_trim_mode() > 0) {
+    FDMExec.RunIC(fgic);
     FG_LOG( FG_FLIGHT, FG_INFO, "  Starting trim..." );
     FGTrimLong *fgtrim=new FGTrimLong(&FDMExec,fgic);
     fgtrim->DoTrim();
@@ -137,7 +138,7 @@ int FGJSBsim::init( double dt ) {
     fgtrim->TrimStats();
     fgtrim->ReportState();
 
-    controls.set_elevator_trim(FDMExec.GetFCS()->GetDeCmd());
+    controls.set_elevator_trim(FDMExec.GetFCS()->GetPitchTrimCmd());
     controls.set_throttle(FGControls::ALL_ENGINES,FDMExec.GetFCS()->GetThrottleCmd(0)/100);
     //the trimming routine only knows how to get 1 value for throttle
 
@@ -223,10 +224,10 @@ int FGJSBsim::update( int multiloop ) {
   }
 
   double end_elev = get_Altitude();
-  if ( time_step > 0.0 ) {
+  //if ( time_step > 0.0 ) {
     // feet per second
-    set_Climb_Rate( (end_elev - start_elev) / time_step );
-  }
+  //  set_Climb_Rate( (end_elev - start_elev) / time_step );
+  //}
 
   return 1;
 }
@@ -309,9 +310,8 @@ int FGJSBsim::copy_from_JSBsim() {
   set_cos_lat_geocentric( lat_geoc );
   set_sin_cos_longitude( lon );
   set_sin_cos_latitude( lat_geod );
+  
+  set_Climb_Rate(FDMExec.GetPosition()->Gethdot());
 
   return 1;
 }
-
-/******************************************************************************/
-

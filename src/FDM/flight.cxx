@@ -33,7 +33,7 @@
 
 #include "External.hxx"
 #include "flight.hxx"
-#include "JSBsim.hxx"
+#include "JSBSim.hxx"
 #include "LaRCsim.hxx"
 #include "Balloon.h"
 
