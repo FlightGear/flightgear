@@ -276,6 +276,7 @@ void YASim::copyToYASim(bool copyState)
     // Velocity
     string speed_set = fgGetString("/sim/presets/speed-set", "UVW");
     float v[3];
+    bool needCopy = false;
     switch (_speed_set) {
     case NED:
         v[0] = get_V_north() * FT2M * -1.0;
@@ -289,17 +290,19 @@ void YASim::copyToYASim(bool copyState)
         Math::tmul33(s.orient, v, v);
         break;
     case KNOTS:
-        // FIXME: right now this does true instead of calibrated airspeed
-        v[0] = get_V_calibrated_kts()/MPS2KTS;
+        v[0] = Atmosphere::spdFromVCAS(get_V_calibrated_kts()/MPS2KTS,
+                                       pressure, temp);
         v[1] = 0;
         v[2] = 0;
         Math::tmul33(s.orient, v, v);
+        needCopy = true;
         break;
     case MACH:
-        // FIXME: not even trying to implement this yet
-        v[0] = 0;
+        v[0] = Atmosphere::spdFromMach(get_Mach_number(), temp);
         v[1] = 0;
         v[2] = 0;
+        Math::tmul33(s.orient, v, v);
+        needCopy = true;
         break;
     default:
         v[0] = 0;
@@ -307,10 +310,11 @@ void YASim::copyToYASim(bool copyState)
         v[2] = 0;
         break;
     }
-    _speed_set = UVW;           // change to this after initial setting
+    if (!copyState)
+        _speed_set = UVW;       // change to this after initial setting
     Math::set3(v, s.v);
 
-    if(copyState)
+    if(copyState || needCopy)
 	model->setState(&s);
 
     // wind
