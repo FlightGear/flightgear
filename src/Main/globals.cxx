@@ -71,7 +71,7 @@ FGGlobals::FGGlobals() :
     acmodel( NULL ),
     model_mgr( NULL ),
     channel_options_list( NULL ),
-    initial_waypoints(0),
+    initial_waypoints( NULL ),
     scenery( NULL ),
     tile_mgr( NULL ),
     io( new FGIO ),

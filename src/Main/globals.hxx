@@ -97,8 +97,8 @@ class FGGlobals
 
 private:
 
-    SGSubsystemMgr * subsystem_mgr;
-    SGEventMgr * event_mgr;
+    SGSubsystemMgr *subsystem_mgr;
+    SGEventMgr *event_mgr;
 
     // Number of milliseconds elapsed since the start of the program.
     double sim_time_sec;
@@ -217,9 +217,9 @@ public:
     FGGlobals();
     virtual ~FGGlobals();
 
-    virtual SGSubsystemMgr * get_subsystem_mgr () const;
+    virtual SGSubsystemMgr *get_subsystem_mgr () const;
 
-    virtual SGSubsystem * get_subsystem (const char * name);
+    virtual SGSubsystem *get_subsystem (const char * name);
 
     virtual void add_subsystem (const char * name,
                                 SGSubsystem * subsystem,
@@ -227,7 +227,7 @@ public:
                                 type = SGSubsystemMgr::GENERAL,
                                 double min_time_sec = 0);
 
-    virtual SGEventMgr * get_event_mgr () const;
+    virtual SGEventMgr *get_event_mgr () const;
 
     inline double get_sim_time_sec () const { return sim_time_sec; }
     inline void inc_sim_time_sec (double dt) { sim_time_sec += dt; }
