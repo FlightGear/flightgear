@@ -152,7 +152,7 @@ FGAircraftModel::update (int dt)
 
   int view_number = globals->get_viewmgr()->get_current();
 
-  if (view_number == 0 && !fgGetBool("cockpit")) {
+  if (view_number == 0 && !fgGetBool("/sim/view/internal")) {
     _selector->select(false);
   } else {
     for (unsigned int i = 0; i < _animations.size(); i++)

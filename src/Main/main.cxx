@@ -584,7 +584,7 @@ void fgRenderFrame( void ) {
 	double agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
 	    - scenery.get_cur_elev();
 
-	if (fgGetBool("/cockpit"))
+	if (fgGetBool("/sim/view/internal"))
 	  ssgSetNearFar( 0.2f, 120000.0f );
 	else if ( agl > 10.0)
 	    ssgSetNearFar( 10.0f, 120000.0f );
