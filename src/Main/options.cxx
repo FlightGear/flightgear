@@ -35,6 +35,7 @@
 
 #include STL_STRING
 
+#include <simgear/math/sg_random.h>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/route/route.hxx>
@@ -495,6 +496,33 @@ add_channel( const string& type, const string& channel_str ) {
 }
 
 
+static void
+setup_wind (double min_hdg, double max_hdg, double speed, double gust)
+{
+  fgSetDouble("/environment/wind-from-heading-deg", min_hdg);
+  fgSetDouble("/environment/params/min-wind-from-heading-deg", min_hdg);
+  fgSetDouble("/environment/params/max-wind-from-heading-deg", max_hdg);
+  fgSetDouble("/environment/wind-speed-kt", speed);
+  fgSetDouble("/environment/params/base-wind-speed-kt", speed);
+  fgSetDouble("/environment/params/gust-wind-speed-kt", gust);
+
+  SG_LOG(SG_GENERAL, SG_INFO, "WIND: " << min_hdg << '@' << 
+	 speed << " knots" << endl);
+
+#ifdef FG_WEATHERCM
+  // convert to fps
+  speed *= SG_NM_TO_METER * SG_METER_TO_FEET * (1.0/3600);
+  while (min_hdg > 360)
+    min_hdg -= 360;
+  while (min_hdg <= 0)
+    min_hdg += 360;
+  min_hdg *= SGD_DEGREES_TO_RADIANS;
+  fgSetDouble("/environment/wind-from-north-fps", speed * cos(dir));
+  fgSetDouble("/environment/wind-from-east-fps", speed * sin(dir));
+#endif // FG_WEATHERCM
+}
+
+
 // Parse --wp=ID[@alt]
 static bool 
 parse_wp( const string& arg ) {
@@ -917,40 +945,19 @@ parse_option (const string& arg)
     } else if ( arg.find( "--visibility-miles=" ) == 0 ) {
         double visibility = atof(arg.substr(19)) * 5280.0 * SG_FEET_TO_METER;
 	fgSetDouble("/environment/visibility-m", visibility);
+    } else if ( arg.find( "--random-wind" ) == 0 ) {
+        double min_hdg = sg_random() * 360.0;
+        double max_hdg = min_hdg + (20 - sqrt(sg_random() * 400));
+	double speed = 40 - sqrt(sg_random() * 1600.0);
+	double gust = speed + (10 - sqrt(sg_random() * 100));
+	setup_wind(min_hdg, max_hdg, speed, gust);
     } else if ( arg.find( "--wind=" ) == 0 ) {
         double min_hdg, max_hdg, speed, gust;
         if (!parse_wind(arg.substr(7), &min_hdg, &max_hdg, &speed, &gust)) {
 	  SG_LOG( SG_GENERAL, SG_ALERT, "bad wind value " << arg.substr(7) );
 	  return FG_OPTIONS_ERROR;
 	}
-	fgSetDouble("/environment/wind-from-heading-deg", min_hdg);
-	fgSetDouble("/environment/params/min-wind-from-heading-deg", min_hdg);
-	fgSetDouble("/environment/params/max-wind-from-heading-deg", max_hdg);
-	fgSetDouble("/environment/wind-speed-kt", speed);
-	fgSetDouble("/environment/params/base-wind-speed-kt", speed);
-	fgSetDouble("/environment/params/gust-wind-speed-kt", gust);
-
-        string val = arg.substr(7);
-	string::size_type pos = val.find('@');
-	if ( pos == string::npos ) {
-	  SG_LOG( SG_GENERAL, SG_ALERT, "bad wind value " << val );
-	  return FG_OPTIONS_ERROR;
-	}
-	SG_LOG(SG_GENERAL, SG_INFO, "WIND: " << min_hdg << '@' << 
-	       speed << " knots" << endl);
-
-#ifdef FG_WEATHERCM
-        // convert to fps
-	speed *= SG_NM_TO_METER * SG_METER_TO_FEET * (1.0/3600);
-	while (min_hdg > 360)
-	  min_hdg -= 360;
-	while (min_hdg <= 0)
-	  min_hdg += 360;
-	min_hdg *= SGD_DEGREES_TO_RADIANS;
-	fgSetDouble("/environment/wind-from-north-fps", speed * cos(dir));
-	fgSetDouble("/environment/wind-from-east-fps", speed * sin(dir));
-#endif // FG_WEATHERCM
-
+	setup_wind(min_hdg, max_hdg, speed, gust);
     } else if ( arg.find( "--wp=" ) == 0 ) {
 	parse_wp( arg.substr( 5 ) );
     } else if ( arg.find( "--flight-plan=") == 0) {
