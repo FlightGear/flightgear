@@ -1,4 +1,8 @@
 New in 0.52
+* Stars added in 8 stages as sky gets darker for a smoother more realistic
+  transition.
+* rewrote star loader to significantly improve load times.
+* Tweaked sky brightness and dawn/dusk colors.
 * Fixed a small problem with moon rendering.
 * Fog color tries to track the sky color at the center of view in sunrise
   and sunset situations.

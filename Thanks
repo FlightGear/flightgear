@@ -111,20 +111,6 @@ Alan Murta <amurta@cs.man.ac.uk>
   Created the Generic Polygon Clipping library
 
 
-Jonathan R Shewchuk <Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu>
-  Author of the Triangle program.  Triangle is used to calculate the
-  Delauney triangulation of our irregular terrain.
-
-
-Michael Smith <msmith99@flash.net>
-  Contributed cockpit graphics, 3d models, logos, and other images.
-  Project Bonanza - http://members.xoom.com/ConceptSim/index.html
-
-
-U.S. Geological Survey - http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html
-  Provided geographic data used by this project
-
-
 Friedemann Reinhard <mpt218@faupt212.physik.uni-erlangen.de>
   Contributed beginnings of a textured instrument panel.
 
@@ -140,6 +126,26 @@ Chris Schoeneman <crs@millpond.engr.sgi.com>
   Contributed some 3d sound playing code for Irix, Win32, and Linux
   It is unclear if this code will be used directly, but it certainly
   will have an influence on the development of our own audio library.
+
+
+Jonathan R Shewchuk <Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu>
+  Author of the Triangle program.  Triangle is used to calculate the
+  Delauney triangulation of our irregular terrain.
+
+
+Gordan Sikic <gsikic@public.srce.hr>
+  Contributed a cherokee flight model for LaRCsim.  Currently is not
+  working and needs to be debugged.  Use configure --with-flight-model=cherokee
+  to build the cherokee instead of the navion.
+
+
+Michael Smith <msmith99@flash.net>
+  Contributed cockpit graphics, 3d models, logos, and other images.
+  Project Bonanza - http://members.xoom.com/ConceptSim/index.html
+
+
+U.S. Geological Survey - http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html
+  Provided geographic data used by this project
 
 
 Durk Talsma <pn_talsma@macmail.psy.uva.nl>
