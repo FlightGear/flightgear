@@ -8,7 +8,9 @@
 
 #include <stdio.h>
 
-#include FG_GLUT_H
+#include <simgear/compiler.h>
+
+#include SG_GLUT_H
 
 
 int main() {

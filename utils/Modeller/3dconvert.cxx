@@ -1,5 +1,13 @@
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <simgear/compiler.h>
+
 #include <iostream>
-#include <GL/glut.h>
+
+#include SG_GLUT_H
+
 #include <plib/ssg.h>
 
 using std::cerr;

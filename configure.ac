@@ -231,22 +231,6 @@ else
     AC_DEFINE([PU_USE_GLUT], 1, [Define to use glut])
 fi
 
-dnl check for glut location
-AC_CHECK_HEADER(GL/glut.h)
-if test "x$ac_cv_header_GL_glut_h" = "xyes"; then
-    AC_DEFINE([FG_GLUT_H], <GL/glut.h>, [Define as glut.h include location])
-else
-    AC_CHECK_HEADER(GLUT/glut.h)
-    if test "x$ac_cv_header_GLUT_glut_h" = "xyes"; then
-        AC_DEFINE([FG_GLUT_H], <GLUT/glut.h>, [Define as glut.h include location])
-    else
-        if test "x$enable_sdl" != "xyes"; then
-            echo "Neither GL/glut.h nor GLUT/glut.h found.  Cannot continue"
-            exit
-        fi
-    fi
-fi
-
 dnl check for OpenGL related libraries
 case "${host}" in
 *-*-cygwin* | *-*-mingw32*)

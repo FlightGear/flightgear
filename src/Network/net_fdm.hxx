@@ -48,8 +48,8 @@ public:
     float phi;			// roll (radians)
     float theta;		// pitch (radians)
     float psi;			// yaw or true heading (radians)
-    float alpha;                // angle of attack
-    float beta;                 // side slip angle
+    float alpha;                // angle of attack (radians)
+    float beta;                 // side slip angle (radians)
 
     // Velocities
     float phidot;		// roll rate (radians/sec)

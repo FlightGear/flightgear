@@ -30,9 +30,9 @@
 #  include <windows.h>
 #endif
 
-#include <GL/gl.h>
-
 #include <simgear/compiler.h>
+
+#include SG_GL_H
 
 #ifdef SG_MATH_EXCEPTION_CLASH
 #  define exception c_exception

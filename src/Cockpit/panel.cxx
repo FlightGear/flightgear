@@ -29,7 +29,9 @@
 #include <stdio.h>	// sprintf
 #include <string.h>
 
-#include <GL/glu.h>
+#include <simgear/compiler.h>
+
+#include SG_GLU_H
 
 #include <plib/ssg.h>
 #include <plib/fnt.h>

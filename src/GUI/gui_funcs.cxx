@@ -40,7 +40,7 @@
 #  include <windows.h>
 #endif
 
-#include <GL/gl.h>
+#include SG_GL_H
 
 #if defined(FX) && defined(XMESA)
 #  include <GL/xmesa.h>

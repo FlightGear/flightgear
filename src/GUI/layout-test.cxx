@@ -1,6 +1,7 @@
 #include <iostream>
 
-#include <GL/gl.h>
+#include <simgear/compiler.h>
+#include SG_GL_H
 #include <plib/pw.h>
 #include <plib/pu.h>
 #include <simgear/props/props.hxx>

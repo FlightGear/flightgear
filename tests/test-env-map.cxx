@@ -10,7 +10,9 @@
 #include <stdio.h>
 #include <math.h>
 
-#include FG_GLUT_H
+#include <simgear/compiler.h>
+
+#include SG_GLUT_H
 
 #define TEXRES_X 256
 #define TEXRES_Y 256

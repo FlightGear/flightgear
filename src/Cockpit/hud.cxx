@@ -44,7 +44,7 @@
 #include <stdio.h>		// char related functions
 #include <string.h>		// strcmp()
 
-#include <GL/glu.h>
+#include SG_GLU_H
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
