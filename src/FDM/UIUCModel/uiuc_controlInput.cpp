@@ -65,8 +65,11 @@
 
 **********************************************************************/
 
+#include <simgear/compiler.h>
+
 #include "uiuc_controlInput.h"
-#include <iostream>
+
+#include STL_IOSTREAM
 
 void uiuc_controlInput()
 {
