@@ -59,7 +59,7 @@ protected:
 
     double mag_hdg;	// degrees - the heading that the physical aircraft is *pointing*
     double track;	// track that the physical aircraft is *following* - degrees relative to *true* north
-    double yaw;
+    double crab;	// Difference between heading and track due to wind.
     double mag_var;	// degrees
     double IAS;		// Indicated airspeed in knots
     double vel;		// velocity along track in knots

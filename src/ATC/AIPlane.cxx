@@ -48,30 +48,31 @@ void FGAIPlane::Update(double dt) {
 }
 
 void FGAIPlane::Bank(double angle) {
-    // This *should* bank us smoothly to any angle
-    if(fabs(roll - angle) > 0.6) {
-	roll -= ((roll - angle)/fabs(roll - angle));  
-    }
+	// This *should* bank us smoothly to any angle
+	if(fabs(roll - angle) > 0.6) {
+		roll -= ((roll - angle)/fabs(roll - angle));  
+	}
 }
 
 // Duplication of Bank(0.0) really - should I cut this?
 void FGAIPlane::LevelWings(void) {
-    // bring the plane back to level smoothly (this should work to come out of either bank)
-    if(fabs(roll) > 0.6) {
-	roll -= (roll/fabs(roll));
-    }
+	// bring the plane back to level smoothly (this should work to come out of either bank)
+	if(fabs(roll) > 0.6) {
+		roll -= (roll/fabs(roll));
+	}
 }
 
 void FGAIPlane::Transmit(string msg) {
-    double user_freq0 = fgGetDouble("/radios/comm[0]/frequencies/selected-mhz");
-    //double user_freq0 = ("/radios/comm[0]/frequencies/selected-mhz");
-    //comm1 is not used yet.
-
-    if(freq == user_freq0) {
-	// we are on the same frequency, so check distance to the user plane
-	if(1) {
-	    // For now (testing) assume in range !!!
-	    globals->get_ATC_display()->RegisterSingleMessage(msg, 0);
+	double user_freq0 = fgGetDouble("/radios/comm[0]/frequencies/selected-mhz");
+	//double user_freq0 = ("/radios/comm[0]/frequencies/selected-mhz");
+	//comm1 is not used yet.
+	
+	if(freq == user_freq0) {
+		// we are on the same frequency, so check distance to the user plane
+		if(1) {
+			// For now (testing) assume in range !!!
+			// TODO - implement range checking
+			globals->get_ATC_display()->RegisterSingleMessage(msg, 0);
+		}
 	}
-    }
 }
