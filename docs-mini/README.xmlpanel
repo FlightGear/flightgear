@@ -1,5 +1,5 @@
 Users Guide to FlightGear panel configuration
-Version 0.4, October 11 2000
+Version 0.5, November 8 2000
 Author: John Check <j4strngs@rockfish.net>  
 
 This document is an attempt to describe the configuration of 
@@ -28,13 +28,13 @@ via XML to address this limitation.
 
 Using Custom Panels:
 
-The default panel location is $FG_ROOT/Panels/Default/default.xml.
+The default panel location is $FG_ROOT/Aircraft/c172/Panels/Default.
 $FG_ROOT is the place on your filesystem where you installed FG
 data files. Alternate panels can be specified on the command line 
-or set as the default in the $HOME/.fgfsrc or $FG_ROOT/system.fgfsrc 
-using a property specification. The format is as follows:
+or set as the default in the $HOME/.fgfsrc or $FG_ROOT/preferences.xml 
+using a property specification. The command line format is as follows:
 
---prop:/sim/panel/path=Panels/Default/default.xml
+--prop:/sim/panel/path=Aircraft/c172/Panels/Default
 
 The path description shown is relative to $FG_ROOT. An absolute
 path may also be used for locations outside $FG_ROOT. I would 
@@ -62,10 +62,10 @@ Comments are bracketed with <!-- -->.
 
 <PropertyList>
  <name>Example Panel</name>
- <background>Panels/Default/Textures/panel-bg.rgb</background>
+ <background>Aircraft/c172/Panels/Textures/panel-bg.rgb</background>
  <instruments>
   <clock>         <!-- the "unique_name" -->
-   <path>Instruments/Default/clock.xml</path>
+   <path>Aircraft/c172/Instruments/clock.xml</path>
    <x>110</x>
    <y>320</y>
    <w>72</w>      <!-- optional width specification -->
@@ -74,7 +74,7 @@ Comments are bracketed with <!-- -->.
  </instruments>
 </PropertyList>
   
-The default location for instrument files is $FG_ROOT/Instruments/Default/.
+The default location for instrument files is $FG_ROOT/Aircraft/c172/Instruments/.
 Alternate locations may be specified in the panel configuration, paths
 must be absolute to use files outside $FG_ROOT.
 
@@ -96,9 +96,9 @@ may be static, as in a label, or generated (if it needs to be dynamic, as
 in an LED display), or a combination of both. 
 A switch layer is composed of two or more nested layers and will display
 one of the nested layers based on a boolean property. For a simple example 
-of a switch see $FG_ROOT/Instruments/Default/brake.xml. Textures used in a 
-switch context *must* have width and height specified to be visible.
-Each layer may contain zero or more transformations.  
+of a switch see $FG_ROOT/Aircraft/Custom/Instruments/brake.xml. 
+Textures used in a switch context *must* have width and height specified to be 
+visible. Each layer may contain zero or more transformations.  
 
 A transformation is a rotation, an x-shift, or a y-shift. Transformations 
 can be static  or they can be based on properties. Static rotations are 
@@ -140,5 +140,4 @@ defining which section of the texture to use.
    there may also be built-in layers for special things like a
    weather-radar display or a GPS (though the GPS could be handled with
    text properties).
-
 
