@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include <Include/general.h>
+#include <Main/options.hxx>
 
 #include "gui.h"
 
@@ -132,23 +133,34 @@ puCallback helpSubmenuCb        [] = { notCb, notCb, NULL };
 void guiInit()
 {
     fgGENERAL *g;
+    fgOPTIONS *o;
     char *mesa_win_state;
 
     g = &general;
+    o = &current_options;
 
     // Initialize PUI
     puInit();
 
-    // Determine if we need to render the cursor, or if the windowing
-    // system will do it.  First test if we are rendering with glide.
-    if ( strstr ( g->glRenderer, "Glide" ) ) {
-	// Test for the MESA_GLX_FX env variable
-	if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
-	    // test if we are fullscreen mesa/glide
-	    if ( (mesa_win_state[0] == 'f') || (mesa_win_state[0] == 'F') ) {
-		puShowCursor ();
+    if ( o->mouse_pointer == 0 ) {
+	// no preference specified for mouse pointer, attempt to autodetect...
+	// Determine if we need to render the cursor, or if the windowing
+	// system will do it.  First test if we are rendering with glide.
+	if ( strstr ( g->glRenderer, "Glide" ) ) {
+	    // Test for the MESA_GLX_FX env variable
+	    if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
+		// test if we are fullscreen mesa/glide
+		if ( (mesa_win_state[0] == 'f') || 
+		     (mesa_win_state[0] == 'F') ) {
+		    puShowCursor ();
+		}
 	    }
 	}
+    } else if ( o->mouse_pointer == 1 ) {
+	// don't show pointer
+    } else if ( o->mouse_pointer == 2 ) {
+	// force showing pointer
+	puShowCursor();
     }
 
     // puSetDefaultStyle         ( PUSTYLE_SMALL_BEVELLED );
