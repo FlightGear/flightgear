@@ -1,8 +1,8 @@
 
 This file is made possible by contributions from:
-	Todd Smith  <msmith@sikorsky.com>
-	Curt Olson  <curt@flightgear.org>
-	Erik Hofman <erik@ehofman.com>
+        Todd Smith  <msmith@sikorsky.com>
+        Curt Olson  <curt@flightgear.org>
+        Erik Hofman <erik@ehofman.com>
 
 
 1. Requirements
@@ -10,34 +10,37 @@ This file is made possible by contributions from:
 The following packages should be installed before FlightGear (or SimGear
 or PLib) can be compiled on Irix:
 
-	    Irix development headers and libraries
-	    --------------------------------------
+            Irix development headers and libraries
+            (from the Irix 6.5 development CD's)
+            --------------------------------------
 
-	compiler_dev.sw.base		irix_dev.sw.headers
-	compiler_dev.sw.ld		dev.sw.lib
-	compiler_dev.sw.util
-	compiler_dev.hdr.lib		
+        compiler_dev.sw.base		irix_dev.sw.headers
+        compiler_dev.sw.ld		dev.sw.lib
+        compiler_dev.sw.util
+        compiler_dev.hdr.lib		
 
         gl_dev.sw.gldev			dmedia_dev.sw.base
         x_dev.sw.dev
 
-	    MipsPro C and C++ Compiler environment
-	    --------------------------------------
+            MipsPro C and C++ Compiler environment
+            --------------------------------------
 
-	c++_dev.hdr.lib			c_dev.sw.c
-	c++_dev.sw.c++			c_fe.sw.c
-	c++_dev.sw.lib
-	c++_eoe.sw.lib
-	c++_fe.sw.c++
+        c++_dev.hdr.lib			c_dev.sw.c
+        c++_dev.sw.c++			c_fe.sw.c
+        c++_dev.sw.lib
+        c++_eoe.sw.lib
+        c++_fe.sw.c++
 
 
-	    FlightGear Flight Simulator Software
-	    ----------------------------------------
+            FlightGear Flight Simulator Software
+            ----------------------------------------
 
-	FlightGear:	http://www.flightgear.org
-	SimGear:	http://www.simgear.org
-	Plib:		http://plib.sourceforge.net
-	GLUT:		http://
+        FlightGear:	http://www.flightgear.org
+        SimGear:	http://www.simgear.org
+        Plib:		http://plib.sourceforge.net
+        GLUT:		http://
+        ZLIB:		http://
+        MetaKit:	http://www.a1.nl/~ehofman/fgfs/downloads/metakit-2.0.1-FGFS.tar.gz
 
 
 
@@ -46,43 +49,27 @@ or PLib) can be compiled on Irix:
 To create a set of binaries it is important to follow these steps. This
 will build a statically linked executable /opt/bin/fgfs
 
-   1. Extract, and install GLUT, following the build guidelines provided
-      by the author of GLUT.
+   1. Install GLUT, Zlib and MetaKit.
 
    2. Extract, configure and install Plib:
-	automake -a -i
-	CXXFLAGS="-O2 -G0 -use_readonly_const -rdata_shared -I/opt/include" \
-	CFLAGS=$CXXFLAGS LDFLAGS="-L/opt/lib32" \
-	./configure --prefix=/opt --libdir=/opt/lib32
-	make; make install
+        automake -a -i
+        CXXFLAGS="-O2 -I/opt/include" LDFLAGS="-L/opt/lib32"
+        ./configure --prefix=/opt --libdir=/opt/lib32
+        make install
 
    3. Extract, configure and install SimGear:
-	automake -a -i
-	CXXFLAGS="-O2 -G0 -use_readonly_const -rdata_shared -I/opt/include \
-	    -woff 1001,1012,1014,1116,1172,1174,1401,1460,1551,1552,1681" \
-	CFLAGS="-Xcpluscomm "$CXXFLAGS LDFLAGS="-L/opt/lib32 -L../zlib" \
-	./configure --prefix=/opt --libdir=/opt/lib32 --with-logging
-	sh ../FlightGear-0.x.x/irix-hack.sh
-	make; make install
+        CXXFLAGS="-O2" LDFLAGS="-L/opt/lib32"
+        ./configure --prefix=/opt --libdir=/opt/lib32 --without-logging
+        make install
 
    4. Extract, configure and install FlightGear:
-	automake -a -i
-	CXXFLAGS="-O2 -G0 -use_readonly_const -rdata_shared -I/opt/include \
-	    -woff 1001,1012,1014,1116,1172,1174,1401,1460,1551,1552,1681" \
-	CFLAGS="-Xcpluscomm "$CXXFLAGS LDFLAGS="-L/opt/lib32" \
-	CPPFLAGS="-woff 1014" \
-	./configure --prefix=/opt --with-simgear=/opt --without-loging
-	sh ./irix-hack.sh
-	make; make install
+        CXXFLAGS="-O2" CFLAGS="-O2 -Xcpluscomm" LDFLAGS="-L/opt/lib32"
+        ./configure --prefix=/opt --with-simgear=/opt --without-loging
+        make install
 
 
 The irix-hack.sh script fixes some compiler specific problems which were 
 introduced after the adoption of the C++ Standard Template Library.
-Not running this script will result in an error message like this:
-   CC ERROR: -ar option requires archive name to be specified with -o option
-
-If this happens, just run the irix-hack script and continue with make.
-
 
 The "automake -a -i" command is required because automake with automatic
 dependency building breaks the native Irix compilers.
@@ -92,11 +79,11 @@ dependency building breaks the native Irix compilers.
 
 Before the FlightGear program could be run it is important to install the
 FlightGear base package (the default is to extract the base package into
-/opt/bin/lib).
+/opt/lib32).
 
 This package can be found at: http://www.flightgear.org
 
 When all is set and done, just run /opt/bin/runfgfs
-To see the command line options, run /opt/bin/runfgfs --help
+To see the command line options, type "man -M /opt/man fgfs"
 
 
