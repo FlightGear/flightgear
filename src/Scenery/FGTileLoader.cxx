@@ -29,6 +29,9 @@
 #include "tileentry.hxx"
 #include "tilemgr.hxx"
 
+extern ssgBranch *terrain;
+extern ssgBranch *ground;
+
 /**
  * 
  */
@@ -87,6 +90,7 @@ FGTileLoader::add( FGTileEntry* tile )
     tile_queue.push( tile );
 #else
     tile->load( tile_path, true );
+    tile->add_ssg_nodes( terrain, ground );
 #endif // ENABLE_THREADS
 }
 

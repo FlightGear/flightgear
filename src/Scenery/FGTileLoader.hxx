@@ -77,11 +77,13 @@ private:
 
 private:
 
+#ifdef ENABLE_THREADS
     /**
      * FIFO queue of tiles to load from data files.
      */
     SGBlockingQueue< FGTileEntry* > tile_queue;
-    
+#endif
+
     /**
      * Base name of directory containing tile data file.
      */
