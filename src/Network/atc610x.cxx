@@ -662,7 +662,7 @@ static int tony_magic( int raw, int obs[3] ) {
 	    }
 	}
         result = obs[1] - obs[2];
-        if ( abs(result) > 200 ) {
+        if ( abs(result) > 400 ) {
             // ignore
             result = 0;
         }
@@ -679,7 +679,7 @@ static int tony_magic( int raw, int obs[3] ) {
 
 
 static double instr_pot_filter( double ave, double val ) {
-    if ( fabs(ave - val) < 200 || fabs(val) < fabs(ave) ) {
+    if ( fabs(ave - val) < 400 || fabs(val) < fabs(ave) ) {
         return 0.5 * ave + 0.5 * val;
     } else {
         return ave;
@@ -792,29 +792,29 @@ bool FGATC610x::do_analog_in() {
     diff4_ave = instr_pot_filter( diff4_ave, diff4 );
     diff5_ave = instr_pot_filter( diff5_ave, diff5 );
 
-    tmp = alt_press->getDoubleValue() + (diff1_ave * (0.25/880.0) );
+    tmp = alt_press->getDoubleValue() + (diff1_ave * (0.25/888.0) );
     if ( tmp < 27.9 ) { tmp = 27.9; }
     if ( tmp > 31.4 ) { tmp = 31.4; }
     fgSetFloat( "/instrumentation/altimeter/setting-inhg", tmp );
 
-    tmp = ati_bird->getDoubleValue() + (diff2_ave * (20.0/880.0) );
+    tmp = ati_bird->getDoubleValue() + (diff2_ave * (20.0/888.0) );
     if ( tmp < -10.0 ) { tmp = -10.0; }
     if ( tmp > 10.0 ) { tmp = 10.0; }
     fgSetFloat( "/instrumentation/attitude-indicator/horizon-offset-deg", tmp );
 
-    tmp = nav1_obs->getDoubleValue() + (diff3_ave * (72.0/880.0) );
+    tmp = nav1_obs->getDoubleValue() + (diff3_ave * (72.0/888.0) );
     while ( tmp >= 360.0 ) { tmp -= 360.0; }
     while ( tmp < 0.0 ) { tmp += 360.0; }
     // cout << " obs = " << tmp << endl;
     fgSetFloat( "/radios/nav[0]/radials/selected-deg", tmp );
 
-    tmp = nav2_obs->getDoubleValue() + (diff4_ave * (72.0/880.0) );
+    tmp = nav2_obs->getDoubleValue() + (diff4_ave * (72.0/888.0) );
     while ( tmp >= 360.0 ) { tmp -= 360.0; }
     while ( tmp < 0.0 ) { tmp += 360.0; }
     // cout << " obs = " << tmp << endl;
     fgSetFloat( "/radios/nav[1]/radials/selected-deg", tmp );
 
-    tmp = adf_hdg->getDoubleValue() + (diff5_ave * (72.0/880.0) );
+    tmp = adf_hdg->getDoubleValue() + (diff5_ave * (72.0/888.0) );
     while ( tmp >= 360.0 ) { tmp -= 360.0; }
     while ( tmp < 0.0 ) { tmp += 360.0; }
     // cout << " obs = " << tmp << endl;
@@ -1379,9 +1379,12 @@ bool FGATC610x::do_radio_display() {
             // display turns on the decimal point
         } else {
             // out of range
-            for ( i = 0; i < 6; ++i ) {
-                radio_display_data[i] = 0xee;
-            }
+            radio_display_data[0] = 0xbb;
+            radio_display_data[1] = 0xfb;
+            radio_display_data[2] = 0xbb;
+            radio_display_data[3] = 0xfb;
+            radio_display_data[4] = 0xbb;
+            radio_display_data[5] = 0x0b;
         }
     } else {
 	// blank dem display
