@@ -42,6 +42,7 @@ extern "C" void *memset(void *, int, size_t);
 
 #include <string>       // Standard C++ library
 #include <map>          // STL
+#include <ctype.h>      // isdigit()
 
 #ifdef NEEDNAMESPACESTD
 using namespace std;
@@ -54,6 +55,8 @@ using namespace std;
 #include <Math/mat3.h>
 #include <Math/fg_random.h>
 #include <Math/polar3d.hxx>
+#include <Misc/stopwatch.hxx>
+#include <Misc/fgstream.hxx>
 #include <Scenery/tile.hxx>
 
 #include "material.hxx"
@@ -103,36 +106,30 @@ fgPoint3d calc_tex_coords(double *node, fgPoint3d *ref) {
 
 
 // Load a .obj file and build the GL fragment list
-int fgObjLoad(char *path, fgTILE *t) {
+int fgObjLoad( const string& path, fgTILE *t) {
     fgFRAGMENT fragment;
     fgPoint3d pp;
-    char fgpath[256], line[256], material[256];
     double approx_normal[3], normal[3], scale;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     GLint display_list;
-    fgFile f;
     int shading;
     int in_fragment, in_faces, vncount, n1, n2, n3, n4;
     int last1, last2, odd;
     double (*nodes)[3];
     fgPoint3d *center;
 
-    // First try "path.gz" (compressed format)
-    strcpy(fgpath, path);
-    strcat(fgpath, ".gz");
-    if ( (f = fgopen(fgpath, "rb")) == NULL ) {
-	// Next try "path" (uncompressed format)
-	strcpy(fgpath, path);
-	if ( (f = fgopen(fgpath, "rb")) == NULL ) {
-	    // Next try "path.obj" (uncompressed format)
-	    strcat(fgpath, ".gz");
-	    if ( (f = fgopen(fgpath, "rb")) == NULL ) {
-		strcpy(fgpath, path);
-		fgPrintf( FG_TERRAIN, FG_ALERT, 
-			  "Cannot open file: %s\n", fgpath );
-		return(0);
-	    }
+    // Attempt to open "path.gz" or "path"
+    fg_gzifstream in( path );
+    if ( ! in )
+    {
+	// Attempt to open "path.obj" or "path.obj.gz"
+	in.open( path + ".obj" );
+	if ( ! in )
+	{
+	    fgPrintf( FG_TERRAIN, FG_ALERT, 
+		      "Cannot open file: %s\n", path.c_str() );
+	    return 0;
 	}
     }
 
@@ -145,48 +142,59 @@ int fgObjLoad(char *path, fgTILE *t) {
     nodes = t->nodes;
     center = &t->center;
 
-    while ( fggets(f, line, 250) != NULL ) {
-	if ( line[0] == '#' ) {
-	    // comment -- ignore
-	} else if ( line[0] == '\n' ) {
-	    // empty line -- ignore
-	} else if ( strncmp(line, "gbs ", 4) == 0 ) {
-	    // reference point (center offset)
-	    sscanf(line, "gbs %lf %lf %lf %lf\n", 
-		   &t->center.x, &t->center.y, &t->center.z, 
-		   &t->bounding_radius);
-	} else if ( strncmp(line, "bs ", 3) == 0 ) {
-	    // reference point (center offset)
-	    sscanf(line, "bs %lf %lf %lf %lf\n", 
-		   &fragment.center.x, &fragment.center.y, &fragment.center.z, 
-		   &fragment.bounding_radius);
-	} else if ( strncmp(line, "v ", 2) == 0 ) {
-	    // node (vertex)
-	    if ( t->ncount < MAX_NODES ) {
-		// fgPrintf( FG_TERRAIN, FG_DEBUG, "vertex = %s", line);
-		sscanf(line, "v %lf %lf %lf\n", 
-		       &(t->nodes[t->ncount][0]), &(t->nodes[t->ncount][1]), 
-		       &(t->nodes[t->ncount][2]));
+    StopWatch stopwatch;
+    stopwatch.start();
+    while ( ! in.eof() )
+    {
+	// ignore comments and blank lines.
+	in.eat_comments();
 
-		t->ncount++;
-
-	    } else {
-		fgPrintf( FG_TERRAIN, FG_EXIT, 
-			  "Read too many nodes ... dying :-(\n");
-	    }
-	} else if ( strncmp(line, "vn ", 3) == 0 ) {
+	string token;
+	in.stream() >> token;
+	if ( token == "gbs" )
+	{
+	    // reference point (center offset)
+	    in.stream() >> t->center.x
+			>> t->center.y
+			>> t->center.z
+			>> t->bounding_radius;
+	}
+	else if ( token == "bs" )
+	{
+	    // reference point (center offset)
+	    in.stream() >> fragment.center.x
+			>> fragment.center.y
+			>> fragment.center.z
+			>> fragment.bounding_radius;
+	}
+	else if ( token == "vn" )
+	{
 	    // vertex normal
 	    if ( vncount < MAX_NODES ) {
-		// fgPrintf( FG_TERRAIN, FG_DEBUG, "vertex normal = %s", line);
-		sscanf(line, "vn %lf %lf %lf\n", 
-		       &normals[vncount][0], &normals[vncount][1], 
-		       &normals[vncount][2]);
+		in.stream() >> normals[vncount][0]
+			    >> normals[vncount][1]
+			    >> normals[vncount][2];
 		vncount++;
 	    } else {
 		fgPrintf( FG_TERRAIN, FG_EXIT, 
 			  "Read too many vertex normals ... dying :-(\n");
 	    }
-	} else if ( strncmp(line, "usemtl ", 7) == 0 ) {
+	}
+	else if ( token[0] == 'v' )
+	{
+	    // node (vertex)
+	    if ( t->ncount < MAX_NODES ) {
+		in.stream() >> t->nodes[t->ncount][0]
+			    >> t->nodes[t->ncount][1]
+			    >> t->nodes[t->ncount][2];
+		t->ncount++;
+	    } else {
+		fgPrintf( FG_TERRAIN, FG_EXIT, 
+			  "Read too many nodes ... dying :-(\n");
+	    }
+	}
+	else if ( token == "usemtl" )
+	{
 	    // material property specification
 
 	    // this also signals the start of a new fragment
@@ -211,26 +219,18 @@ int fgObjLoad(char *path, fgTILE *t) {
 	    // reset the existing face list
 	    // printf("cleaning a fragment with %d faces\n", 
 	    //        fragment.faces.size());
-	    while ( fragment.faces.size() ) {
-		//  printf("emptying face list\n");
-		fragment.faces.pop_front();
-	    }
+	    fragment.init();
 
 	    // scan the material line
-	    sscanf(line, "usemtl %s\n", material);
-
-	    // give the fragment a pointer back to the tile
+	    string material;
+	    in.stream() >> material;
 	    fragment.tile_ptr = t;
 
 	    // find this material in the properties list
-	    map < string, fgMATERIAL, less<string> > :: iterator myfind = 
-		material_mgr.material_map.find(material);
-	    if ( myfind == material_mgr.material_map.end() ) {
+	    if ( ! material_mgr.find( material, fragment.material_ptr )) {
 		fgPrintf( FG_TERRAIN, FG_ALERT, 
 			  "Ack! unknown usemtl name = %s in %s\n",
-			  material, path);
-	    } else {
-		fragment.material_ptr = &((*myfind).second);
+			  material.c_str(), path.c_str() );
 	    }
 
 	    // initialize the fragment transformation matrix
@@ -241,18 +241,13 @@ int fgObjLoad(char *path, fgTILE *t) {
 	    fragment.matrix[0] = fragment.matrix[5] =
 		fragment.matrix[10] = fragment.matrix[15] = 1.0;
 	    */
-	
-	    // initialize fragment face counter
-	    fragment.num_faces = 0;
-		
-	} else if ( line[0] == 't' ) {
+	} else if ( token[0] == 't' ) {
 	    // start a new triangle strip
 
 	    n1 = n2 = n3 = n4 = 0;
 
 	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "    new tri strip = %s", line);
-	    sscanf(line, "t %d %d %d %d\n", &n1, &n2, &n3, &n4);
-
+	    in.stream() >> n1 >> n2 >> n3;
 	    fragment.add_face(n1, n2, n3);
 
 	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "(t) = ");
@@ -340,7 +335,7 @@ int fgObjLoad(char *path, fgTILE *t) {
 		last1 = n3;
 		last2 = n4;
 	    }
-	} else if ( line[0] == 'f' ) {
+	} else if ( token[0] == 'f' ) {
 	    // unoptimized face
 
 	    if ( !in_faces ) {
@@ -349,8 +344,7 @@ int fgObjLoad(char *path, fgTILE *t) {
 	    }
 
 	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "new triangle = %s", line);*/
-	    sscanf(line, "f %d %d %d\n", &n1, &n2, &n3);
-
+	    in.stream() >> n1 >> n2 >> n3;
 	    fragment.add_face(n1, n2, n3);
 
             // xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
@@ -373,13 +367,28 @@ int fgObjLoad(char *path, fgTILE *t) {
             xglTexCoord2f(pp.lon, pp.lat);
 	    // xglVertex3d(t->nodes[n3][0], t->nodes[n3][1], t->nodes[n3][2]);
 	    xglVertex3dv(nodes[n3]);
-	} else if ( line[0] == 'q' ) {
+	} else if ( token[0] == 'q' ) {
 	    // continue a triangle strip
 	    n1 = n2 = 0;
 
 	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "continued tri strip = %s ", 
 	    //           line);
-	    sscanf(line, "q %d %d\n", &n1, &n2);
+	    in.stream() >> n1;
+
+	    // There can be one or two values 
+	    char c;
+	    while ( in.get(c) )
+	    {
+		if ( c == '\n' )
+		    break; // only the one
+
+		if ( isdigit(c) )
+		{
+		    in.putback(c);
+		    in.stream() >> n2;
+		    break;
+		}
+	    }
 	    // fgPrintf( FG_TERRAIN, FG_DEBUG, "read %d %d\n", n1, n2);
 
 	    if ( odd ) {
@@ -450,10 +459,13 @@ int fgObjLoad(char *path, fgTILE *t) {
 		last2 = n2;
 	    }
 	} else {
-	    fgPrintf( FG_TERRAIN, FG_WARN, "Unknown line in %s = %s\n", 
-		      path, line);
+	    fgPrintf( FG_TERRAIN, FG_WARN, "Unknown token in %s = %s\n", 
+		      path.c_str(), token.c_str() );
 	}
     }
+    stopwatch.stop();
+    fgPrintf( FG_TERRAIN, FG_INFO, "Loaded %s in %f seconds\n",
+	      path.c_str(), stopwatch.elapsedSeconds() );
 
     if ( in_fragment ) {
 	// close out the previous structure and start the next
@@ -482,13 +494,69 @@ int fgObjLoad(char *path, fgTILE *t) {
     xglEnd();
     */   
 
-    fgclose(f);
-
     return(1);
 }
 
 
 // $Log$
+// Revision 1.2  1998/09/01 19:03:09  curt
+// Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
+//  - The new classes in libmisc.tgz define a stream interface into zlib.
+//    I've put these in a new directory, Lib/Misc.  Feel free to rename it
+//    to something more appropriate.  However you'll have to change the
+//    include directives in all the other files.  Additionally you'll have
+//    add the library to Lib/Makefile.am and Simulator/Main/Makefile.am.
+//
+//    The StopWatch class in Lib/Misc requires a HAVE_GETRUSAGE autoconf
+//    test so I've included the required changes in config.tgz.
+//
+//    There are a fair few changes to Simulator/Objects as I've moved
+//    things around.  Loading tiles is quicker but thats not where the delay
+//    is.  Tile loading takes a few tenths of a second per file on a P200
+//    but it seems to be the post-processing that leads to a noticeable
+//    blip in framerate.  I suppose its time to start profiling to see where
+//    the delays are.
+//
+//    I've included a brief description of each archives contents.
+//
+// Lib/Misc/
+//   zfstream.cxx
+//   zfstream.hxx
+//     C++ stream interface into zlib.
+//     Taken from zlib-1.1.3/contrib/iostream/.
+//     Minor mods for STL compatibility.
+//     There's no copyright associated with these so I assume they're
+//     covered by zlib's.
+//
+//   fgstream.cxx
+//   fgstream.hxx
+//     FlightGear input stream using gz_ifstream.  Tries to open the
+//     given filename.  If that fails then filename is examined and a
+//     ".gz" suffix is removed or appended and that file is opened.
+//
+//   stopwatch.hxx
+//     A simple timer for benchmarking.  Not used in production code.
+//     Taken from the Blitz++ project.  Covered by GPL.
+//
+//   strutils.cxx
+//   strutils.hxx
+//     Some simple string manipulation routines.
+//
+// Simulator/Airports/
+//   Load airports database using fgstream.
+//   Changed fgAIRPORTS to use set<> instead of map<>.
+//   Added bool fgAIRPORTS::search() as a neater way doing the lookup.
+//   Returns true if found.
+//
+// Simulator/Astro/
+//   Modified fgStarsInit() to load stars database using fgstream.
+//
+// Simulator/Objects/
+//   Modified fgObjLoad() to use fgstream.
+//   Modified fgMATERIAL_MGR::load_lib() to use fgstream.
+//   Many changes to fgMATERIAL.
+//   Some changes to fgFRAGMENT but I forget what!
+//
 // Revision 1.1  1998/08/25 16:51:25  curt
 // Moved from ../Scenery
 //

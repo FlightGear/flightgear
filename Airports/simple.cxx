@@ -28,66 +28,89 @@
 #include <string>
 
 #include <Debug/fg_debug.h>
-#include <Include/fg_zlib.h>
 #include <Main/options.hxx>
+#include <Misc/fgstream.hxx>
+#include <Misc/stopwatch.hxx>
 
 #include "simple.hxx"
 
+#include "Include/fg_stl_config.h"
+#include STL_FUNCTIONAL
+#include STL_ALGORITHM
 
-// Constructor
-fgAIRPORTS::fgAIRPORTS( void ) {
+fgAIRPORTS::fgAIRPORTS() {
 }
 
 
 // load the data
 int fgAIRPORTS::load( const string& file ) {
-    fgAIRPORT a;
-    string path, fgpath, id;
-    char id_raw[256], line[256];
-    fgFile f;
-
     // build the path name to the airport file
-    path = current_options.get_fg_root() + "/Airports/" + file;
-    fgpath = path + ".gz";
+    string path = current_options.get_fg_root() + "/Airports/" + file;
+    StopWatch t;
 
-    // first try "path.gz"
-    if ( (f = fgopen(fgpath.c_str(), "rb")) == NULL ) {
-	// next try "path"
-        if ( (f = fgopen(path.c_str(), "rb")) == NULL ) {
-	    fgPrintf( FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", 
-		      path.c_str());
-	}
+    airports.erase( airports.begin(), airports.end() );
+
+    fg_gzifstream in( path );
+    if ( !in )
+	fgPrintf( FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", 
+		  path.c_str());
+
+    t.start();
+
+    // We can use the STL copy algorithm because the input
+    // file doesn't contain and comments or blank lines.
+    copy( istream_iterator<fgAIRPORT,ptrdiff_t>(in.stream()),
+	  istream_iterator<fgAIRPORT,ptrdiff_t>(),
+ 	  inserter( airports, airports.begin() ) );
+
+    t.stop();
+
+    fgPrintf( FG_GENERAL, FG_INFO, "Loaded %d airports in %f seconds\n",
+	      airports.size(), t.elapsedSeconds() );
+
+    return 1;
+}
+
+// class fgAIRPORT_eq : public unary_function<fgAIRPORT,bool>
+// {
+// public:
+//     explicit fgAIRPORT_eq( const string& id ) : _id(id) {}
+//     bool operator () ( const fgAIRPORT& a ) const { return a.id == _id; }
+// private:
+//     string _id;
+// };
+
+// search for the specified id
+bool
+fgAIRPORTS::search( const string& id, fgAIRPORT* a ) const
+{
+    StopWatch t;
+    t.start();
+//     const_iterator it = find_if( airports.begin(),
+// 				 airports.end(), fgAIRPORT_eq(id) );
+  
+    const_iterator it = airports.find( fgAIRPORT(id) );
+    t.stop();
+    if ( it != airports.end() )
+    {
+	*a = *it;
+	cout << "Found " << id << " in " << t.elapsedSeconds()
+	     << " seconds" << endl;
+	return true;
     }
-
-    while ( fggets(f, line, 250) != NULL ) {
-	// printf("%s", line);
-
-	sscanf( line, "%s %lf %lf %lfl\n", id_raw, &a.longitude, &a.latitude, 
-		&a.elevation );
-	id = id_raw;
-	airports[id] = a;
+    else
+    {
+	return false;
     }
-
-    fgclose(f);
-
-    return(1);
 }
 
 
-// search for the specified id
-fgAIRPORT fgAIRPORTS::search( char *id ) {
-    map < string, fgAIRPORT, less<string> > :: iterator find;
+fgAIRPORT
+fgAIRPORTS::search( const string& id ) const
+{
     fgAIRPORT a;
-
-    find = airports.find(id);
-    if ( find == airports.end() ) {
-	// not found
-	a.longitude = a.latitude = a.elevation = 0;
-    } else {
-	a = (*find).second;
-    }
-
-    return(a);
+    this->search( id, &a );
+    return a;
 }
 
 
@@ -97,6 +120,64 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/09/01 19:02:53  curt
+// Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
+//  - The new classes in libmisc.tgz define a stream interface into zlib.
+//    I've put these in a new directory, Lib/Misc.  Feel free to rename it
+//    to something more appropriate.  However you'll have to change the
+//    include directives in all the other files.  Additionally you'll have
+//    add the library to Lib/Makefile.am and Simulator/Main/Makefile.am.
+//
+//    The StopWatch class in Lib/Misc requires a HAVE_GETRUSAGE autoconf
+//    test so I've included the required changes in config.tgz.
+//
+//    There are a fair few changes to Simulator/Objects as I've moved
+//    things around.  Loading tiles is quicker but thats not where the delay
+//    is.  Tile loading takes a few tenths of a second per file on a P200
+//    but it seems to be the post-processing that leads to a noticeable
+//    blip in framerate.  I suppose its time to start profiling to see where
+//    the delays are.
+//
+//    I've included a brief description of each archives contents.
+//
+// Lib/Misc/
+//   zfstream.cxx
+//   zfstream.hxx
+//     C++ stream interface into zlib.
+//     Taken from zlib-1.1.3/contrib/iostream/.
+//     Minor mods for STL compatibility.
+//     There's no copyright associated with these so I assume they're
+//     covered by zlib's.
+//
+//   fgstream.cxx
+//   fgstream.hxx
+//     FlightGear input stream using gz_ifstream.  Tries to open the
+//     given filename.  If that fails then filename is examined and a
+//     ".gz" suffix is removed or appended and that file is opened.
+//
+//   stopwatch.hxx
+//     A simple timer for benchmarking.  Not used in production code.
+//     Taken from the Blitz++ project.  Covered by GPL.
+//
+//   strutils.cxx
+//   strutils.hxx
+//     Some simple string manipulation routines.
+//
+// Simulator/Airports/
+//   Load airports database using fgstream.
+//   Changed fgAIRPORTS to use set<> instead of map<>.
+//   Added bool fgAIRPORTS::search() as a neater way doing the lookup.
+//   Returns true if found.
+//
+// Simulator/Astro/
+//   Modified fgStarsInit() to load stars database using fgstream.
+//
+// Simulator/Objects/
+//   Modified fgObjLoad() to use fgstream.
+//   Modified fgMATERIAL_MGR::load_lib() to use fgstream.
+//   Many changes to fgMATERIAL.
+//   Some changes to fgFRAGMENT but I forget what!
+//
 // Revision 1.3  1998/08/27 17:01:55  curt
 // Contributions from Bernie Bright <bbright@c031.aone.net.au>
 // - use strings for fg_root and airport_id and added methods to return

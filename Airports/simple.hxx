@@ -35,38 +35,64 @@
 
 
 #include <string>        // Standard C++ string library
-#include <map>           // STL associative "array"
+#include <set>
 
 #ifdef NEEDNAMESPACESTD
 using namespace std;
 #endif
 
 
-typedef struct {
-    // char id[5];
+class fgAIRPORT {
+public:
+    fgAIRPORT( const string& name = "",
+	       double lon = 0.0,
+	       double lat = 0.0,
+	       double ele = 0.0 )
+	: id(name), longitude(lon), latitude(lat), elevation(ele) {}
+
+    bool operator < ( const fgAIRPORT& a ) const {
+	return id < a.id;
+    }
+
+public:
+    string id;
     double longitude;
     double latitude;
     double elevation;
-} fgAIRPORT;
+};
 
+inline istream&
+operator >> ( istream& in, fgAIRPORT& a )
+{
+    return in >> a.id >> a.longitude >> a.latitude >> a.elevation;
+}
 
 class fgAIRPORTS {
-    map < string, fgAIRPORT, less<string> > airports;
+public:
+    typedef set< fgAIRPORT > container;
+    typedef container::iterator iterator;
+    typedef container::const_iterator const_iterator;
+
+private:
+    container airports;
 
 public:
 
     // Constructor
-    fgAIRPORTS( void );
+    fgAIRPORTS();
+
+    // Destructor
+    ~fgAIRPORTS();
 
     // load the data
     int load( const string& file );
 
-    // search for the specified id
-    fgAIRPORT search( char *id );
-
-    // Destructor
-    ~fgAIRPORTS( void );
-
+    // search for the specified id.
+    // Returns true if successful, otherwise returns false.
+    // On success, airport data is returned thru "airport" pointer.
+    // "airport" is not changed if "id" is not found.
+    bool search( const string& id, fgAIRPORT* airport ) const;
+    fgAIRPORT search( const string& id ) const;
 };
 
 
@@ -74,6 +100,64 @@ public:
 
 
 // $Log$
+// Revision 1.3  1998/09/01 19:02:54  curt
+// Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
+//  - The new classes in libmisc.tgz define a stream interface into zlib.
+//    I've put these in a new directory, Lib/Misc.  Feel free to rename it
+//    to something more appropriate.  However you'll have to change the
+//    include directives in all the other files.  Additionally you'll have
+//    add the library to Lib/Makefile.am and Simulator/Main/Makefile.am.
+//
+//    The StopWatch class in Lib/Misc requires a HAVE_GETRUSAGE autoconf
+//    test so I've included the required changes in config.tgz.
+//
+//    There are a fair few changes to Simulator/Objects as I've moved
+//    things around.  Loading tiles is quicker but thats not where the delay
+//    is.  Tile loading takes a few tenths of a second per file on a P200
+//    but it seems to be the post-processing that leads to a noticeable
+//    blip in framerate.  I suppose its time to start profiling to see where
+//    the delays are.
+//
+//    I've included a brief description of each archives contents.
+//
+// Lib/Misc/
+//   zfstream.cxx
+//   zfstream.hxx
+//     C++ stream interface into zlib.
+//     Taken from zlib-1.1.3/contrib/iostream/.
+//     Minor mods for STL compatibility.
+//     There's no copyright associated with these so I assume they're
+//     covered by zlib's.
+//
+//   fgstream.cxx
+//   fgstream.hxx
+//     FlightGear input stream using gz_ifstream.  Tries to open the
+//     given filename.  If that fails then filename is examined and a
+//     ".gz" suffix is removed or appended and that file is opened.
+//
+//   stopwatch.hxx
+//     A simple timer for benchmarking.  Not used in production code.
+//     Taken from the Blitz++ project.  Covered by GPL.
+//
+//   strutils.cxx
+//   strutils.hxx
+//     Some simple string manipulation routines.
+//
+// Simulator/Airports/
+//   Load airports database using fgstream.
+//   Changed fgAIRPORTS to use set<> instead of map<>.
+//   Added bool fgAIRPORTS::search() as a neater way doing the lookup.
+//   Returns true if found.
+//
+// Simulator/Astro/
+//   Modified fgStarsInit() to load stars database using fgstream.
+//
+// Simulator/Objects/
+//   Modified fgObjLoad() to use fgstream.
+//   Modified fgMATERIAL_MGR::load_lib() to use fgstream.
+//   Many changes to fgMATERIAL.
+//   Some changes to fgFRAGMENT but I forget what!
+//
 // Revision 1.2  1998/08/27 17:01:56  curt
 // Contributions from Bernie Bright <bbright@c031.aone.net.au>
 // - use strings for fg_root and airport_id and added methods to return

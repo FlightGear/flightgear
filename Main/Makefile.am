@@ -52,7 +52,8 @@ fgfs_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Debug/libDebug.a \
 	$(top_builddir)/Lib/PUI/libPUI.a \
-	$(top_builddir)/Lib/zlib/libz.a
+	$(top_builddir)/Lib/zlib/libz.a \
+	$(top_builddir)/Lib/Misc/libMisc.a
 
 INCLUDES += \
 	-I$(top_builddir) \

@@ -30,46 +30,39 @@
 #include "fragment.hxx"
 
 
-// return the sign of a value
-#define FG_SIGN( x )  ((x) < 0 ? -1 : 1)
+template <class T>
+inline const int FG_SIGN(const T& x) {
+    return x < T(0) ? -1 : 1;
+}
 
-// return min or max of two values
-#define FG_MIN(A,B)	((A) < (B) ? (A) :  (B))
-#define FG_MAX(A,B)	((A) > (B) ? (A) :  (B))
+template <class T>
+inline const T& FG_MIN(const T& a, const T& b) {
+    return b < a ? b : a;
+}
 
+template <class T>
+inline const T& FG_MAX(const T& a, const T& b) {
+    return  a < b ? b : a;
+}
 
-fgFACE :: fgFACE () : 
-    n1(0), n2(0), n3(0)
+// return the minimum of the three values
+template <class T>
+inline const T& fg_min3( const T& a, const T& b, const T& c)
 {
+    return (a > b ? FG_MIN (b, c) : FG_MIN (a, c));
 }
 
-fgFACE :: ~fgFACE()
+
+// return the maximum of the three values
+template <class T>
+inline const T& fg_max3 (const T& a, const T& b, const T& c)
 {
+    return (a < b ? FG_MAX (b, c) : FG_MAX (a, c));
 }
 
-fgFACE :: fgFACE( const fgFACE & image ) :
-    n1( image.n1), n2( image.n2), n3( image.n3)
-{
-}
-
-bool fgFACE :: operator < (const fgFACE & rhs )
-{
-    return ( n1 < rhs.n1 ? true : false);
-}
-
-bool fgFACE :: operator == (const fgFACE & rhs )
-{
-    return ((n1 == rhs.n1) && (n2 == rhs.n2) && ( n3 == rhs.n3));
-}
-
-
-// Constructor
-fgFRAGMENT::fgFRAGMENT ( void ) {
-}
-
-
+// Add a face to the face list
 // Copy constructor
-fgFRAGMENT ::   fgFRAGMENT ( const fgFRAGMENT & rhs ) :
+fgFRAGMENT::fgFRAGMENT ( const fgFRAGMENT & rhs ) :
     center         ( rhs.center          ),
     bounding_radius( rhs.bounding_radius ),
     material_ptr   ( rhs.material_ptr    ),
@@ -80,7 +73,7 @@ fgFRAGMENT ::   fgFRAGMENT ( const fgFRAGMENT & rhs ) :
 {
 }
 
-fgFRAGMENT & fgFRAGMENT :: operator = ( const fgFRAGMENT & rhs )
+fgFRAGMENT & fgFRAGMENT::operator = ( const fgFRAGMENT & rhs )
 {
     if(!(this == &rhs )) {
 	center          = rhs.center;
@@ -94,41 +87,16 @@ fgFRAGMENT & fgFRAGMENT :: operator = ( const fgFRAGMENT & rhs )
 }
 
 
-// Add a face to the face list
-void fgFRAGMENT::add_face(int n1, int n2, int n3) {
-    fgFACE face;
-
-    face.n1 = n1;
-    face.n2 = n2;
-    face.n3 = n3;
-
-    faces.push_back(face);
-    num_faces++;
-}
-
-
-// return the minimum of the three values
-static double fg_min3 (double a, double b, double c)
-{
-    return (a > b ? FG_MIN (b, c) : FG_MIN (a, c));
-}
-
-
-// return the maximum of the three values
-static double fg_max3 (double a, double b, double c)
-{
-  return (a < b ? FG_MAX (b, c) : FG_MAX (a, c));
-}
-
-
 // test if line intesects with this fragment.  p0 and p1 are the two
 // line end points of the line.  If side_flag is true, check to see
 // that end points are on opposite sides of face.  Returns 1 if it
 // intersection found, 0 otherwise.  If it intesects, result is the
 // point of intersection
 
-int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
-			   fgPoint3d *result)
+int fgFRAGMENT::intersect( const fgPoint3d *end0,
+			   const fgPoint3d *end1,
+			   int side_flag,
+			   fgPoint3d *result) const
 {
     fgTILE *t;
     fgFACE face;
@@ -141,8 +109,6 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
     double xmin, xmax, ymin, ymax, zmin, zmax;
     double dx, dy, dz, min_dim, x2, y2, x3, y3, rx, ry;
     int side1, side2;
-    list < fgFACE > :: iterator current;
-    list < fgFACE > :: iterator last;
 
     // find the associated tile
     t = tile_ptr;
@@ -150,8 +116,8 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
     // printf("Intersecting\n");
 
     // traverse the face list for this fragment
-    current = faces.begin();
-    last = faces.end();
+    const_iterator current = faces.begin();
+    const_iterator last = faces.end();
     while ( current != last ) {
 	face = *current;
 	current++;
@@ -367,44 +333,65 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
     return(0);
 }
 
-
-// Destructor
-fgFRAGMENT::~fgFRAGMENT ( void ) {
-    // Step through the face list deleting the items until the list is
-    // empty
-
-    // printf("destructing a fragment with %d faces\n", faces.size());
-
-    while ( faces.size() ) {
-	//  printf("emptying face list\n");
-	faces.pop_front();
-    }
-}
-
-
-// equality operator
-bool  fgFRAGMENT :: operator == ( const fgFRAGMENT & rhs)
-{
-    if(( center.x - rhs.center.x ) < FG_EPSILON) {
-	if(( center.y - rhs.center.y) < FG_EPSILON) {
-	    if(( center.z - rhs.center.z) < FG_EPSILON) {
-		return true;
-	    }
-	}
-    }
-    return false;
-}
-
-// comparison operator
-bool  fgFRAGMENT :: operator < ( const fgFRAGMENT &rhs)
-{
-    // This is completely arbitrary. It satisfies RW's STL implementation
-
-    return bounding_radius < rhs.bounding_radius;
-}
-
-
 // $Log$
+// Revision 1.2  1998/09/01 19:03:07  curt
+// Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
+//  - The new classes in libmisc.tgz define a stream interface into zlib.
+//    I've put these in a new directory, Lib/Misc.  Feel free to rename it
+//    to something more appropriate.  However you'll have to change the
+//    include directives in all the other files.  Additionally you'll have
+//    add the library to Lib/Makefile.am and Simulator/Main/Makefile.am.
+//
+//    The StopWatch class in Lib/Misc requires a HAVE_GETRUSAGE autoconf
+//    test so I've included the required changes in config.tgz.
+//
+//    There are a fair few changes to Simulator/Objects as I've moved
+//    things around.  Loading tiles is quicker but thats not where the delay
+//    is.  Tile loading takes a few tenths of a second per file on a P200
+//    but it seems to be the post-processing that leads to a noticeable
+//    blip in framerate.  I suppose its time to start profiling to see where
+//    the delays are.
+//
+//    I've included a brief description of each archives contents.
+//
+// Lib/Misc/
+//   zfstream.cxx
+//   zfstream.hxx
+//     C++ stream interface into zlib.
+//     Taken from zlib-1.1.3/contrib/iostream/.
+//     Minor mods for STL compatibility.
+//     There's no copyright associated with these so I assume they're
+//     covered by zlib's.
+//
+//   fgstream.cxx
+//   fgstream.hxx
+//     FlightGear input stream using gz_ifstream.  Tries to open the
+//     given filename.  If that fails then filename is examined and a
+//     ".gz" suffix is removed or appended and that file is opened.
+//
+//   stopwatch.hxx
+//     A simple timer for benchmarking.  Not used in production code.
+//     Taken from the Blitz++ project.  Covered by GPL.
+//
+//   strutils.cxx
+//   strutils.hxx
+//     Some simple string manipulation routines.
+//
+// Simulator/Airports/
+//   Load airports database using fgstream.
+//   Changed fgAIRPORTS to use set<> instead of map<>.
+//   Added bool fgAIRPORTS::search() as a neater way doing the lookup.
+//   Returns true if found.
+//
+// Simulator/Astro/
+//   Modified fgStarsInit() to load stars database using fgstream.
+//
+// Simulator/Objects/
+//   Modified fgObjLoad() to use fgstream.
+//   Modified fgMATERIAL_MGR::load_lib() to use fgstream.
+//   Many changes to fgMATERIAL.
+//   Some changes to fgFRAGMENT but I forget what!
+//
 // Revision 1.1  1998/08/25 16:51:23  curt
 // Moved from ../Scenery
 //

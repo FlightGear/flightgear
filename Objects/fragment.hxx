@@ -50,6 +50,7 @@ extern "C" void *memset(void *, int, size_t);
 
 #include <Bucket/bucketutils.h>
 #include <Include/fg_types.h>
+#include "Include/fg_constants.h"
 #include <Math/mat3.h>
 
 #ifdef NEEDNAMESPACESTD
@@ -70,13 +71,22 @@ class fgFACE {
 public:
     int n1, n2, n3;
 
-    fgFACE();
-    ~fgFACE();
-    fgFACE( const fgFACE & image );
-    bool operator < ( const fgFACE & rhs );
-    bool operator == ( const fgFACE & rhs );
+    explicit fgFACE( int a = 0, int b =0, int c =0 )
+	: n1(a), n2(b), n3(c) {}
+
+    fgFACE( const fgFACE & image )
+	: n1(image.n1), n2(image.n2), n3(image.n3) {}
+
+    ~fgFACE() {}
+
+    bool operator < ( const fgFACE & rhs ) { return n1 < rhs.n1; }
 };
 
+inline bool
+operator == ( const fgFACE& lhs, const fgFACE & rhs )
+{
+    return (lhs.n1 == rhs.n1) && (lhs.n2 == rhs.n2) && (lhs.n3 == rhs.n3);
+}
 
 // Object fragment data class
 class fgFRAGMENT {
@@ -106,40 +116,126 @@ public:
     GLint display_list;
 
     // face list (this indexes into the master tile vertex list)
-    list < fgFACE > faces;
+    typedef list < fgFACE > container;
+    typedef container::iterator iterator;
+    typedef container::const_iterator const_iterator;
+
+    container faces;
 
     // number of faces in this fragment
     int num_faces;
 
     // Add a face to the face list
-    void add_face(int n1, int n2, int n3);
+    void add_face(int n1, int n2, int n3) {
+	faces.push_back( fgFACE(n1,n2,n3) );
+	num_faces++;
+    }
 
     // test if line intesects with this fragment.  p0 and p1 are the
     // two line end points of the line.  If side_flag is true, check
     // to see that end points are on opposite sides of face.  Returns
     // 1 if it intersection found, 0 otherwise.  If it intesects,
     // result is the point of intersection
-    int intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
-		   fgPoint3d *result);
+    int intersect( const fgPoint3d *end0,
+		   const fgPoint3d *end1,
+		   int side_flag,
+		   fgPoint3d *result) const;
 
     // Constructors
-    fgFRAGMENT ();
+    fgFRAGMENT () {}
     fgFRAGMENT ( const fgFRAGMENT &image );
 
     // Destructor
-    ~fgFRAGMENT ( );
+    ~fgFRAGMENT() { faces.erase( faces.begin(), faces.end() ); }
 
     // operators
     fgFRAGMENT & operator = ( const fgFRAGMENT & rhs );
-    bool operator == ( const fgFRAGMENT & rhs );
-    bool operator <  ( const fgFRAGMENT & rhs );
+
+    bool operator <  ( const fgFRAGMENT & rhs ) {
+	// This is completely arbitrary. It satisfies RW's STL implementation
+	return bounding_radius < rhs.bounding_radius;
+    }
+
+    void init() {
+	faces.erase( faces.begin(), faces.end() );
+	num_faces = 0;
+    }
+
+    void deleteDisplayList() {
+	xglDeleteLists( display_list, 1 );
+    }
 };
+
+inline bool
+operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
+    return (( lhs.center.x - rhs.center.x ) < FG_EPSILON &&
+	    ( lhs.center.y - rhs.center.y ) < FG_EPSILON &&
+	    ( lhs.center.z - rhs.center.z ) < FG_EPSILON    );
+}
 
 
 #endif // _FRAGMENT_HXX 
 
 
 // $Log$
+// Revision 1.2  1998/09/01 19:03:08  curt
+// Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
+//  - The new classes in libmisc.tgz define a stream interface into zlib.
+//    I've put these in a new directory, Lib/Misc.  Feel free to rename it
+//    to something more appropriate.  However you'll have to change the
+//    include directives in all the other files.  Additionally you'll have
+//    add the library to Lib/Makefile.am and Simulator/Main/Makefile.am.
+//
+//    The StopWatch class in Lib/Misc requires a HAVE_GETRUSAGE autoconf
+//    test so I've included the required changes in config.tgz.
+//
+//    There are a fair few changes to Simulator/Objects as I've moved
+//    things around.  Loading tiles is quicker but thats not where the delay
+//    is.  Tile loading takes a few tenths of a second per file on a P200
+//    but it seems to be the post-processing that leads to a noticeable
+//    blip in framerate.  I suppose its time to start profiling to see where
+//    the delays are.
+//
+//    I've included a brief description of each archives contents.
+//
+// Lib/Misc/
+//   zfstream.cxx
+//   zfstream.hxx
+//     C++ stream interface into zlib.
+//     Taken from zlib-1.1.3/contrib/iostream/.
+//     Minor mods for STL compatibility.
+//     There's no copyright associated with these so I assume they're
+//     covered by zlib's.
+//
+//   fgstream.cxx
+//   fgstream.hxx
+//     FlightGear input stream using gz_ifstream.  Tries to open the
+//     given filename.  If that fails then filename is examined and a
+//     ".gz" suffix is removed or appended and that file is opened.
+//
+//   stopwatch.hxx
+//     A simple timer for benchmarking.  Not used in production code.
+//     Taken from the Blitz++ project.  Covered by GPL.
+//
+//   strutils.cxx
+//   strutils.hxx
+//     Some simple string manipulation routines.
+//
+// Simulator/Airports/
+//   Load airports database using fgstream.
+//   Changed fgAIRPORTS to use set<> instead of map<>.
+//   Added bool fgAIRPORTS::search() as a neater way doing the lookup.
+//   Returns true if found.
+//
+// Simulator/Astro/
+//   Modified fgStarsInit() to load stars database using fgstream.
+//
+// Simulator/Objects/
+//   Modified fgObjLoad() to use fgstream.
+//   Modified fgMATERIAL_MGR::load_lib() to use fgstream.
+//   Many changes to fgMATERIAL.
+//   Some changes to fgFRAGMENT but I forget what!
+//
 // Revision 1.1  1998/08/25 16:51:23  curt
 // Moved from ../Scenery
 //

@@ -45,9 +45,10 @@
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
-#include <Include/fg_zlib.h>
+#include "Misc/fgstream.hxx"
 #include <Main/options.hxx>
 #include <Main/views.hxx>
+#include <Misc/stopwatch.hxx>
 #include <Time/fg_time.hxx>
 
 #include "orbits.hxx"
@@ -66,11 +67,7 @@ static GLint stars[FG_STAR_LEVELS];
 /* Initialize the Star Management Subsystem */
 int fgStarsInit( void ) {
     fgPoint3d starlist[FG_MAX_STARS];
-    fgFile fd;
     /* struct CelestialCoord pltPos; */
-    string path, gzpath;
-    char line[256], name[256];
-    char *front, *end;
     double right_ascension, declination, magnitude;
     double min_magnitude[FG_STAR_LEVELS];
     /* double ra_save, decl_save; */
@@ -79,65 +76,43 @@ int fgStarsInit( void ) {
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing stars\n");
 
-    /* build the full path name to the stars data base file */
-    path = current_options.get_fg_root() + "/Astro/stars";
-    gzpath = path + ".gz";
-
     if ( FG_STAR_LEVELS < 4 ) {
 	fgPrintf( FG_ASTRO, FG_EXIT, "Big whups in stars.cxx\n");
     }
 
+    // build the full path name to the stars data base file
+    string path = current_options.get_fg_root() + "/Astro/stars" + ".gz";
+
     fgPrintf( FG_ASTRO, FG_INFO, "  Loading stars from %s\n", path.c_str() );
 
-    // load star data file
-    if ( (fd = fgopen(path.c_str(), "rb")) == NULL ) {
-	if ( (fd = fgopen(gzpath.c_str(), "rb")) == NULL ) {
-	    // Oops, lets not even try to continue. This is critical.
-	    fgPrintf( FG_ASTRO, FG_EXIT,
-		      "Cannot open star file: '%s'\n", path.c_str() );
-	}
-    }
+    fg_gzifstream in( path );
+    if ( ! in )
+	fgPrintf( FG_ASTRO, FG_EXIT,
+		  "Cannot open star file: '%s'\n", path.c_str() );
 
     starcount = 0;
 
+    StopWatch timer;
+    timer.start();
+
     // read in each line of the file
-    while ( (fggets(fd, line, 256) != NULL) && (starcount < FG_MAX_STARS) ) {
-	front = line;
-
-	// printf("  Read line = %s", front);
-
-	// advance to first non-whitespace character
-	while ( (front[0] == ' ') || (front[0] == '\t') ) {
-	    front++;
-	}
-
-	// printf("  Line length (after trimming) = %d\n", strlen(front));
-
-	if ( front[0] == '#' ) {
-	    // comment
-	} else if ( strlen(front) <= 1 ) {
-	    // blank line
-	} else {
-	    // star data line
-
-	    // get name
-	    end = front;
-	    while ( end[0] != ',' ) {
-		end++;
-	    }
-	    end[0] = '\0';
-	    strcpy(name, front);
-	    front = end;
-	    front++;
-
-	    sscanf(front, "%lf,%lf,%lf\n",
-		   &right_ascension, &declination, &magnitude);
-	    starlist[starcount].x = right_ascension;
-	    starlist[starcount].y = declination;
-	    starlist[starcount].z = magnitude;
-	    starcount++;
-	}
+    while ( ! in.eof() && starcount < FG_MAX_STARS )
+    {
+	in.eat_comments();
+	string name;
+	char c = 0;
+	getline( in.stream(), name, ',' );
+	in.stream() >> starlist[starcount].x >> c;
+	in.stream() >> starlist[starcount].y >> c;
+// 	in.stream() >> starlist[starcount].x; in.get(c);
+// 	in.stream() >> starlist[starcount].y; in.get(c);
+	in.stream() >> starlist[starcount].z;
+	++starcount;
     }
+
+    timer.stop();
+    cerr << "Loaded " << starcount << " stars in "
+	 << timer.elapsedSeconds() << " seconds" << endl;
 
     min_magnitude[0] = 4.2;
     min_magnitude[1] = 3.6;
@@ -286,15 +261,73 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.12  1998/08/27 17:02:01  curt
-/* Contributions from Bernie Bright <bbright@c031.aone.net.au>
-/* - use strings for fg_root and airport_id and added methods to return
-/*   them as strings,
-/* - inlined all access methods,
-/* - made the parsing functions private methods,
-/* - deleted some unused functions.
-/* - propogated some of these changes out a bit further.
+/* Revision 1.13  1998/09/01 19:03:04  curt
+/* Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
+/*  - The new classes in libmisc.tgz define a stream interface into zlib.
+/*    I've put these in a new directory, Lib/Misc.  Feel free to rename it
+/*    to something more appropriate.  However you'll have to change the
+/*    include directives in all the other files.  Additionally you'll have
+/*    add the library to Lib/Makefile.am and Simulator/Main/Makefile.am.
 /*
+/*    The StopWatch class in Lib/Misc requires a HAVE_GETRUSAGE autoconf
+/*    test so I've included the required changes in config.tgz.
+/*
+/*    There are a fair few changes to Simulator/Objects as I've moved
+/*    things around.  Loading tiles is quicker but thats not where the delay
+/*    is.  Tile loading takes a few tenths of a second per file on a P200
+/*    but it seems to be the post-processing that leads to a noticeable
+/*    blip in framerate.  I suppose its time to start profiling to see where
+/*    the delays are.
+/*
+/*    I've included a brief description of each archives contents.
+/*
+/* Lib/Misc/
+/*   zfstream.cxx
+/*   zfstream.hxx
+/*     C++ stream interface into zlib.
+/*     Taken from zlib-1.1.3/contrib/iostream/.
+/*     Minor mods for STL compatibility.
+/*     There's no copyright associated with these so I assume they're
+/*     covered by zlib's.
+/*
+/*   fgstream.cxx
+/*   fgstream.hxx
+/*     FlightGear input stream using gz_ifstream.  Tries to open the
+/*     given filename.  If that fails then filename is examined and a
+/*     ".gz" suffix is removed or appended and that file is opened.
+/*
+/*   stopwatch.hxx
+/*     A simple timer for benchmarking.  Not used in production code.
+/*     Taken from the Blitz++ project.  Covered by GPL.
+/*
+/*   strutils.cxx
+/*   strutils.hxx
+/*     Some simple string manipulation routines.
+/*
+/* Simulator/Airports/
+/*   Load airports database using fgstream.
+/*   Changed fgAIRPORTS to use set<> instead of map<>.
+/*   Added bool fgAIRPORTS::search() as a neater way doing the lookup.
+/*   Returns true if found.
+/*
+/* Simulator/Astro/
+/*   Modified fgStarsInit() to load stars database using fgstream.
+/*
+/* Simulator/Objects/
+/*   Modified fgObjLoad() to use fgstream.
+/*   Modified fgMATERIAL_MGR::load_lib() to use fgstream.
+/*   Many changes to fgMATERIAL.
+/*   Some changes to fgFRAGMENT but I forget what!
+/*
+ * Revision 1.12  1998/08/27 17:02:01  curt
+ * Contributions from Bernie Bright <bbright@c031.aone.net.au>
+ * - use strings for fg_root and airport_id and added methods to return
+ *   them as strings,
+ * - inlined all access methods,
+ * - made the parsing functions private methods,
+ * - deleted some unused functions.
+ * - propogated some of these changes out a bit further.
+ *
  * Revision 1.11  1998/08/25 20:53:29  curt
  * Shuffled $FG_ROOT file layout.
  *

@@ -53,7 +53,8 @@ extern "C" void *memset(void *, int, size_t);
 using namespace std;
 #endif
 
-#include "fragment.hxx"
+// forward decl.
+class fgFRAGMENT;
 
 
 #define FG_MAX_MATERIAL_FRAGS 800
@@ -67,7 +68,10 @@ public:
     GLuint texture_id;
 
     // file name of texture
-    char texture_name[256];
+    string texture_name;
+
+    // alpha texture?
+    int alpha;
 
     // material properties
     GLfloat ambient[4], diffuse[4], specular[4], emissive[4];
@@ -82,13 +86,19 @@ public:
     fgMATERIAL ( void );
 
     // Sorting routines
-    void init_sort_list( void );
+    void init_sort_list( void ) {
+	list_size = 0;
+    }
+
     int append_sort_list( fgFRAGMENT *object );
+
+    void load_texture();
 
     // Destructor
     ~fgMATERIAL ( void );
 };
 
+istream& operator >> ( istream& in, fgMATERIAL& m );
 
 // Material management class
 class fgMATERIAL_MGR {
@@ -96,7 +106,11 @@ class fgMATERIAL_MGR {
 public:
 
     // associative array of materials
-    map < string, fgMATERIAL, less<string> > material_map;
+    typedef map < string, fgMATERIAL, less<string> > container;
+    typedef container::iterator iterator;
+    typedef container::const_iterator const_iterator;
+
+    container material_map;
 
     // Constructor
     fgMATERIAL_MGR ( void );
@@ -106,6 +120,8 @@ public:
 
     // Initialize the transient list of fragments for each material property
     void init_transient_material_lists( void );
+
+    bool find( const string& material, fgMATERIAL*& mtl_ptr );
 
     // Destructor
     ~fgMATERIAL_MGR ( void );
@@ -120,6 +136,64 @@ extern fgMATERIAL_MGR material_mgr;
 
 
 // $Log$
+// Revision 1.2  1998/09/01 19:03:09  curt
+// Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
+//  - The new classes in libmisc.tgz define a stream interface into zlib.
+//    I've put these in a new directory, Lib/Misc.  Feel free to rename it
+//    to something more appropriate.  However you'll have to change the
+//    include directives in all the other files.  Additionally you'll have
+//    add the library to Lib/Makefile.am and Simulator/Main/Makefile.am.
+//
+//    The StopWatch class in Lib/Misc requires a HAVE_GETRUSAGE autoconf
+//    test so I've included the required changes in config.tgz.
+//
+//    There are a fair few changes to Simulator/Objects as I've moved
+//    things around.  Loading tiles is quicker but thats not where the delay
+//    is.  Tile loading takes a few tenths of a second per file on a P200
+//    but it seems to be the post-processing that leads to a noticeable
+//    blip in framerate.  I suppose its time to start profiling to see where
+//    the delays are.
+//
+//    I've included a brief description of each archives contents.
+//
+// Lib/Misc/
+//   zfstream.cxx
+//   zfstream.hxx
+//     C++ stream interface into zlib.
+//     Taken from zlib-1.1.3/contrib/iostream/.
+//     Minor mods for STL compatibility.
+//     There's no copyright associated with these so I assume they're
+//     covered by zlib's.
+//
+//   fgstream.cxx
+//   fgstream.hxx
+//     FlightGear input stream using gz_ifstream.  Tries to open the
+//     given filename.  If that fails then filename is examined and a
+//     ".gz" suffix is removed or appended and that file is opened.
+//
+//   stopwatch.hxx
+//     A simple timer for benchmarking.  Not used in production code.
+//     Taken from the Blitz++ project.  Covered by GPL.
+//
+//   strutils.cxx
+//   strutils.hxx
+//     Some simple string manipulation routines.
+//
+// Simulator/Airports/
+//   Load airports database using fgstream.
+//   Changed fgAIRPORTS to use set<> instead of map<>.
+//   Added bool fgAIRPORTS::search() as a neater way doing the lookup.
+//   Returns true if found.
+//
+// Simulator/Astro/
+//   Modified fgStarsInit() to load stars database using fgstream.
+//
+// Simulator/Objects/
+//   Modified fgObjLoad() to use fgstream.
+//   Modified fgMATERIAL_MGR::load_lib() to use fgstream.
+//   Many changes to fgMATERIAL.
+//   Some changes to fgFRAGMENT but I forget what!
+//
 // Revision 1.1  1998/08/25 16:51:24  curt
 // Moved from ../Scenery
 //

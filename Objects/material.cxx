@@ -36,8 +36,8 @@
 #include <string.h>
 
 #include <Debug/fg_debug.h>
-#include <Include/fg_zlib.h>
 #include <Main/options.hxx>
+#include <Misc/fgstream.hxx>
 
 #include "material.hxx"
 #include "texload.h"
@@ -48,16 +48,165 @@ fgMATERIAL_MGR material_mgr;
 
 // Constructor
 fgMATERIAL::fgMATERIAL ( void ) {
-}
-
-
-// Sorting routines
-void fgMATERIAL::init_sort_list( void ) {
+    alpha = 0;
+    ambient[0]  = ambient[1]  = ambient[2]  = ambient[3]  = 0.0;
+    diffuse[0]  = diffuse[1]  = diffuse[2]  = diffuse[3]  = 0.0;
+    specular[0] = specular[1] = specular[2] = specular[3] = 0.0;
+    emissive[0] = emissive[1] = emissive[2] = emissive[3] = 0.0;
 }
 
 
 int fgMATERIAL::append_sort_list( fgFRAGMENT *object ) {
-    return(0);
+    if ( list_size < FG_MAX_MATERIAL_FRAGS )
+    {
+	list[ list_size++ ] = object;
+	return 0;
+    }
+    else
+    {
+	return 1;
+    }
+}
+
+istream&
+operator >> ( istream& in, fgMATERIAL& m )
+{
+    string token;
+
+    for (;;)
+    {
+	in >> token;
+	if ( token == "texture" )
+	{
+	    in >> token >> m.texture_name;
+	}
+	else if ( token == "ambient" )
+	{
+	    in >> token >> m.ambient[0] >> m.ambient[1]
+			>> m.ambient[2] >> m.ambient[3];
+	}
+	else if ( token == "diffuse" )
+	{
+	    in >> token >> m.diffuse[0] >> m.diffuse[1]
+			>> m.diffuse[2] >> m.diffuse[3];
+	}
+	else if ( token == "specular" )
+	{
+	    in >> token >> m.specular[0] >> m.specular[1]
+			>> m.specular[2] >> m.specular[3];
+	}
+	else if ( token == "emissive" )
+	{
+	    in >> token >> m.emissive[0] >> m.emissive[1]
+			>> m.emissive[2] >> m.emissive[3];
+	}
+	else if ( token == "alpha" )
+	{
+	    in >> token >> token;
+	    if ( token == "yes" )
+		m.alpha = 1;
+	    else if ( token == "no" )
+		m.alpha = 0;
+	    else
+	    {
+		fgPrintf( FG_TERRAIN, FG_INFO,
+			  "Bad alpha value '%s'\n", token.c_str() );
+	    }
+	}
+	else if ( token[0] == '}' )
+	{
+	    break;
+	}
+    }
+
+    return in;
+}
+
+void
+fgMATERIAL::load_texture()
+{
+    if ( current_options.get_textures() )
+    {
+	GLubyte *texbuf;
+	int width, height;
+
+	// create the texture object and bind it
+#ifdef GL_VERSION_1_1
+	xglGenTextures(1, &texture_id );
+	xglBindTexture(GL_TEXTURE_2D, texture_id );
+#elif GL_EXT_texture_object
+	xglGenTexturesEXT(1, &texture_id );
+	xglBindTextureEXT(GL_TEXTURE_2D, texture_id );
+#else
+#  error port me
+#endif
+
+	// set the texture parameters for this texture
+	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
+	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ) ;
+	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
+			  GL_LINEAR );
+	// xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+	//                   GL_NEAREST_MIPMAP_NEAREST );
+	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
+			  /* GL_LINEAR */ 
+			  /* GL_NEAREST_MIPMAP_LINEAR */
+			  GL_LINEAR_MIPMAP_LINEAR ) ;
+
+	/* load in the texture data */
+	string tpath = current_options.get_fg_root() + "/Textures/" + 
+	    texture_name + ".rgb";
+	string fg_tpath = tpath + ".gz";
+
+	if ( alpha == 0 ) {
+	    // load rgb texture
+
+	    // Try uncompressed
+	    if ( (texbuf = 
+		  read_rgb_texture(tpath.c_str(), &width, &height)) == 
+		 NULL )
+	    {
+		// Try compressed
+		if ( (texbuf = 
+		      read_rgb_texture(fg_tpath.c_str(), &width, &height)) 
+		     == NULL )
+		{
+		    fgPrintf( FG_GENERAL, FG_EXIT, 
+			      "Error in loading texture %s\n", 
+			      tpath.c_str() );
+		    return;
+		} 
+	    } 
+
+	    /* xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+	       GL_RGB, GL_UNSIGNED_BYTE, texbuf); */
+
+	    gluBuild2DMipmaps( GL_TEXTURE_2D, GL_RGB, width, height, 
+			       GL_RGB, GL_UNSIGNED_BYTE, texbuf );
+	} else if ( alpha == 1 ) {
+	    // load rgba (alpha) texture
+
+	    // Try uncompressed
+	    if ( (texbuf = 
+		  read_alpha_texture(tpath.c_str(), &width, &height))
+		 == NULL )
+	    {
+		// Try compressed
+		if ((texbuf = 
+		     read_alpha_texture(fg_tpath.c_str(), &width, &height))
+		    == NULL )
+		{
+		    fgPrintf( FG_GENERAL, FG_EXIT, 
+			      "Error in loading texture %s\n",
+			      tpath.c_str() );
+		    return;
+		} 
+	    } 
+
+	    xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
+			  GL_RGBA, GL_UNSIGNED_BYTE, texbuf);
+	}
+    }
 }
 
 
@@ -73,211 +222,40 @@ fgMATERIAL_MGR::fgMATERIAL_MGR ( void ) {
 
 // Load a library of material properties
 int fgMATERIAL_MGR::load_lib ( void ) {
-    fgMATERIAL m;
-    char material_name[256];
-    string mpath, fg_mpath, tpath, fg_tpath;
-    char line[256], *line_ptr, value[256];
-    GLubyte *texbuf;
-    fgFile f;
-    int width, height;
-    int alpha;
+    string material_name;
 
     // build the path name to the material db
-    mpath = current_options.get_fg_root() + "/materials";
-    fg_mpath = mpath + ".gz";
+    string mpath = current_options.get_fg_root() + "/materials";
+    fg_gzifstream in( mpath );
+    if ( ! in )
+	fgPrintf( FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", 
+		  mpath.c_str() );
 
-    // first try "path.gz"
-    if ( (f = fgopen(fg_mpath.c_str(), "rb")) == NULL ) {
-        // next try "path"    
-        if ( (f = fgopen(mpath.c_str(), "rb")) == NULL ) {
-            fgPrintf( FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", 
-		      mpath.c_str() );
-        }       
-    }
-
-    while ( fggets(f, line, 250) != NULL ) {
+    while ( ! in.eof() ) {
         // printf("%s", line);
 
-	// strip leading white space
-	line_ptr = line;
-	while ( ( (line_ptr[0] == ' ') || (line_ptr[0] == '\t') ) &&
-		(line_ptr[0] != '\n') ) {
-	    line_ptr++;
-	    
-	}
+	// strip leading white space and comments
+	in.eat_comments();
 
-        if ( line_ptr[0] == '#' ) {
-	    // ignore lines that start with '#'
-	} else if ( line_ptr[0] == '\n' ) {
-	    // ignore blank lines
-	} else if ( strstr(line_ptr, "{") ) {
-	    // start of record
-	    alpha = 0;
-	    m.ambient[0]  = m.ambient[1]  = m.ambient[2]  = m.ambient[3]  = 0.0;
-	    m.diffuse[0]  = m.diffuse[1]  = m.diffuse[2]  = m.diffuse[3]  = 0.0;
-	    m.specular[0] = m.specular[1] = m.specular[2] = m.specular[3] = 0.0;
-	    m.emissive[0] = m.emissive[1] = m.emissive[2] = m.emissive[3] = 0.0;
+	// set to zero to prevent its value accidently being '{'
+	// after a failed >> operation.
+	char token = 0;
 
-	    material_name[0] = '\0';
-	    sscanf(line_ptr, "%s", material_name);
-	    if ( ! strlen(material_name) ) {
-		fgPrintf( FG_TERRAIN, FG_INFO, "Bad material name in '%s'\n",
-			  line );
-	    }
-	    printf("  Loading material = %s\n", material_name);
-	} else if ( strncmp(line_ptr, "alpha", 5) == 0 ) {
-	    line_ptr += 5;
-	    while ( ( (line_ptr[0] == ' ') || (line_ptr[0] == '\t') || 
-		      (line_ptr[0] == '=') ) &&
-		    (line_ptr[0] != '\n') ) {
-		line_ptr++;
-	    }
-	    sscanf(line_ptr, "%s\n", value);
-	    if ( strcmp(value, "no") == 0 ) {
-		alpha = 0;
-	    } else if ( strcmp(value, "yes") == 0 ) {
-		alpha = 1;
-	    } else {
-		fgPrintf( FG_TERRAIN, FG_INFO, "Bad alpha value '%s'\n", line );
-	    }
-	} else if ( (strncmp(line_ptr, "texture", 7) == 0) &&
-		    !current_options.get_textures() ) {
-	    // do nothing
-	} else if ( strncmp(line_ptr, "texture", 7) == 0 ) {
-	    line_ptr += 7;
-	    while ( ( (line_ptr[0] == ' ') || (line_ptr[0] == '\t') || 
-		      (line_ptr[0] == '=') ) &&
-		    (line_ptr[0] != '\n') ) {
-		line_ptr++;
-	    }
-	    // printf("texture name = %s\n", line_ptr);
-	    sscanf(line_ptr, "%s\n", m.texture_name);
+	in.stream() >> material_name >> token;
 
-	    // create the texture object and bind it
-#ifdef GL_VERSION_1_1
-	    xglGenTextures(1, &m.texture_id);
-	    xglBindTexture(GL_TEXTURE_2D, m.texture_id);
-#elif GL_EXT_texture_object
-	    xglGenTexturesEXT(1, &m.texture_id);
-	    xglBindTextureEXT(GL_TEXTURE_2D, m.texture_id);
-#else
-#  error port me
-#endif
-
-	    // set the texture parameters for this texture
-	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
-	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ) ;
-	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
-			      GL_LINEAR );
-	    // xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-	    //                   GL_NEAREST_MIPMAP_NEAREST );
-	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
-			      /* GL_LINEAR */ 
-			      /* GL_NEAREST_MIPMAP_LINEAR */
-			      GL_LINEAR_MIPMAP_LINEAR ) ;
-
-	    /* load in the texture data */
-	    tpath = current_options.get_fg_root() + "/Textures/" + 
-		m.texture_name + ".rgb";
-	    fg_tpath = tpath + ".gz";
-
-	    if ( alpha == 0 ) {
-		// load rgb texture
-
-		// Try uncompressed
-		if ( (texbuf = 
-		      read_rgb_texture(tpath.c_str(), &width, &height)) == 
-		     NULL )
-		{
-		    // Try compressed
-		    if ( (texbuf = 
-			  read_rgb_texture(fg_tpath.c_str(), &width, &height)) 
-			 == NULL )
-		    {
-			fgPrintf( FG_GENERAL, FG_EXIT, 
-				  "Error in loading texture %s\n", 
-				  tpath.c_str() );
-			return(0);
-		    } 
-		} 
-
-		/* xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
-			      GL_RGB, GL_UNSIGNED_BYTE, texbuf); */
-
-		gluBuild2DMipmaps( GL_TEXTURE_2D, GL_RGB, width, height, 
-				    GL_RGB, GL_UNSIGNED_BYTE, texbuf );
-	    } else if ( alpha == 1 ) {
-		// load rgba (alpha) texture
-
-		// Try uncompressed
-		if ( (texbuf = 
-		      read_alpha_texture(tpath.c_str(), &width, &height))
-		     == NULL )
-		{
-		    // Try compressed
-		    if ((texbuf = 
-			 read_alpha_texture(fg_tpath.c_str(), &width, &height))
-			== NULL )
-		    {
-			fgPrintf( FG_GENERAL, FG_EXIT, 
-				  "Error in loading texture %s\n",
-				  tpath.c_str() );
-			return(0);
-		    } 
-		} 
-
-		xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
-			      GL_RGBA, GL_UNSIGNED_BYTE, texbuf);
-	    }
-
-	} else if ( strncmp(line_ptr, "ambient", 7) == 0 ) {
-	    line_ptr += 7;
-	    while ( ( (line_ptr[0] == ' ') || (line_ptr[0] == '\t') || 
-		      (line_ptr[0] == '=') ) &&
-		    (line_ptr[0] != '\n') ) {
-		line_ptr++;
-	    }
-	    sscanf( line_ptr, "%f %f %f %f", 
-		    &m.ambient[0], &m.ambient[1], &m.ambient[2], &m.ambient[3]);
-	} else if ( strncmp(line_ptr, "diffuse", 7) == 0 ) {
-	    line_ptr += 7;
-	    while ( ( (line_ptr[0] == ' ') || (line_ptr[0] == '\t') || 
-		      (line_ptr[0] == '=') ) &&
-		    (line_ptr[0] != '\n') ) {
-		line_ptr++;
-	    }
-	    sscanf( line_ptr, "%f %f %f %f", 
-		    &m.diffuse[0], &m.diffuse[1], &m.diffuse[2], &m.diffuse[3]);
-	} else if ( strncmp(line_ptr, "specular", 8) == 0 ) {
-	    line_ptr += 8;
-	    while ( ( (line_ptr[0] == ' ') || (line_ptr[0] == '\t') || 
-		      (line_ptr[0] == '=') ) &&
-		    (line_ptr[0] != '\n') ) {
-		line_ptr++;
-	    }
-	    sscanf( line_ptr, "%f %f %f %f", 
-		    &m.specular[0], &m.specular[1], 
-		    &m.specular[2], &m.specular[3]);
-	} else if ( strncmp(line_ptr, "emissive", 8) == 0 ) {
-	    line_ptr += 8;
-	    while ( ( (line_ptr[0] == ' ') || (line_ptr[0] == '\t') || 
-		      (line_ptr[0] == '=') ) &&
-		    (line_ptr[0] != '\n') ) {
-		line_ptr++;
-	    }
-	    sscanf( line_ptr, "%f %f %f %f", 
-		    &m.emissive[0], &m.emissive[1], 
-		    &m.emissive[2], &m.emissive[3]);
-	} else if ( line_ptr[0] == '}' ) {
-	    // end of record, lets add this one to the list
+	if ( token == '{' ) {
+	    cout << "Loading material " << material_name << endl;
+	    fgMATERIAL m;
+	    in.stream() >> m;
 	    material_mgr.material_map[material_name] = m;
-	} else {
-	    fgPrintf(FG_TERRAIN, FG_INFO, 
-		     "Unknown line in material properties file\n");
 	}
     }
 
-    fgclose(f);
+    for ( iterator it = material_map.begin();
+	  it != material_map.end(); ++it )
+    {
+	it->second.load_texture();
+    }
 
     return(1);
 }
@@ -285,18 +263,24 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 
 // Initialize the transient list of fragments for each material property
 void fgMATERIAL_MGR::init_transient_material_lists( void ) {
-    map < string, fgMATERIAL, less<string> > :: iterator mapcurrent = 
-	material_mgr.material_map.begin();
-    map < string, fgMATERIAL, less<string> > :: iterator maplast = 
-	material_mgr.material_map.end();
-
-    while ( mapcurrent != maplast ) {
-        // (char *)key = (*mapcurrent).first;
-        // (fgMATERIAL)value = (*mapcurrent).second;
-	(*mapcurrent).second.list_size = 0;
-
-        *mapcurrent++;
+    for ( iterator it = material_map.begin();
+	  it != material_map.end(); ++it )
+    {
+	it->second.init_sort_list();
     }
+}
+
+bool
+fgMATERIAL_MGR::find( const string& material, fgMATERIAL*& mtl_ptr )
+{
+    iterator it = material_map.find( material );
+    if ( it != material_map.end() )
+    {
+	mtl_ptr = &(it->second);
+	return true;
+    }
+
+    return false;
 }
 
 
@@ -306,6 +290,64 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/09/01 19:03:08  curt
+// Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
+//  - The new classes in libmisc.tgz define a stream interface into zlib.
+//    I've put these in a new directory, Lib/Misc.  Feel free to rename it
+//    to something more appropriate.  However you'll have to change the
+//    include directives in all the other files.  Additionally you'll have
+//    add the library to Lib/Makefile.am and Simulator/Main/Makefile.am.
+//
+//    The StopWatch class in Lib/Misc requires a HAVE_GETRUSAGE autoconf
+//    test so I've included the required changes in config.tgz.
+//
+//    There are a fair few changes to Simulator/Objects as I've moved
+//    things around.  Loading tiles is quicker but thats not where the delay
+//    is.  Tile loading takes a few tenths of a second per file on a P200
+//    but it seems to be the post-processing that leads to a noticeable
+//    blip in framerate.  I suppose its time to start profiling to see where
+//    the delays are.
+//
+//    I've included a brief description of each archives contents.
+//
+// Lib/Misc/
+//   zfstream.cxx
+//   zfstream.hxx
+//     C++ stream interface into zlib.
+//     Taken from zlib-1.1.3/contrib/iostream/.
+//     Minor mods for STL compatibility.
+//     There's no copyright associated with these so I assume they're
+//     covered by zlib's.
+//
+//   fgstream.cxx
+//   fgstream.hxx
+//     FlightGear input stream using gz_ifstream.  Tries to open the
+//     given filename.  If that fails then filename is examined and a
+//     ".gz" suffix is removed or appended and that file is opened.
+//
+//   stopwatch.hxx
+//     A simple timer for benchmarking.  Not used in production code.
+//     Taken from the Blitz++ project.  Covered by GPL.
+//
+//   strutils.cxx
+//   strutils.hxx
+//     Some simple string manipulation routines.
+//
+// Simulator/Airports/
+//   Load airports database using fgstream.
+//   Changed fgAIRPORTS to use set<> instead of map<>.
+//   Added bool fgAIRPORTS::search() as a neater way doing the lookup.
+//   Returns true if found.
+//
+// Simulator/Astro/
+//   Modified fgStarsInit() to load stars database using fgstream.
+//
+// Simulator/Objects/
+//   Modified fgObjLoad() to use fgstream.
+//   Modified fgMATERIAL_MGR::load_lib() to use fgstream.
+//   Many changes to fgMATERIAL.
+//   Some changes to fgFRAGMENT but I forget what!
+//
 // Revision 1.3  1998/08/27 17:02:09  curt
 // Contributions from Bernie Bright <bbright@c031.aone.net.au>
 // - use strings for fg_root and airport_id and added methods to return
