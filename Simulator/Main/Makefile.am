@@ -27,6 +27,8 @@ else
 SERIAL_LIBS =
 endif
 
+DEFS += -DPKGLIBDIR=\"$(pkglibdir)\"
+
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
 
 bin_PROGRAMS = fgfs

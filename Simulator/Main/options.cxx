@@ -196,7 +196,7 @@ fgOPTIONS::fgOPTIONS() :
 #elif defined( MACOS )
 	fg_root = ":";
 #else
-	fg_root = "/usr/local/lib/FlightGear";
+	fg_root = PKGLIBDIR;
 #endif
     }
 

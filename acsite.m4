@@ -26,19 +26,19 @@ dnl
 dnl
 dnl
 AC_DEFUN(wi_EXTRA_LDIR, [
-libdir="$1"
-if test -r $libdir ; then
+mylibdir="$1"
+if test -r $mylibdir ; then
 	case "$LDFLAGS" in
-		*-L${libdir}*)
-			# echo "   + already had $libdir" 1>&6
+		*-L${mylibdir}*)
+			# echo "   + already had $mylibdir" 1>&6
 			;;
 		*)
 			if test "$LDFLAGS" = "" ; then
-				LDFLAGS="-L$libdir"
+				LDFLAGS="-L$mylibdir"
 			else
-				LDFLAGS="$LDFLAGS -L$libdir"
+				LDFLAGS="$LDFLAGS -L$mylibdir"
 			fi
-			echo "   + found $libdir" 1>&6
+			echo "   + found $mylibdir" 1>&6
 			;;
 	esac
 fi
@@ -99,8 +99,8 @@ for exdir in $exdirs ; do
 		incdir="${exdir}/include${subexdir}"
 		wi_EXTRA_IDIR($incdir)
 
-		libdir="${exdir}/lib${subexdir}"
-		wi_EXTRA_LDIR($libdir)
+		mylibdir="${exdir}/lib${subexdir}"
+		wi_EXTRA_LDIR($mylibdir)
 
 		progdir="${exdir}/bin${subexdirr}"
 		wi_EXTRA_PDIR($progdir)
