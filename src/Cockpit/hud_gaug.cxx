@@ -3,9 +3,9 @@
 
 
 #ifdef USE_HUD_TextList
-#define textString( x , y, text, font,digit )  TextString( text, x , y,digit )  //suma
+#define textString( x , y, text, digit )  TextString( text, x , y,digit )  //suma
 #else
-#define textString( x , y, text, font,digit )  puDrawString ( guiFnt, text, x, y ); //suma
+#define textString( x , y, text, digit )  puDrawString ( guiFnt, text, x, y ); //suma
 #endif
 
 //============== Top of gauge_instr class member definitions ==============
@@ -214,7 +214,7 @@ void gauge_instr :: draw (void)
 			    }
 			    // Now we know where to put the text.
 			    text_y = marker_ys;
-			    textString( text_x, text_y, TextScale, GLUT_BITMAP_8_BY_13,0 ); //suma
+			    textString( text_x, text_y, TextScale, 0 ); //suma
 			}
 		    }
 		}  //
@@ -350,7 +350,7 @@ void gauge_instr :: draw (void)
 
 				if( !huds_notext(options) ) {
 				    textString ( marker_xs - lenstr, marker_ys + 4,
-						 TextScale,  GLUT_BITMAP_8_BY_13 ,0); //suma
+						 TextScale ,0); //suma
 				}
 			    }
 			    else {
@@ -361,11 +361,11 @@ void gauge_instr :: draw (void)
 				    if( huds_top(options) )              {
 					textString ( marker_xs - lenstr,
 						     height - 10,
-						     TextScale, GLUT_BITMAP_8_BY_13,0 ); //suma
+						     TextScale, 0 ); //suma
 				    }
 				    else  {
 					textString( marker_xs - lenstr, scrn_rect.top,
-						    TextScale, GLUT_BITMAP_8_BY_13,0 );  //suma
+						    TextScale, 0 );  //suma
 				    }            
 				}
 			    }

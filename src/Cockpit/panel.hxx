@@ -36,8 +36,6 @@
 #  include <windows.h>
 #endif
 
-#include <GL/gl.h>
-
 #include <plib/ssg.h>
 
 #include <simgear/math/interpolater.hxx>

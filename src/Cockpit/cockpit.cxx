@@ -29,8 +29,6 @@
 #  include <windows.h>
 #endif
 
-#include <GL/gl.h>
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

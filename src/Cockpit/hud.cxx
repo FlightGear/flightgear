@@ -40,7 +40,6 @@
 
 #include <math.h>
 
-#include <GL/glut.h>
 #include <stdlib.h>
 #include <stdio.h>		// char related functions
 #include <string.h>		// strcmp()

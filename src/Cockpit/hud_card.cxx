@@ -2,9 +2,9 @@
 #include "hud.hxx"
 
 #ifdef USE_HUD_TextList
-#define textString( x , y, text, font,digit)  TextString( text, x , y ,digit ) //suma
+#define textString( x , y, text, digit)  TextString( text, x , y ,digit ) //suma
 #else
-#define textString( x , y, text, font,digit )  puDrawString ( guiFnt, text, x, y ); //suma
+#define textString( x , y, text, digit )  puDrawString ( guiFnt, text, x, y ); //suma
 #endif
 
 //========== Top of hud_card class member definitions =============
@@ -234,11 +234,11 @@ draw( void ) //  (HUD_scale * pscale )
             int l = abs((int)theta);
             if (l) {
                 if( l<10)
-                    textString (x,y,TextScale,GLUT_BITMAP_8_BY_13,0 );
+                    textString (x,y,TextScale,0 );
                 else if(l<100)
-                    textString (x-1.0,y,TextScale,GLUT_BITMAP_8_BY_13,0 );
+                    textString (x-1.0,y,TextScale,0 );
                 else if( l<360 )
-                    textString (x-2.0,y,TextScale,GLUT_BITMAP_8_BY_13,0 );
+                    textString (x-2.0,y,TextScale,0 );
             }
 			 
         }
@@ -584,7 +584,7 @@ draw( void ) //  (HUD_scale * pscale )
 								
                                     if( !huds_notext(options)) {
                                         textString ( marker_xs + 2,  marker_ys,
-                                                     TextScale,  GLUT_BITMAP_8_BY_13,0 );
+                                                     TextScale,0 );
                                     } 
                                 } else { 
                                     //begin suma 
@@ -601,11 +601,11 @@ draw( void ) //  (HUD_scale * pscale )
                                         if( huds_left(options) ) { 
                                             textString( marker_xs -  8 * lenstr - 2,
                                                         marker_ys - 4,
-                                                        TextScale, GLUT_BITMAP_8_BY_13,0 );										 
+                                                        TextScale, 0 );										 
                                         } else { 
                                             textString( marker_xe + 3 * lenstr,
                                                         marker_ys - 4,
-                                                        TextScale, GLUT_BITMAP_8_BY_13,0 );
+                                                        TextScale, 0 );
                                         } //End if huds_left
                                     } //End if !huds_notext
                                 }  //End if huds-both
@@ -844,7 +844,7 @@ draw( void ) //  (HUD_scale * pscale )
                                     if( !huds_notext(options) ) {
                                         textString ( marker_xs - 4 * lenstr,
                                                      marker_ys + 4,
-                                                             TextScale,  GLUT_BITMAP_8_BY_13,0 ); //suma
+                                                             TextScale, 0 ); //suma
                                     } 
                                 } else {
                                     drawOneLine( marker_xs, marker_ys,
@@ -853,11 +853,11 @@ draw( void ) //  (HUD_scale * pscale )
                                         if( huds_top(options) )              {
                                             textString ( marker_xs - 4 * lenstr,
                                                          height - 10,
-                                                         TextScale, GLUT_BITMAP_8_BY_13,0 ); //suma
+                                                         TextScale, 0 ); //suma
                                         }  else  {
                                             textString( marker_xs - 4 * lenstr,
                                                         scrn_rect.top,
-                                                        TextScale, GLUT_BITMAP_8_BY_13,0 ); //suma
+                                                        TextScale, 0 ); //suma
                                         } 
                                     } 
                                 }
@@ -1000,7 +1000,7 @@ zoomed_scale(int first, int last)
             sprintf(TextScale,"%3.0f\n",(float)(data[centre] * data_scaling()));
 
             if( !huds_notext(options)) { 
-                textString (x, ycentre, TextScale, GLUT_BITMAP_8_BY_13,0 );
+                textString (x, ycentre, TextScale, 0 );
             } 
  	
             for(i=1;i<5;i++) {  
@@ -1019,12 +1019,12 @@ zoomed_scale(int first, int last)
                 sprintf(TextScale,"%3.0f\n",(float)(data[centre-i-1] * data_scaling()));
 
                 if( !huds_notext(options)) 
-                    textString (x, yfirst, TextScale, GLUT_BITMAP_8_BY_13,0 );
+                    textString (x, yfirst, TextScale, 0 );
 		   
                 sprintf(TextScale,"%3.0f\n",(float)(data[centre+i+1] * data_scaling()));
 
                 if( !huds_notext(options)) 
-                    textString (x, ysecond, TextScale, GLUT_BITMAP_8_BY_13,0 );
+                    textString (x, ysecond, TextScale, 0 );
 		   
 
                 yfirst    -= factors;
@@ -1052,7 +1052,7 @@ zoomed_scale(int first, int last)
             sprintf(TextScale,"%3.0f\n",(float)(data[centre] * data_scaling()));
 
             if( !huds_notext(options)) { 
-                textString (w, ycentre, TextScale, GLUT_BITMAP_8_BY_13,0 );
+                textString (w, ycentre, TextScale, 0 );
             } 
  	
             for(i=1;i<5;i++) {  
@@ -1071,12 +1071,12 @@ zoomed_scale(int first, int last)
                 sprintf(TextScale,"%3.0f\n",(float)(data[centre-i-1] * data_scaling()));
 
                 if( !huds_notext(options)) 
-                    textString (w, yfirst, TextScale, GLUT_BITMAP_8_BY_13,0 );
+                    textString (w, yfirst, TextScale, 0 );
 		   
                 sprintf(TextScale,"%3.0f\n",(float)(data[centre+i+1] * data_scaling()));
 
                 if( !huds_notext(options)) 
-                    textString (w, ysecond, TextScale, GLUT_BITMAP_8_BY_13,0 );
+                    textString (w, ysecond, TextScale, 0 );
 		   
                 yfirst -= factors;
                 ysecond   += factors;
@@ -1166,7 +1166,7 @@ zoomed_scale(int first, int last)
             sprintf(TextScale,"%3.0f\n",(float)(data[centre] * data_scaling()));
 
             if( !huds_notext(options)) { 
-                textString (xcentre-10.0, y, TextScale, GLUT_BITMAP_8_BY_13,0 );
+                textString (xcentre-10.0, y, TextScale, 0 );
             } 
  	
             for(i=1;i<5;i++) {  
@@ -1185,12 +1185,12 @@ zoomed_scale(int first, int last)
                 sprintf(TextScale,"%3.0f\n",(float)(data[centre-i-1] * data_scaling()));
 
                 if( !huds_notext(options)) 
-                    textString (xfirst-10.0, y, TextScale, GLUT_BITMAP_8_BY_13,0 );
+                    textString (xfirst-10.0, y, TextScale, 0 );
 		   
                 sprintf(TextScale,"%3.0f\n",(float)(data[centre+i+1] * data_scaling()));
                             
                 if( !huds_notext(options)) 
-                    textString (xsecond-10.0, y, TextScale, GLUT_BITMAP_8_BY_13,0 );
+                    textString (xsecond-10.0, y, TextScale, 0 );
 		   
 
                 xfirst -= factors;
@@ -1219,7 +1219,7 @@ zoomed_scale(int first, int last)
             sprintf(TextScale,"%3.0f\n",(float)(data[centre] * data_scaling()));
             
             if( !huds_notext(options)) { 
-                textString (xcentre-10.0, h, TextScale, GLUT_BITMAP_8_BY_13,0 );
+                textString (xcentre-10.0, h, TextScale, 0 );
             } 
  	
             for(i=1;i<5;i++) {  
@@ -1238,12 +1238,12 @@ zoomed_scale(int first, int last)
                 sprintf(TextScale,"%3.0f\n",(float)(data[centre-i-1] * data_scaling()));
 
                 if( !huds_notext(options)) 
-                    textString (xfirst-10.0,h, TextScale, GLUT_BITMAP_8_BY_13,0 );
+                    textString (xfirst-10.0,h, TextScale, 0 );
 		   
                 sprintf(TextScale,"%3.0f\n",(float)(data[centre+i+1] * data_scaling()));
 
                 if( !huds_notext(options)) 
-                    textString (xsecond-10.0,h, TextScale, GLUT_BITMAP_8_BY_13,0 );
+                    textString (xsecond-10.0,h, TextScale, 0 );
 		   
 
                 xfirst -= factors;

@@ -3,9 +3,9 @@
 
 
 #ifdef USE_HUD_TextList
-#define textString( x , y, text, font,digit )  TextString( text, x , y,digit ) //suma
+#define textString( x , y, text, digit )  TextString( text, x , y,digit ) //suma
 #else
-#define textString( x , y, text, font,digit )  puDrawString ( guiFnt, text, x, y ); //suma
+#define textString( x , y, text, digit )  puDrawString ( guiFnt, text, x, y ); //suma
 #endif
 
 //======================= Top of instr_label class =========================
@@ -189,12 +189,12 @@ draw( void )       // Required method in base class
   
   if( fontSize == HUD_FONT_SMALL ) {
     textString( scrn_rect.left + posincr, scrn_rect.top,
-                label_buffer, GLUT_BITMAP_8_BY_13 ,get_digits()); //suma
+                label_buffer, get_digits()); //suma
     }
   else  {
     if( fontSize == HUD_FONT_LARGE ) {
       textString( scrn_rect.left + posincr, scrn_rect.top,
-                  label_buffer, GLUT_BITMAP_9_BY_15 ,get_digits()); //suma
+                  label_buffer, get_digits()); //suma
       }
     }
 }

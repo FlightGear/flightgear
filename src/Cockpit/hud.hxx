@@ -38,7 +38,6 @@
 #  include <windows.h>
 #endif
 
-#include <GL/glut.h>
 #include <stdlib.h>
 #include <string.h>
 
