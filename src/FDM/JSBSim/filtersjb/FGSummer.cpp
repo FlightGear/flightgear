@@ -54,6 +54,7 @@ FGSummer::FGSummer(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
   eParam tmpInputIndex;
 
   clip = false;
+  clipmin = clipmax = 0.0;
   Bias = 0.0;
   InputIndices.clear();
   InputTypes.clear();
@@ -181,7 +182,7 @@ void FGSummer::Debug(int from)
           break;
         }
       }
-      if (clipmax > clipmin) cout << "      CLIPTO: " << clipmin 
+      if (clip) cout << "      CLIPTO: " << clipmin 
                                   << ", " << clipmax << endl;
       if (IsOutput) cout << "      OUTPUT: " <<sOutputIdx <<  endl;
     }
