@@ -198,7 +198,7 @@ dnl Checks for library functions.
 AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS( ftime gettimeofday mktime strstr rand random \
-	setitimer getitimer signal GetLocalTime rint )
+	setitimer getitimer signal GetLocalTime rint getrusage )
 
 if test "x$ac_cv_lib_glut_glutGetModifiers" = "xno"; then
     echo 
@@ -220,6 +220,7 @@ AC_OUTPUT( \
 	Lib/Debug/Makefile \
 	Lib/DEM/Makefile \
 	Lib/Math/Makefile \
+	Lib/Misc/Makefile \
 	Lib/PUI/Makefile \
 	Lib/XGL/Makefile \
 	Lib/zlib/Makefile \

@@ -73,6 +73,9 @@
 /* Define if your system has its own `getloadavg' function.  */
 #undef HAVE_GETLOADAVG
 
+/* Define if you have getrusage() */
+#undef HAVE_GETRUSAGE
+
 /* Define if you have the getmntent function.  */
 #undef HAVE_GETMNTENT
 
