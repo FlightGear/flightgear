@@ -51,15 +51,16 @@ inline void init_vec(FG_VECTOR_3 vec) {
 }
 
 // Constructor
-FGInterface::FGInterface() {
+FGInterface::FGInterface()
+  : remainder(0)
+{
     _setup();
 }
 
-FGInterface::FGInterface( double dt ) {
+FGInterface::FGInterface( double dt )
+  : remainder(0)
+{
     _setup();
-//     delta_t = dt;
-//     remainder = elapsed = multi_loop = 0;
-    remainder = 0;
 }
 
 // Destructor
