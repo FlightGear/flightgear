@@ -67,8 +67,12 @@ public:
   static double get_TC_radps ();
   static double get_VSI_fps ();
 
+				// Engine Gauges
+  static double get_VACUUM_inhg ();
+
 private:
-	static double	the_ALT_ft, the_STATIC_inhg;
+	static double	the_ALT_ft;
+	static double	the_STATIC_inhg, the_VACUUM_inhg;
 	static double	the_VSI_fps, the_VSI_case;
 
 	static int	_UpdatesPending;

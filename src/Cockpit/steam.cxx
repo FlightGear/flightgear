@@ -57,6 +57,9 @@ double FGSteam::the_VSI_case = 29.92;
 double FGSteam::the_VSI_fps = 0.0;
 double FGSteam::get_VSI_fps() { _CatchUp(); return the_VSI_fps; }
 
+double FGSteam::the_VACUUM_inhg = 0.0;
+double FGSteam::get_VACUUM_inhg() { _CatchUp(); return the_VACUUM_inhg; }
+
 double FGSteam::get_MH_deg () { return FGBFI::getHeading (); }
 double FGSteam::get_DG_deg () { return FGBFI::getHeading (); }
 
@@ -94,14 +97,15 @@ void FGSteam::set_lowpass ( double *outthe, double inthe, double tc )
 		(*outthe) = (*outthe) * ( 1.0 - tc )
 			  +    inthe  * tc;
 	} else
-	if ( tc > 5 )
+	if ( tc > 5.0 )
 	{	/* Huge time step; assume filter has settled */
 		(*outthe) = inthe;
 	} else
 	{	/* Moderate time step; non linear response */
-		tc = exp ( -tc );
-		(*outthe) = (*outthe) * ( 1.0 - tc )
-			  +    inthe  * tc;
+		double keep = exp ( -tc );
+		printf ( "ARP: Keep is %f\n", keep );
+		(*outthe) = (*outthe) * keep
+			  +    inthe  * ( 1.0 - keep );
 	}
 }
 
@@ -116,16 +120,26 @@ void FGSteam::_CatchUp()
 { if ( _UpdatesPending != 0 )
   {	double dt = _UpdatesPending * 1.0 / current_options.get_model_hz();
 	int i,j;
-	double d;
+	double d, the_ENGINE_rpm;
 	/*
-	Someone has called our update function and we haven't
-	incorporated this into our instrument modelling yet
+	Someone has called our update function and
+	it turns out that we are running somewhat behind.
+	Here, we recalculate everything for a 'dt' second step.
 	*/
 
 	/**************************
-	This is just temporary
+	This is not actually correct, but provides a
+	scaling capability for the vacuum pump later on.
+	When we have a real engine model, we can ask it.
 	*/
-	the_ALT_ft = FGBFI::getAltitude();
+	the_ENGINE_rpm = FGBFI::getThrottle() * 26.0;
+
+	/**************************
+	This is just temporary, until the static source works,
+	so we just filter the actual value by one second to
+	account for the line impedance of the plumbing.
+	*/
+	set_lowpass ( & the_ALT_ft, FGBFI::getAltitude(), dt );
 
 	/**************************
 	First, we need to know what the static line is reporting,
@@ -133,11 +147,11 @@ void FGSteam::_CatchUp()
 	*/
 	the_STATIC_inhg = 29.92; 
 	i = (int) the_ALT_ft;
-	while ( i > 18000 )
-	{	the_STATIC_inhg /= 2;
-		i -= 18000;
+	while ( i > 9000 )
+	{	the_STATIC_inhg *= 0.707;
+		i -= 9000;
 	}
-	the_STATIC_inhg /= ( 1.0 + i / 18000.0 );
+	the_STATIC_inhg *= ( 1.0 - 0.293 * i / 9000.0 );
 
 	/*
 	NO alternate static source error (student feature), 
@@ -152,9 +166,34 @@ void FGSteam::_CatchUp()
 	NO capability for a fixed non-zero reading when level.
 	NO capability to have a scaling error of maybe a factor of two.
 	*/
-	set_lowpass ( & the_VSI_case, the_STATIC_inhg, dt/9.0 );
 	the_VSI_fps = ( the_VSI_case - the_STATIC_inhg )
 		    * 7000.0; /* manual scaling factor */	
+	set_lowpass ( & the_VSI_case, the_STATIC_inhg, dt/9.0 );
+
+	/**************************
+	The engine driven vacuum pump is directly attached
+	to the engine shaft, so each engine rotation pumps
+	a fixed volume.  The amount of air in that volume
+	is determined by the vacuum line's internal pressure.
+	The instruments are essentially leaking air like
+	a fixed source impedance from atmospheric pressure.
+	The regulator provides a digital limit setting,
+	which is open circuit unless the pressure drop is big.
+	Thus, we can compute the vacuum line pressure directly.
+	We assume that there is negligible reservoir space.
+	NO failure of the pump supported (yet)
+	*/
+	the_VACUUM_inhg = the_STATIC_inhg *
+		the_ENGINE_rpm / ( the_ENGINE_rpm + 10000.0 );
+	if ( the_VACUUM_inhg > 5.0 )
+	     the_VACUUM_inhg = 5.0;
+
+/*
+> I was merely going to do the engine rpm driven vacuum pump for both
+> the AI and DG, have the gyros spin down down in power off descents, 
+> have it tumble when you exceed the usual pitch or bank limits,
+> put in those insidious turning errors ... for now anyway.
+*/
 
 	/**************************
 	Finished updates, now clear the timer 
