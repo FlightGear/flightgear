@@ -11,7 +11,8 @@ libFlight_a_SOURCES = \
 	JSBSim.cxx JSBSim.hxx \
 	LaRCsim.cxx LaRCsim.hxx \
 	LaRCsimIC.cxx LaRCsimIC.hxx \
-	MagicCarpet.cxx MagicCarpet.hxx
+	MagicCarpet.cxx MagicCarpet.hxx \
+	NullFDM.cxx NullFDM.hxx
 
 bin_PROGRAMS = pstest
 

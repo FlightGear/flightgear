@@ -876,7 +876,7 @@ parse_option (const string& arg)
 
         // convert to fps
 	speed *= SG_NM_TO_METER * SG_METER_TO_FEET * (1.0/3600);
-	dir += 180;
+	// dir += 180;
 	if (dir >= 360)
 	  dir -= 360;
 	dir *= SGD_DEGREES_TO_RADIANS;
@@ -1086,7 +1086,7 @@ fgUsage ()
  
     cout << "Flight Model:" << endl;
     cout << "\t--fdm=abcd:  selects the core flight model code." << endl;
-    cout << "\t\tcan be one of jsb, larcsim, magic, external, balloon, or ada"
+    cout << "\t\tcan be one of jsb, larcsim, magic, null, external, balloon, or ada"
 	 << endl;
     cout << "\t--aircraft=abcd:  aircraft model to load" << endl;
     cout << "\t--model-hz=n:  run the FDM this rate (iterations per second)" 
