@@ -74,6 +74,8 @@ typedef int_list::const_iterator int_point_list_iterator;
 static double normals[FG_MAX_NODES][3];
 static double tex_coords[FG_MAX_NODES*3][3];
 
+#if 0
+// not used because plib branches don't honor call backs.
 static int
 runway_lights_predraw (ssgEntity * e)
 {
@@ -82,6 +84,7 @@ runway_lights_predraw (ssgEntity * e)
     return int((sun_angle > 90.0) ||
                (fgGetDouble("/environment/visibility-m") < 5000.0));
 }
+#endif
 
 
 #define FG_TEX_CONSTANT 69.0
@@ -1405,8 +1408,11 @@ bool fgBinObjLoad( const string& path, const bool is_base,
                                                         pt_materials[i],
                                                         up );
             float ranges[] = { 0, 12000 };
-            branch->setCallback( SSG_CALLBACK_PREDRAW, runway_lights_predraw );
-            ssgRangeSelector * lod = new ssgRangeSelector;
+            // branches don't honor callbacks as far as I know so I'm
+            // commenting this out to avoid a plib runtime warning.
+            // branch->setCallback( SSG_CALLBACK_PREDRAW,
+            //                      runway_lights_predraw );
+            ssgRangeSelector *lod = new ssgRangeSelector;
             lod->setRanges( ranges, 2 );
             lod->addKid( branch );
             rwy_lights->addKid( lod );
