@@ -122,10 +122,10 @@ public:
     void togglePauseMode() { pause = !pause; }; 
 
     // Initialize the time dependent variables
-    void init(const FGInterface& f);
+    void init( double lon, double lat );
 
     // Update the time dependent variables
-    void update(const FGInterface& f);
+    void update( double lon );
     void updateLocal();
 
     void cal_mjd (int mn, double dy, int yr);

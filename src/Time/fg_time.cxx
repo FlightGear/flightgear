@@ -61,6 +61,8 @@
 #include "fg_time.hxx"
 #include "timezone.h"
 #include "lowleveltime.h"
+#include "moonpos.hxx"
+#include "sunpos.hxx"
 
 
 #define DEGHR(x)        ((x)/15.)
@@ -121,8 +123,7 @@ void FGTime::updateLocal()
 
 // Initialize the time dependent variables (maybe I'll put this in the
 // constructor later)
-void FGTime::init(const FGInterface& f) 
-{
+void FGTime::init( double lon, double lat ) {
     FG_LOG( FG_EVENT, FG_INFO, "Initializing Time" );
     gst_diff = -9999.0;
     FG_LOG( FG_EVENT, FG_DEBUG, 
@@ -142,8 +143,7 @@ void FGTime::init(const FGInterface& f)
     // printf ("Current greenwich mean time = %24s", asctime(gmtime(&cur_time)));
     // printf ("Current local time          = %24s", asctime(localtime(&cur_time)));
     // time_t tmp = cur_time;
-    GeoCoord location(RAD_TO_DEG * f.get_Latitude(), 
-		      RAD_TO_DEG * f.get_Longitude());
+    GeoCoord location( RAD_TO_DEG * lat, RAD_TO_DEG * lon );
 
     GeoCoord* nearestTz = tzContainer->getNearest(location);
 
@@ -337,8 +337,7 @@ double FGTime::sidereal_course(double lng)
 
 
 // Update time variables such as gmt, julian date, and sidereal time
-void FGTime::update(const FGInterface& f) 
-{
+void FGTime::update( double lon ) {
     double gst_precise, gst_course;
 
     FG_LOG( FG_EVENT, FG_DEBUG, "Updating time" );
@@ -389,17 +388,17 @@ void FGTime::update(const FGInterface& f)
       
 	gst_diff = gst_precise - gst_course;
 
-	lst = sidereal_course(-(f.get_Longitude() * RAD_TO_DEG)) + gst_diff;
+	lst = sidereal_course(-(lon * RAD_TO_DEG)) + gst_diff;
     } else {
 	// course + difference should drift off very slowly
-	gst = sidereal_course( 0.00                              ) + gst_diff;
-	lst = sidereal_course( -(f.get_Longitude() * RAD_TO_DEG)) + gst_diff;
+	gst = sidereal_course( 0.00 ) + gst_diff;
+	lst = sidereal_course( -(lon * RAD_TO_DEG)) + gst_diff;
     }
     FG_LOG( FG_EVENT, FG_DEBUG,
 	    "  Current lon=0.00 Sidereal Time = " << gst );
     FG_LOG( FG_EVENT, FG_DEBUG,
 	    "  Current LOCAL Sidereal Time = " << lst << " (" 
-	    << sidereal_precise(-(f.get_Longitude() * RAD_TO_DEG)) 
+	    << sidereal_precise(-(lon * RAD_TO_DEG)) 
 	    << ") (diff = " << gst_diff << ")" );
 }
 
@@ -530,12 +529,9 @@ char* FGTime::format_time( const struct tm* p, char* buf )
 
 // Force an update of the sky and lighting parameters
 void FGTime::local_update_sky_and_lighting_params( void ) {
-    // fgSunInit();
-    SolarSystem::theSolarSystem->rebuild();
+    fgUpdateSunPos();
+    fgUpdateMoonPos();
     cur_light_params.Update();
-    /* current_sky.repaint( cur_light_params.sky_color,
-			 cur_light_params.fog_color,
-			 cur_light_params.sun_angle ); */
 }
 
 

@@ -58,14 +58,15 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/vector.hxx>
 
-#include <Astro/solarsystem.hxx>
+#include <Astro/ephemeris.hxx>
 #include <Main/views.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "fg_time.hxx"
 #include "moonpos.hxx"
 
-extern SolarSystem *solarSystem;
+// extern SolarSystem *solarSystem;
+extern FGEphemeris *ephem;
 
 #undef E
 
@@ -282,7 +283,7 @@ void fgMoonPosition(time_t ssue, double *lon, double *lat) {
      * every ten minutes. (Comment added by Durk Talsma).
      ************************************************************************/
 
-    ecliptic_to_equatorial( SolarSystem::theSolarSystem->getMoon()->getLon(),
+    ecliptic_to_equatorial( ephem->get_moon()->getLon(),
 			    0.0, &alpha, &delta );
     tmp = alpha - (FG_2PI/24)*GST(ssue);
     if (tmp < -FG_PI) {
@@ -314,8 +315,8 @@ static void fgMoonPositionGST(double gst, double *lon, double *lat) {
     /* lambda = moon_ecliptic_longitude(ssue); */
     /* ecliptic_to_equatorial(lambda, 0.0, &alpha, &delta); */
     //ecliptic_to_equatorial (solarPosition.lonMoon, 0.0, &alpha, &delta);
-    ecliptic_to_equatorial( SolarSystem::theSolarSystem->getMoon()->getLon(),
-			    SolarSystem::theSolarSystem->getMoon()->getLat(), 
+    ecliptic_to_equatorial( ephem->get_moon()->getLon(),
+			    ephem->get_moon()->getLat(), 
 			    &alpha,  &delta );
 
 //    tmp = alpha - (FG_2PI/24)*GST(ssue);

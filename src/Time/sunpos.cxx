@@ -57,14 +57,15 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/vector.hxx>
 
-#include <Astro/solarsystem.hxx>
+#include <Astro/ephemeris.hxx>
 #include <Main/views.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "fg_time.hxx"
 #include "sunpos.hxx"
 
-extern SolarSystem *solarSystem;
+// extern SolarSystem *solarSystem;
+extern FGEphemeris *ephem;
 
 #undef E
 #define MeanObliquity (23.440592*(FG_2PI/360))
@@ -188,7 +189,7 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
      * every ten minutes. (Comment added by Durk Talsma).
      ************************************************************************/
 
-    ecliptic_to_equatorial( SolarSystem::theSolarSystem->getSun()->getLon(),
+    ecliptic_to_equatorial( ephem->get_sun()->getLon(),
 			    0.0, &alpha, &delta );
     tmp = alpha - (FG_2PI/24)*GST(ssue);
     if (tmp < -FG_PI) {
@@ -220,9 +221,9 @@ static void fgSunPositionGST(double gst, double *lon, double *lat) {
     /* lambda = sun_ecliptic_longitude(ssue); */
     /* ecliptic_to_equatorial(lambda, 0.0, &alpha, &delta); */
     //ecliptic_to_equatorial (solarPosition.lonSun, 0.0, &alpha, &delta);
-    ecliptic_to_equatorial( SolarSystem::theSolarSystem->getSun()->getLon(),
-			    SolarSystem::theSolarSystem->getSun()->getLat(),
-			    &alpha,  &delta );
+    ecliptic_to_equatorial( ephem->get_sun()->getLon(),
+			    ephem->get_sun()->getLat(),
+			    &alpha, &delta );
 
 //    tmp = alpha - (FG_2PI/24)*GST(ssue);
     tmp = alpha - (FG_2PI/24)*gst;	
