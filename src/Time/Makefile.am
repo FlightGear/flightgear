@@ -1,11 +1,3 @@
-if HAVE_DAYLIGHT
-DEFS += -DHAVE_DAYLIGHT
-endif
-
-if HAVE_TIMEZONE
-DEFS += -DHAVE_TIMEZONE
-endif
-
 noinst_LIBRARIES = libTime.a
 
 libTime_a_SOURCES = \

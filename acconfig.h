@@ -45,6 +45,15 @@
 /* Define if you have <dirent.h>.  */
 #undef DIRENT
 
+/* Define to enable audio support */
+#undef ENABLE_AUDIO_SUPPORT
+
+/* Define to enable GLUT joystick support (limited to 3 axes) */
+#undef ENABLE_GLUT_JOYSTICK
+   
+/* Define to enable plib joystick support (recommended) */
+#undef ENABLE_PLIB_JOYSTICK
+   
 /* Define to eliminate all trace of debugging messages such as for a 
    release build */
 #undef FG_NDEBUG
@@ -52,6 +61,14 @@
 /* Define to include Oliver's networking support */
 #undef FG_NETWORK_OLK
    
+/* Define if we are building FGFS (should always be defined) */
+#undef FGFS
+   
+/* Define to enable 3dfx/glide render in a window hack under unix.
+   This probably won't work under windows. */
+#undef XMESA
+#undef FX
+
 /* Define to the type of elements in the array set by `getgroups'.
    Usually this is either `int' or `gid_t'.  */
 #undef GETGROUPS_T
@@ -70,6 +87,9 @@
 
 /* Define if you have <alloca.h> and it should be used (not on Ultrix).  */
 #undef HAVE_ALLOCA_H
+
+/* Define if you external variables daylight.  */
+#undef HAVE_DAYLIGHT
 
 /* Define if you don't have vprintf but do have _doprnt.  */
 #undef HAVE_DOPRNT
@@ -126,6 +146,9 @@
 
 /* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
 #undef HAVE_SYS_WAIT_H
+
+/* Define if you external variables timezone.  */
+#undef HAVE_TIMEZONE
 
 /* Define if your struct tm has tm_zone.  */
 #undef HAVE_TM_ZONE

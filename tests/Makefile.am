@@ -1,11 +1,3 @@
-if HAVE_DAYLIGHT
-DEFS += -DHAVE_DAYLIGHT
-endif
-
-if HAVE_TIMEZONE
-DEFS += -DHAVE_TIMEZONE
-endif
-
 bin_PROGRAMS = est-epsilon gl-info test-mktime
 
 est_epsilon_SOURCES = est-epsilon.c

@@ -1,9 +1,3 @@
-if ENABLE_PLIB_JOYSTICK
-DEFS += -DENABLE_PLIB_JOYSTICK
-else
-DEFS += -DENABLE_GLUT_JOYSTICK
-endif
-
 noinst_LIBRARIES = libJoystick.a
 
 libJoystick_a_SOURCES = joystick.cxx joystick.hxx

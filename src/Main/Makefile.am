@@ -1,33 +1,10 @@
-if ENABLE_AUDIO_SUPPORT
-DEFS += -DENABLE_AUDIO_SUPPORT
-AUDIO_LIBS = -lsl -lsm
-endif
-
-if ENABLE_IRIX_AUDIO
-LIBS += -laudio
-endif
-
-if ENABLE_WIN32_AUDIO
-LIBS += -lwinmm
-endif
-
-if ENABLE_PLIB_JOYSTICK
-DEFS += -DENABLE_PLIB_JOYSTICK
-else
-DEFS += -DENABLE_GLUT_JOYSTICK
-endif
-
-if ENABLE_XMESA_FX
-DEFS += -DXMESA -DFX
-endif
-
 if ENABLE_UNIX_SERIAL
 SERIAL_LIBS = $(top_builddir)/Lib/Serial/libSerial.a
 else
 SERIAL_LIBS =
 endif
 
-DEFS += -DPKGLIBDIR=\"$(pkglibdir)\"
+CPPFLAGS += -DPKGLIBDIR=\"$(pkglibdir)\"
 
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
 
@@ -63,7 +40,6 @@ fgfs_LDADD = \
 	$(top_builddir)/Simulator/Time/libTime.a \
 	$(top_builddir)/Simulator/Weather/libWeather.a \
 	$(top_builddir)/Simulator/Joystick/libJoystick.a \
-	$(AUDIO_LIBS) \
 	$(SERIAL_LIBS) \
 	$(top_builddir)/Lib/Math/libMath.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
@@ -71,7 +47,9 @@ fgfs_LDADD = \
 	-lpu -lfnt -lssg -lsg \
 	$(top_builddir)/Lib/Misc/libMisc.a \
 	$(top_builddir)/Lib/zlib/libz.a \
-	$(opengl_LIBS)
+	$(opengl_LIBS) \
+	$(audio_LIBS)
+
 
 INCLUDES += \
 	-I$(top_builddir) \
