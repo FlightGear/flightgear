@@ -356,6 +356,7 @@ void trRenderFrame( void ) {
     // a completely dark scene.  So, we set GL_LIGHT_MODEL_AMBIENT
     // explicitely to black.
     glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
+    // glLightModeli( GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE );
 
     ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient );
 
@@ -710,6 +711,15 @@ void fgRenderFrame() {
 
         ssgSetNearFar( scene_nearplane, scene_farplane );
 	ssgCullAndDraw( globals->get_scenery()->get_lighting() );
+
+	//static int _frame_count = 0;
+	//if (_frame_count % 30 == 0) {
+	//  printf("SSG: %s\n", ssgShowStats());
+	//}
+	//else {
+	//  ssgShowStats();
+	//}
+	//_frame_count++;
 
 
 #ifdef FG_EXPERIMENTAL_LIGHTING
@@ -1657,6 +1667,25 @@ handleFPE (int num)
 }
 #endif
 
+#ifdef __APPLE__
+
+typedef struct
+{
+  int  lo;
+  int  hi;
+} PSN;
+
+extern "C" {
+  short CPSGetCurrentProcess(PSN *psn);
+  short CPSSetProcessName (PSN *psn, char *processname);
+  short CPSEnableForegroundOperation(PSN *psn, int _arg2, int _arg3, int _arg4, int _arg5);
+  short CPSSetFrontProcess(PSN *psn);
+};
+
+#define CPSEnableFG(psn) CPSEnableForegroundOperation(psn,0x03,0x3C,0x2C,0x1103)
+
+#endif
+
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv ) {
 
@@ -1673,6 +1702,20 @@ int main ( int argc, char **argv ) {
 
 #if defined( HAVE_BC5PLUS )
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
+#endif
+
+    // Keyboard focus hack
+#ifdef __APPLE__
+    {
+      PSN psn;
+
+      glutInit (&argc, argv);
+
+      CPSGetCurrentProcess(&psn);
+      CPSSetProcessName(&psn, "FlightGear");
+      CPSEnableFG(&psn);
+      CPSSetFrontProcess(&psn);
+    }
 #endif
 
     // FIXME: add other, more specific
