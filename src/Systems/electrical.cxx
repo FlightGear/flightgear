@@ -329,7 +329,9 @@ void FGElectricalSystem::propogate( FGElectricalComponent *node, double val,
 
     // determine the current to carry forward
     double current = 0.0;
-    if ( node->get_kind() == FG_SUPPLIER ) {
+    if ( !fgGetBool("/systems/electrical/serviceable") ) {
+        current = 0;
+    } else if ( node->get_kind() == FG_SUPPLIER ) {
         // cout << s << " is a supplier" << endl;
         current = ((FGElectricalSupplier *)node)->get_output();
     } else if ( node->get_kind() == FG_BUS ) {
