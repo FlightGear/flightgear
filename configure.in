@@ -228,7 +228,7 @@ AC_SUBST(opengl_LIBS)
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS( \
-	fcntl.h getopt.h malloc.h stdlib.h sys/time.h sys/timeb.h \
+	fcntl.h getopt.h malloc.h memory.h stdlib.h sys/time.h sys/timeb.h \
 	unistd.h windows.h winbase.h values.h )
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -240,7 +240,7 @@ AC_STRUCT_TM
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS( ftime gettimeofday mktime strstr rand random \
+AC_CHECK_FUNCS( ftime gettimeofday memcpy bcopy mktime strstr rand random \
 	setitimer getitimer signal GetLocalTime rint getrusage )
 
 if test "x$ac_cv_lib_glut_glutGetModifiers" = "xno"; then
