@@ -90,6 +90,8 @@
 #include <Navaids/navlist.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
+#include <Sound/fg_fx.hxx>
+#include <Sound/soundmgr.hxx>
 #include <Time/event.hxx>
 #include <Time/light.hxx>
 #include <Time/sunpos.hxx>
@@ -728,6 +730,23 @@ bool fgInitSubsystems( void ) {
     // Initialize the built-in commands.
     ////////////////////////////////////////////////////////////////////
     fgInitCommands();
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the sound subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->set_soundmgr(new FGSoundMgr);
+    globals->get_soundmgr()->init();
+    globals->get_soundmgr()->bind();
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the sound-effects subsystem.
+    ////////////////////////////////////////////////////////////////////
+    globals->set_fx(new FGFX);
+    globals->get_fx()->init();
+    globals->get_fx()->bind();
 
 
     ////////////////////////////////////////////////////////////////////

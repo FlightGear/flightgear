@@ -37,10 +37,6 @@
 #include <simgear/misc/commands.hxx>
 #include <simgear/misc/props.hxx>
 
-// #include <Controls/controls.hxx>
-// #include <Sound/soundmgr.hxx>
-// #include "viewmgr.hxx"
-
 SG_USING_STD( vector );
 SG_USING_STD( string );
 
@@ -50,6 +46,7 @@ typedef vector<string> string_list;
 // Forward declarations
 class FGControls;
 class FGSoundMgr;
+class FGFX;
 class FGViewMgr;
 class FGViewer;
 
@@ -88,6 +85,9 @@ private:
 
     // sound manager
     FGSoundMgr *soundmgr;
+
+    // sound-effects manager
+    FGFX *fx;
 
     // control input state
     FGControls *controls;
@@ -143,6 +143,9 @@ public:
 
     inline FGSoundMgr *get_soundmgr() const { return soundmgr; }
     inline void set_soundmgr( FGSoundMgr *sm ) { soundmgr = sm; }
+
+    inline FGFX *get_fx() const { return fx; }
+    inline void set_fx( FGFX *x ) { fx = x; }
 
     inline FGControls *get_controls() const { return controls; }
     inline void set_controls( FGControls *c ) { controls = c; }
