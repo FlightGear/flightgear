@@ -550,6 +550,9 @@ void FGNavCom::search()
 double FGNavCom::get_nav_heading_needle_deflection() const {
     double r;
 
+    std::cout << "Nav heading is " << nav_heading << std::endl;
+    std::cout << "Nav radial is " << nav_radial << std::endl;
+
     if ( nav_inrange ) {
         r = nav_heading - nav_radial;
 	// cout << "Radial = " << nav_radial 
@@ -557,12 +560,8 @@ double FGNavCom::get_nav_heading_needle_deflection() const {
     
 	while ( r >  180.0 ) { r -= 360.0;}
 	while ( r < -180.0 ) { r += 360.0;}
-	if ( fabs(r) > 90.0 ) {
+	if ( fabs(r) > 90.0 )
 	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-	    if ( nav_loc ) {
-		r = -r;
-	    }
-	}
 
 	// According to Robin Peel, the ILS is 4x more sensitive than a vor
 	if ( nav_loc ) { r *= 4.0; }
