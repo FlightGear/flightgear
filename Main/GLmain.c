@@ -193,9 +193,9 @@ static void fgUpdateViewParams() {
 
     printf("View pos = %.4f, %.4f, %.4f\n", view_pos.y, view_pos.z,  
 	   FG_Altitude * FEET_TO_METER);
-    gluLookAt(view_pos.y, view_pos.z,  (FG_Altitude+3.0)*FEET_TO_METER * 0.0011,
+    gluLookAt(view_pos.y, view_pos.z,  FG_Altitude*FEET_TO_METER * 0.0011,
 	      view_pos.y + fwrd_view[0], view_pos.z + fwrd_view[1], 
-	      (FG_Altitude+3.0)*FEET_TO_METER * 0.001 + fwrd_view[2],
+	      FG_Altitude*FEET_TO_METER * 0.001 + fwrd_view[2],
 	      up[0], up[1], up[2]);
 
     glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
@@ -410,7 +410,7 @@ static void fgMainLoop( void ) {
 
 	/* now set aircraft altitude above ground */
 	FG_Altitude = rough_elev * METER_TO_FEET + 3.758099;
-	printf("<*> reseting altitude to %.0f meters\n", 
+	printf("<*> resetting altitude to %.0f meters\n", 
 	       FG_Altitude * FEET_TO_METER);
     }
 }
@@ -498,7 +498,8 @@ int main( int argc, char *argv[] ) {
     FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
     /* FG_Latitude  = 0.0;
     FG_Longitude = 0.0; */
-    FG_Altitude  = FG_Runway_altitude + 3.758099;
+    FG_Altitude = FG_Runway_altitude + 3.758099;
+    FG_Altitude = 15000.0;
 
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", FG_Latitude, 
 	   FG_Longitude, FG_Altitude);
@@ -548,7 +549,7 @@ int main( int argc, char *argv[] ) {
      * eventually */
     rough_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0, 
 			       FG_Latitude  * RAD_TO_DEG * 3600.0);
-    printf("Ground elevation is about %.2f meters here.\n", rough_elev);
+    printf("Ground elevation is %.2f meters here.\n", rough_elev);
     FG_Runway_altitude = rough_elev * METER_TO_FEET;
 
     if ( FG_Altitude < FG_Runway_altitude ) {
@@ -610,12 +611,15 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.30  1997/07/10 04:26:37  curt
-/* We now can interpolated ground elevation for any position in the grid.  We
-/* can use this to enforce a "hard" ground.  We still need to enforce some
-/* bounds checking so that we don't try to lookup data points outside the
-/* grid data set.
+/* Revision 1.31  1997/07/11 01:29:58  curt
+/* More tweaking of terrian floor.
 /*
+ * Revision 1.30  1997/07/10 04:26:37  curt
+ * We now can interpolated ground elevation for any position in the grid.  We
+ * can use this to enforce a "hard" ground.  We still need to enforce some
+ * bounds checking so that we don't try to lookup data points outside the
+ * grid data set.
+ *
  * Revision 1.29  1997/07/09 21:31:12  curt
  * Working on making the ground "hard."
  *

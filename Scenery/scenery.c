@@ -34,9 +34,14 @@
 GLint mesh_hack;
 
 
+/* Shared structure to hold current scenery parameters */
+struct scenery_params cur_scenery_params;
+
+
 /* Initialize the Scenery Management system */
 void fgSceneryInit() {
-    /* nothing to do here yet */
+    /* set the default terrain detail level */
+    cur_scenery_params.terrain_skip = 10;
 }
 
 
@@ -60,9 +65,12 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.3  1997/06/29 21:16:50  curt
-/* More twiddling with the Scenery Management system.
+/* Revision 1.4  1997/07/11 01:30:03  curt
+/* More tweaking of terrian floor.
 /*
+ * Revision 1.3  1997/06/29 21:16:50  curt
+ * More twiddling with the Scenery Management system.
+ *
  * Revision 1.2  1997/06/27 20:03:37  curt
  * Working on Makefile structure.
  *

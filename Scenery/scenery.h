@@ -28,6 +28,14 @@
 #define SCENERY_H
 
 
+/* Define a structure containing global scenery parameters */
+struct scenery_params {
+    int terrain_skip;  /* number of terrain data points to skip */
+};
+
+extern struct scenery_params cur_scenery_params;
+
+
 /* Initialize the Scenery Management system */
 void fgSceneryInit();
 
@@ -43,9 +51,12 @@ void fgSceneryRender();
 
 
 /* $Log$
-/* Revision 1.5  1997/06/26 22:14:57  curt
-/* Beginning work on a scenery management system.
+/* Revision 1.6  1997/07/11 01:30:03  curt
+/* More tweaking of terrian floor.
 /*
+ * Revision 1.5  1997/06/26 22:14:57  curt
+ * Beginning work on a scenery management system.
+ *
  * Revision 1.4  1997/06/21 17:57:21  curt
  * directory shuffling ...
  *

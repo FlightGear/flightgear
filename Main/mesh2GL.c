@@ -28,6 +28,7 @@
 
 #include "../constants.h"
 #include "../Scenery/mesh.h"
+#include "../Scenery/scenery.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
 
@@ -47,7 +48,7 @@ GLint mesh2GL(struct mesh *m) {
 
     printf("In mesh2GL(), generating GL call list.\n");
 
-    istep = jstep = 10;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = cur_scenery_params.terrain_skip ;  /* Detail level */
 
     /* setup the batch transformation */
     fgRotateBatchInit(-m->originx * ARCSEC_TO_RAD, -m->originy * ARCSEC_TO_RAD);
@@ -132,12 +133,15 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.28  1997/07/10 04:26:37  curt
-/* We now can interpolated ground elevation for any position in the grid.  We
-/* can use this to enforce a "hard" ground.  We still need to enforce some
-/* bounds checking so that we don't try to lookup data points outside the
-/* grid data set.
+/* Revision 1.29  1997/07/11 01:29:58  curt
+/* More tweaking of terrian floor.
 /*
+ * Revision 1.28  1997/07/10 04:26:37  curt
+ * We now can interpolated ground elevation for any position in the grid.  We
+ * can use this to enforce a "hard" ground.  We still need to enforce some
+ * bounds checking so that we don't try to lookup data points outside the
+ * grid data set.
+ *
  * Revision 1.27  1997/07/09 21:31:13  curt
  * Working on making the ground "hard."
  *

@@ -31,6 +31,7 @@
 
 #include <GL/glut.h>
 
+#include "scenery.h"
 #include "mesh.h"
 #include "common.h"
 
@@ -158,7 +159,9 @@ double mesh_altitude(double lon, double lat) {
     double xlocal, ylocal, dx, dy, zA, zB, elev;
     int x1, y1, z1, x2, y2, z2, x3, y3, z3;
     int xindex, yindex;
+    int skip;
 
+    skip = cur_scenery_params.terrain_skip;
     /* determine if we are in the lower triangle or the upper triangle 
        ______
        |   /|
@@ -170,84 +173,91 @@ double mesh_altitude(double lon, double lat) {
        then calculate our end points
      */
 
-    xlocal = ( lon - eg.originx ) / eg.col_step;
-    ylocal = ( lat - eg.originy ) / eg.row_step;
+    xlocal = (lon - eg.originx) / eg.col_step;
+    ylocal = (lat - eg.originy) / eg.row_step;
 
-    xindex = (int)xlocal;
-    yindex = (int)ylocal;
+    xindex = (int)(xlocal / skip) * skip;
+    yindex = (int)(ylocal / skip) * skip;
+
+    if ( (xindex < 0) || (xindex + skip >= eg.cols) ||
+	 (yindex < 0) || (yindex + skip >= eg.rows) ) {
+	return(-9999);
+    }
 
     dx = xlocal - xindex;
     dy = ylocal - yindex;
 
     if ( dx > dy ) {
 	/* lower triangle */
-	printf("  Lower triangle\n");
+	/* printf("  Lower triangle\n"); */
 
 	x1 = xindex; 
 	y1 = yindex; 
 	z1 = eg.mesh_data[x1 * eg.rows + y1];
 
-	x2 = xindex + eg.col_step; 
+	x2 = xindex + skip; 
 	y2 = yindex; 
 	z2 = eg.mesh_data[x2 * eg.rows + y2];
 				  
-	x3 = xindex + eg.col_step; 
-	y3 = yindex + eg.row_step; 
+	x3 = xindex + skip; 
+	y3 = yindex + skip; 
 	z3 = eg.mesh_data[x3 * eg.rows + y3];
 
+	/* printf("  dx = %.2f  dy = %.2f\n", dx, dy);
 	printf("  (x1,y1,z1) = (%d,%d,%d)\n", x1, y1, z1);
 	printf("  (x2,y2,z2) = (%d,%d,%d)\n", x2, y2, z2);
-	printf("  (x3,y3,z3) = (%d,%d,%d)\n", x3, y3, z3);
+	printf("  (x3,y3,z3) = (%d,%d,%d)\n", x3, y3, z3); */
 
-	zA = dx * (z2 - z1) / eg.col_step + z1;
-	zB = dx * (z3 - z1) / eg.col_step + z1;
+	zA = dx * (z2 - z1) / skip + z1;
+	zB = dx * (z3 - z1) / skip + z1;
 	
-	printf("  zA = %.2f  zB = %.2f\n", zA, zB);
+	/* printf("  zA = %.2f  zB = %.2f\n", zA, zB); */
 
-	elev = dy * (zB - zA) * eg.col_step / (eg.row_step * dx) + zA;
+	elev = dy * (zB - zA) / dx + zA;
     } else {
 	/* upper triangle */
-	printf("  Upper triangle\n");
+	/* printf("  Upper triangle\n"); */
 
 	x1 = xindex; 
 	y1 = yindex; 
 	z1 = eg.mesh_data[x1 * eg.rows + y1];
 
 	x2 = xindex; 
-	y2 = yindex + eg.row_step; 
+	y2 = yindex + skip; 
 	z2 = eg.mesh_data[x2 * eg.rows + y2];
 				  
-	x3 = xindex + eg.col_step; 
-	y3 = yindex + eg.row_step; 
+	x3 = xindex + skip; 
+	y3 = yindex + skip; 
 	z3 = eg.mesh_data[x3 * eg.rows + y3];
 
+	/* printf("  dx = %.2f  dy = %.2f\n", dx, dy);
 	printf("  (x1,y1,z1) = (%d,%d,%d)\n", x1, y1, z1);
 	printf("  (x2,y2,z2) = (%d,%d,%d)\n", x2, y2, z2);
-	printf("  (x3,y3,z3) = (%d,%d,%d)\n", x3, y3, z3);
+	printf("  (x3,y3,z3) = (%d,%d,%d)\n", x3, y3, z3); */
  
-	zA = dy * (z2 - z1) / eg.row_step + z1;
-	zB = dy * (z3 - z1) / eg.row_step + z1;
+	zA = dy * (z2 - z1) / skip + z1;
+	zB = dy * (z3 - z1) / skip + z1;
 	
-	printf("  zA = %.2f  zB = %.2f\n", zA, zB );
-	printf("  dx = %.2f  xB - xA = %.2f\n", dx,
-	       eg.col_step * dy / eg.row_step);
+	/* printf("  zA = %.2f  zB = %.2f\n", zA, zB );
+	printf("  xB - xA = %.2f\n", eg.col_step * dy / eg.row_step); */
 
-	elev = dx * (zB - zA) * eg.row_step / (eg.col_step * dy) + zA;
+	elev = dx * (zB - zA) / dy    + zA;
     }
-
-    printf("Our true ground elevation is %.2f\n", elev);
 
     return(elev);
 }
 
 
 /* $Log$
-/* Revision 1.10  1997/07/10 04:26:38  curt
-/* We now can interpolated ground elevation for any position in the grid.  We
-/* can use this to enforce a "hard" ground.  We still need to enforce some
-/* bounds checking so that we don't try to lookup data points outside the
-/* grid data set.
+/* Revision 1.11  1997/07/11 01:30:02  curt
+/* More tweaking of terrian floor.
 /*
+ * Revision 1.10  1997/07/10 04:26:38  curt
+ * We now can interpolated ground elevation for any position in the grid.  We
+ * can use this to enforce a "hard" ground.  We still need to enforce some
+ * bounds checking so that we don't try to lookup data points outside the
+ * grid data set.
+ *
  * Revision 1.9  1997/07/10 02:22:10  curt
  * Working on terrain elevation interpolation routine.
  *
