@@ -1011,14 +1011,12 @@ GLUTspecialkeyup(int k, int x, int y)
 void
 GLUTmouse (int button, int updown, int x, int y)
 {
-  current_input.doMouseClick(button, updown == GLUT_DOWN, x, y);
+  current_input.doMouseClick(button, updown, x, y);
 }
 
 void
 GLUTmotion (int x, int y)
 {
-//   puMouse(x, y);
-//   glutPostRedisplay();
   current_input.doMouseMotion(x, y);
 }
 
