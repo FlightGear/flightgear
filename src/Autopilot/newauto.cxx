@@ -377,32 +377,48 @@ int FGAutopilot::run() {
 	} else if ( heading_mode == FG_HEADING_LOCK ) {
 	    // leave target heading alone
 	} else if ( heading_mode == FG_HEADING_NAV1 ) {
-	    double tgt_radial;
-	    double cur_radial;
-	    if ( current_radiostack->get_nav1_loc() ) {
-		// localizers radials are "true"
-		tgt_radial = current_radiostack->get_nav1_radial();
-	    } else {
-		tgt_radial = current_radiostack->get_nav1_radial() +
+	    if ( current_radiostack->get_nav1_to_flag() ||
+		 current_radiostack->get_nav1_from_flag() ) {
+		// We have an appropriate radial selected that the
+		// autopilot can follow
+		double tgt_radial;
+		double cur_radial;
+		if ( current_radiostack->get_nav1_loc() ) {
+		    // localizers radials are "true"
+		    tgt_radial = current_radiostack->get_nav1_radial();
+		} else {
+		    tgt_radial = current_radiostack->get_nav1_radial() +
+			current_radiostack->get_nav1_magvar();
+		}
+		cur_radial = current_radiostack->get_nav1_heading() +
 		    current_radiostack->get_nav1_magvar();
-	    }
-	    cur_radial = current_radiostack->get_nav1_heading() +
-		    current_radiostack->get_nav1_magvar();
-	    // cout << "target rad (true) = " << tgt_radial 
-	    //      << "  current rad (true) = " << cur_radial
-	    //      << endl;
+		if ( current_radiostack->get_nav1_from_flag() ) {
+		    cur_radial += 180.0;
+		    while ( cur_radial >= 360.0 ) { cur_radial -= 360.0; }
+		}
+		// cout << "target rad (true) = " << tgt_radial 
+		//      << "  current rad (true) = " << cur_radial
+		//      << endl;
 
-	    double diff = (tgt_radial - cur_radial);
-	    while ( diff < -180.0 ) { diff += 360.0; }
-	    while ( diff > 180.0 ) { diff -= 360.0; }
+		double diff = (tgt_radial - cur_radial);
+		while ( diff < -180.0 ) { diff += 360.0; }
+		while ( diff > 180.0 ) { diff -= 360.0; }
 		
-	    diff *= (current_radiostack->get_nav1_loc_dist() * METER_TO_NM);
-	    if ( diff < -30.0 ) { diff = -30.0; }
-	    if ( diff >  30.0 ) { diff =  30.0; }
+		diff *= (current_radiostack->get_nav1_loc_dist() * METER_TO_NM);
+		if ( diff < -30.0 ) { diff = -30.0; }
+		if ( diff >  30.0 ) { diff =  30.0; }
 
-	    TargetHeading = cur_radial - diff;
-	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
-	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
+		if ( current_radiostack->get_nav1_to_flag() ) {
+		    TargetHeading = cur_radial - diff;
+		} else if ( current_radiostack->get_nav1_from_flag() ) {
+		    TargetHeading = cur_radial + diff;
+		}
+		while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
+		while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
+	    } else {
+		// neither TO, or FROM, maintain current heading.
+		TargetHeading = FGBFI::getHeading();
+	    }
 	    MakeTargetHeadingStr( TargetHeading );
 	    // cout << "target course (true) = " << TargetHeading << endl;
 	} else if ( heading_mode == FG_HEADING_WAYPOINT ) {
