@@ -44,6 +44,16 @@ FGControls::FGControls() :
 }
 
 
+void FGControls::reset_all()
+{
+    controls.set_aileron(0.0);
+    controls.set_elevator(0.0);
+    controls.set_elevator_trim(0.0);
+    controls.set_rudder(0.0);
+    controls.set_throttle(FGControls::ALL_ENGINES, 0.0);
+}
+
+
 // Destructor
 FGControls::~FGControls() {
 }

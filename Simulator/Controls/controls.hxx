@@ -62,6 +62,9 @@ public:
     FGControls();
     ~FGControls();
 
+    // Reset function
+    void reset_all(void);
+	
     // Query functions
     inline double get_aileron() const { return aileron; }
     inline double get_elevator() const { return elevator; }
