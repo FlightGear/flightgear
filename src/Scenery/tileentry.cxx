@@ -1005,7 +1005,9 @@ FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
 {
     // bump up the ref count so we can remove this later without
     // having ssg try to free the memory.
+#if PLIB_VERSION > 183
     makeDList( terra_transform );
+#endif
 
     terra_transform->ref();
     terrain_branch->addKid( terra_transform );
