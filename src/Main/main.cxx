@@ -1778,8 +1778,16 @@ static bool fgMainInit( int argc, char **argv ) {
                                 // kludge to initialize mag compass
                                 // (should only be done for in-flight
                                 // startup)
-    fgSetDouble("/instrumentation/heading-indicator/offset-deg",
-                globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES);
+    // update magvar model
+    globals->get_mag()->update( fgGetDouble("/position/longitude-deg")
+                                * SGD_DEGREES_TO_RADIANS,
+                                fgGetDouble("/position/latitude-deg")
+                                * SGD_DEGREES_TO_RADIANS,
+                                fgGetDouble("/position/altitude-ft")
+                                * SG_FEET_TO_METER,
+                                globals->get_time_params()->getJD() );
+    double var = globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES;
+    fgSetDouble("/instrumentation/heading-indicator/offset-deg", -var);
 
     // airport = new ssgBranch;
     // airport->setName( "Airport Lighting" );
