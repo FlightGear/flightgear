@@ -63,6 +63,7 @@ void ControlMap::addMapping(int input, int type, void* object, int options)
 	out = new OutRec();
 	out->type = type;
 	out->object = object;
+        out->oldL = out->oldR = out->time = 0;
 	_outputs.add(out);
     }
     
@@ -73,12 +74,8 @@ void ControlMap::addMapping(int input, int type, void* object, int options)
     map->idx = out->maps.add(map);
 
     // The default ranges differ depending on type!
-    map->src1 = map->dst1 = 1;
-    map->src0 = map->dst0 = 0;
-    if(type==FLAP0 || type==FLAP1 || type==STEER)
-	map->src0 = map->dst0 = -1;
-    if(type==MAGNETOS)
-	map->src1 = map->dst1 = 3;
+    map->src1 = map->dst1 = rangeMax(type);
+    map->src0 = map->dst0 = rangeMin(type);
 
     // And add it to the approproate vectors.
     Vector* maps = (Vector*)_inputs.get(input);
@@ -91,7 +88,7 @@ void ControlMap::reset()
     for(int i=0; i<_outputs.size(); i++) {
 	OutRec* o = (OutRec*)_outputs.get(i);
 	for(int j=0; j<o->maps.size(); j++)
-	    ((MapRec*)o->maps.get(j))->val = 0;
+	    ((MapRec*)(o->maps.get(j)))->val = 0;
     }
 }
 
@@ -114,7 +111,31 @@ void ControlMap::setInput(int input, float val)
     }
 }
 
-void ControlMap::applyControls()
+int ControlMap::getOutputHandle(void* obj, int type)
+{
+    for(int i=0; i<_outputs.size(); i++) {
+	OutRec* o = (OutRec*)_outputs.get(i);
+	if(o->object == obj && o->type == type)
+	    return i;
+    }
+}
+
+void ControlMap::setTransitionTime(int handle, float time)
+{
+    ((OutRec*)_outputs.get(handle))->time = time;
+}
+
+float ControlMap::getOutput(int handle)
+{
+    return ((OutRec*)_outputs.get(handle))->oldL;
+}
+
+float ControlMap::getOutputR(int handle)
+{
+    return ((OutRec*)_outputs.get(handle))->oldR;
+}
+
+void ControlMap::applyControls(float dt)
 {
     int outrec;
     for(outrec=0; outrec<_outputs.size(); outrec++) {
@@ -139,6 +160,25 @@ void ControlMap::applyControls()
 		rval += val;
 	}
 
+        // If there is a finite transition time, clamp the values to
+        // the maximum travel allowed in this dt.
+        if(o->time > 0) {
+            float dl = lval - o->oldL;
+            float dr = rval - o->oldR;
+            float adl = Math::abs(dl);
+            float adr = Math::abs(dr);
+        
+            float max = (dt/o->time) * (rangeMax(o->type) - rangeMin(o->type));
+            if(adl > max) dl = dl*max/adl;
+            if(adr > max) dr = dr*max/adr;
+
+            lval = o->oldL + dl;
+            rval = o->oldR + dr;
+        }
+
+        o->oldL = lval;
+        o->oldR = rval;
+
 	void* obj = o->object;
 	switch(o->type) {
 	case THROTTLE: ((Thruster*)obj)->setThrottle(lval);        break;
@@ -162,4 +202,28 @@ void ControlMap::applyControls()
     }
 }
 
-}; // namespace yasim
+float ControlMap::rangeMin(int type)
+{
+    // The minimum of the range for each type of control
+    switch(type) {
+    case FLAP0:    return -1;  // [-1:1]
+    case FLAP1:    return -1;
+    case STEER:    return -1;
+    case MAGNETOS: return 0;   // [0:3]
+    default:       return 0;   // [0:1]
+    }
+}
+
+float ControlMap::rangeMax(int type)
+{
+    // The maximum of the range for each type of control
+    switch(type) {
+    case FLAP0:    return 1; // [-1:1]
+    case FLAP1:    return 1;
+    case STEER:    return 1;
+    case MAGNETOS: return 3; // [0:3]
+    default:       return 1; // [0:1]
+    }
+}
+
+} // namespace yasim

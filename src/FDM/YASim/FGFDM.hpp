@@ -30,6 +30,8 @@ private:
     struct AxisRec { char* name; int handle; };
     struct EngRec { char* prefix; Thruster* eng; };
     struct WeightRec { char* prop; float size; int handle; };
+    struct PropOut { SGPropertyNode* prop; int handle, type; bool left;
+                     float min, max; };
 
     void setOutputProperties();
 
@@ -57,6 +59,9 @@ private:
 
     // Engine types.  Contains an EngRec structure.
     Vector _thrusters;
+
+    // Output properties for the ControlMap
+    Vector _controlProps;
 
     // Parsing temporaries
     void* _currObj;

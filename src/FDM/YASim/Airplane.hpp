@@ -35,7 +35,7 @@ public:
     void addFuselage(float* front, float* back, float width,
                      float taper=1, float mid=0.5);
     int addTank(float* pos, float cap, float fuelDensity);
-    void addGear(Gear* g, float transitionTime);
+    void addGear(Gear* g);
     void addThruster(Thruster* t, float mass, float* cg);
     void addBallast(float* pos, float mass);
 
@@ -51,7 +51,6 @@ public:
 
     int numGear();
     Gear* getGear(int g);
-    void setGearState(bool down, float dt);
 
     int numTanks();
     void setFuelFraction(float frac); // 0-1, total amount of fuel
@@ -74,7 +73,7 @@ private:
     struct Tank { float pos[3]; float cap; float fill;
 	          float density; int handle; };
     struct Fuselage { float front[3], back[3], width, taper, mid; };
-    struct GearRec { Gear* gear; Surface* surf; float wgt; float time; };
+    struct GearRec { Gear* gear; Surface* surf; float wgt; };
     struct ThrustRec { Thruster* thruster;
 	               int handle; float cg[3]; float mass; };
     struct Control { int control; float val; };
@@ -94,6 +93,7 @@ private:
     void addContactPoint(float* pos);
     void compileContactPoints();
     float normFactor(float f);
+    void updateGearState();
 
     Model _model;
     ControlMap _controls;

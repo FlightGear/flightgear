@@ -43,10 +43,31 @@ public:
     void setInput(int input, float value);
 
     // Calculates and applies the settings received since the last reset().
-    void applyControls();
+    void applyControls(float dt);
+
+    // Returns the input/output range appropriate for the given
+    // control.  Ailerons go from -1 to 1, while throttles are never
+    // lower than zero, etc...
+    static float rangeMin(int type);
+    static float rangeMax(int type);
+
+    // Each output record is identified by both an object/type tuple
+    // and a numeric handle.
+    int getOutputHandle(void* obj, int type);
+
+    // Sets the transition time for the control output to swing
+    // through its full range.
+    void setTransitionTime(int handle, float time);
+
+    // Retrieves the current value of the control output.  Controls
+    // with OPT_SPLIT settable on inputs will have a separately
+    // computed "right side" value.
+    float getOutput(int handle);
+    float getOutputR(int handle);
 
 private:
-    struct OutRec { int type; void* object; Vector maps; };
+    struct OutRec { int type; void* object; Vector maps;
+                    float oldL, oldR, time; };
     struct MapRec  { OutRec* out; int idx; int opt; float val;
                      float src0; float src1; float dst0; float dst1; };
 

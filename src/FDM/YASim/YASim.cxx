@@ -159,9 +159,10 @@ void YASim::init()
     fgSetFloat("/controls/spoilers", 0);
 
     // Are we at ground level?  If so, lift the plane up so the gear
-    // clear the ground
+    // clear the ground.
     double runway_altitude =
       fgGetDouble("/environment/ground-elevation-m") * SG_METER_TO_FEET;
+    fgSetBool("/controls/gear-down", false);
     if(get_Altitude() - runway_altitude < 50) {
 	float minGearZ = 1e18;
 	for(i=0; i<a->numGear(); i++) {
@@ -172,6 +173,7 @@ void YASim::init()
 		minGearZ = pos[2];
 	}
 	_set_Altitude(runway_altitude - minGearZ*M2FT);
+	fgSetBool("/controls/gear-down", true);
     }
 
     // The pilot's eyepoint
@@ -418,7 +420,6 @@ void YASim::copyFromYASim()
 	SGPropertyNode * node = fgGetNode("gear/gear", i, true);
 	node->setBoolValue("has-brake", g->getBrake() != 0);
 	node->setBoolValue("wow", g->getCompressFraction() != 0);
-	node->setBoolValue("position", g->getExtension());
     }
 
     for(i=0; i<model->numThrusters(); i++) {

@@ -52,6 +52,9 @@ Airplane::~Airplane()
 
 void Airplane::iterate(float dt)
 {
+    // The gear might have moved.  Change their aerodynamics.
+    updateGearState();
+
     _model.iterate();
 
     // FIXME: Consume fuel
@@ -108,27 +111,12 @@ Gear* Airplane::getGear(int g)
     return ((GearRec*)_gears.get(g))->gear;
 }
 
-void Airplane::setGearState(bool down, float dt)
+void Airplane::updateGearState()
 {
-    int i;
-    for(i=0; i<_gears.size(); i++) {
+    for(int i=0; i<_gears.size(); i++) {
         GearRec* gr = (GearRec*)_gears.get(i);
-        if(gr->time == 0) {
-            // Non-extensible
-            gr->gear->setExtension(1);
-            gr->surf->setXDrag(1);
-            gr->surf->setYDrag(1);
-            gr->surf->setZDrag(1);
-            continue;
-        }
+        float ext = gr->gear->getExtension();
 
-        float diff = dt / gr->time;
-        if(!down) diff = -diff;
-        float ext = gr->gear->getExtension() + diff;
-        if(ext < 0) ext = 0;
-        if(ext > 1) ext = 1;
-
-        gr->gear->setExtension(ext);
         gr->surf->setXDrag(ext);
         gr->surf->setYDrag(ext);
         gr->surf->setZDrag(ext);
@@ -236,12 +224,11 @@ int Airplane::addTank(float* pos, float cap, float density)
     return _tanks.add(t);
 }
 
-void Airplane::addGear(Gear* gear, float transitionTime)
+void Airplane::addGear(Gear* gear)
 {
     GearRec* g = new GearRec();
     g->gear = gear;
     g->surf = 0;
-    g->time = transitionTime;
     _gears.add(g);
 }
 
@@ -589,9 +576,6 @@ void Airplane::compile()
     // Do this after solveGear, because it creates "gear" objects that
     // we don't want to affect.
     compileContactPoints();
-
-    // Drop the gear (use a really big dt)
-    setGearState(true, 1000000);
 }
 
 void Airplane::solveGear()
@@ -678,16 +662,13 @@ void Airplane::runCruise()
 	Control* c = (Control*)_cruiseControls.get(i);
 	_controls.setInput(c->control, c->val);
     }
-    _controls.applyControls();
+    _controls.applyControls(1000000); // Huge dt value
 
     // The local wind
     float wind[3];
     Math::mul3(-1, _cruiseState.v, wind);
     Math::vmul33(_cruiseState.orient, wind, wind);
  
-    // Gear are up (if they're non-retractable, this is a noop)
-    setGearState(false, 100000);
-    
     // Cruise is by convention at 50% tank capacity
     setFuelFraction(0.5);
    
@@ -699,6 +680,8 @@ void Airplane::runCruise()
 	t->setAir(_cruiseP, _cruiseT);
     }
     stabilizeThrust();
+
+    updateGearState();
 
     // Precompute thrust in the model, and calculate aerodynamic forces
     _model.getBody()->reset();
@@ -719,7 +702,7 @@ void Airplane::runApproach()
 	Control* c = (Control*)_approachControls.get(i);
 	_controls.setInput(c->control, c->val);
     }
-    _controls.applyControls();
+    _controls.applyControls(1000000);
 
     // The local wind
     float wind[3];
@@ -729,9 +712,6 @@ void Airplane::runApproach()
     // Approach is by convention at 20% tank capacity
     setFuelFraction(0.2);
 
-    // Gear are down
-    setGearState(true, 100000);
-
     // Run the thrusters until they get to a stable setting.  FIXME:
     // this is lots of wasted work.
     for(i=0; i<_thrusters.size(); i++) {
@@ -740,6 +720,8 @@ void Airplane::runApproach()
 	t->setAir(_approachP, _approachT);
     }
     stabilizeThrust();
+
+    updateGearState();
 
     // Precompute thrust in the model, and calculate aerodynamic forces
     _model.getBody()->reset();

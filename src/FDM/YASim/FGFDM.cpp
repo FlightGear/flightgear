@@ -57,7 +57,8 @@ FGFDM::~FGFDM()
 	delete[] wr->prop;
 	delete wr;
     }
-    
+    for(i=0; i<_controlProps.size(); i++)
+        delete (PropOut*)_controlProps.get(i);
 }
 
 void FGFDM::iterate(float dt)
@@ -170,8 +171,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	g->setDynamicFriction(attrf(a, "dfric", 0.7));
 	if(a->hasAttribute("castering"))
 	    g->setCastering(true);
-        float transitionTime = attrf(a, "retract-time", 0);
-	_airplane.addGear(g, transitionTime);
+	_airplane.addGear(g);
     } else if(eq(name, "fuselage")) {
 	float b[3];
 	v[0] = attrf(a, "ax");
@@ -225,34 +225,55 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	v[1] = attrf(a, "y");
 	v[2] = attrf(a, "z");
 	((Thruster*)_currObj)->setDirection(v);
-    } else if(eq(name, "control")) {
+    } else if(eq(name, "control-setting")) {
+	// A cruise or approach control setting
 	const char* axis = a->getValue("axis");
-	if(a->hasAttribute("output")) {
-	    // assert: output type must match _currObj type!
-	    const char* output = a->getValue("output");
-	    int opt = 0;
-	    opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
-	    opt |= a->hasAttribute("invert") ? ControlMap::OPT_INVERT : 0;
-	    opt |= a->hasAttribute("square") ? ControlMap::OPT_SQUARE : 0;
+	float value = attrf(a, "value", 0);
+	if(_cruiseCurr)
+	    _airplane.addCruiseControl(parseAxis(axis), value);
+	else
+	    _airplane.addApproachControl(parseAxis(axis), value);
+    } else if(eq(name, "control-input")) {
 
-	    ControlMap* cm = _airplane.getControlMap();
-	    if(a->hasAttribute("src0")) {
-		cm->addMapping(parseAxis(axis), parseOutput(output),
-			       _currObj, opt,
-			       attrf(a, "src0"), attrf(a, "src1"), 
-			       attrf(a, "dst0"), attrf(a, "dst1"));
-	    } else {
-		cm->addMapping(parseAxis(axis), parseOutput(output),
-			       _currObj, opt);
-	    }
+	// A mapping of input property to a control
+        int axis = parseAxis(a->getValue("axis"));
+	int control = parseOutput(a->getValue("control"));
+	int opt = 0;
+	opt |= a->hasAttribute("split") ? ControlMap::OPT_SPLIT : 0;
+	opt |= a->hasAttribute("invert") ? ControlMap::OPT_INVERT : 0;
+	opt |= a->hasAttribute("square") ? ControlMap::OPT_SQUARE : 0;
+	
+	ControlMap* cm = _airplane.getControlMap();
+	if(a->hasAttribute("src0")) {
+                           cm->addMapping(axis, control, _currObj, opt,
+			   attrf(a, "src0"), attrf(a, "src1"), 
+			   attrf(a, "dst0"), attrf(a, "dst1"));
 	} else {
-	    // assert: must be under a "cruise" or "approach" tag
-	    float value = attrf(a, "value", 0);
-	    if(_cruiseCurr)
-		_airplane.addCruiseControl(parseAxis(axis), value);
-	    else
-		_airplane.addApproachControl(parseAxis(axis), value);
+            cm->addMapping(axis, control, _currObj, opt);
 	}
+    } else if(eq(name, "control-output")) {
+        // A property output for a control on the current object
+        ControlMap* cm = _airplane.getControlMap();
+        int type = parseOutput(a->getValue("control"));
+        int handle = cm->getOutputHandle(_currObj, type);
+
+	PropOut* p = new PropOut();
+	p->prop = fgGetNode(a->getValue("prop"), true);
+	p->handle = handle;
+	p->type = type;
+	p->left = !(a->hasAttribute("side") &&
+                        eq("right", a->getValue("side")));
+	p->min = attrf(a, "min", cm->rangeMin(type));
+	p->max = attrf(a, "max", cm->rangeMax(type));
+	_controlProps.add(p);
+
+    } else if(eq(name, "control-speed")) {
+        ControlMap* cm = _airplane.getControlMap();
+        int type = parseOutput(a->getValue("control"));
+        int handle = cm->getOutputHandle(_currObj, type);
+        float time = attrf(a, "transition-time", 0);
+        
+        cm->setTransitionTime(handle, time);
     } else {
 	*(int*)0=0; // unexpected tag, boom
     }
@@ -269,22 +290,33 @@ void FGFDM::getExternalInput(float dt)
 	float val = fgGetFloat(a->name, 0);
 	cm->setInput(a->handle, val);
     }
-    cm->applyControls();
+    cm->applyControls(dt);
 
     // Weights
     for(i=0; i<_weights.size(); i++) {
 	WeightRec* wr = (WeightRec*)_weights.get(i);
 	_airplane.setWeight(wr->handle, fgGetFloat(wr->prop));
     }
-
-    // Gear state
-    _airplane.setGearState(fgGetBool("/controls/gear-down"), dt);
 }
 
 void FGFDM::setOutputProperties()
 {
     char buf[256];
     int i;
+
+    ControlMap* cm = _airplane.getControlMap();
+    for(i=0; i<_controlProps.size(); i++) {
+        PropOut* p = (PropOut*)_controlProps.get(i);
+        float val = (p->left
+                     ? cm->getOutput(p->handle)
+                     : cm->getOutputR(p->handle));
+        float rmin = cm->rangeMin(p->type);
+        float rmax = cm->rangeMax(p->type);
+        float frac = (val - rmin) / (rmax - rmin);
+        val = frac*(p->max - p->min) + p->min;
+        p->prop->setFloatValue(val);
+    }
+
     float fuelDensity = 718.95; // default to gasoline: ~6 lb/gal
     for(i=0; i<_airplane.numTanks(); i++) {
         fuelDensity = _airplane.getFuelDensity(i);
@@ -461,8 +493,7 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "FLAP1"))     return ControlMap::FLAP1;
     if(eq(name, "SLAT"))      return ControlMap::SLAT;
     if(eq(name, "SPOILER"))   return ControlMap::SPOILER;
-    // error here...
-    return *(int*)0;
+    *(int*)0=0;
 }
 
 void FGFDM::parseWeight(XMLAttributes* a)
@@ -484,7 +515,7 @@ void FGFDM::parseWeight(XMLAttributes* a)
 bool FGFDM::eq(const char* a, const char* b)
 {
     // Figure it out for yourself. :)
-    while(*a && *b && *a++ == *b++);
+    while(*a && *b && *a == *b) { a++; b++; }
     return !(*a || *b);
 }
 
