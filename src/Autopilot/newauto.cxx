@@ -48,8 +48,8 @@ FGAutopilot *current_autopilot;
 
 
 // Climb speed constants
-const double min_climb = 70.0;	// kts
-const double best_climb = 75.0;	// kts
+// const double min_climb = 70.0;	// kts
+// const double best_climb = 75.0;	// kts
 // const double ideal_climb_rate = 500.0 * SG_FEET_TO_METER; // fpm -> mpm
 // const double ideal_decent_rate = 1000.0 * SG_FEET_TO_METER; // fpm -> mpm
 
@@ -69,10 +69,32 @@ extern char *coord_format_lon(float);
 			
 
 // constructor
-FGAutopilot::FGAutopilot():
-TargetClimbRate(500 * SG_FEET_TO_METER),
-TargetDecentRate(1000 * SG_FEET_TO_METER)
+FGAutopilot::FGAutopilot()
 {
+    TargetClimbRate
+        = fgGetNode("/autopilot/config/target-climb-rate-fpm", true);
+    TargetDescentRate
+        = fgGetNode("/autopilot/config/target-descent-rate-fpm", true);
+    min_climb = fgGetNode("/autopilot/config/min-climb-speed-kt", true);
+    best_climb = fgGetNode("/autopilot/config/best-climb-speed-kt", true);
+    elevator_adj_factor
+        = fgGetNode("/autopilot/config/elevator-adj-factor", true);
+    integral_contrib
+        = fgGetNode("/autopilot/config/integral-contribution", true);
+    cout << "elevadj = " << elevator_adj_factor->getFloatValue() << endl;
+    // initialize with defaults (in case config isn't there)
+    if ( TargetClimbRate->getFloatValue() < 1 )
+        fgSetFloat( "/autopilot/config/target-climb-rate-fpm", 500);
+    if ( TargetDescentRate->getFloatValue() < 1 )
+        fgSetFloat( "/autopilot/config/target-descent-rate-fpm", 1000 );
+    if ( min_climb->getFloatValue() < 1)
+        fgSetFloat( "/autopilot/config/min-climb-speed-kt", 70 );
+    if (best_climb->getFloatValue() < 1)
+        fgSetFloat( "/autopilot/config/best-climb-speed-kt", 120 );
+    if (elevator_adj_factor->getFloatValue() < 1)
+        fgSetFloat( "/autopilot/config/elevator-adj-factor", 5000 );
+    if ( integral_contrib->getFloatValue() < 0.0000001 )
+        fgSetFloat( "/autopilot/config/integral-contribution", 0.01 );
 }
 
 // destructor
@@ -641,29 +663,36 @@ int FGAutopilot::run() {
 
 	speed = get_speed();
 
-	if ( speed < min_climb ) {
+	if ( speed < min_climb->getFloatValue() ) {
 	    max_climb = 0.0;
-	} else if ( speed < best_climb ) {
-	    max_climb = ((best_climb - min_climb) - (best_climb - speed)) 
-		* fabs(TargetClimbRate) 
-		/ (best_climb - min_climb);
+	} else if ( speed < best_climb->getFloatValue() ) {
+	    max_climb = ((best_climb->getFloatValue()
+                          - min_climb->getFloatValue())
+                         - (best_climb->getFloatValue() - speed)) 
+		* fabs(TargetClimbRate->getFloatValue() * SG_FEET_TO_METER) 
+		/ (best_climb->getFloatValue() - min_climb->getFloatValue());
 	} else {			
-	    max_climb = ( speed - best_climb ) * 10.0 + fabs(TargetClimbRate);
+	    max_climb = ( speed - best_climb->getFloatValue() ) * 10.0
+                + fabs(TargetClimbRate->getFloatValue() * SG_FEET_TO_METER);
 	}
 
 	// this first one could be optional if we wanted to allow
 	// better climb performance assuming we have the airspeed to
 	// support it.
-	if ( climb_rate > fabs(TargetClimbRate) ) {
-	    climb_rate = fabs(TargetClimbRate);
+	if ( climb_rate >
+             fabs(TargetClimbRate->getFloatValue() * SG_FEET_TO_METER) ) {
+	    climb_rate
+                = fabs(TargetClimbRate->getFloatValue() * SG_FEET_TO_METER);
 	}
 
 	if ( climb_rate > max_climb ) {
 	    climb_rate = max_climb;
 	}
 
-	if ( climb_rate < -fabs(TargetDecentRate) ) {
-	    climb_rate = -fabs(TargetDecentRate);
+	if ( climb_rate <
+             -fabs(TargetDescentRate->getFloatValue() * SG_FEET_TO_METER) ) {
+	    climb_rate
+                = -fabs(TargetDescentRate->getFloatValue() * SG_FEET_TO_METER);
 	}
 
 	// cout << "Target climb rate = " << TargetClimbRate << endl;
@@ -683,13 +712,14 @@ int FGAutopilot::run() {
 	// calculate integral error, and adjustment amount
 	int_error = alt_error_accum;
 	// printf("error = %.2f  int_error = %.2f\n", error, int_error);
-	int_adj = int_error / 20000.0;
+	int_adj = int_error / elevator_adj_factor->getFloatValue();
 
 	// caclulate proportional error
 	prop_error = error;
-	prop_adj = prop_error / 2000.0;
+	prop_adj = prop_error / elevator_adj_factor->getFloatValue();
 
-	total_adj = 0.9 * prop_adj + 0.1 * int_adj;
+	total_adj = (1.0 - integral_contrib->getFloatValue()) * prop_adj
+            + integral_contrib->getFloatValue() * int_adj;
 	// if ( total_adj > 0.6 ) {
 	//     total_adj = 0.6;
 	// } else if ( total_adj < -0.2 ) {

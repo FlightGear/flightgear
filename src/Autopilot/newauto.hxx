@@ -30,6 +30,7 @@
 #include <simgear/misc/props.hxx>
 #include <simgear/route/waypoint.hxx>
 
+#include <Main/fg_props.hxx>
 
 // Structures
 class FGAutopilot {
@@ -70,8 +71,13 @@ private:
     double TargetHeading;	// the true heading the AP should steer to.
     double TargetAltitude;	// altitude to hold
     double TargetAGL;		// the terrain separation
-    double TargetClimbRate;	// target climb rate
-    double TargetDecentRate;	// target decent rate
+    SGPropertyNode *min_climb;           // minimum climb speed
+    SGPropertyNode *best_climb;          // best climb speed
+    SGPropertyNode *elevator_adj_factor; // factor to optimize altitude hold adjustments
+    SGPropertyNode *integral_contrib;    // amount of contribution of the integral
+                                // component of the pid
+    SGPropertyNode *TargetClimbRate;	// target climb rate
+    SGPropertyNode *TargetDescentRate;	// target decent rate
     double TargetSpeed;		// speed to shoot for
     double alt_error_accum;	// altitude error accumulator
     double climb_error_accum;	// climb error accumulator (for GS)
@@ -178,8 +184,12 @@ public:
     inline void set_TargetAltitude( double val ) { TargetAltitude = val; }
     inline double get_TargetAGL() const { return TargetAGL; }
     inline void set_TargetAGL( double val ) { TargetAGL = val; }
-    inline double get_TargetClimbRate() const { return TargetClimbRate; }
-    inline void set_TargetClimbRate( double val ) { TargetClimbRate = val; }
+    inline double get_TargetClimbRate() const {
+        return TargetClimbRate->getFloatValue();
+    }
+    inline void set_TargetClimbRate( double val ) {
+        fgSetFloat( "/autopilot/config/target-climb-rate-fpm",  val);
+    }
 
     inline char *get_TargetLatitudeStr() { return TargetLatitudeStr; }
     inline char *get_TargetLongitudeStr() { return TargetLongitudeStr; }
