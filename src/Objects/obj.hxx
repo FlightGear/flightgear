@@ -67,4 +67,12 @@ ssgBranch *fgAsciiObjLoad(const string& path, FGTileEntry *tile,
 ssgBranch *fgGenTile( const string& path, FGTileEntry *t);
 
 
+// Generate a taxi sign
+ssgBranch *gen_taxi_sign( const string path, const string content );
+
+
+// Generate a runway sign
+ssgBranch *gen_runway_sign( const string path, const string name );
+
+
 #endif // _OBJ_HXX

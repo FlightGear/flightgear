@@ -70,10 +70,13 @@ static inline Point3D operator + (const Point3D& a, const sgdVec3 b)
 }
 
 #ifdef ENABLE_THREADS
-SGLockedQueue<FGTileEntry*> FGTileMgr::loaded_queue;
+SGLockedQueue<FGTileEntry *> FGTileMgr::attach_queue;
+SGLockedQueue<FGDeferredModel *> FGTileMgr::model_queue;
 #else
-queue<FGTileEntry*> FGTileMgr::loaded_queue;
+queue<FGTileEntry *> FGTileMgr::attach_queue;
+queue<FGTileDeferredModel *> FGTileMgr::model_queue;
 #endif // ENABLE_THREADS
+
 
 // Constructor
 FGTileMgr::FGTileMgr():
@@ -133,25 +136,6 @@ void FGTileMgr::sched_tile( const SGBucket& b ) {
         loader.add( e );
     }
 }
-
-
-// depricated for threading
-#if 0
-// load a tile
-void FGTileMgr::load_tile( const SGBucket& b ) {
-    // see if tile already exists in the cache
-    FGTileEntry *t = tile_cache.get_tile( b );
-
-    if ( t == NULL ) {
-	SG_LOG( SG_TERRAIN, SG_DEBUG, "Loading tile " << b );
-	tile_cache.fill_in( b );
-	t = tile_cache.get_tile( b );
-	t->prep_ssg_node( scenery.center, vis);
-    } else {
-	SG_LOG( SG_TERRAIN, SG_DEBUG, "Tile already in cache " << b );
-    }
-}
-#endif
 
 
 static void CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
@@ -364,6 +348,28 @@ int FGTileMgr::update( double lon, double lat ) {
     // load in the case of the threaded tile pager)
     loader.update();
 
+    // load the next model in the load queue.  Currently this must
+    // happen in the render thread because model loading can trigger
+    // texture loading which involves use of the opengl api.
+    if ( !model_queue.empty() ) {
+        cout << "loading next model ..." << endl;
+        // load the next tile in the queue
+#ifdef ENABLE_THREADS
+	FGDeferredModel* dm = model_queue.pop();
+#else
+        FGDeferredModel* dm = model_queue.front();
+        model_queue.pop();
+#endif
+	
+	ssgTexturePath( (char *)(dm->get_texture_path().c_str()) );
+	ssgEntity *obj_model
+	    = ssgLoad( (char *)(dm->get_model_path().c_str()) );
+	dm->get_obj_trans()->addKid( obj_model );
+	dm->get_tile()->dec_pending_models();
+
+	delete dm;
+    }
+
     if ( scenery.center == Point3D(0.0) ) {
 	// initializing
 	cout << "initializing scenery current elevation  ... " << endl;
@@ -412,16 +418,15 @@ int FGTileMgr::update( double lon, double lat ) {
         // Notify the tile loader that it can load another tile
         // loader.update();
 
-	if ( !loaded_queue.empty() ) {
+	if ( !attach_queue.empty() ) {
 #ifdef ENABLE_THREADS
-	    FGTileEntry* e = loaded_queue.pop();
+	    FGTileEntry* e = attach_queue.pop();
 #else
-	    FGTileEntry* e = loaded_queue.front();
-            loaded_queue.pop();
+	    FGTileEntry* e = attach_queue.front();
+            attach_queue.pop();
 #endif
 	    e->add_ssg_nodes( terrain, ground );
-	    //std::cout << "Adding ssg nodes for "
-	    //<< e->get_tile_bucket() << "\n";
+	    // cout << "Adding ssg nodes for "
 	}
     }
 

@@ -2,7 +2,7 @@
 //
 // Written by Curtis Olson, started May 1998.
 //
-// Copyright (C) 1998, 1999  Curtis L. Olson  - curt@flightgear.org
+// Copyright (C) 1998 - 2001  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -61,6 +61,39 @@ SG_USING_STD(vector);
 typedef vector < Point3D > point_list;
 typedef point_list::iterator point_list_iterator;
 typedef point_list::const_iterator const_point_list_iterator;
+
+class FGTileEntry;
+
+
+/**
+ * A class to hold deferred model loading info
+ */
+class FGDeferredModel {
+
+private:
+
+    string model_path;
+    string texture_path;
+    FGTileEntry *tile;
+    ssgTransform *obj_trans;
+
+public:
+
+    inline FGDeferredModel() { }
+    inline FGDeferredModel( const string mp, const string tp,
+		     FGTileEntry *t, ssgTransform *ot )
+    {
+	model_path = mp;
+	texture_path = tp;
+	tile = t;
+	obj_trans = ot;
+    }
+    inline ~FGDeferredModel() { }
+    inline string get_model_path() const { return model_path; }
+    inline string get_texture_path() const { return texture_path; }
+    inline FGTileEntry *get_tile() const { return tile; }
+    inline ssgTransform *get_obj_trans() const { return obj_trans; }
+};
 
 
 /**
@@ -124,6 +157,13 @@ private:
      */
     volatile bool loaded;
 
+    /**
+     * Count of pending models to load for this tile.  This tile
+     * cannot be removed until this number reaches zero (i.e. no
+     * pending models to load for this tile.)
+     */
+    volatile int pending_models;
+
     ssgBranch* obj_load( const std::string& path,
 			 ssgVertexArray* lights, bool is_base );
 
@@ -136,6 +176,9 @@ public:
 
     // Destructor
     ~FGTileEntry();
+
+    // Schedule tile to be freed/removed
+    void sched_removal();
 
     // Clean up the memory used by this tile and delete the arrays
     // used by ssg as well as the whole ssg branch
@@ -158,8 +201,7 @@ public:
      * Load tile data from a file.
      * @param base name of directory containing tile data file.
      * @param is_base is this a base terrain object for which we should generate
-     *        random ground light points
-     */
+     *        random ground light points */
     void load( const SGPath& base, bool is_base );
 
     /**
@@ -167,6 +209,16 @@ public:
      * indicating that the loading thread is still working on this.
      */
     inline bool is_loaded() const { return loaded; }
+
+    /**
+     * decrement the pending models count
+     */
+    inline void dec_pending_models() { pending_models--; }
+
+    /**
+     * return the number of remaining pending models for this tile
+     */
+    inline int get_pending_models() const { return pending_models; }
 
     /**
      * Return the "bucket" for this tile
@@ -177,6 +229,12 @@ public:
      * Add terrain mesh and ground lighting to scene graph.
      */
     void add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground );
+
+    /**
+     * disconnect terrain mesh and ground lighting nodes from scene
+     * graph for this tile.
+     */
+    void disconnect_ssg_nodes();
 };
 
 

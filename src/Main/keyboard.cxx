@@ -56,6 +56,7 @@
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 #include <GUI/gui.h>
+#include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Objects/matlib.hxx>
 #include <Time/light.hxx>
@@ -484,6 +485,17 @@ void GLUTkey(unsigned char k, int x, int y) {
 		tile_path.append( p.gen_index_str() );
 
 		// printf position and attitude information
+		printf( "Lon = %.6f  Lat = %.6f  Ground = %.2f  Alt = %.2f\n",
+			f->get_Longitude() * SGD_RADIANS_TO_DEGREES,
+			f->get_Latitude() * SGD_RADIANS_TO_DEGREES,
+			scenery.cur_elev,
+			f->get_Altitude() * SG_FEET_TO_METER );
+		printf( "Heading = %.2f  Roll = %.2f  Pitch = %.2f\n",
+			f->get_Psi() * SGD_RADIANS_TO_DEGREES,
+			f->get_Phi() * SGD_RADIANS_TO_DEGREES,
+			f->get_Theta() * SGD_RADIANS_TO_DEGREES );
+
+#if 0
 		SG_LOG( SG_INPUT, SG_INFO,
 			"Lon = " << f->get_Longitude() * SGD_RADIANS_TO_DEGREES
 			<< "  Lat = " << f->get_Latitude() * SGD_RADIANS_TO_DEGREES
@@ -493,6 +505,8 @@ void GLUTkey(unsigned char k, int x, int y) {
 			"Heading = " << f->get_Psi() * SGD_RADIANS_TO_DEGREES 
 			<< "  Roll = " << f->get_Phi() * SGD_RADIANS_TO_DEGREES
 			<< "  Pitch = " << f->get_Theta() * SGD_RADIANS_TO_DEGREES );
+#endif
+
 		SG_LOG( SG_INPUT, SG_INFO, tile_path.c_str());
 	    }
 	    return;

@@ -62,9 +62,15 @@ FGNewCache::~FGNewCache( void ) {
 // Free a tile cache entry
 void FGNewCache::entry_free( long cache_index ) {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING CACHE ENTRY = " << cache_index );
-    FGTileEntry *e = tile_cache[cache_index];
-    e->free_tile();
-    delete e;
+    FGTileEntry *tile = tile_cache[cache_index];
+    tile->disconnect_ssg_nodes();
+    tile->sched_removal();
+
+#if 0
+    tile->free_tile();
+    delete tile;
+#endif
+
     tile_cache.erase( cache_index );
 }
 
@@ -166,7 +172,7 @@ void FGNewCache::make_space() {
 	    long index = current->first;
 	    FGTileEntry *e = current->second;
 
-	    if ( e->is_loaded() ) {
+	    if ( e->is_loaded() && e->get_pending_models() == 0 ) {
 		// calculate approximate distance from view point
 		sgdCopyVec3( abs_view_pos,
 			     globals->get_current_view()->get_abs_view_pos() );

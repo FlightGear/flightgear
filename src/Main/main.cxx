@@ -1745,7 +1745,7 @@ void fgLoadDCS(void) {
         SG_LOG ( SG_TERRAIN, SG_ALERT, "Finished object processing." );
 
         ship_sel->clrTraversalMaskBits( SSGTRAV_HOT );
-        scene->addKid( ship_sel ); //add selector node to root node
+        scene->addKid( ship_sel ); //add selector node to root node 
     }
 
     return;

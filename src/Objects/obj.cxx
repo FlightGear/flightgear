@@ -823,7 +823,7 @@ static ssgLeaf *gen_leaf( const string& path,
 	    newmat = material_lib.find( material );
 	    if ( newmat == NULL ) {
 		SG_LOG( SG_TERRAIN, SG_ALERT, 
-			"Ack! bad on the fly materia create = "
+			"Ack! bad on the fly material create = "
 			<< material << " in " << path );
 	    }
 	}
@@ -981,6 +981,134 @@ ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
 
 	object->addKid( leaf );
     }
+
+    return object;
+}
+
+
+ssgBranch *gen_taxi_sign( const string path, const string content ) {
+    // for demo purposes we assume each element (letter) is 1x1 meter.
+    // Sign is placed 0.25 meters above the ground
+
+    ssgBranch *object = new ssgBranch();
+    object->setName( (char *)content.c_str() );
+
+    double offset = content.length() / 2.0;
+
+    for ( unsigned int i = 0; i < content.length(); ++i ) {
+	string material;
+
+	char item = content[i];
+	if ( item == '<' ) {
+	    material = "ArrowL.rgb";
+	} else if ( item == '>' ) {
+	    material = "ArrowR.rgb";
+	} else if ( item >= 'A' && item <= 'Z' ) {
+	    material = "Letter";
+	    material += item;
+	    material += ".rgb";
+	} else if ( item >= 'a' && item <= 'z' ) {
+	    int tmp = item - 'a';
+	    char c = 'A' + tmp;
+	    material = "Black";
+	    material += c;
+	    material += ".rgb";
+	} else {
+	    cout << "Unknown taxi sign code = '" << item << "' !!!!" << endl;
+	    return NULL;
+	}
+
+	point_list nodes; nodes.clear();
+	point_list normals; normals.clear();
+	point_list texcoords; texcoords.clear();
+	int_list vertex_index; vertex_index.clear();
+	int_list tex_index; tex_index.clear();
+
+	nodes.push_back( Point3D( -offset + i, 0, 0.25 ) );
+	nodes.push_back( Point3D( -offset + i + 1, 0, 0.25 ) );
+	nodes.push_back( Point3D( -offset + i, 0, 1.25 ) );
+	nodes.push_back( Point3D( -offset + i + 1, 0, 1.25 ) );
+
+	normals.push_back( Point3D( 0, -1, 0 ) );
+	normals.push_back( Point3D( 0, -1, 0 ) );
+	normals.push_back( Point3D( 0, -1, 0 ) );
+	normals.push_back( Point3D( 0, -1, 0 ) );
+
+	texcoords.push_back( Point3D( 0, 0, 0 ) );
+	texcoords.push_back( Point3D( 1, 0, 0 ) );
+	texcoords.push_back( Point3D( 0, 1, 0 ) );
+	texcoords.push_back( Point3D( 1, 1, 0 ) );
+
+	vertex_index.push_back( 0 );
+	vertex_index.push_back( 1 );
+	vertex_index.push_back( 2 );
+	vertex_index.push_back( 3 );
+
+	tex_index.push_back( 0 );
+	tex_index.push_back( 1 );
+	tex_index.push_back( 2 );
+	tex_index.push_back( 3 );
+
+	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, material,
+				  nodes, normals, texcoords,
+				  vertex_index, tex_index,
+				  false, NULL );
+
+	object->addKid( leaf );
+    }
+
+    return object;
+}
+
+
+ssgBranch *gen_runway_sign( const string path, const string name ) {
+    // for demo purposes we assume each element (letter) is 1x1 meter.
+    // Sign is placed 0.25 meters above the ground
+
+    ssgBranch *object = new ssgBranch();
+    object->setName( (char *)name.c_str() );
+
+    double offset = name.length() / 2.0;
+
+    string material = name + ".rgb";
+
+    point_list nodes; nodes.clear();
+    point_list normals; normals.clear();
+    point_list texcoords; texcoords.clear();
+    int_list vertex_index; vertex_index.clear();
+    int_list tex_index; tex_index.clear();
+
+    nodes.push_back( Point3D( -offset, 0, 0.25 ) );
+    nodes.push_back( Point3D( offset + 1, 0, 0.25 ) );
+    nodes.push_back( Point3D( -offset, 0, 1.25 ) );
+    nodes.push_back( Point3D( offset + 1, 0, 1.25 ) );
+
+    normals.push_back( Point3D( 0, -1, 0 ) );
+    normals.push_back( Point3D( 0, -1, 0 ) );
+    normals.push_back( Point3D( 0, -1, 0 ) );
+    normals.push_back( Point3D( 0, -1, 0 ) );
+
+    texcoords.push_back( Point3D( 0, 0, 0 ) );
+    texcoords.push_back( Point3D( 1, 0, 0 ) );
+    texcoords.push_back( Point3D( 0, 1, 0 ) );
+    texcoords.push_back( Point3D( 1, 1, 0 ) );
+
+    vertex_index.push_back( 0 );
+    vertex_index.push_back( 1 );
+    vertex_index.push_back( 2 );
+    vertex_index.push_back( 3 );
+
+    tex_index.push_back( 0 );
+    tex_index.push_back( 1 );
+    tex_index.push_back( 2 );
+    tex_index.push_back( 3 );
+
+    ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, material,
+			      nodes, normals, texcoords,
+			      vertex_index, tex_index,
+			      false, NULL );
+
+    object->addKid( leaf );
 
     return object;
 }

@@ -57,9 +57,14 @@ public:
     /**
      * Add a tile to the end of the load queue.
      * @param tile The tile to be loaded from disk.
-     * @param vis Current visibilty (in feet?) (see FGTileMgr::vis).
      */
     void add( FGTileEntry* tile );
+
+    /**
+     * Remove a tile from memory.
+     * @param tile The tile to be removed from memory.
+     */
+    void remove( FGTileEntry* tile );
 
     /**
      * The tile loader thread will only load one tile per call to the
@@ -83,9 +88,11 @@ private:
     /**
      * FIFO queue of tiles to load from data files.
      */
-    SGBlockingQueue< FGTileEntry* > tile_load_queue;
+    SGBlockingQueue< FGTileEntry * > tile_load_queue;
+    SGBlockingQueue< FGTileEntry * > tile_free_queue;
 #else
-    queue< FGTileEntry* > tile_load_queue;
+    queue< FGTileEntry * > tile_load_queue;
+    queue< FGTileEntry * > tile_free_queue;
 #endif
 
     /**

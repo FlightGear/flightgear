@@ -93,6 +93,15 @@ FGTileLoader::add( FGTileEntry* tile )
  * 
  */
 void
+FGTileLoader::remove( FGTileEntry* tile )
+{
+    tile_free_queue.push( tile );
+}
+
+/**
+ * 
+ */
+void
 FGTileLoader::update()
 {
 #ifdef ENABLE_THREADS
@@ -110,6 +119,16 @@ FGTileLoader::update()
         tile->load( tile_path, true );
         FGTileMgr::loaded( tile );
     }
+
+    if ( !tile_free_queue.empty() ) {
+        cout << "freeing next tile ..." << endl;
+        // free the next tile in the queue
+        FGTileEntry* tile = tile_free_queue.front();
+        tile_free_queue.pop();
+	tile->free_tile();
+	delete tile;
+    }
+
 #endif // ENABLE_THREADS
 }
 
@@ -135,7 +154,16 @@ FGTileLoader::LoaderThread::run()
 	tile->load( loader->tile_path, true );
   	set_cancel( SGThread::CANCEL_DEFERRED );
 
-  	FGTileMgr::loaded( tile );
+  	FGTileMgr::ready_to_attach( tile );
+
+	// Handle and pending removals
+	while ( !loader->tile_free_queue.empty() ) {
+	    cout << "freeing next tile ..." << endl;
+	    // free the next tile in the queue
+	    FGTileEntry* tile = loader->tile_free_queue.pop();
+	    tile->free_tile();
+	    delete tile;
+	}
     }
     pthread_cleanup_pop(1);
 }

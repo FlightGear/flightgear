@@ -53,6 +53,7 @@
 
 // forward declaration
 class FGTileEntry;
+class FGDeferredModel;
 
 
 class FGTileMgr {
@@ -119,20 +120,38 @@ private:
     int counter_hack;
 
     /**
-     * Tiles to add to scene graph.
+     * Work queues.
+     *
+     * attach_queue is the tiles that have been loaded [by the pager]
+     * that can be attached to the scene graph by the render thread.
+     *
+     * model_queue is the set of models that need to be loaded by the
+     * primary render thread.
      */
 #ifdef ENABLE_THREADS
-    static SGLockedQueue<FGTileEntry*> loaded_queue;
+    static SGLockedQueue<FGTileEntry *> attach_queue;
+    static SGLockedQueue<FGDeferredModel *> model_queue;
 #else
-    static queue<FGTileEntry*> loaded_queue;
+    static queue<FGTileEntry *> attach_queue;
+    static queue<FGDeferredModel *> model_queue;
 #endif // ENABLE_THREADS
 
 public:
 
     /**
-     * Add a loaded tile to the scene graph queue.
+     * Add a loaded tile to the 'attach to the scene graph' queue.
      */
-    static void loaded( FGTileEntry* t ) { loaded_queue.push(t); }
+    static void ready_to_attach( FGTileEntry *t ) { attach_queue.push( t ); }
+
+    /**
+     * Tile is detatched from scene graph and is ready to delete
+     */
+    inline void ready_to_delete( FGTileEntry *t ) { loader.remove( t ); }
+
+    /**
+     * Add a pending model to the 'deferred model load' queue
+     */
+    static void model_ready( FGDeferredModel *dm ) { model_queue.push( dm ); }
 
 public:
 

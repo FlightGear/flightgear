@@ -1,8 +1,8 @@
-// tile.cxx -- routines to handle a scenery tile
+// tileentry.cxx -- routines to handle a scenery tile
 //
 // Written by Curtis Olson, started May 1998.
 //
-// Copyright (C) 1998, 1999  Curtis L. Olson  - curt@flightgear.org
+// Copyright (C) 1998 - 2001  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -51,6 +51,7 @@
 #include <Objects/obj.hxx>
 
 #include "tileentry.hxx"
+#include "tilemgr.hxx"
 
 SG_USING_STD(for_each);
 SG_USING_STD(mem_fun_ref);
@@ -64,7 +65,8 @@ FGTileEntry::FGTileEntry ( const SGBucket& b )
       tile_bucket( b ),
       terra_transform( new ssgTransform ),
       terra_range( new ssgRangeSelector ),
-      loaded(false)
+      loaded(false),
+      pending_models(0)
 {
     nodes.clear();
 
@@ -103,6 +105,12 @@ static void my_remove_branch( ssgBranch * branch ) {
 }
 
 
+// Schedule tile to be freed/removed
+void FGTileEntry::sched_removal() {
+    global_tile_mgr.ready_to_delete( this );
+}
+
+
 // Clean up the memory used by this tile and delete the arrays used by
 // ssg as well as the whole ssg branch
 void FGTileEntry::free_tile() {
@@ -134,45 +142,14 @@ void FGTileEntry::free_tile() {
     }
     index_ptrs.clear();
 
-    // delete the terrain branch
-    int pcount = terra_transform->getNumParents();
-    if ( pcount > 0 ) {
-	// find the first parent (should only be one)
-	ssgBranch *parent = terra_transform->getParent( 0 ) ;
-	if( parent ) {
-	    // my_remove_branch( select_ptr );
-	    parent->removeKid( terra_transform );
-	    terra_transform = NULL;
-	} else {
-	    SG_LOG( SG_TERRAIN, SG_ALERT,
-		    "parent pointer is NULL!  Dying" );
-	    exit(-1);
-	}
-    } else {
-	SG_LOG( SG_TERRAIN, SG_ALERT,
-		"Parent count is zero for an ssg tile!  Dying" );
-	exit(-1);
-    }
+    // delete the terrain branch (this should already have been
+    // disconnected from the scene graph)
+    ssgDeRefDelete( terra_transform );
 
     if ( lights_transform ) {
-	// delete the terrain lighting branch
-	pcount = lights_transform->getNumParents();
-	if ( pcount > 0 ) {
-	    // find the first parent (should only be one)
-	    ssgBranch *parent = lights_transform->getParent( 0 ) ;
-	    if( parent ) {
-		parent->removeKid( lights_transform );
-		lights_transform = NULL;
-	    } else {
-		SG_LOG( SG_TERRAIN, SG_ALERT,
-			"parent pointer is NULL!  Dying" );
-		exit(-1);
-	    }
-	} else {
-	    SG_LOG( SG_TERRAIN, SG_ALERT,
-		    "Parent count is zero for an ssg light tile!  Dying" );
-	    exit(-1);
-	}
+	// delete the terrain lighting branch (this should already have been
+    // disconnected from the scene graph)
+	ssgDeRefDelete( lights_transform );
     }
 }
 
@@ -389,15 +366,14 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 			<< " elevation = " << elev
 			<< " heading = " << hdg );
 
-		// load the object itself
+		// object loading is deferred to main render thread,
+		// but lets figure out the paths right now.
 		SGPath custom_path = tile_path;
-                ssgTexturePath( (char *)custom_path.c_str() );
 		custom_path.append( name );
-		ssgEntity *obj_model = ssgLoad( (char *)custom_path.c_str() );
 
 		// setup transforms
 		Point3D geod( lon * SGD_DEGREES_TO_RADIANS,
-			      lat *  SGD_DEGREES_TO_RADIANS,
+			      lat * SGD_DEGREES_TO_RADIANS,
 			      elev );
 		Point3D world_pos = sgGeodToCart( geod );
 		Point3D offset = world_pos - center;
@@ -424,8 +400,118 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 		ssgTransform *obj_trans = new ssgTransform;
 		obj_trans->setTransform( &obj_pos );
 
-		// wire the scene graph together
-		obj_trans->addKid( obj_model );
+		// wire as much of the scene graph together as we can
+		new_tile->addKid( obj_trans );
+
+		// bump up the pending models count
+		pending_models++;
+
+		// push an entry onto the model load queue
+		FGDeferredModel *dm
+		    = new FGDeferredModel( custom_path.str(), tile_path.str(),
+					   this, obj_trans );
+		FGTileMgr::model_ready( dm );
+	    } else if ( token == "OBJECT_TAXI_SIGN" ) {
+		// load object info
+		double lon, lat, elev, hdg;
+		in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
+		SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+			<< " name = " << name 
+			<< " pos = " << lon << ", " << lat
+			<< " elevation = " << elev
+			<< " heading = " << hdg );
+
+		// load the object itself
+		SGPath custom_path = tile_path;
+		custom_path.append( name );
+
+		// setup transforms
+		Point3D geod( lon * SGD_DEGREES_TO_RADIANS,
+			      lat * SGD_DEGREES_TO_RADIANS,
+			      elev );
+		Point3D world_pos = sgGeodToCart( geod );
+		Point3D offset = world_pos - center;
+		sgMat4 POS;
+		sgMakeTransMat4( POS, offset.x(), offset.y(), offset.z() );
+
+		sgVec3 obj_rt, obj_up;
+		sgSetVec3( obj_rt, 0.0, 1.0, 0.0); // Y axis
+		sgSetVec3( obj_up, 0.0, 0.0, 1.0); // Z axis
+
+		sgMat4 ROT_lon, ROT_lat, ROT_hdg;
+		sgMakeRotMat4( ROT_lon, lon, obj_up );
+		sgMakeRotMat4( ROT_lat, 90 - lat, obj_rt );
+		sgMakeRotMat4( ROT_hdg, hdg, obj_up );
+	
+		sgMat4 TUX;
+		sgCopyMat4( TUX, ROT_hdg );
+		sgPostMultMat4( TUX, ROT_lat );
+		sgPostMultMat4( TUX, ROT_lon );
+		sgPostMultMat4( TUX, POS );
+
+		sgCoord obj_pos;
+		sgSetCoord( &obj_pos, TUX );
+		ssgTransform *obj_trans = new ssgTransform;
+		obj_trans->setTransform( &obj_pos );
+
+		ssgBranch *custom_obj
+		    = gen_taxi_sign( custom_path.str(), name );
+
+		// wire the pieces together
+		if ( (new_tile != NULL) && (custom_obj != NULL) ) {
+		    obj_trans -> addKid( custom_obj );
+		}
+		new_tile->addKid( obj_trans );
+	    } else if ( token == "OBJECT_RUNWAY_SIGN" ) {
+		// load object info
+		double lon, lat, elev, hdg;
+		in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
+		SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+			<< " name = " << name 
+			<< " pos = " << lon << ", " << lat
+			<< " elevation = " << elev
+			<< " heading = " << hdg );
+
+		// load the object itself
+		SGPath custom_path = tile_path;
+		custom_path.append( name );
+
+		// setup transforms
+		Point3D geod( lon * SGD_DEGREES_TO_RADIANS,
+			      lat * SGD_DEGREES_TO_RADIANS,
+			      elev );
+		Point3D world_pos = sgGeodToCart( geod );
+		Point3D offset = world_pos - center;
+		sgMat4 POS;
+		sgMakeTransMat4( POS, offset.x(), offset.y(), offset.z() );
+
+		sgVec3 obj_rt, obj_up;
+		sgSetVec3( obj_rt, 0.0, 1.0, 0.0); // Y axis
+		sgSetVec3( obj_up, 0.0, 0.0, 1.0); // Z axis
+
+		sgMat4 ROT_lon, ROT_lat, ROT_hdg;
+		sgMakeRotMat4( ROT_lon, lon, obj_up );
+		sgMakeRotMat4( ROT_lat, 90 - lat, obj_rt );
+		sgMakeRotMat4( ROT_hdg, hdg, obj_up );
+	
+		sgMat4 TUX;
+		sgCopyMat4( TUX, ROT_hdg );
+		sgPostMultMat4( TUX, ROT_lat );
+		sgPostMultMat4( TUX, ROT_lon );
+		sgPostMultMat4( TUX, POS );
+
+		sgCoord obj_pos;
+		sgSetCoord( &obj_pos, TUX );
+		ssgTransform *obj_trans = new ssgTransform;
+		obj_trans->setTransform( &obj_pos );
+
+		ssgBranch *custom_obj
+		    = gen_runway_sign( custom_path.str(), name );
+
+		// wire the pieces together
+		if ( (new_tile != NULL) && (custom_obj != NULL) ) {
+		    obj_trans -> addKid( custom_obj );
+		}
 		new_tile->addKid( obj_trans );
 	    } else {
 		SG_LOG( SG_TERRAIN, SG_ALERT,
@@ -478,9 +564,66 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 void
 FGTileEntry::add_ssg_nodes( ssgBranch* terrain, ssgBranch* ground )
 {
+    // bump up the ref count so we can remove this later without
+    // having ssg try to free the memory.
+    terra_transform->ref();
     terrain->addKid( terra_transform );
-    if (lights_transform != 0)
+
+    if ( lights_transform != 0 ) {
+	// bump up the ref count so we can remove this later without
+	// having ssg try to free the memory.
+	lights_transform->ref();
 	ground->addKid( lights_transform );
+    }
 
     loaded = true;
+}
+
+
+void
+FGTileEntry::disconnect_ssg_nodes()
+{
+    cout << "disconnecting ssg nodes" << endl;
+
+    // find the terrain branch parent
+    int pcount = terra_transform->getNumParents();
+    if ( pcount > 0 ) {
+	// find the first parent (should only be one)
+	ssgBranch *parent = terra_transform->getParent( 0 ) ;
+	if( parent ) {
+	    // disconnect the tile (we previously ref()'d it so it
+	    // won't get freed now)
+	    parent->removeKid( terra_transform );
+	} else {
+	    SG_LOG( SG_TERRAIN, SG_ALERT,
+		    "parent pointer is NULL!  Dying" );
+	    exit(-1);
+	}
+    } else {
+	SG_LOG( SG_TERRAIN, SG_ALERT,
+		"Parent count is zero for an ssg tile!  Dying" );
+	exit(-1);
+    }
+
+    // find the terrain lighting branch
+    if ( lights_transform ) {
+	pcount = lights_transform->getNumParents();
+	if ( pcount > 0 ) {
+	    // find the first parent (should only be one)
+	    ssgBranch *parent = lights_transform->getParent( 0 ) ;
+	    if( parent ) {
+		// disconnect the light branch (we previously ref()'d
+		// it so it won't get freed now)
+		parent->removeKid( lights_transform );
+	    } else {
+		SG_LOG( SG_TERRAIN, SG_ALERT,
+			"parent pointer is NULL!  Dying" );
+		exit(-1);
+	    }
+	} else {
+	    SG_LOG( SG_TERRAIN, SG_ALERT,
+		    "Parent count is zero for an ssg light tile!  Dying" );
+	    exit(-1);
+	}
+    }
 }
