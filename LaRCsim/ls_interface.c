@@ -223,7 +223,7 @@ $Original log: LaRCsim.c,v $
 --------------------------------------------------------------------------*/
 
 #include <sys/types.h>
-#include <sys/stat.h>
+/* #include <sys/stat.h> */
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -915,6 +915,9 @@ int fgLaRCsim_2_Flight (struct fgFLIGHT *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.15  1998/01/22 22:03:47  curt
+ * Removed #include <sys/stat.h>
+ *
  * Revision 1.14  1998/01/19 19:27:04  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.
