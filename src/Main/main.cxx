@@ -1726,12 +1726,12 @@ int main( int argc, char **argv ) {
     sgMat4 rot_matrix;
     sgMat4 off_matrix;
     sgMat4 res_matrix;
-    float h_rot = fgGetFloat("/sim/model/h-rotation", 0.0);
-    float p_rot = fgGetFloat("/sim/model/p-rotation", 0.0);
-    float r_rot = fgGetFloat("/sim/model/r-rotation", 0.0);
-    float x_off = fgGetFloat("/sim/model/x-offset", 0.0);
-    float y_off = fgGetFloat("/sim/model/y-offset", 0.0);
-    float z_off = fgGetFloat("/sim/model/z-offset", 0.0);
+    float h_rot = fgGetFloat("/sim/model/heading-offset-deg", 0.0);
+    float p_rot = fgGetFloat("/sim/model/roll-offset-deg", 0.0);
+    float r_rot = fgGetFloat("/sim/model/pitch-offset-deg", 0.0);
+    float x_off = fgGetFloat("/sim/model/x-offset-m", 0.0);
+    float y_off = fgGetFloat("/sim/model/y-offset-m", 0.0);
+    float z_off = fgGetFloat("/sim/model/z-offset-m", 0.0);
     sgMakeRotMat4(rot_matrix, h_rot, p_rot, r_rot);
     sgMakeTransMat4(off_matrix, x_off, y_off, z_off);
     sgMultMat4(res_matrix, off_matrix, rot_matrix);
