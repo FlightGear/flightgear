@@ -37,8 +37,6 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FDM/JSBSim/FGFDMExec.h>
-
 #undef MAX_ENGINES
 #include <Aircraft/aircraft.hxx>
 
@@ -51,6 +49,23 @@ DEFINITIONS
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+#include <FDM/JSBSim/FGFDMExec.h>
+
+class FGState;
+class FGAtmosphere;
+class FGFCS;
+class FGPropulsion;
+class FGMassBalance;
+class FGAerodynamics;
+class FGInertial;
+class FGAircraft;
+class FGTranslation;
+class FGRotation;
+class FGPosition;
+class FGAuxiliary;
+class FGOutput;
+class FGInitialCondition;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]

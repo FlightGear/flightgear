@@ -43,9 +43,9 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifdef FGFS
+#  include <time.h>
 #  include <simgear/compiler.h>
 #  include STL_IOSTREAM
-#  include <time.h>
 #  include STL_ITERATOR
 #else
 #  include <iostream>
