@@ -67,6 +67,8 @@ public:
 
 private:
 
+  void _update_fdm () const;
+
   FGEnvironment * _environment;	// always the same, for now
   FGEnvironmentCtrl * _controller; // always the same, for now
 

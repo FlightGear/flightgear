@@ -48,6 +48,7 @@ FGEnvironmentMgr::init ()
   SG_LOG( SG_GENERAL, SG_INFO, "Initializing environment subsystem");
   _controller->setEnvironment(_environment);
   _controller->init();
+  _update_fdm();
 }
 
 void
@@ -120,6 +121,8 @@ FGEnvironmentMgr::update (double dt)
 				   _environment->get_wind_from_east_fps(),
 				   _environment->get_wind_from_down_fps());
   _environment->set_elevation_ft(fgGetDouble("/position/altitude-ft"));
+
+  _update_fdm();
 }
 
 FGEnvironment
@@ -137,6 +140,27 @@ FGEnvironmentMgr::getEnvironment (double lat, double lon, double alt) const
   FGEnvironment env = *_environment;
   env.set_elevation_ft(alt);
   return env;
+}
+
+void
+FGEnvironmentMgr::_update_fdm () const
+{
+  //
+  // Pass atmosphere on to FDM
+  // FIXME: have FDMs read properties directly.
+  //
+  if (fgGetBool("/environment/params/control-fdm-atmosphere")) {
+				// convert from Rankine to Celsius
+    cur_fdm_state
+      ->set_Static_temperature((9.0/5.0)
+			       * _environment->get_temperature_degc() + 492.0);
+				// convert from inHG to PSF
+    cur_fdm_state
+      ->set_Static_pressure(_environment->get_pressure_inhg() * 70.726566);
+				// keep in slugs/ft^3
+    cur_fdm_state
+      ->set_Density(_environment->get_density_slugft3());
+  }
 }
 
 // end of environment-mgr.cxx
