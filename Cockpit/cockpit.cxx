@@ -204,6 +204,17 @@ double get_altitude( void )
 	return( FG_Altitude * FEET_TO_METER /* -rough_elev */ );
 }
 
+double get_agl( void )
+{
+        fgFLIGHT *f;
+        double agl;
+
+        f = current_aircraft.flight;
+        agl = FG_Altitude * FEET_TO_METER - scenery.cur_elev;
+
+        return( agl );
+}
+
 double get_sideslip( void )
 {
         fgFLIGHT *f;
@@ -288,10 +299,13 @@ void fgCockpitUpdate( void ) {
 
 
 /* $Log$
-/* Revision 1.11  1998/07/13 21:00:45  curt
-/* Integrated Charlies latest HUD updates.
-/* Wrote access functions for current fgOPTIONS.
+/* Revision 1.12  1998/07/13 21:28:00  curt
+/* Converted the aoa scale to a radio altimeter.
 /*
+ * Revision 1.11  1998/07/13 21:00:45  curt
+ * Integrated Charlies latest HUD updates.
+ * Wrote access functions for current fgOPTIONS.
+ *
  * Revision 1.10  1998/07/08 14:41:08  curt
  * Renamed polar3d.h to polar3d.hxx
  *

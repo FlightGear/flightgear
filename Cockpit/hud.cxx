@@ -194,19 +194,19 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 
         break;
 
-      case 3:    // Angle of Attack
+      case 3:    // Radio Altimeter
         HIptr = (instr_item *) new hud_card( 420,
                                              195,
                                               25,
                                              150,
-                                             get_aoa,
+                                             get_agl,
                                              HUDS_LEFT | HUDS_VERT,
-                                             50, -40,
+                                             1000, 0,
                                              1.0,
-                                             2,    1,
+                                             25,    5,
                                              0,
-                                             1,
-                                             5.0,
+                                             0,
+                                             200.0,
                                              true);
         break;
 
@@ -686,10 +686,13 @@ void fgUpdateHUD( void ) {
 }
 
 /* $Log$
-/* Revision 1.16  1998/07/13 21:00:47  curt
-/* Integrated Charlies latest HUD updates.
-/* Wrote access functions for current fgOPTIONS.
+/* Revision 1.17  1998/07/13 21:28:02  curt
+/* Converted the aoa scale to a radio altimeter.
 /*
+ * Revision 1.16  1998/07/13 21:00:47  curt
+ * Integrated Charlies latest HUD updates.
+ * Wrote access functions for current fgOPTIONS.
+ *
  * Revision 1.15  1998/07/08 14:41:08  curt
  * Renamed polar3d.h to polar3d.hxx
  *

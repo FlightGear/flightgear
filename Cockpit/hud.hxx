@@ -165,6 +165,7 @@ extern double get_roll        ( void );
 extern double get_pitch       ( void );
 extern double get_heading     ( void );
 extern double get_altitude    ( void );
+extern double get_agl         ( void );
 extern double get_sideslip    ( void );
 extern double get_frame_rate  ( void );
 extern double get_latitude    ( void );
@@ -522,10 +523,13 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 /* $Log$
-/* Revision 1.9  1998/07/13 21:00:48  curt
-/* Integrated Charlies latest HUD updates.
-/* Wrote access functions for current fgOPTIONS.
+/* Revision 1.10  1998/07/13 21:28:02  curt
+/* Converted the aoa scale to a radio altimeter.
 /*
+ * Revision 1.9  1998/07/13 21:00:48  curt
+ * Integrated Charlies latest HUD updates.
+ * Wrote access functions for current fgOPTIONS.
+ *
  * Revision 1.8  1998/07/03 13:16:29  curt
  * Added Charlie Hotchkiss's HUD updates and improvementes.
  *
