@@ -1,0 +1,178 @@
+/*****************************************************************************
+
+ Header:       FGWeatherUtils.h	
+ Author:       Christian Mayer
+ Date started: 28.05.99
+
+ ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 2 of the License, or (at your option) any later
+ version.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ details.
+
+ You should have received a copy of the GNU General Public License along with
+ this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ Place - Suite 330, Boston, MA  02111-1307, USA.
+
+ Further information about the GNU General Public License can also be found on
+ the world wide web at http://www.gnu.org.
+
+FUNCTIONAL DESCRIPTION
+------------------------------------------------------------------------------
+Utilities for the weather calculation like converting formulas
+
+HISTORY
+------------------------------------------------------------------------------
+02.06.1999 Christian Mayer      Created
+08.06.1999 Christian Mayer      Changed sat_vp
+16.06.1999 Durk Talsma		Portability for Linux
+20.06.1999 Christian Mayer	added lots of consts
+*****************************************************************************/
+
+/****************************************************************************/
+/* SENTRY                                                                   */
+/****************************************************************************/
+#ifndef FGWeatherUtils_H
+#define FGWeatherUtils_H
+
+/****************************************************************************/
+/* INCLUDES								    */
+/****************************************************************************/
+#include <math.h>
+		
+/****************************************************************************/
+/* DEFINES								    */
+/****************************************************************************/
+
+/****************************************************************************/
+/*assuming as given:							    */
+/*									    */
+/* t:	    temperature in °C						    */
+/* p:	    preasure in mbar						    */
+/* //abs_hum: absoloute humidity in g/m^3,				    */
+/* act_vp:  actual vapor pressure pascal				    */
+/*									    */
+/* Calculated vaues:							    */
+/* //max_hum: maximum of humidity in g/m^3,				    */
+/* sat_vp:  saturated vapor pressure in pascal				    */
+/* rel_hum: relative humidity in %					    */
+/* dp:	    dew point in °C						    */
+/* wb:	    approximate wetbulp in °C					    */
+/*									    */
+/* NOTE: Pascal is the SI unit for preasure and is defined as Pa = N/m^2    */
+/*       1 mbar = 1 hPa = 100 Pa					    */
+/* NOTE: °C isn't a SI unit, so I should use °K instead. But as all	    */
+/*       formulas are given in °C and the weather database only uses	    */
+/*       'normal' temperatures, I've kept it in °C			    */
+/****************************************************************************/
+
+#define SAT_VP_CONST1 610.483125
+#define SAT_VP_CONST2 7.444072452
+#define SAT_VP_CONST3 235.3120919
+
+inline WeatherPrecition sat_vp(const WeatherPrecition& temp)
+{
+    //old:
+    //return 6.112 * pow( 10, (7.5*dp)/(237.7+dp) );    //in mbar
+
+    //new:
+    //advantages: return the result as SI unit pascal and the constants
+    //are choosen that the correct results are returned for 0°C, 20°C and
+    //100°C. By 100°C I'm now returning a preasure of 1013.25 hPa
+    return SAT_VP_CONST1 * pow( 10, (SAT_VP_CONST2*temp)/(SAT_VP_CONST3+temp) );    //in pascal
+}
+
+inline WeatherPrecition rel_hum(const WeatherPrecition& act_vp, const WeatherPrecition& sat_vp)
+{
+    return (act_vp / sat_vp) * 100;	//in %
+}
+
+inline WeatherPrecition dp(const WeatherPrecition& sat_vp)
+{
+    return (SAT_VP_CONST3*log10(sat_vp/SAT_VP_CONST1))/(SAT_VP_CONST2-log10(sat_vp/SAT_VP_CONST1)); //in °C 
+}
+
+inline WeatherPrecition wb(const WeatherPrecition& t, const WeatherPrecition& p, const WeatherPrecition& dp)
+{
+    WeatherPrecition e = sat_vp(dp); 
+    WeatherPrecition tcur, tcvp, peq, diff;
+    WeatherPrecition tmin, tmax;
+
+    if (t > dp)
+    {
+	tmax = t;
+	tmin = dp;
+    }
+    else
+    {
+	tmax = dp;
+	tmin = t;
+    }
+
+    while (true) 
+    { 
+	tcur=(tmax+tmin)/2;
+	tcvp=sat_vp(tcur);
+	
+	peq = 0.000660*(1+0.00155*tcur)*p*(t-tcur);
+	
+	diff = peq-tcvp+e;
+	
+	if (fabs(diff) < 0.01) 
+	    return tcur;	//in °C
+	
+	if (diff < 0) 
+	    tmax=tcur; 
+	else 
+	    tmin=tcur; 
+    }; 
+
+}
+
+inline WeatherPrecition Celsius(const WeatherPrecition& celsius)
+{
+    return celsius + 273.16;				//Kelvin
+}
+
+inline WeatherPrecition Fahrenheit(const WeatherPrecition& fahrenheit)
+{
+    return (fahrenheit * 9.0 / 5.0) + 32.0 + 273.16;	//Kelvin
+}
+
+inline WeatherPrecition Kelvin2Celsius(const WeatherPrecition& kelvin)
+{
+    return kelvin - 273.16;				//Celsius
+}
+
+inline WeatherPrecition Kelvin2Fahrenheit(const WeatherPrecition& kelvin)
+{
+    return ((kelvin - 273.16) * 9.0 / 5.0) + 32.0;	 //Fahrenheit
+}
+
+inline WeatherPrecition Celsius2Fahrenheit(const WeatherPrecition& celsius)
+{
+    return (celsius * 9.0 / 5.0) + 32.0;		 //Fahrenheit
+}
+
+inline WeatherPrecition Fahrenheit2Celsius(const WeatherPrecition& fahrenheit)
+{
+    return (fahrenheit - 32.0) * 5.0 / 9.0;		//Celsius
+}
+
+inline WeatherPrecition Torr2Pascal(const WeatherPrecition& torr)
+{
+    return (101325.0/760.0)*torr;
+}
+
+/****************************************************************************/
+/* CLASS DECLARATION							    */
+/****************************************************************************/
+
+/****************************************************************************/
+#endif /*FGWeatherUtils_H*/
