@@ -729,10 +729,10 @@ void fgDEM::outputmesh_output_nodes( const string& fg_root, fgBUCKET *p ) {
 	dir = fg_root + "/Scenery";
 	if (my_mkdir ( dir.c_str() )) { exit (-1); }
 
-	dir += fg_root + "/Scenery/" + tmp_path;
+	dir = fg_root + "/Scenery/" + tmp_path;
 	if (my_mkdir ( dir.c_str() )) { exit (-1); }
 
-	dir += fg_root + "/Scenery/" + base_path;
+	dir = fg_root + "/Scenery/" + base_path;
 	if (my_mkdir ( dir.c_str() )) { exit (-1); }
 
 #endif // WIN32
@@ -819,6 +819,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.16  1998/10/02 21:41:39  curt
+// Fixes for win32.
+//
 // Revision 1.15  1998/09/21 20:53:59  curt
 // minor tweaks to clean a few additional things up after the rewrite.
 //
