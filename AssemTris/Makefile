@@ -26,46 +26,29 @@
 
 TARGET = assemtris
 
-CFILES = assemtris.c ../../Src/Scenery/tileutils.c
-OFILES = $(CFILES:.c=.o)
+CFILES = assemtris.c
+LDLIBS = -lMath -lScenery -lm
 
 
-include ../make.inc
-
-
-CFLAGS = $(FG_CFLAGS) -g
+include $(FG_ROOT_SRC)/commondefs
 
 
 #---------------------------------------------------------------------------
-# Primary Targets
+# Rule for TARGET
 #---------------------------------------------------------------------------
 
-all: $(TARGET)
-
-$(TARGET): $(OFILES)
-	$(CC) $(OFILES) -o $(TARGET) ../../Src/Math/libMath.a -lm
-
-clean:
-	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
-
-realclean: clean
+$(TARGET): $(OBJECTS)
+	$(CC) -o $(TARGET) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
 
 
-#---------------------------------------------------------------------------
-# Secondary Targets
-#---------------------------------------------------------------------------
-
-makedepend:
-	$(CC) -MM *.c > depend
-
-include depend
-
-assemtris.o: assemtris.c
-	$(CC) $(CFLAGS) -c assemtris.c -o $@
+include $(COMMONRULES)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/01/21 02:55:46  curt
+# Incorporated new make system from Bob Kuehne <rpk@sgi.com>.
+#
 # Revision 1.1  1998/01/15 02:45:25  curt
 # Initial revision.
 #

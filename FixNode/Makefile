@@ -26,55 +26,29 @@
 
 TARGET = fixnode
 
-CFILES = ../Dem2node/demparse.c fixnode.c main.c ../Dem2node/mesh.c triload.c
-OFILES = $(CFILES:.c=.o)
+CFILES = fixnode.c main.c triload.c
+LDLIBS = ../Dem2node/demparse.o ../Dem2node/mesh.o -lm
 
 
-include ../make.inc
-
-
-CFLAGS = $(FG_CFLAGS) -g
+include $(FG_ROOT_SRC)/commondefs
 
 
 #---------------------------------------------------------------------------
-# Primary Targets
+# Rule for TARGET
 #---------------------------------------------------------------------------
 
-all: $(TARGET)
-
-$(TARGET): $(OFILES)
-	$(CC) $(OFILES) -o $(TARGET)
-
-clean:
-	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
-
-realclean: clean
+$(TARGET): $(OBJECTS)
+	$(CC) -o $(TARGET) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
 
 
-#---------------------------------------------------------------------------
-# Secondary Targets
-#---------------------------------------------------------------------------
-
-makedepend:
-	$(CC) -MM *.c > depend
-
-include depend
-
-../Dem2node/demparse.o: ../Dem2node/demparse.c
-	$(CC) $(CFLAGS) -c ../Dem2node/demparse.c -o $@
-
-main.o: main.c
-	$(CC) $(CFLAGS) -c main.c -o $@
-
-mesh.o: mesh.c
-	$(CC) $(CFLAGS) -c mesh.c -o $@
-
-triload.o: triload.c
-	$(CC) $(CFLAGS) -c triload.c -o $@
+include $(COMMONRULES)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/01/21 02:55:50  curt
+# Incorporated new make system from Bob Kuehne <rpk@sgi.com>.
+#
 # Revision 1.1  1997/11/27 00:17:32  curt
 # Initial revision.
 #

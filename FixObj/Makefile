@@ -27,50 +27,28 @@
 TARGET = fixobj
 
 CFILES = main.c obj.c
-OFILES = $(CFILES:.c=.o)
+LDLIBS = -lMath -lm
 
 
-include ../make.inc
-
-
-CFLAGS = $(FG_CFLAGS) -g
-
-LIBS = ../../Src/Math/libMath.a -lm
+include $(FG_ROOT_SRC)/commondefs
 
 
 #---------------------------------------------------------------------------
-# Primary Targets
+# Rule for TARGET
 #---------------------------------------------------------------------------
 
-all: $(TARGET)
-
-$(TARGET): $(OFILES)
-	$(CC) $(OFILES) -o $(TARGET) $(LIBS)
-
-clean:
-	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
-
-realclean: clean
+$(TARGET): $(OBJECTS)
+	$(CC) -o $(TARGET) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
 
 
-#---------------------------------------------------------------------------
-# Secondary Targets
-#---------------------------------------------------------------------------
-
-makedepend:
-	$(CC) -MM *.c > depend
-
-include depend
-
-main.o: main.c
-	$(CC) $(CFLAGS) -c main.c -o $@
-
-obj.o: obj.c
-	$(CC) $(CFLAGS) -c obj.c -o $@
+include $(COMMONRULES)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/01/21 02:55:53  curt
+# Incorporated new make system from Bob Kuehne <rpk@sgi.com>.
+#
 # Revision 1.1  1997/12/08 19:28:54  curt
 # Initial revision.
 #

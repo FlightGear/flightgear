@@ -24,26 +24,27 @@
 #---------------------------------------------------------------------------
 
 
-include make.inc
+include $(FG_ROOT_SRC)/commondefs
 
 
 SUBDIRS = AssemTris Dem2node FixNode FixObj SplitTris Stripe_u Tri2obj Triangle
+ORDEREDDIRS = $(SUBDIRS)
 
 
 all: 
-	for dir in $(SUBDIRS); do \
+	for dir in $(ORDEREDDIRS); do \
 	    ( cd $$dir; $(MAKE) ) ; \
 	done
 
 depend:
-	for dir in $(SUBDIRS); do \
+	for dir in $(ORDEREDDIRS); do \
 	    ( echo "Making depend in $$dir"; \
 	      cd $$dir; $(CC) -MM *.c > depend ) ; \
 	done
 
 Makefile-os2:
 	cat Makefile | perl mkmfos2.pl > Makefile.os2; \
-	for dir in $(SUBDIRS); do \
+	for dir in $(ORDEREDDIRS); do \
 	    ( echo "Making Makefile.os2 in $$dir"; \
 	      cat $$dir/Makefile | perl mkmfos2.pl > $$dir/Makefile.os2; \
 	      cat $$dir/depend   | perl mkmfos2.pl > $$dir/depend.os2) ; \
@@ -51,24 +52,24 @@ Makefile-os2:
 
 clean:
 	-rm -f *.os2 *~
-	for dir in $(SUBDIRS); do \
+	for dir in $(ORDEREDDIRS); do \
 	    (cd $$dir; $(MAKE) clean) ; \
 	done
 
 
 source-tar: clean
-	echo "need to fix this"
 	(cd ..; \
 	tar cvzf demtools-$(VERSION).tar.gz Tools/Makefile Tools/README \
-	Tools/TODO Tools/make.inc Tools/Dem2node Tools/FixNode Tools/FixObj \
-	Tools/Stripe_u Tools/Tri2obj Tools/Triangle Tools/mesa-e.dem)
+	Tools/TODO Tools/make.inc Tools/AssemTris Tools/Dem2node \
+	Tools/FixNode Tools/FixObj Tools/SplitTris Tools/Stripe_u \
+	Tools/Tri2obj Tools/Triangle)
 
 source-zip: clean
-	echo "need to fix this"
 	(cd ..; \
 	zip -r demtools-$(VERSION).zip Tools/Makefile Tools/README \
-	Tools/TODO Tools/make.inc Tools/Dem2node Tools/FixNode Tools/FixObj \
-	Tools/Stripe_u Tools/Tri2obj Tools/Triangle Tools/mesa-e.dem)
+	Tools/TODO Tools/make.inc Tools/AssemTris Tools/Dem2node \
+	Tools/FixNode Tools/FixObj Tools/SplitTris Tools/Stripe_u \
+	Tools/Tri2obj Tools/Triangle)
 
 bin-tar: all
 	echo "need to fix this"
@@ -88,6 +89,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1998/01/21 02:55:42  curt
+# Incorporated new make system from Bob Kuehne <rpk@sgi.com>.
+#
 # Revision 1.5  1998/01/14 15:55:34  curt
 # Finished splittris, started assemtris.
 #

@@ -26,46 +26,29 @@
 
 TARGET = tri2obj
 
-CFILES = tri2obj.c ../../Src/Scenery/tileutils.c
-OFILES = $(CFILES:.c=.o)
+CFILES = tri2obj.c
+LDLIBS = -lMath -lScenery -lm
 
 
-include ../make.inc
-
-
-CFLAGS = $(FG_CFLAGS) -O3 -fomit-frame-pointer -funroll-all-loops -ffast-math
+include $(FG_ROOT_SRC)/commondefs
 
 
 #---------------------------------------------------------------------------
 # Primary Targets
 #---------------------------------------------------------------------------
 
-all: $(TARGET)
-
-$(TARGET): $(OFILES)
-	$(CC) $(OFILES) -o $(TARGET) ../../Src/Math/libMath.a -lm
-
-clean:
-	rm -f *.o $(TARGET) lib*.a *.os2 *~ core
-
-realclean: clean
+$(TARGET): $(OBJECTS)
+	$(CC) -o $(TARGET) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
 
 
-#---------------------------------------------------------------------------
-# Secondary Targets
-#---------------------------------------------------------------------------
-
-makedepend:
-	$(CC) -MM *.c > depend
-
-include depend
-
-tri2obj.o: tri2obj.c
-	$(CC) $(CFLAGS) -c tri2obj.c -o $@
+include $(COMMONRULES)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1998/01/21 02:55:56  curt
+# Incorporated new make system from Bob Kuehne <rpk@sgi.com>.
+#
 # Revision 1.4  1998/01/17 01:25:39  curt
 # Added support for shared normals.
 #
