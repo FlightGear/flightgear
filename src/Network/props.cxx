@@ -1,6 +1,8 @@
-// props.hxx -- FGFS property manager interaction class
+// \file props.cxx
+// Property server class.
 //
 // Written by Curtis Olson, started September 2000.
+// Modified by Bernie Bright, May 2002.
 //
 // Copyright (C) 2000  Curtis L. Olson - curt@flightgear.org
 //
@@ -21,72 +23,116 @@
 // $Id$
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/io/iochannel.hxx>
-#include <simgear/math/sg_types.hxx>
+#include <simgear/misc/strutils.hxx>
 #include <simgear/misc/props.hxx>
 #include <simgear/misc/props_io.hxx>
 
-#include <Main/globals.hxx>
-
-#include <stdlib.h>		// atoi() atof()
-
 #include STL_STRSTREAM
+
+#include <Main/globals.hxx>
+#include <Main/viewmgr.hxx>
+
+#include <plib/netChat.h>
 
 #include "props.hxx"
 
 #if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
-SG_USING_STD(cout);
-SG_USING_STD(istrstream);
 SG_USING_STD(strstream);
+SG_USING_STD(ends);
 #endif
 
-FGProps::FGProps() {
+/**
+ * Props connection class.
+ * This class represents a connection to props client.
+ */
+class PropsChannel : public netChat
+{
+    netBuffer buffer;
+
+    /**
+     * Current property node name.
+     */
+    string path;
+
+    enum Mode {
+	PROMPT,
+	DATA
+    };
+    Mode mode;
+
+public:
+    /**
+     * Constructor.
+     */
+    PropsChannel();
+    
+    /**
+     * Append incoming data to our request buffer.
+     *
+     * @param s Character string to append to buffer
+     * @param n Number of characters to append.
+     */
+    void collectIncomingData( const char* s, int n );
+
+    /**
+     * Process a complete request from the props client.
+     */
+    void foundTerminator();
+
+private:
+    /**
+     * Return a "Node no found" error message to the client.
+     */
+    void node_not_found_error( const string& node_name );
+};
+
+/**
+ * 
+ */
+PropsChannel::PropsChannel()
+    : buffer(512),
+      path("/"),
+      mode(PROMPT)
+{
+    setTerminator( "\r\n" );
 }
 
-FGProps::~FGProps() {
+/**
+ * 
+ */
+void
+PropsChannel::collectIncomingData( const char* s, int n )
+{
+    buffer.append( s, n );
 }
 
-
-// open hailing frequencies
-bool FGProps::open() {
-    reset();
-
-    if ( is_enabled() ) {
-	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
-		<< "is already in use, ignoring" );
-	return false;
-    }
-
-    SGIOChannel *io = get_io_channel();
-
-    if ( ! io->open( get_direction() ) ) {
-	SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
-	return false;
-    }
-
-    set_enabled( true );
-    SG_LOG( SG_IO, SG_INFO, "Opening properties channel communication layer." );
-
-    return true;
+/**
+ * 
+ */
+void
+PropsChannel::node_not_found_error( const string& node_name )
+{
+    string error = "ERR Node \"";
+    error += node_name;
+    error += "\" not found.";
+    push( error.c_str() );
+    push( getTerminator() );
 }
-
-
-// prepare for new connection
-bool FGProps::reset() {
-    path = "/";
-    mode = PROMPT;
-    return true;
-}
-
 
 // return a human readable form of the value "type"
-static string getValueTypeString( const SGPropertyNode *node ) {
+static string
+getValueTypeString( const SGPropertyNode *node )
+{
     string result;
 
-    if ( node == NULL ) {
+    if ( node == NULL )
+    {
 	return "unknown";
     }
 
@@ -112,207 +158,308 @@ static string getValueTypeString( const SGPropertyNode *node ) {
     return result;
 }
 
+/**
+ * We have a command.
+ * 
+ */
+void
+PropsChannel::foundTerminator()
+{
+    const char* cmd = buffer.getData();
+    SG_LOG( SG_IO, SG_INFO, "processing command = \"" << cmd << "\"" );
 
-bool FGProps::process_command( const char *cmd ) {
-    SGIOChannel *io = get_io_channel();
+    vector<string> tokens = simgear::strutils::split( cmd );
 
-    cout << "processing command = " << cmd;
-    string_list tokens;
-    tokens.clear();
+    SGPropertyNode* node = globals->get_props()->getNode( path.c_str() );
 
-    istrstream in(cmd);
-    
-    while ( !in.eof() ) {
-	string token;
-	in >> token;
-	tokens.push_back( token );
-    }
+    if (!tokens.empty())
+    {
+	string command = tokens[0];
 
-    string command = tokens[0];
+	if (command == "ls")
+	{
+	    SGPropertyNode* dir = node;
+	    if (tokens.size() == 2)
+	    {
+		if (tokens[1][0] == '/')
+		{
+		    dir = globals->get_props()->getNode( tokens[1].c_str() );
+		}
+		else
+		{
+		    string s = path;
+		    s += "/";
+		    s += tokens[1];
+		    dir = globals->get_props()->getNode( s.c_str() );
+		}
 
-    SGPropertyNode * node = globals->get_props()->getNode(path.c_str());
-
-    if ( command == "ls" ) {
-	SGPropertyNode * dir = node;
-	if ( tokens.size() > 2 ) {
-	    if ( tokens[1][0] == '/' ) {
-		dir = globals->get_props()->getNode(tokens[1].c_str());
-	    } else {
-		dir = globals->get_props()->getNode((path + "/" + tokens[1]).c_str());
-	    }
-	    if ( dir == 0 ) {
-		tokens[1] = "ERR Node \"" + tokens[1] + "\" not found.\n";
-		io->writestring( tokens[1].c_str() );
-		return true;
-	    }
-	}
-	
-	for (int i = 0; i < (int)dir->nChildren(); i++) {
-	    SGPropertyNode * child = dir->getChild(i);
-	    string name = child->getName();
-	    string line = name;
-	    if ( dir->getChild(name.c_str(), 1) ) {
-		char buf[16];
-		sprintf(buf, "[%d]", child->getIndex());
-		line += buf;
-	    }
-	    if ( child->nChildren() > 0 ) {
-		line += "/";
-	    } else {
-		if ( mode == PROMPT ) {
-		    string value = dir->getStringValue ( name.c_str(), "" );
-		    line += " =\t'" + value + "'\t(";
-		    line += getValueTypeString( dir->getNode( name.c_str() ) );
-		    line += ")";
+		if (dir == 0)
+		{
+		    node_not_found_error( tokens[1] );
+		    goto prompt;
 		}
 	    }
-	    line += "\n";
-	    io->writestring( line.c_str() );
-	}
-    } else if ( command == "dump" ) {
-	strstream buf;
-	if ( tokens.size() <= 1 ) {
-	    writeProperties ( buf, node);
-	    io->writestring( buf.str() );
-	}
-	else {
-	    SGPropertyNode *child = node->getNode(tokens[1].c_str());
-	    if ( child ) {
-		writeProperties ( buf, child );
-		io->writestring( buf.str() );
-	    } else {
-		tokens[1] = "ERR Node \"" + tokens[1] + "\" not found.\n";
-		io->writestring( tokens[1].c_str() );
-	    }
-	}
-    } else if ( command == "cd" ) {
-	// string tmp = "current path = " + node.getPath() + "\n";
-	// io->writestring( tmp.c_str() );
 
-        if ( tokens.size() <= 1 ) {
-	    // do nothing
-	} else {
-	    SGPropertyNode *child = node->getNode(tokens[1].c_str());
-	    if ( child ) {
-		node = child;
-		path = node->getPath();
-	    } else {
-		tokens[1] = "ERR Node \"" + tokens[1] + "\" not found.\n";
-		io->writestring( tokens[1].c_str() );
-	    }
-	}
-    } else if ( command == "pwd" ) {
-	string ttt = node->getPath();
-	if ( ttt.empty() ) {
-	    ttt = "/";
-	}
-	ttt += "\n";
-	io->writestring( ttt.c_str() );
-    } else if ( command == "get" || command == "show" ) {
-	if ( tokens.size() <= 1 ) {
-	    // do nothing
-	} else {
-	    string tmp;	
-	    string value = node->getStringValue ( tokens[1].c_str(), "" );
-	    if ( mode == PROMPT ) {
-		tmp = tokens[1] + " = '" + value + "' (";
-		tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
-		tmp += ")\n";
- 	    } else {
-		tmp = value + "\n";
-	    }
-	    io->writestring( tmp.c_str() );
-	}
-    } else if ( command == "set" ) {
-        if ( tokens.size() <= 2 ) {
-	    // do nothing
-	} else {
-	    string tmp = tokens[2];
-	    for ( unsigned int i = 3; i < tokens.size() - 1; i++ ) {
-		tmp += " " + tokens[i];
-	    }
-	    node->getNode( tokens[1].c_str(), true )->setStringValue(tmp.c_str());
+	    for (int i = 0; i < dir->nChildren(); i++)
+	    {
+		SGPropertyNode * child = dir->getChild(i);
+		string name = child->getName();
+		string line = name;
 
-	    if ( mode == PROMPT ) {
-		// now fetch and write out the new value as confirmation
-		// of the change
+		if (dir->getChild( name.c_str(), 1 ))
+		{
+		    char buf[16];
+		    sprintf(buf, "[%d]", child->getIndex());
+		    line += buf;
+		}
+
+		if ( child->nChildren() > 0 )
+		{
+		    line += "/";
+		}
+		else
+		{
+		    if (mode == PROMPT)
+		    {
+			string value = dir->getStringValue( name.c_str(), "" );
+			line += " =\t'" + value + "'\t(";
+			line += getValueTypeString(
+					dir->getNode( name.c_str() ) );
+			line += ")";
+		    }
+		}
+
+		line += getTerminator();
+		push( line.c_str() );
+	    }
+	}
+	else if ( command == "dump" )
+	{
+	    strstream buf;
+	    if ( tokens.size() <= 1 )
+	    {
+		writeProperties( buf, node );
+		buf << ends; // null terminate the string
+		push( buf.str() );
+		push( getTerminator() );
+	    }
+	    else
+	    {
+		SGPropertyNode *child = node->getNode( tokens[1].c_str() );
+		if ( child )
+		{
+		    writeProperties ( buf, child );
+		    buf << ends; // null terminate the string
+		    push( buf.str() );
+		    push( getTerminator() );
+		}
+		else
+		{
+		    node_not_found_error( tokens[1] );
+		}
+	    }
+	}
+	else if ( command == "cd" )
+	{
+	    if (tokens.size() == 2)
+	    {
+		try
+		{
+		    SGPropertyNode* child = node->getNode( tokens[1].c_str() );
+		    if ( child )
+		    {
+			node = child;
+			path = node->getPath();
+		    }
+		    else
+		    {
+			node_not_found_error( tokens[1] );
+		    }
+		}
+		catch (...)
+		{
+		    // Ignore attempt to move past root node with ".."
+		}
+	    }
+	}
+	else if ( command == "pwd" )
+	{
+	    string ttt = node->getPath();
+	    if (ttt.empty())
+	    {
+		ttt = "/";
+	    }
+
+	    push( ttt.c_str() );
+	    push( getTerminator() );
+	}
+	else if ( command == "get" || command == "show" )
+	{
+	    if ( tokens.size() == 2 )
+	    {
+		string tmp;	
 		string value = node->getStringValue ( tokens[1].c_str(), "" );
-		string tmp = tokens[1] + " = '" + value + "' (";
-		tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
-		tmp += ")\n";
-
-		io->writestring( tmp.c_str() );
+		if ( mode == PROMPT )
+		{
+		    tmp = tokens[1];
+		    tmp += " = '";
+		    tmp += value;
+		    tmp += "' (";
+		    tmp += getValueTypeString(
+				     node->getNode( tokens[1].c_str() ) );
+		    tmp += ")";
+		}
+		else
+		{
+		    tmp = value;
+		}
+		push( tmp.c_str() );
+		push( getTerminator() );
 	    }
 	}
-    } else if ( command == "quit" ) {
-	close();
-	reset();
-	return true;
-    } else if ( command == "data" ) {
-    	mode = DATA;
-    } else if ( command == "prompt" ) {
-	mode = PROMPT;
-    } else {
-	io->writestring( "\n" );
-	io->writestring( "Valid commands are:\n" );
-	io->writestring( "\n" );
-	io->writestring( "help             show help message\n" );
-	io->writestring( "ls [<dir>]       list directory\n" );
-	io->writestring( "dump             dump current state (in xml)\n" );
-	io->writestring( "cd <dir>         cd to a directory, '..' to move back\n" );
-	io->writestring( "pwd              display your current path\n" );
-	io->writestring( "get <var>        show the value of a parameter\n" );
-	io->writestring( "show <var>       synonym for get\n" );
-	io->writestring( "set <var> <val>  set <var> to a new <val>\n" );
-	io->writestring( "data             switch to raw data mode\n" );
-	io->writestring( "prompt           switch to interactive mode (default)\n" );
-	io->writestring( "quit             terminate connection\n" );
-	io->writestring( "\n" );
+	else if ( command == "set" )
+	{
+	    if ( tokens.size() == 3 )
+	    {
+		node->getNode( tokens[1].c_str(), true )->setStringValue(tokens[2].c_str());
+
+		if ( mode == PROMPT )
+		{
+		    // now fetch and write out the new value as confirmation
+		    // of the change
+		    string value = node->getStringValue ( tokens[1].c_str(), "" );
+		    string tmp = tokens[1] + " = '" + value + "' (";
+		    tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
+		    tmp += ")";
+		    push( tmp.c_str() );
+		    push( getTerminator() );
+		}
+	    }
+	}
+	else if (command == "quit")
+	{
+	    close();
+	    shouldDelete();
+	    return;
+	}
+	else if ( command == "data" )
+	{
+	    mode = DATA;
+	}
+	else if ( command == "prompt" )
+	{
+	    mode = PROMPT;
+	}
+	else
+	{
+	    const char* msg = "\
+Valid commands are:\r\n\
+\r\n\
+cd <dir>           cd to a directory, '..' to move back\r\n\
+data               switch to raw data mode\r\n\
+dump               dump current state (in xml)\r\n\
+get <var>          show the value of a parameter\r\n\
+help               show this help message\r\n\
+ls [<dir>]         list directory\r\n\
+prompt             switch to interactive mode (default)\r\n\
+pwd                display your current path\r\n\
+quit               terminate connection\r\n\
+set <var> <val>    set <var> to a new <val>\r\n\
+show <var>         synonym for get\r\n";
+	    push( msg );
+	}
     }
 
-    if ( mode == PROMPT ) {
+ prompt:
+    if (mode == PROMPT)
+    {
 	string prompt = node->getPath();
-	if ( prompt.empty() ) {
+	if (prompt.empty())
+	{
 	    prompt = "/";
 	}
 	prompt += "> ";
-	io->writestring( prompt.c_str() );
-    }
-    return true;
-}
-
-
-// process work for this port
-bool FGProps::process() {
-    SGIOChannel *io = get_io_channel();
-    char buf[max_cmd_len];
-
-    // cout << "processing incoming props command" << endl;
-
-    if ( get_direction() == SG_IO_BI ) {
-	// cout << "  (bi directional)" << endl;
-	while ( io->readline( buf, max_cmd_len ) > 0 ) {
-	    SG_LOG( SG_IO, SG_ALERT, "Success reading data." );
-	    process_command( buf );
-	}
-    } else {
-	SG_LOG( SG_IO, SG_ALERT, 
-		"in or out direction not supported for FGProps." );
+	push( prompt.c_str() );
     }
 
-    return true;
+    buffer.remove();
 }
 
+/**
+ * 
+ */
+FGProps::FGProps( const vector<string>& tokens )
+{
+    // tokens:
+    //   props,port#
+    //   props,medium,direction,hz,hostname,port#,style
+    if (tokens.size() == 2)
+	port = atoi( tokens[1].c_str() );
+    else if (tokens.size() == 7)
+	port = atoi( tokens[5].c_str() );
+    else
+	throw FGProtocolConfigError( "FGProps: incorrect number of configuration arguments" );
+}
 
-// close the channel
-bool FGProps::close() {
-    SGIOChannel *io = get_io_channel();
+/**
+ * 
+ */
+FGProps::~FGProps()
+{
+}
 
-    if ( ! io->close() ) {
+/**
+ * 
+ */
+bool
+FGProps::open()
+{
+    if ( is_enabled() )
+    {
+	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
+		<< "is already in use, ignoring" );
 	return false;
     }
 
-    cout << "successfully closed channel\n";
+    netChannel::open();
+    netChannel::bind( "", port );
+    netChannel::listen( 5 );
+    SG_LOG( SG_IO, SG_INFO, "Props server started on port " << port );
 
+    set_hz( 5 );                // default to processing requests @ 5Hz
+    set_enabled( true );
     return true;
+}
+
+/**
+ * 
+ */
+bool
+FGProps::close()
+{
+    return true;
+}
+
+/**
+ * 
+ */
+bool
+FGProps::process()
+{
+    netChannel::poll();
+    return true;
+}
+
+/**
+ * 
+ */
+void
+FGProps::handleAccept()
+{
+    netAddress addr;
+    int handle = accept( &addr );
+    SG_LOG( SG_IO, SG_INFO, "Props server accepted connection from "
+	    << addr.getHost() << ":" << addr.getPort() );
+    PropsChannel* channel = new PropsChannel();
+    channel->setHandle( handle );
 }

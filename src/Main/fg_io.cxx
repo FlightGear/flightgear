@@ -52,14 +52,13 @@
 #include <Network/opengc.hxx>
 #include <Network/nmea.hxx>
 #include <Network/props.hxx>
-#include <Network/telnet.hxx>
 #include <Network/pve.hxx>
 #include <Network/ray.hxx>
 #include <Network/rul.hxx>
 
 #include "globals.hxx"
+#include "fg_io.hxx"
 
-SG_USING_NAMESPACE(std);
 SG_USING_STD(string);
 
 
@@ -125,10 +124,8 @@ static FGProtocol *parse_port_config( const string& config )
 	} else if ( protocol == "nmea" ) {
 	    FGNMEA *nmea = new FGNMEA;
 	    io = nmea;
-	} else if ( protocol == "props" ) {
-	    io = new FGProps();
-	} else if ( protocol == "telnet" ) {
-	    io = new FGTelnet( tokens );
+	} else if ( protocol == "props" || protocol == "telnet" ) {
+	    io = new FGProps( tokens );
 	    return io;
 	} else if ( protocol == "pve" ) {
 	    FGPVE *pve = new FGPVE;

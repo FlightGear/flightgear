@@ -1,6 +1,8 @@
-// props.hxx -- FGFS property manager interaction class
+// \file props.hxx
+// Property server class.
 //
 // Written by Curtis Olson, started September 2000.
+// Modified by Bernie Bright, May 2002.
 //
 // Copyright (C) 2000  Curtis L. Olson - curt@flightgear.org
 //
@@ -24,48 +26,66 @@
 #ifndef _FG_PROPS_HXX
 #define _FG_PROPS_HXX
 
-
 #include <simgear/compiler.h>
-#include <simgear/misc/props.hxx>
-
 #include STL_STRING
+#include <vector>
+
+SG_USING_STD(string);
+SG_USING_STD(vector);
+
+#include <plib/netChannel.h>
 
 #include "protocol.hxx"
 
-SG_USING_STD(string);
+/**
+ * Property server class.
+ * This class provides a telnet-like server for remote access to
+ * FlightGear properties.
+ */
+class FGProps : public FGProtocol,
+		public netChannel
+{
+private:
 
+    /**
+     * Server port to listen on.
+     */
+    int port;
 
-const static int max_cmd_len = 256;
-
-class FGProps : public FGProtocol {
-
-    enum Mode {
-	PROMPT,
-	DATA
-    };
-    Mode mode;
-
-    // tree view of property list
-    string path;
-
-    bool reset();
-    bool process_command( const char *cmd );
-    
 public:
+    /**
+     * Create a new TCP server.
+     * 
+     * @param tokens Tokenized configuration parameters
+     */
+    FGProps( const vector<string>& tokens );
 
-    FGProps();
+    /**
+     * Destructor.
+     */
     ~FGProps();
 
-    // open hailing frequencies
+    /**
+     * Start the telnet server.
+     */
     bool open();
 
-    // process work for this port
+    /**
+     * Process network activity.
+     */
     bool process();
 
-    // close the channel
+    /**
+     * 
+     */
     bool close();
+
+    /**
+     * Accept a new client connection.
+     */
+    void handleAccept();
 
 };
 
-
 #endif // _FG_PROPS_HXX
+

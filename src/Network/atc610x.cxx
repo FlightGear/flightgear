@@ -1402,8 +1402,8 @@ bool FGATC610x::do_switches() {
     fuel2 = fuel1;
     fuel1 = fuel;
     if ( fuel1 == fuel2 && fuel2 == fuel3 ) {
-        fgSetBool( "/controls/fuel-selector[0]", fuel & 0x01 );
-        fgSetBool( "/controls/fuel-selector[1]", fuel & 0x02 );
+        fgSetBool( "/controls/fuel-selector[0]", (fuel & 0x01) > 0 );
+        fgSetBool( "/controls/fuel-selector[1]", (fuel & 0x02) > 0 );
     }
 
     return true;
