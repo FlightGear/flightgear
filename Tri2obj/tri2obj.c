@@ -83,10 +83,10 @@ void calc_normal(struct fgCartesianPoint p1, struct fgCartesianPoint p2,
 
 
 /* return the index of all triangles containing the specified node */
-void find_tris(int n, int *t1, int *t2, int *t3) {
+void find_tris(int n, int *t1, int *t2, int *t3, int *t4, int *t5) {
     int i;
 
-    *t1 = *t2 = *t3 = 0;
+    *t1 = *t2 = *t3 = *t4 = *t5 = 0;
 
     i = 1;
     while ( i <= tricount ) {
@@ -95,8 +95,12 @@ void find_tris(int n, int *t1, int *t2, int *t3) {
 		*t1 = i;
             } else if ( *t2 == 0 ) {
 		*t2 = i;
-	    } else {
+            } else if ( *t3 == 0 ) {
 		*t3 = i;
+            } else if ( *t4 == 0 ) {
+		*t4 = i;
+	    } else {
+		*t5 = i;
 	    }
         }
         i++;
@@ -171,9 +175,9 @@ void triload(char *basename) {
 /* dump in WaveFront .obj format */
 void dump_obj(char *basename) {
     char objname[256];
-    double n1[3], n2[3], n3[3], norm[3], temp;
+    double n1[3], n2[3], n3[3], n4[3], n5[3], norm[3], temp;
     FILE *obj;
-    int i, t1, t2, t3, count;
+    int i, t1, t2, t3, t4, t5, count;
 
     strcpy(objname, basename);
     strcat(objname, ".obj");
@@ -194,11 +198,13 @@ void dump_obj(char *basename) {
     for ( i = 1; i <= nodecount; i++ ) {
 /* 	printf("Finding normal\n"); */
 
-	find_tris(i, &t1, &t2, &t3);
+	find_tris(i, &t1, &t2, &t3, &t4, &t5);
 
 	n1[0] = n1[1] = n1[2] = 0.0;
 	n2[0] = n2[1] = n2[2] = 0.0;
 	n3[0] = n3[1] = n3[2] = 0.0;
+	n4[0] = n4[1] = n4[2] = 0.0;
+	n5[0] = n5[1] = n5[2] = 0.0;
 
 	count = 1;
 	calc_normal(nodes[tris[t1][0]], nodes[tris[t1][1]], nodes[tris[t1][2]], 
@@ -216,11 +222,23 @@ void dump_obj(char *basename) {
 	    count = 3;
 	}
 
+	if ( t4 > 0 ) {
+	    calc_normal(nodes[tris[t4][0]], nodes[tris[t4][1]],
+			nodes[tris[t4][2]], n4);
+	    count = 4;
+	}
+
+	if ( t5 > 0 ) {
+	    calc_normal(nodes[tris[t5][0]], nodes[tris[t5][1]],
+			nodes[tris[t5][2]], n5);
+	    count = 5;
+	}
+
 /* 	printf("  norm[2] = %.2f %.2f %.2f\n", n1[2], n2[2], n3[2]); */
 
-	norm[0] = ( n1[0] + n2[0] + n3[0] ) / (double)count;
-	norm[1] = ( n1[1] + n2[1] + n3[1] ) / (double)count;
-	norm[2] = ( n1[2] + n2[2] + n3[2] ) / (double)count;
+	norm[0] = ( n1[0] + n2[0] + n3[0] + n4[0] + n5[0] ) / (double)count;
+	norm[1] = ( n1[1] + n2[1] + n3[1] + n4[1] + n5[1] ) / (double)count;
+	norm[2] = ( n1[2] + n2[2] + n3[2] + n4[2] + n5[2] ) / (double)count;
 	
 /* 	printf("  count = %d\n", count); */
 /* 	printf("  Ave. normal = %.4f %.4f %.4f\n", norm[0], norm[1], norm[2]);*/
@@ -256,9 +274,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.6  1998/01/09 23:03:15  curt
-/* Restructured to split 1deg x 1deg dem's into 64 subsections.
+/* Revision 1.7  1998/01/12 02:42:00  curt
+/* Average up to five triangles per vertex instead of three.
 /*
+ * Revision 1.6  1998/01/09 23:03:15  curt
+ * Restructured to split 1deg x 1deg dem's into 64 subsections.
+ *
  * Revision 1.5  1997/12/08 19:17:50  curt
  * Fixed a type in the normal generation code.
  *
