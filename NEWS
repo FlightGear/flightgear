@@ -1,3 +1,26 @@
+New in 0.7.1
+* Durk Talsma added a nifty cloud layer.
+* Default to Christian Mayer's new weather system.
+* Added routines to do screen printing contributed by Mark Vallevand.
+* Added routines to do screen shots to ppm graphics file (all platforms)
+  contributed Rich Kaszeta.
+* Added a magic carpet (aka slew) mode.
+* Added a hot air balloon simulator mode. (alpha)
+* Added a simple (direct lincage) autocoordation feature.
+* Added a mode to control view (side to side and up and down) with the mouse.
+* Fixed a DEM decoding problem which caused most of the terrain to be 256
+  meter too high (and regenerated the world scenery with proper elevations.)
+* Updates to JSBsim.
+* Added support for a pilot view offset from the center of gravity.
+* Various platform portability fixes.
+* Updated time-offset/syncing command line options.
+* Updated the FDM <==> Flight Gear interface to be more object oriented.
+  This should hopefully pave the way for being able to simulate several
+  concurrent entities.
+* Removed unimplemented menu entries.
+* Various scenery tools changes and enhancements in preparation for adding
+  runways (hopefully for the next release.)
+
 New in 0.7.0
 * Autopilot can now fly great circle routes.
 * Incorporated a first stab at some networking code contributed by Oliver
