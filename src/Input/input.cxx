@@ -162,9 +162,6 @@ FGBinding::fire (double setting) const
 // Implementation of FGInput.
 ////////////////////////////////////////////////////////////////////////
 
-                                // From main.cxx
-extern void fgReshape( int width, int height );
-
 
 FGInput::FGInput ()
 {

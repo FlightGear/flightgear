@@ -20,9 +20,6 @@
 #include "gui.h"
 #include "trackball.h"
 
-// from main.cxx
-extern void fgReshape(int, int);
-
 // FOR MOUSE VIEW MODE
 // stashed trackball(_quat0, 0.0, 0.0, 0.0, 0.0);
 static float _quat0[4];

@@ -89,6 +89,7 @@ extern void ClearRoute(puObject *);
 extern void fgAPAdjust(puObject *);
 extern void fgLatLonFormatToggle(puObject *);
 extern void helpCb(puObject *);
+extern void fgReshape(int, int);
 
 typedef struct {
         char *name;

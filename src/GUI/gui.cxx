@@ -53,7 +53,6 @@
 
 // main.cxx hack, should come from an include someplace
 extern void fgInitVisuals( void );
-extern void fgReshape( int width, int height );
 extern void fgRenderFrame( void );
 
 extern void initDialog (void);

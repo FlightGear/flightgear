@@ -215,9 +215,6 @@ FGGeneral general;
 static int idle_state = 0;
 static long global_multi_loop;
 
-// forward declaration
-void fgReshape( int width, int height );
-
 // fog constants.  I'm a little nervous about putting actual code out
 // here but it seems to work (?)
 static const double m_log01 = -log( 0.01 );
