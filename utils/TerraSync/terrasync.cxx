@@ -34,9 +34,10 @@
 #include <simgear/bucket/newbucket.hxx>
 
 SG_USING_STD(string);
+#if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(cout);
 SG_USING_STD(endl);
-
+#endif
 
 static string server = "baron.flightgear.org";
 static string source_module = "Scenery-0.7.9";
