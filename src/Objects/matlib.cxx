@@ -267,6 +267,13 @@ FGNewMat *FGMaterialLib::find( const string& material ) {
 
 // Destructor
 FGMaterialLib::~FGMaterialLib ( void ) {
+    // Free up all the material entries first
+    for ( material_map_iterator it = begin(); it != end(); it++ ) {
+	FGNewMat *slot = it->second;
+        if ( slot != NULL ) {
+            delete slot;
+        }
+    }
 }
 
 

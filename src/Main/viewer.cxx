@@ -39,6 +39,7 @@ FGViewer::FGViewer( void ):
     view_offset(0.0),
     goal_view_offset(0.0)
 {
+    sgSetVec3( pilot_offset, 0.0, 0.0, 0.0 );
 }
 
 
