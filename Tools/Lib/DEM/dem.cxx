@@ -305,6 +305,7 @@ void
 FGDem::read_b_record( ) {
     string token;
     int i;
+    int last;
 
     // row / column id of this profile
     prof_row = next_int();
@@ -331,9 +332,17 @@ FGDem::read_b_record( ) {
     token = next_token();
 
     // One (usually) dimensional array (prof_num_cols,1) of elevations
+    last = 0;
     for ( i = 0; i < prof_num_rows; i++ ) {
 	prof_data = next_int();
+
+	// a bit of sanity checking that is unfortunately necessary
+	if ( prof_data > 10000 ) { // meters
+	    prof_data = last;
+	}
+	    
 	dem_data[cur_col][i] = (float)prof_data;
+	last = prof_data;
     }
 }
 
