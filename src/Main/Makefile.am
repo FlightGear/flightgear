@@ -40,6 +40,7 @@ fgfs_SOURCES = \
         logger.cxx logger.hxx \
 	options.cxx options.hxx \
 	splash.cxx splash.hxx \
+	util.cxx util.hxx \
 	viewer.cxx viewer.hxx \
 	viewmgr.cxx viewmgr.hxx \
         location.cxx location.hxx
