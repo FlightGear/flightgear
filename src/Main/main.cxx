@@ -64,7 +64,7 @@
 #include <simgear/constants.h>  // for VERSION
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/polar3d.hxx>
-#include <simgear/math/fg_random.h>
+#include <simgear/math/sg_random.h>
 #include <simgear/misc/fgpath.hxx>
 #include <simgear/sky/sky.hxx>
 #include <simgear/timing/sg_time.hxx>
@@ -161,6 +161,10 @@ ssgRoot *scene = NULL;
 ssgBranch *terrain = NULL;
 ssgSelector *penguin_sel = NULL;
 ssgTransform *penguin_pos = NULL;
+
+ssgRoot *lighting = NULL;
+ssgBranch *ground = NULL;
+ssgBranch *airport = NULL;
 
 #ifdef FG_NETWORK_OLK
 ssgSelector *fgd_sel = NULL;
@@ -293,6 +297,10 @@ void fgRenderFrame( void ) {
     fgLIGHT *l = &cur_light_params;
     static double last_visibility = -9999;
 
+    static GLfloat fog_exp_density;
+    static GLfloat fog_exp2_density;
+    static GLfloat fog_exp2_punch_through;
+    
     // double angle;
     // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     // GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
@@ -465,19 +473,18 @@ void fgRenderFrame( void ) {
 
 	    // cout << "----> updating fog params" << endl;
 		
-	    GLfloat fog_exp_density;
-	    GLfloat fog_exp2_density;
-    
 	    // for GL_FOG_EXP
 	    fog_exp_density = -log(0.01 / actual_visibility);
     
 	    // for GL_FOG_EXP2
 	    fog_exp2_density = sqrt( -log(0.01) ) / actual_visibility;
-    
-	    // Set correct opengl fog density
-	    glFogf (GL_FOG_DENSITY, fog_exp2_density);
+	    fog_exp2_punch_through = sqrt( -log(0.01) ) / 
+		( actual_visibility * 1.5 );
 	}
- 
+
+	// Set correct opengl fog density
+	glFogf (GL_FOG_DENSITY, fog_exp2_density);
+
 	// update the sky dome
 	if ( globals->get_options()->get_skyblend() ) {
 	    /* cout << "thesky->repaint() sky_color = "
@@ -645,6 +652,14 @@ void fgRenderFrame( void ) {
 	// draw the ssg scene
 	glEnable( GL_DEPTH_TEST );
 	ssgCullAndDraw( scene );
+
+	// change state for lighting here
+
+	// draw lighting
+	// Set punch through fog density
+	glFogf (GL_FOG_DENSITY, fog_exp2_density);
+
+	ssgCullAndDraw( lighting );
 
 	// draw the sky cloud layers
 	thesky->postDraw( cur_fdm_state->get_Altitude() * FEET_TO_METER );
@@ -1344,7 +1359,7 @@ int main( int argc, char **argv ) {
 	    << FLIGHTGEAR_VERSION << endl );
 
     // seed the random number generater
-    fg_srandom();
+    sg_srandom();
 
     // Allocate global data structures.  This needs to happen before
     // we parse command line options
@@ -1508,6 +1523,9 @@ int main( int argc, char **argv ) {
     scene = new ssgRoot;
     scene->setName( "Scene" );
 
+    lighting = new ssgRoot;
+    lighting->setName( "Lighting" );
+
     // Initialize the sky
     FGPath ephem_data_path( globals->get_options()->get_fg_root() );
     ephem_data_path.append( "Astro" );
@@ -1548,6 +1566,15 @@ int main( int argc, char **argv ) {
     terrain = new ssgBranch;
     terrain->setName( "Terrain" );
     scene->addKid( terrain );
+
+    // Lighting
+    ground = new ssgBranch;
+    ground->setName( "Ground Lighting" );
+    lighting->addKid( ground );
+
+    airport = new ssgBranch;
+    airport->setName( "Airport Lighting" );
+    lighting->addKid( airport );
 
     // temporary visible aircraft "own ship"
     penguin_sel = new ssgSelector;

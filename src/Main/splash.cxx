@@ -40,7 +40,7 @@
 #include <string.h>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_random.h>
+#include <simgear/math/sg_random.h>
 #include <simgear/misc/fgpath.hxx>
 
 #include <Objects/texload.h>
@@ -74,7 +74,7 @@ void fgSplashInit ( void ) {
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // load in the texture data
-    int num = (int)(fg_random() * 4.0 + 1.0);
+    int num = (int)(sg_random() * 4.0 + 1.0);
     char num_str[256];
     sprintf(num_str, "%d", num);
 
