@@ -346,7 +346,9 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   
   glTranslated(x_offset, y_offset, 0);
   
+  glDepthMask(GL_FALSE);
   draw();
+  glDepthMask(GL_TRUE);
 
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
