@@ -58,14 +58,21 @@ IV. Procedure to build FGFS with Native SGI Irix Compilers from CVS Sources
 
 (Contributed by Todd Smith <msmith@sikorsky.com>)
 
-Download the latest version of plib (1.0.3) from:
+Download the latest version of plib (1.0.13) from:
 
     http://www.woodsoup.org/~sbaker/plib/
 
-Install it both in /usr/local/plib and /usr/local/include/plib.  I
-think that I am using it from /usr/local/include.
+Install it with the default prefix of /usr/local which places
+everthing in a tree rooted at /usr/local/plib:
 
-Download the FlightGear-0.6 via anonymous cvs as usual, then do:
+    sh$ CC="cc -Xcpluscomm" CXX=CC ./configure
+
+Fix up the Makefiles using the script provided with the Flight Gear
+distribution:
+
+    find . -name Makefile -exec .../src/FlightGear-0.7.0/irix-hack.pl {} \;
+
+Download the FlightGear-0.7.x via anonymous cvs as usual, then do:
 
 > aclocal		# normal
 > automake -a -i	# added '-i' flag to avoid dependency calc

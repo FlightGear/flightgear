@@ -137,12 +137,6 @@ Bob Kuehne <rpk@sgi.com>
   Redid the Makefile system so it is simpler and more robust.
 
 
-Vasily Lewis <vlewis@woodsoup.org>  http://www.woodsoup.org
-  Provided computing resources and services so that the Flight Gear 
-  project could have real home.  This includes, web services, ftp services
-  shell accounts, email lists, dns services, etc.
-
-
 Christian Mayer <Vader@t-online.de>
   Working on a multi-lingual conversion tools for fgfs.
   Contributed code to read msfs formated texture files.
@@ -255,6 +249,12 @@ Darrell Walisser <dwaliss1@purdue.edu>
   Contributed a large number of MacOS changes and has somehow managed
   to get a pile of code written by a bunch of people who've never seen
   a Mac to compile and run on said platform.
+
+
+WoodSoup Project  http://www.woodsoup.org
+  Provided computing resources and services so that the Flight Gear 
+  project could have real home.  This includes, web services, ftp services
+  shell accounts, email lists, dns services, etc.
 
 
 Robert Allan Zeh <raz@cmg.FCNBD.COM>
