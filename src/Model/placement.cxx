@@ -15,8 +15,6 @@
 
 #include <simgear/scene/model/location.hxx>
 
-#include "model.hxx"
-
 #include "placement.hxx"
 
 SG_USING_STD(vector);
@@ -43,21 +41,6 @@ FGModelPlacement::FGModelPlacement ()
 FGModelPlacement::~FGModelPlacement ()
 {
 }
-
-#if 0
-void
-FGModelPlacement::init( const string &fg_root,
-                        const string &path,
-                        SGPropertyNode *prop_root,
-                        double sim_time_sec, int dummy )
-{
-  ssgBranch * model = fgLoad3DModel( fg_root, path, prop_root, sim_time_sec );
-  if (model != 0)
-      _position->addKid(model);
-  _selector->addKid(_position);
-  _selector->clrTraversalMaskBits(SSGTRAV_HOT);
-}
-#endif
 
 void
 FGModelPlacement::init( ssgBranch * model )
