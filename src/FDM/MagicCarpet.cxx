@@ -62,6 +62,7 @@ int FGMagicCarpet::update( int multiloop ) {
 
     // update euler angles
     set_Euler_Angles( get_Phi(), get_Theta(), fmod(get_Psi() + turn, FG_2PI) );
+    set_Euler_Rates(0,0,0);
 
     // update (lon/lat) position
     double lat2, lon2, az2;

@@ -532,11 +532,11 @@ public:
     // inline double get_Phi_dot() const { return euler_rates_v[0]; }
     // inline double get_Theta_dot() const { return euler_rates_v[1]; }
     // inline double get_Psi_dot() const { return euler_rates_v[2]; }
-    /* inline void set_Euler_Rates( double phi, double theta, double psi ) {
+    inline void set_Euler_Rates( double phi, double theta, double psi ) {
 	euler_rates_v[0] = phi;
 	euler_rates_v[1] = theta;
 	euler_rates_v[2] = psi;
-    } */
+    } 
 
     FG_VECTOR_3    geocentric_rates_v;     // Geocentric linear velocities
     // inline double * get_Geocentric_rates_v() { return geocentric_rates_v; }

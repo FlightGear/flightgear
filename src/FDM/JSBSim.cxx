@@ -209,7 +209,9 @@ int FGJSBsim::copy_from_JSBsim() {
     // set_Omega_Local( P_local, Q_local, R_local );
     // set_Omega_Total( P_total, Q_total, R_total );
     
-    // set_Euler_Rates( Phi_dot, Theta_dot, Psi_dot );
+    set_Euler_Rates( FDMExec.GetRotation()->Getphi(),
+		     FDMExec.GetRotation()->Gettht(),
+		     FDMExec.GetRotation()->Getpsi() );
     // ***FIXME*** set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
 	
     set_Mach_number( FDMExec.GetState()->GetMach());

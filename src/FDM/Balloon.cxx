@@ -198,7 +198,7 @@ int FGBalloonSim::copy_from_BalloonSim() {
 
     current_balloon.getHPR( temp );
     set_Euler_Angles( temp[0], temp[1], temp[2] );
-
+    set_Euler_Rates(0,0,0);
 
     set_Alpha( 0.0/*FDMExec.GetTranslation()->Getalpha()*/ );
     set_Beta( 0.0/*FDMExec.GetTranslation()->Getbeta()*/ );
