@@ -237,7 +237,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                              200,
                                              get_altitude,
                                              HUDS_RIGHT | HUDS_VERT,
-                                             15000, 0,
+                                             15000, -500,
                                              1.0,
                                              100,  25,
                                              0,
@@ -840,6 +840,10 @@ void fgUpdateHUD( void ) {
 }
 
 // $Log$
+// Revision 1.30  1999/01/27 04:47:52  curt
+// Make lower end of altitude = -500 so the altimeter is guaged below zero (such
+// as in death valley.)
+//
 // Revision 1.29  1998/12/18 23:35:10  curt
 // Converted to a simpler frame rate counting method.
 //
