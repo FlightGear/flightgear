@@ -532,6 +532,14 @@ bool fgInitConfig ( int argc, char **argv ) {
         aircraft_path.append("Aircraft");
         aircraft_path.append(aircraft);
         aircraft_path.concat("-set.xml");
+
+        if ( !ulFileExists(aircraft_path.c_str()) ) {
+            aircraft_path = globals->get_fg_root();
+            aircraft_path.append("Aircraft");
+            aircraft_path.append(aircraft);
+            aircraft_path.append(aircraft);
+            aircraft_path.concat("-set.xml");
+        }
         SG_LOG(SG_INPUT, SG_INFO, "Reading default aircraft: " << aircraft
                << " from " << aircraft_path.str());
         try {
