@@ -7,7 +7,8 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <GL/gl.h>
+#include <simgear/compiler.h>
+#include GL_H
 #include <simgear/screen/texture.hxx>
 
 
