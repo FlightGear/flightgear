@@ -104,7 +104,7 @@ public:
 
 protected:
    /// Pilot/Aircraft, FCS, Autopilot inputs
-  enum eInputType {itPilotAC, itFCS, itAP} InputType;
+  enum eInputType {itPilotAC, itFCS, itAP, itBias} InputType;
   FGFCS* fcs;
   string Type;
   string Name;
