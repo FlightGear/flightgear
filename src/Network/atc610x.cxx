@@ -912,7 +912,7 @@ bool FGATC610x::do_radio_switches() {
 
     if ( navcom1_has_power() && comm1_serviceable->getBoolValue() ) {
         // Com1 Swap
-        int com1_swap = !((radio_switch_data[7] >> 1) & 0x01);
+        int com1_swap = ((radio_switch_data[7] >> 1) & 0x01);
         static int last_com1_swap;
         if ( com1_swap && (last_com1_swap != com1_swap) ) {
             float tmp = com1_freq->getFloatValue();
@@ -929,7 +929,7 @@ bool FGATC610x::do_radio_switches() {
 
     if ( navcom2_has_power() && comm2_serviceable->getBoolValue() ) {
         // Com2 Swap
-        int com2_swap = !((radio_switch_data[15] >> 1) & 0x01);
+        int com2_swap = ((radio_switch_data[15] >> 1) & 0x01);
         static int last_com2_swap;
         if ( com2_swap && (last_com2_swap != com2_swap) ) {
             float tmp = com2_freq->getFloatValue();
@@ -955,7 +955,7 @@ bool FGATC610x::do_radio_switches() {
 
     if ( navcom2_has_power() && nav2_serviceable->getBoolValue() ) {
         // Nav2 Swap
-        int nav2_swap = !(radio_switch_data[19] & 0x01);
+        int nav2_swap = (radio_switch_data[19] & 0x01);
         static int last_nav2_swap;
         if ( nav2_swap && (last_nav2_swap != nav2_swap) ) {
             float tmp = nav2_freq->getFloatValue();
@@ -1252,9 +1252,9 @@ bool FGATC610x::do_radio_switches() {
 
     // ADF buttons 
     fgSetInt( "/radios/kr-87/inputs/adf-btn",
-              !(radio_switch_data[23] & 0x01) );
+              (radio_switch_data[23] & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/bfo-btn",
-              !(radio_switch_data[23] >> 1 & 0x01) );
+              (radio_switch_data[23] >> 1 & 0x01) );
 #ifdef CURT_HARDWARE
     fgSetInt( "/radios/kr-87/inputs/frq-btn",
               !(radio_switch_data[23] >> 2 & 0x01) );
@@ -1263,9 +1263,9 @@ bool FGATC610x::do_radio_switches() {
               (radio_switch_data[23] >> 2 & 0x01) );
 #endif
     fgSetInt( "/radios/kr-87/inputs/flt-et-btn",
-              !(radio_switch_data[23] >> 3 & 0x01) );
+              (radio_switch_data[23] >> 3 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/set-rst-btn",
-              !(radio_switch_data[23] >> 4 & 0x01) );
+              (radio_switch_data[23] >> 4 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/power-btn",
               radio_switch_data[23] >> 5 & 0x01 );
     /* cout << "adf = " << !(radio_switch_data[23] & 0x01)
