@@ -994,7 +994,7 @@ void guiInit()
     }
 
     // Install our fast fonts
-    fntpath.append( "typewriter.txf" );
+    fntpath.append(fgGetString("/sim/font", "typewriter.txf"));
     guiFntHandle = new fntTexFont ;
     guiFntHandle -> load ( (char *)fntpath.c_str() ) ;
     puFont GuiFont ( guiFntHandle, 15 ) ;
