@@ -32,7 +32,7 @@
 
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 15;
+const int FG_NET_FDM_VERSION = 16;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -62,6 +62,8 @@ public:
     float phi;			// roll (radians)
     float theta;		// pitch (radians)
     float psi;			// yaw or true heading (radians)
+    float alpha;                // angle of attack
+    float beta;                 // side slip angle
 
     // Velocities
     float phidot;		// roll rate (radians/sec)

@@ -133,6 +133,8 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     net->phi = cur_fdm_state->get_Phi();
     net->theta = cur_fdm_state->get_Theta();
     net->psi = cur_fdm_state->get_Psi();
+    net->alpha = cur_fdm_state->get_Alpha();
+    net->beta = cur_fdm_state->get_Beta();
     net->phidot = cur_fdm_state->get_Phi_dot_degps() * SG_DEGREES_TO_RADIANS;
     net->thetadot = cur_fdm_state->get_Theta_dot_degps()
         * SG_DEGREES_TO_RADIANS;
@@ -219,6 +221,8 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->phi);
         htonf(net->theta);
         htonf(net->psi);
+        htonf(net->alpha);
+        htonf(net->beta);
 
         htonf(net->phidot);
         htonf(net->thetadot);
@@ -292,6 +296,8 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         htonf(net->phi);
         htonf(net->theta);
         htonf(net->psi);
+        htonf(net->alpha);
+        htonf(net->beta);
 
         htonf(net->phidot);
         htonf(net->thetadot);
@@ -367,6 +373,8 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         cur_fdm_state->_set_Euler_Angles( net->phi,
                                           net->theta,
                                           net->psi );
+        cur_fdm_state->_set_Alpha( net->alpha );
+        cur_fdm_state->_set_Beta( net->beta );
         cur_fdm_state->_set_Euler_Rates( net->phidot,
 					 net->thetadot,
 					 net->psidot );
