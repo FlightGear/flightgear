@@ -1330,8 +1330,8 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 		   ssgVertexArray *ground_lights )
 {
     SGBinObject obj;
-    bool use_dynamic_objects =
-      fgGetBool("/sim/rendering/dynamic-objects", false);
+    bool use_random_objects =
+      fgGetBool("/sim/rendering/random-objects", true);
 
     if ( ! obj.read_bin( path ) ) {
 	return false;
@@ -1418,7 +1418,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  vertex_index, normal_index, tex_index,
 				  is_base, ground_lights );
 
-	if (use_dynamic_objects)
+	if (use_random_objects)
 	  gen_random_surface_objects(leaf, geometry, geod_lon, geod_lat,
 				     material);
 	geometry->addKid( leaf );
@@ -1439,7 +1439,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  vertex_index, normal_index, tex_index,
 				  is_base, ground_lights );
 
-	if (use_dynamic_objects)
+	if (use_random_objects)
 	  gen_random_surface_objects(leaf, geometry, geod_lon, geod_lat,
 				     material);
 	geometry->addKid( leaf );
@@ -1459,7 +1459,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  nodes, normals, texcoords,
 				  vertex_index, normal_index, tex_index,
 				  is_base, ground_lights );
-	if (use_dynamic_objects)
+	if (use_random_objects)
 	  gen_random_surface_objects(leaf, geometry, geod_lon, geod_lat,
 				     material);
 	geometry->addKid( leaf );
