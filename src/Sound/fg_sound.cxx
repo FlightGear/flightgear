@@ -136,8 +136,6 @@ FGSound::init(SGPropertyNode *node)
          volume.intern = &_dt_play;
       else if (!strcmp(intern_str, "dt_stop"))
          volume.intern = &_dt_stop;
-      else if (!strcmp(intern_str, "random"))
-         volume.intern = &_random;
 
       if ((volume.factor = kids[i]->getDoubleValue("factor", 1.0)) != 0.0)
          if (volume.factor < 0.0) {
@@ -271,15 +269,15 @@ FGSound::update (double dt)
       )
    {
 
-      _active = false;
-      _dt_stop += dt;
-      _dt_play = 0.0;
-
       if (_sample->is_playing()) {
          SG_LOG(SG_GENERAL, SG_INFO, "Stopping audio after " << _dt_play
                                       << " sec: " << _name );
          _sample->stop( _mgr->get_scheduler() );
       }
+
+      _active = false;
+      _dt_stop += dt;
+      _dt_play = 0.0;
 
       return;
 
@@ -302,7 +300,7 @@ FGSound::update (double dt)
    }
 
    //
-   // Update playtime, cache the current value and feed the random number
+   // Update playing time and cache the current value.
    //
     _dt_play += dt;
    _prev_value = curr_value;

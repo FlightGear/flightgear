@@ -861,6 +861,11 @@ static const double alt_adjust_m = alt_adjust_ft * SG_FEET_TO_METER;
 static void fgMainLoop( void ) {
 
     // Update the elapsed time.
+    static bool first_time = true;
+    if ( first_time ) {
+        last_time_stamp.stamp();
+        first_time = false;
+    }
     current_time_stamp.stamp();
     delta_time_sec = double(current_time_stamp - last_time_stamp) / 1000000.0;
     last_time_stamp = current_time_stamp;
@@ -1082,8 +1087,17 @@ static void fgMainLoop( void ) {
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( fgGetBool("/sim/sound/audible")
            && globals->get_soundmgr()->is_working() ) {
-	globals->get_fx()->update(1); // FIXME: use dt
-	globals->get_soundmgr()->update(1); // FIXME: use dt
+        static double dt = 0.0;
+        static double sound_update_rate = 0.05;
+
+        dt += delta_time_sec;
+
+	// Updating four times a second should be enough
+        if ( dt >= sound_update_rate ) {
+	    globals->get_fx()->update( dt );
+	    globals->get_soundmgr()->update( dt );
+            dt = 0.0;
+        }
     }
 #endif
 

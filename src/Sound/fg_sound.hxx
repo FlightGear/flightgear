@@ -81,7 +81,6 @@ private:
   string _name;
   int _mode;
   double _prev_value;
-  double _random;
   double _dt_play;
   double _dt_stop;
 
