@@ -132,12 +132,12 @@ readTexture (const SGPropertyNode * node)
 ////////////////////////////////////////////////////////////////////////
 
 static void
-readConditions (FGConditional * component, const SGPropertyNode * node)
+readConditions (SGConditional *component, const SGPropertyNode *node)
 {
   const SGPropertyNode * conditionNode = node->getChild("condition");
   if (conditionNode != 0)
 				// The top level is implicitly AND
-    component->setCondition(fgReadCondition(globals->get_props(),
+    component->setCondition(sgReadCondition(globals->get_props(),
                                             conditionNode) );
 }
 

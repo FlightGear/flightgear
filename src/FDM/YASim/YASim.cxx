@@ -253,7 +253,7 @@ void YASim::copyToYASim(bool copyState)
     wind[2] = get_V_down_airmass() * FT2M * -1.0;
 
     // Get ground elevation from the FGinterface's FGlocation data
-    double ground = getACModel()->get3DModel()->getFGLocation()->get_cur_elev_m();
+    double ground = getACModel()->get3DModel()->getSGLocation()->get_cur_elev_m();
     // cout << "YASIM: ground = " << ground << endl;
 
     float pressure = fgGetFloat("/environment/pressure-inhg") * INHG2PA;

@@ -163,7 +163,7 @@ public:
     // local chunks.  If the chunk isn't already in the cache, then
     // read it from disk.
     int update( double visibility_meters );
-    int update( FGLocation *location, double visibility_meters,
+    int update( SGLocation *location, double visibility_meters,
                 sgdVec3 abs_pos_vector );
 
     int updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center );
@@ -183,7 +183,7 @@ public:
     // tile, set the ssg transform and update it's range selector
     // based on current visibilty void prep_ssg_nodes( float
     // visibility_meters );
-    void prep_ssg_nodes( FGLocation *location, float visibility_meters );
+    void prep_ssg_nodes( SGLocation *location, float visibility_meters );
 
     // Set flag with event manager so that non-moving view refreshes
     // tiles...

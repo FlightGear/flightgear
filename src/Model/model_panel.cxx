@@ -84,7 +84,7 @@ fgLoad3DModelPanel( const string &fg_root, const string &path,
   ssgTransform * alignmainmodel = new ssgTransform;
   alignmainmodel->addKid(model);
   sgMat4 res_matrix;
-  fgMakeOffsetsMatrix(&res_matrix,
+  sgMakeOffsetsMatrix(&res_matrix,
                       props.getFloatValue("/offsets/heading-deg", 0.0),
                       props.getFloatValue("/offsets/roll-deg", 0.0),
                       props.getFloatValue("/offsets/pitch-deg", 0.0),
@@ -111,7 +111,7 @@ fgLoad3DModelPanel( const string &fg_root, const string &path,
     const char * name = animation_nodes[i]->getStringValue("name", 0);
     vector<SGPropertyNode_ptr> name_nodes =
       animation_nodes[i]->getChildren("object-name");
-    fgMakeAnimation( model, name, name_nodes, prop_root, animation_nodes[i],
+    sgMakeAnimation( model, name, name_nodes, prop_root, animation_nodes[i],
                      sim_time_sec);
   }
 
@@ -121,7 +121,7 @@ fgLoad3DModelPanel( const string &fg_root, const string &path,
     SGPropertyNode_ptr node = model_nodes[i];
     ssgTransform * align = new ssgTransform;
     sgMat4 res_matrix;
-    fgMakeOffsetsMatrix(&res_matrix,
+    sgMakeOffsetsMatrix(&res_matrix,
                         node->getFloatValue("offsets/heading-deg", 0.0),
                         node->getFloatValue("offsets/roll-deg", 0.0),
                         node->getFloatValue("offsets/pitch-deg", 0.0),
@@ -130,7 +130,7 @@ fgLoad3DModelPanel( const string &fg_root, const string &path,
                         node->getFloatValue("offsets/z-m", 0.0));
     align->setTransform(res_matrix);
 
-    ssgBranch * kid = fgLoad3DModel( fg_root, node->getStringValue("path"),
+    ssgBranch * kid = sgLoad3DModel( fg_root, node->getStringValue("path"),
                                      prop_root, sim_time_sec );
     align->addKid(kid);
     model->addKid(align);

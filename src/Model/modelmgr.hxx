@@ -21,7 +21,7 @@ SG_USING_STD(vector);
 // Don't pull in headers, since we don't need them here.
 class ssgSelector;
 class SGPropertyNode;
-class FGModelPlacement;
+class SGModelPlacement;
 
 
 /**
@@ -37,18 +37,18 @@ public:
    * The model manager uses the property nodes to update the model's
    * position and orientation; any of the property node pointers may
    * be set to zero to avoid update.  Normally, a caller should
-   * load the model by instantiating FGModelPlacement with the path
+   * load the model by instantiating SGModelPlacement with the path
    * to the model or its XML wrapper, then assign any relevant
    * property node pointers.
    *
-   * @see FGModelPlacement
+   * @see SGModelPlacement
    * @see FGModelMgr#add_instance
    */
   struct Instance
   {
     Instance ();
     virtual ~Instance ();
-    FGModelPlacement * model;
+    SGModelPlacement * model;
     SGPropertyNode * lon_deg_node;
     SGPropertyNode * lat_deg_node;
     SGPropertyNode * elev_ft_node;

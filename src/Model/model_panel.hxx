@@ -53,7 +53,7 @@ class FGLocation;
  * list wrapper to add animations to the model.
  *
  * Subsystems should not normally invoke this function directly;
- * instead, they should use the FGModelLoader declared in loader.hxx.
+ * instead, they should use the SGModelLoader declared in loader.hxx.
  */
 ssgBranch *fgLoad3DModelPanel( const string& fg_root, const string &path,
                                SGPropertyNode *prop_root,

@@ -525,7 +525,7 @@ ssgLeaf* FGTileEntry::gen_lights( ssgVertexArray *lights, int inc, float bright 
         new ssgVtxTable ( GL_POINTS, vl, nl, tl, cl );
 
     // assign state
-    FGNewMat *newmat = material_lib.find( "GROUND_LIGHTS" );
+    SGMaterial *newmat = material_lib.find( "GROUND_LIGHTS" );
     leaf->setState( newmat->get_state() );
     leaf->setCallback( SSG_CALLBACK_PREDRAW, fgLightsPredraw );
     leaf->setCallback( SSG_CALLBACK_POSTDRAW, fgLightsPostdraw );

@@ -58,7 +58,7 @@ protected:
     double pitch;	//degrees
 
     char* model_path;	//Path to the 3D model
-    FGModelPlacement aip;
+    SGModelPlacement aip;
 
     void Transform();
 };

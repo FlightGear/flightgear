@@ -155,7 +155,7 @@ private:
      * Lock and synchronize access to tile queue.
      */
     SGMutex mutex;
-    SGCondition frame_cond;
+    SGPthreadCond frame_cond;
 
     /**
      * Thread cleanup handler.

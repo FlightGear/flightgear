@@ -157,7 +157,7 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	string planepath = "Aircraft/c172/Models/c172-dpm.ac";
 	SGPath path = globals->get_fg_root();
 	path.append(planepath);
-        ssgBranch *model = fgLoad3DModel( path.str(),
+        ssgBranch *model = sgLoad3DModel( path.str(),
                                           planepath.c_str(),
                                           globals->get_props(),
                                           globals->get_sim_time_sec() );
@@ -404,8 +404,8 @@ void FGAILocalTraffic::Update(double dt) {
 		//cout << "In IN_PATTERN\n";
 		if(!inAir) DoGroundElev();
 		if(!elevInitGood) {
-			if(aip.getFGLocation()->get_cur_elev_m() > -9990.0) {
-				pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+			if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+				pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 				//cout << "TAKEOFF_ROLL, POS = " << pos.lon() << ", " << pos.lat() << ", " << pos.elev() << '\n';
 				//Transform();
 				aip.setVisible(true);
@@ -421,8 +421,8 @@ void FGAILocalTraffic::Update(double dt) {
 		//cout << "*" << flush;
 		if(!elevInitGood) {
 			//DoGroundElev();
-			if(aip.getFGLocation()->get_cur_elev_m() > -9990.0) {
-				pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+			if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+				pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 				//Transform();
 				aip.setVisible(true);
 				//Transform();
@@ -469,8 +469,8 @@ void FGAILocalTraffic::Update(double dt) {
 		//cout << "In PARKED\n";
 		if(!elevInitGood) {
 			DoGroundElev();
-			if(aip.getFGLocation()->get_cur_elev_m() > -9990.0) {
-				pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+			if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+				pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 				//Transform();
 				aip.setVisible(true);
 				//Transform();
@@ -613,8 +613,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			double dveldt = 5.0;
 			vel += dveldt * dt;
 		}
-		if(aip.getFGLocation()->get_cur_elev_m() > -9990.0) {
-			pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+		if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+			pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 		}
 		IAS = vel + (cos((hdg - wind_from) * DCL_DEGREES_TO_RADIANS) * wind_speed);
 		if(IAS >= 70) {
@@ -743,8 +743,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			               	// for us in update(...) when the inAir flag is false.
 		}
 		if(pos.elev() < (rwy.threshold_pos.elev()+10.0+wheelOffset)) {
-			if(aip.getFGLocation()->get_cur_elev_m() > -9990.0) {
-				if((aip.getFGLocation()->get_cur_elev_m() + wheelOffset) > pos.elev()) {
+			if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+				if((aip.getSGLocation()->get_cur_elev_m() + wheelOffset) > pos.elev()) {
 					slope = 0.0;
 					pitch = 0.0;
 					leg = LANDING_ROLL;
@@ -755,8 +755,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		break;
 	case LANDING_ROLL:
 		//inAir = false;
-		if(aip.getFGLocation()->get_cur_elev_m() > -9990.0) {
-			pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+		if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+			pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 		}
 		track = rwy.hdg;
 		double dveldt = -5.0;
@@ -1063,8 +1063,8 @@ void FGAILocalTraffic::Taxi(double dt) {
 		double slope = 0.0;
 		pos = dclUpdatePosition(pos, track, slope, dist);
 		//cout << "Updated position...\n";
-		if(aip.getFGLocation()->get_cur_elev_m() > -9990) {
-			pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+		if(aip.getSGLocation()->get_cur_elev_m() > -9990) {
+			pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 		} // else don't change the elev until we get a valid ground elev again!
 	} else if(lastNode) {
 		if(taxiState == TD_LINING_UP) {
@@ -1082,8 +1082,8 @@ void FGAILocalTraffic::Taxi(double dt) {
 				double slope = 0.0;
 				pos = dclUpdatePosition(pos, track, slope, dist);
 				//cout << "Updated position...\n";
-				if(aip.getFGLocation()->get_cur_elev_m() > -9990) {
-					pos.setelev(aip.getFGLocation()->get_cur_elev_m() + wheelOffset);
+				if(aip.getSGLocation()->get_cur_elev_m() > -9990) {
+					pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
 				} // else don't change the elev until we get a valid ground elev again!
 				if(fabs(hdg - rwy.hdg) <= 1.0) {
 					operatingState = IN_PATTERN;
@@ -1117,14 +1117,14 @@ void FGAILocalTraffic::DoGroundElev() {
 	// answer with one call to the function, but what I tried in the two commented-out lines
 	// below only intermittently worked, and I haven't quite groked why yet.
 	//SGBucket buck(pos.lon(), pos.lat());
-	//aip.getFGLocation()->set_tile_center(Point3D(buck.get_center_lon(), buck.get_center_lat(), 0.0));
+	//aip.getSGLocation()->set_tile_center(Point3D(buck.get_center_lon(), buck.get_center_lat(), 0.0));
 	
 	double visibility_meters = fgGetDouble("/environment/visibility-m");
 	//globals->get_tile_mgr()->prep_ssg_nodes( acmodel_location,
-	globals->get_tile_mgr()->prep_ssg_nodes( aip.getFGLocation(),	visibility_meters );
+	globals->get_tile_mgr()->prep_ssg_nodes( aip.getSGLocation(),	visibility_meters );
         Point3D scenery_center = globals->get_scenery()->get_center();
-	globals->get_tile_mgr()->update( aip.getFGLocation(), visibility_meters, (aip.getFGLocation())->get_absolute_view_pos( scenery_center ) );
-	// save results of update in FGLocation for fdm...
+	globals->get_tile_mgr()->update( aip.getSGLocation(), visibility_meters, (aip.getSGLocation())->get_absolute_view_pos( scenery_center ) );
+	// save results of update in SGLocation for fdm...
 	
 	//if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
 	//	acmodel_location->
@@ -1132,10 +1132,10 @@ void FGAILocalTraffic::DoGroundElev() {
 	//}
 	
 	// The need for this here means that at least 2 consecutive passes are needed :-(
-	aip.getFGLocation()->set_tile_center( globals->get_scenery()->get_next_center() );
+	aip.getSGLocation()->set_tile_center( globals->get_scenery()->get_next_center() );
 	
 	//cout << "Transform Elev is " << globals->get_scenery()->get_cur_elev() << '\n';
-	aip.getFGLocation()->set_cur_elev_m(globals->get_scenery()->get_cur_elev());
+	aip.getSGLocation()->set_cur_elev_m(globals->get_scenery()->get_cur_elev());
 	//return(globals->get_scenery()->get_cur_elev());
 }
 

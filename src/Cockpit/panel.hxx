@@ -228,7 +228,7 @@ private:
  * or joystick, but they are tied to specific mouse actions in
  * rectangular areas of the panel.
  */
-class FGPanelAction : public FGConditional
+class FGPanelAction : public SGConditional
 {
 public:
   FGPanelAction ();
@@ -288,7 +288,7 @@ private:
 /**
  * A transformation for a layer.
  */
-class FGPanelTransformation : public FGConditional
+class FGPanelTransformation : public SGConditional
 {
 public:
 
@@ -327,7 +327,7 @@ public:
  * on current FGFS instrument readings: for example, a texture
  * representing a needle can rotate to show the airspeed.
  */
-class FGInstrumentLayer : public FGConditional
+class FGInstrumentLayer : public SGConditional
 {
 public:
 
@@ -369,7 +369,7 @@ protected:
  * may show up in the future (some complex instruments could be 
  * entirely hand-coded, for example).
  */
-class FGPanelInstrument : public FGConditional
+class FGPanelInstrument : public SGConditional
 {
 public:
   FGPanelInstrument ();
@@ -491,7 +491,7 @@ public:
     DOUBLE_VALUE
   };
 
-  class Chunk : public FGConditional
+  class Chunk : public SGConditional
   {
   public:
     Chunk (const string &text, const string &fmt = "%s");

@@ -980,18 +980,21 @@ fgInitNav ()
 bool fgInitPosition() {
     bool set_pos = false;
 
-    // Do a first guess if we should be on the ground or in the air
-    // (to be refined later based on other input.
+    // If glideslope is specified, then calculate offset-distance or
+    // altitude relative to glide slope if either of those was not
+    // specified.
+    if ( fgGetDouble("/sim/presets/glideslope-deg") > 0.1 ) {
+        fgSetDistOrAltFromGlideSlope();
+    }
+
+    // Select ground or air start depending on if an altitude is
+    // specified (this choice can be refined later based on other
+    // input.)
     if ( fgGetDouble("/sim/presets/altitude-ft") > -9990.0 ) {
         fgSetBool("/sim/presets/onground", false);
     } else {
         fgSetBool("/sim/presets/onground", true);
     }
-
-    // If glideslope is specified, then calculate offset-distance or
-    // altitude relative to glide slope if either of those was not
-    // specified.
-    fgSetDistOrAltFromGlideSlope();
 
     // If we have an explicit, in-range lon/lat, don't change it, just use it.
     // If not, check for an airport-id and use that.
@@ -1045,33 +1048,18 @@ bool fgInitPosition() {
     if ( !set_pos && !vor.empty() ) {
         // a VOR is requested
         if ( fgSetPosFromNAV( vor, vor_freq ) ) {
-            if ( fgGetDouble("/sim/presets/altitude-ft") > -9990.0 ) {
-                fgSetBool("/sim/presets/onground", false);
-            } else {
-                fgSetBool("/sim/presets/onground", true);
-            }
             set_pos = true;
         }
     }
     if ( !set_pos && !ndb.empty() ) {
         // an NDB is requested
         if ( fgSetPosFromNAV( ndb, ndb_freq ) ) {
-            if ( fgGetDouble("/sim/presets/altitude-ft") > -9990.0 ) {
-                fgSetBool("/sim/presets/onground", false);
-            } else {
-                fgSetBool("/sim/presets/onground", true);
-            }
             set_pos = true;
         }
     }
     if ( !set_pos && !fix.empty() ) {
         // a Fix is requested
         if ( fgSetPosFromFix( fix ) ) {
-            if ( fgGetDouble("/sim/presets/altitude-ft") > -9990.0 ) {
-                fgSetBool("/sim/presets/onground", false);
-            } else {
-                fgSetBool("/sim/presets/onground", true);
-            }
             set_pos = true;
         }
     }

@@ -186,15 +186,15 @@ void
 FGViewer::init ()
 {
   if ( _from_model )
-    _location = (FGLocation *) globals->get_aircraft_model()->get3DModel()->getFGLocation();
+    _location = (SGLocation *) globals->get_aircraft_model()->get3DModel()->getSGLocation();
   else
-    _location = (FGLocation *) new FGLocation;
+    _location = (SGLocation *) new SGLocation;
 
   if ( _type == FG_LOOKAT ) {
     if ( _at_model )
-      _target_location = (FGLocation *) globals->get_aircraft_model()->get3DModel()->getFGLocation();
+      _target_location = (SGLocation *) globals->get_aircraft_model()->get3DModel()->getSGLocation();
     else
-      _target_location = (FGLocation *) new FGLocation;
+      _target_location = (SGLocation *) new SGLocation;
   }
 }
 
@@ -477,20 +477,20 @@ FGViewer::getZeroElevViewPos ()
 }
 
 void
-FGViewer::updateFromModelLocation (FGLocation * location)
+FGViewer::updateFromModelLocation (SGLocation * location)
 {
   sgCopyMat4(LOCAL, location->getCachedTransformMatrix());
 }
 
 void
-FGViewer::updateAtModelLocation (FGLocation * location)
+FGViewer::updateAtModelLocation (SGLocation * location)
 {
   sgCopyMat4(ATLOCAL, 
              location->getCachedTransformMatrix());
 }
 
 void
-FGViewer::recalcOurOwnLocation (FGLocation * location, double lon_deg, double lat_deg, double alt_ft, 
+FGViewer::recalcOurOwnLocation (SGLocation * location, double lon_deg, double lat_deg, double alt_ft, 
                         double roll_deg, double pitch_deg, double heading_deg)
 {
   // update from our own data...
@@ -668,7 +668,7 @@ FGViewer::recalcLookAt ()
 }
 
 // copy results from location class to viewer...
-// FIXME: some of these should be changed to reference directly to FGLocation...
+// FIXME: some of these should be changed to reference directly to SGLocation...
 void
 FGViewer::copyLocationData()
 {

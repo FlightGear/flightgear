@@ -52,6 +52,7 @@ class SGEphemeris;
 
 class SGCommandMgr;
 class SGMagVar;
+class SGModelLoader;
 class SGPropertyNode;
 class SGRoute;
 class SGTime;
@@ -66,7 +67,6 @@ class FGControls;
 class FGEnvironment;
 class FGEnvironmentMgr;
 class FGIO;
-class FGModelLoader;
 class FGModelMgr;
 class FGScenery;
 #ifdef FG_MPLAYER_AS
@@ -159,7 +159,7 @@ private:
 
     SGCommandMgr *commands;
 
-    FGModelLoader * model_loader;
+    SGModelLoader * model_loader;
 
     FGAircraftModel *acmodel;
 
@@ -275,9 +275,9 @@ public:
 
     inline SGCommandMgr *get_commands () { return commands; }
 
-    inline FGModelLoader * get_model_loader () { return model_loader; }
+    inline SGModelLoader * get_model_loader () { return model_loader; }
 
-    inline void set_model_loader (FGModelLoader * loader) {
+    inline void set_model_loader (SGModelLoader * loader) {
         model_loader = loader;
     }
 

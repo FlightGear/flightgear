@@ -354,7 +354,7 @@ void FGTileMgr::update_queues()
 // disk.
 int FGTileMgr::update( double visibility_meters )
 {
-    FGLocation *location = globals->get_current_view()->getFGLocation();
+    SGLocation *location = globals->get_current_view()->getSGLocation();
     sgdVec3 abs_pos_vector;
     sgdCopyVec3( abs_pos_vector,
                  globals->get_current_view()->get_absolute_view_pos() );
@@ -362,7 +362,7 @@ int FGTileMgr::update( double visibility_meters )
 }
 
 
-int FGTileMgr::update( FGLocation *location, double visibility_meters,
+int FGTileMgr::update( SGLocation *location, double visibility_meters,
                        sgdVec3 abs_pos_vector )
 {
     longitude = location->getLongitude_deg();
@@ -470,7 +470,7 @@ int FGTileMgr::updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center) {
 }
 
 
-void FGTileMgr::prep_ssg_nodes( FGLocation *location, float vis ) {
+void FGTileMgr::prep_ssg_nodes( SGLocation *location, float vis ) {
 
     // traverse the potentially viewable tile list and update range
     // selector and transform

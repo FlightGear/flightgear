@@ -45,10 +45,10 @@ FGModelMgr::init ()
     SG_LOG(SG_GENERAL, SG_INFO,
 	   "Adding model " << node->getStringValue("name", "[unnamed]"));
     Instance * instance = new Instance;
-    FGModelPlacement *model = new FGModelPlacement;
+    SGModelPlacement *model = new SGModelPlacement;
     instance->model = model;
     ssgBranch *object
-        = fgLoad3DModel( globals->get_fg_root(),
+        = sgLoad3DModel( globals->get_fg_root(),
                          node->getStringValue("path",
                                               "Models/Geometry/glider.ac"),
                          globals->get_props(),
@@ -117,7 +117,7 @@ FGModelMgr::update (double dt)
 {
   for (unsigned int i = 0; i < _instances.size(); i++) {
     Instance * instance = _instances[i];
-    FGModelPlacement * model = instance->model;
+    SGModelPlacement * model = instance->model;
 
 				// Optionally set position from properties
     if (instance->lon_deg_node != 0)

@@ -89,7 +89,7 @@ bool fgGenTile( const string& path, SGBucket b,
                       double *bounding_radius,
                       ssgBranch* geometry )
 {
-    FGNewMat *newmat;
+    SGMaterial *newmat;
 
     ssgSimpleState *state = NULL;
 
@@ -283,7 +283,7 @@ class LeafUserData : public ssgBase
 public:
     bool is_filled_in;
     ssgLeaf * leaf;
-    FGNewMat * mat;
+    SGMaterial * mat;
     ssgBranch * branch;
     float sin_lat;
     float cos_lat;
@@ -306,13 +306,13 @@ public:
   float * p3;
     sgVec3 center;
     double area;
-  FGNewMat::ObjectGroup * object_group;
+  SGMaterial::ObjectGroup * object_group;
   ssgBranch * branch;
     LeafUserData * leafData;
   unsigned int seed;
 
     void fill_in_triangle();
-    void add_object_to_triangle(FGNewMat::Object * object);
+    void add_object_to_triangle(SGMaterial::Object * object);
     void makeWorldMatrix (sgMat4 ROT, double hdg_deg );
 };
 
@@ -333,7 +333,7 @@ void TriUserData::fill_in_triangle ()
     int nObjects = object_group->get_object_count();
 
     for (int i = 0; i < nObjects; i++) {
-      FGNewMat::Object * object = object_group->get_object(i);
+      SGMaterial::Object * object = object_group->get_object(i);
       double num = area / object->get_coverage_m2();
 
       // place an object each unit of area
@@ -353,11 +353,11 @@ void TriUserData::fill_in_triangle ()
     }
 }
 
-void TriUserData::add_object_to_triangle (FGNewMat::Object * object)
+void TriUserData::add_object_to_triangle (SGMaterial::Object * object)
 {
     // Set up the random heading if required.
     double hdg_deg = 0;
-    if (object->get_heading_type() == FGNewMat::Object::HEADING_RANDOM)
+    if (object->get_heading_type() == SGMaterial::Object::HEADING_RANDOM)
         hdg_deg = sg_random() * 360;
 
     sgMat4 mat;
@@ -539,7 +539,7 @@ void LeafUserData::setup_triangle (int i )
     int num_groups = mat->get_object_group_count();
     for (int j = 0; j < num_groups; j++) {
                                 // Look up the random object.
-        FGNewMat::ObjectGroup * group = mat->get_object_group(j);
+        SGMaterial::ObjectGroup * group = mat->get_object_group(j);
 
                                 // Set up the range selector for the entire
                                 // triangle; note that we use the object
@@ -670,7 +670,7 @@ gen_random_surface_objects (ssgLeaf *leaf,
       return;
 
                                 // Get the material for this surface.
-    FGNewMat * mat = material_lib.find(material_name);
+    SGMaterial * mat = material_lib.find(material_name);
     if (mat == 0) {
       SG_LOG(SG_INPUT, SG_ALERT, "Unknown material " << material_name);
       return;
@@ -743,7 +743,7 @@ ssgLeaf *gen_leaf( const string& path,
     ssgSimpleState *state = NULL;
     float coverage = -1;
 
-    FGNewMat *newmat = material_lib.find( material );
+    SGMaterial *newmat = material_lib.find( material );
     if ( newmat == NULL ) {
         // see if this is an on the fly texture
         string file = path;

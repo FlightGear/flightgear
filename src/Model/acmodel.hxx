@@ -21,7 +21,7 @@ SG_USING_STD(vector);
 // Don't pull in the headers, since we don't need them here.
 class ssgRoot;
 class ssgSelector;
-class FGModelPlacement;
+class SGModelPlacement;
 
 
 class FGAircraftModel : public FGSubsystem
@@ -36,11 +36,11 @@ public:
   virtual void unbind ();
   virtual void update (double dt);
   virtual void draw ();
-  virtual FGModelPlacement * get3DModel() { return _aircraft; }
+  virtual SGModelPlacement * get3DModel() { return _aircraft; }
 
 private:
 
-  FGModelPlacement * _aircraft;
+  SGModelPlacement * _aircraft;
   ssgSelector * _selector;
   ssgRoot * _scene;
   float _nearplane;

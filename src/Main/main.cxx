@@ -497,7 +497,7 @@ void fgRenderFrame() {
         }
         // Keep resetting sim time while the sim is initializing
         globals->set_sim_time_sec( 0.0 );
-        Animation::set_sim_time_sec( 0.0 );
+        SGAnimation::set_sim_time_sec( 0.0 );
     } else {
         // idle_state is now 1000 meaning we've finished all our
         // initializations and are running the main loop, so this will
@@ -1025,7 +1025,7 @@ static void fgMainLoop( void ) {
         delta_time_sec = 0;
     last_time_stamp = current_time_stamp;
     globals->inc_sim_time_sec( delta_time_sec );
-    Animation::set_sim_time_sec( globals->get_sim_time_sec() );
+    SGAnimation::set_sim_time_sec( globals->get_sim_time_sec() );
 
     static long remainder = 0;
     long elapsed;
@@ -1042,9 +1042,9 @@ static void fgMainLoop( void ) {
     sglog().setLogLevels( SG_ALL, (sgDebugPriority)fgGetInt("/sim/log-level") );
     sglog().setLogLevels( SG_ALL, SG_INFO );
 
-    FGLocation * acmodel_location = 0;
+    SGLocation * acmodel_location = 0;
     if(cur_fdm_state->getACModel() != 0) {
-      acmodel_location = (FGLocation *)  cur_fdm_state->getACModel()->get3DModel()->getFGLocation();
+      acmodel_location = (SGLocation *)  cur_fdm_state->getACModel()->get3DModel()->getSGLocation();
     }
 
     SG_LOG( SG_ALL, SG_DEBUG, "Running Main Loop");
@@ -1250,14 +1250,14 @@ static void fgMainLoop( void ) {
 
     // update tile manager for FDM...
     // ...only if location is different than the viewer (to avoid duplicating effort)
-    if( acmodel_location != current_view->getFGLocation() ) {
+    if( acmodel_location != current_view->getSGLocation() ) {
       if( acmodel_location != 0 ) {
         globals->get_tile_mgr()->prep_ssg_nodes( acmodel_location,
                                                  visibility_meters );
         globals->get_tile_mgr()->
             update( acmodel_location, visibility_meters,
                     acmodel_location->get_absolute_view_pos(globals->get_scenery()->get_center()) );
-        // save results of update in FGLocation for fdm...
+        // save results of update in SGLocation for fdm...
         if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
           acmodel_location->
               set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
@@ -1267,24 +1267,24 @@ static void fgMainLoop( void ) {
       }
     }
 
-    globals->get_tile_mgr()->prep_ssg_nodes( current_view->getFGLocation(),
+    globals->get_tile_mgr()->prep_ssg_nodes( current_view->getSGLocation(),
                                              visibility_meters );
     // update tile manager for view...
     // IMPORTANT!!! the tilemgr update for view location _must_ be done last 
     // after the FDM's until all of Flight Gear code references the viewer's location
     // for elevation instead of the "scenery's" current elevation.
-    FGLocation *view_location = globals->get_current_view()->getFGLocation();
+    SGLocation *view_location = globals->get_current_view()->getSGLocation();
     globals->get_tile_mgr()->update( view_location, visibility_meters,
                                      current_view->get_absolute_view_pos() );
-    // save results of update in FGLocation for fdm...
+    // save results of update in SGLocation for fdm...
     if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
-      current_view->getFGLocation()->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
+      current_view->getSGLocation()->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
     }
-    current_view->getFGLocation()->set_tile_center( globals->get_scenery()->get_next_center() );
+    current_view->getSGLocation()->set_tile_center( globals->get_scenery()->get_next_center() );
 
     // If fdm location is same as viewer's then we didn't do the update for fdm location 
-    //   above so we need to save the viewer results in the fdm FGLocation as well...
-    if( acmodel_location == current_view->getFGLocation() ) {
+    //   above so we need to save the viewer results in the fdm SGLocation as well...
+    if( acmodel_location == current_view->getSGLocation() ) {
       if( acmodel_location != 0 ) {
         if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
           acmodel_location->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
@@ -1697,7 +1697,7 @@ static bool fgMainInit( int argc, char **argv ) {
     // Initialize the general model subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->set_model_loader(new FGModelLoader);
+    globals->set_model_loader(new SGModelLoader);
     globals->set_model_mgr(new FGModelMgr);
     globals->get_model_mgr()->init();
     globals->get_model_mgr()->bind();

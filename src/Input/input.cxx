@@ -104,7 +104,7 @@ FGBinding::read (const SGPropertyNode * node)
 {
   const SGPropertyNode * conditionNode = node->getChild("condition");
   if (conditionNode != 0)
-    setCondition(fgReadCondition(globals->get_props(), conditionNode));
+    setCondition(sgReadCondition(globals->get_props(), conditionNode));
 
   _command_name = node->getStringValue("command", "");
   if (_command_name.empty()) {

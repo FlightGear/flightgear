@@ -117,7 +117,7 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up,
     ssgLeaf *leaf = 
         new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
 
-    FGNewMat *newmat = material_lib.find( material );
+    SGMaterial *newmat = material_lib.find( material );
 
     if ( newmat != NULL ) {
         leaf->setState( newmat->get_state() );
@@ -234,7 +234,7 @@ ssgTransform *gen_dir_light_group( const point_list &nodes,
     ssgLeaf *leaf = 
         new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
 
-    FGNewMat *newmat = material_lib.find( material );
+    SGMaterial *newmat = material_lib.find( material );
 
     if ( newmat != NULL ) {
         leaf->setState( newmat->get_state() );
@@ -319,7 +319,7 @@ ssgTransform *gen_reil_lights( const point_list &nodes,
     ssgLeaf *leaf = 
         new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
 
-    FGNewMat *newmat = material_lib.find( "RWY_WHITE_LIGHTS" );
+    SGMaterial *newmat = material_lib.find( "RWY_WHITE_LIGHTS" );
 
     if ( newmat != NULL ) {
         leaf->setState( newmat->get_state() );
@@ -393,7 +393,7 @@ ssgTransform *gen_odals_lights( const point_list &nodes,
             new ssgVtxTable ( GL_POINTS, vl, NULL, NULL, cl );
 
         // we don't want directional lights here
-        FGNewMat *newmat = material_lib.find( "GROUND_LIGHTS" );
+        SGMaterial *newmat = material_lib.find( "GROUND_LIGHTS" );
 
         if ( newmat != NULL ) {
             leaf->setState( newmat->get_state() );
@@ -428,7 +428,7 @@ ssgTransform *gen_odals_lights( const point_list &nodes,
         new ssgVtxTable ( GL_POINTS, vl, NULL, NULL, cl );
 
     // we don't want directional lights here
-    FGNewMat *newmat = material_lib.find( "GROUND_LIGHTS" );
+    SGMaterial *newmat = material_lib.find( "GROUND_LIGHTS" );
 
     if ( newmat != NULL ) {
         leaf->setState( newmat->get_state() );
@@ -527,7 +527,7 @@ ssgTransform *gen_rabbit_lights( const point_list &nodes,
         ssgLeaf *leaf = 
             new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
 
-        FGNewMat *newmat = material_lib.find( "RWY_WHITE_LIGHTS" );
+        SGMaterial *newmat = material_lib.find( "RWY_WHITE_LIGHTS" );
 
         if ( newmat != NULL ) {
             leaf->setState( newmat->get_state() );
@@ -584,7 +584,7 @@ ssgLeaf *gen_normal_line( sgVec3 pt, sgVec3 dir, sgVec3 up ) {
     ssgLeaf *leaf = 
         new ssgVtxTable ( GL_LINES, vl, NULL, NULL, cl );
 
-    FGNewMat *newmat = material_lib.find( "GROUND_LIGHTS" );
+    SGMaterial *newmat = material_lib.find( "GROUND_LIGHTS" );
     leaf->setState( newmat->get_state() );
 
     return leaf;

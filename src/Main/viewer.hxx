@@ -255,7 +255,7 @@ public:
     inline void set_clean() { _dirty = false; }
     
     // return eye location...
-    virtual FGLocation * getFGLocation () const { return _location; }
+    virtual SGLocation * getSGLocation () const { return _location; }
 
 
 private:
@@ -322,8 +322,8 @@ private:
     bool _at_model;
     int _at_model_index;  // number of model (for multi model)
 
-    FGLocation * _location;
-    FGLocation * _target_location;
+    SGLocation * _location;
+    SGLocation * _target_location;
 
     // the nominal field of view (angle, in degrees)
     double _fov_deg; 
@@ -372,9 +372,9 @@ private:
     void recalcLookFrom();
     void recalcLookAt();
     void copyLocationData();
-    void updateFromModelLocation (FGLocation * location);
-    void updateAtModelLocation (FGLocation * location);
-    void recalcOurOwnLocation (FGLocation * location, double lon_deg, double lat_deg, double alt_ft,
+    void updateFromModelLocation (SGLocation * location);
+    void updateAtModelLocation (SGLocation * location);
+    void recalcOurOwnLocation (SGLocation * location, double lon_deg, double lat_deg, double alt_ft,
                  double roll_deg, double pitch_deg, double heading_deg);
 
     // add to _heading_offset_deg

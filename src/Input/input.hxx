@@ -62,7 +62,7 @@ SG_USING_STD(vector);
  * keyboard key, a joystick button or axis, or even a panel
  * instrument.</p>
  */
-class FGBinding : public FGConditional
+class FGBinding : public SGConditional
 {
 public:
 
