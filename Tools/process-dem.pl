@@ -40,7 +40,7 @@ $do_triangle_2 = 1;
 $do_tri2obj =    1;
 $do_strips =     1;
 $do_fixobj =     1;
-
+ 
 $do_install =    1;
 
 
@@ -423,6 +423,9 @@ sub install {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.22  1998/07/08 14:49:13  curt
+# tweaks.
+#
 # Revision 1.21  1998/06/08 17:18:37  curt
 # Mods to test new Stripe fixes from Wilbur Streett.
 #

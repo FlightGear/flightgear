@@ -26,7 +26,7 @@
 
 bin_PROGRAMS = splittris
 
-splittris_SOURCES = splittris.c splittris.h
+splittris_SOURCES = splittris.cxx splittris.hxx
 
 splittris_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.la \
@@ -39,6 +39,9 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1998/07/08 14:49:13  curt
+# tweaks.
+#
 # Revision 1.4  1998/04/24 00:44:06  curt
 # Added zlib support.
 #
