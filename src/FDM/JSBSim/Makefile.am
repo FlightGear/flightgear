@@ -5,7 +5,7 @@ EXTRA_DIST = Makefile.solo
 noinst_LIBRARIES = libJSBSim.a
 
 libJSBSim_a_SOURCES = \
-        FGAerodynamics.cpp FGAerodynamics.h \
+	FGAerodynamics.cpp FGAerodynamics.h \
 	FGAircraft.cpp FGAircraft.h \
 	FGAtmosphere.cpp FGAtmosphere.h \
 	FGAuxiliary.cpp FGAuxiliary.h \
