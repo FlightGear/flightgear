@@ -11,6 +11,7 @@
 #endif
 
 #include <plib/sg.h>
+#include <simgear/sg_inlines.h>
 
 #include "mag_compass.hxx"
 #include <Main/fg_props.hxx>
@@ -76,8 +77,6 @@ MagCompass::init ()
     _z_accel_node =
         fgGetNode("/accelerations/pilot/z-accel-fps_sec", true);
     _out_node = node->getChild("indicated-heading-deg", 0, true);
-
-    _serviceable_node->setBoolValue(true);
 }
 
 
@@ -85,18 +84,17 @@ void
 MagCompass::update (double delta_time_sec)
 {
                                 // This is the real magnetic
-                                // heading, which will almost
-                                // never appear.
+                                // which would be displayed
+                                // if the compass had no errors.
     double heading_mag_deg = _heading_node->getDoubleValue();
 
 
-                                // don't update if it's broken
+                                // don't update if the compass
+                                // is broken
     if (!_serviceable_node->getBoolValue())
         return;
 
-    /*
-      Jam on an excessive sideslip.
-    */
+                                // jam on excessive sideslip
     if (fabs(_beta_node->getDoubleValue()) > 12.0) {
         _rate_degps = 0.0;
         return;
@@ -114,10 +112,11 @@ MagCompass::update (double delta_time_sec)
 
       Hc = atan2(sin(Hm)cos(theta)-tan(mu)sin(theta), cos(Hm))
 
-      This function changes the variable names to the more common
-      psi for the heading, theta for the pitch, and phi for the
-      roll.  It also modifies the equation to incorporate pitch
-      as well as roll, as suggested by Chris Metzler.
+      This function changes the variable names to the more common psi
+      for the heading, theta for the pitch, and phi for the roll (and
+      target_deg for Hc).  It also modifies the equation to
+      incorporate pitch as well as roll, as suggested by Chris
+      Metzler.
     */
 
                                 // bank angle (radians)
@@ -153,7 +152,7 @@ MagCompass::update (double delta_time_sec)
     phi -= 0.07 * y_accel_g;
     
     ////////////////////////////////////////////////////////////////////
-    // calculate target compass heading Hc in degrees
+    // calculate target compass heading degrees
     ////////////////////////////////////////////////////////////////////
 
                                 // these are expensive: don't repeat
@@ -172,13 +171,28 @@ MagCompass::update (double delta_time_sec)
         - sin_theta * sin_mu;
 
                                 // This is the value that the compass
-                                // is *trying* to display, but it
-                                // takes time to move there, and because
-                                // of momentum, the compass will often
-                                // overshoot.
-    double Hc = atan2(a, b) * SGD_RADIANS_TO_DEGREES;
+                                // is *trying* to display.
+    double target_deg = atan2(a, b) * SGD_RADIANS_TO_DEGREES;
+    double old_deg = _out_node->getDoubleValue();
 
-    _out_node->setDoubleValue(Hc);
+    while ((target_deg - old_deg) > 180.0)
+        target_deg -= 360.0;
+    while ((target_deg - old_deg) < -180.0)
+        target_deg += 360.0;
+
+                                // The compass has a current rate of
+                                // rotation -- move the rate of rotation
+                                // towards one that will turn the compass
+                                // to the correct heading, but lag a bit.
+                                // (so that the compass can keep overshooting
+                                // and coming back).
+    double error = target_deg - old_deg;
+    _rate_degps = fgGetLowPass(_rate_degps, error, delta_time_sec / 5.0);
+    double indicated_deg = old_deg + _rate_degps * delta_time_sec;
+    SG_NORMALIZE_RANGE(indicated_deg, 0.0, 360.0);
+
+                                // That's it -- set the messed-up heading.
+    _out_node->setDoubleValue(indicated_deg);
 }
 
 // end of altimeter.cxx
