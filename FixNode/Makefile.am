@@ -28,8 +28,7 @@ bin_PROGRAMS = fixnode
 
 fixnode_SOURCES = \
 	fixnode.cxx fixnode.hxx \
-	main.cxx \
-	triload.cxx triload.hxx
+	main.cxx
 
 fixnode_LDADD = \
 	$(top_builddir)/Lib/DEM/libDEM.a \
@@ -47,6 +46,10 @@ CXXFLAGS = -g
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.6  1998/09/19 20:43:50  curt
+# C++-ified and STL-ified the code.  Combined triload.* and fixnode.* into
+# a single file.
+#
 # Revision 1.5  1998/09/19 18:01:26  curt
 # Support for changes to libDEM.a
 #

@@ -26,7 +26,7 @@
 
 #include <sys/types.h>
 #include <dirent.h>
-#include <stdio.h>
+// #include <stdio.h>
 #include <string.h>
 #include <string>
 
@@ -37,18 +37,11 @@
 #include <DEM/dem.hxx>
 
 #include "fixnode.hxx"
-#include "triload.hxx"
-
-
-// Storage for the original DEM data which is used to interpolate z values
-fgDEM dem;
-
-// Node list
-static double nodes[MAX_NODES][3];
 
 
 // find all the matching files in the specified directory and fix them
-void process_files(const string& root_path) {
+void process_files(const string& root_path, fgDEM& dem) {
+    container node_list;
     DIR *d;
     struct dirent *de;
     string file_path;
@@ -72,9 +65,9 @@ void process_files(const string& root_path) {
 		cout << "File = " + file_path + "\n";
 
 		// load the input data files
-		triload(file_path.c_str(), nodes);
+		load_nodes(file_path, node_list);
 
-		fixnodes(file_path.c_str(), &dem, nodes);
+		fix_nodes(file_path, dem, node_list);
 	    }
 	}
     }
@@ -83,10 +76,11 @@ void process_files(const string& root_path) {
 
 // main
 int main(int argc, char **argv) {
+    fgDEM dem;
     string demfile, root_path;
 
     if ( argc != 3 ) {
-	printf("Usage %s demfile root_path\n", argv[0]);
+	cout << "Usage " << argv[0] << " demfile root_path\n";
 	exit(-1);
     }
 
@@ -101,13 +95,17 @@ int main(int argc, char **argv) {
     dem.close();
 
     // process all the *.1.node files in the specified directory
-    process_files(root_path);
+    process_files(root_path, dem);
 
     return(0);
 }
 
 
 // $Log$
+// Revision 1.7  1998/09/19 20:43:54  curt
+// C++-ified and STL-ified the code.  Combined triload.* and fixnode.* into
+// a single file.
+//
 // Revision 1.6  1998/09/19 18:01:27  curt
 // Support for changes to libDEM.a
 //
@@ -145,5 +143,4 @@ int main(int argc, char **argv) {
 //
 // Revision 1.1  1997/11/27 00:17:34  curt
 // Initial revision.
-//
 //

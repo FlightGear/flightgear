@@ -1,5 +1,5 @@
-// fixnode.h -- traverse the node file and fix the elevation of all the new
-//              interpolated points.
+// fixnode.hxx -- traverse the node file and fix the elevation of all the new
+//                interpolated points.
 //
 // Written by Curtis Olson, started November 1997.
 //
@@ -30,20 +30,40 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <string>
+
+#include <vector>
+#include "Include/fg_stl_config.h"
+
+#ifdef NEEDNAMESPACESTD
+using namespace std;
+#endif
 
 #include <DEM/dem.hxx>
+#include <Include/fg_types.h>
 
-#include "triload.hxx"
+
+typedef vector < fgPoint3d > container;
+typedef container::iterator iterator;
+typedef container::const_iterator const_iterator;
+
+
+// Initialize a new mesh structure
+void load_nodes(const string& basename, container& node_list);
 
 
 // load the node information
-void fixnodes( char *basename, fgDEM *dem, double nodes[MAX_NODES][3] );
+void fix_nodes( const string& basename, fgDEM& dem, container& node_list );
 
 
 #endif // _FIXNODE_H
 
 
 // $Log$
+// Revision 1.3  1998/09/19 20:43:53  curt
+// C++-ified and STL-ified the code.  Combined triload.* and fixnode.* into
+// a single file.
+//
 // Revision 1.2  1998/07/22 21:46:41  curt
 // Fixed a bug that was triggering a seg fault.
 //
