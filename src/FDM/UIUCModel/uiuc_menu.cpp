@@ -135,6 +135,7 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 #include STL_IOSTREAM
 
 #include "uiuc_menu.h"
@@ -178,9 +179,9 @@ bool check_float(string  &token)
 
 void d_2_to_3( double array2D[100][100], double array3D[][100][100], int index3D)
 {
-  for (int i=0; i<=99; i++)
+  for (register int i=0; i<=99; i++)
     {
-      for (int j=1; j<=99; j++)
+      for (register int j=1; j<=99; j++)
 	{
 	  array3D[index3D][i][j]=array2D[i][j];
 	}
@@ -189,15 +190,20 @@ void d_2_to_3( double array2D[100][100], double array3D[][100][100], int index3D
 
 void d_1_to_2( double array1D[100], double array2D[][100], int index2D)
 {
-  for (int i=0; i<=99; i++)
+  for (register int i=0; i<=99; i++)
     {
       array2D[index2D][i]=array1D[i];
     }
 }
 
+void d_1_to_1( double array1[100], double array2[100] )
+{
+   memcpy( array2, array1, sizeof(array2) );
+}
+
 void i_1_to_2( int array1D[100], int array2D[][100], int index2D)
 {
-  for (int i=0; i<=99; i++)
+  for (register int i=0; i<=99; i++)
     {
       array2D[index2D][i]=array1D[i];
     }
@@ -1451,7 +1457,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  CXfabetaf_na_nice = datafile_nxArray[1];
 			  CXfabetaf_nb_nice = datafile_ny;
-			  CXfabetaf_bArray_nice = datafile_yArray;
+			  d_1_to_1(CXfabetaf_bArray_nice, datafile_yArray);
 			  for (i=1; i<=CXfabetaf_na_nice; i++)
 			    CXfabetaf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -1503,7 +1509,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  CXfadef_na_nice = datafile_nxArray[1];
 			  CXfadef_nde_nice = datafile_ny;
-			  CXfadef_deArray_nice = datafile_yArray;
+			  d_1_to_1(CXfadef_deArray_nice, datafile_yArray);
 			  for (i=1; i<=CXfadef_na_nice; i++)
 			    CXfadef_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -1555,7 +1561,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  CXfaqf_na_nice = datafile_nxArray[1];
 			  CXfaqf_nq_nice = datafile_ny;
-			  CXfaqf_qArray_nice = datafile_yArray;
+			  d_1_to_1(CXfaqf_qArray_nice, datafile_yArray);
 			  for (i=1; i<=CXfaqf_na_nice; i++)
 			    CXfaqf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -1924,7 +1930,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  CZfabetaf_na_nice = datafile_nxArray[1];
 			  CZfabetaf_nb_nice = datafile_ny;
-			  CZfabetaf_bArray_nice = datafile_yArray;
+			  d_1_to_1(CZfabetaf_bArray_nice, datafile_yArray);
 			  for (i=1; i<=CZfabetaf_na_nice; i++)
 			    CZfabetaf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -1976,7 +1982,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  CZfadef_na_nice = datafile_nxArray[1];
 			  CZfadef_nde_nice = datafile_ny;
-			  CZfadef_deArray_nice = datafile_yArray;
+			  d_1_to_1(CZfadef_deArray_nice, datafile_yArray);
 			  for (i=1; i<=CZfadef_na_nice; i++)
 			    CZfadef_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -2028,7 +2034,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  CZfaqf_na_nice = datafile_nxArray[1];
 			  CZfaqf_nq_nice = datafile_ny;
-			  CZfaqf_qArray_nice = datafile_yArray;
+			  d_1_to_1(CZfaqf_qArray_nice, datafile_yArray);
 			  for (i=1; i<=CZfaqf_na_nice; i++)
 			    CZfaqf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -2297,7 +2303,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Cmfabetaf_na_nice = datafile_nxArray[1];
 			  Cmfabetaf_nb_nice = datafile_ny;
-			  Cmfabetaf_bArray_nice = datafile_yArray;
+			  d_1_to_1(Cmfabetaf_bArray_nice, datafile_yArray);
 			  for (i=1; i<=Cmfabetaf_na_nice; i++)
 			    Cmfabetaf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -2349,7 +2355,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Cmfadef_na_nice = datafile_nxArray[1];
 			  Cmfadef_nde_nice = datafile_ny;
-			  Cmfadef_deArray_nice = datafile_yArray;
+			  d_1_to_1(Cmfadef_deArray_nice, datafile_yArray);
 			  for (i=1; i<=Cmfadef_na_nice; i++)
 			    Cmfadef_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -2401,7 +2407,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Cmfaqf_na_nice = datafile_nxArray[1];
 			  Cmfaqf_nq_nice = datafile_ny;
-			  Cmfaqf_qArray_nice = datafile_yArray;
+			  d_1_to_1(Cmfaqf_qArray_nice, datafile_yArray);
 			  for (i=1; i<=Cmfaqf_na_nice; i++)
 			    Cmfaqf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -2611,7 +2617,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  CYfabetaf_na_nice = datafile_nxArray[1];
 			  CYfabetaf_nb_nice = datafile_ny;
-			  CYfabetaf_bArray_nice = datafile_yArray;
+			  d_1_to_1(CYfabetaf_bArray_nice, datafile_yArray);
 			  for (i=1; i<=CYfabetaf_na_nice; i++)
 			    CYfabetaf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -2663,7 +2669,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  CYfadaf_na_nice = datafile_nxArray[1];
 			  CYfadaf_nda_nice = datafile_ny;
-			  CYfadaf_daArray_nice = datafile_yArray;
+			  d_1_to_1(CYfadaf_daArray_nice, datafile_yArray);
 			  for (i=1; i<=CYfadaf_na_nice; i++)
 			    CYfadaf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -2715,7 +2721,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  CYfadrf_na_nice = datafile_nxArray[1];
 			  CYfadrf_ndr_nice = datafile_ny;
-			  CYfadrf_drArray_nice = datafile_yArray;
+			  d_1_to_1(CYfadrf_drArray_nice, datafile_yArray);
 			  for (i=1; i<=CYfadrf_na_nice; i++)
 			    CYfadrf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -2767,7 +2773,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  CYfapf_na_nice = datafile_nxArray[1];
 			  CYfapf_np_nice = datafile_ny;
-			  CYfapf_pArray_nice = datafile_yArray;
+			  d_1_to_1(CYfapf_pArray_nice, datafile_yArray);
 			  for (i=1; i<=CYfapf_na_nice; i++)
 			    CYfapf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -2819,7 +2825,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  CYfarf_na_nice = datafile_nxArray[1];
 			  CYfarf_nr_nice = datafile_ny;
-			  CYfarf_rArray_nice = datafile_yArray;
+			  d_1_to_1(CYfarf_rArray_nice, datafile_yArray);
 			  for (i=1; i<=CYfarf_na_nice; i++)
 			    CYfarf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -3017,7 +3023,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Clfabetaf_na_nice = datafile_nxArray[1];
 			  Clfabetaf_nb_nice = datafile_ny;
-			  Clfabetaf_bArray_nice = datafile_yArray;
+			  d_1_to_1(Clfabetaf_bArray_nice, datafile_yArray);
 			  for (i=1; i<=Clfabetaf_na_nice; i++)
 			    Clfabetaf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -3069,7 +3075,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Clfadaf_na_nice = datafile_nxArray[1];
 			  Clfadaf_nda_nice = datafile_ny;
-			  Clfadaf_daArray_nice = datafile_yArray;
+			  d_1_to_1(Clfadaf_daArray_nice, datafile_yArray);
 			  for (i=1; i<=Clfadaf_na_nice; i++)
 			    Clfadaf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -3121,7 +3127,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Clfadrf_na_nice = datafile_nxArray[1];
 			  Clfadrf_ndr_nice = datafile_ny;
-			  Clfadrf_drArray_nice = datafile_yArray;
+			  d_1_to_1(Clfadrf_drArray_nice, datafile_yArray);
 			  for (i=1; i<=Clfadrf_na_nice; i++)
 			    Clfadrf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -3173,7 +3179,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Clfapf_na_nice = datafile_nxArray[1];
 			  Clfapf_np_nice = datafile_ny;
-			  Clfapf_pArray_nice = datafile_yArray;
+			  d_1_to_1(Clfapf_pArray_nice, datafile_yArray);
 			  for (i=1; i<=Clfapf_na_nice; i++)
 			    Clfapf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -3225,7 +3231,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Clfarf_na_nice = datafile_nxArray[1];
 			  Clfarf_nr_nice = datafile_ny;
-			  Clfarf_rArray_nice = datafile_yArray;
+			  d_1_to_1(Clfarf_rArray_nice, datafile_yArray);
 			  for (i=1; i<=Clfarf_na_nice; i++)
 			    Clfarf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -3435,7 +3441,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Cnfabetaf_na_nice = datafile_nxArray[1];
 			  Cnfabetaf_nb_nice = datafile_ny;
-			  Cnfabetaf_bArray_nice = datafile_yArray;
+			  d_1_to_1(Cnfabetaf_bArray_nice, datafile_yArray);
 			  for (i=1; i<=Cnfabetaf_na_nice; i++)
 			    Cnfabetaf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -3487,7 +3493,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Cnfadaf_na_nice = datafile_nxArray[1];
 			  Cnfadaf_nda_nice = datafile_ny;
-			  Cnfadaf_daArray_nice = datafile_yArray;
+			  d_1_to_1(Cnfadaf_daArray_nice, datafile_yArray);
 			  for (i=1; i<=Cnfadaf_na_nice; i++)
 			    Cnfadaf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -3539,7 +3545,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Cnfadrf_na_nice = datafile_nxArray[1];
 			  Cnfadrf_ndr_nice = datafile_ny;
-			  Cnfadrf_drArray_nice = datafile_yArray;
+			  d_1_to_1(Cnfadrf_drArray_nice, datafile_yArray);
 			  for (i=1; i<=Cnfadrf_na_nice; i++)
 			    Cnfadrf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -3591,7 +3597,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Cnfapf_na_nice = datafile_nxArray[1];
 			  Cnfapf_np_nice = datafile_ny;
-			  Cnfapf_pArray_nice = datafile_yArray;
+			  d_1_to_1(Cnfapf_pArray_nice, datafile_yArray);
 			  for (i=1; i<=Cnfapf_na_nice; i++)
 			    Cnfapf_aArray_nice[i] = datafile_xArray[1][i];
 			}
@@ -3643,7 +3649,7 @@ void uiuc_menu( string aircraft_name )
 			{
 			  Cnfarf_na_nice = datafile_nxArray[1];
 			  Cnfarf_nr_nice = datafile_ny;
-			  Cnfarf_rArray_nice = datafile_yArray;
+			  d_1_to_1(Cnfarf_rArray_nice, datafile_yArray);
 			  for (i=1; i<=Cnfarf_na_nice; i++)
 			    Cnfarf_aArray_nice[i] = datafile_xArray[1][i];
 			}
