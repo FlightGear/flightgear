@@ -69,9 +69,10 @@ int fgStarsInit( void ) {
     char line[256], name[256];
     char *front, *end;
     double right_ascension, declination, magnitude;
+    double min_magnitude[FG_STAR_LEVELS];
     /* double ra_save, decl_save; */
     /* double ra_save1, decl_save1; */
-    int count, i, max_stars;
+    int i;
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing stars\n");
 
@@ -80,11 +81,24 @@ int fgStarsInit( void ) {
     strcat(path, "/Scenery/");
     strcat(path, "Stars");
 
-    max_stars = FG_MAX_STARS;
+    if ( FG_STAR_LEVELS < 4 ) {
+	fgPrintf( FG_ASTRO, FG_EXIT, "Big whups in stars.cxx\n");
+    }
+
+    min_magnitude[0] = 4.2;
+    min_magnitude[1] = 3.6;
+    min_magnitude[2] = 3.0;
+    min_magnitude[3] = 2.4;
+    min_magnitude[4] = 1.8;
+    min_magnitude[5] = 1.2;
+    min_magnitude[6] = 0.6;
+    min_magnitude[7] = 0.0;
+
 
     for ( i = 0; i < FG_STAR_LEVELS; i++ ) {
 	fgPrintf( FG_ASTRO, FG_INFO,
-		  "  Loading %d Stars: %s\n", max_stars, path);
+		  "  Loading stars brighter than %.2f from %2\n", 
+		  min_magnitude[i], path);
 
 	if ( (fd = fgopen(path, "rb")) == NULL ) {
 	    strcpy(gzpath, path);
@@ -101,8 +115,7 @@ int fgStarsInit( void ) {
 	xglBegin( GL_POINTS );
 
 	/* read in each line of the file */
-	count = 0;
-	while ( (fggets(fd, line, 256) != NULL) && (count < max_stars) ) {
+	while ( fggets(fd, line, 256) != NULL ) {
 	    front = line;
 
 	    /* printf("  Read line = %s", front); */
@@ -150,24 +163,27 @@ int fgStarsInit( void ) {
 		  }
 		  */
 
-		/* scale magnitudes to (0.0 - 1.0) */
-		magnitude = (0.0 - magnitude) / 5.0 + 1.0;
+		if ( magnitude < min_magnitude[i] ) {
+		    /* scale magnitudes to (0.0 - 1.0) */
+		    magnitude = (0.0 - magnitude) / 5.0 + 1.0;
 
-		/* scale magnitudes again so they look ok */
-		if ( magnitude > 1.0 ) { magnitude = 1.0; }
-		if ( magnitude < 0.0 ) { magnitude = 0.0; }
-		magnitude =
-		    magnitude * 0.7 + (((FG_STAR_LEVELS - 1) - i) * 0.1);
-		/* printf("  Found star: %d %s, %.3f %.3f %.3f\n", count,
-		   name, right_ascension, declination, magnitude); */
-
-		xglColor3f( magnitude, magnitude, magnitude );
-		/*xglColor3f(0,0,0);*/
-		xglVertex3f( 50000.0 * cos(right_ascension) * cos(declination),
-			     50000.0 * sin(right_ascension) * cos(declination),
-			     50000.0 * sin(declination) );
-
-		count++;
+		    /* scale magnitudes again so they look ok */
+		    if ( magnitude > 1.0 ) { magnitude = 1.0; }
+		    if ( magnitude < 0.0 ) { magnitude = 0.0; }
+		    /* magnitude =
+			magnitude * 0.7 + (((FG_STAR_LEVELS - 1) - i) * 0.042);
+			*/
+		    magnitude = magnitude * 0.9 + 
+			(((FG_STAR_LEVELS - 1) - i) * 0.014);
+		    /* printf("  Found star: %d %s, %.3f %.3f %.3f\n", count,
+		       name, right_ascension, declination, magnitude); */
+		    
+		    xglColor3f( magnitude, magnitude, magnitude );
+		    /*xglColor3f(0,0,0);*/
+		    xglVertex3f( 50000.0*cos(right_ascension)*cos(declination),
+				 50000.0*sin(right_ascension)*cos(declination),
+				 50000.0*sin(declination) );
+		}
 	    } //  valid line
 
 	} /* while */
@@ -213,8 +229,6 @@ int fgStarsInit( void ) {
 	*/
 
 	xglEndList();
-
-	max_stars /= 2;
     }
 
     return 1;  // OK, we got here because initialization worked.
@@ -241,14 +255,22 @@ void fgStarsRender( void ) {
     /* render the stars */
     if ( l->sun_angle > (FG_PI_2 + 5 * DEG_TO_RAD ) ) {
 	/* determine which star structure to draw */
-	if ( l->sun_angle > (FG_PI_2 + 7.25 * DEG_TO_RAD ) ) {
+	if ( l->sun_angle > (FG_PI_2 + 10.0 * DEG_TO_RAD ) ) {
 	    i = 0;
-	} else if ( l->sun_angle > (FG_PI_2 + 6.50 * DEG_TO_RAD ) ) {
+	} else if ( l->sun_angle > (FG_PI_2 + 8.8 * DEG_TO_RAD ) ) {
 	    i = 1;
-	} else if ( l->sun_angle > (FG_PI_2 + 5.75 * DEG_TO_RAD ) ) {
+	} else if ( l->sun_angle > (FG_PI_2 + 7.5 * DEG_TO_RAD ) ) {
 	    i = 2;
-	} else {
+	} else if ( l->sun_angle > (FG_PI_2 + 7.0 * DEG_TO_RAD ) ) {
 	    i = 3;
+	} else if ( l->sun_angle > (FG_PI_2 + 6.5 * DEG_TO_RAD ) ) {
+	    i = 4;
+	} else if ( l->sun_angle > (FG_PI_2 + 6.0 * DEG_TO_RAD ) ) {
+	    i = 5;
+	} else if ( l->sun_angle > (FG_PI_2 + 5.5 * DEG_TO_RAD ) ) {
+	    i = 6;
+	} else {
+	    i = 7;
 	}
 
 	/* printf("RENDERING STARS = %d (night)\n", i); */
@@ -261,9 +283,13 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.8  1998/07/13 21:00:10  curt
-/* Wrote access functions for current fgOPTIONS.
+/* Revision 1.9  1998/08/06 12:45:20  curt
+/* Modified to bring in stars in 8 increments based on magnitude, not number
+/* of stars.
 /*
+ * Revision 1.8  1998/07/13 21:00:10  curt
+ * Wrote access functions for current fgOPTIONS.
+ *
  * Revision 1.7  1998/05/29 20:35:42  curt
  * Added zlib support for reading in compressed data files.
  *

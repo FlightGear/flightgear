@@ -33,9 +33,7 @@
 #endif                                   
 
 
-#define FG_MAX_STARS 500
-#define FG_STAR_LEVELS 4         /* how many star transitions */
-#define FG_MIN_STAR_MAG 0.738750 /* magnitude of weakest star we'll display */
+#define FG_STAR_LEVELS 8         /* how many star transitions */
 
 /* Initialize the Star Management Subsystem */
 int fgStarsInit( void );
@@ -51,9 +49,13 @@ extern fgTIME cur_time_params;
 
 
 /* $Log$
-/* Revision 1.2  1998/04/28 01:19:03  curt
-/* Type-ified fgTIME and fgVIEW
+/* Revision 1.3  1998/08/06 12:45:20  curt
+/* Modified to bring in stars in 8 increments based on magnitude, not number
+/* of stars.
 /*
+ * Revision 1.2  1998/04/28 01:19:03  curt
+ * Type-ified fgTIME and fgVIEW
+ *
  * Revision 1.1  1998/04/22 13:21:35  curt
  * C++ - ifing the code a bit.
  *
