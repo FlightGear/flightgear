@@ -355,6 +355,22 @@ void FGNasalSys::loadPropertyScripts()
         if(n->hasChild("module"))
             module = n->getStringValue("module");
 
+        // allow multiple files to be specified within in a single
+        // Nasal module tag
+        int j = 0;
+        SGPropertyNode *fn;
+        bool file_specified = false;
+        while ( (fn = n->getChild("file", j)) != NULL ) {
+            file_specified = true;
+            const char* file = fn->getStringValue();
+            SGPath p(globals->get_fg_root());
+            p.append(file);
+            readScriptFile(p, module);
+            j++;
+        }
+
+        // Old code which only allowed a single file to be specified per module
+        /*
         const char* file = n->getStringValue("file");
         if(!n->hasChild("file")) file = 0; // Hrm...
         if(file) {
@@ -362,13 +378,14 @@ void FGNasalSys::loadPropertyScripts()
             p.append(file);
             readScriptFile(p, module);
         }
+        */
         
         const char* src = n->getStringValue("script");
         if(!n->hasChild("script")) src = 0; // Hrm...
         if(src)
             initModule(module, n->getPath(), src, strlen(src));
 
-        if(!file && !src)
+        if(!file_specified && !src)
             SG_LOG(SG_NASAL, SG_ALERT, "Nasal error: " <<
                    "no <file> or <script> defined in " <<
                    "/nasal/" << module);
