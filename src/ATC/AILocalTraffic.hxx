@@ -35,7 +35,7 @@
 #include <string>
 SG_USING_STD(string);
 
-typedef enum PatternLeg {
+enum PatternLeg {
 	TAKEOFF_ROLL,
 	CLIMBOUT,
 	TURN1,
@@ -49,20 +49,20 @@ typedef enum PatternLeg {
 	LANDING_ROLL
 };
 
-typedef enum TaxiState {
+enum TaxiState {
 	TD_INBOUND,
 	TD_OUTBOUND,
 	TD_NONE
 };
 
-typedef enum OperatingState {
+enum OperatingState {
 	IN_PATTERN,
 	TAXIING,
 	PARKED
 };
 
 // perhaps we could use an FGRunway instead of this
-typedef struct RunwayDetails {
+struct RunwayDetails {
 	Point3D threshold_pos;
 	Point3D end1ortho;	// ortho projection end1 (the threshold ATM)
 	Point3D end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
@@ -74,7 +74,7 @@ typedef struct RunwayDetails {
 	string rwyID;
 };
 
-typedef struct StartofDescent {
+struct StartofDescent {
 	PatternLeg leg;
 	double orthopos_x;
 	double orthopos_y;

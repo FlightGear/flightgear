@@ -115,7 +115,7 @@ FGSwitch::FGSwitch(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
       }
 
       AC_cfg->GetNextConfigLine();
-      while (AC_cfg->GetValue() != "/TEST") {
+      while (AC_cfg->GetValue() != string("/TEST")) {
         current_test->conditions.push_back(*(new FGCondition(AC_cfg, PropertyManager)));
       }
     }

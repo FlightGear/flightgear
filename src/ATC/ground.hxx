@@ -43,12 +43,12 @@ SG_USING_STD(list);
 
 //////////////////////////////////////////////////////
 // Types for the logical network data structure
-typedef enum arc_type {
+enum arc_type {
 	RUNWAY,
 	TAXIWAY
 };
 
-typedef enum node_type {
+enum node_type {
 	GATE,
 	APRON,
 	HOLD,
@@ -70,7 +70,7 @@ enum GateType {
 	OTHER	// ie. anything goes!!
 };
 
-typedef enum network_element_type {
+enum network_element_type {
 	NODE,
 	ARC
 };

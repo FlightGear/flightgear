@@ -92,7 +92,7 @@ FGCondition::FGCondition(FGConfigFile* AC_cfg, FGPropertyManager* PropertyManage
     else if (AC_cfg->GetValue("LOGIC") == "AND") Logic = eAND;
 
     AC_cfg->GetNextConfigLine();
-    while (AC_cfg->GetValue() != "/CONDITION_GROUP") {
+    while (AC_cfg->GetValue() != string("/CONDITION_GROUP")) {
       conditions.push_back(*(new FGCondition(AC_cfg, PropertyManager)));
     }
     isGroup = true;

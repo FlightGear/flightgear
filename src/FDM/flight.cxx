@@ -448,6 +448,7 @@ FGInterface::unbind ()
   fgUntie("/orientation/pitch-deg");
   fgUntie("/orientation/heading-deg");
   fgUntie("/velocities/airspeed-kt");
+  fgUntie("/velocities/mach");
   fgUntie("/velocities/speed-north-fps");
   fgUntie("/velocities/speed-east-fps");
   fgUntie("/velocities/speed-down-fps");

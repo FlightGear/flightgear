@@ -80,56 +80,56 @@ FGSubsystemGroup::FGSubsystemGroup ()
 
 FGSubsystemGroup::~FGSubsystemGroup ()
 {
-    for (int i = 0; i < _members.size(); i++)
+    for (unsigned int i = 0; i < _members.size(); i++)
         delete _members[i];
 }
 
 void
 FGSubsystemGroup::init ()
 {
-    for (int i = 0; i < _members.size(); i++)
+    for (unsigned int i = 0; i < _members.size(); i++)
         _members[i]->subsystem->init();
 }
 
 void
 FGSubsystemGroup::reinit ()
 {
-    for (int i = 0; i < _members.size(); i++)
+    for (unsigned int i = 0; i < _members.size(); i++)
         _members[i]->subsystem->reinit();
 }
 
 void
 FGSubsystemGroup::bind ()
 {
-    for (int i = 0; i < _members.size(); i++)
+    for (unsigned int i = 0; i < _members.size(); i++)
         _members[i]->subsystem->bind();
 }
 
 void
 FGSubsystemGroup::unbind ()
 {
-    for (int i = 0; i < _members.size(); i++)
+    for (unsigned int i = 0; i < _members.size(); i++)
         _members[i]->subsystem->unbind();
 }
 
 void
 FGSubsystemGroup::update (double delta_time_sec)
 {
-    for (int i = 0; i < _members.size(); i++)
+    for (unsigned int i = 0; i < _members.size(); i++)
         _members[i]->update(delta_time_sec); // indirect call
 }
 
 void
 FGSubsystemGroup::suspend ()
 {
-    for (int i = 0; i < _members.size(); i++)
+    for (unsigned int i = 0; i < _members.size(); i++)
         _members[i]->subsystem->suspend();
 }
 
 void
 FGSubsystemGroup::resume ()
 {
-    for (int i = 0; i < _members.size(); i++)
+    for (unsigned int i = 0; i < _members.size(); i++)
         _members[i]->subsystem->resume();
 }
 
@@ -164,7 +164,7 @@ FGSubsystemGroup::get_subsystem (const string &name)
 void
 FGSubsystemGroup::remove_subsystem (const string &name)
 {
-    for (int i = 0; i < _members.size(); i++) {
+    for (unsigned int i = 0; i < _members.size(); i++) {
         if (name == _members[i]->name) {
             _members.erase(_members.begin() + i);
             return;
@@ -181,7 +181,7 @@ FGSubsystemGroup::has_subsystem (const string &name) const
 FGSubsystemGroup::Member *
 FGSubsystemGroup::get_member (const string &name, bool create)
 {
-    for (int i = 0; i < _members.size(); i++) {
+    for (unsigned int i = 0; i < _members.size(); i++) {
         if (_members[i]->name == name)
             return _members[i];
     }
