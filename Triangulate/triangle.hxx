@@ -66,7 +66,7 @@ public:
     ~FGTriangle( void );
 
     // populate this class based on the specified gpc_polys list
-    int build( FGgpcPolyList gpc_polys );
+    int build( const FGgpcPolyList& gpc_polys );
 };
 
 
@@ -74,6 +74,10 @@ public:
 
 
 // $Log$
+// Revision 1.2  1999/03/18 04:31:12  curt
+// Let's not pass copies of huge structures on the stack ... ye might see a
+// segfault ... :-)
+//
 // Revision 1.1  1999/03/17 23:51:59  curt
 // Initial revision.
 //

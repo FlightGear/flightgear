@@ -54,6 +54,7 @@ FG_USING_STD(vector);
 
 typedef vector < gpc_polygon * > gpcpoly_container;
 typedef gpcpoly_container::iterator gpcpoly_iterator;
+typedef gpcpoly_container::const_iterator const_gpcpoly_iterator;
 
 
 #define FG_MAX_AREAS 20
@@ -108,6 +109,10 @@ public:
 
 
 // $Log$
+// Revision 1.4  1999/03/18 04:31:10  curt
+// Let's not pass copies of huge structures on the stack ... ye might see a
+// segfault ... :-)
+//
 // Revision 1.3  1999/03/17 23:48:59  curt
 // minor renaming and a bit of rearranging.
 //

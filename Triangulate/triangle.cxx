@@ -36,13 +36,13 @@ FGTriangle::~FGTriangle( void ) {
 
 
 // populate this class based on the specified gpc_polys list
-int FGTriangle::build( FGgpcPolyList gpc_polys ) {
+int FGTriangle::build( const FGgpcPolyList& gpc_polys ) {
     // traverse the gpc_polys and build a unified node list and a set
     // of Triangle PSLG that reference the node list by index
     // (starting at zero)
 
     gpc_polygon *gpc_poly;
-    gpcpoly_iterator current, last;
+    const_gpcpoly_iterator current, last;
 
     // process polygons in priority order
     cout << "prepairing node list and polygons" << endl;
@@ -64,10 +64,16 @@ int FGTriangle::build( FGgpcPolyList gpc_polys ) {
 	    }
 	}
     }
+
+    return 0;
 }
 
 
 // $Log$
+// Revision 1.2  1999/03/18 04:31:11  curt
+// Let's not pass copies of huge structures on the stack ... ye might see a
+// segfault ... :-)
+//
 // Revision 1.1  1999/03/17 23:51:59  curt
 // Initial revision.
 //
