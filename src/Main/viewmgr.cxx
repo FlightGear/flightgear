@@ -54,11 +54,13 @@ FGViewMgr::init ()
   // double damp_alt;
   double damp_roll = 0.0, damp_pitch = 0.0, damp_heading = 0.0;
   double x_offset_m, y_offset_m, z_offset_m, fov_deg;
-  double aspect_ratio_multiplier = 1.0;
   double heading_offset_deg, pitch_offset_deg, roll_offset_deg;
   double target_x_offset_m, target_y_offset_m, target_z_offset_m;
   double near_m;
   bool internal;
+
+  double aspect_ratio_multiplier
+      = fgGetDouble("/sim/current-view/aspect-ratio-multiplier");
 
   for (int i = 0; i < fgGetInt("/sim/number-views"); i++) {
     viewpath = "/sim/view";

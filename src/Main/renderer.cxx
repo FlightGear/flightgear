@@ -818,25 +818,64 @@ FGRenderer::resize( int width, int height ) {
 
 static void fgHackFrustum() {
 
-#if 0
-    /* experiment in assymetric view frustums */
-    sgFrustum *f = ssgGetFrustum();
-    cout << " l = " << f->getLeft()
-         << " r = " << f->getRight()
-         << " b = " << f->getBot()
-         << " t = " << f->getTop()
-         << " n = " << f->getNear()
-         << " f = " << f->getFar()
-         << endl;
-    static double incr = 0.0;
-    double factor = (sin(incr) + 1.0) / 2.0; // map to [0-1]
-    double w = (f->getRight() - f->getLeft()) / 2.0;
-    double l = f->getLeft() + w * factor;
-    double r = l + w;
-    ssgSetFrustum(l, r, f->getBot(), f->getTop(), f->getNear(), f->getFar());
-    incr += 0.001;
-#endif
+    // specify a percent of the configured view frustum to actually
+    // display.  This is a bit of a hack to achieve asymmetric view
+    // frustums.  For instance, if you want to display two monitors
+    // side by side, you could specify each with a double fov, a 0.5
+    // aspect ratio multiplier, and then the left side monitor would
+    // have a left_pct = 0.0, a right_pct = 0.5, a bottom_pct = 0.0,
+    // and a top_pct = 1.0.  The right side monitor would have a
+    // left_pct = 0.5 and a right_pct = 1.0.
 
+    static SGPropertyNode *left_pct
+        = fgGetNode("/sim/current-view/frustum-left-pct");
+    static SGPropertyNode *right_pct
+        = fgGetNode("/sim/current-view/frustum-right-pct");
+    static SGPropertyNode *bottom_pct
+        = fgGetNode("/sim/current-view/frustum-bottom-pct");
+    static SGPropertyNode *top_pct
+        = fgGetNode("/sim/current-view/frustum-top-pct");
+
+    sgFrustum *f = ssgGetFrustum();
+
+    // cout << " l = " << f->getLeft()
+    //      << " r = " << f->getRight()
+    //      << " b = " << f->getBot()
+    //      << " t = " << f->getTop()
+    //      << " n = " << f->getNear()
+    //      << " f = " << f->getFar()
+    //      << endl;
+
+    double width = f->getRight() - f->getLeft();
+    double height = f->getTop() - f->getBot();
+
+    double l, r, t, b;
+
+    if ( left_pct != NULL ) {
+        l = f->getLeft() + width * left_pct->getDoubleValue();
+    } else {
+        l = f->getLeft();
+    }
+
+    if ( right_pct != NULL ) {
+        r = f->getLeft() + width * right_pct->getDoubleValue();
+    } else {
+        r = f->getRight();
+    }
+
+    if ( bottom_pct != NULL ) {
+        b = f->getBot() + height * bottom_pct->getDoubleValue();
+    } else {
+        b = f->getBot();
+    }
+
+    if ( top_pct != NULL ) {
+        t = f->getBot() + height * top_pct->getDoubleValue();
+    } else {
+        t = f->getTop();
+    }
+
+    ssgSetFrustum(l, r, b, t, f->getNear(), f->getFar());
 }
 
 
