@@ -164,14 +164,30 @@ ssgTransform *gen_dir_light_group( const point_list &nodes,
                                    const int_list &pnt_i,
                                    const int_list &nml_i,
                                    const string &material,
-                                   sgVec3 up )
+                                   sgVec3 up, bool vertical = false )
 {
     sgVec3 center;
     calc_center_point( nodes, pnt_i, center );
     // cout << center[0] << "," << center[1] << "," << center[2] << endl;
 
-    sgVec3 nup;
-    sgNormalizeVec3( nup, up );
+
+    // find a vector perpendicular to the normal.
+    sgVec3 perp1;
+    if ( !vertical ) {
+        // normal isn't vertical so we can use up as our first vector
+        sgNormalizeVec3( perp1, up );
+    } else {
+        // normal is vertical so we have to work a bit harder to
+        // determine our first vector
+        sgVec3 pt1, pt2;
+        sgSetVec3( pt1, nodes[pnt_i[0]][0], nodes[pnt_i[0]][1],
+                   nodes[pnt_i[0]][2] );
+        sgSetVec3( pt2, nodes[pnt_i[1]][0], nodes[pnt_i[1]][1],
+                   nodes[pnt_i[1]][2] );
+
+        sgSubVec3( perp1, pt2, pt1 );
+        sgNormalizeVec3( perp1 );
+    }
 
     ssgVertexArray *vl = new ssgVertexArray( 3 * pnt_i.size() );
     ssgNormalArray *nl = new ssgNormalArray( 3 * pnt_i.size() );
@@ -187,18 +203,18 @@ ssgTransform *gen_dir_light_group( const point_list &nodes,
                    normals[nml_i[i]][2] );
 
         // calculate a vector perpendicular to dir and up
-        sgVec3 perp;
-        sgVectorProductVec3( perp, normal, nup );
+        sgVec3 perp2;
+        sgVectorProductVec3( perp2, normal, perp1 );
 
         // front face
         sgVec3 tmp3;
         sgCopyVec3( tmp3, pt );
         vl->add( tmp3 );
-        sgAddVec3( tmp3, nup );
+        sgAddVec3( tmp3, perp1 );
         vl->add( tmp3 );
-        sgAddVec3( tmp3, perp );
+        sgAddVec3( tmp3, perp2 );
         vl->add( tmp3 );
-        // sgSubVec3( tmp3, nup );
+        // sgSubVec3( tmp3, perp1 );
         // vl->add( tmp3 );
 
         nl->add( normal );
@@ -420,7 +436,7 @@ ssgTransform *gen_rabbit_lights( const point_list &nodes,
     }
 
     rabbit->setDuration( 10 );
-    rabbit->setLimits( 0, pnt_i.size() + 1 );
+    rabbit->setLimits( 0, pnt_i.size() - 1 );
     rabbit->setMode( SSG_ANIM_SHUTTLE );
     rabbit->control( SSG_ANIM_START );
    
@@ -491,6 +507,11 @@ ssgBranch *gen_directional_lights( const point_list &nodes,
                                                   pnt_i, nml_i,
                                                   material, up );
         return rabbit;
+    } else if ( material == "RWY_BLUE_TAXIWAY_LIGHTS" ) {
+        ssgTransform *light_group = gen_dir_light_group( nodes, normals, pnt_i,
+                                                         nml_i, material, up,
+                                                         true );
+        return light_group;
     } else {
         ssgTransform *light_group = gen_dir_light_group( nodes, normals, pnt_i,
                                                          nml_i, material, up );

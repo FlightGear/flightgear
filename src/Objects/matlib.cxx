@@ -143,6 +143,44 @@ static int gen_standard_dir_light_map( int r, int g, int b, int alpha ) {
 }
 
 
+// generate standard colored directional light environment texture map
+static int gen_taxiway_dir_light_map( int r, int g, int b, int alpha ) {
+    const int env_tex_res = 32;
+    int half_res = env_tex_res / 2;
+    unsigned char env_map[env_tex_res][env_tex_res][4];
+    GLuint tex_name;
+
+    for ( int i = 0; i < env_tex_res; ++i ) {
+        for ( int j = 0; j < env_tex_res; ++j ) {
+            double x = (i - half_res) / (double)half_res;
+            double y = (j - half_res) / (double)half_res;
+            double tmp = sqrt(x*x + y*y);
+            double dist = tmp * tmp;
+            if ( dist > 1.0 ) { dist = 1.0; }
+            double bright = sin( dist * SGD_PI_2 );
+            if ( bright < 0.2 ) { bright = 0.2; }
+            env_map[i][j][0] = r;
+            env_map[i][j][1] = g;
+            env_map[i][j][2] = b;
+            env_map[i][j][3] = (int)(bright * alpha);
+        }
+    }
+
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glGenTextures( 1, &tex_name );
+    glBindTexture( GL_TEXTURE_2D, tex_name );
+  
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, env_tex_res, env_tex_res, 0,
+                  GL_RGBA, GL_UNSIGNED_BYTE, env_map);
+
+    return tex_name;
+}
+
+
 // generate the directional vasi light environment texture map
 static int gen_vasi_light_map() {
     const int env_tex_res = 256;
@@ -450,6 +488,24 @@ bool FGMaterialLib::load( const string& mpath ) {
     rwy_green_low_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
     rwy_green_low_lights->setTexture( tex_name );
     matlib["RWY_GREEN_LOW_LIGHTS"] = new FGNewMat(rwy_green_low_lights);
+
+    // hard coded medium intensity taxiway blue light state
+    tex_name = gen_taxiway_dir_light_map( 20, 20, 235, 205 );
+    ssgSimpleState *taxiway_blue_medium_lights = new ssgSimpleState();
+    taxiway_blue_medium_lights->ref();
+    taxiway_blue_medium_lights->disable( GL_LIGHTING );
+    taxiway_blue_medium_lights->enable ( GL_CULL_FACE ) ;
+    taxiway_blue_medium_lights->enable( GL_TEXTURE_2D );
+    taxiway_blue_medium_lights->enable( GL_BLEND );
+    taxiway_blue_medium_lights->enable( GL_ALPHA_TEST );
+    taxiway_blue_medium_lights->enable( GL_COLOR_MATERIAL );
+    taxiway_blue_medium_lights->setMaterial ( GL_AMBIENT, 1.0, 1.0, 1.0, 1.0 );
+    taxiway_blue_medium_lights->setMaterial ( GL_DIFFUSE, 1.0, 1.0, 1.0, 1.0 );
+    taxiway_blue_medium_lights->setMaterial ( GL_SPECULAR, 0.0, 0.0, 0.0, 0.0 );
+    taxiway_blue_medium_lights->setMaterial ( GL_EMISSION, 0.0, 0.0, 0.0, 0.0 );
+    taxiway_blue_medium_lights->setTexture( tex_name );
+    matlib["RWY_BLUE_TAXIWAY_LIGHTS"]
+        = new FGNewMat(taxiway_blue_medium_lights);
 
     // hard coded runway vasi light state
     ssgSimpleState *rwy_vasi_lights = new ssgSimpleState();
