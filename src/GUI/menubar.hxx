@@ -82,7 +82,7 @@ private:
 
     bool _visible;
     puMenuBar * _menuBar;
-    map<string,vector<FGBinding *> > _bindings;
+    map<string,vector<FGBinding *>*> _bindings;
 };
 
 #endif // __MENUBAR_HXX
