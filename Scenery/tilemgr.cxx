@@ -66,10 +66,10 @@
 
 #define FG_SQUARE( X ) ( (X) * (X) )
 
-#ifdef WIN32
-#  define FG_MEM_COPY(to,from,n)	memcpy(to, from, n)
+#if defined(USE_MEM) || defined(WIN32)
+#  define FG_MEM_COPY(to,from,n)        memcpy(to, from, n)
 #else
-#  define FG_MEM_COPY(to,from,n)	bcopy(from, to, n)
+#  define FG_MEM_COPY(to,from,n)        bcopy(from, to, n)
 #endif
 
 // closest (potentially viewable) tiles, centered on current tile.
@@ -748,6 +748,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.47  1998/12/05 14:11:19  curt
+// Sun portability tweak.
+//
 // Revision 1.46  1998/12/03 14:15:24  curt
 // Actually set the current scenery elevation based on scenery intersection point
 // rather than calculating the intesection point and throwing it away.
