@@ -37,6 +37,22 @@
 #include "flight.hxx"
 #include "groundcache.hxx"
 
+FGGroundCache::FGGroundCache()
+{
+  sgdSetVec3(cache_center, 0.0, 0.0, 0.0);
+  ground_radius = 0.0;
+  cache_ref_time = 0.0;
+  wire_id = 0;
+  sgdSetVec3(reference_wgs84_point, 0.0, 0.0, 0.0);
+  reference_vehicle_radius = 0.0;
+  found_ground = false;
+}
+
+FGGroundCache::~FGGroundCache()
+{
+  cache_root.removeAllKids();
+}
+
 FGGroundCache::GroundProperty*
 FGGroundCache::extractGroundProperty( ssgLeaf* l )
 {
