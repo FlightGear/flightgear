@@ -379,7 +379,7 @@ FGPanel::draw()
   glEnable(GL_COLOR_MATERIAL);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
-  glDepthMask(GL_FALSE);
+  glDisable(GL_DEPTH_TEST);
   sgVec4 panel_color;
   sgCopyVec4( panel_color, cur_light_params.scene_diffuse );
   if ( fgGetDouble("/systems/electrical/outputs/instrument-lights") > 1.0 ) {
@@ -426,10 +426,6 @@ FGPanel::draw()
   instrument_list_type::const_iterator current = _instruments.begin();
   instrument_list_type::const_iterator end = _instruments.end();
 
-  // Don't let the instruments be visible trhought the roof of the c310-3d
-  // This does hurt the magnetic compass in the default c172-3d,
-  //  but we need a real 3d compass anyway.
-  glPolygonOffset(-1, -5*POFF_UNITS);
   for ( ; current != end; current++) {
     FGPanelInstrument * instr = *current;
     glPushMatrix();
@@ -441,15 +437,11 @@ FGPanel::draw()
   // Draw yellow "hotspots" if directed to.  This is a panel authoring
   // feature; not intended to be high performance or to look good.
   if ( fgGetBool("/sim/panel-hotspots") ) {
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
-    glDisable(GL_DEPTH_TEST);
     glDisable(GL_TEXTURE_2D);
     glColor3f(1, 1, 0);
     
     for ( unsigned int i = 0; i < _instruments.size(); i++ )
       _instruments[i]->drawHotspots();
-
-    glPopAttrib();
   }
 
 
@@ -784,7 +776,6 @@ FGLayeredInstrument::draw ()
   
   for (int i = 0; i < (int)_layers.size(); i++) {
     glPushMatrix();
-    // glPolygonOffset(-1, -POFF_UNITS*(i+2));
     _layers[i]->draw();
     glPopMatrix();
   }
