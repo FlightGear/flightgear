@@ -59,6 +59,7 @@
 #include <Airports/simple.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
+#include <Cockpit/radiostack.hxx>
 #include <FDM/Balloon.h>
 #include <FDM/External.hxx>
 #include <FDM/JSBsim.hxx>
@@ -468,6 +469,21 @@ bool fgInitSubsystems( void ) {
     FGPath p_fix( current_options.get_fg_root() );
     p_fix.append( "Navaids/default.fix" );
     current_fixlist->init( p_fix );
+
+    // Initialize the underlying radio stack model
+    current_radiostack = new FGRadioStack;
+
+    current_radiostack->set_nav1_freq( 111.70 );
+    current_radiostack->set_nav1_radial( 280.0 );
+
+    current_radiostack->set_nav2_freq( 117.80 );
+    current_radiostack->set_nav2_radial( 068.0 );
+
+    current_radiostack->set_adf_freq( 210.0 );
+
+    current_radiostack->update( cur_fdm_state->get_Longitude(),
+				cur_fdm_state->get_Latitude(),
+				cur_fdm_state->get_Altitude() * FEET_TO_METER );
 
     // Initialize the Cockpit subsystem
     if( fgCockpitInit( &current_aircraft )) {

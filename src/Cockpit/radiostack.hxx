@@ -109,4 +109,7 @@ public:
 };
 
 
+extern FGRadioStack *current_radiostack;
+
+
 #endif // _FG_RADIOSTACK_HXX

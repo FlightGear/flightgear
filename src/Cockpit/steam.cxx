@@ -36,6 +36,7 @@
 
 FG_USING_NAMESPACE(std);
 
+#include "radiostack.hxx"
 #include "steam.hxx"
 
 

@@ -27,6 +27,9 @@
 #include "radiostack.hxx"
 
 
+FGRadioStack *current_radiostack;
+
+
 // Constructor
 FGRadioStack::FGRadioStack() {
     need_update = true;
@@ -42,17 +45,16 @@ FGRadioStack::~FGRadioStack() {
 void FGRadioStack::update( double lon, double lat, double elev ) {
     need_update = false;
 
-    FGNav n;
-
     // nav1
-    if ( current_navlist->query( lon, lat, elev, nav1_freq,
-				 &n, &nav1_heading, &nav1_dist) ) {
+    FGILS ils;
+    if ( current_ilslist->query( lon, lat, elev, nav1_freq,
+				 &ils, &nav1_heading, &nav1_dist) ) {
 	nav1_inrange = true;
-	nav1_lon = n.get_lon();
-	nav1_lat = n.get_lat();
-	nav1_elev = n.get_elev();
+	nav1_lon = ils.get_loclon();
+	nav1_lat = ils.get_loclat();
+	nav1_elev = ils.get_gselev();
 	cout << "Found a vor station in range" << endl;
-	cout << " id = " << n.get_ident() << endl;
+	cout << " id = " << ils.get_locident() << endl;
 	cout << " heading = " << nav1_heading
 	     << " dist = " << nav1_dist << endl;
     } else {
@@ -61,14 +63,15 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
     }
 
     // nav1
+    FGNav nav;
     if ( current_navlist->query( lon, lat, elev, nav2_freq,
-				 &n, &nav2_heading, &nav2_dist) ) {
+				 &nav, &nav2_heading, &nav2_dist) ) {
 	nav2_inrange = true;
-	nav2_lon = n.get_lon();
-	nav2_lat = n.get_lat();
-	nav2_elev = n.get_elev();
+	nav2_lon = nav.get_lon();
+	nav2_lat = nav.get_lat();
+	nav2_elev = nav.get_elev();
 	cout << "Found a vor station in range" << endl;
-	cout << " id = " << n.get_ident() << endl;
+	cout << " id = " << nav.get_ident() << endl;
 	cout << " heading = " << nav2_heading
 	     << " dist = " << nav2_dist << endl;
     } else {
@@ -79,13 +82,13 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
     // adf
     double junk;
     if ( current_navlist->query( lon, lat, elev, adf_freq,
-				 &n, &adf_heading, &junk) ) {
+				 &nav, &adf_heading, &junk) ) {
 	adf_inrange = true;
-	adf_lon = n.get_lon();
-	adf_lat = n.get_lat();
-	adf_elev = n.get_elev();
+	adf_lon = nav.get_lon();
+	adf_lat = nav.get_lat();
+	adf_elev = nav.get_elev();
 	cout << "Found an adf station in range" << endl;
-	cout << " id = " << n.get_ident() << endl;
+	cout << " id = " << nav.get_ident() << endl;
 	cout << " heading = " << adf_heading
 	     << " dist = " << junk << endl;
     } else {

@@ -83,6 +83,7 @@ public:
     inline double get_locheading() const { return locheading; }
     inline double get_loclat() const { return loclat; }
     inline double get_loclon() const { return loclon; }
+    inline double get_gselev() const { return gselev; }
     inline double get_gsangle() const { return gsangle; }
     inline double get_gslat() const { return gslat; }
     inline double get_gslon() const { return gslon; }

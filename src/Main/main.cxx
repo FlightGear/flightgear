@@ -78,6 +78,7 @@
 
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
+#include <Cockpit/radiostack.hxx>
 #include <Cockpit/steam.hxx>
 #include <FDM/UIUCModel/uiuc_aircraft.h>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
@@ -742,6 +743,11 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 
     // Update solar system
     ephem->update( t, cur_fdm_state->get_Latitude() );
+
+    // Update radio stack model
+    current_radiostack->update( cur_fdm_state->get_Longitude(),
+				cur_fdm_state->get_Latitude(),
+				cur_fdm_state->get_Altitude() * FEET_TO_METER );
 }
 
 
