@@ -5,7 +5,7 @@ dnl
 AC_INIT(Simulator/Aircraft/aircraft.c)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.51)
+AM_INIT_AUTOMAKE(FlightGear, 0.52)
 
 dnl Checks for programs.
 
@@ -97,6 +97,9 @@ dnl if using mesa, check for xmesa.h
 if test "x$ac_cv_lib_MesaGL_glNewList" = "xyes" ; then
     AC_CHECK_HEADER(GL/xmesa.h)
     AM_CONDITIONAL(ENABLE_XMESA_FX, test "x$ac_cv_header_GL_xmesa_h" = "xyes")
+else
+    dnl force a failed check
+    AM_CONDITIONAL(ENABLE_XMESA_FX, test "no" = "yes")
 fi
 
 AC_CHECK_LIB(GLU, gluLookAt)

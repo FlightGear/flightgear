@@ -1,7 +1,15 @@
+New in 0.52
+* Fog color tries to track the sky color at the center of view in sunrise
+  and sunset situations.
+
 New in 0.51
 * Translucent menus
 * Various HUD intensities so you can find something that is readable for the
   current conditions and lighting.
+* Tie visibility to far clip plane & view frustum culling so reducting
+  visibility can increase frame rates by increasing what is culled.
+* Fixed stupid bug with misplaced initial position.
+* Hopefully fixed a bug when parsing system.fgfsrc on windoze.
 
 New in 0.50
 * HUD updates from Charlie Hotchkiss (ladder number rotate w/ ladder, control
