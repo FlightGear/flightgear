@@ -467,8 +467,13 @@ void fgRenderFrame() {
 
         fog_exp_density = m_log01 / actual_visibility;
         fog_exp2_density = sqrt_m_log01 / actual_visibility;
-        rwy_exp2_punch_through = sqrt_m_log01 / ( actual_visibility * 2.5 );
-        taxi_exp2_punch_through = sqrt_m_log01 / ( actual_visibility * 1.5 );
+        if ( actual_visibility < 8000 ) {
+            rwy_exp2_punch_through = sqrt_m_log01 / (actual_visibility * 2.5);
+            taxi_exp2_punch_through = sqrt_m_log01 / (actual_visibility * 1.5);
+        } else {
+            rwy_exp2_punch_through = sqrt_m_log01 / ( 8000 * 2.5 );
+            taxi_exp2_punch_through = sqrt_m_log01 / ( 8000 * 1.5 );
+        }
     }
 
     // double angle;

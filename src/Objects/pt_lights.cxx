@@ -246,7 +246,7 @@ ssgTransform *gen_dir_light_group( const point_list &nodes,
     // put an LOD on each lighting component
     ssgRangeSelector *lod = new ssgRangeSelector;
     lod->setRange( 0, SG_ZERO );
-    lod->setRange( 1, 12000 );
+    lod->setRange( 1, 20000 );
     lod->addKid( leaf );
 
     // create the transformation.
