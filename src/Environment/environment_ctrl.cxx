@@ -317,11 +317,13 @@ FGInterpolateEnvironmentCtrl::bucket::operator< (const bucket &b) const
 FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
     : env( new FGInterpolateEnvironmentCtrl ),
       _icao( fgGetString("/sim/presets/airport-id") ),
+      search_interval_sec( 60.0 ),        // 1 minute
+      same_station_interval_sec( 900.0 ), // 15 minutes
+      search_elapsed( 9999.0 ),
+      fetch_elapsed( 9999.0 ),
       proxy_host( fgGetNode("/sim/presets/proxy/host", true) ),
       proxy_port( fgGetNode("/sim/presets/proxy/port", true) ),
-      proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) ),
-      update_interval_sec( 60.0 ),
-      elapsed( 60.0 )
+      proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) )
 {
 #ifdef ENABLE_THREADS
     thread = new MetarThread(this);
@@ -396,8 +398,10 @@ FGMetarEnvironmentCtrl::init ()
                       true );
         if ( fetch_data( a.id ) ) {
             cout << "closest station w/ metar = " << a.id << endl;
+            last_apt = a;
             _icao = a.id;
-            elapsed = 0.0;
+            search_elapsed = 0.0;
+            fetch_elapsed = 0.0;
             update_env_config();
             env->init();
             found_metar = true;
@@ -427,23 +431,34 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
         = fgGetNode( "/position/longitude-deg", true );
     static const SGPropertyNode *latitude
         = fgGetNode( "/position/latitude-deg", true );
-    elapsed += delta_time_sec;
-    if ( elapsed > update_interval_sec ) {
+    search_elapsed += delta_time_sec;
+    fetch_elapsed += delta_time_sec;
+    if ( search_elapsed > search_interval_sec ) {
         FGAirport a = globals->get_airports()
             ->search( longitude->getDoubleValue(),
                       latitude->getDoubleValue(),
                       true );
-        if ( fetch_data( a.id ) ) {
-            cout << "closest station w/ metar = " << a.id << endl;
-           _icao = a.id;
-            elapsed = 0.0;
-            update_env_config();
-            env->reinit();
+        if ( last_apt.id != a.id
+             || fetch_elapsed > same_station_interval_sec )
+        {
+            if ( fetch_data( a.id ) ) {
+                cout << "closest station w/ metar = " << a.id << endl;
+                last_apt = a;
+                _icao = a.id;
+                search_elapsed = 0.0;
+                fetch_elapsed = 0.0;
+                update_env_config();
+                env->reinit();
+            } else {
+                // mark as no metar so it doesn't show up in subsequent
+                // searches.
+                cout << "no metar at metar = " << a.id << endl;
+                globals->get_airports()->no_metar( a.id );
+            }
         } else {
-            // mark as no metar so it doesn't show up in subsequent
-            // searches.
-            cout << "no metar at metar = " << a.id << endl;
-            globals->get_airports()->no_metar( a.id );
+            search_elapsed = 0.0;
+            // cout << "same station, waiting = "
+            //      << same_station_interval_sec - fetch_elapsed << endl;
         }
     }
 
