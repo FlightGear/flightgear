@@ -71,6 +71,7 @@
 #include <Math/fg_geodesy.hxx>
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
+#include <Math/fg_random.h>
 #include <PUI/pu.h>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -98,9 +99,6 @@ static int idle_state = 0;
 
 // Another hack
 int use_signals = 0;
-
-// Yet another hack, this time for the panel
-int panel_hist = 0;
 
 // Global structures for the Audio library
 #ifdef ENABLE_AUDIO_SUPPORT
@@ -232,7 +230,6 @@ static void fgRenderFrame( void ) {
     FGView *v = &current_view;
 
     double angle;
-    static int iteration = 0;
     // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
@@ -348,14 +345,8 @@ static void fgRenderFrame( void ) {
 	xglDisable( GL_TEXTURE_2D );
 	xglDisable( GL_FOG );
 
-	if ( (iteration == 0) && (current_options.get_panel_status()) ) {   
-	    // Did we run this loop before ?? ...and do we need the panel ??
-	    fgPanelReInit(0, 0, 1024, 768);
-	}
-
 	// display HUD && Panel
 	fgCockpitUpdate();
-	iteration = 1; // don't ReInit the panel in the future
 
 	// We can do translucent menus, so why not. :-)
 	xglEnable    ( GL_BLEND ) ;
@@ -812,7 +803,7 @@ static void fgReshape( int width, int height ) {
 	// the system.
 	current_view.UpdateViewParams();
 	if ( current_options.get_panel_status() ) {
-	    fgPanelReInit(0, 0, 1024, 768);
+	    FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
 	}
     }
 }
@@ -935,9 +926,6 @@ int main( int argc, char **argv ) {
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
 #endif
 
-    // Initialize the [old] debugging output system
-    // fgInitDebug();
-
     // set default log levels
     fglog().setLogLevels( FG_ALL, FG_INFO );
 
@@ -947,6 +935,9 @@ int main( int argc, char **argv ) {
 
     FG_LOG( FG_GENERAL, FG_INFO, "General Initialization" );
     FG_LOG( FG_GENERAL, FG_INFO, "======= ==============" );
+
+    // seed the random number generater
+    fg_srandom();
 
     // Attempt to locate and parse a config file
     // First check fg_root
@@ -970,7 +961,6 @@ int main( int argc, char **argv ) {
 	// line parsing or maybe the user just requested help ... :-)
 	current_options.usage();
 	FG_LOG( FG_GENERAL, FG_ALERT, "\nExiting ...");
-	// cout << endl << "Exiting ..." << endl;
 	exit(-1);
     }
     
@@ -1007,6 +997,10 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.87  1999/03/08 21:56:37  curt
+// Added panel changes sent in by Friedemann.
+// Added a splash screen randomization since we have several nice splash screens.
+//
 // Revision 1.86  1999/02/26 22:09:47  curt
 // Added initial support for native SGI compilers.
 //

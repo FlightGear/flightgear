@@ -73,7 +73,14 @@ void FGView::Init( void ) {
 
     winWidth = current_options.get_xsize();
     winHeight = current_options.get_ysize();
-    win_ratio = (double) winWidth / (double) winHeight;
+
+    if ( ! current_options.get_panel_status() ) {
+	current_view.set_win_ratio( (GLfloat) winWidth / (GLfloat) winHeight );
+    } else {
+	current_view.set_win_ratio( (GLfloat) winWidth / 
+				    ((GLfloat) (winHeight)*0.4232) );
+    }
+
     force_update_fov_math();
 }
 
@@ -205,7 +212,7 @@ void FGView::UpdateViewParams( void ) {
     
     if ((current_options.get_panel_status() != panel_hist) &&                          (current_options.get_panel_status()))
     {
-	fgPanelReInit( 0, 0, 1024, 768);
+	FGPanel::OurPanel->ReInit( 0, 0, 1024, 768);
     }
 
     if ( ! current_options.get_panel_status() ) {
@@ -295,7 +302,6 @@ void FGView::UpdateViewMath( FGInterface *f ) {
     } else {
 	p.setz( p.radius() + scenery.cur_elev + 0.5 * METER_TO_FEET );
     }
-
 
     abs_view_pos = fgPolarToCart3d(p);
     view_pos = abs_view_pos - scenery.center;
@@ -601,6 +607,10 @@ FGView::~FGView( void ) {
 
 
 // $Log$
+// Revision 1.34  1999/03/08 21:56:41  curt
+// Added panel changes sent in by Friedemann.
+// Added a splash screen randomization since we have several nice splash screens.
+//
 // Revision 1.33  1999/02/05 21:29:14  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

@@ -53,7 +53,6 @@
 #include <Cockpit/cockpit.hxx>
 #include <Joystick/joystick.hxx>
 #include <Math/fg_geodesy.hxx>
-#include <Math/fg_random.h>
 #include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Scenery/scenery.hxx>
@@ -164,9 +163,6 @@ int fgInitSubsystems( void )
 
     FG_LOG( FG_GENERAL, FG_INFO, "Initialize Subsystems");
     FG_LOG( FG_GENERAL, FG_INFO, "========== ==========");
-
-    // seed the random number generater
-    fg_srandom();
 
     // allocates structures so must happen before any of the flight
     // model or control parameters are set
@@ -395,6 +391,10 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.69  1999/03/08 21:56:39  curt
+// Added panel changes sent in by Friedemann.
+// Added a splash screen randomization since we have several nice splash screens.
+//
 // Revision 1.68  1999/03/02 01:03:15  curt
 // Tweaks for building with native SGI compilers.
 //

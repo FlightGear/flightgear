@@ -38,6 +38,7 @@
 
 #include <Debug/logstream.hxx>
 #include <Main/options.hxx>
+#include <Math/fg_random.h>
 #include <Objects/texload.h>
 
 #include "splash.hxx"
@@ -70,7 +71,12 @@ void fgSplashInit ( void ) {
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // load in the texture data
-    tpath = current_options.get_fg_root() + "/Textures/Splash2.rgb";
+    int num = (int)(fg_random() * 4.0 + 1.0);
+    char num_str[256];
+    sprintf(num_str, "%d", num);
+    tpath = current_options.get_fg_root() + "/Textures/Splash";
+    tpath += num_str;
+    tpath += ".rgb";
 
     if ( (splash_texbuf = 
 	  read_rgb_texture(tpath.c_str(), &width, &height)) == NULL )
@@ -149,6 +155,10 @@ void fgSplashUpdate ( double progress ) {
 
 
 // $Log$
+// Revision 1.10  1999/03/08 21:56:40  curt
+// Added panel changes sent in by Friedemann.
+// Added a splash screen randomization since we have several nice splash screens.
+//
 // Revision 1.9  1998/12/09 18:50:26  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.
