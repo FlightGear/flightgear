@@ -40,7 +40,7 @@ GLint mesh_to_ogl(struct mesh *m) {
     int i, j, istep, jstep, iend, jend;
     float temp;
 
-    istep = jstep = 50;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 150;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -109,7 +109,10 @@ GLint mesh_to_ogl(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.1  1997/05/16 16:05:52  curt
-/* Initial revision.
+/* Revision 1.2  1997/05/17 00:17:35  curt
+/* Trying to stub in support for standard OpenGL.
 /*
+ * Revision 1.1  1997/05/16 16:05:52  curt
+ * Initial revision.
+ *
  */

@@ -13,8 +13,13 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-/* assumes -I/usr/include/mesa in compile command */
-#include "gltk.h"
+#ifdef MESA
+    /* assumes -I/usr/include/mesa in compile command */
+    #include "gltk.h"
+#else
+    #include <GL/gl.h>
+/* #include "aux.h" */
+#endif
 
 #include "gltkkey.h"
 #include "../aircraft/aircraft.h"
@@ -207,7 +212,7 @@ int main( int argc, char *argv[] ) {
     parse_scenery(argv[1]);
 
     /* Define initial window size */
-    tkInitPosition(0, 0, 400, 400);
+    tkInitPosition(0, 0, 640, 400);
 
     /* Define Display Parameters */
     tkInitDisplayMode( TK_RGB | TK_DEPTH | TK_DOUBLE | TK_DIRECT );
@@ -249,7 +254,10 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.1  1997/05/16 16:05:52  curt
-/* Initial revision.
+/* Revision 1.2  1997/05/17 00:17:34  curt
+/* Trying to stub in support for standard OpenGL.
 /*
+ * Revision 1.1  1997/05/16 16:05:52  curt
+ * Initial revision.
+ *
  */
