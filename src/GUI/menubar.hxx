@@ -88,7 +88,7 @@ public:
 private:
 
     // Make a single menu.
-    void make_menu (SGPropertyNode_ptr node);
+    void make_menu (SGPropertyNode * node);
 
     // Make the top-level menubar.
     void make_menubar ();

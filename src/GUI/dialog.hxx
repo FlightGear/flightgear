@@ -40,7 +40,7 @@ public:
      *
      * @param props A property tree describing the dialog.
      */
-    FGDialog (SGPropertyNode_ptr props);
+    FGDialog (SGPropertyNode * props);
 
 
     /**
@@ -97,7 +97,7 @@ private:
     FGDialog (const FGDialog &);
 
     // Show the dialog.
-    void display (SGPropertyNode_ptr props);
+    void display (SGPropertyNode * props);
 
     // Build the dialog or a subobject of it.
     puObject * makeObject (SGPropertyNode * props,

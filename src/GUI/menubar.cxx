@@ -58,15 +58,6 @@ do_hires_snapshot_dialog (const SGPropertyNode * arg)
 }
 #endif // TR_HIRES_SNAP
 
-extern void dumpSnapShot (puObject *);
-static bool
-do_snapshot_dialog (const SGPropertyNode * arg)
-{
-    dumpSnapShot(0);
-    return true;
-}
-
-
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
 extern void printScreen (puObject *);
 static bool
@@ -215,7 +206,6 @@ static struct {
 #if defined(TR_HIRES_SNAP)
     { "old-hires-snapshot-dialog", do_hires_snapshot_dialog },
 #endif
-    { "old-snapshot-dialog", do_snapshot_dialog },
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
     { "old-print-dialog", do_print_dialog },
 #endif
@@ -359,7 +349,7 @@ FGMenuBar::fireItem (puObject * item)
 }
 
 void
-FGMenuBar::make_menu (SGPropertyNode_ptr node)
+FGMenuBar::make_menu (SGPropertyNode * node)
 {
     const char * name = strdup(node->getStringValue("label"));
     vector<SGPropertyNode_ptr> item_nodes = node->getChildren("item");

@@ -142,12 +142,15 @@ protected:
 
 private:
 
+    // Free all allocated memory.
+    void clear ();
+
     // Read all the configuration files in a directory.
     void readDir (const char * path);
 
     FGMenuBar * _menubar;
     FGDialog * _active_dialog;
-    map<string,SGPropertyNode_ptr> _dialog_props;
+    map<string,SGPropertyNode *> _dialog_props;
 
 };
 

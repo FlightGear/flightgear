@@ -26,7 +26,7 @@ NewGUI::NewGUI ()
 
 NewGUI::~NewGUI ()
 {
-    delete _menubar;
+    clear();
 }
 
 void
@@ -46,13 +46,8 @@ void
 NewGUI::reinit ()
 {
     unbind();
-
-#if !defined(FG_OLD_MENUBAR)
-    delete _menubar;
+    clear();
     _menubar = new FGMenuBar;
-#endif
-    _dialog_props.clear();
-
     init();
     bind();
 }
@@ -134,6 +129,18 @@ NewGUI::setMenuBarVisible (bool visible)
 }
 
 void
+NewGUI::clear ()
+{
+    delete _menubar;
+    _menubar = 0;
+
+    map<string,SGPropertyNode *>::iterator it;
+    for (it = _dialog_props.begin(); it != _dialog_props.end(); it++)
+        delete it->second;
+    _dialog_props.clear();
+}
+
+void
 NewGUI::readDir (const char * path)
 {
     ulDir * dir = ulOpenDir(path);
@@ -144,32 +151,39 @@ NewGUI::readDir (const char * path)
         return;
     }
 
-    ulDirEnt * dirEnt = ulReadDir(dir);
-    while (dirEnt != 0) {
+    for (ulDirEnt * dirEnt = ulReadDir(dir);
+         dirEnt != 0;
+         dirEnt = ulReadDir(dir)) {
+
         char subpath[1024];
 
         ulMakePath(subpath, path, dirEnt->d_name);
 
-        if (dirEnt->d_isdir && dirEnt->d_name[0] != '.') {
-            readDir(subpath);
+        if (dirEnt->d_isdir) {
+            if (dirEnt->d_name[0] != '.')
+                readDir(subpath);
         } else {
-            SGPropertyNode_ptr props = new SGPropertyNode;
+            SGPropertyNode * props = new SGPropertyNode;
             try {
                 readProperties(subpath, props);
             } catch (const sg_exception &ex) {
-                SG_LOG(SG_INPUT, SG_ALERT, "Error parsing GUI file "
+                SG_LOG(SG_INPUT, SG_ALERT, "Error parsing dialog "
                        << subpath);
+                delete props;
+                continue;
             }
             if (!props->hasValue("name")) {
-                SG_LOG(SG_INPUT, SG_WARN, "GUI file " << subpath
+                SG_LOG(SG_INPUT, SG_WARN, "dialog " << subpath
                    << " has no name; skipping.");
-            } else {
-                string name = props->getStringValue("name");
-                SG_LOG(SG_INPUT, SG_BULK, "Saving GUI node " << name);
-                _dialog_props[name] = props;
+                delete props;
+                continue;
             }
+            string name = props->getStringValue("name");
+            SG_LOG(SG_INPUT, SG_BULK, "Saving dialog " << name);
+            if (_dialog_props[name] != 0)
+                delete _dialog_props[name];
+            _dialog_props[name] = props;
         }
-        dirEnt = ulReadDir(dir);
     }
     ulCloseDir(dir);
 }

@@ -115,7 +115,7 @@ GUIInfo::~GUIInfo ()
 // Implementation of FGDialog.
 ////////////////////////////////////////////////////////////////////////
 
-FGDialog::FGDialog (SGPropertyNode_ptr props)
+FGDialog::FGDialog (SGPropertyNode * props)
     : _object(0)
 {
     display(props);
@@ -189,7 +189,7 @@ FGDialog::applyValues ()
 }
 
 void
-FGDialog::display (SGPropertyNode_ptr props)
+FGDialog::display (SGPropertyNode * props)
 {
     if (_object != 0) {
         SG_LOG(SG_GENERAL, SG_ALERT, "This widget is already active");
