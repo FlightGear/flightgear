@@ -105,7 +105,7 @@ int fgDEM::open ( char *file ) {
 	// fd = stdin;
 	fd = gzdopen(STDIN_FILENO, "r");
     } else {
-	if ( (fd = gzopen(file, "r")) == NULL ) {
+	if ( (fd = gzopen(file, "rb")) == NULL ) {
 	    printf("Cannot gzopen %s\n", file);
 	    return(0);
 	}
@@ -772,6 +772,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.5  1998/04/25 15:00:32  curt
+// Changed "r" to "rb" in gzopen() options.  This fixes bad behavior in win32.
+//
 // Revision 1.4  1998/04/22 13:14:46  curt
 // Fixed a bug in zlib usage.
 //
