@@ -24,6 +24,7 @@
 
 #include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
+#include <Sound/soundmgr.hxx>
 
 #include <string>
 #include <list>
@@ -32,8 +33,9 @@
 #include "atis.hxx"
 #include "tower.hxx"
 #include "approach.hxx"
-//#include "ground.hxx"
+#include "ground.hxx"
 #include "ATC.hxx"
+#include "ATCVoice.hxx"
 
 SG_USING_STD(string);
 SG_USING_STD(list);
@@ -104,13 +106,13 @@ private:
     double comm2_freq;
 
     // Pointers to users current communication frequencies.
-    SGPropertyNode *comm1_node;
-    SGPropertyNode *comm2_node;
+    SGPropertyNode* comm1_node;
+    SGPropertyNode* comm2_node;
 
     // Pointers to current users position
-    SGPropertyNode *lon_node;
-    SGPropertyNode *lat_node;
-    SGPropertyNode *elev_node;
+    SGPropertyNode* lon_node;
+    SGPropertyNode* lat_node;
+    SGPropertyNode* elev_node;
 
     // Position of the ATC that the comm radios are tuned to in order to decide whether transmission
     // will be received
@@ -143,6 +145,15 @@ private:
     FGApproach approach;
     //FGDeparture departure;
 
+	// Rendering related stuff
+	bool voice;			// Flag - true if we are using voice
+	bool playing;		// Indicates a message in progress	
+#ifdef ENABLE_AUDIO_SUPPORT
+	string refname;		// FIXME - A hack - assumes only one sound to track.
+	bool voiceOK;		// Flag - true if at least one voice has loaded OK
+	FGATCVoice v1;
+#endif
+
 public:
 
     FGATCMgr();
@@ -161,7 +172,16 @@ public:
 
     // Return a pointer to a given sort of ATC at a given airport and activate if necessary
     FGATC* GetATCPointer(string icao, atc_type type);
+	
+	// Render a transmission
+	// Outputs the transmission either on screen or as audio depending on user preference
+	// The repeating flag indicates whether the message should be repeated continuously or played once.
+	void Render(string msg, bool repeating);
 
+	// Cease rendering a transmission.
+	// At the moment this can handle one transmission active at a time only.
+	void NoRender();
+	
 private:
 
     // Remove a class from the atc_list and delete it from memory
