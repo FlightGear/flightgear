@@ -300,9 +300,6 @@
 /* Define if you do not have <strings.h>, index, bzero, etc..  */
 #undef USG
 
-/* Define to version number */
-#undef VERSION
-
 /* Define vfork as fork if vfork does not work.  */
 #undef vfork
 

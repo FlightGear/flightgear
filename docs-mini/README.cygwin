@@ -1,0 +1,64 @@
+This is what [Norman Vine <nhv@cape.com>] recommends for general
+Cygwin development.
+
+Note:  This will be a Unix like system and not a Windows IDE
+It is expected that the user is comfortable using the gnu gcc
+compiler and its asociated toolkit.
+
+1) Latest Cygwin release
+      earlier ones work but the latest is better by far and
+      upgrading is now just a one click operation :-)
+      http://www.cygwin.com
+
+      For version V1.1.4 ( current version as of 9/22/2000 )
+      after installation upgrade per these instructions
+      http://sources.redhat.com/ml/cygwin/2000-08/msg00256.html
+      ( this will not be necessary for those using Cygwin snapshots
+        later then 08 / 15 / 2000 )
+
+2) a Cygwin compiled Perl
+      I reccomend the binary release from Charles Wilson
+      http://cygutils.netpedia.net/V1.1/perl-5.6.0/index.html
+
+3) automake and autoconf but you might as well pick up
+    the complete usr-local toolkit
+    http://cygutils.netpedia.net/V1.1/usr-local/index.html
+
+4) I HEARTILY reccomend installing this Win32 ( Non - X ) rxvt package
+    http://www.io.com/~bub/rxvt.html
+    to replace the command console
+
+
+5) There is a small problem in the stock OpenGl Distribution
+     I suggest you just grab mine from
+     http://www.vso.cape.com/~nhv/files/cygwin/cygwin_opengl.ZIP
+     There is some documentation in the included shell script
+
+======
+
+After installing the new Cygwin and support files
+You should just be able to do from a Cygwin bash shell
+
+cd to appropriate top SRC_DIR
+
+aclocal
+automake -a
+autoconf
+./configure
+make
+make install
+
+for what it is worth here are the compiler flags I have been using
+do this from bash shell prior to running configure
+
+export
+CFLAGS='-pipe -Wall -O2 -ffast-math -funroll-loops -fexpensive-optimizations
+ -mpentium'
+export
+CXXFLAGS='-pipe -Wall -O2 -ffast-math -funroll-loops -fexpensive-optimizatio
+ns -mpentium'
+
+Cheers
+
+Norman
+
