@@ -20,6 +20,14 @@ SG_USING_STD(vector);
 #include <simgear/misc/props.hxx>
 #include <simgear/timing/timestamp.hxx>
 
+// Has anyone done anything *really* stupid, like making min and max macros?
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+
 class FGAircraftModel : public FGSubsystem
 {
 public:
