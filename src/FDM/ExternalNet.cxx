@@ -65,6 +65,8 @@ static void htond (double &x)
 static void global2raw( FGRawCtrls *raw ) {
     int i;
 
+#if 0
+    // these can probably get wiped as soon as David spots them. :-)
     static const SGPropertyNode *aileron
         = fgGetNode("/controls/aileron");
     static const SGPropertyNode *elevator
@@ -75,6 +77,8 @@ static void global2raw( FGRawCtrls *raw ) {
         = fgGetNode("/controls/rudder");
     static const SGPropertyNode *flaps
         = fgGetNode("/controls/flaps");
+#endif
+
     char buf[256];
 
     // fill in values
@@ -97,6 +101,8 @@ static void global2raw( FGRawCtrls *raw ) {
 	raw->brake[i] = fgGetDouble( buf );
     }
     raw->hground = fgGetDouble( "/environment/ground-elevation-m" );
+    raw->magvar = fgGetDouble("/environment/magnetic-variation-deg");
+    raw->speedup = fgGetInt("/sim/speed-up");
 
     // convert to network byte order
     raw->version = htonl(raw->version);
@@ -114,7 +120,8 @@ static void global2raw( FGRawCtrls *raw ) {
 	htond(raw->brake[i]);
     }
     htond(raw->hground);
-
+    htond(raw->magvar);
+    raw->speedup = htonl(raw->speedup);
 }
 
 
@@ -127,8 +134,14 @@ static void net2global( FGNetFDM *net ) {
     htond(net->phi);
     htond(net->theta);
     htond(net->psi);
+    htond(net->phidot);
+    htond(net->thetadot);
+    htond(net->psidot);
     htond(net->vcas);
     htond(net->climb_rate);
+    htond(net->A_X_pilot);
+    htond(net->A_Y_pilot);
+    htond(net->A_Z_pilot);
     net->cur_time = ntohl(net->cur_time);
     net->warp = ntohl(net->warp);
     htond(net->visibility);
@@ -143,9 +156,14 @@ static void net2global( FGNetFDM *net ) {
         cur_fdm_state->_set_Euler_Angles( net->phi,
                                           net->theta,
                                           net->psi );
+        cur_fdm_state->_set_Euler_Rates( net->phidot,
+					 net->thetadot,
+					 net->psidot );
         cur_fdm_state->_set_V_calibrated_kts( net->vcas );
         cur_fdm_state->_set_Climb_Rate( net->climb_rate );
-
+        cur_fdm_state->_set_Accels_Pilot_Body( net->A_X_pilot,
+					       net->A_Y_pilot,
+					       net->A_Z_pilot );
 	/* these are ignored for now  ... */
 	/*
 	if ( net->cur_time ) {
