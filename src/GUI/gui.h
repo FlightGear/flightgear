@@ -44,9 +44,6 @@
 
 // gui.cxx
 extern void guiInit();
-#if defined (FG_OLD_MENUBAR)
-extern void guiToggleMenu(void);
-#endif
 extern void mkDialog(const char *txt);
 extern void guiErrorMessage(const char *txt);
 extern void guiErrorMessage(const char *txt, const sg_throwable &throwable);

@@ -92,16 +92,6 @@ else
 fi
 AM_CONDITIONAL(ENABLE_WEATHERCM, test "x$with_weathercm" = "xyes")
 
-dnl Specify if we want the old menubar; default to the new one
-AC_ARG_WITH(old-menubar, [  --with-old-menubar      Use the old menu bar])
-if test "x$with_old_menubar" = "xyes" ; then
-    echo "Building with old menubar"
-    AC_DEFINE([FG_OLD_MENUBAR], 1,
-              [Define to build with old menubar])
-else
-    echo "Building with new menubar"
-fi
-
 dnl Thread related checks
 AC_ARG_WITH(threads, [  --with-threads          Include tile loading threads [default=no]])
 if test "x$with_threads" = "xyes"; then
@@ -654,12 +644,6 @@ if test "x$with_multiplayer" != "xno"; then
     echo "Using default multiplayer support"
 elif test "x$with_network_olk" != "xno"; then
     echo "Using Oliver's multi-pilot network support"
-fi
-
-if test "x$with_old_menubar" != "x"; then
-    echo "Using old menubar"
-else
-    echo "Defaulting to new XML-configurable menubar"
 fi
 
 if test "x$with_threads" = "xyes"; then

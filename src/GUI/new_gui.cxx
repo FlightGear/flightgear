@@ -37,9 +37,7 @@ NewGUI::init ()
     ulMakePath(path1, globals->get_fg_root().c_str(), "gui");
     ulMakePath(path2, path1, "dialogs");
     readDir(path2);
-#if !defined(FG_OLD_MENUBAR)
     _menubar->init();
-#endif
 }
 
 void
