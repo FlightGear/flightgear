@@ -29,18 +29,18 @@
 
 
 // Constructor
-FGNavaids::FGNavaids( void ) {
+FGNavList::FGNavList( void ) {
 }
 
 
 // Destructor
-FGNavaids::~FGNavaids( void ) {
+FGNavList::~FGNavList( void ) {
 }
 
 
 // load the navaids and build the map
-bool FGNavaids::init( FGPath path ) {
-    FGNavaid n;
+bool FGNavList::init( FGPath path ) {
+    FGNav n;
 
     navaids.erase( navaids.begin(), navaids.end() );
 
@@ -92,8 +92,8 @@ bool FGNavaids::init( FGPath path ) {
 
 // query the database for the specified frequency, lon and lat are in
 // degrees, elev is in meters
-bool FGNavaids::query( double lon, double lat, double elev, double freq,
-		       FGNavaid *n, double *heading, double *dist )
+bool FGNavList::query( double lon, double lat, double elev, double freq,
+		       FGNav *n, double *heading, double *dist )
 {
     nav_list_type stations = navaids[(int)(freq*100.0)];
 

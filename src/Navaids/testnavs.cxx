@@ -3,13 +3,13 @@
 #include "navlist.hxx"
 
 int main() {
-    FGNavaids navs;
+    FGNavList navs;
 
     FGPath p( "/export/data2/curt/FlightGear/Navaids/default.nav" );
    
     navs.init( p );
 
-    FGNavaid n;
+    FGNav n;
     double heading, dist;
     if ( navs.query( -93.2, 45.14, 3000, 117.30,
 		     &n, &heading, &dist) ) {

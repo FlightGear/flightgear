@@ -1,4 +1,4 @@
-// navaids.hxx -- navaids management class
+// navlist.hxx -- navaids management class
 //
 // Written by Curtis Olson, started April 2000.
 //
@@ -21,8 +21,8 @@
 // $Id$
 
 
-#ifndef _FG_NAVAIDS_HXX
-#define _FG_NAVAIDS_HXX
+#ifndef _FG_NAVLIST_HXX
+#define _FG_NAVLIST_HXX
 
 
 #include <simgear/compiler.h>
@@ -37,10 +37,10 @@ FG_USING_STD(map);
 FG_USING_STD(vector);
 
 
-class FGNavaids {
+class FGNavList {
 
     // convenience types
-    typedef vector < FGNavaid > nav_list_type;
+    typedef vector < FGNav > nav_list_type;
     typedef nav_list_type::iterator nav_list_iterator;
     typedef nav_list_type::const_iterator nav_list_const_iterator;
 
@@ -52,8 +52,8 @@ class FGNavaids {
 
 public:
 
-    FGNavaids();
-    ~FGNavaids();
+    FGNavList();
+    ~FGNavList();
 
     // load the navaids and build the map
     bool init( FGPath path );
@@ -61,8 +61,8 @@ public:
     // query the database for the specified frequency, lon and lat are
     // in degrees, elev is in meters
     bool query( double lon, double lat, double elev, double freq,
-		FGNavaid *n, double *heading, double *dist);
+		FGNav *n, double *heading, double *dist);
 };
 
 
-#endif // _FG_NAVAIDS_HXX
+#endif // _FG_NAVLIST_HXX

@@ -1,4 +1,4 @@
-// navaid.hxx -- navaid class
+// nav.hxx -- vor/dme/ndb class
 //
 // Written by Curtis Olson, started April 2000.
 //
@@ -21,8 +21,8 @@
 // $Id$
 
 
-#ifndef _FG_NAVAID_HXX
-#define _FG_NAVAID_HXX
+#ifndef _FG_NAV_HXX
+#define _FG_NAV_HXX
 
 
 #include <simgear/compiler.h>
@@ -43,7 +43,7 @@ FG_USING_STD(istream);
 #endif
 
 
-class FGNavaid {
+class FGNav {
 
     char type;
     double lon, lat;
@@ -55,8 +55,8 @@ class FGNavaid {
 
 public:
 
-    inline FGNavaid(void) {}
-    inline ~FGNavaid(void) {}
+    inline FGNav(void) {}
+    inline ~FGNav(void) {}
 
     inline char get_type() const { return type; }
     inline double get_lon() const { return lon; }
@@ -76,12 +76,12 @@ public:
     inline void set_dme( bool b ) { dme = b; }
     inline void set_ident( char *i ) { strncpy( ident, i, 5 ); }
 
-    friend istream& operator>> ( istream&, FGNavaid& );
+    friend istream& operator>> ( istream&, FGNav& );
 };
 
 
 inline istream&
-operator >> ( istream& in, FGNavaid& n )
+operator >> ( istream& in, FGNav& n )
 {
     double f;
     char c;
@@ -99,4 +99,4 @@ operator >> ( istream& in, FGNavaid& n )
 }
 
 
-#endif // _FG_NAVAID_HXX
+#endif // _FG_NAV_HXX
