@@ -376,6 +376,8 @@ void fgRenderFrame( void ) {
 	}
 
 	// draw the sun
+	glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
+	xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
 	current_sun.repaint( cur_light_params.sun_angle );
         sgVec3 view_pos;
 	sgSetVec3( view_pos,
