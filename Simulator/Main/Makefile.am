@@ -1,6 +1,6 @@
 if ENABLE_AUDIO_SUPPORT
 DEFS += -DENABLE_AUDIO_SUPPORT
-AUDIO_LIBS = -L$(top_builddir)/Lib/plib/src/sl -lsl -lsm
+AUDIO_LIBS = -lsl -lsm
 endif
 
 if ENABLE_IRIX_AUDIO

@@ -45,7 +45,7 @@
 // from matrices we have allready computed
 // rather then performing 'textbook algebra' to rederive them
 // Norman Vine -- nhv@yahoo.com
-#define FG_VIEW_INLINE_OPTIMIZATIONS
+// #define FG_VIEW_INLINE_OPTIMIZATIONS
 
 // temporary (hopefully) hack
 static int panel_hist = 0;
