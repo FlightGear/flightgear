@@ -371,8 +371,6 @@ FGDem::parse( ) {
 // corner.
 int
 FGDem::write_area( const string& root, FGBucket& b, bool compress ) {
-    char tile_name[256];
-
     // calculate some boundaries
     double min_x = ( b.get_center_lon() - 0.5 * b.get_width() ) * 3600.0;
     double max_x = ( b.get_center_lon() + 0.5 * b.get_width() ) * 3600.0;
@@ -412,9 +410,7 @@ FGDem::write_area( const string& root, FGBucket& b, bool compress ) {
     string command = "mkdir -p " + path;
     system( command.c_str() );
 
-    long int b_index = b.gen_index();
-    sprintf(tile_name, "%ld", b_index);
-    string demfile = path + "/" + tile_name + ".dem";
+    string demfile = path + "/" + b.gen_index_str() + ".dem";
     cout << "demfile = " << demfile << endl;
 
     // write the file
@@ -869,6 +865,9 @@ FGDem::~FGDem( void ) {
 
 
 // $Log$
+// Revision 1.27  1999/03/25 19:04:36  curt
+// Minor tweaks related to FGBucket usage.
+//
 // Revision 1.26  1999/03/13 17:40:37  curt
 // Moved point interpolation and least squares fitting to contruction program
 // area.

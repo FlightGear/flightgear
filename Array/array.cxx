@@ -443,14 +443,13 @@ void FGArray::outputmesh_output_nodes( const string& fg_root, FGBucket& p )
 {
     double exnodes[MAX_EX_NODES][3];
     struct stat stat_buf;
-    string dir;
-    char file[256], exfile[256];
+    string dir, file;
+    char exfile[256];
 #ifdef WIN32
     char tmp_path[256];
 #endif
     string command;
     FILE *fd;
-    long int index;
     int colmin, colmax, rowmin, rowmax;
     int i, j, count, excount, result;
 
@@ -481,13 +480,11 @@ void FGArray::outputmesh_output_nodes( const string& fg_root, FGBucket& p )
     }
 
     // get index and generate output file name
-    index = p.gen_index();
-    sprintf(file, "%s/%ld.node", dir.c_str(), index);
+    file = dir + "/" + p.gen_index_str() + ".node";
 
     // get (optional) extra node file name (in case there is matching
     // .poly file.
-    strcpy(exfile, file);
-    strcat(exfile, ".ex");
+    exfile = file + ".ex";
 
     // load extra nodes if they exist
     excount = 0;
@@ -560,6 +557,9 @@ FGArray::~FGArray( void ) {
 
 
 // $Log$
+// Revision 1.5  1999/03/25 19:03:50  curt
+// Minor tweaks related to FGBucket usage.
+//
 // Revision 1.4  1999/03/20 20:32:51  curt
 // First mostly successful tile triangulation works.  There's plenty of tweaking
 // to do, but we are marching in the right direction.

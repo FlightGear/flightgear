@@ -3,7 +3,6 @@
 #include "array.hxx"
 
 main(int argc, char **argv) {
-    char tile_name[256];
     double lon, lat;
 
     if ( argc != 2 ) {
@@ -12,7 +11,6 @@ main(int argc, char **argv) {
     }
 
     string work_dir = argv[1];
-
    
     lon = -146.248360; lat = 61.133950;  // PAVD (Valdez, AK)
     lon = -110.664244; lat = 33.352890;  // P13
@@ -21,9 +19,7 @@ main(int argc, char **argv) {
     string base = b.gen_base_path();
     string path = work_dir + "/Scenery/" + base;
 
-    long int b_index = b.gen_index();
-    sprintf(tile_name, "%ld", b_index);
-    string arrayfile = path + "/" + tile_name + ".dem";
+    string arrayfile = path + "/" + b.gen_index_str() + ".dem";
     cout << "arrayfile = " << arrayfile << endl;
     
     FGArray a(arrayfile);
