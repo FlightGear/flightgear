@@ -10,7 +10,7 @@ dnl Require at least automake 2.52
 AC_PREREQ(2.52)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.9.3)
+AM_INIT_AUTOMAKE(FlightGear, 0.9.4)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -102,6 +102,12 @@ dnl Determine an extra directories to add to include/lib search paths
 case "${host}" in
 *-apple-darwin* | *-*-mingw32*)
     echo no EXTRA_DIRS for $host
+    ;;
+
+*-*-cygwin*)
+    if test -d /usr/local ; then
+        EXTRA_DIRS="/usr/local"
+    fi
     ;;
 
 *)
@@ -355,7 +361,7 @@ if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for simgear 0.3.4 or newer])
+AC_MSG_CHECKING([for simgear 0.3.5 or newer])
 AC_TRY_RUN([
 #include <stdio.h>
 
@@ -366,7 +372,7 @@ AC_TRY_RUN([
 
 #define MIN_MAJOR 0
 #define MIN_MINOR 3
-#define MIN_MICRO 4
+#define MIN_MICRO 5
 
 int main() {
     int major, minor, micro;
