@@ -54,21 +54,22 @@ static bool isTied = false;
 ////////////////////////////////////////////////////////////////////////
 
 FGSteam::FGSteam ()
-  : the_STATIC_inhg(29.92),
+  : 
     the_ALT_ft(0.0),
     the_ALT_datum_mb(1013.0),
-    the_VSI_case(29.92),
-    the_VSI_fps(0.0),
+    the_TC_rad(0.0),
+    the_TC_std(0.0),
+    the_STATIC_inhg(29.92),
     the_VACUUM_inhg(0.0),
-    the_MH_err(0.0),
+    the_VSI_fps(0.0),
+    the_VSI_case(29.92),
     the_MH_deg(0.0),
     the_MH_degps(0.0),
-    the_DG_err(0.0),
+    the_MH_err(0.0),
     the_DG_deg(0.0),
     the_DG_degps(0.0),
     the_DG_inhg(0.0),
-    the_TC_rad(0.0),
-    the_TC_std(0.0),
+    the_DG_err(0.0),
     _UpdateTimePending(1000000)
 {
 }
