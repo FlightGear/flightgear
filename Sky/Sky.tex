@@ -1,0 +1,228 @@
+%
+% `Sky.tex' -- describes the sky rendering procedure
+%
+%  Written by Curtis Olson.  Started December, 1997.
+%
+% $Id$
+%------------------------------------------------------------------------
+
+
+\documentclass[12pt]{article}
+
+\usepackage{anysize}
+\papersize{11in}{8.5in}
+\marginsize{1in}{1in}{1in}{1in}
+
+\usepackage{amsmath}
+
+\usepackage{epsfig}
+
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{url}
+
+
+\begin{document}
+
+
+\title{
+  Flight Gear Sky Representation and Rendering.
+}
+
+
+\author{
+    Curtis L. Olson\\ 
+    (\texttt{curt@me.umn.edu})
+}
+
+
+\maketitle
+
+
+\section{Introduction}
+
+No flight simulator should be without a nice sky that smoothly
+transitions into haze at the horizon.  Such a sky should also be able
+to render sunrise and sunset effects.  This document describes how we
+have implemented such a sky.
+
+\section{Overview}
+
+The sky is represent as a 12 sided dome (or upside down bowl if you
+prefer.)  Figure \ref{fig:dome} shows how a 6 sided dome might be
+constructed.
+
+\begin{figure}[hbt]
+  \centerline{                   
+      \psfig{file=dome.eps}
+  }
+  \caption{Simplified (6 Sided) Sky Dome}
+  \label{fig:dome}
+\end{figure}
+
+The center section can be constructed with a triangle fan.  The inner
+and outer ``skirts'' can be constructed with triangle strips.
+
+The colors of each vertex can be independently controlled to achieve
+sky to haze transitions, sunrise/sunset effects with a pinkish/oranges
+glow, and one side of the sky can easily be made brighter than the
+other.  By enabling smooth shading in OpenGL, the colors will be
+blended together for a very nice effect.
+
+
+\section{Implementation}
+
+This sections describes how the sky has been implemented in OpenGL.
+
+\subsection{Vertex Generation}
+
+The sky dome structure is intended to be centered over the current
+view point at sea level.  This way we could paste cloud textures on
+the dome if we liked.  So, we simply have to generate vertices for a
+fixed dome, and then use OpenGL calls to transform and rotate it to
+the desired place.  Please refer to the actual code
+(.../Src/Scenery/sky.c) for specifics, but
+to generate the vertices we simply create a 12 element array for the
+inner set of vertices, another 12 element array for the middle set of
+vertices and a last 12 element array for the outer set of vertices.
+
+\subsection{Vertex Coloring}
+
+For each vertex position array, there is a corresponding vertex color
+array.  This way we don't have to compute each vertex color every
+iteration.  Also, by being able to individually control the color at
+each vertex, we can do all sorts of nice sky to haze blending with
+dusk and dawn effects.  Again, please refer to the source
+(.../Src/Scenery/sky.c) for specific details on how the coloring is
+implemented.  However, here's the quick overview.
+
+\subsubsection{Day and Night Coloring}
+
+For the general middle of the day, or middle of the night sky, we
+already know the desired sky color, and the haze color.  This is
+computed elsewhere based on the current sun position.  During the
+night these colors are both nearly black.  During the dawn they are
+smoothly transitioned to day time colors.  And, during the dusk they
+are smoothly transitioned back to night time colors.
+
+The center of the dome is assigned the current sky color.  The color
+of the first inner ring of vertices is weighted 70\% towards the sky
+color and 30\% towards the fog color.
+
+Then color of the middle ring of vertices is weighted 10\% towards the
+sky color and 90\% towards the fog color.
+
+The the outer ring of vertices are assigned the current fog color.
+
+\subsubsection{Dusk and Dawn Effects}
+
+Dusk and dawn effects can be accomplished by controlling the color of
+the vertices.  Rather than trying to figure out which vertices are
+near the current sun position, I just rotate the dome so the 0'th
+vertex of each ring (and the center fan) align with the sun.  This
+makes it easier to calculate vertex colors.  But, there is a fair
+amount of work involved in calculating the proper dome rotation.
+
+\begin{figure}[hbt]
+  \centerline{                   
+      \psfig{file=earth.eps}
+  }
+  \caption{Overview of Earth}
+  \label{fig:earth}
+\end{figure}
+
+Figure \ref{fig:earth} shows an overview of the setup.  $P$, the
+current view position, and $\mathbf{n}$, the local ``up'' vector,
+define the plane which is tangent to the Earth's surface at point $P$.
+Just for a quick review of your linear algebra, given $\mathbf{v_0}$,
+the position vector of $P$ and $\mathbf{v}$, the position vector of
+some other arbitrary point on the plane, and $\mathbf{n}$, the normal
+to the plane, then the vector $\mathbf{n}$ and the vector $(\mathbf{v}
+- \mathbf{v_0})$ are orthogonal (perpendicular.)  If the two vectors
+are orthogonal then their dot product will be zero, so the following
+must be true:
+
+\begin{equation}
+  \mathbf{n} \cdot ( \mathbf{v} - \mathbf{v_0} ) = 0
+\end{equation}
+
+This is the vector equation of the plane and can be rewritten as:
+
+\begin{align}
+  a(x - x_0) + b(y - y_0) + c(z - z_0) &= 0 \\
+  ax + by + cz - (\mathbf{n} \cdot \mathbf{v_0}) &= 0
+\end{align}
+
+We want to find a vector $\mathbf{v}$ representing the
+direction along the current tangent plane towards the position on the
+Earth where the Sun is directly overhead.  The vector $\mathbf{u}$ is
+defined as $\vec{\mathbf{PS}}$.
+
+\begin{figure}[hbt]
+  \centerline{                   
+      \psfig{file=local.eps}
+  }
+  \caption{Vectors and Points in Local Coordinate System}
+  \label{fig:local}
+\end{figure}
+
+Figure \ref{fig:local} shows a more detailed ``local'' view of the
+points and vectors involved.  The point, $P$, is the current view
+point.  The vector, $\mathbf{n}$, is the local up vector.  $S$
+represents the current position on the Earth's surface where the Sun
+is directly overhead.  We want to find the vector, $\mathbf{v}$ which
+is a projection of $\mathbf{u}$ onto the plane defined by $P$ and
+$\mathbf{n}$.
+
+To do this we first calculate $\mathbf{u_1}$ which is the shortest
+distance from point $S$ to the tangent plane.
+
+\begin{equation}
+  \mathbf{u_1} = \frac { \mathbf{n} \cdot \mathbf{u} }
+             { {\| \mathbf{n} \|}^2 } \mathbf{n}
+\end{equation}
+
+Armed with $\mathbf{u_1}$ we can now calculate
+$\mathbf{v}$ which is the local surface direction on the tangent
+plane towards the sun, $S$.
+
+\begin{equation}
+  \mathbf{v} = \mathbf{v_0} + \mathbf{u} - \mathbf{u_1}
+\end{equation}
+
+Ok, so now we have $\mathbf{v}$, but the fun doesn't stop here.  Now
+we need to calculate a rotation angle $\theta$ about $\mathbf{n}$ to
+align our dome with $\mathbf{v}$.  The origin of the dome always
+aligns with a vector pointing directly South.  So, we need to repeat
+the above procedure to map a vector pointing straight down $( 0, 0,
+-\mathbf{z} )$ onto our tangent plane to produce the local, surface,
+south vector $\mathbf{w}$.  We then take the $\arccos()$ of the dot product
+of $\mathbf{v}$ with $\mathbf{w}$.
+
+\begin{equation}
+  \theta = \arccos( \mathbf{v} \cdot \mathbf{w} )
+\end{equation}
+
+Whew, that gives us the angle we want.  Well almost, not quite.  The
+problem is that the dot product returns a number in the range of
+$(-1.0 \ldots 1.0)$. Thus, the $\arccos()$ function returns a $\theta$
+in the range of $(0.0 \ldots 180.0)$.  But this is not enough
+information to determine if $\mathbf{v}$ is in the east hemisphere or
+west hemisphere and if this angle should be positive or negative.
+
+So, to get that last piece of information we need, we can rotate the
+vector $\mathbf{w}$ by 90 degrees about $\mathbf{n}$.  This gives us
+the local surface east vector on the tangent plane.  Taking the dot
+product of $\mathbf{v}$ and the local east vector tells us which
+hemisphere $\mathbf{v}$ is in.  And, from this, we can uniquely
+determine the proper angle for the sky dome rotation.
+
+\end{document}
+
+
+%------------------------------------------------------------------------
+% $Log$
+% Revision 1.1  1999/02/14 19:12:21  curt
+% Initial revisions.
+%

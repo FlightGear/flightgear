@@ -1,0 +1,140 @@
+=============================================================================
+
+
+A basic set of bright stars -- taken from the xephem program.
+
+Based on the 5th Revised edition of the Yale Bright Star Catalog, 1991, from
+ftp://adc.gsfc.nasa.gov/pub/adc/archives/catalogs/5/5050.
+
+Only those entries with a Bayer and/or Flamsteed number are retained
+here.
+
+Format: Constellation BayerN-Flamsteed, as available. Bayer is
+  truncated as requried to enforce a maximum total length of 13
+  imposed within xephem.
+
+Common names were then overlayed by closest position match from
+hand-edited a list supplied by Robert Tidd (inp@violet.berkeley.edu)
+and Alan Paeth (awpaeth@watcgl.waterloo.edu)
+
+
+=============================================================================
+
+
+Data file format:
+
+name , right assention (radians) , declination (radians) , magnitude (0.0 - 1.0)
+
+
+=============================================================================
+
+
+The following information is taken from:
+
+    http://www.lclark.edu/~wstone/skytour/celest.html
+
+Please visit the above site, it contains much more complete information.
+
+CELESTIAL MEASUREMENTS 
+
+RIGHT ASCENSION AND DECLINATION
+
+Although we know that the objects we see in the sky are of different
+sizes and at different distances from us, it is convenient to
+visualize all the objects as being attached to an imaginary sphere
+surrounding the Earth. From our vantage point, the sky certainly looks
+like a dome (the half of the celestial sphere above our local
+horizon). The celestial sphere is mapped in Right Ascension (RA) and
+Declination (Dec). Declination is the celestial equivalent of
+latitude, and is simply the Earth's latitude lines projected onto the
+celestial sphere. A star that can be directly overhead as seen from
+the Earth's Equator (0 degrees latitude) is said to be on the
+Celestial Equator, and has a declination of 0 degrees . The North
+Star, Polaris, is very nearly overhead as seen from the North Pole (90
+degrees North latitude). The point directly over the North Pole on the
+celestial sphere is called the North Celestial Pole, and has a
+declination of +90 degrees . Northern declinations are given positive
+signs, and southern declinations are given negative signs. So, the
+South Celestial Pole has a declination of -90 degrees .
+
+Right Ascension is the equivalent of longitude, but since the Earth
+rotates with respect to the celestial sphere we cannot simply use the
+Greenwich Meridian as 0 degrees RA. Instead, we set the zero point as
+the place on the celestial sphere where the Sun crosses the Celestial
+Equator (0 degrees Dec) at the vernal (spring) equinox.  The arc of
+the celestial sphere from the North Celestial Pole through this point
+to the South Celestial Pole is designated as Zero hours RA. Right
+Ascension increases eastward, and the sky is divided up into 24
+hours. This designation is convenient because it represents the
+sidereal day, the time it takes for the Earth to make one rotation
+relative to the celestial sphere. If you pointed a telescope (with no
+motor drive) at the coordinates (RA=0h, Dec=0 degrees ), and came back
+one hour later, the telescope would then be pointing at (RA=1h, Dec=0
+degrees ). Because the Earth's revolution around the Sun also
+contributes to the apparent motion of the stars, the day we keep time
+by (the solar day) is about four minutes longer than the sidereal
+day. So, if you pointed a telescope at (RA=0h, Dec=0 degrees ) and
+came back 24 hours later, the telescope would now be pointing at
+(RA=0h 4m, Dec=0 degrees). A consequence is that the fixed stars
+appear to rise about four minutes earlier each day.
+
+
+=============================================================================
+
+
+From: steve@mred.bgm.link.com (Steve Baker)
+Subject: Re:  FG: Fun in the sun ...
+Date: Tue, 5 Aug 97 15:37:27 -0500
+
+You probably ought to get the stars right too - there is a database
+of the 300 brightest stars in the 'Yale Bright Star Catalog' - which
+I enclose below.  I'd guess that you could navigate by the stars -
+so this might not be a completely useless feature - right?
+
+Anyway, if all else fails - and the flight sim never gets going - we
+could at least sell this as a planetarium :-)
+
+The format of the star data is:
+
+Name   Right-Ascension   Declination   Magnitude
+        
+(Ascension and Declination are in radians)
+
+We took the magnitude value, scaled it by 0.8 and added 0.2 to make
+a 0->1 brightness value. Using the raw data created too many very
+dark stars.
+
+Originally, there were constellation names as sub-headings - but I
+think I deleted them to make the file easier to parse :-) That makes
+the 'name' field pretty pointless.
+
+if you are still talking about the geocentric coordinate system
+where the terrain is modelled with Z pointing towards the North
+pole, X out of the 0 degree meridian at the equator and Y out at the
+Indian ocean at the equator - then you can position the stars using:
+
+    star[ X ] = fsin ( ra ) * fcos( decl ) ;
+    star[ Y ] = fcos ( ra ) * fcos( decl ) ;
+    star[ Z ] = fsin ( decl ) ;
+
+(which you can precompute at startup)
+
+...and then rotate them about the Z axis using GMT*two_pi/24.0
+#
+Put them all in a display list - use GL_POINTS as the primitive...
+
+  glNewList ( ...whatever... )
+  glBegin ( GL_POINTS ) ;
+
+  for ( int i = 0 ; i < num_stars ; i++ ) {
+    glColor3f ( star_brightness[i], star_brightness[i], star_brightness[i] ) ;
+    glVertex3f ( star_x[i], star_y[i], star_z[i] ) ;
+  }
+
+  glEnd () ;
+  glEndList () ;
+
+You need to draw them out by the far clip plane so they don't occult
+anything. Then you need to translate them using the same x/y/z as
+the eyepoint so that you can never fly any closer to them.
+
