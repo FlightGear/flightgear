@@ -16,6 +16,7 @@
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
+#include <Cockpit/hud.hxx>
 #include <Environment/environment.hxx>
 #include <FDM/flight.hxx>
 #include <GUI/gui.h>
@@ -1184,6 +1185,33 @@ do_increase_visibility (const SGPropertyNode * arg)
     return true;
 }
 
+static bool
+do_hud_brightkey(const SGPropertyNode *)
+{
+    HUD_brightkey( true );
+    return true;
+}
+
+static bool
+do_hud_masterswitch(const SGPropertyNode *)
+{
+    HUD_masterswitch( true );
+    return true;
+}
+
+static bool
+do_hud_init(const SGPropertyNode *)
+{
+    fgHUDInit(0); // minimal HUD
+    return true;
+}
+
+static bool
+do_hud_init2(const SGPropertyNode *)
+{
+    fgHUDInit2(0);  // normal HUD
+    return true;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Command setup.
@@ -1242,6 +1270,10 @@ static struct {
     { "replay", do_replay },
     { "decrease-visibility", do_decrease_visibility },
     { "increase-visibility", do_increase_visibility },
+    { "hud-brightkey", do_hud_brightkey },
+    { "hud-masterswitch", do_hud_masterswitch },
+    { "hud-init", do_hud_init },
+    { "hud-init2", do_hud_init2 },
     { 0, 0 }			// zero-terminated
 };
 
