@@ -36,10 +36,8 @@
 
 #include "../Include/general.h"
 
-#include "astro.h"
 #include "obj.h"
 #include "scenery.h"
-#include "stars.h"
 
 
 /* Temporary hack until we get the scenery management system running */
@@ -102,9 +100,12 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.29  1997/12/30 20:47:52  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.30  1998/01/07 03:22:29  curt
+/* Moved astro stuff to .../Src/Astro/
 /*
+ * Revision 1.29  1997/12/30 20:47:52  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.28  1997/12/15 23:55:02  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.
