@@ -79,7 +79,7 @@ public:
     inline double get_user_speed() {return user_speed; }
 
     inline int getNum( FGAIBase::object_type ot ) {
-      return (0 < ot < FGAIBase::MAX_OBJECTS) ? numObjects[ot] : numObjects[0];
+      return (0 < ot && ot < FGAIBase::MAX_OBJECTS) ? numObjects[ot] : numObjects[0];
     }
 
     void processScenario( string filename );

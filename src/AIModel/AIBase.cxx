@@ -88,7 +88,7 @@ void FGAIBase::update(double dt) {
       T = 59 - 0.00356 * altitude;
       p = 2116 * pow( ((T + 459.7) / 518.6) , 5.256);
 
-    } else if ( 36152 < altitude < 82345 ) {    // lower stratosphere
+    } else if ( 36152 < altitude && altitude < 82345 ) {    // lower stratosphere
       T = -70;
       p = 473.1 * pow( e , 1.73 - (0.000048 * altitude) );
 
