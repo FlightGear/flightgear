@@ -265,7 +265,7 @@ int fgDEM::read_a_record() {
 
     // Map projection parameters (ignored)
     for ( i = 0; i < 15; i++ ) {
-	dnum = next_double();
+	dnum = next_exp();
 	// printf("%d: %f\n",i,dnum);
     }
 
@@ -331,9 +331,9 @@ int fgDEM::read_a_record() {
     cout << "    length = " << i << "\n";
 
 #if 1
-    inum = atoi( token.substr( 0, 1 ) );
-    row_step = atof( token.substr( 1, 12 ) );
-    col_step = atof( token.substr( 13, 12 ) );
+    inum = atoi( token.substr( 0, i - 36 ) );
+    row_step = atof( token.substr( i - 36, 12 ) );
+    col_step = atof( token.substr( i - 24, 12 ) );
     //token.substr( 25, 12 )
 #else
     ptr = token.c_str() + i - 12;
@@ -852,6 +852,12 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.19  1998/10/22 21:59:19  curt
+// Fixed a couple subtle bugs that resulted from some of my c++ conversions.
+// One bug could cause a segfault on certain input, and the other bug could
+// cause the whole procedure to go balistic and generate huge files (also only
+// on rare input combinations.)
+//
 // Revision 1.18  1998/10/18 01:17:09  curt
 // Point3D tweaks.
 //
