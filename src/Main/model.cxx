@@ -150,7 +150,9 @@ FGAircraftModel::update (int dt)
   long elapsed_ms = (_current_timestamp - _last_timestamp) / 1000;
   _last_timestamp.stamp();
 
-  if (globals->get_viewmgr()->get_current() == 0) {
+  int view_number = globals->get_viewmgr()->get_current();
+
+  if (view_number == 0 && !fgGetBool("cockpit")) {
     _selector->select(false);
   } else {
     for (unsigned int i = 0; i < _animations.size(); i++)
@@ -171,7 +173,16 @@ FGAircraftModel::update (int dt)
     
     sgMat4 sgTUX;
     sgCopyMat4( sgTUX, sgROT );
-    sgPostMultMat4( sgTUX, pilot_view->get_VIEW_ROT() );
+    sgMat4 VIEW_ROT;
+    sgCopyMat4( VIEW_ROT, pilot_view->get_VIEW_ROT());
+    if (view_number == 0) {
+				// FIXME: orientation is not applied
+				// correctly when view is not forward
+      sgMakeRotMat4( sgROT, -pilot_view->get_view_offset()
+		     * SGD_RADIANS_TO_DEGREES, pilot_view->get_world_up() );
+      sgPostMultMat4( VIEW_ROT, sgROT );
+    }
+    sgPostMultMat4( sgTUX, VIEW_ROT );
     sgPostMultMat4( sgTUX, sgTRANS );
     
     sgCoord tuxpos;
