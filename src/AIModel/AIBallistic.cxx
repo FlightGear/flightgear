@@ -36,6 +36,7 @@ FGAIBallistic::FGAIBallistic(FGAIManager* mgr) {
     gravity = 32;
 //  buoyancy = 64;
     no_roll = false;
+    Mach = 0.4;
 }
 
 FGAIBallistic::~FGAIBallistic() {
