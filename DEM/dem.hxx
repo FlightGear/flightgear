@@ -45,7 +45,7 @@
 
 class fgDEM {
     // file pointer for input
-    gzFile *fd;
+    gzFile fd;
 
     // coordinates (in arc seconds) of south west corner
     double originx, originy;
@@ -79,7 +79,7 @@ class fgDEM {
 
 public:
 
-    // Constructor (opens a DEM file)
+    // Constructor
     fgDEM( void );
 
     // open a DEM file (use "-" if input is coming from stdin)
@@ -130,6 +130,9 @@ public:
 
 
 // $Log$
+// Revision 1.5  1998/04/22 13:14:46  curt
+// Fixed a bug in zlib usage.
+//
 // Revision 1.4  1998/04/21 17:03:41  curt
 // Prepairing for C++ integration.
 //

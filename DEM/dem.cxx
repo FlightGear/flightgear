@@ -125,7 +125,7 @@ int fgDEM::close ( void ) {
 
 
 // return next token from input stream
-static void next_token(gzFile *fd, char *token) {
+static void next_token(gzFile fd, char *token) {
     int i, result;
     char c;
 
@@ -152,7 +152,7 @@ static void next_token(gzFile *fd, char *token) {
 
 
 // return next integer from input stream
-static int next_int(gzFile *fd) {
+static int next_int(gzFile fd) {
     char token[80];
 
     next_token(fd, token);
@@ -161,7 +161,7 @@ static int next_int(gzFile *fd) {
 
 
 // return next double from input stream
-static double next_double(gzFile *fd) {
+static double next_double(gzFile fd) {
     char token[80];
 
     next_token(fd, token);
@@ -170,7 +170,7 @@ static double next_double(gzFile *fd) {
 
 
 // return next exponential num from input stream
-static int next_exp(gzFile *fd) {
+static int next_exp(gzFile fd) {
     char token[80];
     double mantissa;
     int exp, acc;
@@ -772,6 +772,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/04/22 13:14:46  curt
+// Fixed a bug in zlib usage.
+//
 // Revision 1.3  1998/04/18 03:53:05  curt
 // Added zlib support.
 //
