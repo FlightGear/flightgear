@@ -53,7 +53,10 @@ Point3D FGATCProjection::ConvertToLocal(Point3D pt) {
 }
 
 Point3D FGATCProjection::ConvertFromLocal(Point3D pt) {
-    return(Point3D(0,0,0));
+	double delta_lat = asin(pt.y() / SG_EQUATORIAL_RADIUS_M) * DCL_RADIANS_TO_DEGREES;
+	double delta_lon = (asin(pt.x() / SG_EQUATORIAL_RADIUS_M) * DCL_RADIANS_TO_DEGREES) / correction_factor;
+	
+    return(Point3D(origin.lon()+delta_lon, origin.lat()+delta_lat, 0.0));
 }
 
 /**********************************************************************************/
@@ -91,7 +94,14 @@ Point3D FGATCAlignedProjection::ConvertToLocal(Point3D pt) {
     return(Point3D(x,y,0.0));
 }
 
-// TODO - IMPLEMENT ME!!!
 Point3D FGATCAlignedProjection::ConvertFromLocal(Point3D pt) {
-    return(Point3D(0,0,0));
+	// de-align
+	double x = (pt.x() + pt.y()*sin(theta)) / cos(theta);
+	double y = (pt.y() - pt.x()*sin(theta)) / cos(theta);
+	
+	// convert from orthogonal to lat/lon
+	double delta_lat = asin(y / SG_EQUATORIAL_RADIUS_M) * DCL_RADIANS_TO_DEGREES;
+	double delta_lon = (asin(x / SG_EQUATORIAL_RADIUS_M) * DCL_RADIANS_TO_DEGREES) / correction_factor;
+	
+    return(Point3D(origin.lon()+delta_lon, origin.lat()+delta_lat, 0.0));
 }

@@ -32,10 +32,10 @@ public:
 
     void Init(Point3D centre);
 
-    // Convert a lat/lon co-ordinate to the local projection
+    // Convert a lat/lon co-ordinate (degrees) to the local projection (meters)
     Point3D ConvertToLocal(Point3D pt);
 
-    // Convert a local projection co-ordinate to lat/lon
+    // Convert a local projection co-ordinate (meters) to lat/lon (degrees)
     Point3D ConvertFromLocal(Point3D pt);
 
 private:
@@ -55,10 +55,10 @@ public:
 
     void Init(Point3D centre, double heading);
 
-    // Convert a lat/lon co-ordinate to the local projection
+    // Convert a lat/lon co-ordinate (degrees) to the local projection (meters)
     Point3D ConvertToLocal(Point3D pt);
 
-    // Convert a local projection co-ordinate to lat/lon
+    // Convert a local projection co-ordinate (meters) to lat/lon (degrees)
     Point3D ConvertFromLocal(Point3D pt);
 
 private:
