@@ -405,6 +405,9 @@ void construct_tile( FGConstruct& c ) {
     m.load_neighbor_shared( c );
     m.split_tile( c );
     m.write_shared( c );
+    m.assemble_tile( c );
+
+    // now we must retriangulate the pasted together tile points
 
     // generate the output
     FGGenOutput output;
@@ -431,10 +434,10 @@ main(int argc, char **argv) {
     c.set_min_nodes( 50 );
     c.set_max_nodes( (int)(FG_MAX_NODES * 0.8) );
 
-    lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
+    // lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
     // lon = -110.664244; lat = 33.352890;     // P13
     // lon = -93.211389; lat = 45.145000;      // KANE
-    // lon = -92.486188; lat = 44.590190;      // KRGK
+    lon = -92.486188; lat = 44.590190;      // KRGK
     // lon = -89.7446823; lat= 29.314495;
     // lon = -122.488090; lat = 42.743183;     // 64S
     // lon = -114.861097; lat = 35.947480;     // 61B
@@ -455,14 +458,14 @@ main(int argc, char **argv) {
     FGBucket b_max( lon + 3, lat + 1 );
 
     FGBucket b_start(566777L);
-    bool do_tile = false;
+    bool do_tile = true;
 
     // FGBucket b_omit(-1L);
     // FGBucket b(1122504L);
-    FGBucket b(-146.248360, 61.133950);
-    c.set_bucket( b );
-    construct_tile( c );
-    exit(0);
+    // FGBucket b(-146.248360, 61.133950);
+    // c.set_bucket( b );
+    // construct_tile( c );
+    // exit(0);
     
     if ( b_min == b_max ) {
 	c.set_bucket( b_min );

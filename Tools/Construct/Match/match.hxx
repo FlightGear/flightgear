@@ -79,12 +79,14 @@ public:
     // Destructor
     ~FGMatch( void );
 
-    // load any previously existing shared data from all neighbors
+    // load any previously existing shared data from all neighbors (if
+    // shared data for a component exists set that components flag to
+    // true
     void load_neighbor_shared( FGConstruct& c );
 
     // scan the specified share file for the specified information
     void scan_share_file( const string& dir, const FGBucket& b,
-			  neighbor_type n );
+			  neighbor_type search, neighbor_type dest );
 
     // try to find info for the specified shared component
     void load_shared( const FGConstruct& c, neighbor_type n );
@@ -95,8 +97,13 @@ public:
     // current tile that already exists from a neighbor.
     void split_tile( FGConstruct& c );
 
-    // write the shared edge points, normals, and segments for this tile
+    // write the new shared edge points, normals, and segments for
+    // this tile
     void write_shared( FGConstruct& c );
+
+    // reassemble the tile pieces (combining the shared data and our
+    // own data)
+    void assemble_tile( FGConstruct& c );
 };
 
 
