@@ -207,7 +207,7 @@ void FGAdminUI::update_remove_box() {
 
     remove_box->clear();
 
-    if ( dest.length() ) {
+    if ( dest.length() && fl_filename_isdir(dest.c_str()) ) {
         ulDir *dir = ulOpenDir( dest.c_str() ) ;
         ulDirEnt *ent;
         while ( ent = ulReadDir( dir ) ) {
