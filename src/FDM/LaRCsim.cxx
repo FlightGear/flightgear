@@ -38,24 +38,22 @@
 #include "LaRCsim.hxx"
 
 FGLaRCsim::FGLaRCsim(void) {
-   ls_toplevel_init( 0.0, (char *)globals->get_options()->get_aircraft().c_str() );
-   lsic=new LaRCsimIC; //this needs to be brought up after LaRCsim is
-   copy_to_LaRCsim(); // initialize all of LaRCsim's vars
-   //this should go away someday -- formerly done in fg_init.cxx
-   Mass = 8.547270E+01;
-   I_xx = 1.048000E+03;
-	 I_yy = 3.000000E+03;
-   I_zz = 3.530000E+03;
-   I_xz = 0.000000E+00;
-   
-   
-
+    ls_toplevel_init( 0.0, 
+		      (char *)globals->get_options()->get_aircraft().c_str() );
+    lsic=new LaRCsimIC; //this needs to be brought up after LaRCsim is
+    copy_to_LaRCsim(); // initialize all of LaRCsim's vars
+    //this should go away someday -- formerly done in fg_init.cxx
+    Mass = 8.547270E+01;
+    I_xx = 1.048000E+03;
+    I_yy = 3.000000E+03;
+    I_zz = 3.530000E+03;
+    I_xz = 0.000000E+00;
 }
 
 FGLaRCsim::~FGLaRCsim(void) {
-   if(lsic != NULL) {
-    delete lsic;
-   }
+    if(lsic != NULL) {
+	delete lsic;
+    }
 }    
 
 // Initialize the LaRCsim flight model, dt is the time increment for
@@ -71,7 +69,7 @@ bool FGLaRCsim::init( double dt ) {
     // update the engines interface
     FGEngInterface e;
     add_engine( e );
-    
+	
 
     // FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::init()"  );
 
@@ -87,7 +85,6 @@ bool FGLaRCsim::init( double dt ) {
 
     // actual LaRCsim top level init
     // ls_toplevel_init( dt, (char *)globals->get_options()->get_aircraft().c_str() );
-    
 
     FG_LOG( FG_FLIGHT, FG_INFO, "FG pos = " << 
 	    get_Latitude() );
@@ -116,9 +113,9 @@ bool FGLaRCsim::update( int multiloop ) {
 	eng.set_Throttle_Lever_Pos( controls.get_throttle( 0 ) * 100.0 );
 	eng.set_Propeller_Lever_Pos( 100 );
 	if ( controls.get_mixture( 0 ) > 0.60 ) {
-	    eng.set_Mixture_Lever_Pos( controls.get_mixture( 0 ) * 100.0 );
+            eng.set_Mixture_Lever_Pos( controls.get_mixture( 0 ) * 100.0 );
 	} else {
-	    eng.set_Mixture_Lever_Pos( 60.0 );
+            eng.set_Mixture_Lever_Pos( 60.0 );
 	}
 
 	// update engine model
@@ -138,13 +135,16 @@ bool FGLaRCsim::update( int multiloop ) {
 	e->set_prop_thrust( eng.get_prop_thrust_SI() );
 
 #if 0
-	FG_LOG( FG_FLIGHT, FG_INFO, "Throttle = " << controls.get_throttle( 0 ) * 100.0);
+	FG_LOG( FG_FLIGHT, FG_INFO, "Throttle = " 
+		<< controls.get_throttle( 0 ) * 100.0);
 	FG_LOG( FG_FLIGHT, FG_INFO, " Mixture = " << 80);
 	FG_LOG( FG_FLIGHT, FG_INFO, " RPM = " << eng.get_RPM());
 	FG_LOG( FG_FLIGHT, FG_INFO, " MP = " << eng.get_Manifold_Pressure());
-	FG_LOG( FG_FLIGHT, FG_INFO, " HP = " << ( eng.get_MaxHP() * eng.get_Percentage_Power()/ 100.0) );
+	FG_LOG( FG_FLIGHT, FG_INFO, " HP = " 
+	  	<< ( eng.get_MaxHP() * eng.get_Percentage_Power()/ 100.0) );
 	FG_LOG( FG_FLIGHT, FG_INFO, " EGT = " << eng.get_EGT());
-	FG_LOG( FG_FLIGHT, FG_INFO, " Thrust (N) " << eng.get_prop_thrust_SI());	// Thrust in Newtons
+	FG_LOG( FG_FLIGHT, FG_INFO, " Thrust (N) " 
+	  	<< eng.get_prop_thrust_SI());	// Thrust in Newtons
 	FG_LOG( FG_FLIGHT, FG_INFO, '\n');
 #endif
 	// Hmm .. Newtons to lbs is 0.2248 ...    
@@ -185,8 +185,8 @@ bool FGLaRCsim::update( int multiloop ) {
 
     // Weather
     /* V_north_airmass = get_V_north_airmass();
-    V_east_airmass =  get_V_east_airmass();
-    V_down_airmass =  get_V_down_airmass(); */
+       V_east_airmass =  get_V_east_airmass();
+       V_down_airmass =  get_V_down_airmass(); */
 
 
     // old -- FGInterface_2_LaRCsim() not needed except for Init()
@@ -198,14 +198,9 @@ bool FGLaRCsim::update( int multiloop ) {
 
     ls_update(multiloop);
 
-    if(isnan(Phi)) {
-	busdump();
-	exit(1);
-    } 
-
     // printf("%d FG_Altitude = %.2f\n", i, FG_Altitude * 0.3048);
     // printf("%d Altitude = %.2f\n", i, Altitude * 0.3048);
-    
+
     // translate LaRCsim back to FG structure so that the
     // autopilot (and the rest of the sim can use the updated
     // values
@@ -438,7 +433,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     // set_Velocities_Gust( U_gust, V_gust, W_gust );
     _set_Velocities_Wind_Body( U_body, V_body, W_body );
 
-    // set_V_rel_wind( V_rel_wind );
+    _set_V_rel_wind( V_rel_wind );
     // set_V_true_kts( V_true_kts );
     // set_V_rel_ground( V_rel_ground );
     // set_V_inertial( V_inertial );
@@ -451,7 +446,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     _set_Omega_Body( P_body, Q_body, R_body );
     // set_Omega_Local( P_local, Q_local, R_local );
     // set_Omega_Total( P_total, Q_total, R_total );
-    
+
     _set_Euler_Rates( Phi_dot, Theta_dot, Psi_dot );
     _set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
 
@@ -472,7 +467,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
 
     // Positions
     _set_Geocentric_Position( Lat_geocentric, tmp_lon_geoc, 
-                               Radius_to_vehicle );
+			      Radius_to_vehicle );
     _set_Geodetic_Position( Latitude, tmp_lon, Altitude );
     _set_Euler_Angles( Phi, Theta, Psi );
 
@@ -549,159 +544,188 @@ bool FGLaRCsim::copy_from_LaRCsim() {
 
 
 void FGLaRCsim::set_ls(void) {
-   Phi=lsic->GetRollAngleRadIC();
-   Theta=lsic->GetPitchAngleRadIC();
-   Psi=lsic->GetHeadingRadIC();
-   V_north=lsic->GetVnorthFpsIC();
-   V_east=lsic->GetVeastFpsIC();
-   V_down=lsic->GetVdownFpsIC();
-   Altitude=lsic->GetAltitudeFtIC();
-   Latitude=lsic->GetLatitudeGDRadIC();
-   Longitude=lsic->GetLongitudeRadIC();
-   Runway_altitude=lsic->GetRunwayAltitudeFtIC();
-   V_north_airmass = lsic->GetVnorthAirmassFpsIC();
-   V_east_airmass = lsic->GetVeastAirmassFpsIC();
-   V_down_airmass = lsic->GetVdownAirmassFpsIC();
-   ls_loop(0.0,-1);
-   copy_from_LaRCsim();
-   FG_LOG( FG_FLIGHT, FG_INFO, "  FGLaRCsim::set_ls(): "  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     Phi: " <<  Phi  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     Theta: " <<  Theta  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     Psi: " <<  Psi  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     V_north: " <<  V_north  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     V_east: " <<  V_east  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     V_down: " <<  V_down  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     Altitude: " <<  Altitude  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     Latitude: " <<  Latitude  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     Longitude: " <<  Longitude  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     Runway_altitude: " <<  Runway_altitude  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     V_north_airmass: " <<  V_north_airmass  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     V_east_airmass: " <<  V_east_airmass  );
-   FG_LOG( FG_FLIGHT, FG_INFO, "     V_down_airmass: " <<  V_down_airmass  );
+    Phi=lsic->GetRollAngleRadIC();
+    Theta=lsic->GetPitchAngleRadIC();
+    Psi=lsic->GetHeadingRadIC();
+    V_north=lsic->GetVnorthFpsIC();
+    V_east=lsic->GetVeastFpsIC();
+    V_down=lsic->GetVdownFpsIC();
+    Altitude=lsic->GetAltitudeFtIC();
+    Latitude=lsic->GetLatitudeGDRadIC();
+    Longitude=lsic->GetLongitudeRadIC();
+    Runway_altitude=lsic->GetRunwayAltitudeFtIC();
+    V_north_airmass = lsic->GetVnorthAirmassFpsIC();
+    V_east_airmass = lsic->GetVeastAirmassFpsIC();
+    V_down_airmass = lsic->GetVdownAirmassFpsIC();
+    ls_loop(0.0,-1);
+    copy_from_LaRCsim();
+    FG_LOG( FG_FLIGHT, FG_INFO, "  FGLaRCsim::set_ls(): "  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     Phi: " <<  Phi  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     Theta: " <<  Theta  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     Psi: " <<  Psi  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     V_north: " <<  V_north  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     V_east: " <<  V_east  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     V_down: " <<  V_down  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     Altitude: " <<  Altitude  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     Latitude: " <<  Latitude  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     Longitude: " <<  Longitude  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     Runway_altitude: " <<  Runway_altitude  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     V_north_airmass: " <<  V_north_airmass  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     V_east_airmass: " <<  V_east_airmass  );
+    FG_LOG( FG_FLIGHT, FG_INFO, "     V_down_airmass: " <<  V_down_airmass  );
 }  
 
-    //Positions
+void FGLaRCsim::snap_shot(void) {
+    lsic->SetLatitudeGDRadIC( get_Latitude() );
+    lsic->SetLongitudeRadIC( get_Longitude() );
+    lsic->SetAltitudeFtIC( get_Altitude() );
+    lsic->SetRunwayAltitudeFtIC( get_Runway_altitude() );
+    lsic->SetVtrueFpsIC( get_V_rel_wind() );
+    lsic->SetPitchAngleRadIC( get_Theta() );
+    lsic->SetRollAngleRadIC( get_Phi() );
+    lsic->SetHeadingRadIC( get_Psi() );
+    lsic->SetClimbRateFpsIC( get_Climb_Rate() );
+    lsic->SetVNEDAirmassFpsIC( get_V_north_airmass(),
+			       get_V_east_airmass(),
+			       get_V_down_airmass() );
+}				
+
+//Positions
 void FGLaRCsim::set_Latitude(double lat) {
-  FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Latitude: " << lat  );
-  lsic->SetLatitudeGDRadIC(lat);
-  set_ls();
-  copy_from_LaRCsim(); //update the bus
+    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Latitude: " << lat  );
+    snap_shot();
+    lsic->SetLatitudeGDRadIC(lat);
+    set_ls();
+    copy_from_LaRCsim(); //update the bus
 }  
 
 void FGLaRCsim::set_Longitude(double lon) {
-  FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Longitude: " << lon  );
-  lsic->SetLongitudeRadIC(lon);
-  set_ls();
-  copy_from_LaRCsim(); //update the bus
+    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Longitude: " << lon  );
+    snap_shot();
+    lsic->SetLongitudeRadIC(lon);
+    set_ls();
+    copy_from_LaRCsim(); //update the bus
 }  
 
 void FGLaRCsim::set_Altitude(double alt) {
-  FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Altitude: " << alt  );
-  lsic->SetAltitudeFtIC(alt);
-  set_ls();
-  copy_from_LaRCsim(); //update the bus
+    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Altitude: " << alt  );
+    snap_shot();
+    lsic->SetAltitudeFtIC(alt);
+    set_ls();
+    copy_from_LaRCsim(); //update the bus
 }
-  
+
 void FGLaRCsim::set_V_calibrated_kts(double vc) {
-  FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_V_calibrated_kts: " << vc  );
-  lsic->SetVcalibratedKtsIC(vc);
-  set_ls();
-  copy_from_LaRCsim(); //update the bus
+    FG_LOG( FG_FLIGHT, FG_INFO, 
+	    "FGLaRCsim::set_V_calibrated_kts: " << vc  );
+    snap_shot();
+    lsic->SetVcalibratedKtsIC(vc);
+    set_ls();
+    copy_from_LaRCsim(); //update the bus
 }  
 
 void FGLaRCsim::set_Mach_number(double mach) {
-  FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Mach_number: " << mach  );
-  lsic->SetMachIC(mach);
-  set_ls();
-  copy_from_LaRCsim(); //update the bus
+    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Mach_number: " << mach  );
+    snap_shot();
+    lsic->SetMachIC(mach);
+    set_ls();
+    copy_from_LaRCsim(); //update the bus
 }  
 
 void FGLaRCsim::set_Velocities_Local( double north, double east, double down ){
- FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Velocities_local: " 
-                     << north << "  " << east << "  " << down   );
- lsic->SetVnorthFpsIC(north);
- lsic->SetVeastFpsIC(east);
- lsic->SetVdownFpsIC(down);
- set_ls();
- copy_from_LaRCsim(); //update the bus
+    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Velocities_local: " 
+	    << north << "  " << east << "  " << down   );
+    snap_shot();
+    lsic->SetVNEDFpsIC(north, east, down);
+    set_ls();
+    copy_from_LaRCsim(); //update the bus
 }  
 
 void FGLaRCsim::set_Velocities_Wind_Body( double u, double v, double w){
-  FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Velocities_Wind_Body: " 
-                     << u << "  " << v << "  " << w   );
-
- lsic->SetUBodyFpsIC(u);
- lsic->SetVBodyFpsIC(v);
- lsic->SetWBodyFpsIC(w);
- set_ls();
- copy_from_LaRCsim(); //update the bus
+    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Velocities_Wind_Body: " 
+	    << u << "  " << v << "  " << w   );
+    snap_shot();
+    lsic->SetUVWFpsIC(u,v,w);
+    set_ls();
+    copy_from_LaRCsim(); //update the bus
 } 
 
 //Euler angles 
 void FGLaRCsim::set_Euler_Angles( double phi, double theta, double psi ) {
-  FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Euler_angles: " 
-                     << phi << "  " << theta << "  " << psi   );
+    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Euler_angles: " 
+	    << phi << "  " << theta << "  " << psi   );
 
- lsic->SetPitchAngleRadIC(theta);
- lsic->SetRollAngleRadIC(phi);
- lsic->SetHeadingRadIC(psi);
- set_ls();
- copy_from_LaRCsim(); //update the bus 
+    snap_shot();
+    lsic->SetPitchAngleRadIC(theta);
+    lsic->SetRollAngleRadIC(phi);
+    lsic->SetHeadingRadIC(psi);
+    set_ls();
+    copy_from_LaRCsim(); //update the bus 
 }  
 
 //Flight Path
 void FGLaRCsim::set_Climb_Rate( double roc) {
-  FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Climb_rate: " << roc  );
-  lsic->SetClimbRateFpsIC(roc);
-  set_ls();
-  copy_from_LaRCsim(); //update the bus 
+    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Climb_rate: " << roc  );
+    snap_shot();
+    lsic->SetClimbRateFpsIC(roc);
+    set_ls();
+    copy_from_LaRCsim(); //update the bus 
 }  
 
 void FGLaRCsim::set_Gamma_vert_rad( double gamma) {
-  FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Gamma_vert_rad: " << gamma  );
-  lsic->SetFlightPathAngleRadIC(gamma);
-  set_ls();
-  copy_from_LaRCsim(); //update the bus  
+    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Gamma_vert_rad: " << gamma  );
+    snap_shot();
+    lsic->SetFlightPathAngleRadIC(gamma);
+    set_ls();
+    copy_from_LaRCsim(); //update the bus  
 }  
 
 void FGLaRCsim::set_Runway_altitude(double ralt) {
-  FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Runway_altitude: " << ralt  );
-  lsic->SetRunwayAltitudeFtIC(ralt);
-  set_ls();
-  copy_from_LaRCsim(); //update the bus 
+    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Runway_altitude: " << ralt  );
+    snap_shot();
+    lsic->SetRunwayAltitudeFtIC(ralt);
+    set_ls();
+    copy_from_LaRCsim(); //update the bus 
 } 
 
 void FGLaRCsim::set_AltitudeAGL(double altagl) {
-  FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_AltitudeAGL: " << altagl  );
-  lsic->SetAltitudeAGLFtIC(altagl);
-  set_ls();
-  copy_from_LaRCsim();
+    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_AltitudeAGL: " << altagl  );
+    snap_shot();
+    lsic->SetAltitudeAGLFtIC(altagl);
+    set_ls();
+    copy_from_LaRCsim();
 }
 
 void FGLaRCsim::set_Velocities_Local_Airmass (double wnorth, 
-                                      double weast, 
-                                       double wdown ) {
-     FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Velocities_Local_Airmass: " 
-                     << wnorth << "  " << weast << "  " << wdown   );
-     _set_Velocities_Local_Airmass( wnorth, weast, wdown );
-     set_ls();
-     copy_from_LaRCsim();
+					      double weast, 
+					      double wdown ) {
+    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Velocities_Local_Airmass: " 
+	    << wnorth << "  " << weast << "  " << wdown );
+    snap_shot();
+    lsic->SetVNEDAirmassFpsIC( wnorth, weast, wdown );
+    set_ls();
+    copy_from_LaRCsim();
 }     
 
 void FGLaRCsim::set_Static_pressure(double p) { 
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Static_pressure: " << p  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "LaRCsim does not support externally supplied atmospheric data" );
+    FG_LOG( FG_FLIGHT, FG_INFO, 
+	    "FGLaRCsim::set_Static_pressure: " << p  );
+    FG_LOG( FG_FLIGHT, FG_INFO, 
+	    "LaRCsim does not support externally supplied atmospheric data" );
 }
 
 void FGLaRCsim::set_Static_temperature(double T) { 
-    FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Static_temperature: " << T  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "LaRCsim does not support externally supplied atmospheric data" );
+    FG_LOG( FG_FLIGHT, FG_INFO, 
+	    "FGLaRCsim::set_Static_temperature: " << T  );
+    FG_LOG( FG_FLIGHT, FG_INFO, 
+	    "LaRCsim does not support externally supplied atmospheric data" );
 
 }
-    
+
 void FGLaRCsim::set_Density(double rho) { 
     FG_LOG( FG_FLIGHT, FG_INFO, "FGLaRCsim::set_Density: " << rho  );
-    FG_LOG( FG_FLIGHT, FG_INFO, "LaRCsim does not support externally supplied atmospheric data" );
+    FG_LOG( FG_FLIGHT, FG_INFO, 
+	    "LaRCsim does not support externally supplied atmospheric data" );
 
 }
 

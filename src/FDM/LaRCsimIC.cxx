@@ -119,40 +119,18 @@ void LaRCsimIC::SetPitchAngleRadIC(SCALAR tt) {
   getAlpha();
 }
 
-void LaRCsimIC::SetUBodyFpsIC( SCALAR tt) {
-  u=tt;
+void LaRCsimIC::SetUVWFpsIC(SCALAR vu, SCALAR vv, SCALAR vw) {
+  u=vu; v=vv; w=vw;
   vt=sqrt(u*u+v*v+w*w);
   lastSpeedSet=lssetuvw;
 }
 
   
-void LaRCsimIC::SetVBodyFpsIC( SCALAR tt) {
-  v=tt;
-  vt=sqrt(u*u+v*v+w*w);
-  lastSpeedSet=lssetuvw;
-}
-
-void LaRCsimIC::SetWBodyFpsIC( SCALAR tt) {
-  w=tt;
-  vt=sqrt(u*u+v*v+w*w);
-  lastSpeedSet=lssetuvw;
-}
-
-void LaRCsimIC::SetVNorthAirmassFpsIC(SCALAR tt) {
-  vnorthwind=tt;
-  vw=sqrt(vnorthwind*vnorthwind + veastwind*veastwind + vdownwind*vdownwind);
-}  
-
-void LaRCsimIC::SetVEastAirmassFpsIC(SCALAR tt) {
-  veastwind=tt;
-  vw=sqrt(vnorthwind*vnorthwind + veastwind*veastwind + vdownwind*vdownwind);
-}  
-
-void LaRCsimIC::SetVDownAirmassFpsIC(SCALAR tt){
-  vdownwind=tt;
+void LaRCsimIC::SetVNEDAirmassFpsIC(SCALAR north, SCALAR east, SCALAR down ) {
+  vnorthwind=north; veastwind=east; vdownwind=down;
   vw=sqrt(vnorthwind*vnorthwind + veastwind*veastwind + vdownwind*vdownwind);
   vtg=vt+vw;
-  hdot=-vtg*sin(gamma);
+  SetClimbRateFpsIC(-1*(vdown+vdownwind));
 }  
 
 void LaRCsimIC::SetAltitudeFtIC( SCALAR tt) {
@@ -243,25 +221,15 @@ void LaRCsimIC::calcNEDfromVt(void) {
            vdownwind;
 }           
 
-void LaRCsimIC::SetVnorthFpsIC( SCALAR tt) {
-  vnorth=tt;
+void LaRCsimIC::SetVNEDFpsIC( SCALAR north, SCALAR east, SCALAR down) {
+  vnorth=north;
+  veast=east;
+  vdown=down;
+  SetClimbRateFpsIC(-1*vdown);
   lastSpeedSet=lssetned;
   calcVtfromNED();
 }        
   
-void LaRCsimIC::SetVeastFpsIC( SCALAR tt) {
-  veast=tt;
-  lastSpeedSet=lssetned;
-  calcVtfromNED();
-} 
-
-void LaRCsimIC::SetVdownFpsIC( SCALAR tt) {
-  vdown=tt;
-  calcVtfromNED();
-  SetClimbRateFpsIC(-1*vdown);
-  lastSpeedSet=lssetned;
-} 
-
 void LaRCsimIC::SetLatitudeGDRadIC(SCALAR tt) {
   latitude_gd=tt;
   ls_geod_to_geoc(latitude_gd,altitude,&sea_level_radius, &latitude_gc);

@@ -360,6 +360,10 @@ void FGState::Initialize(FGInitialCondition *FGIC) {
   psi = FGIC->GetPsiRadIC();
 
   Initialize(U, V, W, phi, tht, psi, latitude, longitude, h);
+  
+  FDMExec->GetPosition()->SetSeaLevelRadius( FGIC->GetSeaLevelRadiusFtIC() );
+  FDMExec->GetPosition()->SetRunwayRadius( FGIC->GetSeaLevelRadiusFtIC() + 
+                                             FGIC->GetTerrainAltitudeFtIC() );
 }
 
 /******************************************************************************/

@@ -407,21 +407,21 @@ bool fgInitGeneral( void ) {
 // set initial aircraft speed
 bool fgVelocityInit( void ) {
   switch(globals->get_options()->get_speedset()) {
-    case 1: //FG_VC
+    case FGOptions::FG_VC:
       current_aircraft.fdm_state->set_V_calibrated_kts( 
                                     globals->get_options()->get_vc() );
       break;
-    case 2: //FG_MACH
+    case FGOptions::FG_MACH:
       current_aircraft.fdm_state->set_Mach_number(
                                     globals->get_options()->get_mach() );
       break;
-    case 3: //FG_VTUVW
+    case FGOptions::FG_VTUVW:
       current_aircraft.fdm_state->set_Velocities_Wind_Body(
                                     globals->get_options()->get_uBody(),
                                     globals->get_options()->get_vBody(),
                                     globals->get_options()->get_wBody() );
       break;
-    case 4: //FG_VTNED
+    case FGOptions::FG_VTNED:
       current_aircraft.fdm_state->set_Velocities_Local(
                                     globals->get_options()->get_vNorth(),
                                     globals->get_options()->get_vEast(),

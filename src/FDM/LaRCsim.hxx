@@ -36,6 +36,7 @@ class FGLaRCsim: public FGInterface {
     FGNewEngine eng;
     LaRCsimIC* lsic;
     void set_ls(void);
+    void snap_shot(void);
     double time_step;
     
 public:

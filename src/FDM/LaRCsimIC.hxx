@@ -59,17 +59,11 @@ public:
   
   void SetVequivalentKtsIC(SCALAR tt);
 
-  void SetUBodyFpsIC(SCALAR tt);
-  void SetVBodyFpsIC(SCALAR tt);
-  void SetWBodyFpsIC(SCALAR tt);
+  void SetUVWFpsIC(SCALAR vu, SCALAR vv, SCALAR vw);
+ 
+  void SetVNEDFpsIC(SCALAR north, SCALAR east, SCALAR down);
   
-  void SetVnorthFpsIC(SCALAR tt);
-  void SetVeastFpsIC(SCALAR tt);
-  void SetVdownFpsIC(SCALAR tt);
-  
-  void SetVNorthAirmassFpsIC(SCALAR tt);
-  void SetVEastAirmassFpsIC(SCALAR tt);
-  void SetVDownAirmassFpsIC(SCALAR tt);
+  void SetVNEDAirmassFpsIC(SCALAR north, SCALAR east, SCALAR down );
   
   void SetAltitudeFtIC(SCALAR tt);
   void SetAltitudeAGLFtIC(SCALAR tt);

@@ -2281,6 +2281,51 @@ SOURCE=.\src\Main\viewer.cxx
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=.\src\Main\viewer_lookat.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Main\viewer_rph.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Main\viewmgr.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "Lib_Navaids"
 

@@ -160,10 +160,6 @@ typedef vector < FGEngInterface > engine_list;
 // This is based heavily on LaRCsim/ls_generic.h
 class FGInterface {
 
-protected:
-
-    void busdump(void);
-
 private:
   
     // Pilot location rel to ref pt
@@ -253,9 +249,6 @@ private:
     double sin_latitude, cos_latitude;
     double altitude_agl;
     
-    //change flag
-    bool resetNeeded;
-
     // Engine list
     engine_list engines;
 
@@ -263,6 +256,9 @@ private:
     FGTimeStamp next_stamp;           // time this record is valid
 
 protected:
+    void _busdump(void);
+    void _updatePosition( double lat_geoc, double lon, double alt );
+    void _updateWeather( void );
 
     inline void _set_Inertias( double m, double xx, double yy, 
 			      double zz, double xz)
@@ -326,6 +322,7 @@ protected:
 	v_wind_body_v[1] = v;
 	v_wind_body_v[2] = w;
     }
+    inline void _set_V_rel_wind(double vt) { v_rel_wind = vt; }
     inline void _set_V_ground_speed( double v) { v_ground_speed = v; }
     inline void _set_V_equiv_kts( double kts ) { v_equiv_kts = kts; }
     inline void _set_V_calibrated_kts( double kts ) { v_calibrated_kts = kts; }
@@ -726,7 +723,7 @@ public:
     inline double get_V_body() const { return v_wind_body_v[1]; }
     inline double get_W_body() const { return v_wind_body_v[2]; }
 
-    // inline double get_V_rel_wind() const { return v_rel_wind; }
+    inline double get_V_rel_wind() const { return v_rel_wind; }
     // inline void set_V_rel_wind(double wind) { v_rel_wind = wind; }
 
     // inline double get_V_true_kts() const { return v_true_kts; }

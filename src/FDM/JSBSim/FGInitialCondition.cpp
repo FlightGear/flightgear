@@ -110,8 +110,8 @@ void FGInitialCondition::SetVequivalentKtsIC(float tt) {
   vc=calcVcas(mach);
 }
 
-void FGInitialCondition::SetVtrueKtsIC(float tt) {
-  vt=tt*jsbKTSTOFPS;
+void FGInitialCondition::SetVtrueFpsIC(float tt) {
+  vt=tt;
   lastSpeedSet=setvt;
   mach=vt/fdmex->GetAtmosphere()->GetSoundSpeed();
   vc=calcVcas(mach);

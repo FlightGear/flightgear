@@ -27,6 +27,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
+#include <Scenery/scenery.hxx>
 #include <FDM/LaRCsim/ls_interface.h>
 #include <Main/globals.hxx>
 #include <Time/timestamp.hxx>
@@ -137,8 +138,6 @@ FGInterface::FGInterface(void) {
     sin_latitude=cos_latitude=0;
     sin_longitude=cos_longitude=0;
     altitude_agl=0;
-
-    resetNeeded=false;
 }  
 
 
@@ -156,6 +155,58 @@ bool FGInterface::init( double dt ) {
 bool FGInterface::update( int multi_loop ) {
     cout << "dummy update() ... SHOULDN'T BE CALLED!" << endl;
     return false;
+}
+
+  
+void FGInterface::_updatePosition( double lat_geoc, double lon, double alt ) {
+    double lat_geod, tmp_alt, sl_radius1, sl_radius2, tmp_lat_geoc;
+	
+    sgGeocToGeod( lat_geoc, EQUATORIAL_RADIUS_M + alt * FEET_TO_METER,
+		  &lat_geod, &tmp_alt, &sl_radius1 );
+    sgGeodToGeoc( lat_geod, alt * FEET_TO_METER, &sl_radius2, &tmp_lat_geoc );
+
+    FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << lon 
+	    << " lat_geod = " << lat_geod
+	    << " lat_geoc = " << lat_geoc
+	    << " alt = " << alt 
+	    << " tmp_alt = " << tmp_alt * METER_TO_FEET
+	    << " sl_radius1 = " << sl_radius1 * METER_TO_FEET
+	    << " sl_radius2 = " << sl_radius2 * METER_TO_FEET
+	    << " Equator = " << EQUATORIAL_RADIUS_FT );
+
+    _set_Geocentric_Position( lat_geoc, lon, 
+			      sl_radius2 * METER_TO_FEET + alt );
+	
+    _set_Geodetic_Position( lat_geod, lon, alt );
+	
+    _set_Sea_level_radius( sl_radius2 * METER_TO_FEET );
+    _set_Runway_altitude( scenery.cur_elev*METERS_TO_FEET ); 
+	
+    _set_sin_lat_geocentric( lat_geoc );
+    _set_cos_lat_geocentric( lat_geoc );
+	
+    _set_sin_cos_longitude( lon );
+	
+    _set_sin_cos_latitude( lat_geod );
+	
+    /* Norman's code for slope of the terrain */
+    /* needs to be tested -- get it on the HUD and taxi around */
+    /* double *tnorm = scenery.cur_normal;
+	
+       double sy = sin ( -get_Psi() ) ;
+       double cy = cos ( -get_Psi() ) ;
+
+       double phitb, thetatb, psitb;
+       if(tnorm[1] != 0.0) {
+		psitb = -atan2 ( tnorm[0], tnorm[1] );
+       }
+       if(tnorm[2] != 0.0) {	
+		thetatb =  atan2 ( tnorm[0] * cy - tnorm[1] * sy, tnorm[2] );
+		phitb = -atan2 ( tnorm[1] * cy + tnorm[0] * sy, tnorm[2] );  
+       }	
+	
+       _set_terrain_slope(phitb, thetatb, psitb) 
+     */
 }
 
 
@@ -301,7 +352,7 @@ void FGInterface::set_Velocities_Local_Airmass (double wnorth,
 }     
 
 
-void FGInterface::busdump(void) {
+void FGInterface::_busdump(void) {
 
     FG_LOG(FG_FLIGHT,FG_INFO,"d_pilot_rp_body_v[3]: " << d_pilot_rp_body_v[0] << ", " << d_pilot_rp_body_v[1] << ", " << d_pilot_rp_body_v[2]);
     FG_LOG(FG_FLIGHT,FG_INFO,"d_cg_rp_body_v[3]: " << d_cg_rp_body_v[0] << ", " << d_cg_rp_body_v[1] << ", " << d_cg_rp_body_v[2]);

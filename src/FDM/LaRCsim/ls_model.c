@@ -37,6 +37,9 @@
 	CURRENT RCS HEADER INFO:
 $Header$
 $Log$
+Revision 1.3  2000/10/28 14:30:33  curt
+Updates by Tony working on the FDM interface bus.
+
 Revision 1.2  2000/04/10 18:09:41  curt
 David Megginson made a few (mostly minor) mods to the LaRCsim files, and
 it's now possible to choose the LaRCsim model at runtime, as in
@@ -119,6 +122,7 @@ void ls_model( SCALAR dt, int Initialize ) {
       navion_gear( dt, Initialize );
       break;
     case C172:
+      if(Initialize < 0) c172_init();
       inertias( dt, Initialize );
       subsystems( dt, Initialize );
       c172_aero( dt, Initialize );

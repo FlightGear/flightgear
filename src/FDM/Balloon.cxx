@@ -176,37 +176,14 @@ bool FGBalloonSim::copy_from_BalloonSim() {
 
     // Positions
     current_balloon.getPosition( temp );
-    double lat_geoc = temp[0];
-    double lon	    = temp[1];
-    double alt	    = temp[2] * METER_TO_FEET;
+    //temp[0]: geocentric latitude
+    //temp[1]: longitude
+    //temp[2]: altitude (meters)
 
-    double lat_geod, tmp_alt, sl_radius1, sl_radius2, tmp_lat_geoc;
-    sgGeocToGeod( lat_geoc, EQUATORIAL_RADIUS_M + alt * FEET_TO_METER,
-		  &lat_geod, &tmp_alt, &sl_radius1 );
-    sgGeodToGeoc( lat_geod, alt * FEET_TO_METER, &sl_radius2, &tmp_lat_geoc );
-
-    FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << lon << " lat_geod = " << lat_geod
-	    << " lat_geoc = " << lat_geoc
-	    << " alt = " << alt << " tmp_alt = " << tmp_alt * METER_TO_FEET
-	    << " sl_radius1 = " << sl_radius1 * METER_TO_FEET
-	    << " sl_radius2 = " << sl_radius2 * METER_TO_FEET
-	    << " Equator = " << EQUATORIAL_RADIUS_FT );
-	    
-    _set_Geocentric_Position( lat_geoc, lon, 
-			       sl_radius2 * METER_TO_FEET + alt );
-    _set_Geodetic_Position( lat_geod, lon, alt );
-
+    _updatePosition( temp[0], temp[1], temp[2] * METER_TO_FEET  );
+    
     current_balloon.getHPR( temp );
-    /* **FIXME*** */ _set_Sea_level_radius( sl_radius2 * METER_TO_FEET );
-    /* **FIXME*** */ _set_Earth_position_angle( 0.0 );
-
-    /* ***FIXME*** */ _set_Runway_altitude( 0.0 );
-
-    _set_sin_lat_geocentric( lat_geoc );
-    _set_cos_lat_geocentric( lat_geoc );
-  
-    _set_sin_cos_longitude( lon );
-    _set_sin_cos_latitude( lat_geod );
+    set_Euler_Angles( temp[0], temp[1], temp[2] );
     
     return true;
 }
