@@ -2,7 +2,7 @@
 /* FGD.C by Oliver Delise                                    */
 /* Contact info:                                             */
 /* e-mail: delise@mail.isis.de                               */
-/* www: http://www.isis.de/members/odelise/progs/flightgear  */
+/* www: http://www.isis.de/members/~odelise/progs/flightgear  */
 /*                                                           */
 /* Version 0.1-beta                                          */
 /* The author of this program offers no waranty at all       */
@@ -29,6 +29,7 @@
 /*             v0.1-alpha   : Nov 08 1999                    */
 /*             v0.1-beta    : Jan 16 2000                    */
 /*                            libc5, glibc-2.0, 2.1 cleanups */
+/*                            June 8 2000    socket cleanup  */
 /*************************************************************/
 
 
@@ -218,6 +219,8 @@ int fgd_ele_len;
 struct sockaddr_in address;
 struct sockaddr_in my_address;
 int result;
+socklen_t size = sizeof(address);
+
 
 extern int errno;
 int current_port = 0; 
@@ -317,7 +320,7 @@ for (;;){
     tv.tv_usec = 0;
     nready = select( sock + 1, &rset, NULL, NULL, &tv);
     if (FD_ISSET( sock, &rset)) {
-      my_sock = accept( sock, (struct sockaddr *)&address, (int*) sizeof(address));
+      my_sock = accept( sock, (struct sockaddr *)&address, &size);
       anz = 2;
 /* reading length of senders' ip */
       fgd_ele_len =  0;
