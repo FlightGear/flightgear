@@ -179,7 +179,7 @@ make_animation (ssgBranch * model,
                 SGPropertyNode_ptr node)
 {
   Animation * animation = 0;
-  const char * type = node->getStringValue("type");
+  const char * type = node->getStringValue("type", "none");
   if (!strcmp("none", type)) {
     animation = new NullAnimation(node);
   } else if (!strcmp("range", type)) {
@@ -295,22 +295,24 @@ fgLoad3DModel (const string &path)
                       props.getFloatValue("/offsets/z-m", 0.0));
   align->setTransform(res_matrix);
 
+                                // Load panels
+  unsigned int i;
+  vector<SGPropertyNode_ptr> panel_nodes = props.getChildren("panel");
+  for (i = 0; i < panel_nodes.size(); i++) {
+    SG_LOG(SG_INPUT, SG_DEBUG, "Loading a panel");
+    FGPanelNode * panel = new FGPanelNode(panel_nodes[i]);
+    if (panel_nodes[i]->hasValue("name"))
+        panel->setName((char *)panel_nodes[i]->getStringValue("name"));
+    model->addKid(panel);
+  }
+
                                 // Load animations
   vector<SGPropertyNode_ptr> animation_nodes = props.getChildren("animation");
-  unsigned int i;
   for (i = 0; i < animation_nodes.size(); i++) {
     const char * name = animation_nodes[i]->getStringValue("name", 0);
     vector<SGPropertyNode_ptr> name_nodes =
       animation_nodes[i]->getChildren("object-name");
     make_animation(model, name, name_nodes, animation_nodes[i]);
-  }
-
-                                // Load panels
-  vector<SGPropertyNode_ptr> panel_nodes = props.getChildren("panel");
-  for (i = 0; i < panel_nodes.size(); i++) {
-    printf("Reading a panel in model.cxx\n");
-    FGPanelNode * panel = new FGPanelNode(panel_nodes[i]);
-    model->addKid(panel);
   }
 
                                 // Load sub-models
@@ -550,7 +552,7 @@ void
 RotateAnimation::update ()
 {
   if (_table == 0) {
-    _position_deg = (_prop->getDoubleValue() + _offset_deg) * _factor;
+   _position_deg = _prop->getDoubleValue() * _factor + _offset_deg;
    if (_has_min && _position_deg < _min_deg)
      _position_deg = _min_deg;
    if (_has_max && _position_deg > _max_deg)
