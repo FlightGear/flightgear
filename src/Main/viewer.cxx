@@ -572,12 +572,19 @@ FGViewer::recalc ()
     VIEW[0][0] = right[0];
     VIEW[0][1] = right[1];
     VIEW[0][2] = right[2];
+    VIEW[0][3] = 0.0;
     VIEW[1][0] = forward[0];
     VIEW[1][1] = forward[1];
     VIEW[1][2] = forward[2];
+    VIEW[1][3] = 0.0;
     VIEW[2][0] = _view_up[0];
     VIEW[2][1] = _view_up[1];
     VIEW[2][2] = _view_up[2];
+    VIEW[2][3] = 0.0;
+    VIEW[3][0] = 0.0;
+    VIEW[3][1] = 0.0;
+    VIEW[3][2] = 0.0;
+    VIEW[3][3] = 0.0;
     // multiply the OFFSETS (for heading and pitch) into the VIEW
     sgPostMultMat4(VIEW, VIEW_OFFSET);
 
