@@ -54,7 +54,11 @@ AR = ar
 #                a real time system and call the flight model routines
 #                at a regular interval, rather than between screen updates
 #                which can be highly variable.  This can make the flight
-#                much smoother.
+#                model calculations much smoother.
+#
+# -DUSE_FTIME -  Use ftime() to get an accurate current time instead of
+#                gettimeofday()
+#
 #---------------------------------------------------------------------------
 
 FG_CFLAGS = -g -Wall
@@ -101,6 +105,9 @@ GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1997/07/12 02:13:04  curt
+# Add ftime() support for those that don't have gettimeofday()
+#
 # Revision 1.3  1997/07/09 21:31:08  curt
 # Working on making the ground "hard."
 #

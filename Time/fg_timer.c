@@ -26,9 +26,12 @@
 
 #include <signal.h>    /* for timer routines */
 #include <stdio.h>     /* for printf() */
-#include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
-#include <unistd.h>
 
+#ifdef USE_FTIME
+#  include <sys/timeb.h> /* for ftime() and struct timeb */
+#else
+#  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
+#endif USE_FTIME
 
 #include "fg_timer.h"
 
@@ -79,28 +82,47 @@ void fgTimerInit(float dt, void (*f)()) {
 	exit(0);
     }
 }
-
 #endif HAVE_ITIMER
+
 
 /* This function returns the number of milleseconds since the last
    time it was called. */
 int fgGetTimeInterval() {
+    int interval;
+    static int inited = 0;
+
+#ifdef USE_FTIME
+    static struct timeb last;
+    static struct timeb current;
+#else
     static struct timeval last;
     static struct timeval current;
     static struct timezone tz;
-    static int inited = 0;
-
-    int interval;
+#endif USE_FTIME
 
     if ( ! inited ) {
 	inited = 1;
+
+#ifdef USE_FTIME
+	ftime(&last);
+#else
 	gettimeofday(&last, &tz);
+#endif
+
 	interval = 0;
     } else {
+
+#ifdef USE_FTIME
+	ftime(&current);
+	interval = 1000 * (current.time - last.time) + 
+	    (current.millitm - last.millitm);
+#else
 	gettimeofday(&current, &tz);
 	interval = 1000000 * (current.tv_sec - last.tv_sec) + 
 	    (current.tv_usec - last.tv_usec);
 	interval /= 1000;  /* convert back to milleseconds */
+#endif
+
 	last = current;
     }
 
@@ -109,9 +131,12 @@ int fgGetTimeInterval() {
 
 
 /* $Log$
-/* Revision 1.5  1997/06/26 19:08:38  curt
-/* Restructuring make, adding automatic "make dep" support.
+/* Revision 1.6  1997/07/12 02:13:04  curt
+/* Add ftime() support for those that don't have gettimeofday()
 /*
+ * Revision 1.5  1997/06/26 19:08:38  curt
+ * Restructuring make, adding automatic "make dep" support.
+ *
  * Revision 1.4  1997/06/25 15:39:49  curt
  * Minor changes to compile with rsxnt/win32.
  *
