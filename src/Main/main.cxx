@@ -150,6 +150,7 @@ sgVec3 rway_ols;
 #include "globals.hxx"
 #include "splash.hxx"
 #include "viewmgr.hxx"
+#include "options.hxx"
 
 #ifdef macintosh
 #  include <console.h>		// -dw- for command line dialog
@@ -1474,6 +1475,9 @@ int mainLoop( int argc, char **argv ) {
     // Check for the correct base package version
     string base_version = fgBasePackageVersion();
     if ( !(base_version == "0.7.9") ) {
+        // tell the operator how to use this application
+        fgUsage();
+
 	SG_LOG( SG_GENERAL, SG_ALERT, "Base package check failed ... "
 		<< "Found version " << base_version );
         SG_LOG( SG_GENERAL, SG_ALERT, "Please upgrade to version 0.7.9" );
