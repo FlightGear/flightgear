@@ -455,6 +455,16 @@ setPilotPositionZOffset (float z)
 
 
 /**
+ * Return the number of milliseconds elapsed since simulation started.
+ */
+static long
+getElapsedTime_ms ()
+{
+  return globals->get_elapsed_time_ms();
+}
+
+
+/**
  * Return the current Zulu time.
  */
 static string 
@@ -808,6 +818,7 @@ fgInitProps ()
   fgTie("/sim/view/pilot/z-offset-m",
 	getPilotPositionZOffset, setPilotPositionZOffset);
   fgSetArchivable("/sim/view/pilot/z-offset-m");
+  fgTie("/sim/time/elapsed-ms", getElapsedTime_ms);
   fgTie("/sim/time/gmt", getDateString, setDateString);
   fgSetArchivable("/sim/time/gmt");
   fgTie("/sim/time/gmt-string", getGMTString);
