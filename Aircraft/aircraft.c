@@ -32,8 +32,8 @@
 
 /* Display various parameters to stdout */
 void aircraft_debug(int type) {
-    struct flight_params *f;
-    struct control_params *c;
+    struct FLIGHT *f;
+    struct CONTROLS *c;
 
     f = &current_aircraft.flight;
     c = &current_aircraft.controls;
@@ -48,9 +48,12 @@ void aircraft_debug(int type) {
 
 
 /* $Log$
-/* Revision 1.9  1997/07/19 22:39:08  curt
-/* Moved PI to ../constants.h
+/* Revision 1.10  1997/08/27 03:29:56  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.9  1997/07/19 22:39:08  curt
+ * Moved PI to ../constants.h
+ *
  * Revision 1.8  1997/06/25 15:39:45  curt
  * Minor changes to compile with rsxnt/win32.
  *

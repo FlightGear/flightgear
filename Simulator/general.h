@@ -31,19 +31,22 @@
 
 
 /* the general house keeping structure definition */
-struct general_params {
+struct GENERAL {
     /* The flight gear "root" directory */
     char *root_dir;
 };
 
 /* general contains all the general house keeping parameters. */
-extern struct general_params general;
+extern struct GENERAL general;
 
 #endif /* GENERAL_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/08/23 11:37:12  curt
-/* Initial revision.
+/* Revision 1.2  1997/08/27 03:29:38  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.1  1997/08/23 11:37:12  curt
+ * Initial revision.
+ *
  */

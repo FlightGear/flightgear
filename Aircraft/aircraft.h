@@ -32,15 +32,15 @@
 
 
 /* Define a structure containing all the parameters for an aircraft */
-struct aircraft_params {
-    struct flight_params flight;
-    struct control_params controls;
+struct AIRCRAFT {
+    struct FLIGHT flight;
+    struct CONTROLS controls;
 };
 
 
 /* current_aircraft contains all the parameters of the aircraft
    currently being operated. */
-extern struct aircraft_params current_aircraft;
+extern struct AIRCRAFT current_aircraft;
 
 
 /* Display various parameters to stdout */
@@ -51,9 +51,12 @@ void aircraft_debug(int type);
 
 
 /* $Log$
-/* Revision 1.4  1997/07/23 21:52:17  curt
-/* Put comments around the text after an #endif for increased portability.
+/* Revision 1.5  1997/08/27 03:29:58  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.4  1997/07/23 21:52:17  curt
+ * Put comments around the text after an #endif for increased portability.
+ *
  * Revision 1.3  1997/06/21 17:12:42  curt
  * Capitalized subdirectory names.
  *

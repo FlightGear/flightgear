@@ -44,7 +44,7 @@
 
 /* reset flight params to a specific position */
 void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
-    struct flight_params *f;
+    struct FLIGHT *f;
 
     f = &current_aircraft.flight;
 
@@ -70,8 +70,8 @@ void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
 
 /* update position based on inputs, positions, velocities, etc. */
 void fgSlewUpdate() {
-    struct flight_params *f;
-    struct control_params *c;
+    struct FLIGHT *f;
+    struct CONTROLS *c;
 
     f = &current_aircraft.flight;
     c = &current_aircraft.controls;
@@ -91,9 +91,12 @@ void fgSlewUpdate() {
 
 
 /* $Log$
-/* Revision 1.5  1997/07/19 22:35:06  curt
-/* Moved fiddled with PI to avoid compiler warnings.
+/* Revision 1.6  1997/08/27 03:30:11  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.5  1997/07/19 22:35:06  curt
+ * Moved fiddled with PI to avoid compiler warnings.
+ *
  * Revision 1.4  1997/06/21 17:12:51  curt
  * Capitalized subdirectory names.
  *

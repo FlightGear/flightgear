@@ -31,7 +31,7 @@
 #include <GL/glut.h>
 
 
-struct mesh {
+struct MESH {
     /* start coordinates (in arc seconds) */
     double originx, originy;
 
@@ -52,39 +52,42 @@ struct mesh {
 
 
 /* return a pointer to a new mesh structure (no data array allocated yet) */
-struct mesh *(new_mesh)();
+struct MESH *(new_mesh)();
 
 /* initialize the non-array mesh values */
-void mesh_init(struct mesh *m);
+void mesh_init(struct MESH *m);
 
 /* return a pointer to a dynamically allocated array */
 float *(new_mesh_data)(int nrows, int ncols);
 
 /* set the option name in the mesh data structure */
-void mesh_set_option_name(struct mesh *m, char *name);
+void mesh_set_option_name(struct MESH *m, char *name);
 
 /* set an option value in the mesh data structure */
-void mesh_set_option_value(struct mesh *m, char *value);
+void mesh_set_option_value(struct MESH *m, char *value);
 
 /* do whatever needs to be done with the mesh now that it's been
  * loaded, such as generating the OpenGL call list. */
-void mesh_do_it(struct mesh *m);
+void mesh_do_it(struct MESH *m);
 
 /* return the current altitude based on mesh data.  We should rewrite
  * this to interpolate exact values, but for now this is good enough */
 double mesh_altitude(double lon, double lat);
 
 /* walk through mesh and make opengl calls */
-GLint mesh_to_OpenGL(struct mesh *m);
+GLint mesh_to_OpenGL(struct MESH *m);
 
 
 #endif /* MESH_H */
 
 
 /* $Log$
-/* Revision 1.6  1997/08/02 19:10:15  curt
-/* Incorporated mesh2GL.c into mesh.c
+/* Revision 1.7  1997/08/27 03:30:29  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.6  1997/08/02 19:10:15  curt
+ * Incorporated mesh2GL.c into mesh.c
+ *
  * Revision 1.5  1997/07/23 21:52:25  curt
  * Put comments around the text after an #endif for increased portability.
  *

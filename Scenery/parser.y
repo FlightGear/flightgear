@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
     yydebug = 1;
 #endif
 
-    printf("input file = %s\n", argv[1]);
+    printf("  input file = %s\n", argv[1]);
     push_input_stream(argv[1]);
     yyparse();
 
@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
 int fgParseVRML(char *file) {
     int result;
 
-    printf("input file = %s\n", file);
+    printf("  input file = %s\n", file);
     push_input_stream(file);
     result = yyparse();
 

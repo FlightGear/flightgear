@@ -32,7 +32,7 @@
 
 
 /* Define a structure containing global scenery parameters */
-struct scenery_params {
+struct SCENERY {
     /* number of terrain data points to skip */
     int terrain_skip;
 
@@ -40,7 +40,7 @@ struct scenery_params {
     struct fgCartesianPoint center;
 };
 
-extern struct scenery_params scenery;
+extern struct SCENERY scenery;
 
 
 /* Initialize the Scenery Management system */
@@ -60,9 +60,12 @@ void fgSceneryRender();
 
 
 /* $Log$
-/* Revision 1.8  1997/08/06 00:24:30  curt
-/* Working on correct real time sun lighting.
+/* Revision 1.9  1997/08/27 03:30:33  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.8  1997/08/06 00:24:30  curt
+ * Working on correct real time sun lighting.
+ *
  * Revision 1.7  1997/07/23 21:52:27  curt
  * Put comments around the text after an #endif for increased portability.
  *

@@ -30,7 +30,7 @@
 
 void fgControlsInit() {
     int i;
-    struct control_params *c;
+    struct CONTROLS *c;
     c = &current_aircraft.controls;
 
     FG_Elevator = 0.0;
@@ -46,7 +46,7 @@ void fgControlsInit() {
 
 
 void fgElevMove(double amt) {
-    struct control_params *c;
+    struct CONTROLS *c;
     c = &current_aircraft.controls;
 
     FG_Elevator += amt;
@@ -56,7 +56,7 @@ void fgElevMove(double amt) {
 }
 
 void fgElevSet(double pos) {
-    struct control_params *c;
+    struct CONTROLS *c;
     c = &current_aircraft.controls;
 
     FG_Elevator = pos;
@@ -66,7 +66,7 @@ void fgElevSet(double pos) {
 }
 
 void fgElevTrimMove(double amt) {
-    struct control_params *c;
+    struct CONTROLS *c;
     c = &current_aircraft.controls;
 
     FG_Elev_Trim += amt;
@@ -76,7 +76,7 @@ void fgElevTrimMove(double amt) {
 }
 
 void fgElevTrimSet(double pos) {
-    struct control_params *c;
+    struct CONTROLS *c;
     c = &current_aircraft.controls;
 
     FG_Elev_Trim = pos;
@@ -86,7 +86,7 @@ void fgElevTrimSet(double pos) {
 }
 
 void fgAileronMove(double amt) {
-    struct control_params *c;
+    struct CONTROLS *c;
     c = &current_aircraft.controls;
 
     FG_Aileron += amt;
@@ -96,7 +96,7 @@ void fgAileronMove(double amt) {
 }
 
 void fgAileronSet(double pos) {
-    struct control_params *c;
+    struct CONTROLS *c;
     c = &current_aircraft.controls;
 
     FG_Aileron = pos;
@@ -106,7 +106,7 @@ void fgAileronSet(double pos) {
 }
 
 void fgRudderMove(double amt) {
-    struct control_params *c;
+    struct CONTROLS *c;
     c = &current_aircraft.controls;
 
     FG_Rudder += amt;
@@ -116,7 +116,7 @@ void fgRudderMove(double amt) {
 }
 
 void fgRudderSet(double pos) {
-    struct control_params *c;
+    struct CONTROLS *c;
     c = &current_aircraft.controls;
 
     FG_Rudder = pos;
@@ -127,7 +127,7 @@ void fgRudderSet(double pos) {
 
 void fgThrottleMove(int engine, double amt) {
     int i;
-    struct control_params *c;
+    struct CONTROLS *c;
     c = &current_aircraft.controls;
 
     if ( engine == FG_Throttle_All ) {
@@ -147,7 +147,7 @@ void fgThrottleMove(int engine, double amt) {
 
 void fgThrottleSet(int engine, double pos) {
     int i;
-    struct control_params *c;
+    struct CONTROLS *c;
     c = &current_aircraft.controls;
 
     if ( engine == FG_Throttle_All ) {
@@ -167,9 +167,12 @@ void fgThrottleSet(int engine, double pos) {
 
 
 /* $Log$
-/* Revision 1.2  1997/06/21 17:12:48  curt
-/* Capitalized subdirectory names.
+/* Revision 1.3  1997/08/27 03:30:01  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.2  1997/06/21 17:12:48  curt
+ * Capitalized subdirectory names.
+ *
  * Revision 1.1  1997/05/31 19:24:04  curt
  * Initial revision.
  *

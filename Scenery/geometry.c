@@ -33,7 +33,7 @@
 
 
 static vrmlGeometryType;
-struct mesh eg;
+struct MESH eg;
 
 
 /* Begin a new vrml geometry statement */
@@ -119,9 +119,12 @@ int vrmlFreeGeometry() {
 
 
 /* $Log$
-/* Revision 1.3  1997/07/08 18:20:13  curt
-/* Working on establishing a hard ground.
+/* Revision 1.4  1997/08/27 03:30:26  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.3  1997/07/08 18:20:13  curt
+ * Working on establishing a hard ground.
+ *
  * Revision 1.2  1997/07/07 20:59:51  curt
  * Working on scenery transformations to enable us to fly fluidly over the
  * poles with no discontinuity/distortion in scenery.

@@ -31,7 +31,7 @@
 
 /* Initialize the weather modeling subsystem */
 void fgWeatherInit(void) {
-    struct weather_params *w;
+    struct WEATHER *w;
 
     w = &current_weather;
 
@@ -44,8 +44,8 @@ void fgWeatherInit(void) {
 
 /* Update the weather parameters for the current position */
 void fgWeatherUpdate(double lon, double lat, double alt) {
-    struct flight_params *f;
-    struct weather_params *w;
+    struct FLIGHT *f;
+    struct WEATHER *w;
 
     f = &current_aircraft.flight;
     w = &current_weather;
@@ -58,9 +58,12 @@ void fgWeatherUpdate(double lon, double lat, double alt) {
 
 
 /* $Log$
-/* Revision 1.5  1997/08/22 21:34:42  curt
-/* Doing a bit of reorganizing and house cleaning.
+/* Revision 1.6  1997/08/27 03:30:38  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.5  1997/08/22 21:34:42  curt
+ * Doing a bit of reorganizing and house cleaning.
+ *
  * Revision 1.4  1997/08/02 16:23:55  curt
  * Misc. tweaks.
  *

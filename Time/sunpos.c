@@ -259,7 +259,7 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
 
 /* update the cur_time_params structure with the current sun position */
 void fgUpdateSunPos() {
-    struct time_params *t;
+    struct fgTIME *t;
     double sun_gd_lat, sl_radius;
     static int time_warp = 0;
 
@@ -272,13 +272,19 @@ void fgUpdateSunPos() {
     fgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &t->sun_gc_lat);
 
     t->fg_sunpos = fgPolarToCart(t->sun_lon, t->sun_gc_lat, sl_radius);
+
+    /* printf("Geodetic lat = %.5f Geocentric lat = %.5f\n", sun_gd_lat,
+       t->sun_gc_lat); */
 }
 
 
 /* $Log$
-/* Revision 1.5  1997/08/22 21:34:41  curt
-/* Doing a bit of reorganizing and house cleaning.
+/* Revision 1.6  1997/08/27 03:30:37  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.5  1997/08/22 21:34:41  curt
+ * Doing a bit of reorganizing and house cleaning.
+ *
  * Revision 1.4  1997/08/19 23:55:09  curt
  * Worked on better simulating real lighting.
  *

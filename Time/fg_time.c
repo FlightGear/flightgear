@@ -27,11 +27,14 @@
 #include "fg_time.h"
 
 
-struct time_params cur_time_params;
+struct fgTIME cur_time_params;
 
 
 /* $Log$
-/* Revision 1.1  1997/08/13 21:55:59  curt
-/* Initial revision.
+/* Revision 1.2  1997/08/27 03:30:35  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.1  1997/08/13 21:55:59  curt
+ * Initial revision.
+ *
  */

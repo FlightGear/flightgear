@@ -61,7 +61,7 @@
 typedef double FG_VECTOR_3[3];
 
 /* This is based heavily on LaRCsim/ls_generic.h */
-struct flight_params {
+struct FLIGHT {
 
 /*================== Mass properties and geometry values ==================*/
 
@@ -400,19 +400,22 @@ struct flight_params {
 /* General interface to the flight model routines */
 
 /* Initialize the flight model parameters */
-int fgFlightModelInit(int model, struct flight_params *f, double dt);
+int fgFlightModelInit(int model, struct FLIGHT *f, double dt);
 
 /* Run multiloop iterations of the flight model */
-int fgFlightModelUpdate(int model, struct flight_params *f, int multiloop);
+int fgFlightModelUpdate(int model, struct FLIGHT *f, int multiloop);
 
 
 #endif /* FLIGHT_H */
 
 
 /* $Log$
-/* Revision 1.7  1997/07/23 21:52:19  curt
-/* Put comments around the text after an #endif for increased portability.
+/* Revision 1.8  1997/08/27 03:30:06  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.7  1997/07/23 21:52:19  curt
+ * Put comments around the text after an #endif for increased portability.
+ *
  * Revision 1.6  1997/06/21 17:52:22  curt
  * Continue directory shuffling ... everything should be compilable/runnable
  * again.

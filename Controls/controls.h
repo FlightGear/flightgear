@@ -33,7 +33,7 @@
 
 /* Define a structure containing the control parameters */
 
-struct control_params {
+struct CONTROLS {
     double aileron;
     double elevator;
     double elevator_trim;
@@ -81,9 +81,12 @@ void fgThrottleSet(int engine, double pos);
 
 
 /* $Log$
-/* Revision 1.4  1997/07/23 21:52:18  curt
-/* Put comments around the text after an #endif for increased portability.
+/* Revision 1.5  1997/08/27 03:30:02  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.4  1997/07/23 21:52:18  curt
+ * Put comments around the text after an #endif for increased portability.
+ *
  * Revision 1.3  1997/05/31 19:16:27  curt
  * Elevator trim added.
  *

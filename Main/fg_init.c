@@ -38,6 +38,7 @@
 #include "../Math/fg_random.h"
 #include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
+#include "../Scenery/stars.h"
 #include "../Time/sunpos.h"
 #include "../Weather/weather.h"
 
@@ -48,7 +49,7 @@ extern int show_hud;             /* HUD state */
 /* General house keeping initializations */
 
 void fgInitGeneral( void ) {
-    struct general_params *g;
+    struct GENERAL *g;
 
     g = &general;
 
@@ -72,7 +73,7 @@ void fgInitGeneral( void ) {
 void fgInitSubsystems( void ) {
     double cur_elev;
 
-    struct flight_params *f;
+    struct FLIGHT *f;
 
     f = &current_aircraft.flight;
 
@@ -145,6 +146,9 @@ void fgInitSubsystems( void ) {
     /* Initialize the Cockpit subsystem */
     fgCockpitInit( current_aircraft );
 
+    /* Initialize the Stars subsystem  */
+    fgStarsInit();
+
     /* Initialize the Scenery Management subsystem */
     fgSceneryInit();
 
@@ -184,9 +188,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.2  1997/08/25 20:27:23  curt
-/* Merged in initial HUD and Joystick code.
+/* Revision 1.3  1997/08/27 03:30:19  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.2  1997/08/25 20:27:23  curt
+ * Merged in initial HUD and Joystick code.
+ *
  * Revision 1.1  1997/08/23 01:46:20  curt
  * Initial revision.
  *

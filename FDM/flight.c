@@ -28,7 +28,7 @@
 
 
 /* Initialize the flight model parameters */
-int fgFlightModelInit(int model, struct flight_params *f, double dt) {
+int fgFlightModelInit(int model, struct FLIGHT *f, double dt) {
     int result;
 
     if ( model == FG_LARCSIM ) {
@@ -45,7 +45,7 @@ int fgFlightModelInit(int model, struct flight_params *f, double dt) {
 
 
 /* Run multiloop iterations of the flight model */
-int fgFlightModelUpdate(int model, struct flight_params *f, int multiloop) {
+int fgFlightModelUpdate(int model, struct FLIGHT *f, int multiloop) {
     int result;
 
     if ( model == FG_LARCSIM ) {
@@ -61,9 +61,12 @@ int fgFlightModelUpdate(int model, struct flight_params *f, int multiloop) {
 
 
 /* $Log$
-/* Revision 1.2  1997/05/29 22:39:57  curt
-/* Working on incorporating the LaRCsim flight model.
+/* Revision 1.3  1997/08/27 03:30:04  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.2  1997/05/29 22:39:57  curt
+ * Working on incorporating the LaRCsim flight model.
+ *
  * Revision 1.1  1997/05/29 02:35:04  curt
  * Initial revision.
  *

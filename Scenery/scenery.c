@@ -29,6 +29,7 @@
 #endif
 
 #include <GL/glut.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "../general.h"
@@ -42,7 +43,7 @@ GLint mesh_hack;
 
 
 /* Shared structure to hold current scenery parameters */
-struct scenery_params scenery;
+struct SCENERY scenery;
 
 
 /* Initialize the Scenery Management system */
@@ -55,7 +56,7 @@ void fgSceneryInit() {
 /* Tell the scenery manager where we are so it can load the proper data, and
  * build the proper structures. */
 void fgSceneryUpdate(double lon, double lat, double elev) {
-    struct general_params *g;
+    struct GENERAL *g;
     char path[1024];
 
     g = &general;
@@ -68,6 +69,9 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
     strcat(path, g->root_dir);
     strcat(path, "/Scenery/");
     strcat(path, "mesa-e.wrl");
+
+    printf("Loading Scenery: %s\n", path);
+
     fgParseVRML(path);
 }
 
@@ -81,9 +85,12 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.14  1997/08/25 20:27:24  curt
-/* Merged in initial HUD and Joystick code.
+/* Revision 1.15  1997/08/27 03:30:32  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.14  1997/08/25 20:27:24  curt
+ * Merged in initial HUD and Joystick code.
+ *
  * Revision 1.13  1997/08/22 21:34:41  curt
  * Doing a bit of reorganizing and house cleaning.
  *

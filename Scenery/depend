@@ -7,4 +7,4 @@ mesh.o: mesh.c ../constants.h ../types.h ../Math/fg_geodesy.h \
 parser.o: parser.c parsevrml.h geometry.h common.h mesh.h scenery.h \
  ../types.h
 scanner.o: scanner.c parser.h
-scenery.o: scenery.c scenery.h ../types.h parsevrml.h
+scenery.o: scenery.c ../general.h scenery.h ../types.h parsevrml.h

@@ -56,13 +56,13 @@
 
 /* This is a record containing all the info for the aircraft currently
    being operated */
-struct aircraft_params current_aircraft;
+struct AIRCRAFT current_aircraft;
 
 /* This is a record containing global housekeeping information */
-struct general_params general;
+struct GENERAL general;
 
 /* This is a record containing current weather info */
-struct weather_params current_weather;
+struct WEATHER current_weather;
 
 /* view parameters */
 static GLfloat win_ratio = 1.0;
@@ -103,7 +103,7 @@ int show_hud;
  **************************************************************************/
 
 static void fgInitVisuals() {
-    struct weather_params *w;
+    struct WEATHER *w;
 
     w = &current_weather;
 
@@ -140,8 +140,8 @@ static void fgInitVisuals() {
 
 static void fgUpdateViewParams() {
     struct fgCartesianPoint view_pos /*, alt_up */;
-    struct flight_params *f;
-    struct time_params *t;
+    struct FLIGHT *f;
+    struct fgTIME *t;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     MAT3vec vec, view_up, forward, view_forward, local_up, nup, nsun;
     double sun_angle, temp, ambient, diffuse, sky;
@@ -330,8 +330,8 @@ static void fgUpdateVisuals( void ) {
  **************************************************************************/
 
 void fgUpdateTimeDepCalcs(int multi_loop) {
-    struct flight_params *f;
-    struct time_params *t;
+    struct FLIGHT *f;
+    struct fgTIME *t;
     int i;
 
     f = &current_aircraft.flight;
@@ -487,7 +487,7 @@ static void fgMainLoop( void ) {
     double cur_elev;
     double joy_x, joy_y;
     int joy_b1, joy_b2;
-    struct flight_params *f;
+    struct FLIGHT *f;
 
     f = &current_aircraft.flight;
 
@@ -570,7 +570,7 @@ static void fgReshape( int width, int height ) {
  **************************************************************************/
 
 int main( int argc, char *argv[] ) {
-    struct flight_params *f;
+    struct FLIGHT *f;
 
     f = &current_aircraft.flight;
 
@@ -646,9 +646,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.10  1997/08/25 20:27:22  curt
-/* Merged in initial HUD and Joystick code.
+/* Revision 1.11  1997/08/27 03:30:16  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.10  1997/08/25 20:27:22  curt
+ * Merged in initial HUD and Joystick code.
+ *
  * Revision 1.9  1997/08/22 21:34:39  curt
  * Doing a bit of reorganizing and house cleaning.
  *

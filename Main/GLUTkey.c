@@ -45,8 +45,8 @@ extern int show_hud;             /* HUD state */
 
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
-    struct control_params *c;
-    struct weather_params *w;
+    struct CONTROLS *c;
+    struct WEATHER *w;
 
     c = &current_aircraft.controls;
     w = &current_weather;
@@ -142,7 +142,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 /* Handle "special" keyboard events */
 void GLUTspecialkey(int k, int x, int y) {
-    struct control_params *c;
+    struct CONTROLS *c;
 
     c = &current_aircraft.controls;
 
@@ -220,9 +220,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.19  1997/08/25 20:27:21  curt
-/* Merged in initial HUD and Joystick code.
+/* Revision 1.20  1997/08/27 03:30:13  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.19  1997/08/25 20:27:21  curt
+ * Merged in initial HUD and Joystick code.
+ *
  * Revision 1.18  1997/08/22 21:34:38  curt
  * Doing a bit of reorganizing and house cleaning.
  *

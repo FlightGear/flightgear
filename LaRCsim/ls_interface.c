@@ -495,7 +495,7 @@ int initialize;
 
 
 int ls_cockpit() {
-    struct control_params *c;
+    struct CONTROLS *c;
 
     sim_control_.paused = 0;
 
@@ -559,8 +559,8 @@ int fgLaRCsimUpdate(int multiloop) {
 }
 
 
-/* Convert from the FG flight_params struct to the LaRCsim generic_ struct */
-int fgFlight_2_LaRCsim (struct flight_params *f) {
+/* Convert from the FG FLIGHT struct to the LaRCsim generic_ struct */
+int fgFlight_2_LaRCsim (struct FLIGHT *f) {
     Mass =      FG_Mass;
     I_xx =      FG_I_xx;
     I_yy =      FG_I_yy;
@@ -733,8 +733,8 @@ int fgFlight_2_LaRCsim (struct flight_params *f) {
 }
 
 
-/* Convert from the LaRCsim generic_ struct to the FG flight_params struct */
-int fgLaRCsim_2_Flight (struct flight_params *f) {
+/* Convert from the LaRCsim generic_ struct to the FG FLIGHT struct */
+int fgLaRCsim_2_Flight (struct FLIGHT *f) {
     FG_Mass =   Mass;
     FG_I_xx =   I_xx;
     FG_I_yy =   I_yy;
@@ -909,6 +909,9 @@ int fgLaRCsim_2_Flight (struct flight_params *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.9  1997/08/27 03:30:08  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.8  1997/06/21 17:12:50  curt
  * Capitalized subdirectory names.
  *

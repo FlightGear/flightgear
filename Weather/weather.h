@@ -29,11 +29,11 @@
 
 
 /* holds the current weather values */
-struct weather_params {
+struct WEATHER {
     float visibility;
 };
 
-extern struct weather_params current_weather;
+extern struct WEATHER current_weather;
 
 
 /* Initialize the weather modeling subsystem */
@@ -47,9 +47,12 @@ void fgWeatherUpdate(double lon, double lat, double alt);
 
 
 /* $Log$
-/* Revision 1.3  1997/08/22 21:34:43  curt
-/* Doing a bit of reorganizing and house cleaning.
+/* Revision 1.4  1997/08/27 03:30:39  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.3  1997/08/22 21:34:43  curt
+ * Doing a bit of reorganizing and house cleaning.
+ *
  * Revision 1.2  1997/07/23 21:52:30  curt
  * Put comments around the text after an #endif for increased portability.
  *

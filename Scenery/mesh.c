@@ -52,10 +52,10 @@
 
 /* Temporary hack until we get the scenery management system running */
 extern GLint mesh_hack;
-extern struct mesh eg;
+extern struct MESH eg;
 
 /* initialize the non-array mesh values */
-void mesh_init(struct mesh *m) {
+void mesh_init(struct MESH *m) {
     m->originx = 0.0;
     m->originy = 0.0;
 
@@ -72,10 +72,10 @@ void mesh_init(struct mesh *m) {
 
 
 /* return a pointer to a new mesh structure (no data array allocated yet) */
-struct mesh *(new_mesh)() {
-    struct mesh *mesh_ptr;
+struct MESH *(new_mesh)() {
+    struct MESH *mesh_ptr;
 
-    mesh_ptr = (struct mesh *)malloc(sizeof(struct mesh));
+    mesh_ptr = (struct MESH *)malloc(sizeof(struct MESH));
 
     if ( mesh_ptr == 0 ) {
 	printf("Virtual memory exceeded\n");
@@ -107,7 +107,7 @@ float *(new_mesh_data)(int nrows, int ncols) {
 
 
 /* set the option name in the mesh data structure */
-void mesh_set_option_name(struct mesh *m, char *name) {
+void mesh_set_option_name(struct MESH *m, char *name) {
     if ( strlen(name) < MAX_IDENT_LEN ) {
 	strcpy(m->option_name, name);
     } else {
@@ -123,7 +123,7 @@ void mesh_set_option_name(struct mesh *m, char *name) {
 
 
 /* set an option value in the mesh data structure */
-void mesh_set_option_value(struct mesh *m, char *value) {
+void mesh_set_option_value(struct MESH *m, char *value) {
     /* printf("Setting %s to %s\n", m->option_name, value); */
 
     if ( m->do_data ) {
@@ -160,7 +160,7 @@ void mesh_set_option_value(struct mesh *m, char *value) {
 
 /* do whatever needs to be done with the mesh now that it's been
    loaded, such as generating the OpenGL call list. */
-void mesh_do_it(struct mesh *m) {
+void mesh_do_it(struct MESH *m) {
     mesh_hack = mesh_to_OpenGL(m);
 }
 
@@ -271,7 +271,7 @@ double mesh_altitude(double lon, double lat) {
 
 
 /* walk through mesh and make opengl calls */
-GLint mesh_to_OpenGL(struct mesh *m) {
+GLint mesh_to_OpenGL(struct MESH *m) {
     GLint mesh;
     /* static GLfloat color[4] = { 0.5, 0.4, 0.25, 1.0 }; */ /* dark desert */
     static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 };
@@ -395,9 +395,12 @@ GLint mesh_to_OpenGL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.20  1997/08/19 23:55:08  curt
-/* Worked on better simulating real lighting.
+/* Revision 1.21  1997/08/27 03:30:27  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.20  1997/08/19 23:55:08  curt
+ * Worked on better simulating real lighting.
+ *
  * Revision 1.19  1997/08/06 00:24:28  curt
  * Working on correct real time sun lighting.
  *

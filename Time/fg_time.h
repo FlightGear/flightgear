@@ -32,21 +32,24 @@
 
 
 /* Define a structure containing global time parameters */
-struct time_params {
+struct fgTIME {
     /* the point on the earth's surface above which the sun is directly 
      * overhead */
     struct fgCartesianPoint fg_sunpos;  /* in cartesian coordiantes */
     double sun_lon, sun_gc_lat;         /* in geocentric coordinates */
 };
 
-extern struct time_params cur_time_params;
+extern struct fgTIME cur_time_params;
 
 
 #endif /* FG_TIME_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/08/13 21:56:00  curt
-/* Initial revision.
+/* Revision 1.2  1997/08/27 03:30:36  curt
+/* Changed naming scheme of basic shared structures.
 /*
+ * Revision 1.1  1997/08/13 21:56:00  curt
+ * Initial revision.
+ *
  */
