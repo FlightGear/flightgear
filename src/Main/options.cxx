@@ -160,8 +160,8 @@ fgOPTIONS::fgOPTIONS() :
     auto_coordination(FG_AUTO_COORD_NOT_SPECIFIED),
 
     // Features
-    hud_status(1),
-    panel_status(0),
+    hud_status(0),
+    panel_status(1),
     sound(1),
     anti_alias_hud(0),
 
@@ -182,8 +182,8 @@ fgOPTIONS::fgOPTIONS() :
     skyblend(1),
     textures(1),
     wireframe(0),
-    xsize(640),
-    ysize(480),
+    xsize(800),
+    ysize(600),
     bpp(16),
     view_mode(FG_VIEW_PILOT),
 
@@ -257,11 +257,14 @@ fgOPTIONS::toggle_panel() {
 	if ( current_panel != NULL )
 	  current_panel->setVisibility(true);
     }
-    if ( panel_status ) {
+
+    // new rule .. "fov" shouldn't get messed with like this.
+    /* if ( panel_status ) {
 	fov *= 0.4232;
     } else {
 	fov *= (1.0 / 0.4232);
-    }
+    } */
+
     // fgReshape( xsize, ysize);
     fgReshape( current_view.get_winWidth(), current_view.get_winHeight() );
 
@@ -633,8 +636,8 @@ int fgOPTIONS::parse_option( const string& arg ) {
     } else if ( arg == "--enable-panel" ) {
 	panel_status = true;
 	if ( current_panel != NULL )
-	  current_panel->setVisibility(true);
-	fov *= 0.4232;
+	    current_panel->setVisibility(true);
+	// fov *= 0.4232; /* NO!!! */
     } else if ( arg == "--disable-sound" ) {
 	sound = false;
     } else if ( arg == "--enable-sound" ) {

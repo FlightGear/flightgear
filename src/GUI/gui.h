@@ -37,7 +37,6 @@ extern void BusyCursor( int restore );
 extern void guiToggleMenu(void);
 extern void mkDialog(const char *txt);
 extern void ConfirmExitDialog(void);
-extern void guiFixPanel( void );
 
 extern void fgDumpSnapShot();
 
@@ -66,7 +65,6 @@ extern char *gui_msg_RESET;  // "RESET"
 #define FG_POP_PUI_DIALOG( X ) \
     (X)->hide(); \
     puPopLiveInterface(); \
-    guiFixPanel(); \
     maybeToggleMouse();
 
 // Finalize Dialog Box Construction 

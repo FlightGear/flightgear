@@ -323,7 +323,7 @@ void FGSteam::_CatchUp()
 */
  	if ( _UpdatesPending > 999999 )
 	    the_DG_err = FGBFI::getMagVar();
- 	the_DG_degps = 0.0; /* HACK! */
+ 	the_DG_degps = 0.01; /* HACK! */
  	if (dt<1.0) the_DG_err += dt * the_DG_degps;
  	the_DG_deg = FGBFI::getHeading () - the_DG_err;
 

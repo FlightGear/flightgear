@@ -667,26 +667,6 @@ void mkDialog (const char *txt)
     FG_PUSH_PUI_DIALOG( dialogBox );
 }
 
-// Repair any damage done to the Panel by other Gui Items
-void guiFixPanel( void )
-{
-#if 0 // this function does nothing anyway
-    bool freeze = globals->get_freeze();
-
-    if ( current_options.get_panel_status() ) {
-        // FGView *v = &current_view;
-        if( !freeze )
-            globals->set_freeze( true );
-
-	// we must have some something here at some point but this
-	// function does nothing now.
-
-        if( !freeze )
-            globals->set_freeze( false );
-    }
-#endif
-}
-
 // Toggle the Menu and Mouse display state
 void guiToggleMenu(void)
 {

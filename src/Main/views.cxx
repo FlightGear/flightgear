@@ -42,10 +42,6 @@
 #include "views.hxx"
 
 
-// temporary (hopefully) hack
-static int panel_hist = 0;
-
-
 // This is a record containing current view parameters for the current
 // aircraft position
 FGView pilot_view;
@@ -72,10 +68,9 @@ void FGView::Init( void ) {
     winHeight = current_options.get_ysize();
 
     if ( ! current_options.get_panel_status() ) {
-	set_win_ratio( (GLfloat) winWidth / (GLfloat) winHeight );
+	set_win_ratio( winHeight / winWidth );
     } else {
-	set_win_ratio( (GLfloat) winWidth / 
-		       ((GLfloat) (winHeight)*0.4232) );
+	set_win_ratio( (winHeight*0.4232) / winWidth );
     }
 
     // This never changes -- NHV
@@ -137,6 +132,7 @@ inline static void fgMakeLOCAL( sgMat4 dst, const double Theta,
 }
 #endif
 
+
 // Update the view volume, position, and orientation
 void FGView::UpdateViewParams( const FGInterface& f ) {
     UpdateViewMath(f);
@@ -147,8 +143,6 @@ void FGView::UpdateViewParams( const FGInterface& f ) {
 	xglViewport(0, (GLint)((winHeight)*0.5768), (GLint)(winWidth), 
 		    (GLint)((winHeight)*0.4232) );
     }
-
-    panel_hist = current_options.get_panel_status();
 }
 
 

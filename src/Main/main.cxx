@@ -480,7 +480,8 @@ void fgRenderFrame( void ) {
 	// glMatrixMode( GL_PROJECTION );
 	// glLoadIdentity();
  	float fov = current_options.get_fov();
- 	ssgSetFOV(fov * current_view.get_win_ratio(), fov);
+ 	// ssgSetFOV(fov * current_view.get_win_ratio(), fov);
+ 	ssgSetFOV(fov, fov * current_view.get_win_ratio());
 
 	double agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
 	    - scenery.cur_elev;
@@ -1111,12 +1112,11 @@ static void fgIdleFunction ( void ) {
 // options.cxx needs to see this for toggle_panel()
 // Handle new window size or exposure
 void fgReshape( int width, int height ) {
-    if ( ! current_options.get_panel_status() ) {
-	current_view.set_win_ratio( (GLfloat) width / (GLfloat) height );
+    if ( ! current_options.get_panel_status() || idle_state != 1000 ) {
+	current_view.set_win_ratio( height / width );
 	glViewport(0, 0 , (GLint)(width), (GLint)(height) );
     } else {
-	current_view.set_win_ratio( (GLfloat) width / 
-	                            ((GLfloat) (height)*0.4232) );
+	current_view.set_win_ratio( (height*0.4232) / width );
 	glViewport(0, (GLint)((height)*0.5768),
 		   (GLint)(width), (GLint)((height)*0.4232) );
     }
@@ -1132,7 +1132,8 @@ void fgReshape( int width, int height ) {
 
     // glViewport ( 0, 0, width, height );
     float fov = current_options.get_fov();
-    ssgSetFOV(fov * current_view.get_win_ratio(), fov);
+    // ssgSetFOV(fov * current_view.get_win_ratio(), fov);
+    ssgSetFOV(fov, fov * current_view.get_win_ratio());
 
     fgHUDReshape();
 

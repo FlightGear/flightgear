@@ -64,7 +64,7 @@ public:
     bool update_fov;
 	
     // fov of view is specified in the y direction, win_ratio is used to
-    // calculate the fov in the X direction = width/height
+    // calculate the fov in the X direction = width / height
     double win_ratio;
 
     // width & height of window
