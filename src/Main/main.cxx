@@ -620,22 +620,22 @@ void fgRenderFrame() {
             */
 
             thesky->reposition( current__view->get_view_pos(),
-                            current__view->get_zero_elev(),
-                            current__view->get_world_up(),
-                            current__view->getLongitude_deg()
-                               * SGD_DEGREES_TO_RADIANS,
-                            current__view->getLatitude_deg()
-                               * SGD_DEGREES_TO_RADIANS,
-                            current__view->getAltitudeASL_ft()
-                               * SG_FEET_TO_METER,
-                            cur_light_params.sun_rotation,
-                            globals->get_time_params()->getGst(),
-                            globals->get_ephem()->getSunRightAscension(),
-                            globals->get_ephem()->getSunDeclination(),
-                            50000.0,
-                            globals->get_ephem()->getMoonRightAscension(),
-                            globals->get_ephem()->getMoonDeclination(),
-                            50000.0 );
+                                current__view->get_zero_elev(),
+                                current__view->get_world_up(),
+                                current__view->getLongitude_deg()
+                                  * SGD_DEGREES_TO_RADIANS,
+                                current__view->getLatitude_deg()
+                                  * SGD_DEGREES_TO_RADIANS,
+                                current__view->getAltitudeASL_ft()
+                                  * SG_FEET_TO_METER,
+                                cur_light_params.sun_rotation,
+                                globals->get_time_params()->getGst(),
+                                globals->get_ephem()->getSunRightAscension(),
+                                globals->get_ephem()->getSunDeclination(),
+                                50000.0,
+                                globals->get_ephem()->getMoonRightAscension(),
+                                globals->get_ephem()->getMoonDeclination(),
+                                50000.0 );
         }
 
         glEnable( GL_DEPTH_TEST );
@@ -1757,10 +1757,10 @@ static bool fgMainInit( int argc, char **argv ) {
     thesky->texture_path( sky_tex_path.str() );
 
     thesky->build( 550.0, 550.0,
-               globals->get_ephem()->getNumPlanets(), 
-               globals->get_ephem()->getPlanets(), 60000.0,
-               globals->get_ephem()->getNumStars(),
-               globals->get_ephem()->getStars(), 60000.0 );
+                   globals->get_ephem()->getNumPlanets(), 
+                   globals->get_ephem()->getPlanets(), 60000.0,
+                   globals->get_ephem()->getNumStars(),
+                   globals->get_ephem()->getStars(), 60000.0 );
 
     // Initialize MagVar model
     SGMagVar *magvar = new SGMagVar();
