@@ -103,7 +103,7 @@ $(BIN)triangle.o: $(SRC)triangle.c $(SRC)triangle.h
 		$(SRC)triangle.c
 
 $(BIN)showme: $(SRC)showme.c
-	$(CC) $(CSWITCHES) -o $(BIN)showme $(SRC)showme.c -lX11
+	$(CC) $(CSWITCHES) -o $(BIN)showme $(SRC)showme.c -L/usr/X11R6/lib -lX11
 
 clean: distclean
 
