@@ -139,9 +139,9 @@ module mentioned above installed). I _strongly_ recommend the latter.
 
 3. Install the data files
 
-Change to /usr/local/lib/FlightGear and unpack the data files:
+Change to /usr/local/lib
 
-	tar xvfz WHERE_YOU DOWNLOADED_THE_FILES/fgfs-base-x.xx.tar.gz 
+	tar xvfz WHERE_YOU_DOWNLOADED_THE_FILES/fgfs-base-x.xx.tar.gz 
 
 That's it...
 
