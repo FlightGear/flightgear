@@ -582,7 +582,7 @@ void Airplane::compile()
     // Ground effect
     float gepos[3];
     float gespan = _wing->getGroundEffect(gepos);
-    _model.setGroundEffect(gepos, gespan, 0.3f);
+    _model.setGroundEffect(gepos, gespan, 0.15f);
 
     solveGear();
     solve();

@@ -260,8 +260,9 @@ void Model::calcForces(State* s)
     float dist = ground[3] - Math::dot3(ground, _wingCenter);
     if(dist > 0 && dist < _groundEffectSpan) {
 	float fz = Math::dot3(faero, ground);
-	Math::mul3(fz * _groundEffect * dist/_groundEffectSpan,
-		   ground, faero);
+        fz *= (_groundEffectSpan - dist) / _groundEffectSpan;
+        fz *= _groundEffect;
+	Math::mul3(fz, ground, faero);
 	_body.addForce(faero);
     }
     
