@@ -25,6 +25,8 @@
 #---------------------------------------------------------------------------
 
 
+VERSION = 0.07
+
 #---------------------------------------------------------------------------
 # Choose your weapons
 #---------------------------------------------------------------------------
@@ -48,6 +50,18 @@ RANLIB = ranlib
 #
 # -O2          - Enable compiler optimization
 #
+#---------------------------------------------------------------------------
+
+GLOBAL_CFLAGS = -g -Wall 
+
+
+#---------------------------------------------------------------------------
+# Platform specific compile options, these should be set with FG_CFLAGS
+# below.  These have been predefined for the supported platforms below.
+#
+# -DNO_PRINTF -  Disable all printf()'s.  Works by replacing the printf
+#                fuction with an empty function.
+#
 # -DUSE_ITIMER - Use setitimer(), getitimer(), and signal() to mimic
 #                a real time system and call the flight model routines
 #                at a regular interval, rather than between screen updates
@@ -60,8 +74,6 @@ RANLIB = ranlib
 # -DUSE_RAND  -  Use rand() instead of random()
 #
 #---------------------------------------------------------------------------
-
-FG_CFLAGS = -g -Wall
 
 
 #---------------------------------------------------------------------------
@@ -80,31 +92,37 @@ FG_CFLAGS = -g -Wall
 # INTERFACE_LIBS = -lglut
 # INTERFACE_FILES = GLUTkey.c
 # GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
+# FG_CFLAGS = $(GLOBAL_CFLAGS)
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
 # Linux/Mesa with the GLUT toolkit
 #
-INTERFACE_FLAGS = -DGLUT
-INTERFACE_LIBS = -lglut
-INTERFACE_FILES = GLUTkey.c
-MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
-X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
-GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+# INTERFACE_FLAGS = -DGLUT
+# INTERFACE_LIBS = -lglut
+# INTERFACE_FILES = GLUTkey.c
+# MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
+# X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
+# GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+# FG_CFLAGS = $(GLOBAL_CFLAGS)
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
-# Cygnus Win32 (gcc based) with the GLUT toolkit
+# Cygnus Win32 (gcc based) with a static version of the GLUT toolkit
 #
-# INTERFACE_FLAGS = -DGLUT 
-# INTERFACE_LIBS = -Wl,--subsystem,windows -L. -lglut
-# INTERFACE_FILES = GLUTkey.c
-# GRAPHICS_LIBS = -lglu32 -lopengl32
+INTERFACE_FLAGS = -DGLUT 
+INTERFACE_LIBS = ../Win32/libglut.a
+INTERFACE_FILES = GLUTkey.c
+GRAPHICS_LIBS = -lglu32 -lopengl32 -luser32 -lgdi32
+FG_CFLAGS = $(GLOBAL_CFLAGS) -DWIN32 -DUSE_RAND
 #---------------------------------------------------------------------------
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.8  1997/07/18 23:41:20  curt
+# Tweaks for building with Cygnus Win32 compiler.
+#
 # Revision 1.7  1997/07/18 14:28:34  curt
 # Hacked in some support for wind/turbulence.
 #

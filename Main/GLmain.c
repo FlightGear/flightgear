@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef __CYGWIN32__                                                  
+#ifdef WIN32
 #  include <windows.h>                     
 #endif
 
@@ -417,6 +417,14 @@ static void fgMainLoop( void ) {
 	       FG_Altitude * FEET_TO_METER);
     }
 
+
+#ifndef USE_RAND
+#  ifdef sgi
+#    undef RAND_MAX
+#    define RAND_MAX 2147483647
+#  endif
+#endif
+
 #ifdef USE_RAND
     FG_U_gust = rand() * 3.0 / RAND_MAX - 1.0;
     FG_V_gust = rand() * 3.0 / RAND_MAX - 1.0;
@@ -460,7 +468,7 @@ int main( int argc, char *argv[] ) {
 
     f = &current_aircraft.flight;
 
-    printf("Flight Gear: prototype code to test OpenGL, LaRCsim, and VRML\n\n");
+    /* printf("Flight Gear: prototype code to test OpenGL, LaRCsim, and VRML\n\n");*/
 
 
     /**********************************************************************
@@ -627,11 +635,22 @@ int main( int argc, char *argv[] ) {
     return(0);
 }
 
+#ifdef NO_PRINTF
+
+#include <stdarg.h>
+int printf (const char *format, ...) {
+}
+
+#endif
+
 
 /* $Log$
-/* Revision 1.35  1997/07/18 14:28:34  curt
-/* Hacked in some support for wind/turbulence.
+/* Revision 1.36  1997/07/18 23:41:25  curt
+/* Tweaks for building with Cygnus Win32 compiler.
 /*
+ * Revision 1.35  1997/07/18 14:28:34  curt
+ * Hacked in some support for wind/turbulence.
+ *
  * Revision 1.34  1997/07/16 20:04:48  curt
  * Minor tweaks to aid Win32 port.
  *

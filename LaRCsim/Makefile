@@ -44,7 +44,7 @@ simtest: $(TARGET) LaRCsim.o
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) *~ core
+	rm -f *.o $(TARGET) lib*.a *~ core
 
 
 #---------------------------------------------------------------------------
@@ -56,6 +56,9 @@ include depend
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.9  1997/07/18 23:41:23  curt
+# Tweaks for building with Cygnus Win32 compiler.
+#
 # Revision 1.8  1997/07/12 02:24:48  curt
 # Added ranlib.
 #

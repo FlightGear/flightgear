@@ -27,7 +27,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#ifdef __CYGWIN32__                                                  
+#ifdef WIN32
 #  include <windows.h>                     
 #endif
 
@@ -49,9 +49,10 @@ void GLUTkey(unsigned char k, int x, int y) {
 
     c = &current_aircraft.controls;
 
-    printf("Key hit = %d\n", k);
+    printf("Key hit = %d", k);
 
     if ( GLUT_ACTIVE_SHIFT && glutGetModifiers() ) {
+	printf(" SHIFTED\n");
 	switch (k) {
 	case 49: /* numeric keypad 1 */
 	    goal_view_offset = M_PI * 0.75;
@@ -79,6 +80,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	}
     } else {
+	printf("\n");
 	switch (k) {
 	case 50: /* numeric keypad 2 */
 	    fgElevMove(-0.05);
@@ -139,30 +141,86 @@ void GLUTspecialkey(int k, int x, int y) {
 
     c = &current_aircraft.controls;
 
-    printf("Special key hit = %d\n", k);
+    printf("Special key hit = %d", k);
 
-    switch (k) {
-    case GLUT_KEY_UP:
-	fgElevMove(0.05);
-	return;
-    case GLUT_KEY_DOWN:
-	fgElevMove(-0.05);
-	return;
-    case GLUT_KEY_LEFT:
-	fgAileronMove(-0.05);
-	return;
-    case GLUT_KEY_RIGHT:
-	fgAileronMove(0.05);
-	return;
+    if ( GLUT_ACTIVE_SHIFT && glutGetModifiers() ) {
+	printf(" SHIFTED\n");
+	switch (k) {
+	case GLUT_KEY_END: /* numeric keypad 1 */
+	    goal_view_offset = M_PI * 0.75;
+	    return;
+	case GLUT_KEY_DOWN: /* numeric keypad 2 */
+	    goal_view_offset = M_PI;
+	    return;
+	case GLUT_KEY_PAGE_DOWN: /* numeric keypad 3 */
+	    goal_view_offset = M_PI * 1.25;
+	    return;
+	case GLUT_KEY_LEFT: /* numeric keypad 4 */
+	    goal_view_offset = M_PI * 0.50;
+	    return;
+	case GLUT_KEY_RIGHT: /* numeric keypad 6 */
+	    goal_view_offset = M_PI * 1.50;
+	    return;
+	case GLUT_KEY_HOME: /* numeric keypad 7 */
+	    goal_view_offset = M_PI * 0.25;
+	    return;
+	case GLUT_KEY_UP: /* numeric keypad 8 */
+	    goal_view_offset = 0.00;
+	    return;
+	case GLUT_KEY_PAGE_UP: /* numeric keypad 9 */
+	    goal_view_offset = M_PI * 1.75;
+	    return;
+	}
+    } else {
+	printf("\n");
+	switch (k) {
+	case GLUT_KEY_UP:
+	    fgElevMove(0.05);
+	    return;
+	case GLUT_KEY_DOWN:
+	    fgElevMove(-0.05);
+	    return;
+	case GLUT_KEY_LEFT:
+	    fgAileronMove(-0.05);
+	    return;
+	case GLUT_KEY_RIGHT:
+	    fgAileronMove(0.05);
+	    return;
+	case GLUT_KEY_HOME: /* numeric keypad 1 */
+	    fgElevTrimMove(-0.001);
+	    return;
+	case GLUT_KEY_END: /* numeric keypad 7 */
+	    fgElevTrimMove(0.001);
+	    return;
+	case GLUT_KEY_INSERT: /* numeric keypad Ins */
+	    fgRudderMove(-0.05);
+	    return;
+	case 13: /* numeric keypad Enter */
+	    fgRudderMove(0.05);
+	    return;
+	case 53: /* numeric keypad 5 */
+	    fgAileronSet(0.0);
+	    fgElevSet(0.0);
+	    fgRudderSet(0.0);
+	    return;
+	case GLUT_KEY_PAGE_UP: /* numeric keypad 9 (Pg Up) */
+	    fgThrottleMove(0, 0.01);
+	    return;
+	case GLUT_KEY_PAGE_DOWN: /* numeric keypad 3 (Pg Dn) */
+	    fgThrottleMove(0, -0.01);
+	    return;
+	}
     }
-
 }
 
 
 /* $Log$
-/* Revision 1.15  1997/07/16 20:04:47  curt
-/* Minor tweaks to aid Win32 port.
+/* Revision 1.16  1997/07/18 23:41:24  curt
+/* Tweaks for building with Cygnus Win32 compiler.
 /*
+ * Revision 1.15  1997/07/16 20:04:47  curt
+ * Minor tweaks to aid Win32 port.
+ *
  * Revision 1.14  1997/07/12 03:50:20  curt
  * Added an #include <Windows32/Base.h> to help compiling for Win32
  *

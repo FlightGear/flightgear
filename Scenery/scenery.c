@@ -24,7 +24,7 @@
  **************************************************************************/
 
 
-#ifdef __CYGWIN32__
+#ifdef WIN32
 #  include <windows.h>
 #endif
 
@@ -45,7 +45,7 @@ struct scenery_params cur_scenery_params;
 /* Initialize the Scenery Management system */
 void fgSceneryInit() {
     /* set the default terrain detail level */
-    cur_scenery_params.terrain_skip = 20;
+    cur_scenery_params.terrain_skip = 10;
 }
 
 
@@ -69,9 +69,12 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.7  1997/07/16 20:04:52  curt
-/* Minor tweaks to aid Win32 port.
+/* Revision 1.8  1997/07/18 23:41:27  curt
+/* Tweaks for building with Cygnus Win32 compiler.
 /*
+ * Revision 1.7  1997/07/16 20:04:52  curt
+ * Minor tweaks to aid Win32 port.
+ *
  * Revision 1.6  1997/07/14 16:26:05  curt
  * Testing/playing -- placed objects randomly across the entire terrain.
  *

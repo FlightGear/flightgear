@@ -52,7 +52,7 @@ $(TARGET): $(OFILES) $(AFILES)
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) lib*.a *~ core
+	rm -f *.o $(TARGET) $(TARGET).exe lib*.a *~ core
 
 
 #---------------------------------------------------------------------------
@@ -76,6 +76,9 @@ mesh2GL.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.22  1997/07/18 23:41:25  curt
+# Tweaks for building with Cygnus Win32 compiler.
+#
 # Revision 1.21  1997/07/05 20:43:34  curt
 # renamed mat3 directory to Math so we could add other math related routines.
 #

@@ -52,17 +52,20 @@ clean:
 
 tar: clean
 	(cd ../..; \
-	tar cvf prototype-0.05.tar FlightGear/COPYING FlightGear/Docs \
+	tar cvf prototype-$(VERSION).tar FlightGear/COPYING FlightGear/Docs \
 	FlightGear/Src FlightGear/Thanks)
 
 zip: clean
 	(cd ../..; \
-	zip -r prototype-0.05.zip FlightGear/COPYING FlightGear/Docs \
+	zip -r prototype-$(VERSION).zip FlightGear/COPYING FlightGear/Docs \
 	FlightGear/Src FlightGear/Thanks)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.17  1997/07/18 23:41:20  curt
+# Tweaks for building with Cygnus Win32 compiler.
+#
 # Revision 1.16  1997/07/07 20:59:47  curt
 # Working on scenery transformations to enable us to fly fluidly over the
 # poles with no discontinuity/distortion in scenery.

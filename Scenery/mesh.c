@@ -28,7 +28,7 @@
 #  include <malloc.h>
 #endif
 
-#ifdef __CYGWIN32__
+#ifdef WIN32
 #  include <windows.h>
 #endif
 
@@ -197,7 +197,7 @@ double mesh_altitude(double lon, double lat) {
 
     if ( dx > dy ) {
 	/* lower triangle */
-	printf("  Lower triangle\n");
+	/* printf("  Lower triangle\n"); */
 
 	x1 = xindex; 
 	y1 = yindex; 
@@ -211,15 +211,15 @@ double mesh_altitude(double lon, double lat) {
 	y3 = yindex + skip; 
 	z3 = eg.mesh_data[y3 * eg.cols + x3];
 
-	printf("  dx = %.2f  dy = %.2f\n", dx, dy);
+	/* printf("  dx = %.2f  dy = %.2f\n", dx, dy);
 	printf("  (x1,y1,z1) = (%d,%d,%d)\n", x1, y1, z1);
 	printf("  (x2,y2,z2) = (%d,%d,%d)\n", x2, y2, z2);
-	printf("  (x3,y3,z3) = (%d,%d,%d)\n", x3, y3, z3);
+	printf("  (x3,y3,z3) = (%d,%d,%d)\n", x3, y3, z3); */
 
 	zA = dx * (z2 - z1) / skip + z1;
 	zB = dx * (z3 - z1) / skip + z1;
 	
-	printf("  zA = %.2f  zB = %.2f\n", zA, zB);
+	/* printf("  zA = %.2f  zB = %.2f\n", zA, zB); */
 
 	if ( dx > EPSILON ) {
 	    elev = dy * (zB - zA) / dx + zA;
@@ -228,7 +228,7 @@ double mesh_altitude(double lon, double lat) {
 	}
     } else {
 	/* upper triangle */
-	printf("  Upper triangle\n");
+	/* printf("  Upper triangle\n"); */
 
 	x1 = xindex; 
 	y1 = yindex; 
@@ -242,16 +242,16 @@ double mesh_altitude(double lon, double lat) {
 	y3 = yindex + skip; 
 	z3 = eg.mesh_data[y3 * eg.cols + x3];
 
-	printf("  dx = %.2f  dy = %.2f\n", dx, dy);
+	/* printf("  dx = %.2f  dy = %.2f\n", dx, dy);
 	printf("  (x1,y1,z1) = (%d,%d,%d)\n", x1, y1, z1);
 	printf("  (x2,y2,z2) = (%d,%d,%d)\n", x2, y2, z2);
-	printf("  (x3,y3,z3) = (%d,%d,%d)\n", x3, y3, z3);
+	printf("  (x3,y3,z3) = (%d,%d,%d)\n", x3, y3, z3); */
  
 	zA = dy * (z2 - z1) / skip + z1;
 	zB = dy * (z3 - z1) / skip + z1;
 	
-	printf("  zA = %.2f  zB = %.2f\n", zA, zB );
-	printf("  xB - xA = %.2f\n", eg.col_step * dy / eg.row_step);
+	/* printf("  zA = %.2f  zB = %.2f\n", zA, zB );
+	printf("  xB - xA = %.2f\n", eg.col_step * dy / eg.row_step); */
 
 	if ( dy > EPSILON ) {
 	    elev = dx * (zB - zA) / dy    + zA;
@@ -265,9 +265,12 @@ double mesh_altitude(double lon, double lat) {
 
 
 /* $Log$
-/* Revision 1.16  1997/07/16 20:04:51  curt
-/* Minor tweaks to aid Win32 port.
+/* Revision 1.17  1997/07/18 23:41:26  curt
+/* Tweaks for building with Cygnus Win32 compiler.
 /*
+ * Revision 1.16  1997/07/16 20:04:51  curt
+ * Minor tweaks to aid Win32 port.
+ *
  * Revision 1.15  1997/07/14 16:26:04  curt
  * Testing/playing -- placed objects randomly across the entire terrain.
  *

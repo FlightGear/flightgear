@@ -24,7 +24,7 @@
  **************************************************************************/
 
 
-#ifdef __CYGWIN32__                                                  
+#ifdef WIN32
 #  include <windows.h>                     
 #endif
 
@@ -38,6 +38,14 @@
 #include "../Scenery/scenery.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
+
+
+#ifndef USE_RAND
+#  ifdef sgi
+#    undef RAND_MAX
+#    define RAND_MAX 2147483647
+#  endif
+#endif
 
 
 /* The following routine is a real hack used for testing puposes only
@@ -188,11 +196,13 @@ GLint mesh2GL(struct mesh *m) {
     }
     */
 
+/* 
 #ifdef USE_RAND
     srand(time(&t));
 #else
     srandom(time(&t));
 #endif
+*/
 
     for ( i = 0; i < 200; i++ ) {
 #ifdef USE_RAND
@@ -214,9 +224,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.35  1997/07/18 14:28:35  curt
-/* Hacked in some support for wind/turbulence.
+/* Revision 1.36  1997/07/18 23:41:25  curt
+/* Tweaks for building with Cygnus Win32 compiler.
 /*
+ * Revision 1.35  1997/07/18 14:28:35  curt
+ * Hacked in some support for wind/turbulence.
+ *
  * Revision 1.34  1997/07/16 20:04:50  curt
  * Minor tweaks to aid Win32 port.
  *
