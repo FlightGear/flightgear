@@ -32,6 +32,8 @@
 #include <sys/stat.h> // stat()
 #include <unistd.h>   // stat()
 
+#include <zlib/zlib.h>
+
 #include "dem.hxx"
 #include "leastsqs.hxx"
 
@@ -100,10 +102,11 @@ int fgDEM::open ( char *file ) {
     // open input file (or read from stdin)
     if ( strcmp(file, "-") == 0 ) {
 	printf("Loading DEM data file: stdin\n");
-	fd = stdin;
+	// fd = stdin;
+	fd = gzdopen(STDIN_FILENO, "r");
     } else {
-	if ( (fd = fopen(file, "r")) == NULL ) {
-	    printf("Cannot open %s\n", file);
+	if ( (fd = gzopen(file, "r")) == NULL ) {
+	    printf("Cannot gzopen %s\n", file);
 	    return(0);
 	}
 	printf("Loading DEM data file: %s\n", file);
@@ -115,19 +118,31 @@ int fgDEM::open ( char *file ) {
 
 // close a DEM file
 int fgDEM::close ( void ) {
-    fclose(fd);
+    gzclose(fd);
 
     return(1);
 }
 
 
 // return next token from input stream
-static void next_token(FILE *fd, char *token) {
-    int result;
+static void next_token(gzFile *fd, char *token) {
+    int i, result;
+    char c;
 
-    result = fscanf(fd, "%s", token);
+    i = 0;
+    c = gzgetc(fd);
+    // skip past spaces
+    while ( (c != -1) && (c == ' ') ) {
+	c = gzgetc(fd);
+    }
+    while ( (c != -1) && (c != ' ') && (c != '\n') ){
+	token[i] = c;
+	i++;
+	c = gzgetc(fd);
+    }
+    token[i] = '\0';
 
-    if ( result == EOF ) {
+    if ( c == -1 ) {
 	strcpy(token, "__END_OF_FILE__");
 	printf("    Warning:  Reached end of file!\n");
     }
@@ -137,7 +152,7 @@ static void next_token(FILE *fd, char *token) {
 
 
 // return next integer from input stream
-static int next_int(FILE *fd) {
+static int next_int(gzFile *fd) {
     char token[80];
 
     next_token(fd, token);
@@ -146,7 +161,7 @@ static int next_int(FILE *fd) {
 
 
 // return next double from input stream
-static double next_double(FILE *fd) {
+static double next_double(gzFile *fd) {
     char token[80];
 
     next_token(fd, token);
@@ -155,12 +170,15 @@ static double next_double(FILE *fd) {
 
 
 // return next exponential num from input stream
-static int next_exp(FILE *fd) {
+static int next_exp(gzFile *fd) {
+    char token[80];
     double mantissa;
     int exp, acc;
     int i;
 
-    fscanf(fd, "%lfD%d", &mantissa, &exp);
+    next_token(fd, token);
+
+    sscanf(token, "%lfD%d", &mantissa, &exp);
 
     // printf("    Mantissa = %.4f  Exp = %d\n", mantissa, exp);
 
@@ -189,7 +207,7 @@ void fgDEM::read_a_record( void ) {
 
     // get the name field (144 characters)
     for ( i = 0; i < 144; i++ ) {
-	name[i] = fgetc(fd);
+	name[i] = gzgetc(fd);
     }
     name[i+1] = '\0';
 
@@ -754,6 +772,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.3  1998/04/18 03:53:05  curt
+// Added zlib support.
+//
 // Revision 1.2  1998/04/14 02:43:27  curt
 // Used "new" to auto-allocate large DEM parsing arrays in class constructor.
 //

@@ -31,6 +31,7 @@
 #include <stdio.h>
 
 #include <Bucket/bucketutils.h>
+#include <zlib/zlib.h>
 
 
 #define DEM_SIZE 1200
@@ -39,7 +40,7 @@
 
 class fgDEM {
     // file pointer for input
-    FILE *fd;
+    gzFile *fd;
 
     // coordinates (in arc seconds) of south west corner
     double originx, originy;
@@ -124,6 +125,9 @@ public:
 
 
 // $Log$
+// Revision 1.3  1998/04/18 03:53:06  curt
+// Added zlib support.
+//
 // Revision 1.2  1998/04/14 02:43:28  curt
 // Used "new" to auto-allocate large DEM parsing arrays in class constructor.
 //
