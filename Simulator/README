@@ -1,7 +1,7 @@
 majordomo writes:
 Subdirectories
 ==============
-GLUT/
+Main/
 -------
 "main()" and GLUT dependent mouse/keyboard/graphics code.
 

@@ -28,8 +28,9 @@ include make.inc
 
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew
-SUBDIRS = Aircraft Cockpit Controls Flight Joystick Math Scenery Time Weather
-MAIN = GLUT
+SUBDIRS = Aircraft Cockpit Controls Flight Joystick Math Scenery \
+	Time Weather
+MAIN = Main
 
 
 all: 
@@ -92,6 +93,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.28  1997/10/28 19:35:40  curt
+# Organizational changes.
+#
 # Revision 1.27  1997/09/23 00:29:27  curt
 # Tweaks to get things to compile with gcc-win32.
 #

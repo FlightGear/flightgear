@@ -25,7 +25,14 @@
 #---------------------------------------------------------------------------
 
 
-VERSION = 0.13
+#---------------------------------------------------------------------------
+# Define the version
+#---------------------------------------------------------------------------
+
+VERSION_MAJOR = 0
+VERSION_MINOR = 14
+VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
+
 
 #---------------------------------------------------------------------------
 # Choose your weapons
@@ -36,6 +43,7 @@ FLEX = flex -f -L
 BISON = bison -v --no-lines
 AR = ar
 RANLIB = ranlib
+LN = ln -sf
 
 
 #---------------------------------------------------------------------------
@@ -115,11 +123,15 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 # INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS = -lglu32 -lopengl32 -luser32 -lgdi32
 # FG_CFLAGS = $(GLOBAL_CFLAGS) -DWIN32 -DUSE_RAND
+# LN = copy
 #---------------------------------------------------------------------------
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.18  1997/10/28 19:35:41  curt
+# Organizational changes.
+#
 # Revision 1.17  1997/10/25 03:30:02  curt
 # Misc. tweaks.
 #
