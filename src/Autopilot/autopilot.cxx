@@ -46,6 +46,11 @@
 
 #define mySlider puSlider
 
+// Climb speed constants
+const double min_climb = 70.0;	// kts
+const double best_climb = 75.0;	// kts
+const double ideal_climb_rate = 500.0; // fpm
+
 /// These statics will eventually go into the class
 /// they are just here while I am experimenting -- NHV :-)
 // AutoPilot Gain Adjuster members
@@ -1340,23 +1345,29 @@ int fgAPRun( void ) {
 
 	speed = get_speed();
 
-	if ( speed < 90.0 ) {
+	if ( speed < min_climb ) {
 	    max_climb = 0.0;
-	} else if ( speed < 100.0 ) {
-	    max_climb = ( speed - 90.0 ) * 20;
-	    //        } else if ( speed < 150.0 ) {
+	} else if ( speed < best_climb ) {
+	    max_climb = ((best_climb - min_climb) - (best_climb - speed)) 
+		* ideal_climb_rate 
+		/ (best_climb - min_climb);
 	} else {			
-	    max_climb = ( speed - 100.0 ) * 4.0 + 200.0;
-	} //else { // this is NHV hack
-	//            max_climb = ( speed - 150.0 ) * 6.0 + 300.0;
-	//        }
+	    max_climb = ( speed - best_climb ) * 10.0 + ideal_climb_rate;
+	}
+
+	// this first one could be optional if we wanted to allow
+	// better climb performance assuming we have the airspeed to
+	// support it.
+	if ( APData->TargetClimbRate > ideal_climb_rate ) {
+	    APData->TargetClimbRate = ideal_climb_rate;
+	}
 
 	if ( APData->TargetClimbRate > max_climb ) {
 	    APData->TargetClimbRate = max_climb;
 	}
 
-	else if ( APData->TargetClimbRate < -400.0 ) {
-	    APData->TargetClimbRate = -400.0;
+	if ( APData->TargetClimbRate < -ideal_climb_rate ) {
+	    APData->TargetClimbRate = -ideal_climb_rate;
 	}
 
 	error = fgAPget_climb() - APData->TargetClimbRate;
@@ -1377,11 +1388,15 @@ int fgAPRun( void ) {
 	prop_adj = prop_error / 2000.0;
 
 	total_adj = 0.9 * prop_adj + 0.1 * int_adj;
-	if ( total_adj > 0.6 ) {
-	    total_adj = 0.6;
-	}
-	else if ( total_adj < -0.2 ) {
-	    total_adj = -0.2;
+	// if ( total_adj > 0.6 ) {
+	//     total_adj = 0.6;
+	// } else if ( total_adj < -0.2 ) {
+	//     total_adj = -0.2;
+	// }
+	if ( total_adj > 1.0 ) {
+	    total_adj = 1.0;
+	} else if ( total_adj < -1.0 ) {
+	    total_adj = -1.0;
 	}
 
 	controls.set_elevator( total_adj );
