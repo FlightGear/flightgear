@@ -81,10 +81,10 @@ FGAirports::search( const string& id, FGAirport* a ) const
 	return false;
     }
 
-    c4_RowRef r = vAirport->GetAt(idx);
-
+    c4_RowRef r  = vAirport->GetAt(idx);
+    a->id        = (const char *) pID(r); /// NHV fix wrong case crash
     a->longitude = (double) pLon(r);
-    a->latitude =  (double) pLat(r);
+    a->latitude  =  (double) pLat(r);
     a->elevation = (double) pElev(r);
 
     return true;

@@ -78,6 +78,7 @@ void AptDialog_OK (puObject *)
 
         if ( airports.search( AptId, &a ) )
             {
+                AptId = a.id.c_str();  /// NHV fix wrong case crash
                 fgSetString("/sim/startup/airport-id",  AptId.c_str() );
                 // fgSetDouble("/position/altitude-ft", -9999.0 );
                 // fgSetPosFromAirportID( AptId );
