@@ -33,8 +33,6 @@
 // #include STL_STRING
 
 #include "navlist.hxx"
-#include "ilslist.hxx"
-#include "mkrbeacons.hxx"
 #include "fixlist.hxx"
 
 // SG_USING_STD(map);

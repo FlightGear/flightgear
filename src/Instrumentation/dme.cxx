@@ -8,7 +8,6 @@
 #include <simgear/math/sg_random.h>
 
 #include <Main/fg_props.hxx>
-#include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
 
 #include "dme.hxx"
