@@ -151,8 +151,7 @@ DME::search (double frequency_mhz, double longitude_rad,
                                               longitude_rad,
                                               latitude_rad,
                                               altitude_m);
-    if (ils !=0) {
-        if (ils->get_has_dme()) {
+    if (ils !=0 && ils->get_has_dme()) {
             _transmitter_valid = true;
             _transmitter = Point3D(ils->get_dme_x(),
                                    ils->get_dme_y(),
@@ -171,8 +170,7 @@ DME::search (double frequency_mhz, double longitude_rad,
                                               longitude_rad,
                                               latitude_rad,
                                               altitude_m);
-    if (nav != 0) {
-        if (nav->get_has_dme()) {
+    if (nav != 0 && nav->get_has_dme()) {
             _transmitter_valid = true;
             _transmitter = Point3D(nav->get_x(),
                                    nav->get_y(),
