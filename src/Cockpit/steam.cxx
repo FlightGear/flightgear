@@ -100,7 +100,7 @@ int FGSteam::_UpdatesPending = 1000000;  /* Forces filter to reset */
 
 void FGSteam::update (double dt)
 {
-    int timesteps = int(dt * 1000);
+    int timesteps = int(dt * fgGetInt("/sim/model-hz")); // FIXME
     if (!isTied) {
         isTied = true;
         fgTie("/steam/airspeed-kt", FGSteam::get_ASI_kias);
