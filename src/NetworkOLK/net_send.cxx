@@ -37,7 +37,7 @@
 /* I prefer NHV's decl. */
 #include <Cockpit/hud.hxx>
 #include <Include/fg_constants.h>
-#include <ssg.h>
+#include <plib/ssg.h>
 #include <Main/views.hxx>
 
 //#define printf //

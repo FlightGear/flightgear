@@ -46,7 +46,7 @@
 #include <map>			// STL associative "array"
 #include <vector>		// STL "array"
 
-#include <ssg.h>		// plib include
+#include <plib/ssg.h>		// plib include
 
 #include "material.hxx"
 

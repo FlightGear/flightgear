@@ -391,22 +391,6 @@ inline double fg_max3 (const double a, const double b, const double c ) {
     return a < b ? fg_max(b, c) : fg_max(a, c);
 }
 
-inline void sgdSetVec3 ( sgdVec3 dst, sgVec3 src )
-{
-  dst [ 0 ] = src [ 0 ] ;
-  dst [ 1 ] = src [ 1 ] ;
-  dst [ 2 ] = src [ 2 ] ;
-}
-
-inline void sgdSetMat4 ( sgdMat4 dst, sgMat4 src )
-{
-  for ( int i = 0; i < 4; ++i ) {
-      for ( int j = 0; j < 4; ++j ) {
-	  dst [ i ] [ j ] = src [ i ] [ j ];
-      }
-  }
-}
-
 // check for an instersection with the individual triangles of a leaf
 static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgdMat4 m,
 				    const sgdVec3 p, const sgdVec3 dir,

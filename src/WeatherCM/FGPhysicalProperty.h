@@ -62,7 +62,7 @@ HISTORY
 
 #include <vector>
 
-#include <sg.h>
+#include <plib/sg.h>
 
 #include "FGWeatherDefs.h"
 #include "FGPhysicalProperties.h"

@@ -60,7 +60,7 @@ HISTORY
 #  include <windows.h>
 #endif
 
-#include <sg.h>
+#include <plib/sg.h>
 
 #include "FGWeatherDefs.h"
 

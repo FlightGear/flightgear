@@ -26,7 +26,7 @@
 #  include <config.h>
 #endif
 
-#include <ssg.h>		// plib include
+#include <plib/ssg.h>		// plib include
 
 #include <Aircraft/aircraft.hxx>
 #include <Cockpit/panel.hxx>

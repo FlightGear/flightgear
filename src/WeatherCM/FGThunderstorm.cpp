@@ -44,7 +44,7 @@ HISTORY
 #include <stdlib.h>
 #include <time.h>
 
-#include <sg.h>
+#include <plib/sg.h>
 
 #include "FGThunderstorm.h"
 

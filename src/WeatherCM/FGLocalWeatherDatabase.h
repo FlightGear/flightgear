@@ -55,7 +55,7 @@ HISTORY
 /****************************************************************************/
 #include <vector>
 
-#include <sg.h>
+#include <plib/sg.h>
 
 #include <Math/sphrintp.h>
 

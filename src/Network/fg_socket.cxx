@@ -30,6 +30,10 @@
 #include <netdb.h>		// gethostbyname()
 #include <unistd.h>		// select(), fsync()/fdatasync()
 
+#if defined( sgi )
+#include <strings.h>
+#endif
+
 #include STL_STRING
 
 #include <Debug/logstream.hxx>
@@ -52,7 +56,7 @@ FGSocket::~FGSocket() {
 int FGSocket::make_server_socket () {
     struct sockaddr_in name;
 
-#if defined( __CYGWIN__ ) || defined( __CYGWIN32__ )
+#if defined( __CYGWIN__ ) || defined( __CYGWIN32__ ) || defined( sgi )
     int length;
 #else
     socklen_t length;

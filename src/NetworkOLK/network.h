@@ -25,7 +25,7 @@
 
 #define FGD
 
-#include <ssg.h>
+#include <plib/ssg.h>
 
 extern char *net_callsign;
 extern int  net_hud_display;

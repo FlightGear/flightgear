@@ -34,7 +34,7 @@
 #include <Main/options.hxx>
 
 #if defined( ENABLE_PLIB_JOYSTICK )
-#  include <js.h>		// plib include
+#  include <plib/js.h>		// plib include
 #elif defined( ENABLE_GLUT_JOYSTICK )
 #  include <GL/glut.h>
 #  include <XGL/xgl.h>

@@ -45,13 +45,13 @@
 #include <vector>
 #include STL_STRING
 
-#include <ssg.h>		// plib includes
+#include <plib/ssg.h>		// plib includes
 
 #include <Bucket/newbucket.hxx>
 #include <Math/point3d.hxx>
 #include <Objects/fragment.hxx>
 
-#ifdef FG_HAVE_NATIVE_SGI_COMPILERS
+#if defined( sgi )
 #include <strings.h>
 #endif
 

@@ -55,12 +55,12 @@
 #  include <unistd.h>    /* for stat() */
 #endif
 
-#include <pu.h>			// plib include
-#include <ssg.h>		// plib include
+#include <plib/pu.h>			// plib include
+#include <plib/ssg.h>		// plib include
 
 #ifdef ENABLE_AUDIO_SUPPORT
-#  include <sl.h>		// plib include
-#  include <sm.h>		// plib include
+#  include <plib/sl.h>		// plib include
+#  include <plib/sm.h>		// plib include
 #endif
 
 #include <Include/fg_constants.h>  // for VERSION

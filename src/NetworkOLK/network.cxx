@@ -62,8 +62,8 @@ extern "C" {
 */
 
 #include <Main/options.hxx>
-#include <sg.h>
-#include <ssg.h>
+#include <plib/sg.h>
+#include <plib/ssg.h>
 
 int  net_blast_toggle, net_hud_display, net_is_registered;
 char *net_callsign, *FGFS_host;

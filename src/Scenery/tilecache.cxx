@@ -32,7 +32,7 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <ssg.h>		// plib include
+#include <plib/ssg.h>		// plib include
 
 #include <Debug/logstream.hxx>
 #include <Misc/fgstream.hxx>

@@ -67,7 +67,7 @@ HISTORY
 #include <vector>
 #include <map>
 
-#include <sg.h>
+#include <plib/sg.h>
 
 #include "FGWeatherDefs.h"
 

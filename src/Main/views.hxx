@@ -33,7 +33,7 @@
 
 #include <list>
 
-#include <sg.h>			// plib include
+#include <plib/sg.h>		// plib include
 
 #include <FDM/flight.hxx>
 #include <Math/point3d.hxx>

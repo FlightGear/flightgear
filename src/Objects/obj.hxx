@@ -44,7 +44,7 @@
 
 #include STL_STRING
 
-#include <ssg.h>		// plib include
+#include <plib/ssg.h>		// plib include
 
 #include <Scenery/tileentry.hxx>
 

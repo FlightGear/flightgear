@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <pu.h>			// plib include
+#include <plib/pu.h>		// plib include
 
 #include <Debug/logstream.hxx>
 #include <Aircraft/aircraft.hxx>

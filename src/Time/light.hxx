@@ -41,7 +41,7 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <sg.h>			// plib include
+#include <plib/sg.h>			// plib include
 
 #include <Math/interpolater.hxx>
 #include <Math/point3d.hxx>
