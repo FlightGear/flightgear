@@ -28,15 +28,13 @@
 #else
 #  include <math.h>
 #endif
-#include STL_STRING
+#include <string.h>
 
 #include <simgear/debug/logstream.hxx>
 
 #include <Main/fg_props.hxx>
 
 #include "fg_sound.hxx"
-
-SG_USING_STD(string);
 
 
 // static double _fg_lin(double v)   { return v; };
@@ -93,33 +91,39 @@ FGSound::init()
    if ((_factor = _node->getDoubleValue("factor")) == 0.0)
       _factor = 1.0;
 
-   if ((_offset = _node->getDoubleValue("offset")) == 0.0)
-      _offset = 0.0;
+   _offset = _node->getDoubleValue("offset");
 
    SG_LOG(SG_GENERAL, SG_INFO, "Loading sound information for: " << _name );
 
-   string mode_str = _node->getStringValue("mode");
-   if (mode_str == "looped") {
+   const char *mode_str = _node->getStringValue("mode");
+   if ( !strcmp(mode_str,"looped") ) {
        _mode = FGSound::LOOPED;
+
    } else {
       _mode = FGSound::ONCE;
-      if (mode_str != (string)"once")
-        SG_LOG( SG_GENERAL, SG_INFO, "Unknown sound mode, default to 'once'");
+
+      if ( strcmp(mode_str, "") )
+         SG_LOG(SG_GENERAL,SG_INFO, "  Unknown sound mode, default to 'once'");
    }
 
-   string type_str = _node->getStringValue("type");
-   if (type_str == "flipflop") {
+   const char *type_str = _node->getStringValue("type");
+   if ( !strcmp(type_str, "flipflop") ) {
       _type = FGSound::FLIPFLOP;
-   } else if (type_str== "inverted") {
+
+   } else if ( !strcmp(type_str, "inverted") ) {
       _type = FGSound::INVERTED;
-   } else if (type_str == "raise") {
+
+   } else if ( !strcmp(type_str, "raise") ) {
       _type = FGSound::RAISE;
-   } else if (type_str == "fall") {
+
+   } else if ( !strcmp(type_str, "fall") ) {
       _type = FGSound::FALL;
+
    } else {
       _type = FGSound::LEVEL;
-      if (type_str != (string)"level")
-        SG_LOG( SG_GENERAL, SG_INFO, "Unknown sound type, default to 'level'");
+
+      if ( strcmp(type_str, "") )
+         SG_LOG(SG_GENERAL,SG_INFO, "  Unknown sound type, default to 'level'");
    }
 
 #if 0
@@ -140,42 +144,49 @@ FGSound::init()
    for (i = 0; (i < kids.size()) && (i < FGSound::MAXPROP); i++) {
       _snd_prop volume;
 
-      if ((volume.prop=fgGetNode(kids[i]->getStringValue("property"), true))
-          == 0)
-         volume.prop = fgGetNode("/null", true);
+      volume.prop = fgGetNode(kids[i]->getStringValue("property"), true);
 
       if ((volume.factor = kids[i]->getDoubleValue("factor")) == 0.0)
          volume.factor = 1.0;
+
       else 
          if (volume.factor < 0.0) {
             volume.factor = -volume.factor;
             volume.subtract = true;
+
          } else
             volume.subtract = false;
 
       volume.fn = NULL;
-      for (int j=0; __fg_snd_fn[j].fn; j++)
-         if (__fg_snd_fn[j].name == kids[i]->getStringValue("type")) {
-            volume.fn = __fg_snd_fn[j].fn;
-            break;
+      const char *type_str = kids[i]->getStringValue("type");
+      if ( strcmp(type_str, "") ) {
+
+         for (int j=0; __fg_snd_fn[j].fn; j++)
+           if ( !strcmp(type_str, __fg_snd_fn[j].name) ) {
+               volume.fn = __fg_snd_fn[j].fn;
+               break;
+            }
+
+         if (!volume.fn)
+            SG_LOG(SG_GENERAL,SG_INFO,
+                   "  Unknown volume type, default to 'lin'");
       }
 
-      if (!volume.fn)
-         SG_LOG( SG_GENERAL, SG_INFO, "Unknown volume type, default to 'lin'");
-
-      if ((volume.offset = kids[i]->getDoubleValue("offset")) == 0.0)
-         volume.offset = 0.0;
+      volume.offset = kids[i]->getDoubleValue("offset");
 
       if ((volume.min = kids[i]->getDoubleValue("min")) < 0.0) {
          SG_LOG( SG_GENERAL, SG_WARN,
           "Volume minimum value below 0. Forced to 0.");
+
          volume.min = 0.0;
       }
 
-      if ((volume.max = kids[i]->getDoubleValue("max")) < volume.min) {
-         SG_LOG( SG_GENERAL, SG_ALERT,
-          "Volume maximum value below minimum value. Forced above minimum.");
-        volume.max = volume.min + 5.0;
+      volume.max = kids[i]->getDoubleValue("max");
+      if (volume.max && (volume.max < volume.min) ) {
+         SG_LOG(SG_GENERAL,SG_ALERT,
+                "  Volume maximum below minimum. Neglected.");
+
+        volume.max = 0.0;
       }
 
       _volume.push_back(volume);
@@ -192,36 +203,50 @@ FGSound::init()
    for (i = 0; (i < kids.size()) && (i < FGSound::MAXPROP); i++) {
       _snd_prop pitch;
 
-      if ((pitch.prop = fgGetNode(kids[i]->getStringValue("property"), true))
-          == 0)
-         pitch.prop = fgGetNode("/null", true);
+      pitch.prop = fgGetNode(kids[i]->getStringValue("property"), true);
 
       if ((pitch.factor = kids[i]->getDoubleValue("factor")) == 0.0)
          pitch.factor = 1.0;
 
-      pitch.fn = NULL;
-      for (int j=0; __fg_snd_fn[j].fn; j++) 
-         if (__fg_snd_fn[j].name == kids[i]->getStringValue("type")) {
-            pitch.fn = __fg_snd_fn[j].fn;
-            break;
-      }
+      else
+         if (pitch.factor < 0.0) {
+            pitch.factor = -pitch.factor;
+            pitch.subtract = true;
 
-      if (!pitch.fn)
-         SG_LOG( SG_GENERAL, SG_INFO, "Unknown pitch type, default to 'lin'");
+         } else
+            pitch.subtract = false;
+
+      pitch.fn = NULL;
+      const char *type_str = kids[i]->getStringValue("type");
+      if ( strcmp(type_str, "") ) {
+
+         for (int j=0; __fg_snd_fn[j].fn; j++) 
+            if ( !strcmp(type_str, __fg_snd_fn[j].name) ) {
+               pitch.fn = __fg_snd_fn[j].fn;
+               break;
+            }
+
+         if (!pitch.fn)
+            SG_LOG(SG_GENERAL,SG_INFO,
+                   "  Unknown pitch type, default to 'lin'");
+      }
      
       if ((pitch.offset = kids[i]->getDoubleValue("offset")) == 0.0)
          pitch.offset = 1.0;
 
       if ((pitch.min = kids[i]->getDoubleValue("min")) < 0.0) {
-         SG_LOG( SG_GENERAL, SG_WARN,
-              "Pitch minimum value below 0. Forced to 0.");
+         SG_LOG(SG_GENERAL,SG_WARN,
+                "  Pitch minimum value below 0. Forced to 0.");
+
          pitch.min = 0.0;
       }
 
-      if ((pitch.max = kids[i]->getDoubleValue("max")) < pitch.min) {
-         SG_LOG( SG_GENERAL, SG_ALERT,
-              "Pitch maximum value below minimum value. Forced above minimum.");
-         pitch.max = pitch.min + 5.0;
+      pitch.max = kids[i]->getDoubleValue("max");
+      if (pitch.max && (pitch.max < pitch.min) ) {
+         SG_LOG(SG_GENERAL,SG_ALERT,
+                "  Pitch maximum below minimum. Neglected");
+
+         pitch.max = 0.0;
       }
 
       _pitch.push_back(pitch);
@@ -310,13 +335,16 @@ FGSound::update (int dt)
 
    }
 
+   {
+      int i, max;
+
       //
       // Update the volume
       //
-      int max = _volume.size();
+      max = _volume.size();
+      double volume = 1.0;
+      double volume_offset = 0.0;
 
-      int i;
-      double volume = 1.0, volume_offset = 0.0;
       for(i = 0; i < max; i++) {
          double v = _volume[i].prop->getDoubleValue();
 
@@ -325,11 +353,11 @@ FGSound::update (int dt)
 
          v *= _volume[i].factor;
 
-         if (v > _volume[i].max)
+         if (!_volume[i].max && (v > _volume[i].max))
             v = _volume[i].max;
-         else
-            if (v < _volume[i].min) 
-               v = 0;  // v = _volume[i].min;
+
+         else if (!_volume[i].min && (v < _volume[i].min))
+            v = _volume[i].min;
 
          if (_volume[i].subtract)				// Hack!
             volume = _volume[i].offset - v;
@@ -343,7 +371,9 @@ FGSound::update (int dt)
       // Update the pitch
       //
       max = _pitch.size();
-      double pitch = 1.0, pitch_offset = 0.0;
+      double pitch = 1.0;
+      double pitch_offset = 0.0;
+
       for(i = 0; i < max; i++) {
          double p = _pitch[i].prop->getDoubleValue();
 
@@ -352,11 +382,11 @@ FGSound::update (int dt)
 
          p *= _pitch[i].factor;
 
-         if (p > _pitch[i].max)
+         if (!_pitch[i].max && (p > _pitch[i].max))
             p = _pitch[i].max;
-         else
-            if (p < _pitch[i].min) 
-               p = _pitch[i].min;
+
+         else if (!_pitch[i].min && (p < _pitch[i].min))
+            p = _pitch[i].min;
 
          if (_pitch[i].subtract)				// Hack!
             pitch = _pitch[i].offset - p;
@@ -371,6 +401,7 @@ FGSound::update (int dt)
       //
       _sample->set_pitch( pitch_offset + pitch );
       _sample->set_volume( volume_offset + volume );
+   }
 
    //
    // Do we need to start playing the sample?

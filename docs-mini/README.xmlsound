@@ -20,10 +20,6 @@ A rewrite of the sound code was done around v0.7.10 by Erik Hofman
 allowing for configuration of the sounds via XML to address this
 limitation.
 
-About The Property Manager:
---------------------------
-The 
-
 Sound Architecture:
 ------------------
 All of the sound configuration files are XML-encoded* property lists.
@@ -85,18 +81,35 @@ Configuration description:
  < ... >
  	This is the event seperator. The text inside the brackets
  	can be anything. Bit it is adviced to give it a meaningfull name
-        like:
- 	crank, engine, rumble, gear, squeal, flap, wind, stall or click.
+        like: crank, engine, rumble, gear, squeal, flap, wind or stall
  
  	The value can be defined multiple times, thus anything which is
- 	related may have the same name.
+ 	related may have the same name (grouping them together).
  
    <name>
  	This defines the name of the event. This name is used internally
  	and, although it can me defined multiple times in the same file,
-        should have a unique value unless you realy know what you're doing.
+        should normally have an unique value.
  
- 	Defining it multiple times could lead to unexpected behaviour.
+	Multiple definitions of the same name will allow multiple sections
+	to interfere in the starting and stopping of the sample.
+
+	This method can't be used to controll the pitch or volume of the 
+	sample, but instead multiple volume or pitch section should be
+	included inside the same event.
+
+	The types "raise" and "fall" will stop the playback of the sample
+	regardless of any other event. This means that when the type "raise"
+	is supplied, sample playback will stop when the event turns false.
+	Using the type "fall" will stop playback when the event turns true.
+
+	IMPORTANT:
+        If the trigger is used for anything else but stopping the sound
+ 	at a certain event, all sections with the same name *should* have
+	exactly the same sections for everything but property and type.
+
+	In the case of just stopping the sample at a certain event, the
+	sections for path, volume and pitch may be omitted.
  	
    <path>
  	This defined th path to the sound file. The path is relative to the
@@ -113,7 +126,15 @@ Configuration description:
  	The triger depends on the value of <type>.
  
    <type>
- 	This specifies how the event is triggered.
+ 	This specifies how the event is triggered. When an event is triggered
+	the sample will start playing. Since the effects scheduler can have
+	multiple events controll a single sound event, it depends on the
+	situation if an event actually stops playing the sound.
+
+	Basically the following is true:
+		The first event requesting to start playback, triggers playback.
+		The last event requesting to stop playback, will stop playback.
+
  	There are multiple options:
  
  	level: 		events are active if the value is true.
@@ -124,6 +145,12 @@ Configuration description:
  	flipflop:	events are triggered on state changes.
  			this is only usefull for samples which are played
  			once.
+
+	raise:		start playing at the raise of the event.
+			explicitly stop playing when the event turns false.
+
+	fall:		start playing at the fall of the event.
+			explicitly stop playing when the event turns true.
  
    <mode>
  	This defines how the sample should be played:
@@ -138,9 +165,9 @@ Configuration description:
    <volume> / <pitch>
  	Volume or Pitch definition. Currently there may be up to 5
 	volume and up to 5 pitch definitions defined within one sound
-	event. Normally all <offset> values are added together and the
+	event. Normally all offset values are added together and the
 	results after property calculations will be miltplied.
-	A special condition occurs when the <factor> value is negative,
+	A special condition occurs when the value of factor is negative,
 	in which case the offset doesn't get added to the other offset values
 	but instead will be used in the multiplication section.
  
@@ -149,6 +176,9 @@ Configuration description:
  	The value is treatened as a floating point number.
  
      <type>
+	Defines the function that should be used upon the property
+	before it is used for calculating the net result:
+
  	lin:		lineair handling of the property value.
  			this is the default.
  
@@ -157,6 +187,13 @@ Configuration description:
  
  	log:		convert the property value to a true logarithmic
  			value before scaling it.
+
+	inv:		inverse lineair handling (1/x).
+
+	abs:		absolute handling of the value (always positive).
+
+	sqrt:		calculate the square root of the absolute value
+			before scaling it.
  
      <factor>
  	Defines the multiplication factor for the property value.
@@ -171,28 +208,47 @@ Configuration description:
      <min>
  	Minimum allowed value.
  	This is usefull if sounds start to sound funny. Anything lower
- 	will be converted to 0.
+ 	will be truncated to this value.
  
      <max>
  
  	Maximum allowed value.
  	This is usefull if sounds gets to loud. Anything higher will be
  	truncated to this value.
+
+Creating a configrationfile:
+---------------------------
+
+To make things easy, there is a default falue for most entries to allow a
+sane configuration when a certain entry is omitted.
+
+Default values are:
+
+type:	lin
+factor:	1.0
+offset:	0.0 for volume, 1.0 for pitch
+min:	0.0 (don't check)
+max:	0.0 (don't check)
+
  
  
- Calculations are made the following way
- (function can be one of: none, ln or log ):
+Calculations are made the following way (for both pitch and volume):
  
-   if (scale < 0) {
-      value[i] = offset[n] - abs(scale[n]) * function(property[n])
-      offset[i] = 0;
-   } else
-      value[i] = scale[n] * function(property[n])
- 
- And the end result will be:
+   value = 0;
+   offs = 0;
 
- result = offset[0..max] + value[0..max];
+   for (n = 0;  n < max; n++) {
+      if (factor < 0)
+      {
+         value += offset[n] - abs(factor[n]) * function(property[n]);
+      }
+      else
+      {
+         value += factor[n] * function(property[n]);
+         offs += offset[n];
+      }
+   }
 
+   volume = offs + value;
 
-
-
+where function can be one of: lin, ln, log, inv, abs or sqrt

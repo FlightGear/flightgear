@@ -596,8 +596,10 @@ FGAutopilot::update (int dt)
 	    // figure out how far off we are from desired heading
 
 	    // Now it is time to deterime how far we should be rolled.
-	    SG_LOG( SG_AUTOPILOT, SG_DEBUG, "RelHeading: " << RelHeading );
-
+	    SG_LOG( SG_AUTOPILOT, SG_DEBUG,
+                    "Heading = " << heading_node->getDoubleValue() <<
+                    " TargetHeading = " << TargetHeading <<
+                    " RelHeading = " << RelHeading );
 
 	    // Check if we are further from heading than the roll out point
 	    if ( fabs( RelHeading ) > RollOut ) {
