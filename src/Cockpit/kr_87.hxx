@@ -60,9 +60,9 @@ class FGKR_87 : public FGSubsystem
     double freq;
     double stby_freq;
     double rotation;
-    double lon;
-    double lat;
-    double elev;
+    double stn_lon;
+    double stn_lat;
+    double stn_elev;
     double range;
     double effective_range;
     double dist;
@@ -134,8 +134,8 @@ public:
 
     // Calculated values
     inline bool get_inrange() const { return inrange; }
-    inline double get_lon() const { return lon; }
-    inline double get_lat() const { return lat; }
+    inline double get_stn_lon() const { return stn_lon; }
+    inline double get_stn_lat() const { return stn_lat; }
     inline double get_heading() const { return heading; }
     inline double get_needle_deg() const { return needle_deg; }
     inline double get_flight_timer() const { return flight_timer; }

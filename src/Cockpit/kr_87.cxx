@@ -208,13 +208,13 @@ FGKR_87::unbind ()
 void 
 FGKR_87::update(double dt) 
 {
-    double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
+    double acft_lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double acft_lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double acft_elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
 
     need_update = false;
 
-    Point3D aircraft = sgGeodToCart( Point3D( lon, lat, elev ) );
+    Point3D aircraft = sgGeodToCart( Point3D( acft_lon, acft_lat, acft_elev ) );
     Point3D station;
     double az1, az2, s;
 
@@ -298,15 +298,16 @@ FGKR_87::update(double dt)
             dist = aircraft.distance3D( station );
 
             // wgs84 heading
-            geo_inverse_wgs_84( elev, lat * SGD_RADIANS_TO_DEGREES,
-                                lon * SGD_RADIANS_TO_DEGREES, 
-                                lat, lon,
+            geo_inverse_wgs_84( acft_elev,
+                                acft_lat * SGD_RADIANS_TO_DEGREES,
+                                acft_lon * SGD_RADIANS_TO_DEGREES, 
+                                stn_lat, stn_lon,
                                 &az1, &az2, &s );
             heading = az1;
             // cout << " heading = " << heading
             //      << " dist = " << dist << endl;
 
-            effective_range = kludgeRange(elev, elev, range);
+            effective_range = kludgeRange(stn_elev, acft_elev, range);
             if ( dist < effective_range * SG_NM_TO_METER ) {
                 inrange = true;
             } else if ( dist < 2 * effective_range * SG_NM_TO_METER ) {
@@ -334,7 +335,10 @@ FGKR_87::update(double dt)
         elapsed_timer = 0.0;
     }
 
+    cout << "goal = " << goal_needle_deg << "actual = " << needle_deg << endl;
     double diff = goal_needle_deg - needle_deg;
+    while ( diff < -180.0 ) { diff += 360.0; }
+    while ( diff > 180.0 ) { diff -= 360.0; }
     needle_deg += diff * dt * 4;
 
     // cout << "flt = " << flight_timer << " et = " << elapsed_timer 
@@ -375,9 +379,9 @@ FGKR_87::update(double dt)
 // Update current nav/adf radio stations based on current postition
 void FGKR_87::search() 
 {
-    double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
+    double acft_lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double acft_lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double acft_elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
 
 				// FIXME: the panel should handle this
     FGNav nav;
@@ -388,22 +392,22 @@ void FGKR_87::search()
     // ADF.
     ////////////////////////////////////////////////////////////////////////
 
-    if ( current_navlist->query( lon, lat, elev, freq, &nav ) ) {
+    if ( current_navlist->query( acft_lon, acft_lat, acft_elev, freq, &nav ) ) {
 	char sfreq[128];
 	snprintf( sfreq, 10, "%.0f", freq );
 	ident = sfreq;
 	ident += nav.get_ident();
-	// cout << "adf ident = " << ident << endl;
+	cout << "adf ident = " << ident << endl;
 	valid = true;
 	if ( last_ident != ident ) {
 	    last_ident = ident;
 
 	    trans_ident = nav.get_trans_ident();
-	    lon = nav.get_lon();
-	    lat = nav.get_lat();
-	    elev = nav.get_elev();
+	    stn_lon = nav.get_lon();
+	    stn_lat = nav.get_lat();
+	    stn_elev = nav.get_elev();
 	    range = nav.get_range();
-	    effective_range = kludgeRange(elev, elev, range);
+	    effective_range = kludgeRange(stn_elev, acft_elev, range);
 	    x = nav.get_x();
 	    y = nav.get_y();
 	    z = nav.get_z();
