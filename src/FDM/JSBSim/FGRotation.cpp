@@ -80,7 +80,7 @@ FGRotation::FGRotation(FGFDMExec* fdmex) : FGModel(fdmex)
   Name = "FGRotation";
   cTht=cPhi=cPsi=1.0;
   sTht=sPhi=sPsi=0.0;
-
+  
   Debug(0);
 }
 

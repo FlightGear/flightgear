@@ -123,7 +123,6 @@ private:
   FGColumnVector3 vVelDot;
   FGColumnVector3 vRunwayNormal;
   
-  double Vee, invMass, invRadius;
   double Radius, h;
   double LatitudeDot, LongitudeDot, RadiusDot;
   double lastLatitudeDot, lastLongitudeDot, lastRadiusDot;

@@ -268,7 +268,7 @@ private:
   string name;
   string sSteerType;
   string sBrakeGroup;
-  string Retractable;
+  string sRetractable;
   
   BrakeGroup eBrakeGrp;
   SteerType  eSteerType;

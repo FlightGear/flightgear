@@ -477,10 +477,12 @@ bool FGState::Reset(string path, string acname, string fname)
     cerr << "The reset file " << resetDef
          << " does not appear to be a reset file" << endl;
     return false;
+  } else {
+    resetfile.GetNextConfigLine();
+    resetfile >> token;
+    cout << "Resetting using: " << token << endl << endl;
   }
   
-  resetfile.GetNextConfigLine();
-  resetfile >> token;
   while (token != string("/initialize") && token != string("EOF")) {
     if (token == "UBODY") resetfile >> U;
     if (token == "VBODY") resetfile >> V;
