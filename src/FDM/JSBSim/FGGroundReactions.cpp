@@ -78,6 +78,7 @@ bool FGGroundReactions::Run(void)
       }
 
       // Only execute this code when the aircraft ground speed is very, very small.
+      /*
       if (fabs(Translation->GetUVW(eX)) < 0.1 &&
           fabs(Translation->GetUVW(eZ)) < 0.1)
       {
@@ -124,6 +125,7 @@ bool FGGroundReactions::Run(void)
 
         vMoments(eZ) = -(Aerodynamics->GetMoments(eZ) + Propulsion->GetMoments(eZ));
       }
+      */
     } else {
       // Crash Routine
     }
