@@ -31,8 +31,15 @@
 
 #include "UFO.hxx"
 
+const double throttle_damp = 0.05;
+const double aileron_damp = 0.01;
+const double elevator_damp = 0.01;
 
-FGUFO::FGUFO( double dt ) {
+FGUFO::FGUFO( double dt )
+  : Throttle(0.0),
+    Aileron(0.0),
+    Elevator(0.0)
+{
     set_delta_t( dt );
 }
 
@@ -55,11 +62,17 @@ void FGUFO::update( int multiloop ) {
     double time_step = get_delta_t() * multiloop;
 
     // read the throttle
-    double Throttle = globals->get_controls()->get_throttle( 0 );
+    double th = globals->get_controls()->get_throttle( 0 );
+    if (globals->get_controls()->get_brake(0)) {
+        th = -th;
+    }
+    Throttle = th * throttle_damp + Throttle * (1 - throttle_damp);
 
     // read the state of the control surfaces
-    double Aileron  = globals->get_controls()->get_aileron();
-    double Elevator = globals->get_controls()->get_elevator();
+    Aileron  = globals->get_controls()->get_aileron() * aileron_damp
+               + Aileron * (1 - aileron_damp);
+    Elevator = globals->get_controls()->get_elevator() * elevator_damp
+               + Elevator * (1 - elevator_damp);
 
     // the velocity of the aircraft
     double velocity = Throttle * 2000; // meters/sec
@@ -141,7 +154,7 @@ void FGUFO::update( int multiloop ) {
 
     // update (lon/lat) position
     double lat2, lon2, az2;
-    if ( speed > SG_EPSILON ) {
+    if ( fabs(speed) > SG_EPSILON ) {
 	geo_direct_wgs_84 ( get_Altitude(),
 			    get_Latitude() * SGD_RADIANS_TO_DEGREES,
 			    get_Longitude() * SGD_RADIANS_TO_DEGREES,
