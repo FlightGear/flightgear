@@ -1389,9 +1389,7 @@ int main( int argc, char **argv ) {
     // Allocate global data structures.  This needs to happen before
     // we parse command line options
 
-    SGPropertyNode *props = new SGPropertyNode;
     globals = new FGGlobals;
-    globals->set_props( props );
 
     // seed the random number generater
     sg_srandom_time();
@@ -1603,15 +1601,14 @@ int main( int argc, char **argv ) {
 
 #if !defined( PLIB_1_2_X )
     // this should be redundant ... but it breaks for relative paths
-    // w/ plib-1.2.0
-    ssgModelPath( (char *)full_model.dir().c_str() );
+    // ssgModelPath( (char *)full_model.dir().c_str() );
 #endif
 
     ssgTexturePath( (char *)full_model.dir().c_str() );
     ssgEntity *acmodel_obj = ssgLoad( (char *)full_model.c_str() );
     if( !acmodel_obj ) {
         // fall back to default
-        acmodel_obj = ssgLoad( (char *)"glider.ac" );
+        acmodel_obj = ssgLoad( (char *)"Models/Geometry/glider.ac" );
         if( !acmodel_obj ) {
             SG_LOG( SG_GENERAL, SG_ALERT, "FAILED to LOAD an AC model! ..." );
             exit(-1);
