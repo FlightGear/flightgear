@@ -349,6 +349,29 @@ bool fgSetPosFromAirportID( const string& id ) {
 }
 
 
+
+// Set current tower position lon/lat given an airport id
+bool fgSetTowerPosFromAirportID( const string& id, double hdg ) {
+    FGAirport a;
+    // tower height hard coded for now...
+    float towerheight=50.0f;
+
+    // make a little off the heading for 1 runway airports...
+    float fudge_lon = fabs(sin(hdg)) * .003f;
+    float fudge_lat = .003f - fudge_lon;
+
+    if ( fgFindAirportID( id, &a ) ) {
+	fgSetDouble("/sim/tower/longitude-deg",  a.longitude + fudge_lon);
+	fgSetDouble("/sim/tower/latitude-deg",  a.latitude + fudge_lat);
+        fgSetDouble("/sim/tower/altitude-ft", a.elevation + towerheight);
+	return true;
+    } else {
+	return false;
+    }
+
+}
+
+
 // Set current_options lon/lat given an airport id and heading (degrees)
 bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     FGRunway r;
@@ -1078,3 +1101,4 @@ void fgReInitSubsystems( void )
 	fgSetBool("/sim/freeze/master", false);
     }
 }
+

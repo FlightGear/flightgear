@@ -77,6 +77,9 @@ bool fgFindAirportID( const string& id, FGAirport *a );
 // Set pos given an airport id
 bool fgSetPosFromAirportID( const string& id );
 
+// Set tower position given an airport id
+bool fgSetTowerPosFromAirportID( const string& id, double hdg );
+
 // Set position and heading given an airport id and heading (degrees)
 bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg );
 
@@ -89,5 +92,6 @@ void fgSetPosFromGlideSlope(void);
 SGTime *fgInitTime();
 
 #endif // _FG_INIT_HXX
+
 
 

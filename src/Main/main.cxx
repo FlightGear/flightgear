@@ -143,7 +143,7 @@ sgVec3 rway_ols;
 // ADA
 // Clip plane settings...
 float cockpit_nearplane = 0.01f;
-float cockpit_farplane = 100.0f;
+float cockpit_farplane = 5000.0f;
 float scene_nearplane = 0.5f;
 float scene_farplane = 120000.0f;
 
@@ -1448,6 +1448,8 @@ int mainLoop( int argc, char **argv ) {
 	// fgSetPosFromAirportID( fgGetString("/sim/startup/airport-id") );
 	fgSetPosFromAirportIDandHdg( fgGetString("/sim/startup/airport-id"),
 				     fgGetDouble("/orientation/heading-deg") );
+        // set tower position (a little off the heading for single runway airports)
+        fgSetTowerPosFromAirportID( fgGetString("/sim/startup/airport-id"), fgGetDouble("orientation/heading") );
     }
 
     SGTime *t = fgInitTime();
@@ -1935,6 +1937,7 @@ void fgUpdateDCS (void) {
 
 // $$$ end - added VS Renganathan, 15 Oct 2K
 //           added Venky         , 12 Nov 2K
+
 
 
 

@@ -26,6 +26,8 @@
 
 #include <simgear/compiler.h>
 
+#include <fg_props.hxx>
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -521,6 +523,16 @@ FGViewer::recalc ()
   sgCopyVec3(_zero_elev, _zero_elev_view_pos);
   sgCopyVec3(_view_pos, _relative_view_pos);
 
+  // FIXME:
+  // Doing this last recalc here for published values...where the airplane is
+  // This should be per aircraft or model (for published values) before
+  // multiple FDM can be done.
+  recalcPositionVectors(fgGetDouble("/position/longitude-deg"),
+                        fgGetDouble("/position/latitude-deg"),
+                        fgGetDouble("/position/altitude-deg"));
+
+
+
   // Make the world up rotation matrix for eye positioin...
   sgMakeRotMat4( UP, _lon_deg, 0.0, -_lat_deg );
 
@@ -790,6 +802,7 @@ FGViewer::update (int dt)
     }
   }
 }
+
 
 
 
