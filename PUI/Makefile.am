@@ -1,8 +1,9 @@
 noinst_LIBRARIES = libPUI.a
 
+EXTRA_DIST = complex.cxx simple.cxx
+
 libPUI_a_SOURCES = \
 	pu.h puLocal.h \
-	complex.cxx \
 	pu.cxx \
 	puBox.cxx \
 	puButton.cxx \
