@@ -38,6 +38,8 @@ INCLUDES
 
 #include <math.h>
 
+#include <string>
+
 #include "FGState.h"
 #include "FGFDMExec.h"
 #include "FGAtmosphere.h"
@@ -73,18 +75,21 @@ FGState::~FGState(void)
 }
 
 
-bool FGState::Reset(char* fname)
+bool FGState::Reset(const string& path, const string& fname)
 {
-  char resetDef[256];
+  string resetDef;
   float U, V, W;
   float phi, tht, psi;
   float alpha, beta, gamma;
   float Q0, Q1, Q2, Q3;
   float T[4][4];
 
-  sprintf(resetDef, "/h/curt/projects/FlightGear/Simulator/FDM/JSBsim/aircraft/%s/%s", FDMExec->GetAircraft()->GetAircraftName(), fname);
+  resetDef = path;
+  resetDef += "/";
+  resetDef += FDMExec->GetAircraft()->GetAircraftName();
+  resetDef += "/" + fname;
 
-  ifstream resetfile(resetDef);
+  ifstream resetfile( resetDef.c_str() );
 
   if (resetfile) {
     resetfile >> U;

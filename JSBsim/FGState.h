@@ -46,6 +46,7 @@ INCLUDES
 
 #include <stdio.h>
 #include <fstream.h>
+#include <string>
 #include "FGDefs.h"
 
 /*******************************************************************************
@@ -63,7 +64,7 @@ public:
    FGState(FGFDMExec*);
   ~FGState(void);
 
-  bool Reset(char*);
+  bool FGState::Reset(const string& path, const string& fname);
   bool StoreData(char*);
   bool DumpData(char*);
   bool DisplayData(void);
