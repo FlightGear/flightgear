@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 # $Id$
 #
 #
@@ -24,7 +24,7 @@
 # 
 #  adapt the following two entries to your needs:
 #
-fgfs="../FlightGear/src/Main/fgfs"
+fgfs="../../src/Main/fgfs"
 opt="--disable-game-mode --disable-fullscreen --fdm=magic"
 
 
