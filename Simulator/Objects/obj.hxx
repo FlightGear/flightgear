@@ -54,6 +54,9 @@ int fgObjLoad(const string& path, fgTILE *tile);
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:49  curt
+// Initial revision
+//
 // Revision 1.3  1998/10/16 00:54:41  curt
 // Converted to Point3D class.
 //

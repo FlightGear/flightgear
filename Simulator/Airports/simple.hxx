@@ -111,6 +111,9 @@ public:
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.8  1999/03/15 17:58:57  curt
 // MSVC++ portability tweaks contributed by Bernie Bright.
 //   Added using std::istream declaration.

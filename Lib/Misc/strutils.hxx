@@ -64,6 +64,9 @@ atoi( const string& str )
 #endif // STRUTILS_H
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.6  1999/03/02 01:01:56  curt
 // Tweaks for compiling with native SGI compilers.
 //

@@ -48,6 +48,9 @@ double fg_random(void);
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.4  1998/11/07 19:07:04  curt
 // Enable release builds using the --without-logging option to the configure
 // script.  Also a couple log message cleanups, plus some C to C++ comment

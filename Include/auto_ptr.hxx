@@ -89,6 +89,9 @@ public:
 #endif /* _AUTO_PTR_HXX */
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:41  curt
+// Initial revision
+//
 // Revision 1.2  1998/09/10 19:07:03  curt
 // /Simulator/Objects/fragment.hxx
 //   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.

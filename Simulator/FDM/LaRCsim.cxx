@@ -405,6 +405,9 @@ int fgLaRCsim_2_FGInterface (FGInterface& f) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:44  curt
+// Initial revision
+//
 // Revision 1.12  1999/04/03 04:20:02  curt
 // Optimizations (tm) by Norman Vine.
 //

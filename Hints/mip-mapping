@@ -1,0 +1,118 @@
+From sbaker@link.com  Thu Mar 12 22:51:27 1998
+X-VM-v5-Data: ([nil nil nil nil t nil nil nil nil]
+	["4342" "Thu" "12" "March" "1998" "22:50:07" "-0600" "Steve Baker" "sbaker@link.com" "<Pine.SGI.3.96.980312222643.15355F-100000@lechter.bgm.link.com>" "95" "Re: Texturing (finally)" "^From:" nil nil "3" nil nil nil nil nil]
+	nil)
+Received: from lfkw10.bgm.link.com (bgm.link.com [130.210.2.10])
+	by meserv.me.umn.edu (8.8.8/8.8.8) with ESMTP id WAA13969
+	for <curt@me.umn.edu>; Thu, 12 Mar 1998 22:51:26 -0600 (CST)
+Received: from lechter.bgm.link.com (lechter.bgm.link.com [130.210.239.45])
+          by lfkw10.bgm.link.com (8.8.6/HTI-Hack-8.8.4) with SMTP
+   id WAA25775 for <curt@me.umn.edu>; Thu, 12 Mar 1998 22:50:51 -0600 (CST)
+X-Sender: steve@lechter.bgm.link.com
+Reply-To: Steve Baker <sbaker@link.com>
+In-Reply-To: <199803121856.MAA05616@kenai.me.umn.edu>
+Message-ID: <Pine.SGI.3.96.980312222643.15355F-100000@lechter.bgm.link.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Status: RO
+From: Steve Baker <sbaker@link.com>
+To: "Curtis L. Olson" <curt@me.umn.edu>
+Subject: Re: Texturing (finally)
+Date: Thu, 12 Mar 1998 22:50:07 -0600 (CST)
+
+On Thu, 12 Mar 1998, Curtis L. Olson wrote:
+
+> Steve Baker writes:
+> > So you have the texture into OpenGL using glGenTextures /
+> > glBindTexture and you have a number for each texture?  Does the
+> > routine generate the MIPmaps for you?
+> 
+> I found some code that looks like it might do the mipmapping ... I'll
+> fiddle around with that a bit if I get a chance.
+ 
+Once you have an image in memory, the code in the RedBook is all you need.
+
+There is a glu function for generating the MIPmaps. It works OK for
+starters - but eventually you'll want to rewrite it. Since the sources
+for glu are provided with Mesa (and they work with ANY OpenGL), you
+can easily take the standard glu code and hack it yourself later.
+
+The main thing that I find I need to do with MIPmapping is to control
+the final alpha value of MIPmapped transparency textures. Simply averaging
+all the high level texel Alpha's together to get the lowest LOD doesn't
+work very well in some applications for translucent texture.
+
+However, that won't matter to you for a LONG while yet - so just steal
+the RedBook examples.
+
+> > As a starter (just to get something going), you could simply divide
+> > the latitude and longitude of each terrain vertex by some suitable
+> > constant and use that as the texture coordinate. Alternatively, you
+> > could let OpenGL do the work using glTexGenf.
+> 
+> Tell me more about glTexGenf().
+
+I have to come clean here and mention that I have never actually used
+glTexGenf.
+
+Basically, it provides a mechanism where OpenGL will generate the
+texture coordinates for you automatically using other vertex information.
+I forget all the modes it has - but IIRC, one of them allows you to specify
+the equation of a plane (A,B,C,D where: Ax+By+Cz+D==0) - and the texture
+coordinates are computed by projecting each vertex (x,y,z) onto that
+plane.
+
+If you set that plane to be a plane that is tangential to the earth
+at the center of the terrain tile that you are rendering, then the
+texture would 'drape' itself nicely over the terrain - but there would
+be seams at the edge of each tile.
+
+>  All my coordinates come off the disk
+> in (X, Y, Z) so it would take some computational effort to convert
+> back to lon/lat ...
+
+Yes - you'd need to store (X,Y,Z,S,T) for each vertex on disk and compute
+the texture coordinates in the terrain tool. You'd need to do that
+eventually anyway since the number you use to multiply the lat/long
+to convert to S,T will be different for each kind of texture map - and
+for databases at different latitudes (otherwise the texture gets all
+squashed up near the poles).
+
+I guess if you don't want to change your file format that much, you
+could store a matrix at the top of the file that could be used to
+transform (X,Y,Z) into (S,T,garbage).  But that's really the same
+thing as using glTexGen to do the work - and you'll still get seams
+at the edge of every terrain tile whenever the matrix changes.
+
+Since OpenGL supports the idea of a texture matrix, you could simply
+load your per-tile matrix onto the OpenGL texture matrix stack and
+use glTexCoord3f(x,y,z) [where (x,y,z) is the same vertex coordinate
+that you pass to glVertex3f()].
+
+However, in your quest to DO THE RIGHT THING, there is little choice
+but to store the texture S,T in the file along with the other vertex
+information - any other approach is going to produce seams in the texture
+and sooner or later, you'll get dissatisfied with that.
+
+I suggest that in the short term, you use the texture matrix approach
+since that gets you a textured image *quickly*. It will also let you
+debug the texture loader, the MIPmapping, the glTexBind, etc stuff
+and so on. You'll be able to find some nice textures and make some
+new (and v.cool) screen shots. Switching to stored (S,T) coords is
+something you can attack later when the seams get too annoying.
+
+>  Right now I'm using fg_random() to specify
+> texture coordinates :-) It seems to work, but has some strange
+> effects. :-)
+
+Strange!!...I'm not suprised!
+
+Steve Baker                     817-619-8776 (Vox/Vox-Mail)
+Raytheon Systems Inc.           817-619-4028 (Fax)
+2200 Arlington Downs Road       SBaker@link.com (eMail)
+Arlington, Texas. TX 76005-6171 SJBaker1@airmail.net (Personal eMail)
+http://www.hti.com        http://web2.airmail.net/sjbaker1 (personal)
+
+** Beware of Geeks bearing GIF's. **
+
+

@@ -48,6 +48,9 @@ int fgLaRCsim_2_FGInterface (FGInterface& f);
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:44  curt
+// Initial revision
+//
 // Revision 1.5  1999/02/05 21:28:59  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

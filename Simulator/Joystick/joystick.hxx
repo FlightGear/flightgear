@@ -44,6 +44,9 @@ int fgJoystickInit( void );
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:49  curt
+// Initial revision
+//
 // Revision 1.3  1998/10/27 02:14:33  curt
 // Changes to support GLUT joystick routines as fall back.
 //

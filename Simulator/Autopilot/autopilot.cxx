@@ -581,6 +581,9 @@ double NormalizeDegrees(double Input)
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:49  curt
+// Initial revision
+//
 // Revision 1.15  1999/02/12 23:22:35  curt
 // Allow auto-throttle adjustment while active.
 //

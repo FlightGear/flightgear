@@ -49,11 +49,14 @@ int fgGetTimeInterval( void );
 
 
 /* $Log$
-/* Revision 1.1  1998/04/24 00:52:30  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Fog color fixes.
-/* Separated out lighting calcs into their own file.
+/* Revision 1.1  1999/04/05 21:32:47  curt
+/* Initial revision
 /*
+ * Revision 1.1  1998/04/24 00:52:30  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ * Fog color fixes.
+ * Separated out lighting calcs into their own file.
+ *
  * Revision 1.5  1998/04/21 17:01:45  curt
  * Fixed a problems where a pointer to a function was being passed around.  In
  * one place this functions arguments were defined as ( void ) while in another

@@ -82,7 +82,10 @@
 
 
 /* $Log$
-/* Revision 1.1  1998/04/28 21:41:39  curt
-/* Initial revision of fg_zlib.h
+/* Revision 1.1  1999/04/05 21:32:41  curt
+/* Initial revision
 /*
+ * Revision 1.1  1998/04/28 21:41:39  curt
+ * Initial revision of fg_zlib.h
+ *
  */

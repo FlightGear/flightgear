@@ -63,6 +63,9 @@ double fgPointLineSquared(MAT3vec p, MAT3vec p0, MAT3vec d);
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.4  1998/10/16 23:36:39  curt
 // c++-ifying.
 //

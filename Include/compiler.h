@@ -301,6 +301,9 @@ inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
 #endif // _COMPILER_H
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:40  curt
+// Initial revision
+//
 // Revision 1.9  1999/03/02 00:36:31  curt
 // Tweaks for native SGI compilers.
 //

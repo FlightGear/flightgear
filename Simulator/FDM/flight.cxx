@@ -195,6 +195,9 @@ void fgFDMSetGroundElevation(int model, double ground_meters) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:44  curt
+// Initial revision
+//
 // Revision 1.17  1999/04/03 04:20:03  curt
 // Optimizations (tm) by Norman Vine.
 //

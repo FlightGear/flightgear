@@ -68,6 +68,9 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:49  curt
+// Initial revision
+//
 // Revision 1.7  1999/02/05 21:28:09  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

@@ -1,0 +1,101 @@
+From curt@me.umn.edu  Fri Nov 13 17:02:31 1998
+X-VM-v5-Data: ([nil nil nil nil nil nil nil nil nil]
+	["209" "Fri" "13" "November" "1998" "17:02:29" "-0600" "Curtis L. Olson" "curt@me.umn.edu" nil "6" "nmea stuff 3" "^From:" nil nil "11" nil nil nil nil nil]
+	nil)
+Received: from kenai.me.umn.edu (curt@kenai.me.umn.edu [134.84.18.22])
+	by meserv.me.umn.edu (8.9.1a/8.9.1) with ESMTP id RAA29774
+	for <curt@me.umn.edu>; Fri, 13 Nov 1998 17:02:31 -0600 (CST)
+Received: (from curt@localhost)
+	by kenai.me.umn.edu (8.9.1/8.9.1) id RAA32468;
+	Fri, 13 Nov 1998 17:02:30 -0600
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-ID: <13900.47749.734021.549964@kenai.me.umn.edu>
+X-Mailer: VM 6.61 under Emacs 19.34.1
+From: "Curtis L. Olson" <curt@me.umn.edu>
+To: curt@me.umn.edu
+Subject: nmea stuff 3
+Date: Fri, 13 Nov 1998 17:02:29 -0600 (CST)
+
+http://www.marinesoft.com/Navigation/Technical/index.htm
+-- 
+Curtis Olson                        University of MN, ME Dept.
+curt@me.umn.edu                     
+http://www.menet.umn.edu/~curt      Try Linux!
+
+From curt@me.umn.edu  Fri Nov 13 16:41:49 1998
+X-VM-v5-Data: ([nil nil nil nil nil nil nil nil nil]
+	["730" "Fri" "13" "November" "1998" "16:41:47" "-0600" "Curtis L. Olson" "curt@me.umn.edu" nil "21" "nmea stuff 2" "^From:" nil nil "11" nil nil nil nil nil]
+	nil)
+Received: from kenai.me.umn.edu (curt@kenai.me.umn.edu [134.84.18.22])
+	by meserv.me.umn.edu (8.9.1a/8.9.1) with ESMTP id QAA29467
+	for <curt@me.umn.edu>; Fri, 13 Nov 1998 16:41:48 -0600 (CST)
+Received: (from curt@localhost)
+	by kenai.me.umn.edu (8.9.1/8.9.1) id QAA32325;
+	Fri, 13 Nov 1998 16:41:47 -0600
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-ID: <13900.46507.212248.131431@kenai.me.umn.edu>
+X-Mailer: VM 6.61 under Emacs 19.34.1
+From: "Curtis L. Olson" <curt@me.umn.edu>
+To: curt@me.umn.edu
+Subject: nmea stuff 2
+Date: Fri, 13 Nov 1998 16:41:47 -0600 (CST)
+
+http://www.fet.uni-hannover.de/~purnhage/gps/gps.html
+
+garman hacking project
+    http://www.abnormal.com/~thogard/gps/grmnhack.html
+
+nmea code documents
+    http://www.oce.orst.edu/Wecoma/Docs/Computing/XMidas/Formatter_ID.html
+    http://www.oce.orst.edu/Wecoma/Docs/Computing/XMidas/NMEA_0183_Format.html
+
+http://www.cl.cam.ac.uk/users/ijl20/nmea.txt
+
+http://www.cl.cam.ac.uk/users/ijl20/gps_file.html
+
+(*) http://vancouver-webpages.com/pub/peter/index.html
+    http://vancouver-webpages.com/pub/peter/idx_nmeadoc.html
+    http://vancouver-webpages.com/pub/peter/nmeafaq.txt
+-- 
+Curtis Olson                        University of MN, ME Dept.
+curt@me.umn.edu                     
+http://www.menet.umn.edu/~curt      Try Linux!
+
+From curt@me.umn.edu  Fri Nov 13 15:10:29 1998
+X-VM-v5-Data: ([nil nil nil nil nil nil nil nil nil]
+	["376" "Fri" "13" "November" "1998" "15:10:27" "-0600" "Curtis L. Olson" "curt@me.umn.edu" nil "14" "nmea stuff" "^From:" nil nil "11" nil nil nil nil nil]
+	nil)
+Received: from kenai.me.umn.edu (curt@kenai.me.umn.edu [134.84.18.22])
+	by meserv.me.umn.edu (8.9.1a/8.9.1) with ESMTP id PAA27473
+	for <curt@me.umn.edu>; Fri, 13 Nov 1998 15:10:28 -0600 (CST)
+Received: (from curt@localhost)
+	by kenai.me.umn.edu (8.9.1/8.9.1) id PAA31952;
+	Fri, 13 Nov 1998 15:10:27 -0600
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Message-ID: <13900.41027.169267.293790@kenai.me.umn.edu>
+X-Mailer: VM 6.61 under Emacs 19.34.1
+From: "Curtis L. Olson" <curt@me.umn.edu>
+To: curt@me.umn.edu
+Subject: nmea stuff
+Date: Fri, 13 Nov 1998 15:10:27 -0600 (CST)
+
+http://pfranc.com/projects/g45contr/assemb.htm
+http://pfranc.com/ - gps connector
+http://pfranc.com/projects/g45contr/beans.htm
+
+http://www.thecapn.com/
+http://www.thecapn.com/nmea.htm
+http://vancouver-webpages.com/peter/
+
+
+-- 
+Curtis Olson                        University of MN, ME Dept.
+curt@me.umn.edu                     
+http://www.menet.umn.edu/~curt      Try Linux!
+

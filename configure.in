@@ -256,12 +256,13 @@ AC_CHECK_HEADERS( gpc.h )
 if test "x$ac_cv_header_gpc_h" != "xyes"; then
     echo
     echo "You need to have the GPC library installed on your system to build"
-    echo "some of the scenery generation tools, otherwise, they may fail."
+    echo "some of the scenery generation tools, otherwise you won't be able."
+    echo "to create scenery."
     echo
-    echo "You can get the library from:"
-    echo 
-    echo "    http://www.cs.man.ac.uk/aig/staff/alan/software/"
+    echo "Please see README.gpc for more details."
     echo
+    echo "(pausing 5 seconds)"
+    sleep 5
 fi
 
 dnl Check if  Geographic Foundation Classes library is installed

@@ -43,6 +43,9 @@ void fgSplashUpdate ( double progress );
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.1  1998/07/06 02:42:37  curt
 // Initial revision.
 //

@@ -114,6 +114,9 @@ inline Point3D fgGeodToCart(const Point3D& geod) {
 
 $Header$
 $Log$
+Revision 1.1  1999/04/05 21:32:33  curt
+Initial revision
+
 Revision 1.4  1999/01/27 04:46:15  curt
 Portability tweaks by Bernie Bright.
 
@@ -193,6 +196,9 @@ Initial Flight Gear revision.
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.4  1999/01/27 04:46:15  curt
 // Portability tweaks by Bernie Bright.
 //

@@ -306,6 +306,9 @@ fgEVENT_MGR::~fgEVENT_MGR( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.17  1999/01/27 04:50:18  curt
 // Move sun/solaris specific stuff to compiler.h
 //

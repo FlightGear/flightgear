@@ -172,6 +172,9 @@ operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:49  curt
+// Initial revision
+//
 // Revision 1.12  1999/04/05 02:14:21  curt
 // Moved max node per tile definition to fg_constants.h
 //

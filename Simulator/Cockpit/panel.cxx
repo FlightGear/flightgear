@@ -1059,6 +1059,9 @@ xglEnable(GL_TEXTURE_2D);
      }
      
 // $Log$
+// Revision 1.1  1999/04/05 21:32:48  curt
+// Initial revision
+//
 // Revision 1.18  1999/03/09 20:58:17  curt
 // Tweaks for compiling under native Irix compilers.
 //

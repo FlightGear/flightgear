@@ -63,6 +63,9 @@ logstream::setLogLevels( fgDebugClass c, fgDebugPriority p )
 }
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.2  1999/01/19 20:53:34  curt
 // Portability updates by Bernie Bright.
 //

@@ -282,9 +282,12 @@ int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/06/01 17:49:44  curt
-/* Rewrote a slightly ambiguous code fragment (contributed by Charlie Hotchkiss)
+/* Revision 1.1  1999/04/05 21:32:33  curt
+/* Initial revision
 /*
+ * Revision 1.4  1998/06/01 17:49:44  curt
+ * Rewrote a slightly ambiguous code fragment (contributed by Charlie Hotchkiss)
+ *
  * Revision 1.3  1998/05/07 23:03:54  curt
  * Added an entry for AUTOPILOT.
  *

@@ -146,6 +146,9 @@ void fgBucketDiff( const FGBucket& b1, const FGBucket& b2, int *dx, int *dy ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:34  curt
+// Initial revision
+//
 // Revision 1.4  1999/03/27 05:34:05  curt
 // Elimitated some const warnings from the compiler.
 //

@@ -1,0 +1,72 @@
+From sbaker@link.com  Tue May 26 07:55:03 1998
+X-VM-v5-Data: ([nil nil nil nil nil nil nil nil nil]
+	["1540" "Tue" "26" "May" "1998" "07:54:04" "-0500" "Steve Baker" "sbaker@link.com" nil "40" "Re: Question" "^From:" nil nil "5" nil nil nil nil nil]
+	nil)
+X-VM-Last-Modified: (13793 54640 649954)
+X-VM-IMAP-Retrieved: nil
+X-VM-POP-Retrieved: nil
+X-VM-Message-Order:
+	(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+	 16 17 18 19 20 21 22 23 24 25 26)
+X-VM-Summary-Format: "%n %*%a %-17.17F %-3.3m %2d %4l/%-5c %I\"%s\"\n"
+X-VM-Labels: ("r")
+X-VM-VHeader: ("Resent-" "From:" "Sender:" "To:" "Apparently-To:" "Cc:" "Subject:" "Date:") nil
+X-VM-Bookmark: 20
+Received: from lfkw10.bgm.link.com (bgm.link.com [130.210.2.10])
+	by meserv.me.umn.edu (8.8.8/8.8.8) with ESMTP id HAA28563
+	for <curt@me.umn.edu>; Tue, 26 May 1998 07:55:02 -0500 (CDT)
+Received: from borgus.bgm.link.com (borgus.bgm.link.com [130.210.236.13])
+          by lfkw10.bgm.link.com (8.8.6/HTI-Hack-8.8.4) with SMTP
+	  id HAA00068 for <curt@me.umn.edu>; Tue, 26 May 1998 07:54:55 -0500 (CDT)
+X-Sender: steve@borgus.bgm.link.com
+Reply-To: Steve Baker <sbaker@link.com>
+In-Reply-To: <199805230429.XAA10965@kenai.me.umn.edu>
+Message-ID: <Pine.SGI.3.96.980526074643.2282C-100000@borgus.bgm.link.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Steve Baker <sbaker@link.com>
+To: "Curtis L. Olson" <curt@me.umn.edu>
+Subject: Re: Question
+Date: Tue, 26 May 1998 07:54:04 -0500 (CDT)
+
+On Fri, 22 May 1998, Curtis L. Olson wrote:
+
+> I'm running into floating point problems again where my scenery tiles
+> sometimes have a pixel gap between them.  I was wondering if you had
+> any ideas ...
+ 
+It's a problem that plagues us too.
+
+I can't say that I have a magic solution.
+
+One thing I have *considered* is to do everything in integers (for
+the terrain skin at least).
+
+This sounds counter-intuitive - but the source data for your
+terrain is certainly not accurate to better than a meter - and
+integers have the huge advantage that they don't suffer from
+roundoff error providing all you do is add and subtract them.
+
+However, I havn't had the nerve to try this yet - right now, we
+kludge the edges of each terrain tile to make it a teeny-tiny bit
+too big. The resulting overlap is very small - but enough to get
+rid of the cracks.
+
+> Anyways, what this forces me to do is for each tile I must
+> glTranslate() by center_of_tile_to_be_drawn - center_of_tile_I'm_in.
+> But, up until this point everything was done in double's so I was
+> hoping the final translate about which is on the order of 20,000 -
+> 30,000 meters would be ok.
+ 
+But that translate could be done in integer meters. 
+
+> Anyways, I just thought I'd see if you had any brilliant thoughts on
+> the subject.
+
+Nope - it's a continual problem for me too.
+
+Steve Baker                (817)619-8776 (Vox/Vox-Mail)
+Raytheon Systems Inc.      (817)619-4028 (Fax)
+Work: SBaker@link.com      http://www.hti.com
+Home: SJBaker1@airmail.net http://web2.airmail.net/sjbaker1
+

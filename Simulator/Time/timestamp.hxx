@@ -167,6 +167,9 @@ inline long operator - (const FGTimeStamp& a, const FGTimeStamp& b)
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.5  1999/02/02 20:13:43  curt
 // MSVC++ portability changes by Bernie Bright:
 //

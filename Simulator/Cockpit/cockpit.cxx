@@ -261,6 +261,9 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:48  curt
+// Initial revision
+//
 // Revision 1.31  1999/03/08 21:56:08  curt
 // Added panel changes sent in by Friedemann.
 //

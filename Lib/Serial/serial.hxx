@@ -80,6 +80,9 @@ public:
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:34  curt
+// Initial revision
+//
 // Revision 1.5  1999/03/02 01:01:58  curt
 // Tweaks for compiling with native SGI compilers.
 //

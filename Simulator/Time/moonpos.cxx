@@ -437,6 +437,9 @@ void fgUpdateMoonPos( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.1  1999/03/22 12:08:57  curt
 // Initial revision.
 //

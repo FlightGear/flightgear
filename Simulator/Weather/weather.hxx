@@ -69,6 +69,9 @@ extern FGWeather current_weather;
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:48  curt
+// Initial revision
+//
 // Revision 1.2  1998/12/06 13:51:27  curt
 // Turned "struct fgWEATHER" into "class FGWeather".
 //

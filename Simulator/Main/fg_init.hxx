@@ -46,6 +46,9 @@ int fgInitSubsystems( void );
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.2  1998/04/25 15:11:12  curt
 // Added an command line option to set starting position based on airport ID.
 //

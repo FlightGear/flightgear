@@ -336,6 +336,9 @@ int fgSERIAL::write_port(const string& value) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:34  curt
+// Initial revision
+//
 // Revision 1.9  1999/02/02 20:13:23  curt
 // MSVC++ portability changes by Bernie Bright:
 //

@@ -59,6 +59,9 @@
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:40  curt
+// Initial revision
+//
 // Revision 1.2  1998/12/09 18:47:39  curt
 // Use C++ style comments.
 //

@@ -362,6 +362,9 @@ void fgSkyRender( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:48  curt
+// Initial revision
+//
 // Revision 1.21  1999/02/05 21:28:50  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

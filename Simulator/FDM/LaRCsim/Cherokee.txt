@@ -1,0 +1,60 @@
+
+I will explain assumptions I have made:
+
+	All global vars, such as Alpha, Alpha_dot, Density, Altitude, so on,
+	have correct values in the moment cherokee functions are called.
+
+	Body coord system is defined as follows:
+		X_body  -> from cg to nose
+		Y_body  -> along right wing
+		Z_body  -> "down" (to make right coord system)
+		All forces and moments act in CG.
+
+		If strange behaviour is experienced, (like impossibility of level
+		flight), it is probably misused coord system. Let me know and fix
+		the error.
+
+	All controls are in the range [-1.0, 1.0] If it is not so, values in
+	cherokee_aero.c on lines 119-121 should be changed acordingly. If
+	commands appear to be oposite, this is the place to change sign
+	convention.
+
+	Engine controls are in range [0.0, 1.0] (I found out later that lower
+	bound is -0.2, so I added fabs(). I know, it is dirty and phisiclly
+	wrong, but it was simply the fastest way to deal with it).
+
+	All initialization files are *.ic:
+		mass = 74.53 slugs
+		Ixx  = 1070  slugs
+		Iyy  = 1249  slugs
+		Izz  = 2312  slugs
+		Ixz  = 0.0   slugs
+	above changes are writen in *.ic included in cherokee.zip. However,
+	other data in *.ic files are not changed in any way.
+
+	aditional properties: (if needed)
+		S    = 157.5 ft^2   -> wing area
+		b    = 30.0 ft 		-> wing span
+		Ar   = 5.71			-> aspect ratio
+		c    = 5.25 ft		-> midspan chord
+
+
+Once more: Source are TOTALY UNCHECKED. I hope it will work, but I do not
+dare to claim that ewerything will work first time you compile it.
+
+Good Luck!
+Gordan
+gsikic@public.srce.hr
+
+
+PS
+
+Work to be done (for myself):
+	Landing gear (it is just navion_gear.c copied for now, these are similar
+	class of aircraft, so it should work),
+	Alpha_max is still undone,
+	Spin (if I find any references concerning simulating spin),
+	Efect of ground,
+	Flaps,
+	.......
+

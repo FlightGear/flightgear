@@ -435,6 +435,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.44  1999/04/03 04:21:01  curt
 // Integration of Steve's plib conglomeration.
 // Optimizations (tm) by Norman Vine.

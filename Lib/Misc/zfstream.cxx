@@ -309,6 +309,9 @@ gzifstream::close()
 #endif
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.3  1999/01/19 20:41:48  curt
 // Portability updates contributed by Bernie Bright.
 //

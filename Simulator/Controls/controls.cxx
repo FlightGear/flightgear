@@ -51,6 +51,9 @@ FGControls::~FGControls() {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:49  curt
+// Initial revision
+//
 // Revision 1.3  1998/12/05 16:13:12  curt
 // Renamed class fgCONTROLS to class FGControls.
 //

@@ -48,6 +48,9 @@ int fgJSBsim_2_FGInterface (FGInterface& f);
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:45  curt
+// Initial revision
+//
 // Revision 1.2  1999/02/11 21:09:41  curt
 // Interface with Jon's submitted JSBsim changes.
 //

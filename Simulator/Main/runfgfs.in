@@ -89,6 +89,9 @@ exec("$savepath/$savefile --fg-root=$fg_root @ARGV");
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.1  1999/04/05 21:32:46  curt
+# Initial revision
+#
 # Revision 1.2  1998/08/25 16:59:10  curt
 # Directory reshuffling.
 #

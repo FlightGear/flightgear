@@ -119,6 +119,9 @@ int fgGetTimeInterval( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.6  1999/01/09 13:37:45  curt
 // Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
 //

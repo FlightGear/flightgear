@@ -1,0 +1,73 @@
+From owner-fgfs-devel@flightgear.org  Mon Sep 14 10:44:02 1998
+X-VM-v5-Data: ([nil nil nil nil nil nil nil nil nil]
+	["1542" "Mon" "14" "September" "1998" "10:41:38" "-0500" "Steve Baker" "sbaker@link.com" nil "42" "Re: FGFS: Windows Joystick support" "^From:" nil nil "9" nil nil nil nil nil]
+	nil)
+Received: from mailhub.woodsoup.org (IDENT:root@anduin.physics.iastate.edu [129.186.82.1])
+	by meserv.me.umn.edu (8.9.1a/8.9.1) with ESMTP id KAA21095
+	for <curt@me.umn.edu>; Mon, 14 Sep 1998 10:44:00 -0500 (CDT)
+Received: from majordom by mailhub.woodsoup.org with local (Exim 1.92 #1)
+	for fgfs-devel-outgoing@flightgear.org
+	id 0zIamX-0005os-00; Mon, 14 Sep 1998 10:43:13 -0500
+Received: from bgm.link.com ([130.210.2.10] helo=lfkw10.bgm.link.com)
+	by mailhub.woodsoup.org with esmtp (Exim 1.92 #1)
+	for fgfs-devel@flightgear.org
+	id 0zIamW-0005ok-00; Mon, 14 Sep 1998 10:43:12 -0500
+Received: from samantha.bgm.link.com (samantha.bgm.link.com [130.210.65.19])
+          by lfkw10.bgm.link.com (8.8.6/RSC-RTI-1.0) with SMTP
+	  id KAA21757; Mon, 14 Sep 1998 10:42:23 -0500 (CDT)
+X-Sender: steve@samantha.bgm.link.com
+Reply-To: Steve Baker <sbaker@link.com>
+In-Reply-To: <3.0.5.32.19980913154136.007e8440@umr.edu>
+Message-ID: <Pine.SGI.3.96.980914103259.11905A-100000@samantha.bgm.link.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Precedence: bulk
+From: Steve Baker <sbaker@link.com>
+Sender: owner-fgfs-devel@flightgear.org
+To: William Riley <riley@technologist.com>
+cc: fgfs-devel@flightgear.org
+Subject: Re: FGFS: Windows Joystick support
+Date: Mon, 14 Sep 1998 10:41:38 -0500 (CDT)
+
+On Sun, 13 Sep 1998, William Riley wrote:
+
+> Is anyone working on joystick support for Win9x/NT?  I'm a fledgling
+> programmer and was thinking about tacking this task.  If anyone has started
+> (or finished) please email me directly or through the list.  Thanks.
+ 
+There is basic joystick support in GLUT - I presume the simplest thing
+to do to start with is to use that since the result will be portable to
+all of our target systems.
+
+The downside is that IIRC, GLUT only supports a very simple joystick
+setup (single stick, two axes, two buttons).
+
+Whatever API we finally choose needs to consider the portability issues.
+
+IMHO, it would be better to extend GLUT and offer any improvements back
+into the general Freeware community rather than to settle on an ad'hoc
+FGFS-specific solution.
+
+Joystick info for Linux can be found here:
+
+  http://atrey.karlin.mff.cuni.cz/~vojtech/joystick/
+
+Joystick programming info for Windoze is here:
+
+  http://www.hut.fi/Misc/Electronics/docs/joystick/pc_joystick.html#programming
+
+That same site has a TON of interesting joystick info:
+
+  http://www.hut.fi/Misc/Electronics/docs/joystick/
+
+GLUT's joystick support is not documented yet since it's only present in the
+very latest GLUT 3.7 beta. However, if you check the source code for that
+release of GLUT, you'll see how it's done there.
+
+
+Steve Baker                (817)619-2657 (Vox/Vox-Mail)
+Raytheon Systems Inc.      (817)619-4028 (Fax)
+Work: SBaker@link.com      http://www.hti.com
+Home: SJBaker1@airmail.net http://web2.airmail.net/sjbaker1
+
+

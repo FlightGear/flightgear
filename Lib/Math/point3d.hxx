@@ -337,6 +337,9 @@ Point3D::distance3Dsquared(const Point3D& a ) const
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.10  1999/03/02 01:01:52  curt
 // Tweaks for compiling with native SGI compilers.
 //

@@ -999,6 +999,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:46  curt
+// Initial revision
+//
 // Revision 1.88  1999/04/03 04:21:02  curt
 // Integration of Steve's plib conglomeration.
 // Optimizations (tm) by Norman Vine.

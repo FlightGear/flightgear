@@ -71,6 +71,9 @@ trim( const string& s, const string& trimmings )
 }
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.2  1998/10/18 01:17:15  curt
 // Point3D tweaks.
 //

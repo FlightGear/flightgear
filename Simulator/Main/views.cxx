@@ -1010,6 +1010,9 @@ FGView::~FGView( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.35  1999/04/03 04:21:04  curt
 // Integration of Steve's plib conglomeration.
 // Optimizations (tm) by Norman Vine.

@@ -342,6 +342,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.21  1999/03/22 02:08:18  curt
 // Changes contributed by Durk Talsma:
 //

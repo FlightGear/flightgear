@@ -1,0 +1,112 @@
+From nhv@laserplot.com  Mon Mar 16 14:16:34 1998
+X-VM-v5-Data: ([nil nil nil nil t nil nil nil nil]
+	["1740" "Mon" "16" "March" "1998" "15:11:22" "-0500" "Norman Vine" "nhv@laserplot.com" "<01BD50EE.348AEBC0.nhv@laserplot.com>" "84" "RE: Today's patches" "^From:" nil nil "3" nil nil nil nil nil]
+	nil)
+Received: from mail-out-0.tiac.net (mail-out-0.tiac.net [199.0.65.247])
+	by meserv.me.umn.edu (8.8.8/8.8.8) with ESMTP id OAA21951
+	for <curt@me.umn.edu>; Mon, 16 Mar 1998 14:16:33 -0600 (CST)
+Received: from mail-out-2.tiac.net (mail-out-2.tiac.net [199.0.65.13])
+	by mail-out-0.tiac.net (8.8.8/8.8.8) with ESMTP id PAA20462
+	for <curt@me.umn.edu>; Mon, 16 Mar 1998 15:16:26 -0500 (EST)
+	(envelope-from nhv@laserplot.com)
+Received: from nhv (p1.gw1.mashp.MA.tiac.com [206.119.240.34])
+	by mail-out-2.tiac.net (8.8.7/8.8.7) with SMTP id PAA26460
+	for <curt@me.umn.edu>; Mon, 16 Mar 1998 15:17:02 -0500 (EST)
+	(envelope-from nhv@laserplot.com)
+Received: by localhost with Microsoft MAPI; Mon, 16 Mar 1998 15:14:25 -0500
+Message-ID: <01BD50EE.348AEBC0.nhv@laserplot.com>
+Reply-To: "nhv@laserplot.com" <nhv@laserplot.com>
+X-Mailer: Microsoft Internet E-mail/MAPI - 8.0.0.4211
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+From: Norman Vine <nhv@laserplot.com>
+To: "'Curtis L. Olson'" <curt@me.umn.edu>
+Subject: RE: Today's patches
+Date: Mon, 16 Mar 1998 15:11:22 -0500
+
+On Monday, March 16, 1998 2:31 PM, Curtis L. Olson [SMTP:curt@me.umn.edu] wrote:
+> Norm,
+> 
+> I got both your patches.  Thanks!  The first one looks good, I'll
+> forward that over to the HUD guys.
+> 
+> For the second one, could you try a little bit different fix?  It
+> seemed to work for me anyways.  Somewhere in fg_time.c you'll see the
+> following four lines:
+> 
+> #ifdef WIN32
+>     int daylight;
+>     long int timezone;
+> #endif /* WIN32 */
+> 
+> Could you just try moving them to the top of the file (outside of any
+> functions) so they have a "global" scope?  I put 'em right before
+> fgTimeInit().
+
+Seems to work :-)
+
+> 
+> I just did a quick test of this and I didn't see the sun jumping
+> around.  I really wish I knew how to get the real daylight savings
+> time info out of a win32 machine ...
+
+following time related stuff from CygWin headers
+
+<Windows32/ Structures.h>
+
+typedef struct _TIME_ZONE_INFORMATION { 
+  LONG       Bias; 
+  WCHAR      StandardName[ 32 ]; 
+  SYSTEMTIME StandardDate; 
+  LONG       StandardBias; 
+  WCHAR      DaylightName[ 32 ]; 
+  SYSTEMTIME DaylightDate; 
+  LONG       DaylightBias; 
+} TIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION; 
+
+typedef struct _SYSTEMTIME {  
+  WORD wYear; 
+  WORD wMonth; 
+  WORD wDayOfWeek; 
+  WORD wDay; 
+  WORD wHour; 
+  WORD wMinute; 
+  WORD wSecond; 
+  WORD wMilliseconds; 
+} SYSTEMTIME, *LPSYSTEMTIME; 
+
+!!!!!!!!!!!!!!!!!!!!!!
+
+<Windows32/ Functions.h>
+
+DWORD
+STDCALL
+GetTimeZoneInformation(
+		       LPTIME_ZONE_INFORMATION lpTimeZoneInformation
+		       );
+
+VOID
+STDCALL
+GetSystemTime(
+	      LPSYSTEMTIME lpSystemTime
+	      );
+
+VOID
+STDCALL
+GetLocalTime(
+	     LPSYSTEMTIME lpSystemTime
+	     );
+
+
+DWORD
+STDCALL
+GetTickCount(
+	     VOID
+	     ); 
+
+See Ya
+
+Norman
+
+

@@ -182,6 +182,9 @@ extern FGControls controls;
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:49  curt
+// Initial revision
+//
 // Revision 1.4  1999/01/27 04:48:13  curt
 // C++ style refinements by Bernie Bright.
 //

@@ -416,6 +416,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.72  1999/04/05 02:13:58  curt
 // Minor patch from Norman Vine.
 //

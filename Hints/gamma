@@ -1,0 +1,186 @@
+From owner-flight-gear@me.umn.edu  Thu Apr 23 08:45:16 1998
+X-VM-v5-Data: ([nil nil nil nil nil nil nil nil nil]
+	["7258" "Thu" "23" "April" "1998" "09:44:56" "-0500" "Steve Baker" "sbaker@link.com" nil "158" "Re: [FGFS] lighting question" "^From:" nil nil "4" nil nil nil nil nil]
+	nil)
+Received: (from majordom@localhost)
+	by meserv.me.umn.edu (8.8.8/8.8.8) id IAA05148
+	for flight-gear-outgoing; Thu, 23 Apr 1998 08:45:16 -0500 (CDT)
+X-Authentication-Warning: meserv.me.umn.edu: majordom set sender to owner-flight-gear@me.umn.edu using -f
+Received: from lfkw10.bgm.link.com (bgm.link.com [130.210.2.10])
+	by meserv.me.umn.edu (8.8.8/8.8.8) with ESMTP id IAA05144
+	for <flight-gear@me.umn.edu>; Thu, 23 Apr 1998 08:45:10 -0500 (CDT)
+Received: from sutcliffe.bgm.link.com (sutcliffe.bgm.link.com [130.210.236.18])
+          by lfkw10.bgm.link.com (8.8.6/HTI-Hack-8.8.4) with SMTP
+	  id IAA29813 for <flight-gear@me.umn.edu>; Thu, 23 Apr 1998 08:44:39 -0500 (CDT)
+X-Sender: steve@sutcliffe.bgm.link.com
+In-Reply-To: <199804230119.UAA13239@kenai.me.umn.edu>
+Message-ID: <Pine.SGI.3.96.980423090051.6888D-100000@sutcliffe.bgm.link.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Precedence: bulk
+Reply-To: flight-gear@me.umn.edu
+From: Steve Baker <sbaker@link.com>
+Sender: owner-flight-gear@me.umn.edu
+To: flight-gear@me.umn.edu
+Subject: Re: [FGFS] lighting question
+Date: Thu, 23 Apr 1998 09:44:56 -0500 (CDT)
+
+On Wed, 22 Apr 1998, Curtis L. Olson wrote:
+
+> Here's a lighting question for someone.
+> 
+> Let's say it's noon-ish.  If I set the ambient light component to
+> about 0.3 and the diffuse light component to about 1.0 I get a
+> reasonably bright scene with good contrast in the shadowy areas.
+> 
+> Now, I'm running into problems when the sun is low in the sky.  Even
+> with a high diffuse lighting component (1.0) the angle the sun light
+> makes with the horizontal ground is very small so the diffuse lighting
+> component ends up being virtually nothing.  I'm fiddling around with
+> trying to increase the ambient component to 1.0, but I still get a
+> very dark scene.
+ 
+...simple question - long answer - sorry...
+
+First the "Why does this look bad?" answer...
+
+  Well, when the sun is low in the sky, that is exactly what really
+  does happen - the angle between sun and (flattish) ground gets small
+  and it gets dark.
+
+  The problem is that our eyes have automatic gain control. When the
+  world gets darker, we increase our pupil apartures to increase the
+  amount of light we allow in. That only works when the whole world
+  goes darker - and not in a room in normal daylight containing a
+  small, dim CRT.
+
+  Also, in the real world, the sun lights things much more brightly
+  than a CRT phosphor can reproduce. When you drop that brightness
+  by (say) a factor of ten because it's dusk then the sun is still
+  pretty bright - but 1/10th the brightness on a CRT phosphor is pretty
+  dim.
+
+  If you watch your sunset scenes in a darkened room, they'll look
+  much better. However, for a desktop simulation, that may not help.
+
+  The other reason there is a problem is that the CRT phosphor is 
+  not a linear device - if you double the number for the pixel
+  brightness - you don't get twice the brightness coming out the
+  other side. This non-linearity is *supposed* to be corrected
+  by a process called 'gamma correction' which works by boosting
+  the contrast of the dark pixels and reducing the contrast of
+  the bright ones.
+
+  Fixing the gamma will help noon-time scenes as well as dusk
+  and dawn since the amount of stuff you can see in shadowed
+  areas will be better if the gamma is set right.
+
+  The required amount of gamma modification changes with the
+  age of the CRT and which particular choice of phosphor layer
+  the CRT manufacturer made. You may also need more gamma correction
+  in (say) the BLUE channel than in RED or GREEN.
+
+  Fancy machines like SGI ONYX's have hardware gamma tables on
+  the output of the machine to do this correction - I doubt that
+  all the PC-based 'toy' 3D cards have this feature.
+
+Now, the "What can we do to improve matters?" answer...
+
+  Well, you seem to be on the right track - you basically have to increase
+  the ambient light to make up for the missing light on the horizontal
+  surfaces. However, this tends to reduce the amount of contrast between
+  the dark regions and the vertical surfaces that are being brightly lit
+  just as the sun goes down. That is the opposite of the real world since
+  the shadows are much more contrasty late in the day than they are at noon.
+  (That is a subjective thing - I could be wrong about that)
+
+  You said:
+
+  > I'm fiddling around with trying to increase the ambient component to 1.0,
+  > but I still get a very dark scene.
+
+  ...that suprises me - you ought to be getting a very bright scene
+  with ambient==1.0 since all surfaces are being lit with a very bright
+  light that is ignoring their orientation. The scene should be brighter
+  than at noon.
+
+  Perhaps you don't have the ambient component of the glMaterial set
+  up right?
+
+  On the gamma front, there are two experiments you can try:
+
+    Curt: I know you have access to an SGI RE2 machine - and that
+    you can run FGFS on it. So, run FGFS up and set the time of
+    day to dusk - so you have the too-dark scene. Now open another
+    shell window and try running 'gamma 1.0' then 'gamma 1.5' then
+    'gamma 2.0'. If I'm right about the gamma setting being the problem
+    then gamma 1.0 should look just like it does on the PC, and
+    (depending on the age of your CRT), 1.5 or 2.0 (or something like
+    that) should make it look much better.
+
+    If you can't get to an SGI machine then do a screen dump of your
+    image into a file, then load that file into Xview (under Linux)
+    or something like photoshop. Image processing programs like this
+    usually let you change the gamma for an image interactively by
+    recomputing the pixels (this eliminates the need for gamma hardware).
+    In XView, pick the colour editor window and click on the gamma
+    button next to the intensity graph. Type in 2.0 (or whatever) and
+    you'll notice that the curve in the window looks like this:
+
+
+                    ****
+                  **
+                 *
+                *
+               *
+               *
+              *
+              *
+              *
+  
+     (pardon the ASCII art)
+
+     ....which means that the dark areas have been increased in contrast
+     and the light areas reduced in contrast.
+
+   If either of these tests shows that gamma is indeed your problem then
+   you need to think about how to set the gamma on your hardware.
+
+   For software OpenGL with Mesa - I think Mesa has a gamma setting
+   extension (or an environment variable or something) - the 3Dfx
+   card (IIRC) has a way to set the gamma too - although I don't
+   know how. The general way to set the gamma is not through OpenGL,
+   so doing this in a portable way from inside FGFS is going to be hard.
+   You may have to rely on the user setting it up in some external
+   tool (a windoze control panel most likely).
+
+> I may have something fouled up, or may not understand something
+> correctly, but does anyone have any suggestions as to what the ambient
+> and diffuse lighting components ought to be set to in order for the
+> scenery to be "realistically" lit  when the sun is low in the sky?
+
+Well, 'realistically' is a hard thing - the human eye can discern detail
+in a scene lit at a gazillion candelas - all the way down to a gazillionth
+of a candela, lots of orders of magnitude. A CRT can only display the
+number of brightness levels provided in the frame buffer (256 if you are
+lucky - a mere 2.5 orders of magnitude) - and is VERY dim in any case.
+
+Getting 'realistic' brightnesses just isn't going to happen on a desktop
+display system - so it's all a matter of compromise.
+
+On 'real' flight simulators, the fight for better contrast and brightness
+and more orders of magnitude of brightness variation is a continual battle
+that results in some pretty exotic display technologies. (Things like
+shining an arc-lamp onto a million tiny mirrors that are tilted using
+pizo-electric effects to modulate the brightness...ugh!)
+
+Steve Baker                (817)619-8776 (Vox/Vox-Mail)
+Raytheon Systems Inc.      (817)619-4028 (Fax)
+Work: SBaker@link.com      http://www.hti.com
+Home: SJBaker1@airmail.net http://web2.airmail.net/sjbaker1
+
+-------------------------------------
+Please visit the FGFS web page:  http://www.menet.umn.edu/~curt/fgfs/
+For help on using this list (especially unsubscribing), send a message to
+"flight-gear-request@me.umn.edu" with a single line of text: "help".
+

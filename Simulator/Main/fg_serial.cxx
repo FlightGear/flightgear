@@ -467,6 +467,9 @@ void fgSerialProcess() {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:46  curt
+// Initial revision
+//
 // Revision 1.13  1999/03/02 01:03:16  curt
 // Tweaks for building with native SGI compilers.
 //

@@ -155,6 +155,9 @@ void fgSplashUpdate ( double progress ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.10  1999/03/08 21:56:40  curt
 // Added panel changes sent in by Friedemann.
 // Added a splash screen randomization since we have several nice splash screens.

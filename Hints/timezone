@@ -1,0 +1,67 @@
+>-----Original Message-----
+>From: Antoine Leca [mailto:Antoine.Leca@renault.fr] 
+>Sent: Thursday, April 01, 1999 4:51 AM
+>To: Lee Geoff
+>Cc: tz@elsie.nci.nih.gov
+>Subject: Re: storing timestamp data
+>
+>
+>Lee Geoff wrote:
+>> 
+>> I'm interested in storing date/time data in Ingres
+>> databases which are running on Unix servers. We are 
+>recording timed events
+>> on Unix servers as well as Windows 3.1 and NT PCs.  I have 
+>had problems with
+>> the apparent miss-handling of data when viewed before or after a DST
+>> transition.
+>
+>We had this kind of problems when setting up a Internet 
+>standard for exchanging
+>calendars, agendas and schedules (it ends up in RFC2245, if you mind).
+>
+>The net result was: either use UTC, or local time + offset from UTC.
+>Do not use local time without UTC offset, as no reliable method can be
+>set up to correctly retrieve the exact point of time 
+>afterwards (as you may
+>have experienced).
+>
+>Using UTC times is native on Unix and NT (AFAIK), so this is 
+>the basic choice
+>there.  The problem comes with Windows non-NT PCs, since they 
+>run local clocks.
+>IMHO, and to be consistent with the above, no data that are 
+>not tagged with
+>the (best approximation of) UTC offset should leave the PC.
+>
+>Traditional way of finding the best approximation are (in order):
+> - search for an (up to date) Olson's package to interpret the 
+>information,
+>  perhaps by searching $(DJDIR)/zoneinfo/localtime in addition to 
+>  $(TZDIR)/localtime
+> - if running on Windows 95/98, search the information in the registry
+> - setting a mechanism dedicated to it (but it will end with one more
+>  mechanism, which tends to upset users)
+> - ask the TZ environment variable
+> - search the information on related softwares that may be 
+>present on the PCs
+>  (examples are mailing systems, e.g. Notes, and IP 
+>connectivity packages)
+>
+>Do not use:
+> - tzset and timezone, as it defaults to PST8PDT or EST5EDT on 
+>most compilers,
+>  without being reliably accurate on most workstations by lack of TZ
+> - if your users are not Americans, do not rely on US-based 
+>rules; they are
+>  almost correct for Europeans (except that for example, this 
+>week, my UTC
+>  offset is wrong because my mail software is brocken on this 
+>respect...)
+>
+>
+>Hope it helps,
+>
+>Antoine
+>
+>

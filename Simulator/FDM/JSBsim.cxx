@@ -258,6 +258,9 @@ int fgJSBsim_2_FGInterface (FGInterface& f) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:45  curt
+// Initial revision
+//
 // Revision 1.4  1999/04/03 04:20:01  curt
 // Optimizations (tm) by Norman Vine.
 //

@@ -1,0 +1,86 @@
+From fatcity!root@news.cts.com  Mon Apr 20 10:54:32 1998
+X-VM-v5-Data: ([nil nil nil nil nil nil nil nil nil]
+	["2073" "Mon" "20" "April" "1998" "07:50:34" "-0800" "Steve Baker" "sbaker@link.com" nil "54" "Re: How To Q: Off-screen object culling." "^From:" nil nil "4" nil nil nil nil nil]
+	nil)
+Received: from mh2.cts.com (root@mh2.cts.com [205.163.24.68])
+	by meserv.me.umn.edu (8.8.8/8.8.8) with ESMTP id KAA05163
+	for <curt@me.umn.edu>; Mon, 20 Apr 1998 10:54:29 -0500 (CDT)
+Received: from king.cts.com (root@king.cts.com [198.68.168.21]) by mh2.cts.com (8.8.7/8.8.5) with ESMTP id IAA15636; Mon, 20 Apr 1998 08:51:20 -0700 (PDT)
+Received: from donews.cts.com (root@donews.cts.com [192.188.72.21])
+	by king.cts.com (8.8.7/8.8.7) with SMTP id IAA29983;
+	Mon, 20 Apr 1998 08:51:19 -0700 (PDT)
+Received: from fatcity by donews.cts.com with uucp
+	(Smail3.1.29.1 #5) id m0yRI5D-00000Xa; Mon, 20 Apr 98 08:02 PDT
+Received: by fatcity.com (10-Feb-1998/v1.0f-b64/bab) via UUCP id 0001F042; Mon, 20 Apr 1998 07:50:34 -0800
+Message-ID: <F001.0001F042.19980420075034@fatcity.com>
+X-Comment: OpenGL Game Developers Mailing List
+X-Sender: Steve Baker <sbaker@link.com>
+Reply-To: OPENGL-GAMEDEV-L@fatcity.com
+Errors-To: ML-ERRORS@fatcity.com
+Organization: Fat City Network Services, San Diego, California
+X-ListServer: v1.0f, build 64; ListGuru (c) 1996-1998 Bruce A. Bergman
+Precedence: bulk
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+From: Steve Baker <sbaker@link.com>
+Sender: root@fatcity.com
+To: Multiple recipients of list OPENGL-GAMEDEV-L <OPENGL-GAMEDEV-L@fatcity.com>
+Subject: Re: How To Q: Off-screen object culling.
+Date: Mon, 20 Apr 1998 07:50:34 -0800
+
+On Sat, 18 Apr 1998, Jason Maskell wrote:
+
+> This is probably an FAQ, but I'm to the point now where I need to be
+> able to tell when one of my objects is offscreen and not even send it
+> down the pipe. This would be pretty simple if I was using glFrustum,
+> but I'm not at the moment. I could switch, but I haven't quite got my
+> head around how to get the same results as I get using glPerspective..
+> If someone can point me to some code that does some simple pre-culling,
+> I would be most grateful..  >
+
+Well, if you can do it with glFrustum then you can do it with
+gluPerspective. Note that gluPerspective simply calls glFrustum.
+
+It's like this:
+
+void APIENTRY gluPerspective( GLdouble fovy, GLdouble aspect,
+                              GLdouble zNear, GLdouble zFar )
+{
+   GLdouble xmin, xmax, ymin, ymax;
+
+   ymax = zNear * tan( fovy * M_PI / 360.0 );
+   ymin = -ymax;
+
+   xmin = ymin * aspect;
+   xmax = ymax * aspect;
+
+   glFrustum( xmin, xmax, ymin, ymax, zNear, zFar );
+}
+
+[This is actually the source code for gluPerspective from the Mesa
+library - but since it only involves regular OpenGL API, it should
+work on any OpenGL implementation]
+
+> BTW, I've bought the red book finally...
+
+Always a good move. I have yet to hear anyone who regretted it.
+
+Steve Baker                (817)619-8776 (Vox/Vox-Mail)
+Raytheon Systems Inc.      (817)619-4028 (Fax)
+Work: SBaker@link.com      http://www.hti.com
+Home: SJBaker1@airmail.net http://web2.airmail.net/sjbaker1
+
+-- 
+Author: Steve Baker
+  INET: sbaker@link.com
+
+Fat City Network Services    -- (619) 538-5051  FAX: (619) 538-5051
+San Diego, California        -- Public Internet access / Mailing Lists
+--------------------------------------------------------------------
+To REMOVE yourself from this mailing list, send an E-Mail message
+to: ListGuru@fatcity.com (note EXACT spelling of 'ListGuru') and in
+the message BODY, include a line containing: UNSUB OPENGL-GAMEDEV-L
+(or the name of mailing list you want to be removed from).  You may
+also send the HELP command for other information (like subscribing).
+

@@ -330,6 +330,9 @@ operator== ( const FGBucket& b1, const FGBucket& b2 )
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:34  curt
+// Initial revision
+//
 // Revision 1.8  1999/03/27 05:34:06  curt
 // Elimitated some const warnings from the compiler.
 //

@@ -595,6 +595,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:49  curt
+// Initial revision
+//
 // Revision 1.15  1999/03/31 13:25:58  curt
 // Removed some debugging output.
 //

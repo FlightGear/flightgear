@@ -1,0 +1,46 @@
+(x) class fgOBJECT {
+    // material property pointer
+    int material_ptr;
+
+    // culling data
+    double ref[3];
+    double radius;
+
+    // OpenGL display list for object data
+    GLint display_list_ptr;
+}
+
+
+(x) class fgTILE {
+    // culling data
+    double ref[3];
+    double radius;
+
+    list < fgOBJECT > object_list;
+}
+
+
+class fgMATERIAL {
+    int list_size;
+    int counter;
+
+public:
+
+    // material properties
+    GLfloat ambient[4], diffuse[4], specular[4];
+    GLint texture_ptr;
+
+    // transient list of objects with this material type (used for sorting
+    // by material to reduce GL state changes when rendering the scene
+    fgOBJECT *material_object_list[lots];
+
+    init_list();
+    append_list();
+    list_traverse_init();
+    next_obj()
+}
+
+
+class fgMATERIAL_MGR {
+    list < fgMATERIAL > material_list;
+}

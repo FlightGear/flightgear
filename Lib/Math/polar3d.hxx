@@ -67,6 +67,9 @@ inline Point3D fgCartToPolar3d(const Point3D& cp) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.5  1999/01/27 04:46:20  curt
 // Portability tweaks by Bernie Bright.
 //

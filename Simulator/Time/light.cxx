@@ -221,6 +221,9 @@ fgLIGHT::~fgLIGHT( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.27  1999/04/05 02:14:40  curt
 // Fixed a fog coloring bug.
 //

@@ -129,6 +129,9 @@ double fgPointLineSquared(MAT3vec p, MAT3vec p0, MAT3vec d) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.6  1999/03/25 19:02:28  curt
 // Minor optimization tweaks.
 //

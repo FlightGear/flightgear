@@ -1,0 +1,269 @@
+From fatcity!root@news.cts.com  Thu Mar 26 17:57:48 1998
+X-VM-v5-Data: ([nil nil nil nil nil nil nil nil nil]
+	["8204" "Thu" "26" "March" "1998" "15:32:55" "-0800" "akin@pobox.com" "akin@pobox.com" nil "162" "Re: poly offset " "^From:" nil nil "3" nil nil nil nil nil]
+	nil)
+Received: from mh2.cts.com (root@mh2.cts.com [205.163.24.68])
+	by meserv.me.umn.edu (8.8.8/8.8.8) with ESMTP id RAA07001
+	for <curt@me.umn.edu>; Thu, 26 Mar 1998 17:57:43 -0600 (CST)
+Received: from king.cts.com (root@king.cts.com [198.68.168.21]) by mh2.cts.com (8.8.7/8.8.5) with ESMTP id PAA05457; Thu, 26 Mar 1998 15:55:40 -0800 (PST)
+Received: from donews.cts.com (root@donews.cts.com [192.188.72.21])
+	by king.cts.com (8.8.7/8.8.7) with SMTP id PAA21507;
+	Thu, 26 Mar 1998 15:55:38 -0800 (PST)
+Received: from fatcity by donews.cts.com with uucp
+	(Smail3.1.29.1 #5) id m0yIMSJ-0000NEa; Thu, 26 Mar 98 15:53 PST
+Received: by fatcity.com (10-Feb-1998/v1.0f-b64/bab) via UUCP id 00016F4B; Thu, 26 Mar 1998 15:32:55 -0800
+Message-ID: <F001.00016F4B.19980326153255@fatcity.com>
+X-Comment: OpenGL Game Developers Mailing List
+X-Sender: akin@pobox.com
+Reply-To: OPENGL-GAMEDEV-L@fatcity.com
+Errors-To: ML-ERRORS@fatcity.com
+Organization: Fat City Network Services, San Diego, California
+X-ListServer: v1.0f, build 64; ListGuru (c) 1996-1998 Bruce A. Bergman
+Precedence: bulk
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+From: akin@pobox.com
+Sender: root@fatcity.com
+To: Multiple recipients of list OPENGL-GAMEDEV-L <OPENGL-GAMEDEV-L@fatcity.com>
+Subject: Re: poly offset 
+Date: Thu, 26 Mar 1998 15:32:55 -0800
+
+
+Bryan Gibson-Winge wrote:
+| I was curious to see if anyone would describe a method of using poly offset
+| that didn't eventually conclude with "and mess with the numbers 'till it
+| works".
+
+There is such a method, but since it's not in any of the usual OpenGL
+literature it's not widely discussed.  I'll try to summarize it; maybe
+the result could go into the FAQ.
+
+The purpose of polygon offset is to separate two or more primitives
+by just enough distance in Z that they can be depth-buffered without
+artifacts caused by depth computation roundoff errors, differences in
+sampling algorithms for different types of primitives, etc.
+
+The ``factor'' argument provides separation in the case where the
+primitives are not parallel.  The factor value to use depends on the
+screen sizes of the primitives involved.
+
+	The canonical example is highlighting the edge of a triangle
+	by drawing a line between the two associated triangle vertices.
+	The depth value for each pixel on the line depends only on the
+	depth values at the two vertices of the triangle edge.	However,
+	the depth value for each pixel in the triangle depends on all
+	three of the triangle's vertices.  Since lines and triangles are
+	sampled differently (e.g. diamond-exit rule for lines vs. point
+	sampling for triangles), at a given pixel the depth computed
+	for the edge line usually differs from the depth computed
+	for the underlying triangle.  This can cause ``stitching'' or
+	other unpleasant artifacts in the image, because depth buffering
+	sometimes places the line in front of the triangle and sometimes
+	behind it.
+
+	How much separation is needed to ensure that the line is always
+	in front of the triangle?  If you look at the rasterization
+	arithmetic or play with a few diagrams, you can see that at some
+	pixels the depth value for the triangle is computed at a point
+	almost one pixel away from the ideal edge (which produces the
+	depth values for the line).  Since the triangle can have an almost
+	arbitrarily large depth slope, there is no fixed offset that will
+	guarantee separation between the two primitives in all cases.
+	However, a (variable) separation of 1.0 times the depth slope of
+	the triangle is always sufficient.  (For the purposes of this
+	discussion, the depth slope is max(|dz/dx|,|dz/dy|).  The spec
+	has additional information.)  It's sometimes more than you need,
+	but it's always large enough to work.
+
+	If the line were two pixels wide rather than one, then 1.0
+	times the depth slope wouldn't be enough separation, because
+	some pixels on the line might have depth values derived from an
+	edge point more than one pixel away from the underlying point
+	on the triangle.  2.0 would be sufficient, though.
+
+	So now you understand the factor argument.  It should be
+	nonzero when you're attempting to separate two primitives that
+	aren't parallel, and its value should be roughly the size of
+	the screen-space overlap (measured in pixels) between the two
+	primitives.  For any given triangle, the factor is multiplied
+	by the triangle's depth slope to compute the amount of separation.
+
+The ``units'' or ``bias'' argument provides separation in the case
+where the primitives are roughly parallel.  The value to use
+depends on how many primitives you're trying to stack up.
+
+	Consider the edged-triangle case again.  What happens when the
+	depth slope of the triangle is zero?  Since the depth slope is
+	zero, no matter what the factor argument is, you won't get any
+	separation between the triangle and the edge line.  However,
+	you still want some separation between the two primitives,
+	so that you get a consistent result (i.e., one that doesn't
+	depend on the order in which you draw things or on whether the
+	depth-comparison function tests for equality).
+
+	The bias argument guarantees a little separation even in the case
+	where the depth slope is zero.	Furthermore, it generalizes to
+	the case where the depth slopes of the primitives are nonzero,
+	but the primitives are roughly parallel (for example, when using
+	one polygon as a decal on another).
+
+	The original version of polygon offset allowed you to specify
+	a bias that was simply added to the depth value at each pixel.
+	However, it was quite difficult to choose an appropriate value,
+	because the choice depends not only on the number of bits in the
+	depth buffer (offsets smaller than the depth buffer precision
+	don't do you much good!) but also on the precision of various
+	computations inside the OpenGL driver and the hardware.
+	Perspective projection can also make a difference, since
+	resolution is better at the near clipping plane than it is at
+	the far clipping plane.
+
+	The current version of polygon offset specifies the bias in
+	multiples of a ``minimum resolvable difference,'' which is some
+	value determined by the driver developer.  The minimum resolvable
+	difference is sufficient to separate two parallel primitives,
+	taking into account the perspective projection, size of the
+	depth buffer, hardware precision, etc.
+
+	Since one unit is sufficient to separate two primitives, you
+	can use more than one unit to separate additional primitives.
+	For example, by using bias values of 1, 2, 3, ... you can stack
+	up an arbitrary set of polygons on a base polygon.
+
+	Since some OpenGL implementations add the bias before the
+	perspective divide, a bias of 1.0 unit might be much larger
+	than is needed for primitives close to the near clipping plane.
+	If your app is smart enough to know exactly how the driver
+	behaves, and roughly where in the view volume the primitives
+	will fall, then it can use a bias of less than 1.0 to separate
+	primitives close to the near clipping plane.  Most of the time
+	this is *not* worth the effort, though.
+
+Some practical examples:
+
+	Drawing lines of width 1.0 pixel on the edge of a triangle
+	should use a factor of 1.0 (to guarantee separation when the
+	triangle depth slope is nonzero) and a bias of 1.0 (to guarantee
+	separation when the triangle depth slope is zero).
+
+	Drawing wider lines requires larger factors.  A good rule of
+	thumb might be to use a factor equal to ceil(lineWidth/2 + 0.5).
+
+	Drawing decal polygons needs a zero factor and a nonzero bias,
+	provided that you can guarantee that all of the vertices of
+	the decal polygons are on the same side of the plane of the
+	base polygon, and not on that plane.  (If intersections occur,
+	you might need a nonzero factor, because the depth slopes of
+	the primitives might be different.)  Use a bias of 1.0 for the
+	lowest-level decal (the one closest to the base), 2.0 for the
+	next-highest, and so on.
+
+	Positive factors and biases push primitives in one direction;
+	negative factors and biases push primitives in the other
+	direction.  Sometimes it makes a difference (for example, if you
+	want to use the values in the depth buffer for a subsequent pass).
+
+If you run into trouble, the most likely cause is that the driver
+developer underestimated the value of the minimum resolvable difference.
+(I know of no way to predict this value; I think you just have to
+measure it.  The basic idea is to binary-search across the range of depth
+values, drawing two parallel polygons at each stage and determining if
+depth-buffering artifacts occur.  Do this once at the near plane, and
+once at the far plane, and take the largest result.  Repeat for extreme
+depthrange values.)  Tweaking the bias argument is probably the only
+way to resolve this. :-)
+
+Finally, as Steve Baker and I have discussed in the past, the
+reference_plane extension is often a cleaner solution than polygon offset,
+if your OpenGL implementation supports it.
+
+Allen
+-- 
+Author: 
+  INET: akin@pobox.com
+
+Fat City Network Services    -- (619) 538-5051  FAX: (619) 538-5051
+San Diego, California        -- Public Internet access / Mailing Lists
+--------------------------------------------------------------------
+To REMOVE yourself from this mailing list, send an E-Mail message
+to: ListGuru@fatcity.com (note EXACT spelling of 'ListGuru') and in
+the message BODY, include a line containing: UNSUB OPENGL-GAMEDEV-L
+(or the name of mailing list you want to be removed from).  You may
+also send the HELP command for other information (like subscribing).
+
+From fatcity!root@news.cts.com  Fri Jan 16 04:45:15 1998
+X-VM-v5-Data: ([nil nil nil nil nil nil nil nil nil]
+	["1385" "Fri" "16" "January" "1998" "02:06:11" "-0800" "Mark Kilgard" "mjk@fangio.engr.sgi.com" nil "43" "Re: glPolygonOffset" "^From:" nil nil "1" nil nil nil nil nil]
+	nil)
+Received: from mh2.cts.com (root@mh2.cts.com [205.163.24.68])
+	by meserv.me.umn.edu (8.8.8/8.8.6) with ESMTP id EAA19075
+	for <curt@me.umn.edu>; Fri, 16 Jan 1998 04:45:14 -0600 (CST)
+Received: from king.cts.com (root@king.cts.com [198.68.168.21]) by mh2.cts.com (8.8.7/8.8.5) with ESMTP id CAA19264; Fri, 16 Jan 1998 02:39:16 -0800 (PST)
+Received: from donews.cts.com (root@donews.cts.com [192.188.72.21])
+	by king.cts.com (8.8.7/8.8.7) with SMTP id CAA07365;
+	Fri, 16 Jan 1998 02:39:07 -0800 (PST)
+Received: from fatcity by donews.cts.com with uucp
+	(Smail3.1.29.1 #5) id m0xt8sd-00008Sa; Fri, 16 Jan 98 02:20 PST
+Received: by fatcity.com (02-Jan-98/v1.0f-b63/bab) via UUCP id 0C92BDFF; Fri, 16 Jan 1998 02:06:11 -0800
+Message-ID: <F001.0C92BDFF.19980116020611@fatcity.com>
+X-Comment: OpenGL Game Developers Mailing List
+X-Sender: mjk@fangio.engr.sgi.com (Mark Kilgard)
+Reply-To: OPENGL-GAMEDEV-L@fatcity.com
+Errors-To: ML-ERRORS@fatcity.com
+Organization: Fat City Network Services, San Diego, California
+X-ListServer: v1.0f, build 63; ListGuru (c) 1996-1998 Bruce A. Bergman
+Precedence: bulk
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+From: mjk@fangio.engr.sgi.com (Mark Kilgard)
+Sender: root@fatcity.com
+To: Multiple recipients of list OPENGL-GAMEDEV-L <OPENGL-GAMEDEV-L@fatcity.com>
+Subject: Re: glPolygonOffset
+Date: Fri, 16 Jan 1998 02:06:11 -0800
+
+opengl-gamedev,
+
+> At one time I came across web site with example for glPolygonOffset, but I 
+> can not find it again. Does anybody know web site. 
+
+Polygon offset is used to "lift" the projected planar shadows off of
+the floor to avoid Z fighting in my dinoshade.c example.  See:
+
+  http://reality.sgi.com/mjk/tips/TexShadowReflectLight.html
+
+Other cool OpenGL rendering techniques are shown at:
+
+  http://reality.sgi.com/mjk/tips/
+
+There are also several polygon offset examples in the GLUT 3.6 source
+code distribution.  See:
+
+  http://reality.sgi.com/mjk/glut3/glut3.html
+
+In particular, look at:
+
+  progs/examples/origami.c
+  progs/examples/surfgrid.c
+  progs/examples/dinoshade.c
+  progs/examples/halomagic.c
+  progs/redbook/polyoff.c
+  progs/advanced/haloed.c
+
+I hope this helps.
+
+- Mark
+-- 
+Author: Mark Kilgard
+  INET: mjk@fangio.engr.sgi.com
+
+Fat City Network Services    -- (619) 538-5030  FAX: (619) 538-5051
+San Diego, California        -- Public Internet Access
+--------------------------------------------------------------------
+To REMOVE yourself from this mailing list, send an E-Mail message
+to: ListGuru@fatcity.com (note EXACT spelling of 'ListGuru') and in
+the message BODY, include a line containing: UNSUB OPENGL-GAMEDEV-L
+(or the name of mailing list you want to be removed from).  You may
+also send the HELP command for other information (like subscribing).
+

@@ -1,0 +1,29 @@
+init
+0010
+  continuous_states: 22
+#    module    parameter   value
+    *	generic_.geodetic_position_v[0]	2.793445E-05
+    *	generic_.geodetic_position_v[1]	3.262070E-07
+    *	generic_.geodetic_position_v[2]	3.758099E+00
+    *	generic_.v_local_v[0]	7.287719E+00
+    *	generic_.v_local_v[1]	1.521770E+03
+    *	generic_.v_local_v[2]	-1.265722E-05
+    *	generic_.euler_angles_v[0]	-2.658474E-06
+    *	generic_.euler_angles_v[1]	7.401790E-03
+    *	generic_.euler_angles_v[2]	1.391358E-03
+    *	generic_.omega_body_v[0]	7.206685E-05
+    *	generic_.omega_body_v[1]	0.000000E+00
+    *	generic_.omega_body_v[2]	9.492658E-05
+    *	generic_.earth_position_angle	0.000000E+00
+    *	generic_.mass	8.547270E+01
+    *	generic_.i_xx	1.048000E+03
+    *	generic_.i_yy	3.000000E+03
+    *	generic_.i_zz	3.530000E+03
+    *	generic_.i_xz	0.000000E+00
+    *	generic_.d_cg_rp_body_v[0]	0.000000E+00
+    *	generic_.d_cg_rp_body_v[1]	0.000000E+00
+    *	generic_.d_cg_rp_body_v[2]	0.000000E+00
+    aero	long_trim	1.969572E-03
+  discrete_states: 0
+#    module    parameter   value
+end

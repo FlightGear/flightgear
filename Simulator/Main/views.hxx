@@ -254,6 +254,9 @@ extern FGView current_view;
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.23  1999/04/03 04:21:06  curt
 // Integration of Steve's plib conglomeration.
 // Optimizations (tm) by Norman Vine.

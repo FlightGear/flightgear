@@ -166,6 +166,9 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.18  1999/03/02 01:03:33  curt
 // Tweaks for building with native SGI compilers.
 //

@@ -642,6 +642,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.43  1999/03/22 23:47:55  curt
 // FOV set properly when panel activated.
 //

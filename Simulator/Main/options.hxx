@@ -245,6 +245,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:46  curt
+// Initial revision
+//
 // Revision 1.30  1999/03/11 23:09:51  curt
 // When "Help" is selected from the menu check to see if netscape is running.
 // If so, command it to go to the flight gear user guide url.  Otherwise

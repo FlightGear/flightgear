@@ -45,6 +45,9 @@ void fgSkyRender( void );
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:48  curt
+// Initial revision
+//
 // Revision 1.2  1998/10/16 23:27:19  curt
 // C++-ifying.
 //

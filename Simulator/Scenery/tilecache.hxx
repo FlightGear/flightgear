@@ -104,6 +104,9 @@ extern fgTILECACHE global_tile_cache;
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:49  curt
+// Initial revision
+//
 // Revision 1.14  1999/03/25 19:03:27  curt
 // Converted to use new bucket routines.
 //

@@ -65,6 +65,9 @@ extern FGGeneral general;
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:40  curt
+// Initial revision
+//
 // Revision 1.1  1999/01/06 21:47:39  curt
 // renamed general.h to general.hxx
 // More portability enhancements to compiler.h

@@ -164,6 +164,9 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.1  1999/04/05 21:32:33  curt
+Initial revision
+
 Revision 1.6  1999/03/02 01:01:49  curt
 Tweaks for compiling with native SGI compilers.
 
@@ -256,6 +259,9 @@ Initial Flight Gear revision.
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.6  1999/03/02 01:01:49  curt
 // Tweaks for compiling with native SGI compilers.
 //

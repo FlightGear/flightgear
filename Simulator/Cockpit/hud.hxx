@@ -525,6 +525,9 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:48  curt
+// Initial revision
+//
 // Revision 1.19  1999/03/02 01:02:38  curt
 // Tweaks for building with native SGI compilers.
 //

@@ -60,10 +60,13 @@ void fgCockpitUpdate( void );
 
 
 /* $Log$
-/* Revision 1.4  1998/07/13 21:00:46  curt
-/* Integrated Charlies latest HUD updates.
-/* Wrote access functions for current fgOPTIONS.
+/* Revision 1.1  1999/04/05 21:32:48  curt
+/* Initial revision
 /*
+ * Revision 1.4  1998/07/13 21:00:46  curt
+ * Integrated Charlies latest HUD updates.
+ * Wrote access functions for current fgOPTIONS.
+ *
  * Revision 1.3  1998/06/27 16:47:54  curt
  * Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
  * first pass at an isntrument panel.

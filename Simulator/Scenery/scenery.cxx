@@ -82,6 +82,9 @@ void fgSceneryRender( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:49  curt
+// Initial revision
+//
 // Revision 1.10  1998/11/06 21:18:20  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

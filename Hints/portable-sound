@@ -1,0 +1,331 @@
+From fatcity!root@news.cts.com  Mon Jan  5 14:50:59 1998
+X-VM-v5-Data: ([nil nil nil nil t nil nil nil nil]
+	["1623" "Mon" "5" "January" "1998" "12:03:38" "-0800" "Chris Schoeneman" "crs@millpond.engr.sgi.com" "<F001.0C927564.19980105120338@fatcity.com>" "41" "Re: [Q] OpenGL + Arbitrary display mode in Win32" "^From:" nil nil "1" nil nil nil nil nil]
+	nil)
+Received: from mh2.cts.com (root@mh2.cts.com [205.163.24.68])
+	by meserv.me.umn.edu (8.8.8/8.8.6) with ESMTP id OAA05604
+	for <curt@me.umn.edu>; Mon, 5 Jan 1998 14:50:58 -0600 (CST)
+Received: from king.cts.com (root@king.cts.com [198.68.168.21]) by mh2.cts.com (8.8.7/8.8.5) with ESMTP id MAA20781; Mon, 5 Jan 1998 12:43:38 -0800 (PST)
+Received: from donews.cts.com (root@donews.cts.com [192.188.72.21])
+	by king.cts.com (8.8.7/8.8.7) with SMTP id MAA01273;
+	Mon, 5 Jan 1998 12:41:39 -0800 (PST)
+Received: from fatcity by donews.cts.com with uucp
+	(Smail3.1.29.1 #5) id m0xpJ0S-0000Hga; Mon, 5 Jan 98 12:20 PST
+Received: by fatcity.com (02-Jan-98/v1.0f-b63/bab) via UUCP id 0C927564; Mon, 05 Jan 1998 12:03:38 -0800
+Message-ID: <F001.0C927564.19980105120338@fatcity.com>
+X-Comment: OpenGL Game Developers Mailing List
+X-Sender: crs@millpond.engr.sgi.com (Chris Schoeneman)
+Reply-To: OPENGL-GAMEDEV-L@fatcity.com
+Errors-To: ML-ERRORS@fatcity.com
+Organization: Fat City Network Services, San Diego, California
+X-ListServer: v1.0f, build 63; ListGuru (c) 1996-1998 Bruce A. Bergman
+Precedence: bulk
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
+From: crs@millpond.engr.sgi.com (Chris Schoeneman)
+Sender: root@fatcity.com
+To: Multiple recipients of list OPENGL-GAMEDEV-L <OPENGL-GAMEDEV-L@fatcity.com>
+Subject: Re: [Q] OpenGL + Arbitrary display mode in Win32
+Date: Mon, 05 Jan 1998 12:03:38 -0800
+
+Doty, Lee wrote:
+> 
+> Any sound gurus out there?  I agree that if we could get 3d sound in
+> there, life would get exponentially happier.
+
+I'm willing to donate the sound code from bzflag.  It's supports:
+
+  arbitrary number of simultaneous sounds (limited by CPU speed)
+  attenuation with distance
+  propagation delay
+  doppler effects
+  stereo panning
+
+It runs in a separate thread and has a very simple interface.  I have
+it running on Windows 95/NT and Irix, and Daryll Strauss ported it to
+Linux.  The Windows version would work better if DirectSound didn't
+suck so bad, but it works reasonably well now.
+
+A drawback is that it can suck up a lot of CPU time since it has to
+do its own filtering and mixing.  It also needs support for a better
+HRTF, reverb with distance, high-frequency rolloff with distance, and
+a way to set the volume on individual sounds.  That last one is trivial
+but the others are more involved.
+
+Mark, you interested?  I've also got fullscreen and resolution changing
+code for Irix.
+
+Cheers,
+-chris
+-- 
+Author: Chris Schoeneman
+  INET: crs@millpond.engr.sgi.com
+
+Fat City Network Services    -- (619) 538-5030  FAX: (619) 538-5051
+San Diego, California        -- Public Internet Access
+--------------------------------------------------------------------
+To REMOVE yourself from this mailing list, send an E-Mail message
+to: ListGuru@fatcity.com (note EXACT spelling of 'ListGuru') and in
+the message BODY, include a line containing: UNSUB OPENGL-GAMEDEV-L
+(or the name of mailing list you want to be removed from).  You may
+also send the HELP command for other information (like subscribing).
+
+From crs@millpond.engr.sgi.com  Mon Jan  5 15:36:10 1998
+X-VM-v5-Data: ([nil nil nil nil t nil nil nil nil]
+	["1034" "Mon" "5" "January" "1998" "13:35:59" "-0800" "Chris Schoeneman" "crs@millpond.engr.sgi.com" "<199801052135.NAA21198@millpond.engr.sgi.com>" "23" "Re: bzflag sound playing code" "^From:" nil nil "1" nil nil nil nil nil]
+	nil)
+Received: from sgi.sgi.com (SGI.COM [192.48.153.1])
+	by meserv.me.umn.edu (8.8.8/8.8.6) with SMTP id PAA07002
+	for <curt@me.umn.edu>; Mon, 5 Jan 1998 15:36:07 -0600 (CST)
+Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [192.26.80.2]) by sgi.sgi.com (950413.SGI.8.6.12/970507) via ESMTP id NAA08189
+	for <@sgi.engr.sgi.com:curt@me.umn.edu>; Mon, 5 Jan 1998 13:36:04 -0800
+	env-from (crs@millpond.engr.sgi.com)
+Received: from millpond.engr.sgi.com (millpond.engr.sgi.com [150.166.55.67]) by cthulhu.engr.sgi.com (950413.SGI.8.6.12/960327.SGI.AUTOCF) via ESMTP id NAA07557 for <@cthulhu.engr.sgi.com:curt@me.umn.edu>; Mon, 5 Jan 1998 13:36:00 -0800
+Received: (from crs@localhost) by millpond.engr.sgi.com (950413.SGI.8.6.12/960327.SGI.AUTOCF) id NAA21198 for curt@me.umn.edu; Mon, 5 Jan 1998 13:35:59 -0800
+Message-Id: <199801052135.NAA21198@millpond.engr.sgi.com>
+In-Reply-To: <199801052103.PAA30512@kenai.me.umn.edu> from "Curtis L. Olson" at Jan 5, 98 03:03:52 pm
+X-Mailer: ELM [version 2.4 PL23]
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
+From: crs@millpond.engr.sgi.com (Chris Schoeneman)
+To: curt@me.umn.edu (Curtis L. Olson)
+Subject: Re: bzflag sound playing code
+Date: Mon, 5 Jan 1998 13:35:59 -0800 (PST)
+
+Curtis L. Olson wrote:
+> 
+> Is the licensing of the bzflag sound code such that I could use it to
+> build in sounds support for our project?  We would want to have a
+> continuously looping engine sound (plus wind sound, and maybe rain
+> hitting the windshield sound.)  Then we'd need to intersperse the
+> other sounds such as flaps, stall horn, landing gear, thunder, crash,
+> etc.  It sounds like it might be exactly the sort of thing we need.
+
+Hmm, it's not a perfect match.  Most of your sounds are purely local,
+so you don't need the stereo panning, propagation delay, and doppler
+effect.  However, that's no reason not to try it!
+
+Ripping my sound code out from bzflag shouldn't be too much work
+but I'm really busy at the moment.  Could you wait about a week?
+
+BTW, as far as licensing goes I'd just want the copyright notice to
+stay on the source files (we'll have to tweek the legal notice) and
+a mention in the credits, if you have a credits list.  A right to
+use enhancements to the code would be cool, too.
+
+Cheers,
+-chris
+
+From crs@millpond.engr.sgi.com  Mon Jan  5 16:22:27 1998
+X-VM-v5-Data: ([nil nil nil nil t nil nil nil nil]
+	["1125" "Mon" "5" "January" "1998" "14:22:22" "-0800" "Chris Schoeneman" "crs@millpond.engr.sgi.com" "<199801052222.OAA21481@millpond.engr.sgi.com>" "27" "Re: bzflag sound playing code" "^From:" nil nil "1" nil nil nil nil nil]
+	nil)
+Received: from sgi.sgi.com (SGI.COM [192.48.153.1])
+	by meserv.me.umn.edu (8.8.8/8.8.6) with SMTP id QAA08463
+	for <curt@me.umn.edu>; Mon, 5 Jan 1998 16:22:26 -0600 (CST)
+Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [192.26.80.2]) by sgi.sgi.com (950413.SGI.8.6.12/970507) via ESMTP id OAA22876
+	for <@sgi.engr.sgi.com:curt@me.umn.edu>; Mon, 5 Jan 1998 14:22:25 -0800
+	env-from (crs@millpond.engr.sgi.com)
+Received: from millpond.engr.sgi.com (millpond.engr.sgi.com [150.166.55.67]) by cthulhu.engr.sgi.com (950413.SGI.8.6.12/960327.SGI.AUTOCF) via ESMTP id OAA25764 for <@cthulhu.engr.sgi.com:curt@me.umn.edu>; Mon, 5 Jan 1998 14:22:22 -0800
+Received: (from crs@localhost) by millpond.engr.sgi.com (950413.SGI.8.6.12/960327.SGI.AUTOCF) id OAA21481 for curt@me.umn.edu; Mon, 5 Jan 1998 14:22:22 -0800
+Message-Id: <199801052222.OAA21481@millpond.engr.sgi.com>
+In-Reply-To: <199801052204.QAA31163@kenai.me.umn.edu> from "Curtis L. Olson" at Jan 5, 98 04:04:44 pm
+X-Mailer: ELM [version 2.4 PL23]
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
+From: crs@millpond.engr.sgi.com (Chris Schoeneman)
+To: curt@me.umn.edu (Curtis L. Olson)
+Subject: Re: bzflag sound playing code
+Date: Mon, 5 Jan 1998 14:22:22 -0800 (PST)
+
+Curtis L. Olson wrote:
+> 
+> Does your code support continuously looping sounds?  Or would this be
+> fairly straight forward to implement?  I've done virtually nothing
+> with sound in my life other than listen to it. :-)
+
+It does/should.  bzflag doesn't use this code though so it may suffer
+from bit rot.  I used it to test the Doppler effect.
+
+There may also be some issues around having a very large world.  Imagine
+the sound as a spherical shell.  Outside the shell, sound hasn't reached
+you yet;  inside the shell, the sound has passed by.  In bzflag I need
+to keep sounds around for as long as any part of the shell is inside the
+world because it's possible to move from one place to another instantly.
+Seems to me you have this same situation if you want external views.
+
+The sound engine is clever enough not to process sounds unless you're in
+the shell, so a large world probably won't cause any problems.  I'm just
+not sure at the moment.
+
+
+> This all sounds completely reasonable.  All our stuff is released
+> under the basic "GPL".
+
+Should be fine.  I've no problem releasing my code under the GPL.
+Cheers,
+-chris
+
+From crs@millpond.engr.sgi.com  Mon Jan  5 17:33:03 1998
+X-VM-v5-Data: ([nil nil nil nil t nil nil nil nil]
+	["660" "Mon" "5" "January" "1998" "15:32:53" "-0800" "Chris Schoeneman" "crs@millpond.engr.sgi.com" "<199801052332.PAA21873@millpond.engr.sgi.com>" "18" "Re: bzflag sound playing code" "^From:" nil nil "1" nil nil nil nil nil]
+	nil)
+X-VM-Message-Order:
+	(1 2 3 4 6 5 7 8 9 10 11 12 13 14 15
+	 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30
+	 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45
+	 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60
+	 61 62 63 64)
+X-VM-Summary-Format: "%n %*%a %-17.17F %-3.3m %2d %4l/%-5c %I\"%s\"\n"
+X-VM-Labels: ("r")
+X-VM-VHeader: ("Resent-" "From:" "Sender:" "To:" "Apparently-To:" "Cc:" "Subject:" "Date:") nil
+X-VM-Bookmark: 57
+Received: from sgi.sgi.com (SGI.COM [192.48.153.1])
+	by meserv.me.umn.edu (8.8.8/8.8.6) with SMTP id RAA10765
+	for <curt@me.umn.edu>; Mon, 5 Jan 1998 17:33:01 -0600 (CST)
+Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [192.26.80.2]) by sgi.sgi.com (950413.SGI.8.6.12/970507) via ESMTP id PAA14176
+	for <@sgi.engr.sgi.com:curt@me.umn.edu>; Mon, 5 Jan 1998 15:33:00 -0800
+	env-from (crs@millpond.engr.sgi.com)
+Received: from millpond.engr.sgi.com (millpond.engr.sgi.com [150.166.55.67]) by cthulhu.engr.sgi.com (950413.SGI.8.6.12/960327.SGI.AUTOCF) via ESMTP id PAA19353 for <@cthulhu.engr.sgi.com:curt@me.umn.edu>; Mon, 5 Jan 1998 15:32:53 -0800
+Received: (from crs@localhost) by millpond.engr.sgi.com (950413.SGI.8.6.12/960327.SGI.AUTOCF) id PAA21873 for curt@me.umn.edu; Mon, 5 Jan 1998 15:32:53 -0800
+Message-Id: <199801052332.PAA21873@millpond.engr.sgi.com>
+In-Reply-To: <199801052322.RAA32525@kenai.me.umn.edu> from "Curtis L. Olson" at Jan 5, 98 05:22:08 pm
+X-Mailer: ELM [version 2.4 PL23]
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
+From: crs@millpond.engr.sgi.com (Chris Schoeneman)
+To: curt@me.umn.edu (Curtis L. Olson)
+Subject: Re: bzflag sound playing code
+Date: Mon, 5 Jan 1998 15:32:53 -0800 (PST)
+
+Curtis L. Olson wrote:
+> 
+> Our code is all GPL'd, so if you can keep within those license
+> restrictions feel free to borrow code.  (Or does bzflag take place a
+> long time ago in a galaxy far, far away ... I haven't tried running it
+> yet myself.) :-)
+
+Actually, it's already got accurate sun, moon, and stars.  The star
+magnitudes are relatively okay (there's not enough dynamic range on
+a monitor anyway).  You can specify any position on the earth, and
+the positions are accurately based on the time and date.  Great minds
+think alike, eh?
+
+I don't have the planets as I thought I'd gone overboard myself.  Guess
+I hadn't gone far enough!
+
+Cheers,
+-chris
+
+From curt@me.umn.edu  Thu Apr 30 09:02:28 1998
+X-VM-v5-Data: ([nil nil nil nil nil nil nil nil nil]
+	["3542" "" "30" "April" "1998" "09:02:26" "-0500" "Curtis L. Olson" "curt@me.umn.edu" nil "88" "[comp.os.linux.announce] Enlightened Sound Daemon version 0.2" "^From:" nil nil "4" nil nil nil nil nil]
+	nil)
+Received: from kenai.me.umn.edu (curt@kenai.me.umn.edu [134.84.18.22])
+	by meserv.me.umn.edu (8.8.8/8.8.8) with ESMTP id JAA10406
+	for <curt@me.umn.edu>; Thu, 30 Apr 1998 09:02:28 -0500 (CDT)
+Received: (from curt@localhost)
+	by kenai.me.umn.edu (8.8.5/8.8.5) id JAA19157;
+	Thu, 30 Apr 1998 09:02:27 -0500
+Message-ID: <u87m47v24t.fsf@kenai.me.umn.edu>
+Lines: 88
+X-Mailer: Gnus v5.3/Emacs 19.34
+From: curt@me.umn.edu (Curtis L. Olson)
+Sender: curt@me.umn.edu
+To: curt@me.umn.edu
+Subject: [comp.os.linux.announce] Enlightened Sound Daemon version 0.2
+Date: 30 Apr 1998 09:02:26 -0500
+
+
+-- 
+Curtis Olson                        University of MN, ME Dept.
+curt@me.umn.edu                     
+http://www.menet.umn.edu/~curt      Try Linux!
+------- Start of forwarded message -------
+From: "Eric B. Mitchell" <emitchell@altaira.com>
+Newsgroups: comp.os.linux.announce
+Subject: Enlightened Sound Daemon version 0.2
+Followup-To: comp.os.linux.misc
+Date: Thu, 30 Apr 1998 08:25:43 GMT
+Organization: Altair Aerospace Corporation
+Message-ID: <pycola.893924743.30806@laulujoutsen.pc.helsinki.fi>
+Reply-To: emitchell@altaira.com
+
+-----BEGIN PGP SIGNED MESSAGE-----
+
+
+I am pleased to announce the preliminary release of the 
+Enlightened Sound Daemon (EsounD version 0.2) for Linux.  
+More details at <URL:http://www.netcom.com/~ericmit/EsounD.html>.
+This program is designed to mix together several digitized 
+audio streams for playback by a single device.  The current 
+list of features includes the following functionality:
+
+ o  A simple authentication scheme is implemented.  The first
+    process to present a 16 byte key to the daemon determines
+    the ownership of the daemon.  The owner of the daemon may
+    allow or disallow connections from other keys.  If a HUP
+    signal is received, ownership of the daemon is reset.
+
+ o  Playback of multiple digital samples simultaneously is 
+    supported.  The daemon uses a raw sample format which 
+    is easily generated by the SOX utility from many other 
+    data formats.
+
+ o  The mixed audio data may be output from the daemon as a
+    "monitor" stream.
+
+ o  Recording from the current input of the sound device is
+    supported.  Full duplex operation (simultaneous recording
+    and playback) is supported.
+
+ o  Client connections may cache samples for playback by an 
+    assigned identification number.  For example, a window
+    manager may cache samples in the server for playback on
+    various events, and play them back without replaying the
+    full audio stream for the sample.  Samples may be looped
+    until the server receives a "stop sample" message. 
+
+Currently, the only platform supported is Linux.  It is intended
+that this program support multiple platforms.  I have limited
+access to other Unix platforms, so any help in porting the
+Enlightened Sound Daemon to other platforms is appreciated.  
+The amp program, by Tomislav Uzelac may be a good reference 
+for porting the audio interface to other platforms.
+
+This is to be considered an alpha release, as functionality
+remains to be implemented.
+
+- -- ebm
++=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=+
+|  __                         a.k.a. Eric B. Mitchell |
+|  |_) .  _  _|      _|  _     ericmit@ix.netcom.com  |
+|  | \ ( (_ (_| (_| (_| (/_   www.netcom.com/~ericmit |
+| How's My Programming?   Call:  1 - 800 - DEV - NULL |
++=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=+
+
+
+
+- -- 
+This article has been digitally signed by the moderator, using PGP.
+http://www.iki.fi/mjr/cola-public-key.asc has PGP key for validating signature.
+Send submissions for comp.os.linux.announce to: linux-announce@news.ornl.gov
+PLEASE remember a short description of the software and the LOCATION.
+This group is archived at http://www.iki.fi/mjr/linux/cola.html
+
+-----BEGIN PGP SIGNATURE-----
+Version: 2.6.3ia
+Charset: latin1
+
+iQCVAgUBNUg1h1rUI/eHXJZ5AQHjSwP/aGb9U1fIgnUA6qMaD6x/JeTM2IJVRLDa
+YxXoZ9EbENIKCbV9lV0PcGogW0+eA2zAZq3tQFu9P9B+eFX6jcVD2FhDekvFI5ZS
+j44u74PbNU45LIuw2xxiaBAgfZcnZ9XZ3uy6Z9Yu3Xd+xkZ5k9nxafP1+tkPztmA
+y5okM7m4rEs=
+=Y1B3
+-----END PGP SIGNATURE-----
+------- End of forwarded message -------
+

@@ -860,6 +860,9 @@ void fgFDMSetGroundElevation(int model, double alt_meters);
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:44  curt
+// Initial revision
+//
 // Revision 1.14  1999/04/03 04:20:04  curt
 // Optimizations (tm) by Norman Vine.
 //

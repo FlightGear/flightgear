@@ -1,0 +1,14 @@
+Sky
+	stars
+		correct placement for time, date, and viewer position
+		correct magnitude
+	sun
+		correct position
+		lights the scene correctly
+	sky
+		blends into haze at horizon
+		sunset/sunrise effects
+	planets
+		correct position
+		correct magnitude
+		

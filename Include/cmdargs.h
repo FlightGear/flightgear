@@ -42,6 +42,9 @@ extern const int   DefaultViewMode;
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:41  curt
+// Initial revision
+//
 // Revision 1.2  1998/02/16 16:17:36  curt
 // Minor tweaks.
 //

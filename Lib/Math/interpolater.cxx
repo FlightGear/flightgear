@@ -103,6 +103,9 @@ fgINTERPTABLE::~fgINTERPTABLE( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.7  1999/02/26 22:08:03  curt
 // Added initial support for native SGI compilers.
 //

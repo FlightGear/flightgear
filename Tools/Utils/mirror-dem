@@ -1,0 +1,29 @@
+# Example parameter file for the Debian GNU/Linux "mirror" package
+#
+# This serves as an illustration for a valid mirror parameter file. See the
+# man page mirror(1) and the files in /usr/doc/example/mirror/* for details.
+#
+# This is for illustration. It worked for me when I wrote it, but it might 
+# fail for you. No warranties whatsoever. Use at your own risk.
+#
+# Written by Dirk Eddelbuettel <edd@qed.econ.queensu.ca>
+
+package=DEM-3-Arc-Sec
+        comment=USGS DEM files from ftp://edcftp.cr.usgs.gov/pub/data/DEM/250/
+        # specify remote host and directory
+        site=edcftp.cr.usgs.gov
+        remote_dir=/pub/data/DEM/250/
+        # specify local directory
+        local_dir=/stage/video/curt/DEM/250
+        # inform this user about results
+        mail_to=curt
+        # compress these files (see perlre(1) for regular expressions)
+        compress_patt=\.*(Contents|Packages|Packages-Master)$
+        # exclude these files or directories (see perlre(1) for reg. expr.)
+        # exclude_patt=
+        # preserve these files or directories (see perlre(1) for reg. expr.)
+	# delete_excl=
+        # do not delete if more than 20% of all files would vanish
+        max_delete_files=20%
+        # this speeds up the construction of the remote ls-lR by pruning
+        # recurse_hard=true

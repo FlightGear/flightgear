@@ -1,0 +1,50 @@
+Basically what I'm doing is starting with the 3 arcsec DEM files (a
+point every 100 meters roughly.)
+
+I start out at one corner and walk down a horizonal row.  I start with
+the first 2 points and do a least squares fit, I then add the next
+point, and the next, and the next until my least squares fit exceeds
+some error tolerance from the original data.  At that point, I back up
+one point and include that point in the output set of points.  This
+point then becomes my new starting point for the least squares fit.  I
+repeat this until I finish the row.  I do this for each row to produce
+an "irregular" set of output points from the original.  I'm sure from
+a pure mathematical perspective you can see some potential flaws in
+this approach, but the actual real life result is actually quite good.
+
+I then do a Delauney triangulation of these points (and add in more to
+keep the triangles from getting too long and skinny.)
+
+I have to go through additional pain to make sure that all the points
+coincide on the edge between two adjacent areas (and the normals to so
+there is continuity in the shading.)
+
+I then run a "tri-striper" program to connect up all the individual
+triangles into more efficient opengl strips.
+
+Finally I post process everything to compensate for bugs in our lousy
+tri-striper and to add in a few other things that our render requires.
+
+There is a wee bit of documentation at:
+
+http://www.menet.umn.edu/~curt/fgfs/Docs/Scenery/CoordinateSystem/CoordinateSystem.html
+
+Here I lay out our basic coordinate system.  Essentially the scenery
+tiles that result in the above process are just cutouts of the Earths
+surface.  The maintain the curved shape and spacial orientation.  The
+renderer translates everything to near (0,0,0) to compensate for
+GLfloat precision limitations.
+
+All the tools I use to do this are distributed with the FG source, so
+feel free to download them, play around, and ask questions.
+
+Our resulting scenery tile format is structured to facilitate view
+frustum culling on a per tile basis as well as a per "fragment" basis.
+
+The next thing I plan to work on is sorting by material properties.
+As I walk through the tile structures doing my view frustum culling,
+instead of immediately rendering the visible fragments, I plan to toss
+them into buckets by material property.  Then I make a pass through
+each of these buckets, rendering all the items with like properties.
+This should minimize opengl state and texture changes which should
+help keep the performance from going in the dumpster.

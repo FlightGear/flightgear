@@ -105,6 +105,9 @@ void fgTimeUpdate(FGInterface *f, fgTIME *t);
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.14  1999/02/05 21:29:19  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

@@ -140,6 +140,9 @@ skipcomment( istream& in )
 }
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.3  1998/11/06 14:05:12  curt
 // More portability improvements by Bernie Bright.
 //

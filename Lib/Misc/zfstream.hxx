@@ -154,6 +154,9 @@ struct gzifstream_base
 #endif // _zfstream_hxx
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.9  1999/03/08 22:00:12  curt
 // Tweak for native SGI compilers.
 //

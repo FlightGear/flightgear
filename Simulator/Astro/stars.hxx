@@ -48,6 +48,9 @@ extern fgTIME cur_time_params;
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:48  curt
+// Initial revision
+//
 // Revision 1.8  1999/01/19 20:57:00  curt
 // MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
 //

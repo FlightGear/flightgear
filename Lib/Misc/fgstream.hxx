@@ -100,6 +100,9 @@ istream& skipcomment( istream& in );
 #endif /* _FGSTREAM_HXX */
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.9  1999/03/27 14:04:25  curt
 // Added is_open() so we can check if the open() succeeded.
 //

@@ -399,6 +399,9 @@ void fgTimeUpdate(FGInterface *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.32  1999/02/26 22:10:10  curt
 // Added initial support for native SGI compilers.
 //

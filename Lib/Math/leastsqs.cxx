@@ -135,6 +135,9 @@ double least_squares_max_error(double *x, double *y, int n, double m, double b){
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:33  curt
+// Initial revision
+//
 // Revision 1.1  1999/03/13 17:34:45  curt
 // Moved to math subdirectory.
 //

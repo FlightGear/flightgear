@@ -173,6 +173,9 @@
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:40  curt
+// Initial revision
+//
 // Revision 1.13  1999/04/05 02:12:59  curt
 // Define maximum nodes for a tile here.
 //

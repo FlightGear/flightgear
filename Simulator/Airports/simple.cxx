@@ -110,6 +110,9 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:48  curt
+// Initial revision
+//
 // Revision 1.10  1999/02/26 22:08:35  curt
 // Added initial support for native SGI compilers.
 //

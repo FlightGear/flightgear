@@ -1,0 +1,153 @@
+From: Bernie Bright <bbright@c031.aone.net.au>
+Sender: owner-fgfs-devel@flightgear.org
+To: fgfs-devel@flightgear.org
+Subject: Re: [FGFS-Devel] Another problem compiling Flightgear 0.55
+Date: Mon, 02 Nov 1998 14:31:05 +1100
+
+Arno Dabekaussen wrote:
+> 
+> Hi Curt,
+> 
+> Thanks for answerring my former post, but unfortunately the compilation
+> blew up again.
+> Here is the relevant information.
+> 
+> With kind regards,
+> 
+> Arno Dabekaussen
+> 
+> Making all in Time
+> make[2]: Entering directory
+> `/home/arno/applications/FlightGear-0.55/Simulator/Time'
+> c++ -DHAVE_CONFIG_H -I. -I../../././Simulator/Time -I../../Include
+> -DHAVE_DAYLIGHT -DHAVE_TIMEZONE -I../.. -I../../Lib -I../../Simulator
+> -I/usr/local/include -I/usr/X11R6/include -g -O2 -c event.cxx
+> In file included from /usr/include/g++/std/bastring.h:571,
+>                  from /usr/include/g++/std/string.h:6,
+>                  from /usr/include/g++/string:5,
+>                  from event.hxx:42,
+>                  from event.cxx:48:
+> /usr/include/g++/std/sinst.h:60: ambiguous template instantiation for
+> `operator !=(const char *, const
+> basic_string<char,string_char_traits<char> > &)' requested
+
+[snip]
+
+This is a known problem with the string class in g++ 2.7.x and is not
+limited to FG. I've attached an unofficial patch to that fixes the
+problem.  Note, you'll need root access to apply the patch.
+
+Cheers
+Bernie.>From khan@xraylith.wisc.edu Wed Mar 05 02:21:24 1997
+Path: news.mel.aone.net.au!news.mel.connect.com.au!munnari.OZ.AU!news.ecn.uoknor.edu!feed1.news.erols.com!newsfeeds.sol.net!uwm.edu!newsspool.doit.wisc.edu!news.doit.wisc.edu!khan
+From: khan@xraylith.wisc.edu (Mumit Khan)
+Newsgroups: gnu.g++.help
+Subject: Re: Compiling with strings & vectors
+Date: 4 Mar 1997 16:21:24 GMT
+Organization: Center for X-ray Lithography, UW-Madison
+Lines: 100
+Message-ID: <5fhi64$lsa@news.doit.wisc.edu>
+References: <5ffoh9$v2a$1@quartz.inquo.net>
+NNTP-Posting-Host: modi.xraylith.wisc.edu
+
+In article <5ffoh9$v2a$1@quartz.inquo.net>,
+Travis Jensen <taj@viewpoint.com> wrote:
+>I am trying to use a 'string' in a program compiled with 2.7.2.2
+>and libg++ 2.7.2.  If I just 
+>
+>  #include <string> 
+>
+>and use it, I have no problems.  However, if I 
+>  
+>  #include <vector.h>
+   ^^^^^^^^^^^^^^^^^^^
+
+should be 
+   #include <vector>
+
+>  #include <string>
+>
+>Is there something special I have to do to use strings and vectors
+>together?
+>
+
+I've posted an unofficial patch to libstdc++ headers (no re-compilation
+necessary, so it's easy!) something like 19 times so far. Here is a copy
+of an old posting:
+
+=====================================================================
+
+If you're using GNU STL that comes with libg++-2.7.1, must apply the 
+following patch (no recompilation necessary):
+    
+    % cd /usr/local/lib/g++-include/std
+    % patch -s -p0 < /tmp/libg++-2.7.1-patch
+
+==== LIBG++ patch
+
+*** bastring.h.org	Sun Dec  3 10:51:44 1995
+--- bastring.h	Sun Dec  3 10:51:43 1995
+***************
+*** 523,529 ****
+  }
+  
+  // Kludge this until g++ supports the new template overloading semantics.
+! #if !defined(FUNCTION_H)
+  template <class charT, class traits>
+  inline bool
+  operator!= (const basic_string <charT, traits>& lhs,
+--- 523,529 ----
+  }
+  
+  // Kludge this until g++ supports the new template overloading semantics.
+! #if !defined(FUNCTION_H) && !defined(OS_STL_FUNCTION_H)
+  template <class charT, class traits>
+  inline bool
+  operator!= (const basic_string <charT, traits>& lhs,
+*** cinst.h.org	Sun Dec  3 10:51:48 1995
+--- cinst.h	Sun Dec  3 10:51:47 1995
+***************
+*** 84,92 ****
+--- 84,94 ----
+  __DO2(operator==,__B,__CCR,__CCR)
+  __DO2(operator==,__B,__CCR,__F)
+  __DO2(operator==,__B,__F,__CCR)
++ #if !defined(FUNCTION_H) && !defined(OS_STL_FUNCTION_H)
+  __DO2(operator!=,__B,__CCR,__CCR)
+  __DO2(operator!=,__B,__CCR,__F)
+  __DO2(operator!=,__B,__F,__CCR)
++ #endif
+  __DO1(abs,__F,__CCR)
+  __DO1(arg,__F,__CCR)
+  __DO2(polar,__C,__F,__F)
+*** sinst.h.org	Thu Feb 29 11:20:52 1996
+--- sinst.h	Thu Feb 29 11:21:22 1996
+***************
+*** 57,67 ****
+--- 57,71 ----
+  //  __DOPR (op, bool, wchar_t, __W)
+  
+  __DOB (==)
++ #if !defined(FUNCTION_H) && !defined(OS_STL_FUNCTION_H)
+  __DOB (!=)
++ #endif
+  __DOB (<)
++ #if !defined(FUNCTION_H) && !defined(OS_STL_FUNCTION_H)
+  __DOB (>)
+  __DOB (<=)
+  __DOB (>=)
++ #endif
+  
+  #undef __S
+  //#undef __W
+
+
+==== END LIBG++ patch
+
+Enjoy
+Mumit -- khan@xraylith.wisc.edu
+http://www.xraylith.wisc.edu/~khan/
+
+Cc: gnu.g++.help,
+    Travis Jensen <taj@viewpoint.com> 
+

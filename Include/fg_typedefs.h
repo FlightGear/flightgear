@@ -2,6 +2,9 @@
 //  Alterations: Copyright C. Hotchkiss 1996
 //
 // $Log$
+// Revision 1.1  1999/04/05 21:32:40  curt
+// Initial revision
+//
 // Revision 1.2  1998/05/13 18:23:46  curt
 // fg_typedefs.h: updated version by Charlie Hotchkiss
 // general.h: moved fg_root info to fgOPTIONS structure.

@@ -52,6 +52,9 @@ void GLUTspecialkey(int k, int x, int y);
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:47  curt
+// Initial revision
+//
 // Revision 1.4  1999/03/12 22:51:53  curt
 // Converted to C++ style comments.
 //

@@ -96,6 +96,9 @@ void fgSerialProcess();
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:46  curt
+// Initial revision
+//
 // Revision 1.5  1999/01/21 00:55:02  curt
 // Fixed some problems with timing of output strings.
 // Added checksum support for nmea and garmin output.

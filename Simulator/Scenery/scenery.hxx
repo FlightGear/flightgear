@@ -70,6 +70,9 @@ void fgSceneryRender( void );
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:49  curt
+// Initial revision
+//
 // Revision 1.6  1998/10/16 23:27:59  curt
 // C++-ifying.
 //

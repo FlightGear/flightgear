@@ -1,0 +1,85 @@
+From owner-fgfs-devel@flightgear.org  Fri Mar 12 12:57:31 1999
+X-VM-v5-Data: ([nil nil nil nil t nil nil nil nil]
+	["1824" "Fri" "12" "March" "1999" "12:55:14" "-0600" "Stephen J Baker" "sjbaker@hti.com" "<Pine.SGI.3.96.990312123905.8630A-100000@samantha.bgm.link.com>" "53" "[FGFS-Devel] Scene graph API." "^From:" nil nil "3" nil nil nil nil nil]
+	nil)
+Received: from mailhub.woodsoup.org (IDENT:root@anduin.physics.iastate.edu [129.186.82.1])
+	by meserv.me.umn.edu (8.9.1a/8.9.1) with ESMTP id MAA10391
+	for <curt@me.umn.edu>; Fri, 12 Mar 1999 12:57:30 -0600 (CST)
+Received: from majordom by mailhub.woodsoup.org with local (Exim 1.92 #1)
+	for fgfs-devel-outgoing@flightgear.org
+	id 10LX6P-0003CG-00; Fri, 12 Mar 1999 12:56:09 -0600
+Received: from sunmgr.hti.com ([130.210.206.69] helo=issun6.hti.com)
+	by mailhub.woodsoup.org with esmtp (Exim 1.92 #1)
+	for fgfs-devel@flightgear.org
+	id 10LX6O-0003C8-00; Fri, 12 Mar 1999 12:56:08 -0600
+Received: from issun5.hti.com ([130.210.202.3]) by issun6.hti.com
+          (Netscape Messaging Server 3.6)  with ESMTP id AAAEEB
+          for <fgfs-devel@flightgear.org>; Fri, 12 Mar 1999 12:55:26 -0600
+Received: from samantha.bgm.link.com ([130.210.65.19]) by issun5.hti.com
+          (Netscape Messaging Server 3.6)  with SMTP id AAA6D20
+          for <fgfs-devel@flightgear.org>; Fri, 12 Mar 1999 12:55:25 -0600
+X-Sender: steve@samantha.bgm.link.com
+Message-ID: <Pine.SGI.3.96.990312123905.8630A-100000@samantha.bgm.link.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Precedence: bulk
+Reply-To: fgfs-devel@flightgear.org
+From: "Stephen J Baker" <sjbaker@hti.com>
+Sender: owner-fgfs-devel@flightgear.org
+To: Flight Gear Mailing List <fgfs-devel@flightgear.org>
+Subject: [FGFS-Devel] Scene graph API.
+Date: Fri, 12 Mar 1999 12:55:14 -0600 (CST)
+
+
+I have just posted an early (pre-alpha - whatever) version of my
+new Scene Graph API and simple matrix/vector math library onto my
+web site:
+
+   http://www.woodsoup.org/~sbaker/ssg
+
+...and...
+
+   http://www.woodsoup.org/~sbaker/sg
+
+...these are the libraries that I'm using in my Tux-the-Penguin
+game - so they *work* pretty well - but may not be as complete
+or well-structured as they should be. There are also no example
+programs (apart from the game itself) and the only file loader
+is for an obscure ASCII format that nobody is likely to want
+as a standard. I hope to fix that somewhat over then next few
+weeks - but I'm on vacation next week.
+
+I think these libraries could be applicable to FGFS in several
+areas:
+
+1) 3D instrument panels.
+
+2) BUildings and other hand-created features like airfields,
+   detailed city areas and so forth.
+
+3) Other aircraft.
+
+There are some issues about how this would all integrate into
+Curts terrain rendering scheme - but I think it's do-able.
+
+Anyway, it would be nice if people would read the manuals
+and email me some comments, criticisms, suggestions, etc.
+Like I said though - these are really early cuts so don't
+go out and write 100,000 lines of code that depend on
+them - OK?
+
+Since I'm going to be out in the wilds of Arkansas for the
+next week (Do they have email out there? I *think* they
+have phones), don't expect a quick answer to any questions.
+
+Steve Baker                (817)619-2657 (Vox/Vox-Mail)
+Raytheon Systems Inc.      (817)619-2466 (Fax)
+Work: sjbaker@hti.com      http://www.hti.com
+Home: sjbaker1@airmail.net http://web2.airmail.net/sjbaker1
+
+
+--
+Please visit the FGFS web page:  http://www.flightgear.org
+For help on using this list (especially unsubscribing), send a message to
+"fgfs-devel-request@flightgear.org" with a single line of text: "help".
+

@@ -181,6 +181,9 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:49  curt
+// Initial revision
+//
 // Revision 1.23  1999/03/25 19:03:26  curt
 // Converted to use new bucket routines.
 //

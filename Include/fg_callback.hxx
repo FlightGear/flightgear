@@ -170,6 +170,9 @@ fgMethodCallback<T>::call0v( void** )
 #endif // _FG_CALLBACK_HXX
 
 // $Log$
+// Revision 1.1  1999/04/05 21:32:41  curt
+// Initial revision
+//
 // Revision 1.2  1998/09/15 02:09:04  curt
 // Include/fg_callback.hxx
 //   Moved code inline to stop g++ 2.7 from complaining.
