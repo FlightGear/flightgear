@@ -125,7 +125,6 @@ typedef struct  {
   int div_min;
   int div_max;
   int orientation;
-  int with_minimum;
   int minimum_value;
   int maximum_value;
   int width_units;
@@ -183,11 +182,22 @@ typedef struct{
 } HUD_horizon, *pHUDhorizon;
 
 typedef struct {
-	int type;
-	int x_pos;
-	int y_pos;
-	double (*load_value)();
-} HUD_control_surfaces, *pHUDControlSurface;
+  int x_pos;
+  int y_pos;
+  double(*load_value)(void);
+} HUD_control_surfaces, *pHUDControlSurfaces;
+
+typedef struct {
+  int ctrl_x;
+  int ctrl_y;
+  int ctrl_length;
+  int orientation;
+  int alignment;
+  int min_value;
+  int max_value;
+  int width_units;
+  double (*load_value)(void);
+} HUD_control, *pHUDControl;
 #define LABEL_COUNTER	1
 #define LABEL_WARNING	2
 
@@ -213,7 +223,8 @@ typedef enum{ HUDno_instr,
                    HUDcirc_ladder,
                    HUDhorizon,
                    HUDlabel,
-                   HUDcontrols
+                   HUDcontrol_surfaces,
+                   HUDcontrol
                    } hudinstype;
 
 typedef struct HUD_INSTR_STRUCT{
@@ -249,7 +260,6 @@ Hptr fgHUDAddScale  ( Hptr hud,                    \
                       int div_min,                 \
                       int div_max,                 \
                       int orientation,             \
-                      int with_min,                \
                       int min_value,               \
                       int max_value,               \
                       int width_units,             \
@@ -278,10 +288,21 @@ Hptr fgHUDAddLadder ( Hptr hud,                    \
                       double (*load_roll)( void ), \
                       double (*load_pitch)( void ) );
 
-Hptr fgHUDAddControlSurfaces( Hptr hud,
-                              int x_pos,
-                              int y_pos,
-                              double (*load_value)(void) );
+Hptr fgHUDAddControlSurfaces( Hptr hud,                    \
+                              int x_pos,                   \
+                              int y_pos,                   \
+                              double (*load_value)( void) );
+
+Hptr fgHUDAddControl( Hptr hud,                    \
+                      int ctrl_x,                  \
+                      int ctrl_y,                  \
+                      int ctrl_length,             \
+                      int orientation,             \
+                      int alignment,               \
+                      int min_value,               \
+                      int max_value,               \
+                      int width_units,             \
+                      double (*load_value)( void) );
 
 /*
 Hptr fgHUDAddLadder ( Hptr hud,
@@ -318,10 +339,13 @@ void fgUpdateHUD2( Hptr hud ); // Future use?
 #endif // _HUD_H  
 
 /* $Log$
-/* Revision 1.10  1998/02/12 21:59:42  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.11  1998/02/16 13:38:42  curt
+/* Integrated changes from Charlie Hotchkiss.
 /*
+ * Revision 1.10  1998/02/12 21:59:42  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.8  1998/02/07 15:29:35  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

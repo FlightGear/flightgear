@@ -52,12 +52,52 @@
 
 #define drawOneLine(x1,y1,x2,y2)  glBegin(GL_LINES);  \
    glVertex2f ((x1),(y1)); glVertex2f ((x2),(y2)); glEnd();
-   
+
 
 // The following routines obtain information concerntin the aircraft's
 // current state and return it to calling instrument display routines.
 // They should eventually be member functions of the aircraft.
 //
+
+double get_throttleval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->throttle[0];     // Hack limiting to one engine
+}
+
+double get_aileronval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->aileron;
+}
+
+double get_elevatorval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->elevator;
+}
+
+double get_elev_trimval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->elevator_trim;
+}
+
+double get_rudderval( void )
+{
+	fgCONTROLS *pcontrols;
+
+  pcontrols = current_aircraft.controls;
+  return pcontrols->rudder;
+}
 
 double get_speed( void )
 {
@@ -78,7 +118,7 @@ double get_aoa( void )
 double get_roll( void )
 {
 	fgFLIGHT *f;
-              
+
 	f = current_aircraft.flight;
 	return( FG_Phi );
 }
@@ -153,42 +193,62 @@ static void drawscale( HUD_scale * pscale )
   double vmin, vmax;
   int marker_x;
   int marker_y;
+  int scr_span;
   int mid_scr;
   register i;
   double factor;
   char TextScale[80];
   int condition;
   double cur_value = (*(pscale->load_value))();
-  
-  vmin = cur_value - pscale->width_units / 2;
-  vmax = cur_value + pscale->width_units / 2;
 
-  mid_scr = pscale->scr_min+(pscale->scr_max-pscale->scr_min)/2;
+  vmin = cur_value - pscale->width_units / 2.0; // width units == needle travel
+  vmax = cur_value + pscale->width_units / 2.0; // or picture unit span.
+
+  scr_span = pscale->scr_max - pscale->scr_min; // Run of scan in pix coord
+  scr_span |= 1;  // If span is odd number of units, mid will be correct.
+                  // If not it will be high by one coordinate unit. This is
+                  // an artifact of integer division needed for screen loc's.
+
+  mid_scr  = (scr_span >> 1) + pscale->scr_min; // Middle is half that +
+                                                // starting point.
+
+             // Calculate the number of screen units per indicator unit
+             // We must force floating point calculation or the factor
+             // will be low and miss locate tics by several units.
+
+  factor   = (double)scr_span / (double)pscale->width_units;
+
+             // Separate calculations for location of markings by scale
+             // type V vs H.
 
   if( pscale->type == VERTICAL )     // Vertical scale
     {
-    if( pscale->orientation == LEFT )
+
+    if( pscale->orientation == LEFT )     // Calculate x marker offset
       marker_x = pscale->scr_pos-6;
     else
       if( pscale->orientation == RIGHT )
         marker_x = pscale->scr_pos;
-    drawOneLine( pscale->scr_pos,
+
+    // Draw the basic markings for the scale...
+
+    drawOneLine( pscale->scr_pos,         // Vertical bar
                  pscale->scr_min,
                  pscale->scr_pos,
                  pscale->scr_max );
     if( pscale->orientation == LEFT )
       {
-      drawOneLine( pscale->scr_pos-3,
+      drawOneLine( pscale->scr_pos-3,     // Bottom tick bar
                    pscale->scr_min,
                    pscale->scr_pos,
                    pscale->scr_min );
 
-      drawOneLine( pscale->scr_pos-3,
+      drawOneLine( pscale->scr_pos-3,     // Top tick bar
                    pscale->scr_max,
                    pscale->scr_pos,
                    pscale->scr_max );
 
-      drawOneLine( pscale->scr_pos,
+      drawOneLine( pscale->scr_pos,       // Middle tick bar /Index
                    mid_scr,
                    pscale->scr_pos+6,
                    mid_scr );
@@ -213,22 +273,31 @@ static void drawscale( HUD_scale * pscale )
                      mid_scr );
         }
 
-    factor = (pscale->scr_max - pscale->scr_min)/pscale->width_units;
+    // Work through from bottom to top of scale. Calculating where to put
+    // minor and major ticks.
 
     for( i = vmin; i <= vmax; i++ )
       {
-      if( pscale->sub_type == LIMIT ) {
-        condition = (i >= pscale->minimum_value);
+      if( pscale->sub_type == LIMIT ) {           // Don't show ticks
+        condition = (i >= pscale->minimum_value); // below Minimum value.
         }
       else {
         if( pscale->sub_type == NOLIMIT ) {
           condition = 1;
           }
         }
-      if( condition )
+      if( condition )   // Show a tick if necessary
         {
+        // Calculate the location of this tick
         marker_y = pscale->scr_min + (i - vmin) * factor;
-        if( !(i%pscale->div_min)) {
+
+        // Block calculation artifact from drawing ticks below min coordinate.
+        // Calculation here accounts for text height.
+
+        if( marker_y < (pscale->scr_min + 4)) {  // Magic number!!!
+          continue;
+          }
+        if( (i%pscale->div_min) == 0) {
           if( pscale->orientation == LEFT )
             {
             drawOneLine( marker_x + 3, marker_y, marker_x + 6, marker_y );
@@ -238,28 +307,26 @@ static void drawscale( HUD_scale * pscale )
               {
               drawOneLine( marker_x, marker_y, marker_x + 3, marker_y );
               }
-            if( i%pscale->div_max==0 )
-              {
-              drawOneLine( marker_x, marker_y, marker_x + 6, marker_y );
-              sprintf( TextScale, "%d", i );
-              if( pscale->orientation == LEFT )
-                {
-                textString( marker_x - 8 * strlen(TextScale) - 2, marker_y - 4,
-                            TextScale, GLUT_BITMAP_8_BY_13 );
-                }
-              else  {
-                if( pscale->orientation == RIGHT )
-                  {
-                  textString( marker_x+10, marker_y-4,
-                              TextScale, GLUT_BITMAP_8_BY_13 );
-                  }
-                }
+            }
+          }
+        if( (i%pscale->div_max) == 0 )            {
+          drawOneLine( marker_x,     marker_y,
+                       marker_x + 6, marker_y );
+          sprintf( TextScale, "%d", i );
+          if( pscale->orientation == LEFT )              {
+            textString( marker_x -  8 * strlen(TextScale) - 2, marker_y - 4,
+                        TextScale, GLUT_BITMAP_8_BY_13 );
+            }
+          else  {
+            if( pscale->orientation == RIGHT )              {
+            textString( marker_x + 10,                         marker_y - 4,
+                        TextScale, GLUT_BITMAP_8_BY_13 );
               }
             }
           }
-        }
+        } // End if condition
       } // End for range of i from vmin to vmax
-    }
+    }  // End if VERTICAL SCALE TYPE
   if( pscale->type == HORIZONTAL )     // Horizontal scale
     {
     if( pscale->orientation == TOP ) {
@@ -311,7 +378,6 @@ static void drawscale( HUD_scale * pscale )
                      pscale->scr_pos+6 );
         }
       }
-    factor = (pscale->scr_max - pscale->scr_min)/pscale->width_units;
 
     for( i = vmin; i <= vmax; i++ )  // increment is faster than addition
       {
@@ -323,8 +389,7 @@ static void drawscale( HUD_scale * pscale )
           condition = 1;
           }
         }
-      if( condition )
-        {
+      if( condition )        {
         marker_x = pscale->scr_min+(i-vmin)*factor;
         if( i%pscale->div_min==0 ) {
           if( pscale->orientation == TOP )
@@ -599,7 +664,7 @@ static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 	int x_end, y_end;
 	/* int x_1, y_1; */
 	/* int x_2, y_2; */
-	fgCONTROLS *c;
+	fgCONTROLS *pCtls;
 
 	x_ini = ctrl_surf->x_pos;
 	y_ini = ctrl_surf->y_pos;
@@ -615,51 +680,58 @@ static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 	drawOneLine( x_ini + 90, y_ini, x_ini + 90, y_end );
 	drawOneLine( x_ini + 120, y_ini, x_ini + 120, y_end );
 
-	c = current_aircraft.controls;
+	pCtls = current_aircraft.controls;
 
 	/* Draw elevator diagram */
 	textString( x_ini + 1, y_end-11, "E", GLUT_BITMAP_8_BY_13 );
 	drawOneLine( x_ini + 15, y_ini + 5, x_ini + 15, y_ini + 55 );
 	drawOneLine( x_ini + 14, y_ini + 30, x_ini + 16, y_ini + 30 );
-	if( FG_Elevator <= -0.01 || FG_Elevator >= 0.01 )
+	if( pCtls->elevator <= -0.01 || pCtls->elevator >= 0.01 )
 	{
-		drawOneLine( x_ini + 10, y_ini + 5 + (int)(((FG_Elevator + 1.0)/2)*50.0), \
-				x_ini + 20, y_ini + 5 + (int)(((FG_Elevator + 1.0)/2)*50.0) );
+		drawOneLine( x_ini + 10, y_ini + 5 + (int)(((pCtls->elevator + 1.0)/2)*50.0), \
+				x_ini + 20, y_ini + 5 + (int)(((pCtls->elevator + 1.0)/2)*50.0) );
 	}
 	else
 	{
-		drawOneLine( x_ini + 7, y_ini + 5 + (int)(((FG_Elevator + 1.0)/2)*50.0), \
-				x_ini + 23, y_ini + 5 + (int)(((FG_Elevator + 1.0)/2)*50.0) );
+		drawOneLine( x_ini + 7, y_ini + 5 + (int)(((pCtls->elevator + 1.0)/2)*50.0), \
+				x_ini + 23, y_ini + 5 + (int)(((pCtls->elevator + 1.0)/2)*50.0) );
 	}
 
 	/* Draw aileron diagram */
 	textString( x_ini + 30 + 1, y_end-11, "A", GLUT_BITMAP_8_BY_13 );
 	drawOneLine( x_ini + 35, y_end-15, x_ini + 85, y_end-15 );
 	drawOneLine( x_ini + 60, y_end-14, x_ini + 60, y_end-16 );
-	if( FG_Aileron <= -0.01 || FG_Aileron >= 0.01 )
+	if( pCtls->aileron <= -0.01 || pCtls->aileron >= 0.01 )
 	{
-		drawOneLine( x_ini + 35 + (int)(((FG_Aileron + 1.0)/2)*50.0), y_end-20, \
-				x_ini + 35 + (int)(((FG_Aileron + 1.0)/2)*50.0), y_end-10 );
+		drawOneLine( x_ini + 35 + (int)(((pCtls->aileron + 1.0)/2)*50.0), y_end-20, \
+				x_ini + 35 + (int)(((pCtls->aileron + 1.0)/2)*50.0), y_end-10 );
 	}
 	else
 	{
-		drawOneLine( x_ini + 35 + (int)(((FG_Aileron + 1.0)/2)*50.0), y_end-25, \
-				x_ini + 35 + (int)(((FG_Aileron + 1.0)/2)*50.0), y_end-5 );
+		drawOneLine( x_ini + 35 + (int)(((pCtls->aileron + 1.0) / 2) * 50.0),
+                 y_end - 25,
+                 x_ini + 35 + (int)(((pCtls->aileron + 1.0) / 2) * 50.0),
+                 y_end -  5 );
 	}
 
 	/* Draw rudder diagram */
-	textString( x_ini + 30 + 1, y_ini + 21, "R", GLUT_BITMAP_8_BY_13 );
+	textString ( x_ini + 30 + 1, y_ini + 21, "R", GLUT_BITMAP_8_BY_13 );
 	drawOneLine( x_ini + 35, y_ini + 15, x_ini + 85, y_ini + 15 );
 	drawOneLine( x_ini + 60, y_ini + 14, x_ini + 60, y_ini + 16 );
-	if( FG_Rudder <= -0.01 || FG_Rudder >= 0.01 )
+
+	if( pCtls->rudder <= -0.01 || pCtls->rudder >= 0.01 )
 	{
-		drawOneLine( x_ini + 35 + (int)(((FG_Rudder + 1.0)/2)*50.0), y_ini + 20, \
-				x_ini + 35 + (int)(((FG_Rudder + 1.0)/2)*50.0), y_ini + 10 );
+		drawOneLine( x_ini + 35 + (int)(((pCtls->rudder + 1.0) / 2) * 50.0),
+                 y_ini + 20,
+				         x_ini + 35 + (int)(((pCtls->rudder + 1.0) / 2) * 50.0),
+                 y_ini + 10 );
 	}
 	else
 	{
-		drawOneLine( x_ini + 35 + (int)(((FG_Rudder + 1.0)/2)*50.0), y_ini + 25, \
-				x_ini + 35 + (int)(((FG_Rudder + 1.0)/2)*50.0), y_ini + 5 );
+		drawOneLine( x_ini + 35 + (int)(((pCtls->rudder + 1.0) / 2) * 50.0),
+                 y_ini + 25,
+                 x_ini + 35 + (int)(((pCtls->rudder + 1.0) / 2) * 50.0),
+                 y_ini +  5 );
 	}
 
 
@@ -667,8 +739,8 @@ static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 	textString( x_ini + 90 + 1, y_end-11, "T", GLUT_BITMAP_8_BY_13 );
 	textString( x_ini + 90 + 1, y_end-21, "r", GLUT_BITMAP_8_BY_13 );
 	drawOneLine( x_ini + 105, y_ini + 5, x_ini + 105, y_ini + 55 );
-	drawOneLine( x_ini + 100, y_ini + 5 + (int)(FG_Throttle[0]*50.0), \
-			x_ini + 110, y_ini + 5 + (int)(FG_Throttle[0]*50.0) );
+	drawOneLine( x_ini + 100, y_ini + 5 + (int)(pCtls->throttle[0]*50.0), \
+			x_ini + 110, y_ini + 5 + (int)(pCtls->throttle[0]*50.0) );
 
 
 	/* Draw elevator trim diagram */
@@ -676,15 +748,15 @@ static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 	textString( x_ini + 121, y_end-22, "m", GLUT_BITMAP_8_BY_13 );
 	drawOneLine( x_ini + 135, y_ini + 5, x_ini + 135, y_ini + 55 );
 	drawOneLine( x_ini + 134, y_ini + 30, x_ini + 136, y_ini + 30 );
-	if( FG_Elev_Trim <= -0.01 || FG_Elev_Trim >= 0.01 )
+	if( pCtls->elevator_trim <= -0.01 || pCtls->elevator_trim >= 0.01 )
 	{
-		drawOneLine( x_ini + 130, y_ini + 5 + (int)(((FG_Elev_Trim + 1)/2)*50.0), \
-				x_ini + 140, y_ini + 5 + (int)(((FG_Elev_Trim + 1.0)/2)*50.0) );
+		drawOneLine( x_ini + 130, y_ini + 5 + (int)(((pCtls->elevator_trim + 1)/2)*50.0), \
+				x_ini + 140, y_ini + 5 + (int)(((pCtls->elevator_trim + 1.0)/2)*50.0) );
 	}
 	else
 	{
-		drawOneLine( x_ini + 127, y_ini + 5 + (int)(((FG_Elev_Trim + 1.0)/2)*50.0), \
-				x_ini + 143, y_ini + 5 + (int)(((FG_Elev_Trim + 1.0)/2)*50.0) );
+		drawOneLine( x_ini + 127, y_ini + 5 + (int)(((pCtls->elevator_trim + 1.0)/2)*50.0), \
+				x_ini + 143, y_ini + 5 + (int)(((pCtls->elevator_trim + 1.0)/2)*50.0) );
 	}
 
 }
@@ -786,19 +858,23 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
   // aircraft information came from.
 
   fgHUDAddHorizon( hud, 590, 50, 40, 20, get_roll );
-  fgHUDAddScale  ( hud, VERTICAL, LIMIT, 220, 100, 280, 5, 10,
-                   LEFT, LEFT, 0, 100, 50, get_speed );
-  fgHUDAddScale  ( hud, VERTICAL, NOLIMIT, 440, 100, 280, 1, 5,
-                   RIGHT, RIGHT, -400, 50, 25, get_aoa );
+  fgHUDAddLadder ( hud, 330, 190, 90, 180, 70, 10,
+                   NONE, 45, get_roll, get_pitch );
+  fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 220, 100, 280, 5, 10,
+                      LEFT,    0, 100, 50, get_speed );
+  fgHUDAddScale  ( hud, VERTICAL,   NOLIMIT, 440, 100, 280, 1,  5,
+                      RIGHT, -40,  50, 25, get_aoa );
   fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 280, 220, 440, 5, 10,
-                   TOP, TOP, 0, 50, 50, get_heading );
+                      TOP,     0,  50, 50, get_heading );
   fgHUDAddLabel  ( hud, 180, 85, SMALL, NOBLINK,
                    RIGHT_JUST, NULL, " Kts", "%5.0f", get_speed );
   fgHUDAddLabel  ( hud, 180, 73, SMALL, NOBLINK,
                    RIGHT_JUST, NULL, " m", "%5.0f", get_altitude );
-  fgHUDAddLadder ( hud, 330, 190, 90, 180, 70, 10,
-                   NONE, 45, get_roll, get_pitch );
-  fgHUDAddControlSurfaces( hud, 10, 10, get_heading );
+  fgHUDAddControlSurfaces( hud, 10, 10, NULL );
+
+//  fgHUDAddControl( hud, HORIZONTAL, 50,  25, get_aileronval  ); // was 10, 10
+//  fgHUDAddControl( hud, VERTICAL,   150, 25, get_elevatorval ); // was 10, 10
+//  fgHUDAddControl( hud, HORIZONTAL, 250, 25, get_rudderval   ); // was 10, 10
 
   return( hud );
 }
@@ -878,7 +954,6 @@ Hptr fgHUDAddScale( Hptr hud,        \
                     int div_min,     \
                     int div_max,     \
                     int orientation, \
-                    int with_min,    \
                     int min_value,   \
                     int max_value,   \
                     int width_units, \
@@ -910,7 +985,6 @@ Hptr fgHUDAddScale( Hptr hud,        \
   pscale->div_min       = div_min;
   pscale->div_max       = div_max;
   pscale->orientation   = orientation;
-  pscale->with_minimum  = with_min;
   pscale->minimum_value = min_value;
   pscale->maximum_value = max_value;
   pscale->width_units   = width_units;
@@ -1038,36 +1112,87 @@ Hptr fgHUDAddControlSurfaces( Hptr hud,
                               int y_pos,
                               double (*load_value)() )
 {
-    HUD_control_surfaces *pctrl_surf;
-    HUD_instr *pinstrument;
+	HUD_control_surfaces *pcontrol_surfaces;
+	HUD_instr *pinstrument;
 
     if( !hud ) {
-	return NULL;
+      return NULL;
     }
 
     // Construct shell
     pinstrument = (HIptr)calloc(sizeof(HUD_instr),1);
-    if( !pinstrument )
-	return NULL;
-
-    pinstrument->type = HUDcontrols;
+    if( !pinstrument ) {
+      return NULL;
+      }
+    pinstrument->type = HUDcontrol_surfaces;
 
     // Construct core
-    pctrl_surf = (HUD_control_surfaces *)calloc(sizeof(HUD_control_surfaces),1);
-    if( !(pctrl_surf == NULL) )
-	return( NULL );
+    pcontrol_surfaces = (HUD_control_surfaces *)calloc(sizeof(HUD_control),1);
+    if( !pcontrol_surfaces ) {
+      return( NULL );
+      }
 
-    pctrl_surf->x_pos      = x_pos;
-    pctrl_surf->y_pos      = y_pos;
-    pctrl_surf->load_value = load_value;
-                                                   // Integrate
-    pinstrument->instr     = pctrl_surf;
+    pcontrol_surfaces->x_pos = x_pos;
+    pcontrol_surfaces->y_pos = y_pos;
+    pcontrol_surfaces->load_value = load_value;
+
+    pinstrument->instr     = pcontrol_surfaces;
                                                    // Install
     add_instrument( hud, pinstrument);
 
     return hud;
 }
 
+// fgHUDAddControl
+//
+//
+
+Hptr fgHUDAddControl( Hptr hud,        \
+                      int ctrl_x,      \
+                      int ctrl_y,      \
+                      int ctrl_length, \
+                      int orientation, \
+                      int alignment,   \
+                      int min_value,   \
+                      int max_value,   \
+                      int width_units, \
+                      double (*load_value)() )
+{
+    HUD_control *pcontrol;
+    HUD_instr *pinstrument;
+
+    if( !hud ) {
+      return NULL;
+    }
+
+    // Construct shell
+    pinstrument = (HIptr)calloc(sizeof(HUD_instr),1);
+    if( !pinstrument ) {
+      return NULL;
+      }
+    pinstrument->type = HUDcontrol;
+
+    // Construct core
+    pcontrol = (HUD_control *)calloc(sizeof(HUD_control),1);
+    if( !(pcontrol == NULL) ) {
+      return( NULL );
+      }
+    pcontrol->ctrl_x        = ctrl_x;
+    pcontrol->ctrl_y        = ctrl_y;
+    pcontrol->ctrl_length   = ctrl_length;
+    pcontrol->orientation   = orientation;
+    pcontrol->alignment     = alignment;
+    pcontrol->min_value     = min_value;
+    pcontrol->max_value     = max_value;
+    pcontrol->width_units   = width_units;
+    pcontrol->load_value    = load_value;
+                                                   // Integrate
+    pinstrument->instr     = pcontrol;
+                                                   // Install
+    add_instrument( hud, pinstrument);
+
+    return hud;
+}
 
 /*
 Hptr fgHUDAddMovingHorizon(  Hptr hud,     \
@@ -1139,46 +1264,53 @@ void fgUpdateHUD( Hptr hud ) {
 	/* printf("Drawing Instrument %d\n", phud_instr->type); */
 
 	switch (phud_instr->type) {
-	case HUDhorizon:   // ARTIFICIAL HORIZON
+    case HUDhorizon:   // ARTIFICIAL HORIZON
 	    drawhorizon( (pHUDhorizon)phud_instr->instr );
 	    break;
-	    
-	case HUDscale:     // Need to simplify this call.
+
+    case HUDscale:     // Need to simplify this call.
 	    drawscale (  (pHUDscale)  phud_instr->instr  );
 	    break;
 
-	case HUDlabel:
+    case HUDlabel:
 	    drawlabel (  (pHUDlabel)  phud_instr->instr  );
 	    break;
 
-    	case HUDladder:
+    case HUDladder:
 	    drawladder(  (pHUDladder) phud_instr->instr  );
 	    break;
 
-	case HUDcontrols:
-	    drawControlSurfaces( (pHUDControlSurface) phud_instr->instr );
-	    break;
-	    
-	default:; // Ignore anything you don't know about.
-	}
+//    case HUDcontrol:
+//      drawControl( (pHUDcontrol) phud_instr->instr );
+//      break;
 
-	phud_instr = phud_instr->next;
+    case HUDcontrol_surfaces:
+	    drawControlSurfaces( (pHUDControlSurfaces) phud_instr->instr );
+	    break;
+
+    default:; // Ignore anything you don't know about.
     }
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
+  phud_instr = phud_instr->next;
+  }
+
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_LIGHTING);
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
 }
 
 
 /* $Log$
-/* Revision 1.14  1998/02/12 21:59:41  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.15  1998/02/16 13:38:39  curt
+/* Integrated changes from Charlie Hotchkiss.
 /*
+ * Revision 1.14  1998/02/12 21:59:41  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.12  1998/02/09 15:07:48  curt
  * Minor tweaks.
  *
