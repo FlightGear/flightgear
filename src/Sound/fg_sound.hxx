@@ -61,6 +61,7 @@ protected:
   typedef struct {
         SGPropertyNode * prop;
         double (*fn)(double);
+        double *intern;
         double factor;
         double offset;
         double min;
@@ -72,14 +73,15 @@ private:
 
   FGSoundMgr * _mgr;
   FGSimpleSound * _sample;
+
   FGCondition * _condition;
-
   SGPropertyNode * _property;
-  double _prev_value;
 
-  bool _active;
   string _name;
   int _mode;
+  double _prev_value;
+  double _dt_play;
+  double _dt_stop;
 
   vector<_snd_prop> _volume;
   vector<_snd_prop> _pitch;

@@ -65,6 +65,8 @@ FGSound::FGSound()
   : _sample(NULL),
     _condition(NULL),
     _property(NULL),
+    _dt_play(0.0),
+    _dt_stop(0.0),
     _prev_value(0),
     _name(""),
     _mode(FGSound::ONCE)    
@@ -73,7 +75,12 @@ FGSound::FGSound()
 
 FGSound::~FGSound()
 {
-   delete _condition;
+   if (_property)
+      delete _property;
+
+   if (_condition)
+      delete _condition;
+
    delete _sample;
 }
 
@@ -118,22 +125,23 @@ FGSound::init(SGPropertyNode *node)
    float v = 0.0;
    vector<SGPropertyNode_ptr> kids = node->getChildren("volume");
    for (i = 0; (i < kids.size()) && (i < FGSound::MAXPROP); i++) {
-      _snd_prop volume;
+      _snd_prop volume = {NULL, NULL, NULL, 1.0, 0.0, 0.0, 0.0, false};
 
-      volume.prop = fgGetNode(kids[i]->getStringValue("property"), true);
+      if (strcmp(kids[i]->getStringValue("property"), ""))
+         volume.prop = fgGetNode(kids[i]->getStringValue("property"), true);
 
-      if ((volume.factor = kids[i]->getDoubleValue("factor")) == 0.0)
-         volume.factor = 1.0;
+      const char *intern_str = kids[i]->getStringValue("internal");
+      if (!strcmp(intern_str, "dt_play"))
+         volume.intern = &_dt_play;
+      else if (!strcmp(intern_str, "dt_stop"))
+         volume.intern = &_dt_stop;
 
-      else 
+      if ((volume.factor = kids[i]->getDoubleValue("factor")) != 0.0)
          if (volume.factor < 0.0) {
             volume.factor = -volume.factor;
             volume.subtract = true;
+         }
 
-         } else
-            volume.subtract = false;
-
-      volume.fn = NULL;
       const char *type_str = kids[i]->getStringValue("type");
       if ( strcmp(type_str, "") ) {
 
@@ -150,20 +158,14 @@ FGSound::init(SGPropertyNode *node)
 
       volume.offset = kids[i]->getDoubleValue("offset");
 
-      if ((volume.min = kids[i]->getDoubleValue("min")) < 0.0) {
+      if ((volume.min = kids[i]->getDoubleValue("min")) < 0.0)
          SG_LOG( SG_GENERAL, SG_WARN,
           "Volume minimum value below 0. Forced to 0.");
 
-         volume.min = 0.0;
-      }
-
       volume.max = kids[i]->getDoubleValue("max");
-      if (volume.max && (volume.max < volume.min) ) {
+      if (volume.max && (volume.max < volume.min) )
          SG_LOG(SG_GENERAL,SG_ALERT,
                 "  Volume maximum below minimum. Neglected.");
-
-        volume.max = 0.0;
-      }
 
       _volume.push_back(volume);
       v += volume.offset;
@@ -177,22 +179,23 @@ FGSound::init(SGPropertyNode *node)
    float p = 0.0;
    kids = node->getChildren("pitch");
    for (i = 0; (i < kids.size()) && (i < FGSound::MAXPROP); i++) {
-      _snd_prop pitch;
+      _snd_prop pitch = {NULL, NULL, NULL, 1.0, 1.0, 0.0, 0.0, false};
 
-      pitch.prop = fgGetNode(kids[i]->getStringValue("property"), true);
+      if (strcmp(kids[i]->getStringValue("property"), ""))
+         pitch.prop = fgGetNode(kids[i]->getStringValue("property"), true);
 
-      if ((pitch.factor = kids[i]->getDoubleValue("factor")) == 0.0)
-         pitch.factor = 1.0;
+      const char *intern_str = kids[i]->getStringValue("internal");
+      if (!strcmp(intern_str, "dt_play"))
+         pitch.intern = &_dt_play;
+      else if (!strcmp(intern_str, "dt_stop"))
+         pitch.intern = &_dt_stop;
 
-      else
+      if ((pitch.factor = kids[i]->getDoubleValue("factor")) != 0.0)
          if (pitch.factor < 0.0) {
             pitch.factor = -pitch.factor;
             pitch.subtract = true;
+         }
 
-         } else
-            pitch.subtract = false;
-
-      pitch.fn = NULL;
       const char *type_str = kids[i]->getStringValue("type");
       if ( strcmp(type_str, "") ) {
 
@@ -207,23 +210,16 @@ FGSound::init(SGPropertyNode *node)
                    "  Unknown pitch type, default to 'lin'");
       }
      
-      if ((pitch.offset = kids[i]->getDoubleValue("offset")) == 0.0)
-         pitch.offset = 1.0;
+      pitch.offset = kids[i]->getDoubleValue("offset");
 
-      if ((pitch.min = kids[i]->getDoubleValue("min")) < 0.0) {
+      if ((pitch.min = kids[i]->getDoubleValue("min")) < 0.0)
          SG_LOG(SG_GENERAL,SG_WARN,
                 "  Pitch minimum value below 0. Forced to 0.");
 
-         pitch.min = 0.0;
-      }
-
       pitch.max = kids[i]->getDoubleValue("max");
-      if (pitch.max && (pitch.max < pitch.min) ) {
+      if (pitch.max && (pitch.max < pitch.min) )
          SG_LOG(SG_GENERAL,SG_ALERT,
                 "  Pitch maximum below minimum. Neglected");
-
-         pitch.max = 0.0;
-      }
 
       _pitch.push_back(pitch);
       p += pitch.offset;
@@ -272,10 +268,12 @@ FGSound::update (double dt)
       )
    {
 
-      _active = false;
+      _dt_stop += dt;
       if (_sample->is_playing()) {
-         SG_LOG(SG_GENERAL, SG_INFO, "Stopping sound: " << _name);
+         SG_LOG(SG_GENERAL, SG_INFO, "Stopping audio after " << _dt_play
+                                      << " sec: " << _name );
          _sample->stop( _mgr->get_scheduler() );
+         _dt_play = 0.0;
       }
 
       return;
@@ -286,13 +284,14 @@ FGSound::update (double dt)
    // If the mode is ONCE and the sound is still playing,
    //  we have nothing to do anymore.
    //
-   if (_active && (_mode == FGSound::ONCE))
+   if (_dt_play && (_mode == FGSound::ONCE))
       return;
 
    //
-   // Cache current value;
+   // Cache current value and Update playing time
    //
    _prev_value = curr_value;
+   _dt_play += dt;
 
    //
    // Update the volume
@@ -303,7 +302,13 @@ FGSound::update (double dt)
    double volume_offset = 0.0;
 
    for(i = 0; i < max; i++) {
-      double v = _volume[i].prop->getDoubleValue();
+      double v;
+
+      if (_volume[i].prop)
+         v = _volume[i].prop->getDoubleValue();
+
+      else if (_volume[i].intern)
+         v = *_volume[i].intern;
 
       if (_volume[i].fn)
          v = _volume[i].fn(v);
@@ -333,7 +338,13 @@ FGSound::update (double dt)
    double pitch_offset = 0.0;
 
    for(i = 0; i < max; i++) {
-      double p = _pitch[i].prop->getDoubleValue();
+      double p;
+
+      if (_pitch[i].prop)
+         p = _pitch[i].prop->getDoubleValue();
+
+      else if (_pitch[i].intern)
+         p = *_pitch[i].intern;
 
       if (_pitch[i].fn)
          p = _pitch[i].fn(p);
@@ -365,9 +376,10 @@ FGSound::update (double dt)
    //
    // Do we need to start playing the sample?
    //
-   if (!_active) {
+   if (_dt_stop) {
 
-      _active = true;
+      _dt_stop = 0.0;
+
       if (_mode == FGSound::ONCE)
          _sample->play(_mgr->get_scheduler(), false);
 

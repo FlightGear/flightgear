@@ -155,7 +155,17 @@ Configuration description:
  
      <property>
  	Defins which property supplies the value for the calculation.
+	Either a <property> or an <internal> should be defined.
  	The value is treatened as a floating point number.
+
+     <internal>
+	Defins which internal variable should be used for the calculation.
+	The value is treatened as a floating point number.
+	The following internals are available at this time:
+
+	dt_play:	the number of seconds since the sound started playing.
+
+	dt_stop:	the number of seconds after the sound has stopped.
  
      <type>
 	Defines the function that should be used upon the property
