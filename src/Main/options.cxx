@@ -201,7 +201,7 @@ fgOPTIONS::fgOPTIONS() :
     network_olk(false)
 {
     // set initial values/defaults
-    time_offset_type = SG_TIME_SYS_OFFSET;
+    time_offset_type = FG_TIME_SYS_OFFSET;
     char* envp = ::getenv( "FG_ROOT" );
 
     if ( envp != NULL ) {
@@ -774,22 +774,22 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	tile_diameter = tile_radius * 2 + 1;
     } else if ( arg.find( "--time-offset" ) != string::npos ) {
 	time_offset = parse_time_offset( (arg.substr(14)) );
-	//time_offset_type = SG_TIME_SYS_OFFSET;
+	//time_offset_type = FG_TIME_SYS_OFFSET;
     } else if ( arg.find( "--time-match-real") != string::npos ) {
       //time_offset = parse_time_offset(arg.substr(18));
-	time_offset_type = SG_TIME_SYS_OFFSET;
+	time_offset_type = FG_TIME_SYS_OFFSET;
     } else if ( arg.find( "--time-match-local") != string::npos ) {
       //time_offset = parse_time_offset(arg.substr(18));
-	time_offset_type = SG_TIME_LAT_OFFSET;
+	time_offset_type = FG_TIME_LAT_OFFSET;
     } else if ( arg.find( "--start-date-sys=") != string::npos ) {
         time_offset = parse_date( (arg.substr(17)) );
-	time_offset_type = SG_TIME_SYS_ABSOLUTE;
+	time_offset_type = FG_TIME_SYS_ABSOLUTE;
     } else if ( arg.find( "--start-date-lat=") != string::npos ) {
         time_offset = parse_date( (arg.substr(17)) );
-	time_offset_type = SG_TIME_LAT_ABSOLUTE;
+	time_offset_type = FG_TIME_LAT_ABSOLUTE;
     } else if ( arg.find( "--start-date-gmt=") != string::npos ) {
         time_offset = parse_date( (arg.substr(17)) );
-	time_offset_type = SG_TIME_GMT_ABSOLUTE;
+	time_offset_type = FG_TIME_GMT_ABSOLUTE;
 
     } else if ( arg == "--hud-tris" ) {
 	tris_or_culled = 0;	

@@ -114,6 +114,15 @@ public:
 	FG_AUTO_COORD_ENABLED = 2
     };
 
+    enum fgTimingOffsetType {
+	FG_TIME_SYS_OFFSET   = 0,
+	FG_TIME_GMT_OFFSET   = 1,
+	FG_TIME_LAT_OFFSET   = 2,
+	FG_TIME_SYS_ABSOLUTE = 3,
+	FG_TIME_GMT_ABSOLUTE = 4,
+	FG_TIME_LAT_ABSOLUTE = 5
+    };
+
 private:
 
     // The flight gear "root" directory
@@ -186,8 +195,8 @@ private:
 
     // Time options
     int time_offset;		// Use this value to change time.
-    sgTimingOffsetType time_offset_type; // Will be set to one of the
-				// SG_TIME_* enums, to deterine how
+    fgTimingOffsetType time_offset_type; // Will be set to one of the
+				// FG_TIME_* enums, to deterine how
 				// time_offset should be used 
 
     // Serial port configuration strings
@@ -274,7 +283,7 @@ public:
     inline int get_tris_or_culled() const { return tris_or_culled; }
 
     inline int get_time_offset() const { return time_offset; }
-    inline sgTimingOffsetType  get_time_offset_type() const {
+    inline fgTimingOffsetType  get_time_offset_type() const {
 	return time_offset_type;
     };
 
@@ -341,7 +350,7 @@ public:
     inline void set_units (int value) { units = value; }
     inline void set_tris_or_culled (int value) { tris_or_culled = value; }
     inline void set_time_offset (int value) { time_offset = value; }
-    inline void set_time_offset_type (sgTimingOffsetType value) {
+    inline void set_time_offset_type (fgTimingOffsetType value) {
 	time_offset_type = value;
     }
     inline void cycle_view_mode() { 

@@ -1322,25 +1322,25 @@ int main( int argc, char **argv ) {
 
     // Okay, we now have six possible scenarios
     switch ( current_options.get_time_offset_type() ) {
-    case SG_TIME_SYS_OFFSET:
+    case fgOPTIONS::FG_TIME_SYS_OFFSET:
 	globals->set_warp( current_options.get_time_offset() );
 	break;
-    case SG_TIME_GMT_OFFSET:
+    case fgOPTIONS::FG_TIME_GMT_OFFSET:
 	globals->set_warp( current_options.get_time_offset() - 
 			   (currGMT - systemLocalTime) );
 	break;
-    case SG_TIME_LAT_OFFSET:
+    case fgOPTIONS::FG_TIME_LAT_OFFSET:
 	globals->set_warp( current_options.get_time_offset() - 
 			   (aircraftLocalTime - systemLocalTime) );
 	break;
-    case SG_TIME_SYS_ABSOLUTE:
+    case fgOPTIONS::FG_TIME_SYS_ABSOLUTE:
 	globals->set_warp( current_options.get_time_offset() - cur_time );
 	//printf("warp = %d\n", warp); 
 	break;
-    case SG_TIME_GMT_ABSOLUTE:
+    case fgOPTIONS::FG_TIME_GMT_ABSOLUTE:
 	globals->set_warp( current_options.get_time_offset() - currGMT );
 	break;
-    case SG_TIME_LAT_ABSOLUTE:
+    case fgOPTIONS::FG_TIME_LAT_ABSOLUTE:
 	globals->set_warp( current_options.get_time_offset() - 
 			   (aircraftLocalTime - systemLocalTime) - 
 			   cur_time ); 
