@@ -74,7 +74,7 @@ FGApproach::~FGApproach(){
 }
 
 void FGApproach::Init() {
-  display    = false;
+  display = false;
 }
 
 
@@ -116,6 +116,8 @@ void FGApproach::Update(double dt) {
 			tpars.callsign = "Player";
 			tpars.airport = ident;
 			
+			//cout << "ident = " << ident << " name = " << name << '\n';
+			
 			int num_trans = 0;
 			// is the frequency of the station tuned in?
 			if ( freq == (int)(comm1_freq*100.0 + 0.5) ) {
@@ -139,10 +141,12 @@ void FGApproach::Update(double dt) {
 	}
 	
 	for ( i=0; i<num_planes; i++ ) {
-		
-		if ( planes[i].ident == TPar.callsign && name == TPar.airport && TPar.station == "approach" ) {
-			
-			if ( TPar.request && TPar.intention == "landing" && ident == TPar.intid) {
+		//cout << "TPar.airport = " << TPar.airport << " TPar.station = " << TPar.station << " TPar.callsign = " << TPar.callsign << '\n';
+		//if ( planes[i].ident == TPar.callsign && name == TPar.airport && TPar.station == "approach" ) {
+			//if ( TPar.request && TPar.intention == "landing" && ident == TPar.intid) {
+			if(planes[i].ident == "Player" && fgGetBool("/sim/atc/opt0")) {
+				//cout << "Landing requested\n";
+				fgSetBool("/sim/atc/opt0", false);
 				planes[i].wpn = 0; 
 				// ===========================
 				// === calculate waypoints ===
@@ -168,14 +172,16 @@ void FGApproach::Update(double dt) {
 				else tpars.VDir = 2;
 				tpars.alt = planes[i].aalt;
 				message = current_transmissionlist->gen_text(station, code, tpars, true );
+				cout << message << '\n';
 				globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
 				planes[i].lmc = code;
 				planes[i].tlm = etime_node->getDoubleValue();
 				planes[i].on_crs = true;
 				planes[i].contact = 1;
 			}
-		}
+		//}
 		
+		//if(1) {
 		if ( planes[i].contact == 1 ) {
 			// =========================
 			// === update parameters ===
@@ -193,12 +199,13 @@ void FGApproach::Update(double dt) {
 			adif = angle_diff_deg( planes[i].hdg, planes[i].wpts[wpn][4] ) 
 			* SGD_DEGREES_TO_RADIANS;
 			datp = 2*sin(fabs(adif)/2.0)*sin(fabs(adif)/2.0) *
-			planes[i].spd/3600. * planes[i].turn_rate + 
-			planes[i].spd/3600. * 3.0;
+			       planes[i].spd/3600. * planes[i].turn_rate + 
+			       planes[i].spd/3600. * 3.0;
 			//cout << adif/SGD_DEGREES_TO_RADIANS << " " 
 			//     << datp << " " << planes[i].dnc << " " << planes[i].dcc <<endl;
 			if ( fabs(planes[i].dnc) < datp ) {
 			//if ( fabs(planes[i].dnc) < 0.3 && planes[i].dnwp < 1.0 ) {
+				//cout << "Reached next waypoint!\n";
 				planes[i].wpn -= 1;
 				wpn = planes[i].wpn-1;
 				planes[i].ahdg = planes[i].wpts[wpn][4];
@@ -222,6 +229,8 @@ void FGApproach::Update(double dt) {
 					else tpars.VDir = 2;
 					tpars.alt = planes[i].aalt;
 					message = current_transmissionlist->gen_text(station, code, tpars, true );
+					//cout << "Approach transmitting...\n";
+					//cout << message << '\n';
 					globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
 					
 				}
@@ -231,6 +240,8 @@ void FGApproach::Update(double dt) {
 					code.c3 = 0;
 					tpars.runway = active_runway;
 					message = current_transmissionlist->gen_text(station, code, tpars, true);
+					//cout << "Approach transmitting 2 ...\n";
+					//cout << message << '\n';
 					globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
 				}
 				planes[i].lmc = code;
@@ -244,8 +255,8 @@ void FGApproach::Update(double dt) {
 			// === come off course ? ===
 			// =========================
 			if ( fabs(planes[i].dcc) > 1.0 && 
-				( !planes[i].wp_change || 
-			etime_node->getDoubleValue() - planes[i].tlm > tbm ) ) {
+			   ( !planes[i].wp_change || etime_node->getDoubleValue() - planes[i].tlm > tbm ) ) {
+				//cout << "Off course!\n";
 				if ( planes[i].on_crs ) {
 					if ( planes[i].dcc < 0) {
 						planes[i].ahdg += 30.0;
@@ -262,8 +273,8 @@ void FGApproach::Update(double dt) {
 				//     << planes[i].tlm << endl;
 				// generate the message
 				if ( planes[i].on_crs || 
-					( fabs(angle_diff_deg( planes[i].hdg, planes[i].ahdg )) >  30.0  && 
-				etime_node->getDoubleValue() - planes[i].tlm > tbm) ) {
+				   ( fabs(angle_diff_deg( planes[i].hdg, planes[i].ahdg )) >  30.0  && 
+				    etime_node->getDoubleValue() - planes[i].tlm > tbm) ) {
 					// generate the message
 					code.c1 = 1;
 					code.c2 = 4;
@@ -276,6 +287,8 @@ void FGApproach::Update(double dt) {
 					else            tpars.tdir = 2;
 					tpars.heading = planes[i].ahdg;
 					message = current_transmissionlist->gen_text(station, code, tpars, true);
+					//cout << "Approach transmitting 3 ...\n";
+					//cout << message << '\n';
 					globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
 					planes[i].lmc = code;
 					planes[i].tlm = etime_node->getDoubleValue();
@@ -284,6 +297,7 @@ void FGApproach::Update(double dt) {
 				planes[i].on_crs = false;
 			}
 			else if ( !planes[i].on_crs ) {
+				//cout << "Off course 2!\n";
 				wpn = planes[i].wpn-1;
 				adif = angle_diff_deg( planes[i].hdg, planes[i].wpts[wpn][4] ) 
 				       * SGD_DEGREES_TO_RADIANS;
@@ -303,6 +317,8 @@ void FGApproach::Update(double dt) {
 					else            tpars.tdir = 2;
 					tpars.heading = planes[i].ahdg;
 					message = current_transmissionlist->gen_text(station, code, tpars, true);
+					//cout << "Approach transmitting 4 ...\n";
+					//cout << message << '\n';
 					globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
 					planes[i].lmc = code;
 					planes[i].tlm = etime_node->getDoubleValue();
@@ -328,6 +344,8 @@ void FGApproach::Update(double dt) {
 				tpars.callsign = "Player";
 				tpars.freq    = freq;
 				message = current_transmissionlist->gen_text(station, code, tpars, true);
+				//cout << "Approach transmitting 5 ...\n";
+				//cout << message << '\n';
 				globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
 				planes[i].lmc = code;
 				planes[i].tlm = etime_node->getDoubleValue();
@@ -336,7 +354,6 @@ void FGApproach::Update(double dt) {
 			}
 		}
 	}
-	
 }
 
 
@@ -531,6 +548,7 @@ double FGApproach::round_alt( const bool hl, double alt ) {
 // get active runway
 // ============================================================================
 void FGApproach::get_active_runway() {
+	//cout << "Entering FGApproach::get_active_runway()\n";
 
 #ifdef FG_WEATHERCM
   sgVec3 position = { lat, lon, elev };
@@ -619,7 +637,7 @@ void FGApproach::AddPlane(string pid) {
   int i;
   for ( i=0; i<num_planes; i++) {
     if ( planes[i].ident == pid) {
-      //cout << "Plane already registered: " << ident << " " << num_planes << endl;
+      //cout << "Plane already registered: " << planes[i].ident << ' ' << ident << ' ' << num_planes << endl;
       return;
     }
   }
