@@ -36,13 +36,17 @@
 //       arguments explicitly.
 //  (7)  Defines FG_NEED_AUTO_PTR if STL doesn't provide auto_ptr<>.
 //  (8)  Defines FG_NO_ARROW_OPERATOR if the compiler is unable
-//       to support the -> operator for iterators.
+//       to support operator->() for iterators.
 //  (9)  Defines FG_USE_EXCEPTIONS if the compiler (in the current
 //       compilation mode) supports exceptions.
 //  (10) Define FG_NAMESPACES if the compiler supports namespaces.
 //  (11) Define FG_MATH_FN_IN_NAMESPACE_STD if C math functions are in <cmath>
 //       and std::
 //  (12) Define FG_HAVE_STD if ISO C++ Standard headers are supported.
+//  (13) Defines FG_CLASS_PARTIAL_SPECIALIZATION if the compiler 
+//       supports partial specialization of class templates.
+//  (14) Defines FG_HAVE_STD_INCLUDES to use <iostream> instead of <iostream.h>
+//  (15) Defines FG_HAVE_STREAMBUF if <streambuf> of <streambuf.h> are present.
 
 #ifdef __GNUC__
 #  if __GNUC__ == 2 
@@ -69,8 +73,9 @@
 #      define FG_NEED_AUTO_PTR
 #      define FG_MEMBER_TEMPLATES
 #      define FG_NAMESPACES
-#      define FG_MATH_FN_IN_NAMESPACE_STD
 #      define FG_HAVE_STD
+#      define FG_HAVE_STREAMBUF
+#      define FG_CLASS_PARTIAL_SPECIALIZATION
 
 #      define STL_ALGORITHM  <algorithm>
 #      define STL_FUNCTIONAL <functional>
@@ -94,6 +99,16 @@
 #endif
 
 #ifdef __BORLANDC__
+# if defined(HAVE_SGI_STL_PORT)
+
+// Use quotes around long file names to get around Borland's include hackery
+
+#  define STL_ALGORITHM  "algorithm"
+#  define STL_FUNCTIONAL "functional"
+
+#  define FG_MATH_EXCEPTION_CLASH
+
+# else
 
 #  define STL_ALGORITHM  <algorithm>
 #  define STL_FUNCTIONAL <functional>
@@ -103,12 +118,15 @@
 #  define STL_STRING     <string>
 #  define STL_STRSTREAM  <strstream>
 
+#  define FG_INCOMPLETE_FUNCTIONAL
+
+# endif // HAVE_SGI_STL_PORT
+
 #  define FG_NO_DEFAULT_TEMPLATE_ARGS
 #  define FG_NAMESPACES
-#  define FG_INCOMPLETE_FUNCTIONAL
 #  define FG_HAVE_STD
 
-#endif
+#endif // __BORLANDC__
 
 #ifdef FG_NEED_EXPLICIT
 #  define explicit
@@ -132,6 +150,12 @@
 #  define FG_NULL_TMPL_ARGS <>
 #else
 #  define FG_NULL_TMPL_ARGS
+#endif
+
+#ifdef FG_CLASS_PARTIAL_SPECIALIZATION
+# define FG_TEMPLATE_NULL template<>
+#else
+# define FG_TEMPLATE_NULL
 #endif
 
 // FG_NO_NAMESPACES is a hook so that users can disable namespaces
@@ -178,6 +202,9 @@ inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
 #endif // _COMPILER_H
 
 // $Log$
+// Revision 1.3  1998/11/06 14:04:09  curt
+// More portability improvements by Bernie Bright.
+//
 // Revision 1.2  1998/11/02 18:28:08  curt
 // Portability updates from Bernie Bright
 //
