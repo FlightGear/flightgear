@@ -156,7 +156,7 @@ int fgDEM::close () {
 string fgDEM::next_token() {
     string token;
 
-    in->stream() >> token;
+    *in >> token;
 
     // cout << "    returning " + token + "\n";
 
@@ -167,8 +167,8 @@ string fgDEM::next_token() {
 // return next integer from input stream
 int fgDEM::next_int() {
     int result;
-
-    in->stream() >> result;
+    
+    *in >> result;
 
     return result;
 }
@@ -178,7 +178,7 @@ int fgDEM::next_int() {
 double fgDEM::next_double() {
     double result;
 
-    in->stream() >> result;
+    *in >> result;
 
     return result;
 }
@@ -858,6 +858,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.21  1998/11/06 14:04:32  curt
+// Changes due to updates in fgstream.
+//
 // Revision 1.20  1998/10/28 19:38:20  curt
 // Elliminate some unnecessary win32 specific stuff (by Norman Vine)
 //
