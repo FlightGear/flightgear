@@ -104,7 +104,7 @@ void FGFDM::iterate(float dt)
     } 
     _airplane.calcFuelWeights();
     
-    setOutputProperties();
+    setOutputProperties(dt);
 }
 
 Airplane* FGFDM::getAirplane()
@@ -391,7 +391,19 @@ void FGFDM::getExternalInput(float dt)
     }
 }
 
-void FGFDM::setOutputProperties()
+// Linearly "seeks" a property by the specified fraction of the way to
+// the target value.  Used to emulate "slowly changing" output values.
+static void moveprop(SGPropertyNode* node, const char* prop,
+                    float target, float frac)
+{
+    float val = node->getFloatValue(prop);
+    if(frac > 1) frac = 1;
+    if(frac < 0) frac = 0;
+    val += (target - val) * frac;
+    node->setFloatValue(prop, val);
+}
+
+void FGFDM::setOutputProperties(float dt)
 {
     // char buf[256];
     int i;
@@ -483,6 +495,15 @@ void FGFDM::setOutputProperties()
             node->setFloatValue("epr", j->getEPR());
             node->setFloatValue("egr-degf",
                                 j->getEGT() * K2DEGF + K2DEGFOFFSET);
+
+            // These are "unmodeled" values that are still needed for
+            // many cockpits.  Tie them all to the N1 speed, but
+            // normalize the numbers to the range [0:1] so the
+            // cockpit code can scale them to the right values.
+            float pnorm = j->getPerfNorm();
+            moveprop(node, "oilp-norm", pnorm, dt/3); // 3s seek time
+            moveprop(node, "oilt-norm", pnorm, dt/30); // 30s 
+            moveprop(node, "itt-norm", pnorm, dt/1); // 1s
         }
     }
 }

@@ -39,6 +39,9 @@ public:
     float getEPR();
     float getEGT();
 
+    // Normalized "performance" number.  Used for fuzzy numbers in FGFDM
+    float getPerfNorm() { return (_n1 - _n1Min) / (_n1Max - _n1Min); }
+
     // From Thruster:
     virtual bool isRunning();
     virtual bool isCranking();

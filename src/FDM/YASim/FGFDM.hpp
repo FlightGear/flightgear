@@ -34,7 +34,7 @@ private:
     struct PropOut { SGPropertyNode* prop; int handle, type; bool left;
                      float min, max; };
 
-    void setOutputProperties();
+    void setOutputProperties(float dt);
 
     Rotor* parseRotor(XMLAttributes* a, const char* name);
     Wing* parseWing(XMLAttributes* a, const char* name);
