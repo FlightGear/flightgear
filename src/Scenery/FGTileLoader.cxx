@@ -25,6 +25,7 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/structure/exception.hxx>
 
 #include <Main/globals.hxx>
 #include "FGTileLoader.hxx"
@@ -93,6 +94,9 @@ FGTileLoader::add( FGTileEntry* tile )
     static bool beenhere = false;
     if (!beenhere) {
         tile_path = globals->get_fg_scenery();
+        if (!tile_path.size())
+            throw sg_throwable(string("No valid scenery path defined!"));
+
         beenhere = true;
     }
 
