@@ -144,7 +144,7 @@ bool FGClipper::load_polys(const string& path) {
 // Do actually clipping work
 bool FGClipper::clip_all(const point2d& min, const point2d& max) {
     gpc_polygon accum, result_union, tmp;
-    gpc_polygon *result_diff;
+    gpc_polygon *result_diff, *remains;
     gpcpoly_iterator current, last;
 
     FG_LOG( FG_CLIPPER, FG_INFO, "Running master clipper" );
@@ -234,22 +234,31 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
     // finally, what ever is left over goes to base terrain
 
     // clip to accum against original base tile
+    remains = new gpc_polygon;
+    remains->num_contours = 0;
+    remains->contour = NULL;
     gpc_polygon_clip(GPC_DIFF, &polys_in.safety_base, &accum, 
-		     &polys_clipped.safety_base);
+		     remains);
+    if ( remains->num_contours > 0 ) {
+	polys_clipped.polys[0].push_back(remains);
+    }
 
     // tmp output accum
     FILE *ofp= fopen("accum", "w");
     gpc_write_polygon(ofp, &accum);
 
     // tmp output safety_base
-    ofp= fopen("safety_base", "w");
-    gpc_write_polygon(ofp, &polys_clipped.safety_base);
+    ofp= fopen("remains", "w");
+    gpc_write_polygon(ofp, remains);
 
     return true;
 }
 
 
 // $Log$
+// Revision 1.6  1999/03/27 05:20:53  curt
+// Pass along default area explicitely to triangulator.
+//
 // Revision 1.5  1999/03/19 22:28:46  curt
 // Only add non-null polygons to output list.
 //
