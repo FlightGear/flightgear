@@ -94,19 +94,12 @@ FGViewMgr::init ()
         nodepath += "/config/at-model-idx";
         at_model_index = fgGetInt(nodepath.c_str());
 
-        // view damping (0.0: no damping; <0.0: all but alt; >0.0: damp all)
-        nodepath = viewpath;
-        nodepath += "/config/at-model-alt-damping";
-        damp_alt = fgGetDouble(nodepath.c_str(), 0.0);
-
         nodepath = viewpath;
         nodepath += "/config/at-model-roll-damping";
         damp_roll = fgGetDouble(nodepath.c_str(), 0.0);
-
         nodepath = viewpath;
         nodepath += "/config/at-model-pitch-damping";
         damp_pitch = fgGetDouble(nodepath.c_str(), 0.0);
-
         nodepath = viewpath;
         nodepath += "/config/at-model-heading-damping";
         damp_heading = fgGetDouble(nodepath.c_str(), 0.0);
@@ -157,7 +150,7 @@ FGViewMgr::init ()
     if ( strcmp("lookat",strdata.c_str()) == 0 )
       add_view(new FGViewer ( FG_LOOKAT, from_model, from_model_index,
                               at_model, at_model_index,
-                              damp_alt, damp_roll, damp_pitch, damp_heading,
+                              damp_roll, damp_pitch, damp_heading,
                               x_offset_m, y_offset_m,z_offset_m,
                               heading_offset_deg, pitch_offset_deg,
                               roll_offset_deg, fov_deg,
@@ -165,7 +158,7 @@ FGViewMgr::init ()
                               target_z_offset_m, near_m ));
     else
       add_view(new FGViewer ( FG_LOOKFROM, from_model, from_model_index,
-                              false, 0, 0.0, 0.0, 0.0, 0.0,
+                              false, 0, 0.0, 0.0, 0.0,
                               x_offset_m, y_offset_m, z_offset_m,
                               heading_offset_deg, pitch_offset_deg,
                               roll_offset_deg, fov_deg, 0, 0, 0, near_m ));

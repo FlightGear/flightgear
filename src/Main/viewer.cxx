@@ -133,7 +133,7 @@ static void MakeVIEW_OFFSET( sgMat4 dst,
 // Constructor...
 FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
                     bool at_model, int at_model_index,
-                    double damp_alt, double damp_roll, double damp_pitch, double damp_heading,
+                    double damp_roll, double damp_pitch, double damp_heading,
                     double x_offset_m, double y_offset_m, double z_offset_m,
                     double heading_offset_deg, double pitch_offset_deg,
                     double roll_offset_deg, double fov_deg,
@@ -149,7 +149,7 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     _roll_deg(0),
     _pitch_deg(0),
     _heading_deg(0),
-    _damp_alt(0),
+    _damp_sync(0),
     _damp_roll(0),
     _damp_pitch(0),
     _damp_heading(0),
@@ -161,14 +161,13 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     _from_model_index = from_model_index;
     _at_model = at_model;
     _at_model_index = at_model_index;
-    if (damp_alt > 0.0)
-      _damp_alt = 1 - 1.0 / pow(10, fabs(damp_alt));
+
     if (damp_roll > 0.0)
-      _damp_roll = 1 - 1.0 / pow(10, fabs(damp_roll));
+      _damp_roll = 1.0 / pow(10, fabs(damp_roll));
     if (damp_pitch > 0.0)
-      _damp_pitch = 1 - 1.0 / pow(10, fabs(damp_pitch));
+      _damp_pitch = 1.0 / pow(10, fabs(damp_pitch));
     if (damp_heading > 0.0)
-      _damp_heading = 1 - 1.0 / pow(10, fabs(damp_heading));
+      _damp_heading = 1.0 / pow(10, fabs(damp_heading));
 
     _x_offset_m = x_offset_m;
     _y_offset_m = y_offset_m;
@@ -508,7 +507,7 @@ FGViewer::recalcOurOwnLocation (SGLocation * location, double lon_deg, double la
                         double roll_deg, double pitch_deg, double heading_deg)
 {
   // update from our own data...
-  dampEyeData(alt_ft, roll_deg, pitch_deg, heading_deg);
+  dampEyeData(roll_deg, pitch_deg, heading_deg);
   location->setPosition( lon_deg, lat_deg, alt_ft );
   location->setOrientation( roll_deg, pitch_deg, heading_deg );
   sgCopyMat4(LOCAL,
@@ -634,7 +633,6 @@ FGViewer::recalcLookAt ()
     updateFromModelLocation(_location);
   } else {
     // update from our own data, just the rotation here...
-
     recalcOurOwnLocation( _location, _lon_deg, _lat_deg, _alt_ft, 
           _roll_deg, _pitch_deg, _heading_deg );
   }
@@ -723,24 +721,21 @@ FGViewer::copyLocationData()
 }
 
 void
-FGViewer::dampEyeData (double &alt_ft, double &roll_deg, double &pitch_deg, double &heading_deg)
+FGViewer::dampEyeData (double &roll_deg, double &pitch_deg, double &heading_deg)
 {
   const double interval = 0.01;
 
-  static FGViewer *last = 0;
-  if (last != this) {
+  static FGViewer *last_view = 0;
+  if (last_view != this) {
     _damp_sync = 0.0;
-    _damped_alt_ft = alt_ft;
     _damped_roll_deg = roll_deg;
     _damped_pitch_deg = pitch_deg;
     _damped_heading_deg = heading_deg;
-    last = this;
+    last_view = this;
     return;
   }
 
   if (_damp_sync < interval) {
-    if (_damp_alt > 0.0)
-      alt_ft = _damped_alt_ft;
     if (_damp_roll > 0.0)
       roll_deg = _damped_roll_deg;
     if (_damp_pitch > 0.0)
@@ -754,16 +749,13 @@ FGViewer::dampEyeData (double &alt_ft, double &roll_deg, double &pitch_deg, doub
     _damp_sync -= interval;
 
     double d;
-    if (_damp_alt > 0.0)
-      alt_ft = _damped_alt_ft = alt_ft * (1 - _damp_alt) + _damped_alt_ft * _damp_alt;
-
     if (_damp_roll > 0.0) {
       d = _damped_roll_deg - roll_deg;
       if (d >= 180.0)
         _damped_roll_deg -= 360.0;
       else if (d < -180.0)
         _damped_roll_deg += 360.0;
-      roll_deg = _damped_roll_deg = roll_deg * (1 - _damp_roll) + _damped_roll_deg * _damp_roll;
+      roll_deg = _damped_roll_deg = roll_deg * _damp_roll + _damped_roll_deg * (1 - _damp_roll);
     }
 
     if (_damp_pitch > 0.0) {
@@ -772,7 +764,7 @@ FGViewer::dampEyeData (double &alt_ft, double &roll_deg, double &pitch_deg, doub
         _damped_pitch_deg -= 360.0;
       else if (d < -180.0)
         _damped_pitch_deg += 360.0;
-      pitch_deg = _damped_pitch_deg = pitch_deg * (1 - _damp_pitch) + _damped_pitch_deg * _damp_pitch;
+      pitch_deg = _damped_pitch_deg = pitch_deg * _damp_pitch + _damped_pitch_deg * (1 - _damp_pitch);
     }
 
     if (_damp_heading > 0.0) {
@@ -781,7 +773,7 @@ FGViewer::dampEyeData (double &alt_ft, double &roll_deg, double &pitch_deg, doub
         _damped_heading_deg -= 360.0;
       else if (d < -180.0)
         _damped_heading_deg += 360.0;
-      heading_deg = _damped_heading_deg = heading_deg * (1 - _damp_heading) + _damped_heading_deg * _damp_heading;
+      heading_deg = _damped_heading_deg = heading_deg * _damp_heading + _damped_heading_deg * (1 - _damp_heading);
     }
   }
 }
