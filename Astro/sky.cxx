@@ -114,9 +114,9 @@ void fgSkyVerticesInit( void ) {
 /* (Re)calculate the sky colors at each vertex */
 void fgSkyColorsInit( void ) {
     fgLIGHT *l;
-    float sun_angle, diff;
-    float outer_param[3], outer_amt[3], outer_diff[3];
-    float middle_param[3], middle_amt[3], middle_diff[3];
+    double sun_angle, diff;
+    double outer_param[3], outer_amt[3], outer_diff[3];
+    double middle_param[3], middle_amt[3], middle_diff[3];
     int i, j;
 
     l = &cur_light_params;
@@ -262,7 +262,7 @@ void fgSkyRender( void ) {
     fgFLIGHT *f;
     fgLIGHT *l;
     fgVIEW *v;
-    float /* inner_color[4], middle_color[4], diff, */ east_dot, dot, angle;
+    // float east_dot, dot, angle;
     int i;
 
     f = current_aircraft.flight;
@@ -273,6 +273,7 @@ void fgSkyRender( void ) {
 
     xglPushMatrix();
 
+#ifdef INCLUDE_THIS_CODE
     /* calculate the angle between v->surface_to_sun and
      * v->surface_east.  We do this so we can sort out the acos()
      * ambiguity.  I wish I could think of a more efficient way ... :-( */
@@ -291,6 +292,7 @@ void fgSkyRender( void ) {
     }
     /* printf("  Sky needs to rotate = %.3f rads = %.1f degrees.\n", 
 	   angle, angle * RAD_TO_DEG); */
+#endif
 
     /* Translate to view position */
     xglTranslatef( v->cur_zero_elev.x, v->cur_zero_elev.y, v->cur_zero_elev.z );
@@ -302,7 +304,7 @@ void fgSkyRender( void ) {
 	   FG_Latitude * RAD_TO_DEG); */
     xglRotatef( FG_Longitude * RAD_TO_DEG, 0.0, 0.0, 1.0 );
     xglRotatef( 90.0 - FG_Latitude * RAD_TO_DEG, 0.0, 1.0, 0.0 );
-    xglRotatef( angle * RAD_TO_DEG, 0.0, 0.0, 1.0 );
+    xglRotatef( l->sun_rotation * RAD_TO_DEG, 0.0, 0.0, 1.0 );
 
     /* Draw inner/center section of sky*/
     xglBegin( GL_TRIANGLE_FAN );
@@ -357,12 +359,12 @@ void fgSkyRender( void ) {
     /* Draw the bottom skirt */
     xglBegin( GL_TRIANGLE_STRIP );
     for ( i = 0; i < 12; i++ ) {
-	xglColor4fv( l->fog_color );
+	xglColor4fv( l->adj_fog_color );
 	xglVertex3fv( bottom_vertex[i] );
 	xglColor4fv( outer_color[i] );
 	xglVertex3fv( outer_vertex[i] );
     }
-    xglColor4fv( l->fog_color );
+    xglColor4fv( l->adj_fog_color );
     xglVertex3fv( bottom_vertex[0] );
     xglColor4fv( outer_color[0] );
     xglVertex3fv( outer_vertex[0] );
@@ -373,9 +375,12 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/05/23 14:07:14  curt
-/* Use new C++ events class.
+/* Revision 1.7  1998/07/22 21:39:21  curt
+/* Lower skirt tracks adjusted fog color, not fog color.
 /*
+ * Revision 1.6  1998/05/23 14:07:14  curt
+ * Use new C++ events class.
+ *
  * Revision 1.5  1998/04/28 01:19:02  curt
  * Type-ified fgTIME and fgVIEW
  *
