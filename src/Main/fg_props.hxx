@@ -35,21 +35,23 @@ fgGetNode (const string &path, bool create = false)
 }
 
 
+#if 0
 /**
  * Get an SGValue pointer that can be queried repeatedly.
  *
  * If the property value is going to be accessed within the loop,
  * it is best to use this method for maximum efficiency.
  */
-inline SGValue * 
-fgGetValue (const string &name, bool create = false)
+inline SGPropertyNode * 
+fgGetNode (const string &name, bool create = false)
 {
-  return globals->get_props()->getValue(name, create);
+  return globals->get_props()->getNode(name, create);
 }
+#endif
 
-inline bool fgHasValue (const string &name)
+inline bool fgHasNode (const string &name)
 {
-  return globals->get_props()->hasValue(name);
+  return globals->get_props()->getNode(name) != NULL;
 }
 
 inline bool fgGetBool (const string &name, bool defaultValue = false)
