@@ -559,7 +559,7 @@ do_property_swap (const SGPropertyNode * arg)
 
 
 /**
- * Set a property to an axis or other moving input.
+ * Built-in command: Set a property to an axis or other moving input.
  *
  * property: the name of the property to set.
  * setting: the current input setting, usually between -1.0 and 1.0.
@@ -581,12 +581,88 @@ do_property_scale (const SGPropertyNode * arg)
   return prop->setDoubleValue((setting + offset) * factor);
 }
 
+
+/**
+ * Built-in command: Show an XML-configured dialog.
+ *
+ * dialog-name: the name of the GUI dialog to display.
+ */
 static bool
-do_gui (const SGPropertyNode * arg)
+do_dialog_show (const SGPropertyNode * arg)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
-    gui->display(arg->getStringValue("name"));
+    NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()
+        ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
+    gui->display(arg->getStringValue("dialog-name"));
     return true;
+}
+
+
+/**
+ * Hide the active XML-configured dialog.
+ */
+static bool
+do_dialog_close (const SGPropertyNode * arg)
+{
+    NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()
+        ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
+    GUIWidget * widget = gui->getCurrentWidget();
+    if (widget != 0) {
+        delete widget;
+        gui->setCurrentWidget(0);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+/**
+ * Update a value in the active XML-configured dialog.
+ *
+ * object-name: The name of the GUI object(s) (all GUI objects if omitted).
+ */
+static bool
+do_dialog_update (const SGPropertyNode * arg)
+{
+    NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()
+        ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
+    GUIWidget * widget = gui->getCurrentWidget();
+    if (widget != 0) {
+        if (arg->hasValue("object-name")) {
+            gui->getCurrentWidget()
+                ->updateValue(arg->getStringValue("object-name"));
+        } else {
+            gui->getCurrentWidget()->updateValues();
+        }
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+/**
+ * Apply a value in the active XML-configured dialog.
+ *
+ * object-name: The name of the GUI object(s) (all GUI objects if omitted).
+ */
+static bool
+do_dialog_apply (const SGPropertyNode * arg)
+{
+    NewGUI * gui = (NewGUI *)globals->get_subsystem_mgr()
+        ->get_group(FGSubsystemMgr::INIT)->get_subsystem("gui");
+    GUIWidget * widget = gui->getCurrentWidget();
+    if (widget != 0) {
+        if (arg->hasValue("object-name")) {
+            gui->getCurrentWidget()
+                ->applyValue(arg->getStringValue("object-name"));
+        } else {
+            gui->getCurrentWidget()->applyValues();
+        }
+        return true;
+    } else {
+        return false;
+    }
 }
 
 
@@ -651,8 +727,11 @@ static struct {
     { "property-multiply", do_property_multiply },
     { "property-swap", do_property_swap },
     { "property-scale", do_property_scale },
-    { "gui", do_gui },
-    { "presets_commit", do_presets_commit },
+    { "dialog-show", do_dialog_show },
+    { "dialog-close", do_dialog_close },
+    { "dialog-show", do_dialog_show },
+    { "dialog-update", do_dialog_update },
+    { "dialog-apply", do_dialog_apply },
     { 0, 0 }			// zero-terminated
 };
 
