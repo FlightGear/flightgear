@@ -58,7 +58,8 @@ FGTileEntry::FGTileEntry ( const SGBucket& b )
       center( Point3D( 0.0 ) ),
       tile_bucket( b ),
       terra_transform( new ssgTransform ),
-      terra_range( new ssgRangeSelector )
+      terra_range( new ssgRangeSelector ),
+      loaded(false)
 {
     nodes.clear();
 
@@ -114,20 +115,12 @@ void FGTileEntry::free_tile() {
 	    << " texture coordinate arrays" );
 
     for ( i = 0; i < (int)vec3_ptrs.size(); ++i ) {
-#if defined(macintosh) || defined(_MSC_VER)
 	delete [] vec3_ptrs[i];  //that's the correct version
-#else
-	delete vec3_ptrs[i];
-#endif
     }
     vec3_ptrs.clear();
 
     for ( i = 0; i < (int)vec2_ptrs.size(); ++i ) {
-#if defined(macintosh) || defined(_MSC_VER)
 	delete [] vec2_ptrs[i];  //that's the correct version
-#else
-	delete vec2_ptrs[i];
-#endif
     }
     vec2_ptrs.clear();
 
@@ -182,6 +175,8 @@ void FGTileEntry::free_tile() {
 // Update the ssg transform node for this tile so it can be
 // properly drawn relative to our (0,0,0) point
 void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
+    if ( !loaded ) return;
+
     SetOffset( p );
 
 // #define USE_UP_AND_COMING_PLIB_FEATURE
@@ -329,7 +324,7 @@ FGTileEntry::obj_load( const std::string& path,
 
 
 void
-FGTileEntry::load( SGPath& tile_path, bool is_base )
+FGTileEntry::load( const SGPath& base, bool is_base )
 {
     // a cheesy hack (to be fixed later)
     extern ssgBranch *terrain;
@@ -337,6 +332,7 @@ FGTileEntry::load( SGPath& tile_path, bool is_base )
 
     string index_str = tile_bucket.gen_index_str();
 
+    SGPath tile_path = base;
     // Generate name of file to load.
     tile_path.append( tile_bucket.gen_base_path() );
     SGPath basename = tile_path;
@@ -417,4 +413,6 @@ FGTileEntry::load( SGPath& tile_path, bool is_base )
 	ground->addKid( lights_transform );
     }
     /* end of ground light section */
+
+    loaded = true;
 }

@@ -117,6 +117,12 @@ private:
     // want based on lighting conditions.
     ssgSelector *lights_brightness;
 
+    /**
+     * Indicates this tile has been loaded from a file.
+     * Note that this may be set asynchronously by another thread.
+     */
+    volatile bool loaded;
+
     ssgBranch* obj_load( const std::string& path,
 			 ssgVertexArray* lights, bool is_base );
 
@@ -153,7 +159,7 @@ public:
      * @param is_base is this a base terrain object for which we should generate
      *        random ground light points
      */
-    void load( SGPath& base, bool is_base );
+    void load( const SGPath& base, bool is_base );
 };
 
 
