@@ -391,8 +391,8 @@ bool FGJSBsim::copy_from_JSBsim() {
     _set_Mach_number( Translation->GetMach() );
 
     // Positions
-    _updatePosition( Position->GetLatitude() * SGD_DEGREES_TO_RADIANS,
-                     Position->GetLongitude() * SGD_DEGREES_TO_RADIANS,
+    _updatePosition( Position->GetLatitude(),
+                     Position->GetLongitude(),
                      Position->Geth() );
 
     _set_Altitude_AGL( Position->GetDistanceAGL() );
@@ -470,7 +470,7 @@ void FGJSBsim::set_Latitude(double lat) {
 		  &sea_level_radius_meters, &lat_geoc );
     _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
     fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * SG_METER_TO_FEET  );
-    fgic->SetLatitudeRadIC( lat_geoc * SGD_RADIANS_TO_DEGREES );
+    fgic->SetLatitudeRadIC( lat_geoc );
     needTrim=true;
 }
 
@@ -478,7 +478,7 @@ void FGJSBsim::set_Longitude(double lon) {
 
     SG_LOG(SG_FLIGHT,SG_INFO,"FGJSBsim::set_Longitude: " << lon );
 
-    fgic->SetLongitudeRadIC(lon * SGD_RADIANS_TO_DEGREES );
+    fgic->SetLongitudeRadIC( lon );
     needTrim=true;
 }
 
@@ -495,7 +495,7 @@ void FGJSBsim::set_Altitude(double alt) {
 		  &sea_level_radius_meters, &lat_geoc);
     _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
     fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * SG_METER_TO_FEET );
-    fgic->SetLatitudeRadIC( lat_geoc * SGD_RADIANS_TO_DEGREES );
+    fgic->SetLatitudeRadIC( lat_geoc );
     fgic->SetAltitudeFtIC(alt);
     needTrim=true;
 }
