@@ -35,12 +35,18 @@
 
 
 #include <Include/compiler.h>
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <istream>
+#else
+#  include <istream.h>
+#endif
 
 #include STL_STRING
 #include <set>
 
 FG_USING_STD(string);
 FG_USING_STD(set);
+FG_USING_STD(istream);
 
 
 class fgAIRPORT {
@@ -105,6 +111,10 @@ public:
 
 
 // $Log$
+// Revision 1.8  1999/03/15 17:58:57  curt
+// MSVC++ portability tweaks contributed by Bernie Bright.
+//   Added using std::istream declaration.
+//
 // Revision 1.7  1999/03/02 01:02:33  curt
 // Tweaks for building with native SGI compilers.
 //
