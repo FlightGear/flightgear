@@ -208,6 +208,11 @@ void obj_fix(char *infile, char *outfile) {
 	    printf("new tri strip = %s", line);
 	    sscanf(line, "t %d %d %d %d\n", &n1, &n2, &n3, &n4);
 
+	    /* special case to handle a bug in our beloved tri striper */
+	    if ( (n1 == 4) && (n2 == 2) && (n3 == 2) && (n4 == 1) ) {
+		n2 = 3;
+	    }
+
 	    dot_prod = check_cur_face(n1, n2, n3);
 	    if ( dot_prod < -0.5 ) {
 		/* this stripe is backwards (CW) */
@@ -283,9 +288,12 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.2  1998/01/09 23:03:12  curt
-/* Restructured to split 1deg x 1deg dem's into 64 subsections.
+/* Revision 1.3  1998/01/19 19:51:07  curt
+/* A couple final pre-release tweaks.
 /*
+ * Revision 1.2  1998/01/09 23:03:12  curt
+ * Restructured to split 1deg x 1deg dem's into 64 subsections.
+ *
  * Revision 1.1  1997/12/08 19:28:54  curt
  * Initial revision.
  *

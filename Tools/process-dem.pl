@@ -28,16 +28,16 @@
 
 $| = 1;                         # flush buffers after every write
 
-$do_demfit =     0;
-$do_triangle_1 = 0;
-$do_fixnode =    0;
-$do_splittris =  0;
-$do_assemtris =  0;
-$do_triangle_2 = 0;
+$do_demfit =     1;
+$do_triangle_1 = 1;
+$do_fixnode =    1;
+$do_splittris =  1;
+$do_assemtris =  1;
+$do_triangle_2 = 1;
 
 $do_tri2obj =    1;
-$do_strips =     0;
-$do_fixobj =     0;
+$do_strips =     1;
+$do_fixobj =     1;
 
 
 # return the file name root (ending at last ".")
@@ -96,7 +96,7 @@ if ( $do_demfit ) {
     }
     close(OUT);
 } else {
-    $subdir = "../Scenery/w120n030/w111n033";
+    $subdir = "../Scenery/w100n040/w093n045";
     print "WARNING:  Hardcoding subdir = $subdir\n";
 }
 
@@ -262,7 +262,8 @@ if ( $do_tri2obj ) {
 
 # 6.  strip file.1.obj
 # 
-#     Strip the file.1.obj's
+#     Strip the file.1.obj's.  Note, strips doesn't handle the minimal
+#     case of striping a square correctly.
 #
 # 7.  cp bands.d file.2.obj
 #
@@ -293,7 +294,7 @@ if ( $do_strips ) {
 	    close(IN);
 	    close(OUT);
 	    
-	    unlink("$subdir/$file");
+	    # unlink("$subdir/$file");
 	}
     }
 }
@@ -327,6 +328,9 @@ if ( $do_fixobj ) {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.7  1998/01/19 19:51:06  curt
+# A couple final pre-release tweaks.
+#
 # Revision 1.6  1998/01/15 21:33:33  curt
 # Assembling triangles and building a new .node file with the proper shared
 # vertices now works.  Now we just have to use the shared normals and we'll
