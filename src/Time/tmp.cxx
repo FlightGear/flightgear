@@ -29,6 +29,7 @@
 #include <simgear/magvar/magvar.hxx>
 
 #include <FDM/flight.hxx>
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
 #include "light.hxx"
@@ -39,11 +40,18 @@
 
 // periodic time updater wrapper
 void fgUpdateLocalTime() {
+    static const SGPropertyNode *longitude
+	= fgGetNode("/position/longitude-deg");
+    static const SGPropertyNode *latitude
+	= fgGetNode("/position/latitude-deg");
+
     SGPath zone( globals->get_fg_root() );
     zone.append( "Timezone" );
 
-    globals->get_time_params()->updateLocal( cur_fdm_state->get_Longitude(),
-					     cur_fdm_state->get_Latitude(),
+    globals->get_time_params()->updateLocal( longitude->getDoubleValue()
+					       * SGD_DEGREES_TO_RADIANS, 
+					     latitude->getDoubleValue()
+					       * SGD_DEGREES_TO_RADIANS,
 					     zone.str() );
 }
 
