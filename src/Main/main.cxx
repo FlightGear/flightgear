@@ -53,6 +53,10 @@
 #  include <unistd.h>		// for stat()
 #endif
 
+#ifdef HAVE_LIBX11
+#  include <GL/glext.h>
+#endif
+
 #include <plib/pu.h>
 #include <plib/ssg.h>
 
@@ -1449,6 +1453,20 @@ int main( int argc, char **argv ) {
     // passing off control to glut and before fgInitGeneral to get our
     // fonts !!!
     guiInit();
+
+#ifdef GL_EXT_texture_lod_bias
+    glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
+#endif
+
+#if 0
+#ifdef GL_EXT_texture_filter_anisotropic
+    float max_anisotropy;
+    glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+                     max_anisotropy );
+    cout << "Max anisotropy = " << max_anisotropy << endl;
+#endif
+#endif
 
     // set current_options lon/lat if an airport id is specified
     // cout << "3. airport_id = " << fgGetString("/sim/startup/airport-id") << endl;

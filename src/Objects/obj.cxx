@@ -903,7 +903,7 @@ static ssgLeaf *gen_leaf( const string& path,
 
 // Load an Binary obj file
 ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
-				ssgVertexArray *lights, const bool is_base)
+                         ssgVertexArray *lights, const bool is_base)
 {
     int i;
 

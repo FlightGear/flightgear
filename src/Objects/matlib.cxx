@@ -292,7 +292,7 @@ void FGMaterialLib::load_next_deferred() {
                 setTexture( (char *)slot.get_texture_name_c_str(), 0, 0 );
 #else
             slot.get_textured()->
-                setTexture( (char *)slot.get_texture_name_c_str(), 0, 0, 0 );
+                setTexture( (char *)slot.get_texture_name_c_str(), 0, 0, 1 );
 #endif
             slot.set_texture_loaded( true );
         }
