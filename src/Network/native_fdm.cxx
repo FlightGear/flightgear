@@ -100,7 +100,7 @@ bool FGNativeFDM::open() {
 }
 
 
-void FGProps2NetFDM( FGNetFDM *net ) {
+void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     int i;
 
     // Version sanity checking
@@ -174,112 +174,117 @@ void FGProps2NetFDM( FGNetFDM *net ) {
     net->warp = globals->get_warp();
     net->visibility = fgGetDouble("/environment/visibility-m");
 
-    // Convert the net buffer to network format
-    net->version = htonl(net->version);
+    if ( net_byte_order ) {
+        // Convert the net buffer to network format
+        net->version = htonl(net->version);
 
-    htond(net->longitude);
-    htond(net->latitude);
-    htond(net->altitude);
-    htond(net->phi);
-    htond(net->theta);
-    htond(net->psi);
+        htond(net->longitude);
+        htond(net->latitude);
+        htond(net->altitude);
+        htond(net->phi);
+        htond(net->theta);
+        htond(net->psi);
 
-    htond(net->phidot);
-    htond(net->thetadot);
-    htond(net->psidot);
-    htond(net->vcas);
-    htond(net->climb_rate);
-    htond(net->v_north);
-    htond(net->v_east);
-    htond(net->v_down);
-    htond(net->v_wind_body_north);
-    htond(net->v_wind_body_east);
-    htond(net->v_wind_body_down);
-    htond(net->stall_warning);
+        htond(net->phidot);
+        htond(net->thetadot);
+        htond(net->psidot);
+        htond(net->vcas);
+        htond(net->climb_rate);
+        htond(net->v_north);
+        htond(net->v_east);
+        htond(net->v_down);
+        htond(net->v_wind_body_north);
+        htond(net->v_wind_body_east);
+        htond(net->v_wind_body_down);
+        htond(net->stall_warning);
 
-    htond(net->A_X_pilot);
-    htond(net->A_Y_pilot);
-    htond(net->A_Z_pilot);
+        htond(net->A_X_pilot);
+        htond(net->A_Y_pilot);
+        htond(net->A_Z_pilot);
 
-    for ( i = 0; i < net->num_engines; ++i ) {
-        htonl(net->eng_state[i]);
-        htond(net->rpm[i]);
-        htond(net->fuel_flow[i]);
-        htond(net->EGT[i]);
-        htond(net->oil_temp[i]);
-        htond(net->oil_px[i]);
+        for ( i = 0; i < net->num_engines; ++i ) {
+            htonl(net->eng_state[i]);
+            htond(net->rpm[i]);
+            htond(net->fuel_flow[i]);
+            htond(net->EGT[i]);
+            htond(net->oil_temp[i]);
+            htond(net->oil_px[i]);
+        }
+        net->num_engines = htonl(net->num_engines);
+
+        for ( i = 0; i < net->num_tanks; ++i ) {
+            htond(net->fuel_quantity[i]);
+        }
+        net->num_tanks = htonl(net->num_tanks);
+
+        for ( i = 0; i < net->num_wheels; ++i ) {
+            net->wow[i] = htonl(net->wow[i]);
+        }
+        net->num_wheels = htonl(net->num_wheels);
+        htond(net->flap_deflection);
+
+        net->cur_time = htonl( net->cur_time );
+        net->warp = htonl( net->warp );
+        htond(net->visibility);
     }
-    net->num_engines = htonl(net->num_engines);
-
-    for ( i = 0; i < net->num_tanks; ++i ) {
-        htond(net->fuel_quantity[i]);
-    }
-    net->num_tanks = htonl(net->num_tanks);
-
-    for ( i = 0; i < net->num_wheels; ++i ) {
-        net->wow[i] = htonl(net->wow[i]);
-    }
-    net->num_wheels = htonl(net->num_wheels);
-    htond(net->flap_deflection);
-
-    net->cur_time = htonl( net->cur_time );
-    net->warp = htonl( net->warp );
-    htond(net->visibility);
 }
 
 
-void FGNetFDM2Props( FGNetFDM *net ) {
+void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
     int i;
 
-    // Convert to the net buffer from network format
-    net->version = ntohl(net->version);
+    if ( net_byte_order ) {
+        // Convert to the net buffer from network format
+        net->version = ntohl(net->version);
 
-    htond(net->longitude);
-    htond(net->latitude);
-    htond(net->altitude);
-    htond(net->phi);
-    htond(net->theta);
-    htond(net->psi);
+        htond(net->longitude);
+        htond(net->latitude);
+        htond(net->altitude);
+        htond(net->phi);
+        htond(net->theta);
+        htond(net->psi);
 
-    htond(net->phidot);
-    htond(net->thetadot);
-    htond(net->psidot);
-    htond(net->vcas);
-    htond(net->climb_rate);
-    htond(net->v_north);
-    htond(net->v_east);
-    htond(net->v_down);
-    htond(net->v_wind_body_north);
-    htond(net->v_wind_body_east);
-    htond(net->v_wind_body_down);
-    htond(net->stall_warning);
+        htond(net->phidot);
+        htond(net->thetadot);
+        htond(net->psidot);
+        htond(net->vcas);
+        htond(net->climb_rate);
+        htond(net->v_north);
+        htond(net->v_east);
+        htond(net->v_down);
+        htond(net->v_wind_body_north);
+        htond(net->v_wind_body_east);
+        htond(net->v_wind_body_down);
+        htond(net->stall_warning);
 
-    htond(net->A_X_pilot);
-    htond(net->A_Y_pilot);
-    htond(net->A_Z_pilot);
+        htond(net->A_X_pilot);
+        htond(net->A_Y_pilot);
+        htond(net->A_Z_pilot);
 
-    net->num_engines = htonl(net->num_engines);
-    for ( i = 0; i < net->num_engines; ++i ) {
-	htonl(net->eng_state[i]);
-	htond(net->rpm[i]);
-	htond(net->fuel_flow[i]);
-	htond(net->EGT[i]);
-	htond(net->oil_temp[i]);
-	htond(net->oil_px[i]);
+        net->num_engines = htonl(net->num_engines);
+        for ( i = 0; i < net->num_engines; ++i ) {
+            htonl(net->eng_state[i]);
+            htond(net->rpm[i]);
+            htond(net->fuel_flow[i]);
+            htond(net->EGT[i]);
+            htond(net->oil_temp[i]);
+            htond(net->oil_px[i]);
+        }
+
+        net->num_tanks = htonl(net->num_tanks);
+        for ( i = 0; i < net->num_tanks; ++i ) {
+            htond(net->fuel_quantity[i]);
+        }
+
+        net->num_wheels = htonl(net->num_wheels);
+        // I don't need to convert the Wow flags, since they are one
+        // byte in size
+        htond(net->flap_deflection);
+
+        net->cur_time = ntohl(net->cur_time);
+        net->warp = ntohl(net->warp);
+        htond(net->visibility);
     }
-
-    net->num_tanks = htonl(net->num_tanks);
-    for ( i = 0; i < net->num_tanks; ++i ) {
-	htond(net->fuel_quantity[i]);
-    }
-
-    net->num_wheels = htonl(net->num_wheels);
-    // I don't need to convert the Wow flags, since they are one byte in size
-    htond(net->flap_deflection);
-
-    net->cur_time = ntohl(net->cur_time);
-    net->warp = ntohl(net->warp);
-    htond(net->visibility);
 
     if ( net->version == FG_NET_FDM_VERSION ) {
         // cout << "pos = " << net->longitude << " " << net->latitude << endl;

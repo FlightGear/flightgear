@@ -63,10 +63,10 @@ public:
 // Helper functions which may be useful outside this class
 
 // Populate the FGNetCtrls structure from the property tree.
-void FGProps2NetCtrls( FGNetCtrls *net );
+void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order = true );
 
 // Update the property tree from the FGNetCtrls structure.
-void FGNetCtrls2Props( FGNetCtrls *net );
+void FGNetCtrls2Props( FGNetCtrls *net, bool net_byte_order = true );
 
 
 #endif // _FG_NATIVE_CTRLS_HXX

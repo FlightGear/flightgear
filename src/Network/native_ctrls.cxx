@@ -98,7 +98,7 @@ static void htond (double &x)
 
 
 // Populate the FGNetCtrls structure from the property tree.
-void FGProps2NetCtrls( FGNetCtrls *net ) {
+void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order ) {
     int i;
 
     SGPropertyNode * node = fgGetNode("/controls", true);
@@ -183,85 +183,89 @@ void FGProps2NetCtrls( FGNetCtrls *net ) {
         net->freeze |= 0x04;
     }
 
-    // convert to network byte order
-    net->version = htonl(net->version);
-    htond(net->aileron);
-    htond(net->elevator);
-    htond(net->elevator_trim);
-    htond(net->rudder);
-    htond(net->flaps);
-    net->flaps_power = htonl(net->flaps_power);
-    for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
-	htond(net->throttle[i]);
-	htond(net->mixture[i]);
-        net->fuel_pump_power[i] = htonl(net->fuel_pump_power[i]);
-	htond(net->prop_advance[i]);
-	net->magnetos[i] = htonl(net->magnetos[i]);
-	net->starter_power[i] = htonl(net->starter_power[i]);
+    if ( net_byte_order ) {
+        // convert to network byte order
+        net->version = htonl(net->version);
+        htond(net->aileron);
+        htond(net->elevator);
+        htond(net->elevator_trim);
+        htond(net->rudder);
+        htond(net->flaps);
+        net->flaps_power = htonl(net->flaps_power);
+        for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
+            htond(net->throttle[i]);
+            htond(net->mixture[i]);
+            net->fuel_pump_power[i] = htonl(net->fuel_pump_power[i]);
+            htond(net->prop_advance[i]);
+            net->magnetos[i] = htonl(net->magnetos[i]);
+            net->starter_power[i] = htonl(net->starter_power[i]);
+        }
+        net->num_engines = htonl(net->num_engines);
+        for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
+            net->fuel_selector[i] = htonl(net->fuel_selector[i]);
+        }
+        net->num_tanks = htonl(net->num_tanks);
+        for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
+            htond(net->brake[i]);
+        }
+        net->num_wheels = htonl(net->num_wheels);
+        net->gear_handle = htonl(net->gear_handle);
+        net->master_bat = htonl(net->master_bat);
+        net->master_alt = htonl(net->master_alt);
+        net->master_avionics = htonl(net->master_avionics);
+        htond(net->wind_speed_kt);
+        htond(net->wind_dir_deg);
+        htond(net->hground);
+        htond(net->magvar);
+        net->speedup = htonl(net->speedup);
+        net->freeze = htonl(net->freeze);
     }
-    net->num_engines = htonl(net->num_engines);
-    for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
-        net->fuel_selector[i] = htonl(net->fuel_selector[i]);
-    }
-    net->num_tanks = htonl(net->num_tanks);
-    for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
-	htond(net->brake[i]);
-    }
-    net->num_wheels = htonl(net->num_wheels);
-    net->gear_handle = htonl(net->gear_handle);
-    net->master_bat = htonl(net->master_bat);
-    net->master_alt = htonl(net->master_alt);
-    net->master_avionics = htonl(net->master_avionics);
-    htond(net->wind_speed_kt);
-    htond(net->wind_dir_deg);
-    htond(net->hground);
-    htond(net->magvar);
-    net->speedup = htonl(net->speedup);
-    net->freeze = htonl(net->freeze);
 }
 
 
 // Update the property tree from the FGNetCtrls structure.
-void FGNetCtrls2Props( FGNetCtrls *net ) {
+void FGNetCtrls2Props( FGNetCtrls *net, bool net_byte_order ) {
     int i;
 
     SGPropertyNode * node = fgGetNode("/controls", true);
 
-    // convert from network byte order
-    net->version = htonl(net->version);
-    htond(net->aileron);
-    htond(net->elevator);
-    htond(net->elevator_trim);
-    htond(net->rudder);
-    htond(net->flaps);
-    net->flaps_power = htonl(net->flaps_power);
-    net->num_engines = htonl(net->num_engines);
-    for ( i = 0; i < net->num_engines; ++i ) {
-        net->magnetos[i] = htonl(net->magnetos[i]);
-        net->starter_power[i] = htonl(net->starter_power[i]);
-	htond(net->throttle[i]);
-	htond(net->mixture[i]);
-        net->fuel_pump_power[i] = htonl(net->fuel_pump_power[i]);
-	htond(net->prop_advance[i]);
+    if ( net_byte_order ) {
+        // convert from network byte order
+        net->version = htonl(net->version);
+        htond(net->aileron);
+        htond(net->elevator);
+        htond(net->elevator_trim);
+        htond(net->rudder);
+        htond(net->flaps);
+        net->flaps_power = htonl(net->flaps_power);
+        net->num_engines = htonl(net->num_engines);
+        for ( i = 0; i < net->num_engines; ++i ) {
+            net->magnetos[i] = htonl(net->magnetos[i]);
+            net->starter_power[i] = htonl(net->starter_power[i]);
+            htond(net->throttle[i]);
+            htond(net->mixture[i]);
+            net->fuel_pump_power[i] = htonl(net->fuel_pump_power[i]);
+            htond(net->prop_advance[i]);
+        }
+        net->num_tanks = htonl(net->num_tanks);
+        for ( i = 0; i < net->num_tanks; ++i ) {
+            net->fuel_selector[i] = htonl(net->fuel_selector[i]);
+        }
+        net->num_wheels = htonl(net->num_wheels);
+        for ( i = 0; i < net->num_wheels; ++i ) {
+            htond(net->brake[i]);
+        }
+        net->gear_handle = htonl(net->gear_handle);
+        net->master_bat = htonl(net->master_bat);
+        net->master_alt = htonl(net->master_alt);
+        net->master_avionics = htonl(net->master_avionics);
+        htond(net->wind_speed_kt);
+        htond(net->wind_dir_deg);
+        htond(net->hground);
+        htond(net->magvar);
+        net->speedup = htonl(net->speedup);
+        net->freeze = htonl(net->freeze);
     }
-    net->num_tanks = htonl(net->num_tanks);
-    for ( i = 0; i < net->num_tanks; ++i ) {
-	net->fuel_selector[i] = htonl(net->fuel_selector[i]);
-    }
-    net->num_wheels = htonl(net->num_wheels);
-    for ( i = 0; i < net->num_wheels; ++i ) {
-	htond(net->brake[i]);
-    }
-    net->gear_handle = htonl(net->gear_handle);
-    net->master_bat = htonl(net->master_bat);
-    net->master_alt = htonl(net->master_alt);
-    net->master_avionics = htonl(net->master_avionics);
-    htond(net->wind_speed_kt);
-    htond(net->wind_dir_deg);
-    htond(net->hground);
-    htond(net->magvar);
-    net->speedup = htonl(net->speedup);
-    net->freeze = htonl(net->freeze);
 
     if ( net->version != FG_NET_CTRLS_VERSION ) {
 	SG_LOG( SG_IO, SG_ALERT,
