@@ -373,8 +373,7 @@ MagRibbon::draw ()
   t.minX = xoffset;
   t.minY = yoffset;
   t.maxX = xoffset + 0.5;
-  t.maxY = yoffset + 0.5;
-//   setTextureCoords(xoffset, yoffset, xoffset + 0.5, yoffset + 0.25);
+  t.maxY = yoffset + 0.25;
   MyTexturedLayer::draw();
 }
 
