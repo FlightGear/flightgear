@@ -1,1 +1,1 @@
-SUBDIRS = dafif examples scenery web
+SUBDIRS = examples

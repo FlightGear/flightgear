@@ -1,1 +1,1 @@
-SUBDIRS = debug python example
+SUBDIRS = debug perl python

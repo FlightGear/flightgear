@@ -481,6 +481,8 @@ AC_CONFIG_FILES([ \
 	man/pstest.1 \
         scripts/Makefile \
         scripts/debug/Makefile \
+        scripts/perl/Makefile \
+        scripts/perl/examples/Makefile \
         scripts/python/Makefile \
 	src/Makefile \
 	src/Include/Makefile \
