@@ -22,7 +22,7 @@ INCLUDES
 #include <math.h>
 
 static const char *IdSrc = "$Id$";
-static const char *IdHdr = "ID_CONFIGFILE";
+static const char *IdHdr = ID_CONFIGFILE;
 
 extern short debug_lvl;
 

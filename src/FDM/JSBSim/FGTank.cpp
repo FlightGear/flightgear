@@ -80,10 +80,12 @@ FGTank::FGTank(FGConfigFile* AC_cfg)
     PctFull  = 0;
   }     
 
-  cout << "      " << type << " tank holds " << Capacity << " lbs. " << type << endl;
-  cout << "      currently at " << PctFull << "% of maximum capacity" << endl;
-  cout << "      Tank location (X, Y, Z): " << X << ", " << Y << ", " << Z << endl;
-  cout << "      Effective radius: " << Radius << " inches" << endl;
+  if (debug_lvl > 0) {
+    cout << "      " << type << " tank holds " << Capacity << " lbs. " << type << endl;
+    cout << "      currently at " << PctFull << "% of maximum capacity" << endl;
+    cout << "      Tank location (X, Y, Z): " << X << ", " << Y << ", " << Z << endl;
+    cout << "      Effective radius: " << Radius << " inches" << endl;
+  }
 
   if (debug_lvl & 2) cout << "Instantiated: FGTank" << endl;
 }

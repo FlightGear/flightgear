@@ -67,14 +67,9 @@ FGSummer::FGSummer(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
     *AC_cfg >> token;
 
     if (token == "ID") {
-
       *AC_cfg >> ID;
-      cout << "      ID: " << ID << endl;
-
     } else if (token == "INPUT") {
-
       token = AC_cfg->GetValue("INPUT");
-      cout << "      INPUT: " << token << endl;
       if (token.find("FG_") != token.npos) {
         *AC_cfg >> token;
         tmpInputIndex = fcs->GetState()->GetParameterIndex(token);
@@ -85,22 +80,27 @@ FGSummer::FGSummer(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
         InputIndices.push_back(tmpInputIndex);
         InputTypes.push_back(itFCS);
       }
-
     } else if (token == "CLIPTO") {
-
       *AC_cfg >> clipmin >> clipmax;
       if (clipmax > clipmin) {
         clip = true;
-        cout << "      CLIPTO: " << clipmin << ", " << clipmax << endl;
       }
-
     } else if (token == "OUTPUT") {
-
       IsOutput = true;
       *AC_cfg >> sOutputIdx;
-      cout << "      OUTPUT: " <<sOutputIdx <<  endl;
       OutputIdx = fcs->GetState()->GetParameterIndex(sOutputIdx);
     }
+  }
+
+  if (debug_lvl > 0) {
+    cout << "      ID: " << ID << endl;
+    cout << "      INPUTS: " << endl;
+    for (int i=0;i<InputIndices.size();i++) {
+      cout << "        " << InputIndices[i] << endl;
+    }
+    if (clipmax > clipmin) cout << "      CLIPTO: " << clipmin 
+                                << ", " << clipmax << endl;
+    if (IsOutput) cout << "      OUTPUT: " <<sOutputIdx <<  endl;
   }
 
   if (debug_lvl & 2) cout << "Instantiated: FGSummer" << endl;

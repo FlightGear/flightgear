@@ -162,7 +162,7 @@ private:
   FGFDMExec* fdmex;
   FGInitialCondition* fgic;
    
-   bool solve(void);
+  bool solve(void);
   
   /** @return false if there is no change in the current axis accel
       between accel(control_min) and accel(control_max). If there is a

@@ -39,7 +39,6 @@ SENTRY
 #define GRAVITY         32.174
 #define INVGRAVITY      0.031081
 #define EARTHRAD        20925650.00       // feet, equatorial
-#define OMEGAEARTH      7.2685E-3         // rad/sec
 #define EARTHRADSQRD    437882827922500.0
 #define ONESECOND       4.848136811E-6
 #define ECCENT          0.996647186
@@ -54,8 +53,8 @@ SENTRY
 #define FPSTOKTS        0.592484
 #define INCHTOFT        0.08333333
 #define OMEGA_EARTH .00007272205217  
-#define NEEDED_CFG_VERSION "1.38"
-#define JSBSIM_VERSION  "0.8.2"
+#define NEEDED_CFG_VERSION "1.40"
+#define JSBSIM_VERSION  "0.8.6"
 
 #define HPTOFTLBSSEC 550
 #define METERS_TO_FEET 3.2808

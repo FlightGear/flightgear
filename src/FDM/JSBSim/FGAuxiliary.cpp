@@ -1,7 +1,7 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
  Module:       FGAuxiliary.cpp
- Author:       Jon Berndt
+ Author:       Tony Peden, Jon Berndt
  Date started: 01/26/99
  Purpose:      Calculates additional parameters needed by the visual system, etc.
  Called by:    FGSimExec
@@ -62,7 +62,10 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex) {
+FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex),
+  vPilotAccel(3),
+  vToEyePt(3)
+{
   Name = "FGAuxiliary";
   vcas = veas = mach = qbar = pt = 0;
   psl = rhosl = 1;
@@ -80,14 +83,15 @@ FGAuxiliary::~FGAuxiliary()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGAuxiliary::Run() {
+bool FGAuxiliary::Run()
+{
   float A,B,D;
 
   if (!FGModel::Run()) {
     GetState();
-    if(mach < 1)    //calculate total pressure assuming isentropic flow
+    if (mach < 1) {   //calculate total pressure assuming isentropic flow
       pt=p*pow((1 + 0.2*mach*mach),3.5);
-    else {
+    } else {
       // shock in front of pitot tube, we'll assume its normal and use
       // the Rayleigh Pitot Tube Formula, i.e. the ratio of total
       // pressure behind the shock to the static pressure in front
@@ -105,49 +109,55 @@ bool FGAuxiliary::Run() {
     vcas = sqrt(7*psl/rhosl*(A-1));
     veas = sqrt(2*qbar/rhosl);
 
-    vPilotAccel = Translation->GetUVWdot() + Aircraft->GetXYZep() * Rotation->GetPQRdot();
+    // vPilotAccel = Translation->GetUVWdot() + Aircraft->GetXYZep() * Rotation->GetPQRdot();
+    
+    vToEyePt = Aircraft->GetXYZep() - MassBalance->GetXYZcg();
+    vPilotAccel = Translation->GetUVWdot()
+                    + Rotation->GetPQRdot() * vToEyePt
+                    + Rotation->GetPQR() * (Rotation->GetPQR() * vToEyePt);
 
     earthPosAngle += State->Getdt()*OMEGA_EARTH;
-
+    return false;
   } else {
+    return true;
   }
-
-  return false;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGAuxiliary::GetHeadWind(void) {
-
+float FGAuxiliary::GetHeadWind(void)
+{
   float psiw,vw,psi;
 
   psiw = Atmosphere->GetWindPsi();
   psi = Rotation->Getpsi();
   vw = Atmosphere->GetWindNED().Magnitude();
+
   return -vw*cos(psiw - psi);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGAuxiliary::GetCrossWind(void) {
-
+float FGAuxiliary::GetCrossWind(void)
+{
   float psiw,vw,psi;
 
   psiw = Atmosphere->GetWindPsi();
   psi = Rotation->Getpsi();
   vw = Atmosphere->GetWindNED().Magnitude();
+
   return  vw*sin(psiw - psi);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAuxiliary::GetState(void) {
+void FGAuxiliary::GetState(void)
+{
   qbar = Translation->Getqbar();
   mach = Translation->GetMach();
   p = Atmosphere->GetPressure();
   rhosl = Atmosphere->GetDensitySL();
   psl = Atmosphere->GetPressureSL();
-
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

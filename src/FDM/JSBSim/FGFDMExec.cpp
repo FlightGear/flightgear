@@ -44,15 +44,9 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
-#    include <iostream>
-#    include <ctime>
-#    include <iterator>
-#  else
-#    include <iostream.h>
-#    include <time.h>
-#    include <iterator.h>
-#  endif
+#  include STL_IOSTREAM
+#  include <time.h>
+#  include STL_ITERATOR
 #else
 #  include <iostream>
 #  include <ctime>
@@ -64,6 +58,9 @@ INCLUDES
 #include "FGAtmosphere.h"
 #include "FGFCS.h"
 #include "FGPropulsion.h"
+#include "FGMassBalance.h"
+#include "FGAerodynamics.h"
+#include "FGInertial.h"
 #include "FGAircraft.h"
 #include "FGTranslation.h"
 #include "FGRotation.h"
@@ -73,7 +70,7 @@ INCLUDES
 #include "FGConfigFile.h"
 
 static const char *IdSrc = "$Id$";
-static const char *IdHdr = "ID_FDMEXEC";
+static const char *IdHdr = ID_FDMEXEC;
 
 char highint[5]  = {27, '[', '1', 'm', '\0'      };
 char halfint[5]  = {27, '[', '2', 'm', '\0'      };
@@ -108,6 +105,8 @@ short debug_lvl;  // This describes to any interested entity the debug level
                   //    FGModel object executes its Run() method
                   // f) 8: When this value is set, various runtime state variables
                   //    are printed out periodically
+                  // g) 16: When set various parameters are sanity checked and
+                  //    a message is printed out when they go out of bounds.
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -117,29 +116,27 @@ CLASS IMPLEMENTATION
 
 FGFDMExec::FGFDMExec(void)
 {
-  Frame       = 0;
-  FirstModel  = 0;
-  Error       = 0;
-  State       = 0;
-  Atmosphere  = 0;
-  FCS         = 0;
-  Propulsion  = 0;
-  Aircraft    = 0;
-  Translation = 0;
-  Rotation    = 0;
-  Position    = 0;
-  Auxiliary   = 0;
-  Output      = 0;
+  Frame        = 0;
+  FirstModel   = 0;
+  Error        = 0;
+  State        = 0;
+  Atmosphere   = 0;
+  FCS          = 0;
+  Propulsion   = 0;
+  MassBalance  = 0;
+  Aerodynamics = 0;
+  Inertial     = 0;
+  Aircraft     = 0;
+  Translation  = 0;
+  Rotation     = 0;
+  Position     = 0;
+  Auxiliary    = 0;
+  Output       = 0;
 
   terminate = false;
   frozen = false;
   modelLoaded = false;
   Scripted = false;
-
-  cout << "\n\n     " << highint << underon << "JSBSim Flight Dynamics Model v"
-                                 << JSBSIM_VERSION << underoff << normint << endl;
-  cout << halfint << "            [cfg file spec v" << NEEDED_CFG_VERSION << "]\n\n";
-  cout << normint << "JSBSim startup beginning ...\n\n";
 
   try {
     char* num = getenv("JSBSIM_DEBUG");
@@ -147,6 +144,13 @@ FGFDMExec::FGFDMExec(void)
     else debug_lvl = atoi(num); // set debug level
   } catch (...) {               // if error set to 1
     debug_lvl = 1;
+  }
+
+  if (debug_lvl > 0) {
+    cout << "\n\n     " << highint << underon << "JSBSim Flight Dynamics Model v"
+                                   << JSBSIM_VERSION << underoff << normint << endl;
+    cout << halfint << "            [cfg file spec v" << NEEDED_CFG_VERSION << "]\n\n";
+    cout << normint << "JSBSim startup beginning ...\n\n";
   }
 
   if (debug_lvl & 2) cout << "Instantiated: FGFDMExec" << endl;
@@ -167,19 +171,22 @@ bool FGFDMExec::Allocate(void) {
 
   bool result=true;
 
-  Atmosphere  = new FGAtmosphere(this);
-  FCS         = new FGFCS(this);
-  Propulsion  = new FGPropulsion(this);
-  Aircraft    = new FGAircraft(this);
-  Translation = new FGTranslation(this);
-  Rotation    = new FGRotation(this);
-  Position    = new FGPosition(this);
-  Auxiliary   = new FGAuxiliary(this);
-  Output      = new FGOutput(this);
+  Atmosphere   = new FGAtmosphere(this);
+  FCS          = new FGFCS(this);
+  Propulsion   = new FGPropulsion(this);
+  MassBalance  = new FGMassBalance(this);
+  Aerodynamics = new FGAerodynamics (this);
+  Inertial     = new FGInertial(this);
+  Aircraft     = new FGAircraft(this);
+  Translation  = new FGTranslation(this);
+  Rotation     = new FGRotation(this);
+  Position     = new FGPosition(this);
+  Auxiliary    = new FGAuxiliary(this);
+  Output       = new FGOutput(this);
 
-  State       = new FGState(this); // This must be done here, as the FGState
-                                   // class needs valid pointers to the above
-				   // model classes
+  State        = new FGState(this); // This must be done here, as the FGState
+                                    // class needs valid pointers to the above
+  // model classes
 
   // Initialize models so they can communicate with each other
 
@@ -192,24 +199,33 @@ bool FGFDMExec::Allocate(void) {
   if (!Propulsion->InitModel()) {
     cerr << fgred << "FGPropulsion model init failed" << fgdef << endl;
     Error+=4;}
+  if (!MassBalance->InitModel()) {
+    cerr << fgred << "FGMassBalance model init failed" << fgdef << endl;
+    Error+=8;}
+  if (!Aerodynamics->InitModel()) {
+    cerr << fgred << "FGAerodynamics model init failed" << fgdef << endl;
+    Error+=16;}
+  if (!Inertial->InitModel()) {
+    cerr << fgred << "FGInertial model init failed" << fgdef << endl;
+    Error+=32;}
   if (!Aircraft->InitModel())   {
     cerr << fgred << "Aircraft model init failed" << fgdef << endl;
-    Error+=8;}
+    Error+=64;}
   if (!Translation->InitModel()){
     cerr << fgred << "Translation model init failed" << fgdef << endl;
-    Error+=16;}
+    Error+=128;}
   if (!Rotation->InitModel())   {
     cerr << fgred << "Rotation model init failed" << fgdef << endl;
-    Error+=32;}
+    Error+=256;}
   if (!Position->InitModel())   {
     cerr << fgred << "Position model init failed" << fgdef << endl;
-    Error+=64;}
+    Error+=512;}
   if (!Auxiliary->InitModel())  {
     cerr << fgred << "Auxiliary model init failed" << fgdef << endl;
-    Error+=128;}
+    Error+=1024;}
   if (!Output->InitModel())     {
     cerr << fgred << "Output model init failed" << fgdef << endl;
-    Error+=256;}
+    Error+=2048;}
 
   if (Error > 0) result = false;
 
@@ -217,15 +233,18 @@ bool FGFDMExec::Allocate(void) {
   // instance, the atmosphere model gets executed every fifth pass it is called
   // by the executive. Everything else here gets executed each pass.
 
-  Schedule(Atmosphere,  1);
-  Schedule(FCS,         1);
-  Schedule(Propulsion,  1);
-  Schedule(Aircraft,    1);
-  Schedule(Rotation,    1);
-  Schedule(Translation, 1);
-  Schedule(Position,    1);
-  Schedule(Auxiliary,   1);
-  Schedule(Output,     1);
+  Schedule(Atmosphere,   1);
+  Schedule(FCS,          1);
+  Schedule(Propulsion,   1);
+  Schedule(MassBalance,  1);
+  Schedule(Aerodynamics, 1);
+  Schedule(Inertial,     1);
+  Schedule(Aircraft,     1);
+  Schedule(Rotation,     1);
+  Schedule(Translation,  1);
+  Schedule(Position,     1);
+  Schedule(Auxiliary,    1);
+  Schedule(Output,       1);
 
   modelLoaded = false;
 
@@ -239,6 +258,9 @@ bool FGFDMExec::DeAllocate(void) {
   if ( Atmosphere != 0 )  delete Atmosphere;
   if ( FCS != 0 )         delete FCS;
   if ( Propulsion != 0)   delete Propulsion;
+  if ( MassBalance != 0)  delete MassBalance;
+  if ( Aerodynamics != 0) delete Aerodynamics;
+  if ( Inertial != 0)     delete Inertial;
   if ( Aircraft != 0 )    delete Aircraft;
   if ( Translation != 0 ) delete Translation;
   if ( Rotation != 0 )    delete Rotation;
@@ -250,16 +272,19 @@ bool FGFDMExec::DeAllocate(void) {
   FirstModel  = 0L;
   Error       = 0;
 
-  State       = 0;
-  Atmosphere  = 0;
-  FCS         = 0;
-  Propulsion  = 0;
-  Aircraft    = 0;
-  Translation = 0;
-  Rotation    = 0;
-  Position    = 0;
-  Auxiliary   = 0;
-  Output      = 0;
+  State        = 0;
+  Atmosphere   = 0;
+  FCS          = 0;
+  Propulsion   = 0;
+  MassBalance  = 0;
+  Aerodynamics = 0;
+  Inertial     = 0;
+  Aircraft     = 0;
+  Translation  = 0;
+  Rotation     = 0;
+  Position     = 0;
+  Auxiliary    = 0;
+  Output       = 0;
 
   modelLoaded = false;
   return modelLoaded;
@@ -302,7 +327,7 @@ bool FGFDMExec::Run(void)
   model_iterator = FirstModel;
   if (model_iterator == 0L) return false;
 
-  if (Scripted) {                                              
+  if (Scripted) {
     RunScript();
     if (State->Getsim_time() >= EndTime) return false;
   }
@@ -338,12 +363,12 @@ bool FGFDMExec::RunIC(FGInitialCondition *fgic)
 bool FGFDMExec::LoadModel(string APath, string EPath, string model)
 {
   bool result = false;
-  
+
   if (modelLoaded) {
     DeAllocate();
     Allocate();
   }
-  
+
   AircraftPath = APath;
   EnginePath   = EPath;
   result = Aircraft->LoadAircraft(AircraftPath, EnginePath, model);
@@ -356,7 +381,7 @@ bool FGFDMExec::LoadModel(string APath, string EPath, string model)
          << fgdef << endl;
   }
 
-  cout << "\n\nJSBSim startup complete\n\n";
+  if (debug_lvl > 0) cout << "\n\nJSBSim startup complete\n\n";
   return result;
 }
 
@@ -370,6 +395,7 @@ bool FGFDMExec::LoadScript(string script)
   string initialize="";
   bool result=false;
   float dt=0.0;
+  int i;
   struct condition *newCondition;
 
   if (!Script.IsOpen()) return false;
@@ -377,17 +403,17 @@ bool FGFDMExec::LoadScript(string script)
   Script.GetNextConfigLine();
   ScriptName = Script.GetValue("name");
   Scripted = true;
-  cout << "Reading Script File " << ScriptName << endl;
+  if (debug_lvl > 0) cout << "Reading Script File " << ScriptName << endl;
 
   while (Script.GetNextConfigLine() != "EOF" && Script.GetValue() != "/runscript") {
     token = Script.GetValue();
     if (token == "use") {
       if ((token = Script.GetValue("aircraft")) != "") {
         aircraft = token;
-        cout << "  Use aircraft: " << token << endl;
+        if (debug_lvl > 0) cout << "  Use aircraft: " << token << endl;
       } else if ((token = Script.GetValue("initialize")) != "") {
         initialize = token;
-        cout << "  Use reset file: " << token << endl;
+        if (debug_lvl > 0) cout << "  Use reset file: " << token << endl;
       } else {
         cerr << "Unknown 'use' keyword: \"" << token << "\"" << endl;
       }
@@ -461,75 +487,76 @@ bool FGFDMExec::LoadScript(string script)
     exit(-1);
   }
 
-  // print out conditions for double-checking
+  // print out conditions for double-checking if requested
 
-  vector <struct condition>::iterator iterConditions = Conditions.begin();
+  if (debug_lvl > 0) {
+    vector <struct condition>::iterator iterConditions = Conditions.begin();
+    int count=0;
 
-  int count=0;
+    cout << "\n  Script goes from " << StartTime << " to " << EndTime
+         << " with dt = " << dt << endl << endl;
 
-  cout << "\n  Script goes from " << StartTime << " to " << EndTime
-       << " with dt = " << dt << endl << endl;
+    while (iterConditions < Conditions.end()) {
+      cout << "  Condition: " << count++ << endl;
+      cout << "    if (";
 
-  while (iterConditions < Conditions.end()) {
-    cout << "  Condition: " << count++ << endl;
-    cout << "    if (";
-
-    for (int i=0; i<iterConditions->TestValue.size(); i++) {
-      if (i>0) cout << " and" << endl << "        ";
-      cout << "(" << State->paramdef[iterConditions->TestParam[i]]
-                  << iterConditions->Comparison[i] << " "
-                  << iterConditions->TestValue[i] << ")";
-    }
-    cout << ") then {" << endl;
-
-    for (int i=0; i<iterConditions->SetValue.size(); i++) {
-      cout << "      set" << State->paramdef[iterConditions->SetParam[i]]
-           << "to " << iterConditions->SetValue[i];
-
-      switch (iterConditions->Type[i]) {
-      case FG_VALUE:
-        cout << " (constant";
-        break;
-      case FG_DELTA:
-        cout << " (delta";
-        break;
-      case FG_BOOL:
-        cout << " (boolean";
-        break;
-      default:
-        cout << " (unspecified type";
+      for (i=0; i<iterConditions->TestValue.size(); i++) {
+        if (i>0) cout << " and" << endl << "        ";
+        cout << "(" << State->paramdef[iterConditions->TestParam[i]]
+                    << iterConditions->Comparison[i] << " "
+                    << iterConditions->TestValue[i] << ")";
       }
+      cout << ") then {" << endl;
 
-      switch (iterConditions->Action[i]) {
-      case FG_RAMP:
-        cout << " via ramp";
-        break;
-      case FG_STEP:
-        cout << " via step";
-        break;
-      case FG_EXP:
-        cout << " via exponential approach";
-        break;
-      default:
-        cout << " via unspecified action";
+      for (i=0; i<iterConditions->SetValue.size(); i++) {
+        cout << "      set" << State->paramdef[iterConditions->SetParam[i]]
+             << "to " << iterConditions->SetValue[i];
+
+        switch (iterConditions->Type[i]) {
+        case FG_VALUE:
+          cout << " (constant";
+          break;
+        case FG_DELTA:
+          cout << " (delta";
+          break;
+        case FG_BOOL:
+          cout << " (boolean";
+          break;
+        default:
+          cout << " (unspecified type";
+        }
+
+        switch (iterConditions->Action[i]) {
+        case FG_RAMP:
+          cout << " via ramp";
+          break;
+        case FG_STEP:
+          cout << " via step";
+          break;
+        case FG_EXP:
+          cout << " via exponential approach";
+          break;
+        default:
+          cout << " via unspecified action";
+        }
+
+        if (!iterConditions->Persistent[i]) cout << endl
+                           << "                              once";
+        else cout << endl
+                           << "                              repeatedly";
+
+        if (iterConditions->Action[i] == FG_RAMP ||
+            iterConditions->Action[i] == FG_EXP) cout << endl
+                           << "                              with time constant "
+                           << iterConditions->TC[i];
       }
+      cout << ")" << endl << "    }" << endl << endl;
 
-      if (!iterConditions->Persistent[i]) cout << endl
-                         << "                              once";
-      else cout << endl
-                         << "                              repeatedly";
-
-      if (iterConditions->Action[i] == FG_RAMP ||
-          iterConditions->Action[i] == FG_EXP) cout << endl
-                         << "                              with time constant "
-                         << iterConditions->TC[i];
+      iterConditions++;
     }
-    cout << ")" << endl << "    }" << endl << endl;
 
-    iterConditions++;
+    cout << endl;
   }
-
-  cout << endl;
 
   result = LoadModel("aircraft", "engine", aircraft);
   if (!result) {
@@ -549,6 +576,7 @@ void FGFDMExec::RunScript(void)
   vector <struct condition>::iterator iC = Conditions.begin();
   bool truth;
   bool WholeTruth;
+  int i;
 
   int count=0;
 
@@ -558,7 +586,7 @@ void FGFDMExec::RunScript(void)
   while (iC < Conditions.end()) {
     // determine whether the set of conditional tests for this condition equate
     // to true
-    for (int i=0; i<iC->TestValue.size(); i++) {
+    for (i=0; i<iC->TestValue.size(); i++) {
            if (iC->Comparison[i] == "lt")
               truth = State->GetParameter(iC->TestParam[i]) <  iC->TestValue[i];
       else if (iC->Comparison[i] == "le")
@@ -583,7 +611,7 @@ void FGFDMExec::RunScript(void)
     // if the conditions are true, do the setting of the desired parameters
 
     if (WholeTruth) {
-      for (int i=0; i<iC->SetValue.size(); i++) {
+      for (i=0; i<iC->SetValue.size(); i++) {
         if ( ! iC->Triggered[i]) {
           iC->OriginalValue[i] = State->GetParameter(iC->SetParam[i]);
           switch (iC->Type[i]) {

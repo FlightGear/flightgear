@@ -42,13 +42,8 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
-#    include <iostream>
-#    include <fstream>
-#  else
-#    include <iostream.h>
-#    include <fstream.h>
-#  endif
+#  include STL_IOSTREAM
+#  include STL_FSTREAM
 #else
 #  include <iostream>
 #  include <fstream>

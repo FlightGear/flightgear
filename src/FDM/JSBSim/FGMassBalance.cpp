@@ -52,14 +52,40 @@ CLASS IMPLEMENTATION
 
 FGMassBalance::FGMassBalance(FGFDMExec* fdmex) : FGModel(fdmex)
 {
+  Name = "FGMassBalance";
+
   if (debug_lvl & 2) cout << "Instantiated: FGMassBalance" << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGMassBalance::Run(void) {
+FGMassBalance::~FGMassBalance()
+{
+  if (debug_lvl & 2) cout << "Destroyed:    FGMassBalance" << endl;
+}
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGMassBalance::Run(void)
+{
   if (!FGModel::Run()) {
+
+    Weight = EmptyWeight + Propulsion->GetTanksWeight();
+
+    Mass = Weight / GRAVITY;
+
+// Calculate new CG here.
+
+    vXYZcg = (Propulsion->GetTanksCG() + EmptyWeight*vbaseXYZcg) / Weight;
+
+// Calculate new moments of inertia here
+
+    Ixx = baseIxx + Propulsion->GetTanksIxx(vXYZcg);
+    Iyy = baseIyy + Propulsion->GetTanksIyy(vXYZcg);
+    Izz = baseIzz + Propulsion->GetTanksIzz(vXYZcg);
+    Ixz = baseIxz + Propulsion->GetTanksIxz(vXYZcg);
+
+    if (debug_lvl > 1) Debug();
 
     return false;
   } else {
@@ -71,6 +97,13 @@ bool FGMassBalance::Run(void) {
 
 void FGMassBalance::Debug(void)
 {
-  // TODO: Add user code here
+  if (debug_lvl & 16) { // Sanity check variables
+    if (EmptyWeight <= 0.0 || EmptyWeight > 1e9)
+      cout << "MassBalance::EmptyWeight out of bounds: " << EmptyWeight << endl;
+    if (Weight <= 0.0 || Weight > 1e9)
+      cout << "MassBalance::Weight out of bounds: " << Weight << endl;
+    if (Mass <= 0.0 || Mass > 1e9)
+      cout << "MassBalance::Mass out of bounds: " << Mass << endl;
+  }
 }
 

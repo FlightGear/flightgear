@@ -40,13 +40,16 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <vector>
+#    include <iterator>
 #  else
 #    include <vector.h>
+#    include <iterator.h>
 #  endif
 #else
 #  include <vector>
+#  include <iterator>
 #endif
 
 #include "FGModel.h"
@@ -162,10 +165,20 @@ public:
 
   inline FGColumnVector& GetForces(void)  {return *Forces; }
   inline FGColumnVector& GetMoments(void) {return *Moments;}
+  
+  FGColumnVector& GetTanksCG(void);
+  float GetTanksWeight(void);
+
+  float GetTanksIxx(const FGColumnVector& vXYZcg);
+  float GetTanksIyy(const FGColumnVector& vXYZcg);
+  float GetTanksIzz(const FGColumnVector& vXYZcg);
+  float GetTanksIxz(const FGColumnVector& vXYZcg);
+  float GetTanksIxy(const FGColumnVector& vXYZcg);
 
 private:
   vector <FGEngine*>   Engines;
   vector <FGTank*>     Tanks;
+  vector <FGTank*>::iterator iTank;
   vector <FGThruster*> Thrusters;
   unsigned int numSelectedFuelTanks;
   unsigned int numSelectedOxiTanks;
@@ -177,6 +190,7 @@ private:
   float dt;
   FGColumnVector *Forces;
   FGColumnVector *Moments;
+  FGColumnVector vXYZtank;
   void Debug(void);
 };
 

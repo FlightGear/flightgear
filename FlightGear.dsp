@@ -4452,40 +4452,6 @@ SOURCE=.\src\Input\input.hxx
 
 # End Source File
 # End Group
-# Begin Group "Lib_Joystick"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\src\Joystick\joystick.cxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_Joystick"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_Joystick"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\Joystick\joystick.hxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_Joystick"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_Joystick"
-
-!ENDIF 
-
-# End Source File
-# End Group
 # Begin Group "main"
 
 # PROP Default_Filter ""

@@ -40,17 +40,24 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <vector>
+#    include <map>
 #  else
 #    include <vector.h>
+#    include <map.h>
 #  endif
 #else
 #  include <vector>
+#  include <map>
 #endif
 
 #include "FGModel.h"
 #include "FGConfigFile.h"
+#include "FGState.h"
+#include "FGMassBalance.h"
+#include "FGTranslation.h"
+#include "FGCoefficient.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -99,8 +106,50 @@ public:
   /** Loads the Aerodynamics model
       @return true if successful */
   bool LoadAerodynamics(FGConfigFile* AC_cfg);
-  
+
+  /** Outputs coefficient information.
+      Non-dimensionalizing parameter descriptions are output
+      for each aero coefficient defined.
+      @param multipliers the list of multipliers for this coefficient.*/
+  void DisplayCoeffFactors(vector <eParam> multipliers);
+
+  /** Gets the total aerodynamic force vector.
+      @return a force vector reference. */
+  FGColumnVector& GetForces(void) {return vForces;}
+
+  /** Gets the total aerodynamic moment vector.
+      @return a moment vector reference. */
+  FGColumnVector& GetMoments(void) {return vMoments;}
+
+  inline FGColumnVector GetvLastFs(void) { return vLastFs; }
+  inline float GetvLastFs(int axis) { return vLastFs(axis); }
+  inline FGColumnVector GetvFs(void) { return vFs; }
+  inline float GetvFs(int axis) { return vFs(axis); }
+  float GetLoD(void);
+
+    /** Gets the strings for the current set of coefficients.
+      @return a string containing the descriptive names for all coefficients */
+  string GetCoefficientStrings(void);
+
+  /** Gets the coefficient values.
+      @return a string containing the numeric values for the current set of
+      coefficients */
+  string GetCoefficientValues(void);
+
+  /// Gets the Normal Load Factor
+  float GetNlf(void);
+
 private:
+  typedef map<string,int> AxisIndex;
+  AxisIndex AxisIdx;
+  typedef vector<FGCoefficient*> CoeffArray;
+  CoeffArray* Coeff;
+  FGColumnVector vFs;
+  FGColumnVector vForces;
+  FGColumnVector vMoments;
+  FGColumnVector vLastFs;
+  FGColumnVector vDXYZcg;
+
   void Debug(void);
 };
 

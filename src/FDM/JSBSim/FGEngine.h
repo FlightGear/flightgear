@@ -48,7 +48,7 @@ INCLUDES
 #  include <simgear/compiler.h>
 #  include STL_STRING
    SG_USING_STD(string);
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <vector>
 #  else
 #    include <vector.h>

@@ -40,7 +40,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <fstream>
 #  else
 #    include <fstream.h>
@@ -53,7 +53,7 @@ INCLUDES
 #include "FGTank.h"
 
 static const char *IdSrc = "$Id$";
-static const char *IdHdr = "ID_ENGINE";
+static const char *IdHdr = ID_ENGINE;
 
 extern short debug_lvl;
 

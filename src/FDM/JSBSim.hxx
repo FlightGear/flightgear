@@ -38,7 +38,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <FDM/JSBSim/FGFDMExec.h>
-#include <FDM/JSBSim/FGInitialCondition.h>
+
 #undef MAX_ENGINES
 #include <Aircraft/aircraft.hxx>
 
@@ -202,15 +202,17 @@ private:
     FGInitialCondition *fgic;
     bool needTrim;
 
-    FGState*       State;
-    FGAtmosphere*  Atmosphere;
-    FGFCS*         FCS;
-    FGPropulsion*  Propulsion;
-    FGAircraft*    Aircraft;
-    FGTranslation* Translation;
-    FGRotation*    Rotation;
-    FGPosition*    Position;
-    FGAuxiliary*   Auxiliary;
+    FGState*        State;
+    FGAtmosphere*   Atmosphere;
+    FGFCS*          FCS;
+    FGPropulsion*   Propulsion;
+    FGMassBalance*  MassBalance;
+    FGAircraft*     Aircraft;
+    FGTranslation*  Translation;
+    FGRotation*     Rotation;
+    FGPosition*     Position;
+    FGAuxiliary*    Auxiliary;
+    FGAerodynamics* Aerodynamics;
 
     int runcount;
     float trim_elev;

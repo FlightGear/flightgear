@@ -97,10 +97,7 @@ public:
   
   float GetHeadWind(void);
   float GetCrossWind(void);
-  
  
-protected:
-
 private:
   float vcas;
   float veas;
@@ -115,9 +112,9 @@ private:
   // isentropic flow equations
 
   FGColumnVector vPilotAccel;
+  FGColumnVector vToEyePt;
   
   float earthPosAngle;
-  
 
   void GetState(void);
   void Debug(void);

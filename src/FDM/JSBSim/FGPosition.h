@@ -97,6 +97,7 @@ public:
   inline double GetLongitudeDot(void) { return LongitudeDot; }
   inline double GetRunwayRadius(void) { return RunwayRadius; }
   inline double GetDistanceAGL(void)  { return DistanceAGL; }
+  inline double GetRadius(void) { return Radius; }
   inline FGColumnVector GetRunwayNormal(void) { return vRunwayNormal; }
   
   inline double GetGamma(void) { return gamma; }

@@ -43,7 +43,9 @@ INCLUDES
 #include "FGFDMExec.h"
 #include "FGAtmosphere.h"
 #include "FGFCS.h"
+#include "FGAerodynamics.h"
 #include "FGAircraft.h"
+#include "FGMassBalance.h"
 #include "FGTranslation.h"
 #include "FGRotation.h"
 #include "FGPosition.h"
@@ -194,7 +196,7 @@ void FGOutput::DelimitedOutput(void)
     }
     if (SubSystems & FGAircraft::ssCoefficients) {
       cout << ", ";
-      cout << Aircraft->GetCoefficientStrings();
+      cout << Aerodynamics->GetCoefficientStrings();
     }
     if (SubSystems & FGAircraft::ssGroundReactions) {
       cout << ", ";
@@ -235,8 +237,8 @@ void FGOutput::DelimitedOutput(void)
   }
   if (SubSystems & FGAircraft::ssForces) {
     cout << ", ";
-    cout << Aircraft->GetvFs() << ", ";
-    cout << Aircraft->GetLoD() << ", ";
+    cout << Aerodynamics->GetvFs() << ", ";
+    cout << Aerodynamics->GetLoD() << ", ";
     cout << Aircraft->GetForces();
   }
   if (SubSystems & FGAircraft::ssMoments) {
@@ -249,12 +251,12 @@ void FGOutput::DelimitedOutput(void)
   }
   if (SubSystems & FGAircraft::ssMassProps) {
     cout << ", ";
-    cout << Aircraft->GetIxx() << ", ";
-    cout << Aircraft->GetIyy() << ", ";
-    cout << Aircraft->GetIzz() << ", ";
-    cout << Aircraft->GetIxz() << ", ";
-    cout << Aircraft->GetMass() << ", ";
-    cout << Aircraft->GetXYZcg();
+    cout << MassBalance->GetIxx() << ", ";
+    cout << MassBalance->GetIyy() << ", ";
+    cout << MassBalance->GetIzz() << ", ";
+    cout << MassBalance->GetIxz() << ", ";
+    cout << MassBalance->GetMass() << ", ";
+    cout << MassBalance->GetXYZcg();
   }
   if (SubSystems & FGAircraft::ssPosition) {
     cout << ", ";
@@ -268,7 +270,7 @@ void FGOutput::DelimitedOutput(void)
   }
   if (SubSystems & FGAircraft::ssCoefficients) {
     cout << ", ";
-    cout << Aircraft->GetCoefficientValues();
+    cout << Aerodynamics->GetCoefficientValues();
   }
   if (SubSystems & FGAircraft::ssGroundReactions) {
     cout << ", ";
@@ -348,7 +350,7 @@ void FGOutput::DelimitedOutput(string fname)
     }
     if (SubSystems & FGAircraft::ssCoefficients) {
       datafile << ", ";
-      datafile << Aircraft->GetCoefficientStrings();
+      datafile << Aerodynamics->GetCoefficientStrings();
     }
     if (SubSystems & FGAircraft::ssGroundReactions) {
       datafile << ", ";
@@ -392,8 +394,8 @@ void FGOutput::DelimitedOutput(string fname)
   }
   if (SubSystems & FGAircraft::ssForces) {
     datafile << ", ";
-    datafile << Aircraft->GetvFs() << ", ";
-    datafile << Aircraft->GetLoD() << ", ";
+    datafile << Aerodynamics->GetvFs() << ", ";
+    datafile << Aerodynamics->GetLoD() << ", ";
     datafile << Aircraft->GetForces();
   }
   if (SubSystems & FGAircraft::ssMoments) {
@@ -406,12 +408,12 @@ void FGOutput::DelimitedOutput(string fname)
   }
   if (SubSystems & FGAircraft::ssMassProps) {
     datafile << ", ";
-    datafile << Aircraft->GetIxx() << ", ";
-    datafile << Aircraft->GetIyy() << ", ";
-    datafile << Aircraft->GetIzz() << ", ";
-    datafile << Aircraft->GetIxz() << ", ";
-    datafile << Aircraft->GetMass() << ", ";
-    datafile << Aircraft->GetXYZcg();
+    datafile << MassBalance->GetIxx() << ", ";
+    datafile << MassBalance->GetIyy() << ", ";
+    datafile << MassBalance->GetIzz() << ", ";
+    datafile << MassBalance->GetIxz() << ", ";
+    datafile << MassBalance->GetMass() << ", ";
+    datafile << MassBalance->GetXYZcg();
   }
   if (SubSystems & FGAircraft::ssPosition) {
     datafile << ", ";
@@ -425,7 +427,7 @@ void FGOutput::DelimitedOutput(string fname)
   }
   if (SubSystems & FGAircraft::ssCoefficients) {
     datafile << ", ";
-    datafile << Aircraft->GetCoefficientValues();
+    datafile << Aerodynamics->GetCoefficientValues();
   }
   if (SubSystems & FGAircraft::ssGroundReactions) {
     datafile << ", ";

@@ -63,6 +63,7 @@ INCLUDES
 #include "FGState.h"
 #include "FGFDMExec.h"
 #include "FGFCS.h"
+#include "FGMassBalance.h"
 #include "FGAircraft.h"
 #include "FGPosition.h"
 #include "FGAuxiliary.h"
@@ -158,9 +159,12 @@ bool FGTranslation::Run(void) {
 
     vlastUVWdot = vUVWdot;
 
-  } else {}
+    if (debug_lvl > 1) Debug();
 
-  return false;
+    return false;
+  } else {
+    return true;
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -171,7 +175,7 @@ void FGTranslation::GetState(void) {
   vPQR = Rotation->GetPQR();
   vForces = Aircraft->GetForces();
 
-  Mass = Aircraft->GetMass();
+  Mass = MassBalance->GetMass();
   rho = Atmosphere->GetDensity();
 
   vEuler = Rotation->GetEuler();
@@ -181,6 +185,23 @@ void FGTranslation::GetState(void) {
 
 void FGTranslation::Debug(void)
 {
-    //TODO: Add your source code here
+  if (debug_lvl & 16) { // Sanity check variables
+    if (fabs(vUVW(eU)) > 1e6)
+      cout << "FGTranslation::U velocity out of bounds: " << vUVW(eU) << endl;
+    if (fabs(vUVW(eV)) > 1e6)
+      cout << "FGTranslation::V velocity out of bounds: " << vUVW(eV) << endl;
+    if (fabs(vUVW(eW)) > 1e6)
+      cout << "FGTranslation::W velocity out of bounds: " << vUVW(eW) << endl;
+    if (fabs(vUVWdot(eU)) > 1e4)
+      cout << "FGTranslation::U acceleration out of bounds: " << vUVWdot(eU) << endl;
+    if (fabs(vUVWdot(eV)) > 1e4)
+      cout << "FGTranslation::V acceleration out of bounds: " << vUVWdot(eV) << endl;
+    if (fabs(vUVWdot(eW)) > 1e4)
+      cout << "FGTranslation::W acceleration out of bounds: " << vUVWdot(eW) << endl;
+    if (Mach > 100 || Mach < 0.00)
+      cout << "FGTranslation::Mach is out of bounds: " << Mach << endl;
+    if (qbar > 1e6 || qbar < 0.00)
+      cout << "FGTranslation::qbar is out of bounds: " << qbar << endl;
+  }
 }
 

@@ -36,6 +36,8 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGInertial.h"
+#include "FGPosition.h"
+#include "FGMassBalance.h"
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_INERTIAL;
@@ -47,17 +49,62 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex)
+FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex),
+    vForces(3),
+    vOmegaLocal(3),
+    vRadius(3)
 {
+  Name = "FGInertial";
+
+  vRadius.InitMatrix();
+
   if (debug_lvl & 2) cout << "Instantiated: FGInertial" << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGInertial:: Run(void) {
+FGInertial::~FGInertial(void)
+{
+  if (debug_lvl & 2) cout << "Destroyed:    FGInertial" << endl;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGInertial::Run(void)
+{
+  float stht, ctht, sphi, cphi;
 
   if (!FGModel::Run()) {
 
+    stht = sin(Rotation->GetEuler(eTht));
+    ctht = cos(Rotation->GetEuler(eTht));
+    sphi = sin(Rotation->GetEuler(ePhi));
+    cphi = cos(Rotation->GetEuler(ePhi));
+
+    vForces(eX) = -GRAVITY*stht;
+    vForces(eY) =  GRAVITY*sphi*ctht;
+    vForces(eZ) =  GRAVITY*cphi*ctht;
+    
+    // The following equation for vOmegaLocal terms shows the angular velocity
+    // calculation _for_the_local_frame_ given the earth's rotation (first set)
+    // at the current latitude, and also the component due to the aircraft
+    // motion over the curved surface of the earth (second set).
+
+    vOmegaLocal(eX) = OMEGA_EARTH * cos(Position->GetLatitude());
+    vOmegaLocal(eY) = 0.0;
+    vOmegaLocal(eZ) = OMEGA_EARTH * -sin(Position->GetLatitude());
+
+    vOmegaLocal(eX) +=  Position->GetVe() / Position->GetRadius();
+    vOmegaLocal(eY) += -Position->GetVn() / Position->GetRadius();
+    vOmegaLocal(eZ) +=  0.00;
+
+//    vForces = State->GetTl2b()*(-2.0*vOmegaLocal * Position->GetVel());
+
+    vRadius(3) = Position->GetRadius();
+    vForces += State->GetTl2b()*(vOmegaLocal * (vOmegaLocal * vRadius));
+
+    vForces *= MassBalance->GetMass(); // IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
     return false;
   } else {
     return true;
@@ -68,7 +115,7 @@ bool FGInertial:: Run(void) {
 
 bool FGInertial::LoadInertial(FGConfigFile* AC_cfg)
 {
-//
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -62,6 +62,7 @@ class FGPosition;
 class FGRotation;
 class FGFCS;
 class FGState;
+class FGMassBalance;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
@@ -257,6 +258,7 @@ private:
   FGPosition* Position;
   FGRotation* Rotation;
   FGFCS*      FCS;
+  FGMassBalance* MassBalance;
 
   void Report(void);
   void Debug(void);
@@ -266,6 +268,7 @@ private:
 #include "FGPosition.h"
 #include "FGRotation.h"
 #include "FGFCS.h"
+#include "FGMassBalance.h"
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

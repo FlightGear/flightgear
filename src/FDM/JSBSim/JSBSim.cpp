@@ -54,7 +54,7 @@ INCLUDES
 #ifdef FGFS
 #include <simgear/compiler.h>
 #include STL_IOSTREAM
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <ctime>
 #  else
 #    include <time.h>
@@ -62,6 +62,57 @@ INCLUDES
 #else
 #include <iostream>
 #include <ctime>
+#endif
+
+#if __BORLANDC__ > 0x540
+#include <condefs.h>
+USEUNIT("FGUtility.cpp");
+USEUNIT("FGAircraft.cpp");
+USEUNIT("FGAtmosphere.cpp");
+USEUNIT("FGAuxiliary.cpp");
+USEUNIT("FGCoefficient.cpp");
+USEUNIT("FGConfigFile.cpp");
+USEUNIT("FGEngine.cpp");
+USEUNIT("FGFCS.cpp");
+USEUNIT("FGFDMExec.cpp");
+USEUNIT("FGfdmSocket.cpp");
+USEUNIT("FGForce.cpp");
+USEUNIT("FGGroundReactions.cpp");
+USEUNIT("FGInertial.cpp");
+USEUNIT("FGInitialCondition.cpp");
+USEUNIT("FGLGear.cpp");
+USEUNIT("FGMassBalance.cpp");
+USEUNIT("FGMatrix.cpp");
+USEUNIT("FGModel.cpp");
+USEUNIT("FGNozzle.cpp");
+USEUNIT("FGOutput.cpp");
+USEUNIT("FGPiston.cpp");
+USEUNIT("FGPosition.cpp");
+USEUNIT("FGPropeller.cpp");
+USEUNIT("FGPropulsion.cpp");
+USEUNIT("FGRocket.cpp");
+USEUNIT("FGRotation.cpp");
+USEUNIT("FGRotor.cpp");
+USEUNIT("FGState.cpp");
+USEUNIT("FGTable.cpp");
+USEUNIT("FGTank.cpp");
+USEUNIT("FGThruster.cpp");
+USEUNIT("FGTranslation.cpp");
+USEUNIT("FGTrim.cpp");
+USEUNIT("FGTrimAxis.cpp");
+USEUNIT("FGTurboJet.cpp");
+USEUNIT("FGTurboProp.cpp");
+USEUNIT("FGTurboShaft.cpp");
+USEUNIT("FGAerodynamics.cpp");
+USEUNIT("filtersjb\FGSwitch.cpp");
+USEUNIT("filtersjb\FGFCSComponent.cpp");
+USEUNIT("filtersjb\FGFilter.cpp");
+USEUNIT("filtersjb\FGFlaps.cpp");
+USEUNIT("filtersjb\FGGain.cpp");
+USEUNIT("filtersjb\FGGradient.cpp");
+USEUNIT("filtersjb\FGSummer.cpp");
+USEUNIT("filtersjb\FGDeadBand.cpp");
+//---------------------------------------------------------------------------
 #endif
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -5,7 +5,7 @@
  Date started: 12/12/98                                   
  Purpose:      Encapsulates an aircraft
  Called by:    FGFDMExec
- 
+
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
  
  This program is free software; you can redistribute it and/or modify it under
@@ -109,7 +109,7 @@ INCLUDES
 #  ifndef __BORLANDC__
 #    include <simgear/compiler.h>
 #  endif
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <cmath>
 #  else
 #    include <math.h>
@@ -119,6 +119,9 @@ INCLUDES
 #endif
 
 #include "FGAircraft.h"
+#include "FGMassBalance.h"
+#include "FGInertial.h"
+#include "FGAerodynamics.h"
 #include "FGTranslation.h"
 #include "FGRotation.h"
 #include "FGAtmosphere.h"
@@ -161,27 +164,13 @@ CLASS IMPLEMENTATION
 FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex),
     vMoments(3),
     vForces(3),
-    vFs(3),
-    vLastFs(3),
     vXYZrp(3),
-    vbaseXYZcg(3),
-    vXYZcg(3),
     vXYZep(3),
     vEuler(3),
-    vXYZtank(3),
     vDXYZcg(3),
     vAeroBodyForces(3)
 {
   Name = "FGAircraft";
-
-  AxisIdx["DRAG"]  = 0;
-  AxisIdx["SIDE"]  = 1;
-  AxisIdx["LIFT"]  = 2;
-  AxisIdx["ROLL"]  = 3;
-  AxisIdx["PITCH"] = 4;
-  AxisIdx["YAW"]   = 5;
-
-  Coeff = new CoeffArray[6];
 
   GearUp = false;
 
@@ -194,15 +183,8 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex),
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-FGAircraft::~FGAircraft() {
-  unsigned int i,j;
-  for (i=0; i<6; i++) {
-    for (j=0; j<Coeff[i].size(); j++) {
-      delete Coeff[i][j];
-    }
-  }
-  delete[] Coeff;
-  
+FGAircraft::~FGAircraft()
+{
   if (debug_lvl & 2) cout << "Destroyed:    FGAircraft" << endl;
 }
 
@@ -231,22 +213,22 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
   while ((AC_cfg.GetNextConfigLine() != string("EOF")) &&
          (token = AC_cfg.GetValue()) != string("/FDM_CONFIG")) {
     if (token == "METRICS") {
-      cout << fgcyan << "\n  Reading Metrics" << fgdef << endl;
+      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Metrics" << fgdef << endl;
       ReadMetrics(&AC_cfg);
     } else if (token == "AERODYNAMICS") {
-      cout << fgcyan << "\n  Reading Aerodynamics" << fgdef << endl;
+      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Aerodynamics" << fgdef << endl;
       ReadAerodynamics(&AC_cfg);
     } else if (token == "UNDERCARRIAGE") {
-      cout << fgcyan << "\n  Reading Landing Gear" << fgdef << endl;
+      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Landing Gear" << fgdef << endl;
       ReadUndercarriage(&AC_cfg);
     } else if (token == "PROPULSION") {
-      cout << fgcyan << "\n  Reading Propulsion" << fgdef << endl;
+      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Propulsion" << fgdef << endl;
       ReadPropulsion(&AC_cfg);
     } else if (token == "FLIGHT_CONTROL") {
-      cout << fgcyan << "\n  Reading Flight Control" << fgdef << endl;
+      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Flight Control" << fgdef << endl;
       ReadFlightControls(&AC_cfg);
     } else if (token == "OUTPUT") {
-      cout << fgcyan << "\n  Reading Output directives" << fgdef << endl;
+      if (debug_lvl > 0) cout << fgcyan << "\n  Reading Output directives" << fgdef << endl;
       ReadOutput(&AC_cfg);
     }
   }
@@ -256,160 +238,37 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGAircraft::Run(void) {
+bool FGAircraft::Run(void)
+{
   if (!FGModel::Run()) {                 // if false then execute this Run()
     GetState();
 
-    for (int i = 1; i <= 3; i++)  vForces(i) = vMoments(i) = 0.0;
+    vForces.InitMatrix();
+    vMoments.InitMatrix();
 
-    MassChange();
     FMProp();
     FMAero();
     FMMass();
     FMGear();
 
-    nlf = 0;
-    if (fabs(Position->GetGamma()) < 1.57) {
-        nlf = vFs(eZ)/(Weight*cos(Position->GetGamma()));
-    }    
-        
+    return false;
   } else {                               // skip Run() execution this time
-  }
-
-
-  return false;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGAircraft::MassChange() {
-  float Tw;
-  float IXXt, IYYt, IZZt, IXZt;
-//  unsigned int t;
-//  unsigned int axis_ctr;
-/*
-  for (axis_ctr=1; axis_ctr<=3; axis_ctr++) vXYZtank(axis_ctr) = 0.0;
-
-  // UPDATE TANK CONTENTS
-  //
-  // For each engine, cycle through the tanks and draw an equal amount of
-  // fuel (or oxidizer) from each active tank. The needed amount of fuel is
-  // determined by the engine in the FGEngine class. If more fuel is needed
-  // than is available in the tank, then that amount is considered a shortage,
-  // and will be drawn from the next tank. If the engine cannot be fed what it
-  // needs, it will be considered to be starved, and will shut down.
-
-  float Oshortage, Fshortage;
-
-  for (unsigned int e=0; e<numEngines; e++) {
-    Fshortage = Oshortage = 0.0;
-    for (t=0; t<numTanks; t++) {
-      switch(Engine[e]->GetType()) {
-      case FGEngine::etRocket:
-
-        switch(Tank[t]->GetType()) {
-        case FGTank::ttFUEL:
-          if (Tank[t]->GetSelected()) {
-            Fshortage = Tank[t]->Reduce((Engine[e]->CalcFuelNeed()/
-                                         numSelectedFuelTanks)*(dt*rate) + Fshortage);
-          }
-          break;
-        case FGTank::ttOXIDIZER:
-          if (Tank[t]->GetSelected()) {
-            Oshortage = Tank[t]->Reduce((Engine[e]->CalcOxidizerNeed()/
-                                         numSelectedOxiTanks)*(dt*rate) + Oshortage);
-          }
-          break;
-        }
-        break;
-
-      case FGEngine::etPiston:
-      case FGEngine::etTurboJet:
-      case FGEngine::etTurboProp:
-
-        if (Tank[t]->GetSelected()) {
-          Fshortage = Tank[t]->Reduce((Engine[e]->CalcFuelNeed()/
-                                       numSelectedFuelTanks)*(dt*rate) + Fshortage);
-        }
-        break;
-      }
-    }
-    if ((Fshortage <= 0.0) || (Oshortage <= 0.0)) Engine[e]->SetStarved();
-    else Engine[e]->SetStarved(false);
-  }
-*/
-  Weight = EmptyWeight;
-//  for (t=0; t<numTanks; t++)
-//    Weight += Tank[t]->GetContents();
-
-  Mass = Weight / GRAVITY;
-  // Calculate new CG here.
-
-  Tw = 0;
-//  for (t=0; t<numTanks; t++) {
-//    vXYZtank(eX) += Tank[t]->GetX()*Tank[t]->GetContents();
-//    vXYZtank(eY) += Tank[t]->GetY()*Tank[t]->GetContents();
-//    vXYZtank(eZ) += Tank[t]->GetZ()*Tank[t]->GetContents();
-//
-//    Tw += Tank[t]->GetContents();
-//  }
-
-  vXYZcg = (vXYZtank + EmptyWeight*vbaseXYZcg) / (Tw + EmptyWeight);
-
-  // Calculate new moments of inertia here
-
-  IXXt = IYYt = IZZt = IXZt = 0.0;
-//  for (t=0; t<numTanks; t++) {
-//    IXXt += ((Tank[t]->GetX()-vXYZcg(eX))/12.0)*((Tank[t]->GetX() - vXYZcg(eX))/12.0)*Tank[t]->GetContents()/GRAVITY;
-//    IYYt += ((Tank[t]->GetY()-vXYZcg(eY))/12.0)*((Tank[t]->GetY() - vXYZcg(eY))/12.0)*Tank[t]->GetContents()/GRAVITY;
-//    IZZt += ((Tank[t]->GetZ()-vXYZcg(eZ))/12.0)*((Tank[t]->GetZ() - vXYZcg(eZ))/12.0)*Tank[t]->GetContents()/GRAVITY;
-//    IXZt += ((Tank[t]->GetX()-vXYZcg(eX))/12.0)*((Tank[t]->GetZ() - vXYZcg(eZ))/12.0)*Tank[t]->GetContents()/GRAVITY;
-//  }
-
-  Ixx = baseIxx + IXXt;
-  Iyy = baseIyy + IYYt;
-  Izz = baseIzz + IZZt;
-  Ixz = baseIxz + IXZt;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGAircraft::FMAero(void) {
-  unsigned int axis_ctr,ctr;
-
-  vLastFs = vFs;
-  for (axis_ctr=1; axis_ctr<=3; axis_ctr++) vFs(axis_ctr) = 0.0;
-
-  for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
-    for (ctr=0; ctr < Coeff[axis_ctr].size(); ctr++) {
-      vFs(axis_ctr+1) += Coeff[axis_ctr][ctr]->TotalValue();
-    }
-  }
-
-  vAeroBodyForces = State->GetTs2b(alpha, beta)*vFs;
-  vForces += vAeroBodyForces;
-
-  // see http://home.earthlink.net/~apeden/jsbsim_moments_due_to_forces.txt
-  // for details on this
-  vDXYZcg(eX) = -(vXYZrp(eX) - vXYZcg(eX))/12.0;  //cg and rp values are in inches
-  vDXYZcg(eY) =  (vXYZrp(eY) - vXYZcg(eY))/12.0;
-  vDXYZcg(eZ) = -(vXYZrp(eZ) - vXYZcg(eZ))/12.0;
-
-  vMoments(eL) += vAeroBodyForces(eZ)*vDXYZcg(eY) - vAeroBodyForces(eY)*vDXYZcg(eZ); // rolling moment
-  vMoments(eM) += vAeroBodyForces(eX)*vDXYZcg(eZ) - vAeroBodyForces(eZ)*vDXYZcg(eX); // pitching moment
-  vMoments(eN) += vAeroBodyForces(eY)*vDXYZcg(eX) - vAeroBodyForces(eX)*vDXYZcg(eY); // yawing moment
-  
-  for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
-    for (ctr = 0; ctr < Coeff[axis_ctr+3].size(); ctr++) {
-      vMoments(axis_ctr+1) += Coeff[axis_ctr+3][ctr]->TotalValue();
-    }
+    return true;
   }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAircraft::FMGear(void) {
+void FGAircraft::FMAero(void)
+{
+    vForces += Aerodynamics->GetForces();
+    vMoments += Aerodynamics->GetMoments();
+}
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGAircraft::FMGear(void)
+{
   if ( !GearUp ) {
     vector <FGLGear>::iterator iGear = lGear.begin();
     while (iGear != lGear.end()) {
@@ -424,22 +283,23 @@ void FGAircraft::FMGear(void) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAircraft::FMMass(void) {
-  vForces(eX) += -GRAVITY*sin(vEuler(eTht)) * Mass;
-  vForces(eY) +=  GRAVITY*sin(vEuler(ePhi))*cos(vEuler(eTht)) * Mass;
-  vForces(eZ) +=  GRAVITY*cos(vEuler(ePhi))*cos(vEuler(eTht)) * Mass;
+void FGAircraft::FMMass(void)
+{
+  vForces += Inertial->GetForces();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAircraft::FMProp(void) {
-    vForces += Propulsion->GetForces();
-    vMoments += Propulsion->GetMoments();
+void FGAircraft::FMProp(void)
+{
+  vForces += Propulsion->GetForces();
+  vMoments += Propulsion->GetMoments();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAircraft::GetState(void) {
+void FGAircraft::GetState(void)
+{
   dt = State->Getdt();
 
   alpha = Translation->Getalpha();
@@ -449,53 +309,66 @@ void FGAircraft::GetState(void) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAircraft::ReadMetrics(FGConfigFile* AC_cfg) {
+void FGAircraft::ReadMetrics(FGConfigFile* AC_cfg)
+{
   string token = "";
   string parameter;
+  float EW, bixx, biyy, bizz, bixz, biyz;
+  FGColumnVector vbaseXYZcg(3);
 
   AC_cfg->GetNextConfigLine();
 
   while ((token = AC_cfg->GetValue()) != string("/METRICS")) {
     *AC_cfg >> parameter;
     if (parameter == string("AC_WINGAREA")) {
-        *AC_cfg >> WingArea;
-        cout << "    WingArea: " << WingArea  << endl; 
+      *AC_cfg >> WingArea;
+      if (debug_lvl > 0) cout << "    WingArea: " << WingArea  << endl;
     } else if (parameter == "AC_WINGSPAN") {
-        *AC_cfg >> WingSpan;
-        cout << "    WingSpan: " << WingSpan  << endl;
+      *AC_cfg >> WingSpan;
+      if (debug_lvl > 0) cout << "    WingSpan: " << WingSpan  << endl;
     } else if (parameter == "AC_CHORD") {
-        *AC_cfg >> cbar;
-        cout << "    Chord: " << cbar << endl;
+      *AC_cfg >> cbar;
+      if (debug_lvl > 0) cout << "    Chord: " << cbar << endl;
     } else if (parameter == "AC_IXX") {
-        *AC_cfg >> baseIxx;
-        cout << "    baseIxx: " << baseIxx << endl;
+      *AC_cfg >> bixx;
+      if (debug_lvl > 0) cout << "    baseIxx: " << bixx << endl;
+      MassBalance->SetBaseIxx(bixx);
     } else if (parameter == "AC_IYY") {
-        *AC_cfg >> baseIyy;
-        cout << "    baseIyy: " << baseIyy << endl;
-    } else if (parameter == "AC_IZZ") { 
-        *AC_cfg >> baseIzz;
-        cout << "    baseIzz: " << baseIzz << endl;
-    } else if (parameter == "AC_IXZ") { 
-        *AC_cfg >> baseIxz;
-        cout << "    baseIxz: " << baseIxz  << endl;
+      *AC_cfg >> biyy;
+      if (debug_lvl > 0) cout << "    baseIyy: " << biyy << endl;
+      MassBalance->SetBaseIyy(biyy);
+    } else if (parameter == "AC_IZZ") {
+      *AC_cfg >> bizz;
+      if (debug_lvl > 0) cout << "    baseIzz: " << bizz << endl;
+      MassBalance->SetBaseIzz(bizz);
+    } else if (parameter == "AC_IXZ") {
+      *AC_cfg >> bixz;
+      if (debug_lvl > 0) cout << "    baseIxz: " << bixz  << endl;
+      MassBalance->SetBaseIxz(bixz);
+    } else if (parameter == "AC_IYZ") {
+      *AC_cfg >> biyz;
+      if (debug_lvl > 0) cout << "    baseIyz: " << biyz  << endl;
+      MassBalance->SetBaseIyz(biyz);
     } else if (parameter == "AC_EMPTYWT") {
-        *AC_cfg >> EmptyWeight;
-        cout << "    EmptyWeight: " << EmptyWeight  << endl;
+      *AC_cfg >> EW;
+      MassBalance->SetEmptyWeight(EW);
+      if (debug_lvl > 0) cout << "    EmptyWeight: " << EW  << endl;
     } else if (parameter == "AC_CGLOC") {
-        *AC_cfg >> vbaseXYZcg(eX) >> vbaseXYZcg(eY) >> vbaseXYZcg(eZ);
-        cout << "    CG (x, y, z): " << vbaseXYZcg << endl;
+      *AC_cfg >> vbaseXYZcg(eX) >> vbaseXYZcg(eY) >> vbaseXYZcg(eZ);
+      MassBalance->SetBaseCG(vbaseXYZcg);
+      if (debug_lvl > 0) cout << "    CG (x, y, z): " << vbaseXYZcg << endl;
     } else if (parameter == "AC_EYEPTLOC") {
-        *AC_cfg >> vXYZep(eX) >> vXYZep(eY) >> vXYZep(eZ);
-        cout << "    Eyepoint (x, y, z): " << vXYZep << endl;
+      *AC_cfg >> vXYZep(eX) >> vXYZep(eY) >> vXYZep(eZ);
+      if (debug_lvl > 0) cout << "    Eyepoint (x, y, z): " << vXYZep << endl;
     } else if (parameter == "AC_AERORP") {
-        *AC_cfg >> vXYZrp(eX) >> vXYZrp(eY) >> vXYZrp(eZ);
-        cout << "    Ref Pt (x, y, z): " << vXYZrp << endl;
+      *AC_cfg >> vXYZrp(eX) >> vXYZrp(eY) >> vXYZrp(eZ);
+      if (debug_lvl > 0) cout << "    Ref Pt (x, y, z): " << vXYZrp << endl;
     } else if (parameter == "AC_ALPHALIMITS") {
-        *AC_cfg >> alphaclmin >> alphaclmax;
-        cout << "    Maximum Alpha: " << alphaclmax
-             << "    Minimum Alpha: " << alphaclmin 
+      *AC_cfg >> alphaclmin >> alphaclmax;
+      if (debug_lvl > 0) cout << "    Maximum Alpha: " << alphaclmax
+             << "    Minimum Alpha: " << alphaclmin
              << endl;
-    }         
+    }
   }
 }
 
@@ -517,24 +390,12 @@ void FGAircraft::ReadFlightControls(FGConfigFile* AC_cfg) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAircraft::ReadAerodynamics(FGConfigFile* AC_cfg) {
-  string token, axis;
-
-  AC_cfg->GetNextConfigLine();
-  
-  while ((token = AC_cfg->GetValue()) != string("/AERODYNAMICS")) {
-    if (token == "AXIS") {
-      CoeffArray ca;
-      axis = AC_cfg->GetValue("NAME");
-      AC_cfg->GetNextConfigLine();
-      while ((token = AC_cfg->GetValue()) != string("/AXIS")) {
-        ca.push_back(new FGCoefficient(FDMExec, AC_cfg));
-        DisplayCoeffFactors(ca.back()->Getmultipliers());
-      }
-      Coeff[AxisIdx[axis]]=ca;
-      AC_cfg->GetNextConfigLine();
-    }
+void FGAircraft::ReadAerodynamics(FGConfigFile* AC_cfg)
+{
+  if (!Aerodynamics->LoadAerodynamics(AC_cfg)) {
+    cerr << "Aerodynamics not successfully loaded" << endl;
   }
+
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -631,75 +492,21 @@ void FGAircraft::ReadPrologue(FGConfigFile* AC_cfg) {
   string token = AC_cfg->GetValue();
   string scratch;
   AircraftName = AC_cfg->GetValue("NAME");
-  cout << underon << "Reading Aircraft Configuration File" << underoff << ": "
-                       << highint << AircraftName << normint << endl;
+  if (debug_lvl > 0) cout << underon << "Reading Aircraft Configuration File"
+            << underoff << ": " << highint << AircraftName << normint << endl;
   scratch = AC_cfg->GetValue("VERSION").c_str();
 
   CFGVersion = AC_cfg->GetValue("VERSION");
-  cout << "                            Version: " << highint << CFGVersion
+
+  if (debug_lvl > 0)
+    cout << "                            Version: " << highint << CFGVersion
                                                              << normint << endl;
   if (CFGVersion != string(NEEDED_CFG_VERSION)) {
-    cout << endl << fgred << "YOU HAVE AN INCOMPATIBLE CFG FILE FOR THIS AIRCRAFT."
-    " RESULTS WILL BE UNPREDICTABLE !!" << endl;
-    cout << "Current version needed is: " << NEEDED_CFG_VERSION << endl;
-    cout << "         You have version: " << CFGVersion << endl << fgdef << endl;
-    //exit(-1);
+    cerr << endl << fgred << "YOU HAVE AN INCOMPATIBLE CFG FILE FOR THIS AIRCRAFT."
+            " RESULTS WILL BE UNPREDICTABLE !!" << endl;
+    cerr << "Current version needed is: " << NEEDED_CFG_VERSION << endl;
+    cerr << "         You have version: " << CFGVersion << endl << fgdef << endl;
   }
-
-
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGAircraft::DisplayCoeffFactors(vector <eParam> multipliers) {
-  cout << "   Non-Dimensionalized by: ";
-
-  for (unsigned int i=0; i<multipliers.size();i++)
-    cout << State->paramdef[multipliers[i]];
-
-  cout << endl;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-string FGAircraft::GetCoefficientStrings(void) {
-  string CoeffStrings = "";
-  bool firstime = true;
-
-  for (unsigned int axis = 0; axis < 6; axis++) {
-    for (unsigned int sd = 0; sd < Coeff[axis].size(); sd++) {
-      if (firstime) {
-        firstime = false;
-      } else {
-        CoeffStrings += ", ";
-      }
-      CoeffStrings += Coeff[axis][sd]->Getname();
-    }
-  }
-
-  return CoeffStrings;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-string FGAircraft::GetCoefficientValues(void) {
-  string SDValues = "";
-  char buffer[10];
-  bool firstime = true;
-
-  for (unsigned int axis = 0; axis < 6; axis++) {
-    for (unsigned int sd = 0; sd < Coeff[axis].size(); sd++) {
-      if (firstime) {
-        firstime = false;
-      } else {
-        SDValues += ", ";
-      }
-      sprintf(buffer, "%9.6f", Coeff[axis][sd]->GetSD());
-      SDValues += string(buffer);
-    }
-  }
-
-  return SDValues;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -749,14 +556,3 @@ void FGAircraft::Debug(void)
     //TODO: Add your source code here
 }
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-float FGAircraft::GetLoD(void) {
-  float LoD;
-  if (vFs(1) != 0.00)
-    LoD = vFs(3)/vFs(1);
-  else
-    LoD = 0.00;
-
-  return LoD;
-}

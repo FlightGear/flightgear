@@ -44,7 +44,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <vector>
 #  else
 #    include <vector.h>
@@ -55,6 +55,7 @@ INCLUDES
 
 #include "FGModel.h"
 #include "FGConfigFile.h"
+#include "FGMatrix.h"
 
 #define ID_INERTIAL "$Id$"
 
@@ -67,10 +68,17 @@ class FGInertial : public FGModel {
 
 public:
   FGInertial(FGFDMExec*);
-  ~FGInertial();
+  ~FGInertial(void);
 
   bool Run(void);
+  FGColumnVector GetForces(void) {return vForces;}
   bool LoadInertial(FGConfigFile* AC_cfg);
+
+private:
+  void Debug(void);
+  FGColumnVector vOmegaLocal;
+  FGColumnVector vForces;
+  FGColumnVector vRadius;
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

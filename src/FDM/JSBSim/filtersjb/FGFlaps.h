@@ -1,6 +1,6 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
- Header:       FGFlap.h
+ Header:       FGFlaps.h
  Author:       Tony Peden, for flight control system authored by Jon S. Berndt
  Date started: 5/11/00 
  
@@ -34,8 +34,8 @@ COMMENTS, REFERENCES,  and NOTES
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifndef FGFlap_H
-#define FGFlap_H
+#ifndef FGFLAPS_H
+#define FGFLAPS_H
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
@@ -43,7 +43,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <vector>
 #  else
 #    include <vector.h>
@@ -67,6 +67,12 @@ CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 class FGFlaps  : public FGFCSComponent {
+public:
+  FGFlaps(FGFCS* fcs, FGConfigFile* AC_cfg);
+  ~FGFlaps();
+  bool Run (void );
+  
+private:
   FGConfigFile* AC_cfg;
   vector<float> Detents;
   vector<float> TransitionTimes;
@@ -76,12 +82,6 @@ class FGFlaps  : public FGFCSComponent {
   float Flap_Position;
   bool  Flaps_In_Transit;
 
-public:
-  FGFlaps(FGFCS* fcs, FGConfigFile* AC_cfg);
-  ~FGFlaps();
-  bool Run (void );
-  
-private:
   void Debug(void);
 };
 

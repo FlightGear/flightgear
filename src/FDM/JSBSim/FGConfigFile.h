@@ -40,16 +40,31 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
-#    include <fstream>
-#  else
-#    include <fstream.h>
-#  endif
+#  include STL_STRING
+#  include STL_FSTREAM
+#  include STL_IOSTREAM
+   SG_USING_STD(string);
+   SG_USING_STD(ostream);
+   SG_USING_STD(istream);
+   SG_USING_STD(ifstream);
+   SG_USING_STD(cerr);
+   SG_USING_STD(endl);
+   SG_USING_STD(ios);
+   SG_USING_STD(cout);
 #else
 #  include <fstream>
+#  include <iostream>
+#  include <string>
+   using std::string;
+   using std::ostream;
+   using std::istream;
+   using std::ifstream;
+   using std::ios;
+   using std::cerr;
+   using std::endl;
+   using std::cout;
 #endif
 
-#include <string>
 #include "FGDefs.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -57,9 +72,6 @@ DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #define ID_CONFIGFILE "$Id$"
-
-using std::string;
-using std::ifstream;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS

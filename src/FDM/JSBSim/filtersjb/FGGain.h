@@ -43,18 +43,15 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
-#    include <vector>
-#  else
-#    include <vector.h>
-#  endif
+#  include STL_STRING
+   SG_USING_STD(string);
 #else
-#  include <vector>
+#  include <string>
 #endif
 
-#include <string>
 #include "FGFCSComponent.h"
 #include "../FGConfigFile.h"
+#include "../FGTable.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINES
@@ -78,10 +75,11 @@ public:
 
 private:
   FGConfigFile* AC_cfg;
+  FGTable* Table;
+  FGState* State;
   float Gain;
-  float* lookup;
-  vector < float* > Schedule;
   float Min, Max;
+  int Rows;
   eParam ScheduledBy;
 
   void Debug(void);

@@ -22,22 +22,17 @@ INCLUDES
 
 #include <stdlib.h>
 #ifdef FGFS
+#  include <math.h>
 #  include <simgear/compiler.h>
 #  include STL_STRING
+#  include STL_FSTREAM
+#  include STL_IOSTREAM
    SG_USING_STD(string);
    SG_USING_STD(ostream);
    SG_USING_STD(istream);
    SG_USING_STD(cerr);
+   SG_USING_STD(cout);
    SG_USING_STD(endl);
-#  ifdef FG_HAVE_STD_INCLUDES
-#    include <fstream>
-#    include <cmath>
-#    include <iostream>
-#  else
-#    include <fstream.h>
-#    include <math.h>
-#    include <iostream.h>
-#  endif
 #else
 #  include <fstream>
 #  include <cmath>
@@ -47,6 +42,7 @@ INCLUDES
    using std::ostream;
    using std::istream;
    using std::cerr;
+   using std::cout;
    using std::endl;
 #endif
 

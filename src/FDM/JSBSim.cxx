@@ -53,7 +53,8 @@
 #include <FDM/JSBSim/FGInitialCondition.h>
 #include <FDM/JSBSim/FGTrim.h>
 #include <FDM/JSBSim/FGAtmosphere.h>
-
+#include <FDM/JSBSim/FGMassBalance.h>
+#include <FDM/JSBSim/FGAerodynamics.h>
 #include "JSBSim.hxx"
 
 /******************************************************************************/
@@ -65,15 +66,17 @@ FGJSBsim::FGJSBsim( double dt )
    
     fdmex=new FGFDMExec;
     
-    State       = fdmex->GetState();
-    Atmosphere  = fdmex->GetAtmosphere();
-    FCS         = fdmex->GetFCS();
-    Propulsion  = fdmex->GetPropulsion();
-    Aircraft    = fdmex->GetAircraft();
-    Translation = fdmex->GetTranslation();
-    Rotation    = fdmex->GetRotation();
-    Position    = fdmex->GetPosition();
-    Auxiliary   = fdmex->GetAuxiliary();
+    State        = fdmex->GetState();
+    Atmosphere   = fdmex->GetAtmosphere();
+    FCS          = fdmex->GetFCS();
+    MassBalance  = fdmex->GetMassBalance();
+    Propulsion   = fdmex->GetPropulsion();
+    Aircraft     = fdmex->GetAircraft();
+    Translation  = fdmex->GetTranslation();
+    Rotation     = fdmex->GetRotation();
+    Position     = fdmex->GetPosition();
+    Auxiliary    = fdmex->GetAuxiliary();
+    Aerodynamics = fdmex->GetAerodynamics();
 
     fgic=new FGInitialCondition(fdmex);
     needTrim=true;
@@ -292,15 +295,15 @@ bool FGJSBsim::copy_to_JSBsim() {
 bool FGJSBsim::copy_from_JSBsim() {
     unsigned int i, j;
 
-    _set_Inertias( Aircraft->GetMass(),
-                   Aircraft->GetIxx(),
-                   Aircraft->GetIyy(),
-                   Aircraft->GetIzz(),
-                   Aircraft->GetIxz() );
+    _set_Inertias( MassBalance->GetMass(),
+                   MassBalance->GetIxx(),
+                   MassBalance->GetIyy(),
+                   MassBalance->GetIzz(),
+                   MassBalance->GetIxz() );
 
-    _set_CG_Position( Aircraft->GetXYZcg(1),
-                      Aircraft->GetXYZcg(2),
-                      Aircraft->GetXYZcg(3) );
+    _set_CG_Position( MassBalance->GetXYZcg(1),
+                      MassBalance->GetXYZcg(2),
+                      MassBalance->GetXYZcg(3) );
 
     _set_Accels_Body( Translation->GetUVWdot(1),
                       Translation->GetUVWdot(2),
@@ -322,7 +325,7 @@ bool FGJSBsim::copy_from_JSBsim() {
     //                         Auxiliary->GetNpilot(2),
     //                         Auxiliary->GetNpilot(3) );
 
-    _set_Nlf( Aircraft->GetNlf() );
+    _set_Nlf( Aerodynamics->GetNlf() );
 
     // Velocities
 

@@ -46,7 +46,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <fstream>
 #  else
 #    include <fstream.h>
@@ -165,6 +165,7 @@ private:
   FGOutput* Output;
   FGAtmosphere* Atmosphere;
   FGFCS* FCS;
+  FGAerodynamics* Aerodynamics;
 
   typedef map<string, eParam> CoeffMap;
   CoeffMap coeffdef;
@@ -184,7 +185,7 @@ private:
 #include "FGTranslation.h"
 #include "FGRotation.h"
 #include "FGPosition.h"
-//#include "FGAuxiliary.h"
+#include "FGAerodynamics.h"
 #include "FGOutput.h"
 #include "FGAircraft.h"
 

@@ -69,16 +69,18 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
             >> kSpring >> bDamp>> dynamicFCoeff >> staticFCoeff
                   >> rollingFCoeff >> sSteerType >> sBrakeGroup >> maxSteerAngle;
 
-  cout << "    Name: " << name << endl;
-  cout << "      Location: " << vXYZ << endl;
-  cout << "      Spring Constant:  " << kSpring << endl;
-  cout << "      Damping Constant: " << bDamp << endl;
-  cout << "      Dynamic Friction: " << dynamicFCoeff << endl;
-  cout << "      Static Friction:  " << staticFCoeff << endl;
-  cout << "      Rolling Friction: " << rollingFCoeff << endl;
-  cout << "      Steering Type:    " << sSteerType << endl;
-  cout << "      Grouping:         " << sBrakeGroup << endl;
-  cout << "      Max Steer Angle:  " << maxSteerAngle << endl;
+  if (debug_lvl > 0) {
+    cout << "    Name: " << name << endl;
+    cout << "      Location: " << vXYZ << endl;
+    cout << "      Spring Constant:  " << kSpring << endl;
+    cout << "      Damping Constant: " << bDamp << endl;
+    cout << "      Dynamic Friction: " << dynamicFCoeff << endl;
+    cout << "      Static Friction:  " << staticFCoeff << endl;
+    cout << "      Rolling Friction: " << rollingFCoeff << endl;
+    cout << "      Steering Type:    " << sSteerType << endl;
+    cout << "      Grouping:         " << sBrakeGroup << endl;
+    cout << "      Max Steer Angle:  " << maxSteerAngle << endl;
+  }
 
   if      (sBrakeGroup == "LEFT"  ) eBrakeGrp = bgLeft;
   else if (sBrakeGroup == "RIGHT" ) eBrakeGrp = bgRight;
@@ -107,6 +109,7 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
   Position    = Exec->GetPosition();
   Rotation    = Exec->GetRotation();
   FCS         = Exec->GetFCS();
+  MassBalance = Exec->GetMassBalance();
 
   WOW = false;
   ReportEnable = true;
@@ -114,8 +117,9 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : vXYZ(3),
   Reported = false;
   DistanceTraveled = 0.0;
   MaximumStrutForce = MaximumStrutTravel = 0.0;
+  SinkRate = GroundSpeed = 0.0;
 
-  vWhlBodyVec     = (vXYZ - Aircraft->GetXYZcg()) / 12.0;
+  vWhlBodyVec     = (vXYZ - MassBalance->GetXYZcg()) / 12.0;
   vWhlBodyVec(eX) = -vWhlBodyVec(eX);
   vWhlBodyVec(eZ) = -vWhlBodyVec(eZ);
 
@@ -134,6 +138,7 @@ FGLGear::FGLGear(const FGLGear& lgear)
   Rotation = lgear.Rotation;
   Exec     = lgear.Exec;
   FCS      = lgear.FCS;
+  MassBalance = lgear.MassBalance;
 
   vXYZ = lgear.vXYZ;
   vMoment = lgear.vMoment;
@@ -187,7 +192,7 @@ FGColumnVector FGLGear::Force(void)
   FGColumnVector vLocalForce(3);
   FGColumnVector vWhlVelVec(3);     // Velocity of this wheel (Local)
 
-  vWhlBodyVec     = (vXYZ - Aircraft->GetXYZcg()) / 12.0;
+  vWhlBodyVec     = (vXYZ - MassBalance->GetXYZcg()) / 12.0;
   vWhlBodyVec(eX) = -vWhlBodyVec(eX);
   vWhlBodyVec(eZ) = -vWhlBodyVec(eZ);
 
@@ -380,6 +385,8 @@ FGColumnVector FGLGear::Force(void)
       MaximumStrutForce = MaximumStrutTravel = 0.0;
     }
 
+    compressLength = 0.0; // reset compressLength to zero for data output validity
+
     vForce.InitMatrix();
     vMoment.InitMatrix();
   }
@@ -389,7 +396,7 @@ FGColumnVector FGLGear::Force(void)
   }
 
   if (ReportEnable && Position->GetVel().Magnitude() <= 0.05 && !Reported) {
-    Report();
+    if (debug_lvl > 0) Report();
   }
 
   return vForce;

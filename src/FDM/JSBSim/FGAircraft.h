@@ -40,7 +40,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <vector>
 #    include <iterator>
 #    include <map>
@@ -56,7 +56,6 @@ INCLUDES
 #endif
 
 #include "FGModel.h"
-#include "FGCoefficient.h"
 #include "FGPropulsion.h"
 #include "FGConfigFile.h"
 #include "FGMatrix.h"
@@ -157,27 +156,14 @@ public:
   inline float GetWingSpan(void) { return WingSpan; }
   /// Gets the average wing chord
   inline float Getcbar(void) { return cbar; }
-  inline float GetWeight(void) { return Weight; }
-  inline float GetMass(void) { return Mass; }
   inline FGColumnVector GetMoments(void) { return vMoments; }
   inline FGColumnVector GetForces(void) { return vForces; }
   inline FGColumnVector GetAeroBodyForces(void) { return vAeroBodyForces; }
   inline float GetAeroBodyForces(int axis) { return vAeroBodyForces(axis); }
-  inline FGColumnVector GetvFs(void) { return vFs; }
-  inline float GetvFs(int axis) { return vFs(axis); }
-  inline FGColumnVector GetvLastFs(void) { return vLastFs; }
-  inline float GetvLastFs(int axis) { return vLastFs(axis); }
-  inline float GetIxx(void) { return Ixx; }
-  inline float GetIyy(void) { return Iyy; }
-  inline float GetIzz(void) { return Izz; }
-  inline float GetIxz(void) { return Ixz; }
-  inline FGColumnVector GetXYZcg(void) { return vXYZcg; }
   inline FGColumnVector GetXYZrp(void) { return vXYZrp; }
   inline FGColumnVector GetXYZep(void) { return vXYZep; }
-  inline float GetXYZcg(int idx) { return vXYZcg(idx); }
   inline float GetXYZrp(int idx) { return vXYZrp(idx); }
   inline float GetXYZep(int idx) { return vXYZep(idx); }
-  inline float GetNlf(void) { return nlf; }
   inline float GetAlphaCLMax(void) { return alphaclmax; }
   inline float GetAlphaCLMin(void) { return alphaclmin; }
 
@@ -185,9 +171,6 @@ public:
   inline void SetAlphaCLMax(float tt) { alphaclmax=tt; }
   inline void SetAlphaCLMin(float tt) { alphaclmin=tt; }
 
-  inline FGCoefficient* GetCoeff(int axis, int idx) { return Coeff[axis][idx]; }
-  string GetCoefficientStrings(void);
-  string GetCoefficientValues(void);
   string GetGroundReactionStrings(void);
   string GetGroundReactionValues(void);
 
@@ -216,41 +199,22 @@ private:
   void FMGear(void);
   void FMMass(void);
   void FMProp(void);
-  void MassChange(void);
   FGColumnVector vMoments;
   FGColumnVector vForces;
-  FGColumnVector vFs;
-  FGColumnVector vLastFs;
   FGColumnVector vXYZrp;
-  FGColumnVector vbaseXYZcg;
-  FGColumnVector vXYZcg;
   FGColumnVector vXYZep;
   FGColumnVector vEuler;
-  FGColumnVector vXYZtank;
   FGColumnVector vDXYZcg;
   FGColumnVector vAeroBodyForces;
-  float baseIxx, baseIyy, baseIzz, baseIxz, EmptyMass, Mass;
-  float Ixx, Iyy, Izz, Ixz;
   float alpha, beta;
   float WingArea, WingSpan, cbar;
-  float Weight, EmptyWeight;
-  float nlf,alphaclmax,alphaclmin;
+  float alphaclmax,alphaclmin;
   float dt;
   string CFGVersion;
   string AircraftName;
 
-  typedef map<string,int> AxisIndex;
-  AxisIndex AxisIdx;
-
-  typedef vector<FGCoefficient*> CoeffArray;
-
-  CoeffArray* Coeff;
-
-  void DisplayCoeffFactors(vector <eParam> multipliers);
-
   bool GearUp;
 
-  string Axis[6];
   vector <FGLGear> lGear;
 
   string AircraftPath;

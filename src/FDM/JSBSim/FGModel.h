@@ -42,7 +42,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <iostream>
 #  else
 #    include <iostream.h>
@@ -70,6 +70,9 @@ class FGState;
 class FGAtmosphere;
 class FGFCS;
 class FGPropulsion;
+class FGMassBalance;
+class FGAerodynamics;
+class FGInertial;
 class FGAircraft;
 class FGTranslation;
 class FGRotation;
@@ -129,6 +132,9 @@ protected:
   FGAtmosphere*   Atmosphere;
   FGFCS*          FCS;
   FGPropulsion*   Propulsion;
+  FGMassBalance*  MassBalance;
+  FGAerodynamics* Aerodynamics;
+  FGInertial*     Inertial;
   FGAircraft*     Aircraft;
   FGTranslation*  Translation;
   FGRotation*     Rotation;

@@ -4,10 +4,7 @@ EXTRA_DIST = JSBSim.cpp Makefile.solo
 
 noinst_LIBRARIES = libJSBSim.a
 
-# FGAerodynamics.cpp FGAerodynamics.h \
 # FGGroundReactions.cpp FGGroundReactions.h \
-# FGInertial.cpp FGInertial.h \
-# FGMassBalance.cpp FGMassBalance.h \
 # FGPiston.cpp FGPiston.h \
 # FGPropulsion.cpp FGPropulsion.h \
 # FGRocket.cpp FGRocket.h \
@@ -15,6 +12,7 @@ noinst_LIBRARIES = libJSBSim.a
 # FGTurboShaft.cpp FGTurboShaft.h \
 
 libJSBSim_a_SOURCES = \
+        FGAerodynamics.cpp FGAerodynamics.h \
 	FGAircraft.cpp FGAircraft.h \
 	FGAtmosphere.cpp FGAtmosphere.h \
 	FGAuxiliary.cpp FGAuxiliary.h \
@@ -25,8 +23,10 @@ libJSBSim_a_SOURCES = \
 	FGFCS.cpp FGFCS.h \
 	FGFDMExec.cpp FGFDMExec.h \
 	FGForce.cpp FGForce.h \
+        FGInertial.cpp FGInertial.h \
 	FGInitialCondition.cpp FGInitialCondition.h \
 	FGLGear.cpp FGLGear.h \
+        FGMassBalance.cpp FGMassBalance.h \
 	FGMatrix.cpp FGMatrix.h \
 	FGModel.cpp FGModel.h \
 	FGNozzle.cpp FGNozzle.h \

@@ -42,7 +42,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
+#  ifdef SG_HAVE_STD_INCLUDES
 #    include <vector>
 #  else
 #    include <vector.h>
@@ -68,6 +68,9 @@ class FGState;
 class FGAtmosphere;
 class FGFCS;
 class FGPropulsion;
+class FGMassBalance;
+class FGAerodynamics;
+class FGInertial;
 class FGAircraft;
 class FGTranslation;
 class FGRotation;
@@ -191,6 +194,8 @@ CLASS DOCUMENTATION
        FGModel object executes its Run() method</li>
     <li><b>8</b>: When this value is set, various runtime state variables
        are printed out periodically</li>
+    <li><b>16</b>: When set various parameters are sanity checked and
+       a message is printed out when they go out of bounds</li>
     </ol>
 
 */
@@ -275,6 +280,12 @@ public:
   /// Returns the FGPropulsion pointer.
   inline FGPropulsion* GetPropulsion(void)    {return Propulsion;}
   /// Returns the FGAircraft pointer.
+  inline FGMassBalance* GetMassBalance(void)  {return MassBalance;}
+  /// Returns the FGAerodynamics pointer
+  inline FGAerodynamics* GetAerodynamics(void){return Aerodynamics;}
+  /// Returns the FGInertial pointer.
+  inline FGInertial* GetInertial(void)        {return Inertial;}
+  /// Returns the FGAircraft pointer.
   inline FGAircraft* GetAircraft(void)        {return Aircraft;}
   /// Returns the FGTranslation pointer.
   inline FGTranslation* GetTranslation(void)  {return Translation;}
@@ -311,16 +322,19 @@ private:
   float  EndTime;
   vector <struct condition> Conditions;
 
-  FGState*       State;
-  FGAtmosphere*  Atmosphere;
-  FGFCS*         FCS;
-  FGPropulsion*  Propulsion;
-  FGAircraft*    Aircraft;
-  FGTranslation* Translation;
-  FGRotation*    Rotation;
-  FGPosition*    Position;
-  FGAuxiliary*   Auxiliary;
-  FGOutput*      Output;
+  FGState*        State;
+  FGAtmosphere*   Atmosphere;
+  FGFCS*          FCS;
+  FGPropulsion*   Propulsion;
+  FGMassBalance*  MassBalance;
+  FGAerodynamics* Aerodynamics;
+  FGInertial*     Inertial;
+  FGAircraft*     Aircraft;
+  FGTranslation*  Translation;
+  FGRotation*     Rotation;
+  FGPosition*     Position;
+  FGAuxiliary*    Auxiliary;
+  FGOutput*       Output;
 
   bool Allocate(void);
   bool DeAllocate(void);

@@ -51,7 +51,8 @@ INCLUDES
 #include "FGInitialCondition.h"
 #include "FGTrim.h"
 #include "FGAircraft.h"
-
+#include "FGMassBalance.h"
+#include "FGAerodynamics.h"
 #if _MSC_VER
 #pragma warning (disable : 4786 4788)
 #endif
@@ -164,10 +165,10 @@ void FGTrim::ReportState(void) {
   
   cout << endl << "  JSBSim State" << endl;
   sprintf(out,"    Weight: %7.0f lbs.  CG: %5.1f, %5.1f, %5.1f inches\n",
-                   fdmex->GetAircraft()->GetWeight(),
-                   fdmex->GetAircraft()->GetXYZcg(1),
-                   fdmex->GetAircraft()->GetXYZcg(2),
-                   fdmex->GetAircraft()->GetXYZcg(3));
+                   fdmex->GetMassBalance()->GetWeight(),
+                   fdmex->GetMassBalance()->GetXYZcg(1),
+                   fdmex->GetMassBalance()->GetXYZcg(2),
+                   fdmex->GetMassBalance()->GetXYZcg(3));
   cout << out;             
   if( fdmex->GetFCS()->GetDfPos() <= 0.01)
     sprintf(flap,"Up");
@@ -197,7 +198,7 @@ void FGTrim::ReportState(void) {
                     fdmex->GetPosition()->Gethdot()*60 );
   cout << out;                  
   sprintf(out, "    Normal Load Factor: %4.2f g's  Pitch Rate: %5.2f deg/s\n",
-                    fdmex->GetAircraft()->GetNlf(),
+                    fdmex->GetAerodynamics()->GetNlf(),
                     fdmex->GetState()->GetParameter(FG_PITCHRATE)*RADTODEG );
   cout << out;
   sprintf(out, "    Heading: %3.0f deg true  Sideslip: %5.2f deg\n",

@@ -58,18 +58,14 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef FG_HAVE_STD_INCLUDES
-#    include <cmath>
-#  else
-#    include <math.h>
-#  endif
+#  include <math.h>
 #else
 #  include <cmath>
 #endif
 
 #ifndef M_PI
 #  include <simgear/constants.h>
-#  define M_PI FG_PI
+#  define M_PI SG_PI
 #endif
 
 #include "FGModel.h"

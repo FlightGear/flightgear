@@ -52,29 +52,28 @@ FGNozzle::FGNozzle(FGFDMExec* FDMExec, FGConfigFile* Nzl_cfg) : FGThruster(FDMEx
   string token;
 
   Name = Nzl_cfg->GetValue("NAME");
-  cout << "      Nozzle Name: " << Name << endl;
   Nzl_cfg->GetNextConfigLine();
   while (Nzl_cfg->GetValue() != "/FG_NOZZLE") {
     *Nzl_cfg >> token;
-    if (token == "PE") {
-      *Nzl_cfg >> PE;
-      cout << "      Nozzle Exit Pressure = " << PE << endl;
-    } else if (token == "EXPR") {
-      *Nzl_cfg >> ExpR;
-      cout << "      Nozzle Expansion Ratio = " << ExpR << endl;
-    } else if (token == "NZL_EFF") {
-      *Nzl_cfg >> nzlEff;
-      cout << "      Nozzle Efficiency = " << nzlEff << endl;
-    } else if (token == "DIAM") {
-      *Nzl_cfg >> Diameter;
-      cout << "      Nozzle Diameter = " << Diameter << endl;
-    } else {
-      cout << "Unhandled token in Nozzle config file: " << token << endl;
-    }
+    if      (token == "PE")      *Nzl_cfg >> PE;
+    else if (token == "EXPR")    *Nzl_cfg >> ExpR;
+    else if (token == "NZL_EFF") *Nzl_cfg >> nzlEff;
+    else if (token == "DIAM")    *Nzl_cfg >> Diameter;
+    else cerr << "Unhandled token in Nozzle config file: " << token << endl;
+  }
+
+  if (debug_lvl > 0) {
+    cout << "      Nozzle Name: " << Name << endl;
+    cout << "      Nozzle Exit Pressure = " << PE << endl;
+    cout << "      Nozzle Expansion Ratio = " << ExpR << endl;
+    cout << "      Nozzle Efficiency = " << nzlEff << endl;
+    cout << "      Nozzle Diameter = " << Diameter << endl;
   }
 
   Thrust = 0;
   Type = ttNozzle;
+  Area2 = (Diameter*Diameter/4.0)*M_PI;
+  AreaT = Area2/ExpR;
 
   if (debug_lvl & 2) cout << "Instantiated: FGNozzle" << endl;
 }
@@ -91,8 +90,8 @@ FGNozzle::~FGNozzle()
 float FGNozzle::Calculate(float CfPc)
 {
   float pAtm = fdmex->GetAtmosphere()->GetPressure();
-  
-  Thrust = (CfPc + (PE - pAtm)*ExpR) * (Diameter / ExpR) * nzlEff;
+  Thrust = (CfPc * AreaT + (PE - pAtm)*Area2) * nzlEff;
+  vFn(1) = Thrust;
 
   return Thrust;
 }
