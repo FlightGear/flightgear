@@ -113,13 +113,6 @@ FGBinding::read (const SGPropertyNode * node)
     return;
   }
 
-  _command = globals->get_commands()->getCommand(_command_name);
-  if (_command == 0) {
-    SG_LOG(SG_INPUT, SG_ALERT, "Command " << _command_name << " is undefined");
-    _arg = 0;
-    return;
-  }
-
   delete _arg;
   _arg = new SGPropertyNode;
   _setting = 0;
@@ -130,6 +123,8 @@ void
 FGBinding::fire () const
 {
   if (test()) {
+    if (_command == 0)
+      _command = globals->get_commands()->getCommand(_command_name);
     if (_command == 0) {
       SG_LOG(SG_INPUT, SG_WARN, "No command attached to binding");
     } else if (!(*_command)(_arg)) {
