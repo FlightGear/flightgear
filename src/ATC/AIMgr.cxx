@@ -74,16 +74,16 @@ void FGAIMgr::init() {
 	// Hack alert - Hardwired paths!!
 	string planepath = "Aircraft/c172/Models/c172-dpm.ac";
 	_defaultModel = sgLoad3DModel( globals->get_fg_root(),
-	                                  planepath.c_str(),
-	                                  globals->get_props(),
-	                                  globals->get_sim_time_sec() );
-									  
+	                               planepath.c_str(),
+	                               globals->get_props(),
+	                               globals->get_sim_time_sec() );
+
 	planepath = "Aircraft/pa28-161/Models/pa28-161.ac";
 	_piperModel = sgLoad3DModel( globals->get_fg_root(),
-	                                  planepath.c_str(),
-	                                  globals->get_props(),
-	                                  globals->get_sim_time_sec() );
-									  
+	                             planepath.c_str(),
+	                             globals->get_props(),
+	                             globals->get_sim_time_sec() );
+
 	// go through the $FG_ROOT/ATC directory and find all *.taxi files
 	SGPath path(globals->get_fg_root());
 	path.append("ATC/");
@@ -92,50 +92,14 @@ void FGAIMgr::init() {
 	string file, f_ident;
 	int pos;
 	
-	// WARNING - I (DCL) haven't tested this on MSVC - this is simply cribbed from TerraGear
-#ifdef _MSC_VER	
-	long hfile;
-	struct _finddata_t de;
-	string path_str;
+	ulDir *d;
+	struct ulDirEnt *de;
 	
-	path_str = dir + "\\*.*";
-	
-	if ( ( hfile = _findfirst( path.c_str(), &de ) ) == -1 ) {
-		SG_LOG(SG_ATC, SG_WARN, "cannot open directory " << dir);
-	} else {		
-		// load all .taxi files
-		do {
-			file = de.name;
-			pos = file.find(".");
-			ext = file.substr(pos + 1);
-			if(ext == "taxi") {
-				f_ident = file.substr(0, pos);
-				FGAirport a;
-				if(dclFindAirportID(f_ident, &a)) {
-					SGBucket sgb(a.longitude, a.latitude);
-					int idx = sgb.gen_index();
-					if(facilities.find(idx) != facilities.end()) {
-						facilities[idx]->push_back(f_ident);
-					} else {
-						ID_list_type* apts = new ID_list_type;
-						apts->push_back(f_ident);
-						facilities[idx] = apts;
-					}
-					SG_LOG(SG_ATC, SG_BULK, "Mapping " << f_ident << " to bucket " << idx); 
-				}
-			}
-		} while ( _findnext( hfile, &de ) == 0 );
-	}
-#else
-
-    DIR *d;
-    struct dirent *de;
-
-    if ( (d = opendir( dir.c_str() )) == NULL ) {
+	if ( (d = ulOpenDir( dir.c_str() )) == NULL ) {
 		SG_LOG(SG_ATC, SG_WARN, "cannot open directory " << dir);
 	} else {
 		// load all .taxi files
-		while ( (de = readdir(d)) != NULL ) {
+		while ( (de = ulReadDir(d)) != NULL ) {
 			file = de->d_name;
 			pos = file.find(".");
 			ext = file.substr(pos + 1);
@@ -156,10 +120,9 @@ void FGAIMgr::init() {
 				}
 			}
 		}		
-		closedir(d);
+		ulCloseDir(d);
 	}
-#endif
-	
+
 	// See if are in range at startup and activate if necessary
 	SearchByPos(15.0);
 	
