@@ -3,7 +3,7 @@
 #
 # Written by Curtis Olson, started January 1998.
 #
-# Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+# Copyright (C) 1998  Curtis L. Olson  - curt@me.umn.edu
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,28 +24,21 @@
 #---------------------------------------------------------------------------
 
 
-TARGET = assemtris
+bin_PROGRAMS = assemtris
 
-CFILES = assemtris.c
-LDLIBS = -lMath -lScenery -lm
+assemtris_SOURCES = assemtris.c assemtris.h
 
+assemtris_LDADD = \
+	$(top_builddir)/Simulator/Scenery/Bucket/libBucket.la
 
-include $(FG_ROOT_SRC)/commondefs
-
-
-#---------------------------------------------------------------------------
-# Rule for TARGET
-#---------------------------------------------------------------------------
-
-$(TARGET): $(OBJECTS)
-	$(CC) -o $(TARGET) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
-
-
-include $(COMMONRULES)
+INCLUDES += -I../../Simulator
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.1  1998/04/08 22:54:57  curt
+# Adopted Gnu automake/autoconf system.
+#
 # Revision 1.2  1998/01/21 02:55:46  curt
 # Incorporated new make system from Bob Kuehne <rpk@sgi.com>.
 #

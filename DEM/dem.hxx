@@ -30,7 +30,7 @@
 
 #include <stdio.h>
 
-#include <Scenery/bucketutils.h>
+#include <Scenery/Bucket/bucketutils.h>
 
 
 #define DEM_SIZE 1200
@@ -130,6 +130,9 @@ public:
 
 
 // $Log$
+// Revision 1.1  1998/04/08 22:57:23  curt
+// Adopted Gnu automake/autoconf system.
+//
 // Revision 1.2  1998/03/23 20:35:42  curt
 // Updated to use FG_EPSILON
 //

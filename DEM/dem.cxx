@@ -32,8 +32,8 @@
 #include <sys/stat.h> // stat()
 #include <unistd.h>   // stat()
 
-#include "dem.h"
-#include "leastsqs.h"
+#include "dem.hxx"
+#include "leastsqs.hxx"
 
 #include <Include/fg_constants.h>
 
@@ -763,6 +763,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.1  1998/04/08 22:57:22  curt
+// Adopted Gnu automake/autoconf system.
+//
 // Revision 1.3  1998/04/06 21:09:41  curt
 // Additional win32 support.
 // Fixed a bad bug in dem file parsing that was causing the output to be

@@ -33,10 +33,10 @@
 
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
-#include <Math/fg_geodesy.h>
-#include <Math/mat3.h>
-#include <Math/polar.h>
-#include <Scenery/bucketutils.h>
+// #include <Math/fg_geodesy.h>
+// #include <Math/mat3.h>
+// #include <Math/polar.h>
+#include <Scenery/Bucket/bucketutils.h>
 
 
 int nodecount = 0;
@@ -454,9 +454,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.5  1998/03/03 16:00:52  curt
-/* More c++ compile tweaks.
+/* Revision 1.6  1998/04/08 22:54:58  curt
+/* Adopted Gnu automake/autoconf system.
 /*
+ * Revision 1.5  1998/03/03 16:00:52  curt
+ * More c++ compile tweaks.
+ *
  * Revision 1.4  1998/01/31 00:41:23  curt
  * Made a few changes converting floats to doubles.
  *

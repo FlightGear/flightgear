@@ -58,9 +58,12 @@ double least_squares_max_error(double *x, double *y, int n, double m, double b);
 
 
 /* $Log$
-/* Revision 1.1  1998/03/19 02:54:48  curt
-/* Reorganized into a class lib called fgDEM.
+/* Revision 1.1  1998/04/08 22:57:25  curt
+/* Adopted Gnu automake/autoconf system.
 /*
+ * Revision 1.1  1998/03/19 02:54:48  curt
+ * Reorganized into a class lib called fgDEM.
+ *
  * Revision 1.1  1997/10/13 17:02:35  curt
  * Initial revision.
  *
