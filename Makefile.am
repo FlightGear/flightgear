@@ -26,7 +26,11 @@ fgfs-base: fgfs-base-tar fgfs-base-zip fgfs-base-patch fgfs-textures-high
 
 fgfs-base-tar:
 	(cd $(HOME); \
-	tar --exclude=CVS --exclude='*/Textures/Unused' \
+	tar --exclude=CVS \
+	--exclude='*/c172/Instruments.high' \
+	--exclude='*/Models/Aircraft/*' \
+	--exclude='*/Textures/Unused' \
+	--exclude='*/Textures.high/*.save' \
 	-czvf fgfs-base-$(VERSION).tar.gz \
 	FlightGear/A[A-su-z]* \
 	FlightGear/[B-CE-R]* \
@@ -44,11 +48,11 @@ fgfs-base-zip:
 	FlightGear/Scenery/w130n30/w122n37 \
 	FlightGear/Sounds \
 	FlightGear/[T-Za]* FlightGear/[c-z]* \
-	-x '*/CVS/*' -x '*/Textures/Unused/*' )
+	-x '*/CVS/*' -x '*/Textures/Unused/*' -x '*/Models/Aircraft/*' )
 
 fgfs-base-patch:
 	(cd $(HOME); \
-	tar --newer 10/12/2000 -czvf fgfs-base-patch-$(VERSION)c.tar.gz \
+	tar --newer 6/18/2001 -czvf fgfs-base-patch-$(VERSION)c.tar.gz \
 	FlightGear/A[A-su-z]* \
 	FlightGear/[B-CE-R]* \
 	FlightGear/Scenery/w130n30/w123n37 \
@@ -73,16 +77,16 @@ jsbsim-data:
 fgfs-docs: fgfs-docs-tar fgfs-manual-zip
 
 fgfs-docs-tar:
-	( cd $(HOME)/projects ; \
-	tar czvf fgfs-docs-$(VERSION).tar.gz FlightGear-0.7/docs )
+	( cd $(HOME); \
+	tar czvf fgfs-docs-$(VERSION).tar.gz FlightGear/Docs )
 
 # fgfs-docs-zip:
 # 	( cd $(HOME)/projects ; \
 # 	zip -r fgfs-docs-$(VERSION).zip FlightGear-0.7/docs )
 
 fgfs-manual-zip:
-	( cd $(HOME)/projects ; \
-	zip -r fgfs-manual-$(VERSION).zip FlightGear-0.7/docs/InstallGuide )
+	( cd $(HOME) ; \
+	zip -r fgfs-manual-$(VERSION).zip FlightGear/Docs/InstallGuide )
 
 # make the win32-bin distribution
 
