@@ -317,7 +317,7 @@ int main(int argc, char *argv[]) {
 	IC.psi=0;
 	IC.weight=2400;
 	IC.cg=0.25;
-	IC.flap_handle=30;
+	IC.flap_handle=10;
 	IC.long_control=0;
 	IC.rudder_pedal=0;
     
@@ -333,15 +333,16 @@ int main(int argc, char *argv[]) {
 	altmin=Altitude;
     printf("\tAltitude: %g, Theta: %g, V_down: %g\n\n",Altitude,Theta*RAD_TO_DEG,V_down);
     
-	printf("%12s %10s %10s\n","Alpha (deg)","Alpha","Drag");
-	for(i=-5;i<=22;i++)
+	while(time < 5.0)
 	{
-		IC.alpha=i;
-		setIC(IC);
-		ls_loop(0,-1);
-		printf("%12f %10f %10f\n",Alpha*RAD_TO_DEG,Alpha,cd);
-	}	
-		
+		printf("Time: %g, Flap_handle: %g, Flap_position: %g, Transit: %d\n",time,Flap_handle,Flap_Position,Flaps_In_Transit);  
+		if(time > 2.5)
+		  Flap_handle=20;
+		else if (time > 0.5)
+		  Flap_handle=20;  
+		ls_update(1);
+	    time+=0.01;
+    }
 	
 	
 	

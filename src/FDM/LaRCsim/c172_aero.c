@@ -145,7 +145,7 @@ void aero( SCALAR dt, int Initialize ) {
   
   
   static int init = 0;
-  static int flap_dir=0;
+  static int fi=0;
   static SCALAR lastFlapHandle=0;
   static SCALAR Ai;
   
@@ -155,6 +155,7 @@ void aero( SCALAR dt, int Initialize ) {
   static SCALAR CLtable[NCL]={-0.22,0.25,1.02,1.252,1.354,1.44,1.466,1.298,0.97};  
   
   static SCALAR flap_ind[Ndf]={0,10,20,30};
+  static SCALAR flap_times[Ndf]={0,4,2,2};
   static SCALAR dCLf[Ndf]={0,0.20,0.30,0.35};
   static SCALAR dCdf[Ndf]={0,0.0021,0.0085,0.0191};
   static SCALAR dCmf[Ndf]={0,-0.0654,-0.0981,-0.114};
@@ -252,51 +253,57 @@ void aero( SCALAR dt, int Initialize ) {
 
   if(Flap_handle < flap_ind[0])
   {
-  	Flap_handle=flap_ind[0];
+  	fi=0;
+	Flap_handle=flap_ind[0];
+	lastFlapHandle=Flap_handle;
 	Flap_Position=flap_ind[0];
   }
-  else if(Flap_handle > flap_ind[3])
+  else if(Flap_handle > flap_ind[Ndf-1])
   {
-  	 Flap_handle=flap_ind[3];
-	 Flap_Position=flap_ind[3];
+  	 fi=Ndf-1;
+	 Flap_handle=flap_ind[fi];
+	 lastFlapHandle=Flap_handle;
+	 Flap_Position=flap_ind[fi];
   }
   else	 	
   {		
 	 
-	 
-	 if((Flap_handle != lastFlapHandle) && (dt > 0))
+	 if(dt <= 0)
+	    Flap_Position=Flap_handle;
+	 else	
 	 {
-	 	Flaps_In_Transit=1;
-		
-	 }	
-	 else if(dt <= 0)
-	 	Flap_Position=Flap_handle;
-			
-	 lastFlapHandle=Flap_handle;
-	 if((Flaps_In_Transit) && (dt > 0))	
-	 {	
-		if(Flap_Position < 10)
-			flap_transit_rate = 2.5;
-		else
-			flap_transit_rate=5;
-			
+		if(Flap_handle != lastFlapHandle)
+		{
+	 	   Flaps_In_Transit=1;
+		}
 		if(Flaps_In_Transit)
 		{
+		   fi=0;
+	       while(flap_ind[fi] < Flap_handle) { fi++; }
 		   if(Flap_Position < Flap_handle)
-		    	flap_dir=1;
+		   {
+               if(flap_times[fi] > 0)
+			    	flap_transit_rate=(flap_ind[fi] - flap_ind[fi-1])/flap_times[fi];
+			   else
+			        flap_transit_rate=(flap_ind[fi] - flap_ind[fi-1])/5;
+		   }					
 		   else 
-		        flap_dir=-1;		
-		   
+		   {
+		        if(flap_times[fi+1] > 0)
+				   flap_transit_rate=(flap_ind[fi] - flap_ind[fi+1])/flap_times[fi+1];		
+				else
+			       flap_transit_rate=(flap_ind[fi] - flap_ind[fi+1])/5;   
+		   }
 		   if(fabs(Flap_Position - Flap_handle) > dt*flap_transit_rate)
-			   Flap_Position+=flap_dir*flap_transit_rate*dt;
-
-		   if(fabs(Flap_Position - Flap_handle) < dt*flap_transit_rate)
+			   Flap_Position+=flap_transit_rate*dt;
+		   else
 		   {
 			   Flaps_In_Transit=0;
 			   Flap_Position=Flap_handle;
 		   }
     	}
-	  }	
+	 }	
+	 lastFlapHandle=Flap_handle;
   }	     	  
   
   if(Aft_trim) long_trim = long_trim - trim_inc;
