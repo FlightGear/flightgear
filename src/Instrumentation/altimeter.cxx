@@ -10,6 +10,10 @@
 #include <Main/util.hxx>
 
 
+// A higher number means more responsive
+#define RESPONSIVENESS 10.0
+
+
 // Altitude based on pressure difference from sea level.
 // pressure difference inHG, altitude ft
 static double altitude_data[][2] = {
@@ -73,11 +77,14 @@ Altimeter::update (double dt)
     if (_serviceable_node->getBoolValue()) {
         double pressure = _pressure_node->getDoubleValue();
         double setting = _setting_node->getDoubleValue();
-        double altitude =
-            fgGetLowPass(_altitude_node->getDoubleValue(),
-                         _altitude_table->interpolate(setting - pressure),
-                         dt * 10);
-        _altitude_node->setDoubleValue(altitude);
+
+                                // Move towards the current setting
+        double last_altitude = _altitude_node->getDoubleValue();
+        double current_altitude =
+            _altitude_table->interpolate(setting - pressure);
+        _altitude_node->setDoubleValue(fgGetLowPass(last_altitude,
+                                                    current_altitude,
+                                                    dt * RESPONSIVENESS));
     }
 }
 

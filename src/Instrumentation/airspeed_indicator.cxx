@@ -1,4 +1,4 @@
-// airspeed_indicator.cxx - a regular VSI.
+// airspeed_indicator.cxx - a regular pitot-static airspeed indicator.
 // Written by David Megginson, started 2002.
 //
 // This file is in the Public Domain and comes with no warranty.
@@ -10,6 +10,10 @@
 #include "airspeed_indicator.hxx"
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
+
+
+// A higher number means more responsive.
+#define RESPONSIVENESS 50.0
 
 
 AirspeedIndicator::AirspeedIndicator ()
@@ -58,7 +62,12 @@ AirspeedIndicator::update (double dt)
                                 // Now, reverse the equation
         double v_fps = sqrt((2 * q) / SEA_LEVEL_DENSITY_SLUGFT3);
 
-        _speed_node->setDoubleValue(v_fps * FPSTOKTS);
+                                // Publish the indicated airspeed
+        double last_speed_kt = _speed_node->getDoubleValue();
+        double current_speed_kt = v_fps * FPSTOKTS;
+        _speed_node->setDoubleValue(fgGetLowPass(last_speed_kt,
+                                                 current_speed_kt,
+                                                 dt * RESPONSIVENESS));
     }
 }
 
