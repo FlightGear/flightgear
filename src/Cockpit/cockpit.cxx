@@ -161,7 +161,8 @@ float get_rudderval( void )
 float get_speed( void )
 {
     // Make an explicit function call.
-    float speed = current_aircraft.fdm_state->get_V_equiv_kts();
+    float speed = current_aircraft.fdm_state->get_V_equiv_kts()
+	* current_options.get_speed_up();
     return( speed );
 }
 
