@@ -89,13 +89,16 @@ FGBinding::FGBinding ()
 }
 
 FGBinding::FGBinding (const SGPropertyNode * node)
+  : _command(0),
+    _arg(0),
+    _setting(0)
 {
-  FGBinding();
   read(node);
 }
 
 FGBinding::~FGBinding ()
 {
+  delete _arg;                       // Delete the saved arguments
 }
 
 void
@@ -119,7 +122,10 @@ FGBinding::read (const SGPropertyNode * node)
     return;
   }
 
-  _arg = (SGPropertyNode *)node;
+  delete _arg;
+  _arg = new SGPropertyNode;
+  _setting = 0;
+  copyProperties(node, _arg);  // FIXME: don't use whole node!!!
 }
 
 void

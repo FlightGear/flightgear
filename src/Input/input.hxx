@@ -145,7 +145,7 @@ private:
 
   string _command_name;
   SGCommandMgr::command_t _command;
-  mutable SGPropertyNode_ptr _arg;
+  mutable SGPropertyNode * _arg;
   mutable SGPropertyNode_ptr _setting;
 };
 
