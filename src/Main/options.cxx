@@ -1153,7 +1153,7 @@ struct OptionDesc {
     {"start-date-gmt",               true,  OPTION_FUNC,   "", false, "", fgOptStartDateGmt },
     {"hud-tris",                     false, OPTION_STRING, "/sim/hud/frame-stat-type", false, "tris", 0 },
     {"hud-culled",                   false, OPTION_STRING, "/sim/hud/frame-stat-type", false, "culled", 0 },
-    {"atc610x",                      false, OPTION_CHANNEL, "", false, "dummy", 0 },
+    {"atc610x",                      true,  OPTION_CHANNEL, "", false, "dummy", 0 },
     {"atlas",                        true,  OPTION_CHANNEL, "", false, "", 0 },
     {"httpd",                        true,  OPTION_CHANNEL, "", false, "", 0 },
 #ifdef FG_JPEG_SERVER

@@ -108,6 +108,11 @@ FGIO::parse_port_config( const string& config )
 	if ( protocol == "atc610x" ) {
             FGATC610x *atc610x = new FGATC610x;
 	    atc610x->set_hz( 30 );
+            if ( tokens.size() > 1 ) {
+                if ( tokens[1] == "no-rudder" ) {
+                    atc610x->set_use_rudder( false );
+                }
+            }
 	    return atc610x;
 	} else if ( protocol == "atlas" ) {
 	    FGAtlas *atlas = new FGAtlas;
