@@ -82,11 +82,18 @@ public:
     // load any previously existing shared data from all neighbors
     void load_neighbor_shared( FGConstruct& c );
 
-    // extract the shared edge points, normals, and segments.  This
-    // must be done after calling load_neighbor_data() and will ignore
-    // any shared data from the current tile that already exists from
-    // a neighbor.
-    void extract_shared( FGConstruct& c );
+    // scan the specified share file for the specified information
+    void scan_share_file( const string& dir, const FGBucket& b,
+			  neighbor_type n );
+
+    // try to find info for the specified shared component
+    void load_shared( const FGConstruct& c, neighbor_type n );
+
+    // split up the tile between the shared edge points, normals, and
+    // segments and the body.  This must be done after calling
+    // load_neighbor_data() and will ignore any shared data from the
+    // current tile that already exists from a neighbor.
+    void split_tile( FGConstruct& c );
 
     // write the shared edge points, normals, and segments for this tile
     void write_shared( FGConstruct& c );

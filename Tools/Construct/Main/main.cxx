@@ -403,7 +403,7 @@ void construct_tile( FGConstruct& c ) {
     // generated
     FGMatch m;
     m.load_neighbor_shared( c );
-    m.extract_shared( c );
+    m.split_tile( c );
     m.write_shared( c );
 
     // generate the output

@@ -39,46 +39,160 @@ FGMatch::~FGMatch( void ) {
 }
 
 
-static bool check_corner( FGMatch::neighbor_type n, FGBucket b ) {
+// scan the specified share file for the specified information
+void FGMatch::scan_share_file( const string& dir, const FGBucket& b, 
+			     neighbor_type n )
+{
+    string file = dir + "/" + b.gen_index_str();
+    cout << "reading shared data from " << file << endl;
+
+    fg_gzifstream in( file );
+    if ( !in.is_open() ) {
+        cout << "Cannot open file: " << file << endl;
+	return;
+    }
+
+    string target;
+    if ( n == SW_Corner ) {
+	target = "sw_node";
+    } else if ( n == SE_Corner ) {
+	target = "se_node";
+    } else if ( n == NE_Corner ) {
+	target = "ne_node";
+    } else if ( n == NW_Corner ) {
+	target = "nw_node";
+    }
+
+    string key;
+    Point3D node, normal;
+    while ( in ) {
+	in >> key;
+	in >> node;
+	if ( key == target ) {
+	    cout << key << " " << node << endl;
+	    in >> key;
+	    in >> normal;
+
+	    if ( n == SW_Corner ) {
+		sw_node = node;
+		sw_normal = normal;
+		sw_flag = true;
+	    } else if ( n == SE_Corner ) {
+		se_node = node;
+		se_normal = normal;
+		se_flag = true;
+	    } else if ( n == NE_Corner ) {
+		ne_node = node;
+		ne_normal = normal;
+		ne_flag = true;
+	    } else if ( n == NW_Corner ) {
+		nw_node = node;
+		nw_normal = normal;
+		nw_flag = true;
+	    } else if ( n == NORTH ) {
+		north_nodes.push_back(node);
+		north_normals.push_back(normal);
+		north_flat = true;
+	    } else if ( n == SOUTH ) {
+		south_nodes.push_back(node);
+		south_normals.push_back(normal);
+		south_flat = true;
+	    } else if ( n == EAST ) {
+		east_nodes.push_back(node);
+		east_normals.push_back(normal);
+		east_flat = true;
+	    } else if ( n == WEST ) {
+		west_nodes.push_back(node);
+		west_normals.push_back(normal);
+		west_flat = true;
+	    }
+	}
+    }
+}
+
+
+// try to find info for the specified shared component
+void FGMatch::load_shared( const FGConstruct& c, neighbor_type n ) {
+    FGBucket b = c.get_bucket();
+
     double clon = b.get_center_lon();
     double clat = b.get_center_lat();
 
-    if ( n == FGMatch::SW_Corner ) {
-	fgBucketOffset(clon, clat, -1, 0)
+    string base = c.get_work_base() + ".shared/Scenery/" + b.gen_base_path();
+
+    FGBucket cb;
+
+    // test
+    scan_share_file( base, b, SE_Corner );
+
+    if ( n == SW_Corner ) {
+	cb = fgBucketOffset(clon, clat, -1, 0);
+	scan_share_file( base, cb, SE_Corner );
+	cb = fgBucketOffset(clon, clat, -1, -1);
+	scan_share_file( base, cb, NE_Corner );
+	cb = fgBucketOffset(clon, clat, 0, -1);
+	scan_share_file( base, cb, NW_Corner );
+    } else if ( n == SE_Corner ) {
+	cb = fgBucketOffset(clon, clat, 0, -1);
+	scan_share_file( base, cb, NE_Corner );
+	cb = fgBucketOffset(clon, clat, 1, -1);
+	scan_share_file( base, cb, NW_Corner );
+	cb = fgBucketOffset(clon, clat, 1, 0);
+	scan_share_file( base, cb, SW_Corner );
+    } else if ( n == NE_Corner ) {
+	cb = fgBucketOffset(clon, clat, 1, 0);
+	scan_share_file( base, cb, NW_Corner );
+	cb = fgBucketOffset(clon, clat, 1, 1);
+	scan_share_file( base, cb, SW_Corner );
+	cb = fgBucketOffset(clon, clat, 0, 1);
+	scan_share_file( base, cb, SE_Corner );
+    } else if ( n == NW_Corner ) {
+	cb = fgBucketOffset(clon, clat, 0, 1);
+	scan_share_file( base, cb, SW_Corner );
+	cb = fgBucketOffset(clon, clat, -1, 1);
+	scan_share_file( base, cb, SE_Corner );
+	cb = fgBucketOffset(clon, clat, -1, 0);
+	scan_share_file( base, cb, NE_Corner );
+    } else if ( n == NORTH ) {
+ 	cb = fgBucketOffset(clon, clat, 0, 1);
+	scan_share_file( base, cb, SOUTH );
+    } else if ( n == SOUTH ) {
+ 	cb = fgBucketOffset(clon, clat, 0, 1);
+	scan_share_file( base, cb, NORTH );
+    } else if ( n == EAST ) {
+ 	cb = fgBucketOffset(clon, clat, 0, 1);
+	scan_share_file( base, cb, WEST );
+    } else if ( n == WEST ) {
+ 	cb = fgBucketOffset(clon, clat, 0, 1);
+	scan_share_file( base, cb, EAST );
     }
 }
 
 
 // load any previously existing shared data from all neighbors
 void FGMatch::load_neighbor_shared( FGConstruct& c ) {
+    cout << "Loading existing shared data from neighbor tiles" << endl;
+
     sw_flag = se_flag = ne_flag = nw_flag = false;
     north_flag = south_flag = east_flag = west_flag = false;
 
-    string base = c.get_work_base();
-    FGBucket b = c.get_bucket();
+    load_shared( c, SW_Corner );
+    load_shared( c, SE_Corner );
+    load_shared( c, NE_Corner );
+    load_shared( c, NW_Corner );
 
-    string dir = base + ".shared/Scenery/" + b.gen_base_path();
-    string command = "mkdir -p " + dir;
-    string file = dir + "/" + b.gen_index_str();
-    cout << "shared data will be written to " << file << endl;
-
-    system(command.c_str());
-    fg_gzifstream in( file );
-    if ( !in ) {
-        cout << "Cannot open file: " << file << endl;
-    }
-
-    while ( in ) { }
-
-    check_corner( SW_Corner, b );
+    load_shared( c, NORTH );
+    load_shared( c, SOUTH );
+    load_shared( c, EAST );
+    load_shared( c, WEST );
 }
 
 
-// extract the shared edge points, normals, and segments.  This must
-// be done after calling load_neighbor_data() and will ignore any
-// shared data from the current tile that already exists from a
-// neighbor.
-void FGMatch::extract_shared( FGConstruct& c ) {
+// split up the tile between the shared edge points, normals, and
+// segments and the body.  This must be done after calling
+// load_neighbor_data() and will ignore any shared data from the
+// current tile that already exists from a neighbor.
+void FGMatch::split_tile( FGConstruct& c ) {
 
     cout << "Extracting (shared) edge nodes and normals" << endl;
 
@@ -107,20 +221,28 @@ void FGMatch::extract_shared( FGConstruct& c ) {
 
 	if ( (fabs(node.y() - min.y) < FG_EPSILON) && 
 	     (fabs(node.x() - min.x) < FG_EPSILON) ) {
-	    sw_node = node;
-	    sw_normal = normal;
+	    if ( ! sw_flag ) {
+		sw_node = node;
+		sw_normal = normal;
+	    }
 	} else if ( (fabs(node.y() - min.y) < FG_EPSILON) &&
 		    (fabs(node.x() - max.x) < FG_EPSILON) ) {
-	    se_node = node;
-	    se_normal = normal;
+	    if ( ! se_flag ) {
+		se_node = node;
+		se_normal = normal;
+	    }
 	} else if ( (fabs(node.y() - max.y) < FG_EPSILON) &&
 		    (fabs(node.x() - max.x) < FG_EPSILON)) {
-	    ne_node = node;
-	    ne_normal = normal;
+	    if ( ! ne_flag ) {
+		ne_node = node;
+		ne_normal = normal;
+	    }
 	} else if ( (fabs(node.y() - max.y) < FG_EPSILON) &&
 		    (fabs(node.x() - min.x) < FG_EPSILON) ) {
-	    nw_node = node;
-	    nw_normal = normal;
+	    if ( ! nw_flag ) {
+		nw_node = node;
+		nw_normal = normal;
+	    }
 	} else if ( fabs(node.x() - min.x) < FG_EPSILON ) {
 	    west_nodes.push_back( node );
 	    west_normals.push_back( normal );
