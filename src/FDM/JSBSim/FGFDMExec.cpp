@@ -521,7 +521,7 @@ bool FGFDMExec::ReadPrologue(FGConfigFile* AC_cfg)
          << "This aircraft model may not even properly load, and probably"
          << " will not fly as expected." << endl << endl
          << fgred << highint << "Use this model for development purposes ONLY!!!"
-         << normint << endl << endl;
+         << normint << reset << endl << endl;
   } else if (Release == "BETA") {
     system("banner BETA");
     cout << endl << endl
