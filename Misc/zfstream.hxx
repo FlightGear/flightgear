@@ -67,7 +67,7 @@ FG_USING_STD(streamoff);
 #if defined(__GNUC__) && __GNUC_MINOR__ < 8
 #  define ios_binary   ios::bin
 #elif defined( FG_HAVE_NATIVE_SGI_COMPILERS )
-#  define ios_binary   1
+#  define ios_binary   0
 #else
 #  define ios_binary   ios::binary
 #endif
@@ -154,6 +154,9 @@ struct gzifstream_base
 #endif // _zfstream_hxx
 
 // $Log$
+// Revision 1.9  1999/03/08 22:00:12  curt
+// Tweak for native SGI compilers.
+//
 // Revision 1.8  1999/02/26 22:08:10  curt
 // Added initial support for native SGI compilers.
 //
