@@ -55,7 +55,7 @@ char    *nextchar   =   NULL;       /* Pointer to next character        */
 #define IS_NOT_SWITCH_CHAR(c)   (c != '-')
 #endif
 
-int getopt(int argc,char **argv,char *format,char **argument)
+int fg_getopt(int argc,char **argv,char *format,char **argument)
 /****************************************************************************
 *
 * Function:     getopt
@@ -293,7 +293,7 @@ int getargs( int argc,char
     cmdstr[opt] = '\0';
 
     while (true) {
-        opt = getopt(argc,argv,cmdstr,&argument);
+        opt = fg_getopt(argc,argv,cmdstr,&argument);
         switch (opt) {
             case 'H':
             case 'h':
@@ -359,7 +359,11 @@ void print_desc(int num_opt,Option **optarr)
 
 
 /* $Log$
-/* Revision 1.1  1998/02/13 00:23:40  curt
-/* Initial revision.
+/* Revision 1.2  1998/03/16 21:13:07  curt
+/* Patch to fix Solaris function name contention with "getopt()" -
+/* johns@ultra2.cs.umr.edu (John Stone)
 /*
+ * Revision 1.1  1998/02/13 00:23:40  curt
+ * Initial revision.
+ *
  */                   
