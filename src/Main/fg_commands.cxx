@@ -14,6 +14,16 @@
 
 
 /**
+ * Built-in command: do nothing.
+ */
+static bool
+do_null (const SGPropertyNode * arg)
+{
+  return true;
+}
+
+
+/**
  * Built-in command: exit FlightGear.
  *
  * TODO: show a confirm dialog.
@@ -59,7 +69,7 @@ do_screen_capture (const SGPropertyNode * arg)
 static bool
 do_property_toggle (const SGPropertyNode * arg)
 {
-  string propname = arg->getStringValue("property", "");
+  const string & propname = arg->getStringValue("property", "");
   if (propname == "")
     return false;
 
@@ -77,7 +87,7 @@ do_property_toggle (const SGPropertyNode * arg)
 static bool
 do_property_assign (const SGPropertyNode * arg)
 {
-  string propname = arg->getStringValue("property", "");
+  const string & propname = arg->getStringValue("property", "");
   if (propname == "")
     return false;
 
@@ -111,7 +121,7 @@ do_property_assign (const SGPropertyNode * arg)
 static bool
 do_property_adjust (const SGPropertyNode * arg)
 {
-  string propname = arg->getStringValue("property", "");
+  const string & propname = arg->getStringValue("property", "");
   if (propname == "")
     return false;
 
@@ -150,16 +160,35 @@ do_property_adjust (const SGPropertyNode * arg)
 static bool
 do_property_swap (const SGPropertyNode * arg)
 {
-  string propname1 = arg->getStringValue("property[0]", "");
-  string propname2 = arg->getStringValue("property[1]", "");
+  const string &propname1 = arg->getStringValue("property[0]", "");
+  const string &propname2 = arg->getStringValue("property[1]", "");
   if (propname1 == "" || propname2 == "")
     return false;
 
   SGPropertyNode * node1 = fgGetNode(propname1, true);
   SGPropertyNode * node2 = fgGetNode(propname2, true);
-  string tmp = node1->getStringValue();
+  const string & tmp = node1->getStringValue();
   return (node1->setUnknownValue(node2->getStringValue()) &&
 	  node2->setUnknownValue(tmp));
+}
+
+
+/**
+ * Set a property to an axis or other moving input.
+ *
+ * property: the name of the property to set.
+ * setting: the current input setting, usually between -1.0 and 1.0.
+ * offset: the offset to shift by, before applying the factor.
+ * factor: the factor to multiply by (use negative to reverse).
+ */
+static bool
+do_property_scale (const SGPropertyNode * arg)
+{
+  const string &propname = arg->getStringValue("property");
+  double setting = arg->getDoubleValue("setting", 0.0);
+  double offset = arg->getDoubleValue("offset", 0.0);
+  double factor = arg->getDoubleValue("factor", 1.0);
+  return fgSetDouble(propname, (setting + offset) * factor);
 }
 
 
@@ -174,6 +203,7 @@ static struct {
   const char * name;
   SGCommandMgr::command_t command;
 } built_ins [] = {
+  "null", do_null,
   "exit", do_exit,
   "view-cycle", do_view_cycle,
   "screen-capture", do_screen_capture,
@@ -181,6 +211,7 @@ static struct {
   "property-assign", do_property_assign,
   "property-adjust", do_property_adjust,
   "property-swap", do_property_swap,
+  "property-scale", do_property_scale,
   0, 0				// zero-terminated
 };
 
