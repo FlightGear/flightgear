@@ -49,7 +49,7 @@
 
 /* For best results ... i.e. to avoid tile load problems and blank areas
  *
- * FG_TILE_CACHE_SIZE >= (o->tile_radius + 1) ** 2 */
+ * FG_TILE_CACHE_SIZE >= (o->tile_diameter + 1) ** 2 */
 #define FG_TILE_CACHE_SIZE 121
 
 
@@ -81,17 +81,23 @@ void fgTileCacheEntryFillIn( int index, struct fgBUCKET *p );
 
 /* Return info for a tile cache entry */
 void fgTileCacheEntryInfo( int index, GLint *display_list, 
-			   fgCartesianPoint3d *local_ref );
+			   fgCartesianPoint3d *local_ref,
+			   double *radius );
 
 
 #endif /* _TILECACHE_HXX */
 
 
 /* $Log$
-/* Revision 1.6  1998/05/07 23:15:20  curt
-/* Fixed a glTexImage2D() usage bug where width and height were mis-swapped.
-/* Added support for --tile-radius=n option.
+/* Revision 1.7  1998/05/16 13:09:57  curt
+/* Beginning to add support for view frustum culling.
+/* Added some temporary code to calculate bouding radius, until the
+/*   scenery generation tools and scenery can be updated.
 /*
+ * Revision 1.6  1998/05/07 23:15:20  curt
+ * Fixed a glTexImage2D() usage bug where width and height were mis-swapped.
+ * Added support for --tile-radius=n option.
+ *
  * Revision 1.5  1998/05/02 01:52:17  curt
  * Playing around with texture coordinates.
  *

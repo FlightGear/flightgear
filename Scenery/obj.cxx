@@ -56,7 +56,8 @@ static double normals[MAXNODES][3];
 
 
 /* given three points defining a triangle, calculate the normal */
-void calc_normal(double p1[3], double p2[3], double p3[3], double normal[3])
+static void calc_normal(double p1[3], double p2[3], 
+			double p3[3], double normal[3])
 {
     double v1[3], v2[3];
     double temp;
@@ -93,12 +94,19 @@ fgPolarPoint3d calc_tex_coords(double *node, fgCartesianPoint3d *ref) {
 }
 
 
+// Calculate distance between (0,0,0) and the specified point
+static double calc_dist(double *p) {
+    return ( sqrt(p[0]*p[0] + p[1]*p[1] + p[2]*p[2]) );
+}
+
+
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
     fgOPTIONS *o;
+    fgCartesianPoint3d cp;
     fgPolarPoint3d pp;
     char fgpath[256], line[256], winding_str[256];
-    double approx_normal[3], normal[3], scale;
+    double approx_normal[3], normal[3], scale, dist;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     GLint tile;
@@ -146,6 +154,7 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
     first = 1;
     ncount = 1;
     vncount = 1;
+    *radius = 0.0;
 
     while ( fggets(f, line, 250) != NULL ) {
 	if ( line[0] == '#' ) {
@@ -163,27 +172,14 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 		       &nodes[ncount][0], &nodes[ncount][1], 
 		       &nodes[ncount][2]);
 
-		/* first time through set min's and max'es */
-		/*
-		if ( ncount == 1 ) {
-		    xmin = x;
-		    xmax = x;
-		    ymin = y;
-		    ymax = y;
-		    zmin = z;
-		    zmax = z;
+		// temporary code to calculate bounding radius
+		dist = calc_dist(nodes[ncount]);
+		// printf("node = %.2f %.2f %.2f dist = %.2f\n", 
+		//        nodes[ncount][0], nodes[ncount][1], nodes[ncount][2],
+		//        dist);
+		if ( (dist > *radius) && (dist < 100000.0) ) {
+		    *radius = dist;
 		}
-		*/
-    
-		/* keep track of min/max vertex values */
-		/*
-		if ( x < xmin ) xmin = x;
-		if ( x > xmax ) xmax = x;
-		if ( y < ymin ) ymin = y;
-		if ( y > ymax ) ymax = y;
-		if ( z < zmin ) zmin = z;
-		if ( z > zmax ) zmax = z;		
-		*/
 
 		ncount++;
 	    } else {
@@ -448,9 +444,14 @@ GLint fgObjLoad(char *path, fgCartesianPoint3d *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.3  1998/05/03 00:48:01  curt
-/* Updated texture coordinate fmod() parameter.
+/* Revision 1.4  1998/05/16 13:09:57  curt
+/* Beginning to add support for view frustum culling.
+/* Added some temporary code to calculate bouding radius, until the
+/*   scenery generation tools and scenery can be updated.
 /*
+ * Revision 1.3  1998/05/03 00:48:01  curt
+ * Updated texture coordinate fmod() parameter.
+ *
  * Revision 1.2  1998/05/02 01:52:14  curt
  * Playing around with texture coordinates.
  *

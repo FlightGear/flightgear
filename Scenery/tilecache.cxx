@@ -131,13 +131,16 @@ void fgTileCacheEntryFree( int index ) {
 
 /* Return info for a tile cache entry */
 void fgTileCacheEntryInfo( int index, GLint *display_list, 
-			   fgCartesianPoint3d *local_ref ) {
+			   fgCartesianPoint3d *local_ref,
+			   double *radius ) {
     *display_list = tile_cache[index].display_list;
     /* fgPrintf(FG_TERRAIN, FG_DEBUG, "Display list = %d\n", *display_list); */
 
     local_ref->x = tile_cache[index].local_ref.x;
     local_ref->y = tile_cache[index].local_ref.y;
     local_ref->z = tile_cache[index].local_ref.z;
+
+    *radius = tile_cache[index].bounding_radius;
 }
 
 
@@ -199,9 +202,14 @@ int fgTileCacheNextAvail( void ) {
 
 
 /* $Log$
-/* Revision 1.7  1998/05/13 18:26:41  curt
-/* Root path info moved to fgOPTIONS.
+/* Revision 1.8  1998/05/16 13:09:57  curt
+/* Beginning to add support for view frustum culling.
+/* Added some temporary code to calculate bouding radius, until the
+/*   scenery generation tools and scenery can be updated.
 /*
+ * Revision 1.7  1998/05/13 18:26:41  curt
+ * Root path info moved to fgOPTIONS.
+ *
  * Revision 1.6  1998/05/02 01:52:17  curt
  * Playing around with texture coordinates.
  *

@@ -45,9 +45,11 @@
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
 #include <Main/options.hxx>
+#include <Main/views.hxx>
+#include <Math/mat3.h>
 
 
-#define FG_LOCAL_X_Y         81  /* max(o->tile_radius) ** 2 */
+#define FG_LOCAL_X_Y         81  /* max(o->tile_diameter) ** 2 */
 
 
 /* closest (potentially viewable) tiles, centered on current tile.
@@ -90,8 +92,8 @@ int fgTileMgrUpdate( void ) {
     o = &current_options;
 
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p1);
-    dw = o->tile_radius / 2;
-    dh = o->tile_radius / 2;
+    dw = o->tile_diameter / 2;
+    dh = o->tile_diameter / 2;
 
     if ( (p1.lon == p_last.lon) && (p1.lat == p_last.lat) &&
 	 (p1.x == p_last.x) && (p1.y == p_last.y) ) {
@@ -105,16 +107,16 @@ int fgTileMgrUpdate( void ) {
 	fgPrintf( FG_TERRAIN, FG_INFO, "  Updating Tile list for %d,%d %d,%d\n",
 		  p1.lon, p1.lat, p1.x, p1.y);
 	fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		  o->tile_radius * o->tile_radius);
+		  o->tile_diameter * o->tile_diameter);
 
 	/* wipe tile cache */
 	fgTileCacheInit();
 
 	/* build the local area list and update cache */
-	for ( j = 0; j < o->tile_radius; j++ ) {
-	    for ( i = 0; i < o->tile_radius; i++ ) {
+	for ( j = 0; j < o->tile_diameter; j++ ) {
+	    for ( i = 0; i < o->tile_diameter; i++ ) {
 		fgBucketOffset(&p1, &p2, i - dw, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_radius) + i]);
+		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_diameter) + i]);
 	    }
 	}
     } else {
@@ -131,54 +133,54 @@ int fgTileMgrUpdate( void ) {
 	if ( (p1.lon > p_last.lon) ||
 	     ( (p1.lon == p_last.lon) && (p1.x > p_last.x) ) ) {
 	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		      o->tile_radius);
-	    for ( j = 0; j < o->tile_radius; j++ ) {
+		      o->tile_diameter);
+	    for ( j = 0; j < o->tile_diameter; j++ ) {
 		/* scrolling East */
-		for ( i = 0; i < o->tile_radius - 1; i++ ) {
-		    tiles[(j*o->tile_radius) + i] = tiles[(j*o->tile_radius) + i + 1];
+		for ( i = 0; i < o->tile_diameter - 1; i++ ) {
+		    tiles[(j*o->tile_diameter) + i] = tiles[(j*o->tile_diameter) + i + 1];
 		}
 		/* load in new column */
 		fgBucketOffset(&p_last, &p2, dw + 1, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_radius) + o->tile_radius - 1]);
+		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_diameter) + o->tile_diameter - 1]);
 	    }
 	} else if ( (p1.lon < p_last.lon) ||
 		    ( (p1.lon == p_last.lon) && (p1.x < p_last.x) ) ) {
 	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		      o->tile_radius);
-	    for ( j = 0; j < o->tile_radius; j++ ) {
+		      o->tile_diameter);
+	    for ( j = 0; j < o->tile_diameter; j++ ) {
 		/* scrolling West */
-		for ( i = o->tile_radius - 1; i > 0; i-- ) {
-		    tiles[(j*o->tile_radius) + i] = tiles[(j*o->tile_radius) + i - 1];
+		for ( i = o->tile_diameter - 1; i > 0; i-- ) {
+		    tiles[(j*o->tile_diameter) + i] = tiles[(j*o->tile_diameter) + i - 1];
 		}
 		/* load in new column */
 		fgBucketOffset(&p_last, &p2, -dw - 1, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_radius) + 0]);
+		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_diameter) + 0]);
 	    }
 	}
 
 	if ( (p1.lat > p_last.lat) ||
 	     ( (p1.lat == p_last.lat) && (p1.y > p_last.y) ) ) {
 	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		      o->tile_radius);
-	    for ( i = 0; i < o->tile_radius; i++ ) {
+		      o->tile_diameter);
+	    for ( i = 0; i < o->tile_diameter; i++ ) {
 		/* scrolling North */
-		for ( j = 0; j < o->tile_radius - 1; j++ ) {
-		    tiles[(j * o->tile_radius) + i] =
-			tiles[((j+1) * o->tile_radius) + i];
+		for ( j = 0; j < o->tile_diameter - 1; j++ ) {
+		    tiles[(j * o->tile_diameter) + i] =
+			tiles[((j+1) * o->tile_diameter) + i];
 		}
 		/* load in new column */
 		fgBucketOffset(&p_last, &p2, i - dw, dh + 1);
-		fgTileMgrLoadTile(&p2, &tiles[((o->tile_radius-1)*o->tile_radius) + i]);
+		fgTileMgrLoadTile(&p2, &tiles[((o->tile_diameter-1)*o->tile_diameter) + i]);
 	    }
 	} else if ( (p1.lat < p_last.lat) ||
 		    ( (p1.lat == p_last.lat) && (p1.y < p_last.y) ) ) {
 	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		      o->tile_radius);
-	    for ( i = 0; i < o->tile_radius; i++ ) {
+		      o->tile_diameter);
+	    for ( i = 0; i < o->tile_diameter; i++ ) {
 		/* scrolling South */
-		for ( j = o->tile_radius - 1; j > 0; j-- ) {
-		    tiles[(j * o->tile_radius) + i] = 
-			tiles[((j-1) * o->tile_radius) + i];
+		for ( j = o->tile_diameter - 1; j > 0; j-- ) {
+		    tiles[(j * o->tile_diameter) + i] = 
+			tiles[((j-1) * o->tile_diameter) + i];
 		}
 		/* load in new column */
 		fgBucketOffset(&p_last, &p2, i - dw, -dh - 1);
@@ -194,15 +196,47 @@ int fgTileMgrUpdate( void ) {
 }
 
 
+// Calculate if point/radius is inside view frustum
+// 
+static int viewable( fgCartesianPoint3d *cp, double radius ) {
+    fgVIEW *v;
+    MAT3hvec world, eye;
+    int viewable = 1; // start by assuming it's viewable
+
+    v = &current_view;
+
+    MAT3_SET_HVEC(world, cp->x, cp->y, cp->z, 1.0);
+    MAT3mult_vec(eye, world, v->WORLD_TO_EYE);
+    // printf( "\nworld -> eye = %.2f %.2f %.2f  radius = %.2f\n", 
+    //         eye[0], eye[1], eye[2], radius);
+    
+    if ( eye[2] - radius > 0.0 ) {
+	// Check near clip plane
+	viewable = 0;
+    } else if ( eye[1] < -(v->slope_x) * (eye[0] + radius) ) {
+	// Check left edge
+	// y = m * (x - x0) = equation of a line intercepting X axis at x0
+	printf( "eye[1] = %.2f  slope_x = %.2f  radius = %.2f\n", 
+		eye[1], v->slope_x, radius);
+	viewable = 0;
+    }
+
+    return(viewable);
+}
+
+
 /* Render the local tiles */
 void fgTileMgrRender( void ) {
     fgFLIGHT *f;
     fgOPTIONS *o;
     struct fgBUCKET p;
-    fgCartesianPoint3d local_ref;
+    fgCartesianPoint3d local_ref, offset;
     GLint display_list;
+    double radius;
     int i;
     int index;
+    int culled = 0;
+    int drawn = 0;
 
     f = current_aircraft.flight;
     o = &current_options;
@@ -210,37 +244,52 @@ void fgTileMgrRender( void ) {
     /* Find current translation offset */
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
     index = fgTileCacheExists(&p);
-    fgTileCacheEntryInfo(index, &display_list, &scenery.next_center );
+    fgTileCacheEntryInfo(index, &display_list, &scenery.next_center, &radius );
 
     fgPrintf( FG_TERRAIN, FG_DEBUG, 
 	      "Pos = (%.2f, %.2f) Current bucket = %d %d %d %d  Index = %ld\n", 
 	      FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG,
 	      p.lon, p.lat, p.x, p.y, fgBucketGenIndex(&p) );
 
-    for ( i = 0; i < (o->tile_radius * o->tile_radius); i++ ) {
+    for ( i = 0; i < (o->tile_diameter * o->tile_diameter); i++ ) {
 	index = tiles[i];
 	/* fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index); */
-	fgTileCacheEntryInfo(index, &display_list, &local_ref );
+	fgTileCacheEntryInfo(index, &display_list, &local_ref, &radius );
 
 	if ( display_list >= 0 ) {
-	    xglPushMatrix();
-	    xglTranslatef(local_ref.x - scenery.center.x,
-			  local_ref.y - scenery.center.y,
-			  local_ref.z - scenery.center.z);
-	    /* xglTranslatef(-scenery.center.x, -scenery.center.y, 
-			  -scenery.center.z); */
-	    xglCallList(display_list);
-	    xglPopMatrix();
+
+	    offset.x = local_ref.x - scenery.center.x;
+	    offset.y = local_ref.y - scenery.center.y;
+	    offset.z = local_ref.z - scenery.center.z;
+
+	    if ( viewable(&offset, radius) ) {
+		drawn++;
+		xglPushMatrix();
+		xglTranslatef(offset.x, offset.y, offset.z);
+		xglCallList(display_list);
+		xglPopMatrix();
+	    } else {
+		culled++;
+	    }
 	}
     }
+
+    printf("drawn = %d  culled = %d  saved = %.2f\n", drawn, culled, 
+	   (double)culled / (double)(drawn + culled));
+
 }
 
 
 /* $Log$
-/* Revision 1.8  1998/05/07 23:15:21  curt
-/* Fixed a glTexImage2D() usage bug where width and height were mis-swapped.
-/* Added support for --tile-radius=n option.
+/* Revision 1.9  1998/05/16 13:09:58  curt
+/* Beginning to add support for view frustum culling.
+/* Added some temporary code to calculate bouding radius, until the
+/*   scenery generation tools and scenery can be updated.
 /*
+ * Revision 1.8  1998/05/07 23:15:21  curt
+ * Fixed a glTexImage2D() usage bug where width and height were mis-swapped.
+ * Added support for --tile-radius=n option.
+ *
  * Revision 1.7  1998/05/06 03:16:42  curt
  * Added an option to control square tile radius.
  *
