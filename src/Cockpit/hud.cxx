@@ -60,7 +60,7 @@
 
 #if defined ( __sun__ ) || defined ( __sgi )
 extern "C" {
-  extern void *memmove(void *, const void *, size_t);
+    extern void *memmove(void *, const void *, size_t);
 }
 #endif
 
@@ -173,7 +173,7 @@ static instr_item * readTBI( const SGPropertyNode * node);
 void fgHUDalphaInit( void );
 
 class locRECT {
-  public:
+public:
     RECT rect;
 
     locRECT( UINT left, UINT top, UINT right, UINT bottom);
@@ -182,10 +182,10 @@ class locRECT {
 
 locRECT :: locRECT( UINT left, UINT top, UINT right, UINT bottom)
 {
-  rect.left   =  left;
-  rect.top    =  top;
-  rect.right  =  right;
-  rect.bottom =  bottom;
+    rect.left   =  left;
+    rect.top    =  top;
+    rect.right  =  right;
+    rect.bottom =  bottom;
 
 }
 // #define DEBUG
@@ -193,31 +193,30 @@ locRECT :: locRECT( UINT left, UINT top, UINT right, UINT bottom)
 #ifdef OLD_CODE
 void drawOneLine( UINT x1, UINT y1, UINT x2, UINT y2)
 {
-  glBegin(GL_LINES);
-  glVertex2f(x1, y1);
-  glVertex2f(x2, y2);
-  glEnd();
+    glBegin(GL_LINES);
+    glVertex2f(x1, y1);
+    glVertex2f(x2, y2);
+    glEnd();
 }
 
 void drawOneLine( RECT &rect)
 {
-  glBegin(GL_LINES);
-  glVertex2f(rect.left, rect.top);
-  glVertex2f(rect.right, rect.bottom);
-  glEnd();
+    glBegin(GL_LINES);
+    glVertex2f(rect.left, rect.top);
+    glVertex2f(rect.right, rect.bottom);
+    glEnd();
 }
 
 //
 // The following code deals with painting the "instrument" on the display
 //
-   /* textString - Bitmap font string */
+/* textString - Bitmap font string */
 
 void textString( int x, int y, char *msg, void *font,int digit) //suma
 {
 
-    if(*msg)
-    {
-//      puDrawString (  NULL, msg, x, y );
+    if(*msg) {
+        //      puDrawString (  NULL, msg, x, y );
         glRasterPos2f(x, y);
         while (*msg) {
             glutBitmapCharacter(font, *msg);
@@ -236,27 +235,25 @@ void strokeString(int x, int y, char *msg, void *font, float theta)
     float sintheta,costheta;
     
 
-    if(*msg)
-    {
-    glPushMatrix();
-    glRotatef(theta * SGD_RADIANS_TO_DEGREES, 0.0, 0.0, 1.0);
-    sintheta = sin(theta);
-    costheta = cos(theta);
-    xx = (int)(x * costheta + y * sintheta);
-    yy = (int)(y * costheta - x * sintheta);
-    glTranslatef( xx, yy, 0);
-    glScalef(.1, .1, 0.0);
-    while( (c=*msg++) ) {
-        glutStrokeCharacter(font, c);
-    }
-    glPopMatrix();
+    if(*msg) {
+        glPushMatrix();
+        glRotatef(theta * SGD_RADIANS_TO_DEGREES, 0.0, 0.0, 1.0);
+        sintheta = sin(theta);
+        costheta = cos(theta);
+        xx = (int)(x * costheta + y * sintheta);
+        yy = (int)(y * costheta - x * sintheta);
+        glTranslatef( xx, yy, 0);
+        glScalef(.1, .1, 0.0);
+        while( (c=*msg++) ) {
+            glutStrokeCharacter(font, c);
+        }
+        glPopMatrix();
     }
 }
 
 int getStringWidth ( char *str )
 {
-    if ( HUDtext && str )
-    {
+    if ( HUDtext && str ) {
         float r, l ;
         guiFntHandle->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
         return FloatToInt( r - l );
@@ -282,48 +279,48 @@ static instr_item *
 readLadder(const SGPropertyNode * node)
 {
 
-	instr_item *p;
+    instr_item *p;
 
-				name			= node->getStringValue("name");
-				x				= node->getIntValue("x");
-				y				= node->getIntValue("y");
-				width			= node->getIntValue("width");
-				height			= node->getIntValue("height");
-				factor			= node->getFloatValue("compression_factor");
-				span_units		= node->getFloatValue("span_units");
-				division_units	= node->getFloatValue("division_units");
-				screen_hole		= node->getIntValue("screen_hole");
-				lbl_pos			= node->getIntValue("lbl_pos");
-				frl_spot		= node->getBoolValue("enable_frl",false);
-				target			= node->getBoolValue("enable_target_spot",false);
-				vel_vector		= node->getBoolValue("enable_velocity_vector",false);
-				drift			= node->getBoolValue("enable_drift_marker",false);
-				alpha			= node->getBoolValue("enable_alpha_bracket",false);
-				energy			= node->getBoolValue("enable_energy_marker",false);
-				climb_dive		= node->getBoolValue("enable_climb_dive_marker",false);
-				glide			= node->getBoolValue("enable_glide_slope_marker",false);
-				glide_slope_val	= node->getFloatValue("glide_slope",-4.0);
-				worm_energy		= node->getBoolValue("enable_energy_marker",false);
-				waypoint		= node->getBoolValue("enable_waypoint_marker",false);
-				working			= node->getBoolValue("working");
-				zenith			= node->getIntValue("zenith");  //suma
-				nadir			= node->getIntValue("nadir");  //suma
-				hat				= node->getIntValue("hat");
+    name			= node->getStringValue("name");
+    x				= node->getIntValue("x");
+    y				= node->getIntValue("y");
+    width			= node->getIntValue("width");
+    height			= node->getIntValue("height");
+    factor			= node->getFloatValue("compression_factor");
+    span_units		= node->getFloatValue("span_units");
+    division_units	= node->getFloatValue("division_units");
+    screen_hole		= node->getIntValue("screen_hole");
+    lbl_pos			= node->getIntValue("lbl_pos");
+    frl_spot		= node->getBoolValue("enable_frl",false);
+    target			= node->getBoolValue("enable_target_spot",false);
+    vel_vector		= node->getBoolValue("enable_velocity_vector",false);
+    drift			= node->getBoolValue("enable_drift_marker",false);
+    alpha			= node->getBoolValue("enable_alpha_bracket",false);
+    energy			= node->getBoolValue("enable_energy_marker",false);
+    climb_dive		= node->getBoolValue("enable_climb_dive_marker",false);
+    glide			= node->getBoolValue("enable_glide_slope_marker",false);
+    glide_slope_val	= node->getFloatValue("glide_slope",-4.0);
+    worm_energy		= node->getBoolValue("enable_energy_marker",false);
+    waypoint		= node->getBoolValue("enable_waypoint_marker",false);
+    working			= node->getBoolValue("working");
+    zenith			= node->getIntValue("zenith");  //suma
+    nadir			= node->getIntValue("nadir");  //suma
+    hat				= node->getIntValue("hat");
 
 
-				SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
+    SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 	
 				
-				p = (instr_item *) new HudLadder( name, x, y,
-                                        width, height, factor,
-										get_roll, get_pitch,
-										span_units, division_units, minor_division,
-										screen_hole, lbl_pos, frl_spot, target, vel_vector, 
-										drift, alpha, energy, climb_dive, 
-										glide, glide_slope_val, worm_energy, 
-										waypoint, working, zenith, nadir, hat);
+    p = (instr_item *) new HudLadder( name, x, y,
+                                      width, height, factor,
+                                      get_roll, get_pitch,
+                                      span_units, division_units, minor_division,
+                                      screen_hole, lbl_pos, frl_spot, target, vel_vector, 
+                                      drift, alpha, energy, climb_dive, 
+                                      glide, glide_slope_val, worm_energy, 
+                                      waypoint, working, zenith, nadir, hat);
 				
-				return p;
+    return p;
 		
 } //end readLadder
 
@@ -331,325 +328,316 @@ static instr_item *
 readCard(const SGPropertyNode * node)
 {
 
-	instr_item *p;
+    instr_item *p;
 
-				name			= node->getStringValue("name");
-				x				= node->getIntValue("x");
-				y				= node->getIntValue("y");
-				width			= node->getIntValue("width");
-				height			= node->getIntValue("height");
-				loadfn			= node->getStringValue("loadfn");
-				options			= node->getIntValue("options");
-				maxValue		= node->getFloatValue("maxValue");
-				minValue		= node->getFloatValue("minValue");
-				scaling			= node->getFloatValue("disp_scaling");
-				major_divs		= node->getIntValue("major_divs");
-				minor_divs		= node->getIntValue("minor_divs");
-				modulator		= node->getIntValue("modulator");
-				span_units		= node->getFloatValue("value_span");
-				type			= node->getStringValue("type");
-				tick_bottom	    = node->getBoolValue("tick_bottom",false);
-				tick_top		= node->getBoolValue("tick_top",false);
-				tick_right		= node->getBoolValue("tick_right",false);
-				tick_left		= node->getBoolValue("tick_left",false);
-				cap_bottom		= node->getBoolValue("cap_bottom",false);
-				cap_top			= node->getBoolValue("cap_top",false);
-				cap_right		= node->getBoolValue("cap_right",false);
-				cap_left		= node->getBoolValue("cap_left",false);
-				marker_off		= node->getFloatValue("marker_offset",0.0);
-				enable_pointer	= node->getBoolValue("enable_pointer",true);
-				type_pointer	= node->getStringValue("pointer_type");
-				type_tick		= node->getStringValue("tick_type");//hud Can be 'circle' or 'line'
-				length_tick		= node->getStringValue("tick_length");//hud For variable length
-				working			= node->getBoolValue("working");
-                radius			= node->getFloatValue("radius"); //suma
-				divisions		= node->getIntValue("divisions"); //suma
-				zoom			= node->getIntValue("zoom"); //suma
+    name			= node->getStringValue("name");
+    x				= node->getIntValue("x");
+    y				= node->getIntValue("y");
+    width			= node->getIntValue("width");
+    height			= node->getIntValue("height");
+    loadfn			= node->getStringValue("loadfn");
+    options			= node->getIntValue("options");
+    maxValue		= node->getFloatValue("maxValue");
+    minValue		= node->getFloatValue("minValue");
+    scaling			= node->getFloatValue("disp_scaling");
+    major_divs		= node->getIntValue("major_divs");
+    minor_divs		= node->getIntValue("minor_divs");
+    modulator		= node->getIntValue("modulator");
+    span_units		= node->getFloatValue("value_span");
+    type			= node->getStringValue("type");
+    tick_bottom	    = node->getBoolValue("tick_bottom",false);
+    tick_top		= node->getBoolValue("tick_top",false);
+    tick_right		= node->getBoolValue("tick_right",false);
+    tick_left		= node->getBoolValue("tick_left",false);
+    cap_bottom		= node->getBoolValue("cap_bottom",false);
+    cap_top			= node->getBoolValue("cap_top",false);
+    cap_right		= node->getBoolValue("cap_right",false);
+    cap_left		= node->getBoolValue("cap_left",false);
+    marker_off		= node->getFloatValue("marker_offset",0.0);
+    enable_pointer	= node->getBoolValue("enable_pointer",true);
+    type_pointer	= node->getStringValue("pointer_type");
+    type_tick		= node->getStringValue("tick_type");//hud Can be 'circle' or 'line'
+    length_tick		= node->getStringValue("tick_length");//hud For variable length
+    working			= node->getBoolValue("working");
+    radius			= node->getFloatValue("radius"); //suma
+    divisions		= node->getIntValue("divisions"); //suma
+    zoom			= node->getIntValue("zoom"); //suma
 
-				SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
-
-
-				if(type=="gauge")
-					span_units = maxValue - minValue;
-
-				if(loadfn=="anzg")
-					load_fn = get_anzg;
-				else				
-				if(loadfn=="heading")
-					load_fn = get_heading;
-				else
-				if(loadfn=="aoa")
-					load_fn = get_aoa;
-				else
-				if(loadfn=="climb")
-					load_fn = get_climb_rate;
-				else
-				if(loadfn=="altitude")
-					load_fn = get_altitude;
-				else
-				if(loadfn=="agl")
-					load_fn = get_agl;
-				else
-				if(loadfn=="speed")
-					load_fn = get_speed;
-				else
-				if(loadfn=="view_direction")
-					load_fn = get_view_direction;
-				else
-				if(loadfn=="aileronval")
-					load_fn = get_aileronval;
-				else
-				if(loadfn=="elevatorval")
-					load_fn = get_elevatorval;
-				else
-				if(loadfn=="rudderval")
-					load_fn = get_rudderval;
-				else
-				if(loadfn=="throttleval")
-					load_fn = get_throttleval;
+    SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 
 
-				if ( (type == "dial") | (type == "tape") ) {
-				p = (instr_item *) new hud_card(	x,
-														y,  
-														width,
-														height,
-					                                    load_fn,
-														options,
-														maxValue, minValue,
-														scaling,
-														major_divs, minor_divs,
-														modulator,
-														dp_showing,
-														span_units,
-														type,
-														tick_bottom,
-														tick_top,
-														tick_right,
-														tick_left,
-														cap_bottom,
-														cap_top,
-														cap_right,
-														cap_left,
-														marker_off,
-														enable_pointer,
-														type_pointer,
-														type_tick,//hud
-														length_tick,//hud
-														working,
-														radius, //suma
-														divisions, //suma
-														zoom  //suma
-														);
-				} else {
-				p = (instr_item *) new  gauge_instr( x,            // x
-                                           y,  // y
-                                           width,            // width
-                                           height,            // height
-                                           load_fn, // data source
-                                           options,
-                                           scaling,
-                                           maxValue,minValue,
-                                           major_divs, minor_divs,
-										   dp_showing,
-										   modulator,
-										   working);
-				}
+    if(type=="gauge") {
+        span_units = maxValue - minValue;
+    }
 
-  return p;
+    if (loadfn=="anzg") {
+        load_fn = get_anzg;
+    } else if (loadfn=="heading") {
+        load_fn = get_heading;
+    } else if (loadfn=="aoa") {
+        load_fn = get_aoa;
+    } else if (loadfn=="climb") {
+        load_fn = get_climb_rate;
+    } else if (loadfn=="altitude") {
+        load_fn = get_altitude;
+    } else if (loadfn=="agl") {
+        load_fn = get_agl;
+    } else if (loadfn=="speed") {
+        load_fn = get_speed;
+    } else if (loadfn=="view_direction") {
+        load_fn = get_view_direction;
+    } else if (loadfn=="aileronval") {
+        load_fn = get_aileronval;
+    } else if (loadfn=="elevatorval") {
+        load_fn = get_elevatorval;
+    } else if (loadfn=="rudderval") {
+        load_fn = get_rudderval;
+    } else if (loadfn=="throttleval") {
+        load_fn = get_throttleval;
+    }
+
+
+    if ( (type == "dial") | (type == "tape") ) {
+        p = (instr_item *) new hud_card( x,
+                                         y,  
+                                         width,
+                                         height,
+                                         load_fn,
+                                         options,
+                                         maxValue, minValue,
+                                         scaling,
+                                         major_divs, minor_divs,
+                                         modulator,
+                                         dp_showing,
+                                         span_units,
+                                         type,
+                                         tick_bottom,
+                                         tick_top,
+                                         tick_right,
+                                         tick_left,
+                                         cap_bottom,
+                                         cap_top,
+                                         cap_right,
+                                         cap_left,
+                                         marker_off,
+                                         enable_pointer,
+                                         type_pointer,
+                                         type_tick,//hud
+                                         length_tick,//hud
+                                         working,
+                                         radius, //suma
+                                         divisions, //suma
+                                         zoom  //suma
+                                         );
+    } else {
+        p = (instr_item *) new  gauge_instr( x,            // x
+                                             y,  // y
+                                             width,            // width
+                                             height,            // height
+                                             load_fn, // data source
+                                             options,
+                                             scaling,
+                                             maxValue,minValue,
+                                             major_divs, minor_divs,
+                                             dp_showing,
+                                             modulator,
+                                             working);
+    }
+
+    return p;
 }// end readCard
 
 static instr_item *
 readLabel(const SGPropertyNode * node)
 {
-	instr_item *p;
+    instr_item *p;
 
-	int font_size = (fgGetInt("/sim/startup/xsize") > 1000) ? LARGE : SMALL;
+    int font_size = (fgGetInt("/sim/startup/xsize") > 1000) ? LARGE : SMALL;
 
-        name				= node->getStringValue("name");
-        x                   = node->getIntValue("x");
-        y                   = node->getIntValue("y");
-        width               = node->getIntValue("width");
-        height				= node->getIntValue("height");
-        loadfn				= node->getStringValue("data_source");
-        label_format		= node->getStringValue("label_format");
-        prelabel			= node->getStringValue("pre_label_string");
-        postlabel			= node->getStringValue("post_label_string");
-        scaling				= node->getFloatValue("scale_data");
-        options				= node->getIntValue("options");
-        justi				= node->getIntValue("justification");
-        blinking            = node->getIntValue("blinking");
-        latitude			= node->getBoolValue("latitude",false);
-        longitude			= node->getBoolValue("longitude",false);
-		label_box			= node->getBoolValue("label_box",false);//hud
-        working             = node->getBoolValue("working");
-		digits				= node->getIntValue("digits"); //suma
-
-
-        SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
+    name		= node->getStringValue("name");
+    x                   = node->getIntValue("x");
+    y                   = node->getIntValue("y");
+    width               = node->getIntValue("width");
+    height		= node->getIntValue("height");
+    loadfn		= node->getStringValue("data_source");
+    label_format	= node->getStringValue("label_format");
+    prelabel		= node->getStringValue("pre_label_string");
+    postlabel		= node->getStringValue("post_label_string");
+    scaling		= node->getFloatValue("scale_data");
+    options		= node->getIntValue("options");
+    justi		= node->getIntValue("justification");
+    blinking            = node->getIntValue("blinking");
+    latitude		= node->getBoolValue("latitude",false);
+    longitude		= node->getBoolValue("longitude",false);
+    label_box		= node->getBoolValue("label_box",false);//hud
+    working             = node->getBoolValue("working");
+    digits		= node->getIntValue("digits"); //suma
 
 
-        if ( justi == 0 ) {
-            justification = LEFT_JUST;
+    SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
+
+
+    if ( justi == 0 ) {
+        justification = LEFT_JUST;
+    } else {
+        if ( justi == 1 ) {
+            justification = CENTER_JUST;
         } else {
-            if ( justi == 1 ) {
-                justification = CENTER_JUST;
-            } else {
-                if ( justi == 2 ) {
-                    justification = RIGHT_JUST;
-                }
+            if ( justi == 2 ) {
+                justification = RIGHT_JUST;
             }
         }
+    }
 
-        if ( prelabel == "NULL" ) {
-            pre_label_string = NULL;
+    if ( prelabel == "NULL" ) {
+        pre_label_string = NULL;
+    } else {
+        if ( prelabel == "blank" ) {
+            pre_label_string = " ";
         } else {
-            if ( prelabel == "blank" ) {
-                pre_label_string = " ";
+            pre_label_string = prelabel.c_str();
+        }
+    }
+
+    if ( postlabel == "blank" ) {
+        post_label_string = " ";
+    } else {
+        if ( postlabel == "NULL" ) {
+            post_label_string = NULL;
+        } else {
+            if ( postlabel == "units" ) {
+                post_label_string = units;
             } else {
-                pre_label_string = prelabel.c_str();
+                post_label_string = postlabel.c_str();
             }
         }
+    }
 
-        if ( postlabel == "blank" ) {
-            post_label_string = " ";
-        } else {
-            if ( postlabel == "NULL" ) {
-                post_label_string = NULL;
-            } else {
-                if ( postlabel == "units" ) {
-                    post_label_string = units;
-                } else {
-                    post_label_string = postlabel.c_str();
-                }
-            }
-        }
+    if ( loadfn== "aux1" ) {
+        load_fn = get_aux1;
+    } else if ( loadfn == "aux2" ) {
+        load_fn = get_aux2;
+    } else if ( loadfn == "aux3" ) {
+        load_fn = get_aux3;
+    } else if ( loadfn == "aux4" ) {
+        load_fn = get_aux4;
+    } else if ( loadfn == "aux5" ) {
+        load_fn = get_aux5;
+    } else if ( loadfn == "aux6" ) {
+        load_fn = get_aux6;
+    } else if ( loadfn == "aux7" ) {
+        load_fn = get_aux7;
+    } else if ( loadfn == "aux8" ) {
+        load_fn = get_aux8;
+    } else if ( loadfn == "aux9" ) {
+        load_fn = get_aux9;
+    } else if ( loadfn == "aux10" ) {
+        load_fn = get_aux10;
+    } else if ( loadfn == "aux11" ) {
+        load_fn = get_aux11;
+    } else if ( loadfn == "aux12" ) {
+        load_fn = get_aux12;
+    } else if ( loadfn == "aux13" ) {
+        load_fn = get_aux13;
+    } else if ( loadfn == "aux14" ) {
+        load_fn = get_aux14;
+    } else if ( loadfn == "aux15" ) {
+        load_fn = get_aux15;
+    } else if ( loadfn == "aux16" ) {
+        load_fn = get_aux16;
+    } else if ( loadfn == "aux17" ) {
+        load_fn = get_aux17;
+    } else if ( loadfn == "aux18" ) {
+        load_fn = get_aux18;
+    } else if ( loadfn == "ax" ) {
+        load_fn = get_Ax;
+    } else if ( loadfn == "speed" ) {
+        load_fn = get_speed;
+    } else if ( loadfn == "mach" ) {
+        load_fn = get_mach;
+    } else if ( loadfn == "altitude" ) {
+        load_fn = get_altitude;
+    } else if ( loadfn == "agl" ) {
+        load_fn = get_agl;
+    } else if ( loadfn == "framerate" ) {
+        load_fn = get_frame_rate;
+    } else if ( loadfn == "heading" ) {
+        load_fn = get_heading;
+    } else if ( loadfn == "fov" ) {
+        load_fn = get_fov;
+    } else if ( loadfn == "vfc_tris_culled" ) {
+        load_fn = get_vfc_tris_culled;
+    } else if ( loadfn == "vfc_tris_drawn" ) {
+        load_fn = get_vfc_tris_drawn;
+    } else if ( loadfn == "aoa" ) {
+        load_fn = get_aoa;
+    } else if ( loadfn == "latitude" ) {
+        load_fn  = get_latitude;
+    } else if ( loadfn == "anzg" ) {
+        load_fn = get_anzg;
+    } else if ( loadfn == "longitude" ) {
+        load_fn   = get_longitude;
+    } else if (loadfn=="throttleval") {
+        load_fn = get_throttleval;
+    }
 
-		if ( loadfn== "aux1" ) {
-			 load_fn = get_aux1;
-        } else if ( loadfn == "aux2" ) {
-            load_fn = get_aux2;
-        } else if ( loadfn == "aux3" ) {
-            load_fn = get_aux3;
-        } else if ( loadfn == "aux4" ) {
-            load_fn = get_aux4;
-        } else if ( loadfn == "aux5" ) {
-            load_fn = get_aux5;
-        } else if ( loadfn == "aux6" ) {
-            load_fn = get_aux6;
-        } else if ( loadfn == "aux7" ) {
-            load_fn = get_aux7;
-        } else if ( loadfn == "aux8" ) {
-            load_fn = get_aux8;
-        } else if ( loadfn == "aux9" ) {
-            load_fn = get_aux9;
-        } else if ( loadfn == "aux10" ) {
-            load_fn = get_aux10;
-        } else if ( loadfn == "aux11" ) {
-            load_fn = get_aux11;
-        } else if ( loadfn == "aux12" ) {
-            load_fn = get_aux12;
-        } else if ( loadfn == "aux13" ) {
-            load_fn = get_aux13;
-        } else if ( loadfn == "aux14" ) {
-            load_fn = get_aux14;
-        } else if ( loadfn == "aux15" ) {
-            load_fn = get_aux15;
-		} else if ( loadfn == "aux16" ) {
-            load_fn = get_aux16;
-        } else if ( loadfn == "aux17" ) {
-            load_fn = get_aux17;
-        } else if ( loadfn == "aux18" ) {
-            load_fn = get_aux18;
-        } else if ( loadfn == "ax" ) {
-            load_fn = get_Ax;
-        } else if ( loadfn == "speed" ) {
-            load_fn = get_speed;
-        } else if ( loadfn == "mach" ) {
-            load_fn = get_mach;
-        } else if ( loadfn == "altitude" ) {
-            load_fn = get_altitude;
-        } else if ( loadfn == "agl" ) {
-            load_fn = get_agl;
-        } else if ( loadfn == "framerate" ) {
-            load_fn = get_frame_rate;
-        } else if ( loadfn == "heading" ) {
-            load_fn = get_heading;
-        } else if ( loadfn == "fov" ) {
-            load_fn = get_fov;
-        } else if ( loadfn == "vfc_tris_culled" ) {
-            load_fn = get_vfc_tris_culled;
-        } else if ( loadfn == "vfc_tris_drawn" ) {
-            load_fn = get_vfc_tris_drawn;
-        } else if ( loadfn == "aoa" ) {
-            load_fn = get_aoa;
-        } else if ( loadfn == "latitude" ) {
-            load_fn  = get_latitude;
-		} else if ( loadfn == "anzg" ) {
-			load_fn = get_anzg;
-        } else if ( loadfn == "longitude" ) {
-            load_fn   = get_longitude;
-        } else if (loadfn=="throttleval") {
-			load_fn = get_throttleval;
-		}
+    p = (instr_item *) new instr_label ( x,
+                                         y,
+                                         width,
+                                         height,
+                                         load_fn,
+                                         label_format.c_str(),
+                                         pre_label_string,
+                                         post_label_string,
+                                         scaling,
+                                         options,
+                                         justification,
+                                         font_size,
+                                         blinking,
+                                         latitude,
+                                         longitude,
+                                         label_box, //hud
+                                         working,
+                                         digits); //suma
 
-        p = (instr_item *) new instr_label ( x,
-                                             y,
-                                             width,
-                                             height,
-                                             load_fn,
-                                             label_format.c_str(),
-                                             pre_label_string,
-                                             post_label_string,
-                                             scaling,
-                                             options,
-                                             justification,
-                                             font_size,
-                                             blinking,
-                                             latitude,
-                                             longitude,
-											 label_box, //hud
-                                             working,
-											 digits); //suma
-
-        return p;
+    return p;
 } // end readLabel
 
 static instr_item * 
 readTBI(const SGPropertyNode * node)
 {
 
-	instr_item *p;
+    instr_item *p;
 
-        name           = node->getStringValue("name");
-        x              = node->getIntValue("x");
-        y              = node->getIntValue("y");
-        width          = node->getIntValue("width");
-        height         = node->getIntValue("height");
-        maxBankAngle   = node->getFloatValue("maxBankAngle");
-        maxSlipAngle   = node->getFloatValue("maxSlipAngle");
-        gap_width      = node->getIntValue("gap_width");
-        working        = node->getBoolValue("working");
-		tsi			   = node->getBoolValue("tsi"); //suma
-		rad			   = node->getFloatValue("rad"); //suma
+    name           = node->getStringValue("name");
+    x              = node->getIntValue("x");
+    y              = node->getIntValue("y");
+    width          = node->getIntValue("width");
+    height         = node->getIntValue("height");
+    maxBankAngle   = node->getFloatValue("maxBankAngle");
+    maxSlipAngle   = node->getFloatValue("maxSlipAngle");
+    gap_width      = node->getIntValue("gap_width");
+    working        = node->getBoolValue("working");
+    tsi			   = node->getBoolValue("tsi"); //suma
+    rad			   = node->getFloatValue("rad"); //suma
 
-        SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
+    SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
 
 
-        p = (instr_item *) new fgTBI_instr(	x,
-                                                y,  
-                                                width,
-                                                height,
-                                                get_roll,
-                                                get_sideslip,
-                                                maxBankAngle, 
-                                                maxSlipAngle,
-                                                gap_width,
-                                                working,
-												tsi, //suma
-												rad); //suma
+    p = (instr_item *) new fgTBI_instr(	x,
+                                        y,  
+                                        width,
+                                        height,
+                                        get_roll,
+                                        get_sideslip,
+                                        maxBankAngle, 
+                                        maxSlipAngle,
+                                        gap_width,
+                                        working,
+                                        tsi, //suma
+                                        rad); //suma
 
-        return p;
+    return p;
 } //end readTBI
 
 
@@ -718,10 +706,10 @@ int readHud( istream &input )
     SGPropertyNode root;
 
     try {
-      readProperties(input, &root);
+        readProperties(input, &root);
     } catch (const sg_exception &e) {
-      guiErrorMessage("Error reading HUD: ", e);
-      return 0;
+        guiErrorMessage("Error reading HUD: ", e);
+        return 0;
     }
   
 	
@@ -778,16 +766,13 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
     path.append(hud_path);
 	
     ifstream input(path.c_str());
-    if (!input.good()) 
-        {
-            SG_LOG(SG_INPUT, SG_ALERT,
-                   "Cannot read Hud configuration from " << path.str());
-        } 
-    else 
-        {
-            readHud(input);
-            input.close();
-        }
+    if (!input.good()) {
+        SG_LOG(SG_INPUT, SG_ALERT,
+               "Cannot read Hud configuration from " << path.str());
+    } else {
+        readHud(input);
+        input.close();
+    }
 
     fgHUDalphaInit();
     fgHUDReshape();
@@ -811,8 +796,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
     if (!input.good()) {
         SG_LOG(SG_INPUT, SG_ALERT,
                "Cannot read Hud configuration from " << path.str());
-    } 
-    else {
+    } else {
         readHud(input);
         input.close();
     }
@@ -967,9 +951,9 @@ void fgHUDalphaInit( void ) {
             PUSTR_TGAP + PUSTR_BGAP + 5;
 
         /* puFrame *
-            HUDalphaFrame = new puFrame ( 0, 0, DialogWidth,
-                                          85 + nSliders
-                                          * horiz_slider_height ); */
+           HUDalphaFrame = new puFrame ( 0, 0, DialogWidth,
+           85 + nSliders
+           * horiz_slider_height ); */
 
         puText *
             HUDalphaDialogMessage = new puText ( labelX,
@@ -1065,188 +1049,188 @@ void fgUpdateHUD( void ) {
 void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
                   GLfloat x_end, GLfloat y_end )
 {
-  int brightness;
-  // int day_night_sw = current_aircraft.controls->day_night_switch;
-  int day_night_sw = global_day_night_switch;
-  int hud_displays = HUD_deque.size();
-  instr_item *pHUDInstr;
-  // float line_width;
+    int brightness;
+    // int day_night_sw = current_aircraft.controls->day_night_switch;
+    int day_night_sw = global_day_night_switch;
+    int hud_displays = HUD_deque.size();
+    instr_item *pHUDInstr;
+    // float line_width;
 
-  if( !hud_displays ) {  // Trust everyone, but ALWAYS cut the cards!
-    return;
+    if( !hud_displays ) {  // Trust everyone, but ALWAYS cut the cards!
+        return;
     }
 
-  HUD_TextList.erase();
-  HUD_LineList.erase();
-  // HUD_StippleLineList.erase();
+    HUD_TextList.erase();
+    HUD_LineList.erase();
+    // HUD_StippleLineList.erase();
   
-  pHUDInstr = HUD_deque[0];
-  brightness = pHUDInstr->get_brightness();
-  // brightness = HUD_deque.at(0)->get_brightness();
+    pHUDInstr = HUD_deque[0];
+    brightness = pHUDInstr->get_brightness();
+    // brightness = HUD_deque.at(0)->get_brightness();
 
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
 
-  glLoadIdentity();
-  gluOrtho2D(x_start, x_end, y_start, y_end);
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity();
+    glLoadIdentity();
+    gluOrtho2D(x_start, x_end, y_start, y_end);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
 
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
 
-  static const SGPropertyNode * antialiased_node
-      = fgGetNode("/sim/hud/antialiased");
+    static const SGPropertyNode * antialiased_node
+        = fgGetNode("/sim/hud/antialiased");
 
-  if( antialiased_node->getBoolValue() ) {
-	  glEnable(GL_LINE_SMOOTH);
-//	  glEnable(GL_BLEND);
-	  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-	  glHint(GL_LINE_SMOOTH_HINT,GL_DONT_CARE);
-	  glLineWidth(1.5);
-  } else {
-	  glLineWidth(1.0);
-  }
+    if( antialiased_node->getBoolValue() ) {
+        glEnable(GL_LINE_SMOOTH);
+        //	  glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+        glHint(GL_LINE_SMOOTH_HINT,GL_DONT_CARE);
+        glLineWidth(1.5);
+    } else {
+        glLineWidth(1.0);
+    }
 
-  if( day_night_sw == DAY) {
-      switch (brightness)
-	  {
-	  case BRT_LIGHT:
-	      set_hud_color (0.1f, 0.9f, 0.1f);
-	      break;
+    if( day_night_sw == DAY) {
+        switch (brightness)
+            {
+            case BRT_LIGHT:
+                set_hud_color (0.1f, 0.9f, 0.1f);
+                break;
 
-          case BRT_MEDIUM:
-	      set_hud_color (0.1f, 0.7f, 0.0f);
-	      break;
+            case BRT_MEDIUM:
+                set_hud_color (0.1f, 0.7f, 0.0f);
+                break;
 
-          case BRT_DARK:
-	      set_hud_color (0.0f, 0.6f, 0.0f);
-	      break;
+            case BRT_DARK:
+                set_hud_color (0.0f, 0.6f, 0.0f);
+                break;
 
-          case BRT_BLACK:
-	      set_hud_color( 0.0f, 0.0f, 0.0f);
-	      break;
+            case BRT_BLACK:
+                set_hud_color( 0.0f, 0.0f, 0.0f);
+                break;
 
-          default:
-	      set_hud_color (0.1f, 0.9f, 0.1f);
-	  }
-  } else {
-      if( day_night_sw == NIGHT) {
-	  switch (brightness)
-	      {
-	      case BRT_LIGHT:
-		  set_hud_color (0.9f, 0.1f, 0.1f);
-		  break;
+            default:
+                set_hud_color (0.1f, 0.9f, 0.1f);
+            }
+    } else {
+        if( day_night_sw == NIGHT) {
+            switch (brightness)
+                {
+                case BRT_LIGHT:
+                    set_hud_color (0.9f, 0.1f, 0.1f);
+                    break;
 
-              case BRT_MEDIUM:
-		  set_hud_color (0.7f, 0.0f, 0.1f);
-		  break;
+                case BRT_MEDIUM:
+                    set_hud_color (0.7f, 0.0f, 0.1f);
+                    break;
 
-	      case BRT_DARK:
-		  set_hud_color (0.6f, 0.0f, 0.0f);
-		  break;
+                case BRT_DARK:
+                    set_hud_color (0.6f, 0.0f, 0.0f);
+                    break;
 
-	      case BRT_BLACK:
-		  set_hud_color( 0.0f, 0.0f, 0.0f);
-		  break;
+                case BRT_BLACK:
+                    set_hud_color( 0.0f, 0.0f, 0.0f);
+                    break;
 
-	      default:
-		  set_hud_color (0.6f, 0.0f, 0.0f);
-	      }
-      } else {     // Just in case default
-	  set_hud_color (0.1f, 0.9f, 0.1f);
-      }
-  }
+                default:
+                    set_hud_color (0.6f, 0.0f, 0.0f);
+                }
+        } else {     // Just in case default
+            set_hud_color (0.1f, 0.9f, 0.1f);
+        }
+    }
 
-  deque < instr_item * > :: iterator current = HUD_deque.begin();
-  deque < instr_item * > :: iterator last = HUD_deque.end();
+    deque < instr_item * > :: iterator current = HUD_deque.begin();
+    deque < instr_item * > :: iterator last = HUD_deque.end();
 
-  for ( ; current != last; ++current ) {
-	  pHUDInstr = *current;
+    for ( ; current != last; ++current ) {
+        pHUDInstr = *current;
 
-	  if( pHUDInstr->enabled()) {
-		  //  fgPrintf( SG_COCKPIT, SG_DEBUG, "HUD Code %d  Status %d\n",
-		  //            hud->code, hud->status );
-		  pHUDInstr->draw();
+        if( pHUDInstr->enabled()) {
+            //  fgPrintf( SG_COCKPIT, SG_DEBUG, "HUD Code %d  Status %d\n",
+            //            hud->code, hud->status );
+            pHUDInstr->draw();
 		  
-	  }
-  }
+        }
+    }
 
-  char *gmt_str = get_formated_gmt_time();
-  HUD_TextList.add( fgText(40, 10, gmt_str, 0) );
+    char *gmt_str = get_formated_gmt_time();
+    HUD_TextList.add( fgText(40, 10, gmt_str, 0) );
 
 #ifdef FG_NETWORK_OLK
-  if ( net_hud_display ) {
-      net_hud_update();
-  }
+    if ( net_hud_display ) {
+        net_hud_update();
+    }
 #endif
 
 
-  // temporary
-  // extern bool fgAPAltitudeEnabled( void );
-  // extern bool fgAPHeadingEnabled( void );
-  // extern bool fgAPWayPointEnabled( void );
-  // extern char *fgAPget_TargetDistanceStr( void );
-  // extern char *fgAPget_TargetHeadingStr( void );
-  // extern char *fgAPget_TargetAltitudeStr( void );
-  // extern char *fgAPget_TargetLatLonStr( void );
+    // temporary
+    // extern bool fgAPAltitudeEnabled( void );
+    // extern bool fgAPHeadingEnabled( void );
+    // extern bool fgAPWayPointEnabled( void );
+    // extern char *fgAPget_TargetDistanceStr( void );
+    // extern char *fgAPget_TargetHeadingStr( void );
+    // extern char *fgAPget_TargetAltitudeStr( void );
+    // extern char *fgAPget_TargetLatLonStr( void );
 
-  int apY = 480 - 80;
-  // char scratch[128];
-  // HUD_TextList.add( fgText( "AUTOPILOT", 20, apY) );
-  // apY -= 15;
-  if( current_autopilot->get_HeadingEnabled() ) {
-      HUD_TextList.add( fgText( 40, apY, 
-				current_autopilot->get_TargetHeadingStr()) );
-      apY -= 15;
-  }
-  if( current_autopilot->get_AltitudeEnabled() ) {
-      HUD_TextList.add( fgText( 40, apY, 
-				current_autopilot->get_TargetAltitudeStr()) );
-      apY -= 15;
-  }
-  if( current_autopilot->get_HeadingMode() == 
-      FGAutopilot::FG_HEADING_WAYPOINT )
-  {
-      char *wpstr;
-      wpstr = current_autopilot->get_TargetWP1Str();
-      if ( strlen( wpstr ) ) {
-	  HUD_TextList.add( fgText( 40, apY, wpstr ) );
-	  apY -= 15;
-      }
-      wpstr = current_autopilot->get_TargetWP2Str();
-      if ( strlen( wpstr ) ) {
-	  HUD_TextList.add( fgText( 40, apY, wpstr ) );
-	  apY -= 15;
-      }
-      wpstr = current_autopilot->get_TargetWP3Str();
-      if ( strlen( wpstr ) ) {
-	  HUD_TextList.add( fgText( 40, apY, wpstr ) );
-	  apY -= 15;
-      }
-  }
+    int apY = 480 - 80;
+    // char scratch[128];
+    // HUD_TextList.add( fgText( "AUTOPILOT", 20, apY) );
+    // apY -= 15;
+    if( current_autopilot->get_HeadingEnabled() ) {
+        HUD_TextList.add( fgText( 40, apY, 
+                                  current_autopilot->get_TargetHeadingStr()) );
+        apY -= 15;
+    }
+    if( current_autopilot->get_AltitudeEnabled() ) {
+        HUD_TextList.add( fgText( 40, apY, 
+                                  current_autopilot->get_TargetAltitudeStr()) );
+        apY -= 15;
+    }
+    if( current_autopilot->get_HeadingMode() == 
+        FGAutopilot::FG_HEADING_WAYPOINT )
+    {
+        char *wpstr;
+        wpstr = current_autopilot->get_TargetWP1Str();
+        if ( strlen( wpstr ) ) {
+            HUD_TextList.add( fgText( 40, apY, wpstr ) );
+            apY -= 15;
+        }
+        wpstr = current_autopilot->get_TargetWP2Str();
+        if ( strlen( wpstr ) ) {
+            HUD_TextList.add( fgText( 40, apY, wpstr ) );
+            apY -= 15;
+        }
+        wpstr = current_autopilot->get_TargetWP3Str();
+        if ( strlen( wpstr ) ) {
+            HUD_TextList.add( fgText( 40, apY, wpstr ) );
+                apY -= 15;
+        }
+    }
   
-  HUD_TextList.draw();
+    HUD_TextList.draw();
 
-  HUD_LineList.draw();
+    HUD_LineList.draw();
 
-  // glEnable(GL_LINE_STIPPLE);
-  // glLineStipple( 1, 0x00FF );
-  // HUD_StippleLineList.draw();
-  // glDisable(GL_LINE_STIPPLE);
+    // glEnable(GL_LINE_STIPPLE);
+    // glLineStipple( 1, 0x00FF );
+    // HUD_StippleLineList.draw();
+    // glDisable(GL_LINE_STIPPLE);
 
-  if( antialiased_node->getBoolValue() ) {
-      // glDisable(GL_BLEND);
-      glDisable(GL_LINE_SMOOTH);
-      glLineWidth(1.0);
-  }
+    if( antialiased_node->getBoolValue() ) {
+        // glDisable(GL_BLEND);
+        glDisable(GL_LINE_SMOOTH);
+        glLineWidth(1.0);
+    }
 
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_LIGHTING);
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
 }
 

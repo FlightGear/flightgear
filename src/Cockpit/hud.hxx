@@ -70,13 +70,13 @@ SG_USING_NAMESPACE(std);
 // some of Norman's crazy optimizations. :-)
 
 #ifndef WIN32
-  typedef struct {
-      int x, y;
-  } POINT;
+typedef struct {
+    int x, y;
+} POINT;
  
-  typedef struct {
-      int top, bottom, left, right;
-  } RECT;
+typedef struct {
+    int top, bottom, left, right;
+} RECT;
 #endif
 
 // View mode definitions
@@ -239,16 +239,16 @@ extern char *get_formated_gmt_time( void );
 extern void fgHUDReshape(void);
 
 enum  hudinstype{ HUDno_instr,
-              HUDscale,
-              HUDlabel,
-              HUDladder,
-              HUDcirc_ladder,
-              HUDhorizon,
-              HUDgauge,
-              HUDdual_inst,
-              HUDmoving_scale,
-              HUDtbi
-              };
+                  HUDscale,
+                  HUDlabel,
+                  HUDladder,
+                  HUDcirc_ladder,
+                  HUDhorizon,
+                  HUDgauge,
+                  HUDdual_inst,
+                  HUDmoving_scale,
+                  HUDtbi
+};
 
 typedef struct gltagRGBTRIPLE { // rgbt
     GLfloat Blue;
@@ -309,8 +309,7 @@ public:
 
     int getStringWidth ( char *str )
     {
-        if ( HUDtext && str )
-        {
+        if ( HUDtext && str ) {
             float r, l ;
             guiFntHandle->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
             return FloatToInt( r - l );
@@ -320,8 +319,7 @@ public:
     
     int StringWidth (void )
     {
-        if ( HUDtext && strlen( msg ))
-        {
+        if ( HUDtext && strlen( msg )) {
             float r, l ;
             guiFntHandle->getBBox ( msg, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
             return FloatToInt( r - l );
@@ -339,9 +337,9 @@ public:
             char *t=msg;
             int p=4;
 
-            if(t[0]=='-') //if negative value then increase the c and p values for '-' sign.
-            {
-                c++;
+            if(t[0]=='-') {
+                //if negative value then increase the c and p values
+                //for '-' sign.  c++;
                 p++;
             }
             char *tmp=msg;
@@ -393,28 +391,28 @@ public:
     ~fgLineList( void ) {}
     void add( fgLineSeg2D seg ) { List.push_back(seg); }
     void erase( void ) { List.erase( List.begin(), List.end() ); }
-	void draw( void ) {
-		vector < fgLineSeg2D > :: iterator curSeg;
-		vector < fgLineSeg2D > :: iterator lastSeg;
-		curSeg  = List.begin();
-		lastSeg = List.end();
-		glBegin(GL_LINES);
-		for ( ; curSeg != lastSeg; curSeg++ ) {
-			curSeg->draw();
-		}
-		glEnd();
-	}
-/*    void draw( void ) {
+    void draw( void ) {
         vector < fgLineSeg2D > :: iterator curSeg;
         vector < fgLineSeg2D > :: iterator lastSeg;
-       curSeg  = List.begin();
+        curSeg  = List.begin();
         lastSeg = List.end();
         glBegin(GL_LINES);
         for ( ; curSeg != lastSeg; curSeg++ ) {
             curSeg->draw();
         }
         glEnd();
-    } */
+    }
+    /*    void draw( void ) {
+          vector < fgLineSeg2D > :: iterator curSeg;
+          vector < fgLineSeg2D > :: iterator lastSeg;
+          curSeg  = List.begin();
+          lastSeg = List.end();
+          glBegin(GL_LINES);
+          for ( ; curSeg != lastSeg; curSeg++ ) {
+          curSeg->draw();
+          }
+          glEnd();
+          } */
 };
 
 class fgTextList {
@@ -475,14 +473,14 @@ extern fgLineList         HUD_StippleLineList;
 
 
 class instr_item {  // An Abstract Base Class (ABC)
-  private:
+private:
     static UINT        instances;     // More than 64K instruments? Nah!
     static int         brightness;
     static glRGBTRIPLE color;
 
     UINT               handle;
     RECT               scrn_pos;      // Framing - affects scale dimensions
-                                    // and orientation. Vert vs Horz, etc.
+                                      // and orientation. Vert vs Horz, etc.
     FLTFNPTR           load_value_fn;
     float              disp_factor;   // Multiply by to get numbers shown on scale.
     UINT               opts;
@@ -492,7 +490,7 @@ class instr_item {  // An Abstract Base Class (ABC)
     POINT              mid_span;      //
     int		       digits;        //suma
   
-  public:
+public:
     instr_item( int            x,
                 int            y,
                 UINT           height,
@@ -524,7 +522,9 @@ class instr_item {  // An Abstract Base Class (ABC)
     UINT    huds_vert     (UINT options) { return( options  & HUDS_VERT ); }
     UINT    huds_left     (UINT options) { return( options  & HUDS_LEFT ); }
     UINT    huds_right    (UINT options) { return( options  & HUDS_RIGHT ); }
-    UINT    huds_both     (UINT options) { return( (options & HUDS_BOTH) == HUDS_BOTH ); }
+    UINT    huds_both     (UINT options) {
+        return( (options & HUDS_BOTH) == HUDS_BOTH );
+    }
     UINT    huds_noticks  (UINT options) { return( options  & HUDS_NOTICKS ); }
     UINT    huds_notext   (UINT options) { return( options  & HUDS_NOTEXT ); }
     UINT    huds_top      (UINT options) { return( options  & HUDS_TOP ); }
@@ -553,8 +553,7 @@ class instr_item {  // An Abstract Base Class (ABC)
     }
     int getStringWidth ( char *str )
     {
-        if ( HUDtext && str )
-        {
+        if ( HUDtext && str ) {
             float r, l ;
             guiFntHandle->getBBox ( str, HUD_TextSize, 0, &l, &r, NULL, NULL ) ;
             return FloatToInt( r - l );
@@ -591,7 +590,7 @@ extern int HUD_style;
 
 
 class instr_label : public instr_item {
-  private:
+private:
     const char *pformat;
     const char *pre_str;
     const char *post_str;
@@ -603,7 +602,7 @@ class instr_label : public instr_item {
     bool		lon;
     bool		lbox;
 
-  public:
+public:
     instr_label( int          x,
                  int          y,
                  UINT         width,
@@ -634,7 +633,7 @@ typedef instr_label * pInstlabel;
 
 
 class lat_label : public instr_item {
-  private:
+private:
     const char *pformat;
     const char *pre_str;
     const char *post_str;
@@ -643,7 +642,7 @@ class lat_label : public instr_item {
     int         blink;
     char format_buffer[80];
 
-  public:
+public:
     lat_label( int          x,
                int          y,
                UINT         width,
@@ -670,7 +669,7 @@ class lat_label : public instr_item {
 typedef lat_label * pLatlabel;
 
 class lon_label : public instr_item {
-  private:
+private:
     const char *pformat;
     const char *pre_str;
     const char *post_str;
@@ -679,7 +678,7 @@ class lon_label : public instr_item {
     int         blink;
     char format_buffer[80];
 
-  public:
+public:
     lon_label( int          x,
                int          y,
                UINT         width,
@@ -713,7 +712,7 @@ typedef lon_label * pLonlabel;
 //
 
 class instr_scale : public instr_item {
-  private:
+private:
     float range_shown;   // Width Units.
     float Maximum_value; //                ceiling.
     float Minimum_value; // Representation floor.
@@ -723,7 +722,7 @@ class instr_scale : public instr_item {
     UINT   Modulo;        // Roll over point
     int    signif_digits; // digits to show to the right.
 
-  public:
+public:
     instr_scale( int          x,
                  int          y,
                  UINT         width,
@@ -760,7 +759,7 @@ class instr_scale : public instr_item {
 // line.
 
 class hud_card : public instr_scale {
-  private:
+private:
     float val_span;
     string type;
     float half_width_units;
@@ -786,7 +785,7 @@ class hud_card : public instr_scale {
     UINT	Min_div; //suma
 	
     
-  public:
+public:
     hud_card( int      x,
               int      y,
               UINT     width,
@@ -824,7 +823,7 @@ class hud_card : public instr_scale {
     ~hud_card();
     hud_card( const hud_card & image);
     hud_card & operator = (const hud_card & rhs );
-//    virtual void display_enable( bool setting );
+    //    virtual void display_enable( bool setting );
     virtual void draw( void );       // Required method in base class
     void circles(float,float,float); // suma
     void fixed(float,float,float,float,float,float); //suma
@@ -834,7 +833,7 @@ class hud_card : public instr_scale {
 typedef hud_card * pCardScale;
 
 class gauge_instr : public instr_scale {
-  public:
+public:
     gauge_instr( int       x,
                  int       y,
                  UINT      width,
@@ -862,10 +861,10 @@ typedef gauge_instr * pGaugeInst;
 //                         for both panel and HUD Turn Bank Indicators.
 
 class dual_instr_item : public instr_item {
-  private:
+private:
     FLTFNPTR alt_data_source;
 
-  public:
+public:
     dual_instr_item ( int       x,
                       int       y,
                       UINT      width,
@@ -886,14 +885,14 @@ class dual_instr_item : public instr_item {
 
 class fgTBI_instr : public dual_instr_item 
 {
-  private:
+private:
     UINT BankLimit;
     UINT SlewLimit;
     UINT scr_hole;
     bool tsi;  //suma
     float rad; //suma
 
-  public:
+public:
     fgTBI_instr( int       x,
                  int       y,
                  UINT      width,
@@ -921,7 +920,7 @@ class fgTBI_instr : public dual_instr_item
 typedef fgTBI_instr * pTBI;
 
 class HudLadder : public dual_instr_item {
-  private:
+private:
     UINT   width_units;
     int    div_units;
     UINT   minor_div;
@@ -951,7 +950,7 @@ class HudLadder : public dual_instr_item {
     fgLineList         LineList;
     fgLineList         StippleLineList;
 
-  public:
+public:
     HudLadder( string    name,
 	       int       x,
                int       y,
