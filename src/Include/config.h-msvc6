@@ -1,7 +1,10 @@
-/* Special single config.h for MSVC6 build - Geoff McLane - 10 May, 2001  */
+/* Special single config.h for MSVC6 build - Geoff McLane - 11 Nov, 2001  */
 
 /* Define if the X Window System is missing or not being used.  */
 #define X_DISPLAY_MISSING 1
+
+/* Define if the CONSOLE output has no ANSI driver (eg no "esc [ ..." seqs.) */
+#define  NO_ANSI_DRIVER
 
 /* Define to empty if the keyword does not work.  */
 /* #undef const */
@@ -16,7 +19,7 @@
 #define PACKAGE "FlightGear"
 
 /* Define to package version - use in main.cxx */
-#define FLIGHTGEAR_VERSION "MSVC6-FGFS32-0.7.7"
+#define FLIGHTGEAR_VERSION "MSVC6-FGFS32-0.7.8"
 
 /* Define as the return type of signal handlers (int or void).  */
 #define RETSIGTYPE void
@@ -64,7 +67,7 @@
 #define HAVE_RAND 1
 
 /* Define if you have the random function.  */
-#define HAVE_RANDOM 1
+/* #define HAVE_RANDOM 1   */
 
 /* Define if you have the rint function.  */
 /* #define HAVE_RINT 1 */
@@ -157,5 +160,3 @@
 #define HAVE_MEMORY_H 1
 
 #define HAVE_MEMCPY 1
-
-
