@@ -27,6 +27,8 @@
 
 #include <simgear/compiler.h>
 
+#include <simgear/timing/timestamp.hxx>
+
 #include <FDM/flight.hxx>
 
 #include "protocol.hxx"
@@ -37,6 +39,7 @@ class FGNativeFDM : public FGProtocol, public FGInterface {
 
     FGNetFDM buf;
     int length;
+    SGTimeStamp last_time;
 
 public:
 
