@@ -702,7 +702,7 @@ static int fgPartialFreeSSGtree( ssgBranch *b, int n ) {
         int num_deletes = 0;
         for ( int i = 0; i < b->getNumKids(); ++i ) {
             ssgEntity *kid = b->getKid(i);
-            if ( kid->isAKindOf( ssgTypeBranch() ) ) {
+            if ( kid->isAKindOf( ssgTypeBranch() ) && kid->getRef() <= 1 ) {
                 int result = fgPartialFreeSSGtree( (ssgBranch *)kid, n );
                 num_deletes += result;
                 n -= result;
