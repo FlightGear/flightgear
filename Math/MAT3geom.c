@@ -53,7 +53,9 @@ register MAT3mat result_mat, mat;
 
    MAT3direction_matrix(result_mat, mat);
 
-   if (ret = MAT3invert(tmp_mat, tmp_mat)) MAT3transpose(result_mat, tmp_mat);
+   if ( (ret = MAT3invert(tmp_mat, tmp_mat)) ) {
+       MAT3transpose(result_mat, tmp_mat);
+   }
 
    return(ret);
 }

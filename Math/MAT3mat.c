@@ -5,6 +5,7 @@
  * This file contains routines that operate solely on matrices.
  * -------------------------------------------------------------------------*/
 
+#include <string.h>
 #include "mat3defs.h"
 
 /* #include "macros.h" */
