@@ -20,6 +20,11 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef FG_MPLAYER_AS
 
 /******************************************************************
 * $Id$
@@ -38,7 +43,7 @@
 #include "mpplayer.hxx"
 
 #include <stdlib.h>
-#ifndef _MSC_VER
+#if !(defined(_MSC_VER) || defined(__MINGW32__))
 # include <netdb.h>
 # include <sys/socket.h>
 # include <netinet/in.h>
@@ -306,4 +311,6 @@ void MPPlayer::FillMsgHdr(T_MsgHdr *MsgHdr, const int iMsgId) {
 
 
 }
+
+#endif // FG_MPLAYER_AS
 

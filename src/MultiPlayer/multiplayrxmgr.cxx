@@ -21,6 +21,11 @@
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef FG_MPLAYER_AS
 
 /******************************************************************
 * $Id$
@@ -51,7 +56,7 @@
 ******************************************************************/
 
 #include <sys/types.h>
-#ifndef _MSC_VER
+#if !(defined(_MSC_VER) || defined(__MINGW32__))
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
@@ -353,4 +358,5 @@ void FGMultiplayRxMgr::Update(void) {
 
 }
 
+#endif // FG_MPLAYER_AS
 
