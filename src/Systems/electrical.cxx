@@ -62,7 +62,7 @@ FGElectricalSupplier::FGElectricalSupplier ( SGPropertyNode *node ) {
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         // cout << " scanning: " << child->getName() << endl;
-        if ( child->getName() == "prop" ) {
+        if ( !strcmp(child->getName(), "prop") ) {
             string prop = child->getStringValue();
             // cout << "  Adding prop = " << prop << endl;
             add_prop( prop );
@@ -107,7 +107,7 @@ FGElectricalBus::FGElectricalBus ( SGPropertyNode *node ) {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
-        if ( child->getName() == "prop" ) {
+        if ( !strcmp(child->getName(), "prop") ) {
             string prop = child->getStringValue();
             add_prop( prop );
         }
@@ -122,7 +122,7 @@ FGElectricalOutput::FGElectricalOutput ( SGPropertyNode *node ) {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
-        if ( child->getName() == "prop" ) {
+        if ( !strcmp(child->getName(), "prop") ) {
             string prop = child->getStringValue();
             add_prop( prop );
         }
