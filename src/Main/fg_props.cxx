@@ -102,7 +102,7 @@ static const char *
 getLoggingClasses ()
 {
   sgDebugClass classes = logbuf::get_log_classes();
-  string result = "";
+  static string result = "";	// FIXME
   for (int i = 0; log_class_mappings[i].c != SG_UNDEFD; i++) {
     if ((classes&log_class_mappings[i].c) > 0) {
       if (!result.empty())
@@ -249,14 +249,12 @@ getElapsedTime_ms ()
 static const char *
 getDateString ()
 {
-  string out;
-  char buf[64];
+  static char buf[64];		// FIXME
   struct tm * t = globals->get_time_params()->getGmt();
   sprintf(buf, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d",
 	  t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
 	  t->tm_hour, t->tm_min, t->tm_sec);
-  out = buf;
-  return out.c_str();
+  return buf;
 }
 
 
@@ -313,14 +311,12 @@ setDateString (const char * date_string)
 static const char *
 getGMTString ()
 {
-  string out;
-  char buf[16];
+  static char buf[16];		// FIXME
   struct tm *t = globals->get_time_params()->getGmt();
   sprintf(buf, " %.2d:%.2d:%.2d",
 	  t->tm_hour, t->tm_min, t->tm_sec);
   // cout << t << " " << buf << endl;
-  out = buf;
-  return out.c_str();
+  return buf;
 }
 
 
