@@ -132,6 +132,11 @@ private:
                                 // component of the pid
     SGPropertyNode *zero_pitch_throttle; // amount of throttle at which the aircraft does not pitch up
     SGPropertyNode *zero_pitch_trim_full_throttle; // amount of trim required to level at full throttle
+    SGPropertyNode *max_aileron_node; // maximum aileron setting range -1 ~ 1
+    SGPropertyNode *max_roll_node; // maximum roll setting in degrees
+    SGPropertyNode *roll_out_node; // start rollout offset from desired heading in degrees
+    SGPropertyNode *roll_out_smooth_node; // rollout smoothing offset in degrees
+
     SGPropertyNode *TargetClimbRate;	// target climb rate
     SGPropertyNode *TargetDescentRate;	// target decent rate
     SGPropertyNode *current_throttle; // current throttle (engine 0)
@@ -275,3 +280,4 @@ private:
  */
 
 #endif // _NEWAUTO_HXX
+
