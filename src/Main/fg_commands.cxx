@@ -836,7 +836,12 @@ do_replay (const SGPropertyNode * arg)
 
     fgSetDouble( "/sim/replay/start-time", r->get_start_time() );
     fgSetDouble( "/sim/replay/end-time", r->get_end_time() );
-    fgSetDouble( "/sim/replay/time", r->get_start_time() );
+    double duration = fgGetDouble( "/sim/replay/duration" );
+    if( duration && duration < (r->get_end_time() - r->get_start_time()) ) {
+        fgSetDouble( "/sim/replay/time", r->get_end_time() - duration );
+    } else {
+        fgSetDouble( "/sim/replay/time", r->get_start_time() );
+    }
 
     cout << "start = " << r->get_start_time()
          << "  end = " << r->get_end_time() << endl;
