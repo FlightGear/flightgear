@@ -44,7 +44,6 @@
 #include "globals.hxx"
 #include "fgfs.hxx"
 #include "fg_props.hxx"
-#include "viewmgr.hxx"
 
 #if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(istream);
@@ -57,66 +56,10 @@ static double getWindEast ();
 static double getWindDown ();
 #endif // FG_NEW_ENVIRONMENT
 
-// Allow the view to be set from two axes (i.e. a joystick hat)
-// This needs to be in FGViewer itself, somehow.
-static double axisLong = 0.0;
-static double axisLat = 0.0;
-
 static bool winding_ccw = true; // FIXME: temporary
 
 static bool fdm_data_logging = false; // FIXME: temporary
 
-
-/**
- * Utility function.
- */
-static inline void
-_set_view_from_axes ()
-{
-				// Take no action when hat is centered
-  if ( ( axisLong <  0.01 ) &&
-       ( axisLong > -0.01 ) &&
-       ( axisLat  <  0.01 ) &&
-       ( axisLat  > -0.01 )
-     )
-    return;
-
-  double viewDir = 999;
-
-  /* Do all the quick and easy cases */
-  if (axisLong < 0) {		// Longitudinal axis forward
-    if (axisLat == axisLong)
-      viewDir = 45;
-    else if (axisLat == - axisLong)
-      viewDir = 315;
-    else if (axisLat == 0)
-      viewDir = 0;
-  } else if (axisLong > 0) {	// Longitudinal axis backward
-    if (axisLat == - axisLong)
-      viewDir = 135;
-    else if (axisLat == axisLong)
-      viewDir = 225;
-    else if (axisLat == 0)
-      viewDir = 180;
-  } else if (axisLong == 0) {	// Longitudinal axis neutral
-    if (axisLat < 0)
-      viewDir = 90;
-    else if (axisLat > 0)
-      viewDir = 270;
-    else return; /* And assertion failure maybe? */
-  }
-
-  /* Do all the difficult cases */
-  if ( viewDir > 900 )
-    viewDir = SGD_RADIANS_TO_DEGREES * atan2 ( -axisLat, -axisLong );
-  if ( viewDir < -1 ) viewDir += 360;
-
-//  SG_LOG(SG_INPUT, SG_ALERT, "Joystick Lat=" << axisLat << "   and Long="
-//	<< axisLong << "  gave angle=" << viewDir );
-
-  globals->get_current_view()->set_goal_view_offset(viewDir*SGD_DEGREES_TO_RADIANS);
-//   globals->get_current_view()->set_view_offset(viewDir*SGD_DEGREES_TO_RADIANS);
-}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -314,143 +257,6 @@ setAircraftDir (string dir)
     aircraft_dir = dir;
 //     needReinit(); FIXME!!
   }
-}
-
-
-/**
- * Get the current view offset in degrees.
- */
-static double
-getViewOffset ()
-{
-  return (globals->get_current_view()
-	  ->get_view_offset() * SGD_RADIANS_TO_DEGREES);
-}
-
-
-static void
-setViewOffset (double offset)
-{
-  globals->get_current_view()->set_view_offset(offset * SGD_DEGREES_TO_RADIANS);
-}
-
-static double
-getGoalViewOffset ()
-{
-  return (globals->get_current_view()
-	  ->get_goal_view_offset() * SGD_RADIANS_TO_DEGREES);
-}
-
-static void
-setGoalViewOffset (double offset)
-{
-    while ( offset < 0 ) {
-	offset += 360.0;
-    }
-    while ( offset > 360.0 ) {
-	offset -= 360.0;
-    }
-    // Snap to center if we are close
-    if ( fabs(offset) < 1.0 ||  fabs(offset) > 359.0 ) {
-	offset = 0.0;
-    }
-
-    globals->get_current_view()
-	->set_goal_view_offset(offset * SGD_DEGREES_TO_RADIANS);
-}
-
-/**
- * Get the current view tilt in degrees.
- */
-static double
-getViewTilt ()
-{
-  return (globals->get_current_view()
-	  ->get_view_tilt() * SGD_RADIANS_TO_DEGREES);
-}
-
-
-static void
-setViewTilt (double tilt)
-{
-  globals->get_current_view()->set_view_tilt(tilt * SGD_DEGREES_TO_RADIANS);
-}
-
-static double
-getGoalViewTilt ()
-{
-  return (globals->get_current_view()
-	  ->get_goal_view_tilt() * SGD_RADIANS_TO_DEGREES);
-}
-
-static void
-setGoalViewTilt (double tilt)
-{
-    while ( tilt < 0 ) {
-	tilt += 360.0;
-    }
-    while ( tilt > 360.0 ) {
-	tilt -= 360.0;
-    }
-    // Snap to center if we are close
-    if ( fabs(tilt) < 1.0 ||  fabs(tilt) > 359.0 ) {
-	tilt = 0.0;
-    }
-
-    globals->get_current_view()
-	->set_goal_view_tilt(tilt * SGD_DEGREES_TO_RADIANS);
-}
-
-
-/**
- * Pilot position offset from CG.
- */
-static float
-getPilotPositionXOffset ()
-{
-  FGViewer * pilot_view = globals->get_viewmgr()->get_view(0);
-  float * offset = pilot_view->get_pilot_offset();
-  return offset[0];
-}
-
-static void
-setPilotPositionXOffset (float x)
-{
-  FGViewer * pilot_view = globals->get_viewmgr()->get_view(0);
-  float * offset = pilot_view->get_pilot_offset();
-  pilot_view->set_pilot_offset(x, offset[1], offset[2]);
-}
-
-static float
-getPilotPositionYOffset ()
-{
-  FGViewer * pilot_view = globals->get_viewmgr()->get_view(0);
-  float * offset = pilot_view->get_pilot_offset();
-  return offset[1];
-}
-
-static void
-setPilotPositionYOffset (float y)
-{
-  FGViewer * pilot_view = globals->get_viewmgr()->get_view(0);
-  float * offset = pilot_view->get_pilot_offset();
-  pilot_view->set_pilot_offset(offset[0], y, offset[2]);
-}
-
-static float
-getPilotPositionZOffset ()
-{
-  FGViewer * pilot_view = globals->get_viewmgr()->get_view(0);
-  float * offset = pilot_view->get_pilot_offset();
-  return offset[2];
-}
-
-static void
-setPilotPositionZOffset (float z)
-{
-  FGViewer * pilot_view = globals->get_viewmgr()->get_view(0);
-  float * offset = pilot_view->get_pilot_offset();
-  pilot_view->set_pilot_offset(offset[0], offset[1], z);
 }
 
 
@@ -686,20 +492,6 @@ setWindDown (double speed)
 
 #endif // FG_NEW_ENVIRONMENT
 
-static double
-getFOV ()
-{
-  return globals->get_current_view()->get_fov();
-}
-
-static void
-setFOV (double fov)
-{
-  if ( fov < 180 ) {
-      globals->get_current_view()->set_fov( fov );
-  }
-}
-
 static long
 getWarp ()
 {
@@ -722,18 +514,6 @@ static void
 setWarpDelta (long delta)
 {
   globals->set_warp_delta(delta);
-}
-
-static void
-setViewAxisLong (double axis)
-{
-  axisLong = axis;
-}
-
-static void
-setViewAxisLat (double axis)
-{
-  axisLat = axis;
 }
 
 static bool
@@ -802,22 +582,7 @@ fgInitProps ()
   fgTie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
   // fgTie("/sim/freeze", getFreeze, setFreeze);
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
-  fgTie("/sim/view/offset-deg", getViewOffset, setViewOffset, false);
-  fgSetArchivable("/sim/view/offset-deg");
-  fgTie("/sim/view/goal-offset-deg", getGoalViewOffset, setGoalViewOffset, false);
-  fgTie("/sim/view/tilt-deg", getViewTilt, setViewTilt, false);
-  fgSetArchivable("/sim/view/tilt-deg");
-  fgTie("/sim/view/goal-tilt-deg", getGoalViewTilt, setGoalViewTilt, false);
-  fgSetArchivable("/sim/view/goal-offset-deg");
-  fgTie("/sim/view/pilot/x-offset-m",
-	getPilotPositionXOffset, setPilotPositionXOffset);
-  fgSetArchivable("/sim/view/pilot/x-offset-m");
-  fgTie("/sim/view/pilot/y-offset-m",
-	getPilotPositionYOffset, setPilotPositionYOffset);
-  fgSetArchivable("/sim/view/pilot/y-offset-m");
-  fgTie("/sim/view/pilot/z-offset-m",
-	getPilotPositionZOffset, setPilotPositionZOffset);
-  fgSetArchivable("/sim/view/pilot/z-offset-m");
+
   fgTie("/sim/time/elapsed-ms", getElapsedTime_ms);
   fgTie("/sim/time/gmt", getDateString, setDateString);
   fgSetArchivable("/sim/time/gmt");
@@ -842,13 +607,8 @@ fgInitProps ()
   fgTie("/environment/magnetic-variation-deg", getMagVar);
   fgTie("/environment/magnetic-dip-deg", getMagDip);
 
-				// View
-  fgTie("/sim/field-of-view", getFOV, setFOV);
-  fgSetArchivable("/sim/field-of-view");
   fgTie("/sim/time/warp", getWarp, setWarp, false);
   fgTie("/sim/time/warp-delta", getWarpDelta, setWarpDelta);
-  fgTie("/sim/view/axes/long", (double(*)())0, setViewAxisLong);
-  fgTie("/sim/view/axes/lat", (double(*)())0, setViewAxisLat);
 
 				// Misc. Temporary junk.
   fgTie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);
@@ -861,7 +621,6 @@ fgInitProps ()
 void
 fgUpdateProps ()
 {
-  _set_view_from_axes();
 }
 
 

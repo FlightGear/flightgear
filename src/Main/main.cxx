@@ -87,7 +87,6 @@
 
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
-#include <GUI/sgVec3Slider.hxx>
 // #include <Joystick/joystick.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
@@ -445,51 +444,6 @@ void fgRenderFrame( void ) {
 
 	// calculate our current position in cartesian space
 	scenery.set_center( scenery.get_next_center() );
-
-	FGViewerRPH *pilot_view =
-	    (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
-
-	pilot_view->set_geod_view_pos( longitude->getDoubleValue()
-				         * SGD_DEGREES_TO_RADIANS, 
-				       latitude->getDoubleValue()
-				         * SGD_DEGREES_TO_RADIANS,
-				       altitude->getDoubleValue()
-				         * SG_FEET_TO_METER );
-	pilot_view->set_rph( cur_fdm_state->get_Phi(),
-			     cur_fdm_state->get_Theta(),
-			     cur_fdm_state->get_Psi() );
-
-        if (fgGetString("/sim/flight-model") == "ada") {
-            //+ve x is aft, +ve z is up (see viewer.hxx)
-            pilot_view->set_pilot_offset( -5.0, 0.0, 1.0 ); 
-	}
-
-	FGViewerLookAt *chase_view =
-	    (FGViewerLookAt *)globals->get_viewmgr()->get_view( 1 );
-
-	sgVec3 po;		// chase view pilot_offset
-	sgVec3 wup;		// chase view world up
-	sgSetVec3( po, 0.0, 0.0, 100.0 );
-	sgCopyVec3( wup, pilot_view->get_world_up() );
-	sgMat4 CXFM;		// chase view + pilot offset xform
-	sgMakeRotMat4( CXFM,
-		       chase_view->get_view_offset() * SGD_RADIANS_TO_DEGREES -
-		       cur_fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES,
-		       wup );
-	sgVec3 npo;		// new pilot offset after rotation
-        sgVec3 *pPO = PilotOffsetGet();
-	sgXformVec3( po, *pPO, pilot_view->get_UP() );
-	sgXformVec3( npo, po, CXFM );
-
-	chase_view->set_geod_view_pos( longitude->getDoubleValue()
-				         * SGD_DEGREES_TO_RADIANS, 
-				       latitude->getDoubleValue()
-				         * SGD_DEGREES_TO_RADIANS,
-				       altitude->getDoubleValue()
-				         * SG_FEET_TO_METER );
-	chase_view->set_pilot_offset( npo[0], npo[1], npo[2] );
-	chase_view->set_view_forward( pilot_view->get_view_pos() ); 
-	chase_view->set_view_up( wup );
 
 	// update view port
 	fgReshape( fgGetInt("/sim/startup/xsize"),
@@ -870,7 +824,7 @@ void fgUpdateTimeDepCalcs() {
     }
 
     // update the view angle
-    globals->get_current_view()->update(multi_loop);
+    globals->get_viewmgr()->update(multi_loop);
 
     l->UpdateAdjFog();
 
@@ -1384,18 +1338,11 @@ int mainLoop( int argc, char **argv ) {
 
     FGViewMgr *viewmgr = new FGViewMgr;
     globals->set_viewmgr( viewmgr );
-
-    FGViewerRPH *pv = new FGViewerRPH;
-    globals->get_viewmgr()->add_view( pv );
-
-    FGViewerLookAt *chase = new FGViewerLookAt;
-    globals->get_viewmgr()->add_view( chase );
+    viewmgr->init();
+    viewmgr->bind();
 
     string_list *col = new string_list;
     globals->set_channel_options_list( col );
-
-    // set current view to 0 (first) which is our main pilot view
-    globals->set_current_view( globals->get_viewmgr()->get_view( 0 ) );
 
     // Scan the config file(s) and command line options to see if
     // fg_root was specified (ignore all other options for now)

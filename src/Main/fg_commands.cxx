@@ -243,7 +243,7 @@ static bool
 do_view_cycle (const SGPropertyNode * arg, SGCommandState ** state)
 {
   globals->get_current_view()->set_view_offset(0.0);
-  globals->set_current_view(globals->get_viewmgr()->next_view());
+  globals->get_viewmgr()->next_view();
   if ( fgGetString("/sim/flight-model") == "ada" ) {
       globals->get_props()->setBoolValue( "/sim/hud/visibility", true );
       if ( globals->get_viewmgr()->get_current() == 1 ) {

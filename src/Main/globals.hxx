@@ -37,6 +37,8 @@
 #include <simgear/misc/commands.hxx>
 #include <simgear/misc/props.hxx>
 
+#include "viewmgr.hxx"
+
 SG_USING_STD( vector );
 SG_USING_STD( string );
 
@@ -51,7 +53,6 @@ class FGControls;
 class FGSoundMgr;
 class FGAutopilot;
 class FGFX;
-class FGViewMgr;
 class FGViewer;
 class FGATCMgr;
 class FGATCDisplay;
@@ -125,7 +126,6 @@ private:
 
     // viewer manager
     FGViewMgr *viewmgr;
-    FGViewer *current_view;
 
     // properties
     SGPropertyNode *props;
@@ -215,8 +215,9 @@ public:
 
     inline FGViewMgr *get_viewmgr() const { return viewmgr; }
     inline void set_viewmgr( FGViewMgr *vm ) { viewmgr = vm; }
-    inline FGViewer *get_current_view() const { return current_view; }
-    inline void set_current_view( FGViewer *v ) { current_view = v; }
+    inline FGViewer *get_current_view() const {
+      return viewmgr->get_current_view();
+    }
 
     inline SGPropertyNode *get_props () { return props; }
     inline void set_props( SGPropertyNode *n ) { props = n; }

@@ -38,6 +38,7 @@
 
 #include <vector>
 
+#include "fgfs.hxx"
 #include "viewer_lookat.hxx"
 #include "viewer_rph.hxx"
 
@@ -45,14 +46,8 @@ SG_USING_STD(vector);
 
 
 // Define a structure containing view information
-class FGViewMgr {
-
-private:
-
-    typedef vector < FGViewer * > viewer_list;
-    viewer_list views;
-
-    int current;
+class FGViewMgr : public FGSubsystem
+{
 
 public:
 
@@ -61,6 +56,11 @@ public:
 
     // Destructor
     ~FGViewMgr( void );
+
+    virtual void init ();
+    virtual void bind ();
+    virtual void unbind ();
+    virtual void update (int dt);
 
     // getters
     inline int size() const { return views.size(); }
@@ -72,7 +72,19 @@ public:
 	    return NULL;
 	}
     }
+    inline const FGViewer *get_current_view() const {
+	if ( current < (int)views.size() ) {
+	    return views[current];
+	} else {
+	    return NULL;
+	}
+    }
     inline FGViewer *get_view( int i ) {
+	if ( i < 0 ) { i = 0; }
+	if ( i >= (int)views.size() ) { i = views.size() - 1; }
+	return views[i];
+    }
+    inline const FGViewer *get_view( int i ) const {
 	if ( i < 0 ) { i = 0; }
 	if ( i >= (int)views.size() ) { i = views.size() - 1; }
 	return views[i];
@@ -98,6 +110,38 @@ public:
     inline void add_view( FGViewer * v ) {
 	views.push_back(v);
     }
+
+private:
+
+    double axis_long;
+    double axis_lat;
+
+    void do_axes ();
+
+    double getViewOffset_deg () const;
+    void setViewOffset_deg (double offset);
+    double getGoalViewOffset_deg () const;
+    void setGoalViewOffset_deg (double offset);
+    double getViewTilt_deg () const;
+    void setViewTilt_deg (double tilt);
+    double getGoalViewTilt_deg () const;
+    void setGoalViewTilt_deg (double tilt);
+    double getPilotXOffset_m () const;
+    void setPilotXOffset_m (double x);
+    double getPilotYOffset_m () const;
+    void setPilotYOffset_m (double y);
+    double getPilotZOffset_m () const;
+    void setPilotZOffset_m (double z);
+    double getFOV_deg () const;
+    void setFOV_deg (double fov);
+    void setViewAxisLong (double axis);
+    void setViewAxisLat (double axis);
+
+    typedef vector < FGViewer * > viewer_list;
+    viewer_list views;
+
+    int current;
+
 };
 
 

@@ -588,32 +588,7 @@ void fgInitFDM() {
 
 // Initialize view parameters
 void fgInitView() {
-    // Initialize pilot view
-    static const SGPropertyNode *longitude
-	= fgGetNode("/position/longitude-deg");
-    static const SGPropertyNode *latitude
-	= fgGetNode("/position/latitude-deg");
-    static const SGPropertyNode *altitude
-	= fgGetNode("/position/altitude-ft");
-
-    FGViewerRPH *pilot_view
-        = (FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
-
-    pilot_view->set_geod_view_pos( longitude->getDoubleValue()
-				     * SGD_DEGREES_TO_RADIANS, 
-				   latitude->getDoubleValue()
-				     * SGD_DEGREES_TO_RADIANS,
-				   altitude->getDoubleValue()
-				     * SG_FEET_TO_METER );
-    pilot_view->set_rph( cur_fdm_state->get_Phi(),
-			 cur_fdm_state->get_Theta(),
-			 cur_fdm_state->get_Psi() );
-
-    // set current view to 0 (first) which is our main pilot view
-    globals->set_current_view( pilot_view );
-
-    SG_LOG( SG_GENERAL, SG_DEBUG, "  abs_view_pos = "
-	    << globals->get_current_view()->get_abs_view_pos());
+  globals->get_viewmgr()->update(0);
 }
 
 
