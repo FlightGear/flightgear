@@ -1123,8 +1123,8 @@ fgUsage ()
     cout << "\t--wBody=feet per second:  velocity along the body Z axis"
 	 << endl;
     cout << "\t\t(unless --units-meters specified" << endl;
-    cout << "\t--vc= initial airspeed in knots (--fdm=jsb only)" << endl;
-    cout << "\t--mach= initial mach number (--fdm=jsb only)" << endl;
+    cout << "\t--vc= initial airspeed in knots" << endl;
+    cout << "\t--mach= initial mach number" << endl;
     cout << endl;
 
     cout << "Rendering Options:" << endl;
