@@ -70,6 +70,7 @@ class FGATC610x : public FGProtocol {
     unsigned char switch_data[ATC_SWITCH_BYTES];
 
     float compass_position;
+
     SGPropertyNode *mag_compass;
     SGPropertyNode *dme_min, *dme_kt, *dme_nm;
     SGPropertyNode *com1_freq, *com1_stby_freq;
@@ -90,6 +91,16 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *xpdr_fl_ann, *xpdr_alt_ann, *xpdr_gnd_ann, *xpdr_on_ann;
     SGPropertyNode *xpdr_sby_ann, *xpdr_reply_ann;
 
+    // configuration values
+    SGPropertyNode *elevator_center, *elevator_min, *elevator_max;
+    SGPropertyNode *ailerons_center, *ailerons_min, *ailerons_max;
+    SGPropertyNode *rudder_center, *rudder_min, *rudder_max;
+    SGPropertyNode *throttle_min, *throttle_max;
+    SGPropertyNode *mixture_min, *mixture_max;
+    SGPropertyNode *trim_center, *trim_min, *trim_max;
+    SGPropertyNode *nav1vol_min, *nav1vol_max;
+    SGPropertyNode *nav2vol_min, *nav2vol_max;
+
     int dme_switch;
 
     bool do_analog_in();
@@ -106,6 +117,7 @@ public:
     ~FGATC610x() { }
 
     bool open();
+    void init_config();
 
     bool process();
 
