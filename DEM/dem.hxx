@@ -30,7 +30,7 @@
 
 #include <stdio.h>
 
-#include <Scenery/Bucket/bucketutils.h>
+#include <Bucket/bucketutils.h>
 
 
 #define DEM_SIZE 1200
@@ -50,9 +50,9 @@ class fgDEM {
     // Distance between column and row data points (in arc seconds)
     double col_step, row_step;
     
-    // the actual mesh data allocated here
-    // float dem_data[DEM_SIZE_1][DEM_SIZE_1];
-    // float output_data[DEM_SIZE_1][DEM_SIZE_1];
+    // pointers to the actual mesh data allocated here
+    float (*dem_data)[DEM_SIZE_1];
+    float (*output_data)[DEM_SIZE_1];
 
     // Current "A" Record Information
     char dem_description[80], dem_quadrangle[80];
@@ -83,13 +83,13 @@ public:
     int close ( void );
 
     // parse a DEM file
-    int parse( float dem_data[DEM_SIZE_1][DEM_SIZE_1] );
+    int parse( void );
 
     // read and parse DEM "A" record
-    void read_a_record( );
+    void read_a_record( void );
 
     // read and parse DEM "B" record
-    void read_b_record( float dem_data[DEM_SIZE_1][DEM_SIZE_1] );
+    void read_b_record( void );
 
     // Informational methods
     double info_originx( void ) { return(originx); }
@@ -98,28 +98,22 @@ public:
     // return the current altitude based on mesh data.  We should
     // rewrite this to interpolate exact values, but for now this is
     // good enough
-    double interpolate_altitude( float dem_data[DEM_SIZE_1][DEM_SIZE_1], 
-				 double lon, double lat);
+    double interpolate_altitude( double lon, double lat );
 
     // Use least squares to fit a simpler data set to dem data
-    void fit( float dem_data[DEM_SIZE_1][DEM_SIZE_1], 
-	      float output_data[DEM_SIZE_1][DEM_SIZE_1], 
-	      char *fg_root, double error, struct fgBUCKET *p );
+    void fit( char *fg_root, double error, struct fgBUCKET *p );
 
     // Initialize output mesh structure
-    void outputmesh_init( float output_data[DEM_SIZE_1][DEM_SIZE_1] );
+    void outputmesh_init( void );
 
     // Get the value of a mesh node
-    double outputmesh_get_pt( float output_data[DEM_SIZE_1][DEM_SIZE_1],
-			      int i, int j );
+    double outputmesh_get_pt( int i, int j );
 
     // Set the value of a mesh node
-    void outputmesh_set_pt( float output_data[DEM_SIZE_1][DEM_SIZE_1],
-			    int i, int j, double value );
+    void outputmesh_set_pt( int i, int j, double value );
 
     // Write out a node file that can be used by the "triangle" program
-    void outputmesh_output_nodes( float output_data[DEM_SIZE_1][DEM_SIZE_1],
-				  char *fg_root, struct fgBUCKET *p );
+    void outputmesh_output_nodes( char *fg_root, struct fgBUCKET *p );
 
     // Destructor
     ~fgDEM( void );
@@ -130,6 +124,9 @@ public:
 
 
 // $Log$
+// Revision 1.2  1998/04/14 02:43:28  curt
+// Used "new" to auto-allocate large DEM parsing arrays in class constructor.
+//
 // Revision 1.1  1998/04/08 22:57:23  curt
 // Adopted Gnu automake/autoconf system.
 //

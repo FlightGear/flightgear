@@ -45,6 +45,8 @@
 
 fgDEM::fgDEM( void ) {
     // printf("class fgDEM CONstructor called.\n");
+    dem_data = new float[DEM_SIZE_1][DEM_SIZE_1];
+    output_data = new float[DEM_SIZE_1][DEM_SIZE_1];
 }
 
 
@@ -315,8 +317,7 @@ void fgDEM::read_a_record( void ) {
 
 
 // read and parse DEM "B" record
-void fgDEM::read_b_record(float dem_data[DEM_SIZE_1][DEM_SIZE_1])
-{
+void fgDEM::read_b_record( void ) {
     char token[80];
     int i;
 
@@ -353,7 +354,7 @@ void fgDEM::read_b_record(float dem_data[DEM_SIZE_1][DEM_SIZE_1])
 
 
 // parse dem file
-int fgDEM::parse( float dem_data[DEM_SIZE_1][DEM_SIZE_1] ) {
+int fgDEM::parse( void ) {
     int i;
 
     cur_row = 0;
@@ -361,7 +362,8 @@ int fgDEM::parse( float dem_data[DEM_SIZE_1][DEM_SIZE_1] ) {
     read_a_record();
 
     for ( i = 0; i < dem_num_profiles; i++ ) {
-	read_b_record( dem_data );
+	// printf("Ready to read next b record\n");
+	read_b_record();
 	cur_col++;
 
 	if ( cur_col % 100 == 0 ) {
@@ -377,9 +379,7 @@ int fgDEM::parse( float dem_data[DEM_SIZE_1][DEM_SIZE_1] ) {
 
 // return the current altitude based on mesh data.  We should rewrite
 // this to interpolate exact values, but for now this is good enough
-double fgDEM::interpolate_altitude( float dem_data[DEM_SIZE_1][DEM_SIZE_1],
-				    double lon, double lat)
-{
+double fgDEM::interpolate_altitude( double lon, double lat ) {
     // we expect incoming (lon,lat) to be in arcsec for now
 
     double xlocal, ylocal, dx, dy, zA, zB, elev;
@@ -492,10 +492,7 @@ double fgDEM::interpolate_altitude( float dem_data[DEM_SIZE_1][DEM_SIZE_1],
 
 
 // Use least squares to fit a simpler data set to dem data
-void fgDEM::fit( float dem_data[DEM_SIZE_1][DEM_SIZE_1], 
-		 float output_data[DEM_SIZE_1][DEM_SIZE_1], 
-		 char *fg_root, double error, struct fgBUCKET *p )
-{
+void fgDEM::fit( char *fg_root, double error, struct fgBUCKET *p ) {
     double x[DEM_SIZE_1], y[DEM_SIZE_1];
     double m, b, ave_error, max_error;
     double cury, lasty;
@@ -504,7 +501,7 @@ void fgDEM::fit( float dem_data[DEM_SIZE_1][DEM_SIZE_1],
     // FILE *dem, *fit, *fit1;
 
     printf("Initializing output mesh structure\n");
-    outputmesh_init( output_data );
+    outputmesh_init();
 
     // determine dimensions
     colmin = p->x * ( (cols - 1) / 8);
@@ -514,10 +511,10 @@ void fgDEM::fit( float dem_data[DEM_SIZE_1][DEM_SIZE_1],
     printf("Fitting region = %d,%d to %d,%d\n", colmin, rowmin, colmax, rowmax);
     
     // include the corners explicitly
-    outputmesh_set_pt(output_data, colmin, rowmin, dem_data[colmin][rowmin]);
-    outputmesh_set_pt(output_data, colmin, rowmax, dem_data[colmin][rowmax]);
-    outputmesh_set_pt(output_data, colmax, rowmax, dem_data[colmax][rowmax]);
-    outputmesh_set_pt(output_data, colmax, rowmin, dem_data[colmax][rowmin]);
+    outputmesh_set_pt(colmin, rowmin, dem_data[colmin][rowmin]);
+    outputmesh_set_pt(colmin, rowmax, dem_data[colmin][rowmax]);
+    outputmesh_set_pt(colmax, rowmax, dem_data[colmax][rowmax]);
+    outputmesh_set_pt(colmax, rowmin, dem_data[colmax][rowmin]);
 
     printf("Beginning best fit procedure\n");
 
@@ -598,7 +595,7 @@ void fgDEM::fit( float dem_data[DEM_SIZE_1][DEM_SIZE_1],
 	    if ( start > colmin ) {
 		// skip this for the first line segment
 		cury = m * x[0] + b;
-		outputmesh_set_pt(output_data, start, row, (lasty + cury) / 2);
+		outputmesh_set_pt(start, row, (lasty + cury) / 2);
 		// fprintf(fit, "%.2f %.2f\n", x[0], (lasty + cury) / 2);
 	    }
 
@@ -625,12 +622,12 @@ void fgDEM::fit( float dem_data[DEM_SIZE_1][DEM_SIZE_1],
 	// printf("Please hit return: "); gets(junk);
     }
 
-    outputmesh_output_nodes(output_data, fg_root, p);
+    outputmesh_output_nodes(fg_root, p);
 }
 
 
 // Initialize output mesh structure
-void fgDEM::outputmesh_init( float output_data[DEM_SIZE_1][DEM_SIZE_1] ) {
+void fgDEM::outputmesh_init( void ) {
     int i, j;
     
     for ( j = 0; j < DEM_SIZE_1; j++ ) {
@@ -642,26 +639,20 @@ void fgDEM::outputmesh_init( float output_data[DEM_SIZE_1][DEM_SIZE_1] ) {
 
 
 // Get the value of a mesh node
-double fgDEM::outputmesh_get_pt( float output_data[DEM_SIZE_1][DEM_SIZE_1],
-				 int i, int j )
-{
+double fgDEM::outputmesh_get_pt( int i, int j ) {
     return ( output_data[i][j] );
 }
 
 
 // Set the value of a mesh node
-void fgDEM::outputmesh_set_pt( float output_data[DEM_SIZE_1][DEM_SIZE_1],
-			       int i, int j, double value )
-{
+void fgDEM::outputmesh_set_pt( int i, int j, double value ) {
     // printf("Setting data[%d][%d] = %.2f\n", i, j, value);
    output_data[i][j] = value;
 }
 
 
 // Write out a node file that can be used by the "triangle" program
-void fgDEM::outputmesh_output_nodes( float output_data[DEM_SIZE_1][DEM_SIZE_1],
-				     char *fg_root, struct fgBUCKET *p )
-{
+void fgDEM::outputmesh_output_nodes( char *fg_root, struct fgBUCKET *p ) {
     struct stat stat_buf;
     char base_path[256], dir[256], file[256];
 #ifdef WIN32
@@ -763,6 +754,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.2  1998/04/14 02:43:27  curt
+// Used "new" to auto-allocate large DEM parsing arrays in class constructor.
+//
 // Revision 1.1  1998/04/08 22:57:22  curt
 // Adopted Gnu automake/autoconf system.
 //
