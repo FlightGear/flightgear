@@ -25,7 +25,8 @@ fgfs-base: fgfs-base-tar fgfs-base-zip fgfs-base-patch
 fgfs-base-tar:
 	(cd $(HOME); \
 	tar czvf fgfs-base-$(VERSION)b.tar.gz \
-	FlightGear/[A-CE-R]* \
+	FlightGear/A[A-su-z]* \
+	FlightGear/[B-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
 	FlightGear/Sounds \
 	FlightGear/[T-W]* FlightGear/[c-m]*)
@@ -33,7 +34,8 @@ fgfs-base-tar:
 fgfs-base-zip:
 	(cd $(HOME); \
 	zip -rv fgfs-base-$(VERSION)b.zip \
-	FlightGear/[A-CE-R]* \
+	FlightGear/A[A-su-z]* \
+	FlightGear/[B-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
 	FlightGear/Sounds \
 	FlightGear/Textures FlightGear/Thanks \
@@ -41,8 +43,9 @@ fgfs-base-zip:
 
 fgfs-base-patch:
 	(cd $(HOME); \
-	tar --newer 7/19/2000 -czvf fgfs-base-patch-$(VERSION).tar.gz \
-	FlightGear/[A-CE-R]* \
+	tar --newer 9/18/2000 -czvf fgfs-base-patch-$(VERSION).tar.gz \
+	FlightGear/A[A-su-z]* \
+	FlightGear/[B-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
 	FlightGear/Sounds \
 	FlightGear/[T-W]* FlightGear/[c-m]*)
