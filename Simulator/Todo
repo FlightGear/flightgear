@@ -15,8 +15,6 @@
            kind of like the xgl stuff.  The debugging version can do
            bounds checking and such.
 
-7/21/98 -  add a --enable/disable-sound option.
-
 6/10/98 -  problem with view culling when not looking forward.  Need to 
            generate the correct matrix and work it into the calculations.
 
@@ -37,14 +35,11 @@
 
 4/14/98 -  Convert gl__() calls in Cockpit/ to xgl__() calls
 
-12/29/97 - Add a mechanism to parse command line options
-    * (done) A simple clear-screen sky.
-    * (done) No fog.
+12/29/97 - Add a mechanism to parse additional command line options?
     * No astronomy.
     * Less detailed terrain.
     * Texture - but no MIP-mapping.
     * Texture - but no bilinear blending.
-    * (done) No texture.
 
 12/29/97 - sky tweaking
   Steve Baker writes:
@@ -78,6 +73,3 @@
     We can then tweak that file to set up all the conditions. The
     realtime system interpolates the horizon colours all around the edge
     of the sky.
-
-12/29/97 - glut windows or something for panel area - consider 3d
-           panels, careful of texture memory problems.
