@@ -85,7 +85,11 @@ void FGAutopilot::MakeTargetLatLonStr( double lat, double lon ) {
 
 
 void FGAutopilot::MakeTargetAltitudeStr( double altitude ) {
-    sprintf( TargetAltitudeStr, "APAltitude  %6.0f", altitude );
+    if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
+	sprintf( TargetAltitudeStr, "APAltitude  %6.0f+", altitude );
+    } else {
+	sprintf( TargetAltitudeStr, "APAltitude  %6.0f", altitude );
+    }
 }
 
 
@@ -637,10 +641,20 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
 	TargetAltitude = FGBFI::getAltitude() * FEET_TO_METER;
 	alt_error_accum = 0.0;
 
-	MakeTargetAltitudeStr( TargetAltitude );
+	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	    MakeTargetAltitudeStr( TargetAltitude * METER_TO_FEET );
+	} else {
+	    MakeTargetAltitudeStr( TargetAltitude * METER_TO_FEET );
+	}
     } else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
 	TargetAGL = FGBFI::getAGL() * FEET_TO_METER;
 	alt_error_accum = 0.0;
+
+	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	    MakeTargetAltitudeStr( TargetAGL * METER_TO_FEET );
+	} else {
+	    MakeTargetAltitudeStr( TargetAGL * METER_TO_FEET );
+	}
     }
     
     update_old_control_values();
@@ -750,8 +764,14 @@ void FGAutopilot::AltitudeAdjust( double inc )
 	
     if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET )
 	target_alt *= METER_TO_FEET;
-    // ApAltitudeDialogInput->setValue((float)target_alt);
-    MakeTargetAltitudeStr( target_alt );
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET )
+	target_agl *= METER_TO_FEET;
+
+    if ( altitude_mode == FG_ALTITUDE_LOCK ) {
+	MakeTargetAltitudeStr( target_alt );
+    } else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
+	MakeTargetAltitudeStr( target_agl );
+    }
 
     update_old_control_values();
 }

@@ -46,6 +46,7 @@
 #include <simgear/misc/fgpath.hxx>
 
 #include <Aircraft/aircraft.hxx>
+#include <Autopilot/auto_gui.hxx>
 #include <Autopilot/newauto.hxx>
 #include <Cockpit/hud.hxx>
 #include <GUI/gui.h>
@@ -65,8 +66,6 @@
 #include "save.hxx"
 #include "views.hxx"
 
-extern void NewAltitude( puObject *cb );
-extern void NewHeading( puObject *cb );
 
 // Force an update of the sky and lighting parameters
 static void local_update_sky_and_lighting_params( void ) {
