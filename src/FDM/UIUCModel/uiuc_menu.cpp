@@ -109,7 +109,7 @@ SG_USING_STD(cerr);
 SG_USING_STD(cout);
 SG_USING_STD(endl);
 
-#  ifndef _MSC_VR
+#  ifndef _MSC_VER
 SG_USING_STD(exit);
 #  endif
 #endif

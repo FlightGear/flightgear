@@ -1591,6 +1591,14 @@ int main( int argc, char **argv ) {
 
     ssgTexturePath( (char *)full_model.dir().c_str() );
     ssgEntity *acmodel_obj = ssgLoad( (char *)full_model.c_str() );
+    if( !acmodel_obj ) {
+        // fall back to default
+        acmodel_obj = ssgLoad( (char *)"glider.ac" );
+        if( !acmodel_obj ) {
+            SG_LOG( SG_GENERAL, SG_ALERT, "FAILED to LOAD an AC model! ..." );
+            exit(-1);
+        }
+    }
 
     // find moving parts (if this is an MDL model)
     flaps_selector = (ssgSelector*)fgFindNode( acmodel_obj, "FLAPS" );

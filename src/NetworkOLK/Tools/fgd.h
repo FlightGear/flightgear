@@ -1,3 +1,7 @@
+
+
+#ifndef  _MSC_VER
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -17,3 +21,5 @@ int     MSG_PEEK        = 0x02;    /* Peek at incoming messages.  */
 int     MSG_WAITALL     = 0x100;   /* Wait for a full request.  */
 #define MSG_WAITALL     MSG_WAITALL
 #endif
+
+#endif   /* !_MSC_VER */

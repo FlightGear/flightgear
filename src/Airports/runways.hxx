@@ -49,10 +49,16 @@
 #include STL_STRING
 #include <vector>
 
+#ifndef _MSC_VER
 #define NDEBUG			// she don't work without it.
+#endif // !_MSC_VER
+
 #include <mk4.h>
 #include <mk4str.h>
+
+#ifndef _MSC_VER
 #undef NDEBUG
+#endif // !_MSC_VER
 
 SG_USING_STD(string);
 SG_USING_STD(vector);

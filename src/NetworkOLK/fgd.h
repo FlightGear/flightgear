@@ -1,3 +1,7 @@
+
+
+#ifndef  _MSC_VER
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -15,3 +19,5 @@
 #ifndef MSG_WAITALL
 #define MSG_WAITALL     0x100   /* Wait for a full request.  */
 #endif
+
+#endif   /* !_MSC_VER */

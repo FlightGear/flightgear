@@ -92,6 +92,10 @@ SG_USING_STD(string);
 SG_USING_STD(cout);
 #endif
 
+#ifdef  _MSC_VER
+#define  snprintf    _snprintf
+#endif   /* _MSC_VER */
+
 // main.cxx hack, should come from an include someplace
 extern void fgInitVisuals( void );
 extern void fgReshape( int width, int height );
