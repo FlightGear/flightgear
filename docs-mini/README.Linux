@@ -89,7 +89,7 @@ FlightGear up and running under Linux.
    options. Have a look at the file INSTALL in the FlightGear source
    directory to learn about them. If run without options, configure
    assumes that you will install the data files under
-   /usr/local/lib/FlightGear. Assuming configure finished
+   /usr/local/share/FlightGear. Assuming configure finished
    successfully, simply run
 
 	make
