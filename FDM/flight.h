@@ -33,15 +33,17 @@
 
 
 /* Define the various supported flight models (most not yet implemented) */
-#define FG_LARCSIM     0
+#define FG_LARCSIM     0   /* The only one that is currently implemented */
 #define FG_ACM         1
-#define FG_HELICOPTER  2
-#define FG_AUTOGYRO    3
-#define FG_BALLOON     4
-#define FG_PARACHUTE   5
-#define FG_SLEW        6
-#define FG_EXTERN_GPS  7
-#define FG_EXTERN_NET  8
+#define FG_SUPER_SONIC 2
+#define FG_HELICOPTER  3
+#define FG_AUTOGYRO    4
+#define FG_BALLOON     5
+#define FG_PARACHUTE   6
+#define FG_SLEW        7    /* Slew (in MS terminology) */
+#define FG_EXTERN_GPS  8    /* Driven via a serially connected GPS */
+#define FG_EXTERN_NET  9    /* Driven externally via the net */
+#define FG_EXTERN_NASA 10   /* Track the space shuttle ? */
 
 
 typedef double FG_VECTOR_3[3];
@@ -396,9 +398,12 @@ int fgFlightModelUpdate(int model, struct fgFLIGHT *f, int multiloop);
 
 
 /* $Log$
-/* Revision 1.12  1998/01/22 02:59:32  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.13  1998/01/24 00:04:59  curt
+/* misc. tweaks.
 /*
+ * Revision 1.12  1998/01/22 02:59:32  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.11  1998/01/19 19:27:03  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.
