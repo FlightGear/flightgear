@@ -3355,7 +3355,7 @@ char **argv;
             ymax = yptr + yspan;
             draw(current_inc, current_image, xmin, ymin, xmax, ymax);
           } else if (event.xbutton.button == Button2) {
-            printf("x = %.4g, y = %.4g\n", xptr, yptr);
+            printf("x = %.9f, y = %.9f\n", xptr, yptr);
           }
         }
         break;

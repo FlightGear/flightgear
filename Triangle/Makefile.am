@@ -9,11 +9,12 @@
 #
 #   DEFS = -DTRILIBRARY -DREDUCED -DCDT_ONLY
 
-DEFS += -DTRILIBRARY -DREDUCED
+DEFS += -DTRILIBRARY
 
 noinst_LIBRARIES = libTriangle.a
 
 libTriangle_a_SOURCES = triangle.c triangle.h
 
-# bin_PROGRAMS = showme
-# showme_SOURCES = showme.c
+bin_PROGRAMS = showme
+showme_SOURCES = showme.c
+showme_LDADD = -lX11

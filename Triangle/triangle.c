@@ -5513,6 +5513,15 @@ struct triedge *testtri;
   if (vararea || fixedarea) {
     /* Check whether the area is larger than permitted. */
     area = 0.5 * (dxod * dyda - dyod * dxda);
+
+#if 0
+    if ( area < 1.0 / (2.0 * 3600.0 * 3600.0) ) {
+      /* FGFS ADDITION!!! */
+      /* small enough, don't add to list of bad triangles */
+      printf("REJECTING TRIANGLE OF AREA %.6g\n", area);
+    }
+#endif
+
     if (fixedarea && (area > maxarea)) {
       /* Add this triangle to the list of bad triangles. */
       enqueuebadtri(testtri, angle, tapex, torg, tdest);
