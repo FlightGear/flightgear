@@ -41,6 +41,7 @@
 #include <Include/fg_zlib.h>
 
 #include "area.hxx"
+#include "convex_hull.hxx"
 
 
 // process and airport + runway list
@@ -84,12 +85,12 @@ void process_airport( string last_airport, list < string > & runway_list ) {
     last = apt_list.end();
     while ( current != last ) {
 	// printf( "(%.4f, %.4f)\n", 
-	printf( "%.5f %.5f\n", 
-		current->lon * RAD_TO_DEG,
-		current->lat * RAD_TO_DEG );
+	printf( "%.5f %.5f\n", current->lon, current->lat );
 	current++;
     }
     printf("\n");
+
+    convex_hull(apt_list);
 }
 
 

@@ -1,6 +1,6 @@
-// area.h -- routines to assist with inserting "areas" into FG terrain
+// convex_hull.hxx -- calculate the convex hull of a set of points
 //
-// Written by Curtis Olson, started February 1998.
+// Written by Curtis Olson, started September 1998.
 //
 // Copyright (C) 1998  Curtis L. Olson  - curt@me.umn.edu
 //
@@ -23,32 +23,39 @@
 //
 
 
-#ifndef _AREA_H
-#define _AREA_H
+#ifndef _CONVEX_HULL_HXX
+#define _CONVEX_HULL_HXX
 
 
 #include <list>
+#include <map>
+
+#ifdef NEEDNAMESPACESTD
+using namespace std;
+#endif
 
 #include "point2d.hxx"
 
 
-// generate an area for a runway (return result points in degrees)
-list < point2d >
-gen_runway_area( double lon, double lat, double heading, 
-		      double length, double width);
+// stl list typedefs
+typedef list < point2d > list_container;
+typedef list_container::iterator list_iterator;
+
+// stl mapp typedefs
+typedef map < double, double, less<double> > map_container;
+typedef map_container::iterator map_iterator;
 
 
-#endif // _AREA_H
+// calculate the convex hull of a set of points, return as a list of
+// point2d
+list_container convex_hull( list_container input_list );
+
+
+#endif // _CONVEX_HULL_HXX
 
 
 // $Log$
-// Revision 1.2  1998/09/04 23:04:49  curt
+// Revision 1.1  1998/09/04 23:04:51  curt
 // Beginning of convex hull genereration routine.
-//
-// Revision 1.1  1998/09/01 19:34:33  curt
-// Initial revision.
-//
-// Revision 1.1  1998/07/20 12:54:05  curt
-// Initial revision.
 //
 //

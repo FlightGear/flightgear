@@ -1,4 +1,4 @@
-// area.h -- routines to assist with inserting "areas" into FG terrain
+// point2d.hxx -- define a 2d point class
 //
 // Written by Curtis Olson, started February 1998.
 //
@@ -23,32 +23,37 @@
 //
 
 
-#ifndef _AREA_H
-#define _AREA_H
+#ifndef _POINT2D_HXX
+#define _POINT2D_HXX
 
 
 #include <list>
 
-#include "point2d.hxx"
+
+class point2d {
+public:
+    union {
+	double x;
+	double dist;
+	double lon;
+    };
+    union {
+	double y;
+	double theta;
+	double lat;
+    };
+};
 
 
-// generate an area for a runway (return result points in degrees)
-list < point2d >
-gen_runway_area( double lon, double lat, double heading, 
-		      double length, double width);
+// convert a point from cartesian to polar coordinates
+point2d cart_to_polar_2d(point2d in);
 
 
-#endif // _AREA_H
+#endif // _POINT2D_HXX
 
 
 // $Log$
-// Revision 1.2  1998/09/04 23:04:49  curt
+// Revision 1.1  1998/09/04 23:04:53  curt
 // Beginning of convex hull genereration routine.
-//
-// Revision 1.1  1998/09/01 19:34:33  curt
-// Initial revision.
-//
-// Revision 1.1  1998/07/20 12:54:05  curt
-// Initial revision.
 //
 //

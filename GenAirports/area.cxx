@@ -29,6 +29,7 @@
 #include <Include/fg_constants.h>
 
 #include "area.hxx"
+#include "point2d.hxx"
 
 
 // calc new x, y for a rotation
@@ -64,15 +65,6 @@ point2d calc_lon_lat( point2d orig, point2d offset ) {
 	    fmod(orig.lon - asin( sin(offset.theta) * sin(offset.dist) / 
 				  cos(result.lat) ) + FG_PI, FG_2PI) - FG_PI;
     }
-
-    return(result);
-}
-
-
-point2d cart_to_polar_2d(point2d in) {
-    point2d result;
-    result.dist = sqrt( in.x * in.x + in.y * in.y );
-    result.theta = atan2(in.y, in.x);    
 
     return(result);
 }
@@ -150,6 +142,9 @@ gen_area(point2d origin, double angle, list < point2d > cart_list)
     last = rad_list.end();
     while ( current != last ) {
 	p = calc_lon_lat(origin_rad, *current);
+	// convert from radians to degress
+	p.lon *= RAD_TO_DEG;
+	p.lat *= RAD_TO_DEG;
 	// printf("(%.8f, %.8f)\n", p.lon, p.lat);
 	result_list.push_back(p);
 	current++;
@@ -203,7 +198,7 @@ gen_runway_area( double lon, double lat, double heading,
     printf("\n");
     */
 
-    // rotate, transform, and convert points to lon, lat
+    // rotate, transform, and convert points to lon, lat in degrees
     result_list = gen_area(origin, heading, tmp_list);
 
     /*
@@ -223,6 +218,9 @@ gen_runway_area( double lon, double lat, double heading,
 
 
 // $Log$
+// Revision 1.2  1998/09/04 23:04:48  curt
+// Beginning of convex hull genereration routine.
+//
 // Revision 1.1  1998/09/01 19:34:33  curt
 // Initial revision.
 //

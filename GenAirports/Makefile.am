@@ -26,7 +26,11 @@
 
 bin_PROGRAMS = genapts
 
-genapts_SOURCES = area.cxx area.hxx main.cxx
+genapts_SOURCES = \
+	area.cxx area.hxx \
+	convex_hull.cxx convex_hull.hxx \
+	main.cxx \
+	point2d.cxx point2d.hxx
 
 genapts_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
@@ -37,6 +41,9 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/09/04 23:04:47  curt
+# Beginning of convex hull genereration routine.
+#
 # Revision 1.1  1998/09/01 19:34:32  curt
 # Initial revision.
 #
