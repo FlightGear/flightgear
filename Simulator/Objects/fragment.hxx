@@ -75,7 +75,7 @@ operator== ( const fgFACE& lhs, const fgFACE& rhs )
 
 // Forward declarations
 class fgTILE;
-class fgMATERIAL;
+class FGMaterialSlot;
 
 // Object fragment data class
 class fgFRAGMENT {
@@ -98,7 +98,7 @@ public:
     // material property this fragment is assigned to.
 
     // material property pointer
-    fgMATERIAL *material_ptr;
+    FGMaterialSlot *material_ptr;
 
     // tile pointer
     fgTILE *tile_ptr;

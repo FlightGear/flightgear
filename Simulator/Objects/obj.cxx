@@ -60,7 +60,7 @@
 #include <Misc/stopwatch.hxx>
 #include <Scenery/tile.hxx>
 
-#include "material.hxx"
+#include "materialmgr.hxx"
 #include "obj.hxx"
 
 FG_USING_STD(string);

@@ -47,7 +47,7 @@
 #include <Cockpit/hud.hxx>
 #include <GUI/gui.h>
 #include <Include/fg_constants.h>
-#include <Objects/material.hxx>
+#include <Objects/materialmgr.hxx>
 #include <plib/pu.h>
 #include <Time/light.hxx>
 #include <Weather/weather.hxx>

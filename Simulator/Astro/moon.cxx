@@ -30,7 +30,7 @@
 #include <Debug/logstream.hxx>
 #include <Main/options.hxx>
 #include <Misc/fgpath.hxx>
-#include <Objects/texload.h>
+#include <Misc/texload.h>
 
 #ifdef __BORLANDC__
 #  define exception c_exception

@@ -43,7 +43,7 @@
 #include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Misc/fgstream.hxx>
-#include <Objects/material.hxx>
+#include <Objects/materialmgr.hxx>
 
 // #include <gpc/gpc.h>
 

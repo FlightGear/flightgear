@@ -45,7 +45,7 @@
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Misc/fgpath.hxx>
-#include <Objects/texload.h>
+#include <Misc/texload.h>
 
 #include "panel.hxx"
 #include "cockpit.hxx"

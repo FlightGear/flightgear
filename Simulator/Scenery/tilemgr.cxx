@@ -44,7 +44,7 @@
 #include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
 #include <Math/vector.hxx>
-#include <Objects/material.hxx>
+#include <Objects/materialmgr.hxx>
 #include <Objects/obj.hxx>
 #include <Weather/weather.hxx>
 
@@ -678,7 +678,7 @@ void fgTileMgrRender( void ) {
     FGView *v;
     Point3D frag_offset;
     fgFRAGMENT *frag_ptr;
-    fgMATERIAL *mtl_ptr;
+    FGMaterialSlot *mtl_ptr;
     int i;
     int tile_diameter;
     int index;
