@@ -49,10 +49,13 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up,
     vl->add( tmp3 );
     sgAddVec3( tmp3, perp );
     vl->add( tmp3 );
+    // sgSubVec3( tmp3, up );
+    // vl->add( tmp3 );
 
     nl->add( dir );
     nl->add( dir );
     nl->add( dir );
+    // nl->add( dir );
 
     sgVec4 color;
     sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
@@ -60,6 +63,7 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up,
     sgSetVec4( color, 1.0, 1.0, 1.0, 0.0 );
     cl->add( color );
     cl->add( color );
+    // cl->add( color );
 
     /*
     // temporarily do back face
@@ -91,8 +95,7 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up,
     sgSetVec2( tmp2, 1.0, 1.0 );
     tl->add( tmp2 );
     sgSetVec2( tmp2, 0.0, 1.0 );
-    tl->add( tmp2 );
-    */
+    tl->add( tmp2 ); */
 
     ssgLeaf *leaf = 
         new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );

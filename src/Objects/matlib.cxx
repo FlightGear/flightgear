@@ -160,7 +160,7 @@ static int gen_vasi_light_map() {
 
             // top half white, bottom half red
             env_map[i][j][0] = 255;
-            if ( i < half_res ) {
+            if ( i >= half_res ) {
                 env_map[i][j][1] = 255;
                 env_map[i][j][2] = 255;
             } else {
