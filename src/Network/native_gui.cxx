@@ -149,7 +149,8 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     net->warp = globals->get_warp();
 
     // Approach
-    net->dist_nm = current_radiostack->get_navcom1()->get_nav_gs_dist();
+    net->dist_nm = current_radiostack->get_navcom1()->get_nav_gs_dist()
+        * SG_METER_TO_NM;
     net->course_deviation_deg
         = current_radiostack->get_navcom1()->get_nav_heading()
         - current_radiostack->get_navcom1()->get_nav_radial();
