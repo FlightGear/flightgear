@@ -44,9 +44,7 @@ FGMagicCarpet::~FGMagicCarpet() {
 // Initialize the Magic Carpet flight model, dt is the time increment
 // for each subsequent iteration through the EOM
 void FGMagicCarpet::init() {
-				// explicitly call the superclass's
-				// init method first
-    FGInterface::init();
+    common_init();
 }
 
 

@@ -63,12 +63,13 @@ FGForce::FGForce(FGFDMExec *FDMExec) :
     vXYZn(3),
     vDXYZ(3),
     mT(3,3),
+    vH(3),
     vSense(3),
     ttype(tNone)
 {
-  mT(1,1)=1; //identity matrix
-  mT(2,2)=1;
-  mT(3,3)=1;
+  mT(1,1) = 1; //identity matrix
+  mT(2,2) = 1;
+  mT(3,3) = 1;
   vSense.InitMatrix(1);
   if (debug_lvl & 2) cout << "Instantiated: FGForce" << endl;
 }
@@ -84,7 +85,7 @@ FGForce::~FGForce()
 
 FGColumnVector3& FGForce::GetBodyForces(void) {
 
-  vFb=Transform()*(vFn.multElementWise(vSense));
+  vFb = Transform()*(vFn.multElementWise(vSense));
 
   //find the distance from this vector's location to the cg
   //needs to be done like this to convert from structural to body coords
@@ -92,7 +93,9 @@ FGColumnVector3& FGForce::GetBodyForces(void) {
   vDXYZ(2) =  (vXYZn(2) - fdmex->GetMassBalance()->GetXYZcg(2))*INCHTOFT;  //cg and rp values are in inches
   vDXYZ(3) = -(vXYZn(3) - fdmex->GetMassBalance()->GetXYZcg(3))*INCHTOFT;
 
-  vM=vMn +vDXYZ*vFb;
+  // include rotational effects. vH will be set in descendent class such as
+  // FGPropeller, and in most other cases will be zero.
+  vM = vMn + vDXYZ*vFb + fdmex->GetRotation()->GetPQR()*vH;
 
   return vFb;
 }

@@ -91,8 +91,6 @@ public:
   inline float            GetUVW   (int idx) { return vUVW(idx); }
   inline FGColumnVector3& GetUVWdot(void)    { return vUVWdot; }
   inline float            GetUVWdot(int idx) { return vUVWdot(idx); }
-  inline FGColumnVector3& GetNcg   (void)    { return vNcg; }
-  inline float            GetNcg   (int idx) { return vNcg(idx); }
   inline FGColumnVector3& GetvAero (void)    { return vAero; }
   inline float            GetvAero (int idx) { return vAero(idx); }
 
@@ -121,7 +119,6 @@ public:
 private:
   FGColumnVector3 vUVW;
   FGColumnVector3 vUVWdot;
-  FGColumnVector3 vNcg;
   FGColumnVector3 vlastUVWdot;
   FGMatrix33       mVel;
   FGColumnVector3 vAero;

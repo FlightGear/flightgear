@@ -177,6 +177,43 @@ public:
 
 typedef vector < FGEngInterface > engine_list;
 
+class FGGearInterface {
+   private:
+   
+     string name;
+     float x,y,z;     // >0 forward of cg, >0 right, >0 down
+     bool brake;      // true if this gear unit has a brake mechanism
+     bool rolls;      // true if this gear unit has a wheel
+     bool WoW;        // true if this gear unit is touching the ground
+     float position;  // 0 if retracted, 1 if extended
+   
+   public:
+     FGGearInterface(void);
+     ~FGGearInterface(void);
+     inline string GetName(void)     { return name; }
+     inline void SetName(string nm)  { name=nm; }
+     inline float GetX(void)         { return x; }
+     inline void SetX(float xloc)    { x=xloc;   }
+     inline float GetY(void)         { return y; }
+     inline void SetY(float yloc)    { y=yloc;   }
+     inline float GetZ(void)         { return z; }
+     inline void SetZ(float zloc)    { z=zloc;   }
+     inline bool GetBrake(void)      { return brake; }
+     inline void SetBrake(bool brk) { brake=brk; }
+     
+     // no good way to implement these right now
+     //inline bool GetRolls(void)      { return rolls; }
+     //inline SetRolls(bool rl)        { rolls=rl; }
+     
+     inline bool GetWoW(void)        { return WoW; }        
+     inline void SetWoW(bool wow)         { WoW=wow;    }     
+     inline float GetPosition(void)  { return position; }
+     inline void SetPosition(float pos) { position=pos; }
+};
+
+typedef vector < FGGearInterface > gear_list;       
+           
+
 
 // This is based heavily on LaRCsim/ls_generic.h
 class FGInterface : public FGSubsystem {
@@ -302,6 +339,9 @@ private:
 
     // Engine list
     engine_list engines;
+    
+    //gear list
+    gear_list gear;
 
     // SGTimeStamp valid_stamp;          // time this record is valid
     // SGTimeStamp next_stamp;           // time this record is valid
@@ -520,6 +560,9 @@ public:
     inline void set_inited( bool value ) { inited = value; }
 
     inline bool get_bound() const { return bound; }
+
+    //perform initializion that is common to all FDM's
+    void common_init();
 
     // time and update management values
     inline double get_delta_t() const { return delta_t; }
@@ -1179,6 +1222,19 @@ public:
     inline void add_engine( FGEngInterface e ) {
 	engines.push_back( e );
     }
+    
+    //gear
+    inline int get_num_gear() const {
+      return gear.size();
+    }
+    
+    inline FGGearInterface* get_gear_unit( int i ) {
+       return &gear[i];
+    }
+    
+    inline void add_gear_unit( FGGearInterface fgi ) {
+       gear.push_back( fgi );
+    }        
 };
 
 
@@ -1194,9 +1250,6 @@ extern FGInterface * cur_fdm_state;
 
 // Set the altitude (force)
 void fgFDMForceAltitude(const string &model, double alt_meters);
-
-// Set the local ground elevation
-void fgFDMSetGroundElevation(const string &model, double alt_meters);
 
 // Toggle data logging on/off
 void fgToggleFDMdataLogging(void);

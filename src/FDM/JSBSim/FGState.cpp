@@ -739,7 +739,7 @@ void FGState::ReportState(void) {
                     GetParameter(FG_RUDDER_POS)*RADTODEG );
   cout << out;                  
   snprintf(out,80, "    Throttle: %5.2f%c\n",
-                    FCS->GetThrottlePos(0),'%' );
+                    FCS->GetThrottlePos(0)*100,'%' );
   cout << out;
   
   snprintf(out,80, "    Wind Components: %5.2f kts head wind, %5.2f kts cross wind\n",

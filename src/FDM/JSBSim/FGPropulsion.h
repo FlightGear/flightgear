@@ -158,8 +158,13 @@ public:
   /** Returns the number of oxidizer tanks currently actively supplying oxidizer */
   inline int GetnumSelectedOxiTanks(void)  {return numSelectedOxiTanks;}
 
+  /** Loops the engines/thrusters until thrust output steady (used for trimming) */
   bool GetSteadyState(void);
-
+  
+  /** starts the engines in IC mode (dt=0).  All engine-specific setup must
+      be done before calling this (i.e. magnetos, starter engage, etc.) */
+  bool ICEngineStart(void);
+  
   string GetPropulsionStrings(void);
   string GetPropulsionValues(void);
 

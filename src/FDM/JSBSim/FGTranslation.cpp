@@ -80,7 +80,6 @@ CLASS IMPLEMENTATION
 FGTranslation::FGTranslation(FGFDMExec* fdmex) : FGModel(fdmex),
     vUVW(3),
     vUVWdot(3),
-    vNcg(3),
     vlastUVWdot(3),
     mVel(3,3),
     vAero(3)
@@ -120,9 +119,7 @@ bool FGTranslation::Run(void)
     mVel(3,2) =  vUVW(eU);
     mVel(3,3) =  0.0;
 
-    vUVWdot = mVel*Rotation->GetPQR() + Aircraft->GetForces()/MassBalance->GetMass();
-
-    vNcg = vUVWdot*INVGRAVITY;
+    vUVWdot = mVel*Rotation->GetPQR() + Aircraft->GetBodyAccel();
 
     vUVW += Tc * (vlastUVWdot + vUVWdot);
     vAero = vUVW + State->GetTl2b()*Atmosphere->GetWindNED();

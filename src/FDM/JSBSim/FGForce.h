@@ -256,6 +256,9 @@ public:
     vXYZn(2) = y;
     vXYZn(3) = z;
   }
+  inline void SetLocationX(float x) {vXYZn(1) = x;}
+  inline void SetLocationY(float y) {vXYZn(2) = y;}
+  inline void SetLocationZ(float z) {vXYZn(3) = z;}
   inline void SetLocation(FGColumnVector3 vv) { vXYZn = vv; }
   FGColumnVector3& GetLocation(void) { return vXYZn; }
 
@@ -282,6 +285,7 @@ public:
 protected:
   FGColumnVector3 vFn;
   FGColumnVector3 vMn;
+  FGColumnVector3 vH;
   FGFDMExec *fdmex;
   virtual void Debug(void);
 

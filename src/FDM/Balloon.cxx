@@ -75,9 +75,11 @@ FGBalloonSim::~FGBalloonSim() {
 // Initialize the BalloonSim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
 void FGBalloonSim::init() {
-				// explicitly call the superclass's
-				// init method first.
-    FGInterface::init();
+		
+    //do init common to all the FDM's		
+    common_init();
+    
+    //now do init specific to the Balloon
 
     sgVec3 temp;
 

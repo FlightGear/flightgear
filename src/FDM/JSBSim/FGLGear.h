@@ -228,6 +228,9 @@ public:
   inline bool GetReport(void)    { return ReportEnable; }
   inline float GetSteerAngle(void) { return SteerAngle;}
   inline float GetstaticFCoeff(void) { return staticFCoeff;}
+  
+  inline int GetBrakeGroup(void) { return (int)eBrakeGrp; }
+  inline int GetSteerType(void)  { return (int)eSteerType; }
 
 private:
   FGColumnVector3 vXYZ;

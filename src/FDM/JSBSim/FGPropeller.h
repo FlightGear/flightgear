@@ -150,6 +150,8 @@ private:
   float Diameter;
   float MaxPitch;
   float MinPitch;
+  float P_Factor;
+  float Sense;
   float Pitch;
   float Torque;
   FGTable *Efficiency;

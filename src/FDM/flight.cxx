@@ -71,6 +71,14 @@ FGEngInterface::FGEngInterface() {
 FGEngInterface::~FGEngInterface(void) {
 }
 
+FGGearInterface::FGGearInterface(void) {
+    x=y=z=0.0;
+    brake=rolls=WoW=false;
+    position=1.0;
+}    
+
+FGGearInterface::~FGGearInterface() {
+}
 
 // Constructor
 FGInterface::FGInterface() {
@@ -167,86 +175,101 @@ FGInterface::_setup ()
     altitude_agl=0;
 }
 
+void
+FGInterface::init () {}
 
 /**
  * Initialize the state of the FDM.
  *
  * Subclasses of FGInterface may do their own, additional initialization,
- * but normally they should invoke this method explicitly first as
- * FGInterface::init() to make sure the basic structures are set up
- * properly.
+ * but there is some that is common to all.  Normally, they should call
+ * this before they begin their own init to make sure the basic structures 
+ * are set up properly.
  */
 void
-FGInterface::init ()
+FGInterface::common_init ()
 {
-  SG_LOG(SG_FLIGHT, SG_INFO, "Start initializing FGInterface");
+    SG_LOG( SG_FLIGHT, SG_INFO, "Start common FDM init" );
 
-  inited = true;
+    set_inited( true );
 
-  stamp();
-  set_remainder(0);
+    stamp();
+    set_remainder( 0 );
 
-				// Set initial position
-  SG_LOG(SG_FLIGHT, SG_INFO, "...initializing position...");
-  set_Longitude(fgGetDouble("/position/longitude-deg") * SGD_DEGREES_TO_RADIANS);
-  set_Latitude(fgGetDouble("/position/latitude-deg") * SGD_DEGREES_TO_RADIANS);
-  double ground_elev_m = scenery.get_cur_elev() + 1;
-  double ground_elev_ft = ground_elev_m * METERS_TO_FEET;
-  if (fgGetBool("/sim/startup/onground") ||
-      fgGetDouble("/position/altitude-ft") < ground_elev_ft)
-    fgSetDouble("/position/altitude-ft", ground_elev_ft);
-  set_Altitude(fgGetDouble("/position/altitude-ft"));
-
-				// Set ground elevation
-  SG_LOG(SG_FLIGHT, SG_INFO,
-	 "...initializing ground elevation to "
-	 << ground_elev_ft << "ft...");
-  fgFDMSetGroundElevation("jsb", ground_elev_m);
-
-				// Set sea-level radius
-  SG_LOG(SG_FLIGHT, SG_INFO, "...initializing sea-level radius...");
-  SG_LOG(SG_FLIGHT, SG_INFO, " lat = " << fgGetDouble("/position/latitude-deg")
-	 << " alt = " << fgGetDouble("/position/altitude-ft") );
-  double sea_level_radius_meters;
-  double lat_geoc;
-  sgGeodToGeoc(fgGetDouble("/position/latitude-deg") * SGD_DEGREES_TO_RADIANS,
-	       fgGetDouble("/position/altitude-ft") * SG_FEET_TO_METER,
-	       &sea_level_radius_meters, &lat_geoc);
-  set_Sea_level_radius(sea_level_radius_meters * SG_METER_TO_FEET);
-
-				// Set initial velocities
-  SG_LOG(SG_FLIGHT, SG_INFO, "...initializing velocities...");
-  if (!fgHasNode("/sim/startup/speed-set")) {
-    set_V_calibrated_kts(0.0);
-  } else {
-    const string speedset = fgGetString("/sim/startup/speed-set");
-    if (speedset == "knots" || speedset == "KNOTS") {
-      set_V_calibrated_kts(fgGetDouble("/velocities/airspeed-kt"));
-    } else if (speedset == "mach" || speedset == "MACH") {
-      set_Mach_number(fgGetDouble("/velocities/mach"));
-    } else if (speedset == "UVW" || speedset == "uvw") {
-      set_Velocities_Wind_Body(fgGetDouble("/velocities/uBody-fps"),
-			       fgGetDouble("/velocities/vBody-fps"),
-			       fgGetDouble("/velocities/wBody-fps"));
-    } else if (speedset == "NED" || speedset == "ned") {
-      set_Velocities_Local(fgGetDouble("/velocities/speed-north-fps"),
-			   fgGetDouble("/velocities/speed-east-fps"),
-			   fgGetDouble("/velocities/speed-down-fps"));
-    } else {
-      SG_LOG(SG_FLIGHT, SG_ALERT,
-	     "Unrecognized value for /sim/startup/speed-set: " << speedset);
-      set_V_calibrated_kts(0.0);
+    // Set initial position
+    SG_LOG( SG_FLIGHT, SG_INFO, "...initializing position..." );
+    set_Longitude( fgGetDouble("/position/longitude-deg")
+                   * SGD_DEGREES_TO_RADIANS );
+    set_Latitude( fgGetDouble("/position/latitude-deg")
+                  * SGD_DEGREES_TO_RADIANS );
+    double ground_elev_m = scenery.get_cur_elev();
+    double ground_elev_ft = ground_elev_m * METERS_TO_FEET;
+    if ( fgGetBool("/sim/startup/onground")
+         || fgGetDouble("/position/altitude-ft") < ground_elev_ft ) {
+        fgSetDouble("/position/altitude-ft", ground_elev_ft);
     }
-  }
+    set_Altitude( fgGetDouble("/position/altitude-ft") );
 
-				// Set initial Euler angles
-  SG_LOG(SG_FLIGHT, SG_INFO, "...initializing Euler angles...");
-  set_Euler_Angles
-    (fgGetDouble("/orientation/roll-deg") * SGD_DEGREES_TO_RADIANS,
-     fgGetDouble("/orientation/pitch-deg") * SGD_DEGREES_TO_RADIANS,
-     fgGetDouble("/orientation/heading-deg") * SGD_DEGREES_TO_RADIANS);
+    // Set ground elevation
+    SG_LOG( SG_FLIGHT, SG_INFO,
+            "...initializing ground elevation to " << ground_elev_ft
+            << "ft..." );
+    SG_LOG( SG_FLIGHT, SG_INFO, "common_init(): set ground elevation "
+            << ground_elev_ft ); 
+    base_fdm_state.set_Runway_altitude( ground_elev_ft );
+    set_Runway_altitude( ground_elev_ft );
 
-  SG_LOG(SG_FLIGHT, SG_INFO, "End initializing FGInterface");
+    // Set sea-level radius
+    SG_LOG( SG_FLIGHT, SG_INFO, "...initializing sea-level radius..." );
+    SG_LOG( SG_FLIGHT, SG_INFO, " lat = "
+            << fgGetDouble("/position/latitude-deg")
+            << " alt = " << fgGetDouble("/position/altitude-ft") );
+    double sea_level_radius_meters;
+    double lat_geoc;
+    sgGeodToGeoc( fgGetDouble("/position/latitude-deg")
+                    * SGD_DEGREES_TO_RADIANS,
+                  fgGetDouble("/position/altitude-ft") * SG_FEET_TO_METER,
+                  &sea_level_radius_meters, &lat_geoc );
+    set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET );
+
+    // Set initial velocities
+    SG_LOG( SG_FLIGHT, SG_INFO, "...initializing velocities..." );
+    if ( !fgHasNode("/sim/startup/speed-set") ) {
+        set_V_calibrated_kts(0.0);
+    } else {
+        const string speedset = fgGetString("/sim/startup/speed-set");
+        if ( speedset == "knots" || speedset == "KNOTS" ) {
+            set_V_calibrated_kts( fgGetDouble("/velocities/airspeed-kt") );
+        } else if ( speedset == "mach" || speedset == "MACH" ) {
+            set_Mach_number( fgGetDouble("/velocities/mach") );
+        } else if ( speedset == "UVW" || speedset == "uvw" ) {
+            set_Velocities_Wind_Body(
+                                     fgGetDouble("/velocities/uBody-fps"),
+                                     fgGetDouble("/velocities/vBody-fps"),
+                                     fgGetDouble("/velocities/wBody-fps") );
+        } else if ( speedset == "NED" || speedset == "ned" ) {
+            set_Velocities_Local(
+                                 fgGetDouble("/velocities/speed-north-fps"),
+                                 fgGetDouble("/velocities/speed-east-fps"),
+                                 fgGetDouble("/velocities/speed-down-fps") );
+        } else {
+            SG_LOG( SG_FLIGHT, SG_ALERT,
+                    "Unrecognized value for /sim/startup/speed-set: "
+                    << speedset);
+            set_V_calibrated_kts( 0.0 );
+        }
+    }
+
+    // Set initial Euler angles
+    SG_LOG( SG_FLIGHT, SG_INFO, "...initializing Euler angles..." );
+    set_Euler_Angles( fgGetDouble("/orientation/roll-deg")
+                        * SGD_DEGREES_TO_RADIANS,
+                      fgGetDouble("/orientation/pitch-deg")
+                        * SGD_DEGREES_TO_RADIANS,
+                      fgGetDouble("/orientation/heading-deg")
+                        * SGD_DEGREES_TO_RADIANS );
+
+    SG_LOG( SG_FLIGHT, SG_INFO, "End common FDM init" );
 }
 
 
@@ -524,15 +547,6 @@ void fgFDMForceAltitude(const string &model, double alt_meters) {
 }
 
 
-// Set the local ground elevation
-void fgFDMSetGroundElevation(const string &model, double ground_meters) {
-    SG_LOG( SG_FLIGHT,SG_INFO, "fgFDMSetGroundElevation: "
-	    << ground_meters*SG_METER_TO_FEET ); 
-    base_fdm_state.set_Runway_altitude( ground_meters * SG_METER_TO_FEET );
-    cur_fdm_state->set_Runway_altitude( ground_meters * SG_METER_TO_FEET );
-}
-
-
 // Positions
 void FGInterface::set_Latitude(double lat) { 
     geodetic_position_v[0] = lat;
@@ -723,4 +737,3 @@ void FGInterface::_busdump(void) {
 void fgToggleFDMdataLogging(void) {
   cur_fdm_state->ToggleDataLogging();
 }
-

@@ -88,10 +88,10 @@ FGLaRCsim::~FGLaRCsim(void) {
 // Initialize the LaRCsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
 void FGLaRCsim::init() {
+   //do init common to all FDM's
+   common_init();
 
-    		// Explicitly call the superclass's
-				// init method first.
-    FGInterface::init();
+   //now do any specific to LaRCsim
 }
 
 

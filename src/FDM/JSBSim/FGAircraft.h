@@ -189,6 +189,7 @@ public:
   inline FGColumnVector3& GetMoments(void) { return vMoments; }
   inline FGColumnVector3& GetForces(void) { return vForces; }
   inline FGColumnVector3& GetBodyAccel(void) { return vBodyAccel; }
+  inline FGColumnVector3& GetNcg   (void)    { return vNcg; }
   inline FGColumnVector3& GetXYZrp(void) { return vXYZrp; }
   inline FGColumnVector3& GetXYZep(void) { return vXYZep; }
   inline float GetXYZrp(int idx) { return vXYZrp(idx); }
@@ -198,6 +199,8 @@ public:
 
   inline void SetAlphaCLMax(float tt) { alphaclmax=tt; }
   inline void SetAlphaCLMin(float tt) { alphaclmin=tt; }
+  
+  inline bool GetStallWarn(void) { return impending_stall; }
 
   /// Subsystem types for specifying which will be output in the FDM data logging
   enum  SubSystems {
@@ -224,10 +227,13 @@ private:
   FGColumnVector3 vEuler;
   FGColumnVector3 vDXYZcg;
   FGColumnVector3 vBodyAccel;
+  FGColumnVector3 vNcg;
+
   float WingArea, WingSpan, cbar, WingIncidence;
   float HTailArea, VTailArea, HTailArm, VTailArm;
   float lbarh,lbarv,vbarh,vbarv;
   float alphaclmax,alphaclmin;
+  float impending_stall;
   string CFGVersion;
   string AircraftName;
 

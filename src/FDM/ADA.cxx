@@ -168,9 +168,10 @@ FGADA::~FGADA() {
 // for each subsequent iteration through the EOM
 void FGADA::init() {
 
-	// explicitly call the superclass's
-	// init() method first.
-    FGInterface::init();
+    //do init common to all FDM"s
+    common_init();
+    
+    //now do ADA-specific init.
 
     // cout << "FGADA::init()" << endl;
 
