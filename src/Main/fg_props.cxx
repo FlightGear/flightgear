@@ -54,6 +54,11 @@ static double getWindDown ();
 static double axisLong = 0.0;
 static double axisLat = 0.0;
 
+static bool winding_ccw = false; // FIXME: temporary
+
+static bool fdm_data_logging = false; // FIXME: temporary
+
+
 /**
  * Utility function.
  */
@@ -859,6 +864,64 @@ setViewAxisLat (double axis)
   axisLat = axis;
 }
 
+static bool
+getWindingCCW ()
+{
+  return winding_ccw;
+}
+
+static void
+setWindingCCW (bool state)
+{
+  winding_ccw = state;
+  if ( winding_ccw )
+    glFrontFace ( GL_CCW );
+  else
+    glFrontFace ( GL_CW );
+}
+
+static bool
+getFullScreen ()
+{
+#if defined(FX) && !defined(WIN32)
+  return global_fullscreen;
+#else
+  return false;
+#endif
+}
+
+static void
+setFullScreen (bool state)
+{
+#if defined(FX) && !defined(WIN32)
+  global_fullscreen = state;
+#  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
+  XMesaSetFXmode( global_fullscreen ? XMESA_FX_FULLSCREEN : XMESA_FX_WINDOW );
+#  endif
+#endif
+}
+
+static bool
+getFDMDataLogging ()
+{
+  return fdm_data_logging;
+}
+
+static void
+setFDMDataLogging (bool state)
+{
+				// kludge; no getter or setter available
+  if (state != fdm_data_logging) {
+    fgToggleFDMdataLogging();
+    fdm_data_logging = state;
+  }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Tie the properties.
+////////////////////////////////////////////////////////////////////////
 
 void
 fgInitProps ()
@@ -946,6 +1009,12 @@ fgInitProps ()
   fgTie("/sim/time/warp-delta", getWarpDelta, setWarpDelta);
   fgTie("/sim/view/axes/long", (double(*)())0, setViewAxisLong);
   fgTie("/sim/view/axes/lat", (double(*)())0, setViewAxisLat);
+
+				// Misc. Temporary junk.
+  fgTie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW);
+  fgTie("/sim/temp/full-screen", getFullScreen, setFullScreen);
+  fgTie("/sim/temp/fdm-data-logging", getFDMDataLogging, setFDMDataLogging);
+	
 }
 
 
