@@ -556,7 +556,7 @@ setup_wind (double min_hdg, double max_hdg, double speed, double gust)
   min_hdg += 10;
   if (min_hdg > 360)
       min_hdg -= 360;
-  speed *= 1.2;
+  speed *= 1.1;
   fgSetDouble("/environment/config/boundary/entry[1]/wind-from-heading-deg",
               min_hdg);
   fgSetDouble("/environment/config/boundary/entry[1]/wind-speed-kt",
@@ -565,7 +565,7 @@ setup_wind (double min_hdg, double max_hdg, double speed, double gust)
   min_hdg += 20;
   if (min_hdg > 360)
       min_hdg -= 360;
-  speed *= 1.5;
+  speed *= 1.1;
   fgSetDouble("/environment/config/aloft/entry[0]/wind-from-heading-deg",
               min_hdg);
   fgSetDouble("/environment/config/aloft/entry[0]/wind-speed-kt",
@@ -574,7 +574,7 @@ setup_wind (double min_hdg, double max_hdg, double speed, double gust)
   min_hdg += 10;
   if (min_hdg > 360)
       min_hdg -= 360;
-  speed *= 1.2;
+  speed *= 1.1;
   fgSetDouble("/environment/config/aloft/entry[1]/wind-from-heading-deg",
               min_hdg);
   fgSetDouble("/environment/config/aloft/entry[1]/wind-speed-kt",
@@ -583,7 +583,7 @@ setup_wind (double min_hdg, double max_hdg, double speed, double gust)
   min_hdg += 10;
   if (min_hdg > 360)
       min_hdg -= 360;
-  speed *= 1.2;
+  speed *= 1.1;
   fgSetDouble("/environment/config/aloft/entry[2]/wind-from-heading-deg",
               min_hdg);
   fgSetDouble("/environment/config/aloft/entry[2]/wind-speed-kt",
@@ -1040,7 +1040,7 @@ fgOptRandomWind( const char *arg )
 {
     double min_hdg = sg_random() * 360.0;
     double max_hdg = min_hdg + (20 - sqrt(sg_random() * 400));
-    double speed = 40 - sqrt(sg_random() * 1600.0);
+    double speed = sg_random() * sg_random() * 40;
     double gust = speed + (10 - sqrt(sg_random() * 100));
     setup_wind(min_hdg, max_hdg, speed, gust);
     return FG_OPTIONS_OK;
