@@ -50,9 +50,8 @@ int fgAIRPORTS::load( char *file ) {
 
     o = &current_options;
 
-    // build the path name to the ambient lookup table
-    path[0] = '\0';
-    strcat(path, o->fg_root);
+    // build the path name to the airport file
+    strcpy(path, o->fg_root);
     strcat(path, "/Scenery/");
     strcat(path, "Airports");
     strcpy(fgpath, path);
@@ -104,6 +103,9 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.7  1998/06/03 22:01:07  curt
+// Tweaking sound library usage.
+//
 // Revision 1.6  1998/06/03 00:47:13  curt
 // Updated to compile in audio support if OSS available.
 // Updated for new version of Steve's audio library.

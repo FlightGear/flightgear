@@ -89,8 +89,8 @@ int displayInstruments;
 #ifdef HAVE_OSS_AUDIO
 slScheduler audio_sched ( 8000 ) ;
 smMixer audio_mixer ;
-slSample *s1;
-slSample *s2;
+slSample s1;
+slSample s2;
 #endif
 
 
@@ -632,6 +632,7 @@ int main( int argc, char **argv ) {
     fgFLIGHT *f;
     fgOPTIONS *o;
     char config[256];
+    char path[256], slfile[256];
     int result;  // Used in command line argument.
 
     f = current_aircraft.flight;
@@ -708,11 +709,22 @@ int main( int argc, char **argv ) {
 #ifdef HAVE_OSS_AUDIO
     audio_mixer . setMasterVolume ( 30 ) ;  /* 50% of max volume. */
     audio_sched . setSafetyMargin ( 1.0 ) ;
-    s1 = new slSample ( "/dos/X-System-HSR/sounds/xp_recip.wav", &audio_sched );
-    s2 = new slSample ( "/dos/X-System-HSR/sounds/wind.wav", &audio_sched );
-    s2 -> adjustVolume(0.5);
-    audio_sched . loopSample ( s1 );
-    audio_sched . loopSample ( s2 );
+    strcpy(path, o->fg_root);
+    strcat(path, "/Sounds/");
+
+    strcpy(slfile, path);
+    strcat(slfile, "prpidle.wav");
+    // s1 . loadFile ( slfile );
+    s1 . loadFile ( slfile );
+    printf("Rate = %d  Bps = %d  Stereo = %d\n", 
+	   s1.getRate(), s1.getBps(), s1.getStereo());
+    audio_sched . playSample ( &s1 );
+
+    strcpy(slfile, path);
+    strcat(slfile, "thunder.wav");
+    // s2 . loadFile ( slfile );
+    // s2 . adjustVolume(0.5);
+    // audio_sched . playSample ( &s2 );
 #endif
 
     // pass control off to the master GLUT event handler
@@ -732,6 +744,9 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.21  1998/06/03 22:01:06  curt
+// Tweaking sound library usage.
+//
 // Revision 1.20  1998/06/03 00:47:11  curt
 // Updated to compile in audio support if OSS available.
 // Updated for new version of Steve's audio library.
