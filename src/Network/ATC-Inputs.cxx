@@ -223,17 +223,17 @@ bool FGATCInput::open() {
 
 // scale a number between min and max (with center defined) to a scale
 // from -1.0 to 1.0
-static double scale( int center, int min, int max, int value ) {
+static double scale( int center, int deadband, int min, int max, int value ) {
     // cout << center << " " << min << " " << max << " " << value << " ";
     double result;
     double range;
 
-    if ( value <= center ) {
-        range = center - min;
-        result = (value - center) / range;
+    if ( value <= (center - deadband) ) {
+        range = (center - deadband) - min;
+        result = (value - (center - deadband)) / range;
     } else {
-        range = max - center;
-        result = (value - center) / range;            
+        range = max - (center + deadband);
+        result = (value - (center + deadband)) / range;            
     }
 
     if ( result < -1.0 ) result = -1.0;
@@ -401,6 +401,7 @@ bool FGATCInput::do_analog_in() {
             int center = -1;
             int min = 0;
             int max = 1023;
+	    int deadband = 0;
             float factor = 1.0;
             if ( cname == "channel" ) {
                 SGPropertyNode *prop;
@@ -435,6 +436,10 @@ bool FGATCInput::do_analog_in() {
                 if ( prop != NULL ) {
                     max = prop->getIntValue();
                 }
+                prop = child->getChild( "deadband" );
+                if ( prop != NULL ) {
+                    deadband = prop->getIntValue();
+                }
                 prop = child->getChild( "factor" );
                 if ( prop != NULL ) {
                     factor = prop->getFloatValue();
@@ -456,7 +461,8 @@ bool FGATCInput::do_analog_in() {
                         // "Cook" the raw value
                         float scaled_value = 0.0f;
                         if ( center >= 0 ) {
-                            scaled_value = scale( center, min, max, raw_value );
+                            scaled_value = scale( center, deadband,
+						  min, max, raw_value );
                         } else {
                             scaled_value = scale( min, max, raw_value );
                         }
@@ -471,7 +477,8 @@ bool FGATCInput::do_analog_in() {
                     // "Cook" the raw value
                     float scaled_value = 0.0f;
                     if ( center >= 0 ) {
-                        scaled_value = scale( center, min, max, raw_value );
+                        scaled_value = scale( center, deadband,
+					      min, max, raw_value );
                     } else {
                         scaled_value = scale( min, max, raw_value );
                     }
