@@ -47,11 +47,8 @@
 #include "../aircraft/aircraft.h"
 #include "../scenery/scenery.h"
 
-#define FG_LON_2_DEG(RAD) ((RAD) * 180.0 / M_PI)
-#define FG_LAT_2_DEG(RAD) (-1.0 * (RAD) * 180.0 / M_PI)
-
-#define FG_DEG_2_LON(DEG) ((DEG) * M_PI / 180.0)
-#define FG_DEG_2_LAT(DEG) (-1.0 * (DEG) * M_PI / 180.0)
+#define FG_RAD_2_DEG(RAD) ((RAD) * 180.0 / M_PI)
+#define FG_DEG_2_RAD(DEG) ((DEG) * M_PI / 180.0)
 
 /* This is a record containing all the info for the aircraft currently
    being operated */
@@ -132,13 +129,18 @@ static void fgUpdateViewParams() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
-    pos_x = FG_LAT_2_DEG(FG_Latitude) * 3600.0;
-    pos_y = FG_LON_2_DEG(FG_Longitude) * 3600.0;
-    pos_z = FG_Altitude;
+    pos_x = FG_RAD_2_DEG(FG_Longitude) * 3600.0;
+    pos_y = FG_RAD_2_DEG(FG_Latitude) * 3600.0;
+    pos_z = FG_Altitude * 0.01; /* (Convert feet to aproximate arcsecs) */
+
+    glRotatef(FG_Phi,   1.0, 0.0, 0.0);
+    glRotatef(FG_Theta, 0.0, 1.0, 0.0);
+    glRotatef(FG_Psi,   0.0, 0.0, 1.0);
 
     gluLookAt(pos_x, pos_y, pos_z,
-	      pos_x + cos(FG_Psi), pos_y + sin(FG_Psi), pos_z,
+	      pos_x + 1.0, pos_y, pos_z,
 	      0.0, 0.0, 1.0);
+
 }
 
 
@@ -318,8 +320,8 @@ int main( int argc, char *argv[] ) {
     /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
 
     /* Initial Position */
-    FG_Latitude  = FG_DEG_2_LAT( -398673.28 / 3600.0 );
-    FG_Longitude = FG_DEG_2_LON(  120625.64 / 3600.0 );
+    FG_Latitude  = FG_DEG_2_RAD(  120625.64 / 3600.0 );
+    FG_Longitude = FG_DEG_2_RAD( -398673.28 / 3600.0 );
     FG_Altitude  = 3.758099E+00;
 
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", FG_Latitude, 
@@ -333,7 +335,7 @@ int main( int argc, char *argv[] ) {
     /* Initial Orientation */
     FG_Phi   = -2.658474E-06;
     FG_Theta =  7.401790E-03;
-    FG_Psi   =  1.391358E-03;
+    FG_Psi   =  4.38;
 
     /* Initial Angular B rates */
     FG_P_body = 7.206685E-05;
@@ -408,9 +410,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.7  1997/05/29 22:39:49  curt
-/* Working on incorporating the LaRCsim flight model.
+/* Revision 1.8  1997/05/30 03:54:10  curt
+/* Made a bit more progress towards integrating the LaRCsim flight model.
 /*
+ * Revision 1.7  1997/05/29 22:39:49  curt
+ * Working on incorporating the LaRCsim flight model.
+ *
  * Revision 1.6  1997/05/29 12:31:39  curt
  * Minor tweaks, moving towards general flight model integration.
  *

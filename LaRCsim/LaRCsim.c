@@ -64,6 +64,9 @@
 
 $Header$
 $Log$
+Revision 1.2  1997/05/30 03:54:12  curt
+Made a bit more progress towards integrating the LaRCsim flight model.
+
 Revision 1.1  1997/05/29 00:09:51  curt
 Initial Flight Gear revision.
 
@@ -478,9 +481,9 @@ int ls_cockpit() {
 
     Throttle_pct = 0.85;
 
-    /* printf("Mach = %.2f  ", Mach_number);
+    printf("Mach = %.2f  ", Mach_number);
     printf("%.4f,%.4f,%.2f  ", Latitude, Longitude, Altitude);
-    printf("%.2f,%.2f,%.2f\n", Phi, Theta, Psi); */
+    printf("%.2f,%.2f,%.2f\n", Phi, Theta, Psi);
 
     return(abort);
 }
