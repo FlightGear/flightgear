@@ -88,6 +88,7 @@ public:
 
     // Number of triangles rendered;
     int tris_rendered;
+    int tris_culled;
 
     // absolute view position
     Point3D abs_view_pos;
@@ -209,6 +210,8 @@ public:
     inline void set_vfc_ratio(double r) { vfc_ratio = r; }
     inline int get_tris_rendered() const { return tris_rendered; }
     inline void set_tris_rendered( int tris) { tris_rendered = tris; }
+    inline int get_tris_culled() const { return tris_culled; }
+    inline void set_tris_culled( int tris) { tris_culled = tris; }
     inline Point3D get_abs_view_pos() const { return abs_view_pos; }
     inline Point3D get_view_pos() const { return view_pos; }
     inline Point3D get_cur_zero_elev() const { return cur_zero_elev; }
@@ -251,6 +254,10 @@ extern FGView current_view;
 
 
 // $Log$
+// Revision 1.23  1999/04/03 04:21:06  curt
+// Integration of Steve's plib conglomeration.
+// Optimizations (tm) by Norman Vine.
+//
 // Revision 1.22  1999/03/22 02:08:15  curt
 // Changes contributed by Durk Talsma:
 //

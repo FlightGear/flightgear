@@ -1,8 +1,6 @@
 if ENABLE_AUDIO_SUPPORT
 DEFS += -DENABLE_AUDIO_SUPPORT
-AUDIO_LIBS = \
-	$(top_builddir)/Lib/Audio/src/libsl.a \
-	$(top_builddir)/Lib/Audio/src/libsm.a
+AUDIO_LIBS = -L$(top_builddir)/Lib/plib/src/sl -lsl -lsm
 endif
 
 if ENABLE_IRIX_AUDIO
@@ -62,11 +60,12 @@ fgfs_LDADD = \
 	$(top_builddir)/Simulator/Time/libTime.a \
 	$(top_builddir)/Simulator/Weather/libWeather.a \
 	$(top_builddir)/Simulator/Joystick/libJoystick.a \
-	$(AUDIO_LIBS) $(SERIAL_LIBS) \
+	$(AUDIO_LIBS) \
+	$(SERIAL_LIBS) \
 	$(top_builddir)/Lib/Math/libMath.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Debug/libDebug.a \
-	$(top_builddir)/Lib/PUI/libPUI.a \
+	-L$(top_builddir)/Lib/plib/src/pui -lpu \
 	$(top_builddir)/Lib/zlib/libz.a \
 	$(top_builddir)/Lib/Misc/libMisc.a \
 	$(opengl_LIBS)
@@ -74,4 +73,5 @@ fgfs_LDADD = \
 INCLUDES += \
 	-I$(top_builddir) \
 	-I$(top_builddir)/Lib \
+	-I$(top_builddir)/Lib/plib/include \
 	-I$(top_builddir)/Simulator

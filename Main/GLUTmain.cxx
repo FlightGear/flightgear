@@ -60,8 +60,8 @@
 #include <Astro/solarsystem.hxx>
 
 #ifdef ENABLE_AUDIO_SUPPORT
-#  include <Audio/src/sl.h>
-#  include <Audio/src/sm.h>
+#  include <sl.h>
+#  include <sm.h>
 #endif
 
 #include <Autopilot/autopilot.hxx>
@@ -72,7 +72,7 @@
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
 #include <Math/fg_random.h>
-#include <PUI/pu.h>
+#include <pu.h>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
@@ -565,7 +565,7 @@ static void fgMainLoop( void ) {
 
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
-    if ( current_options.get_sound() && audio_sched->working() ) {
+    if ( current_options.get_sound() && !audio_sched->not_working() ) {
 
 #   ifdef MICHAEL_JOHNSON_EXPERIMENTAL_ENGINE_AUDIO
 
@@ -742,7 +742,9 @@ static void fgIdleFunction ( void ) {
 		<< "  Stereo = " << s1 -> getStereo() );
 	audio_sched -> loopSample ( s1 );
 
-	if ( audio_sched->working() ) {
+	if ( audio_sched->not_working() ) {
+	    // skip
+	} else {
 	    pitch_envelope.setStep  ( 0, 0.01, 0.6 );
 	    volume_envelope.setStep ( 0, 0.01, 0.6 );
 
@@ -997,6 +999,10 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.88  1999/04/03 04:21:02  curt
+// Integration of Steve's plib conglomeration.
+// Optimizations (tm) by Norman Vine.
+//
 // Revision 1.87  1999/03/08 21:56:37  curt
 // Added panel changes sent in by Friedemann.
 // Added a splash screen randomization since we have several nice splash screens.

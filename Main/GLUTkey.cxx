@@ -49,7 +49,7 @@
 #include <GUI/gui.h>
 #include <Include/fg_constants.h>
 #include <Objects/material.hxx>
-#include <PUI/pu.h>
+#include <pu.h>
 #include <Time/light.hxx>
 #include <Weather/weather.hxx>
 
@@ -435,6 +435,10 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.44  1999/04/03 04:21:01  curt
+// Integration of Steve's plib conglomeration.
+// Optimizations (tm) by Norman Vine.
+//
 // Revision 1.43  1999/03/11 23:09:46  curt
 // When "Help" is selected from the menu check to see if netscape is running.
 // If so, command it to go to the flight gear user guide url.  Otherwise

@@ -42,6 +42,12 @@
 #include "views.hxx"
 
 
+// Define following to extract various vectors directly
+// from matrices we have allready computed
+// rather then performing 'textbook algebra' to rederive them
+// Norman Vine -- nhv@yahoo.com
+// #define FG_VIEW_INLINE_OPTIMIZATIONS
+
 // temporary (hopefully) hack
 static int panel_hist = 0;
 
@@ -61,6 +67,7 @@ FGView current_view;
 
 // Constructor
 FGView::FGView( void ) {
+    MAT3identity(WORLD);
 }
 
 
@@ -100,6 +107,9 @@ void FGView::UpdateFOV( const fgOPTIONS& o ) {
     slope_x =  -cos_fov_x / sin_fov_x;
     // printf("slope_x = %.2f\n", slope_x);
 
+    // fov_x_clip and fov_y_clip convoluted algebraic simplification
+    // see code executed in tilemgr.cxx when USE_FAST_FOV_CLIP not
+    // defined Norman Vine -- nhv@yahoo.com
 #if defined( USE_FAST_FOV_CLIP )
     fov_x_clip = slope_x*cos_fov_x - sin_fov_x;
 #endif // defined( USE_FAST_FOV_CLIP )
@@ -237,34 +247,252 @@ void FGView::UpdateViewParams( void ) {
     xglLoadIdentity();
     
     // set up our view volume (default)
+#if !defined(FG_VIEW_INLINE_OPTIMIZATIONS)
     LookAt(view_pos.x(), view_pos.y(), view_pos.z(),
 	   view_pos.x() + view_forward[0], 
-	       view_pos.y() + view_forward[1], 
-	       view_pos.z() + view_forward[2],
-	       view_up[0], view_up[1], view_up[2]);
+	   view_pos.y() + view_forward[1], 
+	   view_pos.z() + view_forward[2],
+	   view_up[0], view_up[1], view_up[2]);
 
     // look almost straight up (testing and eclipse watching)
     /* LookAt(view_pos.x(), view_pos.y(), view_pos.z(),
-	       view_pos.x() + view_up[0] + .001, 
-	       view_pos.y() + view_up[1] + .001, 
-	       view_pos.z() + view_up[2] + .001,
-	       view_up[0], view_up[1], view_up[2]); */
+       view_pos.x() + view_up[0] + .001, 
+       view_pos.y() + view_up[1] + .001, 
+       view_pos.z() + view_up[2] + .001,
+       view_up[0], view_up[1], view_up[2]); */
 
     // lock view horizontally towards sun (testing)
     /* LookAt(view_pos.x(), view_pos.y(), view_pos.z(),
-	       view_pos.x() + surface_to_sun[0], 
-	       view_pos.y() + surface_to_sun[1], 
-	       view_pos.z() + surface_to_sun[2],
-	       view_up[0], view_up[1], view_up[2]); */
+       view_pos.x() + surface_to_sun[0], 
+       view_pos.y() + surface_to_sun[1], 
+       view_pos.z() + surface_to_sun[2],
+       view_up[0], view_up[1], view_up[2]); */
 
     // lock view horizontally towards south (testing)
     /* LookAt(view_pos.x(), view_pos.y(), view_pos.z(),
-	       view_pos.x() + surface_south[0], 
-	       view_pos.y() + surface_south[1], 
-	       view_pos.z() + surface_south[2],
-	       view_up[0], view_up[1], view_up[2]); */
+       view_pos.x() + surface_south[0], 
+       view_pos.y() + surface_south[1], 
+       view_pos.z() + surface_south[2],
+       view_up[0], view_up[1], view_up[2]); */
+
+#else // defined(FG_VIEW_INLINE_OPTIMIZATIONS)
+    //void FGView::LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
+    //		     GLdouble centerx, GLdouble centery, GLdouble centerz,
+    //		     GLdouble upx, GLdouble upy, GLdouble upz )
+    {
+	GLdouble *m;
+	GLdouble x[3], y[3], z[3];
+	//    GLdouble mag;
+
+	m = current_view.MODEL_VIEW;
+
+	/* Make rotation matrix */
+
+	/* Z vector */
+	z[0] = -view_forward[0]; //eyex - centerx;
+	z[1] = -view_forward[1]; //eyey - centery;
+	z[2] = -view_forward[2]; //eyez - centerz;
+	
+	// In our case this is a unit vector  NHV
+	
+	//    mag = sqrt( z[0]*z[0] + z[1]*z[1] + z[2]*z[2] );
+	//    if (mag) {  /* mpichler, 19950515 */
+	//		mag = 1.0/mag;
+	//		printf("mag(%f)  ", mag);
+	//	z[0] *= mag;
+	//	z[1] *= mag;
+	//	z[2] *= mag;
+	//    }
+
+	/* Y vector */
+	y[0] = view_up[0]; //upx;
+	y[1] = view_up[1]; //upy;
+	y[2] = view_up[2]; //upz;
+
+	/* X vector = Y cross Z */
+	x[0] =  y[1]*z[2] - y[2]*z[1];
+	x[1] = -y[0]*z[2] + y[2]*z[0];
+	x[2] =  y[0]*z[1] - y[1]*z[0];
+
+	//	printf(" %f %f %f  ", y[0], y[1], y[2]);
+    
+	/* Recompute Y = Z cross X */
+	//    y[0] =  z[1]*x[2] - z[2]*x[1];
+	//    y[1] = -z[0]*x[2] + z[2]*x[0];
+	//    y[2] =  z[0]*x[1] - z[1]*x[0];
+
+	//	printf(" %f %f %f\n", y[0], y[1], y[2]);
+	
+	// In our case these are unit vectors  NHV
+
+	/* mpichler, 19950515 */
+	/* cross product gives area of parallelogram, which is < 1.0 for
+	 * non-perpendicular unit-length vectors; so normalize x, y here
+	 */
+
+	//    mag = sqrt( x[0]*x[0] + x[1]*x[1] + x[2]*x[2] );
+	//    if (mag) {
+	//		mag = 1.0/mag;
+	//		printf("mag2(%f) ", mag);
+	//	x[0] *= mag;
+	//	x[1] *= mag;
+	//	x[2] *= mag;
+	//    }
+
+	//    mag = sqrt( y[0]*y[0] + y[1]*y[1] + y[2]*y[2] );
+	//    if (mag) {
+	//		mag = 1.0/mag;
+	//		printf("mag3(%f)\n", mag);
+	//	y[0] *= mag;
+	//	y[1] *= mag;
+	//	y[2] *= mag;
+	//    }
+
+#define M(row,col)  m[col*4+row]
+	M(0,0) = x[0];  M(0,1) = x[1];  M(0,2) = x[2];  M(0,3) = 0.0;
+	M(1,0) = y[0];  M(1,1) = y[1];  M(1,2) = y[2];  M(1,3) = 0.0;
+	M(2,0) = z[0];  M(2,1) = z[1];  M(2,2) = z[2];  M(2,3) = 0.0;
+	// the following is part of the original gluLookAt(), but we are
+	// commenting it out because we know we are going to be doing a
+	// translation below which will set these values anyways
+	// M(3,0) = 0.0;   M(3,1) = 0.0;   M(3,2) = 0.0;   M(3,3) = 1.0;
+#undef M
+
+	// Translate Eye to Origin
+	// replaces: glTranslated( -eyex, -eyey, -eyez );
+
+	// this has been slightly modified from the original glTranslate()
+	// code because we know that coming into this m[12] = m[13] =
+	// m[14] = 0.0, and m[15] = 1.0;
+	m[12] = m[0] * -view_pos.x() + m[4] * -view_pos.y() + m[8]  * -view_pos.z() /* + m[12] */;
+	m[13] = m[1] * -view_pos.x() + m[5] * -view_pos.y() + m[9]  * -view_pos.z() /* + m[13] */;
+	m[14] = m[2] * -view_pos.x() + m[6] * -view_pos.y() + m[10] * -view_pos.z() /* + m[14] */;
+	m[15] = 1.0 /* m[3] * -view_pos.x() + m[7] * -view_pos.y() + m[11] * -view_pos.z() + m[15] */;
+
+	// xglMultMatrixd( m );
+	xglLoadMatrixd( m );
+    }
+#endif // FG_VIEW_INLINE_OPTIMIZATIONS
+	
 
     panel_hist = current_options.get_panel_status();
+}
+
+
+void getRotMatrix(double* out, MAT3vec vec, double radians)
+{
+    /* This function contributed by Erich Boleyn (erich@uruk.org) */
+    /* This function used from the Mesa OpenGL code (matrix.c)  */
+    double s, c; // mag,
+    double vx, vy, vz, xy, yz, zx, xs, ys, zs, one_c; //, xx, yy, zz
+  
+    MAT3identity(out);
+    s = sin(radians);
+    c = cos(radians);
+  
+    //  mag = getMagnitude();
+  
+    vx = vec[0];
+    vy = vec[1];
+    vz = vec[2];
+  
+#define M(row,col)  out[row*4 + col]
+  
+    /*
+     *     Arbitrary axis rotation matrix.
+     *
+     *  This is composed of 5 matrices, Rz, Ry, T, Ry', Rz', multiplied
+     *  like so:  Rz * Ry * T * Ry' * Rz'.  T is the final rotation
+     *  (which is about the X-axis), and the two composite transforms
+     *  Ry' * Rz' and Rz * Ry are (respectively) the rotations necessary
+     *  from the arbitrary axis to the X-axis then back.  They are
+     *  all elementary rotations.
+     *
+     *  Rz' is a rotation about the Z-axis, to bring the axis vector
+     *  into the x-z plane.  Then Ry' is applied, rotating about the
+     *  Y-axis to bring the axis vector parallel with the X-axis.  The
+     *  rotation about the X-axis is then performed.  Ry and Rz are
+     *  simply the respective inverse transforms to bring the arbitrary
+     *  axis back to it's original orientation.  The first transforms
+     *  Rz' and Ry' are considered inverses, since the data from the
+     *  arbitrary axis gives you info on how to get to it, not how
+     *  to get away from it, and an inverse must be applied.
+     *
+     *  The basic calculation used is to recognize that the arbitrary
+     *  axis vector (x, y, z), since it is of unit length, actually
+     *  represents the sines and cosines of the angles to rotate the
+     *  X-axis to the same orientation, with theta being the angle about
+     *  Z and phi the angle about Y (in the order described above)
+     *  as follows:
+     *
+     *  cos ( theta ) = x / sqrt ( 1 - z^2 )
+     *  sin ( theta ) = y / sqrt ( 1 - z^2 )
+     *
+     *  cos ( phi ) = sqrt ( 1 - z^2 )
+     *  sin ( phi ) = z
+     *
+     *  Note that cos ( phi ) can further be inserted to the above
+     *  formulas:
+     *
+     *  cos ( theta ) = x / cos ( phi )
+     *  sin ( theta ) = y / cos ( phi )
+     *
+     *  ...etc.  Because of those relations and the standard trigonometric
+     *  relations, it is pssible to reduce the transforms down to what
+     *  is used below.  It may be that any primary axis chosen will give the
+     *  same results (modulo a sign convention) using thie method.
+     *
+     *  Particularly nice is to notice that all divisions that might
+     *  have caused trouble when parallel to certain planes or
+     *  axis go away with care paid to reducing the expressions.
+     *  After checking, it does perform correctly under all cases, since
+     *  in all the cases of division where the denominator would have
+     *  been zero, the numerator would have been zero as well, giving
+     *  the expected result.
+     */
+    
+    one_c = 1.0F - c;
+    
+    //  xx = vx * vx;
+    //  yy = vy * vy;
+    //  zz = vz * vz;
+  
+    //  xy = vx * vy;
+    //  yz = vy * vz;
+    //  zx = vz * vx;
+  
+  
+    M(0,0) = (one_c * vx * vx) + c;  
+    xs = vx * s;
+    yz = vy * vz * one_c;
+    M(1,2) = yz + xs;
+    M(2,1) = yz - xs;
+
+    M(1,1) = (one_c * vy * vy) + c;
+    ys = vy * s;
+    zx = vz * vx * one_c;
+    M(0,2) = zx - ys;
+    M(2,0) = zx + ys;
+  
+    M(2,2) = (one_c * vz *vz) + c;
+    zs = vz * s;
+    xy = vx * vy * one_c;
+    M(0,1) = xy + zs;
+    M(1,0) = xy - zs;
+  
+    //  M(0,0) = (one_c * xx) + c;
+    //  M(1,0) = (one_c * xy) - zs;
+    //  M(2,0) = (one_c * zx) + ys;
+  
+    //  M(0,1) = (one_c * xy) + zs;
+    //  M(1,1) = (one_c * yy) + c;
+    //  M(2,1) = (one_c * yz) - xs;
+  
+    //  M(0,2) = (one_c * zx) - ys;
+    //  M(1,2) = (one_c * yz) + xs;
+    //  M(2,2) = (one_c * zz) + c;
+  
+#undef M
 }
 
 
@@ -283,6 +511,7 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 		
     scenery.center = scenery.next_center;
 
+#if !defined(FG_VIEW_INLINE_OPTIMIZATIONS)
     // printf("scenery center = %.2f %.2f %.2f\n", scenery.center.x,
     //        scenery.center.y, scenery.center.z);
 
@@ -304,6 +533,32 @@ void FGView::UpdateViewMath( FGInterface *f ) {
     }
 
     abs_view_pos = fgPolarToCart3d(p);
+	
+#else // FG_VIEW_INLINE_OPTIMIZATIONS
+	
+    double tmp_radius = f->get_Sea_level_radius() * FEET_TO_METER;
+    double tmp = f->get_cos_lat_geocentric() * tmp_radius;
+	
+    cur_zero_elev.setx(f->get_cos_longitude()*tmp - scenery.center.x());
+    cur_zero_elev.sety(f->get_sin_longitude()*tmp - scenery.center.y());
+    cur_zero_elev.setz(f->get_sin_lat_geocentric()*tmp_radius - scenery.center.z());
+
+    // calculate view position in current FG view coordinate system
+    // p.lon & p.lat are already defined earlier, p.radius was set to
+    // the sea level radius, so now we add in our altitude.
+    if ( f->get_Altitude() * FEET_TO_METER > 
+	 (scenery.cur_elev + 0.5 * METER_TO_FEET) ) {
+	tmp_radius += f->get_Altitude() * FEET_TO_METER;
+    } else {
+	tmp_radius += scenery.cur_elev + 0.5 * METER_TO_FEET ;
+    }
+    tmp = f->get_cos_lat_geocentric() * tmp_radius;
+    abs_view_pos.setx(f->get_cos_longitude()*tmp);
+    abs_view_pos.sety(f->get_sin_longitude()*tmp);
+    abs_view_pos.setz(f->get_sin_lat_geocentric()*tmp_radius);
+	
+#endif // FG_VIEW_INLINE_OPTIMIZATIONS
+	
     view_pos = abs_view_pos - scenery.center;
 
     FG_LOG( FG_VIEW, FG_DEBUG, "Polar view pos = " << p );
@@ -369,6 +624,8 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 
     } // if ( use_larcsim_local_to_body ) 
 
+#if !defined(FG_VIEW_INLINE_OPTIMIZATIONS)
+	
     // Derive the local UP transformation matrix based on *geodetic*
     // coordinates
     MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
@@ -434,6 +691,62 @@ void FGView::UpdateViewMath( FGInterface *f ) {
     //         surface_east[0], surface_east[1], surface_east[2]);
     // printf( "Should be close to zero = %.2f\n", 
     //         MAT3_DOT_PRODUCT(surface_south, surface_east));
+	
+#else // FG_VIEW_INLINE_OPTIMIZATIONS
+	 
+    //	// Build spherical to cartesian transform matrix directly
+    double cos_lat = f->get_cos_latitude(); // cos(-f->get_Latitude());
+    double sin_lat = -f->get_sin_latitude(); // sin(-f->get_Latitude());
+    double cos_lon = f->get_cos_longitude(); //cos(f->get_Longitude());
+    double sin_lon = f->get_sin_longitude(); //sin(f->get_Longitude());
+
+    double *mat = (double *)UP;
+	
+    mat[0] =  cos_lat*cos_lon;
+    mat[1] =  cos_lat*sin_lon;
+    mat[2] = -sin_lat;
+    mat[3] =  0.0;
+    mat[4] =  -sin_lon;
+    mat[5] =  cos_lon;
+    mat[6] =  0.0;
+    mat[7] =  0.0;
+    mat[8]  =  sin_lat*cos_lon;
+    mat[9]  =  sin_lat*sin_lon;
+    mat[10] =  cos_lat;
+    mat[11] =  mat[12] = mat[13] = mat[14] = 0.0;
+    mat[15] =  1.0;
+
+    MAT3mult(VIEW, LOCAL, UP);
+	
+    // THESE COULD JUST BE POINTERS !!!
+    MAT3_SET_VEC(local_up, mat[0],     mat[1],     mat[2]);
+    MAT3_SET_VEC(view_up,  VIEW[0][0], VIEW[0][1], VIEW[0][2]);
+    MAT3_SET_VEC(forward,  VIEW[2][0], VIEW[2][1], VIEW[2][2]);
+
+    getRotMatrix((double *)TMP, view_up, view_offset);
+    MAT3mult_vec(view_forward, forward, TMP);
+
+    // make a vector to the current view position
+    MAT3_SET_VEC(v0, view_pos.x(), view_pos.y(), view_pos.z());
+
+    // Given a vector pointing straight down (-Z), map into onto the
+    // local plane representing "horizontal".  This should give us the
+    // local direction for moving "south".
+    MAT3_SET_VEC(minus_z, 0.0, 0.0, -1.0);
+    map_vec_onto_cur_surface_plane(local_up, v0, minus_z, surface_south);
+
+    MAT3_NORMALIZE_VEC(surface_south, ntmp);
+    // printf( "Surface direction directly south %.6f %.6f %.6f\n",
+    //         surface_south[0], surface_south[1], surface_south[2]);
+
+    // now calculate the surface east vector
+    getRotMatrix((double *)TMP, view_up, FG_PI_2);
+    MAT3mult_vec(surface_east, surface_south, TMP);
+    // printf( "Surface direction directly east %.6f %.6f %.6f\n",
+    //         surface_east[0], surface_east[1], surface_east[2]);
+    // printf( "Should be close to zero = %.6f\n", 
+    //         MAT3_DOT_PRODUCT(surface_south, surface_east));
+#endif // !defined(FG_VIEW_INLINE_OPTIMIZATIONS)
 }
 
 
@@ -492,6 +805,8 @@ void FGView::UpdateWorldToEye( FGInterface *f ) {
 
     } // if ( use_larcsim_local_to_body )
 
+#if !defined(FG_VIEW_INLINE_OPTIMIZATIONS)
+	
     // printf("AIRCRAFT matrix\n");
     // MAT3print(AIRCRAFT, stdout);
 
@@ -550,6 +865,94 @@ void FGView::UpdateWorldToEye( FGInterface *f ) {
     // MAT3mult_vec(vec, vec1, WORLD_TO_EYE);
     // printf( "\nabs_view_pos -> eye = %.2f %.2f %.2f\n", 
     //         vec[0], vec[1], vec[2]);
+#else  // FG_VIEW_INLINE_OPTIMIZATIONS
+	
+    MAT3_SET_HVEC(vec, -AIRCRAFT[1][0], -AIRCRAFT[1][1], -AIRCRAFT[1][2], -AIRCRAFT[1][3]);
+    getRotMatrix((double *)TMP, vec, -view_offset );
+    MAT3mult(VIEW_OFFSET, AIRCRAFT, TMP);
+    // MAT3print_formatted(VIEW_OFFSET, stdout, "VIEW_OFFSET matrix:\n",
+    //					 NULL, "%#8.6f  ", "\n");
+
+    // Build spherical to cartesian transform matrix directly
+    double *mat = (double *)WORLD; //T_view; //WORLD;
+    double cos_lat = f->get_cos_latitude(); //cos(f->get_Latitude());
+    double sin_lat = f->get_sin_latitude(); //sin(f->get_Latitude());
+    // using trig identities  this:
+    //	mat[0]  =  cos(f->get_Longitude() - FG_PI_2);//cos_lon;
+    //	mat[1]  =  sin(f->get_Longitude() - FG_PI_2);//sin_lon;
+    // becomes this: :-)
+    mat[0]  =  f->get_sin_longitude(); //cos_lon;
+    mat[1]  = -f->get_cos_longitude(); //sin_lon;
+    mat[4]  = -cos_lat*mat[1]; //mat[1]=sin_lon;
+    mat[5]  =  cos_lat*mat[0]; //mat[0]=cos_lon;
+    mat[6]  =  sin_lat;
+    mat[8]  =  sin_lat*mat[1]; //mat[1]=sin_lon;
+    mat[9]  = -sin_lat*mat[0]; //mat[0]=cos_lon;
+    mat[10] =  cos_lat;
+
+    // BUILD EYE_TO_WORLD = AIRCRAFT * WORLD
+    // and WORLD_TO_EYE = Inverse( EYE_TO_WORLD) concurrently
+    // by Transposing the 3x3 rotation sub-matrix
+    WORLD_TO_EYE[0][0] = EYE_TO_WORLD[0][0] =
+	VIEW_OFFSET[0][0]*mat[0] + VIEW_OFFSET[0][1]*mat[4] + VIEW_OFFSET[0][2]*mat[8];
+	
+    WORLD_TO_EYE[1][0] = EYE_TO_WORLD[0][1] =
+	VIEW_OFFSET[0][0]*mat[1] + VIEW_OFFSET[0][1]*mat[5] + VIEW_OFFSET[0][2]*mat[9];
+	
+    WORLD_TO_EYE[2][0] = EYE_TO_WORLD[0][2] =
+	VIEW_OFFSET[0][1]*mat[6] + VIEW_OFFSET[0][2]*mat[10];
+	
+    WORLD_TO_EYE[0][1] = EYE_TO_WORLD[1][0] =
+	VIEW_OFFSET[1][0]*mat[0] + VIEW_OFFSET[1][1]*mat[4] + VIEW_OFFSET[1][2]*mat[8];
+	
+    WORLD_TO_EYE[1][1] = EYE_TO_WORLD[1][1] =
+	VIEW_OFFSET[1][0]*mat[1] + VIEW_OFFSET[1][1]*mat[5] + VIEW_OFFSET[1][2]*mat[9];
+	
+    WORLD_TO_EYE[2][1] = EYE_TO_WORLD[1][2] =
+	VIEW_OFFSET[1][1]*mat[6] + VIEW_OFFSET[1][2]*mat[10];
+	
+    WORLD_TO_EYE[0][2] = EYE_TO_WORLD[2][0] =
+	VIEW_OFFSET[2][0]*mat[0] + VIEW_OFFSET[2][1]*mat[4] + VIEW_OFFSET[2][2]*mat[8];
+	
+    WORLD_TO_EYE[1][2] = EYE_TO_WORLD[2][1] =
+	VIEW_OFFSET[2][0]*mat[1] + VIEW_OFFSET[2][1]*mat[5] + VIEW_OFFSET[2][2]*mat[9];
+	
+    WORLD_TO_EYE[2][2] = EYE_TO_WORLD[2][2] =
+	VIEW_OFFSET[2][1]*mat[6] + VIEW_OFFSET[2][2]*mat[10];
+	
+    // TRANSLATE TO VIEW POSITION
+    EYE_TO_WORLD[3][0] = view_pos.x();
+    EYE_TO_WORLD[3][1] = view_pos.y();
+    EYE_TO_WORLD[3][2] = view_pos.z();
+	
+    // FILL 0 ENTRIES
+    WORLD_TO_EYE[0][3] = WORLD_TO_EYE[1][3] = WORLD_TO_EYE[2][3] = 
+	EYE_TO_WORLD[0][3] = EYE_TO_WORLD[1][3] = EYE_TO_WORLD[2][3] = 0.0;
+
+    // FILL UNITY ENTRIES
+    WORLD_TO_EYE[3][3] = EYE_TO_WORLD[3][3] = 1.0;
+	
+    /* MAKE THE INVERTED TRANSLATIONS */
+    mat = (double *)EYE_TO_WORLD;
+    WORLD_TO_EYE[3][0] = -mat[12]*mat[0]
+	-mat[13]*mat[1]
+	-mat[14]*mat[2];
+	
+    WORLD_TO_EYE[3][1] = -mat[12]*mat[4]
+	-mat[13]*mat[5]
+	-mat[14]*mat[6];
+	
+    WORLD_TO_EYE[3][2] = -mat[12]*mat[8]
+	-mat[13]*mat[9]
+	-mat[14]*mat[10];
+	
+    // MAT3print_formatted(EYE_TO_WORLD, stdout, "EYE_TO_WORLD matrix:\n",
+    //					 NULL, "%#8.6f  ", "\n");
+
+    // MAT3print_formatted(WORLD_TO_EYE, stdout, "WORLD_TO_EYE matrix:\n",
+    //					 NULL, "%#8.6f  ", "\n");
+
+#endif // defined(FG_VIEW_INLINE_OPTIMIZATIONS)
 }
 
 
@@ -607,6 +1010,10 @@ FGView::~FGView( void ) {
 
 
 // $Log$
+// Revision 1.35  1999/04/03 04:21:04  curt
+// Integration of Steve's plib conglomeration.
+// Optimizations (tm) by Norman Vine.
+//
 // Revision 1.34  1999/03/08 21:56:41  curt
 // Added panel changes sent in by Friedemann.
 // Added a splash screen randomization since we have several nice splash screens.
