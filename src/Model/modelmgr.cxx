@@ -11,8 +11,6 @@
 #include "modelmgr.hxx"
 #include "model.hxx"
 
-SG_USING_STD(find);
-
 
 FGModelMgr::FGModelMgr ()
   : _selector(new ssgSelector)
@@ -135,8 +133,14 @@ FGModelMgr::add_instance (Instance * instance)
 void
 FGModelMgr::remove_instance (Instance * instance)
 {
-    _instances.erase(find(_instances.begin(), _instances.end(), instance));
-    delete instance;
+    vector<Instance *>::iterator it;
+    for (it = _instances.begin(); it != _instances.end(); it++) {
+        if (*it == instance) {
+            _instances.erase(it);
+            delete instance;
+            return;
+        }
+    }
 }
 
 void
