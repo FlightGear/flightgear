@@ -58,6 +58,13 @@ A supplier entry could look like the following:
 Currently <volts> and <amps> are not really modeled in detail.  This
 is more of a place holder for the future.
 
+For alternators, you must additionally specify:
+
+    <rpm-source>/engines/engine[0]/rpm</rpm-source>
+
+The value of the rpm source determines if the generator is able to
+produce power or not.
+
 
 Buses
 =====
