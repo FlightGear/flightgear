@@ -21,6 +21,7 @@ public:
     void setVariableProp(float min, float max);
     void setPropFeather(int state);
     void setGearRatio(float ratio) { _gearRatio = ratio; }
+    void setContraPair(bool contra) { _contra = contra; }
 
     virtual PropEngine* getPropEngine() { return this; }
     virtual Engine* getEngine() { return _eng; }
@@ -48,6 +49,7 @@ private:
     Engine* _eng;
 
     bool _variable;
+    bool _contra; // contra-rotating propeller pair
     int _magnetos;  // 0=off, 1=right, 2=left, 3=both
     float _gearRatio;
     float _advance; // control input, 0-1

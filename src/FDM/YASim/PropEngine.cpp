@@ -17,6 +17,7 @@ PropEngine::PropEngine(Propeller* prop, Engine* eng, float moment)
     _eng = eng;
     _moment = moment;
     _fuel = true;
+    _contra = false;
 }
 
 PropEngine::~PropEngine()
@@ -192,16 +193,20 @@ void PropEngine::integrate(float dt)
         _omega = 0 - _omega;    // don't allow negative RPM
                                 // FIXME: introduce proper windmilling
 
-    // Store the total angular momentum into _gyro
-    Math::mul3(_omega*momt, _dir, _gyro);
+    // Store the total angular momentum into _gyro, unless the
+    // propeller is a counter-rotating pair (which has zero net
+    // angular momentum, even though it *does* have an MoI for
+    // acceleration purposes).
+    Math::mul3(_contra ? 0 : _omega*momt, _dir, _gyro);
 
     // Accumulate the engine torque, it acts on the body as a whole.
     // (Note: engine torque, not propeller torque.  They can be
     // different, but the difference goes to accelerating the
     // rotation.  It is the engine torque that is felt at the shaft
-    // and works on the body.)
+    // and works on the body.) (Note 2: contra-rotating propellers do
+    // not exert net torque on the aircraft).
     float tau = _moment < 0 ? engTorque : -engTorque;
-    Math::mul3(tau, _dir, _torque);
+    Math::mul3(_contra ? 0 : tau, _dir, _torque);
 
     // Iterate the propeller governor, if we have one.  Since engine
     // torque is basically constant with RPM, we want to make the

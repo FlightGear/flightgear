@@ -717,6 +717,9 @@ void FGFDM::parsePropeller(XMLAttributes* a)
 	thruster->setVariableProp(min, max);
     }
 
+    if(attrb(a, "contra"))
+        thruster->setContraPair(true);
+
     if(a->hasAttribute("manual-pitch")) {
 	prop->setManualPitch();
     }
