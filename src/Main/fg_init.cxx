@@ -37,6 +37,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+#if defined( unix ) || defined( __CYGWIN__ )
+#  include <unistd.h>		// for gethostname()
+#endif
+
 // work around a stdc++ lib bug in some versions of linux, but doesn't
 // seem to hurt to have this here for all versions of Linux.
 #ifdef linux
@@ -116,6 +121,22 @@ bool fgInitFGRoot ( int argc, char **argv ) {
     // override anything specified in a config file
     root = fgScanForRoot(argc, argv);
 
+#if defined( unix ) || defined( __CYGWIN__ )
+    // Next check home directory for .fgfsrc.hostname file
+    if ( root == "" ) {
+	envp = ::getenv( "HOME" );
+	if ( envp != NULL ) {
+	    FGPath config( envp );
+	    config.append( ".fgfsrc" );
+	    char name[256];
+	    gethostname( name, 256 );
+	    config.concat( "." );
+	    config.concat( name );
+ 	    root = fgScanForRoot(config.str());
+	}
+    }
+#endif
+
     // Next check home directory for .fgfsrc file
     if ( root == "" ) {
 	envp = ::getenv( "HOME" );
@@ -170,19 +191,38 @@ bool fgInitConfig ( int argc, char **argv ) {
       FG_LOG(FG_INPUT, FG_INFO, "Finished Reading global preferences");
     }
 
-    // Attempt to locate and parse a config file
-    // First check fg_root
+    // Attempt to locate and parse the various config files in order
+    // from least precidence to greatest precidence
+
+    // Check for $fg_root/system.fgfsrc
     FGPath config( globals->get_fg_root() );
     config.append( "system.fgfsrc" );
     fgParseOptions(config.str());
 
-    // Next check home directory
+    char name[256];
+#if defined( unix ) || defined( __CYGWIN__ )
+    // Check for $fg_root/system.fgfsrc.hostname
+    gethostname( name, 256 );
+    config.concat( "." );
+    config.concat( name );
+    fgParseOptions(config.str());
+#endif
+
+    // Check for ~/.fgfsrc
     char* envp = ::getenv( "HOME" );
     if ( envp != NULL ) {
 	config.set( envp );
 	config.append( ".fgfsrc" );
 	fgParseOptions(config.str());
     }
+
+#if defined( unix ) || defined( __CYGWIN__ )
+    // Check for ~/.fgfsrc.hostname
+    gethostname( name, 256 );
+    config.concat( "." );
+    config.concat( name );
+    fgParseOptions(config.str());
+#endif
 
     // Parse remaining command line options
     // These will override anything specified in a config file
