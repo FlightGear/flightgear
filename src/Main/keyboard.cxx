@@ -564,6 +564,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	    return;
         case GLUT_KEY_F4: // F4 Update lighting manually
 	    fgUpdateSkyAndLightingParams();
+            return;
         case GLUT_KEY_F6: // F6 toggles Autopilot target location
 	    if ( current_autopilot->get_HeadingMode() !=
 		 FGAutopilot::FG_HEADING_WAYPOINT ) {
