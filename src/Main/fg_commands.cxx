@@ -30,18 +30,17 @@
 #include <Time/tmp.hxx>
 
 #include "fg_init.hxx"
+#include "fg_io.hxx"
 #include "fg_commands.hxx"
 #include "fg_props.hxx"
+#include "globals.hxx"
+#include "logger.cxx"
+#include "util.hxx"
+#include "viewmgr.hxx"
 
 SG_USING_STD(string);
 SG_USING_STD(ifstream);
 SG_USING_STD(ofstream);
-
-#include "fg_props.hxx"
-#include "fg_io.hxx"
-#include "globals.hxx"
-#include "util.hxx"
-#include "viewmgr.hxx"
 
 
 
@@ -843,6 +842,20 @@ do_property_randomize (const SGPropertyNode * arg)
  * dialog-name: the name of the GUI dialog to display.
  */
 static bool
+do_data_logging_commit (const SGPropertyNode * arg)
+{
+    FGLogger *log = (FGLogger *)globals->get_subsystem("logger");
+    log->reinit();
+    return true;
+}
+
+
+/**
+ * Built-in command: Show an XML-configured dialog.
+ *
+ * dialog-name: the name of the GUI dialog to display.
+ */
+static bool
 do_dialog_show (const SGPropertyNode * arg)
 {
     NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
@@ -1043,6 +1056,7 @@ static struct {
     { "property-scale", do_property_scale },
     { "property-cycle", do_property_cycle },
     { "property-randomize", do_property_randomize },
+    { "data-logging-commit", do_data_logging_commit },
     { "dialog-show", do_dialog_show },
     { "dialog-close", do_dialog_close },
     { "dialog-show", do_dialog_show },
