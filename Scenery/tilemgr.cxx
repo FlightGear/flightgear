@@ -239,7 +239,7 @@ static double point_line_dist_squared( const Point3D& tc, const Point3D& vp,
 
     dist = fgPointLineSquared(p, p0, d);
 
-    // printf("dist = %.2f\n", dist);
+    // cout << "dist = " << dist << endl;
 
     return(dist);
 }
@@ -475,21 +475,31 @@ fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
 	    if ( dist <= FG_SQUARE(frag_ptr->bounding_radius) ) {
 		if ( frag_ptr->intersect( abs_view_pos, 
 					  earth_center, 0, result ) ) {
+		    FG_LOG( FG_TERRAIN, FG_DEBUG, "intersection point " <<
+			    result );
 		    // compute geocentric coordinates of tile center
 		    Point3D pp = fgCartToPolar3d(result);
+		    FG_LOG( FG_TERRAIN, FG_DEBUG, "  polar form = " << pp );
 		    // convert to geodetic coordinates
 		    fgGeocToGeod(pp.lat(), pp.radius(), &lat_geod, 
 				 &alt, &sea_level_r);
+
 		    // printf("alt = %.2f\n", alt);
 		    // exit since we found an intersection
-		    return(alt);
+		    if ( alt > -9999.0 ) {
+			// printf("returning alt\n");
+			return alt;
+		    } else {
+			// printf("returning 0\n");
+			return 0.0;
+		    }
 		}
 	    }
 	}
     }
 
-    printf("no terrain intersection found\n");
-    return(0);
+    cout << "no terrain intersection found\n";
+    return 0.0;
 }
 
 
@@ -632,6 +642,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.44  1998/11/23 21:49:48  curt
+// minor tweaks.
+//
 // Revision 1.43  1998/11/09 23:40:52  curt
 // Bernie Bright <bbright@c031.aone.net.au> writes:
 // I've made some changes to the Scenery handling.  Basically just tidy ups.
