@@ -289,9 +289,9 @@ int fgLaRCsim_2_FGInterface (FGInterface& f) {
 
     // Accelerations
     // f.set_Accels_Local( V_dot_north, V_dot_east, V_dot_down );
-    // f.set_Accels_Body( U_dot_body, V_dot_body, W_dot_body );
-    // f.set_Accels_CG_Body( A_X_cg, A_Y_cg, A_Z_cg );
-    // f.set_Accels_Pilot_Body( A_X_pilot, A_Y_pilot, A_Z_pilot );
+    f.set_Accels_Body( U_dot_body, V_dot_body, W_dot_body );
+    f.set_Accels_CG_Body( A_X_cg, A_Y_cg, A_Z_cg );
+    f.set_Accels_Pilot_Body( A_X_pilot, A_Y_pilot, A_Z_pilot );
     // f.set_Accels_CG_Body_N( N_X_cg, N_Y_cg, N_Z_cg );
     // f.set_Accels_Pilot_Body_N( N_X_pilot, N_Y_pilot, N_Z_pilot );
     // f.set_Accels_Omega( P_dot_body, Q_dot_body, R_dot_body );

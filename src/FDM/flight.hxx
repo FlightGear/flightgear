@@ -303,36 +303,36 @@ public:
 
     FG_VECTOR_3    v_dot_body_v;
     // inline double * get_V_dot_body_v() { return v_dot_body_v; }
-    // inline double get_U_dot_body() const { return v_dot_body_v[0]; }
-    // inline double get_V_dot_body() const { return v_dot_body_v[1]; }
-    // inline double get_W_dot_body() const { return v_dot_body_v[2]; }
-    /* inline void set_Accels_Body( double u, double v, double w ) {
-	v_dot_local_v[0] = u;
-	v_dot_local_v[1] = v;
-	v_dot_local_v[2] = w;
-    } */
+    inline double get_U_dot_body() const { return v_dot_body_v[0]; }
+    inline double get_V_dot_body() const { return v_dot_body_v[1]; }
+    inline double get_W_dot_body() const { return v_dot_body_v[2]; }
+    inline void set_Accels_Body( double u, double v, double w ) {
+	v_dot_body_v[0] = u;
+	v_dot_body_v[1] = v;
+	v_dot_body_v[2] = w;
+    }
 
     FG_VECTOR_3    a_cg_body_v;
     // inline double * get_A_cg_body_v() { return a_cg_body_v; }
-    // inline double get_A_X_cg() const { return a_cg_body_v[0]; }
-    // inline double get_A_Y_cg() const { return a_cg_body_v[1]; }
-    // inline double get_A_Z_cg() const { return a_cg_body_v[2]; }
-    /* inline void set_Accels_CG_Body( double x, double y, double z ) {
+    inline double get_A_X_cg() const { return a_cg_body_v[0]; }
+    inline double get_A_Y_cg() const { return a_cg_body_v[1]; }
+    inline double get_A_Z_cg() const { return a_cg_body_v[2]; }
+    inline void set_Accels_CG_Body( double x, double y, double z ) {
 	a_cg_body_v[0] = x;
 	a_cg_body_v[1] = y;
 	a_cg_body_v[2] = z;
-    } */
+    }
 
     FG_VECTOR_3    a_pilot_body_v;
     // inline double * get_A_pilot_body_v() { return a_pilot_body_v; }
-    // inline double get_A_X_pilot() const { return a_pilot_body_v[0]; }
-    // inline double get_A_Y_pilot() const { return a_pilot_body_v[1]; }
-    // inline double get_A_Z_pilot() const { return a_pilot_body_v[2]; }
-    /* inline void set_Accels_Pilot_Body( double x, double y, double z ) {
+    inline double get_A_X_pilot() const { return a_pilot_body_v[0]; }
+    inline double get_A_Y_pilot() const { return a_pilot_body_v[1]; }
+    inline double get_A_Z_pilot() const { return a_pilot_body_v[2]; }
+    inline void set_Accels_Pilot_Body( double x, double y, double z ) {
 	a_pilot_body_v[0] = x;
 	a_pilot_body_v[1] = y;
 	a_pilot_body_v[2] = z;
-    } */
+    }
 
     FG_VECTOR_3    n_cg_body_v;
     // inline double * get_N_cg_body_v() { return n_cg_body_v; }
