@@ -1507,6 +1507,7 @@ void fgReshape( int width, int height ) {
 // do some clean up on exit.  Specifically we want to call alutExit()
 // which happens in the sound manager destructor.
 void fgExitCleanup() {
+    fgSetMouseCursor(MOUSE_CURSOR_POINTER);
     delete globals;
 //    fgOSExit(0);
 }
