@@ -72,15 +72,15 @@ static void ATCDialogOK (puObject *me)
 		FGTower* twr = (FGTower*)globals->get_ATC_mgr()->GetComm1ATCPointer();
 		switch(atcDialogCommunicationOptions->getValue()) {
 		case 0:
-			cout << "Option 0 chosen\n";
+			//cout << "Option 0 chosen\n";
 			twr->RequestLandingClearance("golf bravo echo");
 			break;
 		case 1:
-			cout << "Option 1 chosen\n";
+			//cout << "Option 1 chosen\n";
 			twr->RequestDepartureClearance("golf bravo echo");
 			break;
 		case 2:
-			cout << "Option 2 chosen\n";
+			//cout << "Option 2 chosen\n";
 			twr->ReportRunwayVacated("golf bravo echo");
 			break;
 		default:
@@ -113,15 +113,15 @@ static void ATCDialogInit()
 	char *s;
 
 	// Option lists hardwired per ATC type	
-	towerOptions[0] = new char[strlen(t0)];
+	towerOptions[0] = new char[strlen(t0)+1];
 	strcpy(towerOptions[0], t0);
-	towerOptions[1] = new char[strlen(t1)];
+	towerOptions[1] = new char[strlen(t1)+1];
 	strcpy(towerOptions[1], t1);
-	towerOptions[2] = new char[strlen(t2)];
+	towerOptions[2] = new char[strlen(t2)+1];
 	strcpy(towerOptions[2], t2);
 	towerOptions[3] = NULL;
 	
-	approachOptions[0] = new char[strlen(a0)];
+	approachOptions[0] = new char[strlen(a0)+1];
 	strcpy(approachOptions[0], a0);
 	approachOptions[1] = NULL;
 
