@@ -23,6 +23,8 @@
 #include <simgear/debug/logstream.hxx>
 
 #include <stdlib.h>
+#include <algorithm>
+
 #include <Main/fg_props.hxx>
 
 #include "environment_ctrl.hxx"
