@@ -5,6 +5,9 @@
  * This file contains routines that operate solely on matrices.
  * -------------------------------------------------------------------------*/
 
+
+#include <config.h>
+
 #ifdef WIN32
 #  include <memory.h>      /* required for memset() and memcpy() */
 #endif
