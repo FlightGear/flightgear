@@ -703,7 +703,7 @@ fi
 
 PACKAGE=FlightGear
 
-VERSION=0.43
+VERSION=0.44
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { echo "configure: error: source directory already configured; run "make distclean" there first" 1>&2; exit 1; }
@@ -4053,6 +4053,7 @@ trap 'rm -fr `echo "\
 	Tools/Stripe_u/Makefile \
 	Tools/Tri2obj/Makefile \
 	Tools/Triangle/Makefile \
+	Tests/Makefile \
 	 Include/config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -4190,6 +4191,7 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	Tools/Stripe_u/Makefile \
 	Tools/Tri2obj/Makefile \
 	Tools/Triangle/Makefile \
+	Tests/Makefile \
 	"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF

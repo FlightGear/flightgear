@@ -71,7 +71,7 @@ PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 VERSION = @VERSION@
 
-SUBDIRS = Include Lib Simulator Tools
+SUBDIRS = Include Lib Simulator Tools Tests
 
 EXTRA_DIST = Makefile.extra README.Win32 README.autoconf README.running Thanks
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4

@@ -5,7 +5,7 @@ dnl
 AC_INIT(Simulator/Aircraft/aircraft.c)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.43)
+AM_INIT_AUTOMAKE(FlightGear, 0.44)
 
 dnl Checks for programs.
 
@@ -164,4 +164,5 @@ AC_OUTPUT( \
 	Tools/Stripe_u/Makefile \
 	Tools/Tri2obj/Makefile \
 	Tools/Triangle/Makefile \
+	Tests/Makefile \
 	)

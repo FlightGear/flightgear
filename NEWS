@@ -1,4 +1,10 @@
+New in 0.44:
+* command line option to set starting position by airport ID
+
 New in 0.43:
+* material properties bug fixed when rendering terrain.
+* bug in sky color generation fixed.
+* bug in fog color generation fixed.
 * zlib on the fly decompression/compression support.
 * more code reorganization and clean ups.
 * a fixed up 30 arcsec DEM file preprocessor.  World wide DEM's are 
