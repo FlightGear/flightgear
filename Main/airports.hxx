@@ -34,8 +34,8 @@
 #endif                                   
 
 
-#include <map>             // STL associative "array"
 #include <string>          // Standard C++ string library
+#include <map>             // STL associative "array"
 
 
 typedef struct {
@@ -70,6 +70,12 @@ public:
 
 
 // $Log$
+// Revision 1.5  1998/06/17 21:35:11  curt
+// Refined conditional audio support compilation.
+// Moved texture parameter setup calls to ../Scenery/materials.cxx
+// #include <string.h> before various STL includes.
+// Make HUD default state be enabled.
+//
 // Revision 1.4  1998/06/03 00:47:14  curt
 // Updated to compile in audio support if OSS available.
 // Updated for new version of Steve's audio library.

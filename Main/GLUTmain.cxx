@@ -52,9 +52,9 @@
 #include <Astro/stars.hxx>
 #include <Astro/sun.hxx>
 
-#ifdef HAVE_OSS_AUDIO
-#  include <Audio/sl.h>
-#  include <Audio/sm.h>
+#ifdef HAVE_AUDIO_SUPPORT
+#  include <Audio/src/sl.h>
+#  include <Audio/src/sm.h>
 #endif
 
 #include <Cockpit/cockpit.hxx>
@@ -89,7 +89,7 @@ int use_signals = 0;
 int displayInstruments; 
 
 // Global structures for the Audio library
-#ifdef HAVE_OSS_AUDIO
+#ifdef HAVE_AUDIO_SUPPORT
 slScheduler audio_sched ( 8000 ) ;
 smMixer audio_mixer ;
 slSample *s1;
@@ -365,13 +365,6 @@ static void fgRenderFrame( void ) {
     if ( o->textures ) {
 	// texture parameters
 	xglEnable( GL_TEXTURE_2D );
-	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
-	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ) ;
-	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) ;
-	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
-			  GL_LINEAR /* GL_LINEAR_MIPMAP_LINEAR */ ) ;
-	xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
-	xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
 	// set base color (I don't think this is doing anything here)
 	xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
 	xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
@@ -562,7 +555,7 @@ static void fgMainLoop( void ) {
     global_events.Process();
 
     // Run audio scheduler
-#ifdef HAVE_OSS_AUDIO
+#ifdef HAVE_AUDIO_SUPPORT
     audio_sched.update();
 #endif
 
@@ -722,7 +715,7 @@ int main( int argc, char **argv ) {
     guiInit();
 
     // Initialize audio support
-#ifdef HAVE_OSS_AUDIO
+#ifdef HAVE_AUDIO_SUPPORT
     audio_mixer . setMasterVolume ( 30 ) ;  /* 50% of max volume. */
     audio_sched . setSafetyMargin ( 1.0 ) ;
     strcpy(path, o->fg_root);
@@ -752,6 +745,12 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.27  1998/06/17 21:35:10  curt
+// Refined conditional audio support compilation.
+// Moved texture parameter setup calls to ../Scenery/materials.cxx
+// #include <string.h> before various STL includes.
+// Make HUD default state be enabled.
+//
 // Revision 1.26  1998/06/13 00:40:32  curt
 // Tweaked fog command line options.
 //

@@ -1,6 +1,12 @@
-if HAVE_OSS_AUDIO
-DEFS += -DHAVE_OSS_AUDIO
-AUDIO_LIBS = $(top_builddir)/Lib/Audio/libAudio.la
+if HAVE_AUDIO_SUPPORT
+DEFS += -DHAVE_AUDIO_SUPPORT
+AUDIO_LIBS = \
+	$(top_builddir)/Lib/Audio/src/libsl.la \
+	$(top_builddir)/Lib/Audio/src/libsm.la
+endif
+
+if HAVE_WIN32_AUDIO
+LIBS += -lwinmm
 endif
 
 EXTRA_DIST = runfg.in runfg.bat.in

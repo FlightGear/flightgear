@@ -30,6 +30,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <Include/fg_constants.h>
 #include <Include/general.h>
@@ -386,6 +387,12 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.20  1998/06/17 21:35:12  curt
+// Refined conditional audio support compilation.
+// Moved texture parameter setup calls to ../Scenery/materials.cxx
+// #include <string.h> before various STL includes.
+// Make HUD default state be enabled.
+//
 // Revision 1.19  1998/06/08 17:57:05  curt
 // Minor sound/startup position tweaks.
 //

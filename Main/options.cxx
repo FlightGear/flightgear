@@ -68,7 +68,7 @@ fgOPTIONS::fgOPTIONS( void ) {
     strcpy(airport_id, "");
 
     // Features
-    hud_status = 0;
+    hud_status = 1;
 
     // Rendering options
     fog = 2;    // nicest
@@ -433,6 +433,12 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.12  1998/06/17 21:35:13  curt
+// Refined conditional audio support compilation.
+// Moved texture parameter setup calls to ../Scenery/materials.cxx
+// #include <string.h> before various STL includes.
+// Make HUD default state be enabled.
+//
 // Revision 1.11  1998/06/13 00:40:33  curt
 // Tweaked fog command line options.
 //
