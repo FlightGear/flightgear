@@ -470,20 +470,18 @@ void fgPropPicker::find_props ()
   for (i = 0; i < (int)node->nChildren(); i++) {
 	    SGPropertyNode * child = node->getChild(i);
 	    name = child->getName();
+	    if ( node->getChild(name, 1) != 0 ) {
+		iindex = child->getIndex();
+		sprintf(sindex, "[%d]", iindex);
+	        name += sindex;
+	    }
 	    line = name;
   	    names[ pi ] = new char[ strlen(line.c_str())+2 ] ;
 	    strcpy ( names [ pi ], line.c_str() ) ;
 	    if ( child->nChildren() > 0 ) {
-                iindex = child->getIndex();
-		sprintf(sindex, "%d", iindex);
 		dflag[ pi ] = 1 ;
                 files[ pi ] = new char[ strlen(line.c_str())+strlen(sindex)+4 ] ;
 	        strcpy ( files [ pi ], line.c_str() ) ;
-		if ( node->getChild(name, 1) != 0 ) {
-	            strcat ( files [ pi ], "[" ) ;
-                    strcat ( files [ pi ], sindex ) ;
-	            strcat ( files [ pi ], "]" ) ;
-		}
 	        strcat ( files [ pi ], "/" ) ;
    	        values[ pi ] = new char[ 2 ] ;
 	    } else {
