@@ -32,7 +32,6 @@
 #include "tri2obj.hxx"
 
 #include <Include/fg_constants.h>
-#include <Include/fg_types.h>
 #include <Bucket/bucketutils.h>
 
 #include <Math/fg_geodesy.hxx>
@@ -442,7 +441,9 @@ void triload(char *basename, char *basepath) {
 	fscanf(node, "%d %lf %lf %lf %d\n", &junk1, 
 	       &n[0], &n[1], &n[2], &junk2);
 	// printf("%d %.2f %.2f %.2f\n", junk1, n[0], n[1], n[2]);
-	p = Point3D(n[0], n[1], n[2]);
+	p = Point3D( n[0] * ARCSEC_TO_RAD,
+		     n[1] * ARCSEC_TO_RAD,
+		     n[2] );
 	nodes[i] = fgGeodToCart(p);
 	// printf("%d %.2f %.2f %.2f\n", 
 	//        junk1, nodes[i].x, nodes[i].y, nodes[i].z);
@@ -622,6 +623,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.4  1998/10/20 15:52:46  curt
+// Fixed a units conversion bug introduced when converting to Point3D class.
+//
 // Revision 1.3  1998/10/19 19:33:31  curt
 // C++-ification.
 //
