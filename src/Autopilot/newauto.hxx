@@ -85,6 +85,7 @@ private:
     double climb_error_accum;   // climb error accumulator (for GS)
     double speed_error_accum;   // speed error accumulator
 
+    double current_ap_throttle;  // current ap stored throttle setting used to set all engines
     double previous_speed;  // used to detect acceleration rate
 
     double TargetSlope;         // the glide slope hold value

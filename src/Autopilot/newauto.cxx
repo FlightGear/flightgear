@@ -903,17 +903,17 @@ FGAutopilot::update (double dt)
 	total_adj = (1.0 - throttle_integral->getFloatValue()) * prop_adj + 
                                      throttle_integral->getFloatValue() * int_adj;
 
-                      total_adj = current_throttle->getFloatValue() + total_adj;
+                      current_ap_throttle = current_ap_throttle + total_adj;
 
-	if ( total_adj > 1.0 ) {
-	    total_adj = 1.0;
+	if ( current_ap_throttle > 1.0 ) {
+	    current_ap_throttle = 1.0;
 	}
-	else if ( total_adj < 0.0 ) {
-	    total_adj = 0.0;
+	else if ( current_ap_throttle < 0.0 ) {
+	    current_ap_throttle = 0.0;
 	}
 
 	globals->get_controls()->set_throttle( FGControls::ALL_ENGINES,
-					       total_adj );
+					       current_ap_throttle );
     }
 
 #ifdef THIS_CODE_IS_NOT_USED
@@ -1186,7 +1186,9 @@ void FGAutopilot::set_AutoThrottleEnabled( bool value ) {
         if (TargetSpeed < 0.0001) {
           TargetSpeed = fgGetDouble("/velocities/airspeed-kt");
         }
-	speed_error_accum = 0.0;
+        speed_error_accum = 0.0;
+        // initialize autothrottle at current control setting;
+        current_ap_throttle = current_throttle->getFloatValue();
     }
 
     update_old_control_values();
