@@ -337,14 +337,14 @@ This tools inputs an ascii specification of the airports of the world
 that looks like the following:
 
 \begin{verbatim}
-A KORD  41.979595 -087.904464   668 CYY Chicago O Hare International
-R 04L  41.989606 -087.905138 039.39   7500 150 AHYN NNNLYN NNNNNY
-R 04R  41.961618 -087.889594 041.40   8071 150 AHYN YNNNNY YNNNNY
-R 09L  41.983954 -087.903705 089.70   7967 150 AHYN YNNNNY YNNNNY
-R 09R  41.969040 -087.902380 089.88  10141 150 AHYN YNNNNY YNNNNY
-R 14L  41.991918 -087.903546 140.10  10003 150 AHYN YNNBYN YNNNNY
-R 14R  41.976778 -087.917774 140.08  13000 200 AHYN YNNBYN YNNNNY
-R 18   41.990086 -087.900410 180.00   5341 150 AMNN NNNNNN NNNNNN
+A KORD  41.979595 -087.904464   668 CCY Chicago O Hare International 
+R 04L  41.989606 -087.905138 039.39   7500 150 AHYN NNNL 0 0 NNNO 0 0
+R 04R  41.961618 -087.889594 041.40   8071 150 AHYN YNNO 0 0 YNNO 0 0
+R 09L  41.983954 -087.903705 089.70   7967 150 AHYN YNNO 0 0 YNNO 0 0
+R 09R  41.969040 -087.902380 089.88  10141 150 AHYN YNNO 0 0 YNNO 0 0
+R 14L  41.991918 -087.903546 140.10  10003 150 AHYN YNNC 0 0 YNNO 0 0
+R 14R  41.976778 -087.917774 140.08  13000 200 AHYN YNNC 0 0 YNNO 0 0
+R 18   41.990086 -087.900410 180.00   5341 150 AMNN NNNN 0 0 NNNN 0 0
 \end{verbatim}
 
 For each airport, a bounding polygon is generated, and written as a
@@ -394,6 +394,9 @@ Dump the raw data into the appropriate tile areas in the work space.
 This includes height data (DEM, airport) and polygon data (airport,
 hydro-data, land use data, etc.)
 
+For each tile create a fitted set of ``important height'' points from
+the original regular grid of data.
+
 For each tile, run the generic clipper on each polygon in order from
 highest to lowest incrementally building an accumulation ``super''
 polygon that comprises a union of all polygons we've processed so far
@@ -403,21 +406,50 @@ shape of the polygon.  This is the scheme for eliminating overlapping
 features on a priority basis.
 
 For each polygon on a tile we must determine a point inside.  We need
-this for the triangulation step.
+this for the triangulation step so we can assign a regional attribute
+to all triangles inside a polygon.
 
-For each polygon, triangulate all the height fields in the tile.
-Using the triangle library we can feed in all the polygon outlines
-with the corresponding interior points.  We can tell the triangulator
-to start at every point except for the one we are working on and eat
-away all the triangles until a polygon border is encountered.  This
-leaves us with the triangulation of each polygon.
+Run the delauney triangulator for the tile.  The triangulator code is
+very powerful and feature rich, but also very obfuscated to use.  It
+is very robust and fast, but suffers a bit on the usability continuum.
 
-Now we have a pile of height data and the triangulation for each
-polygon.  However, some of these hieght fields must be enforced
-(airports) and some of this can be adjusted (base terrain).  We might
-also want to think about ensuring lakes are level, and rivers don't
-run up and down hills.  Anyways, with a flurry of handwaving, we have
-adjusted all the heights.
+In preparation for the triangulation step we need to create the
+following items:
+
+\begin{itemize}
+\item A list of all unique vertices (nodes) in this tile, including
+  the corners
+
+\item A list of all the unique segments (edges of the polygons) in no
+  particular order.  The triangulator doesn't really care how the
+  polygons connect together, it just cares about boundary edges.
+
+\item A list of ``holes'' (if any) to cut out of the tile.  If an
+  airport overlaps multiple tiles we assign it one tile and leave a
+  hole in remaining tiles.  A hole is specified by a single point.
+  When the triangulation step is finished, the triangulator will start
+  at each hole point and recursively eat away all neighboring
+  triangles until it encounters an edge.
+
+\item A list of regions with region attributes.  These are specified
+  much the same way as holes.  After the triangulation step is
+  finished, regional attributes are assigned.  The procedure is
+  identical to cutting out a hole except that instead of removing a
+  triangle it is simply assigned the attribute for that region.
+\end{itemize}
+
+The result of the triangulation step is a list of triangles for the
+tile with each triangle assigned an attribute representing the polygon
+it lives inside.
+
+Now we have a pile of triangles.  We are heading in the right
+direction!  However, no we need to go through and assign the proper
+height to each of the verticies of the triangles.  We must be aware of
+certain constraints.  Airport elevations should have the highest
+priority, followed by the DEM elevations.  We will also want to impose
+additional constraints such as ensuring lakes are level and rivers
+don't run up hill.  Anyways, with a flurry of handwaving, we have now
+adjusted all the heights. :-)
 
 The next thing we have to worry about is making sure each tile meshes
 exactly with all it's neighbors.  We do this by spliting the tile up
@@ -517,6 +549,9 @@ Generates the width of a 1/8 x 1/8 degree tile at various latitudes.
 
 %------------------------------------------------------------------------
 % $Log$
+% Revision 1.4  1999/03/21 15:12:51  curt
+% Updated to reflect current scenery progress.
+%
 % Revision 1.3  1999/03/13 21:42:37  curt
 % Updated to match current scenery generation tools progress.
 %
