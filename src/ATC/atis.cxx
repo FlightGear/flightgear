@@ -66,6 +66,8 @@ atis_failed(false),
 refname("atis")
 //type(ATIS)
 {
+	vPtr = globals->get_ATC_mgr()->GetVoicePointer(ATIS);
+	voiceOK = (vPtr == NULL ? false : true);
 }
 
 // Destructor
@@ -83,14 +85,14 @@ void FGATIS::Update() {
 			// We need to get and display the message
 			UpdateTransmission();
 			//cout << "ATIS.CXX - calling ATCMgr to render transmission..." << endl;
-			globals->get_ATC_mgr()->Render(transmission, refname, true);
+			Render(transmission, refname, true);
 			displaying = true;
 		}
 	} else {
 		// We shouldn't be displaying
 		if(displaying) {
 			//cout << "ATIS.CXX - calling NoRender()..." << endl;
-			globals->get_ATC_mgr()->NoRender(refname);
+			NoRender(refname);
 			displaying = false;
 		}
 	}

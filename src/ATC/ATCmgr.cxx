@@ -53,6 +53,7 @@ FGATCMgr::FGATCMgr() {
 }
 
 FGATCMgr::~FGATCMgr() {
+	delete v1;
 }
 
 void FGATCMgr::bind() {
@@ -99,7 +100,9 @@ void FGATCMgr::init() {
 	// Load all available voices.
 	// For now we'll do one hardwired one
 	
-	voiceOK = v1.LoadVoice("default");
+	v1 = new FGATCVoice;
+	voiceOK = v1->LoadVoice("default");
+	voice = true;
 	
 	/* I've loaded the voice even if /sim/sound/audible is false
 	*  since I know no way of forcing load of the voice if the user
@@ -284,61 +287,35 @@ FGATC* FGATCMgr::GetATCPointer(string icao, atc_type type) {
 	return(NULL);
 }
 
-
-// Render a transmission
-// Outputs the transmission either on screen or as audio depending on user preference
-// The refname is a string to identify this sample to the sound manager
-// The repeating flag indicates whether the message should be repeated continuously or played once.
-void FGATCMgr::Render(string msg, string refname, bool repeating) {
-#ifdef ENABLE_AUDIO_SUPPORT
-	voice = (voiceOK && fgGetBool("/sim/sound/audible")
-                 && fgGetBool("/sim/sound/voice"));
+// Return a pointer to an appropriate voice for a given type of ATC
+// creating the voice if necessary - ie. make sure exactly one copy
+// of every voice in use exists in memory.
+//
+// TODO - in the future this will get more complex and dole out country/airport
+// specific voices, and possible make sure that the same voice doesn't get used
+// at different airports in quick succession if a large enough selection are available.
+FGATCVoice* FGATCMgr::GetVoicePointer(atc_type type) {
+	// TODO - implement me better - maintain a list of loaded voices and other voices!!
 	if(voice) {
-		int len;
-		unsigned char* buf = v1.WriteMessage((char*)msg.c_str(), len, voice);
-		if(voice) {
-			FGSimpleSound* simple = new FGSimpleSound(buf, len);
-			// TODO - at the moment the volume is always set off comm1 
-			// and can't be changed after the transmission has started.
-			simple->set_volume(5.0 * fgGetDouble("/radios/comm[0]/volume"));
-			globals->get_soundmgr()->add(simple, refname);
-			if(repeating) {
-				globals->get_soundmgr()->play_looped(refname);
-			} else {
-				globals->get_soundmgr()->play_once(refname);
+		switch(type) {
+		case ATIS:
+			if(voiceOK) {
+				return(v1);
 			}
+		case TOWER:
+			return(NULL);
+		case APPROACH:
+			return(NULL);
+		case GROUND:
+			return(NULL);
+		default:
+			return(NULL);
 		}
-		delete[] buf;
-	}
-#endif	// ENABLE_AUDIO_SUPPORT
-	if(!voice) {
-		// first rip the underscores and the pause hints out of the string - these are for the convienience of the voice parser
-		for(unsigned int i = 0; i < msg.length(); ++i) {
-			if((msg.substr(i,1) == "_") || (msg.substr(i,1) == "/")) {
-				msg[i] = ' ';
-			}
-		}
-		globals->get_ATC_display()->RegisterRepeatingMessage(msg);
-	}
-	playing = true;	
-}
-
-
-// Cease rendering a transmission.
-void FGATCMgr::NoRender(string refname) {
-	if(playing) {
-		if(voice) {
-#ifdef ENABLE_AUDIO_SUPPORT		
-			globals->get_soundmgr()->stop(refname);
-			globals->get_soundmgr()->remove(refname);
-#endif
-		} else {
-			globals->get_ATC_display()->CancelRepeatingMessage();
-		}
-		playing = false;
+		return(NULL);
+	} else {
+		return(NULL);
 	}
 }
-
 
 // Display a dialog box with options relevant to the currently tuned ATC service.
 void FGATCMgr::doPopupDialog() {

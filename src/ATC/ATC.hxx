@@ -30,6 +30,8 @@
 #include STL_IOSTREAM
 #include STL_STRING
 
+#include "ATCVoice.hxx"
+
 SG_USING_STD(ostream);
 SG_USING_STD(string);
 SG_USING_STD(ios);
@@ -111,12 +113,28 @@ public:
 	
 protected:
 
+	// Render a transmission
+	// Outputs the transmission either on screen or as audio depending on user preference
+	// The refname is a string to identify this sample to the sound manager
+	// The repeating flag indicates whether the message should be repeated continuously or played once.
+	void Render(string msg, string refname, bool repeating);
+
+	// Cease rendering a transmission.
+	// Requires the sound manager refname if audio, else "".
+	void NoRender(string refname);
+
 	double lon, lat, elev;
 	double x, y, z;
 	int freq;
 	int range;
 	string ident;		// Code of the airport its at.
 	string name;		// Name transmitted in the broadcast.
+	
+	// Rendering related stuff
+	bool voice;			// Flag - true if we are using voice
+	bool playing;		// Indicates a message in progress	
+	bool voiceOK;		// Flag - true if at least one voice has loaded OK
+	FGATCVoice* vPtr;
 };
 
 inline istream&

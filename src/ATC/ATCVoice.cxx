@@ -23,8 +23,6 @@
 #  include <config.h>
 #endif
 
-#include <plib/sl.h>
-
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>

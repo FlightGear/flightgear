@@ -21,6 +21,8 @@
 #ifndef _FG_ATC_VOICE
 #define _FG_ATC_VOICE
 
+#include <plib/sl.h>
+
 #include <simgear/compiler.h>
 
 #if defined( SG_HAVE_STD_INCLUDES ) || defined( __BORLANDC__ ) || (__APPLE__)

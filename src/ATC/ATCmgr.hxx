@@ -24,7 +24,6 @@
 
 #include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
-#include <Sound/soundmgr.hxx>
 #include <GUI/gui.h>
 
 #include <string>
@@ -131,13 +130,12 @@ private:
     FGTower tower;
     FGApproach approach;
     //FGDeparture departure;
-
-	// Rendering related stuff
+	
+	// Voice related stuff
 	bool voice;			// Flag - true if we are using voice
-	bool playing;		// Indicates a message in progress	
 #ifdef ENABLE_AUDIO_SUPPORT
 	bool voiceOK;		// Flag - true if at least one voice has loaded OK
-	FGATCVoice v1;
+	FGATCVoice* v1;
 #endif
 
 public:
@@ -159,18 +157,17 @@ public:
     // Return a pointer to a given sort of ATC at a given airport and activate if necessary
     FGATC* GetATCPointer(string icao, atc_type type);
 	
-	// Render a transmission
-	// Outputs the transmission either on screen or as audio depending on user preference
-	// The refname is a string to identify this sample to the sound manager
-	// The repeating flag indicates whether the message should be repeated continuously or played once.
-	void Render(string msg, string refname, bool repeating);
-
-	// Cease rendering a transmission.
-	// Requires the sound manager refname if audio, else "".
-	void NoRender(string refname);
-	
 	// Display a dialog box with options relevant to the currently tuned ATC service.
 	void doPopupDialog();
+	
+	// Return a pointer to an appropriate voice for a given type of ATC
+	// creating the voice if necessary - ie. make sure exactly one copy
+	// of every voice in use exists in memory.
+	//
+	// TODO - in the future this will get more complex and dole out country/airport
+	// specific voices, and possible make sure that the same voice doesn't get used
+	// at different airports in quick succession if a large enough selection are available.
+	FGATCVoice* GetVoicePointer(atc_type type);
 	
 	atc_type GetComm1ATCType() { return(comm_type[0]); }
 	FGATC* GetComm1ATCPointer() { return(comm_atc_ptr[0]); }
