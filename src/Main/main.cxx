@@ -1139,7 +1139,8 @@ static void fgMainLoop( void ) {
 
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
-    if ( fgGetBool("/sim/sound") && globals->get_soundmgr()->is_working() ) {
+    if ( fgGetBool("/sim/sound/audible")
+           && globals->get_soundmgr()->is_working() ) {
 	globals->get_fx()->update(1); // FIXME: use dt
 	globals->get_soundmgr()->update(1); // FIXME: use dt
     }

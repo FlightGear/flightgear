@@ -150,7 +150,7 @@ fgSetDefaults ()
 				// Features
     fgSetBool("/sim/hud/visibility", false);
     fgSetBool("/sim/panel/visibility", true);
-    fgSetBool("/sim/sound", true);
+    fgSetBool("/sim/sound/audible", true);
     fgSetBool("/sim/hud/antialiased", false);
 
 				// Flight Model options
@@ -587,9 +587,9 @@ parse_option (const string& arg)
     } else if ( arg == "--enable-panel" ) {
 	fgSetBool("/sim/panel/visibility", true);
     } else if ( arg == "--disable-sound" ) {
-	fgSetBool("/sim/sound", false);
+	fgSetBool("/sim/sound/audible", false);
     } else if ( arg == "--enable-sound" ) {
-	fgSetBool("/sim/sound", true);
+	fgSetBool("/sim/sound/audible", true);
     } else if ( arg.find( "--airport-id=") == 0 ) {
 				// NB: changed property name!!!
 	fgSetString("/sim/startup/airport-id", arg.substr(13));

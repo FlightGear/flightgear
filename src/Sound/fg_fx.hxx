@@ -24,15 +24,9 @@
 #ifndef __FGFX_HXX
 #define __FGFX_HXX 1
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <simgear/compiler.h>
-#include <Main/fgfs.hxx>
-#include <Main/globals.hxx>
 
-#include "soundmgr.hxx"
+#include "fg_sound.hxx"
 
 
 /**
@@ -47,11 +41,6 @@ class FGFX : public FGSubsystem
 
 public:
 
-  enum {
-    MAX_ENGINES = 2,		// TODO: increase later
-    MAX_GEAR = 20,
-  };
-
   FGFX ();
   virtual ~FGFX ();
 
@@ -62,35 +51,7 @@ public:
 
 private:
 
-  void set_playing (const char * soundName, bool state = true);
-
-  double _old_flap_position;
-  double _old_gear_position;
-
-  bool _gear_on_ground[MAX_GEAR];
-  float _wheel_spin[MAX_GEAR];
-
-				// looped sounds
-  FGSimpleSound * _engine[MAX_ENGINES];
-  FGSimpleSound * _crank[MAX_ENGINES];
-  FGSimpleSound * _wind;
-  FGSimpleSound * _stall;
-  FGSimpleSound * _rumble;
-
-				// one-off sounds
-  FGSimpleSound * _flaps;
-  FGSimpleSound * _gear_up;
-  FGSimpleSound * _gear_dn;
-  FGSimpleSound * _squeal;
-  FGSimpleSound * _click;
-
-				// Cached property nodes.
-  const SGPropertyNode * _engine_running_prop[MAX_ENGINES];
-  const SGPropertyNode * _engine_cranking_prop[MAX_ENGINES];
-  const SGPropertyNode * _stall_warning_prop;
-  const SGPropertyNode * _vc_prop;
-  const SGPropertyNode * _flaps_prop;
-  const SGPropertyNode * _gear_prop;
+  vector<FGSound *> _sound;
 
 };
 
