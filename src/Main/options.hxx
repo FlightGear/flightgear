@@ -404,6 +404,7 @@ private:
     double parse_fov( const string& arg );
     bool parse_channel( const string& type, const string& channel_str );
     bool parse_wp( const string& arg );
+    bool parse_flightplan(const string& arg);
 };
 
 

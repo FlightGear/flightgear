@@ -619,6 +619,32 @@ bool FGOptions::parse_wp( const string& arg ) {
 }
 
 
+// Parse --flight-plan=[file]
+bool FGOptions::parse_flightplan(const string& arg)
+{
+    fg_gzifstream infile(arg.c_str());
+    if (!infile) {
+	return false;
+    }
+    while ( true ) {
+	string line;
+#ifdef GETLINE_NEEDS_TERMINATOR
+	getline( infile, line, '\n' );
+#elif defined( macintosh )
+	getline( infile, line, '\r' );
+#else
+	getline( infile, line );
+#endif
+	if ( infile.eof() ) {
+	    break;
+	}
+	parse_wp(line);
+    }
+
+    return true;
+}
+
+
 // Parse a single option
 int FGOptions::parse_option( const string& arg ) {
     // General Options
@@ -940,6 +966,8 @@ int FGOptions::parse_option( const string& arg ) {
     // $$$ end - added VS Renganathan, 14 Oct 2K
     } else if ( arg.find( "--wp=" ) != string::npos ) {
 	parse_wp( arg.substr( 5 ) );
+    } else if ( arg.find( "--flight-plan=") != string::npos) {
+	parse_flightplan ( arg.substr (14) );
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown option '" << arg << "'" );
 	return FG_OPTIONS_ERROR;
@@ -1215,6 +1243,7 @@ void FGOptions::usage ( void ) {
     cout << "\t\tYou can specify multiple waypoints (a route) with multiple"
 	 << endl;
     cout << "\t\tinstances of --wp=" << endl;
+    cout << "\t--flight-plan=[file]: Read all waypoints from [file]" <<endl;
 }
 
 
