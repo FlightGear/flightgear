@@ -625,7 +625,9 @@ FGTileEntry::load( const string &base_path, bool is_base )
     ssgBranch* new_tile = new ssgBranch;
 
     unsigned int i = 0;
-    while ( i < search.size() && !found_tile_base ) {
+    while ( i < search.size() ) {
+
+        bool has_base = false;
 
         // Generate names for later use
         string index_str = tile_bucket.gen_index_str();
@@ -653,68 +655,79 @@ FGTileEntry::load( const string &base_path, bool is_base )
             while ( ! in.eof() ) {
                 in >> token;
 
+                                // Load only once (first found)
                 if ( token == "OBJECT_BASE" ) {
                     in >> name >> ::skipws;
                     SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
                             << " name = " << name );
 
-                    found_tile_base = true;
+                    if (!found_tile_base) {
+                        found_tile_base = true;
+                        has_base = true;
 
-                    SGPath custom_path = tile_path;
-                    custom_path.append( name );
+                        SGPath custom_path = tile_path;
+                        custom_path.append( name );
 
-                    ssgBranch *geometry = new ssgBranch;
-                    if ( obj_load( custom_path.str(),
-                                   geometry, NULL, NULL, NULL, light_pts,
-                                   true ) )
-                    {
-                        new_tile -> addKid( geometry );
+                        ssgBranch *geometry = new ssgBranch;
+                        if ( obj_load( custom_path.str(),
+                                       geometry, NULL, NULL, NULL, light_pts,
+                                       true ) )
+                            {
+                                new_tile -> addKid( geometry );
+                            } else {
+                                delete geometry;
+                            }
                     } else {
-                        delete geometry;
+                        SG_LOG( SG_TERRAIN, SG_INFO, " (skipped)" );
                     }
+
+                                // Load only if base is not in another file
                 } else if ( token == "OBJECT" ) {
-                    in >> name >> ::skipws;
-                    SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
-                            << " name = " << name );
+                    if (!found_tile_base || has_base) {
+                        in >> name >> ::skipws;
+                        SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+                                << " name = " << name );
 
-                    SGPath custom_path = tile_path;
-                    custom_path.append( name );
+                        SGPath custom_path = tile_path;
+                        custom_path.append( name );
 
-                    ssgBranch *geometry = new ssgBranch;
-                    ssgBranch *vasi_lights = new ssgBranch;
-                    ssgBranch *rwy_lights = new ssgBranch;
-                    ssgBranch *taxi_lights = new ssgBranch;
-                    if ( obj_load( custom_path.str(),
-                                   geometry, vasi_lights, rwy_lights,
-                                   taxi_lights, NULL, false ) )
-                    {
-                        if ( geometry -> getNumKids() > 0 ) {
-                            new_tile -> addKid( geometry );
-                        } else {
-                            delete geometry;
-                        }
-                        if ( vasi_lights -> getNumKids() > 0 ) {
-                            vasi_lights_transform -> addKid( vasi_lights );
-                        } else {
-                            delete vasi_lights;
-                        }
-                        if ( rwy_lights -> getNumKids() > 0 ) {
-                            rwy_lights_transform -> addKid( rwy_lights );
-                        } else {
-                            delete rwy_lights;
-                        }
-                        if ( taxi_lights -> getNumKids() > 0 ) {
-                            taxi_lights_transform -> addKid( taxi_lights );
-                        } else {
-                            delete taxi_lights;
-                        }
-                    } else {
-                        delete geometry;
-                        delete vasi_lights;
-                        delete rwy_lights;
-                        delete taxi_lights;
+                        ssgBranch *geometry = new ssgBranch;
+                        ssgBranch *vasi_lights = new ssgBranch;
+                        ssgBranch *rwy_lights = new ssgBranch;
+                        ssgBranch *taxi_lights = new ssgBranch;
+                        if ( obj_load( custom_path.str(),
+                                       geometry, vasi_lights, rwy_lights,
+                                       taxi_lights, NULL, false ) )
+                            {
+                                if ( geometry -> getNumKids() > 0 ) {
+                                    new_tile -> addKid( geometry );
+                                } else {
+                                    delete geometry;
+                                }
+                                if ( vasi_lights -> getNumKids() > 0 ) {
+                                    vasi_lights_transform -> addKid( vasi_lights );
+                                } else {
+                                    delete vasi_lights;
+                                }
+                                if ( rwy_lights -> getNumKids() > 0 ) {
+                                    rwy_lights_transform -> addKid( rwy_lights );
+                                } else {
+                                    delete rwy_lights;
+                                }
+                                if ( taxi_lights -> getNumKids() > 0 ) {
+                                    taxi_lights_transform -> addKid( taxi_lights );
+                                } else {
+                                    delete taxi_lights;
+                                }
+                            } else {
+                                delete geometry;
+                                delete vasi_lights;
+                                delete rwy_lights;
+                                delete taxi_lights;
+                            }
                     }
 
+                                // Always OK to load
                 } else if ( token == "OBJECT_STATIC" ||
                             token == "OBJECT_SHARED" ) {
                     // load object info
@@ -754,6 +767,8 @@ FGTileEntry::load( const string &base_path, bool is_base )
                                                tile_path.str(),
                                                this, obj_trans );
                     FGTileMgr::model_ready( dm );
+
+                                // Do we even use this one?
                 } else if ( token == "OBJECT_TAXI_SIGN" ) {
                     // load object info
                     double lon, lat, elev, hdg;
@@ -783,6 +798,8 @@ FGTileEntry::load( const string &base_path, bool is_base )
                         obj_trans -> addKid( custom_obj );
                     }
                     new_tile->addKid( obj_trans );
+
+                                // Do we even use this one?
                 } else if ( token == "OBJECT_RUNWAY_SIGN" ) {
                     // load object info
                     double lon, lat, elev, hdg;
@@ -812,6 +829,8 @@ FGTileEntry::load( const string &base_path, bool is_base )
                         obj_trans -> addKid( custom_obj );
                     }
                     new_tile->addKid( obj_trans );
+
+                                // I don't think we use this, either
                 } else if ( token == "RWY_LIGHTS" ) {
                     double lon, lat, hdg, len, width;
                     string common, end1, end2;
