@@ -3,6 +3,7 @@ libdir	= ${exec_prefix}/lib
 lib_LTLIBRARIES = libScenery.la
 
 libScenery_la_SOURCES = \
+	material.cxx material.hxx \
 	obj.cxx obj.hxx \
 	scenery.cxx scenery.hxx \
 	texload.c texload.h \
