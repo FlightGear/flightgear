@@ -187,7 +187,7 @@ setGoalViewOffset (double offset)
 	offset -= 360.0;
     }
     // Snap to center if we are close
-    if ( fabs( offset ) < 1.0 ) {
+    if ( fabs(offset) < 1.0 ||  fabs(offset) > 359.0 ) {
 	offset = 0.0;
     }
 
