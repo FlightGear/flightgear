@@ -752,6 +752,7 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
     FGRunway found_r;
     double heading = 0.0;
     string runway;
+    bool match = false;
 
     // standardize input number
     string tmp = rwy.substr(1, 1);
@@ -785,6 +786,7 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
             if ( r.rwy_no == runway ) {
                 found_r = r;
                 heading = r.heading;
+                match = true;
                 SG_LOG( SG_GENERAL, SG_INFO,
                         "Runway " << r.rwy_no << " heading = " << heading );
             }
@@ -827,6 +829,7 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
                 found_r = r;
                 heading = r.heading + 180;
                 while ( heading > 360.0 ) { heading -= 360; }
+                match = true;
                 SG_LOG( SG_GENERAL, SG_INFO,
                         "Runway " << r.rwy_no << " heading = " << heading );
             }
@@ -837,50 +840,57 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
         return false;
     }
 
-    double lat2, lon2, az2;
-    double azimuth = heading + 180.0;
-    while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
+    if ( match ) {
+        double lat2, lon2, az2;
+        double azimuth = heading + 180.0;
+        while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
 
-    SG_LOG( SG_GENERAL, SG_INFO,
-            "runway =  " << found_r.lon << ", " << found_r.lat
-            << " length = " << found_r.length * SG_FEET_TO_METER * 0.5 
-            << " heading = " << azimuth );
+        SG_LOG( SG_GENERAL, SG_INFO,
+                "runway =  " << found_r.lon << ", " << found_r.lat
+                << " length = " << found_r.length * SG_FEET_TO_METER * 0.5 
+                << " heading = " << azimuth );
     
-    geo_direct_wgs_84 ( 0, found_r.lat, found_r.lon, 
-                        azimuth, found_r.length * SG_FEET_TO_METER * 0.5 - 5.0,
-                        &lat2, &lon2, &az2 );
+        geo_direct_wgs_84 ( 0, found_r.lat, found_r.lon, 
+                            azimuth,
+                            found_r.length * SG_FEET_TO_METER * 0.5 - 5.0,
+                            &lat2, &lon2, &az2 );
 
-    if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON ) {
-        double olat, olon;
-        double odist = fgGetDouble("/sim/presets/offset-distance");
-        odist *= SG_NM_TO_METER;
-        double oaz = azimuth;
-        if ( fabs(fgGetDouble("/sim/presets/offset-azimuth")) > SG_EPSILON ) {
-            oaz = fgGetDouble("/sim/presets/offset-azimuth") + 180;
+        if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON )
+        {
+            double olat, olon;
+            double odist = fgGetDouble("/sim/presets/offset-distance");
+            odist *= SG_NM_TO_METER;
+            double oaz = azimuth;
+            if ( fabs(fgGetDouble("/sim/presets/offset-azimuth")) > SG_EPSILON )
+            {
+                oaz = fgGetDouble("/sim/presets/offset-azimuth") + 180;
+            }
+            while ( oaz >= 360.0 ) { oaz -= 360.0; }
+            geo_direct_wgs_84 ( 0, lat2, lon2, oaz, odist, &olat, &olon, &az2 );
+            lat2=olat;
+            lon2=olon;
         }
-        while ( oaz >= 360.0 ) { oaz -= 360.0; }
-        geo_direct_wgs_84 ( 0, lat2, lon2, oaz, odist, &olat, &olon, &az2 );
-        lat2=olat;
-        lon2=olon;
+
+        // presets
+        fgSetDouble("/sim/presets/longitude-deg",  lon2 );
+        fgSetDouble("/sim/presets/latitude-deg",  lat2 );
+        fgSetDouble("/sim/presets/heading-deg", heading );
+
+        // other code depends on the actual values being set ...
+        fgSetDouble("/position/longitude-deg",  lon2 );
+        fgSetDouble("/position/latitude-deg",  lat2 );
+        fgSetDouble("/orientation/heading-deg", heading );
+
+        SG_LOG( SG_GENERAL, SG_INFO,
+                "Position for " << id << " is ("
+                << lon2 << ", "
+                << lat2 << ") new heading is "
+                << heading );
+
+        return true;
+    } else {
+        return false;
     }
-
-    // presets
-    fgSetDouble("/sim/presets/longitude-deg",  lon2 );
-    fgSetDouble("/sim/presets/latitude-deg",  lat2 );
-    fgSetDouble("/sim/presets/heading-deg", heading );
-
-    // other code depends on the actual values being set ...
-    fgSetDouble("/position/longitude-deg",  lon2 );
-    fgSetDouble("/position/latitude-deg",  lat2 );
-    fgSetDouble("/orientation/heading-deg", heading );
-
-    SG_LOG( SG_GENERAL, SG_INFO,
-            "Position for " << id << " is ("
-            << lon2 << ", "
-            << lat2 << ") new heading is "
-            << heading );
-
-    return true;
 }
 
 
