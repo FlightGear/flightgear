@@ -213,6 +213,9 @@ void FGAutopilot::init ()
     altitude_agl_node = fgGetNode("/position/altitude-agl-ft", true);
     vertical_speed_node = fgGetNode("/velocities/vertical-speed-fps", true);
     heading_node = fgGetNode("/orientation/heading-deg", true);
+    dg_heading_node
+        = fgGetNode("/instrumentation/heading-indicator/indicated-heading-deg",
+                    true);
     roll_node = fgGetNode("/orientation/roll-deg", true);
     pitch_node = fgGetNode("/orientation/pitch-deg", true);
 
@@ -484,8 +487,10 @@ FGAutopilot::update (double dt)
     // heading hold
     if ( heading_hold == true ) {
 	if ( heading_mode == FG_DG_HEADING_LOCK ) {
-	    TargetHeading = DGTargetHeading +
-	      globals->get_steam()->get_DG_err();
+            double dg_error = heading_node->getDoubleValue()
+                - dg_heading_node->getDoubleValue();
+	    TargetHeading = DGTargetHeading + dg_error;
+            // cout << "dg_error = " << dg_error << endl;
 	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
 	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
 	    MakeTargetHeadingStr( TargetHeading );
@@ -887,10 +892,7 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
     heading_mode = mode;
 
     if ( heading_mode == FG_DG_HEADING_LOCK ) {
-	// set heading hold to current heading (as read from DG)
-	// ... no, leave target heading along ... just use the current
-	// heading bug value
-        //  DGTargetHeading = FGSteam::get_DG_deg();
+	// use current heading bug value
     } else if ( heading_mode == FG_TC_HEADING_LOCK ) {
 	// set autopilot to hold a zero turn (as reported by the TC)
     } else if ( heading_mode == FG_TRUE_HEADING_LOCK ) {

@@ -124,6 +124,7 @@ private:
     SGPropertyNode *altitude_agl_node;
     SGPropertyNode *vertical_speed_node;
     SGPropertyNode *heading_node;
+    SGPropertyNode *dg_heading_node;
     SGPropertyNode *roll_node;
     SGPropertyNode *pitch_node;
 
