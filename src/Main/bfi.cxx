@@ -119,35 +119,6 @@ reinit ()
   FG_LOG(FG_GENERAL, FG_INFO, "Ending BFI reinit");
 }
 
-// BEGIN: kludge 2000-12-07
-// This is a kludge around a LaRCsim problem; see setAltitude()
-// for details.
-static int _altitude_countdown = 0;
-static double _requested_altitude = -9999;
-static bool _saved_freeze = false;
-static inline void _check_altitude ()
-{
-  if (_altitude_countdown > 0) {
-    _altitude_countdown--;
-    if (_altitude_countdown == 0) {
-      current_aircraft.fdm_state->set_Altitude(_requested_altitude);
-      globals->set_freeze(_saved_freeze);
-    }
-  }
-}
-
-static int _lighting_countdown = 0;
-static inline void _check_lighting ()
-{
-  if (_lighting_countdown > 0) {
-    _lighting_countdown--;
-    if (_lighting_countdown == 0)
-      fgUpdateSkyAndLightingParams();
-  }
-}
-// END: kludge
-
-
 // BEGIN: kludge
 // Allow the view to be set from two axes (i.e. a joystick hat)
 // This needs to be in FGViewer itself, somehow.
@@ -206,36 +177,20 @@ void
 FGBFI::init ()
 {
   FG_LOG(FG_GENERAL, FG_INFO, "Starting BFI init");
+
 				// Simulation
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
   fgTie("/sim/time/gmt", getDateString, setDateString);
   fgTie("/sim/time/gmt-string", getGMTString);
 
-				// Position
-//   fgTie("/position/latitude", getLatitude, setLatitude);
-//   fgTie("/position/longitude", getLongitude, setLongitude);
-//   fgTie("/position/altitude", getAltitude, setAltitude);
-//   fgTie("/position/altitude-agl", getAGL);
-
 				// Orientation
-//   fgTie("/orientation/heading", getHeading, setHeading);
   fgTie("/orientation/heading-magnetic", getHeadingMag);
-//   fgTie("/orientation/pitch", getPitch, setPitch);
-//   fgTie("/orientation/roll", getRoll, setRoll);
 
 				// Engine
   fgTie("/engines/engine0/rpm", getRPM);
   fgTie("/engines/engine0/egt", getEGT);
   fgTie("/engines/engine0/cht", getCHT);
   fgTie("/engines/engine0/mp", getMP);
-
-				// Velocities
-//   fgTie("/velocities/airspeed", getAirspeed, setAirspeed);
-//   fgTie("/velocities/side-slip", getSideSlip);
-//   fgTie("/velocities/vertical-speed", getVerticalSpeed);
-//   fgTie("/velocities/speed-north", getSpeedNorth);
-//   fgTie("/velocities/speed-east", getSpeedEast);
-//   fgTie("/velocities/speed-down", getSpeedDown);
 
 				// Autopilot
   fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
@@ -256,8 +211,6 @@ FGBFI::init ()
   fgTie("/sim/view/axes/long", (double(*)())0, setViewAxisLong);
   fgTie("/sim/view/axes/lat", (double(*)())0, setViewAxisLat);
 
-  _altitude_countdown = 0;
-  globals->set_freeze(_saved_freeze);
   _needReinit = false;
 
   FG_LOG(FG_GENERAL, FG_INFO, "Ending BFI init");
@@ -275,8 +228,6 @@ FGBFI::init ()
 void
 FGBFI::update ()
 {
-  _check_altitude();
-  _check_lighting();
   _set_view_from_axes();
   if (_needReinit) {
     reinit();
@@ -416,9 +367,6 @@ void
 FGBFI::setLatitude (double latitude)
 {
   current_aircraft.fdm_state->set_Latitude(latitude * DEG_TO_RAD);
-  fgUpdateSkyAndLightingParams();
-  if (_lighting_countdown <= 0)
-    _lighting_countdown = 5;
 }
 
 
@@ -439,9 +387,6 @@ void
 FGBFI::setLongitude (double longitude)
 {
   current_aircraft.fdm_state->set_Longitude(longitude * DEG_TO_RAD);
-  fgUpdateSkyAndLightingParams();
-  if (_lighting_countdown <= 0)
-    _lighting_countdown = 5;
 }
 
 
@@ -474,22 +419,6 @@ void
 FGBFI::setAltitude (double altitude)
 {
   current_aircraft.fdm_state->set_Altitude(altitude);
-
-				// 2000-12-07
-				// This is an ugly kludge around a
-				// LaRCsim problem; if the
-				// requested altitude cannot be
-				// set right away (because it's
-				// below the last-calculated ground
-				// level), pause FGFS, wait for
-				// five frames, and then try again.
-  if (_altitude_countdown <= 0 &&
-      fabs(getAltitude() - altitude) > 5.0) {
-    _altitude_countdown = 5;
-    _requested_altitude = altitude;
-    _saved_freeze = globals->get_freeze();
-    globals->set_freeze(true);
-  }
 }
 
 

@@ -530,9 +530,9 @@ parse_option (const string& arg)
     } else if ( arg == "--enable-mouse-pointer" ) {
 	fgSetString("/sim/startup/mouse-pointer", "enabled");
     } else if ( arg == "--disable-freeze" ) {
-	fgSetBool("/sim/freeze", false);
+        globals->set_freeze(false);
     } else if ( arg == "--enable-freeze" ) {
-	fgSetBool("/sim/freeze", true);
+        globals->set_freeze(true);
     } else if ( arg == "--disable-anti-alias-hud" ) {
 	fgSetBool("/sim/hud/antialiased", false);
     } else if ( arg == "--enable-anti-alias-hud" ) {
@@ -802,8 +802,8 @@ parse_option (const string& arg)
 	string name = assign.substr(0, pos);
 	string value = assign.substr(pos + 1);
 	fgSetString(name.c_str(), value);
-	FG_LOG(FG_GENERAL, FG_INFO, "Setting default value of property "
-	       << name << " to \"" << value << '"');
+	// FG_LOG(FG_GENERAL, FG_INFO, "Setting default value of property "
+	//        << name << " to \"" << value << '"');
     // $$$ begin - added VS Renganathan, 14 Oct 2K
     // for multi-window outside window imagery
     } else if ( arg.find( "--view-offset=" ) != string::npos ) {
