@@ -83,29 +83,12 @@ public:
 
 
 /**
- * A simple proportional controler
+ * Roy Ovesen's PID controller
  */
 
 class FGPIDController : public FGXMLAutoComponent {
 
 private:
-
-    // proportional component data
-    bool proportional;
-    double factor;
-    SGPropertyNode *offset_prop;
-    double offset_value;
-
-    // integral component data
-    bool integral;
-    double gain;
-    double int_sum;
-
-    // prep functions for error term
-    bool one_eighty;
-
-    // post functions for output
-    bool clamp;
 
     // debug flag
     bool debug;
@@ -146,6 +129,48 @@ public:
     ~FGPIDController() {}
 
     void update_old( double dt );
+    void update( double dt );
+};
+
+
+/**
+ * A simplistic P [ + I ] PID controller
+ */
+
+class FGSimplePIController : public FGXMLAutoComponent {
+
+private:
+
+    // proportional component data
+    bool proportional;
+    double factor;
+    SGPropertyNode *offset_prop;
+    double offset_value;
+
+    // integral component data
+    bool integral;
+    double gain;
+    double int_sum;
+
+    // post functions for output
+    bool clamp;
+
+    // debug flag
+    bool debug;
+
+    // Input values
+    double y_n;                 // measured process value
+    double r_n;                 // reference (set point) value
+
+    double u_min;               // Minimum output clamp
+    double u_max;               // Maximum output clamp
+
+    
+public:
+
+    FGSimplePIController( SGPropertyNode *node );
+    ~FGSimplePIController() {}
+
     void update( double dt );
 };
 

@@ -30,152 +30,7 @@
 #include "xmlauto.hxx"
 
 
-FGPIDController::FGPIDController( SGPropertyNode *node, bool old ):
-    proportional( false ),
-    factor( 0.0 ),
-    offset_prop( NULL ),
-    offset_value( 0.0 ),
-    integral( false ),
-    gain( 0.0 ),
-    int_sum( 0.0 ),
-    one_eighty( false ),
-    clamp( false ),
-    debug( false ),
-    y_n( 0.0 ),
-    r_n( 0.0 ),
-    Kp( 0.0 ),
-    alpha( 0.1 ),
-    beta( 1.0 ),
-    gamma( 0.0 ),
-    Ti( 0.0 ),
-    Td( 0.0 ),
-    u_min( 0.0 ),
-    u_max( 0.0 ),
-    ep_n_1( 0.0 ),
-    edf_n_1( 0.0 ),
-    edf_n_2( 0.0 ),
-    u_n_1( 0.0 )
-{
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "enable" ) {
-            // cout << "parsing enable" << endl;
-            SGPropertyNode *prop = child->getChild( "prop" );
-            if ( prop != NULL ) {
-                // cout << "prop = " << prop->getStringValue() << endl;
-                enable_prop = fgGetNode( prop->getStringValue(), true );
-            } else {
-                // cout << "no prop child" << endl;
-            }
-            SGPropertyNode *val = child->getChild( "value" );
-            if ( val != NULL ) {
-                enable_value = val->getStringValue();
-            }
-        } else if ( cname == "debug" ) {
-            debug = child->getBoolValue();
-        } else if ( cname == "input" ) {
-            SGPropertyNode *prop = child->getChild( "prop" );
-            if ( prop != NULL ) {
-                input_prop = fgGetNode( prop->getStringValue(), true );
-            }
-        } else if ( cname == "reference" ) {
-            SGPropertyNode *prop = child->getChild( "prop" );
-            if ( prop != NULL ) {
-                r_n_prop = fgGetNode( prop->getStringValue(), true );
-            } else {
-                prop = child->getChild( "value" );
-                if ( prop != NULL ) {
-                    r_n_value = prop->getDoubleValue();
-                }
-            }
-        } else if ( cname == "output" ) {
-            int i = 0;
-            SGPropertyNode *prop;
-            while ( (prop = child->getChild("prop", i)) != NULL ) {
-                SGPropertyNode *tmp = fgGetNode( prop->getStringValue(), true );
-                output_list.push_back( tmp );
-                i++;
-            }
-            prop = child->getChild( "clamp" );
-            if ( prop != NULL ) {
-                clamp = true;
-
-                SGPropertyNode *tmp;
-
-                tmp = prop->getChild( "min" );
-                if ( tmp != NULL ) {
-                    u_min = tmp->getDoubleValue();
-                    // cout << "min = " << u_min << endl;
-                }
-
-                tmp = prop->getChild( "max" );
-                if ( tmp != NULL ) {
-                    u_max = tmp->getDoubleValue();
-                    // cout << "max = " << u_max << endl;
-                }
-            }
-        } else if ( cname == "proportional" ) {
-            proportional = true;
-
-            SGPropertyNode *prop;
-
-            prop = child->getChild( "pre" );
-            if ( prop != NULL ) {
-                prop = prop->getChild( "one-eighty" );
-                if ( prop != NULL && prop->getBoolValue() ) {
-                    one_eighty = true;
-                }
-            }
-
-            prop = child->getChild( "factor" );
-            if ( prop != NULL ) {
-                factor = prop->getDoubleValue();
-            }
-
-            prop = child->getChild( "offset" );
-            if ( prop != NULL ) {
-                SGPropertyNode *sub = prop->getChild( "prop" );
-                if ( sub != NULL ) {
-                    offset_prop = fgGetNode( sub->getStringValue(), true );
-                    // cout << "offset prop = " << sub->getStringValue() << endl;
-                } else {
-                    sub = prop->getChild( "value" );
-                    if ( sub != NULL ) {
-                        offset_value = sub->getDoubleValue();
-                        // cout << "offset value = " << offset_value << endl;
-                    }
-                }
-            }
-        } else if ( cname == "integral" ) {
-            integral = true;
-
-            SGPropertyNode *prop;
-            prop = child->getChild( "gain" );
-            if ( prop != NULL ) {
-                gain = prop->getDoubleValue();
-            }
-        } else {
-            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in autopilot config logic" );
-        }
-    }   
-}
-
-
 FGPIDController::FGPIDController( SGPropertyNode *node ):
-    proportional( false ),
-    factor( 0.0 ),
-    offset_prop( NULL ),
-    offset_value( 0.0 ),
-    integral( false ),
-    gain( 0.0 ),
-    int_sum( 0.0 ),
-    one_eighty( false ),
-    clamp( false ),
     debug( false ),
     y_n( 0.0 ),
     r_n( 0.0 ),
@@ -286,83 +141,6 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
             }
         }
     }   
-}
-
-
-void FGPIDController::update_old( double dt ) {
-    if (enable_prop != NULL && enable_prop->getStringValue() == enable_value) {
-        if ( !enabled ) {
-            // we have just been enabled, zero out int_sum
-            int_sum = 0.0;
-        }
-        enabled = true;
-    } else {
-        enabled = false;
-    }
-
-    if ( enabled ) {
-        if ( debug ) cout << "Updating " << name << endl;
-        double input = 0.0;
-        if ( input_prop != NULL ) {
-            input = input_prop->getDoubleValue();
-        }
-
-        double r_n = 0.0;
-        if ( r_n_prop != NULL ) {
-            r_n = r_n_prop->getDoubleValue();
-        } else {
-            r_n = r_n_value;
-        }
-                      
-        double error = r_n - input;
-        if ( one_eighty ) {
-            while ( error < -180.0 ) { error += 360.0; }
-            while ( error > 180.0 ) { error -= 360.0; }
-        }
-        if ( debug ) cout << "input = " << input
-                          << " reference = " << r_n
-                          << " error = " << error
-                          << endl;
-
-        double prop_comp = 0.0;
-        double offset = 0.0;
-        if ( offset_prop != NULL ) {
-            offset = offset_prop->getDoubleValue();
-            if ( debug ) cout << "offset = " << offset << endl;
-        } else {
-            offset = offset_value;
-        }
-
-        if ( proportional ) {
-            prop_comp = error * factor + offset;
-        }
-
-        if ( integral ) {
-            int_sum += error * gain * dt;
-        } else {
-            int_sum = 0.0;
-        }
-
-        if ( debug ) cout << "prop_comp = " << prop_comp
-                          << " int_sum = " << int_sum << endl;
-
-        double output = prop_comp + int_sum;
-
-        if ( clamp ) {
-            if ( output < u_min ) {
-                output = u_min;
-            }
-            if ( output > u_max ) {
-                output = u_max;
-            }
-        }
-        if ( debug ) cout << "output = " << output << endl;
-
-        unsigned int i;
-        for ( i = 0; i < output_list.size(); ++i ) {
-            output_list[i]->setDoubleValue( output );
-        }
-    }
 }
 
 
@@ -518,6 +296,196 @@ void FGPIDController::update( double dt ) {
 }
 
 
+FGSimplePIController::FGSimplePIController( SGPropertyNode *node ):
+    proportional( false ),
+    factor( 0.0 ),
+    offset_prop( NULL ),
+    offset_value( 0.0 ),
+    integral( false ),
+    gain( 0.0 ),
+    int_sum( 0.0 ),
+    clamp( false ),
+    debug( false ),
+    y_n( 0.0 ),
+    r_n( 0.0 ),
+    u_min( 0.0 ),
+    u_max( 0.0 )
+{
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "enable" ) {
+            // cout << "parsing enable" << endl;
+            SGPropertyNode *prop = child->getChild( "prop" );
+            if ( prop != NULL ) {
+                // cout << "prop = " << prop->getStringValue() << endl;
+                enable_prop = fgGetNode( prop->getStringValue(), true );
+            } else {
+                // cout << "no prop child" << endl;
+            }
+            SGPropertyNode *val = child->getChild( "value" );
+            if ( val != NULL ) {
+                enable_value = val->getStringValue();
+            }
+        } else if ( cname == "debug" ) {
+            debug = child->getBoolValue();
+        } else if ( cname == "input" ) {
+            SGPropertyNode *prop = child->getChild( "prop" );
+            if ( prop != NULL ) {
+                input_prop = fgGetNode( prop->getStringValue(), true );
+            }
+        } else if ( cname == "reference" ) {
+            SGPropertyNode *prop = child->getChild( "prop" );
+            if ( prop != NULL ) {
+                r_n_prop = fgGetNode( prop->getStringValue(), true );
+            } else {
+                prop = child->getChild( "value" );
+                if ( prop != NULL ) {
+                    r_n_value = prop->getDoubleValue();
+                }
+            }
+        } else if ( cname == "output" ) {
+            int i = 0;
+            SGPropertyNode *prop;
+            while ( (prop = child->getChild("prop", i)) != NULL ) {
+                SGPropertyNode *tmp = fgGetNode( prop->getStringValue(), true );
+                output_list.push_back( tmp );
+                i++;
+            }
+            prop = child->getChild( "clamp" );
+            if ( prop != NULL ) {
+                clamp = true;
+
+                SGPropertyNode *tmp;
+
+                tmp = prop->getChild( "min" );
+                if ( tmp != NULL ) {
+                    u_min = tmp->getDoubleValue();
+                    // cout << "min = " << u_min << endl;
+                }
+
+                tmp = prop->getChild( "max" );
+                if ( tmp != NULL ) {
+                    u_max = tmp->getDoubleValue();
+                    // cout << "max = " << u_max << endl;
+                }
+            }
+        } else if ( cname == "proportional" ) {
+            proportional = true;
+
+            SGPropertyNode *prop;
+
+            prop = child->getChild( "factor" );
+            if ( prop != NULL ) {
+                factor = prop->getDoubleValue();
+            }
+
+            prop = child->getChild( "offset" );
+            if ( prop != NULL ) {
+                SGPropertyNode *sub = prop->getChild( "prop" );
+                if ( sub != NULL ) {
+                    offset_prop = fgGetNode( sub->getStringValue(), true );
+                    // cout << "offset prop = " << sub->getStringValue() << endl;
+                } else {
+                    sub = prop->getChild( "value" );
+                    if ( sub != NULL ) {
+                        offset_value = sub->getDoubleValue();
+                        // cout << "offset value = " << offset_value << endl;
+                    }
+                }
+            }
+        } else if ( cname == "integral" ) {
+            integral = true;
+
+            SGPropertyNode *prop;
+            prop = child->getChild( "gain" );
+            if ( prop != NULL ) {
+                gain = prop->getDoubleValue();
+            }
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in autopilot config logic" );
+        }
+    }   
+}
+
+
+void FGSimplePIController::update( double dt ) {
+    if (enable_prop != NULL && enable_prop->getStringValue() == enable_value) {
+        if ( !enabled ) {
+            // we have just been enabled, zero out int_sum
+            int_sum = 0.0;
+        }
+        enabled = true;
+    } else {
+        enabled = false;
+    }
+
+    if ( enabled ) {
+        if ( debug ) cout << "Updating " << name << endl;
+        double input = 0.0;
+        if ( input_prop != NULL ) {
+            input = input_prop->getDoubleValue();
+        }
+
+        double r_n = 0.0;
+        if ( r_n_prop != NULL ) {
+            r_n = r_n_prop->getDoubleValue();
+        } else {
+            r_n = r_n_value;
+        }
+                      
+        double error = r_n - input;
+        if ( debug ) cout << "input = " << input
+                          << " reference = " << r_n
+                          << " error = " << error
+                          << endl;
+
+        double prop_comp = 0.0;
+        double offset = 0.0;
+        if ( offset_prop != NULL ) {
+            offset = offset_prop->getDoubleValue();
+            if ( debug ) cout << "offset = " << offset << endl;
+        } else {
+            offset = offset_value;
+        }
+
+        if ( proportional ) {
+            prop_comp = error * factor + offset;
+        }
+
+        if ( integral ) {
+            int_sum += error * gain * dt;
+        } else {
+            int_sum = 0.0;
+        }
+
+        if ( debug ) cout << "prop_comp = " << prop_comp
+                          << " int_sum = " << int_sum << endl;
+
+        double output = prop_comp + int_sum;
+
+        if ( clamp ) {
+            if ( output < u_min ) {
+                output = u_min;
+            }
+            if ( output > u_max ) {
+                output = u_max;
+            }
+        }
+        if ( debug ) cout << "output = " << output << endl;
+
+        unsigned int i;
+        for ( i = 0; i < output_list.size(); ++i ) {
+            output_list[i]->setDoubleValue( output );
+        }
+    }
+}
+
+
 FGXMLAutopilot::FGXMLAutopilot() {
 }
 
@@ -627,19 +595,33 @@ static void update_helper( double dt ) {
         v_last = v;
     }
 
-    // Calculate heading bug error normalized to +/- 180.0
+    // Calculate heading bug error normalized to +/- 180.0 (based on
+    // DG indicated heading)
     static SGPropertyNode *bug
         = fgGetNode( "/autopilot/settings/heading-bug-deg", true );
     static SGPropertyNode *ind_hdg
         = fgGetNode( "/instrumentation/heading-indicator/indicated-heading-deg",
                      true );
-    static SGPropertyNode *bug_error
+    static SGPropertyNode *ind_bug_error
         = fgGetNode( "/autopilot/internal/heading-bug-error-deg", true );
 
     double diff = bug->getDoubleValue() - ind_hdg->getDoubleValue();
     if ( diff < -180.0 ) { diff += 360.0; }
     if ( diff > 180.0 ) { diff -= 360.0; }
-    bug_error->setDoubleValue( diff );
+    ind_bug_error->setDoubleValue( diff );
+
+    // Calculate heading bug error normalized to +/- 180.0 (based on
+    // actual/nodrift magnetic-heading, i.e. a DG slaved to magnetic
+    // compass.)
+    static SGPropertyNode *mag_hdg
+        = fgGetNode( "/orientation/heading-magnetic-deg", true );
+    static SGPropertyNode *fdm_bug_error
+        = fgGetNode( "/autopilot/internal/fdm-heading-bug-error-deg", true );
+
+    diff = bug->getDoubleValue() - mag_hdg->getDoubleValue();
+    if ( diff < -180.0 ) { diff += 360.0; }
+    if ( diff > 180.0 ) { diff -= 360.0; }
+    fdm_bug_error->setDoubleValue( diff );
 
     // Calculate true heading error normalized to +/- 180.0
     static SGPropertyNode *target_true
