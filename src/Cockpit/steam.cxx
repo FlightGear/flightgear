@@ -96,38 +96,46 @@ double FGSteam::get_TC_std () { _CatchUp(); return the_TC_std; }
 int FGSteam::_UpdatesPending = 1000000;  /* Forces filter to reset */
 
 
+				// FIXME: no need to use static
+				// functions any longer.
+#define DF1(getter) SGRawValueFunctions<double>(getter,0)
+#define DF2(getter, setter) SGRawValueFunctions<double>(getter,setter)
+
 void FGSteam::update ( int timesteps )
 {
         if (!isTied) {
 	  isTied = true;
-	  current_properties.tieDouble("/steam/airspeed",
-				       FGSteam::get_ASI_kias);
-	  current_properties.tieDouble("/steam/altitude",
-				       FGSteam::get_ALT_ft);
-	  current_properties.tieDouble("/steam/turn-rate",
-				       FGSteam::get_TC_std);
-	  current_properties.tieDouble("/steam/slip-skid",
-				       FGSteam::get_TC_rad);
-	  current_properties.tieDouble("/steam/vertical-speed",
-				       FGSteam::get_VSI_fps);
-	  current_properties.tieDouble("/steam/gyro-compass",
-				       FGSteam::get_DG_deg);
-	  current_properties.tieDouble("/steam/vor1",
-				       FGSteam::get_HackVOR1_deg);
-	  current_properties.tieDouble("/steam/vor2",
-				       FGSteam::get_HackVOR2_deg);
-	  current_properties.tieDouble("/steam/glidescope1",
-				       FGSteam::get_HackGS_deg);
-	  current_properties.tieDouble("/steam/adf",
-				       FGSteam::get_HackADF_deg);
-	  current_properties.tieDouble("/steam/gyro-compass-error",
-				       FGSteam::get_DG_err,
-				       FGSteam::set_DG_err);
-	  current_properties.tieDouble("/steam/mag-compass",
-				       FGSteam::get_MH_deg);
+	  globals->get_props()->tie("/steam/airspeed",
+				   DF1(FGSteam::get_ASI_kias));
+	  globals->get_props()->tie("/steam/altitude",
+				   DF1(FGSteam::get_ALT_ft));
+	  globals->get_props()->tie("/steam/turn-rate",
+				   DF1(FGSteam::get_TC_std));
+	  globals->get_props()->tie("/steam/slip-skid",
+				   DF1(FGSteam::get_TC_rad));
+	  globals->get_props()->tie("/steam/vertical-speed",
+				   DF1(FGSteam::get_VSI_fps));
+	  globals->get_props()->tie("/steam/gyro-compass",
+				   DF1(FGSteam::get_DG_deg));
+	  globals->get_props()->tie("/steam/vor1",
+				   DF1(FGSteam::get_HackVOR1_deg));
+	  globals->get_props()->tie("/steam/vor2",
+				   DF1(FGSteam::get_HackVOR2_deg));
+	  globals->get_props()->tie("/steam/glidescope1",
+				   DF1(FGSteam::get_HackGS_deg));
+	  globals->get_props()->tie("/steam/adf",
+				   DF1(FGSteam::get_HackADF_deg));
+	  globals->get_props()->tie("/steam/gyro-compass-error",
+				   DF2(FGSteam::get_DG_err,
+				       FGSteam::set_DG_err));
+	  globals->get_props()->tie("/steam/mag-compass",
+				   DF1(FGSteam::get_MH_deg));
 	}
 	_UpdatesPending += timesteps;
 }
+
+#undef DF1
+#undef DF2
 
 
 void FGSteam::set_lowpass ( double *outthe, double inthe, double tc )

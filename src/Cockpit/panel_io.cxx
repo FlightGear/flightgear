@@ -212,14 +212,14 @@ FGMagRibbon::draw ()
  * texture, x1=0.0, y1=0.0, x2=0.5, y2=0.5.
  */
 static FGCroppedTexture
-readTexture (SGPropertyNode node)
+readTexture (const SGPropertyNode * node)
 {
-  FGCroppedTexture texture(node.getStringValue("path"),
-			   node.getFloatValue("x1"),
-			   node.getFloatValue("y1"),
-			   node.getFloatValue("x2", 1.0),
-			   node.getFloatValue("y2", 1.0));
-  FG_LOG(FG_INPUT, FG_INFO, "Read texture " << node.getName());
+  FGCroppedTexture texture(node->getStringValue("path"),
+			   node->getFloatValue("x1"),
+			   node->getFloatValue("y1"),
+			   node->getFloatValue("x2", 1.0),
+			   node->getFloatValue("y2", 1.0));
+  FG_LOG(FG_INPUT, FG_INFO, "Read texture " << node->getName());
   return texture;
 }
 
@@ -250,18 +250,18 @@ readTexture (SGPropertyNode node)
  * being drawn at its regular size.
  */
 static FGPanelAction *
-readAction (SGPropertyNode node, float hscale, float vscale)
+readAction (const SGPropertyNode * node, float hscale, float vscale)
 {
   FGPanelAction * action = 0;
 
-  string name = node.getStringValue("name");
-  string type = node.getStringValue("type");
+  string name = node->getStringValue("name");
+  string type = node->getStringValue("type");
 
-  int button = node.getIntValue("button");
-  int x = int(node.getIntValue("x") * hscale);
-  int y = int(node.getIntValue("y") * vscale);
-  int w = int(node.getIntValue("w") * hscale);
-  int h = int(node.getIntValue("h") * vscale);
+  int button = node->getIntValue("button");
+  int x = int(node->getIntValue("x") * hscale);
+  int y = int(node->getIntValue("y") * vscale);
+  int w = int(node->getIntValue("w") * hscale);
+  int h = int(node->getIntValue("h") * vscale);
 
   if (type == "") {
     FG_LOG(FG_INPUT, FG_ALERT,
@@ -271,14 +271,14 @@ readAction (SGPropertyNode node, float hscale, float vscale)
 
 				// Adjust a property value
   if (type == "adjust") {
-    string propName = node.getStringValue("property");
-    SGValue * value = current_properties.getValue(propName, true);
-    float increment = node.getFloatValue("increment", 1.0);
-    float min = node.getFloatValue("min", 0.0);
-    float max = node.getFloatValue("max", 0.0);
-    bool wrap = node.getBoolValue("wrap", false);
+    string propName = node->getStringValue("property");
+    SGValue * value = globals->get_props()->getValue(propName, true);
+    float increment = node->getFloatValue("increment", 1.0);
+    float min = node->getFloatValue("min", 0.0);
+    float max = node->getFloatValue("max", 0.0);
+    bool wrap = node->getBoolValue("wrap", false);
     if (min == max)
-      FG_LOG(FG_INPUT, FG_ALERT, "Action " << node.getName()
+      FG_LOG(FG_INPUT, FG_ALERT, "Action " << node->getName()
 	     << " has same min and max value");
     action = new FGAdjustAction(button, x, y, w, h, value,
 				increment, min, max, wrap);
@@ -286,17 +286,17 @@ readAction (SGPropertyNode node, float hscale, float vscale)
 
 				// Swap two property values
   else if (type == "swap") {
-    string propName1 = node.getStringValue("property1");
-    string propName2 = node.getStringValue("property2");
-    SGValue * value1 = current_properties.getValue(propName1, true);
-    SGValue * value2 = current_properties.getValue(propName2, true);
+    string propName1 = node->getStringValue("property1");
+    string propName2 = node->getStringValue("property2");
+    SGValue * value1 = globals->get_props()->getValue(propName1, true);
+    SGValue * value2 = globals->get_props()->getValue(propName2, true);
     action = new FGSwapAction(button, x, y, w, h, value1, value2);
   } 
 
 				// Toggle a boolean value
   else if (type == "toggle") {
-    string propName = node.getStringValue("property");
-    SGValue * value = current_properties.getValue(propName, true);
+    string propName = node->getStringValue("property");
+    SGValue * value = globals->get_props()->getValue(propName, true);
     action = new FGToggleAction(button, x, y, w, h, value);
   } 
 
@@ -336,13 +336,13 @@ readAction (SGPropertyNode node, float hscale, float vscale)
  * appear to be applied backwards.
  */
 static FGPanelTransformation *
-readTransformation (SGPropertyNode node, float hscale, float vscale)
+readTransformation (const SGPropertyNode * node, float hscale, float vscale)
 {
   FGPanelTransformation * t = new FGPanelTransformation;
 
-  string name = node.getName();
-  string type = node.getStringValue("type");
-  string propName = node.getStringValue("property", "");
+  string name = node->getName();
+  string type = node->getStringValue("type");
+  string propName = node->getStringValue("property", "");
   SGValue * value = 0;
 
   if (type == "") {
@@ -353,14 +353,14 @@ readTransformation (SGPropertyNode node, float hscale, float vscale)
   }
 
   if (propName != "") {
-    value = current_properties.getValue(propName, true);
+    value = globals->get_props()->getValue(propName, true);
   }
 
   t->value = value;
-  t->min = node.getFloatValue("min", -9999999);
-  t->max = node.getFloatValue("max", 99999999);
-  t->factor = node.getFloatValue("scale", 1.0);
-  t->offset = node.getFloatValue("offset", 0.0);
+  t->min = node->getFloatValue("min", -9999999);
+  t->max = node->getFloatValue("max", 99999999);
+  t->factor = node->getFloatValue("scale", 1.0);
+  t->offset = node->getFloatValue("offset", 0.0);
 
 				// Move the layer horizontally.
   if (type == "x-shift") {
@@ -413,12 +413,12 @@ readTransformation (SGPropertyNode node, float hscale, float vscale)
  * All three may also include a printf-style format string.
  */
 FGTextLayer::Chunk *
-readTextChunk (SGPropertyNode node)
+readTextChunk (const SGPropertyNode * node)
 {
   FGTextLayer::Chunk * chunk;
-  string name = node.getStringValue("name");
-  string type = node.getStringValue("type");
-  string format = node.getStringValue("format");
+  string name = node->getStringValue("name");
+  string type = node->getStringValue("type");
+  string format = node->getStringValue("format");
 
 				// Default to literal text.
   if (type == "") {
@@ -429,22 +429,22 @@ readTextChunk (SGPropertyNode node)
 
 				// A literal text string.
   if (type == "literal") {
-    string text = node.getStringValue("text");
+    string text = node->getStringValue("text");
     chunk = new FGTextLayer::Chunk(text, format);
   }
 
 				// The value of a string property.
   else if (type == "text-value") {
     SGValue * value =
-      current_properties.getValue(node.getStringValue("property"), true);
+      globals->get_props()->getValue(node->getStringValue("property"), true);
     chunk = new FGTextLayer::Chunk(FGTextLayer::TEXT_VALUE, value, format);
   }
 
 				// The value of a float property.
   else if (type == "number-value") {
-    string propName = node.getStringValue("property");
-    float scale = node.getFloatValue("scale", 1.0);
-    SGValue * value = current_properties.getValue(propName, true);
+    string propName = node->getStringValue("property");
+    float scale = node->getFloatValue("scale", 1.0);
+    SGValue * value = globals->get_props()->getValue(propName, true);
     chunk = new FGTextLayer::Chunk(FGTextLayer::DOUBLE_VALUE, value,
 				   format, scale);
   }
@@ -482,13 +482,13 @@ readTextChunk (SGPropertyNode node)
  * Currently, the only built-in layer class is "compass-ribbon".
  */
 static FGInstrumentLayer *
-readLayer (SGPropertyNode node, float hscale, float vscale)
+readLayer (const SGPropertyNode * node, float hscale, float vscale)
 {
   FGInstrumentLayer * layer = NULL;
-  string name = node.getStringValue("name");
-  string type = node.getStringValue("type");
-  int w = node.getIntValue("w", -1);
-  int h = node.getIntValue("h", -1);
+  string name = node->getStringValue("name");
+  string type = node->getStringValue("type");
+  int w = node->getIntValue("w", -1);
+  int h = node->getIntValue("h", -1);
   if (w != -1)
     w = int(w * hscale);
   if (h != -1)
@@ -505,7 +505,7 @@ readLayer (SGPropertyNode node, float hscale, float vscale)
 
 				// A textured instrument layer.
   if (type == "texture") {
-    FGCroppedTexture texture = readTexture(node.getSubNode("texture"));
+    FGCroppedTexture texture = readTexture(node->getNode("texture"));
     layer = new FGTexturedLayer(texture, w, h);
   }
 
@@ -515,45 +515,47 @@ readLayer (SGPropertyNode node, float hscale, float vscale)
     FGTextLayer * tlayer = new FGTextLayer(w, h); // FIXME
 
 				// Set the text color.
-    float red = node.getFloatValue("color/red", 0.0);
-    float green = node.getFloatValue("color/green", 0.0);
-    float blue = node.getFloatValue("color/blue", 0.0);
+    float red = node->getFloatValue("color/red", 0.0);
+    float green = node->getFloatValue("color/green", 0.0);
+    float blue = node->getFloatValue("color/blue", 0.0);
     tlayer->setColor(red, green, blue);
 
 				// Set the point size.
-    float pointSize = node.getFloatValue("point-size", 10.0) * hscale;
+    float pointSize = node->getFloatValue("point-size", 10.0) * hscale;
     tlayer->setPointSize(pointSize);
 
 				// Set the font.
     // TODO
 
-    SGPropertyNode chunk_group = node.getSubNode("chunks");
-    int nChunks = chunk_group.size();
-    for (int i = 0; i < nChunks; i++) {
-      FGTextLayer::Chunk * chunk = readTextChunk(chunk_group.getChild(i));
-      if (chunk == 0) {
-	delete layer;
-	return 0;
+    const SGPropertyNode * chunk_group = node->getNode("chunks");
+    if (chunk_group != 0) {
+      int nChunks = chunk_group->nChildren();
+      for (int i = 0; i < nChunks; i++) {
+	FGTextLayer::Chunk * chunk = readTextChunk(chunk_group->getChild(i));
+	if (chunk == 0) {
+	  delete layer;
+	  return 0;
+	}
+	tlayer->addChunk(chunk);
       }
-      tlayer->addChunk(chunk);
+      layer = tlayer;
     }
-    layer = tlayer;
   }
 
 				// A switch instrument layer.
   else if (type == "switch") {
     SGValue * value =
-      current_properties.getValue(node.getStringValue("property"), true);
+      globals->get_props()->getValue(node->getStringValue("property"), true);
     FGInstrumentLayer * layer1 =
-      readLayer(node.getSubNode("layer1"), hscale, vscale);
+      readLayer(node->getNode("layer1"), hscale, vscale);
     FGInstrumentLayer * layer2 =
-      readLayer(node.getSubNode("layer2"), hscale, vscale);
+      readLayer(node->getNode("layer2"), hscale, vscale);
     layer = new FGSwitchLayer(w, h, value, layer1, layer2);
   }
 
 				// A built-in instrument layer.
   else if (type == "built-in") {
-    string layerclass = node.getStringValue("class");
+    string layerclass = node->getStringValue("class");
 
     if (layerclass == "mag-ribbon") {
       layer = new FGMagRibbon(w, h);
@@ -582,16 +584,18 @@ readLayer (SGPropertyNode node, float hscale, float vscale)
   //
   // Get the transformations for each layer.
   //
-  SGPropertyNode trans_group = node.getSubNode("transformations");
-  int nTransformations = trans_group.size();
-  for (int k = 0; k < nTransformations; k++) {
-    FGPanelTransformation * t = readTransformation(trans_group.getChild(k),
-						   hscale, vscale);
-    if (t == 0) {
-      delete layer;
-      return 0;
+  const SGPropertyNode * trans_group = node->getNode("transformations");
+  if (trans_group != 0) {
+    int nTransformations = trans_group->nChildren();
+    for (int i = 0; i < nTransformations; i++) {
+      FGPanelTransformation * t = readTransformation(trans_group->getChild(i),
+						     hscale, vscale);
+      if (t == 0) {
+	delete layer;
+	return 0;
+      }
+      layer->addTransformation(t);
     }
-    layer->addTransformation(t);
   }
   
   FG_LOG(FG_INPUT, FG_INFO, "Read layer " << name);
@@ -611,11 +615,12 @@ readLayer (SGPropertyNode node, float hscale, float vscale)
  * scaled automatically if the instrument is not at its preferred size.
  */
 static FGPanelInstrument *
-readInstrument (SGPropertyNode node, int x, int y, int real_w, int real_h)
+readInstrument (const SGPropertyNode * node, int x, int y,
+		int real_w, int real_h)
 {
-  int w = node.getIntValue("w");
-  int h = node.getIntValue("h");
-  const string &name = node.getStringValue("name");
+  int w = node->getIntValue("w");
+  int h = node->getIntValue("h");
+  const string &name = node->getStringValue("name");
 
   float hscale = 1.0;
   float vscale = 1.0;
@@ -636,34 +641,37 @@ readInstrument (SGPropertyNode node, int x, int y, int real_w, int real_h)
   //
   // Get the actions for the instrument.
   //
-  SGPropertyNode action_group = node.getSubNode("actions");
-  int nActions = action_group.size();
-  int j;
-  for (j = 0; j < nActions; j++) {
-    FGPanelAction * action = readAction(action_group.getChild(j),
-					hscale, vscale);
-    if (action == 0) {
-      delete instrument;
-      return new DefaultInstrument(x, y, w, h);
+  const SGPropertyNode * action_group = node->getNode("actions");
+  if (action_group != 0) {
+    int nActions = action_group->nChildren();
+    for (int i = 0; i < nActions; i++) {
+      FGPanelAction * action = readAction(action_group->getChild(i),
+					  hscale, vscale);
+      if (action == 0) {
+	delete instrument;
+	return new DefaultInstrument(x, y, w, h);
+      }
+      instrument->addAction(action);
     }
-    instrument->addAction(action);
   }
 
   //
   // Get the layers for the instrument.
   //
-  SGPropertyNode layer_group = node.getSubNode("layers");
-  int nLayers = layer_group.size();
-  for (j = 0; j < nLayers; j++) {
-    FGInstrumentLayer * layer = readLayer(layer_group.getChild(j),
-					  hscale, vscale);
-    if (layer == 0) {
-      delete instrument;
-      return new DefaultInstrument(x, y, w, h);
+  const SGPropertyNode * layer_group = node->getNode("layers");
+  if (layer_group != 0) {
+    int nLayers = layer_group->nChildren();
+    for (int i = 0; i < nLayers; i++) {
+      FGInstrumentLayer * layer = readLayer(layer_group->getChild(i),
+					    hscale, vscale);
+      if (layer == 0) {
+	delete instrument;
+	return new DefaultInstrument(x, y, w, h);
+      }
+      instrument->addLayer(layer);
     }
-    instrument->addLayer(layer);
   }
-
+    
   FG_LOG(FG_INPUT, FG_INFO, "Done reading instrument " << name);
   return instrument;
 }
@@ -682,18 +690,18 @@ readInstrument (SGPropertyNode node, int x, int y, int real_w, int real_h)
 FGPanel *
 fgReadPanel (istream &input)
 {
-  SGPropertyList props;
+  SGPropertyNode root;
 
 
   //
   // Read the property list from disk.
   //
-  if (!readPropertyList(input, &props)) {
+  if (!readProperties(input, &root)) {
     FG_LOG(FG_INPUT, FG_ALERT, "Malformed property list for panel.");
     return 0;
   }
   FG_LOG(FG_INPUT, FG_INFO, "Read properties for panel " <<
-	 props.getStringValue("/name"));
+	 root.getStringValue("name"));
 
   //
   // Construct a new, empty panel.
@@ -704,26 +712,26 @@ fgReadPanel (istream &input)
   //
   // Grab the panel's dimensions, default to 1024x443.
   //
-  int panel_w = (props.hasValue("/w") ? props.getIntValue("/w") : 1024);
-  int panel_h = (props.hasValue("/h") ? props.getIntValue("/h") : 443);
+  int panel_w = (root.hasValue("w") ? root.getIntValue("w") : 1024);
+  int panel_h = (root.hasValue("h") ? root.getIntValue("h") : 443);
   panel->setWidth(panel_w);
   panel->setHeight(panel_h);
 
   //
   // Grab the visible external viewing area, default to 
   //
-  panel->setViewHeight(props.hasValue("/view-height") ?
-		       props.getIntValue("/view-height") :
+  panel->setViewHeight(root.hasValue("view-height") ?
+		       root.getIntValue("view-height") :
 		       768 - panel_h + 2);
 
   //
   // Grab the panel's initial offsets, default to 0, 0.
   //
-  int xoffset = (props.hasValue("/x-offset") ?
-		 props.getIntValue("x-offset") :
+  int xoffset = (root.hasValue("x-offset") ?
+		 root.getIntValue("x-offset") :
 		 0);
-  int yoffset = (props.hasValue("/y-offset") ?
-		 props.getIntValue("y-offset") :
+  int yoffset = (root.hasValue("y-offset") ?
+		 root.getIntValue("y-offset") :
 		 0);
   panel->setXOffset(xoffset);
   panel->setYOffset(yoffset);
@@ -731,7 +739,7 @@ fgReadPanel (istream &input)
   //
   // Assign the background texture, if any, or a bogus chequerboard.
   //
-  string bgTexture = props.getStringValue("/background");
+  string bgTexture = root.getStringValue("background");
   if (bgTexture == "")
     bgTexture = "FOO";
   panel->setBackground(FGTextureManager::createTexture(bgTexture.c_str()));
@@ -742,41 +750,46 @@ fgReadPanel (istream &input)
   // Create each instrument.
   //
   FG_LOG(FG_INPUT, FG_INFO, "Reading panel instruments");
-  SGPropertyNode instrument_group("/instruments", &props);
-  int nInstruments = instrument_group.size();
-  for (int i = 0; i < nInstruments; i++) {
-    SGPropertyList props2;
-    SGPropertyNode node = instrument_group.getChild(i);
+  const SGPropertyNode * instrument_group = root.getChild("instruments");
+  if (instrument_group != 0) {
+    int nInstruments = instrument_group->nChildren();
+    for (int i = 0; i < nInstruments; i++) {
+      const SGPropertyNode * node = instrument_group->getChild(i);
+      
+      FGPath path( globals->get_options()->get_fg_root() );
+      path.append(node->getStringValue("path"));
+      
+      FG_LOG(FG_INPUT, FG_INFO, "Reading instrument "
+	     << node->getName()
+	     << " from "
+	     << path.str());
+      
+      int x = node->getIntValue("x", -1);
+      int y = node->getIntValue("y", -1);
+      int w = node->getIntValue("w", -1);
+      int h = node->getIntValue("h", -1);
+      
+      if (x == -1 || y == -1) {
+	FG_LOG(FG_INPUT, FG_ALERT, "x and y positions must be specified and >0");
+	delete panel;
+	return 0;
+      }
 
-    FGPath path( globals->get_options()->get_fg_root() );
-    path.append(node.getStringValue("path"));
-
-    FG_LOG(FG_INPUT, FG_INFO, "Reading instrument "
-	   << node.getName()
-	   << " from "
-	   << path.str());
-
-    int x = node.getIntValue("x", -1);
-    int y = node.getIntValue("y", -1);
-    int w = node.getIntValue("w", -1);
-    int h = node.getIntValue("h", -1);
-
-    if (x == -1 || y == -1) {
-      FG_LOG(FG_INPUT, FG_ALERT, "x and y positions must be specified and >0");
-      delete panel;
-      return 0;
+				// Read the instrument from
+				// a separate file.
+      FGPanelInstrument * instrument = 0;
+      
+      SGPropertyNode root2;
+      
+      if (readProperties(path.str(), &root2)) {
+	cerr << "Read " << root2.nChildren() << " top-level nodes from "
+	     << path.c_str() << endl;
+	instrument = readInstrument(&root2, x, y, w, h);
+      }
+      if (instrument == 0)
+	instrument = new DefaultInstrument(x, y, w, h);
+      panel->addInstrument(instrument);
     }
-
-
-    FGPanelInstrument * instrument = 0;
-
-    if (readPropertyList(path.str(), &props2)) {
-      instrument = readInstrument(SGPropertyNode("/", &props2), x, y, w, h);
-    }
-    if (instrument == 0) {
-      instrument = new DefaultInstrument(x, y, w, h);
-    }
-    panel->addInstrument(instrument);
   }
   FG_LOG(FG_INPUT, FG_INFO, "Done reading panel instruments");
 

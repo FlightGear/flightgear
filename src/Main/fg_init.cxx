@@ -199,9 +199,9 @@ bool fgSetPosFromAirportID( const string& id ) {
     if ( fgFindAirportID( id, &a ) ) {
 	globals->get_options()->set_lon( a.longitude );
 	globals->get_options()->set_lat( a.latitude );
-	current_properties.setDoubleValue("/position/longitude",
+	globals->get_props()->setDoubleValue("/position/longitude",
 					  a.longitude);
-	current_properties.setDoubleValue("/position/latitude",
+	globals->get_props()->setDoubleValue("/position/latitude",
 					  a.latitude);
 
 	FG_LOG( FG_GENERAL, FG_INFO,
@@ -311,9 +311,9 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     globals->get_options()->set_lon( lon2 );
     globals->get_options()->set_lat( lat2 );
     globals->get_options()->set_heading( heading );
-    current_properties.setDoubleValue("/position/longitude", lon2);
-    current_properties.setDoubleValue("/position/latitude", lat2);
-    current_properties.setDoubleValue("/orientation/heading", heading);
+    globals->get_props()->setDoubleValue("/position/longitude", lon2);
+    globals->get_props()->setDoubleValue("/position/latitude", lat2);
+    globals->get_props()->setDoubleValue("/orientation/heading", heading);
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Position for " << id << " is ("
@@ -346,11 +346,11 @@ bool fgInitPosition( void ) {
     //	                        f->get_Altitude() * FEET_TO_METER );
 
 #if 0
-    current_properties.setDoubleValue("/position/longitude",
+    globals->get_props()->setDoubleValue("/position/longitude",
 				      f->get_Longitude() * RAD_TO_DEG);
-    current_properties.setDoubleValue("/position/latitude",
+    globals->get_props()->setDoubleValue("/position/latitude",
 				      f->get_Latitude() * RAD_TO_DEG);
-    current_properties.setDoubleValue("/position/altitude",
+    globals->get_props()->setDoubleValue("/position/altitude",
 				      f->get_Altitude() * RAD_TO_DEG);
 #endif
 
@@ -738,8 +738,8 @@ bool fgInitSubsystems( void ) {
 
     // Initialize the 2D panel.
     string panel_path =
-	current_properties.getStringValue("/sim/panel/path",
-					  "Panels/Default/default.xml");
+	globals->get_props()->getStringValue("/sim/panel/path",
+					    "Panels/Default/default.xml");
     current_panel = fgReadPanel(panel_path);
     if (current_panel == 0) {
 	FG_LOG( FG_INPUT, FG_ALERT, 

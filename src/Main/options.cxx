@@ -666,25 +666,25 @@ int FGOptions::parse_option( const string& arg ) {
 	auto_coordination = FG_AUTO_COORD_ENABLED;	
     } else if ( arg == "--disable-hud" ) {
 	hud_status = false;	
-	current_properties.setBoolValue("/sim/hud/visibility", false);
+	globals->get_props()->setBoolValue("/sim/hud/visibility", false);
 //$$$ begin - added Neetha
     } else if ( arg == "--enable-default_hud" ) {
 	hud_status = true;
 	hud_flag = 1;
-	current_properties.setBoolValue("/sim/hud/visibility", true);
+	globals->get_props()->setBoolValue("/sim/hud/visibility", true);
     } else if ( arg == "--enable-ada_hud" ) {
 	hud_status = true;
 	hud_flag = 2;
-	current_properties.setBoolValue("/sim/hud/visibility", true);
+	globals->get_props()->setBoolValue("/sim/hud/visibility", true);
 //$$$ end - added Neetha
     } else if ( arg == "--disable-panel" ) {
 	panel_status = false;
-	current_properties.setBoolValue("/sim/panel/visibility", false);
+	globals->get_props()->setBoolValue("/sim/panel/visibility", false);
 	if ( current_panel != NULL )
 	  current_panel->setVisibility(false);
     } else if ( arg == "--enable-panel" ) {
 	panel_status = true;
-	current_properties.setBoolValue("/sim/panel/visibility", true);
+	globals->get_props()->setBoolValue("/sim/panel/visibility", true);
 	if ( current_panel != NULL )
 	    current_panel->setVisibility(true);
     } else if ( arg == "--disable-sound" ) {
@@ -693,24 +693,24 @@ int FGOptions::parse_option( const string& arg ) {
 	sound = true;
     } else if ( arg.find( "--airport-id=") != string::npos ) {
 	airport_id = arg.substr( 13 );
-	current_properties.setStringValue("/position/airport-id", airport_id);
+	globals->get_props()->setStringValue("/position/airport-id", airport_id);
     } else if ( arg.find( "--lon=" ) != string::npos ) {
 	lon = parse_degree( arg.substr(6) );
 	airport_id = "";
-	current_properties.setDoubleValue("/position/longitude", lon);
-	current_properties.setStringValue("/position/airport-id", airport_id);
+	globals->get_props()->setDoubleValue("/position/longitude", lon);
+	globals->get_props()->setStringValue("/position/airport-id", airport_id);
     } else if ( arg.find( "--lat=" ) != string::npos ) {
 	lat = parse_degree( arg.substr(6) );
 	airport_id = "";
-	current_properties.setDoubleValue("/position/latitude", lat);
-	current_properties.setStringValue("/position/airport-id", airport_id);
+	globals->get_props()->setDoubleValue("/position/latitude", lat);
+	globals->get_props()->setStringValue("/position/airport-id", airport_id);
     } else if ( arg.find( "--altitude=" ) != string::npos ) {
 	if ( units == FG_UNITS_FEET ) {
 	    altitude = atof( arg.substr(11) ) * FEET_TO_METER;
 	} else {
 	    altitude = atof( arg.substr(11) );
 	}
-	current_properties.setDoubleValue("/position/altitude", altitude);
+	globals->get_props()->setDoubleValue("/position/altitude", altitude);
     } else if ( arg.find( "--uBody=" ) != string::npos ) {
 	speedset = FG_VTUVW;
 	if ( units == FG_UNITS_FEET ) {
@@ -718,7 +718,7 @@ int FGOptions::parse_option( const string& arg ) {
 	} else {
 	    uBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
-	//current_properties.setDoubleValue("/velocities/speed-north", uBody);
+	//globals->get_props()->setDoubleValue("/velocities/speed-north", uBody);
     } else if ( arg.find( "--vBody=" ) != string::npos ) {
 	speedset = FG_VTUVW;
 	if ( units == FG_UNITS_FEET ) {
@@ -726,7 +726,7 @@ int FGOptions::parse_option( const string& arg ) {
 	} else {
 	    vBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
-	//current_properties.setDoubleValue("/velocities/speed-east", vBody);
+	//globals->get_props()->setDoubleValue("/velocities/speed-east", vBody);
     } else if ( arg.find( "--wBody=" ) != string::npos ) {
 	speedset = FG_VTUVW;
 	if ( units == FG_UNITS_FEET ) {
@@ -741,7 +741,7 @@ int FGOptions::parse_option( const string& arg ) {
 	} else {
 	    vNorth = atof( arg.substr(9) ) * FEET_TO_METER;
 	}
-	current_properties.setDoubleValue("/velocities/speed-north", vNorth);
+	globals->get_props()->setDoubleValue("/velocities/speed-north", vNorth);
     } else if ( arg.find( "--vEast=" ) != string::npos ) {
 	speedset = FG_VTNED;
 	if ( units == FG_UNITS_FEET ) {
@@ -749,7 +749,7 @@ int FGOptions::parse_option( const string& arg ) {
 	} else {
 	    vEast = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
-	current_properties.setDoubleValue("/velocities/speed-east", vEast);
+	globals->get_props()->setDoubleValue("/velocities/speed-east", vEast);
     } else if ( arg.find( "--vDown=" ) != string::npos ) {
 	speedset = FG_VTNED;
 	if ( units == FG_UNITS_FEET ) {
@@ -757,7 +757,7 @@ int FGOptions::parse_option( const string& arg ) {
 	} else {
 	    vDown = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
-	current_properties.setDoubleValue("/velocities/speed-down", vDown);
+	globals->get_props()->setDoubleValue("/velocities/speed-down", vDown);
     } else if ( arg.find( "--vc=" ) != string::npos) {
 	speedset = FG_VC;
 	vkcas=atof( arg.substr(5) );
@@ -767,20 +767,20 @@ int FGOptions::parse_option( const string& arg ) {
 	mach=atof( arg.substr(7) );
     } else if ( arg.find( "--heading=" ) != string::npos ) {
 	heading = atof( arg.substr(10) );
-	current_properties.setDoubleValue("/orientation/heading", heading);
+	globals->get_props()->setDoubleValue("/orientation/heading", heading);
     } else if ( arg.find( "--roll=" ) != string::npos ) {
 	roll = atof( arg.substr(7) );
-	current_properties.setDoubleValue("/orientation/roll", roll);
+	globals->get_props()->setDoubleValue("/orientation/roll", roll);
     } else if ( arg.find( "--pitch=" ) != string::npos ) {
 	pitch = atof( arg.substr(8) );
-	current_properties.setDoubleValue("/orientation/pitch", pitch);
+	globals->get_props()->setDoubleValue("/orientation/pitch", pitch);
     } else if ( arg.find( "--fg-root=" ) != string::npos ) {
 	fg_root = arg.substr( 10 );
     } else if ( arg.find( "--fg-scenery=" ) != string::npos ) {
 	fg_scenery = arg.substr( 13 );
     } else if ( arg.find( "--fdm=" ) != string::npos ) {
 	flight_model = parse_fdm( arg.substr(6) );
-	current_properties.setIntValue("/sim/flight-model", flight_model);
+	globals->get_props()->setIntValue("/sim/flight-model", flight_model);
     if((flight_model == FGInterface::FG_JSBSIM) && (get_trim_mode() == 0)) {
 	set_trim_mode(1);
     } else {
@@ -788,7 +788,7 @@ int FGOptions::parse_option( const string& arg ) {
     }        
     } else if ( arg.find( "--aircraft=" ) != string::npos ) {
 	aircraft = arg.substr(11);
-	current_properties.setStringValue("/sim/aircraft", aircraft);
+	globals->get_props()->setStringValue("/sim/aircraft", aircraft);
     } else if ( arg.find( "--aircraft-dir=" ) != string::npos ) {
 	aircraft_dir =  arg.substr(15); //  (UIUC)
     } else if ( arg.find( "--model-hz=" ) != string::npos ) {
@@ -930,7 +930,7 @@ int FGOptions::parse_option( const string& arg ) {
 	}
 	string name = assign.substr(0, pos);
 	string value = assign.substr(pos + 1);
-	current_properties.setStringValue(name.c_str(), value);
+	globals->get_props()->setStringValue(name.c_str(), value);
 	FG_LOG(FG_GENERAL, FG_INFO, "Setting default value of property "
 	       << name << " to \"" << value << '"');
     // $$$ begin - added VS Renganathan, 14 Oct 2K

@@ -180,6 +180,25 @@ static inline void _check_lighting ()
 // Local functions
 ////////////////////////////////////////////////////////////////////////
 
+static inline void 
+TIE_BOOL(const char * name, bool (*getter)(), void (*setter)(bool)) {
+  globals->get_props()->tie(name, SGRawValueFunctions<bool>(getter, setter));
+}
+
+static inline void 
+TIE_INT(const char * name, int (*getter)(), void (*setter)(int)) {
+  globals->get_props()->tie(name, SGRawValueFunctions<int>(getter, setter));
+}
+
+static inline void 
+TIE_DOUBLE(const char * name, double (*getter)(), void (*setter)(double)) {
+  globals->get_props()->tie(name, SGRawValueFunctions<double>(getter, setter));
+}
+
+static inline void 
+TIE_STRING(const char * name, string (*getter)(), void (*setter)(string)) {
+  globals->get_props()->tie(name, SGRawValueFunctions<string>(getter, setter));
+}
 
 /**
  * Initialize the BFI by binding its functions to properties.
@@ -192,161 +211,95 @@ FGBFI::init ()
 {
   FG_LOG(FG_GENERAL, FG_INFO, "Starting BFI init");
 				// Simulation
-  current_properties.tieInt("/sim/flight-model",
-			    getFlightModel, setFlightModel);
-  current_properties.tieString("/sim/aircraft",
-			       getAircraft, setAircraft);
-  current_properties.tieString("/sim/aircraft-dir",
-			       getAircraftDir, setAircraftDir);
-  // TODO: timeGMT
-  current_properties.tieString("/sim/time/gmt",
-			       getDateString, setDateString);
-  current_properties.tieString("/sim/time/gmt-string",
-			       getGMTString, 0);
-  current_properties.tieBool("/sim/hud/visibility",
-			     getHUDVisible, setHUDVisible);
-  current_properties.tieBool("/sim/panel/visibility",
-			     getPanelVisible, setPanelVisible);
-  current_properties.tieInt("/sim/panel/x-offset",
-			    getPanelXOffset, setPanelXOffset);
-  current_properties.tieInt("/sim/panel/y-offset",
-			    getPanelYOffset, setPanelYOffset);
+  TIE_INT("/sim/flight-model", getFlightModel, setFlightModel);
+  TIE_STRING("/sim/aircraft", getAircraft, setAircraft);
+  TIE_STRING("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
+  TIE_STRING("/sim/time/gmt", getDateString, setDateString);
+  TIE_STRING("/sim/time/gmt-string", getGMTString, 0);
+  TIE_BOOL("/sim/hud/visibility", getHUDVisible, setHUDVisible);
+  TIE_BOOL("/sim/panel/visibility", getPanelVisible, setPanelVisible);
+  TIE_INT("/sim/panel/x-offset", getPanelXOffset, setPanelXOffset);
+  TIE_INT("/sim/panel/y-offset", getPanelYOffset, setPanelYOffset);
 
 				// Position
-  current_properties.tieString("/position/airport-id",
-				getTargetAirport, setTargetAirport);
-  current_properties.tieDouble("/position/latitude",
-				getLatitude, setLatitude);
-  current_properties.tieDouble("/position/longitude",
-			       getLongitude, setLongitude);
-  current_properties.tieDouble("/position/altitude",
-			       getAltitude, setAltitude);
-// 			       getAltitude, setAltitude, false);
-  current_properties.tieDouble("/position/altitude-agl",
-			       getAGL, 0);
+  TIE_STRING("/position/airport-id", getTargetAirport, setTargetAirport);
+  TIE_DOUBLE("/position/latitude", getLatitude, setLatitude);
+  TIE_DOUBLE("/position/longitude", getLongitude, setLongitude);
+  TIE_DOUBLE("/position/altitude", getAltitude, setAltitude);
+  TIE_DOUBLE("/position/altitude-agl", getAGL, 0);
 
 				// Orientation
-  current_properties.tieDouble("/orientation/heading",
-			       getHeading, setHeading);
-  current_properties.tieDouble("/orientation/heading-magnetic",
-			       getHeadingMag, 0);
-  current_properties.tieDouble("/orientation/pitch",
-			       getPitch, setPitch);
-  current_properties.tieDouble("/orientation/roll",
-			       getRoll, setRoll);
+  TIE_DOUBLE("/orientation/heading", getHeading, setHeading);
+  TIE_DOUBLE("/orientation/heading-magnetic", getHeadingMag, 0);
+  TIE_DOUBLE("/orientation/pitch", getPitch, setPitch);
+  TIE_DOUBLE("/orientation/roll", getRoll, setRoll);
 
 				// Engine
-  current_properties.tieDouble("/engines/engine0/rpm",
-			       getRPM, 0);
-  current_properties.tieDouble("/engines/engine0/egt",
-			       getEGT, 0);
-  current_properties.tieDouble("/engines/engine0/cht",
-			       getCHT, 0);
-  current_properties.tieDouble("/engines/engine0/mp",
-			       getMP, 0);
+  TIE_DOUBLE("/engines/engine0/rpm", getRPM, 0);
+  TIE_DOUBLE("/engines/engine0/egt", getEGT, 0);
+  TIE_DOUBLE("/engines/engine0/cht", getCHT, 0);
+  TIE_DOUBLE("/engines/engine0/mp", getMP, 0);
 
 				// Velocities
-  current_properties.tieDouble("/velocities/airspeed",
-			       getAirspeed, setAirspeed);
-  current_properties.tieDouble("/velocities/side-slip",
-			       getSideSlip, 0);
-  current_properties.tieDouble("/velocities/vertical-speed",
-			       getVerticalSpeed, 0);
-  current_properties.tieDouble("/velocities/speed-north",
-			       getSpeedNorth, 0);
-  current_properties.tieDouble("/velocities/speed-east",
-			       getSpeedEast, 0);
-  current_properties.tieDouble("/velocities/speed-down",
-			       getSpeedDown, 0);
+  TIE_DOUBLE("/velocities/airspeed", getAirspeed, setAirspeed);
+  TIE_DOUBLE("/velocities/side-slip", getSideSlip, 0);
+  TIE_DOUBLE("/velocities/vertical-speed", getVerticalSpeed, 0);
+  TIE_DOUBLE("/velocities/speed-north", getSpeedNorth, 0);
+  TIE_DOUBLE("/velocities/speed-east", getSpeedEast, 0);
+  TIE_DOUBLE("/velocities/speed-down", getSpeedDown, 0);
 
 				// Controls
-  current_properties.tieDouble("/controls/throttle",
-			       getThrottle, setThrottle);
-  current_properties.tieDouble("/controls/mixture",
-			       getMixture, setMixture);
-  current_properties.tieDouble("/controls/propellor-pitch",
-			       getPropAdvance, setPropAdvance);
-  current_properties.tieDouble("/controls/flaps",
-			       getFlaps, setFlaps);
-  current_properties.tieDouble("/controls/aileron",
-			       getAileron, setAileron);
-  current_properties.tieDouble("/controls/rudder",
-			       getRudder, setRudder);
-  current_properties.tieDouble("/controls/elevator",
-			       getElevator, setElevator);
-  current_properties.tieDouble("/controls/elevator-trim",
-			       getElevatorTrim, setElevatorTrim);
-  current_properties.tieDouble("/controls/brakes/all",
-			       getBrakes, setBrakes);
-  current_properties.tieDouble("/controls/brakes/left",
-			       getLeftBrake, setLeftBrake);
-  current_properties.tieDouble("/controls/brakes/right",
-			       getRightBrake, setRightBrake);
-  current_properties.tieDouble("/controls/brakes/center",
-			       getRightBrake, setCenterBrake);
+  TIE_DOUBLE("/controls/throttle", getThrottle, setThrottle);
+  TIE_DOUBLE("/controls/mixture", getMixture, setMixture);
+  TIE_DOUBLE("/controls/propellor-pitch", getPropAdvance, setPropAdvance);
+  TIE_DOUBLE("/controls/flaps", getFlaps, setFlaps);
+  TIE_DOUBLE("/controls/aileron", getAileron, setAileron);
+  TIE_DOUBLE("/controls/rudder", getRudder, setRudder);
+  TIE_DOUBLE("/controls/elevator", getElevator, setElevator);
+  TIE_DOUBLE("/controls/elevator-trim", getElevatorTrim, setElevatorTrim);
+  TIE_DOUBLE("/controls/brakes/all", getBrakes, setBrakes);
+  TIE_DOUBLE("/controls/brakes/left", getLeftBrake, setLeftBrake);
+  TIE_DOUBLE("/controls/brakes/right", getRightBrake, setRightBrake);
+  TIE_DOUBLE("/controls/brakes/center", getRightBrake, setCenterBrake);
 
 				// Autopilot
-  current_properties.tieBool("/autopilot/locks/altitude",
-			     getAPAltitudeLock, setAPAltitudeLock);
-  current_properties.tieDouble("/autopilot/settings/altitude",
-			       getAPAltitude, setAPAltitude);
-  current_properties.tieBool("/autopilot/locks/heading",
-			     getAPHeadingLock, setAPHeadingLock);
-  current_properties.tieDouble("/autopilot/settings/heading",
-			       getAPHeading, setAPHeading);
-  current_properties.tieDouble("/autopilot/settings/heading-magnetic",
-			       getAPHeadingMag, setAPHeadingMag);
-  current_properties.tieBool("/autopilot/locks/nav1",
-			     getAPNAV1Lock, setAPNAV1Lock);
+  TIE_BOOL("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
+  TIE_DOUBLE("/autopilot/settings/altitude", getAPAltitude, setAPAltitude);
+  TIE_BOOL("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
+  TIE_DOUBLE("/autopilot/settings/heading", getAPHeading, setAPHeading);
+  TIE_DOUBLE("/autopilot/settings/heading-magnetic",
+             getAPHeadingMag, setAPHeadingMag);
+  TIE_BOOL("/autopilot/locks/nav1", getAPNAV1Lock, setAPNAV1Lock);
 
 				// Radio navigation
-  current_properties.tieDouble("/radios/nav1/frequencies/selected",
-			       getNAV1Freq, setNAV1Freq);
-  current_properties.tieDouble("/radios/nav1/frequencies/standby",
-			       getNAV1AltFreq, setNAV1AltFreq);
-  current_properties.tieDouble("/radios/nav1/radials/actual",
-			       getNAV1Radial, 0);
-  current_properties.tieDouble("/radios/nav1/radials/selected",
-			       getNAV1SelRadial, setNAV1SelRadial);
-  current_properties.tieDouble("/radios/nav1/dme/distance",
-			       getNAV1DistDME, 0);
-  current_properties.tieBool("/radios/nav1/to-flag",
-			     getNAV1TO, 0);
-  current_properties.tieBool("/radios/nav1/from-flag",
-			     getNAV1FROM, 0);
-  current_properties.tieBool("/radios/nav1/in-range",
-			     getNAV1InRange, 0);
-  current_properties.tieBool("/radios/nav1/dme/in-range",
-			     getNAV1DMEInRange, 0);
+  TIE_DOUBLE("/radios/nav1/frequencies/selected", getNAV1Freq, setNAV1Freq);
+  TIE_DOUBLE("/radios/nav1/frequencies/standby", getNAV1AltFreq, setNAV1AltFreq);
+  TIE_DOUBLE("/radios/nav1/radials/actual", getNAV1Radial, 0);
+  TIE_DOUBLE("/radios/nav1/radials/selected",
+             getNAV1SelRadial, setNAV1SelRadial);
+  TIE_DOUBLE("/radios/nav1/dme/distance", getNAV1DistDME, 0);
+  TIE_BOOL("/radios/nav1/to-flag", getNAV1TO, 0);
+  TIE_BOOL("/radios/nav1/from-flag", getNAV1FROM, 0);
+  TIE_BOOL("/radios/nav1/in-range", getNAV1InRange, 0);
+  TIE_BOOL("/radios/nav1/dme/in-range", getNAV1DMEInRange, 0);
 			       
-  current_properties.tieDouble("/radios/nav2/frequencies/selected",
-			       getNAV2Freq, setNAV2Freq);
-  current_properties.tieDouble("/radios/nav2/frequencies/standby",
-			       getNAV2AltFreq, setNAV2AltFreq);
-  current_properties.tieDouble("/radios/nav2/radials/actual",
-			       getNAV2Radial, 0);
-  current_properties.tieDouble("/radios/nav2/radials/selected",
-			       getNAV2SelRadial, setNAV2SelRadial);
-  current_properties.tieDouble("/radios/nav2/dme/distance",
-			       getNAV2DistDME, 0);
-  current_properties.tieBool("/radios/nav2/to-flag",
-			     getNAV2TO, 0);
-  current_properties.tieBool("/radios/nav2/from-flag",
-			     getNAV2FROM, 0);
-  current_properties.tieBool("/radios/nav2/in-range",
-			     getNAV2InRange, 0);
-  current_properties.tieBool("/radios/nav2/dme/in-range",
-			     getNAV2DMEInRange, 0);
+  TIE_DOUBLE("/radios/nav2/frequencies/selected", getNAV2Freq, setNAV2Freq);
+  TIE_DOUBLE("/radios/nav2/frequencies/standby",
+             getNAV2AltFreq, setNAV2AltFreq);
+  TIE_DOUBLE("/radios/nav2/radials/actual", getNAV2Radial, 0);
+  TIE_DOUBLE("/radios/nav2/radials/selected",
+             getNAV2SelRadial, setNAV2SelRadial);
+  TIE_DOUBLE("/radios/nav2/dme/distance", getNAV2DistDME, 0);
+  TIE_BOOL("/radios/nav2/to-flag", getNAV2TO, 0);
+  TIE_BOOL("/radios/nav2/from-flag", getNAV2FROM, 0);
+  TIE_BOOL("/radios/nav2/in-range", getNAV2InRange, 0);
+  TIE_BOOL("/radios/nav2/dme/in-range", getNAV2DMEInRange, 0);
 
-  current_properties.tieDouble("/radios/adf/frequencies/selected",
-			       getADFFreq, setADFFreq);
-  current_properties.tieDouble("/radios/adf/frequencies/standby",
-			       getADFAltFreq, setADFAltFreq);
-  current_properties.tieDouble("/radios/adf/rotation",
-			       getADFRotation, setADFRotation);
+  TIE_DOUBLE("/radios/adf/frequencies/selected", getADFFreq, setADFFreq);
+  TIE_DOUBLE("/radios/adf/frequencies/standby", getADFAltFreq, setADFAltFreq);
+  TIE_DOUBLE("/radios/adf/rotation", getADFRotation, setADFRotation);
 
-  current_properties.tieDouble("/environment/visibility",
-			       getVisibility, setVisibility);
+  TIE_DOUBLE("/environment/visibility", getVisibility, setVisibility);
 
   _needReinit = false;
 
@@ -394,7 +347,7 @@ FGBFI::getFlightModel ()
 /**
  * Return the current aircraft as a string.
  */
-const string &
+string
 FGBFI::getAircraft ()
 {
   _temp = globals->get_options()->get_aircraft();
@@ -405,7 +358,7 @@ FGBFI::getAircraft ()
 /**
  * Return the current aircraft directory (UIUC) as a string.
  */
-const string &
+string 
 FGBFI::getAircraftDir ()
 {
   _temp = aircraft_dir;
@@ -432,7 +385,7 @@ FGBFI::setFlightModel (int model)
  * Set the current aircraft.
  */
 void
-FGBFI::setAircraft (const string &aircraft)
+FGBFI::setAircraft (string aircraft)
 {
   if (getAircraft() != aircraft) {
     globals->get_options()->set_aircraft(aircraft);
@@ -445,7 +398,7 @@ FGBFI::setAircraft (const string &aircraft)
  * Set the current aircraft directory (UIUC).
  */
 void
-FGBFI::setAircraftDir (const string &dir)
+FGBFI::setAircraftDir (string dir)
 {
   if (getAircraftDir() != dir) {
     aircraft_dir = dir;
@@ -457,10 +410,10 @@ FGBFI::setAircraftDir (const string &dir)
 /**
  * Return the current Zulu time.
  */
-const string &
+string 
 FGBFI::getDateString ()
 {
-  static string out;		// FIXME: not thread-safe
+  string out;
   char buf[64];
   struct tm * t = globals->get_time_params()->getGmt();
   sprintf(buf, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d",
@@ -475,7 +428,7 @@ FGBFI::getDateString ()
  * Set the current Zulu time.
  */
 void
-FGBFI::setDateString (const string &date_string)
+FGBFI::setDateString (string date_string)
 // FGBFI::setTimeGMT (time_t time)
 {
   SGTime * st = globals->get_time_params();
@@ -521,10 +474,10 @@ FGBFI::setDateString (const string &date_string)
 /**
  * Return the GMT as a string.
  */
-const string &
+string 
 FGBFI::getGMTString ()
 {
-  static string out;		// FIXME: not thread-safe
+  string out;
   char buf[16];
   struct tm * t = globals->get_time_params()->getGmt();
   sprintf(buf, " %.2d:%.2d:%.2d",
@@ -1682,7 +1635,7 @@ FGBFI::setGPSLock (bool lock)
 /**
  * Get the GPS target airport code.
  */
-const string &
+string 
 FGBFI::getTargetAirport ()
 {
   // FIXME: not thread-safe
@@ -1697,7 +1650,7 @@ FGBFI::getTargetAirport ()
  * Set the GPS target airport code.
  */
 void
-FGBFI::setTargetAirport (const string &airportId)
+FGBFI::setTargetAirport (string airportId)
 {
   // cout << "setting target airport id = " << airportId << endl;
   globals->get_options()->set_airport_id(airportId);

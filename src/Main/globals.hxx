@@ -29,6 +29,7 @@
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/route/route.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/misc/props.hxx>
 
 #include "options.hxx"
 #include "viewmgr.hxx"
@@ -68,6 +69,9 @@ private:
     FGViewMgr *viewmgr;
     FGViewer *current_view;
 
+    // properties
+    SGPropertyNode *props;
+
 public:
 
     FGGlobals();
@@ -103,6 +107,10 @@ public:
     inline void set_viewmgr( FGViewMgr *vm ) { viewmgr = vm; }
     inline FGViewer *get_current_view() const { return current_view; }
     inline void set_current_view( FGViewer *v ) { current_view = v; }
+
+    inline SGPropertyNode *get_props () { return props; }
+    inline void set_props( SGPropertyNode *n ) { props = n; }
+    // inline const SGPropertyNode &get_props () const { return props; }
     
 };
 

@@ -445,7 +445,7 @@ void GLUTspecialkey(int k, int x, int y) {
  	}
 	case GLUT_KEY_F3: {
 	  string panel_path =
-	    current_properties.getStringValue("/sim/panel/path",
+	    globals->get_props()->getStringValue("/sim/panel/path",
 					      "Panels/Default/default.xml");
 	  FGPanel * new_panel = fgReadPanel(panel_path);
 	  if (new_panel == 0) {
@@ -462,7 +462,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	  FGPath props_path(globals->get_options()->get_fg_root());
 	  props_path.append("preferences.xml");
 	  FG_LOG(FG_INPUT, FG_INFO, "Rereading global preferences");
-	  if (!readPropertyList(props_path.str(), &current_properties)) {
+	  if (!readProperties(props_path.str(), globals->get_props())) {
 	    FG_LOG(FG_INPUT, FG_ALERT,
 		   "Failed to reread global preferences from "
 		   << props_path.str());

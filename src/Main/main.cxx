@@ -1426,6 +1426,9 @@ int main( int argc, char **argv ) {
     // set current view to 0 (first) which is our main pilot view
     globals->set_current_view( globals->get_viewmgr()->get_view( 0 ) );
 
+    SGPropertyNode *props = new SGPropertyNode;
+    globals->set_props( props );
+
     // Scan the config file(s) and command line options to see if
     // fg_root was specified (ignore all other options for now)
     fgInitFGRoot(argc, argv);
@@ -1436,7 +1439,7 @@ int main( int argc, char **argv ) {
     FGPath props_path(globals->get_options()->get_fg_root());
     props_path.append("preferences.xml");
     FG_LOG(FG_INPUT, FG_INFO, "Reading global preferences");
-    if (!readPropertyList(props_path.str(), &current_properties)) {
+    if (!readProperties(props_path.str(), globals->get_props())) {
       FG_LOG(FG_INPUT, FG_ALERT, "Failed to read global preferences from "
 	     << props_path.str());
     } else {
@@ -1619,7 +1622,7 @@ int main( int argc, char **argv ) {
     acmodel_pos = new ssgTransform;
 
     string acmodel_path =
-      current_properties.getStringValue("/sim/model/path",
+	globals->get_props()->getStringValue("/sim/model/path",
 					"Models/Geometry/glider.ac");
     ssgEntity *acmodel_obj = ssgLoad((char *)(acmodel_path.c_str()));
 
@@ -1653,17 +1656,17 @@ int main( int argc, char **argv ) {
     sgMat4 off_matrix;
     sgMat4 res_matrix;
     float h_rot =
-      current_properties.getFloatValue("/sim/model/h-rotation", 0.0);
+      globals->get_props()->getFloatValue("/sim/model/h-rotation", 0.0);
     float p_rot =
-      current_properties.getFloatValue("/sim/model/p-rotation", 0.0);
+      globals->get_props()->getFloatValue("/sim/model/p-rotation", 0.0);
     float r_rot =
-      current_properties.getFloatValue("/sim/model/r-rotation", 0.0);
+      globals->get_props()->getFloatValue("/sim/model/r-rotation", 0.0);
     float x_off =
-      current_properties.getFloatValue("/sim/model/x-offset", 0.0);
+      globals->get_props()->getFloatValue("/sim/model/x-offset", 0.0);
     float y_off =
-      current_properties.getFloatValue("/sim/model/y-offset", 0.0);
+      globals->get_props()->getFloatValue("/sim/model/y-offset", 0.0);
     float z_off =
-      current_properties.getFloatValue("/sim/model/z-offset", 0.0);
+      globals->get_props()->getFloatValue("/sim/model/z-offset", 0.0);
     sgMakeRotMat4(rot_matrix, h_rot, p_rot, r_rot);
     sgMakeTransMat4(off_matrix, x_off, y_off, z_off);
     sgMultMat4(res_matrix, off_matrix, rot_matrix);

@@ -56,19 +56,19 @@ public:
   static int getFlightModel ();
   static void setFlightModel (int flightModel);
 
-  static const string &getAircraft ();
-  static void setAircraft (const string &aircraft);
+  static string getAircraft ();
+  static void setAircraft (string aircraft);
 
-  static const string &getAircraftDir ();
-  static void setAircraftDir (const string &aircraftDir);
+  static string getAircraftDir ();
+  static void setAircraftDir (string aircraftDir);
 
 //   static time_t getTimeGMT ();
 //   static void setTimeGMT (time_t time);
-  static const string &getDateString ();
-  static void setDateString (const string &time_string);
+  static string getDateString ();
+  static void setDateString (string time_string);
 
 				// deprecated
-  static const string &getGMTString ();
+  static string getGMTString ();
 
   static bool getHUDVisible ();
   static void setHUDVisible (bool hudVisible);
@@ -245,8 +245,8 @@ public:
   static void setADFRotation (double rot);
 
 				// GPS
-  static const string &getTargetAirport ();
-  static void setTargetAirport (const string &targetAirport);
+  static string getTargetAirport ();
+  static void setTargetAirport (string targetAirport);
 
   static bool getGPSLock ();
   static void setGPSLock (bool lock);

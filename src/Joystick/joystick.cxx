@@ -35,6 +35,8 @@
 
 #include <string>
 
+#include <Main/globals.hxx>
+
 #include <simgear/misc/props.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <plib/js.h>
@@ -198,19 +200,19 @@ fgJoystickInit()
 	    // Control property
 	    string name = base;
 	    name += "/control";
-	    SGValue * value = current_properties.getValue(name);
+	    SGValue * value = globals->get_props()->getValue(name);
 	    if (value == 0) {
 		FG_LOG(FG_INPUT, FG_INFO, "    no control defined");
 		continue;
 	    }
 	    const string &control = value->getStringValue();
-	    a.value = current_properties.getValue(control, true);
+	    a.value = globals->get_props()->getValue(control, true);
 	    FG_LOG(FG_INPUT, FG_INFO, "    using control " << control);
 
 	    // Dead band
 	    name = base;
 	    name += "/dead-band";
-	    value = current_properties.getValue(name);
+	    value = globals->get_props()->getValue(name);
 	    if (value != 0)
 		js->setDeadBand(j, value->getDoubleValue());
 	    FG_LOG(FG_INPUT, FG_INFO, "    dead-band is " << js->getDeadBand(j));
@@ -218,7 +220,7 @@ fgJoystickInit()
 	    // Offset
 	    name = base;
 	    name += "/offset";
-	    value = current_properties.getValue(name);
+	    value = globals->get_props()->getValue(name);
 	    if (value != 0)
 		a.offset = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    offset is " << a.offset);
@@ -227,7 +229,7 @@ fgJoystickInit()
 	    // Factor
 	    name = base;
 	    name += "/factor";
-	    value = current_properties.getValue(name);
+	    value = globals->get_props()->getValue(name);
 	    if (value != 0)
 		a.factor = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    factor is " << a.factor);
@@ -236,7 +238,7 @@ fgJoystickInit()
 	    // Tolerance
 	    name = base;
 	    name += "/tolerance";
-	    value = current_properties.getValue(name);
+	    value = globals->get_props()->getValue(name);
 	    if (value != 0)
 		a.tolerance = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    tolerance is " << a.tolerance);
@@ -245,7 +247,7 @@ fgJoystickInit()
 	    // Saturation
 	    name = base;
 	    name += "/saturation";
-	    value = current_properties.getValue(name);
+	    value = globals->get_props()->getValue(name);
 	    if (value != 0)
 		js->setSaturation(j, value->getDoubleValue());
 	    FG_LOG(FG_INPUT, FG_INFO, "    saturation is " << js->getSaturation(j));
@@ -253,7 +255,7 @@ fgJoystickInit()
 	    // Minimum range
 	    name = base;
 	    name += "/min-range";
-	    value = current_properties.getValue(name);
+	    value = globals->get_props()->getValue(name);
 	    if (value != 0)
 		minRange[j] = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    min-range is " << minRange[j]);
@@ -261,7 +263,7 @@ fgJoystickInit()
 	    // Maximum range
 	    name = base;
 	    name += "/max-range";
-	    value = current_properties.getValue(name);
+	    value = globals->get_props()->getValue(name);
 	    if (value != 0)
 		maxRange[j] = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    max-range is " << maxRange[j]);
@@ -269,7 +271,7 @@ fgJoystickInit()
 	    // Center
 	    name = base;
 	    name += "/center";
-	    value = current_properties.getValue(name);
+	    value = globals->get_props()->getValue(name);
 	    if (value != 0)
 		center[j] = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    center is " << center[j]);
@@ -292,19 +294,19 @@ fgJoystickInit()
 	    string name = base;
 	    name += "/control";
 	    cout << "Trying name " << name << endl;
-	    SGValue * value = current_properties.getValue(name);
+	    SGValue * value = globals->get_props()->getValue(name);
 	    if (value == 0) {
 		FG_LOG(FG_INPUT, FG_INFO, "    no control defined");
 		continue;
 	    }
 	    const string &control = value->getStringValue();
-	    b.value = current_properties.getValue(control, true);
+	    b.value = globals->get_props()->getValue(control, true);
 	    FG_LOG(FG_INPUT, FG_INFO, "    using control " << control);
 
 	    // Step
 	    name = base;
 	    name += "/step";
-	    value = current_properties.getValue(name);
+	    value = globals->get_props()->getValue(name);
 	    if (value != 0)
 		b.step = value->getDoubleValue();
 	    FG_LOG(FG_INPUT, FG_INFO, "    step is " << b.step);
@@ -312,7 +314,7 @@ fgJoystickInit()
 	    // Type
 	    name = base;
 	    name += "/action";
-	    value = current_properties.getValue(name);
+	    value = globals->get_props()->getValue(name);
 	    string action = "adjust";
 	    if (value != 0)
 		action = value->getStringValue();
@@ -336,7 +338,7 @@ fgJoystickInit()
 	    // Repeatability.
 	    name = base;
 	    name += "/repeatable";
-	    value = current_properties.getValue(name);
+	    value = globals->get_props()->getValue(name);
 	    if (value != 0)
 		b.isRepeatable = value->getBoolValue();
 	    FG_LOG(FG_INPUT, FG_INFO, (b.isRepeatable ?

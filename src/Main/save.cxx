@@ -50,7 +50,7 @@ using std::ostream;
 bool
 fgSaveFlight (ostream &output)
 {
-  return writePropertyList(output, &current_properties);
+  return writeProperties(output, globals->get_props());
 }
 
 
@@ -60,7 +60,7 @@ fgSaveFlight (ostream &output)
 bool
 fgLoadFlight (istream &input)
 {
-  return readPropertyList(input, &current_properties);
+  return readProperties(input, globals->get_props());
 }
 
 // end of save.cxx

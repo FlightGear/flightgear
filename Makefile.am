@@ -6,7 +6,7 @@ EXTRA_DIST = Thanks acsite.m4 acconfig.h irix-hack.pl \
 	FlightGear.dsp FlightGear.dsw
 
 dist-hook:
-	(cd $(top_srcdir); ../admin/am2dsp.pl)
+	(cd $(top_srcdir); $(HOME)/projects/FlightGear-0.7/admin/am2dsp.pl)
 	tar --exclude docs-mini/CVS --exclude hints/CVS -cf - docs-mini hints \
 		| (cd $(distdir); tar xvf -)
 	# tar cf - Simulator/FDM/JSBsim/aircraft Simulator/FDM/JSBsim/engine | (cd $(distdir); tar xvf -)
@@ -26,7 +26,8 @@ fgfs-base: fgfs-base-tar fgfs-base-zip fgfs-base-patch fgfs-textures-high
 
 fgfs-base-tar:
 	(cd $(HOME); \
-	tar --exclude=CVS -czvf fgfs-base-$(VERSION).tar.gz \
+	tar --exclude=CVS --exclude='*/Textures/Unused' \
+	-czvf fgfs-base-$(VERSION).tar.gz \
 	FlightGear/A[A-su-z]* \
 	FlightGear/[B-CE-R]* \
 	FlightGear/Scenery/w130n30/w123n37 \
@@ -43,7 +44,7 @@ fgfs-base-zip:
 	FlightGear/Scenery/w130n30/w122n37 \
 	FlightGear/Sounds \
 	FlightGear/[T-Za]* FlightGear/[c-z]* \
-	-x '*/CVS/*' )
+	-x '*/CVS/*' -x '*/Textures/Unused/*' )
 
 fgfs-base-patch:
 	(cd $(HOME); \
@@ -72,15 +73,15 @@ jsbsim-data:
 fgfs-docs: fgfs-docs-tar fgfs-manual-zip
 
 fgfs-docs-tar:
-	( cd ../.. ; \
+	( cd $(HOME)/projects ; \
 	tar czvf fgfs-docs-$(VERSION).tar.gz FlightGear-0.7/docs )
 
 # fgfs-docs-zip:
-# 	( cd ../.. ; \
+# 	( cd $(HOME)/projects ; \
 # 	zip -r fgfs-docs-$(VERSION).zip FlightGear-0.7/docs )
 
 fgfs-manual-zip:
-	( cd ../.. ; \
+	( cd $(HOME)/projects ; \
 	zip -r fgfs-manual-$(VERSION).zip FlightGear-0.7/docs/InstallGuide )
 
 # make the win32-bin distribution
