@@ -94,7 +94,7 @@ bool FGSoundMgr::init() {
     last.stamp();
     safety = FG_MAX_SOUND_SAFETY;
 
-    audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
+    // audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
     audio_sched -> setSafetyMargin ( FG_SOUND_SAFETY_MULT * safety ) ;
 
     sound_map_iterator current = sounds.begin();
