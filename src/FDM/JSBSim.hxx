@@ -79,7 +79,7 @@ class FGJSBsim: public FGInterface {
 
 public:
     /// Constructor
-    FGJSBsim::FGJSBsim(void);
+    FGJSBsim::FGJSBsim( double dt );
     /// Destructor
     FGJSBsim::~FGJSBsim();
 
@@ -90,7 +90,7 @@ public:
     bool copy_from_JSBsim();
 
     /// Reset flight params to a specific position
-    bool init( double dt );
+    void init();
 
     /// @name Position Parameter Set
     //@{

@@ -31,14 +31,15 @@
 class FGMagicCarpet: public FGInterface {
 
 public:
+    FGMagicCarpet::FGMagicCarpet( double dt );
+    FGMagicCarpet::~FGMagicCarpet();
+
     // reset flight params to a specific position 
-    bool init( double dt );
+    void init();
 
     // update position based on inputs, positions, velocities, etc.
     bool update( int multiloop );
 
-private:
-    SGValue * model_hz;
 };
 
 

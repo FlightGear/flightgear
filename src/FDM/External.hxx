@@ -31,8 +31,11 @@
 class FGExternal: public FGInterface {
 
 public:
+    FGExternal::FGExternal( double dt );
+    FGExternal::~FGExternal();
+
     // reset flight params to a specific position 
-    bool init( double dt );
+    void init();
 
     // update position based on inputs, positions, velocities, etc.
     bool update( int multiloop );

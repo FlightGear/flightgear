@@ -38,7 +38,9 @@
 #include "IO360.hxx"
 #include "LaRCsim.hxx"
 
-FGLaRCsim::FGLaRCsim(void) {
+FGLaRCsim::FGLaRCsim( double dt ) {
+    set_delta_t( dt );
+
     ls_toplevel_init( 0.0, 
 		      (char *)fgGetString("/sim/aircraft").c_str() );
     lsic=new LaRCsimIC; //this needs to be brought up after LaRCsim is
@@ -59,13 +61,13 @@ FGLaRCsim::~FGLaRCsim(void) {
 
 // Initialize the LaRCsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
-bool FGLaRCsim::init( double dt ) {
+void FGLaRCsim::init() {
 
     speed_up = fgGetValue("/sim/speed-up", true);
     
-    ls_set_model_dt(dt);
+    ls_set_model_dt( get_delta_t() );
     // Initialize our little engine that hopefully might
-    eng.init(dt);
+    eng.init( get_delta_t() );
     // dcl - in passing dt to init rather than update I am assuming
     // that the LaRCsim dt is fixed at one value (yes it is 120hz CLO)
 
@@ -102,8 +104,6 @@ bool FGLaRCsim::init( double dt ) {
 
     // set valid time for this record
     stamp_time();
-
-    return true;
 }
 
 

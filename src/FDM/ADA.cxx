@@ -142,9 +142,18 @@ struct {
 #define anzg sixdof_to_visuals.anzg
 
 
+FGADA::FGADA( double dt ) {
+    set_delta_t( dt );
+}
+
+
+FGADA::~FGADA() {
+}
+
+
 // Initialize the ADA flight model, dt is the time increment
 // for each subsequent iteration through the EOM
-bool FGADA::init( double dt ) {
+void FGADA::init() {
     // cout << "FGADA::init()" << endl;
 
     char Buffer[numberofbytes];
@@ -165,8 +174,6 @@ bool FGADA::init( double dt ) {
 	int result = fdmsock->write(Buffer, numberofbytes);
 	printf("Connection established.\n");
     }
-
-    return true;
 }
 
 

@@ -55,23 +55,15 @@ HISTORY
 /* DECLARATIONS  							    */
 /****************************************************************************/
 
-// reset flight params to a specific position 
-// int fgBalloonSimInit(double dt, FGInterface& f);
-
-// update position based on inputs, positions, velocities, etc.
-// int fgBalloonSimUpdate(FGInterface& f, int multiloop);
-
-// Convert from the FGInterface struct to the BalloonSim
-// int FGInterface_2_fgBalloonSim (FGInterface& f);
-
-// Convert from the BalloonSim to the FGInterface struct
-// int fgBalloonSim_2_FGInterface (FGInterface& f);
 
 class FGBalloonSim: public FGInterface {
 
     balloon current_balloon;
 
 public:
+
+    FGBalloonSim( double dt );
+    ~FGBalloonSim();
 
     // copy FDM state to BalloonSim structures
     bool copy_to_BalloonSim();
@@ -80,7 +72,7 @@ public:
     bool copy_from_BalloonSim();
 
     // reset flight params to a specific position 
-    bool init( double dt );
+    void init();
 
     // update position based on inputs, positions, velocities, etc.
     bool update( int multiloop );

@@ -488,19 +488,21 @@ bool fgInitSubsystems( void ) {
     	    "Current terrain elevation after tile mgr init " <<
 	    scenery.cur_elev );
 
+    double dt = 1.0 / fgGetInt("/sim/model-hz");
+
     const string &model = fgGetString("/sim/flight-model");
     if (model == "larcsim") {
-	cur_fdm_state = new FGLaRCsim;
+	cur_fdm_state = new FGLaRCsim( dt );
     } else if (model == "jsb") {
-	cur_fdm_state = new FGJSBsim;
+	cur_fdm_state = new FGJSBsim( dt );
     } else if (model == "ada") {
-	cur_fdm_state = new FGADA;
+	cur_fdm_state = new FGADA( dt );
     } else if (model == "balloon") {
-	cur_fdm_state = new FGBalloonSim;
+	cur_fdm_state = new FGBalloonSim( dt );
     } else if (model == "magic") {
-	cur_fdm_state = new FGMagicCarpet;
+	cur_fdm_state = new FGMagicCarpet( dt );
     } else if (model == "external") {
-	cur_fdm_state = new FGExternal;
+	cur_fdm_state = new FGExternal( dt );
     } else {
 	FG_LOG(FG_GENERAL, FG_ALERT,
 	       "Unrecognized flight model '" << model

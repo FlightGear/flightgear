@@ -52,7 +52,7 @@ inline void init_vec(FG_VECTOR_3 vec) {
     vec[0] = 0.0; vec[1] = 0.0; vec[2] = 0.0;
 }  
 
-FGEngInterface::FGEngInterface(void) {
+FGEngInterface::FGEngInterface() {
     
     // inputs
     Throttle=0;
@@ -73,7 +73,7 @@ FGEngInterface::~FGEngInterface(void) {
 
 
 // Constructor
-FGInterface::FGInterface(void) {
+FGInterface::FGInterface() {
     init_vec( d_pilot_rp_body_v );
     init_vec( d_cg_rp_body_v );
     init_vec( f_body_total_v );
@@ -141,6 +141,12 @@ FGInterface::FGInterface(void) {
     altitude_agl=0;
 }  
 
+FGInterface::FGInterface( double dt ) {
+    FGInterface();
+
+    delta_t = dt;
+    remainder = elapsed = multi_loop = 0;
+}
 
 // Destructor
 FGInterface::~FGInterface() {
@@ -151,13 +157,29 @@ FGInterface::~FGInterface() {
 void
 FGInterface::init ()
 {
-  init(1.0 / fgGetInt("/sim/model-hz"));
 }
 
 void
 FGInterface::bind ()
 {
-				// Aircraft position
+                                // Time management
+  fgTie("/fdm/time/delta_t", this, 
+	&(FGInterface::get_delta_t),
+	&(FGInterface::set_delta_t));
+
+  // The following two can't be uncommented until we have support for
+  // the "long" data type in the property manager
+  /*  fgTie("/fdm/time/elapsed", this, 
+	&(FGInterface::get_elapsed),
+	&(FGInterface::set_elapsed));
+  fgTie("/fdm/time/remainder", this, 
+	&(FGInterface::get_remainder),
+	&(FGInterface::set_remainder)); */
+  fgTie("/fdm/time/multi_loop", this, 
+	&(FGInterface::get_multi_loop),
+	&(FGInterface::set_multi_loop));
+
+			// Aircraft position
   fgTie("/position/latitude", this,
 	&(FGInterface::get_Latitude_deg),
 	&(FGInterface::set_Latitude_deg));
@@ -217,6 +239,10 @@ FGInterface::bind ()
 void
 FGInterface::unbind ()
 {
+  fgUntie("/fdm/time/delta_t");
+  fgUntie("/fdm/time/elapsed");
+  fgUntie("/fdm/time/remainder");
+  fgUntie("/fdm/time/multi_loop");
   fgUntie("/position/latitude");
   fgUntie("/position/longitude");
   fgUntie("/position/altitude");
@@ -238,12 +264,6 @@ void
 FGInterface::update ()
 {
   update(1);
-}
-
-
-bool FGInterface::init( double dt ) {
-    cout << "dummy init() ... SHOULDN'T BE CALLED!" << endl;
-    return false;
 }
 
 

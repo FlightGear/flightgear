@@ -41,7 +41,7 @@ class FGLaRCsim: public FGInterface {
     SGValue * speed_up;
     
 public:
-    FGLaRCsim(void);
+    FGLaRCsim( double dt );
     ~FGLaRCsim(void);
     
     // copy FDM state to LaRCsim structures
@@ -51,7 +51,7 @@ public:
     bool copy_from_LaRCsim();
 
     // reset flight params to a specific position 
-    bool init( double dt );
+    void init();
 
     // update position based on inputs, positions, velocities, etc.
     bool update( int multiloop );

@@ -24,15 +24,22 @@
 #include "External.hxx"
 
 
+FGExternal::FGExternal( double dt ) {
+    set_delta_t( dt );
+}
+
+
+FGExternal::~FGExternal() {
+}
+
+
 // Initialize the External flight model, dt is the time increment
 // for each subsequent iteration through the EOM
-bool FGExternal::init( double dt ) {
+void FGExternal::init() {
     // cout << "FGExternal::init()" << endl;
 
     // set valid time for this record
     stamp_time();
-
-    return true;
 }
 
 

@@ -62,17 +62,24 @@ HISTORY
 /****************************************************************************/
 
 
+FGBalloonSim::FGBalloonSim( double dt ) {
+    //set the dt of the model
+    current_balloon.set_dt(dt);
+}
+
+
+FGBalloonSim::~FGBalloonSim() {
+}
+
+
 // Initialize the BalloonSim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
-bool FGBalloonSim::init( double dt ) {
+void FGBalloonSim::init() {
     sgVec3 temp;
 
     FG_LOG( FG_FLIGHT, FG_INFO, "Starting initializing BalloonSim" );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "  created a balloon" );
-
-    //set the dt of the model
-    current_balloon.set_dt(dt);
 
     //set position
     sgSetVec3( temp,
@@ -96,8 +103,6 @@ bool FGBalloonSim::init( double dt ) {
     current_balloon.setVelocity( temp );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "Finished initializing BalloonSim" );
-
-    return true;
 }
 
 

@@ -140,9 +140,6 @@ static int global_multi_loop;
 // attempt to avoid a large bounce at startup
 static bool initial_freeze = true;
 
-// Another hack
-int use_signals = 0;
-
 // forward declaration
 void fgReshape( int width, int height );
 
@@ -972,25 +969,24 @@ static void fgMainLoop( void ) {
 #endif
 
     // Run flight model
-    if ( ! use_signals ) {
-	// Calculate model iterations needed for next frame
-	elapsed += remainder;
 
-	global_multi_loop = (int)(((double)elapsed * 0.000001) * 
-			   fgGetInt("/sim/model-hz"));
-	remainder = elapsed - ( (global_multi_loop*1000000) / 
-				fgGetInt("/sim/model-hz") );
-	FG_LOG( FG_ALL, FG_DEBUG, 
-		"Model iterations needed = " << global_multi_loop
-		<< ", new remainder = " << remainder );
+    // Calculate model iterations needed for next frame
+    elapsed += remainder;
+
+    global_multi_loop = (int)(((double)elapsed * 0.000001) * 
+			      fgGetInt("/sim/model-hz"));
+    remainder = elapsed - ( (global_multi_loop*1000000) / 
+			    fgGetInt("/sim/model-hz") );
+    FG_LOG( FG_ALL, FG_DEBUG, 
+	    "Model iterations needed = " << global_multi_loop
+	    << ", new remainder = " << remainder );
 	
-	// flight model
-	if ( global_multi_loop > 0 ) {
-	    fgUpdateTimeDepCalcs(global_multi_loop, remainder);
-	} else {
-	    FG_LOG( FG_ALL, FG_DEBUG, 
-		    "Elapsed time is zero ... we're zinging" );
-	}
+    // flight model
+    if ( global_multi_loop > 0 ) {
+	fgUpdateTimeDepCalcs(global_multi_loop, remainder);
+    } else {
+	FG_LOG( FG_ALL, FG_DEBUG, 
+		"Elapsed time is zero ... we're zinging" );
     }
 
 #if ! defined( macintosh )
@@ -1128,12 +1124,6 @@ static void fgIdleFunction ( void ) {
     } else if ( idle_state == 4 ) {
 	// setup OpenGL view parameters
 	fgInitVisuals();
-
-	if ( use_signals ) {
-	    // init timer routines, signals, etc.  Arrange for an alarm
-	    // signal to be generated, etc.
-	    fgInitTimeDepCalcs();
-	}
 
 	idle_state++;
     } else if ( idle_state == 5 ) {

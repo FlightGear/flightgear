@@ -167,6 +167,21 @@ class FGInterface : public FGSubsystem {
 
 private:
   
+    // periodic update management variable.  This is a scheme to run
+    // the fdm with a fixed delta-t.  We control how many iteration of
+    // the fdm to run with the fixed dt based on the elapsed time from
+    // the last update.  This allows us to maintain sync with the real
+    // time clock, even though each frame could take a random amount
+    // of time.  Since "dt" is unlikely to divide evenly into the
+    // elapse time, we keep track of the remainder and add it into the
+    // next elapsed time.  This yields a small amount of temporal
+    // jitter ( < dt ) but in practice seems to work well.
+
+    double delta_t;		// delta "t"
+    long elapsed;		// time elapsed since last run
+    long remainder;		// remainder time from last run
+    int multi_loop;		// number of iterations of "delta_t" to run
+
     // Pilot location rel to ref pt
     FG_VECTOR_3 d_pilot_rp_body_v;
 
@@ -261,9 +276,7 @@ private:
     SGTimeStamp next_stamp;           // time this record is valid
 
 protected:
-    virtual bool init( double dt );
-
-    void _busdump(void);
+     void _busdump(void);
     void _updatePosition( double lat_geoc, double lon, double alt );
     void _updateWeather( void );
 
@@ -419,7 +432,8 @@ protected:
 
 public:
   
-    FGInterface(void);
+    FGInterface();
+    FGInterface( double dt );
     virtual ~FGInterface();
 
     virtual void init ();
@@ -456,6 +470,16 @@ public:
 	// Driven externally via a serial port, net, file, etc.
 	FG_EXTERNAL = 10
     };
+
+    // time and update management values
+    inline double get_delta_t() const { return delta_t; }
+    inline void set_delta_t( double dt ) { delta_t = dt; }
+    inline long get_elapsed() const { return elapsed; }
+    inline void set_elapsed( long e ) { elapsed = e; }
+    inline long get_remainder() const { return remainder; }
+    inline void set_remainder( long r ) { remainder = r; }
+    inline int get_multi_loop() const { return multi_loop; }
+    inline void set_multi_loop( int ml ) { multi_loop = ml; }
 
     // Positions
     virtual void set_Latitude(double lat);       // geocentric

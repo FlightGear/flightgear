@@ -32,14 +32,20 @@
 #include "MagicCarpet.hxx"
 
 
+FGMagicCarpet::FGMagicCarpet( double dt ) {
+    set_delta_t( dt );
+}
+
+
+FGMagicCarpet::~FGMagicCarpet() {
+}
+
+
 // Initialize the Magic Carpet flight model, dt is the time increment
 // for each subsequent iteration through the EOM
-bool FGMagicCarpet::init( double dt ) {
+void FGMagicCarpet::init() {
     // set valid time for this record
     stamp_time();
-    model_hz = fgGetValue("/sim/model-hz", true);
-
-    return true;
 }
 
 
@@ -47,8 +53,7 @@ bool FGMagicCarpet::init( double dt ) {
 bool FGMagicCarpet::update( int multiloop ) {
     // cout << "FGLaRCsim::update()" << endl;
 
-    double time_step = (1.0 / model_hz->getIntValue()) *
-	multiloop;
+    double time_step = get_delta_t() * multiloop;
 
     // speed and distance traveled
     double speed = controls.get_throttle( 0 ) * 2000; // meters/sec

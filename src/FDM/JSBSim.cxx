@@ -58,7 +58,7 @@
 
 /******************************************************************************/
 
-FGJSBsim::FGJSBsim(void) {
+FGJSBsim::FGJSBsim( double dt ) {
     bool result;
    
     runcount=0;
@@ -72,7 +72,7 @@ FGJSBsim::FGJSBsim(void) {
 
     FGPath engine_path( globals->get_fg_root() );
     engine_path.append( "Engine" );
-    float dt = 1.0 / fgGetInt("/sim/model-hz");
+    set_delta_t( dt );
     fdmex->GetState()->Setdt( dt );
 
     result = fdmex->LoadModel( aircraft_path.str(),
@@ -99,7 +99,7 @@ FGJSBsim::~FGJSBsim(void) {
 // Initialize the JSBsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
 
-bool FGJSBsim::init( double dt ) {
+void FGJSBsim::init() {
 
     bool result;
 
@@ -112,7 +112,7 @@ bool FGJSBsim::init( double dt ) {
     FGPath engine_path( globals->get_fg_root() );
     engine_path.append( "Engine" );
 
-    fdmex->GetState()->Setdt( dt );
+    fdmex->GetState()->Setdt( get_delta_t() );
 
     result = fdmex->LoadModel( aircraft_path.str(),
 			       engine_path.str(),
@@ -125,7 +125,7 @@ bool FGJSBsim::init( double dt ) {
 	FG_LOG( FG_FLIGHT, FG_INFO, "  aircraft "
 		<< fgGetString("/sim/aircraft")
 		<< " does not exist" );
-	return false;
+	exit(-1);
     }
     
     fdmex->GetAtmosphere()->UseInternal();
@@ -191,8 +191,6 @@ bool FGJSBsim::init( double dt ) {
     FG_LOG( FG_FLIGHT, FG_INFO, "  set dt" );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "Finished initializing JSBSim" );
-
-    return true;
 }
 
 /******************************************************************************/

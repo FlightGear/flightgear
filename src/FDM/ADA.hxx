@@ -72,8 +72,11 @@ private:
 
 public:
 
+    FGADA( double dt );
+    ~FGADA();
+
     // reset flight params to a specific position 
-    bool init( double dt );
+    void init();
 
     // update position based on inputs, positions, velocities, etc.
     bool update( int multiloop );
