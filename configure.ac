@@ -70,8 +70,12 @@ AM_CONDITIONAL(ENABLE_MPLAYER_AS, test "x$with_multiplayer" != "xno")
 
 
 dnl Thread related checks
-AC_ARG_WITH(threads, [  --with-threads          Include tile loading threads [default=no]])
-if test "x$with_threads" = "xyes"; then
+# defaults to yes
+with_threads=yes
+AC_ARG_WITH(threads, [  --with-threads          Include tile loading threads [default=yes]])
+if test "x$with_threads" = "xno"; then
+    AC_DEFINE([ENABLE_THREADS], 0, [Define to enable threaded tile paging])
+else
     AC_DEFINE([ENABLE_THREADS], 1, [Define to enable threaded tile paging])
     CXXFLAGS="$CXXFLAGS -D_REENTRANT"
     CFLAGS="$CFLAGS -D_REENTRANT"
