@@ -82,7 +82,7 @@ public:
 	inline PatternLeg GetLeg() {return leg;}
 	
 	// Return what type of landing we're doing on this circuit
-	LandingType GetLandingOption();
+	virtual LandingType GetLandingOption();
 
 protected:
 	PlaneRec plane;
