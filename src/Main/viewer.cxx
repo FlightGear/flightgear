@@ -148,8 +148,6 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     _roll_deg(0),
     _pitch_deg(0),
     _heading_deg(0),
-    _damped_roll_deg(0),
-    _damped_pitch_deg(0),
     _scaling_type(FG_SCALING_MAX)
 {
     sgdZeroVec3(_absolute_view_pos);
@@ -158,7 +156,14 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     _from_model_index = from_model_index;
     _at_model = at_model;
     _at_model_index = at_model_index;
-    _damp = at_model_damping;
+
+    _damp = _damp_alt = 0.0;
+    if (at_model_damping > 0.0) {
+      _damp = 1 - 1.0 / pow(10, at_model_damping);
+      _damp_alt = _damp * _damp * _damp * _damp;
+    } else if (at_model_damping < 0.0)
+      _damp = 1 - 1.0 / pow(10, -at_model_damping);
+
     _x_offset_m = x_offset_m;
     _y_offset_m = y_offset_m;
     _z_offset_m = z_offset_m;
@@ -498,36 +503,42 @@ FGViewer::recalcOurOwnLocation (SGLocation * location, double lon_deg, double la
 {
   // update from our own data...
   if (_damp > 0.0) {
-    double d;
 
-    d = roll_deg - _damped_roll_deg;
-    if (d > 180.0)
-      _damped_roll_deg += 360.0;
-    else if (d < -180.0)
-      _damped_roll_deg -= 360.0;
-
-    d = pitch_deg - _damped_pitch_deg;
-    if (d > 180.0)
-      _damped_pitch_deg += 360.0;
-    else if (d < -180.0)
-      _damped_pitch_deg -= 360.0;
-
-    d = heading_deg - _damped_heading_deg;
-    if (d > 180.0)
-      _damped_heading_deg += 360.0;
-    else if (d < -180.0)
-      _damped_heading_deg -= 360.0;
-
-    static bool firstrun = true;
-    if (firstrun) {
-      _damped_heading_deg = _target_location->getHeading_deg();
-      firstrun = false;
+    static FGViewer *last = 0;
+    if (last != this) {
+      _damped_alt_ft = alt_ft;
+      _damped_roll_deg = roll_deg;
+      _damped_pitch_deg = pitch_deg;
+      _damped_heading_deg = heading_deg;
+      last = this;
     }
+
+    double d;
+    d = _damped_roll_deg - roll_deg;
+    if (d >= 180.0)
+      _damped_roll_deg -= 360.0;
+    else if (d < -180.0)
+      _damped_roll_deg += 360.0;
+
+    d = _damped_pitch_deg - pitch_deg;
+    if (d >= 180.0)
+      _damped_pitch_deg -= 360.0;
+    else if (d < -180.0)
+      _damped_pitch_deg += 360.0;
+
+    d = _damped_heading_deg - heading_deg;
+    if (d >= 180.0)
+      _damped_heading_deg -= 360.0;
+    else if (d < -180.0)
+      _damped_heading_deg += 360.0;
 
     d = 1.0 - _damp;
     roll_deg = _damped_roll_deg = roll_deg * d + _damped_roll_deg * _damp;
     pitch_deg = _damped_pitch_deg = pitch_deg * d + _damped_pitch_deg * _damp;
     heading_deg = _damped_heading_deg = heading_deg * d + _damped_heading_deg * _damp;
+
+    if (_damp_alt > 0.0)
+      alt_ft = _damped_alt_ft = alt_ft * (1 - _damp_alt) + _damped_alt_ft * _damp_alt;
   }
   location->setPosition( lon_deg, lat_deg, alt_ft );
   location->setOrientation( roll_deg, pitch_deg, heading_deg );
@@ -837,27 +848,6 @@ FGViewer::update (double dt)
 	setPitchOffset_deg(90);
       } else if ( _pitch_offset_deg < -90 ) {
 	setPitchOffset_deg( -90 );
-      }
-    }
-  }
-
-  for ( i = 0; i < dt_ms; i++ ) {
-    if ( fabs( _goal_roll_offset_deg - _roll_offset_deg ) < 1 ) {
-      setRollOffset_deg( _goal_roll_offset_deg );
-      break;
-    } else {
-      // move current_view.roll_offset_deg towards
-      // current_view.goal_roll_offset
-      if ( _goal_roll_offset_deg > _roll_offset_deg )
-	{
-	  incRollOffset_deg( 1.0 );
-	} else {
-	    incRollOffset_deg( -1.0 );
-	}
-      if ( _roll_offset_deg > 90 ) {
-	setRollOffset_deg(90);
-      } else if ( _roll_offset_deg < -90 ) {
-	setRollOffset_deg( -90 );
       }
     }
   }

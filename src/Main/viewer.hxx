@@ -289,6 +289,8 @@ private:
     double _damped_roll_deg;
     double _damped_pitch_deg;
     double _damped_heading_deg;
+    double _damp_alt;
+    double _damped_alt_ft;
 
     // Position offsets from FDM origin.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
@@ -381,12 +383,6 @@ private:
     void updateAtModelLocation (SGLocation * location);
     void recalcOurOwnLocation (SGLocation * location, double lon_deg, double lat_deg, double alt_ft,
                  double roll_deg, double pitch_deg, double heading_deg);
-
-    // add to _roll_offset_deg
-    inline void incRollOffset_deg( double amt ) {
-	set_dirty();
-	_roll_offset_deg += amt;
-    }
 
     // add to _heading_offset_deg
     inline void incHeadingOffset_deg( double amt ) {
