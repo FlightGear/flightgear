@@ -35,7 +35,7 @@
 #include <XGL/xgl.h>
 
 #include <Scenery/scenery.h>
-#include <Scenery/bucketutils.h>
+#include <Scenery/Bucket/bucketutils.h>
 #include <Scenery/obj.h>
 #include <Scenery/tilecache.h>
 
@@ -219,9 +219,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.22  1998/04/03 22:11:38  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.23  1998/04/08 23:30:08  curt
+/* Adopted Gnu automake/autoconf system.
 /*
+ * Revision 1.22  1998/04/03 22:11:38  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.21  1998/03/23 21:23:05  curt
  * Debugging output tweaks.
  *

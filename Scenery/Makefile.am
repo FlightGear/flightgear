@@ -1,12 +1,14 @@
+SUBDIRS = Bucket
+
 libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libScenery.la
+
 libScenery_la_SOURCES = \
-	bucketutils.c \
-	obj.c \
-	scenery.c \
-	texload.c \
-	tilecache.c \
-	tilemgr.c
+	obj.c obj.h \
+	scenery.c scenery.h \
+	texload.c texload.h \
+	tilecache.c tilecache.h \
+	tilemgr.c tilemgr.h
 
 INCLUDES += -I..

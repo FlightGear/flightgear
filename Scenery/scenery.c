@@ -70,7 +70,7 @@ int fgSceneryInit( void ) {
     path[0] = '\0';
     strcat(path, g->root_dir);
     strcat(path, "/Textures/");
-    strcat(path, "forest.rgb");
+    strcat(path, "desert.rgb");
 
     if ( (texbuf = read_rgb_texture(path, &width, &height)) == NULL ) {
     	fgPrintf( FG_GENERAL, FG_EXIT, "Error in loading textures!\n" );
@@ -114,9 +114,12 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.38  1998/04/03 22:11:37  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.39  1998/04/08 23:30:07  curt
+/* Adopted Gnu automake/autoconf system.
 /*
+ * Revision 1.38  1998/04/03 22:11:37  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.37  1998/03/23 21:23:05  curt
  * Debugging output tweaks.
  *
