@@ -1,0 +1,6 @@
+hud.o: cockpit.c cockpit.h hud.c hud.h ../Aircraft/aircraft.h \
+ ../Aircraft/../Flight/flight.h ../Aircraft/../Flight/Slew/slew.h \
+ ../Aircraft/../Flight/LaRCsim/ls_interface.h \
+ ../Aircraft/../Flight/LaRCsim/../flight.h \
+ ../Aircraft/../Controls/controls.h \
+ ../Aircraft/../Controls/../limits.h ../Math/fg_random.h
