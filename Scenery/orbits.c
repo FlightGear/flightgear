@@ -129,7 +129,7 @@ void fgSolarSystemInit(struct fgTIME t)
    path[0] = '\0';
    strcat(path, g->root_dir);
    strcat(path, "/Scenery/");
-   strcat(path, "planets.dat");
+   strcat(path, "Planets.dat");
 
    if ( (data = fopen(path, "r")) == NULL )
    {
@@ -170,9 +170,12 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
 
 
 /* $Log$
-/* Revision 1.2  1997/11/25 19:25:36  curt
-/* Changes to integrate Durk's moon/sun code updates + clean up.
+/* Revision 1.3  1997/11/25 23:20:44  curt
+/* Changed planets.dat Planets.dat
 /*
+ * Revision 1.2  1997/11/25 19:25:36  curt
+ * Changes to integrate Durk's moon/sun code updates + clean up.
+ *
  * Revision 1.1  1997/10/25 03:16:10  curt
  * Initial revision of code contributed by Durk Talsma.
  *
