@@ -647,6 +647,22 @@ void fgRenderFrame() {
         ssgSetNearFar( scene_nearplane, scene_farplane );
 	ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
 
+	// This is a bit kludgy.  Every 200 frames, do an extra traversal
+	// of the scene graph without drawing anything and with frustum
+	// culling disabled.  This ensures that out-of-range random
+	// objects that are not in the current view frustum will still be
+	// freed properly.
+	static int counter = 0;
+	if (++counter == 200) {
+				// We disable frustrum testing, so 
+				// the default is fine.
+	  sgFrustum f;
+	  sgMat4 m;
+	  ssgGetModelviewMatrix(m);
+	  globals->get_scenery()->get_scene_graph()->cull(&f, m, false);
+	  counter = 0;
+	}
+
 	// change state for lighting here
 
 	// draw lighting
