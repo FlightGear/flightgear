@@ -1681,33 +1681,36 @@ static bool fgMainInit( int argc, char **argv ) {
     SGPath modelpath( globals->get_fg_root() );
     ssgModelPath( (char *)modelpath.c_str() );
 
-    // Initialize the global scenery manager
-    globals->set_matlib( new SGMaterialLib );
-    globals->set_scenery( new FGScenery );
-    globals->get_scenery()->init();
-    globals->get_scenery()->bind();
-
-    // Initialize the global tile manager
-    globals->set_tile_mgr( new FGTileMgr );
-
     ////////////////////////////////////////////////////////////////////
     // Initialize the property-based built-in commands
     ////////////////////////////////////////////////////////////////////
     fgInitCommands();
 
     ////////////////////////////////////////////////////////////////////
+    // Initialize the material manager
+    ////////////////////////////////////////////////////////////////////
+    globals->set_matlib( new SGMaterialLib );
+
+    ////////////////////////////////////////////////////////////////////
     // Initialize the general model subsystem.
     ////////////////////////////////////////////////////////////////////
-
     globals->set_model_lib(new SGModelLib);
     globals->set_model_mgr(new FGModelMgr);
     globals->get_model_mgr()->init();
     globals->get_model_mgr()->bind();
 
     ////////////////////////////////////////////////////////////////////
-    // Initialize the 3D aircraft model subsystem.
+    // Initialize the TG scenery subsystem.
     ////////////////////////////////////////////////////////////////////
+    globals->set_scenery( new FGScenery );
+    globals->get_scenery()->init();
+    globals->get_scenery()->bind();
+    globals->set_tile_mgr( new FGTileMgr );
 
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the 3D aircraft model subsystem (has a dependency on
+    // the scenery subsystem.)
+    ////////////////////////////////////////////////////////////////////
     globals->set_aircraft_model(new FGAircraftModel);
     globals->get_aircraft_model()->init();
     globals->get_aircraft_model()->bind();

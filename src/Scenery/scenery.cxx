@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/scene/tgdb/userdata.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -76,6 +77,10 @@ void FGScenery::init() {
 
     taxi_lights_root = new ssgRoot;
     taxi_lights_root->setName( "Taxi Lighting Root" );
+
+    // Initials values needed by the draw-time object loader
+    sgUserDataInit( globals->get_model_lib(), globals->get_fg_root(),
+                    globals->get_props(), globals->get_sim_time_sec() );
 }
 
 

@@ -39,8 +39,7 @@
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/tgdb/leaf.hxx>
 #include <simgear/scene/tgdb/pt_lights.hxx>
-
-#include "userdata.hxx"
+#include <simgear/scene/tgdb/userdata.hxx>
 
 #include "obj.hxx"
 
@@ -193,7 +192,7 @@ bool fgGenTile( const string& path, SGBucket b,
 static int
 leaf_in_range_callback (ssgEntity * entity, int mask)
 {
-  LeafUserData * data = (LeafUserData *)entity->getUserData();
+  sgLeafUserData * data = (sgLeafUserData *)entity->getUserData();
 
   if (!data->is_filled_in) {
                                 // Iterate through all the triangles
@@ -223,7 +222,7 @@ leaf_in_range_callback (ssgEntity * entity, int mask)
 static int
 leaf_out_of_range_callback (ssgEntity * entity, int mask)
 {
-  LeafUserData * data = (LeafUserData *)entity->getUserData();
+  sgLeafUserData * data = (sgLeafUserData *)entity->getUserData();
   if (data->is_filled_in) {
     data->branch->removeAllKids();
     data->is_filled_in = false;
@@ -288,7 +287,7 @@ gen_random_surface_objects (ssgLeaf *leaf,
     lod->addKid(in_range);
     lod->addKid(out_of_range);
 
-    LeafUserData * data = new LeafUserData;
+    sgLeafUserData * data = new sgLeafUserData;
     data->is_filled_in = false;
     data->leaf = leaf;
     data->mat = mat;
@@ -304,7 +303,7 @@ gen_random_surface_objects (ssgLeaf *leaf,
     out_of_range->setTravCallback(SSG_CALLBACK_PRETRAV,
                                    leaf_out_of_range_callback);
     out_of_range
-      ->addKid(new DummyBSphereEntity(leaf->getBSphere()->getRadius()));
+      ->addKid(new sgDummyBSphereEntity(leaf->getBSphere()->getRadius()));
 }
 
 
@@ -407,9 +406,10 @@ bool fgBinObjLoad( const string& path, const bool is_base,
                 SG_LOG( SG_INPUT, SG_ALERT,
                         "Unknown material for random surface objects = "
                         << tri_materials[i] );
+            } else {
+                gen_random_surface_objects( leaf, random_object_branch,
+                                            center, mat );
             }
-            gen_random_surface_objects( leaf, random_object_branch,
-                                        center, mat );
         }
         geometry->addKid( leaf );
     }
@@ -432,9 +432,10 @@ bool fgBinObjLoad( const string& path, const bool is_base,
                 SG_LOG( SG_INPUT, SG_ALERT,
                         "Unknown material for random surface objects = "
                         << strip_materials[i] );
+            } else {
+                gen_random_surface_objects( leaf, random_object_branch,
+                                            center, mat );
             }
-            gen_random_surface_objects( leaf, random_object_branch,
-                                        center, mat );
         }
         geometry->addKid( leaf );
     }
@@ -456,10 +457,12 @@ bool fgBinObjLoad( const string& path, const bool is_base,
                 SG_LOG( SG_INPUT, SG_ALERT,
                         "Unknown material for random surface objects = "
                         << fan_materials[i] );
+            } else {
+                gen_random_surface_objects( leaf, random_object_branch,
+                                            center, mat );
             }
-            gen_random_surface_objects( leaf, random_object_branch,
-                                        center, mat );
         }
+
         geometry->addKid( leaf );
     }
 
