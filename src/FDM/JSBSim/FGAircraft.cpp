@@ -106,6 +106,7 @@ FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex)
   HTailArm  = VTailArm  = 0.0;
   lbarh = lbarv = 0.0;
   vbarh = vbarv = 0.0;
+  WingIncidence = 0.0;
 
   bind();
 

@@ -82,6 +82,8 @@ FGTranslation::FGTranslation(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGTranslation";
   qbar = 0;
+  qbarUW = 0.0;
+  qbarUV = 0.0;
   Vt = 0.0;
   Mach = 0.0;
   alpha = beta = 0.0;

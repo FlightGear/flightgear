@@ -71,6 +71,7 @@ FGAerodynamics::FGAerodynamics(FGFDMExec* FDMExec) : FGModel(FDMExec)
   alphahystmin = alphahystmax = 0.0;
   clsq = lod = 0.0;
   alphaw = 0.0;  
+  bi2vel = ci2vel = 0.0;
   bind();
 
   Debug(0);

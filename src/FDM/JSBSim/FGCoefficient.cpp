@@ -83,6 +83,7 @@ FGCoefficient::FGCoefficient( FGFDMExec* fdex )
   totalValue   = 0.0;
   bias = 0.0;
   gain = 1.0;
+  SD = 0.0;
 
   filename.erase();
   description.erase();

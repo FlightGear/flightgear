@@ -79,7 +79,7 @@ FGTrim::FGTrim(FGFDMExec *FDMExec,FGInitialCondition *FGIC, TrimMode tt ) {
   gamma_fallback=true;
   axis_count=0;
   mode=tt;
-  xlo=xhi=alo=ahi;
+  xlo=xhi=alo=ahi=0.0;
   targetNlf=1.0;
   debug_axis=tAll;
   switch(mode) {

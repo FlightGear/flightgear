@@ -114,7 +114,9 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root)
   frozen = false;
   modelLoaded = false;
   IsSlave = false;
-
+  
+  cout << "FGFDMExec::FGFDMExec, FDMctr: " << FDMctr << endl;
+  
   IdFDM = FDMctr;
   FDMctr++;
   
@@ -130,7 +132,6 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root)
   else            master = root;
 
   instance = master->GetNode("/fdm/jsbsim",IdFDM,true);
-  instance->SetDouble("zero",0);  
   
   Debug(0);
   
@@ -156,7 +157,8 @@ FGFDMExec::~FGFDMExec()
 
   for (unsigned int i=1; i<SlaveFDMList.size(); i++) delete SlaveFDMList[i]->exec;
   SlaveFDMList.clear();
- 
+  cout << "FGFDMExec::~FGFDMExec, FDMctr: " << FDMctr << endl;
+  FDMctr--;
   Debug(1);
 }
 
