@@ -686,7 +686,7 @@ void FGNavCom::search()
 	    nav_has_gs = false;
 	    nav_loclon = nav->get_lon();
 	    nav_loclat = nav->get_lat();
-	    nav_elev = nav->get_elev();
+	    nav_elev = nav->get_elev_ft();
 	    nav_twist = nav->get_magvar();
 	    nav_range = nav->get_range();
 	    nav_effective_range = adjustNavRange(nav_elev, elev, nav_range);

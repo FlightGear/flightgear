@@ -51,7 +51,7 @@ static double kludgeRange ( double stationElev, double aircraftElev,
 				// Assume that the nominal range (usually
 				// 50nm) applies at a 5,000 ft difference.
 				// Just a wild guess!
-  double factor = ((aircraftElev*SG_METER_TO_FEET) - stationElev) / 5000.0;
+  double factor = (aircraftElev - stationElev)*SG_METER_TO_FEET / 5000.0;
   double range = fabs(nominalRange * factor);
 
 				// Clamp the range to keep it sane; for
@@ -503,7 +503,7 @@ void FGKR_87::search() {
 	    trans_ident = nav->get_trans_ident();
 	    stn_lon = nav->get_lon();
 	    stn_lat = nav->get_lat();
-	    stn_elev = nav->get_elev();
+	    stn_elev = nav->get_elev_ft();
 	    range = nav->get_range();
 	    effective_range = kludgeRange(stn_elev, acft_elev, range);
 	    x = nav->get_x();
