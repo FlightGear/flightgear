@@ -31,7 +31,6 @@ SubmodelSystem::init ()
     _trigger_node->setBoolValue(false);
 	
     _amount_node = fgGetNode("/systems/submodel/amount", true);
-    _amount_node->setIntValue(0);
 	 
     _user_lat_node = fgGetNode("/position/latitude-deg", true);
     _user_lon_node = fgGetNode("/position/longitude-deg", true);
