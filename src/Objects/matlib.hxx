@@ -1,0 +1,137 @@
+// matlib.hxx -- class to handle material properties
+//
+// Written by Curtis Olson, started May 1998.
+//
+// Copyright (C) 1998 - 2000  Curtis L. Olson  - curt@flightgear.org
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+
+
+#ifndef _MATLIB_HXX
+#define _MATLIB_HXX
+
+
+#ifndef __cplusplus                                                          
+# error This library requires C++
+#endif                                   
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
+#include <simgear/compiler.h>
+
+#include <GL/glut.h>
+#include <simgear/xgl/xgl.h>
+
+#include STL_STRING		// Standard C++ string library
+#include <map>			// STL associative "array"
+#include <vector>		// STL "array"
+
+#include <plib/ssg.h>		// plib include
+
+#include "newmat.hxx"
+
+
+FG_USING_STD(string);
+FG_USING_STD(map);
+FG_USING_STD(vector);
+FG_USING_STD(less);
+
+
+#if 0
+// Material property class
+class FGMaterialSlotold {
+
+private:
+
+    FGMaterial m;
+
+    // ssg stage structure
+    ssgStateSelector *state;
+    bool state_valid;
+
+public:
+
+    // Constructor
+    FGMaterialSlotold ( void );
+
+    // Destructor
+    ~FGMaterialSlotold ( void );
+
+    // friend istream& operator >> ( istream& in, FGMaterialSlot& m );
+
+    inline FGMaterial get_m() const { return m; }
+    inline void set_m( FGMaterial new_m ) { m = new_m; }
+
+    // ssg state
+    inline ssgStateSelector *get_state() { return state; }
+    inline void set_state( ssgStateSelector *s ) { state = s; }
+    inline bool get_state_valid() const { return state_valid; }
+    inline void set_state_valid( bool flag ) { state_valid = flag; }
+};
+#endif
+
+
+// Material management class
+class FGMaterialLib {
+
+private:
+
+    // associative array of materials
+    typedef map < string, FGNewMat, less<string> > material_map;
+    typedef material_map::iterator material_map_iterator;
+    typedef material_map::const_iterator const_material_map_iterator;
+
+    material_map matlib;
+
+public:
+
+    // Constructor
+    FGMaterialLib ( void );
+
+    // Load a library of material properties
+    bool load( const string& mpath );
+
+    // Add the named texture with default properties
+    bool add_item( const string &name );
+
+    // find a material record by material name
+    FGNewMat *find( const string& material );
+
+    void set_step (int step);
+
+    material_map_iterator begin() { return matlib.begin(); }
+    const_material_map_iterator begin() const { return matlib.begin(); }
+
+    material_map_iterator end() { return matlib.end(); }
+    const_material_map_iterator end() const { return matlib.end(); }
+
+    // Destructor
+    ~FGMaterialLib ( void );
+};
+
+
+// global material management class
+extern FGMaterialLib material_lib;
+
+
+#endif // _MATLIB_HXX 
