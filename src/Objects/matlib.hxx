@@ -88,8 +88,9 @@ public:
     void set_step (int step);
     int get_step ();
 
-    // Load one pending "deferred" texture.  Return true if a texture
-    // loaded successfully, false if no pending, or error.
+    /**
+     * Load the next deferred texture, if there is any.
+     */
     void load_next_deferred();
 
     material_map_iterator begin() { return matlib.begin(); }

@@ -37,6 +37,7 @@
 #include <GL/gl.h>
 
 #include <simgear/compiler.h>
+#include <simgear/misc/exception.hxx>
 
 #include <string.h>
 #include STL_STRING
@@ -65,105 +66,37 @@ FGMaterialLib::FGMaterialLib ( void ) {
 }
 
 
-static bool local_file_exists( const string& path ) {
-    sg_gzifstream in( path );
-    if ( ! in.is_open() ) {
-	return false;
-    } else {
-	return true;
-    }
-}
-
-
 // Load a library of material properties
 bool FGMaterialLib::load( const string& mpath ) {
-    string material_name;
 
-    sg_gzifstream in( mpath );
-    if ( ! in.is_open() ) {
-	SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << mpath );
-	exit(-1);
+  SGPropertyNode materials;
+
+  cout << "Reading materials from " << mpath << endl;
+  try {
+    readProperties(mpath, &materials);
+  } catch (const sg_exception &ex) {
+    SG_LOG(SG_INPUT, SG_ALERT, "Error reading materials: " << ex.getMessage());
+    throw ex;
+  }
+
+  int nMaterials = materials.nChildren();
+  for (int i = 0; i < nMaterials; i++) {
+    const SGPropertyNode * node = materials.getChild(i);
+    if (node->getName() == "material") {
+      FGNewMat * m = new FGNewMat(node);
+
+      vector<const SGPropertyNode *>names = node->getChildren("name");
+      for (int j = 0; j < names.size(); j++) {
+	m->ref();
+	matlib[names[j]->getStringValue()] = m;
+	SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material "
+		<< names[j]->getStringValue());
+      }
+    } else {
+      SG_LOG(SG_INPUT, SG_ALERT,
+	     "Skipping bad material entry " << node->getName());
     }
-
-#ifndef __MWERKS__
-    while ( ! in.eof() ) {
-#else
-    char c = '\0';
-    while ( in.get(c) && c != '\0' ) {
-	in.putback(c);
-#endif
-        // printf("%s", line);
-
-	// strip leading white space and comments
-	in >> skipcomment;
-
-	// set to zero to prevent its value accidently being '{'
-	// after a failed >> operation.
-	char token = 0;
-
-	in >> material_name;
-
-	if ( material_name == "alias" ) {
-	    string src_mat, dst_mat;
-	    in >> dst_mat >> src_mat;
-	    SG_LOG( SG_GENERAL, SG_INFO, "  Material alias: " << dst_mat <<
-		    " mapped to " << src_mat );
-	    FGNewMat *m = matlib[src_mat];
-            if ( m != NULL ) {
-                matlib[dst_mat] = m;
-		m->ref();
-            } else {
-                SG_LOG( SG_GENERAL, SG_ALERT,
-                        "Bad material alias pointing to nonexistant material" );
-            }
-	} else {
-	    in >> token;
-
-	    if ( token == '{' ) {
-                // Read the data into a temporary but stack allocated
-                // copy of the structure
-                FGNewMat tmp;
-		in >> tmp;
-
-                // create a pointer to a heap allocated copy of the structure
-		FGNewMat *m = new FGNewMat;
-                *m = tmp;
-		m->ref();
-
-		// build the ssgSimpleState
-		SGPath tex_path( globals->get_fg_root() );
-		tex_path.append( "Textures.high" );
-		tex_path.append( m->get_texture_name() );
-		if ( ! local_file_exists(tex_path.str())
-		     || general.get_glMaxTexSize() < 512 ) {
-		    tex_path = SGPath( globals->get_fg_root() );
-		    tex_path.append( "Textures" );
-		    tex_path.append( m->get_texture_name() );
-		}
-	    
-		SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material " 
-			<< material_name << " (" << tex_path.c_str() << ")");
-
-		GLenum shade_model = GL_SMOOTH;
-		if ( fgGetBool("/sim/rendering/shading") ) {
-		    shade_model = GL_SMOOTH;
-		} else {
-		    shade_model = GL_FLAT;
-		}
-
-		m->set_texture_name( tex_path.str() );
-		m->build_ssg_state( shade_model,
-                                    fgGetBool("/sim/rendering/textures"),
-                                    false );
-
-#if EXTRA_DEBUG
-		m->dump_info();
-#endif
-	    
-		matlib[material_name] = m;
-	    }
-	}
-    }
+  }
 
     // hard coded light state
     ssgSimpleState *lights = new ssgSimpleState;
@@ -178,9 +111,7 @@ bool FGMaterialLib::load( const string& mpath ) {
     lights->disable( GL_ALPHA_TEST );
     lights->disable( GL_LIGHTING );
 
-    FGNewMat *m = new FGNewMat;
-    m->set_ssg_state( lights );
-    matlib["LIGHTS"] = m;
+    matlib["LIGHTS"] = new FGNewMat(lights);
 
     return true;
 }
@@ -204,27 +135,10 @@ bool FGMaterialLib::add_item ( const string &mat_name, const string &full_path )
     string tex_name = full_path.substr( pos + 1 );
     string tex_path = full_path.substr( 0, pos );
 
-    FGNewMat *m = new FGNewMat( mat_name, full_path );
-
     SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material " 
 	    << mat_name << " (" << full_path << ")");
 
-#if EXTRA_DEBUG
-    m->dump_info();
-#endif
-
-    GLenum shade_model = GL_SMOOTH;
-    if ( fgGetBool("/sim/rendering/shading") ) {
-	shade_model = GL_SMOOTH;
-    } else {
-	shade_model = GL_FLAT;
-    }
-
-    m->build_ssg_state( shade_model,
-                        fgGetBool("/sim/rendering/textures"),
-                        true );
-
-    material_lib.matlib[mat_name] = m;
+    material_lib.matlib[mat_name] = new FGNewMat(full_path);
 
     return true;
 }
@@ -233,15 +147,10 @@ bool FGMaterialLib::add_item ( const string &mat_name, const string &full_path )
 // Load a library of material properties
 bool FGMaterialLib::add_item ( const string &mat_name, ssgSimpleState *state )
 {
-    FGNewMat *m = new FGNewMat( mat_name );
-    m->set_ssg_state( state );
+    FGNewMat *m = new FGNewMat(state);
 
     SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material given a premade "
 	    << "ssgSimpleState = " << mat_name );
-
-#if EXTRA_DEBUG
-    m->dump_info();
-#endif
 
     material_lib.matlib[mat_name] = m;
 
@@ -304,18 +213,7 @@ void FGMaterialLib::load_next_deferred() {
     for ( material_map_iterator it = begin(); it != end(); it++ ) {
 	const string &key = it->first;
 	FGNewMat *slot = it->second;
-        // SG_LOG( SG_GENERAL, SG_INFO, "slot = " << slot );
-	if ( ! slot->get_texture_loaded() ) {
-            SG_LOG( SG_GENERAL, SG_INFO, "Loading deferred texture for "
-                    << key );
-#ifdef PLIB_1_2_X
-            slot->get_textured()->
-                setTexture( (char *)slot->get_texture_name_c_str(), 0, 0 );
-#else
-            slot->get_textured()->
-                setTexture( (char *)slot->get_texture_name_c_str(), 0, 0, 1 );
-#endif
-            slot->set_texture_loaded( true );
-        }
+	if (slot->load_texture())
+	  return;
     }
 }

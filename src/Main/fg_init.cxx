@@ -529,7 +529,7 @@ bool fgInitSubsystems( void ) {
     ////////////////////////////////////////////////////////////////////
 
     SGPath mpath( globals->get_fg_root() );
-    mpath.append( "materials" );
+    mpath.append( "materials.xml" );
     if ( material_lib.load( mpath.str() ) ) {
     } else {
     	SG_LOG( SG_GENERAL, SG_ALERT, "Error loading material lib!" );

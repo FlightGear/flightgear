@@ -1,6 +1,8 @@
-// newmat.hxx -- class to handle material properties
+// newmat.hxx -- a material in the scene graph.
+// TODO: this class needs to be renamed.
 //
 // Written by Curtis Olson, started May 1998.
+// Overhauled by David Megginson, December 2001
 //
 // Copyright (C) 1998 - 2000  Curtis L. Olson  - curt@flightgear.org
 //
@@ -24,7 +26,6 @@
 #ifndef _NEWMAT_HXX
 #define _NEWMAT_HXX
 
-
 #ifndef __cplusplus                                                          
 # error This library requires C++
 #endif                                   
@@ -41,6 +42,7 @@
 #include <plib/ssg.h>
 
 #include <simgear/compiler.h>
+#include <simgear/misc/props.hxx>
 
 #include <GL/glut.h>
 
@@ -49,113 +51,179 @@
 SG_USING_STD(string);
 
 
-// MSVC++ 6.0 kuldge - Need forward declaration of friends.
-class FGNewMat;
-istream& operator >> ( istream& in, FGNewMat& m );
-
-// Material property class
+/**
+ * A material in the scene graph.
+ *
+ * A material represents information about a single surface type
+ * in the 3D scene graph, including texture, colour, lighting,
+ * tiling, and so on; most of the materials in FlightGear are
+ * defined in the $FG_ROOT/materials.xml file, and can be changed
+ * at runtime.
+ */
 class FGNewMat {
-
-private:
-
-    // names
-    string material_name;
-    string texture_name;
-
-    // pointers to ssg states
-    ssgStateSelector *state;
-    ssgSimpleState *textured;
-    ssgSimpleState *nontextured;
-
-    // alpha texture?
-    int alpha;
-
-    // texture size
-    double xsize, ysize;
-
-    // wrap texture?
-    int wrapu, wrapv;
-
-    // use mipmapping?
-    int mipmap;
-
-    // coverage of night lighting.  This number is specifically the
-    // amount of area coverage we give a single light.  The size of a
-    // triangle is divided by this number and that is the number of
-    // lights assigned to that triangle.  Lower numbers mean more
-    // dense light ocverage.
-    double light_coverage;
-
-    // material properties
-    sgVec4 ambient, diffuse, specular, emission;
-
-    // true if texture loading deferred, and not yet loaded
-    bool texture_loaded;
-
-    // ref count so we can properly delete if we have multiple
-    // pointers to this record
-    int refcount;
 
 public:
 
-    // Constructor
-    FGNewMat ( void );
-    FGNewMat ( const string& name );
-    FGNewMat ( const string &mat_name, const string &tex_name );
+
+  ////////////////////////////////////////////////////////////////////
+  // Public Constructors.
+  ////////////////////////////////////////////////////////////////////
 
-    // Destructor
-    ~FGNewMat ( void );
+  /**
+   * Construct a material from a set of properties.
+   *
+   * @param props A property node containing subnodes with the
+   * state information for the material.  This node is usually
+   * loaded from the $FG_ROOT/materials.xml file.
+   */
+  FGNewMat (const SGPropertyNode * props);
 
-    friend istream& operator >> ( istream& in, FGNewMat& m );
 
-    // void load_texture( const string& root );
-    void build_ssg_state( GLenum shade_model, bool texture_default,
-			  bool defer_tex_load = false );
-    void set_ssg_state( ssgSimpleState *s );
+  /**
+   * Construct a material from an absolute texture path.
+   *
+   * @param texture_path A string containing an absolute path
+   * to a texture file (usually RGB).
+   */
+  FGNewMat (const string &texture_path);
 
-    inline string get_material_name() const { return material_name; }
-    inline void set_material_name( const string& n ) { material_name = n; }
 
-    inline string get_texture_name() const { return texture_name; }
-    inline const char *get_texture_name_c_str() const {
-        return texture_name.c_str();
-    }
-    inline void set_texture_name( const string& n ) { texture_name = n; }
+  /**
+   * Construct a material around an existing SSG state.
+   *
+   * This constructor allows the application to create a custom,
+   * low-level state for the scene graph and wrap a material around
+   * it.  Note: the pointer ownership is transferred to the material.
+   *
+   * @param s The SSG state for this material.
+   */
+  FGNewMat (ssgSimpleState * s);
 
-    inline ssgSimpleState *get_textured() { return textured; }
+  /**
+   * Destructor.
+   */
+  virtual ~FGNewMat ( void );
 
-    inline double get_xsize() const { return xsize; }
-    inline double get_ysize() const { return ysize; }
-    inline void set_xsize( double x ) { xsize = x; }
-    inline void set_ysize( double y ) { ysize = y; }
 
-    inline float *get_ambient() { return ambient; }
-    inline float *get_diffuse() { return diffuse; }
-    inline float *get_specular() { return specular; }
-    inline float *get_emission() { return emission; }
-    inline void set_ambient( sgVec4 a ) { sgCopyVec4( ambient, a ); }
-    inline void set_diffuse( sgVec4 d ) { sgCopyVec4( diffuse, d ); }
-    inline void set_specular( sgVec4 s ) { sgCopyVec4( specular, s ); }
-    inline void set_emission( sgVec4 e ) { sgCopyVec4( emission, e ); }
+
+  ////////////////////////////////////////////////////////////////////
+  // Public methods.
+  ////////////////////////////////////////////////////////////////////
 
-    inline bool get_texture_loaded() const { return texture_loaded; }
-    inline void set_texture_loaded( bool val ) { texture_loaded = val; }
+  /**
+   * Force the texture to load if it hasn't already.
+   *
+   * @return true if the texture loaded, false if it was loaded
+   * already.
+   */
+  virtual bool load_texture ();
 
-    inline double get_light_coverage () const { return light_coverage; }
-    inline void set_light_coverage (double coverage) {
-	light_coverage = coverage;
-    }
 
-    inline ssgStateSelector *get_state() const { return state; }
+  /**
+   * Get the textured state.
+   */
+  virtual inline ssgSimpleState *get_textured () { return textured; }
 
-    inline void ref() { refcount++; }
-    inline void deRef() { refcount--; }
-    inline int getRef() const { return refcount; }
 
-    void dump_info();
+  /**
+   * Get the xsize of the texture, in meters.
+   */
+  virtual inline double get_xsize() const { return xsize; }
+
+
+  /**
+   * Get the ysize of the texture, in meters.
+   */
+  virtual inline double get_ysize() const { return ysize; }
+
+
+  /**
+   * Get the light coverage.
+   *
+   * A smaller number means more generated night lighting.
+   *
+   * @return The area (m^2?) covered by each light.
+   */
+  virtual inline double get_light_coverage () const { return light_coverage; }
+
+
+  /**
+   * Get the current state.
+   */
+  virtual inline ssgStateSelector *get_state() const { return state; }
+
+
+  /**
+   * Add a reference to the texture.
+   */
+  virtual inline void ref() { refcount++; }
+
+
+  /**
+   * Remove a reference from the texture.
+   */
+  virtual inline void deRef() { refcount--; }
+
+
+  /**
+   * Get the number of references to the texture.
+   */
+  virtual inline int getRef() const { return refcount; }
+
+
+private:
+
+
+  ////////////////////////////////////////////////////////////////////
+  // Internal state.
+  ////////////////////////////////////////////////////////////////////
+
+  // names
+  string texture_path;
+
+  // pointers to ssg states
+  ssgStateSelector *state;
+  ssgSimpleState *textured;
+  ssgSimpleState *nontextured;
+
+  // alpha texture?
+  bool alpha;
+  
+  // texture size
+  double xsize, ysize;
+
+  // wrap texture?
+  bool wrapu, wrapv;
+
+  // use mipmapping?
+  int mipmap;
+
+  // coverage of night lighting.
+  double light_coverage;
+
+  // material properties
+  sgVec4 ambient, diffuse, specular, emission;
+
+  // true if texture loading deferred, and not yet loaded
+  bool texture_loaded;
+
+  // ref count so we can properly delete if we have multiple
+  // pointers to this record
+  int refcount;
+
+
+
+  ////////////////////////////////////////////////////////////////////
+  // Internal constructors and methods.
+  ////////////////////////////////////////////////////////////////////
+
+  FGNewMat ();
+  FGNewMat (const FGNewMat &mat); // unimplemented
+
+  void read_properties (const SGPropertyNode * props);
+  void build_ssg_state(bool defer_tex_load = false);
+  void set_ssg_state( ssgSimpleState *s );
+
 };
 
-
 #endif // _NEWMAT_HXX 
-
-

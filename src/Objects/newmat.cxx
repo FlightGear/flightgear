@@ -35,46 +35,87 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sgstream.hxx>
 
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
+
 #include "newmat.hxx"
 
 
-// Constructor
-FGNewMat::FGNewMat ( void ) {
-    wrapu = wrapv = 1;
-    mipmap = 1;
-    light_coverage = -1.0;
-    refcount = 0;
+static bool
+local_file_exists( const string& path ) {
+    sg_gzifstream in( path );
+    if ( ! in.is_open() ) {
+	return false;
+    } else {
+	return true;
+    }
 }
 
 
 // Constructor
-FGNewMat::FGNewMat ( const string &name )
+
+FGNewMat::FGNewMat ()
+  : texture_path(""),
+    state(0),
+    textured(0),
+    nontextured(0),
+    alpha(false),
+    xsize(0),
+    ysize(0),
+    wrapu(true),
+    wrapv(true),
+    mipmap(true),
+    texture_loaded(false),
+    refcount(0)
 {
-    FGNewMat( name, name );
+    for (int i = 0; i < 4; i++)
+      ambient[i] = diffuse[i] = specular[i] = emission[i] = 0.0;
+}
+
+FGNewMat::FGNewMat (const SGPropertyNode * props)
+{
+    FGNewMat();
+    read_properties(props);
+    build_ssg_state(false);
+}
+
+FGNewMat::FGNewMat (const string &texture_path)
+{
+    FGNewMat();
+    build_ssg_state(true);
+}
+
+FGNewMat::FGNewMat (ssgSimpleState * s)
+{
+    FGNewMat();
+    set_ssg_state(s);
 }
 
 
-// Constructor
-FGNewMat::FGNewMat ( const string &mat_name, const string &tex_name )
+bool
+FGNewMat::load_texture ()
 {
-    material_name = mat_name;
-    texture_name = tex_name;
-    xsize = ysize = 0;
-    wrapu = wrapv = 1;
-    mipmap = 1;
-    alpha = 0; 
-    ambient[0]  = ambient[1]  = ambient[2]  = ambient[3]  = 1.0;
-    diffuse[0]  = diffuse[1]  = diffuse[2]  = diffuse[3]  = 1.0;
-    specular[0] = specular[1] = specular[2] = specular[3] = 1.0;
-    emission[0] = emission[1] = emission[2] = emission[3] = 1.0;
-    light_coverage = -1.0;
-    refcount = 0;
+  if (texture_loaded) {
+    return false;
+  } else {
+    SG_LOG( SG_GENERAL, SG_INFO, "Loading deferred texture " << texture_path );
+#ifdef PLIB_1_2_X
+    textured->setTexture((char *)texture_path.c_str(), wrapu, wrapv );
+#else
+    textured->setTexture((char *)texture_path.c_str(), wrapu, wrapv, mipmap );
+#endif
+    texture_loaded = true;
+    return true;
+  }
 }
 
 
-void FGNewMat::build_ssg_state( GLenum shade_model, bool texture_default,
-				bool defer_tex_load )
+void FGNewMat::build_ssg_state( bool defer_tex_load )
 {
+    GLenum shade_model =
+      (fgGetBool("/sim/rendering/shading") ? GL_SMOOTH : GL_FLAT);
+    bool texture_default = fgGetBool("/sim/rendering/textures");
+
     state = new ssgStateSelector(2);
     state->ref();
 
@@ -92,12 +133,11 @@ void FGNewMat::build_ssg_state( GLenum shade_model, bool texture_default,
     textured->disable( GL_BLEND );
     textured->disable( GL_ALPHA_TEST );
     if ( !defer_tex_load ) {
-	textured->setTexture( (char *)texture_name.c_str(), wrapu, wrapv );
+	textured->setTexture( (char *)texture_path.c_str(), wrapu, wrapv );
 	texture_loaded = true;
     } else {
 	texture_loaded = false;
     }
-    // cout << "wrap u = " << wrapu << " wrapv = " << wrapv << endl;
     textured->enable( GL_COLOR_MATERIAL );
     textured->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
     textured->setMaterial( GL_EMISSION, 0, 0, 0, 1 );
@@ -112,8 +152,6 @@ void FGNewMat::build_ssg_state( GLenum shade_model, bool texture_default,
     nontextured->disable( GL_ALPHA_TEST );
     nontextured->disable( GL_COLOR_MATERIAL );
 
-    /* cout << "ambient = " << ambient[0] << "," << ambient[1] 
-       << "," << ambient[2] << endl; */
     nontextured->setMaterial ( GL_AMBIENT, 
 			       ambient[0], ambient[1], 
 			       ambient[2], ambient[3] ) ;
@@ -180,75 +218,50 @@ void FGNewMat::set_ssg_state( ssgSimpleState *s ) {
 }
 
 
-void FGNewMat::dump_info () {
-    SG_LOG( SG_TERRAIN, SG_INFO, "{" << endl << "  texture = " 
-	    << texture_name );
-    SG_LOG( SG_TERRAIN, SG_INFO, "  xsize = " << xsize );
-    SG_LOG( SG_TERRAIN, SG_INFO, "  ysize = " << ysize );
-    SG_LOG( SG_TERRAIN, SG_INFO, "  ambient = " << ambient[0] << " "
-	    << ambient[1] <<" "<< ambient[2] <<" "<< ambient[3] );
-    SG_LOG( SG_TERRAIN, SG_INFO, "  diffuse = " << diffuse[0] << " " 
-	    << diffuse[1] << " " << diffuse[2] << " " << diffuse[3] );
-    SG_LOG( SG_TERRAIN, SG_INFO, "  specular = " << specular[0] << " " 
-	    << specular[1] << " " << specular[2] << " " << specular[3]);
-    SG_LOG( SG_TERRAIN, SG_INFO, "  emission = " << emission[0] << " " 
-	    << emission[1] << " " << emission[2] << " " << emission[3]);
-    SG_LOG( SG_TERRAIN, SG_INFO, "  alpha = " << alpha << endl <<"}" );
-	    
-}
-
-
 // Destructor
 FGNewMat::~FGNewMat ( void ) {
 }
 
 
-istream&
-operator >> ( istream& in, FGNewMat& m )
+void
+FGNewMat::read_properties (const SGPropertyNode * props)
 {
-    string token;
+				// Get the path to the texture
+  string tname = props->getStringValue("texture", "unknown.rgb");
+  SGPath tpath(globals->get_fg_root());
+  tpath.append("Textures.high");
+  tpath.append(tname);
+  if (!local_file_exists(tpath.str())) {
+    tpath = SGPath(globals->get_fg_root());
+    tpath.append("Textures");
+    tpath.append(tname);
+  }
+  texture_path = tpath.str();
 
-    for (;;) {
-	in >> token;
-	if ( token == "texture" ) {
-	    in >> token >> m.texture_name;
-	} else if ( token == "xsize" ) {
-	    in >> token >> m.xsize;
-	} else if ( token == "ysize" ) {
-	    in >> token >> m.ysize;
-	} else if ( token == "wrapu" ) {
-	    in >> token >> m.wrapu;
-	} else if ( token == "wrapv" ) {
-	    in >> token >> m.wrapv;
-	} else if ( token == "mipmap" ) {
-	    in >> token >> m.mipmap;
-	} else if ( token == "ambient" ) {
-	    in >> token >> m.ambient[0] >> m.ambient[1]
-	       >> m.ambient[2] >> m.ambient[3];
-	} else if ( token == "diffuse" ) {
-	    in >> token >> m.diffuse[0] >> m.diffuse[1]
-	       >> m.diffuse[2] >> m.diffuse[3];
-	} else if ( token == "specular" ) {
-	    in >> token >> m.specular[0] >> m.specular[1]
-	       >> m.specular[2] >> m.specular[3];
-	} else if ( token == "emission" ) {
-	    in >> token >> m.emission[0] >> m.emission[1]
-	       >> m.emission[2] >> m.emission[3];
-	} else if ( token == "alpha" ) {
-	    in >> token >> token;
-	    if ( token == "yes" ) {
-		m.alpha = 1;
-	    } else if ( token == "no" ) {
-		m.alpha = 0;
-	    } else {
-		SG_LOG( SG_TERRAIN, SG_INFO, "Bad alpha value " << token );
-	    }
-	} else if ( token == "light-coverage" ) {
-	    in >> token >> m.light_coverage;
-	} else if ( token[0] == '}' ) {
-	    break;
-	}
-    }
+  xsize = props->getDoubleValue("xsize", 0.0);
+  ysize = props->getDoubleValue("ysize", 0.0);
+  wrapu = props->getBoolValue("wrapu", true);
+  wrapv = props->getBoolValue("wrapv", true);
+  mipmap = props->getBoolValue("mipmap", true);
+  light_coverage = props->getDoubleValue("light-coverage");
 
-    return in;
+  ambient[0] = props->getDoubleValue("ambient/r", 0.0);
+  ambient[1] = props->getDoubleValue("ambient/g", 0.0);
+  ambient[2] = props->getDoubleValue("ambient/b", 0.0);
+  ambient[3] = props->getDoubleValue("ambient/a", 0.0);
+
+  diffuse[0] = props->getDoubleValue("diffuse/r", 0.0);
+  diffuse[1] = props->getDoubleValue("diffuse/g", 0.0);
+  diffuse[2] = props->getDoubleValue("diffuse/b", 0.0);
+  diffuse[3] = props->getDoubleValue("diffuse/a", 0.0);
+
+  specular[0] = props->getDoubleValue("specular/r", 0.0);
+  specular[1] = props->getDoubleValue("specular/g", 0.0);
+  specular[2] = props->getDoubleValue("specular/b", 0.0);
+  specular[3] = props->getDoubleValue("specular/a", 0.0);
+
+  emission[0] = props->getDoubleValue("emissive/r", 0.0);
+  emission[1] = props->getDoubleValue("emissive/g", 0.0);
+  emission[2] = props->getDoubleValue("emissive/b", 0.0);
+  emission[3] = props->getDoubleValue("emissive/a", 0.0);
 }
