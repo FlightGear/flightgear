@@ -1566,6 +1566,7 @@ fgUsage (bool verbose)
 
     SGPropertyNode options_root;
 
+    SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on Windows
     cout << endl;
 
     try {
@@ -1686,6 +1687,10 @@ fgUsage (bool verbose)
         cout << endl;
         cout << "For a complete list of options use --help --verbose" << endl;
     }
+#ifdef _MSC_VER
+    cout << "Hit a key to continue..." << endl;
+    cin.get();
+#endif
 }
 
 static void fgSearchAircraft(const SGPath &path, string_list &aircraft,
@@ -1762,12 +1767,13 @@ void fgShowAircraft(const SGPath &path, bool recursive) {
     fgSearchAircraft( path, aircraft, recursive );
 
     sort(aircraft.begin(), aircraft.end());
-    SG_LOG( SG_GENERAL, SG_ALERT, "Available aircraft:" );
+    SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on Windows
+    cout << "Available aircraft:" << endl;
     for ( unsigned int i = 0; i < aircraft.size(); i++ ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, aircraft[i] );
+        cout << aircraft[i] << endl;
     }
 #ifdef _MSC_VER
-    SG_LOG( SG_GENERAL, SG_ALERT, "Hit a key to continue..." );
+    cout << "Hit a key to continue..." << endl;
     cin.get();
 #endif
 }

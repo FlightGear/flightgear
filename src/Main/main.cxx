@@ -257,6 +257,12 @@ void fgInitVisuals( void ) {
 
 // For HiRes screen Dumps using Brian Pauls TR Library
 void trRenderFrame( void ) {
+#ifdef FG_ENABLE_MULTIPASS_CLOUDS
+    bool multi_pass_clouds = fgGetBool("/sim/rendering/multi-pass-clouds");
+#else
+    bool multi_pass_clouds = false;
+#endif
+    bool draw_clouds = fgGetBool("/environment/clouds/status");
 
     if ( fgPanelVisible() ) {
         GLfloat height = fgGetInt("/sim/startup/ysize");
@@ -301,14 +307,64 @@ void trRenderFrame( void ) {
     ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
     thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
                      fog_exp2_density );
-    thesky->drawUpperClouds();
 
     // draw the ssg scene
     // return to the desired diffuse color
     ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse() );
     glEnable( GL_DEPTH_TEST );
     ssgSetNearFar( scene_nearplane, scene_farplane );
-    ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+    if ( draw_clouds ) {
+        // Draw the terrain
+        FGTileMgr::set_tile_filter( true );
+        sgSetModelFilter( false );
+        globals->get_aircraft_model()->select( false );
+        ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+        // Disable depth buffer update, draw the clouds
+        glDepthMask( GL_FALSE );
+        thesky->drawUpperClouds();
+        if ( multi_pass_clouds ) {
+            thesky->drawLowerClouds();
+        }
+        glDepthMask( GL_TRUE );
+        if ( multi_pass_clouds ) {
+            // Draw the objects except the aircraft
+            //  and update the stencil buffer with 1
+            glEnable( GL_STENCIL_TEST );
+            glStencilFunc( GL_ALWAYS, 1, 1 );
+            glStencilOp( GL_REPLACE, GL_REPLACE, GL_REPLACE );
+        }
+        FGTileMgr::set_tile_filter( false );
+        sgSetModelFilter( true );
+        ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+        if ( multi_pass_clouds ) {
+            // Disable depth buffer update, draw the clouds where the
+            //  objects overwrite the already drawn clouds, by testing
+            //  the stencil buffer against 1
+            glDepthMask( GL_FALSE );
+            glStencilFunc( GL_EQUAL, 1, 1 );
+            glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
+            thesky->drawUpperClouds();
+            thesky->drawLowerClouds();
+            glDepthMask( GL_TRUE );
+            glDisable( GL_STENCIL_TEST );
+        } else {
+            glDepthMask( GL_FALSE );
+            thesky->drawLowerClouds();
+            glDepthMask( GL_TRUE );
+        }
+
+        // Draw the aircraft
+        sgSetModelFilter( false );
+        globals->get_aircraft_model()->select( true );
+        ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+        FGTileMgr::set_tile_filter( true );
+        sgSetModelFilter( true );
+    } else {
+        FGTileMgr::set_tile_filter( true );
+        sgSetModelFilter( true );
+        globals->get_aircraft_model()->select( true );
+        ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+    }
 
     // draw the lights
     glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
@@ -1431,12 +1487,13 @@ bool fgMainInit( int argc, char **argv ) {
     if ( !(base_version == required_version) ) {
         // tell the operator how to use this application
 
-        SG_LOG( SG_GENERAL, SG_ALERT, endl << "Base package check failed ... " \
+        SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on windows
+        cerr << endl << "Base package check failed ... " \
              << "Found version " << base_version << " at: " \
-             << globals->get_fg_root() );
-        SG_LOG( SG_GENERAL, SG_ALERT, "Please upgrade to version: " << required_version );
+             << globals->get_fg_root() << endl;
+        cerr << "Please upgrade to version: " << required_version << endl;
 #ifdef _MSC_VER
-        SG_LOG( SG_GENERAL, SG_ALERT, "Hit a key to continue..." );
+        cerr << "Hit a key to continue..." << endl;
         cin.get();
 #endif
         exit(-1);
@@ -1472,6 +1529,7 @@ bool fgMainInit( int argc, char **argv ) {
 #endif
 
     // Clouds3D requires an alpha channel
+    // clouds may require stencil buffer
     fgOSOpenWindow( fgGetInt("/sim/startup/xsize"),
                     fgGetInt("/sim/startup/ysize"),
                     fgGetInt("/sim/rendering/bits-per-pixel"),
