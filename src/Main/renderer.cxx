@@ -885,23 +885,23 @@ static void fgHackFrustum() {
 // interface to the display callback system.  There's probably a
 // better way, there has to be a better way, but I'm not seeing it
 // right now.
-static float width = 55.0;
-static float height = 42.0;
-static float near = 1.0;
-static float far = 1000.0;
+static float fov_width = 55.0;
+static float fov_height = 42.0;
+static float fov_near = 1.0;
+static float fov_far = 1000.0;
 
 
 /** FlightGear code should use this routine to set the FOV rather than
  *  calling the ssg routine directly
  */
 void FGRenderer::setFOV( float w, float h ) {
-    width = w;
-    height = h;
+    fov_width = w;
+    fov_height = h;
 
     // fully specify the view frustum before hacking it (so we don't
     // accumulate hacked effects
     ssgSetFOV( w, h );
-    ssgSetNearFar( near, far );
+    ssgSetNearFar( fov_near, fov_far );
     fgHackFrustum();
 }
 
@@ -910,13 +910,13 @@ void FGRenderer::setFOV( float w, float h ) {
  *  planes rather than calling the ssg routine directly
  */
 void FGRenderer::setNearFar( float n, float f ) {
-    near = n;
-    far = f;
+    fov_near = n;
+    fov_far = f;
 
     // fully specify the view frustum before hacking it (so we don't
     // accumulate hacked effects
     ssgSetNearFar( n, f );
-    ssgSetFOV( width, height );
+    ssgSetFOV( fov_width, fov_height );
 
     fgHackFrustum();
 }
