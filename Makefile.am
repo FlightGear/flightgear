@@ -82,6 +82,7 @@ clean-deps:
 	Lib/.deps Simulator/.deps Tools/.deps Test/.deps \
 	Lib/*/.deps Simulator/*/.deps Tools/*/.deps \
 	Lib/*/*/.deps Simulator/*/*/.deps Tools/*/*/.deps \
+	Lib/*/*/*/.deps Lib/*/*/*/*/.deps \
 	Tests/.deps
 
 # clean up after libtool
