@@ -115,8 +115,8 @@ void FGSteam::update (double dt)
 	fgSetArchivable("/steam/turn-rate");
         fgTie("/steam/slip-skid", FGSteam::get_TC_rad);
 	fgSetArchivable("/steam/slip-skid");
-        fgTie("/steam/vertical-speed-fpm", FGSteam::get_VSI_fps);
-	fgSetArchivable("/steam/vertical-speed-fpm");
+        fgTie("/steam/vertical-speed-fps", FGSteam::get_VSI_fps);
+	fgSetArchivable("/steam/vertical-speed-fps");
         fgTie("/steam/gyro-compass-deg", FGSteam::get_DG_deg);
 	fgSetArchivable("/steam/gyro-compass-deg");
         fgTie("/steam/adf-deg", FGSteam::get_HackADF_deg);
