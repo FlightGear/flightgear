@@ -70,7 +70,8 @@ FGSound::FGSound()
     _mode(FGSound::ONCE),
     _prev_value(0),
     _dt_play(0.0),
-    _dt_stop(0.0)
+    _dt_stop(0.0),
+    _stopping(0.0)
 {
 }
 
@@ -270,12 +271,19 @@ FGSound::update (double dt)
    {
 
       if (_sample->is_playing()) {
-         SG_LOG(SG_GENERAL, SG_INFO, "Stopping audio after " << _dt_play
-                                      << " sec: " << _name );
-         _sample->stop( _mgr->get_scheduler() );
+
+         if ((_mode != FGSound::IN_TRANSIT) || (_stopping < MAX_TRANSIT_TIME)) {
+
+            _active = false;
+            _sample->stop( _mgr->get_scheduler() );
+
+            SG_LOG(SG_GENERAL, SG_INFO, "Stopping audio after " << _dt_play
+                                        << " sec: " << _name );
+
+         } else
+            _stopping += dt;
       }
 
-      _active = false;
       _dt_stop += dt;
       _dt_play = 0.0;
 

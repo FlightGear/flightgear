@@ -33,6 +33,9 @@
 
 #include "soundmgr.hxx"
 
+static const double MAX_TRANSIT_TIME = 0.01;	// 10 ms.
+
+
 /**
  * Class for handling one sound event.
  *
@@ -55,7 +58,6 @@ protected:
   enum { MAXPROP=5 };
   enum { ONCE=0, LOOPED, IN_TRANSIT };
   enum { LEVEL=0, INVERTED, FLIPFLOP };
-
 
   // Sound properties
   typedef struct {
@@ -83,6 +85,8 @@ private:
   double _prev_value;
   double _dt_play;
   double _dt_stop;
+  double _stopping;	// time after the sound should have stopped.
+			// This is usefull for lost packets in in-trasit mode.
 
   vector<_snd_prop> _volume;
   vector<_snd_prop> _pitch;
