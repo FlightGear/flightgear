@@ -125,6 +125,10 @@ class FGView {
     // Transformation matrix for eye coordinates to aircraft coordinates
     MAT3mat AIRCRAFT;
 
+    // Transformation matrix for the view direction offset relative to
+    // the AIRCRAFT matrix
+    MAT3mat VIEW_OFFSET;
+
     // Transformation matrix for aircraft coordinates to world
     // coordinates
     MAT3mat WORLD;
@@ -150,8 +154,6 @@ public:
     // Initialize a view class
     void Init( void );
 
-    void UpdateGlobals( FGState *f );
-
     // Basically, this is a modified version of the Mesa gluLookAt()
     // function that's been modified slightly so we can capture the
     // result (and use it later) otherwise this all gets calculated in
@@ -163,14 +165,18 @@ public:
     // Update the view volume, position, and orientation
     void UpdateViewParams( void );
 
+    // Flag to request that UpdateFOV() be called next time
+    // UpdateViewMath() is run.
+    inline void force_update_fov_math() { update_fov = true; }
+
     // Update the view parameters
     void UpdateViewMath( FGState *f );
 
     // Update the "World to Eye" transformation matrix
     void UpdateWorldToEye( FGState *f );
 
-    // Update the field of view parameters
-    void UpdateFOV( fgOPTIONS *o );
+    // Update the field of view coefficients
+    void UpdateFOV( const fgOPTIONS& o );
 
     // accessor functions
     inline double get_view_offset() const { return view_offset; }
@@ -178,8 +184,6 @@ public:
     inline void inc_view_offset( double amt ) { view_offset += amt; }
     inline double get_goal_view_offset() const { return goal_view_offset; }
     inline void set_goal_view_offset( double a) { goal_view_offset = a; }
-    inline bool get_update_fov() const { return update_fov; }
-    inline void set_update_fov(bool value) { update_fov = value; }
     inline double get_win_ratio() const { return win_ratio; }
     inline void set_win_ratio( double r ) { win_ratio = r; }
     inline int get_winWidth() const { return winWidth; }
@@ -226,6 +230,10 @@ extern FGView current_view;
 
 
 // $Log$
+// Revision 1.18  1998/12/11 20:26:30  curt
+// Fixed view frustum culling accuracy bug so we can look out the sides and
+// back without tri-stripes dropping out.
+//
 // Revision 1.17  1998/12/09 18:50:29  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.

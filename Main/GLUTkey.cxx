@@ -164,7 +164,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 		fov = FG_FOV_MAX;
 	    }
 	    current_options.set_fov(fov);
-	    v->set_update_fov( true );
+	    v->force_update_fov_math();
 	    return;
 	case 90: // Z key
 	    tmp = w->get_visibility();   // in meters
@@ -250,7 +250,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 		fov = FG_FOV_MIN;
 	    }
 	    current_options.set_fov(fov);
-	    v->set_update_fov( true );
+	    v->force_update_fov_math();
 	    return;
 	case 122: // z key
 	    tmp = w->get_visibility();   // in meters
@@ -386,6 +386,10 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.38  1998/12/11 20:26:25  curt
+// Fixed view frustum culling accuracy bug so we can look out the sides and
+// back without tri-stripes dropping out.
+//
 // Revision 1.37  1998/12/09 18:50:22  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.

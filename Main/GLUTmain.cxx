@@ -224,7 +224,6 @@ static void fgUpdateInstrViewParams( void ) {
 
 // Update all Visuals (redraws anything graphics related)
 static void fgRenderFrame( void ) {
-    FGState *f = current_aircraft.fdm_state;
     fgLIGHT *l = &cur_light_params;
     fgTIME *t = &cur_time_params;
     FGView *v = &current_view;
@@ -255,6 +254,9 @@ static void fgRenderFrame( void ) {
 
 	// update view volume parameters
 	v->UpdateViewParams();
+
+	// set the sun position
+	xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
 	clear_mask = GL_DEPTH_BUFFER_BIT;
 	if ( current_options.get_wireframe() ) {
@@ -785,21 +787,20 @@ static void fgIdleFunction ( void ) {
 
 // Handle new window size or exposure
 static void fgReshape( int width, int height ) {
-    FGView *v = &current_view;
-
     // Do this so we can call fgReshape(0,0) ourselves without having
     // to know what the values of width & height are.
     if ( (height > 0) && (width > 0) ) {
 	if ( ! current_options.get_panel_status() ) {
-	    v->set_win_ratio( (GLfloat) width / (GLfloat) height );
+	    current_view.set_win_ratio( (GLfloat) width / (GLfloat) height );
 	} else {
-	    v->set_win_ratio( (GLfloat) width / ((GLfloat) (height)*0.4232) );
+	    current_view.set_win_ratio( (GLfloat) width / 
+					((GLfloat) (height)*0.4232) );
 	}
     }
 
-    v->set_winWidth( width );
-    v->set_winHeight( height );
-    v->set_update_fov( true );
+    current_view.set_winWidth( width );
+    current_view.set_winHeight( height );
+    current_view.force_update_fov_math();
 
     // Inform gl of our view window size (now handled elsewhere)
     // xglViewport(0, 0, (GLint)width, (GLint)height);
@@ -807,13 +808,11 @@ static void fgReshape( int width, int height ) {
 	// yes we've finished all our initializations and are running
 	// the main loop, so this will now work without seg faulting
 	// the system.
-	v->UpdateViewParams();
+	current_view.UpdateViewParams();
 	if ( current_options.get_panel_status() ) {
 	    fgPanelReInit(0, 0, 1024, 768);
 	}
     }
-    
-    // xglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 }
 
 
@@ -1003,6 +1002,10 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.76  1998/12/11 20:26:26  curt
+// Fixed view frustum culling accuracy bug so we can look out the sides and
+// back without tri-stripes dropping out.
+//
 // Revision 1.75  1998/12/09 18:50:23  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.

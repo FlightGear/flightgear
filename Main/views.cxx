@@ -42,6 +42,15 @@
 #include "views.hxx"
 
 
+// specify code paths ... these are done as variable rather than
+// #define's because down the road we may want to choose between them
+// on the fly for different flight models ... this way magic carpet
+// and external modes wouldn't need to recreate the LaRCsim matrices
+// themselves.
+
+static const bool use_larcsim_local_to_body = true;
+
+
 // This is a record containing current view parameters
 FGView current_view;
 
@@ -61,15 +70,15 @@ void FGView::Init( void ) {
     winWidth = current_options.get_xsize();
     winHeight = current_options.get_ysize();
     win_ratio = (double) winWidth / (double) winHeight;
-    update_fov = true;
+    force_update_fov_math();
 }
 
 
-// Update the field of view parameters
-void FGView::UpdateFOV( fgOPTIONS *o ) {
+// Update the field of view coefficients
+void FGView::UpdateFOV( const fgOPTIONS& o ) {
     double fov, theta_x, theta_y;
 
-    fov = o->get_fov();
+    fov = o.get_fov();
 	
     // printf("win_ratio = %.2f\n", win_ratio);
     // calculate sin() and cos() of fov / 2 in X direction;
@@ -147,7 +156,7 @@ void FGView::LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
     if (mag) {
 	x[0] /= mag;
 	x[1] /= mag;
-      x[2] /= mag;
+	x[2] /= mag;
     }
 
     mag = sqrt( y[0]*y[0] + y[1]*y[1] + y[2]*y[2] );
@@ -185,34 +194,23 @@ void FGView::LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 
 // Update the view volume, position, and orientation
 void FGView::UpdateViewParams( void ) {
-    FGState *f;
-    fgLIGHT *l;
-
-    f = current_aircraft.fdm_state;
-    l = &cur_light_params;
+    FGState *f = current_aircraft.fdm_state;
 
     UpdateViewMath(f);
     UpdateWorldToEye(f);
     
     if ((current_options.get_panel_status() != panel_hist) &&                          (current_options.get_panel_status()))
-	{
-	    fgPanelReInit( 0, 0, 1024, 768);
-	}
+    {
+	fgPanelReInit( 0, 0, 1024, 768);
+    }
 
-    // if (!o->panel_status) {
-    // xglViewport( 0, (GLint)((winHeight) / 2 ) , 
-    // (GLint)(winWidth), (GLint)(winHeight) / 2 );
-    // Tell GL we are about to modify the projection parameters
-    // xglMatrixMode(GL_PROJECTION);
-    // xglLoadIdentity();
-    // gluPerspective(o->fov, win_ratio / 2.0, 1.0, 100000.0);
-    // } else {
     if ( ! current_options.get_panel_status() ) {
 	xglViewport(0, 0 , (GLint)(winWidth), (GLint)(winHeight) );
     } else {
 	xglViewport(0, (GLint)((winHeight)*0.5768), (GLint)(winWidth), 
                     (GLint)((winHeight)*0.4232) );
     }
+
     // Tell GL we are about to modify the projection parameters
     xglMatrixMode(GL_PROJECTION);
     xglLoadIdentity();
@@ -255,9 +253,6 @@ void FGView::UpdateViewParams( void ) {
 	       view_pos.z() + surface_south[2],
 	       view_up[0], view_up[1], view_up[2]); */
 
-    // set the sun position
-    xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
-
     panel_hist = current_options.get_panel_status();
 }
 
@@ -269,9 +264,9 @@ void FGView::UpdateViewMath( FGState *f ) {
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     double ntmp;
 
-    if(update_fov == true) {
+    if ( update_fov ) {
 	// printf("Updating fov\n");
-	UpdateFOV(&current_options);
+	UpdateFOV( current_options );
 	update_fov = false;
     }
 		
@@ -310,30 +305,39 @@ void FGView::UpdateViewMath( FGState *f ) {
     // Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw)
     // from FG_T_local_to_body[3][3]
 
-    // Question: Why is the LaRCsim matrix arranged so differently
-    // than the one we need???
-    LOCAL[0][0] = f->get_T_local_to_body_33();
-    LOCAL[0][1] = -f->get_T_local_to_body_32();
-    LOCAL[0][2] = -f->get_T_local_to_body_31();
-    LOCAL[0][3] = 0.0;
-    LOCAL[1][0] = -f->get_T_local_to_body_23();
-    LOCAL[1][1] = f->get_T_local_to_body_22();
-    LOCAL[1][2] = f->get_T_local_to_body_21();
-    LOCAL[1][3] = 0.0;
-    LOCAL[2][0] = -f->get_T_local_to_body_13();
-    LOCAL[2][1] = f->get_T_local_to_body_12();
-    LOCAL[2][2] = f->get_T_local_to_body_11();
-    LOCAL[2][3] = 0.0;
-    LOCAL[3][0] = LOCAL[3][1] = LOCAL[3][2] = LOCAL[3][3] = 0.0;
-    LOCAL[3][3] = 1.0;
-    // printf("LaRCsim LOCAL matrix\n");
-    // MAT3print(LOCAL, stdout);
+    if ( use_larcsim_local_to_body ) {
 
-#ifdef OLD_LOCAL_TO_BODY_CODE
-        // old code to calculate LOCAL matrix calculated from Phi,
-        // Theta, and Psi (roll, pitch, yaw)
+	// Question: Why is the LaRCsim matrix arranged so differently
+	// than the one we need???
 
-        MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
+	// Answer (I think): The LaRCsim matrix is generated in a
+	// different reference frame than we've set up for our world
+
+	LOCAL[0][0] = f->get_T_local_to_body_33();
+	LOCAL[0][1] = -f->get_T_local_to_body_32();
+	LOCAL[0][2] = -f->get_T_local_to_body_31();
+	LOCAL[0][3] = 0.0;
+	LOCAL[1][0] = -f->get_T_local_to_body_23();
+	LOCAL[1][1] = f->get_T_local_to_body_22();
+	LOCAL[1][2] = f->get_T_local_to_body_21();
+	LOCAL[1][3] = 0.0;
+	LOCAL[2][0] = -f->get_T_local_to_body_13();
+	LOCAL[2][1] = f->get_T_local_to_body_12();
+	LOCAL[2][2] = f->get_T_local_to_body_11();
+	LOCAL[2][3] = 0.0;
+	LOCAL[3][0] = LOCAL[3][1] = LOCAL[3][2] = LOCAL[3][3] = 0.0;
+	LOCAL[3][3] = 1.0;
+
+	// printf("LaRCsim LOCAL matrix\n");
+	// MAT3print(LOCAL, stdout);
+
+    } else {
+
+	// code to calculate LOCAL matrix calculated from Phi, Theta, and
+	// Psi (roll, pitch, yaw) in case we aren't running LaRCsim as our
+	// flight model
+
+	MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
 	MAT3rotate(R, vec, f->get_Phi());
 	/* printf("Roll matrix\n"); */
 	/* MAT3print(R, stdout); */
@@ -354,7 +358,8 @@ void FGView::UpdateViewMath( FGState *f ) {
 	MAT3mult(LOCAL, R, TMP);
 	// printf("FG derived LOCAL matrix\n");
 	// MAT3print(LOCAL, stdout);
-#endif // OLD_LOCAL_TO_BODY_CODE
+
+    } // if ( use_larcsim_local_to_body ) 
 
     // Derive the local UP transformation matrix based on *geodetic*
     // coordinates
@@ -431,33 +436,12 @@ void FGView::UpdateWorldToEye( FGState *f ) {
     MAT3mat TMP;
     MAT3hvec vec;
 
-    // if we have a view offset use slow way for now
-    if(fabs(view_offset)>FG_EPSILON){ 
-	// Roll Matrix
-	MAT3_SET_HVEC(vec, 0.0, 0.0, -1.0, 1.0);
-	MAT3rotate(R_Phi, vec, f->get_Phi());
-	// printf("Roll matrix (Phi)\n");
-	// MAT3print(R_Phi, stdout);
+    if ( use_larcsim_local_to_body ) {
 
-	// Pitch Matrix
-	MAT3_SET_HVEC(vec, 1.0, 0.0, 0.0, 1.0);
-	MAT3rotate(R_Theta, vec, f->get_Theta());
-	// printf("\nPitch matrix (Theta)\n");
-	// MAT3print(R_Theta, stdout);
+	// Question: hey this is even different then LOCAL[][] above??
+	// Answer: yet another coordinate system, this time the
+	// coordinate system in which we do our view frustum culling.
 
-	// Yaw Matrix
-	MAT3_SET_HVEC(vec, 0.0, -1.0, 0.0, 1.0);
-	MAT3rotate(R_Psi, vec, f->get_Psi() + FG_PI - view_offset );
-	// printf("\nYaw matrix (Psi)\n");
-	// MAT3print(R_Psi, stdout);
-
-	// aircraft roll/pitch/yaw
-	MAT3mult(TMP, R_Phi, R_Theta);
-	MAT3mult(AIRCRAFT, TMP, R_Psi);
-
-    } else { // JUST USE LOCAL_TO_BODY  NHV 5/25/98
-	// hey this is even different then LOCAL[][] above ??
-	 
 	AIRCRAFT[0][0] = -f->get_T_local_to_body_22();
 	AIRCRAFT[0][1] = -f->get_T_local_to_body_23();
 	AIRCRAFT[0][2] = f->get_T_local_to_body_21();
@@ -473,15 +457,45 @@ void FGView::UpdateWorldToEye( FGState *f ) {
 	AIRCRAFT[3][0] = AIRCRAFT[3][1] = AIRCRAFT[3][2] = AIRCRAFT[3][3] = 0.0;
 	AIRCRAFT[3][3] = 1.0;
 
-	// ??? SOMETHING LIKE THIS SHOULD WORK    NHV
-	// Rotate about LOCAL_UP  (AIRCRAFT[2][])
-	// MAT3_SET_HVEC(vec, AIRCRAFT[2][0], AIRCRAFT[2][1],
-	//			  AIRCRAFT[2][2], AIRCRAFT[2][3]);
-	// MAT3rotate(TMP, vec, FG_PI - view_offset );
-	// MAT3mult(AIRCRAFT, AIRCRAFT, TMP);
-    }
-    // printf("\naircraft roll pitch yaw\n");
+    } else {
+
+	// Roll Matrix
+	MAT3_SET_HVEC(vec, 0.0, 0.0, -1.0, 1.0);
+	MAT3rotate(R_Phi, vec, f->get_Phi());
+	// printf("Roll matrix (Phi)\n");
+	// MAT3print(R_Phi, stdout);
+
+	// Pitch Matrix
+	MAT3_SET_HVEC(vec, 1.0, 0.0, 0.0, 1.0);
+	MAT3rotate(R_Theta, vec, f->get_Theta());
+	// printf("\nPitch matrix (Theta)\n");
+	// MAT3print(R_Theta, stdout);
+
+	// Yaw Matrix
+	MAT3_SET_HVEC(vec, 0.0, -1.0, 0.0, 1.0);
+	MAT3rotate(R_Psi, vec, f->get_Psi() + FG_PI /* - view_offset */ );
+	// MAT3rotate(R_Psi, vec, f->get_Psi() + FG_PI - view_offset );
+	// printf("\nYaw matrix (Psi)\n");
+	// MAT3print(R_Psi, stdout);
+
+	// aircraft roll/pitch/yaw
+	MAT3mult(TMP, R_Phi, R_Theta);
+	MAT3mult(AIRCRAFT, TMP, R_Psi);
+
+    } // if ( use_larcsim_local_to_body )
+
+    // printf("AIRCRAFT matrix\n");
     // MAT3print(AIRCRAFT, stdout);
+
+    // View rotation matrix relative to current aircraft orientation
+    MAT3_SET_HVEC(vec, 0.0, -1.0, 0.0, 1.0);
+    MAT3mult_vec(vec, vec, AIRCRAFT);
+    // printf("aircraft up vector = %.2f %.2f %.2f\n", 
+    //        vec[0], vec[1], vec[2]);
+    MAT3rotate(TMP, vec, -view_offset );
+    MAT3mult(VIEW_OFFSET, AIRCRAFT, TMP);
+    // printf("VIEW_OFFSET matrix\n");
+    // MAT3print(VIEW_OFFSET, stdout);
 
     // View position in scenery centered coordinates
     MAT3_SET_HVEC(vec, view_pos.x(), view_pos.y(), view_pos.z(), 1.0);
@@ -503,26 +517,12 @@ void FGView::UpdateWorldToEye( FGState *f ) {
     // printf("\nLongitude matrix\n");
     // MAT3print(R_Lon, stdout);
 
-#ifdef THIS_IS_OLD_CODE
-    // View position in scenery centered coordinates
-    MAT3_SET_HVEC(vec, view_pos.x, view_pos.y, view_pos.z, 1.0);
-    MAT3translate(T_view, vec);
-    // printf("\nTranslation matrix\n");
-    // MAT3print(T_view, stdout);
-
-    // aircraft roll/pitch/yaw
-    MAT3mult(TMP, R_Phi, R_Theta);
-    MAT3mult(AIRCRAFT, TMP, R_Psi);
-    // printf("\naircraft roll pitch yaw\n");
-    // MAT3print(AIRCRAFT, stdout);
-#endif THIS_IS_OLD_CODE
-
     // lon/lat
     MAT3mult(WORLD, R_Lat, R_Lon);
     // printf("\nworld\n");
     // MAT3print(WORLD, stdout);
 
-    MAT3mult(EYE_TO_WORLD, AIRCRAFT, WORLD);
+    MAT3mult(EYE_TO_WORLD, VIEW_OFFSET, WORLD);
     MAT3mult(EYE_TO_WORLD, EYE_TO_WORLD, T_view);
     // printf("\nEye to world\n");
     // MAT3print(EYE_TO_WORLD, stdout);
@@ -599,6 +599,10 @@ FGView::~FGView( void ) {
 
 
 // $Log$
+// Revision 1.31  1998/12/11 20:26:28  curt
+// Fixed view frustum culling accuracy bug so we can look out the sides and
+// back without tri-stripes dropping out.
+//
 // Revision 1.30  1998/12/09 18:50:28  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.
