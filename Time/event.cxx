@@ -39,6 +39,10 @@
                          // contains milliseconds
 #endif
 
+#include "Include/fg_stl_config.h"
+#include STL_ALGORITHM
+#include STL_FUNCTIONAL
+
 #include <Debug/fg_debug.h>
 
 #include "event.hxx"
@@ -47,40 +51,91 @@
 fgEVENT_MGR global_events;
 
 
-// run a specified event
-static void RunEvent(fgEVENT *e) {
-    long duration;
+fgEVENT::fgEVENT( const string& desc,
+		  const fgCallback& cb,
+		  EventState _status,
+		  int _interval )
+    : description(desc),
+      event_cb(cb.clone()),
+      status(_status),
+      interval(_interval),
+      cum_time(0),
+      min_time(100000),
+      max_time(0),
+      count(0)
+{
+}
 
-    printf("Running %s\n", e->description);
+fgEVENT::fgEVENT( const fgEVENT& evt )
+    : description(evt.description),
+#ifdef _FG_NEED_AUTO_PTR
+      // Ugly - cast away const until proper auto_ptr implementation.
+      event_cb((auto_ptr<fgCallback>&)(evt.event_cb)),
+#else
+      event_cb(evt.event_cb),
+#endif
+      status(evt.status),
+      interval(evt.interval),
+      last_run(evt.last_run),
+      current(evt.current),
+      next_run(evt.next_run),
+      cum_time(evt.cum_time),
+      min_time(evt.min_time),
+      max_time(evt.max_time),
+      count(evt.count)
+{
+}
+
+fgEVENT::~fgEVENT()
+{
+//     cout << "fgEVENT::~fgEVENT" << endl;
+}
+
+void
+fgEVENT::run()
+{
+    printf("Running %s\n", description.c_str() );
 
     // record starting time
-    timestamp(&(e->last_run));
+    timestamp( &last_run );
 
     // run the event
-    (*e->event)();
+    event_cb->call( (void**)NULL );
 
     // increment the counter for this event
-    e->count++;
+    count++;
 
     // update the event status
-    e->status = FG_EVENT_READY;
+    status = FG_EVENT_READY;
 
     // calculate duration and stats
-    timestamp(&(e->current));
-    duration = timediff(&(e->last_run), &(e->current));
+    timestamp( &current );
+    long duration = timediff( &last_run, &current );
 
-    e->cum_time += duration;
+    cum_time += duration;
 
-    if ( duration < e->min_time ) {
-	e->min_time = duration;
+    if ( duration < min_time ) {
+	min_time = duration;
     }
 
-    if ( duration > e->max_time ) {
-	e->max_time = duration;
+    if ( duration > max_time ) {
+	max_time = duration;
     }
 
     // determine the next absolute run time
-    timesum(&(e->next_run), &(e->last_run), e->interval);
+    timesum( &next_run, &last_run, interval );
+}
+
+
+// Dump scheduling stats
+void
+fgEVENT::PrintStats() const
+{
+    printf("  %-30s int=%.2fs cum=%ld min=%ld max=%ld count=%ld ave=%.2f\n",
+	   description.c_str(), 
+	   interval / 1000.0,
+	   cum_time, min_time, max_time, count, 
+	   cum_time / (double)count);
 }
 
 
@@ -92,44 +147,25 @@ fgEVENT_MGR::fgEVENT_MGR( void ) {
 // Initialize the scheduling subsystem
 void fgEVENT_MGR::Init( void ) {
     printf("Initializing event manager\n");
-    // clear event table
-    while ( event_table.size() ) {
-	event_table.pop_front();
-    }
 
-    // clear run queue
-    while ( run_queue.size() ) {
-	run_queue.pop_front();
-    }
+    run_queue.erase( run_queue.begin(), run_queue.end() );
+    event_table.erase( event_table.begin(), event_table.end() );
 }
 
 
-// Register an event with the scheduler
-void fgEVENT_MGR::Register(char *desc, void (*event)( void ), int status, 
-		    int interval)
+// Register an event with the scheduler.
+void
+fgEVENT_MGR::Register( const string& desc,
+		       const fgCallback& cb,
+		       fgEVENT::EventState status, 
+		       int interval )
 {
-    fgEVENT e;
+    fgEVENT e( desc, cb, status, interval );
 
-    printf("Registering event: %s\n", desc);
-
-    if ( strlen(desc) < 256 ) {
-	strcpy(e.description, desc);
-    } else {
-	strncpy(e.description, desc, 255);
-	e.description[255] = '\0';
-    }
-
-    e.event = event;
-    e.status = status;
-    e.interval = interval;
-
-    e.cum_time = 0;
-    e.min_time = 100000;
-    e.max_time = 0;
-    e.count = 0;
+    printf("Registering event: %s\n", desc.c_str() );
 
     // Actually run the event
-    RunEvent(&e);
+    e.run();
 
     // Now add to event_table
     event_table.push_back(e);
@@ -157,23 +193,16 @@ void fgEVENT_MGR::Resume( void ) {
 
 
 // Dump scheduling stats
-void fgEVENT_MGR::PrintStats( void ) {
-    deque < fgEVENT > :: iterator current = event_table.begin();
-    deque < fgEVENT > :: iterator last    = event_table.end();
-    fgEVENT e;
-
+void
+fgEVENT_MGR::PrintStats()
+{
     printf("\n");
     printf("Event Stats\n");
     printf("-----------\n");
 
-    while ( current != last ) {
-	e = *(current++);
-	printf("  %-20s int=%.2fs cum=%ld min=%ld max=%ld count=%ld ave=%.2f\n",
-	       e.description, 
-	       e.interval / 1000.0,
-	       e.cum_time, e.min_time, e.max_time, e.count, 
-	       e.cum_time / (double)e.count);
-    }
+    for_each( event_table.begin(),
+	      event_table.end(),
+	      mem_fun_ref( &fgEVENT::PrintStats ));
 
     printf("\n");
 }
@@ -202,13 +231,13 @@ void fgEVENT_MGR::Process( void ) {
     for ( i = 0; i < size; i++ ) {
 	// e = *current++;
 	e_ptr = &event_table[i];
-	if ( e_ptr->status == FG_EVENT_READY ) {
+	if ( e_ptr->status == fgEVENT::FG_EVENT_READY ) {
 	    fgPrintf(FG_EVENT, FG_DEBUG, 
 		     "  Item %d, current %d, next run @ %ld\n", 
 		     i, cur_time.seconds, e_ptr->next_run.seconds);
 	    if ( timediff(&cur_time, &(e_ptr->next_run)) <= 0) {
 	        run_queue.push_back(e_ptr);
-		e_ptr->status = FG_EVENT_QUEUED;
+		e_ptr->status = fgEVENT::FG_EVENT_QUEUED;
 	    }
 	}
     }
@@ -219,7 +248,7 @@ void fgEVENT_MGR::Process( void ) {
 	// printf("Yep, running it\n");
 	e_ptr = run_queue.front();
 	run_queue.pop_front();
-	RunEvent(e_ptr);
+	e_ptr->run();
     }
 }
 
@@ -229,12 +258,33 @@ fgEVENT_MGR::~fgEVENT_MGR( void ) {
 }
 
 
-void fgEventPrintStats( void ) {
-    global_events.PrintStats();
-}
-
-
 // $Log$
+// Revision 1.7  1998/08/29 13:11:31  curt
+// Bernie Bright writes:
+//   I've created some new classes to enable pointers-to-functions and
+//   pointers-to-class-methods to be treated like objects.  These objects
+//   can be registered with fgEVENT_MGR.
+//
+//   File "Include/fg_callback.hxx" contains the callback class defns.
+//
+//   Modified fgEVENT and fgEVENT_MGR to use the callback classes.  Also
+//   some minor tweaks to STL usage.
+//
+//   Added file "Include/fg_stl_config.h" to deal with STL portability
+//   issues.  I've added an initial config for egcs (and probably gcc-2.8.x).
+//   I don't have access to Visual C++ so I've left that for someone else.
+//   This file is influenced by the stl_config.h file delivered with egcs.
+//
+//   Added "Include/auto_ptr.hxx" which contains an implementation of the
+//   STL auto_ptr class which is not provided in all STL implementations
+//   and is needed to use the callback classes.
+//
+//   Deleted fgLightUpdate() which was just a wrapper to call
+//   fgLIGHT::Update().
+//
+//   Modified fg_init.cxx to register two method callbacks in place of the
+//   old wrapper functions.
+//
 // Revision 1.6  1998/08/20 15:12:26  curt
 // Tweak ...
 //

@@ -211,16 +211,33 @@ fgLIGHT::~fgLIGHT( void ) {
 }
 
 
-// wrapper function for updating light parameters via the event scheduler
-void fgLightUpdate ( void ) {
-    fgLIGHT *l;
-    l = &cur_light_params;
-   
-    l->Update();
-}
-
-
 // $Log$
+// Revision 1.17  1998/08/29 13:11:33  curt
+// Bernie Bright writes:
+//   I've created some new classes to enable pointers-to-functions and
+//   pointers-to-class-methods to be treated like objects.  These objects
+//   can be registered with fgEVENT_MGR.
+//
+//   File "Include/fg_callback.hxx" contains the callback class defns.
+//
+//   Modified fgEVENT and fgEVENT_MGR to use the callback classes.  Also
+//   some minor tweaks to STL usage.
+//
+//   Added file "Include/fg_stl_config.h" to deal with STL portability
+//   issues.  I've added an initial config for egcs (and probably gcc-2.8.x).
+//   I don't have access to Visual C++ so I've left that for someone else.
+//   This file is influenced by the stl_config.h file delivered with egcs.
+//
+//   Added "Include/auto_ptr.hxx" which contains an implementation of the
+//   STL auto_ptr class which is not provided in all STL implementations
+//   and is needed to use the callback classes.
+//
+//   Deleted fgLightUpdate() which was just a wrapper to call
+//   fgLIGHT::Update().
+//
+//   Modified fg_init.cxx to register two method callbacks in place of the
+//   old wrapper functions.
+//
 // Revision 1.16  1998/08/27 17:02:11  curt
 // Contributions from Bernie Bright <bbright@c031.aone.net.au>
 // - use strings for fg_root and airport_id and added methods to return

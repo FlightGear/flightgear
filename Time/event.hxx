@@ -39,6 +39,17 @@ extern "C" void *memset(void *, int, size_t);
 
 #include <deque>        // STL double ended queue
 #include <list>         // STL list
+#include <string>
+
+#include "Include/fg_stl_config.h"
+
+#ifdef _FG_NEED_AUTO_PTR
+#  include "Include/auto_ptr.hxx"
+#else
+#  include <memory>
+#endif
+
+#include "Include/fg_callback.hxx"
 
 #ifdef NEEDNAMESPACESTD
 using namespace std;
@@ -47,16 +58,40 @@ using namespace std;
 #include "fg_time.hxx"
 
 
-#define FG_EVENT_SUSP 0
-#define FG_EVENT_READY 1
-#define FG_EVENT_QUEUED 2
+struct fgEVENT
+{
+public:
+    enum EventState
+    {
+	FG_EVENT_SUSP   = 0,
+	FG_EVENT_READY  = 1,
+	FG_EVENT_QUEUED = 2
+    };
 
+public:
+    fgEVENT( const string& desc,
+	     const fgCallback& cb,
+	     EventState _status,
+	     int _interval );
 
-typedef struct {
-    char description[256];
+    fgEVENT( const fgEVENT& evt );
 
-    void (*event)( void );  // pointer to function
-    int status;       // status flag
+    ~fgEVENT();
+
+    void run();
+
+    void PrintStats() const;
+
+public:
+
+    string description;
+
+    // The callback object.
+    // We wrap it in an auto_ptr<> because deque<> calls our copy ctor
+    // and dtor when inserting and removing.
+    auto_ptr<fgCallback> event_cb;
+
+    EventState status;       // status flag
 
     long interval;    // interval in ms between each iteration of this event
 
@@ -68,7 +103,7 @@ typedef struct {
     long min_time;    // time of quickest execution
     long max_time;    // time of slowest execution
     long count;       // number of times executed
-} fgEVENT;
+};
 
 
 class fgEVENT_MGR {
@@ -88,8 +123,15 @@ public:
     void Init( void );
 
     // Register an event with the scheduler
-    void Register(char *desc, void (*event)( void ), int status, 
-			 int interval);
+    void Register( const string& desc, void (*event)( void ),
+		   fgEVENT::EventState status, int interval) {
+	Register( desc, fgFunctionCallback(event), status, interval );
+    }
+
+    void Register( const string& desc,
+		   const fgCallback& cb,
+		   fgEVENT::EventState status, 
+		   int interval );
 
     // Update the scheduling parameters for an event
     void Update( void );
@@ -125,6 +167,32 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.8  1998/08/29 13:11:32  curt
+// Bernie Bright writes:
+//   I've created some new classes to enable pointers-to-functions and
+//   pointers-to-class-methods to be treated like objects.  These objects
+//   can be registered with fgEVENT_MGR.
+//
+//   File "Include/fg_callback.hxx" contains the callback class defns.
+//
+//   Modified fgEVENT and fgEVENT_MGR to use the callback classes.  Also
+//   some minor tweaks to STL usage.
+//
+//   Added file "Include/fg_stl_config.h" to deal with STL portability
+//   issues.  I've added an initial config for egcs (and probably gcc-2.8.x).
+//   I don't have access to Visual C++ so I've left that for someone else.
+//   This file is influenced by the stl_config.h file delivered with egcs.
+//
+//   Added "Include/auto_ptr.hxx" which contains an implementation of the
+//   STL auto_ptr class which is not provided in all STL implementations
+//   and is needed to use the callback classes.
+//
+//   Deleted fgLightUpdate() which was just a wrapper to call
+//   fgLIGHT::Update().
+//
+//   Modified fg_init.cxx to register two method callbacks in place of the
+//   old wrapper functions.
+//
 // Revision 1.7  1998/07/30 23:48:54  curt
 // Sgi build tweaks.
 // Pause support.
