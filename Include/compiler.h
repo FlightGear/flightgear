@@ -168,18 +168,18 @@
 #  define STL_ALGORITHM  <algorithm>
 #  define STL_FUNCTIONAL <functional>
 #  define STL_IOMANIP    <iomanip>
-#  define STL_IOSTREAM   <iostream>
 #  define STL_STDEXCEPT  <stdexcept>
-#  define STL_STRING     <string>
 #  define STL_STRSTREAM  <strstream>
 
 #  define FG_INCOMPLETE_FUNCTIONAL
 
 # endif // HAVE_SGI_STL_PORT
 
+#  define STL_IOSTREAM   <iostream>
+#  define STL_STRING     <string>
 #  define FG_NO_DEFAULT_TEMPLATE_ARGS
 #  define FG_NAMESPACES
-#  define FG_HAVE_STD
+// #  define FG_HAVE_STD
 
 #endif // __BORLANDC__
 

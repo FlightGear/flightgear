@@ -2,8 +2,11 @@
 //  Alterations: Copyright C. Hotchkiss 1996
 //
 // $Log$
-// Revision 1.1  1999/04/05 21:32:40  curt
-// Initial revision
+// Revision 1.2  1999/04/22 18:45:42  curt
+// Borland tweaks.
+//
+// Revision 1.1.1.1  1999/04/05 21:32:40  curt
+// Start of 0.6.x branch.
 //
 // Revision 1.2  1998/05/13 18:23:46  curt
 // fg_typedefs.h: updated version by Charlie Hotchkiss
@@ -107,6 +110,7 @@ typedef int (*FNPTR)    ( void );
 typedef int (*FNINTPTR) ( int  );
 typedef int (*FNUIPTR)  ( UINT );
 typedef double( *DBLFNPTR)( void );
+typedef float( *FLTFNPTR)( void );
 
 #endif
 
