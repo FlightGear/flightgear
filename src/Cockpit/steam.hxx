@@ -40,15 +40,14 @@ SG_USING_NAMESPACE(std);
 /**
  * STEAM GAUGES
  *
- * This class is a mapping layer, which retrieves information from
- * the BFI (which reports truthful and ideal values) and generates
- * all the instrument errors and inaccuracies that pilots (err)
- * love, of course.  Please report any missing flaws (!).
+ * This class is a mapping layer, which retrieves information from the
+ * property manager (which reports truthful and ideal values) and
+ * generates all the instrument errors and inaccuracies that pilots
+ * (err) love, of course.  Please report any missing flaws (!).
  *
  * These should be used to operate cockpit instruments, 
  * and autopilot features where these are slaved thus.
  * They should not be used for other simulation purposes.
- *
  */
 class FGSteam
 {

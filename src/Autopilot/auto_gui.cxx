@@ -38,7 +38,6 @@
 
 #include <Airports/simple.hxx>
 #include <GUI/gui.h>
-#include <Main/bfi.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -219,7 +218,7 @@ void NewHeadingInit(void)
     char NewHeadingLabel[] = "Enter New Heading";
     char *s;
 
-    float heading = FGBFI::getHeading();
+    float heading = fgGetDouble("/orientation/heading");
     int len = 260/2 -
 	(puGetStringWidth( puGetDefaultLabelFont(), NewHeadingLabel ) /2 );
 
@@ -664,7 +663,8 @@ void PopWayPoint(puObject *cb)
 	current_autopilot->set_HeadingMode( FGAutopilot::FG_TC_HEADING_LOCK );
 
 	// use current heading
-	current_autopilot->set_TargetHeading( FGBFI::getHeading() );
+	current_autopilot
+	  ->set_TargetHeading(fgGetDouble("/orientation/heading"));
     }
 }
 

@@ -31,7 +31,6 @@
 #include <simgear/math/sg_types.hxx>
 #include <simgear/misc/props.hxx>
 #include <Aircraft/aircraft.hxx>
-#include <Main/bfi.hxx>
 #include <NetworkOLK/features.hxx>
 
 SG_USING_NAMESPACE(std);
@@ -47,9 +46,6 @@ static bool isTied = false;
 // Declare the functions that read the variables
 ////////////////////////////////////////////////////////////////////////
 
-// Anything that reads the BFI directly is not implemented at all!
-
-
 double FGSteam::the_STATIC_inhg = 29.92;
 double FGSteam::the_ALT_ft = 0.0;  // Indicated altitude
 double FGSteam::get_ALT_ft() { _CatchUp(); return the_ALT_ft; }
@@ -61,7 +57,7 @@ void FGSteam::set_ALT_datum_mb ( double datum_mb ) {
     the_ALT_datum_mb = datum_mb;
 }
 
-double FGSteam::get_ASI_kias() { return FGBFI::getAirspeed(); }
+double FGSteam::get_ASI_kias() { return fgGetDouble("/velocities/airspeed"); }
 
 double FGSteam::the_VSI_case = 29.92;
 double FGSteam::the_VSI_fps = 0.0;
@@ -243,7 +239,6 @@ void FGSteam::_CatchUp()
 	More subtle flaw is having it not move or a travel limit
 	occasionally due to some dirt in the tube or on the ball.
 	*/
-	// the_TC_rad = - ( FGBFI::getSideSlip () ); /* incorrect */
 	d = - current_aircraft.fdm_state->get_A_Z_pilot();
 	if ( d < 1 ) d = 1;
 	set_lowpass ( & the_TC_rad,
@@ -274,15 +269,17 @@ void FGSteam::_CatchUp()
 	if ( fabs(the_TC_rad) > 0.2 )
 	{       /* Massive sideslip jams it; it stops turning */
 	        the_MH_degps = 0.0;
-	        the_MH_err   = FGBFI::getHeading () - the_MH_deg;
+	        the_MH_err   = fgGetDouble("/orientation/heading") - the_MH_deg;
 	} else
 	{       double MagDip, MagVar, CosDip;
 	        double FrcN, FrcE, FrcU, AccTot;
 	        double EdgN, EdgE, EdgU;
 	        double TrqN, TrqE, TrqU, Torque;
 	        /* Find a force vector towards exact magnetic north */
-	        MagVar = FGBFI::getMagVar() / SGD_RADIANS_TO_DEGREES;
-	        MagDip = FGBFI::getMagDip() / SGD_RADIANS_TO_DEGREES;
+	        MagVar = fgGetDouble("/environment/magnetic-variation") 
+                    / SGD_RADIANS_TO_DEGREES;
+	        MagDip = fgGetDouble("/environment/magnetic-dip")
+                    / SGD_RADIANS_TO_DEGREES;
 	        CosDip = cos ( MagDip );
 	        FrcN = CosDip * cos ( MagVar );
 	        FrcE = CosDip * sin ( MagVar );
@@ -312,7 +309,7 @@ void FGSteam::_CatchUp()
 	        }
 	        if ( the_MH_err >  180.0 ) the_MH_err -= 360.0; else
 	        if ( the_MH_err < -180.0 ) the_MH_err += 360.0;
-	        the_MH_deg  = FGBFI::getHeading () - the_MH_err;
+	        the_MH_deg  = fgGetDouble("/orientation/heading") - the_MH_err;
 	}
 
 	/**************************
@@ -328,7 +325,8 @@ void FGSteam::_CatchUp()
 	We filter the actual value by one second to
 	account for the line impedance of the plumbing.
 	*/
-	double static_inhg = altFtToPressInHg(FGBFI::getAltitude());
+	double static_inhg
+            = altFtToPressInHg(fgGetDouble("/position/altitude"));
 	set_lowpass ( & the_STATIC_inhg, static_inhg, dt ); 
 
 	/*
@@ -388,10 +386,10 @@ void FGSteam::_CatchUp()
 > put in those insidious turning errors ... for now anyway.
 */
  	if ( _UpdatesPending > 999999 )
-	    the_DG_err = FGBFI::getMagVar();
+	    the_DG_err = fgGetDouble("/environment/magnetic-variation");
  	the_DG_degps = 0.01; /* HACK! */
  	if (dt<1.0) the_DG_err += dt * the_DG_degps;
- 	the_DG_deg = FGBFI::getHeading () - the_DG_err;
+ 	the_DG_deg = fgGetDouble("/orientation/heading") - the_DG_err;
 
 	/**************************
 	Finished updates, now clear the timer 
@@ -415,7 +413,8 @@ double FGSteam::get_HackGS_deg () {
 	 current_radiostack->get_nav1_has_gs() )
     {
 	double x = current_radiostack->get_nav1_gs_dist();
-	double y = (FGBFI::getAltitude() - current_radiostack->get_nav1_elev())
+	double y = (fgGetDouble("/position/altitude")
+                    - current_radiostack->get_nav1_elev())
 	    * SG_FEET_TO_METER;
 	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	return (current_radiostack->get_nav1_target_gs() - angle) * 5.0;
@@ -486,7 +485,8 @@ double FGSteam::get_HackADF_deg () {
     double r;
 
     if ( current_radiostack->get_adf_inrange() ) {
-	double r = current_radiostack->get_adf_heading() - FGBFI::getHeading();
+	double r = current_radiostack->get_adf_heading()
+            - fgGetDouble("orientation/heading");
 	last_r = r;
 	// cout << "Radial = " << current_radiostack->get_adf_heading() 
 	//      << "  Heading = " << FGBFI::getHeading() << endl;

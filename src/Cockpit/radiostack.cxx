@@ -29,7 +29,6 @@
 #include <simgear/math/sg_random.h>
 
 #include <Aircraft/aircraft.hxx>
-#include <Main/bfi.hxx>
 #include <Navaids/ilslist.hxx>
 #include <Navaids/mkrbeacons.hxx>
 #include <Navaids/navlist.hxx>
@@ -1053,7 +1052,8 @@ double FGRadioStack::get_nav2_heading_needle_deflection() const {
 double FGRadioStack::get_nav1_gs_needle_deflection() const {
     if ( nav1_inrange && nav1_has_gs ) {
 	double x = nav1_gs_dist;
-	double y = (FGBFI::getAltitude() - nav1_elev) * SG_FEET_TO_METER;
+	double y = (fgGetDouble("/position/altitude") - nav1_elev)
+            * SG_FEET_TO_METER;
 	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	return (nav1_target_gs - angle) * 5.0;
     } else {
@@ -1067,7 +1067,8 @@ double FGRadioStack::get_nav1_gs_needle_deflection() const {
 double FGRadioStack::get_nav2_gs_needle_deflection() const {
     if ( nav2_inrange && nav2_has_gs ) {
 	double x = nav2_gs_dist;
-	double y = (FGBFI::getAltitude() - nav2_elev) * SG_FEET_TO_METER;
+	double y = (fgGetDouble("/position/altitude") - nav2_elev)
+            * SG_FEET_TO_METER;
 	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	return (nav2_target_gs - angle) * 5.0;
     } else {
