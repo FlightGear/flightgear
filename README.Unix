@@ -5,6 +5,23 @@ specific question, please send the question to curt@me.umn.edu and
 suggest that I include the answer here.
 
 
+Compilers and Portability
+=========================
+
+Flight Gear is known to build with egcs-1.1 and higher, as well as
+gcc-2.8 and higher.  Your mileage may vary with earlier versions of
+these compilers although support for gcc-2.7.x is mostly there.
+
+For other platforms where you may have access to native compilers,
+again your mileage may vary.  We would like to support as many
+different compilers and platforms as possible.  Please relay any
+changes you make (or problems you encounter) back to
+curt@flightgear.org, so that in the future we can better support your
+platform and your compiler.  I have access to a few different
+platforms, but I must depend on others to make sure their favorite
+platform and compiler is well supported.
+
+
 GLUT
 ====
 
