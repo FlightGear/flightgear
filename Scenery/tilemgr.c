@@ -202,6 +202,8 @@ void fgTileMgrRender( void ) {
     index = fgTileCacheExists(&p);
     fgTileCacheEntryInfo(index, &display_list, &scenery.center );
 
+    printf("Current bucket = %d %d %d %d\n", p.lon, p.lat, p.x, p.y );
+
     for ( i = 0; i < FG_LOCAL_X_Y; i++ ) {
 	index = tiles[i];
 	/* fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index); */
@@ -222,9 +224,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.14  1998/02/09 21:30:19  curt
-/* Fixed a nagging problem with terrain tiles not "quite" matching up perfectly.
+/* Revision 1.15  1998/02/11 02:50:44  curt
+/* Minor changes.
 /*
+ * Revision 1.14  1998/02/09 21:30:19  curt
+ * Fixed a nagging problem with terrain tiles not "quite" matching up perfectly.
+ *
  * Revision 1.13  1998/02/07 15:29:46  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

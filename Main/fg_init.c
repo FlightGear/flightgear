@@ -181,10 +181,10 @@ void fgInitSubsystems( void ) {
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
 
     /* Initial Position: (GCN) Grand Canyon Airport, AZ */
-    /* FG_Longitude = ( -112.1469647 ) * DEG_TO_RAD; */
-    /* FG_Latitude  = (   35.9523539 ) * DEG_TO_RAD; */
-    /* FG_Runway_altitude = 6606.0; */
-    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+    FG_Longitude = ( -112.1469647 ) * DEG_TO_RAD;
+    FG_Latitude  = (   35.9523539 ) * DEG_TO_RAD;
+    FG_Runway_altitude = 6606.0;
+    FG_Altitude = FG_Runway_altitude + 3.758099;
 
     /* A random test position */
     /* FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD; */
@@ -334,9 +334,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.42  1998/02/09 22:56:58  curt
-/* Removed "depend" files from cvs control.  Other minor make tweaks.
+/* Revision 1.43  1998/02/11 02:50:40  curt
+/* Minor changes.
 /*
+ * Revision 1.42  1998/02/09 22:56:58  curt
+ * Removed "depend" files from cvs control.  Other minor make tweaks.
+ *
  * Revision 1.41  1998/02/09 15:07:50  curt
  * Minor tweaks.
  *

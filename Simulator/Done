@@ -2,6 +2,12 @@
 | Done
 --------------------------------------------------------------------------
 
+2/9/98 -   Fixed a problem with terrain tiles not quite matching up perfectly.
+
+2/2/98 -   Fix warning when compiling with c++ ... also successfully built 
+           with cygnus-g++.  There should be nothing holding us back from 
+           using C++.
+
 1/30/98 -  remove Scenery/geometry.c and Scenery/mesh.c
    
 1/28/98 -  Dynamic unloading of scenery.

@@ -4,9 +4,6 @@
 
 12/29/97 - View frustum culling
 
-1/21/98 -  Fix warning when compiling with c++ ... still can't build
-           with cygnus-g++
-
 1/5/98 -   Create a development "roadmap"
 
 12/30/97 - fix winding problem with tri-strips in obj.c (invert normals)

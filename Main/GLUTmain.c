@@ -490,14 +490,17 @@ static void fgMainLoop( void ) {
 
     /* Calculate model iterations needed */
     elapsed = fgGetTimeInterval();
-    fgPrintf( FG_ALL, FG_BULK, "Time interval is = %d, previous remainder is = %d\n", 
+    fgPrintf( FG_ALL, FG_BULK, 
+	      "Time interval is = %d, previous remainder is = %d\n", 
 	      elapsed, remainder);
-    fgPrintf( FG_ALL, FG_BULK, "--> Frame rate is = %.2f\n", 1000.0 / (float)elapsed);
+    fgPrintf( FG_ALL, FG_BULK, 
+	      "--> Frame rate is = %.2f\n", 1000.0 / (float)elapsed);
     elapsed += remainder;
 
-    multi_loop = ((float)elapsed * 0.001) * DEFAULT_MODEL_HZ;
+    multi_loop = (int)(((float)elapsed * 0.001) * DEFAULT_MODEL_HZ);
     remainder = elapsed - ((multi_loop*1000) / DEFAULT_MODEL_HZ);
-    fgPrintf( FG_ALL, FG_BULK, "Model iterations needed = %d, new remainder = %d\n", 
+    fgPrintf( FG_ALL, FG_BULK, 
+	      "Model iterations needed = %d, new remainder = %d\n", 
 	      multi_loop, remainder);
 
     /* Run flight model */
@@ -647,9 +650,12 @@ int main( int argc, char *argv[] ) {
 #endif
 
 /* $Log$
-/* Revision 1.59  1998/02/09 22:56:54  curt
-/* Removed "depend" files from cvs control.  Other minor make tweaks.
+/* Revision 1.60  1998/02/11 02:50:40  curt
+/* Minor changes.
 /*
+ * Revision 1.59  1998/02/09 22:56:54  curt
+ * Removed "depend" files from cvs control.  Other minor make tweaks.
+ *
  * Revision 1.58  1998/02/09 15:07:49  curt
  * Minor tweaks.
  *
