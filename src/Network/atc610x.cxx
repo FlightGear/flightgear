@@ -1840,7 +1840,7 @@ bool FGATC610x::do_switches() {
     fuel1 = fuel;
     if ( fuel1 == fuel2 && fuel2 == fuel3 ) {
         fgSetBool( "/controls/fuel/tank[0]/fuel-selector", (fuel & 0x01) > 0 );
-        fgSetBool( "/controls/fuel/tabk[1]/fuel-selector", (fuel & 0x02) > 0 );
+        fgSetBool( "/controls/fuel/tank[1]/fuel-selector", (fuel & 0x02) > 0 );
     }
 
     // circuit breakers
