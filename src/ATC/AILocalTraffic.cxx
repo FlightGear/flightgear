@@ -38,6 +38,7 @@ during descent to avoid occasionally landing short or long.
 
 #include <Airports/runways.hxx>
 #include <Main/globals.hxx>
+#include <Main/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <simgear/math/point3d.hxx>
@@ -1511,17 +1512,24 @@ void FGAILocalTraffic::Taxi(double dt) {
 // Either this function or the logic of how often it is called
 // will almost certainly change.
 void FGAILocalTraffic::DoGroundElev() {
-
 	// It would be nice if we could set the correct tile center here in order to get a correct
 	// answer with one call to the function, but what I tried in the two commented-out lines
 	// below only intermittently worked, and I haven't quite groked why yet.
 	//SGBucket buck(pos.lon(), pos.lat());
 	//aip.getSGLocation()->set_tile_center(Point3D(buck.get_center_lon(), buck.get_center_lat(), 0.0));
 	
+	// Only do the proper hitlist stuff if we are within visible range of the viewer.
 	double visibility_meters = fgGetDouble("/environment/visibility-m");
+	FGViewer* vw = globals->get_current_view();
+	if(dclGetHorizontalSeparation(_pos, Point3D(vw->getLongitude_deg(), vw->getLatitude_deg(), 0.0)) > visibility_meters) {
+		_aip.getSGLocation()->set_cur_elev_m(aptElev);
+		return;
+	}
+	
+	
 	//globals->get_tile_mgr()->prep_ssg_nodes( acmodel_location,
 	globals->get_tile_mgr()->prep_ssg_nodes( _aip.getSGLocation(),	visibility_meters );
-        Point3D scenery_center = globals->get_scenery()->get_center();
+	Point3D scenery_center = globals->get_scenery()->get_center();
 	globals->get_tile_mgr()->update( _aip.getSGLocation(), visibility_meters, (_aip.getSGLocation())->get_absolute_view_pos( scenery_center ) );
 	// save results of update in SGLocation for fdm...
 	
