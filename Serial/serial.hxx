@@ -30,8 +30,17 @@
 # error This library requires C++
 #endif
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
+#include "Include/compiler.h"
 #include <string>
+FG_USING_STD(string);
+
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined( __CYGWIN32__ )
+#  include <windows.h>
+#endif
 
 // if someone know how to do this all with C++ streams let me know
 // #include <stdio.h>
@@ -39,10 +48,15 @@
 
 class fgSERIAL
 {
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined( __CYGWIN32__ )
+    typedef HANDLE fd_type;
+#else
+    typedef int fd_type;
+#endif
 
 private:
 
-    int fd;
+    fd_type fd;
     bool dev_open;
 
 public:
@@ -66,6 +80,22 @@ public:
 
 
 // $Log$
+// Revision 1.3  1999/02/02 20:13:24  curt
+// MSVC++ portability changes by Bernie Bright:
+//
+// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
+// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
+// Simulator/Cockpit/hud.cxx: Added Standard headers
+// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
+// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
+// Simulator/Main/fg_init.cxx:
+// Simulator/Main/GLUTmain.cxx:
+// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
+// Simulator/Objects/material.hxx:
+// Simulator/Time/timestamp.hxx: VC++ friend kludge
+// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
+// Simulator/Main/views.hxx: Added a constant
+//
 // Revision 1.2  1998/11/30 17:15:30  curt
 // Having the class destructor close the fd was a bad idea ... especially if you
 // ever make a copy of the instance and then subsequently destroy either.

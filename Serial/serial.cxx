@@ -22,20 +22,36 @@
 // (Log is kept at end of this file)
 
 
-#include <errno.h>
-#include <termios.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include "Include/compiler.h"
+#ifdef FG_HAVE_STD_INCLUDE
+#  include <cerrno>
+#else
+#  include <errno.h>
+#endif
+
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined( __CYGWIN32__ )
+  // maybe include something???
+#else
+#  include <termios.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
+#  include <fcntl.h>
+#  include <unistd.h>
+#endif
 
 #include <Debug/logstream.hxx>
 
 #include "serial.hxx"
 
 
-fgSERIAL::fgSERIAL() {
-    dev_open = false;
+fgSERIAL::fgSERIAL()
+    : dev_open(false)
+{
+    // empty
 }
 
 fgSERIAL::fgSERIAL(const string& device, int baud) {
@@ -50,11 +66,44 @@ fgSERIAL::~fgSERIAL() {
     // closing the port here screws us up because if we would even so
     // much as make a copy of an fgSERIAL object and then delete it,
     // the file descriptor gets closed.  Doh!!!
-
-    // close(fd);
 }
 
 bool fgSERIAL::open_port(const string& device) {
+
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined( __CYGWIN32__ )
+
+    fd = CreateFile( device.c_str(),
+        GENERIC_READ | GENERIC_WRITE,
+        0, // dwShareMode
+        NULL, // lpSecurityAttributes
+        OPEN_EXISTING,
+        FILE_FLAG_OVERLAPPED,
+        NULL );
+    if ( fd == INVALID_HANDLE_VALUE )
+    {
+        LPVOID lpMsgBuf;
+        FormatMessage(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+            FORMAT_MESSAGE_FROM_SYSTEM | 
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+            NULL,
+            GetLastError(),
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+            (LPTSTR) &lpMsgBuf,
+            0,
+            NULL );
+
+        FG_LOG( FG_SERIAL, FG_ALERT, "Error opening serial device \"" 
+            << device << "\" " << (const char*) lpMsgBuf );
+        LocalFree( lpMsgBuf );
+        return false;
+    }
+
+    dev_open = true;
+    return true;
+
+#else
+
     struct termios config;
 
     fd = open(device.c_str(), O_RDWR | O_NONBLOCK);
@@ -97,16 +146,29 @@ bool fgSERIAL::open_port(const string& device) {
     }
 
     return true;
+#endif
 }
 
 
 bool fgSERIAL::close_port() {
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined( __CYGWIN32__ )
+    CloseHandle( fd );
+#else
     close(fd);
+#endif
+
     return true;
 }
 
 
 bool fgSERIAL::set_baud(int baud) {
+
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined( __CYGWIN32__ )
+
+    return true;
+
+#else
+
     struct termios config;
     speed_t speed = B9600;
 
@@ -158,9 +220,20 @@ bool fgSERIAL::set_baud(int baud) {
     }
 
     return true;
+
+#endif
+
 }
 
 string fgSERIAL::read_port() {
+
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined( __CYGWIN32__ )
+
+    string result = "";
+    return result;
+
+#else
+
     const int max_count = 1024;
     char buffer[max_count+1];
     int count;
@@ -183,9 +256,48 @@ string fgSERIAL::read_port() {
 
 	return result;
     }
+
+#endif
+
 }
 
 int fgSERIAL::write_port(const string& value) {
+
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined( __CYGWIN32__ )
+
+    LPCVOID lpBuffer = value.c_str();
+    DWORD nNumberOfBytesToWrite = value.length();
+    DWORD lpNumberOfBytesWritten;
+    OVERLAPPED lpOverlapped;
+
+    if ( WriteFile( fd,
+        lpBuffer,
+        nNumberOfBytesToWrite,
+        &lpNumberOfBytesWritten,
+        &lpOverlapped ) == 0 )
+    {
+        LPVOID lpMsgBuf;
+        FormatMessage(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+            FORMAT_MESSAGE_FROM_SYSTEM | 
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+            NULL,
+            GetLastError(),
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+            (LPTSTR) &lpMsgBuf,
+            0,
+            NULL );
+
+        FG_LOG( FG_SERIAL, FG_ALERT, "Serial I/O write error: " 
+             << (const char*) lpMsgBuf );
+        LocalFree( lpMsgBuf );
+        return int(lpNumberOfBytesWritten);
+    }
+
+    return int(lpNumberOfBytesWritten);
+
+#else
+
     static bool error = false;
     int count;
 
@@ -217,10 +329,29 @@ int fgSERIAL::write_port(const string& value) {
     }
 
     return count;
+
+#endif
+
 }
 
 
 // $Log$
+// Revision 1.9  1999/02/02 20:13:23  curt
+// MSVC++ portability changes by Bernie Bright:
+//
+// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
+// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
+// Simulator/Cockpit/hud.cxx: Added Standard headers
+// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
+// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
+// Simulator/Main/fg_init.cxx:
+// Simulator/Main/GLUTmain.cxx:
+// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
+// Simulator/Objects/material.hxx:
+// Simulator/Time/timestamp.hxx: VC++ friend kludge
+// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
+// Simulator/Main/views.hxx: Added a constant
+//
 // Revision 1.8  1999/01/20 13:42:21  curt
 // Tweaked FDM interface.
 // Testing check sum support for NMEA serial output.
