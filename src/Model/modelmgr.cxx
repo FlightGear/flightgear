@@ -42,7 +42,7 @@ FGModelMgr::init ()
 				// or directly with static values.
     SGPropertyNode * child = node->getChild("longitude-deg-prop");
     if (child != 0)
-      instance->lon_deg_node = child;
+      instance->lon_deg_node = fgGetNode(child->getStringValue(), true);
     else
       model->setLongitudeDeg(node->getDoubleValue("longitude-deg"));
 
@@ -101,8 +101,6 @@ FGModelMgr::update (int dt)
     Instance * instance = _instances[i];
     FG3DModel * model = instance->model;
 
-    instance->model->update(dt);
-
 				// Optionally set position from properties
     if (instance->lon_deg_node != 0)
       model->setLongitudeDeg(instance->lon_deg_node->getDoubleValue());
@@ -119,6 +117,7 @@ FGModelMgr::update (int dt)
     if (instance->heading_deg_node != 0)
       model->setHeadingDeg(instance->heading_deg_node->getDoubleValue());
 
+    instance->model->update(dt);
   }
 }
 
