@@ -319,10 +319,11 @@ private:
   FGMatrix33 mTb2s;
   FGColumnVector4 vQtrn;
   FGColumnVector4 vlastQdot;
+  FGColumnVector4 vQdot;
   FGColumnVector3 vUVW;
   FGColumnVector3 vLocalVelNED;
   FGColumnVector3 vLocalEuler;
-  FGColumnVector4 vQdot;
+  
   FGColumnVector4 vTmp;
   FGColumnVector3 vEuler;
 

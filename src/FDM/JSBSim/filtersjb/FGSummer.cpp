@@ -93,7 +93,7 @@ FGSummer::FGSummer(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
   if (debug_lvl > 0) {
     cout << "      ID: " << ID << endl;
     cout << "      INPUTS: " << endl;
-    for (int i=0;i<InputIndices.size();i++) {
+    for (unsigned i=0;i<InputIndices.size();i++) {
       cout << "        " << InputIndices[i] << endl;
     }
     if (clipmax > clipmin) cout << "      CLIPTO: " << clipmin 

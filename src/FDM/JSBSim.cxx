@@ -54,6 +54,7 @@
 #include <FDM/JSBSim/FGAtmosphere.h>
 #include <FDM/JSBSim/FGMassBalance.h>
 #include <FDM/JSBSim/FGAerodynamics.h>
+#include <FDM/JSBSim/FGLGear.h>
 #include "JSBSim.hxx"
 
 /******************************************************************************/
@@ -218,6 +219,9 @@ void FGJSBsim::init() {
 
     SG_LOG( SG_FLIGHT, SG_INFO, "Finished initializing JSBSim" );
     
+    SG_LOG( SG_FLIGHT, SG_INFO, "FGControls::get_gear_down()= " << 
+                                  globals->get_controls()->get_gear_down() );
+    
 
    
 }
@@ -264,20 +268,20 @@ bool FGJSBsim::update( int multiloop ) {
       msg = fdmex->ProcessMessage();
       switch (msg->type) {
       case FGJSBBase::Message::eText:
-        cout << msg->messageId << ": " << msg->text << endl;
+        SG_LOG( SG_FLIGHT, SG_INFO, msg->messageId << ": " << msg->text );
         break;
       case FGJSBBase::Message::eBool:
-        cout << msg->messageId << ": " << msg->text << " " << msg->bVal << endl;
+        SG_LOG( SG_FLIGHT, SG_INFO, msg->messageId << ": " << msg->text << " " << msg->bVal );
         break;
       case FGJSBBase::Message::eInteger:
-        cout << msg->messageId << ": " << msg->text << " " << msg->iVal << endl;
+        SG_LOG( SG_FLIGHT, SG_INFO, msg->messageId << ": " << msg->text << " " << msg->iVal );
         break;
       case FGJSBBase::Message::eDouble:
-        cout << msg->messageId << ": " << msg->text << " " << msg->dVal << endl;
+        SG_LOG( SG_FLIGHT, SG_INFO, msg->messageId << ": " << msg->text << " " << msg->dVal );
         break;
       default:
-        cerr << "Unrecognized message type." << endl;
-              break;
+        SG_LOG( SG_FLIGHT, SG_INFO, "Unrecognized message type." );
+        break;
       }
     }
 
@@ -322,9 +326,11 @@ bool FGJSBsim::copy_to_JSBsim() {
     FCS->SetLBrake( globals->get_controls()->get_brake( 0 ) );
     FCS->SetRBrake( globals->get_controls()->get_brake( 1 ) );
     FCS->SetCBrake( globals->get_controls()->get_brake( 2 ) );
+    FCS->SetGearCmd( globals->get_controls()->get_gear_down());
     for (int i = 0; i < get_num_engines(); i++) {
       FCS->SetThrottleCmd(i, globals->get_controls()->get_throttle(i));
       FCS->SetMixtureCmd(i, globals->get_controls()->get_mixture(i));
+      FCS->SetPropPitchCmd(i, globals->get_controls()->get_prop_advance(i));
     }
 
     Position->SetSeaLevelRadius( get_Sea_level_radius() );
@@ -644,9 +650,11 @@ void FGJSBsim::init_gear(void ) {
       if ( gr->GetGearUnit(i)->GetBrakeGroup() > 0 ) {
         gear->SetBrake(true);
       }
-      if ( gr->GetGearUp() ) {
-        gear->SetPosition( 0.0 );
-      }    
+      if ( gr->GetGearUnit(i)->GetRetractable() ) {
+        gear->SetPosition( FCS->GetGearPos() );
+      } else {
+        gear->SetPosition( 1.0 );
+      }  
     }  
 }
 
@@ -658,9 +666,9 @@ void FGJSBsim::update_gear(void) {
     for (int i=0;i<Ngear;i++) {
       gear=get_gear_unit(i);
       gear->SetWoW( gr->GetGearUnit(i)->GetWOW() );
-      if ( gr->GetGearUp() ) {
-        gear->SetPosition( 0.0 );
-      }    
+      if ( gr->GetGearUnit(i)->GetRetractable() ) {
+        gear->SetPosition( FCS->GetGearPos() );
+      }   
     }  
 }
 

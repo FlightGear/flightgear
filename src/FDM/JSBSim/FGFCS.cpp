@@ -54,7 +54,7 @@ INCLUDES
 #include "filtersjb/FGGradient.h"
 #include "filtersjb/FGSwitch.h"
 #include "filtersjb/FGSummer.h"
-#include "filtersjb/FGFlaps.h"
+#include "filtersjb/FGKinemat.h"
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FCS;
@@ -69,6 +69,7 @@ FGFCS::FGFCS(FGFDMExec* fdmex) : FGModel(fdmex)
 
   DaCmd = DeCmd = DrCmd = DfCmd = DsbCmd = DspCmd = PTrimCmd = 0.0;
   DaPos = DePos = DrPos = DfPos = DsbPos = DspPos = 0.0;
+  GearCmd = GearPos = 1; // default to gear down
   LeftBrake = RightBrake = CenterBrake = 0.0;
 
   if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
@@ -82,6 +83,8 @@ FGFCS::~FGFCS()
   ThrottlePos.clear();
   MixtureCmd.clear();
   MixturePos.clear();
+  PropPitchCmd.clear();
+  PropPitchPos.clear();
 
   unsigned int i;
 
@@ -98,6 +101,7 @@ bool FGFCS::Run(void)
   if (!FGModel::Run()) {
     for (i=0; i<ThrottlePos.size(); i++) ThrottlePos[i] = ThrottleCmd[i];
     for (i=0; i<MixturePos.size(); i++) MixturePos[i] = MixtureCmd[i];
+    for (i=0; i<PropPitchPos.size(); i++) PropPitchPos[i] = PropPitchCmd[i];
     for (i=0; i<Components.size(); i++)  Components[i]->Run();
   } else {
   }
@@ -158,6 +162,7 @@ double FGFCS::GetThrottleCmd(int engineNum)
          << " engines exist, but throttle setting for engine " << engineNum
 	       << " is selected" << endl;
   }
+  return 0.0;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -175,6 +180,7 @@ double FGFCS::GetThrottlePos(int engineNum)
          << " engines exist, but attempted throttle position setting is for engine "
          << engineNum << endl;
   }
+  return 0.0; 
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -203,6 +209,36 @@ void FGFCS::SetMixturePos(int engineNum, double setting)
       for (ctr=0;ctr<=MixtureCmd.size();ctr++) MixturePos[ctr] = MixtureCmd[ctr];
     } else {
       MixturePos[engineNum] = setting;
+    }
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFCS::SetPropPitchCmd(int engineNum, double setting)
+{
+  unsigned int ctr;
+
+  if (engineNum < (int)ThrottlePos.size()) {
+    if (engineNum < 0) {
+      for (ctr=0;ctr<PropPitchCmd.size();ctr++) PropPitchCmd[ctr] = setting;
+    } else {
+      PropPitchCmd[engineNum] = setting;
+    }
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFCS::SetPropPitchPos(int engineNum, double setting)
+{
+  unsigned int ctr;
+
+  if (engineNum < (int)ThrottlePos.size()) {
+    if (engineNum < 0) {
+      for (ctr=0;ctr<=PropPitchCmd.size();ctr++) PropPitchPos[ctr] = PropPitchCmd[ctr];
+    } else {
+      PropPitchPos[engineNum] = setting;
     }
   }
 }
@@ -242,8 +278,8 @@ bool FGFCS::Load(FGConfigFile* AC_cfg)
         Components.push_back(new FGGradient(this, AC_cfg));
       } else if (token == "SWITCH") {
         Components.push_back(new FGSwitch(this, AC_cfg));
-      } else if (token == "FLAPS") {
-        Components.push_back(new FGFlaps(this, AC_cfg));
+      } else if (token == "KINEMAT") {
+        Components.push_back(new FGKinemat(this, AC_cfg));
       } else {
         cerr << "Unknown token [" << token << "] in FCS portion of config file" << endl;
         return false;
@@ -330,6 +366,8 @@ void FGFCS::AddThrottle(void)
   ThrottlePos.push_back(0.0);
   MixtureCmd.push_back(0.0);	// assume throttle and mixture are coupled
   MixturePos.push_back(0.0);
+  PropPitchCmd.push_back(0.0);	// assume throttle and prop pitch are coupled
+  PropPitchPos.push_back(0.0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

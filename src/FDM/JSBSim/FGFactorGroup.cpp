@@ -77,7 +77,7 @@ FGFactorGroup::FGFactorGroup( FGFDMExec* fdmex ) : FGCoefficient( fdmex)
                           
 FGFactorGroup::~FGFactorGroup()
 {
-  int i;
+  unsigned i;
   for (i=0; i<sum.size(); i++) {
     delete sum[i];
   }
@@ -115,7 +115,7 @@ bool FGFactorGroup::Load(FGConfigFile *AC_cfg) {
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 double FGFactorGroup::TotalValue(void) {
-  int i;
+  unsigned i;
   double totalsum=0;
   SDtotal=0.0;
   for(i=0;i<sum.size();i++) {

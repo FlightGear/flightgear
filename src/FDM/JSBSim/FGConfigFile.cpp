@@ -60,7 +60,7 @@ FGConfigFile::~FGConfigFile()
 
 string FGConfigFile::GetNextConfigLine(void)
 {
-  int deblank, not_found = string::npos;
+  
   int comment_starts_at;
   int comment_ends_at;
   int comment_length;

@@ -287,10 +287,11 @@ public:
   FGMatrix33 Transform(void);
 
 protected:
+  FGFDMExec *fdmex;
   FGColumnVector3 vFn;
   FGColumnVector3 vMn;
   FGColumnVector3 vH;
-  FGFDMExec *fdmex;
+  
   virtual void Debug(void);
 
 private:

@@ -147,7 +147,7 @@ class FGTrim : public FGJSBBase
 private:
 
   vector<FGTrimAxis*> TrimAxes;
-  int current_axis;
+  unsigned int current_axis;
   int N, Nsub;
   TrimMode mode;
   int DebugLevel, Debug;
@@ -163,7 +163,7 @@ private:
   bool trimudot;
   bool gamma_fallback;
   bool trim_failed;
-  int axis_count;
+  unsigned int axis_count;
   int solutionDomain;
   double xlo,xhi,alo,ahi;
   double targetNlf;

@@ -203,9 +203,19 @@ public:
       @return mixture command in percent ( 0 - 100) for the given engine */
   inline double GetMixtureCmd(int engine) { return MixtureCmd[engine]; }
 
+  /** Gets the prop pitch command.
+      @param engine engine ID number
+      @return pitch command in percent ( 0.0 - 1.0) for the given engine */
+  inline double GetPropPitchCmd(int engine) { return PropPitchCmd[engine]; }
+
   /** Gets the pitch trim command.
       @return pitch trim command in radians */
   inline double GetPitchTrimCmd(void) { return PTrimCmd; }
+  
+  /** Get the gear extend/retract command. 0 commands gear up, 1 down.
+      defaults to down.
+      @return the current value of the gear extend/retract command*/
+  inline double GetGearCmd(void) { return GearCmd; }    
   //@}
 
   /// @name Aerosurface position retrieval
@@ -243,6 +253,15 @@ public:
       @param engine engine ID number
       @return mixture position for the given engine in percent ( 0 - 100)*/
   inline double GetMixturePos(int engine) { return MixturePos[engine]; }
+  
+  /** Gets the gear position (0 up, 1 down), defaults to down
+      @return gear position (0 up, 1 down) */
+  inline double GetGearPos(void) { return GearPos; }    
+
+  /** Gets the prop pitch position.
+      @param engine engine ID number
+      @return prop pitch position for the given engine in percent ( 0.0-1.0)*/
+  inline double GetPropPitchPos(int engine) { return PropPitchPos[engine]; }
   //@}
 
   /** Retrieves the State object pointer.
@@ -305,6 +324,15 @@ public:
       @param engine engine ID number
       @param cmd mixture command in percent (0 - 100)*/
   void SetMixtureCmd(int engine, double cmd);
+  
+  /** Set the gear extend/retract command, defaults to down
+      @param gear command 0 for up, 1 for down */
+   void SetGearCmd(double gearcmd) { GearCmd = gearcmd; }   
+
+  /** Sets the propeller pitch command for the specified engine
+      @param engine engine ID number
+      @param cmd mixture command in percent (0.0 - 1.0)*/
+  void SetPropPitchCmd(int engine, double cmd);
   //@}
 
   /// @name Aerosurface position setting
@@ -342,6 +370,16 @@ public:
       @param engine engine ID number
       @param cmd mixture setting in percent (0 - 100)*/
   void SetMixturePos(int engine, double cmd);
+  
+  /** Set the gear extend/retract position, defaults to down
+      @param gear position 0 up, 1 down       */
+   void SetGearPos(double gearpos) { GearPos = gearpos; }   
+
+
+  /** Sets the actual prop pitch setting for the specified engine
+      @param engine engine ID number
+      @param cmd prop pitch setting in percent (0.0 - 1.0)*/
+  void SetPropPitchPos(int engine, double cmd);
   //@}
 
   /// @name Landing Gear brakes
@@ -382,7 +420,10 @@ private:
   vector <double> ThrottlePos;
   vector <double> MixtureCmd;
   vector <double> MixturePos;
+  vector <double> PropPitchCmd;
+  vector <double> PropPitchPos;
   double LeftBrake, RightBrake, CenterBrake; // Brake settings
+  double GearCmd,GearPos;
 
   vector <FGFCSComponent*> Components;
   void Debug(void);

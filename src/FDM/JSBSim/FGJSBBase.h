@@ -136,7 +136,9 @@ enum eParam {
   FG_HTAILAREA,
   FG_VTAILAREA,
   FG_VBARH,    //horizontal tail volume 
-  FG_VBARV     //vertical tail volume 
+  FG_VBARV,     //vertical tail volume 
+  FG_GEAR_CMD,
+  FG_GEAR_POS
 };
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

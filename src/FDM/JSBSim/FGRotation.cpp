@@ -77,12 +77,12 @@ CLASS IMPLEMENTATION
 
 FGRotation::FGRotation(FGFDMExec* fdmex) : FGModel(fdmex),
         vPQR(3),
+        vAeroPQR(3),
         vPQRdot(3),
         vMoments(3),
         vEuler(3),
         vEulerRates(3),
-        vlastPQRdot(3),
-        vAeroPQR(3)
+        vlastPQRdot(3)
 {
   Name = "FGRotation";
   cTht=cPhi=cPsi=1.0;

@@ -48,8 +48,8 @@ CLASS IMPLEMENTATION
 
 
 FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex),
-    vForces(3),
     vOmegaLocal(3),
+    vForces(3),
     vRadius(3),
     vGravity(3)
 {

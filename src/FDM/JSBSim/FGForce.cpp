@@ -54,17 +54,18 @@ static const char *IdHdr = ID_FORCE;
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGForce::FGForce(FGFDMExec *FDMExec) :
+    ttype(tNone),
+    fdmex(FDMExec),
     vFn(3),
     vMn(3),
-    fdmex(FDMExec),
+    vH(3),
     vFb(3),
     vM(3),
     vXYZn(3),
     vDXYZ(3),
-    mT(3,3),
-    vH(3),
     vSense(3),
-    ttype(tNone)
+    mT(3,3)
+    
 {
   mT(1,1) = 1; //identity matrix
   mT(2,2) = 1;

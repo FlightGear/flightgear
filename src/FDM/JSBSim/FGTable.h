@@ -102,8 +102,8 @@ private:
   enum type {tt1D, tt2D} Type;
   double** Data;
   int nRows, nCols;
-  unsigned int colCounter;
-  unsigned int rowCounter;
+  int colCounter;
+  int rowCounter;
   double** Allocate(void);
   void Debug(void);
 };

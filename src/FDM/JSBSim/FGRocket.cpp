@@ -99,7 +99,7 @@ FGRocket::~FGRocket()
 
 double FGRocket::Calculate(double pe)
 {
-  double Cf;
+  double Cf=0;
 
   ConsumeFuel();
 

@@ -231,7 +231,11 @@ public:
   
   inline int GetBrakeGroup(void) { return (int)eBrakeGrp; }
   inline int GetSteerType(void)  { return (int)eSteerType; }
-
+  
+  inline bool GetRetractable(void)  { return isRetractable; }
+  inline bool GetGearUnitUp(void)   { return GearUp; }
+  inline bool GetGearUnitDown(void) { return GearDown; }
+  
 private:
   FGColumnVector3 vXYZ;
   FGColumnVector3 vMoment;
@@ -259,9 +263,12 @@ private:
   bool FirstContact;
   bool Reported;
   bool ReportEnable;
+  bool isRetractable;
+  bool GearUp, GearDown;
   string name;
   string sSteerType;
   string sBrakeGroup;
+  
   BrakeGroup eBrakeGrp;
   SteerType  eSteerType;
   double  maxSteerAngle;

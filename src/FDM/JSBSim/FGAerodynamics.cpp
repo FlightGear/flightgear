@@ -49,9 +49,9 @@ CLASS IMPLEMENTATION
 
 
 FGAerodynamics::FGAerodynamics(FGFDMExec* FDMExec) : FGModel(FDMExec),
-    vMoments(3),
-    vForces(3),
     vFs(3),
+    vForces(3),
+    vMoments(3),
     vLastFs(3),
     vDXYZcg(3)
 {
@@ -182,7 +182,6 @@ string FGAerodynamics::GetCoefficientStrings(void)
 string FGAerodynamics::GetCoefficientValues(void)
 {
   string SDValues = "";
-  char buffer[10];
   bool firstime = true;
 
   for (unsigned int axis = 0; axis < 6; axis++) {
@@ -203,8 +202,6 @@ string FGAerodynamics::GetCoefficientValues(void)
 
 double FGAerodynamics::GetLoD(void)
 {
-  double LoD;
-
   if (vFs(1) != 0.00) return vFs(3)/vFs(1);
   else                return 0.00;
 }

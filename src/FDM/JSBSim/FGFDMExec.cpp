@@ -415,7 +415,7 @@ bool FGFDMExec::LoadScript(string script)
   string initialize="";
   bool result=false;
   double dt=0.0;
-  int i;
+  unsigned i;
   struct condition *newCondition;
 
   if (!Script.IsOpen()) return false;
@@ -594,14 +594,12 @@ bool FGFDMExec::LoadScript(string script)
 void FGFDMExec::RunScript(void)
 {
   vector <struct condition>::iterator iC = Conditions.begin();
-  bool truth;
-  bool WholeTruth;
-  int i;
-
-  int count=0;
+  bool truth = false;
+  bool WholeTruth = false;
+  unsigned i;
 
   double currentTime = State->Getsim_time();
-  double newSetValue;
+  double newSetValue = 0;
 
   while (iC < Conditions.end()) {
     // determine whether the set of conditional tests for this condition equate
