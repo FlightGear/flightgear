@@ -36,7 +36,11 @@
 #include <sys/stat.h> // stat()
 #include <unistd.h>   // stat()
 
-#include <zlib/zlib.h>
+#include <string>
+
+// #include <zlib/zlib.h>
+#include <Misc/fgstream.hxx>
+#include <Misc/strutils.hxx>
 
 #include "dem.hxx"
 #include "leastsqs.hxx"
@@ -61,7 +65,7 @@ fgDEM::fgDEM( void ) {
 #ifdef WIN32
 
 // return the file path name ( foo/bar/file.ext = foo/bar )
-void extract_path (char *in, char *base) {
+static void extract_path (char *in, char *base) {
     int len, i;
     
     len = strlen (in);
@@ -77,7 +81,7 @@ void extract_path (char *in, char *base) {
 
 
 // Make a subdirectory
-int my_mkdir (char *dir) {
+static int my_mkdir (char *dir) {
     struct stat stat_buf;
     int result;
 
@@ -104,89 +108,81 @@ int my_mkdir (char *dir) {
 
 
 // open a DEM file
-int fgDEM::open ( char *file ) {
+int fgDEM::open ( const string& file ) {
     // open input file (or read from stdin)
-    if ( strcmp(file, "-") == 0 ) {
+    if ( file ==  "-" ) {
 	printf("Loading DEM data file: stdin\n");
 	// fd = stdin;
-	fd = gzdopen(STDIN_FILENO, "r");
+	// fd = gzdopen(STDIN_FILENO, "r");
+	printf("Not yet ported ...\n");
+	return 0;
     } else {
-	if ( (fd = gzopen(file, "rb")) == NULL ) {
-	    printf("Cannot gzopen %s\n", file);
-	    return(0);
+	in = new fg_gzifstream( file );
+	if ( !in ) {
+	    cout << "Cannot open " + file + "\n";
+	    return 0;
 	}
-	printf("Loading DEM data file: %s\n", file);
+	cout << "Loading DEM data file: " + file + "\n";
     }
 
-    return(1);
+    return 1;
 }
 
 
 // close a DEM file
-int fgDEM::close ( void ) {
-    gzclose(fd);
+int fgDEM::close () {
+    // the fg_gzifstream doesn't seem to have a close()
 
-    return(1);
+    delete(in);
+
+    return 1;
 }
 
 
 // return next token from input stream
-static void next_token(gzFile fd, char *token) {
-    int i, result;
-    char c;
+string fgDEM::next_token() {
+    string token;
 
-    i = 0;
-    c = gzgetc(fd);
-    // skip past spaces
-    while ( (c != -1) && (c == ' ') ) {
-	c = gzgetc(fd);
-    }
-    while ( (c != -1) && (c != ' ') && (c != '\n') ){
-	token[i] = c;
-	i++;
-	c = gzgetc(fd);
-    }
-    token[i] = '\0';
+    in->stream() >> token;
 
-    if ( c == -1 ) {
-	strcpy(token, "__END_OF_FILE__");
-	printf("    Warning:  Reached end of file!\n");
-    }
+    cout << "    returning " + token + "\n";
 
-    // printf("    returning %s\n", token);
+    return token;
 }
 
 
 // return next integer from input stream
-static int next_int(gzFile fd) {
-    char token[80];
+int fgDEM::next_int() {
+    int result;
 
-    next_token(fd, token);
-    return ( atoi(token) );
+    in->stream() >> result;
+
+    return result;
 }
 
 
 // return next double from input stream
-static double next_double(gzFile fd) {
-    char token[80];
+double fgDEM::next_double() {
+    double result;
 
-    next_token(fd, token);
-    return ( atof(token) );
+    in->stream() >> result;
+
+    return result;
 }
 
 
 // return next exponential num from input stream
-static int next_exp(gzFile fd) {
-    char token[80];
+int fgDEM::next_exp() {
+    string token;
     double mantissa;
     int exp, acc;
     int i;
 
-    next_token(fd, token);
+    token = next_token();
 
-    sscanf(token, "%lfD%d", &mantissa, &exp);
+    sscanf(token.c_str(), "%lfD%d", &mantissa, &exp);
 
-    // printf("    Mantissa = %.4f  Exp = %d\n", mantissa, exp);
+    cout << "    Mantissa = " << mantissa << "  Exp = " << exp << "\n";
 
     acc = 1;
     if ( exp > 0 ) {
@@ -204,103 +200,97 @@ static int next_exp(gzFile fd) {
 
 
 // read and parse DEM "A" record
-int fgDEM::read_a_record( void ) {
+int fgDEM::read_a_record() {
     int i, inum;
     double dnum;
-    char name[256];
-    char token[80];
+    string name, token;
+    char c;
     char *ptr;
 
     // get the name field (144 characters)
     for ( i = 0; i < 144; i++ ) {
-	name[i] = gzgetc(fd);
+	in->get(c);
+	name += c;
     }
-    name[i+1] = '\0';
-
-    // clean off the whitespace at the end
-    for ( i = strlen(name)-2; i > 0; i-- ) {
-	if ( !isspace(name[i]) ) {
-	    i=0;
-	} else {
-	    name[i] = '\0'; 
-	}
-    }
-    printf("    Quad name field: %s\n", name);
+  
+    // clean off the trailing whitespace
+    name = trimleft(name);
+    cout << "    Quad name field: " + name + "\n";
 
     // DEM level code, 3 reflects processing by DMA
-    inum = next_int(fd);
-    printf("    DEM level code = %d\n", inum);
+    inum = next_int();
+    cout << "    DEM level code = " << inum << "\n";
 
     if ( inum > 3 ) {
-	return(0);
+	return 0;
     }
 
     // Pattern code, 1 indicates a regular elevation pattern
-    inum = next_int(fd);
-    printf("    Pattern code = %d\n", inum);
+    inum = next_int();
+    cout << "    Pattern code = " << inum << "\n";
 
     // Planimetric reference system code, 0 indicates geographic
     // coordinate system.
-    inum = next_int(fd);
-    printf("    Planimetric reference code = %d\n", inum);
+    inum = next_int();
+    cout << "    Planimetric reference code = " << inum << "\n";
 
     // Zone code
-    inum = next_int(fd);
-    printf("    Zone code = %d\n", inum);
+    inum = next_int();
+    cout << "    Zone code = " << inum << "\n";
 
     // Map projection parameters (ignored)
     for ( i = 0; i < 15; i++ ) {
-	dnum = next_double(fd);
+	dnum = next_double();
 	// printf("%d: %f\n",i,dnum);
     }
 
     // Units code, 3 represents arc-seconds as the unit of measure for
     // ground planimetric coordinates throughout the file.
-    inum = next_int(fd);
+    inum = next_int();
     if ( inum != 3 ) {
-	printf("    Unknown (X,Y) units code = %d!\n", inum);
+	cout << "    Unknown (X,Y) units code = " << inum << "!\n";
 	exit(-1);
     }
 
     // Units code; 2 represents meters as the unit of measure for
     // elevation coordinates throughout the file.
-    inum = next_int(fd);
+    inum = next_int();
     if ( inum != 2 ) {
-	printf("    Unknown (Z) units code = %d!\n", inum);
+	cout << "    Unknown (Z) units code = " << inum << "!\n";
 	exit(-1);
     }
 
     // Number (n) of sides in the polygon which defines the coverage of
     // the DEM file (usually equal to 4).
-    inum = next_int(fd);
+    inum = next_int();
     if ( inum != 4 ) {
-	printf("    Unknown polygon dimension = %d!\n", inum);
+	cout << "    Unknown polygon dimension = " << inum << "!\n";
 	exit(-1);
     }
 
     // Ground coordinates of bounding box in arc-seconds
-    dem_x1 = originx = next_exp(fd);
-    dem_y1 = originy = next_exp(fd);
-    printf("    Origin = (%.2f,%.2f)\n", originx, originy);
+    dem_x1 = originx = next_exp();
+    dem_y1 = originy = next_exp();
+    cout << "    Origin = (" << originx << "," << originy << ")\n";
 
-    dem_x2 = next_exp(fd);
-    dem_y2 = next_exp(fd);
+    dem_x2 = next_exp();
+    dem_y2 = next_exp();
 
-    dem_x3 = next_exp(fd);
-    dem_y3 = next_exp(fd);
+    dem_x3 = next_exp();
+    dem_y3 = next_exp();
 
-    dem_x4 = next_exp(fd);
-    dem_y4 = next_exp(fd);
+    dem_x4 = next_exp();
+    dem_y4 = next_exp();
 
     // Minimum/maximum elevations in meters
-    dem_z1 = next_exp(fd);
-    dem_z2 = next_exp(fd);
-    printf("    Elevation range %.4f %.4f\n", dem_z1, dem_z2);
+    dem_z1 = next_exp();
+    dem_z2 = next_exp();
+    cout << "    Elevation range " << dem_z1 << dem_z2 << "\n";
 
     // Counterclockwise angle from the primary axis of ground
     // planimetric referenced to the primary axis of the DEM local
     // reference system.
-    next_token(fd, token);
+    token = next_token();
 
     // Accuracy code; 0 indicates that a record of accuracy does not
     // exist and that no record type C will follow.
@@ -310,81 +300,83 @@ int fgDEM::read_a_record( void ) {
 
     // I will eventually have to do something with this for data at
     // higher latitudes */
-    next_token(fd, token);
-    printf("    accuracy & spacial resolution string = %s\n", token);
-    i = strlen(token);
-    printf("    length = %d\n", i);
+    token = next_token();
+    cout << "    accuracy & spacial resolution string = " + token + "\n";
+    i = token.length();
+    cout << "    length = " << i << "\n";
 
-    ptr = token + i - 12;
-    printf("    last field = %s = %.2f\n", ptr, atof(ptr));
+    ptr = token.c_str() + i - 12;
+    cout << "    last field = " << ptr << " = " << atof(ptr) << "\n";
     ptr[0] = '\0';
 
     ptr = ptr - 12;
     col_step = atof(ptr);
-    printf("    last field = %s = %.2f\n", ptr, col_step);
+    cout << "    last field = " << ptr << " = " << col_step << "\n";
     ptr[0] = '\0';
 
     ptr = ptr - 12;
     row_step = atof(ptr);
-    printf("    last field = %s = %.2f\n", ptr, row_step);
+    cout << "    last field = " << ptr << " = " << row_step << "\n";
     ptr[0] = '\0';
 
     // accuracy code = atod(token)
-    inum = atoi(token);
-    printf("    Accuracy code = %d\n", inum);
+    ptr = ptr - 12;
+    inum = atoi(ptr);
+    cout << "    Accuracy code = " << inum << "\n";
 
-    printf("    column step = %.2f  row step = %.2f\n", 
-	   col_step, row_step);
+    cout << "    column step = " << col_step << 
+	"  row step = " << row_step << "\n";
+
     // dimension of arrays to follow (1)
-    next_token(fd, token);
+    token = next_token();
 
     // number of profiles
-    dem_num_profiles = cols = next_int(fd);
-    printf("    Expecting %d profiles\n", dem_num_profiles);
+    dem_num_profiles = cols = next_int();
+    cout << "    Expecting " << dem_num_profiles << " profiles\n";
 
-    return(1);
+    return 1;
 }
 
 
 // read and parse DEM "B" record
-void fgDEM::read_b_record( void ) {
-    char token[80];
+void fgDEM::read_b_record( ) {
+    string token;
     int i;
 
     // row / column id of this profile
-    prof_row = next_int(fd);
-    prof_col = next_int(fd);
+    prof_row = next_int();
+    prof_col = next_int();
     // printf("col id = %d  row id = %d\n", prof_col, prof_row);
 
     // Number of columns and rows (elevations) in this profile
-    prof_num_rows = rows = next_int(fd);
-    prof_num_cols = next_int(fd);
+    prof_num_rows = rows = next_int();
+    prof_num_cols = next_int();
     // printf("    profile num rows = %d\n", prof_num_rows);
 
     // Ground planimetric coordinates (arc-seconds) of the first
     // elevation in the profile
-    prof_x1 = next_exp(fd);
-    prof_y1 = next_exp(fd);
+    prof_x1 = next_exp();
+    prof_y1 = next_exp();
     // printf("    Starting at %.2f %.2f\n", prof_x1, prof_y1);
 
     // Elevation of local datum for the profile.  Always zero for
     // 1-degree DEM, the reference is mean sea level.
-    next_token(fd, token);
+    token = next_token();
 
     // Minimum and maximum elevations for the profile.
-    next_token(fd, token);
-    next_token(fd, token);
+    token = next_token();
+    token = next_token();
 
     // One (usually) dimensional array (prof_num_cols,1) of elevations
     for ( i = 0; i < prof_num_rows; i++ ) {
-	prof_data = next_int(fd);
+	prof_data = next_int();
 	dem_data[cur_col][i] = (float)prof_data;
     }
 }
 
 
 // parse dem file
-int fgDEM::parse( void ) {
+int fgDEM::parse( ) {
     int i;
 
     cur_col = 0;
@@ -399,13 +391,13 @@ int fgDEM::parse( void ) {
 	cur_col++;
 
 	if ( cur_col % 100 == 0 ) {
-	    printf("    loaded %d profiles of data\n", cur_col);
+	    cout << "    loaded " << cur_col << "profiles of data\n";
 	}
     }
 
-    printf("    Done parsing\n");
+    cout << "    Done parsing\n";
 
-    return(1);
+    return 1;
 }
 
 
@@ -687,15 +679,16 @@ void fgDEM::outputmesh_set_pt( int i, int j, double value ) {
 // Check for an optional "index.node.ex" file in case there is a .poly
 // file to go along with this node file.  Include these nodes first
 // since they are referenced by position from the .poly file.
-void fgDEM::outputmesh_output_nodes( char *fg_root, fgBUCKET *p ) {
+void fgDEM::outputmesh_output_nodes( const string& fg_root, fgBUCKET *p ) {
     double exnodes[MAX_EX_NODES][3];
     double junk1, junk2, junk3;
     struct stat stat_buf;
-    char base_path[256], dir[256], file[256], exfile[256];
+    string dir;
+    char base_path[256], file[256], exfile[256];
 #ifdef WIN32
     char tmp_path[256];
 #endif
-    char command[256];
+    string command;
     FILE *fd;
     long int index;
     int colmin, colmax, rowmin, rowmax;
@@ -706,24 +699,24 @@ void fgDEM::outputmesh_output_nodes( char *fg_root, fgBUCKET *p ) {
     colmax = colmin + ( (cols - 1) / 8);
     rowmin = p->y * ( (rows - 1) / 8);
     rowmax = rowmin + ( (rows - 1) / 8);
-    printf("  dumping region = %d,%d to %d,%d\n", 
-	   colmin, rowmin, colmax, rowmax);
+    cout << "  dumping region = " << colmin << "," << rowmin << " to " <<
+	colmax << "," << rowmax << "\n";
 
     // generate the base directory
     fgBucketGenBasePath(p, base_path);
-    printf("fg_root = %s  Base Path = %s\n", fg_root, base_path);
-    sprintf(dir, "%s/Scenery/%s", fg_root, base_path);
-    printf("Dir = %s\n", dir);
+    cout << "fg_root = " + fg_root + "  Base Path = " + base_path + "\n";
+    dir = fg_root + "/Scenery/" + base_path;
+    cout << "Dir = " + dir + "\n";
     
     // stat() directory and create if needed
-    result = stat(dir, &stat_buf);
+    result = stat(dir.c_str(), &stat_buf);
     if ( result != 0 ) {
-	printf("Stat error need to create directory\n");
+	cout << "Stat error need to create directory\n";
 
 #ifndef WIN32
 
-	sprintf(command, "mkdir -p %s\n", dir);
-	system(command);
+	command = "mkdir -p " + dir + "\n";
+	system( command.c_str() );
 
 #else // WIN32
 
@@ -732,14 +725,14 @@ void fgDEM::outputmesh_output_nodes( char *fg_root, fgBUCKET *p ) {
 
 	extract_path (base_path, tmp_path);
 
-	sprintf (dir, "%s/Scenery", fg_root);
-	if (my_mkdir (dir)) { exit (-1); }
+	dir = fg_root + "/Scenery";
+	if (my_mkdir ( dir.c_str() )) { exit (-1); }
 
-	sprintf (dir, "%s/Scenery/%s", fg_root, tmp_path);
-	if (my_mkdir (dir)) { exit (-1); }
+	dir += fg_root + "/Scenery/" + tmp_path;
+	if (my_mkdir ( dir.c_str() )) { exit (-1); }
 
-	sprintf (dir, "%s/Scenery/%s", fg_root, base_path);
-	if (my_mkdir (dir)) { exit (-1); }
+	dir += fg_root + "/Scenery/" + base_path;
+	if (my_mkdir ( dir.c_str() )) { exit (-1); }
 
 #endif // WIN32
 
@@ -749,7 +742,7 @@ void fgDEM::outputmesh_output_nodes( char *fg_root, fgBUCKET *p ) {
 
     // get index and generate output file name
     index = fgBucketGenIndex(p);
-    sprintf(file, "%s/%ld.node", dir, index);
+    sprintf(file, "%s/%ld.node", dir.c_str(), index);
 
     // get (optional) extra node file name (in case there is matching
     // .poly file.
@@ -825,6 +818,10 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.14  1998/09/19 17:59:45  curt
+// Use c++ streams (fg_gzifstream).  Also converted many character arrays to
+// the string class.
+//
 // Revision 1.13  1998/09/09 16:24:04  curt
 // Fixed a bug in the handling of exclude files which was causing
 // a crash by calling fclose() on an invalid file handle.

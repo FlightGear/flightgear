@@ -36,7 +36,9 @@
 #include <stdio.h>
 
 #include <Bucket/bucketutils.h>
-#include <zlib/zlib.h>
+
+//#include <zlib/zlib.h>
+#include <Misc/fgstream.hxx>
 
 
 #define DEM_SIZE 1200
@@ -45,7 +47,8 @@
 
 class fgDEM {
     // file pointer for input
-    gzFile fd;
+    // gzFile fd;
+    fg_gzifstream *in;
 
     // coordinates (in arc seconds) of south west corner
     double originx, originy;
@@ -77,25 +80,37 @@ class fgDEM {
     int do_data;
     int cur_col, cur_row;
 
+    // return next token from input stream
+    string next_token();
+
+    // return next integer from input stream
+    int next_int();
+
+    // return next double from input stream
+    double next_double();
+
+    // return next exponential num from input stream
+    int next_exp();
+
 public:
 
     // Constructor
     fgDEM( void );
 
     // open a DEM file (use "-" if input is coming from stdin)
-    int open ( char *file );
+    int open ( const string& file );
 
     // close a DEM file
-    int close ( void );
+    int close ();
 
     // parse a DEM file
-    int parse( void );
+    int parse();
 
     // read and parse DEM "A" record
-    int read_a_record( void );
+    int read_a_record();
 
     // read and parse DEM "B" record
-    void read_b_record( void );
+    void read_b_record();
 
     // Informational methods
     double info_originx( void ) { return(originx); }
@@ -119,7 +134,7 @@ public:
     void outputmesh_set_pt( int i, int j, double value );
 
     // Write out a node file that can be used by the "triangle" program
-    void outputmesh_output_nodes( char *fg_root, fgBUCKET *p );
+    void outputmesh_output_nodes( const string& fg_root, fgBUCKET *p );
 
     // Destructor
     ~fgDEM( void );
@@ -130,6 +145,10 @@ public:
 
 
 // $Log$
+// Revision 1.8  1998/09/19 17:59:46  curt
+// Use c++ streams (fg_gzifstream).  Also converted many character arrays to
+// the string class.
+//
 // Revision 1.7  1998/07/04 00:47:19  curt
 // typedef'd struct fgBUCKET.
 //
