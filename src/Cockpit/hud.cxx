@@ -938,8 +938,10 @@ void fgHUDalphaInit( void ) {
 
 
 void fgHUDReshape(void) {
-    if ( HUDtext )
+    if ( HUDtext ) {
         delete HUDtext;
+        HUDtext = NULL;
+    }
 
     HUD_TextSize = fgGetInt("/sim/startup/xsize") / 60;
     HUD_TextSize = 10;

@@ -722,6 +722,7 @@ void fgCockpitUpdate( void ) {
         // If these is anything to draw it will.
         fgUpdateHUD();
     }
+
 #define DISPLAY_COUNTER
 #ifdef DISPLAY_COUNTER
     else
