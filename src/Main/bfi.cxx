@@ -181,6 +181,8 @@ FGBFI::init ()
 
 				// Simulation
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
+  fgTie("/sim/view/offset", getViewOffset, setViewOffset);
+  fgTie("/sim/view/goal-offset", getGoalViewOffset, setGoalViewOffset);
   fgTie("/sim/time/gmt", getDateString, setDateString);
   fgTie("/sim/time/gmt-string", getGMTString);
 
@@ -201,6 +203,7 @@ FGBFI::init ()
 				// Autopilot
   fgTie("/autopilot/locks/altitude", getAPAltitudeLock, setAPAltitudeLock);
   fgTie("/autopilot/settings/altitude", getAPAltitude, setAPAltitude);
+  fgTie("/autopilot/locks/glide-slope", getAPGSLock, setAPGSLock);
   fgTie("/autopilot/settings/climb-rate", getAPClimb, setAPClimb, false);
   fgTie("/autopilot/locks/heading", getAPHeadingLock, setAPHeadingLock);
   fgTie("/autopilot/settings/heading-bug", getAPHeadingBug, setAPHeadingBug,
@@ -278,6 +281,39 @@ FGBFI::setAircraftDir (string dir)
     needReinit();
   }
 }
+
+
+/**
+ * Get the current view offset in degrees.
+ */
+double
+FGBFI::getViewOffset ()
+{
+  return (globals->get_current_view()
+	  ->get_view_offset() * SGD_RADIANS_TO_DEGREES);
+}
+
+void
+FGBFI::setViewOffset (double offset)
+{
+  globals->get_current_view()->set_view_offset(offset * SGD_DEGREES_TO_RADIANS);
+}
+
+double
+FGBFI::getGoalViewOffset ()
+{
+  return (globals->get_current_view()
+	  ->get_goal_view_offset() * SGD_RADIANS_TO_DEGREES);
+}
+
+void
+FGBFI::setGoalViewOffset (double offset)
+{
+  globals->get_current_view()
+    ->set_goal_view_offset(offset * SGD_DEGREES_TO_RADIANS);
+}
+
+
 
 
 /**
@@ -768,6 +804,27 @@ void
 FGBFI::setAPAltitudeLock (bool lock)
 {
   current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_LOCK);
+  current_autopilot->set_AltitudeEnabled(lock);
+}
+
+
+/**
+ * Get the autopilot altitude lock (true=on).
+ */
+bool
+FGBFI::getAPGSLock ()
+{
+    return current_autopilot->get_AltitudeEnabled();
+}
+
+
+/**
+ * Set the autopilot altitude lock (true=on).
+ */
+void
+FGBFI::setAPGSLock (bool lock)
+{
+  current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_GS1);
   current_autopilot->set_AltitudeEnabled(lock);
 }
 
