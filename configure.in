@@ -276,7 +276,6 @@ AC_OUTPUT( \
 	Lib/Bucket/Makefile \
 	Lib/Debug/Makefile \
 	Lib/DEM/Makefile \
-	Lib/gpc/Makefile \
 	Lib/Math/Makefile \
 	Lib/Misc/Makefile \
 	Lib/PUI/Makefile \

@@ -1,0 +1,24 @@
+README.MacOS
+
+Jan 12, 1999.
+
+Here is a quick outline of *one* way you can build FG for MacOS:
+
+
+1. Install Metrowerks CodeWarrior Pro 3
+
+
+2. Install the 'Mesa 3D Graphics Library' *** URL
+
+
+3. Fetch the Flight Gear code. *** URL
+
+
+4. Fetch the 'MWCWP3 Support'  *** URL
+
+
+5. Open 'MWCWP3 Support:Simulator:Simulator.mcp' and you are ready to compile.
+
+
+6.  I appreciate feedback.  Tell me if this works for you !  If it doesn't, tell me 
+    what went wrong.  My email is  *** who want do to the first-level support ?

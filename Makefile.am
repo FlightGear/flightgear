@@ -1,6 +1,6 @@
 SUBDIRS = Include Lib Simulator Tools Tests
 
-EXTRA_DIST = README.Unix README.Linux README.Win32 \
+EXTRA_DIST = README.Unix README.Linux README.MacOS README.Win32 \
 	README.autoconf README.running Thanks VERSION acsite.m4
 
 dist-hook:
@@ -66,6 +66,10 @@ win32-libs:
 	Win32/impdef.exe Win32/include \
 	Win32/install.exe \
 	Win32/lib Win32/zlib.lib )
+
+# make the MacOS (MWCWP3) devel support archive
+macos-devel:
+	( cd ..; zip -r MWCWP3_Support.zip FlightGear/MWCWP3_Support )
 
 # clean up dependencies
 clean-deps:
