@@ -32,11 +32,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// #if defined ( __sun__ )
-// extern "C" void *memmove(void *, const void *, size_t);
-// extern "C" void *memset(void *, int, size_t);
-// #endif
-
 #include <simgear/compiler.h>
 #include <simgear/io/sg_binobj.hxx>
 
@@ -247,6 +242,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
 }
 
 
+#if defined ( PLIB_1_2_X )
 static float fgTriArea( sgVec3 p0, sgVec3 p1, sgVec3 p2 ) {
     /* 
        From comp.graph.algorithms FAQ
@@ -272,6 +268,9 @@ static float fgTriArea( sgVec3 p0, sgVec3 p1, sgVec3 p2 ) {
 
     return( sgAbs(sgScalarProductVec3( norm, sum )) * SG_HALF );
 }
+#else
+#  define fgTriArea(p0,p1,p2) sgTriArea(p0,p1,p2)
+#endif
 
 
 static void random_pt_inside_tri( float *res,

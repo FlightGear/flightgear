@@ -146,8 +146,8 @@ bool FGSoundMgr::remove( const string& refname ) {
 					NULL,
 					SL_VOLUME_ENVELOPE );
 
-#if defined ( PLIB_AUDIO_IS_BROKEN )
-	// if PLIB_AUDIO_IS_BROKEN, we can't reliably remove sounds
+#if defined ( PLIB_1_2_X )
+	// if PLIB_1_2_X, we can't reliably remove sounds
 	// that are currently being played. :-( So, let's just not
 	// remove them and return false.  The effects of this are that
 	// the sound sample will continue to finish playing (or
