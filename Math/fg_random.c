@@ -24,6 +24,8 @@
  **************************************************************************/
 
 
+#include <config.h>
+
 #include <stdio.h>
 #include <stdlib.h>         /* for random(), srandom() */
 #include <time.h>           /* for time() to seed srandom() */        
@@ -31,7 +33,7 @@
 
 #include "fg_random.h"
 
-#ifndef USE_RAND
+#ifndef HAVE_RAND
 #  ifdef sgi
 #    undef RAND_MAX
 #    define RAND_MAX 2147483647
@@ -51,7 +53,7 @@
 void fg_srandom(void) {
     fgPrintf( FG_MATH, FG_INFO, "Seeding random number generater\n");
 
-#ifdef USE_RAND
+#ifdef HAVE_RAND
     srand(time(NULL));
 #else
     srandom(time(NULL));
@@ -61,7 +63,7 @@ void fg_srandom(void) {
 
 /* return a random number between [0.0, 1.0) */
 double fg_random(void) {
-#ifdef USE_RAND
+#ifdef HAVE_RAND
     return(rand() / (double)RAND_MAX);
 #else
     return(random() / (double)RAND_MAX);
@@ -70,12 +72,15 @@ double fg_random(void) {
 
 
 /* $Log$
-/* Revision 1.4  1998/02/03 23:20:28  curt
-/* Lots of little tweaks to fix various consistency problems discovered by
-/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
-/* passed arguments along to the real printf().  Also incorporated HUD changes
-/* by Michele America.
+/* Revision 1.5  1998/04/03 22:10:29  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.4  1998/02/03 23:20:28  curt
+ * Lots of little tweaks to fix various consistency problems discovered by
+ * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+ * passed arguments along to the real printf().  Also incorporated HUD changes
+ * by Michele America.
+ *
  * Revision 1.3  1998/01/27 00:47:59  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

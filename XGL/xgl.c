@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef WIN32
-#  include <windows.h>
-#else
+#ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
 
