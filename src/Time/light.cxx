@@ -104,11 +104,11 @@ void fgLIGHT::Init( void ) {
 // update lighting parameters based on current sun position
 void fgLIGHT::Update( void ) {
     // if the 4th field is 0.0, this specifies a direction ...
-    GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
+    const GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     // base sky color
-    GLfloat base_sky_color[4] = { 0.39, 0.50, 0.74, 1.0 };
+    const GLfloat base_sky_color[4] = { 0.39, 0.50, 0.74, 1.0 };
     // base fog color
-    GLfloat base_fog_color[4] = { 0.84, 0.87, 1.0, 1.0 };
+    const GLfloat base_fog_color[4] = { 0.84, 0.87, 1.0, 1.0 };
     float deg, ambient, diffuse, specular, sky_brightness;
 
     SG_LOG( SG_EVENT, SG_INFO, "Updating light parameters." );
@@ -157,44 +157,22 @@ void fgLIGHT::Update( void ) {
     }
     gamma_correct_rgb( cloud_color );
 
-    if (fgGetBool("/test/scene_lighting")) {
-        float *sun_color = thesky->get_sun_color();
+    float *sun_color = thesky->get_sun_color();
 
-        scene_ambient[0] = ((sun_color[0]*0.25 + cloud_color[0]*0.75) + ambient) / 2;
-        scene_ambient[1] = ((sun_color[1]*0.25 + cloud_color[1]*0.75) + ambient) / 2;
-        scene_ambient[2] = ((sun_color[2]*0.25 + cloud_color[2]*0.75) + ambient) / 2;
-        // scene_ambient[0] = white[0] * ambient;
-        // scene_ambient[1] = white[0] * ambient;
-        // scene_ambient[2] = white[0] * ambient;
-        scene_ambient[3] = 1.0;
+    scene_ambient[0] = ((sun_color[0]*0.25 + cloud_color[0]*0.75) + ambient) / 2;
+    scene_ambient[1] = ((sun_color[1]*0.25 + cloud_color[1]*0.75) + ambient) / 2;
+    scene_ambient[2] = ((sun_color[2]*0.25 + cloud_color[2]*0.75) + ambient) / 2;
+    scene_ambient[3] = 1.0;
 
-        scene_diffuse[0] = (sun_color[0]*0.25 + fog_color[0]*0.75) * diffuse;
-        scene_diffuse[1] = (sun_color[1]*0.25 + fog_color[1]*0.75) * diffuse;
-        scene_diffuse[2] = (sun_color[2]*0.25 + fog_color[2]*0.75) * diffuse;
-        scene_diffuse[3] = 1.0;
+    scene_diffuse[0] = (sun_color[0]*0.25 + fog_color[0]*0.75) * diffuse;
+    scene_diffuse[1] = (sun_color[1]*0.25 + fog_color[1]*0.75) * diffuse;
+    scene_diffuse[2] = (sun_color[2]*0.25 + fog_color[2]*0.75) * diffuse;
+    scene_diffuse[3] = 1.0;
 
-        scene_specular[0] = sun_color[0] * specular;
-        scene_specular[1] = sun_color[1] * specular;
-        scene_specular[2] = sun_color[2] * specular;
-        scene_specular[3] = 1.0;
-
-    } else {
-
-        scene_ambient[0] = white[0] * ambient;
-        scene_ambient[1] = white[1] * ambient;
-        scene_ambient[2] = white[2] * ambient;
-        scene_ambient[3] = 1.0;
-
-        scene_diffuse[0] = white[0] * diffuse;
-        scene_diffuse[1] = white[1] * diffuse;
-        scene_diffuse[2] = white[2] * diffuse;
-        scene_diffuse[3] = 1.0;
-        
-        scene_specular[0] = white[0] * ambient;
-        scene_specular[1] = white[1] * ambient;
-        scene_specular[2] = white[2] * ambient;
-        scene_specular[3] = 1.0;
-    }
+    scene_specular[0] = sun_color[0] * specular;
+    scene_specular[1] = sun_color[1] * specular;
+    scene_specular[2] = sun_color[2] * specular;
+    scene_specular[3] = 1.0;
 }
 
 
