@@ -73,17 +73,24 @@ static void global2raw( FGRawCtrls *raw ) {
     raw->elevator_trim = node->getDoubleValue( "elevator-trim" );
     raw->rudder = node->getDoubleValue( "rudder" );
     raw->flaps = node->getDoubleValue( "flaps" );
+    raw->flaps_power
+            = node->getDoubleValue( "/systems/electrical/outputs/flaps",
+                                    1.0 ) >= 1.0;
     raw->num_engines = FGRawCtrls::FG_MAX_ENGINES;
     for ( i = 0; i < FGRawCtrls::FG_MAX_ENGINES; ++i ) {
 	raw->throttle[i] = node->getDoubleValue( "throttle", 0.0 );
 	raw->mixture[i] = node->getDoubleValue( "mixture", 0.0 );
-	raw->fuel_pump[i] = node->getDoubleValue( "fuel-pump", false );
+	raw->fuel_pump_power[i]
+            = node->getDoubleValue( "/systems/electrical/outputs/fuel-pump",
+                                    1.0 ) >= 1.0;
 	raw->prop_advance[i] = node->getDoubleValue( "propeller-pitch", 0.0 );
 	raw->magnetos[i] = node->getIntValue( "magnetos", 0 );
 	if ( i == 0 ) {
 	  // cout << "Magnetos -> " << node->getIntValue( "magnetos", 0 );
 	}
-	raw->starter[i] = node->getBoolValue( "starter", false );
+	raw->starter_power[i]
+            = node->getDoubleValue( "/systems/electrical/outputs/starter",
+                                    1.0 ) >= 1.0;
 	if ( i == 0 ) {
 	  // cout << " Starter -> " << node->getIntValue( "stater", false )
 	  //      << endl;
@@ -124,13 +131,14 @@ static void global2raw( FGRawCtrls *raw ) {
     htond(raw->elevator_trim);
     htond(raw->rudder);
     htond(raw->flaps);
+    raw->flaps_power = htonl(raw->flaps_power);
     for ( i = 0; i < FGRawCtrls::FG_MAX_ENGINES; ++i ) {
 	htond(raw->throttle[i]);
 	htond(raw->mixture[i]);
-        raw->fuel_pump[i] = htonl(raw->fuel_pump[i]);
+        raw->fuel_pump_power[i] = htonl(raw->fuel_pump_power[i]);
 	htond(raw->prop_advance[i]);
 	raw->magnetos[i] = htonl(raw->magnetos[i]);
-	raw->starter[i] = htonl(raw->starter[i]);
+	raw->starter_power[i] = htonl(raw->starter_power[i]);
     }
     raw->num_engines = htonl(raw->num_engines);
     for ( i = 0; i < FGRawCtrls::FG_MAX_TANKS; ++i ) {
