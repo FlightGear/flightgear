@@ -1,0 +1,135 @@
+/**********************************************************************
+
+ FILENAME:     uiuc_2DdataFileReader.cpp
+
+----------------------------------------------------------------------
+
+ DESCRIPTION:  Reads name of data file to be opened and reads data 
+               into appropriate arrays or matrices
+
+----------------------------------------------------------------------
+
+ STATUS:       alpha version
+
+----------------------------------------------------------------------
+
+ REFERENCES:   
+
+----------------------------------------------------------------------
+
+ HISTORY:      02/29/2000   initial release
+
+----------------------------------------------------------------------
+
+ AUTHOR(S):    Jeff Scott         <jscott@mail.com>
+
+----------------------------------------------------------------------
+
+ VARIABLES:
+
+----------------------------------------------------------------------
+
+ INPUTS:       -2D file name
+               -conversion factor for x data
+               -conversion factor for y data
+               -conversion factor for z data
+
+----------------------------------------------------------------------
+
+ OUTPUTS:      -2D array of x data for each y case
+               -1D array of y data
+               -2D array of z data for each y case
+               -1D array of max number of x-z data sets for each y case
+               -max number of y data sets
+
+----------------------------------------------------------------------
+
+ CALLED BY:    uiuc_menu.cpp
+
+----------------------------------------------------------------------
+
+ CALLS TO:     specified 2D data file
+
+----------------------------------------------------------------------
+
+ COPYRIGHT:    (C) 2000 by Michael Selig
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+ USA or view http://www.gnu.org/copyleft/gpl.html.
+
+**********************************************************************/
+
+#include "uiuc_2DdataFileReader.h"
+
+
+int uiuc_2DdataFileReader( string file_name, 
+                           double convert_x,
+                           double convert_y,
+                           double convert_z,
+                           double x[100][100], 
+                           double y[100], 
+                           double z[100][100], 
+                           int xmax[100], 
+                           int &ymax)
+{
+  ParseFile *matrix;
+  double token_value1;
+  double token_value2;
+  int counter_y = 1, counter_x = 1, data = 0;
+  string linetoken1;
+  string linetoken2;
+
+  stack command_list;
+
+  /* Read the file and get the list of commands */
+  matrix = new ParseFile(file_name);
+  command_list = matrix -> getCommands();
+
+  for (LIST command_line = command_list.begin(); command_line!=command_list.end(); ++command_line)
+    {
+      linetoken1 = matrix -> getToken(*command_line, 1); // gettoken(string,tokenNo);
+      linetoken2 = matrix -> getToken(*command_line, 2); // 2 represents token No 2
+
+      istrstream token1(linetoken1.c_str());
+      istrstream token2(linetoken2.c_str());
+
+      //reset token_value2 for first if statement
+      token_value2 = -999;
+
+      token1 >> token_value1;
+      token2 >> token_value2;
+
+      //check to see if only one value on line (token2 blank)
+      if (token_value2 == -999)
+        {
+          y[counter_y] = token_value1 * convert_y;
+
+          ymax = counter_y;
+          counter_y++;
+          counter_x = 1;
+        }
+      else
+        {
+          x[counter_y-1][counter_x] = token_value1 * convert_x;
+          z[counter_y-1][counter_x] = token_value2 * convert_z;
+
+          xmax[counter_y-1] = counter_x;
+          counter_x++;
+        }
+    }
+  data = 1;
+  return data;
+}
+
+// end uiuc_2DdataFileReader.cpp

@@ -45,6 +45,7 @@ bool global_fullscreen = true;
 #include <Include/general.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <FDM/flight.hxx>
+#include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #ifdef FG_NETWORK_OLK
 #  include <NetworkOLK/network.h>
 #endif
@@ -194,6 +195,8 @@ fgOPTIONS::fgOPTIONS() :
 
     network_olk(false)
 {
+    aircraft_dir=""; // Initialize the Aircraft directory to "" (UIUC)
+
     // set initial values/defaults
     time_offset_type=FG_TIME_SYS_OFFSET;
     char* envp = ::getenv( "FG_ROOT" );
@@ -658,6 +661,8 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	flight_model = parse_fdm( arg.substr(6) );
     } else if ( arg.find( "--aircraft=" ) != string::npos ) {
 	aircraft = arg.substr(11);
+    } else if ( arg.find( "--aircraft-dir=" ) != string::npos ) {
+	aircraft_dir =  arg.substr(15); //  (UIUC)
     } else if ( arg.find( "--model-hz=" ) != string::npos ) {
 	model_hz = atoi( arg.substr(11) );
     } else if ( arg.find( "--speed=" ) != string::npos ) {
@@ -885,6 +890,10 @@ void fgOPTIONS::usage ( void ) {
     cout << "\t--model-hz=n:  run the FDM this rate (iterations per second)" 
 	 << endl;
     cout << "\t--speed=n:  run the FDM this much faster than real time" << endl;
+    cout << endl;
+    //(UIUC)
+    cout <<"Aircraft model directory" << endl;
+    cout <<"\t--aircraft-dir=<path> path is relative to the path of the executable" << endl;
     cout << endl;
 
     cout << "Initial Position and Orientation:" << endl;

@@ -79,6 +79,8 @@
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/steam.hxx>
+#include <FDM/UIUCModel/uiuc_aircraft.h>
+#include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
 #include <Joystick/joystick.hxx>
 #ifdef FG_NETWORK_OLK
@@ -1293,6 +1295,10 @@ int main( int argc, char **argv ) {
 
     // seed the random number generater
     fg_srandom();
+
+    // AIRCRAFTDIR defined in uiuc_aircraftdir.h
+    aircraft_ = new AIRCRAFT;
+    aircraftdir_ = new AIRCRAFTDIR;
 
     // Load the configuration parameters
     if ( !fgInitConfig(argc, argv) ) {

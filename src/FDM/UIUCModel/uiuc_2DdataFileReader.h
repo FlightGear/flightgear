@@ -1,0 +1,13 @@
+#ifndef _2D_DATA_FILE_READER_H_
+#define _2D_DATA_FILE_READER_H_
+
+#include <strstream.h>
+#include "uiuc_parsefile.h"
+#include "uiuc_aircraft.h"
+
+int 
+uiuc_2DdataFileReader( string file_name, double convert_x, double convert_y, double convert_z,
+                           double x[100][100], double y[100], double z[100][100], int xmax[100], 
+                           int &ymax);
+
+#endif // _2D_DATA_FILE_READER_H_
