@@ -339,34 +339,37 @@ FGNewMat::read_properties (const SGPropertyNode * props)
 void 
 FGNewMat::init ()
 {
-  texture_path = "";
-  state = 0;
-  textured = 0;
-  nontextured = 0;
-  xsize = 0;
-  ysize = 0;
-  wrapu = true;
-  wrapv = true;
-  mipmap = true;
-  light_coverage = 0.0;
-  texture_loaded = false;
-  refcount = 0;
-  shininess = 0.0;
-  for (int i = 0; i < 4; i++)
-    ambient[i] = diffuse[i] = specular[i] = emission[i] = 0.0;
+    texture_path = "";
+    state = 0;
+    textured = 0;
+    nontextured = 0;
+    xsize = 0;
+    ysize = 0;
+    wrapu = true;
+    wrapv = true;
+    mipmap = true;
+    light_coverage = 0.0;
+    texture_loaded = false;
+    refcount = 0;
+    shininess = 0.0;
+    for (int i = 0; i < 4; i++) {
+        ambient[i] = diffuse[i] = specular[i] = emission[i] = 0.0;
+    }
 }
 
 bool
 FGNewMat::load_texture ()
 {
-  if (texture_loaded) {
-    return false;
-  } else {
-    SG_LOG( SG_GENERAL, SG_INFO, "Loading deferred texture " << texture_path );
-    textured->setTexture((char *)texture_path.c_str(), wrapu, wrapv, mipmap );
-    texture_loaded = true;
-    return true;
-  }
+    if (texture_loaded) {
+        return false;
+    } else {
+        SG_LOG( SG_GENERAL, SG_INFO, "Loading deferred texture "
+                << texture_path );
+        textured->setTexture( (char *)texture_path.c_str(),
+                              wrapu, wrapv, mipmap );
+        texture_loaded = true;
+        return true;
+    }
 }
 
 

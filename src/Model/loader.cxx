@@ -78,30 +78,4 @@ FGModelLoader::load_model( const string &fg_root,
 }
 
 
-
-////////////////////////////////////////////////////////////////////////
-// Implementation of FGTextureLoader.
-////////////////////////////////////////////////////////////////////////
-
-FGTextureLoader::FGTextureLoader ()
-{
-}
-
-FGTextureLoader::~FGTextureLoader ()
-{
-}
-
-ssgTexture *
-FGTextureLoader::load_texture( const string &fg_root, const string &path )
-{
-    std::map<string, ssgBase *>::iterator it = _table.find(path);
-    if (it == _table.end()) {
-        _table[path] = new ssgTexture((char *)path.c_str()); // FIXME wrapu/v
-        it = _table.find(path);
-        it->second->ref();      // add one reference to keep it around
-    }
-    return (ssgTexture *)it->second;
-}
-
-
 // end of loader.cxx

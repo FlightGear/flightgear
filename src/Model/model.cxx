@@ -24,10 +24,6 @@
 #include <simgear/props/props_io.hxx>
 #include <simgear/scene/model/location.hxx>
 
-// #include <Main/fg_props.hxx>
-// #include <Main/globals.hxx>
-// #include <Scenery/scenery.hxx>
-
 #include "model.hxx"
 #include "panelnode.hxx"
 

@@ -1,3 +1,7 @@
+#ifndef FG_PANELNODE_HXX
+#define FG_PANELNODE_HXX
+
+
 #include <plib/ssg.h>
 
 class FGPanel;
@@ -76,3 +80,6 @@ private:
     GLfloat _lastProjection[16];
     GLint   _lastViewport[4];
 };
+
+
+#endif // FG_PANELNODE_HXX

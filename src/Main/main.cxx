@@ -1695,7 +1695,6 @@ static bool fgMainInit( int argc, char **argv ) {
     ////////////////////////////////////////////////////////////////////
 
     globals->set_model_loader(new FGModelLoader);
-    globals->set_texture_loader(new FGTextureLoader);
     globals->set_model_mgr(new FGModelMgr);
     globals->get_model_mgr()->init();
     globals->get_model_mgr()->bind();
@@ -2021,7 +2020,8 @@ void fgLoadDCS(void) {
                             				if (in1.eof()) break;
                             			} 
                             		}  //while
-        
+
+#if 0        
                             		if ( lightpoints->getNum() ) {
                             			ssgBranch *lightpoints_branch;
                             			long int dummy = -999;
@@ -2040,6 +2040,7 @@ void fgLoadDCS(void) {
                             			lightpoints_transform->ref();
                             			globals->get_scenery()->get_gnd_lights_root()->addKid( lightpoints_transform );
                             		} 
+#endif
                             	} //if in1 
                 } //if objc
                             // end hack for deck lights
@@ -2167,7 +2168,7 @@ void fgUpdateDCS (void) {
 //		if ((ref_elev < -0.17) & (ref_elev >= -0.51)) sel = 0x28;
 //		if (ref_elev < -0.51) sel = 0x30;
 // DO NOT DELETE THIS CODE - This is to compare a discrete FLOLS (without LOD) with analog FLOLS
-            dummy_tile->lightmaps_sequence->select(sel);
+            // dummy_tile->lightmaps_sequence->select(sel);
 
             sgVec3 up;
             sgCopyVec3 (up, ship_up);
@@ -2175,7 +2176,7 @@ void fgUpdateDCS (void) {
                     sgScaleVec3 (up, 4.0*ref_elev*dist/750.0);
             else
                     sgScaleVec3 (up, 4.0*ref_elev);
-            dummy_tile->ols_transform->setTransform(up);
+            // dummy_tile->ols_transform->setTransform(up);
             //cout << "ref_elev  " << ref_elev << endl;
         }
     // end hack for deck lights

@@ -46,17 +46,4 @@ public:
 };
 
 
-/**
- * Class for loading and managing textures.
- */
-class FGTextureLoader : public FGSSGLoader
-{
-public:
-    FGTextureLoader ();
-    virtual ~FGTextureLoader ();
-
-    virtual ssgTexture * load_texture( const string &fg_root,
-                                       const string &path );
-};
-
 #endif

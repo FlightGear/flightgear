@@ -97,17 +97,6 @@ class FGTileEntry {
 
 public:
 
-    /* CLO123 FROM HERE TO THE CORRESPONDING MARKER ARE THINGS THAT
-       CAN BE DELETED AFTER WE DROP THE ASCII SCENERY FORMAT */
-    typedef vector < sgVec3 * > free_vec3_list;
-    typedef vector < sgVec2 * > free_vec2_list;
-    typedef vector < unsigned short * > free_index_list;
-
-    // node list
-    point_list nodes;
-    int ncount;
-    /* CLO123 MARKER */
-
     // global tile culling data
     Point3D center;
     double bounding_radius;
@@ -115,12 +104,6 @@ public:
 
     // this tile's official location in the world
     SGBucket tile_bucket;
-
-    // list of pointers to memory chunks that need to be freed when
-    // tile entry goes away
-    free_vec3_list vec3_ptrs;
-    free_vec2_list vec2_ptrs;
-    free_index_list index_ptrs;
 
 private:
 
@@ -148,18 +131,6 @@ private:
     // we create several preset brightness and can choose which one we
     // want based on lighting conditions.
     ssgSelector *gnd_lights_brightness;
-
-    // ADA --->
-    // Runway centre coords.
-    Point3D rway_center; // Reqd. for switching as function of distance from runway center
-    //pointers for Runway lights    
-    ssgTransform *lightmaps_transform; // branch for runway lights
-    ssgRangeSelector *lightmaps_range; // tried to maintain same structure as Curt's ground
-    ssgSelector *lightmaps_brightness; // selector node for points/ lightmaps
-
-    ssgSimpleState *lightmap_state; // OpenGL state of the polygons that make up runway lights
-    ssgVertexArray *light_points; // array of runway light coords.
-    // <--- ADA
 
     /**
      * Indicates this tile has been loaded from a file and connected
@@ -200,12 +171,6 @@ private:
     int free_tracker;
 
 public:
-
-    // ADA --->
-    ssgTransform *ols_transform; // transform node for flols simulation
-    ssgSelector *lightmaps_sequence; // selector node for points/ lightmaps
-    ssgBranch* gen_runway_lights(ssgVertexArray *points,ssgVertexArray *normal, ssgVertexArray *dir, int *type);
-    // <--- ADA
 
     // Constructor
     FGTileEntry( const SGBucket& b );

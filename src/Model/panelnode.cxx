@@ -8,10 +8,12 @@
 #include <GL/gl.h>
 #include <plib/sg.h>
 
-#include <Main/fg_props.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 #include "panelnode.hxx"
+
+SG_USING_STD(vector);
+
 
 // Static (!) handling for all 3D panels in the program.  Very
 // clumsy.  Replace with per-aircraft handling.
