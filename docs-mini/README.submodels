@@ -21,6 +21,7 @@
       <repeat>       Set "true" if you want multiple releases of this submodel.
       <delay>        Time, in seconds, between repeated releases.
       <count>        Number of submodels available for multiple release.
+                     -1 defines an unlimited number.
       <slaved>       Not used yet.
       <x-offset>     Submodel's initial fore/aft position relative to user
                      aircraft.   Fore is positive.
