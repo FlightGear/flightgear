@@ -252,7 +252,7 @@ void fgMoonInit() {
     yMoon = 60000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
     zMoon = 60000.0 * sin(moonPos.Declination);
 
-    glutSolidSphere(1.0, 10, 10);
+    glutSolidSphere(1.0, 15, 15);
 
     glEndList();
 }
@@ -270,7 +270,8 @@ void fgMoonRender() {
     glLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_clear );
     glLightfv(GL_LIGHT0, GL_DIFFUSE, moon_color );
 
-    glMaterialfv(GL_FRONT, GL_AMBIENT, black);
+    glMaterialfv(GL_FRONT, GL_AMBIENT, l->scene_clear );
+    glMaterialfv(GL_FRONT, GL_AMBIENT, moon_color );
     glMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color);
 
     glPushMatrix();

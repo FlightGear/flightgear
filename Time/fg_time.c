@@ -233,7 +233,7 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
     /* get current Unix calendar time (in seconds) */
     /* warp = 60; */
     warp += 0;
-    t->cur_time = time(NULL) + (3) * 60 * 60;
+    t->cur_time = time(NULL) + (0) * 60 * 60;
     t->cur_time += warp;
     printf("Current Unix calendar time = %ld  warp = %ld\n", t->cur_time, warp);
 
@@ -285,9 +285,12 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.18  1997/12/12 21:41:31  curt
-/* More light/material property tweaking ... still a ways off.
+/* Revision 1.19  1997/12/15 20:59:10  curt
+/* Misc. tweaks.
 /*
+ * Revision 1.18  1997/12/12 21:41:31  curt
+ * More light/material property tweaking ... still a ways off.
+ *
  * Revision 1.17  1997/12/12 19:53:04  curt
  * Working on lightling and material properties.
  *

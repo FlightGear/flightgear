@@ -60,41 +60,44 @@ clean:
 
 source-tar: clean
 	(cd ../..; \
-	tar cvzf source-$(VERSION).tar.gz FlightGear/fgtop FlightGear/COPYING \
-	FlightGear/Docs FlightGear/Src FlightGear/Thanks)
+	tar cvzf source-$(FG_VERSION).tar.gz FlightGear/fgtop \
+	FlightGear/COPYING FlightGear/Docs FlightGear/Src FlightGear/Thanks)
 
 source-zip: clean
 	(cd ../..; \
-	zip -r source-$(VERSION).zip FlightGear/fgtop FlightGear/COPYING \
-	FlightGear/Docs FlightGear/Src FlightGear/Thanks)
+	zip -r source-$(FG_VERSION).zip FlightGear/fgtop 
+	FlightGear/COPYING FlightGear/Docs FlightGear/Src FlightGear/Thanks)
 
 scenery-tar:
 	(cd ../..; \
-	tar cvzf scenery-$(VERSION).tar.gz FlightGear/Scenery)
+	tar cvzf scenery-$(FG_VERSION).tar.gz FlightGear/Scenery)
 
 scenery-zip:
 	(cd ../..; \
-	zip -r scenery-$(VERSION).zip FlightGear/Scenery)
+	zip -r scenery-$(FG_VERSION).zip FlightGear/Scenery)
 
 bin-tar: all
-	cp Main/fg-$(VERSION) runfg ..
-	$(LN) ../fg-$(VERSION) ../fg$(VERSION_MAJOR)
+	cp Main/fg-$(FG_VERSION) runfg ..
+	$(LN) ../fg-$(FG_VERSION) ../fg$(FG_VERSION_MAJOR)
 	(cd ../..; \
-	tar cvzf bin-$(VERSION).tar.gz FlightGear/fgtop \
-	FlightGear/fg-$(VERSION) FlightGear/fg$(VERSION_MAJOR) \
+	tar cvzf bin-$(FG_VERSION).tar.gz FlightGear/fgtop \
+	FlightGear/fg-$(FG_VERSION) FlightGear/fg$(FG_VERSION_MAJOR) \
 	FlightGear/runfg FlightGear/COPYING FlightGear/Docs FlightGear/Thanks)
 
 bin-zip: 
-	cp Main/fg$(VERSION_MAJOR).exe Main/cygwin.dll runfg.bat ..
+	cp Main/fg$(FG_VERSION_MAJOR).exe Main/cygwin.dll runfg.bat ..
 	(cd ../..; \
-	zip -r bin-$(VERSION).zip FlightGear/fgtop \
-	FlightGear/fg$(VERSION_MAJOR).exe FlightGear/runfg.bat \
+	zip -r bin-$(FG_VERSION).zip FlightGear/fgtop \
+	FlightGear/fg$(FG_VERSION_MAJOR).exe FlightGear/runfg.bat \
 	FlightGear/cygwin.dll FlightGear/COPYING FlightGear/Docs \
 	FlightGear/Thanks)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.31  1997/12/15 20:59:08  curt
+# Misc. tweaks.
+#
 # Revision 1.30  1997/12/10 01:19:42  curt
 # Tweaks for verion 0.15 release.
 #

@@ -90,7 +90,7 @@ void fgAstroRender() {
     glDisable( GL_FOG );
 
     /* set the sun position */
-    /* glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec_inv );*/
+    glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec_inv );
 
     glPushMatrix();
 
@@ -104,14 +104,14 @@ void fgAstroRender() {
 #endif
     glRotatef( angle, 0.0, 0.0, -1.0 );
 
+    /* render the moon */
+    fgMoonRender();
+
     /* render the stars */
     fgStarsRender();
 
     /* render the sun */
     fgSunRender();
-
-    /* render the moon */
-    fgMoonRender();
 
     glPopMatrix();
 
@@ -121,9 +121,12 @@ void fgAstroRender() {
 
 
 /* $Log$
-/* Revision 1.6  1997/12/12 21:41:27  curt
-/* More light/material property tweaking ... still a ways off.
+/* Revision 1.7  1997/12/15 20:59:09  curt
+/* Misc. tweaks.
 /*
+ * Revision 1.6  1997/12/12 21:41:27  curt
+ * More light/material property tweaking ... still a ways off.
+ *
  * Revision 1.5  1997/12/12 19:52:54  curt
  * Working on lightling and material properties.
  *

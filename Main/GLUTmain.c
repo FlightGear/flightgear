@@ -58,18 +58,10 @@ struct fgGENERAL general;
 /* view parameters */
 static GLfloat win_ratio = 1.0;
 
-/* sun direction */
-/* static GLfloat sun_vec[4] = {1.0, 0.0, 0.0, 0.0 }; */
-
 /* fog color */
 static GLfloat fgFogColor[4] =   {0.65, 0.65, 0.85, 1.0};
 
 /* temporary hack */
-/* extern struct mesh *mesh_ptr; */
-/* Function prototypes */
-/* GLint fgSceneryCompile_OLD(); */
-/* static void fgSceneryDraw_OLD(); */
-
 /* pointer to scenery structure */
 /* static GLint scenery, runway; */
 
@@ -99,6 +91,8 @@ static void fgInitVisuals() {
     /* glFrontFace(GL_CW); */
     glEnable( GL_CULL_FACE );
     
+    /* glDisable( GL_DITHER ); */
+
     /* If enabled, normal vectors specified with glNormal are scaled
        to unit length after transformation.  See glNormal. */
     glEnable( GL_NORMALIZE );
@@ -570,9 +564,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.31  1997/12/12 21:41:25  curt
-/* More light/material property tweaking ... still a ways off.
+/* Revision 1.32  1997/12/15 20:59:08  curt
+/* Misc. tweaks.
 /*
+ * Revision 1.31  1997/12/12 21:41:25  curt
+ * More light/material property tweaking ... still a ways off.
+ *
  * Revision 1.30  1997/12/12 19:52:47  curt
  * Working on lightling and material properties.
  *

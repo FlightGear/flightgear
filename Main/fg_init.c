@@ -115,7 +115,7 @@ void fgInitSubsystems( void ) {
     /* A random test position */
     /* FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Latitude  = ( 93312.00 / 3600.0 ) * DEG_TO_RAD; */
-    FG_Runway_altitude = 8500.0;
+    FG_Runway_altitude = 4000.0;
     FG_Altitude = FG_Runway_altitude + 3.758099;
 
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", 
@@ -218,9 +218,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.16  1997/12/12 19:52:48  curt
-/* Working on lightling and material properties.
+/* Revision 1.17  1997/12/15 20:59:09  curt
+/* Misc. tweaks.
 /*
+ * Revision 1.16  1997/12/12 19:52:48  curt
+ * Working on lightling and material properties.
+ *
  * Revision 1.15  1997/12/11 04:43:55  curt
  * Fixed sun vector and lighting problems.  I thing the moon is now lit
  * correctly.
