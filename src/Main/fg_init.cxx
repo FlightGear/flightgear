@@ -79,7 +79,7 @@
 #include <FDM/ADA.hxx>
 #include <FDM/Balloon.h>
 #include <FDM/External.hxx>
-#include <FDM/JSBSim.hxx>
+#include <FDM/JSBSim/JSBSim.hxx>
 #include <FDM/LaRCsim.hxx>
 #include <FDM/MagicCarpet.hxx>
 #include <FDM/NullFDM.hxx>
