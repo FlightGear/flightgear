@@ -12,7 +12,7 @@ AC_PREREQ(2.52)
 dnl Initialize the automake stuff
 dnl set the $host variable based on local machine/os
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE(FlightGear, 0.9.5-pre1)
+AM_INIT_AUTOMAKE(FlightGear, 0.9.5-pre2)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -427,15 +427,14 @@ AC_TRY_RUN([
 int main() {
     int major, minor, micro;
 
-    printf("%d.%d.%d or greater... ", MIN_MAJOR, MIN_MINOR, MIN_MICRO);
+    /* printf("%d.%d.%d or greater, ", MIN_MAJOR, MIN_MINOR, MIN_MICRO); */
+    printf("[found %s] ... ", STRINGIFY(SIMGEAR_VERSION));
 
     sscanf( STRINGIFY(SIMGEAR_VERSION), "%d.%d.%d", &major, &minor, &micro );
 
-    if ( major < MIN_MAJOR ) {
-	 return -1;
-    } else if ( major == MIN_MAJOR && minor < MIN_MINOR ) {
-	 return -1;
-    } else if ( major == MIN_MAJOR && minor == MIN_MINOR && micro < MIN_MICRO ){
+    if ( (major < MIN_MAJOR) ||
+         (major == MIN_MAJOR && minor < MIN_MINOR) ||
+         (major == MIN_MAJOR && minor == MIN_MINOR && micro < MIN_MICRO) ) {
 	 return -1;
     }
 
@@ -451,7 +450,7 @@ int main() {
 
 LIBS="$saved_LIBS"
 
-dnl Check if SimGear was built with Norman JPEG factory support
+dnl Check if SimGear was built with Norman's JPEG factory support
 AC_CHECK_HEADER(simgear/screen/jpgfactory.hxx)
 if test "x$ac_cv_header_simgear_screen_jpgfactory_hxx" = "xyes"; then
     AC_CHECK_LIB(jpeg, jpeg_start_compress)

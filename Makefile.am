@@ -45,7 +45,11 @@ fgfs-base-tar:
 		data/AUTHORS \
                 data/Aircraft/737 \
                 data/Aircraft/747 \
+                data/Aircraft/A-10 \
                 data/Aircraft/A320 \
+                data/Aircraft/AN-225 \
+                data/Aircraft/B-52F \
+                data/Aircraft/BAC-TSR2 \
                 data/Aircraft/ComperSwift \
                 data/Aircraft/Generic \
                 data/Aircraft/Hunter \
@@ -57,8 +61,7 @@ fgfs-base-tar:
                 data/Aircraft/X15 \
                 data/Aircraft/YF-23 \
                 data/Aircraft/a4 \
-                data/Aircraft/an225 \
-                data/Aircraft/b52 \
+                data/Aircraft/beech99 \
                 data/Aircraft/bo105 \
                 data/Aircraft/c172 \
                 data/Aircraft/c172-fs-set.xml \
@@ -79,7 +82,7 @@ fgfs-base-tar:
                 data/Aircraft/seahawk \
                 data/Aircraft/sgs233 \
                 data/Aircraft/t6texan2 \
-                data/Aircraft/tsr2 \
+                data/Aircraft/tu154 \
                 data/Aircraft/ufo \
                 data/Aircraft/wrightFlyer1903 \
 		data/Airports \
