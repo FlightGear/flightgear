@@ -31,7 +31,7 @@
 #endif                                   
 
 
-#if defined ( __sun__ )
+#if defined ( __sun__ ) || defined ( __sgi )
 extern "C" void *memmove(void *, const void *, size_t);
 extern "C" void *memset(void *, int, size_t);
 #endif
@@ -125,6 +125,10 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.7  1998/07/30 23:48:54  curt
+// Sgi build tweaks.
+// Pause support.
+//
 // Revision 1.6  1998/07/24 21:42:25  curt
 // Output message tweaks.
 //

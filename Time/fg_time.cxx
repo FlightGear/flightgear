@@ -73,7 +73,7 @@ void fgTimeInit(fgTIME *t) {
     t->warp = current_options.get_time_offset();
     t->warp_delta = 0;
 
-    t->pause = 0;
+    t->pause = current_options.get_pause();
 }
 
 
@@ -411,6 +411,10 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.13  1998/07/30 23:48:55  curt
+// Sgi build tweaks.
+// Pause support.
+//
 // Revision 1.12  1998/07/27 18:42:22  curt
 // Added a pause option.
 //
