@@ -786,10 +786,15 @@ void
 FGLayeredInstrument::draw ()
 {
   if (test()) {
+    float z = 0.1f;
+    float z_inc = 0.01;
+    bool vc = fgGetBool("/sim/virtual-cockpit");
     for (int i = 0; i < (int)_layers.size(); i++) {
       glPushMatrix();
-      if(!fgGetBool("/sim/virtual-cockpit"))
-	  glTranslatef(0.0, 0.0, (i / 100.0) + 0.1);
+      if(!vc) {
+        glTranslatef(0.0, 0.0, z);
+        z += z_inc;
+      }
       _layers[i]->draw();
       glPopMatrix();
     }
