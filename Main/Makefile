@@ -66,7 +66,7 @@ OFILES = $(CFILES:.c=.o)
 AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
 	../Flight/libFlight.a ../Flight/LaRCsim/libLaRCsim.a \
 	../Flight/Slew/libSlew.a ../mat3/libmat3.a \
-	../Scenery/ParseScn/libParseScn.a ../Scenery/libScenery.a \
+	../Scenery/ParseVRML/libParseVRML.a ../Scenery/libScenery.a \
 	../Timer/libTimer.a
 
 
@@ -107,6 +107,9 @@ mesh2GL.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.17  1997/06/26 22:14:54  curt
+# Beginning work on a scenery management system.
+#
 # Revision 1.16  1997/06/26 19:08:33  curt
 # Restructuring make, adding automatic "make dep" support.
 #

@@ -1,5 +1,5 @@
 /**************************************************************************
- * scenery.h -- data structures and routines for processing terrain meshes
+ * scenery.h -- data structures and routines for managing scenery.
  *
  * Written by Curtis Olson, started May 1997.
  *
@@ -28,17 +28,27 @@
 #define SCENERY_H
 
 
-/* parse a scenery file */
-int parse_scenery(char *file);
+/* Initialize the Scenery Management system */
+void fgSceneryInit();
+
+/* Tell the scenery manager where we are so it can load the proper data, and
+ * build the proper structures. */
+void fgSceneryUpdate(double lon, double lat, double elev);
+
+/* Render out the current scene */
+void fgSceneryRender();
 
 
 #endif SCENERY_H
 
 
 /* $Log$
-/* Revision 1.4  1997/06/21 17:57:21  curt
-/* directory shuffling ...
+/* Revision 1.5  1997/06/26 22:14:57  curt
+/* Beginning work on a scenery management system.
 /*
+ * Revision 1.4  1997/06/21 17:57:21  curt
+ * directory shuffling ...
+ *
  * Revision 1.2  1997/05/23 15:40:43  curt
  * Added GNU copyright headers.
  *

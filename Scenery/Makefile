@@ -26,7 +26,7 @@
 
 TARGET = libScenery.a
 
-CFILES = common.c mesh.c
+CFILES = common.c mesh.c scenery.c
 HFILES = 
 OFILES = $(CFILES:.c=.o)
 
@@ -66,9 +66,15 @@ common.o:
 mesh.o:
 	$(CC) $(CFLAGS) -c mesh.c
 
+scenery.o:
+	$(CC) $(CFLAGS) -c scenery.c
+
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.11  1997/06/26 22:14:57  curt
+# Beginning work on a scenery management system.
+#
 # Revision 1.10  1997/06/26 19:08:34  curt
 # Restructuring make, adding automatic "make dep" support.
 #

@@ -420,7 +420,12 @@ int main( int argc, char *argv[] ) {
 
     f = &current_aircraft.flight;
 
-    printf("Flight Gear:  prototype code to test OpenGL, LaRCsim, and VRML\n\n");
+    printf("Flight Gear: prototype code to test OpenGL, LaRCsim, and VRML\n\n");
+
+
+    /**********************************************************************
+     * Initialize the Window/Graphics environment.
+     **********************************************************************/
 
     #ifdef GLUT
       /* initialize GLUT */
@@ -450,6 +455,12 @@ int main( int argc, char *argv[] ) {
     /* setup view parameters, only makes GL calls */
     fgInitVisuals();
 
+
+    /****************************************************************
+     * The following section sets up the flight model EOM parameters and 
+     * should really be read in from one or more files.
+     ****************************************************************/
+
     /* Globe Aiport, AZ */
     FG_Runway_altitude = 3234.5;
     FG_Runway_latitude = 120070.41;
@@ -464,8 +475,7 @@ int main( int argc, char *argv[] ) {
     printf("Initial position is: (%.4f, %.4f, %.2f)\n", FG_Latitude, 
 	   FG_Longitude, FG_Altitude);
 
-  
-    /* Initial Velocity */
+      /* Initial Velocity */
     FG_V_north = 0.0 /*  7.287719E+00 */;
     FG_V_east  = 0.0 /*  1.521770E+03 */;
     FG_V_down  = 0.0 /* -1.265722E-05 */;
@@ -499,6 +509,7 @@ int main( int argc, char *argv[] ) {
     /* fgSlewInit(-335340,162540, 15, 4.38); */
     /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
 
+    /* Initialize the flight model data structures base on above values */
     fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
 
     if ( use_signals ) {
@@ -507,16 +518,24 @@ int main( int argc, char *argv[] ) {
 	fgInitTimeDepCalcs();
     }
 
-    /* build all objects */
 
-    /* parse the scenery file, and build the OpenGL call list */
-    /* this function will eventually move to the scenery management system */
-    if ( strlen(argv[1]) ) {
-	parse_scenery(argv[1]);
-    }
+    /**********************************************************************
+     * The following section (and the functions elsewhere in this file) 
+     * set up the scenery management system. This part is a big hack, 
+     * and needs to be moved to it's own area.
+     **********************************************************************/
 
-    /* initialize the scenery */
+    /* Initialize the Scenery Management system */
     fgSceneryInit();
+
+    /* Tell the Scenery Management system where we are so it can load
+     * the correct scenery data */
+    fgSceneryUpdate(FG_Latitude, FG_Longitude, FG_Altitude);
+
+
+    /**********************************************************************
+     * Initialize the Event Handlers.
+     **********************************************************************/
 
     #ifdef GLUT
       /* call fgReshape() on window resizes */
@@ -559,9 +578,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.23  1997/06/26 19:08:33  curt
-/* Restructuring make, adding automatic "make dep" support.
+/* Revision 1.24  1997/06/26 22:14:53  curt
+/* Beginning work on a scenery management system.
 /*
+ * Revision 1.23  1997/06/26 19:08:33  curt
+ * Restructuring make, adding automatic "make dep" support.
+ *
  * Revision 1.22  1997/06/25 15:39:47  curt
  * Minor changes to compile with rsxnt/win32.
  *
