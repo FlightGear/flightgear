@@ -55,6 +55,9 @@ class FGATCDialog {
 	
 public:
 
+	FGATCDialog();
+	~FGATCDialog();
+	
 	void Init();
 	
 	void DoDialog();

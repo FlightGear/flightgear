@@ -36,6 +36,12 @@
 
 SG_USING_STD(ostringstream);
 
+static void atcUppercase(string &s) {
+	for(unsigned int i=0; i<s.size(); ++i) {
+		s[i] = toupper(s[i]);
+	}
+}
+
 FGATCDialog *current_atcdialog;
 
 // For the command manager - maybe eventually this should go in the built in command list
@@ -74,6 +80,43 @@ static puOneShot*		atcDialogOkButton;
 static puOneShot*		atcDialogCancelButton;
 static puButtonBox*		atcDialogCommunicationOptions;
 // ----------------------------------------------------------------------
+
+//////////////////////////////////////////////////////
+//
+//  STUFF FOR THE FREQUENCY SEARCH DIALOG
+//
+//////////////////////////////////////////////////////
+
+static const int ATC_MAX_FREQ_DISPLAY = 20;		// Maximum number of frequencies that can be displayed for any one airport
+
+static puDialogBox*     atcFreqDialog;
+static puFrame*         atcFreqDialogFrame;
+static puText*          atcFreqDialogMessage;
+static puInput*         atcFreqDialogInput;
+static puOneShot*       atcFreqDialogOkButton;
+static puOneShot*       atcFreqDialogCancelButton;
+
+static puDialogBox*     atcFreqDisplay;
+static puFrame*         atcFreqDisplayFrame;
+static puText*          atcFreqDisplayMessage;
+static puOneShot*       atcFreqDisplayOkButton;
+static puText*          atcFreqDisplayText[ATC_MAX_FREQ_DISPLAY];
+	
+static void FreqDialogCancel(puObject*) {
+	FG_POP_PUI_DIALOG(atcFreqDialog);
+}
+
+static void FreqDialogOK(puObject*) {
+	string tmp = atcFreqDialogInput->getStringValue();
+	FG_POP_PUI_DIALOG(atcFreqDialog);
+	current_atcdialog->FreqDisplay(tmp);
+}
+
+static void FreqDisplayOK(puObject*) {
+	FG_POP_PUI_DIALOG(atcFreqDisplay);
+}
+
+////////////// end freq search statics ///////////////
 
 // ------------------------ AK ------------------------------------------
 static puDialogBox  *ATCMenuBox = 0;
@@ -256,9 +299,70 @@ void ATCDoDialog(atc_type type) {
 	}
 }
 
+FGATCDialog::FGATCDialog() {
+}
+
+FGATCDialog::~FGATCDialog() {
+	if(atcFreqDialog) delete atcFreqDialog;
+	if(atcFreqDisplay) delete atcFreqDisplay;
+}
+
 void FGATCDialog::Init() {
 	// Add ATC-freq-search to the command list
 	globals->get_commands()->addCommand("ATC-freq-search", do_ATC_freq_search);
+	
+	// Init the freq-search dialog
+	char *s;
+	int hsize = 150;
+	atcFreqDialog = new puDialogBox (150, 50);
+	{
+		atcFreqDialogFrame = new puFrame (0, 0, 300, hsize);
+		atcFreqDialogMessage = new puText          (40, (hsize - 30));
+		atcFreqDialogMessage->setDefaultValue ("Enter airport identifier:");
+		atcFreqDialogMessage->getDefaultValue (&s);
+		atcFreqDialogMessage->setLabel(s);
+	
+		atcFreqDialogInput = new puInput (50, (hsize - 75), 150, (hsize - 45));
+			
+		atcFreqDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
+		atcFreqDialogOkButton     ->     setLegend         (gui_msg_OK);
+		atcFreqDialogOkButton     ->     makeReturnDefault (TRUE);
+		atcFreqDialogOkButton     ->     setCallback       (FreqDialogOK);
+			
+		atcFreqDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
+		atcFreqDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
+		atcFreqDialogCancelButton ->     setCallback       (FreqDialogCancel);
+		
+		atcFreqDialogInput->acceptInput();
+	}
+	
+	FG_FINALIZE_PUI_DIALOG(atcFreqDialog);
+	
+	// Init the freq-display dialog
+	hsize = 100;
+	atcFreqDisplay = new puDialogBox (250, 50);
+	{
+		atcFreqDisplayFrame   = new puFrame (0, 0, 400, hsize);
+		
+		atcFreqDisplayMessage = new puText          (40, (hsize - 30));
+		atcFreqDisplayMessage    -> setDefaultValue ("No freqencies found");
+		atcFreqDisplayMessage    -> getDefaultValue (&s);
+		atcFreqDisplayMessage    -> setLabel        (s);
+		
+		for(int i=0; i<ATC_MAX_FREQ_DISPLAY; ++i) {
+			atcFreqDisplayText[i] = new puText(40, hsize - 65 - (30 * i));
+			atcFreqDisplayText[i]->setDefaultValue("");
+			atcFreqDisplayText[i]-> getDefaultValue (&s);
+			atcFreqDisplayText[i]-> setLabel        (s);
+			atcFreqDisplayText[i]->hide();
+		}
+		
+		atcFreqDisplayOkButton     =  new puOneShot         (50, 10, 110, 50);
+		atcFreqDisplayOkButton     ->     setLegend         (gui_msg_OK);
+		atcFreqDisplayOkButton     ->     makeReturnDefault (TRUE);
+		atcFreqDisplayOkButton     ->     setCallback       (FreqDisplayOK);
+	}
+	FG_FINALIZE_PUI_DIALOG(atcFreqDisplay);
 }
 
 // AK
@@ -407,43 +511,7 @@ void FGATCDialog::DoDialog() {
 	}
 }
 
-//////////////////////////////////////////////////////
-//
-//  STUFF FOR THE FREQUENCY SEARCH DIALOG
-//
-//////////////////////////////////////////////////////
 
-static puDialogBox*     atcFreqDialog;
-static puFrame*         atcFreqDialogFrame;
-static puText*          atcFreqDialogMessage;
-static puInput*         atcFreqDialogInput;
-static puOneShot*       atcFreqDialogOkButton;
-static puOneShot*       atcFreqDialogCancelButton;
-
-static puDialogBox*     atcFreqDisplay;
-static puFrame*         atcFreqDisplayFrame;
-static puText*          atcFreqDisplayMessage;
-static puOneShot*       atcFreqDisplayOkButton;
-static puOneShot*       atcFreqDisplayCancelButton;
-static puText*          atcFreqDisplayText[20];
-	
-static void FreqDialogCancel(puObject*) {
-	FG_POP_PUI_DIALOG(atcFreqDialog);
-}
-
-static void FreqDialogOK(puObject*) {
-	string tmp = atcFreqDialogInput->getStringValue();
-	FG_POP_PUI_DIALOG(atcFreqDialog);
-	current_atcdialog->FreqDisplay(tmp);
-}
-
-static void FreqDisplayOK(puObject*) {
-	FG_POP_PUI_DIALOG(atcFreqDisplay);
-}
-
-static void FreqDisplayCancel(puObject*) {
-	FG_POP_PUI_DIALOG(atcFreqDisplay);
-}
 
 void FGATCDialog::FreqDialog() {
 
@@ -464,57 +532,23 @@ void FGATCDialog::FreqDialog() {
 	}
 	*/
 	
-	//char defaultATCLabel[] = "Enter desired option to communicate with ATC:";
-	char *s;
+	// TODO - it would be nice to display a drop-down list of airports within the general vicinity of the user
+	//        in addition to the general input box (started above).
 	
-	int hsize = 150;
-	atcFreqDialog = new puDialogBox (150, 50);
-	{
-		atcFreqDialogFrame   = new puFrame (0, 0, 300, hsize);
-		
-		atcFreqDialogMessage = new puText          (40, (hsize - 30));
-		atcFreqDialogMessage    -> setDefaultValue ("Enter airport identifier:");
-		atcFreqDialogMessage    -> getDefaultValue (&s);
-		atcFreqDialogMessage    -> setLabel        (s);
-
-		atcFreqDialogInput = new puInput (50, (hsize - 75), 150, (hsize - 45));
-		atcFreqDialogInput->acceptInput();
-		
-		atcFreqDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
-		atcFreqDialogOkButton     ->     setLegend         (gui_msg_OK);
-		atcFreqDialogOkButton     ->     makeReturnDefault (TRUE);
-		atcFreqDialogOkButton     ->     setCallback       (FreqDialogOK);
-		
-		atcFreqDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
-		atcFreqDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
-		atcFreqDialogCancelButton ->     setCallback       (FreqDialogCancel);
-		
-	}
-	FG_FINALIZE_PUI_DIALOG(atcFreqDialog);
-	
+	atcFreqDialogInput->setValue("");
+	atcFreqDialogInput->acceptInput();
 	FG_PUSH_PUI_DIALOG(atcFreqDialog);
-	
-}
-
-static void atcUppercase(string &s)
-{
-	for(unsigned int i=0; i<s.size(); ++i) {
-		s[i] = toupper(s[i]);
-	}
 }
 
 void FGATCDialog::FreqDisplay(string ident) {
 
 	atcUppercase(ident);
 	
-	//char defaultATCLabel[] = "Enter desired option to communicate with ATC:";
-	string label = "Frequencies for airport ";
-	label += ident;
-	label += ":";
+	string label;
 	char *s;
 	
 	int n = 0;	// Number of ATC frequencies at this airport
-	string freqs[20];
+	string freqs[ATC_MAX_FREQ_DISPLAY];
 	char buf[8];
 
     FGAirport a;
@@ -542,46 +576,39 @@ void FGATCDialog::FreqDisplay(string ident) {
 				++itr;
 			}
 		}
+		if(n == 0) {
+			label = "No frequencies found for airport ";
+			label += ident;
+		} else {
+			label = "Frequencies for airport ";
+			label += ident;
+			label += ":";
+		}
     } else {
 		label = "Airport ";
 		label += ident;
 		label += " not found in database.";
-		n = -1;
-	}
-	
-	if(n == 0) {
-		label = "No frequencies found for airport ";
-		label += ident;
 	}
 
-	int hsize = (n < 0 ? 100 : 105 + (n * 30));
-	atcFreqDisplay = new puDialogBox (250, 50);
-	{
-		atcFreqDisplayFrame   = new puFrame (0, 0, 400, hsize);
-		
-		atcFreqDisplayMessage = new puText          (40, (hsize - 30));
-		atcFreqDisplayMessage    -> setDefaultValue (label.c_str());
-		atcFreqDisplayMessage    -> getDefaultValue (&s);
-		atcFreqDisplayMessage    -> setLabel        (s);
-		
-		for(int i=0; i<n; ++i) {
-			atcFreqDisplayText[i] = new puText(40, hsize - 65 - (30 * i));
-			atcFreqDisplayText[i]->setDefaultValue(freqs[i].c_str());
-			atcFreqDisplayText[i]-> getDefaultValue (&s);
-			atcFreqDisplayText[i]-> setLabel        (s);
-		}
-		
-		atcFreqDisplayOkButton     =  new puOneShot         (50, 10, 110, 50);
-		atcFreqDisplayOkButton     ->     setLegend         (gui_msg_OK);
-		atcFreqDisplayOkButton     ->     makeReturnDefault (TRUE);
-		atcFreqDisplayOkButton     ->     setCallback       (FreqDisplayOK);
-		
-		atcFreqDisplayCancelButton =  new puOneShot         (140, 10, 210, 50);
-		atcFreqDisplayCancelButton ->     setLegend         (gui_msg_CANCEL);
-		atcFreqDisplayCancelButton ->     setCallback       (FreqDisplayCancel);
-		
+	int hsize = 105 + (n * 30);
+	
+	atcFreqDisplayFrame->setSize(400, hsize);
+	
+	atcFreqDisplayMessage -> setPosition (40, (hsize - 30));
+	atcFreqDisplayMessage -> setValue    (label.c_str());
+	atcFreqDisplayMessage -> getValue    (&s);
+	atcFreqDisplayMessage -> setLabel    (s);
+	
+	for(int i=0; i<n; ++i) {
+		atcFreqDisplayText[i] -> setPosition(40, hsize - 65 - (30 * i));
+		atcFreqDisplayText[i] -> setValue(freqs[i].c_str());
+		atcFreqDisplayText[i] -> getValue (&s);
+		atcFreqDisplayText[i] -> setLabel (s);
+		atcFreqDisplayText[i] -> reveal();
 	}
-	FG_FINALIZE_PUI_DIALOG(atcFreqDisplay);
+	for(int j=n; j<ATC_MAX_FREQ_DISPLAY; ++j) {
+		atcFreqDisplayText[j] -> hide();
+	}
 	
 	FG_PUSH_PUI_DIALOG(atcFreqDisplay);
 	
