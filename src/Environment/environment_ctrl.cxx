@@ -324,6 +324,7 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
       proxy_host( fgGetNode("/sim/presets/proxy/host", true) ),
       proxy_port( fgGetNode("/sim/presets/proxy/port", true) ),
       proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) ),
+      metar_max_age( fgGetNode("/environment/params/metar-max-age-min", true) ),
       _error_count( 0 ),
       _error_dt( 0.0 )
 {
@@ -543,7 +544,8 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
         string port = proxy_port->getStringValue();
         result.m = new FGMetar( icao, host, port, auth);
 
-        if (result.m->getAge_min() > 4 * 60) {
+        long max_age = metar_max_age->getLongValue();
+        if (max_age && result.m->getAge_min() > max_age) {
             SG_LOG( SG_GENERAL, SG_WARN, "METAR data too old");
             delete result.m;
             result.m = NULL;

@@ -177,6 +177,7 @@ private:
     SGPropertyNode *proxy_host;
     SGPropertyNode *proxy_port;
     SGPropertyNode *proxy_auth;
+    SGPropertyNode *metar_max_age;
 
     FGMetarResult fetch_data( const string &icao );
     virtual void update_metar_properties( FGMetar *m );
