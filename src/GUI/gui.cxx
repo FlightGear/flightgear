@@ -539,13 +539,16 @@ void NetIdDialog_OK (puObject *)
     int PauseMode = t->getPause();
     if(!PauseMode)
         t->togglePauseMode();
-
-    char *s;
-    NetIdDialogInput->getValue(&s);
-    NetId = s;
+/*  
+   The following needs some cleanup because 
+   "string options.NetId" and "char *net_callsign" 
+*/
+    NetIdDialogInput->getValue(&net_callsign);
+    NetId = net_callsign;
     
     NetIdDialog_Cancel( NULL );
     current_options.set_net_id( NetId.c_str() );
+/* Entering a callsign indicates : user wants Net HUD Info */
     net_hud_display = 1;
 
     if( PauseMode != t->getPause() )
@@ -592,6 +595,13 @@ static void NewNetIdInit(void)
 static void net_display_toggle( puObject *cb)
 {
 	net_hud_display = (net_hud_display) ? 0 : 1;
+        printf("Toggle net_hud_display : %d\n", net_hud_display);
+}
+
+static void net_blaster_toggle( puObject *cb)
+{
+	net_blast_toggle = (net_blast_toggle) ? 0 : -1;
+        printf("Toggle net_blast : %d\n", net_blast_toggle);
 }
 
 /***************  End Networking  **************/
@@ -646,11 +656,12 @@ puCallback optionsSubmenuCb     [] = {
 #ifdef FG_NETWORK_OLK
 char *networkSubmenu            [] = {
     "Unregister from FGD ", "Send MSG to All", "Send MSG", "Show Pilots", "Register to FGD",
-    "Scan for Deamons", "Enter Callsign", "Display Netinfos", "Toggle Display", NULL
+    "Scan for Deamons", "Enter Callsign", "Display Netinfos", "Toggle Display",
+    "Hyper Blast", NULL
 };
 puCallback networkSubmenuCb     [] = {
     notCb, notCb, notCb, notCb, notCb, notCb, NewCallSign, notCb,
-    net_display_toggle, NULL
+    net_display_toggle, net_blaster_toggle, NULL
 };
 #endif
 

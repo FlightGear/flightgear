@@ -1,4 +1,4 @@
-// network.cxx -- data structures for managing network.
+// network.cxx -- data structures for initializing & managing network.
 //
 // Written by Oliver Delise, started May 1999.
 //
@@ -26,7 +26,6 @@
 #endif
 
 /*
-
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
@@ -60,23 +59,21 @@ extern "C" {
   extern void *memmove(void *, const void *, size_t);
 }
 #endif
-
 */
 
 #include <Main/options.hxx>
-#include <Cockpit/hud.hxx>
 
-extern char *net_callsign;
+int  net_blast_toggle;
+int  net_hud_display;
+char *net_callsign;
 
+char *fg_net_init( void ){
 
-void net_hud_update(){
- static char fgd_str[80];
- static float fgd_lon, fgd_lat, fgd_alt;
- 
-  fgd_lon = get_longitude();
-  fgd_lat = get_latitude();
-  fgd_alt = get_altitude();
-  sprintf(fgd_str,"Found %s %3.3f %3.3f", net_callsign, fgd_lat, fgd_lon);
-//  HUD_TextList.add( fgText( 40, 18, net_callsign) );
-  HUD_TextList.add( fgText( 40, 18, fgd_str) );
+ // We enable display of netinfos only if user wishes it via cmd-line param
+ net_hud_display = (net_hud_display == 0) ? 0 : 1; 
+ // Get pilot's name from options, can be modified at runtime via menu
+ net_callsign = (char *) current_options.get_net_id().c_str();
+ // Disable Blast Mode -1 = Disable, 0 = Enable  
+ net_blast_toggle = -1; 
+ return("activated");
 }

@@ -44,6 +44,9 @@ bool global_fullscreen = true;
 #include <Debug/logstream.hxx>
 #include <FDM/flight.hxx>
 #include <Misc/fgstream.hxx>
+#ifdef FG_NETWORK_OLK
+#  include <Network/network.h>
+#endif
 #include <Time/fg_time.hxx>
 
 #include "options.hxx"
@@ -200,8 +203,8 @@ fgOPTIONS::fgOPTIONS() :
 #endif
     }
 
-    airport_id = "";  // default airport id
-    net_id = "";
+    airport_id = "";		// default airport id
+    net_id = "Johnney";		// default pilot's name
 
     // initialize port config string list
     port_options_list.erase ( port_options_list.begin(), 
@@ -661,6 +664,12 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	tris_or_culled = 1;
     } else if ( arg.find( "--serial=" ) != string::npos ) {
 	parse_serial( arg.substr(9) );
+#ifdef FG_NETWORK_OLK
+    } else if ( arg == "--net-hud" ) {
+	net_hud_display = 1;	
+    } else if ( arg.find( "--net-id=") != string::npos ) {
+	net_id = arg.substr( 9 );
+#endif
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown option '" << arg << "'" );
 	return FG_OPTIONS_ERROR;
@@ -801,11 +810,16 @@ void fgOPTIONS::usage ( void ) {
     printf("\t--time-offset=[+-]hh:mm:ss:  offset local time by this amount\n");
     printf("\t--start-date-gmt=yyyy:mm:dd:hh:mm:ss: specify a starting date/time. Time is Greenwich Mean Time\n");
     printf("\t--start-date-lst=yyyy:mm:dd:hh:mm:ss: specify a starting date/time. Uses local sidereal time\n");
+#ifdef FG_NETWORK_OLK
+    printf("\n");
+
+    printf("Network Options:\n");
+    printf("\t--net-hud:  Hud displays network info\n");
+    printf("\t--net-id=name:  specify your own callsign\n");
+#endif
 }
 
 
 // Destructor
 fgOPTIONS::~fgOPTIONS( void ) {
 }
-
-

@@ -81,6 +81,9 @@
 #include <Math/polar3d.hxx>
 #include <Math/fg_random.h>
 #include <Misc/fgpath.hxx>
+#ifdef FG_NETWORK_OLK
+#include <Network/network.h>
+#endif
 #include <Objects/materialmgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -1120,6 +1123,11 @@ int main( int argc, char **argv ) {
     penguin_sel->addKid( penguin_pos );
     ssgFlatten( tux_obj );
     ssgStripify( penguin_sel );
+
+#ifdef FG_NETWORK_OLK
+    // Do the network intialization
+    printf("Multipilot mode %s\n", fg_net_init() );
+#endif
 
     scene->addKid( terrain );
     scene->addKid( penguin_sel );

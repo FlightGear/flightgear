@@ -5,6 +5,8 @@ related code.
 For the moment all you get is a new menu entry "Network" with the
 folowing entries:
 
+- Hyper Blast            : Toggles between LaRCsim and a tuned Flight-Model
+                           you can change between both "on the fly "
 - Toggle Display         : enable/disable info (Lat/Lon/Alt) about found player
                            well, by now it will be you. ;-))
 - Display Netinfos       : n.i. will display more detailed information
@@ -23,8 +25,8 @@ You don't need a net-access to test this new stuff since it is just an idea
 of how to incorporate a Multi-Pilot Mode in FGFS.
 
 There are two security options:
-a) Compiletime - commenting the "#define FGD" in "network.h" disables _ALL_
-   network related stuff in case of problems, should not happen ;-)
+a) Compiletime - commenting the "#define FG_NETWORK_OLK" in "network.h" 
+   disables ALL network related stuff in case of problems, shouldn't occur ;-)
 b) Runtime - setting the "int net_hud_display" variable to 0 disables any
    network display (default)
 

@@ -25,8 +25,10 @@
 
 #define FGD
 
-extern int net_hud_display;
-
+extern char *net_callsign;
+extern int  net_hud_display;
+extern int  net_blast_toggle;
+extern char *fg_net_init( void );
 extern void net_hud_update( void );
 
 #endif

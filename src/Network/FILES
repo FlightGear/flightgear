@@ -1,0 +1,8 @@
+FILES        - This file, describing the other files
+README       - containing Network info
+Makefile.am  -  
+net_hud.cxx  - display found player's info in bottom/left part of HUD
+network.cxx  - initialization of netcode and vars
+network.h    - declaration of used vars and functions for libnetwork.a
+               should be included from other files using libnetwork
+Tools        - directory containing network tools and toys

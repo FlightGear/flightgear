@@ -1105,7 +1105,7 @@ void fgUpdateHUD( void ) {
 
   char *gmt_str = get_formated_gmt_time();
   HUD_TextList.add( fgText( 40, 10, gmt_str) );
-  
+
 #ifdef FG_NETWORK_OLK
   if ( net_hud_display ) {
       net_hud_update();
