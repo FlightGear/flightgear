@@ -8,4 +8,4 @@
 void ls_gravity( SCALAR radius, SCALAR lat, SCALAR *gravity );
 
 
-#endif _LS_GRAVITY_H
+#endif /* _LS_GRAVITY_H */

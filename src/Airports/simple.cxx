@@ -179,9 +179,16 @@ int FGAirportsUtil::load( const string& file ) {
 bool FGAirportsUtil::dump_gdbm( const string& file ) {
 
     GDBM_FILE dbf;
+
+#if !defined( MACOS )
     dbf = gdbm_open( (char *)file.c_str(), 0, GDBM_NEWDB | GDBM_FAST, 
 		     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH,
 		     NULL );
+#else
+    dbf = gdbm_open( (char *)file.c_str(), 0, GDBM_NEWDB | GDBM_FAST,
+		     NULL, NULL );
+#endif
+
     if ( dbf == NULL ) {
 	cout << "Error opening " << file << endl;
 	exit(-1);

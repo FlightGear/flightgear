@@ -89,9 +89,17 @@
 #ifndef _AIRCRAFT_H_
 #define _AIRCRAFT_H_
 
+#include <simgear/compiler.h>
+
 #include <map>
 #include <iostream>
 #include "uiuc_parsefile.h"
+
+FG_USING_STD(map);
+FG_USING_STD(iostream);
+#ifdef MACOS
+FG_USING_STD(ofstream);
+#endif
 
 typedef stack :: iterator LIST;
 

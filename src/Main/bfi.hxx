@@ -23,6 +23,8 @@
 #include <time.h>
 #include <string>
 
+#include <simgear/compiler.h>
+
 FG_USING_NAMESPACE(std);
 
 

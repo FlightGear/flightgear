@@ -48,6 +48,9 @@
 
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <ctime>
+#  ifdef MACOS
+     FG_USING_STD(time_t);
+#  endif
 #else
 #  include <time.h>
 #endif

@@ -1,9 +1,19 @@
 #ifndef _PARSE_FILE_H_
 #define _PARSE_FILE_H_
 
+#include <simgear/compiler.h>
+
 #include <string>
 #include <list>
 #include <fstream>
+
+FG_USING_STD(string);
+FG_USING_STD(list);
+#ifdef MACOS
+FG_USING_STD(ifstream);
+FG_USING_STD(iostream);
+FG_USING_STD(endl);
+#endif
 
 #define DELIMITERS " \t"
 #define COMMENT "#"

@@ -48,9 +48,9 @@ int fgFlight_2_LaRCsim (fgFLIGHT *f);
 
 /* Convert from the LaRCsim generic_ struct to the fgFLIGHT struct */
 int fgLaRCsim_2_Flight (fgFLIGHT *f);
+#endif
 
 void ls_loop( SCALAR dt, int initialize );
-#endif
 
 /* Set the altitude (force) */
 int ls_ForceAltitude(double alt_feet);
@@ -65,6 +65,9 @@ int ls_ForceAltitude(double alt_feet);
 
 
 // $Log$
+// Revision 1.3  2000/04/27 19:57:08  curt
+// MacOS build updates.
+//
 // Revision 1.2  2000/04/10 18:09:41  curt
 // David Megginson made a few (mostly minor) mods to the LaRCsim files, and
 // it's now possible to choose the LaRCsim model at runtime, as in

@@ -1291,6 +1291,8 @@ int fgGlutInitEvents( void ) {
 int main( int argc, char **argv ) {
 
 #if defined( MACOS )
+    freopen ("stdout.txt", "w", stdout );
+    freopen ("stderr.txt", "w", stderr );
     argc = ccommand( &argv );
 #endif
 

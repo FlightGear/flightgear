@@ -8,4 +8,4 @@
 void navion_init( void );
 
 
-#endif _NAVION_INIT_H
+#endif /* _NAVION_INIT_H */

@@ -25,6 +25,16 @@
 #define _WEATHER_HXX
 
 
+#include <simgear/compiler.h>
+
+#include <simgear/xgl/xgl.h>
+
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <cmath>
+#else
+#  include <math.h>
+#endif
+
 // holds the current weather values
 class FGWeather {
 

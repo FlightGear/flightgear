@@ -39,6 +39,4 @@ FG_USING_NAMESPACE(std);
 extern bool fgSaveFlight (ostream &output);
 extern bool fgLoadFlight (istream &input);
 
-#endif __SAVE_HXX
-
-// end of save.hxx
+#endif // __SAVE_HXX
