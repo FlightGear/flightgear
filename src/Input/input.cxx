@@ -551,7 +551,14 @@ FGInput::_init_joystick ()
       _init_button(js_node->getChild("button", j),
                    _joystick_bindings[i].buttons[j],
                    buf);
-                   
+      
+      // get interval-sec property             
+      button &b = _joystick_bindings[i].buttons[j];
+      const SGPropertyNode * button_node = js_node->getChild("button", j);
+      if (button_node != 0) {
+        b.interval_sec = button_node->getDoubleValue("interval-sec",0.0);
+        b.last_dt = 0.0;
+      }
     }
 
     js->setMinRange(minRange);
@@ -748,10 +755,15 @@ FGInput::_update_joystick (double dt)
 
                                 // Fire bindings for the buttons.
     for (j = 0; j < _joystick_bindings[i].nbuttons; j++) {
-      _update_button(_joystick_bindings[i].buttons[j],
-                     modifiers,
-                     (buttons & (1 << j)) > 0,
-                     -1, -1);
+      button &b = _joystick_bindings[i].buttons[j];
+      b.last_dt += dt;
+      if(b.last_dt >= b.interval_sec) {
+        _update_button(_joystick_bindings[i].buttons[j],
+                       modifiers,
+                       (buttons & (1 << j)) > 0,
+                       -1, -1);
+        b.last_dt -= b.interval_sec;
+      }
     }
   }
 }

@@ -279,6 +279,8 @@ private:
     button ();
     virtual ~button ();
     bool is_repeatable;
+    float interval_sec;
+    float last_dt;
     int last_state;
     binding_list_t bindings[FG_MOD_MAX];
   };
