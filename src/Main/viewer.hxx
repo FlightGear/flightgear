@@ -62,7 +62,7 @@ public:
 
     // Constructor
     FGViewer( fgViewType Type, bool from_model, int from_model_index,
-              bool at_model, int at_model_index,
+              bool at_model, int at_model_index, double damping,
               double x_offset_m, double y_offset_m, double z_offset_m,
               double heading_offset_deg, double pitch_offset_deg,
               double roll_offset_deg, double fov_deg,
@@ -285,6 +285,11 @@ private:
     double _target_pitch_deg;
     double _target_heading_deg;
 
+    double _damp;
+    double _damped_roll_deg;
+    double _damped_pitch_deg;
+    double _damped_heading_deg;
+
     // Position offsets from FDM origin.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
     // distance in meters
@@ -376,6 +381,12 @@ private:
     void updateAtModelLocation (SGLocation * location);
     void recalcOurOwnLocation (SGLocation * location, double lon_deg, double lat_deg, double alt_ft,
                  double roll_deg, double pitch_deg, double heading_deg);
+
+    // add to _roll_offset_deg
+    inline void incRollOffset_deg( double amt ) {
+	set_dirty();
+	_roll_offset_deg += amt;
+    }
 
     // add to _heading_offset_deg
     inline void incHeadingOffset_deg( double amt ) {
