@@ -1,65 +1,87 @@
-Users Guide to Joystick Usage Under FlightGear Flight Simulator
-version 0.4 03/06/2001
+Users Guide to FGInput - Joystick And Keyboard Bindings For FlightGear
+Or
+"The document formerly know as The Users Guide to Joystick Usage Under
+FlightGear Flight Simulator"
+
+version 0.7.7.1 06/25/2001
 Author John Check <j4strngs@rockfish.net>
 
-This document is written with versions of FlightGear 0.7.5 and greater
-in mind. It assumes a working joystick present on your system. While it
-is written from the point of view of a Linux user, the cross platform
-nature of FGFS should ensure the information presented is useful on other
-platforms. I'd like to say thanks to all the developers who make FGFS happen
-and forgive me for not giving credit with regard to the property
-manager and js_demo. Corrections and additions are encouraged.
-The most current version can be found at http://rockfish.net/shell/aboutjoy.txt
+This document is written with versions of FlightGear 0.7.7 and greater
+in mind. It assumes a working joystick present on your system. It
+is written from the perspective a Linux user, but the information presented
+is valid on other platforms. The most current version can be found at:
+
+http://rockfish.net/shell/aboutFGInput.txt
+
+Thanks to David Megginson, who aside from actually implementing FGFS XML
+features, lets me rip off his descriptions of how stuff works so I can look
+smart.
 
 Some History:
+------------
 Earlier versions of FGFS had assignments of joystick axis/buttons
-hard coded. If you had a joystick that did not use the default channel
-assignments, you had to edit the source code and recompile. 
-Fortunately, around about v0.7.4/0.7.5 a "property manager" was
-implemented, allowing, among other things, runtime access to some of the FGFS
-internals, which facilitated being able to set the parameters for the
-joystick at runtime.
+and key bindings hard coded. If you had a joystick that did not use
+the default channel assignments, or wanted different key bindings
+you had to edit the source code and recompile.
 
-About runtime options:
-FGFS has always had a plethora of available runtime options. Starting
-point, altitude, direction, time of day and other aspects of the
-simulated environment were always well represented. However there
-were also a number of options and features that were not well documented.
-Among these was the ability to use a runtime configuration file (.fgfsrc)
-to control the default operation. The .fgfsrc file is not created at runtime
-and must be created manually. Fortunately, the format of the file is
-straightforward. All one need do is place the commandline options one would
-like in a plain ASCII text file in the users home directory. System wide
-defaults can be place in $FG_ROOT/system.fgfsrc.
+Fortunately, around about v0.7.5 a "property manager" was implemented,
+which facilitated being able to set the parameters for the joystick at runtime.
+Version 0.7.7 saw an expanded role for the property manager and the
+addition of a "command manager" that allows for binding of events to commands.
+The code that does this is known as FGInput and is used to configure
+keyboard command bindings as well as joysticks.
 
-With the advent of the property manager it became possible to add a number
-of additional runtime options to the .fgfsrc file including joystick channel
-assignments. Basically, anything* that is reported by the property manager
-can now be tweaked without having to recompile the binary.
+Storing alternate keyboard or joystick bindings can be done in a variety of ways.
+The order of precedence for options is thus:
 
-*see mini-doc/properties.txt for exceptions
+Source          Location                Format                 Scope
+------          --------                ------                 -----
+command line    STDIN                   see examples           session
+.fgfsrc         Users home directory.   command line options   single user
+system.fgfsrc   $FG_ROOT                command line options   system wide
+joystick.xml    $FG_ROOT                XML property list      system wide
+keyboard.xml    $FG_ROOT                XML property list      system wide
+
+First Things First
+------------------
+I will cover joysticks first and save the keyboard stuff for later.
+FGInput treats things in a generic enough way that the line between
+joystick buttons and keyboard events starts to blur.
+
+About XML
+---------
+In case you were wondering, XML stands for eXtensible Markup Language.
+It looks a lot like HTML, except you get to define your own tags. Well,
+in the case of FGFS we defined the tags you need to configure things.
+It is well suited for describing hierarchically organized structures, such as
+the property tree FGFS uses to expose the it's innards to external applications.
+Your XML configuration files for FGFS must start and end with the following
+pair of tags.
+     <PropertyList>
+       <!-- this is a comment, See I told you it was like HTML -->
+     </PropertyList>
 
 Determining your joystick output:
-
-Included with FlightGear is a utility called js_demo. It will report
+--------------------------------
+FlightGear ships with a utility called js_demo. It will report
 the number of joysticks attached to a system and their capabilites.
-By observing the output of js_demo while working our joystick we can
+By observing the output of js_demo while working your joystick you can
 determine what controls are where.
 It should be noted that, at least on UNIX, numbering generally starts with
 zero. In the following example the system has 1 joystick (js0) connected.
 The output shown is from an analog Gravis BlackHawk with four buttons and
-a throttle. 
+a throttle.
 
 Typical output of js_demo:
 
 Joystick test program.
 ~~~~~~~~~~~~~~~~~~~~~~
-Joystick 1 not detected
+Joystick 1 not detected              <!-- remember we start at 0 -->
 Joystick 2 not detected
 +---------------JS.0-----------------+
 | Btns Ax:0 Ax:1 Ax:2                |
 +------------------------------------+
-| 0000 +0.0 +0.0 -1.0   .    .    .  |              
+| 0000 +0.0 +0.0 -1.0   .    .    .  |
 
 The buttons are handled internally as a binary number in which bit 0 (the
 least significant bit) represents button 0, bit 1 represents button 1, etc.,
@@ -79,29 +101,41 @@ but this number is displayed on the screen in hexadecimal notation, so:
 
 
 Default Joystick properties:
-
+----------------------------
 
 Axis 0   = Aileron
 Axis 1   = Elevator
 Axis 2   = Rudder
 Axis 3   = Throttle
 Button 0 = All brakes
-Button 1 = Left brake
-Button 2 = Right brake
-Button 3 = Elevator trim (up)
-Button 4 = Elevator trim (down)
-Button 5 = Flaps (down)
-Button 6 = Flaps (up)
+Button 1 = Elevator trim (up)
+Button 2 = Elevator trim (down)
 
 
-In addition to the channel assignments there are other properties
-for tuning the joystick. These values work together in a particular order.
-They should always be written as a 'float', or decimal number.
+Okay, Now what?
+---------------
+Now that you know what the output of the devices connected to the joystick
+port (or USB port joystick devices) is, you probably want to dive straight
+in and to start connecting to FGInput. If you are familiar with configuring
+the joystick on versions of FGFS prior to 0.7.7 you can skip down to the
+section "The Command Manager".
+If you are a new FGFS user, you should at least skim the next bit since it
+explains some concepts you may or may not know. It also covers some legacy
+joystick options which have not been implemented yet in the context of the
+command manager.
+
+
+Modifiers For Raw Joystick Values
+---------------------------------
+These concepts are expressed by supplying arguments to the joystick bindings.
+The raw values coming from the joystick axes may not be suitable to use directly.
+For that matter not all joysticks are created equal so understanding the basic
+concepts should save you some time when experimenting to get the best performance.
 
 The full order of precedence for axis properties is
 
 1. The raw axis value ...
-2. is adjusted to dead-band, ...
+2. is adjusted to dead-band, ... deadband is implemented outside the command manager
 3. then adjusted to offset, ...
 4. then multiplied by factor, which ...
 5. is assigned to the FlightGear control property.
@@ -119,17 +153,19 @@ Axis properties:
  .......................
 -1         | |         1
             ^
-        dead-band   
+        dead-band
 
 
 This is an area where signals are ignored. It is used to compensate
 for noise or potentiometers of dubious quality by creating a threshold
-below which any signal is ignored. 
+below which any signal is ignored.
 
-The default of 0.1 for elevators and ailerons is very forgiving. A lower 
-number results in a tighter feel. Throttle defaults to 0.0
+The default of 0.1 for elevators and ailerons is very forgiving. A lower
+number results in a tighter feel. In some cases such as throttle you may
+wish to not set a deadband. Use a value of 0.0 in this case.
 
- 
+
+
 	offset
 
 -1  0                  1
@@ -139,111 +175,384 @@ number results in a tighter feel. Throttle defaults to 0.0
 
 Used to maximize a controls use of it's axis, as in the case of a
 throttle where zero would be a minimum and not a center point like in the case
-of a rudder. Typical value -1.0. 
+of a rudder. Typical value -1.0.
 
 
 	factor
 
 Controls sensitivity of an axis. If the factor is too low it results in
 control not reaching its maximum possible limit. Negating the number will result in
-the control moving counter to the default. The default value is 1.0, think unity gain. 
+the control moving counter to the default. The default value is 1.0, think unity gain.
 
-In my case, throttle behaviour was inverted from what I preferred. 
+In my case, throttle behavior was inverted from what I preferred.
 I set this value to -1.0 and everything was groovy.
 
 
+The Command Manager
+-------------------
+Previous versions of FGFS allowed joystick output to be bound directly
+to the property manager. This has changed for FGFS v0.7.7 and now events
+are bound to commands. Commands *must* be specified for a binding to have
+an effect. The current list of commands is broken down here into two
+categories, mainly for my convenience.
 
-Button properties
+Visual And File Related:
 
-	switch
-A button designated a switch is either on or off. While the button is
-held in the switch is engaged. Brakes are described as a switch and take
-additional parameters [ step, repeatable ]
+command            options          used for
+-------            -------          --------
+null               none             useful for clearing a previous binding
+exit               none             Exiting FGFS
+load               file name*       Load a saved flight
+save               file name*       Save current flight
+load-panel         path **          Change/reload panel
+load-preferences   path **          Load preferences ***
+screen-capture     none             Save a screenshot to ./fgfs-screen.ppm
+view-cycle         none             Change the direction of the pilots view
 
-	adjust
-A button designated adjust is for controls that have a range
-of settings, for example elevator trim and flaps. These are found
-in pairs having opposing values for the parameter 'step'.
-The 'repeatable' parameter should be appropriate to the type of control.
+*Saved/loaded relative to current working directory.
+**The path includes the filename you wish to load and is relative to $FG_ROOT,
+  which is the location of the installed base package. The default for load-panel
+  is the value of /sim/panel/path (from preferences.xml) or if that is unset
+  Panel/Default/default.xml. The default for load preferences is preferences.xml.
+***This might make a good first binding to experiment with, since it's not currently
+   bound to anything. Reloading preferences will allow you to test settings
+   without having to sit through a restart of FGFS for every edit. You can
+   always (re)move it later.
 
-	step
-This defines how much adjustment is applied when the button is activated
-Default values are 1.0 for brakes (full on), 0.001 / -0.001 for
-elevator trim and -0.34 / 0.34 for flaps
+Flight Control:
+command         options                effect
+-------         -------                ------
+property-toggle property               toggle the property full on
+property-assign "" "", value           targets a property for action
+property-adjust "" "", step            Increment size for changes
+property-swap   "" ""[0], "" ""[1]     Set values in a switch
+property-scale  "" "", offset, factor  Processes the raw joystick value
 
-	repeatable
-In this case repeatable means when the button is held down the value continues
-to increment. repeatable is a true / false value. The default for brakes is
-false. This is appropriate since by default brakes are a switch that are full
-on. Elevator trim on the other hand defaults to true. Holding down the
-button for elevator trim will cause a continuous adjustment until the button
-is released. Being a fine adjustment this is appropriate behaviour. Flaps
-on the otherhand default to false. Clicking the flaps button will cause the
-flaps to be extended to the first detent, subsequent clicks will extend or
-retract by one increment. Being a large adjustment with a major impact on a 
-planes handling this is a good thing.
 
-Syntax for properties in .fgfsrc
+Bindings
+--------
+A command may have more than one binding.  By default, the examples below
+use just /binding or <binding>, but /binding[0] or <binding n="0"> is implied.
+When bindings are specified in XML the indices are created automagically. If
+you wish to avoid XML you must supply the index number for multiple bindings
+in your command line formatted options.
+Multiple properties in a single binding must have the index specified. For 
+example if you build a switch that loads alternate panels the XML form
+must be written thusly:
 
-Here is a listing of the defaults as they would appear in .fgfsrc
-You only need entries where the defaults aren't what you want.
-In my case I had to make entries to put the throttle on axis2.
+<command>property-swap</command>
+<property n="0">/sim/panel/path=foo</property>
+<property n="1">/sim/panel/path=bar</property>
 
-    // Default axis 0 to aileron
---prop:/input/js0/axis0/control=/controls/aileron
---prop:/input/js0/axis0/dead-band=0.1
- 
-    // Default axis 1 to elevator
---prop:/input/js0/axis1/control=/controls/elevator
---prop:/input/js0/axis1/dead-band=0.1
---prop:/input/js0/axis1/factor=-1.0
- 
-    // Default axis 2 to rudder
---prop:/input/js0/axis2/control=/controls/rudder
---prop:/input/js0/axis2/dead-band=0.1
- 
-    // Default axis 3 to throttle
---prop:/input/js0/axis3/control=/controls/throttle
---prop:/input/js0/axis3/dead-band=0.0
---prop:/input/js0/axis3/offset=-1.0
---prop:/input/js0/axis3/factor=-0.5
- 
-    // Default button 0 to all brakes
---prop:/input/js0/button0/action=switch
---prop:/input/js0/button0/control=/controls/brakes/all        
---prop:/input/js0/button0/step=1.0
---prop:/input/js0/button0/repeatable=false 
 
-    // Default button 1 to left brake.
---prop:/input/js0/button1/action=switch
---prop:/input/js0/button1/control=/controls/brakes/left
---prop:/input/js0/button1/step=1.0
---prop:/input/js0/button1/repeatable=false
- 
-    // Default button 2 to right brake.
---prop:/input/js0/button2/action=switch
---prop:/input/js0/button2/control=/controls/brakes/right
---prop:/input/js0/button2/step=1.0
---prop:/input/js0/button2/repeatable=false
- 
-    // Default buttons 3 and 4 to elevator trim
---prop:/input/js0/button3/action=adjust
---prop:/input/js0/button3/control=/controls/elevator-trim
---prop:/input/js0/button3/step=0.001
---prop:/input/js0/button3/repeatable=true
 
---prop:/input/js0/button4/action=adjust
---prop:/input/js0/button4/control=/controls/elevator-trim
---prop:/input/js0/button4/step=-0.001
---prop:/input/js0/button4/repeatable=true
- 
-    // Default buttons 5 and 6 to flaps
---prop:/input/js0/button5/action=adjust
---prop:/input/js0/button5/control=/controls/flaps
---prop:/input/js0/button5/step=-0.34
---prop:/input/js0/button5/repeatable=false
+Joystick Axes
+-------------
 
---prop:/input/js0/button6/action=adjust
---prop:/input/js0/button6/control=/controls/flaps
---prop:/input/js0/button6/step=0.34       
---prop:/input/js0/button6/repeatable=false
+Here's a sample Joystick axis declaration in XML:
+
+  <axis n="0">                        <!-- target an axis -->
+   <desc>Aileron</desc>               <!-- descriptive name (optional) -->
+   <binding>                          <!-- open a container for the binding -->
+    <command>property-scale</command>           <!-- pick a command -->
+    <property>/controls/aileron</property>      <!-- target a property -->
+   </binding>                                   <!-- closing tag for binding -->
+  </axis>                                       <!-- closing tag for axis -->
+
+Remember how I said the property tree was a hierarchy? Thoughtful readers
+will notice how the nested tags keep things organized.
+This binding appears in the context /input/joysticks/js/, so the
+command-line option equivalent of this declaration (leaving out the
+'desc', which isn't strictly necessary), is
+
+  --prop:/input/joysticks/js[0]/axis[0]/binding/command=property-scale
+  --prop:/input/joysticks/js[0]/axis[0]/binding/property=/controls/aileron
+
+Do you see how the command line versions uses a path to represent the hierarchy?
+Cool! You should read README.xmlpanel next, working with FGFS XML configuration
+system is easy and it's fun for the whole family! ( not sold in stores. excludes
+tax and title. void where prohibited by law.)
+
+Ok, back to business. The 'property-scale' command also recognizes 'offset' and
+'factor' arguments. The "type" arguments shown in the following example are
+specifying a double precision floating point number. A double has more discrete
+steps and gives a smoother action than a plain float.
+
+  <axis n="2">
+   <desc>Throttle</desc>
+   <!-- See important note about dead-band below -->
+   <binding>
+    <command>property-scale</command>
+    <property>/controls/throttle</property>
+    <offset type="double">-1.0</offset>
+    <factor type="double">-0.5</factor>
+   </binding>
+  </axis>
+
+or
+
+  --prop:/input/joysticks/js[0]/axis[2]/binding/command=property-scale
+  --prop:/input/joysticks/js[0]/axis[2]/binding/property=/controls/throttle
+  --prop:/input/joysticks/js[0]/axis[2]/binding/offset=-1.0
+  --prop:/input/joysticks/js[0]/axis[2]/binding/factor=-0.5
+
+*Important Note About dead-band*
+--------------------------------
+You may recall from the section about raw axis value modifiers that dead-band
+is implemented outside the command manager. This means that if you want to apply
+a dead-band, the tag *must* precede the binding tag. If you are using the command
+line format you must omit the 'binding' part like so:
+
+  --prop:/input/joysticks/js[0]/axis[2]/dead-band=0.005
+
+Joystick Button Properties
+--------------------------
+Buttons, being boolean by nature, can use a little help. By this I mean that there
+are times when you need momentary action, times where you need a repeating action
+and sometimes you just want a plain old toggle. In order to facilitate this need
+we have some tags that modify the actions of buttons.
+
+<repeatable>
+ <!-- Will be either true or false. If it is true, holding down a button (or key) will
+      cause repeated events, say, for moving the trim; if false (the default), pressing
+      a key will cause only a single event. -->
+
+<step>
+ <!-- The property-adjust command takes a 'step' argument specifying the
+      amount of the adjustment for each event. In the following example, the elevator
+      trim moves 0.1% for each event (without automatic repetition, you'd
+      have a pretty sore finger). -->
+
+<value>
+ <!-- Use value on non-repeatables to supply the value for each consecutive press-->
+
+<mod-up>
+ <!-- This stands for "modifier up", my favorite I think. This is used to set up a binding
+      for when you *release* a key. As you'll see, it comes in handy -->
+
+Here's a sample joystick button declaration in XML:
+
+  <button n="1">                         <!-- target a button -->
+   <desc>Elevator trim up</desc>         <!-- optional description -->
+   <repeatable>true</repeatable>    <!-- Ok, repeatable is outside the command manager too -->
+   <binding>                             <!-- Open the "binding" node of the tree-->
+    <command>property-adjust</command>           <!-- pick a command type to bind -->
+    <property>/controls/elevator-trim</property> <!-- target a property -->
+    <step type="double">0.001</step>
+   </binding>
+  </button>
+
+In command-line option syntax, this would appear as
+
+  --prop:/input/joysticks/js[0]/button[1]/repeatable=true     <!-- See? no 'binding' -->
+  --prop:/input/joysticks/js[0]/button[1]/binding/command=property-adjust
+  --prop:/input/joysticks/js[0]/button[1]/binding/property=/controls/elevator-trim
+  --prop:/input/joysticks/js[0]/button[1]/binding//step=0.001
+
+
+Here's a slightly fancier declaration, that applies the left (differential) brakes
+when button 4 is pressed, and releases them automatically when the user releases the
+button:
+
+  <button n="4">
+   <desc>Left brake</desc>
+   <binding>
+    <command>property-assign</command>
+    <property>/controls/brakes[0]</property>
+    <value type="double">1.0</value>    <!-- brakes are a toggle so 1.0 represents on -->
+   </binding>
+   <mod-up>                    <!-- it's not a parking brake so we need to release it -->
+    <binding>
+     <command>property-assign</command>
+     <property>/controls/brakes[0]</property>
+     <value type="double">0.0</value>       <!-- 1.0 is on so 0.0 is off, right? -->
+    </binding>
+   </mod-up>
+  </button>
+
+The first binding is straight-forward: when the button is pressed, the
+'property-assign' command assigns the value 1.0 (i.e. full) to the left brake
+property.  The second binding, however, is nested inside a 'mod-up' element,
+it will be fired when the user *releases* the button, and will use the
+'property-assign' command to assign the value 0.0 (i.e. none) to the left brake
+property.  Repetition is left at the default value of false, so that the same
+value will not be assigned over and over again.
+
+Here's the command-line equivalent:
+
+  --prop:/input/joysticks/js[0]/button[4]/binding/command=property-assign
+  --prop:/input/joysticks/js[0]/button[4]/binding/property=/controls/brakes[0]
+  --prop:/input/joysticks/js[0]/button[4]/binding/value=1.0
+  --prop:/input/joysticks/js[0]/button[4]/mod-up/binding/command=property-assign
+  --prop:/input/joysticks/js[0]/button[4]/mod-up/binding/property=/controls/brakes[0]
+  --prop:/input/joysticks/js[0]/button[4]/mod-up/binding/value=0.0
+
+Remember that more than one binding can be included in each context. Here's a
+very hairy example from the default bindings that fires all three brakes when
+button 0 is pressed, and releases all three when button 0 is released:
+
+  <button n="0">
+   <desc>Brakes</desc>
+   <binding>
+    <command>property-assign</command>
+    <property>/controls/brakes[0]</property>
+    <value type="double">1.0</value>
+   </binding>
+   <binding>
+    <command>property-assign</command>
+    <property>/controls/brakes[1]</property>
+    <value type="double">1.0</value>
+   </binding>
+   <binding>
+    <command>property-assign</command>
+    <property>/controls/brakes[2]</property>
+    <value type="double">1.0</value>
+   </binding>
+   <mod-up>
+    <binding>
+     <command>property-assign</command>
+     <property>/controls/brakes[0]</property>
+     <value type="double">0.0</value>
+    </binding>
+    <binding>
+     <command>property-assign</command>
+     <property>/controls/brakes[1]</property>
+     <value type="double">0.0</value>
+    </binding>
+    <binding>
+     <command>property-assign</command>
+     <property>/controls/brakes[2]</property>
+     <value type="double">0.0</value>
+    </binding>
+   </mod-up>
+  </button>
+
+For people who take pleasure in avoiding XML, here's the command-line
+equivalent (note the subscripts to distinguish multiple bindings; the
+XML will handle this automatically):
+
+  --prop:/input/joysticks/button[0]/binding[0]/command=property-assign
+  --prop:/input/joysticks/button[0]/binding[0]/property=/controls/brakes[0]
+  --prop:/input/joysticks/button[0]/binding[0]/value=1.0
+  --prop:/input/joysticks/button[0]/binding[1]/command=property-assign
+  --prop:/input/joysticks/button[0]/binding[1]/property=/controls/brakes[1]
+  --prop:/input/joysticks/button[0]/binding[1]/value=1.0
+  --prop:/input/joysticks/button[0]/binding[2]/command=property-assign
+  --prop:/input/joysticks/button[0]/binding[2]/property=/controls/brakes[2]
+  --prop:/input/joysticks/button[0]/binding[2]/value=1.0
+  --prop:/input/joysticks/button[0]/mod-up/binding[0]/command=property-assign
+  --prop:/input/joysticks/button[0]/mod-up/binding[0]/property=brakes[0]
+  --prop:/input/joysticks/button[0]/mod-up/binding[0]/value=0.0
+  --prop:/input/joysticks/button[0]/mod-up/binding[1]/command=property-assign
+  --prop:/input/joysticks/button[0]/mod-up/binding[1]/property=brakes[1]
+  --prop:/input/joysticks/button[0]/mod-up/binding[1]/value=0.0
+  --prop:/input/joysticks/button[0]/mod-up/binding[2]/command=property-assign
+  --prop:/input/joysticks/button[0]/mod-up/binding[2]/property=brakes[2]
+  --prop:/input/joysticks/button[0]/mod-up/binding[2]/value=0.0
+
+
+This is a good time to remind you that command line formatted options are used
+in your .fgfsrc file. You can put them in $FG_ROOT/system.fgfsrc to make them
+global.
+
+
+Keyboard Bindings
+-----------------
+
+Keyboard bindings are almost exactly identical to joystick-button
+bindings, as in the following example (the context is
+/input/keyboard):
+
+  <key n="1">
+   <name>Ctrl-A</name>
+   <desc>Toggle autopilot altitude lock.</desc>
+   <binding>
+    <command>property-toggle</command>
+    <property>/autopilot/locks/altitude</property>
+   </binding>
+  </key>
+
+There are a few gotcha's though.  First, the index of the key
+specifies the key code that you're binding; in the above example, '1'
+corresponds to Ctrl-A (as mentioned in the friendly comment).  Regular
+key codes go up to 255; codes from 256 up represent special keys like
+function and arrow keys (you can get the value from include/GL/glut.h,
+but adding 256 to the special key code).  Here is the command-line
+equivalent of the above, leaving out the documentation properties:
+
+  --prop:/input/keyboard/key[1]/binding/command=property-toggle
+  --prop:/input/keyboard/key[1]/binding/property=/autopilot/locks/altitude
+
+(The 'property-toggle' command switches a boolean value between true and
+false, so it needs no arguments except for the property name.)  DON'T
+LEAVE OUT THE INDEX!!!
+
+The second gotcha is that keys can take more modifiers than joystick
+buttons.  In addition to mod-up (representing the key release), a key
+may use any combination of nested 'mod-alt', 'mod-ctrl', and
+'mod-shift' modifiers, as in the following example:
+
+  <key n="49">
+   <name>1</name>
+   <mod-shift>
+     <desc>Look back left</desc>
+     <binding>
+      <command>property-assign</command>
+      <property>/sim/view/goal-offset</property>
+      <value type="double">135</value>
+     </binding>
+   </mod-shift>
+  </key>
+
+In this example, the '1' key combined with shift causes the view to
+switch to back left.  Note that this will work only with the keypad 1,
+since pressing shift+1 on the regular keyboard will give a '!'
+character instead.
+
+The input module tries to be smart about supplying control and shift
+modifiers automatically where they make sense -- note that it wasn't
+necessary to use a nested 'mod-ctrl' element for the ctrl-A binding
+earlier, since a keycode less that 32 implies a control character
+anyway.
+
+With the new input module, the key-up events can also be detected for
+the keyboard, so it's possible to have touch-sensitive brakes (etc.)
+just as with the joystick:
+
+  <key n="44">
+   <name>,</name>
+   <desc>Left brake</desc>
+   <binding>
+    <command>property-assign</command>
+    <property>/controls/brakes[0]</property>
+    <value type="double">1.0</value>
+   </binding>
+   <mod-up>
+    <binding>
+     <command>property-assign</command>
+     <property>/controls/brakes[0]</property>
+     <value type="double">0.0</value>
+    </binding>
+   </mod-up>
+  </key>
+
+Now here is a different way to bind a brake. In this example, there is
+no <mod-up> tag, so it *does* work like a parking brake.
+
+<key n="66">
+  <name>B</name>
+  <desc>Toggle parking brake on or off</desc>
+  <binding>
+   <command>property-toggle</command>
+   <property>/controls/brakes[0]</property>
+  </binding>
+  <binding>
+   <command>property-toggle</command>
+   <property>/controls/brakes[1]</property>
+  </binding>
+  <binding>
+   <command>property-toggle</command>
+   <property>/controls/brakes[2]</property>
+  </binding>
+ </key>
+
