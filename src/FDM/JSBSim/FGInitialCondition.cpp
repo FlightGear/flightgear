@@ -671,7 +671,6 @@ bool FGInitialCondition::solve(double *y,double x)
   i=0;
   while ((fabs(d) > eps) && (i < 100)) {
     d=(x3-x1)/d0;
-    cout << "f3-f1= " << f3-f1 << endl;
     x2 = x1-d*d0*f1/(f3-f1);
     
     f2=(this->*sfunc)(x2)-x;

@@ -145,7 +145,9 @@ public:
   inline double Getvbarh(void) { return vbarh; } // H. Tail Volume
   inline double Getvbarv(void) { return vbarv; } // V. Tail Volume
   inline FGColumnVector3& GetMoments(void) { return vMoments; }
+  inline double GetMoments(int idx) { return vMoments(idx); }
   inline FGColumnVector3& GetForces(void) { return vForces; }
+  inline double GetForces(int idx) { return vForces(idx); }
   inline FGColumnVector3& GetBodyAccel(void) { return vBodyAccel; }
   inline FGColumnVector3& GetNcg   (void)    { return vNcg; }
   inline FGColumnVector3& GetXYZrp(void) { return vXYZrp; }

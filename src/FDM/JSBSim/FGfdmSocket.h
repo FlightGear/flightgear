@@ -100,6 +100,7 @@ public:
   void Append(double);
   void Append(long);
   void Clear(void);
+  bool GetConnectStatus(void) {return connected;}
 
 private:
   int sckt;
@@ -107,6 +108,7 @@ private:
   struct sockaddr_in scktName;
   struct hostent *host;
   string buffer;
+  bool connected;
   void Debug(int from);
 };
 

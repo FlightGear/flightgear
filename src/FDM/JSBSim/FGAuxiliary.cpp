@@ -145,14 +145,18 @@ bool FGAuxiliary::Run()
     // mass, the acceleration vector is calculated. The term wdot is equivalent
     // to the JSBSim vPQRdot vector, and the w parameter is equivalent to vPQR.
     // The radius R is calculated below in the vector vToEyePt.
-        
-    vToEyePt = Aircraft->GetXYZep() - MassBalance->GetXYZcg();
+    
+    vPilotAccel.InitMatrix();   
+    if( Translation->GetVt() > 1 ) {
+      vToEyePt = Aircraft->GetXYZep() - MassBalance->GetXYZcg();
 
-    vPilotAccel = Aircraft->GetBodyAccel()
-                  + Rotation->GetPQRdot() * vToEyePt
-                  + Rotation->GetPQR() * (Rotation->GetPQR() * vToEyePt)
-                  + Inertial->GetGravity();
-
+      vPilotAccel =  Aerodynamics->GetForces() 
+                  +  Propulsion->GetForces()
+                  +  GroundReactions->GetForces();
+      vPilotAccel /= MassBalance->GetMass();
+      vPilotAccel += Rotation->GetPQRdot() * vToEyePt;
+      vPilotAccel += Rotation->GetPQR() * (Rotation->GetPQR() * vToEyePt);
+    }
     earthPosAngle += State->Getdt()*Inertial->omega();
     return false;
   } else {

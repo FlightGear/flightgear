@@ -49,6 +49,7 @@ CLASS IMPLEMENTATION
 FGfdmSocket::FGfdmSocket(string address, int port)
 {
   size = 0;
+  connected = false;
 
 #if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
     WSADATA wsaData;
@@ -80,6 +81,7 @@ FGfdmSocket::FGfdmSocket(string address, int port)
       int len = sizeof(struct sockaddr_in);
       if (connect(sckt, (struct sockaddr*)&scktName, len) == 0) {   // successful
         cout << "Successfully connected to socket ..." << endl;
+        connected = true;
       } else {                // unsuccessful
         cout << "Could not connect to socket ..." << endl;
       }
