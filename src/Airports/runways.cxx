@@ -25,6 +25,7 @@
 #  include <config.h>
 #endif
 
+#include <math.h>               // fabs()
 #include <stdio.h>              // sprintf()
 
 #include <simgear/compiler.h>
