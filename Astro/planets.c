@@ -32,12 +32,12 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Time/fg_time.h>
 #include <Astro/orbits.h>
 #include <Astro/planets.h>
 #include <Astro/sun.h>
+#include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
-#include <Main/fg_debug.h>
+#include <Time/fg_time.h>
 
 GLint planets = 0;
 
@@ -206,9 +206,12 @@ void fgPlanetsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.8  1998/04/03 21:52:50  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.9  1998/04/18 04:13:57  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.8  1998/04/03 21:52:50  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.7  1998/02/23 19:07:55  curt
  * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
  * calculation code between sun display, and other FG sections that use this

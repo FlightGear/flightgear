@@ -41,7 +41,7 @@
 
 #include "fg_time.h"
 
-#include <Main/fg_debug.h>
+#include <Debug/fg_debug.h>
 #include <Time/event.h>
 
 
@@ -301,14 +301,17 @@ void fgEventProcess( void ) {
 
 
 /* $Log$
-/* Revision 1.12  1998/04/09 18:40:13  curt
-/* We had unified some of the platform disparate time handling code, and
-/* there was a bug in timesum() which calculated a new time stamp based on
-/* the current time stamp + offset.  This hosed the periodic event processing
-/* logic because you'd never arrive at the time the event was scheduled for.
-/* Sky updates and lighting changes are handled via this event mechanism so
-/* they never changed ... it is fixed now.
+/* Revision 1.13  1998/04/18 04:14:08  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.12  1998/04/09 18:40:13  curt
+ * We had unified some of the platform disparate time handling code, and
+ * there was a bug in timesum() which calculated a new time stamp based on
+ * the current time stamp + offset.  This hosed the periodic event processing
+ * logic because you'd never arrive at the time the event was scheduled for.
+ * Sky updates and lighting changes are handled via this event mechanism so
+ * they never changed ... it is fixed now.
+ *
  * Revision 1.11  1998/04/03 22:12:55  curt
  * Converting to Gnu autoconf system.
  * Centralized time handling differences.

@@ -42,12 +42,12 @@
 #include <Astro/planets.h>
 #include <Astro/stars.h>
 
+#include <Aircraft/aircraft.h>
+#include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Include/general.h>
-#include <Aircraft/aircraft.h>
 #include <Main/views.h>
 #include <Time/fg_time.h>
-#include <Main/fg_debug.h>
 
 #define EpochStart           (631065600)
 #define DaysSinceEpoch(secs) (((secs)-EpochStart)*(1.0/(24*3600)))
@@ -257,9 +257,12 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.10  1998/04/03 21:52:51  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.11  1998/04/18 04:13:58  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.10  1998/04/03 21:52:51  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.9  1998/03/14 00:27:12  curt
  * Updated fgGENERAL to a "type" of struct.
  *

@@ -37,8 +37,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <Debug/fg_debug.h>
 #include <Include/general.h>
-#include <Main/fg_debug.h>
 #include <Scenery/obj.h>
 #include <Scenery/scenery.h>
 #include <Scenery/texload.h>
@@ -114,9 +114,12 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.39  1998/04/08 23:30:07  curt
-/* Adopted Gnu automake/autoconf system.
+/* Revision 1.40  1998/04/18 04:14:06  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.39  1998/04/08 23:30:07  curt
+ * Adopted Gnu automake/autoconf system.
+ *
  * Revision 1.38  1998/04/03 22:11:37  curt
  * Converting to Gnu autoconf system.
  *

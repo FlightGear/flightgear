@@ -41,15 +41,14 @@
 #  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
 #endif
 
-#include <Time/fg_time.h>
-#include <Include/fg_constants.h>
+#include <Debug/fg_debug.h>
 #include <Flight/flight.h>
+#include <Include/fg_constants.h>
+#include <Time/fg_time.h>
 
 
 #define DEGHR(x)        ((x)/15.)
 #define RADHR(x)        DEGHR(x*RAD_TO_DEG)
-
-#include <Main/fg_debug.h>
 
 struct fgTIME cur_time_params;
 struct fgLIGHT cur_light_params;
@@ -368,14 +367,17 @@ void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.39  1998/04/09 18:40:14  curt
-/* We had unified some of the platform disparate time handling code, and
-/* there was a bug in timesum() which calculated a new time stamp based on
-/* the current time stamp + offset.  This hosed the periodic event processing
-/* logic because you'd never arrive at the time the event was scheduled for.
-/* Sky updates and lighting changes are handled via this event mechanism so
-/* they never changed ... it is fixed now.
+/* Revision 1.40  1998/04/18 04:14:09  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.39  1998/04/09 18:40:14  curt
+ * We had unified some of the platform disparate time handling code, and
+ * there was a bug in timesum() which calculated a new time stamp based on
+ * the current time stamp + offset.  This hosed the periodic event processing
+ * logic because you'd never arrive at the time the event was scheduled for.
+ * Sky updates and lighting changes are handled via this event mechanism so
+ * they never changed ... it is fixed now.
+ *
  * Revision 1.38  1998/04/08 23:35:40  curt
  * Tweaks to Gnu automake/autoconf system.
  *

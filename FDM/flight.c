@@ -24,9 +24,10 @@
  **************************************************************************/
 
 #include <stdio.h>
+
+#include <Debug/fg_debug.h>
 #include <Flight/flight.h>
 #include <Flight/LaRCsim/ls_interface.h>
-#include <Main/fg_debug.h>
 
 
 fgFLIGHT cur_flight_params;
@@ -72,10 +73,13 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
 
 
 /* $Log$
-/* Revision 1.10  1998/02/07 15:29:37  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.11  1998/04/18 04:14:04  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.10  1998/02/07 15:29:37  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.9  1998/01/27 00:47:53  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

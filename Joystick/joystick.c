@@ -33,7 +33,7 @@
 
 #endif
 
-#include <Main/fg_debug.h>
+#include <Debug/fg_debug.h>
 
 static joy_x_min=0, joy_x_ctr=0, joy_x_max=0;
 static joy_y_min=0, joy_y_ctr=0, joy_y_max=0;
@@ -256,10 +256,13 @@ int fgJoystickRead( double *joy_x, double *joy_y, int *joy_b1, int *joy_b2 )
 
 
 /* $Log$
-/* Revision 1.5  1998/02/12 21:59:44  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.6  1998/04/18 04:14:05  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.5  1998/02/12 21:59:44  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.4  1998/02/03 23:20:20  curt
  * Lots of little tweaks to fix various consistency problems discovered by
  * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper

@@ -6,7 +6,6 @@ SUBDIRS = \
 	Controls \
 	Flight \
 	Joystick \
-	Math \
 	Scenery \
 	Time \
 	Weather \

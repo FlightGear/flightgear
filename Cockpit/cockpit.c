@@ -38,14 +38,14 @@
 #include <Include/fg_constants.h>
 
 #include <Aircraft/aircraft.h>
-#include <Scenery/scenery.h>
+#include <Debug/fg_debug.h>
+#include <Math/fg_random.h>
 #include <Math/mat3.h>
 #include <Math/polar.h>
+#include <Scenery/scenery.h>
 #include <Time/fg_timer.h>
-#include <Math/fg_random.h>
 #include <Weather/weather.h>
 
-#include <Main/fg_debug.h>
 
 // This is a structure that contains all data related to
 // cockpit/panel/hud system
@@ -102,9 +102,12 @@ void fgCockpitUpdate( void )
 
 
 /* $Log$
-/* Revision 1.12  1998/04/14 02:23:09  curt
-/* Code reorganizations.  Added a Lib/ directory for more general libraries.
+/* Revision 1.13  1998/04/18 04:14:01  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.12  1998/04/14 02:23:09  curt
+ * Code reorganizations.  Added a Lib/ directory for more general libraries.
+ *
  * Revision 1.11  1998/03/14 00:32:13  curt
  * Changed a printf() to a fgPrintf().
  *

@@ -28,10 +28,10 @@
 
 #include <Astro/orbits.h>
 
+#include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Include/general.h>
 #include <Time/fg_time.h>
-#include <Main/fg_debug.h>
 
 struct OrbElements pltOrbElements[9];
 
@@ -165,9 +165,12 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
 
 
 /* $Log$
-/* Revision 1.9  1998/03/14 00:27:12  curt
-/* Updated fgGENERAL to a "type" of struct.
+/* Revision 1.10  1998/04/18 04:13:57  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.9  1998/03/14 00:27:12  curt
+ * Updated fgGENERAL to a "type" of struct.
+ *
  * Revision 1.8  1998/02/23 19:07:55  curt
  * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
  * calculation code between sun display, and other FG sections that use this

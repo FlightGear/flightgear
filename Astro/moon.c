@@ -35,11 +35,11 @@
 #include <Astro/moon.h>
 
 #include <Aircraft/aircraft.h>
+#include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Include/general.h>
 #include <Main/views.h>
 #include <Time/fg_time.h>
-#include <Main/fg_debug.h>
 
 struct CelestialCoord moonPos;
 
@@ -213,9 +213,12 @@ void fgMoonRender( void ) {
 
 
 /* $Log$
-/* Revision 1.8  1998/04/03 21:52:49  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.9  1998/04/18 04:13:56  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.8  1998/04/03 21:52:49  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.7  1998/02/23 19:07:54  curt
  * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
  * calculation code between sun display, and other FG sections that use this

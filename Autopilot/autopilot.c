@@ -24,34 +24,15 @@
  **************************************************************************/
 
 
-// I have no Idea how many of these are needed.  Some one tell me.
 #include <config.h>
+
 #include <assert.h>
-
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
-#include <GL/glut.h>
 #include <stdlib.h>
-#include <string.h>
 
-#ifdef HAVE_VALUES_H
-#  include <values.h>  // for MAXINT
-#endif
- 
 #include "autopilot.h"
 
 #include <Include/fg_constants.h>
-#include <Aircraft/aircraft.h>
-#include <Main/fg_debug.h>
-#include <Math/fg_random.h>
-#include <Math/mat3.h>
-#include <Math/polar.h>
-#include <Scenery/scenery.h>
-#include <Time/fg_timer.h>
-#include <Weather/weather.h>
-#include <Controls/controls.h>
+#include <Debug/fg_debug.h>
 
 
 // The below routines were copied right from hud.c ( I hate reinventing
@@ -61,7 +42,7 @@
 //// They should eventually be member functions of the aircraft.
 ////
 
-double get_throttleval( void )
+static double get_throttleval( void )
 {
 	fgCONTROLS *pcontrols;
 
@@ -69,7 +50,7 @@ double get_throttleval( void )
   return pcontrols->throttle[0];     // Hack limiting to one engine
 }
 
-double get_aileronval( void )
+static double get_aileronval( void )
 {
 	fgCONTROLS *pcontrols;
 
@@ -77,7 +58,7 @@ double get_aileronval( void )
   return pcontrols->aileron;
 }
 
-double get_elevatorval( void )
+static double get_elevatorval( void )
 {
 	fgCONTROLS *pcontrols;
 
@@ -85,7 +66,7 @@ double get_elevatorval( void )
   return pcontrols->elevator;
 }
 
-double get_elev_trimval( void )
+static double get_elev_trimval( void )
 {
 	fgCONTROLS *pcontrols;
 
@@ -93,7 +74,7 @@ double get_elev_trimval( void )
   return pcontrols->elevator_trim;
 }
 
-double get_rudderval( void )
+static double get_rudderval( void )
 {
 	fgCONTROLS *pcontrols;
 
@@ -101,7 +82,7 @@ double get_rudderval( void )
   return pcontrols->rudder;
 }
 
-double get_speed( void )
+static double get_speed( void )
 {
 	fgFLIGHT *f;
 
@@ -109,7 +90,7 @@ double get_speed( void )
 	return( FG_V_equiv_kts );    // Make an explicit function call.
 }
 
-double get_aoa( void )
+static double get_aoa( void )
 {
 	fgFLIGHT *f;
               
@@ -117,7 +98,7 @@ double get_aoa( void )
 	return( FG_Gamma_vert_rad * RAD_TO_DEG );
 }
 
-double fgAPget_roll( void )
+static double fgAPget_roll( void )
 {
 	fgFLIGHT *f;
 
@@ -125,7 +106,7 @@ double fgAPget_roll( void )
 	return( FG_Phi * RAD_TO_DEG );
 }
 
-double get_pitch( void )
+static double get_pitch( void )
 {
 	fgFLIGHT *f;
               
@@ -141,7 +122,7 @@ double fgAPget_heading( void )
 	return( FG_Psi * RAD_TO_DEG );
 }
 
-double get_altitude( void )
+static double get_altitude( void )
 {
 	fgFLIGHT *f;
 	// double rough_elev;
@@ -153,7 +134,7 @@ double get_altitude( void )
 	return( FG_Altitude * FEET_TO_METER /* -rough_elev */ );
 }
 
-double get_sideslip( void )
+static double get_sideslip( void )
 {
         fgFLIGHT *f;
         
@@ -187,7 +168,7 @@ void fgAPInit( fgAIRCRAFT *current_aircraft )
 		exit(1);
 		
 	APData->Mode = 0 ; 		// turn the AP off
-	APData->Heading = 5 ; 		// default direction, due north
+	APData->Heading = 0.0; 		// default direction, due north
 	
 	// These eventually need to be read from current_aircaft somehow.
 	
@@ -300,7 +281,7 @@ void fgAPSetMode( int mode)
 	 fgPrintf( FG_COCKPIT, FG_INFO, "APSetMode : %d\n", mode );
 	 
 	 APData->Mode = mode;  // set the new mode
-	 
+	 APData->Heading = fgAPget_heading();  // Lock to current heading
 }
 	         
 

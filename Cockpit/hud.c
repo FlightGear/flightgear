@@ -40,9 +40,9 @@
 
 #include "hud.h"
 
-#include <Include/fg_constants.h>
 #include <Aircraft/aircraft.h>
-#include <Main/fg_debug.h>
+#include <Debug/fg_debug.h>
+#include <Include/fg_constants.h>
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
 #include <Math/polar.h>
@@ -1603,10 +1603,13 @@ void fgHUDSetBrightness( Hptr hud, int brightness )
 }
 
 /* $Log$
-/* Revision 1.21  1998/04/03 21:55:28  curt
-/* Converting to Gnu autoconf system.
-/* Tweaks to hud.c
+/* Revision 1.22  1998/04/18 04:14:02  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.21  1998/04/03 21:55:28  curt
+ * Converting to Gnu autoconf system.
+ * Tweaks to hud.c
+ *
  * Revision 1.20  1998/03/09 22:48:40  curt
  * Minor "formatting" tweaks.
  *

@@ -27,8 +27,8 @@
 #include <stdio.h>
 
 #include <Aircraft/aircraft.h>
+#include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
-#include <Main/fg_debug.h>
 
 /* This is a record containing all the info for the aircraft currently
    being operated */
@@ -64,10 +64,13 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
 
 /* $Log$
-/* Revision 1.17  1998/02/12 21:59:31  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.18  1998/04/18 04:13:56  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.17  1998/02/12 21:59:31  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.16  1998/02/07 15:29:31  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

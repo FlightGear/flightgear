@@ -40,9 +40,9 @@
 
 #include <Aircraft/aircraft.h>
 #include <Bucket/bucketutils.h>
+#include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
-#include <Main/fg_debug.h>
 
 
 #define FG_LOCAL_X           7   /* should be odd */
@@ -219,9 +219,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.24  1998/04/14 02:23:18  curt
-/* Code reorganizations.  Added a Lib/ directory for more general libraries.
+/* Revision 1.25  1998/04/18 04:14:07  curt
+/* Moved fg_debug.c to it's own library.
 /*
+ * Revision 1.24  1998/04/14 02:23:18  curt
+ * Code reorganizations.  Added a Lib/ directory for more general libraries.
+ *
  * Revision 1.23  1998/04/08 23:30:08  curt
  * Adopted Gnu automake/autoconf system.
  *
