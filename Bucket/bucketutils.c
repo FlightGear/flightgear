@@ -45,7 +45,7 @@
 
    3 bits - to represent x (0 to 7)
    3 bits - to represent y (0 to 7) */
-long int fgBucketGenIndex(fgBUCKET *p) {
+long int fgBucketGenIndex( const fgBUCKET *p) {
     long index = 0;
 
     index = ((p->lon + 180) << 14) + ((p->lat + 90) << 6) + (p->y << 3) + p->x;
@@ -73,7 +73,7 @@ void fgBucketParseIndex(long int index, fgBUCKET *p) {
 
 
 /* Build a path name from an tile index */
-void fgBucketGenBasePath(fgBUCKET *p, char *path) {
+void fgBucketGenBasePath( const fgBUCKET *p, char *path) {
     long int index;
     int top_lon, top_lat, main_lon, main_lat;
     char hem, pole;
@@ -267,9 +267,12 @@ int main() {
 
 
 /* $Log$
-/* Revision 1.3  1998/07/04 00:46:47  curt
-/* typedef'd struct fgBUCKET.
+/* Revision 1.4  1998/12/07 21:08:01  curt
+/* Added a const in a couple places to get rid of annoying compiler warnings.
 /*
+ * Revision 1.3  1998/07/04 00:46:47  curt
+ * typedef'd struct fgBUCKET.
+ *
  * Revision 1.2  1998/04/25 22:06:22  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *
