@@ -315,9 +315,12 @@ FGFX::update ()
     if (cur_fdm_state->get_gear_unit(i)->GetWoW()) {
       gearOnGround++;
       if (!_gear_on_ground[i]) {
-	double squeal_volume = cur_fdm_state->get_V_down() / 5.0;
+        // 3 parts horizontal velocity + 1 part vertical velocity
+	double squeal_volume = 0.75 * cur_fdm_state->get_V_equiv_kts() / 90.0 +
+            0.25 * cur_fdm_state->get_V_down() / 5.0;
 	if (squeal_volume > 0.1) {
 	  _squeal->set_volume(squeal_volume);
+	  _squeal->set_pitch(1.25);
 	  mgr->play_once("squeal");
 	}
 	_gear_on_ground[i] = true;
