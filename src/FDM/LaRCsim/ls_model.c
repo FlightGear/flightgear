@@ -37,6 +37,9 @@
 	CURRENT RCS HEADER INFO:
 $Header$
 $Log$
+Revision 1.4  2003/07/25 17:53:41  mselig
+UIUC code initilization mods to tidy things up a bit.
+
 Revision 1.3  2003/05/13 18:45:06  curt
 Robert Deters:
 
@@ -168,6 +171,7 @@ void ls_model( SCALAR dt, int Initialize ) {
       navion_gear( dt, Initialize );
       break;
     case C172:
+      printf("here we are in C172 \n");
       if(Initialize < 0) c172_init();
       inertias( dt, Initialize );
       subsystems( dt, Initialize );
@@ -182,10 +186,22 @@ void ls_model( SCALAR dt, int Initialize ) {
       cherokee_engine( dt, Initialize );
       cherokee_gear( dt, Initialize );
       break;
+    case BASIC:
+      //      printf("here we are in BASIC \n");
+      if(Initialize < 0) basic_init();
+      printf("Initialize %d \n", Initialize);
+      inertias( dt, Initialize );
+      subsystems( dt, Initialize );
+      basic_aero( dt, Initialize );
+      basic_engine( dt, Initialize );
+      basic_gear( dt, Initialize );
+      break;
     case UIUC:
       inertias( dt, Initialize );
       subsystems( dt, Initialize );
-      uiuc_init_2_wrapper();
+      // During initialization period, re-initialize velocities
+      // and euler angles
+      if (Initialize !=0) uiuc_init_2_wrapper();
       uiuc_network_recv_2_wrapper();
       uiuc_engine_2_wrapper( dt, Initialize );
       uiuc_wind_2_wrapper( dt, Initialize );

@@ -50,6 +50,9 @@
 
 $Header$
 $Log$
+Revision 1.5  2003/07/25 17:53:47  mselig
+UIUC code initilization mods to tidy things up a bit.
+
 Revision 1.4  2003/06/20 19:53:56  ehofman
 Get rid of a multiple defined symbol warning" src/FDM/LaRCsim/ls_step.c
 "
@@ -294,7 +297,7 @@ Initial Flight Gear revision.
 
 --------------------------------------------------------------------------*/
 
-#include <FDM/UIUCModel/uiuc_wrapper.h>
+//#include <FDM/UIUCModel/uiuc_wrapper.h>
 
 #include "ls_types.h"
 #include "ls_constants.h"
@@ -361,11 +364,9 @@ void ls_step( SCALAR dt, int Initialize ) {
     	V_east = V_east + local_gnd_veast;
 
 /* Initialize quaternions and transformation matrix from Euler angles */
-	if (current_model == UIUC && Simtime == 0) {
-	  if (inited == 0) {
-	    uiuc_defaults_inits();
-	  }
-	  uiuc_init_vars();
+	// Initialize UIUC aircraft model
+	if (current_model == UIUC) {
+	  uiuc_init_2_wrapper();
         }
 
 	    e_0 = cos(Psi*0.5)*cos(Theta*0.5)*cos(Phi*0.5) 
@@ -386,9 +387,11 @@ void ls_step( SCALAR dt, int Initialize ) {
 	    T_local_to_body_32 = 2*(e_2*e_3 - e_0*e_1);
 	    T_local_to_body_33 = e_0*e_0 - e_1*e_1 - e_2*e_2 + e_3*e_3;
 
-	if (current_model == UIUC && Simtime == 0) {
-	    uiuc_vel_init();
-        }
+	    // Initialize local velocities (V_north, V_east, V_down)
+	    // based on transformation matrix calculated above
+	    if (current_model == UIUC) {
+	      uiuc_local_vel_init();
+	    }
 
 /*	Calculate local gravitation acceleration	*/
 

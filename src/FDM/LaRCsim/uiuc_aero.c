@@ -66,11 +66,21 @@ void uiuc_init_2_wrapper()
 {
     static int init = 0;
 
-    if (init==0)
-    {
-      init = -1; 
-      uiuc_initial_init();
+    // On first time through initialize UIUC aircraft model
+    if (init==0) {
+        init=-1;
+	uiuc_defaults_inits();
+        uiuc_init_aeromodel();
     }
+
+    // Re-initialize velocities and euler angles since LaRCsim tends
+    // to change them
+    uiuc_initial_init();
+}
+
+void uiuc_local_vel_init()
+{
+  uiuc_vel_init();
 }
 
 void uiuc_aero_2_wrapper( SCALAR dt, int Initialize ) 
@@ -81,6 +91,7 @@ void uiuc_aero_2_wrapper( SCALAR dt, int Initialize )
 
 void uiuc_wind_2_wrapper( SCALAR dt, int Initialize ) 
 {
+  if (Initialize == 0)
     uiuc_wind_routine(dt);
 }
 
@@ -103,10 +114,10 @@ void uiuc_record_2_wrapper(SCALAR dt)
 
 void uiuc_network_recv_2_wrapper()
 {
-    uiuc_network_recv_routine();
+  uiuc_network_recv_routine();
 }
 
 void uiuc_network_send_2_wrapper()
 {
-    uiuc_network_send_routine();
+  uiuc_network_send_routine();
 }

@@ -34,8 +34,11 @@
 
 $Header$
 $Log$
-Revision 1.1  2002/09/10 01:14:02  curt
-Initial revision
+Revision 1.2  2003/07/25 17:53:35  mselig
+UIUC code initilization mods to tidy things up a bit.
+
+Revision 1.1.1.1  2002/09/10 01:14:02  curt
+Initial revision of FlightGear-0.9.0
 
 Revision 1.3  2000/05/24 04:10:01  curt
 MSVC5 portability changes contributed by Bruce Finney.
@@ -149,6 +152,7 @@ static char rcsid[] = "$Id$";
 
 void cherokee_init( void );
 void c172_init( void );
+void basic_init( void );
 
 typedef struct
 {
@@ -245,6 +249,9 @@ void ls_init( char * aircraft ) {
     } else if (!strcasecmp(aircraft, "cherokee")) {
       printf("Initializing LaRCsim for Cherokee\n");
       current_model = CHEROKEE;
+    } else if (!strcasecmp(aircraft, "basic")) {
+      printf("Initializing LaRCsim for Basic\n");
+      current_model = BASIC;
     } else if (!strcasecmp(aircraft, "uiuc")) {
       printf("Initializing LaRCsim for UIUC models\n");
       current_model = UIUC;
@@ -282,6 +289,9 @@ void ls_init( char * aircraft ) {
       break;
     case CHEROKEE:
       cherokee_init();
+      break;
+    case BASIC:
+      basic_init();
       break;
     case UIUC:
       c172_init();

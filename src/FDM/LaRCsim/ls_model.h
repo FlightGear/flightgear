@@ -8,6 +8,7 @@ typedef enum {
   NAVION,
   C172,
   CHEROKEE,
+  BASIC,
   UIUC
 } Model;
 
