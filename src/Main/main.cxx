@@ -26,6 +26,7 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/misc/exception.hxx>
 
 #ifdef SG_MATH_EXCEPTION_CLASH
 #  include <math.h>
@@ -1426,8 +1427,8 @@ int fgGlutInitEvents( void ) {
 }
 
 
-// Main ...
-int main( int argc, char **argv ) {
+// Main loop
+int mainLoop( int argc, char **argv ) {
 
 #if defined( macintosh )
     freopen ("stdout.txt", "w", stdout );
@@ -1756,6 +1757,26 @@ int main( int argc, char **argv ) {
 
 // $$$ end - added VS Renganathan, 15 Oct 2K
 //         - added Venky         , 12 Nov 2K
+
+// Main entry point; catch any exceptions that have made it this far.
+int main ( int argc, char **argv ) {
+				// FIXME: add other, more specific
+				// exceptions.
+  try {
+    mainLoop(argc, argv);
+  } catch (sg_io_exception e1) {
+    SG_LOG(SG_GENERAL, SG_ALERT,
+	   "Fatal error " << e1.getMessage()
+	   << " received from " << e1.getOrigin()
+	   << "\n at " << e1.getLocation().asString());
+  } catch (sg_exception e) {
+    SG_LOG(SG_GENERAL, SG_ALERT,
+	   "Fatal error " << e.getMessage()
+	   << " received from " << e.getOrigin());
+    exit(1);
+  }
+}
+
 
 void fgLoadDCS(void) {
 
