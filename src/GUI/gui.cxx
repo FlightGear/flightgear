@@ -153,6 +153,30 @@ void mkDialog (const char *txt)
     FG_PUSH_PUI_DIALOG( dialogBox );
 }
 
+// Message Box to report an error.
+void guiErrorMessage (const char *txt)
+{
+    SG_LOG(SG_GENERAL, SG_ALERT, txt);
+    if (dialogBox != 0)
+      mkDialog(txt);
+}
+
+// Message Box to report a throwable (usually an exception).
+void guiErrorMessage (const char *txt, const sg_throwable &throwable)
+{
+    string msg = txt;
+    msg += '\n';
+    msg += throwable.getFormattedMessage();
+    if (throwable.getOrigin() != "") {
+      msg += "\n (reported by ";
+      msg += throwable.getOrigin();
+      msg += ')';
+    }
+    SG_LOG(SG_GENERAL, SG_ALERT, msg);
+    if (dialogBox != 0)
+      mkDialog(msg.c_str());
+}
+
 // Toggle the Menu and Mouse display state
 void guiToggleMenu(void)
 {
