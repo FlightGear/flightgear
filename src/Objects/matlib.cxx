@@ -289,10 +289,10 @@ void FGMaterialLib::load_next_deferred() {
             SG_LOG( SG_GENERAL, SG_INFO, "Loading texture for " << key );
 #ifdef PLIB_1_2_X
             slot.get_textured()->
-                setTexture( (char *)slot.get_texture_name_c_str(), 0, 0, 0 );
+                setTexture( (char *)slot.get_texture_name_c_str(), 0, 0 );
 #else
             slot.get_textured()->
-                setTexture( (char *)slot.get_texture_name_c_str(), 0, 0 );
+                setTexture( (char *)slot.get_texture_name_c_str(), 0, 0, 0 );
 #endif
             slot.set_texture_loaded( true );
         }
