@@ -576,7 +576,7 @@ void HeadingPitchRadiusFromVec3 ( sgVec3 hpr, sgVec3 vec3 )
     hpr[2] = 0;
   } else {
     if (fabs(y) < 0.001f)
-      y == 0.001f;
+      y = 0.001f;
 
     Zx = sqrt(y*y + z*z);
 
