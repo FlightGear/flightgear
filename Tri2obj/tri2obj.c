@@ -135,10 +135,10 @@ void triload(char *basename) {
     for ( i = 1; i <= nodecount; i++ ) {
 	fscanf(node, "%d %lf %lf %lf %d\n", &junk1, 
 	       &n[0], &n[1], &n[2], &junk2);
-	printf("%d %.2f %.2f %.2f\n", junk1, n[0], n[1], n[2]);
+	/* printf("%d %.2f %.2f %.2f\n", junk1, n[0], n[1], n[2]); */
 	nodes[i] = geod_to_cart(n);
-	printf("%d %.2f %.2f %.2f\n", 
-	       junk1, nodes[i].x, nodes[i].y, nodes[i].z);
+	/* printf("%d %.2f %.2f %.2f\n", 
+	       junk1, nodes[i].x, nodes[i].y, nodes[i].z); */
     }
 
     fclose(node);
@@ -183,11 +183,13 @@ void dump_obj(char *basename) {
     obj = fopen(objname, "w");
 
     /* dump vertices */
+    printf("  writing vertices\n");
     for ( i = 1; i <= nodecount; i++ ) {
 	fprintf(obj, "v %.2f %.2f %.2f\n", 
 		nodes[i].x, nodes[i].y, nodes[i].z);
     }
 
+    printf("  calculating and writing normals\n");
     /* calculate and generate normals */
     for ( i = 1; i <= nodecount; i++ ) {
 	find_tris(i, &t1, &t2, &t3);
@@ -219,6 +221,7 @@ void dump_obj(char *basename) {
     }
 
     /* dump faces */
+    printf("  writing faces\n");
     for ( i = 1; i <= tricount; i++ ) {
 	fprintf(obj, "f %d//%d %d//%d %d//%d\n", 
 		tris[i][0], tris[i][0], 
@@ -245,12 +248,15 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.2  1997/11/14 00:29:13  curt
-/* Transform scenery coordinates at this point in pipeline when scenery is
-/* being translated to .obj format, not when it is being loaded into the end
-/* renderer.  Precalculate normals for each node as average of the normals
-/* of each containing polygon so Garoude shading is now supportable.
+/* Revision 1.3  1997/11/15 18:05:05  curt
+/* minor tweaks ...
 /*
+ * Revision 1.2  1997/11/14 00:29:13  curt
+ * Transform scenery coordinates at this point in pipeline when scenery is
+ * being translated to .obj format, not when it is being loaded into the end
+ * renderer.  Precalculate normals for each node as average of the normals
+ * of each containing polygon so Garoude shading is now supportable.
+ *
  * Revision 1.1  1997/10/29 23:05:15  curt
  * Initial revision.
  *

@@ -32,8 +32,8 @@
 #include <string.h>
 
 
-#define MAX_NODES 100000
-#define MAX_TRIS  200000
+#define MAX_NODES 200000
+#define MAX_TRIS  400000
 
 
 extern int nodecount, tricount;
@@ -50,12 +50,15 @@ void triload(char *basename);
 
 
 /* $Log$
-/* Revision 1.2  1997/11/14 00:29:13  curt
-/* Transform scenery coordinates at this point in pipeline when scenery is
-/* being translated to .obj format, not when it is being loaded into the end
-/* renderer.  Precalculate normals for each node as average of the normals
-/* of each containing polygon so Garoude shading is now supportable.
+/* Revision 1.3  1997/11/15 18:05:06  curt
+/* minor tweaks ...
 /*
+ * Revision 1.2  1997/11/14 00:29:13  curt
+ * Transform scenery coordinates at this point in pipeline when scenery is
+ * being translated to .obj format, not when it is being loaded into the end
+ * renderer.  Precalculate normals for each node as average of the normals
+ * of each containing polygon so Garoude shading is now supportable.
+ *
  * Revision 1.1  1997/10/29 23:05:15  curt
  * Initial revision.
  *
