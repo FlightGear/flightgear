@@ -568,6 +568,7 @@ bool fgInitConfig ( int argc, char **argv ) {
 
         string result = fgFindAircraftPath( aircraft_search, aircraft_set );
         if ( !result.empty() ) {
+            fgSetString( "/sim/aircraft-dir", result.c_str() );
             SGPath full_name( result );
             full_name.append( aircraft_set );
 

@@ -146,8 +146,7 @@ void YASim::init()
     }
 
     // Build a filename and parse it
-    SGPath f(globals->get_fg_root());
-    f.append("Aircraft-yasim");
+    SGPath f(fgGetString("/sim/aircraft-dir"));
     f.append(fgGetString("/sim/aero"));
     f.concat(".xml");
     readXML(f.str(), *_fdm);
