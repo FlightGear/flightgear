@@ -344,8 +344,8 @@ INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 #---------------------------------------------------------------------------
 # $Log$
-# Revision 1.3  1998/04/18 04:02:48  curt
-# Added zlib support in placed and other misc. tweaks.
+# Revision 1.4  1998/04/24 00:43:59  curt
+# Added zlib support.
 #
 # Revision 1.2  1998/04/14 02:25:59  curt
 # Code reorganizations.  Added a Lib/ directory for more general libraries.

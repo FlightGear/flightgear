@@ -30,13 +30,18 @@ tri2obj_SOURCES = tri2obj.c tri2obj.h
 
 tri2obj_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.la \
-	$(top_builddir)/Lib/Math/libMath.la
+	$(top_builddir)/Lib/Math/libMath.la \
+        $(top_builddir)/Lib/Debug/libDebug.la \
+        $(top_builddir)/Lib/zlib/libz.la
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1998/04/24 00:44:07  curt
+# Added zlib support.
+#
 # Revision 1.3  1998/04/18 04:01:29  curt
 # Now use libMath rather than having local copies of math routines.
 #

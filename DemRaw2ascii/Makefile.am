@@ -26,7 +26,7 @@
 
 bin_PROGRAMS = raw2ascii
 
-raw2ascii_SOURCES = main.c rawdem.c
+raw2ascii_SOURCES = main.c rawdem.c rawdem.h
 
 raw2ascii_LDADD = 
 
@@ -35,6 +35,9 @@ INCLUDES +=
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.2  1998/04/24 00:44:04  curt
+# Added zlib support.
+#
 # Revision 1.1  1998/04/18 03:59:44  curt
 # Incorporated into gnu automake/autoconf system.
 #

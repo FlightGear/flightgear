@@ -28,13 +28,19 @@ bin_PROGRAMS = fixobj
 
 fixobj_SOURCES = main.c obj.c obj.h
 
-fixobj_LDADD = $(top_builddir)/Lib/Math/libMath.la
+fixobj_LDADD = \
+	$(top_builddir)/Lib/Math/libMath.la \
+	$(top_builddir)/Lib/Debug/libDebug.la \
+	$(top_builddir)/Lib/zlib/libz.la
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1998/04/24 00:44:05  curt
+# Added zlib support.
+#
 # Revision 1.3  1998/04/18 04:01:02  curt
 # Now use libMath rather than having local copies of math routines.
 #
