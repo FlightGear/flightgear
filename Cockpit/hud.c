@@ -34,7 +34,7 @@
 
 #ifndef WIN32
 #  include <values.h>  // for MAXINT
-#endif //
+#endif
 
 #include "hud.h"
 
@@ -51,7 +51,7 @@
 // #define DEBUG
 
 #define drawOneLine(x1,y1,x2,y2)  glBegin(GL_LINES);  \
-   glVertex2f ((x1),(y1)); glVertex2f ((x2),(y2)); glEnd();
+	glVertex2f ((x1),(y1)); glVertex2f ((x2),(y2)); glEnd();
 
 
 // The following routines obtain information concerntin the aircraft's
@@ -1519,9 +1519,12 @@ void fgHUDSetBrightness( Hptr hud, int brightness )
 }
 
 /* $Log$
-/* Revision 1.19  1998/02/23 20:18:28  curt
-/* Incorporated Michele America's hud changes.
+/* Revision 1.20  1998/03/09 22:48:40  curt
+/* Minor "formatting" tweaks.
 /*
+ * Revision 1.19  1998/02/23 20:18:28  curt
+ * Incorporated Michele America's hud changes.
+ *
  * Revision 1.18  1998/02/21 14:53:10  curt
  * Added Charlie's HUD changes.
  *
