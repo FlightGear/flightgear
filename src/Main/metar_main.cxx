@@ -432,34 +432,19 @@ void printArgs(SGMetar *m, double airport_elevation)
 }
 
 
-
-
-
-const char *metar_list[] = {
-	"LOWW", "VHHH", "ULLI", "EHTW", "EFHK", "CYXU", 0, // note the trailing zero
-	"CYGK", "CYOW", "CYQY", "CYTZ", "CYXU", "EBBR", "EDDB", "EDDK", "EDVE", "EFHF",
-	"EFHK", "EGLC", "EGLL", "EHTW", "EIDW", "ENGM", "GMMN", "KART", "KBFI", "KBOS",
-	"KCCR", "KCEZ", "KCOF", "KDAL", "KDEN", "KDSM", "KEDW", "KEMT", "KENW", "KHON",
-	"KIGM", "KJFK", "KLAX", "KMCI", "KMKE", "KMLB", "KMSY", "KNBC", "KOAK", "KORD",
-	"KPNE", "KSAC", "KSAN", "KSEA", "KSFO", "KSJC", "KSMF", "KSMO", "KSNS", "KSQL",
-	"KSUN", "LBSF", "LEMD", "LFPG", "LFPO", "LGAT", "LHBP", "LIPQ", "LIRA", "LKPR",
-	"LLJR", "LOWG", "LOWI", "LOWK", "LOWL", "LOWS", "LOWW", "LOWZ", "LOXA", "LOXT",
-	"LOXZ", "LSZH", "LYBE", "NZWP", "ORBS", "PHNL", "ULLI", "VHHH", "WMKB", "YSSY",
-	0
-};
-
-
 int main(int argc, char *argv[])
 {
-	const char **src = metar_list;
-	if (argc > 1)
-		src = (const char **)&argv[1];
+	if (argc <= 1) {
+		fprintf(stderr,
+			"Usage:   metar <list of ICAO airport ids>\n"
+			"Example: metar ksfo koak\n"
+		);
+		return 0;
+	}
 
-	for (int i = 0; src[i]; i++) {
-		const char *icao = src[i];
-
+	for (int i = 1; i < argc; i++) {
 		try {
-			SGMetar *m = new SGMetar(icao);
+			SGMetar *m = new SGMetar(argv[i]);
 			//SGMetar *m = new SGMetar("2004/01/11 01:20\nLOWG 110120Z AUTO VRB01KT 0050 1600N R35/0600 FG M06/M06 Q1019 88//////\n");
 
 			printf(G"INPUT: %s\n"N, m->getData());
