@@ -198,7 +198,7 @@ void ATC610xSetLamp( int fd, int channel, bool value ) {
     buf[2] = 0;
     result = write( fd, buf, 2 );
     if ( result != 2 ) {
-        cout << "Write failed" << endl;
+        SG_LOG( SG_IO, SG_ALERT,  "Write failed" );
         exit( -1 );
     }
 }
