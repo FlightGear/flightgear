@@ -54,7 +54,8 @@ private:
     void setRotation ();
   };
 
-  Animation read_animation (const SGPropertyNode * node);
+  Animation read_animation (const string &object_name,
+			    const SGPropertyNode * node);
   void do_animation (Animation &animation, long elapsed_ms);
 
   ssgEntity * _model;

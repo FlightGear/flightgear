@@ -95,7 +95,16 @@ FGAircraftModel::init ()
   vector<SGPropertyNode *> animation_nodes =
     props.getChildren("animation");
   for (int i = 0; i < animation_nodes.size(); i++) {
-    _animations.push_back(read_animation(animation_nodes[i]));
+    vector<SGPropertyNode *> name_nodes =
+      animation_nodes[i]->getChildren("object-name");
+    if (name_nodes.size() < 1) {
+      SG_LOG(SG_INPUT, SG_ALERT, "No object-name given for transformation");
+    } else {
+      for (int j = 0; j < name_nodes.size(); j++) {
+	_animations.push_back(read_animation(name_nodes[j]->getStringValue(),
+					     animation_nodes[i]));
+      }
+    }
   }
 
 				// Set up the alignment node
@@ -173,9 +182,21 @@ FGAircraftModel::update (int dt)
 }
 
 FGAircraftModel::Animation
-FGAircraftModel::read_animation (const SGPropertyNode * node)
+FGAircraftModel::read_animation (const string &object_name,
+				 const SGPropertyNode * node)
 {
   Animation animation;
+
+				// Find the object to be animated
+  ssgEntity * target = find_named_node(_model, object_name);
+  if (target != 0) {
+    SG_LOG(SG_INPUT, SG_INFO, "  Target object is " << object_name);
+  } else {
+    animation.type = Animation::None;
+    SG_LOG(SG_INPUT, SG_ALERT, "Object " << object_name
+	   << " not found in model");
+    return animation;
+  }
 
 				// Figure out the animation type
   string type_name = node->getStringValue("type");
@@ -192,18 +213,6 @@ FGAircraftModel::read_animation (const SGPropertyNode * node)
   } else {
     animation.type = Animation::None;
     SG_LOG(SG_INPUT, SG_ALERT, "Unknown animation type " << type_name);
-    return animation;
-  }
-
-				// Find the object to be animated
-  string object_name = node->getStringValue("object-name");
-  ssgEntity * target = find_named_node(_model, object_name);
-  if (target != 0) {
-    SG_LOG(SG_INPUT, SG_INFO, "  Target object is " << object_name);
-  } else {
-    animation.type = Animation::None;
-    SG_LOG(SG_INPUT, SG_ALERT, "Object " << object_name
-	   << " not found in model");
     return animation;
   }
 
