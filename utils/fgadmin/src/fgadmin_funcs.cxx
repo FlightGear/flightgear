@@ -137,7 +137,7 @@ void FGAdminUI::update_install_box() {
 
     install_box->clear();
 
-    if ( source.length() ) {
+    if ( source.length() && fl_filename_isdir(source.c_str()) ) {
         ulDir *dir = ulOpenDir( source.c_str() ) ;
         ulDirEnt *ent;
         while ( ent = ulReadDir( dir ) ) {
@@ -159,14 +159,22 @@ void FGAdminUI::update_install_box() {
                 base[offset] = '\0';
             }
 
-            // add to list if not installed
-            SGPath install( dest );
-            install.append( base );
-            if ( ! fl_filename_isdir( install.c_str() ) ) {
-                // cout << install.str() << " install candidate." << endl;
-                file_list.push_back( ent->d_name );
+            if ( strlen(ent->d_name) != 14 ) {
+                // simple heuristic to ingore non-scenery files
+            } else if ( ent->d_name[0] != 'e' && ent->d_name[0] != 'w' ) {
+                // further sanity checks on name
+            } else if ( ent->d_name[4] != 'n' && ent->d_name[4] != 's' ) {
+                // further sanity checks on name
             } else {
-                // cout << install.str() << " exists." << endl;
+                // add to list if not installed
+                SGPath install( dest );
+                install.append( base );
+                if ( ! fl_filename_isdir( install.c_str() ) ) {
+                    // cout << install.str() << " install candidate." << endl;
+                    file_list.push_back( ent->d_name );
+                } else {
+                    // cout << install.str() << " exists." << endl;
+                }
             }
         }
         ulCloseDir( dir );
