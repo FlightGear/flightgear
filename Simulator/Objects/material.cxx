@@ -127,12 +127,10 @@ FGMaterial::load_texture( const string& root )
 #endif
 
     // set the texture parameters for this texture
+    xglPixelStorei(GL_UNPACK_ALIGNMENT, 4);
     xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
     xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ) ;
-    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, 
-		      GL_LINEAR );
-    // xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-    //                   GL_NEAREST_MIPMAP_NEAREST );
+    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
     xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
 		      /* GL_LINEAR */ 
 		      /* GL_NEAREST_MIPMAP_LINEAR */
@@ -203,18 +201,17 @@ FGMaterial::load_texture( const string& root )
 		   read_r8_texture(fg_oav_tpath.c_str(), &width, &height)) 
 		  != NULL )
 	    ;
-	else
-	    {
-		FG_LOG( FG_GENERAL, FG_ALERT, 
-			"Error in loading texture " << tpath.str() );
-		exit(-1);
-	    } 
+	else {
+	    FG_LOG( FG_GENERAL, FG_ALERT, 
+		    "Error in loading texture " << tpath.str() );
+	    exit(-1);
+	} 
 
-	/* xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
-	   GL_RGB, GL_UNSIGNED_BYTE, texbuf); */
-
-	gluBuild2DMipmaps( GL_TEXTURE_2D, GL_RGB, width, height, 
-			   GL_RGB, GL_UNSIGNED_BYTE, texbuf );
+	if ( gluBuild2DMipmaps( GL_TEXTURE_2D, GL_RGB, width, height, 
+				GL_RGB, GL_UNSIGNED_BYTE, texbuf ) != 0 )
+	    FG_LOG( FG_GENERAL, FG_ALERT, "Error building mipmaps");
+	    exit(-1);
+	}
     } else if ( alpha == 1 ) {
 	// load rgba (alpha) texture
 

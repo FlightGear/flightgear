@@ -249,7 +249,9 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		FGMaterial m = fragment.material_ptr->get_m();
 		tex_width = m.get_xsize();
 		tex_height = m.get_ysize();
-		cout << "(w) = " << tex_width << " (h) = " << tex_width << endl;
+		// cout << "(w) = " << tex_width << " (h) = " 
+		//      << tex_width << endl;
+
 		// initialize the fragment transformation matrix
 		/*
 		 for ( i = 0; i < 16; i++ ) {
