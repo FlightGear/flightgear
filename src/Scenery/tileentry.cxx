@@ -662,14 +662,9 @@ bool FGTileEntry::obj_load( const string& path,
 
 
 void
-FGTileEntry::load( const string &base_path, bool is_base )
+FGTileEntry::load( const string_list &path_list, bool is_base )
 {
-    SG_LOG( SG_TERRAIN, SG_INFO, "load() base search path = "
-            << base_path );
-
     bool found_tile_base = false;
-
-    string_list search = sgPathSplit( base_path );
 
     // obj_load() will generate ground lighting for us ...
     ssgVertexArray *light_pts = new ssgVertexArray( 100 );
@@ -677,14 +672,14 @@ FGTileEntry::load( const string &base_path, bool is_base )
     ssgBranch* new_tile = new ssgBranch;
 
     unsigned int i = 0;
-    while ( i < search.size() ) {
+    while ( i < path_list.size() ) {
 
         bool has_base = false;
 
         // Generate names for later use
         string index_str = tile_bucket.gen_index_str();
 
-        SGPath tile_path = search[i];
+        SGPath tile_path = path_list[i];
         tile_path.append( tile_bucket.gen_base_path() );
 
         SGPath basename = tile_path;
@@ -918,7 +913,7 @@ FGTileEntry::load( const string &base_path, bool is_base )
         ssgBranch *geometry = new ssgBranch;
         Point3D c;
         double br;
-        if ( sgGenTile( search[0], tile_bucket, &c, &br,
+        if ( sgGenTile( path_list[0], tile_bucket, &c, &br,
                         globals->get_matlib(), geometry ) )
         {
             center = c;

@@ -109,9 +109,9 @@ private:
 #endif
 
     /**
-     * Base name of directory containing tile data file.
+     * Base names of directories containing tile data files.
      */
-    string tile_path;
+    string_list tile_path;
 
 #if defined(ENABLE_THREADS) && ENABLE_THREADS
     /**

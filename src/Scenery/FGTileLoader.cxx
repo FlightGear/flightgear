@@ -88,22 +88,12 @@ FGTileLoader::add( FGTileEntry* tile )
 {
     /**
      * Initialise tile_path here and not in ctor to avoid problems
-     * with the initialastion order of global objects.
+     * with the initialisation order of global objects.
      */
     static bool beenhere = false;
-    if (!beenhere)
-    {
-	if ( !globals->get_fg_scenery().empty() ) {
-            tile_path = globals->get_fg_scenery();
-	} else {
-            SGPath tmp;
-	    tmp.set( globals->get_fg_root() );
-            tmp.append( "Scenery/Terrain" );
-            tmp.add(globals->get_fg_root() );
-            tmp.append( "Scenery/Objects" );
-            tile_path = tmp.str();
-	}
-	beenhere = true;
+    if (!beenhere) {
+        tile_path = globals->get_fg_scenery();
+        beenhere = true;
     }
 
     tile_load_queue.push( tile );

@@ -106,8 +106,8 @@ private:
     // Root of FlightGear data tree
     string fg_root;
 
-    // Root of FlightGear scenery tree
-    string fg_scenery;
+    // Roots of FlightGear scenery tree
+    string_list fg_scenery;
 
     // Fullscreen mode for old 3DFX cards.
 #if defined(FX) && defined(XMESA)
@@ -236,7 +236,7 @@ public:
     inline const string &get_fg_root () const { return fg_root; }
     void set_fg_root (const string &root);
 
-    inline const string &get_fg_scenery () const { return fg_scenery; }
+    inline const string_list &get_fg_scenery () const { return fg_scenery; }
     void set_fg_scenery (const string &scenery);
 
 #if defined(FX) && defined(XMESA)

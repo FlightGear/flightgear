@@ -46,7 +46,6 @@ FGGlobals::FGGlobals() :
     event_mgr( new SGEventMgr ),
     sim_time_sec( 0.0 ),
     fg_root( "" ),
-    fg_scenery( "" ),
 #if defined(FX) && defined(XMESA)
     fullscreen( true ),
 #endif
@@ -118,34 +117,42 @@ void FGGlobals::set_fg_root (const string &root) {
 }
 
 void FGGlobals::set_fg_scenery (const string &scenery) {
-    if (scenery.empty())
-        return;
+    SGPath s;
+    if (scenery.empty()) {
+        s.set( fg_root );
+        s.append( "Scenery" );
+    } else
+        s.set( scenery );
 
-    // TODO: Split the scenery path up into separate
-    // paths (taking into account the search path separator
-    // and test them individually.
-    // -EMH-
-    SGPath pt( scenery ), po( scenery );
-    pt.append("Terrain");
-    po.append("Objects");
+    string_list path_list = sgPathSplit( s.str() );
+    fg_scenery.clear();
 
-    ulDir *td = ulOpenDir(pt.c_str());
-    ulDir *od = ulOpenDir(po.c_str());
+    for (unsigned i = 0; i < path_list.size(); i++) {
 
-    if (td == NULL) {
-        if (od == NULL) {
-            fg_scenery = scenery;
-        } else {
-            fg_scenery = po.str();
-            ulCloseDir(od);
+        ulDir *d = ulOpenDir( path_list[0].c_str() );
+        if (d == NULL)
+            continue;
+        ulCloseDir( d );
+
+        SGPath pt( path_list[i] ), po( path_list[i] );
+        pt.append("Terrain");
+        po.append("Objects");
+
+        ulDir *td = ulOpenDir( pt.c_str() );
+        ulDir *od = ulOpenDir( po.c_str() );
+
+        if (td == NULL && od == NULL)
+            fg_scenery.push_back( path_list[i] );
+        else {
+            if (td != NULL) {
+                fg_scenery.push_back( pt.str() );
+                ulCloseDir( td );
+            }
+            if (od != NULL) {
+                fg_scenery.push_back( po.str() );
+                ulCloseDir( od );
+            }
         }
-    } else {
-        if (od != NULL) {
-            pt.add(po.str());
-            ulCloseDir(od);
-        }
-        fg_scenery = pt.str();
-        ulCloseDir(td);
     }
 }
 
