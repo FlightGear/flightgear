@@ -1456,6 +1456,91 @@ int fgGlutInitEvents( void ) {
     return 1;
 }
 
+// Initialize the localization
+SGPropertyNode *fgInitLocale() {
+   SGPropertyNode *c_node = NULL, *d_node = NULL;
+
+   // 
+   // Detect the current language
+   //
+   char *language = getenv("LANG");
+   if (language == NULL) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "Unable to detect the current language" );
+      language = "C";
+   }
+
+   SGPropertyNode *intl = fgGetNode("/sim/intl", "");
+
+   if (!intl)
+      return NULL;
+  
+   vector<SGPropertyNode_ptr> locale = intl->getChildren("locale");
+   for (unsigned int i = 0; i < locale.size(); i++) {
+
+      vector<SGPropertyNode_ptr> lang = locale[i]->getChildren("lang");
+      for (unsigned int j = 0; j < lang.size(); j++) {
+
+         if (!strcmp(lang[j]->getStringValue(), language)) {
+            c_node = locale[i];
+            break;
+         }
+      }
+   }
+
+
+   //
+   // Load the default strings
+   //
+   d_node = intl->getChild("locale");
+   SGPath d_path( globals->get_fg_root() );
+
+   if (!c_node)
+      c_node = d_node;
+
+   const char *d_path_str = d_node->getStringValue("strings");
+   if (!d_path_str) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "Incorrect path in configuration file.");
+      return NULL;
+   }
+
+   d_path.append(d_path_str);
+   SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings from "
+                                  << d_path.str());
+
+   SGPropertyNode *strings = c_node->getNode("strings");
+   try {
+      readProperties(d_path.str(), strings);
+   } catch (const sg_exception &e) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "Unable to read the localized strings");
+      return NULL;
+   }
+
+
+   //
+   // Load the language specific strings
+   //
+   SGPath c_path( globals->get_fg_root() );
+
+   const char *c_path_str = c_node->getStringValue("strings");
+   if (!c_path_str) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "Incorrect path in configuration file.");
+      return NULL;
+   }
+
+   c_path.append(c_path_str);
+   SG_LOG(SG_GENERAL, SG_INFO, "Reading localized strings from "
+                                  << c_path.str());
+
+   try {
+      readProperties(c_path.str(), strings);
+   } catch (const sg_exception &e) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "Unable to read the localized strings");
+      return NULL;
+   }
+
+   return c_node;
+}
+
 
 // Main loop
 int mainLoop( int argc, char **argv ) {
@@ -1529,6 +1614,14 @@ int mainLoop( int argc, char **argv ) {
 	SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
 	exit(-1);
     }
+
+    // Initialize the localization routines
+    SGPropertyNode *locale = fgInitLocale();
+    if (!locale)
+       return false;
+
+    globals->set_locale( locale );
+
 
     // Initialize the Window/Graphics environment.
     if( !fgGlutInit(&argc, argv) ) {

@@ -94,6 +94,7 @@ void initMenu()
      mainMenuBar = new puMenuBar ();
 
      SGPropertyNode *menu = main.getChild("menu");
+     SGPropertyNode *locale = globals->get_locale();
 
      vector<SGPropertyNode_ptr>submenu = menu->getChildren("submenu");
 
@@ -120,8 +121,8 @@ void initMenu()
              if (sep) {
                 Menu[h].submenu[pos] = strdup("----------");
              } else if (call && strcmp(call->getStringValue(), "")) {
-                 string text = fgGetString( name->getStringValue(),
-                                        "/strings/null" );
+                 string text = locale->getStringValue( name->getStringValue(),
+                                                       "strings/null" );
                  Menu[h].submenu[pos]
                      = strdup(text.c_str());
              } else {
@@ -139,8 +140,8 @@ void initMenu()
          }
 
          SGPropertyNode *name = submenu[h]->getNode("name");
-         string text = fgGetString( name->getStringValue(),
-                                    "/strings/null" );
+         string text = locale->getStringValue( name->getStringValue(),
+                                               "strings/null" );
 
          Menu[h].name = strdup(text.c_str());
          mainMenuBar->add_submenu(Menu[h].name, Menu[h].submenu, Menu[h].cb);

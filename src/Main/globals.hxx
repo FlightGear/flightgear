@@ -165,6 +165,9 @@ private:
     SGPropertyNode *props;
     SGPropertyNode *initial_state;
 
+    // localization
+    SGPropertyNode *locale;
+
     SGCommandMgr *commands;
 
     FGModelLoader * model_loader;
@@ -274,6 +277,9 @@ public:
 
     inline SGPropertyNode *get_props () { return props; }
     inline void set_props( SGPropertyNode *n ) { props = n; }
+
+    inline SGPropertyNode *get_locale () { return locale; }
+    inline void set_locale( SGPropertyNode *n ) { locale = n; }
 
     inline SGCommandMgr *get_commands () { return commands; }
 
