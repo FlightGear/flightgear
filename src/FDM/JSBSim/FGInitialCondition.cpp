@@ -510,8 +510,8 @@ bool FGInitialCondition::getAlpha(void) {
   if(vt < 0.01) return 0;
   
   xlo=xhi=0;
-  xmin=fdmex->GetAircraft()->GetAlphaCLMin();
-  xmax=fdmex->GetAircraft()->GetAlphaCLMax();
+  xmin=fdmex->GetAerodynamics()->GetAlphaCLMin();
+  xmax=fdmex->GetAerodynamics()->GetAlphaCLMax();
   sfunc=&FGInitialCondition::GammaEqOfAlpha;
   if(findInterval(0,guess)){
     if(solve(&alpha,0)){

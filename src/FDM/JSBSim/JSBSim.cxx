@@ -553,7 +553,7 @@ bool FGJSBsim::copy_from_JSBsim() {
 
     update_gear();
     
-    stall_warning->setDoubleValue( Aircraft->GetStallWarn() );
+    stall_warning->setDoubleValue( Aerodynamics->GetStallWarn() );
     
     /* elevator_pos_deg->setDoubleValue( FCS->GetDePos()*SG_RADIANS_TO_DEGREES );
     left_aileron_pos_deg->setDoubleValue( FCS->GetDaLPos()*SG_RADIANS_TO_DEGREES );
