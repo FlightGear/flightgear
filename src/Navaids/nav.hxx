@@ -111,7 +111,12 @@ operator >> ( istream& in, FGNav& n )
 	first_time = false;
     }
 
-    in >> n.type >> n.lat >> n.lon >> n.elev >> f >> n.range 
+    in >> n.type;
+    
+    if ( n.type == '[' )
+      return in >> skipeol;
+
+    in >> n.lat >> n.lon >> n.elev >> f >> n.range 
        >> c >> n.ident >> magvar_s;
 
     n.freq = (int)(f*100.0 + 0.5);

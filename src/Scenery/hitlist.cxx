@@ -199,6 +199,13 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
 	sgdXformPnt3( tri[1], leaf->getVertex( i2 ), m );
 	sgdXformPnt3( tri[2], leaf->getVertex( i3 ), m );
 
+        //avoid division by zero when two points are the same
+        if ( sgdEqualVec3(tri[0], tri[1]) ||
+             sgdEqualVec3(tri[1], tri[2]) ||
+             sgdEqualVec3(tri[2], tri[0]) ) {
+            continue;
+        }
+
 	sgdVec4 plane;
 	sgdMakePlane( plane, tri[0], tri[1], tri[2] );
 

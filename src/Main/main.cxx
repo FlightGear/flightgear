@@ -113,8 +113,8 @@
 // Should already be inlcluded by gl.h if needed by your platform so
 // we shouldn't include this here.
 // #include <GL/glext.h>
-PFNGLPOINTPARAMETERFEXTPROC glPointParameterfEXT = 0;
-PFNGLPOINTPARAMETERFVEXTPROC glPointParameterfvEXT = 0;
+// PFNGLPOINTPARAMETERFEXTPROC glPointParameterfEXT = 0;
+// PFNGLPOINTPARAMETERFVEXTPROC glPointParameterfvEXT = 0;
 float default_attenuation[3] = {1.0, 0.0, 0.0};
 //Required for using GL_extensions
 void fgLoadDCS (void);
@@ -1866,16 +1866,24 @@ int mainLoop( int argc, char **argv ) {
 
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv ) {
-				// FIXME: add other, more specific
-				// exceptions.
-  try {
-    mainLoop(argc, argv);
-  } catch (sg_throwable &t) {
-    SG_LOG(SG_GENERAL, SG_ALERT,
-	   "Fatal error: " << t.getFormattedMessage()
-	   << "\n (received from " << t.getOrigin() << ')');
-    exit(1);
-  }
+
+#ifdef _MSC_VER
+    // Christian, we should document what this does
+    _control87( _EM_INEXACT, _MCW_EM );
+#endif
+
+    // FIXME: add other, more specific
+    // exceptions.
+    try {
+        mainLoop(argc, argv);
+    } catch (sg_throwable &t) {
+        SG_LOG(SG_GENERAL, SG_ALERT,
+               "Fatal error: " << t.getFormattedMessage()
+               << "\n (received from " << t.getOrigin() << ')');
+        exit(1);
+    }
+
+    return 0;
 }
 
 
@@ -1966,7 +1974,7 @@ void fgLoadDCS(void) {
 						SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: " << modelpath.str() );
 					} else {
 						while ( ! in1.eof() ) {
-							in1 >> skipws;
+                                                        in1 >> ::skipws;
 							if ( in1.get( c ) && c == '#' ) { 
 								in1 >> skipeol;
 							} else { 

@@ -29,6 +29,7 @@
 #endif
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/constants.h>
 
 #include "viewer.hxx"
 
@@ -40,6 +41,10 @@ FGViewer::FGViewer( void ):
     goal_view_offset(0.0)
 {
     sgSetVec3( pilot_offset, 0.0, 0.0, 0.0 );
+    sgdZeroVec3(geod_view_pos);
+    sgdZeroVec3(abs_view_pos);
+    sea_level_radius = SG_EQUATORIAL_RADIUS_M; 
+    //a reasonable guess for init, so that the math doesn't blow up
 }
 
 

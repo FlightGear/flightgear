@@ -128,7 +128,12 @@ inline istream&
 operator >> ( istream& in, FGILS& i )
 {
     double f;
-    in >> i.ilstype >> i.ilstypename >> i.aptcode >> i.rwyno 
+    in >> i.ilstype;
+    
+    if ( i.ilstype == '[' )
+          return in;
+
+    in >> i.ilstypename >> i.aptcode >> i.rwyno 
        >> f >> i.locident >> i.locheading >> i.loclat >> i.loclon
        >> i.gselev >> i.gsangle >> i.gslat >> i.gslon
        >> i.dmelat >> i.dmelon
