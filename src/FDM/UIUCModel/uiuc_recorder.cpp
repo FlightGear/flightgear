@@ -1683,7 +1683,139 @@ void uiuc_recorder( double dt )
 	      {
 	        fout << eta_ice << " ";
 		break;
-	      }	
+	      }
+	    case eta_wing_left_record:
+	      {
+		fout << eta_wing_left << " ";
+		break;
+	      }
+	    case eta_wing_right_record:
+	      {
+		fout << eta_wing_right << " ";
+		break;
+	      }
+	    case eta_tail_record:
+	      {
+		fout << eta_tail << " ";
+		break;
+	      }
+	    case delta_CL_record:
+	      {
+		fout << delta_CL << " ";
+		break;
+	      }
+	    case delta_CD_record:
+	      {
+		fout << delta_CD << " ";
+		break;
+	      }
+	    case delta_Cm_record:
+	      {
+		fout << delta_Cm << " ";
+		break;
+	      }
+	    case delta_Cl_record:
+	      {
+		fout << delta_Cl << " ";
+		break;
+	      }
+	    case delta_Cn_record:
+	      {
+		fout << delta_Cn << " ";
+		break;
+	      }
+	    case boot_cycle_tail_record:
+	      {
+		fout << boot_cycle_tail << " ";
+		break;
+	      }
+	    case boot_cycle_wing_left_record:
+	      {
+		fout << boot_cycle_wing_left << " ";
+		break;
+	      }
+	    case boot_cycle_wing_right_record:
+	      {
+		fout << boot_cycle_wing_right << " ";
+		break;
+	      }
+	    case autoIPS_tail_record:
+	      {
+		fout << autoIPS_tail << " ";
+		break;
+	      }
+	    case autoIPS_wing_left_record:
+	      {
+		fout << autoIPS_wing_left << " ";
+		break;
+	      }
+	    case autoIPS_wing_right_record:
+	      {
+		fout << autoIPS_wing_right << " ";
+		break;
+	      }
+	    case eps_pitch_input_record:
+	      {
+		fout << eps_pitch_input << " ";
+		break;
+	      }
+	    case eps_alpha_max_record:
+	      {
+		fout << eps_alpha_max << " ";
+		break;
+	      }
+	    case eps_pitch_max_record:
+	      {
+		fout << eps_pitch_max << " ";
+		break;
+	      }
+	    case eps_pitch_min_record:
+	      {
+		fout << eps_pitch_min << " ";
+		break;
+	      }
+	    case eps_roll_max_record:
+	      {
+		fout << eps_roll_max << " ";
+		break;
+	      }
+	    case eps_thrust_min_record:
+	      {
+		fout << eps_thrust_min << " ";
+		break;
+	      }
+	    case eps_flap_max_record:
+	      {
+		fout << eps_flap_max << " ";
+		break;
+	      }
+	    case eps_airspeed_max_record:
+	      {
+		fout << eps_airspeed_max << " ";
+		break;
+	      }
+	    case eps_airspeed_min_record:
+	      {
+		fout << eps_airspeed_min << " ";
+		break;
+	      }
+            case tactilefadefI_record:
+              {
+                fout << tactilefadefI << " ";
+                break;
+              }
+
+	      /*******************Autopilot***************************/
+	    case ap_Theta_ref_deg_record:
+	      {
+		fout << ap_Theta_ref_deg << " ";
+		break;
+	      }
+	    case ap_pah_on_record:
+	      {
+		fout << ap_pah_on << " ";
+		break;
+	      }
 
               /************************ Forces ***********************/
             case F_X_wind_record:
@@ -1840,55 +1972,62 @@ void uiuc_recorder( double dt )
               }
 
               /*********************** Moments ***********************/
-	      /* case flapper_freq_record:
-	      {
-		fout << flapper_freq << " ";
-		break;
-	      }
-	    case flapper_phi_record:
-	      {
-		fout << flapper_phi << " ";
-		break;
-	      }
-	    case flapper_phi_deg_record:
-	      {
-		fout << flapper_phi*RAD_TO_DEG << " ";
-		break;
-	      }
-	    case flapper_Lift_record:
-	      {
-		fout << flapper_Lift << " ";
-		break;
-	      }
-	    case flapper_Thrust_record:
-	      {
-		fout << flapper_Thrust << " ";
-		break;
-	      }
-	    case flapper_Inertia_record:
-	      {
-		fout << flapper_Inertia << " ";
-		break;
-	      }
-	    case flapper_Moment_record:
-	      {
-		fout << flapper_Moment << " ";
-		break;
-		}*/
+	    //case flapper_freq_record:
+	    //  {
+		//fout << flapper_freq << " ";
+		//break;
+	    //  }
+	    //case flapper_phi_record:
+	    //  {
+		//fout << flapper_phi << " ";
+		//break;
+	    //  }
+	    //case flapper_phi_deg_record:
+	    //  {
+		//fout << flapper_phi*RAD_TO_DEG << " ";
+		//break;
+	    //  }
+	    //case flapper_Lift_record:
+	    //  {
+		//fout << flapper_Lift << " ";
+		//break;
+	    //  }
+	    //case flapper_Thrust_record:
+	    //  {
+		//fout << flapper_Thrust << " ";
+		//break;
+	    //  }
+	    //case flapper_Inertia_record:
+	    //  {
+		//fout << flapper_Inertia << " ";
+		//break;
+	    //  }
+	    //case flapper_Moment_record:
+	    //  {
+		//fout << flapper_Moment << " ";
+		//break;
+	    //  }
               /*********************** debug  ***********************/
               /* debug variables for use in probing data            */
               /* comment out old lines, and add new                 */
               /* only remove code that you have written             */
 	    case debug1_record:
 	      {
+		// eta_q term check
+		// fout << eta_q_Cm_q_fac << " ";
+		// fout << eta_q_Cm_adot_fac << " ";
+		// fout << eta_q_Cmfade_fac << " ";
+		// fout << eta_q_Cl_dr_fac << " ";
 		// eta on tail
-		// fout << eta_q << " ";
+		// fout << tc << " ";
 		// engine RPM
 		// fout << engineOmega * 60 / (2 * LS_PI)<< " ";
-		// climb rate in fpm
-		//fout << V_down * 60 << " ";
+		// vertical climb rate in fpm
+		// fout << V_down * 60 << " ";
 		// w_induced downwash at tail due to wing
-		fout << w_induced   << " ";
+		//fout << w_induced   << " ";
+		// w_induced downwash at tail due to wing
+		fout << gammaWing   << " ";
 		break;
 	      }
 	    case debug2_record:
@@ -1899,9 +2038,10 @@ void uiuc_recorder( double dt )
 		// fout << (-A_Z_cg/32.174) << " ";
 		// gyroscopic moment (see uiuc_wrapper.cpp)
 		// fout << (polarInertia * engineOmega * Q_body) << " ";
-		// downwash_angle at tail
-		fout << downwash_angle * 57.29 << " ";
-
+		// downwashAngle at tail
+		fout << downwashAngle * 57.29 << " ";
+		// w_induced from engine
+		// fout << w_i << " ";
 		break;
 	      }
 	    case debug3_record:
@@ -1911,8 +2051,10 @@ void uiuc_recorder( double dt )
 		// gyroscopic moment (see uiuc_wrapper.cpp)
 		// fout << (-polarInertia * engineOmega * R_body) << " ";
 		// AlphaTail 
-		fout << AlphaTail * 57.29  << " ";
-		fout << Alpha     * 57.29  << " ";
+		// fout << AlphaTail * 57.29  << " ";
+		// fout << Alpha     * 57.29  << " ";
+		// eta on tail
+		fout << eta_q << " ";
 		break;
 	      }
 

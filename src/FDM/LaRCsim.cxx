@@ -571,7 +571,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
             globals->get_controls()->set_rudder(Rudder_pedal);
             //	  controls.set_rudder(Rudder_pedal);
         }
-	if (Throttle_pct_input) {
+	if (pilot_throttle_no) {
             globals->get_controls()->set_throttle(0,Throttle_pct);
             //	  controls.set_throttle(0,Throttle_pct);
         }

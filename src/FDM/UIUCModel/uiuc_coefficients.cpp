@@ -96,10 +96,13 @@
 **********************************************************************/
 
 #include "uiuc_coefficients.h"
+#include "uiuc_warnings_errors.h"
+#include <string.h>
 
 
 void uiuc_coefficients(double dt)
 {
+  static string uiuc_coefficients_error = " (from uiuc_coefficients.cpp) ";
   double l_trim, l_defl;
   double V_rel_wind_dum, U_body_dum;
 
@@ -111,6 +114,10 @@ void uiuc_coefficients(double dt)
 
   // calculate rate derivative nondimensionalization factors
   // check if speed is sufficient to compute dynamic pressure terms
+  if (dyn_on_speed==0) 
+    {
+      uiuc_warnings_errors(5, uiuc_coefficients_error);
+    }
   if (nondim_rate_V_rel_wind || use_V_rel_wind_2U)         // c172_aero uses V_rel_wind
     {
       if (V_rel_wind > dyn_on_speed)
@@ -202,18 +209,57 @@ void uiuc_coefficients(double dt)
     }
 
   // check to see if data files are used for control deflections
-  pilot_elev_no = false;
-  pilot_ail_no = false;
-  pilot_rud_no = false;
-  if (elevator_step || elevator_singlet || elevator_doublet || elevator_input || aileron_input || rudder_input)
+  if (outside_control == false)
+    {
+      pilot_elev_no = false;
+      pilot_ail_no = false;
+      pilot_rud_no = false;
+    }
+  if (elevator_step || elevator_singlet || elevator_doublet || elevator_input || aileron_input || rudder_input || flap_pos_input)
     {
       uiuc_controlInput();
+    }
+
+  if (icing_demo)
+    {
+      if (demo_ap_pah_on){
+	double time = Simtime - demo_ap_pah_on_startTime;
+	ap_pah_on = uiuc_1Dinterpolation(demo_ap_pah_on_timeArray,
+					 demo_ap_pah_on_daArray,
+					 demo_ap_pah_on_ntime,
+					 time);
+      }
+      if (demo_ap_Theta_ref_deg){
+	double time = Simtime - demo_ap_Theta_ref_deg_startTime;
+	ap_Theta_ref_deg = uiuc_1Dinterpolation(demo_ap_Theta_ref_deg_timeArray,
+						demo_ap_Theta_ref_deg_daArray,
+						demo_ap_Theta_ref_deg_ntime,
+						time);
+      }
+    }
+  if (ap_pah_on)
+    {
+      double V_rel_wind_ms;
+      V_rel_wind_ms = V_rel_wind * 0.3048;
+      ap_Theta_ref_rad = ap_Theta_ref_deg * DEG_TO_RAD;
+      elevator = pah_ap(Theta, Theta_dot, ap_Theta_ref_rad, V_rel_wind_ms, dt);
+      if (elevator*RAD_TO_DEG <= -1*demax)
+	elevator = -1*demax * DEG_TO_RAD;
+      if (elevator*RAD_TO_DEG >= demin)
+	elevator = demin * DEG_TO_RAD;
+      pilot_elev_no=true;
     }
 
   CD = CX = CL = CZ = Cm = CY = Cl = Cn = 0.0;
   CLclean_wing = CLiced_wing = CLclean_tail = CLiced_tail = 0.0;
   CZclean_wing = CZiced_wing = CZclean_tail = CZiced_tail = 0.0;
   CXclean_wing = CXiced_wing = CXclean_tail = CXiced_tail = 0.0;
+  CL_clean = CL_iced = 0.0;
+  CY_clean = CY_iced = 0.0;
+  CD_clean = CD_iced = 0.0;
+  Cm_iced = Cm_clean = 0.0;
+  Cl_iced = Cl_clean = 0.0;
+  Cn_iced = Cn_clean = 0.0;
 
   uiuc_coef_lift();
   uiuc_coef_drag();
@@ -221,18 +267,182 @@ void uiuc_coefficients(double dt)
   uiuc_coef_sideforce();
   uiuc_coef_roll();
   uiuc_coef_yaw();
-  if (ice_case)
+
+  //uncomment next line to always run icing functions
+  //nonlin_ice_case = 1;
+
+  if (nonlin_ice_case)
     {
-      eta_tail = sublimation(OATemperature_F, eta_tail, dt);
-      eta_wing_left = sublimation(OATemperature_F, eta_wing_left, dt);
-      eta_wing_right = sublimation(OATemperature_F, eta_wing_right, dt);
-      //removed shed until new model is created
-      //eta_tail = shed(0.0, eta_tail, OATemperature_F, 0.0, dt);
-      //eta_wing_left = shed(0.0, eta_wing_left, OATemperature_F, 0.0, dt);
-      //eta_wing_right = shed(0.0, eta_wing_right, OATemperature_F, 0.0, dt);
-      
+      if (eta_from_file)
+	{
+	  if (eta_tail_input) {
+	    double time = Simtime - eta_tail_input_startTime;
+	    eta_tail = uiuc_1Dinterpolation(eta_tail_input_timeArray,
+					    eta_tail_input_daArray,
+					    eta_tail_input_ntime,
+					    time);
+	  }
+	  if (eta_wing_left_input) {
+	    double time = Simtime - eta_wing_left_input_startTime;
+	    eta_wing_left = uiuc_1Dinterpolation(eta_wing_left_input_timeArray,
+						 eta_wing_left_input_daArray,
+						 eta_wing_left_input_ntime,
+						 time);
+	  }
+	  if (eta_wing_right_input) {
+	    double time = Simtime - eta_wing_right_input_startTime;
+	    eta_wing_right = uiuc_1Dinterpolation(eta_wing_right_input_timeArray,
+						  eta_wing_right_input_daArray,
+						  eta_wing_right_input_ntime,
+						  time);
+	  }
+	}
+
+      delta_CL = delta_CD = delta_Cm = delta_Cl = delta_Cn = 0.0;
       Calc_Iced_Forces();
       add_ice_effects();
+      tactilefadefI = 0.0;
+      if (eta_tail == 0.2 && tactile_pitch && tactilefadef)
+	{
+	  if (tactilefadef_nice == 1)
+	    tactilefadefI = uiuc_3Dinterp_quick(tactilefadef_fArray,
+					   tactilefadef_aArray_nice,
+					   tactilefadef_deArray_nice,
+					   tactilefadef_tactileArray,
+					   tactilefadef_na_nice,
+					   tactilefadef_nde_nice,
+					   tactilefadef_nf,
+					   flap_pos,
+					   Alpha,
+					   elevator);
+	  else
+	    tactilefadefI = uiuc_3Dinterpolation(tactilefadef_fArray,
+					    tactilefadef_aArray,
+					    tactilefadef_deArray,
+					    tactilefadef_tactileArray,
+					    tactilefadef_nAlphaArray,
+					    tactilefadef_nde,
+					    tactilefadef_nf,
+					    flap_pos,
+					    Alpha,
+					    elevator);
+	}
+      else if (demo_tactile)
+	{
+	  double time = Simtime - demo_tactile_startTime;
+	  tactilefadefI = uiuc_1Dinterpolation(demo_tactile_timeArray,
+					       demo_tactile_daArray,
+					       demo_tactile_ntime,
+					       time);
+	}
+      if (icing_demo)
+	{
+	  if (demo_eps_alpha_max) {
+	    double time = Simtime - demo_eps_alpha_max_startTime;
+	    eps_alpha_max = uiuc_1Dinterpolation(demo_eps_alpha_max_timeArray,
+						 demo_eps_alpha_max_daArray,
+						 demo_eps_alpha_max_ntime,
+						 time);
+	  }
+	  if (demo_eps_pitch_max) {
+	    double time = Simtime - demo_eps_pitch_max_startTime;
+	    eps_pitch_max = uiuc_1Dinterpolation(demo_eps_pitch_max_timeArray,
+						  demo_eps_pitch_max_daArray,
+						  demo_eps_pitch_max_ntime,
+						  time);
+	  }
+	  if (demo_eps_pitch_min) {
+	    double time = Simtime - demo_eps_pitch_min_startTime;
+	    eps_pitch_min = uiuc_1Dinterpolation(demo_eps_pitch_min_timeArray,
+						 demo_eps_pitch_min_daArray,
+						 demo_eps_pitch_min_ntime,
+						 time);
+	  }
+	  if (demo_eps_roll_max) {
+	    double time = Simtime - demo_eps_roll_max_startTime;
+	    eps_roll_max = uiuc_1Dinterpolation(demo_eps_roll_max_timeArray,
+						demo_eps_roll_max_daArray,
+						demo_eps_roll_max_ntime,
+						time);
+	  }
+	  if (demo_eps_thrust_min) {
+	    double time = Simtime - demo_eps_thrust_min_startTime;
+	    eps_thrust_min = uiuc_1Dinterpolation(demo_eps_thrust_min_timeArray,
+						  demo_eps_thrust_min_daArray,
+						  demo_eps_thrust_min_ntime,
+						  time);
+	  }
+	  if (demo_eps_airspeed_max) {
+	    double time = Simtime - demo_eps_airspeed_max_startTime;
+	    eps_airspeed_max = uiuc_1Dinterpolation(demo_eps_airspeed_max_timeArray,
+						 demo_eps_airspeed_max_daArray,
+						 demo_eps_airspeed_max_ntime,
+						 time);
+	  }
+	  if (demo_eps_airspeed_min) {
+	    double time = Simtime - demo_eps_airspeed_min_startTime;
+	    eps_airspeed_min = uiuc_1Dinterpolation(demo_eps_airspeed_min_timeArray,
+						 demo_eps_airspeed_min_daArray,
+						 demo_eps_airspeed_min_ntime,
+						 time);
+	  }
+	  if (demo_eps_flap_max) {
+	    double time = Simtime - demo_eps_flap_max_startTime;
+	    eps_flap_max = uiuc_1Dinterpolation(demo_eps_flap_max_timeArray,
+						demo_eps_flap_max_daArray,
+						demo_eps_flap_max_ntime,
+						time);
+	  }
+	  if (demo_boot_cycle_tail) {
+	    double time = Simtime - demo_boot_cycle_tail_startTime;
+	    boot_cycle_tail = uiuc_1Dinterpolation(demo_boot_cycle_tail_timeArray,
+						  demo_boot_cycle_tail_daArray,
+						  demo_boot_cycle_tail_ntime,
+						  time);
+	  }
+	  if (demo_boot_cycle_wing_left) {
+	    double time = Simtime - demo_boot_cycle_wing_left_startTime;
+	    boot_cycle_wing_left = uiuc_1Dinterpolation(demo_boot_cycle_wing_left_timeArray,
+					     demo_boot_cycle_wing_left_daArray,
+					     demo_boot_cycle_wing_left_ntime,
+					     time);
+	  }
+	  if (demo_boot_cycle_wing_right) {
+	    double time = Simtime - demo_boot_cycle_wing_right_startTime;
+	    boot_cycle_wing_right = uiuc_1Dinterpolation(demo_boot_cycle_wing_right_timeArray,
+					    demo_boot_cycle_wing_right_daArray,
+					    demo_boot_cycle_wing_right_ntime,
+					    time);
+	  }
+	  if (demo_eps_pitch_input) {
+	    double time = Simtime - demo_eps_pitch_input_startTime;
+	    eps_pitch_input = uiuc_1Dinterpolation(demo_eps_pitch_input_timeArray,
+						  demo_eps_pitch_input_daArray,
+						  demo_eps_pitch_input_ntime,
+						  time);
+	  }
+	  if (demo_ice_tail) {
+	    double time = Simtime - demo_ice_tail_startTime;
+	    ice_tail = uiuc_1Dinterpolation(demo_ice_tail_timeArray,
+					    demo_ice_tail_daArray,
+					    demo_ice_tail_ntime,
+					    time);
+	  }
+	  if (demo_ice_left) {
+	    double time = Simtime - demo_ice_left_startTime;
+	    ice_left = uiuc_1Dinterpolation(demo_ice_left_timeArray,
+					    demo_ice_left_daArray,
+					    demo_ice_left_ntime,
+					    time);
+	  }
+	  if (demo_ice_right) {
+	    double time = Simtime - demo_ice_right_startTime;
+	    ice_right = uiuc_1Dinterpolation(demo_ice_right_timeArray,
+					     demo_ice_right_daArray,
+					     demo_ice_right_ntime,
+					     time);
+	  }
+	}
     }
 
   if (pilot_ail_no)
@@ -243,18 +453,23 @@ void uiuc_coefficients(double dt)
 	Lat_control = - aileron / damin * RAD_TO_DEG;
     }
 
+  // can go past real limits
+  // add flag to behave like trim_case2 later
   if (pilot_elev_no)
     {
-      l_trim = elevator_tab;
-      l_defl = elevator - elevator_tab;
-      if (l_trim <=0 )
-	Long_trim = l_trim / demax * RAD_TO_DEG;
-      else
-	Long_trim = l_trim / demin * RAD_TO_DEG;
-      if (l_defl <= 0)
-	Long_control = l_defl / demax * RAD_TO_DEG;
-      else
-	Long_control = l_defl / demin * RAD_TO_DEG;
+      if (outside_control == false)
+	{
+	  l_trim = elevator_tab;
+	  l_defl = elevator - elevator_tab;
+	  if (l_trim <=0 )
+	    Long_trim = l_trim / demax * RAD_TO_DEG;
+	  else
+	    Long_trim = l_trim / demin * RAD_TO_DEG;
+	  if (l_defl <= 0)
+	    Long_control = l_defl / demax * RAD_TO_DEG;
+	  else
+	    Long_control = l_defl / demin * RAD_TO_DEG;
+	}
     }
 
   if (pilot_rud_no)

@@ -47,8 +47,13 @@
 
 $Header$
 $Log$
-Revision 1.1  2002/09/10 01:14:01  curt
-Initial revision
+Revision 1.2  2002/11/08 17:03:50  curt
+Robert Deters:
+
+Latest revisions of the UIUC code.
+
+Revision 1.1.1.1  2002/09/10 01:14:01  curt
+Initial revision of FlightGear-0.9.0
 
 Revision 1.3  2001/03/24 05:03:12  curt
 SG-ified logstream.
@@ -294,8 +299,11 @@ Initial Flight Gear revision.
 
 #include <math.h>
 
+#include "uiuc_getwind.h" //For wind gradient functions
 
 void ls_aux( void ) {
+
+        static double uiuc_wind[3] = {0, 0, 0}; //The UIUC wind vector (initialized to zero)
 
 	SCALAR	dx_pilot_from_cg, dy_pilot_from_cg, dz_pilot_from_cg;
 	/* SCALAR inv_Mass; */
@@ -319,10 +327,17 @@ void ls_aux( void ) {
 	V_east_rel_ground  = V_east 
 	  - OMEGA_EARTH*Sea_level_radius*cos( Lat_geocentric );
 	V_down_rel_ground  = V_down;
+
+        //BEGIN Modified UIUC arbitrary wind calculations:
+        uiuc_getwind(uiuc_wind); //Update the UIUC wind vector
+        V_north_rel_airmass = V_north_rel_ground - uiuc_wind[0] - V_north_airmass;
+        V_east_rel_airmass  = V_east_rel_ground  - uiuc_wind[1] - V_east_airmass;
+        V_down_rel_airmass  = V_down_rel_ground  - uiuc_wind[2] - V_down_airmass;
+        //END UIUC wind code
 	
-	V_north_rel_airmass = V_north_rel_ground - V_north_airmass;
-	V_east_rel_airmass  = V_east_rel_ground  - V_east_airmass;
-	V_down_rel_airmass  = V_down_rel_ground  - V_down_airmass;
+//	V_north_rel_airmass = V_north_rel_ground - V_north_airmass;
+//	V_east_rel_airmass  = V_east_rel_ground  - V_east_airmass;
+//	V_down_rel_airmass  = V_down_rel_ground  - V_down_airmass;
 	
 	U_body = T_local_to_body_11*V_north_rel_airmass 
 	  + T_local_to_body_12*V_east_rel_airmass

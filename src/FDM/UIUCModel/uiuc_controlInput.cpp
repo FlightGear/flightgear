@@ -177,6 +177,21 @@ void uiuc_controlInput()
                                  time);
         }
     }
+
+  if (flap_pos_input)
+    {
+      double flap_pos_input_endTime = flap_pos_input_timeArray[flap_pos_input_ntime];
+      if (Simtime >= flap_pos_input_startTime && 
+          Simtime <= (flap_pos_input_startTime + flap_pos_input_endTime))
+        {
+          double time = Simtime - flap_pos_input_startTime;
+          flap_pos = uiuc_1Dinterpolation(flap_pos_input_timeArray,
+					  flap_pos_input_dfArray,
+					  flap_pos_input_ntime,
+					  time);
+        }
+    }
+
   return;
 }
 

@@ -83,6 +83,8 @@ void uiuc_engine()
   string linetoken1;
   string linetoken2;
 
+  if (outside_control == false)
+    pilot_throttle_no = false;
   if (Throttle_pct_input)
     {
       double Throttle_pct_input_endTime = Throttle_pct_input_timeArray[Throttle_pct_input_ntime];
@@ -94,6 +96,7 @@ void uiuc_engine()
                          Throttle_pct_input_dTArray,
                          Throttle_pct_input_ntime,
                          time);
+	  pilot_throttle_no = true;
         }
     }
   
@@ -128,7 +131,7 @@ void uiuc_engine()
 	    /* simple model based on Hepperle's equation
 	     * exponent dtdvvt was computed in uiuc_menu.cpp */
 	    F_X_engine = Throttle[3] * t_v0 * (1 - pow((V_rel_wind/v_t0),dtdvvt));
-	    if (slipstream_effects) {
+	    if (b_slipstreamEffects) {
 	      tc = F_X_engine/(Dynamic_pressure * LS_PI * propDia * propDia / 4);
 	      w_induced = 0.5 *  V_rel_wind * (-1 + pow((1+tc),.5));
 	      eta_q = (2* w_induced + V_rel_wind)*(2* w_induced + V_rel_wind)/(V_rel_wind * V_rel_wind);

@@ -17,11 +17,13 @@
 
 ----------------------------------------------------------------------
 
- HISTORY:      01/30/2000   initial release
+ HISTORY:      01/30/2000   (BS) initial release
+               09/19/2002   (MSS) appended zeros to lines w/ comments 
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
+               Michael Selig
 
 ----------------------------------------------------------------------
 
@@ -85,9 +87,16 @@ void ParseFile :: removeComments(string& inputLine)
   if (pos != inputLine.npos) // a "#" exists in the line 
   {
         if (inputLine.find_first_not_of(DELIMITERS) == pos)
-          inputLine = ""; // Complete line a comment
+	  {
+	    inputLine = ""; // Complete line a comment
+	  }
         else
-          inputLine = inputLine.substr(0,pos); //Truncate the comment from the line
+          {
+	    inputLine = inputLine.substr(0,pos); //Truncate the comment from the line
+	    // append zeros to the input line after stripping off the comments
+	    // mss added from Bipin email of 9/3/02
+	    //	    inputLine += " 0 0 0 0 0 0";
+	  }
   }
 }
 
@@ -139,18 +148,37 @@ void ParseFile :: storeCommands(string inputLine)
   commands.push_back(line);
 }
 
+//  void ParseFile :: readFile()
+//  {
+//    string line;
+
+//    while (getline(file , line))
+//    {
+//     removeComments(line);
+//     if (line.find_first_not_of(DELIMITERS) != line.npos) // strip off blank lines
+//     {
+//     	line += "     0 0 0 0 0";
+//          storeCommands(line);
+//     }
+//    }
+//  }
+
 void ParseFile :: readFile()
 {
   string line;
 
   while (getline(file , line))
-  {
-        removeComments(line);
-        if (line.find_first_not_of(DELIMITERS) != line.npos) // strip off blank lines
-          storeCommands(line);
-  }
+    {
+      removeComments(line);
+      if (line.find_first_not_of(DELIMITERS) != line.npos) // strip off blank lines
+	{
+	  line += "     ";
+	  // append some zeros, but this is doing something strange!
+	  //	  	  line += "  0 0 0 0 0   ";
+	  storeCommands(line);
+	}
+    }
 }
-
 stack ParseFile :: getCommands()
 {
   return commands;

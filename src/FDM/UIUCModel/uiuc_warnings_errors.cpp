@@ -75,6 +75,7 @@ for information.
 
 **********************************************************************/
 #include <stdlib.h>
+#include <string.h>
 
 #include "uiuc_warnings_errors.h"
 
@@ -92,13 +93,25 @@ void uiuc_warnings_errors(int errorCode, string line)
   switch (errorCode)
     {
     case 1:
-	cerr << "UIUC ERROR: The value of the coefficient in \"" << line << "\" should be of type float" << endl;
-	exit(-1);
-        break;
+      cerr << "UIUC ERROR 1: The value of the coefficient in \"" << line << "\" should be of type float" << endl;
+      exit(-1);
+      break;
     case 2:
-	cerr << "UIUC ERROR: Unknown identifier in \"" << line << "\"" << endl;
-	exit(-1);
-        break;
+      cerr << "UIUC ERROR 2: Unknown identifier in \"" << line << "\" (check uiuc_maps_*.cpp)" << endl;
+      exit(-1);
+      break;
+    case 3:
+      cerr << "UIUC ERROR 3: Slipstream effects only work w/ the engine simpleSingleModel line: \"" << line  << endl;
+      exit(-1);
+      break;
+    case 4:
+      cerr << "UIUC ERROR 4: Downwash mode does not exist: \"" << line  << endl;
+      exit(-1);
+      break;
+    case 5:
+      cerr << "UIUC ERROR 5: Must use dyn_on_speed not equal to zero: \"" << line << endl;
+      exit(-1);
+      break;
     }
 }
 

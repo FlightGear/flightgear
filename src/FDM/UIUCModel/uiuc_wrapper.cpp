@@ -309,6 +309,7 @@ void uiuc_record_routine(double dt)
 
 //void uiuc_network_routine()
 //{
-//  uiuc_network();
+//  if (use_uiuc_network)
+//    uiuc_network(2);  //send data
 //}
 //end uiuc_wrapper.cpp

@@ -106,4 +106,43 @@ uiuc_1DdataFileReader( string file_name,
   return data;
 }
 
+//can't have conversions in this version since the numbers are
+//to stay as integers
+int 
+uiuc_1DdataFileReader( string file_name,  
+                         double x[], int y[], int &xmax ) 
+{
+
+  ParseFile *matrix;
+  int token_value1;
+  int token_value2;
+  int counter = 1, data = 0;
+  string linetoken1; 
+  string linetoken2; 
+  stack command_list;
+
+  /* Read the file and get the list of commands */
+  matrix = new ParseFile(file_name);
+  command_list = matrix -> getCommands();
+
+  for (LIST command_line = command_list.begin(); command_line!=command_list.end(); ++command_line)
+    {
+      linetoken1 = matrix -> getToken(*command_line, 1); // gettoken(string,tokenNo);
+      linetoken2 = matrix -> getToken(*command_line, 2); // 2 represents token No 2
+
+      istrstream token1(linetoken1.c_str());
+      istrstream token2(linetoken2.c_str());
+
+      token1 >> token_value1;
+      token2 >> token_value2;
+
+      x[counter] = token_value1;
+      y[counter] = token_value2;
+      xmax = counter;
+      counter++;
+      data = 1;
+    }
+  return data;
+}
+
 // end uiuc_1DdataFileReader.cpp

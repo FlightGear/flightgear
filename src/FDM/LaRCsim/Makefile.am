@@ -30,6 +30,7 @@ libLaRCsim_a_SOURCES = \
         ls_step.c ls_step.h \
 	ls_sym.h ls_types.h \
 	$(AIRCRAFT_MODEL) \
-	ls_interface.c ls_interface.h
+	ls_interface.c ls_interface.h \
+	uiuc_getwind.c
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

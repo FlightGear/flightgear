@@ -85,6 +85,7 @@ void uiuc_map_controlSurface()
   controlSurface_map["elevator_input"]   = elevator_input_flag      ;
   controlSurface_map["aileron_input"]    = aileron_input_flag       ;
   controlSurface_map["rudder_input"]     = rudder_input_flag        ;
+  controlSurface_map["flap_pos_input"]   = flap_pos_input_flag      ;
   controlSurface_map["pilot_elev_no"]    = pilot_elev_no_flag       ;
   controlSurface_map["pilot_ail_no"]     = pilot_ail_no_flag        ;
   controlSurface_map["pilot_rud_no"]     = pilot_rud_no_flag        ;

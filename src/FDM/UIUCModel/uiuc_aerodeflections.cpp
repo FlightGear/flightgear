@@ -73,7 +73,7 @@
 
 **********************************************************************/
 
-#include <math.h>
+//#include <math.h>
 
 #include "uiuc_aerodeflections.h"
 
@@ -84,6 +84,29 @@ void uiuc_aerodeflections( double dt )
   bool flaps_in_transit = false;
   double demax_remain;
   double demin_remain;
+  static double elev_trim;
+
+  //if (use_uiuc_network)
+  //  {
+      // receive data
+  //    uiuc_network(1);
+  //    if (pitch_trim_up)
+	//elev_trim += 0.001;
+  //    if (pitch_trim_down)
+	//elev_trim -= 0.001;
+  //    if (elev_trim > 1.0)
+	//elev_trim = 1;
+  //    if (elev_trim < -1.0)
+	//elev_trim = -1;
+  //    if (outside_control)
+	//{
+	//  pilot_elev_no = true;
+	//  pilot_ail_no = true;
+	//  pilot_rud_no = true;
+	//  pilot_throttle_no = true;
+	//  Long_trim = elev_trim;
+	//}
+  //  }
 
   if (zero_Long_trim)
     {
@@ -96,31 +119,36 @@ void uiuc_aerodeflections( double dt )
   else
     aileron = - Lat_control * damax * DEG_TO_RAD;
 
-  if (Long_trim <= 0)
+  if (trim_case_2)
     {
-      elevator = Long_trim * demax * DEG_TO_RAD;
-      demax_remain = demax + Long_trim * demax;
-      demin_remain = -1*Long_trim * demax + demin;
-      if (Long_control <= 0)
-	elevator += Long_control * demax_remain * DEG_TO_RAD;
+      if (Long_trim <= 0)
+	{
+	  elevator = Long_trim * demax * DEG_TO_RAD;
+	  demax_remain = demax + Long_trim * demax;
+	  demin_remain = -1*Long_trim * demax + demin;
+	  if (Long_control <= 0)
+	    elevator += Long_control * demax_remain * DEG_TO_RAD;
+	  else
+	    elevator += Long_control * demin_remain * DEG_TO_RAD;
+	}
       else
-	elevator += Long_control * demin_remain * DEG_TO_RAD;
+	{
+	  elevator = Long_trim * demin * DEG_TO_RAD;
+	  demin_remain = demin - Long_trim * demin;
+	  demax_remain = Long_trim * demin + demax;
+	  if (Long_control >=0)
+	    elevator += Long_control * demin_remain * DEG_TO_RAD;
+	  else
+	    elevator += Long_control * demax_remain * DEG_TO_RAD;
+	}
     }
   else
     {
-      elevator = Long_trim * demin * DEG_TO_RAD;
-      demin_remain = demin - Long_trim * demin;
-      demax_remain = Long_trim * demin + demax;
-      if (Long_control >=0)
-	elevator += Long_control * demin_remain * DEG_TO_RAD;
+      if ((Long_control+Long_trim) <= 0)
+	elevator = (Long_control + Long_trim) * demax * DEG_TO_RAD;
       else
-	elevator += Long_control * demax_remain * DEG_TO_RAD;
+	elevator = (Long_control + Long_trim) * demin * DEG_TO_RAD;
     }
-
-  //if ((Long_control+Long_trim) <= 0)
-  //  elevator = (Long_control + Long_trim) * demax * DEG_TO_RAD;
-  //else
-  //  elevator = (Long_control + Long_trim) * demin * DEG_TO_RAD;
 
   if (Rudder_pedal <= 0)
     rudder = - Rudder_pedal * drmin * DEG_TO_RAD;
@@ -128,84 +156,91 @@ void uiuc_aerodeflections( double dt )
     rudder = - Rudder_pedal * drmax * DEG_TO_RAD;
 
 
-  // new flap routine
-  // designed for the twin otter non-linear model
-  flap_percent     = Flap_handle / 30.0;       // percent of flaps desired
-  if (flap_percent>=0.31 && flap_percent<=0.35)
-    flap_percent = 1.0 / 3.0;
-  if (flap_percent>=0.65 && flap_percent<=0.69)
-    flap_percent = 2.0 / 3.0;
-  flap_goal        = flap_percent * flap_max;  // angle of flaps desired
-  flap_moving_rate = flap_rate * dt;           // amount flaps move per time step
-  
-  // determine flap position with respect to the flap goal
-  if (flap_pos < flap_goal)
+  if (old_flap_routine)
     {
-      flap_pos += flap_moving_rate;
-      if (flap_pos > flap_goal)
-	flap_pos = flap_goal;
-    }
-  else if (flap_pos > flap_goal)
-    {
-      flap_pos -= flap_moving_rate;
-      if (flap_pos < flap_goal)
-	flap_pos = flap_goal;
-    }
-
-
-  // old flap routine
-  // check for lowest flap setting
-  if (Flap_handle < dfArray[1])
-    {
-      Flap_handle    = dfArray[1];
+      // old flap routine
+      // check for lowest flap setting
+      if (Flap_handle < dfArray[1])
+	{
+	  Flap_handle    = dfArray[1];
+	  prevFlapHandle = Flap_handle;
+	  flap           = Flap_handle;
+	}
+      // check for highest flap setting
+      else if (Flap_handle > dfArray[ndf])
+	{
+	  Flap_handle      = dfArray[ndf];
+	  prevFlapHandle   = Flap_handle;
+	  flap             = Flap_handle;
+	}
+      // otherwise in between
+      else          
+	{
+	  if(Flap_handle != prevFlapHandle)
+	    {
+	      flaps_in_transit = true;
+	    }
+	  if(flaps_in_transit)
+	    {
+	      int iflap = 0;
+	      while (dfArray[iflap] < Flap_handle)
+		{
+		  iflap++;
+		}
+	      if (flap < Flap_handle)
+		{
+		  if (TimeArray[iflap] > 0)
+		    flap_transit_rate = (dfArray[iflap] - dfArray[iflap-1]) / TimeArray[iflap+1];
+		  else
+		    flap_transit_rate = (dfArray[iflap] - dfArray[iflap-1]) / 5;
+		}
+	      else 
+		{
+		  if (TimeArray[iflap+1] > 0)
+		    flap_transit_rate = (dfArray[iflap] - dfArray[iflap+1]) / TimeArray[iflap+1];
+		  else
+		    flap_transit_rate = (dfArray[iflap] - dfArray[iflap+1]) / 5;
+		}
+	      if(fabs (flap - Flap_handle) > dt * flap_transit_rate)
+		flap += flap_transit_rate * dt;
+	      else
+		{
+		  flaps_in_transit = false;
+		  flap = Flap_handle;
+		}
+	    }
+	}
       prevFlapHandle = Flap_handle;
-      flap           = Flap_handle;
     }
-  // check for highest flap setting
-  else if (Flap_handle > dfArray[ndf])
+  else
     {
-      Flap_handle      = dfArray[ndf];
-      prevFlapHandle   = Flap_handle;
-      flap             = Flap_handle;
+      // new flap routine
+      // designed for the twin otter non-linear model
+      if (outside_control == false)
+	{
+	  flap_percent     = Flap_handle / 30.0;    // percent of flaps desired
+	  if (flap_percent>=0.31 && flap_percent<=0.35)
+	    flap_percent = 1.0 / 3.0;
+	  if (flap_percent>=0.65 && flap_percent<=0.69)
+	    flap_percent = 2.0 / 3.0;
+	}
+      flap_goal        = flap_percent * flap_max;  // angle of flaps desired
+      flap_moving_rate = flap_rate * dt;           // amount flaps move per time step
+      
+      // determine flap position with respect to the flap goal
+      if (flap_pos < flap_goal)
+	{
+	  flap_pos += flap_moving_rate;
+	  if (flap_pos > flap_goal)
+	    flap_pos = flap_goal;
+	}
+      else if (flap_pos > flap_goal)
+	{
+	  flap_pos -= flap_moving_rate;
+	  if (flap_pos < flap_goal)
+	    flap_pos = flap_goal;
+	} 
     }
-  // otherwise in between
-  else          
-    {
-      if(Flap_handle != prevFlapHandle)
-        {
-          flaps_in_transit = true;
-        }
-      if(flaps_in_transit)
-        {
-          int iflap = 0;
-          while (dfArray[iflap] < Flap_handle)
-            {
-              iflap++;
-            }
-          if (flap < Flap_handle)
-            {
-              if (TimeArray[iflap] > 0)
-                flap_transit_rate = (dfArray[iflap] - dfArray[iflap-1]) / TimeArray[iflap+1];
-              else
-                flap_transit_rate = (dfArray[iflap] - dfArray[iflap-1]) / 5;
-            }
-          else 
-            {
-              if (TimeArray[iflap+1] > 0)
-                flap_transit_rate = (dfArray[iflap] - dfArray[iflap+1]) / TimeArray[iflap+1];
-              else
-                flap_transit_rate = (dfArray[iflap] - dfArray[iflap+1]) / 5;
-            }
-          if(fabs (flap - Flap_handle) > dt * flap_transit_rate)
-            flap += flap_transit_rate * dt;
-          else
-            {
-              flaps_in_transit = false;
-              flap = Flap_handle;
-            }
-        }
-    }
-  prevFlapHandle = Flap_handle;
 
   return;
 }

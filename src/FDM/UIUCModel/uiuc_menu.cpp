@@ -81,7 +81,7 @@
 	                    own function to speed up compile time
                08/29/2002   (RD w/ help from CO) Made changes to shorten
                             compile time.  [] RD to add more comments here.
-               08/29/3003   (MSS) Adding new keywords for new engine model
+               08/29/2003   (MSS) Adding new keywords for new engine model
                             and slipstream effects on tail.
 
 ----------------------------------------------------------------------
@@ -200,9 +200,10 @@ void i_1_to_2( int array1D[100], int array2D[][100], int index2D)
 }
 
 void parse_init( const string& linetoken2, const string& linetoken3,
-                 LIST command_line ) {
+                 const string& linetoken4, LIST command_line ) {
     double token_value;
     istrstream token3(linetoken3.c_str());
+    istrstream token4(linetoken4.c_str());
     int token_value_recordRate;
 
     switch(init_map[linetoken2])
@@ -467,6 +468,26 @@ void parse_init( const string& linetoken2, const string& linetoken3,
 	  Alpha_dot_on_speed = token_value;
 	  break;
 	}
+      case downwashMode_flag:
+	{
+	  b_downwashMode = true;
+	  token3 >> downwashMode;
+	  if (downwashMode==100)
+	    ;
+	  // compute downwash using downwashCoef, do nothing here
+	  else
+	    uiuc_warnings_errors(4, *command_line); 
+	  break;
+	}
+      case downwashCoef_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  downwashCoef = token_value;
+	  break;
+	}
       case Alpha_flag:
 	{
 	  if (check_float(linetoken3))
@@ -525,6 +546,33 @@ void parse_init( const string& linetoken2, const string& linetoken3,
       case ignore_unknown_flag:
 	{
 	  dont_ignore=false;
+	  break;
+	}
+      case trim_case_2_flag:
+	{
+	  trim_case_2 = true;
+	  break;
+	}
+      case use_uiuc_network_flag:
+	{
+	  use_uiuc_network = true;
+	  server_IP = linetoken3;
+	  token4 >> port_num;
+	  break;
+	}
+      case old_flap_routine_flag:
+	{
+	  old_flap_routine = true;
+	  break;
+	}
+      case icing_demo_flag:
+	{
+	  icing_demo = true;
+	  break;
+	}
+      case outside_control_flag:
+	{
+	  outside_control = true;
 	  break;
 	}
       default:
@@ -851,6 +899,22 @@ void parse_controlSurface( const string& linetoken2, const string& linetoken3,
 	  rudder_input_startTime = token_value;
 	  break;
 	}
+      case flap_pos_input_flag:
+	{
+	  flap_pos_input = true;
+	  flap_pos_input_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(flap_pos_input_file,
+				flap_pos_input_timeArray,
+				flap_pos_input_dfArray,
+				flap_pos_input_ntime);
+	  token6 >> token_value;
+	  flap_pos_input_startTime = token_value;
+	  break;
+	}
       case pilot_elev_no_flag:
 	{
 	  pilot_elev_no_check = true;
@@ -1157,7 +1221,7 @@ void parse_engine( const string& linetoken2, const string& linetoken3,
       case slipstream_effects_flag:
 	{
 	// include slipstream effects
-	  slipstream_effects = true;
+	  b_slipstreamEffects = true;
 	  if (!simpleSingleModel)
 	    uiuc_warnings_errors(3, *command_line);
 	  break;
@@ -4212,10 +4276,23 @@ void parse_gear( const string& linetoken2, const string& linetoken3,
 
 
 void parse_ice( const string& linetoken2, const string& linetoken3,
-                const string& linetoken4, LIST command_line ) {
+                const string& linetoken4, const string& linetoken5,
+		const string& linetoken6, const string& linetoken7, 
+		const string& linetoken8, const string& linetoken9,
+		const string& aircraft_directory,
+		bool &tactilefadef_first, LIST command_line ) {
     double token_value;
+    int token_value_convert1, token_value_convert2, token_value_convert3;
+    double datafile_xArray[100][100], datafile_yArray[100];
+    double datafile_zArray[100][100];
+    int datafile_nxArray[100], datafile_ny;
     istrstream token3(linetoken3.c_str());
     istrstream token4(linetoken4.c_str());
+    istrstream token5(linetoken5.c_str());
+    istrstream token6(linetoken6.c_str());
+    istrstream token7(linetoken7.c_str());
+    istrstream token8(linetoken8.c_str());
+    istrstream token9(linetoken9.c_str());
 
     switch(ice_map[linetoken2])
       {
@@ -4927,6 +5004,437 @@ void parse_ice( const string& linetoken2, const string& linetoken3,
 	  bootTrue[index] = true;
 	  break;
 	}  
+      case eta_wing_left_input_flag:
+	{
+	  eta_from_file = true;
+	  eta_wing_left_input = true;
+	  eta_wing_left_input_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(eta_wing_left_input_file,
+				eta_wing_left_input_timeArray,
+				eta_wing_left_input_daArray,
+				eta_wing_left_input_ntime);
+	  token6 >> token_value;
+	  eta_wing_left_input_startTime = token_value;
+	  break;
+	}
+      case eta_wing_right_input_flag:
+	{
+	  eta_from_file = true;
+	  eta_wing_right_input = true;
+	  eta_wing_right_input_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(eta_wing_right_input_file,
+				eta_wing_right_input_timeArray,
+				eta_wing_right_input_daArray,
+				eta_wing_right_input_ntime);
+	  token6 >> token_value;
+	  eta_wing_right_input_startTime = token_value;
+	  break;
+	}
+      case eta_tail_input_flag:
+	{
+	  eta_from_file = true;
+	  eta_tail_input = true;
+	  eta_tail_input_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(eta_tail_input_file,
+				eta_tail_input_timeArray,
+				eta_tail_input_daArray,
+				eta_tail_input_ntime);
+	  token6 >> token_value;
+	  eta_tail_input_startTime = token_value;
+	  break;
+	}
+      case nonlin_ice_case_flag:
+	{
+	  token3 >> nonlin_ice_case;
+	  break;
+	}
+      case eta_tail_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+
+	  eta_tail = token_value;
+	  break;
+	}
+      case eta_wing_left_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+
+	  eta_wing_left = token_value;
+	  break;
+	}
+      case eta_wing_right_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+
+	  eta_wing_right = token_value;
+	  break;
+	}
+      case demo_eps_alpha_max_flag:
+	{
+	  demo_eps_alpha_max = true;
+	  demo_eps_alpha_max_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_eps_alpha_max_file,
+				demo_eps_alpha_max_timeArray,
+				demo_eps_alpha_max_daArray,
+				demo_eps_alpha_max_ntime);
+	  token6 >> token_value;
+	  demo_eps_alpha_max_startTime = token_value;
+	  break;
+	}
+      case demo_eps_pitch_max_flag:
+	{
+	  demo_eps_pitch_max = true;
+	  demo_eps_pitch_max_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_eps_pitch_max_file,
+				demo_eps_pitch_max_timeArray,
+				demo_eps_pitch_max_daArray,
+				demo_eps_pitch_max_ntime);
+	  token6 >> token_value;
+	  demo_eps_pitch_max_startTime = token_value;
+	  break;
+	}
+      case demo_eps_pitch_min_flag:
+	{
+	  demo_eps_pitch_min = true;
+	  demo_eps_pitch_min_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_eps_pitch_min_file,
+				demo_eps_pitch_min_timeArray,
+				demo_eps_pitch_min_daArray,
+				demo_eps_pitch_min_ntime);
+	  token6 >> token_value;
+	  demo_eps_pitch_min_startTime = token_value;
+	  break;
+	}
+      case demo_eps_roll_max_flag:
+	{
+	  demo_eps_roll_max = true;
+	  demo_eps_roll_max_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_eps_roll_max_file,
+				demo_eps_roll_max_timeArray,
+				demo_eps_roll_max_daArray,
+				demo_eps_roll_max_ntime);
+	  token6 >> token_value;
+	  demo_eps_roll_max_startTime = token_value;
+	  break;
+	}
+      case demo_eps_thrust_min_flag:
+	{
+	  demo_eps_thrust_min = true;
+	  demo_eps_thrust_min_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_eps_thrust_min_file,
+				demo_eps_thrust_min_timeArray,
+				demo_eps_thrust_min_daArray,
+				demo_eps_thrust_min_ntime);
+	  token6 >> token_value;
+	  demo_eps_thrust_min_startTime = token_value;
+	  break;
+	}
+      case demo_eps_airspeed_max_flag:
+	{
+	  demo_eps_airspeed_max = true;
+	  demo_eps_airspeed_max_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_eps_airspeed_max_file,
+				demo_eps_airspeed_max_timeArray,
+				demo_eps_airspeed_max_daArray,
+				demo_eps_airspeed_max_ntime);
+	  token6 >> token_value;
+	  demo_eps_airspeed_max_startTime = token_value;
+	  break;
+	}
+      case demo_eps_airspeed_min_flag:
+	{
+	  demo_eps_airspeed_min = true;
+	  demo_eps_airspeed_min_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_eps_airspeed_min_file,
+				demo_eps_airspeed_min_timeArray,
+				demo_eps_airspeed_min_daArray,
+				demo_eps_airspeed_min_ntime);
+	  token6 >> token_value;
+	  demo_eps_airspeed_min_startTime = token_value;
+	  break;
+	}
+      case demo_eps_flap_max_flag:
+	{
+	  demo_eps_flap_max = true;
+	  demo_eps_flap_max_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_eps_flap_max_file,
+				demo_eps_flap_max_timeArray,
+				demo_eps_flap_max_daArray,
+				demo_eps_flap_max_ntime);
+	  token6 >> token_value;
+	  demo_eps_flap_max_startTime = token_value;
+	  break;
+	}
+      case demo_boot_cycle_tail_flag:
+	{
+	  demo_boot_cycle_tail = true;
+	  demo_boot_cycle_tail_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_boot_cycle_tail_file,
+				demo_boot_cycle_tail_timeArray,
+				demo_boot_cycle_tail_daArray,
+				demo_boot_cycle_tail_ntime);
+	  token6 >> token_value;
+	  demo_boot_cycle_tail_startTime = token_value;
+	  break;
+	}
+      case demo_boot_cycle_wing_left_flag:
+	{
+	  demo_boot_cycle_wing_left = true;
+	  demo_boot_cycle_wing_left_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_boot_cycle_wing_left_file,
+				demo_boot_cycle_wing_left_timeArray,
+				demo_boot_cycle_wing_left_daArray,
+				demo_boot_cycle_wing_left_ntime);
+	  token6 >> token_value;
+	  demo_boot_cycle_wing_left_startTime = token_value;
+	  break;
+	}
+      case demo_boot_cycle_wing_right_flag:
+	{
+	  demo_boot_cycle_wing_right = true;
+	  demo_boot_cycle_wing_right_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_boot_cycle_wing_right_file,
+				demo_boot_cycle_wing_right_timeArray,
+				demo_boot_cycle_wing_right_daArray,
+				demo_boot_cycle_wing_right_ntime);
+	  token6 >> token_value;
+	  demo_boot_cycle_wing_right_startTime = token_value;
+	  break;
+	}
+      case demo_eps_pitch_input_flag:
+	{
+	  demo_eps_pitch_input = true;
+	  demo_eps_pitch_input_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_eps_pitch_input_file,
+				demo_eps_pitch_input_timeArray,
+				demo_eps_pitch_input_daArray,
+				demo_eps_pitch_input_ntime);
+	  token6 >> token_value;
+	  demo_eps_pitch_input_startTime = token_value;
+	  break;
+	}
+      case demo_ap_Theta_ref_deg_flag:
+	{
+	  demo_ap_Theta_ref_deg = true;
+	  demo_ap_Theta_ref_deg_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_ap_Theta_ref_deg_file,
+				demo_ap_Theta_ref_deg_timeArray,
+				demo_ap_Theta_ref_deg_daArray,
+				demo_ap_Theta_ref_deg_ntime);
+	  token6 >> token_value;
+	  demo_ap_Theta_ref_deg_startTime = token_value;
+	  break;
+	}
+      case demo_ap_pah_on_flag:
+	{
+	  demo_ap_pah_on = true;
+	  demo_ap_pah_on_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_ap_pah_on_file,
+				demo_ap_pah_on_timeArray,
+				demo_ap_pah_on_daArray,
+				demo_ap_pah_on_ntime);
+	  token6 >> token_value;
+	  demo_ap_pah_on_startTime = token_value;
+	  break;
+	}
+      case tactilefadef_flag:
+	{
+	  int tactilefadef_index, i;
+	  string tactilefadef_file;
+	  double flap_value;
+	  tactilefadef = true;
+	  tactilefadef_file = aircraft_directory + linetoken3;
+	  token4 >> tactilefadef_index;
+	  if (tactilefadef_index < 0 || tactilefadef_index >= 30)
+	    uiuc_warnings_errors(1, *command_line);
+	  if (tactilefadef_index > tactilefadef_nf)
+	    tactilefadef_nf = tactilefadef_index;
+	  token5 >> flap_value;
+	  tactilefadef_fArray[tactilefadef_index] = flap_value;
+	  token6 >> token_value_convert1;
+	  token7 >> token_value_convert2;
+	  token8 >> token_value_convert3;
+	  token9 >> tactilefadef_nice;
+	  convert_z = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  convert_y = uiuc_convert(token_value_convert3);
+	  /* call 2D File Reader with file name (tactilefadef_file) and 
+	     conversion factors; function returns array of 
+	     elevator deflections (deArray) and corresponding 
+	     alpha (aArray) and delta CZ (CZArray) values and 
+	     max number of terms in alpha arrays (nAlphaArray) 
+	     and delfection array (nde) */
+	  uiuc_2DdataFileReader(tactilefadef_file,
+				datafile_xArray,
+				datafile_yArray,
+				datafile_zArray,
+				datafile_nxArray,
+				datafile_ny);
+	  d_2_to_3(datafile_xArray, tactilefadef_aArray, tactilefadef_index);
+	  d_1_to_2(datafile_yArray, tactilefadef_deArray, tactilefadef_index);
+	  d_2_to_3(datafile_zArray, tactilefadef_tactileArray, tactilefadef_index);
+	  i_1_to_2(datafile_nxArray, tactilefadef_nAlphaArray, tactilefadef_index);
+	  tactilefadef_nde[tactilefadef_index] = datafile_ny;
+	  if (tactilefadef_first==true)
+	    {
+	      if (tactilefadef_nice == 1)
+		{
+		  tactilefadef_na_nice = datafile_nxArray[1];
+		  tactilefadef_nde_nice = datafile_ny;
+		  d_1_to_1(datafile_yArray, tactilefadef_deArray_nice);
+		  for (i=1; i<=tactilefadef_na_nice; i++)
+		    tactilefadef_aArray_nice[i] = datafile_xArray[1][i];
+		}
+	      tactilefadef_first=false;
+	    }
+	  break;
+	}
+      case tactile_pitch_flag:
+	{
+	  tactile_pitch = 1;
+	  break;
+	}
+      case demo_tactile_flag:
+	{
+	  demo_tactile = true;
+	  demo_tactile_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_tactile_file,
+				demo_tactile_timeArray,
+				demo_tactile_daArray,
+				demo_tactile_ntime);
+	  token6 >> token_value;
+	  demo_tactile_startTime = token_value;
+	  break;
+	}
+      case demo_ice_tail_flag:
+	{
+	  demo_ice_tail = true;
+	  demo_ice_tail_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_ice_tail_file,
+				demo_ice_tail_timeArray,
+				demo_ice_tail_daArray,
+				demo_ice_tail_ntime);
+	  token6 >> token_value;
+	  demo_ice_tail_startTime = token_value;
+	  break;
+	}
+      case demo_ice_left_flag:
+	{
+	  demo_ice_left = true;
+	  demo_ice_left_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_ice_left_file,
+				demo_ice_left_timeArray,
+				demo_ice_left_daArray,
+				demo_ice_left_ntime);
+	  token6 >> token_value;
+	  demo_ice_left_startTime = token_value;
+	  break;
+	}
+      case demo_ice_right_flag:
+	{
+	  demo_ice_right = true;
+	  demo_ice_right_file = aircraft_directory + linetoken3;
+	  token4 >> token_value_convert1;
+	  token5 >> token_value_convert2;
+	  convert_y = uiuc_convert(token_value_convert1);
+	  convert_x = uiuc_convert(token_value_convert2);
+	  uiuc_1DdataFileReader(demo_ice_right_file,
+				demo_ice_right_timeArray,
+				demo_ice_right_daArray,
+				demo_ice_right_ntime);
+	  token6 >> token_value;
+	  demo_ice_right_startTime = token_value;
+	  break;
+	}
       default:
 	{
 	  if (dont_ignore)
@@ -6574,7 +7082,129 @@ void parse_record( const string& linetoken2, LIST command_line ) {
 	recordParts -> storeCommands (*command_line);
 	break;
       }
-      
+    case eta_wing_left_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case eta_wing_right_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case eta_tail_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case delta_CL_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case delta_CD_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case delta_Cm_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case delta_Cl_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case boot_cycle_tail_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case boot_cycle_wing_left_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case boot_cycle_wing_right_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case autoIPS_tail_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case autoIPS_wing_left_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case autoIPS_wing_right_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case eps_pitch_input_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case eps_alpha_max_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case eps_pitch_max_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case eps_pitch_min_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case eps_roll_max_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case eps_thrust_min_record:
+       {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case eps_flap_max_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case eps_airspeed_max_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case eps_airspeed_min_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+
+      /*********************Auto Pilot************************/
+    case ap_Theta_ref_deg_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case ap_pah_on_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+	
       /************************ Forces ***********************/
     case F_X_wind_record:
       {
@@ -6729,7 +7359,7 @@ void parse_record( const string& linetoken2, LIST command_line ) {
 	break;
       }
       /****************** Flapper Data ***********************/
-      /*    case flapper_freq_record:
+    case flapper_freq_record:
       {
 	recordParts -> storeCommands (*command_line);
 	break;
@@ -6763,7 +7393,7 @@ void parse_record( const string& linetoken2, LIST command_line ) {
       {
 	recordParts -> storeCommands (*command_line);
 	break;
-	}*/
+      }
       /****************** Flapper Data ***********************/
     case debug1_record:
       {
@@ -6776,6 +7406,11 @@ void parse_record( const string& linetoken2, LIST command_line ) {
 	break;
       }
     case debug3_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case tactilefadefI_record:
       {
 	recordParts -> storeCommands (*command_line);
 	break;
@@ -6820,25 +7455,25 @@ void parse_misc( const string& linetoken2, const string& linetoken3,
 			      dfTimefdf_ndf);
 	break;
       }
-      /*case flapper_flag:
-      {
-	string flap_file;
-	
-	flap_file = aircraft_directory + "flap.dat";
-	flapper_model = true;
-	flapper_data = new FlapData(flap_file.c_str());
-	break;
-      }
-    case flapper_phi_init_flag:
-      {
-	if (check_float(linetoken3))
-	  token3 >> token_value;
-	else
-	  uiuc_warnings_errors(1, *command_line);
-	
-	flapper_phi_init = token_value*DEG_TO_RAD;
-	break;
-	}*/
+    //case flapper_flag:
+    //  {
+	//string flap_file;
+	//
+	//flap_file = aircraft_directory + "flap.dat";
+	//flapper_model = true;
+	//flapper_data = new FlapData(flap_file.c_str());
+	//break;
+    //  }
+    //case flapper_phi_init_flag:
+    //  {
+	//if (check_float(linetoken3))
+	//  token3 >> token_value;
+	//else
+	//  uiuc_warnings_errors(1, *command_line);
+	//
+	//flapper_phi_init = token_value*DEG_TO_RAD;
+	//break;
+    //  }
     default:
       {
 	if (dont_ignore)
@@ -6895,6 +7530,8 @@ void uiuc_menu( string aircraft_name )
   bool Cnfadrf_first = true;
   bool Cnfapf_first = true;
   bool Cnfarf_first = true;
+
+  bool tactilefadef_first = true;
 
   /* the following default setting should eventually be moved to a default or uiuc_init routine */
 
@@ -6963,7 +7600,7 @@ void uiuc_menu( string aircraft_name )
         {
         case init_flag:
           {
-	    parse_init( linetoken2, linetoken3, command_line );
+	    parse_init( linetoken2, linetoken3, linetoken4, command_line );
             break;
           } // end init map
           
@@ -7084,7 +7721,9 @@ void uiuc_menu( string aircraft_name )
         case ice_flag:
           {
 	    parse_ice( linetoken2, linetoken3, linetoken4,
-		       command_line );
+		       linetoken5, linetoken6, linetoken7,
+		       linetoken8, linetoken9, aircraft_directory,
+		       tactilefadef_first, command_line );
             break;
           } // end ice map
          

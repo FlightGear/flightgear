@@ -70,6 +70,7 @@
                             and options for computing *_2U coefficient
                             scale factors.
                08/29/2002   (MSS) Added simpleSingleModel
+	       09/18/2002   (MSS) Added downwash options
 
 ----------------------------------------------------------------------
 
@@ -139,7 +140,7 @@
 #include <math.h>
 
 #include "uiuc_parsefile.h"
-// #include "uiuc_flapdata.h"
+//#include "uiuc_flapdata.h"
 
 SG_USING_STD(map);
 #if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
@@ -156,17 +157,45 @@ enum {init_flag = 1000, geometry_flag, controlSurface_flag, controlsMixer_flag,
       Cn_flag, gear_flag, ice_flag, record_flag, misc_flag, fog_flag};
 
 // init ======= Initial values for equation of motion
-enum {Dx_pilot_flag = 2000, Dy_pilot_flag, Dz_pilot_flag, 
-      Dx_cg_flag, Dy_cg_flag, Dz_cg_flag, Altitude_flag,
-      V_north_flag, V_east_flag, V_down_flag, 
-      P_body_flag, Q_body_flag, R_body_flag, 
-      Phi_flag, Theta_flag, Psi_flag,
-      Long_trim_flag, recordRate_flag, recordStartTime_flag, 
-      use_V_rel_wind_2U_flag, nondim_rate_V_rel_wind_flag, 
+enum {Dx_pilot_flag = 2000, 
+      Dy_pilot_flag,
+      Dz_pilot_flag,
+      Dx_cg_flag,
+      Dy_cg_flag,
+      Dz_cg_flag,
+      Altitude_flag,
+      V_north_flag,
+      V_east_flag,
+      V_down_flag, 
+      P_body_flag,
+      Q_body_flag,
+      R_body_flag, 
+      Phi_flag,
+      Theta_flag,
+      Psi_flag,
+      Long_trim_flag,
+      recordRate_flag,
+      recordStartTime_flag, 
+      use_V_rel_wind_2U_flag,
+      nondim_rate_V_rel_wind_flag, 
       use_abs_U_body_2U_flag,
-      dyn_on_speed_flag, dyn_on_speed_zero_flag, 
-      use_dyn_on_speed_curve1_flag, use_Alpha_dot_on_speed_flag, Alpha_flag, 
-      Beta_flag, U_body_flag, V_body_flag, W_body_flag, ignore_unknown_flag};
+      dyn_on_speed_flag,
+      dyn_on_speed_zero_flag, 
+      use_dyn_on_speed_curve1_flag,
+      use_Alpha_dot_on_speed_flag, 
+      downwashMode_flag,
+      downwashCoef_flag,
+      Alpha_flag, 
+      Beta_flag,
+      U_body_flag,
+      V_body_flag,
+      W_body_flag,
+      ignore_unknown_flag,
+      trim_case_2_flag,
+      use_uiuc_network_flag,
+      old_flap_routine_flag,
+      icing_demo_flag,
+      outside_control_flag};
 
 // geometry === Aircraft-specific geometric quantities
 enum {bw_flag = 3000, cbar_flag, Sw_flag, ih_flag, bh_flag, ch_flag, Sh_flag};
@@ -175,9 +204,9 @@ enum {bw_flag = 3000, cbar_flag, Sw_flag, ih_flag, bh_flag, ch_flag, Sh_flag};
 enum {de_flag = 4000, da_flag, dr_flag, 
       set_Long_trim_flag, set_Long_trim_deg_flag, zero_Long_trim_flag, 
       elevator_step_flag, elevator_singlet_flag, elevator_doublet_flag,
-      elevator_input_flag, aileron_input_flag, rudder_input_flag, 
-      pilot_elev_no_flag, pilot_ail_no_flag, pilot_rud_no_flag, flap_max_flag,
-      flap_rate_flag};
+      elevator_input_flag, aileron_input_flag, rudder_input_flag,
+      flap_pos_input_flag, pilot_elev_no_flag, pilot_ail_no_flag,
+      pilot_rud_no_flag, flap_max_flag, flap_rate_flag};
 
 // controlsMixer == Controls mixer
 enum {nomix_flag = 5000};
@@ -267,7 +296,21 @@ enum {iceTime_flag = 15000, transientTime_flag, eta_ice_final_flag,
       kClo_flag, kCl_beta_flag, kCl_p_flag, kCl_r_flag, kCl_da_flag, 
       kCl_dr_flag, kCl_daa_flag, 
       kCno_flag, kCn_beta_flag, kCn_p_flag, kCn_r_flag, kCn_da_flag, 
-      kCn_dr_flag, kCn_q_flag, kCn_b3_flag, bootTime_flag};
+      kCn_dr_flag, kCn_q_flag, kCn_b3_flag, bootTime_flag,
+      
+      eta_wing_left_input_flag, eta_wing_right_input_flag, 
+      eta_tail_input_flag, nonlin_ice_case_flag, eta_tail_flag,
+      eta_wing_left_flag, eta_wing_right_flag,
+
+      demo_eps_alpha_max_flag, demo_eps_pitch_max_flag, 
+      demo_eps_pitch_min_flag, demo_eps_roll_max_flag, 
+      demo_eps_thrust_min_flag, demo_eps_flap_max_flag, 
+      demo_eps_airspeed_max_flag, demo_eps_airspeed_min_flag,
+      demo_boot_cycle_tail_flag, demo_boot_cycle_wing_left_flag,
+      demo_boot_cycle_wing_right_flag, demo_eps_pitch_input_flag,
+      tactilefadef_flag, tactile_pitch_flag, demo_ap_Theta_ref_deg_flag,
+      demo_ap_pah_on_flag, demo_tactile_flag, demo_ice_tail_flag, 
+      demo_ice_left_flag, demo_ice_right_flag};
 
 // record ===== Record desired quantites to file
 enum {Simtime_record = 16000, dt_record, 
@@ -389,6 +432,7 @@ enum {Simtime_record = 16000, dt_record,
       Cm_clean_record, Cm_iced_record,
       Ch_clean_record, Ch_iced_record,
       Cl_clean_record, Cl_iced_record,
+      Cn_clean_record, Cn_iced_record,
       CLclean_wing_record, CLiced_wing_record, 
       CLclean_tail_record, CLiced_tail_record, 
       Lift_clean_wing_record, Lift_iced_wing_record, 
@@ -406,10 +450,23 @@ enum {Simtime_record = 16000, dt_record,
       Dbeta_flow_wing_record, Dbeta_flow_wing_deg_record, 
       Dbeta_flow_tail_record, Dbeta_flow_tail_deg_record, 
       pct_beta_flow_wing_record, pct_beta_flow_tail_record, eta_ice_record,
+      eta_wing_right_record, eta_wing_left_record, eta_tail_record,
+      delta_CL_record, delta_CD_record, delta_Cm_record, delta_Cl_record,
+      delta_Cn_record,
 
       flapper_freq_record, flapper_phi_record,
       flapper_phi_deg_record, flapper_Lift_record, flapper_Thrust_record,
       flapper_Inertia_record, flapper_Moment_record,
+
+      boot_cycle_tail_record, boot_cycle_wing_left_record,
+      boot_cycle_wing_right_record, autoIPS_tail_record, 
+      autoIPS_wing_left_record, autoIPS_wing_right_record,
+      eps_pitch_input_record, eps_alpha_max_record, eps_pitch_max_record, 
+      eps_pitch_min_record, eps_roll_max_record, eps_thrust_min_record, 
+      eps_flap_max_record, eps_airspeed_max_record, eps_airspeed_min_record,
+      tactilefadefI_record,
+
+      ap_Theta_ref_deg_record, ap_pah_on_record,
 
       debug1_record, debug2_record, debug3_record};
 
@@ -507,14 +564,29 @@ struct AIRCRAFT
 #define dyn_on_speed_zero      aircraft_->dyn_on_speed_zero
   bool use_dyn_on_speed_curve1;
 #define use_dyn_on_speed_curve1 aircraft_->use_dyn_on_speed_curve1
-  bool P_body_init_true;
 
   bool use_Alpha_dot_on_speed;
 #define use_Alpha_dot_on_speed  aircraft_->use_Alpha_dot_on_speed
   double Alpha_dot_on_speed;
 #define Alpha_dot_on_speed      aircraft_->Alpha_dot_on_speed
 
+  bool b_downwashMode;
+#define b_downwashMode          aircraft_->b_downwashMode
+  int downwashMode;
+#define downwashMode            aircraft_->downwashMode
+  double downwashCoef;
+#define downwashCoef            aircraft_->downwashCoef
+  double gammaWing;
+#define gammaWing               aircraft_->gammaWing
+  double downwash;
+#define downwash                aircraft_->downwash
+  double downwashAngle;
+#define downwashAngle           aircraft_->downwashAngle
+  double alphaTail;
+#define alphaTail               aircraft_->alphaTail
 
+
+  bool P_body_init_true;
   double P_body_init;
 #define P_body_init_true       aircraft_->P_body_init_true
 #define P_body_init            aircraft_->P_body_init
@@ -558,6 +630,20 @@ struct AIRCRAFT
   double W_body_init;
 #define W_body_init_true       aircraft_->W_body_init_true
 #define W_body_init            aircraft_->W_body_init
+  bool trim_case_2;
+#define trim_case_2            aircraft_->trim_case_2
+  bool use_uiuc_network;
+  string server_IP;
+  int port_num;
+#define use_uiuc_network       aircraft_->use_uiuc_network
+#define server_IP              aircraft_->server_IP
+#define port_num               aircraft_->port_num
+  bool old_flap_routine;
+#define old_flap_routine       aircraft_->old_flap_routine
+  bool icing_demo;
+#define icing_demo             aircraft_->icing_demo
+  bool outside_control;
+#define outside_control        aircraft_->outside_control
 
   /* Variables (token2) ===========================================*/
   /* geometry ====== Aircraft-specific geometric quantities =======*/
@@ -628,8 +714,8 @@ struct AIRCRAFT
 
   bool elevator_input;
   string elevator_input_file;
-  double elevator_input_timeArray[1500];
-  double elevator_input_deArray[1500];
+  double elevator_input_timeArray[7500];
+  double elevator_input_deArray[7500];
   int elevator_input_ntime;
   double elevator_input_startTime;
 #define elevator_input             aircraft_->elevator_input
@@ -654,8 +740,8 @@ struct AIRCRAFT
 
   bool rudder_input;
   string rudder_input_file;
-  double rudder_input_timeArray[1500];
-  double rudder_input_drArray[1500];
+  double rudder_input_timeArray[500];
+  double rudder_input_drArray[500];
   int rudder_input_ntime;
   double rudder_input_startTime;
 #define rudder_input             aircraft_->rudder_input
@@ -683,6 +769,20 @@ struct AIRCRAFT
   double flap_max, flap_rate;
 #define flap_max                 aircraft_->flap_max
 #define flap_rate                aircraft_->flap_rate
+
+  bool flap_pos_input;
+  string flap_pos_input_file;
+  double flap_pos_input_timeArray[500];
+  double flap_pos_input_dfArray[500];
+  int flap_pos_input_ntime;
+  double flap_pos_input_startTime;
+#define flap_pos_input             aircraft_->flap_pos_input
+#define flap_pos_input_file        aircraft_->flap_pos_input_file
+#define flap_pos_input_timeArray   aircraft_->flap_pos_input_timeArray
+#define flap_pos_input_dfArray     aircraft_->flap_pos_input_dfArray
+#define flap_pos_input_ntime       aircraft_->flap_pos_input_ntime
+#define flap_pos_input_startTime   aircraft_->flap_pos_input_startTime
+
 
   /* Variables (token2) ===========================================*/
   /* controlsMixer = Control mixer ================================*/
@@ -769,7 +869,7 @@ struct AIRCRAFT
 #define polarInertia                  aircraft_->polarInertia
 
   // propeller slipstream effects
-  bool slipstream_effects;
+  bool b_slipstreamEffects;
   double propDia;
   double eta_q_Cm_q, eta_q_Cm_q_fac;
   double eta_q_Cm_adot, eta_q_Cm_adot_fac;
@@ -787,7 +887,7 @@ struct AIRCRAFT
   double eta_q_Cn_r, eta_q_Cn_r_fac;
   double eta_q_Cn_dr, eta_q_Cn_dr_fac;
 
-#define slipstream_effects   aircraft_->slipstream_effects
+#define b_slipstreamEffects  aircraft_->b_slipstreamEffects
 #define propDia              aircraft_->propDia
 #define eta_q_Cm_q           aircraft_->eta_q_Cm_q
 #define eta_q_Cm_q_fac       aircraft_->eta_q_Cm_q_fac
@@ -1261,14 +1361,12 @@ struct AIRCRAFT
 #define Cmfade_nAlphaArray aircraft_->Cmfade_nAlphaArray
 #define Cmfade_nde         aircraft_->Cmfade_nde
 #define CmfadeI            aircraft_->CmfadeI
-
-  double gamma_wing, w_induced, w_coef, downwash_angle, AlphaTail;
-#define gamma_wing         aircraft_->gamma_wing
+  
+  // induced flow in slipstream impinging on tail
+  double w_induced;
 #define w_induced          aircraft_->w_induced
-#define w_coef             aircraft_->w_coef
-#define downwash_angle     aircraft_->downwash_angle
-#define AlphaTail          aircraft_->AlphaTail
-
+  
+  
   string Cmfdf;
   double Cmfdf_dfArray[100];
   double Cmfdf_CmArray[100];
@@ -2102,6 +2200,288 @@ struct AIRCRAFT
 #define bootTime       aircraft_->bootTime  
 #define bootindex      aircraft_->bootindex 
 #define bootTrue       aircraft_->bootTrue
+  bool eta_from_file;
+#define eta_from_file             aircraft_->eta_from_file
+  bool eta_wing_left_input;
+  string eta_wing_left_input_file;
+  double eta_wing_left_input_timeArray[100];
+  double eta_wing_left_input_daArray[100];
+  int eta_wing_left_input_ntime;
+  double eta_wing_left_input_startTime;
+#define eta_wing_left_input           aircraft_->eta_wing_left_input
+#define eta_wing_left_input_file      aircraft_->eta_wing_left_input_file
+#define eta_wing_left_input_timeArray aircraft_->eta_wing_left_input_timeArray
+#define eta_wing_left_input_daArray   aircraft_->eta_wing_left_input_daArray
+#define eta_wing_left_input_ntime     aircraft_->eta_wing_left_input_ntime
+#define eta_wing_left_input_startTime aircraft_->eta_wing_left_input_startTime
+  bool eta_wing_right_input;
+  string eta_wing_right_input_file;
+  double eta_wing_right_input_timeArray[100];
+  double eta_wing_right_input_daArray[100];
+  int eta_wing_right_input_ntime;
+  double eta_wing_right_input_startTime;
+#define eta_wing_right_input           aircraft_->eta_wing_right_input
+#define eta_wing_right_input_file      aircraft_->eta_wing_right_input_file
+#define eta_wing_right_input_timeArray aircraft_->eta_wing_right_input_timeArray
+#define eta_wing_right_input_daArray   aircraft_->eta_wing_right_input_daArray
+#define eta_wing_right_input_ntime     aircraft_->eta_wing_right_input_ntime
+#define eta_wing_right_input_startTime aircraft_->eta_wing_right_input_startTime
+  bool eta_tail_input;
+  string eta_tail_input_file;
+  double eta_tail_input_timeArray[100];
+  double eta_tail_input_daArray[100];
+  int eta_tail_input_ntime;
+  double eta_tail_input_startTime;
+#define eta_tail_input           aircraft_->eta_tail_input
+#define eta_tail_input_file      aircraft_->eta_tail_input_file
+#define eta_tail_input_timeArray aircraft_->eta_tail_input_timeArray
+#define eta_tail_input_daArray   aircraft_->eta_tail_input_daArray
+#define eta_tail_input_ntime     aircraft_->eta_tail_input_ntime
+#define eta_tail_input_startTime aircraft_->eta_tail_input_startTime
+  bool demo_eps_alpha_max;
+  string demo_eps_alpha_max_file;
+  double demo_eps_alpha_max_timeArray[100];
+  double demo_eps_alpha_max_daArray[100];
+  int demo_eps_alpha_max_ntime;
+  double demo_eps_alpha_max_startTime;
+#define demo_eps_alpha_max           aircraft_->demo_eps_alpha_max
+#define demo_eps_alpha_max_file      aircraft_->demo_eps_alpha_max_file
+#define demo_eps_alpha_max_timeArray aircraft_->demo_eps_alpha_max_timeArray
+#define demo_eps_alpha_max_daArray   aircraft_->demo_eps_alpha_max_daArray
+#define demo_eps_alpha_max_ntime     aircraft_->demo_eps_alpha_max_ntime
+#define demo_eps_alpha_max_startTime aircraft_->demo_eps_alpha_max_startTime
+  bool demo_eps_pitch_max;
+  string demo_eps_pitch_max_file;
+  double demo_eps_pitch_max_timeArray[100];
+  double demo_eps_pitch_max_daArray[100];
+  int demo_eps_pitch_max_ntime;
+  double demo_eps_pitch_max_startTime;
+#define demo_eps_pitch_max           aircraft_->demo_eps_pitch_max
+#define demo_eps_pitch_max_file      aircraft_->demo_eps_pitch_max_file
+#define demo_eps_pitch_max_timeArray aircraft_->demo_eps_pitch_max_timeArray
+#define demo_eps_pitch_max_daArray   aircraft_->demo_eps_pitch_max_daArray
+#define demo_eps_pitch_max_ntime     aircraft_->demo_eps_pitch_max_ntime
+#define demo_eps_pitch_max_startTime aircraft_->demo_eps_pitch_max_startTime
+  bool demo_eps_pitch_min;
+  string demo_eps_pitch_min_file;
+  double demo_eps_pitch_min_timeArray[100];
+  double demo_eps_pitch_min_daArray[100];
+  int demo_eps_pitch_min_ntime;
+  double demo_eps_pitch_min_startTime;
+#define demo_eps_pitch_min           aircraft_->demo_eps_pitch_min
+#define demo_eps_pitch_min_file      aircraft_->demo_eps_pitch_min_file
+#define demo_eps_pitch_min_timeArray aircraft_->demo_eps_pitch_min_timeArray
+#define demo_eps_pitch_min_daArray   aircraft_->demo_eps_pitch_min_daArray
+#define demo_eps_pitch_min_ntime     aircraft_->demo_eps_pitch_min_ntime
+#define demo_eps_pitch_min_startTime aircraft_->demo_eps_pitch_min_startTime
+  bool demo_eps_roll_max;
+  string demo_eps_roll_max_file;
+  double demo_eps_roll_max_timeArray[10];
+  double demo_eps_roll_max_daArray[10];
+  int demo_eps_roll_max_ntime;
+  double demo_eps_roll_max_startTime;
+#define demo_eps_roll_max           aircraft_->demo_eps_roll_max
+#define demo_eps_roll_max_file      aircraft_->demo_eps_roll_max_file
+#define demo_eps_roll_max_timeArray aircraft_->demo_eps_roll_max_timeArray
+#define demo_eps_roll_max_daArray   aircraft_->demo_eps_roll_max_daArray
+#define demo_eps_roll_max_ntime     aircraft_->demo_eps_roll_max_ntime
+#define demo_eps_roll_max_startTime aircraft_->demo_eps_roll_max_startTime
+  bool demo_eps_thrust_min;
+  string demo_eps_thrust_min_file;
+  double demo_eps_thrust_min_timeArray[100];
+  double demo_eps_thrust_min_daArray[100];
+  int demo_eps_thrust_min_ntime;
+  double demo_eps_thrust_min_startTime;
+#define demo_eps_thrust_min           aircraft_->demo_eps_thrust_min
+#define demo_eps_thrust_min_file      aircraft_->demo_eps_thrust_min_file
+#define demo_eps_thrust_min_timeArray aircraft_->demo_eps_thrust_min_timeArray
+#define demo_eps_thrust_min_daArray   aircraft_->demo_eps_thrust_min_daArray
+#define demo_eps_thrust_min_ntime     aircraft_->demo_eps_thrust_min_ntime
+#define demo_eps_thrust_min_startTime aircraft_->demo_eps_thrust_min_startTime
+  bool demo_eps_airspeed_max;
+  string demo_eps_airspeed_max_file;
+  double demo_eps_airspeed_max_timeArray[10];
+  double demo_eps_airspeed_max_daArray[10];
+  int demo_eps_airspeed_max_ntime;
+  double demo_eps_airspeed_max_startTime;
+#define demo_eps_airspeed_max           aircraft_->demo_eps_airspeed_max
+#define demo_eps_airspeed_max_file      aircraft_->demo_eps_airspeed_max_file
+#define demo_eps_airspeed_max_timeArray aircraft_->demo_eps_airspeed_max_timeArray
+#define demo_eps_airspeed_max_daArray   aircraft_->demo_eps_airspeed_max_daArray
+#define demo_eps_airspeed_max_ntime     aircraft_->demo_eps_airspeed_max_ntime
+#define demo_eps_airspeed_max_startTime aircraft_->demo_eps_airspeed_max_startTime
+  bool demo_eps_airspeed_min;
+  string demo_eps_airspeed_min_file;
+  double demo_eps_airspeed_min_timeArray[100];
+  double demo_eps_airspeed_min_daArray[100];
+  int demo_eps_airspeed_min_ntime;
+  double demo_eps_airspeed_min_startTime;
+#define demo_eps_airspeed_min           aircraft_->demo_eps_airspeed_min
+#define demo_eps_airspeed_min_file      aircraft_->demo_eps_airspeed_min_file
+#define demo_eps_airspeed_min_timeArray aircraft_->demo_eps_airspeed_min_timeArray
+#define demo_eps_airspeed_min_daArray   aircraft_->demo_eps_airspeed_min_daArray
+#define demo_eps_airspeed_min_ntime     aircraft_->demo_eps_airspeed_min_ntime
+#define demo_eps_airspeed_min_startTime aircraft_->demo_eps_airspeed_min_startTime
+  bool demo_eps_flap_max;
+  string demo_eps_flap_max_file;
+  double demo_eps_flap_max_timeArray[10];
+  double demo_eps_flap_max_daArray[10];
+  int demo_eps_flap_max_ntime;
+  double demo_eps_flap_max_startTime;
+#define demo_eps_flap_max           aircraft_->demo_eps_flap_max
+#define demo_eps_flap_max_file      aircraft_->demo_eps_flap_max_file
+#define demo_eps_flap_max_timeArray aircraft_->demo_eps_flap_max_timeArray
+#define demo_eps_flap_max_daArray   aircraft_->demo_eps_flap_max_daArray
+#define demo_eps_flap_max_ntime     aircraft_->demo_eps_flap_max_ntime
+#define demo_eps_flap_max_startTime aircraft_->demo_eps_flap_max_startTime
+  bool demo_boot_cycle_tail;
+  string demo_boot_cycle_tail_file;
+  double demo_boot_cycle_tail_timeArray[100];
+  int demo_boot_cycle_tail_daArray[100];
+  int demo_boot_cycle_tail_ntime;
+  double demo_boot_cycle_tail_startTime;
+#define demo_boot_cycle_tail           aircraft_->demo_boot_cycle_tail
+#define demo_boot_cycle_tail_file      aircraft_->demo_boot_cycle_tail_file
+#define demo_boot_cycle_tail_timeArray aircraft_->demo_boot_cycle_tail_timeArray
+#define demo_boot_cycle_tail_daArray   aircraft_->demo_boot_cycle_tail_daArray
+#define demo_boot_cycle_tail_ntime     aircraft_->demo_boot_cycle_tail_ntime
+#define demo_boot_cycle_tail_startTime aircraft_->demo_boot_cycle_tail_startTime
+  bool demo_boot_cycle_wing_left;
+  string demo_boot_cycle_wing_left_file;
+  double demo_boot_cycle_wing_left_timeArray[100];
+  int demo_boot_cycle_wing_left_daArray[100];
+  int demo_boot_cycle_wing_left_ntime;
+  double demo_boot_cycle_wing_left_startTime;
+#define demo_boot_cycle_wing_left           aircraft_->demo_boot_cycle_wing_left
+#define demo_boot_cycle_wing_left_file      aircraft_->demo_boot_cycle_wing_left_file
+#define demo_boot_cycle_wing_left_timeArray aircraft_->demo_boot_cycle_wing_left_timeArray
+#define demo_boot_cycle_wing_left_daArray   aircraft_->demo_boot_cycle_wing_left_daArray
+#define demo_boot_cycle_wing_left_ntime     aircraft_->demo_boot_cycle_wing_left_ntime
+#define demo_boot_cycle_wing_left_startTime aircraft_->demo_boot_cycle_wing_left_startTime
+  bool demo_boot_cycle_wing_right;
+  string demo_boot_cycle_wing_right_file;
+  double demo_boot_cycle_wing_right_timeArray[100];
+  int demo_boot_cycle_wing_right_daArray[100];
+  int demo_boot_cycle_wing_right_ntime;
+  double demo_boot_cycle_wing_right_startTime;
+#define demo_boot_cycle_wing_right           aircraft_->demo_boot_cycle_wing_right
+#define demo_boot_cycle_wing_right_file      aircraft_->demo_boot_cycle_wing_right_file
+#define demo_boot_cycle_wing_right_timeArray aircraft_->demo_boot_cycle_wing_right_timeArray
+#define demo_boot_cycle_wing_right_daArray   aircraft_->demo_boot_cycle_wing_right_daArray
+#define demo_boot_cycle_wing_right_ntime     aircraft_->demo_boot_cycle_wing_right_ntime
+#define demo_boot_cycle_wing_right_startTime aircraft_->demo_boot_cycle_wing_right_startTime
+  bool demo_eps_pitch_input;
+  string demo_eps_pitch_input_file;
+  double demo_eps_pitch_input_timeArray[100];
+  int demo_eps_pitch_input_daArray[100];
+  int demo_eps_pitch_input_ntime;
+  double demo_eps_pitch_input_startTime;
+#define demo_eps_pitch_input           aircraft_->demo_eps_pitch_input
+#define demo_eps_pitch_input_file      aircraft_->demo_eps_pitch_input_file
+#define demo_eps_pitch_input_timeArray aircraft_->demo_eps_pitch_input_timeArray
+#define demo_eps_pitch_input_daArray   aircraft_->demo_eps_pitch_input_daArray
+#define demo_eps_pitch_input_ntime     aircraft_->demo_eps_pitch_input_ntime
+#define demo_eps_pitch_input_startTime aircraft_->demo_eps_pitch_input_startTime
+  bool tactilefadef;
+  double tactilefadef_aArray[30][100][100];
+  double tactilefadef_deArray[30][100];
+  double tactilefadef_tactileArray[30][100][100];
+  int tactilefadef_nAlphaArray[30][100];
+  int tactilefadef_nde[30];
+  double tactilefadef_fArray[30];
+  int tactilefadef_nf;
+  double tactilefadefI;
+  int tactilefadef_nice, tactilefadef_na_nice, tactilefadef_nde_nice;
+  double tactilefadef_deArray_nice[100];
+  double tactilefadef_aArray_nice[100];
+#define tactilefadef               aircraft_->tactilefadef
+#define tactilefadef_aArray        aircraft_->tactilefadef_aArray
+#define tactilefadef_deArray       aircraft_->tactilefadef_deArray
+#define tactilefadef_tactileArray  aircraft_->tactilefadef_tactileArray
+#define tactilefadef_nAlphaArray   aircraft_->tactilefadef_nAlphaArray
+#define tactilefadef_nde           aircraft_->tactilefadef_nde
+#define tactilefadef_fArray        aircraft_->tactilefadef_fArray
+#define tactilefadef_nf            aircraft_->tactilefadef_nf
+#define tactilefadefI              aircraft_->tactilefadefI
+#define tactilefadef_nice          aircraft_->tactilefadef_nice
+#define tactilefadef_na_nice       aircraft_->tactilefadef_na_nice
+#define tactilefadef_nde_nice      aircraft_->tactilefadef_nde_nice
+#define tactilefadef_deArray_nice  aircraft_->tactilefadef_deArray_nice
+#define tactilefadef_aArray_nice   aircraft_->tactilefadef_aArray_nice
+  int tactile_pitch;
+#define tactile_pitch              aircraft_->tactile_pitch
+  bool demo_ap_pah_on;
+  string demo_ap_pah_on_file;
+  double demo_ap_pah_on_timeArray[10];
+  int demo_ap_pah_on_daArray[10];
+  int demo_ap_pah_on_ntime;
+  double demo_ap_pah_on_startTime;
+#define demo_ap_pah_on           aircraft_->demo_ap_pah_on
+#define demo_ap_pah_on_file      aircraft_->demo_ap_pah_on_file
+#define demo_ap_pah_on_timeArray aircraft_->demo_ap_pah_on_timeArray
+#define demo_ap_pah_on_daArray   aircraft_->demo_ap_pah_on_daArray
+#define demo_ap_pah_on_ntime     aircraft_->demo_ap_pah_on_ntime
+#define demo_ap_pah_on_startTime aircraft_->demo_ap_pah_on_startTime
+  bool demo_ap_Theta_ref_deg;
+  string demo_ap_Theta_ref_deg_file;
+  double demo_ap_Theta_ref_deg_timeArray[10];
+  double demo_ap_Theta_ref_deg_daArray[10];
+  int demo_ap_Theta_ref_deg_ntime;
+  double demo_ap_Theta_ref_deg_startTime;
+#define demo_ap_Theta_ref_deg           aircraft_->demo_ap_Theta_ref_deg
+#define demo_ap_Theta_ref_deg_file      aircraft_->demo_ap_Theta_ref_deg_file
+#define demo_ap_Theta_ref_deg_timeArray aircraft_->demo_ap_Theta_ref_deg_timeArray
+#define demo_ap_Theta_ref_deg_daArray   aircraft_->demo_ap_Theta_ref_deg_daArray
+#define demo_ap_Theta_ref_deg_ntime     aircraft_->demo_ap_Theta_ref_deg_ntime
+#define demo_ap_Theta_ref_deg_startTime aircraft_->demo_ap_Theta_ref_deg_startTime
+  bool demo_tactile;
+  string demo_tactile_file;
+  double demo_tactile_timeArray[1500];
+  double demo_tactile_daArray[1500];
+  int demo_tactile_ntime;
+  double demo_tactile_startTime;
+#define demo_tactile           aircraft_->demo_tactile
+#define demo_tactile_file      aircraft_->demo_tactile_file
+#define demo_tactile_timeArray aircraft_->demo_tactile_timeArray
+#define demo_tactile_daArray   aircraft_->demo_tactile_daArray
+#define demo_tactile_ntime     aircraft_->demo_tactile_ntime
+#define demo_tactile_startTime aircraft_->demo_tactile_startTime
+  bool demo_ice_tail;
+  string demo_ice_tail_file;
+  double demo_ice_tail_timeArray[10];
+  int demo_ice_tail_daArray[10];
+  int demo_ice_tail_ntime;
+  double demo_ice_tail_startTime;
+#define demo_ice_tail           aircraft_->demo_ice_tail
+#define demo_ice_tail_file      aircraft_->demo_ice_tail_file
+#define demo_ice_tail_timeArray aircraft_->demo_ice_tail_timeArray
+#define demo_ice_tail_daArray   aircraft_->demo_ice_tail_daArray
+#define demo_ice_tail_ntime     aircraft_->demo_ice_tail_ntime
+#define demo_ice_tail_startTime aircraft_->demo_ice_tail_startTime
+  bool demo_ice_left;
+  string demo_ice_left_file;
+  double demo_ice_left_timeArray[10];
+  int demo_ice_left_daArray[10];
+  int demo_ice_left_ntime;
+  double demo_ice_left_startTime;
+#define demo_ice_left           aircraft_->demo_ice_left
+#define demo_ice_left_file      aircraft_->demo_ice_left_file
+#define demo_ice_left_timeArray aircraft_->demo_ice_left_timeArray
+#define demo_ice_left_daArray   aircraft_->demo_ice_left_daArray
+#define demo_ice_left_ntime     aircraft_->demo_ice_left_ntime
+#define demo_ice_left_startTime aircraft_->demo_ice_left_startTime
+  bool demo_ice_right;
+  string demo_ice_right_file;
+  double demo_ice_right_timeArray[10];
+  int demo_ice_right_daArray[10];
+  int demo_ice_right_ntime;
+  double demo_ice_right_startTime;
+#define demo_ice_right           aircraft_->demo_ice_right
+#define demo_ice_right_file      aircraft_->demo_ice_right_file
+#define demo_ice_right_timeArray aircraft_->demo_ice_right_timeArray
+#define demo_ice_right_daArray   aircraft_->demo_ice_right_daArray
+#define demo_ice_right_ntime     aircraft_->demo_ice_right_ntime
+#define demo_ice_right_startTime aircraft_->demo_ice_right_startTime
 
   //321654
   /* Variables (token2) ===========================================*/
@@ -2239,22 +2619,22 @@ struct AIRCRAFT
 #define dfTimefdf_TimeArray    aircraft_->dfTimefdf_TimeArray
 #define dfTimefdf_ndf          aircraft_->dfTimefdf_ndf
 
-  /*  FlapData *flapper_data;
-#define flapper_data           aircraft_->flapper_data
-  bool flapper_model;
-#define flapper_model          aircraft_->flapper_model
-  double flapper_phi_init;
-#define flapper_phi_init       aircraft_->flapper_phi_init
-  double flapper_freq, flapper_cycle_pct, flapper_phi;
-  double flapper_Lift, flapper_Thrust, flapper_Inertia;
-  double flapper_Moment;
-#define flapper_freq           aircraft_->flapper_freq
-#define flapper_cycle_pct      aircraft_->flapper_cycle_pct
-#define flapper_phi            aircraft_->flapper_phi
-#define flapper_Lift           aircraft_->flapper_Lift
-#define flapper_Thrust         aircraft_->flapper_Thrust
-#define flapper_Inertia        aircraft_->flapper_Inertia
-#define flapper_Moment         aircraft_->flapper_Moment
+//  FlapData *flapper_data;
+//#define flapper_data           aircraft_->flapper_data
+//  bool flapper_model;
+//#define flapper_model          aircraft_->flapper_model
+//  double flapper_phi_init;
+//#define flapper_phi_init       aircraft_->flapper_phi_init
+//  double flapper_freq, flapper_cycle_pct, flapper_phi;
+//  double flapper_Lift, flapper_Thrust, flapper_Inertia;
+//  double flapper_Moment;
+//#define flapper_freq           aircraft_->flapper_freq
+//#define flapper_cycle_pct      aircraft_->flapper_cycle_pct
+//#define flapper_phi            aircraft_->flapper_phi
+//#define flapper_Lift           aircraft_->flapper_Lift
+//#define flapper_Thrust         aircraft_->flapper_Thrust
+//#define flapper_Inertia        aircraft_->flapper_Inertia
+//#define flapper_Moment         aircraft_->flapper_Moment
   double F_X_aero_flapper, F_Z_aero_flapper;
 #define F_X_aero_flapper       aircraft_->F_X_aero_flapper
 #define F_Z_aero_flapper       aircraft_->F_Z_aero_flapper
@@ -2284,39 +2664,67 @@ struct AIRCRAFT
 #define flap_moving_rate aircraft_->flap_moving_rate
 #define flap_pos         aircraft_->flap_pos
 
-  double delta_CL, delta_CD, delta_Cm, delta_Ch, delta_Cl;
+  double delta_CL, delta_CD, delta_Cm, delta_Ch, delta_Cl, delta_Cn;
 #define delta_CL         aircraft_->delta_CL
 #define delta_CD         aircraft_->delta_CD
 #define delta_Cm         aircraft_->delta_Cm
 #define delta_Ch         aircraft_->delta_Ch
 #define delta_Cl         aircraft_->delta_Cl
+#define delta_Cn         aircraft_->delta_Cn
 
-  int ice_case;
+  int nonlin_ice_case;
   double eta_wing_left, eta_wing_right, eta_tail;
   double OATemperature_F;
-#define ice_case         aircraft_->ice_case
+#define nonlin_ice_case  aircraft_->nonlin_ice_case
 #define eta_wing_left    aircraft_->eta_wing_left
 #define eta_wing_right   aircraft_->eta_wing_right
 #define eta_tail         aircraft_->eta_tail
 #define OATemperature_F  aircraft_->OATemperature_F
+  int boot_cycle_tail, boot_cycle_wing_left, boot_cycle_wing_right;
+  int autoIPS_tail, autoIPS_wing_left, autoIPS_wing_right;
+  int eps_pitch_input;
+  double eps_alpha_max, eps_pitch_max, eps_pitch_min;
+  double eps_roll_max, eps_thrust_min, eps_flap_max;
+  double eps_airspeed_max, eps_airspeed_min;
+#define boot_cycle_tail        aircraft_->boot_cycle_tail 
+#define boot_cycle_wing_left   aircraft_->boot_cycle_wing_left
+#define boot_cycle_wing_right  aircraft_->boot_cycle_wing_right
+#define autoIPS_tail           aircraft_->autoIPS_tail
+#define autoIPS_wing_left      aircraft_->autoIPS_wing_left
+#define autoIPS_wing_right     aircraft_->autoIPS_wing_right
+#define eps_pitch_input        aircraft_->eps_pitch_input
+#define eps_alpha_max          aircraft_->eps_alpha_max
+#define eps_pitch_max          aircraft_->eps_pitch_max
+#define eps_pitch_min          aircraft_->eps_pitch_min
+#define eps_roll_max           aircraft_->eps_roll_max
+#define eps_thrust_min         aircraft_->eps_thrust_min
+#define eps_flap_max           aircraft_->eps_flap_max
+#define eps_airspeed_max       aircraft_->eps_airspeed_max
+#define eps_airspeed_min       aircraft_->eps_airspeed_min
 
   double Ch;
 #define Ch   aircraft_->Ch;
 
   double CL_clean, CL_iced;
+  double CY_clean, CY_iced;
   double CD_clean, CD_iced;
   double Cm_clean, Cm_iced;
   double Cl_clean, Cl_iced;
+  double Cn_clean, Cn_iced;
   double Ch_clean, Ch_iced;
 #define CL_clean         aircraft_->CL_clean
+#define CY_clean         aircraft_->CY_clean
 #define CD_clean         aircraft_->CD_clean
 #define Cm_clean         aircraft_->Cm_clean
 #define Cl_clean         aircraft_->Cl_clean
+#define Cn_clean         aircraft_->Cn_clean
 #define Ch_clean         aircraft_->Ch_clean
 #define CL_iced          aircraft_->CL_iced
+#define CY_iced          aircraft_->CY_iced
 #define CD_iced          aircraft_->CD_iced
 #define Cm_iced          aircraft_->Cm_iced
 #define Cl_iced          aircraft_->Cl_iced
+#define Cn_iced          aircraft_->Cn_iced
 #define Ch_iced          aircraft_->Ch_iced
 
   ofstream fout;
@@ -2326,6 +2734,24 @@ struct AIRCRAFT
   bool dont_ignore;
 #define dont_ignore            aircraft_->dont_ignore
   
+  int ap_pah_on;
+#define ap_pah_on              aircraft_->ap_pah_on
+  double ap_Theta_ref_deg, ap_Theta_ref_rad;
+#define ap_Theta_ref_deg       aircraft_->ap_Theta_ref_deg
+#define ap_Theta_ref_rad       aircraft_->ap_Theta_ref_rad
+
+  int pitch_trim_up, pitch_trim_down;
+#define pitch_trim_up          aircraft_->pitch_trim_up
+#define pitch_trim_down        aircraft_->pitch_trim_down
+
+  bool pilot_throttle_no;
+#define pilot_throttle_no      aircraft_->pilot_throttle_no
+
+  int ice_tail, ice_left, ice_right;
+#define ice_tail               aircraft_->ice_tail
+#define ice_left               aircraft_->ice_left
+#define ice_right              aircraft_->ice_right
+
 };
 
 extern AIRCRAFT *aircraft_;    // usually defined in the first program that includes uiuc_aircraft.h

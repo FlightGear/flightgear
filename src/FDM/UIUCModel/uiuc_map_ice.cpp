@@ -138,6 +138,32 @@ void uiuc_map_ice()
   ice_map["beta_probe_wing"]      =      beta_probe_wing_flag       ;
   ice_map["beta_probe_tail"]      =      beta_probe_tail_flag       ;
   ice_map["bootTime"]             =      bootTime_flag              ;
+  ice_map["eta_wing_left_input"]  =      eta_wing_left_input_flag   ;
+  ice_map["eta_wing_right_input"] =      eta_wing_right_input_flag  ;
+  ice_map["eta_tail_input"]       =      eta_tail_input_flag        ;
+  ice_map["nonlin_ice_case"]      =      nonlin_ice_case_flag       ;
+  ice_map["eta_tail"]             =      eta_tail_flag              ;
+  ice_map["eta_wing_left"]        =      eta_wing_left_flag         ;
+  ice_map["eta_wing_right"]       =      eta_wing_right_flag        ;
+  ice_map["demo_eps_alpha_max"]   =      demo_eps_alpha_max_flag    ;
+  ice_map["demo_eps_pitch_max"]   =      demo_eps_pitch_max_flag    ;
+  ice_map["demo_eps_pitch_min"]   =      demo_eps_pitch_min_flag    ;
+  ice_map["demo_eps_roll_max"]    =      demo_eps_roll_max_flag     ;
+  ice_map["demo_eps_thrust_min"]  =      demo_eps_thrust_min_flag   ;
+  ice_map["demo_eps_flap_max"]    =      demo_eps_flap_max_flag     ;
+  ice_map["demo_eps_airspeed_max"]=      demo_eps_airspeed_max_flag ;
+  ice_map["demo_eps_airspeed_min"]=      demo_eps_airspeed_min_flag ;
+  ice_map["demo_boot_cycle_tail"] =      demo_boot_cycle_tail_flag  ;
+  ice_map["demo_boot_cycle_wing_left"]=  demo_boot_cycle_wing_left_flag;
+  ice_map["demo_boot_cycle_wing_right"]= demo_boot_cycle_wing_right_flag;  
+  ice_map["demo_eps_pitch_input"] =      demo_eps_pitch_input_flag  ; 
+  ice_map["tactilefadef"]         =      tactilefadef_flag          ;
+  ice_map["tactile_pitch"]        =      tactile_pitch_flag         ;
+  ice_map["demo_ap_Theta_ref_deg"]=      demo_ap_Theta_ref_deg_flag ;
+  ice_map["demo_ap_pah_on"]       =      demo_ap_pah_on_flag        ;
+  ice_map["demo_tactile"]         =      demo_tactile_flag          ;
+  ice_map["demo_ice_tail"]        =      demo_ice_tail_flag         ;
+  ice_map["demo_ice_left"]        =      demo_ice_left_flag         ;
+  ice_map["demo_ice_right"]       =      demo_ice_right_flag        ;
 }
-
 // end uiuc_map_ice.cpp

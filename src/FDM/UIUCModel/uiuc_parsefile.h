@@ -17,7 +17,7 @@ SG_USING_STD(ifstream);
 #define DELIMITERS " \t"
 #define COMMENT "#"
 
-#define MAXLINE 200   // Max size of the line of the input file
+#define MAXLINE 400   // Max size of the line of the input file
 
 typedef list<string> stack; //list to contain the input file "command_lines"
 

@@ -62,6 +62,12 @@
 
 void uiuc_aero_2_wrapper( SCALAR dt, int Initialize ) 
 {
+    uiuc_force_moment(dt);
+}
+
+
+void uiuc_engine_2_wrapper( SCALAR dt, int Initialize ) 
+{
     static int init = 0;
 
     if (init==0)
@@ -71,12 +77,6 @@ void uiuc_aero_2_wrapper( SCALAR dt, int Initialize )
       //      uiuc_init_aeromodel();
     }
 
-    uiuc_force_moment(dt);
-}
-
-
-void uiuc_engine_2_wrapper( SCALAR dt, int Initialize ) 
-{
     uiuc_engine_routine();
 }
 

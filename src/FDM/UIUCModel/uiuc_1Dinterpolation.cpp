@@ -117,4 +117,48 @@ double uiuc_1Dinterpolation( double xData[100], double yData[100], int xmax, dou
   return yfx;
 }
 
+
+int uiuc_1Dinterpolation( double xData[], int yData[], int xmax, double x )
+{
+  double x1=0, x2=0, xdiff=0;
+  int y1=0, y2=0;
+  int i=2;
+  int yfx=0;
+
+  //check bounds on x to see if data range encloses it
+  // NOTE: [1] is first element of all arrays, [0] not used
+  if (x <= xData[1])         //if x less than lowest x
+    {
+      yfx = yData[1];        //let y equal lowest y
+    }
+  else if (x >= xData[xmax]) //if x greater than greatest x
+    {
+      yfx = yData[xmax];     //let y equal greatest y
+    }
+  else                       //x between xmax and x min
+    {
+      /*loop increases i until x is less than a known x, 
+        e.g. Alpha from LaRCsim less than Alpha given in 
+        tabulated data; once this value is found, i becomes 
+        the upper bound and i-1 the lower bound*/
+      while (xData[i] <= x)    //bracket upper bound
+        {
+          i++;
+        }
+      x2 = xData[i];          //set upper bounds
+      y2 = yData[i];
+      x1 = xData[i-1];        //set lower bounds
+      y1 = yData[i-1];
+
+      xdiff = x2 - x1;
+      if (y1 == y2)
+	yfx = y1;
+      else if (x < x1+xdiff/2)
+	yfx = y1;
+      else
+	yfx = y2;
+    }
+  return yfx;
+}
+
 // end uiuc_1Dinterpolation.cpp

@@ -37,8 +37,13 @@
 	CURRENT RCS HEADER INFO:
 $Header$
 $Log$
-Revision 1.1  2002/09/10 01:14:02  curt
-Initial revision
+Revision 1.2  2002/11/08 17:03:50  curt
+Robert Deters:
+
+Latest revisions of the UIUC code.
+
+Revision 1.1.1.1  2002/09/10 01:14:02  curt
+Initial revision of FlightGear-0.9.0
 
 Revision 1.5  2002/04/01 19:37:34  curt
 I have attached revisions to the UIUC code.  The revisions include the
@@ -161,8 +166,8 @@ void ls_model( SCALAR dt, int Initialize ) {
     case UIUC:
       inertias( dt, Initialize );
       subsystems( dt, Initialize );
-      uiuc_aero_2_wrapper( dt, Initialize );
       uiuc_engine_2_wrapper( dt, Initialize );
+      uiuc_aero_2_wrapper( dt, Initialize );
       uiuc_gear_2_wrapper( dt, Initialize );
       //uiuc_network_2_wrapper();
       uiuc_record_2_wrapper(dt);

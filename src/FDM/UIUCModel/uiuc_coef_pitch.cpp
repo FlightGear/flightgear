@@ -232,27 +232,44 @@ void uiuc_coef_pitch()
           }
         case Cmfade_flag:
           {
-	    // compute the induced velocity on the tail to account for tail downwash
-	    /* gamma_wing = V_rel_wind * Sw * CL / (2.0 * bw);
-	    w_coef = 0.036;
-	    w_induced  = w_coef * gamma_wing;
-	    downwash_angle = atan(w_induced/V_rel_wind);
-	    AlphaTail = Alpha - downwash_angle;
-	    CmfadeI = uiuc_2Dinterpolation(Cmfade_aArray,
-                                           Cmfade_deArray,
-                                           Cmfade_CmArray,
-                                           Cmfade_nAlphaArray,
-                                           Cmfade_nde,
-                                           AlphaTail,
-                                           elevator); */
-	    CmfadeI = uiuc_2Dinterpolation(Cmfade_aArray,
-                                           Cmfade_deArray,
-                                           Cmfade_CmArray,
-                                           Cmfade_nAlphaArray,
-                                           Cmfade_nde,
-                                           Alpha,
-                                           elevator);
-		    // Cm += CmfadeI;
+	    if(b_downwashMode)
+	      {
+		// compute the induced velocity on the tail to account for tail downwash
+		switch(downwashMode)
+		  {
+		  case 100:	       
+		    if (V_rel_wind < dyn_on_speed)
+		      {
+			alphaTail = Alpha;
+		      }
+		    else
+		      {
+			gammaWing = V_rel_wind * Sw * CL / (2.0 * bw);
+			// printf("gammaWing = %.4f\n", (gammaWing));
+			downwash  = downwashCoef * gammaWing;
+			downwashAngle = atan(downwash/V_rel_wind);
+			alphaTail = Alpha - downwashAngle;
+		      }
+		    CmfadeI = uiuc_2Dinterpolation(Cmfade_aArray,
+						   Cmfade_deArray,
+						   Cmfade_CmArray,
+						   Cmfade_nAlphaArray,
+						   Cmfade_nde,
+						   alphaTail,
+						   elevator);
+		    break;
+		  }
+	      }
+	    else
+	      {
+		CmfadeI = uiuc_2Dinterpolation(Cmfade_aArray,
+					       Cmfade_deArray,
+					       Cmfade_CmArray,
+					       Cmfade_nAlphaArray,
+					       Cmfade_nde,
+					       Alpha,
+					       elevator); 
+	      }
 	    if (eta_q_Cmfade_fac)
 	      {
 		Cm += CmfadeI * eta_q_Cmfade_fac;
