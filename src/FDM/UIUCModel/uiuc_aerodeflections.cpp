@@ -201,14 +201,14 @@ void uiuc_aerodeflections( double dt )
     rudder_sas = rudder_sas_KR * R_body;
     if (use_rudder_sas_max && (fabs(rudder_sas) > (rudder_sas_max*DEG_TO_RAD)))
       if (rudder_sas >= 0) {
-	rudder -=  rudder_sas_max * DEG_TO_RAD;
+	rudder +=  rudder_sas_max * DEG_TO_RAD;
 	//rudder_sas = rudder_sas_max;
       } else {
-	rudder -= -rudder_sas_max * DEG_TO_RAD;
+	rudder += -rudder_sas_max * DEG_TO_RAD;
 	//rudder_sas = rudder_sas_max;
       }
     else
-      rudder -= rudder_sas;
+      rudder += rudder_sas;
     // don't exceed rudder deflection limits, assumes drmax = drmin, 
     // i.e. equal rudder throws left and right
     if (fabs(rudder) > drmax)
