@@ -168,10 +168,10 @@ void FGATCDisplay::update(double dt) {
 						//cout << "Stopping single message\n";
 						msgList_itr = msgList.erase(msgList_itr);
 					} else if(m.counter > m.start_count) {
-						guiFnt.drawString( m.msg.c_str(),
-						(iwidth - (m.msg.size() * 8))/2,
-						//iwidth/2,
-						(iheight - 40) );	// TODO - relate the distance in that the string is rendered to the string length.
+						int pin = (((int)m.msg.size() * 8) >= iwidth ? 5 : (iwidth - (m.msg.size() * 8))/2);
+						//cout << m.msg << '\n';
+						//cout << "pin = " << pin << ", iwidth = " << iwidth << ", msg.size = " << m.msg.size() << '\n';
+						guiFnt.drawString( m.msg.c_str(), pin, (iheight - 40) );
 						m.counter += dt;
 						msgList[i] = m;
 						++msgList_itr;
