@@ -22,8 +22,10 @@
 #include <Main/viewmgr.hxx>
 #include <Scenery/scenery.hxx>
 
+#include "model_panel.hxx"
+#include "placement.hxx"
+
 #include "acmodel.hxx"
-#include "model.hxx"
 
 
 
@@ -54,17 +56,19 @@ FGAircraftModel::init ()
   _aircraft = new FGModelPlacement;
   string path = fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
   try {
-    _aircraft->init( globals->get_fg_root(),
-                     path,
-                     globals->get_props(),
-                     globals->get_sim_time_sec() );
+    ssgBranch *model = fgLoad3DModelPanel( globals->get_fg_root(),
+                                           path,
+                                           globals->get_props(),
+                                           globals->get_sim_time_sec() );
+    _aircraft->init( model );
   } catch (const sg_exception &ex) {
     SG_LOG(SG_GENERAL, SG_ALERT, "Failed to load aircraft from " << path);
     SG_LOG(SG_GENERAL, SG_ALERT, "(Falling back to glider.ac.)");
-    _aircraft->init( globals->get_fg_root(),
-                     "Models/Geometry/glider.ac",
-                     globals->get_props(),
-                     globals->get_sim_time_sec() );
+    ssgBranch *model = fgLoad3DModelPanel( globals->get_fg_root(),
+                                           "Models/Geometry/glider.ac",
+                                           globals->get_props(),
+                                           globals->get_sim_time_sec() );
+    _aircraft->init( model );
   }
   _scene->addKid(_aircraft->getSceneGraph());
   _selector->addKid(_aircraft->getSceneGraph());

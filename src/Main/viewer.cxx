@@ -43,7 +43,7 @@
 #include <simgear/math/vector.hxx>
 #include <Main/globals.hxx>
 #include <Model/acmodel.hxx>
-#include <Model/model.hxx>
+#include <Model/placement.hxx>
 
 #include "viewer.hxx"
 

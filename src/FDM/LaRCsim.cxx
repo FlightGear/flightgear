@@ -28,7 +28,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
-#include <Model/model.hxx>
+#include <Model/placement.hxx>
 #include <FDM/flight.hxx>
 #include <FDM/LaRCsim/ls_cockpit.h>
 #include <FDM/LaRCsim/ls_generic.h>

@@ -8,8 +8,10 @@
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>
 
-#include "modelmgr.hxx"
 #include "model.hxx"
+#include "placement.hxx"
+
+#include "modelmgr.hxx"
 
 
 FGModelMgr::FGModelMgr ()
@@ -36,12 +38,15 @@ FGModelMgr::init ()
     SG_LOG(SG_GENERAL, SG_INFO,
 	   "Adding model " << node->getStringValue("name", "[unnamed]"));
     Instance * instance = new Instance;
-    FGModelPlacement * model = new FGModelPlacement;
+    FGModelPlacement *model = new FGModelPlacement;
     instance->model = model;
-    model->init( globals->get_fg_root(),
-                 node->getStringValue("path", "Models/Geometry/glider.ac"),
-                 globals->get_props(),
-                 globals->get_sim_time_sec() );
+    ssgBranch *object
+        = fgLoad3DModel( globals->get_fg_root(),
+                         node->getStringValue("path",
+                                              "Models/Geometry/glider.ac"),
+                         globals->get_props(),
+                         globals->get_sim_time_sec() );
+    model->init( object );
 
 				// Set position and orientation either
 				// indirectly through property refs

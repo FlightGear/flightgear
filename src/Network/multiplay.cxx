@@ -29,6 +29,8 @@
 
 #include <simgear/debug/logstream.hxx>
 
+#include <Model/placement.hxx>
+
 #include "multiplay.hxx"
 
 SG_USING_STD(string);

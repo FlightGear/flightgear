@@ -157,8 +157,11 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	string planepath = "Aircraft/c172/Models/c172-dpm.ac";
 	SGPath path = globals->get_fg_root();
 	path.append(planepath);
-	aip.init( path.str(), planepath.c_str(), globals->get_props(),
-                  globals->get_sim_time_sec() );
+        ssgBranch *model = fgLoad3DModel( path.str(),
+                                          planepath.c_str(),
+                                          globals->get_props(),
+                                          globals->get_sim_time_sec() );
+	aip.init( model );
 	aip.setVisible(false);		// This will be set to true once a valid ground elevation has been determined
 	globals->get_scenery()->get_scene_graph()->addKid(aip.getSceneGraph());
 	

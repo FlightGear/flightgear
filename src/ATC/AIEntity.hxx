@@ -21,10 +21,13 @@
 #ifndef _FG_AIEntity_HXX
 #define _FG_AIEntity_HXX
 
-#include <Model/model.hxx>
 #include <plib/sg.h>
 #include <plib/ssg.h>
+
 #include <simgear/math/point3d.hxx>
+
+#include <Model/model.hxx>
+#include <Model/placement.hxx>
 
 
 /*****************************************************************

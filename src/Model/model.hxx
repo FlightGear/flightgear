@@ -17,21 +17,7 @@ SG_USING_STD(vector);
 #include <plib/sg.h>
 #include <plib/ssg.h>
 
-#include <simgear/math/point3d.hxx>
 #include <simgear/props/props.hxx>
-
-
-// Don't pull in the headers, since we don't need them here.
-class ssgBranch;
-class ssgCutout;
-class ssgEntity;
-class ssgRangeSelector;
-class ssgSelector;
-class ssgTransform;
-
-class SGInterpTable;
-class FGCondition;
-class FGLocation;
 
 
 // Has anyone done anything *really* stupid, like making min and max macros?
@@ -44,7 +30,10 @@ class FGLocation;
 
 
 /**
- * Load a 3D model with or without XML wrapper.
+ * Load a 3D model with or without XML wrapper.  Note, this version
+ * Does not know about or load the panel/cockpit information.  Use the
+ * "model_panel.hxx" version if you want to load an aircraft
+ * (i.e. ownship) with a panel.
  *
  * If the path ends in ".xml", then it will be used as a property-
  * list wrapper to add animations to the model.
@@ -56,80 +45,23 @@ ssgBranch * fgLoad3DModel( const string& fg_root, const string &path,
                            SGPropertyNode *prop_root, double sim_time_sec );
 
 
-////////////////////////////////////////////////////////////////////////
-// Model placement.
-////////////////////////////////////////////////////////////////////////
+/**
+ * Make an offset matrix from rotations and position offset.
+ */
+void
+fgMakeOffsetsMatrix( sgMat4 * result, double h_rot, double p_rot, double r_rot,
+                     double x_off, double y_off, double z_off );
 
 /**
- * A wrapper for a model with a definite placement.
+ * Make the animation
  */
-class FGModelPlacement
-{
-public:
+void
+fgMakeAnimation( ssgBranch * model,
+                 const char * name,
+                 vector<SGPropertyNode_ptr> &name_nodes,
+                 SGPropertyNode *prop_root,
+                 SGPropertyNode_ptr node,
+                 double sim_time_sec );
 
-  FGModelPlacement ();
-  virtual ~FGModelPlacement ();
-
-  virtual void init( const string &fg_root,
-                     const string &path,
-                     SGPropertyNode *prop_root,
-                     double sim_time_sec );
-  virtual void update( const Point3D scenery_center );
-
-  virtual ssgEntity * getSceneGraph () { return (ssgEntity *)_selector; }
-
-  virtual FGLocation * getFGLocation () { return _location; }
-
-  virtual bool getVisible () const;
-  virtual void setVisible (bool visible);
-
-  virtual double getLongitudeDeg () const { return _lon_deg; }
-  virtual double getLatitudeDeg () const { return _lat_deg; }
-  virtual double getElevationFt () const { return _elev_ft; }
-
-  virtual void setLongitudeDeg (double lon_deg);
-  virtual void setLatitudeDeg (double lat_deg);
-  virtual void setElevationFt (double elev_ft);
-  virtual void setPosition (double lon_deg, double lat_deg, double elev_ft);
-
-  virtual double getRollDeg () const { return _roll_deg; }
-  virtual double getPitchDeg () const { return _pitch_deg; }
-  virtual double getHeadingDeg () const { return _heading_deg; }
-
-  virtual void setRollDeg (double roll_deg);
-  virtual void setPitchDeg (double pitch_deg);
-  virtual void setHeadingDeg (double heading_deg);
-  virtual void setOrientation (double roll_deg, double pitch_deg,
-                               double heading_deg);
-  
-  // Addition by Diarmuid Tyson for Multiplayer Support
-  // Allows multiplayer to get players position transform
-  virtual const sgVec4 *get_POS() { return POS; }
-
-private:
-
-                                // Geodetic position
-  double _lon_deg;
-  double _lat_deg;
-  double _elev_ft;
-
-                                // Orientation
-  double _roll_deg;
-  double _pitch_deg;
-  double _heading_deg;
-
-  ssgSelector * _selector;
-  ssgTransform * _position;
-
-                                // Location
-  FGLocation * _location;
-
-
-  // Addition by Diarmuid Tyson for Multiplayer Support
-  // Moved from update method
-  // POS for transformation Matrix
-  sgMat4 POS;
-
-};
 
 #endif // __MODEL_HXX

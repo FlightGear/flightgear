@@ -35,7 +35,7 @@
 #include <FDM/LaRCsim/ls_interface.h>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Model/model.hxx>
+#include <Model/placement.hxx>
 #include <Model/acmodel.hxx>
 
 #include "flight.hxx"

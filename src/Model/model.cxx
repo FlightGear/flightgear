@@ -7,27 +7,25 @@
 #  include <config.h>
 #endif
 
+#include <simgear/compiler.h>
+
 #include <string.h>             // for strcmp()
+
+#include <vector>
 
 #include <plib/sg.h>
 #include <plib/ssg.h>
 #include <plib/ul.h>
 
-#include <simgear/compiler.h>
-#include <simgear/debug/logstream.hxx>
-#include <simgear/math/interpolater.hxx>
-#include <simgear/math/point3d.hxx>
-#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/props/condition.hxx>
+#include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/scene/model/animation.hxx>
-#include <simgear/scene/model/location.hxx>
-
-#include "panelnode.hxx"
 
 #include "model.hxx"
+
+SG_USING_STD(vector);
 
 
 
@@ -84,9 +82,9 @@ splice_branch (ssgBranch * branch, ssgEntity * child)
 /**
  * Make an offset matrix from rotations and position offset.
  */
-static void
-make_offsets_matrix (sgMat4 * result, double h_rot, double p_rot, double r_rot,
-                     double x_off, double y_off, double z_off)
+void
+fgMakeOffsetsMatrix( sgMat4 * result, double h_rot, double p_rot, double r_rot,
+                     double x_off, double y_off, double z_off )
 {
   sgMat4 rot_matrix;
   sgMat4 pos_matrix;
@@ -96,13 +94,13 @@ make_offsets_matrix (sgMat4 * result, double h_rot, double p_rot, double r_rot,
 }
 
 
-static void
-make_animation (ssgBranch * model,
-                const char * name,
-                vector<SGPropertyNode_ptr> &name_nodes,
-                SGPropertyNode *prop_root,
-                SGPropertyNode_ptr node,
-                double sim_time_sec )
+void
+fgMakeAnimation( ssgBranch * model,
+                 const char * name,
+                 vector<SGPropertyNode_ptr> &name_nodes,
+                 SGPropertyNode *prop_root,
+                 SGPropertyNode_ptr node,
+                 double sim_time_sec )
 {
   Animation * animation = 0;
   const char * type = node->getStringValue("type", "none");
@@ -165,6 +163,7 @@ make_animation (ssgBranch * model,
 }
 
 
+
 
 ////////////////////////////////////////////////////////////////////////
 // Global functions.
@@ -214,7 +213,7 @@ fgLoad3DModel( const string &fg_root, const string &path,
   ssgTransform * alignmainmodel = new ssgTransform;
   alignmainmodel->addKid(model);
   sgMat4 res_matrix;
-  make_offsets_matrix(&res_matrix,
+  fgMakeOffsetsMatrix(&res_matrix,
                       props.getFloatValue("/offsets/heading-deg", 0.0),
                       props.getFloatValue("/offsets/roll-deg", 0.0),
                       props.getFloatValue("/offsets/pitch-deg", 0.0),
@@ -223,16 +222,7 @@ fgLoad3DModel( const string &fg_root, const string &path,
                       props.getFloatValue("/offsets/z-m", 0.0));
   alignmainmodel->setTransform(res_matrix);
 
-                                // Load panels
   unsigned int i;
-  vector<SGPropertyNode_ptr> panel_nodes = props.getChildren("panel");
-  for (i = 0; i < panel_nodes.size(); i++) {
-    SG_LOG(SG_INPUT, SG_DEBUG, "Loading a panel");
-    FGPanelNode * panel = new FGPanelNode(panel_nodes[i]);
-    if (panel_nodes[i]->hasValue("name"))
-        panel->setName((char *)panel_nodes[i]->getStringValue("name"));
-    model->addKid(panel);
-  }
 
                                 // Load animations
   vector<SGPropertyNode_ptr> animation_nodes = props.getChildren("animation");
@@ -240,8 +230,8 @@ fgLoad3DModel( const string &fg_root, const string &path,
     const char * name = animation_nodes[i]->getStringValue("name", 0);
     vector<SGPropertyNode_ptr> name_nodes =
       animation_nodes[i]->getChildren("object-name");
-    make_animation( model, name, name_nodes, prop_root, animation_nodes[i],
-                    sim_time_sec);
+    fgMakeAnimation( model, name, name_nodes, prop_root, animation_nodes[i],
+                     sim_time_sec);
   }
 
                                 // Load sub-models
@@ -250,7 +240,7 @@ fgLoad3DModel( const string &fg_root, const string &path,
     SGPropertyNode_ptr node = model_nodes[i];
     ssgTransform * align = new ssgTransform;
     sgMat4 res_matrix;
-    make_offsets_matrix(&res_matrix,
+    fgMakeOffsetsMatrix(&res_matrix,
                         node->getFloatValue("offsets/heading-deg", 0.0),
                         node->getFloatValue("offsets/roll-deg", 0.0),
                         node->getFloatValue("offsets/pitch-deg", 0.0),
@@ -268,125 +258,5 @@ fgLoad3DModel( const string &fg_root, const string &path,
   return alignmainmodel;
 }
 
-
-
-////////////////////////////////////////////////////////////////////////
-// Implementation of FGModelPlacement.
-////////////////////////////////////////////////////////////////////////
-
-FGModelPlacement::FGModelPlacement ()
-  : _lon_deg(0),
-    _lat_deg(0),
-    _elev_ft(0),
-    _roll_deg(0),
-    _pitch_deg(0),
-    _heading_deg(0),
-    _selector(new ssgSelector),
-    _position(new ssgTransform),
-    _location(new FGLocation)
-{
-}
-
-FGModelPlacement::~FGModelPlacement ()
-{
-}
-
-void
-FGModelPlacement::init( const string &fg_root,
-                        const string &path,
-                        SGPropertyNode *prop_root,
-                        double sim_time_sec )
-{
-  ssgBranch * model = fgLoad3DModel( fg_root, path, prop_root, sim_time_sec );
-  if (model != 0)
-      _position->addKid(model);
-  _selector->addKid(_position);
-  _selector->clrTraversalMaskBits(SSGTRAV_HOT);
-}
-
-void
-FGModelPlacement::update( const Point3D scenery_center )
-{
-  _location->setPosition( _lon_deg, _lat_deg, _elev_ft );
-  _location->setOrientation( _roll_deg, _pitch_deg, _heading_deg );
-
-  sgCopyMat4( POS, _location->getTransformMatrix(scenery_center) );
-
-  sgVec3 trans;
-  sgCopyVec3(trans, _location->get_view_pos());
-
-  for(int i = 0; i < 4; i++) {
-    float tmp = POS[i][3];
-    for( int j=0; j<3; j++ ) {
-      POS[i][j] += (tmp * trans[j]);
-    }
-  }
-  _position->setTransform(POS);
-}
-
-bool
-FGModelPlacement::getVisible () const
-{
-  return (_selector->getSelect() != 0);
-}
-
-void
-FGModelPlacement::setVisible (bool visible)
-{
-  _selector->select(visible);
-}
-
-void
-FGModelPlacement::setLongitudeDeg (double lon_deg)
-{
-  _lon_deg = lon_deg;
-}
-
-void
-FGModelPlacement::setLatitudeDeg (double lat_deg)
-{
-  _lat_deg = lat_deg;
-}
-
-void
-FGModelPlacement::setElevationFt (double elev_ft)
-{
-  _elev_ft = elev_ft;
-}
-
-void
-FGModelPlacement::setPosition (double lon_deg, double lat_deg, double elev_ft)
-{
-  _lon_deg = lon_deg;
-  _lat_deg = lat_deg;
-  _elev_ft = elev_ft;
-}
-
-void
-FGModelPlacement::setRollDeg (double roll_deg)
-{
-  _roll_deg = roll_deg;
-}
-
-void
-FGModelPlacement::setPitchDeg (double pitch_deg)
-{
-  _pitch_deg = pitch_deg;
-}
-
-void
-FGModelPlacement::setHeadingDeg (double heading_deg)
-{
-  _heading_deg = heading_deg;
-}
-
-void
-FGModelPlacement::setOrientation (double roll_deg, double pitch_deg,
-                                  double heading_deg)
-{
-  _roll_deg = roll_deg;
-  _pitch_deg = pitch_deg;
-  _heading_deg = heading_deg;
-}
 
 // end of model.cxx
