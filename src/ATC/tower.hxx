@@ -318,6 +318,9 @@ private:
 	bool AddToTrafficList(TowerPlaneRec* t, bool holding = false);
 	
 	bool AddToCircuitList(TowerPlaneRec* t);
+	
+	// Add to vacated list only if not already present
+	void AddToVacatedList(TowerPlaneRec* t);
 
 	// Ground can be separate or handled by tower in real life.
 	// In the program we will always use a separate FGGround class, but we need to know

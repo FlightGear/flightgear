@@ -682,7 +682,7 @@ void FGTower::ProcessDownwindReport(TowerPlaneRec* t) {
 
 void FGTower::ProcessRunwayVacatedReport(TowerPlaneRec* t) {
 	//cout << "Processing rwy vacated...\n";
-	current_atcdialog->remove_entry(ident, USER_REPORT_GOING_AROUND, TOWER);
+	if(t->isUser) current_atcdialog->remove_entry(ident, USER_REPORT_GOING_AROUND, TOWER);
 	string trns = t->plane.callsign;
 	if(separateGround) {
 		trns += " Contact ground on ";
@@ -701,6 +701,8 @@ void FGTower::ProcessRunwayVacatedReport(TowerPlaneRec* t) {
 	if(_display) {
 		globals->get_ATC_display()->RegisterSingleMessage(trns);
 	}
+	RemoveFromRwyList(t->plane.callsign);
+	AddToVacatedList(t);
 	// Maybe we should check that the plane really *has* vacated the runway!
 }
 
@@ -1112,7 +1114,7 @@ void FGTower::CheckRunwayList(double dt) {
 					//cout << "Size of rwylist was " << rwyList.size() << '\n';
 					//cout << "Size of vacatedList was " << vacatedList.size() << '\n';
 					RemoveFromRwyList(t->plane.callsign);
-					vacatedList.push_back(t);
+					AddToVacatedList(t);
 					//cout << "Size of rwylist is " << rwyList.size() << '\n';
 					//cout << "Size of vacatedList is " << vacatedList.size() << '\n';
 					// At the moment we wait until Runway Vacated is reported by the plane before telling to contact ground etc.
@@ -1601,6 +1603,19 @@ bool FGTower::AddToCircuitList(TowerPlaneRec* t) {
 	circuitList.push_back(t);	// TODO - check the separation with the preceding plane for the conflict flag.
 	//cout << "\tE\t" << circuitList.size() << endl;
 	return(conflict);
+}
+
+// Add to vacated list only if not already present
+void FGTower::AddToVacatedList(TowerPlaneRec* t) {
+	tower_plane_rec_list_iterator twrItr;
+	bool found = false;
+	for(twrItr = vacatedList.begin(); twrItr != vacatedList.end(); twrItr++) {
+		if((*twrItr)->plane.callsign == t->plane.callsign) {
+			found = true;
+		}
+	}
+	if(found) return;
+	vacatedList.push_back(t);
 }
 
 
