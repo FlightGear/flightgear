@@ -172,8 +172,9 @@ void balloon::update()
     sgVec3 v;
 
     //get the current wind velocity and store it in v
-    Point3D temp = WeatherDatabase->get(position).Wind;
-    sgSetVec3(v, temp.x(), temp.y(), temp.z());
+    //Point3D temp = WeatherDatabase->get(position).Wind;
+    //sgSetVec3(v, temp.x(), temp.y(), temp.z());
+    sgCopyVec3(v, WeatherDatabase->get(position).Wind );
 
     sgSubVec3(v, velocity);
     float speed = sgLengthVec3(v);
