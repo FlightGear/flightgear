@@ -262,6 +262,8 @@ SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
     // 4. create the simple sound and return
     SGSoundSample *sample = new SGSoundSample( buffer, length,
                                                BYTES_PER_SECOND );
+    sample->set_reference_dist( 10.0 );
+    sample->set_max_dist( 20.0 );
 
     return sample;
 }
