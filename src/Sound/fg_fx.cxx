@@ -75,7 +75,7 @@ FGFX::init()
       _sound.push_back(sound);
    }
 
-   for (i = 0; i < _sound.size(); i++ ) {
+   for (i = 0; i < (int)_sound.size(); i++ ) {
       _sound[i]->init();
    }
 }
@@ -93,7 +93,7 @@ FGFX::unbind ()
 void
 FGFX::update (int dt)
 {
-   for (int i = 0; i < _sound.size(); i++ )
+   for (unsigned int i = 0; i < _sound.size(); i++ )
       _sound[i]->update(dt);
 }
 

@@ -64,13 +64,13 @@ static const struct {
 };
 
 FGSound::FGSound(const SGPropertyNode * node)
-  : _name(""),
+  : _node(node),
     _sample(NULL),
-    _factor(1.0),
     _active(false),
     _mode(FGSound::ONCE),
     _type(FGSound::LEVEL),
-    _node(node)
+    _name(""),  
+    _factor(1.0)
 {
 }
 
@@ -138,7 +138,7 @@ FGSound::init()
    //
    // set volume properties
    //
-   int i;
+   unsigned int i;
    float v = 0.0;
    vector<const SGPropertyNode *> kids = _node->getChildren("volume");
    for (i = 0; (i < kids.size()) && (i < FGSound::MAXPROP); i++) {
