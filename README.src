@@ -17,7 +17,7 @@ Controls/
 Provide a standardized interface to all aircraft controls.
 
 
-Flight/
+FDM/
 -------
 Strucures and code to implement various flight models.  Provides a 
 standardized interface to all interesting flight model variabls.
