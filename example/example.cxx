@@ -55,25 +55,36 @@ int main ()
 
   int tim = 0 ;  /* My periodic event timer. */
 
+  slEnvelope pitch_envelope ( 3, SL_SAMPLE_LOOP ) ;
+  slEnvelope p_envelope ( 1, SL_SAMPLE_ONE_SHOT ) ;
+  slEnvelope volume_envelope ( 3, SL_SAMPLE_LOOP ) ;
+
   while ( SL_TRUE )
   {
-    tim++ ;  /* Time passes */
+
+   tim++ ;  /* Time passes */
 
     if ( tim % 200 == 0 ) sched.playSample ( s1 ) ;
     if ( tim % 180 == 0 ) sched.playSample ( s2 ) ;
     if ( tim % 150 == 0 ) sched.playSample ( s3 ) ;
     if ( tim % 120 == 0 ) sched.playSample ( s4 ) ;
 
-    if ( tim == 300 ) {
+    if ( tim == 60 ) {
 	// introduce an envelope for our engine noise after 10 seconds
 
-	slEnvelope my_envelope ( 2, SL_SAMPLE_LOOP ) ;
-	my_envelope.setStep ( 0,  0.0, 1.0 ) ;
-	my_envelope.setStep ( 1, 10.0, 2.0 ) ;
-	my_envelope.setStep ( 2, 20.0, 1.0 ) ;
+	pitch_envelope.setStep ( 0,  0.0, 1.0 ) ;
+	pitch_envelope.setStep ( 1,  5.0, 2.0 ) ;
+	pitch_envelope.setStep ( 2, 10.0, 1.0 ) ;
+
+	p_envelope.setStep ( 0,  5.0, 2.0 ) ;
+
+	volume_envelope.setStep ( 0,  0.0, 1.0 ) ;
+	volume_envelope.setStep ( 1,  5.0, 2.0 ) ;
+	volume_envelope.setStep ( 2, 10.0, 1.0 ) ;
 
 	// scheduler -> playSample ( my_sample ) ;
-	sched.addSampleEnvelope ( s, 0, 0, &my_envelope, SL_PITCH_ENVELOPE ) ;
+	sched.addSampleEnvelope( s, 0, 0, &p_envelope, SL_PITCH_ENVELOPE );
+	sched.addSampleEnvelope( s, 0, 1, &volume_envelope, SL_VOLUME_ENVELOPE);
     }
 
 
