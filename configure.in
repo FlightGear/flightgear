@@ -5,7 +5,7 @@ dnl
 AC_INIT(Simulator/Aircraft/aircraft.c)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.42)
+AM_INIT_AUTOMAKE(FlightGear, 0.43)
 
 dnl Checks for programs.
 
@@ -132,8 +132,11 @@ AC_OUTPUT( \
 	Include/Makefile \
 	Lib/Makefile \
 	Lib/Bucket/Makefile \
+	Lib/Debug/Makefile \
 	Lib/DEM/Makefile \
+	Lib/Math/Makefile \
 	Lib/XGL/Makefile \
+	Lib/zlib/Makefile \
 	Simulator/Makefile \
 	Simulator/Aircraft/Makefile \
 	Simulator/Astro/Makefile \
@@ -148,13 +151,13 @@ AC_OUTPUT( \
 	Simulator/Main/runfg \
 	Simulator/Main/runfg.bat \
 	Simulator/Makefile \
-	Simulator/Math/Makefile \
 	Simulator/Scenery/Makefile \
 	Simulator/Time/Makefile \
 	Simulator/Weather/Makefile \
 	Tools/Makefile \
 	Tools/AssemTris/Makefile \
 	Tools/Dem2node/Makefile \
+	Tools/DemRaw2ascii/Makefile \
 	Tools/FixNode/Makefile \
 	Tools/FixObj/Makefile \
 	Tools/SplitTris/Makefile \

@@ -703,7 +703,7 @@ fi
 
 PACKAGE=FlightGear
 
-VERSION=0.42
+VERSION=0.43
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { echo "configure: error: source directory already configured; run "make distclean" there first" 1>&2; exit 1; }
@@ -4021,8 +4021,11 @@ trap 'rm -fr `echo "\
 	Include/Makefile \
 	Lib/Makefile \
 	Lib/Bucket/Makefile \
+	Lib/Debug/Makefile \
 	Lib/DEM/Makefile \
+	Lib/Math/Makefile \
 	Lib/XGL/Makefile \
+	Lib/zlib/Makefile \
 	Simulator/Makefile \
 	Simulator/Aircraft/Makefile \
 	Simulator/Astro/Makefile \
@@ -4037,13 +4040,13 @@ trap 'rm -fr `echo "\
 	Simulator/Main/runfg \
 	Simulator/Main/runfg.bat \
 	Simulator/Makefile \
-	Simulator/Math/Makefile \
 	Simulator/Scenery/Makefile \
 	Simulator/Time/Makefile \
 	Simulator/Weather/Makefile \
 	Tools/Makefile \
 	Tools/AssemTris/Makefile \
 	Tools/Dem2node/Makefile \
+	Tools/DemRaw2ascii/Makefile \
 	Tools/FixNode/Makefile \
 	Tools/FixObj/Makefile \
 	Tools/SplitTris/Makefile \
@@ -4155,8 +4158,11 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	Include/Makefile \
 	Lib/Makefile \
 	Lib/Bucket/Makefile \
+	Lib/Debug/Makefile \
 	Lib/DEM/Makefile \
+	Lib/Math/Makefile \
 	Lib/XGL/Makefile \
+	Lib/zlib/Makefile \
 	Simulator/Makefile \
 	Simulator/Aircraft/Makefile \
 	Simulator/Astro/Makefile \
@@ -4171,13 +4177,13 @@ CONFIG_FILES=\${CONFIG_FILES-"\
 	Simulator/Main/runfg \
 	Simulator/Main/runfg.bat \
 	Simulator/Makefile \
-	Simulator/Math/Makefile \
 	Simulator/Scenery/Makefile \
 	Simulator/Time/Makefile \
 	Simulator/Weather/Makefile \
 	Tools/Makefile \
 	Tools/AssemTris/Makefile \
 	Tools/Dem2node/Makefile \
+	Tools/DemRaw2ascii/Makefile \
 	Tools/FixNode/Makefile \
 	Tools/FixObj/Makefile \
 	Tools/SplitTris/Makefile \

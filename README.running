@@ -39,3 +39,8 @@ Num Lock Inactive
     3 = right/back
     6 = right
     9 = right/forward
+
+Autopilot
+---------
+    Shift + A               Enable Autopilot
+    Shift + S               Disable Autopilot

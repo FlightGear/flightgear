@@ -14,10 +14,16 @@ clean-deps:
 	Lib/*/*/.deps Simulator/*/*/.deps Tools/*/*/.deps
 
 clean-libs:
-	rm -rf .libs Src/.libs Src/*/.libs Src/*/*/.libs
-	rm -f Src/*/so_locations Src/*/*/so_locations
+	rm -rf .libs Lib/.libs Simulator/.libs Tools/.libs \
+		Lib/*/.libs Simulator/*/.libs Tools/*/.libs \
+		Lib/*/*/.libs Simulator/*/*/.libs Tools/*/*/.libs
+	rm -f Simulator/*/so_locations Lib/*/so_locations \
+		Simulator/*/*/so_locations Lib/*/*/so_locations
 
 # clean up after winbloze spews random case for file names :-(
 clean-winbloze: clean-deps clean-libs
-	rm -f makefile Src/makefile Src/*/makefile Src/*/*/makefile
-	rm -f Src/Main/fg.exe
+	rm -f makefile Include/makefile Lib/makefile Simulator/makefile \
+		Tools/makefile \
+		Lib/*/makefile Simulator/*/makefile Tools/*/makefile \
+		Lib/*/*/makefile Simulator/*/*/makefile Tools/*/*/makefile
+	rm -f Src/Main/fg.exe Tools/*/*.exe

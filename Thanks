@@ -41,6 +41,12 @@ Didier Chauveau <chauveau@math.univ-mlv.fr>
   http://edcwww.cr.usgs.gov/landdaac/gtopo30/gtopo30.html
 
 
+Jean-loup Gailly and Mark Adler <zlib@quest.jpl.nasa.gov>
+  Authors of the zlib library.  Used for on-the-fly compression and
+  decompression routines.
+  http://www.cdrom.com/pub/infozip/zlib/
+
+
 Jeff Goeke-Smith <jgoeke@voyager.net>
   Contributed our first autopilot.
 

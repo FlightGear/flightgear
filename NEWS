@@ -1,0 +1,16 @@
+New in 0.42:
+* Simple autopilot heading hold contributed by 
+  Jeff Goeke-Smith <jgoeke@voyager.net>
+* More code reorganization and clean ups.
+
+New in 0.41:
+* Many autoconf cleanups and tweaks
+* make and make install work in unix
+* make works for cygnus win32 (but not install yet)
+* make dist now works
+* added the Tools directory into the main source tree
+
+New in 0.40:
+* Gnu automake/autoconf/libtool make system
+* Initial texture support
+* Bug fixes

@@ -48,6 +48,17 @@ a completely free development environment.
 	cd FlightGear-X.XX	
         pkunzip -d win32-libs-X.XX.zip
 
+6.  --> IMPORTANT <--
+
+    You will find a file called "install.exe" In the Win32 directory 
+    created when you unzip the win32-libs-X.XX.zip file.
+
+    This version of install.exe should replace the one in your 
+    H-i386-cygwin32\bin directory - it's sole claim to fame is that it 
+    "understands" that when many calls to it say "install foo" they 
+    mean "install foo.exe".   If you skip this step, and attempt an 
+    install with the older version present, "make install" will fail.
+
 Side Note: we need to make a distinction between the "build tree" and
     the "install tree."  The "build tree" is what we've been talking
     about up until this point.  This is where the source code lives
@@ -57,7 +68,7 @@ Side Note: we need to make a distinction between the "build tree" and
     executables, the scenery, the textures, and any other run-time
     files will be located.
 
-6.  Configure the make system for your environment and your "install
+7.  Configure the make system for your environment and your "install
     tree".  Tell the configure script where you would like to install
     the exectuables and all the scenery and textures by using the
     "--prefix" option.  In the following example the base of the
@@ -65,11 +76,11 @@ Side Note: we need to make a distinction between the "build tree" and
 
         ./configure --prefix=/FlightGear
 
-7.  Build the executable.  Run:
+8.  Build the executable.  Run:
 
         make
 
-8.  Create and populate the install tree.  Run:
+9.  Create and populate the install tree.  Run:
 
         make install
 
@@ -84,17 +95,17 @@ Important Note: so far you've built and installed the simulator and
     make sure you have the appropriate scenery and texture downloaded
     and unzip'ed in your "install tree".
 
-9.  Download and install the scenery and texture files.
+10. Download and install the scenery and texture files.
 
-10. Set the runtime environment variable to point to the base of your
+11. Set the runtime environment variable to point to the base of your
     "install tree".  Run:
 
         export FG_ROOT=/FlightGear
 
-11. Try it out!  There are several ways to run flight gear once it has
+12. Try it out!  There are several ways to run flight gear once it has
     been installed. The simplest is as follows.  Run:
 
         /FlightGear/bin/runfg.bat
 
-12. I appreciate feedback.  Tell me if it works!  If it doesn't, tell me 
+13. I appreciate feedback.  Tell me if it works!  If it doesn't, tell me 
     what went wrong.  My email is curt@me.umn.edu
