@@ -30,6 +30,12 @@
 
 #include "Include/compiler.h"
 
+#if defined ( sun )                                                   
+  extern "C" {                                               
+    extern void *memmove(void *, const void *, size_t);             
+  }                                        
+#endif
+
 #include STL_ALGORITHM
 #include STL_FUNCTIONAL
 
@@ -306,6 +312,9 @@ fgEVENT_MGR::~fgEVENT_MGR( void ) {
 
 
 // $Log$
+// Revision 1.16  1999/01/21 20:14:18  curt
+// Sun portability hack.
+//
 // Revision 1.15  1999/01/09 13:37:42  curt
 // Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
 //
