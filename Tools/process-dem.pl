@@ -31,10 +31,10 @@ $remove_tmps = 0;
 
 $| = 1;                         # flush buffers after every write
 
-$do_dem2node =   0;
-$do_triangle_1 = 0;
-$do_fixnode =    0;
-$do_splittris =  0;
+$do_dem2node =   1;
+$do_triangle_1 = 1;
+$do_fixnode =    1;
+$do_splittris =  1;
 $do_assemtris =  1;
 $do_triangle_2 = 1;
 
@@ -76,7 +76,6 @@ while ( $dem_file = shift(@ARGV) ) {
     fixnode() if ( $do_fixnode );
     splittris() if ( $do_splittris );
     assemtris() if ( $do_assemtris );
-    exit;
     triangle_2() if ( $do_triangle_2);
     tri2obj() if ( $do_tri2obj );
     strips() if ( $do_strips );
@@ -244,7 +243,7 @@ sub assemtris {
     foreach $file ( @FILES ) {
 	chop($file);
 	if ( $file =~ m/\.1\.body$/ ) {
-	    $file =~ s/\.body$//;  # strip off the ".body"
+	    $file =~ s/\.1\.body$//;  # strip off the ".body"
 	
 	    $command = "AssemTris/assemtris $subdir/$file";
 	    $command = fix_command($command);
@@ -268,23 +267,29 @@ sub assemtris {
 sub triangle_2 {
     @FILES = `ls $subdir`;
     foreach $file ( @FILES ) {
-	print $file;
+	# print $file;
 	chop($file);
 	if ( ($file =~ m/\.node$/) && ($file !~ m/\.\d\.node$/) ) {
 	    $base = $file;
 	    $base =~ s/\.node$//;
 	    print("Test for $subdir/$base.q\n");
-	    if ( -r "$subdir/$base.q" ) {
 
+	    $command = "Triangle/triangle";
+
+	    if ( -r "$subdir/$base.q" ) {
 		# if triangle hangs, we can create a filebase.q for
 		# the file it hung on.  Then, we test for that file
 		# here which causes the incremental algorithm to run
 		# (which shouldn't ever hang.)
-
-		$command = "Triangle/triangle -i $subdir/$file";
-	    } else {
-		$command = "Triangle/triangle $subdir/$file";
+		$command .= " -i";
 	    }
+
+	    if ( -r "$subdir/$base.poly" ) {
+		$command .= " -pc $subdir/$base";
+	    } else {
+		$command .= " -c $subdir/$file";
+	    }
+
 	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
@@ -449,6 +454,9 @@ sub install {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.24  1998/07/21 04:33:47  curt
+# More tweaks for sub-area cutouts.
+#
 # Revision 1.23  1998/07/20 12:55:35  curt
 # Several tweaks to start incorporating area cutouts into the pipeline.
 #
