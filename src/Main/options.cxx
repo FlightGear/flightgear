@@ -612,11 +612,628 @@ parse_flightplan(const string& arg)
     return true;
 }
 
+#define NEW_OPTION_PARSING 1
+#ifdef NEW_OPTION_PARSING
+static int
+fgOptLanguage( const char *arg )
+{
+    globals->set_locale( fgInitLocale( arg ) );
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptLon( const char *arg )
+{
+    fgSetDouble("/sim/presets/longitude-deg", parse_degree( arg ));
+    fgSetDouble("/position/longitude-deg", parse_degree( arg ));
+    fgSetString("/sim/presets/airport-id", "");
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptLat( const char *arg )
+{
+    fgSetDouble("/sim/presets/latitude-deg", parse_degree( arg ));
+    fgSetDouble("/position/latitude-deg", parse_degree( arg ));
+    fgSetString("/sim/presets/airport-id", "");
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptAltitude( const char *arg )
+{
+    fgSetBool("/sim/presets/onground", false);
+    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+        fgSetDouble("/sim/presets/altitude-ft", atof( arg ));
+    else
+        fgSetDouble("/sim/presets/altitude-ft",
+		    atof( arg ) * SG_METER_TO_FEET);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptUBody( const char *arg )
+{
+    fgSetString("/sim/presets/speed-set", "UVW");
+    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+	fgSetDouble("/sim/presets/uBody-fps", atof( arg ));
+    else
+	fgSetDouble("/sim/presets/uBody-fps",
+                    atof( arg ) * SG_METER_TO_FEET);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptVBody( const char *arg )
+{
+    fgSetString("/sim/presets/speed-set", "UVW");
+    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+	fgSetDouble("/sim/presets/vBody-fps", atof( arg ));
+    else
+	fgSetDouble("/sim/presets/vBody-fps",
+			    atof( arg ) * SG_METER_TO_FEET);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptWBody( const char *arg )
+{
+    fgSetString("/sim/presets/speed-set", "UVW");
+    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+	fgSetDouble("/sim/presets/wBody-fps", atof(arg));
+    else
+	fgSetDouble("/sim/presets/wBody-fps",
+			    atof(arg) * SG_METER_TO_FEET);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptVNorth( const char *arg )
+{
+    fgSetString("/sim/presets/speed-set", "NED");
+    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+	fgSetDouble("/sim/presets/speed-north-fps", atof( arg ));
+    else
+	fgSetDouble("/sim/presets/speed-north-fps",
+			    atof( arg ) * SG_METER_TO_FEET);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptVEast( const char *arg )
+{
+    fgSetString("/sim/presets/speed-set", "NED");
+    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+	fgSetDouble("/sim/presets/speed-east-fps", atof(arg));
+    else
+	fgSetDouble("/sim/presets/speed-east-fps",
+		    atof(arg) * SG_METER_TO_FEET);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptVDown( const char *arg )
+{
+    fgSetString("/sim/presets/speed-set", "NED");
+    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+	fgSetDouble("/sim/presets/speed-down-fps", atof(arg));
+    else
+	fgSetDouble("/sim/presets/speed-down-fps",
+			    atof(arg) * SG_METER_TO_FEET);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptVc( const char *arg )
+{
+    // fgSetString("/sim/presets/speed-set", "knots");
+    // fgSetDouble("/velocities/airspeed-kt", atof(arg.substr(5)));
+    fgSetString("/sim/presets/speed-set", "knots");
+    fgSetDouble("/sim/presets/airspeed-kt", atof(arg));
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptMach( const char *arg )
+{
+    fgSetString("/sim/presets/speed-set", "mach");
+    fgSetDouble("/sim/presets/mach", atof(arg));
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptRoc( const char *arg )
+{
+    fgSetDouble("/velocities/vertical-speed-fps", atof(arg)/60);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptFgRoot( const char *arg )
+{
+    globals->set_fg_root(arg);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptFgScenery( const char *arg )
+{
+    globals->set_fg_scenery(arg);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptFov( const char *arg )
+{
+    parse_fov( arg );
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptGeometry( const char *arg )
+{
+    bool geometry_ok = true;
+    int xsize = 0, ysize = 0;
+    string geometry = arg;
+    string::size_type i = geometry.find('x');
+
+    if (i != string::npos) {
+        xsize = atoi(geometry.substr(0, i));
+        ysize = atoi(geometry.substr(i+1));
+    } else {
+        geometry_ok = false;
+    }
+
+    if ( xsize <= 0 || ysize <= 0 ) {
+        xsize = 640;
+        ysize = 480;
+        geometry_ok = false;
+    }
+
+    if ( !geometry_ok ) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Unknown geometry: " << geometry );
+        SG_LOG( SG_GENERAL, SG_ALERT,
+ 	        "Setting geometry to " << xsize << 'x' << ysize << '\n');
+    } else {
+        SG_LOG( SG_GENERAL, SG_INFO,
+	        "Setting geometry to " << xsize << 'x' << ysize << '\n');
+        fgSetInt("/sim/startup/xsize", xsize);
+        fgSetInt("/sim/startup/ysize", ysize);
+    }
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptBpp( const char *arg )
+{
+    string bits_per_pix = arg;
+    if ( bits_per_pix == "16" ) {
+	fgSetInt("/sim/rendering/bits-per-pixel", 16);
+    } else if ( bits_per_pix == "24" ) {
+	fgSetInt("/sim/rendering/bits-per-pixel", 24);
+    } else if ( bits_per_pix == "32" ) {
+	fgSetInt("/sim/rendering/bits-per-pixel", 32);
+    } else {
+	SG_LOG(SG_GENERAL, SG_ALERT, "Unsupported bpp " << bits_per_pix);
+    }
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptTimeOffset( const char *arg )
+{
+    fgSetInt("/sim/startup/time-offset",
+                parse_time_offset( arg ));
+    fgSetString("/sim/startup/time-offset-type", "system-offset");
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptStartDateSys( const char *arg )
+{
+    fgSetInt("/sim/startup/time-offset", parse_date( arg ) );
+    fgSetString("/sim/startup/time-offset-type", "system");
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptStartDateLat( const char *arg )
+{
+    fgSetInt("/sim/startup/time-offset", parse_date( arg ) );
+    fgSetString("/sim/startup/time-offset-type", "latitude");
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptStartDateGmt( const char *arg )
+{
+    fgSetInt("/sim/startup/time-offset", parse_date( arg ) );
+    fgSetString("/sim/startup/time-offset-type", "gmt");
+    return FG_OPTIONS_OK;
+}
+
+#ifdef FG_NETWORK_OLK
+static int
+fgOptNetHud( const char *arg )
+{
+    fgSetBool("/sim/hud/net-display", true);
+    net_hud_display = 1;	// FIXME
+    return FG_OPTIONS_OK;
+}
+#endif
+
+static int
+fgOptTraceRead( const char *arg )
+{
+    string name = arg;
+    SG_LOG(SG_GENERAL, SG_INFO, "Tracing reads for property " << name);
+    fgGetNode(name.c_str(), true)
+	->setAttribute(SGPropertyNode::TRACE_READ, true);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptTraceWrite( const char *arg )
+{
+    string name = arg;
+    SG_LOG(SG_GENERAL, SG_INFO, "Tracing writes for property " << name);
+    fgGetNode(name.c_str(), true)
+	->setAttribute(SGPropertyNode::TRACE_WRITE, true);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptViewOffset( const char *arg )
+{
+    // $$$ begin - added VS Renganathan, 14 Oct 2K
+    // for multi-window outside window imagery
+    string woffset = arg;
+    double default_view_offset = 0.0;
+    if ( woffset == "LEFT" ) {
+	    default_view_offset = SGD_PI * 0.25;
+    } else if ( woffset == "RIGHT" ) {
+	default_view_offset = SGD_PI * 1.75;
+    } else if ( woffset == "CENTER" ) {
+	default_view_offset = 0.00;
+    } else {
+	default_view_offset = atof( woffset.c_str() ) * SGD_DEGREES_TO_RADIANS;
+    }
+    /* apparently not used (CLO, 11 Jun 2002) 
+        FGViewer *pilot_view =
+	    (FGViewer *)globals->get_viewmgr()->get_view( 0 ); */
+    // this will work without calls to the viewer...
+    fgSetDouble( "/sim/current-view/heading-offset-deg",
+                    default_view_offset  * SGD_RADIANS_TO_DEGREES );
+    // $$$ end - added VS Renganathan, 14 Oct 2K
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptVisibilityMiles( const char *arg )
+{
+    double visibility = atof( arg ) * 5280.0 * SG_FEET_TO_METER;
+    fgSetDouble("/environment/visibility-m", visibility);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptRandomWind( const char *arg )
+{
+    double min_hdg = sg_random() * 360.0;
+    double max_hdg = min_hdg + (20 - sqrt(sg_random() * 400));
+    double speed = 40 - sqrt(sg_random() * 1600.0);
+    double gust = speed + (10 - sqrt(sg_random() * 100));
+    setup_wind(min_hdg, max_hdg, speed, gust);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptWind( const char *arg )
+{
+    double min_hdg, max_hdg, speed, gust;
+    if (!parse_wind( arg, &min_hdg, &max_hdg, &speed, &gust)) {
+	SG_LOG( SG_GENERAL, SG_ALERT, "bad wind value " << arg );
+	return FG_OPTIONS_ERROR;
+    }
+    setup_wind(min_hdg, max_hdg, speed, gust);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptWp( const char *arg )
+{
+    parse_wp( arg );
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptFlightPlan( const char *arg )
+{
+    parse_flightplan ( arg );
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptConfig( const char *arg )
+{
+    string file = arg;
+    try {
+	readProperties(file, globals->get_props());
+    } catch (const sg_exception &e) {
+	string message = "Error loading config file: ";
+	message += e.getFormattedMessage();
+	SG_LOG(SG_INPUT, SG_ALERT, message);
+	exit(2);
+    }
+    return FG_OPTIONS_OK;
+}
+
+static map<string,size_t> fgOptionMap;
+
+enum OptionType { OPTION_BOOL, OPTION_STRING, OPTION_DOUBLE, OPTION_INT, OPTION_CHANNEL, OPTION_FUNC };
+struct OptionDesc {
+    char *option;
+    bool has_param;
+    enum OptionType type;
+    char *property;
+    bool b_param;
+    char *s_param;
+    int (*func)( const char * );
+    } fgOptionArray[] = {
+       
+    {"language",                     true,  OPTION_FUNC,   "", false, "", fgOptLanguage },
+    {"disable-game-mode",            false, OPTION_BOOL,   "/sim/startup/game-mode", false, "", 0 },
+    {"enable-game-mode",             false, OPTION_BOOL,   "/sim/startup/game-mode", true, "", 0 },
+    {"disable-splash-screen",        false, OPTION_BOOL,   "/sim/startup/splash-screen", false, "", 0 },
+    {"enable-splash-screen",         false, OPTION_BOOL,   "/sim/startup/splash-screen", true, "", 0 },
+    {"disable-intro-music",          false, OPTION_BOOL,   "/sim/startup/intro-music", false, "", 0 },
+    {"enable-intro-music",           false, OPTION_BOOL,   "/sim/startup/intro-music", true, "", 0 },
+    {"disable-mouse-pointer",        false, OPTION_STRING, "/sim/startup/mouse-pointer", false, "disabled", 0 },
+    {"enable-mouse-pointer",         false, OPTION_STRING, "/sim/startup/mouse-pointer", false, "enabled", 0 },
+    {"disable-random-objects",       false, OPTION_BOOL,   "/sim/rendering/random-objects", false, "", 0 },
+    {"enable-random-objects",        false, OPTION_BOOL,   "/sim/rendering/random-objects", true, "", 0 },
+    {"disable-freeze",               false, OPTION_BOOL,   "/sim/freeze/master", false, "", 0 },
+    {"enable-freeze",                false, OPTION_BOOL,   "/sim/freeze/master", true, "", 0 },
+    {"disable-fuel-freeze",          false, OPTION_BOOL,   "/sim/freeze/fuel", false, "", 0 },
+    {"enable-fuel-freeze",           false, OPTION_BOOL,   "/sim/freeze/fuel", true, "", 0 },
+    {"disable-clock-freeze",         false, OPTION_BOOL,   "/sim/freeze/clock", false, "", 0 },
+    {"enable-clock-freeze",          false, OPTION_BOOL,   "/sim/freeze/clock", true, "", 0 },
+    {"disable-anti-alias-hud",       false, OPTION_BOOL,   "/sim/hud/antialiased", false, "", 0 },
+    {"enable-anti-alias-hud",        false, OPTION_BOOL,   "/sim/hud/antialiased", true, "", 0 },
+    {"control",                      true,  OPTION_STRING, "/sim/control-mode", false, "", 0 },
+    {"disable-auto-coordination",    false, OPTION_BOOL,   "/sim/auto-coordination", false, "", 0 },
+    {"enable-auto-coordination",     false, OPTION_BOOL,   "/sim/auto-coordination", true, "", 0 },
+    {"browser-app",                  true,  OPTION_STRING, "/sim/startup/browser-app", false, "", 0 },
+    {"disable-hud",                  false, OPTION_BOOL,   "/sim/hud/visibility", false, "", 0 },
+    {"enable-hud",                   false, OPTION_BOOL,   "/sim/hud/visibility", true, "", 0 },
+    {"disable-panel",                false, OPTION_BOOL,   "/sim/panel/visibility", false, "", 0 },
+    {"enable-panel",                 false, OPTION_BOOL,   "/sim/panel/visibility", true, "", 0 },
+    {"disable-sound",                false, OPTION_BOOL,   "/sim/sound/audible", false, "", 0 },
+    {"enable-sound",                 false, OPTION_BOOL,   "/sim/sound/audible", true, "", 0 },
+    {"airport",                      true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
+    {"airport-id",                   true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
+    {"runway",                       true,  OPTION_STRING, "/sim/presets/runway", false, "", 0 },
+    {"offset-distance",              true,  OPTION_DOUBLE, "/sim/presets/offset-distance", false, "", 0 },
+    {"offset-azimuth",               true,  OPTION_DOUBLE, "/sim/presets/offset-azimuth", false, "", 0 },
+    {"lon",                          true,  OPTION_FUNC,   "", false, "", fgOptLon },
+    {"lat",                          true,  OPTION_FUNC,   "", false, "", fgOptLat },
+    {"altitude",                     true,  OPTION_FUNC,   "", false, "", fgOptAltitude },
+    {"uBody",                        true,  OPTION_FUNC,   "", false, "", fgOptUBody },
+    {"vBody",                        true,  OPTION_FUNC,   "", false, "", fgOptVBody },
+    {"wBody",                        true,  OPTION_FUNC,   "", false, "", fgOptWBody },
+    {"vNorth",                       true,  OPTION_FUNC,   "", false, "", fgOptVNorth },
+    {"vEast",                        true,  OPTION_FUNC,   "", false, "", fgOptVEast },
+    {"vDown",                        true,  OPTION_FUNC,   "", false, "", fgOptVDown },
+    {"vc",                           true,  OPTION_FUNC,   "", false, "", fgOptVc },
+    {"mach",                         true,  OPTION_FUNC,   "", false, "", fgOptMach },
+    {"heading",                      true,  OPTION_DOUBLE, "/sim/presets/heading-deg", false, "", 0 },
+    {"roll",                         true,  OPTION_DOUBLE, "/sim/presets/roll-deg", false, "", 0 },
+    {"pitch",                        true,  OPTION_DOUBLE, "/sim/presets/pitch-deg", false, "", 0 },
+    {"glideslope",                   true,  OPTION_DOUBLE, "/sim/presets/glideslope-deg", false, "", 0 },
+    {"roc",                          true,  OPTION_FUNC,   "", false, "", fgOptRoc },
+    {"fg-root",                      true,  OPTION_FUNC,   "", false, "", fgOptFgRoot },
+    {"fg-scenery",                   true,  OPTION_FUNC,   "", false, "", fgOptFgScenery },
+    {"fdm",                          true,  OPTION_STRING, "/sim/flight-model", false, "", 0 },
+    {"aero",                         true,  OPTION_STRING, "/sim/aero", false, "", 0 },
+    {"aircraft-dir",                 true,  OPTION_STRING, "/sim/aircraft-dir", false, "", 0 },
+    {"model-hz",                     true,  OPTION_INT,    "/sim/model-hz", false, "", 0 },
+    {"speed",                        true,  OPTION_INT,    "/sim/speed-up", false, "", 0 },
+    {"trim",                         false, OPTION_BOOL,   "/sim/presets/trim", true, "", 0 },
+    {"notrim",                       false, OPTION_BOOL,   "/sim/presets/trim", false, "", 0 },
+    {"on-ground",                    false, OPTION_BOOL,   "/sim/presets/onground", true, "", 0 },
+    {"in-air",                       false, OPTION_BOOL,   "/sim/presets/onground", false, "", 0 },
+    {"fog-disable",                  false, OPTION_STRING, "/sim/rendering/fog", false, "disabled", 0 },
+    {"fog-fastest",                  false, OPTION_STRING, "/sim/rendering/fog", false, "fastest", 0 },
+    {"fog-nicest",                   false, OPTION_STRING, "/sim/fog", false, "nicest", 0 },
+    {"disable-distance-attenuation", false, OPTION_BOOL,   "/environment/distance-attenuation", false, "", 0 },
+    {"enable-distance-attenuation",  false, OPTION_BOOL,   "/environment/distance-attenuation", true, "", 0 },
+    {"disable-clouds",               false, OPTION_BOOL,   "/environment/clouds/status", false, "", 0 },
+    {"enable-clouds",                false, OPTION_BOOL,   "/environment/clouds/status", true, "", 0 },
+#ifdef FG_USE_CLOUDS_3D
+    {"disable-clouds3d",             false, OPTION_BOOL,   "/sim/rendering/clouds3d", false, "", 0 },
+    {"enable-clouds3d",              false, OPTION_BOOL,   "/sim/rendering/clouds3d", true, "", 0 },
+#endif
+    {"fov",                          true,  OPTION_FUNC,   "", false, "", fgOptFov },
+    {"disable-fullscreen",           false, OPTION_BOOL,   "/sim/startup/fullscreen", false, "", 0 },
+    {"enable-fullscreen",            false, OPTION_BOOL,   "/sim/startup/fullscreen", true, "", 0 },
+    {"shading-flat",                 false, OPTION_BOOL,   "/sim/rendering/shading", false, "", 0 },
+    {"shading-smooth",               false, OPTION_BOOL,   "/sim/rendering/shading", true, "", 0 },
+    {"disable-skyblend",             false, OPTION_BOOL,   "/sim/rendering/skyblend", false, "", 0 },
+    {"enable-skyblend",              false, OPTION_BOOL,   "/sim/rendering/skyblend", true, "", 0 },
+    {"disable-textures",             false, OPTION_BOOL,   "/sim/rendering/textures", false, "", 0 },
+    {"enable-textures",              false, OPTION_BOOL,   "/sim/rendering/textures", true, "", 0 },
+    {"disable-wireframe",            false, OPTION_BOOL,   "/sim/rendering/wireframe", false, "", 0 },
+    {"enable-wireframe",             false, OPTION_BOOL,   "/sim/rendering/wireframe", true, "", 0 },
+    {"geometry",                     true,  OPTION_FUNC,   "", false, "", fgOptGeometry },
+    {"bpp",                          true,  OPTION_FUNC,   "", false, "", fgOptBpp },
+    {"units-feet",                   false, OPTION_STRING, "/sim/startup/units", false, "feet", 0 },
+    {"units-meters",                 false, OPTION_STRING, "/sim/startup/units", false, "meters", 0 },
+    {"time-offset",                  true,  OPTION_FUNC,   "", false, "", fgOptTimeOffset },
+    {"time-match-real",              false, OPTION_STRING, "/sim/startup/time-offset-type", false, "system-offset", 0 },
+    {"time-match-local",             false, OPTION_STRING, "/sim/startup/time-offset-type", false, "latitude-offset", 0 },
+    {"start-date-sys",               true,  OPTION_FUNC,   "", false, "", fgOptStartDateSys },
+    {"start-date-lat",               true,  OPTION_FUNC,   "", false, "", fgOptStartDateLat },
+    {"start-date-gmt",               true,  OPTION_FUNC,   "", false, "", fgOptStartDateGmt },
+    {"hud-tris",                     false, OPTION_STRING, "/sim/hud/frame-stat-type", false, "tris", 0 },
+    {"hud-culled",                   false, OPTION_STRING, "/sim/hud/frame-stat-type", false, "culled", 0 },
+    {"atc610x",                      false, OPTION_CHANNEL, "", false, "dummy", 0 },
+    {"atlas",                        true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"httpd",                        true,  OPTION_CHANNEL, "", false, "", 0 },
+#ifdef FG_JPEG_SERVER
+    {"jpg-httpd",                    true,  OPTION_CHANNEL, "", false, "", 0 },
+#endif
+    {"native",                       true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"native-ctrls",                 true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"native-fdm",                   true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"native-gui",                   true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"opengc",                       true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"garmin",                       true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"nmea",                         true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"props",                        true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"telnet",                       true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"pve",                          true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"ray",                          true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"rul",                          true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"joyclient",                    true,  OPTION_CHANNEL, "", false, "", 0 },
+#ifdef FG_NETWORK_OLK
+    {"disable-network-olk",          false, OPTION_BOOL,   "/sim/networking/olk", false, "", 0 },
+    {"enable-network-olk",           false, OPTION_BOOL,   "/sim/networking/olk", true, "", 0 },
+    {"net-hud",                      false, OPTION_FUNC,   "", false, "", fgOptNetHud },
+    {"net-id",                       true,  OPTION_STRING, "sim/networking/call-sign", false, "", 0 },
+#endif
+    {"trace-read",                   true,  OPTION_FUNC,   "", false, "", fgOptTraceRead },
+    {"trace-write",                  true,  OPTION_FUNC,   "", false, "", fgOptTraceWrite },
+    {"view-offset",                  true,  OPTION_FUNC,   "", false, "", fgOptViewOffset },
+    {"visibility",                   true,  OPTION_DOUBLE, "/environment/visibility-m", false, "", 0 },
+    {"visibility-miles",             true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMiles },
+    {"random-wind",                  false, OPTION_FUNC,   "", false, "", fgOptRandomWind },
+    {"wind",                         true,  OPTION_FUNC,   "", false, "", fgOptWind },
+    {"wp",                           true,  OPTION_FUNC,   "", false, "", fgOptWp },
+    {"flight-plan",                  true,  OPTION_FUNC,   "", false, "", fgOptFlightPlan },
+    {"config",                       true,  OPTION_FUNC,   "", false, "", fgOptConfig },
+    {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
+    {0}
+};
+#endif
 
 // Parse a single option
 static int 
 parse_option (const string& arg) 
 {
+#ifdef NEW_OPTION_PARSING
+    if ( fgOptionMap.size() == 0 ) {
+        size_t i = 0;
+        OptionDesc *pt = &fgOptionArray[ 0 ];
+        while ( pt->option != 0 ) {
+            fgOptionMap[ pt->option ] = i;
+            i += 1;
+            pt += 1;
+        }
+    }
+
+    // General Options
+    if ( (arg == "--help") || (arg == "-h") ) {
+	// help/usage request
+	return(FG_OPTIONS_HELP);
+    } else if ( (arg == "--verbose") || (arg == "-v") ) {
+        // verbose help/usage request
+        return(FG_OPTIONS_VERBOSE_HELP);
+    } else if ( arg.find( "--show-aircraft") == 0) {
+        return(FG_OPTIONS_SHOW_AIRCRAFT);
+    } else if ( arg.find( "--prop:" ) == 0 ) {
+        string assign = arg.substr(7);
+	string::size_type pos = assign.find('=');
+	if ( pos == arg.npos || pos == 0 ) {
+	    SG_LOG( SG_GENERAL, SG_ALERT, "Bad property assignment: " << arg );
+	    return FG_OPTIONS_ERROR;
+	}
+	string name = assign.substr(0, pos);
+	string value = assign.substr(pos + 1);
+	fgSetString(name.c_str(), value.c_str());
+	// SG_LOG(SG_GENERAL, SG_INFO, "Setting default value of property "
+	//        << name << " to \"" << value << '"');
+    } else if ( arg.find( "--" ) == 0 ) {
+        size_t pos = arg.find( '=' );
+        string arg_name;
+        if ( pos == string::npos ) {
+            arg_name = arg.substr( 2 );
+        } else {
+            arg_name = arg.substr( 2, pos - 2 );
+        }
+        map<string,size_t>::iterator it = fgOptionMap.find( arg_name );
+        if ( it != fgOptionMap.end() ) {
+            OptionDesc *pt = &fgOptionArray[ it->second ];
+            switch ( pt->type ) {
+                case OPTION_BOOL:
+                    fgSetBool( pt->property, pt->b_param );
+                    break;
+                case OPTION_STRING:
+                    if ( pt->has_param && pos != string::npos ) {
+                        fgSetString( pt->property, arg.substr( pos + 1 ).c_str() );
+                    } else if ( !pt->has_param && pos == string::npos ) {
+                        fgSetString( pt->property, pt->s_param );
+                    } else if ( pt->has_param ) {
+                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
+                        return FG_OPTIONS_ERROR;
+                    } else {
+                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' does not have a parameter" );
+                        return FG_OPTIONS_ERROR;
+                    }
+                    break;
+                case OPTION_DOUBLE:
+                    if ( pos != string::npos ) {
+                        fgSetDouble( pt->property, atof( arg.substr( pos + 1 ) ) );
+                    } else {
+                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
+                        return FG_OPTIONS_ERROR;
+                    }
+                    break;
+                case OPTION_INT:
+                    if ( pos != string::npos ) {
+                        fgSetInt( pt->property, atoi( arg.substr( pos + 1 ) ) );
+                    } else {
+                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
+                        return FG_OPTIONS_ERROR;
+                    }
+                    break;
+                case OPTION_CHANNEL:
+                    if ( pt->has_param && pos != string::npos ) {
+                        add_channel( pt->option, arg.substr( pos + 1 ) );
+                    } else if ( !pt->has_param && pos == string::npos ) {
+                        add_channel( pt->option, pt->s_param );
+                    } else if ( pt->has_param ) {
+                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
+                        return FG_OPTIONS_ERROR;
+                    } else {
+                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' does not have a parameter" );
+                        return FG_OPTIONS_ERROR;
+                    }
+                    break;
+                case OPTION_FUNC:
+                    if ( pt->has_param && pos != string::npos ) {
+                        pt->func( arg.substr( pos + 1 ).c_str() );
+                    } else if ( !pt->has_param && pos == string::npos ) {
+                        pt->func( 0 );
+                    } else if ( pt->has_param ) {
+                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
+                        return FG_OPTIONS_ERROR;
+                    } else {
+                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' does not have a parameter" );
+                        return FG_OPTIONS_ERROR;
+                    }
+                    break;
+            }
+        } else {
+            SG_LOG( SG_GENERAL, SG_ALERT, "Unknown option '" << arg << "'" );
+            return FG_OPTIONS_ERROR;
+        }
+    } else {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Unknown option '" << arg << "'" );
+        return FG_OPTIONS_ERROR;
+    }
+
+#else
+
     // General Options
     if ( (arg == "--help") || (arg == "-h") ) {
 	// help/usage request
@@ -1029,6 +1646,7 @@ parse_option (const string& arg)
 	SG_LOG( SG_GENERAL, SG_ALERT, "Unknown option '" << arg << "'" );
 	return FG_OPTIONS_ERROR;
     }
+#endif
     
     return FG_OPTIONS_OK;
 }
