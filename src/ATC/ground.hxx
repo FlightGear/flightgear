@@ -132,7 +132,7 @@ typedef gate_map_type::iterator gate_map_iterator;
 typedef gate_map_type::const_iterator gate_map_const_iterator;
 
 // Runways - all the runway stuff is likely to change in the future
-typedef struct Rwy {
+struct Rwy {
 	int id;	//note this is a very simplified scheme for now - R & L are not differentiated
 	//It should work for simple one rwy airports
 	node_array_type exits;	//Array of available exits from runway
