@@ -117,14 +117,17 @@ void initMenu()
              SGPropertyNode *sep = option[i]->getNode("seperator");
 
              int pos = option.size()-i-1;
-             if (sep)
+             if (sep) {
                 Menu[h].submenu[pos] = strdup("----------");
-
-             else if (call && strcmp(call->getStringValue(), ""))
-                 Menu[h].submenu[pos] = strdup(name->getStringValue());
-
-             else
+             } else if (call && strcmp(call->getStringValue(), "")) {
+                 cout << name->getStringValue() << endl;
+                 string text = fgGetString( name->getStringValue(),
+                                        "/strings/null" );
+                 Menu[h].submenu[pos]
+                     = strdup(text.c_str());
+             } else {
                  Menu[h].submenu[pos] = strdup("not specified");
+             }
 
              Menu[h].cb[pos] = NULL;
              for (unsigned int j=0; __fg_gui_fn[j].fn; j++)
@@ -137,8 +140,11 @@ void initMenu()
          }
 
          SGPropertyNode *name = submenu[h]->getNode("name");
+         cout << name->getStringValue() << endl;
+         string text = fgGetString( name->getStringValue(),
+                                    "/strings/null" );
 
-         Menu[h].name = strdup(name->getStringValue());
+         Menu[h].name = strdup(text.c_str());
          mainMenuBar->add_submenu(Menu[h].name, Menu[h].submenu, Menu[h].cb);
 
     }
