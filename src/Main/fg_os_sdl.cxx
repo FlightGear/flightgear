@@ -137,6 +137,7 @@ static void handleKey(int key, int keyup)
     }
     if(keyup) CurrentModifiers &= ~modmask;
     else      CurrentModifiers |= modmask;
+    if(keyup) CurrentModifiers |= KEYMOD_RELEASED;
     if(modmask == 0 && KeyHandler)
         (*KeyHandler)(key, CurrentModifiers, CurrentMouseX, CurrentMouseY);
 }
