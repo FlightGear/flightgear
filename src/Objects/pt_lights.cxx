@@ -113,6 +113,29 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up,
 }
 
 
+// Generate a REIL light
+ssgBranch *gen_reil_light( sgVec3 pt, sgVec3 dir, sgVec3 up, 
+                         const string &material ) {
+
+    ssgTimedSelector *reil = new ssgTimedSelector;
+
+    ssgLeaf *leaf;
+
+    leaf = gen_directional_light( pt, dir, up, "RWY_WHITE_LIGHTS" );
+    reil->addKid( leaf );
+
+    leaf = gen_directional_light( pt, dir, up, "RWY_WHITE_LIGHTS" );
+    reil->addKid( leaf );
+
+    reil->setDuration( 60 );
+    reil->setLimits( 0, 2 );
+    reil->setMode( SSG_ANIM_SHUTTLE );
+    reil->control( SSG_ANIM_START );
+
+    return reil;
+}
+
+
 // Generate a directional light
 ssgLeaf *gen_normal_line( sgVec3 pt, sgVec3 dir, sgVec3 up ) {
 
@@ -160,8 +183,15 @@ ssgBranch *gen_directional_lights( const point_list &nodes,
                    nodes[pnt_i[i]][2] );
         sgSetVec3( normal, normals[nml_i[i]][0], normals[nml_i[i]][1],
                    normals[nml_i[i]][2] );
-        ssgLeaf *light = gen_directional_light( pt, normal, nup, material );
-        result->addKid( light );
+        if ( material == "RWY_REIL_LIGHTS" ) {
+            cout << "found a reil" << endl;
+            ssgBranch *light = gen_reil_light( pt, normal, nup, material );
+            result->addKid( light );
+        } else {
+            // standard directional lights
+            ssgLeaf *light = gen_directional_light( pt, normal, nup, material );
+            result->addKid( light );
+        }
         // light = gen_normal_line( pt, normal, nup );
         // result->addKid( light );
     }
