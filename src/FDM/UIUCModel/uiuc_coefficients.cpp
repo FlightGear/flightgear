@@ -127,15 +127,15 @@ void uiuc_coefficients(double dt)
 	{
 	  cbar_2U = cbar / (2.0 * V_rel_wind);
 	  b_2U    = bw /   (2.0 * V_rel_wind);
-	  // ch is the horizontal tail chord
-	  ch_2U   = ch /   (2.0 * V_rel_wind);
+	  // chord_h is the horizontal tail chord
+	  ch_2U   = chord_h /   (2.0 * V_rel_wind);
 	}
       else if (use_dyn_on_speed_curve1)
   	{
   	  V_rel_wind_dum = dyn_on_speed_zero + V_rel_wind * (dyn_on_speed - dyn_on_speed_zero)/dyn_on_speed;
   	  cbar_2U        = cbar / (2.0 * V_rel_wind_dum);
   	  b_2U           = bw /   (2.0 * V_rel_wind_dum);
-  	  ch_2U          = ch /   (2.0 * V_rel_wind_dum);
+  	  ch_2U          = chord_h /   (2.0 * V_rel_wind_dum);
 	  Std_Alpha_dot      = 0.0;
   	}
       else
@@ -152,14 +152,14 @@ void uiuc_coefficients(double dt)
 	{
 	  cbar_2U = cbar / (2.0 * fabs(U_body));
 	  b_2U    = bw /   (2.0 * fabs(U_body));
-	  ch_2U   = ch /   (2.0 * fabs(U_body));
+	  ch_2U   = chord_h /   (2.0 * fabs(U_body));
 	}
       else if (use_dyn_on_speed_curve1)
 	{
 	  U_body_dum = dyn_on_speed_zero + fabs(U_body) * (dyn_on_speed - dyn_on_speed_zero)/dyn_on_speed;
 	  cbar_2U    = cbar / (2.0 * U_body_dum);
 	  b_2U       = bw /   (2.0 * U_body_dum);
-	  ch_2U      = ch /   (2.0 * U_body_dum);
+	  ch_2U      = chord_h /   (2.0 * U_body_dum);
 	  Std_Alpha_dot  = 0.0;
 	}
       else
@@ -176,14 +176,14 @@ void uiuc_coefficients(double dt)
 	{
 	  cbar_2U = cbar / (2.0 * U_body);
 	  b_2U    = bw /   (2.0 * U_body);
-	  ch_2U   = ch /   (2.0 * U_body);
+	  ch_2U   = chord_h /   (2.0 * U_body);
 	}
       else if (use_dyn_on_speed_curve1)
 	{
 	  U_body_dum = dyn_on_speed_zero + U_body * (dyn_on_speed - dyn_on_speed_zero)/dyn_on_speed;
 	  cbar_2U    = cbar / (2.0 * U_body_dum);
 	  b_2U       = bw /   (2.0 * U_body_dum);
-	  ch_2U      = ch /   (2.0 * U_body_dum);
+	  ch_2U      = chord_h /   (2.0 * U_body_dum);
 	  Std_Alpha_dot  = 0.0;
 	  beta_flow_clean_tail = cbar_2U;
 	}

@@ -73,7 +73,7 @@ void uiuc_map_geometry()
   geometry_map["Sw"]              =      Sw_flag                    ;
   geometry_map["ih"]              =      ih_flag                    ;
   geometry_map["bh"]              =      bh_flag                    ;
-  geometry_map["ch"]              =      ch_flag                    ;
+  geometry_map["chord_h"]         =      ch_flag                    ;
   geometry_map["Sh"]              =      Sh_flag                    ;
 }
 

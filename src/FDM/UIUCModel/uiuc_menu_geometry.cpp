@@ -173,7 +173,7 @@ void parse_geometry( const string& linetoken2, const string& linetoken3,
 	  else
 	    uiuc_warnings_errors(1, *command_line);
 	  
-	  ch = token_value;
+	  chord_h = token_value;
 	  geometryParts -> storeCommands (*command_line);
 	  break;
 	}

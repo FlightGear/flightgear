@@ -755,13 +755,13 @@ struct AIRCRAFT
   map <string,int> geometry_map;
 #define      geometry_map        aircraft_->geometry_map       
   
-  double bw, cbar, Sw, ih, bh, ch, Sh;
+  double bw, cbar, Sw, ih, bh, chord_h, Sh;
 #define bw   aircraft_->bw
 #define cbar aircraft_->cbar
 #define Sw   aircraft_->Sw       
 #define ih   aircraft_->ih
 #define bh   aircraft_->bh
-#define ch   aircraft_->ch
+#define chord_h   aircraft_->chord_h
 #define Sh   aircraft_->Sh
 
   
