@@ -32,7 +32,6 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Navaids/ilslist.hxx>
-#include <Navaids/mkrbeacons.hxx>
 #include <Navaids/navlist.hxx>
 #include <Time/FGEventMgr.hxx>
 
@@ -113,7 +112,6 @@ void
 FGNavCom::init ()
 {
     morse.init();
-    beacon.init();
 
     search();
 
