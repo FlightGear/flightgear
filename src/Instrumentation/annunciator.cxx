@@ -33,6 +33,7 @@ Annunciator::init ()
     _fuel_l = fgGetNode( "/consumables/fuel/tank[0]/level-gal_us", true );
     _fuel_r = fgGetNode( "/consumables/fuel/tank[1]/level-gal_us", true );
     _oil_px = fgGetNode( "/engines/engine[0]/oil-pressure-psi", true );
+    _elec_serv = fgGetNode( "/systems/electrical/serviceable", true );
 
     _ann_volts = fgGetNode( "/instrumentation/annunciator/volts", true );
     _ann_vac_l = fgGetNode( "/instrumentation/annunciator/vacuum-left", true );
@@ -52,7 +53,7 @@ Annunciator::update (double dt)
     timer3 += dt;
     timer4 += dt;
 
-    if ( _volts->getDoubleValue() < 5.0 ) {
+    if ( _volts->getDoubleValue() < 5.0 || !_elec_serv->getBoolValue() ) {
         // Not enough juice to illuminate the display
         _ann_volts->setBoolValue( false );
         _ann_vac_l->setBoolValue( false );

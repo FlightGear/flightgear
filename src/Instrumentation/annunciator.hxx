@@ -45,7 +45,8 @@ class Annunciator : public FGSubsystem
     SGPropertyNode *_fuel_l;
     SGPropertyNode *_fuel_r;
     SGPropertyNode *_oil_px;
-    
+    SGPropertyNode *_elec_serv;
+
     // outputs
     SGPropertyNode *_ann_volts;  // VOLTS        (red)
     SGPropertyNode *_ann_vac_l;  // L VAC        (amber)
