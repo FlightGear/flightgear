@@ -31,6 +31,7 @@
 
 #include <simgear/compiler.h>
 #include STL_IOSTREAM
+#include <simgear/debug/logstream.hxx>
 
 #include <math.h>
 #include "sphrintp.h"
