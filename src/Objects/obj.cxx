@@ -78,7 +78,8 @@ runway_lights_predraw (ssgEntity * e)
 {
                                 // Turn on lights only at night
     float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
-    return int(sun_angle > 90.0);
+    return int((sun_angle > 90.0) ||
+               (fgGetDouble("/environment/visibility-m") < 5000.0));
 }
 
 
