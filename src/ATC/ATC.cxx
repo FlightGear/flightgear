@@ -230,7 +230,7 @@ void FGATC::Render(string msg, string refname, bool repeating) {
                             = new SGSoundSample(buf, len, 8000, false);
 			// TODO - at the moment the volume is always set off comm1 
 			// and can't be changed after the transmission has started.
-			simple->set_volume(5.0 * fgGetDouble("/radios/comm[0]/volume"));
+			simple->set_volume(5.0 * fgGetDouble("/instrumentation/comm[0]/volume"));
 			globals->get_soundmgr()->add(simple, refname);
 			if(repeating) {
 				globals->get_soundmgr()->play_looped(refname);

@@ -86,8 +86,8 @@ void FGATCMgr::unbind() {
 void FGATCMgr::init() {
 	//cout << "ATCMgr::init called..." << endl;
 	
-	comm_node[0] = fgGetNode("/radios/comm[0]/frequencies/selected-mhz", true);
-	comm_node[1] = fgGetNode("/radios/comm[1]/frequencies/selected-mhz", true);
+	comm_node[0] = fgGetNode("/instrumentation/comm[0]/frequencies/selected-mhz", true);
+	comm_node[1] = fgGetNode("/instrumentation/comm[1]/frequencies/selected-mhz", true);
 	lon_node = fgGetNode("/position/longitude-deg", true);
 	lat_node = fgGetNode("/position/latitude-deg", true);
 	elev_node = fgGetNode("/position/altitude-ft", true);

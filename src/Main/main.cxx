@@ -59,13 +59,14 @@
 
 #include <Include/general.hxx>
 #include <Cockpit/cockpit.hxx>
-#include <Cockpit/radiostack.hxx>
 #include <Cockpit/hud.hxx>
 #include <Model/panelnode.hxx>
 #include <Model/modelmgr.hxx>
 #include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
+#include <Sound/beacon.hxx>
+#include <Sound/morse.hxx>
 #include <FDM/flight.hxx>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 // #include <FDM/ADA.hxx>
@@ -184,8 +185,6 @@ void fgUpdateTimeDepCalcs() {
                                   globals->get_time_params()->getLst(),
                                   cur_fdm_state->get_Latitude() );
 
-    // Update radio stack model
-    current_radiostack->update(delta_time_sec);
 }
 
 

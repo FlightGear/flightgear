@@ -25,9 +25,11 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/io/iochannel.hxx>
 
-#include <Cockpit/radiostack.hxx>
+
 #include <FDM/flight.hxx>
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
+#include <Main/fg_init.hxx>
 
 #include "atlas.hxx"
 
@@ -65,6 +67,10 @@ bool FGAtlas::gen_message() {
 
     static SGPropertyNode *adf_freq
         = fgGetNode("/instrumentation/kr-87/outputs/selected-khz", true);
+    static SGPropertyNode *nav_freq
+        = fgGetNode("/instrumentation/nav/frequencies/selected-mhz", false);
+    static SGPropertyNode *nav_sel_radial
+        = fgGetNode("/instrumentation/van/radials/selected-deg", false);
 
     char rmc[256], gga[256], patla[256];
     char rmc_sum[10], gga_sum[10], patla_sum[10];
@@ -129,10 +135,10 @@ bool FGAtlas::gen_message() {
     sprintf( gga_sum, "%02X", calc_atlas_cksum(gga) );
 
     sprintf( patla, "PATLA,%.2f,%.1f,%.2f,%.1f,%.0f",
-	     current_radiostack->get_navcom1()->get_nav_freq(),
-	     current_radiostack->get_navcom1()->get_nav_sel_radial(),
-	     current_radiostack->get_navcom1()->get_nav_freq(),
-	     current_radiostack->get_navcom1()->get_nav_sel_radial(),
+	     nav_freq->getDoubleValue(),
+	     nav_sel_radial->getDoubleValue(),
+	     nav_freq->getDoubleValue(),
+	     nav_sel_radial->getDoubleValue(),
 	     adf_freq->getDoubleValue() );
     sprintf( patla_sum, "%02X", calc_atlas_cksum(patla) );
 

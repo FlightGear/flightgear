@@ -128,9 +128,15 @@ FGNavRadio::init ()
     cdi_serviceable = (node->getChild("cdi", 0, true))
 	->getChild("serviceable", 0, true);
     gs_serviceable = (node->getChild("gs", 0, true))
-	->getNode("serviceable");
+	->getChild("serviceable");
     tofrom_serviceable = (node->getChild("to-from", 0, true))
 	->getChild("serviceable", 0, true);
+
+    std::ostringstream temp;
+    temp << name << "nav-ident" << num;
+    nav_fx_name = temp.str();
+    temp << name << "dme-ident" << num;
+    dme_fx_name = temp.str();
 }
 
 void
@@ -176,6 +182,12 @@ FGNavRadio::bind ()
     fgTie( (branch + "/radials/target-radial-deg").c_str(),
 	   this, &FGNavRadio::get_nav_target_radial_true );
 
+    fgTie( (branch + "/radials/reciprocal-radial-deg").c_str(),
+	   this, &FGNavRadio::get_nav_reciprocal_radial );
+
+    fgTie( (branch + "/radials/target-radial2-deg").c_str(),
+	   this, &FGNavRadio::get_nav_target_radial );
+
     fgTie( (branch + "/radials/target-auto-hdg-deg").c_str(),
 	   this, &FGNavRadio::get_nav_target_auto_hdg );
 
@@ -205,6 +217,12 @@ FGNavRadio::bind ()
 
     fgTie( (branch + "/gs-needle-deflection").c_str(),
 	   this, &FGNavRadio::get_nav_gs_deflection );
+
+    fgTie( (branch + "/gs-distance").c_str(),
+	   this, &FGNavRadio::get_nav_gs_dist_signed );
+
+    fgTie( (branch + "/nav-distance").c_str(),
+	   this, &FGNavRadio::get_nav_loc_dist );
 
     fgTie( (branch + "/nav-id").c_str(),
 	   this, &FGNavRadio::get_nav_id );

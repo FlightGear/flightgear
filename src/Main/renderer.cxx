@@ -60,7 +60,6 @@
 #include <Aircraft/aircraft.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/cockpit.hxx>
-#include <Cockpit/radiostack.hxx>
 #include <Cockpit/hud.hxx>
 #include <Model/panelnode.hxx>
 #include <Model/modelmgr.hxx>

@@ -36,8 +36,8 @@
 
 //Constructor
 FGApproach::FGApproach(){
-  comm1_node = fgGetNode("/radios/comm[0]/frequencies/selected-mhz", true);
-  comm2_node = fgGetNode("/radios/comm[1]/frequencies/selected-mhz", true);
+  comm1_node = fgGetNode("/instrumentation/comm[0]/frequencies/selected-mhz", true);
+  comm2_node = fgGetNode("/instrumentation/comm[1]/frequencies/selected-mhz", true);
   
   _type = APPROACH;
 

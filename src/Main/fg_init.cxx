@@ -79,7 +79,6 @@
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/xmlauto.hxx>
 #include <Cockpit/cockpit.hxx>
-#include <Cockpit/radiostack.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 #ifdef ENABLE_SP_FMDS
@@ -109,6 +108,8 @@
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Sound/fg_fx.hxx>
+#include <Sound/beacon.hxx>
+#include <Sound/morse.hxx>
 #include <Systems/system_mgr.hxx>
 #include <Time/light.hxx>
 #include <Time/moonpos.hxx>
@@ -1712,14 +1713,6 @@ bool fgInitSubsystems() {
     globals->add_subsystem("instrumentation", new FGInstrumentMgr);
     globals->add_subsystem("systems", new FGSystemMgr);
 
-
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the radio stack subsystem.
-    ////////////////////////////////////////////////////////////////////
-    current_radiostack = new FGRadioStack;
-    current_radiostack->init();
-    current_radiostack->bind();
 
 
     ////////////////////////////////////////////////////////////////////

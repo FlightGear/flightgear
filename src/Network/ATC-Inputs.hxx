@@ -44,16 +44,12 @@ class FGATCInput {
     int board;
     SGPath config;
 
-    int lock_fd;
     int analog_in_fd;
     int radios_fd;
     int switches_fd;
 
-    char lock_file[256];
     char analog_in_file[256];
-    char lamps_file[256];
     char radios_file[256];
-    char stepper_file[256];
     char switches_file[256];
 
     unsigned char analog_in_bytes[ATC_ANAL_IN_BYTES];

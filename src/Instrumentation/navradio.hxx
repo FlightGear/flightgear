@@ -56,8 +56,8 @@ class FGNavRadio : public SGSubsystem
     time_t nav_last_time;
 
     int index;                  // used for property binding
-    char nav_fx_name[256];
-    char dme_fx_name[256];
+    string nav_fx_name;
+    string dme_fx_name;
 
     bool need_update;
 
@@ -136,12 +136,13 @@ public:
 
     // Update nav/adf radios based on current postition
     void search ();
-
+/*
     inline void set_bind_index( int i ) {
         index = i;
         sprintf( nav_fx_name, "nav%d-vor-ident", index );
         sprintf( dme_fx_name, "dme%d-vor-ident", index );
     }
+*/
 
     // NavCom Setters
     inline void set_power_btn( bool val ) { power_btn = val; }

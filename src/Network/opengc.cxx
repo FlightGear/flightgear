@@ -36,7 +36,6 @@
 #include "opengc.hxx"
 #include <FDM/flight.hxx>
 #include <Main/globals.hxx>
-#include <Cockpit/radiostack.hxx>
 #include <Controls/controls.hxx>
 #include <Main/fg_props.hxx>
 

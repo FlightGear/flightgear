@@ -90,8 +90,8 @@ void FGAIPlane::Update(double dt) {
 	// TODO - turn it off if user switches to another freq - keep track of where in message we are etc.
 	if(_transmit) {
 		//cout << "transmit\n";
-		double user_freq0 = fgGetDouble("/radios/comm[0]/frequencies/selected-mhz");
-		double user_freq1 = fgGetDouble("/radios/comm[1]/frequencies/selected-mhz");
+		double user_freq0 = fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
+		double user_freq1 = fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
 		_counter = 0.0;
 		_max_count = 5.0;		// FIXME - hardwired length of message - need to calculate it!
 		
@@ -191,7 +191,7 @@ void FGAIPlane::Render(string refname, bool repeating) {
 			SGSoundSample* simple = new SGSoundSample(buf, len, 8000, false);
 			// TODO - at the moment the volume is always set off comm1 
 			// and can't be changed after the transmission has started.
-			simple->set_volume(5.0 * fgGetDouble("/radios/comm[0]/volume"));
+			simple->set_volume(5.0 * fgGetDouble("/instrumentation/comm[0]/volume"));
 			globals->get_soundmgr()->add(simple, refname);
 			if(repeating) {
 				globals->get_soundmgr()->play_looped(refname);

@@ -136,9 +136,8 @@ bool FGATCInput::open() {
     init_config();
 
     SG_LOG( SG_IO, SG_ALERT,
-	    "Initializing ATC 610x hardware, please wait ..." );
+	    "Initializing ATC hardware, please wait ..." );
 
-    snprintf( lock_file, 256, "/proc/atc610x/board%d/lock", board );
     snprintf( analog_in_file, 256, "/proc/atc610x/board%d/analog_in", board );
     snprintf( radios_file, 256, "/proc/atc610x/board%d/radios", board );
     snprintf( switches_file, 256, "/proc/atc610x/board%d/switches", board );
@@ -148,15 +147,6 @@ bool FGATCInput::open() {
     /////////////////////////////////////////////////////////////////////
     // Open the /proc files
     /////////////////////////////////////////////////////////////////////
-
-    lock_fd = ::open( lock_file, O_RDWR );
-    if ( lock_fd == -1 ) {
-	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error opening %s", lock_file );
-	perror( msg );
-	exit( -1 );
-    }
 
     analog_in_fd = ::open( analog_in_file, O_RDONLY );
     if ( analog_in_fd == -1 ) {
@@ -192,7 +182,7 @@ bool FGATCInput::open() {
     /////////////////////////////////////////////////////////////////////
 
     SG_LOG( SG_IO, SG_ALERT,
-	    "Done initializing ATC 610x hardware." );
+	    "Done initializing ATC hardware." );
 
     is_open = true;
 
@@ -870,15 +860,6 @@ bool FGATCInput::close() {
 #if defined( unix ) || defined( __CYGWIN__ )
 
     int result;
-
-    result = ::close( lock_fd );
-    if ( result == -1 ) {
-	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
-	char msg[256];
-	snprintf( msg, 256, "Error closing %s", lock_file );
-	perror( msg );
-	exit( -1 );
-    }
 
     result = ::close( analog_in_fd );
     if ( result == -1 ) {

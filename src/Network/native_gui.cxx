@@ -30,7 +30,6 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/timing/sg_time.hxx>
 
-#include <Cockpit/radiostack.hxx>
 #include <FDM/flight.hxx>
 #include <Time/tmp.hxx>
 #include <Main/fg_props.hxx>
@@ -121,6 +120,22 @@ bool FGNativeGUI::open() {
 
 
 void FGProps2NetGUI( FGNetGUI *net ) {
+    static SGPropertyNode *nav_freq
+	= fgGetNode("/instrumentation/nav/frequencies/selected-mhz", false);
+    static SGPropertyNode *nav_target_radial
+	= fgGetNode("/instrumentation/nav/radials/target-radial2-deg", false);
+    static SGPropertyNode *nav_inrange
+	= fgGetNode("instrumentation/nav/in-range", false);
+    static SGPropertyNode *nav_loc
+	= fgGetNode("instrumentation/nav/nav-loc", false);
+    static SGPropertyNode *nav_gs_dist_signed
+	= fgGetNode("instrumentation/nav/gs-distance", false);
+    static SGPropertyNode *nav_loc_dist
+	= fgGetNode("instrumentation/nav/nav-distance", false);
+    static SGPropertyNode *nav_reciprocal_radial
+	= fgGetNode("instrumentation/nav/reciprocal-radial-deg", false);
+    static SGPropertyNode *nav_gs_deflection
+	= fgGetNode("instrumentation/nav/gs-needle-deflection", false);
     int i;
 
     // Version sanity checking
@@ -151,24 +166,25 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     net->ground_elev = globals->get_scenery()->get_cur_elev();
 
     // Approach
-    net->tuned_freq = current_radiostack->get_navcom1()->get_nav_freq();
-    net->nav_radial = current_radiostack->get_navcom1()->get_nav_target_radial();
-    net->in_range = current_radiostack->get_navcom1()->get_nav_inrange();
+    net->tuned_freq = nav_freq->getDoubleValue();
+    net->nav_radial = nav_target_radial->getDoubleValue();
+    net->in_range = nav_inrange->getBoolValue();
 
-    if ( current_radiostack->get_navcom1()->get_nav_loc() ) {
+    if ( nav_loc->getBoolValue() ) {
         // is an ILS
         net->dist_nm
-            = current_radiostack->get_navcom1()->get_nav_gs_dist_signed()
+            = nav_gs_dist_signed->getDoubleValue()
               * SG_METER_TO_NM;
     } else {
         // is a VOR
-        net->dist_nm = current_radiostack->get_navcom1()->get_nav_loc_dist()
+        net->dist_nm = nav_loc_dist->getDoubleValue()
             * SG_METER_TO_NM;
     }
 
     net->course_deviation_deg
-        = current_radiostack->get_navcom1()->get_nav_reciprocal_radial()
-        - current_radiostack->get_navcom1()->get_nav_target_radial();
+        = nav_reciprocal_radial->getDoubleValue()
+        - nav_target_radial->getDoubleValue();
+
     if ( net->course_deviation_deg < -1000.0 
          || net->course_deviation_deg > 1000.0 )
     {
@@ -187,10 +203,10 @@ void FGProps2NetGUI( FGNetGUI *net ) {
                 ? -net->course_deviation_deg - 180.0
                 : -net->course_deviation_deg + 180.0 );
 
-    if ( current_radiostack->get_navcom1()->get_nav_loc() ) {
+    if ( nav_loc->getBoolValue() ) {
         // is an ILS
         net->gs_deviation_deg
-            = current_radiostack->get_navcom1()->get_nav_gs_deflection()
+            = nav_gs_deflection->getDoubleValue()
             / 5.0;
     } else {
         // is an ILS
