@@ -76,16 +76,19 @@ public:
 
   virtual double Calculate(double) {return 0.0;}
   void SetName(string name) {Name = name;}
+  void SetThrusterNumber(int nn) {ThrusterNumber = nn;}
   virtual double GetPowerRequired(void) {return 0.0;}
   virtual void SetdeltaT(double dt) {deltaT = dt;}
   double GetThrust(void) {return Thrust;}
   eType GetType(void) {return Type;}
   string GetName(void) {return Name;}
+  int GetThrusterNumber(void) {return ThrusterNumber;}
   virtual double GetRPM(void) { return 0.0; };
 
 protected:
   eType Type;
   string Name;
+  int ThrusterNumber;
   double Thrust;
   double PowerRequired;
   double deltaT;

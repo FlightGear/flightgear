@@ -36,6 +36,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGPropeller.h"
+#include "FGFCS.h"
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_PROPELLER;
@@ -67,20 +68,19 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
       *Prop_cfg >> MinPitch;
     } else if (token == "MAXPITCH") {
       *Prop_cfg >> MaxPitch;
-    } else if (token == "EFFICIENCY") {
-      *Prop_cfg >> rows >> cols;
-      if (cols == 1) Efficiency = new FGTable(rows);
-	    else           Efficiency = new FGTable(rows, cols);
-      *Efficiency << *Prop_cfg;
+    } else if (token == "MINRPM") {
+      *Prop_cfg >> MinRPM;
+    } else if (token == "MAXRPM") {
+      *Prop_cfg >> MaxRPM;
     } else if (token == "C_THRUST") {
       *Prop_cfg >> rows >> cols;
       if (cols == 1) cThrust = new FGTable(rows);
-	    else           cThrust = new FGTable(rows, cols);
+      else           cThrust = new FGTable(rows, cols);
       *cThrust << *Prop_cfg;
     } else if (token == "C_POWER") {
       *Prop_cfg >> rows >> cols;
       if (cols == 1) cPower = new FGTable(rows);
-	    else           cPower = new FGTable(rows, cols);
+      else           cPower = new FGTable(rows, cols);
       *cPower << *Prop_cfg;
     } else if (token == "EOF") {
       cerr << "      End of file reached" <<  endl;
@@ -97,8 +97,6 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
     cout << "      Number of Blades  = " << numBlades << endl;
     cout << "      Minimum Pitch  = " << MinPitch << endl;
     cout << "      Maximum Pitch  = " << MaxPitch << endl;
-    cout << "      Efficiency: " <<  endl;
-    Efficiency->Print();
     cout << "      Thrust Coefficient: " <<  endl;
     cThrust->Print();
     cout << "      Power Coefficient: " <<  endl;
@@ -115,7 +113,6 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
 
 FGPropeller::~FGPropeller()
 {
-  if (Efficiency) delete Efficiency;
   if (cThrust)    delete cThrust;
   if (cPower)     delete cPower;
   if (debug_lvl & 2) cout << "Destroyed:    FGPropeller" << endl;
@@ -144,7 +141,7 @@ double FGPropeller::Calculate(double PowerAvailable)
   double alpha, beta;
 
   if (RPM > 0.10) {
-    J = Vel / (Diameter * RPM / 60.0);
+    J = Vel / (Diameter * RPS);
   } else {
     J = 0.0;
   }
@@ -200,6 +197,20 @@ double FGPropeller::GetPowerRequired(void)
   if (MaxPitch == MinPitch) { // Fixed pitch prop
     cPReq = cPower->GetValue(J);
   } else {                    // Variable pitch prop
+    double advance = fdmex->GetFCS()->GetPropAdvance(ThrusterNumber);
+
+    if (MaxRPM != MinRPM) {   // fixed-speed prop
+      double rpmReq = MinRPM + (MaxRPM - MinRPM) * advance;
+      double dRPM = rpmReq - RPM;
+
+      Pitch -= dRPM / 10;
+
+      if (Pitch < MinPitch)       Pitch = MinPitch;
+      else if (Pitch > MaxPitch)  Pitch = MaxPitch;
+
+    } else {
+      Pitch = MaxPitch - (MaxPitch - MinPitch) * advance;
+    }
     cPReq = cPower->GetValue(J, Pitch);
   }
 

@@ -45,7 +45,8 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGThruster::FGThruster(FGFDMExec *FDMExec) : FGForce(FDMExec)
+FGThruster::FGThruster(FGFDMExec *FDMExec) : FGForce(FDMExec),
+                                             ThrusterNumber(0)
 {
   SetTransformType(FGForce::tCustom);
 

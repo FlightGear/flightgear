@@ -255,7 +255,7 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
           cout << "      Pitch = " << Pitch << endl;
           cout << "      Yaw = " << Yaw << endl;
         }
-	
+
         Engines[numEngines]->SetPlacement(xLoc, yLoc, zLoc, Pitch, Yaw);
         Engines[numEngines]->SetEngineNumber(numEngines);
         numEngines++;
@@ -325,7 +325,7 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
           cout << "      Sense: " << Sense <<  endl;
         }
         Thrusters[numThrusters]->SetdeltaT(dt*rate);
-
+        Thrusters[numThrusters]->SetThrusterNumber(numThrusters);
         numThrusters++;
 
       } else {

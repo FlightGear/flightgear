@@ -62,8 +62,8 @@ CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Propeller modeling class.
-    FGPropeller models a propeller given the tabular data for Ct, Cp, and
-    efficiency indexed by advance ratio "J". The data for the propeller is
+    FGPropeller models a propeller given the tabular data for Ct and Cp
+    indexed by advance ratio "J". The data for the propeller is
     stored in a config file named "prop_name.xml". The propeller config file
     is referenced from the main aircraft config file in the "Propulsion" section.
     See the constructor for FGPropeller to see what is read in and what should
@@ -111,8 +111,7 @@ public:
       control system (perhaps to maintain constant RPM for a constant-speed
       propeller). This value will be limited to be within whatever is specified
       in the config file for Max and Min pitch. It is also one of the lookup
-      indices to the power, thrust, and efficiency tables for variable-pitch
-      propellers.
+      indices to the power and thrust tables for variable-pitch propellers.
       @param pitch the pitch of the blade in degrees. */
   void SetPitch(double pitch) {Pitch = pitch;}
   
@@ -145,7 +144,7 @@ public:
       @param PowerAvailable this is the excess power provided by the engine to
       accelerate the prop. It could be negative, dictating that the propeller
       would be slowed.
-		  @return the thrust in pounds */
+      @return the thrust in pounds */
   double Calculate(double PowerAvailable);
 
 private:
@@ -155,11 +154,12 @@ private:
   double Diameter;
   double MaxPitch;
   double MinPitch;
+  double MinRPM;
+  double MaxRPM;
   double P_Factor;
   double Sense;
   double Pitch;
   double Torque;
-  FGTable *Efficiency;
   FGTable *cThrust;
   FGTable *cPower;
   void Debug(void);

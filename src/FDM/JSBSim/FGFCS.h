@@ -206,7 +206,7 @@ public:
   /** Gets the prop pitch command.
       @param engine engine ID number
       @return pitch command in percent ( 0.0 - 1.0) for the given engine */
-  inline double GetPropPitchCmd(int engine) { return PropPitchCmd[engine]; }
+  inline double GetPropAdvanceCmd(int engine) { return PropAdvanceCmd[engine]; }
 
   /** Gets the pitch trim command.
       @return pitch trim command in radians */
@@ -261,7 +261,7 @@ public:
   /** Gets the prop pitch position.
       @param engine engine ID number
       @return prop pitch position for the given engine in percent ( 0.0-1.0)*/
-  inline double GetPropPitchPos(int engine) { return PropPitchPos[engine]; }
+  inline double GetPropAdvance(int engine) { return PropAdvance[engine]; }
   //@}
 
   /** Retrieves the State object pointer.
@@ -332,7 +332,7 @@ public:
   /** Sets the propeller pitch command for the specified engine
       @param engine engine ID number
       @param cmd mixture command in percent (0.0 - 1.0)*/
-  void SetPropPitchCmd(int engine, double cmd);
+  void SetPropAdvanceCmd(int engine, double cmd);
   //@}
 
   /// @name Aerosurface position setting
@@ -379,7 +379,7 @@ public:
   /** Sets the actual prop pitch setting for the specified engine
       @param engine engine ID number
       @param cmd prop pitch setting in percent (0.0 - 1.0)*/
-  void SetPropPitchPos(int engine, double cmd);
+  void SetPropAdvance(int engine, double cmd);
   //@}
 
   /// @name Landing Gear brakes
@@ -420,8 +420,8 @@ private:
   vector <double> ThrottlePos;
   vector <double> MixtureCmd;
   vector <double> MixturePos;
-  vector <double> PropPitchCmd;
-  vector <double> PropPitchPos;
+  vector <double> PropAdvanceCmd;
+  vector <double> PropAdvance;
   double LeftBrake, RightBrake, CenterBrake; // Brake settings
   double GearCmd,GearPos;
 
