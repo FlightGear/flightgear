@@ -1,0 +1,186 @@
+XML IN FIFTEEN MINUTES OR LESS
+
+Written by David Megginson, david@megginson.com
+Last modified: $Date$
+
+This document is in the Public Domain and comes with NO WARRANTY!
+
+
+1. Introduction
+---------------
+
+FlightGear uses XML for much of its configuration.  This document
+provides a minimal introduction to XML syntax, concentrating only on
+the parts necessary for writing and understanding FlightGear
+configuration files.  For a full description, read the XML
+Recommendation at 
+
+  http://www.w3.org/TR/
+
+This document describes general XML syntax.  Most of the XML
+configuration files in FlightGear use a special format called
+"Property Lists" -- a separate document will describe the specific
+features of the property-list format.
+
+
+2. Elements and Attributes
+--------------------------
+
+An XML document is a tree structure with a single root, much like a
+file system or a recursive, nested list structure (for LISP fans).
+Every node in the tree is called an _element_: the start and end of
+every element is marked by a _tag_: the _start tag_ appears at the
+beginning of the element, and the _end tag_ appears at the end.
+
+Here is an example of a start tag: 
+
+  <foo>
+
+Here is an example of an end tag:
+
+  </foo>
+
+Here is an example of an element:
+
+  <foo>Hello, world!</foo>
+
+The element in this example contains only data element, so it is a
+leaf node in the tree.  Elements may also contain other elements, as
+in this example:
+
+  <bar>
+   <foo>Hello, world!</foo>
+   <foo>Goodbye, world!</foo>
+  </bar>
+
+This time, the 'bar' element is a branch that contains other, nested
+elements, while the 'foo' elements are leaf elements that contain only
+data.  Here's the tree in ASCII art (make sure you're not using a
+proportional font):
+
+  bar +-- foo -- "Hello, world!"
+      |
+      +-- foo -- "Goodbye, world!"
+
+There is always one single element at the top level: it is called the
+_root element_.  Elements may never overlap, so something like this is
+always wrong (try to draw it as a tree diagram, and you'll understand
+why):
+
+  <a><b></a></b>
+
+Every element may have variables, called _attributes_, attached to
+it.  The attribute consists of a simple name=value pair in the start
+tag:
+
+  <foo type="greeting">Hello, world!</foo>
+
+Attribute values must be quoted with '"' or "'" (unlike in HTML), and
+no two attributes may have the same name.
+
+There are rules governing what can be used as an element or attribute
+name.  The first character of a name must be an alphabetic character
+or '_'; subsequent characters may be '_', '-', '.', an alphabetic
+character, or a numeric character.  Note especially that names may not
+begin with a number.
+
+
+3. Data
+-------
+
+Some characters in XML documents have special meanings, and must
+always be escaped when used literally:
+
+  <  &lt;
+  &  &amp;
+  
+Other characters have special meanings only in certain contexts, but
+it still doesn't hurt to escape them:
+
+  >  &gt;
+  '  &apos;
+  "  &quot;
+
+Here is how you would escape "x < 3 && y > 6" in XML data:
+
+  x &lt; 3 &amp;&amp; y &gt; 6
+
+Most control characters are forbidden in XML documents: only tab,
+newline, and carriage return are allowed (that means no ^L, for
+example).  Any other character can be included in an XML document as a
+character reference, by using its Unicode value; for example, the
+following represents the French word "cafe" with an accent on the
+final 'e':
+
+  caf&#233;
+
+By default, 8-bit XML documents use UTF-8, **NOT** ISO 8859-1 (Latin
+1), so it's safest always to use character references for characters
+above position 127 (i.e. for non-ASCII).
+
+Whitespace always counts in XML documents, though some specific
+applications (like property lists) have rules for ignoring it in some
+contexts.
+
+
+4. Comments
+-----------
+
+You can add a comment anywhere in an XML document except inside a tag
+or declaration using the following syntax:
+
+  <!-- comment -->
+
+The comment text must not contain "--", so be careful about using
+dashes.
+
+
+5. XML Declaration
+------------------
+
+Every XML document may begin with an XML declaration, starting with
+"<?xml" and ending with "?>".  Here is an example:
+
+  <?xml version="1.0" encoding="UTF-8"?>
+
+The XML declaration must always give the XML version, and it may also
+specify the encoding (and other information, not discussed here).
+UTF-8 is the default encoding for 8-bit documents; you could also try
+
+  <?xml version="1.0" encoding="ISO-8859-1"?>
+
+to get ISO Latin 1, but some XML parsers might not support that
+(FlightGear's does, for what it's worth).
+
+
+6. Other Stuff
+--------------
+
+There are other kinds of things allowed in XML documents.  You don't
+need to use them for FlightGear, but in case anyone leaves one lying
+around, it would be useful to be able to recognize it.
+
+XML documents may contain different kinds of declarations starting
+with "<!" and ending with ">":
+
+  <!DOCTYPE html SYSTEM "html.dtd">
+
+  <!ELEMENT foo (#PCDATA)>
+
+  <!ENTITY myname "John Smith">
+
+and so on.  They may also contain processing instructions, which look
+a bit like the XML declaration:
+
+  <?foo processing instruction?>
+
+Finally, they may contain references to _entities_, like the ones used
+for escaping special characters, but with different names (we're
+trying to avoid these in FlightGear):
+
+  &chapter1;
+
+  &myname;
+
+
+Enjoy.
