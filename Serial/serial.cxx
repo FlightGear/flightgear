@@ -60,14 +60,24 @@ bool fgSERIAL::open_port(const string& device) {
 	dev_open = true;
     }
 
-    // set software flow control 
+    // set required port parameters 
     if ( tcgetattr( fd, &config ) != 0 ) {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Unable to poll port settings" );
 	return false;
     }
 
-    config.c_iflag |= IXON;
-    config.c_iflag |= IXOFF;
+    cfmakeraw( &config );
+
+    // cout << "config.c_iflag = " << config.c_iflag << endl;
+
+    // software flow control on
+    // config.c_iflag |= IXON;
+    // config.c_iflag |= IXOFF;
+
+    // disable hardware flow control
+    // config.c_cflag |= CRTSCTS;
+
+    // cout << "config.c_iflag = " << config.c_iflag << endl;
 
     if ( tcsetattr( fd, TCSANOW, &config ) != 0 ) {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Unable to update port settings" );
@@ -170,6 +180,9 @@ int fgSERIAL::write_port(const string& value) {
 
 
 // $Log$
+// Revision 1.3  1998/11/19 13:52:54  curt
+// port configuration tweaks & experiments.
+//
 // Revision 1.2  1998/11/19 03:35:43  curt
 // Updates ...
 //
