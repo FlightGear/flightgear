@@ -72,14 +72,8 @@ void FGAIShip::Run(double dt) {
    double turn_circum_ft;
    double speed_north_deg_sec;
    double speed_east_deg_sec;
-   double ft_per_deg_lon;
-   double ft_per_deg_lat;
    double dist_covered_ft;
    double alpha;
-
-   // get size of a degree at this latitude
-   ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.lat()/SG_RADIANS_TO_DEGREES);
-   ft_per_deg_lon = 365228.16 * cos(pos.lat() / SG_RADIANS_TO_DEGREES);
 
    // adjust speed
    double speed_diff = tgt_speed - speed;
