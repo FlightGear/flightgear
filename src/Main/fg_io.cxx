@@ -35,6 +35,7 @@
 #include <simgear/io/sg_socket_udp.hxx>
 #include <simgear/math/sg_types.hxx>
 #include <simgear/timing/timestamp.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <Network/protocol.hxx>
 #include <Network/atc610x.hxx>
@@ -51,6 +52,7 @@
 #include <Network/opengc.hxx>
 #include <Network/nmea.hxx>
 #include <Network/props.hxx>
+#include <Network/telnet.hxx>
 #include <Network/pve.hxx>
 #include <Network/ray.hxx>
 #include <Network/rul.hxx>
@@ -68,172 +70,126 @@ io_container global_io_list;
 // configure a port based on the config string
 static FGProtocol *parse_port_config( const string& config )
 {
-    bool short_circuit = false;
-
-    string::size_type begin, end;
-
-    begin = 0;
-
     SG_LOG( SG_IO, SG_INFO, "Parse I/O channel request: " << config );
 
-    // determine protocol
-    end = config.find(",", begin);
-    if ( end == string::npos ) {
-	return NULL;		// dummy
+    vector<string> tokens = simgear::strutils::split( config, "," );
+    if (tokens.empty())
+    {
+	SG_LOG( SG_IO, SG_ALERT,
+		"Port configuration error: empty config string" );
+	return 0;
     }
-    
-    string protocol = config.substr(begin, end - begin);
-    begin = end + 1;
+
+    string protocol = tokens[0];
     SG_LOG( SG_IO, SG_INFO, "  protocol = " << protocol );
 
-    FGProtocol *io;
-    if ( protocol == "atc610x" ) {
-	FGATC610x *atc610x = new FGATC610x;
-	io = atc610x;
-        short_circuit = true;
-	cout << "here ..." << endl;
-    } else if ( protocol == "atlas" ) {
-	FGAtlas *atlas = new FGAtlas;
-	io = atlas;
-    } else if ( protocol == "opengc" ) {
-	// char wait;
-	// printf("Parsed opengc\n"); cin >> wait;
-	FGOpenGC *opengc = new FGOpenGC;
-	io = opengc;
-    } else if ( protocol == "garmin" ) {
-	FGGarmin *garmin = new FGGarmin;
-	io = garmin;
-    } else if ( protocol == "httpd" ) {
-        // determine port
-        string port = config.substr(begin);
-	FGHttpd *httpd = new FGHttpd( atoi(port.c_str()) );
-	io = httpd;
-        short_circuit = true;
+    FGProtocol *io = 0;
+
+    try
+    {
+	if ( protocol == "atc610x" ) {
+	    return new FGATC610x;
+	} else if ( protocol == "atlas" ) {
+	    FGAtlas *atlas = new FGAtlas;
+	    io = atlas;
+	} else if ( protocol == "opengc" ) {
+	    // char wait;
+	    // printf("Parsed opengc\n"); cin >> wait;
+	    FGOpenGC *opengc = new FGOpenGC;
+	    io = opengc;
+	} else if ( protocol == "garmin" ) {
+	    FGGarmin *garmin = new FGGarmin;
+	    io = garmin;
+	} else if ( protocol == "httpd" ) {
+	    // determine port
+	    string port = tokens[1];
+	    return new FGHttpd( atoi(port.c_str()) );
 #ifdef FG_JPEG_SERVER
-    } else if ( protocol == "jpg-httpd" ) {
-        // determine port
-        string port = config.substr(begin);
-	FGJpegHttpd *jpeg_httpd = new FGJpegHttpd( atoi(port.c_str()) );
-	io = jpeg_httpd;
-        short_circuit = true;
+	} else if ( protocol == "jpg-httpd" ) {
+	    // determine port
+	    string port = tokens[1];
+	    return new FGJpegHttpd( atoi(port.c_str()) );
 #endif
-    } else if ( protocol == "joyclient" ) {
-	FGJoyClient *joyclient = new FGJoyClient;
-	io = joyclient;
-    } else if ( protocol == "native" ) {
-	FGNative *native = new FGNative;
-	io = native;
-    } else if ( protocol == "native_ctrls" ) {
-	FGNativeCtrls *native_ctrls = new FGNativeCtrls;
-	io = native_ctrls;
-    } else if ( protocol == "native_fdm" ) {
-	FGNativeFDM *native_fdm = new FGNativeFDM;
-	io = native_fdm;
-    } else if ( protocol == "nmea" ) {
-	FGNMEA *nmea = new FGNMEA;
-	io = nmea;
-    } else if ( protocol == "props" ) {
-	FGProps *props = new FGProps;
-	io = props;
-    } else if ( protocol == "pve" ) {
-	FGPVE *pve = new FGPVE;
-	io = pve;
-    } else if ( protocol == "ray" ) {
-	FGRAY *ray = new FGRAY;
-	io = ray;
-    } else if ( protocol == "rul" ) {
-	FGRUL *rul = new FGRUL;
-	io = rul;
-    } else {
-	return NULL;
+	} else if ( protocol == "joyclient" ) {
+	    FGJoyClient *joyclient = new FGJoyClient;
+	    io = joyclient;
+	} else if ( protocol == "native" ) {
+	    FGNative *native = new FGNative;
+	    io = native;
+	} else if ( protocol == "native_ctrls" ) {
+	    FGNativeCtrls *native_ctrls = new FGNativeCtrls;
+	    io = native_ctrls;
+	} else if ( protocol == "native_fdm" ) {
+	    FGNativeFDM *native_fdm = new FGNativeFDM;
+	    io = native_fdm;
+	} else if ( protocol == "nmea" ) {
+	    FGNMEA *nmea = new FGNMEA;
+	    io = nmea;
+	} else if ( protocol == "props" ) {
+	    io = new FGProps();
+	} else if ( protocol == "telnet" ) {
+	    io = new FGTelnet( tokens );
+	    return io;
+	} else if ( protocol == "pve" ) {
+	    FGPVE *pve = new FGPVE;
+	    io = pve;
+	} else if ( protocol == "ray" ) {
+	    FGRAY *ray = new FGRAY;
+	    io = ray;
+	} else if ( protocol == "rul" ) {
+	    FGRUL *rul = new FGRUL;
+	    io = rul;
+	} else {
+	    return NULL;
+	}
+    }
+    catch (FGProtocolConfigError& err)
+    {
+	SG_LOG( SG_IO, SG_ALERT, "Port configuration error: " << err.what() );
+	delete io;
+	return 0;
     }
 
-    if ( ! short_circuit ) {
-        // determine medium
-        end = config.find(",", begin);
-        if ( end == string::npos ) {
-            return NULL;		// dummy
-        }
-    
-        string medium = config.substr(begin, end - begin);
-        begin = end + 1;
-        SG_LOG( SG_IO, SG_INFO, "  medium = " << medium );
+    string medium = tokens[1];
+    SG_LOG( SG_IO, SG_INFO, "  medium = " << medium );
 
-        // determine direction
-        end = config.find(",", begin);
-        if ( end == string::npos ) {
-            return NULL;		// dummy
-        }
-    
-        string direction = config.substr(begin, end - begin);
-        begin = end + 1;
-        io->set_direction( direction );
-        SG_LOG( SG_IO, SG_INFO, "  direction = " << direction );
+    string direction = tokens[2];
+    io->set_direction( direction );
+    SG_LOG( SG_IO, SG_INFO, "  direction = " << direction );
 
-        // determine hertz
-        end = config.find(",", begin);
-        if ( end == string::npos ) {
-            return NULL;		// dummy
-        }
-    
-        string hertz_str = config.substr(begin, end - begin);
-        begin = end + 1;
-        double hertz = atof( hertz_str.c_str() );
-        io->set_hz( hertz );
-        SG_LOG( SG_IO, SG_INFO, "  hertz = " << hertz );
+    string hertz_str = tokens[3];
+    double hertz = atof( hertz_str.c_str() );
+    io->set_hz( hertz );
+    SG_LOG( SG_IO, SG_INFO, "  hertz = " << hertz );
 
-        if ( medium == "serial" ) {
-            // device name
-            end = config.find(",", begin);
-            if ( end == string::npos ) {
-                return NULL;
-            }
-    
-            string device = config.substr(begin, end - begin);
-            begin = end + 1;
-            SG_LOG( SG_IO, SG_INFO, "  device = " << device );
+    if ( medium == "serial" ) {
+	// device name
+	string device = tokens[4];
+	SG_LOG( SG_IO, SG_INFO, "  device = " << device );
 
-            // baud
-            string baud = config.substr(begin);
-            SG_LOG( SG_IO, SG_INFO, "  baud = " << baud );
+	// baud
+	string baud = tokens[5];
+	SG_LOG( SG_IO, SG_INFO, "  baud = " << baud );
 
-            SGSerial *ch = new SGSerial( device, baud );
-            io->set_io_channel( ch );
-        } else if ( medium == "file" ) {
-            // file name
-            string file = config.substr(begin);
-            SG_LOG( SG_IO, SG_INFO, "  file name = " << file );
+	SGSerial *ch = new SGSerial( device, baud );
+	io->set_io_channel( ch );
+    } else if ( medium == "file" ) {
+	// file name
+	string file = tokens[4];
+	SG_LOG( SG_IO, SG_INFO, "  file name = " << file );
 
-            SGFile *ch = new SGFile( file );
-            io->set_io_channel( ch );
-        } else if ( medium == "socket" ) {
-            // hostname
-            end = config.find(",", begin);
-            if ( end == string::npos ) {
-                return NULL;
-            }
-    
-            string hostname = config.substr(begin, end - begin);
-            begin = end + 1;
-            SG_LOG( SG_IO, SG_INFO, "  hostname = " << hostname );
+	SGFile *ch = new SGFile( file );
+	io->set_io_channel( ch );
+    } else if ( medium == "socket" ) {
+	string hostname = tokens[4];
+	string port = tokens[5];
+	string style = tokens[6];
 
-            // port string
-            end = config.find(",", begin);
-            if ( end == string::npos ) {
-                return NULL;
-            }
-    
-            string port = config.substr(begin, end - begin);
-            begin = end + 1;
-            SG_LOG( SG_IO, SG_INFO, "  port string = " << port );
-
-            // socket style
-            string style_str = config.substr(begin);
-            SG_LOG( SG_IO, SG_INFO, "  style string = " << style_str );
+	SG_LOG( SG_IO, SG_INFO, "  hostname = " << hostname );
+	SG_LOG( SG_IO, SG_INFO, "  port = " << port );
+	SG_LOG( SG_IO, SG_INFO, "  style = " << style );
             
-            SGSocket *ch = new SGSocket( hostname, port, style_str );
-            io->set_io_channel( ch );
-        }
+	io->set_io_channel( new SGSocket( hostname, port, style ) );
     }
 
     return io;
@@ -273,8 +229,6 @@ void fgIOInit() {
 
 // process any serial port work
 void fgIOProcess() {
-    FGProtocol *p;
-
     // cout << "processing I/O channels" << endl;
 
     static int inited = 0;
@@ -292,9 +246,9 @@ void fgIOProcess() {
 	last = current;
     }
 
-    for ( int i = 0; i < (int)global_io_list.size(); ++i ) {
+    for ( unsigned int i = 0; i < global_io_list.size(); ++i ) {
 	// cout << "  channel = " << i << endl;
-	p = global_io_list[i];
+	FGProtocol* p = global_io_list[i];
 
 	if ( p->is_enabled() ) {
 	    p->dec_count_down( interval );

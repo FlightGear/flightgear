@@ -95,3 +95,14 @@ bool FGProtocol::parse_message() {
 }
 
 
+void FGProtocol::set_direction( const string& d ) {
+    if ( d == "in" ) {
+	dir = SG_IO_IN;
+    } else if ( d == "out" ) {
+	dir = SG_IO_OUT;
+    } else if ( d == "bi" ) {
+	dir = SG_IO_BI;
+    } else {
+	dir = SG_IO_NONE;
+    }
+}

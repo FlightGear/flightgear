@@ -1332,7 +1332,8 @@ int mainLoop( int argc, char **argv ) {
     version = "unknown version";
 #endif
     SG_LOG( SG_GENERAL, SG_INFO, "FlightGear:  Version "
-	    << version << endl );
+	    << version );
+    SG_LOG( SG_GENERAL, SG_INFO, "Built with " << SG_COMPILER_STR );
 
     // Allocate global data structures.  This needs to happen before
     // we parse command line options

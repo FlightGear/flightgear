@@ -26,6 +26,7 @@
 
 
 #include <simgear/compiler.h>
+#include <simgear/io/iochannel.hxx>
 
 #include STL_STRING
 #include <vector>
@@ -35,10 +36,6 @@ SG_USING_STD(vector);
 
 
 #define FG_MAX_MSG_SIZE 16384
-
-// forward declaration
-class SGIOChannel;
-
 
 class FGProtocol {
 
@@ -68,17 +65,7 @@ public:
     virtual bool close();
 
     inline SGProtocolDir get_direction() const { return dir; }
-    inline void set_direction( const string& d ) {
-	if ( d == "in" ) {
-	    dir = SG_IO_IN;
-	} else if ( d == "out" ) {
-	    dir = SG_IO_OUT;
-	} else if ( d == "bi" ) {
-	    dir = SG_IO_BI;
-	} else {
-	    dir = SG_IO_NONE;
-	}
-    }
+    void set_direction( const string& d );
 
     inline double get_hz() const { return hz; }
     inline void set_hz( double t ) { hz = t; }
@@ -107,6 +94,18 @@ public:
 typedef vector < FGProtocol * > io_container;
 typedef io_container::iterator io_iterator;
 typedef io_container::const_iterator const_io_iterator;
+
+#include <stdexcept>
+SG_USING_STD(invalid_argument);
+
+//namespace flightgear { namespace network {
+class FGProtocolConfigError : public invalid_argument
+{
+public:
+    FGProtocolConfigError( const string& what_string )
+	: invalid_argument(what_string) {}
+};
+//}} // end namespace flightgear::network
 
 
 #endif // _PROTOCOL_HXX

@@ -24,7 +24,8 @@ libNetwork_a_SOURCES = \
 	pve.cxx pve.hxx \
 	raw_ctrls.hxx \
 	ray.cxx ray.hxx \
-	rul.cxx rul.hxx
+	rul.cxx rul.hxx \
+	telnet.cxx telnet.hxx
 
 if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
