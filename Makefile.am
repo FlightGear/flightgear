@@ -24,7 +24,7 @@ fgfs-base: fgfs-base-tar fgfs-base-zip fgfs-base-patch
 
 fgfs-base-tar:
 	(cd $(HOME); \
-	tar czvf fgfs-base-$(VERSION)g.tar.gz \
+	tar czvf fgfs-base-$(VERSION)a.tar.gz \
 	FlightGear/[A-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
 	FlightGear/Sounds \
@@ -32,7 +32,7 @@ fgfs-base-tar:
 
 fgfs-base-zip:
 	(cd $(HOME); \
-	zip -ryv fgfs-base-$(VERSION)g.zip \
+	zip -ryv fgfs-base-$(VERSION)a.zip \
 	FlightGear/[A-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
 	FlightGear/Sounds \
@@ -41,7 +41,7 @@ fgfs-base-zip:
 
 fgfs-base-patch:
 	(cd $(HOME); \
-	tar --newer 2/17/2000 -czvf fgfs-base-patch-$(VERSION)g.tar.gz \
+	tar --newer 2/17/2000 -czvf fgfs-base-patch-$(VERSION)a.tar.gz \
 	FlightGear/[A-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
 	FlightGear/Sounds \
@@ -60,15 +60,15 @@ fgfs-docs: fgfs-docs-tar fgfs-manual-zip
 
 fgfs-docs-tar:
 	( cd ../.. ; \
-	tar czvf fgfs-docs-$(VERSION).tar.gz FlightGear/docs )
+	tar czvf fgfs-docs-$(VERSION).tar.gz FlightGear-0.7/docs )
 
 # fgfs-docs-zip:
 # 	( cd ../.. ; \
-# 	zip -r fgfs-docs-$(VERSION).zip FlightGear/docs )
+# 	zip -r fgfs-docs-$(VERSION).zip FlightGear-0.7/docs )
 
 fgfs-manual-zip:
 	( cd ../.. ; \
-	zip -r fgfs-manual-$(VERSION).zip FlightGear/docs/InstallGuide )
+	zip -r fgfs-manual-$(VERSION).zip FlightGear-0.7/docs/InstallGuide )
 
 # make the win32-bin distribution
 
