@@ -347,7 +347,9 @@ bool FGATC610x::open() {
     // Connect up to property values
     /////////////////////////////////////////////////////////////////////
 
-    mag_compass = fgGetNode( "/instrumentation/magnetic-compass/indicated-heading-deg", true );
+    mag_compass
+        = fgGetNode( "/instrumentation/magnetic-compass/indicated-heading-deg",
+                     true );
 
     dme_min = fgGetNode( "/instrumentation/dme/indicated-time-min", true );
     dme_kt = fgGetNode( "/instrumentation/dme/indicated-ground-speed-kt",
@@ -385,49 +387,57 @@ bool FGATC610x::open() {
 	= fgGetNode( "/radios/nav[1]/frequencies/standby-mhz", true );
     nav2_obs = fgGetNode( "/radios/nav[1]/radials/selected-deg", true );
 
-    adf_power_btn = fgGetNode( "/radios/kr-87/inputs/power-btn", true );
-    adf_vol = fgGetNode( "/radios/kr-87/inputs/volume", true );
-    adf_adf_btn = fgGetNode( "/radios/kr-87/inputs/adf-btn", true );
-    adf_bfo_btn = fgGetNode( "/radios/kr-87/inputs/bfo-btn", true );
-    adf_freq = fgGetNode( "/radios/kr-87/outputs/selected-khz", true );
-    adf_stby_freq = fgGetNode( "/radios/kr-87/outputs/standby-khz", true );
-    adf_stby_mode = fgGetNode( "/radios/kr-87/modes/stby", true );
-    adf_timer_mode = fgGetNode( "/radios/kr-87/modes/timer", true );
-    adf_count_mode = fgGetNode( "/radios/kr-87/modes/count", true );
-    adf_flight_timer = fgGetNode( "/radios/kr-87/outputs/flight-timer", true );
-    adf_elapsed_timer = fgGetNode( "/radios/kr-87/outputs/elapsed-timer",
+    adf_power_btn
+        = fgGetNode( "/instrumentation/kr-87/inputs/power-btn", true );
+    adf_vol = fgGetNode( "/instrumentation/kr-87/inputs/volume", true );
+    adf_adf_btn = fgGetNode( "/instrumentation/kr-87/inputs/adf-btn", true );
+    adf_bfo_btn = fgGetNode( "/instrumentation/kr-87/inputs/bfo-btn", true );
+    adf_freq = fgGetNode( "/instrumentation/kr-87/outputs/selected-khz", true );
+    adf_stby_freq
+        = fgGetNode( "/instrumentation/kr-87/outputs/standby-khz", true );
+    adf_stby_mode = fgGetNode( "/instrumentation/kr-87/modes/stby", true );
+    adf_timer_mode = fgGetNode( "/instrumentation/kr-87/modes/timer", true );
+    adf_count_mode = fgGetNode( "/instrumentation/kr-87/modes/count", true );
+    adf_flight_timer
+        = fgGetNode( "/instrumentation/kr-87/outputs/flight-timer", true );
+    adf_elapsed_timer
+        = fgGetNode( "/instrumentation/kr-87/outputs/elapsed-timer",
                                    true );
-    adf_ant_ann = fgGetNode( "/radios/kr-87/annunciators/ant", true );
-    adf_adf_ann = fgGetNode( "/radios/kr-87/annunciators/adf", true );
-    adf_bfo_ann = fgGetNode( "/radios/kr-87/annunciators/bfo", true );
-    adf_frq_ann = fgGetNode( "/radios/kr-87/annunciators/frq", true );
-    adf_flt_ann = fgGetNode( "/radios/kr-87/annunciators/flt", true );
-    adf_et_ann = fgGetNode( "/radios/kr-87/annunciators/et", true );
+    adf_ant_ann = fgGetNode( "/instrumentation/kr-87/annunciators/ant", true );
+    adf_adf_ann = fgGetNode( "/instrumentation/kr-87/annunciators/adf", true );
+    adf_bfo_ann = fgGetNode( "/instrumentation/kr-87/annunciators/bfo", true );
+    adf_frq_ann = fgGetNode( "/instrumentation/kr-87/annunciators/frq", true );
+    adf_flt_ann = fgGetNode( "/instrumentation/kr-87/annunciators/flt", true );
+    adf_et_ann = fgGetNode( "/instrumentation/kr-87/annunciators/et", true );
 
     inner = fgGetNode( "/radios/marker-beacon/inner", true );
     middle = fgGetNode( "/radios/marker-beacon/middle", true );
     outer = fgGetNode( "/radios/marker-beacon/outer", true );
 
-    xpdr_ident_btn = fgGetNode( "/radios/kt-70/inputs/ident-btn", true );
-    xpdr_digit1 = fgGetNode( "/radios/kt-70/inputs/digit1", true );
-    xpdr_digit2 = fgGetNode( "/radios/kt-70/inputs/digit2", true );
-    xpdr_digit3 = fgGetNode( "/radios/kt-70/inputs/digit3", true );
-    xpdr_digit4 = fgGetNode( "/radios/kt-70/inputs/digit4", true );
-    xpdr_func_knob = fgGetNode( "/radios/kt-70/inputs/func-knob", true );
-    xpdr_id_code = fgGetNode( "/radios/kt-70/outputs/id-code", true );
-    xpdr_flight_level = fgGetNode( "/radios/kt-70/outputs/flight-level", true );
-    xpdr_fl_ann = fgGetNode( "/radios/kt-70/annunciators/fl", true );
-    xpdr_alt_ann = fgGetNode( "/radios/kt-70/annunciators/alt", true );
-    xpdr_gnd_ann = fgGetNode( "/radios/kt-70/annunciators/gnd", true );
-    xpdr_on_ann = fgGetNode( "/radios/kt-70/annunciators/on", true );
-    xpdr_sby_ann = fgGetNode( "/radios/kt-70/annunciators/sby", true );
-    xpdr_reply_ann = fgGetNode( "/radios/kt-70/annunciators/reply", true );
+    xpdr_ident_btn
+        = fgGetNode( "/instrumentation/kt-70/inputs/ident-btn", true );
+    xpdr_digit1 = fgGetNode( "/instrumentation/kt-70/inputs/digit1", true );
+    xpdr_digit2 = fgGetNode( "/instrumentation/kt-70/inputs/digit2", true );
+    xpdr_digit3 = fgGetNode( "/instrumentation/kt-70/inputs/digit3", true );
+    xpdr_digit4 = fgGetNode( "/instrumentation/kt-70/inputs/digit4", true );
+    xpdr_func_knob
+        = fgGetNode( "/instrumentation/kt-70/inputs/func-knob", true );
+    xpdr_id_code = fgGetNode( "/instrumentation/kt-70/outputs/id-code", true );
+    xpdr_flight_level
+        = fgGetNode( "/instrumentation/kt-70/outputs/flight-level", true );
+    xpdr_fl_ann = fgGetNode( "/instrumentation/kt-70/annunciators/fl", true );
+    xpdr_alt_ann = fgGetNode( "/instrumentation/kt-70/annunciators/alt", true );
+    xpdr_gnd_ann = fgGetNode( "/instrumentation/kt-70/annunciators/gnd", true );
+    xpdr_on_ann = fgGetNode( "/instrumentation/kt-70/annunciators/on", true );
+    xpdr_sby_ann = fgGetNode( "/instrumentation/kt-70/annunciators/sby", true );
+    xpdr_reply_ann
+        = fgGetNode( "/instrumentation/kt-70/annunciators/reply", true );
 
     ati_bird
       = fgGetNode( "/instrumentation/attitude-indicator/horizon-offset-deg",
 		   true );
     alt_press = fgGetNode( "/instrumentation/altimeter/setting-inhg", true );
-    adf_hdg = fgGetNode( "/radios/kr-87/inputs/rotation-deg", true );
+    adf_hdg = fgGetNode( "/instrumentation/kr-87/inputs/rotation-deg", true );
     hdg_bug = fgGetNode( "/autopilot/settings/heading-bug-deg", true );
 
     elevator_center = fgGetNode( "/input/atc610x/elevator/center", true );
@@ -467,13 +477,15 @@ bool FGATC610x::open() {
     ignore_flight_controls
         = fgGetNode( "/input/atc610x/ignore-flight-controls", true );
 
-    comm1_serviceable = fgGetNode( "/instrumentation/comm[0]/serviceable", true );
-    comm2_serviceable = fgGetNode( "/instrumentation/comm[1]/serviceable", true );
+    comm1_serviceable
+        = fgGetNode( "/instrumentation/comm[0]/serviceable", true );
+    comm2_serviceable
+        = fgGetNode( "/instrumentation/comm[1]/serviceable", true );
     nav1_serviceable = fgGetNode( "/instrumentation/nav[0]/serviceable", true );
     nav2_serviceable = fgGetNode( "/instrumentation/nav[1]/serviceable", true );
     adf_serviceable = fgGetNode( "/instrumentation/adf/serviceable", true );
-    xpdr_serviceable = fgGetNode( "/radios/kt-70/inputs/serviceable",
-                                 true );
+    xpdr_serviceable
+        = fgGetNode( "/instrumentation/kt-70/inputs/serviceable", true );
     dme_serviceable = fgGetNode( "/instrumentation/dme/serviceable", true );
 
     dme_selector

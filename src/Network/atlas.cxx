@@ -64,7 +64,7 @@ bool FGAtlas::gen_message() {
     // cout << "generating atlas message" << endl;
 
     static SGPropertyNode *adf_freq
-        = fgGetNode("/radios/kr-87/outputs/selected-khz", true);
+        = fgGetNode("/instrumentation/kr-87/outputs/selected-khz", true);
 
     char rmc[256], gga[256], patla[256];
     char rmc_sum[10], gga_sum[10], patla_sum[10];
