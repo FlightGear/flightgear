@@ -62,6 +62,10 @@ public:
     double theta;		// pitch (radians)
     double psi;			// yaw or true heading (radians)
 
+    // Velocities
+    double vcas;
+    double climb_rate;		// feet per second
+
     // Consumables
     int num_tanks;		// Max number of fuel tanks
     double fuel_quantity[FG_MAX_TANKS];

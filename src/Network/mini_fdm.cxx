@@ -114,6 +114,10 @@ void FGProps2NetMiniFDM( FGNetMiniFDM *net ) {
     net->theta = cur_fdm_state->get_Theta();
     net->psi = cur_fdm_state->get_Psi();
 
+    // Velocities
+    net->vcas = cur_fdm_state->get_V_calibrated_kts();
+    net->climb_rate = cur_fdm_state->get_Climb_Rate();
+
     // Consumables
     net->num_tanks = FGNetMiniFDM::FG_MAX_TANKS;
     for ( i = 0; i < net->num_tanks; ++i ) {
@@ -134,6 +138,8 @@ void FGProps2NetMiniFDM( FGNetMiniFDM *net ) {
     htond(net->phi);
     htond(net->theta);
     htond(net->psi);
+    htond(net->vcas);
+    htond(net->climb_rate);
 
     for ( i = 0; i < net->num_tanks; ++i ) {
         htond(net->fuel_quantity[i]);
@@ -157,6 +163,8 @@ void FGNetMiniFDM2Props( FGNetMiniFDM *net ) {
     htond(net->phi);
     htond(net->theta);
     htond(net->psi);
+    htond(net->vcas);
+    htond(net->climb_rate);
 
     net->num_tanks = htonl(net->num_tanks);
     for ( i = 0; i < net->num_tanks; ++i ) {
@@ -177,6 +185,9 @@ void FGNetMiniFDM2Props( FGNetMiniFDM *net ) {
         cur_fdm_state->_set_Euler_Angles( net->phi,
                                           net->theta,
                                           net->psi );
+
+        cur_fdm_state->_set_V_calibrated_kts( net->vcas );
+        cur_fdm_state->_set_Climb_Rate( net->climb_rate );
 
 	for (i = 0; i < net->num_tanks; ++i ) {
 	    SGPropertyNode * node
