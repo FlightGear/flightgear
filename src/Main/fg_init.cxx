@@ -58,7 +58,6 @@
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
 #include <Astro/stars.hxx>
-#include <Astro/solarsystem.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <FDM/Balloon.h>
@@ -381,19 +380,6 @@ bool fgInitSubsystems( void ) {
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << current_view.get_abs_view_pos());
     // current_view.UpdateWorldToEye(f);
 
-    // Build the solar system
-    //fgSolarSystemInit(*t);
-    FG_LOG(FG_GENERAL, FG_INFO, "Building SolarSystem");
-    SolarSystem::theSolarSystem = new SolarSystem(t);
-
-    // Initialize the Stars subsystem
-    if( fgStarsInit() ) {
-	// Stars initialized ok.
-    } else {
-    	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Stars initialization!" );
-	exit(-1);
-    }
-
     // Initialize the planetary subsystem
     // global_events.Register( "fgPlanetsInit()", fgPlanetsInit,
     //			    fgEVENT::FG_EVENT_READY, 600000);
@@ -405,10 +391,6 @@ bool fgInitSubsystems( void ) {
     // Intialize the moon's position
     // global_events.Register( "fgMoonInit()", fgMoonInit,
     //			    fgEVENT::FG_EVENT_READY, 600000 );
-
-    // register the periodic update of Sun, moon, and planets
-    global_events.Register( "ssolsysUpdate", solarSystemRebuild,
-			    fgEVENT::FG_EVENT_READY, 600000);
 
     // fgUpdateSunPos() needs a few position and view parameters set
     // so it can calculate local relative sun angle and a few other

@@ -75,8 +75,6 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Astro/ephemeris.hxx>
-#include <Astro/stars.hxx>
-#include <Astro/solarsystem.hxx>
 
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
@@ -381,8 +379,9 @@ void fgRenderFrame( void ) {
 			     cur_light_params.fog_color,
 			     cur_light_params.sun_angle,
 			     cur_light_params.moon_angle,
-			     0, NULL, 0, NULL );
-
+			     ephem->getNumPlanets(), ephem->getPlanets(),
+			     ephem->getNumStars(), ephem->getStars() );
+ 
 	    /* cout << "thesky->reposition( view_pos = " << view_pos[0] << " "
 		 << view_pos[1] << " " << view_pos[2] << endl;
 	    cout << "    zero_elev = " << zero_elev[0] << " "
@@ -1149,7 +1148,6 @@ void fgReshape( int width, int height ) {
 	// yes we've finished all our initializations and are running
 	// the main loop, so this will now work without seg faulting
 	// the system.
-	solarSystemRebuild();
 	current_view.UpdateViewParams(cur_view_fdm);
 	if ( current_options.get_panel_status() ) {
 	    FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
@@ -1353,17 +1351,22 @@ int main( int argc, char **argv ) {
     scene->setName( "Scene" );
 
     // Initialize the sky
-    ephem = new FGEphemeris;
+    FGPath ephem_data_path( current_options.get_fg_root() );
+    ephem_data_path.append( "Astro" );
+    ephem = new FGEphemeris( ephem_data_path.c_str() );
     ephem->update( FGTime::cur_time_params, 0.0 );
+
     FGPath sky_tex_path( current_options.get_fg_root() );
     sky_tex_path.append( "Textures" );
     sky_tex_path.append( "Sky" );
     thesky = new SGSky;
     thesky->texture_path( sky_tex_path.str() );
+
     ssgBranch *sky = thesky->build( 550.0, 550.0,
 				    ephem->getNumPlanets(), 
 				    ephem->getPlanets(), 60000.0,
-				    0, NULL, 60000.0 );
+				    ephem->getNumStars(),
+				    ephem->getStars(), 60000.0 );
     scene->addKid( sky );
 
     // Terrain branch

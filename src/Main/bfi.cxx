@@ -38,7 +38,7 @@
 #include <Controls/controls.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Time/fg_time.hxx>
-#include <Astro/solarsystem.hxx>
+#include <Time/light.hxx>
 #ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
@@ -120,7 +120,7 @@ FGBFI::reinit ()
   double gpsLongitude = getGPSTargetLongitude();
 
   fgReInitSubsystems();
-  solarSystemRebuild();
+  // solarSystemRebuild();
   cur_light_params.Update();
 
 				// Restore all of the old states.
