@@ -25,7 +25,7 @@
 #---------------------------------------------------------------------------
 
 
-VERSION = 0.08
+VERSION = 0.09
 
 #---------------------------------------------------------------------------
 # Choose your weapons
@@ -52,7 +52,7 @@ RANLIB = ranlib
 #
 #---------------------------------------------------------------------------
 
-GLOBAL_CFLAGS = -g -Wall 
+GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(VERSION)\"
 
 
 #---------------------------------------------------------------------------
@@ -90,7 +90,7 @@ GLOBAL_CFLAGS = -g -Wall
 #
 # INTERFACE_FLAGS = -DGLUT
 # INTERFACE_LIBS = -lglut
-# INTERFACE_FILES = GLUTkey.c
+# INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
 # FG_CFLAGS = $(GLOBAL_CFLAGS)
 #---------------------------------------------------------------------------
@@ -100,7 +100,7 @@ GLOBAL_CFLAGS = -g -Wall
 #
 INTERFACE_FLAGS = -DGLUT
 INTERFACE_LIBS = -lglut
-INTERFACE_FILES = GLUTkey.c
+INTERFACE_FILES = GLUTmain.c GLUTkey.c
 MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
 X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
 GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
@@ -112,7 +112,7 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 #
 # INTERFACE_FLAGS = -DGLUT 
 # INTERFACE_LIBS = ../Win32/libglut.a
-# INTERFACE_FILES = GLUTkey.c
+# INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS = -lglu32 -lopengl32 -luser32 -lgdi32
 # FG_CFLAGS = $(GLOBAL_CFLAGS) -DWIN32 -DUSE_RAND
 #---------------------------------------------------------------------------
@@ -120,6 +120,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.11  1997/08/22 21:34:33  curt
+# Doing a bit of reorganizing and house cleaning.
+#
 # Revision 1.10  1997/08/16 12:22:19  curt
 # Tweaks for new version.
 #

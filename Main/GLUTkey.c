@@ -33,17 +33,21 @@
 #include <GL/glut.h>
 
 #include "GLUTkey.h"
-#include "../Aircraft/aircraft.h"
+
 #include "../constants.h"
 
-extern double fogDensity;
+#include "../Aircraft/aircraft.h"
+#include "../Weather/weather.h"
+
 extern double goal_view_offset;
 
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
     struct control_params *c;
+    struct weather_params *w;
 
     c = &current_aircraft.controls;
+    w = &current_weather;
 
     printf("Key hit = %d", k);
 
@@ -73,6 +77,11 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 57: /* numeric keypad 9 */
 	    goal_view_offset = FG_PI * 1.75;
+	    return;
+	case 90: /* Z */
+	    w->visibility /= 1.10;
+	    glFogf(GL_FOG_END, w->visibility);
+	    printf("Fog density = %.4f\n", w->visibility);
 	    return;
 	}
     } else {
@@ -113,15 +122,10 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 51: /* numeric keypad 3 (Pg Dn) */
 	    fgThrottleMove(0, -0.01);
 	    return;
-	case 122:
-	    fogDensity *= 1.10;
-	    glFogf(GL_FOG_END, fogDensity);
-	    printf("Fog density = %.4f\n", fogDensity);
-	    return;
-	case 90:
-	    fogDensity /= 1.10;
-	    glFogf(GL_FOG_END, fogDensity);
-	    printf("Fog density = %.4f\n", fogDensity);
+	case 122: /* z */
+	    w->visibility *= 1.10;
+	    glFogf(GL_FOG_END, w->visibility);
+	    printf("Fog density = %.4f\n", w->visibility);
 	    return;
 	case 27: /* ESC */
 	    exit(0);
@@ -211,10 +215,13 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.17  1997/07/19 22:34:02  curt
-/* Moved PI definitions to ../constants.h
-/* Moved random() stuff to ../Utils/ and renamed fg_random()
+/* Revision 1.18  1997/08/22 21:34:38  curt
+/* Doing a bit of reorganizing and house cleaning.
 /*
+ * Revision 1.17  1997/07/19 22:34:02  curt
+ * Moved PI definitions to ../constants.h
+ * Moved random() stuff to ../Utils/ and renamed fg_random()
+ *
  * Revision 1.16  1997/07/18 23:41:24  curt
  * Tweaks for building with Cygnus Win32 compiler.
  *

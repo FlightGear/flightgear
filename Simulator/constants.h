@@ -31,6 +31,12 @@
 #include <math.h>
 
 
+/* This should be defined in the toplevel make.inc */
+#ifndef VERSION
+#define VERSION "\"not defined\""
+#endif
+
+
 /* Make sure PI is defined in its various forms */
 #ifdef M_PI
 #  define  FG_PI  M_PI
@@ -99,13 +105,22 @@
 #define EPSILON 0.000001
 
 
+/* Timing constants for Flight Model updates */
+#define DEFAULT_TIMER_HZ 20
+#define DEFAULT_MULTILOOP 6
+#define DEFAULT_MODEL_HZ (DEFAULT_TIMER_HZ * DEFAULT_MULTILOOP)
+
+
 #endif /* CONSTANTS_H */
 
 
 /* $Log$
-/* Revision 1.8  1997/07/31 22:52:22  curt
-/* Working on redoing internal coordinate systems & scenery transformations.
+/* Revision 1.9  1997/08/22 21:34:32  curt
+/* Doing a bit of reorganizing and house cleaning.
 /*
+ * Revision 1.8  1997/07/31 22:52:22  curt
+ * Working on redoing internal coordinate systems & scenery transformations.
+ *
  * Revision 1.7  1997/07/23 21:52:10  curt
  * Put comments around the text after an #endif for increased portability.
  *

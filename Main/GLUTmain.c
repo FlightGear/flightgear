@@ -1,5 +1,5 @@
 /**************************************************************************
- * GLmain.c -- top level sim routines
+ * GLUTmain.c -- top level sim routines
  *
  * Written by Curtis Olson for OpenGL, started May 1997.
  *
@@ -35,15 +35,17 @@
     #include "GLUTkey.h"
 #endif
 
+#include "fg_init.h"
+
 #include "../constants.h"
+#include "../general.h"
 
 #include "../Aircraft/aircraft.h"
-#include "../Scenery/mesh.h"
-#include "../Scenery/scenery.h"
 #include "../Math/fg_geodesy.h"
-#include "../Math/fg_random.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
+#include "../Scenery/mesh.h"
+#include "../Scenery/scenery.h"
 #include "../Time/fg_time.h"
 #include "../Time/fg_timer.h"
 #include "../Time/sunpos.h"
@@ -53,6 +55,12 @@
 /* This is a record containing all the info for the aircraft currently
    being operated */
 struct aircraft_params current_aircraft;
+
+/* This is a record containing global housekeeping information */
+struct general_params general;
+
+/* This is a record containing current weather info */
+struct weather_params current_weather;
 
 /* view parameters */
 static GLfloat win_ratio = 1.0;
@@ -76,14 +84,8 @@ static GLfloat fgFogColor[4] =   {0.65, 0.65, 0.85, 1.0};
 /* static GLint scenery, runway; */
 
 /* Another hack */
-double fogDensity = 60000.0; /* in meters */
 double view_offset = 0.0;
 double goal_view_offset = 0.0;
-
-/* Another hack */
-#define DEFAULT_TIMER_HZ 20
-#define DEFAULT_MULTILOOP 6
-#define DEFAULT_MODEL_HZ (DEFAULT_TIMER_HZ * DEFAULT_MULTILOOP)
 
 double Simtime;
 
@@ -96,6 +98,10 @@ int use_signals = 0;
  **************************************************************************/
 
 static void fgInitVisuals() {
+    struct weather_params *w;
+
+    w = &current_weather;
+
     glEnable( GL_DEPTH_TEST );
     /* glFrontFace(GL_CW); */
     glEnable( GL_CULL_FACE );
@@ -113,9 +119,9 @@ static void fgInitVisuals() {
     glEnable( GL_FOG );
     glFogi (GL_FOG_MODE, GL_LINEAR);
     /* glFogf (GL_FOG_START, 1.0); */
-    glFogf (GL_FOG_END, fogDensity);
+    glFogf (GL_FOG_END, w->visibility);
     glFogfv (GL_FOG_COLOR, fgFogColor);
-    /* glFogf (GL_FOG_DENSITY, fogDensity); */
+    /* glFogf (GL_FOG_DENSITY, w->visibility); */
     /* glHint (GL_FOG_HINT, GL_FASTEST); */
 
     glClearColor(fgClearColor[0], fgClearColor[1], fgClearColor[2], 
@@ -467,7 +473,7 @@ void fgInitTimeDepCalcs() {
 static void fgMainLoop( void ) {
     static int remainder = 0;
     int elapsed, multi_loop;
-    double rough_elev;
+    double cur_elev;
     struct flight_params *f;
 
     f = &current_aircraft.flight;
@@ -493,18 +499,18 @@ static void fgMainLoop( void ) {
 
     /* I'm just sticking this here for now, it should probably move 
      * eventually */
-    rough_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC, 
+    cur_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC, 
 			       FG_Latitude  * RAD_TO_ARCSEC);
-    printf("Ground elevation is %.2f meters here.\n", rough_elev);
-    /* FG_Runway_altitude = rough_elev * METER_TO_FEET; */
+    printf("Ground elevation is %.2f meters here.\n", cur_elev);
+    /* FG_Runway_altitude = cur_elev * METER_TO_FEET; */
 
-    if ( FG_Altitude * FEET_TO_METER < rough_elev + 3.758099) {
+    if ( FG_Altitude * FEET_TO_METER < cur_elev + 3.758099) {
 	/* set this here, otherwise if we set runway height above our
 	   current height we get a really nasty bounce. */
 	FG_Runway_altitude = FG_Altitude - 3.758099;
 
 	/* now set aircraft altitude above ground */
-	FG_Altitude = rough_elev * METER_TO_FEET + 3.758099;
+	FG_Altitude = cur_elev * METER_TO_FEET + 3.758099;
 	printf("<*> resetting altitude to %.0f meters\n", 
 	       FG_Altitude * FEET_TO_METER);
     }
@@ -542,12 +548,10 @@ static void fgReshape( int width, int height ) {
 
 int main( int argc, char *argv[] ) {
     struct flight_params *f;
-    double rough_elev;
 
     f = &current_aircraft.flight;
 
-    printf("Flight Gear: prototype code to test OpenGL, LaRCsim, and VRML\n\n");
-
+    printf("Flight Gear: prototype version %s\n\n", VERSION);
 
     /**********************************************************************
      * Initialize the Window/Graphics environment.
@@ -567,95 +571,17 @@ int main( int argc, char *argv[] ) {
       glutCreateWindow("Flight Gear");
     #endif
 
-    /* seed the random number generater */
-    fg_srandom();
+    /* This is the general house keeping init routine */
+    fgInitGeneral();
+
+    /* This is the top level init routine which calls all the other
+     * subsystem initialization routines.  If you are adding a
+     * subsystem to flight gear, its initialization call should
+     * located in this routine.*/
+    fgInitSubsystems();
 
     /* setup view parameters, only makes GL calls */
     fgInitVisuals();
-
-
-    /****************************************************************
-     * The following section sets up the flight model EOM parameters and 
-     * should really be read in from one or more files.
-     ****************************************************************/
-
-    /* Globe Aiport, AZ */
-    FG_Runway_altitude = 3234.5;
-    FG_Runway_latitude = 120070.41;
-    FG_Runway_longitude = -398391.28;
-    FG_Runway_heading = 102.0 * DEG_TO_RAD;
-
-    /* Initial Position at GLOBE airport */
-    FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
-    FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
-    FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    /* Initial Position north of the city of Globe */
-    /* FG_Latitude  = (  120625.64 / 3600.0 ) * DEG_TO_RAD; */
-    /* FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
-    /* FG_Altitude = 0.0 + 3.758099; */
-
-    printf("Initial position is: (%.4f, %.4f, %.2f)\n", FG_Latitude, 
-	   FG_Longitude, FG_Altitude);
-
-      /* Initial Velocity */
-    FG_V_north = 0.0 /*  7.287719E+00 */;
-    FG_V_east  = 0.0 /*  1.521770E+03 */;
-    FG_V_down  = 0.0 /* -1.265722E-05 */;
-
-    /* Initial Orientation */
-    FG_Phi   = -2.658474E-06;
-    FG_Theta =  7.401790E-03;
-    FG_Psi   =  270.0 * DEG_TO_RAD;
-    /* FG_Psi   =  0.0 * DEG_TO_RAD; */
-
-    /* Initial Angular B rates */
-    FG_P_body = 7.206685E-05;
-    FG_Q_body = 0.000000E+00;
-    FG_R_body = 9.492658E-05;
-
-    FG_Earth_position_angle = 0.000000E+00;
-
-    /* Mass properties and geometry values */
-    FG_Mass = 8.547270E+01;
-    FG_I_xx = 1.048000E+03;
-    FG_I_yy = 3.000000E+03;
-    FG_I_zz = 3.530000E+03;
-    FG_I_xz = 0.000000E+00;
-
-    /* CG position w.r.t. ref. point */
-    FG_Dx_cg = 0.000000E+00;
-    FG_Dy_cg = 0.000000E+00;
-    FG_Dz_cg = 0.000000E+00;
-
-    /* Set initial position and slew parameters */
-    /* fgSlewInit(-398391.3, 120070.41, 244, 3.1415); */ /* GLOBE Airport */
-    /* fgSlewInit(-335340,162540, 15, 4.38); */
-    /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
-
-   /* Initialize the Scenery Management system */
-    fgSceneryInit();
-
-    /* Tell the Scenery Management system where we are so it can load
-     * the correct scenery data */
-    fgSceneryUpdate(FG_Latitude, FG_Longitude, FG_Altitude);
-
-    /* I'm just sticking this here for now, it should probably move 
-     * eventually */
-    rough_elev = mesh_altitude(FG_Longitude * RAD_TO_DEG * 3600.0, 
-			       FG_Latitude  * RAD_TO_DEG * 3600.0);
-    printf("Ground elevation is %.2f meters here.\n", rough_elev);
-    if ( rough_elev > -9990.0 ) {
-	FG_Runway_altitude = rough_elev * METER_TO_FEET;
-    }
-
-    if ( FG_Altitude < FG_Runway_altitude ) {
-	FG_Altitude = FG_Runway_altitude + 3.758099;
-    }
-    /* end of thing that I just stuck in that I should probably move */
-
-    /* Initialize the flight model data structures base on above values */
-    fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
 
     if ( use_signals ) {
 	/* init timer routines, signals, etc.  Arrange for an alarm
@@ -663,10 +589,7 @@ int main( int argc, char *argv[] ) {
 	fgInitTimeDepCalcs();
     }
 
-    /* Initialize the weather modeling subsystem */
-    fgWeatherInit();
-
-    /**********************************************************************
+   /**********************************************************************
      * Initialize the Event Handlers.
      **********************************************************************/
 
@@ -700,9 +623,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.8  1997/08/19 23:55:03  curt
-/* Worked on better simulating real lighting.
+/* Revision 1.9  1997/08/22 21:34:39  curt
+/* Doing a bit of reorganizing and house cleaning.
 /*
+ * Revision 1.8  1997/08/19 23:55:03  curt
+ * Worked on better simulating real lighting.
+ *
  * Revision 1.7  1997/08/16 12:22:38  curt
  * Working on improving the lighting/shading.
  *

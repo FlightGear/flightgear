@@ -31,27 +31,39 @@
 
 /* Initialize the weather modeling subsystem */
 void fgWeatherInit(void) {
+    struct weather_params *w;
+
+    w = &current_weather;
+
+    /* Configure some wind */
+    /* FG_V_north_airmass = 15; */ /* ft/s =~ 10mph */
+
+    w->visibility = 60000.0;       /* meters = 60km */
 }
+
 
 /* Update the weather parameters for the current position */
 void fgWeatherUpdate(double lon, double lat, double alt) {
     struct flight_params *f;
-    f = &current_aircraft.flight;
+    struct weather_params *w;
 
-    /* Configure some wind */
-    /* FG_V_north_airmass = 15; */ /* ft/s =~ 10mph */
+    f = &current_aircraft.flight;
+    w = &current_weather;
 
     /* Add some random turbulence */
     /* FG_U_gust = fg_random() * 1.0 - 0.5;
     FG_V_gust = fg_random() * 1.0 - 0.5;
     FG_W_gust = fg_random() * 1.0 - 0.5; */
-
 }
 
+
 /* $Log$
-/* Revision 1.4  1997/08/02 16:23:55  curt
-/* Misc. tweaks.
+/* Revision 1.5  1997/08/22 21:34:42  curt
+/* Doing a bit of reorganizing and house cleaning.
 /*
+ * Revision 1.4  1997/08/02 16:23:55  curt
+ * Misc. tweaks.
+ *
  * Revision 1.3  1997/07/31 22:52:41  curt
  * Working on redoing internal coordinate systems & scenery transformations.
  *

@@ -4,13 +4,21 @@ GLUTkey.o: GLUTkey.c GLUTkey.h ../Aircraft/aircraft.h \
  ../Aircraft/../Flight/LaRCsim/../flight.h \
  ../Aircraft/../Controls/controls.h \
  ../Aircraft/../Controls/../limits.h ../constants.h
-GLUTmain.o: GLUTmain.c ../constants.h ../Aircraft/aircraft.h \
- ../Aircraft/../Flight/flight.h ../Aircraft/../Flight/Slew/slew.h \
+GLUTmain.o: GLUTmain.c fg_init.h ../constants.h ../general.h \
+ ../Aircraft/aircraft.h ../Aircraft/../Flight/flight.h \
+ ../Aircraft/../Flight/Slew/slew.h \
  ../Aircraft/../Flight/LaRCsim/ls_interface.h \
  ../Aircraft/../Flight/LaRCsim/../flight.h \
  ../Aircraft/../Controls/controls.h \
  ../Aircraft/../Controls/../limits.h ../Scenery/mesh.h \
  ../Scenery/scenery.h ../Scenery/../types.h ../Math/fg_geodesy.h \
- ../Math/fg_random.h ../Math/mat3.h ../Math/polar.h ../Math/../types.h \
- ../Time/fg_time.h ../Time/../types.h ../Time/fg_timer.h \
- ../Time/sunpos.h ../Weather/weather.h
+ ../Math/mat3.h ../Math/polar.h ../Math/../types.h ../Time/fg_time.h \
+ ../Time/../types.h ../Time/fg_timer.h ../Time/sunpos.h \
+ ../Weather/weather.h
+fg_init.o: fg_init.c fg_init.h ../constants.h ../general.h \
+ ../Aircraft/aircraft.h ../Aircraft/../Flight/flight.h \
+ ../Aircraft/../Flight/Slew/slew.h \
+ ../Aircraft/../Flight/LaRCsim/ls_interface.h \
+ ../Aircraft/../Flight/LaRCsim/../flight.h \
+ ../Aircraft/../Controls/controls.h \
+ ../Aircraft/../Controls/../limits.h ../Math/fg_random.h

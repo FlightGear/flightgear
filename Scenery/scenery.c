@@ -29,6 +29,9 @@
 #endif
 
 #include <GL/glut.h>
+#include <string.h>
+
+#include "../general.h"
 
 #include "scenery.h"
 #include "parsevrml.h"
@@ -45,18 +48,27 @@ struct scenery_params scenery;
 /* Initialize the Scenery Management system */
 void fgSceneryInit() {
     /* set the default terrain detail level */
-    scenery.terrain_skip = 5;
+    scenery.terrain_skip = 10;
 }
 
 
 /* Tell the scenery manager where we are so it can load the proper data, and
  * build the proper structures. */
 void fgSceneryUpdate(double lon, double lat, double elev) {
+    struct general_params *g;
+    char path[1024];
+
+    g = &general;
+
     /* a hardcoded hack follows */
 
     /* this routine should parse the file, and make calls back to the
      * scenery management system to build the appropriate structures */
-    fgParseVRML("mesa-e.wrl");
+    path[0] = '\0';
+    strcat(path, g->root_dir);
+    strcat(path, "/Scenery/");
+    strcat(path, "mesa-e.wrl");
+    fgParseVRML(path);
 }
 
 
@@ -69,9 +81,12 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.12  1997/08/19 23:55:08  curt
-/* Worked on better simulating real lighting.
+/* Revision 1.13  1997/08/22 21:34:41  curt
+/* Doing a bit of reorganizing and house cleaning.
 /*
+ * Revision 1.12  1997/08/19 23:55:08  curt
+ * Worked on better simulating real lighting.
+ *
  * Revision 1.11  1997/08/13 20:24:22  curt
  * Changed default detail level.
  *

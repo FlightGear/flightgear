@@ -265,7 +265,7 @@ void fgUpdateSunPos() {
 
     t = &cur_time_params;
 
-    time_warp += 300; /* increase this to make the world spin real fast */
+    time_warp += 200; /* increase this to make the world spin real fast */
 
     fgSunPosition(time(NULL) + time_warp, &t->sun_lon, &sun_gd_lat);
 
@@ -276,9 +276,12 @@ void fgUpdateSunPos() {
 
 
 /* $Log$
-/* Revision 1.4  1997/08/19 23:55:09  curt
-/* Worked on better simulating real lighting.
+/* Revision 1.5  1997/08/22 21:34:41  curt
+/* Doing a bit of reorganizing and house cleaning.
 /*
+ * Revision 1.4  1997/08/19 23:55:09  curt
+ * Worked on better simulating real lighting.
+ *
  * Revision 1.3  1997/08/13 20:23:49  curt
  * The interface to sunpos now updates a global structure rather than returning
  * current sun position.

@@ -26,7 +26,7 @@
 
 TARGET=fg0
 
-CFILES = GLUTmain.c $(INTERFACE_FILES)
+CFILES = fg_init.c $(INTERFACE_FILES)
 OFILES = $(CFILES:.c=.o)
 AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
 	../Flight/libFlight.a ../Flight/LaRCsim/libLaRCsim.a \
@@ -72,6 +72,9 @@ GLTKkey.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.30  1997/08/22 21:34:40  curt
+# Doing a bit of reorganizing and house cleaning.
+#
 # Revision 1.29  1997/08/04 20:25:15  curt
 # Organizational tweaking.
 #
