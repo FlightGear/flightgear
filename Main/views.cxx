@@ -83,27 +83,53 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l) {
 	   v->view_pos.x, v->view_pos.y, v->view_pos.z);
 
     // Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw)
-    MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-    MAT3rotate(R, vec, FG_Phi);
-    // printf("Roll matrix\n");
-    // MAT3print(R, stdout);
+    // from FG_T_local_to_body[3][3]
 
-    MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
-    // MAT3mult_vec(vec, vec, R);
-    MAT3rotate(TMP, vec, FG_Theta);
-    // printf("Pitch matrix\n");
-    // MAT3print(TMP, stdout);
-    MAT3mult(R, R, TMP);
+    // Question: Why is the LaRCsim matrix arranged so differently
+    // than the one we need???
+    LOCAL[0][0] = FG_T_local_to_body_33;
+    LOCAL[0][1] = -FG_T_local_to_body_32;
+    LOCAL[0][2] = -FG_T_local_to_body_31;
+    LOCAL[0][3] = 0.0;
+    LOCAL[1][0] = -FG_T_local_to_body_23;
+    LOCAL[1][1] = FG_T_local_to_body_22;
+    LOCAL[1][2] = FG_T_local_to_body_21;
+    LOCAL[1][3] = 0.0;
+    LOCAL[2][0] = -FG_T_local_to_body_13;
+    LOCAL[2][1] = FG_T_local_to_body_12;
+    LOCAL[2][2] = FG_T_local_to_body_11;
+    LOCAL[2][3] = 0.0;
+    LOCAL[3][0] = LOCAL[3][1] = LOCAL[3][2] = LOCAL[3][3] = 0.0;
+    LOCAL[3][3] = 1.0;
+    printf("LaRCsim LOCAL matrix\n");
+    MAT3print(LOCAL, stdout);
 
-    MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
-    // MAT3mult_vec(vec, vec, R);
-    // MAT3rotate(TMP, vec, FG_Psi - FG_PI_2);
-    MAT3rotate(TMP, vec, -FG_Psi);
-    // printf("Yaw matrix\n");
-    // MAT3print(TMP, stdout);
-    MAT3mult(LOCAL, R, TMP);
-    // printf("LOCAL matrix\n");
-    // MAT3print(LOCAL, stdout);
+#ifdef OLD_LOCAL_TO_BODY_CODE
+        // old code to calculate LOCAL matrix calculated from Phi,
+        // Theta, and Psi (roll, pitch, yaw)
+
+        MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
+	MAT3rotate(R, vec, FG_Phi);
+	/* printf("Roll matrix\n"); */
+	/* MAT3print(R, stdout); */
+
+	MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
+	/* MAT3mult_vec(vec, vec, R); */
+	MAT3rotate(TMP, vec, FG_Theta);
+	/* printf("Pitch matrix\n"); */
+	/* MAT3print(TMP, stdout); */
+	MAT3mult(R, R, TMP);
+
+	MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
+	/* MAT3mult_vec(vec, vec, R); */
+	/* MAT3rotate(TMP, vec, FG_Psi - FG_PI_2); */
+	MAT3rotate(TMP, vec, -FG_Psi);
+	/* printf("Yaw matrix\n");
+	   MAT3print(TMP, stdout); */
+	MAT3mult(LOCAL, R, TMP);
+	printf("FG derived LOCAL matrix\n");
+	MAT3print(LOCAL, stdout);
+#endif // OLD_LOCAL_TO_BODY_CODE
 
     // Derive the local UP transformation matrix based on *geodetic*
     // coordinates
@@ -174,6 +200,10 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l) {
 
 
 // $Log$
+// Revision 1.4  1998/04/25 22:04:53  curt
+// Use already calculated LaRCsim values to create the roll/pitch/yaw
+// transformation matrix (we call it LOCAL)
+//
 // Revision 1.3  1998/04/25 20:24:02  curt
 // Cleaned up initialization sequence to eliminate interdependencies
 // between sun position, lighting, and view position.  This creates a
@@ -205,7 +235,7 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l) {
 // Added a view record field for absolute x, y, z position.
 //
 // Revision 1.11  1998/01/27 00:47:58  curt
-// Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+// Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
 // system and commandline/config file processing code.
 //
 // Revision 1.10  1998/01/19 19:27:09  curt
