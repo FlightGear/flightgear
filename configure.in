@@ -351,7 +351,6 @@ AC_OUTPUT( \
 	Tools/Utils/Makedir/Makefile \
 	Tools/Areas/Makefile \
 	Tools/AssemTris/Makefile \
-	Tools/Dem2node/Makefile \
 	Tools/FixNode/Makefile \
 	Tools/FixObj/Makefile \
 	Tools/SplitTris/Makefile \
