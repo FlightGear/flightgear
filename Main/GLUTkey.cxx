@@ -69,14 +69,14 @@ static void local_update_sky_and_lighting_params( void ) {
 
 // Handle keyboard events
 void GLUTkey(unsigned char k, int x, int y) {
-    fgFLIGHT *f;
+    FGState *f;
     fgTIME *t;
     fgVIEW *v;
     struct fgWEATHER *w;
     float fov, tmp;
     static bool winding_ccw = true;
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     t = &cur_time_params;
     v = &current_view;
     w = &current_weather;
@@ -386,6 +386,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.34  1998/12/05 15:54:17  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.33  1998/12/03 01:17:12  curt
 // Converted fgFLIGHT to a class.
 //

@@ -185,10 +185,10 @@ void fgVIEW::LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 
 // Update the view volume, position, and orientation
 void fgVIEW::UpdateViewParams( void ) {
-    fgFLIGHT *f;
+    FGState *f;
     fgLIGHT *l;
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     l = &cur_light_params;
 
     UpdateViewMath(f);
@@ -263,7 +263,7 @@ void fgVIEW::UpdateViewParams( void ) {
 
 
 // Update the view parameters
-void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
+void fgVIEW::UpdateViewMath( FGState *f ) {
     Point3D p;
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
@@ -426,7 +426,7 @@ void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
 
 // Update the "World to Eye" transformation matrix
 // This is most useful for view frustum culling
-void fgVIEW::UpdateWorldToEye( fgFLIGHT *f ) {
+void fgVIEW::UpdateWorldToEye( FGState *f ) {
     MAT3mat R_Phi, R_Theta, R_Psi, R_Lat, R_Lon, T_view;
     MAT3mat TMP;
     MAT3hvec vec;
@@ -599,6 +599,9 @@ fgVIEW::~fgVIEW( void ) {
 
 
 // $Log$
+// Revision 1.29  1998/12/05 15:54:24  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.28  1998/12/03 01:17:20  curt
 // Converted fgFLIGHT to a class.
 //

@@ -129,7 +129,7 @@ fgOPTIONS::fgOPTIONS() :
     sound(1),
 
     // Flight Model options
-    flight_model(fgFLIGHT::FG_LARCSIM),
+    flight_model(FGState::FG_LARCSIM),
 
     // Rendering options
     fog(FG_FOG_NICEST),  // nicest
@@ -310,11 +310,11 @@ fgOPTIONS::parse_flight_model( const string& fm ) {
     // printf("flight model = %s\n", fm);
 
     if ( fm == "slew" ) {
-	return fgFLIGHT::FG_SLEW;
+	return FGState::FG_SLEW;
     } else if ( (fm == "larcsim") || (fm == "LaRCsim") ) {
-	return fgFLIGHT::FG_LARCSIM;
+	return FGState::FG_LARCSIM;
     } else if ( fm == "external" ) {
-	return fgFLIGHT::FG_EXTERNAL;
+	return FGState::FG_EXTERNAL;
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown flight model = " << fm );
 	exit(-1);
@@ -624,6 +624,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.34  1998/12/05 15:54:22  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.33  1998/12/04 01:30:44  curt
 // Added support for the External flight model.
 //

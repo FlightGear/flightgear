@@ -228,7 +228,7 @@ static void fgUpdateInstrViewParams( void ) {
 
 // Update all Visuals (redraws anything graphics related)
 static void fgRenderFrame( void ) {
-    fgFLIGHT *f;
+    FGState *f;
     fgLIGHT *l;
     fgTIME *t;
     fgVIEW *v;
@@ -239,7 +239,7 @@ static void fgRenderFrame( void ) {
     GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
     GLbitfield clear_mask;
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
@@ -371,13 +371,13 @@ static void fgRenderFrame( void ) {
 
 // Update internal time dependent calculations (i.e. flight model)
 void fgUpdateTimeDepCalcs(int multi_loop) {
-    fgFLIGHT *f;
+    FGState *f;
     fgLIGHT *l;
     fgTIME *t;
     fgVIEW *v;
     int i;
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
@@ -393,10 +393,10 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 
 	// printf("updating flight model x %d\n", multi_loop);
 	fgFlightModelUpdate( current_options.get_flight_model(), 
-			     cur_flight_params, multi_loop );
+			     cur_fdm_state, multi_loop );
     } else {
 	fgFlightModelUpdate( current_options.get_flight_model(), 
-			     cur_flight_params, 0 );
+			     cur_fdm_state, 0 );
     }
 
     // update the view angle
@@ -456,7 +456,7 @@ static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
-    fgFLIGHT *f;
+    FGState *f;
     fgGENERAL *g;
     fgTIME *t;
     static int remainder = 0;
@@ -464,7 +464,7 @@ static void fgMainLoop( void ) {
     int i;
     double accum;
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     g = &general;
     t = &cur_time_params;
 
@@ -490,7 +490,7 @@ static void fgMainLoop( void ) {
 		   scenery.cur_elev + alt_adjust_m - 3.0,
 		   scenery.cur_elev + alt_adjust_m );
 	    fgFlightModelSetAltitude( current_options.get_flight_model(), 
-				      cur_flight_params, 
+				      cur_fdm_state, 
 				      scenery.cur_elev + alt_adjust_m );
 
 	    FG_LOG( FG_ALL, FG_DEBUG, 
@@ -934,9 +934,9 @@ int fgGlutInitEvents( void ) {
 
 // Main ...
 int main( int argc, char **argv ) {
-    fgFLIGHT *f;
+    FGState *f;
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
 
 #ifdef HAVE_BC5PLUS
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
@@ -1014,6 +1014,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.72  1998/12/05 15:54:18  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.71  1998/12/05 14:19:51  curt
 // Looking into a problem with cur_view_params.abs_view_pos initialization.
 //

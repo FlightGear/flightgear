@@ -89,7 +89,7 @@ void fgLIGHT::Init( void ) {
 
 // update lighting parameters based on current sun position
 void fgLIGHT::Update( void ) {
-    fgFLIGHT *f;
+    FGState *f;
     fgTIME *t;
     fgVIEW *v;
     // if the 4th field is 0.0, this specifies a direction ...
@@ -100,7 +100,7 @@ void fgLIGHT::Update( void ) {
     GLfloat base_fog_color[4] = {0.90, 0.90, 1.00, 1.0};
     double deg, ambient, diffuse, sky_brightness;
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     t = &cur_time_params;
     v = &current_view;
 
@@ -150,11 +150,11 @@ void fgLIGHT::Update( void ) {
 
 // calculate fog color adjusted for sunrise/sunset effects
 void fgLIGHT::UpdateAdjFog( void ) {
-    fgFLIGHT *f;
+    FGState *f;
     fgVIEW *v;
     double sun_angle_deg, rotation, param1[3], param2[3];
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     v = &current_view;
 
     FG_LOG( FG_EVENT, FG_DEBUG, "Updating adjusted fog parameters." );
@@ -217,6 +217,9 @@ fgLIGHT::~fgLIGHT( void ) {
 
 
 // $Log$
+// Revision 1.23  1998/12/05 15:54:30  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.22  1998/12/03 01:18:42  curt
 // Converted fgFLIGHT to a class.
 //

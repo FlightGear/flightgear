@@ -255,7 +255,7 @@ void fgSkyInit( void ) {
 
 // Draw the Sky
 void fgSkyRender( void ) {
-    fgFLIGHT *f;
+    FGState *f;
     fgLIGHT *l;
     fgVIEW *v;
     float inner_color[4];
@@ -264,7 +264,7 @@ void fgSkyRender( void ) {
     double diff;
     int i;
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     l = &cur_light_params;
     v = &current_view;
 
@@ -365,6 +365,9 @@ void fgSkyRender( void ) {
 
 
 // $Log$
+// Revision 1.16  1998/12/05 15:54:03  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.15  1998/12/03 01:15:36  curt
 // Converted fgFLIGHT to a class.
 // Tweaks for Sun portability.

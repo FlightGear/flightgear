@@ -42,7 +42,7 @@ int fgLaRCsimInit(double dt) {
 
 
 // Run an iteration of the EOM (equations of motion)
-int fgLaRCsimUpdate(fgFLIGHT& f, int multiloop) {
+int fgLaRCsimUpdate(FGState& f, int multiloop) {
     double save_alt = 0.0;
 
     // lets try to avoid really screwing up the LaRCsim model
@@ -52,7 +52,7 @@ int fgLaRCsimUpdate(fgFLIGHT& f, int multiloop) {
     }
 
     // translate FG to LaRCsim structure
-    fgFlight_2_LaRCsim(f);
+    FGState_2_LaRCsim(f);
     // printf("FG_Altitude = %.2f\n", FG_Altitude * 0.3048);
     // printf("Altitude = %.2f\n", Altitude * 0.3048);
     // printf("Radius to Vehicle = %.2f\n", Radius_to_vehicle * 0.3048);
@@ -65,7 +65,7 @@ int fgLaRCsimUpdate(fgFLIGHT& f, int multiloop) {
     // translate LaRCsim back to FG structure so that the
     // autopilot (and the rest of the sim can use the updated
     // values
-    fgLaRCsim_2_Flight(f);
+    fgLaRCsim_2_FGState(f);
 
     // but lets restore our original bogus altitude when we are done
     if ( save_alt < -9000.0 ) {
@@ -76,8 +76,8 @@ int fgLaRCsimUpdate(fgFLIGHT& f, int multiloop) {
 }
 
 
-// Convert from the fgFLIGHT struct to the LaRCsim generic_ struct
-int fgFlight_2_LaRCsim (fgFLIGHT& f) {
+// Convert from the FGState struct to the LaRCsim generic_ struct
+int FGState_2_LaRCsim (FGState& f) {
 
     Lat_control = controls.get_aileron();
     Long_control = controls.get_elevator();
@@ -260,8 +260,8 @@ int fgFlight_2_LaRCsim (fgFLIGHT& f) {
 }
 
 
-// Convert from the LaRCsim generic_ struct to the fgFLIGHT struct
-int fgLaRCsim_2_Flight (fgFLIGHT& f) {
+// Convert from the LaRCsim generic_ struct to the FGState struct
+int fgLaRCsim_2_FGState (FGState& f) {
     // Mass properties and geometry values
     f.set_Inertias( Mass, I_xx, I_yy, I_zz, I_xz );
     f.set_Pilot_Location( Dx_pilot, Dy_pilot, Dz_pilot );
@@ -382,6 +382,9 @@ int fgLaRCsim_2_Flight (fgFLIGHT& f) {
 
 
 // $Log$
+// Revision 1.6  1998/12/05 15:54:08  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.5  1998/12/03 04:25:02  curt
 // Working on fixing up new fgFLIGHT class.
 //

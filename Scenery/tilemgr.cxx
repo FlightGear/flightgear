@@ -331,14 +331,14 @@ fgTileMgrCurElevOLD( double lon, double lat, const Point3D& abs_view_pos ) {
 // the chunk isn't already in the cache, then read it from disk.
 int fgTileMgrUpdate( void ) {
     fgTILECACHE *c;
-    fgFLIGHT *f;
+    FGState *f;
     fgBUCKET p1, p2;
     static fgBUCKET p_last = {-1000, 0, 0, 0};
     int tile_diameter;
     int i, j, dw, dh;
 
     c = &global_tile_cache;
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
 
     tile_diameter = current_options.get_tile_diameter();
 
@@ -641,7 +641,7 @@ update_tile_geometry( fgTILE *t, GLdouble *MODEL_VIEW)
 
 // Render the local tiles
 void fgTileMgrRender( void ) {
-    fgFLIGHT *f;
+    FGState *f;
     fgTILECACHE *c;
     fgTILE *t;
     fgVIEW *v;
@@ -655,7 +655,7 @@ void fgTileMgrRender( void ) {
     int drawn = 0;
 
     c = &global_tile_cache;
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     v = &current_view;
 
     tile_diameter = current_options.get_tile_diameter();
@@ -748,6 +748,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.49  1998/12/05 15:54:26  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.48  1998/12/05 14:20:21  curt
 // Looking into a terrain intersection problem.
 //

@@ -210,13 +210,13 @@ int fgStarsInit( void ) {
 
 // Draw the Stars
 void fgStarsRender( void ) {
-    fgFLIGHT *f;
+    FGState *f;
     fgVIEW *v;
     fgLIGHT *l;
     fgTIME *t;
     int i;
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
@@ -256,6 +256,9 @@ void fgStarsRender( void ) {
 
 
 // $Log$
+// Revision 1.24  1998/12/05 15:54:04  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.23  1998/11/23 21:48:28  curt
 // Borland portability tweaks.
 //

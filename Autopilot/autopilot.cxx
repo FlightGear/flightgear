@@ -50,58 +50,58 @@
 
 static double get_speed( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
 
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	return( f->get_V_equiv_kts() );    // Make an explicit function call.
 }
 
 static double get_aoa( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
               
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	return( f->get_Gamma_vert_rad() * RAD_TO_DEG );
 }
 
 static double fgAPget_roll( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
 
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	return( f->get_Phi() * RAD_TO_DEG );
 }
 
 static double get_pitch( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
               
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	return( f->get_Theta() );
 }
 
 double fgAPget_heading( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
 
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	return( f->get_Psi() * RAD_TO_DEG );
 }
 
 static double fgAPget_altitude( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
 
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 
 	return( f->get_Altitude() * FEET_TO_METER /* -rough_elev */ );
 }
 
 static double fgAPget_climb( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
 
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 
 	// return in meters per minute
 	return( f->get_Climb_Rate() * FEET_TO_METER * 60 );
@@ -109,19 +109,19 @@ static double fgAPget_climb( void )
 
 static double get_sideslip( void )
 {
-        fgFLIGHT *f;
+        FGState *f;
         
-        f = current_aircraft.flight;
+        f = current_aircraft.fdm_state;
         
         return( f->get_Beta() );
 }
 
 static double fgAPget_agl( void )
 {
-        fgFLIGHT *f;
+        FGState *f;
         double agl;
 
-        f = current_aircraft.flight;
+        f = current_aircraft.fdm_state;
         agl = f->get_Altitude() * FEET_TO_METER - scenery.cur_elev;
 
         return( agl );

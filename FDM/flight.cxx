@@ -34,35 +34,35 @@
 #include <Math/fg_geodesy.hxx>
 
 
-fgFLIGHT cur_flight_params;
+FGState cur_fdm_state;
 
 
 // Initialize the flight model parameters
-int fgFlightModelInit(int model, fgFLIGHT& f, double dt) {
+int fgFlightModelInit(int model, FGState& f, double dt) {
     double save_alt = 0.0;
     int result;
 
     FG_LOG( FG_FLIGHT ,FG_INFO, "Initializing flight model" );
 
-    if ( model == fgFLIGHT::FG_SLEW ) {
+    if ( model == FGState::FG_SLEW ) {
 	// fgSlewInit(dt);
-    } else if ( model == fgFLIGHT::FG_LARCSIM ) {
+    } else if ( model == FGState::FG_LARCSIM ) {
 	// lets try to avoid really screwing up the LaRCsim model
 	if ( f.get_Altitude() < -9000.0 ) {
 	    save_alt = f.get_Altitude();
 	    f.set_Altitude( 0.0 );
 	}
 
-	fgFlight_2_LaRCsim(f);  // translate FG to LaRCsim structure
+	FGState_2_LaRCsim(f);  // translate FG to LaRCsim structure
 	fgLaRCsimInit(dt);
 	FG_LOG( FG_FLIGHT, FG_INFO, "FG pos = " << f.get_Latitude() );
-	fgLaRCsim_2_Flight(f);  // translate LaRCsim back to FG	structure
+	fgLaRCsim_2_FGState(f);  // translate LaRCsim back to FG structure
 
 	// but lets restore our original bogus altitude when we are done
 	if ( save_alt < -9000.0 ) {
 	    f.set_Altitude( save_alt );
 	}
-    } else if ( model == fgFLIGHT::FG_EXTERNAL ) {
+    } else if ( model == FGState::FG_EXTERNAL ) {
 	fgExternalInit(f, dt);
     } else {
 	FG_LOG( FG_FLIGHT, FG_WARN,
@@ -76,7 +76,7 @@ int fgFlightModelInit(int model, fgFLIGHT& f, double dt) {
 
 
 // Run multiloop iterations of the flight model
-int fgFlightModelUpdate(int model, fgFLIGHT& f, int multiloop) {
+int fgFlightModelUpdate(int model, FGState& f, int multiloop) {
     double time_step, start_elev, end_elev;
     int result;
     // printf("Altitude = %.2f\n", FG_Altitude * 0.3048);
@@ -84,11 +84,11 @@ int fgFlightModelUpdate(int model, fgFLIGHT& f, int multiloop) {
     time_step = (1.0 / DEFAULT_MODEL_HZ) * multiloop;
     start_elev = f.get_Altitude();
 
-    if ( model == fgFLIGHT::FG_SLEW ) {
+    if ( model == FGState::FG_SLEW ) {
 	// fgSlewUpdate(f, multiloop);
-    } else if ( model == fgFLIGHT::FG_LARCSIM ) {
+    } else if ( model == FGState::FG_LARCSIM ) {
 	fgLaRCsimUpdate(f, multiloop);
-    } else if ( model == fgFLIGHT::FG_EXTERNAL ) {
+    } else if ( model == FGState::FG_EXTERNAL ) {
 	// fgExternalUpdate(f, multiloop);
     } else {
 	FG_LOG( FG_FLIGHT, FG_WARN,
@@ -107,7 +107,7 @@ int fgFlightModelUpdate(int model, fgFLIGHT& f, int multiloop) {
 
 
 // Set the altitude (force)
-void fgFlightModelSetAltitude(int model, fgFLIGHT& f, double alt_meters) {
+void fgFlightModelSetAltitude(int model, FGState& f, double alt_meters) {
     double sea_level_radius_meters;
     double lat_geoc;
     // Set the FG variables first
@@ -119,7 +119,7 @@ void fgFlightModelSetAltitude(int model, fgFLIGHT& f, double alt_meters) {
 			      (sea_level_radius_meters * METER_TO_FEET) );
 
     // additional work needed for some flight models
-    if ( model == fgFLIGHT::FG_LARCSIM ) {
+    if ( model == FGState::FG_LARCSIM ) {
 	ls_ForceAltitude( f.get_Altitude() );
     }
 
@@ -127,6 +127,9 @@ void fgFlightModelSetAltitude(int model, fgFLIGHT& f, double alt_meters) {
 
 
 // $Log$
+// Revision 1.6  1998/12/05 15:54:11  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.5  1998/12/04 01:29:39  curt
 // Stubbed in a new flight model called "External" which is expected to be driven
 // from some external source.

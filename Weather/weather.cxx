@@ -67,10 +67,10 @@ void fgWeatherUpdate( void ) {
     // temporarily remove the code of this do-nothing routine
 
 // #ifdef FG_WEATHER_UPDATE
-    fgFLIGHT *f;
+    FGState *f;
     struct fgWEATHER *w;
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     w = &current_weather;
 
     // Add some random turbulence
@@ -104,6 +104,9 @@ void fgWeatherSetVisibility( float visibility ) {
 
 
 // $Log$
+// Revision 1.4  1998/12/05 15:54:31  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.3  1998/11/23 21:49:11  curt
 // Borland portability tweaks.
 //

@@ -87,16 +87,19 @@ public:
 
 
 // reset flight params to a specific position 
-void fgExternalInit(fgFLIGHT& f, double dt);
+void fgExternalInit( FGState& f, double dt );
 
 // update position based on inputs, positions, velocities, etc.
-void fgExternalUpdate( fgFLIGHT& f, int multiloop );
+void fgExternalUpdate( FGState& f, int multiloop );
 
 
 #endif // _EXTERNAL_HXX
 
 
 // $Log$
+// Revision 1.3  1998/12/05 15:54:14  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.2  1998/12/05 14:18:47  curt
 // added an fgTIMESTAMP to define when this record is valid.
 //

@@ -332,7 +332,7 @@ double sidereal_course(fgTIME *t, double lng) {
 
 
 // Update time variables such as gmt, julian date, and sidereal time
-void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
+void fgTimeUpdate(FGState *f, fgTIME *t) {
     double gst_precise, gst_course;
 
     FG_LOG( FG_EVENT, FG_DEBUG, "Updating time" );
@@ -398,6 +398,9 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.26  1998/12/05 15:54:28  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.25  1998/12/05 14:21:30  curt
 // Moved struct fg_timestamp to class fgTIMESTAMP and moved it's definition
 // to it's own file, timestamp.hxx.

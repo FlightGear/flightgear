@@ -147,11 +147,12 @@ public:
     // Initialize a view class
     void Init( void );
 
-    void update_globals( fgFLIGHT *f );
+    void update_globals( FGState *f );
 
     // Basically, this is a modified version of the Mesa gluLookAt()
     // function that's been modified slightly so we can capture the
-    // result before sending it off to OpenGL land.
+    // result (and use it later) otherwise this all gets calculated in
+    // OpenGL land and we don't have access to the results.
     void LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 		 GLdouble centerx, GLdouble centery, GLdouble centerz,
 		 GLdouble upx, GLdouble upy, GLdouble upz );
@@ -160,10 +161,10 @@ public:
     void UpdateViewParams( void );
 
     // Update the view parameters
-    void UpdateViewMath( fgFLIGHT *f );
+    void UpdateViewMath( FGState *f );
 
     // Update the "World to Eye" transformation matrix
-    void UpdateWorldToEye(  fgFLIGHT *f );
+    void UpdateWorldToEye( FGState *f );
 
     // Update the field of view parameters
     void UpdateFOV( fgOPTIONS *o );
@@ -180,6 +181,9 @@ extern fgVIEW current_view;
 
 
 // $Log$
+// Revision 1.16  1998/12/05 15:54:25  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.15  1998/10/16 23:27:56  curt
 // C++-ifying.
 //

@@ -39,7 +39,7 @@
 
 // Define a structure containing all the parameters for an aircraft
 typedef struct{
-    fgFLIGHT   *flight;
+    FGState   *fdm_state;
     fgCONTROLS *controls;
 } fgAIRCRAFT ;
 
@@ -61,6 +61,9 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a);
 
 
 // $Log$
+// Revision 1.3  1998/12/05 15:54:01  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.2  1998/10/17 01:33:54  curt
 // C++ ifying ...
 //

@@ -92,13 +92,16 @@ void fgTimeInit(fgTIME *t);
 
 
 // Update the time dependent variables
-void fgTimeUpdate(fgFLIGHT *f, fgTIME *t);
+void fgTimeUpdate(FGState *f, fgTIME *t);
 
 
 #endif // _FG_TIME_HXX
 
 
 // $Log$
+// Revision 1.11  1998/12/05 15:54:29  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.10  1998/12/05 14:21:31  curt
 // Moved struct fg_timestamp to class fgTIMESTAMP and moved it's definition
 // to it's own file, timestamp.hxx.

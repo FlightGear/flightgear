@@ -34,9 +34,9 @@
 
 // reset flight params to a specific position
 void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
-    fgFLIGHT *f;
-
-    f = current_aircraft.flight;
+    FGState *f;
+    
+    f = current_aircraft.fdm_state;
 
     /*
     f->pos_x = pos_x;
@@ -62,10 +62,10 @@ void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
 
 // update position based on inputs, positions, velocities, etc.
 void fgSlewUpdate( void ) {
-    fgFLIGHT *f;
+    FGState *f;
     fgCONTROLS *c;
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     c = current_aircraft.controls;
 
     /* f->Psi += ( c->aileron / 8 );
@@ -83,6 +83,9 @@ void fgSlewUpdate( void ) {
 
 
 // $Log$
+// Revision 1.3  1998/12/05 15:54:16  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.2  1998/10/17 01:34:17  curt
 // C++ ifying ...
 //

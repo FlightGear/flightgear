@@ -66,8 +66,8 @@ static pCockpit ac_cockpit;
 
 double get_latitude( void )
 {
-	fgFLIGHT *f;
-	f = current_aircraft.flight;
+	FGState *f;
+	f = current_aircraft.fdm_state;
 
 //	return( toDM(FG_Latitude * RAD_TO_DEG) );
 	return((double)((int)( f->get_Latitude() * RAD_TO_DEG)) );
@@ -75,10 +75,10 @@ double get_latitude( void )
 
 double get_lat_min( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
 	double      a, d;
 
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	
 	a = f->get_Latitude() * RAD_TO_DEG;	
 	if (a < 0.0) {
@@ -91,18 +91,18 @@ double get_lat_min( void )
 
 double get_longitude( void )
 {
-	fgFLIGHT *f;
-	f = current_aircraft.flight;
+	FGState *f;
+	f = current_aircraft.fdm_state;
 
 //	return( toDM(FG_Longitude * RAD_TO_DEG) );
 	return((double)((int) (f->get_Longitude() * RAD_TO_DEG)) );
 }
 double get_long_min( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
 	double  a, d;
 
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	
 	a = f->get_Longitude() * RAD_TO_DEG;	
 	if (a < 0.0) {
@@ -139,50 +139,50 @@ double get_rudderval( void )
 
 double get_speed( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
 
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	return( f->get_V_equiv_kts() );    // Make an explicit function call.
 }
 
 double get_aoa( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
               
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	return( f->get_Gamma_vert_rad() * RAD_TO_DEG );
 }
 
 double get_roll( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
 
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	return( f->get_Phi() );
 }
 
 double get_pitch( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
               
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	return( f->get_Theta() );
 }
 
 double get_heading( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
 
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	return( f->get_Psi() * RAD_TO_DEG );
 }
 
 double get_altitude( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
 	// double rough_elev;
 
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 	// rough_elev = mesh_altitude(f->get_Longitude() * RAD_TO_ARCSEC,
 	//		                   f->get_Latitude()  * RAD_TO_ARCSEC);
 
@@ -195,9 +195,9 @@ double get_altitude( void )
 
 double get_agl( void )
 {
-        fgFLIGHT *f;
+        FGState *f;
 
-        f = current_aircraft.flight;
+        f = current_aircraft.fdm_state;
 
 	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
 	    return f->get_Altitude() - scenery.cur_elev * METER_TO_FEET;
@@ -208,9 +208,9 @@ double get_agl( void )
 
 double get_sideslip( void )
 {
-        fgFLIGHT *f;
+        FGState *f;
         
-        f = current_aircraft.flight;
+        f = current_aircraft.fdm_state;
         
         return( f->get_Beta() );
 }
@@ -245,9 +245,9 @@ double get_vfc_tris_drawn   ( void )
 
 double get_climb_rate( void )
 {
-	fgFLIGHT *f;
+	FGState *f;
 
-	f = current_aircraft.flight;
+	f = current_aircraft.fdm_state;
 
 	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
 	    return f->get_Climb_Rate() * 60.0;
@@ -312,6 +312,9 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
+// Revision 1.25  1998/12/05 15:54:07  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.24  1998/12/03 01:16:00  curt
 // Converted fgFLIGHT to a class.
 //

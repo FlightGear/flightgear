@@ -37,16 +37,16 @@ fgAIRCRAFT current_aircraft;
 void fgAircraftInit( void ) {
     FG_LOG( FG_AIRCRAFT, FG_INFO, "Initializing Aircraft structure" );
 
-    current_aircraft.flight   = &cur_flight_params;
+    current_aircraft.fdm_state   = &cur_fdm_state;
     current_aircraft.controls = &controls;
 }
 
 
 // Display various parameters to stdout
 void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
-    fgFLIGHT *f;
+    FGState *f;
 
-    f = a->flight;
+    f = a->fdm_state;
 
     FG_LOG( FG_FLIGHT, FG_DEBUG,
 	    "Pos = ("
@@ -68,6 +68,9 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
 
 // $Log$
+// Revision 1.6  1998/12/05 15:53:59  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.5  1998/12/03 01:14:58  curt
 // Converted fgFLIGHT to a class.
 //

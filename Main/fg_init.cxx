@@ -75,9 +75,9 @@ extern const char *default_root;
 // Set initial position and orientation
 int fgInitPosition( void ) {
     string id;
-    fgFLIGHT *f;
+    FGState *f;
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
 
     id = current_options.get_airport_id();
     if ( id.length() ) {
@@ -154,7 +154,7 @@ int fgInitGeneral( void ) {
 // Returns non-zero if a problem encountered.
 int fgInitSubsystems( void )
 {
-    fgFLIGHT *f;
+    FGState *f;
     fgLIGHT *l;
     fgTIME *t;
     fgVIEW *v;
@@ -173,7 +173,7 @@ int fgInitSubsystems( void )
     // allocates structures so must happen before any of the flight
     // model or control parameters are set
     fgAircraftInit();   // In the future this might not be the case.
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
 
     // set the initial position
     fgInitPosition();
@@ -332,7 +332,7 @@ int fgInitSubsystems( void )
     // Initialize the flight model subsystem data structures base on
     // above values
 
-    fgFlightModelInit( current_options.get_flight_model(), cur_flight_params, 
+    fgFlightModelInit( current_options.get_flight_model(), cur_fdm_state, 
 		       1.0 / DEFAULT_MODEL_HZ );
 
     // I'm just sticking this here for now, it should probably move
@@ -370,6 +370,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.55  1998/12/05 15:54:20  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.54  1998/12/05 14:19:53  curt
 // Looking into a problem with cur_view_params.abs_view_pos initialization.
 //

@@ -112,10 +112,10 @@ void Moon::updatePosition(fgTIME *t, Star *ourSun)
     geoRa, geoDec;
   
   fgAIRCRAFT *air;
-  fgFLIGHT *f;
+  FGState *f;
 
   air = &current_aircraft;
-  f = air->flight;
+  f = air->fdm_state;
  
   updateOrbElements(t);
   actTime = fgCalcActTime(t);

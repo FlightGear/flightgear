@@ -227,7 +227,7 @@ static void send_nmea_out( fgIOCHANNEL& p ) {
     char dir;
     int deg;
     double min;
-    fgFLIGHT *f;
+    FGState *f;
     fgTIME *t;
 
     // run once every two seconds
@@ -239,7 +239,7 @@ static void send_nmea_out( fgIOCHANNEL& p ) {
 	return;
     }
 
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     t = &cur_time_params;
 
     char utc[10];
@@ -326,7 +326,7 @@ static void send_garmin_out( fgIOCHANNEL& p ) {
     char dir;
     int deg;
     double min;
-    fgFLIGHT *f;
+    FGState *f;
     fgTIME *t;
 
     // run once per second
@@ -338,7 +338,7 @@ static void send_garmin_out( fgIOCHANNEL& p ) {
 	return;
     }
     
-    f = current_aircraft.flight;
+    f = current_aircraft.fdm_state;
     t = &cur_time_params;
 
     char utc[10];
@@ -451,6 +451,9 @@ void fgSerialProcess() {
 
 
 // $Log$
+// Revision 1.7  1998/12/05 15:54:21  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.6  1998/12/03 01:17:18  curt
 // Converted fgFLIGHT to a class.
 //

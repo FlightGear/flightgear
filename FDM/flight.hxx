@@ -38,7 +38,7 @@ typedef double FG_VECTOR_3[3];
 
 
 // This is based heavily on LaRCsim/ls_generic.h
-class fgFLIGHT {
+class FGState {
 
 public:
 
@@ -313,7 +313,7 @@ public:
 	v_local_v[2] = down;
     }
 
-    FG_VECTOR_3    v_local_rel_ground_v; /* V rel w.r.t. earth surface   */
+    FG_VECTOR_3    v_local_rel_ground_v; // V rel w.r.t. earth surface  
     inline double * get_V_local_rel_ground_v() { return v_local_rel_ground_v; }
     inline double get_V_north_rel_ground() const {
 	return v_local_rel_ground_v[0];
@@ -330,7 +330,7 @@ public:
 	v_local_rel_ground_v[2] = down;
     }
 
-    FG_VECTOR_3    v_local_airmass_v;   /* velocity of airmass (steady winds) */
+    FG_VECTOR_3    v_local_airmass_v;   // velocity of airmass (steady winds)
     inline double * get_V_local_airmass_v() { return v_local_airmass_v; }
     inline double get_V_north_airmass() const { return v_local_airmass_v[0]; }
     inline double get_V_east_airmass() const { return v_local_airmass_v[1]; }
@@ -343,8 +343,8 @@ public:
 	v_local_airmass_v[2] = down;
     }
 
-    FG_VECTOR_3    v_local_rel_airmass_v;  /* velocity of veh. relative to */
-    /* airmass */
+    FG_VECTOR_3    v_local_rel_airmass_v;  // velocity of veh. relative to
+    // airmass
     inline double * get_V_local_rel_airmass_v() {
 	return v_local_rel_airmass_v;
     }
@@ -365,7 +365,7 @@ public:
 	v_local_rel_airmass_v[2] = down;
     }
 
-    FG_VECTOR_3    v_local_gust_v; /* linear turbulence components, L frame */
+    FG_VECTOR_3    v_local_gust_v; // linear turbulence components, L frame
     inline double * get_V_local_gust_v() { return v_local_gust_v; }
     inline double get_U_gust() const { return v_local_gust_v[0]; }
     inline double get_V_gust() const { return v_local_gust_v[1]; }
@@ -377,7 +377,7 @@ public:
 	v_local_gust_v[2] = w;
     }
     
-    FG_VECTOR_3    v_wind_body_v;  /* Wind-relative velocities in body axis */
+    FG_VECTOR_3    v_wind_body_v;  // Wind-relative velocities in body axis
     inline double * get_V_wind_body_v() { return v_wind_body_v; }
     inline double get_U_body() const { return v_wind_body_v[0]; }
     inline double get_V_body() const { return v_wind_body_v[1]; }
@@ -420,7 +420,7 @@ public:
     inline double get_V_calibrated_kts() const { return v_calibrated_kts; }
     inline void set_V_calibrated_kts( double kts ) { v_calibrated_kts = kts; }
 
-    FG_VECTOR_3    omega_body_v;   /* Angular B rates      */
+    FG_VECTOR_3    omega_body_v;   // Angular B rates     
     inline double * get_Omega_body_v() { return omega_body_v; }
     inline double get_P_body() const { return omega_body_v[0]; }
     inline double get_Q_body() const { return omega_body_v[1]; }
@@ -431,7 +431,7 @@ public:
 	omega_body_v[2] = r;
     }
 
-    FG_VECTOR_3    omega_local_v;  /* Angular L rates      */
+    FG_VECTOR_3    omega_local_v;  // Angular L rates     
     inline double * get_Omega_local_v() { return omega_local_v; }
     inline double get_P_local() const { return omega_local_v[0]; }
     inline double get_Q_local() const { return omega_local_v[1]; }
@@ -442,7 +442,7 @@ public:
 	omega_local_v[2] = r;
     }
 
-    FG_VECTOR_3    omega_total_v;  /* Diff btw B & L       */
+    FG_VECTOR_3    omega_total_v;  // Diff btw B & L      
     inline double * get_Omega_total_v() { return omega_total_v; }
     inline double get_P_total() const { return omega_total_v[0]; }
     inline double get_Q_total() const { return omega_total_v[1]; }
@@ -464,7 +464,7 @@ public:
 	euler_rates_v[2] = psi;
     }
 
-    FG_VECTOR_3    geocentric_rates_v;     /* Geocentric linear velocities */
+    FG_VECTOR_3    geocentric_rates_v;     // Geocentric linear velocities
     inline double * get_Geocentric_rates_v() { return geocentric_rates_v; }
     inline double get_Latitude_dot() const { return geocentric_rates_v[0]; }
     inline double get_Longitude_dot() const { return geocentric_rates_v[1]; }
@@ -529,7 +529,7 @@ public:
 
     /*======================= Miscellaneous quantities ========================*/
 
-    double    t_local_to_body_m[3][3];    /* Transformation matrix L to B */
+    double    t_local_to_body_m[3][3];    // Transformation matrix L to B
     // inline double * get_T_local_to_body_m() { return t_local_to_body_m; }
     inline double get_T_local_to_body_11() const {
 	return t_local_to_body_m[0][0];
@@ -567,15 +567,15 @@ public:
 	}
     }
 
-    double    gravity;            /* Local acceleration due to G  */
+    double    gravity;            // Local acceleration due to G 
     inline double get_Gravity() const { return gravity; }
     inline void set_Gravity(double g) { gravity = g; }
     
-    double    centrifugal_relief; /* load factor reduction due to speed */
+    double    centrifugal_relief; // load factor reduction due to speed
     inline double get_Centrifugal_relief() const { return centrifugal_relief; }
     inline void set_Centrifugal_relief(double cr) { centrifugal_relief = cr; }
 
-    double    alpha, beta, alpha_dot, beta_dot;   /* in radians   */
+    double    alpha, beta, alpha_dot, beta_dot;   // in radians  
     inline double get_Alpha() const { return alpha; }
     inline void set_Alpha( double a ) { alpha = a; }
     inline double get_Beta() const { return beta; }
@@ -609,7 +609,7 @@ public:
     inline double get_Sin_psi() const { return sin_psi; }
     inline void set_Sin_psi( double sp ) { sin_psi = sp; }
 
-    double    gamma_vert_rad, gamma_horiz_rad;    /* Flight path angles   */
+    double    gamma_vert_rad, gamma_horiz_rad;    // Flight path angles  
     inline double get_Gamma_vert_rad() const { return gamma_vert_rad; }
     inline void set_Gamma_vert_rad( double gv ) { gamma_vert_rad = gv; }
     inline double get_Gamma_horiz_rad() const { return gamma_horiz_rad; }
@@ -667,7 +667,7 @@ public:
     inline double get_Radius_to_rwy() const { return radius_to_rwy; }
     inline void set_Radius_to_rwy( double r ) { radius_to_rwy = r; }
 
-    FG_VECTOR_3    d_cg_rwy_local_v;       /* CG rel. to rwy in local coords */
+    FG_VECTOR_3    d_cg_rwy_local_v;       // CG rel. to rwy in local coords
     inline double * get_D_cg_rwy_local_v() { return d_cg_rwy_local_v; }
     inline double get_D_cg_north_of_rwy() const { return d_cg_rwy_local_v[0]; }
     inline double get_D_cg_east_of_rwy() const { return d_cg_rwy_local_v[1]; }
@@ -679,7 +679,7 @@ public:
 	d_cg_rwy_local_v[2] = above;
     }
 
-    FG_VECTOR_3    d_cg_rwy_rwy_v; /* CG relative to rwy, in rwy coordinates */
+    FG_VECTOR_3    d_cg_rwy_rwy_v; // CG relative to rwy, in rwy coordinates
     inline double * get_D_cg_rwy_rwy_v() { return d_cg_rwy_rwy_v; }
     inline double get_X_cg_rwy() const { return d_cg_rwy_rwy_v[0]; }
     inline double get_Y_cg_rwy() const { return d_cg_rwy_rwy_v[1]; }
@@ -691,7 +691,7 @@ public:
 	d_cg_rwy_rwy_v[2] = h;
     }
 
-    FG_VECTOR_3    d_pilot_rwy_local_v;  /* pilot rel. to rwy in local coords */
+    FG_VECTOR_3    d_pilot_rwy_local_v;  // pilot rel. to rwy in local coords
     inline double * get_D_pilot_rwy_local_v() { return d_pilot_rwy_local_v; }
     inline double get_D_pilot_north_of_rwy() const {
 	return d_pilot_rwy_local_v[0];
@@ -709,7 +709,7 @@ public:
 	d_pilot_rwy_local_v[2] = above;
     }
 
-    FG_VECTOR_3   d_pilot_rwy_rwy_v;   /* pilot rel. to rwy, in rwy coords. */
+    FG_VECTOR_3   d_pilot_rwy_rwy_v;   // pilot rel. to rwy, in rwy coords.
     inline double * get_D_pilot_rwy_rwy_v() { return d_pilot_rwy_rwy_v; }
     inline double get_X_pilot_rwy() const { return d_pilot_rwy_rwy_v[0]; }
     inline double get_Y_pilot_rwy() const { return d_pilot_rwy_rwy_v[1]; }
@@ -721,31 +721,34 @@ public:
 	d_pilot_rwy_rwy_v[2] = h;
     }
 
-    double        climb_rate;           /* in feet per second */
+    double        climb_rate;           // in feet per second
     inline double get_Climb_Rate() const { return climb_rate; }
     inline void set_Climb_Rate(double rate) { climb_rate = rate; }
 };
 
 
-extern fgFLIGHT cur_flight_params;
+extern FGState cur_fdm_state;
 
 
-/* General interface to the flight model routines */
+// General interface to the flight model routines
 
-/* Initialize the flight model parameters */
-int fgFlightModelInit(int model, fgFLIGHT& f, double dt);
+// Initialize the flight model parameters
+int fgFlightModelInit(int model, FGState& f, double dt);
 
-/* Run multiloop iterations of the flight model */
-int fgFlightModelUpdate(int model, fgFLIGHT& f, int multiloop);
+// Run multiloop iterations of the flight model
+int fgFlightModelUpdate(int model, FGState& f, int multiloop);
 
-/* Set the altitude (force) */
-void fgFlightModelSetAltitude(int model, fgFLIGHT& f, double alt_meters);
+// Set the altitude (force)
+void fgFlightModelSetAltitude(int model, FGState& f, double alt_meters);
 
 
 #endif // _FLIGHT_HXX
 
 
 // $Log$
+// Revision 1.6  1998/12/05 15:54:12  curt
+// Renamed class fgFLIGHT to class FGState as per request by JSB.
+//
 // Revision 1.5  1998/12/04 01:29:40  curt
 // Stubbed in a new flight model called "External" which is expected to be driven
 // from some external source.
