@@ -62,12 +62,12 @@ static const struct {
 };
 
 FGSound::FGSound()
-  : _condition(NULL),
+  : _sample(NULL),
+    _condition(NULL),
     _property(NULL),
-    _sample(NULL),
-    _mode(FGSound::ONCE),
     _prev_value(0),
-    _name("")
+    _name(""),
+    _mode(FGSound::ONCE)    
 {
 }
 
@@ -263,7 +263,7 @@ FGSound::update (double dt)
 
    if (							// Lisp, anyone?
          (_condition && !_condition->test()) ||
-         (_property &&
+         (_property && !_condition &&
             (
                !curr_value ||
                ( (_mode == FGSound::IN_TRANSIT) && (curr_value == _prev_value) )
