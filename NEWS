@@ -1,8 +1,36 @@
-New in 0.59
+New in 0.6.0
+* Tons of improvements with scenery creation.  Inter-tile gaps have been
+  fixed, distorted textures have been fixed, real coastlines have been added,
+  and many other subtle improvements.
+* Tools for parallelizing the scenery building tasks.  For instance by using
+  20 machines in parallel, scenery for the entire USA can be regenerated in
+  just over 4 hours vs. 70+ hours on a single machine.
+* Texture scale can be specified (and changed)( in the materials file.  The
+  sim must be rerun for the change to take effect.
+* Windows now uses plib joystick code so rudder pedals should now work.
+* Now builds against Steve Baker's plib (portable game devel library) 
+  distributed separately (www.woodsoup.org/~sbaker/plib/)
+* Many source code changes for the MacOS port contributed by Darrell
+  Walisser (the port isn't quite there yet ...)
+* Source code changes for better compiling with the Borland compiler.
+* Source code changes for better compiling with the native Irix compilers.
+* Fixed a bug so you can now fly across the international date line (or
+  more precisely the division between longitude = +/-180.
+* Tweaks to the Astro section contributed by Durk Talsma.
+* Autopilot improvements contributed by Norman Vine.
+* Fonts/characters now drawn with texture maps for increased speed.
+* Instrument panel can be toggled on and off with "P".
+* GUI interface for tweaking some autopilot parameters.
+* HUD appearance and layout changes contributed by Norman Vine, includes
+  faster font drawing for much better performance.
+* Reset function added to reset you to your starting conditions.
+* GUI function to enter a new airport id (and be transported there)
+* Added serial output support for an "in-development" full motion cockpit.
+* "Just in time" texture loading to reduce initial sim loading time.
 
-(This is an intermediate/stepping stone release.  Skip this if you are
-interested in stability.)
 
+New in 0.59 (This is an intermediate/stepping stone release.  Skip this 
+             release if you are interested in stability.)
 * IRIX portability changes and support for native SGI compilers.
 * Solaris portability tweaks
 * Incorporated some MacOS portability changes (although the port is not
