@@ -75,7 +75,7 @@ FGSwitch::FGSwitch(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
 {
   string token, value;
   struct test *current_test;
-  struct FGCondition *current_condition;
+  string sOutputIdx;
 
   Type = AC_cfg->GetValue("TYPE");
   Name = AC_cfg->GetValue("NAME");
@@ -124,8 +124,13 @@ FGSwitch::FGSwitch(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
       while (AC_cfg->GetValue() != string("/TEST")) {
         current_test->conditions.push_back(FGCondition(AC_cfg, PropertyManager));
       }
+      AC_cfg->GetNextConfigLine();
+    } else if (token == "OUTPUT") {
+      IsOutput = true;
+      *AC_cfg >> sOutputIdx;
+      *AC_cfg >> sOutputIdx;
+      OutputNode = PropertyManager->GetNode( sOutputIdx, true );
     }
-    AC_cfg->GetNextConfigLine();
   }
 
   FGFCSComponent::bind();
@@ -177,6 +182,8 @@ bool FGSwitch::Run(void )
     }
     *iTests++;
   }
+
+  if (IsOutput) SetOutput();
 
   return true;
 }
@@ -256,6 +263,7 @@ void FGSwitch::Debug(int from)
         cout << endl;
         *iTests++;
       }
+      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

@@ -86,7 +86,7 @@ additional conditions, as well as possibly additional CONDITION_GROUPs.
 
 <pre>
 \<COMPONENT NAME="switch1" TYPE="SWITCH"\>
-  \<TEST LOGIC="{AND|OR|DEFAULT}" OUTPUT="{property|value}"\>
+  \<TEST LOGIC="{AND|OR|DEFAULT}" VALUE="{property|value}"\>
     {property} {conditional} {property|value}
     \<CONDITION_GROUP LOGIC="{AND|OR}"\>
       {property} {conditional} {property|value}
@@ -94,11 +94,12 @@ additional conditions, as well as possibly additional CONDITION_GROUPs.
     \</CONDITION_GROUP\>
     ...
   \</TEST>
-  \<TEST LOGIC="{AND|OR}" OUTPUT="{property|value}"\>
+  \<TEST LOGIC="{AND|OR}" VALUE="{property|value}"\>
     {property} {conditional} {property|value}
     ...
   \</TEST\>
   ...
+  [OUTPUT \<property>]
 \</COMPONENT\>
 </pre>
 

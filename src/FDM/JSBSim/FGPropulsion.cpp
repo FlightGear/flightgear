@@ -3,7 +3,7 @@
  Module:       FGPropulsion.cpp
  Author:       Jon S. Berndt
  Date started: 08/20/00
- Purpose:      Encapsulates the set of engines, tanks, and thrusters associated
+ Purpose:      Encapsulates the set of engines and tanks associated
                with this aircraft
 
  ------------- Copyright (C) 2000  Jon S. Berndt (jsb@hal-pc.org) -------------
@@ -28,21 +28,13 @@
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 The Propulsion class is the container for the entire propulsion system, which is
-comprised of engines, tanks, and "thrusters" (the device that transforms the
-engine power into a force that acts on the aircraft, such as a nozzle or
-propeller). Once the Propulsion class gets the config file, it reads in
-information which is specific to a type of engine. Then:
+comprised of engines and tanks. Once the Propulsion class gets the config file,
+it reads in information which is specific to a type of engine. Then:
 
 1) The appropriate engine type instance is created
-2) A thruster object is instantiated, and is linked to the engine
-3) At least one tank object is created, and is linked to an engine.
+2) At least one tank object is created, and is linked to an engine.
 
-At Run time each engines Calculate() method is called to return the excess power
-generated during that iteration. The drag from the previous iteration is sub-
-tracted to give the excess power available for thrust this pass. That quantity
-is passed to the thrusters associated with a particular engine - perhaps with a
-scaling mechanism (gearing?) to allow the engine to give its associated thrust-
-ers specific distributed portions of the excess power.
+At Run time each engines Calculate() method is called.
 
 HISTORY
 --------------------------------------------------------------------------------
@@ -54,21 +46,10 @@ INCLUDES
 
 #include "FGPropulsion.h"
 #include "FGRocket.h"
-#include "FGSimTurbine.h"
 #include "FGTurbine.h"
-#include "FGPropeller.h"
-#include "FGNozzle.h"
 #include "FGPiston.h"
+#include "FGElectric.h"
 #include "FGPropertyManager.h"
-
-#if defined (__APPLE__)
-/* Not all systems have the gcvt function */
-inline char* gcvt (double value, int ndigits, char *buf) {
-    /* note that this is not exactly what gcvt is supposed to do! */
-    snprintf (buf, ndigits+1, "%f", value);
-    return buf;
-}
-#endif
 
 namespace JSBSim {
 
@@ -87,11 +68,11 @@ FGPropulsion::FGPropulsion(FGFDMExec* exec) : FGModel(exec)
   Name = "FGPropulsion";
 
   numSelectedFuelTanks = numSelectedOxiTanks = 0;
-  numTanks = numEngines = numThrusters = 0;
+  numTanks = numEngines = 0;
   numOxiTanks = numFuelTanks = 0;
-  dt = 0.0;
   ActiveEngine = -1; // -1: ALL, 0: Engine 1, 1: Engine 2 ...
   tankJ.InitMatrix();
+  refuel = false;
 
   bind();
 
@@ -112,34 +93,33 @@ FGPropulsion::~FGPropulsion()
 
 bool FGPropulsion::Run(void)
 {
-  double PowerAvailable;
-  dt = State->Getdt();
+  if (FGModel::Run()) return true;
+
+  double dt = State->Getdt();
 
   vForces.InitMatrix();
   vMoments.InitMatrix();
 
-  if (!FGModel::Run()) {
-    for (unsigned int i=0; i<numEngines; i++) {
-      Thrusters[i]->SetdeltaT(dt*rate);
-      PowerAvailable = Engines[i]->Calculate(Thrusters[i]->GetPowerRequired());
-      Thrusters[i]->Calculate(PowerAvailable);
-      vForces  += Thrusters[i]->GetBodyForces();  // sum body frame forces
-      vMoments += Thrusters[i]->GetMoments();     // sum body frame moments
-    }
-
-    return false;
-  } else {
-    return true;
+  for (unsigned int i=0; i<numEngines; i++) {
+    Engines[i]->Calculate();
+    vForces  += Engines[i]->GetBodyForces();  // sum body frame forces
+    vMoments += Engines[i]->GetMoments();     // sum body frame moments
   }
+
+  for (unsigned int i=0; i<numTanks; i++) {
+    Tanks[i]->Calculate( dt * rate );
+  }     
+
+  if (refuel) DoRefuel( dt * rate );
+
+  return false;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGPropulsion::GetSteadyState(void)
 {
-  double PowerAvailable;
   double currentThrust = 0, lastThrust=-1;
-  dt = State->Getdt();
   int steady_count,j=0;
   bool steady=false;
 
@@ -149,13 +129,12 @@ bool FGPropulsion::GetSteadyState(void)
   if (!FGModel::Run()) {
     for (unsigned int i=0; i<numEngines; i++) {
       Engines[i]->SetTrimMode(true);
-      Thrusters[i]->SetdeltaT(dt*rate);
       steady=false;
       steady_count=0;
       while (!steady && j < 6000) {
-        PowerAvailable = Engines[i]->Calculate(Thrusters[i]->GetPowerRequired());
+        Engines[i]->Calculate();
         lastThrust = currentThrust;
-        currentThrust = Thrusters[i]->Calculate(PowerAvailable);
+        currentThrust = Engines[i]->GetThrust();
         if (fabs(lastThrust-currentThrust) < 0.0001) {
           steady_count++;
           if (steady_count > 120) { steady=true; }
@@ -164,8 +143,8 @@ bool FGPropulsion::GetSteadyState(void)
         }
         j++;
       }
-      vForces  += Thrusters[i]->GetBodyForces();  // sum body frame forces
-      vMoments += Thrusters[i]->GetMoments();     // sum body frame moments
+      vForces  += Engines[i]->GetBodyForces();  // sum body frame forces
+      vMoments += Engines[i]->GetMoments();     // sum body frame moments
       Engines[i]->SetTrimMode(false);
     }
 
@@ -179,24 +158,20 @@ bool FGPropulsion::GetSteadyState(void)
 
 bool FGPropulsion::ICEngineStart(void)
 {
-  double PowerAvailable;
   int j;
-  dt = State->Getdt();
 
   vForces.InitMatrix();
   vMoments.InitMatrix();
 
   for (unsigned int i=0; i<numEngines; i++) {
     Engines[i]->SetTrimMode(true);
-    Thrusters[i]->SetdeltaT(dt*rate);
     j=0;
     while (!Engines[i]->GetRunning() && j < 2000) {
-      PowerAvailable = Engines[i]->Calculate(Thrusters[i]->GetPowerRequired());
-      Thrusters[i]->Calculate(PowerAvailable);
+      Engines[i]->Calculate();
       j++;
     }
-    vForces  += Thrusters[i]->GetBodyForces();  // sum body frame forces
-    vMoments += Thrusters[i]->GetMoments();     // sum body frame moments
+    vForces  += Engines[i]->GetBodyForces();  // sum body frame forces
+    vMoments += Engines[i]->GetMoments();     // sum body frame moments
     Engines[i]->SetTrimMode(false);
   }
   return true;
@@ -206,20 +181,22 @@ bool FGPropulsion::ICEngineStart(void)
 
 bool FGPropulsion::Load(FGConfigFile* AC_cfg)
 {
-  string token, fullpath;
+  string token, fullpath, localpath;
   string engineFileName, engType;
-  string thrusterFileName, thrType;
   string parameter;
   string enginePath = FDMExec->GetEnginePath();
+  string aircraftPath = FDMExec->GetAircraftPath();
   double xLoc, yLoc, zLoc, Pitch, Yaw;
-  double P_Factor = 0, Sense = 0.0;
   int Feed;
   bool ThrottleAdded = false;
+  FGConfigFile* Cfg_ptr = 0;
 
 # ifndef macintosh
       fullpath = enginePath + "/";
+      localpath = aircraftPath + "/Engines/";
 # else
       fullpath = enginePath + ";";
+      localpath = aircraftPath +  ";Engines;";
 # endif
 
   AC_cfg->GetNextConfigLine();
@@ -230,25 +207,44 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
 
       engineFileName = AC_cfg->GetValue("FILE");
 
-      if (debug_lvl > 0) cout << "\n    Reading engine from file: " << fullpath
-                                                + engineFileName + ".xml"<< endl;
+      // Look in the Aircraft/Engines directory first
+      Cfg_ptr = 0;
+      FGConfigFile Local_cfg(localpath + engineFileName + ".xml");
       FGConfigFile Eng_cfg(fullpath + engineFileName + ".xml");
+      if (Local_cfg.IsOpen()) {
+        Cfg_ptr = &Local_cfg;
+        if (debug_lvl > 0) cout << "\n    Reading engine from file: " << localpath
+                                                + engineFileName + ".xml"<< endl;
+      } else {
+        if (Eng_cfg.IsOpen()) {
+          Cfg_ptr = &Eng_cfg;
+          if (debug_lvl > 0) cout << "\n    Reading engine from file: " << fullpath
+                                                + engineFileName + ".xml"<< endl;
+        }
+      }
 
-      if (Eng_cfg.IsOpen()) {
-        Eng_cfg.GetNextConfigLine();
-        engType = Eng_cfg.GetValue();
+      if (Cfg_ptr) {
+        Cfg_ptr->GetNextConfigLine();
+        engType = Cfg_ptr->GetValue();
 
         FCS->AddThrottle();
         ThrottleAdded = true;
 
         if (engType == "FG_ROCKET") {
-          Engines.push_back(new FGRocket(FDMExec, &Eng_cfg));
+          Engines.push_back(new FGRocket(FDMExec, Cfg_ptr));
         } else if (engType == "FG_PISTON") {
-          Engines.push_back(new FGPiston(FDMExec, &Eng_cfg));
+          Engines.push_back(new FGPiston(FDMExec, Cfg_ptr));
         } else if (engType == "FG_TURBINE") {
-          Engines.push_back(new FGTurbine(FDMExec, &Eng_cfg));
+          Engines.push_back(new FGTurbine(FDMExec, Cfg_ptr));
         } else if (engType == "FG_SIMTURBINE") {
-          Engines.push_back(new FGSimTurbine(FDMExec, &Eng_cfg));
+          cerr << endl;
+          cerr << "The FG_SIMTURBINE engine type has been renamed to FG_TURBINE." << endl;
+          cerr << "To fix this problem, simply replace the FG_SIMTURBINE name " << endl;
+          cerr << "in your engine file to FG_TURBINE." << endl;
+          cerr << endl;
+          Engines.push_back(new FGTurbine(FDMExec, Cfg_ptr));
+        } else if (engType == "FG_ELECTRIC") {
+          Engines.push_back(new FGElectric(FDMExec, Cfg_ptr));
         } else {
           cerr << fgred << "    Unrecognized engine type: " << underon << engType
                     << underoff << " found in config file." << fgdef << endl;
@@ -262,7 +258,12 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
           else if (token == "YLOC")  { *AC_cfg >> yLoc; }
           else if (token == "ZLOC")  { *AC_cfg >> zLoc; }
           else if (token == "PITCH") { *AC_cfg >> Pitch;}
-          else if (token == "YAW")   { *AC_cfg >> Yaw;}
+          else if (token == "YAW")   { *AC_cfg >> Yaw;  }
+          else if (token.find("AC_THRUSTER") != string::npos) {
+            if (debug_lvl > 0) cout << "\n    Reading thruster definition" << endl;
+              Engines.back()->LoadThruster(AC_cfg);
+              AC_cfg->GetNextConfigLine();
+          }
           else if (token == "FEED")  {
             *AC_cfg >> Feed;
             Engines[numEngines]->AddFeedTank(Feed);
@@ -286,14 +287,14 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
       } else {
 
         cerr << fgred << "\n  Could not read engine config file: " << underon <<
-                    fullpath + engineFileName + ".xml" << underoff << fgdef << endl;
+                    engineFileName + ".xml" << underoff << fgdef << endl;
         return false;
       }
 
     } else if (token == "AC_TANK") {              // ============== READING TANKS
 
       if (debug_lvl > 0) cout << "\n    Reading tank definition" << endl;
-      Tanks.push_back(new FGTank(AC_cfg));
+      Tanks.push_back(new FGTank(AC_cfg, FDMExec));
       switch(Tanks[numTanks]->GetType()) {
       case FGTank::ttFUEL:
         numSelectedFuelTanks++;
@@ -306,59 +307,6 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
       }
 
       numTanks++;
-
-    } else if (token == "AC_THRUSTER") {          // ========== READING THRUSTERS
-
-      thrusterFileName = AC_cfg->GetValue("FILE");
-
-      if (debug_lvl > 0) cout << "\n    Reading thruster from file: " <<
-                                    fullpath + thrusterFileName + ".xml" << endl;
-      FGConfigFile Thruster_cfg(fullpath + thrusterFileName + ".xml");
-
-      if (Thruster_cfg.IsOpen()) {
-        Thruster_cfg.GetNextConfigLine();
-        thrType = Thruster_cfg.GetValue();
-
-        if (thrType == "FG_PROPELLER") {
-          Thrusters.push_back(new FGPropeller(FDMExec, &Thruster_cfg));
-        } else if (thrType == "FG_NOZZLE") {
-          Thrusters.push_back(new FGNozzle(FDMExec, &Thruster_cfg ));
-        } else if (thrType == "FG_DIRECT") {
-          Thrusters.push_back(new FGThruster( FDMExec, &Thruster_cfg) );
-        }
-
-        AC_cfg->GetNextConfigLine();
-        while ((token = AC_cfg->GetValue()) != string("/AC_THRUSTER")) {
-          *AC_cfg >> token;
-          if (token == "XLOC") *AC_cfg >> xLoc;
-          else if (token == "YLOC") *AC_cfg >> yLoc;
-          else if (token == "ZLOC") *AC_cfg >> zLoc;
-          else if (token == "PITCH") *AC_cfg >> Pitch;
-          else if (token == "YAW") *AC_cfg >> Yaw;
-          else if (token == "P_FACTOR") *AC_cfg >> P_Factor;
-          else if (token == "SENSE")   *AC_cfg >> Sense;
-          else cerr << "Unknown identifier: " << token << " in engine file: "
-                                                        << engineFileName << endl;
-        }
-
-        Thrusters[numThrusters]->SetLocation(xLoc, yLoc, zLoc);
-        Thrusters[numThrusters]->SetAnglesToBody(0, Pitch, Yaw);
-        if (thrType == "FG_PROPELLER" && P_Factor > 0.001) {
-          ((FGPropeller*)Thrusters[numThrusters])->SetPFactor(P_Factor);
-          if (debug_lvl > 0) cout << "      P-Factor: " << P_Factor << endl;
-          ((FGPropeller*)Thrusters[numThrusters])->SetSense(fabs(Sense)/Sense);
-          if (debug_lvl > 0) cout << "      Sense: " << Sense <<  endl;
-        }
-        Thrusters[numThrusters]->SetdeltaT(dt*rate);
-        Thrusters[numThrusters]->SetThrusterNumber(numThrusters);
-        numThrusters++;
-
-      } else {
-        cerr << "Could not read thruster config file: " << fullpath
-                                                + thrusterFileName + ".xml" << endl;
-        return false;
-      }
-
     }
     AC_cfg->GetNextConfigLine();
   }
@@ -375,58 +323,12 @@ string FGPropulsion::GetPropulsionStrings(void)
 {
   string PropulsionStrings = "";
   bool firstime = true;
-  char buffer[5];
 
   for (unsigned int i=0;i<Engines.size();i++) {
     if (firstime)  firstime = false;
     else           PropulsionStrings += ", ";
 
-    sprintf(buffer, "%d", i);
-
-    switch(Engines[i]->GetType()) {
-    case FGEngine::etPiston:
-      PropulsionStrings += (Engines[i]->GetName() + "_PwrAvail[" + buffer + "]");
-      break;
-    case FGEngine::etRocket:
-      PropulsionStrings += (Engines[i]->GetName() + "_ChamberPress[" + buffer + "]");
-      break;
-    case FGEngine::etTurbine:
-      break;
-    case FGEngine::etSimTurbine:
-      PropulsionStrings += (Engines[i]->GetName() + "_N1[" + buffer + "], ");
-      PropulsionStrings += (Engines[i]->GetName() + "_N2[" + buffer + "]");
-      break;
-    default:
-      PropulsionStrings += "INVALID ENGINE TYPE";
-      break;
-    }
-
-    PropulsionStrings += ", ";
-
-    FGPropeller* Propeller = (FGPropeller*)Thrusters[i];
-    switch(Thrusters[i]->GetType()) {
-    case FGThruster::ttNozzle:
-      PropulsionStrings += (Thrusters[i]->GetName() + "_Thrust[" + buffer + "]");
-      break;
-    case FGThruster::ttRotor:
-      break;
-    case FGThruster::ttPropeller:
-      PropulsionStrings += (Thrusters[i]->GetName() + "_Torque[" + buffer + "], ");
-      PropulsionStrings += (Thrusters[i]->GetName() + "_PFactor_Roll[" + buffer + "], ");
-      PropulsionStrings += (Thrusters[i]->GetName() + "_PFactor_Pitch[" + buffer + "], ");
-      PropulsionStrings += (Thrusters[i]->GetName() + "_PFactor_Yaw[" + buffer + "], ");
-      PropulsionStrings += (Thrusters[i]->GetName() + "_Thrust[" + buffer + "], ");
-      if (Propeller->IsVPitch())
-        PropulsionStrings += (Thrusters[i]->GetName() + "_Pitch[" + buffer + "], ");
-      PropulsionStrings += (Thrusters[i]->GetName() + "_RPM[" + buffer + "]");
-      break;
-    case FGThruster::ttDirect:
-      PropulsionStrings += (Thrusters[i]->GetName() + "_Thrust[" + buffer + "]");
-      break;
-    default:
-      PropulsionStrings += "INVALID THRUSTER TYPE";
-      break;
-    }
+    PropulsionStrings += Engines[i]->GetEngineLabels() + ", ";
   }
 
   return PropulsionStrings;
@@ -436,7 +338,6 @@ string FGPropulsion::GetPropulsionStrings(void)
 
 string FGPropulsion::GetPropulsionValues(void)
 {
-  char buff[20];
   string PropulsionValues = "";
   bool firstime = true;
 
@@ -444,45 +345,7 @@ string FGPropulsion::GetPropulsionValues(void)
     if (firstime)  firstime = false;
     else           PropulsionValues += ", ";
 
-    switch(Engines[i]->GetType()) {
-    case FGEngine::etPiston:
-      PropulsionValues += (string(gcvt(((FGPiston*)Engines[i])->GetPowerAvailable(), 10, buff)));
-      break;
-    case FGEngine::etRocket:
-      PropulsionValues += (string(gcvt(((FGRocket*)Engines[i])->GetChamberPressure(), 10, buff)));
-      break;
-    case FGEngine::etTurbine:
-      break;
-    case FGEngine::etSimTurbine:
-      PropulsionValues += (string(gcvt(((FGSimTurbine*)Engines[i])->GetN1(), 10, buff))) + ", ";
-      PropulsionValues += (string(gcvt(((FGSimTurbine*)Engines[i])->GetN2(), 10, buff)));
-      break;
-    }
-
-    PropulsionValues += ", ";
-
-    switch(Thrusters[i]->GetType()) {
-    case FGThruster::ttNozzle:
-      PropulsionValues += (string(gcvt(((FGNozzle*)Thrusters[i])->GetThrust(), 10, buff)));
-      break;
-    case FGThruster::ttRotor:
-      break;
-    case FGThruster::ttDirect:
-      PropulsionValues += (string(gcvt(((FGThruster*)Thrusters[i])->GetThrust(), 10, buff)));
-      break;
-    case FGThruster::ttPropeller:
-      FGPropeller* Propeller = (FGPropeller*)Thrusters[i];
-      FGColumnVector3 vPFactor = Propeller->GetPFactor();
-      PropulsionValues += string(gcvt(Propeller->GetTorque(), 10, buff)) + ", ";
-      PropulsionValues += string(gcvt(vPFactor(eRoll), 10, buff)) + ", ";
-      PropulsionValues += string(gcvt(vPFactor(ePitch), 10, buff)) + ", ";
-      PropulsionValues += string(gcvt(vPFactor(eYaw), 10, buff)) + ", ";
-      PropulsionValues += string(gcvt(Propeller->GetThrust(), 10, buff)) + ", ";
-      if (Propeller->IsVPitch())
-        PropulsionValues += string(gcvt(Propeller->GetPitch(), 10, buff)) + ", ";
-      PropulsionValues += string(gcvt(Propeller->GetRPM(), 10, buff));
-      break;
-    }
+    PropulsionValues += Engines[i]->GetEngineValues() + ", ";
   }
 
   return PropulsionValues;
@@ -574,15 +437,15 @@ void FGPropulsion::SetCutoff(int setting)
   if (ActiveEngine < 0) {
     for (unsigned i=0; i<Engines.size(); i++) {
       if (setting == 0)
-        ((FGSimTurbine*)Engines[i])->SetCutoff(false);
+        ((FGTurbine*)Engines[i])->SetCutoff(false);
       else
-        ((FGSimTurbine*)Engines[i])->SetCutoff(true);
+        ((FGTurbine*)Engines[i])->SetCutoff(true);
     }
   } else {
     if (setting == 0)
-      ((FGSimTurbine*)Engines[ActiveEngine])->SetCutoff(false);
+      ((FGTurbine*)Engines[ActiveEngine])->SetCutoff(false);
     else
-      ((FGSimTurbine*)Engines[ActiveEngine])->SetCutoff(true);
+      ((FGTurbine*)Engines[ActiveEngine])->SetCutoff(true);
   }
 }
 
@@ -594,6 +457,44 @@ void FGPropulsion::SetActiveEngine(int engine)
     ActiveEngine = -1;
   else
     ActiveEngine = engine;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGPropulsion::Transfer(int source, int target, double amount)
+{
+ double shortage, overage;
+
+  if (source == -1) {
+     shortage = 0.0;
+  } else {
+     shortage = Tanks[source]->Drain(amount);
+  }
+  if (target == -1) {
+     overage = 0.0;
+  } else {
+     overage = Tanks[target]->Fill(amount - shortage);
+  }
+  return overage;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropulsion::DoRefuel(double time_slice)
+{
+  double fillrate = 100 * time_slice;   // 100 lbs/sec = 6000 lbs/min
+  int TanksNotFull = 0;
+
+  for (unsigned int i=0; i<numTanks; i++) {
+    if (Tanks[i]->GetPctFull() < 99.99) ++TanksNotFull;
+  }
+
+  if (TanksNotFull) {
+    for (unsigned int i=0; i<numTanks; i++) {
+      if (Tanks[i]->GetPctFull() < 99.99)
+          Transfer(-1, i, fillrate/TanksNotFull);
+    }
+  }      
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

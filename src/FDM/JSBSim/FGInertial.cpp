@@ -36,7 +36,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGInertial.h"
-#include "FGPosition.h"
+#include "FGPropagate.h"
 #include "FGState.h"
 #include "FGMassBalance.h"
 
@@ -60,12 +60,6 @@ FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex)
   RadiusReference = 20925650.00;
   gAccelReference = GM/(RadiusReference*RadiusReference);
   gAccel          = GM/(RadiusReference*RadiusReference);
-  vRadius.InitMatrix();
-  vCoriolis.InitMatrix();
-  vCentrifugal.InitMatrix();
-  vGravity.InitMatrix();
-
-  bind();
 
   Debug(0);
 }
@@ -74,7 +68,6 @@ FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex)
 
 FGInertial::~FGInertial(void)
 {
-  unbind();
   Debug(1);
 }
 
@@ -82,42 +75,14 @@ FGInertial::~FGInertial(void)
 
 bool FGInertial::Run(void)
 {
-  if (!FGModel::Run()) {
+  // Fast return if we have nothing to do ...
+  if (FGModel::Run()) return true;
 
-    gAccel = GM / (Position->GetRadius()*Position->GetRadius());
+  // Gravitation accel
+  double r = Propagate->GetRadius();
+  gAccel = GetGAccel(r);
 
-    vGravity(eDown) = gAccel;
-
-    // The following equation for vOmegaLocal terms shows the angular velocity
-    // calculation _for_the_local_frame_ given the earth's rotation (first set)
-    // at the current latitude, and also the component due to the aircraft
-    // motion over the curved surface of the earth (second set).
-
-    vOmegaLocal(eX) = omega() * cos(Position->GetLatitude());
-    vOmegaLocal(eY) = 0.0;
-    vOmegaLocal(eZ) = omega() * -sin(Position->GetLatitude());
-
-    vOmegaLocal(eX) +=  Position->GetVe() / Position->GetRadius();
-    vOmegaLocal(eY) += -Position->GetVn() / Position->GetRadius();
-    vOmegaLocal(eZ) +=  0.00;
-
-    // Coriolis acceleration is normally written: -2w*dr/dt, but due to the axis
-    // conventions used here the sign is reversed: 2w*dr/dt. The same is true for
-    // Centrifugal acceleration.
-
-    vCoriolis(eEast) = 2.0*omega() * (Position->GetVd()*cos(Position->GetLatitude()) +
-                                      Position->GetVn()*sin(Position->GetLatitude()));
-
-    vRadius(eDown) = Position->GetRadius();
-    vCentrifugal(eDown) = -vOmegaLocal.Magnitude() * vOmegaLocal.Magnitude() * vRadius(eDown);
-
-//    vForces = State->GetTl2b() * MassBalance->GetMass() * (vCoriolis + vCentrifugal + vGravity);
-    vForces = State->GetTl2b() * MassBalance->GetMass() * vGravity;
-
-    return false;
-  } else {
-    return true;
-  }
+  return false;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -129,27 +94,6 @@ bool FGInertial::LoadInertial(FGConfigFile* AC_cfg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGInertial::bind(void)
-{
-  typedef double (FGInertial::*PMF)(int) const;
-  PropertyManager->Tie("forces/fbx-inertial-lbs", this,1,
-                       (PMF)&FGInertial::GetForces);
-  PropertyManager->Tie("forces/fby-inertial-lbs", this,2,
-                       (PMF)&FGInertial::GetForces);
-  PropertyManager->Tie("forces/fbz-inertial-lbs", this,3,
-                       (PMF)&FGInertial::GetForces);
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGInertial::unbind(void)
-{
-  PropertyManager->Untie("forces/fbx-inertial-lbs");
-  PropertyManager->Untie("forces/fby-inertial-lbs");
-  PropertyManager->Untie("forces/fbz-inertial-lbs");
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print
 //       out the normally expected messages, essentially echoing

@@ -87,7 +87,7 @@ FGSummer::FGSummer(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
     } else if (token == "OUTPUT") {
       IsOutput = true;
       *AC_cfg >> sOutputIdx;
-      OutputNode = PropertyManager->GetNode(sOutputIdx);
+      OutputNode = PropertyManager->GetNode(sOutputIdx, true);
     }
   }
  

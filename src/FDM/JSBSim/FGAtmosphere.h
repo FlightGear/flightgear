@@ -28,7 +28,7 @@ HISTORY
 --------------------------------------------------------------------------------
 11/24/98   JSB   Created
 07/23/99   TP    Added implementation of 1959 Standard Atmosphere
-                 Moved calculation of Mach number to FGTranslation
+                 Moved calculation of Mach number to FGPropagate
                  Updated to '76 model
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -92,6 +92,8 @@ public:
   inline double GetDensity(void)  const {return *density;}
   /// Returns the pressure in psf.
   inline double GetPressure(void)  const {return *pressure;}
+  /// Returns the pressure at an arbitrary altitude in psf
+  double GetPressure(double alt);
   /// Returns the speed of sound in ft/sec.
   inline double GetSoundSpeed(void) const {return soundspeed;}
 

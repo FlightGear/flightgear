@@ -35,11 +35,12 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <sstream>
+
 #include "FGPropeller.h"
-#include "FGTranslation.h"
-#include "FGRotation.h"
-#include "FGFCS.h"
+#include "FGPropagate.h"
 #include "FGAtmosphere.h"
+#include "FGAuxiliary.h"
 
 namespace JSBSim {
 
@@ -50,9 +51,9 @@ static const char *IdHdr = ID_PROPELLER;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-// This class currently makes certain assumptions when calculating torque and 
+// This class currently makes certain assumptions when calculating torque and
 // p-factor. That is, that the axis of rotation is the X axis of the aircraft -
-// not just the X-axis of the engine/propeller. This may or may not work for a 
+// not just the X-axis of the engine/propeller. This may or may not work for a
 // helicopter.
 
 FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(exec)
@@ -60,7 +61,7 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
   string token;
   int rows, cols;
 
-  MaxPitch = MinPitch = P_Factor = Sense = Pitch = 0.0;
+  MaxPitch = MinPitch = P_Factor = Sense = Pitch = Advance = 0.0;
   GearRatio = 1.0;
 
   Name = Prop_cfg->GetValue("NAME");
@@ -135,7 +136,7 @@ FGPropeller::~FGPropeller()
 double FGPropeller::Calculate(double PowerAvailable)
 {
   double J, C_Thrust, omega;
-  double Vel = fdmex->GetTranslation()->GetAeroUVW(eU);
+  double Vel = fdmex->GetAuxiliary()->GetAeroUVW(eU);
   double rho = fdmex->GetAtmosphere()->GetDensity();
   double RPS = RPM/60.0;
   double alpha, beta;
@@ -153,8 +154,8 @@ double FGPropeller::Calculate(double PowerAvailable)
   }
 
   if (P_Factor > 0.0001) {
-    alpha = fdmex->GetTranslation()->Getalpha();
-    beta  = fdmex->GetTranslation()->Getbeta();
+    alpha = fdmex->GetAuxiliary()->Getalpha();
+    beta  = fdmex->GetAuxiliary()->Getbeta();
     SetActingLocationY( GetLocationY() + P_Factor*alpha*Sense);
     SetActingLocationZ( GetLocationZ() + P_Factor*beta*Sense);
   } else if (P_Factor < 0.000) {
@@ -163,12 +164,6 @@ double FGPropeller::Calculate(double PowerAvailable)
 
   Thrust = C_Thrust*RPS*RPS*Diameter*Diameter*Diameter*Diameter*rho;
   omega = RPS*2.0*M_PI;
-
-  // Check for windmilling.
-  double radius = Diameter * 0.375; // 75% of radius
-  double windmill_cutoff = tan(Pitch * 1.745329E-2) * omega * radius;
-  if (Vel > windmill_cutoff)
-    Thrust = -Thrust;
 
   vFn(1) = Thrust;
 
@@ -185,13 +180,13 @@ double FGPropeller::Calculate(double PowerAvailable)
   ExcessTorque = PowerAvailable / omega * GearRatio;
   RPM = (RPS + ((ExcessTorque / Ixx) / (2.0 * M_PI)) * deltaT) * 60.0;
 
-				// The friction from the engine should
-				// stop it somewhere; I chose an
-				// arbitrary point.
+        // The friction from the engine should
+        // stop it somewhere; I chose an
+        // arbitrary point.
   if (RPM < 5.0)
     RPM = 0;
 
-  vMn = fdmex->GetRotation()->GetPQR()*vH + vTorque*Sense;
+  vMn = fdmex->GetPropagate()->GetPQR()*vH + vTorque*Sense;
 
   return Thrust; // return thrust in pounds
 }
@@ -204,17 +199,16 @@ double FGPropeller::GetPowerRequired(void)
 
   double cPReq, RPS = RPM / 60.0;
 
-  double J = fdmex->GetTranslation()->GetAeroUVW(eU) / (Diameter * RPS);
+  double J = fdmex->GetAuxiliary()->GetAeroUVW(eU) / (Diameter * RPS);
   double rho = fdmex->GetAtmosphere()->GetDensity();
 
   if (MaxPitch == MinPitch) { // Fixed pitch prop
     Pitch = MinPitch;
     cPReq = cPower->GetValue(J);
   } else {                    // Variable pitch prop
-    double advance = fdmex->GetFCS()->GetPropAdvance(ThrusterNumber);
 
     if (MaxRPM != MinRPM) {   // fixed-speed prop
-      double rpmReq = MinRPM + (MaxRPM - MinRPM) * advance;
+      double rpmReq = MinRPM + (MaxRPM - MinRPM) * Advance;
       double dRPM = rpmReq - RPM;
 
       Pitch -= dRPM / 10;
@@ -223,7 +217,7 @@ double FGPropeller::GetPowerRequired(void)
       else if (Pitch > MaxPitch)  Pitch = MaxPitch;
 
     } else {
-      Pitch = MinPitch + (MaxPitch - MinPitch) * advance;
+      Pitch = MinPitch + (MaxPitch - MinPitch) * Advance;
     }
     cPReq = cPower->GetValue(J, Pitch);
   }
@@ -245,6 +239,41 @@ FGColumnVector3 FGPropeller::GetPFactor()
   pz = Thrust * Sense * (GetActingLocationZ() - GetLocationZ()) / 12.0;
 
   return FGColumnVector3(px, py, pz);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+string FGPropeller::GetThrusterLabels(int id)
+{
+  std::ostringstream buf;
+
+  buf << Name << "_Torque[" << id << "], "
+      << Name << "_PFactor_Pitch[" << id << "], "
+      << Name << "_PFactor_Yaw[" << id << "], "
+      << Name << "_Thrust[" << id << "], ";
+  if (IsVPitch())
+    buf << Name << "_Pitch[" << id << "], ";
+  buf << Name << "_RPM[" << id << "]";
+
+  return buf.str();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+string FGPropeller::GetThrusterValues(int id)
+{
+  std::ostringstream buf;
+
+  FGColumnVector3 vPFactor = GetPFactor();
+  buf << vTorque(eX) << ", "
+      << vPFactor(ePitch) << ", "
+      << vPFactor(eYaw) << ", "
+      << Thrust << ", ";
+  if (IsVPitch())
+    buf << Pitch << ", ";
+  buf << RPM;
+
+  return buf.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

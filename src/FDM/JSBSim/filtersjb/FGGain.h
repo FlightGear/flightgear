@@ -1,8 +1,8 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
  Header:       FGGain.h
- Author:       
- Date started: 
+ Author:
+ Date started:
 
  ------------- Copyright (C)  -------------
 
@@ -94,6 +94,7 @@ CLASS DOCUMENTATION
       ROWS \<number_of_rows>
       \<lookup_value  gain_value>
       ?
+      [CLIPTO \<min> \<max> 1]
       [OUTPUT \<property>]
     \</COMPONENT>
     </pre>
@@ -170,9 +171,9 @@ class FGGain  : public FGFCSComponent
 public:
   FGGain(FGFCS* fcs, FGConfigFile* AC_cfg);
   ~FGGain();
-  
+
   double GetOutputPct() const { return OutputPct; }
-  
+
   bool Run (void);
 
 private:
@@ -181,8 +182,9 @@ private:
   FGState* State;
   double Gain;
   double Min, Max;
+  double clipmin, clipmax;
   double OutputPct;
-  bool invert;
+  bool invert, clip;
   int Rows;
   FGPropertyManager* ScheduledBy;
 

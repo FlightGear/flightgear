@@ -35,6 +35,8 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <sstream>
+
 #include "FGThruster.h"
 
 namespace JSBSim {
@@ -47,8 +49,7 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGThruster::FGThruster(FGFDMExec *FDMExec) : FGForce(FDMExec),
-                                             ThrusterNumber(0)
+FGThruster::FGThruster(FGFDMExec *FDMExec) : FGForce(FDMExec)
 {
   Type = ttDirect;
   SetTransformType(FGForce::tCustom);
@@ -61,19 +62,40 @@ FGThruster::FGThruster(FGFDMExec *FDMExec) : FGForce(FDMExec),
 FGThruster::FGThruster(FGFDMExec *FDMExec,
                        FGConfigFile *Eng_cfg ): FGForce(FDMExec)
 {
-  ThrusterNumber = 0;
   Type = ttDirect;
   SetTransformType(FGForce::tCustom);
   Name = Eng_cfg->GetValue();
   GearRatio = 1.0;
   Debug(0);
-}   
+}
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGThruster::~FGThruster()
 {
   Debug(1);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+string FGThruster::GetThrusterLabels(int id)
+{
+  std::ostringstream buf;
+
+  buf << Name << "_Thrust[" << id << "]";
+
+  return buf.str();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+string FGThruster::GetThrusterValues(int id)
+{
+  std::ostringstream buf;
+
+  buf << Thrust;
+
+  return buf.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

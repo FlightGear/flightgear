@@ -60,10 +60,10 @@ CLASS IMPLEMENTATION
 FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : Exec(fdmex)
 {
   string tmp;
-  
+
   *AC_cfg >> tmp >> name >> vXYZ(1) >> vXYZ(2) >> vXYZ(3)
             >> kSpring >> bDamp>> dynamicFCoeff >> staticFCoeff
-                  >> rollingFCoeff >> sSteerType >> sBrakeGroup 
+                  >> rollingFCoeff >> sSteerType >> sBrakeGroup
                      >> maxSteerAngle >> sRetractable;
 
   if      (sBrakeGroup == "LEFT"  ) eBrakeGrp = bgLeft;
@@ -84,13 +84,13 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : Exec(fdmex)
     cerr << "Improper steering type specification in config file: "
          << sSteerType << " is undefined." << endl;
   }
-  
+
   if ( sRetractable == "RETRACT" ) {
     isRetractable = true;
   } else  {
     isRetractable = false;
-  }  
-  
+  }
+
   GearUp = false;
   GearDown = true;
   Servicable = true;
@@ -100,8 +100,8 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : Exec(fdmex)
 
   State       = Exec->GetState();
   Aircraft    = Exec->GetAircraft();
-  Position    = Exec->GetPosition();
-  Rotation    = Exec->GetRotation();
+  Propagate   = Exec->GetPropagate();
+  Auxiliary   = Exec->GetAuxiliary();
   FCS         = Exec->GetFCS();
   MassBalance = Exec->GetMassBalance();
 
@@ -116,8 +116,8 @@ FGLGear::FGLGear(FGConfigFile* AC_cfg, FGFDMExec* fdmex) : Exec(fdmex)
   SinkRate = GroundSpeed = 0.0;
 
   vWhlBodyVec = MassBalance->StructuralToBody(vXYZ);
-  
-  vLocalGear = State->GetTb2l() * vWhlBodyVec;
+
+  vLocalGear = Propagate->GetTb2l() * vWhlBodyVec;
 
   compressLength  = 0.0;
   compressSpeed   = 0.0;
@@ -142,8 +142,8 @@ FGLGear::FGLGear(const FGLGear& lgear)
 {
   State    = lgear.State;
   Aircraft = lgear.Aircraft;
-  Position = lgear.Position;
-  Rotation = lgear.Rotation;
+  Propagate = lgear.Propagate;
+  Auxiliary = lgear.Auxiliary;
   Exec     = lgear.Exec;
   FCS      = lgear.FCS;
   MassBalance = lgear.MassBalance;
@@ -206,7 +206,6 @@ FGLGear::~FGLGear()
 
 FGColumnVector3& FGLGear::Force(void)
 {
-  double SteerGain = 0;
   double SinWheel, CosWheel;
   double deltaSlip;
   double deltaT = State->Getdt()*Aircraft->GetRate();
@@ -228,19 +227,19 @@ FGColumnVector3& FGLGear::Force(void)
   } else {
       GearUp   = false;
       GearDown = true;
-  }         
-      
+  }
+
   if (GearDown) {
 
     vWhlBodyVec = MassBalance->StructuralToBody(vXYZ);
 
 // vWhlBodyVec now stores the vector from the cg to this wheel
 
-    vLocalGear = State->GetTb2l() * vWhlBodyVec;
+    vLocalGear = Propagate->GetTb2l() * vWhlBodyVec;
 
 // vLocalGear now stores the vector from the cg to the wheel in local coords.
 
-    compressLength = vLocalGear(eZ) - Position->GetDistanceAGL();
+    compressLength = vLocalGear(eZ) - Propagate->GetDistanceAGL();
 
 // The compression length is currently measured in the Z-axis, only, at this time.
 // It should be measured along the strut axis. If the local-frame gear position
@@ -262,8 +261,8 @@ FGColumnVector3& FGLGear::Force(void)
 // (used for calculating damping force) is found by taking the Z-component of the
 // wheel velocity.
 
-      vWhlVelVec      =  State->GetTb2l() * (Rotation->GetPQR() * vWhlBodyVec);
-      vWhlVelVec     +=  Position->GetVel();
+      vWhlVelVec      =  Propagate->GetTb2l() * (Propagate->GetPQR() * vWhlBodyVec);
+      vWhlVelVec     +=  Propagate->GetVel();
       compressSpeed   =  vWhlVelVec(eZ);
 
 // If this is the first time the wheel has made contact, remember some values
@@ -272,13 +271,13 @@ FGColumnVector3& FGLGear::Force(void)
       if (!FirstContact) {
         FirstContact  = true;
         SinkRate      =  compressSpeed;
-        GroundSpeed   =  Position->GetVel().Magnitude();
+        GroundSpeed   =  Propagate->GetVel().Magnitude();
         TakeoffReported = false;
       }
 
 // If the takeoff run is starting, initialize.
 
-      if ((Position->GetVel().Magnitude() > 0.1) &&
+      if ((Propagate->GetVel().Magnitude() > 0.1) &&
           (FCS->GetBrake(bgLeft) == 0) &&
           (FCS->GetBrake(bgRight) == 0) &&
           (FCS->GetThrottlePos(0) == 1) && !StartedGroundRun)
@@ -326,7 +325,7 @@ FGColumnVector3& FGLGear::Force(void)
 
       switch (eSteerType) {
       case stSteer:
-        SteerAngle = -maxSteerAngle * FCS->GetDrCmd() * 0.01745; 
+        SteerAngle = -maxSteerAngle * FCS->GetDrCmd() * 0.01745;
         break;
       case stFixed:
         SteerAngle = 0.0;
@@ -344,8 +343,8 @@ FGColumnVector3& FGLGear::Force(void)
 // For now, steering angle is assumed to happen in the Local Z axis,
 // not the strut axis as it should be.  Will fix this later.
 
-      SinWheel      = sin(Rotation->Getpsi() + SteerAngle);
-      CosWheel      = cos(Rotation->Getpsi() + SteerAngle);
+      SinWheel      = sin(Propagate->Getpsi() + SteerAngle);
+      CosWheel      = cos(Propagate->Getpsi() + SteerAngle);
       RollingWhlVel = vWhlVelVec(eX)*CosWheel + vWhlVelVec(eY)*SinWheel;
       SideWhlVel    = vWhlVelVec(eY)*CosWheel - vWhlVelVec(eX)*SinWheel;
 
@@ -382,19 +381,19 @@ FGColumnVector3& FGLGear::Force(void)
       {
         WheelSlip = 0.0;
       }
-*/    
+*/
       lastWheelSlip = WheelSlip;
 
 // Compute the sideforce coefficients using similar assumptions to LaRCSim for now.
 // Allow a maximum of 10 degrees tire slip angle before wheel slides.  At that point,
 // transition from static to dynamic friction.  There are more complicated formulations
-// of this that avoid the discrete jump.  Will fix this later.
+// of this that avoid the discrete jump (similar to Pacejka).  Will fix this later.
 
       if (fabs(WheelSlip) <= 20.0) {
         FCoeff = staticFCoeff*WheelSlip/20.0;
       } else if (fabs(WheelSlip) <= 40.0) {
 //        FCoeff = dynamicFCoeff*fabs(WheelSlip)/WheelSlip;
-        FCoeff = (dynamicFCoeff*(fabs(WheelSlip) - 20.0)/20.0 + 
+        FCoeff = (dynamicFCoeff*(fabs(WheelSlip) - 20.0)/20.0 +
                   staticFCoeff*(40.0 - fabs(WheelSlip))/20.0)*fabs(WheelSlip)/WheelSlip;
       } else {
         FCoeff = dynamicFCoeff*fabs(WheelSlip)/WheelSlip;
@@ -441,14 +440,14 @@ FGColumnVector3& FGLGear::Force(void)
 
 // Transform the forces back to the body frame and compute the moment.
 
-      vForce  = State->GetTl2b() * vLocalForce;
+      vForce  = Propagate->GetTl2b() * vLocalForce;
       vMoment = vWhlBodyVec * vForce;
 
     } else { // Gear is NOT compressed
 
       WOW = false;
 
-      if (Position->GetDistanceAGL() > 200.0) {
+      if (Propagate->GetDistanceAGL() > 200.0) {
         FirstContact = false;
         StartedGroundRun = false;
         LandingReported = false;
@@ -459,19 +458,19 @@ FGColumnVector3& FGLGear::Force(void)
       compressLength = 0.0; // reset compressLength to zero for data output validity
     }
 
-    if (FirstContact) LandingDistanceTraveled += Position->GetVground()*deltaT;
-  
+    if (FirstContact) LandingDistanceTraveled += Auxiliary->GetVground()*deltaT;
+
     if (StartedGroundRun) {
-       TakeoffDistanceTraveled50ft += Position->GetVground()*deltaT;
-      if (WOW) TakeoffDistanceTraveled += Position->GetVground()*deltaT;
+       TakeoffDistanceTraveled50ft += Auxiliary->GetVground()*deltaT;
+      if (WOW) TakeoffDistanceTraveled += Auxiliary->GetVground()*deltaT;
     }
 
-    if (ReportEnable && Position->GetVground() <= 0.05 && !LandingReported) {
+    if (ReportEnable && Auxiliary->GetVground() <= 0.05 && !LandingReported) {
       if (debug_lvl > 0) Report(erLand);
     }
 
     if (ReportEnable && !TakeoffReported &&
-       (vLocalGear(eZ) - Position->GetDistanceAGL()) < -50.0)
+       (vLocalGear(eZ) - Propagate->GetDistanceAGL()) < -50.0)
     {
       if (debug_lvl > 0) Report(erTakeoff);
     }
@@ -492,8 +491,8 @@ FGColumnVector3& FGLGear::Force(void)
       PutMessage("Crash Detected: Simulation FREEZE.");
       Exec->Freeze();
     }
-  } 
-  return vForce; 
+  }
+  return vForce;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

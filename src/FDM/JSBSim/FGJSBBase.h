@@ -38,6 +38,8 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <limits>
+
 #ifdef FGFS
 #  include <simgear/compiler.h>
 #  include <math.h>
@@ -73,17 +75,6 @@ using std::string;
 using std::max;
 #endif
 
-#ifdef __FreeBSD__ // define gcvt on FreeBSD
-
-#include <stdio.h>
-
-static char *gcvt(double number, size_t ndigit, char *buf)
-{
-  sprintf(buf, "%f", number);
-  return buf;
-}
-#endif
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -112,10 +103,10 @@ CLASS DECLARATION
 class FGJSBBase {
 public:
   /// Constructor for FGJSBBase.
-  FGJSBBase();
+  FGJSBBase() {};
 
   /// Destructor for FGJSBBase.
-  virtual ~FGJSBBase() {};
+  ~FGJSBBase() {};
 
   /// JSBSim Message structure
   typedef struct Msg {
@@ -129,26 +120,6 @@ public:
     double dVal;
   } Message;
 
-  ///@name JSBSim Enums.
-  //@{
-  /// Moments L, M, N
-  enum {eL     = 1, eM,     eN    };
-  /// Rates P, Q, R
-  enum {eP     = 1, eQ,     eR    };
-  /// Velocities U, V, W
-  enum {eU     = 1, eV,     eW    };
-  /// Positions X, Y, Z
-  enum {eX     = 1, eY,     eZ    };
-  /// Euler angles Phi, Theta, Psi
-  enum {ePhi   = 1, eTht,   ePsi  };
-  /// Stability axis forces, Drag, Side force, Lift
-  enum {eDrag  = 1, eSide,  eLift };
-  /// Local frame orientation Roll, Pitch, Yaw
-  enum {eRoll  = 1, ePitch, eYaw  };
-  /// Local frame position North, East, Down
-  enum {eNorth = 1, eEast,  eDown };
-  //@}
-  
   ///@name JSBSim console output highlighting terms.
   //@{
   /// highlights text
@@ -184,22 +155,22 @@ public:
   /** Creates a message with the given text and places it on the queue.
       @param text message text
       @return pointer to a Message structure */
-  Message* PutMessage(string text);
+  Message* PutMessage(const string& text);
   /** Creates a message with the given text and boolean value and places it on the queue.
       @param text message text
       @param bVal boolean value associated with the message
       @return pointer to a Message structure */
-  Message* PutMessage(string text, bool bVal);
+  Message* PutMessage(const string& text, bool bVal);
   /** Creates a message with the given text and integer value and places it on the queue.
       @param text message text
       @param iVal integer value associated with the message
       @return pointer to a Message structure */
-  Message* PutMessage(string text, int iVal);
+  Message* PutMessage(const string& text, int iVal);
   /** Creates a message with the given text and double value and places it on the queue.
       @param text message text
       @param dVal double value associated with the message
       @return pointer to a Message structure */
-  Message* PutMessage(string text, double dVal);
+  Message* PutMessage(const string& text, double dVal);
   /** Reads the message on the queue (but does not delete it).
       @return pointer to a Message structure (or NULL if no mesage) */
   Message* ReadMessage(void);
@@ -208,28 +179,71 @@ public:
   Message* ProcessMessage(void);
   //@}
   string GetVersion(void) {return JSBSim_version;}
-  
+
   void disableHighLighting(void);
 
   static short debug_lvl;
-  double KelvinToFahrenheit (double kelvin) {
+  static double KelvinToFahrenheit (double kelvin) {
     return 1.8*kelvin - 459.4;
   }
 
-  double RankineToCelsius (double rankine) {
+  static double RankineToCelsius (double rankine) {
     return (rankine - 491.67)/1.8;
+  }
+
+  static double FahrenheitToCelsius (double fahrenheit) {
+    return (fahrenheit - 32.0)/1.8;
+  }
+
+  static double CelsiusToFahrenheit (double celsius) {
+    return celsius * 1.8 + 32.0;
+  }
+
+
+  /** Finite precision comparison.
+      @param a first value to compare
+      @param b second value to compare
+      @return if the two values can be considered equal up to roundoff */
+  static bool EqualToRoundoff(double a, double b) {
+    double eps = 2.0*std::numeric_limits<double>::epsilon();
+    return fabs(a - b) <= eps*max(fabs(a), fabs(b));
+  }
+
+  /** Finite precision comparison.
+      @param a first value to compare
+      @param b second value to compare
+      @return if the two values can be considered equal up to roundoff */
+  static bool EqualToRoundoff(float a, float b) {
+    float eps = 2.0*std::numeric_limits<float>::epsilon();
+    return fabs(a - b) <= eps*max(fabs(a), fabs(b));
+  }
+
+  /** Finite precision comparison.
+      @param a first value to compare
+      @param b second value to compare
+      @return if the two values can be considered equal up to roundoff */
+  static bool EqualToRoundoff(float a, double b) {
+    return EqualToRoundoff(a, (float)b);
+  }
+
+  /** Finite precision comparison.
+      @param a first value to compare
+      @param b second value to compare
+      @return if the two values can be considered equal up to roundoff */
+  static bool EqualToRoundoff(double a, float b) {
+    return EqualToRoundoff((float)a, b);
   }
 
 protected:
   static Message localMsg;
-  
+
   static std::queue <Message*> Messages;
 
-  virtual void Debug(int from) {};
+  void Debug(int from) {};
 
   static unsigned int frame;
   static unsigned int messageId;
-  
+
   static const double radtodeg;
   static const double degtorad;
   static const double hptoftlbssec;
@@ -245,6 +259,28 @@ protected:
   static const string needed_cfg_version;
   static const string JSBSim_version;
 };
+
+/// Moments L, M, N
+enum {eL     = 1, eM,     eN    };
+/// Rates P, Q, R
+enum {eP     = 1, eQ,     eR    };
+/// Velocities U, V, W
+enum {eU     = 1, eV,     eW    };
+/// Positions X, Y, Z
+enum {eX     = 1, eY,     eZ    };
+/// Euler angles Phi, Theta, Psi
+enum {ePhi   = 1, eTht,   ePsi  };
+/// Stability axis forces, Drag, Side force, Lift
+enum {eDrag  = 1, eSide,  eLift };
+/// Local frame orientation Roll, Pitch, Yaw
+enum {eRoll  = 1, ePitch, eYaw  };
+/// Local frame position North, East, Down
+enum {eNorth = 1, eEast,  eDown };
+/// Locations Radius, Latitude, Longitude
+enum {eLat = 1, eLong, eRad     };
+/// Conversion specifiers
+enum {inNone = 0, inDegrees, inRadians, inMeters, inFeet };
+
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

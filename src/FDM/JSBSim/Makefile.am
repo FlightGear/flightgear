@@ -11,9 +11,7 @@ libJSBSim_a_SOURCES = \
 	FGAuxiliary.cpp FGAuxiliary.h \
 	FGCoefficient.cpp FGCoefficient.h \
         FGColumnVector3.cpp FGColumnVector3.h \
-        FGColumnVector4.cpp FGColumnVector4.h \
 	FGConfigFile.cpp FGConfigFile.h \
-	FGDefs.h \
 	FGFCS.cpp FGFCS.h \
 	FGFDMExec.cpp FGFDMExec.h \
 	FGFactorGroup.cpp FGFactorGroup.h \
@@ -31,25 +29,24 @@ libJSBSim_a_SOURCES = \
         FGPiston.cpp FGPiston.h \
         FGPropeller.cpp FGPropeller.h \
         FGPropulsion.cpp FGPropulsion.h \
-	FGPosition.cpp FGPosition.h \
-	FGRotation.cpp FGRotation.h \
  	FGRotor.cpp FGRotor.h \
 	FGRocket.cpp FGRocket.h \
 	FGScript.cpp FGScript.h \
 	FGState.cpp FGState.h \
 	FGTable.cpp FGTable.h \
 	FGThruster.cpp FGThruster.h \
-	FGTranslation.cpp FGTranslation.h \
 	FGTrim.cpp FGTrim.h \
 	FGTrimAxis.cpp FGTrimAxis.h \
 	FGTurbine.cpp FGTurbine.h \
-	FGUtility.cpp FGUtility.h \
 	FGEngine.cpp FGEngine.h \
 	FGTank.cpp FGTank.h \
 	FGfdmSocket.cpp FGfdmSocket.h \
 	FGTurbine.cpp FGTurbine.h \
 	FGPropertyManager.cpp FGPropertyManager.h  \
-	FGSimTurbine.cpp FGSimTurbine.h \
+	FGPropagate.cpp FGPropagate.h \
+	FGLocation.cpp FGLocation.h \
+	FGQuaternion.cpp FGQuaternion.h \
+	FGElectric.cpp FGElectric.h \
 	JSBSim.cxx JSBSim.hxx
 
 

@@ -77,11 +77,29 @@ CLASS DECLARATION
 
 class FGKinemat  : public FGFCSComponent {
 public:
+  /** Initializer.
+      @param fcs A reference to the ccurrent flightcontrolsystem.
+      @param AC_cfg reference to the current aircraft configuration file.
+      Initializes the FGKinemat object from the given configuration
+      file. The Configuration file is expected to be at the stream
+      position where the KINEMAT object starts. Also it is expected to
+      be past the end of the current KINEMAT configuration on exit.
+   */
   FGKinemat(FGFCS* fcs, FGConfigFile* AC_cfg);
+
+  /** Destructor.
+   */
   ~FGKinemat();
   
+  /** Kinemat output value.
+      @return the current output of the kinemat object on the range of [0,1].
+   */
   double GetOutputPct() const { return OutputPct; }
     
+  /** Run method, overwrites FGModel::Run().
+      @return false on success, true on failure.
+      The routine doing the work.
+   */
   bool Run (void);
   
 private:

@@ -83,27 +83,14 @@ public:
   ~FGInertial(void);
 
   bool Run(void);
-  FGColumnVector3& GetForces(void) {return vForces;}
-  FGColumnVector3& GetGravity(void) {return vGravity;}
-  FGColumnVector3& GetCoriolis(void) {return vCoriolis;}
-  FGColumnVector3& GetCentrifugal(void) {return vCentrifugal;}
-  double GetForces(int n) const {return vForces(n);}
   bool LoadInertial(FGConfigFile* AC_cfg);
   double SLgravity(void) const {return gAccelReference;}
   double gravity(void) const {return gAccel;}
   double omega(void) const {return RotationRate;}
+  double GetGAccel(double r) const { return GM/(r*r); }
   double RefRadius(void) const {return RadiusReference;}
-  
-  void bind(void);
-  void unbind(void);
 
 private:
-  FGColumnVector3 vOmegaLocal;
-  FGColumnVector3 vForces;
-  FGColumnVector3 vRadius;
-  FGColumnVector3 vGravity;
-  FGColumnVector3 vCoriolis;
-  FGColumnVector3 vCentrifugal;
   double gAccel;
   double gAccelReference;
   double RadiusReference;
@@ -114,4 +101,3 @@ private:
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
-

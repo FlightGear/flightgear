@@ -82,9 +82,7 @@ class FGAerodynamics;
 class FGInertial;
 class FGGroundReactions;
 class FGAircraft;
-class FGTranslation;
-class FGRotation;
-class FGPosition;
+class FGPropagate;
 class FGAuxiliary;
 class FGOutput;
 class FGConfigFile;
@@ -114,7 +112,7 @@ public:
       @param Config a pointer to the config file instance
       @return true if model is successfully loaded*/
   virtual bool Load(FGConfigFile* Config) {return true;}
- 
+
   FGModel* NextModel;
   string Name;
 
@@ -125,13 +123,13 @@ public:
   virtual bool InitModel(void);
   virtual void SetRate(int tt) {rate = tt;}
   virtual int  GetRate(void)   {return rate;}
-  
+
   void SetPropertyManager(FGPropertyManager *fgpm) { PropertyManager=fgpm;}
 
 protected:
   int exe_ctr;
   int rate;
-  
+
   virtual void Debug(int from);
 
   FGFDMExec*         FDMExec;
@@ -144,9 +142,7 @@ protected:
   FGInertial*        Inertial;
   FGGroundReactions* GroundReactions;
   FGAircraft*        Aircraft;
-  FGTranslation*     Translation;
-  FGRotation*        Rotation;
-  FGPosition*        Position;
+  FGPropagate*       Propagate;
   FGAuxiliary*       Auxiliary;
   FGOutput*          Output;
   FGPropertyManager* PropertyManager;

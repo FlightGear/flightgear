@@ -75,7 +75,7 @@ INCLUDES
 #include "FGAerodynamics.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
-#include "FGPosition.h"
+#include "FGPropagate.h"
 #include "FGPropertyManager.h"
 
 namespace JSBSim {
@@ -125,7 +125,6 @@ bool FGAircraft::Run(void)
   if (!FGModel::Run()) {                 // if false then execute this Run()
     vForces.InitMatrix();
     vForces += Aerodynamics->GetForces();
-    vForces += Inertial->GetForces();
     vForces += Propulsion->GetForces();
     vForces += GroundReactions->GetForces();
 
@@ -229,7 +228,6 @@ bool FGAircraft::Load(FGConfigFile* AC_cfg)
     } else if (parameter == "AC_VRP") {
       *AC_cfg >> vXYZvrp(eX) >> vXYZvrp(eY) >> vXYZvrp(eZ);
       if (debug_lvl > 0) cout << "    Visual Ref Pt (x, y, z): " << vXYZvrp << endl;
-      Position->SetVRP(vXYZvrp);
     } else if (parameter == "AC_POINTMASS") {
       *AC_cfg >> pmWt >> pmX >> pmY >> pmZ;
       MassBalance->AddPointMass(pmWt, pmX, pmY, pmZ);

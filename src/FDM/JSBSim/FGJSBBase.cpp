@@ -78,7 +78,7 @@ const double FGJSBBase::SHRatio = 1.40;
 const double FGJSBBase::slugtolb = 32.174049;
 const double FGJSBBase::lbtoslug = 1.0/slugtolb;
 
-const string FGJSBBase::needed_cfg_version = "1.61";
+const string FGJSBBase::needed_cfg_version = "1.65";
 const string FGJSBBase::JSBSim_version = "0.9.5";
 
 std::queue <FGJSBBase::Message*> FGJSBBase::Messages;
@@ -90,12 +90,6 @@ short FGJSBBase::debug_lvl  = 1;
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGJSBBase::FGJSBBase()
-{
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 FGJSBBase::Message* FGJSBBase::PutMessage(Message* msg)
 {
   Messages.push(msg);
@@ -104,7 +98,7 @@ FGJSBBase::Message* FGJSBBase::PutMessage(Message* msg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGJSBBase::Message* FGJSBBase::PutMessage(string text)
+FGJSBBase::Message* FGJSBBase::PutMessage(const string& text)
 {
   Message *msg = new Message();
   msg->text = text;
@@ -117,7 +111,7 @@ FGJSBBase::Message* FGJSBBase::PutMessage(string text)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGJSBBase::Message* FGJSBBase::PutMessage(string text, bool bVal)
+FGJSBBase::Message* FGJSBBase::PutMessage(const string& text, bool bVal)
 {
   Message *msg = new Message();
   msg->text = text;
@@ -131,7 +125,7 @@ FGJSBBase::Message* FGJSBBase::PutMessage(string text, bool bVal)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGJSBBase::Message* FGJSBBase::PutMessage(string text, int iVal)
+FGJSBBase::Message* FGJSBBase::PutMessage(const string& text, int iVal)
 {
   Message *msg = new Message();
   msg->text = text;
@@ -145,7 +139,7 @@ FGJSBBase::Message* FGJSBBase::PutMessage(string text, int iVal)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGJSBBase::Message* FGJSBBase::PutMessage(string text, double dVal)
+FGJSBBase::Message* FGJSBBase::PutMessage(const string& text, double dVal)
 {
   Message *msg = new Message();
   msg->text = text;

@@ -121,7 +121,7 @@ bool FGKinemat::Run(void )
 
   Input = InputNodes[0]->getDoubleValue();
 
-  if (DoScale)  Input *= Detents[NumDetents-1];
+  if (DoScale) Input *= Detents[NumDetents-1];
 
   Output = OutputNode->getDoubleValue();
 
@@ -132,7 +132,7 @@ bool FGKinemat::Run(void )
 
   // Process all detent intervals the movement traverses until either the
   // final value is reached or the time interval has finished.
-  while (0.0 < dt && Input != Output) {
+  while ( 0.0 < dt && !EqualToRoundoff(Input, Output) ) {
 
     // Find the area where Output is in
     int ind;
@@ -154,16 +154,20 @@ bool FGKinemat::Run(void )
       if (Detents[ind] < ThisInput)     ThisInput = Detents[ind];
       // Compute the time to reach the value in ThisInput
       double ThisDt = fabs((ThisInput-Output)/Rate);
-      if (ThisDt == 0.0)
-         break;
+
       // and clip to the timestep size
-      if (dt < ThisDt) ThisDt = dt;
+      if (dt < ThisDt) {
+        ThisDt = dt;
+        if (Output < Input)
+          Output += ThisDt*Rate;
+        else
+          Output -= ThisDt*Rate;
+      } else
+        // Handle this case separate to make shure the termination condition
+        // is met even in inexact arithmetics ...
+        Output = ThisInput;
+
       dt -= ThisDt;
-      // Do the output calculation
-      if (Output < Input)
-        Output += ThisDt*Rate;
-      else
-        Output -= ThisDt*Rate;
     }
   }
 

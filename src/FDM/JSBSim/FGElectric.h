@@ -1,10 +1,10 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- Header:       FGUtility.h
- Author:       Jon Berndt
- Date started: 01/09/99
+ Header:       FGElectric.h
+ Author:       David Culp
+ Date started: 04/07/2004
 
- ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
+ ----- Copyright (C) 2004  David P. Culp (davidculp2@comcast.net) --------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -25,26 +25,27 @@
 
 HISTORY
 --------------------------------------------------------------------------------
-01/09/99   JSB   Created
+04/07/2004  DPC  Created
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifndef FGUTILITY_H
-#define FGUTILITY_H
+#ifndef FGELECTRIC_H
+#define FGELECTRIC_H
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGJSBBase.h"
+#include "FGEngine.h"
+#include "FGConfigFile.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DEFINES
+DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_UTILITY "$Id$"
+#define ID_ELECTRIC "$Id$";
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -56,22 +57,49 @@ namespace JSBSim {
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+/** Models and electric motor.
+    FGElectric models an electric motor based on the configuration file
+    POWER_WATTS parameter.  The throttle controls motor output linearly from
+    zero to POWER_WATTS.  This power value (converted internally to horsepower)
+    is then used by FGPropeller to apply torque to the propeller.
+    @author David Culp
+    @version "$Id$"
+  */
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGFDMExec;
-class FGState;
-
-class FGUtility : public FGJSBBase
+class FGElectric : public FGEngine
 {
 public:
-  FGUtility(void);
-  ~FGUtility();
+  /// Constructor
+  FGElectric(FGFDMExec* exec, FGConfigFile* Eng_cfg);
+  /// Destructor
+  ~FGElectric();
+
+  double Calculate(void);
+  double GetPowerAvailable(void) {return PowerAvailable;}
+  double CalcFuelNeed(void);
+  double getRPM(void) {return RPM;}
+  string GetEngineLabels(void);
+  string GetEngineValues(void);
 
 private:
-  FGState* State;
-  FGFDMExec* FDMExec;
+
+  double BrakeHorsePower;
+  double PowerAvailable;
+
+  // timestep
+  double dt;
+
+  // constants
+  double hptowatts;
+
+  double PowerWatts;         // maximum engine power
+  double RPM;                // revolutions per minute
+  double HP;
+
   void Debug(int from);
 };
 }

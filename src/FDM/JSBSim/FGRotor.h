@@ -70,6 +70,8 @@ public:
   ~FGRotor();
 
   double Calculate(double);
+  string GetThrusterLabels(int id);
+  string GetThrusterValues(int id);
 
 private:
   void Debug(int from);

@@ -75,7 +75,9 @@ public:
 
   double Calculate(double CfPc);
   double GetPowerRequired(void);
-  
+  string GetThrusterLabels(int id);
+  string GetThrusterValues(int id);
+
 private:
   double ReverserAngle;
   double PE;

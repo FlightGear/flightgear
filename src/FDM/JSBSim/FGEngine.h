@@ -59,6 +59,7 @@ INCLUDES
 #endif
 
 #include "FGJSBBase.h"
+#include "FGThruster.h"
 #include "FGPropertyManager.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -81,12 +82,12 @@ class FGState;
 class FGAtmosphere;
 class FGFCS;
 class FGAircraft;
-class FGTranslation;
-class FGRotation;
+class FGPropagate;
 class FGPropulsion;
-class FGPosition;
 class FGAuxiliary;
 class FGOutput;
+class FGThruster;
+class FGConfigFile;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -96,7 +97,7 @@ CLASS DOCUMENTATION
     This base class contains methods and members common to all engines, such as
     logic to drain fuel from the appropriate tank, etc.
     @author Jon S. Berndt
-    @version $Id$ 
+    @version $Id$
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -109,7 +110,7 @@ public:
   FGEngine(FGFDMExec* exec);
   virtual ~FGEngine();
 
-  enum EngineType {etUnknown, etRocket, etPiston, etTurbine, etSimTurbine};
+  enum EngineType {etUnknown, etRocket, etPiston, etTurbine, etElectric};
 
   EngineType      GetType(void) { return Type; }
   virtual string  GetName(void) { return Name; }
@@ -138,11 +139,8 @@ public:
   virtual void SetStarter(bool s) { Starter = s; }
 
   /** Calculates the thrust of the engine, and other engine functions.
-      @param PowerRequired this is the power required to run the thrusting device
-             such as a propeller. This resisting effect must be provided to the 
-             engine model.
       @return Thrust in pounds */
-  virtual double Calculate(double PowerRequired) {return 0.0;};
+  virtual double Calculate(void) {return 0.0;}
 
   /** Reduces the fuel in the active tanks by the amount required.
       This function should be called from within the
@@ -173,6 +171,15 @@ public:
 
   virtual bool GetTrimMode(void) {return TrimMode;}
   virtual void SetTrimMode(bool state) {TrimMode = state;}
+
+  virtual FGColumnVector3& GetBodyForces(void);
+  virtual FGColumnVector3& GetMoments(void);
+
+  bool LoadThruster(FGConfigFile* AC_cfg);
+  FGThruster* GetThruster(void) {return Thruster;}
+
+  virtual string GetEngineLabels(void) = 0;
+  virtual string GetEngineValues(void) = 0;
 
 protected:
   FGPropertyManager* PropertyManager;
@@ -208,11 +215,10 @@ protected:
   FGFCS*          FCS;
   FGPropulsion*   Propulsion;
   FGAircraft*     Aircraft;
-  FGTranslation*  Translation;
-  FGRotation*     Rotation;
-  FGPosition*     Position;
+  FGPropagate*    Propagate;
   FGAuxiliary*    Auxiliary;
   FGOutput*       Output;
+  FGThruster*     Thruster;
 
   vector <int> SourceTanks;
   void Debug(int from);
@@ -223,12 +229,12 @@ protected:
 #include "FGAtmosphere.h"
 #include "FGFCS.h"
 #include "FGAircraft.h"
-#include "FGTranslation.h"
-#include "FGRotation.h"
+#include "FGPropagate.h"
 #include "FGPropulsion.h"
-#include "FGPosition.h"
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
+#include "FGThruster.h"
+#include "FGConfigFile.h"
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

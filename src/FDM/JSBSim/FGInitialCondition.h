@@ -192,6 +192,9 @@ public:
   void SetVnorthFpsIC(double tt);
   void SetVeastFpsIC(double tt);
   void SetVdownFpsIC(double tt);
+  void SetPRadpsIC(double tt)  { p = tt; }
+  void SetQRadpsIC(double tt) { q = tt; }
+  void SetRRadpsIC(double tt) { r = tt; }
   
   void SetWindNEDFpsIC(double wN, double wE, double wD);
  
@@ -215,9 +218,12 @@ public:
   inline double GetWindFpsIC(void)  const { return sqrt(wnorth*wnorth + weast*weast); }
   double GetWindDirDegIC(void); 
   inline double GetClimbRateFpsIC(void) const { return hdot; }
-  double GetUBodyFpsIC(void);
-  double GetVBodyFpsIC(void);
-  double GetWBodyFpsIC(void);
+  double GetUBodyFpsIC(void) const;
+  double GetVBodyFpsIC(void) const;
+  double GetWBodyFpsIC(void) const;
+  double GetPRadpsIC() const { return p; }
+  double GetQRadpsIC() const { return q; }
+  double GetRRadpsIC() const { return r; }
   void SetFlightPathAngleRadIC(double tt);
   void SetAlphaRadIC(double tt);
   void SetPitchAngleRadIC(double tt);
@@ -253,6 +259,7 @@ private:
   double altitude,hdot;
   double latitude,longitude;
   double u,v,w;
+  double p,q,r;
   double uw,vw,ww;
   double vnorth,veast,vdown;
   double wnorth,weast,wdown;

@@ -242,6 +242,10 @@ bool FGTrim::DoTrim(void) {
   }
 
   fdmex->GetOutput()->Disable();
+  
+  fgic->SetPRadpsIC(0.0);
+  fgic->SetQRadpsIC(0.0);
+  fgic->SetRRadpsIC(0.0);
 
   //clear the sub iterations counts & zero out the controls
   for(current_axis=0;current_axis<TrimAxes.size();current_axis++) {
@@ -557,7 +561,7 @@ void FGTrim::setupPullup() {
        << fgic->GetVtrueFpsIC() << endl;
   q=g*(targetNlf-cgamma)/fgic->GetVtrueFpsIC();
   cout << targetNlf << ", " << q << endl;
-  fdmex->GetRotation()->SetPQR(0,q,0);
+  fgic->SetQRadpsIC(q);
   cout << "setPitchRateInPullup() complete" << endl;
   
 }  
@@ -593,13 +597,15 @@ void FGTrim::updateRates(void){
     } else {
       p=q=r=0;
     }      
-    fdmex->GetRotation()->SetPQR(p,q,r);
+    fgic->SetPRadpsIC(p);
+    fgic->SetQRadpsIC(q);
+    fgic->SetRRadpsIC(r);
   } else if( mode == tPullup && fabs(targetNlf-1) > 0.01) {
       float g,q,cgamma;
       g=fdmex->GetInertial()->gravity();
       cgamma=cos(fgic->GetFlightPathAngleRadIC());
       q=g*(targetNlf-cgamma)/fgic->GetVtrueFpsIC();
-      fdmex->GetRotation()->SetPQR(0,q,0);
+      fgic->SetQRadpsIC(q);
   }  
 }  
 

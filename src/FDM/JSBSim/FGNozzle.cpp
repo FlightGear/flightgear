@@ -35,12 +35,7 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  include STL_ALGORITHM
-#else
-#  include <algorithm>
-#endif
+#include <sstream>
 
 #include "FGNozzle.h"
 #include "FGAtmosphere.h"
@@ -102,6 +97,28 @@ double FGNozzle::Calculate(double CfPc)
 double FGNozzle::GetPowerRequired(void)
 {
   return PE;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+string FGNozzle::GetThrusterLabels(int id)
+{
+  std::ostringstream buf;
+
+  buf << Name << "_Thrust[" << id << ']';
+
+  return buf.str();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+string FGNozzle::GetThrusterValues(int id)
+{
+  std::ostringstream buf;
+
+  buf << Thrust;
+
+  return buf.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

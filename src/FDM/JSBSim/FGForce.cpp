@@ -42,7 +42,7 @@ and the cg.
 
 #include "FGFDMExec.h"
 #include "FGAircraft.h"
-#include "FGTranslation.h"
+#include "FGPropagate.h"
 #include "FGMassBalance.h"
 #include "FGState.h"
 #include "FGForce.h"
@@ -97,7 +97,7 @@ FGMatrix33 FGForce::Transform(void)
   case tWindBody:
     return fdmex->GetState()->GetTs2b();
   case tLocalBody:
-    return fdmex->GetState()->GetTl2b();
+    return fdmex->GetPropagate()->GetTl2b();
   case tCustom:
   case tNone:
     return mT;

@@ -66,7 +66,7 @@ FGColumnVector3& FGColumnVector3::operator/=(const double scalar)
 
 double FGColumnVector3::Magnitude(void) const
 {
-  if (data[1] == 0.0 && data[2] == 0.0 && data[3] == 0.0)
+  if (Entry(1) == 0.0 && Entry(2) == 0.0 && Entry(3) == 0.0)
     return 0.0;
   else
     return sqrt( Entry(1)*Entry(1) +  Entry(2)*Entry(2) +  Entry(3)*Entry(3) );

@@ -47,8 +47,8 @@ INCLUDES
 #  endif
 #endif
 
-#ifdef _MSC_VER
-#define snprintf _snprintf
+#ifdef _WIN32
+//#define snprintf _snprintf
 #endif
 
 #include "FGState.h"
@@ -74,9 +74,8 @@ FGState::FGState(FGFDMExec* fdex)
   dt = 1.0/120.0;
 
   Aircraft     = FDMExec->GetAircraft();
-  Translation  = FDMExec->GetTranslation();
-  Rotation     = FDMExec->GetRotation();
-  Position     = FDMExec->GetPosition();
+  Propagate    = FDMExec->GetPropagate();
+  Auxiliary    = FDMExec->GetAuxiliary();
   FCS          = FDMExec->GetFCS();
   Output       = FDMExec->GetOutput();
   Atmosphere   = FDMExec->GetAtmosphere();
@@ -84,8 +83,6 @@ FGState::FGState(FGFDMExec* fdex)
   GroundReactions = FDMExec->GetGroundReactions();
   Propulsion      = FDMExec->GetPropulsion();
   PropertyManager = FDMExec->GetPropertyManager();
-
-  for(int i=0;i<4;i++) vQdot_prev[i].InitMatrix();
 
   bind();
 
@@ -100,39 +97,23 @@ FGState::~FGState()
   Debug(1);
 }
 
-//***************************************************************************
-//
-// Initialize: Assume all angles GIVEN IN RADIANS !!
-//
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGState::Initialize(double U, double V, double W,
-                         double phi, double tht, double psi,
-                         double Latitude, double Longitude, double H,
-                         double wnorth, double weast, double wdown)
+void FGState::Initialize(FGInitialCondition *FGIC)
 {
-  double alpha, beta;
-  double qbar, Vt;
-  FGColumnVector3 vAeroUVW;
-  FGColumnVector3 vUVW;
+  sim_time = 0.0;
 
-  Position->SetLatitude(Latitude);
-  Position->SetLongitude(Longitude);
-  Position->Seth(H);
+  Propagate->SetInitialState( FGIC );
 
   Atmosphere->Run();
+  Atmosphere->SetWindNED( FGIC->GetWindNFpsIC(),
+                          FGIC->GetWindEFpsIC(),
+                          FGIC->GetWindDFpsIC() );
 
-  vLocalEuler << phi << tht << psi;
-  Rotation->SetEuler(vLocalEuler);
+  FGColumnVector3 vAeroUVW;
+  vAeroUVW = Propagate->GetUVW() + Propagate->GetTl2b()*Atmosphere->GetWindNED();
 
-  InitMatrices(phi, tht, psi);
-
-  vUVW << U << V << W;
-  Translation->SetUVW(vUVW);
-
-  Atmosphere->SetWindNED(wnorth, weast, wdown);
-
-  vAeroUVW = vUVW + mTl2b*Atmosphere->GetWindNED();
-
+  double alpha, beta;
   if (vAeroUVW(eW) != 0.0)
     alpha = vAeroUVW(eU)*vAeroUVW(eU) > 0.0 ? atan2(vAeroUVW(eW), vAeroUVW(eU)) : 0.0;
   else
@@ -142,148 +123,15 @@ void FGState::Initialize(double U, double V, double W,
   else
     beta = 0.0;
 
-  Translation->SetAB(alpha, beta);
+  Auxiliary->SetAB(alpha, beta);
 
-  Vt = sqrt(U*U + V*V + W*W);
-  Translation->SetVt(Vt);
+  double Vt = vAeroUVW.Magnitude();
+  Auxiliary->SetVt(Vt);
 
-  Translation->SetMach(Vt/Atmosphere->GetSoundSpeed());
+  Auxiliary->SetMach(Vt/Atmosphere->GetSoundSpeed());
 
-  qbar = 0.5*(U*U + V*V + W*W)*Atmosphere->GetDensity();
-  Translation->Setqbar(qbar);
-
-  vLocalVelNED = mTb2l*vUVW;
-  Position->SetvVel(vLocalVelNED);
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGState::Initialize(FGInitialCondition *FGIC)
-{
-  double tht,psi,phi;
-  double U, V, W, h;
-  double latitude, longitude;
-  double wnorth,weast, wdown;
-
-  latitude = FGIC->GetLatitudeRadIC();
-  longitude = FGIC->GetLongitudeRadIC();
-  h = FGIC->GetAltitudeFtIC();
-  U = FGIC->GetUBodyFpsIC();
-  V = FGIC->GetVBodyFpsIC();
-  W = FGIC->GetWBodyFpsIC();
-  tht = FGIC->GetThetaRadIC();
-  phi = FGIC->GetPhiRadIC();
-  psi = FGIC->GetPsiRadIC();
-  wnorth = FGIC->GetWindNFpsIC();
-  weast = FGIC->GetWindEFpsIC();
-  wdown = FGIC->GetWindDFpsIC();
-
-  Position->SetSeaLevelRadius( FGIC->GetSeaLevelRadiusFtIC() );
-  Position->SetRunwayRadius( FGIC->GetSeaLevelRadiusFtIC() +
-                                             FGIC->GetTerrainAltitudeFtIC() );
-
-  // need to fix the wind speed args, here.
-  Initialize(U, V, W, phi, tht, psi, latitude, longitude, h, wnorth, weast, wdown);
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGState::InitMatrices(double phi, double tht, double psi)
-{
-  double thtd2, psid2, phid2;
-  double Sthtd2, Spsid2, Sphid2;
-  double Cthtd2, Cpsid2, Cphid2;
-  double Cphid2Cthtd2;
-  double Cphid2Sthtd2;
-  double Sphid2Sthtd2;
-  double Sphid2Cthtd2;
-
-  thtd2 = tht/2.0;
-  psid2 = psi/2.0;
-  phid2 = phi/2.0;
-
-  Sthtd2 = sin(thtd2);
-  Spsid2 = sin(psid2);
-  Sphid2 = sin(phid2);
-
-  Cthtd2 = cos(thtd2);
-  Cpsid2 = cos(psid2);
-  Cphid2 = cos(phid2);
-
-  Cphid2Cthtd2 = Cphid2*Cthtd2;
-  Cphid2Sthtd2 = Cphid2*Sthtd2;
-  Sphid2Sthtd2 = Sphid2*Sthtd2;
-  Sphid2Cthtd2 = Sphid2*Cthtd2;
-
-  vQtrn(1) = Cphid2Cthtd2*Cpsid2 + Sphid2Sthtd2*Spsid2;
-  vQtrn(2) = Sphid2Cthtd2*Cpsid2 - Cphid2Sthtd2*Spsid2;
-  vQtrn(3) = Cphid2Sthtd2*Cpsid2 + Sphid2Cthtd2*Spsid2;
-  vQtrn(4) = Cphid2Cthtd2*Spsid2 - Sphid2Sthtd2*Cpsid2;
-
-  CalcMatrices();
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGState::CalcMatrices(void)
-{
-  double Q0Q0, Q1Q1, Q2Q2, Q3Q3;
-  double Q0Q1, Q0Q2, Q0Q3, Q1Q2;
-  double Q1Q3, Q2Q3;
-
-  Q0Q0 = vQtrn(1)*vQtrn(1);
-  Q1Q1 = vQtrn(2)*vQtrn(2);
-  Q2Q2 = vQtrn(3)*vQtrn(3);
-  Q3Q3 = vQtrn(4)*vQtrn(4);
-  Q0Q1 = vQtrn(1)*vQtrn(2);
-  Q0Q2 = vQtrn(1)*vQtrn(3);
-  Q0Q3 = vQtrn(1)*vQtrn(4);
-  Q1Q2 = vQtrn(2)*vQtrn(3);
-  Q1Q3 = vQtrn(2)*vQtrn(4);
-  Q2Q3 = vQtrn(3)*vQtrn(4);
-
-  mTl2b(1,1) = Q0Q0 + Q1Q1 - Q2Q2 - Q3Q3;
-  mTl2b(1,2) = 2*(Q1Q2 + Q0Q3);
-  mTl2b(1,3) = 2*(Q1Q3 - Q0Q2);
-  mTl2b(2,1) = 2*(Q1Q2 - Q0Q3);
-  mTl2b(2,2) = Q0Q0 - Q1Q1 + Q2Q2 - Q3Q3;
-  mTl2b(2,3) = 2*(Q2Q3 + Q0Q1);
-  mTl2b(3,1) = 2*(Q1Q3 + Q0Q2);
-  mTl2b(3,2) = 2*(Q2Q3 - Q0Q1);
-  mTl2b(3,3) = Q0Q0 - Q1Q1 - Q2Q2 + Q3Q3;
-
-  mTb2l = mTl2b;
-  mTb2l.T();
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGState::IntegrateQuat(FGColumnVector3 vPQR, int rate)
-{
-  vQdot(1) = -0.5*(vQtrn(2)*vPQR(eP) + vQtrn(3)*vPQR(eQ) + vQtrn(4)*vPQR(eR));
-  vQdot(2) =  0.5*(vQtrn(1)*vPQR(eP) + vQtrn(3)*vPQR(eR) - vQtrn(4)*vPQR(eQ));
-  vQdot(3) =  0.5*(vQtrn(1)*vPQR(eQ) + vQtrn(4)*vPQR(eP) - vQtrn(2)*vPQR(eR));
-  vQdot(4) =  0.5*(vQtrn(1)*vPQR(eR) + vQtrn(2)*vPQR(eQ) - vQtrn(3)*vPQR(eP));
-
-  vQtrn += Integrate(TRAPZ, dt*rate, vQdot, vQdot_prev);
-
-  vQtrn.Normalize();
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-FGColumnVector3& FGState::CalcEuler(void)
-{
-  if (mTl2b(3,3) == 0.0) mTl2b(3,3) = 0.0000001;
-  if (mTl2b(1,1) == 0.0) mTl2b(1,1) = 0.0000001;
-
-  vEuler(ePhi) = atan2(mTl2b(2,3), mTl2b(3,3));
-  vEuler(eTht) = asin(-mTl2b(1,3));
-  vEuler(ePsi) = atan2(mTl2b(1,2), mTl2b(1,1));
-
-  if (vEuler(ePsi) < 0.0) vEuler(ePsi) += 2*M_PI;
-
-  return vEuler;
+  double qbar = 0.5*Vt*Vt*Atmosphere->GetDensity();
+  Auxiliary->Setqbar(qbar);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -292,8 +140,8 @@ FGMatrix33& FGState::GetTs2b(void)
 {
   double ca, cb, sa, sb;
 
-  double alpha = Translation->Getalpha();
-  double beta  = Translation->Getbeta();
+  double alpha = Auxiliary->Getalpha();
+  double beta  = Auxiliary->Getbeta();
 
   ca = cos(alpha);
   sa = sin(alpha);
@@ -320,8 +168,8 @@ FGMatrix33& FGState::GetTb2s(void)
   float alpha,beta;
   float ca, cb, sa, sb;
 
-  alpha = Translation->Getalpha();
-  beta  = Translation->Getbeta();
+  alpha = Auxiliary->Getalpha();
+  beta  = Auxiliary->Getbeta();
 
   ca = cos(alpha);
   sa = sin(alpha);
@@ -345,6 +193,7 @@ FGMatrix33& FGState::GetTb2s(void)
 
 void FGState::ReportState(void)
 {
+#if 0
 #if !defined(__BORLANDCPP__)
   char out[80], flap[10], gear[12];
 
@@ -370,33 +219,33 @@ void FGState::ReportState(void)
   snprintf(out,80, "    Flaps: %3s  Gear: %12s\n",flap,gear);
   cout << out;
   snprintf(out,80, "    Speed: %4.0f KCAS  Mach: %5.2f\n",
-                    FDMExec->GetAuxiliary()->GetVcalibratedKTS(),
-                    Translation->GetMach() );
+                    Auxiliary->GetVcalibratedKTS(),
+                    Auxiliary->GetMach() );
   cout << out;
   snprintf(out,80, "    Altitude: %7.0f ft.  AGL Altitude: %7.0f ft.\n",
-                    Position->Geth(),
-                    Position->GetDistanceAGL() );
+                    Propagate->Geth(),
+                    Propagate->GetDistanceAGL() );
   cout << out;
   snprintf(out,80, "    Angle of Attack: %6.2f deg  Pitch Angle: %6.2f deg\n",
-                    Translation->Getalpha()*radtodeg,
-                    Rotation->Gettht()*radtodeg );
+                    Auxiliary->Getalpha()*radtodeg,
+                    Propagate->Gettht()*radtodeg );
   cout << out;
   snprintf(out,80, "    Flight Path Angle: %6.2f deg  Climb Rate: %5.0f ft/min\n",
-                    Position->GetGamma()*radtodeg,
-                    Position->Gethdot()*60 );
+                    Auxiliary->GetGamma()*radtodeg,
+                    Propagate->Gethdot()*60 );
   cout << out;
   snprintf(out,80, "    Normal Load Factor: %4.2f g's  Pitch Rate: %5.2f deg/s\n",
                     Aircraft->GetNlf(),
-                    Rotation->GetPQR(2)*radtodeg );
+                    Propagate->GetPQR(2)*radtodeg );
   cout << out;
   snprintf(out,80, "    Heading: %3.0f deg true  Sideslip: %5.2f deg  Yaw Rate: %5.2f deg/s\n",
-                    Rotation->Getpsi()*radtodeg,
-                    Translation->Getbeta()*radtodeg,
-                    Rotation->GetPQR(3)*radtodeg  );
+                    Propagate->Getpsi()*radtodeg,
+                    Auxiliary->Getbeta()*radtodeg,
+                    Propagate->GetPQR(3)*radtodeg  );
   cout << out;
   snprintf(out,80, "    Bank Angle: %5.2f deg  Roll Rate: %5.2f deg/s\n",
-                    Rotation->Getphi()*radtodeg,
-                    Rotation->GetPQR(1)*radtodeg );
+                    Propagate->Getphi()*radtodeg,
+                    Propagate->GetPQR(1)*radtodeg );
   cout << out;
   snprintf(out,80, "    Elevator: %5.2f deg  Left Aileron: %5.2f deg  Rudder: %5.2f deg\n",
                     FCS->GetDePos(ofRad)*radtodeg,
@@ -408,14 +257,15 @@ void FGState::ReportState(void)
   cout << out;
 
   snprintf(out,80, "    Wind Components: %5.2f kts head wind, %5.2f kts cross wind\n",
-                    FDMExec->GetAuxiliary()->GetHeadWind()*fpstokts,
-                    FDMExec->GetAuxiliary()->GetCrossWind()*fpstokts );
+                    Auxiliary->GetHeadWind()*fpstokts,
+                    Auxiliary->GetCrossWind()*fpstokts );
   cout << out;
 
   snprintf(out,80, "    Ground Speed: %4.0f knots , Ground Track: %3.0f deg true\n",
-                    Position->GetVground()*fpstokts,
-                    Position->GetGroundTrack()*radtodeg );
+                    Auxiliary->GetVground()*fpstokts,
+                    Auxiliary->GetGroundTrack()*radtodeg );
   cout << out;
+#endif
 #endif
 }
 

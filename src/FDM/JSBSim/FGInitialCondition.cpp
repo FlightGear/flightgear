@@ -47,7 +47,7 @@ INCLUDES
 #include "FGInertial.h"
 #include "FGAtmosphere.h"
 #include "FGAerodynamics.h"
-#include "FGPosition.h"
+#include "FGPropagate.h"
 #include "FGConfigFile.h"
 #include "FGPropertyManager.h"
 
@@ -67,6 +67,7 @@ FGInitialCondition::FGInitialCondition(FGFDMExec *FDMExec)
   altitude=hdot=0;
   latitude=longitude=0;
   u=v=w=0;
+  p=q=r=0;
   uw=vw=ww=0;
   vnorth=veast=vdown=0;
   wnorth=weast=wdown=0;
@@ -83,7 +84,7 @@ FGInitialCondition::FGInitialCondition(FGFDMExec *FDMExec)
 
   if(FDMExec != NULL ) {
     fdmex=FDMExec;
-    fdmex->GetPosition()->Seth(altitude);
+    fdmex->GetPropagate()->Seth(altitude);
     fdmex->GetAtmosphere()->Run();
     PropertyManager=fdmex->GetPropertyManager();
     bind();
@@ -265,7 +266,7 @@ void FGInitialCondition::SetWBodyFpsIC(double tt) {
 
 //******************************************************************************
 
-double FGInitialCondition::GetUBodyFpsIC(void) {
+double FGInitialCondition::GetUBodyFpsIC(void) const {
     if(lastSpeedSet == setvg )
       return u;
     else
@@ -274,7 +275,7 @@ double FGInitialCondition::GetUBodyFpsIC(void) {
 
 //******************************************************************************
 
-double FGInitialCondition::GetVBodyFpsIC(void) {
+double FGInitialCondition::GetVBodyFpsIC(void) const {
     if( lastSpeedSet == setvg )
       return v;
     else {
@@ -284,7 +285,7 @@ double FGInitialCondition::GetVBodyFpsIC(void) {
 
 //******************************************************************************
 
-double FGInitialCondition::GetWBodyFpsIC(void) {
+double FGInitialCondition::GetWBodyFpsIC(void) const {
     if( lastSpeedSet == setvg )
       return w;
     else
@@ -394,7 +395,7 @@ void FGInitialCondition::calcWindUVW(void) {
 
 void FGInitialCondition::SetAltitudeFtIC(double tt) {
   altitude=tt;
-  fdmex->GetPosition()->Seth(altitude);
+  fdmex->GetPropagate()->Seth(altitude);
   fdmex->GetAtmosphere()->Run();
   //lets try to make sure the user gets what they intended
 
@@ -422,8 +423,8 @@ void FGInitialCondition::SetAltitudeFtIC(double tt) {
 //******************************************************************************
 
 void FGInitialCondition::SetAltitudeAGLFtIC(double tt) {
-  fdmex->GetPosition()->SetDistanceAGL(tt);
-  altitude=fdmex->GetPosition()->Geth();
+  fdmex->GetPropagate()->SetDistanceAGL(tt);
+  altitude=fdmex->GetPropagate()->Geth();
   SetAltitudeFtIC(altitude);
 }
 
@@ -925,6 +926,19 @@ void FGInitialCondition::bind(void){
                        &FGInitialCondition::GetLongitudeRadIC,
                        &FGInitialCondition::SetLongitudeRadIC,
                        true);
+  PropertyManager->Tie("ic/p-rad_sec", this,
+                       &FGInitialCondition::GetPRadpsIC,
+                       &FGInitialCondition::SetPRadpsIC,
+                       true);
+  PropertyManager->Tie("ic/q-rad_sec", this,
+                       &FGInitialCondition::GetQRadpsIC,
+                       &FGInitialCondition::SetQRadpsIC,
+                       true);
+  PropertyManager->Tie("ic/r-rad_sec", this,
+                       &FGInitialCondition::GetRRadpsIC,
+                       &FGInitialCondition::SetRRadpsIC,
+                       true);
+
 }
 
 //******************************************************************************
@@ -973,6 +987,10 @@ void FGInitialCondition::unbind(void){
   PropertyManager->Untie("ic/psi-true-rad");
   PropertyManager->Untie("ic/lat-gc-rad");
   PropertyManager->Untie("ic/long-gc-rad");
+  PropertyManager->Untie("ic/p-rad_sec");
+  PropertyManager->Untie("ic/q-rad_sec");
+  PropertyManager->Untie("ic/r-rad_sec");
+
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
