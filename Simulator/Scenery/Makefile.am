@@ -2,8 +2,8 @@ noinst_LIBRARIES = libScenery.a
 
 libScenery_a_SOURCES = \
 	scenery.cxx scenery.hxx \
-	tile.cxx tile.hxx \
 	tilecache.cxx tilecache.hxx \
+	tileentry.cxx tileentry.hxx \
 	tilemgr.cxx tilemgr.hxx
 
 INCLUDES += \

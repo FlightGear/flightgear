@@ -41,34 +41,26 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <vector>
+
 #include <Bucket/newbucket.hxx>
 #include <Math/point3d.hxx>
 
-#include "tile.hxx"
+#include "tileentry.hxx"
 
+FG_USING_STD(vector);
 
-// For best results ... i.e. to avoid tile load problems and blank areas
-//
-// FG_TILE_CACHE_SIZE >= (o->tile_diameter + 1) ** 2 
-#define FG_TILE_CACHE_SIZE 121
 
 // A class to store and manage a pile of tiles
-class fgTILECACHE {
-
-//     enum
-//     {
-// 	// For best results... i.e. to avoid tile load problems and blank areas
-// 	// FG_TILE_CACHE_SIZE >= (o->tile_diameter + 1) ** 2 
-// 	FG_TILE_CACHE_SIZE = 121
-//     };
+class FGTileCache {
 
     // cache storage space
-    fgTILE tile_cache[ FG_TILE_CACHE_SIZE ];
+    tile_list tile_cache;
 
 public:
 
     // Constructor
-    fgTILECACHE( void );
+    FGTileCache( void );
 
     // Initialize the tile cache subsystem 
     void init( void );
@@ -86,17 +78,17 @@ public:
     void fill_in( int index, FGBucket& p );
 
     // Return a pointer to the specified tile cache entry 
-    fgTILE *get_tile( int index ) {
+    FGTileEntry *get_tile( int index ) {
 	return &tile_cache[index];
     }
 
     // Destructor
-    ~fgTILECACHE( void );
+    ~FGTileCache( void );
 };
 
 
 // the tile cache
-extern fgTILECACHE global_tile_cache;
+extern FGTileCache global_tile_cache;
 
 
 #endif // _TILECACHE_HXX 

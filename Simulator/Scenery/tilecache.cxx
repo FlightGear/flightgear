@@ -40,44 +40,73 @@
 #include <Misc/fgpath.hxx>
 #include <Objects/obj.hxx>
 
-#include "tile.hxx"
 #include "tilecache.hxx"
+#include "tileentry.hxx"
 
 
 // the tile cache
-fgTILECACHE global_tile_cache;
+FGTileCache global_tile_cache;
 
 
 // Constructor
-fgTILECACHE::fgTILECACHE( void ) {
+FGTileCache::FGTileCache( void ) {
+    tile_cache.clear();
 }
 
 
 // Initialize the tile cache subsystem
 void
-fgTILECACHE::init( void )
+FGTileCache::init( void )
 {
     int i;
 
     FG_LOG( FG_TERRAIN, FG_INFO, "Initializing the tile cache." );
 
-    for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
+    // expand cache if needed.  For best results ... i.e. to avoid
+    // tile load problems and blank areas: 
+    // 
+    //   target_cache_size >= (current.options.tile_diameter + 1) ** 2 
+    // 
+    int side = current_options.get_tile_diameter() + 1;
+    int target_cache_size = side * side;
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "  target cache size = " 
+	    << target_cache_size );
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "  current cache size = " 
+	    << tile_cache.size() );
+    FGTileEntry e;
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "  size of tile = " 
+	    << sizeof( e ) );
+    if ( target_cache_size > (int)tile_cache.size() ) {
+	// FGTileEntry e;
+	e.used = false;
+	int expansion_amt = target_cache_size - (int)tile_cache.size();
+	for ( i = 0; i < expansion_amt; ++i ) {
+	    tile_cache.push_back( e );
+	    FG_LOG( FG_TERRAIN, FG_DEBUG, "  expanding cache size = " 
+		    << tile_cache.size() );
+	}
+    }
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "  done expanding cache, size = " 
+	    << tile_cache.size() );
+
+    for ( i = 0; i < (int)tile_cache.size(); i++ ) {
 	if ( tile_cache[i].used ) {
 	    entry_free(i);
 	}
-	tile_cache[i].used = 0;
+	tile_cache[i].used = false;
 	tile_cache[i].tile_bucket.make_bad();
     }
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "  done with init()"  );
 }
 
 
 // Search for the specified "bucket" in the cache
 int
-fgTILECACHE::exists( const FGBucket& p )
+FGTileCache::exists( const FGBucket& p )
 {
     int i;
 
-    for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
+    for ( i = 0; i < (int)tile_cache.size(); i++ ) {
 	if ( tile_cache[i].tile_bucket == p ) {
 	    FG_LOG( FG_TERRAIN, FG_DEBUG, 
 		    "TILE EXISTS in cache ... index = " << i );
@@ -91,7 +120,7 @@ fgTILECACHE::exists( const FGBucket& p )
 
 // Fill in a tile cache entry with real data for the specified bucket
 void
-fgTILECACHE::fill_in( int index, FGBucket& p )
+FGTileCache::fill_in( int index, FGBucket& p )
 {
     // Load the appropriate data file and build tile fragment list
     FGPath tile_path( current_options.get_fg_root() );
@@ -120,7 +149,7 @@ fgTILECACHE::fill_in( int index, FGBucket& p )
 
 // Free a tile cache entry
 void
-fgTILECACHE::entry_free( int index )
+FGTileCache::entry_free( int index )
 {
     tile_cache[index].release_fragments();
 }
@@ -128,7 +157,7 @@ fgTILECACHE::entry_free( int index )
 
 // Return index of next available slot in tile cache
 int
-fgTILECACHE::next_avail( void )
+FGTileCache::next_avail( void )
 {
     Point3D delta, abs_view_pos;
     int i;
@@ -139,7 +168,7 @@ fgTILECACHE::next_avail( void )
     max_dist = 0.0;
     max_index = 0;
 
-    for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
+    for ( i = 0; i < (int)tile_cache.size(); i++ ) {
 	if ( ! tile_cache[i].used ) {
 	    return(i);
 	} else {
@@ -183,7 +212,7 @@ fgTILECACHE::next_avail( void )
 
 
 // Destructor
-fgTILECACHE::~fgTILECACHE( void ) {
+FGTileCache::~FGTileCache( void ) {
 }
 
 

@@ -49,8 +49,8 @@
 #include <Weather/weather.hxx>
 
 #include "scenery.hxx"
-#include "tile.hxx"
 #include "tilecache.hxx"
+#include "tileentry.hxx"
 #include "tilemgr.hxx"
 
 
@@ -104,7 +104,7 @@ int fgTileMgrInit( void ) {
 
 // load a tile
 void fgTileMgrLoadTile( FGBucket& p, int *index) {
-    fgTILECACHE *c;
+    FGTileCache *c;
 
     c = &global_tile_cache;
 
@@ -140,7 +140,7 @@ static double point_line_dist_squared( const Point3D& tc, const Point3D& vp,
 // Returns result in meters.
 double
 fgTileMgrCurElevNEW( const FGBucket& p ) {
-    fgTILE *t;
+    FGTileEntry *t;
     fgFRAGMENT *frag_ptr;
     Point3D abs_view_pos = current_view.get_abs_view_pos();
     Point3D earth_center(0.0);
@@ -187,8 +187,8 @@ fgTileMgrCurElevNEW( const FGBucket& p ) {
     if ( dist < FG_SQUARE(t->bounding_radius) ) {
 
 	// traverse fragment list for tile
-        fgTILE::FragmentIterator current = t->begin();
-        fgTILE::FragmentIterator last = t->end();
+        FGTileEntry::FragmentIterator current = t->begin();
+        FGTileEntry::FragmentIterator last = t->end();
 
 	for ( ; current != last; ++current ) {
 	    frag_ptr = &(*current);
@@ -238,8 +238,8 @@ fgTileMgrCurElevNEW( const FGBucket& p ) {
 // Returns result in meters.
 double
 fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
-    fgTILECACHE *c;
-    fgTILE *t;
+    FGTileCache *c;
+    FGTileEntry *t;
     fgFRAGMENT *frag_ptr;
     Point3D earth_center(0.0);
     Point3D result;
@@ -294,8 +294,8 @@ fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
     if ( dist < FG_SQUARE(t->bounding_radius) ) {
 
 	// traverse fragment list for tile
-        fgTILE::FragmentIterator current = t->begin();
-        fgTILE::FragmentIterator last = t->end();
+        FGTileEntry::FragmentIterator current = t->begin();
+        FGTileEntry::FragmentIterator last = t->end();
 
 	for ( ; current != last; ++current ) {
 	    frag_ptr = &(*current);
@@ -342,7 +342,7 @@ fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
 // given the current lon/lat, fill in the array of local chunks.  If
 // the chunk isn't already in the cache, then read it from disk.
 int fgTileMgrUpdate( void ) {
-    fgTILECACHE *c;
+    FGTileCache *c;
     FGInterface *f;
     FGBucket p2;
     static FGBucket p_last(false);
@@ -643,7 +643,7 @@ inrange( const double radius, const Point3D& center, const Point3D& vp,
 // update this tile's geometry for current view
 // The Compiler should inline this
 static void
-update_tile_geometry( fgTILE *t, GLdouble *MODEL_VIEW)
+update_tile_geometry( FGTileEntry *t, GLdouble *MODEL_VIEW)
 {
     GLfloat *m;
     double x, y, z;
@@ -673,8 +673,8 @@ update_tile_geometry( fgTILE *t, GLdouble *MODEL_VIEW)
 // Render the local tiles
 void fgTileMgrRender( void ) {
     FGInterface *f;
-    fgTILECACHE *c;
-    fgTILE *t;
+    FGTileCache *c;
+    FGTileEntry *t;
     FGView *v;
     Point3D frag_offset;
     fgFRAGMENT *frag_ptr;
@@ -715,14 +715,14 @@ void fgTileMgrRender( void ) {
 	    
 	    // Calculate the model_view transformation matrix for this tile
 	    // This is equivalent to doing a glTranslatef(x, y, z);
-	    t->UpdateViewMatrix( v->get_MODEL_VIEW() );
+	    t->update_view_matrix( v->get_MODEL_VIEW() );
 
 	    // xglPushMatrix();
 	    // xglTranslatef(t->offset.x, t->offset.y, t->offset.z);
 
 	    // traverse fragment list for tile
-            fgTILE::FragmentIterator current = t->begin();
-            fgTILE::FragmentIterator last = t->end();
+            FGTileEntry::FragmentIterator current = t->begin();
+            FGTileEntry::FragmentIterator last = t->end();
 
 	    for ( ; current != last; ++current ) {
 		frag_ptr = &(*current);
