@@ -442,12 +442,22 @@ FGEnvironment::_recalc_hdgspd ()
     wind_from_heading_deg = 90 - wind_from_heading_deg;
   else
     wind_from_heading_deg = 270 - wind_from_heading_deg;
+
+#if 0
+  // FIXME: Windspeed can become negative with these formulas.
+  //        which can cause problems for animations that rely
+  //        on the windspeed property.
   if (angle_rad == 0)
     wind_speed_kt = fabs(wind_from_east_fps
 			 * SG_METER_TO_NM * SG_FEET_TO_METER * 3600);
   else
     wind_speed_kt = (wind_from_north_fps / sin(angle_rad))
       * SG_METER_TO_NM * SG_FEET_TO_METER * 3600;
+#else
+  wind_speed_kt = sqrt(wind_from_north_fps * wind_from_north_fps +
+                       wind_from_east_fps * wind_from_east_fps) 
+                  * SG_METER_TO_NM * SG_FEET_TO_METER * 3600;
+#endif
 }
 
 void
