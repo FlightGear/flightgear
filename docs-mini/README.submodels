@@ -58,7 +58,7 @@
   <submodel>
     <name>left gun</name>
     <model>Models/Geometry/tracer.ac</model>
-    <trigger>systems/submodels/submodel[0]/trigger</trigger>
+    <trigger>ai/submodels/submodel[0]/trigger</trigger>
     <speed>2750.0</speed>
     <repeat>true</repeat>
     <delay>0.25</delay>
@@ -74,7 +74,7 @@
   <submodel>
     <name>right gun</name>
     <model>Models/Geometry/tracer.ac</model>
-    <trigger>systems/submodels/submodel[0]/trigger</trigger>
+    <trigger>ai/submodels/submodel[0]/trigger</trigger>
     <speed>2750.0</speed>
     <repeat>true</repeat>
     <delay>0.25</delay>

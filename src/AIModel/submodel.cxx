@@ -36,7 +36,7 @@ void
 FGSubmodelMgr::init ()
 {
     load();
-    _serviceable_node = fgGetNode("/sim/systems/submodels/serviceable", true);
+    _serviceable_node = fgGetNode("/sim/submodels/serviceable", true);
 
     _user_lat_node = fgGetNode("/position/latitude-deg", true);
     _user_lon_node = fgGetNode("/position/longitude-deg", true);
@@ -142,7 +142,7 @@ FGSubmodelMgr::load ()
 {
 
     int i;
-    SGPropertyNode *path = fgGetNode("/sim/systems/submodels/path");
+    SGPropertyNode *path = fgGetNode("/sim/submodels/path");
     SGPropertyNode root;
 
     if (path) {
@@ -193,7 +193,7 @@ FGSubmodelMgr::load ()
  
      sm->contents = sm->contents_node->getDoubleValue();
  
-     sm->prop = fgGetNode("/systems/submodels/submodel", i, true);
+     sm->prop = fgGetNode("/ai/submodels/submodel", i, true);
      sm->prop->tie("count", SGRawValuePointer<int>(&(sm->count)));
 
 //   sm->prop->tie("contents", SGRawValuePointer<double>(&(sm->contents)));
