@@ -404,6 +404,12 @@ FGInput::_init_joystick ()
       vector<SGPropertyNode_ptr> nodes = js_nodes->getChildren("js-named");
       for (unsigned int i = 0; i < nodes.size(); i++) {
         SGPropertyNode_ptr node = nodes[i];
+        SGPropertyNode *tgt = node->getNode("target-platform", false);
+        if (tgt != NULL) {
+           if ((strcmp(tgt->getStringValue(), TGT_PLATFORM) != NULL) &&
+               (strcmp(tgt->getStringValue(), "All") != NULL))
+              continue;		// Different target platform
+        }
         vector<SGPropertyNode_ptr> name_nodes = node->getChildren("name");
         for (unsigned int j = 0; j < name_nodes.size(); j++) {
             const char * js_name = name_nodes[j]->getStringValue();

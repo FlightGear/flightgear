@@ -29,6 +29,7 @@
 #endif
 
 #include <plib/js.h>
+#include <plib/ul.h>
 
 #include <simgear/compiler.h>
 
@@ -48,6 +49,13 @@ SG_USING_STD(map);
 SG_USING_STD(vector);
 
 
+
+
+#if defined( UL_WIN32 )
+#define TGT_PLATFORM	"Windows"
+#else
+#define TGT_PLATFORM	"UNIX"
+#endif
 
 
 
