@@ -141,6 +141,7 @@ public:
   virtual void init ();
   virtual void bind ();
   virtual void unbind ();
+  virtual void draw ();
   virtual void update (double dt);
   virtual void update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh);
 

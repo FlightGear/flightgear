@@ -26,6 +26,7 @@
 #include <Scenery/scenery.hxx>
 
 #include "model.hxx"
+#include "panelnode.hxx"
 
 
 
@@ -242,6 +243,14 @@ FG3DModel::init (const string &path)
           _animations.push_back(animation);
       }
     }
+  }
+
+                                // Load panels
+  vector<SGPropertyNode_ptr> panel_nodes = props.getChildren("panel");
+  for (i = 0; i < panel_nodes.size(); i++) {
+    printf("Reading a panel in model.cxx\n");
+    FGPanelNode * panel = new FGPanelNode(panel_nodes[i]);
+    _model->addKid(panel);
   }
 
 				// Load sub-models

@@ -2,7 +2,8 @@ noinst_LIBRARIES = libModel.a
 
 libModel_a_SOURCES = model.cxx model.hxx \
                      modelmgr.cxx modelmgr.hxx \
-                     acmodel.cxx acmodel.hxx
+                     acmodel.cxx acmodel.hxx \
+                     panelnode.cxx panelnode.hxx
 
 if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

@@ -49,6 +49,11 @@
 #define WIN_W 1024
 #define WIN_H 768
 
+// The number of polygon-offset "units" to place between layers.  In
+// principle, one is supposed to be enough.  In practice, I find that
+// my hardware/driver requires many more.
+#define POFF_UNITS 40
+
 #if defined( NONE ) && defined( _MSC_VER )
 #  pragma message( "A sloppy coder has defined NONE as a macro!!!" )
 #  undef NONE
@@ -89,8 +94,7 @@ fgPanelVisible ()
 	return false;
      if(globals->get_viewmgr()->get_current() != 0)
 	return false;
-     if(globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS != 0 &&
-        !fgGetBool("/sim/virtual-cockpit"))
+     if(globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS != 0)
 	return false;
      return true;
 }
@@ -312,6 +316,7 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   double x_offset = _x_offset;
   double y_offset = _y_offset;
 
+#if 0
   if (_jitter != 0.0) {
     double a_x_pilot = current_aircraft.fdm_state->get_A_X_pilot();
     double a_y_pilot = current_aircraft.fdm_state->get_A_Y_pilot();
@@ -328,23 +333,40 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
     x_offset += x_adjust;
     y_offset += y_adjust;
   }
+#endif
 
-  if(fgGetBool("/sim/virtual-cockpit")) {
-      setupVirtualCockpit();
-  } else {
-      glMatrixMode(GL_PROJECTION);
-      glPushMatrix();
-      glLoadIdentity();
-      gluOrtho2D(winx, winx + winw, winy, winy + winh); /* right side up */
-      // gluOrtho2D(winx + winw, winx, winy + winh, winy); /* up side down */
-      
-      glMatrixMode(GL_MODELVIEW);
-      glPushMatrix();
-      glLoadIdentity();
-      
-      glTranslated(x_offset, y_offset, 0);
-  }
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  gluOrtho2D(winx, winx + winw, winy, winy + winh); /* right side up */
+  // gluOrtho2D(winx + winw, winx, winy + winh, winy); /* up side down */
   
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+  
+  glTranslated(x_offset, y_offset, 0);
+  
+  draw();
+
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+
+  ssgForceBasicState();
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+}
+
+void
+FGPanel::draw()
+{
+  // In 3D mode, it's possible that we are being drawn exactly on top
+  // of an existing polygon.  Use an offset to prevent z-fighting.  In
+  // 2D mode, this is a no-op.
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(0, -POFF_UNITS);
+
   // Draw the background
   glEnable(GL_TEXTURE_2D);
   glDisable(GL_LIGHTING);
@@ -363,10 +385,10 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glBegin(GL_POLYGON);
-    glTexCoord2f(0.0, 0.0); glVertex3f(WIN_X, WIN_Y, 0);
-    glTexCoord2f(1.0, 0.0); glVertex3f(WIN_X + _width, WIN_Y, 0);
-    glTexCoord2f(1.0, 1.0); glVertex3f(WIN_X + _width, WIN_Y + _height, 0);
-    glTexCoord2f(0.0, 1.0); glVertex3f(WIN_X, WIN_Y + _height, 0);
+    glTexCoord2f(0.0, 0.0); glVertex2f(WIN_X, WIN_Y);
+    glTexCoord2f(1.0, 0.0); glVertex2f(WIN_X + _width, WIN_Y);
+    glTexCoord2f(1.0, 1.0); glVertex2f(WIN_X + _width, WIN_Y + _height);
+    glTexCoord2f(0.0, 1.0); glVertex2f(WIN_X, WIN_Y + _height);
     glEnd();
   } else {
     for (int i = 0; i < 4; i ++) {
@@ -374,25 +396,24 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
       glBindTexture(GL_TEXTURE_2D, _mbg[i*2]->getHandle());
       glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
       glBegin(GL_POLYGON);
-      glTexCoord2f(0.0, 0.0); glVertex3f(WIN_X + (_width/4) * i, WIN_Y + (_height/2), 0);
-      glTexCoord2f(1.0, 0.0); glVertex3f(WIN_X + (_width/4) * (i+1), WIN_Y + (_height/2), 0);
-      glTexCoord2f(1.0, 1.0); glVertex3f(WIN_X + (_width/4) * (i+1), WIN_Y + _height, 0);
-      glTexCoord2f(0.0, 1.0); glVertex3f(WIN_X + (_width/4) * i, WIN_Y + _height, 0);
+      glTexCoord2f(0.0, 0.0); glVertex2f(WIN_X + (_width/4) * i, WIN_Y + (_height/2));
+      glTexCoord2f(1.0, 0.0); glVertex2f(WIN_X + (_width/4) * (i+1), WIN_Y + (_height/2));
+      glTexCoord2f(1.0, 1.0); glVertex2f(WIN_X + (_width/4) * (i+1), WIN_Y + _height);
+      glTexCoord2f(0.0, 1.0); glVertex2f(WIN_X + (_width/4) * i, WIN_Y + _height);
       glEnd();
       // bottom row of textures...(2,4,6,8)
       glBindTexture(GL_TEXTURE_2D, _mbg[(i*2)+1]->getHandle());
       glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
       glBegin(GL_POLYGON);
-      glTexCoord2f(0.0, 0.0); glVertex3f(WIN_X + (_width/4) * i, WIN_Y, 0);
-      glTexCoord2f(1.0, 0.0); glVertex3f(WIN_X + (_width/4) * (i+1), WIN_Y, 0);
-      glTexCoord2f(1.0, 1.0); glVertex3f(WIN_X + (_width/4) * (i+1), WIN_Y + (_height/2), 0);
-      glTexCoord2f(0.0, 1.0); glVertex3f(WIN_X + (_width/4) * i, WIN_Y + (_height/2), 0);
+      glTexCoord2f(0.0, 0.0); glVertex2f(WIN_X + (_width/4) * i, WIN_Y);
+      glTexCoord2f(1.0, 0.0); glVertex2f(WIN_X + (_width/4) * (i+1), WIN_Y);
+      glTexCoord2f(1.0, 1.0); glVertex2f(WIN_X + (_width/4) * (i+1), WIN_Y + (_height/2));
+      glTexCoord2f(0.0, 1.0); glVertex2f(WIN_X + (_width/4) * i, WIN_Y + (_height/2));
       glEnd();
     }
-
   }
 
-				// Draw the instruments.
+  // Draw the instruments.
   instrument_list_type::const_iterator current = _instruments.begin();
   instrument_list_type::const_iterator end = _instruments.end();
 
@@ -404,106 +425,8 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
     glPopMatrix();
   }
 
-  if(fgGetBool("/sim/virtual-cockpit")) {
-      cleanupVirtualCockpit();
-  } else {
-      glMatrixMode(GL_PROJECTION);
-      glPopMatrix();
-      glMatrixMode(GL_MODELVIEW);
-      glPopMatrix();
-  }
-
-  ssgForceBasicState();
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  glDisable(GL_POLYGON_OFFSET_FILL);
 }
-
-void
-FGPanel::setupVirtualCockpit()
-{
-    int i;
-    FGViewer* view = globals->get_current_view();
-
-    // Generate corners for the panel quad.  Put the top edge of the
-    // panel 1m in and 6 degrees down from the forward direction, and
-    // make the whole thing 60 degrees wide.  In principle, these
-    // should be settable per-panel, so that you can have lots of
-    // panel objects plastered about the cockpit in realistic
-    // positions and orientations.
-    float a[3], b[3], c[3];
-    float pw = tan(30*SGD_DEGREES_TO_RADIANS);
-    float ph = 2 * pw * (float)_height/(float)_width;
-    float ptop = -tan(6*SGD_DEGREES_TO_RADIANS);
-    a[0] = -pw; a[1] = ptop-ph; a[2] = -1; // bottom left
-    b[0] =  pw; b[1] = ptop-ph; b[2] = -1; // bottom right
-    c[0] = -pw; c[1] = ptop;    c[2] = -1; // top left
-
-    // A standard projection, in meters, with especially close clip
-    // planes.
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    gluPerspective(view->get_v_fov(), 1/view->get_aspect_ratio(), 
-		   0.01, 100);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    // Generate a "look at" matrix using OpenGL (!) coordinate
-    // conventions.
-    float lookat[3];
-    float pitch = view->getPitchOffset_deg() * SGD_DEGREES_TO_RADIANS;
-    float rot = view->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS;
-    lookat[0] = -sin(rot);
-    lookat[1] = sin(pitch) / cos(pitch);
-    lookat[2] = -cos(rot);
-    if(fabs(lookat[1]) > 9999) lookat[1] = 9999; // FPU sanity
-    gluLookAt(0, 0, 0, lookat[0], lookat[1], lookat[2], 0, 1, 0);
-
-    // Translate the origin to the location of the panel quad
-    glTranslatef(a[0], a[1], a[2]);
- 
-    // Generate a matrix to translate unit square coordinates from the
-    // panel to real world coordinates.  Use a transposed basis for
-    // the panel quad.  Note: this matrix is relatively expensive to
-    // compute, and is invariant.  Consider precomputing and storing
-    // it.  Also, consider using the plib vector math routines, so the
-    // reuse junkies don't yell at me.  (Fine, I hard-coded a cross
-    // product.  Just shoot me and be done with it.)
-    float u[3], v[3], w[3], m[16];
-    for(i=0; i<3; i++) u[i] = b[i] - a[i]; // U = B - A
-    for(i=0; i<3; i++) v[i] = c[i] - a[i]; // V = C - A
-    w[0] = u[1]*v[2] - v[1]*u[2];          // W = U x V
-    w[1] = u[2]*v[0] - v[2]*u[0];
-    w[2] = u[0]*v[1] - v[0]*u[1];
-
-    m[0] = u[0]; m[4] = v[0]; m[8]  = w[0]; m[12] = 0; //     |Ux Vx Wx|
-    m[1] = u[1]; m[5] = v[1]; m[9]  = w[1]; m[13] = 0; // m = |Uy Vy Wy|
-    m[2] = u[2]; m[6] = v[2]; m[10] = w[2]; m[14] = 0; //     |Uz Vz Wz|
-    m[3] = 0;    m[7] = 0;    m[11] = 0;    m[15] = 1;
-    glMultMatrixf(m);
-
-    // Finally, a scaling factor to map the panel's width and height
-    // to the unit square.
-    glScalef(1./_width, 1./_height, 1);
-
-    // Now, turn off the Z buffer.  The panel code doesn't need
-    // it, and we're using different clip planes anyway (meaning we
-    // can't share it without glDepthRange() hackery or much
-    // framebuffer bandwidth wasteage)
-    glDisable(GL_DEPTH_TEST);
-}
-
-void
-FGPanel::cleanupVirtualCockpit()
-{
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-    glEnable(GL_DEPTH_TEST);
-}
-
 
 /**
  * Set the panel's visibility.
@@ -564,7 +487,6 @@ FGPanel::setYOffset (int offset)
   if (offset <= 0 && offset >= -_height)
     _y_offset = offset;
 }
-
 
 /**
  * Perform a mouse action.
@@ -785,19 +707,14 @@ FGLayeredInstrument::~FGLayeredInstrument ()
 void
 FGLayeredInstrument::draw ()
 {
-  if (test()) {
-    float z = 0.1f;
-    float z_inc = 0.01;
-    bool vc = fgGetBool("/sim/virtual-cockpit");
-    for (int i = 0; i < (int)_layers.size(); i++) {
-      glPushMatrix();
-      if(!vc) {
-        glTranslatef(0.0, 0.0, z);
-        z += z_inc;
-      }
-      _layers[i]->draw();
-      glPopMatrix();
-    }
+  if (!test())
+    return;
+  
+  for (int i = 0; i < (int)_layers.size(); i++) {
+    glPushMatrix();
+    glPolygonOffset(-1, -POFF_UNITS*(i+2));
+    _layers[i]->draw();
+    glPopMatrix();
   }
 }
 
@@ -999,7 +916,6 @@ void
 FGTextLayer::draw ()
 {
   if (test()) {
-    glPushMatrix();
     glColor4fv(_color);
     transform();
     if ( _font_name == "led" ) {
@@ -1013,20 +929,7 @@ FGTextLayer::draw ()
 
     _now.stamp();
     long diff = _now - _then;
-#if 0
-    // It would be nice to keep this #ifdef'd stuff for (04/18/2002 +
-    // a couple days) as I verify my solution to the panel text
-    // drawing problem is actually correct. -CLO
-    cout << "time diff = " << diff << endl;
-    if ( _now - _then < 0 ) {
-        cout << "Eeek, the past is now in the future!" << endl;
-        cout << "Now = " << _now.get_seconds() << " seconds "
-             << _now.get_usec() << "usecs" << endl;
-        cout << "Past = " << _then.get_seconds() << " seconds "
-             << _then.get_usec() << "usecs" << endl;
-        exit(-1);
-    }
-#endif
+
     if (diff > 100000 || diff < 0 ) {
       // ( diff < 0 ) is a sanity check and indicates our time stamp
       // difference math probably overflowed.  We can handle a max
@@ -1038,11 +941,19 @@ FGTextLayer::draw ()
       recalc_value();
       _then = _now;
     }
+
+    // Something is goofy.  The code in this file renders only CCW
+    // polygons, and I have verified that the font code in plib
+    // renders only CCW trianbles.  Yet they come out backwards.
+    // Something around here or in plib is either changing the winding
+    // order or (more likely) pushing a left-handed matrix onto the
+    // stack.  But I can't find it; get out the chainsaw...
+    glFrontFace(GL_CW);
     text_renderer.puts((char *)(_value.c_str()));
+    glFrontFace(GL_CCW);
 
     text_renderer.end();
     glColor4f(1.0, 1.0, 1.0, 1.0);	// FIXME
-    glPopMatrix();
   }
 }
 
