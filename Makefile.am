@@ -33,6 +33,7 @@ fgfs-base-tar:
 	tar \
 	--exclude=CVS \
 	--exclude='*~' \
+	--exclude='*.tex' \
 	--exclude='*.xcf' \
 	--exclude='*/c172/Instruments.high' \
 	--exclude='*/Textures/Unused' \
