@@ -31,7 +31,7 @@ void
 TurnIndicator::bind ()
 {
     fgTie("/instrumentation/turn-indicator/serviceable",
-          &_gyro, &Gyro::is_serviceable);
+          &_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
     fgTie("/instrumentation/turn-indicator/spin",
           &_gyro, &Gyro::get_spin_norm, &Gyro::set_spin_norm);
 }
