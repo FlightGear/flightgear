@@ -308,18 +308,18 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                  TRUE );
         break;
 
-      case 11:    // Digital Altimeter
+      case 11:    // Digital Rate of Climb
         HIptr = (instr_item *) new instr_label ( 110,
                                                  135,
                                                   40,
                                                   10,
-                                                 get_altitude,
-                                                 "MSL  %5.0f",
+                                                 get_climb_rate,
+                                                 "%5.0f",
+                                                 " Climb",
                                                  NULL,
-                                                 " m",
                                                  1.0,
                                                  HUDS_TOP,
-                                                 LEFT_JUST,
+                                                 RIGHT_JUST,
                                                  SMALL,
                                                  0,
                                                  TRUE );
@@ -691,13 +691,13 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
                                                  TRUE );
         break;
 
-      case 11:    // Digital Altimeter
+      case 11:    // Digital Rate of Climb
         HIptr = (instr_item *) new instr_label ( 110,
                                                  135,
                                                   40,
                                                   10,
                                                  get_altitude,
-                                                 "MSL  %5.0f",
+                                                 "Climb  %5.0f",
                                                  NULL,
                                                  " m",
                                                  1.0,
@@ -1099,10 +1099,13 @@ void fgUpdateHUD( void ) {
 }
 
 /* $Log$
-/* Revision 1.20  1998/08/24 20:05:16  curt
-/* Added a second minimalistic HUD.
-/* Added code to display the number of triangles rendered.
+/* Revision 1.21  1998/09/29 02:01:07  curt
+/* Added a "rate of climb" indicator.
 /*
+ * Revision 1.20  1998/08/24 20:05:16  curt
+ * Added a second minimalistic HUD.
+ * Added code to display the number of triangles rendered.
+ *
  * Revision 1.19  1998/07/30 23:44:05  curt
  * Tweaks for sgi building.
  *

@@ -175,6 +175,7 @@ extern double get_long_min    ( void );
 extern double get_fov         ( void );
 extern double get_vfc_ratio   ( void );
 extern double get_vfc_tris_drawn   ( void );
+extern double get_climb_rate  ( void );
 
 enum  hudinstype{ HUDno_instr,
               HUDscale,
@@ -525,10 +526,13 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 /* $Log$
-/* Revision 1.12  1998/08/24 20:05:17  curt
-/* Added a second minimalistic HUD.
-/* Added code to display the number of triangles rendered.
+/* Revision 1.13  1998/09/29 02:01:09  curt
+/* Added a "rate of climb" indicator.
 /*
+ * Revision 1.12  1998/08/24 20:05:17  curt
+ * Added a second minimalistic HUD.
+ * Added code to display the number of triangles rendered.
+ *
  * Revision 1.11  1998/07/24 21:36:55  curt
  * Ran dos2unix to get rid of extraneous ^M's.  Tweaked parameter in
  * ImageGetRawData() to match usage.

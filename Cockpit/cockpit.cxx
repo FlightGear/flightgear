@@ -252,6 +252,15 @@ double get_vfc_tris_drawn   ( void )
     return current_view.tris_rendered;
 }
 
+double get_climb_rate( void )
+{
+	fgFLIGHT *f;
+
+	f = current_aircraft.flight;
+
+	return( FG_Climb_Rate * FEET_TO_METER * 60.0 );
+}
+
 
 bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 {
@@ -307,10 +316,13 @@ void fgCockpitUpdate( void ) {
 
 
 /* $Log$
-/* Revision 1.15  1998/08/28 18:14:39  curt
-/* Added new cockpit code from Friedemann Reinhard
-/* <mpt218@faupt212.physik.uni-erlangen.de>
+/* Revision 1.16  1998/09/29 02:01:06  curt
+/* Added a "rate of climb" indicator.
 /*
+ * Revision 1.15  1998/08/28 18:14:39  curt
+ * Added new cockpit code from Friedemann Reinhard
+ * <mpt218@faupt212.physik.uni-erlangen.de>
+ *
  * Revision 1.14  1998/08/24 20:05:15  curt
  * Added a second minimalistic HUD.
  * Added code to display the number of triangles rendered.
