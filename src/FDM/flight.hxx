@@ -111,8 +111,8 @@ public:
 
     // Define the various supported flight models (many not yet implemented)
     enum {
-	// Slew (in MS terminology)
-	FG_SLEW = 0,
+	// Magic Carpet mode
+	FG_MAGICCARPET = 0,
 	
 	// The NASA LaRCsim (Navion) flight model
 	FG_LARCSIM = 1,

@@ -57,8 +57,9 @@
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
 // #include <FDM/Balloon.h>
-#include <FDM/LaRCsim.hxx>
 #include <FDM/JSBsim.hxx>
+#include <FDM/LaRCsim.hxx>
+#include <FDM/MagicCarpet.hxx>
 #include <Include/fg_constants.h>
 #include <Include/general.hxx>
 #include <Joystick/joystick.hxx>
@@ -235,6 +236,9 @@ bool fgInitSubsystems( void ) {
     // } else if ( current_options.get_flight_model() == 
     //             FGInterface::FG_BALLOONSIM ) {
     //     cur_fdm_state = new FGBalloonSim;
+    } else if ( current_options.get_flight_model() == 
+		FGInterface::FG_MAGICCARPET ) {
+	cur_fdm_state = new FGMagicCarpet;
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT,
 		"No flight model, can't init aircraft" );

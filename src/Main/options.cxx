@@ -497,16 +497,16 @@ int
 fgOPTIONS::parse_fdm( const string& fm ) {
     // printf("fdm = %s\n", fm);
 
-    if ( fm == "slew" ) {
-	return FGInterface::FG_SLEW;
-    } else if ( fm == "jsb" ) {
-	return FGInterface::FG_JSBSIM;
-    } else if ( fm == "balloon" ) {
+    if ( fm == "balloon" ) {
 	return FGInterface::FG_BALLOONSIM;
-    } else if ( (fm == "larcsim") || (fm == "LaRCsim") ) {
-	return FGInterface::FG_LARCSIM;
     } else if ( fm == "external" ) {
 	return FGInterface::FG_EXTERNAL;
+    } else if ( fm == "jsb" ) {
+	return FGInterface::FG_JSBSIM;
+    } else if ( (fm == "larcsim") || (fm == "LaRCsim") ) {
+	return FGInterface::FG_LARCSIM;
+    } else if ( fm == "magic" ) {
+	return FGInterface::FG_MAGICCARPET;
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown fdm = " << fm );
 	exit(-1);
