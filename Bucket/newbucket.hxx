@@ -75,13 +75,14 @@ public:
     string gen_base_path();
 
     // return the center lon of a tile
-    double get_center_lon();
+    double get_center_lon() const;
 
     // return the center lat of a tile
-    double get_center_lat();
+    double get_center_lat() const;
 
     // friends
     friend ostream& operator<< ( ostream&, const FGBucket& );
+    friend bool operator== ( const FGBucket&, const FGBucket& );
 };
 
 
@@ -224,7 +225,7 @@ inline long int FGBucket::gen_index() {
 
 
 // return the center lon of a tile
-inline double FGBucket::get_center_lon() {
+inline double FGBucket::get_center_lon() const {
     double span = bucket_span( lat + y / 8.0 + FG_HALF_BUCKET_SPAN );
 
     if ( span >= 1.0 ) {
@@ -236,7 +237,7 @@ inline double FGBucket::get_center_lon() {
 
 
 // return the center lat of a tile
-inline double FGBucket::get_center_lat() {
+inline double FGBucket::get_center_lat() const {
     return lat + y / 8.0 + FG_HALF_BUCKET_SPAN;
 }
 
@@ -246,38 +247,15 @@ inline double FGBucket::get_center_lat() {
 FGBucket fgBucketOffset( double dlon, double dlat, int x, int y );
 
 
+// calculate the offset between two buckets
+void fgBucketDiff( const FGBucket& b1, const FGBucket& b2, int *dx, int *dy );
+
+
 /*
 // Given a lat/lon, fill in the local tile index array
 void fgBucketGenIdxArray(fgBUCKET *p1, fgBUCKET *tiles, int width, int height);
-
-
-
-inline bool
-operator== ( const fgBUCKET& b1, const fgBUCKET& b2 )
-{
-    return ( b1.lon == b2.lon &&
-	     b1.lat == b2.lat &&
-	     b1.x == b2.x &&
-	     b1.y == b2.y );
-}
-
-inline string
-fgBucketGenIndex( const fgBUCKET& p )
-{
-    char index_str[256];
-    sprintf( index_str, "%ld", fgBucketGenIndex( &p ) );
-    return string( index_str );
-}
-
-inline string
-fgBucketGenBasePath( const fgBUCKET& p )
-{
-    char base_path[256];
-    fgBucketGenBasePath( &p, base_path );
-    return string( base_path );
-}
-
 */
+
 
 inline ostream&
 operator<< ( ostream& out, const FGBucket& b )
@@ -286,10 +264,35 @@ operator<< ( ostream& out, const FGBucket& b )
 }
 
 
+inline bool
+operator== ( const FGBucket& b1, const FGBucket& b2 )
+{
+    return ( b1.lon == b2.lon &&
+	     b1.lat == b2.lat &&
+	     b1.x == b2.x &&
+	     b1.y == b2.y );
+}
+
+/*
+inline string
+fgBucketGenIndex( const fgBUCKET& p )
+{
+    char index_str[256];
+    sprintf( index_str, "%ld", fgBucketGenIndex( &p ) );
+    return string( index_str );
+}
+
+*/
+
+
+
 #endif // _NEWBUCKET_HXX
 
 
 // $Log$
+// Revision 1.2  1999/02/11 01:09:34  curt
+// Added a routine to calculate the offset in bucket units between two buckets.
+//
 // Revision 1.1  1999/02/08 23:52:16  curt
 // Added a new "newbucket.[ch]xx" FGBucket class to replace the old
 // fgBUCKET struct and C routines.  This FGBucket class adjusts the tile

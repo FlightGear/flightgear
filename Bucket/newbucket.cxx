@@ -24,6 +24,11 @@
  **************************************************************************/
 
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
+
 #include "newbucket.hxx"
 
 
@@ -99,7 +104,51 @@ FGBucket fgBucketOffset( double dlon, double dlat, int dx, int dy ) {
 }
 
 
+// calculate the offset between two buckets
+void fgBucketDiff( const FGBucket& b1, const FGBucket& b2, int *dx, int *dy ) {
+
+    // Latitude difference
+    double c1_lat = b1.get_center_lat();
+    double c2_lat = b2.get_center_lat();
+    double diff_lat = c2_lat - c1_lat;
+
+#ifdef HAVE_RINT
+    *dy = (int)rint( diff_lat / FG_BUCKET_SPAN );
+#else
+    if ( diff_lat > 0 ) {
+	*dy = (int)( diff_lat / FG_BUCKET_SPAN + 0.5 );
+    } else {
+	*dy = (int)( diff_lat / FG_BUCKET_SPAN - 0.5 );
+    }
+#endif
+
+    // longitude difference
+    double c1_lon = b1.get_center_lon();
+    double c2_lon = b2.get_center_lon();
+    double diff_lon = c2_lon - c1_lon;
+    double span;
+    if ( bucket_span(c1_lat) <= bucket_span(c2_lat) ) {
+	span = bucket_span(c1_lat);
+    } else {
+	span = bucket_span(c2_lat);
+    }
+
+#ifdef HAVE_RINT
+    *dx = (int)rint( diff_lon / span );
+#else
+    if ( diff_lon > 0 ) {
+	*dx = (int)( diff_lon / span + 0.5 );
+    } else {
+	*dx = (int)( diff_lon / span - 0.5 );
+    }
+#endif
+}
+
+
 // $Log$
+// Revision 1.2  1999/02/11 01:09:33  curt
+// Added a routine to calculate the offset in bucket units between two buckets.
+//
 // Revision 1.1  1999/02/08 23:52:16  curt
 // Added a new "newbucket.[ch]xx" FGBucket class to replace the old
 // fgBUCKET struct and C routines.  This FGBucket class adjusts the tile
