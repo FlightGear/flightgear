@@ -46,20 +46,20 @@ FGAIFlightPlan::FGAIFlightPlan(string filename)
       return;
   }
 
-  SGPropertyNode * node = root.getNode("FLIGHTPLAN");
+  SGPropertyNode * node = root.getNode("flightplan");
   for (i = 0; i < node->nChildren(); i++) { 
      //cout << "Reading waypoint " << i << endl;        
      waypoint* wpt = new waypoint;
      waypoints.push_back( wpt );
      SGPropertyNode * wpt_node = node->getChild(i);
-     wpt->name      = wpt_node->getStringValue("NAME", "END");
-     wpt->latitude  = wpt_node->getDoubleValue("LAT", 0);
-     wpt->longitude = wpt_node->getDoubleValue("LON", 0);
-     wpt->altitude  = wpt_node->getDoubleValue("ALT", 0);
-     wpt->speed     = wpt_node->getDoubleValue("KTAS", 0);
-     wpt->crossat   = wpt_node->getDoubleValue("CROSSAT", -10000);
-     wpt->gear_down = wpt_node->getBoolValue("GEAR-DOWN", false);
-     wpt->flaps_down= wpt_node->getBoolValue("FLAPS-DOWN", false);
+     wpt->name      = wpt_node->getStringValue("name", "END");
+     wpt->latitude  = wpt_node->getDoubleValue("lat", 0);
+     wpt->longitude = wpt_node->getDoubleValue("lon", 0);
+     wpt->altitude  = wpt_node->getDoubleValue("alt", 0);
+     wpt->speed     = wpt_node->getDoubleValue("ktas", 0);
+     wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
+     wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
+     wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
    }
 
   wpt_iterator = waypoints.begin();
@@ -163,9 +163,6 @@ double FGAIFlightPlan::getBearing(double lat, double lon, waypoint* wp){
   if (!southerly && easterly) return 90.0 - angle;
   if (southerly && !easterly) return 270.0 - angle;
   if (!southerly && !easterly) return 270.0 + angle; 
-
-  /* prevent a compiler warning */
-  return 0.0;
 }
 
 

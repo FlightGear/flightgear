@@ -46,16 +46,16 @@ FGAIScenario::FGAIScenario(string filename)
       return;
   }
 
-  SGPropertyNode * node = root.getNode("SCENARIO");
+  SGPropertyNode * node = root.getNode("scenario");
   for (i = 0; i < node->nChildren(); i++) { 
      //cout << "Reading entry " << i << endl;        
      entry* en = new entry;
      entries.push_back( en );
      SGPropertyNode * entry_node = node->getChild(i);
-     en->callsign       = entry_node->getStringValue("CALLSIGN", "none");
-     en->aircraft_class = entry_node->getStringValue("CLASS", "jet_transport");
-     en->model_path     = entry_node->getStringValue("MODEL", "Models/Geometry/glider.ac");
-     en->flightplan     = entry_node->getStringValue("FLIGHTPLAN", "");
+     en->callsign       = entry_node->getStringValue("callsign", "none");
+     en->aircraft_class = entry_node->getStringValue("class", "jet_transport");
+     en->model_path     = entry_node->getStringValue("model", "Models/Geometry/glider.ac");
+     en->flightplan     = entry_node->getStringValue("flightplan", "");
    }
 
   entry_iterator = entries.begin();
