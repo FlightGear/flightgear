@@ -81,7 +81,7 @@ draw( void ) //  (HUD_scale * pscale )
   /* register */ int i;
   char TextScale[80];
   bool condition;
-  int disp_val;
+  int disp_val = 0;
   POINT mid_scr    = get_centroid();
   double cur_value = get_value();
   RECT   scrn_rect = get_location();

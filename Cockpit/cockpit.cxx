@@ -266,7 +266,9 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
     fgHUDInit( cur_aircraft );
     ac_cockpit = new fg_Cockpit();
     
+#ifdef INCLUDE_PANEL
     fgPanelInit();
+#endif
 
     fgPrintf( FG_COCKPIT, FG_INFO,
 	      "  Code %d  Status %d\n",
@@ -291,17 +293,22 @@ void fgCockpitUpdate( void ) {
 	fgUpdateHUD();
     }
 
+#if INCLUDE_PANEL
     if ( current_options.get_panel_status() && 
 	 (fabs(pview->view_offset) < 0.2) ) {
 	fgPanelUpdate();
     }
+#endif
 }
 
 
 /* $Log$
-/* Revision 1.12  1998/07/13 21:28:00  curt
-/* Converted the aoa scale to a radio altimeter.
+/* Revision 1.13  1998/08/22 01:19:27  curt
+/* Omit panel code because it's texture loading overruns array bounds.
 /*
+ * Revision 1.12  1998/07/13 21:28:00  curt
+ * Converted the aoa scale to a radio altimeter.
+ *
  * Revision 1.11  1998/07/13 21:00:45  curt
  * Integrated Charlies latest HUD updates.
  * Wrote access functions for current fgOPTIONS.
