@@ -1538,14 +1538,14 @@ int main( int argc, char **argv ) {
 		   globals->get_ephem()->getStars(), 60000.0 );
 
     if ( fgGetBool("/environment/clouds/status") ) {
+	thesky->add_cloud_layer( 2000.0, 200.0, 50.0, 40000.0,
+				 SG_CLOUD_OVERCAST );
 	thesky->add_cloud_layer( 2600.0, 200.0, 50.0, 40000.0,
+				 SG_CLOUD_MOSTLY_CLOUDY );
+	thesky->add_cloud_layer( 3000.0, 200.0, 50.0, 40000.0,
 				 SG_CLOUD_MOSTLY_SUNNY );
 	thesky->add_cloud_layer( 6000.0, 20.0, 10.0, 40000.0,
 				 SG_CLOUD_CIRRUS );
-	// thesky->add_cloud_layer( 1000.0, 200.0, 50.0,
-	//                          SG_CLOUD_MOSTLY_SUNNY );
-	// thesky->add_cloud_layer( 1800.0, 400.0, 100.0, SG_CLOUD_OVERCAST );
-	// thesky->add_cloud_layer( 5000.0, 20.0, 10.0, SG_CLOUD_CIRRUS );
     }
 
     // Initialize MagVar model

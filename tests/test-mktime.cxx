@@ -75,9 +75,15 @@ time_t get_start_gmt(int year) {
 #else // ! defined ( MK_TIME_IS_GMT )
 
     // timezone seems to work as a proper offset for Linux & Solaris
-#  if defined( __linux__ ) || defined( __sun__ ) 
+#  if defined( __linux__ ) || defined( __sun__ ) || defined( __CYGWIN__ )
 #   define TIMEZONE_OFFSET_WORKS 1
 #  endif
+
+#if defined(__CYGWIN__)
+#define TIMEZONE _timezone
+#else
+#define TIMEZONE timezone
+#endif
 
     time_t start = mktime(&mt);
 
@@ -85,11 +91,11 @@ time_t get_start_gmt(int year) {
     printf("start2 = %s", ctime(&start));
     printf("(tm_isdst = %d)\n", mt.tm_isdst);
 
-    timezone = fix_up_timezone( timezone );
-
+    TIMEZONE = fix_up_timezone( TIMEZONE );
+	
 #  if defined( TIMEZONE_OFFSET_WORKS )
-    printf("start = %ld, timezone = %ld\n", start, timezone);
-    return( start - timezone );
+    printf("start = %ld, timezone = %ld\n", start, TIMEZONE);
+    return( start - TIMEZONE );
 #  else // ! defined( TIMEZONE_OFFSET_WORKS )
 
     daylight = mt.tm_isdst;
@@ -99,13 +105,13 @@ time_t get_start_gmt(int year) {
 	printf("OOOPS, problem in fg_time.cxx, no daylight savings info.\n");
     }
 
-    long int offset = -(timezone / 3600 - daylight);
+    long int offset = -(TIMEZONE / 3600 - daylight);
 
-    printf("  Raw time zone offset = %ld\n", timezone);
+    printf("  Raw time zone offset = %ld\n", TIMEZONE);
     printf("  Daylight Savings = %d\n", daylight);
     printf("  Local hours from GMT = %ld\n", offset);
     
-    long int start_gmt = start - timezone + (daylight * 3600);
+    long int start_gmt = start - TIMEZONE + (daylight * 3600);
     
     printf("  March 21 noon (CST) = %ld\n", start);
 

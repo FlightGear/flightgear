@@ -35,7 +35,9 @@
 
 // Constructor
 FGViewer::FGViewer( void ):
-fov(55.0)
+    fov(55.0),
+    view_offset(0.0),
+    goal_view_offset(0.0)
 {
 }
 
