@@ -287,15 +287,11 @@ void FGAIManager::processThermal( FGAIThermal* thermal ) {
 
 void FGAIManager::processScenario( string filename ) {
   FGAIScenario* s = new FGAIScenario( filename );
-
   for (int i=0;i<s->nEntries();i++) {
     FGAIModelEntity* en = s->getNextEntry();
 
     if (en) {
-      en->fp = NULL;
-      if (en->flightplan != ""){
-        en->fp = new FGAIFlightPlan( en->flightplan );
-      }
+
  
       if (en->m_class == "aircraft") {
          createAircraft( en );
