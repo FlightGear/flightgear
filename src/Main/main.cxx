@@ -140,7 +140,7 @@ FGTileEntry *dummy_tile;
 sgVec3 rway_ols;
 // ADA
 // Clip plane settings...
-float cockpit_nearplane = 0.1f;
+float cockpit_nearplane = 0.01f;
 float cockpit_farplane = 100.0f;
 float scene_nearplane = 0.5f;
 float scene_farplane = 120000.0f;
