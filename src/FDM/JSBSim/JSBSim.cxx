@@ -244,15 +244,14 @@ FGJSBsim::update( int multiloop ) {
     copy_to_JSBsim();
 
     trimmed->setBoolValue(false);
+    
 
+    
     if ( needTrim ) {
       if ( startup_trim->getBoolValue() ) {
         SG_LOG(SG_FLIGHT, SG_INFO,
           "Ready to trim, terrain altitude is: " 
             << scenery.get_cur_elev() * SG_METER_TO_FEET );
-        SG_LOG( SG_FLIGHT, SG_INFO, "position = "
-		<< fgGetDouble("/position/longitude-deg") << ", "
-		<< fgGetDouble("/position/latitude-deg") );
         fgic->SetTerrainAltitudeFtIC( scenery.get_cur_elev() * SG_METER_TO_FEET );
         do_trim();
       } else {
@@ -561,9 +560,6 @@ void FGJSBsim::set_Altitude(double alt) {
     fgic->SetTerrainAltitudeFtIC( scenery.get_cur_elev() * SG_METER_TO_FEET  );
     SG_LOG(SG_FLIGHT, SG_INFO,
           "Terrain altitude: " << scenery.get_cur_elev() * SG_METER_TO_FEET );
-    SG_LOG( SG_FLIGHT, SG_INFO, "position = "
-	    << fgGetDouble("/position/longitude-deg") << ", "
-	    << fgGetDouble("/position/latitude-deg") );
     fgic->SetLatitudeRadIC( lat_geoc );
     fgic->SetAltitudeFtIC(alt);
     needTrim=true;
@@ -672,8 +668,8 @@ void FGJSBsim::set_Density(double rho) {
 void FGJSBsim::set_Velocities_Local_Airmass (double wnorth, 
                          double weast, 
                          double wdown ) {
-    SG_LOG(SG_FLIGHT,SG_DEBUG, "FGJSBsim::set_Velocities_Local_Airmass: " 
-       << wnorth << ", " << weast << ", " << wdown );
+    //SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Velocities_Local_Airmass: " 
+    //   << wnorth << ", " << weast << ", " << wdown );
     
     _set_Velocities_Local_Airmass( wnorth, weast, wdown );
     fgic->SetWindNEDFpsIC( wnorth, weast, wdown );
