@@ -23,19 +23,9 @@
 //
 // $Id$
 
-
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
-
-// #include <sys/types.h>		// for gdbm open flags
-// #include <sys/stat.h>		// for gdbm open flags
-
-// #ifdef HAVE_GDBM
-// #  include <gdbm.h>
-// #else
-// #  include <simgear/gdbm/gdbm.h>
-// #endif
 
 #include <simgear/compiler.h>
 
@@ -49,6 +39,36 @@
 #include "simple.hxx"
 
 SG_USING_NAMESPACE(std);
+
+#ifndef _MSC_VER
+#   define NDEBUG			// she don't work without it.
+#endif
+#include <mk4.h>
+#include <mk4str.h>
+#ifndef _MSC_VER
+#  undef NDEBUG
+#endif
+
+#ifdef SG_HAVE_STD_INCLUDES
+#  include <istream>
+#elif defined( SG_HAVE_NATIVE_SGI_COMPILERS )
+#  include <iostream.h>
+#elif defined( __BORLANDC__ )
+#  include <iostream>
+#else
+#  include <istream.h>
+#endif
+#if ! defined( SG_HAVE_NATIVE_SGI_COMPILERS )
+SG_USING_STD(istream);
+#endif
+
+
+inline istream&
+operator >> ( istream& in, FGAirport& a )
+{
+    return in >> a.id >> a.latitude >> a.longitude >> a.elevation;
+}
+
 
 FGAirports::FGAirports( const string& file ) {
     // open the specified database readonly

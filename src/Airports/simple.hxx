@@ -38,35 +38,15 @@
 
 #include <simgear/compiler.h>
 
-#ifdef SG_HAVE_STD_INCLUDES
-#  include <istream>
-#elif defined( SG_HAVE_NATIVE_SGI_COMPILERS )
-#  include <iostream.h>
-#elif defined( __BORLANDC__ )
-#  include <iostream>
-#else
-#  include <istream.h>
-#endif
-
 #include STL_STRING
 #include <set>
 
-#ifndef _MSC_VER
-#   define NDEBUG			// she don't work without it.
-#endif
-#include <mk4.h>
-#include <mk4str.h>
-#ifndef _MSC_VER
-#  undef NDEBUG
-#endif
+// Forward declarations.
+class c4_Storage;
+class c4_View;
 
 SG_USING_STD(string);
 SG_USING_STD(set);
-
-#if ! defined( SG_HAVE_NATIVE_SGI_COMPILERS )
-SG_USING_STD(istream);
-#endif
-
 
 class FGAirport {
 
@@ -90,12 +70,6 @@ public:
     double elevation;
 
 };
-
-inline istream&
-operator >> ( istream& in, FGAirport& a )
-{
-    return in >> a.id >> a.latitude >> a.longitude >> a.elevation;
-}
 
 
 class FGAirports {

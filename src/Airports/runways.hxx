@@ -36,36 +36,15 @@
 
 #include <simgear/compiler.h>
 
-#ifdef SG_HAVE_STD_INCLUDES
-#  include <istream>
-#elif defined( SG_HAVE_NATIVE_SGI_COMPILERS )
-#  include <iostream.h>
-#elif defined( __BORLANDC__ )
-#  include <iostream>
-#else
-#  include <istream.h>
-#endif
-
 #include STL_STRING
 #include <vector>
 
-#ifndef _MSC_VER
-#define NDEBUG			// she don't work without it.
-#endif // !_MSC_VER
-
-#include <mk4.h>
-#include <mk4str.h>
-
-#ifndef _MSC_VER
-#undef NDEBUG
-#endif // !_MSC_VER
+// Forward declarations.
+class c4_Storage;
+class c4_View;
 
 SG_USING_STD(string);
 SG_USING_STD(vector);
-
-#if ! defined( SG_HAVE_NATIVE_SGI_COMPILERS )
-SG_USING_STD(istream);
-#endif
 
 
 class FGRunway {
@@ -87,21 +66,10 @@ public:
 
 public:
 
-    FGRunway();
-    ~FGRunway();
+    FGRunway() {}
+    ~FGRunway() {}
 
 };
-
-inline istream&
-operator >> ( istream& in, FGRunway& a )
-{
-    int tmp;
-
-    return in >> a.rwy_no >> a.lat >> a.lon >> a.heading >> a.length >> a.width
-	      >> a.surface_flags >> a.end1_flags >> tmp >> tmp >> a.end2_flags
-	      >> tmp >> tmp;
-}
-
 
 class FGRunways {
 
