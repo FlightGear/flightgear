@@ -180,6 +180,7 @@ extern float get_vfc_ratio   ( void );
 extern float get_vfc_tris_drawn   ( void );
 extern float get_vfc_tris_culled   ( void );
 extern float get_climb_rate  ( void );
+extern float get_mach( void );
 extern char *coord_format_lat(float);
 extern char *coord_format_lon(float);
 //extern char *coord_format_latlon(float latitude, float longitude);  // cockpit.cxx

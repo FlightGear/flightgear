@@ -333,6 +333,26 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                        50.0,
                                        true);
 
+  
+ 
+  HUD_deque.insert( HUD_deque.begin(), HIptr);
+    
+
+//      case 10:    // Digital Mach number
+        HIptr = (instr_item *) new instr_label ( min_x , //same as speed tape
+                                                 cen_y-(compass_w/2) -10, //below speed tape
+                                                  40,
+                                                  30,
+                                                 get_mach,
+                                                 "%4.2f",
+                                                 "",
+                                                 NULL,
+                                                 1.0,
+                                                 HUDS_TOP,
+                                                 RIGHT_JUST,
+                                                 font_size,
+                                                 0,
+                                                 TRUE );
   HUD_deque.insert( HUD_deque.begin(), HIptr);
 
 //      case 9:
