@@ -52,42 +52,41 @@ local_file_exists( const string& path ) {
 }
 
 
-// Constructor
-
-FGNewMat::FGNewMat ()
-  : texture_path(""),
-    state(0),
-    textured(0),
-    nontextured(0),
-    alpha(false),
-    xsize(0),
-    ysize(0),
-    wrapu(true),
-    wrapv(true),
-    mipmap(true),
-    texture_loaded(false),
-    refcount(0)
+void 
+FGNewMat::init ()
 {
-    for (int i = 0; i < 4; i++)
-      ambient[i] = diffuse[i] = specular[i] = emission[i] = 0.0;
+  texture_path = "";
+  state = 0;
+  textured = 0;
+  nontextured = 0;
+  alpha = false;
+  xsize = 0;
+  ysize = 0;
+  wrapu = true;
+  wrapv = true;
+  mipmap = true;
+  texture_loaded = false;
+  refcount = 0;
+  for (int i = 0; i < 4; i++)
+    ambient[i] = diffuse[i] = specular[i] = emission[i] = 0.0;
 }
 
 FGNewMat::FGNewMat (const SGPropertyNode * props)
 {
-    FGNewMat();
+    init();
     read_properties(props);
     build_ssg_state(false);
 }
 
 FGNewMat::FGNewMat (const string &texture_path)
 {
-    FGNewMat();
+    init();
     build_ssg_state(true);
 }
 
 FGNewMat::FGNewMat (ssgSimpleState * s)
 {
-    FGNewMat();
+    init();
     set_ssg_state(s);
 }
 

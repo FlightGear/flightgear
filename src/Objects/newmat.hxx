@@ -170,6 +170,18 @@ public:
    */
   virtual inline int getRef() const { return refcount; }
 
+protected:
+
+
+  ////////////////////////////////////////////////////////////////////
+  // Protected methods.
+  ////////////////////////////////////////////////////////////////////
+
+  /**
+   * Initialization method, invoked by all public constructors.
+   */
+  virtual void init();
+
 
 private:
 
@@ -217,7 +229,6 @@ private:
   // Internal constructors and methods.
   ////////////////////////////////////////////////////////////////////
 
-  FGNewMat ();
   FGNewMat (const FGNewMat &mat); // unimplemented
 
   void read_properties (const SGPropertyNode * props);
