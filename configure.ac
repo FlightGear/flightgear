@@ -34,7 +34,8 @@ case "${host}" in
     if test "$CXX" = "CC"; then
         AR="CC -ar"
         ARFLAGS="-o"
-        CXXFLAGS="$CXXFLAGS -I$with_simgear/include/simgear/compatibility"
+        CXXFLAGS="$CXXFLAGS -c99 -I$with_simgear/include/simgear/compatibility"
+        CFLAGS="$CFLAGS -c99"
     else
         AR="ar"
         ARFLAGS="cru"
