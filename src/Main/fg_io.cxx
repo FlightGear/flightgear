@@ -32,6 +32,7 @@
 #include <Network/iochannel.hxx>
 #include <Network/fg_file.hxx>
 #include <Network/fg_serial.hxx>
+#include <Network/fg_socket.hxx>
 
 #include <Network/protocol.hxx>
 #include <Network/garmin.hxx>
@@ -138,14 +139,29 @@ static FGProtocol *parse_port_config( const string& config )
 	io->set_io_channel( ch );
     } else if ( medium == "file" ) {
 	FGFile *ch = new FGFile;
+	io->set_io_channel( ch );
 
 	// file name
 	ch->set_file_name( config.substr(begin) );
 	FG_LOG( FG_IO, FG_INFO, "  file name = " << ch->get_file_name() );
-
-	io->set_io_channel( ch );
     } else if ( medium == "socket" ) {
-	// ch = new FGSocket;
+	FGSocket *ch = new FGSocket;
+	io->set_io_channel( ch );
+
+	// hostname
+	end = config.find(",", begin);
+	if ( end == string::npos ) {
+	    return NULL;
+	}
+    
+	ch->set_hostname( config.substr(begin, end - begin) );
+	begin = end + 1;
+	FG_LOG( FG_IO, FG_INFO, "  hostname = " << ch->get_hostname() );
+
+	// port
+	ch->set_port_str( config.substr(begin) );
+	FG_LOG( FG_IO, FG_INFO, "  port string = " << ch->get_port_str() );
+
     }
 
     return io;
