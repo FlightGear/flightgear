@@ -171,6 +171,7 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order ) {
 
     net->wind_speed_kt = fgGetDouble("/environment/wind-speed-kt");
     net->wind_dir_deg = fgGetDouble("/environment/wind-from-heading-deg");
+    net->turbulence_norm = fgGetDouble("/environment/turbulence-norm");
 
     // cur_fdm_state->get_ground_elev_ft() is what we want ... this
     // reports the altitude of the aircraft.
@@ -223,6 +224,7 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order ) {
         net->master_avionics = htonl(net->master_avionics);
         htond(net->wind_speed_kt);
         htond(net->wind_dir_deg);
+        htond(net->turbulence_norm);
         htond(net->hground);
         htond(net->magvar);
         net->speedup = htonl(net->speedup);
@@ -269,6 +271,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool net_byte_order ) {
         net->master_avionics = htonl(net->master_avionics);
         htond(net->wind_speed_kt);
         htond(net->wind_dir_deg);
+        htond(net->turbulence_norm);
         htond(net->hground);
         htond(net->magvar);
         net->speedup = htonl(net->speedup);
@@ -324,8 +327,9 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool net_byte_order ) {
     node->setBoolValue( "master-avionics", net->master_avionics );
     
     node = fgGetNode( "/environment", true );
-    node->setBoolValue( "wind-speed-kt", net->wind_speed_kt );
-    node->setBoolValue( "wind-from-heading-deg", net->wind_dir_deg );
+    node->setDoubleValue( "wind-speed-kt", net->wind_speed_kt );
+    node->setDoubleValue( "wind-from-heading-deg", net->wind_dir_deg );
+    node->setDoubleValue( "turbulence-norm", net->turbulence_norm );
     node->setBoolValue( "magnetic-variation-deg", net->magvar );
 
     // ground elevation ???
