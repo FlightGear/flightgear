@@ -45,7 +45,7 @@ int make_socket (char *host, unsigned short int port) {
     {
 	close(sock);
 	perror("Cannot connect to stream socket");
-	exit(-1);
+	return -1;
     }
 
     return sock;
@@ -59,7 +59,10 @@ long int get_next_task( const string& host, int port ) {
     fd_set ready;
     char message[256];
 
-    sock = make_socket( host.c_str(), port );
+    while ( (sock = make_socket( host.c_str(), port )) < 0 ) {
+	// loop till we get a socket connection
+	sleep(1);
+    }
 
     // build a command string from the argv[]'s
     strcpy(message, "hello world!\n");
@@ -115,8 +118,10 @@ main(int argc, char *argv[]) {
     string host = argv[1];
     int port = atoi( argv[2] );
 
-    while ( true ) {
-	tile = get_next_task( host, port );
+    while ( 
+	   (tile = get_next_task( host, port )) >= 0
+	   )
+    {
 	run_task( tile );
     }
 }

@@ -160,7 +160,7 @@ long int get_next_tile( const string& work_base, const string& output_base )
     }
 
     b = FGBucket( lon, lat );
-    cout << "Bucket = " << b << endl;
+    cout << "Bucket = " << b << " (" << pass << ")" << endl;
 
     // increment to next tile
     FGBucket tmp( 0.0, lat );
@@ -203,7 +203,7 @@ int main( int argc, char **argv ) {
     cout << "socket is connected to port = " << port << endl;
 
     // Specify the maximum length of the connection queue
-    listen(sock, 3);
+    listen(sock, 10);
 
     for ( ;; ) {
 	FD_ZERO(&ready);
@@ -217,7 +217,7 @@ int main( int argc, char **argv ) {
 
 	    // get the next tile to work on
 	    next_tile = get_next_tile(work_base, output_base);
-	    cout << "next tile = " << next_tile << endl;;
+	    // cout << "next tile = " << next_tile << endl;;
 
 	    msgsock = accept(sock, 0, 0);
 	    // cout << "msgsock = " << msgsock << endl;
