@@ -97,6 +97,8 @@
 
 #include <simgear/compiler.h>
 
+#include <FDM/LaRCsim/ls_types.h>
+
 #include <map>
 #include STL_IOSTREAM
 #include <math.h>
@@ -856,11 +858,11 @@ typedef struct
 #define      gear_map              aircraft_->gear_map
 #define MAX_GEAR 16
   bool gear_model[MAX_GEAR];
-  double D_gear_v[MAX_GEAR][3];
-  double cgear[MAX_GEAR];
-  double kgear[MAX_GEAR];
-  double muGear[MAX_GEAR];
-  double strutLength[MAX_GEAR];
+  SCALAR D_gear_v[MAX_GEAR][3];
+  SCALAR cgear[MAX_GEAR];
+  SCALAR kgear[MAX_GEAR];
+  SCALAR muGear[MAX_GEAR];
+  SCALAR strutLength[MAX_GEAR];
 #define D_gear_v aircraft_->D_gear_v
 #define gear_model aircraft_->gear_model
 #define cgear aircraft_->cgear

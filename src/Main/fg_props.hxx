@@ -45,6 +45,11 @@ inline int fgGetInt (const string &name, int defaultValue = 0)
   return globals->get_props()->getIntValue(name, defaultValue);
 }
 
+inline int fgGetLong (const string &name, long defaultValue = 0L)
+{
+  return globals->get_props()->getLongValue(name, defaultValue);
+}
+
 inline float fgGetFloat (const string &name, float defaultValue = 0.0)
 {
   return globals->get_props()->getFloatValue(name, defaultValue);
@@ -68,6 +73,11 @@ inline bool fgSetBool (const string &name, bool val)
 inline bool fgSetInt (const string &name, int val)
 {
   return globals->get_props()->setIntValue(name, val);
+}
+
+inline bool fgSetLong (const string &name, long val)
+{
+  return globals->get_props()->setLongValue(name, val);
 }
 
 inline bool fgSetFloat (const string &name, float val)
@@ -113,6 +123,15 @@ inline void
 fgTie (const string &name, int *pointer, bool useDefault = true)
 {
   if (!globals->get_props()->tie(name, SGRawValuePointer<int>(pointer),
+				 useDefault))
+    SG_LOG(SG_GENERAL, SG_WARN,
+	   "Failed to tie property " << name << " to a pointer");
+}
+
+inline void
+fgTie (const string &name, long *pointer, bool useDefault = true)
+{
+  if (!globals->get_props()->tie(name, SGRawValuePointer<long>(pointer),
 				 useDefault))
     SG_LOG(SG_GENERAL, SG_WARN,
 	   "Failed to tie property " << name << " to a pointer");

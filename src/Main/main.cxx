@@ -1568,18 +1568,17 @@ int main( int argc, char **argv ) {
     acmodel_selector = new ssgSelector;
     acmodel_pos = new ssgTransform;
 
+    // Get the model location, and load textures from the same
+    // directory.  Use an absolute path for the model to avoid
+    // incompatibilities in different versions of PLIB.
     string acmodel_path =
 	fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
-
-    string full_model = globals->get_fg_root() + "/"
-	+ acmodel_path;
-    int pos = full_model.rfind("/");
-    
-    SGPath texturepath( full_model.substr(0, pos) );
-    cout << "Texture path = " << texturepath.str() << endl;
-    ssgTexturePath( (char *)texturepath.c_str() );
-
-    ssgEntity *acmodel_obj = ssgLoad((char *)(acmodel_path.c_str()));
+    SGPath full_model = globals->get_fg_root();
+    full_model.append(acmodel_path);
+    // this should be redundant...
+    ssgModelPath( (char *)full_model.dir().c_str() );
+    ssgTexturePath( (char *)full_model.dir().c_str() );
+    ssgEntity *acmodel_obj = ssgLoad( (char *)full_model.c_str() );
 
     // find moving parts (if this is an MDL model)
     flaps_selector = (ssgSelector*)fgFindNode( acmodel_obj, "FLAPS" );

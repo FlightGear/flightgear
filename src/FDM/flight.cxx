@@ -162,18 +162,15 @@ FGInterface::init ()
 void
 FGInterface::bind ()
 {
-                                // Time management
+                                // Time management (read-only)
   fgTie("/fdm/time/delta_t", this, 
-	&FGInterface::get_delta_t);
-
-  // The following two can't be uncommented until we have support for
-  // the "long" data type in the property manager
-  /*  fgTie("/fdm/time/elapsed", this, 
-	&FGInterface::get_elapsed);
+	&FGInterface::get_delta_t); // read-only
+  fgTie("/fdm/time/elapsed", this, 
+	&FGInterface::get_elapsed); // read-only
   fgTie("/fdm/time/remainder", this, 
-	&FGInterface::get_remainder); */
+	&FGInterface::get_remainder); // read-only
   fgTie("/fdm/time/multi_loop", this, 
-	&FGInterface::get_multi_loop);
+	&FGInterface::get_multi_loop); // read-only
 
 			// Aircraft position
   fgTie("/position/latitude", this,
