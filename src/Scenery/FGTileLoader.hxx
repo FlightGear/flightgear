@@ -32,7 +32,9 @@
 #  include <simgear/threads/SGQueue.hxx>
 #else
 #  include <queue>
+   SG_USING_STD( queue );
 #endif
+
 
 // Forward reference.
 class FGTileEntry;

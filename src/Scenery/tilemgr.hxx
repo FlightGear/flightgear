@@ -50,6 +50,8 @@
 #  define FG_MEM_COPY(to,from,n)        bcopy(from, to, n)
 #endif
 
+SG_USING_STD( queue );
+
 
 // forward declaration
 class FGTileEntry;

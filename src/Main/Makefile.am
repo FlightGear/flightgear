@@ -35,9 +35,9 @@ EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
 
 bin_PROGRAMS = fgfs
 
-noinst_SCRIPTS = runfgfs.bat
+noinst_SCRIPTS = runfgfs.bat runfgfs
 
-bin_SCRIPTS = runfgfs
+# bin_SCRIPTS = runfgfs
 
 fgfs_SOURCES = \
 	main.cxx \
