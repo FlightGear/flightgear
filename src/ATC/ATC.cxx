@@ -122,6 +122,10 @@ void FGATC::Update(double dt) {
 			_transmitting = false;
 			//if(tuned_station) tuned_station->NotifyTransmissionFinished(plane.callsign);
 			// TODO - need to let the plane the transmission is aimed at that it's finished.
+			// However, for now we'll just release the frequency since if we don't it all goes pear-shaped
+			_releaseCounter = 0.0;
+			_releaseTime = 0.9;
+			_runReleaseCounter = true;
 		}
 		_counter += dt;
 	}
