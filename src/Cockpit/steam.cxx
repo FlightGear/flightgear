@@ -418,7 +418,7 @@ double FGSteam::get_HackGS_deg () {
     {
 	double x = current_radiostack->get_nav1_gs_dist();
 	double y = (FGBFI::getAltitude() - current_radiostack->get_nav1_elev())
-	    * FEET_TO_METER;
+	    * SG_FEET_TO_METER;
 	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	return (current_radiostack->get_nav1_target_gs() - angle) * 5.0;
     } else {

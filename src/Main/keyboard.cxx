@@ -148,7 +148,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    {
 		double alt = cur_fdm_state->get_Altitude() + 1000;
 		fgFDMForceAltitude( fgGetString("/sim/flight-model"), 
-				    alt * FEET_TO_METER );
+				    alt * SG_FEET_TO_METER );
 	    }
 	    return;
 	case 49: // numeric keypad 1
@@ -359,7 +359,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 		FG_LOG( FG_INPUT, FG_INFO,
 			"Lon = " << f->get_Longitude() * SGD_RADIANS_TO_DEGREES
 			<< "  Lat = " << f->get_Latitude() * SGD_RADIANS_TO_DEGREES
-			<< "  Altitude = " << f->get_Altitude() * FEET_TO_METER
+			<< "  Altitude = " << f->get_Altitude() * SG_FEET_TO_METER
 			);
 		FG_LOG( FG_INPUT, FG_INFO,
 			"Heading = " << f->get_Psi() * SGD_RADIANS_TO_DEGREES 

@@ -85,7 +85,7 @@ void FGBalloonSim::init() {
     sgSetVec3( temp,
 	get_Latitude(), 
 	get_Longitude(), 
-	get_Altitude() * FEET_TO_METER);
+	get_Altitude() * SG_FEET_TO_METER);
     current_balloon.setPosition( temp );
 
     //set Euler angles (?)
@@ -121,7 +121,7 @@ bool FGBalloonSim::update( int multiloop ) {
     //not more implemented yet
 
     // Inform BalloonSim of the local terrain altitude
-    current_balloon.setGroundLevel ( get_Runway_altitude() * FEET_TO_METER);
+    current_balloon.setGroundLevel ( get_Runway_altitude() * SG_FEET_TO_METER);
 
     // old -- FGInterface_2_JSBsim() not needed except for Init()
     // translate FG to JSBsim structure
@@ -186,7 +186,7 @@ bool FGBalloonSim::copy_from_BalloonSim() {
     //temp[1]: longitude
     //temp[2]: altitude (meters)
 
-    _updatePosition( temp[0], temp[1], temp[2] * METER_TO_FEET  );
+    _updatePosition( temp[0], temp[1], temp[2] * SG_METER_TO_FEET  );
     
     current_balloon.getHPR( temp );
     set_Euler_Angles( temp[0], temp[1], temp[2] );

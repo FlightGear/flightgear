@@ -51,8 +51,8 @@ FGAutopilot *current_autopilot;
 // Climb speed constants
 const double min_climb = 70.0;	// kts
 const double best_climb = 75.0;	// kts
-// const double ideal_climb_rate = 500.0 * FEET_TO_METER; // fpm -> mpm
-// const double ideal_decent_rate = 1000.0 * FEET_TO_METER; // fpm -> mpm
+// const double ideal_climb_rate = 500.0 * SG_FEET_TO_METER; // fpm -> mpm
+// const double ideal_decent_rate = 1000.0 * SG_FEET_TO_METER; // fpm -> mpm
 
 /// These statics will eventually go into the class
 /// they are just here while I am experimenting -- NHV :-)
@@ -71,7 +71,7 @@ extern char *coord_format_lon(float);
 
 // constructor
 FGAutopilot::FGAutopilot():
-TargetClimbRate(1000 * FEET_TO_METER)
+TargetClimbRate(1000 * SG_FEET_TO_METER)
 {
 }
 
@@ -113,7 +113,7 @@ static inline double get_ground_speed() {
     // starts in ft/s so we convert to kts
     double ft_s = cur_fdm_state->get_V_ground_speed() 
       * fgGetInt("/sim/speed-up"); // FIXME: inefficient
-    double kts = ft_s * FEET_TO_METER * 3600 * METER_TO_NM;
+    double kts = ft_s * SG_FEET_TO_METER * 3600 * SG_METER_TO_NM;
 
     return kts;
 }
@@ -141,7 +141,7 @@ void FGAutopilot::MakeTargetWPStr( double distance ) {
     if ( size > 0 ) {
 	SGWayPoint wp1 = globals->get_route()->get_waypoint( 0 );
 	accum += distance;
-	double eta = accum * METER_TO_NM / get_ground_speed();
+	double eta = accum * SG_METER_TO_NM / get_ground_speed();
 	if ( eta >= 100.0 ) { eta = 99.999; }
 	int major, minor;
 	if ( eta < (1.0/6.0) ) {
@@ -152,8 +152,8 @@ void FGAutopilot::MakeTargetWPStr( double distance ) {
 	minor = (int)((eta - (int)eta) * 60.0);
 	sprintf( TargetWP1Str, "%s %.2f NM  ETA %d:%02d",
 		 wp1.get_id().c_str(),
-		 accum*METER_TO_NM, major, minor );
-	// cout << "distance = " << distance*METER_TO_NM
+		 accum*SG_METER_TO_NM, major, minor );
+	// cout << "distance = " << distance*SG_METER_TO_NM
 	//      << "  gndsp = " << get_ground_speed() 
 	//      << "  time = " << eta
 	//      << "  major = " << major
@@ -166,7 +166,7 @@ void FGAutopilot::MakeTargetWPStr( double distance ) {
 	SGWayPoint wp2 = globals->get_route()->get_waypoint( 1 );
 	accum += wp2.get_distance();
 	
-	double eta = accum * METER_TO_NM / get_ground_speed();
+	double eta = accum * SG_METER_TO_NM / get_ground_speed();
 	if ( eta >= 100.0 ) { eta = 99.999; }
 	int major, minor;
 	if ( eta < (1.0/6.0) ) {
@@ -177,7 +177,7 @@ void FGAutopilot::MakeTargetWPStr( double distance ) {
 	minor = (int)((eta - (int)eta) * 60.0);
 	sprintf( TargetWP2Str, "%s %.2f NM  ETA %d:%02d",
 		 wp2.get_id().c_str(),
-		 accum*METER_TO_NM, major, minor );
+		 accum*SG_METER_TO_NM, major, minor );
     }
 
     // next route
@@ -188,7 +188,7 @@ void FGAutopilot::MakeTargetWPStr( double distance ) {
 	
 	SGWayPoint wpn = globals->get_route()->get_waypoint( size - 1 );
 
-	double eta = accum * METER_TO_NM / get_ground_speed();
+	double eta = accum * SG_METER_TO_NM / get_ground_speed();
 	if ( eta >= 100.0 ) { eta = 99.999; }
 	int major, minor;
 	if ( eta < (1.0/6.0) ) {
@@ -199,7 +199,7 @@ void FGAutopilot::MakeTargetWPStr( double distance ) {
 	minor = (int)((eta - (int)eta) * 60.0);
 	sprintf( TargetWP3Str, "%s %.2f NM  ETA %d:%02d",
 		 wpn.get_id().c_str(),
-		 accum*METER_TO_NM, major, minor );
+		 accum*SG_METER_TO_NM, major, minor );
     }
 }
 
@@ -352,7 +352,7 @@ int FGAutopilot::run() {
 	
     double lat = FGBFI::getLatitude();
     double lon = FGBFI::getLongitude();
-    double alt = FGBFI::getAltitude() * FEET_TO_METER;
+    double alt = FGBFI::getAltitude() * SG_FEET_TO_METER;
 
 #ifdef FG_FORCE_AUTO_DISENGAGE
     // see if somebody else has changed them
@@ -425,7 +425,7 @@ int FGAutopilot::run() {
 	    // determine the heading adjustment needed.
 	    double adjustment = 
 		current_radiostack->get_nav1_heading_needle_deflection()
-		* (current_radiostack->get_nav1_loc_dist() * METER_TO_NM);
+		* (current_radiostack->get_nav1_loc_dist() * SG_METER_TO_NM);
 	    if ( adjustment < -30.0 ) { adjustment = -30.0; }
 	    if ( adjustment >  30.0 ) { adjustment =  30.0; }
 
@@ -587,14 +587,14 @@ int FGAutopilot::run() {
 	if ( altitude_mode == FG_ALTITUDE_LOCK ) {
 	    // normal altitude hold
 	    // cout << "TargetAltitude = " << TargetAltitude
-	    //      << "Altitude = " << FGBFI::getAltitude() * FEET_TO_METER
+	    //      << "Altitude = " << FGBFI::getAltitude() * SG_FEET_TO_METER
 	    //      << endl;
 	    climb_rate =
-		( TargetAltitude - FGSteam::get_ALT_ft() * FEET_TO_METER ) * 8.0;
+		( TargetAltitude - FGSteam::get_ALT_ft() * SG_FEET_TO_METER ) * 8.0;
 	} else if ( altitude_mode == FG_ALTITUDE_GS1 ) {
 	    double x = current_radiostack->get_nav1_gs_dist();
 	    double y = (FGBFI::getAltitude() 
-			- current_radiostack->get_nav1_elev()) * FEET_TO_METER;
+			- current_radiostack->get_nav1_elev()) * SG_FEET_TO_METER;
 	    double current_angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	    // cout << "current angle = " << current_angle << endl;
 
@@ -611,7 +611,7 @@ int FGAutopilot::run() {
 	    // convert to meter/min
 	    // cout << "raw ground speed = " << cur_fdm_state->get_V_ground_speed() << endl;
 	    double horiz_vel = cur_fdm_state->get_V_ground_speed()
-		* FEET_TO_METER * 60.0;
+		* SG_FEET_TO_METER * 60.0;
 	    // cout << "Horizontal vel = " << horiz_vel << endl;
 	    climb_rate = -sin( des_angle * SGD_DEGREES_TO_RADIANS ) * horiz_vel;
 	    // cout << "climb_rate = " << climb_rate << endl;
@@ -620,7 +620,7 @@ int FGAutopilot::run() {
 	} else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
 	    // brain dead ground hugging with no look ahead
 	    climb_rate =
-		( TargetAGL - FGBFI::getAGL()*FEET_TO_METER ) * 16.0;
+		( TargetAGL - FGBFI::getAGL()*SG_FEET_TO_METER ) * 16.0;
 	    // cout << "target agl = " << TargetAGL 
 	    //      << "  current agl = " << fgAPget_agl() 
 	    //      << "  target climb rate = " << climb_rate 
@@ -658,10 +658,10 @@ int FGAutopilot::run() {
 	}
 	// cout << "Target climb rate = " << TargetClimbRate << endl;
 	// cout << "given our speed, modified desired climb rate = "
-	//      << climb_rate * METER_TO_FEET 
+	//      << climb_rate * SG_METER_TO_FEET 
 	//      << " fpm" << endl;
 
-	error = FGBFI::getVerticalSpeed() * FEET_TO_METER - climb_rate;
+	error = FGBFI::getVerticalSpeed() * SG_FEET_TO_METER - climb_rate;
 	// cout << "climb rate = " << FGBFI::getVerticalSpeed()
 	//      << "  vsi rate = " << FGSteam::get_VSI_fps() << endl;
 
@@ -798,7 +798,7 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 	    waypoint = globals->get_route()->get_first();
 	    waypoint.CourseAndDistance( FGBFI::getLongitude(),
 					FGBFI::getLatitude(),
-					FGBFI::getLatitude() * FEET_TO_METER,
+					FGBFI::getLatitude() * SG_FEET_TO_METER,
 					&course, &distance );
 	    TargetHeading = course;
 	    TargetDistance = distance;
@@ -810,7 +810,7 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 		TargetAltitude = waypoint.get_target_alt();
 		altitude_mode = FG_ALTITUDE_LOCK;
 		set_AltitudeEnabled( true );
-		MakeTargetAltitudeStr( TargetAltitude * METER_TO_FEET );
+		MakeTargetAltitudeStr( TargetAltitude * SG_METER_TO_FEET );
 	    }
 
 	    FG_LOG( FG_COCKPIT, FG_INFO, " set_HeadingMode: ( "
@@ -835,25 +835,25 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
     alt_error_accum = 0.0;
 
     if ( altitude_mode == FG_ALTITUDE_LOCK ) {
-	if ( TargetAltitude < FGBFI::getAGL() * FEET_TO_METER ) {
-	    // TargetAltitude = FGBFI::getAltitude() * FEET_TO_METER;
+	if ( TargetAltitude < FGBFI::getAGL() * SG_FEET_TO_METER ) {
+	    // TargetAltitude = FGBFI::getAltitude() * SG_FEET_TO_METER;
 	}
 
 	if ( fgGetString("/sim/startup/units") == "feet" ) {
-	    MakeTargetAltitudeStr( TargetAltitude * METER_TO_FEET );
+	    MakeTargetAltitudeStr( TargetAltitude * SG_METER_TO_FEET );
 	} else {
-	    MakeTargetAltitudeStr( TargetAltitude * METER_TO_FEET );
+	    MakeTargetAltitudeStr( TargetAltitude * SG_METER_TO_FEET );
 	}
     } else if ( altitude_mode == FG_ALTITUDE_GS1 ) {
 	climb_error_accum = 0.0;
 
     } else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
-	TargetAGL = FGBFI::getAGL() * FEET_TO_METER;
+	TargetAGL = FGBFI::getAGL() * SG_FEET_TO_METER;
 
 	if ( fgGetString("/sim/startup/units") == "feet" ) {
-	    MakeTargetAltitudeStr( TargetAGL * METER_TO_FEET );
+	    MakeTargetAltitudeStr( TargetAGL * SG_METER_TO_FEET );
 	} else {
-	    MakeTargetAltitudeStr( TargetAGL * METER_TO_FEET );
+	    MakeTargetAltitudeStr( TargetAGL * SG_METER_TO_FEET );
 	}
     }
     
@@ -888,12 +888,12 @@ double fgAPget_heading( void ) {
 }
 
 static inline double fgAPget_altitude( void ) {
-    return( cur_fdm_state->get_Altitude() * FEET_TO_METER );
+    return( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 }
 
 static inline double fgAPget_climb( void ) {
     // return in meters per minute
-    return( cur_fdm_state->get_Climb_Rate() * FEET_TO_METER * 60 );
+    return( cur_fdm_state->get_Climb_Rate() * SG_FEET_TO_METER * 60 );
 }
 
 static inline double get_sideslip( void ) {
@@ -903,7 +903,7 @@ static inline double get_sideslip( void ) {
 static inline double fgAPget_agl( void ) {
     double agl;
 
-    agl = cur_fdm_state->get_Altitude() * FEET_TO_METER
+    agl = cur_fdm_state->get_Altitude() * SG_FEET_TO_METER
 	- scenery.cur_elev;
 
     return( agl );
@@ -917,7 +917,7 @@ void FGAutopilot::AltitudeSet( double new_altitude ) {
     // cout << "new altitude = " << new_altitude << endl;
 
     if ( fgGetString("/sim/startup/units") == "feet" ) {
-	target_alt = new_altitude * FEET_TO_METER;
+	target_alt = new_altitude * SG_FEET_TO_METER;
     }
 
     if( target_alt < scenery.cur_elev ) {
@@ -930,7 +930,7 @@ void FGAutopilot::AltitudeSet( double new_altitude ) {
     // cout << "TargetAltitude = " << TargetAltitude << endl;
 
     if ( fgGetString("/sim/startup/units") == "feet" ) {
-	target_alt *= METER_TO_FEET;
+	target_alt *= SG_METER_TO_FEET;
     }
     // ApAltitudeDialogInput->setValue((float)target_alt);
     MakeTargetAltitudeStr( target_alt );
@@ -944,8 +944,8 @@ void FGAutopilot::AltitudeAdjust( double inc )
     double target_alt, target_agl;
 
     if ( fgGetString("/sim/startup/units") == "feet" ) {
-	target_alt = TargetAltitude * METER_TO_FEET;
-	target_agl = TargetAGL * METER_TO_FEET;
+	target_alt = TargetAltitude * SG_METER_TO_FEET;
+	target_agl = TargetAGL * SG_METER_TO_FEET;
     } else {
 	target_alt = TargetAltitude;
 	target_agl = TargetAGL;
@@ -968,17 +968,17 @@ void FGAutopilot::AltitudeAdjust( double inc )
     }
 
     if ( fgGetString("/sim/startup/units") == "feet" ) {
-	target_alt *= FEET_TO_METER;
-	target_agl *= FEET_TO_METER;
+	target_alt *= SG_FEET_TO_METER;
+	target_agl *= SG_FEET_TO_METER;
     }
 
     TargetAltitude = target_alt;
     TargetAGL = target_agl;
 	
     if ( fgGetString("/sim/startup/units") == "feet" )
-	target_alt *= METER_TO_FEET;
+	target_alt *= SG_METER_TO_FEET;
     if ( fgGetString("/sim/startup/units") == "feet" )
-	target_agl *= METER_TO_FEET;
+	target_agl *= SG_METER_TO_FEET;
 
     if ( altitude_mode == FG_ALTITUDE_LOCK ) {
 	MakeTargetAltitudeStr( target_alt );

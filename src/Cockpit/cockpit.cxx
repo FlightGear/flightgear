@@ -195,14 +195,14 @@ float get_altitude( void )
     // double rough_elev;
 
 //  current_aircraft.fdm_state
-    // rough_elev = mesh_altitude(f->get_Longitude() * RAD_TO_ARCSEC,
-    //                         f->get_Latitude()  * RAD_TO_ARCSEC);
+    // rough_elev = mesh_altitude(f->get_Longitude() * SG_RAD_TO_ARCSEC,
+    //                         f->get_Latitude()  * SG_RAD_TO_ARCSEC);
     float altitude;
 
     if ( fgGetString("/sim/startup/units") == "feet" ) {
         altitude = current_aircraft.fdm_state->get_Altitude();
     } else {
-        altitude = (current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER);
+        altitude = (current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER);
     }
     return altitude;
 }
@@ -213,9 +213,9 @@ float get_agl( void )
 
     if ( fgGetString("/sim/startup/units") == "feet" ) {
         agl = (current_aircraft.fdm_state->get_Altitude()
-               - scenery.cur_elev * METER_TO_FEET);
+               - scenery.cur_elev * SG_METER_TO_FEET);
     } else {
-        agl = (current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
+        agl = (current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
                - scenery.cur_elev);
     }
     return agl;
@@ -266,7 +266,7 @@ float get_climb_rate( void )
     if ( fgGetString("/sim/startup/units") == "feet" ) {
         climb_rate = current_aircraft.fdm_state->get_Climb_Rate() * 60.0;
     } else {
-        climb_rate = current_aircraft.fdm_state->get_Climb_Rate() * FEET_TO_METER * 60.0;
+        climb_rate = current_aircraft.fdm_state->get_Climb_Rate() * SG_FEET_TO_METER * 60.0;
     }
     return (climb_rate);
 }

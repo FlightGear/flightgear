@@ -294,7 +294,7 @@ void NewAltitudeInit(void)
     float alt = cur_fdm_state->get_Altitude();
 
     if ( fgGetString("/sim/startup/units") == "meters") {
-	alt *= FEET_TO_METER;
+	alt *= SG_FEET_TO_METER;
     }
 
     int len = 260/2 -
@@ -596,7 +596,7 @@ void TgtAptDialog_OK (puObject *)
 	string alt_str = tmp.substr( pos + 1 );
 	alt = atof( alt_str.c_str() );
 	if ( fgGetString("/sim/startup/units") == "feet" ) {
-	    alt *= FEET_TO_METER;
+	    alt *= SG_FEET_TO_METER;
 	}
     } else {
 	TgtAptId = tmp;

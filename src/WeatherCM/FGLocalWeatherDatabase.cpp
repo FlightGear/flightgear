@@ -259,7 +259,7 @@ void fgUpdateWeatherDatabase(void)
     sgSetVec3(position, 
         current_aircraft.fdm_state->get_Latitude(),
         current_aircraft.fdm_state->get_Longitude(),
-        current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER);
+        current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER);
     
     WeatherDatabase->update( position );
        

@@ -107,7 +107,7 @@ bool FGAtlas::gen_message() {
 
     char altitude_m[10];
     sprintf( altitude_m, "%02d", 
-	     (int)(cur_fdm_state->get_Altitude() * FEET_TO_METER) );
+	     (int)(cur_fdm_state->get_Altitude() * SG_FEET_TO_METER) );
 
     char altitude_ft[10];
     sprintf( altitude_ft, "%02d", (int)cur_fdm_state->get_Altitude() );
@@ -444,7 +444,7 @@ bool FGAtlas::parse_message() {
 	    begin = end + 1;
 
 	    if ( alt_units != "F" ) {
-		altitude *= METER_TO_FEET;
+		altitude *= SG_METER_TO_FEET;
 	    }
 
 	    cur_fdm_state->set_Altitude( altitude );

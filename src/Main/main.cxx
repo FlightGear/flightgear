@@ -335,7 +335,7 @@ void fgRenderFrame( void ) {
 	// now work without seg faulting the system.
 
 	// printf("Ground = %.2f  Altitude = %.2f\n", scenery.cur_elev, 
-	//        FG_Altitude * FEET_TO_METER);
+	//        FG_Altitude * SG_FEET_TO_METER);
     
 	// this is just a temporary hack, to make me understand Pui
 	// timerText -> setLabel (ctime (&t->cur_time));
@@ -352,10 +352,10 @@ void fgRenderFrame( void ) {
 	pilot_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
 				       cur_fdm_state->get_Lat_geocentric(), 
 				       cur_fdm_state->get_Altitude() *
-				       FEET_TO_METER );
+				       SG_FEET_TO_METER );
 	pilot_view->set_sea_level_radius( cur_fdm_state->
 					  get_Sea_level_radius() *
-					  FEET_TO_METER ); 
+					  SG_FEET_TO_METER ); 
 	pilot_view->set_rph( cur_fdm_state->get_Phi(),
 			     cur_fdm_state->get_Theta(),
 			     cur_fdm_state->get_Psi() );
@@ -380,10 +380,10 @@ void fgRenderFrame( void ) {
 	chase_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
 				       cur_fdm_state->get_Lat_geocentric(), 
 				       cur_fdm_state->get_Altitude() *
-				       FEET_TO_METER );
+				       SG_FEET_TO_METER );
 	chase_view->set_sea_level_radius( cur_fdm_state->
 					  get_Sea_level_radius() *
-					  FEET_TO_METER );
+					  SG_FEET_TO_METER );
 	chase_view->set_pilot_offset( npo[0], npo[1], npo[2] );
 	chase_view->set_view_forward( pilot_view->get_view_pos() ); 
 	chase_view->set_view_up( wup );
@@ -476,7 +476,7 @@ void fgRenderFrame( void ) {
 	thesky->set_visibility( current_weather.get_visibility() );
 #endif
 
-	thesky->modify_vis( cur_fdm_state->get_Altitude() * FEET_TO_METER,
+	thesky->modify_vis( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
 			    ( global_multi_loop * 
 			      fgGetInt("/sim/speed-up") ) /
 			    (double)fgGetInt("/sim/model-hz") );
@@ -543,7 +543,7 @@ void fgRenderFrame( void ) {
 				globals->get_current_view()->get_world_up(),
 				cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Latitude(),
-				cur_fdm_state->get_Altitude() * FEET_TO_METER,
+				cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
 				cur_light_params.sun_rotation,
 				globals->get_time_params()->getGst(),
 				globals->get_ephem()->getSunRightAscension(),
@@ -587,7 +587,7 @@ void fgRenderFrame( void ) {
  	float fov = globals->get_current_view()->get_fov();
  	ssgSetFOV(fov, fov * globals->get_current_view()->get_win_ratio());
 
-	double agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
+	double agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
 	    - scenery.cur_elev;
 
 	// FG_LOG( FG_ALL, FG_INFO, "visibility is " 
@@ -697,7 +697,7 @@ void fgRenderFrame( void ) {
 
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    // draw the sky cloud layers
-	    thesky->postDraw( cur_fdm_state->get_Altitude() * FEET_TO_METER );
+	    thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 	}
 
 	// display HUD && Panel
@@ -857,7 +857,7 @@ void fgInitTimeDepCalcs( void ) {
 
 
 static const double alt_adjust_ft = 3.758099;
-static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
+static const double alt_adjust_m = alt_adjust_ft * SG_FEET_TO_METER;
 
 
 // What should we do when we have nothing else to do?  Let's get ready
@@ -909,15 +909,15 @@ static void fgMainLoop( void ) {
 
     /* printf("Before - ground = %.2f  runway = %.2f  alt = %.2f\n",
 	   scenery.cur_elev,
-	   cur_fdm_state->get_Runway_altitude() * FEET_TO_METER,
-	   cur_fdm_state->get_Altitude() * FEET_TO_METER); */
+	   cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
+	   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
     if ( scenery.cur_elev > -9990 ) {
-	if ( cur_fdm_state->get_Altitude() * FEET_TO_METER < 
+	if ( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER < 
 	     (scenery.cur_elev + alt_adjust_m - 3.0) ) {
 	    // now set aircraft altitude above ground
 	    printf("(*) Current Altitude = %.2f < %.2f forcing to %.2f\n", 
-		   cur_fdm_state->get_Altitude() * FEET_TO_METER,
+		   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
 		   scenery.cur_elev + alt_adjust_m - 3.0,
 		   scenery.cur_elev + alt_adjust_m );
 	    fgFDMForceAltitude( fgGetString("/sim/flight-model"), 
@@ -925,15 +925,15 @@ static void fgMainLoop( void ) {
 
 	    FG_LOG( FG_ALL, FG_DEBUG, 
 		    "<*> resetting altitude to " 
-		    << cur_fdm_state->get_Altitude() * FEET_TO_METER
+		    << cur_fdm_state->get_Altitude() * SG_FEET_TO_METER
 		    << " meters" );
 	}
     }
 
     /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
 	   scenery.cur_elev,
-	   cur_fdm_state->get_Runway_altitude() * FEET_TO_METER,
-	   cur_fdm_state->get_Altitude() * FEET_TO_METER); */
+	   cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
+	   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
     // update "time"
     if ( globals->get_warp_delta() != 0 ) {
@@ -951,7 +951,7 @@ static void fgMainLoop( void ) {
     // update magvar model
     globals->get_mag()->update( cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Latitude(),
-				cur_fdm_state->get_Altitude()* FEET_TO_METER,
+				cur_fdm_state->get_Altitude()* SG_FEET_TO_METER,
 				globals->get_time_params()->getJD() );
 
     // Get elapsed time (in usec) for this past frame

@@ -327,7 +327,7 @@ FGBFI::setDateString (string date_string)
     mktime(&new_time) - mktime(current_time) + globals->get_warp();
   double lon = current_aircraft.fdm_state->get_Longitude();
   double lat = current_aircraft.fdm_state->get_Latitude();
-  // double alt = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER;
+  // double alt = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER;
   globals->set_warp(warp);
   st->update(lon, lat, warp);
   fgUpdateSkyAndLightingParams();
@@ -414,7 +414,7 @@ double
 FGBFI::getAGL ()
 {
   return current_aircraft.fdm_state->get_Altitude()
-	 - (scenery.cur_elev * METER_TO_FEET);
+	 - (scenery.cur_elev * SG_METER_TO_FEET);
 }
 
 
@@ -1033,7 +1033,7 @@ FGBFI::setAPAltitudeLock (bool lock)
 double
 FGBFI::getAPAltitude ()
 {
-  return current_autopilot->get_TargetAltitude() * METER_TO_FEET;
+  return current_autopilot->get_TargetAltitude() * SG_METER_TO_FEET;
 }
 
 
@@ -1043,7 +1043,7 @@ FGBFI::getAPAltitude ()
 void
 FGBFI::setAPAltitude (double altitude)
 {
-    current_autopilot->set_TargetAltitude( altitude * FEET_TO_METER );
+    current_autopilot->set_TargetAltitude( altitude * SG_FEET_TO_METER );
 }
 
 
@@ -1053,7 +1053,7 @@ FGBFI::setAPAltitude (double altitude)
 double
 FGBFI::getAPClimb ()
 {
-  return current_autopilot->get_TargetClimbRate() * METER_TO_FEET;
+  return current_autopilot->get_TargetClimbRate() * SG_METER_TO_FEET;
 }
 
 
@@ -1063,7 +1063,7 @@ FGBFI::getAPClimb ()
 void
 FGBFI::setAPClimb (double rate)
 {
-    current_autopilot->set_TargetClimbRate( rate * FEET_TO_METER );
+    current_autopilot->set_TargetClimbRate( rate * SG_FEET_TO_METER );
 }
 
 

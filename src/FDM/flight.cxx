@@ -272,25 +272,25 @@ bool FGInterface::update( int multi_loop ) {
 void FGInterface::_updatePosition( double lat_geoc, double lon, double alt ) {
     double lat_geod, tmp_alt, sl_radius1, sl_radius2, tmp_lat_geoc;
 	
-    sgGeocToGeod( lat_geoc, ( get_Sea_level_radius() + alt ) * FEET_TO_METER,
+    sgGeocToGeod( lat_geoc, ( get_Sea_level_radius() + alt ) * SG_FEET_TO_METER,
 		  &lat_geod, &tmp_alt, &sl_radius1 );
-    sgGeodToGeoc( lat_geod, alt * FEET_TO_METER, &sl_radius2, &tmp_lat_geoc );
+    sgGeodToGeoc( lat_geod, alt * SG_FEET_TO_METER, &sl_radius2, &tmp_lat_geoc );
 
     FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << lon 
 	    << " lat_geod = " << lat_geod
 	    << " lat_geoc = " << lat_geoc
 	    << " alt = " << alt 
-	    << " tmp_alt = " << tmp_alt * METER_TO_FEET
-	    << " sl_radius1 = " << sl_radius1 * METER_TO_FEET
-	    << " sl_radius2 = " << sl_radius2 * METER_TO_FEET
+	    << " tmp_alt = " << tmp_alt * SG_METER_TO_FEET
+	    << " sl_radius1 = " << sl_radius1 * SG_METER_TO_FEET
+	    << " sl_radius2 = " << sl_radius2 * SG_METER_TO_FEET
 	    << " Equator = " << SG_EQUATORIAL_RADIUS_FT );
 
     _set_Geocentric_Position( lat_geoc, lon, 
-			      sl_radius2 * METER_TO_FEET + alt );
+			      sl_radius2 * SG_METER_TO_FEET + alt );
 	
     _set_Geodetic_Position( lat_geod, lon, alt );
 	
-    _set_Sea_level_radius( sl_radius2 * METER_TO_FEET );
+    _set_Sea_level_radius( sl_radius2 * SG_METER_TO_FEET );
     _set_Runway_altitude( scenery.cur_elev*METERS_TO_FEET ); 
 	
     _set_sin_lat_geocentric( lat_geoc );
@@ -360,9 +360,9 @@ void fgFDMForceAltitude(const string &model, double alt_meters) {
     sgGeodToGeoc( base_fdm_state.get_Latitude(), alt_meters, 
 		  &sea_level_radius_meters, &lat_geoc);
 
-    base_fdm_state.set_Altitude( alt_meters * METER_TO_FEET );
+    base_fdm_state.set_Altitude( alt_meters * SG_METER_TO_FEET );
     base_fdm_state.set_Sea_level_radius( sea_level_radius_meters *
-					 METER_TO_FEET ); 
+					 SG_METER_TO_FEET ); 
 					  
 
     // additional work needed for some flight models
@@ -375,9 +375,9 @@ void fgFDMForceAltitude(const string &model, double alt_meters) {
 // Set the local ground elevation
 void fgFDMSetGroundElevation(const string &model, double ground_meters) {
     FG_LOG( FG_FLIGHT,FG_INFO, "fgFDMSetGroundElevation: "
-	    << ground_meters*METER_TO_FEET ); 
-    base_fdm_state.set_Runway_altitude( ground_meters * METER_TO_FEET );
-    cur_fdm_state->set_Runway_altitude( ground_meters * METER_TO_FEET );
+	    << ground_meters*SG_METER_TO_FEET ); 
+    base_fdm_state.set_Runway_altitude( ground_meters * SG_METER_TO_FEET );
+    cur_fdm_state->set_Runway_altitude( ground_meters * SG_METER_TO_FEET );
 }
 
 

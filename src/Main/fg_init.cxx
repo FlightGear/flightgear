@@ -370,17 +370,17 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "runway =  " << found_r.lon << ", " << found_r.lat
-	    << " length = " << found_r.length * FEET_TO_METER * 0.5 
+	    << " length = " << found_r.length * SG_FEET_TO_METER * 0.5 
 	    << " heading = " << azimuth );
     
     geo_direct_wgs_84 ( 0, found_r.lat, found_r.lon, 
-			azimuth, found_r.length * FEET_TO_METER * 0.5 - 5.0,
+			azimuth, found_r.length * SG_FEET_TO_METER * 0.5 - 5.0,
 			&lat2, &lon2, &az2 );
 
     if ( fabs( fgGetDouble("/sim/startup/offset-distance") ) > SG_EPSILON ) {
 	double olat, olon;
 	double odist = fgGetDouble("/sim/startup/offset-distance");
-	odist *= NM_TO_METER;
+	odist *= SG_NM_TO_METER;
 	double oaz = azimuth;
 	if ( fabs(fgGetDouble("/sim/startup/offset-azimuth")) > SG_EPSILON ) {
 	    oaz = fgGetDouble("/sim/startup/offset-azimuth") + 180;
@@ -440,7 +440,7 @@ bool fgInitPosition( void ) {
 	    "Initial position is: ("
 	    << (f->get_Longitude() * SGD_RADIANS_TO_DEGREES) << ", "
 	    << (f->get_Latitude() * SGD_RADIANS_TO_DEGREES) << ", "
-	    << (f->get_Altitude() * FEET_TO_METER) << ")" );
+	    << (f->get_Altitude() * SG_FEET_TO_METER) << ")" );
 
     return true;
 }
@@ -622,7 +622,7 @@ bool fgInitSubsystems( void ) {
 	    "Updated position (after elevation adj): ("
 	    << (cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES) << ", "
 	    << (cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES) << ", "
-	    << (cur_fdm_state->get_Altitude() * FEET_TO_METER) << ")" );
+	    << (cur_fdm_state->get_Altitude() * SG_FEET_TO_METER) << ")" );
 
     // We need to calculate a few sea_level_radius here so we can pass
     // the correct value to the view class
@@ -632,7 +632,7 @@ bool fgInitSubsystems( void ) {
 		  cur_fdm_state->get_Altitude(),
 		  &sea_level_radius_meters, &lat_geoc);
     cur_fdm_state->set_Sea_level_radius( sea_level_radius_meters *
-					 METER_TO_FEET );
+					 SG_METER_TO_FEET );
 
     // The following section sets up the flight model EOM parameters
     // and should really be read in from one or more files.
@@ -669,9 +669,9 @@ bool fgInitSubsystems( void ) {
     pilot_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
 				   cur_fdm_state->get_Lat_geocentric(), 
 				   cur_fdm_state->get_Altitude() *
-				   FEET_TO_METER );
+				   SG_FEET_TO_METER );
     pilot_view->set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
-				      FEET_TO_METER ); 
+				      SG_FEET_TO_METER ); 
     pilot_view->set_rph( cur_fdm_state->get_Phi(),
 			 cur_fdm_state->get_Theta(),
 			 cur_fdm_state->get_Psi() );
@@ -711,7 +711,7 @@ bool fgInitSubsystems( void ) {
     sgVec3 position;
     sgSetVec3( position, current_aircraft.fdm_state->get_Latitude(),
 	       current_aircraft.fdm_state->get_Longitude(),
-	       current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER );
+	       current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER );
     FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
 	new FGLocalWeatherDatabase( position,
 				    globals->get_fg_root() );
@@ -783,7 +783,7 @@ bool fgInitSubsystems( void ) {
 
     // *ABCD* I'm just sticking this here for now, it should probably
     // move eventually
-    scenery.cur_elev = cur_fdm_state->get_Runway_altitude() * FEET_TO_METER;
+    scenery.cur_elev = cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER;
 
     if ( cur_fdm_state->get_Altitude() <
 	 cur_fdm_state->get_Runway_altitude() + 3.758099)
@@ -796,7 +796,7 @@ bool fgInitSubsystems( void ) {
 	    "Updated position (after elevation adj): ("
 	    << (cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES) << ", "
 	    << (cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES) << ", "
-	    << (cur_fdm_state->get_Altitude() * FEET_TO_METER) << ")" );
+	    << (cur_fdm_state->get_Altitude() * SG_FEET_TO_METER) << ")" );
     // *ABCD* end of thing that I just stuck in that I should probably
     // move
 
@@ -896,7 +896,7 @@ void fgReInitSubsystems( void )
     sgGeodToGeoc( cur_fdm_state->get_Latitude(), cur_fdm_state->get_Altitude(), 
 		  &sea_level_radius_meters, &lat_geoc);
     cur_fdm_state->set_Sea_level_radius( sea_level_radius_meters *
-					 METER_TO_FEET );
+					 SG_METER_TO_FEET );
 	
     // The following section sets up the flight model EOM parameters
     // and should really be read in from one or more files.
@@ -920,9 +920,9 @@ void fgReInitSubsystems( void )
     pilot_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
 				   cur_fdm_state->get_Lat_geocentric(), 
 				   cur_fdm_state->get_Altitude() *
-				   FEET_TO_METER );
+				   SG_FEET_TO_METER );
     pilot_view->set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
-				      FEET_TO_METER ); 
+				      SG_FEET_TO_METER ); 
     pilot_view->set_rph( cur_fdm_state->get_Phi(),
 			 cur_fdm_state->get_Theta(),
 			 cur_fdm_state->get_Psi() );
@@ -937,7 +937,7 @@ void fgReInitSubsystems( void )
 //     cur_fdm_state->bind();
 //     cur_fdm_state->init( 1.0 / fgGetInt("/sim/model-hz") );
 
-    scenery.cur_elev = cur_fdm_state->get_Runway_altitude() * FEET_TO_METER;
+    scenery.cur_elev = cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER;
 
     if ( cur_fdm_state->get_Altitude() <
 	 cur_fdm_state->get_Runway_altitude() + 3.758099)

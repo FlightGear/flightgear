@@ -169,15 +169,15 @@ void FGJSBsim::init() {
     // for debug only
     /* FG_LOG( FG_FLIGHT, FG_DEBUG, "  FGJSBSim::get_Altitude(): " <<  get_Altitude() );
        FG_LOG( FG_FLIGHT, FG_DEBUG, "  FGJSBSim::get_Sea_level_radius(): " << get_Sea_level_radius()  );
-       FG_LOG( FG_FLIGHT, FG_DEBUG, "  scenery.cur_radius*METER_TO_FEET: "
-       <<  scenery.cur_radius*METER_TO_FEET );
+       FG_LOG( FG_FLIGHT, FG_DEBUG, "  scenery.cur_radius*SG_METER_TO_FEET: "
+       <<  scenery.cur_radius*SG_METER_TO_FEET );
        FG_LOG( FG_FLIGHT, FG_DEBUG, "  Calculated Terrain ASL: " << endl 
-       << "    " << "scenery.cur_radius*METER_TO_FEET -get_Sea_level_radius()= " 
-       <<  scenery.cur_radius*METER_TO_FEET - get_Sea_level_radius()  );
+       << "    " << "scenery.cur_radius*SG_METER_TO_FEET -get_Sea_level_radius()= " 
+       <<  scenery.cur_radius*SG_METER_TO_FEET - get_Sea_level_radius()  );
 
        FG_LOG( FG_FLIGHT, FG_DEBUG, "  Calculated Aircraft AGL: " << endl 
-       << "    " << "get_Altitude() + get_Sea_level_radius() - scenery.cur_radius*METER_TO_FEET= " 
-       <<  get_Altitude() + get_Sea_level_radius()- scenery.cur_radius*METER_TO_FEET );
+       << "    " << "get_Altitude() + get_Sea_level_radius() - scenery.cur_radius*SG_METER_TO_FEET= " 
+       <<  get_Altitude() + get_Sea_level_radius()- scenery.cur_radius*SG_METER_TO_FEET );
        FG_LOG( FG_FLIGHT, FG_DEBUG, "  fgGetDouble("/position/altitude"): " 
        <<  fgGetDouble("/position/altitude") );
        FG_LOG( FG_FLIGHT, FG_DEBUG, "  FGBFI::getAltitude(): " 
@@ -206,7 +206,7 @@ bool FGJSBsim::update( int multiloop ) {
     
     if(needTrim && fgGetBool("/sim/startup/trim")) {
 	//fgic->SetSeaLevelRadiusFtIC( get_Sea_level_radius() );
-	//fgic->SetTerrainAltitudeFtIC( scenery.cur_elev * METER_TO_FEET );
+	//fgic->SetTerrainAltitudeFtIC( scenery.cur_elev * SG_METER_TO_FEET );
 	FGTrim *fgtrim;
 	if(fgic->GetVcalibratedKtsIC() < 10 ) {
 		fgic->SetVcalibratedKtsIC(0.0);
@@ -285,7 +285,7 @@ bool FGJSBsim::copy_to_JSBsim() {
     fdmex->GetFCS()->SetCBrake( controls.get_brake( 2 ) );
 
     fdmex->GetPosition()->SetSeaLevelRadius( get_Sea_level_radius() );
-    fdmex->GetPosition()->SetRunwayRadius( scenery.cur_elev*METER_TO_FEET
+    fdmex->GetPosition()->SetRunwayRadius( scenery.cur_elev*SG_METER_TO_FEET
     						+ get_Sea_level_radius() );
     
     fdmex->GetAtmosphere()->SetExTemperature(get_Static_temperature());
@@ -421,8 +421,8 @@ void FGJSBsim::set_Latitude(double lat) {
     
     snap_shot();
     sgGeodToGeoc( lat, get_Altitude() , &sea_level_radius_meters, &lat_geoc);
-    _set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET  );
-    fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * METER_TO_FEET  );
+    _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
+    fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * SG_METER_TO_FEET  );
     fgic->SetLatitudeRadIC( lat_geoc );
     fdmex->RunIC(fgic); //loop JSBSim once
     copy_from_JSBsim(); //update the bus
@@ -447,8 +447,8 @@ void FGJSBsim::set_Altitude(double alt) {
     
     snap_shot();
     sgGeodToGeoc( get_Latitude(), alt , &sea_level_radius_meters, &lat_geoc);
-    _set_Sea_level_radius( sea_level_radius_meters * METER_TO_FEET  );
-    fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * METER_TO_FEET );
+    _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
+    fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * SG_METER_TO_FEET );
     fgic->SetLatitudeRadIC( lat_geoc );
     fgic->SetAltitudeFtIC(alt);
     fdmex->RunIC(fgic); //loop JSBSim once

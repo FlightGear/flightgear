@@ -148,16 +148,16 @@ bool FGILSList::query( double lon, double lat, double elev, double freq,
 
 	d = aircraft.distance3Dsquared( station );
 	// cout << "  distance = " << d << " (" 
-	//      << FG_ILS_DEFAULT_RANGE * NM_TO_METER 
-	//         * FG_ILS_DEFAULT_RANGE * NM_TO_METER
+	//      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
+	//         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
 	//      << ")" << endl;
 
 	// cout << "  dist = " << s << endl;
 
 	// match up to twice the published range so we can model
 	// reduced signal strength
-	if ( d < (2* FG_ILS_DEFAULT_RANGE * NM_TO_METER 
-		  * 2 * FG_ILS_DEFAULT_RANGE * NM_TO_METER) ) {
+	if ( d < (2* FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
+		  * 2 * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER) ) {
 	    *ils = *current;
 	    return true;
 	}

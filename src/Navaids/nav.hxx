@@ -130,7 +130,7 @@ operator >> ( istream& in, FGNav& n )
 	//      << n.elev << " JD = " 
 	//      << julian_date << endl;
 	n.magvar = sgGetMagVar(n.lon * SGD_DEGREES_TO_RADIANS, n.lat * SGD_DEGREES_TO_RADIANS,
-				n.elev * FEET_TO_METER,
+				n.elev * SG_FEET_TO_METER,
 				julian_date) * SGD_RADIANS_TO_DEGREES;
 	// cout << "Default variation at " << n.lon << ',' << n.lat
 	// 	<< " is " << var << endl;

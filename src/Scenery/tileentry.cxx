@@ -195,7 +195,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 
 	double agl;
 	if ( current_aircraft.fdm_state ) {
-	    agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
+	    agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
 		- scenery.cur_elev;
 	} else {
 	    agl = 0.0;

@@ -56,7 +56,7 @@ bool FGMagicCarpet::update( int multiloop ) {
     // speed and distance traveled
     double speed = controls.get_throttle( 0 ) * 2000; // meters/sec
     double dist = speed * time_step;
-    double kts = speed * METER_TO_NM * 3600.0;
+    double kts = speed * SG_METER_TO_NM * 3600.0;
     _set_V_equiv_kts( kts );
     _set_V_calibrated_kts( kts );
     _set_V_ground_speed( kts );
@@ -99,7 +99,7 @@ bool FGMagicCarpet::update( int multiloop ) {
 			     sl_radius + get_Altitude() + climb );
     // cout << "sea level radius (ft) = " << sl_radius << endl;
     // cout << "(setto) sea level radius (ft) = " << get_Sea_level_radius() << endl;
-    _set_Sea_level_radius( sl_radius * METER_TO_FEET);
+    _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET);
     _set_Altitude( get_Altitude() + climb );
 
     return true;

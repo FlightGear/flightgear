@@ -174,8 +174,8 @@ FGBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
 
 	double d = aircraft.distance3Dsquared( station ); // meters^2
 	// cout << "  distance = " << d << " (" 
-	//      << FG_ILS_DEFAULT_RANGE * NM_TO_METER 
-	//         * FG_ILS_DEFAULT_RANGE * NM_TO_METER
+	//      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
+	//         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
 	//      << ")" << endl;
 
 	// cout << "  range = " << sqrt(d) << endl;
@@ -184,9 +184,9 @@ FGBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
 	    min_dist = d;
 	}
 
-	// cout << "elev = " << elev * METER_TO_FEET
+	// cout << "elev = " << elev * SG_METER_TO_FEET
 	//      << " current->get_elev() = " << current->get_elev() << endl;
-	double delev = elev * METER_TO_FEET - current->get_elev();
+	double delev = elev * SG_METER_TO_FEET - current->get_elev();
 
 	// max range is the area under r = 2.4 * alt or r^2 = 4000^2 - alt^2
 	// whichever is smaller.  The intersection point is 1538 ...
@@ -198,7 +198,7 @@ FGBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
 	} else {
 	    maxrange2 = 0.0;
 	}
-	maxrange2 *= FEET_TO_METER * FEET_TO_METER; // convert to meter^2
+	maxrange2 *= SG_FEET_TO_METER * SG_FEET_TO_METER; // convert to meter^2
 	// cout << "delev = " << delev << " maxrange = " << maxrange << endl;
 
 	// match up to twice the published range so we can model

@@ -116,10 +116,10 @@ void FGViewerLookAt::update() {
     // calculate view position in current FG view coordinate system
     // p.lon & p.lat are already defined earlier, p.radius was set to
     // the sea level radius, so now we add in our altitude.
-    if ( geod_view_pos[2] > (scenery.cur_elev + 0.5 * METER_TO_FEET) ) {
+    if ( geod_view_pos[2] > (scenery.cur_elev + 0.5 * SG_METER_TO_FEET) ) {
 	p.setz( p.radius() + geod_view_pos[2] );
     } else {
-	p.setz( p.radius() + scenery.cur_elev + 0.5 * METER_TO_FEET );
+	p.setz( p.radius() + scenery.cur_elev + 0.5 * SG_METER_TO_FEET );
     }
 
     tmp = sgPolarToCart3d(p);

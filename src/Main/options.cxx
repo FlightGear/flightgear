@@ -470,7 +470,7 @@ parse_wp( const string& arg ) {
 	// cout << "id str = " << id << "  alt str = " << alt_str << endl;
 	alt = atof( alt_str.c_str() );
 	if ( fgGetString("/sim/startup/units") == "feet" ) {
-	    alt *= FEET_TO_METER;
+	    alt *= SG_FEET_TO_METER;
 	}
     } else {
 	id = arg;
@@ -586,49 +586,49 @@ parse_option (const string& arg)
 	    fgSetDouble("/position/altitude", atof(arg.substr(11)));
 	else
 	    fgSetDouble("/position/altitude",
-			atof(arg.substr(11)) * METER_TO_FEET);
+			atof(arg.substr(11)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--uBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/velocities/uBody", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/uBody",
-			       atof(arg.substr(8)) * METER_TO_FEET);
+			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/velocities/vBody", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/vBody",
-			       atof(arg.substr(8)) * METER_TO_FEET);
+			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--wBody=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "UVW");
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/velocities/wBody", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/wBody",
-			       atof(arg.substr(8)) * METER_TO_FEET);
+			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vNorth=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/velocities/speed-north", atof(arg.substr(9)));
 	else
 	  fgSetDouble("/velocities/speed-north",
-			       atof(arg.substr(9)) * METER_TO_FEET);
+			       atof(arg.substr(9)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vEast=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/velocities/speed-east", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/speed-east",
-			       atof(arg.substr(8)) * METER_TO_FEET);
+			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vDown=" ) == 0 ) {
         fgSetString("/sim/startup/speed-set", "NED");
 	if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/velocities/speed-down", atof(arg.substr(8)));
 	else
 	  fgSetDouble("/velocities/speed-down",
-			       atof(arg.substr(8)) * METER_TO_FEET);
+			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vc=" ) == 0) {
         fgSetString("/sim/startup/speed-set", "knots");
 	fgSetDouble("/velocities/airspeed", atof(arg.substr(5)));
@@ -677,7 +677,7 @@ parse_option (const string& arg)
 				// FIXME: check units
         if ( fgGetString("/sim/startup/units") == "feet" )
 	  fgSetDouble("/environment/clouds/altitude",
-				atof(arg.substr(13)) * FEET_TO_METER);
+				atof(arg.substr(13)) * SG_FEET_TO_METER);
 	else
 	  fgSetDouble("/environment/clouds/altitude",
 				atof(arg.substr(13)));
@@ -837,7 +837,7 @@ parse_option (const string& arg)
     } else if ( arg.find( "--visibility=" ) == 0 ) {
 	fgSetDouble("/environment/visibility", atof(arg.substr(13)));
     } else if ( arg.find( "--visibility-miles=" ) == 0 ) {
-        double visibility = atof(arg.substr(19)) * 5280.0 * FEET_TO_METER;
+        double visibility = atof(arg.substr(19)) * 5280.0 * SG_FEET_TO_METER;
 	fgSetDouble("/environment/visibility", visibility);
     } else if ( arg.find( "--wind=" ) == 0 ) {
         string val = arg.substr(7);
@@ -851,7 +851,7 @@ parse_option (const string& arg)
 	FG_LOG(FG_GENERAL, FG_INFO, "WIND: " << dir << '@' << 
 	       speed << " knots" << endl);
 				// convert to fps
-	speed *= NM_TO_METER * METER_TO_FEET * (1.0/3600);
+	speed *= SG_NM_TO_METER * SG_METER_TO_FEET * (1.0/3600);
 	dir += 180;
 	if (dir >= 360)
 	  dir -= 360;

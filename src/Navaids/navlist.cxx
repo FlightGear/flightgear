@@ -129,12 +129,12 @@ bool FGNavList::query( double lon, double lat, double elev, double freq,
 	d = aircraft.distance3Dsquared( station );
 
 	// cout << "  dist = " << sqrt(d)
-	//      << "  range = " << current->get_range() * NM_TO_METER << endl;
+	//      << "  range = " << current->get_range() * SG_NM_TO_METER << endl;
 
 	// match up to twice the published range so we can model
 	// reduced signal strength
-	if ( d < (2 * current->get_range() * NM_TO_METER 
-		  * 2 * current->get_range() * NM_TO_METER ) ) {
+	if ( d < (2 * current->get_range() * SG_NM_TO_METER 
+		  * 2 * current->get_range() * SG_NM_TO_METER ) ) {
 	    // cout << "matched = " << current->get_ident() << endl;
 	    *n = *current;
 	    return true;

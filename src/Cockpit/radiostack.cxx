@@ -57,7 +57,7 @@ static double kludgeRange ( double stationElev, double aircraftElev,
 				// Assume that the nominal range (usually
 				// 50nm) applies at a 5,000 ft difference.
 				// Just a wild guess!
-  double factor = ((aircraftElev*METER_TO_FEET) - stationElev) / 5000.0;
+  double factor = ((aircraftElev*SG_METER_TO_FEET) - stationElev) / 5000.0;
   double range = fabs(nominalRange * factor);
 
 				// Clamp the range to keep it sane; for
@@ -249,8 +249,8 @@ double FGRadioStack::adjustNavRange( double stationElev, double aircraftElev,
     // to model diminishing returns at too-high altitudes.
 
     // altitude difference
-    double alt = ( aircraftElev * METER_TO_FEET - stationElev );
-    // cout << "aircraft elev = " << aircraftElev * METER_TO_FEET
+    double alt = ( aircraftElev * SG_METER_TO_FEET - stationElev );
+    // cout << "aircraft elev = " << aircraftElev * SG_METER_TO_FEET
     //      << " station elev = " << stationElev << endl;
 
     if ( nominalRange < 25.0 + SG_EPSILON ) {
@@ -277,7 +277,7 @@ double FGRadioStack::adjustILSRange( double stationElev, double aircraftElev,
     // assumptions we model the standard service volume, plus
 
     // altitude difference
-    // double alt = ( aircraftElev * METER_TO_FEET - stationElev );
+    // double alt = ( aircraftElev * SG_METER_TO_FEET - stationElev );
     double offset = fabs( offsetDegrees );
 
     if ( offset < 10 ) {
@@ -298,7 +298,7 @@ FGRadioStack::update()
 {
     double lon = longitudeVal->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double lat = latitudeVal->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double elev = altitudeVal->getDoubleValue() * FEET_TO_METER;
+    double elev = altitudeVal->getDoubleValue() * SG_FEET_TO_METER;
 
     need_update = false;
 
@@ -340,19 +340,19 @@ FGRadioStack::update()
 	    while ( offset > 180.0 ) { offset -= 360.0; }
 	    // cout << "ils offset = " << offset << endl;
 	    nav1_effective_range = adjustILSRange(nav1_elev, elev, offset,
-						  nav1_loc_dist * METER_TO_NM );
+						  nav1_loc_dist * SG_METER_TO_NM );
 	} else {
 	    nav1_effective_range = adjustNavRange(nav1_elev, elev, nav1_range);
 	}
 	// cout << "nav1 range = " << nav1_effective_range
 	//      << " (" << nav1_range << ")" << endl;
 
-	if ( nav1_loc_dist < nav1_effective_range * NM_TO_METER ) {
+	if ( nav1_loc_dist < nav1_effective_range * SG_NM_TO_METER ) {
 	    nav1_inrange = true;
-	} else if ( nav1_loc_dist < 2 * nav1_effective_range * NM_TO_METER ) {
+	} else if ( nav1_loc_dist < 2 * nav1_effective_range * SG_NM_TO_METER ) {
 	    nav1_inrange = sg_random() < 
-		( 2 * nav1_effective_range * NM_TO_METER - nav1_loc_dist ) /
-		(nav1_effective_range * NM_TO_METER);
+		( 2 * nav1_effective_range * SG_NM_TO_METER - nav1_loc_dist ) /
+		(nav1_effective_range * SG_NM_TO_METER);
 	} else {
 	    nav1_inrange = false;
 	}
@@ -433,19 +433,19 @@ FGRadioStack::update()
 	    while ( offset > 180.0 ) { offset -= 360.0; }
 	    // cout << "ils offset = " << offset << endl;
 	    nav2_effective_range = adjustILSRange(nav2_elev, elev, offset,
-						  nav2_loc_dist * METER_TO_NM );
+						  nav2_loc_dist * SG_METER_TO_NM );
 	} else {
 	    nav2_effective_range = adjustNavRange(nav2_elev, elev, nav2_range);
 	}
 	// cout << "nav2 range = " << nav2_effective_range
 	//      << " (" << nav2_range << ")" << endl;
 
-	if ( nav2_loc_dist < nav2_effective_range * NM_TO_METER ) {
+	if ( nav2_loc_dist < nav2_effective_range * SG_NM_TO_METER ) {
 	    nav2_inrange = true;
-	} else if ( nav2_loc_dist < 2 * nav2_effective_range * NM_TO_METER ) {
+	} else if ( nav2_loc_dist < 2 * nav2_effective_range * SG_NM_TO_METER ) {
 	    nav2_inrange = sg_random() < 
-		( 2 * nav2_effective_range * NM_TO_METER - nav2_loc_dist ) /
-		(nav2_effective_range * NM_TO_METER);
+		( 2 * nav2_effective_range * SG_NM_TO_METER - nav2_loc_dist ) /
+		(nav2_effective_range * SG_NM_TO_METER);
 	} else {
 	    nav2_inrange = false;
 	}
@@ -508,12 +508,12 @@ FGRadioStack::update()
 	//      << " dist = " << nav2_dist << endl;
 
 	adf_effective_range = kludgeRange(adf_elev, elev, adf_range);
-	if ( adf_dist < adf_effective_range * NM_TO_METER ) {
+	if ( adf_dist < adf_effective_range * SG_NM_TO_METER ) {
 	    adf_inrange = true;
-	} else if ( adf_dist < 2 * adf_effective_range * NM_TO_METER ) {
+	} else if ( adf_dist < 2 * adf_effective_range * SG_NM_TO_METER ) {
 	    adf_inrange = sg_random() < 
-		( 2 * adf_effective_range * NM_TO_METER - adf_dist ) /
-		(adf_effective_range * NM_TO_METER);
+		( 2 * adf_effective_range * SG_NM_TO_METER - adf_dist ) /
+		(adf_effective_range * SG_NM_TO_METER);
 	} else {
 	    adf_inrange = false;
 	}
@@ -552,7 +552,7 @@ void FGRadioStack::search()
 {
     double lon = longitudeVal->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double lat = latitudeVal->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double elev = altitudeVal->getDoubleValue() * FEET_TO_METER;
+    double elev = altitudeVal->getDoubleValue() * SG_FEET_TO_METER;
 
     // nav1
     FGILS ils;
@@ -938,7 +938,7 @@ double FGRadioStack::get_nav2_heading_needle_deflection() const {
 double FGRadioStack::get_nav1_gs_needle_deflection() const {
     if ( nav1_inrange && nav1_has_gs ) {
 	double x = nav1_gs_dist;
-	double y = (FGBFI::getAltitude() - nav1_elev) * FEET_TO_METER;
+	double y = (FGBFI::getAltitude() - nav1_elev) * SG_FEET_TO_METER;
 	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	return (nav1_target_gs - angle) * 5.0;
     } else {
@@ -952,7 +952,7 @@ double FGRadioStack::get_nav1_gs_needle_deflection() const {
 double FGRadioStack::get_nav2_gs_needle_deflection() const {
     if ( nav2_inrange && nav2_has_gs ) {
 	double x = nav2_gs_dist;
-	double y = (FGBFI::getAltitude() - nav2_elev) * FEET_TO_METER;
+	double y = (FGBFI::getAltitude() - nav2_elev) * SG_FEET_TO_METER;
 	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	return (nav2_target_gs - angle) * 5.0;
     } else {
