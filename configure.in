@@ -7,7 +7,7 @@ dnl $Id$
 AC_INIT(Simulator/Aircraft/aircraft.cxx)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.6.1)
+AM_INIT_AUTOMAKE(FlightGear, 0.6.2)
 
 dnl configure other independant packages included with flight gear for
 dnl convenience
