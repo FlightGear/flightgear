@@ -323,36 +323,6 @@ void FGNetCtrls2Props( FGNetCtrls *net ) {
 }
 
 
-static void net2global( const FGNetCtrls *net, FGControls *global ) {
-    int i;
-
-    if ( net->version == FG_NET_CTRLS_VERSION ) {
-	globals->get_controls()->set_aileron( net->aileron );
-	globals->get_controls()->set_elevator( net->elevator );
-	globals->get_controls()->set_elevator_trim( net->elevator_trim );
-	globals->get_controls()->set_rudder( net->rudder );
-	globals->get_controls()->set_flaps( net->flaps );
-	for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {    
-	    globals->get_controls()->set_throttle( i, net->throttle[i] );
-	    globals->get_controls()->set_mixture( i, net->mixture[i] );
-	    globals->get_controls()->set_prop_advance( i, net->prop_advance[i]);
-	}
-	for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
-	    globals->get_controls()->set_fuel_selector( i, net->fuel_selector[i] );
-	}
-	for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
-	    globals->get_controls()->set_brake( i, net->brake[i] );
-	}
-	globals->get_controls()->set_gear_down( net->gear_handle );
-	globals->get_scenery()->set_cur_elev( net->hground );
-    } else {
-	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in net2global()" );
-	SG_LOG( SG_IO, SG_ALERT,
-		"\tsomeone needs to upgrade net_ctrls.hxx and recompile." );
-    }
-}
-
-
 // process work for this port
 bool FGNativeCtrls::process() {
     SGIOChannel *io = get_io_channel();
@@ -371,12 +341,12 @@ bool FGNativeCtrls::process() {
 	if ( io->get_type() == sgFileType ) {
 	    if ( io->read( (char *)(& net_ctrls), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		net2global( &net_ctrls, globals->get_controls() );
+		FGNetCtrls2Props( &net_ctrls );
 	    }
 	} else {
 	    while ( io->read( (char *)(& net_ctrls), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		net2global( &net_ctrls, globals->get_controls() );
+		FGNetCtrls2Props( &net_ctrls );
 	    }
 	}
     }
