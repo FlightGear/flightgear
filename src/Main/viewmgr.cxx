@@ -177,8 +177,10 @@ void
 FGViewMgr::setViewOffset_deg (double offset)
 {
   FGViewer * view = get_current_view();
-  if (view != 0)
+  if (view != 0) {
+    view->setGoalHeadingOffset_deg(offset);
     view->setHeadingOffset_deg(offset);
+  }
 }
 
 double
@@ -207,8 +209,10 @@ void
 FGViewMgr::setViewTilt_deg (double tilt)
 {
   FGViewer * view = get_current_view();
-  if (view != 0)
+  if (view != 0) {
+    view->setGoalPitchOffset_deg(tilt);
     view->setPitchOffset_deg(tilt);
+  }
 }
 
 double
