@@ -95,7 +95,7 @@ public:
     fgMATERIAL_MGR ( void );
 
     // Load a library of material properties
-    int load_lib ( char *file );
+    int load_lib ( void );
 
     // Destructor
     ~fgMATERIAL_MGR ( void );
@@ -106,6 +106,10 @@ public:
 
 
 // $Log$
+// Revision 1.2  1998/06/01 17:56:20  curt
+// Incremental additions to material.cxx (not fully functional)
+// Tweaked vfc_ratio math to avoid divide by zero.
+//
 // Revision 1.1  1998/05/30 01:56:45  curt
 // Added material.cxx material.hxx
 //

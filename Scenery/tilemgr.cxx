@@ -367,13 +367,21 @@ void fgTileMgrRender( void ) {
 	}
     }
 
-    v->vfc_ratio = (double)culled / (double)(drawn + culled);
+    if ( (drawn + culled) > 0 ) {
+	v->vfc_ratio = (double)culled / (double)(drawn + culled);
+    } else {
+	v->vfc_ratio = 0.0;
+    }
     // printf("drawn = %d  culled = %d  saved = %.2f\n", drawn, culled, 
     //        v->vfc_ratio);
 }
 
 
 // $Log$
+// Revision 1.14  1998/06/01 17:56:20  curt
+// Incremental additions to material.cxx (not fully functional)
+// Tweaked vfc_ratio math to avoid divide by zero.
+//
 // Revision 1.13  1998/05/24 02:49:10  curt
 // Implimented fragment level view frustum culling.
 //
