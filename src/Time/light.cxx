@@ -108,7 +108,7 @@ void fgLIGHT::Update( void ) {
 #if defined (sgi)
     GLfloat base_sky_color[4] = { 0.20, 0.32, 0.50, 1.0 };
 #else // PC
-    GLfloat base_sky_color[4] = { 0.38, 0.57, 0.82, 1.0 };
+    GLfloat base_sky_color[4] = { 0.24, 0.36, 0.56, 1.0 };
 #endif
     // base fog color
     GLfloat base_fog_color[4] = { 0.65, 0.62, 0.70, 1.0 };
