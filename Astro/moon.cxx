@@ -218,10 +218,13 @@ void fgMoonRender( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/07/30 23:43:30  curt
-/* Eliminated glScale call so that glutSolidSphere normals are preserved
-/* correctly.  Also made the sun & moon a bit smaller.
+/* Revision 1.6  1998/09/03 21:25:39  curt
+/* log file tweak.
 /*
+ * Revision 1.5  1998/07/30 23:43:30  curt
+ * Eliminated glScale call so that glutSolidSphere normals are preserved
+ * correctly.  Also made the sun & moon a bit smaller.
+ *
  * Revision 1.4  1998/04/28 01:18:59  curt
  * Type-ified fgTIME and fgVIEW
  *
