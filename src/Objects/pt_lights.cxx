@@ -368,8 +368,7 @@ ssgTransform *gen_odals_lights( const point_list &nodes,
 {
     sgVec3 center;
     calc_center_point( nodes, pnt_i, center );
-    cout << center[0] << "," << center[1] << "," << center[2] << endl;
-    cout << "points = " << pnt_i.size() << endl;
+    // cout << center[0] << "," << center[1] << "," << center[2] << endl;
 
     ssgTimedSelector *odals = new ssgTimedSelector;
 
@@ -608,7 +607,7 @@ ssgBranch *gen_directional_lights( const point_list &nodes,
                                               material, up );
         return reil;
     } else if ( material == "RWY_ODALS_LIGHTS" ) {
-        cout << "found a odals" << endl;
+        // cout << "found a odals" << endl;
         ssgTransform *odals = gen_odals_lights( nodes, normals, pnt_i, nml_i,
                                                 material, up );
         return odals;
