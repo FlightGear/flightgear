@@ -154,6 +154,11 @@ FGADA::~FGADA() {
 // Initialize the ADA flight model, dt is the time increment
 // for each subsequent iteration through the EOM
 void FGADA::init() {
+
+				// explicitly call the superclass's
+				// init() method first.
+    FGInterface::init();
+
     // cout << "FGADA::init()" << endl;
 
     char Buffer[numberofbytes];

@@ -109,33 +109,13 @@ FGJSBsim::~FGJSBsim(void) {
 // each subsequent iteration through the EOM
 
 void FGJSBsim::init() {
+				// Explicitly call the superclass's
+				// init method first.
+    FGInterface::init();
 
     bool result;
 
     SG_LOG( SG_FLIGHT, SG_INFO, "Starting and initializing JSBsim" );
-
-#if 0
-    SGPath aircraft_path( globals->get_fg_root() );
-    aircraft_path.append( "Aircraft" );
-
-    SGPath engine_path( globals->get_fg_root() );
-    engine_path.append( "Engine" );
-
-    fdmex->GetState()->Setdt( get_delta_t() );
-
-    result = fdmex->LoadModel( aircraft_path.str(),
-			       engine_path.str(),
-			       fgGetString("/sim/aircraft") );
-
-    if (result) {
-	SG_LOG( SG_FLIGHT, SG_INFO, "  loaded aircraft " << fgGetString("/sim/aircraft") );
-    } else {
-	SG_LOG( SG_FLIGHT, SG_INFO, "  aircraft "
-		<< fgGetString("/sim/aircraft")
-		<< " does not exist" );
-	exit(-1);
-    }
-#endif    
 
     fdmex->GetAtmosphere()->UseInternal();
   
@@ -177,24 +157,6 @@ void FGJSBsim::init() {
     SG_LOG( SG_FLIGHT, SG_INFO, "  Longitude: " 
 	    <<  fdmex->GetPosition()->GetLongitude() << " deg"  );
   
-    // for debug only
-    /* SG_LOG( SG_FLIGHT, SG_DEBUG, "  FGJSBSim::get_Altitude(): " <<  get_Altitude() );
-       SG_LOG( SG_FLIGHT, SG_DEBUG, "  FGJSBSim::get_Sea_level_radius(): " << get_Sea_level_radius()  );
-       SG_LOG( SG_FLIGHT, SG_DEBUG, "  scenery.cur_radius*SG_METER_TO_FEET: "
-       <<  scenery.cur_radius*SG_METER_TO_FEET );
-       SG_LOG( SG_FLIGHT, SG_DEBUG, "  Calculated Terrain ASL: " << endl 
-       << "    " << "scenery.cur_radius*SG_METER_TO_FEET -get_Sea_level_radius()= " 
-       <<  scenery.cur_radius*SG_METER_TO_FEET - get_Sea_level_radius()  );
-
-       SG_LOG( SG_FLIGHT, SG_DEBUG, "  Calculated Aircraft AGL: " << endl 
-       << "    " << "get_Altitude() + get_Sea_level_radius() - scenery.cur_radius*SG_METER_TO_FEET= " 
-       <<  get_Altitude() + get_Sea_level_radius()- scenery.cur_radius*SG_METER_TO_FEET );
-       SG_LOG( SG_FLIGHT, SG_DEBUG, "  fgGetDouble("/position/altitude"): " 
-       <<  fgGetDouble("/position/altitude") );
-       SG_LOG( SG_FLIGHT, SG_DEBUG, "  FGBFI::getAltitude(): " 
-       <<  FGBFI::getAltitude() );    */
-
-
     SG_LOG( SG_FLIGHT, SG_INFO, "  loaded initial conditions" );
 
     SG_LOG( SG_FLIGHT, SG_INFO, "  set dt" );

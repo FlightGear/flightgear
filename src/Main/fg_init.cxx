@@ -404,48 +404,6 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 }
 
 
-// Set initial position and orientation
-bool fgInitPosition( void ) {
-    FGInterface *f = current_aircraft.fdm_state;
-    string id = fgGetString("/sim/startup/airport-id");
-
-    // set initial position from default or command line coordinates
-    f->set_Longitude( fgGetDouble("/position/longitude") * SGD_DEGREES_TO_RADIANS );
-    f->set_Latitude( fgGetDouble("/position/latitude") * SGD_DEGREES_TO_RADIANS );
-
-    SG_LOG( SG_GENERAL, SG_INFO,
-	    "scenery.cur_elev = " << scenery.cur_elev );
-    SG_LOG( SG_GENERAL, SG_INFO,
-	    "/position/altitude = " << fgGetDouble("/position/altitude") );
-
-    // if we requested on ground startups
-    if ( fgGetBool( "/sim/startup/onground" ) ) {
-        fgSetDouble( "/position/altitude", (scenery.cur_elev + 1)
-		     * METERS_TO_FEET );
-    }
-
-    // if requested altitude is below ground level
-    if ( fgGetDouble( "/position/altitude" ) < (scenery.cur_elev + 1)
-	 * METERS_TO_FEET ) {
-	fgSetDouble( "/position/altitude",
-		     (scenery.cur_elev + 1) * METERS_TO_FEET );
-    }
-
-    SG_LOG( SG_GENERAL, SG_INFO,
-	    "starting altitude is = " <<
-	    fgGetDouble("/position/altitude") );
-
-    f->set_Altitude( fgGetDouble("/position/altitude") );
-    SG_LOG( SG_GENERAL, SG_INFO,
-	    "Initial position is: ("
-	    << (f->get_Longitude() * SGD_RADIANS_TO_DEGREES) << ", "
-	    << (f->get_Latitude() * SGD_RADIANS_TO_DEGREES) << ", "
-	    << (f->get_Altitude() * SG_FEET_TO_METER) << ")" );
-
-    return true;
-}
-
-
 // General house keeping initializations
 bool fgInitGeneral( void ) {
     string root;
@@ -486,40 +444,6 @@ bool fgInitGeneral( void ) {
 }
 
 
-// set initial aircraft speed
-void
-fgVelocityInit( void ) 
-{
-  if (!fgHasValue("/sim/startup/speed-set")) {
-    current_aircraft.fdm_state->set_V_calibrated_kts(0.0);
-    return;
-  }
-
-  const string speedset = fgGetString("/sim/startup/speed-set");
-  if (speedset == "knots" || speedset == "KNOTS") {
-    current_aircraft.fdm_state
-      ->set_V_calibrated_kts(fgGetDouble("/velocities/airspeed"));
-  } else if (speedset == "mach" || speedset == "MACH") {
-    current_aircraft.fdm_state
-      ->set_Mach_number(fgGetDouble("/velocities/mach"));
-  } else if (speedset == "UVW" || speedset == "uvw") {
-    current_aircraft.fdm_state
-      ->set_Velocities_Wind_Body(fgGetDouble("/velocities/uBody"),
-				 fgGetDouble("/velocities/vBody"),
-				 fgGetDouble("/velocities/wBody"));
-  } else if (speedset == "NED" || speedset == "ned") {
-    current_aircraft.fdm_state
-      ->set_Velocities_Local(fgGetDouble("/velocities/speed-north"),
-			     fgGetDouble("/velocities/speed-east"),
-			     fgGetDouble("/velocities/speed-down"));
-  } else {
-    SG_LOG(SG_GENERAL, SG_ALERT,
-	   "Unrecognized value for /sim/startup/speed-set: " << speedset);
-    current_aircraft.fdm_state->set_V_calibrated_kts(0.0);
-  }
-}             
-
-        
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
@@ -530,7 +454,11 @@ bool fgInitSubsystems( void ) {
     SG_LOG( SG_GENERAL, SG_INFO, "Initialize Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
 
-    // Initialize the material property lib
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the material property subsystem.
+    ////////////////////////////////////////////////////////////////////
+
     SGPath mpath( globals->get_fg_root() );
     mpath.append( "materials" );
     if ( material_lib.load( mpath.str() ) ) {
@@ -539,7 +467,11 @@ bool fgInitSubsystems( void ) {
 	exit(-1);
     }
 
-    // Initialize the Scenery Management subsystem
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the scenery management subsystem.
+    ////////////////////////////////////////////////////////////////////
+
     if ( fgSceneryInit() ) {
 	// Material lib initialized ok.
     } else {
@@ -559,6 +491,11 @@ bool fgInitSubsystems( void ) {
     SG_LOG( SG_GENERAL, SG_DEBUG,
     	    "Current terrain elevation after tile mgr init " <<
 	    scenery.cur_elev );
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the flight model subsystem.
+    ////////////////////////////////////////////////////////////////////
 
     double dt = 1.0 / fgGetInt("/sim/model-hz");
     // cout << "dt = " << dt << endl;
@@ -583,70 +520,18 @@ bool fgInitSubsystems( void ) {
 	       << ", can't init aircraft");
 	exit(-1);
     }
-    cur_fdm_state->stamp();
-    cur_fdm_state->set_remainder( 0 );
-
+    cur_fdm_state->init();
+    cur_fdm_state->bind();
+    
     // allocates structures so must happen before any of the flight
     // model or control parameters are set
     fgAircraftInit();   // In the future this might not be the case.
 
-    fgFDMSetGroundElevation( fgGetString("/sim/flight-model"),
-			     scenery.cur_elev );
-    
-    // set the initial position
-    fgInitPosition();
 
-    // Calculate ground elevation at starting point (we didn't have
-    // tmp_abs_view_pos calculated when fgTileMgrUpdate() was called above
-    //
-    // calculalate a cartesian point somewhere along the line between
-    // the center of the earth and our view position.  Doesn't have to
-    // be the exact elevation (this is good because we don't know it
-    // yet :-)
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the event manager subsystem.
+    ////////////////////////////////////////////////////////////////////
 
-    // now handled inside of the fgTileMgrUpdate()
-
-    // Reset our altitude if we are below ground
-    SG_LOG( SG_GENERAL, SG_DEBUG, "Current altitude = "
-	    << cur_fdm_state->get_Altitude() );
-    SG_LOG( SG_GENERAL, SG_DEBUG, "Current runway altitude = " <<
-	    cur_fdm_state->get_Runway_altitude() );
-
-    if ( cur_fdm_state->get_Altitude() < cur_fdm_state->get_Runway_altitude() +
-	 3.758099) {
-	cur_fdm_state->set_Altitude( cur_fdm_state->get_Runway_altitude() +
-				     3.758099 );
-    }
-
-    SG_LOG( SG_GENERAL, SG_INFO,
-	    "Updated position (after elevation adj): ("
-	    << (cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES) << ", "
-	    << (cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES) << ", "
-	    << (cur_fdm_state->get_Altitude() * SG_FEET_TO_METER) << ")" );
-
-    // We need to calculate a few sea_level_radius here so we can pass
-    // the correct value to the view class
-    double sea_level_radius_meters;
-    double lat_geoc;
-    sgGeodToGeoc( cur_fdm_state->get_Latitude(),
-		  cur_fdm_state->get_Altitude(),
-		  &sea_level_radius_meters, &lat_geoc);
-    cur_fdm_state->set_Sea_level_radius( sea_level_radius_meters *
-					 SG_METER_TO_FEET );
-
-    // The following section sets up the flight model EOM parameters
-    // and should really be read in from one or more files.
-
-    // Initial Velocity
-    fgVelocityInit();
-
-    // Initial Orientation
-//     cur_fdm_state->
-// 	set_Euler_Angles( fgGetDouble("/orientation/roll") * SGD_DEGREES_TO_RADIANS,
-// 			  fgGetDouble("/orientation/pitch") * SGD_DEGREES_TO_RADIANS,
-// 			  fgGetDouble("/orientation/heading") * SGD_DEGREES_TO_RADIANS );
-
-    // Initialize the event manager
     global_events.Init();
 
     // Output event stats every 60 seconds
@@ -654,6 +539,11 @@ bool fgInitSubsystems( void ) {
 			    fgMethodCallback<fgEVENT_MGR>( &global_events,
 						   &fgEVENT_MGR::PrintStats),
 			    fgEVENT::FG_EVENT_READY, 60000 );
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the view manager subsystem.
+    ////////////////////////////////////////////////////////////////////
 
     // Initialize win_ratio parameters
     for ( int i = 0; i < globals->get_viewmgr()->size(); ++i ) {
@@ -682,6 +572,11 @@ bool fgInitSubsystems( void ) {
     SG_LOG( SG_GENERAL, SG_DEBUG, "  abs_view_pos = "
 	    << globals->get_current_view()->get_abs_view_pos());
 
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the lighting subsystem.
+    ////////////////////////////////////////////////////////////////////
+
     // fgUpdateSunPos() needs a few position and view parameters set
     // so it can calculate local relative sun angle and a few other
     // things for correctly orienting the sky.
@@ -700,9 +595,20 @@ bool fgInitSubsystems( void ) {
 			    fgMethodCallback<fgLIGHT>( &cur_light_params,
 						       &fgLIGHT::Update),
 			    fgEVENT::FG_EVENT_READY, 30000 );
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the local time subsystem.
+    ////////////////////////////////////////////////////////////////////
+
     // update the current timezone each 30 minutes
     global_events.Register( "fgUpdateLocalTime()", fgUpdateLocalTime,
 			    fgEVENT::FG_EVENT_READY, 1800000);
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the weather subsystem.
+    ////////////////////////////////////////////////////////////////////
 
     // Initialize the weather modeling subsystem
 #ifndef FG_OLD_WEATHER
@@ -733,7 +639,10 @@ bool fgInitSubsystems( void ) {
     current_weather.Init();
 #endif
 
+    ////////////////////////////////////////////////////////////////////
     // Initialize vor/ndb/ils/fix list management and query systems
+    ////////////////////////////////////////////////////////////////////
+
     SG_LOG(SG_GENERAL, SG_INFO, "Loading Navaids");
 
     SG_LOG(SG_GENERAL, SG_INFO, "  VOR/NDB");
@@ -756,12 +665,22 @@ bool fgInitSubsystems( void ) {
     p_fix.append( "Navaids/default.fix" );
     current_fixlist->init( p_fix );
 
-    // Radio stack subsystem.
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the radio stack subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+				// A textbook example of how FGSubsystem
+				// should work...
     current_radiostack = new FGRadioStack;
     current_radiostack->init();
     current_radiostack->bind();
 
-    // Initialize the Cockpit subsystem
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the cockpit subsystem
+    ////////////////////////////////////////////////////////////////////
+
     if( fgCockpitInit( &current_aircraft )) {
 	// Cockpit initialized ok.
     } else {
@@ -769,43 +688,20 @@ bool fgInitSubsystems( void ) {
 	exit(-1);
     }
 
-    // Initialize the flight model subsystem data structures base on
-    // above values
 
-    cur_fdm_state->init();
-    cur_fdm_state->bind();
-//     if ( cur_fdm_state->init( 1.0 / fgGetInt("/sim/model-hz") ) ) {
-// 	// fdm init successful
-//     } else {
-// 	SG_LOG( SG_GENERAL, SG_ALERT, "FDM init() failed!  Cannot continue." );
-// 	exit(-1);
-//     }
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the joystick subsystem.
+    ////////////////////////////////////////////////////////////////////
 
-    // *ABCD* I'm just sticking this here for now, it should probably
-    // move eventually
-    scenery.cur_elev = cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER;
-
-    if ( cur_fdm_state->get_Altitude() <
-	 cur_fdm_state->get_Runway_altitude() + 3.758099)
-    {
-	cur_fdm_state->set_Altitude( cur_fdm_state->get_Runway_altitude() +
-				     3.758099 );
-    }
-
-    SG_LOG( SG_GENERAL, SG_INFO,
-	    "Updated position (after elevation adj): ("
-	    << (cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES) << ", "
-	    << (cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES) << ", "
-	    << (cur_fdm_state->get_Altitude() * SG_FEET_TO_METER) << ")" );
-    // *ABCD* end of thing that I just stuck in that I should probably
-    // move
-
-    // Joystick support
     if ( ! fgJoystickInit() ) {
     	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Joystick initialization!" );
     }
 
-    // Autopilot init
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the autopilot subsystem.
+    ////////////////////////////////////////////////////////////////////
+
     current_autopilot = new FGAutopilot;
     current_autopilot->init();
 
@@ -815,7 +711,11 @@ bool fgInitSubsystems( void ) {
     NewHeadingInit();
     NewAltitudeInit();
 
-    // Initialize I/O channels
+    
+    ////////////////////////////////////////////////////////////////////
+    // Initialize I/O subsystem.
+    ////////////////////////////////////////////////////////////////////
+
 #if ! defined( macintosh )
     fgIOInit();
 #endif
@@ -833,11 +733,25 @@ bool fgInitSubsystems( void ) {
 	current_panel->bind();
     }
 
-    // Initialize the BFI
+    
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the BFI.
+    ////////////////////////////////////////////////////////////////////
+
     FGBFI::init();
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the controls subsystem.
+    ////////////////////////////////////////////////////////////////////
 
     controls.init();
     controls.bind();
+
+
+    ////////////////////////////////////////////////////////////////////////
+    // End of subsystem initialization.
+    ////////////////////////////////////////////////////////////////////
 
     SG_LOG( SG_GENERAL, SG_INFO, endl);
 
@@ -873,43 +787,6 @@ void fgReInitSubsystems( void )
 		exit(-1);
     }
 
-    // cout << "current scenery elev = " << scenery.cur_elev << endl;
-
-    fgFDMSetGroundElevation( fgGetString("/sim/flight-model"), 
-			     scenery.cur_elev );
-    fgInitPosition();
-
-    // Reset our altitude if we are below ground
-    SG_LOG( SG_GENERAL, SG_DEBUG, "Current altitude = "
-	    << cur_fdm_state->get_Altitude() );
-    SG_LOG( SG_GENERAL, SG_DEBUG, "Current runway altitude = "
-	    << cur_fdm_state->get_Runway_altitude() );
-
-    if ( cur_fdm_state->get_Altitude() <
-	 cur_fdm_state->get_Runway_altitude() + 3.758099)
-    {
-	cur_fdm_state->set_Altitude( cur_fdm_state->get_Runway_altitude() +
-				     3.758099 );
-    }
-    double sea_level_radius_meters;
-    double lat_geoc;
-    sgGeodToGeoc( cur_fdm_state->get_Latitude(), cur_fdm_state->get_Altitude(), 
-		  &sea_level_radius_meters, &lat_geoc);
-    cur_fdm_state->set_Sea_level_radius( sea_level_radius_meters *
-					 SG_METER_TO_FEET );
-	
-    // The following section sets up the flight model EOM parameters
-    // and should really be read in from one or more files.
-
-    // Initial Velocity
-    fgVelocityInit();
-
-    // Initial Orientation
-//     cur_fdm_state->
-// 	set_Euler_Angles( fgGetDouble("/orientation/roll") * SGD_DEGREES_TO_RADIANS,
-// 			  fgGetDouble("/orientation/pitch") * SGD_DEGREES_TO_RADIANS,
-// 			  fgGetDouble("/orientation/heading") * SGD_DEGREES_TO_RADIANS );
-
     // Initialize view parameters
     FGViewerRPH *pilot_view =
 	(FGViewerRPH *)globals->get_viewmgr()->get_view( 0 );
@@ -934,17 +811,6 @@ void fgReInitSubsystems( void )
 	    << globals->get_current_view()->get_abs_view_pos());
 
     cur_fdm_state->init();
-//     cur_fdm_state->bind();
-//     cur_fdm_state->init( 1.0 / fgGetInt("/sim/model-hz") );
-
-    scenery.cur_elev = cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER;
-
-    if ( cur_fdm_state->get_Altitude() <
-	 cur_fdm_state->get_Runway_altitude() + 3.758099)
-    {
-	cur_fdm_state->set_Altitude( cur_fdm_state->get_Runway_altitude() +
-				     3.758099 );
-    }
 
     controls.reset_all();
     current_autopilot->reset();

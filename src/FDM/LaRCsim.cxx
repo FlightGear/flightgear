@@ -67,6 +67,10 @@ FGLaRCsim::~FGLaRCsim(void) {
 // each subsequent iteration through the EOM
 void FGLaRCsim::init() {
 
+				// Explicitly call the superclass's
+				// init method first.
+    FGInterface::init();
+
     speed_up = fgGetValue("/sim/speed-up", true);
     
     ls_set_model_dt( get_delta_t() );

@@ -74,12 +74,12 @@ FGEngInterface::~FGEngInterface(void) {
 
 // Constructor
 FGInterface::FGInterface() {
-    init();
+    _setup();
 }  
 
 FGInterface::FGInterface( double dt ) {
     
-    init();
+    _setup();
     delta_t = dt;
     remainder = elapsed = multi_loop = 0;
 }
@@ -90,8 +90,13 @@ FGInterface::~FGInterface() {
 }
 
 
+/**
+ * Set default values for the state of the FDM.
+ *
+ * This method is invoked by the constructors.
+ */
 void
-FGInterface::init ()
+FGInterface::_setup ()
 {
     init_vec( d_pilot_rp_body_v );
     init_vec( d_cg_rp_body_v );
@@ -160,6 +165,93 @@ FGInterface::init ()
     altitude_agl=0;
 }
 
+
+/**
+ * Initialize the state of the FDM.
+ *
+ * Subclasses of FGInterface may do their own, additional initialization,
+ * but normally they should invoke this method explicitly first as
+ * FGInterface::init() to make sure the basic structures are set up
+ * properly.
+ */
+void
+FGInterface::init ()
+{
+  SG_LOG(SG_FLIGHT, SG_INFO, "Start initializing FGInterface");
+
+  stamp();
+  set_remainder(0);
+
+				// Set initial position
+  SG_LOG(SG_FLIGHT, SG_INFO, "...initializing position...");
+  set_Longitude(fgGetDouble("/position/longitude") * SGD_DEGREES_TO_RADIANS);
+  set_Latitude(fgGetDouble("/position/latitude") * SGD_DEGREES_TO_RADIANS);
+  double ground_elev_m = scenery.cur_elev + 1;
+  double ground_elev_ft = ground_elev_m * METERS_TO_FEET;
+  if (fgGetBool("/sim/startup/onground") ||
+      fgGetDouble("/position/altitude") < ground_elev_ft)
+    fgSetDouble("/position/altitude", ground_elev_ft);
+  set_Altitude(fgGetDouble("/position/altitude"));
+
+				// Set ground elevation
+  SG_LOG(SG_FLIGHT, SG_INFO,
+	 "...initializing ground elevation to "
+	 << ground_elev_ft << "ft...");
+  fgFDMSetGroundElevation("jsb", ground_elev_m);
+
+				// Set sea-level radius
+  SG_LOG(SG_FLIGHT, SG_INFO, "...initializing sea-level radius...");
+  double sea_level_radius_meters;
+  double lat_geoc;
+  sgGeodToGeoc(get_Latitude(), get_Altitude(),
+	       &sea_level_radius_meters, &lat_geoc);
+  set_Sea_level_radius(sea_level_radius_meters * SG_METER_TO_FEET);
+
+				// Set initial velocities
+  SG_LOG(SG_FLIGHT, SG_INFO, "...initializing velocities...");
+  if (!fgHasValue("/sim/startup/speed-set")) {
+    set_V_calibrated_kts(0.0);
+  } else {
+    const string speedset = fgGetString("/sim/startup/speed-set");
+    if (speedset == "knots" || speedset == "KNOTS") {
+      set_V_calibrated_kts(fgGetDouble("/velocities/airspeed"));
+    } else if (speedset == "mach" || speedset == "MACH") {
+      set_Mach_number(fgGetDouble("/velocities/mach"));
+    } else if (speedset == "UVW" || speedset == "uvw") {
+      set_Velocities_Wind_Body(fgGetDouble("/velocities/uBody"),
+			       fgGetDouble("/velocities/vBody"),
+			       fgGetDouble("/velocities/wBody"));
+    } else if (speedset == "NED" || speedset == "ned") {
+      set_Velocities_Local(fgGetDouble("/velocities/speed-north"),
+			   fgGetDouble("/velocities/speed-east"),
+			   fgGetDouble("/velocities/speed-down"));
+    } else {
+      SG_LOG(SG_FLIGHT, SG_ALERT,
+	     "Unrecognized value for /sim/startup/speed-set: " << speedset);
+      set_V_calibrated_kts(0.0);
+    }
+  }
+
+				// Set initial Euler angles
+  SG_LOG(SG_FLIGHT, SG_INFO, "...initializing Euler angles...");
+  set_Euler_Angles
+    (fgGetDouble("/orientation/roll") * SGD_DEGREES_TO_RADIANS,
+     fgGetDouble("/orientation/pitch") * SGD_DEGREES_TO_RADIANS,
+     fgGetDouble("/orientation/heading") * SGD_DEGREES_TO_RADIANS);
+
+  SG_LOG(SG_FLIGHT, SG_INFO, "End initializing FGInterface");
+}
+
+
+/**
+ * Bind getters and setters to properties.
+ *
+ * The bind() method will be invoked after init().  Note that unlike
+ * the usual implementations of FGSubsystem::bind(), this method does
+ * not automatically pick up existing values for the properties at
+ * bind time; instead, all values are set explicitly in the init()
+ * method.
+ */
 void
 FGInterface::bind ()
 {
@@ -192,48 +284,40 @@ FGInterface::bind ()
 				// Orientation
   fgTie("/orientation/roll", this,
 	&FGInterface::get_Phi_deg,
-	&FGInterface::set_Phi_deg,
-	true);
+	&FGInterface::set_Phi_deg);
   fgTie("/orientation/pitch", this,
 	&FGInterface::get_Theta_deg,
-	&FGInterface::set_Theta_deg,
-	true);
+	&FGInterface::set_Theta_deg);
   fgTie("/orientation/heading", this,
 	&FGInterface::get_Psi_deg,
-	&FGInterface::set_Psi_deg,
-	true);
+	&FGInterface::set_Psi_deg);
 
 				// Calibrated airspeed
   fgTie("/velocities/airspeed", this,
 	&FGInterface::get_V_calibrated_kts,
-	&FGInterface::set_V_calibrated_kts,
-	true);
+	&FGInterface::set_V_calibrated_kts);
 
 				// Local velocities
   fgTie("/velocities/speed-north", this,
-	&FGInterface::get_V_north); // read-only
+	&FGInterface::get_V_north,
+	&FGInterface::set_V_north);
   fgTie("/velocities/speed-east", this,
 	&FGInterface::get_V_east,
-	&FGInterface::set_V_east,
-	true);
+	&FGInterface::set_V_east);
   fgTie("/velocities/speed-down", this,
 	&FGInterface::get_V_down,
-	&FGInterface::set_V_down,
-	true);
+	&FGInterface::set_V_down);
 
 				// Relative wind
   fgTie("/velocities/uBody", this,
 	&FGInterface::get_uBody,
-	&FGInterface::set_uBody,
-	true);
+	&FGInterface::set_uBody);
   fgTie("/velocities/vBody", this,
 	&FGInterface::get_vBody,
-	&FGInterface::set_vBody,
-	true);
+	&FGInterface::set_vBody);
   fgTie("/velocities/wBody", this,
 	&FGInterface::get_wBody,
-	&FGInterface::set_wBody,
-	true);
+	&FGInterface::set_wBody);
 
 				// Climb and slip (read-only)
   fgTie("/velocities/vertical-speed", this,
@@ -242,6 +326,13 @@ FGInterface::bind ()
 	&FGInterface::get_Beta); // read-only
 }
 
+
+/**
+ * Unbind any properties bound to this FDM.
+ *
+ * This method allows the FDM to release properties so that a new
+ * FDM can bind them instead.
+ */
 void
 FGInterface::unbind ()
 {
@@ -266,6 +357,10 @@ FGInterface::unbind ()
   fgUntie("/velocities/side-slip");
 }
 
+
+/**
+ * Update the state of the FDM (i.e. run the equations of motion).
+ */
 void
 FGInterface::update ()
 {

@@ -282,6 +282,12 @@ private:
     // SGTimeStamp next_stamp;           // time this record is valid
 
 protected:
+
+				// deliberately not virtual so that
+				// FGInterface constructor will call
+				// the right version
+    void _setup();
+
     void _busdump(void);
     void _updatePosition( double lat_geoc, double lon, double alt );
     void _updateWeather( void );
