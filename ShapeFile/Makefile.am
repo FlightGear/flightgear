@@ -1,6 +1,6 @@
 bin_PROGRAMS = shape-decode
 
-shape_decode_SOURCES = main.cxx
+shape_decode_SOURCES = names.cxx names.hxx main.cxx shape.cxx shape.hxx
 
 shape_decode_LDADD = $(top_builddir)/Lib/Debug/libDebug.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
