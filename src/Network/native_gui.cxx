@@ -149,8 +149,19 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     net->warp = globals->get_warp();
 
     // Approach
-    net->dist_nm = current_radiostack->get_navcom1()->get_nav_gs_dist()
-        * SG_METER_TO_NM;
+    net->tuned_freq = current_radiostack->get_navcom1()->get_nav_freq();
+    net->in_range = current_radiostack->get_navcom1()->get_nav_inrange();
+
+    if ( current_radiostack->get_navcom1()->get_nav_loc() ) {
+        // is an ILS
+        net->dist_nm = current_radiostack->get_navcom1()->get_nav_gs_dist()
+            * SG_METER_TO_NM;
+    } else {
+        // is a VOR
+        net->dist_nm = current_radiostack->get_navcom1()->get_nav_loc_dist()
+            * SG_METER_TO_NM;
+    }
+
     net->course_deviation_deg
         = current_radiostack->get_navcom1()->get_nav_heading()
         - current_radiostack->get_navcom1()->get_nav_radial();
@@ -165,9 +176,16 @@ void FGProps2NetGUI( FGNetGUI *net ) {
             = ( net->course_deviation_deg<0.0
                 ? -net->course_deviation_deg - 180.0
                 : -net->course_deviation_deg + 180.0 );
-    net->gs_deviation_deg
-        = current_radiostack->get_navcom1()->get_nav_gs_needle_deflection()
-        / 5.0;
+
+    if ( current_radiostack->get_navcom1()->get_nav_loc() ) {
+        // is an ILS
+        net->gs_deviation_deg
+            = current_radiostack->get_navcom1()->get_nav_gs_needle_deflection()
+            / 5.0;
+    } else {
+        // is an ILS
+        net->gs_deviation_deg = -9999.0;
+    }
 
 #if defined( FG_USE_NETWORK_BYTE_ORDER )
     // Convert the net buffer to network format
@@ -190,6 +208,8 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     net->cur_time = htonl( net->cur_time );
     net->warp = htonl( net->warp );
 
+    htonf(net->tuned_freq);
+    net->in_range = htonl(net->in_range);
     htonf(net->dist_nm);
     htonf(net->course_deviation_deg);
     htonf(net->gs_deviation_deg);
@@ -221,6 +241,8 @@ void FGNetGUI2Props( FGNetGUI *net ) {
     net->cur_time = ntohl(net->cur_time);
     net->warp = ntohl(net->warp);
 
+    htonf(net->tuned_freq);
+    net->in_range = htonl(net->in_range);
     htonf(net->dist_nm);
     htonf(net->course_deviation_deg);
     htonf(net->gs_deviation_deg);
@@ -254,6 +276,9 @@ void FGNetGUI2Props( FGNetGUI *net ) {
         globals->set_warp( net->warp );
 
         // Approach
+        fgSetDouble( "/radios/nav[0]/frequencies/selected-mhz",
+                     net->tuned_freq );
+        fgSetBool( "/radios/nav[0]/in-range", net->in_range );
         fgSetDouble( "/radios/dme/distance-nm", net->dist_nm );
         fgSetDouble( "/radios/nav[0]/heading-needle-deflection",
                      net->course_deviation_deg );
