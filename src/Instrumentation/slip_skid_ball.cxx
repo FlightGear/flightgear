@@ -19,22 +19,25 @@ SlipSkidBall::~SlipSkidBall ()
 void
 SlipSkidBall::init ()
 {
-    _y_accel_node = fgGetNode("/orientation/roll-rate-degps", true);
-    _z_accel_node = fgGetNode("/orientation/yaw-rate-degps", true);
+    _serviceable_node =
+        fgGetNode("/instrumentation/slip-skid-ball/serviceable", true);
+    _y_accel_node = fgGetNode("/accelerations/pilot/y-accel-fps_sec", true);
+    _z_accel_node = fgGetNode("/accelerations/pilot/z-accel-fps_sec", true);
     _out_node =
         fgGetNode("/instrumentation/slip-skid-ball/indicated-slip-skid", true);
 }
 
 void
-SlipSkidBall::update (double dt)
+SlipSkidBall::update (double delta_time_sec)
 {
-    double d = -_z_accel_node->getDoubleValue();
-    if (d < 60.0)               // originally 1 radian
-        d = 60.0;
-    double pos = _y_accel_node->getDoubleValue()/d;
-    pos = fgGetLowPass(_last_pos, pos, dt);
-    _last_pos = pos;
-    _out_node->setDoubleValue(pos);
+    if (_serviceable_node->getBoolValue()) {
+        double d = -_z_accel_node->getDoubleValue();
+        if (d < 1.0)
+            d = 1.0;
+        double pos = _y_accel_node->getDoubleValue() / d * 5.0;
+        pos = fgGetLowPass(_out_node->getDoubleValue(), pos, delta_time_sec);
+        _out_node->setDoubleValue(pos);
+    }
 }
 
 // end of slip_skid_ball.cxx

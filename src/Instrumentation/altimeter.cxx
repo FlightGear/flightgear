@@ -68,16 +68,6 @@ Altimeter::init ()
 }
 
 void
-Altimeter::bind ()
-{
-}
-
-void
-Altimeter::unbind ()
-{
-}
-
-void
 Altimeter::update (double dt)
 {
     if (_serviceable_node->getBoolValue()) {

@@ -12,6 +12,7 @@
 #include "slip_skid_ball.hxx"
 #include "heading_indicator.hxx"
 #include "vertical_speed_indicator.hxx"
+#include "mag_compass.hxx"
 
 
 FGInstrumentMgr::FGInstrumentMgr ()
@@ -23,6 +24,7 @@ FGInstrumentMgr::FGInstrumentMgr ()
     set_subsystem("ball", new SlipSkidBall);
     set_subsystem("hi", new HeadingIndicator);
     set_subsystem("vsi", new VerticalSpeedIndicator);
+    set_subsystem("compass", new MagCompass);
 }
 
 FGInstrumentMgr::~FGInstrumentMgr ()

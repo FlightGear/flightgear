@@ -35,17 +35,6 @@ AirspeedIndicator::init ()
                   true);
 }
 
-void
-AirspeedIndicator::bind ()
-{
-}
-
-void
-AirspeedIndicator::unbind ()
-{
-}
-
-
 #ifndef SEA_LEVEL_DENSITY_SLUGFG3
 # define SEA_LEVEL_DENSITY_SLUGFT3 0.002378
 #endif

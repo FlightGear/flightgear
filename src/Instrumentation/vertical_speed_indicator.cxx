@@ -33,16 +33,6 @@ VerticalSpeedIndicator::init ()
 }
 
 void
-VerticalSpeedIndicator::bind ()
-{
-}
-
-void
-VerticalSpeedIndicator::unbind ()
-{
-}
-
-void
 VerticalSpeedIndicator::update (double dt)
 {
                                 // model take from steam.cxx, with change

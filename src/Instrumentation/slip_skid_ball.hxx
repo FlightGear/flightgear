@@ -45,6 +45,7 @@ private:
     Gyro _gyro;
     double _last_pos;
 
+    SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _y_accel_node;
     SGPropertyNode_ptr _z_accel_node;
     SGPropertyNode_ptr _out_node;
