@@ -183,8 +183,7 @@ void FGAIPlane::ProcessCallback(int code) {
 // The repeating flag indicates whether the message should be repeated continuously or played once.
 void FGAIPlane::Render(string refname, bool repeating) {
 #ifdef ENABLE_AUDIO_SUPPORT
-	voice = (voiceOK && fgGetBool("/sim/sound/audible")
-                 && fgGetBool("/sim/sound/voice"));
+	voice = (voiceOK && fgGetBool("/sim/sound/voice"));
 	if(voice) {
 		int len;
 		unsigned char* buf = vPtr->WriteMessage((char*)pending_transmission.c_str(), len, voice);

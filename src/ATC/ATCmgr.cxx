@@ -117,9 +117,10 @@ void FGATCMgr::init() {
 	voiceOK = v1->LoadVoice("default");
 	voice = true;
 	
-	/* I've loaded the voice even if /sim/sound/audible is false
+	/* I've loaded the voice even if /sim/sound/pause is true
 	*  since I know no way of forcing load of the voice if the user
-	*  subsequently switches /sim/sound/audible to true. */
+	*  subsequently switches /sim/sound/audible to true.
+        *  (which is the right thing to do -- CLO) :-) */
 #else
 	voice = false;
 #endif
