@@ -43,14 +43,17 @@ include $(FG_ROOT_SRC)/commondefs
 # Rule for TARGET
 #---------------------------------------------------------------------------
 
-$(TARGET): $(OBJECTS) $(FG_ROOT_LIB)/stamp_libs
-	$(CC) -o $(TARGET) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
-	$(LN) -sf $(TARGET) fg$(FG_VERSION_MAJOR)
+$(TARGET)$(EXT): $(OBJECTS) $(FG_ROOT_LIB)/stamp_libs
+	$(CC) -o $(TARGET)$(EXT) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
+	$(LN) $(TARGET)$(EXT) fg$(FG_VERSION_MAJOR)$(EXT)
 
 include $(COMMONRULES)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.44  1998/01/22 22:04:00  curt
+# Tweaked extention stuff.
+#
 # Revision 1.43  1998/01/22 02:59:37  curt
 # Changed #ifdef FILE_H to #ifdef _FILE_H
 #
