@@ -37,6 +37,12 @@
 #include STL_STRING
 #include <vector>
 
+#include <GL/glut.h>
+
+#include <plib/pu.h>
+
+#include <simgear/compiler.h>
+
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/props.hxx>
@@ -59,9 +65,7 @@
 #  include <Weather/weather.hxx>
 #endif
 
-#include <Main/bfi.hxx>
 #include <Main/globals.hxx>
-#include <Main/keyboard.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/options.hxx>
 
@@ -322,76 +326,6 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
 // START SPECIALS
 
- 	case 256+GLUT_KEY_F1: {
- 	    ifstream input("fgfs.sav");
- 	    if (input.good() && fgLoadFlight(input)) {
-   	        input.close();
- 		SG_LOG(SG_INPUT, SG_INFO, "Restored flight from fgfs.sav");
- 	    } else {
- 	        SG_LOG(SG_INPUT, SG_ALERT, "Cannot load flight from fgfs.sav");
- 	    }
- 	    return;
- 	}
- 	case 256+GLUT_KEY_F2: {
- 	    SG_LOG(SG_INPUT, SG_INFO, "Saving flight");
- 	    ofstream output("fgfs.sav");
- 	    if (output.good() && fgSaveFlight(output)) {
- 		output.close();
- 		SG_LOG(SG_INPUT, SG_INFO, "Saved flight to fgfs.sav");
- 	    } else {
- 	        SG_LOG(SG_INPUT, SG_ALERT, "Cannot save flight to fgfs.sav");
- 	    }
- 	    return;
- 	}
-	case 256+GLUT_KEY_F3: {
-            string panel_path =
-                fgGetString("/sim/panel/path", "Panels/Default/default.xml");
-            FGPanel * new_panel = fgReadPanel(panel_path);
-            if (new_panel == 0) {
-                SG_LOG(SG_INPUT, SG_ALERT,
-                       "Error reading new panel from " << panel_path);
-                return;
-            }
-            SG_LOG(SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path);
-            current_panel->unbind();
-            delete current_panel;
-            current_panel = new_panel;
-	    current_panel->bind();
-            return;
-	}
-	case 256+GLUT_KEY_F4: {
-            SGPath props_path(globals->get_fg_root());
-            props_path.append("preferences.xml");
-            SG_LOG(SG_INPUT, SG_INFO, "Rereading global preferences");
-            if (!readProperties(props_path.str(), globals->get_props())) {
-                SG_LOG(SG_INPUT, SG_ALERT,
-                       "Failed to reread global preferences from "
-                       << props_path.str());
-            } else {
-                SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
-            }
-            return;
-	}
-	case 256+GLUT_KEY_F5: {
-            current_panel->setYOffset(current_panel->getYOffset() - 5);
-            fgReshape(fgGetInt("/sim/startup/xsize"),
-                      fgGetInt("/sim/startup/ysize"));
-            return;
-	}
-	case 256+GLUT_KEY_F6: {
-            current_panel->setYOffset(current_panel->getYOffset() + 5);
-            fgReshape(fgGetInt("/sim/startup/xsize"),
-                      fgGetInt("/sim/startup/ysize"));
-            return;
-	}
-	case 256+GLUT_KEY_F7: {
-            current_panel->setXOffset(current_panel->getXOffset() - 5);
-            return;
-	}
-	case 256+GLUT_KEY_F8: {
-            current_panel->setXOffset(current_panel->getXOffset() + 5);
-            return;
-	}
         case 256+GLUT_KEY_F10: {
             fgToggleFDMdataLogging();
             return;
@@ -809,6 +743,90 @@ FGInput::_find_key_bindings (unsigned int k, int modifiers)
 				// Give up and return the empty vector.
   else
     return b.bindings[modifiers];
+}
+
+
+/**
+ * Construct the modifiers.
+ */
+static inline int get_mods ()
+{
+  int glut_modifiers = glutGetModifiers();
+  int modifiers = 0;
+
+  if (glut_modifiers & GLUT_ACTIVE_SHIFT)
+    modifiers |= FGInput::FG_MOD_SHIFT;
+  if (glut_modifiers & GLUT_ACTIVE_CTRL)
+    modifiers |= FGInput::FG_MOD_CTRL;
+  if (glut_modifiers & GLUT_ACTIVE_ALT)
+    modifiers |= FGInput::FG_MOD_ALT;
+
+  return modifiers;
+}
+
+
+/**
+ * Key-down event handler for Glut.
+ *
+ * <p>Pass the value on to the FGInput module unless PUI wants it.</p>
+ *
+ * @param k The integer value for the key pressed.
+ * @param x (unused)
+ * @param y (unused)
+ */
+void GLUTkey(unsigned char k, int x, int y)
+{
+				// Give PUI a chance to grab it first.
+  if (!puKeyboard(k, PU_DOWN))
+    current_input.doKey(k, get_mods(), x, y);
+}
+
+
+/**
+ * Key-up event handler for GLUT.
+ *
+ * <p>PUI doesn't use this, so always pass it to the input manager.</p>
+ *
+ * @param k The integer value for the key pressed.
+ * @param x (unused)
+ * @param y (unused)
+ */
+void GLUTkeyup(unsigned char k, int x, int y)
+{
+  current_input.doKey(k, get_mods()|FGInput::FG_MOD_UP, x, y);
+}
+
+
+/**
+ * Special key-down handler for Glut.
+ *
+ * <p>Pass the value on to the FGInput module unless PUI wants it.
+ * The key value will have 256 added to it.</p>
+ *
+ * @param k The integer value for the key pressed (will have 256 added
+ * to it).
+ * @param x (unused)
+ * @param y (unused)
+ */
+void GLUTspecialkey(int k, int x, int y)
+{
+				// Give PUI a chance to grab it first.
+  if (!puKeyboard(k + PU_KEY_GLUT_SPECIAL_OFFSET, PU_DOWN))
+    current_input.doKey(k + 256, get_mods(), x, y);
+}
+
+
+/**
+ * Special key-up handler for Glut.
+ *
+ * @param k The integer value for the key pressed (will have 256 added
+ * to it).
+ * @param x (unused)
+ * @param y (unused)
+ */
+void GLUTspecialkeyup(int k, int x, int y)
+{
+  current_input.doKey(k + 256, get_mods()|FGInput::FG_MOD_UP, x, y);
 }
 
 // end of input.cxx
