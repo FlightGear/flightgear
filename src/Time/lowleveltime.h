@@ -64,9 +64,6 @@ typedef struct
     int computed_for;	/* Year above is computed for.  */
   } fgtz_rule;
 
-/* tz_rules[0] is standard, tz_rules[1] is daylight.  */
-static fgtz_rule fgtz_rules[2];
-
 struct tzhead {
  	char	tzh_magic[4];		/* TZ_MAGIC */
 	char	tzh_reserved[16];	/* reserved for future use */

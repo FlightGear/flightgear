@@ -124,6 +124,9 @@ void fgtzfile_read (const char *file);
 static void offtime (const time_t *t, long int offset, struct tm *tp);
 static char *tzstring (const char* string);
 
+/* tz_rules[0] is standard, tz_rules[1] is daylight.  */
+static fgtz_rule fgtz_rules[2];
+
 int fgtzfile_compute (time_t timer, int use_localtime,
 		  long int *leap_correct, int *leap_hit);
 struct ttinfo
