@@ -101,16 +101,9 @@
 #include "splash.hxx"
 #include "fg_commands.hxx"
 #include "fg_io.hxx"
-
-
-glPointParameterfProc glPointParameterfPtr = 0;
-glPointParameterfvProc glPointParameterfvPtr = 0;
-bool glPointParameterIsSupported = false;
+#include "main.hxx"
 
 float default_attenuation[3] = {1.0, 0.0, 0.0};
-//Required for using GL_extensions
-void fgLoadDCS (void);
-void fgUpdateDCS (void);
 ssgSelector *ship_sel=NULL;
 // upto 32 instances of a same object can be loaded.
 ssgTransform *ship_pos[32];
@@ -126,6 +119,10 @@ float scene_nearplane = 0.5f;
 float scene_farplane = 120000.0f;
 
 static double delta_time_sec = 0.0;
+
+glPointParameterfProc glPointParameterfPtr = 0;
+glPointParameterfvProc glPointParameterfvPtr = 0;
+bool glPointParameterIsSupported = false;
 
 
 #ifdef FG_WEATHERCM

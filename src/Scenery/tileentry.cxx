@@ -27,6 +27,9 @@
 
 #include <simgear/compiler.h>
 
+#include <Main/main.hxx>
+
+
 #include STL_STRING
 
 #include <simgear/bucket/newbucket.hxx>
@@ -448,28 +451,24 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 // Set up lights rendering call backs
 static int fgLightsPredraw( ssgEntity *e ) {
 #if 0
-#ifdef GL_EXT_point_parameters
-    if (glutExtensionSupported("GL_EXT_point_parameters")) {
+    if (glPointParameterIsSupported) {
         static float quadratic[3] = {1.0, 0.01, 0.0001};
         glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
         glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
         glPointSize(4.0);
     }
 #endif
-#endif
     return true;
 }
 
 static int fgLightsPostdraw( ssgEntity *e ) {
 #if 0
-#ifdef GL_EXT_point_parameters
-    if (glutExtensionSupported("GL_EXT_point_parameters")) {
+    if (glPointParameterIsSupported) {
         static float default_attenuation[3] = {1.0, 0.0, 0.0};
         glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
                               default_attenuation);
         glPointSize(1.0);
     }
-#endif
 #endif
     return true;
 }

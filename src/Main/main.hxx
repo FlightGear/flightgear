@@ -2,9 +2,14 @@
 #ifndef __FG_MAIN_HXX
 #define __FG_MAIN_HXX 1
 
-class SGSky;
+#include <simgear/screen/extensions.hxx>
 
+class SGSky;
 extern SGSky *thesky;
+
+extern glPointParameterfProc glPointParameterfPtr;
+extern glPointParameterfvProc glPointParameterfvPtr;
+extern bool glPointParameterIsSupported;
 
 void fgLoadDCS (void);
 void fgUpdateDCS (void);
@@ -14,8 +19,6 @@ void fgRenderFrame();
 void fgUpdateTimeDepCalcs();
 void fgInitTimeDepCalcs( void );
 void fgReshape( int width, int height );
-void fgLoadDCS(void);
-void fgUpdateDCS (void);
 
 bool fgMainInit( int argc, char **argv );
 
