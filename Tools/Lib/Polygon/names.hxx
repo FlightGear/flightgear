@@ -36,7 +36,7 @@ FG_USING_STD(string);
 // defines the priority of these shapes if they should intersect.  The
 // smaller the number, the higher the priority.
 enum AreaType {
-    DefaultArea       = 0,
+    SomeSortOfArea    = 0,
     AirportKeepArea   = 1,
     AirportIgnoreArea = 2,
     OceanArea         = 3,
@@ -49,6 +49,7 @@ enum AreaType {
     CanalArea         = 10,
     GlacierArea       = 11,
     MarshArea         = 12,
+    DefaultArea       = 13,
     VoidArea          = 9997,
     NullArea          = 9998,
     UnknownArea       = 9999

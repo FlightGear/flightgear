@@ -29,8 +29,8 @@
 
 // return area type from text name
 AreaType get_area_type( string area ) {
-    if ( area == "Default" ) {
-	return DefaultArea;
+    if ( area == "SomeSort" ) {
+	return SomeSortOfArea;
     } else if ( area == "AirportKeep" ) {
 	return AirportKeepArea;
     } else if ( area == "AirportIgnore" ) {
@@ -60,6 +60,8 @@ AreaType get_area_type( string area ) {
 	return CanalArea;
     } else if ( area == "Glacier" ) {
 	return GlacierArea;
+    } else if ( area == "Default" ) {
+	return DefaultArea;
     } else if ( area == "Void Area" ) {
 	return VoidArea;
     } else if ( area == "Null" ) {
