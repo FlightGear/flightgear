@@ -602,7 +602,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    last2 = n4;
 		    // printf("a normal, texcoord, and vertex (4th)\n");
 		}
-	    } else if ( token == "tf" ) {
+	    } else if ( (token == "tf") || (token == "ts") ) {
 		// triangle fan
 		// fgPrintf( FG_TERRAIN, FG_DEBUG, "new fan");
 
@@ -618,8 +618,12 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    in >> tex;
 		    fan_tex_coords.push_back( tex );
 		    if ( scenery_version >= 0.4 ) {
-			t->tclist[tex][0] *= (1000.0 / tex_width);
-			t->tclist[tex][1] *= (1000.0 / tex_height);
+			if ( tex_width > 0 ) {
+			    t->tclist[tex][0] *= (1000.0 / tex_width);
+			}
+			if ( tex_height > 0 ) {
+			    t->tclist[tex][1] *= (1000.0 / tex_height);
+			}
 		    }
 		    pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
 		    pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
@@ -637,8 +641,12 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    in >> tex;
 		    fan_tex_coords.push_back( tex );
 		    if ( scenery_version >= 0.4 ) {
-			t->tclist[tex][0] *= (1000.0 / tex_width);
-			t->tclist[tex][1] *= (1000.0 / tex_height);
+			if ( tex_width > 0 ) {
+			    t->tclist[tex][0] *= (1000.0 / tex_width);
+			}
+			if ( tex_height > 0 ) {
+			    t->tclist[tex][1] *= (1000.0 / tex_height);
+			}
 		    }
 		    pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
 		    pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
@@ -674,8 +682,12 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 			in >> tex;
 			fan_tex_coords.push_back( tex );
 			if ( scenery_version >= 0.4 ) {
-			    t->tclist[tex][0] *= (1000.0 / tex_width);
-			    t->tclist[tex][1] *= (1000.0 / tex_height);
+			    if ( tex_width > 0 ) {
+				t->tclist[tex][0] *= (1000.0 / tex_width);
+			    }
+			    if ( tex_height > 0 ) {
+				t->tclist[tex][1] *= (1000.0 / tex_height);
+			    }
 			}
 			pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
 			pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
@@ -703,12 +715,24 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		for ( i = 0; i < (int)fan_tex_coords.size(); ++i ) {
 		    tindex[i] = fan_tex_coords[i];
 		}
-		ssgLeaf *leaf = 
-		    new ssgVTable ( GL_TRIANGLE_FAN,
-				    fan_vertices.size(), vindex, t->vtlist,
-				    fan_vertices.size(), vindex, t->vnlist,
-				    fan_tex_coords.size(), tindex, t->tclist,
-				    0, NULL, NULL ) ;
+		ssgLeaf *leaf;
+		if ( token == "tf" ) {
+		    // triangle fan
+		    leaf = 
+			new ssgVTable ( GL_TRIANGLE_FAN,
+					fan_vertices.size(), vindex, t->vtlist,
+					fan_vertices.size(), vindex, t->vnlist,
+					fan_tex_coords.size(), tindex,t->tclist,
+					0, NULL, NULL ) ;
+		} else {
+		    // triangle strip
+		    leaf = 
+			new ssgVTable ( GL_TRIANGLE_STRIP,
+					fan_vertices.size(), vindex, t->vtlist,
+					fan_vertices.size(), vindex, t->vnlist,
+					fan_tex_coords.size(), tindex,t->tclist,
+					0, NULL, NULL ) ;
+		}
 		leaf->setState( state );
 
 		tile->addKid( leaf );
