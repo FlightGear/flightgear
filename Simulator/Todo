@@ -8,7 +8,7 @@
            back off of larcsim calcs, and consolate potentially
            redundant code
 
-12/29/97 - View frustum culling
+12/29/97 - Fine grain view frustum culling
 
 4/21/98 -  Tweak lighting parameter interpolation tables to better fit
            "perceived" reality
@@ -19,9 +19,6 @@
 4/14/98 -  Convert gl__() calls in Cockpit/ to xgl__() calls
 
 1/5/98 -   Create a development "roadmap"
-
-12/30/97 - fix winding problem with tri-strips in obj.c (wait for next
-           version of stripe)
 
 12/29/97 - Add a mechanism to parse command line options
     * (done) A simple clear-screen sky.

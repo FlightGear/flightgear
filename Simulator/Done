@@ -2,6 +2,11 @@
 | Done
 --------------------------------------------------------------------------
 
+5/20/98 -  fix winding problem with tri-strips in obj.c (wait for next
+           version of stripe)
+
+5/17/98 -  Course grain (tile based) view frustum culling
+
 5/6/98 -   HUD updates from Jeff Goeke-Smith.
 
 5/5/98 -   Added a visual frame rate counter on the HUD.
