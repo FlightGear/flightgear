@@ -2,6 +2,7 @@
 #include "sl.h"
 
 slScheduler *slScheduler::current = NULL ;
+char *__slPendingError = NULL ;
 
 void slScheduler::init ()
 {
@@ -121,6 +122,12 @@ void slScheduler::realUpdate ( int dump_first )
 
   if ( not_working () )
     return ;
+
+  if ( __slPendingError != NULL )
+  {
+      fprintf ( stderr, __slPendingError ) ;
+      exit ( 1 ) ;
+  }
 
   while ( secondsUsed() <= safety_margin )
   {
