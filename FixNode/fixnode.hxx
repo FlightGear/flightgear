@@ -40,10 +40,10 @@ using namespace std;
 #endif
 
 #include <DEM/dem.hxx>
-#include <Include/fg_types.h>
+#include <Math/point3d.hxx>
 
 
-typedef vector < fgPoint3d > container;
+typedef vector < Point3D > container;
 typedef container::iterator iterator;
 typedef container::const_iterator const_iterator;
 
@@ -52,7 +52,15 @@ typedef container::const_iterator const_iterator;
 void load_nodes(const string& basename, container& node_list);
 
 
-// load the node information
+// load the extra nodes.  These are always the first n nodes of the
+// .node file.  (???  These will be tagged with a code indicating what
+// needs to be done with this node's elevation such as adjust to local
+// DEM elevation, or massage the local DEM points to match this
+// elevation point. ???)
+void load_extra_nodes(const string& filename, container& node_list);
+
+
+// fix the node elevations
 void fix_nodes( const string& basename, fgDEM& dem, container& node_list );
 
 
@@ -60,6 +68,9 @@ void fix_nodes( const string& basename, fgDEM& dem, container& node_list );
 
 
 // $Log$
+// Revision 1.4  1998/10/20 15:49:23  curt
+// Converted to Point3D class.
+//
 // Revision 1.3  1998/09/19 20:43:53  curt
 // C++-ified and STL-ified the code.  Combined triload.* and fixnode.* into
 // a single file.

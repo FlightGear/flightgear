@@ -3,7 +3,7 @@
 //
 // Written by Curtis Olson, started November 1997.
 //
-// Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+// Copyright (C) 1997  Curtis L. Olson  - curt@me.umn.edu
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -36,16 +36,20 @@
 #include <Misc/fgstream.hxx>
 
 #include "fixnode.hxx"
-// #include "triload.hxx"
+
+
+// load extra nodes
+void load_extra(const string& filename, container& extra_list) {
+}
 
 
 // load the node information
 void load_nodes(const string& filename, container& node_list) {
-    fgPoint3d node;
+    Point3D node;
     int dim, junk1, junk2;
     int i, nodecount;
 
-    cout << "Loading node file:  " + filename + " ...\n";
+    cout << "Loading node file:  " << filename << " ...\n";
 
     fg_gzifstream in( filename );
     if ( !in ) {
@@ -64,7 +68,7 @@ void load_nodes(const string& filename, container& node_list) {
 
     in.eat_comments();
     while ( ! in.eof() ) {
-	in.stream() >> junk1 >> node.x >> node.y >> node.z >> junk2;
+	in.stream() >> junk1 >> node >> junk2;
 	in.eat_comments();
 	node_list.push_back(node);
     }
@@ -86,8 +90,9 @@ void fix_nodes( const string& filename, fgDEM& dem, container& node_list )
 	// printf("Current: %d %.2f %.2f %.2f\n", i, nodes[i][0],
 	//        nodes[i][1], nodes[i][2]);
 
-	(*current).z = 
-	    dem.interpolate_altitude( (*current).x, (*current).y );
+	(*current).setz( 
+			dem.interpolate_altitude( (*current).x(), 
+						  (*current).y() ) );
 
 	// printf("Fixed: %d %.2f %.2f %.2f\n", i, nodes[i][0],
 	//        nodes[i][1], nodes[i][2]);
@@ -107,7 +112,7 @@ void fix_nodes( const string& filename, fgDEM& dem, container& node_list )
     i = 1;
     for ( current = node_list.begin() ; current != last ; ++current ) {
 	fprintf( fd, "%d %.2f %.2f %.2f 0\n", i,
-		 (*current).x, (*current).y, (*current).z );
+		 (*current).x(), (*current).y(), (*current).z() );
 	++i;
     }
 
@@ -116,6 +121,9 @@ void fix_nodes( const string& filename, fgDEM& dem, container& node_list )
 
 
 // $Log$
+// Revision 1.6  1998/10/20 15:49:22  curt
+// Converted to Point3D class.
+//
 // Revision 1.5  1998/09/22 23:49:10  curt
 // eliminated a left over #include
 //
