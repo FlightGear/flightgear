@@ -258,6 +258,7 @@ void fgUpdateSunPos( void ) {
     v = &current_view;
 
     FG_LOG( FG_EVENT, FG_INFO, "  Updating Sun position" );
+    FG_LOG( FG_EVENT, FG_INFO, "  Gst = " << t->getGst() );
 
     fgSunPositionGST(t->getGst(), &l->sun_lon, &sun_gd_lat);
 

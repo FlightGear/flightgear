@@ -54,6 +54,7 @@
 #  include <Weather/weather.hxx>
 #endif
 
+#include "globals.hxx"
 #include "options.hxx"
 #include "save.hxx"
 #include "fg_init.hxx"
@@ -393,13 +394,12 @@ FGBFI::setTimeGMT (time_t time)
   current_options.set_time_offset_type(SG_TIME_GMT_ABSOLUTE);
   SGTime::cur_time_params->init( cur_fdm_state->get_Longitude(),
 				 cur_fdm_state->get_Latitude(),
-				 current_options.get_fg_root(),
-				 current_options.get_time_offset(),
-				 current_options.get_time_offset_type() );
+				 current_options.get_fg_root() );
   SGTime::cur_time_params->update( cur_fdm_state->get_Longitude(),
 				   cur_fdm_state->get_Latitude(),
 				   cur_fdm_state->get_Altitude()
-				   * FEET_TO_METER );
+				   * FEET_TO_METER,
+				   globals->get_warp() );
   needReinit();
 }
 

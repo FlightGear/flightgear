@@ -73,6 +73,7 @@
 #include <simgear/misc/fgpath.hxx>
 #include <simgear/sky/sky.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/timing/lowleveltime.h>
 
 #include <Include/general.hxx>
 
@@ -105,6 +106,7 @@
 #include "bfi.hxx"
 #include "fg_init.hxx"
 #include "fg_io.hxx"
+#include "globals.hxx"
 #include "keyboard.hxx"
 #include "options.hxx"
 #include "splash.hxx"
@@ -796,11 +798,16 @@ static void fgMainLoop( void ) {
 	   cur_fdm_state->get_Altitude() * FEET_TO_METER); */
 
     // update "time"
+    if ( globals->get_warp_delta() != 0 ) {
+	globals->inc_warp( globals->get_warp_delta() );
+    }
+
     t->update( cur_fdm_state->get_Longitude(),
 	       cur_fdm_state->get_Latitude(),
-	       cur_fdm_state->get_Altitude()* FEET_TO_METER );
+	       cur_fdm_state->get_Altitude()* FEET_TO_METER,
+	       globals->get_warp() );
 
-    if ( t->get_warp_delta() != 0 ) {
+    if ( globals->get_warp_delta() != 0 ) {
 	fgUpdateSkyAndLightingParams();
     }
 
@@ -1277,6 +1284,9 @@ int main( int argc, char **argv ) {
 
     aircraft_dir = ""; // Initialize the Aircraft directory to "" (UIUC)
 
+    // needs to happen before we parse command line options
+    globals = new FGGlobals;
+
     // Load the configuration parameters
     if ( !fgInitConfig(argc, argv) ) {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Config option parsing failed ..." );
@@ -1310,11 +1320,53 @@ int main( int argc, char **argv ) {
     // SGTime::cur_time_params->init( cur_fdm_state->get_Longitude(), 
     //                                cur_fdm_state->get_Latitude() );
     // SGTime::cur_time_params->update( cur_fdm_state->get_Longitude() );
-    SGTime::cur_time_params->init( 0.0, 0.0,
-				   current_options.get_fg_root(), 
-				   current_options.get_time_offset(),
-				   current_options.get_time_offset_type() );
-    SGTime::cur_time_params->update( 0.0, 0.0, 0.0 );
+    SGTime::cur_time_params->init( 0.0, 0.0, current_options.get_fg_root() );
+
+    // Handle user specified offsets
+    // current_options.get_time_offset(),
+    // current_options.get_time_offset_type() );
+
+    time_t cur_time = SGTime::cur_time_params->get_cur_time();
+    time_t currGMT = SGTime::cur_time_params->get_gmt( gmtime(&cur_time) );
+    time_t systemLocalTime = SGTime::cur_time_params->get_gmt( localtime(&cur_time) );
+    time_t aircraftLocalTime = SGTime::cur_time_params->get_gmt( fgLocaltime(&cur_time, SGTime::cur_time_params->get_zonename() ) );
+
+    // Okay, we now have six possible scenarios
+    switch ( current_options.get_time_offset_type() ) {
+    case SG_TIME_SYS_OFFSET:
+	globals->set_warp( current_options.get_time_offset() );
+	break;
+    case SG_TIME_GMT_OFFSET:
+	globals->set_warp( current_options.get_time_offset() - 
+			   (currGMT - systemLocalTime) );
+	break;
+    case SG_TIME_LAT_OFFSET:
+	globals->set_warp( current_options.get_time_offset() - 
+			   (aircraftLocalTime - systemLocalTime) );
+	break;
+    case SG_TIME_SYS_ABSOLUTE:
+	globals->set_warp( current_options.get_time_offset() - cur_time );
+	//printf("warp = %d\n", warp); 
+	break;
+    case SG_TIME_GMT_ABSOLUTE:
+	globals->set_warp( current_options.get_time_offset() - currGMT );
+	break;
+    case SG_TIME_LAT_ABSOLUTE:
+	globals->set_warp( current_options.get_time_offset() - 
+			   (aircraftLocalTime - systemLocalTime) - 
+			   cur_time ); 
+	break;
+    default:
+	FG_LOG( FG_GENERAL, FG_ALERT, "Unsupported type" );
+	exit( -1 );
+    }
+
+    FG_LOG( FG_GENERAL, FG_INFO, "After time init, warp = " 
+	    << globals->get_warp() );
+
+    globals->set_warp_delta( 0 );
+
+    SGTime::cur_time_params->update( 0.0, 0.0, 0.0, globals->get_warp() );
 
     // Do some quick general initializations
     if( !fgInitGeneral()) {

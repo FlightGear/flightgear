@@ -245,7 +245,6 @@ bool fgInitGeneral( void ) {
 // Returns non-zero if a problem encountered.
 bool fgInitSubsystems( void ) {
     fgLIGHT *l = &cur_light_params;
-    SGTime *t = SGTime::cur_time_params;
 
     FG_LOG( FG_GENERAL, FG_INFO, "Initialize Subsystems");
     FG_LOG( FG_GENERAL, FG_INFO, "========== ==========");

@@ -36,6 +36,7 @@ fgfs_SOURCES = \
 	bfi.cxx bfi.hxx \
 	fg_init.cxx fg_init.hxx \
 	fg_io.cxx fg_io.hxx \
+	globals.cxx globals.hxx \
 	keyboard.cxx keyboard.hxx \
 	options.cxx options.hxx \
 	save.cxx save.hxx \

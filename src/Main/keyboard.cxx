@@ -67,6 +67,7 @@
 #endif
 
 #include "bfi.hxx"
+#include "globals.hxx"
 #include "keyboard.hxx"
 #include "options.hxx"
 #include "save.hxx"
@@ -194,14 +195,14 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    fgHUDInit2(&current_aircraft);
 	    return;
 	case 77: // M key
-	    t->adjust_warp(-60);
+	    globals->inc_warp( -60 );
 	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 80: // P key
 	    current_options.toggle_panel();
 	    break;
 	case 84: // T key
-	    t->adjust_warp_delta(-30);
+	    globals->inc_warp_delta( -30 );
 	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 87: // W key
@@ -339,7 +340,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    fgHUDInit(&current_aircraft);  // normal HUD
 	    return;
 	case 109: // m key
-	    t->adjust_warp (+60);
+	    globals->inc_warp( 60 );
 	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 112: // p key
@@ -367,7 +368,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    }
 	    return;
 	case 116: // t key
-	    t->adjust_warp_delta (+30);
+	    globals->inc_warp_delta( 30 );
 	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 118: // v key
