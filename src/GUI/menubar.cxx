@@ -210,39 +210,7 @@ FGMenuBar::FGMenuBar ()
 
 FGMenuBar::~FGMenuBar ()
 {
-    hide();
-    puDeleteObject(_menuBar);
-
-    unsigned int i;
-
-                                // Delete all the character arrays
-                                // we were forced to keep around for
-                                // plib.
-    SG_LOG(SG_GENERAL, SG_INFO, "Deleting char arrays");
-    for (i = 0; i < _char_arrays.size(); i++) {
-        for (int j = 0; _char_arrays[i][j] != 0; j++)
-            free(_char_arrays[i][j]); // added with strdup
-        delete[] _char_arrays[i];
-    }
-
-                                // Delete all the callback arrays
-                                // we were forced to keep around for
-                                // plib.
-    SG_LOG(SG_GENERAL, SG_INFO, "Deleting callback arrays");
-    for (i = 0; i < _callback_arrays.size(); i++)
-        delete[] _callback_arrays[i];
-
-                                // Delete all those bindings
-    SG_LOG(SG_GENERAL, SG_INFO, "Deleting bindings");
-    map<string,vector<FGBinding *> >::iterator it;
-    it = _bindings.begin();
-    for (it = _bindings.begin(); it != _bindings.end(); it++) {
-        SG_LOG(SG_GENERAL, SG_INFO, "Deleting bindings for " << it->first);
-        for ( i = 0; i < it->second.size(); i++ )
-            delete it->second[i];
-    }
-
-    SG_LOG(SG_GENERAL, SG_INFO, "Done.");
+    destroy_menubar();
 }
 
 void
@@ -323,11 +291,43 @@ FGMenuBar::make_menu (SGPropertyNode * node)
 void
 FGMenuBar::make_menubar ()
 {
-    _menuBar = new puMenuBar;
-    SGPropertyNode props;
+    SGPropertyNode *targetpath;
+   
+    targetpath = fgGetNode("/sim/menubar/default",true);
+    // fgLoadProps("gui/menubar.xml", targetpath);
+    
+    /* NOTE: there is no check to see whether there's any usable data at all
+     *
+     * This would also have the advantage of being able to create some kind of
+     * 'fallback' menu - just in case that either menubar.xml is empty OR that
+     * its XML data is not valid, that way we would avoid displaying an
+     * unusable menubar without any functionality - if we decided to add another
+     * char * element to the commands structure in
+     *  $FG_SRC/src/Main/fgcommands.cxx 
+     * we could additionally save each function's (short) description and use
+     * this as label for the fallback PUI menubar item labels - as a workaround
+     * one might simply use the internal fgcommands and put them into the 
+     * fallback menu, so that the user is at least able to re-init the menu
+     * loading - just in case there was some malformed XML in it
+     * (it happend to me ...)
+     */
+    
+    make_menubar(targetpath);
+}
 
-    fgLoadProps("gui/menubar.xml", &props);
-    vector<SGPropertyNode_ptr> menu_nodes = props.getChildren("menu");
+/* WARNING: We aren't yet doing any validation of what's found - but since
+ * this isn't done with menubar.xml either, it should not really matter
+ * right now. Although one should later on consider to validate the
+ * contents, whether they are representing a 'legal' menubar structure.
+ */
+void
+FGMenuBar::make_menubar(const SGPropertyNode * props) 
+{    
+    // Just in case.
+    destroy_menubar();
+    _menuBar = new puMenuBar;
+
+    vector<SGPropertyNode_ptr> menu_nodes = props->getChildren("menu");
     for (unsigned int i = 0; i < menu_nodes.size(); i++)
         make_menu(menu_nodes[i]);
 
@@ -337,6 +337,48 @@ FGMenuBar::make_menubar ()
     else
         _menuBar->hide();
 }
+
+void
+FGMenuBar::destroy_menubar ()
+{
+    if ( _menuBar == 0 )
+        return;
+
+    hide();
+    puDeleteObject(_menuBar);
+
+    unsigned int i;
+
+                                // Delete all the character arrays
+                                // we were forced to keep around for
+                                // plib.
+    SG_LOG(SG_GENERAL, SG_INFO, "Deleting char arrays");
+    for (i = 0; i < _char_arrays.size(); i++) {
+        for (int j = 0; _char_arrays[i][j] != 0; j++)
+            free(_char_arrays[i][j]); // added with strdup
+        delete[] _char_arrays[i];
+    }
+
+                                // Delete all the callback arrays
+                                // we were forced to keep around for
+                                // plib.
+    SG_LOG(SG_GENERAL, SG_INFO, "Deleting callback arrays");
+    for (i = 0; i < _callback_arrays.size(); i++)
+        delete[] _callback_arrays[i];
+
+                                // Delete all those bindings
+    SG_LOG(SG_GENERAL, SG_INFO, "Deleting bindings");
+    map<string,vector<FGBinding *> >::iterator it;
+    it = _bindings.begin();
+    for (it = _bindings.begin(); it != _bindings.end(); it++) {
+        SG_LOG(SG_GENERAL, SG_INFO, "Deleting bindings for " << it->first);
+        for ( i = 0; i < it->second.size(); i++ )
+            delete it->second[i];
+    }
+
+    SG_LOG(SG_GENERAL, SG_INFO, "Done.");
+}
+
 
 char **
 FGMenuBar::make_char_array (int size)

@@ -54,7 +54,6 @@ public:
      * Initialize the menu bar from $FG_ROOT/gui/menubar.xml
      */
     virtual void init ();
-
     
     /**
      * Make the menu bar visible.
@@ -83,6 +82,18 @@ public:
      * callback to pass the menu item one-shot on to the current menu.
      */
     virtual void fireItem (puObject * item);
+
+
+    /**
+     * create a menubar based on a PropertyList within the PropertyTree
+     */
+    void make_menubar (const SGPropertyNode * props);
+
+
+    /**
+     * destroy a menubar based on a PropertyList within the PropertyTree
+     */
+    void destroy_menubar ();
 
 
 private:
