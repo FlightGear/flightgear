@@ -357,7 +357,20 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
   int modifiers = FG_MOD_NONE;	// FIXME: any way to get the real ones?
 
   mouse &m = _mouse_bindings[0];
+  mouse_mode &mode = m.modes[m.current_mode];
 
+				// Pass on to PUI and the panel if
+				// requested, and return if one of
+				// them consumes the event.
+  if (mode.pass_through) {
+    if (puMouse(b, updown, x, y))
+      return;
+    else if ((current_panel != 0) &&
+	     current_panel->doMouseAction(b, updown, x, y))
+      return;
+  }
+
+				// OK, PUI and the panel didn't want the click
   if (b >= MAX_MOUSE_BUTTONS) {
     SG_LOG(SG_INPUT, SG_ALERT, "Mouse button " << b
 	   << " where only " << MAX_MOUSE_BUTTONS << " expected");
@@ -378,6 +391,14 @@ FGInput::doMouseMotion (int x, int y)
   if (m.current_mode < 0 || m.current_mode >= m.nModes)
     return;
   mouse_mode &mode = m.modes[m.current_mode];
+
+				// Pass on to PUI if requested, and return
+				// if PUI consumed the event.
+  if (mode.pass_through && puMouse(x, y))
+    return;
+
+				// OK, PUI didn't want the event,
+				// so we can play with it.
   if (x != m.x) {
     int delta = x - m.x;
     for (int i = 0; i < mode.x_bindings[modifiers].size(); i++)
@@ -611,6 +632,7 @@ FGInput::_init_mouse ()
 
 				// Read other properties for this mode
       m.modes[j].constrained = mode_node->getBoolValue("constrained", false);
+      m.modes[j].pass_through = mode_node->getBoolValue("pass-through", false);
 
 				// Read the button bindings for this mode
       m.modes[j].buttons = new button[MAX_MOUSE_BUTTONS];
@@ -889,6 +911,7 @@ FGInput::joystick::~joystick ()
 FGInput::mouse_mode::mouse_mode ()
   : cursor(GLUT_CURSOR_INHERIT),
     constrained(false),
+    pass_through(false),
     buttons(0)
 {
 }

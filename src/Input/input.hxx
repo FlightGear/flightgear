@@ -302,6 +302,7 @@ private:
     virtual ~mouse_mode ();
     int cursor;
     bool constrained;
+    bool pass_through;
     button * buttons;
     binding_list_t x_bindings[FG_MOD_MAX];
     binding_list_t y_bindings[FG_MOD_MAX];
