@@ -21,6 +21,10 @@
 //
 // $Id$
 
+#ifdef _MSC_VER
+#pragma warning (disable: 4786)
+#endif
+
 #include <simgear/misc/props.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
