@@ -27,6 +27,7 @@
 #include <Include/compiler.h>
 
 #include <Debug/logstream.hxx>
+#include <Misc/fgpath.hxx>
 #include <Misc/fgstream.hxx>
 #include <Main/options.hxx>
 
@@ -46,13 +47,15 @@ int fgAIRPORTS::load( const string& file ) {
     fgAIRPORT a;
 
     // build the path name to the airport file
-    string path = current_options.get_fg_root() + "/Airports/" + file;
+    FGPath path( current_options.get_fg_root() );
+    path.append( "Airports" );
+    path.append( file );
 
     airports.erase( airports.begin(), airports.end() );
 
-    fg_gzifstream in( path );
-    if ( !in ) {
-	FG_LOG( FG_GENERAL, FG_ALERT, "Cannot open file: " << path );
+    fg_gzifstream in( path.str() );
+    if ( !in.is_open() ) {
+	FG_LOG( FG_GENERAL, FG_ALERT, "Cannot open file: " << path.str() );
 	exit(-1);
     }
 
@@ -65,13 +68,28 @@ int fgAIRPORTS::load( const string& file ) {
     */
 
     // read in each line of the file
+
+#ifdef __MWERKS__
+
     in >> skipcomment;
-    while ( ! in.eof() )
-    {
+    char c = 0;
+    while ( in.get(c) && c != '\0' ) {
+	in.putback(c);
 	in >> a;
 	airports.insert(a);
 	in >> skipcomment;
     }
+
+#else
+
+    in >> skipcomment;
+    while ( ! in.eof() ) {
+	in >> a;
+	airports.insert(a);
+	in >> skipcomment;
+    }
+
+#endif
 
     return 1;
 }

@@ -614,6 +614,7 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 
 	sgMultMat4( sgLARC_TO_SSG, mat1, mat2 );
 
+	/*
 	cout << "LaRCsim to SSG:" << endl;
 	MAT3mat print;
 	int i;
@@ -624,6 +625,7 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 	    }
 	}
 	MAT3print( print, stdout);
+	*/
 
 	// code to calculate LOCAL matrix calculated from Phi, Theta, and
 	// Psi (roll, pitch, yaw) in case we aren't running LaRCsim as our
@@ -736,13 +738,14 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 
     // Calculate the VIEW matrix
     MAT3mult(VIEW, LOCAL, UP);
-    cout << "VIEW matrix" << endl;;
-    MAT3print(VIEW, stdout);
+    // cout << "VIEW matrix" << endl;;
+    // MAT3print(VIEW, stdout);
 
     sgMat4 sgTMP;
     sgMultMat4( sgTMP, sgLOCAL, sgUP );
     sgMultMat4( sgVIEW, sgLARC_TO_SSG, sgTMP );
 
+    /*
     cout << "FG derived VIEW matrix using sg routines" << endl;
     MAT3mat print;
     int i;
@@ -753,6 +756,7 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 	}
     }
     MAT3print( print, stdout);
+    */
 
 
     // generate the current up, forward, and fwrd-view vectors

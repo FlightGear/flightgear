@@ -395,7 +395,6 @@ static void fgRenderFrame( void ) {
 	xglEnable( GL_FOG );
 
 	// ssg test
-	cout << "trying to draw ssg scene" << endl;
 
 	xglMatrixMode(GL_PROJECTION);
 	xglLoadIdentity();
@@ -1067,8 +1066,8 @@ int main( int argc, char **argv ) {
     // distribution) specifically from the ssg tux example
     //
 
-    ssgModelPath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
-    ssgTexturePath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgModelPath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgTexturePath( "/stage/pinky01/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
 
     scene = new ssgRoot;
     penguin = new ssgTransform;
