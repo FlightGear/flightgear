@@ -672,7 +672,12 @@ int fgOPTIONS::parse_config_file( const string& path ) {
     while ( !in.eof() )
     {
 	string line;
+
+#ifdef GETLINE_NEEDS_TERMINATOR
+	getline( in, line, '\n' );
+#else
 	getline( in, line );
+#endif
 
 	if ( parse_option( line ) == FG_OPTIONS_ERROR ) {
 	    FG_LOG( FG_GENERAL, FG_ALERT, 
