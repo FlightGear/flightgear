@@ -3,7 +3,7 @@
  *
  * Written by Michele America, started September 1997.
  *
- * Copyright (C) 1997  Michele F. America  - nomimarketing@mail.telepac.pt
+ * Copyright (C) 1997  Michele F. America  - micheleamerica@geocities.com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -136,7 +136,7 @@ double get_heading( void )
 	fgFLIGHT *f;
 
 	f = current_aircraft.flight;
-	return( FG_Psi*RAD_TO_DEG );
+	return( FG_Psi * RAD_TO_DEG );
 }
 
 double get_altitude( void )
@@ -202,84 +202,67 @@ static void drawscale( HUD_scale * pscale )
   double vmin, vmax;
   int marker_x;
   int marker_y;
-  int scr_span;
-  int mid_scr;
   register i;
-  double factor;
   char TextScale[80];
   int condition;
   double cur_value = (*(pscale->load_value))();
+  int disp_val;
 
-  vmin = cur_value - pscale->width_units / 2.0; // width units == needle travel
-  vmax = cur_value + pscale->width_units / 2.0; // or picture unit span.
+  vmin = cur_value - pscale->half_width_units; // width units == needle travel
+  vmax = cur_value + pscale->half_width_units; // or picture unit span.
 
-  scr_span = pscale->scr_max - pscale->scr_min; // Run of scan in pix coord
-  scr_span |= 1;  // If span is odd number of units, mid will be correct.
-                  // If not it will be high by one coordinate unit. This is
-                  // an artifact of integer division needed for screen loc's.
-
-  mid_scr  = (scr_span >> 1) + pscale->scr_min; // Middle is half that +
-                                                // starting point.
-
-             // Calculate the number of screen units per indicator unit
-             // We must force floating point calculation or the factor
-             // will be low and miss locate tics by several units.
-
-  factor   = (double)scr_span / (double)pscale->width_units;
-
-             // Separate calculations for location of markings by scale
-             // type V vs H.
 
   if( pscale->type == VERTICAL )     // Vertical scale
     {
+      drawOneLine( pscale->scrn_pos.right,    // Vertical scale bar
+                   pscale->scrn_pos.bottom,
+                   pscale->scrn_pos.right,
+                   pscale->scrn_pos.top );
 
     if( pscale->orientation == LEFT )     // Calculate x marker offset
-      marker_x = pscale->scr_pos-6;
+      marker_x = pscale->scrn_pos.left - 6;
     else
       if( pscale->orientation == RIGHT )
-        marker_x = pscale->scr_pos;
+        marker_x = pscale->scrn_pos.right;
 
     // Draw the basic markings for the scale...
 
-    drawOneLine( pscale->scr_pos,         // Vertical bar
-                 pscale->scr_min,
-                 pscale->scr_pos,
-                 pscale->scr_max );
     if( pscale->orientation == LEFT )
       {
-      drawOneLine( pscale->scr_pos-3,     // Bottom tick bar
-                   pscale->scr_min,
-                   pscale->scr_pos,
-                   pscale->scr_min );
 
-      drawOneLine( pscale->scr_pos-3,     // Top tick bar
-                   pscale->scr_max,
-                   pscale->scr_pos,
-                   pscale->scr_max );
+      drawOneLine( pscale->scrn_pos.right - 3,     // Bottom tick bar
+                   pscale->scrn_pos.bottom,
+                   pscale->scrn_pos.right,
+                   pscale->scrn_pos.bottom );
 
-      drawOneLine( pscale->scr_pos,       // Middle tick bar /Index
-                   mid_scr,
-                   pscale->scr_pos+6,
-                   mid_scr );
+      drawOneLine( pscale->scrn_pos.right - 3,     // Top tick bar
+                   pscale->scrn_pos.top,
+                   pscale->scrn_pos.right,
+                   pscale->scrn_pos.top );
+
+      drawOneLine( pscale->scrn_pos.right,       // Middle tick bar /Index
+                   pscale->mid_scr,
+                   pscale->scrn_pos.right + 6,
+                   pscale->mid_scr );
 
       }
     else
       if( pscale->orientation == RIGHT )
         {
-        drawOneLine( pscale->scr_pos,
-                     pscale->scr_min,
-                     pscale->scr_pos+3,
-                     pscale->scr_min );
+        drawOneLine( pscale->scrn_pos.right,
+                     pscale->scrn_pos.bottom,
+                     pscale->scrn_pos.right+3,
+                     pscale->scrn_pos.bottom );
 
-        drawOneLine( pscale->scr_pos,
-                     pscale->scr_max,
-                     pscale->scr_pos+3,
-                     pscale->scr_max );
+        drawOneLine( pscale->scrn_pos.right,
+                     pscale->scrn_pos.top,
+                     pscale->scrn_pos.right+3,
+                     pscale->scrn_pos.top );
 
-        drawOneLine( pscale->scr_pos,
-                     mid_scr,
-                     pscale->scr_pos-6,
-                     mid_scr );
+        drawOneLine( pscale->scrn_pos.right,
+                     pscale->mid_scr,
+                     pscale->scrn_pos.right-6,
+                     pscale->mid_scr );
         }
 
     // Work through from bottom to top of scale. Calculating where to put
@@ -298,12 +281,12 @@ static void drawscale( HUD_scale * pscale )
       if( condition )   // Show a tick if necessary
         {
         // Calculate the location of this tick
-        marker_y = pscale->scr_min + (i - vmin) * factor;
+        marker_y = pscale->scrn_pos.bottom + (i - vmin) * pscale->factor;
 
         // Block calculation artifact from drawing ticks below min coordinate.
         // Calculation here accounts for text height.
 
-        if( marker_y < (pscale->scr_min + 4)) {  // Magic number!!!
+        if( marker_y < (pscale->scrn_pos.bottom + 4)) {  // Magic number!!!
           continue;
           }
         if( (i%pscale->div_min) == 0) {
@@ -321,7 +304,19 @@ static void drawscale( HUD_scale * pscale )
         if( (i%pscale->div_max) == 0 )            {
           drawOneLine( marker_x,     marker_y,
                        marker_x + 6, marker_y );
-          sprintf( TextScale, "%d", i );
+          if(pscale->modulo) {
+            disp_val = i % pscale->modulo;
+            if( !disp_val ) {
+              disp_val = pscale->modulo;
+              }
+            if( disp_val < 0) {
+              disp_val += pscale->modulo;
+              }
+            }
+          else {
+            disp_val = i;
+            }
+          sprintf( TextScale, "%d", disp_val );
           if( pscale->orientation == LEFT )              {
             textString( marker_x -  8 * strlen(TextScale) - 2, marker_y - 4,
                         TextScale, GLUT_BITMAP_8_BY_13 );
@@ -339,52 +334,53 @@ static void drawscale( HUD_scale * pscale )
   if( pscale->type == HORIZONTAL )     // Horizontal scale
     {
     if( pscale->orientation == TOP ) {
-      marker_y = pscale->scr_pos;
+      marker_y = pscale->scrn_pos.bottom;
       }
     else {
       if( pscale->orientation == BOTTOM ) {
-        marker_y = pscale->scr_pos - 6;
+        marker_y = pscale->scrn_pos.bottom - 6;
         }
       }
-    drawOneLine( pscale->scr_min,
-                 pscale->scr_pos,
-                 pscale->scr_max,
-                 pscale->scr_pos );
+    drawOneLine( pscale->scrn_pos.left,
+                 pscale->scrn_pos.bottom,
+                 pscale->scrn_pos.right,
+                 pscale->scrn_pos.bottom );
+
     if( pscale->orientation == TOP )
       {
-      drawOneLine( pscale->scr_min,
-                   pscale->scr_pos,
-                   pscale->scr_min,
-                   pscale->scr_pos-3 );
+      drawOneLine( pscale->scrn_pos.left,
+                   pscale->scrn_pos.bottom,
+                   pscale->scrn_pos.left,
+                   pscale->scrn_pos.bottom + 3 );
 
-      drawOneLine( pscale->scr_max,
-                   pscale->scr_pos,
-                   pscale->scr_max,
-                   pscale->scr_pos-3 );
+      drawOneLine( pscale->scrn_pos.right,
+                   pscale->scrn_pos.bottom,
+                   pscale->scrn_pos.right,
+                   pscale->scrn_pos.bottom + 6 );
 
-      drawOneLine( mid_scr,
-                   pscale->scr_pos,
-                   mid_scr,
-                   pscale->scr_pos-6 );
+      drawOneLine( pscale->mid_scr,
+                   pscale->scrn_pos.bottom,
+                   pscale->mid_scr,
+                   pscale->scrn_pos.bottom - 6 );
 
       }
     else {
       if( pscale->orientation == BOTTOM )
         {
-        drawOneLine( pscale->scr_min,
-                     pscale->scr_pos,
-                     pscale->scr_min,
-                     pscale->scr_pos+3 );
+        drawOneLine( pscale->scrn_pos.left,
+                     pscale->scrn_pos.bottom,
+                     pscale->scrn_pos.left,
+                     pscale->scrn_pos.bottom - 6 );
 
-        drawOneLine( pscale->scr_max,
-                     pscale->scr_pos,
-                     pscale->scr_max,
-                     pscale->scr_pos+3 );
+        drawOneLine( pscale->scrn_pos.right,
+                     pscale->scrn_pos.bottom,
+                     pscale->scrn_pos.right,
+                     pscale->scrn_pos.bottom - 6 );
 
-        drawOneLine( mid_scr,
-                     pscale->scr_pos,
-                     mid_scr,
-                     pscale->scr_pos+6 );
+        drawOneLine( pscale->mid_scr,
+                     pscale->scrn_pos.bottom,
+                     pscale->mid_scr,
+                     pscale->scrn_pos.bottom + 6 );
         }
       }
 
@@ -399,33 +395,45 @@ static void drawscale( HUD_scale * pscale )
           }
         }
       if( condition )        {
-        marker_x = pscale->scr_min+(i-vmin)*factor;
-        if( i%pscale->div_min==0 ) {
+        marker_x = pscale->scrn_pos.left + (i - vmin) * pscale->factor;
+        if( (i%pscale->div_min) == 0 ) {
           if( pscale->orientation == TOP )
             {
-            drawOneLine( marker_x, marker_y, marker_x, marker_y+3 );
+            drawOneLine( marker_x, marker_y, marker_x, marker_y + 3 );
             }
           else {
             if( pscale->orientation == BOTTOM )
               {
-              drawOneLine( marker_x, marker_y+3, marker_x, marker_y+6 );
+              drawOneLine( marker_x, marker_y + 3, marker_x, marker_y + 6 );
               }
             }
           }
-        if( i%pscale->div_max==0 )
+        if( (i%pscale->div_max)==0 )
           {
-          sprintf( TextScale, "%d", i );
+          if(pscale->modulo) {
+            disp_val = i % pscale->modulo;
+            if( !disp_val ) {
+              disp_val = pscale->modulo;
+              }
+            if( disp_val < 0) {
+              disp_val += pscale->modulo;
+              }
+            }
+          else {
+            disp_val = i;
+            }
+            sprintf( TextScale, "%d", disp_val );
           if( pscale->orientation == TOP )
             {
             drawOneLine( marker_x, marker_y, marker_x, marker_y+6 );
-            textString ( marker_x-4*strlen(TextScale), marker_y+14,
+            textString ( marker_x - 4 * strlen(TextScale), marker_y + 14,
                          TextScale, GLUT_BITMAP_8_BY_13 );
             }
           else {
             if( pscale->orientation == BOTTOM )
               {
               drawOneLine( marker_x, marker_y, marker_x, marker_y+6 );
-              textString ( marker_x+10, marker_y-4,
+              textString ( marker_x - 4 * strlen(TextScale), marker_y - 14,
                            TextScale, GLUT_BITMAP_8_BY_13 );
               }
             }
@@ -464,14 +472,14 @@ static void drawladder( HUD_ladder *ladder )
   vmin = pitch_value - ladder->width_units/2;
   vmax = pitch_value + ladder->width_units/2;
 
-  scr_min = ladder->y_pos - (ladder->scr_height/2);
+  scr_min = ladder->scrn_pos.y - (ladder->scr_height/2);
   scr_max = scr_min       + ladder->scr_height;
 
 #ifdef DEBUGHUD
   mid_scr = scr_min       + (scr_max-scr_min)/2;
 #endif
 
-  marker_x = ladder->x_pos - ladder->scr_width/2;
+  marker_x = ladder->scrn_pos.x - ladder->scr_width/2;
 
   factor = (scr_max-scr_min)/ladder->width_units;
 
@@ -487,26 +495,26 @@ static void drawladder( HUD_ladder *ladder )
         if( ladder->scr_hole == 0 )
           {
           if( i ) {
-            x_ini = ladder->x_pos - ladder->scr_width/2;
+            x_ini = ladder->scrn_pos.x - ladder->scr_width/2;
             }
           else {
-            x_ini = ladder->x_pos - ladder->scr_width/2 - 10;
+            x_ini = ladder->scrn_pos.x - ladder->scr_width/2 - 10;
             }
           y_ini = marker_y;
-          x_end = ladder->x_pos + ladder->scr_width/2;
+          x_end = ladder->scrn_pos.x + ladder->scr_width/2;
           y_end = marker_y;
-          new_x_ini = ladder->x_pos +                             \
-                      (x_ini - ladder->x_pos) * cos(roll_value) - \
-                      (y_ini - ladder->y_pos) * sin(roll_value);
-          new_y_ini = ladder->y_pos +                             \
-                      (x_ini - ladder->x_pos) * sin(roll_value) + \
-                      (y_ini - ladder->y_pos) * cos(roll_value);
-          new_x_end = ladder->x_pos +                             \
-                      (x_end - ladder->x_pos) * cos(roll_value) - \
-                      (y_end - ladder->y_pos) * sin(roll_value);
-          new_y_end = ladder->y_pos +                             \
-                      (x_end - ladder->x_pos) * sin(roll_value) + \
-                      (y_end - ladder->y_pos) * cos(roll_value);
+          new_x_ini = ladder->scrn_pos.x +                             \
+                      (x_ini - ladder->scrn_pos.x) * cos(roll_value) - \
+                      (y_ini - ladder->scrn_pos.y) * sin(roll_value);
+          new_y_ini = ladder->scrn_pos.y +                             \
+                      (x_ini - ladder->scrn_pos.x) * sin(roll_value) + \
+                      (y_ini - ladder->scrn_pos.y) * cos(roll_value);
+          new_x_end = ladder->scrn_pos.x +                             \
+                      (x_end - ladder->scrn_pos.x) * cos(roll_value) - \
+                      (y_end - ladder->scrn_pos.y) * sin(roll_value);
+          new_y_end = ladder->scrn_pos.y +                             \
+                      (x_end - ladder->scrn_pos.x) * sin(roll_value) + \
+                      (y_end - ladder->scrn_pos.y) * cos(roll_value);
 
           if( i >= 0 )
             {
@@ -529,26 +537,26 @@ static void drawladder( HUD_ladder *ladder )
         else
           {
           if( i != 0 )  {
-            x_ini = ladder->x_pos - ladder->scr_width/2;
+            x_ini = ladder->scrn_pos.x - ladder->scr_width/2;
             }
           else          {
-            x_ini = ladder->x_pos - ladder->scr_width/2 - 10;
+            x_ini = ladder->scrn_pos.x - ladder->scr_width/2 - 10;
             }
           y_ini = marker_y;
-          x_end = ladder->x_pos - ladder->scr_width/2 + ladder->scr_hole/2;
+          x_end = ladder->scrn_pos.x - ladder->scr_width/2 + ladder->scr_hole/2;
           y_end = marker_y;
-          new_x_ini = ladder->x_pos+                             \
-                      (x_ini - ladder->x_pos) * cos(roll_value) -\
-                      (y_ini - ladder->y_pos) * sin(roll_value);
-          new_y_ini = ladder->y_pos+                             \
-                      (x_ini - ladder->x_pos) * sin(roll_value) +\
-                      (y_ini - ladder->y_pos) * cos(roll_value);
-          new_x_end = ladder->x_pos+                             \
-                      (x_end - ladder->x_pos) * cos(roll_value) -\
-                      (y_end - ladder->y_pos) * sin(roll_value);
-          new_y_end = ladder->y_pos+                             \
-                      (x_end - ladder->x_pos) * sin(roll_value) +\
-                      (y_end - ladder->y_pos) * cos(roll_value);
+          new_x_ini = ladder->scrn_pos.x+                             \
+                      (x_ini - ladder->scrn_pos.x) * cos(roll_value) -\
+                      (y_ini - ladder->scrn_pos.y) * sin(roll_value);
+          new_y_ini = ladder->scrn_pos.y+                             \
+                      (x_ini - ladder->scrn_pos.x) * sin(roll_value) +\
+                      (y_ini - ladder->scrn_pos.y) * cos(roll_value);
+          new_x_end = ladder->scrn_pos.x+                             \
+                      (x_end - ladder->scrn_pos.x) * cos(roll_value) -\
+                      (y_end - ladder->scrn_pos.y) * sin(roll_value);
+          new_y_end = ladder->scrn_pos.y+                             \
+                      (x_end - ladder->scrn_pos.x) * sin(roll_value) +\
+                      (y_end - ladder->scrn_pos.y) * cos(roll_value);
 
           if( i >= 0 )
             {
@@ -565,27 +573,27 @@ static void drawladder( HUD_ladder *ladder )
                       new_y_ini - 4,
                       TextLadder, GLUT_BITMAP_8_BY_13 );
 
-          x_ini = ladder->x_pos + ladder->scr_width/2 - ladder->scr_hole/2;
+          x_ini = ladder->scrn_pos.x + ladder->scr_width/2 - ladder->scr_hole/2;
           y_ini = marker_y;
           if( i != 0 )  {
-            x_end = ladder->x_pos + ladder->scr_width/2;
+            x_end = ladder->scrn_pos.x + ladder->scr_width/2;
             }
           else          {
-            x_end = ladder->x_pos + ladder->scr_width/2 + 10;
+            x_end = ladder->scrn_pos.x + ladder->scr_width/2 + 10;
             }
           y_end = marker_y;
-          new_x_ini = ladder->x_pos +                        \
-                      (x_ini-ladder->x_pos)*cos(roll_value) -\
-                      (y_ini-ladder->y_pos)*sin(roll_value);
-          new_y_ini = ladder->y_pos +                        \
-                      (x_ini-ladder->x_pos)*sin(roll_value) +\
-                      (y_ini-ladder->y_pos)*cos(roll_value);
-          new_x_end = ladder->x_pos +                        \
-                      (x_end-ladder->x_pos)*cos(roll_value) -\
-           				 (y_end-ladder->y_pos)*sin(roll_value);
-          new_y_end = ladder->y_pos +                        \
-                      (x_end-ladder->x_pos)*sin(roll_value) +\
-                      (y_end-ladder->y_pos)*cos(roll_value);
+          new_x_ini = ladder->scrn_pos.x +                        \
+                      (x_ini-ladder->scrn_pos.x)*cos(roll_value) -\
+                      (y_ini-ladder->scrn_pos.y)*sin(roll_value);
+          new_y_ini = ladder->scrn_pos.y +                        \
+                      (x_ini-ladder->scrn_pos.x)*sin(roll_value) +\
+                      (y_ini-ladder->scrn_pos.y)*cos(roll_value);
+          new_x_end = ladder->scrn_pos.x +                        \
+                      (x_end-ladder->scrn_pos.x)*cos(roll_value) -\
+           				 (y_end-ladder->scrn_pos.y)*sin(roll_value);
+          new_y_end = ladder->scrn_pos.y +                        \
+                      (x_end-ladder->scrn_pos.x)*sin(roll_value) +\
+                      (y_end-ladder->scrn_pos.y)*cos(roll_value);
 
           if( i >= 0 )
             {
@@ -646,7 +654,7 @@ static void drawhorizon( HUD_horizon *horizon )
   double sin_sideslip, cos_sideslip;
   double ss_const; // sideslip angle pixels per rad
 
-  bank_angle = (*horizon->load_roll)();
+  bank_angle     = (*horizon->load_roll)();         // Need roll limit!
   sideslip_angle = (*horizon->load_sideslip)();
 
 	// sin_bank = sin( FG_2PI-FG_Phi );
@@ -660,18 +668,18 @@ static void drawhorizon( HUD_horizon *horizon )
   y_inc1 = (int)(horizon->scr_width * sin_bank);
   x_inc2 = (int)(horizon->scr_hole  * cos_bank);
   y_inc2 = (int)(horizon->scr_hole  * sin_bank);
-  
+
   x_t_inc1 = (int)(horizon->tee_height * sin_bank);
   y_t_inc1 = (int)(horizon->tee_height * cos_bank);
   
-  d_bottom_x = horizon->x_pos;
-  d_bottom_y = horizon->y_pos-horizon->scr_hole;
-  d_right_x  = horizon->x_pos+horizon->scr_hole;
-  d_right_y  = horizon->y_pos;
-  d_top_x    = horizon->x_pos;
-  d_top_y    = horizon->y_pos+horizon->scr_hole;
-  d_left_x   = horizon->x_pos-horizon->scr_hole;
-  d_left_y   = horizon->y_pos;
+  d_bottom_x = horizon->scrn_pos.x;
+  d_bottom_y = horizon->scrn_pos.y-horizon->scr_hole;
+  d_right_x  = horizon->scrn_pos.x+horizon->scr_hole;
+  d_right_y  = horizon->scrn_pos.y;
+  d_top_x    = horizon->scrn_pos.x;
+  d_top_y    = horizon->scrn_pos.y+horizon->scr_hole;
+  d_left_x   = horizon->scrn_pos.x-horizon->scr_hole;
+  d_left_y   = horizon->scrn_pos.y;
   
   ss_const = (FG_PI_2/2)/(2*horizon->scr_width-2*horizon->scr_hole);
 
@@ -682,22 +690,22 @@ static void drawhorizon( HUD_horizon *horizon )
    
   if( horizon->scr_hole == 0 )
     {
-    drawOneLine( horizon->x_pos - x_inc1, horizon->y_pos - y_inc1, \
-                 horizon->x_pos + x_inc1, horizon->y_pos + y_inc1 );
+    drawOneLine( horizon->scrn_pos.x - x_inc1, horizon->scrn_pos.y - y_inc1, \
+                 horizon->scrn_pos.x + x_inc1, horizon->scrn_pos.y + y_inc1 );
     }
   else
     {
-    drawOneLine( horizon->x_pos - x_inc1, horizon->y_pos - y_inc1, \
-                 horizon->x_pos - x_inc2, horizon->y_pos - y_inc2 );
-    drawOneLine( horizon->x_pos + x_inc2, horizon->y_pos + y_inc2, \
-                 horizon->x_pos + x_inc1, horizon->y_pos + y_inc1 );
+    drawOneLine( horizon->scrn_pos.x - x_inc1, horizon->scrn_pos.y - y_inc1, \
+                 horizon->scrn_pos.x - x_inc2, horizon->scrn_pos.y - y_inc2 );
+    drawOneLine( horizon->scrn_pos.x + x_inc2, horizon->scrn_pos.y + y_inc2, \
+                 horizon->scrn_pos.x + x_inc1, horizon->scrn_pos.y + y_inc1 );
     }
-    
-  // draw teemarks (?) 
-  drawOneLine( horizon->x_pos + x_inc2, horizon->y_pos + y_inc2, \
-               horizon->x_pos + x_inc2 + x_t_inc1, horizon->y_pos + y_inc2 - y_t_inc1 );
-  drawOneLine( horizon->x_pos - x_inc2, horizon->y_pos - y_inc2, \
-               horizon->x_pos - x_inc2 + x_t_inc1, horizon->y_pos - y_inc2 - y_t_inc1 );
+
+  // draw teemarks (?)
+  drawOneLine( horizon->scrn_pos.x + x_inc2, horizon->scrn_pos.y + y_inc2, \
+               horizon->scrn_pos.x + x_inc2 + x_t_inc1, horizon->scrn_pos.y + y_inc2 - y_t_inc1 );
+  drawOneLine( horizon->scrn_pos.x - x_inc2, horizon->scrn_pos.y - y_inc2, \
+               horizon->scrn_pos.x - x_inc2 + x_t_inc1, horizon->scrn_pos.y - y_inc2 - y_t_inc1 );
                
   // draw sideslip diamond (it is not yet positioned correctly )
   drawOneLine( d_bottom_x, d_bottom_y, d_right_x, d_right_y )
@@ -719,8 +727,8 @@ static void drawControlSurfaces( HUD_control_surfaces *ctrl_surf )
 	/* int x_2, y_2; */
 	fgCONTROLS *pCtls;
 
-	x_ini = ctrl_surf->x_pos;
-	y_ini = ctrl_surf->y_pos;
+	x_ini = ctrl_surf->scrn_pos.x;
+	y_ini = ctrl_surf->scrn_pos.y;
 	x_end = x_ini + 150;
 	y_end = y_ini + 60;
 
@@ -872,12 +880,12 @@ static void drawlabel( HUD_label *label )
     }
 
   if( label->size == SMALL ) {
-    textString( label->x_pos + posincr, label->y_pos,
+    textString( label->scrn_pos.x + posincr, label->scrn_pos.y,
                 string, GLUT_BITMAP_8_BY_13);
     }
   else  {
     if( label->size == LARGE ) {
-      textString( label->x_pos + posincr, label->y_pos,
+      textString( label->scrn_pos.x + posincr, label->scrn_pos.y,
                   string, GLUT_BITMAP_9_BY_15);
       }
     }
@@ -909,40 +917,41 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
   // For now lets just hardcode the hud here.
   // In the future, hud information has to come from the same place
   // aircraft information came from.
-  
-  fgHUDSetTimeMode( hud, NIGHT );
-  fgHUDSetBrightness( hud, BRT_LIGHT ); 
 
-  // Small, original HUD configuration
-  // fgHUDAddHorizon( hud, 590, 50, 40, 5, 10, get_roll, get_sideslip );
-  // fgHUDAddLadder ( hud, 330, 190, 90, 180, 70, 10,
-  //                  NONE, 45, get_roll, get_pitch );
-  // fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 220, 100, 280, 5, 10,
-  //                     LEFT,    0, 100, 50, get_speed );
-  // fgHUDAddScale  ( hud, VERTICAL,   NOLIMIT, 440, 100, 280, 1,  5, RIGHT,
-  //                     -40, 50, 25, get_aoa );
-  // fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 280, 220, 440, 5, 10,
-  //                     TOP,     0,  50, 50, get_heading );
-  // fgHUDAddLabel  ( hud, 180, 85, SMALL, NOBLINK,
-  //                  RIGHT_JUST, NULL, " Kts", "%5.0f", get_speed );
-  // fgHUDAddLabel  ( hud, 180, 73, SMALL, NOBLINK,
-  //                  RIGHT_JUST, NULL, " m", "%5.0f", get_altitude );
-  // fgHUDAddControlSurfaces( hud, 10, 10, NULL );
-  
-  // Bigger and placed a bit higher HUD configuration
-  fgHUDAddHorizon( hud, 590, 50, 40, 5, 10, get_roll, get_sideslip );
-  fgHUDAddLadder ( hud, 330, 270, 120, 180, 70, 10,
+  fgHUDSetTimeMode( hud, NIGHT );
+  fgHUDSetBrightness( hud, BRT_LIGHT );
+
+     // TBI
+  fgHUDAddHorizon( hud, 330, 100, 40, 5, 10, get_roll, get_sideslip );
+
+  fgHUDAddLadder ( hud, 330, 285, 120, 180, 70, 10,
                    NONE, 45, get_roll, get_pitch );
-  fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 200, 180, 380, 5, 10,
-                      LEFT,    0, 100, 50, get_speed );
-  fgHUDAddScale  ( hud, VERTICAL,   NOLIMIT, 460, 180, 380, 1,  5,
-                      RIGHT, -40,  50, 25, get_aoa );
-  fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 380, 200, 460, 5, 10,
-                      TOP,     0,  50, 50, get_heading );
-  fgHUDAddLabel  ( hud, 160, 165, SMALL, NOBLINK,
-                   RIGHT_JUST, NULL, " Kts", "%5.0f", get_speed );
-  fgHUDAddLabel  ( hud, 160, 153, SMALL, NOBLINK,
-                   RIGHT_JUST, NULL, " m", "%5.0f", get_altitude );
+     // KIAS
+  fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 200, 180, 380,  5,  10,
+                      LEFT,     0,  100,   50,   0, get_speed );
+     // Angle of Attack
+  fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 180, 250, 410,  1,   5,
+                      BOTTOM, -40,   50,   21,   0, get_aoa );
+     // GYRO COMPASS
+  fgHUDAddScale  ( hud, HORIZONTAL, NOLIMIT, 380, 200, 460,  5,  10,
+                      TOP,      0,   50,   50, 360, get_heading );
+     // AMSL
+  fgHUDAddScale  ( hud, VERTICAL,     LIMIT, 460, 180, 380, 25, 100,
+                      RIGHT,    0, 15000, 250,   0, get_altitude);
+
+  fgHUDAddLabel  ( hud, 160, 150, SMALL, NOBLINK,
+                      RIGHT_JUST, NULL, " Kts",      "%5.0f", get_speed );
+  fgHUDAddLabel  ( hud, 160, 135, SMALL, NOBLINK,
+                      RIGHT_JUST, NULL, " m",        "%5.0f", get_altitude );
+  fgHUDAddLabel  ( hud, 160, 120, SMALL, NOBLINK,
+                      RIGHT_JUST, NULL, " Roll",     "%5.2f", get_roll );
+  fgHUDAddLabel  ( hud, 440, 150, SMALL, NOBLINK,
+                      RIGHT_JUST, NULL, " AOA",      "%5.2f", get_aoa );
+  fgHUDAddLabel  ( hud, 440, 135, SMALL, NOBLINK,
+                      RIGHT_JUST, NULL, " Heading",  "%5.0f", get_heading );
+  fgHUDAddLabel  ( hud, 440, 120, SMALL, NOBLINK,
+                      RIGHT_JUST, NULL, " Sideslip", "%5.2f", get_sideslip );
+
   fgHUDAddControlSurfaces( hud, 10, 10, NULL );
 
 //  fgHUDAddControl( hud, HORIZONTAL, 50,  25, get_aileronval  ); // was 10, 10
@@ -951,6 +960,7 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
 
   return( hud );
 }
+
 
 // add_instrument
 //
@@ -973,13 +983,13 @@ void add_instrument( Hptr hud, HIptr pinstrument )
 // Constructs a HUD_horizon "object" and installs it into the hud instrument
 // list.
 
-Hptr fgHUDAddHorizon( Hptr hud,      \
-                      int x_pos,     \
-                      int y_pos,     \
-                      int length,    \
-                      int hole_len,  \
+Hptr fgHUDAddHorizon( Hptr hud,     \
+                      int x_pos,    \
+                      int y_pos,    \
+                      int length,   \
+                      int hole_len, \
                       int tee_height,\
-                      double (*load_roll)(),\
+                      double (*load_roll)(),
                       double (*load_sideslip)() )
 {
     HUD_horizon *phorizon;
@@ -1001,15 +1011,15 @@ Hptr fgHUDAddHorizon( Hptr hud,      \
 	return( NULL );
     }
 
-    phorizon->x_pos         = x_pos;
-    phorizon->y_pos         = y_pos;
-    phorizon->scr_width     = length;
+    phorizon->scrn_pos.x    = x_pos;
+    phorizon->scrn_pos.y    = y_pos;
+    phorizon->scr_width     = length | 1;
     phorizon->scr_hole      = hole_len;
     phorizon->tee_height    = tee_height;
     phorizon->load_roll     = load_roll;
     phorizon->load_sideslip = load_sideslip;
     //  Install the horizon in the parent.
-    pinstrument->instr      = phorizon;
+    pinstrument->instr   = phorizon;
     //  Install the instrument into hud.
     add_instrument( hud, pinstrument);
 
@@ -1033,6 +1043,7 @@ Hptr fgHUDAddScale( Hptr hud,        \
                     int min_value,   \
                     int max_value,   \
                     int width_units, \
+                    int modulus,     \
                     double (*load_value)() )
 {
   HUD_scale *pscale;
@@ -1053,18 +1064,48 @@ Hptr fgHUDAddScale( Hptr hud,        \
   if( pscale == NULL )   {
      return( NULL );
     }
-  pscale->type          = type;
-  pscale->sub_type      = sub_type;
-  pscale->scr_pos       = scr_pos;
-  pscale->scr_min       = scr_min;
-  pscale->scr_max       = scr_max;
-  pscale->div_min       = div_min;
-  pscale->div_max       = div_max;
-  pscale->orientation   = orientation;
-  pscale->minimum_value = min_value;
-  pscale->maximum_value = max_value;
-  pscale->width_units   = width_units;
-  pscale->load_value    = load_value;
+
+  pscale->type             = type;
+  pscale->sub_type         = sub_type;
+  pscale->div_min          = div_min;
+  pscale->div_max          = div_max;
+  pscale->orientation      = orientation;
+  pscale->minimum_value    = min_value;
+  pscale->maximum_value    = max_value;
+  pscale->modulo           = modulus;
+  pscale->load_value       = load_value;
+
+  pscale->half_width_units = width_units / 2.0;
+  pscale->scr_span = scr_max - scr_min; // Run of scan in pix coord
+  pscale->scr_span |= 1;                // Force odd span of units.
+             // If span is odd number of units, mid will be correct.
+             // If not it will be high by one coordinate unit. This is
+             // an artifact of integer division needed for screen loc's.
+
+  pscale->mid_scr  = (pscale->scr_span >> 1) + scr_min;
+
+             // Calculate the number of screen units per indicator unit
+             // We must force floating point calculation or the factor
+             // will be low and miss locate tics by several units.
+
+  pscale->factor   = (double)pscale->scr_span / (double)width_units;
+
+  switch( type ) {
+    case HORIZONTAL:
+      pscale->scrn_pos.left    = scr_min;
+      pscale->scrn_pos.top     = scr_pos;
+      pscale->scrn_pos.right   = scr_max;
+      pscale->scrn_pos.bottom  = scr_pos;
+      break;
+
+    case VERTICAL:
+    default:
+      pscale->scrn_pos.left    = scr_pos;
+      pscale->scrn_pos.top     = scr_max;
+      pscale->scrn_pos.right   = scr_pos;
+      pscale->scrn_pos.bottom  = scr_min;
+    }
+
                                      // Install the scale
   pinstrument->instr = pscale;
                                       //  Install the instrument into hud.
@@ -1106,8 +1147,8 @@ Hptr fgHUDAddLabel( Hptr hud,       \
     return NULL;
     }
 
-  plabel->x_pos      = x_pos;
-  plabel->y_pos      = y_pos;
+  plabel->scrn_pos.x      = x_pos;
+  plabel->scrn_pos.y      = y_pos;
   plabel->size       = size;
   plabel->blink      = blink;
   plabel->justify    = justify;
@@ -1158,8 +1199,8 @@ Hptr fgHUDAddLadder( Hptr hud,        \
 		return( NULL );
 
   pladder->type           = 0; // Not used.
-  pladder->x_pos          = x_pos;
-  pladder->y_pos          = y_pos;
+  pladder->scrn_pos.x          = x_pos;
+  pladder->scrn_pos.y          = y_pos;
   pladder->scr_width      = scr_width;
   pladder->scr_height     = scr_height;
   pladder->scr_hole       = hole_len;
@@ -1208,8 +1249,8 @@ Hptr fgHUDAddControlSurfaces( Hptr hud,
       return( NULL );
       }
 
-    pcontrol_surfaces->x_pos = x_pos;
-    pcontrol_surfaces->y_pos = y_pos;
+    pcontrol_surfaces->scrn_pos.x = x_pos;
+    pcontrol_surfaces->scrn_pos.y = y_pos;
     pcontrol_surfaces->load_value = load_value;
 
     pinstrument->instr     = pcontrol_surfaces;
@@ -1253,8 +1294,8 @@ Hptr fgHUDAddControl( Hptr hud,        \
     if( !(pcontrol == NULL) ) {
       return( NULL );
       }
-    pcontrol->ctrl_x        = ctrl_x;
-    pcontrol->ctrl_y        = ctrl_y;
+    pcontrol->scrn_pos.x    = ctrl_x;
+    pcontrol->scrn_pos.y    = ctrl_y;
     pcontrol->ctrl_length   = ctrl_length;
     pcontrol->orientation   = orientation;
     pcontrol->alignment     = alignment;
@@ -1330,7 +1371,9 @@ void fgUpdateHUD( Hptr hud ) {
     glDisable(GL_LIGHTING);
 
     glLineWidth(1);
-    
+                                   // This is a good improvement, but needs
+                                   // to respond to a dial instead of time
+                                   // of day. Of course, we have no dial!
     if( hud->time_of_day==DAY) {
       switch (hud->brightness) {
          case BRT_LIGHT:
@@ -1354,6 +1397,9 @@ void fgUpdateHUD( Hptr hud ) {
          case BRT_DARK:
            glColor3f (0.5, 0.0, 0.0);
          }
+      }
+    else {
+      glColor3f (0.1, 0.9, 0.1);
       }
 
     fgPrintf( FG_COCKPIT, FG_DEBUG, "HUD Code %d  Status %d\n",
@@ -1417,9 +1463,12 @@ void fgHUDSetBrightness( Hptr hud, int brightness )
 }
 
 /* $Log$
-/* Revision 1.17  1998/02/20 00:16:21  curt
-/* Thursday's tweaks.
+/* Revision 1.18  1998/02/21 14:53:10  curt
+/* Added Charlie's HUD changes.
 /*
+ * Revision 1.17  1998/02/20 00:16:21  curt
+ * Thursday's tweaks.
+ *
  * Revision 1.16  1998/02/19 13:05:49  curt
  * Incorporated some HUD tweaks from Michelle America.
  * Tweaked the sky's sunset/rise colors.

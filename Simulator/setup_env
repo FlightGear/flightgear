@@ -1,0 +1,3 @@
+export FG_ROOT=~/projects/FlightGear
+export FG_ROOT_SRC=${FG_ROOT}/Src
+export FG_ROOT_LIB=${FG_ROOT}/Lib

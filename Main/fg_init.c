@@ -187,16 +187,17 @@ int fgInitSubsystems( void ) {
     /* FG_Runway_altitude = 5000.0; */
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
 
-    /* Initial Position: 10125 Jewell St. NE */
-    /* FG_Longitude = ( -93.15 ) * DEG_TO_RAD; */
-    /* FG_Latitude  = (  45.15 ) * DEG_TO_RAD; */
-    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+    // Initial Position: 10125 Jewell St. NE
+    // FG_Longitude = ( -93.15 ) * DEG_TO_RAD;
+    // FG_Latitude  = (  45.15 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 950.0;
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position: Somewhere near the Grand Canyon
-    FG_Longitude = ( -112.5 ) * DEG_TO_RAD;
-    FG_Latitude  = (  36.5 ) * DEG_TO_RAD;
-    FG_Runway_altitude = 5000.0;
-    FG_Altitude = FG_Runway_altitude + 3.758099;
+    // FG_Longitude = ( -112.5 ) * DEG_TO_RAD;
+    // FG_Latitude  = (  36.5 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 5000.0;
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position: (GCN) Grand Canyon Airport, AZ
     // FG_Longitude = ( -112.1469647 ) * DEG_TO_RAD;
@@ -380,11 +381,14 @@ int fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.47  1998/02/19 13:05:53  curt
-/* Incorporated some HUD tweaks from Michelle America.
-/* Tweaked the sky's sunset/rise colors.
-/* Other misc. tweaks.
+/* Revision 1.48  1998/02/21 14:53:15  curt
+/* Added Charlie's HUD changes.
 /*
+ * Revision 1.47  1998/02/19 13:05:53  curt
+ * Incorporated some HUD tweaks from Michelle America.
+ * Tweaked the sky's sunset/rise colors.
+ * Other misc. tweaks.
+ *
  * Revision 1.46  1998/02/18 15:07:06  curt
  * Tweaks to build with SGI OpenGL (and therefor hopefully other accelerated
  * drivers will work.)

@@ -27,7 +27,6 @@
 #ifndef _HUD_H
 #define _HUD_H
 
-
 #include <Aircraft/aircraft.h>
 #include <Flight/flight.h>
 #include <Controls/controls.h>
@@ -125,38 +124,61 @@ enum VIEW_MODES { HUD_VIEW, PANEL_VIEW, CHASE_VIEW, TOWER_VIEW };
 //    Night_Day();       // Illumination changes appearance/bitmaps.
 //
 
+// CLO 2/21/98 - added to fix compile error
 typedef struct  {
-  int type;
-  int sub_type;
-  int scr_pos;
-  int scr_min;
-  int scr_max;
-  int div_min;
-  int div_max;
-  int orientation;
-  int minimum_value;
-  int maximum_value;
-  int width_units;
+  int x;
+  int y;
+} POINT;
+
+// CLO 2/21/98 - added to fix compile error
+typedef struct  {
+  int left;
+  int right;
+  int top;
+  int bottom;
+} RECT;
+
+typedef struct  {
+       // Parametric defined members
+  int  type;
+  int  sub_type;
+  int  div_min;
+  int  div_max;
+  int  orientation;
+  int  minimum_value;
+  int  maximum_value;
+  int  width_units;
+  int  modulo;    // for compass, etc. Set to 0 for non_modulo scales.
+
   double (*load_value)( void );
+
+  // Pre-calculated members.
+  int scr_span;
+  int mid_scr;
+  RECT scrn_pos; // Screen rectangle for inicator
+                 //  Replaces previous parameters as:
+                 //  scr_pos -> left,bottom
+                 //  scr_max -> top, right
+                 //  scr_min -> left,bottom
+  double factor;
+  double half_width_units;
 }HUD_scale,  *pHUDscale;
 
 typedef struct  {
 	int type;
-	int scr_pos;
-	int scr_min;
-	int scr_max;
+  RECT  position;
 	int div_min;
 	int div_max;
 	int orientation;
 	int label_position;
 	int width_units;
+  int  modulo;  // for compass, etc. Set to 0 for non_modulo scales.
 	double (*load_value)( void );
 }HUD_circular_scale, *pHUD_circscale;
 
 typedef struct  {
 	int type;
-	int x_pos;
-	int y_pos;
+  POINT scrn_pos;
 	int scr_width;
 	int scr_height;
 	int scr_hole;
@@ -183,8 +205,7 @@ typedef struct {
 
 typedef struct{
 	int type;
-	int x_pos;
-	int y_pos;
+  POINT scrn_pos;
 	int scr_width;
 	int scr_hole;
 	int tee_height;
@@ -193,14 +214,12 @@ typedef struct{
 } HUD_horizon, *pHUDhorizon;
 
 typedef struct {
-  int x_pos;
-  int y_pos;
+  POINT scrn_pos;
   double(*load_value)(void);
 } HUD_control_surfaces, *pHUDControlSurfaces;
 
 typedef struct {
-  int ctrl_x;
-  int ctrl_y;
+  POINT scrn_pos;    // ctrl_x, ctrl_y
   int ctrl_length;
   int orientation;
   int alignment;
@@ -214,8 +233,7 @@ typedef struct {
 
 typedef struct {
 	int type;
-	int x_pos;
-	int y_pos;
+  POINT scrn_pos;
 	int size;
 	int blink;
 	int justify;
@@ -228,15 +246,15 @@ typedef struct {
 // Removed union HUD_instr_data to evolve this to oop code.
 
 typedef enum{ HUDno_instr,
-                   HUDscale,
-                   HUDcirc_scale,
-                   HUDladder,
-                   HUDcirc_ladder,
-                   HUDhorizon,
-                   HUDlabel,
-                   HUDcontrol_surfaces,
-                   HUDcontrol
-                   } hudinstype;
+              HUDscale,
+              HUDcirc_scale,
+              HUDladder,
+              HUDcirc_ladder,
+              HUDhorizon,
+              HUDlabel,
+              HUDcontrol_surfaces,
+              HUDcontrol
+              } hudinstype;
 
 typedef struct HUD_INSTR_STRUCT{
   hudinstype  type;
@@ -282,6 +300,7 @@ Hptr fgHUDAddScale  ( Hptr hud,                    \
                       int min_value,               \
                       int max_value,               \
                       int width_units,             \
+                      int modulus,                 \
                       double (*load_value)( void ) );
 
 Hptr fgHUDAddLabel  ( Hptr hud,                    \
@@ -354,12 +373,16 @@ Hptr fgHUDAddNumDisp( Hptr hud,
 void fgUpdateHUD ( Hptr hud );
 void fgUpdateHUD2( Hptr hud ); // Future use?
 
+
 #endif // _HUD_H  
 
 /* $Log$
-/* Revision 1.13  1998/02/20 00:16:22  curt
-/* Thursday's tweaks.
+/* Revision 1.14  1998/02/21 14:53:14  curt
+/* Added Charlie's HUD changes.
 /*
+ * Revision 1.13  1998/02/20 00:16:22  curt
+ * Thursday's tweaks.
+ *
  * Revision 1.12  1998/02/19 13:05:52  curt
  * Incorporated some HUD tweaks from Michelle America.
  * Tweaked the sky's sunset/rise colors.
