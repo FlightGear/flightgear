@@ -282,7 +282,8 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		    vncount++;
 		} else {
 		    FG_LOG( FG_TERRAIN, FG_ALERT, 
-			    "Read too many vertex normals ... dying :-(" );
+			    "Read too many vertex normals in " << path 
+			    << " ... dying :-(" );
 		    exit(-1);
 		}
 	    } else if ( token == "vt" ) {
@@ -293,7 +294,8 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		    vtcount++;
 		} else {
 		    FG_LOG( FG_TERRAIN, FG_ALERT, 
-			    "Read too many vertex texture coords ... dying :-("
+			    "Read too many vertex texture coords in " << path
+			    << " ... dying :-("
 			    );
 		    exit(-1);
 		}
@@ -306,7 +308,8 @@ int fgObjLoad( const string& path, fgTILE *t) {
 		    t->ncount++;
 		} else {
 		    FG_LOG( FG_TERRAIN, FG_ALERT, 
-			    "Read too many nodes ... dying :-(");
+			    "Read too many nodes in " << path 
+			    << " ... dying :-(");
 		    exit(-1);
 		}
 	    } else if ( token == "t" ) {
