@@ -152,12 +152,12 @@ void Jet::integrate(float dt)
     float vCorr = 1 - (speed/_vMax);
 
     float maxThrust = _maxThrust * vCorr * (statD/D0);
-    _thrust = maxThrust * _throttle;
+    float setThrust = maxThrust * _throttle;
 
     // Now get a "beta" (i.e. EPR - 1) value.  The output values are
     // expressed as functions of beta.
     float ibeta0 = 1/(_epr0 - 1);
-    float betaTarget = (_epr0 - 1) * (_thrust/_maxThrust) * (P0/_pressure)
+    float betaTarget = (_epr0 - 1) * (setThrust/_maxThrust) * (P0/_pressure)
 	* (_temp/statT);
     float n2Target = _n2Min + (betaTarget*ibeta0) * (_n2Max - _n2Min);
 
@@ -173,7 +173,7 @@ void Jet::integrate(float dt)
     // The actual thrust produced is keyed to the N1 speed.  Add the
     // afterburners in at the end.
     float betaN1 =  (_epr0-1) * (_n1 - _n1Min) / (_n1Max - _n1Min);
-    _thrust *= betaN1/(betaTarget+0.00001f); // blowup protection
+    _thrust = _maxThrust * betaN1/((_epr0-1)*(P0/_pressure)*(_temp/statT));
     _thrust *= 1 + _reheat*(_abFactor-1);
 
     // Finally, calculate the output variables.   Use a 80/20 mix of
