@@ -4,14 +4,18 @@ else
 WEATHER_LIBS = $(top_builddir)/src/Environment/libEnvironment.a
 endif
 
-if ENABLE_NETWORK_OLK
-NETWORK_LIBS = \
-	$(top_builddir)/src/Network/libNetwork.a \
-	$(top_builddir)/src/NetworkOLK/libNetworkOLK.a
+if ENABLE_MPLAYER_AS
+MPLAYER_LIBS = $(top_builddir)/src/MultiPlayer/libMultiPlayer.a
 else
-NETWORK_LIBS = \
-	$(top_builddir)/src/Network/libNetwork.a
+MPLAYER_LIBS = 
 endif
+
+if ENABLE_NETWORK_OLK
+NETWORK_LIBS = $(top_builddir)/src/NetworkOLK/libNetworkOLK.a
+else
+NETWORK_LIBS =
+endif
+
 
 if WITH_THREADS
 THREAD_LIBS = -lsgthreads
@@ -73,12 +77,13 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Input/libInput.a \
 	$(top_builddir)/src/Instrumentation/libInstrumentation.a \
 	$(top_builddir)/src/Model/libModel.a \
-	$(top_builddir)/src/MultiPlayer/libMultiPlayer.a \
+	$(top_builddir)/src/Network/libNetwork.a \
 	$(top_builddir)/src/Navaids/libNavaids.a \
 	$(top_builddir)/src/Scenery/libScenery.a \
         $(SCRIPTING_LIBS) \
 	$(top_builddir)/src/Sound/libSound.a \
 	$(top_builddir)/src/Airports/libAirports.a \
+	$(MPLAYER_LIBS) \
         $(NETWORK_LIBS) \
 	$(top_builddir)/src/Objects/libObjects.a \
 	$(top_builddir)/src/Systems/libSystems.a \
