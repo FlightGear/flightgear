@@ -32,10 +32,11 @@
 #include <XGL/xgl.h>
 
 #include <Include/general.h>
+#include <Main/fg_debug.h>
+#include <Main/views.h>
 #include <Scenery/bucketutils.h>
 #include <Scenery/obj.h>
 #include <Scenery/tilecache.h>
-#include <Main/fg_debug.h>
 
 
 /* tile cache */
@@ -54,17 +55,24 @@ void fgTileCacheInit( void ) {
 }
 
 
-/* Return index of next available slot in tile cache */
-int fgTileCacheNextAvail( void ) {
-     int i;
-     
-     for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
-	 if ( tile_cache[i].used == 0 ) {
-	     return(i);
-	 }
-     }
+/* Search for the specified "bucket" in the cache */
+int fgTileCacheExists( struct fgBUCKET *p ) {
+    int i;
 
-     return(-1);
+    for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
+	if ( tile_cache[i].tile_bucket.lon == p->lon ) {
+	    if ( tile_cache[i].tile_bucket.lat == p->lat ) {
+		if ( tile_cache[i].tile_bucket.x == p->x ) {
+		    if ( tile_cache[i].tile_bucket.y == p->y ) {
+			printf("TILE EXISTS in cache ... index = %d\n", i);
+			return( i );
+		    }
+		}
+	    }
+	}
+    }
+    
+    return( -1 );
 }
 
 
@@ -94,6 +102,22 @@ void fgTileCacheEntryFillIn( int index, struct fgBUCKET *p ) {
 }
 
 
+/* Free a tile cache entry */
+void fgTileCacheEntryFree( int index ) {
+    /* Mark this cache entry as un-used */
+    tile_cache[index].used = 0;
+
+    /* Update the bucket */
+    printf( "FREEING TILE = (%d %d %d %d)\n",
+	    tile_cache[index].tile_bucket.lon, 
+	    tile_cache[index].tile_bucket.lat, tile_cache[index].tile_bucket.x,
+	    tile_cache[index].tile_bucket.y );
+
+    /* Load the appropriate area and get the display list pointer */
+    xglDeleteLists( tile_cache[index].display_list, 1 );
+}
+
+
 /* Return info for a tile cache entry */
 void fgTileCacheEntryInfo( int index, GLint *display_list, 
 			   struct fgCartesianPoint *local_ref ) {
@@ -106,16 +130,68 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 }
 
 
-/* Free the specified cache entry
-void fgTileCacheEntryFree( in index ) {
+/* Return index of next available slot in tile cache */
+int fgTileCacheNextAvail( void ) {
+    struct fgVIEW *v;
+    int i;
+    float dx, dy, dz, max, med, min, tmp;
+    float dist, max_dist;
+    int max_index;
+    
+    v = &current_view;
+
+    max_dist = 0.0;
+    max_index = 0;
+
+    for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
+	if ( tile_cache[i].used == 0 ) {
+	    return(i);
+	} else {
+	    /* calculate approximate distance from view point */
+	    printf( "DIST Abs view pos = %.4f, %.4f, %.4f\n", 
+		    v->abs_view_pos.x, v->abs_view_pos.y, v->abs_view_pos.z);
+	    printf( "    ref point = %.4f, %.4f, %.4f\n", 
+		    tile_cache[i].local_ref.x, tile_cache[i].local_ref.y,
+		    tile_cache[i].local_ref.z);
+
+	    dx = fabs(tile_cache[i].local_ref.x - v->abs_view_pos.x);
+	    dy = fabs(tile_cache[i].local_ref.y - v->abs_view_pos.y);
+	    dz = fabs(tile_cache[i].local_ref.z - v->abs_view_pos.z);
+
+	    max = dx; med = dy; min = dz;
+	    if ( max < med ) {
+		tmp = max; max = med; med = tmp;
+	    }
+	    if ( max < min ) {
+		tmp = max; max = min; min = tmp;
+	    }
+	    dist = max + (med + min) / 4;
+
+	    printf("    distance = %.2f\n", dist);
+
+	    if ( dist > max_dist ) {
+		max_dist = dist;
+		max_index = i;
+	    }
+	}
+    }
+
+    /* If we made it this far, then there were no open cache entries.
+     * We will instead free the furthest cache entry and return it's
+     * index. */
+    
+    fgTileCacheEntryFree( max_index );
+    return( max_index );
 }
-*/
 
 
 /* $Log$
-/* Revision 1.4  1998/01/27 03:26:43  curt
-/* Playing with new fgPrintf command.
+/* Revision 1.5  1998/01/29 00:51:39  curt
+/* First pass at tile cache, dynamic tile loading and tile unloading now works.
 /*
+ * Revision 1.4  1998/01/27 03:26:43  curt
+ * Playing with new fgPrintf command.
+ *
  * Revision 1.3  1998/01/27 00:48:03  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

@@ -46,15 +46,10 @@
 #define FG_LOCAL_Y           3   /* should be odd */
 #define FG_LOCAL_X_Y         9   /* At least FG_LOCAL_X times FG_LOCAL_Y */
 
-#define FG_TILE_CACHE_SIZE 100   /* Must be > FG_LOCAL_X_Y */
-
 
 /* closest (potentially viewable) tiles, centered on current tile.
  * This is an array of pointers to cache indexes. */
 int tiles[FG_LOCAL_X_Y];
-
-/* tile cache */
-struct fgTILE tile_cache[FG_TILE_CACHE_SIZE];
 
 
 /* Initialize the Tile Manager subsystem */
@@ -70,10 +65,15 @@ void fgTileMgrLoadTile( struct fgBUCKET *p, int *index) {
     fgPrintf( FG_TERRAIN, FG_DEBUG, "Updating for bucket %d %d %d %d\n", 
 	   p->lon, p->lat, p->x, p->y);
     
-    *index = fgTileCacheNextAvail();
+    /* if not in cache, load tile into the next available slot */
+    if ( (*index = fgTileCacheExists(p)) < 0 ) {
+	*index = fgTileCacheNextAvail();
+	fgTileCacheEntryFillIn(*index, p);
+    }
+
+    printf( "SELECTED cache index of %d\n", *index);
     fgPrintf( FG_TERRAIN, FG_DEBUG, "Selected cache index of %d\n", *index);
     
-    fgTileCacheEntryFillIn(*index, p);
 }
 
 
@@ -213,9 +213,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/01/27 03:26:44  curt
-/* Playing with new fgPrintf command.
+/* Revision 1.10  1998/01/29 00:51:40  curt
+/* First pass at tile cache, dynamic tile loading and tile unloading now works.
 /*
+ * Revision 1.9  1998/01/27 03:26:44  curt
+ * Playing with new fgPrintf command.
+ *
  * Revision 1.8  1998/01/27 00:48:04  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

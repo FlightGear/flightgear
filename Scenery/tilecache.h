@@ -38,8 +38,10 @@
 #include <Scenery/bucketutils.h>
 #include <Include/fg_types.h>
 
-
-#define FG_TILE_CACHE_SIZE 100   /* Must be > FG_LOCAL_X_Y */
+/* For best results ...
+ *
+ * FG_TILE_CACHE_SIZE >= FG_LOCAL_X_Y + max(FG_LOCAL_X, FG_LOCAL_Y) */
+#define FG_TILE_CACHE_SIZE 12   
 
 
 /* Tile cache record */
@@ -58,6 +60,9 @@ extern struct fgTILE tile_cache[FG_TILE_CACHE_SIZE];
 /* Initialize the tile cache subsystem */
 void fgTileCacheInit( void );
 
+/* Search for the specified "bucket" in the cache */
+int fgTileCacheExists( struct fgBUCKET *p );
+
 /* Return index of next available slot in tile cache */
 int fgTileCacheNextAvail( void );
 
@@ -73,10 +78,13 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 
 
 /* $Log$
-/* Revision 1.2  1998/01/27 00:48:04  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.3  1998/01/29 00:51:40  curt
+/* First pass at tile cache, dynamic tile loading and tile unloading now works.
 /*
+ * Revision 1.2  1998/01/27 00:48:04  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.1  1998/01/24 00:03:29  curt
  * Initial revision.
  *

@@ -67,7 +67,8 @@ void calc_normal(float p1[3], float p2[3], float p3[3], double normal[3])
 GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
     char line[256], winding_str[256];
     double approx_normal[3], normal[3], scale;
-    GLint area;
+    float x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
+    GLint tile;
     FILE *f;
     int first, ncount, vncount, n1, n2, n3, n4;
     static int use_vertex_norms = 1;
@@ -80,8 +81,8 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 	return(0);
     }
 
-    area = xglGenLists(1);
-    xglNewList(area, GL_COMPILE);
+    tile = xglGenLists(1);
+    xglNewList(tile, GL_COMPILE);
 
     first = 1;
     ncount = 1;
@@ -96,15 +97,37 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 	    /* node (vertex) */
 	    if ( ncount < MAXNODES ) {
 		/* fgPrintf( FG_TERRAIN, FG_DEBUG, "vertex = %s", line); */
-		sscanf(line, "v %f %f %f\n", 
-		       &nodes[ncount][0], &nodes[ncount][1], &nodes[ncount][2]);
+		sscanf(line, "v %f %f %f\n", &x, &y, &z);
+		nodes[ncount][0] = x;
+		nodes[ncount][1] = y;
+		nodes[ncount][2] = z;
+
+		/* first time through set min's and max'es */
 		if ( ncount == 1 ) {
-		    /* first node becomes the reference point */
-		    ref->x = nodes[ncount][0];
-		    ref->y = nodes[ncount][1];
-		    ref->z = nodes[ncount][2];
-		    /* scenery.center = ref; */
+		    xmin = x;
+		    xmax = x;
+		    ymin = y;
+		    ymax = y;
+		    zmin = z;
+		    zmax = z;
 		}
+    
+		/* keep track of min/max vertex values */
+		if ( x < xmin ) xmin = x;
+		if ( x > xmax ) xmax = x;
+		if ( y < ymin ) ymin = y;
+		if ( y > ymax ) ymax = y;
+		if ( z < zmin ) zmin = z;
+		if ( z > zmax ) zmax = z;		
+
+		/* reference point is the "center" */
+		/* this is overkill to calculate it everytime we get a
+                 * new node, but it's hard to know with the .obj
+                 * format when we are done with vertices */
+		ref->x = (xmin + xmax) / 2;
+		ref->y = (ymin + ymax) / 2;
+		ref->z = (zmin + zmax) / 2;
+
 		ncount++;
 	    } else {
 		fgPrintf( FG_TERRAIN, FG_EXIT, 
@@ -327,14 +350,17 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref) {
 
     fclose(f);
 
-    return(area);
+    return(tile);
 }
 
 
 /* $Log$
-/* Revision 1.19  1998/01/27 03:26:42  curt
-/* Playing with new fgPrintf command.
+/* Revision 1.20  1998/01/29 00:51:39  curt
+/* First pass at tile cache, dynamic tile loading and tile unloading now works.
 /*
+ * Revision 1.19  1998/01/27 03:26:42  curt
+ * Playing with new fgPrintf command.
+ *
  * Revision 1.18  1998/01/19 19:27:16  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

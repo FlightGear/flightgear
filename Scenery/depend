@@ -1,7 +1,9 @@
+bucketutils.o: bucketutils.c
 common.o: common.c
 geometry.o: geometry.c
 mesh.o: mesh.c
 obj.o: obj.c
 scenery.o: scenery.c
+texload.o: texload.c texload.h
+tilecache.o: tilecache.c
 tilemgr.o: tilemgr.c
-tileutils.o: tileutils.c
