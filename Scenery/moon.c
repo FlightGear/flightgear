@@ -34,8 +34,8 @@
 
 struct CelestialCoord moonPos;
 
-float xMoon, yMoon, zMoon;
-GLint moon;
+static float xMoon, yMoon, zMoon;
+static GLint moon;
 
 /*
 static GLfloat vdata[12][3] =
@@ -227,16 +227,11 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
 
 void fgMoonInit() {
     struct fgLIGHT *l;
-//   int i;
+    static int dl_exists = 0;
 
     l = &cur_light_params;
 
-    moon = xglGenLists(1);
-    xglNewList(moon, GL_COMPILE );
-
-    /* xglMaterialfv(GL_FRONT, GL_AMBIENT, l->scene_clear);
-    xglMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color); */
-
+    /* position the moon */
     fgSolarSystemUpdate(&(pltOrbElements[1]), cur_time_params);
     moonPos = fgCalculateMoon(pltOrbElements[1], pltOrbElements[0], 
 			      cur_time_params);
@@ -245,24 +240,34 @@ void fgMoonInit() {
 	   moonPos.Declination);
 #endif
 
-    /* xMoon = 90000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
-       yMoon = 90000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
-       zMoon = 90000.0 * sin(moonPos.Declination); */
+    if ( !dl_exists ) {
+	dl_exists = 1;
 
-    xMoon = 60000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
-    yMoon = 60000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
-    zMoon = 60000.0 * sin(moonPos.Declination);
+	/* printf("First time through, creating moon display list\n"); */
 
-    glutSolidSphere(1.0, 15, 15);
+	moon = xglGenLists(1);
+	xglNewList(moon, GL_COMPILE );
 
-    xglEndList();
+	/* xglMaterialfv(GL_FRONT, GL_AMBIENT, l->scene_clear);
+	   xglMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color); */
+
+
+	xMoon = 60000.0 * cos(moonPos.RightAscension) * 
+	    cos(moonPos.Declination);
+	yMoon = 60000.0 * sin(moonPos.RightAscension) * 
+	    cos(moonPos.Declination);
+	zMoon = 60000.0 * sin(moonPos.Declination);
+
+	glutSolidSphere(1.0, 15, 15);
+
+	xglEndList();
+    }
 }
 
 
 /* Draw the moon */
 void fgMoonRender() {
     struct fgLIGHT *l;
-    GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat moon_color[4] = { 1.0, 1.0, 1.0, 1.0 };
 
     l = &cur_light_params;

@@ -93,14 +93,8 @@ struct CelestialCoord fgCalculateSun(struct OrbElements params, struct fgTIME t)
 
 
 /* Initialize the Sun */
-void fgSunInit()
-{
-//   int i;
-
-    sun_obj = xglGenLists(1);
-    xglNewList(sun_obj, GL_COMPILE );
-
-//	xglBegin( GL_POINTS );
+void fgSunInit() {
+    static int dl_exists = 0;
 
     fgSolarSystemUpdate(&(pltOrbElements[0]), cur_time_params);
     sunPos = fgCalculateSun(pltOrbElements[0], cur_time_params);
@@ -109,38 +103,22 @@ void fgSunInit()
 	   sunPos.Declination);
 #endif
 
-    /* give the moon a temporary color, for testing purposes */
-//   xglColor3f( 0.0, 1.0, 0.0);
-//   xglVertex3f( 190000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination),
- //              190000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination),
-//   	           190000.0 * sin(moonPos.Declination) );
-   //xglVertex3f(0.0, 0.0, 0.0);
-//   xglEnd();
-//   xglColor3f(1.0, 1.0, 1.0);
-   //xMoon = 190000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
-   //yMoon = 190000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
-   //zMoon = 190000.0 * sin(moonPos.Declination);
+    if ( !dl_exists ) {
+	dl_exists = 1;
 
-   xSun = 60000.0 * cos(sunPos.RightAscension) * cos(sunPos.Declination);
-   ySun = 60000.0 * sin(sunPos.RightAscension) * cos(sunPos.Declination);
-   zSun = 60000.0 * sin(sunPos.Declination);
+	/* printf("First time through, creating sun display list\n"); */
 
-//   xglPushMatrix();
-//   xglTranslatef(x, y, z);
-//   xglScalef(16622.8, 16622.8, 16622.8);
-//     xglBegin(GL_TRIANGLES);
-//   for (i = 0; i < 20; i++)
-//      subdivide(&vdata[tindices[i][0]][0],
-//                &vdata[tindices[i][1]][0],
-//                &vdata[tindices[i][2]][0], 3);
-//     glutSolidSphere(1.0, 25, 25);
+	sun_obj = xglGenLists(1);
+	xglNewList(sun_obj, GL_COMPILE );
 
-//     xglEnd();
-    //xglPopMatrix();
+	xSun = 60000.0 * cos(sunPos.RightAscension) * cos(sunPos.Declination);
+	ySun = 60000.0 * sin(sunPos.RightAscension) * cos(sunPos.Declination);
+	zSun = 60000.0 * sin(sunPos.Declination);
 
-    glutSolidSphere(1.0, 10, 10);
+	glutSolidSphere(1.0, 10, 10);
 
-    xglEndList();
+	xglEndList();
+    }
 }
 
 
@@ -204,10 +182,13 @@ void fgSunRender() {
 
 
 /* $Log$
-/* Revision 1.6  1997/12/15 23:55:04  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.7  1997/12/17 23:12:16  curt
+/* Fixed so moon and sun display lists aren't recreate periodically.
 /*
+ * Revision 1.6  1997/12/15 23:55:04  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.5  1997/12/12 21:41:31  curt
  * More light/material property tweaking ... still a ways off.
  *
