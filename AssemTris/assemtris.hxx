@@ -1,4 +1,4 @@
-// splittris.h -- reassemble the pieces produced by splittris
+// splittris.hxx -- reassemble the pieces produced by splittris
 //
 // Written by Curtis Olson, started January 1998.
 //
@@ -39,6 +39,9 @@
 
 
 // $Log$
+// Revision 1.2  1998/09/25 19:38:03  curt
+// Minor tweaks so that this actually compiles.
+//
 // Revision 1.1  1998/09/25 19:35:31  curt
 // Renamed assemtris.[ch] to assemtris.[ch]xx
 //

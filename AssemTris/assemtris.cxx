@@ -1,8 +1,8 @@
-// assemtris.c -- reassemble the pieces produced by splittris
+// assemtris.cxx -- reassemble the pieces produced by splittris
 //
 // Written by Curtis Olson, started January 1998.
 //
-// Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+// Copyright (C) 1997  Curtis L. Olson  - curt@me.umn.edu
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 #include <sys/stat.h> // for stat()
 #include <unistd.h>   // for stat()
 
-#include "assemtris.h"
+#include "assemtris.hxx"
 
 #include <Include/fg_constants.h>
 #include <Include/fg_types.h>
@@ -542,6 +542,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.2  1998/09/25 19:38:01  curt
+// Minor tweaks so that this actually compiles.
+//
 // Revision 1.1  1998/09/25 19:35:29  curt
 // Renamed assemtris.[ch] to assemtris.[ch]xx
 //
