@@ -143,17 +143,6 @@ void YASim::init()
 	node->setDoubleValue("yoffset-in", pos[1]);
 	node->setDoubleValue("zoffset-in", pos[2]);
     }
-//     for(i=0; i<m->numThrusters(); i++) {
-// 	// Sanify the initial input conditions
-// 	char buf[64];
-//  	sprintf(buf, "/controls/engines/engine[%d]/throttle", i);        fgSetFloat(buf, 0);
-// 	sprintf(buf, "/controls/engines/engine[%d]/mixture", i);         fgSetFloat(buf, 1);
-// 	sprintf(buf, "/controls/engines/engine[%d]/propeller-pitch", i); fgSetFloat(buf, 1);
-// 	sprintf(buf, "/controls/engines/engine[%d]/augmentation", i);     fgSetFloat(buf, 0);
-//     }
-
-//     fgSetFloat("/controls/flight/slats", 0);
-//     fgSetFloat("/controls/flight/spoilers", 0);
 
     // Are we at ground level?  If so, lift the plane up so the gear
     // clear the ground.
@@ -171,13 +160,6 @@ void YASim::init()
 	_set_Altitude(runway_altitude - minGearZ*M2FT);
 	fgSetBool("/controls/gear/gear-down", true);
     }
-
-    // The pilot's eyepoint
-    float pilot[3];
-    a->getPilotPos(pilot);
-//     fgSetFloat("/sim/view/pilot/x-offset-m", -pilot[0]);
-//     fgSetFloat("/sim/view/pilot/y-offset-m", -pilot[1]);
-//     fgSetFloat("/sim/view/pilot/z-offset-m", pilot[2]);
 
     // Blank the state, and copy in ours
     State s;
