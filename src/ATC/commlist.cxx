@@ -138,6 +138,8 @@ bool FGCommList::FindByFreq( double lon, double lat, double elev, double freq,
 	// double az1, az2, s;
 	Point3D aircraft = sgGeodToCart( Point3D(lon, lat, elev) );
 	Point3D station;
+	const double orig_max_d = 1e100; 
+	double max_d = orig_max_d;
 	double d;
 	// TODO - at the moment this loop returns the first match found in range
 	// We want to return the closest match in the event of a frequency conflict
@@ -150,21 +152,28 @@ bool FGCommList::FindByFreq( double lon, double lat, double elev, double freq,
 		d = aircraft.distance3Dsquared( station );
 		
 		//cout << "  dist = " << sqrt(d)
-		//     << "  range = " << current->get_range() * SG_NM_TO_METER << endl;
+		//     << "  range = " << current->range * SG_NM_TO_METER << endl;
 		
-		// match up to twice the published range so we can model
+		// TODO - match up to twice the published range so we can model
 		// reduced signal strength
-		if ( d < (2 * current->range * SG_NM_TO_METER 
-		* 2 * current->range * SG_NM_TO_METER ) ) {
-			//cout << "matched = " << current->get_ident() << endl;
+		// NOTE The below is squared since we match to distance3Dsquared (above) to avoid a sqrt.
+		if ( d < (current->range * SG_NM_TO_METER 
+		     * current->range * SG_NM_TO_METER ) ) {
+			//cout << "matched = " << current->ident << endl;
 			if((tp == INVALID) || (tp == (*current).type)) {
-				*ad = *current;
-				return true;
+				if(d < max_d) {
+					max_d = d;
+					*ad = *current;
+				}
 			}
 		}
 	}
 	
-	return false;
+	if(max_d < orig_max_d) {
+		return true;
+	} else {
+		return false;
+	}
 }
 
 int FGCommList::FindByPos(double lon, double lat, double elev, double range, comm_list_type* stations, atc_type tp)
@@ -200,8 +209,9 @@ int FGCommList::FindByPos(double lon, double lat, double elev, double range, com
 				if((current->type == tp) || (tp == INVALID)) {
 					station = Point3D(current->x, current->y, current->z);
 					d = aircraft.distance3Dsquared( station );
-					if ( d < (current->range * SG_NM_TO_METER 
-					* current->range * SG_NM_TO_METER ) ) {
+					// NOTE The below is squared since we match to distance3Dsquared (above) to avoid a sqrt.
+					if ( d < (current->range * SG_NM_TO_METER
+					     * current->range * SG_NM_TO_METER ) ) {
 						stations->push_back(*current);
 						++found;
 					}
