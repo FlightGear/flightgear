@@ -93,15 +93,20 @@
 #include <Time/sunpos.hxx>
 #include <Time/tmp.hxx>
 
-// $$$ begin - added VS Renganathan
+// begin - added Venky
+//    $$$ begin - added VS Renganathan
 #include <simgear/misc/fgstream.hxx>
 #include <FDM/flight.hxx>
+#include <FDM/ADA.hxx>
 void fgLoadDCS (void);
 void fgUpdateDCS (void);
-ssgSelector *ship_sel = NULL;
-ssgTransform *ship_pos = NULL;
-//int totalDCSobj = 0;
-// $$$ end - added VS Renganathan
+ssgSelector *ship_sel=NULL;
+// upto 32 instances of a same object can be loaded.
+ssgTransform *ship_pos[32];
+double obj_lat[32],obj_lon[32],obj_alt[32];
+int objc=0;
+//    $$$ end - added VS Renganathan
+// end - added Venky
 
 #ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
@@ -1642,9 +1647,27 @@ int main( int argc, char **argv ) {
 
 
 // $$$ end - added VS Renganathan, 15 Oct 2K
+//         - added Venky         , 12 Nov 2K
+
 void fgLoadDCS(void) {
 
-    string obj_filename;
+    ssgEntity *ship_obj;
+    double bz[3];
+    int j=0;
+    char obj_filename[25];
+
+    for (int k=0;k<32;k++)
+    {
+        ship_pos[k]=NULL;
+    }
+
+    FGPath tile_path( globals->get_options()->get_fg_root());
+    tile_path.append( "Scenery" );
+    tile_path.append( "Objects.txt" );
+    fg_gzifstream in( tile_path.str() );
+    if ( ! in.is_open() ) {
+	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << tile_path.str() );
+    }
 
     FGPath modelpath( globals->get_options()->get_fg_root() );
     modelpath.append( "Models" );
@@ -1657,65 +1680,93 @@ void fgLoadDCS(void) {
     ssgModelPath( (char *)modelpath.c_str() );
     ssgTexturePath( (char *)texturepath.c_str() );
 
-    // while ( ! in.eof() ) {
-    //     in >> obj_filename >> obj_lat >> obj_lon >> obj_alt;
-    //     totalDCSobj = totalDCSobj+1;
-
     ship_sel = new ssgSelector;
-    ship_pos = new ssgTransform;
-    ssgEntity *ship_obj = ssgLoadOBJ( "saratoga.obj" );
-    if ( ship_obj != NULL ) {
-	ship_pos->addKid( ship_obj ); // add object to transform node
-	ship_sel->addKid( ship_pos ); // add transform node to selector
-	// ssgFlatten( ship_obj );
-	// ssgStripify( ship_sel );
-	ship_sel->clrTraversalMaskBits( SSGTRAV_HOT );
-	scene->addKid( ship_sel ); //add selector node to root node
-    } else {
-	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << "saratoga.obj" );
-    }
 
-    //     if (in.eof()) break;
+    char c;
+    while ( ! in.eof() ) 
+    {
+       in >> skipws;
+       if ( in.get( c ) && c == '#' )
+       { 
+            in >> skipeol;
+       }
+       else 
+       { 
+       	in.putback(c);
+           	in >> obj_filename >> obj_lat[objc] >> obj_lon[objc] >> obj_alt[objc];
+/*       	cout << endl << obj_filename << " " << obj_lat[objc] << " " << obj_lon[objc] <<  " " << obj_alt[objc] << endl;
+       	int chj=getchar();*/
+                
+	      obj_lon[objc] *=DEG_TO_RAD;
+      	obj_lat[objc] *=DEG_TO_RAD;
+    
+            ship_pos[objc] = new ssgTransform;
+       
+       
+       	// type "repeat" in objects.txt to load one more instance of the last object.
 
-    // } // while
+       	if ( strcmp(obj_filename,"repeat") != 0)
+                  ship_obj = ssgLoadOBJ( obj_filename );
+      
+	      if ( ship_obj != NULL ) 
+            {
+	 		ship_pos[objc]->addKid( ship_obj ); // add object to transform node
+		 	ship_sel->addKid( ship_pos[objc] ); // add transform node to selector
+			}
+       	else
+       		FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << obj_filename );
+            
+      	if (in.eof()) break;
+            objc++;
+         }
+     } // while
+
+    ship_sel->clrTraversalMaskBits( SSGTRAV_HOT );
+    scene->addKid( ship_sel ); //add selector node to root node
     return;
-}
+ }
 
 
 void fgUpdateDCS (void) {
 
-    // double eye_lat,eye_lon,eye_alt;
-    static double obj_lat=15.377603*DEG_TO_RAD;
-    static double obj_lon= 73.816436*DEG_TO_RAD;
-    static double obj_alt=0.15;
-    // static double obj_head;
+    double eye_lat,eye_lon,eye_alt;
+    static double obj_head;
     double sl_radius,obj_latgc;
-    // float nresultmat[4][4];
+    float nresultmat[4][4];
+    sgMat4 Trans,rothead,rotlon,rot180,rotlat,resultmat1,resultmat2,resultmat3;
     double bz[3];
 
-    obj_lat = obj_lat + 0.0000001;
-
     // Instantaneous Geodetic Lat/Lon/Alt of moving object
-    //    obj_lon = current_aircraft.fdm_state->get_aux5()*DEG_TO_RAD;
-    //    obj_lat = current_aircraft.fdm_state->get_aux6()*DEG_TO_RAD;
-    //    obj_alt = current_aircraft.fdm_state->get_aux7();
-	  
-    // Geodetic to Geocentric angles for rotation
-    sgGeodToGeoc(obj_lat,obj_alt,&sl_radius,&obj_latgc);
+    FGADA *fdm = (FGADA *)current_aircraft.fdm_state;
+    
+    // Deck should be the first object in objects.txt in case of fdm=ada
 
-    // moving object gbs-posn in cartesian coords
-    Point3D obj_posn = Point3D( obj_lon,obj_lat,obj_alt);
-    Point3D obj_pos = sgGeodToCart( obj_posn );
+    if ((globals->get_options()->get_flight_model()) == 4 )
+    {
+      obj_lon[0] = fdm->get_aux5()*DEG_TO_RAD;
+      obj_lat[0] = fdm->get_aux6()*DEG_TO_RAD;
+      obj_alt[0] = fdm->get_aux7();
+    }
+    
+    for (int m=0; m<=objc; m++)
+    {
+    	//cout << endl <<  obj_lat[m]*RAD_TO_DEG << " " << obj_lon[m]*RAD_TO_DEG << " " << obj_alt[m] << " " << objc << endl;
+	//int v=getchar();
 
-    // Translate moving object w.r.t eye
-    Point3D Objtrans = obj_pos-scenery.center;
-    bz[0]=Objtrans.x();
-    bz[1]=Objtrans.y();
-    bz[2]=Objtrans.z();
+        //Geodetic to Geocentric angles for rotation
+	sgGeodToGeoc(obj_lat[m],obj_alt[m],&sl_radius,&obj_latgc);
 
-    // rotate dynamic objects for lat,lon & alt and other motion about its axes
-    if ( ship_sel != NULL ) {
-	ship_sel->select(1);
+        //moving object gbs-posn in cartesian coords
+        Point3D obj_posn = Point3D( obj_lon[m],obj_lat[m],obj_alt[m]);
+        Point3D obj_pos = sgGeodToCart( obj_posn );
+
+        // Translate moving object w.r.t eye
+        Point3D Objtrans = obj_pos-scenery.center;
+        bz[0]=Objtrans.x();
+        bz[1]=Objtrans.y();
+        bz[2]=Objtrans.z();
+
+       // rotate dynamic objects for lat,lon & alt and other motion about its axes
 	
 	sgMat4 sgTRANS;
 	sgMakeTransMat4( sgTRANS, bz[0],bz[1],bz[2]);
@@ -1726,7 +1777,7 @@ void fgUpdateDCS (void) {
 	sgSetVec3( ship_up, 0.0, 0.0, 1.0); //north,yaw
 
 	sgMat4 sgROT_lon, sgROT_lat, sgROT_hdg;
-	sgMakeRotMat4( sgROT_lon, obj_lon*RAD_TO_DEG, ship_up );
+	sgMakeRotMat4( sgROT_lon, obj_lon[m]*RAD_TO_DEG, ship_up );
 	sgMakeRotMat4( sgROT_lat, 90-obj_latgc*RAD_TO_DEG, ship_rt );
 	sgMakeRotMat4( sgROT_hdg, 180.0, ship_up );
 	
@@ -1737,9 +1788,12 @@ void fgUpdateDCS (void) {
 	sgPostMultMat4( sgTUX, sgTRANS );
 
 	sgCoord shippos;
-	sgSetCoord( &shippos, sgTUX );
-	ship_pos->setTransform( &shippos );
+	sgSetCoord(&shippos, sgTUX );
+	ship_pos[m]->setTransform( &shippos );
     }
-}
+   if ( ship_sel != NULL ) 
+	ship_sel->select(0xFFFFFFFF);
+  }
 
 // $$$ end - added VS Renganathan, 15 Oct 2K
+//           added Venky         , 12 Nov 2K

@@ -197,6 +197,7 @@ private:
     double visibility;	// visibilty in meters
 
     // HUD options
+    int hud_flag;	// Type of hud, added by Neetha, 28 Nov 2k
     int units;         // feet or meters
     int tris_or_culled;
 
@@ -299,6 +300,8 @@ public:
     }
     inline double get_default_visibility() const { return visibility; }
 
+    // added, Neetha, 28 Nov 2k
+    inline int get_hud_flag() const { return hud_flag; }
     inline int get_units() const { return units; }
     inline int get_tris_or_culled() const { return tris_or_culled; }
 
@@ -379,6 +382,9 @@ public:
 
     inline void set_network_olk( bool net ) { network_olk = net; }
     inline void set_net_id( const string id ) { net_id = id; }
+
+    // added, Neetha, 28 Nov 2k
+    inline void set_hud_flag (int value) { hud_flag = value; }
 
 private:
 

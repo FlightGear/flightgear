@@ -667,9 +667,16 @@ int FGOptions::parse_option( const string& arg ) {
     } else if ( arg == "--disable-hud" ) {
 	hud_status = false;	
 	current_properties.setBoolValue("/sim/hud/visibility", false);
-    } else if ( arg == "--enable-hud" ) {
-	hud_status = true;	
+//$$$ begin - added Neetha
+    } else if ( arg == "--enable-default_hud" ) {
+	hud_status = true;
+	hud_flag = 1;
 	current_properties.setBoolValue("/sim/hud/visibility", true);
+    } else if ( arg == "--enable-ada_hud" ) {
+	hud_status = true;
+	hud_flag = 2;
+	current_properties.setBoolValue("/sim/hud/visibility", true);
+//$$$ end - added Neetha
     } else if ( arg == "--disable-panel" ) {
 	panel_status = false;
 	current_properties.setBoolValue("/sim/panel/visibility", false);
