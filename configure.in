@@ -5,7 +5,7 @@ dnl
 AC_INIT(Simulator/Aircraft/aircraft.c)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.40)
+AM_INIT_AUTOMAKE(FlightGear, 0.41)
 
 dnl Checks for programs.
 
@@ -81,19 +81,19 @@ if test "x$am_cv_cygwin32" = "xyes" ; then
         exit 1
     fi
     if [[ -f `pwd`/Win32/glu.dll ]]; then
-        echo "    found glu.dll, adding -lglu"
-        LIBS="$LIBS -lglu"
+        echo "    found glu.dll"
     else
-        echo "    Cannot find glu.dll"
-        exit 1
+        echo "    Can't find glu.dll, assuming it's someplace"
     fi
+    echo "    adding -lglu"
+    LIBS="$LIBS -lglu"
     if [[ -f `pwd`/Win32/opengl.dll ]]; then
-        echo "    found opengl.dll, adding -lopengl"
-        LIBS="$LIBS -lopengl"
+        echo "    found opengl.dll"
     else
-        echo "    Cannot find opengl.dll"
-        exit 1
+        echo "    Can't find opengl.dll, assuming it's somplace"
     fi
+    echo "    adding -lopengl"
+    LIBS="$LIBS -lopengl"
     echo "    adding -luser32 -lgdi32"
     LIBS="$LIBS -luser32 -lgdi32"
     ac_cv_lib_glut_glutGetModifiers="yes"
@@ -126,21 +126,34 @@ AM_CONFIG_HEADER(Simulator/Include/config.h)
 
 AC_OUTPUT( \
 	Makefile \
+	Simulator/Makefile \
 	Simulator/Aircraft/Makefile \
 	Simulator/Astro/Makefile \
 	Simulator/Cockpit/Makefile \
 	Simulator/Controls/Makefile \
 	Simulator/Flight/LaRCsim/Makefile \
-	Simulator/Flight/Makefile \
 	Simulator/Flight/Slew/Makefile \
+	Simulator/Flight/Makefile \
 	Simulator/Include/Makefile \
 	Simulator/Joystick/Makefile \
-	Simulator/Linux/Makefile \
 	Simulator/Main/Makefile \
+	Simulator/Main/runfg \
+	Simulator/Main/runfg.bat \
 	Simulator/Makefile \
 	Simulator/Math/Makefile \
+	Simulator/Scenery/Bucket/Makefile \
 	Simulator/Scenery/Makefile \
 	Simulator/Time/Makefile \
 	Simulator/Weather/Makefile \
 	Simulator/XGL/Makefile \
+	Tools/Makefile \
+	Tools/AssemTris/Makefile \
+	Tools/DEM/Makefile \
+	Tools/Dem2node/Makefile \
+	Tools/FixNode/Makefile \
+	Tools/FixObj/Makefile \
+	Tools/SplitTris/Makefile \
+	Tools/Stripe_u/Makefile \
+	Tools/Tri2obj/Makefile \
+	Tools/Triangle/Makefile \
 	)

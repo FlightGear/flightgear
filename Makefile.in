@@ -71,7 +71,9 @@ PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
 VERSION = @VERSION@
 
-SUBDIRS = Simulator
+SUBDIRS = Simulator Tools
+
+EXTRA_DIST = Makefile.extra README.Win32 README.autoconf README.running Thanks
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ./Simulator/Include/config.h
@@ -223,6 +225,7 @@ distdir: $(DISTFILES)
 	  (cd $$subdir && $(MAKE) top_distdir=../$(distdir) distdir=../$(distdir)/$$subdir distdir) \
 	    || exit 1; \
 	done
+	$(MAKE) top_distdir="$(top_distdir)" distdir="$(distdir)" dist-hook
 info: info-recursive
 dvi: dvi-recursive
 check: all-am
@@ -293,6 +296,9 @@ installcheck all-am install-exec install-data install uninstall all \
 installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
+
+dist-hook:
+	tar cf - Hints | (cd $(distdir); tar xvf -)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

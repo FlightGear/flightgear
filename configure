@@ -703,7 +703,7 @@ fi
 
 PACKAGE=FlightGear
 
-VERSION=0.40
+VERSION=0.41
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { echo "configure: error: source directory already configured; run "make distclean" there first" 1>&2; exit 1; }
@@ -1316,7 +1316,7 @@ echo "configure:1316: checking for ld used by GCC" >&5
   ac_prog=`($CC -print-prog-name=ld) 2>&5`
   case "$ac_prog" in
   # Accept absolute paths.
-  /* | A-Za-z:\\*)
+  /* | [A-Za-z]:\\*)
     test -z "$LD" && LD="$ac_prog"
     ;;
   "")
@@ -3219,19 +3219,19 @@ EOF
         exit 1
     fi
     if [ -f `pwd`/Win32/glu.dll ]; then
-        echo "    found glu.dll, adding -lglu"
-        LIBS="$LIBS -lglu"
+        echo "    found glu.dll"
     else
-        echo "    Cannot find glu.dll"
-        exit 1
+        echo "    Can't find glu.dll, assuming it's someplace"
     fi
+    echo "    adding -lglu"
+    LIBS="$LIBS -lglu"
     if [ -f `pwd`/Win32/opengl.dll ]; then
-        echo "    found opengl.dll, adding -lopengl"
-        LIBS="$LIBS -lopengl"
+        echo "    found opengl.dll"
     else
-        echo "    Cannot find opengl.dll"
-        exit 1
+        echo "    Can't find opengl.dll, assuming it's somplace"
     fi
+    echo "    adding -lopengl"
+    LIBS="$LIBS -lopengl"
     echo "    adding -luser32 -lgdi32"
     LIBS="$LIBS -luser32 -lgdi32"
     ac_cv_lib_glut_glutGetModifiers="yes"
@@ -3877,23 +3877,36 @@ ac_given_INSTALL="$INSTALL"
 
 trap 'rm -fr `echo "\
 	Makefile \
+	Simulator/Makefile \
 	Simulator/Aircraft/Makefile \
 	Simulator/Astro/Makefile \
 	Simulator/Cockpit/Makefile \
 	Simulator/Controls/Makefile \
 	Simulator/Flight/LaRCsim/Makefile \
-	Simulator/Flight/Makefile \
 	Simulator/Flight/Slew/Makefile \
+	Simulator/Flight/Makefile \
 	Simulator/Include/Makefile \
 	Simulator/Joystick/Makefile \
-	Simulator/Linux/Makefile \
 	Simulator/Main/Makefile \
+	Simulator/Main/runfg \
+	Simulator/Main/runfg.bat \
 	Simulator/Makefile \
 	Simulator/Math/Makefile \
+	Simulator/Scenery/Bucket/Makefile \
 	Simulator/Scenery/Makefile \
 	Simulator/Time/Makefile \
 	Simulator/Weather/Makefile \
 	Simulator/XGL/Makefile \
+	Tools/Makefile \
+	Tools/AssemTris/Makefile \
+	Tools/DEM/Makefile \
+	Tools/Dem2node/Makefile \
+	Tools/FixNode/Makefile \
+	Tools/FixObj/Makefile \
+	Tools/SplitTris/Makefile \
+	Tools/Stripe_u/Makefile \
+	Tools/Tri2obj/Makefile \
+	Tools/Triangle/Makefile \
 	 Simulator/Include/config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
@@ -3996,23 +4009,36 @@ cat >> $CONFIG_STATUS <<EOF
 
 CONFIG_FILES=\${CONFIG_FILES-"\
 	Makefile \
+	Simulator/Makefile \
 	Simulator/Aircraft/Makefile \
 	Simulator/Astro/Makefile \
 	Simulator/Cockpit/Makefile \
 	Simulator/Controls/Makefile \
 	Simulator/Flight/LaRCsim/Makefile \
-	Simulator/Flight/Makefile \
 	Simulator/Flight/Slew/Makefile \
+	Simulator/Flight/Makefile \
 	Simulator/Include/Makefile \
 	Simulator/Joystick/Makefile \
-	Simulator/Linux/Makefile \
 	Simulator/Main/Makefile \
+	Simulator/Main/runfg \
+	Simulator/Main/runfg.bat \
 	Simulator/Makefile \
 	Simulator/Math/Makefile \
+	Simulator/Scenery/Bucket/Makefile \
 	Simulator/Scenery/Makefile \
 	Simulator/Time/Makefile \
 	Simulator/Weather/Makefile \
 	Simulator/XGL/Makefile \
+	Tools/Makefile \
+	Tools/AssemTris/Makefile \
+	Tools/DEM/Makefile \
+	Tools/Dem2node/Makefile \
+	Tools/FixNode/Makefile \
+	Tools/FixObj/Makefile \
+	Tools/SplitTris/Makefile \
+	Tools/Stripe_u/Makefile \
+	Tools/Tri2obj/Makefile \
+	Tools/Triangle/Makefile \
 	"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
