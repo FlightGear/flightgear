@@ -158,12 +158,16 @@ public:
 private:
     FGInterpolateEnvironmentCtrl *env;
 
-    string _icao;
     float station_elevation_ft;
     float update_interval_sec;
     float elapsed;
     bool fetch_data (const string &icao);
     void update_env_config();
+
+    string _icao;
+    SGPropertyNode *proxy_host;
+    SGPropertyNode *proxy_port;
+    SGPropertyNode *proxy_auth;
 
 private:
 
