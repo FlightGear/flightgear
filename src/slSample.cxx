@@ -71,7 +71,7 @@ void slSample::changeRate   ( int r )
   buffer = buffer2 ;
 }
 
-#ifdef 0
+#if 0
 void slSample::changeToUnsigned ()
 {
   if ( getBps() == 16 )
