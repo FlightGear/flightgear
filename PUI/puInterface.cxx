@@ -253,10 +253,15 @@ void puInterface::doHit ( int, int, int, int )
 
 puInterface::~puInterface ()
 {
-  puPopLiveInterface () ;
+    puPopLiveInterface () ;
 
-  for ( puObject *bo = dlist ; bo != NULL ; bo = bo->next )
-    delete bo ;
+    puObject *bo = dlist ;
+
+    while ( bo != NULL ) {
+	puObject *tmp_bo = bo->next ;
+	delete bo ;
+	bo = tmp_bo ;
+    }
 }
 
 
