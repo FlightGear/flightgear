@@ -26,6 +26,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+#endif // HAVE_STDLIB_H
+
 #include "triload.hxx"
 
 
@@ -65,6 +69,9 @@ void triload(char *filename, double nodes[MAX_NODES][3]) {
 
 
 // $Log$
+// Revision 1.2  1998/04/26 05:02:06  curt
+// Added #ifdef HAVE_STDLIB_H
+//
 // Revision 1.1  1998/04/08 23:05:58  curt
 // Adopted Gnu automake/autoconf system.
 //

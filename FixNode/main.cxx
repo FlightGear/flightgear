@@ -29,6 +29,10 @@
 #include <string.h>
 #include <sys/types.h>
 
+#ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+#endif // HAVE_STDLIB_H
+
 #include <DEM/dem.hxx>
 
 #include "fixnode.hxx"
@@ -104,6 +108,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.3  1998/04/26 05:02:06  curt
+// Added #ifdef HAVE_STDLIB_H
+//
 // Revision 1.2  1998/04/14 02:26:04  curt
 // Code reorganizations.  Added a Lib/ directory for more general libraries.
 //
