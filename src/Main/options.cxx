@@ -902,6 +902,19 @@ parse_option (const string& arg)
 	  SG_LOG(SG_INPUT, SG_ALERT, message);
 	  exit(2);
 	}
+    } else if ( arg.find( "--aircraft=" ) == 0 ) {
+        SGPath apath(globals->get_fg_root());
+	apath.append("Aircraft");
+	apath.append(arg.substr(11));
+	apath.concat("-set.xml");
+	try {
+            readProperties(apath.str(), globals->get_props());
+	} catch (const sg_exception &e) {
+            string message = "Error loading aircraft file: ";
+            message += e.getFormattedMessage();
+            SG_LOG(SG_INPUT, SG_ALERT, message);
+            exit(2);
+	}
     } else {
 	SG_LOG( SG_GENERAL, SG_ALERT, "Unknown option '" << arg << "'" );
 	return FG_OPTIONS_ERROR;
