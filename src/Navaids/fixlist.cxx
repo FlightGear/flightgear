@@ -28,6 +28,9 @@
 #include "fixlist.hxx"
 
 
+FGFixList *current_fixlist;
+
+
 // Constructor
 FGFixList::FGFixList( void ) {
 }

@@ -28,6 +28,9 @@
 #include "ilslist.hxx"
 
 
+FGILSList *current_ilslist;
+
+
 // Constructor
 FGILSList::FGILSList( void ) {
 }
@@ -95,7 +98,7 @@ bool FGILSList::init( FGPath path ) {
 bool FGILSList::query( double lon, double lat, double elev, double freq,
 		       FGILS *ils, double *heading, double *dist )
 {
-    ils_list_type stations = ilslist[(int)(freq*100.0)];
+    ils_list_type stations = ilslist[(int)(freq*100.0 + 0.5)];
 
     ils_list_iterator current = stations.begin();
     ils_list_iterator last = stations.end();

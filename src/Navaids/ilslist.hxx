@@ -65,4 +65,7 @@ public:
 };
 
 
+extern FGILSList *current_ilslist;
+
+
 #endif // _FG_ILSLIST_HXX

@@ -28,6 +28,9 @@
 #include "navlist.hxx"
 
 
+FGNavList *current_navlist;
+
+
 // Constructor
 FGNavList::FGNavList( void ) {
 }
@@ -95,7 +98,7 @@ bool FGNavList::init( FGPath path ) {
 bool FGNavList::query( double lon, double lat, double elev, double freq,
 		       FGNav *n, double *heading, double *dist )
 {
-    nav_list_type stations = navaids[(int)(freq*100.0)];
+    nav_list_type stations = navaids[(int)(freq*100.0 + 0.5)];
 
     nav_list_iterator current = stations.begin();
     nav_list_iterator last = stations.end();

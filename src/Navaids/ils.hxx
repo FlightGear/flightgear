@@ -112,7 +112,7 @@ operator >> ( istream& in, FGILS& i )
        >> i.imlat >> i.imlon;
 	
 
-    i.locfreq = (int)(f * 100.0);
+    i.locfreq = (int)(f*100.0 + 0.5);
 
     // return in >> skipeol;
     return in;

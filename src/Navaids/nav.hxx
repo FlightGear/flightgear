@@ -88,7 +88,7 @@ operator >> ( istream& in, FGNav& n )
     in >> n.type >> n.lat >> n.lon >> n.elev >> f >> n.range 
        >> c >> n.ident;
 
-    n.freq = (int)(f * 100.0);
+    n.freq = (int)(f*100.0 + 0.5);
     if ( c == 'Y' ) {
 	n.dme = true;
     } else {

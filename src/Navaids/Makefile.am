@@ -1,13 +1,13 @@
-noinst_LIBRARIES = libNavAids.a
+noinst_LIBRARIES = libNavaids.a
 
 noinst_PROGRAMS = testnavs
 
-libNavAids_a_SOURCES = \
+libNavaids_a_SOURCES = \
 	fix.hxx fixlist.hxx fixlist.cxx \
 	ils.hxx ilslist.hxx ilslist.cxx \
 	nav.hxx navlist.hxx navlist.cxx
 
 testnavs_SOURCES = testnavs.cxx
-testnavs_LDADD = libNavAids.a -lsgdebug -lsgmath -lsgmisc -lz
+testnavs_LDADD = libNavaids.a -lsgdebug -lsgmath -lsgmisc -lz
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/src
