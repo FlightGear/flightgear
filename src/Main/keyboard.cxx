@@ -53,7 +53,8 @@
 #include <Objects/materialmgr.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
-#include <Weather/weather.hxx>
+// #include <Weather/weather.hxx>
+#include <WeatherCM/FGLocalWeatherDatabase.h>
 
 #include "keyboard.hxx"
 #include "options.hxx"
@@ -76,14 +77,15 @@ void GLUTkey(unsigned char k, int x, int y) {
     FGInterface *f;
     FGTime *t;
     FGView *v;
-    FGWeather *w;
+    // FGWeather *w;
     float fov, tmp;
     static bool winding_ccw = true;
+    int speed;
 
     f = current_aircraft.fdm_state;
     t = FGTime::cur_time_params;
     v = &current_view;
-    w = &current_weather;
+    // w = &current_weather;
 
     FG_LOG( FG_INPUT, FG_DEBUG, "Key hit = " << k );
     if ( puKeyboard(k, PU_DOWN) ) {
@@ -138,6 +140,14 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 57: // numeric keypad 9
 	    v->set_goal_view_offset( FG_PI * 1.75 );
 	    return;
+	case 65: // A key
+	    speed = current_options.get_speed_up();
+	    speed--;
+	    if ( speed < 1 ) {
+		speed = 1;
+	    }
+	    current_options.set_speed_up( speed );
+	    return;
 	case 72: // H key
 	    // status = current_options.get_hud_status();
 	    // current_options.set_hud_status(!status);
@@ -177,9 +187,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->force_update_fov_math();
 	    return;
 	case 90: // Z key
-	    tmp = w->get_visibility();   // in meters
+	    // tmp = w->get_visibility();   // in meters
+	    // tmp /= 1.10;
+	    // w->set_visibility( tmp );
+	    tmp = WeatherDatabase->getWeatherVisibility();
 	    tmp /= 1.10;
-	    w->set_visibility( tmp );
+	    WeatherDatabase->setWeatherVisibility( tmp );
 	    return;
 	}
     } else {
@@ -244,6 +257,11 @@ void GLUTkey(unsigned char k, int x, int y) {
 		controls.move_throttle( FGControls::ALL_ENGINES, -0.01 );
 	    }
 	    return;
+	case 97: // a key
+	    speed = current_options.get_speed_up();
+	    speed++;
+	    current_options.set_speed_up( speed );
+	    return;
 	case 98: // b key
 	    int b_ret;
 	    double b_set;
@@ -290,9 +308,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->force_update_fov_math();
 	    return;
 	case 122: // z key
-	    tmp = w->get_visibility();   // in meters
+	    // tmp = w->get_visibility();   // in meters
+	    // tmp *= 1.10;
+	    // w->set_visibility( tmp );
+	    tmp = WeatherDatabase->getWeatherVisibility();
 	    tmp *= 1.10;
-	    w->set_visibility( tmp );
+	    WeatherDatabase->setWeatherVisibility( tmp );
 	    return;
 	case 27: // ESC
 	    // if( fg_DebugOutput ) {

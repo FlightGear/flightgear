@@ -91,7 +91,8 @@
 #include <Time/fg_time.hxx>
 #include <Time/fg_timer.hxx>
 #include <Time/sunpos.hxx>
-#include <Weather/weather.hxx>
+// #include <Weather/weather.hxx>
+// #include <WeatherCM/FGLocalWeatherDatabase.h>
 
 #include "fg_init.hxx"
 #include "keyboard.hxx"
@@ -473,7 +474,9 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 
 	// printf("updating flight model x %d\n", multi_loop);
 	fgFDMUpdate( current_options.get_flight_model(), 
-		     cur_fdm_state, multi_loop * 1, remainder );
+		     cur_fdm_state, 
+		     multi_loop * current_options.get_speed_up(),
+		     remainder );
     } else {
 	fgFDMUpdate( current_options.get_flight_model(), 
 		     cur_fdm_state, 0, remainder );
@@ -556,14 +559,16 @@ static void fgMainLoop( void ) {
 
 #if defined( ENABLE_PLIB_JOYSTICK )
     // Read joystick and update control settings
-    fgJoystickRead();
+    if ( current_options.get_control_mode() == fgOPTIONS::FG_JOYSTICK ) {
+	fgJoystickRead();
+    }
 #elif defined( ENABLE_GLUT_JOYSTICK )
     // Glut joystick support works by feeding a joystick handler
     // function to glut.  This is taken care of once in the joystick
     // init routine and we don't have to worry about it again.
 #endif
 
-    current_weather.Update();
+    // current_weather.Update();
 
     // Fix elevation.  I'm just sticking this here for now, it should
     // probably move eventually

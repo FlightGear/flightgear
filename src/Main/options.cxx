@@ -152,6 +152,7 @@ fgOPTIONS::fgOPTIONS() :
     intro_music(1),
     mouse_pointer(0),
     pause(0),
+    control_mode(FG_JOYSTICK),
 
     // Features
     hud_status(1),
@@ -159,7 +160,8 @@ fgOPTIONS::fgOPTIONS() :
     sound(1),
 
     // Flight Model options
-    flight_model(FGInterface::FG_LARCSIM),
+    flight_model( FGInterface::FG_LARCSIM ),
+    speed_up( 1 ),
 
     // Rendering options
     fog(FG_FOG_NICEST),  // nicest
@@ -433,6 +435,18 @@ long int fgOPTIONS::parse_date( const string& date)
 
 
 // parse degree in the form of [+/-]hhh:mm:ss
+void fgOPTIONS::parse_control( const string& mode ) {
+    if ( mode == "joystick" ) {
+	control_mode = FG_JOYSTICK;
+    } else if ( mode == "mouse" ) {
+	control_mode = FG_MOUSE;
+    } else {
+	control_mode = FG_KEYBOARD;
+    }
+}
+
+
+/// parse degree in the form of [+/-]hhh:mm:ss
 double
 fgOPTIONS::parse_degree( const string& degree_str) {
     double result = parse_time( degree_str );
@@ -570,6 +584,8 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	pause = false;	
     } else if ( arg == "--enable-pause" ) {
 	pause = true;	
+    } else if ( arg.find( "--control=") != string::npos ) {
+	parse_control( arg.substr(10) );
     } else if ( arg == "--disable-hud" ) {
 	hud_status = false;	
     } else if ( arg == "--enable-hud" ) {
@@ -623,6 +639,8 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	fg_root = arg.substr( 10 );
     } else if ( arg.find( "--fdm=" ) != string::npos ) {
 	flight_model = parse_fdm( arg.substr(6) );
+    } else if ( arg.find( "--speed=" ) != string::npos ) {
+	speed_up = atoi( arg.substr(8) );
     } else if ( arg == "--fog-disable" ) {
 	fog = FG_FOG_DISABLED;	
     } else if ( arg == "--fog-fastest" ) {
@@ -778,6 +796,7 @@ void fgOPTIONS::usage ( void ) {
     printf("\t\tfull screen voodoo/voodoo-II based cards.)\n");
     printf("\t--disable-pause:  start out in an active state\n");
     printf("\t--enable-pause:  start out in a paused state\n");
+    printf("\t--control=mode:  primary control mode (joystick, keyboard, mouse)\n");
     printf("\n");
 
     printf("Features:\n");
@@ -791,6 +810,7 @@ void fgOPTIONS::usage ( void ) {
  
     printf("Flight Model:\n");
     printf("\t--fdm=abcd:  one of slew, jsb, larcsim, or external\n");
+    printf("\t--speed=n:  run the FDM this much faster than real time\n");
     printf("\n");
 
     printf("Initial Position and Orientation:\n");

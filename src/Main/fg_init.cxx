@@ -70,7 +70,8 @@
 #include <Time/light.hxx>
 #include <Time/sunpos.hxx>
 #include <Time/moonpos.hxx>
-#include <Weather/weather.hxx>
+// #include <Weather/weather.hxx>
+#include <WeatherCM/FGLocalWeatherDatabase.h>
 
 #include "fg_init.hxx"
 #include "options.hxx"
@@ -405,7 +406,21 @@ bool fgInitSubsystems( void ) {
 			    fgEVENT::FG_EVENT_READY, 30000 );
 
     // Initialize the weather modeling subsystem
-    current_weather.Init();
+    // current_weather.Init();
+    // Initialize the WeatherDatabase
+    FG_LOG(FG_GENERAL, FG_INFO, "Creating LocalWeatherDatabase");
+    FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
+	new FGLocalWeatherDatabase(
+	      Point3D( current_aircraft.fdm_state->get_Latitude(),
+		       current_aircraft.fdm_state->get_Longitude(),
+		       current_aircraft.fdm_state->get_Altitude() 
+		          * FEET_TO_METER) );
+
+    WeatherDatabase = FGLocalWeatherDatabase::theFGLocalWeatherDatabase;
+
+    // register the periodic update of the weather
+    global_events.Register( "weather update", fgUpdateWeatherDatabase,
+			    fgEVENT::FG_EVENT_READY, 30000);
 
     // Initialize the Cockpit subsystem
     if( fgCockpitInit( &current_aircraft )) {

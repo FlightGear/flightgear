@@ -87,6 +87,13 @@ public:
 	FG_RADIUS_MAX = 4
     };
 
+    enum fgControlMode
+    {
+	FG_JOYSTICK = 0,
+	FG_KEYBOARD = 1,
+	FG_MOUSE = 2
+    };
+
 private:
 
     // The flight gear "root" directory
@@ -110,6 +117,7 @@ private:
     bool intro_music;   // play introductory music
     int mouse_pointer;  // show mouse pointer
     bool pause;         // pause intially enabled/disabled
+    fgControlMode control_mode; // primary control mode
 
     // Features
     bool hud_status;    // HUD on/off
@@ -118,6 +126,7 @@ private:
 
     // Flight Model options
     int flight_model;   // Flight Model:  FG_SLEW, FG_LARCSIM, etc.
+    int speed_up;       // Sim mechanics run this much faster than normal speed
 
     // Rendering options
     fgFogKind fog;      // Fog nicest/fastest/disabled
@@ -192,10 +201,14 @@ public:
     inline bool get_intro_music() const { return intro_music; }
     inline int get_mouse_pointer() const { return mouse_pointer; }
     inline bool get_pause() const { return pause; }
+    inline fgControlMode get_control_mode() const { return control_mode; }
+    inline void set_control_mode( fgControlMode mode ) { control_mode = mode; }
     inline bool get_hud_status() const { return hud_status; }
     inline bool get_panel_status() const { return panel_status; }
     inline bool get_sound() const { return sound; }
     inline int get_flight_model() const { return flight_model; }
+    inline int get_speed_up() const { return speed_up; }
+    inline void set_speed_up( int speed ) { speed_up = speed; }
     inline bool fog_enabled() const { return fog != FG_FOG_DISABLED; }
     inline fgFogKind get_fog() const { return fog; }
     inline double get_fov() const { return fov; }
@@ -244,6 +257,7 @@ public:
 
 private:
 
+    void parse_control( const string& mode );
     double parse_time( const string& time_str );
     long int parse_date( const string& date_str );
     double parse_degree( const string& degree_str );

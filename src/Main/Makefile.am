@@ -39,10 +39,12 @@ fgfs_LDADD = \
 	$(top_builddir)/Simulator/Objects/libObjects.a \
 	$(top_builddir)/Simulator/Time/libTime.a \
 	$(top_builddir)/Simulator/Weather/libWeather.a \
+	$(top_builddir)/Simulator/WeatherCM/libWeatherCM.a \
 	$(top_builddir)/Simulator/Joystick/libJoystick.a \
 	$(SERIAL_LIBS) \
 	$(top_builddir)/Lib/Math/libMath.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
+	$(top_builddir)/Lib/Voronoi/libVoronoi.a \
 	$(top_builddir)/Lib/Debug/libDebug.a \
 	-lpu -lfnt -lssg -lsg \
 	$(top_builddir)/Lib/Misc/libMisc.a \
