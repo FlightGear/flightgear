@@ -48,9 +48,8 @@ public:
     int addWeight(float* pos, float size);
     void setWeight(int handle, float mass);
 
-    void setApproach(float speed, float altitude);
-    void setApproach(float speed, float altitude, float aoa); 
-    void setCruise(float speed, float altitude);
+    void setApproach(float speed, float altitude, float aoa, float fuel);
+    void setCruise(float speed, float altitude, float fuel);
 
     void setElevatorControl(int control);
     void addApproachControl(int control, float val);
@@ -134,6 +133,7 @@ private:
     float _cruiseT;
     float _cruiseSpeed;
     float _cruiseWeight;
+    float _cruiseFuel;
 
     Vector _approachControls;
     State _approachState;
@@ -142,6 +142,7 @@ private:
     float _approachSpeed;
     float _approachAoA;
     float _approachWeight;
+    float _approachFuel;
 
     int _solutionIterations;
     float _dragFactor;

@@ -170,27 +170,23 @@ void Airplane::updateGearState()
     }
 }
 
-void Airplane::setApproach(float speed, float altitude)
-{
-    // The zero AoA will become a calculated stall AoA in compile()
-    setApproach(speed, altitude, 0);
-}
-
-void Airplane::setApproach(float speed, float altitude, float aoa)
+void Airplane::setApproach(float speed, float altitude, float aoa, float fuel)
 {
     _approachSpeed = speed;
     _approachP = Atmosphere::getStdPressure(altitude);
     _approachT = Atmosphere::getStdTemperature(altitude);
     _approachAoA = aoa;
+    _approachFuel = fuel;
 }
  
-void Airplane::setCruise(float speed, float altitude)
+void Airplane::setCruise(float speed, float altitude, float fuel)
 {
     _cruiseSpeed = speed;
     _cruiseP = Atmosphere::getStdPressure(altitude);
     _cruiseT = Atmosphere::getStdTemperature(altitude);
     _cruiseAoA = 0;
     _tailIncidence = 0;
+    _cruiseFuel = fuel;
 }
 
 void Airplane::setElevatorControl(int control)
@@ -780,8 +776,7 @@ void Airplane::runCruise()
     Math::mul3(-1, _cruiseState.v, wind);
     Math::vmul33(_cruiseState.orient, wind, wind);
  
-    // Cruise is by convention at 50% tank capacity
-    setFuelFraction(0.5);
+    setFuelFraction(_cruiseFuel);
    
     // Set up the thruster parameters and iterate until the thrust
     // stabilizes.
@@ -824,7 +819,7 @@ void Airplane::runApproach()
     Math::vmul33(_approachState.orient, wind, wind);
     
     // Approach is by convention at 20% tank capacity
-    setFuelFraction(0.2f);
+    setFuelFraction(_approachFuel);
 
     // Run the thrusters until they get to a stable setting.  FIXME:
     // this is lots of wasted work.

@@ -118,12 +118,12 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	float spd = attrf(a, "speed") * KTS2MPS;
 	float alt = attrf(a, "alt", 0) * FT2M;
 	float aoa = attrf(a, "aoa", 0) * DEG2RAD;
-	_airplane.setApproach(spd, alt, aoa);
+	_airplane.setApproach(spd, alt, aoa, attrf(a, "fuel", 0.2));
 	_cruiseCurr = false;
     } else if(eq(name, "cruise")) {
 	float spd = attrf(a, "speed") * KTS2MPS;
 	float alt = attrf(a, "alt") * FT2M;
-	_airplane.setCruise(spd, alt);
+	_airplane.setCruise(spd, alt, attrf(a, "fuel", 0.5));
 	_cruiseCurr = true;
     } else if(eq(name, "cockpit")) {
 	v[0] = attrf(a, "x");
