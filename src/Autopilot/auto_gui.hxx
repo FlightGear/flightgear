@@ -41,49 +41,15 @@ FG_USING_STD(string);
 // Defines
 #define AP_CURRENT_HEADING -1
 
-
 // prototypes
-// void fgAPToggleWayPoint( void );
-// void fgAPToggleHeading( void );
-// void fgAPToggleAltitude( void );
-// void fgAPToggleTerrainFollow( void );
-// void fgAPToggleAutoThrottle( void );
-
-// bool fgAPTerrainFollowEnabled( void );
-// bool fgAPAltitudeEnabled( void );
-// bool fgAPHeadingEnabled( void );
-// bool fgAPWayPointEnabled( void );
-// bool fgAPAutoThrottleEnabled( void );
-
-// void fgAPAltitudeAdjust( double inc );
-// void fgAPHeadingAdjust( double inc );
-// void fgAPAutoThrottleAdjust( double inc );
-
-// void fgAPHeadingSet( double value );
-
-// double fgAPget_TargetLatitude( void );
-// double fgAPget_TargetLongitude( void );
-// // double fgAPget_TargetHeading( void );
-// double fgAPget_TargetDistance( void );
-// double fgAPget_TargetAltitude( void );
-
-// char *fgAPget_TargetLatitudeStr( void );
-// char *fgAPget_TargetLongitudeStr( void );
-// char *fgAPget_TargetDistanceStr( void );
-// char *fgAPget_TargetHeadingStr( void );
-// char *fgAPget_TargetAltitudeStr( void );
-// char *fgAPget_TargetLatLonStr( void );
-
-//void fgAPset_tgt_airport_id( const string );
-//string fgAPget_tgt_airport_id( void );
-
-// void fgAPReset(void);
 
 class puObject;
 void fgAPAdjust( puObject * );
 void NewHeading(puObject *cb);
 void NewAltitude(puObject *cb);
-void NewTgtAirport(puObject *cb);
+void AddWayPoint(puObject *cb);
+void PopWayPoint(puObject *cb);
+void ClearRoute(puObject *cb);
 
 void NewTgtAirportInit();
 void fgAPAdjustInit() ;

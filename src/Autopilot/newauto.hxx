@@ -135,18 +135,16 @@ public:
     inline bool get_AutoThrottleEnabled() const { return auto_throttle; }
     void set_AutoThrottleEnabled( bool value );
 
-    inline void set_WayPoint( const double lon, const double lat,
-			      const string s ) {
-	waypoint = SGWayPoint( lon, lat, SGWayPoint::WGS84, "Current WP" );
-    }
+    /* inline void set_WayPoint( const double lon, const double lat, 
+			      const double alt, const string s ) {
+	waypoint = SGWayPoint( lon, lat, alt, SGWayPoint::WGS84, "Current WP" );
+    } */
     inline double get_TargetLatitude() const {
 	return waypoint.get_target_lat();
     }
     inline double get_TargetLongitude() const {
 	return waypoint.get_target_lon();
     }
-    // inline void set_TargetLatitude( double val ) { TargetLatitude = val; }
-    // inline void set_TargetLongitude( double val ) { TargetLongitude = val; }
     inline void set_old_lat( double val ) { old_lat = val; }
     inline void set_old_lon( double val ) { old_lon = val; }
     inline double get_TargetHeading() const { return TargetHeading; }

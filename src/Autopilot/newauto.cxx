@@ -37,6 +37,7 @@
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
 #include <Main/bfi.hxx>
+#include <Main/globals.hxx>
 #include <Main/options.hxx>
 #include <Scenery/scenery.hxx>
 
@@ -116,7 +117,8 @@ void FGAutopilot::MakeTargetDistanceStr( double distance ) {
     }
     major = (int)eta;
     minor = (int)((eta - (int)eta) * 60.0);
-    sprintf( TargetDistanceStr, "APDistance %.2f NM  ETA %d:%02d",
+    sprintf( TargetDistanceStr, "%s %.2f NM  ETA %d:%02d",
+	     waypoint.get_id().c_str(),
 	     distance*METER_TO_NM, major, minor );
     // cout << "distance = " << distance*METER_TO_NM
     //      << "  gndsp = " << get_ground_speed() 
@@ -146,7 +148,7 @@ void FGAutopilot::init() {
     // Initialize target location to startup location
     old_lat = FGBFI::getLatitude();
     old_lon = FGBFI::getLongitude();
-    set_WayPoint( old_lon, old_lat, "default" );
+    // set_WayPoint( old_lon, old_lat, 0.0, "default" );
 
     MakeTargetLatLonStr( get_TargetLatitude(), get_TargetLongitude() );
 	
@@ -215,7 +217,7 @@ void FGAutopilot::reset() {
 	
     // TargetLatitude = FGBFI::getLatitude();
     // TargetLongitude = FGBFI::getLongitude();
-    set_WayPoint( FGBFI::getLongitude(), FGBFI::getLatitude(), "reset" );
+    // s<et_WayPoint( FGBFI::getLongitude(), FGBFI::getLatitude(), 0.0, "reset" );
 
     MakeTargetLatLonStr( get_TargetLatitude(), get_TargetLongitude() );
 }
@@ -272,6 +274,7 @@ int FGAutopilot::run() {
 	
     double lat = FGBFI::getLatitude();
     double lon = FGBFI::getLongitude();
+    double alt = FGBFI::getAltitude() * FEET_TO_METER;
 
 #ifdef FG_FORCE_AUTO_DISENGAGE
     // see if somebody else has changed them
@@ -333,7 +336,7 @@ int FGAutopilot::run() {
 	} else if ( heading_mode == FG_HEADING_WAYPOINT ) {
 	    // update target heading to waypoint
 
-	    double wp_course, /*wp_reverse,*/ wp_distance;
+	    double wp_course, wp_distance;
 
 #ifdef DO_fgAP_CORRECTED_COURSE
 	    // compute course made good
@@ -352,7 +355,8 @@ int FGAutopilot::run() {
 
 	    // compute course to way_point
 	    // need to test for iter
-	    waypoint.CourseAndDistance( lon, lat, &wp_course, &wp_distance );
+	    waypoint.CourseAndDistance( lon, lat, alt, 
+					&wp_course, &wp_distance );
 
 #ifdef DO_fgAP_CORRECTED_COURSE
 	    corrected_course = course - wp_course;
@@ -366,12 +370,24 @@ int FGAutopilot::run() {
 		// corrected_course = course - wp_course;
 		TargetHeading = NormalizeDegrees(wp_course);
 	    } else {
-		printf("distance(%f) to close\n", wp_distance);
-		// Real Close -- set heading hold to current heading
-		// and Ring the arival bell !!
-		heading_mode = FG_HEADING_LOCK;
-		// use current heading
-		TargetHeading = FGBFI::getHeading();
+		cout << "Reached waypoint within " << wp_distance << "meters"
+		     << endl;
+
+		// pop off this waypoint from the list
+		if ( globals->get_route()->size() ) {
+		    globals->get_route()->delete_first();
+		}
+
+		// see if there are more waypoints on the list
+		if ( globals->get_route()->size() ) {
+		    // more waypoints
+		    set_HeadingMode( FG_HEADING_WAYPOINT );
+		} else {
+		    // end of the line
+		    heading_mode = FG_HEADING_LOCK;
+		    // use current heading
+		    TargetHeading = FGBFI::getHeading();
+		}
 	    }
 	    MakeTargetHeadingStr( TargetHeading );
 	    // Force this just in case
@@ -623,24 +639,41 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 	// set heading hold to current heading
 	TargetHeading = FGBFI::getHeading();
     } else if ( heading_mode == FG_HEADING_WAYPOINT ) {
-	double course, /*reverse,*/ distance;
-	// turn on location hold
-	// turn on heading hold
-	old_lat = FGBFI::getLatitude();
-	old_lon = FGBFI::getLongitude();
-			
-	waypoint.CourseAndDistance( FGBFI::getLongitude(), FGBFI::getLatitude(),
-				    &course, &distance );
-	TargetHeading = course;
-	TargetDistance = distance;
-	MakeTargetDistanceStr( distance );
+	if ( globals->get_route()->size() ) {
+	    double course, distance;
 
-	FG_LOG( FG_COCKPIT, FG_INFO, " fgAPSetLocation: ( "
-		<< get_TargetLatitude()  << " "
-		<< get_TargetLongitude() << " ) "
-		);
+	    old_lat = FGBFI::getLatitude();
+	    old_lon = FGBFI::getLongitude();
+
+	    waypoint = globals->get_route()->get_first();
+	    waypoint.CourseAndDistance( FGBFI::getLongitude(),
+					FGBFI::getLatitude(),
+					FGBFI::getLatitude() * FEET_TO_METER,
+					&course, &distance );
+	    TargetHeading = course;
+	    TargetDistance = distance;
+	    MakeTargetLatLonStr( waypoint.get_target_lat(),
+				 waypoint.get_target_lon() );
+	    MakeTargetDistanceStr( distance );
+
+	    if ( waypoint.get_target_alt() > 0.0 ) {
+		TargetAltitude = waypoint.get_target_alt();
+		altitude_mode = FG_ALTITUDE_LOCK;
+		set_AltitudeEnabled( true );
+		MakeTargetAltitudeStr( TargetAltitude * METER_TO_FEET );
+	    }
+
+	    FG_LOG( FG_COCKPIT, FG_INFO, " set_HeadingMode: ( "
+		    << get_TargetLatitude()  << " "
+		    << get_TargetLongitude() << " ) "
+		    );
+	} else {
+	    // no more way points, default to heading lock.
+	    heading_mode = FG_HEADING_LOCK;
+	    TargetHeading = FGBFI::getHeading();
+	}
     }
-	
+
     MakeTargetHeadingStr( TargetHeading );			
     update_old_control_values();
 }

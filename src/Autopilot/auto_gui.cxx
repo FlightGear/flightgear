@@ -40,7 +40,9 @@
 #include <GUI/gui.h>
 #include <Main/bfi.hxx>
 #include <Main/fg_init.hxx>
+#include <Main/globals.hxx>
 #include <Main/options.hxx>
+#include <Navaids/fixlist.hxx>
 
 #include "auto_gui.hxx"
 #include "newauto.hxx"
@@ -585,72 +587,51 @@ void TgtAptDialog_OK (puObject *)
     
     char *s;
     TgtAptDialogInput->getValue(&s);
-    TgtAptId = s;
-    
+
+    string tmp = s;
+    double alt = 0.0;
+    int pos = tmp.find( "," );
+    if ( pos != string::npos ) {
+	TgtAptId = tmp.substr( 0, pos );
+	string alt_str = tmp.substr( pos + 1 );
+	alt = atof( alt_str.c_str() );
+	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	    alt *= FEET_TO_METER;
+	}
+    } else {
+	TgtAptId = tmp;
+    }
+
     TgtAptDialog_Cancel( NULL );
     
-    if ( TgtAptId.length() ) {
-        // set initial position from TgtAirport id
+    FGAirport a;
+    FGFix f;
+    double t1, t2;
+    if ( fgFindAirportID( TgtAptId, &a ) ) {
+
+	 FG_LOG( FG_GENERAL, FG_INFO,
+		 "Adding waypoint (airport) = " << TgtAptId );
         
-	FGPath path( current_options.get_fg_root() );
-	path.append( "Airports" );
-	path.append( "simple.mk4" );
-        FGAirports airports( path.c_str() );
-        FGAirport a;
+	 sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
+
+	 SGWayPoint wp( a.longitude, a.latitude, alt,
+			SGWayPoint::WGS84, TgtAptId );
+	 globals->get_route()->add_waypoint( wp );
+    } else if ( current_fixlist->query( TgtAptId, 0.0, 0.0, 0.0,
+					&f, &t1, &t2 ) )
+    {
+	 FG_LOG( FG_GENERAL, FG_INFO,
+		 "Adding waypoint (fix) = " << TgtAptId );
         
-        FG_LOG( FG_GENERAL, FG_INFO,
-                "Attempting to set starting position from airport code "
-                << s );
-        
-        if ( airports.search( TgtAptId, &a ) )
-	    {
-		double course, reverse, distance;
-		//            fgAPset_tgt_airport_id( TgtAptId.c_str() );
-		current_options.set_airport_id( TgtAptId.c_str() );
-		sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
-			
-		current_autopilot->set_WayPoint( a.longitude, a.latitude,
-						 TgtAptId );
-		// current_autopilot->set_TargetLatitude( a.latitude );
-		// current_autopilot->set_TargetLongitude( a.longitude );
-		current_autopilot->MakeTargetLatLonStr(
-				     current_autopilot->get_TargetLatitude(),
-				     current_autopilot->get_TargetLongitude() );
-			
-		current_autopilot->set_old_lat( FGBFI::getLatitude() );
-		current_autopilot->set_old_lon( FGBFI::getLongitude() );
-			
-		// need to test for iter
-		if( ! geo_inverse_wgs_84( FGBFI::getAltitude() * FEET_TO_METER,
-					  FGBFI::getLatitude(),
-					  FGBFI::getLongitude(),
-					  current_autopilot->get_TargetLatitude(),
-					  current_autopilot->get_TargetLongitude(),
-					  &course,
-					  &reverse,
-					  &distance ) ) {
-		    current_autopilot->set_TargetHeading( course );
-		    current_autopilot->MakeTargetHeadingStr(
-				      current_autopilot->get_TargetHeading() );
-		    current_autopilot->set_TargetDistance( distance );
-		    current_autopilot->MakeTargetDistanceStr( distance );
-		    // This changes the AutoPilot Heading
-		    // following cast needed
-		    ApHeadingDialogInput->
-			setValue((float)current_autopilot->get_TargetHeading() );
-		    // Force this !
-		    current_autopilot->set_HeadingEnabled( true );
-		    current_autopilot->set_HeadingMode(
-                                             FGAutopilot::FG_HEADING_WAYPOINT );
-		}
-	    } else {
-		TgtAptId  += " not in database.";
-		mkDialog(TgtAptId.c_str());
-	    }
+	 sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
+
+	 SGWayPoint wp( f.get_lon(), f.get_lat(), alt,
+			SGWayPoint::WGS84, TgtAptId );
+	 globals->get_route()->add_waypoint( wp );
+    } else {
+	TgtAptId  += " not in database.";
+	mkDialog(TgtAptId.c_str());
     }
-    // get_control_values();
-    //    if( PauseMode != t->getPause() )
-    //        t->togglePauseMode();
 }
 
 void TgtAptDialog_Reset(puObject *)
@@ -661,13 +642,23 @@ void TgtAptDialog_Reset(puObject *)
     TgtAptDialogInput->setCursor( 0 ) ;
 }
 
-void NewTgtAirport(puObject *cb)
+void AddWayPoint(puObject *cb)
 {
     //  strncpy( NewAirportId, current_options.get_airport_id().c_str(), 16 );
     sprintf( NewTgtAirportId, "%s", current_options.get_airport_id().c_str() );
     TgtAptDialogInput->setValue( NewTgtAirportId );
     
     FG_PUSH_PUI_DIALOG( TgtAptDialog );
+}
+
+void PopWayPoint(puObject *cb)
+{
+    globals->get_route()->delete_first();
+}
+
+void ClearRoute(puObject *cb)
+{
+    globals->get_route()->clear();
 }
 
 void NewTgtAirportInit(void)
