@@ -12,7 +12,7 @@
 #include <iostream>
 #include <ctime>
 
-void main(int argc, char** argv)
+int main(int argc, char** argv)
 {
 	FGFDMExec* FDMExec;
 	

@@ -187,7 +187,7 @@ fgMATERIAL_MGR::load_lib ( void )
 	    state->enable ( GL_CULL_FACE      ) ;
 	    if ( current_options.get_textures() ) {
 		state->enable( GL_TEXTURE_2D );
-		state->setTexture( tex_file.c_str() );
+		state->setTexture( (char *)tex_file.c_str() );
 		state->setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
 	    } else {
 		state->disable( GL_TEXTURE_2D );

@@ -159,7 +159,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     ssgSimpleState *state = NULL;
 
     ssgBranch *tile = new ssgBranch () ;
-    tile -> setName ( path.c_str() ) ;
+    tile -> setName ( (char *)path.c_str() ) ;
 
     // Attempt to open "path.gz" or "path"
     fg_gzifstream in( path );
