@@ -1152,8 +1152,9 @@ void FGOptions::usage ( void ) {
 	 << endl;
     cout << "\t--speed=n:  run the FDM this much faster than real time" << endl;
     cout << "\t--notrim:  Do NOT attempt to trim the model when initializing JSBsim" << endl;
-    cout << "\t--wind=degrees@knots:  specify a wind component." << endl;
+    cout << "\t--wind=DIR@SPEED: specify wind coming from DIR (degrees) at SPEED (knots)" << endl;
     cout << endl;
+
     //(UIUC)
     cout <<"Aircraft model directory:" << endl;
     cout <<"\t--aircraft-dir=<path> path is relative to the path of the executable" << endl;

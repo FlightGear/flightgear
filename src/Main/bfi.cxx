@@ -323,6 +323,7 @@ FGBFI::init ()
   fgTie("/sim/view/axes/long", (double(*)())0, setViewAxisLong);
   fgTie("/sim/view/axes/lat", (double(*)())0, setViewAxisLat);
 
+  _altitude_countdown = 0;
   _needReinit = false;
 
   FG_LOG(FG_GENERAL, FG_INFO, "Ending BFI init");
