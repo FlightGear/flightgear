@@ -173,47 +173,35 @@ PropsChannel::foundTerminator()
 
     SGPropertyNode* node = globals->get_props()->getNode( path.c_str() );
 
-    if (!tokens.empty())
-    {
+    if (!tokens.empty()) {
 	string command = tokens[0];
 
-	if (command == "ls")
-	{
+	if (command == "ls") {
 	    SGPropertyNode* dir = node;
-	    if (tokens.size() == 2)
-	    {
-		if (tokens[1][0] == '/')
-		{
+	    if (tokens.size() == 2) {
+		if (tokens[1][0] == '/') {
 		    dir = globals->get_props()->getNode( tokens[1].c_str() );
-		}
-		else
-		{
+		} else {
 		    string s = path;
 		    s += "/";
 		    s += tokens[1];
 		    dir = globals->get_props()->getNode( s.c_str() );
 		}
 
-		if (dir == 0)
-		{
+		if (dir == 0) {
 		    node_not_found_error( tokens[1] );
 		    goto prompt;
 		}
 	    }
 
-	    for (int i = 0; i < dir->nChildren(); i++)
-	    {
+	    for (int i = 0; i < dir->nChildren(); i++) {
 		SGPropertyNode * child = dir->getChild(i);
 		string line = child->getDisplayName(true);
 
-		if ( child->nChildren() > 0 )
-		{
+		if ( child->nChildren() > 0 ) {
 		    line += "/";
-		}
-		else
-		{
-		    if (mode == PROMPT)
-		    {
+		} else {
+		    if (mode == PROMPT) {
 			string value = child->getStringValue();
 			line += " =\t'" + value + "'\t(";
 			line += getValueTypeString( child );
@@ -224,75 +212,52 @@ PropsChannel::foundTerminator()
 		line += getTerminator();
 		push( line.c_str() );
 	    }
-	}
-	else if ( command == "dump" )
-	{
+	} else if ( command == "dump" ) {
 	    strstream buf;
-	    if ( tokens.size() <= 1 )
-	    {
+	    if ( tokens.size() <= 1 ) {
 		writeProperties( buf, node );
 		buf << ends; // null terminate the string
 		push( buf.str() );
 		push( getTerminator() );
-	    }
-	    else
-	    {
+	    } else {
 		SGPropertyNode *child = node->getNode( tokens[1].c_str() );
-		if ( child )
-		{
+		if ( child ) {
 		    writeProperties ( buf, child );
 		    buf << ends; // null terminate the string
 		    push( buf.str() );
 		    push( getTerminator() );
-		}
-		else
-		{
+		} else {
 		    node_not_found_error( tokens[1] );
 		}
 	    }
 	}
-	else if ( command == "cd" )
-	{
-	    if (tokens.size() == 2)
-	    {
-		try
-		{
+	else if ( command == "cd" ) {
+	    if (tokens.size() == 2) {
+		try {
 		    SGPropertyNode* child = node->getNode( tokens[1].c_str() );
-		    if ( child )
-		    {
+		    if ( child ) {
 			node = child;
 			path = node->getPath();
-		    }
-		    else
-		    {
+		    } else {
 			node_not_found_error( tokens[1] );
 		    }
-		}
-		catch (...)
-		{
+		} catch (...) {
 		    // Ignore attempt to move past root node with ".."
 		}
 	    }
-	}
-	else if ( command == "pwd" )
-	{
+	} else if ( command == "pwd" ) {
 	    string ttt = node->getPath();
-	    if (ttt.empty())
-	    {
+	    if (ttt.empty()) {
 		ttt = "/";
 	    }
 
 	    push( ttt.c_str() );
 	    push( getTerminator() );
-	}
-	else if ( command == "get" || command == "show" )
-	{
-	    if ( tokens.size() == 2 )
-	    {
+	} else if ( command == "get" || command == "show" ) {
+	    if ( tokens.size() == 2 ) {
 		string tmp;	
 		string value = node->getStringValue ( tokens[1].c_str(), "" );
-		if ( mode == PROMPT )
-		{
+		if ( mode == PROMPT ) {
 		    tmp = tokens[1];
 		    tmp += " = '";
 		    tmp += value;
@@ -300,19 +265,14 @@ PropsChannel::foundTerminator()
 		    tmp += getValueTypeString(
 				     node->getNode( tokens[1].c_str() ) );
 		    tmp += ")";
-		}
-		else
-		{
+		} else {
 		    tmp = value;
 		}
 		push( tmp.c_str() );
 		push( getTerminator() );
 	    }
-	}
-	else if ( command == "set" )
-	{
-	    if ( tokens.size() >= 2 )
-            {
+	} else if ( command == "set" ) {
+	    if ( tokens.size() >= 2 ) {
                 string value, tmp;
                 if ( tokens.size() == 3 ) {
                     value = tokens[2];
@@ -322,8 +282,7 @@ PropsChannel::foundTerminator()
                 node->getNode( tokens[1].c_str(), true )
                     ->setStringValue(value.c_str());
 
-		if ( mode == PROMPT )
-		{
+		if ( mode == PROMPT ) {
 		    // now fetch and write out the new value as confirmation
 		    // of the change
 		    value = node->getStringValue ( tokens[1].c_str(), "" );
@@ -334,13 +293,46 @@ PropsChannel::foundTerminator()
 		    push( getTerminator() );
 		}
 	    } 
-	}
-	else if ( command == "run" )
-	{
-	    if ( tokens.size() == 2 )
-	    {
+	} else if ( command == "reinit" ) {
+	    if ( tokens.size() == 2 ) {
 		string tmp;	
                 SGPropertyNode args;
+                for ( unsigned int i = 1; i < tokens.size(); ++i ) {
+                    cout << "props: adding subsystem = " << tokens[i] << endl;
+                    SGPropertyNode *node = args.getNode("subsystem", i-1, true);
+                    node->setStringValue( tokens[i].c_str() );
+                }
+                if ( !globals->get_commands()
+                         ->execute( "reinit", &args) )
+                {
+                    SG_LOG( SG_GENERAL, SG_ALERT,
+                            "Command " << tokens[1] << " failed.");
+                    if ( mode == PROMPT ) {
+                        tmp += "*failed*";
+                        push( tmp.c_str() );
+                        push( getTerminator() );
+                    }
+                } else {
+                    if ( mode == PROMPT ) {
+                        tmp += "<completed>";
+                        push( tmp.c_str() );
+                        push( getTerminator() );
+                    }
+                }
+	    }
+	} else if ( command == "run" ) {
+            string tmp;	
+            if ( tokens.size() >= 2 ) {
+                SGPropertyNode args;
+                if ( tokens[1] == "reinit" ) {
+                    for ( unsigned int i = 2; i < tokens.size(); ++i ) {
+                        cout << "props: adding subsystem = " << tokens[i]
+                             << endl;
+                        SGPropertyNode *node
+                            = args.getNode("subsystem", i-2, true);
+                        node->setStringValue( tokens[i].c_str() );
+                    }
+                }
                 if ( !globals->get_commands()
                          ->execute(tokens[1].c_str(), &args) )
                 {
@@ -358,24 +350,22 @@ PropsChannel::foundTerminator()
                         push( getTerminator() );
                     }
                 }
-	    }
-	}
-	else if (command == "quit")
-	{
+	    } else {
+                if ( mode == PROMPT ) {
+                    tmp += "no command specified";
+                    push( tmp.c_str() );
+                    push( getTerminator() );
+                }
+            }
+	} else if (command == "quit") {
 	    close();
 	    shouldDelete();
 	    return;
-	}
-	else if ( command == "data" )
-	{
+	} else if ( command == "data" ) {
 	    mode = DATA;
-	}
-	else if ( command == "prompt" )
-	{
+	} else if ( command == "prompt" ) {
 	    mode = PROMPT;
-	}
-	else
-	{
+	} else {
 	    const char* msg = "\
 Valid commands are:\r\n\
 \r\n\
@@ -396,11 +386,9 @@ show <var>         synonym for get\r\n";
     }
 
  prompt:
-    if (mode == PROMPT)
-    {
+    if (mode == PROMPT) {
 	string prompt = node->getPath();
-	if (prompt.empty())
-	{
+	if (prompt.empty()) {
 	    prompt = "/";
 	}
 	prompt += "> ";
