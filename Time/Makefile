@@ -26,7 +26,7 @@
 
 TARGET = libTime.a
 
-CFILES = fg_timer.c
+CFILES = fg_timer.c sunpos.c
 HFILES = fg_timer.h
 OFILES = $(CFILES:.c=.o)
 
@@ -63,6 +63,9 @@ fg_timer.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.11  1997/08/01 15:28:44  curt
+# Added sunpos.c
+#
 # Revision 1.10  1997/07/31 22:52:40  curt
 # Working on redoing internal coordinate systems & scenery transformations.
 #
