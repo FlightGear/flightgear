@@ -279,36 +279,51 @@ void FGTileMgr::update_queues()
 {
     // load the next model in the load queue.  Currently this must
     // happen in the render thread because model loading can trigger
-    // texture loading which involves use of the opengl api.
+    // texture loading which involves use of the opengl api.  Skip any
+    // models belonging to not loaded tiles (i.e. the tile was removed
+    // before we were able to load some of the associated models.)
     if ( !model_queue.empty() ) {
-        // cout << "loading next model ..." << endl;
-        // load the next tile in the queue
+        bool processed_one = false;
+
+        while ( model_queue.size() > 200 || processed_one == false ) {
+            processed_one = true;
+
+            if ( model_queue.size() > 200 ) {
+                SG_LOG( SG_TERRAIN, SG_INFO,
+                        "Alert: catching up on model load queue" );
+            }
+
+            // cout << "loading next model ..." << endl;
+            // load the next tile in the queue
 #if defined(ENABLE_THREADS) && ENABLE_THREADS
-        FGDeferredModel* dm = model_queue.pop();
+            FGDeferredModel* dm = model_queue.pop();
 #else
-        FGDeferredModel* dm = model_queue.front();
-        model_queue.pop();
+            FGDeferredModel* dm = model_queue.front();
+            model_queue.pop();
 #endif
 
-        ssgTexturePath( (char *)(dm->get_texture_path().c_str()) );
-        try
-        {
-            ssgEntity *obj_model =
-                globals->get_model_lib()->load_model( ".",
-                                                      dm->get_model_path(),
-                                                      globals->get_props(),
-                                                      globals->get_sim_time_sec() );
-            if ( obj_model != NULL ) {
-                dm->get_obj_trans()->addKid( obj_model );
+            // only load the model if the tile still exists in the
+            // tile cache
+            FGTileEntry *t = tile_cache.get_tile( dm->get_bucket() );
+            if ( t != NULL ) {
+                ssgTexturePath( (char *)(dm->get_texture_path().c_str()) );
+                try {
+                    ssgEntity *obj_model =
+                        globals->get_model_lib()->load_model( ".",
+                                                  dm->get_model_path(),
+                                                  globals->get_props(),
+                                                  globals->get_sim_time_sec() );
+                    if ( obj_model != NULL ) {
+                        dm->get_obj_trans()->addKid( obj_model );
+                    }
+                } catch (const sg_exception& exc) {
+                    SG_LOG( SG_ALL, SG_ALERT, exc.getMessage() );
+                }
+                
+                dm->get_tile()->dec_pending_models();
             }
+            delete dm;
         }
-        catch (const sg_exception& exc)
-        {
-            SG_LOG( SG_ALL, SG_ALERT, exc.getMessage() );
-        }
-
-        dm->get_tile()->dec_pending_models();
-        delete dm;
     }
     
     // cout << "current elevation (ssg) == " << scenery.get_cur_elev() << endl;
@@ -333,26 +348,26 @@ void FGTileMgr::update_queues()
 
     if ( !delete_queue.empty() ) {
         // cout << "delete queue = " << delete_queue.size() << endl;
+        bool processed_one = false;
 
-        while ( delete_queue.size() > 30 ) {
-            // uh oh, delete queue is blowing up, we aren't clearing
-            // it fast enough.  Let's just panic, well not panic, but
-            // get real serious and agressively free up some tiles so
-            // we don't explode our memory usage.
+        while ( delete_queue.size() > 30 || processed_one == false ) {
+            processed_one = true;
 
-            SG_LOG( SG_TERRAIN, SG_ALERT,
-                    "Alert: catching up on tile delete queue" );
+            if ( delete_queue.size() > 30 ) {
+                // uh oh, delete queue is blowing up, we aren't clearing
+                // it fast enough.  Let's just panic, well not panic, but
+                // get real serious and agressively free up some tiles so
+                // we don't explode our memory usage.
+
+                SG_LOG( SG_TERRAIN, SG_ALERT,
+                        "Alert: catching up on tile delete queue" );
+            }
 
             FGTileEntry* e = delete_queue.front();
-            while ( !e->free_tile() );
-            delete_queue.pop();
-            delete e;
-        }
-
-        FGTileEntry* e = delete_queue.front();
-        if ( e->free_tile() ) {
-            delete_queue.pop();
-            delete e;
+            if ( e->free_tile() ) {
+                delete_queue.pop();
+                delete e;
+            }
         }
     }
 }

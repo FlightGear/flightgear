@@ -818,6 +818,7 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
                     FGDeferredModel *dm
                         = new FGDeferredModel( custom_path.str(),
                                                tile_path.str(),
+                                               tile_bucket,
                                                this, obj_trans );
                     FGTileMgr::model_ready( dm );
 

@@ -125,7 +125,8 @@ bool FGNewCache::make_space() {
 	for ( ; current != end; ++current ) {
 	    long index = current->first;
 	    FGTileEntry *e = current->second;
-	    if ( e->is_loaded() && (e->get_pending_models() == 0) ) {
+	    // if ( e->is_loaded() && (e->get_pending_models() == 0) ) {
+	    if ( e->is_loaded() ) {
 
                 timestamp = e->get_timestamp();
                 if ( timestamp < min_time ) {

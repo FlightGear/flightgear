@@ -70,21 +70,25 @@ private:
     string texture_path;
     FGTileEntry *tile;
     ssgTransform *obj_trans;
+    SGBucket bucket;
+
 
 public:
 
     inline FGDeferredModel() { }
-    inline FGDeferredModel( const string mp, const string tp,
+    inline FGDeferredModel( const string mp, const string tp, SGBucket b,
 		     FGTileEntry *t, ssgTransform *ot )
     {
 	model_path = mp;
 	texture_path = tp;
+        bucket = b;
 	tile = t;
 	obj_trans = ot;
     }
     inline ~FGDeferredModel() { }
     inline string get_model_path() const { return model_path; }
     inline string get_texture_path() const { return texture_path; }
+    inline SGBucket get_bucket() const { return bucket; }
     inline FGTileEntry *get_tile() const { return tile; }
     inline ssgTransform *get_obj_trans() const { return obj_trans; }
 };
