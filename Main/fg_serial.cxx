@@ -294,11 +294,11 @@ static void send_nmea_out( fgIOCHANNEL& p ) {
     // $GPRMC,HHMMSS,A,DDMM.MMM,N,DDDMM.MMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E*XX
     sprintf( rmc, "GPRMC,%s,A,%s,%s,%s,%s,%s,0.000,E",
 	     utc, lat, lon, speed, heading, date );
-    sprintf( rmc_sum, "%02X", 0 /*calc_nmea_cksum(rmc)*/ );
+    sprintf( rmc_sum, "%02X", calc_nmea_cksum(rmc) );
 
     sprintf( gga, "GPGGA,%s,%s,%s,1,,,%s,F,,,,",
 	     utc, lat, lon, altitude_ft );
-    sprintf( gga_sum, "%02X", 0 /*calc_nmea_cksum(gga)*/ );
+    sprintf( gga_sum, "%02X", calc_nmea_cksum(gga) );
 
 
     FG_LOG( FG_SERIAL, FG_DEBUG, rmc );
@@ -456,6 +456,10 @@ void fgSerialProcess() {
 
 
 // $Log$
+// Revision 1.9  1999/01/20 13:42:26  curt
+// Tweaked FDM interface.
+// Testing check sum support for NMEA serial output.
+//
 // Revision 1.8  1999/01/19 20:57:04  curt
 // MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
 //

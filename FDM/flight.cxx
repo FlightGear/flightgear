@@ -70,7 +70,7 @@ void FGState::extrapolate( int time_offset ) {
 
 
 // Initialize the flight model parameters
-int fgFlightModelInit(int model, FGState& f, double dt) {
+int fgFDMInit(int model, FGState& f, double dt) {
     double save_alt = 0.0;
 
     FG_LOG( FG_FLIGHT ,FG_INFO, "Initializing flight model" );
@@ -120,7 +120,7 @@ int fgFlightModelInit(int model, FGState& f, double dt) {
 
 
 // Run multiloop iterations of the flight model
-int fgFlightModelUpdate(int model, FGState& f, int multiloop, int time_offset) {
+int fgFDMUpdate(int model, FGState& f, int multiloop, int time_offset) {
     double time_step, start_elev, end_elev;
 
     // printf("Altitude = %.2f\n", FG_Altitude * 0.3048);
@@ -161,7 +161,7 @@ int fgFlightModelUpdate(int model, FGState& f, int multiloop, int time_offset) {
 
 
 // Set the altitude (force)
-void fgFlightModelSetAltitude(int model, double alt_meters) {
+void fgFDMForceAltitude(int model, double alt_meters) {
     double sea_level_radius_meters;
     double lat_geoc;
 
@@ -181,7 +181,17 @@ void fgFlightModelSetAltitude(int model, double alt_meters) {
 }
 
 
+// Set the local ground elevation
+void fgFDMSetGroundElevation(int model, double ground_meters) {
+    base_fdm_state.set_Runway_altitude( ground_meters * METER_TO_FEET );
+}
+
+
 // $Log$
+// Revision 1.12  1999/01/20 13:42:22  curt
+// Tweaked FDM interface.
+// Testing check sum support for NMEA serial output.
+//
 // Revision 1.11  1999/01/19 17:52:06  curt
 // Working on being able to extrapolate a new position and orientation
 // based on a position, orientation, and time offset.

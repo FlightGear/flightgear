@@ -386,10 +386,10 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	fgAPRun();
 
 	// printf("updating flight model x %d\n", multi_loop);
-	fgFlightModelUpdate( current_options.get_flight_model(), 
+	fgFDMUpdate( current_options.get_flight_model(), 
 			     cur_fdm_state, multi_loop, remainder );
     } else {
-	fgFlightModelUpdate( current_options.get_flight_model(), 
+	fgFDMUpdate( current_options.get_flight_model(), 
 			     cur_fdm_state, 0, remainder );
     }
 
@@ -492,14 +492,15 @@ static void fgMainLoop( void ) {
 		   f->get_Altitude() * FEET_TO_METER,
 		   scenery.cur_elev + alt_adjust_m - 3.0,
 		   scenery.cur_elev + alt_adjust_m );
-	    fgFlightModelSetAltitude( current_options.get_flight_model(), 
-				      scenery.cur_elev + alt_adjust_m );
+	    fgFDMForceAltitude( current_options.get_flight_model(), 
+				scenery.cur_elev + alt_adjust_m );
 
 	    FG_LOG( FG_ALL, FG_DEBUG, 
 		    "<*> resetting altitude to " 
 		    << f->get_Altitude() * FEET_TO_METER << " meters" );
 	}
-	f->set_Runway_altitude( scenery.cur_elev * METER_TO_FEET );
+	fgFDMSetGroundElevation( current_options.get_flight_model(),
+				 scenery.cur_elev );  // meters
     }
 
     /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
@@ -1002,6 +1003,10 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.82  1999/01/20 13:42:24  curt
+// Tweaked FDM interface.
+// Testing check sum support for NMEA serial output.
+//
 // Revision 1.81  1999/01/19 20:57:03  curt
 // MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>
 //

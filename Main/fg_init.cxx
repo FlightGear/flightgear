@@ -107,7 +107,8 @@ int fgInitPosition( void ) {
 	    "starting altitude is = " << current_options.get_altitude() );
 
     f->set_Altitude( current_options.get_altitude() * METER_TO_FEET );
-    f->set_Runway_altitude( f->get_Altitude() - 3.758099 );
+    fgFDMSetGroundElevation( current_options.get_flight_model(),
+			     (f->get_Altitude() - 3.758099) * FEET_TO_METER );
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Initial position is: ("
@@ -208,7 +209,8 @@ int fgInitSubsystems( void )
 			     tmp_abs_view_pos );
     FG_LOG( FG_GENERAL, FG_DEBUG, 
 	    "Altitude after update " << scenery.cur_elev );
-    f->set_Runway_altitude( scenery.cur_elev * METER_TO_FEET );
+    fgFDMSetGroundElevation( current_options.get_flight_model(), 
+			     scenery.cur_elev );
 
     // Reset our altitude if we are below ground
     if ( f->get_Altitude() < f->get_Runway_altitude() + 3.758099) {
@@ -341,7 +343,7 @@ int fgInitSubsystems( void )
     // Initialize the flight model subsystem data structures base on
     // above values
 
-    fgFlightModelInit( current_options.get_flight_model(), cur_fdm_state, 
+    fgFDMInit( current_options.get_flight_model(), cur_fdm_state, 
 		       1.0 / DEFAULT_MODEL_HZ );
 
     // I'm just sticking this here for now, it should probably move
@@ -379,6 +381,10 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.62  1999/01/20 13:42:25  curt
+// Tweaked FDM interface.
+// Testing check sum support for NMEA serial output.
+//
 // Revision 1.61  1999/01/08 03:23:57  curt
 // Beginning work on compensating for sim time vs. real world time "jitter".
 //

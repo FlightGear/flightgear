@@ -84,6 +84,11 @@
 
 #include <Time/timestamp.hxx>
 
+#ifndef __cplusplus                                                          
+# error This library requires C++
+#endif                                   
+
+
 typedef double FG_VECTOR_3[3];
 
 
@@ -793,19 +798,26 @@ extern FGState cur_fdm_state;
 // General interface to the flight model routines
 
 // Initialize the flight model parameters
-int fgFlightModelInit(int model, FGState& f, double dt);
+int fgFDMInit(int model, FGState& f, double dt);
 
 // Run multiloop iterations of the flight model
-int fgFlightModelUpdate(int model, FGState& f, int multiloop, int jitter);
+int fgFDMUpdate(int model, FGState& f, int multiloop, int jitter);
 
 // Set the altitude (force)
-void fgFlightModelSetAltitude(int model, double alt_meters);
+void fgFDMForceAltitude(int model, double alt_meters);
+
+// Set the local ground elevation
+void fgFDMSetGroundElevation(int model, double alt_meters);
 
 
 #endif // _FLIGHT_HXX
 
 
 // $Log$
+// Revision 1.12  1999/01/20 13:42:23  curt
+// Tweaked FDM interface.
+// Testing check sum support for NMEA serial output.
+//
 // Revision 1.11  1999/01/19 17:52:07  curt
 // Working on being able to extrapolate a new position and orientation
 // based on a position, orientation, and time offset.
