@@ -20,3 +20,8 @@ When making a change to any of these files you will need to run:
 Then follow the regular build procedure:
 
     ./configure; make; make install
+
+For debuging purposes you might want to try something like:
+
+    CFLAGS=-Wall CXXFLAGS=-Wall ./configure --disable-shared; make; make install
+
