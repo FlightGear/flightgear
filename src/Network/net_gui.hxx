@@ -12,12 +12,28 @@
 #define _NET_GUI_HXX
 
 
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif                                   
+// NOTE: this file defines an external interface structure.  Due to
+// variability between platforms and architectures, we only used fixed
+// length types here.  Specifically, integer types can vary in length.
+// I am not aware of any platforms that don't use 4 bytes for float
+// and 8 bytes for double.
 
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#elif defined( _MSC_VER ) || defined(__MINGW32__)
+typedef signed char      int8_t;
+typedef signed short     int16_t;
+typedef signed int       int32_t;
+typedef signed __int64   int64_t;
+typedef unsigned char    uint8_t;
+typedef unsigned short   uint16_t;
+typedef unsigned int     uint32_t;
+typedef unsigned __int64 uint64_t;
+#else
+# error "Port me! Platforms that don't have <stdint.h> need to define int8_t, et. al."
+#endif
 
-const int FG_NET_GUI_VERSION = 5;
+const uint16_t FG_NET_GUI_VERSION = 6;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -33,11 +49,7 @@ public:
         FG_MAX_TANKS = 4
     };
 
-    int version;		// increment when data values change
-    int pad;                    // keep doubles 64-bit aligned for some
-                                // hardware platforms, such as the Sun
-                                // SPARC, which don't like misaligned
-                                // data
+    uint16_t version;		// increment when data values change
 
     // Positions
     double longitude;		// geodetic (radians)
@@ -53,18 +65,19 @@ public:
     float climb_rate;		// feet per second
 
     // Consumables
-    int num_tanks;		// Max number of fuel tanks
+    uint8_t num_tanks;		// Max number of fuel tanks
     float fuel_quantity[FG_MAX_TANKS];
 
     // Environment
-    time_t cur_time;            // current unix time
-    long int warp;              // offset in seconds to unix time
+    uint32_t cur_time;          // current unix time
+                                // FIXME: make this uint64_t before 2038
+    uint32_t warp;              // offset in seconds to unix time
     float ground_elev;          // ground elev (meters)
 
     // Approach
     float tuned_freq;           // currently tuned frequency
     float nav_radial;           // target nav radial
-    int in_range;               // tuned navaid is in range?
+    uint8_t in_range;           // tuned navaid is in range?
     float dist_nm;              // distance to tuned navaid in nautical miles
     float course_deviation_deg; // degrees off target course
     float gs_deviation_deg;     // degrees off target glide slope

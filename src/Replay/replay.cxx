@@ -284,7 +284,7 @@ static FGReplayData interpolate( double time, FGReplayData f1, FGReplayData f2 )
 
     // Gear status
     for ( i = 0; i < fdm1.num_wheels; ++i ) {
-        result.fdm.wow[i] = weight( fdm1.wow[i], fdm2.wow[i], ratio );
+        result.fdm.wow[i] = (int)(weight( fdm1.wow[i], fdm2.wow[i], ratio ));
         result.fdm.gear_pos[i]
             = weight( fdm1.gear_pos[i], fdm2.gear_pos[i], ratio );
         result.fdm.gear_steer[i]

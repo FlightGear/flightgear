@@ -13,13 +13,30 @@
 #define _NET_FDM_HXX
 
 
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif                                   
-
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 20;
+// NOTE: this file defines an external interface structure.  Due to
+// variability between platforms and architectures, we only used fixed
+// length types here.  Specifically, integer types can vary in length.
+// I am not aware of any platforms that don't use 4 bytes for float
+// and 8 bytes for double.
+
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#elif defined( _MSC_VER ) || defined(__MINGW32__)
+typedef signed char      int8_t;
+typedef signed short     int16_t;
+typedef signed int       int32_t;
+typedef signed __int64   int64_t;
+typedef unsigned char    uint8_t;
+typedef unsigned short   uint16_t;
+typedef unsigned int     uint32_t;
+typedef unsigned __int64 uint64_t;
+#else
+# error "Port me! Platforms that don't have <stdint.h> need to define int8_t, et. al."
+#endif
+
+const uint16_t FG_NET_FDM_VERSION = 21;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -29,17 +46,13 @@ class FGNetFDM {
 
 public:
 
-    int version;		// increment when data values change
-    int pad;                    // keep doubles 64-bit aligned for some
-                                // hardware platforms, such as the Sun
-                                // SPARC, which don't like misaligned
-                                // data
-
     enum {
         FG_MAX_ENGINES = 4,
         FG_MAX_WHEELS = 3,
         FG_MAX_TANKS = 4
     };
+
+    uint16_t version;		// increment when data values change
 
     // Positions
     double longitude;		// geodetic (radians)
@@ -80,8 +93,8 @@ public:
     // Pressure
     
     // Engine status
-    int num_engines;		     // Number of valid engines
-    int eng_state[FG_MAX_ENGINES];   // Engine state (off, cranking, running)
+    uint8_t num_engines;	     // Number of valid engines
+    uint8_t eng_state[FG_MAX_ENGINES];// Engine state (off, cranking, running)
     float rpm[FG_MAX_ENGINES];	     // Engine RPM rev/min
     float fuel_flow[FG_MAX_ENGINES]; // Fuel flow gallons/hr
     float egt[FG_MAX_ENGINES];	     // Exhuast gas temp deg F
@@ -92,20 +105,21 @@ public:
     float oil_px[FG_MAX_ENGINES];    // Oil pressure psi
 
     // Consumables
-    int num_tanks;		// Max number of fuel tanks
+    uint8_t num_tanks;		// Max number of fuel tanks
     float fuel_quantity[FG_MAX_TANKS];
 
     // Gear status
-    int num_wheels;
-    bool wow[FG_MAX_WHEELS];
+    uint8_t num_wheels;
+    uint8_t wow[FG_MAX_WHEELS];
     float gear_pos[FG_MAX_WHEELS];
     float gear_steer[FG_MAX_WHEELS];
     float gear_compression[FG_MAX_WHEELS];
 
     // Environment
-    time_t cur_time;            // current unix time
-    long int warp;              // offset in seconds to unix time
-    float visibility;           // visibility in meters (for env. effects)
+    uint32_t cur_time;           // current unix time
+                                 // FIXME: make this uint64_t before 2038
+    uint32_t warp;               // offset in seconds to unix time
+    float visibility;            // visibility in meters (for env. effects)
 
     // Control surface positions (normalized values)
     float elevator;
