@@ -29,7 +29,10 @@
 #include STL_FSTREAM
 
 #include "ground.hxx"
+#include "ATCmgr.hxx"
 #include "ATCutils.hxx"
+#include "ATCdisplay.hxx"
+#include "AILocalTraffic.hxx"
 
 SG_USING_STD(ifstream);
 SG_USING_STD(cout);
@@ -51,11 +54,15 @@ a_path::a_path() {
 FGGround::FGGround() {
 	display = false;
 	networkLoadOK = false;
+	ground_traffic.erase(ground_traffic.begin(), ground_traffic.end());
+	ground_traffic_itr = ground_traffic.begin();
 }
 
 FGGround::FGGround(string id) {
 	display = false;
 	networkLoadOK = false;
+	ground_traffic.erase(ground_traffic.begin(), ground_traffic.end());
+	ground_traffic_itr = ground_traffic.begin();
 	ident = id;
 }
 
@@ -101,11 +108,11 @@ bool FGGround::LoadNetwork() {
 	string taxiPath = "ATC/KEMT.taxi";	// FIXME - HARDWIRED FOR TESTING
 	path.append(taxiPath);
 	
-	SG_LOG(SG_GENERAL, SG_INFO, "Trying to read taxiway data for " << ident << "...");
+	SG_LOG(SG_ATC, SG_INFO, "Trying to read taxiway data for " << ident << "...");
 	//cout << "Trying to read taxiway data for " << ident << "..." << endl;
 	fin.open(path.c_str(), ios::in);
 	if(!fin) {
-		SG_LOG(SG_GENERAL, SG_ALERT, "Unable to open taxiway data input file " << path.c_str());
+		SG_LOG(SG_ATC, SG_ALERT, "Unable to open taxiway data input file " << path.c_str());
 		//cout << "Unable to open taxiway data input file " << path.c_str() << endl;
 		return(false);
 	}
@@ -117,7 +124,7 @@ bool FGGround::LoadNetwork() {
 		// Node, arc, or [End]?
 		//cout << "Read in ground network element type = " << buf << endl;
 		if(!strcmp(buf, "[End]")) {		// TODO - maybe make this more robust to spelling errors by just looking for '['
-			SG_LOG(SG_GENERAL, SG_INFO, "Done reading " << path.c_str() << endl);
+			SG_LOG(SG_ATC, SG_INFO, "Done reading " << path.c_str() << endl);
 			break;
 		} else if(!strcmp(buf, "N")) {
 			// Node
@@ -139,7 +146,7 @@ bool FGGround::LoadNetwork() {
 			} else if(!strcmp(buf, "H")) {
 				np->type = HOLD;
 			} else {
-				SG_LOG(SG_GENERAL, SG_ALERT, "**** ERROR ***** Unknown node type in taxi network...\n");
+				SG_LOG(SG_ATC, SG_ALERT, "**** ERROR ***** Unknown node type in taxi network...\n");
 				delete np;
 				return(false);
 			}
@@ -177,7 +184,7 @@ bool FGGround::LoadNetwork() {
 			} else if(!strcmp(buf, "T")) {
 				ap->type = TAXIWAY;
 			} else {
-				SG_LOG(SG_GENERAL, SG_ALERT, "**** ERROR ***** Unknown arc type in taxi network...\n");
+				SG_LOG(SG_ATC, SG_ALERT, "**** ERROR ***** Unknown arc type in taxi network...\n");
 				delete ap;
 				return(false);
 			}
@@ -188,7 +195,7 @@ bool FGGround::LoadNetwork() {
 			} else if(!strcmp(buf, "N")) {
 				ap->directed = false;
 			} else {
-				SG_LOG(SG_GENERAL, SG_ALERT, "**** ERROR ***** Unknown arc directed value in taxi network - should be Y/N !!!\n");
+				SG_LOG(SG_ATC, SG_ALERT, "**** ERROR ***** Unknown arc directed value in taxi network - should be Y/N !!!\n");
 				delete ap;
 				return(false);
 			}			
@@ -240,7 +247,7 @@ bool FGGround::LoadNetwork() {
 			gateCount++;
 		} else {
 			// Something has gone seriously pear-shaped
-			SG_LOG(SG_GENERAL, SG_ALERT, "********* ERROR - unknown ground network element type... aborting read of " << path.c_str() << '\n');
+			SG_LOG(SG_ATC, SG_ALERT, "********* ERROR - unknown ground network element type... aborting read of " << path.c_str() << '\n');
 			return(false);
 		}
 		
@@ -252,15 +259,19 @@ bool FGGround::LoadNetwork() {
 void FGGround::Init() {
 	display = false;
 	
-	// For now we'll hardwire the threshold end
+	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// For now we'll hardwire the threshold end FIXME FIXME FIXME - use actual active rwy
 	Point3D P010(-118.037483, 34.081358, 296 * SG_FEET_TO_METER);
 	double hdg = 25.32;
 	ortho.Init(P010, hdg);
+	// FIXME TODO FIXME TODO
+	// TODO FIXME TODO FIXME
+	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
 	networkLoadOK = LoadNetwork();
 }
 
-void FGGround::Update() {
+void FGGround::Update(double dt) {
 	// Each time step, what do we need to do?
 	// We need to go through the list of outstanding requests and acknowedgements
 	// and process at least one of them.
@@ -272,7 +283,53 @@ void FGGround::Update() {
 	// Lets take the example of a plane which has just contacted ground
 	// following landing - presumably requesting where to go?
 	// First we need to establish the position of the plane within the logical network.
-	// Next we need to decide where its going. 
+	// Next we need to decide where its going.
+	
+	if(ground_traffic.size()) {
+		if(ground_traffic_itr == ground_traffic.end()) {
+			ground_traffic_itr = ground_traffic.begin();
+		}
+		
+		//Process(*ground_traffic_itr);
+		GroundRec* g = *ground_traffic_itr;
+		if(g->taxiRequestOutstanding) {
+			double responseTime = 10.0;		// seconds - this should get more sophisticated at some point
+			if(g->clearanceCounter > responseTime) {
+				// DO CLEARANCE
+				// TODO - move the mechanics of making up the transmission out of the main Update(...) routine.
+				string trns = "";
+				trns += g->plane.callsign;
+				trns += " taxi holding point runway ";	// TODO - add the holding point name
+				// eg " taxi holding point G2 runway "
+				//trns += "
+				if(display) {
+					globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+				}
+				g->planePtr->RegisterTransmission(1);	// cleared to taxi
+				g->clearanceCounter = 0.0;
+				g->taxiRequestOutstanding = false;
+			} else {
+				g->clearanceCounter += (dt * ground_traffic.size());
+			}
+		} else if(((FGAILocalTraffic*)(g->planePtr))->AtHoldShort()) {		// That's a hack - eventually we should monitor actual position
+			// HACK ALERT - the automatic cast to AILocalTraffic has to go once we have other sorts working!!!!! FIXME TODO
+			// NOTE - we don't need to do the contact tower bit unless we have separate tower and ground
+			string trns = g->plane.callsign;
+			trns += " contact Tower ";
+			double f = globals->get_ATC_mgr()->GetFrequency(ident, TOWER);
+			char buf[10];
+			sprintf(buf, "%f", f);
+			trns += buf;
+			if(display) {
+				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+			}
+			g->planePtr->RegisterTransmission(2);	// contact tower
+			delete *ground_traffic_itr;
+			ground_traffic.erase(ground_traffic_itr);
+			ground_traffic_itr = ground_traffic.begin();
+		}				
+		++ground_traffic_itr;
+	}
 }
 
 // Return a random gate ID of an unused gate.
@@ -347,6 +404,7 @@ node* FGGround::GetThresholdNode(string rwyID) {
 	return NULL;
 }
 
+
 // Get a path from a point on a runway to a gate
 // TODO !!
 
@@ -362,12 +420,22 @@ ground_network_path_type FGGround::GetPath(node* A, node* B) {
 ground_network_path_type FGGround::GetPath(node* A, string rwyID) {
 	node* b = GetThresholdNode(rwyID);
 	if(b == NULL) {
-		SG_LOG(SG_GENERAL, SG_ALERT, "ERROR - unable to find path to runway theshold in ground.cxx\n");
+		SG_LOG(SG_ATC, SG_ALERT, "ERROR - unable to find path to runway theshold in ground.cxx\n");
 		ground_network_path_type emptyPath;
 		emptyPath.erase(emptyPath.begin(), emptyPath.end());
 		return(emptyPath);
 	}
 	return GetShortestPath(A, b);
+}
+
+// Get a path from a node to a runway hold short point
+// Bit of a hack this at the moment!
+ground_network_path_type FGGround::GetPathToHoldShort(node* A, string rwyID) {
+	ground_network_path_type path = GetPath(A, rwyID);
+	path.pop_back();	// That should be the threshold stripped of 
+	path.pop_back();	// and that should be the arc from hold short to threshold
+	// This isn't robust though - TODO - implement properly!
+	return(path);
 }
 
 // A shortest path algorithm from memory (ie. I can't find the bl&*dy book again!)
@@ -496,7 +564,7 @@ ground_network_path_type FGGround::GetShortestPath(node* A, node* B) {
 	
 	//cout << "pathsCreated = " << pathsCreated << '\n';
 	if(pathsCreated > 0) {
-		SG_LOG(SG_GENERAL, SG_ALERT, "WARNING - Possible memory leak in FGGround::GetShortestPath\n\
+		SG_LOG(SG_ATC, SG_ALERT, "WARNING - Possible memory leak in FGGround::GetShortestPath\n\
 									  Please report to flightgear-devel@flightgear.org\n");
 	}
 	
@@ -511,8 +579,32 @@ ground_network_path_type FGGround::GetShortestPath(node* A, node* B) {
 
 // Return a list of exits from a given runway
 // It is up to the calling function to check for non-zero size of returned array before use
-node_array_type FGGround::GetExits(int rwyID) {
-	return(runways[rwyID].exits);
+node_array_type FGGround::GetExits(string rwyID) {
+	// FIXME - get a 07L or similar in here and we're stuffed!!!
+	return(runways[atoi(rwyID.c_str())].exits);
+}
+
+void FGGround::RequestDeparture(PlaneRec plane, FGAIEntity* requestee) {
+	// For now we'll just automatically clear all planes to the runway hold.
+	// This communication needs to be delayed 20 sec or so from receiving the request.
+	// Even if display=false we still need to start the timer in case display=true when communication starts.
+	// We also need to bear in mind we also might have other outstanding communications, although for now we'll punt that issue!
+	// FIXME - sort the above!
+	
+	// HACK - assume that anything requesting departure is new for now - FIXME LATER
+	GroundRec* g = new GroundRec;
+	g->plane = plane;
+	g->planePtr = requestee;
+	g->taxiRequestOutstanding = true;
+	g->clearanceCounter = 0;
+	g->cleared = false;
+	g->incoming = false;
+	// TODO - need to handle the next 3 as well
+    //Point3D current_pos;
+    //node* destination;
+    //node* last_clearance;
+	
+	ground_traffic.push_back(g);
 }
 
 #if 0

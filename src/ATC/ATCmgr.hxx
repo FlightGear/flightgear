@@ -69,8 +69,7 @@ struct AirportATC {
     // Flags to ensure the stations don't get wrongly deactivated
     bool set_by_AI;	// true when the AI manager has activated this station
 	unsigned int numAI;	// Ref count of the number of AI planes registered
-    bool set_by_comm_search;	// true when the comm_search has activated this station
-	// Do we need to distingiush comm1 and comm2?
+    bool set_by_comm[2];	// true when the relevant comm_freq has activated this station
 };
 
 class FGATCMgr : public FGSubsystem
@@ -190,7 +189,7 @@ public:
 	bool AIRegisterAirport(string ident);
 	
 	// Register the fact that the comm radio is tuned to an airport
-	bool CommRegisterAirport(string ident);	// Later we'll differentiate between comm 1 and comm2
+	bool CommRegisterAirport(string ident, int chan);
 	
 private:
 

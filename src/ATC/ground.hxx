@@ -35,7 +35,10 @@ SG_USING_STD(ios);
 #include <simgear/math/sg_geodesy.hxx>
 
 #include "ATC.hxx"
+//#include "ATCmgr.hxx"
 #include "ATCProjection.hxx"
+#include "AIEntity.hxx"
+//#include "AILocalTraffic.hxx"	// RunwayDetails - this is a temporary hack
 
 SG_USING_STD(map);
 SG_USING_STD(vector);
@@ -140,6 +143,7 @@ struct Rwy {
 	// Eventually we will also want some encoding of real-life preferred runways
 	// This will get us up and running for single runway airports though.
 };
+
 typedef vector < Rwy > runway_array_type;
 typedef runway_array_type::iterator runway_array_iterator;
 typedef runway_array_type::const_iterator runway_array_const_iterator;
@@ -177,27 +181,44 @@ typedef shortest_path_map_type::iterator shortest_path_map_iterator;
 ////////////////////////////////////////////////
 
 // Planes active within the ground network.
-// somewhere in the ATC/AI system we are going to have defined something like
-// typedef struct plane_rec
-// list <PlaneRec> plane_rec_list_type
-/*
+
 // A more specialist plane rec to include ground information
-typedef struct ground_rec {
-    plane_rec plane;
-    point current_pos;
-    node destination;
-    node last_clearance;
+struct GroundRec {
+	FGAIEntity* planePtr;	// This might move to the planeRec eventually
+	
+    PlaneRec plane;
+    Point3D current_pos;
+    node* destination;
+    node* last_clearance;
+	bool taxiRequestOutstanding;	// Plane has requested taxi and we haven't responded yet
+	double clearanceCounter;		// Hack for communication timing - counter since clearance requested in seconds 
+	
     bool cleared;  // set true when the plane has been cleared to somewhere
     bool incoming; //true for arrivals, false for departures
     // status?
     // Almost certainly need to add more here
 };
 
-typedef list<ground_rec*> ground_rec_list;
+typedef list < GroundRec* > ground_rec_list;
 typedef ground_rec_list::iterator ground_rec_list_itr;
 typedef ground_rec_list::const_iterator ground_rec_list_const_itr;
-*/
+
 //////////////////////////////////////////////////////////////////////////////////////////
+
+// Hack
+// perhaps we could use an FGRunway instead of this
+struct GRunwayDetails {
+	Point3D threshold_pos;
+	Point3D end1ortho;	// ortho projection end1 (the threshold ATM)
+	Point3D end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
+	double mag_hdg;
+	double mag_var;
+	double hdg;		// true runway heading
+	double length;	// In *METERS*
+	int ID;		// 1 -> 36
+	string rwyID;
+	// Do we really need *both* the last two??
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -212,20 +233,18 @@ public:
 	~FGGround();
     void Init();
 
-    void Update();
+    void Update(double dt);
 	
 	inline string get_trans_ident() { return trans_ident; }
 	inline atc_type GetType() { return GROUND; }
     inline void SetDisplay() {display = true;}
     inline void SetNoDisplay() {display = false;}
 
-    // Its possible that NewArrival and NewDeparture should simply be rolled into Request.
-
     // Contact ground control on arrival, assumed to request any gate
     //void NewArrival(plane_rec plane);
 
     // Contact ground control on departure, assumed to request currently active runway.
-    //void NewDeparture(plane_rec plane);
+    void RequestDeparture(PlaneRec plane, FGAIEntity* requestee);
 
     // Contact ground control when the calling routine doesn't know if arrival
     // or departure is appropriate.
@@ -246,15 +265,20 @@ public:
 	// Runway stuff - this might change in the future.
 	// Get a list of exits from a given runway
 	// It is up to the calling function to check for non-zero size of returned array before use
-	node_array_type GetExits(int rwyID);
+	node_array_type GetExits(string rwyID);
 	
 	// Get a path from one node to another
 	ground_network_path_type GetPath(node* A, node* B);
 	
 	// Get a path from a node to a runway threshold
 	ground_network_path_type GetPath(node* A, string rwyID);
+	
+	// Get a path from a node to a runway hold short point
+	// Bit of a hack this at the moment!
+	ground_network_path_type GetPathToHoldShort(node* A, string rwyID);
 
 private:
+	// Tower stuff
 
     // Need a data structure to hold details of the various active planes
     // Need a data structure to hold details of the logical network
@@ -283,9 +307,6 @@ private:
 
     // Find the shortest route through the logical network between two points.
     //FindShortestRoute(point a, point b);
-
-    // Project a point in WGS84 lat/lon onto the local gnomonic.
-    //ConvertWGS84ToXY(sgVec3 wgs84, point xy);
 
     // Assign a gate or parking location to a new arrival
     //AssignGate(ground_rec &g);
@@ -318,8 +339,12 @@ private:
 	// Returns NULL if unsuccessful.
 	node* GetThresholdNode(string rwyID);
 	
-	// A shortest path algorithm sort of from memory (I can't find the bl&*dy book again!)
+	// A shortest path algorithm from memory (I can't find the bl&*dy book again!)
 	ground_network_path_type GetShortestPath(node* A, node* B); 
+	
+	// Planes
+	ground_rec_list ground_traffic;
+	ground_rec_list_itr ground_traffic_itr;
 };
 
 #endif	// _FG_GROUND_HXX
