@@ -43,7 +43,7 @@
 
 #include "fgfs.hxx"
 #include "fg_props.hxx"
-#include "viewer.hxx"
+#include "viewmgr.hxx"
 
 #if !defined(SG_HAVE_NATIVE_SGI_COMPILERS)
 SG_USING_STD(istream);
@@ -203,6 +203,58 @@ setGoalViewOffset (double offset)
 
     globals->get_current_view()
 	->set_goal_view_offset(offset * SGD_DEGREES_TO_RADIANS);
+}
+
+
+/**
+ * Pilot position offset from CG.
+ */
+static float
+getPilotPositionXOffset ()
+{
+  FGViewer * pilot_view = globals->get_viewmgr()->get_view(0);
+  float * offset = pilot_view->get_pilot_offset();
+  return offset[0];
+}
+
+static void
+setPilotPositionXOffset (float x)
+{
+  FGViewer * pilot_view = globals->get_viewmgr()->get_view(0);
+  float * offset = pilot_view->get_pilot_offset();
+  pilot_view->set_pilot_offset(x, offset[1], offset[2]);
+}
+
+static float
+getPilotPositionYOffset ()
+{
+  FGViewer * pilot_view = globals->get_viewmgr()->get_view(0);
+  float * offset = pilot_view->get_pilot_offset();
+  return offset[1];
+}
+
+static void
+setPilotPositionYOffset (float y)
+{
+  FGViewer * pilot_view = globals->get_viewmgr()->get_view(0);
+  float * offset = pilot_view->get_pilot_offset();
+  pilot_view->set_pilot_offset(offset[0], y, offset[2]);
+}
+
+static float
+getPilotPositionZOffset ()
+{
+  FGViewer * pilot_view = globals->get_viewmgr()->get_view(0);
+  float * offset = pilot_view->get_pilot_offset();
+  return offset[2];
+}
+
+static void
+setPilotPositionZOffset (float z)
+{
+  FGViewer * pilot_view = globals->get_viewmgr()->get_view(0);
+  float * offset = pilot_view->get_pilot_offset();
+  pilot_view->set_pilot_offset(offset[0], offset[1], z);
 }
 
 
@@ -922,7 +974,6 @@ setFDMDataLogging (bool state)
   }
 }
 
-
 
 ////////////////////////////////////////////////////////////////////////
 // Tie the properties.
@@ -938,6 +989,15 @@ fgInitProps ()
   fgSetArchivable("/sim/view/offset-deg");
   fgTie("/sim/view/goal-offset-deg", getGoalViewOffset, setGoalViewOffset);
   fgSetArchivable("/sim/view/goal-offset-deg");
+  fgTie("/sim/view/pilot/x-offset-m",
+	getPilotPositionXOffset, setPilotPositionXOffset);
+  fgSetArchivable("/sim/view/pilot/x-offset-m");
+  fgTie("/sim/view/pilot/y-offset-m",
+	getPilotPositionYOffset, setPilotPositionYOffset);
+  fgSetArchivable("/sim/view/pilot/y-offset-m");
+  fgTie("/sim/view/pilot/z-offset-m",
+	getPilotPositionZOffset, setPilotPositionZOffset);
+  fgSetArchivable("/sim/view/pilot/z-offset-m");
   fgTie("/sim/time/gmt", getDateString, setDateString);
   fgSetArchivable("/sim/time/gmt");
   fgTie("/sim/time/gmt-string", getGMTString);
@@ -1044,13 +1104,8 @@ fgSaveFlight (ostream &output)
 {
   try {
     writeProperties(output, globals->get_props());
-  } catch (const sg_io_exception &e) {
-    string message = "Error saving flight: ";
-    message += e.getMessage();
-    message += "\n at ";
-    message += e.getLocation().asString();
-    SG_LOG(SG_INPUT, SG_ALERT, message);
-    mkDialog(message.c_str());
+  } catch (const sg_exception &e) {
+    guiErrorMessage("Error saving flight: ", e);
     return false;
   }
   return true;
@@ -1066,13 +1121,8 @@ fgLoadFlight (istream &input)
   SGPropertyNode props;
   try {
     readProperties(input, &props);
-  } catch (const sg_io_exception &e) {
-    string message = "Error reading saved flight: ";
-    message += e.getMessage();
-    message += "\n at ";
-    message += e.getLocation().asString();
-    SG_LOG(SG_INPUT, SG_ALERT, message);
-    mkDialog(message.c_str());
+  } catch (const sg_exception &e) {
+    guiErrorMessage("Error reading saved flight: ", e);
     return false;
   }
   copyProperties(&props, globals->get_props());
