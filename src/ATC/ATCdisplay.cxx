@@ -31,11 +31,8 @@
 #include "ATCdisplay.hxx"
 
 
-FGATCDisplay *current_atcdisplay;
-
-
 // Constructor
-FGATCDisplay::FGATCDisplay( void ) {
+FGATCDisplay::FGATCDisplay() {
     rep_msg = false;
     change_msg_flag = false;
     dsp_offset1 = 0;
@@ -44,18 +41,23 @@ FGATCDisplay::FGATCDisplay( void ) {
 
 
 // Destructor
-FGATCDisplay::~FGATCDisplay( void ) {
+FGATCDisplay::~FGATCDisplay() {
 }
 
-void FGATCDisplay::init( void ) {
+void FGATCDisplay::init() {
 }
 
+void FGATCDisplay::bind() {
+}
+
+void FGATCDisplay::unbind() {
+}
 
 // update - this actually draws the visuals and should be called from the main Flightgear rendering loop.
-void FGATCDisplay::update() {
+void FGATCDisplay::update(int dt) {
 
     // These strings are used for temporary storage of the transmission string in order
-    // that the string we view only changes when the next repitition starts scrolling
+    // that the string we view only changes when the next repetition starts scrolling
     // even though the master string (rep_msg_str) may change at any time.
     static string msg1 = "";
     static string msg2 = "";

@@ -51,6 +51,8 @@ class FGSoundMgr;
 class FGFX;
 class FGViewMgr;
 class FGViewer;
+class FGATCMgr;
+class FGATCDisplay;
 
 class FGGlobals {
 
@@ -100,6 +102,12 @@ private:
 
     // environment information
     FGEnvironmentMgr * environment_mgr;
+
+    // ATC manager
+    FGATCMgr *ATC_mgr;
+
+    // ATC Renderer
+    FGATCDisplay *ATC_display;
 
     // control input state
     FGControls *controls;
@@ -170,6 +178,12 @@ public:
     const FGEnvironment * get_environment(double lat, double lon,
 					  double alt) const;
 
+    inline FGATCMgr *get_ATC_mgr() const { return ATC_mgr; }
+    inline void set_ATC_mgr( FGATCMgr *a ) {ATC_mgr = a; }
+
+    inline FGATCDisplay *get_ATC_display() const { return ATC_display; }
+    inline void set_ATC_display( FGATCDisplay *d ) {ATC_display = d; }  
+
     inline FGSoundMgr *get_soundmgr() const { return soundmgr; }
     inline void set_soundmgr( FGSoundMgr *sm ) { soundmgr = sm; }
 
@@ -215,5 +229,3 @@ extern FGGlobals *globals;
 
 
 #endif // _GLOBALS_HXX
-
-

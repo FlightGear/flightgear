@@ -1,6 +1,7 @@
 // atislist.cxx -- navaids management class
 //
-// Written by Curtis Olson, started April 2000.
+// Written by David Luff, started October 2001.
+// Based on navlist.cxx by Curtis Olson, started April 2000.
 //
 // Copyright (C) 2000  Curtis L. Olson - curt@flightgear.org
 //

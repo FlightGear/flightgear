@@ -1,4 +1,5 @@
 // atis.cxx - routines to generate the ATIS info string
+// This is the implementation of the FGATIS class
 //
 // Written by David Luff, started October 2001.
 //
@@ -47,10 +48,12 @@ SG_USING_STD(cout);
 //#endif
 
 #include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
 #include <Airports/runways.hxx>
 
 #include "atis.hxx"
 #include "atislist.hxx"
+#include "ATCdisplay.hxx"
 
 string GetPhoneticIdent(int i) {
 // TODO - Check i is between 1 and 26 and wrap if necessary
@@ -88,17 +91,40 @@ string GetPhoneticIdent(int i) {
 
 // Constructor
 FGATIS::FGATIS() {
+    transmission = "";
+    display = false;
+    displaying = false;
 }
 
 // Destructor
 FGATIS::~FGATIS() {
 }
 
-string FGATIS::get_transmission() {
-//void FGATIS::get_transmission() {
-#if !defined(FG_NEW_ENVIRONMENT)
+// Main update function - checks whether we are displaying or not the correct message.
+void FGATIS::Update() {
+    if(display) {
+	if(displaying) {
+	    // Check if we need to update the message
+	    // - basically every hour and if the weather changes significantly at the station
+	    //globals->get_ATC_display()->ChangeRepeatingMessage(transmission);
+	} else {
+	    // We need to get and display the message
+	    UpdateTransmission();
+	    globals->get_ATC_display()->RegisterRepeatingMessage(transmission);
+	    displaying = true;
+	}
+    } else {
+	// We shouldn't be displaying
+	if(displaying) {
+	    globals->get_ATC_display()->CancelRepeatingMessage();
+	    displaying = false;
+	}
+    }
+}
 
-    string transmission = "";
+// Sets the actual broadcast ATIS transmission.
+void FGATIS::UpdateTransmission() {
+#if !defined(FG_NEW_ENVIRONMENT)
     double visibility;
     char buf[10];
     int phonetic_id;
@@ -109,42 +135,36 @@ string FGATIS::get_transmission() {
     sgVec3 position = { lat, lon, elev };
     FGPhysicalProperty stationweather = WeatherDatabase->get(position);
 
-// Only update every so-many loops - FIXME - possibly register this with the event scheduler
-// Ack this doesn't work since the static counter is shared between all instances of FGATIS
-// OK, for now the radiostack is handling only calling this every-so-often but that is not really 
-// a proper solution since the atis knows when the transmission is going to change not the radio.
-    //static int i=0;
-    //if(i == 0) {
-	transmission = "";
+    transmission = "";
 
-	// Start with the transmitted station name.
-	transmission += name;
-	// Add "Information"
-	transmission += " Information";
+    // Start with the transmitted station name.
+    transmission += name;
+    // Add "Information"
+    transmission += " Information";
 
-	//cout << "In atis.cxx, time_str = " << time_str << '\n';
-	// Add the recording identifier
-	// For now we will assume we only transmit every hour
-	hours = atoi((time_str.substr(1,2)).c_str());	//Warning - this is fragile if the 
+    //cout << "In atis.cxx, time_str = " << time_str << '\n';
+    // Add the recording identifier
+    // For now we will assume we only transmit every hour
+    hours = atoi((time_str.substr(1,2)).c_str());	//Warning - this is fragile if the 
 							//time string format changes
-	//cout << "In atis.cxx, hours = " << hours << endl;
-	phonetic_id = current_atislist->GetCallSign(ident, hours, 0);
-	phonetic_id_string = GetPhoneticIdent(phonetic_id);
-	transmission += " ";
-	transmission += phonetic_id_string;
+    //cout << "In atis.cxx, hours = " << hours << endl;
+    phonetic_id = current_atislist->GetCallSign(ident, hours, 0);
+    phonetic_id_string = GetPhoneticIdent(phonetic_id);
+    transmission += " ";
+    transmission += phonetic_id_string;
 
-	// Output the recording time. - we'll just output the last whole hour for now.
-	// FIXME - this only gets GMT time but that appears to be all the clock outputs for now
-	//cout << "in atis.cxx, time = " << time_str << endl;
-	transmission = transmission + "  Weather " + time_str.substr(0,3) + "00 hours Zulu";
+    // Output the recording time. - we'll just output the last whole hour for now.
+    // FIXME - this only gets GMT time but that appears to be all the clock outputs for now
+    //cout << "in atis.cxx, time = " << time_str << endl;
+    transmission = transmission + "  Weather " + time_str.substr(0,3) + "00 hours Zulu";
 
-	// Get the temperature
-	// (Hardwire it for now since the global property returns the temperature at the current altitude
-	//temperature = fgGetDouble("/environment/weather/temperature-K");
-	sprintf(buf, "%i", int(stationweather.Temperature - 273.15));
-	transmission += "  Temperature ";
-	transmission += buf;
-	transmission += " degrees Celsius";
+    // Get the temperature
+    // (Hardwire it for now since the global property returns the temperature at the current altitude
+    //temperature = fgGetDouble("/environment/weather/temperature-K");
+    sprintf(buf, "%i", int(stationweather.Temperature - 273.15));
+    transmission += "  Temperature ";
+    transmission += buf;
+    transmission += " degrees Celsius";
 
 	// Get the pressure / altimeter
         // pressure is: stationweather.AirPressure in Pascal
@@ -207,19 +227,11 @@ string FGATIS::get_transmission() {
 
 	// Anything else?
 
-	// TODO - unhardwire the identifier
 	transmission += "  Advise controller on initial contact you have ";
 	transmission += phonetic_id_string;
 
-    //}
-
-//    i++;
-//    if(i == 600) {
-//	i=0;
-//    }
-
-    return(transmission);
 #else
-    return "Station unavailable (not supported by FG_NEW_ENVIRONMENT)";
+    transmission = "Station unavailable (not supported by FG_NEW_ENVIRONMENT)";
+    //return "Station unavailable (not supported by FG_NEW_ENVIRONMENT)";
 #endif // FG_NEW_ENVIRONMENT
 }

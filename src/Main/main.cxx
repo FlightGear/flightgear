@@ -77,6 +77,7 @@
 
 #include <Aircraft/aircraft.hxx>
 
+#include <ATC/ATCmgr.hxx>
 #include <ATC/ATCdisplay.hxx>
 #include <Autopilot/newauto.hxx>
 
@@ -793,7 +794,7 @@ void fgRenderFrame( void ) {
 
 	// Use the hud_and_panel ssgSimpleState for rendering the ATC output
 	// This only works properly if called before the panel call
-	current_atcdisplay->update();
+	globals->get_ATC_display()->update(1);  // FIXME: use real dt
 
 	// update the panel subsystem
 	if ( current_panel != NULL ) {
@@ -1093,6 +1094,9 @@ static void fgMainLoop( void ) {
     last_time = t->get_cur_time();
     ++frames;
 #endif
+
+    // Run ATC subsystem
+    globals->get_ATC_mgr()->update(1);  // FIXME: use real dt
 
     // Run flight model
 

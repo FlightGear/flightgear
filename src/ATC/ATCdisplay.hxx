@@ -1,6 +1,6 @@
 // ATCdisplay.hxx - class to manage the graphical display of ATC messages.
 //                - The idea is to separate the display of ATC messages from their
-//		  - generation so that the generation may come from any source.
+//	          - generation so that the generation may come from any source.
 //
 // Written by David Luff, started October 2001.
 //
@@ -27,6 +27,8 @@
 #  include <config.h>
 #endif
 
+#include <Main/fgfs.hxx>
+
 #include <vector>
 #include <string>
 
@@ -43,7 +45,8 @@ struct atcMessage {
 typedef vector<atcMessage> atcMessageList;
 typedef atcMessageList::iterator atcMessageListIterator;
 
-class FGATCDisplay {
+class FGATCDisplay : public FGSubsystem 
+{
 
 private:
     bool rep_msg;		// Flag to indicate there is a repeating transmission to display
@@ -60,13 +63,17 @@ public:
 
     void init();
 
+    void bind();
+
+    void unbind();
+
     // Display any registered messages
-    void update();
+    void update(int dt);
 
     // Register a single message for display when possible
     void RegisterSingleMessage(string msg);	// OK - I know passing a string in and out is probably not good but it will have to do for now.
 
-/* For now we will assume only one repeating message at once */
+    // For now we will assume only one repeating message at once
     // This is not really robust
 
     // Register a continuously repeating message
@@ -78,7 +85,5 @@ public:
     // Cancel the current repeating message
     void CancelRepeatingMessage();
 };
-
-extern FGATCDisplay *current_atcdisplay;
 
 #endif // _FG_ATC_DISPLAY_HXX

@@ -31,8 +31,6 @@
 #include <simgear/math/sg_random.h>
 
 #include <Aircraft/aircraft.hxx>
-#include <ATC/ATCdisplay.hxx>
-//#include <Navaids/atis.hxx>
 #include <Navaids/ilslist.hxx>
 #include <Navaids/mkrbeacons.hxx>
 #include <Navaids/navlist.hxx>
@@ -404,9 +402,6 @@ double FGRadioStack::adjustILSRange( double stationElev, double aircraftElev,
 void 
 FGRadioStack::update(int dt) 
 {
-    //DCL
-    string transmission;
-
     double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
@@ -416,48 +411,6 @@ FGRadioStack::update(int dt)
     Point3D aircraft = sgGeodToCart( Point3D( lon, lat, elev ) );
     Point3D station;
     double az1, az2, s;
-
-    ////////////////////////////////////////////////////////////////////////
-    // Comm1.
-    ////////////////////////////////////////////////////////////////////////
-
-    static bool repeating_message_registered = false;
-    static int dcl_i = 0;   //Hack to only call the transmission now and then - should use the event scheduler
-    if ( comm1_valid ) {
-	station = Point3D( comm1_x, comm1_y, comm1_z );
-	comm1_dist = aircraft.distance3D( station );
-	if ( comm1_dist < comm1_effective_range * SG_NM_TO_METER ) {
-	    comm1_inrange = true;
-	    // TODO - only get the transmission and register every now and then
-	    if(dcl_i == 0) {
-		transmission = atis.get_transmission();
-		current_atcdisplay->ChangeRepeatingMessage(transmission);
-	    }
-	    if(!repeating_message_registered) {
-		current_atcdisplay->RegisterRepeatingMessage(transmission);
-		repeating_message_registered = true;
-	    }
-	    dcl_i++;
-	    if(dcl_i == 2000) {
-		dcl_i = 0;
-	    }
-	} else {
-	    comm1_inrange = false;
-	    if(repeating_message_registered) {
-		current_atcdisplay->CancelRepeatingMessage();
-		repeating_message_registered = false;
-	    }
-	    dcl_i = 0;
-	}
-    } else {
-	comm1_inrange = false;
-	if(repeating_message_registered) {
-	    current_atcdisplay->CancelRepeatingMessage();
-	    repeating_message_registered = false;
-	}
-	dcl_i = 0;
-	// cout << "not picking up comm1. :-(" << endl;
-    }
 
     ////////////////////////////////////////////////////////////////////////
     // Nav1.
@@ -812,42 +765,11 @@ void FGRadioStack::search()
     FGILS ils;
     FGNav nav;
 
-    static string last_comm1_ident = "";
-    static string last_comm2_ident = "";
     static string last_nav1_ident = "";
     static string last_nav2_ident = "";
     static string last_adf_ident = "";
     static bool last_nav1_vor = false;
     static bool last_nav2_vor = false;
-
-
-    ////////////////////////////////////////////////////////////////////////
-    // Comm1.
-    ////////////////////////////////////////////////////////////////////////
-
-    if ( current_atislist->query( lon, lat, elev, comm1_freq, &atis ) ) {
-	//cout << "atis found in radiostack search !!!!" << endl;
-	comm1_ident = atis.get_ident();
-	comm1_valid = true;
-	if ( last_comm1_ident != comm1_ident ) {
-	    //nav1_trans_ident = ils.get_trans_ident();
-	    last_comm1_ident = comm1_ident;
-	    comm1_elev = atis.get_elev();
-	    comm1_range = FG_ATIS_DEFAULT_RANGE;
-	    comm1_effective_range = comm1_range;
-	    comm1_x = atis.get_x();
-	    comm1_y = atis.get_y();
-	    comm1_z = atis.get_z();
-	    //cout << "Found a new atis station in range" << endl;
-	    //cout << " id = " << atis.get_ident() << endl;
-	}
-    } else {
-	comm1_valid = false;
-	comm1_ident = "";
-	//comm1_trans_ident = "";
-	last_comm1_ident = "";
-	// cout << "not picking up atis" << endl;
-    }
 
     ////////////////////////////////////////////////////////////////////////
     // Nav1.
@@ -1422,4 +1344,3 @@ FGRadioStack::get_nav2_from_flag () const
     return false;
   }
 }
-

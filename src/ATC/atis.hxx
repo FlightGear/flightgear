@@ -1,8 +1,9 @@
 // atis.hxx -- ATIS class
 //
-// Written by Curtis Olson, started April 2000.
+// Written by David Luff, started October 2001.
+// Based on nav.hxx by Curtis Olson, started April 2000.
 //
-// Copyright (C) 2000  Curtis L. Olson - curt@flightgear.org
+// Copyright (C) 2001  David C. Luff - david.luff@nottingham.ac.uk
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -50,10 +51,12 @@ SG_USING_STD(istream);
 
 SG_USING_STD(string);
 
+#include "ATC.hxx"
+
 //DCL - a complete guess for now.
 #define FG_ATIS_DEFAULT_RANGE 30
 
-class FGATIS {
+class FGATIS : public FGATC {
 
     char type;
     double lon, lat;
@@ -61,9 +64,11 @@ class FGATIS {
     double x, y, z;
     int freq;
     int range;
+    bool display;		// Flag to indicate whether we should be outputting to the ATC display.
+    bool displaying;		// Flag to indicate whether we are outputting to the ATC display.
     string ident;		// Code of the airport its at.
     string name;		// Name transmitted in the broadcast.
-    string info;		// The actual ATIS transmission
+    string transmission;	// The actual ATIS transmission
 				// This is not stored in default.atis but is generated
 				// from the prevailing conditions when required.
 
@@ -71,10 +76,28 @@ class FGATIS {
     string trans_ident;		// transmitted ident
     bool atis_failed;		// atis failed?
 
+    // Aircraft position
+    // ATIS is actually a special case in that unlike other ATC eg.tower it doesn't actually know about
+    // or the whereabouts of the aircraft it is transmitting to.  However, to ensure consistancy of
+    // operation with the other ATC classes the ATIS class must calculate range to the aircraft in order
+    // to decide whether to render the transmission - hence the users plane details must be stored.
+    //SGPropertyNode *airplane_lon_node; 
+    //SGPropertyNode *airplane_lat_node;
+    //SGPropertyNode *airplane_elev_node; 
+
 public:
 
     FGATIS(void);
     ~FGATIS(void);
+
+    //run the ATIS instance
+    void Update(void);
+
+    //Indicate that this instance should be outputting to the ATC display
+    inline void SetDisplay(void) {display = true;}
+
+    //Indicate that this instance should not be outputting to the ATC display
+    inline void SetNoDisplay(void) {display = false;}
 
     inline char get_type() const { return type; }
     inline double get_lon() const { return lon; }
@@ -85,10 +108,14 @@ public:
     inline double get_z() const { return z; }
     inline int get_freq() const { return freq; }
     inline int get_range() const { return range; }
-    inline const char *get_ident() { return ident.c_str(); }
+    inline const char* GetIdent() { return ident.c_str(); }
     inline string get_trans_ident() { return trans_ident; }
-    string get_transmission(void);
-//    void get_transmission();
+    inline atc_type GetType() { return ATIS; }
+
+private:
+
+    //Update the transmission string
+    void UpdateTransmission(void);
 
     /* inline void set_type( char t ) { type = t; }
     inline void set_lon( double l ) { lon = l; }

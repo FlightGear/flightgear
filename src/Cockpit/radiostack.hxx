@@ -35,7 +35,6 @@
 
 #include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
-#include <ATC/atislist.hxx>
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 
@@ -54,8 +53,6 @@ class FGRadioStack : public FGSubsystem
     SGPropertyNode *alt_node;
 
     bool need_update;
-
-    FGATIS atis;
 
     string comm1_ident;
     bool comm1_valid;

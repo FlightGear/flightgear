@@ -70,6 +70,8 @@
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
 #include <ATC/ATCdisplay.hxx>
+#include <ATC/ATCmgr.hxx>
+#include <ATC/atislist.hxx>
 #include <Autopilot/auto_gui.hxx>
 #include <Autopilot/newauto.hxx>
 #include <Cockpit/cockpit.hxx>
@@ -866,7 +868,6 @@ bool fgInitSubsystems( void ) {
     // Initialize ATC list management and query systems
     ////////////////////////////////////////////////////////////////////
 
-    //DCL
     SG_LOG(SG_GENERAL, SG_INFO, "  ATIS");
     current_atislist = new FGATISList;
     SGPath p_atis( globals->get_fg_root() );
@@ -877,10 +878,17 @@ bool fgInitSubsystems( void ) {
     // Initialise ATC display system
     ////////////////////////////////////////////////////////////////////
 
-    //DCL
     SG_LOG(SG_GENERAL, SG_INFO, "  ATC Display");
-    current_atcdisplay = new FGATCDisplay;
-    current_atcdisplay->init();   
+    globals->set_ATC_display(new FGATCDisplay);
+    globals->get_ATC_display()->init(); 
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialise the ATC Manager 
+    ////////////////////////////////////////////////////////////////////
+
+    SG_LOG(SG_GENERAL, SG_INFO, "  ATC Manager");
+    globals->set_ATC_mgr(new FGATCMgr);
+    globals->get_ATC_mgr()->init();     
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the built-in commands.
