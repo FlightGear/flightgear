@@ -135,6 +135,9 @@ public:
     // coordinates to eye coordinates
     MAT3mat WORLD_TO_EYE;
 
+    // Current model view matrix;
+    GLdouble MODEL_VIEW[16];
+
     // Constructor
     fgVIEW( void );
 
@@ -158,10 +161,31 @@ public:
 extern fgVIEW current_view;
 
 
+// Basically, this is a modified version of the Mesa gluLookAt()
+// function that's been modified slightly so we can capture the result
+// before sending it off to OpenGL land.
+void fg_gluLookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
+		   GLdouble centerx, GLdouble centery, GLdouble centerz,
+		   GLdouble upx, GLdouble upy, GLdouble upz );
+
+
 #endif // _VIEWS_HXX
 
 
 // $Log$
+// Revision 1.9  1998/07/04 00:52:27  curt
+// Add my own version of gluLookAt() (which is nearly identical to the
+// Mesa/glu version.)  But, by calculating the Model View matrix our selves
+// we can save this matrix without having to read it back in from the video
+// card.  This hopefully allows us to save a few cpu cycles when rendering
+// out the fragments because we can just use glLoadMatrixd() with the
+// precalculated matrix for each tile rather than doing a push(), translate(),
+// pop() for every fragment.
+//
+// Panel status defaults to off for now until it gets a bit more developed.
+//
+// Extract OpenGL driver info on initialization.
+//
 // Revision 1.8  1998/05/27 02:24:06  curt
 // View optimizations by Norman Vine.
 //

@@ -192,28 +192,28 @@ static void fgUpdateViewParams( void ) {
     xglLoadIdentity();
     
     // set up our view volume (default)
-    gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
+    fg_gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
 	       v->view_pos.x + v->view_forward[0], 
 	       v->view_pos.y + v->view_forward[1], 
 	       v->view_pos.z + v->view_forward[2],
 	       v->view_up[0], v->view_up[1], v->view_up[2]);
 
     // look almost straight up (testing and eclipse watching)
-    /* gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
+    /* fg_gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
 	       v->view_pos.x + v->view_up[0] + .001, 
 	       v->view_pos.y + v->view_up[1] + .001, 
 	       v->view_pos.z + v->view_up[2] + .001,
 	       v->view_up[0], v->view_up[1], v->view_up[2]); */
 
     // lock view horizontally towards sun (testing)
-    /* gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
+    /* fg_gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
 	       v->view_pos.x + v->surface_to_sun[0], 
 	       v->view_pos.y + v->surface_to_sun[1], 
 	       v->view_pos.z + v->surface_to_sun[2],
 	       v->view_up[0], v->view_up[1], v->view_up[2]); */
 
     // lock view horizontally towards south (testing)
-    /* gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
+    /* fg_gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
 	       v->view_pos.x + v->surface_south[0], 
 	       v->view_pos.y + v->surface_south[1], 
 	       v->view_pos.z + v->surface_south[2],
@@ -745,6 +745,19 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.29  1998/07/04 00:52:22  curt
+// Add my own version of gluLookAt() (which is nearly identical to the
+// Mesa/glu version.)  But, by calculating the Model View matrix our selves
+// we can save this matrix without having to read it back in from the video
+// card.  This hopefully allows us to save a few cpu cycles when rendering
+// out the fragments because we can just use glLoadMatrixd() with the
+// precalculated matrix for each tile rather than doing a push(), translate(),
+// pop() for every fragment.
+//
+// Panel status defaults to off for now until it gets a bit more developed.
+//
+// Extract OpenGL driver info on initialization.
+//
 // Revision 1.28  1998/06/27 16:54:32  curt
 // Replaced "extern displayInstruments" with a entry in fgOPTIONS.
 // Don't change the view port when displaying the panel.

@@ -69,7 +69,7 @@ fgOPTIONS::fgOPTIONS( void ) {
 
     // Features
     hud_status = 1;
-    panel_status = 1;
+    panel_status = 0;
 
     // Rendering options
     fog = 2;    // nicest
@@ -434,6 +434,19 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.14  1998/07/04 00:52:26  curt
+// Add my own version of gluLookAt() (which is nearly identical to the
+// Mesa/glu version.)  But, by calculating the Model View matrix our selves
+// we can save this matrix without having to read it back in from the video
+// card.  This hopefully allows us to save a few cpu cycles when rendering
+// out the fragments because we can just use glLoadMatrixd() with the
+// precalculated matrix for each tile rather than doing a push(), translate(),
+// pop() for every fragment.
+//
+// Panel status defaults to off for now until it gets a bit more developed.
+//
+// Extract OpenGL driver info on initialization.
+//
 // Revision 1.13  1998/06/27 16:54:34  curt
 // Replaced "extern displayInstruments" with a entry in fgOPTIONS.
 // Don't change the view port when displaying the panel.

@@ -375,7 +375,99 @@ fgVIEW::~fgVIEW( void ) {
 }
 
 
+// Basically, this is a modified version of the Mesa gluLookAt()
+// function that's been modified slightly so we can capture the result
+// before sending it off to OpenGL land.
+void fg_gluLookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
+		   GLdouble centerx, GLdouble centery, GLdouble centerz,
+		   GLdouble upx, GLdouble upy, GLdouble upz )
+{
+    GLdouble *m;
+    GLdouble x[3], y[3], z[3];
+    GLdouble mag;
+
+    m = current_view.MODEL_VIEW;
+
+    /* Make rotation matrix */
+
+    /* Z vector */
+    z[0] = eyex - centerx;
+    z[1] = eyey - centery;
+    z[2] = eyez - centerz;
+    mag = sqrt( z[0]*z[0] + z[1]*z[1] + z[2]*z[2] );
+    if (mag) {  /* mpichler, 19950515 */
+	z[0] /= mag;
+	z[1] /= mag;
+	z[2] /= mag;
+    }
+
+    /* Y vector */
+    y[0] = upx;
+    y[1] = upy;
+    y[2] = upz;
+
+    /* X vector = Y cross Z */
+    x[0] =  y[1]*z[2] - y[2]*z[1];
+    x[1] = -y[0]*z[2] + y[2]*z[0];
+    x[2] =  y[0]*z[1] - y[1]*z[0];
+    
+    /* Recompute Y = Z cross X */
+    y[0] =  z[1]*x[2] - z[2]*x[1];
+    y[1] = -z[0]*x[2] + z[2]*x[0];
+    y[2] =  z[0]*x[1] - z[1]*x[0];
+
+    /* mpichler, 19950515 */
+    /* cross product gives area of parallelogram, which is < 1.0 for
+     * non-perpendicular unit-length vectors; so normalize x, y here
+     */
+
+    mag = sqrt( x[0]*x[0] + x[1]*x[1] + x[2]*x[2] );
+    if (mag) {
+	x[0] /= mag;
+	x[1] /= mag;
+      x[2] /= mag;
+    }
+
+    mag = sqrt( y[0]*y[0] + y[1]*y[1] + y[2]*y[2] );
+    if (mag) {
+	y[0] /= mag;
+	y[1] /= mag;
+	y[2] /= mag;
+    }
+
+#define M(row,col)  m[col*4+row]
+    M(0,0) = x[0];  M(0,1) = x[1];  M(0,2) = x[2];  M(0,3) = 0.0;
+    M(1,0) = y[0];  M(1,1) = y[1];  M(1,2) = y[2];  M(1,3) = 0.0;
+    M(2,0) = z[0];  M(2,1) = z[1];  M(2,2) = z[2];  M(2,3) = 0.0;
+    M(3,0) = 0.0;   M(3,1) = 0.0;   M(3,2) = 0.0;   M(3,3) = 1.0;
+#undef M
+
+    // Translate Eye to Origin
+    // replaces: glTranslated( -eyex, -eyey, -eyez );
+    m[12] = m[0] * -eyex + m[4] * -eyey + m[8]  * -eyez + m[12];
+    m[13] = m[1] * -eyex + m[5] * -eyey + m[9]  * -eyez + m[13];
+    m[14] = m[2] * -eyex + m[6] * -eyey + m[10] * -eyez + m[14];
+    m[15] = m[3] * -eyex + m[7] * -eyey + m[11] * -eyez + m[15];
+
+    // xglMultMatrixd( m );
+    xglLoadMatrixd( m );
+}
+
+
 // $Log$
+// Revision 1.13  1998/07/04 00:52:27  curt
+// Add my own version of gluLookAt() (which is nearly identical to the
+// Mesa/glu version.)  But, by calculating the Model View matrix our selves
+// we can save this matrix without having to read it back in from the video
+// card.  This hopefully allows us to save a few cpu cycles when rendering
+// out the fragments because we can just use glLoadMatrixd() with the
+// precalculated matrix for each tile rather than doing a push(), translate(),
+// pop() for every fragment.
+//
+// Panel status defaults to off for now until it gets a bit more developed.
+//
+// Extract OpenGL driver info on initialization.
+//
 // Revision 1.12  1998/06/03 00:47:15  curt
 // Updated to compile in audio support if OSS available.
 // Updated for new version of Steve's audio library.

@@ -180,6 +180,10 @@ int fgInitGeneral( void ) {
     fgPrintf( FG_GENERAL, FG_INFO, "General Initialization\n" );
     fgPrintf( FG_GENERAL, FG_INFO, "======= ==============\n" );
 
+    g->glVendor = glGetString ( GL_VENDOR );
+    g->glRenderer = glGetString ( GL_RENDERER );
+    g->glVersion = glGetString ( GL_VERSION );
+
     if ( !strlen(o->fg_root) ) { 
 	// No root path set? Then assume, we will exit if this is
 	// wrong when looking for support files.
@@ -383,6 +387,19 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.22  1998/07/04 00:52:25  curt
+// Add my own version of gluLookAt() (which is nearly identical to the
+// Mesa/glu version.)  But, by calculating the Model View matrix our selves
+// we can save this matrix without having to read it back in from the video
+// card.  This hopefully allows us to save a few cpu cycles when rendering
+// out the fragments because we can just use glLoadMatrixd() with the
+// precalculated matrix for each tile rather than doing a push(), translate(),
+// pop() for every fragment.
+//
+// Panel status defaults to off for now until it gets a bit more developed.
+//
+// Extract OpenGL driver info on initialization.
+//
 // Revision 1.21  1998/06/27 16:54:33  curt
 // Replaced "extern displayInstruments" with a entry in fgOPTIONS.
 // Don't change the view port when displaying the panel.
