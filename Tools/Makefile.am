@@ -1,6 +1,7 @@
 EXTRA_DIST = process-dem.pl
 
 SUBDIRS = \
+	Areas \
 	AssemTris \
 	Dem2node \
 	DemInfo \
