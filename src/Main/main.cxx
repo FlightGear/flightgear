@@ -879,8 +879,8 @@ static void fgMainLoop( void ) {
 #endif
 
     // see if we need to load any new scenery tiles
-    global_tile_mgr.update( cur_fdm_state->get_Longitude(),
-			    cur_fdm_state->get_Latitude() );
+    global_tile_mgr.update( cur_fdm_state->get_Longitude() * RAD_TO_DEG,
+			    cur_fdm_state->get_Latitude() * RAD_TO_DEG );
 
     // Process/manage pending events
     global_events.Process();

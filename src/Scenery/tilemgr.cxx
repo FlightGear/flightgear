@@ -39,7 +39,7 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/vector.hxx>
 
-#include <Aircraft/aircraft.hxx>
+// #include <Aircraft/aircraft.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Objects/obj.hxx>
@@ -88,7 +88,7 @@ int FGTileMgr::init( void ) {
 
     if ( state != Start ) {
 	FG_LOG( FG_TERRAIN, FG_INFO,
-		"ReInitializing the Tile Manager subsystem." );
+		"... Reinitializing." );
 
 	// This is necessay to keep bookeeping straight for the
 	// tile_cache   -- which actually handles all the
@@ -102,7 +102,7 @@ int FGTileMgr::init( void ) {
 	}
     } else {
 	FG_LOG( FG_TERRAIN, FG_INFO,
-		"Initializing Tile Manager subsystem." );
+		"... First time through." );
     }
 
     global_tile_cache.init();
@@ -304,13 +304,12 @@ void FGTileMgr::scroll( void )
 }
 
 
-void FGTileMgr::initialize_queue( void )
+void FGTileMgr::initialize_queue()
 {
     // First time through or we have teleported, initialize the
     // system and load all relavant tiles
 
     FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << current_bucket );
-    FG_LOG( FG_TERRAIN, FG_INFO, "  First time through ... " );
     FG_LOG( FG_TERRAIN, FG_INFO, "  Updating Tile list for " << current_bucket );
     FG_LOG( FG_TERRAIN, FG_INFO, "  Loading " 
             << tile_diameter * tile_diameter << " tiles" );
@@ -328,12 +327,6 @@ void FGTileMgr::initialize_queue( void )
     // "rings"
 
     sched_tile( current_bucket );
-    Point3D geod_view_center( current_bucket.get_center_lon(), 
-                              current_bucket.get_center_lat(), 
-                              cur_fdm_state->get_Altitude()*FEET_TO_METER + 3 );
-
-    current_view.abs_view_pos = fgGeodToCart( geod_view_center );
-    current_view.view_pos = current_view.abs_view_pos - scenery.next_center;
 
     for ( i = 3; i <= tile_diameter; i = i + 2 ) {
         int j;
@@ -372,16 +365,19 @@ void FGTileMgr::initialize_queue( void )
 }
 
 
-// given the current lon/lat, fill in the array of local chunks.  If
-// the chunk isn't already in the cache, then read it from disk.
-int FGTileMgr::update( double junk1, double junk2 ) {
+// given the current lon/lat (in degrees), fill in the array of local
+// chunks.  If the chunk isn't already in the cache, then read it from
+// disk.
+int FGTileMgr::update( double lon, double lat ) {
     // FG_LOG( FG_TERRAIN, FG_DEBUG, "FGTileMgr::update()" );
 
-    FGInterface *f = current_aircraft.fdm_state;
+    // FGInterface *f = current_aircraft.fdm_state;
 
     // lonlat for this update 
-    longitude = f->get_Longitude() * RAD_TO_DEG;
-    latitude = f->get_Latitude() * RAD_TO_DEG;
+    // longitude = f->get_Longitude() * RAD_TO_DEG;
+    // latitude = f->get_Latitude() * RAD_TO_DEG;
+    longitude = lon;
+    latitude = lat;
     // FG_LOG( FG_TERRAIN, FG_DEBUG, "lon "<< lonlat[LON] <<
     //      " lat " << lonlat[LAT] );
 
@@ -395,7 +391,7 @@ int FGTileMgr::update( double junk1, double junk2 ) {
         current_tile = global_tile_cache.get_tile(tile_index);
         scenery.next_center = current_tile->center;
     } else {
-        FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found" );
+        FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found (Ok if initializing)" );
     }
 
     if ( state == Running ) {
@@ -438,7 +434,7 @@ int FGTileMgr::update( double junk1, double junk2 ) {
 	    scroll();
 	}
 
-    } else if ( (state == Start) || (state == Inited) ) {
+    } else if ( state == Start || state == Inited ) {
 	initialize_queue();
 	state = Running;
     }
@@ -451,19 +447,25 @@ int FGTileMgr::update( double junk1, double junk2 ) {
 	load_tile( pending.b, pending.cache_index );
     }
 
-    // find our current elevation (feed in the current bucket to save work)
-    // Point3D geod_pos = Point3D( f->get_Longitude(), f->get_Latitude(), 0.0);
-    // Point3D tmp_abs_view_pos = fgGeodToCart(geod_pos);
+    if ( scenery.center == Point3D(0.0) ) {
+	// initializing
+	// cout << "initializing ... " << endl;
+	Point3D geod_pos = Point3D( longitude * DEG_TO_RAD,
+				    latitude * DEG_TO_RAD,
+				    0.0);
+	Point3D tmp_abs_view_pos = fgGeodToCart( geod_pos );
+	scenery.center = tmp_abs_view_pos;
+	// cout << "abs_view_pos = " << tmp_abs_view_pos << endl;
+	prep_ssg_nodes();
+	current_elev_ssg( tmp_abs_view_pos,
+			  Point3D( 0.0 ) );
+    } else {
+	// cout << "abs view pos = " << current_view.abs_view_pos
+	//      << " view pos = " << current_view.view_pos << endl;
+	current_elev_ssg( current_view.abs_view_pos,
+			  current_view.view_pos );
+    }
 
-    // cout << "current elevation (old) == " 
-    //      << current_elev( f->get_Longitude(), f->get_Latitude(), 
-    //                       tmp_abs_view_pos ) 
-    //      << endl;
-
-    // set scenery.cur_elev and scenery.cur_radius
-
-    current_elev_ssg( current_view.abs_view_pos,
-                      current_view.view_pos );
     // cout << "current elevation (ssg) == " << scenery.cur_elev << endl;
 
     previous_bucket = current_bucket;
@@ -483,6 +485,18 @@ void FGTileMgr::prep_ssg_nodes( void ) {
     FGTileEntry *t;
     float ranges[2];
     ranges[0] = 0.0f;
+    double vis = 0.0;
+
+#ifndef FG_OLD_WEATHER
+    if ( WeatherDatabase != NULL ) {
+	vis = WeatherDatabase->getWeatherVisibility();
+    } else {
+	vis = 16000;
+    }
+#else
+    vis = current_weather.get_visibility();
+#endif
+    // cout << "visibility = " << vis << endl;
 
     // traverse the potentially viewable tile list and update range
     // selector and transform
@@ -493,12 +507,7 @@ void FGTileMgr::prep_ssg_nodes( void ) {
 	    // set range selector (LOD trick) to be distance to center
 	    // of tile + bounding radius
 
-#ifndef FG_OLD_WEATHER
-            ranges[1] = WeatherDatabase->getWeatherVisibility()
-		+ t->bounding_radius;
-#else
-            ranges[1] = current_weather.get_visibility()+t->bounding_radius;
-#endif
+            ranges[1] = vis + t->bounding_radius;
             t->range_ptr->setRanges( ranges, 2 );
 
             // calculate tile offset

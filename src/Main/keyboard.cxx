@@ -476,10 +476,11 @@ void GLUTspecialkey(int k, int x, int y) {
 		if ( !freeze ) 
 		    globals->set_freeze( true );
 		BusyCursor(0);
-		if( global_tile_mgr.init() ) {
+		if ( global_tile_mgr.init() ) {
 		    // Load the local scenery data
-		    global_tile_mgr.update( cur_fdm_state->get_Longitude(),
-					    cur_fdm_state->get_Latitude() );
+		    global_tile_mgr.update( 
+		        cur_fdm_state->get_Longitude() * RAD_TO_DEG,
+			cur_fdm_state->get_Latitude() * RAD_TO_DEG );
 		} else {
 		    FG_LOG( FG_GENERAL, FG_ALERT, 
 			    "Error in Tile Manager initialization!" );

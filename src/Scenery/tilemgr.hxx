@@ -94,7 +94,7 @@ private:
     list < FGLoadRec > load_queue;
 
     // initialize the cache
-    void initialize_queue( void );
+    void initialize_queue();
 
     FGBucket BucketOffset( int dx, int dy );
 
@@ -143,10 +143,10 @@ public:
     // Initialize the Tile Manager subsystem
     int init( void );
 
-    // given the current lon/lat, fill in the array of local chunks.
-    // If the chunk isn't already in the cache, then read it from
-    // disk.
-    int update( double junk1, double junk2 );
+    // given the current lon/lat (in degrees), fill in the array of
+    // local chunks.  If the chunk isn't already in the cache, then
+    // read it from disk.
+    int update( double lon, double lat );
 
     // Determine scenery altitude.  Normally this just happens when we
     // render the scene, but we'd also like to be able to do this

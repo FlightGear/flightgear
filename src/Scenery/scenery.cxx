@@ -52,18 +52,11 @@ struct fgSCENERY scenery;
 
 // Initialize the Scenery Management system
 int fgSceneryInit( void ) {
-    fgOPTIONS *o;
-    // char path[1024], fgpath[1024];
-    // GLubyte *texbuf;
-    // int width, height;
-
-    o = &current_options;
-
     FG_LOG( FG_TERRAIN, FG_INFO, "Initializing scenery subsystem" );
 
     scenery.cur_elev = -9999;
 
-    return(1);
+    return 1;
 }
 
 

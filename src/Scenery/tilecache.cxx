@@ -114,7 +114,7 @@ FGTileCache::init( void )
     // and ... just in case we missed something ... 
     terrain->removeAllKids();
 
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "  done with init()"  );
+    FG_LOG( FG_TERRAIN, FG_INFO, "  done with init()"  );
 }
 
 

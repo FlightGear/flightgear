@@ -188,16 +188,13 @@ bool fgInitPosition( void ) {
     FGInterface *f = current_aircraft.fdm_state;
     string id = current_options.get_airport_id();
 
-    if ( id.length() ) {
-	// set initial position from airport id
-	if ( ! fgSetPosFromAirportID( id ) ) {
-	    exit(-1);
-	}
-    }
-
     // set initial position from default or command line coordinates
     f->set_Longitude( current_options.get_lon() * DEG_TO_RAD );
     f->set_Latitude( current_options.get_lat() * DEG_TO_RAD );
+
+    if ( scenery.cur_elev > current_options.get_altitude() - 2 ) {
+	current_options.set_altitude( scenery.cur_elev + 2 );
+    }
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "starting altitude is = " << current_options.get_altitude() );
@@ -266,6 +263,36 @@ bool fgInitSubsystems( void ) {
     FG_LOG( FG_GENERAL, FG_INFO, "Initialize Subsystems");
     FG_LOG( FG_GENERAL, FG_INFO, "========== ==========");
 
+    // Initialize the material property lib
+    FGPath mpath( current_options.get_fg_root() );
+    mpath.append( "materials" );
+    if ( material_lib.load( mpath.str() ) ) {
+    } else {
+    	FG_LOG( FG_GENERAL, FG_ALERT, "Error loading material lib!" );
+	exit(-1);
+    }
+
+    // Initialize the Scenery Management subsystem
+    if ( fgSceneryInit() ) {
+	// Material lib initialized ok.
+    } else {
+    	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Scenery initialization!" );
+	exit(-1);
+    }
+
+    if ( global_tile_mgr.init() ) {
+	// Load the local scenery data
+	global_tile_mgr.update( current_options.get_lon(),
+				current_options.get_lat() );
+    } else {
+    	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Tile Manager initialization!" );
+	exit(-1);
+    }
+
+    FG_LOG( FG_GENERAL, FG_DEBUG,
+    	    "Current terrain elevation after tile mgr init " <<
+	    scenery.cur_elev );
+
     if ( current_options.get_flight_model() == FGInterface::FG_LARCSIM ) {
 	cur_fdm_state = new FGLaRCsim;
     } else if ( current_options.get_flight_model() == FGInterface::FG_JSBSIM ) {
@@ -291,36 +318,6 @@ bool fgInitSubsystems( void ) {
 
     // set the initial position
     fgInitPosition();
-
-    // Initialize the material property lib
-    FGPath mpath( current_options.get_fg_root() );
-    mpath.append( "materials" );
-    if ( material_lib.load( mpath.str() ) ) {
-    } else {
-    	FG_LOG( FG_GENERAL, FG_ALERT, "Error loading material lib!" );
-	exit(-1);
-    }
-
-    // Initialize the Scenery Management subsystem
-    if ( fgSceneryInit() ) {
-	// Material lib initialized ok.
-    } else {
-    	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Scenery initialization!" );
-	exit(-1);
-    }
-
-    if( global_tile_mgr.init() ) {
-	// Load the local scenery data
-	global_tile_mgr.update( cur_fdm_state->get_Longitude(),
-				cur_fdm_state->get_Latitude() );
-    } else {
-    	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Tile Manager initialization!" );
-	exit(-1);
-    }
-
-    FG_LOG( FG_GENERAL, FG_DEBUG,
-    	    "Current terrain elevation after tile mgr init " <<
-	    scenery.cur_elev );
 
     // Calculate ground elevation at starting point (we didn't have
     // tmp_abs_view_pos calculated when fgTileMgrUpdate() was called above
@@ -613,15 +610,18 @@ void fgReInitSubsystems( void )
     if( !freeze )
         globals->set_freeze( true );
     
-    fgInitPosition();
     if( global_tile_mgr.init() ) {
 	// Load the local scenery data
-	global_tile_mgr.update( cur_fdm_state->get_Longitude(),
-				cur_fdm_state->get_Latitude() );
+	global_tile_mgr.update( current_options.get_lon(),
+				current_options.get_lat() );
     } else {
     	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Tile Manager initialization!" );
 		exit(-1);
     }
+
+    // cout << "current scenery elev = " << scenery.cur_elev << endl;
+
+    fgInitPosition();
     fgFDMSetGroundElevation( current_options.get_flight_model(), 
 			     scenery.cur_elev );
 
