@@ -66,7 +66,7 @@ CLASS IMPLEMENTATION
 //
 // For every term registered here there must be a corresponding handler in
 // GetParameter() below that retrieves that parameter. Also, there must be an
-// entry in the enum eParam definition in FGDefs.h. The ID is what must be used
+// entry in the enum eParam definition in FGJSBBase.h. The ID is what must be used
 // in any config file entry which references that item.
 
 FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
@@ -107,6 +107,7 @@ FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
   RegisterVariable(FG_ALPHA,          " alpha "          );
   RegisterVariable(FG_ALPHADOT,       " alphadot "       );
   RegisterVariable(FG_BETA,           " beta "           );
+  RegisterVariable(FG_ABETA,          " |beta| "         );
   RegisterVariable(FG_BETADOT,        " betadot "        );
   RegisterVariable(FG_PHI,            " roll_angle "     );
   RegisterVariable(FG_THT,            " pitch_angle "    );
@@ -199,6 +200,8 @@ float FGState::GetParameter(eParam val_idx) {
     return Translation->Getadot();
   case FG_BETA:
     return Translation->Getbeta();
+  case FG_ABETA:
+    return fabs(Translation->Getbeta());   
   case FG_BETADOT:
     return Translation->Getbdot();
   case FG_PHI:
@@ -441,15 +444,15 @@ bool FGState::Reset(string path, string acname, string fname)
   }
   
   
-  Position->SetLatitude(latitude*DEGTORAD);
-  Position->SetLongitude(longitude*DEGTORAD);
+  Position->SetLatitude(latitude*degtorad);
+  Position->SetLongitude(longitude*degtorad);
   Position->Seth(h);
 
-  wnorth = wmag*KTSTOFPS*cos(wdir*DEGTORAD);
-  weast = wmag*KTSTOFPS*sin(wdir*DEGTORAD);
+  wnorth = wmag*ktstofps*cos(wdir*degtorad);
+  weast = wmag*ktstofps*sin(wdir*degtorad);
   
-  Initialize(U, V, W, phi*DEGTORAD, tht*DEGTORAD, psi*DEGTORAD,
-               latitude*DEGTORAD, longitude*DEGTORAD, h, wnorth, weast, 0.0);
+  Initialize(U, V, W, phi*degtorad, tht*degtorad, psi*degtorad,
+               latitude*degtorad, longitude*degtorad, h, wnorth, weast, 0.0);
 
   return true;
 }
@@ -715,41 +718,41 @@ void FGState::ReportState(void) {
                     Position->GetDistanceAGL() );
   cout << out;
   snprintf(out,80, "    Angle of Attack: %6.2f deg  Pitch Angle: %6.2f deg\n",
-                    GetParameter(FG_ALPHA)*RADTODEG,
-                    Rotation->Gettht()*RADTODEG );
+                    GetParameter(FG_ALPHA)*radtodeg,
+                    Rotation->Gettht()*radtodeg );
   cout << out;
   snprintf(out,80, "    Flight Path Angle: %6.2f deg  Climb Rate: %5.0f ft/min\n",
-                    Position->GetGamma()*RADTODEG,
+                    Position->GetGamma()*radtodeg,
                     Position->Gethdot()*60 );
   cout << out;                  
   snprintf(out,80, "    Normal Load Factor: %4.2f g's  Pitch Rate: %5.2f deg/s\n",
                     Aerodynamics->GetNlf(),
-                    GetParameter(FG_PITCHRATE)*RADTODEG );
+                    GetParameter(FG_PITCHRATE)*radtodeg );
   cout << out;
   snprintf(out,80, "    Heading: %3.0f deg true  Sideslip: %5.2f deg\n",
-                    Rotation->Getpsi()*RADTODEG,
-                    GetParameter(FG_BETA)*RADTODEG );                  
+                    Rotation->Getpsi()*radtodeg,
+                    GetParameter(FG_BETA)*radtodeg );                  
   cout << out;
   snprintf(out,80, "    Bank Angle: %5.2f deg\n",
-                    Rotation->Getphi()*RADTODEG );
+                    Rotation->Getphi()*radtodeg );
   cout << out;
   snprintf(out,80, "    Elevator: %5.2f deg  Left Aileron: %5.2f deg  Rudder: %5.2f deg\n",
-                    GetParameter(FG_ELEVATOR_POS)*RADTODEG,
-                    GetParameter(FG_AILERON_POS)*RADTODEG,
-                    GetParameter(FG_RUDDER_POS)*RADTODEG );
+                    GetParameter(FG_ELEVATOR_POS)*radtodeg,
+                    GetParameter(FG_AILERON_POS)*radtodeg,
+                    GetParameter(FG_RUDDER_POS)*radtodeg );
   cout << out;                  
   snprintf(out,80, "    Throttle: %5.2f%c\n",
                     FCS->GetThrottlePos(0)*100,'%' );
   cout << out;
   
   snprintf(out,80, "    Wind Components: %5.2f kts head wind, %5.2f kts cross wind\n",
-                    FDMExec->GetAuxiliary()->GetHeadWind()*jsbFPSTOKTS,
-                    FDMExec->GetAuxiliary()->GetCrossWind()*jsbFPSTOKTS );
+                    FDMExec->GetAuxiliary()->GetHeadWind()*fpstokts,
+                    FDMExec->GetAuxiliary()->GetCrossWind()*fpstokts );
   cout << out; 
   
   snprintf(out,80, "    Ground Speed: %4.0f knots , Ground Track: %3.0f deg true\n",
-                    Position->GetVground()*jsbFPSTOKTS,
-                    Position->GetGroundTrack()*RADTODEG );
+                    Position->GetVground()*fpstokts,
+                    Position->GetGroundTrack()*radtodeg );
   cout << out;                                   
 
 } 

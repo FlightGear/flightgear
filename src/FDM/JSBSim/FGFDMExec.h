@@ -71,26 +71,6 @@ class FGAuxiliary;
 class FGOutput;
 class FGInitialCondition;
 
-struct condition {
-  vector <eParam>  TestParam;
-  vector <eParam>  SetParam;
-  vector <float>   TestValue;
-  vector <float>   SetValue;
-  vector <string>  Comparison;
-  vector <float>   TC;
-  vector <bool>    Persistent;
-  vector <eAction> Action;
-  vector <eType>   Type;
-  vector <bool>    Triggered;
-  vector <float>   newValue;
-  vector <float>   OriginalValue;
-  vector <float>   StartTime;
-  vector <float>   EndTime;
-
-  condition() {
-  }
-};
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -299,12 +279,46 @@ public:
   inline string GetAircraftPath(void)        {return AircraftPath;}
 
 private:
+  enum eAction {
+    FG_RAMP  = 1,
+    FG_STEP  = 2,
+    FG_EXP   = 3
+  };
+
+  enum eType {
+    FG_VALUE = 1,
+    FG_DELTA = 2,
+    FG_BOOL  = 3
+  };
+
+  struct condition {
+    vector <eParam>  TestParam;
+    vector <eParam>  SetParam;
+    vector <float>   TestValue;
+    vector <float>   SetValue;
+    vector <string>  Comparison;
+    vector <float>   TC;
+    vector <bool>    Persistent;
+    vector <eAction> Action;
+    vector <eType>   Type;
+    vector <bool>    Triggered;
+    vector <float>   newValue;
+    vector <float>   OriginalValue;
+    vector <float>   StartTime;
+    vector <float>   EndTime;
+
+    condition() {
+    }
+  };
+
   FGModel* FirstModel;
 
   bool frozen;
   bool terminate;
   int  Error;
-  int  Frame;
+  unsigned int Frame;
+  unsigned int IdFDM;
+  static unsigned int FDMctr;
   bool modelLoaded;
   bool Scripted;
 

@@ -178,7 +178,7 @@ bool FGAircraft::Run(void)
     
     vBodyAccel = vForces/MassBalance->GetMass();
     
-    vNcg = vBodyAccel*INVGRAVITY;
+    vNcg = vBodyAccel/Inertial->gravity();
     
     if (alphaclmax != 0) {
       if (Translation->Getalpha() > 0.85*alphaclmax) {
@@ -414,10 +414,10 @@ void FGAircraft::ReadPrologue(FGConfigFile* AC_cfg)
   if (debug_lvl > 0)
     cout << "                            Version: " << highint << CFGVersion
                                                              << normint << endl;
-  if (CFGVersion != NEEDED_CFG_VERSION) {
+  if (CFGVersion != needed_cfg_version) {
     cerr << endl << fgred << "YOU HAVE AN INCOMPATIBLE CFG FILE FOR THIS AIRCRAFT."
             " RESULTS WILL BE UNPREDICTABLE !!" << endl;
-    cerr << "Current version needed is: " << NEEDED_CFG_VERSION << endl;
+    cerr << "Current version needed is: " << needed_cfg_version << endl;
     cerr << "         You have version: " << CFGVersion << endl << fgdef << endl;
   }
 }

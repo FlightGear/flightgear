@@ -38,7 +38,6 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGDefs.h"
 #include "FGPiston.h"
 #include "FGPropulsion.h"
 
@@ -194,7 +193,7 @@ float FGPiston::Calculate(float PowerRequired)
     HP = 0;
   }
 
-  PowerAvailable = (HP * HPTOFTLBSSEC) - PowerRequired;
+  PowerAvailable = (HP * hptoftlbssec) - PowerRequired;
   return PowerAvailable;
 }
 

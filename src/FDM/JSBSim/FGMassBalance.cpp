@@ -70,7 +70,7 @@ bool FGMassBalance::Run(void)
 
     Weight = EmptyWeight + Propulsion->GetTanksWeight();
 
-    Mass = Weight / GRAVITY;
+    Mass = Weight / Inertial->gravity();
 
 // Calculate new CG here.
 

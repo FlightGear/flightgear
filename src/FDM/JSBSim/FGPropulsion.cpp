@@ -472,7 +472,7 @@ float FGPropulsion::GetTanksIxx(const FGColumnVector3& vXYZcg)
   float I = 0.0;
   iTank = Tanks.begin();
   while (iTank < Tanks.end()) {
-    I += ((*iTank)->GetX() - vXYZcg(eX))*((*iTank)->GetX() - vXYZcg(eX)) * (*iTank)->GetContents()/(144.0*GRAVITY);
+    I += ((*iTank)->GetX() - vXYZcg(eX))*((*iTank)->GetX() - vXYZcg(eX)) * (*iTank)->GetContents()/(144.0*Inertial->gravity());
     iTank++;
   }
   return I;
@@ -485,7 +485,7 @@ float FGPropulsion::GetTanksIyy(const FGColumnVector3& vXYZcg)
   float I = 0.0;
   iTank = Tanks.begin();
   while (iTank < Tanks.end()) {
-    I += ((*iTank)->GetY() - vXYZcg(eY))*((*iTank)->GetY() - vXYZcg(eY)) * (*iTank)->GetContents()/(144.0*GRAVITY);
+    I += ((*iTank)->GetY() - vXYZcg(eY))*((*iTank)->GetY() - vXYZcg(eY)) * (*iTank)->GetContents()/(144.0*Inertial->gravity());
     iTank++;
   }
   return I;
@@ -498,7 +498,7 @@ float FGPropulsion::GetTanksIzz(const FGColumnVector3& vXYZcg)
   float I = 0.0;
   iTank = Tanks.begin();
   while (iTank < Tanks.end()) {
-    I += ((*iTank)->GetZ() - vXYZcg(eZ))*((*iTank)->GetZ() - vXYZcg(eZ)) * (*iTank)->GetContents()/(144.0*GRAVITY);
+    I += ((*iTank)->GetZ() - vXYZcg(eZ))*((*iTank)->GetZ() - vXYZcg(eZ)) * (*iTank)->GetContents()/(144.0*Inertial->gravity());
     iTank++;
   }
   return I;
@@ -511,7 +511,7 @@ float FGPropulsion::GetTanksIxz(const FGColumnVector3& vXYZcg)
   float I = 0.0;
   iTank = Tanks.begin();
   while (iTank < Tanks.end()) {
-    I += ((*iTank)->GetX() - vXYZcg(eX))*((*iTank)->GetZ() - vXYZcg(eZ)) * (*iTank)->GetContents()/(144.0*GRAVITY);
+    I += ((*iTank)->GetX() - vXYZcg(eX))*((*iTank)->GetZ() - vXYZcg(eZ)) * (*iTank)->GetContents()/(144.0*Inertial->gravity());
     iTank++;
   }
   return I;
@@ -524,7 +524,7 @@ float FGPropulsion::GetTanksIxy(const FGColumnVector3& vXYZcg)
   float I = 0.0;
   iTank = Tanks.begin();
   while (iTank != Tanks.end()) {
-    I += ((*iTank)->GetX() - vXYZcg(eX))*((*iTank)->GetY() - vXYZcg(eY)) * (*iTank)->GetContents()/(144.0*GRAVITY);
+    I += ((*iTank)->GetX() - vXYZcg(eX))*((*iTank)->GetY() - vXYZcg(eY)) * (*iTank)->GetContents()/(144.0*Inertial->gravity());
     iTank++;
   }
   return I;

@@ -44,7 +44,6 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGDefs.h"
 #include "FGCoefficient.h"
 #include "FGState.h"
 #include "FGFDMExec.h"

@@ -38,7 +38,6 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGDefs.h"
 #include "FGRocket.h"
 
 static const char *IdSrc = "$Id$";

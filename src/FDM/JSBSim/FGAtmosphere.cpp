@@ -56,7 +56,6 @@ INCLUDES
 #include "FGPosition.h"
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
-#include "FGDefs.h"
 #include "FGMatrix33.h"
 #include "FGColumnVector3.h"
 #include "FGColumnVector4.h"
@@ -84,17 +83,6 @@ FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex),
   htab[6]=200131.234;
   htab[7]=259186.352; //ft.
 
-  Calculate(h);
-  SLtemperature = temperature;
-  SLpressure    = pressure;
-  SLdensity     = density;
-  SLsoundspeed  = sqrt(SHRATIO*Reng*temperature);
-  rSLtemperature = 1.0/temperature;
-  rSLpressure    = 1.0/pressure;
-  rSLdensity     = 1.0/density;
-  rSLsoundspeed  = 1.0/SLsoundspeed;
-  useExternal=false;
-
   if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
 }
 
@@ -103,6 +91,26 @@ FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex),
 FGAtmosphere::~FGAtmosphere()
 {
   if (debug_lvl & 2) cout << "Destroyed:    FGAtmosphere" << endl;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGAtmosphere::InitModel(void)
+{
+  FGModel::InitModel();
+
+  Calculate(h);
+  SLtemperature = temperature;
+  SLpressure    = pressure;
+  SLdensity     = density;
+  SLsoundspeed  = sqrt(SHRatio*Reng*temperature);
+  rSLtemperature = 1.0/temperature;
+  rSLpressure    = 1.0/pressure;
+  rSLdensity     = 1.0/density;
+  rSLsoundspeed  = 1.0/SLsoundspeed;
+  useExternal=false;
+  
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -124,7 +132,7 @@ bool FGAtmosphere::Run(void)
 
     if (psiw < 0) psiw += 2*M_PI;
 
-    soundspeed = sqrt(SHRATIO*Reng*temperature);
+    soundspeed = sqrt(SHRatio*Reng*temperature);
 
     State->Seta(soundspeed);
 
@@ -212,13 +220,13 @@ void FGAtmosphere::Calculate(float altitude)
  
   if (slope == 0) {
     temperature = reftemp;
-    pressure = refpress*exp(-GRAVITY/(reftemp*Reng)*(altitude-htab[i]));
-    //density = refdens*exp(-GRAVITY/(reftemp*Reng)*(altitude-htab[i]));
+    pressure = refpress*exp(-Inertial->SLgravity()/(reftemp*Reng)*(altitude-htab[i]));
+    //density = refdens*exp(-Inertial->SLgravity()/(reftemp*Reng)*(altitude-htab[i]));
     density = pressure/(Reng*temperature);
   } else {
     temperature = reftemp+slope*(altitude-htab[i]);
-    pressure = refpress*pow(temperature/reftemp,-GRAVITY/(slope*Reng));
-    //density = refdens*pow(temperature/reftemp,-(GRAVITY/(slope*Reng)+1));
+    pressure = refpress*pow(temperature/reftemp,-Inertial->SLgravity()/(slope*Reng));
+    //density = refdens*pow(temperature/reftemp,-(Inertial->SLgravity()/(slope*Reng)+1));
     density = pressure/(Reng*temperature);
   }
   lastIndex=i;

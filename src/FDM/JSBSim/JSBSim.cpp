@@ -148,11 +148,35 @@ int main(int argc, char** argv)
     	cerr << "Aircraft file " << argv[1] << " was not found" << endl;
 	    exit(-1);
     }
-    if ( ! FDMExec->GetState()->Reset("aircraft", string(argv[1]), string(argv[2])))
-                   FDMExec->GetState()->Initialize(2000,0,0,0,0,0,0.5,0.5,40000, 0, 0, 0);
+    if ( ! FDMExec->GetState()->Reset("aircraft", string(argv[1]), string(argv[2]))) {
+    	cerr << "JSBSim could not be started" << endl;
+	    exit(-1);
+    }                   
   }
 
-  while (FDMExec->Run()) {}
+  struct FGJSBBase::Message* msg;
+  while (FDMExec->Run()) {
+    while (FDMExec->ReadMessage()) {
+      msg = FDMExec->ProcessMessage();
+      switch (msg->type) {
+      case FGJSBBase::Message::eText:
+        cout << msg->messageId << ": " << msg->text << endl;
+        break;
+      case FGJSBBase::Message::eBool:
+        cout << msg->messageId << ": " << msg->text << " " << msg->bVal << endl;
+        break;
+      case FGJSBBase::Message::eInteger:
+        cout << msg->messageId << ": " << msg->text << " " << msg->iVal << endl;
+        break;
+      case FGJSBBase::Message::eDouble:
+        cout << msg->messageId << ": " << msg->text << " " << msg->dVal << endl;
+        break;
+      default:
+        cerr << "Unrecognized message type." << endl;
+	      break;
+      }
+    }
+  }
 
   delete FDMExec;
 

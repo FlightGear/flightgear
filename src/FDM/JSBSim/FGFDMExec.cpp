@@ -102,6 +102,8 @@ short debug_lvl;  // This describes to any interested entity the debug level
                   // g) 16: When set various parameters are sanity checked and
                   //    a message is printed out when they go out of bounds.
 
+unsigned int FGFDMExec::FDMctr = 0;
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -133,6 +135,9 @@ FGFDMExec::FGFDMExec(void)
   modelLoaded = false;
   Scripted = false;
 
+  IdFDM = FDMctr;
+  FDMctr++;
+
   try {
     char* num = getenv("JSBSIM_DEBUG");
     if (!num) debug_lvl = 1;
@@ -143,8 +148,8 @@ FGFDMExec::FGFDMExec(void)
 
   if (debug_lvl > 0) {
     cout << "\n\n     " << highint << underon << "JSBSim Flight Dynamics Model v"
-                                   << JSBSIM_VERSION << underoff << normint << endl;
-    cout << halfint << "            [cfg file spec v" << NEEDED_CFG_VERSION << "]\n\n";
+                                   << JSBSim_version << underoff << normint << endl;
+    cout << halfint << "            [cfg file spec v" << needed_cfg_version << "]\n\n";
     cout << normint << "JSBSim startup beginning ...\n\n";
   }
 

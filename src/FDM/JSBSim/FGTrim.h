@@ -199,11 +199,6 @@ public:
   */     
   void Report(void);
   
-  /** Prints a summary of simulator state (speed, altitude, 
-      configuration, etc.)
-  */
-  void ReportState(void);
-  
   /** Iteration statistics
   */
   void TrimStats();

@@ -36,7 +36,6 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGDefs.h"
 #include "FGTank.h"
 
 static const char *IdSrc = "$Id$";

@@ -64,26 +64,20 @@ string FGConfigFile::GetNextConfigLine(void)
 
   do {
     CurrentLine = GetLine();
-    if ((CurrentLine.find("<COMMENT>") != CurrentLine.npos) ||
-        (CurrentLine.find("<!--") != CurrentLine.npos)) {
+    if (CurrentLine.find("<!--") != CurrentLine.npos) {
       CommentsOn = true;
       CommentString = "";
       if (CurrentLine.find("<!--") != CurrentLine.npos)
         CurrentLine.erase(CurrentLine.find("<!--"),4);
-      else if (CurrentLine.find("<COMMENT>") != CurrentLine.npos)
-        CurrentLine.erase(CurrentLine.find("<COMMENT>"),9);
       while((deblank = CurrentLine.find(" ")) != CurrentLine.npos) CurrentLine.erase(deblank,1);
       if (CurrentLine.size() <= 2) CurrentLine = "";
     }
 
-    if ((CurrentLine.find("</COMMENT>") != CurrentLine.npos) ||
-        (CurrentLine.find("-->") != CurrentLine.npos)) {
+    if (CurrentLine.find("-->") != CurrentLine.npos) {
       CommentsOn = false;
 
       if (CurrentLine.find("-->") != CurrentLine.npos)
         CurrentLine.erase(CurrentLine.find("-->"),4);
-      else if (CurrentLine.find("</COMMENT>") != CurrentLine.npos)
-        CurrentLine.erase(CurrentLine.find("</COMMENT>"),10);
 
       while((deblank = CurrentLine.find(" ")) != CurrentLine.npos) CurrentLine.erase(deblank,1);
       if (CurrentLine.size() <= 2) CurrentLine = "";
@@ -94,7 +88,7 @@ string FGConfigFile::GetNextConfigLine(void)
 
     if (CommentsOn) CommentString += CurrentLine + "\r\n";
 
-  } while (IsCommentLine());
+  } while (CommentsOn);
 
   if (CurrentLine.length() == 0) GetNextConfigLine();
   CurrentIndex = 0;
@@ -182,16 +176,6 @@ string FGConfigFile::GetValue(string val)
 string FGConfigFile::GetValue(void)
 {
   return GetValue("");
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-bool FGConfigFile::IsCommentLine(void)
-{
-  if (CurrentLine[0] == '/' && CurrentLine[1] == '/') return true;
-  if (CommentsOn) return true;
-
-  return false;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

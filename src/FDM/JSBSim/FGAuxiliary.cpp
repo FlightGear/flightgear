@@ -155,7 +155,7 @@ bool FGAuxiliary::Run()
                   + Rotation->GetPQR() * (Rotation->GetPQR() * vToEyePt)
                   + Inertial->GetGravity();
 
-    earthPosAngle += State->Getdt()*OMEGA_EARTH;
+    earthPosAngle += State->Getdt()*Inertial->omega();
     return false;
   } else {
     return true;
@@ -186,6 +186,20 @@ float FGAuxiliary::GetCrossWind(void)
   vw = Atmosphere->GetWindNED().Magnitude();
 
   return  vw*sin(psiw - psi);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGColumnVector3 FGAuxiliary::GetNpilot(void)
+{
+  return vPilotAccel/Inertial->gravity();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGAuxiliary::GetNpilot(int idx)
+{
+  return (vPilotAccel/Inertial->gravity())(idx);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

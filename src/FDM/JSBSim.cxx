@@ -49,7 +49,6 @@
 #include <FDM/JSBSim/FGState.h>
 #include <FDM/JSBSim/FGTranslation.h>
 #include <FDM/JSBSim/FGAuxiliary.h>
-#include <FDM/JSBSim/FGDefs.h>
 #include <FDM/JSBSim/FGInitialCondition.h>
 #include <FDM/JSBSim/FGTrim.h>
 #include <FDM/JSBSim/FGAtmosphere.h>

@@ -245,7 +245,6 @@ protected:
 #include "FGPosition.h"
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
-#include "FGDefs.h"
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

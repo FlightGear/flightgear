@@ -42,7 +42,6 @@ INCLUDES
 #endif
 
 #include <string>
-#include "../FGDefs.h"
 #include "../FGJSBBase.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

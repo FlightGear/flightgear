@@ -78,6 +78,8 @@ public:
   /// Destructor
   ~FGPosition();
 
+  bool InitModel(void);
+
   /** Runs the Position model; called by the Executive
       @see JSBSim.cpp documentation
       @return false if no error */

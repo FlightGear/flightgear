@@ -86,14 +86,14 @@ public:
 
   // Use FGInitialCondition to set these speeds
   inline float GetVcalibratedFPS(void) { return vcas; }
-  inline float GetVcalibratedKTS(void) { return vcas*FPSTOKTS; }
+  inline float GetVcalibratedKTS(void) { return vcas*fpstokts; }
   inline float GetVequivalentFPS(void) { return veas; }
-  inline float GetVequivalentKTS(void) { return veas*FPSTOKTS; }
+  inline float GetVequivalentKTS(void) { return veas*fpstokts; }
   
   inline FGColumnVector3& GetPilotAccel(void) { return vPilotAccel; }
   inline float GetPilotAccel(int idx) { return vPilotAccel(idx); }
-  inline FGColumnVector3 GetNpilot(void) { return vPilotAccel*INVGRAVITY; }
-  inline float GetNpilot(int idx) { return (vPilotAccel*INVGRAVITY)(idx); }
+  FGColumnVector3 GetNpilot(void);
+  float GetNpilot(int idx);
 
   inline float GetEarthPositionAngle(void) { return earthPosAngle; }
   

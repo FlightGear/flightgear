@@ -306,7 +306,7 @@ FGColumnVector3& FGLGear::Force(void)
     if (RollingWhlVel == 0.0 && SideWhlVel == 0.0) {
       WheelSlip = 0.0;
     } else {
-      WheelSlip = RADTODEG*atan2(SideWhlVel, RollingWhlVel);
+      WheelSlip = radtodeg*atan2(SideWhlVel, RollingWhlVel);
     }
 
 // The following code normalizes the wheel velocity vector, reverses it, and zeroes out

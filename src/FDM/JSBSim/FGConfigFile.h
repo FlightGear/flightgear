@@ -72,7 +72,6 @@ INCLUDES
     using std::string;
 #endif
 
-#include "FGDefs.h"
 #include "FGJSBBase.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -118,7 +117,6 @@ public:
   string GetValue(string);
   string GetValue(void);
   string GetCommentString(void);
-  bool IsCommentLine(void);
   bool IsOpen(void) {return Opened;}
   FGConfigFile& operator>>(double&);
   FGConfigFile& operator>>(float&);

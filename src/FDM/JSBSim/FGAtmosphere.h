@@ -88,6 +88,8 @@ public:
       @return false if no error */
   bool Run(void);
 
+  bool InitModel(void);
+
   /// Returns the temperature in degrees Rankine.
   inline float GetTemperature(void) {return temperature;}
   /** Returns the density in slugs/ft^3.

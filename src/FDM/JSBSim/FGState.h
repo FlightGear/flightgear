@@ -58,7 +58,6 @@ INCLUDES
 
 #include <string>
 #include <map>
-#include "FGDefs.h"
 #include "FGJSBBase.h"
 #include "FGInitialCondition.h"
 #include "FGMatrix33.h"
@@ -187,14 +186,14 @@ public:
   inline void Resume(void)  {dt = saved_dt;}
 
   /** Retrieves a parameter.
-      The parameters that can be retrieved are enumerated in FGDefs.h.
+      The parameters that can be retrieved are enumerated in FGJSBBase.h.
       @param val_idx one of the enumerated JSBSim parameters.
       @return the value of the parameter.
       */
   float GetParameter(eParam val_idx);
 
   /** Retrieves a parameter.
-      The parameters that can be retrieved are enumerated in FGDefs.h.
+      The parameters that can be retrieved are enumerated in FGJSBBase.h.
       @param val_string a string representing one of the enumerated JSBSim parameters,
              i.e. "FG_QBAR".
       @return the value of the parameter.

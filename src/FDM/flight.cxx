@@ -23,6 +23,8 @@
 
 #include <stdio.h>
 
+#include <plib/sg.h>
+
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -203,7 +205,7 @@ FGInterface::common_init ()
     set_Latitude( fgGetDouble("/position/latitude-deg")
                   * SGD_DEGREES_TO_RADIANS );
     double ground_elev_m = scenery.get_cur_elev();
-    double ground_elev_ft = ground_elev_m * METERS_TO_FEET;
+    double ground_elev_ft = ground_elev_m * SG_METER_TO_FEET;
     if ( fgGetBool("/sim/startup/onground")
          || fgGetDouble("/position/altitude-ft") < ground_elev_ft ) {
         fgSetDouble("/position/altitude-ft", ground_elev_ft);
@@ -461,7 +463,7 @@ void FGInterface::_updatePosition( double lat_geoc, double lon, double alt ) {
     _set_Geodetic_Position( lat_geod, lon, alt );
 	
     _set_Sea_level_radius( sl_radius2 * SG_METER_TO_FEET );
-    _set_Runway_altitude( scenery.get_cur_elev()*METERS_TO_FEET ); 
+    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET ); 
 	
     _set_sin_lat_geocentric( lat_geoc );
     _set_cos_lat_geocentric( lat_geoc );

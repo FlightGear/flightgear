@@ -45,7 +45,6 @@ INCLUDES
 #include <vector>
 #include <string>
 #include "FGConfigFile.h"
-#include "FGDefs.h"
 #include "FGTable.h"
 #include "FGJSBBase.h"
 
