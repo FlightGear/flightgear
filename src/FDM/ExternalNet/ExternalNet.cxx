@@ -393,12 +393,12 @@ void FGExternalNet::init() {
     // init method first.
     common_init();
 
-    double lon = fgGetDouble( "/position/longitude-deg" );
-    double lat = fgGetDouble( "/position/latitude-deg" );
-    double alt = fgGetDouble( "/position/altitude-ft" );
+    double lon = fgGetDouble( "/sim/presets/longitude-deg" );
+    double lat = fgGetDouble( "/sim/presets/latitude-deg" );
+    double alt = fgGetDouble( "/sim/presets/altitude-ft" );
     double ground = fgGetDouble( "/environment/ground-elevation-m" );
-    double heading = fgGetDouble("/orientation/heading-deg");
-    double speed = fgGetDouble( "/velocities/airspeed-kt" );
+    double heading = fgGetDouble("/sim/presets/heading-deg");
+    double speed = fgGetDouble( "/sim/presets/airspeed-kt" );
 
     char cmd[256];
 
@@ -435,7 +435,7 @@ void FGExternalNet::init() {
 
     SG_LOG( SG_IO, SG_INFO, "before sending reset command." );
 
-    if( fgGetBool("/sim/startup/onground") ) {
+    if( fgGetBool("/sim/presets/onground") ) {
       sprintf( cmd, "/reset?value=ground" );
     } else {
       sprintf( cmd, "/reset?value=air" );

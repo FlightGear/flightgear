@@ -141,7 +141,7 @@ FGJSBsim::FGJSBsim( double dt )
     fgSetDouble("/fdm/trim/aileron",    FCS->GetDaCmd());
     fgSetDouble("/fdm/trim/rudder",     FCS->GetDrCmd());
 
-    startup_trim = fgGetNode("/sim/startup/trim", true);
+    startup_trim = fgGetNode("/sim/presets/trim", true);
 
     trimmed = fgGetNode("/fdm/trim/trimmed", true);
     trimmed->setBoolValue(false);
@@ -751,7 +751,7 @@ void FGJSBsim::update_gear(void) {
 void FGJSBsim::do_trim(void) {
 
         FGTrim *fgtrim;
-        if( fgGetBool("/sim/startup/onground") ) {
+        if( fgGetBool("/sim/presets/onground") ) {
             fgic->SetVcalibratedKtsIC(0.0);
             fgtrim=new FGTrim(fdmex,tGround);
         } else {

@@ -664,7 +664,7 @@ void TgtAptDialog_OK (puObject *)
 
 void TgtAptDialog_Reset(puObject *)
 {
-    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id") );
+    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/presets/airport-id") );
     TgtAptDialogInput->setValue ( NewTgtAirportId );
     TgtAptDialogInput->setCursor( 0 ) ;
 }
@@ -705,7 +705,7 @@ void TgtAptDialog_HandleArrow( puObject *arrow )
 
 void AddWayPoint(puObject *cb)
 {
-    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id") );
+    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/presets/airport-id") );
     TgtAptDialogInput->setValue( NewTgtAirportId );
     
     /* refresh waypoint list */
@@ -776,7 +776,7 @@ void ClearRoute(puObject *cb)
 void NewTgtAirportInit()
 {
     SG_LOG( SG_AUTOPILOT, SG_INFO, " enter NewTgtAirportInit()" );
-    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id") );
+    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/presets/airport-id") );
     SG_LOG( SG_AUTOPILOT, SG_INFO, " NewTgtAirportId " << NewTgtAirportId );
     
     TgtAptDialog = new puDialogBox (150, 350);

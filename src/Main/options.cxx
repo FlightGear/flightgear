@@ -132,7 +132,6 @@ fgSetDefaults ()
     fgSetDouble("/orientation/pitch-deg", 0.424);
 
 				// Velocities
-    fgSetString("/sim/startup/speed-set", "knots");
     fgSetDouble("/velocities/uBody-fps", 0.0);
     fgSetDouble("/velocities/vBody-fps", 0.0);
     fgSetDouble("/velocities/wBody-fps", 0.0);
@@ -141,6 +140,28 @@ fgSetDefaults ()
     fgSetDouble("/velocities/speed-down-fps", 0.0);
     fgSetDouble("/velocities/airspeed-kt", 0.0);
     fgSetDouble("/velocities/mach", 0.0);
+
+                                // Presets
+    fgSetDouble("/sim/presets/longitude-deg", 9999.0);
+    fgSetDouble("/sim/presets/latitude-deg", 9999.0);
+    fgSetDouble("/sim/presets/altitude-ft", -9999.0);
+
+    fgSetDouble("/sim/presets/heading-deg", 270);
+    fgSetDouble("/sim/presets/roll-deg", 0);
+    fgSetDouble("/sim/presets/pitch-deg", 0.424);
+
+    fgSetString("/sim/presets/speed-set", "knots");
+    fgSetDouble("/sim/presets/airspeed-kt", 0.0);
+    fgSetDouble("/sim/presets/mach", 0.0);
+    fgSetDouble("/sim/presets/uBody-fps", 0.0);
+    fgSetDouble("/sim/presets/vBody-fps", 0.0);
+    fgSetDouble("/sim/presets/wBody-fps", 0.0);
+    fgSetDouble("/sim/presets/speed-north-fps", 0.0);
+    fgSetDouble("/sim/presets/speed-east-fps", 0.0);
+    fgSetDouble("/sim/presets/speed-down-fps", 0.0);
+
+    fgSetBool("/sim/presets/onground", true);
+    fgSetBool("/sim/presets/trim", false);
 
 				// Miscellaneous
     fgSetBool("/sim/startup/game-mode", false);
@@ -167,8 +188,6 @@ fgSetDefaults ()
     fgSetString("/sim/aero", "c172");
     fgSetInt("/sim/model-hz", NEW_DEFAULT_MODEL_HZ);
     fgSetInt("/sim/speed-up", 1);
-    fgSetBool("/sim/startup/trim", false);
-    fgSetBool("/sim/startup/onground", true);
 
 				// Rendering options
     fgSetString("/sim/rendering/fog", "nicest");
@@ -662,80 +681,82 @@ parse_option (const string& arg)
 	fgSetBool("/sim/sound/audible", true);
     } else if ( arg.find( "--airport-id=") == 0 ) {
 				// NB: changed property name!!!
-	fgSetString("/sim/startup/airport-id", arg.substr(13).c_str());
+	fgSetString("/sim/presets/airport-id", arg.substr(13).c_str());
     } else if ( arg.find( "--offset-distance=") == 0 ) {
-	fgSetDouble("/sim/startup/offset-distance", atof(arg.substr(18)));
+	fgSetDouble("/sim/presets/offset-distance", atof(arg.substr(18)));
     } else if ( arg.find( "--offset-azimuth=") == 0 ) {
-	fgSetDouble("/sim/startup/offset-azimuth", atof(arg.substr(17))); 
+	fgSetDouble("/sim/presets/offset-azimuth", atof(arg.substr(17))); 
     } else if ( arg.find( "--lon=" ) == 0 ) {
-	fgSetDouble("/position/longitude-deg",
-			      parse_degree(arg.substr(6)));
-	fgSetString("/sim/startup/airport-id", "");
+	fgSetDouble("/sim/presets/longitude-deg", parse_degree(arg.substr(6)));
+	fgSetDouble("/position/longitude-deg", parse_degree(arg.substr(6)));
+	fgSetString("/sim/presets/airport-id", "");
     } else if ( arg.find( "--lat=" ) == 0 ) {
-	fgSetDouble("/position/latitude-deg",
-			      parse_degree(arg.substr(6)));
-	fgSetString("/sim/startup/airport-id", "");
+	fgSetDouble("/sim/presets/latitude-deg", parse_degree(arg.substr(6)));
+	fgSetDouble("/position/latitude-deg", parse_degree(arg.substr(6)));
+	fgSetString("/sim/presets/airport-id", "");
     } else if ( arg.find( "--altitude=" ) == 0 ) {
-	fgSetBool("/sim/startup/onground", false);
+	fgSetBool("/sim/presets/onground", false);
 	if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
-	    fgSetDouble("/position/altitude-ft", atof(arg.substr(11)));
+	    fgSetDouble("/sim/presets/altitude-ft", atof(arg.substr(11)));
 	else
-	    fgSetDouble("/position/altitude-ft",
+	    fgSetDouble("/sim/presets/altitude-ft",
 			atof(arg.substr(11)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--uBody=" ) == 0 ) {
-        fgSetString("/sim/startup/speed-set", "UVW");
+        fgSetString("/sim/presets/speed-set", "UVW");
 	if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
-	  fgSetDouble("/velocities/uBody-fps", atof(arg.substr(8)));
+	  fgSetDouble("/sim/presets/uBody-fps", atof(arg.substr(8)));
 	else
-	  fgSetDouble("/velocities/uBody-fps",
-			       atof(arg.substr(8)) * SG_METER_TO_FEET);
+	  fgSetDouble("/sim/presets/uBody-fps",
+                      atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vBody=" ) == 0 ) {
-        fgSetString("/sim/startup/speed-set", "UVW");
+        fgSetString("/sim/presets/speed-set", "UVW");
 	if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
-	  fgSetDouble("/velocities/vBody-fps", atof(arg.substr(8)));
+	  fgSetDouble("/sim/presets/vBody-fps", atof(arg.substr(8)));
 	else
-	  fgSetDouble("/velocities/vBody-fps",
+	  fgSetDouble("/sim/presets/vBody-fps",
 			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--wBody=" ) == 0 ) {
-        fgSetString("/sim/startup/speed-set", "UVW");
+        fgSetString("/sim/presets/speed-set", "UVW");
 	if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
-	  fgSetDouble("/velocities/wBody-fps", atof(arg.substr(8)));
+	  fgSetDouble("/sim/presets/wBody-fps", atof(arg.substr(8)));
 	else
-	  fgSetDouble("/velocities/wBody-fps",
+	  fgSetDouble("/sim/presets/wBody-fps",
 			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vNorth=" ) == 0 ) {
-        fgSetString("/sim/startup/speed-set", "NED");
+        fgSetString("/sim/presets/speed-set", "NED");
 	if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
-	  fgSetDouble("/velocities/speed-north-fps", atof(arg.substr(9)));
+	  fgSetDouble("/sim/presets/speed-north-fps", atof(arg.substr(9)));
 	else
-	  fgSetDouble("/velocities/speed-north-fps",
+	  fgSetDouble("/sim/presets/speed-north-fps",
 			       atof(arg.substr(9)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vEast=" ) == 0 ) {
-        fgSetString("/sim/startup/speed-set", "NED");
+        fgSetString("/sim/presets/speed-set", "NED");
 	if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
-	  fgSetDouble("/velocities/speed-east-fps", atof(arg.substr(8)));
+	  fgSetDouble("/sim/presets/speed-east-fps", atof(arg.substr(8)));
 	else
-	  fgSetDouble("/velocities/speed-east-fps",
+	  fgSetDouble("/sim/presets/speed-east-fps",
 		      atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vDown=" ) == 0 ) {
-        fgSetString("/sim/startup/speed-set", "NED");
+        fgSetString("/sim/presets/speed-set", "NED");
 	if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
-	  fgSetDouble("/velocities/speed-down-fps", atof(arg.substr(8)));
+	  fgSetDouble("/sim/presets/speed-down-fps", atof(arg.substr(8)));
 	else
-	  fgSetDouble("/velocities/speed-down-fps",
+	  fgSetDouble("/sim/presets/speed-down-fps",
 			       atof(arg.substr(8)) * SG_METER_TO_FEET);
     } else if ( arg.find( "--vc=" ) == 0) {
-        fgSetString("/sim/startup/speed-set", "knots");
-	fgSetDouble("/velocities/airspeed-kt", atof(arg.substr(5)));
+        // fgSetString("/sim/presets/speed-set", "knots");
+	// fgSetDouble("/velocities/airspeed-kt", atof(arg.substr(5)));
+        fgSetString("/sim/presets/speed-set", "knots");
+	fgSetDouble("/sim/presets/airspeed-kt", atof(arg.substr(5)));
     } else if ( arg.find( "--mach=" ) == 0) {
-        fgSetString("/sim/startup/speed-set", "mach");
-	fgSetDouble("/velocities/mach", atof(arg.substr(7)));
+        fgSetString("/sim/presets/speed-set", "mach");
+	fgSetDouble("/sim/presets/mach", atof(arg.substr(7)));
     } else if ( arg.find( "--heading=" ) == 0 ) {
-	fgSetDouble("/orientation/heading-deg", atof(arg.substr(10)));
+	fgSetDouble("/sim/presets/heading-deg", atof(arg.substr(10)));
     } else if ( arg.find( "--roll=" ) == 0 ) {
-	fgSetDouble("/orientation/roll-deg", atof(arg.substr(7)));
+	fgSetDouble("/sim/presets/roll-deg", atof(arg.substr(7)));
     } else if ( arg.find( "--pitch=" ) == 0 ) {
-	fgSetDouble("/orientation/pitch-deg", atof(arg.substr(8)));
+	fgSetDouble("/sim/presets/pitch-deg", atof(arg.substr(8)));
     } else if ( arg.find( "--glideslope=" ) == 0 ) {
 	fgSetDouble("/velocities/glideslope", atof(arg.substr(13))
                                           *SG_DEGREES_TO_RADIANS);
@@ -758,13 +779,13 @@ parse_option (const string& arg)
     } else if ( arg.find( "--speed=" ) == 0 ) {
 	fgSetInt("/sim/speed-up", atoi(arg.substr(8)));
     } else if ( arg.find( "--trim") == 0) {
-        fgSetBool("/sim/startup/trim", true);
+        fgSetBool("/sim/presets/trim", true);
     } else if ( arg.find( "--notrim") == 0) {
-        fgSetBool("/sim/startup/trim", false);
+        fgSetBool("/sim/presets/trim", false);
     } else if ( arg.find( "--on-ground") == 0) {
-        fgSetBool("/sim/startup/onground", true);
+        fgSetBool("/sim/presets/onground", true);
     } else if ( arg.find( "--in-air") == 0) {
-        fgSetBool("/sim/startup/onground", false);
+        fgSetBool("/sim/presets/onground", false);
     } else if ( arg == "--fog-disable" ) {
 	fgSetString("/sim/rendering/fog", "disabled");
     } else if ( arg == "--fog-fastest" ) {
@@ -1314,9 +1335,11 @@ void fgShowAircraft(void) {
              continue;
           }
 
-          SGPropertyNode *desc, *node = root.getNode("sim");
-          if (node)
+          SGPropertyNode *desc = NULL;
+          SGPropertyNode *node = root.getNode("sim");
+          if (node) {
              desc = node->getNode("description");
+          }
 
           char cstr[96];
           if (strlen(dire->d_name) <= 27)

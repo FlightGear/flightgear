@@ -92,7 +92,7 @@ void AptDialog_OK (puObject *)
             cur_fdm_state->unbind();
         
             AptId = a.id.c_str();  /// NHV fix wrong case crash
-            fgSetString("/sim/startup/airport-id",  AptId.c_str() );
+            fgSetString("/sim/presets/airport-id",  AptId.c_str() );
             // fgSetDouble("/position/altitude-ft", -9999.0 );
             // fgSetPosFromAirportID( AptId );
             fgSetPosFromAirportIDandHdg( AptId, 
@@ -121,16 +121,16 @@ void AptDialog_OK (puObject *)
 
 void AptDialog_Reset(puObject *)
 {
-    //  strncpy( NewAirportId, fgGetString("/sim/startup/airport-id").c_str(), 16 );
-    sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id") );
+    //  strncpy( NewAirportId, fgGetString("/sim/presets/airport-id").c_str(), 16 );
+    sprintf( NewAirportId, "%s", fgGetString("/sim/presets/airport-id") );
     AptDialogInput->setValue ( NewAirportId );
     AptDialogInput->setCursor( 0 ) ;
 }
 
 void NewAirport(puObject *cb)
 {
-    //  strncpy( NewAirportId, fgGetString("/sim/startup/airport-id").c_str(), 16 );
-    sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id") );
+    //  strncpy( NewAirportId, fgGetString("/sim/presets/airport-id").c_str(), 16 );
+    sprintf( NewAirportId, "%s", fgGetString("/sim/presets/airport-id") );
     // cout << "NewAirport " << NewAirportId << endl;
     AptDialogInput->setValue( NewAirportId );
 
@@ -139,7 +139,7 @@ void NewAirport(puObject *cb)
 
 void NewAirportInit(void)
 {
-    sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id") );
+    sprintf( NewAirportId, "%s", fgGetString("/sim/presets/airport-id") );
     int len = 150
         - puGetDefaultLabelFont().getStringWidth( NewAirportLabel ) / 2;
 

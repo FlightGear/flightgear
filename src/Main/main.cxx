@@ -1619,17 +1619,17 @@ int mainLoop( int argc, char **argv ) {
     double lon_deg = fgGetDouble("/position/longitude-deg");
     double lat_deg = fgGetDouble("/position/latitude-deg");
     if (lon_deg < -180 || lon_deg > 180 || lat_deg < -90 || lat_deg > 90) {
-      if ( fgGetString("/sim/startup/airport-id")[0] != '\0' ) {
-	fgSetPosFromAirportIDandHdg( fgGetString("/sim/startup/airport-id"),
-				     fgGetDouble("/orientation/heading-deg") );
+      if ( fgGetString("/sim/presets/airport-id")[0] != '\0' ) {
+	fgSetPosFromAirportIDandHdg( fgGetString("/sim/presets/airport-id"),
+				     fgGetDouble("/sim/presets/heading-deg") );
         // set tower position (a little off the heading for single 
 	// runway airports)
-        fgSetTowerPosFromAirportID( fgGetString("/sim/startup/airport-id"),
-				    fgGetDouble("orientation/heading") );
+        fgSetTowerPosFromAirportID( fgGetString("/sim/presets/airport-id"),
+				    fgGetDouble("/sim/presets/heading-deg") );
       } else {
 				// Default to middle of KSFO field
-	fgSetDouble("/position/longitude-deg", -122.374843);
-	fgSetDouble("/position/latitude-deg", 37.619002);
+	fgSetDouble("/sim/presets/longitude-deg", -122.374843);
+	fgSetDouble("/sim/presets/latitude-deg", 37.619002);
       }
     }
 

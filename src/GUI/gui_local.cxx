@@ -76,7 +76,7 @@ void reInit(puObject *cb)
     // Unsuccessful KLUDGE to fix the 'every other time'
     // problem when doing a 'reset' after a 'goto airport'
 	
-    // string AptId( fgGetString("/sim/startup/airport-id") );
+    // string AptId( fgGetString("/sim/presets/airport-id") );
     // if( AptId.c_str() != "\0" )
     //      fgSetPosFromAirportID( AptId );
 	

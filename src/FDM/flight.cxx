@@ -195,19 +195,20 @@ FGInterface::common_init ()
 
     // Set initial position
     SG_LOG( SG_FLIGHT, SG_INFO, "...initializing position..." );
-    set_Longitude( fgGetDouble("/position/longitude-deg")
+    set_Longitude( fgGetDouble("/sim/presets/longitude-deg")
                    * SGD_DEGREES_TO_RADIANS );
-    set_Latitude( fgGetDouble("/position/latitude-deg")
+    set_Latitude( fgGetDouble("/sim/presets/latitude-deg")
                   * SGD_DEGREES_TO_RADIANS );
     double ground_elev_m = globals->get_scenery()->get_cur_elev();
     double ground_elev_ft = ground_elev_m * SG_METER_TO_FEET;
     _acmodel->get3DModel()->getFGLocation()->set_cur_elev_m( ground_elev_m );
     _set_Runway_altitude ( ground_elev_ft );
-    if ( fgGetBool("/sim/startup/onground")
-         || fgGetDouble("/position/altitude-ft") < ground_elev_ft ) {
+    if ( fgGetBool("/sim/presets/onground")
+         || fgGetDouble("/sim/presets/altitude-ft") < ground_elev_ft ) {
+        fgSetDouble("/sim/presets/altitude-ft", ground_elev_ft);
         fgSetDouble("/position/altitude-ft", ground_elev_ft);
     }
-    set_Altitude( fgGetDouble("/position/altitude-ft") );
+    set_Altitude( fgGetDouble("/sim/presets/altitude-ft") );
 
     // Set ground elevation
     SG_LOG( SG_FLIGHT, SG_INFO,
@@ -217,39 +218,39 @@ FGInterface::common_init ()
     // Set sea-level radius
     SG_LOG( SG_FLIGHT, SG_INFO, "...initializing sea-level radius..." );
     SG_LOG( SG_FLIGHT, SG_INFO, " lat = "
-            << fgGetDouble("/position/latitude-deg")
-            << " alt = " << fgGetDouble("/position/altitude-ft") );
+            << fgGetDouble("/sim/presets/latitude-deg")
+            << " alt = " << fgGetDouble("/sim/presets/altitude-ft") );
     double sea_level_radius_meters;
     double lat_geoc;
-    sgGeodToGeoc( fgGetDouble("/position/latitude-deg")
+    sgGeodToGeoc( fgGetDouble("/sim/presets/latitude-deg")
                     * SGD_DEGREES_TO_RADIANS,
-                  fgGetDouble("/position/altitude-ft") * SG_FEET_TO_METER,
+                  fgGetDouble("/sim/presets/altitude-ft") * SG_FEET_TO_METER,
                   &sea_level_radius_meters, &lat_geoc );
     _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET );
 
     // Set initial velocities
     SG_LOG( SG_FLIGHT, SG_INFO, "...initializing velocities..." );
-    if ( !fgHasNode("/sim/startup/speed-set") ) {
+    if ( !fgHasNode("/sim/presets/speed-set") ) {
         set_V_calibrated_kts(0.0);
     } else {
-        const string speedset = fgGetString("/sim/startup/speed-set");
+        const string speedset = fgGetString("/sim/presets/speed-set");
         if ( speedset == "knots" || speedset == "KNOTS" ) {
-            set_V_calibrated_kts( fgGetDouble("/velocities/airspeed-kt") );
+            set_V_calibrated_kts( fgGetDouble("/sim/presets/airspeed-kt") );
         } else if ( speedset == "mach" || speedset == "MACH" ) {
-            set_Mach_number( fgGetDouble("/velocities/mach") );
+            set_Mach_number( fgGetDouble("/sim/presets/mach") );
         } else if ( speedset == "UVW" || speedset == "uvw" ) {
             set_Velocities_Wind_Body(
-                                     fgGetDouble("/velocities/uBody-fps"),
-                                     fgGetDouble("/velocities/vBody-fps"),
-                                     fgGetDouble("/velocities/wBody-fps") );
+                                     fgGetDouble("/sim/presets/uBody-fps"),
+                                     fgGetDouble("/sim/presets/vBody-fps"),
+                                     fgGetDouble("/sim/presets/wBody-fps") );
         } else if ( speedset == "NED" || speedset == "ned" ) {
             set_Velocities_Local(
-                                 fgGetDouble("/velocities/speed-north-fps"),
-                                 fgGetDouble("/velocities/speed-east-fps"),
-                                 fgGetDouble("/velocities/speed-down-fps") );
+                                 fgGetDouble("/sim/presets/speed-north-fps"),
+                                 fgGetDouble("/sim/presets/speed-east-fps"),
+                                 fgGetDouble("/sim/presets/speed-down-fps") );
         } else {
             SG_LOG( SG_FLIGHT, SG_ALERT,
-                    "Unrecognized value for /sim/startup/speed-set: "
+                    "Unrecognized value for /sim/presets/speed-set: "
                     << speedset);
             set_V_calibrated_kts( 0.0 );
         }
@@ -257,11 +258,11 @@ FGInterface::common_init ()
 
     // Set initial Euler angles
     SG_LOG( SG_FLIGHT, SG_INFO, "...initializing Euler angles..." );
-    set_Euler_Angles( fgGetDouble("/orientation/roll-deg")
+    set_Euler_Angles( fgGetDouble("/sim/presets/roll-deg")
                         * SGD_DEGREES_TO_RADIANS,
-                      fgGetDouble("/orientation/pitch-deg")
+                      fgGetDouble("/sim/presets/pitch-deg")
                         * SGD_DEGREES_TO_RADIANS,
-                      fgGetDouble("/orientation/heading-deg")
+                      fgGetDouble("/sim/presets/heading-deg")
                         * SGD_DEGREES_TO_RADIANS );
 
     SG_LOG( SG_FLIGHT, SG_INFO, "End common FDM init" );

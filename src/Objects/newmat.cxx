@@ -390,6 +390,7 @@ FGNewMat::build_ssg_state (bool defer_tex_load)
     textured->disable( GL_BLEND );
     textured->disable( GL_ALPHA_TEST );
     if ( !defer_tex_load ) {
+        SG_LOG(SG_INPUT, SG_INFO, "    " << texture_path );
 	textured->setTexture( (char *)texture_path.c_str(), wrapu, wrapv );
 	texture_loaded = true;
     } else {

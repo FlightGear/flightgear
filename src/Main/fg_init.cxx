@@ -454,7 +454,7 @@ bool fgFindAirportID( const string& id, FGAirport *a ) {
 }
 
 
-// Set current_options lon/lat given an airport id
+// Preset lon/lat given an airport id
 bool fgSetPosFromAirportID( const string& id ) {
     FGAirport a;
     // double lon, lat;
@@ -463,12 +463,18 @@ bool fgSetPosFromAirportID( const string& id ) {
             "Attempting to set starting position from airport code " << id );
 
     if ( fgFindAirportID( id, &a ) ) {
-        fgSetDouble("/position/longitude-deg",  a.longitude );
-        fgSetDouble("/position/latitude-deg",  a.latitude );
+        // presets
+        fgSetDouble("/sim/presets/longitude-deg", a.longitude );
+        fgSetDouble("/sim/presets/latitude-deg", a.latitude );
+
+        // other code depends on the actual postition being set so set
+        // that as well
+        fgSetDouble("/position/longitude-deg", a.longitude );
+        fgSetDouble("/position/latitude-deg", a.latitude );
+
         SG_LOG( SG_GENERAL, SG_INFO,
-                "Position for " << id << " is ("
-                << a.longitude << ", "
-                << a.latitude << ")" );
+                "Position for " << id << " is (" << a.longitude
+                << ", " << a.latitude << ")" );
 
         return true;
     } else {
@@ -594,20 +600,26 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
                         azimuth, found_r.length * SG_FEET_TO_METER * 0.5 - 5.0,
                         &lat2, &lon2, &az2 );
 
-    if ( fabs( fgGetDouble("/sim/startup/offset-distance") ) > SG_EPSILON ) {
+    if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON ) {
         double olat, olon;
-        double odist = fgGetDouble("/sim/startup/offset-distance");
+        double odist = fgGetDouble("/sim/presets/offset-distance");
         odist *= SG_NM_TO_METER;
         double oaz = azimuth;
-        if ( fabs(fgGetDouble("/sim/startup/offset-azimuth")) > SG_EPSILON ) {
-            oaz = fgGetDouble("/sim/startup/offset-azimuth") + 180;
+        if ( fabs(fgGetDouble("/sim/presets/offset-azimuth")) > SG_EPSILON ) {
+            oaz = fgGetDouble("/sim/presets/offset-azimuth") + 180;
         }
         while ( oaz >= 360.0 ) { oaz -= 360.0; }
         geo_direct_wgs_84 ( 0, lat2, lon2, oaz, odist, &olat, &olon, &az2 );
         lat2=olat;
         lon2=olon;
     }
-        
+
+    // presets
+    fgSetDouble("/sim/presets/longitude-deg",  lon2 );
+    fgSetDouble("/sim/presets/latitude-deg",  lat2 );
+    fgSetDouble("/sim/presets/heading-deg", heading );
+
+    // other code depends on the actual values being set ...
     fgSetDouble("/position/longitude-deg",  lon2 );
     fgSetDouble("/position/latitude-deg",  lat2 );
     fgSetDouble("/orientation/heading-deg", heading );
@@ -624,21 +636,21 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 
 void fgSetPosFromGlideSlope(void) {
     double gs = fgGetDouble("/velocities/glideslope");
-    double od = fgGetDouble("/sim/startup/offset-distance");
-    double alt = fgGetDouble("/position/altitude-ft");
+    double od = fgGetDouble("/sim/presets/offset-distance");
+    double alt = fgGetDouble("/sim/presets/altitude-ft");
     
     //if glideslope and offset-distance are set and altitude is
     //not, calculate the initial altitude
     if( fabs(gs) > 0.01 && fabs(od) > 0.1 && alt < -9990 ) {
         od *= SG_NM_TO_METER * SG_METER_TO_FEET;
         alt = fabs(od*tan(gs));
-        fgSetDouble("/position/altitude-ft",alt);
-        fgSetBool("/sim/startup/onground", false);
+        fgSetDouble("/sim/presets/altitude-ft",alt);
+        fgSetBool("/sim/presets/onground", false);
         SG_LOG(SG_GENERAL,SG_INFO, "Calculated altitude as: " << alt  << " ft");
     } else if( fabs(gs) > 0.01 && alt > 0 && fabs(od) < 0.1) {
         od  = alt/tan(gs);
         od *= -1*SG_FEET_TO_METER * SG_METER_TO_NM;
-        fgSetDouble("/sim/startup/offset-distance",od);
+        fgSetDouble("/sim/presets/offset-distance",od);
         SG_LOG(SG_GENERAL,SG_INFO, "Calculated offset distance as: " 
                                        << od  << " nm");
     } else if( fabs(gs) > 0.01 ) {
@@ -861,11 +873,11 @@ SGTime *fgInitTime() {
 // Returns non-zero if a problem encountered.
 bool fgInitSubsystems( void ) {
     static const SGPropertyNode *longitude
-        = fgGetNode("/position/longitude-deg");
+        = fgGetNode("/sim/presets/longitude-deg");
     static const SGPropertyNode *latitude
-        = fgGetNode("/position/latitude-deg");
+        = fgGetNode("/sim/presets/latitude-deg");
     static const SGPropertyNode *altitude
-        = fgGetNode("/position/altitude-ft");
+        = fgGetNode("/sim/presets/altitude-ft");
 
     fgLIGHT *l = &cur_light_params;
 
@@ -1277,11 +1289,11 @@ bool fgInitSubsystems( void ) {
 void fgReInitSubsystems( void )
 {
     static const SGPropertyNode *longitude
-        = fgGetNode("/position/longitude-deg");
+        = fgGetNode("/sim/presets/longitude-deg");
     static const SGPropertyNode *latitude
-        = fgGetNode("/position/latitude-deg");
+        = fgGetNode("/sim/presets/latitude-deg");
     static const SGPropertyNode *altitude
-        = fgGetNode("/position/altitude-ft");
+        = fgGetNode("/sim/presets/altitude-ft");
     static const SGPropertyNode *master_freeze
         = fgGetNode("/sim/freeze/master");
 

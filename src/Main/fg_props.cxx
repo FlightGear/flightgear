@@ -637,12 +637,12 @@ bool
 fgSaveFlight (ostream &output, bool write_all)
 {
 
-  fgSetBool("/sim/startup/onground", false);
-  fgSetArchivable("/sim/startup/onground");
-  fgSetBool("/sim/startup/trim", false);
-  fgSetArchivable("/sim/startup/trim");
-  fgSetString("/sim/startup/speed-set", "UVW");
-  fgSetArchivable("/sim/startup/speed-set");
+  fgSetBool("/sim/presets/onground", false);
+  fgSetArchivable("/sim/presets/onground");
+  fgSetBool("/sim/presets/trim", false);
+  fgSetArchivable("/sim/presets/trim");
+  fgSetString("/sim/presets/speed-set", "UVW");
+  fgSetArchivable("/sim/presets/speed-set");
 
   try {
     writeProperties(output, globals->get_props(), write_all);
@@ -668,9 +668,9 @@ fgLoadFlight (istream &input)
     return false;
   }
 
-  fgSetBool("/sim/startup/onground", false);
-  fgSetBool("/sim/startup/trim", false);
-  fgSetString("/sim/startup/speed-set", "UVW");
+  fgSetBool("/sim/presets/onground", false);
+  fgSetBool("/sim/presets/trim", false);
+  fgSetString("/sim/presets/speed-set", "UVW");
 
   copyProperties(&props, globals->get_props());
   // When loading a flight, make it the
