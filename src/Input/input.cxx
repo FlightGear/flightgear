@@ -483,6 +483,11 @@ FGInput::_init_joystick ()
     if (js->notWorking()) {
       SG_LOG(SG_INPUT, SG_WARN, "Joystick " << i << " not found");
       continue;
+    } else {
+#ifdef FG_PLIB_JOYSTICK_GETNAME
+      SG_LOG(SG_INPUT, SG_INFO, "");
+      SG_LOG(SG_INPUT, SG_INFO, "Found joystick " << js->getName());
+#endif
     }
 #ifdef WIN32
     JOYCAPS jsCaps ;

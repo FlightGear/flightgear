@@ -67,6 +67,9 @@
 /* Define to avoid Christian's new weather code */
 #undef FG_NEW_ENVIRONMENT
 
+/* Define to enable new Plib joystick features (post 1.4) */
+#undef FG_PLIB_JOYSTICK_GETNAME
+
 /* Define to use old mouse support */
 #undef FG_OLD_MOUSE
    
