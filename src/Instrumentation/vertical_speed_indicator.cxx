@@ -35,7 +35,7 @@ VerticalSpeedIndicator::init ()
 void
 VerticalSpeedIndicator::update (double dt)
 {
-                                // model take from steam.cxx, with change
+                                // model taken from steam.cxx, with change
                                 // from 10000 to 10500 for manual factor
     if (_serviceable_node->getBoolValue()) {
         double pressure = _pressure_node->getDoubleValue();

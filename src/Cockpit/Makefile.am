@@ -14,8 +14,7 @@ libCockpit_a_SOURCES = \
 	navcom.cxx navcom.hxx \
 	panel.cxx panel.hxx \
         panel_io.cxx panel_io.hxx \
-	radiostack.cxx radiostack.hxx \
-	steam.cxx steam.hxx
+	radiostack.cxx radiostack.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
 

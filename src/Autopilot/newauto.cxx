@@ -37,7 +37,6 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/route/route.hxx>
 
-#include <Cockpit/steam.hxx>
 #include <Cockpit/radiostack.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
@@ -612,7 +611,8 @@ FGAutopilot::update (double dt)
 
 	if ( heading_mode == FG_TC_HEADING_LOCK ) {
 	    // drive the turn coordinator to zero
-	    double turn = globals->get_steam()->get_TC_std();
+	    double turn =
+                fgGetDouble("/instrumentation/turn-indicator/indicated-turn-rate");
 	    double AileronSet = -turn / 2.0;
             SG_CLAMP_RANGE( AileronSet, -1.0, 1.0 );
 	    globals->get_controls()->set_aileron( AileronSet );
@@ -699,7 +699,7 @@ FGAutopilot::update (double dt)
 	if ( altitude_mode == FG_ALTITUDE_LOCK ) {
 	    climb_rate =
 		( TargetAltitude -
-		  globals->get_steam()->get_ALT_ft() * SG_FEET_TO_METER ) * 8.0;
+		  fgGetDouble("/instrumentation/altimeter/indicated-altitude-ft") * SG_FEET_TO_METER ) * 8.0;
         } else if ( altitude_mode == FG_TRUE_ALTITUDE_LOCK ) {
             climb_rate = ( TargetAltitude - alt ) * 8.0;
 	} else if ( altitude_mode == FG_ALTITUDE_GS1 ) {

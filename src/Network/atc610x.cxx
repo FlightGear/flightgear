@@ -394,7 +394,7 @@ bool FGATC610x::open() {
     // Connect up to property values
     /////////////////////////////////////////////////////////////////////
 
-    mag_compass = fgGetNode( "/steam/mag-compass-deg", true );
+    mag_compass = fgGetNode( "/instrumentation/magnetic-compass/indicated-heading-deg", true );
 
     dme_min = fgGetNode( "/radios/dme/ete-min", true );
     dme_kt = fgGetNode( "/radios/dme/speed-kt", true );

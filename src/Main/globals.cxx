@@ -62,7 +62,6 @@ FGGlobals::FGGlobals() :
     ATC_display( NULL ),
     AI_mgr( NULL ),
     controls( NULL ),
-    steam( NULL ),
     viewmgr( NULL ),
     props( new SGPropertyNode ),
     initial_state( NULL ),

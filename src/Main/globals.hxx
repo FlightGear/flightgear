@@ -68,7 +68,6 @@ class FGModelLoader;
 class FGModelMgr;
 class FGScenery;
 class FGSoundMgr;
-class FGSteam;
 class FGTextureLoader;
 class FGTileMgr;
 class FGViewMgr;
@@ -139,9 +138,6 @@ private:
 
     // control input state
     FGControls *controls;
-
-    // Steam instruments
-    FGSteam *steam;
 
     // viewer manager
     FGViewMgr *viewmgr;
@@ -250,9 +246,6 @@ public:
 
     inline FGControls *get_controls() const { return controls; }
     inline void set_controls( FGControls *c ) { controls = c; }
-
-    inline FGSteam *get_steam() const { return steam; }
-    inline void set_steam( FGSteam *s ) { steam = s; }
 
     inline FGViewMgr *get_viewmgr() const { return viewmgr; }
     inline void set_viewmgr( FGViewMgr *vm ) { viewmgr = vm; }

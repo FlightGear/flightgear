@@ -97,7 +97,6 @@ SG_USING_STD(endl);
 
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/radiostack.hxx>
-#include <Cockpit/steam.hxx>
 
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
@@ -925,7 +924,6 @@ void fgUpdateTimeDepCalcs() {
 
 	globals->get_autopilot()->update(delta_time_sec);
 	cur_fdm_state->update(delta_time_sec);
-	globals->get_steam()->update(delta_time_sec);
     }
 
     globals->get_model_mgr()->update(delta_time_sec);
@@ -1532,9 +1530,6 @@ static bool fgMainInit( int argc, char **argv ) {
 
     FGControls *controls = new FGControls;
     globals->set_controls( controls );
-
-    FGSteam *steam = new FGSteam;
-    globals->set_steam( steam );
 
     string_list *col = new string_list;
     globals->set_channel_options_list( col );
