@@ -1,4 +1,4 @@
-SUBDIRS	= Balloon ExternalNet JSBSim LaRCsim UIUCModel YASim
+SUBDIRS	= Balloon ExternalNet ExternalPipe JSBSim LaRCsim UIUCModel YASim
 
 noinst_LIBRARIES = libFlight.a
 
