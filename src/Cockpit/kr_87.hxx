@@ -44,6 +44,7 @@ class FGKR_87 : public FGSubsystem
     SGPropertyNode *lat_node;
     SGPropertyNode *alt_node;
     SGPropertyNode *bus_power;
+    SGPropertyNode *servicable;
 
     bool need_update;
 

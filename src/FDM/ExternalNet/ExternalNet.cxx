@@ -108,8 +108,12 @@ static void global2net( FGNetCtrls *net ) {
     net->num_wheels = FGNetCtrls::FG_MAX_WHEELS;
     for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
         if ( node->getChild("brakes", i) != 0 ) {
-            net->brake[i]
-                = node->getChild("brakes", i)->getDoubleValue();
+            if ( node->getChild("parking-brake")->getDoubleValue() > 0.0 ) {
+                net->brake[i] = 1.0;
+           } else {
+                net->brake[i]
+                    = node->getChild("brakes", i)->getDoubleValue();
+            }
         } else {
             net->brake[i] = 0.0;
         }

@@ -74,6 +74,7 @@ FGKR_87::FGKR_87() :
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
     bus_power(fgGetNode("/systems/electrical/outputs/adf", true)),
+    servicable(fgGetNode("/instrumentation/adf/servicable", true)),
     need_update(true),
     valid(false),
     inrange(false),
@@ -113,6 +114,7 @@ FGKR_87::~FGKR_87() {
 
 
 void FGKR_87::init () {
+    servicable->setBoolValue( true );
     morse.init();
 }
 
@@ -245,7 +247,7 @@ void FGKR_87::update( double dt ) {
     // Radio
     ////////////////////////////////////////////////////////////////////////
 
-    if ( has_power() ) {
+    if ( has_power() && servicable->getBoolValue() ) {
         // buttons
         if ( adf_btn == 0 ) {
             ant_mode = 1;
@@ -438,7 +440,7 @@ void FGKR_87::update( double dt ) {
     //      << " needle = " << needle_deg << endl;
 
 #ifdef ENABLE_AUDIO_SUPPORT
-    if ( valid && inrange ) {
+    if ( valid && inrange && servicable->getBoolValue() ) {
 	// play station ident via audio system if on + ident_btn,
 	// otherwise turn it off
 	if ( vol_btn >= 0.01 && ident_btn ) {

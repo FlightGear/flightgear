@@ -93,10 +93,31 @@ FGNavCom::init ()
     // We assume that index is valid now (it must be set before init()
     // is called.)
     char propname[256];
+
     sprintf( propname, "/systems/electrical/outputs/navcom[%d]", index );
     // default to true in case no electrical system defined.
     fgSetDouble( propname, 60.0 );
     bus_power = fgGetNode( propname, true );
+
+    sprintf( propname, "/instrumentation/comm[%d]/servicable", index );
+    com_servicable = fgGetNode( propname, true );
+    com_servicable->setBoolValue( true );
+
+    sprintf( propname, "/instrumentation/nav[%d]/servicable", index );
+    nav_servicable = fgGetNode( propname, true );
+    nav_servicable->setBoolValue( true );
+
+    sprintf( propname, "/instrumentation/vor[%d]/cdi/servicable", index );
+    cdi_servicable = fgGetNode( propname, true );
+    cdi_servicable->setBoolValue( true );
+
+    sprintf( propname, "/instrumentation/vor[%d]/gs/servicable", index );
+    gs_servicable = fgGetNode( propname, true );
+    gs_servicable->setBoolValue( true );
+
+    sprintf( propname, "/instrumentation/vor[%d]/to-from/servicable", index );
+    tofrom_servicable = fgGetNode( propname, true );
+    tofrom_servicable->setBoolValue( true );
 }
 
 void
@@ -209,7 +230,7 @@ FGNavCom::unbind ()
 
 // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
 double FGNavCom::adjustNavRange( double stationElev, double aircraftElev,
-			      double nominalRange )
+                                 double nominalRange )
 {
     // extend out actual usable range to be 1.3x the published safe range
     const double usability_factor = 1.3;
@@ -287,7 +308,9 @@ FGNavCom::update(double dt)
     // Nav.
     ////////////////////////////////////////////////////////////////////////
 
-    if ( nav_valid && power_btn && (bus_power->getDoubleValue() > 1.0) ) {
+    if ( nav_valid && power_btn && (bus_power->getDoubleValue() > 1.0)
+         && nav_servicable->getBoolValue() )
+    {
 	station = Point3D( nav_x, nav_y, nav_z );
 	nav_loc_dist = aircraft.distance3D( station );
 
@@ -339,7 +362,7 @@ FGNavCom::update(double dt)
     }
 
 #ifdef ENABLE_AUDIO_SUPPORT
-    if ( nav_valid && nav_inrange ) {
+    if ( nav_valid && nav_inrange && nav_servicable->getBoolValue() ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
 	if ( power_btn && (bus_power->getDoubleValue() > 1.0)
@@ -547,7 +570,9 @@ void FGNavCom::search()
 double FGNavCom::get_nav_heading_needle_deflection() const {
     double r;
 
-    if ( nav_inrange ) {
+    if ( nav_inrange
+         && nav_servicable->getBoolValue() && cdi_servicable->getBoolValue() )
+    {
         r = nav_heading - nav_radial;
 	// cout << "Radial = " << nav_radial 
 	//      << "  Bearing = " << nav_heading << endl;
@@ -572,7 +597,9 @@ double FGNavCom::get_nav_heading_needle_deflection() const {
 // return the amount of glide slope needle deflection (.i.e. the
 // number of degrees we are off the glide slope * 5.0
 double FGNavCom::get_nav_gs_needle_deflection() const {
-    if ( nav_inrange && nav_has_gs ) {
+    if ( nav_inrange && nav_has_gs
+         && nav_servicable->getBoolValue() && gs_servicable->getBoolValue() )
+    {
 	double x = nav_gs_dist;
 	double y = (fgGetDouble("/position/altitude-ft") - nav_elev)
             * SG_FEET_TO_METER;
@@ -590,15 +617,19 @@ double FGNavCom::get_nav_gs_needle_deflection() const {
 bool 
 FGNavCom::get_nav_to_flag () const
 {
-  if (nav_inrange) {
-    double offset = fabs(nav_heading - nav_radial);
-    if (nav_loc)
-      return true;
-    else
-      return (offset <= 90.0 || offset >= 270.0);
-  } else {
-    return false;
-  }
+    if ( nav_inrange
+         && nav_servicable->getBoolValue()
+         && tofrom_servicable->getBoolValue() )
+    {
+        double offset = fabs(nav_heading - nav_radial);
+        if (nav_loc) {
+            return true;
+        } else {
+            return (offset <= 90.0 || offset >= 270.0);
+        }
+    } else {
+        return false;
+    }
 }
 
 
@@ -608,13 +639,16 @@ FGNavCom::get_nav_to_flag () const
 bool
 FGNavCom::get_nav_from_flag () const
 {
-  if (nav_inrange) {
-    double offset = fabs(nav_heading - nav_radial);
-    if (nav_loc)
-      return false;
-    else
-      return (offset > 90.0 && offset < 270.0);
-  } else {
-    return false;
-  }
+    if ( nav_inrange
+         && nav_servicable->getBoolValue()
+         && tofrom_servicable->getBoolValue() ) {
+        double offset = fabs(nav_heading - nav_radial);
+        if (nav_loc) {
+            return false;
+        } else {
+          return (offset > 90.0 && offset < 270.0);
+        }
+    } else {
+        return false;
+    }
 }
