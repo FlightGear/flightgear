@@ -34,8 +34,9 @@
 #endif                                   
 
 
-#include <string>          // Standard C++ string library
-#include <map>             // STL associative "array"
+#include <string>        // Standard C++ string library
+#include <map>           // STL associative "array"
+
 #ifdef NEEDNAMESPACESTD
 using namespace std;
 #endif
@@ -73,6 +74,11 @@ public:
 
 
 // $Log$
+// Revision 1.7  1998/07/24 21:39:09  curt
+// Debugging output tweaks.
+// Cast glGetString to (char *) to avoid compiler errors.
+// Optimizations to fgGluLookAt() by Norman Vine.
+//
 // Revision 1.6  1998/07/06 21:34:19  curt
 // Added an enable/disable splash screen option.
 // Added an enable/disable intro music option.

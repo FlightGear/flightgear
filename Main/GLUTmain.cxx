@@ -243,7 +243,7 @@ static void fgUpdateViewParams( void ) {
 }
 
 
-#ifdef 0
+#ifdef IS_THIS_BETTER_THAN_A_ZERO_CHARLIE
 // Draw a basic instrument panel
 static void fgUpdateInstrViewParams( void ) {
 
@@ -502,9 +502,9 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
     while ( tmp > FG_2PI ) {
 	tmp -= FG_2PI;
     }
-    printf("Psi = %.2f, viewoffset = %.2f sunrot = %.2f rottosun = %.2f\n",
+    /* printf("Psi = %.2f, viewoffset = %.2f sunrot = %.2f rottosun = %.2f\n",
 	   FG_Psi * RAD_TO_DEG, v->view_offset * RAD_TO_DEG, 
-	   -(l->sun_rotation+FG_PI) * RAD_TO_DEG, tmp * RAD_TO_DEG);
+	   -(l->sun_rotation+FG_PI) * RAD_TO_DEG, tmp * RAD_TO_DEG); */
     l->UpdateAdjFog();
 }
 
@@ -924,6 +924,11 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.39  1998/07/24 21:39:08  curt
+// Debugging output tweaks.
+// Cast glGetString to (char *) to avoid compiler errors.
+// Optimizations to fgGluLookAt() by Norman Vine.
+//
 // Revision 1.38  1998/07/22 21:40:43  curt
 // Clear to adjusted fog color (for sunrise/sunset effects)
 // Make call to fog sunrise/sunset adjustment method.

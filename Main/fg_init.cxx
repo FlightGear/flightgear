@@ -186,9 +186,9 @@ int fgInitGeneral( void ) {
     fgPrintf( FG_GENERAL, FG_INFO, "General Initialization\n" );
     fgPrintf( FG_GENERAL, FG_INFO, "======= ==============\n" );
 
-    g->glVendor = glGetString ( GL_VENDOR );
-    g->glRenderer = glGetString ( GL_RENDERER );
-    g->glVersion = glGetString ( GL_VERSION );
+    g->glVendor = (char *)glGetString ( GL_VENDOR );
+    g->glRenderer = (char *)glGetString ( GL_RENDERER );
+    g->glVersion = (char *)glGetString ( GL_VERSION );
 
     current_options.get_fg_root(root);
     if ( !strlen(root) ) { 
@@ -401,6 +401,11 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.27  1998/07/24 21:39:10  curt
+// Debugging output tweaks.
+// Cast glGetString to (char *) to avoid compiler errors.
+// Optimizations to fgGluLookAt() by Norman Vine.
+//
 // Revision 1.26  1998/07/22 21:40:44  curt
 // Clear to adjusted fog color (for sunrise/sunset effects)
 // Make call to fog sunrise/sunset adjustment method.

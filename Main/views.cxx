@@ -447,15 +447,22 @@ void fg_gluLookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
     M(0,0) = x[0];  M(0,1) = x[1];  M(0,2) = x[2];  M(0,3) = 0.0;
     M(1,0) = y[0];  M(1,1) = y[1];  M(1,2) = y[2];  M(1,3) = 0.0;
     M(2,0) = z[0];  M(2,1) = z[1];  M(2,2) = z[2];  M(2,3) = 0.0;
-    M(3,0) = 0.0;   M(3,1) = 0.0;   M(3,2) = 0.0;   M(3,3) = 1.0;
+    // the following is part of the original gluLookAt(), but we are
+    // commenting it out because we know we are going to be doing a
+    // translation below which will set these values anyways
+    // M(3,0) = 0.0;   M(3,1) = 0.0;   M(3,2) = 0.0;   M(3,3) = 1.0;
 #undef M
 
     // Translate Eye to Origin
     // replaces: glTranslated( -eyex, -eyey, -eyez );
-    m[12] = m[0] * -eyex + m[4] * -eyey + m[8]  * -eyez + m[12];
-    m[13] = m[1] * -eyex + m[5] * -eyey + m[9]  * -eyez + m[13];
-    m[14] = m[2] * -eyex + m[6] * -eyey + m[10] * -eyez + m[14];
-    m[15] = m[3] * -eyex + m[7] * -eyey + m[11] * -eyez + m[15];
+
+    // this has been slightly modified from the original glTranslate()
+    // code because we know that coming into this m[12] = m[13] =
+    // m[14] = 0.0, and m[15] = 1.0;
+    m[12] = m[0] * -eyex + m[4] * -eyey + m[8]  * -eyez /* + m[12] */;
+    m[13] = m[1] * -eyex + m[5] * -eyey + m[9]  * -eyez /* + m[13] */;
+    m[14] = m[2] * -eyex + m[6] * -eyey + m[10] * -eyez /* + m[14] */;
+    m[15] = 1.0 /* m[3] * -eyex + m[7] * -eyey + m[11] * -eyez + m[15] */;
 
     // xglMultMatrixd( m );
     xglLoadMatrixd( m );
@@ -463,6 +470,11 @@ void fg_gluLookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 
 
 // $Log$
+// Revision 1.17  1998/07/24 21:39:12  curt
+// Debugging output tweaks.
+// Cast glGetString to (char *) to avoid compiler errors.
+// Optimizations to fgGluLookAt() by Norman Vine.
+//
 // Revision 1.16  1998/07/13 21:01:41  curt
 // Wrote access functions for current fgOPTIONS.
 //
