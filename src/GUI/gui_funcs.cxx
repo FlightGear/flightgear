@@ -385,9 +385,6 @@ void goodBye(puObject *)
     //      "Program exiting normally at user request." );
     cout << "Program exiting normally at user request." << endl;
 
-    // close all external I/O connections
-    globals->get_io()->shutdown_all();
-
     exit(0);
 }
 
