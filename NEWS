@@ -2,6 +2,8 @@ New in 0.56
 * Added some initial joystick support using Steve's joystick interface class.
   This works great under Linux, but Steve's class now needs to be ported to
   Windoze and other platforms.
+* Also added a fall back to the GLUT joystick routines for windows (until
+  we can find better joystick support.)
 
 New in 0.55
 * New version of gpc (generic polygon clipping library) from 

@@ -15,6 +15,13 @@ dist-hook:
 
 FG_ROOT=$(HOME)/FlightGear
 
+# refresh the fg-root installation
+update-fg-root:
+	tar cf - AUTHORS COPYING NEWS README README.Linux README.Unix \
+		README.Win32 README.anoncvs README.autoconf README.running \
+		Thanks \
+		| (cd $HOME/FlightGear; tar xvf -)
+
 # make the base distribution with textures, sounds and a bit of
 # scenery, and all the other associated files
 fgfs-base: fgfs-base-tar fgfs-base-zip
@@ -83,5 +90,6 @@ clean-winbloze: clean-deps clean-libs
 	rm -f makefile Include/makefile Lib/makefile Simulator/makefile \
 		Tools/makefile \
 		Lib/*/makefile Simulator/*/makefile Tools/*/makefile \
-		Lib/*/*/makefile Simulator/*/*/makefile Tools/*/*/makefile
+		Lib/*/*/makefile Simulator/*/*/makefile Tools/*/*/makefile \
+		Tests/makefile
 	rm -f Src/Main/fg.exe Tools/*/*.exe
