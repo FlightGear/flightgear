@@ -34,19 +34,25 @@
 #  include <config.h>
 #endif
 
+#include <Include/compiler.h>
+
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
 #include <GL/glut.h>
 
-#include <string>
+#include STL_STRING
+
+#include <ssg.h>		// plib include
 
 #include <Scenery/tileentry.hxx>
 
+FG_USING_STD(string);
+
 
 // Load a .obj file and build the GL fragment list
-int fgObjLoad(const string& path, FGTileEntry *tile);
+ssgBranch *fgObjLoad(const string& path, FGTileEntry *tile);
 
 
 #endif // _OBJ_HXX

@@ -32,6 +32,8 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <ssg.h>		// plib include
+
 #include <Debug/logstream.hxx>
 #include <Airports/genapt.hxx>
 #include <Bucket/newbucket.hxx>
@@ -42,6 +44,11 @@
 
 #include "tilecache.hxx"
 #include "tileentry.hxx"
+
+
+// a cheesy hack (to be fixed later)
+extern ssgBranch *terrain;
+extern ssgEntity *penguin;
 
 
 // the tile cache
@@ -130,8 +137,11 @@ FGTileCache::fill_in( int index, const FGBucket& p )
 
     tile_cache[index].mark_loaded();
     tile_cache[index].tile_bucket = p;
-    fgObjLoad( tile_path.str(), &tile_cache[index] );
-//     tile_cache[ index ].ObjLoad( tile_path, p );
+    ssgBranch *new_tile = fgObjLoad( tile_path.str(), &tile_cache[index] );
+    tile_cache[index].branch_ptr = new ssgTransform;
+    tile_cache[index].branch_ptr->addKid( new_tile );
+    tile_cache[index].branch_ptr->addKid( penguin );
+    terrain->addKid( tile_cache[index].branch_ptr );
 
     // cout << " ncount before = " << tile_cache[index].ncount << "\n";
     // cout << " fragments before = " << tile_cache[index].fragment_list.size()

@@ -45,7 +45,7 @@
 #include <vector>
 #include STL_STRING
 
-#include <sg.h>			// plib includes
+#include <ssg.h>		// plib includes
 
 #include <Bucket/newbucket.hxx>
 #include <Math/mat3.h>
@@ -99,10 +99,18 @@ public:
     // this tile's official location in the world
     FGBucket tile_bucket;
 
-    // the tile cache will mark here if the tile is being used
+    // the tile cache will keep track here if the tile is being used
     tile_state state;
 
     container fragment_list;
+
+    // ssg related structures
+    sgVec3 *vtlist;
+    sgVec3 *vnlist;
+    sgVec2 *tclist;
+
+    // pointer to ssg branch;
+    ssgTransform *branch_ptr;
 
 public:
 

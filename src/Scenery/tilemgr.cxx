@@ -775,6 +775,13 @@ void FGTileMgr::render( void ) {
 	    // calculate tile offset
 	    t->SetOffset( scenery.center );
 
+	    // calculate ssg transform
+	    sgCoord sgcoord;
+	    sgSetCoord( &sgcoord,
+			t->offset.x(), t->offset.y(), t->offset.z(),
+			0.0, 0.0, 0.0 );
+	    t->branch_ptr->setTransform( &sgcoord );
+
 	    // Course (tile based) culling
 	    if ( viewable(t->offset, t->bounding_radius) ) {
 		// at least a portion of this tile could be viewable
@@ -847,6 +854,6 @@ void FGTileMgr::render( void ) {
     // traverse the transient per-material fragment lists and render
     // out all fragments for each material property.
     xglPushMatrix();
-    material_mgr.render_fragments();
+    // material_mgr.render_fragments();
     xglPopMatrix();
 }

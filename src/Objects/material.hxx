@@ -37,7 +37,7 @@
 #  include <windows.h>
 #endif
 
-#include "Include/compiler.h"
+#include <Include/compiler.h>
 
 #include <GL/glut.h>
 #include <XGL/xgl.h>
@@ -94,7 +94,6 @@ public:
     inline GLfloat *get_diffuse() { return diffuse; }
     inline GLfloat *get_specular() { return specular; }
     inline GLfloat *get_emissive() { return emissive; }
-
 };
 
 

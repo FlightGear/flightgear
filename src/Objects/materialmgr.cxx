@@ -69,7 +69,7 @@ FGMaterialSlot::~FGMaterialSlot ( void ) {
 
 // Constructor
 fgMATERIAL_MGR::fgMATERIAL_MGR ( void ) {
-    textures_loaded = false;
+    materials_loaded = false;
 }
 
 
@@ -80,13 +80,23 @@ FGMaterialSlot::render_fragments()
 
     // cout << "rendering " + texture_name + " = " << list_size << "\n";
 
-    if ( empty() )
+    if ( empty() ) {
 	return;
+    }
 
     if ( current_options.get_textures() ) {
 
 	if ( !m.is_loaded() ) {
 	    m.load_texture( current_options.get_fg_root() );
+
+	    // build the ssgSimpleState
+	    GLuint tex_id = m.get_texture_id();
+	    state.setTexture( tex_id );
+	    state.enable( GL_TEXTURE_2D );
+	    state.enable( GL_LIGHTING );
+	    state.setShadeModel( GL_SMOOTH );
+	    state.enable ( GL_CULL_FACE      ) ;
+	    state.setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
 	}
 
 #ifdef GL_VERSION_1_1
@@ -168,7 +178,7 @@ fgMATERIAL_MGR::load_lib ( void )
     }
 
     if ( current_options.get_textures() ) {
-	textures_loaded = true;
+	materials_loaded = true;
     }
 
     return(1);

@@ -46,8 +46,9 @@
 #include <Include/compiler.h>
 
 #include STL_STRING
-#include <map>          // STL
-#include <ctype.h>      // isdigit()
+#include <map>			// STL
+#include <vector>		// STL
+#include <ctype.h>		// isdigit()
 
 #include <Debug/logstream.hxx>
 #include <Misc/fgstream.hxx>
@@ -64,6 +65,12 @@
 #include "obj.hxx"
 
 FG_USING_STD(string);
+FG_USING_STD(vector);
+
+
+typedef vector < int > int_list;
+typedef int_list::iterator int_list_iterator;
+typedef int_list::const_iterator int_point_list_iterator;
 
 
 static double normals[FG_MAX_NODES][3];
@@ -128,7 +135,7 @@ static Point3D calc_tex_coords(const Point3D& node, const Point3D& ref) {
 
 
 // Load a .obj file and build the GL fragment list
-int fgObjLoad( const string& path, FGTileEntry *t) {
+ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     fgFRAGMENT fragment;
     Point3D pp;
     double approx_normal[3], normal[3] /*, scale = 0.0 */;
@@ -136,7 +143,8 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
     // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     GLint display_list = 0;
     int shading;
-    int in_fragment = 0, in_faces = 0, vncount, vtcount;
+    bool in_fragment = false, in_faces = false;
+    int vncount, vtcount;
     int n1 = 0, n2 = 0, n3 = 0, n4 = 0;
     int tex;
     int last1 = 0, last2 = 0, odd = 0;
@@ -144,6 +152,11 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
     Point3D node;
     Point3D center;
     double tex_width = 1000.0, tex_height = 1000.0;
+    bool shared_done = false;
+    int_list fan_vertices;
+    int_list fan_tex_coords;
+    int i;
+    ssgSimpleState *state = NULL;
 
     // printf("loading %s\n", path.c_str() );
 
@@ -156,7 +169,7 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
 
     shading = current_options.get_shading();
 
-    in_fragment = 0;
+    in_fragment = false;
     t->ncount = 0;
     vncount = 0;
     vtcount = 0;
@@ -165,6 +178,9 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
 
     StopWatch stopwatch;
     stopwatch.start();
+
+    ssgBranch *tile = new ssgBranch () ;
+    tile -> setName ( path.c_str() ) ;
 
     // ignore initial comments and blank lines. (priming the pump)
     // in >> skipcomment;
@@ -204,6 +220,31 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
 	    } else if ( token == "usemtl" ) {
 		// material property specification
 
+		// if first usemtl with shared_done = false, then set
+		// shared_done true and build the ssg shared lists
+		if ( ! shared_done ) {
+		    shared_done = true;
+
+		    t->vtlist = new sgVec3 [ nodes.size() ];
+		    t->vnlist = new sgVec3 [ vncount ];
+		    t->tclist = new sgVec2 [ vtcount ];
+
+		    for ( i = 0; i < (int)nodes.size(); ++i ) {
+			sgSetVec3( t->vtlist[i], 
+				   nodes[i][0], nodes[i][1], nodes[i][2] );
+		    }
+		    for ( i = 0; i < vncount; ++i ) {
+			sgSetVec3( t->vnlist[i], 
+				   normals[i][0], 
+				   normals[i][1],
+				   normals[i][2] );
+		    }
+		    for ( i = 0; i < vtcount; ++i ) {
+			sgSetVec2( t->tclist[i],
+				   tex_coords[i][0], tex_coords[i][1] );
+		    }
+		}
+
 		// series of individual triangles
 		if ( in_faces ) {
 		    xglEnd();
@@ -221,7 +262,7 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
 		    // push this fragment onto the tile's object list
 		    t->fragment_list.push_back(fragment);
 		} else {
-		    in_fragment = 1;
+		    in_fragment = true;
 		}
 
 		// printf("start of fragment (usemtl)\n");
@@ -229,7 +270,7 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
 		display_list = xglGenLists(1);
 		xglNewList(display_list, GL_COMPILE);
 		// printf("xglGenLists(); xglNewList();\n");
-		in_faces = 0;
+		in_faces = false;
 
 		// reset the existing face list
 		// printf("cleaning a fragment with %d faces\n", 
@@ -253,6 +294,7 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
 		FGMaterial m = fragment.material_ptr->get_m();
 		tex_width = m.get_xsize();
 		tex_height = m.get_ysize();
+		state = fragment.material_ptr->get_state();
 		// cout << "(w) = " << tex_width << " (h) = " 
 		//      << tex_width << endl;
 
@@ -426,12 +468,17 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
 		// triangle fan
 		// fgPrintf( FG_TERRAIN, FG_DEBUG, "new fan");
 
+		fan_vertices.clear();
+		fan_tex_coords.clear();
+
 		xglBegin(GL_TRIANGLE_FAN);
 
 		in >> n1;
+		fan_vertices.push_back( n1 );
 		xglNormal3dv(normals[n1]);
 		if ( in.get( c ) && c == '/' ) {
 		    in >> tex;
+		    fan_tex_coords.push_back( tex );
 		    pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
 		    pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
 		} else {
@@ -442,9 +489,11 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
 		xglVertex3dv(nodes[n1].get_n());
 
 		in >> n2;
+		fan_vertices.push_back( n2 );
 		xglNormal3dv(normals[n2]);
 		if ( in.get( c ) && c == '/' ) {
 		    in >> tex;
+		    fan_tex_coords.push_back( tex );
 		    pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
 		    pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
 		} else {
@@ -470,12 +519,14 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
 		    }
 
 		    in >> n3;
+		    fan_vertices.push_back( n3 );
 		    // cout << "  triangle = " 
 		    //      << n1 << "," << n2 << "," << n3 
 		    //      << endl;
 		    xglNormal3dv(normals[n3]);
 		    if ( in.get( c ) && c == '/' ) {
 			in >> tex;
+			fan_tex_coords.push_back( tex );
 			pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
 			pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
 		    } else {
@@ -490,13 +541,35 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
 		}
 
 		xglEnd();
+
+		// build the ssg entity
+		unsigned short *vindex = 
+		    new unsigned short [ fan_vertices.size() ];
+		unsigned short *tindex = 
+		    new unsigned short [ fan_tex_coords.size() ];
+		for ( i = 0; i < (int)fan_vertices.size(); ++i ) {
+		    vindex[i] = fan_vertices[i];
+		}
+		for ( i = 0; i < (int)fan_tex_coords.size(); ++i ) {
+		    tindex[i] = fan_tex_coords[i];
+		}
+		ssgLeaf *leaf = 
+		    new ssgVTable ( GL_TRIANGLE_FAN,
+				    fan_vertices.size(), vindex, t->vtlist,
+				    fan_vertices.size(), vindex, t->vnlist,
+				    fan_tex_coords.size(), tindex, t->tclist,
+				    0, NULL, NULL ) ;
+		leaf->setState( state );
+
+		tile->addKid( leaf );
+
 	    } else if ( token == "f" ) {
 		// unoptimized face
 
 		if ( !in_faces ) {
 		    xglBegin(GL_TRIANGLES);
 		    // printf("xglBegin(triangles)\n");
-		    in_faces = 1;
+		    in_faces = true;
 		}
 
 		// fgPrintf( FG_TERRAIN, FG_DEBUG, "new triangle = %s", line);*/
@@ -657,7 +730,7 @@ int fgObjLoad( const string& path, FGTileEntry *t) {
 	    "Loaded " << path << " in " 
 	    << stopwatch.elapsedSeconds() << " seconds" );
     
-    return 1;
+    return tile;
 }
 
 

@@ -42,9 +42,11 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include STL_STRING      // Standard C++ string library
-#include <map>           // STL associative "array"
-#include <vector>        // STL "array"
+#include STL_STRING		// Standard C++ string library
+#include <map>			// STL associative "array"
+#include <vector>		// STL "array"
+
+#include <ssg.h>		// plib include
 
 #include "material.hxx"
 
@@ -75,26 +77,14 @@ class FGMaterialSlot {
 private:
     FGMaterial m;
 
-    // OpenGL texture name
-    // GLuint texture_id;
-
-    // file name of texture
-    // string texture_name;
-
-    // alpha texture?
-    // int alpha;
-
-    // texture size
-    // double xsize, ysize;
-
-    // material properties
-    // GLfloat ambient[4], diffuse[4], specular[4], emissive[4];
-    // GLint texture_ptr;
-
     // transient list of objects with this material type (used for sorting
     // by material to reduce GL state changes when rendering the scene
     frag_list_type list;
     // size_t list_size;
+
+    // ssg stage structure
+    ssgSimpleState state;
+    bool state_valid;
 
 public:
 
@@ -116,8 +106,6 @@ public:
 
     void render_fragments();
 
-    // void load_texture();
-
     // Destructor
     ~FGMaterialSlot ( void );
 
@@ -125,6 +113,12 @@ public:
 
     inline FGMaterial get_m() const { return m; }
     inline void set_m( FGMaterial new_m ) { m = new_m; }
+
+    // ssg state
+    inline ssgSimpleState *get_state() { return &state; }
+    inline void set_state( ssgSimpleState s ) { state = s; }
+    inline bool get_state_valid() const { return state_valid; }
+    inline void set_state_valid( bool flag ) { state_valid = flag; }
 };
 
 
@@ -150,7 +144,7 @@ public:
     // Load a library of material properties
     int load_lib ( void );
 
-    inline bool loaded() const { return textures_loaded; }
+    inline bool loaded() const { return materials_loaded; }
 
     // Initialize the transient list of fragments for each material property
     void init_transient_material_lists( void );
@@ -164,8 +158,8 @@ public:
 
 private:
 
-    // Have textures been loaded
-    bool textures_loaded;
+    // Has the material properties lib been loaded
+    bool materials_loaded;
 
     container material_map;
 
