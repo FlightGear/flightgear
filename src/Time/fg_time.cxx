@@ -51,6 +51,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/magvar/magvar.hxx>
 #include <simgear/misc/fgpath.hxx>
 
 #include <FDM/flight.hxx>
@@ -336,7 +337,7 @@ double FGTime::sidereal_course(double lng)
 
 
 // Update time variables such as gmt, julian date, and sidereal time
-void FGTime::update( double lon ) {
+void FGTime::update( double lon, double lat, double alt_m ) {
     double gst_precise, gst_course;
 
     FG_LOG( FG_EVENT, FG_DEBUG, "Updating time" );
@@ -393,6 +394,13 @@ void FGTime::update( double lon ) {
 	gst = sidereal_course( 0.00 ) + gst_diff;
 	lst = sidereal_course( -(lon * RAD_TO_DEG)) + gst_diff;
     }
+
+    // Calculate local magnetic variation
+    double field[6];
+    // cout << "alt_m = " << alt_m << endl;
+    magvar = SGMagVar( lat, lon, alt_m / 1000.0, jd, field );
+    magdip = atan(field[5]/pow(field[3]*field[3]+field[4]*field[4],0.5));
+
     FG_LOG( FG_EVENT, FG_DEBUG,
 	    "  Current lon=0.00 Sidereal Time = " << gst );
     FG_LOG( FG_EVENT, FG_DEBUG,

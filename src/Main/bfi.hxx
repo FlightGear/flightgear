@@ -139,6 +139,10 @@ public:
 
   static void setVisibility (double visiblity);
 
+                                // Time (this varies with time) huh, huh
+  static double getMagVar (); 
+  static double getMagDip (); 
+
 
 private:
 				// Will cause a linking error if invoked.

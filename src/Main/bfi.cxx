@@ -198,7 +198,10 @@ FGBFI::setTimeGMT (time_t time)
   current_options.set_time_offset_type(fgOPTIONS::FG_TIME_GMT_ABSOLUTE);
   FGTime::cur_time_params->init( cur_fdm_state->get_Longitude(),
 				 cur_fdm_state->get_Latitude() );
-  FGTime::cur_time_params->update( cur_fdm_state->get_Longitude() );
+  FGTime::cur_time_params->update( cur_fdm_state->get_Longitude(),
+				   cur_fdm_state->get_Latitude(),
+				   cur_fdm_state->get_Altitude()
+				   * FEET_TO_METER );
   needReinit();
 }
 
@@ -848,4 +851,30 @@ FGBFI::setVisibility (double visibility)
 }
 
 
+
+////////////////////////////////////////////////////////////////////////
+// Time
+////////////////////////////////////////////////////////////////////////
+
+/**
+ * Return the magnetic variation
+ */
+double
+FGBFI::getMagVar ()
+{
+  return FGTime::cur_time_params->getMagVar() * RAD_TO_DEG;
+}
+
+
+/**
+ * Return the magnetic variation
+ */
+double
+FGBFI::getMagDip ()
+{
+  return FGTime::cur_time_params->getMagDip() * RAD_TO_DEG;
+}
+
+
 // end of bfi.cxx
+

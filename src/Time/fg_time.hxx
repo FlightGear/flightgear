@@ -102,7 +102,11 @@ private:
 
     // Paused?
     bool pause;
-                                     
+
+    // Local magnetic variation and dip in radians
+    double magvar;
+    double magdip;
+
     void local_update_sky_and_lighting_params( void );
 
 public:
@@ -110,6 +114,7 @@ public:
     FGTime();
     ~FGTime();
 
+    inline double getJD() const { return jd; };
     inline double getMjd() const { return mjd; };
     inline double getLst() const { return lst; };
     inline double getGst() const { return gst; };
@@ -125,7 +130,7 @@ public:
     void init( double lon, double lat );
 
     // Update the time dependent variables
-    void update( double lon );
+    void update( double lon, double lat, double alt_m );
     void updateLocal();
 
     void cal_mjd (int mn, double dy, int yr);
@@ -143,6 +148,10 @@ public:
   
     char* format_time( const struct tm* p, char* buf );
     long int fix_up_timezone( long int timezone_orig );
+
+    // Return magnetic variations
+    double getMagVar() const { return magvar; }
+    double getMagDip() const { return magdip; }
 };
 
 

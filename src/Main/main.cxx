@@ -830,7 +830,9 @@ static void fgMainLoop( void ) {
 	   cur_fdm_state->get_Altitude() * FEET_TO_METER); */
 
     // update "time"
-    t->update( cur_fdm_state->get_Longitude() );
+    t->update( cur_fdm_state->get_Longitude(),
+	       cur_fdm_state->get_Latitude(),
+	       cur_fdm_state->get_Altitude()* FEET_TO_METER );
 
     // Get elapsed time (in usec) for this past frame
     elapsed = fgGetTimeInterval();
@@ -1332,7 +1334,7 @@ int main( int argc, char **argv ) {
     //                                cur_fdm_state->get_Latitude() );
     // FGTime::cur_time_params->update( cur_fdm_state->get_Longitude() );
     FGTime::cur_time_params->init( 0.0, 0.0 );
-    FGTime::cur_time_params->update( 0.0 );
+    FGTime::cur_time_params->update( 0.0, 0.0, 0.0 );
 
     // Do some quick general initializations
     if( !fgInitGeneral()) {
