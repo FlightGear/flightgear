@@ -221,6 +221,13 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		// if first usemtl with shared_done = false, then set
 		// shared_done true and build the ssg shared lists
 		if ( ! shared_done ) {
+		    // sanity check
+		    if ( nodes.size() != vncount ) {
+			FG_LOG( FG_TERRAIN, FG_ALERT, 
+				"Tile has mismatched nodes and normals: " 
+				<< path );
+			exit(-1);
+		    }
 		    shared_done = true;
 
 		    t->vtlist = new sgVec3 [ nodes.size() ];
