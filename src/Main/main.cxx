@@ -39,6 +39,7 @@ SG_USING_STD(endl);
 #include <simgear/misc/exception.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/route/route.hxx>
+#include <simgear/screen/extensions.hxx>
 
 #include <Environment/environment_mgr.hxx>
 
@@ -142,7 +143,6 @@ SG_USING_STD(endl);
 
 #include "fg_commands.hxx"
 
-#ifdef FG_EXPERIMENTAL_POINT_LIGHTING
 #ifdef WIN32
   typedef void (APIENTRY * PFNGLPOINTPARAMETERFEXTPROC)(GLenum pname,
                                                         GLfloat param);
@@ -159,7 +159,6 @@ SG_USING_STD(endl);
 
   OpenGLFuncExt glPointParameterfEXT = 0;
   OpenGLFuncExtv glPointParameterfvEXT = 0;
-#endif
 #endif
 
 float default_attenuation[3] = {1.0, 0.0, 0.0};
@@ -624,8 +623,13 @@ void fgRenderFrame() {
             // within the range of the far clip plane.
             // Moon distance:    384,467 kilometers
             // Sun distance: 150,000,000 kilometers
-            double sun_eye_eff = 0.67+pow(0.5+cos(cur_light_params.sun_angle*2)/2,0.33)/3;
-            double moon_eye_eff = 0.67+pow(0.5+cos(cur_light_params.moon_angle*2)/2,0.33)/3;
+            double sun_horiz_eff, moon_horiz_eff;
+            if (fgGetBool("/sim/rendering/horizon-effect")) {
+            sun_horiz_eff = 0.67+pow(0.5+cos(cur_light_params.sun_angle*2)/2,0.33)/3;
+            moon_horiz_eff = 0.67+pow(0.5+cos(cur_light_params.moon_angle*2)/2,0.33)/3;
+            } else {
+               sun_horiz_eff = moon_horiz_eff = 1.0;
+            }
             thesky->reposition( current__view->get_view_pos(),
                                 current__view->get_zero_elev(),
                                 current__view->get_world_up(),
@@ -639,10 +643,10 @@ void fgRenderFrame() {
                                 globals->get_time_params()->getGst(),
                                 globals->get_ephem()->getSunRightAscension(),
                                 globals->get_ephem()->getSunDeclination(),
-                                50000.0 * sun_eye_eff,
+                                50000.0 * sun_horiz_eff,
                                 globals->get_ephem()->getMoonRightAscension(),
                                 globals->get_ephem()->getMoonDeclination(),
-                                40000.0 * moon_eye_eff );
+                                40000.0 * moon_horiz_eff );
         }
 
         glEnable( GL_DEPTH_TEST );
@@ -773,23 +777,28 @@ void fgRenderFrame() {
         glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
         ssgSetNearFar( scene_nearplane, scene_farplane );
 
-#ifdef FG_EXPERIMENTAL_POINT_LIGHTING
-        // Enable states for drawing points with GL_extension
-        glEnable(GL_POINT_SMOOTH);
+        if (fgGetBool("/sim/rendering/enhanced-lighting")) {
 
-        if ( fgGetBool("/sim/rendering/distance-attenuation")
-             && glutExtensionSupported("GL_EXT_point_parameters") )
-        {
-            float quadratic[3] = {1.0, 0.001, 0.0000001};
-            // makes the points fade as they move away
-            glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
-            glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
+            // Enable states for drawing points with GL_extension
+            glEnable(GL_POINT_SMOOTH);
+
+            if ( fgGetBool("/sim/rendering/distance-attenuation")
+                 && glutExtensionSupported("GL_EXT_point_parameters") )
+            {
+                // Enable states for drawing points with GL_extension
+                glEnable(GL_POINT_SMOOTH);
+
+                float quadratic[3] = {1.0, 0.001, 0.0000001};
+                // makes the points fade as they move away
+                glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
+                glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
+            }
+
+            glPointSize(4.0);
+
+            // blending function for runway lights
+            glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ;
         }
-        glPointSize(4.0);
-
-        // blending function for runway lights
-        glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) ;
-#endif
 
         glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
         glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
@@ -826,17 +835,17 @@ void fgRenderFrame() {
         //_frame_count++;
 
 
-#ifdef FG_EXPERIMENTAL_POINT_LIGHTING
-        if ( fgGetBool("/sim/rendering/distance-attenuation")
-             && glutExtensionSupported("GL_EXT_point_parameters") )
-        {
-            glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
-                                  default_attenuation);
-        }
+        if (fgGetBool("/sim/rendering/enhanced-lighting")) {
+            if ( fgGetBool("/sim/rendering/distance-attenuation")
+                 && glutExtensionSupported("GL_EXT_point_parameters") )
+            {
+                glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
+                                      default_attenuation);
+            }
 
-        glPointSize(1.0);
-        glDisable(GL_POINT_SMOOTH);
-#endif
+            glPointSize(1.0);
+            glDisable(GL_POINT_SMOOTH);
+        }
 
         // draw ground lighting
         glFogf (GL_FOG_DENSITY, ground_exp2_punch_through);
@@ -1657,23 +1666,21 @@ static bool fgMainInit( int argc, char **argv ) {
     glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
 #endif
 
-#ifdef FG_EXPERIMENTAL_POINT_LIGHTING
             // get the address of our OpenGL extensions
     if ( fgGetBool("/sim/rendering/distance-attenuation") )
     {
 #ifdef WIN32
         glPointParameterfEXT = (PFNGLPOINTPARAMETERFEXTPROC) 
-            wglGetProcAddress("glPointParameterfEXT");
+            SGLookupFunction("glPointParameterfEXT");
         glPointParameterfvEXT = (PFNGLPOINTPARAMETERFVEXTPROC) 
-            wglGetProcAddress("glPointParameterfvEXT");
+            SGLookupFunction("glPointParameterfvEXT");
 #elif linux
         glPointParameterfEXT = (OpenGLFuncExt) 
-            glXGetProcAddressARB((GLubyte *)"glPointParameterfEXT");
+            SGLookupFunction((GLubyte *)"glPointParameterfEXT");
         glPointParameterfvEXT = (OpenGLFuncExtv) 
-            glXGetProcAddressARB((GLubyte *)"glPointParameterfvEXT");
+            SGLookupFunction((GLubyte *)"glPointParameterfvEXT");
 #endif
    }
-#endif
 
     // based on the requested presets, calculate the true starting
     // lon, lat
