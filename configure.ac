@@ -226,6 +226,7 @@ case "${host}" in
     fi
 
     LIBS="$LIBS -lglu32 -lopengl32 -luser32 -lgdi32"
+    joystick_LIBS="$joystick_LIBS -lwinmm"
 
     dnl add -lwsock32 for mingwin
     case "${host}" in
@@ -294,7 +295,7 @@ case "${host}" in
 
     AC_SEARCH_LIBS(alGenBuffers, openal32)
     AC_SEARCH_LIBS(alutInit, [ openal32 ALut ] )
-    LIBS="$LIBS -lwinmm -ldsound -ldxguid -lole32"
+    LIBS="$LIBS -ldsound -ldxguid -lole32"
     openal_LIBS="$LIBS"
     ;;
 
