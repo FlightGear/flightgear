@@ -153,8 +153,8 @@ public:
       @return the thrust in pounds */
   double Calculate(double PowerAvailable);
   FGColumnVector3 GetPFactor(void);
-  string GetThrusterLabels(int id);
-  string GetThrusterValues(int id);
+  string GetThrusterLabels(int id, string delimeter);
+  string GetThrusterValues(int id, string delimeter);
 
 private:
   int   numBlades;

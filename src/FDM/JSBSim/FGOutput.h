@@ -161,7 +161,7 @@ public:
 private:
   bool sFirstPass, dFirstPass, enabled;
   int SubSystems;
-  string Filename, outputInFileName;
+  string Filename, outputInFileName, delimeter;
   enum {otNone, otCSV, otTab, otSocket, otTerminal, otUnknown} Type;
   ofstream datafile;
   FGfdmSocket* socket;

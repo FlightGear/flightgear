@@ -156,13 +156,15 @@ public:
   inline void SetAlphaCLMin(double tt) { alphaclmin=tt; }
 
   /** Gets the strings for the current set of coefficients.
+      @param delimeter either a tab or comma string depending on output type
       @return a string containing the descriptive names for all coefficients */
-  string GetCoefficientStrings(void);
+  string GetCoefficientStrings(string delimeter);
 
   /** Gets the coefficient values.
+      @param delimeter either a tab or comma string depending on output type
       @return a string containing the numeric values for the current set of
       coefficients */
-  string GetCoefficientValues(void);
+  string GetCoefficientValues(string delimeter);
   
   void bind(void);
   void bindModel(void);

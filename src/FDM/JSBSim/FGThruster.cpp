@@ -72,11 +72,15 @@ FGThruster::FGThruster(FGFDMExec *FDMExec,
 
   EngineNum = num;
   ThrustCoeff = 0.0;
+  ReverserAngle = 0.0;
   PropertyManager = FDMExec->GetPropertyManager();
 
   char property_name[80];
   snprintf(property_name, 80, "propulsion/c-thrust[%u]", EngineNum);
   PropertyManager->Tie( property_name, &ThrustCoeff );
+  snprintf(property_name, 80, "propulsion/engine[%u]/reverser-angle", EngineNum);
+  PropertyManager->Tie( property_name, &ReverserAngle );
+
 
   Debug(0);
 }
@@ -88,13 +92,15 @@ FGThruster::~FGThruster()
   char property_name[80];
   snprintf(property_name, 80, "propulsion/c-thrust[%u]", EngineNum);
   PropertyManager->Untie( property_name );
+  snprintf(property_name, 80, "propulsion/engine[%u]/reverser-angle", EngineNum);
+  PropertyManager->Untie( property_name );
 
   Debug(1);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGThruster::GetThrusterLabels(int id)
+string FGThruster::GetThrusterLabels(int id, string delimeter)
 {
   std::ostringstream buf;
 
@@ -105,7 +111,7 @@ string FGThruster::GetThrusterLabels(int id)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGThruster::GetThrusterValues(int id)
+string FGThruster::GetThrusterValues(int id, string delimeter)
 {
   std::ostringstream buf;
 

@@ -210,12 +210,12 @@ bool FGPropagate::Run(void)
   // Compute body frame accelerations based on the current body forces
   vUVWdot = VState.vUVW*VState.vPQR + vForces/mass;
 
-  // Centrifugal acceleration.
+  // Coriolis acceleration.
   FGColumnVector3 ecVel = Tl2ec*vVel;
   FGColumnVector3 ace = 2.0*omega*ecVel;
   vUVWdot -= Tl2b*(Tec2l*ace);
 
-  // Coriolis acceleration.
+  // Centrifugal acceleration.
   FGColumnVector3 aeec = omega*(omega*VState.vLocation);
   vUVWdot -= Tl2b*(Tec2l*aeec);
 

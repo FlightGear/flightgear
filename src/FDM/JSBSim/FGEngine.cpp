@@ -87,6 +87,7 @@ FGEngine::FGEngine(FGFDMExec* exec, int engine_number) : EngineNumber(engine_num
   TrimMode = false;
   FuelFlow_gph = 0.0;
   FuelFlow_pph = 0.0;
+  FuelFreeze = false;
 
   FDMExec = exec;
   State = FDMExec->GetState();
@@ -99,7 +100,11 @@ FGEngine::FGEngine(FGFDMExec* exec, int engine_number) : EngineNumber(engine_num
   Output = FDMExec->GetOutput();
 
   PropertyManager = FDMExec->GetPropertyManager();
-
+  
+  char property_name[80];
+  snprintf(property_name, 80, "propulsion/engine[%u]/thrust", EngineNumber);
+  PropertyManager->Tie( property_name, &Thrust);
+  
   Debug(0);
 }
 
@@ -107,9 +112,12 @@ FGEngine::FGEngine(FGFDMExec* exec, int engine_number) : EngineNumber(engine_num
 
 FGEngine::~FGEngine()
 {
-  if (Thruster)
-    delete Thruster;
+  if (Thruster) delete Thruster;
 
+  char property_name[80];
+  snprintf(property_name, 80, "propulsion/engine[%u]/thrust", EngineNumber);
+  PropertyManager->Untie( property_name);
+  
   Debug(1);
 }
 
@@ -121,6 +129,8 @@ FGEngine::~FGEngine()
 
 void FGEngine::ConsumeFuel(void)
 {
+  if (FuelFreeze) return;
+  unsigned int i;
   double Fshortage, Oshortage, TanksWithFuel;
   FGTank* Tank;
 
@@ -128,7 +138,7 @@ void FGEngine::ConsumeFuel(void)
   Fshortage = Oshortage = TanksWithFuel = 0.0;
 
   // count how many assigned tanks have fuel
-  for (unsigned int i=0; i<SourceTanks.size(); i++) {
+  for (i=0; i<SourceTanks.size(); i++) {
     Tank = Propulsion->GetTank(SourceTanks[i]);
     if (Tank->GetContents() > 0.0) {
       ++TanksWithFuel;
@@ -136,7 +146,7 @@ void FGEngine::ConsumeFuel(void)
   }
   if (!TanksWithFuel) return;
 
-  for (unsigned int i=0; i<SourceTanks.size(); i++) {
+  for (i=0; i<SourceTanks.size(); i++) {
     Tank = Propulsion->GetTank(SourceTanks[i]);
     if (Tank->GetType() == FGTank::ttFUEL) {
        Fshortage += Tank->Drain(CalcFuelNeed()/TanksWithFuel);

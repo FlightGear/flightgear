@@ -66,7 +66,6 @@ FGNozzle::FGNozzle(FGFDMExec* FDMExec, FGConfigFile* Nzl_cfg, int num) : FGThrus
   }
 
   Thrust = 0;
-  ReverserAngle = 0.0;
   Type = ttNozzle;
   Area2 = (Diameter*Diameter/4.0)*M_PI;
   AreaT = Area2/ExpR;
@@ -95,7 +94,7 @@ double FGNozzle::Calculate(double CfPc)
 {
   double pAtm = fdmex->GetAtmosphere()->GetPressure();
   Thrust = max((double)0.0, (CfPc * AreaT + (PE - pAtm)*Area2) * nzlEff);
-  vFn(1) = Thrust * cos(ReverserAngle);
+  vFn(1) = Thrust;
 
   ThrustCoeff = max((double)0.0, CfPc / ((pAtm - PE) * Area2));
 
@@ -111,7 +110,7 @@ double FGNozzle::GetPowerRequired(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGNozzle::GetThrusterLabels(int id)
+string FGNozzle::GetThrusterLabels(int id, string delimeter)
 {
   std::ostringstream buf;
 
@@ -122,7 +121,7 @@ string FGNozzle::GetThrusterLabels(int id)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGNozzle::GetThrusterValues(int id)
+string FGNozzle::GetThrusterValues(int id, string delimeter)
 {
   std::ostringstream buf;
 

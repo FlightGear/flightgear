@@ -75,11 +75,11 @@ public:
 
   double Calculate(double CfPc);
   double GetPowerRequired(void);
-  string GetThrusterLabels(int id);
-  string GetThrusterValues(int id);
+  string GetThrusterLabels(int id, string delimeter);
+  string GetThrusterValues(int id, string delimeter);
 
 private:
-  double ReverserAngle;
+
   double PE;
   double ExpR;
   double nzlEff;

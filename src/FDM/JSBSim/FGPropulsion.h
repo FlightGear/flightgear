@@ -150,8 +150,8 @@ public:
       be done before calling this (i.e. magnetos, starter engage, etc.) */
   bool ICEngineStart(void);
 
-  string GetPropulsionStrings(void);
-  string GetPropulsionValues(void);
+  string GetPropulsionStrings(string delimeter);
+  string GetPropulsionValues(string delimeter);
 
   inline FGColumnVector3& GetForces(void)  {return vForces; }
   inline double GetForces(int n) const { return vForces(n);}
@@ -172,11 +172,13 @@ public:
   }
 
   inline int GetActiveEngine(void);
+  inline bool GetFuelFreeze(void) {return fuel_freeze;}
 
   void SetMagnetos(int setting);
   void SetStarter(int setting);
   void SetCutoff(int setting=0);
   void SetActiveEngine(int engine);
+  void SetFuelFreeze(bool f);  
   FGMatrix33& CalculateTankInertias(void);
 
   void bind();
@@ -199,6 +201,7 @@ private:
   FGColumnVector3 vXYZtank_arm;
   FGMatrix33 tankJ;
   bool refuel;
+  bool fuel_freeze;
 
   void Debug(int from);
 };

@@ -214,7 +214,7 @@ string FGConfigFile::GetLine(void)
       }
     } else {
       if ((test = cfgfile.get()) != EOF) { // get *next* character
-#if defined ( sgi ) && !defined( __GNUC__ ) && (_COMPILER_VERSION < 740)
+#if defined ( sgi ) && !defined( __GNUC__ ) && (_COMPILER_VERSION < 740) || defined (_MSC_VER)
         if (test >= 0x20 || test == 0x09) cfgfile.putback(test);
 #else
         if (test >= 0x20 || test == 0x09) cfgfile.unget();

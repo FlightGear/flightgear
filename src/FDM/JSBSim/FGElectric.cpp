@@ -91,19 +91,19 @@ double FGElectric::Calculate(void)
 
   PowerAvailable = (HP * hptoftlbssec) - Thruster->GetPowerRequired();
 
-  return Thruster->Calculate(PowerAvailable);
+  return Thrust = Thruster->Calculate(PowerAvailable);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGElectric::GetEngineLabels(void)
+string FGElectric::GetEngineLabels(string delimeter)
 {
   return ""; // currently no labels are returned for this engine
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGElectric::GetEngineValues(void)
+string FGElectric::GetEngineValues(string delimeter)
 {
   return ""; // currently no values are returned for this engine
 }

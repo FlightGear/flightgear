@@ -85,8 +85,8 @@ public:
   double GetForces(int idx) const {return vForces(idx);}
   FGColumnVector3& GetMoments(void) {return vMoments;}
   double GetMoments(int idx) const {return vMoments(idx);}
-  string GetGroundReactionStrings(void);
-  string GetGroundReactionValues(void);
+  string GetGroundReactionStrings(string delimeter);
+  string GetGroundReactionValues(string delimeter);
   
   inline int GetNumGearUnits(void) const { return lGear.size(); }
 

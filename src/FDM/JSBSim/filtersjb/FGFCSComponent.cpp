@@ -89,7 +89,7 @@ FGPropertyManager* FGFCSComponent::resolveSymbol(string token)
   FGPropertyManager* tmp = PropertyManager->GetNode(token,false);
   if (!tmp) {
     if (token.find("/") == token.npos) prop = "model/" + token;
-    cerr << "Creating new property " << prop << endl;
+    //cerr << "Creating new property " << prop << endl;
     tmp = PropertyManager->GetNode(token,true);
   }
   return tmp;  

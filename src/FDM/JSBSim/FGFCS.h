@@ -425,11 +425,16 @@ public:
       @return pointer to the State object */
   inline FGState* GetState(void) { return State; }
 
-  /** Retrieves all component names for inclusion in output stream */
-  string GetComponentStrings(void);
+  /** Retrieves all component names for inclusion in output stream
+      @param delimeter either a tab or comma string depending on output type
+      @return a string containing the descriptive names for all components */
+  string GetComponentStrings(string delimeter);
 
-  /** Retrieves all component outputs for inclusion in output stream */
-  string GetComponentValues(void);
+  /** Retrieves all component outputs for inclusion in output stream
+      @param delimeter either a tab or comma string depending on output type
+      @return a string containing the numeric values for the current set of
+      component outputs */
+  string GetComponentValues(string delimeter);
 
   /// @name Pilot input command setting
   //@{

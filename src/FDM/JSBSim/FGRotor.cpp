@@ -68,14 +68,14 @@ double FGRotor::Calculate(double PowerAvailable)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGRotor::GetThrusterLabels(int id)
+string FGRotor::GetThrusterLabels(int id, string delimeter)
 {
   return "";
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGRotor::GetThrusterValues(int id)
+string FGRotor::GetThrusterValues(int id, string delimeter)
 {
   return "";
 }

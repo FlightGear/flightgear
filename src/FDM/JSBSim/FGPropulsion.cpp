@@ -50,6 +50,7 @@ INCLUDES
 #include "FGPiston.h"
 #include "FGElectric.h"
 #include "FGPropertyManager.h"
+#include <sstream>
 
 namespace JSBSim {
 
@@ -73,6 +74,7 @@ FGPropulsion::FGPropulsion(FGFDMExec* exec) : FGModel(exec)
   ActiveEngine = -1; // -1: ALL, 0: Engine 1, 1: Engine 2 ...
   tankJ.InitMatrix();
   refuel = false;
+  fuel_freeze = false;
 
   bind();
 
@@ -93,6 +95,8 @@ FGPropulsion::~FGPropulsion()
 
 bool FGPropulsion::Run(void)
 {
+  unsigned int i;
+
   if (FGModel::Run()) return true;
 
   double dt = State->Getdt();
@@ -100,18 +104,18 @@ bool FGPropulsion::Run(void)
   vForces.InitMatrix();
   vMoments.InitMatrix();
 
-  for (unsigned int i=0; i<numEngines; i++) {
+  for (i=0; i<numEngines; i++) {
     Engines[i]->Calculate();
     vForces  += Engines[i]->GetBodyForces();  // sum body frame forces
     vMoments += Engines[i]->GetMoments();     // sum body frame moments
   }
 
-  for (unsigned int i=0; i<numTanks; i++) {
+  for (i=0; i<numTanks; i++) {
     Tanks[i]->Calculate( dt * rate );
   }
 
   if (refuel) DoRefuel( dt * rate );
-
+  
   return false;
 }
 
@@ -318,16 +322,23 @@ bool FGPropulsion::Load(FGConfigFile* AC_cfg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPropulsion::GetPropulsionStrings(void)
+string FGPropulsion::GetPropulsionStrings(string delimeter)
 {
+  unsigned int i;
+
   string PropulsionStrings = "";
   bool firstime = true;
+  stringstream buf;
 
-  for (unsigned int i=0;i<Engines.size();i++) {
+  for (i=0; i<Engines.size(); i++) {
     if (firstime)  firstime = false;
-    else           PropulsionStrings += ", ";
+    else           PropulsionStrings += delimeter;
 
-    PropulsionStrings += Engines[i]->GetEngineLabels();
+    PropulsionStrings += Engines[i]->GetEngineLabels(delimeter);
+  }
+  for (i=0; i<Tanks.size(); i++) {
+    if (Tanks[i]->GetType() == FGTank::ttFUEL) buf << delimeter << "Fuel Tank " << i;
+    else if (Tanks[i]->GetType() == FGTank::ttOXIDIZER) buf << delimeter << "Oxidizer Tank " << i;
   }
 
   return PropulsionStrings;
@@ -335,16 +346,23 @@ string FGPropulsion::GetPropulsionStrings(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPropulsion::GetPropulsionValues(void)
+string FGPropulsion::GetPropulsionValues(string delimeter)
 {
+  unsigned int i;
+
   string PropulsionValues = "";
   bool firstime = true;
+  stringstream buf;
 
-  for (unsigned int i=0;i<Engines.size();i++) {
+  for (i=0; i<Engines.size(); i++) {
     if (firstime)  firstime = false;
-    else           PropulsionValues += ", ";
+    else           PropulsionValues += delimeter;
 
-    PropulsionValues += Engines[i]->GetEngineValues();
+    PropulsionValues += Engines[i]->GetEngineValues(delimeter);
+  }
+  for (i=0; i<Tanks.size(); i++) {
+    buf << delimeter;
+    buf << Tanks[i]->GetContents();
   }
 
   return PropulsionValues;
@@ -496,6 +514,16 @@ void FGPropulsion::DoRefuel(double time_slice)
   }
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropulsion::SetFuelFreeze(bool f) 
+{
+  fuel_freeze = f;
+  for (unsigned int i=0; i<numEngines; i++) {
+    Engines[i]->SetFuelFreeze(f);
+  }
+}  
+ 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGPropulsion::bind(void)

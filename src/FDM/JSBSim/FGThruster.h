@@ -80,8 +80,9 @@ public:
   enum eType {ttNozzle, ttRotor, ttPropeller, ttDirect};
 
   virtual double Calculate(double tt) {
-       Thrust = tt; vFn(1) = Thrust;
-       return 0.0;
+       Thrust = tt;
+       vFn(1) = Thrust * cos(ReverserAngle);
+       return vFn(1);
   }
   void SetName(string name) {Name = name;}
   virtual void SetRPM(double rpm) {};
@@ -92,8 +93,11 @@ public:
   string GetName(void) {return Name;}
   virtual double GetRPM(void) { return 0.0; };
   double GetGearRatio(void) {return GearRatio; }
-  virtual string GetThrusterLabels(int id);
-  virtual string GetThrusterValues(int id);
+  virtual string GetThrusterLabels(int id, string delimeter);
+  virtual string GetThrusterValues(int id, string delimeter);
+  void SetReverserAngle(double radians) { ReverserAngle = radians; }
+  double GetReverserAngle(void) {return ReverserAngle;}
+
 
   inline void SetThrustCoefficient(double ct) { ThrustCoeff = ct; }
 
@@ -105,6 +109,7 @@ protected:
   double deltaT;
   double GearRatio;
   double ThrustCoeff;
+  double ReverserAngle;
   int EngineNum;
   FGPropertyManager* PropertyManager;
   virtual void Debug(int from);

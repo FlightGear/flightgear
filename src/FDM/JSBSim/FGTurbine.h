@@ -182,8 +182,8 @@ public:
   void SetReverse(bool reversed) { Reversed = reversed; }
   void SetCutoff(bool cutoff) { Cutoff = cutoff; }
 
-  string GetEngineLabels(void);
-  string GetEngineValues(void);
+  string GetEngineLabels(string delimeter);
+  string GetEngineValues(string delimeter);
 
 private:
 
@@ -233,12 +233,12 @@ private:
   double NozzlePosition;
 
   double Off(void);
-  double Run(double &CT);
+  double Run();
   double SpinUp(void);
   double Start(void);
   double Stall(void);
   double Seize(void);
-  double Trim(double &CT);
+  double Trim();
 
   void SetDefaults(void);
   bool Load(FGConfigFile *ENG_cfg);

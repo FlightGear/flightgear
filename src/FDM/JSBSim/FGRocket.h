@@ -123,8 +123,8 @@ public:
       sustainable setting.
       @return true if engine has flamed out. */
   bool GetFlameout(void) {return Flameout;}
-  string GetEngineLabels(void);
-  string GetEngineValues(void);
+  string GetEngineLabels(string delimeter);
+  string GetEngineValues(string delimeter);
 
 private:
   double SHR;

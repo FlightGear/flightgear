@@ -146,8 +146,8 @@ public:
   /// Destructor
   ~FGPiston();
 
-  string GetEngineLabels(void);
-  string GetEngineValues(void);
+  string GetEngineLabels(string delimeter);
+  string GetEngineValues(string delimeter);
 
   double Calculate(void);
   double GetPowerAvailable(void) {return PowerAvailable;}

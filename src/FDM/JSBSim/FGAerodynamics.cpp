@@ -220,7 +220,7 @@ bool FGAerodynamics::Load(FGConfigFile* AC_cfg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGAerodynamics::GetCoefficientStrings(void)
+string FGAerodynamics::GetCoefficientStrings(string delimeter)
 {
   string CoeffStrings = "";
   bool firstime = true;
@@ -231,7 +231,7 @@ string FGAerodynamics::GetCoefficientStrings(void)
       if (firstime) {
         firstime = false;
       } else {
-        CoeffStrings += ", ";
+        CoeffStrings += delimeter;
       }
       CoeffStrings += Coeff[axis][sd]->GetCoefficientName();
     }
@@ -241,7 +241,7 @@ string FGAerodynamics::GetCoefficientStrings(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGAerodynamics::GetCoefficientValues(void)
+string FGAerodynamics::GetCoefficientValues(string delimeter)
 {
   string SDValues = "";
   bool firstime = true;
@@ -251,7 +251,7 @@ string FGAerodynamics::GetCoefficientValues(void)
       if (firstime) {
         firstime = false;
       } else {
-        SDValues += ", ";
+        SDValues += delimeter;
       }
       SDValues += Coeff[axis][sd]->GetSDstring();
     }

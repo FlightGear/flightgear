@@ -113,28 +113,28 @@ double FGRocket::Calculate(void)
     Flameout = false;
   }
 
-  return Thruster->Calculate(Cf*maxPC*PctPower*propEff);
+  return Thrust = Thruster->Calculate(Cf*maxPC*PctPower*propEff);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGRocket::GetEngineLabels(void)
+string FGRocket::GetEngineLabels(string delimeter)
 {
   std::ostringstream buf;
 
-  buf << Name << "_ChamberPress[" << EngineNumber << "], "
-      << Thruster->GetThrusterLabels(EngineNumber);
+  buf << Name << "_ChamberPress[" << EngineNumber << "]" << delimeter
+      << Thruster->GetThrusterLabels(EngineNumber, delimeter);
 
   return buf.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGRocket::GetEngineValues(void)
+string FGRocket::GetEngineValues(string delimeter)
 {
   std::ostringstream buf;
 
-  buf << PC << ", " << Thruster->GetThrusterValues(EngineNumber);
+  buf << PC << delimeter << Thruster->GetThrusterValues(EngineNumber, delimeter);
 
   return buf.str();
 }

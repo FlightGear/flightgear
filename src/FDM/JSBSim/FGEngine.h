@@ -135,6 +135,7 @@ public:
   virtual void SetRunning(bool bb) { Running=bb; }
   virtual void SetName(string name) { Name = name; }
   virtual void AddFeedTank(int tkID);
+  virtual void SetFuelFreeze(bool f) { FuelFreeze = f; }
 
   virtual void SetStarter(bool s) { Starter = s; }
 
@@ -175,8 +176,8 @@ public:
   bool LoadThruster(FGConfigFile* AC_cfg);
   FGThruster* GetThruster(void) {return Thruster;}
 
-  virtual string GetEngineLabels(void) = 0;
-  virtual string GetEngineValues(void) = 0;
+  virtual string GetEngineLabels(string delimeter) = 0;
+  virtual string GetEngineValues(string delimeter) = 0;
 
 protected:
   FGPropertyManager* PropertyManager;
@@ -202,6 +203,7 @@ protected:
   bool  Running;
   bool  Cranking;
   bool  TrimMode;
+  bool  FuelFreeze;
 
   double FuelFlow_gph;
   double FuelFlow_pph;

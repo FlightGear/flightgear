@@ -93,7 +93,7 @@ FGPiston::FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg, int engine_number)
   bTakeoffBoost = false;
   TakeoffBoost = 0.0;   // Default to no extra takeoff-boost
   int i;
-  for(i=0; i<FG_MAX_BOOST_SPEEDS; ++i) {
+  for (i=0; i<FG_MAX_BOOST_SPEEDS; i++) {
     RatedBoost[i] = 0.0;
     RatedPower[i] = 0.0;
     RatedAltitude[i] = 0.0;
@@ -101,6 +101,10 @@ FGPiston::FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg, int engine_number)
     RatedMAP[i] = 100000;
     RatedRPM[i] = 2500;
     TakeoffMAP[i] = 100000;
+  }
+  for (i=0; i<FG_MAX_BOOST_SPEEDS-1; i++) {
+    BoostSwitchAltitude[i] = 0.0;
+    BoostSwitchPressure[i] = 0.0;
   }
 
   // Initialisation
@@ -277,7 +281,7 @@ double FGPiston::Calculate(void)
 
   PowerAvailable = (HP * hptoftlbssec) - Thruster->GetPowerRequired();
 
-  return Thruster->Calculate(PowerAvailable);
+  return Thrust = Thruster->Calculate(PowerAvailable);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -698,23 +702,25 @@ void FGPiston::doOilPressure(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPiston::GetEngineLabels(void)
+string FGPiston::GetEngineLabels(string delimeter)
 {
   std::ostringstream buf;
 
-  buf << Name << "_PwrAvail[" << EngineNumber << "], "
-      << Thruster->GetThrusterLabels(EngineNumber);
+  buf << Name << "_PwrAvail[" << EngineNumber << "]" << delimeter
+      << Name << "_HP[" << EngineNumber << "]" << delimeter
+      << Thruster->GetThrusterLabels(EngineNumber, delimeter);
 
   return buf.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPiston::GetEngineValues(void)
+string FGPiston::GetEngineValues(string delimeter)
 {
   std::ostringstream buf;
 
-  buf << PowerAvailable << ", " << Thruster->GetThrusterValues(EngineNumber);
+  buf << PowerAvailable << delimeter << HP << delimeter
+      << Thruster->GetThrusterValues(EngineNumber, delimeter);
 
   return buf.str();
 }
