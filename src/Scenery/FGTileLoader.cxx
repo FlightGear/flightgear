@@ -119,6 +119,7 @@ FGTileLoader::remove( FGTileEntry* tile )
 void
 FGTileLoader::update()
 {
+
 #ifdef ENABLE_THREADS
     // send a signal to the pager thread that it is allowed to load
     // another tile
@@ -131,7 +132,9 @@ FGTileLoader::update()
         // load the next tile in the queue
         FGTileEntry* tile = tile_load_queue.front();
         tile_load_queue.pop();
+
         tile->load( tile_path, true );
+
         FGTileMgr::ready_to_attach( tile );
     }
 
@@ -147,6 +150,7 @@ FGTileLoader::update()
 #endif
 
 #endif // ENABLE_THREADS
+
 }
 
 

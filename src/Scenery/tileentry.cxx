@@ -1042,6 +1042,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 
 		SGPath custom_path = tile_path;
 		custom_path.append( name );
+
 		ssgBranch *custom_obj
 		    = obj_load( custom_path.str(), NULL, false );
 		if ( custom_obj != NULL ) {

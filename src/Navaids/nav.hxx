@@ -107,7 +107,7 @@ operator >> ( istream& in, FGNav& n )
     static double julian_date = 0;
     static const double MJD0    = 2415020.0;
     if ( first_time ) {
-	julian_date = sgTimeCurrentMJD() + MJD0;
+	julian_date = sgTimeCurrentMJD(0,0) + MJD0;
 	first_time = false;
     }
 

@@ -590,14 +590,17 @@ SGTime *fgInitTime() {
 	= fgGetNode("/position/longitude-deg");
     static const SGPropertyNode *latitude
 	= fgGetNode("/position/latitude-deg");
-	
+    static const SGPropertyNode *cur_time_override
+	= fgGetNode("/sim/time/cur-time-override", true);
+
     SGPath zone( globals->get_fg_root() );
     zone.append( "Timezone" );
     SGTime *t = new SGTime( longitude->getDoubleValue()
                               * SGD_DEGREES_TO_RADIANS,
                             latitude->getDoubleValue()
                               * SGD_DEGREES_TO_RADIANS,
-                            zone.str() );
+                            zone.str(),
+                            cur_time_override->getLongValue() );
 
     // Handle potential user specified time offsets
     time_t cur_time = t->get_cur_time();
@@ -633,7 +636,9 @@ SGTime *fgInitTime() {
 
     globals->set_warp_delta( 0 );
 
-    t->update( 0.0, 0.0, globals->get_warp() );
+    t->update( 0.0, 0.0,
+               cur_time_override->getLongValue(),
+               globals->get_warp() );
 
     return t;
 }

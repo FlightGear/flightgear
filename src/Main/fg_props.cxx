@@ -476,6 +476,9 @@ getDateString ()
 static void
 setDateString (string date_string)
 {
+  static const SGPropertyNode *cur_time_override
+	= fgGetNode("/sim/time/cur-time-override", true);
+
   SGTime * st = globals->get_time_params();
   struct tm * current_time = st->getGmt();
   struct tm new_time;
@@ -510,7 +513,7 @@ setDateString (string date_string)
   double lon = current_aircraft.fdm_state->get_Longitude();
   double lat = current_aircraft.fdm_state->get_Latitude();
   globals->set_warp(warp);
-  st->update(lon, lat, warp);
+  st->update(lon, lat, cur_time_override->getLongValue(), warp);
   fgUpdateSkyAndLightingParams();
 }
 
@@ -522,9 +525,10 @@ getGMTString ()
 {
   string out;
   char buf[16];
-  struct tm * t = globals->get_time_params()->getGmt();
+  struct tm *t = globals->get_time_params()->getGmt();
   sprintf(buf, " %.2d:%.2d:%.2d",
 	  t->tm_hour, t->tm_min, t->tm_sec);
+  // cout << t << " " << buf << endl;
   out = buf;
   return out;
 }

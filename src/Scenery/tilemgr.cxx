@@ -332,6 +332,7 @@ int FGTileMgr::update( double lon, double lat ) {
     // activate loader thread one out of every 5 frames
     if ( counter_hack == 0 ) {
         // Notify the tile loader that it can load another tile
+
         loader.update();
 
     }
