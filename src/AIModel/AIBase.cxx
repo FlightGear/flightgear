@@ -47,6 +47,7 @@ FGAIBase *FGAIBase::_self = NULL;
 FGAIBase::FGAIBase() {
     _self = this;
     _type_str = "model";
+    tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
 }
 
 FGAIBase::~FGAIBase() {
@@ -84,7 +85,6 @@ bool FGAIBase::init() {
      SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load aircraft model.");
    } 
 
-   tgt_roll = tgt_pitch = tgt_yaw = tgt_vs = vs = roll = pitch = 0.0;
    setDie(false);
 
    return true;

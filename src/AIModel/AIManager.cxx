@@ -71,6 +71,7 @@ void FGAIManager::init() {
         ai_plane->setAltitude(entry->getDoubleValue("altitude-ft"));
         ai_plane->setLongitude(entry->getDoubleValue("longitude"));
         ai_plane->setLatitude(entry->getDoubleValue("latitude"));
+        ai_plane->setBank(entry->getDoubleValue("bank"));
         ai_plane->init();
         ai_plane->bind();
 
@@ -83,6 +84,7 @@ void FGAIManager::init() {
         ai_ship->setAltitude(entry->getDoubleValue("altitude-ft"));
         ai_ship->setLongitude(entry->getDoubleValue("longitude"));
         ai_ship->setLatitude(entry->getDoubleValue("latitude"));
+        ai_ship->setBank(entry->getDoubleValue("rudder"));
         ai_ship->init();
         ai_ship->bind();
 

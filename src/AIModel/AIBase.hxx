@@ -49,6 +49,7 @@ public:
     void setHeading( double heading );
     void setLatitude( double latitude );
     void setLongitude( double longitude );
+    void setBank( double bank );
 
     void setDie( bool die );
     bool getDie();
@@ -118,6 +119,10 @@ inline void FGAIBase::setAltitude( double altitude_ft ) {
     pos.setelev(altitude * SG_FEET_TO_METER);
 }
 
+inline void FGAIBase::setBank( double bank ) {
+  roll = tgt_roll = bank;
+}
+
 inline void FGAIBase::setLongitude( double longitude ) {
     pos.setlon( longitude );
 }
@@ -142,7 +147,7 @@ inline double FGAIBase::_getVS_fps() { return _self->vs*60.0; }
 inline void FGAIBase::_setVS_fps( double _vs ) { _self->vs = _vs/60.0; }
 
 inline double FGAIBase::_getAltitude() {
-    return _self->altitude * SG_METER_TO_FEET;
+    return _self->altitude;
 }
 inline void FGAIBase::_setAltitude( double _alt ) {
     _self->setAltitude( _alt );
