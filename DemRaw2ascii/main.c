@@ -32,7 +32,7 @@
 int main(int argc, char **argv) {
     fgRAWDEM raw;
     char basename[256], output_dir[256], hdr_file[256], dem_file[256];
-    int i;
+    int i, start_lat, end_lat;
 
     if ( argc != 3 ) {
 	printf("Usage: %s <input_file_basename> <output_dir>\n", argv[0]);
@@ -62,7 +62,11 @@ int main(int argc, char **argv) {
     /* open up the raw data file */
     rawOpenDemFile(&raw, dem_file);
 
-    for ( i = 41; i <= 90; i++ ) {
+    end_lat = raw.rooty / 3600;
+    start_lat = end_lat - ((raw.nrows * raw.ydim) / 3600);
+    printf("Latitude ranges from %d to %d\n", start_lat, end_lat);
+
+    for ( i = start_lat + 1; i <= end_lat; i++ ) {
 	rawProcessStrip(&raw, i, output_dir);
     }
 
@@ -74,9 +78,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.2  1998/03/03 13:10:28  curt
-/* Close to a working version.
+/* Revision 1.3  1998/03/03 21:54:50  curt
+/* Changes to process 30 arcsec binary DEM files.
 /*
+ * Revision 1.2  1998/03/03 13:10:28  curt
+ * Close to a working version.
+ *
  * Revision 1.1  1998/03/02 23:31:01  curt
  * Initial revision.
  *

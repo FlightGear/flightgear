@@ -62,15 +62,15 @@ source-tar: clean
 	(cd ..; \
 	tar cvzf demtools-$(FG_VERSION).tar.gz Tools/Makefile Tools/README \
 	Tools/Todo Tools/make.inc Tools/process-dem.pl Tools/AssemTris \
-        Tools/Dem2node Tools/FixNode Tools/FixObj Tools/SplitTris \
-	Tools/Stripe_u Tools/Tri2obj Tools/Triangle)
+        Tools/Dem2node Tools/DemRaw2Ascii Tools/FixNode Tools/FixObj \
+	Tools/SplitTris Tools/Stripe_u Tools/Tri2obj Tools/Triangle)
 
 source-zip: clean
 	(cd ..; \
 	zip -r demtools-$(FG_VERSION).zip Tools/Makefile Tools/README \
 	Tools/Todo Tools/make.inc Tools/process-dem.pl Tools/AssemTris \
-        Tools/Dem2node Tools/FixNode Tools/FixObj Tools/SplitTris \
-	Tools/Stripe_u Tools/Tri2obj Tools/Triangle)
+        Tools/Dem2node Tools/DemRaw2Ascii Tools/FixNode Tools/FixObj \
+	Tools/SplitTris Tools/Stripe_u Tools/Tri2obj Tools/Triangle)
 
 bin-tar: all
 	echo "need to fix this"
@@ -90,6 +90,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.11  1998/03/03 21:54:43  curt
+# Changes to process 30 arcsec binary DEM files.
+#
 # Revision 1.10  1998/03/03 15:36:11  curt
 # Tweaks for compiling with g++
 #
