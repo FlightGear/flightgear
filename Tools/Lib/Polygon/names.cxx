@@ -38,9 +38,6 @@ AreaType get_area_type( string area ) {
     } else if ( (area == "Swamp or Marsh")
 		|| (area == "Marsh") ) {
 	return MarshArea;
-    } else if ( (area == "Bay  Estuary or Ocean")
-                || (area == "Ocean") ) {
-	return OceanArea;
     } else if ( area == "Lake" ) {
 	return LakeArea;
     } else if ( (area == "Lake   Dry")
@@ -60,8 +57,13 @@ AreaType get_area_type( string area ) {
 	return CanalArea;
     } else if ( area == "Glacier" ) {
 	return GlacierArea;
+    } else if ( area == "Urban" ) {
+	return UrbanArea;
     } else if ( area == "Default" ) {
 	return DefaultArea;
+    } else if ( (area == "Bay  Estuary or Ocean")
+                || (area == "Ocean") ) {
+	return OceanArea;
     } else if ( area == "Void Area" ) {
 	return VoidArea;
     } else if ( area == "Null" ) {
@@ -87,8 +89,6 @@ string get_area_name( AreaType area ) {
 	return "AirportIgnore";
     } else if ( area == MarshArea ) {
 	return "Marsh";
-    } else if ( area == OceanArea ) {
-	return "Ocean";
     } else if ( area == LakeArea ) {
 	return "Lake";
     } else if ( area == DryLakeArea ) {
@@ -105,6 +105,10 @@ string get_area_name( AreaType area ) {
 	return "Canal";
     } else if ( area == GlacierArea ) {
 	return "Glacier";
+    } else if ( area == UrbanArea ) {
+	return "Urban";
+    } else if ( area == OceanArea ) {
+	return "Ocean";
     } else if ( area == VoidArea ) {
 	return "VoidArea";
     } else if ( area == NullArea ) {

@@ -47,9 +47,10 @@ enum AreaType {
     StreamArea        = 8,
     CanalArea         = 9,
     GlacierArea       = 10,
-    MarshArea         = 11,
-    DefaultArea       = 12,
-    OceanArea         = 13,
+    UrbanArea         = 11,
+    MarshArea         = 12,
+    DefaultArea       = 13,
+    OceanArea         = 14,
     VoidArea          = 9997,
     NullArea          = 9998,
     UnknownArea       = 9999
