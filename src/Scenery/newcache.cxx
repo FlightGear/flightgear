@@ -173,6 +173,10 @@ bool FGNewCache::make_space() {
 	    return false;
 	}
     }
+
+    SG_LOG( SG_TERRAIN, SG_ALERT, "WHOOPS!!! Hit an unhandled condition in  "
+            "FGNewCache::make_space()." );
+    return false;
 }
 
 

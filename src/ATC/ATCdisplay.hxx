@@ -32,7 +32,6 @@
 
 SG_USING_STD(vector);
 SG_USING_STD(string);
-SG_USING_NAMESPACE(std);
 
 struct atcMessage {
     string msg;
@@ -42,7 +41,7 @@ struct atcMessage {
 
 // ASSUMPTION - with two radios the list won't be long so we don't need to map the id's
 typedef vector<atcMessage> atcMessageList;
-typedef vector<atcMessage>::iterator atcMessageListIterator;
+typedef atcMessageList::iterator atcMessageListIterator;
 
 class FGATCDisplay {
 
