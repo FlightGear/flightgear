@@ -36,6 +36,9 @@
 
 $Header$
 $Log$
+Revision 1.4  1998/08/06 12:46:40  curt
+Header change.
+
 Revision 1.3  1998/02/03 23:20:18  curt
 Lots of little tweaks to fix various consistency problems discovered by
 Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper

@@ -35,6 +35,9 @@
 
 $Header$
 $Log$
+Revision 1.4  1998/08/06 12:46:39  curt
+Header change.
+
 Revision 1.3  1998/01/22 02:59:32  curt
 Changed #ifdef FILE_H to #ifdef _FILE_H
 

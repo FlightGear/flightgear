@@ -37,6 +37,9 @@
 	CURRENT RCS HEADER INFO:
 $Header$
 $Log$
+Revision 1.3  1998/08/06 12:46:39  curt
+Header change.
+
 Revision 1.2  1998/01/19 18:40:27  curt
 Tons of little changes to clean up the code and to remove fatal errors
 when building with the c++ compiler.
