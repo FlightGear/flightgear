@@ -151,6 +151,10 @@ fi
 
 dnl add correct audio libs and configure for audio support
 audio_LIBS="-lplibsl -lplibsm"
+
+dnl search for FreeBSD library
+AC_SEARCH_LIBS(hid_init, usbhid)
+
 case "${host}" in
 *-*-cygwin* | *-*-mingw32*)
     audio_LIBS="$audio_LIBS -lwinmm"
@@ -186,23 +190,12 @@ esac
 dnl Checks for libraries.
 
 dnl Thread related checks
-AC_CHECK_LIB(pthread, pthread_exit)
-if test "x$ac_cv_lib_pthread_pthread_exit" != "xyes" \
-   -a "x$ac_cv_header_pthread_h" = "xyes"; then
-    dnl FreeBSD: System has pthread.h, but -lpthread library check
-    dnl fails.  See if we need -pthread instead of -lpthread and look
-    dnl for the functions in libc_r.
-    save_CXXFLAGS="$CXXFLAGS"
-    save_CFLAGS="$CFLAGS"
+AC_SEARCH_LIBS(pthread_cancel, [pthread c_r])
+if test "x$ac_cv_header_pthread_h" = "xyes"; then
+  if test "x$ac_cv_search_pthread_exit" = "x-lc_r"; then
     CXXFLAGS="-pthread $CXXFLAGS"
-    CFLAGS="-pthread $CFLAGS"
-    save_LIBS=$LIBS
-    AC_CHECK_LIB(c_r, pthread_exit)
-    if test "x$ac_cv_lib_c_r_pthread_exit" != "xyes"; then
-        CXXFLAGS=$save_CXXFLAGS
-        CFLAGS=$save_CFLAGS
-    fi
-    LIBS=$save_LIBS
+    CFLAGS="-pthread $FLAGS"
+  fi
 fi
 
 thread_LIBS="$LIBS"
@@ -219,9 +212,6 @@ LIBS=""
 dnl check for some default libraries
 AC_SEARCH_LIBS(cos, m)
 AC_SEARCH_LIBS(dlclose, dl)
-
-dnl search for FreeBSD library
-AC_SEARCH_LIBS(hid_init, usbhid)
 
 base_LIBS="$LIBS"
 
@@ -310,6 +300,9 @@ esac
 opengl_LIBS="$LIBS"
 LIBS="$base_LIBS"
 
+dnl search for FreeBSD library
+AC_SEARCH_LIBS(hid_init, usbhid)
+
 dnl check for OpenAL libraries
 case "${host}" in
 *-*-cygwin* | *-*-mingw32*)
@@ -318,23 +311,29 @@ case "${host}" in
     AC_SEARCH_LIBS(alGenBuffers, openal32)
     AC_SEARCH_LIBS(alutInit, [ openal32 ALut ] )
     LIBS="$LIBS -lwinmm -ldsound -ldxguid -lole32"
+    openal_LIBS="$LIBS"
     ;;
 
 *-apple-darwin*)
     dnl Mac OS X
 
     LIBS="$LIBS -framework IOKit -framework OpenAL"
+    openal_LIBS="$LIBS"
     ;;
 
 *)
     dnl default unix style machines
 
+    save_LIBS=$LIBS
+    LIBS="$LIBS $thread_LIBS"
     AC_SEARCH_LIBS(alGenBuffers, openal)
+    OPENAL_OK="$ac_cv_search_alGenBuffers"
+    openal_LIBS="$LIBS"
+    LIBS=$save_LIBS
     ;;
 
 esac
 
-openal_LIBS="$LIBS"
 LIBS="$base_LIBS"
 
 AC_SUBST(base_LIBS)
