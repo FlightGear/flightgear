@@ -175,7 +175,7 @@ bool FGNewCache::make_space() {
 // nothing available to be removed.
 long FGNewCache::get_oldest_tile() {
     // we need to free the furthest entry
-    long max_index = -1;
+    long min_index = -1;
     double timestamp = 0.0;
     double min_time = 2419200000.0f; // one month should be enough
     double max_time = 0;
@@ -190,7 +190,7 @@ long FGNewCache::get_oldest_tile() {
             
             timestamp = e->get_timestamp();
             if ( timestamp < min_time ) {
-                max_index = index;
+                min_index = index;
                 min_time = timestamp;
             }
             if ( timestamp > max_time ) {
@@ -205,10 +205,10 @@ long FGNewCache::get_oldest_tile() {
     }
 
     SG_LOG( SG_TERRAIN, SG_INFO, "    min_time = " << min_time );
-    SG_LOG( SG_TERRAIN, SG_INFO, "    index = " << max_index );
+    SG_LOG( SG_TERRAIN, SG_INFO, "    index = " << min_index );
     SG_LOG( SG_TERRAIN, SG_INFO, "    max_time = " << max_time );
 
-    return max_index;
+    return min_index;
 }
 
 
@@ -259,6 +259,7 @@ bool FGNewCache::insert_tile( FGTileEntry *e ) {
         return false;
     }
 }
+
 
 // Note this is the old version of FGNewCache::make_space(), currently disabled
 // It uses distance from a center point to determine tiles to be discarded...

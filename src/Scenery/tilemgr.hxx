@@ -105,7 +105,6 @@ private:
     /**
      * tile cache
      */
-    int max_cache_size;
     FGNewCache tile_cache;
 
     /**

@@ -70,7 +70,6 @@ FGTileMgr::FGTileMgr():
     state( Start ),
     current_tile( NULL ),
     vis( 16000 ),
-    max_cache_size(100),
     counter_hack(0)
 {
 }
@@ -131,7 +130,7 @@ void FGTileMgr::sched_tile( const SGBucket& b ) {
 
     if ( t == NULL ) {
         // make space in the cache
-        while ( (int)tile_cache.get_size() > max_cache_size ) {
+        while ( (int)tile_cache.get_size() > tile_cache.get_max_cache_size() ) {
             long index = tile_cache.get_oldest_tile();
             if ( index >= 0 ) {
                 FGTileEntry *old = tile_cache.get_tile( index );
@@ -173,10 +172,10 @@ void FGTileMgr::schedule_needed( double vis, SGBucket curr_bucket) {
         exit(-1);        
     }
 
-   SG_LOG( SG_TERRAIN, SG_INFO,
-           "scheduling needed tiles for " << longitude << " " << latitude );
+    SG_LOG( SG_TERRAIN, SG_INFO,
+            "scheduling needed tiles for " << longitude << " " << latitude );
 
-//   vis = fgGetDouble("/environment/visibility-m");
+    // vis = fgGetDouble("/environment/visibility-m");
 
     double tile_width = curr_bucket.get_width_m();
     double tile_height = curr_bucket.get_height_m();
@@ -185,12 +184,17 @@ void FGTileMgr::schedule_needed( double vis, SGBucket curr_bucket) {
 
     xrange = (int)(vis / tile_width) + 1;
     yrange = (int)(vis / tile_height) + 1;
-    if ( xrange < 1 ) { xrange = 1; }
+    if ( xrange < 1 ) { xrange /= 1; }
     if ( yrange < 1 ) { yrange = 1; }
-    // cout << "xrange = " << xrange << "  yrange = " << yrange << endl;
 
     // note * 2 at end doubles cache size (for fdm and viewer)
-    max_cache_size = (2*xrange + 2) * (2*yrange + 2) * 2;
+    tile_cache.set_max_cache_size( (2*xrange + 2) * (2*yrange + 2) * 2 );
+
+    /*
+    cout << "xrange = " << xrange << "  yrange = " << yrange << endl;
+    cout << "max cache size = " << tile_cache.get_max_cache_size()
+         << " current cache size = " << tile_cache.get_size() << endl;
+    */
 
     SGBucket b;
 
