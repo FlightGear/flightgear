@@ -71,7 +71,7 @@ void fgLIGHT::Init( void ) {
     path[0] = '\0';
     strcat(path, o->fg_root);
     strcat(path, "/Scenery/");
-    strcat(path, "Ambient.table");
+    strcat(path, "Ambient");
     // initialize ambient table
     ambient_tbl = new fgINTERPTABLE(path);
 
@@ -79,7 +79,7 @@ void fgLIGHT::Init( void ) {
     path[0] = '\0';
     strcat(path, o->fg_root);
     strcat(path, "/Scenery/");
-    strcat(path, "Diffuse.table");
+    strcat(path, "Diffuse");
     // initialize diffuse table
     diffuse_tbl = new fgINTERPTABLE(path);
     
@@ -87,7 +87,7 @@ void fgLIGHT::Init( void ) {
     path[0] = '\0';
     strcat(path, o->fg_root);
     strcat(path, "/Scenery/");
-    strcat(path, "Sky.table");
+    strcat(path, "Sky");
     // initialize sky table
     sky_tbl = new fgINTERPTABLE(path);
 }
@@ -167,6 +167,9 @@ void fgLightUpdate ( void ) {
 
 
 // $Log$
+// Revision 1.9  1998/05/29 20:37:51  curt
+// Renamed <Table>.table to be <Table> so we can add a .gz under DOS.
+//
 // Revision 1.8  1998/05/20 20:54:16  curt
 // Converted fgLIGHT to a C++ class.
 //
