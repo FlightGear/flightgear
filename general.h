@@ -26,8 +26,8 @@
  **************************************************************************/
 
 
-#ifndef GENERAL_H
-#define GENERAL_H
+#ifndef _GENERAL_H
+#define _GENERAL_H
 
 
 /* the general house keeping structure definition */
@@ -39,13 +39,16 @@ struct fgGENERAL {
 /* general contains all the general house keeping parameters. */
 extern struct fgGENERAL general;
 
-#endif /* GENERAL_H */
+#endif /* _GENERAL_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/12/15 21:02:16  curt
-/* Moved to .../FlightGear/Src/Include/
+/* Revision 1.2  1998/01/22 02:59:35  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.1  1997/12/15 21:02:16  curt
+ * Moved to .../FlightGear/Src/Include/
+ *
  * Revision 1.3  1997/12/10 22:37:34  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

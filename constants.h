@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#ifndef _CONSTANTS_H
+#define _CONSTANTS_H
 
 
 #include <math.h>
@@ -118,13 +118,16 @@
 #define DEFAULT_MODEL_HZ (DEFAULT_TIMER_HZ * DEFAULT_MULTILOOP)
 
 
-#endif /* CONSTANTS_H */
+#endif /* _CONSTANTS_H */
 
 
 /* $Log$
-/* Revision 1.2  1998/01/07 03:31:26  curt
-/* Miscellaneous tweaks.
+/* Revision 1.3  1998/01/22 02:59:35  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.2  1998/01/07 03:31:26  curt
+ * Miscellaneous tweaks.
+ *
  * Revision 1.1  1997/12/15 21:02:15  curt
  * Moved to .../FlightGear/Src/Include/
  *

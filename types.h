@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef _TYPES_H
+#define _TYPES_H
 
 
 /* A simple cartesian point */
@@ -40,13 +40,16 @@ struct fgGeodeticPoint {
 };
 
 
-#endif /* TYPES_H */
+#endif /* _TYPES_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/12/15 21:02:17  curt
-/* Moved to .../FlightGear/Src/Include/
+/* Revision 1.2  1998/01/22 02:59:36  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.1  1997/12/15 21:02:17  curt
+ * Moved to .../FlightGear/Src/Include/
+ *
  * Revision 1.2  1997/07/23 21:52:12  curt
  * Put comments around the text after an #endif for increased portability.
  *

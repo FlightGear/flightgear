@@ -24,21 +24,24 @@
  **************************************************************************/
 
 
-#ifndef LIMITS_H
-#define LIMITS_H
+#ifndef _LIMITS_H
+#define _LIMITS_H
 
 
 /* Maximum number of engines for a single aircraft */
 #define FG_MAX_ENGINES 10
 
 
-#endif /* LIMITS_H */
+#endif /* _LIMITS_H */
 
 
 /* $Log$
-/* Revision 1.1  1997/12/15 21:02:16  curt
-/* Moved to .../FlightGear/Src/Include/
+/* Revision 1.2  1998/01/22 02:59:35  curt
+/* Changed #ifdef FILE_H to #ifdef _FILE_H
 /*
+ * Revision 1.1  1997/12/15 21:02:16  curt
+ * Moved to .../FlightGear/Src/Include/
+ *
  * Revision 1.4  1997/07/23 21:52:11  curt
  * Put comments around the text after an #endif for increased portability.
  *
