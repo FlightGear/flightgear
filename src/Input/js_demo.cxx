@@ -28,9 +28,7 @@ int main ( int, char ** )
   { useful[i] = ! ( js[i]->notWorking () );
     if ( useful[i] ) {
          t++;
-#ifdef FG_PLIB_JOYSTICK_GETNAME
          printf ( "Joystick %i: \"%s\"\n", i, js[i]->getName() ) ;
-#endif
     } else printf ( "Joystick %i not detected\n", i ) ;
   }
   if ( t == 0 ) exit ( 1 ) ;
