@@ -66,8 +66,8 @@ typedef enum { tLongitudinal, tFull, tGround, tPullup,
                tCustom, tNone, tTurn 
              } TrimMode;
 
-#ifdef _WIN32
-#define snprintf _snprintf
+#if defined(_WIN32) && !defined(__CYGWIN__)
+  #define snprintf _snprintf
 #endif
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
