@@ -25,7 +25,7 @@
 #  include <config.h>
 #endif
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(__CYGWIN__)
 #  include <windows.h>
 #else
 #  include <netinet/in.h>	// htonl() ntohl()
