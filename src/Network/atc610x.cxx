@@ -977,7 +977,7 @@ bool FGATC610x::do_radio_display() {
 	if ( minutes > 999 ) {
 	    minutes = 999.0;
 	}
-	sprintf(digits, "%03.0f", minutes);
+	snprintf(digits, 7, "%03.0f", minutes);
 	for ( i = 0; i < 6; ++i ) {
 	    digits[i] -= '0';
 	}
@@ -989,7 +989,7 @@ bool FGATC610x::do_radio_display() {
 	if ( knots > 999 ) {
 	    knots = 999.0;
 	}
-	sprintf(digits, "%03.0f", knots);
+	snprintf(digits, 7, "%03.0f", knots);
 	for ( i = 0; i < 6; ++i ) {
 	    digits[i] -= '0';
 	}
@@ -1001,7 +1001,7 @@ bool FGATC610x::do_radio_display() {
 	if ( nm > 99 ) {
 	    nm = 99.0;
 	}
-	sprintf(digits, "%04.1f", nm);
+	snprintf(digits, 7, "%04.1f", nm);
 	for ( i = 0; i < 6; ++i ) {
 	    digits[i] -= '0';
 	}
@@ -1021,7 +1021,7 @@ bool FGATC610x::do_radio_display() {
     if ( fabs(com1_stby) > 999.99 ) {
 	com1_stby = 0.0;
     }
-    sprintf(digits, "%06.3f", com1_stby);
+    snprintf(digits, 7, "%06.3f", com1_stby);
     for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
@@ -1034,7 +1034,7 @@ bool FGATC610x::do_radio_display() {
     if ( fabs(com1) > 999.99 ) {
 	com1 = 0.0;
     }
-    sprintf(digits, "%06.3f", com1);
+    snprintf(digits, 7, "%06.3f", com1);
     for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
@@ -1049,7 +1049,7 @@ bool FGATC610x::do_radio_display() {
     if ( fabs(com2_stby) > 999.99 ) {
 	com2_stby = 0.0;
     }
-    sprintf(digits, "%06.3f", com2_stby);
+    snprintf(digits, 7, "%06.3f", com2_stby);
     for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
@@ -1062,7 +1062,7 @@ bool FGATC610x::do_radio_display() {
     if ( fabs(com2) > 999.99 ) {
 	com2 = 0.0;
     }
-    sprintf(digits, "%06.3f", com2);
+    snprintf(digits, 7, "%06.3f", com2);
     for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
@@ -1077,7 +1077,7 @@ bool FGATC610x::do_radio_display() {
     if ( fabs(nav1_stby) > 999.99 ) {
 	nav1_stby = 0.0;
     }
-    sprintf(digits, "%06.2f", nav1_stby);
+    snprintf(digits, 7, "%06.2f", nav1_stby);
     for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
@@ -1090,7 +1090,7 @@ bool FGATC610x::do_radio_display() {
     if ( fabs(nav1) > 999.99 ) {
 	nav1 = 0.0;
     }
-    sprintf(digits, "%06.2f", nav1);
+    snprintf(digits, 7, "%06.2f", nav1);
     for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
@@ -1105,7 +1105,7 @@ bool FGATC610x::do_radio_display() {
     if ( fabs(nav2_stby) > 999.99 ) {
 	nav2_stby = 0.0;
     }
-    sprintf(digits, "%06.2f", nav2_stby);
+    snprintf(digits, 7, "%06.2f", nav2_stby);
     for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
@@ -1118,7 +1118,7 @@ bool FGATC610x::do_radio_display() {
     if ( fabs(nav2) > 999.99 ) {
 	nav2 = 0.0;
     }
-    sprintf(digits, "%06.2f", nav2);
+    snprintf(digits, 7, "%06.2f", nav2);
     for ( i = 0; i < 6; ++i ) {
 	digits[i] -= '0';
     }
@@ -1136,7 +1136,7 @@ bool FGATC610x::do_radio_display() {
             if ( fabs(adf_stby) > 1799 ) {
                 adf_stby = 1799;
             }
-            sprintf(digits, "%04.0f", adf_stby);
+            snprintf(digits, 7, "%04.0f", adf_stby);
             for ( i = 0; i < 6; ++i ) {
                 digits[i] -= '0';
             }
@@ -1177,7 +1177,7 @@ bool FGATC610x::do_radio_display() {
                 big = 99;
             }
             // cout << big << ":" << little << endl;
-            sprintf(digits, "%02d%02d", big, little);
+            snprintf(digits, 7, "%02d%02d", big, little);
             for ( i = 0; i < 6; ++i ) {
                 digits[i] -= '0';
             }
@@ -1191,7 +1191,7 @@ bool FGATC610x::do_radio_display() {
         if ( fabs(adf) > 1799 ) {
             adf = 1799;
         }
-        sprintf(digits, "%04.0f", adf);
+        snprintf(digits, 7, "%04.0f", adf);
         for ( i = 0; i < 6; ++i ) {
             digits[i] -= '0';
         }
@@ -1234,7 +1234,7 @@ bool FGATC610x::do_radio_display() {
              xpdr_func_knob->getIntValue() == 5 )
         {
             // do flight level display
-            sprintf(digits, "%03d", xpdr_flight_level->getIntValue() );
+            snprintf(digits, 7, "%03d", xpdr_flight_level->getIntValue() );
             for ( i = 0; i < 6; ++i ) {
                 digits[i] -= '0';
             }
