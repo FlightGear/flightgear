@@ -1,0 +1,95 @@
+#!/usr/bin/perl -w
+# USAGE: fgfsscript [host [port]]
+# Melchior FRANZ, a8603365@unet.univie.ac.at
+# $Id$
+
+use strict;
+use IO::Socket;
+
+my $host = (shift || 'localhost');
+my $port = (shift || 5501);
+my ($fgfs, $i);
+
+
+
+# main()
+{
+	chdir;
+	$fgfs = &connect($host, $port, 120) || die " can't open socket\n";
+	&send("data");
+
+	# wait for random altitude (0--3000 ft.) to be reached
+	my $alt = int(rand(3000));
+	print "disaster begins at $alt ft. AGL\n";
+	while (1) {
+		sleep(1);
+		$i = &get("/position/altitude-agl-ft");
+		print "\r" . int($i) . " ft.";
+		print "\n" and last if $i > $alt;
+	}
+
+	print "start fuel dumping  :-)\n";
+	for ($i = 0; $i < 4; $i++) {
+		sleep(rand(60));
+		&set("/consumables/fuel/tank[$i]/level-gal_us", 0);
+		print "tank $i empty\n";
+	}
+	
+	&send("quit");
+	close $fgfs;
+}
+
+
+
+
+sub get()
+{	
+	&send("get " . shift);
+	eof $fgfs and die "\nconnection closed by host";
+	$_ = <$fgfs>;
+	s/\015?\012$//;
+	/^-ERR (.*)/ and die "\nfgfs error: $1\n";
+	return $_;
+}
+
+
+sub set()
+{	
+	my $prop = shift;
+	my $value = shift;
+	&send("set $prop $value");
+}
+
+
+sub send()
+{	
+	print $fgfs shift, "\015\012";
+}
+
+
+sub connect()
+{
+	my $host = shift;
+	my $port = shift;
+	my $timeout = (shift || 120);
+	my $socket;
+	STDOUT->autoflush(1);
+	print "connect ";
+	while ($timeout--) {
+		if ($socket = IO::Socket::INET->new(
+				Proto => 'tcp',
+				PeerAddr => $host,
+				PeerPort => $port)) {
+			print ".. done.\n";
+			$socket->autoflush(1);
+			sleep 1;
+			return $socket;
+		}	
+		print ".";
+		sleep(1);
+	}
+       	return 0;
+}
+
+
+# vi:ts=8:sw=8:noet:nowrap:cindent

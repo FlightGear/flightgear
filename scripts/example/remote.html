@@ -1,0 +1,133 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<title>FlightGear: Remote control</title>
+	<meta name="Author" content="Melchior FRANZ">
+	<meta name="KeyWords" content="flightgear,fgfs,flightsimulator,simulator,remote,control,perl,c,c++">
+	<link rel="StyleSheet" type="text/css" href="fgfs.css">
+	<link rel="SHORTCUT ICON" href="mf.ico">
+
+</head>
+
+<body>
+<h1>FlightGear: Remote control</h1>
+
+
+<p>FlightGear has several interfaces that provide access to internal
+parameters. The HTTP interface is best suited for human interaction
+via a web browser. The telnet interface is the ideal choice for
+remotely controlling FlightGear by means of external programs.
+</p>
+
+<p>To activate FlightGear's telnet server capabilities, call it with
+a <em>--props</em> specifiaction:
+
+<blockquote>
+<pre>
+$ fgfs --props=socket,bi,5,localhost,5501,tcp
+</pre>
+
+<br>
+<br>
+<table>
+<tr><td><strong>socket:</strong></td><td>FlightGear protocol</td></tr>
+<tr><td><strong>bi:</strong></td><td>bidirectional</td></tr>
+<tr><td><strong>5:</strong></td><td>polling frequency in Hertz</td></tr>
+<tr><td><strong>localhost: </strong></td><td>server name or IP-address</td></tr>
+<tr><td><strong>5501: </strong></td><td>server port</td></tr>
+<tr><td><strong>tcp:</strong></td><td>internet protocol type</td></tr>
+</table>
+</blockquote>
+
+<br>
+<br>
+In newer versions of FlightGear just type:
+<blockquote>
+<pre>
+$ fgfs --telnet=5501
+</pre>
+</blockquote>
+</p>
+
+<p>To learn more about the supported commands, connect to FlightGear
+with a telnet program and type in "help&lt;RETURN&gt;". This is what you'll get:<p>
+
+<blockquote>
+<pre>
+$ telnet localhost 5501
+Trying ::1...
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+help
+
+Valid commands are:
+
+help             show help message
+ls [&lt;dir&gt;]       list directory
+dump             dump current state (in xml)
+cd &lt;dir&gt;         cd to a directory, '..' to move back
+pwd              display your current path
+get &lt;var&gt;        show the value of a parameter
+show &lt;var&gt;       synonym for get
+set &lt;var&gt; &lt;val&gt;  set &lt;var&gt; to a new &lt;val&gt;
+data             switch to raw data mode
+prompt           switch to interactive mode (default)
+quit             terminate connection
+
+/&gt;
+</pre>
+</blockquote>
+
+<p>Now you can browse in the property system like in a Linux file
+system with <em>cd, ls, pwd</em>.</p>
+
+
+
+
+<p>Here you can <a href="fgfsscript">download a sample script</a> 
+written in Perl, that shows how to access and manipulate FlightGear's
+internal parameters. It can be started before FlightGear (in which
+case it tries up to 2&nbsp;minutes to connect) or afterwards. Then
+it picks a random AGL altitude and checks every 5&nbsp;seconds
+if the aircraft has already climbed at this height. Now it starts
+to empty all four tanks, one after the other, until the engines
+stop working. Try to find a place where you can land safely. :-)</p>
+
+<blockquote>
+<pre>
+$ fgfsscript&amp;
+$ fgfs --props=socket,bi,5,localhost,5501,tcp
+</pre>
+</blockquote>
+
+<p>The script defaults to <em>localhost</em> and <em>port 5501</em>,
+but you can let the script control FlightGear on another host and
+under another port.</p>
+
+<blockquote>
+<pre>
+$ fgfsscript some.host.org 1234&amp;
+</pre>
+</blockquote>
+
+
+<p>Demo programs are available in:<br>
+<ul>
+<li><a href="fgfsclient.c">C</a></li>
+<li><a href="fgfsclient.cxx">C++</a></li>
+<li><a href="fgfsscript">Perl (same as mentioned above)</a></li>
+</ul>
+</p>
+
+
+<br>
+<hr>
+<address>
+$Id$<br>
+<a href="http://www.unet.univie.ac.at/~a8603365/">Melchior FRANZ</a>
+(mfranz at aon dot at</a>)
+</address>
+
+</body>
+</html>
