@@ -50,6 +50,9 @@ public:
     // Offset true time by this many seconds
     int time_offset;
 
+    // Textures enabled/disabled
+    int use_textures;
+
     // Constructor
     fgOPTIONS( void );
 
@@ -72,6 +75,10 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.3  1998/04/28 01:20:23  curt
+// Type-ified fgTIME and fgVIEW.
+// Added a command line option to disable textures.
+//
 // Revision 1.2  1998/04/25 15:11:13  curt
 // Added an command line option to set starting position based on airport ID.
 //

@@ -48,6 +48,7 @@ fgOPTIONS::fgOPTIONS( void ) {
     strcpy(airport_id, "");
     hud_status = 0;
     time_offset = 0;
+    use_textures = 1;
 }
 
 
@@ -158,17 +159,22 @@ int fgOPTIONS::parse( int argc, char **argv ) {
     while ( i < argc ) {
 	fgPrintf(FG_GENERAL, FG_INFO, "argv[%d] = %s\n", i, argv[i]);
 
-	if ( strncmp(argv[i], "--airport-id=", 13) == 0 ) {
-	    argv[i] += 13;
-	    strncpy(airport_id, argv[i], 4);
+	// General Options
+	if ( (strcmp(argv[i], "--help") == 0) ||
+	     (strcmp(argv[i], "-h") == 0) ) {
+	    // help/usage request
+	    return(FG_OPTIONS_HELP);
 	} else if ( strcmp(argv[i], "--disable-hud") == 0 ) {
 	    hud_status = 0;	
 	} else if ( strcmp(argv[i], "--enable-hud") == 0 ) {
 	    hud_status = 1;	
-	} else if ( (strcmp(argv[i], "--help") == 0) ||
-	     (strcmp(argv[i], "-h") == 0) ) {
-	    // help/usage request
-	    return(FG_OPTIONS_HELP);
+	} else if ( strncmp(argv[i], "--airport-id=", 13) == 0 ) {
+	    argv[i] += 13;
+	    strncpy(airport_id, argv[i], 4);
+	} else if ( strcmp(argv[i], "--disable-textures") == 0 ) {
+	    use_textures = 0;	
+	} else if ( strcmp(argv[i], "--enable-textures") == 0 ) {
+	    use_textures = 1;	
 	} else if ( strncmp(argv[i], "--time-offset=", 14) == 0 ) {
 	    time_offset = parse_time_offset(argv[i]);
 	} else {
@@ -185,10 +191,27 @@ int fgOPTIONS::parse( int argc, char **argv ) {
 // Print usage message
 void fgOPTIONS::usage ( void ) {
     printf("Usage: fg [ options ... ]\n");
-    printf("\t--airport-id=ABCD:  specify starting postion by airport id\n");
+    printf("\n");
+
+    printf("General Options:\n");
+    printf("\t--help -h:  print usage\n");
+    printf("\n");
+
+    printf("Features:\n");
     printf("\t--disable-hud:  disable heads up display\n");
     printf("\t--enable-hud:  enable heads up display\n");
-    printf("\t--help -h:  print usage\n");
+    printf("\n");
+ 
+    printf("Initial Position:\n");
+    printf("\t--airport-id=ABCD:  specify starting postion by airport id\n");
+    printf("\n");
+
+    printf("Rendering Options:\n");
+    printf("\t--disable-textures:  disable textures\n");
+    printf("\t--enable-textures:  enable textures\n");
+    printf("\n");
+
+    printf("Time Options:\n");
     printf("\t--time-offset=[+-]hh:mm:ss:  offset local time by this amount\n");
 }
 
@@ -199,6 +222,10 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/04/28 01:20:22  curt
+// Type-ified fgTIME and fgVIEW.
+// Added a command line option to disable textures.
+//
 // Revision 1.3  1998/04/26 05:01:19  curt
 // Added an rint() / HAVE_RINT check.
 //

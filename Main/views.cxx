@@ -41,11 +41,11 @@
 
 
 // This is a record containing current view parameters
-struct fgVIEW current_view;
+fgVIEW current_view;
 
 
 // Initialize a view structure
-void fgViewInit(struct fgVIEW *v) {
+void fgViewInit(fgVIEW *v) {
     fgPrintf( FG_VIEW, FG_INFO, "Initializing View parameters\n");
 
     v->view_offset = 0.0;
@@ -54,7 +54,7 @@ void fgViewInit(struct fgVIEW *v) {
 
 
 // Update the view parameters
-void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l) {
+void fgViewUpdate(fgFLIGHT *f, fgVIEW *v, fgLIGHT *l) {
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     double ntmp;
@@ -200,6 +200,10 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l) {
 
 
 // $Log$
+// Revision 1.6  1998/04/28 01:20:23  curt
+// Type-ified fgTIME and fgVIEW.
+// Added a command line option to disable textures.
+//
 // Revision 1.5  1998/04/26 05:10:04  curt
 // "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
 //

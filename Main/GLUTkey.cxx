@@ -55,8 +55,8 @@ extern int displayInstruments;
 void GLUTkey(unsigned char k, int x, int y) {
     fgCONTROLS *c;
     fgOPTIONS *o;
-    struct fgTIME *t;
-    struct fgVIEW *v;
+    fgTIME *t;
+    fgVIEW *v;
     struct fgWEATHER *w;
 
     c = current_aircraft.controls;
@@ -186,7 +186,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 /* Handle "special" keyboard events */
 void GLUTspecialkey(int k, int x, int y) {
     fgCONTROLS *c;
-    struct fgVIEW *v;
+    fgVIEW *v;
 
     c = current_aircraft.controls;
     v = &current_view;
@@ -265,9 +265,13 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.5  1998/04/25 22:06:29  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.6  1998/04/28 01:20:20  curt
+/* Type-ified fgTIME and fgVIEW.
+/* Added a command line option to disable textures.
 /*
+ * Revision 1.5  1998/04/25 22:06:29  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.4  1998/04/25 20:24:00  curt
  * Cleaned up initialization sequence to eliminate interdependencies
  * between sun position, lighting, and view position.  This creates a

@@ -214,12 +214,10 @@ static void fgInitVisuals( void ) {
 static void fgUpdateViewParams( void ) {
     fgFLIGHT *f;
     fgLIGHT *l;
-    // struct fgTIME *t;
-    struct fgVIEW *v;
+    fgVIEW *v;
 
     f = current_aircraft.flight;
     l = &cur_light_params;
-    // t = &cur_time_params;
     v = &current_view;
 
     fgViewUpdate(f, v, l);
@@ -318,10 +316,11 @@ static void fgUpdateInstrViewParams( void ) {
 static void fgRenderFrame( void ) {
     fgLIGHT *l;
     fgOPTIONS *o;
-    struct fgTIME *t;
-    struct fgVIEW *v;
+    fgTIME *t;
+    fgVIEW *v;
     double angle;
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat color[4] = { 0.54, 0.44, 0.29, 1.0 };
 
     l = &cur_light_params;
     o = &current_options;
@@ -384,18 +383,25 @@ static void fgRenderFrame( void ) {
     // set lighting parameters
     xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
     xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
-    // texture parameters
-    xglEnable( GL_TEXTURE_2D ); /* xglDisable( GL_TEXTURE_2D ); */
-    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
-    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ) ;
-    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) ;
-    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
-		      GL_LINEAR /* GL_LINEAR_MIPMAP_LINEAR */ ) ;
-    xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
-    xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
-    // set base color (I don't think this is doing anything here)
-    xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
-    xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
+
+    if ( o->use_textures ) {
+	// texture parameters
+	xglEnable( GL_TEXTURE_2D );
+	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
+	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ) ;
+	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) ;
+	xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
+			  GL_LINEAR /* GL_LINEAR_MIPMAP_LINEAR */ ) ;
+	xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
+	xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
+	// set base color (I don't think this is doing anything here)
+	xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
+	xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
+    } else {
+	xglDisable( GL_TEXTURE_2D );
+	xglMaterialfv (GL_FRONT, GL_AMBIENT, color);
+	xglMaterialfv (GL_FRONT, GL_DIFFUSE, color);
+    }
 
     fgTileMgrRender();
 
@@ -418,8 +424,8 @@ static void fgRenderFrame( void ) {
 // Update internal time dependent calculations (i.e. flight model)
 void fgUpdateTimeDepCalcs(int multi_loop) {
     fgFLIGHT *f;
-    struct fgTIME *t;
-    struct fgVIEW *v;
+    fgTIME *t;
+    fgVIEW *v;
     int i;
 
     f = current_aircraft.flight;
@@ -484,7 +490,7 @@ static void fgMainLoop( void ) {
     // int joy_b1, joy_b2;
     fgAIRCRAFT *a;
     fgFLIGHT *f;
-    struct fgTIME *t;
+    fgTIME *t;
 
     fgPrintf( FG_ALL, FG_DEBUG, "Running Main Loop\n");
     fgPrintf( FG_ALL, FG_DEBUG, "======= ==== ====\n");
@@ -693,6 +699,10 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.8  1998/04/28 01:20:21  curt
+// Type-ified fgTIME and fgVIEW.
+// Added a command line option to disable textures.
+//
 // Revision 1.7  1998/04/26 05:10:02  curt
 // "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
 //

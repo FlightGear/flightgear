@@ -119,9 +119,9 @@ int fgInitPosition( void ) {
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Test Position
-    // FG_Longitude = ( -109.5 ) * DEG_TO_RAD;
-    // FG_Latitude  = (  32.5 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = (2646 + 2000);
+    // FG_Longitude = ( -110.5 ) * DEG_TO_RAD;
+    // FG_Latitude  = (  34.5 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = (2646 + 6000);
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     if ( strlen(o->airport_id) ) {
@@ -190,8 +190,8 @@ int fgInitSubsystems( void ) {
 
     fgFLIGHT *f;
     fgLIGHT *l;
-    struct fgTIME *t;
-    struct fgVIEW *v;
+    fgTIME *t;
+    fgVIEW *v;
 
     l = &cur_light_params;
     t = &cur_time_params;
@@ -369,6 +369,10 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.7  1998/04/28 01:20:22  curt
+// Type-ified fgTIME and fgVIEW.
+// Added a command line option to disable textures.
+//
 // Revision 1.6  1998/04/26 05:10:03  curt
 // "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
 //

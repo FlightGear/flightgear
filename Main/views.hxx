@@ -41,7 +41,7 @@
 
 
 /* Define a structure containing view information */
-struct fgVIEW {
+typedef struct {
     /* absolute view position */
     struct fgCartesianPoint abs_view_pos;
 
@@ -81,26 +81,30 @@ struct fgVIEW {
 
     /* the goal view offset for viewing (used for smooth view changes) */
     double goal_view_offset;
-};
+} fgVIEW;
 
 
-extern struct fgVIEW current_view;
+extern fgVIEW current_view;
 
 
 /* Initialize a view structure */
-void fgViewInit(struct fgVIEW *v);
+void fgViewInit(fgVIEW *v);
 
 /* Update the view parameters */
-void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l);
+void fgViewUpdate(fgFLIGHT *f, fgVIEW *v, fgLIGHT *l);
 
 
 #endif /* _VIEWS_HXX */
 
 
 /* $Log$
-/* Revision 1.3  1998/04/25 22:06:31  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.4  1998/04/28 01:20:24  curt
+/* Type-ified fgTIME and fgVIEW.
+/* Added a command line option to disable textures.
 /*
+ * Revision 1.3  1998/04/25 22:06:31  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.2  1998/04/24 00:49:22  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Trying out some different option parsing code.
