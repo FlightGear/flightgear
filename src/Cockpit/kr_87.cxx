@@ -398,7 +398,7 @@ void FGKR_87::search()
 	snprintf( sfreq, 10, "%.0f", freq );
 	ident = sfreq;
 	ident += nav.get_ident();
-	cout << "adf ident = " << ident << endl;
+// 	cout << "adf ident = " << ident << endl;
 	valid = true;
 	if ( last_ident != ident ) {
 	    last_ident = ident;
