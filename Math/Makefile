@@ -51,7 +51,7 @@ $(TARGET): $(OFILES) $(HFILES)
 all: $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET) *~ core
+	rm -f *.o $(TARGET) lib*.a *~ core
 
 
 #---------------------------------------------------------------------------
@@ -62,6 +62,9 @@ clean:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1997/06/25 15:39:49  curt
+# Minor changes to compile with rsxnt/win32.
+#
 # Revision 1.2  1997/05/30 19:30:16  curt
 # The LaRCsim flight model is starting to look like it is working.
 #
