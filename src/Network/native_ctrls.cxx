@@ -98,7 +98,9 @@ static void htond (double &x)
 
 
 // Populate the FGNetCtrls structure from the property tree.
-void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order ) {
+void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
+                       bool net_byte_order )
+{
     int i;
     SGPropertyNode * node;
     SGPropertyNode * tempnode;
@@ -192,14 +194,16 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order ) {
     net->magvar = fgGetDouble("/environment/magnetic-variation-deg");
     net->speedup = fgGetInt("/sim/speed-up");
     net->freeze = 0;
-    if ( fgGetBool("/sim/freeze/master") ) {
-        net->freeze |= 0x01;
-    }
-    if ( fgGetBool("/sim/freeze/position") ) {
-        net->freeze |= 0x02;
-    }
-    if ( fgGetBool("/sim/freeze/fuel") ) {
-        net->freeze |= 0x04;
+    if ( honor_freezes ) {
+        if ( fgGetBool("/sim/freeze/master") ) {
+            net->freeze |= 0x01;
+        }
+        if ( fgGetBool("/sim/freeze/position") ) {
+            net->freeze |= 0x02;
+        }
+        if ( fgGetBool("/sim/freeze/fuel") ) {
+            net->freeze |= 0x04;
+        }
     }
 
     if ( net_byte_order ) {
@@ -244,7 +248,9 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order ) {
 
 
 // Update the property tree from the FGNetCtrls structure.
-void FGNetCtrls2Props( FGNetCtrls *net, bool net_byte_order ) {
+void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
+                       bool net_byte_order )
+{
     int i;
 
     SGPropertyNode * node;
@@ -346,10 +352,12 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool net_byte_order ) {
 
     fgSetInt( "/sim/speed-up", net->speedup );
 
-    node = fgGetNode( "/sim/freeze", true );
-    node->setBoolValue( "master", net->freeze & 0x01 );
-    node->setBoolValue( "position", net->freeze & 0x02 );
-    node->setBoolValue( "fuel", net->freeze & 0x04 );
+    if ( honor_freezes ) {
+        node = fgGetNode( "/sim/freeze", true );
+        node->setBoolValue( "master", net->freeze & 0x01 );
+        node->setBoolValue( "position", net->freeze & 0x02 );
+        node->setBoolValue( "fuel", net->freeze & 0x04 );
+    }
 }
 
 
@@ -361,7 +369,7 @@ bool FGNativeCtrls::process() {
     if ( get_direction() == SG_IO_OUT ) {
 	// cout << "size of cur_fdm_state = " << length << endl;
 
-	FGProps2NetCtrls( &net_ctrls );
+	FGProps2NetCtrls( &net_ctrls, true, true );
 
 	if ( ! io->write( (char *)(& net_ctrls), length ) ) {
 	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
@@ -371,12 +379,12 @@ bool FGNativeCtrls::process() {
 	if ( io->get_type() == sgFileType ) {
 	    if ( io->read( (char *)(& net_ctrls), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		FGNetCtrls2Props( &net_ctrls );
+		FGNetCtrls2Props( &net_ctrls, true, true );
 	    }
 	} else {
 	    while ( io->read( (char *)(& net_ctrls), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		FGNetCtrls2Props( &net_ctrls );
+		FGNetCtrls2Props( &net_ctrls, true, true );
 	    }
 	}
     }

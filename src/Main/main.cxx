@@ -120,6 +120,7 @@ SG_USING_STD(endl);
 #include <MultiPlayer/multiplayrxmgr.hxx>
 #endif
 
+#include <Replay/replay.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #ifdef ENABLE_AUDIO_SUPPORT
@@ -165,7 +166,8 @@ sgVec3 rway_ols;
 float scene_nearplane = 0.5f;
 float scene_farplane = 120000.0f;
 
-static double delta_time_sec = 0;
+static double delta_time_sec = 0.0;
+static double replay_dt_sec = 0.0;
 
 
 #ifdef FG_WEATHERCM
@@ -932,6 +934,13 @@ void fgRenderFrame() {
 void fgUpdateTimeDepCalcs() {
     static bool inited = false;
 
+    static const SGPropertyNode *replay
+        = fgGetNode( "/sim/replay/master", true );
+    static SGPropertyNode *replay_time
+        = fgGetNode( "/sim/replay/time", true );
+    static const SGPropertyNode *replay_end_time
+        = fgGetNode( "/sim/replay/end-time", true );
+
     //SG_LOG(SG_FLIGHT,SG_INFO, "Updating time dep calcs()");
 
     fgLIGHT *l = &cur_light_params;
@@ -964,8 +973,15 @@ void fgUpdateTimeDepCalcs() {
             inited = true;
         }
 
-        globals->get_autopilot()->update(delta_time_sec);
-        cur_fdm_state->update(delta_time_sec);
+        if ( ! replay->getBoolValue() ) {
+            globals->get_autopilot()->update(delta_time_sec);
+            cur_fdm_state->update(delta_time_sec);
+        } else {
+            FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
+            r->replay( replay_time->getDoubleValue() );
+            replay_time->setDoubleValue( replay_time->getDoubleValue()
+                                         + replay_dt_sec );
+        }
     }
 
     globals->get_model_mgr()->update(delta_time_sec);
@@ -1010,6 +1026,8 @@ static void fgMainLoop( void ) {
         = fgGetNode("/sim/freeze/clock", true);
     static const SGPropertyNode *cur_time_override
         = fgGetNode("/sim/time/cur-time-override", true);
+    static const SGPropertyNode *replay
+        = fgGetNode("/sim/replay/master", true);
 
     // Update the elapsed time.
     static bool first_time = true;
@@ -1032,9 +1050,12 @@ static void fgMainLoop( void ) {
     }
 
     delta_time_sec = double(current_time_stamp - last_time_stamp) / 1000000.0;
+    if ( replay->getBoolValue() ) {
+        replay_dt_sec = delta_time_sec;
+    }
     if ( clock_freeze->getBoolValue() ) {
         delta_time_sec = 0;
-    }
+    } 
     last_time_stamp = current_time_stamp;
     globals->inc_sim_time_sec( delta_time_sec );
     SGAnimation::set_sim_time_sec( globals->get_sim_time_sec() );

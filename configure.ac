@@ -595,6 +595,7 @@ AC_CONFIG_FILES([ \
 	src/Network/Makefile \
 	src/NetworkOLK/Makefile \
 	src/Objects/Makefile \
+	src/Replay/Makefile \
 	src/Scenery/Makefile \
 	src/Scripting/Makefile \
 	src/Sound/Makefile \

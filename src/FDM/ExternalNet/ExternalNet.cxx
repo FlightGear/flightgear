@@ -164,7 +164,7 @@ void FGExternalNet::update( double dt ) {
 
     // Send control positions to remote fdm
     length = sizeof(ctrls);
-    FGProps2NetCtrls( &ctrls );
+    FGProps2NetCtrls( &ctrls, true, true );
     if ( data_client.send( (char *)(& ctrls), length, 0 ) != length ) {
 	SG_LOG( SG_IO, SG_DEBUG, "Error writing data." );
     } else {

@@ -85,6 +85,7 @@ fgfs_LDADD = \
 	$(MPLAYER_LIBS) \
         $(NETWORK_LIBS) \
 	$(top_builddir)/src/Objects/libObjects.a \
+	$(top_builddir)/src/Replay/libReplay.a \
 	$(top_builddir)/src/Systems/libSystems.a \
 	$(top_builddir)/src/Time/libTime.a \
 	$(WEATHER_LIBS) \

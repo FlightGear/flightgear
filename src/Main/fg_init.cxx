@@ -103,6 +103,7 @@
 #include <Navaids/ilslist.hxx>
 #include <Navaids/mkrbeacons.hxx>
 #include <Navaids/navlist.hxx>
+#include <Replay/replay.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #if defined(HAVE_PLIB_PSL)
@@ -1633,6 +1634,11 @@ bool fgInitSubsystems() {
 
     globals->add_subsystem("input", new FGInput);
 
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the replay subsystem
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("replay", new FGReplay);
 
     ////////////////////////////////////////////////////////////////////
     // Bind and initialize subsystems.

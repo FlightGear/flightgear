@@ -20,6 +20,7 @@
 #include <GUI/gui.h>
 #include <GUI/new_gui.hxx>
 #include <GUI/dialog.hxx>
+#include <Replay/replay.hxx>
 #include <Scenery/tilemgr.hxx>
 #if defined(HAVE_PLIB_PSL)
 #  include <Scripting/scriptmgr.hxx>
@@ -821,6 +822,29 @@ do_log_level (const SGPropertyNode * arg)
    return true;
 }
 
+/**
+ * Built-in command: replay the FDR buffer
+ */
+static bool
+do_replay (const SGPropertyNode * arg)
+{
+    // freeze the master fdm
+    fgSetBool( "/sim/freeze/master", true );
+    fgSetBool( "/sim/freeze/clock", true );
+    fgSetBool( "/sim/replay/master", true );
+
+    FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
+
+    fgSetDouble( "/sim/replay/start-time", r->get_start_time() );
+    fgSetDouble( "/sim/replay/end-time", r->get_end_time() );
+    fgSetDouble( "/sim/replay/time", r->get_start_time() );
+
+    cout << "start = " << r->get_start_time()
+         << "  end = " << r->get_end_time() << endl;
+
+    return true;
+}
+
 
 
 
@@ -871,6 +895,7 @@ static struct {
     { "dialog-apply", do_dialog_apply },
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
+    { "replay", do_replay },
     { 0, 0 }			// zero-terminated
 };
 

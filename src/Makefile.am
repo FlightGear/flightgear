@@ -40,6 +40,7 @@ SUBDIRS = \
 	$(MPLAYER_DIRS) \
         $(NETWORK_DIRS) \
         Objects \
+	Replay \
         Scenery \
         $(SCRIPTING_DIRS) \
         Sound \

@@ -192,7 +192,7 @@ void FGExternalPipe::update( double dt ) {
 
     // Send control positions to remote fdm
     length = sizeof(ctrls);
-    FGProps2NetCtrls( &ctrls, false );
+    FGProps2NetCtrls( &ctrls, true, false );
     char *ptr = buf;
     *ptr = '2';
     ptr++;
