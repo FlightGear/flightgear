@@ -55,9 +55,10 @@ bool FGNativeCtrls::open() {
 }
 
 
-static void global2raw( FGControls *global, FGRawCtrls *raw ) {
+static void global2raw( const FGControls *global, FGRawCtrls *raw ) {
     int i;
 
+    raw->version = FG_RAW_CTRLS_VERSION;
     raw->aileron = globals->get_controls()->get_aileron();
     raw->elevator = globals->get_controls()->get_elevator();
     raw->elevator_trim = globals->get_controls()->get_elevator_trim();
@@ -74,21 +75,27 @@ static void global2raw( FGControls *global, FGRawCtrls *raw ) {
 }
 
 
-static void raw2global( FGRawCtrls *raw, FGControls *global ) {
+static void raw2global( const FGRawCtrls *raw, FGControls *global ) {
     int i;
 
-    globals->get_controls()->set_aileron( raw->aileron );
-    globals->get_controls()->set_elevator( raw->elevator );
-    globals->get_controls()->set_elevator_trim( raw->elevator_trim );
-    globals->get_controls()->set_rudder( raw->rudder );
-    globals->get_controls()->set_flaps( raw->flaps );
-    for ( i = 0; i < FG_MAX_ENGINES; ++i ) {    
-	globals->get_controls()->set_throttle( i, raw->throttle[i] );
-	globals->get_controls()->set_mixture( i, raw->mixture[i] );
-	globals->get_controls()->set_prop_advance( i, raw->prop_advance[i] );
-    }
-    for ( i = 0; i < FG_MAX_WHEELS; ++i ) {
-	globals->get_controls()->set_brake( i, raw->brake[i] );
+    if ( raw->version == FG_RAW_CTRLS_VERSION ) {
+	globals->get_controls()->set_aileron( raw->aileron );
+	globals->get_controls()->set_elevator( raw->elevator );
+	globals->get_controls()->set_elevator_trim( raw->elevator_trim );
+	globals->get_controls()->set_rudder( raw->rudder );
+	globals->get_controls()->set_flaps( raw->flaps );
+	for ( i = 0; i < FG_MAX_ENGINES; ++i ) {    
+	    globals->get_controls()->set_throttle( i, raw->throttle[i] );
+	    globals->get_controls()->set_mixture( i, raw->mixture[i] );
+	    globals->get_controls()->set_prop_advance( i, raw->prop_advance[i]);
+	}
+	for ( i = 0; i < FG_MAX_WHEELS; ++i ) {
+	    globals->get_controls()->set_brake( i, raw->brake[i] );
+	}
+    } else {
+	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in raw2global()" );
+	SG_LOG( SG_IO, SG_ALERT,
+		"\tsomeone needs to upgrade raw_ctrls.hxx and recompile." );
     }
 }
 

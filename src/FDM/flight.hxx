@@ -285,7 +285,8 @@ private:
     // SGTimeStamp valid_stamp;          // time this record is valid
     // SGTimeStamp next_stamp;           // time this record is valid
 
-protected:
+// protected:
+public:
 
 				// deliberately not virtual so that
 				// FGInterface constructor will call

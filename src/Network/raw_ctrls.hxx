@@ -30,6 +30,7 @@
 # error This library requires C++
 #endif                                   
 
+const int FG_RAW_CTRLS_VERSION = 1;
 
 const int FG_MAX_ENGINES = 10;
 const int FG_MAX_WHEELS = 3;
@@ -40,6 +41,7 @@ class FGRawCtrls {
 
 public:
 
+    int version;		         // increment when data values change
     double aileron;		         // -1 ... 1
     double elevator;		         // -1 ... 1
     double elevator_trim;	         // -1 ... 1
