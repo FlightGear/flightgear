@@ -1,7 +1,9 @@
 // The mac puts this in a weird location (GLUT/glut.h), so the
 // configure script detects the location and defines it as a macro.
+#ifndef _MSC_VER // MSVC really needs a definition for wchar_t
 #define _WCHAR_T_DEFINED 1 // Glut needs this, or else it tries to
                            // redefine it
+#endif
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #  include FG_GLUT_H
