@@ -1,3 +1,9 @@
+New in 0.55
+* Brakes (use "b" to toggle)
+* Added an altitude hold module to the autopilot.  Lock your current altitude
+  with "ctrl-a", "cntr-a" again will deactivate.  (Also lock your current 
+  heading with "ctrl-h", and again to deactivate.)
+
 New in 0.54
 * Implimented audio envelopes so that pitch of engine changes with throttle
 * Textured moon, and rewritten/restructured Astro code.
