@@ -40,8 +40,8 @@
 
 /* For best results ... i.e. to avoid tile load problems and blank areas
  *
- * FG_TILE_CACHE_SIZE >= FG_LOCAL_X_Y + max(FG_LOCAL_X, FG_LOCAL_Y) + 1 */
-#define FG_TILE_CACHE_SIZE 36
+ * FG_TILE_CACHE_SIZE >= FG_LOCAL_X_Y + 2*max(FG_LOCAL_X, FG_LOCAL_Y) + 1 */
+#define FG_TILE_CACHE_SIZE 100
 
 
 /* Tile cache record */
@@ -79,10 +79,14 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 
 
 /* $Log$
-/* Revision 1.5  1998/02/16 13:39:45  curt
-/* Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
-/* tiles to occasionally be missing.
+/* Revision 1.6  1998/02/18 15:07:10  curt
+/* Tweaks to build with SGI OpenGL (and therefor hopefully other accelerated
+/* drivers will work.)
 /*
+ * Revision 1.5  1998/02/16 13:39:45  curt
+ * Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
+ * tiles to occasionally be missing.
+ *
  * Revision 1.4  1998/01/31 00:43:27  curt
  * Added MetroWorks patches from Carmen Volpe.
  *

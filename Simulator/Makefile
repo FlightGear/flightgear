@@ -53,11 +53,14 @@ Makefile-os2:
 
 clean:
 	-rm -f *.os2 *~
+	-rm -f $(FG_ROOT_LIB)/stamp_libs
 	for dir in $(ORDEREDDIRS); do \
 	    (cd $$dir; $(MAKE) clean) ; \
 	done
 
 clobber:
+	-rm -f *.os2 *~
+	-rm -f $(FG_ROOT_LIB)/stamp_libs
 	for dir in $(ORDEREDDIRS); do \
 	    (cd $$dir; $(MAKE) clobber) ; \
 	done
@@ -65,12 +68,12 @@ clobber:
 source-tar: clean
 	(cd ../..; \
 	$(TAR) cvzf source-$(FG_VERSION).tar.gz FlightGear/fgtop \
-	FlightGear/COPYING FlightGear/Docs FlightGear/Src)
+	FlightGear/COPYING FlightGear/Docs FlightGear/Src FlightGear/Lib)
 
 source-zip: clean
 	(cd ../..; \
 	zip -r source-$(FG_VERSION).zip FlightGear/fgtop \
-	FlightGear/COPYING FlightGear/Docs FlightGear/Src)
+	FlightGear/COPYING FlightGear/Docs FlightGear/Src FlightGear/Lib)
 
 scenery-tar:
 	(cd ../..; \
@@ -101,9 +104,23 @@ bin-zip:
 	FlightGear/cygwin.dll FlightGear/COPYING FlightGear/Docs \
 	FlightGear/README FlightGear/Thanks)
 
+new-bin-zip: 
+	cp Main/fg$(FG_VERSION_MAJOR).exe Main/cygwin.dll README Thanks \
+	runfg.bat ../Win32/*.dll ..
+	(cd ../..; \
+	zip -r bin-$(FG_VERSION).zip FlightGear/fgtop \
+	FlightGear/fg$(FG_VERSION_MAJOR).exe FlightGear/runfg.bat \
+	FlightGear/cygwin.dll FlightGear/COPYING FlightGear/Docs \
+	FlightGear/README FlightGear/Thanks FlightGear/glu.dll \
+	FlightGear/glut.dll FlightGear/opengl.dll)
+
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.42  1998/02/18 15:07:02  curt
+# Tweaks to build with SGI OpenGL (and therefor hopefully other accelerated
+# drivers will work.)
+#
 # Revision 1.41  1998/02/09 22:56:28  curt
 # Removed "depend" files from cvs control.  Other minor make tweaks.
 #
