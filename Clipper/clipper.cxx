@@ -223,7 +223,10 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 	    }
 	    */
 
-	    polys_clipped.polys[i].push_back(result_diff);
+	    // only add to output list if the clip left us with a polygon
+	    if ( result_diff->num_contours > 0 ) {
+		polys_clipped.polys[i].push_back(result_diff);
+	    }
 	    accum = result_union;
 	}
     }
@@ -247,6 +250,9 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
 
 // $Log$
+// Revision 1.5  1999/03/19 22:28:46  curt
+// Only add non-null polygons to output list.
+//
 // Revision 1.4  1999/03/19 00:26:18  curt
 // Fixed a clipping bug (polygons specified in wrong order).
 // Touched up a few compiler warnings.
