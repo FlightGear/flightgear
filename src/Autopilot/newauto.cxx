@@ -840,7 +840,7 @@ void FGAutopilot::AutoThrottleAdjust( double inc ) {
 void FGAutopilot::set_AutoThrottleEnabled( bool value ) {
     auto_throttle = value;
 
-    if ( auto_throttle = true ) {
+    if ( auto_throttle == true ) {
 	TargetSpeed = FGBFI::getAirspeed();
 	speed_error_accum = 0.0;
     }

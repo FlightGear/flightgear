@@ -189,6 +189,7 @@ MagRibbon::draw () const
     yoffset = 0.0;
   }
 
+  xoffset = 1.0 - xoffset;
 				// Adjust to put the number in the centre
   xoffset -= 0.25;
 
