@@ -16,5 +16,6 @@ If you would prefer to install these in /usr/local/include/plib/ and
 
     ./configure --prefix=/usr/local --includedir=/usr/local/include/plib
 
-Installing like this makes it much easier for the fgfs configure script
-to locate the plib includes and libs.
+Installing into /usr/local/include/plib/ and /usr/local/lib makes it 
+possible for the fgfs configure script to automatically locate the plib 
+includes and libs.

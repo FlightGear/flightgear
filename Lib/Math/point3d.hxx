@@ -295,9 +295,9 @@ inline Point3D operator / (const Point3D& a, const double d)
 inline bool operator == (const Point3D& a, const Point3D& b)
 {
     return
-	(a.n[PX] - b.n[PX]) < fgPoint3_Epsilon &&
-	(a.n[PY] - b.n[PY]) < fgPoint3_Epsilon &&
-	(a.n[PZ] - b.n[PZ]) < fgPoint3_Epsilon;
+	fabs(a.n[PX] - b.n[PX]) < fgPoint3_Epsilon &&
+	fabs(a.n[PY] - b.n[PY]) < fgPoint3_Epsilon &&
+	fabs(a.n[PZ] - b.n[PZ]) < fgPoint3_Epsilon;
 }
 
 inline bool operator != (const Point3D& a, const Point3D& b)
