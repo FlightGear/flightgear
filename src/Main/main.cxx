@@ -1769,15 +1769,10 @@ int main ( int argc, char **argv ) {
 				// exceptions.
   try {
     mainLoop(argc, argv);
-  } catch (sg_io_exception e1) {
+  } catch (sg_throwable &t) {
     SG_LOG(SG_GENERAL, SG_ALERT,
-	   "Fatal error " << e1.getMessage()
-	   << " received from " << e1.getOrigin()
-	   << "\n at " << e1.getLocation().asString());
-  } catch (sg_exception e) {
-    SG_LOG(SG_GENERAL, SG_ALERT,
-	   "Fatal error " << e.getMessage()
-	   << " received from " << e.getOrigin());
+	   "Fatal error: " << t.getFormattedMessage()
+	   << "\n (received from " << t.getOrigin() << ')');
     exit(1);
   }
 }
