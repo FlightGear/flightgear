@@ -51,6 +51,13 @@ FGControls::~FGControls() {
 
 
 // $Log$
+// Revision 1.4  1999/06/20 02:12:07  curt
+// Updated JSBsim from Jon Berndt
+// Fixed a typo in hud.cxx.
+//
+// Revision 1.1.1.1  1999/06/17 18:07:34  curt
+// Start of 0.7.x branch
+//
 // Revision 1.3  1999/05/08 03:19:15  curt
 // Incorporated latest JSBsim updates.
 //

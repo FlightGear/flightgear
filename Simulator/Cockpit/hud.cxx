@@ -1103,7 +1103,7 @@ void fgUpdateHUD( void ) {
   }
 
   char *gmt_str = get_formated_gmt_time();
-  HUD_TextList.add( fgText( gmt_str, 40, 10) );
+  HUD_TextList.add( fgText( 40, 10, gmt_str ) );
   
   HUD_TextList.draw();
 
