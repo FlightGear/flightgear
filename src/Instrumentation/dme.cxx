@@ -112,11 +112,11 @@ DME::update (double delta_time_sec)
     if (source[0] == '\0') {
         string branch;
         branch = "/instrumentation/" + name + "/frequencies/selected-mhz";
-        source = branch.c_str();
-        _source_node->setStringValue(source);
+        _source_node->setStringValue(branch.c_str());
+        source = _source_node->getStringValue();
     }
-
                                 // Get the frequency
+
     double frequency_mhz = fgGetDouble(source, 108.0);
     if (frequency_mhz != _last_frequency_mhz) {
         _time_before_search_sec = 0;
@@ -153,9 +153,11 @@ DME::update (double delta_time_sec)
     Point3D location =
         sgGeodToCart(Point3D(longitude_rad, latitude_rad, altitude_m));
     double distance_nm = _transmitter.distance3D(location) * SG_METER_TO_NM;
+
     double range_nm = adjust_range(_transmitter_elevation_ft,
                                    altitude_m * SG_METER_TO_FEET,
                                    _transmitter_range_nm);
+
     if (distance_nm <= range_nm) {
         double speed_kt = (fabs(distance_nm - _last_distance_nm) *
                            ((1 / delta_time_sec) * 3600.0));
