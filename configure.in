@@ -302,10 +302,10 @@ AC_OUTPUT( \
 	Simulator/Autopilot/Makefile \
 	Simulator/Cockpit/Makefile \
 	Simulator/Controls/Makefile \
-	Simulator/Flight/External/Makefile \
-	Simulator/Flight/LaRCsim/Makefile \
-	Simulator/Flight/Slew/Makefile \
-	Simulator/Flight/Makefile \
+	Simulator/FDM/External/Makefile \
+	Simulator/FDM/LaRCsim/Makefile \
+	Simulator/FDM/Slew/Makefile \
+	Simulator/FDM/Makefile \
 	Simulator/GUI/Makefile \
 	Simulator/Joystick/Makefile \
 	Simulator/Main/Makefile \
