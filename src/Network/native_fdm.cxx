@@ -183,6 +183,9 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     for (i = 0; i < net->num_wheels; ++i ) {
         SGPropertyNode *node = fgGetNode("/gear/gear", i, true);
         net->wow[i] = node->getDoubleValue("wow");
+        net->gear_pos[i] = node->getDoubleValue("position-norm");
+        net->gear_steer[i] = node->getDoubleValue("steering-norm");
+        net->gear_compression[i] = node->getDoubleValue("compression-norm");
     }
 
     // the following really aren't used in this context
@@ -246,6 +249,9 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
 
         for ( i = 0; i < net->num_wheels; ++i ) {
             net->wow[i] = htonl(net->wow[i]);
+            net->gear_pos[i] = htonl(net->gear_pos[i]);
+            net->gear_steer[i] = htonl(net->gear_steer[i]);
+            net->gear_compression[i] = htonl(net->gear_compression[i]);
         }
         net->num_wheels = htonl(net->num_wheels);
 
@@ -312,8 +318,12 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
         }
 
         net->num_wheels = htonl(net->num_wheels);
-        // I don't need to convert the Wow flags, since they are one
-        // byte in size
+        for ( i = 0; i < net->num_wheels; ++i ) {
+            net->wow[i] = htonl(net->wow[i]);
+            net->gear_pos[i] = htonl(net->gear_pos[i]);
+            net->gear_steer[i] = htonl(net->gear_steer[i]);
+            net->gear_compression[i] = htonl(net->gear_compression[i]);
+        }
 
         net->cur_time = ntohl(net->cur_time);
         net->warp = ntohl(net->warp);
@@ -389,9 +399,11 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
 	}
 
 	for (i = 0; i < net->num_wheels; ++i ) {
-	    SGPropertyNode * node
-		= fgGetNode("/gear/gear", i, true);
+	    SGPropertyNode * node = fgGetNode("/gear/gear", i, true);
 	    node->setDoubleValue("wow", net->wow[i] );
+	    node->setDoubleValue("position-norm", net->gear_pos[i] );
+	    node->setDoubleValue("steering-norm", net->gear_steer[i] );
+	    node->setDoubleValue("compression-norm", net->gear_compression[i] );
 	}
 
 	/* these are ignored for now  ... */

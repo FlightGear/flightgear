@@ -32,7 +32,7 @@
 
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 12;
+const int FG_NET_FDM_VERSION = 13;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -105,6 +105,9 @@ public:
     // Gear status
     int num_wheels;
     bool wow[FG_MAX_WHEELS];
+    float gear_pos[FG_MAX_WHEELS];
+    float gear_steer[FG_MAX_WHEELS];
+    float gear_compression[FG_MAX_WHEELS];
 
     // Environment
     time_t cur_time;            // current unix time
