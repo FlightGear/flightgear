@@ -57,7 +57,8 @@ io_container port_list;
 
 
 fgIOCHANNEL::fgIOCHANNEL() :
-    kind( FG_SERIAL_DISABLED )
+    kind( FG_SERIAL_DISABLED ),
+    valid_config( false )
 {
 }
 
@@ -67,20 +68,15 @@ fgIOCHANNEL::~fgIOCHANNEL() {
 
 
 // configure a port based on the config string
-static fgIOCHANNEL config_port( const string& config )
+static fgIOCHANNEL parse_port_config( const string& config )
 {
     fgIOCHANNEL p;
 
     string::size_type begin, end;
 
-    string device;
-    string format;
-    string baud;
-    string direction;
-
     begin = 0;
 
-    FG_LOG( FG_SERIAL, FG_INFO, "Configuring serial port: " << config );
+    FG_LOG( FG_SERIAL, FG_INFO, "Parse serial port config: " << config );
 
     // device name
     end = config.find(",", begin);
@@ -88,9 +84,9 @@ static fgIOCHANNEL config_port( const string& config )
 	return p;
     }
     
-    device = config.substr(begin, end - begin);
+    p.device = config.substr(begin, end - begin);
     begin = end + 1;
-    FG_LOG( FG_SERIAL, FG_INFO, "  device = " << device );
+    FG_LOG( FG_SERIAL, FG_INFO, "  device = " << p.device );
 
     // format
     end = config.find(",", begin);
@@ -98,9 +94,9 @@ static fgIOCHANNEL config_port( const string& config )
 	return p;
     }
     
-    format = config.substr(begin, end - begin);
+    p.format = config.substr(begin, end - begin);
     begin = end + 1;
-    FG_LOG( FG_SERIAL, FG_INFO, "  format = " << format );
+    FG_LOG( FG_SERIAL, FG_INFO, "  format = " << p.format );
 
     // baud
     end = config.find(",", begin);
@@ -108,59 +104,74 @@ static fgIOCHANNEL config_port( const string& config )
 	return p;
     }
     
-    baud = config.substr(begin, end - begin);
+    p.baud = config.substr(begin, end - begin);
     begin = end + 1;
-    FG_LOG( FG_SERIAL, FG_INFO, "  baud = " << baud );
+    FG_LOG( FG_SERIAL, FG_INFO, "  baud = " << p.baud );
 
     // direction
-    direction = config.substr(begin);
-    FG_LOG( FG_SERIAL, FG_INFO, "  direction = " << direction );
+    p.direction = config.substr(begin);
+    FG_LOG( FG_SERIAL, FG_INFO, "  direction = " << p.direction );
 
+    p.valid_config = true;
+
+    return p;
+}
+
+
+// configure a port based on the config info
+static bool config_port( fgIOCHANNEL &p )
+{
     if ( p.port.is_enabled() ) {
 	FG_LOG( FG_SERIAL, FG_ALERT, "This shouldn't happen, but the port " 
 		<< "is already in use, ignoring" );
-	return p;
+	return false;
     }
 
-    if ( ! p.port.open_port( device ) ) {
-	FG_LOG( FG_SERIAL, FG_ALERT, "Error opening device: " << device );
-	return p;
+    if ( ! p.port.open_port( p.device ) ) {
+	FG_LOG( FG_SERIAL, FG_ALERT, "Error opening device: " << p.device );
+	return false;
     }
 
-    if ( ! p.port.set_baud( atoi( baud.c_str() ) ) ) {
-	FG_LOG( FG_SERIAL, FG_ALERT, "Error setting baud: " << baud );
-	return p;
+    // cout << "fd = " << p.port.fd << endl;
+
+    if ( ! p.port.set_baud( atoi( p.baud.c_str() ) ) ) {
+	FG_LOG( FG_SERIAL, FG_ALERT, "Error setting baud: " << p.baud );
+	return false;
     }
 
-    if ( format == "nmea" ) {
-	if ( direction == "out" ) {
+    if ( p.format == "nmea" ) {
+	if ( p.direction == "out" ) {
 	    p.kind = fgIOCHANNEL::FG_SERIAL_NMEA_OUT;
-	} else if ( direction == "in" ) {
+	} else if ( p.direction == "in" ) {
 	    p.kind = fgIOCHANNEL::FG_SERIAL_NMEA_IN;
 	} else {
 	    FG_LOG( FG_SERIAL, FG_ALERT, "Unknown direction" );
+	    return false;
 	}
-    } else if ( format == "garman" ) {
-	if ( direction == "out" ) {
-	    p.kind = fgIOCHANNEL::FG_SERIAL_GARMAN_OUT;
-	} else if ( direction == "in" ) {
-	    p.kind = fgIOCHANNEL::FG_SERIAL_GARMAN_IN;
+    } else if ( p.format == "garmin" ) {
+	if ( p.direction == "out" ) {
+	    p.kind = fgIOCHANNEL::FG_SERIAL_GARMIN_OUT;
+	} else if ( p.direction == "in" ) {
+	    p.kind = fgIOCHANNEL::FG_SERIAL_GARMIN_IN;
 	} else {
 	    FG_LOG( FG_SERIAL, FG_ALERT, "Unknown direction" );
+	    return false;
 	}
-    } else if ( format == "fgfs" ) {
-	if ( direction == "out" ) {
+    } else if ( p.format == "fgfs" ) {
+	if ( p.direction == "out" ) {
 	    p.kind = fgIOCHANNEL::FG_SERIAL_FGFS_OUT;
-	} else if ( direction == "in" ) {
+	} else if ( p.direction == "in" ) {
 	    p.kind = fgIOCHANNEL::FG_SERIAL_FGFS_IN;
 	} else {
 	    FG_LOG( FG_SERIAL, FG_ALERT, "Unknown direction" );
+	    return false;
 	}
     } else {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Unknown format" );
+	return false;
     }
 
-    return p;
+    return true;
 }
 
 
@@ -168,15 +179,24 @@ static fgIOCHANNEL config_port( const string& config )
 // serial port channels for each
 void fgSerialInit() {
     fgIOCHANNEL port;
+    bool result;
     str_container port_options_list = current_options.get_port_options_list();
 
-    const_str_iterator current = port_options_list.begin();
-    const_str_iterator last = port_options_list.end();
+    // we could almost do this in a single step except pushing a valid
+    // port onto the port list copies the structure and destroys the
+    // original, which closes the port and frees up the fd ... doh!!!
 
-    for ( ; current != last; ++current ) {
-	port = config_port( *current );
-	if ( port.kind != fgIOCHANNEL::FG_SERIAL_DISABLED ) {
-	    port_list.push_back( port );
+    // parse the configuration strings and store the results in stub
+    // fgIOCHANNEL structures
+    const_str_iterator current_str = port_options_list.begin();
+    const_str_iterator last_str = port_options_list.end();
+    for ( ; current_str != last_str; ++current_str ) {
+	port = parse_port_config( *current_str );
+	if ( port.valid_config ) {
+	    result = config_port( port );
+	    if ( result ) {
+		port_list.push_back( port );
+	    }
 	}
     }
 }
@@ -210,12 +230,15 @@ static void send_nmea_out( fgIOCHANNEL& p ) {
     fgFLIGHT *f;
     fgTIME *t;
 
-    // run once per second
+    // run once every two seconds
     if ( p.last_time == cur_time_params.cur_time ) {
 	return;
     }
     p.last_time = cur_time_params.cur_time;
-    
+    if ( cur_time_params.cur_time % 2 != 0 ) {
+	return;
+    }
+
     f = current_aircraft.flight;
     t = &cur_time_params;
 
@@ -245,7 +268,7 @@ static void send_nmea_out( fgIOCHANNEL& p ) {
     }
     deg = (int)(lond);
     min = (lond - (double)deg) * 60.0;
-    sprintf( lon, "%02d%06.3f,%c", abs(deg), min, dir);
+    sprintf( lon, "%03d%06.3f,%c", abs(deg), min, dir);
 
     char speed[10];
     sprintf( speed, "%05.1f", FG_V_equiv_kts );
@@ -268,38 +291,37 @@ static void send_nmea_out( fgIOCHANNEL& p ) {
 	     utc, lat, lon, speed, heading, date );
     sprintf( rmc_sum, "%02X", 0 /*calc_nmea_cksum(rmc)*/ );
 
-    sprintf( gga, "GPGGA,%s,%s,%s,1,,,%s,M,,,,",
-	     utc, lat, lon, altitude_m );
+    sprintf( gga, "GPGGA,%s,%s,%s,1,,,%s,F,,,,",
+	     utc, lat, lon, altitude_ft );
     sprintf( gga_sum, "%02X", 0 /*calc_nmea_cksum(gga)*/ );
 
 
     FG_LOG( FG_SERIAL, FG_DEBUG, rmc );
     FG_LOG( FG_SERIAL, FG_DEBUG, gga );
 
-    // one full frame every 2 seconds according to the standard
-    if ( cur_time_params.cur_time % 2 == 0 ) {
-	// rmc on even seconds
-	string rmc_sentence = "$";
-	rmc_sentence += rmc;
-	rmc_sentence += "*";
-	rmc_sentence += rmc_sum;
-	rmc_sentence += "\r\n";
-	p.port.write_port(rmc_sentence);
-    } else {
-	// gga on odd seconds
-	string gga_sentence = "$";
-	gga_sentence += gga;
-	gga_sentence += "*";
-	gga_sentence += gga_sum;
-	gga_sentence += "\n";
-	// p.port.write_port(gga_sentence);
-    }
+    // RMC sentence
+    string rmc_sentence = "$";
+    rmc_sentence += rmc;
+    rmc_sentence += "*";
+    rmc_sentence += rmc_sum;
+    rmc_sentence += "\n";
+    p.port.write_port(rmc_sentence);
+    cout << rmc_sentence;
+
+    // GGA sentence
+    string gga_sentence = "$";
+    gga_sentence += gga;
+    gga_sentence += "*";
+    gga_sentence += gga_sum;
+    gga_sentence += "\n";
+    p.port.write_port(gga_sentence);
+    cout << gga_sentence;
 }
 
 static void read_nmea_in( fgIOCHANNEL& p ) {
 }
 
-static void send_garman_out( fgIOCHANNEL& p ) {
+static void send_garmin_out( fgIOCHANNEL& p ) {
     char rmc[256], rmz[256];
     char dir;
     int deg;
@@ -312,6 +334,9 @@ static void send_garman_out( fgIOCHANNEL& p ) {
 	return;
     }
     p.last_time = cur_time_params.cur_time;
+    if ( cur_time_params.cur_time % 2 != 0 ) {
+	return;
+    }
     
     f = current_aircraft.flight;
     t = &cur_time_params;
@@ -342,7 +367,7 @@ static void send_garman_out( fgIOCHANNEL& p ) {
     }
     deg = (int)(lond);
     min = (lond - (double)deg) * 60.0;
-    sprintf( lon, "%02d%06.3f,%c", abs(deg), min, dir);
+    sprintf( lon, "%03d%06.3f,%c", abs(deg), min, dir);
 
     char speed[10];
     sprintf( speed, "%05.1f", FG_V_equiv_kts );
@@ -372,18 +397,16 @@ static void send_garman_out( fgIOCHANNEL& p ) {
     FG_LOG( FG_SERIAL, FG_DEBUG, rmc );
     FG_LOG( FG_SERIAL, FG_DEBUG, rmz );
 
+    // RMC sentence
+    p.port.write_port(rmc);
+    cout << rmc;
 
-    // one full frame every 2 seconds according to the standard
-    if ( cur_time_params.cur_time % 2 == 0 ) {
-	// rmc on even seconds
-	p.port.write_port(rmc);
-    } else {
-	// rmz on odd seconds
-	p.port.write_port(rmz);
-    }
+    // RMZ sentence (garmin proprietary)
+    p.port.write_port(rmz);
+    cout << rmz;
 }
 
-static void read_garman_in( fgIOCHANNEL& p ) {
+static void read_garmin_in( fgIOCHANNEL& p ) {
 }
 
 static void send_fgfs_out( fgIOCHANNEL& p ) {
@@ -399,10 +422,10 @@ static void process_port( fgIOCHANNEL& p ) {
 	send_nmea_out(p);
     } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_NMEA_IN ) {
 	read_nmea_in(p);
-    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_GARMAN_OUT ) {
-	send_garman_out(p);
-    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_GARMAN_IN ) {
-	read_garman_in(p);
+    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_GARMIN_OUT ) {
+	send_garmin_out(p);
+    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_GARMIN_IN ) {
+	read_garmin_in(p);
     } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_FGFS_OUT ) {
 	send_fgfs_out(p);
     } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_FGFS_IN ) {
@@ -428,6 +451,9 @@ void fgSerialProcess() {
 
 
 // $Log$
+// Revision 1.5  1998/11/30 17:43:32  curt
+// Lots of tweaking to get serial output to actually work.
+//
 // Revision 1.4  1998/11/25 01:33:58  curt
 // Support for an arbitrary number of serial ports.
 //
@@ -435,7 +461,7 @@ void fgSerialProcess() {
 // Tweaking serial stuff.
 //
 // Revision 1.2  1998/11/19 13:53:25  curt
-// Added a "Garman" mode.
+// Added a "Garmin" mode.
 //
 // Revision 1.1  1998/11/16 13:57:42  curt
 // Initial revision.

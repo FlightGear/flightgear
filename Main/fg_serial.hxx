@@ -31,6 +31,8 @@
 #endif
 
 
+#include <string>
+
 #include <Serial/serial.hxx>
 
 
@@ -43,15 +45,21 @@ public:
 	FG_SERIAL_DISABLED = 0,
 	FG_SERIAL_NMEA_OUT = 1,
 	FG_SERIAL_NMEA_IN = 2,
-	FG_SERIAL_GARMAN_OUT = 3,
-	FG_SERIAL_GARMAN_IN = 4,
+	FG_SERIAL_GARMIN_OUT = 3,
+	FG_SERIAL_GARMIN_IN = 4,
 	FG_SERIAL_FGFS_OUT = 5,
 	FG_SERIAL_FGFS_IN = 6
     };
 
+    string device;
+    string format;
+    string baud;
+    string direction;
+
     fgPortKind kind;
     fgSERIAL port;
     long last_time;
+    bool valid_config;
 
     fgIOCHANNEL();
     ~fgIOCHANNEL();
@@ -81,11 +89,14 @@ void fgSerialProcess();
 
 
 // $Log$
+// Revision 1.4  1998/11/30 17:43:34  curt
+// Lots of tweaking to get serial output to actually work.
+//
 // Revision 1.3  1998/11/25 01:33:59  curt
 // Support for an arbitrary number of serial ports.
 //
 // Revision 1.2  1998/11/19 13:53:27  curt
-// Added a "Garman" mode.
+// Added a "Garmin" mode.
 //
 // Revision 1.1  1998/11/16 13:57:43  curt
 // Initial revision.
