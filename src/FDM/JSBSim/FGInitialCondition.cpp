@@ -110,7 +110,6 @@ FGInitialCondition::~FGInitialCondition()
 void FGInitialCondition::SetVcalibratedKtsIC(double tt) {
 
   if(getMachFromVcas(&mach,tt*ktstofps)) {
-
     //cout << "Mach: " << mach << endl;
     lastSpeedSet=setvc;
     vc=tt*ktstofps;

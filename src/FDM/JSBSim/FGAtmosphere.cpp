@@ -152,10 +152,10 @@ bool FGAtmosphere::Run(void)
 
     Debug(2);
 
+	return false;
   } else {                               // skip Run() execution this time
+	return true;
   }
-
-  return false;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

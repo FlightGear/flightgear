@@ -121,15 +121,14 @@ public:
   void bind(void);
   void unbind(void);
 
-
 private:
   FGColumnVector3 vPQR;
   FGColumnVector3 vAeroPQR;
   FGColumnVector3 vPQRdot;
+  FGColumnVector3 vPQRdot_prev[3];
   FGColumnVector3 vMoments;
   FGColumnVector3 vEuler;
   FGColumnVector3 vEulerRates;
-  FGColumnVector3 vlastPQRdot;
   
   double cTht,sTht;
   double cPhi,sPhi;

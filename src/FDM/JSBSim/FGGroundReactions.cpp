@@ -134,6 +134,8 @@ string FGGroundReactions::GetGroundReactionStrings(void)
     GroundReactionStrings += (lGear[i].GetName() + "_strokeVel, ");
     GroundReactionStrings += (lGear[i].GetName() + "_CompressForce, ");
     GroundReactionStrings += (lGear[i].GetName() + "_WhlSideForce, ");
+    GroundReactionStrings += (lGear[i].GetName() + "_WhlVelVecX, ");
+    GroundReactionStrings += (lGear[i].GetName() + "_WhlVelVecY, ");
     GroundReactionStrings += (lGear[i].GetName() + "_WhlRollForce, ");
     GroundReactionStrings += (lGear[i].GetName() + "_BodyXForce, ");
     GroundReactionStrings += (lGear[i].GetName() + "_BodyYForce, ");
@@ -141,6 +143,13 @@ string FGGroundReactions::GetGroundReactionStrings(void)
 
     firstime = false;
   }
+
+  GroundReactionStrings += ", TotalGearForce_X, ";
+  GroundReactionStrings += "TotalGearForce_Y, ";
+  GroundReactionStrings += "TotalGearForce_Z, ";
+  GroundReactionStrings += "TotalGearMoment_L, ";
+  GroundReactionStrings += "TotalGearMoment_M, ";
+  GroundReactionStrings += "TotalGearMoment_N";
 
   return GroundReactionStrings;
 }
@@ -160,6 +169,8 @@ string FGGroundReactions::GetGroundReactionValues(void)
     GroundReactionValues += (string(gcvt(lGear[i].GetCompLen(),    5, buff)) + ", ");
     GroundReactionValues += (string(gcvt(lGear[i].GetCompVel(),    6, buff)) + ", ");
     GroundReactionValues += (string(gcvt(lGear[i].GetCompForce(), 10, buff)) + ", ");
+    GroundReactionValues += (string(gcvt(lGear[i].GetWheelVel(eX), 6, buff)) + ", ");
+    GroundReactionValues += (string(gcvt(lGear[i].GetWheelVel(eY), 6, buff)) + ", ");
     GroundReactionValues += (string(gcvt(lGear[i].GetWheelSideForce(), 6, buff)) + ", ");
     GroundReactionValues += (string(gcvt(lGear[i].GetWheelRollForce(), 6, buff)) + ", ");
     GroundReactionValues += (string(gcvt(lGear[i].GetBodyXForce(), 6, buff)) + ", ");
@@ -168,6 +179,13 @@ string FGGroundReactions::GetGroundReactionValues(void)
 
     firstime = false;
   }
+
+  GroundReactionValues += (", " + string(gcvt(vForces(eX), 6, buff)) + ", ");
+  GroundReactionValues += (string(gcvt(vForces(eY), 6, buff)) + ", ");
+  GroundReactionValues += (string(gcvt(vForces(eZ), 6, buff)) + ", ");
+  GroundReactionValues += (string(gcvt(vMoments(eX), 6, buff)) + ", ");
+  GroundReactionValues += (string(gcvt(vMoments(eY), 6, buff)) + ", ");
+  GroundReactionValues += (string(gcvt(vMoments(eZ), 6, buff)));
 
   return GroundReactionValues;
 }

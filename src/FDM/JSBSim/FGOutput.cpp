@@ -98,8 +98,9 @@ bool FGOutput::Run(void)
       } else {
         // Not a valid type of output
       }
-
+	  return false;
     } else {
+	  return true;
     }
   }
   return false;
@@ -172,7 +173,10 @@ void FGOutput::DelimitedOutput(string fname)
       outstream << ", ";
       outstream << "Drag, Side, Lift, ";
       outstream << "L/D, ";
-      outstream << "Xforce, Yforce, Zforce";
+      outstream << "Xforce, Yforce, Zforce, ";
+      outstream << "xGravity, yGravity, zGravity, ";
+      outstream << "xCoriolis, yCoriolis, zCoriolis, ";
+      outstream << "xCentrifugal, yCentrifugal, zCentrifugal";
     }
     if (SubSystems & ssMoments) {
       outstream << ", ";
@@ -252,7 +256,10 @@ void FGOutput::DelimitedOutput(string fname)
     outstream << ", ";
     outstream << Aerodynamics->GetvFs() << ", ";
     outstream << Aerodynamics->GetLoD() << ", ";
-    outstream << Aircraft->GetForces();
+    outstream << Aircraft->GetForces() << ", ";
+    outstream << Inertial->GetGravity() << ", ";
+    outstream << Inertial->GetCoriolis() << ", ";
+    outstream << Inertial->GetCentrifugal();
   }
   if (SubSystems & ssMoments) {
     outstream << ", ";

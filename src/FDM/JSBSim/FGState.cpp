@@ -64,13 +64,6 @@ MACROS
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-//
-// For every term registered here there must be a corresponding handler in
-// GetParameter() below that retrieves that parameter. Also, there must be an
-// entry in the enum eParam definition in FGJSBBase.h. The ID is what must be used
-// in any config file entry which references that item.
-
 FGState::FGState(FGFDMExec* fdex)
 {
   FDMExec = fdex;
@@ -78,7 +71,6 @@ FGState::FGState(FGFDMExec* fdex)
   a = 1000.0;
   sim_time = 0.0;
   dt = 1.0/120.0;
-  ActiveEngine = -1;
 
   Aircraft     = FDMExec->GetAircraft();
   Translation  = FDMExec->GetTranslation();
@@ -91,6 +83,8 @@ FGState::FGState(FGFDMExec* fdex)
   GroundReactions = FDMExec->GetGroundReactions();
   Propulsion      = FDMExec->GetPropulsion();
   PropertyManager = FDMExec->GetPropertyManager();
+
+  for(int i=0;i<3;i++) vQdot_prev[i].InitMatrix();
 
   InitPropertyMaps();
 
@@ -158,7 +152,6 @@ bool FGState::Reset(string path, string acname, string fname)
 
     resetfile >> token;
   }
-  
   
   Position->SetLatitude(latitude*degtorad);
   Position->SetLongitude(longitude*degtorad);
@@ -336,11 +329,10 @@ void FGState::IntegrateQuat(FGColumnVector3 vPQR, int rate)
   vQdot(2) =  0.5*(vQtrn(1)*vPQR(eP) + vQtrn(3)*vPQR(eR) - vQtrn(4)*vPQR(eQ));
   vQdot(3) =  0.5*(vQtrn(1)*vPQR(eQ) + vQtrn(4)*vPQR(eP) - vQtrn(2)*vPQR(eR));
   vQdot(4) =  0.5*(vQtrn(1)*vPQR(eR) + vQtrn(2)*vPQR(eQ) - vQtrn(3)*vPQR(eP));
-  vQtrn += 0.5*dt*rate*(vlastQdot + vQdot);
+
+  vQtrn += Integrate(TRAPZ, dt*rate, vQdot, vQdot_prev);
 
   vQtrn.Normalize();
-
-  vlastQdot = vQdot;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -553,17 +545,17 @@ void FGState::InitPropertyMaps(void)
   ParamNameToProp[  "FG_THROTTLE_POS" ]="fcs/throttle-pos-norm";
   ParamNameToProp[  "FG_MIXTURE_CMD" ]="fcs/mixture-cmd-norm";
   ParamNameToProp[  "FG_MIXTURE_POS" ]="fcs/mixture-pos-norm";
-  ParamNameToProp[  "FG_MAGNETO_CMD" ]="zero";
-  ParamNameToProp[  "FG_STARTER_CMD" ]="zero";
-  ParamNameToProp[  "FG_ACTIVE_ENGINE" ]="zero";
+  ParamNameToProp[  "FG_MAGNETO_CMD" ]="propulsion/magneto_cmd";
+  ParamNameToProp[  "FG_STARTER_CMD" ]="propulsion/starter_cmd";
+  ParamNameToProp[  "FG_ACTIVE_ENGINE" ]="propulsion/active_engine";
   ParamNameToProp[  "FG_HOVERB" ]="aero/h_b-mac-ft";
   ParamNameToProp[  "FG_PITCH_TRIM_CMD" ]="fcs/pitch-trim-cmd-norm";
   ParamNameToProp[  "FG_YAW_TRIM_CMD" ]="fcs/yaw-trim-cmd-norm";
   ParamNameToProp[  "FG_ROLL_TRIM_CMD" ]="fcs/roll-trim-cmd-norm";
-  ParamNameToProp[  "FG_LEFT_BRAKE_CMD" ]="zero";
-  ParamNameToProp[  "FG_CENTER_BRAKE_CMD" ]="zero";
-  ParamNameToProp[  "FG_RIGHT_BRAKE_CMD" ]="zero";
-  ParamNameToProp[  "FG_SET_LOGGING" ]="zero";
+  ParamNameToProp[  "FG_LEFT_BRAKE_CMD" ]="fcs/left_brake";
+  ParamNameToProp[  "FG_CENTER_BRAKE_CMD" ]="fcs/center_brake";
+  ParamNameToProp[  "FG_RIGHT_BRAKE_CMD" ]="fcs/right_brake";
+  ParamNameToProp[  "FG_SET_LOGGING" ]="sim/set_logging";
   ParamNameToProp[  "FG_ALPHAH" ]="aero/alpha-rad";
   ParamNameToProp[  "FG_ALPHAW" ]="aero/alpha-wing-rad";
   ParamNameToProp[  "FG_LBARH" ]="metrics/lh-norm";     

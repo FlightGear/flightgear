@@ -244,6 +244,7 @@ public:
   inline double GetBodyXForce(void)        { return vLocalForce(eX); }
   inline double GetBodyYForce(void)        { return vLocalForce(eY); }
   inline double GetWheelSlipAngle(void)    { return WheelSlip;       }
+  double GetWheelVel(int axis)             { return vWhlVelVec(axis);}
   
 private:
   FGColumnVector3 vXYZ;
@@ -270,6 +271,7 @@ private:
   double SideWhlVel, RollingWhlVel;
   double RollingForce, SideForce, FCoeff;
   double WheelSlip;
+  double lastWheelSlip;
   bool WOW;
   bool lastWOW;
   bool FirstContact;

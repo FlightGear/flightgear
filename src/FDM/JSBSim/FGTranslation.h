@@ -128,8 +128,8 @@ public:
 private:
   FGColumnVector3 vUVW;
   FGColumnVector3 vUVWdot;
-  FGColumnVector3 vlastUVWdot;
-  FGMatrix33       mVel;
+  FGColumnVector3 vUVWdot_prev[3];
+  FGMatrix33      mVel;
   FGColumnVector3 vAeroUVW;
 
   double Vt, Mach;
@@ -137,7 +137,6 @@ private:
   double dt;
   double alpha, beta;
   double adot,bdot;
-
   void Debug(int from);
 };
 

@@ -79,6 +79,7 @@ public:
   /** Constructor
       @param Executive a pointer to the parent executive object */
   FGPosition(FGFDMExec*);
+
   /// Destructor
   ~FGPosition();
 
@@ -132,7 +133,7 @@ private:
   
   double Radius, h;
   double LatitudeDot, LongitudeDot, RadiusDot;
-  double lastLatitudeDot, lastLongitudeDot, lastRadiusDot;
+  double LatitudeDot_prev[3], LongitudeDot_prev[3], RadiusDot_prev[3];
   double Longitude, Latitude;
   double dt;
   double RunwayRadius;

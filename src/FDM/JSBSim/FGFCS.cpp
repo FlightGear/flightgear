@@ -120,10 +120,11 @@ bool FGFCS::Run(void)
     for (i=0; i<PropAdvance.size(); i++) PropAdvance[i] = PropAdvanceCmd[i];
     for (i=0; i<Components.size(); i++)  Components[i]->Run();
     if (DoNormalize) Normalize();
-  } else {
-  }
 
-  return false;
+	return false;
+  } else {
+	return true;
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

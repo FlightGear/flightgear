@@ -192,6 +192,10 @@ public:
   double GetTanksIxz(const FGColumnVector3& vXYZcg);
   double GetTanksIxy(const FGColumnVector3& vXYZcg);
   
+  void SetMagnetos(int setting);
+  void SetStarter(int setting);
+  void SetActiveEngine(int engine);
+  
   void bind();
   void unbind();
    
@@ -207,6 +211,7 @@ private:
   unsigned int numEngines;
   unsigned int numTanks;
   unsigned int numThrusters;
+  int ActiveEngine;
   double dt;
   FGColumnVector3 vForces;
   FGColumnVector3 vMoments;
