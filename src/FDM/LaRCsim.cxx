@@ -34,6 +34,7 @@
 #include <FDM/LaRCsim/ls_interface.h>
 #include <FDM/LaRCsimIC.hxx>
 #include <FDM/UIUCModel/uiuc_aircraft.h>
+#include <Model/acmodel.hxx>
 
 #include "IO360.hxx"
 #include "LaRCsim.hxx"

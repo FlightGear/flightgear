@@ -93,13 +93,14 @@
 // #include <simgear/timing/timestamp.hxx>
 
 #include <Main/fgfs.hxx>
-#include <Model/acmodel.hxx>
 #include <Model/model.hxx>
 #include <Main/location.hxx>
 
 SG_USING_STD(list);
 SG_USING_STD(vector);
 SG_USING_STD(string);
+
+class FGAircraftModel;
 
 
 typedef double FG_VECTOR_3[3];

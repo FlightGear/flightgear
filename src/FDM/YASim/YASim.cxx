@@ -3,6 +3,7 @@
 #include <simgear/xml/easyxml.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Model/acmodel.hxx>
 
 #include "FGFDM.hpp"
 #include "Atmosphere.hpp"
