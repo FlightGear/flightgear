@@ -236,6 +236,9 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
 				// Use the old, default actions.
   SG_LOG(SG_INPUT, SG_INFO, "(No user binding.)");
+  if (modifiers&FG_MOD_UP)
+    return;
+
   float fov, tmp;
   static bool winding_ccw = true;
   int speed;
