@@ -37,6 +37,8 @@ FGRAY::FGRAY() {
 	chair_heading = 0.0;
 	chair_vertical[0] = 0.0;
 	chair_vertical[1] = 0.0;
+//	chair_FILE = stderr;
+	chair_FILE = 0;
 }
 
 
@@ -86,7 +88,7 @@ bool FGRAY::gen_message() {
 		lin_acc = f->get_A_Y_pilot() * 0.3;
 		break;
 	case 1: ang_pos = f->get_Theta();
-		lin_acc =-f->get_A_X_pilot() * 0.3;
+		lin_acc = f->get_A_X_pilot() * 0.3;
 		break;
 	case 2: ang_pos = f->get_Psi();
 		lin_acc = grav_acc - vert_acc;
@@ -106,9 +108,11 @@ bool FGRAY::gen_message() {
 	}
 
 	/* Tell interested parties what the situation is */
-	printf ( "RAY %s, %8.3f rad %8.3f m/s/s  =>",
-		((axis==0)?"Roll ":((axis==1)?"Pitch":"Yaw  ")),
-		ang_pos, lin_acc );
+	if (chair_FILE) {
+	    fprintf ( chair_FILE, "RAY %s, %8.3f rad %8.3f m/s/s  =>",
+		      ((axis==0)?"Roll ":((axis==1)?"Pitch":"Yaw  ")),
+		      ang_pos, lin_acc );
+	}
 
 	/* The upward direction and axis are special cases */
 	if ( axis == 2 )
@@ -153,8 +157,10 @@ bool FGRAY::gen_message() {
 	}
 
 	/* Tell interested parties what we'll do */
-	printf ( "  %8.3f deg %8.3f cm.\n",
-		ang_pos * 60.0, lin_pos * 100.0 );
+	if ( chair_FILE ) {
+	    fprintf ( chair_FILE, "  %8.3f deg %8.3f cm.\n",
+		      ang_pos * 60.0, lin_pos * 100.0 );
+	}
 
 	/* Write the resulting numbers to the command buffer */
 	/* The first pass number is linear, second pass is angle */
@@ -179,11 +185,6 @@ bool FGRAY::gen_message() {
 
     /* Tell the caller what we did */
     length = 18;
-
-    /* Log bytes for debug */
-//    for ( axis = 0; axis < length; axis++ )
-//        printf ( "%02x ", (unsigned int) (unsigned char) buf[axis] );
-//    printf ( "\n" );
 
     return true;
 }

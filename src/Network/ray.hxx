@@ -43,6 +43,7 @@ class FGRAY : public FGProtocol {
     double chair_rising;
     double chair_height;
     double chair_vertical[2];
+    FILE *chair_FILE;
 
 public:
 
