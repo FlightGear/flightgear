@@ -182,6 +182,7 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
     polys_in.safety_base.contour = NULL;
     gpc_add_contour( &polys_in.safety_base, &v_list, 0 );
 
+    int count = 0;
     // process polygons in priority order
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	cout << "num polys of type (" << i << ") = " 
@@ -213,13 +214,14 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 		//      << " accum.num_contours = " << accum.num_contours
 		//      << endl;
 		// tmp output accum
-		FILE *ofp= fopen("tmp-debug", "w");
-		gpc_write_polygon(ofp, 1, &tmp);
-		fclose(ofp);
 
-		ofp= fopen("accum-debug", "w");
-		gpc_write_polygon(ofp, 1, &accum);
-		fclose(ofp);
+		// FILE *ofp= fopen("tmp-debug", "w");
+		// gpc_write_polygon(ofp, 1, &tmp);
+		// fclose(ofp);
+
+		// ofp= fopen("accum-debug", "w");
+		// gpc_write_polygon(ofp, 1, &accum);
+		// fclose(ofp);
 
 		gpc_polygon_clip(GPC_DIFF, &tmp, &accum, result_diff);
 		gpc_polygon_clip(GPC_UNION, &tmp, &accum, &result_union);
@@ -248,6 +250,12 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 	    // only add to output list if the clip left us with a polygon
 	    if ( result_diff->num_contours > 0 ) {
 		polys_clipped.polys[i].push_back(result_diff);
+
+		// char filename[256];
+		// sprintf(filename, "next-result-%02d", count++);
+		// FILE *tmpfp= fopen(filename, "w");
+		// gpc_write_polygon(tmpfp, 1, result_diff);
+		// fclose(tmpfp);
 	    }
 	    accum = result_union;
 	}
