@@ -211,8 +211,10 @@ FGElectricalSystem::~FGElectricalSystem () {
 void FGElectricalSystem::init () {
     config_props = new SGPropertyNode;
 
+    SGPropertyNode *path_n = fgGetNode("/sim/systems/electrical/path", true);
+
     SGPath config( globals->get_fg_root() );
-    config.append( fgGetString("/sim/systems/electrical/path") );
+    config.append( path_n->getStringValue() );
 
     SG_LOG( SG_ALL, SG_ALERT, "Reading electrical system model from "
             << config.str() );
