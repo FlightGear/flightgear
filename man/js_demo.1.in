@@ -16,19 +16,18 @@
 .\" Or try here: http://www.fsf.org/copyleft/gpl.html
 .\"
 .Id $Id$
-.TH FGJS 1 "January 2002" "@VERSION@" "@PACKAGE@"
+.TH JS_DEMO 1 "January 2002" "@VERSION@" "@PACKAGE@"
 .SH NAME
-fgjs \- FlightGear Joystick Utility
+js_demo \- joystick test program for FlightGear
 .SH SYNOPSIS
-.B fgjs
+.B js_demo
 .SH DESCRIPTION
-.B fgjs
-is a joystick utility for the FlightGear Flight Simulator.  It allows
-you to generate an appropriate configuration file for your joystick.
+.B js_demo
+is a joystick test program for the FlightGear Flight Simulator.
 .SH BUGS
 Send bug reports to <flightgear-devel@flightgear.org>.
 .SH SEE ALSO
-fgfs(1)
+fgfs(1), fgjs(1)
 .SH AUTHORS
 Tony Peden, et al.  See
 .I Thanks

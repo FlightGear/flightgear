@@ -16,20 +16,19 @@
 .\" Or try here: http://www.fsf.org/copyleft/gpl.html
 .\"
 .Id $Id$
-.TH FGJS 1 "January 2002" "@VERSION@" "@PACKAGE@"
+.TH PSTEST 1 "January 2002" "@VERSION@" "@PACKAGE@"
 .SH NAME
-fgjs \- FlightGear Joystick Utility
+pstest \- engine model test for FlightGear
 .SH SYNOPSIS
-.B fgjs
+.B pstest
 .SH DESCRIPTION
-.B fgjs
-is a joystick utility for the FlightGear Flight Simulator.  It allows
-you to generate an appropriate configuration file for your joystick.
+.B pstest
+is a test program that models a Continental IO-520-M engine.
 .SH BUGS
 Send bug reports to <flightgear-devel@flightgear.org>.
 .SH SEE ALSO
 fgfs(1)
 .SH AUTHORS
-Tony Peden, et al.  See
+Curt L. Olson, et al.  See
 .I Thanks
 file for a list of contributors.

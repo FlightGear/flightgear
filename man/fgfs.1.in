@@ -1,4 +1,4 @@
-.\" Copyright (C) 2001 Cameron Moore
+.\" Copyright (C) 2002 Cameron Moore
 .\"
 .\" This program is free software; you can redistribute it and/or
 .\" modify it under the terms of the GNU General Public License
@@ -16,7 +16,7 @@
 .\" Or try here: http://www.fsf.org/copyleft/gpl.html
 .\"
 .Id $Id$
-.TH FGFS 1 "August 2001" "@VERSION@" "@PACKAGE@"
+.TH FGFS 1 "January 2002" "@VERSION@" "@PACKAGE@"
 .SH NAME
 fgfs \- FlightGear Flight Simulator
 .SH SYNOPSIS
