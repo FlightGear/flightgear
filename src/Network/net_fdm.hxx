@@ -1,4 +1,4 @@
-// raw_fdm.hxx -- defines a common raw I/O interface to the flight
+// net_fdm.hxx -- defines a common net I/O interface to the flight
 //                dynamics model
 //
 // Written by Curtis Olson, started September 2001.
@@ -22,24 +22,28 @@
 // $Id$
 
 
-#ifndef _RAW_FDM_HXX
-#define _RAW_FDM_HXX
+#ifndef _NET_FDM_HXX
+#define _NET_FDM_HXX
 
 
 #ifndef __cplusplus                                                          
 # error This library requires C++
 #endif                                   
 
-const int FG_RAW_FDM_VERSION = 3;
+const int FG_NET_FDM_VERSION = 0x0104;
 
 // Define a structure containing the top level flight dynamics model
 // parameters
 
-class FGRawFDM {
+class FGNetFDM {
 
 public:
 
     int version;		// increment when data values change
+    int pad;                    // keep doubles 64-bit aligned for some
+                                // hardware platforms, such as the Sun
+                                // SPARC, which don't like misaligned
+                                // data
 
     // Positions
     double longitude;		// geodetic (radians)
@@ -53,9 +57,11 @@ public:
     // Velocities
     double vcas;		// calibrated airspeed
     double climb_rate;		// feet per second
+
+    // Time
+    time_t cur_time;            // current unix time
+    long int warp;              // offset in seconds to unix time
 };
 
 
-#endif // _RAW_FDM_HXX
-
-
+#endif // _NET_FDM_HXX

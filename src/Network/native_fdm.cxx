@@ -21,12 +21,43 @@
 // $Id$
 
 
+#include <netinet/in.h>         // htonl() ntohl()
+
 #include <simgear/debug/logstream.hxx>
+#include <simgear/io/lowlevel.hxx> // endian tests
 #include <simgear/io/iochannel.hxx>
 
 #include <FDM/flight.hxx>
+#include <Main/globals.hxx>
 
 #include "native_fdm.hxx"
+
+
+
+// The function htond is defined this way due to the way some
+// processors and OSes treat floating point values.  Some will raise
+// an exception whenever a "bad" floating point value is loaded into a
+// floating point register.  Solaris is notorious for this, but then
+// so is LynxOS on the PowerPC.  By translating the data in place,
+// there is no need to load a FP register with the "corruped" floating
+// point value.  By doing the BIG_ENDIAN test, I can optimize the
+// routine for big-endian processors so it can be as efficient as
+// possible
+static void htond (double &x)	
+{
+    if ( sgIsLittleEndian() ) {
+        int    *Double_Overlay;
+        int     Holding_Buffer;
+    
+        Double_Overlay = (int *) &x;
+        Holding_Buffer = Double_Overlay [0];
+    
+        Double_Overlay [0] = htonl (Double_Overlay [1]);
+        Double_Overlay [1] = htonl (Holding_Buffer);
+    } else {
+        return;
+    }
+}
 
 
 FGNativeFDM::FGNativeFDM() {
@@ -58,40 +89,73 @@ bool FGNativeFDM::open() {
 }
 
 
-static void global2raw( const FGInterface *global, FGRawFDM *raw ) {
-    raw->version = FG_RAW_FDM_VERSION;
+static void global2net( const FGInterface *global, FGNetFDM *net ) {
+    net->version = FG_NET_FDM_VERSION;
 
     // positions
-    raw->longitude = cur_fdm_state->get_Longitude();
-    raw->latitude = cur_fdm_state->get_Latitude();
-    raw->altitude = cur_fdm_state->get_Altitude() * SG_FEET_TO_METER;
-    raw->phi = cur_fdm_state->get_Phi();
-    raw->theta = cur_fdm_state->get_Theta();
-    raw->psi = cur_fdm_state->get_Psi();
+    net->longitude = cur_fdm_state->get_Longitude();
+    net->latitude = cur_fdm_state->get_Latitude();
+    net->altitude = cur_fdm_state->get_Altitude() * SG_FEET_TO_METER;
+    net->phi = cur_fdm_state->get_Phi();
+    net->theta = cur_fdm_state->get_Theta();
+    net->psi = cur_fdm_state->get_Psi();
 
     // velocities
-    raw->vcas = cur_fdm_state->get_V_calibrated_kts();
-    raw->climb_rate = cur_fdm_state->get_Climb_Rate();
+    net->vcas = cur_fdm_state->get_V_calibrated_kts();
+    net->climb_rate = cur_fdm_state->get_Climb_Rate();
+
+    // time
+    net->cur_time = globals->get_time_params()->get_cur_time();
+    net->warp = globals->get_warp();
+
+    // Convert the net buffer to network format
+    net->version = htonl(net->version);
+    htond(net->longitude);
+    htond(net->latitude);
+    htond(net->altitude);
+    htond(net->phi);
+    htond(net->theta);
+    htond(net->psi);
+    htond(net->vcas);
+    htond(net->climb_rate);
+    net->cur_time = htonl( net->cur_time );
+    net->warp = htonl( net->warp );
 }
 
 
-static void raw2global( const FGRawFDM *raw, FGInterface *global ) {
-    if ( raw->version == FG_RAW_FDM_VERSION ) {
-	// cout << "pos = " << raw->longitude << " " << raw->latitude << endl;
+static void net2global( FGNetFDM *net, FGInterface *global ) {
+
+    // Convert to the net buffer from network format
+    net->version = htonl(net->version);
+    htond(net->longitude);
+    htond(net->latitude);
+    htond(net->altitude);
+    htond(net->phi);
+    htond(net->theta);
+    htond(net->psi);
+    htond(net->vcas);
+    htond(net->climb_rate);
+    net->cur_time = htonl(net->cur_time);
+    net->warp = htonl(net->warp);
+
+    if ( net->version == FG_NET_FDM_VERSION ) {
+	// cout << "pos = " << net->longitude << " " << net->latitude << endl;
 	// cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius() << endl;
-	cur_fdm_state->_updateGeodeticPosition( raw->latitude,
-						raw->longitude,
-						raw->altitude
+	cur_fdm_state->_updateGeodeticPosition( net->latitude,
+						net->longitude,
+						net->altitude
 						  * SG_METER_TO_FEET );
-	cur_fdm_state->_set_Euler_Angles( raw->phi,
-					  raw->theta,
-					  raw->psi );
-	cur_fdm_state->_set_V_calibrated_kts( raw->vcas );
-	cur_fdm_state->_set_Climb_Rate( raw->climb_rate );
+	cur_fdm_state->_set_Euler_Angles( net->phi,
+					  net->theta,
+					  net->psi );
+	cur_fdm_state->_set_V_calibrated_kts( net->vcas );
+	cur_fdm_state->_set_Climb_Rate( net->climb_rate );
+
+        globals->set_warp( net->warp );
     } else {
-	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in raw2global()" );
+	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in net2global()" );
 	SG_LOG( SG_IO, SG_ALERT,
-		"\tsomeone needs to upgrade raw_fdm.hxx and recompile." );
+		"\tsomeone needs to upgrade net_fdm.hxx and recompile." );
     }
 }
 
@@ -103,7 +167,7 @@ bool FGNativeFDM::process() {
 
     if ( get_direction() == SG_IO_OUT ) {
 	// cout << "size of cur_fdm_state = " << length << endl;
-	global2raw( cur_fdm_state, &buf );
+	global2net( cur_fdm_state, &buf );
 	if ( ! io->write( (char *)(& buf), length ) ) {
 	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
 	    return false;
@@ -112,12 +176,12 @@ bool FGNativeFDM::process() {
 	if ( io->get_type() == sgFileType ) {
 	    if ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		raw2global( &buf, cur_fdm_state );
+		net2global( &buf, cur_fdm_state );
 	    }
 	} else {
 	    while ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		raw2global( &buf, cur_fdm_state );
+		net2global( &buf, cur_fdm_state );
 	    }
 	}
     }

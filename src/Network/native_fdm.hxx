@@ -30,12 +30,12 @@
 #include <FDM/flight.hxx>
 
 #include "protocol.hxx"
-#include "raw_fdm.hxx"
+#include "net_fdm.hxx"
 
 
 class FGNativeFDM : public FGProtocol, public FGInterface {
 
-    FGRawFDM buf;
+    FGNetFDM buf;
     int length;
 
 public:
