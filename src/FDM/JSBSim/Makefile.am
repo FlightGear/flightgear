@@ -42,6 +42,7 @@ libJSBSim_a_SOURCES = \
 	FGPosition.cpp FGPosition.h \
 	FGRotation.cpp FGRotation.h \
 	FGRocket.cpp FGRocket.h \
+	FGScript.cpp FGScript.h \
 	FGState.cpp FGState.h \
 	FGTable.cpp FGTable.h \
 	FGThruster.cpp FGThruster.h \
