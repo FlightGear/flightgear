@@ -170,7 +170,7 @@ static void print_sgMat4( sgMat4 &in) {
 
 // Update the view parameters
 void FGViewer::update() {
-
+    Point3D tmp;
     sgVec3 minus_z, forward;
     sgMat4 VIEWo;
 
@@ -179,7 +179,8 @@ void FGViewer::update() {
 			 geod_view_pos[1], 
 			 sea_level_radius );
 
-    cur_zero_elev = sgPolarToCart3d(p) - scenery.center;
+    tmp = sgPolarToCart3d(p) - scenery.center;
+    sgSetVec3( zero_elev, tmp[0], tmp[1], tmp[2] );
 
     // calculate view position in current FG view coordinate system
     // p.lon & p.lat are already defined earlier, p.radius was set to
@@ -190,7 +191,7 @@ void FGViewer::update() {
 	p.setz( p.radius() + scenery.cur_elev + 0.5 * METER_TO_FEET );
     }
 
-    Point3D tmp = sgPolarToCart3d(p);
+    tmp = sgPolarToCart3d(p);
     sgdSetVec3( abs_view_pos, tmp[0], tmp[1], tmp[2] );
 
     sgdVec3 sc;

@@ -31,7 +31,6 @@
 #endif                                   
 
 #include <simgear/compiler.h>
-#include <simgear/math/point3d.hxx>
 #include <simgear/timing/sg_time.hxx>
 
 #include <list>
@@ -87,7 +86,7 @@ private:
 
     // cartesion coordinates of current lon/lat if at sea level
     // translated to scenery.center
-    Point3D cur_zero_elev;
+    sgVec3 zero_elev;
 
     // vector in cartesian coordinates from current position to the
     // postion on the earth's surface the sun is directly over
@@ -202,9 +201,9 @@ public:
 	if ( dirty ) { update(); }
 	return view_pos;
     }
-    inline Point3D get_cur_zero_elev() {
+    inline float *get_zero_elev() {
 	if ( dirty ) { update(); }
-	return cur_zero_elev;
+	return zero_elev;
     }
     inline float *get_surface_south() {
 	if ( dirty ) { update(); }

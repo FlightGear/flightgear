@@ -442,12 +442,6 @@ void fgRenderFrame( void ) {
  
 	// update the sky dome
 	if ( globals->get_options()->get_skyblend() ) {
-	    sgVec3 zero_elev;
-	    sgSetVec3( zero_elev,
-		       globals->get_current_view()->get_cur_zero_elev().x(),
-		       globals->get_current_view()->get_cur_zero_elev().y(),
-		       globals->get_current_view()->get_cur_zero_elev().z() );
-
 	    /* cout << "thesky->repaint() sky_color = "
 		 << cur_light_params.sky_color[0] << " "
 		 << cur_light_params.sky_color[1] << " "
@@ -484,7 +478,7 @@ void fgRenderFrame( void ) {
 		 << " moon dec = " << globals->get_ephem()->getMoonDeclination() << endl; */
 
 	    thesky->reposition( globals->get_current_view()->get_view_pos(),
-				zero_elev,
+				globals->get_current_view()->get_zero_elev(),
 				globals->get_current_view()->get_local_up(),
 				cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Latitude(),
