@@ -21,6 +21,8 @@
 // $Id$
 
 
+#include <Environment/environment_mgr.hxx>
+
 #include "globals.hxx"
 #include "fg_props.hxx"
 
@@ -80,6 +82,18 @@ FGGlobals::restoreInitialState ()
   } else {
     SG_LOG(SG_GENERAL, SG_INFO, "Initial state restored successfully");
   }
+}
+
+const FGEnvironment *
+FGGlobals::get_environment () const
+{
+  return environment_mgr->getEnvironment();
+}
+
+const FGEnvironment *
+FGGlobals::get_environment (double lat, double lon, double alt) const
+{
+  return environment_mgr->getEnvironment(lat, lon, alt);
 }
 
 

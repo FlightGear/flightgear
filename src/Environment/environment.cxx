@@ -39,6 +39,8 @@
 
 FGEnvironment::FGEnvironment()
   : visibility_m(32000),
+    temperature_sea_level_degc(20),
+    pressure_sea_level_inhg(28),
     wind_from_heading_deg(0),
     wind_speed_kt(0),
     wind_from_north_fps(0),
@@ -53,10 +55,72 @@ FGEnvironment::~FGEnvironment()
 }
 
 
+double
+FGEnvironment::get_visibility_m () const
+{
+  return visibility_m;
+}
+
+double
+FGEnvironment::get_temperature_sea_level_degc () const
+{
+  return temperature_sea_level_degc;
+}
+
+double
+FGEnvironment::get_pressure_sea_level_inhg () const
+{
+  return pressure_sea_level_inhg;
+}
+
+double
+FGEnvironment::get_wind_from_heading_deg () const
+{
+  return wind_from_heading_deg;
+}
+
+double
+FGEnvironment::get_wind_speed_kt () const
+{
+  return wind_speed_kt;
+}
+
+double
+FGEnvironment::get_wind_from_north_fps () const
+{
+  return wind_from_north_fps;
+}
+
+double
+FGEnvironment::get_wind_from_east_fps () const
+{
+  return wind_from_east_fps;
+}
+
+double
+FGEnvironment::get_wind_from_down_fps () const
+{
+  return wind_from_down_fps;
+}
+
+
+
 void
 FGEnvironment::set_visibility_m (double v)
 {
   visibility_m = v;
+}
+
+void
+FGEnvironment::set_temperature_sea_level_degc (double t)
+{
+  temperature_sea_level_degc = t;
+}
+
+void
+FGEnvironment::set_pressure_sea_level_inhg (double p)
+{
+  pressure_sea_level_inhg = p;
 }
 
 void

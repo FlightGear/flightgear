@@ -45,12 +45,6 @@
 #include <Main/viewer.hxx>
 #include <Objects/obj.hxx>
 
-#ifndef FG_NEW_ENVIRONMENT
-#  include <WeatherCM/FGLocalWeatherDatabase.h>
-#else
-#  include <Environment/environment.hxx>
-#endif
-
 #include "newcache.hxx"
 #include "scenery.hxx"
 #include "tilemgr.hxx"

@@ -51,22 +51,18 @@ public:
   FGEnvironment();
   virtual ~FGEnvironment();
   
-  inline virtual double get_visibility_m () const { return visibility_m; }
-  inline virtual double get_wind_from_heading_deg () const {
-    return wind_from_heading_deg;
-  }
-  inline virtual double get_wind_speed_kt () const { return wind_speed_kt; }
-  inline virtual double get_wind_from_north_fps () const {
-    return wind_from_north_fps;
-  }
-  inline virtual double get_wind_from_east_fps () const {
-    return wind_from_east_fps;
-  }
-  inline virtual double get_wind_from_down_fps () const {
-    return wind_from_down_fps;
-  }
+  virtual double get_visibility_m () const;
+  virtual double get_temperature_sea_level_degc () const;
+  virtual double get_pressure_sea_level_inhg () const;
+  virtual double get_wind_from_heading_deg () const;
+  virtual double get_wind_speed_kt () const;
+  virtual double get_wind_from_north_fps () const;
+  virtual double get_wind_from_east_fps () const;
+  virtual double get_wind_from_down_fps () const;
 
   virtual void set_visibility_m (double v);
+  virtual void set_temperature_sea_level_degc (double t);
+  virtual void set_pressure_sea_level_inhg (double p);
   virtual void set_wind_from_heading_deg (double h);
   virtual void set_wind_speed_kt (double s);
   virtual void set_wind_from_north_fps (double n);
@@ -79,6 +75,8 @@ private:
   void _recalc_ne ();
 
   double visibility_m;
+  double temperature_sea_level_degc;
+  double pressure_sea_level_inhg;
 
   double wind_from_heading_deg;
   double wind_speed_kt;

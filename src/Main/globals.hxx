@@ -42,8 +42,6 @@ SG_USING_STD( string );
 
 typedef vector<string> string_list;
 
-#include <Environment/environment_mgr.hxx>
-
 
 // Forward declarations
 class FGEnvironmentMgr;
@@ -168,13 +166,9 @@ public:
     inline void set_environment_mgr(FGEnvironmentMgr * mgr) {
       environment_mgr = mgr;
     }
-    inline const FGEnvironment * get_environment() const {
-      return environment_mgr->getEnvironment();
-    }
-    inline const FGEnvironment * get_environment(double lat, double lon,
-						 double alt) const {
-      return environment_mgr->getEnvironment(lat, lon, alt);
-    }
+    const FGEnvironment * get_environment() const;
+    const FGEnvironment * get_environment(double lat, double lon,
+					  double alt) const;
 
     inline FGSoundMgr *get_soundmgr() const { return soundmgr; }
     inline void set_soundmgr( FGSoundMgr *sm ) { soundmgr = sm; }

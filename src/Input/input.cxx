@@ -55,12 +55,6 @@
 #include <Cockpit/panel_io.hxx>
 #include <GUI/gui.h>
 
-#ifndef FG_NEW_ENVIRONMENT
-#  include <WeatherCM/FGLocalWeatherDatabase.h>
-#else
-#  include <Environment/environment.hxx>
-#endif
-
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 

@@ -50,6 +50,14 @@ FGEnvironmentMgr::bind ()
   fgTie("/environment/visibility-m", _environment,
 	&FGEnvironment::get_visibility_m, &FGEnvironment::set_visibility_m);
   fgSetArchivable("/environment/visibility-m");
+  fgTie("/environment/temperature-sea-level-degc", _environment,
+	&FGEnvironment::get_temperature_sea_level_degc,
+	&FGEnvironment::set_temperature_sea_level_degc);
+  fgSetArchivable("/environment/temperature-sea-level-degc");
+  fgTie("/environment/pressure-sea-level-inhg", _environment,
+	&FGEnvironment::get_pressure_sea_level_inhg,
+	&FGEnvironment::set_pressure_sea_level_inhg);
+  fgSetArchivable("/environment/pressure-sea-level-inhg");
   fgTie("/environment/wind-from-heading-deg", _environment,
 	&FGEnvironment::get_wind_from_heading_deg,
 	&FGEnvironment::set_wind_from_heading_deg);
