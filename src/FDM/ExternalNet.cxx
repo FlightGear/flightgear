@@ -384,15 +384,15 @@ void FGExternalNet::update( double dt ) {
     length = sizeof(ctrls);
     global2raw( &ctrls );
     if ( data_client.send( (char *)(& ctrls), length, 0 ) != length ) {
-	SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
+	SG_LOG( SG_IO, SG_DEBUG, "Error writing data." );
     } else {
-	SG_LOG( SG_IO, SG_ALERT, "wrote control data." );
+	SG_LOG( SG_IO, SG_DEBUG, "wrote control data." );
     }
 
     // Read next set of FDM data (blocking enabled to maintain 'sync')
     length = sizeof(fdm);
     while ( (result = data_server.recv( (char *)(& fdm), length, 0)) >= 0 ) {
-	SG_LOG( SG_IO, SG_INFO, "Success reading data." );
+	SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
 	net2global( &fdm );
     }
 }
