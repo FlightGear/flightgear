@@ -604,6 +604,8 @@ AC_CONFIG_FILES([ \
 	src/Time/Makefile \
 	src/WeatherCM/Makefile \
 	tests/Makefile \
+	utils/Makefile \
+	utils/TerraSync/Makefile \
 ])
 AC_OUTPUT
 

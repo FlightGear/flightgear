@@ -1,8 +1,9 @@
 SUBDIRS = \
 	tests \
-	src \
+	man \
         scripts \
-	man
+	src \
+        utils
 
 EXTRA_DIST = \
 	Thanks \
