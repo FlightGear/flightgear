@@ -908,7 +908,7 @@ parse_option (const string& arg)
 	fgSetDouble("/environment/wind-from-heading-deg", dir);
 	fgSetDouble("/environment/wind-speed-kt", speed);
 
-#if !defined (FG_NEW_ENVIRONMENT)
+#ifdef FG_WEATHERCM
         // convert to fps
 	speed *= SG_NM_TO_METER * SG_METER_TO_FEET * (1.0/3600);
 	while (dir > 360)
@@ -920,7 +920,7 @@ parse_option (const string& arg)
 		    speed * cos(dir));
 	fgSetDouble("/environment/wind-from-east-fps",
 		    speed * sin(dir));
-#endif // FG_NEW_ENVIRONMENT
+#endif // FG_WEATHERCM
     } else if ( arg.find( "--wp=" ) == 0 ) {
 	parse_wp( arg.substr( 5 ) );
     } else if ( arg.find( "--flight-plan=") == 0) {

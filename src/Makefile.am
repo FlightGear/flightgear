@@ -1,7 +1,7 @@
-if ENABLE_NEW_ENVIRONMENT
-WEATHER_DIR = Environment
-else
+if ENABLE_WEATHERCM
 WEATHER_DIR = WeatherCM
+else
+WEATHER_DIR = Environment
 endif
 
 if ENABLE_NETWORK_OLK

@@ -24,11 +24,11 @@
 
 #include <simgear/misc/sg_path.hxx>
 
-#ifdef FG_NEW_ENVIRONMENT
-#include <Environment/environment_mgr.hxx>
-#include <Environment/environment.hxx>
+#ifdef FG_WEATHERCM
+# include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
-#include <WeatherCM/FGLocalWeatherDatabase.h>
+# include <Environment/environment_mgr.hxx>
+# include <Environment/environment.hxx>
 #endif
 
 //Constructor
@@ -189,12 +189,12 @@ void FGApproach::Update() {
 // ============================================================================
 void FGApproach::get_active_runway() {
 
-#ifdef FG_NEW_ENVIRONMENT
-  FGEnvironment stationweather =
-    globals->get_environment_mgr()->getEnvironment(lat, lon, elev);
-#else
+#ifdef FG_WEATHERCM
   sgVec3 position = { lat, lon, elev };
   FGPhysicalProperty stationweather = WeatherDatabase->get(position);
+#else
+  FGEnvironment stationweather =
+    globals->get_environment_mgr()->getEnvironment(lat, lon, elev);
 #endif
 
   SGPath path( globals->get_fg_root() );
@@ -203,9 +203,7 @@ void FGApproach::get_active_runway() {
   FGRunways runways( path.c_str() );
   
   //Set the heading to into the wind
-#ifdef FG_NEW_ENVIRONMENT
-  double hdg = stationweather.get_wind_from_heading_deg();
-#else
+#ifdef FG_WEATHERCM
   double wind_x = stationweather.Wind[0];
   double wind_y = stationweather.Wind[1];
   
@@ -223,6 +221,8 @@ void FGApproach::get_active_runway() {
     if (hdg < 0.0)
       hdg += 360.0;
   }
+#else
+  double hdg = stationweather.get_wind_from_heading_deg();
 #endif
   
   FGRunway runway;

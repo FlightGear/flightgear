@@ -4,10 +4,10 @@ else
 SERIAL_LIBS =
 endif
 
-if ENABLE_NEW_ENVIRONMENT
-WEATHER_LIBS = $(top_builddir)/src/Environment/libEnvironment.a
-else
+if ENABLE_WEATHERCM
 WEATHER_LIBS = $(top_builddir)/src/WeatherCM/libWeatherCM.a
+else
+WEATHER_LIBS = $(top_builddir)/src/Environment/libEnvironment.a
 endif
 
 if ENABLE_NETWORK_OLK

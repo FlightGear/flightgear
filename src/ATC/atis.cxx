@@ -40,11 +40,11 @@ SG_USING_STD(cout);
 //#include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-#ifdef FG_NEW_ENVIRONMENT
+#ifdef FG_WEATHERCM
+# include <WeatherCM/FGLocalWeatherDatabase.h>
+#else
 # include <Environment/environment_mgr.hxx>
 # include <Environment/environment.hxx>
-#else
-# include <WeatherCM/FGLocalWeatherDatabase.h>
 #endif
 
 #include <Main/fg_props.hxx>
@@ -143,12 +143,12 @@ void FGATIS::UpdateTransmission() {
     int hours;
     // int minutes;
 
-#ifdef FG_NEW_ENVIRONMENT
-    FGEnvironment stationweather =
-      globals->get_environment_mgr()->getEnvironment(lat, lon, elev);
-#else
+#ifdef FG_WEATHERCM
     sgVec3 position = { lat, lon, elev };
     FGPhysicalProperty stationweather = WeatherDatabase->get(position);
+#else
+    FGEnvironment stationweather =
+      globals->get_environment_mgr()->getEnvironment(lat, lon, elev);
 #endif
 
     transmission = "";
@@ -177,10 +177,10 @@ void FGATIS::UpdateTransmission() {
     // Get the temperature
     // (Hardwire it for now since the global property returns the temperature at the current altitude
     //temperature = fgGetDouble("/environment/weather/temperature-K");
-#ifdef FG_NEW_ENVIRONMENT
-    sprintf(buf, "%i", int(stationweather.get_temperature_degc()));
-#else
+#ifdef FG_WEATHERCM
     sprintf(buf, "%i", int(stationweather.Temperature - 273.15));
+#else
+    sprintf(buf, "%i", int(stationweather.get_temperature_degc()));
 #endif
     transmission += "  Temperature ";
     transmission += buf;
@@ -190,10 +190,10 @@ void FGATIS::UpdateTransmission() {
         // pressure is: stationweather.AirPressure in Pascal
 
 	// Get the visibility
-#ifdef FG_NEW_ENVIRONMENT
-        visibility = stationweather.get_visibility_m();
-#else
+#ifdef FG_WEATHERCM
 	visibility = fgGetDouble("/environment/visibility-m");
+#else
+        visibility = stationweather.get_visibility_m();
 #endif
 	sprintf(buf, "%i", int(visibility/1600));
 	transmission += "  Visibility ";
@@ -217,18 +217,7 @@ void FGATIS::UpdateTransmission() {
 	path.append( "runways.mk4" );
 	FGRunways runways( path.c_str() );
 
-#ifdef FG_NEW_ENVIRONMENT
-	double speed = stationweather.get_wind_speed_kt();
-	double hdg = stationweather.get_wind_from_heading_deg();
-	if (speed == 0) {
-	  transmission += "  Winds light and variable";
-	} else {
-				// FIXME: get gust factor in somehow
-	    char buf2[72];
-	    sprintf(buf2, "%s %i %s %i %s", "  Winds ", int(speed),
-		    " knots from ", int(hdg), " degrees");
-	}
-#else
+#ifdef FG_WEATHERCM
 	//Set the heading to into the wind
         double wind_x = stationweather.Wind[0];
         double wind_y = stationweather.Wind[1];
@@ -252,6 +241,17 @@ void FGATIS::UpdateTransmission() {
 	    char buf2[72];
 	    sprintf(buf2, "%s %i %s %i %s", "  Winds ", int(speed), " knots from ", int(hdg), " degrees");
 	    transmission += buf2;
+	}
+#else
+	double speed = stationweather.get_wind_speed_kt();
+	double hdg = stationweather.get_wind_from_heading_deg();
+	if (speed == 0) {
+	  transmission += "  Winds light and variable";
+	} else {
+				// FIXME: get gust factor in somehow
+	    char buf2[72];
+	    sprintf(buf2, "%s %i %s %i %s", "  Winds ", int(speed),
+		    " knots from ", int(hdg), " degrees");
 	}
 #endif
 

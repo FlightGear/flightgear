@@ -111,7 +111,7 @@
 #include <Time/moonpos.hxx>
 #include <Time/tmp.hxx>
 
-#ifndef FG_NEW_ENVIRONMENT
+#ifdef FG_WEATHERCM
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
 #  include <Environment/environment_mgr.hxx>
@@ -842,7 +842,7 @@ bool fgInitSubsystems( void ) {
     ////////////////////////////////////////////////////////////////////
 
     // Initialize the weather modeling subsystem
-#ifndef FG_NEW_ENVIRONMENT
+#ifdef FG_WEATHERCM
     // Initialize the WeatherDatabase
     SG_LOG(SG_GENERAL, SG_INFO, "Creating LocalWeatherDatabase");
     sgVec3 position;

@@ -64,15 +64,12 @@
 /* Define to include Oliver's networking support */
 #undef FG_NETWORK_OLK
    
-/* Define to avoid Christian's new weather code */
-#undef FG_NEW_ENVIRONMENT
+/* Define to use Christian's old weather code */
+#undef FG_WEATHERCM
 
 /* Define to enable new Plib joystick features (post 1.4) */
 #undef FG_PLIB_JOYSTICK_GETNAME
 
-/* Define to use old mouse support */
-#undef FG_OLD_MOUSE
-   
 /* Define if we are building FGFS (should always be defined) */
 #undef FGFS
    

@@ -151,7 +151,7 @@ float scene_farplane = 120000.0f;
 static double delta_time_sec = 0;
 
 
-#ifndef FG_NEW_ENVIRONMENT
+#ifdef FG_WEATHERCM
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
 #  include <Environment/environment_mgr.hxx>
@@ -885,8 +885,8 @@ static void fgMainLoop( void ) {
     // init routine and we don't have to worry about it again.
 #endif
 
-#ifdef FG_NEW_ENVIRONMENT
-    globals->get_environment_mgr()->update(0);	// FIXME: use real delta time
+#ifndef FG_WEATHERCM
+    globals->get_environment_mgr()->update(delta_time_sec);
 #endif
 
     // Fix elevation.  I'm just sticking this here for now, it should
@@ -1300,13 +1300,6 @@ int fgGlutInitEvents( void ) {
 
     // keyboard and mouse callbacks are set in FGInput::init
 
-#ifdef FG_OLD_MOUSE
-    // call guiMouseFunc() whenever our little rodent is used
-    glutMouseFunc ( guiMouseFunc );
-    glutMotionFunc (guiMotionFunc );
-    glutPassiveMotionFunc (guiMotionFunc );
-#endif
-
     // call fgMainLoop() whenever there is
     // nothing else to do
     glutIdleFunc( fgIdleFunction );
@@ -1344,7 +1337,7 @@ int mainLoop( int argc, char **argv ) {
 
     globals = new FGGlobals;
 
-#if defined(FG_NEW_ENVIRONMENT)
+#ifndef FG_WEATHERCM
     globals->set_environment_mgr(new FGEnvironmentMgr);
 #endif
 

@@ -34,11 +34,11 @@
 #include <Aircraft/aircraft.hxx>
 #include <Time/tmp.hxx>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
-#ifndef FG_NEW_ENVIRONMENT
+#ifdef FG_WEATHERCM
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
 #  include <Environment/environment.hxx>
-#endif // FG_NEW_ENVIRONMENT
+#endif // FG_WEATHERCM
 #include <Objects/matlib.hxx>
 
 #include <GUI/gui.h>
@@ -53,11 +53,11 @@ SG_USING_STD(istream);
 SG_USING_STD(ostream);
 #endif
 
-#if !defined(FG_NEW_ENVIRONMENT)
+#ifdef FG_WEATHERCM
 static double getWindNorth ();
 static double getWindEast ();
 static double getWindDown ();
-#endif // FG_NEW_ENVIRONMENT
+#endif // FG_WEATHERCM
 
 static bool winding_ccw = true; // FIXME: temporary
 
@@ -401,7 +401,7 @@ getHeadingMag ()
 }
 
 
-#if !defined(FG_NEW_ENVIRONMENT)
+#ifdef FG_WEATHERCM
 
 /**
  * Get the current visibility (meters).
@@ -487,7 +487,7 @@ setWindDown (double speed)
 							   speed);
 }
 
-#endif // FG_NEW_ENVIRONMENT
+#endif // FG_WEATHERCM
 
 static long
 getWarp ()
@@ -590,7 +590,7 @@ fgInitProps ()
   fgTie("/orientation/heading-magnetic-deg", getHeadingMag);
 
 				// Environment
-#if !defined(FG_NEW_ENVIRONMENT)
+#ifdef FG_WEATHERCM
   fgTie("/environment/visibility-m", getVisibility, setVisibility);
   fgSetArchivable("/environment/visibility-m");
   fgTie("/environment/wind-from-north-fps", getWindNorth, setWindNorth);
