@@ -1,4 +1,9 @@
-EXTRA_DIST = c172_aero.c c172_engine.c c172_gear.c c172_init.c navion_init.h
+EXTRA_DIST = \
+	c172_aero.c c172_aero.h \
+	c172_engine.c \
+	c172_gear.c \
+	c172_init.c \
+	navion_init.h
 
 if ENABLE_C172
 AIRCRAFT_MODEL = c172_aero.c c172_engine.c c172_gear.c c172_init.c navion_init.h
