@@ -159,17 +159,19 @@ FGNewMat::Object::load_models () const
       ssgTexturePath((char *)path.dir().c_str());
       ssgEntity * entity = load_object((char *)path.c_str());
       if (entity != 0) {
+        // entity->ref();
 	float ranges[] = {0, _range_m};
 	ssgRangeSelector * lod = new ssgRangeSelector;
-	lod->setRanges(ranges, 2);
+        lod->ref();
+        lod->setRanges(ranges, 2);
 	if (_heading_type == HEADING_BILLBOARD) {
 	  ssgCutout * cutout = new ssgCutout(false);
+          // cutout->ref();
 	  cutout->addKid(entity);
 	  lod->addKid(cutout);
 	} else {
 	  lod->addKid(entity);
 	}
-	lod->ref();
 	_models.push_back(lod);
       } else {
 	SG_LOG(SG_INPUT, SG_ALERT, "Failed to load object " << path.str());
