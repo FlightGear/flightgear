@@ -415,7 +415,6 @@ FGInput::doMouseMotion (int x, int y)
 void
 FGInput::_init_keyboard ()
 {
-                                // TODO: zero the old bindings first.
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing key bindings");
   SGPropertyNode * key_nodes = fgGetNode("/input/keyboard");
   if (key_nodes == 0) {
@@ -427,6 +426,8 @@ FGInput::_init_keyboard ()
   for (unsigned int i = 0; i < keys.size(); i++) {
     int index = keys[i]->getIndex();
     SG_LOG(SG_INPUT, SG_DEBUG, "Binding key " << index);
+
+    _key_bindings[index].bindings->clear();
     _key_bindings[index].is_repeatable = keys[i]->getBoolValue("repeatable");
     _read_bindings(keys[i], _key_bindings[index].bindings, FG_MOD_NONE);
   }
