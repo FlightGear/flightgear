@@ -21,6 +21,12 @@
 // $Id$
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <simgear/compiler.h>
+
 #include <FDM/flight.hxx>
 #include <Main/fg_props.hxx>
 
