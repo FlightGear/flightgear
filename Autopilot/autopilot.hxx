@@ -1,5 +1,5 @@
 /**************************************************************************
- * autopilot.h -- autopilot defines and prototypes (very alpha)
+ * autopilot.hxx -- autopilot defines and prototypes (very alpha)
  *
  * Written by Jeff Goeke-Smith, started April 1998.
  *
@@ -39,19 +39,24 @@ extern "C" {
 
 // Structures
 typedef struct {
-		int Mode ; // the current mode the AP is operating in
-		double Heading; // the heading the AP  should steer to.
-		double TargetSlope; // the glide slope hold value
-		
-		double MaxRoll ; // the max the plane can roll for the turn
-		double RollOut;  // when the plane should roll out
-				 // measured from Heading
-		double MaxAileron; // how far to move the aleroin from center
-		double RollOutSmooth; // deg to use for smoothing Aileron Control
-		double MaxElevator; // the maximum elevator allowed
-		double SlopeSmooth; // smoothing angle for elevator
-		
-		} fgAPData, *fgAPDataPtr ;
+    int heading_hold;  // the current state of the heading hold
+    int altitude_hold; // the current state of the altitude hold
+
+    double TargetHeading;     // the heading the AP should steer to.
+    double TargetAltitude;    // altitude to hold
+    double alt_error_accum;   // altitude error accumulator
+
+    double TargetSlope; // the glide slope hold value
+    
+    double MaxRoll ; // the max the plane can roll for the turn
+    double RollOut;  // when the plane should roll out
+    // measured from Heading
+    double MaxAileron; // how far to move the aleroin from center
+    double RollOutSmooth; // deg to use for smoothing Aileron Control
+    double MaxElevator; // the maximum elevator allowed
+    double SlopeSmooth; // smoothing angle for elevator
+    
+} fgAPData, *fgAPDataPtr ;
 		
 
 // Defines
@@ -61,8 +66,8 @@ typedef struct {
 // prototypes
 void fgAPInit( fgAIRCRAFT *current_aircraft );
 int fgAPRun( void );
-void fgAPSetMode( int mode);
-void fgAPSetHeading( double Heading);
+void fgAPToggleHeading( void );
+void fgAPToggleAltitude( void );
 
 
 #ifdef __cplusplus
