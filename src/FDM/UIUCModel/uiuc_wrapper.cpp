@@ -90,7 +90,7 @@
 #include "uiuc_menu.h"
 #include "uiuc_betaprobe.h"
 #include <FDM/LaRCsim/ls_generic.h>
-#include "Main/simple_udp.h"
+// #include "Main/simple_udp.h"
 #include "uiuc_fog.h" //321654
 
 #if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
@@ -109,7 +109,7 @@ extern "C" void uiuc_initial_init ();
 AIRCRAFT *aircraft_ = new AIRCRAFT;
 AIRCRAFTDIR *aircraftdir_ = new AIRCRAFTDIR;
 
-SendArray testarray(4950);
+// SendArray testarray(4950);
 
 /* Convert float to string */
 string ftoa(double in)
@@ -257,8 +257,8 @@ void uiuc_force_moment(double dt)
   input += " altitude " + ftoa(Altitude);
   input += " climb_rate " + ftoa(-1.0*V_down_rel_ground);
  
-  testarray.getHello();
-  testarray.sendData(input);
+  // testarray.getHello();
+  // testarray.sendData(input);
   
   /* End of Networking */ 
 

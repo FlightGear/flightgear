@@ -37,6 +37,9 @@
 	CURRENT RCS HEADER INFO:
 $Header$
 $Log$
+Revision 1.4  2001/09/14 18:47:27  curt
+More changes in support of UIUCModel.
+
 Revision 1.3  2000/10/28 14:30:33  curt
 Updates by Tony working on the FDM interface bus.
 
@@ -142,6 +145,7 @@ void ls_model( SCALAR dt, int Initialize ) {
       uiuc_aero( dt, Initialize );
       uiuc_engine( dt, Initialize );
       uiuc_gear( dt, Initialize );
+      uiuc_record(dt);
       break;
     }
 }

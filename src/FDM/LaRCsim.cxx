@@ -34,6 +34,7 @@
 #include <FDM/LaRCsim/ls_generic.h>
 #include <FDM/LaRCsim/ls_interface.h>
 #include <FDM/LaRCsimIC.hxx>
+#include <FDM/UIUCModel/uiuc_aircraft.h>
 
 #include "IO360.hxx"
 #include "LaRCsim.hxx"
@@ -47,14 +48,16 @@ FGLaRCsim::FGLaRCsim( double dt ) {
     ls_toplevel_init( 0.0, (char *)(aircraft->getStringValue().c_str()) );
 
     lsic=new LaRCsimIC; //this needs to be brought up after LaRCsim is
-    copy_to_LaRCsim(); // initialize all of LaRCsim's vars
+    if ( aircraft->getStringValue() == "c172" ) {
+	copy_to_LaRCsim(); // initialize all of LaRCsim's vars
 
-    //this should go away someday -- formerly done in fg_init.cxx
-    Mass = 8.547270E+01;
-    I_xx = 1.048000E+03;
-    I_yy = 3.000000E+03;
-    I_zz = 3.530000E+03;
-    I_xz = 0.000000E+00;
+	//this should go away someday -- formerly done in fg_init.cxx
+	Mass = 8.547270E+01;
+	I_xx = 1.048000E+03;
+	I_yy = 3.000000E+03;
+	I_zz = 3.530000E+03;
+	I_xz = 0.000000E+00;
+    }
     
     ls_set_model_dt( get_delta_t() );
     
@@ -537,6 +540,28 @@ bool FGLaRCsim::copy_from_LaRCsim() {
 
     _set_Climb_Rate( -1 * V_down );
     // cout << "climb rate = " << -V_down * 60 << endl;
+
+    if ( aircraft->getStringValue() == "uiuc" ) {
+	if (pilot_elev_no) {
+	    globals->get_controls()->set_elevator(Long_control);
+	    globals->get_controls()->set_elevator_trim(Long_trim);
+	    //	    controls.set_elevator(Long_control);
+	    //	    controls.set_elevator_trim(Long_trim);
+        }
+	if (pilot_ail_no) {
+            globals->get_controls()->set_aileron(Lat_control);
+            //	  controls.set_aileron(Lat_control);
+        }
+	if (pilot_rud_no) {
+            globals->get_controls()->set_rudder(Rudder_pedal);
+            //	  controls.set_rudder(Rudder_pedal);
+        }
+	if (Throttle_pct_input) {
+            globals->get_controls()->set_throttle(0,Throttle_pct);
+            //	  controls.set_throttle(0,Throttle_pct);
+        }
+    }
+
     return true;
 }
 

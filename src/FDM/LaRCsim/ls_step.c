@@ -50,6 +50,9 @@
 
 $Header$
 $Log$
+Revision 1.5  2001/09/14 18:47:27  curt
+More changes in support of UIUCModel.
+
 Revision 1.4  2001/03/24 05:03:12  curt
 SG-ified logstream.
 
@@ -278,6 +281,8 @@ Initial Flight Gear revision.
 
 --------------------------------------------------------------------------*/
 
+#include <FDM/UIUCModel/uiuc_wrapper.h>
+
 #include "ls_types.h"
 #include "ls_constants.h"
 #include "ls_generic.h"
@@ -290,7 +295,20 @@ Initial Flight Gear revision.
 /* #include "ls_sim_control.h" */
 #include <math.h>
 
+Model current_model;
 extern SCALAR Simtime;		/* defined in ls_main.c */
+
+void uiuc_init_vars() {
+    static int init = 0;
+
+    if (init==0) {
+        init=-1;
+        uiuc_init_aeromodel();
+    }
+
+    uiuc_initial_init();
+}
+
 
 void ls_step( SCALAR dt, int Initialize ) {
 	static	int	inited = 0;
@@ -330,6 +348,9 @@ void ls_step( SCALAR dt, int Initialize ) {
     	V_east = V_east + local_gnd_veast;
 
 /* Initialize quaternions and transformation matrix from Euler angles */
+	if (current_model == UIUC && Simtime == 0) {
+	    uiuc_init_vars();
+        }
 
 	    e_0 = cos(Psi*0.5)*cos(Theta*0.5)*cos(Phi*0.5) 
 		+ sin(Psi*0.5)*sin(Theta*0.5)*sin(Phi*0.5);
@@ -348,6 +369,10 @@ void ls_step( SCALAR dt, int Initialize ) {
 	    T_local_to_body_31 = 2*(e_1*e_3 + e_0*e_2);
 	    T_local_to_body_32 = 2*(e_2*e_3 - e_0*e_1);
 	    T_local_to_body_33 = e_0*e_0 - e_1*e_1 - e_2*e_2 + e_3*e_3;
+
+	if (current_model == UIUC && Simtime == 0) {
+	    uiuc_vel_init();
+        }
 
 /*	Calculate local gravitation acceleration	*/
 

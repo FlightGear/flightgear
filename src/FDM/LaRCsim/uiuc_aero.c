@@ -29,7 +29,7 @@
   DATE		PURPOSE												BY
   3/17/00   Initial test release  
   3/09/01   Added callout to UIUC gear function.   (DPM)
-  
+  6/18/01   Added call out to UIUC record routine (RD)
 
 ----------------------------------------------------------------------------
 
@@ -81,4 +81,9 @@ void uiuc_engine( SCALAR dt, int Initialize )
 void uiuc_gear ()
 {
     uiuc_gear_routine();
+}
+
+void uiuc_record(SCALAR dt)
+{
+  uiuc_record_routine(dt);
 }
