@@ -49,6 +49,8 @@
 
 #include <Main/fgfs.hxx>
 
+#include <Input/input.hxx>
+
 SG_USING_STD(vector);
 SG_USING_STD(map);
 
@@ -215,6 +217,7 @@ public:
   virtual int getHeight () const { return _h; }
 
 				// Setters.
+  virtual void addBinding (const FGBinding &binding);
   virtual void setButton (int button) { _button = button; }
   virtual void setX (int x) { _x = x; }
   virtual void setY (int y) { _y = y; }
@@ -232,84 +235,17 @@ public:
   }
 
 				// Perform the action.
-  virtual void doAction () = 0;
+  virtual void doAction ();
 
 private:
+  typedef vector<FGBinding> binding_list_t;
+
   int _button;
   int _x;
   int _y;
   int _w;
   int _h;
-};
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Adjustment action.
-//
-// This is an action to increase or decrease an FGFS value by a certain
-// increment within a certain range.  If the wrap flag is true, the
-// value will wrap around if it goes below min or above max; otherwise,
-// it will simply stop at min or max.
-////////////////////////////////////////////////////////////////////////
-
-class FGAdjustAction : public FGPanelAction
-{
-public:
-  FGAdjustAction (int button, int x, int y, int w, int h,
-		  SGPropertyNode * node, float increment,
-		  float min, float max, bool wrap=false);
-  virtual ~FGAdjustAction ();
-  virtual void doAction ();
-
-private:
-  SGPropertyNode * _node;
-  float _increment;
-  float _min;
-  float _max;
-  bool _wrap;
-};
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Swap action.
-//
-// This is an action to swap two values.  It's currently used in the
-// navigation radios.
-////////////////////////////////////////////////////////////////////////
-
-class FGSwapAction : public FGPanelAction
-{
-public:
-  FGSwapAction (int button, int x, int y, int w, int h,
-		SGPropertyNode * node1, SGPropertyNode * node2);
-  virtual ~FGSwapAction ();
-  virtual void doAction ();
-
-private:
-  SGPropertyNode * _node1;
-  SGPropertyNode * _node2;
-};
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Toggle action.
-//
-// This is an action to toggle a boolean value.
-////////////////////////////////////////////////////////////////////////
-
-class FGToggleAction : public FGPanelAction
-{
-public:
-  FGToggleAction (int button, int x, int y, int w, int h,
-		  SGPropertyNode * node);
-  virtual ~FGToggleAction ();
-  virtual void doAction ();
-
-private:
-  SGPropertyNode * _node;
+  binding_list_t _bindings;
 };
 
 

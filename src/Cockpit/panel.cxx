@@ -273,7 +273,8 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  gluOrtho2D(winx, winx + winw, winy, winy + winh);
+  gluOrtho2D(winx, winx + winw, winy, winy + winh); /* right side up */
+  // gluOrtho2D(winx + winw, winx, winy + winh, winy); /* up side down */
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
@@ -450,81 +451,19 @@ FGPanelAction::~FGPanelAction ()
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////
-// Implementation of FGAdjustAction.
-////////////////////////////////////////////////////////////////////////
-
-FGAdjustAction::FGAdjustAction (int button, int x, int y, int w, int h,
-				SGPropertyNode * node, float increment, 
-				float min, float max, bool wrap)
-  : FGPanelAction(button, x, y, w, h),
-    _node(node), _increment(increment), _min(min), _max(max), _wrap(wrap)
+void
+FGPanelAction::addBinding (const FGBinding &binding)
 {
-}
-
-FGAdjustAction::~FGAdjustAction ()
-{
+  _bindings.push_back(binding);
 }
 
 void
-FGAdjustAction::doAction ()
+FGPanelAction::doAction ()
 {
-  float val = _node->getFloatValue();
-  val += _increment;
-  if (val < _min) {
-    val = (_wrap ? _max : _min);
-  } else if (val > _max) {
-    val = (_wrap ? _min : _max);
+  int nBindings = _bindings.size();
+  for (int i = 0; i < nBindings; i++) {
+    _bindings[i].fire();
   }
-  _node->setDoubleValue(val);
-}
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Implementation of FGSwapAction.
-////////////////////////////////////////////////////////////////////////
-
-FGSwapAction::FGSwapAction (int button, int x, int y, int w, int h,
-			    SGPropertyNode * node1, SGPropertyNode * node2)
-  : FGPanelAction(button, x, y, w, h), _node1(node1), _node2(node2)
-{
-}
-
-FGSwapAction::~FGSwapAction ()
-{
-}
-
-void
-FGSwapAction::doAction ()
-{
-  float val = _node1->getFloatValue();
-  _node1->setDoubleValue(_node2->getFloatValue());
-  _node2->setDoubleValue(val);
-}
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Implementation of FGToggleAction.
-////////////////////////////////////////////////////////////////////////
-
-FGToggleAction::FGToggleAction (int button, int x, int y, int w, int h,
-				SGPropertyNode * node)
-  : FGPanelAction(button, x, y, w, h), _node(node)
-{
-}
-
-FGToggleAction::~FGToggleAction ()
-{
-}
-
-void
-FGToggleAction::doAction ()
-{
-  _node->setBoolValue(!(_node->getBoolValue()));
 }
 
 
