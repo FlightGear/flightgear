@@ -1,5 +1,6 @@
 SUBDIRS = \
 	Aircraft \
+	Airports \
 	Astro \
 	Autopilot \
 	Cockpit \
@@ -7,6 +8,7 @@ SUBDIRS = \
 	Flight \
 	GUI \
 	Joystick \
+	Objects \
 	Scenery \
 	Time \
 	Weather \
