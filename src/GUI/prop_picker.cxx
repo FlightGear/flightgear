@@ -88,7 +88,7 @@ void prop_pickerRefresh()
 	me -> find_props();
 }
 
-void prop_editInit(char * name, char * value, char * proppath)
+void prop_editInit( const char * name, const char * value, char * proppath )
 {
 	if( PE_widget == 0 ) {
             fgPropEdit *PP = new fgPropEdit ( name, value, proppath );
@@ -96,7 +96,7 @@ void prop_editInit(char * name, char * value, char * proppath)
 	}
 }
 
-void prop_editOpen( char * name, char * value, char * proppath )
+void prop_editOpen( const char * name, const char * value, char * proppath )
 {
 	if( PE_widget == 0 ) {
 		prop_editInit( name, value, proppath );
@@ -110,7 +110,7 @@ void prop_editOpen( char * name, char * value, char * proppath )
 }
 
 // return a human readable form of the value "type"
-static string getValueTypeString( const SGPropertyNode *node ) {
+static string getValueTypeString( const SGPropertyNode_ptr node ) {
     string result;
 
     if ( node == NULL ) {
@@ -235,7 +235,6 @@ void fgPropPicker::go_up_one_directory ( char *fname )
 void fgPropPicker::handle_select ( puObject* list_box )
 {
   fgPropPicker* prop_picker = (fgPropPicker*) list_box -> getUserData () ;
-
   int selected ;
   list_box -> getValue ( &selected ) ;
 
@@ -244,25 +243,29 @@ void fgPropPicker::handle_select ( puObject* list_box )
     char *dst = prop_picker -> startDir ;
     char *src = prop_picker -> files [ selected ] ;
 
-    if ( strcmp ( src, "." ) == 0 )
-    {
-      /* Do nothing - but better refresh anyway. */
+    if (prop_picker->dotFiles && (selected < 2)) {
+        if ( strcmp ( src, "." ) == 0 ) {
+            /* Do nothing - but better refresh anyway. */
+	
+            prop_picker -> find_props () ;
+            return ;
+        } else if ( strcmp ( src, ".." ) == 0 ) {
+            /* Do back up one level - so refresh. */
+	
+            go_up_one_directory ( dst ) ;
+            prop_picker -> find_props () ;
+            return ;
+        }
+    }
 
-      prop_picker -> find_props () ;
-      return ;
-    } 
-
-    if ( strcmp ( src, ".." ) == 0 )
-    {
-      /* Do back up one level - so refresh. */
-
-      go_up_one_directory ( dst ) ;
-      prop_picker -> find_props () ;
-      return ;
-    } 
-
-    if ( prop_picker -> dflag [ selected ] )
-    {
+    //  we know we're dealing with a regular entry, so convert
+    // it to an index into children[]
+    if (prop_picker->dotFiles) selected -= 2; 
+    SGPropertyNode_ptr child = prop_picker->children[selected];
+    assert(child != NULL);
+		
+    // check if it's a directory (had children)
+    if ( child->nChildren() ) {
       /* If this is a directory - then descend into it and refresh */
 
       if ( strlen ( dst ) + strlen ( src ) + 2 >= PUSTRING_MAX )
@@ -285,7 +288,8 @@ void fgPropPicker::handle_select ( puObject* list_box )
         "PUI: fgPropPicker - path is too long, max is %d.", PUSTRING_MAX ) ;
       return ;
     }
-    prop_editOpen( prop_picker -> names [ selected ], prop_picker -> values [ selected ], dst);
+	
+    prop_editOpen(child->getName(), child->getStringValue(), dst);
   }
   else
   {
@@ -294,8 +298,8 @@ void fgPropPicker::handle_select ( puObject* list_box )
       refresh just in case some other process created the
       file.
     */
-
-    prop_picker -> find_props () ;
+      // should be obsolete once we observe child add/remove on our top node
+      prop_picker -> find_props () ;
   }
 }
 
@@ -314,15 +318,16 @@ void fgPropPicker::delete_arrays ()
   if ( files )
   {
     for ( int i=0; i<num_files; i++ ) {
-      delete[] files[i];
-      delete[] names[i];
-      delete[] values[i];
+		delete[] files[i];
     }
 
+    for (int C=0; C<num_children; ++C) {
+        if (children[C]->nChildren() == 0)
+            children[C]->removeChangeListener(this);
+    }
+	
     delete[] files;
-    delete[] names;
-    delete[] values;
-    delete[] dflag;
+    delete[] children;
   }
 }
 
@@ -345,9 +350,6 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
   puGetDefaultFonts ( &LegendFont, &LabelFont );
 
   files = NULL ;
-  dflag = NULL ;
-  names = NULL ;
-  values = NULL ;
   num_files = 0 ;
 
   strcpy ( startDir, dir ) ;
@@ -400,7 +402,6 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
   slider -> setCallback ( fgPropPickerHandleSlider ) ;
 
   FG_FINALIZE_PUI_DIALOG( this );
-  printf("fgPropPicker - End of Init\n");
 }
 
 
@@ -431,86 +432,63 @@ void fgPropPicker::find_props ()
   SGPropertyNode * node = globals->get_props()->getNode(startDir);
 
   num_files = (node) ? (int)node->nChildren() : 0;
-
+		
   // instantiate string objects and add [.] and [..] for subdirs
   if (strcmp(startDir,"/") == 0) {
     files = new char* [ num_files+1 ] ;
-    names = new char* [ num_files+1 ] ;
-    values = new char* [ num_files+1 ] ;
-    dflag = new char  [ num_files+1 ] ;
     pi = 0;
+    dotFiles = false;
   } else {
     // add two for the .. and .
     num_files = num_files + 2;
     // make room for .. and .
     files = new char* [ num_files+1 ] ;
-    names = new char* [ num_files+1 ] ;
-    values = new char* [ num_files+1 ] ;
-    dflag = new char  [ num_files+1 ] ;
-    stdString line = ".";
-    files [ 0 ] = new char[ strlen(line.c_str())+2 ];
-    strcpy ( files [ 0 ], line.c_str() );
-    names [ 0 ] = new char[ 2 ];
-    values[ 0 ] = new char[ 2 ] ;
-    line = "..";
-    dflag[ 0 ] = 1;
-    files [ 1 ] = new char[ strlen(line.c_str())+2 ];
-    strcpy ( files [ 1 ], line.c_str() );
-    names [ 1 ] = new char[ strlen(line.c_str())+2 ];
-    values[ 1 ] = new char[ 2 ] ;
-    strcpy ( names [ 1 ], line.c_str() );
 
-    dflag[ 1 ] = 1;
+    stdString line = ".";
+    files [ 0 ] = new char[line.size()];
+    strcpy ( files [ 0 ], line.c_str() );
+
+    line = "..";
+    files [ 1 ] = new char[line.size()];
+    strcpy ( files [ 1 ], line.c_str() );
+
     pi = 2;
+    dotFiles = true;
   };
 
 
   if (node) {
     // Get the list of children
-    int nChildren = node->nChildren();
-    SGPropertyNode_ptr * children = new SGPropertyNode_ptr[nChildren];
-    for (i = 0; i < nChildren; i++) {
+    num_children = node->nChildren();
+    children = new SGPropertyNode_ptr[num_children];
+    for (i = 0; i < num_children; i++) {
       children[i] = node->getChild(i);
     }
-
+	
     // Sort the children into display order
-    qsort(children, nChildren, sizeof(children[0]), nodeNameCompare);
+    qsort(children, num_children, sizeof(children[0]), nodeNameCompare);
 
     // Make lists of the children's names, values, etc.
-    for (i = 0; i < nChildren; i++) {
-	    SGPropertyNode * child = children[i];
-	    stdString name = child->getDisplayName(true);
-  	    names[ pi ] = new char[ strlen(name.c_str())+2 ] ;
-	    strcpy ( names [ pi ], name.c_str() ) ;
-	    if ( child->nChildren() > 0 ) {
-		dflag[ pi ] = 1 ;
-                files[ pi ] = new char[ strlen(name.c_str())+2 ] ;
-	        strcpy ( files [ pi ], name.c_str() ) ;
-	        strcat ( files [ pi ], "/" ) ;
-   	        values[ pi ] = new char[ 2 ] ;
-	    } else {
-                dflag[ pi ] = 0 ;
-		stdString value = child->getStringValue();
-   	        values[ pi ] = new char[ strlen(value.c_str())+2 ] ;
-                strcpy ( values [pi], value.c_str() );
-		stdString line = name + " = '" + value + "' " + "(";
-		line += getValueTypeString( child );
-                line += ")";
-                // truncate entries to plib pui limit
-                if (line.length() > (PUSTRING_MAX-1)) line[PUSTRING_MAX-1] = '\0';
-                files[ pi ] = new char[ strlen(line.c_str())+2 ] ;
-	        strcpy ( files [ pi ], line.c_str() ) ;
-	    }
-            // printf("files->%i of %i %s\n",pi, node->nChildren(), files [pi]);
-            ++pi;
-    }
+    for (i = 0; i < num_children; i++) {
+        SGPropertyNode * child = children[i];
+        stdString name = child->getDisplayName(true);
 
-    delete [] children;
+        if ( child->nChildren() > 0 ) {
+            files[ pi ] = new char[ strlen(name.c_str())+2 ] ;
+            strcpy ( files [ pi ], name.c_str() ) ;
+            strcat ( files [ pi ], "/" ) ;
+        } else {
+            files[pi] = NULL; // ensure it's NULL before setting intial value
+            updateTextForEntry(i);
+            // observe it
+            child->addChangeListener(this);
+        }
+		
+        ++pi;
+    }
   }
 
   files [ num_files ] = NULL ;
-
-  // printf("files pointer=%i/%i\n", files, num_files);
 
   proppath ->    setLabel          (startDir);
 
@@ -528,6 +506,41 @@ void fgPropPicker::find_props ()
     up_arrow->hide();
     down_arrow->hide();      
   }
+}
+
+void fgPropPicker::updateTextForEntry(int index)
+{
+    assert((index >= 0) && (index < num_children));
+    SGPropertyNode_ptr node = children[index];
+	
+    // take a copy of the value	
+    stdString value = node->getStringValue();
+
+    stdString line = node->getDisplayName() + stdString(" = '")
+        + value + "' " + "(";
+    line += getValueTypeString( node );
+    line += ")";
+	
+    // truncate entries to plib pui limit
+    if (line.length() >= PUSTRING_MAX)
+        line[PUSTRING_MAX-1] = '\0';
+
+    if (dotFiles) index +=2;
+		
+    // don't leak everywhere if we're updating
+    if (files[index]) delete[] files[index];
+		
+    files[index] = new char[ strlen(line.c_str())+2 ] ;
+    strcpy ( files [ index ], line.c_str() ) ;
+}
+
+void fgPropPicker::valueChanged(SGPropertyNode *nd)
+{
+    for (int C=0; C<num_children; ++C)
+        if (children[C] == nd) {
+            updateTextForEntry(C);
+            return;
+        }
 }
 
 void fgPropEdit::fgPropEditHandleCancel ( puObject* b )
@@ -555,7 +568,7 @@ void fgPropEdit::fgPropEditHandleOK ( puObject* b )
   FG_POP_PUI_DIALOG( prop_edit );
 }
 
-fgPropEdit::fgPropEdit ( char *name, char *value, char *proppath ) : puDialogBox ( 0, 0 )
+fgPropEdit::fgPropEdit ( const char *name, const char *value, char *proppath ) : puDialogBox ( 0, 0 )
 
 {
     puFont LegendFont, LabelFont;
@@ -591,4 +604,3 @@ fgPropEdit::fgPropEdit ( char *name, char *value, char *proppath ) : puDialogBox
         
     FG_FINALIZE_PUI_DIALOG( this );
 }
-

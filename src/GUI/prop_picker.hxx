@@ -7,17 +7,20 @@
 
 #include <stdio.h>
 #include "gui.h"
+#include <simgear/misc/props.hxx>
 
 void prop_pickerInit();
 void prop_pickerView( puObject * );
 void prop_pickerRefresh();
-void prop_editInit(char * name, char * value );
-void prop_editOpen( char * name, char * value );
+void prop_editInit( const char * name, const char * value );
+void prop_editOpen( const char * name, const char * value );
 
 class fgPropPicker       ;
 class fgPropEdit       ;
 
-class fgPropPicker : public puDialogBox
+class fgPropPicker : 
+    public puDialogBox,
+    public SGPropertyChangeListener
 {
 
   static void handle_select ( puObject *b ) ;
@@ -28,14 +31,24 @@ class fgPropPicker : public puDialogBox
 
   void delete_arrays () ;
 
+  /** update the text string in the puList using the given node and
+      updating the requested offset. The value of dotFiles is taken
+      into account before the index is applied, i.e this should be
+      an index into 'children' */
+  void updateTextForEntry(int index);
+	
   char** files ;
-  char** names ;
-  char** values ;
-  char*  dflag ;
   int num_files   ;
   int arrow_count ;
   char startDir [ PUSTRING_MAX * 2 ] ;
 
+  SGPropertyNode_ptr* children;
+  int num_children;
+	
+  /** set if we're display the . and .. entries at the start of the
+      list */
+  bool dotFiles;
+	
 /* puInput   *input         ; */
 
 protected:
@@ -59,6 +72,8 @@ public:
   static void go_up_one_directory ( char *fname ) ;
   static void chop_file ( char *fname ) ;
 
+  // over-ride the method from SGPropertyNodeListener
+  virtual void valueChanged (SGPropertyNode * node);
 } ;
 
 class fgPropEdit : public puDialogBox
@@ -78,7 +93,7 @@ public:
   puInput   *propinput     ;
   char propPath [ PUSTRING_MAX * 2 ] ;
 
-  fgPropEdit ( char *name, char *value, char *proppath ) ;
+  fgPropEdit ( const char *name, const char *value, char *proppath ) ;
 
   ~fgPropEdit () {;}
 
