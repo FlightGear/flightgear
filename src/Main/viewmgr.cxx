@@ -632,7 +632,12 @@ FGViewMgr::getView () const
 void
 FGViewMgr::setView (int newview )
 {
-  if ( newview < 0 || newview > (int)views.size() ) {
+  // if newview number too low wrap to last view...
+  if ( newview < 0 ) {
+    newview = (int)views.size() -1;
+  }
+  // if newview number to high wrap to zero...
+  if ( newview > ((int)views.size() -1) ) {
     newview = 0;
   }
   // set new view
