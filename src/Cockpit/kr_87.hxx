@@ -34,13 +34,11 @@
 #include <simgear/timing/timestamp.hxx>
 
 #include <Navaids/navlist.hxx>
-#include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 
 
 class FGKR_87 : public FGSubsystem
 {
-    FGBeacon beacon;
     FGMorse morse;
 
     SGInterpTable *term_tbl;
@@ -90,7 +88,7 @@ class FGKR_87 : public FGSubsystem
     bool last_flt_et_btn;
     bool set_rst_btn;           // 0 = normal, 1 = depressed
     bool last_set_rst_btn;      // 0 = normal, 1 = depressed
-    bool ident_btn;             // ???
+    bool ident_btn;             // turn audio morse code on/off
 
     // outputs
     double freq;
@@ -122,9 +120,12 @@ public:
     void search ();
 
     // internal values
+    inline string get_ident() const { return ident; }
+    inline bool get_valid() const { return valid; }
     inline bool get_inrange() const { return inrange; }
     inline double get_stn_lon() const { return stn_lon; }
     inline double get_stn_lat() const { return stn_lat; }
+    inline double get_dist() const { return dist; }
     inline double get_heading() const { return heading; }
 
     // modes

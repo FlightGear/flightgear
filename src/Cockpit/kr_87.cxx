@@ -92,6 +92,7 @@ FGKR_87::FGKR_87() :
     last_flt_et_btn(false),
     set_rst_btn(false),
     last_set_rst_btn(false),
+    ident_btn(false),
     freq(0.0),
     stby_freq(0.0),
     needle_deg(0.0),
@@ -114,31 +115,25 @@ FGKR_87::FGKR_87() :
 
 
 // Destructor
-FGKR_87::~FGKR_87() 
-{
+FGKR_87::~FGKR_87() {
     delete term_tbl;
     delete low_tbl;
     delete high_tbl;
 }
 
 
-void
-FGKR_87::init ()
-{
+void FGKR_87::init () {
     morse.init();
 
     update(0);			// FIXME: use dt
 }
 
-void
-FGKR_87::bind ()
-{
+
+void FGKR_87::bind () {
     // internal values
-    fgTie("/radios/kr-87/internal/ident", this,
-	  &FGKR_87::get_ident_btn,
-	  &FGKR_87::set_ident_btn);
-    fgSetArchivable("/radios/kr-87/internal/ident");
+    fgTie("/radios/kr-87/internal/valid", this, &FGKR_87::get_valid);
     fgTie("/radios/kr-87/internal/inrange", this, &FGKR_87::get_inrange);
+    fgTie("/radios/kr-87/internal/dist", this, &FGKR_87::get_dist);
     fgTie("/radios/kr-87/internal/heading", this, &FGKR_87::get_heading);
 
     // modes
@@ -174,6 +169,8 @@ FGKR_87::bind ()
     fgTie("/radios/kr-87/inputs/set-rst-btn", this,
 	  &FGKR_87::get_set_rst_btn,
 	  &FGKR_87::set_set_rst_btn);
+    fgTie("/radios/kr-87/inputs/ident-btn", this,
+	  &FGKR_87::get_ident_btn, &FGKR_87::set_ident_btn);
 
     // outputs
     fgTie("/radios/kr-87/outputs/selected-khz", this,
@@ -198,12 +195,12 @@ FGKR_87::bind ()
     fgTie("/radios/kr-87/annunciators/et", this, &FGKR_87::get_et_ann );
 }
 
-void
-FGKR_87::unbind ()
-{
+
+void FGKR_87::unbind () {
     // internal values
-    fgUntie("/radios/kr-87/internal/ident");
+    fgUntie("/radios/kr-87/internal/valid");
     fgUntie("/radios/kr-87/internal/inrange");
+    fgUntie("/radios/kr-87/internal/dist");
     fgUntie("/radios/kr-87/internal/heading");
 
     // modes
@@ -220,6 +217,7 @@ FGKR_87::unbind ()
     fgUntie("/radios/kr-87/inputs/frq-btn");
     fgUntie("/radios/kr-87/inputs/flt-et-btn");
     fgUntie("/radios/kr-87/inputs/set-rst-btn");
+    fgUntie("/radios/kr-87/inputs/ident-btn");
 
     // outputs
     fgUntie("/radios/kr-87/outputs/selected-khz");
@@ -239,9 +237,7 @@ FGKR_87::unbind ()
 
 
 // Update the various nav values based on position and valid tuned in navs
-void 
-FGKR_87::update( double dt ) 
-{
+void FGKR_87::update( double dt ) {
     double acft_lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double acft_lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double acft_elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
@@ -418,7 +414,7 @@ FGKR_87::update( double dt )
 
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( valid && inrange ) {
-	// play station ident via audio system if on + ident,
+	// play station ident via audio system if on + ident_btn,
 	// otherwise turn it off
 	if ( on_off_vol_btn >= 0.01 && ident_btn ) {
 	    FGSimpleSound *sound;
@@ -449,8 +445,7 @@ FGKR_87::update( double dt )
 
 
 // Update current nav/adf radio stations based on current postition
-void FGKR_87::search() 
-{
+void FGKR_87::search() {
     double acft_lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double acft_lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double acft_elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
