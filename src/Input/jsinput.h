@@ -23,7 +23,7 @@
 #ifndef _JSINPUT_H
 #define _JSINPUT_H
 
-#include <jssuper.h>
+#include "jssuper.h"
 
 class jsInput {
   private:

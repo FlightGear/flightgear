@@ -18,7 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-#include <jsinput.h>
+#include "jsinput.h"
 
 jsInput::jsInput(jsSuper *j) {
   jss=j;
