@@ -820,8 +820,11 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 
     SetOffset( p );
 
+    // visibility can change from frame to frame so we update the
+    // range selector cutoff's each time.
     terra_range->setRange( 0, SG_ZERO );
     terra_range->setRange( 1, vis + bounding_radius );
+
     if ( gnd_lights_range ) {
         gnd_lights_range->setRange( 0, SG_ZERO );
         gnd_lights_range->setRange( 1, vis * 1.5 + bounding_radius );
@@ -896,17 +899,10 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
             agl = 0.0;
         }
         
-        // sgTrans just happens to be the
-        // vector from scenery center to the center of this tile which
-        // is what we want to calculate the distance of
-        sgVec3 to;
-        sgCopyVec3( to, sgTrans );
-        double dist = sgLengthVec3( to );
-
         if ( general.get_glDepthBits() > 16 ) {
-            sgScaleVec3( lift_vec, 0.0 + agl / 500.0 + dist / 10000 );
+            sgScaleVec3( lift_vec, 0.0 + agl / 500.0 );
         } else {
-            sgScaleVec3( lift_vec, 1.0 + agl / 20.0 + dist / 5000 );
+            sgScaleVec3( lift_vec, 1.0 + agl / 20.0 );
         }
 
         sgVec3 lt_trans;
