@@ -1,3 +1,23 @@
+New in 0.7.11pre2
+* Septemeber 3, 2002
+
+* automake/conf script enhancemnts and fixes.
+* Updated the UIUCModel code.
+* Removed some dos line endings that crept in.
+* Spelling fixes.
+* Removed some depricated code related to the old view management system.
+* Fix a problem with VOR station lookups where we wouldn't always find
+  the closest station of a given frequency.
+* Changed the default Nav radio frequencies to be more appropriate for SFO.
+* Retrimmed the C172
+* Added seats and other interior stuff to the J3 Cub, and retrimmed.  Also
+  fixed wing incidence in the 3d visual model.
+* Fixed C310u3a-3d.  3d cockpit instruments can now be seen.
+* Fixes to the DC-3 such as tank location; other surface and wheel position
+  adjustments.  Increase effectiveness of rudder, vstab, and hstab.
+* Updated some of the preconfigured joystick files.
+
+
 New in 0.7.11pre1
 * August 31, 2002
 
