@@ -23,6 +23,8 @@
 #  include <config.h>
 #endif
 
+#include <plib/sl.h>
+
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
@@ -36,7 +38,7 @@ FGATCVoice::FGATCVoice() {
 }
 
 FGATCVoice::~FGATCVoice() {
-	delete[] rawSoundData;
+	delete SoundData;
 }
 
 // Load the two voice files - one containing the raw sound data (.wav) and one containing the word positions (.vce).
@@ -48,60 +50,10 @@ bool FGATCVoice::LoadVoice(string voice) {
 	string soundPath = "ATC/" + voice + ".wav";
 	path.append(soundPath);
 	
-	// Input data parameters - some of these might need to be class variables eventually
-	// but at the moment we're just using them to find the header size to get the start
-	// of the data properly.
-	char chunkID[5];
-	unsigned int chunkSize;
-	char junk[100];		// WARNING - Assumes all non-data chunk sizes are < 100
+	SoundData = new slSample( (char*)path.c_str() );
+	rawDataSize = SoundData->getLength();
+	rawSoundData = (char*)SoundData->getBuffer();
 	
-	// do the sound data first
-	SG_LOG(SG_GENERAL, SG_INFO, "Trying to open voice input...");
-	fin.open(path.c_str(), ios::in|ios::binary);
-	if(!fin) {
-		SG_LOG(SG_GENERAL, SG_ALERT, "Unable to open input file " << path.c_str());
-		return(false);
-	}
-	cout << "Opened voice input file " << soundPath << " OK...\n";
-	// Strip the initial headers and ignore.
-	// Note that this assumes we know the sound format etc - fix this eventually
-	// (I've assumed sample-rate = 8000, bits = 8, mono, which is what the other FGFS sound samples seem to use.
-	// The file should always start with the 12 byte RIFF header
-	fin.read(chunkID, 4);
-	// TODO - Should we check that the above == "RIFF" ?
-	// read and discard the next 8 bytes
-	fin.read(junk, 8);
-	// Now it gets more complicated - although the format chunk is normally before the data chunk,
-	// this is not guaranteed, and there may be a fact chunk as well. (And possibly more that I haven't heard of!).
-	while(1) {
-		fin.read(chunkID, 4);
-		chunkID[4] = '\0';
-		//cout << "sizeof(chunkID) = " << sizeof(chunkID) << '\n';
-		//cout << "chunkID = " << chunkID << '\n';
-		if(!strcmp(chunkID, "data")) {
-			break;
-		} else if((!strcmp(chunkID, "fmt ")) || (!strcmp(chunkID, "fact"))) {
-			fin.read((char*)&chunkSize, sizeof(chunkSize));
-			// Chunksizes must be word-aligned (ie every 2 bytes), but the given chunk size
-			// is not guaranteed to be word-aligned, and there may be an extra padding byte.
-			// Add 1 to chunkSize if it's odd.
-			// Well, it is a microsoft file format!!!
-			chunkSize += (chunkSize % 2);
-			fin.read(junk, chunkSize);
-		} else {
-			// Oh dear - its all gone pear-shaped - abort :-(
-			SG_LOG(SG_GENERAL, SG_ALERT, "Unknown chunk ID in input wave file in ATCVoice.cxx... aborting voice ATC load");
-			fin.close();
-			return(false);
-		}
-	}
-
-	fin.read((char*)&rawDataSize, sizeof(rawDataSize));
-	//cout << "rawDataSize = " << rawDataSize << endl;
-	rawSoundData = new char[rawDataSize];
-	fin.read(rawSoundData, rawDataSize);
-	fin.close();
-
 	path = globals->get_fg_root();
 	string wordPath = "ATC/" + voice + ".vce";
 	path.append(wordPath);
@@ -208,7 +160,6 @@ unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
 			     << " exceeds rawdata size: " << rawDataSize << endl);
 			delete[] wdptr;
 			dataOK = false;
-			// I suppose we have to return something
 			return(NULL);
 		}
 		memcpy(outbuf + bufpos, rawSoundData + wdptr[i].offset, wdptr[i].length);

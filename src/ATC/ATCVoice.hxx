@@ -44,22 +44,14 @@
 SG_USING_STD(map);
 SG_USING_STD(list);
 SG_USING_STD(string);
+
+#if !defined( SG_HAVE_NATIVE_SGI_COMPILERS )
 SG_USING_STD(cout);
 SG_USING_STD(ios);
-
-#if ! defined( SG_HAVE_NATIVE_SGI_COMPILERS )
 SG_USING_STD(ofstream);
 SG_USING_STD(ifstream);
 #endif
 
-/*****************************************************************
-
-Warning.
-
-Assumptions inherent in this class are that char is 1 byte length,
-short int is 2 byte length and int is 4 byte length.
-
-******************************************************************/
 
 struct WordData {
 	unsigned int offset;	// Offset of beginning of word sample into raw sound sample
@@ -71,7 +63,7 @@ typedef atc_word_map_type::iterator atc_word_map_iterator;
 typedef atc_word_map_type::const_iterator atc_word_map_const_iterator;
 
 class FGATCVoice {
-	
+
 public:
 
 	FGATCVoice();
@@ -84,14 +76,15 @@ public:
 	// Given a desired message, return a pointer to the data buffer and write the buffer length into len.
 	// Sets dataOK = true if the returned buffer is valid.
 	unsigned char* WriteMessage(char* message, int& len, bool& dataOK);
-	
-	
+
+
 private:
 
 	// the sound and word position data
 	char* rawSoundData;
 	unsigned int rawDataSize;
-	
+	slSample* SoundData;
+
 	// A map of words vs. byte position and length in rawSoundData
 	atc_word_map_type wordMap;
 
