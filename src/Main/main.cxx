@@ -1690,13 +1690,7 @@ static bool fgMainInit( int argc, char **argv ) {
     ////////////////////////////////////////////////////////////////////
     globals->set_matlib( new SGMaterialLib );
 
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the general model subsystem.
-    ////////////////////////////////////////////////////////////////////
     globals->set_model_lib(new SGModelLib);
-    globals->set_model_mgr(new FGModelMgr);
-    globals->get_model_mgr()->init();
-    globals->get_model_mgr()->bind();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the TG scenery subsystem.
@@ -1705,6 +1699,13 @@ static bool fgMainInit( int argc, char **argv ) {
     globals->get_scenery()->init();
     globals->get_scenery()->bind();
     globals->set_tile_mgr( new FGTileMgr );
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the general model subsystem.
+    ////////////////////////////////////////////////////////////////////
+    globals->set_model_mgr(new FGModelMgr);
+    globals->get_model_mgr()->init();
+    globals->get_model_mgr()->bind();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the 3D aircraft model subsystem (has a dependency on
