@@ -72,6 +72,11 @@ Didier Chauveau <chauveau@math.univ-mlv.fr>
   http://edcwww.cr.usgs.gov/landdaac/gtopo30/gtopo30.html
 
 
+Oliver Delise <delise@rp-plus.de>
+  FAQ Maintainer.
+  Working on adding some networking / multi-user support.
+
+
 Jean-Francois Doue
   Vector 2D, 3D, 4D and Matrix 3D and 4D inlined C++ classes.  (Based on
   Graphics Gems IV ed. Paul S. Heckbert)
@@ -120,9 +125,8 @@ Bruce Jackson of NASA <e.b.jackson@larc.nasa.gov>
   flight model.  Bruce has patiently answered my many, many questions.
 
 
-Oliver Delise <delise@rp-plus.de>
-  FAQ Maintainer.
-  Working on adding some networking / multi-user support.
+Richard Kaszeta <bofh@me.umn.edu>
+  Contributed screen buffer to ppm screen shot routine.
 
 
 Tom Knienieder <knienieder@ms.netwing.at>
@@ -243,6 +247,7 @@ Durk Talsma <pn_talsma@macmail.psy.uva.nl>
   position in sky.  Moon has correct phase and blends well into the
   sky.  Planets are correctly positioned and have proper magnitude.
   Help with time functions, gui, and other misc stuff.
+  2D Cloud layers (nifty).
 
 
 Mark Vallevand <Mark.Vallevand@UNISYS.com>
@@ -258,6 +263,9 @@ Norman Vine <nhv@laserplot.com>
   Many performance optimizations throughout the code.  Many contributions
   and much advice for the scenery generation section.  Lots of windoze
   related contributions.
+  Contributed wgs84 distance and course routines.
+  Contributed a great circle route autopilot mode based on wgs84 routines.
+  Many other GUI, HUD, and autopilot contributions.
 
 
 Roland Voegtli <webmaster@sanw.unibe.ch>

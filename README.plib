@@ -1,5 +1,5 @@
-You *must* have the plib library installed on your system to build
-the FGFS simulator!"
+You *must* have the plib version 1.0.19 or later installed on your system 
+to build the FGFS simulator!"
 
 You can get the library from:
 
