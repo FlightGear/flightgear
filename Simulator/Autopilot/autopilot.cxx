@@ -32,13 +32,13 @@
 
 #include "autopilot.hxx"
 
+#include <GUI/gui.h>
 #include <Include/fg_constants.h>
+#include <Cockpit/panel.hxx>
 #include <Debug/logstream.hxx>
 #include <Main/options.hxx>
-#include <Cockpit/panel.hxx>
 #include <Main/views.hxx>
 
-#include <plib/pu.h>
 
 // The below routines were copied right from hud.c ( I hate reinventing
 // the wheel more than necessary)
@@ -49,8 +49,7 @@
 //
 
 
-static double get_speed( void )
-{
+static double get_speed( void ) {
     return( current_aircraft.fdm_state->get_V_equiv_kts() );
 }
 

@@ -80,6 +80,8 @@ void fgAPAltitudeAdjust( double inc );
 void fgAPHeadingAdjust( double inc );
 void fgAPAutoThrottleAdjust( double inc );
 
+void fgAPHeadingSet( double value );
+
 void fgAPReset(void);
 
 class puObject;
