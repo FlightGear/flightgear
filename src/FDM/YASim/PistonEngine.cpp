@@ -141,16 +141,19 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // turbocharging and reduced by the throttle setting.  According
     // to Dave Luff, minimum throttle at sea level corresponds to 6"
     // manifold pressure.  Assume that this means that minimum MP is
-    // always 20% of ambient pressure.
+    // always 20% of ambient pressure.  But we need to produce _zero_
+    // thrust at that setting, so hold onto the "output" value
+    // separately.  Ick.
     _mp = pressure * (1 + _boost*(_turbo-1)); // turbocharger
-    _mp *= (0.2 + 0.8 * _throttle);            // throttle
-    if(_mp > _maxMP) _mp = _maxMP;             // wastegate
+    float mp = _mp * (0.2 + 0.8 * _throttle); // throttle
+    _mp *= _throttle;
+    if(mp > _maxMP) mp = _maxMP;              // wastegate
 
     // Air entering the manifold does so rapidly, and thus the
     // pressure change can be assumed to be adiabatic.  Calculate a
     // temperature change, and use that to get the density.
-    float T = temp * Math::pow(_mp/pressure, 2.0/7.0);
-    float rho = _mp / (287.1 * T);
+    float T = temp * Math::pow(mp/pressure, 2.0/7.0);
+    float rho = mp / (287.1 * T);
 
     // The actual fuel flow is determined only by engine RPM and the
     // mixture setting.  Not all of this will burn with the same
