@@ -74,8 +74,8 @@ libdir	= ${exec_prefix}/lib
 
 lib_LTLIBRARIES = libCockpit.la
 libCockpit_la_SOURCES = \
-	cockpit.c cockpit.h \
-	hud.c hud.h
+	cockpit.cxx cockpit.hxx \
+	hud.cxx hud.hxx
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../Include/config.h
 CONFIG_CLEAN_FILES = 
@@ -93,10 +93,10 @@ X_PRE_LIBS = @X_PRE_LIBS@
 libCockpit_la_LDFLAGS = 
 libCockpit_la_LIBADD = 
 libCockpit_la_OBJECTS =  cockpit.lo hud.lo
-CFLAGS = @CFLAGS@
-COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
-LINK = $(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(LDFLAGS) -o $@
+CXXFLAGS = @CXXFLAGS@
+CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
+CXXLINK = $(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@
 DIST_COMMON =  Makefile.am Makefile.in
 
 
@@ -105,13 +105,14 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 TAR = tar
 GZIP = --best
 DEP_FILES =  .deps/cockpit.P .deps/hud.P
+CXXMKDEP = $(CXX) -M $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 SOURCES = $(libCockpit_la_SOURCES)
 OBJECTS = $(libCockpit_la_OBJECTS)
 
 all: Makefile $(LTLIBRARIES)
 
 .SUFFIXES:
-.SUFFIXES: .S .c .lo .o .s
+.SUFFIXES: .S .c .cxx .lo .o .s
 $(srcdir)/Makefile.in: @MAINT@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && $(AUTOMAKE) --gnu Simulator/Cockpit/Makefile
 
@@ -178,7 +179,11 @@ distclean-libtool:
 maintainer-clean-libtool:
 
 libCockpit.la: $(libCockpit_la_OBJECTS) $(libCockpit_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libCockpit_la_LDFLAGS) $(libCockpit_la_OBJECTS) $(libCockpit_la_LIBADD) $(LIBS)
+	$(CXXLINK) -rpath $(libdir) $(libCockpit_la_LDFLAGS) $(libCockpit_la_OBJECTS) $(libCockpit_la_LIBADD) $(LIBS)
+.cxx.o:
+	$(CXXCOMPILE) -c $<
+.cxx.lo:
+	$(LTCXXCOMPILE) -c $<
 
 tags: TAGS
 
@@ -242,6 +247,17 @@ maintainer-clean-depend:
 %.lo: %.c
 	@echo '$(LTCOMPILE) -c $<'; \
 	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).p -c $<
+	@-sed -e 's/^\([^:]*\)\.o:/\1.lo \1.o:/' \
+	  < .deps/$(*F).p > .deps/$(*F).P
+	@-rm -f .deps/$(*F).p
+
+%.o: %.cxx
+	@echo '$(CXXCOMPILE) -c $<'; \
+	$(CXXCOMPILE) -Wp,-MD,.deps/$(*F).P -c $<
+
+%.lo: %.cxx
+	@echo '$(LTCXXCOMPILE) -c $<'; \
+	$(LTCXXCOMPILE) -Wp,-MD,.deps/$(*F).p -c $<
 	@-sed -e 's/^\([^:]*\)\.o:/\1.lo \1.o:/' \
 	  < .deps/$(*F).p > .deps/$(*F).P
 	@-rm -f .deps/$(*F).p

@@ -1,5 +1,5 @@
 /**************************************************************************
- * cockpit.h -- cockpit defines and prototypes (initial draft)
+ * cockpit.hxx -- cockpit defines and prototypes (initial draft)
  *
  * Written by Michele America, started September 1997.
  *
@@ -24,15 +24,15 @@
  **************************************************************************/
  
 
-#ifndef _COCKPIT_H
-#define _COCKPIT_H
+#ifndef _COCKPIT_HXX
+#define _COCKPIT_HXX
 
 
-#include <Cockpit/hud.h>
+#include "hud.hxx"
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -51,18 +51,16 @@ fgCOCKPIT *fgCockpitInit( fgAIRCRAFT *cur_aircraft );
 void fgCockpitUpdate( void );
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _COCKPIT_H */
+#endif /* _COCKPIT_HXX */
 
 
 /* $Log$
-/* Revision 1.8  1998/04/22 13:26:19  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.1  1998/04/24 00:45:55  curt
+/* C++-ifing the code a bit.
 /*
+ * Revision 1.8  1998/04/22 13:26:19  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.7  1998/04/21 17:02:34  curt
  * Prepairing for C++ integration.
  *

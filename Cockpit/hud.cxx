@@ -24,7 +24,9 @@
  **************************************************************************/
  
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -38,8 +40,6 @@
 #  include <values.h>  // for MAXINT
 #endif
 
-#include "hud.h"
-
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
@@ -47,8 +47,10 @@
 #include <Math/mat3.h>
 #include <Math/polar.h>
 #include <Scenery/scenery.h>
-#include <Time/fg_timer.h>
+#include <Time/fg_timer.hxx>
 #include <Weather/weather.h>
+
+#include "hud.hxx"
 
 // #define DEBUG
 
@@ -1603,9 +1605,12 @@ void fgHUDSetBrightness( Hptr hud, int brightness )
 }
 
 /* $Log$
-/* Revision 1.22  1998/04/18 04:14:02  curt
-/* Moved fg_debug.c to it's own library.
+/* Revision 1.1  1998/04/24 00:45:57  curt
+/* C++-ifing the code a bit.
 /*
+ * Revision 1.22  1998/04/18 04:14:02  curt
+ * Moved fg_debug.c to it's own library.
+ *
  * Revision 1.21  1998/04/03 21:55:28  curt
  * Converting to Gnu autoconf system.
  * Tweaks to hud.c

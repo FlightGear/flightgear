@@ -1,5 +1,5 @@
 /**************************************************************************
- * hud.h -- hud defines and prototypes (initial draft)
+ * hud.hxx -- hud defines and prototypes (initial draft)
  *
  * Written by Michele America, started September 1997.
  *
@@ -24,8 +24,14 @@
  **************************************************************************/
 
 
-#ifndef _HUD_H
-#define _HUD_H
+#ifndef _HUD_HXX
+#define _HUD_HXX
+
+
+#ifndef __cplusplus                                                          
+# error This library requires C++
+#endif                                   
+
 
 #include <Aircraft/aircraft.h>
 #include <Flight/flight.h>
@@ -374,14 +380,17 @@ void fgUpdateHUD ( Hptr hud );
 void fgUpdateHUD2( Hptr hud ); // Future use?
 
 
-#endif // _HUD_H  
+#endif // _HUD_HXX
 
 /* $Log$
-/* Revision 1.15  1998/02/23 19:07:57  curt
-/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
-/* calculation code between sun display, and other FG sections that use this
-/* for things like lighting.
+/* Revision 1.1  1998/04/24 00:45:58  curt
+/* C++-ifing the code a bit.
 /*
+ * Revision 1.15  1998/02/23 19:07:57  curt
+ * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+ * calculation code between sun display, and other FG sections that use this
+ * for things like lighting.
+ *
  * Revision 1.14  1998/02/21 14:53:14  curt
  * Added Charlie's HUD changes.
  *

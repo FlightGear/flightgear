@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H          
 #  include <windows.h>
@@ -33,7 +35,6 @@
 #include <GL/glut.h>
 
 #include <stdlib.h>
-#include <Cockpit/cockpit.h>
 
 #include <Include/fg_constants.h>
 
@@ -43,9 +44,10 @@
 #include <Math/mat3.h>
 #include <Math/polar.h>
 #include <Scenery/scenery.h>
-#include <Time/fg_timer.h>
+#include <Time/fg_timer.hxx>
 #include <Weather/weather.h>
 
+#include "cockpit.hxx"
 
 // This is a structure that contains all data related to
 // cockpit/panel/hud system
@@ -102,9 +104,12 @@ void fgCockpitUpdate( void )
 
 
 /* $Log$
-/* Revision 1.13  1998/04/18 04:14:01  curt
-/* Moved fg_debug.c to it's own library.
+/* Revision 1.1  1998/04/24 00:45:54  curt
+/* C++-ifing the code a bit.
 /*
+ * Revision 1.13  1998/04/18 04:14:01  curt
+ * Moved fg_debug.c to it's own library.
+ *
  * Revision 1.12  1998/04/14 02:23:09  curt
  * Code reorganizations.  Added a Lib/ directory for more general libraries.
  *
