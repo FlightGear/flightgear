@@ -71,13 +71,105 @@ void list_add(int *list, int *list_ptr, int node) {
 }
 
 
+/* fix the cw list and append to ccw_list */
+void fix_cw_list(int *list, int list_ptr) {
+    int i, j, len;
+
+    if ( list_ptr < 3 ) {
+	printf("List is empty ... skipping\n");
+	return;
+    }
+
+    printf("Fixing cw list, size = %d\n", list_ptr);
+
+    i = 0;
+    while ( i < list_ptr ) { 
+	/* do next strip */
+
+	/* find length */
+	len = 0;
+	/* scan rest of strip (until -1) */
+	while ( ((i+len) < list_ptr) && (list[i+len] != -1) ) { 
+	    // printf("len = %d item = %d\n", len, list[i+len] );
+	    len++;
+	}
+	// printf("          Final length = %d\n", len);
+
+	if ( (len % 2) != 0 ) {
+	    /* if length is odd, just reverse order of nodes to reverse
+	       winding */
+	    if ( ccw_list_ptr ) {
+		list_add(ccw_list, &ccw_list_ptr, -1);
+	    }
+	    for ( j = i + len - 1; j >= i; j-- ) {
+		// printf(" odd -> item = %d\n", list[j] );
+		list_add(ccw_list, &ccw_list_ptr, list[j]);
+	    }
+	} else {
+	    /* if length is even, reverse order of (n-1) nodes to
+	       reverse winding, and create an orphan triangle for the
+	       last "nth" node */
+	    if ( ccw_list_ptr ) {
+		list_add(ccw_list, &ccw_list_ptr, -1);
+	    }
+	    for ( j = i + len - 2; j >= i; j-- ) {
+		// printf(" even -> item = %d\n", list[j] );
+		list_add(ccw_list, &ccw_list_ptr, list[j]);
+	    }
+
+	    // printf(" even bonus -> item = %d\n", list[i + len - 1] );
+	    // printf(" even bonus -> item = %d\n", list[i + len - 2] );
+	    // printf(" even bonus -> item = %d\n", list[i + len - 3] );
+	    list_add(ccw_list, &ccw_list_ptr, -1);
+	    list_add(ccw_list, &ccw_list_ptr, list[i + len - 3]);
+	    list_add(ccw_list, &ccw_list_ptr, list[i + len - 2]);
+	    list_add(ccw_list, &ccw_list_ptr, list[i + len - 1]);
+	}
+
+	i += len + 1;
+    }
+}
+
+
+// Calculate distance between (0,0,0) and the specified point
+static double calc_dist(double x, double y, double z) {
+    return ( sqrt(x*x + y*y + z*z) );
+}
+
+
+void dump_global_bounds( void ) {
+    double dist, radius;
+    int i;
+
+    radius = 0.0;
+
+    fprintf(out, "\n");
+
+    for ( i = 1; i < ncount; i++ ) {
+
+	dist = calc_dist(nodes[i][0] - refx, nodes[i][1] - refy, 
+			 nodes[i][2] - refz);
+	// printf("node = %.2f %.2f %.2f dist = %.2f\n", 
+        //        nodes[i][0], nodes[i][1], nodes[i][2],
+	//        dist);
+
+	if ( dist > radius ) {
+	    radius = dist;
+	}
+
+    }
+
+    fprintf(out, "gb %.4f %.4f %.4f %.2f\n", refx, refy, refz, radius);
+}
+
+
 /* dump nodes */
 void dump_nodes( void ) {
     int i;
 
     fprintf(out, "\n");
-    for ( i = 1; i <= ncount; i++ ) {
-	fprintf(out, "v %.4lf %.4lf %.4lf\n",
+    for ( i = 1; i < ncount; i++ ) {
+	fprintf(out, "v %.4f %.4f %.4f\n",
 		nodes[i][0] - refx, nodes[i][1] - refy, nodes[i][2] - refz);
     }
 }
@@ -88,8 +180,8 @@ void dump_normals( void ) {
     int i;
 
     fprintf(out, "\n");
-    for ( i = 1; i <= vncount; i++ ) {
-	fprintf(out, "vn %.4lf %.4lf %.4lf\n", 
+    for ( i = 1; i < vncount; i++ ) {
+	fprintf(out, "vn %.4f %.4f %.4f\n", 
 		normals[i][0], normals[i][1], normals[i][2]);
     }
 }
@@ -100,7 +192,7 @@ void dump_faces( void ) {
     int i;
 
     fprintf(out, "\n");
-    for ( i = 1; i <= fcount; i++ ) {
+    for ( i = 1; i < fcount; i++ ) {
 	fprintf(out, "f %d %d %d\n", 
 		faces[i][0], faces[i][1], faces[i][2]);
     }
@@ -121,6 +213,12 @@ void dump_list(int *list, int list_ptr) {
     i = 0;
     while ( i < list_ptr ) { 
 	/* do next strip */
+
+	if ( (i % 2) == 0 ) {
+	    fprintf(out, "\nusemtl desert1\n");
+	} else {
+	    fprintf(out, "\nusemtl desert2\n");
+	}
 
 	/* dump header */
 	fprintf(out, "t %d %d %d\n", list[i], list[i+1], list[i+2]);
@@ -202,9 +300,9 @@ void obj_fix(char *infile, char *outfile) {
     /* I start counting at one because that is how the triangle
        program refers to nodes and normals */
     first = 1;
-    ncount = 0;
-    vncount = 0;
-    fcount = 0;
+    ncount = 1;
+    vncount = 1;
+    fcount = 1;
 
     printf("Reading file:  %s\n", infile);
 
@@ -361,18 +459,17 @@ void obj_fix(char *infile, char *outfile) {
     refy = (ymin + ymax) / 2.0;
     refz = (zmin + zmax) / 2.0;
 
-    fprintf(out, "\n");
-    fprintf(out, "ref %.2f %.2f %.2f\n", refx, refy, refz);	
+    /* convert the cw_list to ccw add append to ccw_list */
+    fix_cw_list(cw_list, cw_list_ptr);
 
+    dump_global_bounds();
     dump_nodes();
     dump_normals();
-    dump_faces();
+    if ( fcount > 1 ) {
+	dump_faces();
+    }
 
-    fprintf(out, "winding ccw\n");
     dump_list(ccw_list, ccw_list_ptr);
-
-    fprintf(out, "winding cw\n");
-    dump_list(cw_list, cw_list_ptr);
 
     fclose(in);
     fclose(out);
@@ -380,9 +477,13 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.12  1998/05/16 13:11:26  curt
-/* Fixed an off by one error in node, normal, and face counters.
+/* Revision 1.13  1998/05/20 20:55:19  curt
+/* Fixed arbitrary polygon winding problem here so all tristrips are passed
+/* to runtime simulator with a consistant counter clockwise winding.
 /*
+ * Revision 1.12  1998/05/16 13:11:26  curt
+ * Fixed an off by one error in node, normal, and face counters.
+ *
  * Revision 1.11  1998/04/27 15:59:24  curt
  * Fixed an off by one error.
  *
