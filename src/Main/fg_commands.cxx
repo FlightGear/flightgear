@@ -12,6 +12,8 @@
 #include <GUI/gui.h>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
+#include <Scenery/tilemgr.hxx>
+#include <Time/tmp.hxx>
 
 #include "fg_commands.hxx"
 
@@ -44,8 +46,8 @@ do_null (const SGPropertyNode * arg)
 static bool
 do_exit (const SGPropertyNode * arg)
 {
-  fgIOShutdownAll();
-  exit(0);
+  SG_LOG(SG_INPUT, SG_ALERT, "Program exit requested.");
+  ConfirmExitDialog();
   return true;
 }
 
@@ -173,6 +175,44 @@ do_screen_capture (const SGPropertyNode * arg)
 
 
 /**
+ * Reload the tile cache.
+ */
+static bool
+do_tile_cache_reload (const SGPropertyNode * arg)
+{
+  bool freeze = globals->get_freeze();
+  SG_LOG(SG_INPUT, SG_INFO, "ReIniting TileCache");
+  if ( !freeze ) 
+    globals->set_freeze( true );
+  BusyCursor(0);
+  if ( global_tile_mgr.init() ) {
+    // Load the local scenery data
+    global_tile_mgr.update(fgGetDouble("/position/longitude"),
+			   fgGetDouble("/position/latitude"));
+  } else {
+    SG_LOG( SG_GENERAL, SG_ALERT, 
+	    "Error in Tile Manager initialization!" );
+    exit(-1);
+  }
+  BusyCursor(1);
+  if ( !freeze )
+    globals->set_freeze( false );
+  return true;
+}
+
+
+/**
+ * Update the lighting manually.
+ */
+static bool
+do_lighting_update (const SGPropertyNode * arg)
+{
+  fgUpdateSkyAndLightingParams();
+  return true;
+}
+
+
+/**
  * Built-in command: toggle a bool property value.
  *
  * property: The name of the property to toggle.
@@ -254,8 +294,47 @@ do_property_adjust (const SGPropertyNode * arg)
     return node->setFloatValue(node->getFloatValue()
 			       + arg->getFloatValue("step"));
   case SGPropertyNode::DOUBLE:
+  case SGPropertyNode::UNKNOWN:
     return node->setDoubleValue(node->getDoubleValue()
 				+ arg->getDoubleValue("step"));
+  default:			// doesn't make sense with strings
+    return false;
+  }
+}
+
+
+/**
+ * Built-in command: multiply a property value.
+ *
+ * property: the name of the property to multiply.
+ * factor: the amount by which to multiply.
+ */
+static bool
+do_property_multiply (const SGPropertyNode * arg)
+{
+  const string & propname = arg->getStringValue("property", "");
+  if (propname == "")
+    return false;
+
+  SGPropertyNode * node = fgGetNode(propname, true);
+
+  switch (node->getType()) {
+  case SGPropertyNode::BOOL:
+    return node->setBoolValue(node->getBoolValue() &&
+			      arg->getBoolValue("factor"));
+  case SGPropertyNode::INT:
+    return node->setIntValue(int(node->getIntValue()
+				 * arg->getDoubleValue("factor")));
+  case SGPropertyNode::LONG:
+    return node->setLongValue(long(node->getLongValue()
+				   * arg->getDoubleValue("factor")));
+  case SGPropertyNode::FLOAT:
+    return node->setFloatValue(float(node->getFloatValue()
+				     * arg->getDoubleValue("factor")));
+  case SGPropertyNode::DOUBLE:
+  case SGPropertyNode::UNKNOWN:
+    return node->setDoubleValue(node->getDoubleValue()
+				* arg->getDoubleValue("factor"));
   default:			// doesn't make sense with strings
     return false;
   }
@@ -322,9 +401,12 @@ static struct {
     { "preferences-load", do_preferences_load },
     { "view-cycle", do_view_cycle },
     { "screen-capture", do_screen_capture },
+    { "tile-cache-reload", do_tile_cache_reload },
+    { "lighting-update", do_lighting_update },
     { "property-toggle", do_property_toggle },
     { "property-assign", do_property_assign },
     { "property-adjust", do_property_adjust },
+    { "property-multiply", do_property_multiply },
     { "property-swap", do_property_swap },
     { "property-scale", do_property_scale },
     { 0, 0 }			// zero-terminated
