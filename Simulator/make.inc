@@ -30,7 +30,7 @@
 #---------------------------------------------------------------------------
 
 FG_VERSION_MAJOR = 0
-FG_VERSION_MINOR = 19
+FG_VERSION_MINOR = 20
 FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 
 
@@ -159,6 +159,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.27  1997/12/30 20:47:08  curt
+# Version 0.20
+#
 # Revision 1.26  1997/12/17 23:13:18  curt
 # Changes and tweaks to go to version 0.19 (Plus tweaks to Solaris support)
 #
