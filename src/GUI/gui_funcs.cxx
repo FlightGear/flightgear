@@ -53,6 +53,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+// for help call back
+#ifdef WIN32
+# include <shellapi.h>
+# ifdef __CYGWIN__
+#  include <sys/cygwin.h>
+# endif
+#endif
+
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -526,6 +534,7 @@ void helpCb (puObject *)
     path.append( "Docs/index.html" );
 	
 #if !defined(WIN32)
+
     string help_app = fgGetString("/sim/startup/browser-app");
 
     if ( system("xwininfo -name Netscape > /dev/null 2>&1") == 0 ) {
@@ -534,12 +543,26 @@ void helpCb (puObject *)
         command = help_app + " " + path.str();
     }
     command += " &";
+    system( command.c_str() );
+
 #else // WIN32
-    command = "start ";
-    command += path.str();
+
+    // Look for favorite browser
+    char Dummy[1024], ExecName[1024], browserParameter[1024];
+    char win32_name[1024];
+# ifdef __CYGWIN__
+    cygwin32_conv_to_full_win32_path(path.c_str(),win32_name);
+# else
+    strcpy(win32_name,path.c_str());
+# endif
+    Dummy[0] = 0;
+    FindExecutable(win32_name, Dummy, ExecName);
+    sprintf(browserParameter, "file:///%s", win32_name);
+    ShellExecute ( NULL, "open", ExecName, browserParameter, Dummy,
+                   SW_SHOWNORMAL ) ;
+
 #endif
 	
-    system( command.c_str() );
     mkDialog ("Help started in your web browser window.");
 }
 

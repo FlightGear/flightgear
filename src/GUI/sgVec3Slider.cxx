@@ -16,6 +16,45 @@
 #include <Main/fg_props.hxx>
 #include <simgear/sg_inlines.h>
 
+static void
+setPilotXOffset (float value)
+{
+	PilotOffsetSet(0, value);
+}
+
+static float
+getPilotXOffset ()
+{
+	return( PilotOffsetGetSetting(0) );
+}
+
+
+static void
+setPilotYOffset (float value)
+{
+	PilotOffsetSet(1, value);
+}
+
+static float
+getPilotYOffset ()
+{
+	return( PilotOffsetGetSetting(1) );
+}
+
+
+static void
+setPilotZOffset (float value)
+{
+	PilotOffsetSet(2, value);
+}
+
+static float
+getPilotZOffset ()
+{
+	return( PilotOffsetGetSetting(2) );
+}
+
+
 class FloatSlider : public puSlider
 {
 
@@ -484,9 +523,9 @@ sgVec3 *PilotOffsetGet()
 // external function used to tie to FG properties
 float PilotOffsetGetSetting(int opt)
 {
-	float setting;
+	float setting = 0.0;
 	if( PO_vec == 0 ) {
-		PilotOffsetInit();
+            PilotOffsetInit();
 	}
 	sgVec3Slider *me = (sgVec3Slider *)PO_vec -> getUserData();
         sgVec3 vec;
