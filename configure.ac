@@ -234,7 +234,6 @@ AC_SEARCH_LIBS(cos, m)
 AC_SEARCH_LIBS(dlclose, dl)
 
 base_LIBS="$LIBS"
-LIBS=""
 
 dnl check for glut location
 AC_CHECK_HEADER(GL/glut.h)
