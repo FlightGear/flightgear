@@ -1,0 +1,108 @@
+SUBDIRS = \
+	tests \
+	src
+
+EXTRA_DIST = FG-FAQ.v3 README.Unix README.Linux README.MacOS README.Win32 \
+	README.Win32-X README.autoconf README.gpc README.plib \
+	README.running Thanks VERSION acsite.m4 acconfig.h irix-hack.pl
+
+dist-hook:
+	tar cf - hints | (cd $(distdir); tar xvf -)
+	# tar cf - Simulator/FDM/JSBsim/aircraft Simulator/FDM/JSBsim/engine | (cd $(distdir); tar xvf -)
+
+
+##########################################################################
+# extra targets to do various things ...
+#
+# Use "make <target>"
+##########################################################################
+
+
+# make the base distribution with textures, sounds and a bit of
+# scenery, and all the other associated files
+
+fgfs-base: fgfs-base-tar fgfs-base-zip
+
+fgfs-base-tar:
+	(cd $(HOME); \
+	tar czvf fgfs-base-$(VERSION).tar.gz \
+	FlightGear/[A-CE-R]* \
+	FlightGear/Scenery/w120n30/w111n33 \
+	FlightGear/Sounds \
+	FlightGear/[T-W]* FlightGear/[c-m]*)
+
+fgfs-base-zip:
+	(cd $(HOME); \
+	zip -ryv fgfs-base-$(VERSION).zip \
+	FlightGear/[A-CE-R]* \
+	FlightGear/Scenery/w120n30/w111n33 \
+	FlightGear/Sounds \
+	FlightGear/Textures FlightGear/Thanks \
+	FlightGear/[T-W]* FlightGear/[c-z]*)
+
+# make the mini JSBsim data distribution
+jsbsim-data:
+	(cd $(HOME); \
+	tar czvf jsbsim-data-$(VERSION).tar.gz \
+	FlightGear/Aircraft \
+	FlightGear/Engine)
+
+# make the documentation distribution
+
+fgfs-docs: fgfs-docs-tar fgfs-manual-zip
+
+fgfs-docs-tar:
+	( cd .. ; \
+	tar czvf fgfs-docs-$(VERSION).tar.gz FlightGear/docs )
+
+# fgfs-docs-zip:
+# 	( cd .. ; \
+# 	zip -r fgfs-docs-$(VERSION).zip FlightGear/docs )
+
+fgfs-manual-zip:
+	( cd .. ; \
+	zip -r fgfs-manual-$(VERSION).zip FlightGear/docs/InstallGuide )
+
+# make the win32-bin distribution
+
+fgfs-win32-bin:
+	(cd $(HOME); \
+	zip -r fgfs-win32-bin-$(VERSION).zip FlightGear/bin )
+
+# make the win32-libs distribution (depricated)
+win32-libs:
+	( zip -r ../win32-libs-$(VERSION).zip Win32/Makefile \
+	Win32/README.glut Win32/cygwinb1.dll Win32/def \
+	Win32/*.exp Win32/gen-def-from-errors.pl \
+	Win32/glut.dll Win32/glut32.dll Win32/impdef.cpp \
+	Win32/impdef.exe Win32/include \
+	Win32/install.exe \
+	Win32/lib Win32/zlib.lib )
+
+# make the MacOS (MWCWP3) devel support archive
+macos-devel:
+	( cd ..; zip -r MWCWP3_Support.zip FlightGear/MWCWP3_Support )
+
+# clean up dependencies
+clean-deps:
+	rm -rf .deps \
+	src/.deps tests/.deps \
+	src/*/.deps \
+	src/*/*/.deps \
+	tests/.deps
+
+# clean up after libtool
+clean-libs:
+	rm -rf .libs src/.libs \
+		src/*/.libs \
+		src/*/*/.libs 
+	rm -f src/*/so_locations \
+		src/*/*/so_locations 
+
+# clean up after winbloze spews random case for file names :-(
+clean-winbloze: clean-deps clean-libs
+	rm -f makefile src/Include/makefile src/makefile \
+		src/*/makefile \
+		src/*/*/makefile \
+		tests/makefile
+	rm -f src/Main/fg.exe
