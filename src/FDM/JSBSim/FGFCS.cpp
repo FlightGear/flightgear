@@ -65,14 +65,17 @@ CLASS IMPLEMENTATION
 
 FGFCS::FGFCS(FGFDMExec* fdmex) : FGModel(fdmex)
 {
+  int i;
   Name = "FGFCS";
 
   DaCmd = DeCmd = DrCmd = DfCmd = DsbCmd = DspCmd = 0.0;
   PTrimCmd = YTrimCmd = RTrimCmd = 0.0;
-  DaPos = DePos = DrPos = DfPos = DsbPos = DspPos = 0.0;
+  DaLPos = DaRPos = DePos = DrPos = DfPos = DsbPos = DspPos = 0.0;
   GearCmd = GearPos = 1; // default to gear down
   LeftBrake = RightBrake = CenterBrake = 0.0;
-
+  DoNormalize=true;
+  
+  for(i=0;i<6;i++) { ToNormalize[i]=-1;}
   Debug(0);
 }
 
@@ -104,6 +107,7 @@ bool FGFCS::Run(void)
     for (i=0; i<MixturePos.size(); i++) MixturePos[i] = MixtureCmd[i];
     for (i=0; i<PropAdvance.size(); i++) PropAdvance[i] = PropAdvanceCmd[i];
     for (i=0; i<Components.size(); i++)  Components[i]->Run();
+    if(DoNormalize) Normalize();
   } else {
   }
 
@@ -249,9 +253,14 @@ void FGFCS::SetPropAdvance(int engineNum, double setting)
 bool FGFCS::Load(FGConfigFile* AC_cfg)
 {
   string token;
-
+  unsigned i;
+  
   Name = Name + ":" + AC_cfg->GetValue("NAME");
   if (debug_lvl > 0) cout << "    Control System Name: " << Name << endl;
+  if( AC_cfg->GetValue("NORMALIZE") == "FALSE") {
+      DoNormalize=false;
+      cout << "    Automatic Control Surface Normalization Disabled" << endl;
+  }    
   AC_cfg->GetNextConfigLine();
   while ((token = AC_cfg->GetValue()) != string("/FLIGHT_CONTROL")) {
     if (token == "COMPONENT") {
@@ -288,6 +297,31 @@ bool FGFCS::Load(FGConfigFile* AC_cfg)
       AC_cfg->GetNextConfigLine();
     }
   }
+  //collect information for normalizing control surfaces
+  
+  for(i=0;i<Components.size();i++) {
+    
+    if(Components[i]->GetType() == "AEROSURFACE_SCALE" 
+        || Components[i]->GetType() == "KINEMAT"  ) {
+      if( Components[i]->GetOutputIdx() == FG_ELEVATOR_POS ) {
+        ToNormalize[iNDe]=i;
+      } else if ( Components[i]->GetOutputIdx() == FG_LEFT_AILERON_POS 
+                      || Components[i]->GetOutputIdx() == FG_AILERON_POS ) {
+        ToNormalize[iNDaL]=i;
+      } else if ( Components[i]->GetOutputIdx() == FG_RIGHT_AILERON_POS ) {
+        ToNormalize[iNDaR]=i;
+      } else if ( Components[i]->GetOutputIdx() == FG_RUDDER_POS ) {
+        ToNormalize[iNDr]=i;
+      } else if ( Components[i]->GetOutputIdx() == FG_SPDBRAKE_POS ) {
+        ToNormalize[iNDsb]=i;
+      } else if ( Components[i]->GetOutputIdx() == FG_SPOILERS_POS ) {
+        ToNormalize[iNDsp]=i;
+      } else if ( Components[i]->GetOutputIdx() == FG_FLAPS_POS ) {
+        ToNormalize[iNDf]=i;
+      }
+    }
+  }     
+  
   return true;
 }
 
@@ -370,6 +404,32 @@ void FGFCS::AddThrottle(void)
   PropAdvance.push_back(0.0);
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFCS::Normalize(void) {
+  if( ToNormalize[iNDe] > -1 ) 
+    DePosN = Components[ToNormalize[iNDe]]->GetOutputPct();
+  
+  if( ToNormalize[iNDaL] > -1 ) 
+    DaLPosN = Components[ToNormalize[iNDaL]]->GetOutputPct();
+  
+  if( ToNormalize[iNDaR] > -1 ) 
+    DaRPosN = Components[ToNormalize[iNDaR]]->GetOutputPct();
+  
+  if( ToNormalize[iNDr] > -1 ) 
+    DrPosN = Components[ToNormalize[iNDr]]->GetOutputPct();
+       
+  if( ToNormalize[iNDsb] > -1 ) 
+    DsbPosN = Components[ToNormalize[iNDsb]]->GetOutputPct();
+  
+  if( ToNormalize[iNDsp] > -1 ) 
+    DspPosN = Components[ToNormalize[iNDsp]]->GetOutputPct();
+  
+  if( ToNormalize[iNDf] > -1 ) 
+    DfPosN = Components[ToNormalize[iNDf]]->GetOutputPct();
+   
+}  
+    
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print
