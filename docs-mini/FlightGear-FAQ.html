@@ -1,9 +1,21 @@
-<html lang="en"><!-- $Id$ --><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>FlightGear FAQ</title><style type="text/css">
+<html lang="en">
+  <!-- $Id$ -->
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <title>FlightGear FAQ</title>
+    <style type="text/css">
         .indent { margin-left: 2em; margin-right: 1em; }
-      </style></head><body>
+      </style>
+  </head>
+  <body>
   
     <h1 align="center">FlightGear FAQ</h1>
-    <p align="center"><small>Cameron Moore<br><a href="mailto:cameron@unbeatenpath.net?subject=FlightGear%20FAQ">cameron@unbeatenpath.net</a></small></p><hr noshade="yes">
+    <p align="center">
+      <small>Cameron Moore<br>
+        <a href="mailto:cameron@unbeatenpath.net?subject=FlightGear%20FAQ">cameron@unbeatenpath.net</a>
+      </small>
+    </p>
+    <hr noshade>
     
     
     <h2>Introduction</h2>
@@ -12,92 +24,242 @@
       you have a question that is not answered here, feel free to ask
       us on our mailing lists.  Enjoy</p>
     
-  <hr noshade="yes"><h2><a name="toc">Table of Contents</a></h2><h4>1 -
-    <a href="#1">The FAQ</a></h4><div class="indent">1.1 -
-      <a href="#1.1">Where can I get the latest version of this FAQ?</a></div><div class="indent">1.2 -
-      <a href="#1.2">Who do I contact if I have comments about this FAQ?</a></div><div class="indent">1.3 -
-      <a href="#1.3">What other important documentation should I read?</a></div><div class="indent">1.4 -
-      <a href="#1.4">How old is this document?</a></div><br><h4>2 -
-    <a href="#2">Distribution</a></h4><div class="indent">2.1 -
-      <a href="#2.1">Where is the latest distribution of FlightGear?</a></div><div class="indent">2.2 -
-      <a href="#2.2">Where can I find the newest snapshots?</a></div><div class="indent">2.3 -
-      <a href="#2.3">Where can I fly and where do I get the scenery?</a></div><div class="indent">2.4 -
-      <a href="#2.4">Where can I get some different 3D models for my plane?</a></div><br><h4>3 -
-    <a href="#3">Compiling</a></h4><div class="indent">3.1 -
-      <a href="#3.1">Why won't FlightGear compile?</a></div><div class="indent">3.2 -
-      <a href="#3.2">I'm using RedHat 7, and ...?</a></div><br><h4>4 -
-    <a href="#4">Configuring</a></h4><div class="indent">4.1 -
-      <a href="#4.1">How do I install new scenery?</a></div><div class="indent">4.2 -
-      <a href="#4.2">How do I setup my joystick(s)?</a></div><br><h4>5 -
-    <a href="#5">Running</a></h4><div class="indent">5.1 -
-      <a href="#5.1">Why is FlightGear so slow?</a></div><div class="indent">5.2 -
-      <a href="#5.2">Why is my SGI machine so slow?</a></div><div class="indent">5.3 -
-      <a href="#5.3">Stuck upside down after "crash"?</a></div><div class="indent">5.4 -
-      <a href="#5.4">What happened to the panel, keyboard, etc?</a></div><div class="indent">5.5 -
-      <a href="#5.5">Why doesn't audio work properly under Irix?</a></div><div class="indent">5.6 -
-      <a href="#5.6">Why do I get an error loading libmk4.so.0?</a></div><br><h4>6 -
-    <a href="#6">Hacking</a></h4><div class="indent">6.1 -
-      <a href="#6.1">How do I design a flight dynamics model for a new plane?</a></div><div class="indent">6.2 -
-      <a href="#6.2">How do I import planes from Microsoft Flight Simulator?</a></div><div class="indent">6.3 -
-      <a href="#6.3">How do I import BGL scenery from Microsoft Flight Simulator?</a></div><div class="indent">6.4 -
-      <a href="#6.4">How do I design or modify a panel?</a></div><div class="indent">6.5 -
-      <a href="#6.5">How do I place objects, like buildings, into FlightGear?</a></div><br><h4>7 -
-    <a href="#7">Flying</a></h4><div class="indent">7.1 -
-      <a href="#7.1">Where can I learn about instrument flying and navigation?</a></div><div class="indent">7.2 -
-      <a href="#7.2">What is the difference between Aileron and Rudder?</a></div><br><h4>8 -
-    <a href="#8">FlightGear v0.7.6</a></h4><div class="indent">8.1 -
-      <a href="#8.1">Why do I get an error in viewer.cxx about `exit' being undeclared?</a></div><br>
+  <hr noshade>
+    <h2>
+      <a name="toc">Table of Contents</a>
+    </h2>
+    <h4>1 -
+    <a href="#1">The FAQ</a>
+    </h4>
+    <div class="indent">1.1 -
+      <a href="#1.1">Where can I get the latest version of this FAQ?</a>
+    </div>
+    <div class="indent">1.2 -
+      <a href="#1.2">Who do I contact if I have comments about this FAQ?</a>
+    </div>
+    <div class="indent">1.3 -
+      <a href="#1.3">How old is this document?</a>
+    </div>
+    <div class="indent">1.4 -
+      <a href="#1.4">What other important documentation should I read?</a>
+    </div>
+    <br>
+    <h4>2 -
+    <a href="#2">Distribution</a>
+    </h4>
+    <div class="indent">2.1 -
+      <a href="#2.1">Where can I get FlightGear?</a>
+    </div>
+    <div class="indent">2.2 -
+      <a href="#2.2">Where can I find the latest development source code?</a>
+    </div>
+    <div class="indent">2.3 -
+      <a href="#2.3">What is SimGear, and why do I need it?</a>
+    </div>
+    <div class="indent">2.4 -
+      <a href="#2.4">Where can I fly and where do I get the scenery?</a>
+    </div>
+    <div class="indent">2.5 -
+      <a href="#2.5">Where can I get different 3D models for my plane?</a>
+    </div>
+    <div class="indent">2.6 -
+      <a href="#2.6">How current is the data in FlightGear compared to the real world?</a>
+    </div>
+    <div class="indent">2.7 -
+      <a href="#2.7">Where is the moving map?</a>
+    </div>
+    <div class="indent">2.8 -
+      <a href="#2.8">Why don't you charge money for this?</a>
+    </div>
+    <br>
+    <h4>3 -
+    <a href="#3">Compiling</a>
+    </h4>
+    <div class="indent">3.1 -
+      <a href="#3.1">Why won't FlightGear compile?</a>
+    </div>
+    <div class="indent">3.2 -
+      <a href="#3.2">I'm using RedHat 7, and ...?</a>
+    </div>
+    <br>
+    <h4>4 -
+    <a href="#4">Configuring</a>
+    </h4>
+    <div class="indent">4.1 -
+      <a href="#4.1">How do I install new scenery?</a>
+    </div>
+    <div class="indent">4.2 -
+      <a href="#4.2">How do I setup my joystick(s)?</a>
+    </div>
+    <div class="indent">4.3 -
+      <a href="#4.3">What format should my personal .fgfsrc file be in?</a>
+    </div>
+    <br>
+    <h4>5 -
+    <a href="#5">Running</a>
+    </h4>
+    <div class="indent">5.1 -
+      <a href="#5.1">Why do I get an error loading libmk4.so.0?</a>
+    </div>
+    <div class="indent">5.2 -
+      <a href="#5.2">Why do I get "ssgInit called without a valid OpenGL context"?</a>
+    </div>
+    <div class="indent">5.3 -
+      <a href="#5.3">What happened to the panel, keyboard, etc?</a>
+    </div>
+    <div class="indent">5.4 -
+      <a href="#5.4">Why doesn't audio work properly under Irix?</a>
+    </div>
+    <div class="indent">5.5 -
+      <a href="#5.5">Why is FlightGear so slow?</a>
+    </div>
+    <div class="indent">5.6 -
+      <a href="#5.6">Why is my SGI machine so slow?</a>
+    </div>
+    <div class="indent">5.7 -
+      <a href="#5.7">How do I see the frame rate?</a>
+    </div>
+    <div class="indent">5.8 -
+      <a href="#5.8">Stuck upside down after "crash"?</a>
+    </div>
+    <div class="indent">5.9 -
+      <a href="#5.9">Why does FlightGear die on startup saying "time zone reading failed"?</a>
+    </div>
+    <br>
+    <h4>6 -
+    <a href="#6">Hacking</a>
+    </h4>
+    <div class="indent">6.1 -
+      <a href="#6.1">What language is FlightGear written in?</a>
+    </div>
+    <div class="indent">6.2 -
+      <a href="#6.2">How do I design a flight dynamics model for a new aircraft?</a>
+    </div>
+    <div class="indent">6.3 -
+      <a href="#6.3">How do I import planes from Microsoft Flight Simulator?</a>
+    </div>
+    <div class="indent">6.4 -
+      <a href="#6.4">How do I import BGL scenery from Microsoft Flight Simulator?</a>
+    </div>
+    <div class="indent">6.5 -
+      <a href="#6.5">How do I design or modify a panel?</a>
+    </div>
+    <div class="indent">6.6 -
+      <a href="#6.6">How do I place objects, like buildings, into FlightGear?</a>
+    </div>
+    <div class="indent">6.7 -
+      <a href="#6.7">Where can I learn 3D programming and how do I get involved?</a>
+    </div>
+    <div class="indent">6.8 -
+      <a href="#6.8">How do I add an airport?</a>
+    </div>
+    <div class="indent">6.9 -
+      <a href="#6.9">How do I generate my own scenery?</a>
+    </div>
+    <br>
+    <h4>7 -
+    <a href="#7">Flying</a>
+    </h4>
+    <div class="indent">7.1 -
+      <a href="#7.1">Where can I learn about instrument flying and navigation?</a>
+    </div>
+    <div class="indent">7.2 -
+      <a href="#7.2">What is the difference between Aileron and Rudder?</a>
+    </div>
+    <div class="indent">7.3 -
+      <a href="#7.3">Is there support for multi-player flying?</a>
+    </div>
+    <div class="indent">7.4 -
+      <a href="#7.4">Is there support for any military scenarios like dog fighting or bomb dropping?</a>
+    </div>
+    <br>
+    <h4>8 -
+    <a href="#8">FlightGear v0.7.6</a>
+    </h4>
+    <div class="indent">8.1 -
+      <a href="#8.1">Why do I get an error in viewer.cxx about `exit' being undeclared?</a>
+    </div>
+    <br>
 
   
-    <hr><h2><a name="1">1 -
-    The FAQ</a></h2>
-        <b><a name="1.1">1.1 -
-    <u>Where can I get the latest version of this FAQ?</u></a></b>
+    <hr>
+    <h2>
+      <a name="1">1 -
+    The FAQ</a>
+    </h2>
+        <b>
+      <a name="1.1">1.1 -
+    <u>Where can I get the latest version of this FAQ?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>
           <a href="http://flightgear.org/Docs/FlightGear-FAQ.html">http://flightgear.org/Docs/FlightGear-FAQ.html</a>
           </p>
         </div>
       
-        <b><a name="1.2">1.2 -
-    <u>Who do I contact if I have comments about this FAQ?</u></a></b>
+        <b>
+      <a name="1.2">1.2 -
+    <u>Who do I contact if I have comments about this FAQ?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>First contact the author.  If you get no response, send your
-          comments to the flightgear-users mailing list.</p>
+          comments to the FlightGear-Users mailing list.</p>
         </div>
       
-        <b><a name="1.3">1.3 -
-    <u>What other important documentation should I read?</u></a></b>
-        <div class="indent">
-          <p>Definitely read the <i>FlightGear Installation and Getting
-          Started</i> document available at
-          <a href="http://flightgear.org/Docs/">http://flightgear.org/Docs/</a>.</p>
-          <p>Also see the FlightGear/docs-mini/ directory in the source
-          distribution for various other helpful documents.</p>
-        </div>
-      
-        <b><a name="1.4">1.4 -
-    <u>How old is this document?</u></a></b>
+        <b>
+      <a name="1.3">1.3 -
+    <u>How old is this document?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>See the <i>About This Document</i> section at the end of the FAQ.</p>
         </div>
       
-
-    <hr><h2><a name="2">2 -
-    Distribution</a></h2>
-        <b><a name="2.1">2.1 -
-    <u>Where is the latest distribution of FlightGear?</u></a></b>
+        <b>
+      <a name="1.4">1.4 -
+    <u>What other important documentation should I read?</u>
+      </a>
+    </b>
         <div class="indent">
-          <p>See
-          <a href="http://flightgear.org/Downloads/">http://flightgear.org/Downloads/</a>.
-          </p>
+          <p>Most FlightGear documentation is linked to from
+          <a href="http://flightgear.org/Docs/">http://flightgear.org/Docs/</a>.
+          Definitely check out the <i>FlightGear Installation and Getting
+          Started</i> document available from the aforementioned location.</p>
+          <p>Also see the <code>FlightGear/docs-mini/</code> directory in the
+          source distribution for various other helpful documents.</p>
         </div>
       
-        <b><a name="2.2">2.2 -
-    <u>Where can I find the newest snapshots?</u></a></b>
+
+    <hr>
+    <h2>
+      <a name="2">2 -
+    Distribution</a>
+    </h2>
+        <b>
+      <a name="2.1">2.1 -
+    <u>Where can I get FlightGear?</u>
+      </a>
+    </b>
         <div class="indent">
-          <p>The best place to get the latest development code is from our CVS
-          repository.  See
+          <p>The official download page is 
+          <a href="http://flightgear.org/Downloads/">http://flightgear.org/Downloads/</a>.
+          Source code is our primary form of distribution, but precompiled
+          binaries are available for Windows and SGI IRIX.</p>
+          <p>Alternatively, FlightGear is packaged for Linux by SuSE, Debian
+          (sid), and Mandrake (Cooker) and can be directly installed through
+          those distributions.</p>
+        </div>
+      
+        <b>
+      <a name="2.2">2.2 -
+    <u>Where can I find the latest development source code?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>The latest development code is available for everyone through our
+          CVS repository.  See
           <a href="http://flightgear.org/cvsResources/">http://flightgear.org/cvsResources/</a> for details.
           </p>
           <p>Otherwise, you can get relatively up-to-date snapshots of the
@@ -106,8 +268,23 @@
           </p>
         </div>
       
-        <b><a name="2.3">2.3 -
-    <u>Where can I fly and where do I get the scenery?</u></a></b>
+        <b>
+      <a name="2.3">2.3 -
+    <u>What is SimGear, and why do I need it?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>SimGear is a library of supporting code.  SimGear is only needed
+          if you plan on compiling FlightGear -- it is not needed to run
+          precompiled binaries.  For more information see
+          <a href="http://www.simgear.org/">http://www.simgear.org/</a>.</p>
+        </div>
+      
+        <b>
+      <a name="2.4">2.4 -
+    <u>Where can I fly and where do I get the scenery?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>While the base package only comes with scenery for the San Francisco
           Bay area, you can currently fly just about anywhere in the world.
@@ -121,10 +298,13 @@
           for some help navigating to some awesome locations.</p>
         </div>
       
-        <b><a name="2.4">2.4 -
-    <u>Where can I get some different 3D models for my plane?</u></a></b>
+        <b>
+      <a name="2.5">2.5 -
+    <u>Where can I get different 3D models for my plane?</u>
+      </a>
+    </b>
         <div class="indent">
-          <p>We currently don't have any of our own models yet, but we have
+          <p>While we are working toward building our own 3D models, we have
           been given permission by several people to convert their models (which
           where originally intended for use with <i>Microsoft Flight
           Simulator</i>) to use with FlightGear.  See Wolfram's Hangar
@@ -133,15 +313,61 @@
           information on how to convert models yourself.</p>
         </div>
       
+        <b>
+      <a name="2.6">2.6 -
+    <u>How current is the data in FlightGear compared to the real world?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>We use the same navaid and airport dataset that <i>X-Plane</i> uses.  The
+          current dataset can be found in the <code>$FGROOT/Navaids/</code> and
+          <code>$FGROOT/Airports/</code> directories.  If you have updates or
+          corrections to the dataset, see
+          <a href="http://flightgear.org/Docs/AirNav/AptNavFAQ.FlightGear.html">http://flightgear.org/Docs/AirNav/AptNavFAQ.FlightGear.html</a>
+          for instructions on contacting the database maintainer.</p>
+        </div>
+      
+        <b>
+      <a name="2.7">2.7 -
+    <u>Where is the moving map?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>A popular moving map display is avaliable under a separate
+          project called <i>Atlas</i>.  See
+          <a href="http://atlas.sf.net/">http://atlas.sf.net/</a>.</p>
+        </div>
+      
+        <b>
+      <a name="2.8">2.8 -
+    <u>Why don't you charge money for this?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>We could do that, since the initial download is about 25
+          megabytes.  Especially for people who have to pay per-minute charges
+          for internet access, buying a CD is a convenient and possibly
+          cheaper option.  Although we offer that service (see the website), we
+          encourage other groups to redistribute it for their users, especially
+          within an operating system distribution which makes installation even
+          faster and easier for new users.</p>
+        </div>
+      
 
-    <hr><h2><a name="3">3 -
-    Compiling</a></h2>
-        <b><a name="3.1">3.1 -
-    <u>Why won't FlightGear compile?</u></a></b>
+    <hr>
+    <h2>
+      <a name="3">3 -
+    Compiling</a>
+    </h2>
+        <b>
+      <a name="3.1">3.1 -
+    <u>Why won't FlightGear compile?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>Well, that depends.  First make sure you are using the appropriate
-          versions of FlightGear, SimGear, and plib.  If any of the packages are
-          out of sync with the others, compilation may fail.</p>
+          versions of FlightGear, SimGear, plib, zlib, and metakit.  If any of
+          the packages are out of sync with the others, compilation may fail.</p>
           <p>The FlightGear <i>Downloads</i> page
           (<a href="http://flightgear.org/Downloads/">http://flightgear.org/Downloads/</a>)
           should tell you what versions you need if you are trying to compile
@@ -151,9 +377,9 @@
           support with the appropriate header files.  Linux users with nVidia
           cards should make sure you have the latest drivers from nVidia.  Other
           Linux users make sure you have Mesa3D
-          (<a href="http://mesa3d.org">http://mesa3d.org</a>)
+          (<a href="http://mesa3d.org/">http://mesa3d.org/</a>)
           and your X server installed correctly.  Windows users see
-          <a href="http://www.x-plane.com/SYSREQ/v5ibm.htm">http://www.x-plane.com/SYSREQ/v5ibm.html</a>,
+          <a href="http://www.x-plane.com/SYSREQ/v5ibm.html">http://www.x-plane.com/SYSREQ/v5ibm.html</a>,
           and Mac users see
           <a href="http://www.x-plane.com/SYSREQ/v5mac.html">http://www.x-plane.com/SYSREQ/v5mac.html</a>.
           </p>
@@ -163,8 +389,11 @@
           </p>
         </div>
       
-        <b><a name="3.2">3.2 -
-    <u>I'm using RedHat 7, and ...?</u></a></b>
+        <b>
+      <a name="3.2">3.2 -
+    <u>I'm using RedHat 7, and ...?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>Update your gcc packages.  See
           <a href="http://redhat.com/errata/">http://redhat.com/errata/</a>
@@ -174,44 +403,141 @@
         </div>
       
 
-    <hr><h2><a name="4">4 -
-    Configuring</a></h2>
-        <b><a name="4.1">4.1 -
-    <u>How do I install new scenery?</u></a></b>
+    <hr>
+    <h2>
+      <a name="4">4 -
+    Configuring</a>
+    </h2>
+        <b>
+      <a name="4.1">4.1 -
+    <u>How do I install new scenery?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>The scenery archive files (ie. w100n30.tar.gz) should be untarred
           into the <code>Scenery/</code> directory in your
           <code>$FG_ROOT</code>.</p>
         </div>
       
-        <b><a name="4.2">4.2 -
-    <u>How do I setup my joystick(s)?</u></a></b>
+        <b>
+      <a name="4.2">4.2 -
+    <u>How do I setup my joystick(s)?</u>
+      </a>
+    </b>
         <div class="indent">
-          <!--
           <p>FlightGear should come with a helpful program called <i>`fgjs`</i>
-          that can help configure your joystick.</p>
-          -->
-          <p>See the README.Joystick file located in the
+          that can help configure your joystick.  Run <i>`fgjs`</i> and then
+	  copy the dot file it created into your home directory or add its
+	  contents to your existing rc file.</p>
+          <p>Also, see the README.Joystick file located in the
           <code>FlightGear/docs-mini/</code> directory of the source
           distribution.  This document is mirrored at
-          <a href="http://rockfish.net/shell/aboutjoy.txt">http://rockfish.net/shell/aboutjoy.txt</a>.
+          <a href="http://rockfish.net/fg/README.Joystick">http://rockfish.net/fg/README.Joystick</a>.
           </p>
-          <p>If you have a joystick with digital axes, see
-          <a href="http://www.unet.univie.ac.at/~a8603365/flightgear.html">http://www.unet.univie.ac.at/~a8603365/flightgear.html</a>
-          for a patch to the development version of FlightGear.</p>
+        </div>
+      
+        <b>
+      <a name="4.3">4.3 -
+    <u>What format should my personal .fgfsrc file be in?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>Your <code>.fgfsrc</code> file should simply be a list of
+          command-line options with one option per line.  The file is <b>not</b>
+          an XML file.</p>
+          <p>If you would rather use an XML configuration file, you can add
+          something like the following in your <code>.fgfsrc</code>
+      </p>
+          <p>
+        <code>--config=/path/to/my/config.xml</code>
+      </p>
+          <p>Almost every option corresponds to a property, so you can choose
+          to use whichever method best suits your needs.</p>
         </div>
       
 
-    <hr><h2><a name="5">5 -
-    Running</a></h2>
-        <b><a name="5.1">5.1 -
-    <u>Why is FlightGear so slow?</u></a></b>
+    <hr>
+    <h2>
+      <a name="5">5 -
+    Running</a>
+    </h2>
+        <b>
+      <a name="5.1">5.1 -
+    <u>Why do I get an error loading libmk4.so.0?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>With the default installation, libmk4.so.0 is installed into
+          <code>/usr/local/lib</code>.  You need to ensure that that path is
+          listed in <code>/etc/ld.so.conf</code>, then run <i>`ldconfig`</i>as
+          root.</p>
+        </div>
+      
+        <b>
+      <a name="5.2">5.2 -
+    <u>Why do I get "ssgInit called without a valid OpenGL context"?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>In short, your GL libraries are broken.  So far only Red Hat 7.x
+          users have experienced this (see
+          <a href="http://www.redhat.com/bugzilla/show_bug.cgi?id=18867">http://www.redhat.com/bugzilla/show_bug.cgi?id=18867</a>).
+          The only solutions are possibly complicated ones: you can either
+          change distributions (most of us prefer Debian) or upgrade/downgrade
+          your Mesa libs.</p>
+          <p>
+        <i>
+          <u>Why do some other GL applications work though?</u>
+        </i>  Well,
+          Steve Baker (Mr. PLIB) has explained this on the plib-users list
+          (<a href="http://www.geocrawler.com/lists/3/SourceForge/1867/0/6470648/">http://www.geocrawler.com/lists/3/SourceForge/1867/0/6470648/</a>).
+          </p>
+        </div>
+      
+        <b>
+      <a name="5.3">5.3 -
+    <u>What happened to the panel, keyboard, etc?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>The problem is almost certainly that your base package is out of
+          sync with FlightGear.  Many configurable parts of FlightGear are
+          defined in XML files contained in the base package.</p>
+        </div>
+      
+        <b>
+      <a name="5.4">5.4 -
+    <u>Why doesn't audio work properly under Irix?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>FlightGear (as of June 2001) uses the Portable Libraries (PLIB)
+          for playing audio. The audio queue implementation of PLIB is far from
+          optimal (in fact it's just wrong).  This seems to work on other
+          platforms quite well, but Irix expects things to be programmed
+          properly.</p>
+          <p>There has been discussion about using OpenAL
+          (<a href="http://www.openal.org/">http://www.openal.org/</a>)
+          for the next release of both PLIB and FlightGear.  Tests show that
+          the OpenAL audio implementation does the job right, meaning that
+          these audio problems should be gone by then. In the mean time it is
+          best to disable audio on Irix completely (by adding --disable-sound
+          either on the command line or to your <code>$HOME/.fgfsrc</code>
+          file).</p>
+        </div>
+      
+        <b>
+      <a name="5.5">5.5 -
+    <u>Why is FlightGear so slow?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>FlightGear supports hardware acceleration, but it seems not to be
           activated.  Make sure you have OpenGL libraries installed and
           configured properly and make sure you have the latest drivers for your
           video card.</p>
-          <p><b>Linux users</b>:  If you are an nVidia user, follow their
+          <p>
+        <b>Linux users</b>:  If you are an nVidia user, follow their
           directions on getting your card working.  For most other users, make
           sure Mesa is installed property and ensure that you have the
           appropriate kernel device drivers for your card.  Most people (and
@@ -224,8 +550,11 @@
           like <i>Quake3</i>.</p>
         </div>
       
-        <b><a name="5.2">5.2 -
-    <u>Why is my SGI machine so slow?</u></a></b>
+        <b>
+      <a name="5.6">5.6 -
+    <u>Why is my SGI machine so slow?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>First of all, one of the most common mistakes on SGI hardware is to
           forget to specify --fog-fastest. On most SGI machines the EXP2 shading
@@ -246,9 +575,13 @@
           </ul>
           <p>This means that running FlightGear with the following options may not
           even get the desired result:</p>
-          <p><code>./runfgfs --fog-disable --shading-flat --disable-skyblend \</code><br>
-          <code>--disable-textures --disable-clouds --disable-sound \</code><br>
-          <code>--disable-panel --enable-hud --disable-anti-alias-hud</code></p>
+          <p>
+        <code>./runfgfs --fog-disable --shading-flat --disable-skyblend \</code>
+        <br>
+          <code>--disable-textures --disable-clouds --disable-sound \</code>
+        <br>
+          <code>--disable-panel --enable-hud --disable-anti-alias-hud</code>
+      </p>
           <p>I could even imagine that adding --enable-wireframe doesn't work on
           these machines (I would be happy to be proven wrong though).</p>
           <p>On a machine like O2 the following options give an acceptable
@@ -258,8 +591,23 @@
           options would be appropriate for your situation.</p>
         </div>
       
-        <b><a name="5.3">5.3 -
-    <u>Stuck upside down after "crash"?</u></a></b>
+        <b>
+      <a name="5.7">5.7 -
+    <u>How do I see the frame rate?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>There are two ways.  One way is to hide the panel without the HUD
+          showing.  To hide the panel, use <i>Shift+P</i>; To make the HUD
+          disappear, use <i>H</i>.  The second way is to use the alternative
+          HUD by <i>Shift+I</i> (Use <i>I</i> to switch back).</p>
+        </div>
+      
+        <b>
+      <a name="5.8">5.8 -
+    <u>Stuck upside down after "crash"?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>In his infinite wisdom the FlightGear Grand Master decided that
           planes were to valuable to allow them to be destroyed by novice pilots
@@ -278,70 +626,83 @@
           and keep that airspeed up!!!</p>
         </div>
       
-        <b><a name="5.4">5.4 -
-    <u>What happened to the panel, keyboard, etc?</u></a></b>
+        <b>
+      <a name="5.9">5.9 -
+    <u>Why does FlightGear die on startup saying "time zone reading failed"?</u>
+      </a>
+    </b>
         <div class="indent">
-          <p>If you are using a development version of FlightGear, make
-          sure you also have the latest base package.  See
-          <a href="http://rockfish.net/fg/">http://rockfish.net/fg/</a>
-          for details on getting the latest CVS version.</p>
-        </div>
-      
-        <b><a name="5.5">5.5 -
-    <u>Why doesn't audio work properly under Irix?</u></a></b>
-        <div class="indent">
-          <p>FlightGear (as of June 2001) uses the Portable Libraries (PLIB)
-          for playing audio. The audio queue implementation of PLIB is far from
-          optimal (in fact it's just wrong).  This seems to work on other
-          platforms quite well, but Irix expects things to be programmed
-          properly.</p>
-          <p>There has been discussion about using OpenAL
-          (<a href="http://www.openal.org">http://www.openal.org</a>)
-          for the next release of both PLIB and FlightGear.  Tests show that
-          the OpenAL audio implementation does the job right, meaning that
-          these audio problems should be gone by then. In the mean time it is
-          best to disable audio on Irix completely (by adding --disable-sound
-          either on the command line or to your <code>$HOME/.fgfsrc</code>
-          file).</p>
-        </div>
-      
-        <b><a name="5.6">5.6 -
-    <u>Why do I get an error loading libmk4.so.0?</u></a></b>
-        <div class="indent">
-          <p>With the default installation, libmk4.so.0 is installed into
-          <code>/usr/local/lib</code>.  You need to ensure that that path is
-          listed in <code>/etc/ld.so.conf</code>, then run <i>`ldconfig`</i>as
-          root.</p>
+          <p>This is probably caused by a line-ending problem in the timezone
+          files.  Win32 users can resolve the problem by downloading a DOS to
+          UNIX conversion utility available at
+          <a href="http://www.nottingham.ac.uk/~eazdluf/d2u.zip">http://www.nottingham.ac.uk/~eazdluf/d2u.zip</a>.
+          Run as `<i>d2u *.tab</i>` from within the timezone directory to fix
+          your timezone files.</p>
         </div>
       
 
-    <hr><h2><a name="6">6 -
-    Hacking</a></h2>
-        <b><a name="6.1">6.1 -
-    <u>How do I design a flight dynamics model for a new plane?</u></a></b>
+    <hr>
+    <h2>
+      <a name="6">6 -
+    Hacking</a>
+    </h2>
+        <b>
+      <a name="6.1">6.1 -
+    <u>What language is FlightGear written in?</u>
+      </a>
+    </b>
         <div class="indent">
-          <p>See
-          <a href="http://jsbsim.sf.net">http://jsbsim.sf.net</a>.</p>
+          <p>Mostly C++ with some supporting C code that's primary contained
+          within SimGear.</p>
         </div>
       
-        <b><a name="6.2">6.2 -
-    <u>How do I import planes from Microsoft Flight Simulator?</u></a></b>
+        <b>
+      <a name="6.2">6.2 -
+    <u>How do I design a flight dynamics model for a new aircraft?</u>
+      </a>
+    </b>
         <div class="indent">
-          <p>See
-          <a href="http://home.t-online.de/home/Wolfram.Kuss/">http://home.t-online.de/home/Wolfram.Kuss/</a>.
+          <p>To define an aircraft for FlightGear's primary FDM (JSBSIM),
+          see <a href="http://jsbsim.sf.net/">http://jsbsim.sf.net/</a>.</p>
+          <p>If you want a simpler FDM to work with, try your hand at YASim,
+          an alternative FDM.  For an guide on creating a YASim aircraft,
+          look in the FlightGear base package for
+          <code>Aircraft-yasim/README.yasim</code>.</p>
+        </div>
+      
+        <b>
+      <a name="6.3">6.3 -
+    <u>How do I import planes from Microsoft Flight Simulator?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>You can import the 3D model and textures, but the flight dynamics
+          (the .AIR file) must be completely redone for FlightGear.  See
+          <a href="http://home.t-online.de/home/Wolfram.Kuss/">http://home.t-online.de/home/Wolfram.Kuss/</a>
+          for help importing .MDL files and textures.</p>
+          <p>If you wish to import a model made with gmax, you will need to
+          convert it to .MDL format using <i>Microsoft's MakeMDL SDK</i> which
+          is available at
+          <a href="http://zone.msn.com/flightsim/FS02DevDeskSDK08.asp">http://zone.msn.com/flightsim/FS02DevDeskSDK08.asp</a>.
           </p>
         </div>
       
-        <b><a name="6.3">6.3 -
-    <u>How do I import BGL scenery from Microsoft Flight Simulator?</u></a></b>
+        <b>
+      <a name="6.4">6.4 -
+    <u>How do I import BGL scenery from Microsoft Flight Simulator?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>See
-          <a href="http://matrixsoft.50megs.com/BGL/">http://matrixsoft.50megs.com/BGL/</a>.
+          <a href="http://chiangt.virtualave.net/BGL/bgl_index.html">http://chiangt.virtualave.net/BGL/bgl_index.html</a>.
           </p>
         </div>
       
-        <b><a name="6.4">6.4 -
-    <u>How do I design or modify a panel?</u></a></b>
+        <b>
+      <a name="6.5">6.5 -
+    <u>How do I design or modify a panel?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>See the README.xmlpanel file located in the
           <code>FlightGear/docs-mini/</code> directory of the source
@@ -350,8 +711,11 @@
           </p>
         </div>
       
-        <b><a name="6.5">6.5 -
-    <u>How do I place objects, like buildings, into FlightGear?</u></a></b>
+        <b>
+      <a name="6.6">6.6 -
+    <u>How do I place objects, like buildings, into FlightGear?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>First, ensure that you have v0.7.7 or later, the scenery files
           where you plan to place the object, the actual model, and the
@@ -359,68 +723,187 @@
           <p>Now get the altitude for your point.  If you don't want to
           calculate this yourself, start FlightGear at your location and take
           note of the altitude.  Here's an example command:</p>
-          <p><code>fgfs --lat=45.50 --lon=-75.73 2>&amp;1 | tee fgfs.log</code></p>
+          <p>
+        <code>fgfs --lat=45.50 --lon=-75.73 2&gt;&amp;1 | tee fgfs.log</code>
+      </p>
           <p>The altitude is probably in feet, so divide the starting altitude
           by 3.28.</p>
           <p>Search the output log file for the first occurrence of the string
           "Loading tile" and take note of the filename.  In the above example,
           the output line looks like:</p>
-          <p><code>Loading tile /usr/local/Scenery/w080n40/w076n45/1712601</code></p>
+          <p>
+        <code>Loading tile /usr/local/Scenery/w080n40/w076n45/1712601</code>
+      </p>
           <p>Copy a 3D model in a format that Plib understands to the same
           directory as the tile file.  Edit the text file in that directory
-          consisting of the tile name with the extension ".ind".  The file will
+          consisting of the tile name with the extension ".stg".  The file will
           already exist if there is an airport on the tile; otherwise, you can
           create it from scratch.  In our example, the filename is:</p>
-          <p><code>/usr/local/Scenery/w080n40/w076n45/1712601.ind</code></p>
+          <p>
+        <code>/usr/local/Scenery/w080n40/w076n45/1712601.stg</code>
+      </p>
           <p>At the end of the file, add a new entry for your object,
           consisting of the word "OBJECT_STATIC" followed by the model name,
           the longitude in degrees, the latitude in degrees, the altitude in
           meters, and the heading in degrees.  In our example the line looks
           like:</p>
-          <p><code>OBJECT_STATIC Towerax.ac -75.73 45.40 60 0</code></p>
-          <p>Save the changes to the .ind file, restart FlightGear, and
+          <p>
+        <code>OBJECT_STATIC Towerax.ac -75.73 45.40 60 0</code>
+      </p>
+          <p>Save the changes to the .stg file, restart FlightGear, and
           enjoy.</p>
           <p>NOTE: The above information was taken from the following mailing
           list post:
           <a href="http://www.geocrawler.com/archives/3/11854/2001/6/0/5991409/">http://www.geocrawler.com/archives/3/11854/2001/6/0/5991409/</a>.
           See that page if this one doesn't make sense.</p>
+          <p>An alternative approach using PPE is described at
+          <a href="http://mail.flightgear.org/pipermail/flightgear-devel/2001-December/002239.html">http://mail.flightgear.org/pipermail/flightgear-devel/2001-December/002239.html</a>
+          by Norman Vine.</p>
+        </div>
+      
+        <b>
+      <a name="6.7">6.7 -
+    <u>Where can I learn 3D programming and how do I get involved?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>Contributing to the 2D panel doesn't require any coding at all,
+          just a minimal knowledge of XML syntax (i.e. five minutes' worth)
+          and good skills with drawing and/or paint programs.  Every instrument
+          on the current panel, with the partial exception of the magnetic
+          compass, is defined entirely in XML with no custom C++  code.  If
+          you want to get started, take a look at John Check's excellent intro
+          (<a href="http://rockfish.net/fg/README.xmlpanel">http://rockfish.net/fg/README.xmlpanel</a>).
+          </p>
+          <p>Likewise, if you want to create a 3D cockpit for FlightGear, or to
+          create buildings, external aircraft models, etc., your help is
+          *desperately* needed.  The only rule is to go easy on the triangles
+          -- a model with 50,000 triangles probably won't be usable in
+          FlightGear, and one with 5,000 triangles, only marginally.  If you
+          can design a nice 3D cockpit interior for a Cessna 172 (for example)
+          in a 3D design program such as ac3D or ppe, we have coders who will
+          be happy to add the support code in the C++.</p>
+          <p>If, on the other hand, you really want to get your hands dirty
+          with C++ coding, you'll have to buy a good OpenGL book eventually.
+          However, FlightGear uses a high-level library, plib, that hides most 
+          of the details of OpenGL.  To get started with 3D C++ coding, you
+          can take a look at the plib documentation and learn only as much
+          OpenGL as you need, when you need it.</p>
+        </div>
+      
+        <b>
+      <a name="6.8">6.8 -
+    <u>How do I add an airport?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>You can add your airport to the
+          <code>$FGROOT/Airports/default.apt.gz</code> file, but to get the
+          airport to show up visually, you will have to rebuild the scenery
+          around the airport.  The format of the default.apt file is
+          documented at
+          <a href="http://flightgear.org/Docs/AirNav/AptNavFAQ.FlightGear.html">http://flightgear.org/Docs/AirNav/AptNavFAQ.FlightGear.html</a>.</p>
+        </div>
+      
+        <b>
+      <a name="6.9">6.9 -
+    <u>How do I generate my own scenery?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>Yes, though it can be a difficult task.  FlightGear's scenery
+          generation is handled by a sister project, TerraGear.  For more
+          details, see
+          <a href="http://terragear.org/">http://terragear.org/</a>.</p>
         </div>
       
 
-    <hr><h2><a name="7">7 -
-    Flying</a></h2>
-        <b><a name="7.1">7.1 -
-    <u>Where can I learn about instrument flying and navigation?</u></a></b>
+    <hr>
+    <h2>
+      <a name="7">7 -
+    Flying</a>
+    </h2>
+        <b>
+      <a name="7.1">7.1 -
+    <u>Where can I learn about instrument flying and navigation?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>
           <a href="http://www.navfltsm.addr.com/">http://www.navfltsm.addr.com/</a>
-          is a very good site for learning techniques for navigation.  Check
-          it out!</p>
-        </div>
-      
-        <b><a name="7.2">7.2 -
-    <u>What is the difference between Aileron and Rudder?</u></a></b>
-        <div class="indent">
-          <p>There is a bit of info on aileron vs. rudder here:
-          <a href="http://www.arundel.net/xplane/html/crosswind.html">http://www.arundel.net/xplane/html/crosswind.html</a>
-          and
+          is a very good site for learning techniques for navigation.  Also see
           <a href="http://www.monmouth.com/~jsd/how/">http://www.monmouth.com/~jsd/how/</a>.
           </p>
         </div>
       
+        <b>
+      <a name="7.2">7.2 -
+    <u>What is the difference between Aileron and Rudder?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>There is a bit of info on aileron vs. rudder here:
+          <a href="http://www.monmouth.com/~jsd/how/">http://www.monmouth.com/~jsd/how/</a>.
+          </p>
+        </div>
+      
+        <b>
+      <a name="7.3">7.3 -
+    <u>Is there support for multi-player flying?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>We have an initial stab at this that is incomplete and only seems
+          to work under Linux.  We'd love to find someone to pick up the
+          slack here and develop this further.  Specifically, plib now has
+          some low level networking support for mult-player games.  It would
+          also be nice to develop support for the DIS protocol.</p>
+        </div>
+      
+        <b>
+      <a name="7.4">7.4 -
+    <u>Is there support for any military scenarios like dog fighting or bomb dropping?</u>
+      </a>
+    </b>
+        <div class="indent">
+          <p>No, not at this time.  Most of our developers are primarily
+          interested and focused on civilian aviation.  We aren't explicitly
+          excluding these features -- we just haven't had anyone who seriously
+          wanted to develop these areas.</p>
+        </div>
+      
 
-    <hr><h2><a name="8">8 -
-    FlightGear v0.7.6</a></h2>
-        <b><a name="8.1">8.1 -
-    <u>Why do I get an error in viewer.cxx about `exit' being undeclared?</u></a></b>
+    <hr>
+    <h2>
+      <a name="8">8 -
+    FlightGear v0.7.6</a>
+    </h2>
+        <b>
+      <a name="8.1">8.1 -
+    <u>Why do I get an error in viewer.cxx about `exit' being undeclared?</u>
+      </a>
+    </b>
         <div class="indent">
           <p>This error cropped up after the release of v0.7.6.  To fix the
-          problem, add "<code>#include &lt;stdlib.h></code>" to the top of viewer.cxx.</p>
+          problem, add "<code>#include &lt;stdlib.h&gt;</code>" to the top of viewer.cxx.</p>
         </div>
       
 
   
-<hr noshade="yes"><a name="about"><h2>About This Document</h2></a><b>FlightGear FAQ</b><br>$Revision$<br>$Date$<br><p><small>
+<hr noshade>
+    <a name="about">
+      <h2>About This Document</h2>
+    </a>
+    <b>FlightGear FAQ</b>
+    <br>$Revision$<br>$Date$<br>
+    <p>
+      <small>
         This document generated from XML using
-        <a href="http://www.gingerall.com/charlie-bin/get/webGA/act/sablotron.act">Sablotron</a>.
-      </small></p><address>Cameron Moore<br>cameron@unbeatenpath.net<br></address></body></html>
+        <a href="http://gingerall.com/charlie/ga/xml/p_sab.xml">Sablotron</a>.
+      </small>
+    </p>
+    <address>Cameron Moore<br>cameron@unbeatenpath.net<br>
+    </address>
+  </body>
+  <!-- vim: set ts=2 et nowrap: -->
+</html>
