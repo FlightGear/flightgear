@@ -87,8 +87,7 @@
 #include <Cockpit/panel_io.hxx>
 #include <FDM/ADA.hxx>
 #include <FDM/Balloon.h>
-#include <FDM/External.hxx>
-#include <FDM/ExternalNet.hxx>
+#include <FDM/ExternalNet/ExternalNet.hxx>
 #include <FDM/JSBSim/JSBSim.hxx>
 #include <FDM/LaRCsim.hxx>
 #include <FDM/MagicCarpet.hxx>
@@ -597,7 +596,9 @@ void fgInitFDM() {
 	} else if ( model == "ufo" ) {
 	    cur_fdm_state = new FGUFO( dt );
 	} else if ( model == "external" ) {
-	    cur_fdm_state = new FGExternal( dt );
+            // external is a synonym for "--fdm=null" and is
+            // maintained here for backwards compatibility
+	    cur_fdm_state = new FGNullFDM( dt );
 	} else if ( model.find("network") == 0 ) {
             string host = "localhost";
             int port1 = 5501;

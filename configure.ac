@@ -579,6 +579,7 @@ AC_CONFIG_FILES([ \
 	src/Controls/Makefile \
 	src/Environment/Makefile \
 	src/FDM/Balloon/Makefile \
+	src/FDM/ExternalNet/Makefile \
 	src/FDM/JSBSim/Makefile \
 	src/FDM/JSBSim/filtersjb/Makefile \
 	src/FDM/LaRCsim/Makefile \
