@@ -78,7 +78,7 @@ string FGBucket::gen_base_path() const {
 
     FGPath path( raw_path );
 
-    return path.get_path();
+    return path.str();
 }
 
 

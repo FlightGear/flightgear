@@ -51,7 +51,7 @@ FGPath::FGPath() {
 
 // create a path based on "path"
 FGPath::FGPath( const string p ) {
-    path = fix_path( p );
+    set( p );
 }
 
 
@@ -60,7 +60,13 @@ FGPath::~FGPath() {
 }
 
 
-// append to the existing path
+// set path
+void FGPath::set( const string p ) {
+    path = fix_path( p );
+}
+
+
+// append another piece to the existing path
 void FGPath::append( const string p ) {
     string part = fix_path( p );
 
@@ -70,6 +76,19 @@ void FGPath::append( const string p ) {
 	if ( part[0] != FG_PATH_SEP ) {
 	    path += FG_PATH_SEP;
 	}
+	path += part;
+    }
+}
+
+
+// concatenate a string to the end of the path without inserting a
+// path separator
+void FGPath::concat( const string p ) {
+    string part = fix_path( p );
+
+    if ( path.size() == 0 ) {
+	path = part;
+    } else {
 	path += part;
     }
 }

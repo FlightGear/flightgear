@@ -38,6 +38,7 @@
 #include <Debug/logstream.hxx>
 #include <Main/options.hxx>
 #include <Math/fg_random.h>
+#include <Misc/fgpath.hxx>
 #include <Objects/texload.h>
 
 #include "splash.hxx"
@@ -50,7 +51,6 @@ static GLubyte *splash_texbuf;
 
 // Initialize the splash screen
 void fgSplashInit ( void ) {
-    string tpath, fg_tpath;
     int width, height;
 
     FG_LOG( FG_GENERAL, FG_INFO, "Initializing splash screen" );
@@ -73,20 +73,23 @@ void fgSplashInit ( void ) {
     int num = (int)(fg_random() * 4.0 + 1.0);
     char num_str[256];
     sprintf(num_str, "%d", num);
-    tpath = current_options.get_fg_root() + "/Textures/Splash";
-    tpath += num_str;
-    tpath += ".rgb";
+
+    FGPath tpath( current_options.get_fg_root() );
+    tpath.append( "Textures/Splash" );
+    tpath.concat( num_str );
+    tpath.concat( ".rgb" );
 
     if ( (splash_texbuf = 
 	  read_rgb_texture(tpath.c_str(), &width, &height)) == NULL )
     {
 	// Try compressed
-	fg_tpath = tpath + ".gz";
+	FGPath fg_tpath = tpath;
+	fg_tpath.concat( ".gz" );
 	if ( (splash_texbuf = 
 	      read_rgb_texture(fg_tpath.c_str(), &width, &height)) == NULL )
 	{
 	    FG_LOG( FG_GENERAL, FG_ALERT, 
-		    "Error in loading splash screen texture " << tpath );
+		    "Error in loading splash screen texture " << tpath.str() );
 	    exit(-1);
 	} 
     } 

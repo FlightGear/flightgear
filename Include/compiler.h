@@ -117,6 +117,9 @@
 // -rp- please use FG_MEM_COPY everywhere !
 #    define FG_MEM_COPY(to,from,n) memcpy(to, from, n)
 
+// -dw- currently used glut has no game mode stuff
+#    define GLUT_WRONG_VERSION
+
 #  elif (__MWERKS__ >= 0x0900) && __INTEL__
 #    error still to be supported...
 #  else
@@ -298,4 +301,3 @@ inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
 #endif // FG_INCOMPLETE_FUNCTIONAL
 
 #endif // _COMPILER_H
-

@@ -47,7 +47,12 @@ FGInterface base_fdm_state;
 // Extrapolate fdm based on time_offset (in usec)
 void FGInterface::extrapolate( int time_offset ) {
     double dt = time_offset / 1000000.0;
+
+    // -dw- metrowerks complains about ambiguous access, not critical
+    // to keep this ;)
+#ifndef __MWERKS__
     cout << "extrapolating FDM by dt = " << dt << endl;
+#endif
 
     double lat = geodetic_position_v[0] + geocentric_rates_v[0] * dt;
     double lat_geoc = geocentric_position_v[0] + geocentric_rates_v[0] * dt;
@@ -79,9 +84,11 @@ int fgFDMInit(int model, FGInterface& f, double dt) {
 
     if ( model == FGInterface::FG_SLEW ) {
 	// fgSlewInit(dt);
+#ifndef __MWERKS__   // -dw- 04/22/99 JSB sim not ported yet
     } else if ( model == FGInterface::FG_JSBSIM ) {
 	fgJSBsimInit(dt);
 	fgJSBsim_2_FGInterface(base_fdm_state);
+#endif
     } else if ( model == FGInterface::FG_LARCSIM ) {
 	// lets try to avoid really screwing up the LaRCsim model
 	if ( base_fdm_state.get_Altitude() < -9000.0 ) {
@@ -135,9 +142,11 @@ int fgFDMUpdate(int model, FGInterface& f, int multiloop, int time_offset) {
 
     if ( model == FGInterface::FG_SLEW ) {
 	// fgSlewUpdate(f, multiloop);
+#ifndef __MWERKS__   // -dw- 04/22/99 JSB sim not ported yet
     } else if ( model == FGInterface::FG_JSBSIM ) {
 	fgJSBsimUpdate(base_fdm_state, multiloop);
 	f = base_fdm_state;
+#endif
     } else if ( model == FGInterface::FG_LARCSIM ) {
 	fgLaRCsimUpdate(base_fdm_state, multiloop);
 	// extrapolate position based on actual time

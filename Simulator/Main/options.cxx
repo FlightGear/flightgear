@@ -54,13 +54,24 @@ FG_USING_NAMESPACE(std);
 inline double
 atof( const string& str )
 {
+
+#ifdef __MWERKS__ 
+    // -dw- if ::atof is called, then we get an infinite loop
+    return std::atof( str.c_str() );
+#else
     return ::atof( str.c_str() );
+#endif
 }
 
 inline int
 atoi( const string& str )
 {
+#ifdef __MWERKS__ 
+    // -dw- if ::atoi is called, then we get an infinite loop
+    return std::atoi( str.c_str() );
+#else
     return ::atoi( str.c_str() );
+#endif
 }
 
 // Defined the shared options class here
@@ -176,8 +187,10 @@ fgOPTIONS::fgOPTIONS() :
 	// $FG_ROOT is not set.  This can still be overridden from the
 	// command line or a config file.
 
-#if defined(WIN32)
+#if defined( WIN32 )
 	fg_root = "\\FlightGear";
+#elif defined( MACOS )
+	fg_root = ":";
 #else
 	fg_root = "/usr/local/lib/FlightGear";
 #endif

@@ -38,6 +38,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
+#include <GUI/gui.h>
 #include <Include/fg_constants.h>
 #include <Include/general.hxx>
 #include <Main/options.hxx>
@@ -46,6 +47,7 @@
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
 #include <Scenery/scenery.hxx>
+#include <Time/fg_time.hxx>
 #include <Time/fg_timer.hxx>
 
 #include "cockpit.hxx"
@@ -63,8 +65,7 @@ static pCockpit ac_cockpit;
 
 double get_latitude( void )
 {
-    return((double)((int)( current_aircraft.fdm_state->get_Latitude() 
-			   * RAD_TO_DEG)) );
+    return (double)((int)(current_aircraft.fdm_state->get_Latitude()*RAD_TO_DEG));
 }
 
 double get_lat_min( void )
@@ -96,6 +97,19 @@ double get_long_min( void )
     d = (double) ( (int) a);
     return( (a - d) * 60.0);
 }
+
+char*
+get_formated_gmt_time( void )
+{
+    static char buf[32];
+    FGTime *t = FGTime::cur_time_params;
+    const struct tm *p = t->getGmt();
+    sprintf( buf, "%d/%d/%2d %d:%02d:%02d", 
+	     p->tm_mon+1, p->tm_mday, p->tm_year,
+	     p->tm_hour, p->tm_min, p->tm_sec);
+    return buf;
+}
+
 
 double get_throttleval( void )
 {

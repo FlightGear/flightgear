@@ -60,12 +60,19 @@ public:
     // destructor
     ~FGPath();
 
-    // append to the existing path
+    // set path
+    void set( const string p );
+
+    // append another piece to the existing path
     void append( const string p );
 
+    // concatenate a string to the end of the path without inserting a
+    // path separator
+    void concat( const string p );
+
     // get the path string
-    inline string get_path() const { return path; }
-    inline const char *get_path_c_str() { return path.c_str(); }
+    inline string str() const { return path; }
+    inline const char *c_str() { return path.c_str(); }
 };
 
 

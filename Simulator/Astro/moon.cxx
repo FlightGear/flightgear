@@ -28,8 +28,9 @@
 #include "moon.hxx"
 
 #include <Debug/logstream.hxx>
-#include <Objects/texload.h>
 #include <Main/options.hxx>
+#include <Misc/fgpath.hxx>
+#include <Objects/texload.h>
 
 #ifdef __BORLANDC__
 #  define exception c_exception
@@ -53,7 +54,6 @@ Moon::Moon(FGTime *t) :
 		0.054900,  0.000000,
 		115.3654,  13.0649929509, t)
 {
-  string tpath, fg_tpath;
   int width, height;
   
   FG_LOG( FG_GENERAL, FG_INFO, "Initializing Moon Texture");
@@ -72,18 +72,21 @@ Moon::Moon(FGTime *t) :
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
   // load in the texture data
-  tpath = current_options.get_fg_root() + "/Textures/" + "moon.rgb";
-  
+  FGPath tpath( current_options.get_fg_root() );
+  tpath.append( "Textures" );
+  tpath.append( "moon.rgb" );
+
   if ( (moon_texbuf = read_rgb_texture(tpath.c_str(), &width, &height)) 
        == NULL )
   {
     // Try compressed
-    fg_tpath = tpath + ".gz";
+    FGPath fg_tpath = tpath;
+    fg_tpath.append( ".gz" );
     if ( (moon_texbuf = read_rgb_texture(fg_tpath.c_str(), &width, &height)) 
 	 == NULL )
     {
 	FG_LOG( FG_GENERAL, FG_ALERT, 
-		"Error in loading moon texture " << tpath );
+		"Error in loading moon texture " << tpath.str() );
 	exit(-1);
     } 
   } 

@@ -51,10 +51,11 @@
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
 #include <Include/fg_constants.h>
+#include <Misc/fgpath.hxx>
 #include <Misc/fgstream.hxx>
+#include <Misc/stopwatch.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
-#include <Misc/stopwatch.hxx>
 #include <Time/fg_time.hxx>
 #include "Misc/stopwatch.hxx"
 
@@ -72,7 +73,9 @@ static GLint stars[FG_STAR_LEVELS];
 
 // Initialize the Star Management Subsystem
 int fgStarsInit( void ) {
-    Point3D starlist[FG_MAX_STARS];
+    // -dw- avoid local data > 32k error by dynamic allocation of the
+    // array, problem for some compilers
+    Point3D *starlist = new Point3D[FG_MAX_STARS];
     // struct CelestialCoord pltPos;
     double right_ascension, declination, magnitude;
     double min_magnitude[FG_STAR_LEVELS];
@@ -88,13 +91,13 @@ int fgStarsInit( void ) {
     }
 
     // build the full path name to the stars data base file
-    string path = current_options.get_fg_root() + "/Astro/stars" + ".gz";
+    FGPath path ( current_options.get_fg_root() );
+    path.append( "Astro/stars" );
+    FG_LOG( FG_ASTRO, FG_INFO, "  Loading stars from " << path.str() );
 
-    FG_LOG( FG_ASTRO, FG_INFO, "  Loading stars from " << path );
-
-    fg_gzifstream in( path );
+    fg_gzifstream in( path.str() );
     if ( ! in ) {
-	FG_LOG( FG_ASTRO, FG_ALERT, "Cannot open star file: " << path );
+	FG_LOG( FG_ASTRO, FG_ALERT, "Cannot open star file: " << path.str() );
 	exit(-1);
     }
 

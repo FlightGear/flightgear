@@ -57,6 +57,7 @@ FG_USING_STD(string);
 #include <Math/interpolater.hxx>
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
+#include <Misc/fgpath.hxx>
 
 #include "fg_time.hxx"
 #include "light.hxx"
@@ -77,19 +78,22 @@ void fgLIGHT::Init( void ) {
 	    "Initializing Lighting interpolation tables." );
 
     // build the path name to the ambient lookup table
-    string path = current_options.get_fg_root();
-    string ambient = path + "/Lighting/ambient";
-    string diffuse = path + "/Lighting/diffuse";
-    string sky     = path + "/Lighting/sky";
+    FGPath path( current_options.get_fg_root() );
+    FGPath ambient = path;
+    ambient.append( "Lighting/ambient" );
+    FGPath diffuse = path;
+    diffuse.append( "Lighting/diffuse" );
+    FGPath sky = path;
+    sky.append( "Lighting/sky" );
 
     // initialize ambient table
-    ambient_tbl = new fgINTERPTABLE( ambient );
+    ambient_tbl = new fgINTERPTABLE( ambient.str() );
 
     // initialize diffuse table
-    diffuse_tbl = new fgINTERPTABLE( diffuse );
+    diffuse_tbl = new fgINTERPTABLE( diffuse.str() );
     
     // initialize sky table
-    sky_tbl = new fgINTERPTABLE( sky );
+    sky_tbl = new fgINTERPTABLE( sky.str() );
 }
 
 

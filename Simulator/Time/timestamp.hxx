@@ -136,6 +136,11 @@ inline void FGTimeStamp::stamp() {
     ftime(&current);
     seconds = current.time;
     usec = current.millitm * 1000;
+#elif defined( __MWERKS__ )
+    // -dw- uses system clock to get time stamp... don't know if this works
+    long ticks = clock();
+    seconds = ticks / CLOCKS_PER_SEC;
+    usec = seconds * 100000;
 #else
 # error Port me
 #endif

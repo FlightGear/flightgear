@@ -411,7 +411,9 @@ int fgInitSubsystems( void )
     fgAPInit(&current_aircraft);
 
     // Initialize serial ports
+#if ! defined( MACOS )
     fgSerialInit();
+#endif
 
     FG_LOG( FG_GENERAL, FG_INFO, endl);
 

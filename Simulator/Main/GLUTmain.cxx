@@ -71,6 +71,7 @@
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
 #include <Math/fg_random.h>
+#include <Misc/fgpath.hxx>
 #include <plib/pu.h>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -86,6 +87,14 @@
 #include "splash.hxx"
 #include "views.hxx"
 #include "fg_serial.hxx"
+
+
+// -dw- use custom sioux settings so I can see output window
+#ifdef MACOS
+#  ifndef FG_NDEBUG
+#    include <sioux.h> // settings for output window
+#  endif
+#endif
 
 
 // This is a record containing a bit of global housekeeping information
@@ -137,10 +146,12 @@ static void fgInitVisuals( void ) {
 
     l = &cur_light_params;
 
+#ifndef GLUT_WRONG_VERSION
     // Go full screen if requested ...
     if ( current_options.get_fullscreen() ) {
 	glutFullScreen();
     }
+#endif
 
     // If enabled, normal vectors specified with glNormal are scaled
     // to unit length after transformation.  See glNormal.
@@ -554,8 +565,10 @@ static void fgMainLoop( void ) {
 	}
     }
 
+#if ! defined( MACOS )
     // Do any serial port work that might need to be done
     fgSerialProcess();
+#endif
 
     // see if we need to load any new scenery tiles
     fgTileMgrUpdate();
@@ -660,12 +673,14 @@ static void fgIdleFunction ( void ) {
 #if !defined(WIN32)
 	if ( current_options.get_intro_music() ) {
 	    string lockfile = "/tmp/mpg123.running";
-	    string mp3file = current_options.get_fg_root() +
-		"/Sounds/intro.mp3";
-	    string command = "(touch " + lockfile + "; mpg123 " + mp3file +
-		 "> /dev/null 2>&1; /bin/rm " + lockfile + ") &";
+	    FGPath mp3file( current_options.get_fg_root() );
+	    mp3file.append( "Sounds/intro.mp3" );
+
+	    string command = "(touch " + lockfile + "; mpg123 "
+		+ mp3file.str() + "> /dev/null 2>&1; /bin/rm "
+		+ lockfile + ") &";
 	    FG_LOG( FG_GENERAL, FG_INFO, 
-		    "Starting intro music: " << mp3file );
+		    "Starting intro music: " << mp3file.str() );
 	    system ( command.c_str() );
 	}
 #endif
@@ -733,7 +748,9 @@ static void fgIdleFunction ( void ) {
 	audio_mixer = new smMixer;
 	audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
 	audio_sched -> setSafetyMargin ( 1.0 ) ;
-	string slfile = current_options.get_fg_root() + "/Sounds/wasp.wav";
+
+	FGPath slfile( current_options.get_fg_root() );
+	slfile.append( "Sounds/wasp.wav" );
 
 	s1 = new slSample ( (char *)slfile.c_str() );
 	FG_LOG( FG_GENERAL, FG_INFO,
@@ -831,6 +848,7 @@ int fgGlutInit( int *argc, char **argv ) {
     if ( current_options.get_game_mode() == 0 ) {
 	// Open the regular window
 	xglutCreateWindow("Flight Gear");
+#ifndef GLUT_WRONG_VERSION
     } else {
 	// Open the cool new 'game mode' window
 	char game_mode_str[256];
@@ -842,6 +860,7 @@ int fgGlutInit( int *argc, char **argv ) {
 		"game mode params = " << game_mode_str );
 	glutGameModeString( game_mode_str );
 	glutEnterGameMode();
+#endif
     }
 
     // This seems to be the absolute earliest in the init sequence
@@ -920,6 +939,18 @@ int fgGlutInitEvents( void ) {
 
 // Main ...
 int main( int argc, char **argv ) {
+#ifdef MACOS
+#  ifndef FG_NDEBUG
+
+    // -dw- this will not work unless called before any standard
+    // output, so why not put it here?
+    SIOUXSettings.toppixel = 540;
+    SIOUXSettings.leftpixel = 50;
+    SIOUXSettings.rows = 15;
+
+#  endif
+#endif
+
     FGInterface *f;
 
     f = current_aircraft.fdm_state;
@@ -943,15 +974,16 @@ int main( int argc, char **argv ) {
 
     // Attempt to locate and parse a config file
     // First check fg_root
-    string config = current_options.get_fg_root() + "/system.fgfsrc";
-    current_options.parse_config_file( config );
+    FGPath config( current_options.get_fg_root() );
+    config.append( "system.fgfsrc" );
+    current_options.parse_config_file( config.str() );
 
     // Next check home directory
     char* envp = ::getenv( "HOME" );
     if ( envp != NULL ) {
-	config = envp;
-	config += "/.fgfsrc";
-	current_options.parse_config_file( config );
+	config.set( envp );
+	config.append( ".fgfsrc" );
+	current_options.parse_config_file( config.str() );
     }
 
     // Parse remaining command line options

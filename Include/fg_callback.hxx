@@ -22,6 +22,12 @@
 #ifndef _FG_CALLBACK_HXX
 #define _FG_CALLBACK_HXX
 
+// -dw- need size_t for params() function
+#ifdef __MWERKS__
+typedef unsigned long	size_t;
+#endif
+
+
 //-----------------------------------------------------------------------------
 //
 // Abstract base class for all FlightGear callbacks.

@@ -44,6 +44,7 @@
 #include <Aircraft/aircraft.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
+#include <Misc/fgpath.hxx>
 #include <Objects/texload.h>
 
 #include "panel.hxx"
@@ -80,13 +81,11 @@ FGPanel* FGPanel::OurPanel = 0;
 
 // FGPanel::FGPanel() - constructor to initialize the panel.                 
 FGPanel::FGPanel(void){
-
-    string tpath;
     int x, y;
     FILE *f;
     char line[256];
     GLint test;
-    GLubyte tex[262144];
+    GLubyte *tex = new GLubyte[262144];
 
 OurPanel = this;   
 
@@ -133,18 +132,21 @@ test_instr[2] = new FGTexInstrument(462.5, 133, 10, 20, 5.5, 60, 0.0, 1.0,      
     // load in the texture data 
     
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 256);
-    tpath = current_options.get_fg_root() + "/Textures/gauges.rgb";
+    FGPath tpath( current_options.get_fg_root() );
+    tpath.append( "Textures/gauges.rgb" );
     if((img = read_rgb_texture( (char *)tpath.c_str(), &img_width,                      &img_height ))==NULL){
     }
 
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 256);
-    tpath = current_options.get_fg_root() + "/Textures/gauges2.rgb";
+    tpath.set( current_options.get_fg_root() );
+    tpath.append( "Textures/gauges2.rgb" );
     if((imag = read_rgb_texture( (char *)tpath.c_str(), &imag_width,                     &imag_height ))==NULL){
     }
 
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 1024);
 
-    tpath = current_options.get_fg_root() + "/Textures/Fullone.rgb";
+    tpath.set( current_options.get_fg_root() );
+    tpath.append( "Textures/Fullone.rgb" );
     if ((background = read_rgb_texture( (char *)tpath.c_str(), &width,                         &height ))==NULL ){
         }
 
@@ -227,7 +229,7 @@ void FGPanel::ReInit( int x, int y, int finx, int finy){
     xglDrawPixels(finx - x, finy - y, GL_RGB, GL_UNSIGNED_BYTE,                     (GLvoid *)(background));
 
     // restore original buffer state
-    xglDrawBuffer( buffer );
+    xglDrawBuffer( (GLenum)buffer );
     xglEnable(GL_DEPTH_TEST);
 }
 

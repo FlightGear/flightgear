@@ -45,6 +45,7 @@
 #endif
 
 #include <deque>        // STL double ended queue
+#include <vector>       // STL vector
 
 #include <fg_typedefs.h>
 #include <fg_constants.h>
@@ -53,6 +54,7 @@
 #include <Controls/controls.hxx>
 
 FG_USING_STD(deque);
+FG_USING_STD(vector);
 
 #ifndef WIN32
   typedef struct {

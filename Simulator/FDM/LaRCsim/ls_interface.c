@@ -231,6 +231,7 @@ $Original log: LaRCsim.c,v $
 
 #include "ls_types.h"
 #include "ls_constants.h"
+#include "ls_geodesy.h"
 #include "ls_generic.h"
 #include "ls_sim_control.h"
 #include "ls_cockpit.h"
@@ -574,8 +575,11 @@ int ls_ForceAltitude(double alt_feet) {
 /* Flight Gear Modification Log
  *
  * $Log$
- * Revision 1.1  1999/04/05 21:32:45  curt
- * Initial revision
+ * Revision 1.2  1999/04/27 19:28:04  curt
+ * Changes for the MacOS port contributed by Darrell Walisser.
+ *
+ * Revision 1.1.1.1  1999/04/05 21:32:45  curt
+ * Start of 0.6.x branch.
  *
  * Revision 1.25  1999/01/19 20:57:02  curt
  * MacOS portability changes contributed by "Robert Puyol" <puyol@abvent.fr>

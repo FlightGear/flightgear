@@ -37,6 +37,7 @@
 // #include <Bucket/bucketutils.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
+#include <Misc/fgpath.hxx>
 #include <Objects/obj.hxx>
 
 #include "tile.hxx"
@@ -93,19 +94,21 @@ void
 fgTILECACHE::fill_in( int index, FGBucket& p )
 {
     // Load the appropriate data file and build tile fragment list
-    string tile_path = current_options.get_fg_root() +
-	"/Scenery/" + p.gen_base_path() + "/" + p.gen_index_str();
+    FGPath tile_path( current_options.get_fg_root() );
+    tile_path.append( "Scenery" );
+    tile_path.append( p.gen_base_path() );
+    tile_path.append( p.gen_index_str() );
 
     tile_cache[index].used = true;
     tile_cache[index].tile_bucket = p;
-    fgObjLoad( tile_path, &tile_cache[index] );
+    fgObjLoad( tile_path.str(), &tile_cache[index] );
 //     tile_cache[ index ].ObjLoad( tile_path, p );
 
     // cout << " ncount before = " << tile_cache[index].ncount << "\n";
     // cout << " fragments before = " << tile_cache[index].fragment_list.size()
     //      << "\n";
 
-    string apt_path = tile_path + ".apt";
+    string apt_path = tile_path.str() + ".apt";
     fgAptGenerate( apt_path, &tile_cache[index] );
 
     // cout << " ncount after = " << tile_cache[index].ncount << "\n";

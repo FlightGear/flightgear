@@ -31,6 +31,7 @@
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Math/fg_geodesy.hxx>
+#include <Misc/fgpath.hxx>
 
 #include <FDM/JSBsim/FGFDMExec.h>
 #include <FDM/JSBsim/FGAircraft.h>
@@ -54,13 +55,17 @@ int fgJSBsimInit(double dt) {
 
     FG_LOG( FG_FLIGHT, FG_INFO, "  created FDMExec" );
 
-    string aircraft_path = current_options.get_fg_root() + "/Aircraft";
-    string engine_path = current_options.get_fg_root() + "/Engine";
+    FGPath aircraft_path( current_options.get_fg_root() );
+    aircraft_path.append( "Aircraft" );
 
-    FDMExec.GetAircraft()->LoadAircraft(aircraft_path, engine_path, "X15");
+    FGPath engine_path( current_options.get_fg_root() );
+    engine_path.append( "Engine" );
+
+    FDMExec.GetAircraft()->LoadAircraft(aircraft_path.str(), 
+					engine_path.str(), "X15");
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft" );
 
-    FDMExec.GetState()->Reset(aircraft_path, "Reset00");
+    FDMExec.GetState()->Reset(aircraft_path.str(), "Reset00");
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded initial conditions" );
 
     FDMExec.GetState()->Setdt(dt);
