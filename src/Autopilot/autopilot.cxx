@@ -1280,7 +1280,8 @@ int fgAPRun( void ) {
 	}
 
 	controls.set_aileron( AileronSet );
-	controls.set_rudder( 0.0 );
+	controls.set_rudder( AileronSet / 2.0 );
+	// controls.set_rudder( 0.0 );
     }
 
     // altitude hold or terrain follow enabled?
