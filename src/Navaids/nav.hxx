@@ -66,7 +66,7 @@ class FGNav {
 
 public:
 
-    inline FGNav(void) {}
+    inline FGNav(void);
     inline ~FGNav(void) {}
 
     inline char get_type() const { return type; }
@@ -94,6 +94,24 @@ public:
 
     friend istream& operator>> ( istream&, FGNav& );
 };
+
+
+inline
+FGNav::FGNav(void) :
+    type(0),
+    lon(0.0), lat(0.0),
+    elev(0.0),
+    x(0.0), y(0.0), z(0.0),
+    freq(0),
+    range(0),
+    has_dme(false),
+    ident(""),
+    magvar(0.0),
+    trans_ident(""),
+    nav_failed(false),
+    dme_failed(false)
+{
+}
 
 
 inline istream&

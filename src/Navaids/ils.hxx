@@ -83,7 +83,7 @@ class FGILS {
 
 public:
 
-    inline FGILS(void) {}
+    inline FGILS(void);
     inline ~FGILS(void) {}
 
     inline char get_ilstype() const { return ilstype; }
@@ -124,6 +124,42 @@ public:
 };
 
 
+inline
+FGILS::FGILS(void)
+  : ilstype(0),
+    locfreq(0),
+    locheading(0.0),
+    loclat(0.0),
+    loclon(0.0),
+    x(0.0), y(0.0), z(0.0),
+    has_gs(false),
+    gselev(0.0),
+    gsangle(0.0),
+    gslat(0.0),
+    gslon(0.0),
+    gs_x(0.0), gs_y(0.0), gs_z(0.0),
+    has_dme(false),
+    dmelat(0.0),
+    dmelon(0.0),
+    dme_x(0.0), dme_y(0.0), dme_z(0.0),
+    omlat(0.0),
+    omlon(0.0),
+    mmlat(0.0),
+    mmlon(0.0),
+    imlat(0.0),
+    imlon(0.0),
+    trans_ident(""),
+    loc_failed(false),
+    gs_failed(false),
+    dme_failed(false)
+{
+    ilstypename[0] = '\0';
+    aptcode[0] = '\0';
+    rwyno[0] = '\0';
+    locident[0] = '\0';
+}
+
+    
 inline istream&
 operator >> ( istream& in, FGILS& i )
 {

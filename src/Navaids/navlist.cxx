@@ -47,7 +47,6 @@ FGNavList::~FGNavList( void ) {
 
 // load the navaids and build the map
 bool FGNavList::init( SGPath path ) {
-    FGNav n;
 
     navaids.erase( navaids.begin(), navaids.end() );
 
@@ -62,26 +61,19 @@ bool FGNavList::init( SGPath path ) {
     in >> skipeol;
     in >> skipcomment;
 
+    // double min = 100000;
+    // double max = 0;
+
 #ifdef __MWERKS__
-
     char c = 0;
-    while ( in.get(c) && c != '\0' && n.get_type() != '[' ) {
+    while ( in.get(c) && c != '\0'  ) {
         in.putback(c);
-        in >> n;
-	if ( n.get_type() != '[' ) {
-	    navaids[n.get_freq()].push_back(n);
-	}
-        in >> skipcomment;
-    }
-
 #else
-
-    double min = 100000;
-    double max = 0;
-
     while ( ! in.eof() ) {
-        in >> n;
+#endif
 
+        FGNav n;
+        in >> n;
         if ( n.get_type() == '[' ) {
             break;
         }
@@ -92,25 +84,23 @@ bool FGNavList::init( SGPath path ) {
 	cout << " lat = " << n.get_lat() << endl;
 	cout << " elev = " << n.get_elev() << endl;
 	cout << " freq = " << n.get_freq() << endl;
- 	cout << " range = " << n.get_range() << endl; */
+ 	cout << " range = " << n.get_range() << endl << endl; */
 
         navaids[n.get_freq()].push_back(n);
         in >> skipcomment;
 
-	if ( n.get_type() != 'N' ) {
+	/* if ( n.get_type() != 'N' ) {
 	    if ( n.get_freq() < min ) {
 		min = n.get_freq();
 	    }
 	    if ( n.get_freq() > max ) {
 		max = n.get_freq();
 	    }
-	}
+	} */
     }
 
     // cout << "min freq = " << min << endl;
     // cout << "max freq = " << max << endl;
-
-#endif
 
     return true;
 }

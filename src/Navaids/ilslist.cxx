@@ -48,7 +48,6 @@ FGILSList::~FGILSList( void ) {
 
 // load the navaids and build the map
 bool FGILSList::init( SGPath path ) {
-    FGILS ils;
 
     ilslist.erase( ilslist.begin(), ilslist.end() );
 
@@ -63,47 +62,38 @@ bool FGILSList::init( SGPath path ) {
     in >> skipeol;
     in >> skipcomment;
 
+    // double min = 1000000.0;
+    // double max = 0.0;
+
 #ifdef __MWERKS__
-
     char c = 0;
-    while ( in.get(c) && c != '\0' && ils.get_ilstype() != '[' ) {
+    while ( in.get(c) && c != '\0' ) {
         in.putback(c);
-        in >> ils;
-	if ( ils.get_ilstype() != '[' ) {
-	    ilslist[ils.get_locfreq()].push_back(ils);
-	}
-        in >> skipcomment;
-    }
-
 #else
-
-    double min = 1000000.0;
-    double max = 0.0;
-
     while ( ! in.eof() ) {
-        in >> ils;
+#endif
 
+        FGILS ils;
+        in >> ils;
         if ( ils.get_ilstype() == '[' ) {
             break;
         }
 
-	/* cout << "id = " << n.get_ident() << endl;
-	cout << " type = " << n.get_type() << endl;
-	cout << " lon = " << n.get_lon() << endl;
-	cout << " lat = " << n.get_lat() << endl;
-	cout << " elev = " << n.get_elev() << endl;
-	cout << " freq = " << n.get_freq() << endl;
- 	cout << " range = " << n.get_range() << endl; */
+        /* cout << "typename = " << ils.get_ilstypename() << endl;
+        cout << " aptcode = " << ils.get_aptcode() << endl;
+        cout << " twyno = " << ils.get_rwyno() << endl;
+        cout << " locfreq = " << ils.get_locfreq() << endl;
+        cout << " locident = " << ils.get_locident() << endl << endl; */
 
         ilslist[ils.get_locfreq()].push_back(ils);
         in >> skipcomment;
 
-	if ( ils.get_locfreq() < min ) {
+	/* if ( ils.get_locfreq() < min ) {
 	    min = ils.get_locfreq();
 	}
 	if ( ils.get_locfreq() > max ) {
 	    max = ils.get_locfreq();
-	}
+	} */
 
 	// update the marker beacon list
 	if ( fabs(ils.get_omlon()) > SG_EPSILON ||
@@ -125,8 +115,6 @@ bool FGILSList::init( SGPath path ) {
 
     // cout << "min freq = " << min << endl;
     // cout << "max freq = " << max << endl;
-
-#endif
 
     return true;
 }
