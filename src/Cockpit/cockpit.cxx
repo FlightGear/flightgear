@@ -274,7 +274,7 @@ float get_climb_rate( void )
 
 float get_view_direction( void )
 {
-    double view_off = SG_2PI - globals->get_current_view()->get_view_offset();
+    double view_off = SGD_2PI - globals->get_current_view()->get_view_offset();
     double view = ( current_aircraft.fdm_state->get_Psi() + view_off)
 	* RAD_TO_DEG;
     

@@ -69,7 +69,7 @@ INCLUDES
 
 #ifndef M_PI
 #  include <simgear/constants.h>
-#  define M_PI SG_PI
+#  define M_PI SGD_PI
 #endif
 
 #include "FGModel.h"

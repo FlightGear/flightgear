@@ -33,7 +33,7 @@ main() {
 
     // Yaw Matrix
     MAT3_SET_HVEC(vec, 0.0, -1.0, 0.0, 1.0);
-    MAT3rotate(R_Psi, vec, SG_PI + FG_Psi);
+    MAT3rotate(R_Psi, vec, SGD_PI + FG_Psi);
     printf("\nYaw matrix (Psi)\n");
     MAT3print(R_Psi, stdout);
 
@@ -47,7 +47,7 @@ main() {
     // Longitude
     MAT3_SET_HVEC(vec, 0.0, 0.0, 1.0, 1.0);
     // R_Lon = rotate about Z axis
-    MAT3rotate(R_Lon, vec, FG_Longitude - SG_PI_2 );
+    MAT3rotate(R_Lon, vec, FG_Longitude - SGD_PI_2 );
     printf("\nLongitude matrix\n");
     MAT3print(R_Lon, stdout);
 

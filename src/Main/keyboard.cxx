@@ -152,28 +152,28 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    }
 	    return;
 	case 49: // numeric keypad 1
-	    v->set_goal_view_offset( SG_PI * 0.75 );
+	    v->set_goal_view_offset( SGD_PI * 0.75 );
 	    return;
 	case 50: // numeric keypad 2
-	    v->set_goal_view_offset( SG_PI );
+	    v->set_goal_view_offset( SGD_PI );
 	    return;
 	case 51: // numeric keypad 3
-	    v->set_goal_view_offset( SG_PI * 1.25 );
+	    v->set_goal_view_offset( SGD_PI * 1.25 );
 	    return;
 	case 52: // numeric keypad 4
-	    v->set_goal_view_offset( SG_PI * 0.50 );
+	    v->set_goal_view_offset( SGD_PI * 0.50 );
 	    return;
 	case 54: // numeric keypad 6
-	    v->set_goal_view_offset( SG_PI * 1.50 );
+	    v->set_goal_view_offset( SGD_PI * 1.50 );
 	    return;
 	case 55: // numeric keypad 7
-	    v->set_goal_view_offset( SG_PI * 0.25 );
+	    v->set_goal_view_offset( SGD_PI * 0.25 );
 	    return;
 	case 56: // numeric keypad 8
 	    v->set_goal_view_offset( 0.00 );
 	    return;
 	case 57: // numeric keypad 9
-	    v->set_goal_view_offset( SG_PI * 1.75 );
+	    v->set_goal_view_offset( SGD_PI * 1.75 );
 	    return;
 	case 65: // A key
 	    speed = fgGetInt("/sim/speed-up");
@@ -497,28 +497,28 @@ void GLUTspecialkey(int k, int x, int y) {
 	  return;
 	}
 	case GLUT_KEY_END: // numeric keypad 1
-	    v->set_goal_view_offset( SG_PI * 0.75 );
+	    v->set_goal_view_offset( SGD_PI * 0.75 );
 	    return;
 	case GLUT_KEY_DOWN: // numeric keypad 2
-	    v->set_goal_view_offset( SG_PI );
+	    v->set_goal_view_offset( SGD_PI );
 	    return;
 	case GLUT_KEY_PAGE_DOWN: // numeric keypad 3
-	    v->set_goal_view_offset( SG_PI * 1.25 );
+	    v->set_goal_view_offset( SGD_PI * 1.25 );
 	    return;
 	case GLUT_KEY_LEFT: // numeric keypad 4
-	    v->set_goal_view_offset( SG_PI * 0.50 );
+	    v->set_goal_view_offset( SGD_PI * 0.50 );
 	    return;
 	case GLUT_KEY_RIGHT: // numeric keypad 6
-	    v->set_goal_view_offset( SG_PI * 1.50 );
+	    v->set_goal_view_offset( SGD_PI * 1.50 );
 	    return;
 	case GLUT_KEY_HOME: // numeric keypad 7
-	    v->set_goal_view_offset( SG_PI * 0.25 );
+	    v->set_goal_view_offset( SGD_PI * 0.25 );
 	    return;
 	case GLUT_KEY_UP: // numeric keypad 8
 	    v->set_goal_view_offset( 0.00 );
 	    return;
 	case GLUT_KEY_PAGE_UP: // numeric keypad 9
-	    v->set_goal_view_offset( SG_PI * 1.75 );
+	    v->set_goal_view_offset( SGD_PI * 1.75 );
 	    return;
 	}
     } else {

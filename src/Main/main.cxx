@@ -802,13 +802,13 @@ void fgUpdateTimeDepCalcs() {
 	    // current_view.goal_view_offset
 	    if ( v->get_goal_view_offset() > v->get_view_offset() )
             {
-		if ( v->get_goal_view_offset() - v->get_view_offset() < SG_PI ){
+		if ( v->get_goal_view_offset() - v->get_view_offset() < SGD_PI ){
 		    v->inc_view_offset( 0.01 );
 		} else {
 		    v->inc_view_offset( -0.01 );
 		}
 	    } else {
-		if ( v->get_view_offset() - v->get_goal_view_offset() < SG_PI ){
+		if ( v->get_view_offset() - v->get_goal_view_offset() < SGD_PI ){
 		    v->inc_view_offset( -0.01 );
 		} else {
 		    v->inc_view_offset( 0.01 );
@@ -822,7 +822,7 @@ void fgUpdateTimeDepCalcs() {
 	}
     }
 
-    double tmp = -(l->sun_rotation + SG_PI) 
+    double tmp = -(l->sun_rotation + SGD_PI) 
 	- (cur_fdm_state->get_Psi() -
 	   globals->get_current_view()->get_view_offset() );
     while ( tmp < 0.0 ) {
@@ -833,7 +833,7 @@ void fgUpdateTimeDepCalcs() {
     }
     /* printf("Psi = %.2f, viewoffset = %.2f sunrot = %.2f rottosun = %.2f\n",
 	   FG_Psi * RAD_TO_DEG, current_view.view_offset * RAD_TO_DEG, 
-	   -(l->sun_rotation+SG_PI) * RAD_TO_DEG, tmp * RAD_TO_DEG); */
+	   -(l->sun_rotation+SGD_PI) * RAD_TO_DEG, tmp * RAD_TO_DEG); */
     l->UpdateAdjFog();
 
     // Update solar system

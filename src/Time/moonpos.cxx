@@ -284,12 +284,12 @@ void fgMoonPosition(time_t ssue, double *lon, double *lat) {
     ecliptic_to_equatorial( globals->get_ephem()->get_moon()->getLon(),
 			    0.0, &alpha, &delta );
     tmp = alpha - (SG_2PI/24)*GST(ssue);
-    if (tmp < -SG_PI) {
+    if (tmp < -SGD_PI) {
 	do tmp += SG_2PI;
-	while (tmp < -SG_PI);
-    } else if (tmp > SG_PI) {
+	while (tmp < -SGD_PI);
+    } else if (tmp > SGD_PI) {
 	do tmp -= SG_2PI;
-	while (tmp < -SG_PI);
+	while (tmp < -SGD_PI);
     }
 
     *lon = tmp;
@@ -319,12 +319,12 @@ static void fgMoonPositionGST(double gst, double *lon, double *lat) {
 
 //    tmp = alpha - (SG_2PI/24)*GST(ssue);
     tmp = alpha - (SG_2PI/24)*gst;	
-    if (tmp < -SG_PI) {
+    if (tmp < -SGD_PI) {
 	do tmp += SG_2PI;
-	while (tmp < -SG_PI);
-    } else if (tmp > SG_PI) {
+	while (tmp < -SGD_PI);
+    } else if (tmp > SGD_PI) {
 	do tmp -= SG_2PI;
-	while (tmp < -SG_PI);
+	while (tmp < -SGD_PI);
     }
 
     *lon = tmp;

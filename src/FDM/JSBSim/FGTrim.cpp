@@ -189,7 +189,7 @@ void FGTrim::ReportState(void) {
   cout << out;                  
   sprintf(out, "    Normal Load Factor: %4.2f g's  Pitch Rate: %5.2f deg/s\n",
                     fdmex->GetAircraft()->GetNlf(),
-                    fdmex->GetState()->GetParameter(SG_PITCHRATE)*RADTODEG );
+                    fdmex->GetState()->GetParameter(SGD_PITCHRATE)*RADTODEG );
   cout << out;
   sprintf(out, "    Heading: %3.0f deg true  Sideslip: %5.2f deg\n",
                     fdmex->GetRotation()->Getpsi()*RADTODEG,

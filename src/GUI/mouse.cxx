@@ -349,7 +349,7 @@ void guiMotionFunc ( int x, int y )
                     need_warp = 1;
                     x = 1;
                 }
-                // try to get SG_PI movement in each half of screen
+                // try to get SGD_PI movement in each half of screen
                 // do spherical pan
                 W = ww;
                 H = wh;

@@ -474,12 +474,12 @@ bool FGLaRCsim::copy_from_LaRCsim() {
 	    << " radius_to_vehicle = " << Radius_to_vehicle );
 
     double tmp_lon_geoc = Lon_geocentric;
-    while ( tmp_lon_geoc < -SG_PI ) { tmp_lon_geoc += SG_2PI; }
-    while ( tmp_lon_geoc > SG_PI ) { tmp_lon_geoc -= SG_2PI; }
+    while ( tmp_lon_geoc < -SGD_PI ) { tmp_lon_geoc += SG_2PI; }
+    while ( tmp_lon_geoc > SGD_PI ) { tmp_lon_geoc -= SG_2PI; }
 
     double tmp_lon = Longitude;
-    while ( tmp_lon < -SG_PI ) { tmp_lon += SG_2PI; }
-    while ( tmp_lon > SG_PI ) { tmp_lon -= SG_2PI; }
+    while ( tmp_lon < -SGD_PI ) { tmp_lon += SG_2PI; }
+    while ( tmp_lon > SGD_PI ) { tmp_lon -= SG_2PI; }
 
     // Positions
     _set_Geocentric_Position( Lat_geocentric, tmp_lon_geoc, 

@@ -167,10 +167,10 @@ void fgLIGHT::UpdateAdjFog( void ) {
 
     // first determine the difference between our view angle and local
     // direction to the sun
-    rotation = -(sun_rotation + SG_PI) 
+    rotation = -(sun_rotation + SGD_PI) 
 	- (f->get_Psi() - globals->get_current_view()->get_view_offset());
     if ( globals->get_current_view()->get_reverse_view_offset() ) {
-	rotation += SG_PI;
+	rotation += SGD_PI;
     }
     while ( rotation < 0 ) {
 	rotation += SG_2PI;

@@ -49,7 +49,7 @@ INCLUDES
 
 #ifndef M_PI 
 #  include <simgear/constants.h>
-#  define M_PI SG_PI
+#  define M_PI SGD_PI
 #endif
 
 #include "FGState.h"
@@ -102,7 +102,7 @@ FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
   RegisterVariable(FG_ALPHADOT,       " alphadot "       );
   RegisterVariable(FG_BETA,           " beta "           );
   RegisterVariable(FG_BETADOT,        " betadot "        );
-  RegisterVariable(SG_PITCHRATE,      " pitch_rate "     );
+  RegisterVariable(SGD_PITCHRATE,      " pitch_rate "     );
   RegisterVariable(FG_ROLLRATE,       " roll_rate "      );
   RegisterVariable(FG_YAWRATE,        " yaw_rate "       );
   RegisterVariable(FG_MACH,           " mach "           );
@@ -124,7 +124,7 @@ FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
   RegisterVariable(FG_THROTTLE_CMD,   " throttle_cmd "   );
   RegisterVariable(FG_THROTTLE_POS,   " throttle_pos "   );
   RegisterVariable(FG_HOVERB,         " height/span "    );
-  RegisterVariable(SG_PITCH_TRIM_CMD, " pitch_trim_cmd " );
+  RegisterVariable(SGD_PITCH_TRIM_CMD, " pitch_trim_cmd " );
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -151,7 +151,7 @@ float FGState::GetParameter(eParam val_idx) {
     return FDMExec->GetTranslation()->Getbeta();
   case FG_BETADOT:
     return FDMExec->GetTranslation()->Getbdot();
-  case SG_PITCHRATE:
+  case SGD_PITCHRATE:
     return (FDMExec->GetRotation()->GetPQR())(2);
   case FG_ROLLRATE:
     return (FDMExec->GetRotation()->GetPQR())(1);
@@ -201,7 +201,7 @@ float FGState::GetParameter(eParam val_idx) {
     return FDMExec->GetFCS()->GetThrottlePos(0);
   case FG_HOVERB:
     return FDMExec->GetPosition()->GetHOverB();
-  case SG_PITCH_TRIM_CMD:
+  case SGD_PITCH_TRIM_CMD:
     return FDMExec->GetFCS()->GetPitchTrimCmd();
   default:
     cerr << "FGState::GetParameter() - No handler for parameter " << val_idx << endl;
