@@ -614,7 +614,7 @@ void fgRenderFrame( void ) {
 
         ssgSetNearFar( scene_nearplane, scene_farplane );
 
-	current_model.update(dt_ms);
+	globals->get_aircraft_model()->update(dt_ms);
 
 	// $$$ begin - added VS Renganthan 17 Oct 2K
 	if(objc)
@@ -1568,9 +1568,6 @@ int mainLoop( int argc, char **argv ) {
     // ADA
     fgLoadDCS();
     // ADA
-
-    // temporary visible aircraft "own ship"
-    current_model.init();
 
 #ifdef FG_NETWORK_OLK
     // Do the network intialization

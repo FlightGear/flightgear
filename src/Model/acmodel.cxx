@@ -24,8 +24,6 @@
 
 extern ssgRoot * cockpit;		// FIXME: from main.cxx
 
-FGAircraftModel current_model;	// FIXME: add to globals
-
 
 
 ////////////////////////////////////////////////////////////////////////

@@ -64,6 +64,7 @@ class FGViewer;
 class FGATCMgr;
 class FGATCDisplay;
 class FGAIMgr;
+class FGAircraftModel;
 
 
 /**
@@ -148,6 +149,8 @@ private:
     SGPropertyNode *initial_state;
 
     SGCommandMgr *commands;
+
+    FGAircraftModel *acmodel;
 
     // list of serial port-like configurations
     string_list *channel_options_list;
@@ -240,6 +243,13 @@ public:
     inline void set_props( SGPropertyNode *n ) { props = n; }
 
     inline SGCommandMgr *get_commands () { return commands; }
+
+    inline FGAircraftModel *get_aircraft_model () { return acmodel; }
+
+    inline void set_aircraft_model (FGAircraftModel * model)
+    {
+        acmodel = model;
+    }
 
     inline string_list *get_channel_options_list () {
 	return channel_options_list;

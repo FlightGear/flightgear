@@ -95,6 +95,7 @@
 #include <Input/input.hxx>
 // #include <Joystick/joystick.hxx>
 #include <Objects/matlib.hxx>
+#include <Model/acmodel.hxx>
 #include <Navaids/fixlist.hxx>
 #include <Navaids/ilslist.hxx>
 #include <Navaids/mkrbeacons.hxx>
@@ -789,6 +790,7 @@ bool fgInitSubsystems( void ) {
     globals->get_logger()->init();
     globals->get_logger()->bind();
 
+
     ////////////////////////////////////////////////////////////////////
     // Initialize the local time subsystem.
     ////////////////////////////////////////////////////////////////////
@@ -969,15 +971,6 @@ bool fgInitSubsystems( void ) {
 
 
     ////////////////////////////////////////////////////////////////////
-    // Initialize the joystick subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    // if ( ! fgJoystickInit() ) {
-    //   SG_LOG( SG_GENERAL, SG_ALERT, "Error in Joystick initialization!" );
-    // }
-
-
-    ////////////////////////////////////////////////////////////////////
     // Initialize the autopilot subsystem.
     ////////////////////////////////////////////////////////////////////
 
@@ -1035,6 +1028,15 @@ bool fgInitSubsystems( void ) {
 
     current_input.init();
     current_input.bind();
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the 3D aircraft model subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->set_aircraft_model(new FGAircraftModel);
+    globals->get_aircraft_model()->init();
+    globals->get_aircraft_model()->bind();
 
 
     ////////////////////////////////////////////////////////////////////////

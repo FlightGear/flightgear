@@ -40,7 +40,5 @@ private:
 
 };
 
-extern FGAircraftModel current_model;
-
 #endif // __ACMODEL_HXX
 
