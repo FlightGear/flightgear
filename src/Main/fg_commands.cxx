@@ -1,6 +1,7 @@
 // fg_commands.cxx - internal FGFS commands.
 
 #include <simgear/compiler.h>
+#include <simgear/misc/exception.hxx>
 
 #include STL_STRING
 #include STL_FSTREAM
@@ -208,13 +209,19 @@ do_preferences_load (const SGPropertyNode * arg, SGCommandState ** state)
   props_path.append(path);
   SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences from "
 	 << props_path.str());
-  if (!readProperties(props_path.str(), globals->get_props())) {
-    SG_LOG(SG_INPUT, SG_ALERT, "Failed to reread global preferences");
+  try {
+    readProperties(props_path.str(), globals->get_props());
+  } catch (const sg_io_exception &e) {
+    string message = "Error reading global preferences: ";
+    message += e.getMessage();
+    message += "\n at ";
+    message += e.getLocation().asString();
+    SG_LOG(SG_INPUT, SG_ALERT, message);
+    mkDialog(message.c_str());
     return false;
-  } else {
-    SG_LOG(SG_INPUT, SG_INFO, "Successfully read global preferences.");
-    return true;
   }
+  SG_LOG(SG_INPUT, SG_INFO, "Successfully read global preferences.");
+  return true;
 }
 
 

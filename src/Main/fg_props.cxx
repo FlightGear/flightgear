@@ -24,6 +24,8 @@
 #  include <simgear/compiler.h>
 #endif
 
+#include <simgear/misc/exception.hxx>
+
 #include STL_IOSTREAM
 
 #include <Autopilot/newauto.hxx>
@@ -36,6 +38,8 @@
 #  include <Weather/weather.hxx>
 #endif
 #include <Objects/matlib.hxx>
+
+#include <GUI/gui.h>
 
 #include "fgfs.hxx"
 #include "fg_props.hxx"
@@ -1037,7 +1041,18 @@ fgUpdateProps ()
 bool
 fgSaveFlight (ostream &output)
 {
-  return writeProperties(output, globals->get_props());
+  try {
+    writeProperties(output, globals->get_props());
+  } catch (const sg_io_exception &e) {
+    string message = "Error saving flight: ";
+    message += e.getMessage();
+    message += "\n at ";
+    message += e.getLocation().asString();
+    SG_LOG(SG_INPUT, SG_ALERT, message);
+    mkDialog(message.c_str());
+    return false;
+  }
+  return true;
 }
 
 
@@ -1048,16 +1063,21 @@ bool
 fgLoadFlight (istream &input)
 {
   SGPropertyNode props;
-  if (readProperties(input, &props)) {
-    copyProperties(&props, globals->get_props());
-				// When loading a flight, make it the
-				// new initial state.
-    globals->saveInitialState();
-  } else {
-    SG_LOG(SG_INPUT, SG_ALERT, "Error restoring flight; aborted");
+  try {
+    readProperties(input, &props);
+  } catch (const sg_io_exception &e) {
+    string message = "Error reading saved flight: ";
+    message += e.getMessage();
+    message += "\n at ";
+    message += e.getLocation().asString();
+    SG_LOG(SG_INPUT, SG_ALERT, message);
+    mkDialog(message.c_str());
     return false;
   }
-
+  copyProperties(&props, globals->get_props());
+  // When loading a flight, make it the
+  // new initial state.
+  globals->saveInitialState();
   return true;
 }
 

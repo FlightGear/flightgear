@@ -27,6 +27,7 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/misc/exception.hxx>
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
@@ -38,6 +39,8 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+
+#include <GUI/gui.h>
 
 #include "panel.hxx"
 #include "steam.hxx"
@@ -760,8 +763,14 @@ fgReadPanel (istream &input)
 {
   SGPropertyNode root;
 
-  if (!readProperties(input, &root)) {
-    SG_LOG( SG_COCKPIT, SG_ALERT, "Malformed property list for panel." );
+  try {
+    readProperties(input, &root);
+  } catch (const sg_io_exception &e) {
+    string message = e.getMessage();
+    message += "\n at ";
+    message += e.getLocation().asString();
+    SG_LOG(SG_INPUT, SG_ALERT, message);
+    mkDialog(message.c_str());
     return 0;
   }
   return readPanel(&root);
@@ -781,8 +790,14 @@ fgReadPanel (const string &relative_path)
   path.append(relative_path);
   SGPropertyNode root;
 
-  if (!readProperties(path.str(), &root)) {
-    SG_LOG( SG_COCKPIT, SG_ALERT, "Malformed property list for panel." );
+  try {
+    readProperties(path.str(), &root);
+  } catch (const sg_io_exception &e) {
+    string message = e.getMessage();
+    message += "\n at ";
+    message += e.getLocation().asString();
+    SG_LOG(SG_INPUT, SG_ALERT, message);
+    mkDialog(message.c_str());
     return 0;
   }
   return readPanel(&root);

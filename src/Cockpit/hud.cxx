@@ -21,6 +21,7 @@
 // $Id$
 
 #include <simgear/compiler.h>
+#include <simgear/misc/exception.hxx>
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -644,10 +645,16 @@ int readHud( istream &input )
 
     SGPropertyNode root;
 
-
-    if (!readProperties(input, &root)) {
-        SG_LOG(SG_INPUT, SG_ALERT, "Malformed property list for hud.");
-        return 0;
+    try {
+      readProperties(input, &root);
+    } catch (const sg_io_exception &e) {
+      string message = "Error reading HUD: ";
+      message += e.getMessage();
+      message += "\n at ";
+      message += e.getLocation().asString();
+      SG_LOG(SG_INPUT, SG_ALERT, message);
+      mkDialog(message.c_str());
+      return 0;
     }
   
 	
@@ -677,11 +684,18 @@ int readHud( istream &input )
 
 
         SGPropertyNode root2;
-        if (readProperties(path.str(), &root2)) {
-
-            readInstrument(&root2);
-
-        }//if
+	try {
+	  readProperties(path.str(), &root2);
+	} catch (const sg_io_exception &e) {
+	  string message = "Error reading HUD instrument: ";
+	  message += e.getMessage();
+	  message += "\n at ";
+	  message += e.getLocation().asString();
+	  SG_LOG(SG_INPUT, SG_ALERT, message);
+	  mkDialog(message.c_str());
+	  continue;
+	}
+	readInstrument(&root2);
     }//for loop(i)
 
     return 0;
