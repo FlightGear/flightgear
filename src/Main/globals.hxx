@@ -34,6 +34,7 @@
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/route/route.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/misc/commands.hxx>
 #include <simgear/misc/props.hxx>
 
 #include <Sound/soundmgr.hxx>
@@ -89,6 +90,8 @@ private:
     SGPropertyNode *props;
     SGPropertyNode *initial_state;
 
+    SGCommandMgr *commands;
+
     // list of serial port-like configurations
     string_list *channel_options_list;
 
@@ -138,6 +141,8 @@ public:
 
     inline SGPropertyNode *get_props () { return props; }
     inline void set_props( SGPropertyNode *n ) { props = n; }
+
+    inline SGCommandMgr *get_commands () { return commands; }
 
     inline string_list *get_channel_options_list () {
 	return channel_options_list;
