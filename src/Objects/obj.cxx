@@ -546,8 +546,6 @@ public:
   virtual void isect (sgSphere *s, sgMat4 m, int test_needed) {}
   virtual void hot (sgVec3 s, sgMat4 m, int test_needed) {}
   virtual void los (sgVec3 s, sgMat4 m, int test_needed) {}
-  static ssgEntity * get_tri_entity ();
-  static ssgEntity * get_tile_entity ();
 };
 
 
@@ -659,9 +657,9 @@ setup_triangle (float * p1, float * p2, float * p3,
 
 
 /**
- * User data for populating tiles when they come in range.
+ * User data for populating leaves when they come in range.
  */
-class TileUserData : public ssgBase
+class LeafUserData : public ssgBase
 {
 public:
   bool is_filled_in;
@@ -674,10 +672,10 @@ public:
 
 
 /**
- * SSG callback for an in-range tile of randomly-placed objects.
+ * SSG callback for an in-range leaf of randomly-placed objects.
  *
  * This pretraversal callback is attached to a branch that is
- * traversed only when a tile is in range.  If the tile is not
+ * traversed only when a leaf is in range.  If the leaf is not
  * currently prepared to be populated with randomly-placed objects,
  * this callback will prepare it (actual population is handled by
  * the tri_in_range_callback for individual triangles).
@@ -687,9 +685,9 @@ public:
  * @return Always 1, to allow traversal and culling to continue.
  */
 static int
-tile_in_range_callback (ssgEntity * entity, int mask)
+leaf_in_range_callback (ssgEntity * entity, int mask)
 {
-  TileUserData * data = (TileUserData *)entity->getUserData();
+  LeafUserData * data = (LeafUserData *)entity->getUserData();
 
   if (!data->is_filled_in) {
 				// Iterate through all the triangles
@@ -710,10 +708,10 @@ tile_in_range_callback (ssgEntity * entity, int mask)
 
 
 /**
- * SSG callback for an out-of-range tile of randomly-placed objects.
+ * SSG callback for an out-of-range leaf of randomly-placed objects.
  *
  * This pretraversal callback is attached to a branch that is
- * traversed only when a tile is out of range.  If the tile is
+ * traversed only when a leaf is out of range.  If the leaf is
  * currently prepared to be populated with randomly-placed objects (or
  * is actually populated), the objects will be removed.
  *
@@ -722,9 +720,9 @@ tile_in_range_callback (ssgEntity * entity, int mask)
  * @return Always 0, to prevent any further traversal or culling.
  */
 static int
-tile_out_of_range_callback (ssgEntity * entity, int mask)
+leaf_out_of_range_callback (ssgEntity * entity, int mask)
 {
-  TileUserData * data = (TileUserData *)entity->getUserData();
+  LeafUserData * data = (LeafUserData *)entity->getUserData();
   if (data->is_filled_in) {
     data->branch->removeAllKids();
     data->is_filled_in = false;
@@ -745,7 +743,7 @@ tile_out_of_range_callback (ssgEntity * entity, int mask)
  *
  * @param leaf The surface where the objects should be placed.
  * @param branch The branch that will hold the randomly-placed objects.
- * @param center The center of the tile in FlightGear coordinates.
+ * @param center The center of the leaf in FlightGear coordinates.
  * @param lon_deg The longitude of the surface center, in degrees.
  * @param lat_deg The latitude of the surface center, in degrees.
  * @param material_name The name of the surface's material.
@@ -784,7 +782,7 @@ gen_random_surface_objects (ssgLeaf *leaf,
 		 &lat_rad, &alt_m, &sl_radius_m);
     lat_deg = lat_rad * SGD_RADIANS_TO_DEGREES;
 
-				// LOD for the tile
+				// LOD for the leaf
 				// max random object range: 20000m
     float ranges[] = {0, 20000, 1000000};
     ssgRangeSelector * lod = new ssgRangeSelector;
@@ -798,7 +796,7 @@ gen_random_surface_objects (ssgLeaf *leaf,
     lod->addKid(in_range);
     lod->addKid(out_of_range);
 
-    TileUserData * data = new TileUserData;
+    LeafUserData * data = new LeafUserData;
     data->is_filled_in = false;
     data->leaf = leaf;
     data->mat = mat;
@@ -807,10 +805,10 @@ gen_random_surface_objects (ssgLeaf *leaf,
     data->lat_deg = lat_deg;
 
     in_range->setUserData(data);
-    in_range->setTravCallback(SSG_CALLBACK_PRETRAV, tile_in_range_callback);
+    in_range->setTravCallback(SSG_CALLBACK_PRETRAV, leaf_in_range_callback);
     out_of_range->setUserData(data);
     out_of_range->setTravCallback(SSG_CALLBACK_PRETRAV,
-				   tile_out_of_range_callback);
+				   leaf_out_of_range_callback);
     out_of_range
       ->addKid(new DummyBSphereEntity(leaf->getBSphere()->getRadius()));
 }
