@@ -41,7 +41,7 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_random.h>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Objects/texload.h>
 
@@ -79,7 +79,7 @@ void fgSplashInit ( void ) {
     char num_str[256];
     sprintf(num_str, "%d", num);
 
-    FGPath tpath( globals->get_fg_root() );
+    SGPath tpath( globals->get_fg_root() );
     tpath.append( "Textures/Splash" );
     tpath.concat( num_str );
     tpath.concat( ".rgb" );
@@ -88,7 +88,7 @@ void fgSplashInit ( void ) {
 	  read_rgb_texture(tpath.c_str(), &width, &height)) == NULL )
     {
 	// Try compressed
-	FGPath fg_tpath = tpath;
+	SGPath fg_tpath = tpath;
 	fg_tpath.concat( ".gz" );
 	if ( (splash_texbuf = 
 	      read_rgb_texture(fg_tpath.c_str(), &width, &height)) == NULL )

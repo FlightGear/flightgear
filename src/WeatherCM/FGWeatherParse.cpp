@@ -77,7 +77,7 @@ void FGWeatherParse::input(const char *file)
 {
     unsigned int nr = 0;
 
-    fg_gzifstream in;
+    sg_gzifstream in;
 
     cerr << "Parsing \"" << file << "\" for weather datas:\n";
     

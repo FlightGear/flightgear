@@ -46,7 +46,7 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
-#include <simgear/misc/fgstream.hxx>
+#include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/stopwatch.hxx>
 #include <simgear/misc/texcoord.hxx>
 
@@ -375,7 +375,7 @@ static ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
     tile -> setName ( (char *)path.c_str() ) ;
 
     // Attempt to open "path.gz" or "path"
-    fg_gzifstream in( path );
+    sg_gzifstream in( path );
     if ( ! in.is_open() ) {
 	SG_LOG( SG_TERRAIN, SG_DEBUG, "Cannot open file: " << path );
 	SG_LOG( SG_TERRAIN, SG_DEBUG, "default to ocean tile: " << path );

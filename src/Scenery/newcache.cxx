@@ -38,8 +38,8 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
-#include <simgear/misc/fgstream.hxx>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sgstream.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Main/globals.hxx>
 #include <Objects/matlib.hxx>
@@ -217,7 +217,7 @@ void FGNewCache::fill_in( const SGBucket& b ) {
     e->terra_range = new ssgRangeSelector;
     e->tile_bucket = b;
 
-    FGPath tile_path;
+    SGPath tile_path;
     if ( globals->get_fg_scenery() != "" ) {
 	tile_path.set( globals->get_fg_scenery() );
     } else {
@@ -230,7 +230,7 @@ void FGNewCache::fill_in( const SGBucket& b ) {
     ssgVertexArray *light_pts = new ssgVertexArray( 100 );
 
     // Load the appropriate data file
-    FGPath tile_base = tile_path;
+    SGPath tile_base = tile_path;
     tile_base.append( b.gen_index_str() );
     ssgBranch *new_tile = fgObjLoad( tile_base.str(), e, light_pts, true );
 
@@ -241,13 +241,13 @@ void FGNewCache::fill_in( const SGBucket& b ) {
     // load custom objects
     SG_LOG( SG_TERRAIN, SG_DEBUG, "CUSTOM OBJECTS" );
 
-    FGPath index_path = tile_path;
+    SGPath index_path = tile_path;
     index_path.append( b.gen_index_str() );
     index_path.concat( ".ind" );
 
     SG_LOG( SG_TERRAIN, SG_DEBUG, "Looking in " << index_path.str() );
 
-    fg_gzifstream in( index_path.str() );
+    sg_gzifstream in( index_path.str() );
 
     if ( in.is_open() ) {
 	string token, name;
@@ -263,7 +263,7 @@ void FGNewCache::fill_in( const SGBucket& b ) {
 	    SG_LOG( SG_TERRAIN, SG_DEBUG, "token = " << token
 		    << " name = " << name );
 
-	    FGPath custom_path = tile_path;
+	    SGPath custom_path = tile_path;
 	    custom_path.append( name );
 	    ssgBranch *custom_obj = 
 		fgObjLoad( custom_path.str(), e, NULL, false );

@@ -32,7 +32,7 @@
 #include <plib/fnt.h>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -66,7 +66,7 @@ FGTextureManager::createTexture (const string &relativePath)
   ssgTexture * texture = _textureMap[relativePath];
   if (texture == 0) {
     cerr << "Texture " << relativePath << " does not yet exist" << endl;
-    FGPath tpath(globals->get_fg_root());
+    SGPath tpath(globals->get_fg_root());
     tpath.append(relativePath);
     texture = new ssgTexture((char *)tpath.c_str(), false, false);
     _textureMap[relativePath] = texture;

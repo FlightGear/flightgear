@@ -684,7 +684,7 @@ int readHud( istream &input )
 		
 		const SGPropertyNode * node = instrument_group->getChild(i);
 
-		FGPath path( globals->get_fg_root() );
+		SGPath path( globals->get_fg_root() );
 		path.append(node->getStringValue("path"));
 
 		SG_LOG(SG_INPUT, SG_INFO, "Reading Instrument "
@@ -714,7 +714,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 
     string hud_path =
 	fgGetString("/sim/hud/path", "Huds/Default/default.xml");
-	FGPath path(globals->get_fg_root());
+	SGPath path(globals->get_fg_root());
 	path.append(hud_path);
 	
 	ifstream input(path.c_str());
@@ -743,7 +743,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 
     SG_LOG( SG_COCKPIT, SG_INFO, "Initializing current aircraft HUD" );
 
-	FGPath path(globals->get_fg_root());
+	SGPath path(globals->get_fg_root());
 	path.append("Huds/Minimal/default.xml");
 
 

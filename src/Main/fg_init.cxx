@@ -57,7 +57,7 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/timing/sg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
@@ -126,7 +126,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
     if ( root == "" ) {
 	envp = ::getenv( "HOME" );
 	if ( envp != NULL ) {
-	    FGPath config( envp );
+	    SGPath config( envp );
 	    config.append( ".fgfsrc" );
 	    char name[256];
 	    gethostname( name, 256 );
@@ -141,7 +141,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
     if ( root == "" ) {
 	envp = ::getenv( "HOME" );
 	if ( envp != NULL ) {
-	    FGPath config( envp );
+	    SGPath config( envp );
 	    config.append( ".fgfsrc" );
 	    root = fgScanForRoot(config.str());
 	}
@@ -181,7 +181,7 @@ bool fgInitConfig ( int argc, char **argv ) {
     fgSetDefaults();
 
     // Read global preferences from $FG_ROOT/preferences.xml
-    FGPath props_path(globals->get_fg_root());
+    SGPath props_path(globals->get_fg_root());
     props_path.append("preferences.xml");
     SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
     if (!readProperties(props_path.str(), globals->get_props())) {
@@ -195,7 +195,7 @@ bool fgInitConfig ( int argc, char **argv ) {
     // from least precidence to greatest precidence
 
     // Check for $fg_root/system.fgfsrc
-    FGPath config( globals->get_fg_root() );
+    SGPath config( globals->get_fg_root() );
     config.append( "system.fgfsrc" );
     fgParseOptions(config.str());
 
@@ -235,7 +235,7 @@ bool fgInitConfig ( int argc, char **argv ) {
 // find basic airport location info from airport database
 bool fgFindAirportID( const string& id, FGAirport *a ) {
     if ( id.length() ) {
-	FGPath path( globals->get_fg_root() );
+	SGPath path( globals->get_fg_root() );
 	path.append( "Airports" );
 	path.append( "simple.mk4" );
 	FGAirports airports( path.c_str() );
@@ -293,7 +293,7 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     if ( id.length() ) {
 	// set initial position from runway and heading
 
-	FGPath path( globals->get_fg_root() );
+	SGPath path( globals->get_fg_root() );
 	path.append( "Airports" );
 	path.append( "runways.mk4" );
 	FGRunways runways( path.c_str() );
@@ -302,12 +302,12 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 		"Attempting to set starting position from runway code "
 		<< id << " heading " << tgt_hdg );
 
-	// FGPath inpath( globals->get_fg_root() );
+	// SGPath inpath( globals->get_fg_root() );
 	// inpath.append( "Airports" );
 	// inpath.append( "apt_simple" );
 	// airports.load( inpath.c_str() );
 
-	// FGPath outpath( globals->get_fg_root() );
+	// SGPath outpath( globals->get_fg_root() );
 	// outpath.append( "Airports" );
 	// outpath.append( "simple.gdbm" );
 	// airports.dump_gdbm( outpath.c_str() );
@@ -531,7 +531,7 @@ bool fgInitSubsystems( void ) {
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
 
     // Initialize the material property lib
-    FGPath mpath( globals->get_fg_root() );
+    SGPath mpath( globals->get_fg_root() );
     mpath.append( "materials" );
     if ( material_lib.load( mpath.str() ) ) {
     } else {
@@ -738,7 +738,7 @@ bool fgInitSubsystems( void ) {
 
     SG_LOG(SG_GENERAL, SG_INFO, "  VOR/NDB");
     current_navlist = new FGNavList;
-    FGPath p_nav( globals->get_fg_root() );
+    SGPath p_nav( globals->get_fg_root() );
     p_nav.append( "Navaids/default.nav" );
     current_navlist->init( p_nav );
 
@@ -746,13 +746,13 @@ bool fgInitSubsystems( void ) {
     current_beacons = new FGMarkerBeacons;
     current_beacons->init();
     current_ilslist = new FGILSList;
-    FGPath p_ils( globals->get_fg_root() );
+    SGPath p_ils( globals->get_fg_root() );
     p_ils.append( "Navaids/default.ils" );
     current_ilslist->init( p_ils );
 
     SG_LOG(SG_GENERAL, SG_INFO, "  Fixes");
     current_fixlist = new FGFixList;
-    FGPath p_fix( globals->get_fg_root() );
+    SGPath p_fix( globals->get_fg_root() );
     p_fix.append( "Navaids/default.fix" );
     current_fixlist->init( p_fix );
 

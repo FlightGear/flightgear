@@ -42,8 +42,8 @@
 #include STL_STRING
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/fgpath.hxx>
-#include <simgear/misc/fgstream.hxx>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sgstream.hxx>
 
 #include <Include/general.hxx>
 #include <Main/globals.hxx>
@@ -65,7 +65,7 @@ FGMaterialLib::FGMaterialLib ( void ) {
 
 
 static bool local_file_exists( const string& path ) {
-    fg_gzifstream in( path );
+    sg_gzifstream in( path );
     if ( ! in.is_open() ) {
 	return false;
     } else {
@@ -90,7 +90,7 @@ static bool local_file_exists( const string& path ) {
 bool FGMaterialLib::load( const string& mpath ) {
     string material_name;
 
-    fg_gzifstream in( mpath );
+    sg_gzifstream in( mpath );
     if ( ! in.is_open() ) {
 	SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << mpath );
 	exit(-1);
@@ -129,14 +129,14 @@ bool FGMaterialLib::load( const string& mpath ) {
 		in >> m;
 
 		// build the ssgSimpleState
-		FGPath tex_path( globals->get_fg_root() );
+		SGPath tex_path( globals->get_fg_root() );
 		tex_path.append( "Textures.high" );
 
-		FGPath tmp_path = tex_path;
+		SGPath tmp_path = tex_path;
 		tmp_path.append( m.get_texture_name() );
 		if ( ! local_file_exists(tmp_path.str())
 		     || general.get_glMaxTexSize() < 512 ) {
-		    tex_path = FGPath( globals->get_fg_root() );
+		    tex_path = SGPath( globals->get_fg_root() );
 		    tex_path.append( "Textures" );
 		}
 	    

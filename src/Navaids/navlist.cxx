@@ -22,7 +22,7 @@
 
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/fgstream.hxx>
+#include <simgear/misc/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
 #include "navlist.hxx"
@@ -42,12 +42,12 @@ FGNavList::~FGNavList( void ) {
 
 
 // load the navaids and build the map
-bool FGNavList::init( FGPath path ) {
+bool FGNavList::init( SGPath path ) {
     FGNav n;
 
     navaids.erase( navaids.begin(), navaids.end() );
 
-    fg_gzifstream in( path.str() );
+    sg_gzifstream in( path.str() );
     if ( !in.is_open() ) {
         SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
         exit(-1);

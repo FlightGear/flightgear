@@ -12,7 +12,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Include/general.hxx>
 
@@ -51,7 +51,7 @@ void AptDialog_Cancel(puObject *)
 
 void AptDialog_OK (puObject *)
 {
-	FGPath path( globals->get_fg_root() );
+	SGPath path( globals->get_fg_root() );
 	path.append( "Airports" );
 	path.append( "simple.mk4" );
 	FGAirports airports( path.c_str() );

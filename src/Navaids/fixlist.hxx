@@ -26,7 +26,7 @@
 
 
 #include <simgear/compiler.h>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <map>
 #include <vector>
@@ -54,7 +54,7 @@ public:
     ~FGFixList();
 
     // load the navaids and build the map
-    bool init( FGPath path );
+    bool init( SGPath path );
 
     // query the database for the specified frequency, lon and lat are
     // in degrees, elev is in meters

@@ -60,7 +60,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_random.h>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/sky/sky.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/timing/lowleveltime.h>
@@ -95,7 +95,7 @@
 
 // begin - added Venky
 //    $$$ begin - added VS Renganathan
-#include <simgear/misc/fgstream.hxx>
+#include <simgear/misc/sgstream.hxx>
 #include <FDM/flight.hxx>
 #include <FDM/ADA.hxx>
 void fgLoadDCS (void);
@@ -1115,7 +1115,7 @@ static void fgIdleFunction ( void ) {
 #if !defined(WIN32)
 	if ( fgGetBool("/sim/startup/intro-music") ) {
 	    string lockfile = "/tmp/mpg123.running";
-	    FGPath mp3file( globals->get_fg_root() );
+	    SGPath mp3file( globals->get_fg_root() );
 	    mp3file.append( "Sounds/intro.mp3" );
 
 	    string command = "(touch " + lockfile + "; mpg123 "
@@ -1447,7 +1447,7 @@ int main( int argc, char **argv ) {
     }
 
     // Initialize time
-    FGPath zone( globals->get_fg_root() );
+    SGPath zone( globals->get_fg_root() );
     zone.append( "Timezone" );
     SGTime *t = new SGTime( fgGetDouble("/position/longitude") * SGD_DEGREES_TO_RADIANS,
 			    fgGetDouble("/position/latitude") * SGD_DEGREES_TO_RADIANS,
@@ -1498,7 +1498,7 @@ int main( int argc, char **argv ) {
 	exit(-1);
     }
 
-    FGPath modelpath( globals->get_fg_root() );
+    SGPath modelpath( globals->get_fg_root() );
     ssgModelPath( (char *)modelpath.c_str() );
   
     // Scene graph root
@@ -1509,7 +1509,7 @@ int main( int argc, char **argv ) {
     lighting->setName( "Lighting" );
 
     // Initialize the sky
-    FGPath ephem_data_path( globals->get_fg_root() );
+    SGPath ephem_data_path( globals->get_fg_root() );
     ephem_data_path.append( "Astro" );
     SGEphemeris *ephem = new SGEphemeris( ephem_data_path.c_str() );
     ephem->update( globals->get_time_params()->getMjd(),
@@ -1517,7 +1517,7 @@ int main( int argc, char **argv ) {
 		   0.0 );
     globals->set_ephem( ephem );
 
-    FGPath sky_tex_path( globals->get_fg_root() );
+    SGPath sky_tex_path( globals->get_fg_root() );
     sky_tex_path.append( "Textures" );
     sky_tex_path.append( "Sky" );
     thesky = new SGSky;
@@ -1569,7 +1569,7 @@ int main( int argc, char **argv ) {
 	+ acmodel_path;
     int pos = full_model.rfind("/");
     
-    FGPath texturepath( full_model.substr(0, pos) );
+    SGPath texturepath( full_model.substr(0, pos) );
     cout << "Texture path = " << texturepath.str() << endl;
     ssgTexturePath( (char *)texturepath.c_str() );
 
@@ -1660,19 +1660,19 @@ void fgLoadDCS(void) {
         ship_pos[k]=NULL;
     }
 
-    FGPath tile_path( globals->get_fg_root());
+    SGPath tile_path( globals->get_fg_root());
     tile_path.append( "Scenery" );
     tile_path.append( "Objects.txt" );
-    fg_gzifstream in( tile_path.str() );
+    sg_gzifstream in( tile_path.str() );
     if ( ! in.is_open() ) {
 	SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: " << tile_path.str() );
     }
 
-    FGPath modelpath( globals->get_fg_root() );
+    SGPath modelpath( globals->get_fg_root() );
     modelpath.append( "Models" );
     modelpath.append( "Geometry" );
   
-    FGPath texturepath( globals->get_fg_root() );
+    SGPath texturepath( globals->get_fg_root() );
     texturepath.append( "Models" );
     texturepath.append( "Textures" );
  

@@ -47,7 +47,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Autopilot/auto_gui.hxx>
@@ -350,7 +350,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    {
 		SGBucket p( f->get_Longitude() * SGD_RADIANS_TO_DEGREES,
 			    f->get_Latitude() * SGD_RADIANS_TO_DEGREES );
-		FGPath tile_path( globals->get_fg_root() );
+		SGPath tile_path( globals->get_fg_root() );
 		tile_path.append( "Scenery" );
 		tile_path.append( p.gen_base_path() );
 		tile_path.append( p.gen_index_str() );
@@ -464,7 +464,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	  return;
 	}
 	case GLUT_KEY_F4: {
-	  FGPath props_path(globals->get_fg_root());
+	  SGPath props_path(globals->get_fg_root());
 	  props_path.append("preferences.xml");
 	  SG_LOG(SG_INPUT, SG_INFO, "Rereading global preferences");
 	  if (!readProperties(props_path.str(), globals->get_props())) {

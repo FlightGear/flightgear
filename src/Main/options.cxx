@@ -39,7 +39,7 @@ bool global_fullscreen = true;
 
 #include STL_STRING
 
-#include <simgear/misc/fgstream.hxx>
+#include <simgear/misc/sgstream.hxx>
 
 // #include <Include/general.hxx>
 // #include <Airports/simple.hxx>
@@ -492,7 +492,7 @@ parse_wp( const string& arg ) {
 static bool 
 parse_flightplan(const string& arg)
 {
-    fg_gzifstream infile(arg.c_str());
+    sg_gzifstream infile(arg.c_str());
     if ( !infile.is_open() ) {
 	return false;
     }
@@ -908,7 +908,7 @@ fgScanForRoot (int argc, char **argv)
 string
 fgScanForRoot (const string& path)
 {
-    fg_gzifstream in( path );
+    sg_gzifstream in( path );
     if ( !in.is_open() )
       return "";
 
@@ -968,7 +968,7 @@ fgParseOptions (int argc, char **argv) {
 // Parse config file options
 void
 fgParseOptions (const string& path) {
-    fg_gzifstream in( path );
+    sg_gzifstream in( path );
     if ( !in.is_open() )
       return;
 

@@ -32,8 +32,8 @@
 #endif
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/fgpath.hxx>
-#include <simgear/misc/fgstream.hxx>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sgstream.hxx>
 
 #include "newmat.hxx"
 
@@ -73,7 +73,7 @@ FGNewMat::FGNewMat ( const string &mat_name, const string &tex_name )
 void FGNewMat::build_ssg_state( const string& path,
 				GLenum shade_model, bool texture_default )
 {
-    FGPath tex_file( path );
+    SGPath tex_file( path );
     tex_file.append( texture_name );
 
     state = new ssgStateSelector(2);

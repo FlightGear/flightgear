@@ -25,7 +25,7 @@
 
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Main/globals.hxx>
 
@@ -34,7 +34,7 @@
 
 // constructor
 FGSimpleSound::FGSimpleSound( string file ) {
-    FGPath slfile( globals->get_fg_root() );
+    SGPath slfile( globals->get_fg_root() );
     slfile.append( file );
     sample = new slSample ( (char *)slfile.c_str() );
     pitch_envelope = new slEnvelope( 1, SL_SAMPLE_ONE_SHOT );

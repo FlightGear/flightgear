@@ -53,7 +53,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/screen/screen-dump.hxx>
 
 #include <Include/general.hxx>
@@ -724,7 +724,7 @@ void guiInit()
     gui_msg_RESET  = msg_RESET;  // "RESET"
 
     // Next check home directory
-    FGPath fntpath;
+    SGPath fntpath;
     char* envp = ::getenv( "FG_FONTS" );
     if ( envp != NULL ) {
         fntpath.set( envp );

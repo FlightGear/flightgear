@@ -106,12 +106,12 @@ FGRadioStack::init ()
     search();
     update();
 
-    FGPath path( globals->get_fg_root() );
-    FGPath term = path;
+    SGPath path( globals->get_fg_root() );
+    SGPath term = path;
     term.append( "Navaids/range.term" );
-    FGPath low = path;
+    SGPath low = path;
     low.append( "Navaids/range.low" );
-    FGPath high = path;
+    SGPath high = path;
     high.append( "Navaids/range.high" );
 
     term_tbl = new SGInterpTable( term.str() );

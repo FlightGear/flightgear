@@ -34,7 +34,7 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Airports/simple.hxx>
 #include <GUI/gui.h>

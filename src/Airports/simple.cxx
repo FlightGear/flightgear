@@ -40,7 +40,7 @@
 #include <simgear/compiler.h>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/fgstream.hxx>
+#include <simgear/misc/sgstream.hxx>
 
 #include STL_STRING
 #include STL_FUNCTIONAL
@@ -117,7 +117,7 @@ int FGAirportsUtil::load( const string& file ) {
 
     airports.erase( airports.begin(), airports.end() );
 
-    fg_gzifstream in( file );
+    sg_gzifstream in( file );
     if ( !in.is_open() ) {
 	SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << file );
 	exit(-1);

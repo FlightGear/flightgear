@@ -28,7 +28,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/misc/fgstream.hxx>
+#include <simgear/misc/sgstream.hxx>
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
 

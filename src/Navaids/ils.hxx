@@ -27,7 +27,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/misc/fgstream.hxx>
+#include <simgear/misc/sgstream.hxx>
 
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <istream>

@@ -32,7 +32,7 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Scenery/scenery.hxx>
 
@@ -65,10 +65,10 @@ FGJSBsim::FGJSBsim( double dt ) {
     fgic=new FGInitialCondition(fdmex);
     needTrim=true;
   
-    FGPath aircraft_path( globals->get_fg_root() );
+    SGPath aircraft_path( globals->get_fg_root() );
     aircraft_path.append( "Aircraft" );
 
-    FGPath engine_path( globals->get_fg_root() );
+    SGPath engine_path( globals->get_fg_root() );
     engine_path.append( "Engine" );
     set_delta_t( dt );
     fdmex->GetState()->Setdt( dt );
@@ -104,10 +104,10 @@ void FGJSBsim::init() {
     SG_LOG( SG_FLIGHT, SG_INFO, "Starting and initializing JSBsim" );
 
 #if 0
-    FGPath aircraft_path( globals->get_fg_root() );
+    SGPath aircraft_path( globals->get_fg_root() );
     aircraft_path.append( "Aircraft" );
 
-    FGPath engine_path( globals->get_fg_root() );
+    SGPath engine_path( globals->get_fg_root() );
     engine_path.append( "Engine" );
 
     fdmex->GetState()->Setdt( get_delta_t() );

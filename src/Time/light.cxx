@@ -52,7 +52,7 @@ SG_USING_STD(string);
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/interpolater.hxx>
 #include <simgear/math/polar3d.hxx>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Main/globals.hxx>
@@ -75,12 +75,12 @@ void fgLIGHT::Init( void ) {
 	    "Initializing Lighting interpolation tables." );
 
     // build the path name to the ambient lookup table
-    FGPath path( globals->get_fg_root() );
-    FGPath ambient = path;
+    SGPath path( globals->get_fg_root() );
+    SGPath ambient = path;
     ambient.append( "Lighting/ambient" );
-    FGPath diffuse = path;
+    SGPath diffuse = path;
     diffuse.append( "Lighting/diffuse" );
-    FGPath sky = path;
+    SGPath sky = path;
     sky.append( "Lighting/sky" );
 
     // initialize ambient table

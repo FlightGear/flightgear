@@ -28,7 +28,7 @@
 
 #include <simgear/compiler.h>
 
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/props.hxx>
 
@@ -760,7 +760,7 @@ fgReadPanel (istream &input)
     for (int i = 0; i < nInstruments; i++) {
       const SGPropertyNode * node = instrument_group->getChild(i);
       
-      FGPath path( globals->get_fg_root() );
+      SGPath path( globals->get_fg_root() );
       path.append(node->getStringValue("path"));
       
       SG_LOG(SG_INPUT, SG_INFO, "Reading instrument "
@@ -815,7 +815,7 @@ FGPanel *
 fgReadPanel (const string &relative_path)
 {
   FGPanel * panel = 0;
-  FGPath path(globals->get_fg_root());
+  SGPath path(globals->get_fg_root());
   path.append(relative_path);
   ifstream input(path.c_str());
   if (!input.good()) {

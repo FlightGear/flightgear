@@ -26,7 +26,7 @@
 
 
 #include <simgear/compiler.h>
-#include <simgear/misc/fgpath.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <map>
 #include <vector>
