@@ -52,7 +52,7 @@ class FGNav {
     double x, y, z;
     int freq;
     int range;
-    bool dme;
+    bool has_dme;
     char ident[5];
 
 public:
@@ -69,7 +69,7 @@ public:
     inline double get_z() const { return z; }
     inline int get_freq() const { return freq; }
     inline int get_range() const { return range; }
-    inline bool get_dme() const { return dme; }
+    inline bool get_has_dme() const { return has_dme; }
     inline char *get_ident() { return ident; }
 
     /* inline void set_type( char t ) { type = t; }
@@ -95,9 +95,9 @@ operator >> ( istream& in, FGNav& n )
 
     n.freq = (int)(f*100.0 + 0.5);
     if ( c == 'Y' ) {
-	n.dme = true;
+	n.has_dme = true;
     } else {
-	n.dme = false;
+	n.has_dme = false;
     }
 
     // generate cartesian coordinates

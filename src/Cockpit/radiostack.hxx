@@ -37,7 +37,8 @@ class FGRadioStack {
 
     bool nav1_valid;
     bool nav1_inrange;
-    bool nav1_dme;
+    bool nav1_has_dme;
+    bool nav1_has_gs;
     bool nav1_loc;
     double nav1_freq;
     double nav1_alt_freq;
@@ -45,6 +46,10 @@ class FGRadioStack {
     double nav1_sel_radial;
     double nav1_loclon;
     double nav1_loclat;
+    double nav1_x;
+    double nav1_y;
+    double nav1_z;
+    double nav1_loc_dist;
     double nav1_gslon;
     double nav1_gslat;
     double nav1_gs_x;
@@ -64,7 +69,8 @@ class FGRadioStack {
 
     bool nav2_valid;
     bool nav2_inrange;
-    bool nav2_dme;
+    bool nav2_has_dme;
+    bool nav2_has_gs;
     bool nav2_loc;
     double nav2_freq;
     double nav2_alt_freq;
@@ -72,6 +78,10 @@ class FGRadioStack {
     double nav2_sel_radial;
     double nav2_loclon;
     double nav2_loclat;
+    double nav2_x;
+    double nav2_y;
+    double nav2_z;
+    double nav2_loc_dist;
     double nav2_gslon;
     double nav2_gslat;
     double nav2_gs_x;
@@ -158,10 +168,12 @@ public:
 
     // Calculated values.
     inline bool get_nav1_inrange() const { return nav1_inrange; }
-    inline bool get_nav1_dme() const { return nav1_dme; }
+    inline bool get_nav1_has_dme() const { return nav1_has_dme; }
+    inline bool get_nav1_has_gs() const { return nav1_has_gs; }
     inline bool get_nav1_loc() const { return nav1_loc; }
     inline double get_nav1_loclon() const { return nav1_loclon; }
     inline double get_nav1_loclat() const { return nav1_loclat; }
+    inline double get_nav1_loc_dist() const { return nav1_loc_dist; }
     inline double get_nav1_gslon() const { return nav1_gslon; }
     inline double get_nav1_gslat() const { return nav1_gslat; }
     inline double get_nav1_gs_dist() const { return nav1_gs_dist; }
@@ -174,10 +186,12 @@ public:
     inline double get_nav1_target_gs() const { return nav1_target_gs; }
 
     inline bool get_nav2_inrange() const { return nav2_inrange; }
-    inline bool get_nav2_dme() const { return nav2_dme; }
+    inline bool get_nav2_has_dme() const { return nav2_has_dme; }
+    inline bool get_nav2_has_gs() const { return nav2_has_gs; }
     inline bool get_nav2_loc() const { return nav2_loc; }
     inline double get_nav2_loclon() const { return nav2_loclon; }
     inline double get_nav2_loclat() const { return nav2_loclat; }
+    inline double get_nav2_loc_dist() const { return nav2_loc_dist; }
     inline double get_nav2_gslon() const { return nav2_gslon; }
     inline double get_nav2_gslat() const { return nav2_gslat; }
     inline double get_nav2_gs_dist() const { return nav2_gs_dist; }

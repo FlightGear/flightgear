@@ -332,7 +332,7 @@ void FGSteam::_CatchUp()
 
 double FGSteam::get_HackGS_deg () {
     if ( current_radiostack->get_nav1_inrange() && 
-	 current_radiostack->get_nav1_loc() )
+	 current_radiostack->get_nav1_has_gs() )
     {
 	double x = current_radiostack->get_nav1_gs_dist();
 	double y = (FGBFI::getAltitude() - current_radiostack->get_nav1_elev())
