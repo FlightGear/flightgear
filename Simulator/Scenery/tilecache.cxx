@@ -67,8 +67,8 @@ FGTileCache::init( void )
     // 
     //   target_cache_size >= (current.options.tile_diameter + 1) ** 2 
     // 
-    int side = current_options.get_tile_diameter() + 1;
-    int target_cache_size = side * side;
+    int side = current_options.get_tile_diameter() + 2;
+    int target_cache_size = (side*side);
     FG_LOG( FG_TERRAIN, FG_DEBUG, "  target cache size = " 
 	    << target_cache_size );
     FG_LOG( FG_TERRAIN, FG_DEBUG, "  current cache size = " 
@@ -166,12 +166,17 @@ FGTileCache::next_avail( void )
     int max_index;
     
     max_dist = 0.0;
-    max_index = 0;
+    max_index = -1;
 
     for ( i = 0; i < (int)tile_cache.size(); i++ ) {
+	// only look at freeing NON-scheduled (i.e. ready to load
+	// cache entries.  This assumes that the cache is always big
+	// enough for our tile radius!
+
 	if ( tile_cache[i].is_unused() ) {
+	    // favor unused cache slots
 	    return(i);
-	} else {
+	} else if ( tile_cache[i].is_loaded() ) {
 	    // calculate approximate distance from view point
 	    abs_view_pos = current_view.get_abs_view_pos();
 
