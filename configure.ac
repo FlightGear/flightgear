@@ -81,14 +81,14 @@ else
 fi
 AM_CONDITIONAL(ENABLE_WEATHERCM, test "x$with_weathercm" = "xyes")
 
-dnl Specify if we want the new XML menu; default to the old one
-AC_ARG_WITH(new-menubar, [  --with-new-menubar        Use the new XML menu bar])
-if test "x$with_new_menubar" = "xyes" ; then
-    echo "Building with new menubar"
-else
+dnl Specify if we want the old menubar; default to the new one
+AC_ARG_WITH(old-menubar, [  --with-old-menubar        Use the old menu bar])
+if test "x$with_old_menubar" = "xyes" ; then
+    echo "Building with old menubar"
     AC_DEFINE([FG_OLD_MENUBAR], 1,
               [Define to build with old menubar])
-    echo "Building with old menubar"
+else
+    echo "Building with new menubar"
 fi
 AM_CONDITIONAL(ENABLE_WEATHERCM, test "x$with_weathercm" = "xyes")
 
@@ -619,10 +619,10 @@ else
     echo "Using FGEnvironment"
 fi
 
-if test "x$with_new_menubar" != "x"; then
-    echo "Using new menubar"
+if test "x$with_old_menubar" != "x"; then
+    echo "Using old menubar"
 else
-    echo "Defaulting to old menubar"
+    echo "Defaulting to new XML-configurable menubar"
 fi
 
 if test "x$with_threads" = "xyes"; then
