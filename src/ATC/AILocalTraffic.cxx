@@ -340,6 +340,8 @@ void FGAILocalTraffic::Update(double dt) {
 			// Contact the tower, even if only virtually
 			changeFreq = false;
 			tower->ContactAtHoldShort(plane, this, CIRCUIT);
+			pending_transmission = "";	// Transmit an empty string until we do it properly to activate the ATC response timer mechanism
+			Transmit();
 			break;
 		case GROUND:
 			tuned_station = ground;
