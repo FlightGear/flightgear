@@ -13,6 +13,7 @@ libTime_a_SOURCES = \
 	fg_time.cxx fg_time.hxx \
 	fg_timer.cxx fg_timer.hxx \
 	light.cxx light.hxx \
+	moonpos.cxx moonpos.hxx \
 	sunpos.cxx sunpos.hxx \
 	timestamp.hxx
 

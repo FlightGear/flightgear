@@ -32,19 +32,26 @@
 class Star : public CelestialBody
 {
 private:
-  double longitude;  // the sun's true longitude
+  //double longitude;  // the sun's true longitude - this is depreciated by
+                       // CelestialBody::lonEcl 
   double xs, ys;     // the sun's rectangular geocentric coordinates
   double distance;   // the sun's distance to the earth
- 
+   GLUquadricObj *SunObject;
+  GLuint sun_texid;
+  GLubyte *sun_texbuf;
+
+  void setTexture();
 public:
   Star (fgTIME *t);
+  ~Star();
   void updatePosition(fgTIME *t);
   double getM();
   double getw();
-  double getLon();
+  //double getLon();
   double getxs();
   double getys();
   double getDistance();
+  void newImage();
 };
 
 
@@ -57,11 +64,6 @@ inline double Star::getM()
 inline double Star::getw()
 {
   return w;
-}
-
-inline double Star::getLon()
-{
-  return longitude;
 }
 
 inline double Star::getxs()

@@ -54,6 +54,9 @@
 /* update the cur_time_params structure with the current sun position */
 void fgUpdateSunPos( void );
 
+/* update the cur_time_params structure with the current moon position */
+void fgUpdateMoonPos( void );
+
 void fgSunPosition(time_t ssue, double *lon, double *lat);
 
 

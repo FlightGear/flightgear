@@ -38,13 +38,19 @@ class Moon : public CelestialBody
 private:
   void TexInit();  // This should move to the constructor eventually.
 
-  GLUquadricObj *Object;
+  GLUquadricObj *moonObject;
   GLuint Sphere;
+  GLuint moon_texid;
+  GLuint moon_halotexid;
+  GLubyte *moon_texbuf;
+  GLubyte *moon_halotexbuf;
   
+  void setHalo();
 public:
   Moon ( fgTIME *t);
+  ~Moon();
   void updatePosition(fgTIME *t, Star *ourSun);
-  void newImage(float, float);
+  void newImage();
 };
 
 

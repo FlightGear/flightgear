@@ -68,104 +68,11 @@
 extern SolarSystem *solarSystem;
 
 #undef E
-
-
-/*
- * the epoch upon which these astronomical calculations are based is
- * 1990 january 0.0, 631065600 seconds since the beginning of the
- * "unix epoch" (00:00:00 GMT, Jan. 1, 1970)
- *
- * given a number of seconds since the start of the unix epoch,
- * DaysSinceEpoch() computes the number of days since the start of the
- * astronomical epoch (1990 january 0.0)
- */
-
-#define EpochStart           (631065600)
-#define DaysSinceEpoch(secs) (((secs)-EpochStart)*(1.0/(24*3600)))
-
-/*
- * assuming the apparent orbit of the sun about the earth is circular,
- * the rate at which the orbit progresses is given by RadsPerDay --
- * FG_2PI radians per orbit divided by 365.242191 days per year:
- */
-
-#define RadsPerDay (FG_2PI/365.242191)
-
-/*
- * details of sun's apparent orbit at epoch 1990.0 (after
- * duffett-smith, table 6, section 46)
- *
- * Epsilon_g    (ecliptic longitude at epoch 1990.0) 279.403303 degrees
- * OmegaBar_g   (ecliptic longitude of perigee)      282.768422 degrees
- * Eccentricity (eccentricity of orbit)                0.016713
- */
-
-#define Epsilon_g    (279.403303*(FG_2PI/360))
-#define OmegaBar_g   (282.768422*(FG_2PI/360))
-#define Eccentricity (0.016713)
-
-/*
- * MeanObliquity gives the mean obliquity of the earth's axis at epoch
- * 1990.0 (computed as 23.440592 degrees according to the method given
- * in duffett-smith, section 27)
- */
 #define MeanObliquity (23.440592*(FG_2PI/360))
 
-/* static double solve_keplers_equation(double); */
-/* static double sun_ecliptic_longitude(time_t); */
 static void   ecliptic_to_equatorial(double, double, double *, double *);
 static double julian_date(int, int, int);
 static double GST(time_t);
-
-/*
- * solve Kepler's equation via Newton's method
- * (after duffett-smith, section 47)
- */
-/*
-static double solve_keplers_equation(double M) {
-    double E;
-    double delta;
-
-    E = M;
-    while (1) {
-	delta = E - Eccentricity*sin(E) - M;
-	if (fabs(delta) <= 1e-10) break;
-	E -= delta / (1 - Eccentricity*cos(E));
-    }
-
-    return E;
-}
-*/
-
-
-/* compute ecliptic longitude of sun (in radians) (after
- * duffett-smith, section 47) */
-/*
-static double sun_ecliptic_longitude(time_t ssue) {
-    // time_t ssue;              //  seconds since unix epoch
-    double D, N;
-    double M_sun, E;
-    double v;
-
-    D = DaysSinceEpoch(ssue);
-
-    N = RadsPerDay * D;
-    N = fmod(N, FG_2PI);
-    if (N < 0) N += FG_2PI;
-
-    M_sun = N + Epsilon_g - OmegaBar_g;
-    if (M_sun < 0) M_sun += FG_2PI;
-
-    E = solve_keplers_equation(M_sun);
-    v = 2 * atan(sqrt((1+Eccentricity)/(1-Eccentricity)) * tan(E/2));
-
-    return (v + OmegaBar_g);
-}
-*/
-
-
-/* convert from ecliptic to equatorial coordinates (after
- * duffett-smith, section 27) */
 
 static void ecliptic_to_equatorial(double lambda, double beta, 
 				   double *alpha, double *delta) {
@@ -315,7 +222,8 @@ static void fgSunPositionGST(double gst, double *lon, double *lat) {
     /* ecliptic_to_equatorial(lambda, 0.0, &alpha, &delta); */
     //ecliptic_to_equatorial (solarPosition.lonSun, 0.0, &alpha, &delta);
     ecliptic_to_equatorial( SolarSystem::theSolarSystem->getSun()->getLon(),
-			    0.0, &alpha,  &delta );
+			    SolarSystem::theSolarSystem->getSun()->getLat(),
+			    &alpha,  &delta );
 
 //    tmp = alpha - (FG_2PI/24)*GST(ssue);
     tmp = alpha - (FG_2PI/24)*gst;	
@@ -434,6 +342,17 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.21  1999/03/22 02:08:18  curt
+// Changes contributed by Durk Talsma:
+//
+// Here's a few changes I made to fg-0.58 this weekend. Included are the
+// following features:
+// - Sun and moon have a halo
+// - The moon has a light vector, moon_angle, etc. etc. so that we can have
+//   some moonlight during the night.
+// - Lot's of small changes tweakes, including some stuff Norman Vine sent
+//   me earlier.
+//
 // Revision 1.20  1999/02/26 22:10:11  curt
 // Added initial support for native SGI compilers.
 //

@@ -77,7 +77,10 @@ void CelestialBody::updatePosition(fgTIME *t, Star *ourSun)
   xg = xh + ourSun->getxs();
   yg = yh + ourSun->getys();
   zg = zh;
-  
+
+  lonEcl = atan2(yh, xh);
+  latEcl = atan2(zh, sqrt(xh*xh+yh*yh));
+
   xe = xg;
   ye = yg * cos(ecl) - zg * sin(ecl);
   ze = yg * sin(ecl) + zg * cos(ecl);
@@ -152,6 +155,11 @@ double CelestialBody::fgCalcEccAnom(double M, double e)
     }
   return eccAnom;
 }
+
+
+
+
+
 
 
 

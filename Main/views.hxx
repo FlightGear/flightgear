@@ -106,6 +106,13 @@ public:
     // surface direction to go to head towards sun
     MAT3vec surface_to_sun;
 
+    // vector in cartesian coordinates from current position to the
+    // postion on the earth's surface the moon is directly over
+    MAT3vec to_moon;
+  
+    // surface direction to go to head towards moon
+    MAT3vec surface_to_moon;
+
     // surface vector heading south
     MAT3vec surface_south;
 
@@ -217,6 +224,18 @@ public:
 	surface_to_sun[1] = y;
 	surface_to_sun[2] = z;
     }
+    inline double *get_to_moon() { return to_moon; }
+    inline void set_to_moon( double x, double y, double z) {
+	to_moon[0] = x;
+	to_moon[1] = y;
+	to_moon[2] = z;
+    }
+    inline double *get_surface_to_moon() { return surface_to_moon; }
+    inline void set_surface_to_moon( double x, double y, double z) {
+	surface_to_moon[0] = x;
+	surface_to_moon[1] = y;
+	surface_to_moon[2] = z;
+    }
     inline double *get_surface_south() { return surface_south; }
     inline double *get_surface_east() { return surface_east; }
     inline double *get_local_up() { return local_up; }
@@ -232,6 +251,17 @@ extern FGView current_view;
 
 
 // $Log$
+// Revision 1.22  1999/03/22 02:08:15  curt
+// Changes contributed by Durk Talsma:
+//
+// Here's a few changes I made to fg-0.58 this weekend. Included are the
+// following features:
+// - Sun and moon have a halo
+// - The moon has a light vector, moon_angle, etc. etc. so that we can have
+//   some moonlight during the night.
+// - Lot's of small changes tweakes, including some stuff Norman Vine sent
+//   me earlier.
+//
 // Revision 1.21  1999/02/05 21:29:15  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

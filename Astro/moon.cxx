@@ -23,21 +23,19 @@
  * (Log is kept at end of this file)
  **************************************************************************/
 
+#include <FDM/flight.hxx>
+
 #include <string.h>
+#include "moon.hxx"
 
 #include <Debug/logstream.hxx>
 #include <Objects/texload.h>
-#include <FDM/flight.hxx>
 
 #ifdef __BORLANDC__
 #  define exception c_exception
 #endif
 #include <math.h>
 
-#include "moon.hxx"
-
-static GLuint moon_texid;
-static GLubyte *moon_texbuf;
 
 /*************************************************************************
  * Moon::Moon(fgTIME *t)
@@ -97,7 +95,95 @@ Moon::Moon(fgTIME *t) :
 		0,
 		GL_RGB, GL_UNSIGNED_BYTE,
 		moon_texbuf);
+
+  // setup the halo texture
+  FG_LOG( FG_GENERAL, FG_INFO, "Initializing Moon Texture");
+#ifdef GL_VERSION_1_1
+  xglGenTextures(1, &moon_halotexid);
+  xglBindTexture(GL_TEXTURE_2D, moon_halotexid);
+#elif GL_EXT_texture_object
+  xglGenTexturesEXT(1, &moon_halotexid);
+  xglBindTextureEXT(GL_TEXTURE_2D, moon_halotexid);
+#else
+#  error port me
+#endif
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  setHalo();
+  glTexImage2D( GL_TEXTURE_2D,
+		0,
+		GL_RGBA,
+		256, 256,
+		0,
+		GL_RGBA, GL_UNSIGNED_BYTE,
+		moon_halotexbuf);
+  moonObject = gluNewQuadric();
 }
+
+Moon::~Moon()
+{
+  //delete moonObject;
+  delete moon_texbuf;
+  delete moon_halotexbuf;
+}
+
+
+static int texWidth = 256;	/* 64x64 is plenty */
+
+void Moon::setHalo()
+{
+  int texSize;
+  //void *textureBuf;
+  GLubyte *p;
+  int i,j;
+  double radius;
+  
+  texSize = texWidth*texWidth;
+  
+  moon_halotexbuf = new GLubyte[texSize*4];
+  if (!moon_halotexbuf) 
+    return;  // Ugly!
+  
+  p = moon_halotexbuf;
+  
+  radius = (double)(texWidth / 2);
+  
+  for (i=0; i < texWidth; i++) {
+    for (j=0; j < texWidth; j++) {
+      double x, y, d;
+	    
+      x = fabs((double)(i - (texWidth / 2)));
+      y = fabs((double)(j - (texWidth / 2)));
+
+      d = sqrt((x * x) + (y * y));
+      if (d < radius) 
+	{
+	  double t = 1.0 - (d / radius); // t is 1.0 at center, 0.0 at edge */
+	  // inverse square looks nice 
+	  *p = (int)((double)0xff * (t * t));
+	  *(p+1) = (int)((double) 0xff * (t*t));
+	  *(p+2) = (int)((double) 0xff * (t*t));
+	  *(p+3) = 0x11;
+	} 
+      else
+	{
+	  *p = 0x00;
+	  *(p+1) = 0x00;
+	  *(p+2) = 0x00;
+	  *(p+3) = 0x11;
+	}
+      p += 4;
+    }
+  }
+  //gluBuild2DMipmaps(GL_TEXTURE_2D, 1, texWidth, texWidth, 
+  //	    GL_LUMINANCE,
+  //	    GL_UNSIGNED_BYTE, textureBuf);
+  //free(textureBuf);
+}
+
+
 /*****************************************************************************
  * void Moon::updatePosition(fgTIME *t, Star *ourSun)
  * this member function calculates the actual topocentric position (i.e.) 
@@ -107,7 +193,7 @@ Moon::Moon(fgTIME *t) :
 void Moon::updatePosition(fgTIME *t, Star *ourSun)
 {
   double 
-    eccAnom, ecl, lonecl, latecl, actTime,
+    eccAnom, ecl, actTime,
     xv, yv, v, r, xh, yh, zh, xg, yg, zg, xe, ye, ze,
     Ls, Lm, D, F, mpar, gclat, rho, HA, g,
     geoRa, geoDec;
@@ -136,8 +222,8 @@ void Moon::updatePosition(fgTIME *t, Star *ourSun)
   zh = r * (sin(v+w) * sin(i));
 
   // calculate the ecliptic latitude and longitude here
-  lonecl = atan2 (yh, xh);
-  latecl = atan2(zh, sqrt(xh*xh + yh*yh));
+  lonEcl = atan2 (yh, xh);
+  latEcl = atan2(zh, sqrt(xh*xh + yh*yh));
 
   /* Calculate a number of perturbatioin, i.e. disturbances caused by the 
    * gravitational infuence of the sun and the other major planets.
@@ -147,7 +233,7 @@ void Moon::updatePosition(fgTIME *t, Star *ourSun)
   D = Lm - Ls;
   F = Lm - N;
   
-  lonecl += DEG_TO_RAD * (-1.274 * sin (M - 2*D)
+  lonEcl += DEG_TO_RAD * (-1.274 * sin (M - 2*D)
 			  +0.658 * sin (2*D)
 			  -0.186 * sin(ourSun->getM())
 			  -0.059 * sin(2*M - 2*D)
@@ -160,7 +246,7 @@ void Moon::updatePosition(fgTIME *t, Star *ourSun)
 			  -0.015 * sin(2*F - 2*D)
 			  +0.011 * sin(M - 4*D)
 			  );
-  latecl += DEG_TO_RAD * (-0.173 * sin(F-2*D)
+  latEcl += DEG_TO_RAD * (-0.173 * sin(F-2*D)
 			  -0.055 * sin(M - F - 2*D)
 			  -0.046 * sin(M + F - 2*D)
 			  +0.033 * sin(F + 2*D)
@@ -170,9 +256,9 @@ void Moon::updatePosition(fgTIME *t, Star *ourSun)
 	-0.46 * cos(2*D)
 	);
   FG_LOG(FG_GENERAL, FG_INFO, "Running moon update");
-  xg = r * cos(lonecl) * cos(latecl);
-  yg = r * sin(lonecl) * cos(latecl);
-  zg = r *               sin(latecl);
+  xg = r * cos(lonEcl) * cos(latEcl);
+  yg = r * sin(lonEcl) * cos(latEcl);
+  zg = r *               sin(latEcl);
   
   xe = xg;
   ye = yg * cos(ecl) -zg * sin(ecl);
@@ -185,7 +271,7 @@ void Moon::updatePosition(fgTIME *t, Star *ourSun)
   // topocentric ra and dec. i.e. the position as seen from the
   // surface of the earth, instead of the center of the earth
 
-  // First calculates the moon's parrallax, that is, the apparent size of the 
+  // First calculate the moon's parrallax, that is, the apparent size of the 
   // (equatorial) radius of the earth, as seen from the moon 
   mpar = asin ( 1 / r);
   gclat = f->get_Latitude() - 0.003358 * 
@@ -202,7 +288,7 @@ void Moon::updatePosition(fgTIME *t, Star *ourSun)
 
 
 /************************************************************************
- * void Moon::newImage(float ra, float dec)
+ * void Moon::newImage()
  *
  * This function regenerates a new visual image of the moon, which is added to
  * solarSystem display list.
@@ -211,24 +297,93 @@ void Moon::updatePosition(fgTIME *t, Star *ourSun)
  *
  * return value: none
  **************************************************************************/
-void Moon::newImage(float ra, float dec)
+void Moon::newImage()
 {
-  glEnable(GL_TEXTURE_2D);
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); 
-  glBindTexture(GL_TEXTURE_2D, moon_texid);
+  fgLIGHT *l = &cur_light_params;
+  float moon_angle = l->moon_angle;
+  
+  /*double x_2, x_4, x_8, x_10;
+  GLfloat ambient;
+  GLfloat amb[4];*/
+  int moonSize = 750;
 
-  //xglRotatef(-90, 0.0, 0.0, 1.0);
-  xglRotatef(((RAD_TO_DEG * ra)- 90.0), 0.0, 0.0, 1.0);
-  xglRotatef((RAD_TO_DEG * dec), 1.0, 0.0, 0.0);
+  GLfloat moonColor[4] = {0.85, 0.75, 0.35, 1.0};
+  GLfloat black[4] = {0.0, 0.0,0.0,1.0};
+  GLfloat white[4] = {1.0, 1.0,1.0,1.0};
+  
+  if( moon_angle*RAD_TO_DEG < 100 ) 
+    {
+      /*
+      x_2 = moon_angle * moon_angle;
+      x_4 = x_2 * x_2;
+      x_8 = x_4 * x_4;
+      x_10 = x_8 * x_2;
+      ambient = (float)(0.4 * pow (1.1, - x_10 / 30.0));
+      if (ambient < 0.3) ambient = 0.3;
+      if (ambient > 1.0) ambient = 1.0;
+      
+      amb[0] = ((ambient * 6.0)  - 1.0); // minimum value = 0.8
+      amb[1] = ((ambient * 11.0) - 3.0); // minimum value = 0.3
+      amb[2] = ((ambient * 12.0) - 3.6); // minimum value = 0.0
+      amb[3] = 1.00;
+      
+      if (amb[0] > 1.0) amb[0] = 1.0;
+      if (amb[1] > 1.0) amb[1] = 1.0;
+      if (amb[2] > 1.0) amb[2] = 1.0;
+      xglColor3fv(amb);
+      xglColor3f(1.0, 1.0, 1.0); */
+      xglPushMatrix();
+      {
+	//xglRotatef(-90, 0.0, 0.0, 1.0);
+	xglRotatef(((RAD_TO_DEG * rightAscension)- 90.0), 0.0, 0.0, 1.0);
+	xglRotatef((RAD_TO_DEG * declination), 1.0, 0.0, 0.0);
+	
+	FG_LOG( FG_GENERAL, FG_INFO, 
+		"Ra = (" << (RAD_TO_DEG *rightAscension) 
+		<< "), Dec= (" << (RAD_TO_DEG *declination) << ")" );
+	xglTranslatef(0.0, 58600.0, 0.0);
+	
+	glEnable(GL_TEXTURE_2D);                                             // TEXTURE ENABLED
+	glEnable(GL_BLEND);                                                  // BLEND ENABLED
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);  
+	glBindTexture(GL_TEXTURE_2D, moon_halotexid);
+	
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(-5000, 0.0, -5000);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f( 5000, 0.0, -5000);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f( 5000, 0.0,  5000);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(-5000, 0.0,  5000);
+	glEnd();
+	
+	xglEnable(GL_LIGHTING);                                                // LIGHTING ENABLED
+	xglEnable( GL_LIGHT0 );
+	// set lighting parameters
+	xglLightfv(GL_LIGHT0, GL_AMBIENT, white );
+	xglLightfv(GL_LIGHT0, GL_DIFFUSE, white );
+	xglEnable( GL_CULL_FACE );
+	xglMaterialfv(GL_FRONT, GL_AMBIENT, black);
+	xglMaterialfv(GL_FRONT, GL_DIFFUSE, moonColor); 
+	
+	//glEnable(GL_TEXTURE_2D);
+	glBlendFunc(GL_ONE, GL_ONE);
+	
+	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); 
+	glBindTexture(GL_TEXTURE_2D, moon_texid);                         
+	//glDisable(GL_LIGHTING);                                               // LIGHTING DISABLED
+	
+	gluQuadricTexture(moonObject, GL_TRUE );   
+	gluSphere(moonObject,  moonSize, 12, 12 );
+	glDisable(GL_TEXTURE_2D);                                             // TEXTURE DISABLED
+	glDisable(GL_BLEND);                                                  // BLEND DISABLED
+      }
+      xglPopMatrix();
+      glDisable(GL_LIGHTING);                                               // LIGHTING DISABLED
 
-  FG_LOG( FG_GENERAL, FG_INFO, 
-	  "Ra = (" << (RAD_TO_DEG *ra) 
-	  << "), Dec= (" << (RAD_TO_DEG *dec) << ")" );
-  xglTranslatef(0.0, 58600.0, 0.0);
-  Object = gluNewQuadric();
-  gluQuadricTexture( Object, GL_TRUE );   
-  gluSphere( Object,  1367, 12, 12 );
-  glDisable(GL_TEXTURE_2D);
+    }
+  else
+    {
+    }
 }
 
 

@@ -59,6 +59,7 @@ protected:              // make the data protected, in order to give the inherit
   double rightAscension, declination;
   double r, R, s, FV;
   double magnitude;
+  double lonEcl, latEcl;
 
   double fgCalcEccAnom(double M, double e);
   double fgCalcActTime(fgTIME *t);
@@ -73,6 +74,8 @@ public:
 		double Mf, double Ms, fgTIME *t);
   void getPos(double *ra, double *dec);
   void getPos(double *ra, double *dec, double *magnitude);
+  double getLon();
+  double getLat(); 
   void updatePosition(fgTIME *t, Star *ourSun);
 };
 
@@ -168,6 +171,15 @@ inline void CelestialBody::getPos(double* ra, double* dec, double* magn)
   *magn = magnitude;
 }
 
+inline double CelestialBody::getLon()
+{
+  return lonEcl;
+}
+
+inline double CelestialBody::getLat()
+{
+  return latEcl;
+}
 
 #endif // _CELESTIALBODY_H_
 

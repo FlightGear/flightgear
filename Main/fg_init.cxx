@@ -64,6 +64,7 @@
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 #include <Time/sunpos.hxx>
+#include <Time/moonpos.hxx>
 #include <Weather/weather.hxx>
 
 #include "fg_init.hxx"
@@ -341,7 +342,10 @@ int fgInitSubsystems( void )
     // so it can calculate local relative sun angle and a few other
     // things for correctly orienting the sky.
     fgUpdateSunPos();
+    fgUpdateMoonPos();
     global_events.Register( "fgUpdateSunPos()", fgUpdateSunPos,
+			    fgEVENT::FG_EVENT_READY, 60000);
+    global_events.Register( "fgUpdateMoonPos()", fgUpdateMoonPos,
 			    fgEVENT::FG_EVENT_READY, 60000);
 
     // Initialize Lighting interpolation tables
@@ -408,6 +412,17 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.71  1999/03/22 02:08:13  curt
+// Changes contributed by Durk Talsma:
+//
+// Here's a few changes I made to fg-0.58 this weekend. Included are the
+// following features:
+// - Sun and moon have a halo
+// - The moon has a light vector, moon_angle, etc. etc. so that we can have
+//   some moonlight during the night.
+// - Lot's of small changes tweakes, including some stuff Norman Vine sent
+//   me earlier.
+//
 // Revision 1.70  1999/03/11 23:09:49  curt
 // When "Help" is selected from the menu check to see if netscape is running.
 // If so, command it to go to the flight gear user guide url.  Otherwise

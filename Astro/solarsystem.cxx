@@ -40,6 +40,7 @@
 #include <XGL/xgl.h>
 #include <Debug/logstream.hxx>
 #include <Time/sunpos.hxx>
+#include <Time/moonpos.hxx>
 #include "solarsystem.hxx"
 
 /***************************************************************************
@@ -69,10 +70,9 @@ SolarSystem::SolarSystem(fgTIME *t)
   displayList = 0;
 };
 
-/* --------------------------------------------------------------------------
-   the destructor for class SolarSystem;
-   danger: Huge Explosions ahead! (-:))
-   ------------------------------------------------------------------------*/
+/**************************************************************************
+ * the destructor for class SolarSystem;
+ **************************************************************************/
 SolarSystem::~SolarSystem()
 {
   delete ourSun;
@@ -84,7 +84,6 @@ SolarSystem::~SolarSystem()
   delete saturn;
   delete uranus;
   delete neptune;
-  //delete pluto;
 }
 /****************************************************************************
  * void SolarSystem::rebuild()
@@ -97,19 +96,19 @@ SolarSystem::~SolarSystem()
  ***************************************************************************/
 void SolarSystem::rebuild()
 {
-  fgLIGHT *l = &cur_light_params;
+  //fgLIGHT *l = &cur_light_params;
   fgTIME  *t = &cur_time_params;  
-  float x, y, z;
-  // float xx, yy,zz;
-  double sun_angle;
+  //float x, y, z;
+  //double sun_angle;
   double ra, dec;
-  double x_2, x_4, x_8, x_10;
+  //double x_2, x_4, x_8, x_10;*/
   double magnitude;
-  GLfloat ambient;
-  GLfloat amb[4];
-  GLfloat moonColor[4] = {0.85, 0.75, 0.35, 1.0};
-  GLfloat black[4] = {0.0, 0.0,0.0,1.0};
-  GLfloat white[4] = {1.0, 1.0,1.0,1.0};
+  //GLfloat ambient;
+  //GLfloat amb[4];
+  
+  
+  glDisable(GL_LIGHTING);
+
 
   // Step 1: update all the positions
   ourSun->updatePosition(t);
@@ -123,75 +122,28 @@ void SolarSystem::rebuild()
   neptune->updatePosition(t, ourSun);
   
   fgUpdateSunPos();   // get the right sun angle (especially important when 
-                      // running for the first time.
+                      // running for the first time).
+  fgUpdateMoonPos();
+
   if (displayList)
     xglDeleteLists(displayList, 1);
 
   displayList = xglGenLists(1);
+
   // Step 2: rebuild the display list
   xglNewList( displayList, GL_COMPILE);
   {
     // Step 2a: Add the moon...
-    xglEnable( GL_LIGHTING );
-    xglEnable( GL_LIGHT0 );
-    // set lighting parameters
-    xglLightfv(GL_LIGHT0, GL_AMBIENT, white );
-    xglLightfv(GL_LIGHT0, GL_DIFFUSE, white );
-    xglEnable( GL_CULL_FACE );
-    
-    // Enable blending, in order to effectively eliminate the dark side of the
-    // moon
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);
-    earthsMoon->getPos(&ra, &dec);
-    xglMaterialfv(GL_FRONT, GL_AMBIENT, black);
-    xglMaterialfv(GL_FRONT, GL_DIFFUSE, moonColor); 
-    xglPushMatrix();
-    {
-	earthsMoon->newImage(ra,dec);
-    }
-    xglPopMatrix();
-    glDisable(GL_BLEND);
-    xglDisable(GL_LIGHTING);
- 
+    // Not that it is preferred to draw the moon first, and the sun next, in order to mime a
+    // solar eclipse. This is yet untested though...
+
+    earthsMoon->newImage();
     // Step 2b:  Add the sun
-    sun_angle = l->sun_angle;
-    x_2 = sun_angle * sun_angle;
-    x_4 = x_2 * x_2;
-    x_8 = x_4 * x_4;
-    x_10 = x_8 * x_2;
-    ambient = (0.4 * pow (1.1, - x_10 / 30.0));
-    if (ambient < 0.3) ambient = 0.3;
-    if (ambient > 1.0) ambient = 1.0;
-
-    amb[0] = ((ambient * 6.0)  - 1.0); // minimum value = 0.8
-    amb[1] = ((ambient * 11.0) - 3.0); // minimum value = 0.3
-    amb[2] = ((ambient * 12.0) - 3.6); // minimum value = 0.0
-    amb[3] = 1.00;
-
-    if (amb[0] > 1.0) amb[0] = 1.0;
-    if (amb[1] > 1.0) amb[1] = 1.0;
-    if (amb[2] > 1.0) amb[2] = 1.0;
-
-    sun_angle = l->sun_angle * RAD_TO_DEG;
-    if ( sun_angle < 100 ) {
-	ourSun->getPos(&ra, &dec);
-	double cos_dec = cos(dec) * 60000.0;
-	x = cos(ra) * cos_dec;
-	y = sin(ra) * cos_dec;
-	z = sin(dec) * 60000.0;
-	xglPushMatrix();
-	{
-	    double sun_size = 1400.0;
-	    xglTranslatef(x,y,z);
-	    xglColor3fv(amb);
-	    glutSolidSphere(sun_size, 10, 10);
-	}
-	glPopMatrix();
-
-    } else {
-	// sun angle > 100, no need to draw sun
-    }
+    //xglPushMatrix();
+    //{
+      ourSun->newImage();
+      //}
+    //xglPopMatrix();
     // Step 2c: Add the planets
     xglBegin(GL_POINTS);
     mercury->getPos(&ra, &dec, &magnitude);addPlanetToList(ra, dec, magnitude);

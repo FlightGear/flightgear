@@ -62,19 +62,24 @@ private:
 
 public:
   SolarSystem(fgTIME *t);
-  Star *getSun();
+  CelestialBody *getSun();
+  CelestialBody *getMoon();
   ~SolarSystem();
 
   static SolarSystem *theSolarSystem;  // thanks to Bernie Bright!
   void rebuild();
   friend void solarSystemRebuild();
   void draw();
-  
 };
 
-inline Star * SolarSystem::getSun()
+inline CelestialBody* SolarSystem::getSun()
 {
   return ourSun;
+}
+
+inline CelestialBody* SolarSystem::getMoon()
+{
+  return earthsMoon;
 }
 
 inline void SolarSystem::draw()

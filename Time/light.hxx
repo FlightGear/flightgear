@@ -81,6 +81,34 @@ public:
     double sun_rotation;
 
     ///////////////////////////////////////////////////////////
+    // Have the same for the moon. Useful for having some light at night
+    // and stuff. I (Durk) also want to use this for adding similar 
+    // coloring effects to the moon as I did to the sun. 
+    ///////////////////////////////////////////////////////////
+    // position of the moon in various forms
+
+    // in geocentric coordinates
+    double moon_lon, moon_gc_lat;
+
+    // in cartesian coordiantes
+    Point3D fg_moonpos;
+
+    // (in view coordinates)
+    GLfloat moon_vec[4];
+
+    // inverse (in view coordinates)
+    GLfloat moon_vec_inv[4];
+
+    // the angle between the moon and the local horizontal (in radians)
+    double moon_angle;
+
+    // the rotation around our vertical axis of the moon (relative to
+    // due south with positive numbers going in the counter clockwise
+    // direction.)  This is the direction we'd need to face if we
+    // wanted to travel towards the sun.
+    double moon_rotation;
+
+    ///////////////////////////////////////////////////////////
     // Derived lighting values
 
     // ambient component
@@ -123,6 +151,17 @@ extern fgLIGHT cur_light_params;
 
 
 // $Log$
+// Revision 1.9  1999/03/22 02:08:17  curt
+// Changes contributed by Durk Talsma:
+//
+// Here's a few changes I made to fg-0.58 this weekend. Included are the
+// following features:
+// - Sun and moon have a halo
+// - The moon has a light vector, moon_angle, etc. etc. so that we can have
+//   some moonlight during the night.
+// - Lot's of small changes tweakes, including some stuff Norman Vine sent
+//   me earlier.
+//
 // Revision 1.8  1998/10/16 00:56:10  curt
 // Converted to Point3D class.
 //
