@@ -76,7 +76,7 @@ void fgCalcSunPos(struct OrbElements params)
 
 
 struct CelestialCoord fgCalculateSun (struct OrbElements params, 
-				      struct fgTIME t)
+				      fgTIME t)
 {
     struct CelestialCoord result;
     double xe, ye, ze, ecl, actTime;
@@ -105,8 +105,8 @@ struct CelestialCoord fgCalculateSun (struct OrbElements params,
 /* Initialize the Sun */
 void fgSunInit( void ) {
     fgLIGHT *l;
-    struct fgTIME *t;
-    struct fgVIEW *v;  
+    fgTIME *t;
+    fgVIEW *v;  
     float xSun, ySun, zSun;
 
     /* GLfloat color[4] = { 1.00, 1.00, 1.00, 1.00 }; */
@@ -192,9 +192,12 @@ void fgSunRender( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/04/26 05:10:02  curt
-/* "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
+/* Revision 1.5  1998/04/28 01:19:04  curt
+/* Type-ified fgTIME and fgVIEW
 /*
+ * Revision 1.4  1998/04/26 05:10:02  curt
+ * "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
+ *
  * Revision 1.3  1998/04/25 22:06:26  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *

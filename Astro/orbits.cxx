@@ -41,7 +41,7 @@
 struct OrbElements pltOrbElements[9];
 
 
-double fgCalcActTime(struct fgTIME t)
+double fgCalcActTime(fgTIME t)
 {
   return (t.mjd - 36523.5);
 }
@@ -111,7 +111,7 @@ int fgReadOrbElements(struct OrbElements *dest, FILE *src)
 }
 
 
-int fgSolarSystemInit(struct fgTIME t)
+int fgSolarSystemInit(fgTIME t)
 {
     fgGENERAL *g;
     char path[80];
@@ -152,7 +152,7 @@ int fgSolarSystemInit(struct fgTIME t)
 }
 
 
-void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
+void fgSolarSystemUpdate(struct OrbElements *planet, fgTIME t)
 {
    double
          actTime;
@@ -170,9 +170,12 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
 
 
 /* $Log$
-/* Revision 1.3  1998/04/25 22:06:25  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.4  1998/04/28 01:19:00  curt
+/* Type-ified fgTIME and fgVIEW
 /*
+ * Revision 1.3  1998/04/25 22:06:25  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.2  1998/04/24 00:45:01  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Fixed a bug when generating sky colors.

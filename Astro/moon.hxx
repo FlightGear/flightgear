@@ -46,7 +46,7 @@ void fgMoonRender( void );
 
 struct CelestialCoord fgCalculateMoon(struct OrbElements Params,
                                       struct OrbElements sunParams,
-                                      struct fgTIME t);
+                                      fgTIME t);
 
 extern struct OrbElements pltOrbElements[9];
 
@@ -55,10 +55,13 @@ extern struct OrbElements pltOrbElements[9];
 
 
 /* $Log$
-/* Revision 1.2  1998/04/24 00:45:00  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Fixed a bug when generating sky colors.
+/* Revision 1.3  1998/04/28 01:19:00  curt
+/* Type-ified fgTIME and fgVIEW
 /*
+ * Revision 1.2  1998/04/24 00:45:00  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ * Fixed a bug when generating sky colors.
+ *
  * Revision 1.1  1998/04/22 13:21:28  curt
  * C++ - ifing the code a bit.
  *

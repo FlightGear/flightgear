@@ -223,9 +223,9 @@ int fgStarsInit( void ) {
 /* Draw the Stars */
 void fgStarsRender( void ) {
     fgFLIGHT *f;
-    struct fgVIEW *v;
+    fgVIEW *v;
     fgLIGHT *l;
-    struct fgTIME *t;
+    fgTIME *t;
     int i;
 
     f = current_aircraft.flight;
@@ -260,9 +260,12 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/04/26 05:10:02  curt
-/* "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
+/* Revision 1.5  1998/04/28 01:19:03  curt
+/* Type-ified fgTIME and fgVIEW
 /*
+ * Revision 1.4  1998/04/26 05:10:02  curt
+ * "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
+ *
  * Revision 1.3  1998/04/25 22:06:26  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *

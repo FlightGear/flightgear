@@ -33,8 +33,8 @@
 
 
 struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
-                                         struct OrbElements theSun,
-                                         struct fgTIME t, int idx);
+					struct OrbElements theSun,
+					fgTIME t, int idx);
 
 
 void fgPlanetsInit( void );
@@ -45,9 +45,12 @@ void fgPlanetsRender( void );
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:21:32  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.2  1998/04/28 01:19:02  curt
+/* Type-ified fgTIME and fgVIEW
 /*
+ * Revision 1.1  1998/04/22 13:21:32  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.5  1998/04/21 17:02:31  curt
  * Prepairing for C++ integration.
  *

@@ -47,7 +47,7 @@ GLint planets = 0;
 
 struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
                                         struct OrbElements theSun,
-                                        struct fgTIME t, int idx)
+                                        fgTIME t, int idx)
 {
     struct CelestialCoord result;
 
@@ -210,9 +210,12 @@ void fgPlanetsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/04/26 05:10:01  curt
-/* "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
+/* Revision 1.5  1998/04/28 01:19:01  curt
+/* Type-ified fgTIME and fgVIEW
 /*
+ * Revision 1.4  1998/04/26 05:10:01  curt
+ * "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
+ *
  * Revision 1.3  1998/04/25 22:06:25  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *

@@ -261,7 +261,7 @@ void fgSkyInit( void ) {
 void fgSkyRender( void ) {
     fgFLIGHT *f;
     fgLIGHT *l;
-    struct fgVIEW *v;
+    fgVIEW *v;
     float /* inner_color[4], middle_color[4], diff, */ east_dot, dot, angle;
     int i;
 
@@ -373,9 +373,12 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/04/26 05:10:01  curt
-/* "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
+/* Revision 1.5  1998/04/28 01:19:02  curt
+/* Type-ified fgTIME and fgVIEW
 /*
+ * Revision 1.4  1998/04/26 05:10:01  curt
+ * "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
+ *
  * Revision 1.3  1998/04/25 22:06:25  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *

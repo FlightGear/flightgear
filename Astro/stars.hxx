@@ -42,17 +42,21 @@ int fgStarsInit( void );
 
 /* Draw the Stars */
 void fgStarsRender( void );
+
 extern struct OrbElements pltOrbElements[9];
-extern struct fgTIME cur_time_params;
+extern fgTIME cur_time_params;
 
 
 #endif /* _STARS_HXX */
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:21:35  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.2  1998/04/28 01:19:03  curt
+/* Type-ified fgTIME and fgVIEW
 /*
+ * Revision 1.1  1998/04/22 13:21:35  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.5  1998/04/21 17:02:33  curt
  * Prepairing for C++ integration.
  *

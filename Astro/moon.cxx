@@ -57,7 +57,7 @@ static GLint moon = 0;
 ----------------------------------------------------------------*/
 struct CelestialCoord fgCalculateMoon(struct OrbElements params,
                                       struct OrbElements sunParams,
-                                      struct fgTIME t)
+                                      fgTIME t)
 {
   struct CelestialCoord
     geocCoord, topocCoord; 
@@ -216,9 +216,12 @@ void fgMoonRender( void ) {
 
 
 /* $Log$
-/* Revision 1.3  1998/04/25 22:06:24  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.4  1998/04/28 01:18:59  curt
+/* Type-ified fgTIME and fgVIEW
 /*
+ * Revision 1.3  1998/04/25 22:06:24  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.2  1998/04/24 00:45:00  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Fixed a bug when generating sky colors.

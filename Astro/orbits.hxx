@@ -77,21 +77,24 @@ struct CelestialCoord {
 
 
 double fgCalcEccAnom(double M, double e);
-double fgCalcActTime(struct fgTIME t);
+double fgCalcActTime(fgTIME t);
 
 int fgReadOrbElements (struct OrbElements *dest, FILE * src);
-int  fgSolarSystemInit(struct fgTIME t);
-void fgSolarSystemUpdate(struct OrbElements *planets, struct fgTIME t);
+int  fgSolarSystemInit(fgTIME t);
+void fgSolarSystemUpdate(struct OrbElements *planets, fgTIME t);
 
 
 #endif /* _ORBITS_HXX */
 
 
 /* $Log$
-/* Revision 1.2  1998/04/24 00:45:01  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Fixed a bug when generating sky colors.
+/* Revision 1.3  1998/04/28 01:19:01  curt
+/* Type-ified fgTIME and fgVIEW
 /*
+ * Revision 1.2  1998/04/24 00:45:01  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ * Fixed a bug when generating sky colors.
+ *
  * Revision 1.1  1998/04/22 13:21:30  curt
  * C++ - ifing the code a bit.
  *
