@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_CTRLS_VERSION = 11;
+const int FG_NET_CTRLS_VERSION = 13;
 
 
 // Define a structure containing the control parameters
@@ -80,10 +80,20 @@ public:
     bool master_alt;
     bool master_avionics;
 
-    // Other values of use to a remote FDM
+    // wind and turbulance
+    double wind_speed_kt;
+    double wind_dir_deg;
+
+    // other information about environment
     double hground;		         // ground elevation (meters)
-    double magvar;		         // local magnetic variation in degrees.
+    double magvar;		         // local magnetic variation in degs.
+
+    // simulation control
     int speedup;		         // integer speedup multiplier
+    int freeze;		                 // 0=normal
+				         // 0x01=master
+				         // 0x02=position
+				         // 0x04=fuel
 };
 
 
