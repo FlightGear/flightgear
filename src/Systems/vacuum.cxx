@@ -50,12 +50,14 @@ VacuumSystem::update (double dt)
     } else {
         double rpm = _rpm_node->getDoubleValue();
         double pressure = _pressure_node->getDoubleValue();
-        // suction = pressure * rpm / (rpm + 5000.0);
-        // This magic formula yields about 4.1 inhg at 700 rpm and
-        // about 6.0 inhg at 2200 rpm (numbers by observation)
-        suction = 5.39 - 1.0 / ( rpm * 0.00111 );
+        // This magic formula yields about 4 inhg at 700 rpm
+        suction = pressure * rpm / (rpm + 4875.0);
+
+        // simple regulator model that clamps smoothly to about 5 inhg
+        // over a normal rpm range
+        double max = 5.39 - 1.0 / ( rpm * 0.00111 );
         if ( suction < 0.0 ) suction = 0.0;
-        if ( suction > 5.0 ) suction = 5.0;
+        if ( suction > max ) suction = max;
     }
     _suction_node->setDoubleValue(suction);
 }
