@@ -60,7 +60,7 @@ int fgLaRCsimUpdate(FGInterface& f, int multiloop) {
     Brake_pct = controls.get_brake( 0 );
 
     // Inform LaRCsim of the local terrain altitude
-    Runway_altitude =   f.get_Runway_altitude();
+    Runway_altitude = f.get_Runway_altitude();
 
     // old -- FGInterface_2_LaRCsim() not needed except for Init()
     // translate FG to LaRCsim structure
