@@ -161,6 +161,11 @@ Alan Murta <amurta@cs.man.ac.uk>
   Created the Generic Polygon Clipping library
 
 
+Alexei Novikov <anovikov@heron.itep.ru>
+  Contributed a script to turn fgfs scenery into beautifully rendered
+  2d maps.
+
+
 Curt Olson <curt@flightgear.org>
   Curt is the one that "herds that cats".  Lately Curt has been concetrating
   on building better scenery.
