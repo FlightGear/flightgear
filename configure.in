@@ -339,6 +339,7 @@ AC_OUTPUT( \
 	Tools/Lib/Makefile \
 	Tools/Lib/DEM/Makefile \
 	Tools/Lib/Polygon/Makefile \
+	Tools/Lib/Triangle/Makefile \
 	Tools/Prep/Makefile \
 	Tools/Prep/DemChop/Makefile \
 	Tools/Prep/DemInfo/Makefile \
@@ -355,7 +356,6 @@ AC_OUTPUT( \
 	Tools/SplitTris/Makefile \
 	Tools/Stripe_w/Makefile \
 	Tools/Tri2obj/Makefile \
-	Tools/Triangle/Makefile \
 	Tests/Makefile \
 )
 
