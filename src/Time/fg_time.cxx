@@ -55,9 +55,12 @@
 #include <FDM/flight.hxx>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
+#include <Misc/fgpath.hxx>
 #include <Time/light.hxx>
 
 #include "fg_time.hxx"
+#include "timezone.h"
+#include "lowleveltime.h"
 
 
 #define DEGHR(x)        ((x)/15.)
@@ -77,62 +80,103 @@ FGTime::FGTime()
     }
 
     cur_time_params = this;
+
+    FGPath buffer( current_options.get_fg_root() );
+    buffer.append( "Timezone" );
+    buffer.append( "zone.tab" );
+    FG_LOG( FG_EVENT, FG_INFO, "Reading timezone info from: " << buffer.str() );
+    tzContainer = new TimezoneContainer( buffer.c_str() );
+    warp=0;
+    warp_delta=0;
 }
 
 
 FGTime::~FGTime()
 {
+    delete tzContainer;
+    delete zonename;
 }
 
 
 // Initialize the time dependent variables (maybe I'll put this in the
 // constructor later)
-void FGTime::init() 
+void FGTime::init(FGInterface *f) 
 {
     FG_LOG( FG_EVENT, FG_INFO, "Initializing Time" );
     gst_diff = -9999.0;
     FG_LOG( FG_EVENT, FG_DEBUG, 
 	    "time offset = " << current_options.get_time_offset() );
     time_t timeOffset = current_options.get_time_offset();
-    time_t gstStart = current_options.get_start_gst();
-    time_t lstStart = current_options.get_start_lst();
+    int offsetType = current_options.get_time_offset_type();
+
+    time_t currGMT;
+    time_t systemLocalTime;
+    time_t aircraftLocalTime;
 
     // would it be better to put these sanity checks in the options
     // parsing code? (CLO)
-    if (timeOffset && gstStart)
-	{
-	    FG_LOG( FG_EVENT, FG_ALERT, "Error: you specified both a time offset and a gst. Confused now!" );
-	    current_options.usage();
-	    exit(1);
-	}
-    if (timeOffset && lstStart)
-	{
-	    FG_LOG( FG_EVENT, FG_ALERT, "Error: you specified both a time offset and a lst. Confused now!" );
-	    current_options.usage();
-	    exit(1);
-	}
-    if (gstStart && lstStart)
-	{
-	    FG_LOG( FG_EVENT, FG_ALERT, "Error: you specified both a time offset and a lst. Confused now!" );
-	    current_options.usage();
-	    exit(1);
-	}
+
     cur_time = time(NULL); 
-    if (gstStart)
-	warp = gstStart - cur_time;
-    else if (lstStart) // I need to use the time zone info for this one, but I'll do that later.
-	// Until then, Gst and LST are the same 
+
+    // printf ("Current greenwich mean time = %24s", asctime(gmtime(&cur_time)));
+    // printf ("Current local time          = %24s", asctime(localtime(&cur_time)));
+    // time_t tmp = cur_time;
+    GeoCoord location(RAD_TO_DEG * f->get_Latitude(), 
+		      RAD_TO_DEG * f->get_Longitude());
+
+    GeoCoord* nearestTz = tzContainer->getNearest(location);
+
+    FGPath buffer( current_options.get_fg_root() );
+    buffer.append( "Timezone" );
+    buffer.append( nearestTz->getDescription() );
+
+    // printf("Using %s for timezone information\n", buffer);
+    zonename = strdup( buffer.c_str() );
+    show( buffer.c_str(), cur_time, 1); 
+    //printf ("Current greenwich mean time = %24s", asctime(gmtime(&cur_time)));
+    //printf ("Current local time          = %24s", asctime(localtime(&cur_time)));
+    currGMT = get_gmt(gmtime(&cur_time));
+    systemLocalTime = get_gmt(localtime(&cur_time));
+    aircraftLocalTime = get_gmt(fgLocaltime(&cur_time, buffer.c_str())); 
+    //printf ("Current greenwich mean time = %24s", asctime(gmtime(&cur_time)));
+    //printf ("Current local time          = %24s", asctime(localtime(&cur_time)));
+
+    //printf("LT  = %d\n", computerLocalTime);
+    // Okay, in principle, this trick allows to calculate the
+    // difference between GMT and localtime, in seconds.
+    // printf("Gmt = %d, SLT = %d, (difference = %d)\n", currGMT, systemLocalTime,   (currGMT - systemLocalTime));
+    // printf("Gmt = %d, ALT = %d, (difference = %d)\n", currGMT, aircraftLocalTime, (currGMT - aircraftLocalTime));
+    // exit(1);
+    // Okay, we now have six possible scenarios
+    switch (offsetType)
 	{
-	    warp = lstStart - cur_time;
-	}
-    else if (timeOffset)
-	{
+	case fgOPTIONS::FG_TIME_SYS_OFFSET:
 	    warp = timeOffset;
+	    break;
+	case fgOPTIONS::FG_TIME_GMT_OFFSET:
+	    warp = timeOffset - (currGMT - systemLocalTime);
+	    break;
+	case fgOPTIONS::FG_TIME_LAT_OFFSET:
+	    // warp = timeOffset - (currGMT - systemLocalTime + 
+	    //        (currGMT - aircraftLocalTime));
+	    warp = timeOffset - (aircraftLocalTime - systemLocalTime); 
+	    break;
+	case fgOPTIONS::FG_TIME_SYS_ABSOLUTE:
+	    warp = timeOffset - cur_time;
+	    //printf("warp = %d\n", warp); 
+	    break;
+	case fgOPTIONS::FG_TIME_GMT_ABSOLUTE:
+	    warp = timeOffset - (currGMT - systemLocalTime) - cur_time;
+	    break;
+	case fgOPTIONS::FG_TIME_LAT_ABSOLUTE:
+	    warp = timeOffset - (aircraftLocalTime - systemLocalTime) - 
+		cur_time; 
+	    break;
+	default:
+	    printf("Unsupported type\n");
+	    exit(1);
 	}
-    else
-	{
-	    warp = 0;
-	}
+
     warp_delta = 0;
     pause = current_options.get_pause();
 }

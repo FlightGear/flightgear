@@ -49,11 +49,18 @@
 
 #include <FDM/flight.hxx>
 
+#include "timezone.h"
+#include "lowleveltime.h"
 
 // Define a structure containing global time parameters
 class FGTime {
 
 private:
+    // tzContainer stores all the current Timezone control points/
+    TimezoneContainer* tzContainer;
+
+    //Store the current local timezone name;
+    char *zonename;
 
     // Unix "calendar" time in seconds
     time_t cur_time;
@@ -111,7 +118,7 @@ public:
     void togglePauseMode() { pause = !pause; }; 
 
     // Initialize the time dependent variables
-    void init();
+    void init(FGInterface *f);
 
     // Update the time dependent variables
     void update(FGInterface *f);
@@ -127,9 +134,23 @@ public:
     // time_t get_start_gmt(int year);
     time_t get_gmt(int year, int month, int day, 
 		   int hour, int minute, int second);
+    time_t get_gmt(struct tm* the_time);
+  
     char* format_time( const struct tm* p, char* buf );
     long int fix_up_timezone( long int timezone_orig );
 };
+
+
+inline time_t FGTime::get_gmt(struct tm* the_time) // this is just a wrapper
+{
+  //printf("Using: %24s as input\n", asctime(the_time));
+  return get_gmt(the_time->tm_year,
+	  the_time->tm_mon,
+	  the_time->tm_mday,
+	  the_time->tm_hour,
+	  the_time->tm_min,
+	  the_time->tm_sec);
+}
 
 
 #endif // _FG_TIME_HXX
