@@ -46,7 +46,7 @@
 class FGRadioStack : public SGSubsystem
 {
     FGDME dme;
-    FGKR_87 adf;                // King KR 87 Digital ADF model
+    //FGKR_87 adf;                // King KR 87 Digital ADF model
     FGKT_70 xponder;            // Bendix/King KT 70 Panel-Mounted Transponder
     FGMarkerBeacon beacon;
     FGNavCom navcom1;

@@ -53,7 +53,10 @@ ADF::ADF ()
       _last_frequency_khz(-1),
       _transmitter_valid(false),
       _transmitter_elevation_ft(0),
-      _transmitter_range_nm(0)
+      _transmitter_range_nm(0),
+      _ident_count(0),
+      _last_ident_time(0),
+      _last_volume(-1)
 {
 }
 
@@ -79,6 +82,9 @@ ADF::init ()
     _bearing_node =
         fgGetNode("/instrumentation/adf/indicated-bearing-deg", true);
     _ident_node = fgGetNode("/instrumentation/adf/ident", true);
+    _volume_node = fgGetNode("/instrumentation/adf/volume-norm", true);
+    _ident_audible = fgGetNode("/instrumentation/adf/ident-audible", true);
+    morse.init();
 }
 
 void
@@ -146,10 +152,42 @@ ADF::update (double delta_time_sec)
         if (bearing < 0)
             bearing += 360;
         set_bearing(delta_time_sec, bearing);
+
+        // adf ident sound
+        double volume;
+        if ( _ident_audible->getBoolValue() )
+            volume = _volume_node->getDoubleValue();
+        else
+            volume = 0.0;
+
+        if ( volume != _last_volume ) {
+            _last_volume = volume;
+
+            SGSoundSample *sound;
+            sound = globals->get_soundmgr()->find( "adf-ident" );
+            if ( sound != NULL )
+                sound->set_volume( volume );
+            else
+                SG_LOG( SG_GENERAL, SG_ALERT, "Can't find adf-ident sound" );
+        }
+
+        double cur_time = globals->get_time_params()->get_cur_time();
+        if ( _last_ident_time < cur_time - 30 ) {
+            _last_ident_time = cur_time;
+            _ident_count = 0;
+        }
+
+        if ( _ident_count < 4 ) {
+            if ( !globals->get_soundmgr()->is_playing("adf-ident") ) {
+                globals->get_soundmgr()->play_once( "adf-ident" );
+                ++_ident_count;
+            }
+        }
     } else {
         _in_range_node->setBoolValue(false);
         set_bearing(delta_time_sec, 90);
         _ident_node->setStringValue("");
+        globals->get_soundmgr()->stop( "adf-ident" );
     }
 }
 
@@ -158,7 +196,6 @@ ADF::search (double frequency_khz, double longitude_rad,
              double latitude_rad, double altitude_m)
 {
     string ident = "";
-
                                 // reset search time
     _time_before_search_sec = 1.0;
 
@@ -178,8 +215,27 @@ ADF::search (double frequency_khz, double longitude_rad,
             _transmitter_range_nm = nav->get_range();
         }
     }
-    _last_ident = ident;
-    _ident_node->setStringValue(ident.c_str());
+
+    if ( _last_ident != ident ) {
+        _last_ident = ident;
+        _ident_node->setStringValue(ident.c_str());
+
+        if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
+            globals->get_soundmgr()->stop( "adf-ident" );
+            globals->get_soundmgr()->remove( "adf-ident" );
+        }
+
+        SGSoundSample *sound;
+        sound = morse.make_ident( ident, LO_FREQUENCY );
+        sound->set_volume(0);
+        _last_volume = -1;
+        globals->get_soundmgr()->add( sound, "adf-ident" );
+
+        int offset = (int)(sg_random() * 30.0);
+        _ident_count = offset / 4;
+        _last_ident_time = globals->get_time_params()->get_cur_time() -
+            offset;
+    }
 }
 
 void

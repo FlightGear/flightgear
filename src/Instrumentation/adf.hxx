@@ -17,6 +17,7 @@
 #include <simgear/props/props.hxx>
 
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <Sound/morse.hxx>
 
 SG_USING_STD(string);
 
@@ -35,6 +36,8 @@ SG_USING_STD(string);
  * /instrumentation/adf/error-deg
  * /instrumentation/adf/frequencies/selected-khz
  * /instrumentation/adf/mode
+ * /instrumentation/adf/ident-audible
+ * /instrumentation/adf/volume-norm
  *
  * Output properties:
  *
@@ -73,6 +76,13 @@ private:
     SGPropertyNode_ptr _in_range_node;
     SGPropertyNode_ptr _bearing_node;
     SGPropertyNode_ptr _ident_node;
+    SGPropertyNode_ptr _ident_audible;
+    SGPropertyNode_ptr _volume_node;
+
+    FGMorse morse;
+    int _ident_count;
+    time_t _last_ident_time;
+    double _last_volume;
 
     double _time_before_search_sec;
 

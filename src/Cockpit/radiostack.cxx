@@ -50,7 +50,7 @@ FGRadioStack::FGRadioStack() {
 // Destructor
 FGRadioStack::~FGRadioStack() 
 {
-    adf.unbind();
+    //adf.unbind();
     beacon.unbind();
     navcom1.unbind();
     navcom2.unbind();
@@ -67,7 +67,7 @@ FGRadioStack::init ()
     navcom2.set_bind_index( 1 );
     navcom2.init();
 
-    adf.init();
+    //adf.init();
     beacon.init();
     xponder.init();
 
@@ -83,7 +83,7 @@ FGRadioStack::init ()
 void
 FGRadioStack::bind ()
 {
-    adf.bind();
+    //adf.bind();
     beacon.bind();
     dme.bind();
     navcom1.set_bind_index( 0 );
@@ -97,7 +97,7 @@ FGRadioStack::bind ()
 void
 FGRadioStack::unbind ()
 {
-    adf.unbind();
+    //adf.unbind();
     beacon.unbind();
     dme.unbind();
     navcom1.unbind();
@@ -110,7 +110,7 @@ FGRadioStack::unbind ()
 void 
 FGRadioStack::update(double dt) 
 {
-    adf.update( dt );
+    //adf.update( dt );
     beacon.update( dt );
     navcom1.update( dt );
     navcom2.update( dt );
@@ -122,7 +122,7 @@ FGRadioStack::update(double dt)
 // Update current nav/adf radio stations based on current postition
 void FGRadioStack::search() 
 {
-    adf.search();
+    //adf.search();
     beacon.search();
     navcom1.search();
     navcom2.search();
