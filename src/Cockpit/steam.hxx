@@ -58,9 +58,11 @@ public:
 
 				// Position
   static double get_ALT_ft ();
+  static double get_TC_rad ();
   static double get_MH_deg ();
   static double get_DG_deg ();
-  static double get_TC_rad ();
+  static double get_DG_err ();
+  static void set_DG_err(double approx_magvar);
 
 				// Velocities
   static double get_ASI_kias ();
@@ -85,7 +87,7 @@ private:
 	static double	the_STATIC_inhg, the_VACUUM_inhg;
 	static double	the_VSI_fps, the_VSI_case;
         static double   the_MH_deg, the_MH_degps, the_MH_err;
-        static double   the_DG_deg, the_DG_degps, the_DG_inhg;
+        static double   the_DG_deg, the_DG_degps, the_DG_inhg, the_DG_err;
 
 	static int	_UpdatesPending;
 	static void	_CatchUp ();

@@ -68,10 +68,16 @@ double FGSteam::the_MH_deg   = 0.0;
 double FGSteam::the_MH_degps = 0.0;
 double FGSteam::get_MH_deg () { _CatchUp(); return the_MH_deg; }
 
+double FGSteam::the_DG_err   = 0.0;
 double FGSteam::the_DG_deg   = 0.0;
 double FGSteam::the_DG_degps = 0.0;
 double FGSteam::the_DG_inhg  = 0.0;
 double FGSteam::get_DG_deg () { _CatchUp(); return the_DG_deg; }
+double FGSteam::get_DG_err () { _CatchUp(); return the_DG_err; }
+
+void FGSteam::set_DG_err ( double approx_magvar ) {
+    the_DG_err = approx_magvar;
+}
 
 double FGSteam::the_TC_rad   = 0.0;
 double FGSteam::the_TC_std   = 0.0;
@@ -84,7 +90,7 @@ double FGSteam::get_TC_std () { _CatchUp(); return the_TC_std; }
 ////////////////////////////////////////////////////////////////////////
 
 
-int FGSteam::_UpdatesPending = 9999;  /* Forces filter to reset */
+int FGSteam::_UpdatesPending = 999;  /* Forces filter to reset */
 
 
 void FGSteam::update ( int timesteps )
@@ -315,12 +321,20 @@ void FGSteam::_CatchUp()
 > have it tumble when you exceed the usual pitch or bank limits,
 > put in those insidious turning errors ... for now anyway.
 */
-	the_DG_deg = FGBFI::getHeading () - FGBFI::getMagVar();
+	// cout << "Updates pending = " << _UpdatesPending << endl;
+ 	if ( _UpdatesPending > 999 ) {
+	    the_DG_err = FGBFI::getMagVar();
+	}
+ 	the_DG_degps = 0.0; /* HACK! */
+ 	if (dt<1.0) the_DG_err += dt * the_DG_degps;
+ 	the_DG_deg = FGBFI::getHeading () - the_DG_err;
 
 	/**************************
 	Finished updates, now clear the timer 
 	*/
 	_UpdatesPending = 0;
+  } else {
+      // cout << "0 Updates pending" << endl;
   }
 }
 

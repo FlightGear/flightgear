@@ -22,6 +22,7 @@
 
 
 #include <Aircraft/aircraft.hxx>
+#include <Main/bfi.hxx>
 #include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
 
@@ -102,6 +103,7 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 				nav1_loclat, nav1_loclon,
 				&az1, &az2, &s );
 	    nav1_heading = az1;
+	    // Alex: nav1_heading = az1 - FGBFI::getMagVar() / RAD_TO_DEG;
 
 	    // cout << " heading = " << nav1_heading
 	    //      << " dist = " << nav1_dist << endl;
@@ -145,6 +147,7 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 				nav2_loclat, nav2_loclon,
 				&az1, &az2, &s );
 	    nav2_heading = az1;
+	    // Alex: nav2_heading = az1 - FGBFI::getMagVar() / RAD_TO_DEG;
 
 	    // cout << " heading = " << nav2_heading
 	    //      << " dist = " << nav2_dist << endl;
