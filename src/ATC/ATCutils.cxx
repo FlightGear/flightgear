@@ -80,7 +80,7 @@ string ConvertRwyNumToSpokenString(int n) {
 	return(str);
 }
 
-// Assumes we get a two-digit string optionally appended with R or L
+// Assumes we get a two-digit string optionally appended with L, R or C
 // eg 01 07L 29R 36
 // Anything else is not guaranteed to be handled correctly!
 string ConvertRwyNumToSpokenString(string s) {
@@ -88,7 +88,16 @@ string ConvertRwyNumToSpokenString(string s) {
 		return(ConvertRwyNumToSpokenString(atoi(s.c_str())));
 	} else {
 		string r = ConvertRwyNumToSpokenString(atoi(s.substr(0,2).c_str()));
-		return(r += (s.substr(2,1) == "L" ? " left" : " right"));	// Warning - not much error checking there!
+		if(s.substr(2,1) == "L") {
+			r += " left";
+		} else if(s.substr(2,1) == "R") {
+			r += " right";
+		} else if(s.substr(2,1) == "C") {
+			r += " center";
+		} else {
+			SG_LOG(SG_ATC, SG_WARN, "WARNING: Unknown suffix " << s.substr(2,1) << " from runway ID " << s << " in ConvertRwyNumToSpokenString(...)");
+		}
+		return(r);
 	}
 }
 	
@@ -127,6 +136,8 @@ string GetPhoneticIdent(int i) {
 	// We shouldn't get here
 	return("Error");
 }
+
+//================================================================================================================
 
 // Given two positions (lat & lon in degrees), get the HORIZONTAL separation (in meters)
 double dclGetHorizontalSeparation(Point3D pos1, Point3D pos2) {
@@ -237,6 +248,19 @@ void dclBoundHeading(double &hdg) {
 		hdg -= 360.0;
 	}
 }
+
+// smallest difference between two angles in degrees
+// difference is negative if a1 > a2 and positive if a2 > a1
+double GetAngleDiff_deg( const double &a1, const double &a2) {
+  
+  double a3 = a2 - a1;
+  while (a3 < 180.0) a3 += 360.0;
+  while (a3 > 180.0) a3 -= 360.0;
+
+  return a3;
+}
+
+//================================================================================================================
 
 // Airport stuff.  The next two functions are straight copies of their fg.... equivalents
 // in fg_init.cxx, and are just here temporarily until some rationalisation occurs.

@@ -77,6 +77,10 @@ double GetHeadingFromTo(Point3D A, Point3D B);
 // Given a heading (in degrees), bound it from 0 -> 360
 void dclBoundHeading(double &hdg);
 
+// smallest difference between two angles in degrees
+// difference is negative if a1 > a2 and positive if a2 > a1
+double GetAngleDiff_deg( const double &a1, const double &a2);
+
 
 /*******************************
 *
