@@ -3,6 +3,10 @@
 # Written by Curtis L. Olson, started January 2003
 #
 # This file is in the Public Domain and comes with no warranty.
+#
+# $Id$
+# ----------------------------------------------------------------------------
+
 
 use strict;
 
