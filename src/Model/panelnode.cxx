@@ -2,6 +2,7 @@
 #  include <config.h>
 #endif
 
+#include <simgear/compiler.h>
 #include <vector>
 
 #include <GL/gl.h>
