@@ -1,4 +1,4 @@
-// runways.hxx -- a simple class to manage airport runway info
+// runways.cxx -- a simple class to manage airport runway info
 //
 // Written by Curtis Olson, started August 2000.
 //
@@ -170,11 +170,54 @@ bool FGRunways::search( const string& aptid, const string& rwyno, FGRunway* r )
 
             return true;
         }
+	
+	// Check reverse rwy number
+	// eg 01 -> 19
+	// 03L -> 21R
+	// cout << "Original rowrwyno = " << rowrwyno << '\n';
+	char buf[4];
+	int rn = atoi(rowrwyno.substr(0,2).c_str());
+	rn += 18;
+	while(rn > 36) {
+	    rn -= 36;
+	}
+	sprintf(buf, "%02i", rn);
+	if(rowrwyno.size() == 3) {
+	    if(rowrwyno.substr(2,1) == "L") {
+		buf[2] = 'R';
+		buf[3] = '\0';
+	    } else if (rowrwyno.substr(2,1) == "R") {
+		buf[2] = 'L';
+		buf[3] = '\0';
+	    } else {
+		SG_LOG(SG_GENERAL, SG_ALERT, "Unknown runway code "
+                       << rowrwyno << " found in FGRunways.search(...)");
+	    }
+	}
+	rowrwyno = buf;
+	// cout << "New rowrwyno = " << rowrwyno << '\n';
+	// Search again with the other-end runway number
+	// Remember we have to munge the heading result if this one matches
+	if ( rowrwyno == rwyno ) {
+	    r->id =      (const char *) pID(row);
+	    r->rwy_no =  rowrwyno;
+	    r->lon =     (double) pLon(row);
+	    r->lat =     (double) pLat(row);
+	    r->heading = (double) pHdg(row) + 180.0;
+	    r->length =  (double) pLen(row);
+	    r->width =   (double) pWid(row);
+	    r->surface_flags = (const char *) pSurf(row);
+	    r->end1_flags =    (const char *) pEnd2(row);
+	    r->end2_flags =    (const char *) pEnd1(row);
+	    // I've swapped the end flags as well 
+	    
+	    return true;
+	}
 
         index++;
-        c4_RowRef row = vRunway->GetAt(index);
-        string rowid = (const char *) pID(row);
-        string rowrwyno = (const char *) pRwy(row);
+        row = vRunway->GetAt(index);
+        rowid = (const char *) pID(row);
+        rowrwyno = (const char *) pRwy(row);
     }
 
     return false;
@@ -234,59 +277,8 @@ bool FGRunways::next( FGRunway* r ) {
 bool FGRunways::search( const string& aptid, const int tgt_hdg,
                         FGRunway* runway )
 {
-    FGRunway r;
-    double found_dir = 0.0;  
- 
-    if ( !search( aptid, &r ) ) {
-	SG_LOG( SG_GENERAL, SG_ALERT,
-                "Failed to find " << aptid << " in database." );
-	return false;
-    }
-    
-    double diff;
-    double min_diff = 360.0;
-    
-    while ( r.id == aptid ) {
-	// forward direction
-	diff = tgt_hdg - r.heading;
-	while ( diff < -180.0 ) { diff += 360.0; }
-	while ( diff >  180.0 ) { diff -= 360.0; }
-	diff = fabs(diff);
-        // SG_LOG( SG_GENERAL, SG_INFO,
-        //	   "Runway " << r.rwy_no << " heading = " << r.heading <<
-        //	   " diff = " << diff );
-	if ( diff < min_diff ) {
-	    min_diff = diff;
-	    runway = &r;
-	    found_dir = 0;
-	}
-	
-	// reverse direction
-	diff = tgt_hdg - r.heading - 180.0;
-	while ( diff < -180.0 ) { diff += 360.0; }
-	while ( diff >  180.0 ) { diff -= 360.0; }
-	diff = fabs(diff);
-        // SG_LOG( SG_GENERAL, SG_INFO,
-        //	   "Runway -" << r.rwy_no << " heading = " <<
-        //	   r.heading + 180.0 <<
-        //	   " diff = " << diff );
-	if ( diff < min_diff ) {
-	    min_diff = diff;
-	    runway = &r;
-	    found_dir = 180.0;
-	}
-	
-	next( &r );
-    }
-    
-    // SG_LOG( SG_GENERAL, SG_INFO, "closest runway = " << runway->rwy_no
-    //	       << " + " << found_dir );
-    
-    double heading = runway->heading + found_dir;
-    while ( heading >= 360.0 ) { heading -= 360.0; }
-    runway->heading = heading;
-
-    return true;
+    string rwyNo = search(aptid, tgt_hdg);
+    return(rwyNo == "NN" ? false : search(aptid, rwyNo, runway));
 }
 
 
