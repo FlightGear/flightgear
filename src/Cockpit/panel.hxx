@@ -442,7 +442,7 @@ public:
   virtual void draw ();
 				// transfer pointer ownership
   virtual void addLayer (FGInstrumentLayer * layer);
-private:
+protected:
   vector<FGInstrumentLayer *> _layers;
 };
 
@@ -536,25 +536,18 @@ private:
 
 
 /**
- * A layer that switches between two other layers.
+ * A group layer that switches among its children.
  *
- * The usefulness of this layer is questionable now that all layers
- * can have conditions, and it may be deprecated soon.
+ * The first layer that passes its condition will be drawn, and
+ * any following layers will be ignored.
  */
-class FGSwitchLayer : public FGInstrumentLayer
+class FGSwitchLayer : public FGGroupLayer
 {
 public:
 				// Transfer pointers!!
-  FGSwitchLayer (int w, int h, const SGPropertyNode * node,
-		 FGInstrumentLayer * layer1,
-		 FGInstrumentLayer * layer2);
-  virtual ~FGSwitchLayer ();
-
+  FGSwitchLayer ();
   virtual void draw ();
 
-private:
-  const SGPropertyNode * _node;
-  FGInstrumentLayer * _layer1, * _layer2;
 };
 
 

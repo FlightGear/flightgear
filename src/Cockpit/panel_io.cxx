@@ -436,11 +436,8 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
     layer = new FGGroupLayer();
     for (int i = 0; i < node->nChildren(); i++) {
       const SGPropertyNode * child = node->getChild(i);
-      cerr << "Trying child " << child->getName() << endl;
-      if (!strcmp(child->getName(), "layer")) {
-	cerr << "succeeded!" << endl;
+      if (!strcmp(child->getName(), "layer"))
 	((FGGroupLayer *)layer)->addLayer(readLayer(child, w_scale, h_scale));
-      }
     }
   }
 
@@ -483,13 +480,12 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
 
 				// A switch instrument layer.
   else if (type == "switch") {
-    SGPropertyNode * target =
-      fgGetNode(node->getStringValue("property"), true);
-    FGInstrumentLayer * layer1 =
-      readLayer(node->getNode("layer[0]"), w_scale, h_scale);
-    FGInstrumentLayer * layer2 =
-      readLayer(node->getNode("layer[1]"), w_scale, h_scale);
-    layer = new FGSwitchLayer(w, h, target, layer1, layer2);
+    layer = new FGSwitchLayer();
+    for (int i = 0; i < node->nChildren(); i++) {
+      const SGPropertyNode * child = node->getChild(i);
+      if (!strcmp(child->getName(), "layer"))
+	((FGGroupLayer *)layer)->addLayer(readLayer(child, w_scale, h_scale));
+    }
   }
 
 				// A built-in instrument layer.

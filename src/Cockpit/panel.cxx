@@ -904,6 +904,7 @@ void
 FGGroupLayer::draw ()
 {
   if (test()) {
+    transform();
     int nLayers = _layers.size();
     for (int i = 0; i < nLayers; i++)
       _layers[i]->draw();
@@ -1134,17 +1135,9 @@ FGTextLayer::Chunk::getValue () const
 // Implementation of FGSwitchLayer.
 ////////////////////////////////////////////////////////////////////////
 
-FGSwitchLayer::FGSwitchLayer (int w, int h, const SGPropertyNode * node,
-			      FGInstrumentLayer * layer1,
-			      FGInstrumentLayer * layer2)
-  : FGInstrumentLayer(w, h), _node(node), _layer1(layer1), _layer2(layer2)
+FGSwitchLayer::FGSwitchLayer ()
+  : FGGroupLayer()
 {
-}
-
-FGSwitchLayer::~FGSwitchLayer ()
-{
-  delete _layer1;
-  delete _layer2;
 }
 
 void
@@ -1152,10 +1145,12 @@ FGSwitchLayer::draw ()
 {
   if (test()) {
     transform();
-    if (_node->getBoolValue()) {
-      _layer1->draw();
-    } else {
-      _layer2->draw();
+    int nLayers = _layers.size();
+    for (int i = 0; i < nLayers; i++) {
+      if (_layers[i]->test()) {
+          _layers[i]->draw();
+          return;
+      }
     }
   }
 }
