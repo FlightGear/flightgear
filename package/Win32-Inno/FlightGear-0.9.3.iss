@@ -19,13 +19,13 @@
 
 [Setup]
 AppName=FlightGear
-AppVerName=FlightGear 0.9.3
+AppVerName=FlightGear v0.9.3
 AppPublisher=The FlightGear Organization
 AppPublisherURL=http://www.flightgear.org
 AppSupportURL=http://www.flightgear.org
 AppUpdatesURL=http://www.flightgear.org
 DefaultDirName={pf}\FlightGear-0.9.3
-DefaultGroupName=FlightGear-0.9.3
+DefaultGroupName=FlightGear v0.9.3
 LicenseFile=X:\data\COPYING
 Uninstallable=yes
 
@@ -43,14 +43,14 @@ Source: "X:\bin\Win32\fgrun.prefs"; DestDir: "{userappdata}\flightgear.org"; Fla
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\FlightGear"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}";
-Name: "{group}\Fgrun FlightGear"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}";
+Name: "{group}\FlightGear Launcher"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}";
+; Name: "{group}\FlightGear"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}";
 Name: "{group}\FlightGear Documentation"; Filename: "{app}\data\docs\index.html"
 Name: "{group}\Explore Documentation Folder"; Filename: "{app}\docs"
-Name: "{group}\Uninstall FlightGear-0.9.3"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\FlightGear-0.9.3"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{group}\Uninstall FlightGear v0.9.3"; Filename: "{uninstallexe}"
+Name: "{userdesktop}\FlightGear v0.9.3"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 ; For running flightgear directly
-; Name: "{userdesktop}\FlightGear-0.9.3"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
+; Name: "{userdesktop}\FlightGear v0.9.3"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
 ; Put installation directory in the fgrun.prefs
