@@ -23,6 +23,7 @@
  * Input properties:
  *
  * /instrumentation/heading-indicator/serviceable
+ * /instrumentation/heading-indicator/spin
  * /instrumentation/heading-indicator/offset-deg
  * /orientation/heading-deg
  * /systems/vacuum[0]/suction-inhg
@@ -46,10 +47,10 @@ public:
 
 private:
 
-    double _spin;
     double _last_heading_deg;
 
     SGPropertyNode_ptr _serviceable_node;
+    SGPropertyNode_ptr _spin_node;
     SGPropertyNode_ptr _offset_node;
     SGPropertyNode_ptr _heading_in_node;
     SGPropertyNode_ptr _suction_node;

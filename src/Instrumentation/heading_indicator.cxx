@@ -21,6 +21,8 @@ HeadingIndicator::init ()
 {
     _serviceable_node =
         fgGetNode("/instrumentation/heading-indicator/serviceable", true);
+    _spin_node =
+        fgGetNode("/instrumentation/heading-indicator/spin", true);
     _offset_node =
         fgGetNode("/instrumentation/heading-indicator/offset-deg", true);
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
@@ -48,7 +50,8 @@ HeadingIndicator::update (double dt)
                                 // First, calculate the bogo-spin from 0 to 1.
                                 // All numbers are made up.
 
-    _spin -= 0.005 * dt;         // spin decays every 0.5% every second.
+    double spin = _spin_node->getDoubleValue();
+    spin -= 0.005 * dt;         // spin decays every 0.5% every second.
 
                                 // spin increases up to 25% every second
                                 // if suction is available and the gauge
@@ -56,13 +59,14 @@ HeadingIndicator::update (double dt)
     if (_serviceable_node->getBoolValue()) {
         double suction = _suction_node->getDoubleValue();
         double step = 0.25 * (suction / 5.0) * dt;
-        if ((_spin + step) <= (suction / 5.0))
-            _spin += step;
+        if ((spin + step) <= (suction / 5.0))
+            spin += step;
     }
-    if (_spin > 1.0)
-        _spin = 1.0;
-    else if (_spin < 0.0)
-        _spin = 0.0;
+    if (spin > 1.0)
+        spin = 1.0;
+    else if (spin < 0.0)
+        spin = 0.0;
+    _spin_node->setDoubleValue(spin);
 
                                 // Next, calculate time-based precession
     double offset = _offset_node->getDoubleValue();
@@ -77,7 +81,7 @@ HeadingIndicator::update (double dt)
 
                                 // Next, calculate the indicated heading,
                                 // introducing errors.
-    double factor = 0.01 / (_spin * _spin * _spin * _spin * _spin * _spin);
+    double factor = 0.01 / (spin * spin * spin * spin * spin * spin);
     double heading = _heading_in_node->getDoubleValue();
     heading = fgGetLowPass(_last_heading_deg, heading, dt/factor);
     _last_heading_deg = heading;

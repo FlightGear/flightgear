@@ -23,6 +23,7 @@
  * Input properties:
  *
  * /instrumentation/attitude-indicator/serviceable
+ * /instrumentation/attitude-indicator/spin
  * /orientation/pitch-deg
  * /orientation/roll-deg
  * /systems/vacuum[0]/suction-inhg
@@ -47,9 +48,8 @@ public:
 
 private:
 
-    double _spin;
-
     SGPropertyNode_ptr _serviceable_node;
+    SGPropertyNode_ptr _spin_node;
     SGPropertyNode_ptr _pitch_in_node;
     SGPropertyNode_ptr _roll_in_node;
     SGPropertyNode_ptr _suction_node;
