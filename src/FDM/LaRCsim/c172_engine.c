@@ -69,7 +69,7 @@ $Header$
 
 extern SIM_CONTROL	sim_control_;
 
-void engine( SCALAR dt, int init ) {
+void c172_engine( SCALAR dt, int init ) {
     
 	float v,h,pa;
 	float bhp=160;

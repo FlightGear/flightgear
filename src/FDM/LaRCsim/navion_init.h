@@ -5,7 +5,7 @@
 #define _NAVION_INIT_H
 
 
-void model_init( void );
+void navion_init( void );
 
 
 #endif _NAVION_INIT_H

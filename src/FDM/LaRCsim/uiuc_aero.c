@@ -57,7 +57,7 @@
 #include <FDM/UIUCModel/uiuc_wrapper.h>
 
 
-void aero( SCALAR dt, int Initialize ) 
+void uiuc_aero( SCALAR dt, int Initialize ) 
 {
     static int init = 0;
 
@@ -71,7 +71,7 @@ void aero( SCALAR dt, int Initialize )
 }
 
 
-void engine( SCALAR dt, int Initialize ) 
+void uiuc_engine( SCALAR dt, int Initialize ) 
 {
     uiuc_engine_routine();
 }
@@ -81,47 +81,47 @@ void engine( SCALAR dt, int Initialize )
  * added later and the choice of the gear model could be specified at
  * runtime.
  * ***********************************************************************/
-sub3( DATA v1[],  DATA v2[], DATA result[] )
+static sub3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[0] - v2[0];
     result[1] = v1[1] - v2[1];
     result[2] = v1[2] - v2[2];
 }
 
-add3( DATA v1[],  DATA v2[], DATA result[] )
+static add3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[0] + v2[0];
     result[1] = v1[1] + v2[1];
     result[2] = v1[2] + v2[2];
 }
 
-cross3( DATA v1[],  DATA v2[], DATA result[] )
+static cross3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[1]*v2[2] - v1[2]*v2[1];
     result[1] = v1[2]*v2[0] - v1[0]*v2[2];
     result[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
-multtrans3x3by3( DATA m[][3], DATA v[], DATA result[] )
+static multtrans3x3by3( DATA m[][3], DATA v[], DATA result[] )
 {
     result[0] = m[0][0]*v[0] + m[1][0]*v[1] + m[2][0]*v[2];
     result[1] = m[0][1]*v[0] + m[1][1]*v[1] + m[2][1]*v[2];
     result[2] = m[0][2]*v[0] + m[1][2]*v[1] + m[2][2]*v[2];
 }
 
-mult3x3by3( DATA m[][3], DATA v[], DATA result[] )
+static mult3x3by3( DATA m[][3], DATA v[], DATA result[] )
 {
     result[0] = m[0][0]*v[0] + m[0][1]*v[1] + m[0][2]*v[2];
     result[1] = m[1][0]*v[0] + m[1][1]*v[1] + m[1][2]*v[2];
     result[2] = m[2][0]*v[0] + m[2][1]*v[1] + m[2][2]*v[2];
 }
 
-clear3( DATA v[] )
+static clear3( DATA v[] )
 {
     v[0] = 0.; v[1] = 0.; v[2] = 0.;
 }
 
-gear()
+uiuc_gear()
 {
 char rcsid[] = "$Id$";
 

@@ -37,8 +37,24 @@
 	CURRENT RCS HEADER INFO:
 $Header$
 $Log$
-Revision 1.1  1999/06/17 18:07:33  curt
-Initial revision
+Revision 1.2  2000/04/10 18:09:41  curt
+David Megginson made a few (mostly minor) mods to the LaRCsim files, and
+it's now possible to choose the LaRCsim model at runtime, as in
+
+  fgfs --aircraft=c172
+
+or
+
+  fgfs --aircraft=uiuc --aircraft-dir=Aircraft-uiuc/Boeing747
+
+I did this so that I could play with the UIUC stuff without losing
+Tony's C172 with its flaps, etc.  I did my best to respect the design
+of the LaRCsim code by staying in C, making only minimal changes, and
+not introducing any dependencies on the rest of FlightGear.  The
+modified files are attached.
+
+Revision 1.1.1.1  1999/06/17 18:07:33  curt
+Start of 0.7.x branch
 
 Revision 1.1.1.1  1999/04/05 21:32:45  curt
 Start of 0.6.x branch.
@@ -90,11 +106,38 @@ Initial Flight Gear revision.
 #include "ls_model.h"
 #include "default_model_routines.h"
 
+Model current_model;
+
 
 void ls_model( SCALAR dt, int Initialize ) {
-    inertias( dt, Initialize );
-    subsystems( dt, Initialize );
-    aero( dt, Initialize );
-    engine( dt, Initialize );
-    gear( dt, Initialize );
+    switch (current_model) {
+    case NAVION:
+      inertias( dt, Initialize );
+      subsystems( dt, Initialize );
+      navion_aero( dt, Initialize );
+      navion_engine( dt, Initialize );
+      navion_gear( dt, Initialize );
+      break;
+    case C172:
+      inertias( dt, Initialize );
+      subsystems( dt, Initialize );
+      c172_aero( dt, Initialize );
+      c172_engine( dt, Initialize );
+      c172_gear( dt, Initialize );
+      break;
+    case CHEROKEE:
+      inertias( dt, Initialize );
+      subsystems( dt, Initialize );
+      cherokee_aero( dt, Initialize );
+      cherokee_engine( dt, Initialize );
+      cherokee_gear( dt, Initialize );
+      break;
+    case UIUC:
+      inertias( dt, Initialize );
+      subsystems( dt, Initialize );
+      uiuc_aero( dt, Initialize );
+      uiuc_engine( dt, Initialize );
+      uiuc_gear( dt, Initialize );
+      break;
+    }
 }

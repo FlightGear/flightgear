@@ -66,7 +66,7 @@ $Header$
 
 extern SIM_CONTROL	sim_control_;
 
-void engine( SCALAR dt, int init ) {
+void navion_engine( SCALAR dt, int init ) {
     /* if (init) { */
     Throttle[3] = Throttle_pct;
     /* } */

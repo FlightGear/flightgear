@@ -36,7 +36,7 @@ This source is not checked in this configuration in any way.
 
 
 
-void engine( SCALAR dt, int init )
+void cherokee_engine( SCALAR dt, int init )
 {
 
 	static float

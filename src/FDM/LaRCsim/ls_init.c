@@ -34,8 +34,24 @@
 
 $Header$
 $Log$
-Revision 1.1  1999/06/17 18:07:34  curt
-Initial revision
+Revision 1.2  2000/04/10 18:09:41  curt
+David Megginson made a few (mostly minor) mods to the LaRCsim files, and
+it's now possible to choose the LaRCsim model at runtime, as in
+
+  fgfs --aircraft=c172
+
+or
+
+  fgfs --aircraft=uiuc --aircraft-dir=Aircraft-uiuc/Boeing747
+
+I did this so that I could play with the UIUC stuff without losing
+Tony's C172 with its flaps, etc.  I did my best to respect the design
+of the LaRCsim code by staying in C, making only minimal changes, and
+not introducing any dependencies on the rest of FlightGear.  The
+modified files are attached.
+
+Revision 1.1.1.1  1999/06/17 18:07:34  curt
+Start of 0.7.x branch
 
 Revision 1.1.1.1  1999/04/05 21:32:45  curt
 Start of 0.6.x branch.
@@ -112,6 +128,7 @@ static char rcsid[] = "$Id$";
 #include "ls_step.h"
 #include "ls_init.h"
 #include "navion_init.h"
+#include "ls_model.h"
 
 /* temp */
 #include "ls_generic.h"
@@ -200,10 +217,27 @@ void ls_init_init( void ) {
     */
 }
 
-void ls_init( void ) {
+void ls_init( char * aircraft ) {
     /* int i; */
 
     Simtime = 0;
+
+    if (!strcasecmp(aircraft, "c172")) {
+      printf("Initializing LaRCsim for C172\n");
+      current_model = C172;
+    } else if (!strcasecmp(aircraft, "navion")) {
+      printf("Initializing LaRCsim for Navion\n");
+      current_model = NAVION;
+    } else if (!strcasecmp(aircraft, "cherokee")) {
+      printf("Initializing LaRCsim for Cherokee\n");
+      current_model = CHEROKEE;
+    } else if (!strcasecmp(aircraft, "uiuc")) {
+      printf("Initializing LaRCsim for UIUC models\n");
+      current_model = UIUC;
+    } else {
+      printf("Unknown LaRCsim aircraft: %s; defaulting to C172\n", aircraft);
+      current_model = C172;
+    }
 
     /* printf("LS in init() pos = %.2f\n", Latitude); */
 
@@ -224,8 +258,21 @@ void ls_init( void ) {
 	    ls_set_sym_val( &Discrete_States[i].Symbol, 
 			    (double) Discrete_States[i].value );
     */
-  
-    model_init();
+
+    switch (current_model) {
+    case NAVION:
+      navion_init();
+      break;
+    case C172:
+      c172_init();
+      break;
+    case CHEROKEE:
+      cherokee_init();
+      break;
+    case UIUC:
+      c172_init();
+      break;
+    }
 
     /* printf("LS after model_init() pos = %.2f\n", Latitude); */
 

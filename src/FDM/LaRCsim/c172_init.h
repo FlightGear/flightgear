@@ -1,11 +1,11 @@
 /* a quick navion_init.h */
 
 
-#ifndef _NAVION_INIT_H
-#define _NAVION_INIT_H
+#ifndef _C172_INIT_H
+#define _C172_INIT_H
 
 
-void model_init( void );
+void c172_init( void );
 
 
-#endif _NAVION_INIT_H
+#endif _C172_INIT_H

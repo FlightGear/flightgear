@@ -521,7 +521,7 @@ int ls_cockpit( void ) {
 
 /* Initialize the LaRCsim flight model, dt is the time increment for
    each subsequent iteration through the EOM */
-int ls_toplevel_init(double dt) {
+int ls_toplevel_init(double dt, char * aircraft) {
     model_dt = dt;
 
     ls_setdefopts();		/* set default options */
@@ -535,7 +535,7 @@ int ls_toplevel_init(double dt) {
 
     /* printf("LS pre Init pos = %.2f\n", Latitude); */
 
-    ls_init();
+    ls_init(aircraft);
 
     /* printf("LS post Init pos = %.2f\n", Latitude); */
 
@@ -575,8 +575,24 @@ int ls_ForceAltitude(double alt_feet) {
 /* Flight Gear Modification Log
  *
  * $Log$
- * Revision 1.1  1999/06/17 18:07:33  curt
- * Initial revision
+ * Revision 1.2  2000/04/10 18:09:41  curt
+ * David Megginson made a few (mostly minor) mods to the LaRCsim files, and
+ * it's now possible to choose the LaRCsim model at runtime, as in
+ *
+ *   fgfs --aircraft=c172
+ *
+ * or
+ *
+ *   fgfs --aircraft=uiuc --aircraft-dir=Aircraft-uiuc/Boeing747
+ *
+ * I did this so that I could play with the UIUC stuff without losing
+ * Tony's C172 with its flaps, etc.  I did my best to respect the design
+ * of the LaRCsim code by staying in C, making only minimal changes, and
+ * not introducing any dependencies on the rest of FlightGear.  The
+ * modified files are attached.
+ *
+ * Revision 1.1.1.1  1999/06/17 18:07:33  curt
+ * Start of 0.7.x branch
  *
  * Revision 1.2  1999/04/27 19:28:04  curt
  * Changes for the MacOS port contributed by Darrell Walisser.

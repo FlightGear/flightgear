@@ -36,6 +36,22 @@
 
 $Header$
 $Log$
+Revision 1.14  2000/04/10 18:09:41  curt
+David Megginson made a few (mostly minor) mods to the LaRCsim files, and
+it's now possible to choose the LaRCsim model at runtime, as in
+
+  fgfs --aircraft=c172
+
+or
+
+  fgfs --aircraft=uiuc --aircraft-dir=Aircraft-uiuc/Boeing747
+
+I did this so that I could play with the UIUC stuff without losing
+Tony's C172 with its flaps, etc.  I did my best to respect the design
+of the LaRCsim code by staying in C, making only minimal changes, and
+not introducing any dependencies on the rest of FlightGear.  The
+modified files are attached.
+
 Revision 1.13  1999/12/13 20:43:41  curt
 Updates from Tony.
 
@@ -70,47 +86,47 @@ Updates from Tony.
 #define HEIGHT_AGL_WHEEL d_wheel_rwy_local_v[2]
 
 
-sub3( DATA v1[],  DATA v2[], DATA result[] )
+static sub3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[0] - v2[0];
     result[1] = v1[1] - v2[1];
     result[2] = v1[2] - v2[2];
 }
 
-add3( DATA v1[],  DATA v2[], DATA result[] )
+static add3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[0] + v2[0];
     result[1] = v1[1] + v2[1];
     result[2] = v1[2] + v2[2];
 }
 
-cross3( DATA v1[],  DATA v2[], DATA result[] )
+static cross3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[1]*v2[2] - v1[2]*v2[1];
     result[1] = v1[2]*v2[0] - v1[0]*v2[2];
     result[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
-multtrans3x3by3( DATA m[][3], DATA v[], DATA result[] )
+static multtrans3x3by3( DATA m[][3], DATA v[], DATA result[] )
 {
     result[0] = m[0][0]*v[0] + m[1][0]*v[1] + m[2][0]*v[2];
     result[1] = m[0][1]*v[0] + m[1][1]*v[1] + m[2][1]*v[2];
     result[2] = m[0][2]*v[0] + m[1][2]*v[1] + m[2][2]*v[2];
 }
 
-mult3x3by3( DATA m[][3], DATA v[], DATA result[] )
+static mult3x3by3( DATA m[][3], DATA v[], DATA result[] )
 {
     result[0] = m[0][0]*v[0] + m[0][1]*v[1] + m[0][2]*v[2];
     result[1] = m[1][0]*v[0] + m[1][1]*v[1] + m[1][2]*v[2];
     result[2] = m[2][0]*v[0] + m[2][1]*v[1] + m[2][2]*v[2];
 }
 
-clear3( DATA v[] )
+static clear3( DATA v[] )
 {
     v[0] = 0.; v[1] = 0.; v[2] = 0.;
 }
 
-gear()
+c172_gear()
 {
 char rcsid[] = "$Id$";
 #define NUM_WHEELS 4

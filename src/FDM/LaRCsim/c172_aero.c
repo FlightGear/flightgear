@@ -109,7 +109,7 @@
 extern COCKPIT cockpit_;
 
 
-SCALAR interp(SCALAR *y_table, SCALAR *x_table, int Ntable, SCALAR x)
+static SCALAR interp(SCALAR *y_table, SCALAR *x_table, int Ntable, SCALAR x)
 {
 	SCALAR slope;
 	int i=1;
@@ -141,7 +141,7 @@ SCALAR interp(SCALAR *y_table, SCALAR *x_table, int Ntable, SCALAR x)
 }    	
 				
 
-void aero( SCALAR dt, int Initialize ) {
+void c172_aero( SCALAR dt, int Initialize ) {
   
   
   static int init = 0;

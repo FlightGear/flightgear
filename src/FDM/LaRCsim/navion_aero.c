@@ -112,7 +112,7 @@ ring is given below:
 extern COCKPIT cockpit_;
 
 
-void aero( SCALAR dt, int Initialize ) {
+void navion_aero( SCALAR dt, int Initialize ) {
   static int init = 0;
 
   SCALAR u, w;

@@ -50,7 +50,7 @@ int FGLaRCsim::init( double dt ) {
     copy_to_LaRCsim();
 
     // actual LaRCsim top level init
-    ls_toplevel_init( dt );
+    ls_toplevel_init( dt, (char *)current_options.get_aircraft().c_str() );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "FG pos = " << 
 	    get_Latitude() );

@@ -66,7 +66,7 @@ This source is not checked in this configuration in any way.
 
 
 
-void aero()
+void cherokee_aero()
 /*float ** Cherokee (float t, VectorStanja &X, float *U)*/
 {
  	static float

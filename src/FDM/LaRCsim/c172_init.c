@@ -62,7 +62,7 @@
 #include "ls_constants.h"
 #include "c172_aero.h"
 
-void model_init( void ) {
+void c172_init( void ) {
 
   Throttle[3] = 0.2; 
   
