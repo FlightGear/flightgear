@@ -74,6 +74,25 @@ FGEngInterface::~FGEngInterface(void) {
 
 // Constructor
 FGInterface::FGInterface() {
+    init();
+}  
+
+FGInterface::FGInterface( double dt ) {
+    
+    init();
+    delta_t = dt;
+    remainder = elapsed = multi_loop = 0;
+}
+
+// Destructor
+FGInterface::~FGInterface() {
+//   unbind();			// FIXME: should be called explicitly
+}
+
+
+void
+FGInterface::init ()
+{
     init_vec( d_pilot_rp_body_v );
     init_vec( d_cg_rp_body_v );
     init_vec( f_body_total_v );
@@ -139,24 +158,6 @@ FGInterface::FGInterface() {
     sin_latitude=cos_latitude=0;
     sin_longitude=cos_longitude=0;
     altitude_agl=0;
-}  
-
-FGInterface::FGInterface( double dt ) {
-    FGInterface();
-
-    delta_t = dt;
-    remainder = elapsed = multi_loop = 0;
-}
-
-// Destructor
-FGInterface::~FGInterface() {
-//   unbind();			// FIXME: should be called explicitly
-}
-
-
-void
-FGInterface::init ()
-{
 }
 
 void
@@ -206,7 +207,7 @@ FGInterface::bind ()
   fgTie("/velocities/airspeed", this,
 	&FGInterface::get_V_calibrated_kts,
 	&FGInterface::set_V_calibrated_kts,
-	false);
+	true);
 
 				// Local velocities
   fgTie("/velocities/speed-north", this,
@@ -214,25 +215,25 @@ FGInterface::bind ()
   fgTie("/velocities/speed-east", this,
 	&FGInterface::get_V_east,
 	&FGInterface::set_V_east,
-	false);
+	true);
   fgTie("/velocities/speed-down", this,
 	&FGInterface::get_V_down,
 	&FGInterface::set_V_down,
-	false);
+	true);
 
 				// Relative wind
   fgTie("/velocities/uBody", this,
 	&FGInterface::get_uBody,
 	&FGInterface::set_uBody,
-	false);
+	true);
   fgTie("/velocities/vBody", this,
 	&FGInterface::get_vBody,
 	&FGInterface::set_vBody,
-	false);
+	true);
   fgTie("/velocities/wBody", this,
 	&FGInterface::get_wBody,
 	&FGInterface::set_wBody,
-	false);
+	true);
 
 				// Climb and slip (read-only)
   fgTie("/velocities/vertical-speed", this,
