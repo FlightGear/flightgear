@@ -81,7 +81,7 @@ bool FGRunways::search( const string& aptid, FGRunway* r ) {
     c4_StringProp pEnd2 ("End2Flags");
 
     int index = vRunway->Find(pID[aptid.c_str()]);
-    cout << "index = " << index << endl;
+    // cout << "index = " << index << endl;
 
     if ( index == -1 ) {
 	return false;
@@ -121,7 +121,7 @@ bool FGRunways::search( const string& aptid, const string& rwyno, FGRunway* r )
     c4_StringProp pEnd2 ("End2Flags");
 
     int index = vRunway->Find(pID[aptid.c_str()]);
-    cout << "index = " << index << endl;
+    // cout << "index = " << index << endl;
 
     if ( index == -1 ) {
 	return false;

@@ -160,7 +160,7 @@ string FGATIS::get_transmission() {
 	    double cloudbase = fgGetDouble("/environment/clouds/altitude-ft");
 	    // For some reason the altitude returned doesn't seem to correspond to the actual cloud altitude.
 	    char buf3[10];
-	    cout << "cloudbase = " << cloudbase << endl;
+	    // cout << "cloudbase = " << cloudbase << endl;
 	    sprintf(buf3, "%i", int(cloudbase));
 	    transmission = transmission + "  Cloudbase " + buf3 + " feet";
 	}
