@@ -24,8 +24,6 @@
 #---------------------------------------------------------------------------
 
 
-TARGET=fg0
-
 CFILES = fg_init.c views.c $(INTERFACE_FILES)
 OFILES = $(CFILES:.c=.o)
 AFILES = ../Aircraft/libAircraft.a ../Cockpit/libCockpit.a \
@@ -42,12 +40,16 @@ CFLAGS = $(FG_CFLAGS) $(INTERFACE_FLAGS)
 LIBS =  $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
 
 
+TARGET=fg-$(VERSION)
+
+
 #---------------------------------------------------------------------------
 # Primary Targets
 #---------------------------------------------------------------------------
 
 $(TARGET): $(OFILES) $(AFILES)
 	$(CC) -o $(TARGET) $(OFILES) $(AFILES) $(LIBS)
+	$(LN) $(TARGET) fg$(VERSION_MAJOR)
 
 all: $(TARGET)
 
@@ -79,6 +81,9 @@ views.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.35  1997/10/28 21:11:22  curt
+# Organizational changes.
+#
 # Revision 1.34  1997/10/25 03:24:21  curt
 # Incorporated sun, moon, and star positioning code contributed by Durk Talsma.
 #
