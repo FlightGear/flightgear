@@ -339,6 +339,7 @@ void fgRenderFrame( void ) {
 		     cur_fdm_state->get_Theta(),
 		     cur_fdm_state->get_Psi() );
 
+#if 0
 	// this is a test, we are trying to match RPH and LookAt
 	// matrices
 	tv->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
@@ -351,7 +352,7 @@ void fgRenderFrame( void ) {
 	tv->set_view_up( globals->get_current_view()->get_view_up() );
 
 	sgMat4 rph;
-	sgCopyMat4( rph, globals->get_current_view()->get_VIEW() );
+	sgCopyMat4( rph, globals->get_current_view()->get_VIEW_ROT() );
 	cout << "RPH Matrix = " << endl;
 	int i, j;
 	for ( i = 0; i < 4; i++ ) {
@@ -361,7 +362,7 @@ void fgRenderFrame( void ) {
 	    cout << endl;
 	}
 	sgMat4 la;
-	sgCopyMat4( la, tv->get_VIEW() );
+	sgCopyMat4( la, tv->get_VIEW_ROT() );
 	cout << "LookAt Matrix = " << endl;
 	for ( i = 0; i < 4; i++ ) {
 	    for ( j = 0; j < 4; j++ ) {
@@ -369,7 +370,7 @@ void fgRenderFrame( void ) {
 	    }
 	    cout << endl;
 	}
-
+#endif
 
 	// update view volume parameters
 	// cout << "before pilot_view update" << endl;
