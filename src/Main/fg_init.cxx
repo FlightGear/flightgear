@@ -1029,9 +1029,8 @@ bool fgInitSubsystems( void ) {
     // Initialize I/O subsystem.
     ////////////////////////////////////////////////////////////////////
 
-#if ! defined( macintosh )
-    fgIOInit();
-#endif
+    globals->get_io()->init();
+    globals->get_io()->bind();
 
     // Initialize the 2D panel.
     string panel_path = fgGetString("/sim/panel/path",

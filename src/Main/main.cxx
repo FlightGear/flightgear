@@ -89,7 +89,8 @@ SG_USING_STD(endl);
 
 #include <ATC/ATCmgr.hxx>
 #include <ATC/ATCdisplay.hxx>
-#include <ATC/AIMgr.hxx>
+//#include <ATC/AIMgr.hxx>
+
 
 #include <Autopilot/newauto.hxx>
 
@@ -1071,10 +1072,8 @@ static void fgMainLoop( void ) {
 		"Elapsed time is zero ... we're zinging" );
     }
 
-#if ! defined( macintosh )
     // Do any I/O channel work that might need to be done
-    fgIOProcess();
-#endif
+    globals->get_io()->update( delta_time_sec );
 
     // see if we need to load any deferred-load textures
     material_lib.load_next_deferred();

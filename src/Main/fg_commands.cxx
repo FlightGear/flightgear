@@ -261,6 +261,35 @@ do_preferences_load (const SGPropertyNode * arg, SGCommandState ** state)
 }
 
 
+static void
+fix_hud_visibility()
+{
+  if ( !strcmp(fgGetString("/sim/flight-model"), "ada") ) {
+      globals->get_props()->setBoolValue( "/sim/hud/visibility", true );
+      if ( globals->get_viewmgr()->get_current() == 1 ) {
+          globals->get_props()->setBoolValue( "/sim/hud/visibility", false );
+      }
+  }
+}
+
+void
+do_view_next( bool )
+{
+    globals->get_current_view()->setHeadingOffset_deg(0.0);
+    globals->get_viewmgr()->next_view();
+    fix_hud_visibility();
+  global_tile_mgr.refresh_view_timestamps();
+}
+
+void
+do_view_prev( bool )
+{
+    globals->get_current_view()->setHeadingOffset_deg(0.0);
+    globals->get_viewmgr()->prev_view();
+    fix_hud_visibility();
+  global_tile_mgr.refresh_view_timestamps();
+}
+
 /**
  * Built-in command: cycle view.
  */
@@ -269,17 +298,11 @@ do_view_cycle (const SGPropertyNode * arg, SGCommandState ** state)
 {
   globals->get_current_view()->setHeadingOffset_deg(0.0);
   globals->get_viewmgr()->next_view();
-  if ( !strcmp(fgGetString("/sim/flight-model"), "ada") ) {
-      globals->get_props()->setBoolValue( "/sim/hud/visibility", true );
-      if ( globals->get_viewmgr()->get_current() == 1 ) {
-          globals->get_props()->setBoolValue( "/sim/hud/visibility", false );
-      }
-  }
+  fix_hud_visibility();
   global_tile_mgr.refresh_view_timestamps();
 //   fgReshape(fgGetInt("/sim/startup/xsize"), fgGetInt("/sim/startup/ysize"));
   return true;
 }
-
 
 /**
  * Built-in command: capture screen.
@@ -665,6 +688,10 @@ fgInitCommands ()
     globals->get_commands()->addCommand(built_ins[i].name,
 					built_ins[i].command);
   }
+
+  typedef bool (*dummy)();
+  fgTie( "/command/view/next", dummy(0), do_view_next );
+  fgTie( "/command/view/prev", dummy(0), do_view_prev );
 }
 
 // end of fg_commands.cxx

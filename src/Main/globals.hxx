@@ -46,6 +46,7 @@ typedef vector<string> string_list;
 // anyway.
 
 class SGEphemeris;
+
 class SGMagVar;
 class SGRoute;
 class SGTime;
@@ -70,7 +71,7 @@ class FGTextureLoader;
 class FGAircraftModel;
 class FGModelMgr;
 class FGScenery;
-
+class FGIO;
 
 /**
  * Bucket for subsystem pointers representing the sim's state.
@@ -171,6 +172,8 @@ private:
 
     // FlightGear scenery manager
     FGScenery *scenery;
+
+    FGIO* io;
 
 public:
 
@@ -297,6 +300,8 @@ public:
 
     inline FGScenery * get_scenery () const { return scenery; }
     inline void set_scenery ( FGScenery *s ) { scenery = s; }
+
+    FGIO* get_io() const { return io; }
 
     /**
      * Save the current state as the initial state.

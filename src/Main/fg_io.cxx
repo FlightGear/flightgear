@@ -62,12 +62,25 @@
 SG_USING_STD(string);
 
 
-// define the global I/O channel list
-io_container global_io_list;
+FGIO::FGIO()
+{
+}
+
+#include STL_ALGORITHM
+SG_USING_STD(for_each);
+
+static void delete_ptr( FGProtocol* p ) { delete p; }
+
+FGIO::~FGIO()
+{
+    shutdown_all();
+    for_each( io_channels.begin(), io_channels.end(), delete_ptr );
+}
 
 
 // configure a port based on the config string
-static FGProtocol *parse_port_config( const string& config )
+FGProtocol*
+FGIO::parse_port_config( const string& config )
 {
     SG_LOG( SG_IO, SG_INFO, "Parse I/O channel request: " << config );
 
@@ -197,12 +210,13 @@ static FGProtocol *parse_port_config( const string& config )
 
 // step through the port config streams (from fgOPTIONS) and setup
 // serial port channels for each
-void fgIOInit() {
+void
+FGIO::init()
+{
     // SG_LOG( SG_IO, SG_INFO, "I/O Channel initialization, " << 
     //         globals->get_channel_options_list()->size() << " requests." );
 
     FGProtocol *p;
-    string_list *channel_options_list = globals->get_channel_options_list();
 
     // we could almost do this in a single step except pushing a valid
     // port onto the port list copies the structure and destroys the
@@ -210,11 +224,14 @@ void fgIOInit() {
 
     // parse the configuration strings and store the results in the
     // appropriate FGIOChannel structures
-    for ( int i = 0; i < (int)channel_options_list->size(); ++i ) {
-	p = parse_port_config( (*channel_options_list)[i] );
+    vector< string >::iterator i = globals->get_channel_options_list()->begin();
+    vector< string >::iterator end = globals->get_channel_options_list()->end();
+    for (; i != end; ++i )
+    {
+	p = parse_port_config( *i );
 	if ( p != NULL ) {
 	    p->open();
-	    global_io_list.push_back( p );
+	    io_channels.push_back( p );
 	    if ( !p->is_enabled() ) {
 		SG_LOG( SG_IO, SG_ALERT, "I/O Channel config failed." );
 		exit(-1);
@@ -227,7 +244,9 @@ void fgIOInit() {
 
 
 // process any serial port work
-void fgIOProcess() {
+void
+FGIO::update( double delta_time_sec )
+{
     // cout << "processing I/O channels" << endl;
 
     static int inited = 0;
@@ -245,9 +264,11 @@ void fgIOProcess() {
 	last = current;
     }
 
-    for ( unsigned int i = 0; i < global_io_list.size(); ++i ) {
-	// cout << "  channel = " << i << endl;
-	FGProtocol* p = global_io_list[i];
+    vector< FGProtocol* >::iterator i = io_channels.begin();
+    vector< FGProtocol* >::iterator end = io_channels.end();
+    for (; i != end; ++i )
+    {
+	FGProtocol* p = *i;
 
 	if ( p->is_enabled() ) {
 	    p->dec_count_down( interval );
@@ -260,18 +281,31 @@ void fgIOProcess() {
 }
 
 
-// shutdown all I/O connections
-void fgIOShutdownAll() {
+void
+FGIO::shutdown_all() {
     FGProtocol *p;
 
     // cout << "processing I/O channels" << endl;
 
-    for ( int i = 0; i < (int)global_io_list.size(); ++i ) {
-	// cout << "  channel = " << i << endl;
-	p = global_io_list[i];
+    vector< FGProtocol* >::iterator i = io_channels.begin();
+    vector< FGProtocol* >::iterator end = io_channels.end();
+    for (; i != end; ++i )
+    {
+	p = *i;
 
 	if ( p->is_enabled() ) {
 	    p->close();
 	}
     }
 }
+
+void
+FGIO::bind()
+{
+}
+
+void
+FGIO::unbind()
+{
+}
+

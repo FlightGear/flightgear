@@ -29,7 +29,7 @@
 #include "viewmgr.hxx"
 
 #include "fg_props.hxx"
-
+#include "fg_io.hxx"
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -51,7 +51,8 @@ FGGlobals::FGGlobals() :
     logger(0),
     props(new SGPropertyNode),
     initial_state(0),
-    commands(new SGCommandMgr)
+    commands(new SGCommandMgr),
+    io(new FGIO)
 {
 }
 
@@ -62,6 +63,7 @@ FGGlobals::~FGGlobals()
   delete initial_state;
   delete props;
   delete commands;
+  delete io;
 }
 
 

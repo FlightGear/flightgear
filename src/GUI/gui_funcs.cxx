@@ -387,7 +387,7 @@ void goodBye(puObject *)
 #endif
 
     // close all external I/O connections
-    fgIOShutdownAll();
+    globals->get_io()->shutdown_all();
 
     exit(0);
 }

@@ -26,18 +26,39 @@
 
 
 #include <simgear/compiler.h>
+#include <vector>
+#include STL_STRING
 
+#include "fgfs.hxx"
 
-// initialize I/O channels based on command line options (if any)
-void fgIOInit();
+SG_USING_STD(vector);
+SG_USING_STD(string);
 
+class FGProtocol;
 
-// process any I/O work
-void fgIOProcess();
+class FGIO : public FGSubsystem
+{
+public:
+    FGIO();
+    ~FGIO();
 
+    void init();
+    void bind();
+    void unbind();
+    void update( double dt );
 
-// shutdown all I/O connections
-void fgIOShutdownAll();
+    void shutdown_all();
+
+private:
+
+    FGProtocol* parse_port_config( const string& cfgstr );
+
+private:
+
+    // define the global I/O channel list
+    //io_container global_io_list;
+    vector< FGProtocol* > io_channels;
+};
 
 
 #endif // _FG_IO_HXX
