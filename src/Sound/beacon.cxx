@@ -25,11 +25,18 @@
 
 
 // constructor
-FGBeacon::FGBeacon() {
+FGBeacon::FGBeacon() :
+    inner(NULL),
+    middle(NULL),
+    outer(NULL)
+{
 }
 
 // destructor
 FGBeacon::~FGBeacon() {
+    delete inner;
+    delete middle;
+    delete outer;
 }
 
 
@@ -38,6 +45,10 @@ bool FGBeacon::init() {
     int i;
     int len;
     unsigned char *ptr;
+
+    unsigned char inner_buf[ INNER_SIZE ] ;
+    unsigned char middle_buf[ MIDDLE_SIZE ] ;
+    unsigned char outer_buf[ OUTER_SIZE ] ;
 
     // Make inner marker beacon sound
     len= (int)(INNER_DIT_LEN / 2.0 );
@@ -51,7 +62,7 @@ bool FGBeacon::init() {
 	ptr += INNER_DIT_LEN;
     }
 
-    inner = new SGSoundSample( inner_buf, INNER_SIZE, BYTES_PER_SECOND );
+    inner = new SGSoundSample( inner_buf, INNER_SIZE, BYTES_PER_SECOND, false );
     inner->set_reference_dist( 10.0 );
     inner->set_max_dist( 20.0 );
 
@@ -71,7 +82,8 @@ bool FGBeacon::init() {
     ptr += MIDDLE_DIT_LEN;
     memcpy( ptr, middle_dah, MIDDLE_DAH_LEN );
 
-    middle = new SGSoundSample( middle_buf, MIDDLE_SIZE, BYTES_PER_SECOND );
+    middle = new SGSoundSample( middle_buf, MIDDLE_SIZE, BYTES_PER_SECOND,
+                                false );
     middle->set_reference_dist( 10.0 );
     middle->set_max_dist( 20.0 );
 
@@ -86,7 +98,7 @@ bool FGBeacon::init() {
     ptr += OUTER_DAH_LEN;
     memcpy( ptr, outer_dah, OUTER_DAH_LEN );
 
-    outer = new SGSoundSample( outer_buf, OUTER_SIZE, BYTES_PER_SECOND );
+    outer = new SGSoundSample( outer_buf, OUTER_SIZE, BYTES_PER_SECOND, false );
     outer->set_reference_dist( 10.0 );
     outer->set_max_dist( 20.0 );
 

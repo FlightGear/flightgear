@@ -1291,6 +1291,7 @@ static void fgMainLoop( void ) {
     sgVec3 source_pos_offset;
     sgSubVec3( source_pos_offset,
                view_location->get_view_pos(), acmodel_loc->get_view_pos() );
+    // cout << "pos all = " << source_pos_offset[0] << " " << source_pos_offset[1] << " " << source_pos_offset[2] << endl;
     globals->get_soundmgr()->set_source_pos_all( source_pos_offset );
 
     // set the velocity
@@ -1298,12 +1299,14 @@ static void fgMainLoop( void ) {
     sgSubVec3( source_vel, source_pos_offset, last_pos_offset );
     sgScaleVec3( source_vel, delta_time_sec );
     sgCopyVec3( last_pos_offset, source_pos_offset );
+    // cout << "vel = " << source_vel[0] << " " << source_vel[1] << " " << source_vel[2] << endl;
     globals->get_soundmgr()->set_source_vel_all( source_vel );
 
     // Right now we make a simplifying assumption that the listener is
     // always positioned at the origin.
     sgVec3 listener_pos;
     sgSetVec3( listener_pos, 0.0, 0.0, 0.0 );
+    // cout << "listener = " << listener_pos[0] << " " << listener_pos[1] << " " << listener_pos[2] << endl;
     globals->get_soundmgr()->set_listener_pos( listener_pos );
 #endif
 

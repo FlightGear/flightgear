@@ -1768,14 +1768,14 @@ bool FGATC610x::do_switches() {
 
     // master switches
     fgSetBool( "/controls/engines/engine[0]/master-bat",
-               switch_matrix[board][5][1] );
+               switch_matrix[board][4][1] );
     fgSetBool( "/controls/engines/engine[1]/master-bat",
-               switch_matrix[board][5][1] );
+               switch_matrix[board][4][1] );
 
     fgSetBool( "/controls/engines/engine[0]/master-alt",
-               switch_matrix[board][4][1] );
+               switch_matrix[board][5][1] );
     fgSetBool( "/controls/engines/engine[1]/master-alt",
-               switch_matrix[board][4][1] );
+               switch_matrix[board][5][1] );
 
     fgSetBool( "/controls/switches/master-avionics",
                switch_matrix[board][0][3] );

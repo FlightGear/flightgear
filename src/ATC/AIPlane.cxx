@@ -189,7 +189,7 @@ void FGAIPlane::Render(string refname, bool repeating) {
 		int len;
 		unsigned char* buf = vPtr->WriteMessage((char*)pending_transmission.c_str(), len, voice);
 		if(voice) {
-			SGSoundSample* simple = new SGSoundSample(buf, len, 8000);
+			SGSoundSample* simple = new SGSoundSample(buf, len, 8000, false);
 			// TODO - at the moment the volume is always set off comm1 
 			// and can't be changed after the transmission has started.
 			simple->set_volume(5.0 * fgGetDouble("/radios/comm[0]/volume"));

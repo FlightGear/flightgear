@@ -37,7 +37,8 @@ FGATCVoice::FGATCVoice() {
 }
 
 FGATCVoice::~FGATCVoice() {
-    // delete SoundData;
+    free( rawSoundData );
+    delete SoundData;
 }
 
 // Load the two voice files - one containing the raw sound data (.wav) and one containing the word positions (.vce).

@@ -96,10 +96,6 @@ class FGBeacon {
 
 private:
 
-    unsigned char inner_buf[ INNER_SIZE ] ;
-    unsigned char middle_buf[ MIDDLE_SIZE ] ;
-    unsigned char outer_buf[ OUTER_SIZE ] ;
-
     SGSoundSample *inner;
     SGSoundSample *middle;
     SGSoundSample *outer;

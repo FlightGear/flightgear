@@ -206,7 +206,7 @@ void FGExternalPipe::init() {
     }
     last_cg_offset = cg_offset;
 
-    SG_LOG( SG_IO, SG_INFO, "before sending reset command." );
+    SG_LOG( SG_IO, SG_ALERT, "before sending reset command." );
 
     if( fgGetBool("/sim/presets/onground") ) {
         sprintf( cmd, "reset=ground" );
@@ -215,7 +215,7 @@ void FGExternalPipe::init() {
     }
     result = write_fifo( '1', pd1, cmd, strlen(cmd) );
 
-    SG_LOG( SG_IO, SG_INFO, "Remote FDM init() finished." );
+    SG_LOG( SG_IO, SG_ALERT, "Remote FDM init() finished." );
 #endif
 }
 
