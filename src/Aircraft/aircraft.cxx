@@ -140,7 +140,7 @@ void fgReadAircraft(void) {
    globals->get_commands()->addCommand("load-aircraft", fgLoadAircraft);
 }
 
-static bool
+bool
 fgLoadAircraft (const SGPropertyNode * arg)
 {
     static const SGPropertyNode *master_freeze

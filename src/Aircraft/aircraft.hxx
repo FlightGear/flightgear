@@ -59,7 +59,7 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a);
 
 // Read the list of available aircraft into to property tree
 void fgReadAircraft(void);
-static bool fgLoadAircraft (const SGPropertyNode * arg);
+bool fgLoadAircraft (const SGPropertyNode * arg);
 
 #endif // _AIRCRAFT_HXX
 
