@@ -1,7 +1,8 @@
 // net_ctrls.hxx -- defines a common net I/O interface to the flight
 //                  sim controls
 //
-// Written by Curtis Olson - curt@flightgear.com, started July 2001.
+// Written by Curtis Olson - http://www.flightgear.org/~curt
+// Started July 2001.
 //
 // This file is in the Public Domain, and comes with no warranty.
 //

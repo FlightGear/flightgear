@@ -1,7 +1,8 @@
 // net_fdm.hxx -- defines a common net I/O interface to the flight
 //                dynamics model
 //
-// Written by Curtis Olson - curt@flightgear.com, started September 2001.
+// Written by Curtis Olson - http://www.flightgear.org/~curt
+// Started September 2001.
 //
 // This file is in the Public Domain, and comes with no warranty.
 //
