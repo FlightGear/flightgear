@@ -41,11 +41,6 @@
 #include <string>
 SG_USING_STD(string);
 
-static int nav1_play_count = 0;
-static int nav2_play_count = 0;
-static time_t nav1_last_time = 0;
-static time_t nav2_last_time = 0;
-
 
 FGRadioStack *current_radiostack;
 
@@ -81,20 +76,6 @@ FGRadioStack::FGRadioStack() :
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
     need_update(true),
-    comm1_freq(0.0),
-    comm1_alt_freq(0.0),
-    comm1_vol_btn(0.0),
-    comm2_freq(0.0),
-    comm2_alt_freq(0.0),
-    comm2_vol_btn(0.0),
-    nav1_freq(0.0),
-    nav1_alt_freq(0.0),
-    nav1_radial(0.0),
-    nav1_vol_btn(0.0),
-    nav2_freq(0.0),
-    nav2_alt_freq(0.0),
-    nav2_radial(0.0),
-    nav2_vol_btn(0.0),
     dme_freq(0.0),
     dme_dist(0.0),
     dme_prev_dist(0.0),
@@ -122,6 +103,8 @@ FGRadioStack::FGRadioStack() :
 // Destructor
 FGRadioStack::~FGRadioStack() 
 {
+    navcom1.unbind();
+    navcom2.unbind();
     adf.unbind();
     xponder.unbind();
     unbind();			// FIXME: should be called externally
@@ -135,6 +118,12 @@ FGRadioStack::~FGRadioStack()
 void
 FGRadioStack::init ()
 {
+    navcom1.set_bind_index( 0 );
+    navcom1.init();
+
+    navcom2.set_bind_index( 1 );
+    navcom2.init();
+
     adf.init();
     xponder.init();
 
@@ -143,10 +132,14 @@ FGRadioStack::init ()
     blink.stamp();
 
     search();
+    navcom1.search();
+    navcom2.search();
     adf.search();
     xponder.search();
 
     update(0);			// FIXME: use dt
+    navcom1.update(0);
+    navcom2.update(0);
     adf.update(0);
     xponder.update(0);
 
@@ -159,97 +152,6 @@ FGRadioStack::init ()
 void
 FGRadioStack::bind ()
 {
-				// User inputs
-    fgTie("/radios/comm[0]/frequencies/selected-mhz", this,
-	  &FGRadioStack::get_comm1_freq, &FGRadioStack::set_comm1_freq);
-    fgSetArchivable("/radios/comm[0]/frequencies/selected-mhz");
-    fgTie("/radios/comm[0]/frequencies/standby-mhz", this,
-	  &FGRadioStack::get_comm1_alt_freq, &FGRadioStack::set_comm1_alt_freq);
-    fgSetArchivable("/radios/comm[0]/frequencies/standby-mhz");
-     fgTie("/radios/comm[0]/volume", this,
-	  &FGRadioStack::get_comm1_vol_btn,
-	  &FGRadioStack::set_comm1_vol_btn);
-    fgSetArchivable("/radios/comm[0]/volume");
-    fgTie("/radios/comm[0]/ident", this,
-	  &FGRadioStack::get_comm1_ident_btn,
-	  &FGRadioStack::set_comm1_ident_btn);
-    fgSetArchivable("/radios/comm[0]/ident");
-
-    fgTie("/radios/comm[1]/frequencies/selected-mhz", this,
-	  &FGRadioStack::get_comm2_freq, &FGRadioStack::set_comm2_freq);
-    fgSetArchivable("/radios/comm[0]/frequencies/selected-mhz");
-    fgTie("/radios/comm[1]/frequencies/standby-mhz", this,
-	  &FGRadioStack::get_comm2_alt_freq, &FGRadioStack::set_comm2_alt_freq);
-    fgSetArchivable("/radios/comm[0]/frequencies/standby-mhz");
-     fgTie("/radios/comm[1]/volume", this,
-	  &FGRadioStack::get_comm2_vol_btn,
-	  &FGRadioStack::set_comm2_vol_btn);
-    fgSetArchivable("/radios/comm[0]/volume");
-    fgTie("/radios/comm[1]/ident", this,
-	  &FGRadioStack::get_comm2_ident_btn,
-	  &FGRadioStack::set_comm2_ident_btn);
-    fgSetArchivable("/radios/comm[1]/ident");
-
-    fgTie("/radios/nav[0]/frequencies/selected-mhz", this,
-	  &FGRadioStack::get_nav1_freq, &FGRadioStack::set_nav1_freq);
-    fgSetArchivable("/radios/nav[0]/frequencies/selected-mhz");
-    fgTie("/radios/nav[0]/frequencies/standby-mhz", this,
-	  &FGRadioStack::get_nav1_alt_freq, &FGRadioStack::set_nav1_alt_freq);
-    fgSetArchivable("/radios/nav[0]/frequencies/standby-mhz");
-    fgTie("/radios/nav[0]/radials/selected-deg", this,
-	  &FGRadioStack::get_nav1_sel_radial,
-	  &FGRadioStack::set_nav1_sel_radial);
-    fgSetArchivable("/radios/nav[0]/radials/selected-deg");
-    fgTie("/radios/nav[0]/volume", this,
-	  &FGRadioStack::get_nav1_vol_btn,
-	  &FGRadioStack::set_nav1_vol_btn);
-    fgSetArchivable("/radios/nav[0]/volume");
-    fgTie("/radios/nav[0]/ident", this,
-	  &FGRadioStack::get_nav1_ident_btn,
-	  &FGRadioStack::set_nav1_ident_btn);
-    fgSetArchivable("/radios/nav[0]/ident");
-
-				// Radio outputs
-    fgTie("/radios/nav[0]/radials/actual-deg", this,
-	  &FGRadioStack::get_nav1_radial);
-    fgTie("/radios/nav[0]/to-flag", this, &FGRadioStack::get_nav1_to_flag);
-    fgTie("/radios/nav[0]/from-flag", this, &FGRadioStack::get_nav1_from_flag);
-    fgTie("/radios/nav[0]/in-range", this, &FGRadioStack::get_nav1_inrange);
-    fgTie("/radios/nav[0]/heading-needle-deflection", this,
-	  &FGRadioStack::get_nav1_heading_needle_deflection);
-    fgTie("/radios/nav[0]/gs-needle-deflection", this,
-	  &FGRadioStack::get_nav1_gs_needle_deflection);
-
-				// User inputs
-    fgTie("/radios/nav[1]/frequencies/selected-mhz", this,
-	  &FGRadioStack::get_nav2_freq, &FGRadioStack::set_nav2_freq);
-    fgSetArchivable("/radios/nav[1]/frequencies/selected-mhz");
-    fgTie("/radios/nav[1]/frequencies/standby-mhz", this,
-	  &FGRadioStack::get_nav2_alt_freq, &FGRadioStack::set_nav2_alt_freq);
-    fgSetArchivable("/radios/nav[1]/frequencies/standby-mhz");
-    fgTie("/radios/nav[1]/radials/selected-deg", this,
-	  &FGRadioStack::get_nav2_sel_radial,
-	  &FGRadioStack::set_nav2_sel_radial);
-    fgSetArchivable("/radios/nav[1]/radials/selected-deg");
-    fgTie("/radios/nav[1]/volume", this,
-	  &FGRadioStack::get_nav2_vol_btn,
-	  &FGRadioStack::set_nav2_vol_btn);
-    fgSetArchivable("/radios/nav[1]/volume");
-    fgTie("/radios/nav[1]/ident", this,
-	  &FGRadioStack::get_nav2_ident_btn,
-	  &FGRadioStack::set_nav2_ident_btn);
-    fgSetArchivable("/radios/nav[1]/ident");
-
-				// Radio outputs
-    fgTie("/radios/nav[1]/radials/actual-deg", this,
-	  &FGRadioStack::get_nav2_radial);
-    fgTie("/radios/nav[1]/to-flag", this, &FGRadioStack::get_nav2_to_flag);
-    fgTie("/radios/nav[1]/from-flag", this, &FGRadioStack::get_nav2_from_flag);
-    fgTie("/radios/nav[1]/in-range", this, &FGRadioStack::get_nav2_inrange);
-    fgTie("/radios/nav[1]/heading-needle-deflection", this,
-	  &FGRadioStack::get_nav2_heading_needle_deflection);
-    fgTie("/radios/nav[1]/gs-needle-deflection", this,
-	  &FGRadioStack::get_nav2_gs_needle_deflection);
 
 				// User inputs
     fgTie("/radios/dme/frequencies/selected-khz", this,
@@ -257,17 +159,26 @@ FGRadioStack::bind ()
 
 				// Radio outputs
     fgTie("/radios/dme/in-range", this, &FGRadioStack::get_dme_inrange);
+
     fgTie("/radios/dme/distance-nm", this, &FGRadioStack::get_dme_dist);
+
     fgTie("/radios/dme/speed-kt", this, &FGRadioStack::get_dme_spd);
+
     fgTie("/radios/dme/ete-min", this, &FGRadioStack::get_dme_ete);
 
     fgTie("/radios/marker-beacon/inner", this,
 	  &FGRadioStack::get_inner_blink);
+
     fgTie("/radios/marker-beacon/middle", this,
 	  &FGRadioStack::get_middle_blink);
+
     fgTie("/radios/marker-beacon/outer", this,
 	  &FGRadioStack::get_outer_blink);
 
+    navcom1.set_bind_index( 0 );
+    navcom1.bind();
+    navcom2.set_bind_index( 1 );
+    navcom2.bind();
     adf.bind();
     xponder.bind();
 }
@@ -275,40 +186,6 @@ FGRadioStack::bind ()
 void
 FGRadioStack::unbind ()
 {
-    fgUntie("/radios/comm[0]/frequencies/selected-mhz");
-    fgUntie("/radios/comm[0]/frequencies/standby-mhz");
-    fgUntie("/radios/comm[0]/on");
-    fgUntie("/radios/comm[0]/ident");
-
-    fgUntie("/radios/comm[1]/frequencies/selected-mhz");
-    fgUntie("/radios/comm[1]/frequencies/standby-mhz");
-    fgUntie("/radios/comm[1]/on");
-    fgUntie("/radios/comm[1]/ident");
-
-    fgUntie("/radios/nav[0]/frequencies/selected-mhz");
-    fgUntie("/radios/nav[0]/frequencies/standby-mhz");
-    fgUntie("/radios/nav[0]/radials/actual-deg");
-    fgUntie("/radios/nav[0]/radials/selected-deg");
-    fgUntie("/radios/nav[0]/on");
-    fgUntie("/radios/nav[0]/ident");
-    fgUntie("/radios/nav[0]/to-flag");
-    fgUntie("/radios/nav[0]/from-flag");
-    fgUntie("/radios/nav[0]/in-range");
-    fgUntie("/radios/nav[0]/heading-needle-deflection");
-    fgUntie("/radios/nav[0]/gs-needle-deflection");
-
-    fgUntie("/radios/nav[1]/frequencies/selected-mhz");
-    fgUntie("/radios/nav[1]/frequencies/standby-mhz");
-    fgUntie("/radios/nav[1]/radials/actual-deg");
-    fgUntie("/radios/nav[1]/radials/selected-deg");
-    fgUntie("/radios/nav[1]/on");
-    fgUntie("/radios/nav[1]/ident");
-    fgUntie("/radios/nav[1]/to-flag");
-    fgUntie("/radios/nav[1]/from-flag");
-    fgUntie("/radios/nav[1]/in-range");
-    fgUntie("/radios/nav[1]/heading-needle-deflection");
-    fgUntie("/radios/nav[1]/gs-needle-deflection");
-
     fgUntie("/radios/dme/frequencies/selected-khz");
 
 				// Radio outputs
@@ -321,6 +198,8 @@ FGRadioStack::unbind ()
     fgUntie("/radios/marker-beacon/middle");
     fgUntie("/radios/marker-beacon/outer");
 
+    navcom1.unbind();
+    navcom2.unbind();
     adf.unbind();
     xponder.unbind();
 }
@@ -400,216 +279,9 @@ FGRadioStack::update(double dt)
 
     Point3D aircraft = sgGeodToCart( Point3D( lon, lat, elev ) );
     Point3D station;
-    double az1, az2, s;
 
-    ////////////////////////////////////////////////////////////////////////
-    // Nav1.
-    ////////////////////////////////////////////////////////////////////////
-
-    if ( nav1_valid ) {
-	station = Point3D( nav1_x, nav1_y, nav1_z );
-	nav1_loc_dist = aircraft.distance3D( station );
-
-	if ( nav1_has_gs ) {
-	    station = Point3D( nav1_gs_x, nav1_gs_y, nav1_gs_z );
-	    nav1_gs_dist = aircraft.distance3D( station );
-	} else {
-	    nav1_gs_dist = 0.0;
-	}
-	
-	// wgs84 heading
-	geo_inverse_wgs_84( elev, lat * SGD_RADIANS_TO_DEGREES, lon * SGD_RADIANS_TO_DEGREES, 
-			    nav1_loclat, nav1_loclon,
-			    &az1, &az2, &s );
-	// cout << "az1 = " << az1 << " magvar = " << nav1_magvar << endl;
-	nav1_heading = az1 - nav1_magvar;
-	// cout << " heading = " << nav1_heading
-	//      << " dist = " << nav1_dist << endl;
-
-	if ( nav1_loc ) {
-	    double offset = nav1_heading - nav1_radial;
-	    while ( offset < -180.0 ) { offset += 360.0; }
-	    while ( offset > 180.0 ) { offset -= 360.0; }
-	    // cout << "ils offset = " << offset << endl;
-	    nav1_effective_range = adjustILSRange(nav1_elev, elev, offset,
-						  nav1_loc_dist * SG_METER_TO_NM );
-	} else {
-	    nav1_effective_range = adjustNavRange(nav1_elev, elev, nav1_range);
-	}
-	// cout << "nav1 range = " << nav1_effective_range
-	//      << " (" << nav1_range << ")" << endl;
-
-	if ( nav1_loc_dist < nav1_effective_range * SG_NM_TO_METER ) {
-	    nav1_inrange = true;
-	} else if ( nav1_loc_dist < 2 * nav1_effective_range * SG_NM_TO_METER ) {
-	    nav1_inrange = sg_random() < 
-		( 2 * nav1_effective_range * SG_NM_TO_METER - nav1_loc_dist ) /
-		(nav1_effective_range * SG_NM_TO_METER);
-	} else {
-	    nav1_inrange = false;
-	}
-
-	if ( !nav1_loc ) {
-	    nav1_radial = nav1_sel_radial;
-	}
-    } else {
-	nav1_inrange = false;
-	// cout << "not picking up vor. :-(" << endl;
-    }
-
-#ifdef ENABLE_AUDIO_SUPPORT
-    if ( nav1_valid && nav1_inrange ) {
-	// play station ident via audio system if on + ident,
-	// otherwise turn it off
-	if ( nav1_vol_btn > 0.1 && nav1_ident_btn ) {
-	    FGSimpleSound *sound;
-	    sound = globals->get_soundmgr()->find( "nav1-vor-ident" );
-            if ( sound != NULL ) {
-                sound->set_volume( nav1_vol_btn );
-            } else {
-                SG_LOG( SG_COCKPIT, SG_ALERT,
-                        "Can't find nav1-vor-ident sound" );
-            }
-	    sound = globals->get_soundmgr()->find( "nav1-dme-ident" );
-            if ( sound != NULL ) {
-                sound->set_volume( nav1_vol_btn );
-            } else {
-                SG_LOG( SG_COCKPIT, SG_ALERT,
-                        "Can't find nav1-dme-ident sound" );
-            }
-            // cout << "nav1_last_time = " << nav1_last_time << " ";
-            // cout << "cur_time = " << globals->get_time_params()->get_cur_time();
-	    if ( nav1_last_time <
-		 globals->get_time_params()->get_cur_time() - 30 ) {
-		nav1_last_time = globals->get_time_params()->get_cur_time();
-		nav1_play_count = 0;
-	    }
-            // cout << " nav1_play_count = " << nav1_play_count << endl;
-            // cout << "playing = "
-            //      << globals->get_soundmgr()->is_playing("nav1-vor-ident")
-            //      << endl;
-	    if ( nav1_play_count < 4 ) {
-		// play VOR ident
-		if ( !globals->get_soundmgr()->is_playing("nav1-vor-ident") ) {
-		    globals->get_soundmgr()->play_once( "nav1-vor-ident" );
-		    ++nav1_play_count;
-                }
-	    } else if ( nav1_play_count < 5 && nav1_has_dme ) {
-		// play DME ident
-		if ( !globals->get_soundmgr()->is_playing("nav1-vor-ident") &&
-		     !globals->get_soundmgr()->is_playing("nav1-dme-ident") ) {
-		    globals->get_soundmgr()->play_once( "nav1-dme-ident" );
-		    ++nav1_play_count;
-		}
-	    }
-	} else {
-	    globals->get_soundmgr()->stop( "nav1-vor-ident" );
-	    globals->get_soundmgr()->stop( "nav1-dme-ident" );
-	}
-    }
-#endif
-
-
-    ////////////////////////////////////////////////////////////////////////
-    // Nav2.
-    ////////////////////////////////////////////////////////////////////////
-
-    if ( nav2_valid ) {
-	station = Point3D( nav2_x, nav2_y, nav2_z );
-	nav2_loc_dist = aircraft.distance3D( station );
-
-	if ( nav2_has_gs ) {
-	    station = Point3D( nav2_gs_x, nav2_gs_y, nav2_gs_z );
-	    nav2_gs_dist = aircraft.distance3D( station );
-	} else {
-	    nav2_gs_dist = 0.0;
-	}
-
-	// wgs84 heading
-	geo_inverse_wgs_84( elev, lat * SGD_RADIANS_TO_DEGREES, lon * SGD_RADIANS_TO_DEGREES, 
-			    nav2_loclat, nav2_loclon,
-			    &az1, &az2, &s );
-	nav2_heading = az1 - nav2_magvar;
-	// cout << " heading = " << nav2_heading
-	//      << " dist = " << nav2_dist << endl;
-
-	if ( nav2_loc ) {
-	    double offset = nav2_heading - nav2_radial;
-	    while ( offset < -180.0 ) { offset += 360.0; }
-	    while ( offset > 180.0 ) { offset -= 360.0; }
-	    // cout << "ils offset = " << offset << endl;
-	    nav2_effective_range = adjustILSRange(nav2_elev, elev, offset,
-						  nav2_loc_dist * SG_METER_TO_NM );
-	} else {
-	    nav2_effective_range = adjustNavRange(nav2_elev, elev, nav2_range);
-	}
-	// cout << "nav2 range = " << nav2_effective_range
-	//      << " (" << nav2_range << ")" << endl;
-
-	if ( nav2_loc_dist < nav2_effective_range * SG_NM_TO_METER ) {
-	    nav2_inrange = true;
-	} else if ( nav2_loc_dist < 2 * nav2_effective_range * SG_NM_TO_METER ) {
-	    nav2_inrange = sg_random() < 
-		( 2 * nav2_effective_range * SG_NM_TO_METER - nav2_loc_dist ) /
-		(nav2_effective_range * SG_NM_TO_METER);
-	} else {
-	    nav2_inrange = false;
-	}
-
-	if ( !nav2_loc ) {
-	    nav2_radial = nav2_sel_radial;
-	}
-    } else {
-	nav2_inrange = false;
-	// cout << "not picking up vor. :-(" << endl;
-    }
-
-#ifdef ENABLE_AUDIO_SUPPORT
-    if ( nav2_valid && nav2_inrange ) {
-	// play station ident via audio system if on + ident,
-	// otherwise turn it off
-	if ( nav2_vol_btn > 0.1 && nav2_ident_btn ) {
-	    FGSimpleSound *sound;
-	    sound = globals->get_soundmgr()->find( "nav2-vor-ident" );
-            if ( sound != NULL ) {
-                sound->set_volume( nav2_vol_btn );
-            } else {
-                SG_LOG( SG_COCKPIT, SG_ALERT,
-                        "Can't find nav2-vor-ident sound" );
-            }
-	    sound = globals->get_soundmgr()->find( "nav2-dme-ident" );
-            if ( sound != NULL ) {
-                sound->set_volume( nav2_vol_btn );
-            } else {
-                SG_LOG( SG_COCKPIT, SG_ALERT,
-                        "Can't find nav2-dme-ident sound" );
-            }
-            if ( nav2_last_time <
-		 globals->get_time_params()->get_cur_time() - 30 ) {
-		nav2_last_time = globals->get_time_params()->get_cur_time();
-		nav2_play_count = 0;
-	    }
-	    if ( nav2_play_count < 4 ) {
-		// play VOR ident
-		if ( !globals->get_soundmgr()->is_playing("nav2-vor-ident") ) {
-		    globals->get_soundmgr()->play_once( "nav2-vor-ident" );
-		    ++nav2_play_count;
-		}
-	    } else if ( nav2_play_count < 5 && nav2_has_dme ) {
-		// play DME ident
-		if ( !globals->get_soundmgr()->is_playing("nav2-vor-ident") &&
-		     !globals->get_soundmgr()->is_playing("nav2-dme-ident") ) {
-		    globals->get_soundmgr()->play_once( "nav2-dme-ident" );
-		    ++nav2_play_count;
-		}
-	    }
-	} else {
-	    globals->get_soundmgr()->stop( "nav2-vor-ident" );
-	    globals->get_soundmgr()->stop( "nav2-dme-ident" );
-	}
-    }
-#endif
-
+    navcom1.update( dt );
+    navcom2.update( dt );
 
     ////////////////////////////////////////////////////////////////////////
     // DME.
@@ -712,13 +384,13 @@ void FGRadioStack::search()
       dme_freq = 0;
       dme_inrange = false;
     } else if (dme_switch_pos == 1) {
-      if (dme_freq != nav1_freq) {
-	dme_freq = nav1_freq;
+      if (dme_freq != navcom1.get_nav_freq()) {
+	dme_freq = navcom1.get_nav_freq();
 	need_update = true;
       }
     } else if (dme_switch_pos == 3) {
-      if (dme_freq != nav2_freq) {
-	dme_freq = nav2_freq;
+      if (dme_freq != navcom2.get_nav_freq()) {
+	dme_freq = navcom2.get_nav_freq();
 	need_update = true;
       }
     }
@@ -726,271 +398,8 @@ void FGRadioStack::search()
     FGILS ils;
     FGNav nav;
 
-    static string last_nav1_ident = "";
-    static string last_nav2_ident = "";
-    static bool last_nav1_vor = false;
-    static bool last_nav2_vor = false;
-
-    ////////////////////////////////////////////////////////////////////////
-    // Nav1.
-    ////////////////////////////////////////////////////////////////////////
-
-    if ( current_ilslist->query( lon, lat, elev, nav1_freq, &ils ) ) {
-	nav1_ident = ils.get_locident();
-	nav1_valid = true;
-	if ( last_nav1_ident != nav1_ident || last_nav1_vor ) {
-	    nav1_trans_ident = ils.get_trans_ident();
-	    last_nav1_ident = nav1_ident;
-	    last_nav1_vor = false;
-	    nav1_loc = true;
-	    nav1_has_dme = ils.get_has_dme();
-	    nav1_has_gs = ils.get_has_gs();
-
-	    nav1_loclon = ils.get_loclon();
-	    nav1_loclat = ils.get_loclat();
-	    nav1_gslon = ils.get_gslon();
-	    nav1_gslat = ils.get_gslat();
-	    nav1_elev = ils.get_gselev();
-	    nav1_magvar = 0;
-	    nav1_range = FG_ILS_DEFAULT_RANGE;
-	    nav1_effective_range = nav1_range;
-	    nav1_target_gs = ils.get_gsangle();
-	    nav1_radial = ils.get_locheading();
-	    while ( nav1_radial <   0.0 ) { nav1_radial += 360.0; }
-	    while ( nav1_radial > 360.0 ) { nav1_radial -= 360.0; }
-	    nav1_x = ils.get_x();
-	    nav1_y = ils.get_y();
-	    nav1_z = ils.get_z();
-	    nav1_gs_x = ils.get_gs_x();
-	    nav1_gs_y = ils.get_gs_y();
-	    nav1_gs_z = ils.get_gs_z();
-
-#ifdef ENABLE_AUDIO_SUPPORT
-	    if ( globals->get_soundmgr()->exists( "nav1-vor-ident" ) ) {
-		globals->get_soundmgr()->remove( "nav1-vor-ident" );
-	    }
-	    FGSimpleSound *sound;
-	    sound = morse.make_ident( nav1_trans_ident, LO_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, "nav1-vor-ident" );
-
-	    if ( globals->get_soundmgr()->exists( "nav1-dme-ident" ) ) {
-		globals->get_soundmgr()->remove( "nav1-dme-ident" );
-	    }
-	    sound = morse.make_ident( nav1_trans_ident, HI_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, "nav1-dme-ident" );
-
-	    int offset = (int)(sg_random() * 30.0);
-	    nav1_play_count = offset / 4;
-	    nav1_last_time = globals->get_time_params()->get_cur_time() -
-		offset;
-	    // cout << "offset = " << offset << " play_count = "
-	    //      << nav1_play_count
-	    //      << " nav1_last_time = " << nav1_last_time
-	    //      << " current time = "
-	    //      << globals->get_time_params()->get_cur_time() << endl;
-#endif
-
-	    // cout << "Found an ils station in range" << endl;
-	    // cout << " id = " << ils.get_locident() << endl;
-	}
-    } else if ( current_navlist->query( lon, lat, elev, nav1_freq, &nav ) ) {
-	nav1_ident = nav.get_ident();
-	nav1_valid = true;
-	if ( last_nav1_ident != nav1_ident || !last_nav1_vor ) {
-	    last_nav1_ident = nav1_ident;
-	    last_nav1_vor = true;
-	    nav1_trans_ident = nav.get_trans_ident();
-	    nav1_loc = false;
-	    nav1_has_dme = nav.get_has_dme();
-	    nav1_has_gs = false;
-	    nav1_loclon = nav.get_lon();
-	    nav1_loclat = nav.get_lat();
-	    nav1_elev = nav.get_elev();
-	    nav1_magvar = nav.get_magvar();
-	    nav1_range = nav.get_range();
-	    nav1_effective_range = adjustNavRange(nav1_elev, elev, nav1_range);
-	    nav1_target_gs = 0.0;
-	    nav1_radial = nav1_sel_radial;
-	    nav1_x = nav.get_x();
-	    nav1_y = nav.get_y();
-	    nav1_z = nav.get_z();
-
-#ifdef ENABLE_AUDIO_SUPPORT
-	    if ( globals->get_soundmgr()->exists( "nav1-vor-ident" ) ) {
-		globals->get_soundmgr()->remove( "nav1-vor-ident" );
-	    }
-	    FGSimpleSound *sound;
-	    sound = morse.make_ident( nav1_trans_ident, LO_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    if ( globals->get_soundmgr()->add( sound, "nav1-vor-ident" ) ) {
-                // cout << "Added nav1-vor-ident sound" << endl;
-            } else {
-                // cout << "Failed to add v1-vor-ident sound" << endl;
-            }
-
-	    if ( globals->get_soundmgr()->exists( "nav1-dme-ident" ) ) {
-		globals->get_soundmgr()->remove( "nav1-dme-ident" );
-	    }
-	    sound = morse.make_ident( nav1_trans_ident, HI_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, "nav1-dme-ident" );
-
-	    int offset = (int)(sg_random() * 30.0);
-	    nav1_play_count = offset / 4;
-	    nav1_last_time = globals->get_time_params()->get_cur_time() -
-		offset;
-	    // cout << "offset = " << offset << " play_count = "
-	    //      << nav1_play_count << " nav1_last_time = "
-	    //      << nav1_last_time << " current time = "
-	    //      << globals->get_time_params()->get_cur_time() << endl;
-#endif
-
-	    // cout << "Found a vor station in range" << endl;
-	    // cout << " id = " << nav.get_ident() << endl;
-	}
-    } else {
-	nav1_valid = false;
-	nav1_ident = "";
-	nav1_radial = 0;
-	nav1_trans_ident = "";
-	last_nav1_ident = "";
-#ifdef ENABLE_AUDIO_SUPPORT
-	if ( ! globals->get_soundmgr()->remove( "nav1-vor-ident" ) ) {
-            // cout << "Failed to remove nav1-vor-ident sound" << endl;
-        }
-	globals->get_soundmgr()->remove( "nav1-dme-ident" );
-#endif
-	// cout << "not picking up vor1. :-(" << endl;
-    }
-
-
-    ////////////////////////////////////////////////////////////////////////
-    // Nav2.
-    ////////////////////////////////////////////////////////////////////////
-
-    if ( current_ilslist->query( lon, lat, elev, nav2_freq, &ils ) ) {
-	nav2_ident = ils.get_locident();
-	nav2_valid = true;
-	if ( last_nav2_ident != nav2_ident || last_nav2_vor ) {
-	    last_nav2_ident = nav2_ident;
-	    last_nav2_vor = false;
-	    nav2_trans_ident = ils.get_trans_ident();
-	    nav2_loc = true;
-	    nav2_has_dme = ils.get_has_dme();
-	    nav2_has_gs = ils.get_has_gs();
-
-	    nav2_loclon = ils.get_loclon();
-	    nav2_loclat = ils.get_loclat();
-	    nav2_elev = ils.get_gselev();
-	    nav2_magvar = 0;
-	    nav2_range = FG_ILS_DEFAULT_RANGE;
-	    nav2_effective_range = nav2_range;
-	    nav2_target_gs = ils.get_gsangle();
-	    nav2_radial = ils.get_locheading();
-	    while ( nav2_radial <   0.0 ) { nav2_radial += 360.0; }
-	    while ( nav2_radial > 360.0 ) { nav2_radial -= 360.0; }
-	    nav2_x = ils.get_x();
-	    nav2_y = ils.get_y();
-	    nav2_z = ils.get_z();
-	    nav2_gs_x = ils.get_gs_x();
-	    nav2_gs_y = ils.get_gs_y();
-	    nav2_gs_z = ils.get_gs_z();
-
-#ifdef ENABLE_AUDIO_SUPPORT
-	    if ( globals->get_soundmgr()->exists( "nav2-vor-ident" ) ) {
-		globals->get_soundmgr()->remove( "nav2-vor-ident" );
-	    }
-	    FGSimpleSound *sound;
-	    sound = morse.make_ident( nav2_trans_ident, LO_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, "nav2-vor-ident" );
-
-	    if ( globals->get_soundmgr()->exists( "nav2-dme-ident" ) ) {
-		globals->get_soundmgr()->remove( "nav2-dme-ident" );
-	    }
-	    sound = morse.make_ident( nav2_trans_ident, HI_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, "nav2-dme-ident" );
-
-	    int offset = (int)(sg_random() * 30.0);
-	    nav2_play_count = offset / 4;
-	    nav2_last_time = globals->get_time_params()->get_cur_time() -
-		offset;
-	    // cout << "offset = " << offset << " play_count = "
-	    //      << nav2_play_count << " nav2_last_time = "
-	    //      << nav2_last_time << " current time = "
-	    //      << globals->get_time_params()->get_cur_time() << endl;
-#endif
-
-	    // cout << "Found an ils station in range" << endl;
-	    // cout << " id = " << ils.get_locident() << endl;
-	}
-    } else if ( current_navlist->query( lon, lat, elev, nav2_freq, &nav ) ) {
-	nav2_ident = nav.get_ident();
-	nav2_valid = true;
-	if ( last_nav2_ident != nav2_ident || !last_nav2_vor ) {
-	    last_nav2_ident = nav2_ident;
-	    last_nav2_vor = true;
-	    nav2_trans_ident = nav.get_trans_ident();
-	    nav2_loc = false;
-	    nav2_has_dme = nav.get_has_dme();
-	    nav2_has_dme = false;
-	    nav2_loclon = nav.get_lon();
-	    nav2_loclat = nav.get_lat();
-	    nav2_elev = nav.get_elev();
-	    nav2_magvar = nav.get_magvar();
-	    nav2_range = nav.get_range();
-	    nav2_effective_range = adjustNavRange(nav2_elev, elev, nav2_range);
-	    nav2_target_gs = 0.0;
-	    nav2_radial = nav2_sel_radial;
-	    nav2_x = nav.get_x();
-	    nav2_y = nav.get_y();
-	    nav2_z = nav.get_z();
-
-#ifdef ENABLE_AUDIO_SUPPORT
-	    if ( globals->get_soundmgr()->exists( "nav2-vor-ident" ) ) {
-		globals->get_soundmgr()->remove( "nav2-vor-ident" );
-	    }
-	    FGSimpleSound *sound;
-	    sound = morse.make_ident( nav2_trans_ident, LO_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, "nav2-vor-ident" );
-
-	    if ( globals->get_soundmgr()->exists( "nav2-dme-ident" ) ) {
-		globals->get_soundmgr()->remove( "nav2-dme-ident" );
-	    }
-	    sound = morse.make_ident( nav2_trans_ident, HI_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, "nav2-dme-ident" );
-
-	    int offset = (int)(sg_random() * 30.0);
-	    nav2_play_count = offset / 4;
-	    nav2_last_time = globals->get_time_params()->get_cur_time() -
-		offset;
-	    // cout << "offset = " << offset << " play_count = "
-	    //      << nav2_play_count << " nav2_last_time = "
-	    //      << nav2_last_time << " current time = "
-	    //      << globals->get_time_params()->get_cur_time() << endl;
-#endif
-
-	    // cout << "Found a vor station in range" << endl;
-	    // cout << " id = " << nav.get_ident() << endl;
-	}
-    } else {
-	nav2_valid = false;
-	nav2_ident = "";
-	nav2_radial = 0;
-	nav2_trans_ident = "";
-	last_nav2_ident = "";
-#ifdef ENABLE_AUDIO_SUPPORT
-	globals->get_soundmgr()->remove( "nav2-vor-ident" );
-	globals->get_soundmgr()->remove( "nav2-dme-ident" );
-#endif
-	// cout << "not picking up vor1. :-(" << endl;
-    }
-
+    navcom1.search();
+    navcom2.search();
 
     ////////////////////////////////////////////////////////////////////////
     // DME
@@ -1091,163 +500,8 @@ void FGRadioStack::search()
     }
     last_beacon = beacon_type;
 
+    navcom1.search();
+    navcom2.search();
     adf.search();
     xponder.search();
-}
-
-
-// return the amount of heading needle deflection, returns a value
-// clamped to the range of ( -10 , 10 )
-double FGRadioStack::get_nav1_heading_needle_deflection() const {
-    double r;
-
-    if ( nav1_inrange ) {
-        r = nav1_heading - nav1_radial;
-	// cout << "Radial = " << nav1_radial 
-	//      << "  Bearing = " << nav1_heading << endl;
-    
-	while ( r >  180.0 ) { r -= 360.0;}
-	while ( r < -180.0 ) { r += 360.0;}
-	if ( fabs(r) > 90.0 ) {
-	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-	    if ( nav1_loc ) {
-		r = -r;
-	    }
-	}
-
-	// According to Robin Peel, the ILS is 4x more sensitive than a vor
-	if ( nav1_loc ) { r *= 4.0; }
-	if ( r < -10.0 ) { r = -10.0; }
-	if ( r >  10.0 ) { r = 10.0; }
-    } else {
-	r = 0.0;
-    }
-
-    return r;
-}
-
-// return the amount of heading needle deflection, returns a value
-// clamped to the range of ( -10 , 10 )
-double FGRadioStack::get_nav2_heading_needle_deflection() const {
-    double r;
-
-    if ( nav2_inrange ) {
-        r = nav2_heading - nav2_radial;
-	// cout << "Radial = " << nav2_radial 
-	//      << "  Bearing = " << nav2_heading << endl;
-    
-	while (r> 180.0) r-=360.0;
-	while (r<-180.0) r+=360.0;
-	if ( fabs(r) > 90.0 )
-	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-	// According to Robin Peel, the ILS is 4x more sensitive than a vor
-	if ( nav2_loc ) r *= 4.0;
-	if ( r < -10.0 ) r = -10.0;
-	if ( r > 10.0 ) r = 10.0;
-    } else {
-	r = 0.0;
-    }
-
-    return r;
-}
-
-// return the amount of glide slope needle deflection (.i.e. the
-// number of degrees we are off the glide slope * 5.0
-double FGRadioStack::get_nav1_gs_needle_deflection() const {
-    if ( nav1_inrange && nav1_has_gs ) {
-	double x = nav1_gs_dist;
-	double y = (fgGetDouble("/position/altitude-ft") - nav1_elev)
-            * SG_FEET_TO_METER;
-	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
-	return (nav1_target_gs - angle) * 5.0;
-    } else {
-	return 0.0;
-    }
-}
-
-
-// return the amount of glide slope needle deflection (.i.e. the
-// number of degrees we are off the glide slope * 5.0
-double FGRadioStack::get_nav2_gs_needle_deflection() const {
-    if ( nav2_inrange && nav2_has_gs ) {
-	double x = nav2_gs_dist;
-	double y = (fgGetDouble("/position/altitude-ft") - nav2_elev)
-            * SG_FEET_TO_METER;
-	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
-	return (nav2_target_gs - angle) * 5.0;
-    } else {
-	return 0.0;
-    }
-}
-
-
-/**
- * Return true if the NAV1 TO flag should be active.
- */
-bool 
-FGRadioStack::get_nav1_to_flag () const
-{
-  if (nav1_inrange) {
-    double offset = fabs(nav1_heading - nav1_radial);
-    if (nav1_loc)
-      return true;
-    else
-      return (offset <= 90.0 || offset >= 270.0);
-  } else {
-    return false;
-  }
-}
-
-
-/**
- * Return true if the NAV1 FROM flag should be active.
- */
-bool
-FGRadioStack::get_nav1_from_flag () const
-{
-  if (nav1_inrange) {
-    double offset = fabs(nav1_heading - nav1_radial);
-    if (nav1_loc)
-      return false;
-    else
-      return (offset > 90.0 && offset < 270.0);
-  } else {
-    return false;
-  }
-}
-
-
-/**
- * Return true if the NAV2 TO flag should be active.
- */
-bool 
-FGRadioStack::get_nav2_to_flag () const
-{
-  if (nav2_inrange) {
-    double offset = fabs(nav2_heading - nav2_radial);
-    if (nav2_loc)
-      return true;
-    else
-      return (offset <= 90.0 || offset >= 270.0);
-  } else {
-    return false;
-  }
-}
-
-
-/**
- * Return true if the NAV2 FROM flag should be active.
- */
-bool
-FGRadioStack::get_nav2_from_flag () const
-{
-  if (nav2_inrange) {
-    double offset = fabs(nav2_heading - nav2_radial);
-    if (nav2_loc)
-      return false;
-    else
-      return (offset > 90.0 && offset < 270.0);
-  } else {
-    return false;
-  }
 }

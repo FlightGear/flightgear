@@ -494,12 +494,12 @@ void FGSteam::_CatchUp()
 
 double FGSteam::get_HackOBS1_deg () const
 {
-  return current_radiostack->get_nav1_radial(); 
+    return current_radiostack->get_navcom1()->get_nav_radial(); 
 }
 
 double FGSteam::get_HackOBS2_deg () const
 {
-    return current_radiostack->get_nav2_radial(); 
+    return current_radiostack->get_navcom2()->get_nav_radial(); 
 }
 
 

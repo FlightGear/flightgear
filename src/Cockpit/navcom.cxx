@@ -1,0 +1,644 @@
+// navcom.cxx -- class to manage a navcom instance
+//
+// Written by Curtis Olson, started April 2000.
+//
+// Copyright (C) 2000 - 2002  Curtis L. Olson - curt@flightgear.org
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <stdio.h>	// snprintf
+
+#include <simgear/compiler.h>
+#include <simgear/math/sg_random.h>
+
+#include <Aircraft/aircraft.hxx>
+#include <Navaids/ilslist.hxx>
+#include <Navaids/mkrbeacons.hxx>
+#include <Navaids/navlist.hxx>
+#include <Time/FGEventMgr.hxx>
+
+#include "navcom.hxx"
+
+#include <string>
+SG_USING_STD(string);
+
+
+/**
+ * Boy, this is ugly!  Make the VOR range vary by altitude difference.
+ */
+static double kludgeRange ( double stationElev, double aircraftElev,
+			    double nominalRange)
+{
+    // Assume that the nominal range (usually 50nm) applies at a 5,000
+    // ft difference.  Just a wild guess!
+    double factor = ((aircraftElev*SG_METER_TO_FEET) - stationElev) / 5000.0;
+    double range = fabs(nominalRange * factor);
+
+    // Clamp the range to keep it sane; for now, never less than 25%
+    // or more than 500% of nominal range.
+    if (range < nominalRange/4.0) {
+        range = nominalRange/4.0;
+    } else if (range > nominalRange*5.0) {
+        range = nominalRange*5.0;
+    }
+
+    return range;
+}
+
+
+// Constructor
+FGNavCom::FGNavCom() :
+    lon_node(fgGetNode("/position/longitude-deg", true)),
+    lat_node(fgGetNode("/position/latitude-deg", true)),
+    alt_node(fgGetNode("/position/altitude-ft", true)),
+    last_nav_ident(""),
+    last_nav_vor(false),
+    nav_play_count(0),
+    nav_last_time(0),
+    need_update(true),
+    comm_freq(0.0),
+    comm_alt_freq(0.0),
+    comm_vol_btn(0.0),
+    nav_freq(0.0),
+    nav_alt_freq(0.0),
+    nav_radial(0.0),
+    nav_vol_btn(0.0)
+{
+    SGPath path( globals->get_fg_root() );
+    SGPath term = path;
+    term.append( "Navaids/range.term" );
+    SGPath low = path;
+    low.append( "Navaids/range.low" );
+    SGPath high = path;
+    high.append( "Navaids/range.high" );
+
+    term_tbl = new SGInterpTable( term.str() );
+    low_tbl = new SGInterpTable( low.str() );
+    high_tbl = new SGInterpTable( high.str() );
+
+}
+
+
+// Destructor
+FGNavCom::~FGNavCom() 
+{
+    unbind();		// FIXME: should be called externally
+
+    delete term_tbl;
+    delete low_tbl;
+    delete high_tbl;
+}
+
+
+void
+FGNavCom::init ()
+{
+    morse.init();
+    beacon.init();
+
+    search();
+
+    update(0);			// FIXME: use dt
+}
+
+void
+FGNavCom::bind ()
+{
+    char propname[256];
+
+				// User inputs
+    sprintf( propname, "/radios/comm[%d]/frequencies/selected-mhz", index );
+    fgTie( propname, this, &FGNavCom::get_comm_freq, &FGNavCom::set_comm_freq );
+    fgSetArchivable( propname );
+
+    sprintf( propname, "/radios/comm[%d]/frequencies/standby-mhz", index );
+    fgTie( propname, this,
+           &FGNavCom::get_comm_alt_freq, &FGNavCom::set_comm_alt_freq );
+    fgSetArchivable( propname );
+
+    sprintf( propname, "/radios/comm[%d]/volume", index );
+    fgTie( propname, this,
+           &FGNavCom::get_comm_vol_btn, &FGNavCom::set_comm_vol_btn );
+    fgSetArchivable( propname );
+
+    sprintf( propname, "/radios/comm[%d]/ident", index );
+    fgTie( propname, this,
+	  &FGNavCom::get_comm_ident_btn, &FGNavCom::set_comm_ident_btn );
+    fgSetArchivable( propname );
+
+    sprintf( propname, "/radios/nav[%d]/frequencies/selected-mhz", index );
+    fgTie( propname, this,
+	  &FGNavCom::get_nav_freq, &FGNavCom::set_nav_freq );
+    fgSetArchivable( propname );
+
+    sprintf( propname, "/radios/nav[%d]/frequencies/standby-mhz", index );
+    fgTie( propname , this,
+           &FGNavCom::get_nav_alt_freq, &FGNavCom::set_nav_alt_freq);
+    fgSetArchivable( propname );
+
+    sprintf( propname, "/radios/nav[%d]/radials/selected-deg", index );
+    fgTie( propname, this,
+           &FGNavCom::get_nav_sel_radial, &FGNavCom::set_nav_sel_radial );
+    fgSetArchivable( propname );
+
+    sprintf( propname, "/radios/nav[%d]/volume", index );
+    fgTie( propname, this,
+           &FGNavCom::get_nav_vol_btn, &FGNavCom::set_nav_vol_btn );
+    fgSetArchivable( propname );
+
+    sprintf( propname, "/radios/nav[%d]/ident", index );
+    fgTie( propname, this,
+           &FGNavCom::get_nav_ident_btn, &FGNavCom::set_nav_ident_btn );
+    fgSetArchivable( propname );
+
+				// Radio outputs
+    sprintf( propname, "/radios/nav[%d]/radials/actual-deg", index );
+    fgTie( propname,  this, &FGNavCom::get_nav_radial );
+
+    sprintf( propname, "/radios/nav[%d]/to-flag", index );
+    fgTie( propname, this, &FGNavCom::get_nav_to_flag );
+
+    sprintf( propname, "/radios/nav[%d]/from-flag", index );
+    fgTie( propname, this, &FGNavCom::get_nav_from_flag );
+
+    sprintf( propname, "/radios/nav[%d]/in-range", index );
+    fgTie( propname, this, &FGNavCom::get_nav_inrange );
+
+    sprintf( propname, "/radios/nav[%d]/heading-needle-deflection", index );
+    fgTie( propname, this, &FGNavCom::get_nav_heading_needle_deflection );
+
+    sprintf( propname, "/radios/nav[%d]/gs-needle-deflection", index );
+    fgTie( propname, this, &FGNavCom::get_nav_gs_needle_deflection );
+}
+
+
+void
+FGNavCom::unbind ()
+{
+    char propname[256];
+
+    sprintf( propname, "/radios/comm[%d]/frequencies/selected-mhz", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/comm[%d]/frequencies/standby-mhz", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/comm[%d]/on", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/comm[%d]/ident", index );
+    fgUntie( propname );
+
+    sprintf( propname, "/radios/nav[%d]/frequencies/selected-mhz", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/nav[%d]/frequencies/standby-mhz", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/nav[%d]/radials/actual-deg", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/nav[%d]/radials/selected-deg", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/nav[%d]/on", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/nav[%d]/ident", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/nav[%d]/to-flag", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/nav[%d]/from-flag", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/nav[%d]/in-range", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/nav[%d]/heading-needle-deflection", index );
+    fgUntie( propname );
+    sprintf( propname, "/radios/nav[%d]/gs-needle-deflection", index );
+    fgUntie( propname );
+}
+
+
+// model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
+double FGNavCom::adjustNavRange( double stationElev, double aircraftElev,
+			      double nominalRange )
+{
+    // extend out actual usable range to be 1.3x the published safe range
+    const double usability_factor = 1.3;
+
+    // assumptions we model the standard service volume, plus
+    // ... rather than specifying a cylinder, we model a cone that
+    // contains the cylinder.  Then we put an upside down cone on top
+    // to model diminishing returns at too-high altitudes.
+
+    // altitude difference
+    double alt = ( aircraftElev * SG_METER_TO_FEET - stationElev );
+    // cout << "aircraft elev = " << aircraftElev * SG_METER_TO_FEET
+    //      << " station elev = " << stationElev << endl;
+
+    if ( nominalRange < 25.0 + SG_EPSILON ) {
+	// Standard Terminal Service Volume
+	return term_tbl->interpolate( alt ) * usability_factor;
+    } else if ( nominalRange < 50.0 + SG_EPSILON ) {
+	// Standard Low Altitude Service Volume
+	// table is based on range of 40, scale to actual range
+	return low_tbl->interpolate( alt ) * nominalRange / 40.0
+	    * usability_factor;
+    } else {
+	// Standard High Altitude Service Volume
+	// table is based on range of 130, scale to actual range
+	return high_tbl->interpolate( alt ) * nominalRange / 130.0
+	    * usability_factor;
+    }
+}
+
+
+// model standard ILS service volumes as per AIM 1-1-9
+double FGNavCom::adjustILSRange( double stationElev, double aircraftElev,
+				     double offsetDegrees, double distance )
+{
+    // assumptions we model the standard service volume, plus
+
+    // altitude difference
+    // double alt = ( aircraftElev * SG_METER_TO_FEET - stationElev );
+    double offset = fabs( offsetDegrees );
+
+    if ( offset < 10 ) {
+	return FG_ILS_DEFAULT_RANGE;
+    } else if ( offset < 35 ) {
+	return 10 + (35 - offset) * (FG_ILS_DEFAULT_RANGE - 10) / 25;
+    } else if ( offset < 45 ) {
+	return (45 - offset);
+    } else if ( offset > 170 ) {
+        return FG_ILS_DEFAULT_RANGE;
+    } else if ( offset > 145 ) {
+	return 10 + (offset - 145) * (FG_ILS_DEFAULT_RANGE - 10) / 25;
+    } else if ( offset > 135 ) {
+        return (offset - 135);
+    } else {
+	return 0;
+    }
+}
+
+
+// Update the various nav values based on position and valid tuned in navs
+void 
+FGNavCom::update(double dt) 
+{
+    double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
+
+    need_update = false;
+
+    Point3D aircraft = sgGeodToCart( Point3D( lon, lat, elev ) );
+    Point3D station;
+    double az1, az2, s;
+
+    ////////////////////////////////////////////////////////////////////////
+    // Nav.
+    ////////////////////////////////////////////////////////////////////////
+
+    if ( nav_valid ) {
+	station = Point3D( nav_x, nav_y, nav_z );
+	nav_loc_dist = aircraft.distance3D( station );
+
+	if ( nav_has_gs ) {
+	    station = Point3D( nav_gs_x, nav_gs_y, nav_gs_z );
+	    nav_gs_dist = aircraft.distance3D( station );
+	} else {
+	    nav_gs_dist = 0.0;
+	}
+	
+	// wgs84 heading
+	geo_inverse_wgs_84( elev, lat * SGD_RADIANS_TO_DEGREES, lon * SGD_RADIANS_TO_DEGREES, 
+			    nav_loclat, nav_loclon,
+			    &az1, &az2, &s );
+	// cout << "az1 = " << az1 << " magvar = " << nav_magvar << endl;
+	nav_heading = az1 - nav_magvar;
+	// cout << " heading = " << nav_heading
+	//      << " dist = " << nav_dist << endl;
+
+	if ( nav_loc ) {
+	    double offset = nav_heading - nav_radial;
+	    while ( offset < -180.0 ) { offset += 360.0; }
+	    while ( offset > 180.0 ) { offset -= 360.0; }
+	    // cout << "ils offset = " << offset << endl;
+	    nav_effective_range = adjustILSRange(nav_elev, elev, offset,
+						  nav_loc_dist * SG_METER_TO_NM );
+	} else {
+	    nav_effective_range = adjustNavRange(nav_elev, elev, nav_range);
+	}
+	// cout << "nav range = " << nav_effective_range
+	//      << " (" << nav_range << ")" << endl;
+
+	if ( nav_loc_dist < nav_effective_range * SG_NM_TO_METER ) {
+	    nav_inrange = true;
+	} else if ( nav_loc_dist < 2 * nav_effective_range * SG_NM_TO_METER ) {
+	    nav_inrange = sg_random() < 
+		( 2 * nav_effective_range * SG_NM_TO_METER - nav_loc_dist ) /
+		(nav_effective_range * SG_NM_TO_METER);
+	} else {
+	    nav_inrange = false;
+	}
+
+	if ( !nav_loc ) {
+	    nav_radial = nav_sel_radial;
+	}
+    } else {
+	nav_inrange = false;
+	// cout << "not picking up vor. :-(" << endl;
+    }
+
+#ifdef ENABLE_AUDIO_SUPPORT
+    if ( nav_valid && nav_inrange ) {
+	// play station ident via audio system if on + ident,
+	// otherwise turn it off
+	if ( nav_vol_btn > 0.1 && nav_ident_btn ) {
+	    FGSimpleSound *sound;
+	    sound = globals->get_soundmgr()->find( nav_fx_name );
+            if ( sound != NULL ) {
+                sound->set_volume( nav_vol_btn );
+            } else {
+                SG_LOG( SG_COCKPIT, SG_ALERT,
+                        "Can't find nav-vor-ident sound" );
+            }
+	    sound = globals->get_soundmgr()->find( dme_fx_name );
+            if ( sound != NULL ) {
+                sound->set_volume( nav_vol_btn );
+            } else {
+                SG_LOG( SG_COCKPIT, SG_ALERT,
+                        "Can't find nav-dme-ident sound" );
+            }
+            cout << "nav_last_time = " << nav_last_time << " ";
+            cout << "cur_time = " << globals->get_time_params()->get_cur_time();
+	    if ( nav_last_time <
+		 globals->get_time_params()->get_cur_time() - 30 ) {
+		nav_last_time = globals->get_time_params()->get_cur_time();
+		nav_play_count = 0;
+	    }
+            cout << " nav_play_count = " << nav_play_count << endl;
+            cout << "playing = "
+                 << globals->get_soundmgr()->is_playing(nav_fx_name)
+                 << endl;
+	    if ( nav_play_count < 4 ) {
+		// play VOR ident
+		if ( !globals->get_soundmgr()->is_playing(nav_fx_name) ) {
+		    globals->get_soundmgr()->play_once( nav_fx_name );
+		    ++nav_play_count;
+                }
+	    } else if ( nav_play_count < 5 && nav_has_dme ) {
+		// play DME ident
+		if ( !globals->get_soundmgr()->is_playing(nav_fx_name) &&
+		     !globals->get_soundmgr()->is_playing(dme_fx_name) ) {
+		    globals->get_soundmgr()->play_once( dme_fx_name );
+		    ++nav_play_count;
+		}
+	    }
+	} else {
+	    globals->get_soundmgr()->stop( nav_fx_name );
+	    globals->get_soundmgr()->stop( dme_fx_name );
+	}
+    }
+#endif
+
+}
+
+
+// Update current nav/adf radio stations based on current postition
+void FGNavCom::search() 
+{
+    double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
+    double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
+
+    FGILS ils;
+    FGNav nav;
+
+    ////////////////////////////////////////////////////////////////////////
+    // Nav.
+    ////////////////////////////////////////////////////////////////////////
+
+    if ( current_ilslist->query( lon, lat, elev, nav_freq, &ils ) ) {
+	nav_ident = ils.get_locident();
+	nav_valid = true;
+	if ( last_nav_ident != nav_ident || last_nav_vor ) {
+	    nav_trans_ident = ils.get_trans_ident();
+	    last_nav_ident = nav_ident;
+	    last_nav_vor = false;
+	    nav_loc = true;
+	    nav_has_dme = ils.get_has_dme();
+	    nav_has_gs = ils.get_has_gs();
+
+	    nav_loclon = ils.get_loclon();
+	    nav_loclat = ils.get_loclat();
+	    nav_gslon = ils.get_gslon();
+	    nav_gslat = ils.get_gslat();
+	    nav_elev = ils.get_gselev();
+	    nav_magvar = 0;
+	    nav_range = FG_ILS_DEFAULT_RANGE;
+	    nav_effective_range = nav_range;
+	    nav_target_gs = ils.get_gsangle();
+	    nav_radial = ils.get_locheading();
+	    while ( nav_radial <   0.0 ) { nav_radial += 360.0; }
+	    while ( nav_radial > 360.0 ) { nav_radial -= 360.0; }
+	    nav_x = ils.get_x();
+	    nav_y = ils.get_y();
+	    nav_z = ils.get_z();
+	    nav_gs_x = ils.get_gs_x();
+	    nav_gs_y = ils.get_gs_y();
+	    nav_gs_z = ils.get_gs_z();
+
+#ifdef ENABLE_AUDIO_SUPPORT
+	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
+		globals->get_soundmgr()->remove( nav_fx_name );
+	    }
+	    FGSimpleSound *sound;
+	    sound = morse.make_ident( nav_trans_ident, LO_FREQUENCY );
+	    sound->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( sound, nav_fx_name );
+
+	    if ( globals->get_soundmgr()->exists( dme_fx_name ) ) {
+		globals->get_soundmgr()->remove( dme_fx_name );
+	    }
+	    sound = morse.make_ident( nav_trans_ident, HI_FREQUENCY );
+	    sound->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( sound, dme_fx_name );
+
+	    int offset = (int)(sg_random() * 30.0);
+	    nav_play_count = offset / 4;
+	    nav_last_time = globals->get_time_params()->get_cur_time() -
+		offset;
+	    cout << "offset = " << offset << " play_count = "
+	         << nav_play_count
+	         << " nav_last_time = " << nav_last_time
+	         << " current time = "
+	         << globals->get_time_params()->get_cur_time() << endl;
+#endif
+
+	    // cout << "Found an ils station in range" << endl;
+	    // cout << " id = " << ils.get_locident() << endl;
+	}
+    } else if ( current_navlist->query( lon, lat, elev, nav_freq, &nav ) ) {
+	nav_ident = nav.get_ident();
+	nav_valid = true;
+	if ( last_nav_ident != nav_ident || !last_nav_vor ) {
+	    last_nav_ident = nav_ident;
+	    last_nav_vor = true;
+	    nav_trans_ident = nav.get_trans_ident();
+	    nav_loc = false;
+	    nav_has_dme = nav.get_has_dme();
+	    nav_has_gs = false;
+	    nav_loclon = nav.get_lon();
+	    nav_loclat = nav.get_lat();
+	    nav_elev = nav.get_elev();
+	    nav_magvar = nav.get_magvar();
+	    nav_range = nav.get_range();
+	    nav_effective_range = adjustNavRange(nav_elev, elev, nav_range);
+	    nav_target_gs = 0.0;
+	    nav_radial = nav_sel_radial;
+	    nav_x = nav.get_x();
+	    nav_y = nav.get_y();
+	    nav_z = nav.get_z();
+
+#ifdef ENABLE_AUDIO_SUPPORT
+	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
+		globals->get_soundmgr()->remove( nav_fx_name );
+	    }
+	    FGSimpleSound *sound;
+	    sound = morse.make_ident( nav_trans_ident, LO_FREQUENCY );
+	    sound->set_volume( 0.3 );
+	    if ( globals->get_soundmgr()->add( sound, nav_fx_name ) ) {
+                cout << "Added nav-vor-ident sound" << endl;
+            } else {
+                cout << "Failed to add v1-vor-ident sound" << endl;
+            }
+
+	    if ( globals->get_soundmgr()->exists( dme_fx_name ) ) {
+		globals->get_soundmgr()->remove( dme_fx_name );
+	    }
+	    sound = morse.make_ident( nav_trans_ident, HI_FREQUENCY );
+	    sound->set_volume( 0.3 );
+	    globals->get_soundmgr()->add( sound, dme_fx_name );
+
+	    int offset = (int)(sg_random() * 30.0);
+	    nav_play_count = offset / 4;
+	    nav_last_time = globals->get_time_params()->get_cur_time() -
+		offset;
+	    cout << "offset = " << offset << " play_count = "
+	         << nav_play_count << " nav_last_time = "
+	         << nav_last_time << " current time = "
+	         << globals->get_time_params()->get_cur_time() << endl;
+#endif
+
+	    // cout << "Found a vor station in range" << endl;
+	    // cout << " id = " << nav.get_ident() << endl;
+	}
+    } else {
+	nav_valid = false;
+	nav_ident = "";
+	nav_radial = 0;
+	nav_trans_ident = "";
+	last_nav_ident = "";
+#ifdef ENABLE_AUDIO_SUPPORT
+	if ( ! globals->get_soundmgr()->remove( nav_fx_name ) ) {
+            cout << "Failed to remove nav-vor-ident sound" << endl;
+        }
+	globals->get_soundmgr()->remove( dme_fx_name );
+#endif
+	// cout << "not picking up vor1. :-(" << endl;
+    }
+}
+
+
+// return the amount of heading needle deflection, returns a value
+// clamped to the range of ( -10 , 10 )
+double FGNavCom::get_nav_heading_needle_deflection() const {
+    double r;
+
+    if ( nav_inrange ) {
+        r = nav_heading - nav_radial;
+	// cout << "Radial = " << nav_radial 
+	//      << "  Bearing = " << nav_heading << endl;
+    
+	while ( r >  180.0 ) { r -= 360.0;}
+	while ( r < -180.0 ) { r += 360.0;}
+	if ( fabs(r) > 90.0 ) {
+	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+	    if ( nav_loc ) {
+		r = -r;
+	    }
+	}
+
+	// According to Robin Peel, the ILS is 4x more sensitive than a vor
+	if ( nav_loc ) { r *= 4.0; }
+	if ( r < -10.0 ) { r = -10.0; }
+	if ( r >  10.0 ) { r = 10.0; }
+    } else {
+	r = 0.0;
+    }
+
+    return r;
+}
+
+
+// return the amount of glide slope needle deflection (.i.e. the
+// number of degrees we are off the glide slope * 5.0
+double FGNavCom::get_nav_gs_needle_deflection() const {
+    if ( nav_inrange && nav_has_gs ) {
+	double x = nav_gs_dist;
+	double y = (fgGetDouble("/position/altitude-ft") - nav_elev)
+            * SG_FEET_TO_METER;
+	double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
+	return (nav_target_gs - angle) * 5.0;
+    } else {
+	return 0.0;
+    }
+}
+
+
+/**
+ * Return true if the NAV TO flag should be active.
+ */
+bool 
+FGNavCom::get_nav_to_flag () const
+{
+  if (nav_inrange) {
+    double offset = fabs(nav_heading - nav_radial);
+    if (nav_loc)
+      return true;
+    else
+      return (offset <= 90.0 || offset >= 270.0);
+  } else {
+    return false;
+  }
+}
+
+
+/**
+ * Return true if the NAV FROM flag should be active.
+ */
+bool
+FGNavCom::get_nav_from_flag () const
+{
+  if (nav_inrange) {
+    double offset = fabs(nav_heading - nav_radial);
+    if (nav_loc)
+      return false;
+    else
+      return (offset > 90.0 && offset < 270.0);
+  } else {
+    return false;
+  }
+}
