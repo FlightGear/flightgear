@@ -212,8 +212,8 @@ FGInput::update ()
 void
 FGInput::doKey (int k, int modifiers, int x, int y)
 {
-  SG_LOG(SG_INPUT, SG_INFO, "User pressed key " << k
-	 << " with modifiers " << modifiers);
+    // SG_LOG( SG_INPUT, SG_INFO, "User pressed key " << k
+    // 	       << " with modifiers " << modifiers );
 
 				// Sanity check.
   if (k < 0 || k >= MAX_KEYS) {
@@ -257,7 +257,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
 
 				// Use the old, default actions.
-  SG_LOG(SG_INPUT, SG_INFO, "(No user binding.)");
+  // SG_LOG( SG_INPUT, SG_INFO, "(No user binding.)" );
   if (modifiers&FG_MOD_UP)
     return;
 
@@ -550,14 +550,14 @@ FGInput::_update_button (button &b, int modifiers, bool pressed)
   if (pressed) {
 				// The press event may be repeated.
     if (!b.last_state || b.is_repeatable) {
-      SG_LOG(SG_INPUT, SG_INFO, "Button has been pressed");
+      // SG_LOG( SG_INPUT, SG_INFO, "Button has been pressed" );
       for (unsigned int k = 0; k < b.bindings[modifiers].size(); k++)
 	b.bindings[modifiers][k].fire();
     }
   } else {
 				// The release event is never repeated.
     if (b.last_state) {
-      SG_LOG(SG_INPUT, SG_INFO, "Button has been released");
+      // SG_LOG( SG_INPUT, SG_INFO, "Button has been released" );
       for (unsigned int k = 0; k < b.bindings[modifiers|FG_MOD_UP].size(); k++)
 	b.bindings[modifiers|FG_MOD_UP][k].fire();
     }
