@@ -66,7 +66,7 @@ void FGAIBase::Transform() {
 
 bool FGAIBase::init() {
 
-   SGPropertyNode *root = globals->get_props()->getNode("ai/modeles", true);
+   SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
    vector<SGPropertyNode_ptr> p_vec = root->getChildren(_type_str);
    unsigned num = p_vec.size();
    p_vec.clear();
