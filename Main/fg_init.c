@@ -44,6 +44,7 @@
 #include <Astro/sun.h>
 #include <Autopilot/autopilot.h>
 #include <Cockpit/cockpit.h>
+#include <Debug/fg_debug.h>
 #include <Joystick/joystick.h>
 #include <Math/fg_random.h>
 #include <Scenery/scenery.h>
@@ -52,7 +53,6 @@
 #include <Time/fg_time.h>
 #include <Time/sunpos.h>
 #include <Weather/weather.h>
-#include <Main/fg_debug.h>
 
 extern int show_hud;             /* HUD state */
 extern int displayInstruments;
@@ -228,14 +228,10 @@ int fgInitSubsystems( void ) {
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Test Position
-    FG_Longitude = ( -113.5 ) * DEG_TO_RAD;
-    FG_Latitude  = (   33.5 ) * DEG_TO_RAD;
-    FG_Runway_altitude = 8000.0;
-    FG_Altitude = FG_Runway_altitude + 3.758099;
-
-    // A random test position
-    // FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD;
-    // FG_Latitude  = ( 93312.00 / 3600.0 ) * DEG_TO_RAD;
+    // FG_Longitude = ( -109.5 ) * DEG_TO_RAD;
+    // FG_Latitude  = (  32.5 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = (2646 + 2000);
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     fgPrintf( FG_GENERAL, FG_INFO, 
 	      "Initial position is: (%.4f, %.4f, %.2f)\n", 
@@ -405,10 +401,13 @@ int fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.55  1998/04/14 02:21:03  curt
-/* Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
-/* <jgoeke@voyager.net>
+/* Revision 1.56  1998/04/18 04:11:28  curt
+/* Moved fg_debug to it's own library, added zlib support.
 /*
+ * Revision 1.55  1998/04/14 02:21:03  curt
+ * Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
+ * <jgoeke@voyager.net>
+ *
  * Revision 1.54  1998/04/08 23:35:36  curt
  * Tweaks to Gnu automake/autoconf system.
  *

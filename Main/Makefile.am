@@ -8,7 +8,6 @@ fg_SOURCES = \
 	GLUTkey.c GLUTkey.h \
 	GLUTmain.c \
 	fg_config.h \
-	fg_debug.c fg_debug.h \
 	fg_getopt.c fg_getopt.h \
 	fg_init.c fg_init.h \
 	views.c views.h
@@ -26,8 +25,10 @@ fg_LDADD = \
 	$(top_builddir)/Simulator/Time/libTime.la \
 	$(top_builddir)/Simulator/Weather/libWeather.la \
         $(top_builddir)/Simulator/Joystick/libJoystick.la \
-	$(top_builddir)/Simulator/Math/libMath.la \
-	$(top_builddir)/Lib/Bucket/libBucket.la
+	$(top_builddir)/Lib/Math/libMath.la \
+	$(top_builddir)/Lib/Bucket/libBucket.la \
+	$(top_builddir)/Lib/Debug/libDebug.la \
+	$(top_builddir)/Lib/zlib/libz.la
 
 INCLUDES += \
 	-DGLUT \

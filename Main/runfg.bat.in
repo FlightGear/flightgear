@@ -8,16 +8,16 @@ SET FG_ROOT=@prefix@
 :CONT1
 
 REM Check for the existance of the executable
-IF NOT EXIST %FG_ROOT%/BIN/FG.EXE GOTO ERROR1
+IF NOT EXIST %FG_ROOT%\BIN\FG.EXE GOTO ERROR1
 
 REM Now that FG_ROOT has been set, run the program
 ECHO FG_ROOT = %FG_ROOT%
-%FG_ROOT%/BIN/FG.EXE
+%FG_ROOT%\BIN\FG.EXE
 
 GOTO END
 
 :ERROR1
-ECHO Cannot find %FG_ROOT%/BIN/FG.EXE
+ECHO Cannot find %FG_ROOT%\BIN\FG.EXE
 GOTO END
 
 :END

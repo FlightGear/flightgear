@@ -35,8 +35,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <Debug/fg_debug.h>
 #include <Main/GLUTkey.h>
-#include <Main/fg_debug.h>
 #include <Main/views.h>
 
 #include <Include/fg_constants.h>
@@ -257,10 +257,13 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.32  1998/04/14 02:21:01  curt
-/* Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
-/* <jgoeke@voyager.net>
+/* Revision 1.33  1998/04/18 04:11:25  curt
+/* Moved fg_debug to it's own library, added zlib support.
 /*
+ * Revision 1.32  1998/04/14 02:21:01  curt
+ * Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
+ * <jgoeke@voyager.net>
+ *
  * Revision 1.31  1998/04/08 23:34:05  curt
  * Patch from Durk to fix trim reversal with numlock key active.
  *

@@ -81,7 +81,6 @@ fg_SOURCES = \
 	GLUTkey.c GLUTkey.h \
 	GLUTmain.c \
 	fg_config.h \
-	fg_debug.c fg_debug.h \
 	fg_getopt.c fg_getopt.h \
 	fg_init.c fg_init.h \
 	views.c views.h
@@ -99,8 +98,10 @@ fg_LDADD = \
 	$(top_builddir)/Simulator/Time/libTime.la \
 	$(top_builddir)/Simulator/Weather/libWeather.la \
         $(top_builddir)/Simulator/Joystick/libJoystick.la \
-	$(top_builddir)/Simulator/Math/libMath.la \
-	$(top_builddir)/Lib/Bucket/libBucket.la
+	$(top_builddir)/Lib/Math/libMath.la \
+	$(top_builddir)/Lib/Bucket/libBucket.la \
+	$(top_builddir)/Lib/Debug/libDebug.la \
+	$(top_builddir)/Lib/zlib/libz.la
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../Include/config.h
 CONFIG_CLEAN_FILES =  runfg runfg.bat
@@ -115,8 +116,7 @@ X_CFLAGS = @X_CFLAGS@
 X_LIBS = @X_LIBS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
-fg_OBJECTS =  GLUTkey.o GLUTmain.o fg_debug.o fg_getopt.o fg_init.o \
-views.o
+fg_OBJECTS =  GLUTkey.o GLUTmain.o fg_getopt.o fg_init.o views.o
 fg_DEPENDENCIES =  $(top_builddir)/Simulator/Aircraft/libAircraft.la \
 $(top_builddir)/Simulator/Astro/libAstro.la \
 $(top_builddir)/Simulator/Autopilot/libAutopilot.la \
@@ -129,8 +129,9 @@ $(top_builddir)/Simulator/Scenery/libScenery.la \
 $(top_builddir)/Simulator/Time/libTime.la \
 $(top_builddir)/Simulator/Weather/libWeather.la \
 $(top_builddir)/Simulator/Joystick/libJoystick.la \
-$(top_builddir)/Simulator/Math/libMath.la \
-$(top_builddir)/Lib/Bucket/libBucket.la
+$(top_builddir)/Lib/Math/libMath.la \
+$(top_builddir)/Lib/Bucket/libBucket.la \
+$(top_builddir)/Lib/Debug/libDebug.la $(top_builddir)/Lib/zlib/libz.la
 fg_LDFLAGS = 
 SCRIPTS =  $(bin_SCRIPTS)
 
@@ -145,8 +146,8 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP = --best
-DEP_FILES =  .deps/GLUTkey.P .deps/GLUTmain.P .deps/fg_debug.P \
-.deps/fg_getopt.P .deps/fg_init.P .deps/views.P
+DEP_FILES =  .deps/GLUTkey.P .deps/GLUTmain.P .deps/fg_getopt.P \
+.deps/fg_init.P .deps/views.P
 SOURCES = $(fg_SOURCES)
 OBJECTS = $(fg_OBJECTS)
 

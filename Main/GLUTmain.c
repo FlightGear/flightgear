@@ -41,9 +41,9 @@
 #   include <getopt.h>
 #endif
 
+#include <Debug/fg_debug.h>
 #include <Main/GLUTkey.h>
 #include <Main/fg_init.h>
-#include <Main/fg_debug.h>
 #include <Main/fg_getopt.h>
 #include <Main/views.h>
 
@@ -347,6 +347,7 @@ static void fgRenderFrame( void ) {
     struct fgVIEW *v;
     double angle;
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
 
     l = &cur_light_params;
     t = &cur_time_params;
@@ -417,6 +418,8 @@ static void fgRenderFrame( void ) {
 		      GL_LINEAR /* GL_LINEAR_MIPMAP_LINEAR */ ) ;
     xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
     xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
+    /* set base color (I don't think this is doing anything here) */
+    xglColor4fv(white);
 
     fgTileMgrRender();
 
@@ -824,10 +827,13 @@ extern "C" {
 #endif
 
 /* $Log$
-/* Revision 1.70  1998/04/14 02:21:02  curt
-/* Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
-/* <jgoeke@voyager.net>
+/* Revision 1.71  1998/04/18 04:11:26  curt
+/* Moved fg_debug to it's own library, added zlib support.
 /*
+ * Revision 1.70  1998/04/14 02:21:02  curt
+ * Incorporated autopilot heading hold contributed by:  Jeff Goeke-Smith
+ * <jgoeke@voyager.net>
+ *
  * Revision 1.69  1998/04/08 23:35:34  curt
  * Tweaks to Gnu automake/autoconf system.
  *
