@@ -25,7 +25,7 @@ AirportList::AirportList (int x, int y, int width, int height)
         
         _content[i] = new char[buf_len+1];
         memcpy(_content[i], buf, buf_len);
-        _content[i][buf_len+1] = '\0';
+        _content[i][buf_len] = '\0';
     }
     _content[_nAirports] = 0;
     newList(_content);
