@@ -191,9 +191,6 @@ FGOptions::FGOptions() :
     view_mode(FG_VIEW_PILOT),
     default_view_offset(0),
 
-    // Scenery options
-    tile_diameter(5),
-
     // HUD options
     units(FG_UNITS_FEET),
     tris_or_culled(0),
@@ -493,21 +490,6 @@ FGOptions::parse_time_offset( const string& time_str) {
     // printf("parse_time_offset(): %d\n", result);
 
     return( result );
-}
-
-
-// Parse --tile-diameter=n type option 
-
-int
-FGOptions::parse_tile_radius( const string& arg ) {
-    int radius = atoi( arg );
-
-    if ( radius < FG_RADIUS_MIN ) { radius = FG_RADIUS_MIN; }
-    if ( radius > FG_RADIUS_MAX ) { radius = FG_RADIUS_MAX; }
-
-    // printf("parse_tile_radius(): radius = %d\n", radius);
-
-    return(radius);
 }
 
 
@@ -882,9 +864,6 @@ int FGOptions::parse_option( const string& arg ) {
 	units = FG_UNITS_FEET;	
     } else if ( arg == "--units-meters" ) {
 	units = FG_UNITS_METERS;	
-    } else if ( arg.find( "--tile-radius=" ) != string::npos ) {
-	tile_radius = parse_tile_radius( arg.substr(14) );
-	tile_diameter = tile_radius * 2 + 1;
     } else if ( arg.find( "--time-offset" ) != string::npos ) {
 	time_offset = parse_time_offset( (arg.substr(14)) );
 	//time_offset_type = FG_TIME_SYS_OFFSET;

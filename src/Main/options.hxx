@@ -195,14 +195,6 @@ private:
     double default_view_offset;	// default forward view offset (for use by
 				// multi-display configuration
 
-    // Scenery options
-    int tile_radius;   // Square radius of rendered tiles (around center 
-                       // square.)
-    int tile_diameter; // Diameter of rendered tiles.  for instance
-                       // if tile_diameter = 3 then a 3 x 3 grid of tiles will 
-                       // be drawn.  Increase this to see terrain that is 
-                       // further away.
-
     // HUD options
     int units;         // feet or meters
     int tris_or_culled;
@@ -305,10 +297,6 @@ public:
 	return default_view_offset;
     }
 
-
-    inline int get_tile_radius() const { return tile_radius; }
-    inline int get_tile_diameter() const { return tile_diameter; }
-
     inline int get_units() const { return units; }
     inline int get_tris_or_culled() const { return tris_or_culled; }
 
@@ -373,8 +361,6 @@ public:
     inline void set_xsize( int x ) { xsize = x; }
     inline void set_ysize( int y ) { ysize = y; }
     inline void set_view_mode (fgViewMode value) { view_mode = value; }
-    inline void set_tile_radius (int value) { tile_radius = value; }
-    inline void set_tile_diameter (int value) { tile_diameter = value; }
     inline void set_units (int value) { units = value; }
     inline void set_tris_or_culled (int value) { tris_or_culled = value; }
     inline void set_time_offset (int value) { time_offset = value; }
@@ -399,7 +385,6 @@ private:
     long int parse_date( const string& date_str );
     double parse_degree( const string& degree_str );
     int parse_time_offset( const string& time_str );
-    int parse_tile_radius( const string& arg );
     int parse_fdm( const string& fm );
     double parse_fov( const string& arg );
     bool parse_channel( const string& type, const string& channel_str );
