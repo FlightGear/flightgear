@@ -1,5 +1,5 @@
-New in 0.9.4.pre1
-* March 22, 2004
+New in 0.9.4.pre2
+* March 23, 2004
 
 * Impliment SimGear's (aka Andy's) Nasal scripting language in
   FlightGear and integrate with the FG property system.
