@@ -545,9 +545,9 @@ parse_option (const string& arg)
     } else if ( arg == "--enable-mouse-pointer" ) {
 	fgSetString("/sim/startup/mouse-pointer", "enabled");
     } else if ( arg == "--disable-freeze" ) {
-        globals->set_freeze(false);
+        fgSetBool("/sim/freeze", false);
     } else if ( arg == "--enable-freeze" ) {
-        globals->set_freeze(true);
+        fgSetBool("/sim/freeze", true);
     } else if ( arg == "--disable-anti-alias-hud" ) {
 	fgSetBool("/sim/hud/antialiased", false);
     } else if ( arg == "--enable-anti-alias-hud" ) {
