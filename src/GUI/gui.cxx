@@ -595,6 +595,10 @@ void dumpScreen ( puObject *obj ) {
 
     fgInitVisuals();
     fgReshape( current_options.get_xsize(), current_options.get_ysize() );
+
+    // we need two render frames here to clear the menu and cursor
+    // ... not sure why but doing an extra fgFenderFrame() shoulnd't
+    // hurt anything
     fgRenderFrame();
     fgRenderFrame();
 
