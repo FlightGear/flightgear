@@ -35,10 +35,6 @@
 #include "LaRCsim.hxx"
 
 
-#define USE_NEW_ENGINE_CODE 1
-FGEngine eng;
-
-
 // Initialize the LaRCsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
 int FGLaRCsim::init( double dt ) {
@@ -48,6 +44,10 @@ int FGLaRCsim::init( double dt ) {
     eng.init(dt);
     // dcl - in passing dt to init rather than update I am assuming
     // that the LaRCsim dt is fixed at one value (yes it is 120hz CLO)
+
+    // update the engines interface
+    FGEngInterface e;
+    add_engine( e );
 #endif
 
     // cout << "FGLaRCsim::init()" << endl;
@@ -88,13 +88,27 @@ int FGLaRCsim::update( int multiloop ) {
     // cout << "FGLaRCsim::update()" << endl;
 
 #ifdef USE_NEW_ENGINE_CODE
-    // update simple engine model
+    // set control inputs
     eng.set_IAS( V_calibrated_kts );
     eng.set_Throttle_Lever_Pos( controls.get_throttle( 0 ) * 100.0 );
     eng.set_Propeller_Lever_Pos( 100 );
     eng.set_Mixture_Lever_Pos( 80 );
+
+    // update engine model
     eng.update();
 
+    // copy engine state values onto "bus"
+    FGEngInterface *e = get_engine( 0 );
+    e->set_Throttle( controls.get_throttle( 0 ) * 100.0 );
+    e->set_Mixture( 80 );
+    e->set_Prop_Advance( 100 );
+    e->set_RPM( eng.get_RPM() );
+    e->set_Manifold_Pressure( eng.get_Manifold_Pressure() );
+    e->set_MaxHP( eng.get_MaxHP() );
+    e->set_Percentage_Power( eng.get_Percentage_Power() );
+    e->set_EGT( eng.get_EGT() );
+    e->set_prop_thrust( eng.get_prop_thrust_SI() );
+    
 #if 0
     cout << "Throttle = " << controls.get_throttle( 0 ) * 100.0;
     cout << " Mixture = " << 80;

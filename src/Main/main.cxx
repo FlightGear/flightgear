@@ -21,7 +21,8 @@
 // $Id$
 
 
-#define MICHAEL_JOHNSON_EXPERIMENTAL_ENGINE_AUDIO
+#define USE_NEW_ENGINE_CODE
+#undef MICHAEL_JOHNSON_EXPERIMENTAL_ENGINE_AUDIO
 
 
 #ifdef HAVE_CONFIG_H
@@ -896,7 +897,7 @@ static void fgMainLoop( void ) {
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( current_options.get_sound() && !audio_sched->not_working() ) {
 
-#   ifdef MICHAEL_JOHNSON_EXPERIMENTAL_ENGINE_AUDIO
+#   if defined(MICHAEL_JOHNSON_EXPERIMENTAL_ENGINE_AUDIO)
 
 	static double kts_to_fts = NM_TO_METER * METER_TO_FEET / 3600.0;
 
@@ -912,7 +913,7 @@ static void fgMainLoop( void ) {
 
 	double pitch = log((controls.get_throttle(0) * 14.0) + 1.0);
 	//fprintf(stderr, "pitch1: %f ", pitch);
-	// if (controls.get_throttle(0) > 0.0 || 
+	// if (controls.get_throttle(0) > 0.0 ||
 	//     cur_fdm_state->get_V_calibrated_kts() > 40.0) {
 
 	//fprintf(stderr, "rel_wind: %f ", cur_fdm_state->get_V_calibrated_kts());
@@ -949,6 +950,36 @@ static void fgMainLoop( void ) {
 	if ( volume > 1.0 ) { volume = 1.0; }
 
 	// fprintf(stderr, "volume: %f\n", volume);
+
+	pitch_envelope.setStep  ( 0, 0.01, pitch );
+	volume_envelope.setStep ( 0, 0.01, volume );
+
+#   elif defined(USE_NEW_ENGINE_CODE)
+
+	// pitch corresponds to rpm
+	// volume corresponds to manifold pressure
+
+	double rpm_factor = cur_fdm_state->get_engine(0)->get_RPM() / 2500.0;
+	cout << "rpm = " << cur_fdm_state->get_engine(0)->get_RPM() << endl;
+
+	double pitch = 0.3 + rpm_factor * 3.0;
+	
+	// don't run at absurdly slow rates -- not realistic
+	// and sounds bad to boot.  :-)
+	if (pitch < 0.7) { pitch = 0.7; }
+	if (pitch > 5.0) { pitch = 5.0; }
+	cout << "pitch = " << pitch << endl;
+
+	double mp_factor =
+	    cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 28;
+	cout << "mp = " << cur_fdm_state->get_engine(0)->get_Manifold_Pressure()
+	     << endl;
+
+	double volume = mp_factor;
+
+	if ( volume < 0.3 ) { volume = 0.3; }
+	if ( volume > 2.0 ) { volume = 2.0; }
+	cout << "volume = " << volume << endl;
 
 	pitch_envelope.setStep  ( 0, 0.01, pitch );
 	volume_envelope.setStep ( 0, 0.01, volume );

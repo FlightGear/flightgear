@@ -177,6 +177,10 @@ Bob Kuehne <rpk@who.net>
   Redid the Makefile system so it is simpler and more robust.
 
 
+David Luff <david.luff@nottingham.ac.uk>
+  Contributed heavily to the IO360 piston engine model.
+
+
 Christian Mayer <flightgear@christianmayer.de>
   Working on a multi-lingual conversion tools for fgfs 
   as a demonstration of technology ;-)

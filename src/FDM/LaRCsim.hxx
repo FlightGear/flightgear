@@ -27,10 +27,18 @@
 #define _LARCSIM_HXX
 
 
+#include "IO360.hxx"
 #include "flight.hxx"
 
 
+#define USE_NEW_ENGINE_CODE 1
+
+
 class FGLaRCsim: public FGInterface {
+
+#ifdef USE_NEW_ENGINE_CODE
+    FGEngine eng;
+#endif
 
 public:
 

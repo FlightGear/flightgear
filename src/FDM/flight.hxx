@@ -86,13 +86,59 @@
 #include <math.h>
 
 #include <list>
+#include <vector>
 
 #include <Time/timestamp.hxx>
 
 FG_USING_STD(list);
+FG_USING_STD(vector);
 
 
 typedef double FG_VECTOR_3[3];
+
+
+class FGEngInterface {
+
+private:
+
+    // inputs
+    double Throttle;
+    double Mixture;
+    double Prop_Advance;
+
+    // outputs
+    double RPM;
+    double Manifold_Pressure;
+    double MaxHP;
+    double Percentage_Power;
+    double EGT;
+    double prop_thrust;
+
+public:
+
+    inline double get_Throttle() const { return Throttle; }
+    inline double get_Mixture() const { return Mixture; }
+    inline double get_Prop_Advance() const { return Prop_Advance; }
+    inline double get_RPM() const { return RPM; }
+    inline double get_Manifold_Pressure() const { return Manifold_Pressure; }
+    inline double get_MaxHP() const { return MaxHP; }
+    inline double get_Percentage_Power() const { return Percentage_Power; }
+    inline double get_EGT() const { return EGT; }
+    inline double get_prop_thrust() const { return prop_thrust; }
+
+    inline void set_Throttle( double t ) { Throttle = t; }
+    inline void set_Mixture( double m ) { Mixture = m; }
+    inline void set_Prop_Advance( double p ) { Prop_Advance = p; }
+    inline void set_RPM( double r ) { RPM = r; }
+    inline void set_Manifold_Pressure( double mp ) { Manifold_Pressure = mp; }
+    inline void set_MaxHP( double hp ) { MaxHP = hp; }
+    inline void set_Percentage_Power( double p ) { Percentage_Power = p; }
+    inline void set_EGT( double e ) { EGT = e; }
+    inline void set_prop_thrust( double t ) { prop_thrust = t; }
+
+};
+
+typedef vector < FGEngInterface > engine_list;
 
 
 // This is based heavily on LaRCsim/ls_generic.h
@@ -185,6 +231,9 @@ private:
     double sin_lat_geocentric, cos_lat_geocentric;
     double sin_longitude, cos_longitude;
     double sin_latitude, cos_latitude;
+
+    // Engine list
+    engine_list engines;
 
     FGTimeStamp valid_stamp;          // time this record is valid
     FGTimeStamp next_stamp;           // time this record is valid
@@ -888,6 +937,19 @@ public:
     }
     inline double get_cos_latitude(void) const {
 	return cos_latitude;
+    }
+
+    // engines
+    inline double get_num_engines() const {
+	return engines.size();
+    }
+
+    inline FGEngInterface* get_engine( int i ) {
+	return &engines[i];
+    }
+
+    inline void add_engine( FGEngInterface e ) {
+	return engines.push_back( e );
     }
 };
 
