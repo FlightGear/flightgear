@@ -1,4 +1,4 @@
-SUBDIRS	= LaRCsim Slew
+SUBDIRS	= External LaRCsim Slew
 
 noinst_LIBRARIES = libFlight.a
 

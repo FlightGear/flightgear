@@ -34,27 +34,6 @@
 #endif                                   
 
 
-// Define the various supported flight models (most not yet implemented)
-
-enum fgFlightModelKind {
-    // Slew (in MS terminology)
-    FG_SLEW = 0,
-
-    // The only "real" model that is currently implemented
-    FG_LARCSIM = 1,
-
-    FG_ACM = 2,
-    FG_SUPER_SONIC = 3,
-    FG_HELICOPTER = 4,
-    FG_AUTOGYRO = 5,
-    FG_BALLOON = 6,
-    FG_PARACHUTE = 7,
-
-    // Driven externally via a serial port, net, file, etc.
-    FG_EXTERN = 8
-};
-
-
 typedef double FG_VECTOR_3[3];
 
 
@@ -62,6 +41,25 @@ typedef double FG_VECTOR_3[3];
 class fgFLIGHT {
 
 public:
+
+    // Define the various supported flight models (many not yet implemented)
+    enum {
+	// Slew (in MS terminology)
+	FG_SLEW = 0,
+	
+	// The only "real" model that is currently implemented
+	FG_LARCSIM = 1,
+
+	FG_ACM = 2,
+	FG_SUPER_SONIC = 3,
+	FG_HELICOPTER = 4,
+	FG_AUTOGYRO = 5,
+	FG_BALLOON = 6,
+	FG_PARACHUTE = 7,
+
+	// Driven externally via a serial port, net, file, etc.
+	FG_EXTERNAL = 8
+    };
 
 /*================== Mass properties and geometry values ==================*/
 
@@ -748,6 +746,10 @@ void fgFlightModelSetAltitude(int model, fgFLIGHT& f, double alt_meters);
 
 
 // $Log$
+// Revision 1.5  1998/12/04 01:29:40  curt
+// Stubbed in a new flight model called "External" which is expected to be driven
+// from some external source.
+//
 // Revision 1.4  1998/12/03 04:25:03  curt
 // Working on fixing up new fgFLIGHT class.
 //
