@@ -220,7 +220,8 @@ static const double m_log01 = -log( 0.01 );
 static const double sqrt_m_log01 = sqrt( m_log01 );
 static GLfloat fog_exp_density;
 static GLfloat fog_exp2_density;
-static GLfloat fog_exp2_punch_through;
+static GLfloat rwy_exp2_punch_through;
+static GLfloat taxi_exp2_punch_through;
 
 #ifdef FG_NETWORK_OLK
 ssgSelector *fgd_sel = NULL;
@@ -415,10 +416,11 @@ void trRenderFrame( void ) {
     ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
 
     // draw the lights
-    glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
+    glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
     ssgSetNearFar( scene_nearplane, scene_farplane );
-    ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
     ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
+
+    ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
 
     if (fgGetBool("/environment/clouds/status"))
       thesky->postDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
@@ -465,7 +467,8 @@ void fgRenderFrame() {
 
         fog_exp_density = m_log01 / actual_visibility;
         fog_exp2_density = sqrt_m_log01 / actual_visibility;
-        fog_exp2_punch_through = sqrt_m_log01 / ( actual_visibility * 2.5 );
+        rwy_exp2_punch_through = sqrt_m_log01 / ( actual_visibility * 2.5 );
+        taxi_exp2_punch_through = sqrt_m_log01 / ( actual_visibility * 1.5 );
     }
 
     // double angle;
@@ -734,12 +737,9 @@ void fgRenderFrame() {
 
 	// change state for lighting here
 
-	// draw lighting
-	// Set punch through fog density
-	glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
-
+	// draw runway lighting
+	glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
         ssgSetNearFar( scene_nearplane, scene_farplane );
-	ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
 
 #ifdef FG_EXPERIMENTAL_LIGHTING
         // Enable states for drawing points with GL_extension
@@ -762,7 +762,15 @@ void fgRenderFrame() {
         glEnable(GL_TEXTURE_GEN_S);
         glEnable(GL_TEXTURE_GEN_T);
         glPolygonMode(GL_FRONT, GL_POINT);
+
+        // draw runway lighting
 	ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
+
+        // change punch through and then draw taxi lighting
+	glFogf (GL_FOG_DENSITY, taxi_exp2_punch_through);
+	ssgCullAndDraw( globals->get_scenery()->get_taxi_lights_root() );
+
+        // clean up lighting
         glPolygonMode(GL_FRONT, GL_FILL);
         glDisable(GL_TEXTURE_GEN_S);
         glDisable(GL_TEXTURE_GEN_T);
@@ -786,6 +794,9 @@ void fgRenderFrame() {
         glPointSize(1.0);
         glDisable(GL_POINT_SMOOTH);
 #endif
+
+        // draw ground lighting
+	ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
 
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    // draw the sky cloud layers

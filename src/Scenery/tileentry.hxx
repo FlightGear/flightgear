@@ -145,6 +145,7 @@ private:
     // pointer to ssg transform for this tile
     ssgTransform *terra_transform;
     ssgTransform *rwy_lights_transform;
+    ssgTransform *taxi_lights_transform;
     ssgTransform *gnd_lights_transform;
 
     // pointer to ssg range selector for this tile
@@ -184,6 +185,7 @@ private:
     bool obj_load( const std::string& path,
 			 ssgBranch* geometry,
 			 ssgBranch* rwy_lights,
+			 ssgBranch* taxi_lights,
 			 ssgVertexArray* gound_lights,
 			 bool is_base );
 
@@ -199,7 +201,8 @@ private:
         TERRA_NODE = 0x04,
         GROUND_LIGHTS = 0x08,
         RWY_LIGHTS = 0x10,
-        LIGHTMAPS = 0x20
+        TAXI_LIGHTS = 0x20,
+        LIGHTMAPS = 0x40
     };
     int free_tracker;
 
@@ -271,7 +274,8 @@ public:
      */
     void add_ssg_nodes( ssgBranch* terrain_branch,
 			ssgBranch* gnd_lights_branch,
-			ssgBranch* rwy_lights_branch );
+			ssgBranch* rwy_lights_branch,
+			ssgBranch* taxi_lights_branch );
 
     /**
      * disconnect terrain mesh and ground lighting nodes from scene

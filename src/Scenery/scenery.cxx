@@ -80,6 +80,9 @@ void FGScenery::init() {
 
     rwy_lights_root = new ssgRoot;
     rwy_lights_root->setName( "Runway Lighting Root" );
+
+    taxi_lights_root = new ssgRoot;
+    taxi_lights_root->setName( "Taxi Lighting Root" );
 }
 
 

@@ -65,6 +65,7 @@ class FGScenery : public FGSubsystem {
     ssgBranch *terrain_branch;
     ssgRoot *gnd_lights_root;
     ssgRoot *rwy_lights_root;
+    ssgRoot *taxi_lights_root;
     ssgBranch *models_branch;
     ssgBranch *aircraft_branch;
 
@@ -109,6 +110,13 @@ public:
     }
     inline void set_rwy_lights_root (ssgRoot *r) {
         rwy_lights_root = r;
+    }
+
+    inline ssgRoot *get_taxi_lights_root () const {
+        return taxi_lights_root;
+    }
+    inline void set_taxi_lights_root (ssgRoot *r) {
+        taxi_lights_root = r;
     }
 
     inline ssgBranch *get_models_branch () const {

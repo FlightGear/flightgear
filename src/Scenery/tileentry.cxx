@@ -55,6 +55,7 @@ FGTileEntry::FGTileEntry ( const SGBucket& b )
       tile_bucket( b ),
       terra_transform( new ssgTransform ),
       rwy_lights_transform( new ssgTransform ),
+      taxi_lights_transform( new ssgTransform ),
       terra_range( new ssgRangeSelector ),
       loaded(false),
       pending_models(0),
@@ -786,12 +787,20 @@ bool FGTileEntry::free_tile() {
             free_tracker |= GROUND_LIGHTS;
         }
     } else if ( !(free_tracker & RWY_LIGHTS) && rwy_lights_transform ) {
-        // delete the terrain lighting branch (this should already have been
-        // disconnected from the scene graph)
+        // delete the runway lighting branch (this should already have
+        // been disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING rwy_lights_transform" );
         if ( fgPartialFreeSSGtree( rwy_lights_transform, delete_size ) == 0 ) {
             ssgDeRefDelete( rwy_lights_transform );
             free_tracker |= RWY_LIGHTS;
+        }
+    } else if ( !(free_tracker & TAXI_LIGHTS) && taxi_lights_transform ) {
+        // delete the taxi lighting branch (this should already have been
+        // disconnected from the scene graph)
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING taxi_lights_transform" );
+        if ( fgPartialFreeSSGtree( taxi_lights_transform, delete_size ) == 0 ) {
+            ssgDeRefDelete( taxi_lights_transform );
+            free_tracker |= TAXI_LIGHTS;
         }
     } else if ( !(free_tracker & LIGHTMAPS) && lightmaps_transform ) {
         // ADA
@@ -910,6 +919,49 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 
         sgAddVec3( lt_trans, lift_vec );
         rwy_lights_transform->setTransform( lt_trans );
+
+        // select which set of lights based on sun angle
+        // float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
+        // if ( sun_angle > 95 ) {
+        //     gnd_lights_brightness->select(0x04);
+        // } else if ( sun_angle > 92 ) {
+        //     gnd_lights_brightness->select(0x02);
+        // } else if ( sun_angle > 89 ) {
+        //     gnd_lights_brightness->select(0x01);
+        // } else {
+        //     gnd_lights_brightness->select(0x00);
+        // }
+    }
+
+    if ( taxi_lights_transform ) {
+        // we need to lift the lights above the terrain to avoid
+        // z-buffer fighting.  We do this based on our altitude and
+        // the distance this tile is away from scenery center.
+
+        sgVec3 lift_vec;
+        sgCopyVec3( lift_vec, up );
+
+        // we fudge agl by 30 meters so that the lifting function
+        // doesn't phase in until we are > 30m agl.
+        double agl;
+        agl = globals->get_current_view()->getAltitudeASL_ft()
+            * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev()
+            - 30.0;
+        if ( agl < 0.0 ) {
+            agl = 0.0;
+        }
+        
+        if ( general.get_glDepthBits() > 16 ) {
+            sgScaleVec3( lift_vec, 0.0 + agl / 500.0 );
+        } else {
+            sgScaleVec3( lift_vec, 0.0 + agl / 20.0 );
+        }
+
+        sgVec3 lt_trans;
+        sgCopyVec3( lt_trans, sgTrans );
+
+        sgAddVec3( lt_trans, lift_vec );
+        taxi_lights_transform->setTransform( lt_trans );
 
         // select which set of lights based on sun angle
         // float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
@@ -1067,16 +1119,18 @@ ssgLeaf* FGTileEntry::gen_lights( ssgVertexArray *lights, int inc, float bright 
 
 
 bool FGTileEntry::obj_load( const std::string& path,
-                       ssgBranch* geometry,
-                       ssgBranch* rwy_lights,
-                       ssgVertexArray* ground_lights, bool is_base )
+                            ssgBranch* geometry,
+                            ssgBranch* rwy_lights,
+                            ssgBranch* taxi_lights,
+                            ssgVertexArray* ground_lights, bool is_base )
 {
     Point3D c;                  // returned center point
     double br;                  // returned bounding radius
 
     // try loading binary format
     if ( fgBinObjLoad( path, is_base,
-                       &c, &br, geometry, rwy_lights, ground_lights ) )
+                       &c, &br, geometry,
+                       rwy_lights, taxi_lights, ground_lights ) )
     {
         if ( is_base ) {
             center = c;
@@ -1158,7 +1212,7 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 
                 ssgBranch *geometry = new ssgBranch;
                 if ( obj_load( custom_path.str(),
-                               geometry, NULL, light_pts, true ) )
+                               geometry, NULL, NULL, light_pts, true ) )
                 {
                     new_tile -> addKid( geometry );
                 } else {
@@ -1174,8 +1228,10 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 
                 ssgBranch *geometry = new ssgBranch;
                 ssgBranch *rwy_lights = new ssgBranch;
+                ssgBranch *taxi_lights = new ssgBranch;
                 if ( obj_load( custom_path.str(),
-                               geometry, rwy_lights, NULL, false ) )
+                               geometry, rwy_lights, taxi_lights,
+                               NULL, false ) )
                 {
                     if ( geometry -> getNumKids() > 0 ) {
                         new_tile -> addKid( geometry );
@@ -1187,9 +1243,15 @@ FGTileEntry::load( const SGPath& base, bool is_base )
                     } else {
                         delete rwy_lights;
                     }
+                    if ( taxi_lights -> getNumKids() > 0 ) {
+                        taxi_lights_transform -> addKid( taxi_lights );
+                    } else {
+                        delete taxi_lights;
+                    }
                 } else {
                     delete geometry;
                     delete rwy_lights;
+                    delete taxi_lights;
                 }
 
             } else if ( token == "OBJECT_STATIC" ||
@@ -1363,6 +1425,12 @@ FGTileEntry::load( const SGPath& base, bool is_base )
         rwy_lights_transform->setTransform( &sgcoord );
     }
 
+     // Add taxi lights to scene graph if any exist
+    if ( taxi_lights_transform->getNumKids() > 0 ) {
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "adding taxi lights" );
+        taxi_lights_transform->setTransform( &sgcoord );
+    }
+
     // ADA
     // Create runway lights - 23 Mar 2001
     lightmaps_transform = NULL;
@@ -1399,7 +1467,8 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 void
 FGTileEntry::add_ssg_nodes( ssgBranch* terrain_branch,
                             ssgBranch* gnd_lights_branch,
-                            ssgBranch* rwy_lights_branch )
+                            ssgBranch* rwy_lights_branch,
+                            ssgBranch* taxi_lights_branch )
 {
     // bump up the ref count so we can remove this later without
     // having ssg try to free the memory.
@@ -1424,6 +1493,13 @@ FGTileEntry::add_ssg_nodes( ssgBranch* terrain_branch,
         // having ssg try to free the memory.
         rwy_lights_transform->ref();
         rwy_lights_branch->addKid( rwy_lights_transform );
+    }
+
+    if ( taxi_lights_transform != NULL ) {
+        // bump up the ref count so we can remove this later without
+        // having ssg try to free the memory.
+        taxi_lights_transform->ref();
+        taxi_lights_branch->addKid( taxi_lights_transform );
     }
 
     // ADA
@@ -1502,6 +1578,28 @@ FGTileEntry::disconnect_ssg_nodes()
                 // disconnect the light branch (we previously ref()'d
                 // it so it won't get freed now)
                 parent->removeKid( rwy_lights_transform );
+            } else {
+                SG_LOG( SG_TERRAIN, SG_ALERT,
+                        "parent pointer is NULL!  Dying" );
+                exit(-1);
+            }
+        } else {
+            SG_LOG( SG_TERRAIN, SG_ALERT,
+                    "Parent count is zero for an ssg light tile!  Dying" );
+            exit(-1);
+        }
+    }
+
+    // find the taxi lighting branch
+    if ( taxi_lights_transform ) {
+        pcount = taxi_lights_transform->getNumParents();
+        if ( pcount > 0 ) {
+            // find the first parent (should only be one)
+            ssgBranch *parent = taxi_lights_transform->getParent( 0 ) ;
+            if( parent ) {
+                // disconnect the light branch (we previously ref()'d
+                // it so it won't get freed now)
+                parent->removeKid( taxi_lights_transform );
             } else {
                 SG_LOG( SG_TERRAIN, SG_ALERT,
                         "parent pointer is NULL!  Dying" );

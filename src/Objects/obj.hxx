@@ -57,6 +57,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
                    double *bounding_radius,
                    ssgBranch* geometry,
                    ssgBranch* rwy_lights,
+                   ssgBranch* taxi_lights,
                    ssgVertexArray *ground_lights );
 
 // Load an ascii object file

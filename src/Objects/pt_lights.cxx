@@ -491,8 +491,6 @@ ssgBranch *gen_directional_lights( const point_list &nodes,
                                    const string &material,
                                    sgVec3 up )
 {
-    ssgBranch *result;
-
     sgVec3 nup;
     sgNormalizeVec3( nup, up );
 

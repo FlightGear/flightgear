@@ -1368,6 +1368,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
                    double *bounding_radius,
                    ssgBranch* geometry,
                    ssgBranch* rwy_lights,
+                   ssgBranch* taxi_lights,
                    ssgVertexArray *ground_lights )
 {
     SGBinObject obj;
@@ -1412,7 +1413,11 @@ bool fgBinObjLoad( const string& path, const bool is_base,
             // commenting this out to avoid a plib runtime warning.
             // branch->setCallback( SSG_CALLBACK_PREDRAW,
             //                      runway_lights_predraw );
-            rwy_lights->addKid( branch );
+            if ( pt_materials[i].substr(0, 16) == "RWY_BLUE_TAXIWAY" ) {
+                taxi_lights->addKid( branch );
+            } else {
+                rwy_lights->addKid( branch );
+            }
         } else {
             material = pt_materials[i];
             tex_index.clear();
