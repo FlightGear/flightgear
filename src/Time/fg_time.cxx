@@ -53,7 +53,6 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 
-// #include <Astro/skydome.hxx>
 #include <Astro/solarsystem.hxx>
 #include <FDM/flight.hxx>
 #include <Main/options.hxx>
@@ -101,7 +100,7 @@ FGTime::~FGTime()
 void FGTime::updateLocal()
 {
   FGInterface* f;
-  f = current_aircraft.fdm_state;
+  f = cur_fdm_state;
   time_t currGMT;
   time_t aircraftLocalTime;
   GeoCoord location(RAD_TO_DEG * f->get_Latitude(),
