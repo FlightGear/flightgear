@@ -55,6 +55,7 @@ Name: "{userdesktop}\FlightGear v0.9.3"; Filename: "{app}\bin\Win32\fgrun.exe"; 
 [Run]
 ; Put installation directory in the fgrun.prefs
 filename: "{app}\bin\win32\mkfgrunp.bat"; WorkingDir: "{app}\bin\win32"; Parameters: """{app}"" ""{userappdata}"""
+filename: "{app}\bin\win32\instscen.bat"; WorkingDir: "{app}\bin\win32"; Parameters: """{src}"" ""{app}"""
 ; NOTE: The following entry contains an English phrase ("Launch"). You are free to translate it into another language if required.
 Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
 ; For running flightgear directly

@@ -1,15 +1,15 @@
 New in 0.9.3
-* October 22, 2003
+* October 24, 2003
 
 * Added a flight "replay" system.
 * Many updates to the ATC and AI aircraft subsystem. (David Luff)
 * Add support for moving cloud layers.
 * New "symbolic" time of day dialog box for easily setting dawn, dusk,
   noon, etc.
-* Aircaft are now each self contained in their own individual
+* Aircraft are now each self contained in their own individual
   subdirectories for easier end user addition and removal.
 * Many improvements to scene lighting throughout the day->night range
-  including more realistic sky and fog colors, more relistic scene
+  including more realistic sky and fog colors, more realistic scene
   illumination, better dusk/dawn sky coloring, better specular
   lighting support.
 * A nice new chase view has been added.
@@ -33,7 +33,7 @@ New in 0.9.3
   some circumstances.)
 * Many fixes and updates to the autopilot.  Autothrottle tracks speed
   much better with much less jumping around.  
-* Expose the tuned navid via the property system to support building
+* Expose the tuned navaid via the property system to support building
   more advanced avionics.
 * Improvements to the environment manager and gui's, more control over
   turbulence, ability to specify boundary condition layers as well as
@@ -42,7 +42,7 @@ New in 0.9.3
   things like starting and stopping procedures and thrust reversing.
 * UIUCsim updates (compiler warning and namespace conflict fixes.)
 * YASim updates (fix drag from shutdown engine, helicopter support,
-  better in airr startup support.)
+  better in air startup support.)
 * Support for "clock" instruments that operate independently of
   computer system time.
 * Annunciators shouldn't work if electrical system not serviceable.
