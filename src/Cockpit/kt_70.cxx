@@ -41,6 +41,7 @@ FGKT_70::FGKT_70() :
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
     bus_power(fgGetNode("/systems/electrical/outputs/transponder", true)),
+    serviceable_node(fgGetNode("/radios/kt-70/inputs/serviceable", true)),
     r_flash_time(0.0),
     ident_mode(false),
     ident_btn(false),
@@ -147,7 +148,7 @@ void FGKT_70::update( double dt ) {
     sby_ann = false;
     reply_ann = false;
 
-    if ( has_power() ) {
+    if ( has_power() && serviceable_node->getBoolValue() ) {
         // sanity checks
         if ( digit1 < 0 ) { digit1 = 0; }
         if ( digit1 > 7 ) { digit1 = 7; }

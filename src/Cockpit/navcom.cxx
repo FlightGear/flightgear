@@ -102,25 +102,25 @@ FGNavCom::init ()
     fgSetDouble( propname, 60.0 );
     bus_power = fgGetNode( propname, true );
 
-    snprintf(propname, 256, "/instrumentation/comm[%d]/servicable", index);
-    com_servicable = fgGetNode( propname, true );
-    com_servicable->setBoolValue( true );
+    snprintf(propname, 256, "/instrumentation/comm[%d]/serviceable", index);
+    com_serviceable = fgGetNode( propname, true );
+    com_serviceable->setBoolValue( true );
 
-    snprintf(propname, 256, "/instrumentation/nav[%d]/servicable", index);
-    nav_servicable = fgGetNode( propname, true );
-    nav_servicable->setBoolValue( true );
+    snprintf(propname, 256, "/instrumentation/nav[%d]/serviceable", index);
+    nav_serviceable = fgGetNode( propname, true );
+    nav_serviceable->setBoolValue( true );
 
-    snprintf(propname, 256, "/instrumentation/vor[%d]/cdi/servicable", index);
-    cdi_servicable = fgGetNode( propname, true );
-    cdi_servicable->setBoolValue( true );
+    snprintf(propname, 256, "/instrumentation/vor[%d]/cdi/serviceable", index);
+    cdi_serviceable = fgGetNode( propname, true );
+    cdi_serviceable->setBoolValue( true );
 
-    snprintf(propname, 256, "/instrumentation/vor[%d]/gs/servicable", index);
-    gs_servicable = fgGetNode( propname, true );
-    gs_servicable->setBoolValue( true );
+    snprintf(propname, 256, "/instrumentation/vor[%d]/gs/serviceable", index);
+    gs_serviceable = fgGetNode( propname, true );
+    gs_serviceable->setBoolValue( true );
 
-    snprintf(propname, 256, "/instrumentation/vor[%d]/to-from/servicable", index);
-    tofrom_servicable = fgGetNode( propname, true );
-    tofrom_servicable->setBoolValue( true );
+    snprintf(propname, 256, "/instrumentation/vor[%d]/to-from/serviceable", index);
+    tofrom_serviceable = fgGetNode( propname, true );
+    tofrom_serviceable->setBoolValue( true );
 }
 
 void
@@ -342,7 +342,7 @@ FGNavCom::update(double dt)
     ////////////////////////////////////////////////////////////////////////
 
     if ( nav_valid && power_btn && (bus_power->getDoubleValue() > 1.0)
-         && nav_servicable->getBoolValue() )
+         && nav_serviceable->getBoolValue() )
     {
 	station = Point3D( nav_x, nav_y, nav_z );
 	nav_loc_dist = aircraft.distance3D( station );
@@ -426,7 +426,7 @@ FGNavCom::update(double dt)
 	// cout << "not picking up vor. :-(" << endl;
     }
 
-    if ( nav_valid && nav_inrange && nav_servicable->getBoolValue() ) {
+    if ( nav_valid && nav_inrange && nav_serviceable->getBoolValue() ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
 	if ( power_btn && (bus_power->getDoubleValue() > 1.0)
@@ -643,7 +643,7 @@ double FGNavCom::get_nav_cdi_deflection() const {
     double r;
 
     if ( nav_inrange
-         && nav_servicable->getBoolValue() && cdi_servicable->getBoolValue() )
+         && nav_serviceable->getBoolValue() && cdi_serviceable->getBoolValue() )
     {
         r = nav_radial - nav_target_radial;
 	// cout << "Target radial = " << nav_target_radial 
@@ -671,7 +671,7 @@ double FGNavCom::get_nav_cdi_deflection() const {
 // number of degrees we are off the glide slope * 5.0
 double FGNavCom::get_nav_gs_deflection() const {
     if ( nav_inrange && nav_has_gs
-         && nav_servicable->getBoolValue() && gs_servicable->getBoolValue() )
+         && nav_serviceable->getBoolValue() && gs_serviceable->getBoolValue() )
     {
 	double x = nav_gs_dist;
 	double y = (fgGetDouble("/position/altitude-ft") - nav_elev)
@@ -692,8 +692,8 @@ bool
 FGNavCom::get_nav_to_flag () const
 {
     if ( nav_inrange
-         && nav_servicable->getBoolValue()
-         && tofrom_servicable->getBoolValue() )
+         && nav_serviceable->getBoolValue()
+         && tofrom_serviceable->getBoolValue() )
     {
         double offset = fabs(nav_radial - nav_target_radial);
         if (nav_loc) {
@@ -714,8 +714,8 @@ bool
 FGNavCom::get_nav_from_flag () const
 {
     if ( nav_inrange
-         && nav_servicable->getBoolValue()
-         && tofrom_servicable->getBoolValue() ) {
+         && nav_serviceable->getBoolValue()
+         && tofrom_serviceable->getBoolValue() ) {
         double offset = fabs(nav_radial - nav_target_radial);
         if (nav_loc) {
             return false;

@@ -48,7 +48,7 @@ FGMarkerBeacon::FGMarkerBeacon() :
     bus_power(fgGetNode("/systems/electrical/outputs/navcom[0]", true)),
     power_btn(fgGetNode("/radios/marker-beacon/power-btn", true)),
     audio_btn(fgGetNode("/radios/marker-beacon/audio-btn", true)),
-    servicable(fgGetNode("/instrumentation/marker-beacons/servicable", true)),
+    serviceable(fgGetNode("/instrumentation/marker-beacons/serviceable", true)),
                  
     need_update(true),
     outer_blink(false),
@@ -69,7 +69,7 @@ FGMarkerBeacon::FGMarkerBeacon() :
 
     power_btn->setBoolValue( true );
     audio_btn->setBoolValue( true );
-    servicable->setBoolValue( true );
+    serviceable->setBoolValue( true );
 }
 
 
@@ -121,7 +121,7 @@ FGMarkerBeacon::update(double dt)
 {
     need_update = false;
 
-    if ( has_power() && servicable->getBoolValue() ) {
+    if ( has_power() && serviceable->getBoolValue() ) {
         // marker beacon blinking
         bool light_on = ( outer_blink || middle_blink || inner_blink );
         SGTimeStamp current;
@@ -181,7 +181,7 @@ void FGMarkerBeacon::search()
     outer_marker = middle_marker = inner_marker = false;
 
     if ( beacon_type == FGMkrBeacon::NOBEACON
-         || !has_power() || !servicable->getBoolValue() )
+         || !has_power() || !serviceable->getBoolValue() )
     {
 	// cout << "no marker" << endl;
         beacon_type = FGMkrBeacon::NOBEACON;

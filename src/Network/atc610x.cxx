@@ -475,6 +475,7 @@ bool FGATC610x::open() {
 		   true );
     alt_press = fgGetNode( "/instrumentation/altimeter/setting-inhg", true );
     adf_hdg = fgGetNode( "/radios/kr-87/inputs/rotation-deg", true );
+    hdg_bug = fgGetNode( "/autopilot/settings/heading-bug-deg", true );
 
     elevator_center = fgGetNode( "/input/atc610x/elevator/center", true );
     elevator_min = fgGetNode( "/input/atc610x/elevator/min", true );
@@ -510,23 +511,23 @@ bool FGATC610x::open() {
     nav2vol_min = fgGetNode( "/input/atc610x/nav2vol/min", true );
     nav2vol_max = fgGetNode( "/input/atc610x/nav2vol/max", true );
 
-    comm1_servicable = fgGetNode( "/instrumentation/comm[0]/servicable", true );
-    comm2_servicable = fgGetNode( "/instrumentation/comm[1]/servicable", true );
-    nav1_servicable = fgGetNode( "/instrumentation/nav[0]/servicable", true );
-    nav2_servicable = fgGetNode( "/instrumentation/nav[1]/servicable", true );
-    adf_servicable = fgGetNode( "/instrumentation/adf/servicable", true );
-    xpdr_servicable = fgGetNode( "/instrumentation/transponder/servicable",
+    comm1_serviceable = fgGetNode( "/instrumentation/comm[0]/serviceable", true );
+    comm2_serviceable = fgGetNode( "/instrumentation/comm[1]/serviceable", true );
+    nav1_serviceable = fgGetNode( "/instrumentation/nav[0]/serviceable", true );
+    nav2_serviceable = fgGetNode( "/instrumentation/nav[1]/serviceable", true );
+    adf_serviceable = fgGetNode( "/instrumentation/adf/serviceable", true );
+    xpdr_serviceable = fgGetNode( "/radios/kt-70/inputs/serviceable",
                                  true );
-    dme_servicable = fgGetNode( "/instrumentation/dme/servicable", true );
+    dme_serviceable = fgGetNode( "/instrumentation/dme/serviceable", true );
 
-    // default to having everything servicable
-    comm1_servicable->setBoolValue( true );
-    comm2_servicable->setBoolValue( true );
-    nav1_servicable->setBoolValue( true );
-    nav2_servicable->setBoolValue( true );
-    adf_servicable->setBoolValue( true );
-    xpdr_servicable->setBoolValue( true );
-    dme_servicable->setBoolValue( true );
+    // default to having everything serviceable
+    comm1_serviceable->setBoolValue( true );
+    comm2_serviceable->setBoolValue( true );
+    nav1_serviceable->setBoolValue( true );
+    nav2_serviceable->setBoolValue( true );
+    adf_serviceable->setBoolValue( true );
+    xpdr_serviceable->setBoolValue( true );
+    dme_serviceable->setBoolValue( true );
 
     return true;
 }
@@ -764,12 +765,13 @@ bool FGATC610x::do_analog_in() {
 
     // instrument panel pots
     static bool first = true;
-    static int obs1[3], obs2[3], obs3[3], obs4[3], obs5[3];
+    static int obs1[3], obs2[3], obs3[3], obs4[3], obs5[3], obs6[3];
     static double diff1_ave = 0.0;
     static double diff2_ave = 0.0;
     static double diff3_ave = 0.0;
     static double diff4_ave = 0.0;
     static double diff5_ave = 0.0;
+    static double diff6_ave = 0.0;
 
     if ( first ) {
         first = false;
@@ -778,6 +780,7 @@ bool FGATC610x::do_analog_in() {
         obs3[0] = obs3[1] = obs3[2] = analog_in_data[29];
         obs4[0] = obs4[1] = obs4[2] = analog_in_data[30];
         obs5[0] = obs5[1] = obs5[2] = analog_in_data[31];
+        obs6[0] = obs6[1] = obs6[2] = analog_in_data[14];
     }
 
     int diff1 = tony_magic( analog_in_data[11], obs1 );
@@ -785,12 +788,14 @@ bool FGATC610x::do_analog_in() {
     int diff3 = tony_magic( analog_in_data[29], obs3 );
     int diff4 = tony_magic( analog_in_data[30], obs4 );
     int diff5 = tony_magic( analog_in_data[31], obs5 );
+    int diff6 = tony_magic( analog_in_data[14], obs6 );
 
     diff1_ave = instr_pot_filter( diff1_ave, diff1 );
     diff2_ave = instr_pot_filter( diff2_ave, diff2 );
     diff3_ave = instr_pot_filter( diff3_ave, diff3 );
     diff4_ave = instr_pot_filter( diff4_ave, diff4 );
     diff5_ave = instr_pot_filter( diff5_ave, diff5 );
+    diff6_ave = instr_pot_filter( diff6_ave, diff6 );
 
     tmp = alt_press->getDoubleValue() + (diff1_ave * (0.25/888.0) );
     if ( tmp < 27.9 ) { tmp = 27.9; }
@@ -819,6 +824,12 @@ bool FGATC610x::do_analog_in() {
     while ( tmp < 0.0 ) { tmp += 360.0; }
     // cout << " obs = " << tmp << endl;
     fgSetFloat( "/radios/kr-87/inputs/rotation-deg", tmp );
+
+    tmp = hdg_bug->getDoubleValue() + (diff6_ave * (72.0/888.0) );
+    while ( tmp >= 360.0 ) { tmp -= 360.0; }
+    while ( tmp < 0.0 ) { tmp += 360.0; }
+    // cout << " obs = " << tmp << endl;
+    fgSetFloat( "/autopilot/settings/heading-bug-deg", tmp );
 
     return true;
 }
@@ -890,7 +901,7 @@ bool FGATC610x::do_radio_switches() {
     fgSetBool( "/radios/comm[0]/inputs/power-btn",
                radio_switch_data[7] & 0x01 );
 
-    if ( navcom1_has_power() && comm1_servicable->getBoolValue() ) {
+    if ( navcom1_has_power() && comm1_serviceable->getBoolValue() ) {
         // Com1 Swap
         int com1_swap = !((radio_switch_data[7] >> 1) & 0x01);
         static int last_com1_swap;
@@ -907,7 +918,7 @@ bool FGATC610x::do_radio_switches() {
     fgSetBool( "/radios/comm[1]/inputs/power-btn",
                radio_switch_data[15] & 0x01 );
 
-    if ( navcom2_has_power() && comm2_servicable->getBoolValue() ) {
+    if ( navcom2_has_power() && comm2_serviceable->getBoolValue() ) {
         // Com2 Swap
         int com2_swap = !((radio_switch_data[15] >> 1) & 0x01);
         static int last_com2_swap;
@@ -920,7 +931,7 @@ bool FGATC610x::do_radio_switches() {
         last_com2_swap = com2_swap;
     }
 
-    if ( navcom1_has_power() && nav1_servicable->getBoolValue() ) {
+    if ( navcom1_has_power() && nav1_serviceable->getBoolValue() ) {
         // Nav1 Swap
         int nav1_swap = radio_switch_data[11] & 0x01;
         static int last_nav1_swap;
@@ -933,7 +944,7 @@ bool FGATC610x::do_radio_switches() {
         last_nav1_swap = nav1_swap;
     }
 
-    if ( navcom2_has_power() && nav2_servicable->getBoolValue() ) {
+    if ( navcom2_has_power() && nav2_serviceable->getBoolValue() ) {
         // Nav2 Swap
         int nav2_swap = !(radio_switch_data[19] & 0x01);
         static int last_nav2_swap;
@@ -946,7 +957,7 @@ bool FGATC610x::do_radio_switches() {
         last_nav2_swap = nav2_swap;
     }
 
-    if ( navcom1_has_power() && comm1_servicable->getBoolValue() ) {
+    if ( navcom1_has_power() && comm1_serviceable->getBoolValue() ) {
         // Com1 Tuner
         int com1_tuner_fine = ((radio_switch_data[5] >> 4) & 0x0f) - 1;
         int com1_tuner_coarse = (radio_switch_data[5] & 0x0f) - 1;
@@ -998,7 +1009,7 @@ bool FGATC610x::do_radio_switches() {
                     coarse_freq + fine_freq / 40.0 );
     }
 
-    if ( navcom2_has_power() && comm2_servicable->getBoolValue() ) {
+    if ( navcom2_has_power() && comm2_serviceable->getBoolValue() ) {
         // Com2 Tuner
         int com2_tuner_fine = ((radio_switch_data[13] >> 4) & 0x0f) - 1;
         int com2_tuner_coarse = (radio_switch_data[13] & 0x0f) - 1;
@@ -1050,7 +1061,7 @@ bool FGATC610x::do_radio_switches() {
                     coarse_freq + fine_freq / 40.0 );
     }
 
-    if ( navcom1_has_power() && nav1_servicable->getBoolValue() ) {
+    if ( navcom1_has_power() && nav1_serviceable->getBoolValue() ) {
         // Nav1 Tuner
         int nav1_tuner_fine = ((radio_switch_data[9] >> 4) & 0x0f) - 1;
         int nav1_tuner_coarse = (radio_switch_data[9] & 0x0f) - 1;
@@ -1102,7 +1113,7 @@ bool FGATC610x::do_radio_switches() {
                     coarse_freq + fine_freq / 20.0 );
     }
 
-    if ( navcom2_has_power() && nav2_servicable->getBoolValue() ) {
+    if ( navcom2_has_power() && nav2_serviceable->getBoolValue() ) {
         // Nav2 Tuner
         int nav2_tuner_fine = ((radio_switch_data[17] >> 4) & 0x0f) - 1;
         int nav2_tuner_coarse = (radio_switch_data[17] & 0x0f) - 1;
@@ -1161,7 +1172,7 @@ bool FGATC610x::do_radio_switches() {
     static int last_adf_tuner_fine = adf_tuner_fine;
     static int last_adf_tuner_coarse = adf_tuner_coarse;
 
-    if ( adf_has_power() && adf_servicable->getBoolValue() ) {
+    if ( adf_has_power() && adf_serviceable->getBoolValue() ) {
         // cout << "adf_stby_mode = " << adf_stby_mode->getIntValue() << endl;
         if ( adf_count_mode->getIntValue() == 2 ) {
             // tune count down timer
@@ -1267,7 +1278,7 @@ bool FGATC610x::do_radio_switches() {
         }
     }
 
-    if ( xpdr_has_power() && xpdr_servicable->getBoolValue() ) {
+    if ( xpdr_has_power() && xpdr_serviceable->getBoolValue() ) {
         int id_code = xpdr_id_code->getIntValue();
         int digit[4];
         int place = 1000;
@@ -1338,7 +1349,7 @@ bool FGATC610x::do_radio_display() {
     char digits[10];
     int i;
 
-    if ( dme_has_power() && dme_servicable->getBoolValue() ) {
+    if ( dme_has_power() && dme_serviceable->getBoolValue() ) {
         if ( dme_in_range->getBoolValue() ) {
             // DME minutes
             float minutes = dme_min->getFloatValue();
@@ -1393,7 +1404,7 @@ bool FGATC610x::do_radio_display() {
 	}
     }
 
-    if ( navcom1_has_power() && comm1_servicable->getBoolValue() ) {
+    if ( navcom1_has_power() && comm1_serviceable->getBoolValue() ) {
         // Com1 standby frequency
         float com1_stby = com1_stby_freq->getFloatValue();
         if ( fabs(com1_stby) > 999.99 ) {
@@ -1430,7 +1441,7 @@ bool FGATC610x::do_radio_display() {
         radio_display_data[11] = 0xff;
     }
 
-    if ( navcom2_has_power() && comm2_servicable->getBoolValue() ) {
+    if ( navcom2_has_power() && comm2_serviceable->getBoolValue() ) {
         // Com2 standby frequency
         float com2_stby = com2_stby_freq->getFloatValue();
         if ( fabs(com2_stby) > 999.99 ) {
@@ -1467,7 +1478,7 @@ bool FGATC610x::do_radio_display() {
         radio_display_data[23] = 0xff;
     }
 
-    if ( navcom1_has_power() && nav1_servicable->getBoolValue() ) {
+    if ( navcom1_has_power() && nav1_serviceable->getBoolValue() ) {
         // Nav1 standby frequency
         float nav1_stby = nav1_stby_freq->getFloatValue();
         if ( fabs(nav1_stby) > 999.99 ) {
@@ -1504,7 +1515,7 @@ bool FGATC610x::do_radio_display() {
         radio_display_data[17] = 0xff;
     }
 
-    if ( navcom2_has_power() && nav2_servicable->getBoolValue() ) {
+    if ( navcom2_has_power() && nav2_serviceable->getBoolValue() ) {
         // Nav2 standby frequency
         float nav2_stby = nav2_stby_freq->getFloatValue();
         if ( fabs(nav2_stby) > 999.99 ) {
@@ -1542,7 +1553,7 @@ bool FGATC610x::do_radio_display() {
     }
 
     // ADF standby frequency / timer
-    if ( adf_has_power() && adf_servicable->getBoolValue() ) {
+    if ( adf_has_power() && adf_serviceable->getBoolValue() ) {
         if ( adf_stby_mode->getIntValue() == 0 ) {
             // frequency
             float adf_stby = adf_stby_freq->getFloatValue();
@@ -1629,7 +1640,7 @@ bool FGATC610x::do_radio_display() {
     }
     
     // Transponder code and flight level
-    if ( xpdr_has_power() && xpdr_servicable->getBoolValue() ) {
+    if ( xpdr_has_power() && xpdr_serviceable->getBoolValue() ) {
         if ( xpdr_func_knob->getIntValue() == 2 ) {
             // test mode
             radio_display_data[36] = 8 << 4 | 8;

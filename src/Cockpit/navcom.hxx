@@ -49,8 +49,8 @@ class FGNavCom : public FGSubsystem
     SGPropertyNode *lat_node;
     SGPropertyNode *alt_node;
     SGPropertyNode *bus_power;
-    SGPropertyNode *com_servicable, *nav_servicable;
-    SGPropertyNode *cdi_servicable, *gs_servicable, *tofrom_servicable;
+    SGPropertyNode *com_serviceable, *nav_serviceable;
+    SGPropertyNode *cdi_serviceable, *gs_serviceable, *tofrom_serviceable;
 
     string last_nav_id;
     bool last_nav_vor;

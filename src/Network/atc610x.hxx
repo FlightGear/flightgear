@@ -92,7 +92,7 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *adf_stby_mode, *adf_timer_mode;
     SGPropertyNode *adf_count_mode, *adf_flight_timer, *adf_elapsed_timer;
     SGPropertyNode *adf_ant_ann, *adf_adf_ann, *adf_bfo_ann, *adf_frq_ann;
-    SGPropertyNode *adf_flt_ann, *adf_et_ann, *adf_hdg;
+    SGPropertyNode *adf_flt_ann, *adf_et_ann, *adf_hdg, *hdg_bug;
     SGPropertyNode *inner, *middle, *outer;
     SGPropertyNode *xpdr_ident_btn;
     SGPropertyNode *xpdr_digit1, *xpdr_digit2, *xpdr_digit3, *xpdr_digit4;
@@ -102,9 +102,9 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *ati_bird, *alt_press;
 
     // Faults
-    SGPropertyNode *comm1_servicable, *comm2_servicable;
-    SGPropertyNode *nav1_servicable, *nav2_servicable;
-    SGPropertyNode *adf_servicable, *xpdr_servicable, *dme_servicable;
+    SGPropertyNode *comm1_serviceable, *comm2_serviceable;
+    SGPropertyNode *nav1_serviceable, *nav2_serviceable;
+    SGPropertyNode *adf_serviceable, *xpdr_serviceable, *dme_serviceable;
 
     // Configuration values
     SGPropertyNode *elevator_center, *elevator_min, *elevator_max;

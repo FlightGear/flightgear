@@ -52,7 +52,7 @@ class FGMarkerBeacon : public FGSubsystem
     SGPropertyNode *bus_power;
     SGPropertyNode *power_btn;
     SGPropertyNode *audio_btn;
-    SGPropertyNode *servicable;
+    SGPropertyNode *serviceable;
 
     bool need_update;
 
