@@ -46,7 +46,7 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up ) {
     vl->add( tmp3 );
     sgAddVec3( tmp3, up );
     vl->add( tmp3 );
-    sgSubVec3( tmp3, perp );
+    sgAddVec3( tmp3, perp );
     vl->add( tmp3 );
 
     nl->add( dir );
@@ -60,6 +60,7 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up ) {
     cl->add( color );
     cl->add( color );
 
+    /*
     // temporarily do back face
     sgCopyVec3( tmp3, pt );
     vl->add( tmp3 );
@@ -78,6 +79,7 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up ) {
     sgSetVec4( color, 1.0, 1.0, 1.0, 0.0 );
     cl->add( color );
     cl->add( color );
+    */
 
     /* ssgTexCoordArray *tl = new ssgTexCoordArray( 4 );
     sgVec2 tmp2;
@@ -116,7 +118,7 @@ ssgLeaf *gen_normal_line( sgVec3 pt, sgVec3 dir, sgVec3 up ) {
     vl->add( tmp3 );
 
     sgVec4 color;
-    sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
+    sgSetVec4( color, 1.0, 0.0, 0.0, 1.0 );
     cl->add( color );
     cl->add( color );
 
@@ -124,7 +126,6 @@ ssgLeaf *gen_normal_line( sgVec3 pt, sgVec3 dir, sgVec3 up ) {
         new ssgVtxTable ( GL_LINES, vl, NULL, NULL, cl );
 
     FGNewMat *newmat = material_lib.find( "GROUND_LIGHTS" );
-    // FGNewMat *newmat = material_lib.find( "IrrCropPastureCover" );
     leaf->setState( newmat->get_state() );
 
     return leaf;
