@@ -180,16 +180,50 @@ FGAircraftModel::update (int dt)
 				// correctly when view is not forward
       sgMakeRotMat4( sgROT, -pilot_view->get_view_offset()
 		     * SGD_RADIANS_TO_DEGREES, pilot_view->get_world_up() );
-      sgPostMultMat4( VIEW_ROT, sgROT );
+
+      /* Warning lame hack from Wilson ahead */
+      /* get the pitch value */
+      sgVec3 rph;
+      sgCopyVec3(rph, pilot_view->get_rph());
+      /* double it to counter the value already in the VIEW_ROT */
+      float pitch = rph[1] * 2;
+      /* make a ROT matrix 
+         with the values waited by the X coordinate from the offset 
+         rotation see sgROT above
+      */
+      sgMat4 PunROT;
+      PunROT[0][0] = SG_ONE;
+      PunROT[0][1] = SG_ZERO;
+      PunROT[0][2] = SG_ZERO;
+      PunROT[0][3] = SG_ZERO;
+      PunROT[1][0] = SG_ZERO;
+      PunROT[1][1] = cos((1 - sgROT[0][0]) * -pitch);
+      PunROT[1][2] = -sin((1 - sgROT[0][0]) * -pitch);
+      PunROT[1][3] = SG_ZERO;
+      PunROT[2][0] = SG_ZERO;
+      PunROT[2][1] = sin((1 - sgROT[0][0]) * -pitch);
+      PunROT[2][2] = cos((1 - sgROT[0][0]) * -pitch);
+      PunROT[2][3] = SG_ZERO;
+      PunROT[3][0] = SG_ZERO;
+      PunROT[3][1] = SG_ZERO;
+      PunROT[3][2] = SG_ZERO;
+      PunROT[3][3] = SG_ONE;
+
+      sgPostMultMat4( sgTUX, PunROT );
+      sgPostMultMat4( sgTUX, VIEW_ROT );
+      sgPostMultMat4( sgTUX, sgROT );
+      sgPostMultMat4( sgTUX, sgTRANS );
+      /* end lame hack */
+
+    } else {
+      sgPostMultMat4( sgTUX, VIEW_ROT );
+      sgPostMultMat4( sgTUX, sgTRANS );
     }
-    sgPostMultMat4( sgTUX, VIEW_ROT );
-    sgPostMultMat4( sgTUX, sgTRANS );
-    
+
     sgCoord tuxpos;
     sgSetCoord( &tuxpos, sgTUX );
     _position->setTransform( &tuxpos );
   }
-
 }
 
 FGAircraftModel::Animation
