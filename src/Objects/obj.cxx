@@ -348,6 +348,77 @@ add_object_to_triangle (sgVec3 p1, sgVec3 p2, sgVec3 p3, sgVec3 center,
 
 
 /**
+ * Populate a single triangle with randomly-placed objects.
+ *
+ * The objects and their density are defined in the material.  If the
+ * density is smaller than the minimum, there is an appropriate chance
+ * of one appearing.  The ssgBranch supplied will be populated
+ * with the randomly-placed objects, with all objects of each type
+ * under a range selector.
+ *
+ * @param leaf The leaf containing the data for the terrain surface.
+ * @param tri_index The index of the triangle in the leaf.
+ * @param mat The material data for the triangle.
+ * @param branch The branch to which the randomly-placed objects
+ *        should be added.
+ * @param ROT A rotation matrix to align the objects with the earth's
+ *        surface at the current lat/lon.
+ */
+static void
+populate_triangle (float * p1, float * p2, float * p3,
+		   FGNewMat * mat, ssgBranch * branch, sgMat4 ROT)
+{
+				// Calculate the triangle area.
+    double area = sgTriArea(p1, p2, p3);
+
+				// Set up a single center point for LOD
+    sgVec3 center;
+    sgSetVec3(center,
+	      (p1[0] + p2[0] + p3[0]) / 3.0,
+	      (p1[1] + p2[1] + p3[1]) / 3.0,
+	      (p1[2] + p2[2] + p3[2]) / 3.0);
+      
+				// Set up a transformation to the center
+				// point, so that everything else can
+				// be specified relative to it.
+    ssgTransform * location = new ssgTransform;
+    sgMat4 TRANS;
+    sgMakeTransMat4(TRANS, center);
+    location->setTransform(TRANS);
+    branch->addKid(location);
+
+				// Iterate through all the objects types.
+    int num_objects = mat->get_object_count();
+    for (int i = 0; i < num_objects; i++) {
+        double num = area / mat->get_object_coverage(i);
+	float ranges[] = {0, mat->get_object_lod(i)};
+	ssgRangeSelector * lod = new ssgRangeSelector;
+	lod->setRanges(ranges, 2);
+	location->addKid(lod);
+	ssgBranch * objects = new ssgBranch;
+	lod->addKid(objects);
+	      
+	// place an object each unit of area
+	while ( num > 1.0 ) {
+	  add_object_to_triangle(p1, p2, p3, center,
+				 ROT, mat, i, objects);
+	  num -= 1.0;
+	}
+	// for partial units of area, use a zombie door method to
+	// create the proper random chance of an object being created
+	// for this triangle
+	if ( num > 0.0 ) {
+	  if ( sg_random() <= num ) {
+	    // a zombie made it through our door
+	    add_object_to_triangle(p1, p2, p3, center,
+				   ROT, mat, i, objects);
+	  }
+	}
+    }
+}
+
+
+/**
  * Create a rotation matrix to align an object for the current lat/lon.
  *
  * By default, objects are aligned for the north pole.  This code
@@ -379,6 +450,20 @@ makeWorldUpRotationMatrix (sgMat4 ROT, double hdg_deg,
 }
 
 
+/**
+ * Randomly place objects on a surface.
+ *
+ * The leaf node provides the geometry of the surface, while the
+ * material provides the objects and placement density.  Latitude
+ * and longitude are required so that the objects can be rotated
+ * to the world-up vector.
+ *
+ * @param leaf The surface where the objects should be placed.
+ * @param branch The branch that will hold the randomly-placed objects.
+ * @param lon_deg The longitude of the surface center, in degrees.
+ * @param lat_deg The latitude of the surface center, in degrees.
+ * @param material_name The name of the surface's material.
+ */
 static void
 gen_random_surface_objects (ssgLeaf *leaf,
 			    ssgBranch *branch,
@@ -414,66 +499,18 @@ gen_random_surface_objects (ssgLeaf *leaf,
     sgMat4 ROT;
     makeWorldUpRotationMatrix(ROT, hdg_deg, lon_deg, lat_deg);
 
-    short int n1, n2, n3;
-    float *p1, *p2, *p3;
-    sgVec3 result;
-
 				// generate a repeatable random seed
-    p1 = leaf->getVertex( 0 );
-    unsigned int seed = (unsigned int)p1[0];
-    sg_srandom( seed );
+    sg_srandom((unsigned int)(leaf->getVertex(0)[0]));
 
 				// Iterate through all the triangles
+				// and populate them.
     for ( int i = 0; i < num_tris; ++i ) {
-      leaf->getTriangle( i, &n1, &n2, &n3 );
-      p1 = leaf->getVertex(n1);
-      p2 = leaf->getVertex(n2);
-      p3 = leaf->getVertex(n3);
-      double area = sgTriArea( p1, p2, p3 );
-
-				// Set up a single center point for LOD
-      sgVec3 center;
-      sgSetVec3(center,
-		(p1[0] + p2[0] + p3[0]) / 3.0,
-		(p1[1] + p2[1] + p3[1]) / 3.0,
-		(p1[2] + p2[2] + p3[2]) / 3.0);
-      
-				// Set up a transformation to the center
-				// point, so that everything else can
-				// be specified relative to it.
-      ssgTransform * location = new ssgTransform;
-      sgMat4 TRANS;
-      sgMakeTransMat4(TRANS, center);
-      location->setTransform(TRANS);
-      branch->addKid(location);
-
-				// Iterate through all the objects.
-      for (int j = 0; j < num_objects; j++) {
-	double num = area / mat->get_object_coverage(j);
-	float ranges[] = {0, mat->get_object_lod(j)};
-	ssgRangeSelector * lod = new ssgRangeSelector;
-	lod->setRanges(ranges, 2);
-	location->addKid(lod);
-	ssgBranch * objects = new ssgBranch;
-	lod->addKid(objects);
-	      
-	// place an object each unit of area
-	while ( num > 1.0 ) {
-	  add_object_to_triangle(p1, p2, p3, center,
-				 ROT, mat, j, objects);
-	  num -= 1.0;
-	}
-	// for partial units of area, use a zombie door method to
-	// create the proper random chance of an object being created
-	// for this triangle
-	if ( num > 0.0 ) {
-	  if ( sg_random() <= num ) {
-	    // a zombie made it through our door
-	    add_object_to_triangle(p1, p2, p3, center,
-				   ROT, mat, j, objects);
-	  }
-	}
-      }
+      short n1, n2, n3;
+      leaf->getTriangle(i, &n1, &n2, &n3);
+      populate_triangle(leaf->getVertex(n1),
+			leaf->getVertex(n2),
+			leaf->getVertex(n3),
+			mat, branch, ROT);
     }
 }
 
