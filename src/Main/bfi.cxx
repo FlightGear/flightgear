@@ -392,9 +392,6 @@ FGBFI::setTimeGMT (time_t time)
 				// and solar system
   current_options.set_time_offset(time);
   current_options.set_time_offset_type(fgOPTIONS::FG_TIME_GMT_ABSOLUTE);
-  globals->get_time_params()->init( cur_fdm_state->get_Longitude(),
-				    cur_fdm_state->get_Latitude(),
-				    current_options.get_fg_root() );
   globals->get_time_params()->update( cur_fdm_state->get_Longitude(),
 				      cur_fdm_state->get_Latitude(),
 				      globals->get_warp() );

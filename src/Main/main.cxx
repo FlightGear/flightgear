@@ -1315,8 +1315,7 @@ int main( int argc, char **argv ) {
     // Initialize time
     FGPath zone( current_options.get_fg_root() );
     zone.append( "Timezone" );
-    SGTime *t = new SGTime( zone.str() );
-    t->init( 0.0, 0.0, zone.str() );
+    SGTime *t = new SGTime( 0.0, 0.0, zone.str() );
 
     // Handle potential user specified time offsets
     time_t cur_time = t->get_cur_time();
