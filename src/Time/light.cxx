@@ -111,7 +111,7 @@ void fgLIGHT::Update( void ) {
     GLfloat base_sky_color[4] = { 0.336, 0.406, 0.574, 1.0 };
 #endif
     // base fog color
-    GLfloat base_fog_color[4] = { 0.90, 0.90, 1.00, 1.0 };
+    GLfloat base_fog_color[4] = { 0.80, 0.83, 1.0, 1.0 };
     double deg, ambient, diffuse, specular, sky_brightness;
 
     f = current_aircraft.fdm_state;
