@@ -27,7 +27,7 @@
 TARGET = libMath.a
 
 CFILES = MAT3geom.c MAT3inv.c MAT3mat.c MAT3vec.c fg_geodesy.c fg_random.c \
-	 polar.c
+	 polar.c vector.c
 OFILES = $(CFILES:.c=.o)
 
 
@@ -78,9 +78,15 @@ fg_random.o:
 polar.o:
 	$(CC) $(CFLAGS) -c polar.c -o $@
 
+vector.o:
+	$(CC) $(CFLAGS) -c vector.c -o $@
+
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.13  1997/12/22 04:14:33  curt
+# Aligned sky with sun so dusk/dawn effects can be correct relative to the sun.
+#
 # Revision 1.12  1997/07/31 22:52:27  curt
 # Working on redoing internal coordinate systems & scenery transformations.
 #
