@@ -63,7 +63,7 @@
 
 void model_init( void ) {
 
-  Throttle[3] = 0.2; Rudder_pedal = 0; Lat_control = 0; Long_control = 0;
+  Throttle[3] = 0.2; 
   
   Dx_pilot = 0; Dy_pilot = 0; Dz_pilot = 0;
   Mass=2300*INVG;

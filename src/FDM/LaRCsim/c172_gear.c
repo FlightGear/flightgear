@@ -37,11 +37,8 @@
 
 $Header$
 $Log$
-Revision 1.1  1999/06/17 18:07:34  curt
-Initial revision
-
-Revision 1.1  1999/06/15 20:05:27  curt
-Added c172 model from Tony Peden.
+Revision 1.2  1999/06/21 03:01:47  curt
+Updated for both JSBsim and Tony Peden's c172 flight model.
 
 Revision 1.1.1.1  1999/04/05 21:32:45  curt
 Start of 0.6.x branch.

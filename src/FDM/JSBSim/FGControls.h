@@ -177,11 +177,8 @@ extern FGControls controls;
 
 
 // $Log$
-// Revision 1.1  1999/06/17 18:07:34  curt
-// Initial revision
-//
-// Revision 1.3  1999/05/08 03:19:16  curt
-// Incorporated latest JSBsim updates.
+// Revision 1.2  1999/06/21 03:01:39  curt
+// Updated for both JSBsim and Tony Peden's c172 flight model.
 //
 // Revision 1.1  1999/02/13 01:12:03  curt
 // Initial Revision.

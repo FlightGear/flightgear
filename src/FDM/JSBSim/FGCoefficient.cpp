@@ -30,69 +30,6 @@ FUNCTIONAL DESCRIPTION
 This class models the stability derivative coefficient lookup tables or
 equations. Note that the coefficients need not be calculated each delta-t.
 
-The coefficient files are located in the axis subdirectory for each aircraft.
-For instance, for the X-15, you would find subdirectories under the
-aircraft/X-15/ directory named CLIFT, CDRAG, CSIDE, CROLL, CPITCH, CYAW. Under
-each of these directories would be files named a, a0, q, and so on. The file
-named "a" under the CLIFT directory would contain data for the stability
-derivative modeling lift due to a change in alpha. See the FGAircraft.cpp file
-for additional information. The coefficient files have the following format:
-
-<name of coefficient>
-<short description of coefficient with no embedded spaces>
-<method used in calculating the coefficient: TABLE | EQUATION | VECTOR | VALUE>
-  <parameter identifier for table row (if required)>
-  <parameter identifier for table column (if required)>
-<OR'ed list of parameter identifiers needed to turn this coefficient into a force>
-<number of rows in table (if required)>
-<number of columns in table (if required)>
-
-<value of parameter indexing into the column of a table or vector - or value
-  itself for a VALUE coefficient>
-<values of parameter indexing into row of a table if TABLE type> <Value of
-  coefficient at this row and column>
-
-<... repeat above for each column of data in table ...>
-
-As an example for the X-15, for the lift due to mach:
-
-CLa0
-Lift_at_zero_alpha
-Table 8 3
-16384
-32768
-16387
-
-0.00
-0.0 0.0
-0.5 0.4
-0.9 0.9
-1.0 1.6
-1.1 1.3
-1.4 1.0
-2.0 0.5
-3.0 0.5
-
-30000.00
-0.0 0.0
-0.5 0.5
-0.9 1.0
-1.0 1.7
-1.1 1.4
-1.4 1.1
-2.0 0.6
-3.0 0.6
-
-70000.00
-0.0 0.0
-0.5 0.6
-0.9 1.1
-1.0 1.7
-1.1 1.5
-1.4 1.2
-2.0 0.7
-3.0 0.7
-
 Note that the values in a row which index into the table must be the same value
 for each column of data, so the first column of numbers for each altitude are
 seen to be equal, and there are the same number of values for each altitude.
@@ -125,9 +62,28 @@ INCLUDES
 
 FGCoefficient::FGCoefficient(FGFDMExec* fdex, ifstream& coeffDefFile)
 {
-  int r, c;
+  int r, c, start, end, n;
   float ftrashcan;
   string strashcan;
+
+  coeffdef["FG_QBAR"]      = 1;
+  coeffdef["FG_WINGAREA"]  = 2;
+  coeffdef["FG_WINGSPAN"]  = 4;
+  coeffdef["FG_CBAR"]      = 8;
+  coeffdef["FG_ALPHA"]     = 16;
+  coeffdef["FG_ALPHADOT"]  = 32;
+  coeffdef["FG_BETA"]      = 64;
+  coeffdef["FG_BETADOT"]   = 128;
+  coeffdef["FG_PITCHRATE"] = 256;
+  coeffdef["FG_ROLLRATE"]  = 512;
+  coeffdef["FG_YAWRATE"]   = 1024;
+  coeffdef["FG_ELEVATOR"]  = 2048;
+  coeffdef["FG_AILERON"]   = 4096;
+  coeffdef["FG_RUDDER"]    = 8192;
+  coeffdef["FG_MACH"]      = 16384;
+  coeffdef["FG_ALTITUDE"]  = 32768L;
+  coeffdef["FG_I2VEL"]     = 65536L;
+  coeffdef["FG_HALF"]      = 131072L;
 
   FDMExec     = fdex;
   State       = FDMExec->GetState();
@@ -163,19 +119,51 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, ifstream& coeffDefFile)
           coeffDefFile >> columns;
           cout << "Cols: " << columns;
         }
-        coeffDefFile >> LookupR;
+
         cout << endl;
-        cout << "   Row indexing parameter: " << LookupR << endl;
+
+        coeffDefFile >> strashcan;
+        if (strashcan.substr(0,1) == "F") {
+          LookupR = coeffdef[strashcan.c_str()];
+          cout << "   Row indexing parameter: " << strashcan << endl;
+        } else {
+          LookupR = atoi(strashcan.c_str());
+          cout << "   Row indexing parameter: " << LookupR << endl;
+        }
+
       }
 
       if (type == TABLE) {
-        coeffDefFile >> LookupC;
-        cout << "   Column indexing parameter: " << LookupC << endl;
+        coeffDefFile >> strashcan;
+        if (strashcan.substr(0,1) == "F") {
+          LookupC = coeffdef[strashcan.c_str()];
+          cout << "   Column indexing parameter: " << strashcan << endl;
+        } else {
+          LookupC = atoi(strashcan.c_str());
+          cout << "   Column indexing parameter: " << LookupC << endl;
+        }
       }
 
-      coeffDefFile >> multipliers;
+      coeffDefFile >> strashcan;
+
+      end   = strashcan.length();
+      n     = strashcan.find("|");
+      start = 0;
+      multipliers = 0;
+      if (strashcan.substr(0,1) == "F") {
+        while(n < end && n >= 0) {
+          n -= start;
+          multipliers += coeffdef[strashcan.substr(start,n).c_str()];
+          start += n+1;
+          n = strashcan.find("|",start);
+        }
+        multipliers += coeffdef[strashcan.substr(start,end).c_str()];
+      } else {
+        multipliers = atoi(strashcan.c_str());
+      }
+
       cout << "   Non-Dimensionalized by: ";
-      
+
       mult_count = 0;
       if (multipliers & FG_QBAR) {
         mult_idx[mult_count] = FG_QBAR;
@@ -257,11 +245,17 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, ifstream& coeffDefFile)
         mult_count++;
         cout << "h ";
       }
+      if (multipliers & FG_I2VEL) {
+        mult_idx[mult_count] = FG_I2VEL;
+        mult_count++;
+        cout << "1 /(2*Vt) ";
+      }
 			cout << endl;
-			
+
       switch(type) {
       case VALUE:
         coeffDefFile >> StaticValue;
+        cout << "      Value = " << StaticValue << endl;
         break;
       case VECTOR:
         Allocate(rows,2);
@@ -283,6 +277,7 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, ifstream& coeffDefFile)
       case TABLE:
         Allocate(rows, columns);
 
+        Table3D[0][0] = 0.0;
         for (c=1;c<=columns;c++) {
           coeffDefFile >> Table3D[0][c];
           for (r=1;r<=rows;r++) {
@@ -299,7 +294,7 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, ifstream& coeffDefFile)
         	}
         	cout << endl;
         }
-        
+
         break;
       }
     } else {
@@ -353,14 +348,10 @@ float FGCoefficient::Value(float rVal, float cVal)
   col2temp = rFactor*(Table3D[r][c] - Table3D[r-1][c]) + Table3D[r-1][c];
 
   Value = col1temp + cFactor*(col2temp - col1temp);
-  
-//cout << "Value for " << description << " is " << Value;
- 
+
   for (midx=0;midx<mult_count;midx++) {
     Value *= GetCoeffVal(mult_idx[midx]);
   }
-
-//cout << " after multipliers it is: " << Value << endl;
 
   return Value;
 }
@@ -372,7 +363,7 @@ float FGCoefficient::Value(float Val)
   int r, midx;
 
   if (rows < 2) return 0.0;
-  
+
   for (r=1;r<=rows;r++) if (Table3D[r][0] >= Val) break;
   r = r < 2 ? 2 : (r > rows    ? rows    : r);
 
@@ -385,13 +376,9 @@ float FGCoefficient::Value(float Val)
 
   Value = Factor*(Table3D[r][1] - Table3D[r-1][1]) + Table3D[r-1][1];
 
-// cout << "Value for " << description << " is " << Value;
- 
   for (midx=0;midx<mult_count;midx++) {
     Value *= GetCoeffVal(mult_idx[midx]);
   }
-
-//cout << " after multipliers it is: " << Value << endl;
 
   return Value;
 }
@@ -404,13 +391,9 @@ float FGCoefficient::Value(void)
 	
 	Value = StaticValue;
 
-// cout << "Value for " << description << " is " << Value << endl;
- 
   for (midx=0;midx<mult_count;midx++) {
     Value *= GetCoeffVal(mult_idx[midx]);
   }
-
-// cout << " after multipliers it is: " << Value << endl;
 
   return Value;
 }
@@ -436,53 +419,40 @@ float FGCoefficient::GetCoeffVal(int val_idx)
 {
   switch(val_idx) {
   case FG_QBAR:
-//cout << "Qbar: " << State->Getqbar() << endl;
     return State->Getqbar();
   case FG_WINGAREA:
-//cout << "S: " << Aircraft->GetWingArea() << endl;  
     return Aircraft->GetWingArea();
   case FG_WINGSPAN:
-//cout << "b: " << Aircraft->GetWingSpan() << endl;
     return Aircraft->GetWingSpan();
   case FG_CBAR:
-//cout << "Cbar: " << Aircraft->Getcbar() << endl;
     return Aircraft->Getcbar();
   case FG_ALPHA:
-//cout << "Alpha: " << Translation->Getalpha() << endl;
     return Translation->Getalpha();
   case FG_ALPHADOT:
-//cout << "Adot: " << State->Getadot() << endl;
     return State->Getadot();
   case FG_BETA:
-//cout << "Beta: " << Translation->Getbeta() << endl;
     return Translation->Getbeta();
   case FG_BETADOT:
-//cout << "Bdot: " << State->Getbdot() << endl;
     return State->Getbdot();
   case FG_PITCHRATE:
-//cout << "Q: " << Rotation->GetQ() << endl;
     return Rotation->GetQ();
   case FG_ROLLRATE:
-//cout << "P: " << Rotation->GetP() << endl;
     return Rotation->GetP();
   case FG_YAWRATE:
-//cout << "R: " << Rotation->GetR() << endl;
     return Rotation->GetR();
   case FG_ELEVATOR:
-//cout << "De: " << FCS->GetDe() << endl;
     return FCS->GetDe();
   case FG_AILERON:
-//cout << "Da: " << FCS->GetDa() << endl;
     return FCS->GetDa();
   case FG_RUDDER:
-//cout << "Dr: " << FCS->GetDr() << endl;
     return FCS->GetDr();
   case FG_MACH:
-//cout << "Mach: " << State->GetMach() << endl;
     return State->GetMach();
   case FG_ALTITUDE:
-//cout << "h: " << State->Geth() << endl;
     return State->Geth();
+  case FG_I2VEL:
+    return 1.0/(0.5 * State->GetVt());
   }
   return 0;
 }
+

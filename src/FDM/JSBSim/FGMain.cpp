@@ -16,8 +16,8 @@ void main(int argc, char** argv)
 {
 	FGFDMExec* FDMExec;
 	
-  struct timespec short_wait = {0,100000000};
-  struct timespec no_wait    = {0,100000000};
+//  struct timespec short_wait = {0,100000000};
+//  struct timespec no_wait    = {0,100000000};
 
   if (argc != 3) {
     cout << endl
@@ -28,7 +28,7 @@ void main(int argc, char** argv)
 
   FDMExec = new FGFDMExec();
 
-  FDMExec->GetAircraft()->LoadAircraftEx("aircraft", "engine", string(argv[1]));
+  FDMExec->GetAircraft()->LoadAircraft("aircraft", "engine", string(argv[1]));
   FDMExec->GetState()->Reset("aircraft", string(argv[2]));
 
   while (FDMExec->GetState()->Getsim_time() <= 25.0)
@@ -39,12 +39,12 @@ void main(int argc, char** argv)
 
 		if (FDMExec->GetState()->Getsim_time() > 5.0) {
 			FDMExec->GetFCS()->SetDa(0.05);
-			FDMExec->GetFCS()->SetDr(0.05);
-			FDMExec->GetFCS()->SetDe(0.05);
+//			FDMExec->GetFCS()->SetDr(0.05);
+//			FDMExec->GetFCS()->SetDe(0.05);
 		}
 		
     FDMExec->Run();
-    nanosleep(&short_wait,&no_wait);
+//    nanosleep(&short_wait,&no_wait);
   }
 
   delete FDMExec;

@@ -17,6 +17,12 @@ libJSBsim_a_SOURCES = FGAircraft.cpp FGAircraft.h \
 	FGEngine.cpp FGEngine.h \
 	FGTank.cpp FGTank.h 
 
+noinst_PROGRAMS = testJSBsim
+
+testJSBsim_SOURCES = FGMain.cpp
+
+testJSBsim_LDADD = libJSBsim.a
+
 INCLUDES += -I$(top_builddir)
 
 DEFS += -DFGFS

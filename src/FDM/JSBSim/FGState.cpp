@@ -130,7 +130,7 @@ bool FGState::Reset(string path, string fname)
     FDMExec->GetTranslation()->SetABG(alpha, beta, gamma);
 
     Vt = sqrt(U*U + V*V + W*W);
-    qbar = sqrt(U*U + V*V + W*W);
+    qbar = 0.5*(U*U + V*V + W*W)*FDMExec->GetAtmosphere()->CalcRho(h);
 
     Q0 =  sin(psi*0.5)*sin(tht*0.5)*sin(phi*0.5) + cos(psi*0.5)*cos(tht*0.5)*cos(phi*0.5);
     Q1 = -sin(psi*0.5)*sin(tht*0.5)*cos(phi*0.5) + cos(psi*0.5)*cos(tht*0.5)*sin(phi*0.5);

@@ -115,7 +115,7 @@ FGFDMExec::FGFDMExec(void)
   Schedule(Translation, 1);
   Schedule(Position,    1);
   Schedule(Auxiliary,   1);
-  Schedule(Output,      5);
+  Schedule(Output,      1);
 
   terminate = false;
   frozen = false;

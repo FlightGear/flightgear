@@ -94,43 +94,6 @@ Control
   CnDr - Yaw moment due to rudder
   CnDa - Yaw moment due to aileron
 
-This class expects to be run in a directory which contains the subdirectory
-structure shown below (where example aircraft X-15 is shown):
-
-aircraft/
-         X-15/
-              X-15.dat reset00 reset01 reset02 ...
-              CDRAG/
-                 a0 a M De
-              CSIDE/
-                 b r Dr Da
-              CLIFT/
-                 a0 a M adt De
-              CROLL/
-                 b p r Da Dr
-              CPITCH/
-                 a0 a adt q M De
-              CYAW/
-                 b p r Dr Da
-         F-16/
-              F-16.dat reset00 reset01 ...
-              CDRAG/
-                 a0 a M De
-              ...
-
-The General Idea
-
-The file structure is arranged so that various modeled aircraft are stored in
-their own subdirectory. Each aircraft subdirectory is named after the aircraft.
-There should be a file present in the specific aircraft subdirectory (e.g.
-aircraft/X-15) with the same name as the directory with a .dat appended. This
-file contains mass properties information, name of aircraft, etc. for the
-aircraft. In that same directory are reset files numbered starting from 0 (two
-digit numbers), e.g. reset03. Within each reset file are values for important
-state variables for specific flight conditions (altitude, airspeed, etc.). Also
-within this directory are the directories containing lookup tables for the
-stability derivatives for the aircraft.
-
 ********************************************************************************
 INCLUDES
 *******************************************************************************/
@@ -180,7 +143,7 @@ FGAircraft::~FGAircraft(void)
 {
 }
 
-bool FGAircraft::LoadAircraftEx(string aircraft_path, string engine_path, string fname)
+bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string fname)
 {
   string path;
   string fullpath;
@@ -190,7 +153,11 @@ bool FGAircraft::LoadAircraftEx(string aircraft_path, string engine_path, string
   string holding_string;
   char scratch[128];
   ifstream coeffInFile;
+  streampos gpos;
+  int axis;
+  string axis_descript;
 
+	axis = -1;
   aircraftDef = aircraft_path + "/" + fname + "/" + fname + ".cfg";
   ifstream aircraftfile(aircraftDef.c_str());
   cout << "Reading Aircraft Configuration File: " << aircraftDef << endl;
@@ -201,9 +168,11 @@ bool FGAircraft::LoadAircraftEx(string aircraft_path, string engine_path, string
   while (!aircraftfile.fail()) {
   	holding_string.erase();
     aircraftfile >> holding_string;
-    // if (holding_string.compare("//",0,2) != 0) {
-    if ( !(holding_string.substr(0, 2) == "//") ) {
-
+#ifdef __BORLANDC__
+    if (holding_string.compare(0, 2, "//") != 0) {
+#else
+    if (holding_string.compare("//",0,2) != 0) {
+#endif
       if (holding_string == "AIRCRAFT") {
       	cout << "Reading in Aircraft parameters ..." << endl;
       } else if (holding_string == "AERODYNAMICS") {
@@ -269,97 +238,63 @@ bool FGAircraft::LoadAircraftEx(string aircraft_path, string engine_path, string
 
 			} else if (holding_string == "LIFT") {
 
-				cout << "   Lift Coefficients ..." << endl;
-        aircraftfile >> tag;
-        streampos gpos = aircraftfile.tellg();
-				aircraftfile >> tag;
-				if ( !(tag == "}") ) {
-					aircraftfile.seekg(gpos);
-	        Coeff[LiftCoeff][coeff_ctr[LiftCoeff]] = new FGCoefficient(FDMExec, aircraftfile);
-  	      coeff_ctr[LiftCoeff]++;
-  	    } else {
-  	    	cout << "      None found ..." << endl;
-  	    }
-
+				axis_descript = "   Lift Coefficients ...";
+				axis = LiftCoeff;
+				
 			} else if (holding_string == "DRAG") {
 
-				cout << "   Drag Coefficients ..." << endl;
-        aircraftfile >> tag;
-        streampos gpos = aircraftfile.tellg();
-				aircraftfile >> tag;
-				if ( !(tag == "}") ) {
-					aircraftfile.seekg(gpos);
-	        Coeff[DragCoeff][coeff_ctr[DragCoeff]] = new FGCoefficient(FDMExec, aircraftfile);
-  	      coeff_ctr[DragCoeff]++;
-  	    } else {
-  	    	cout << "      None found ..." << endl;
-  	    }
+				axis_descript = "   Drag Coefficients ...";
+				axis = DragCoeff;
 
 			} else if (holding_string == "SIDE") {
 
-				cout << "   Side Coefficients ..." << endl;
-        aircraftfile >> tag;
-        streampos gpos = aircraftfile.tellg();
-				aircraftfile >> tag;
-				if ( !(tag == "}") ) {
-					aircraftfile.seekg(gpos);
-	        Coeff[SideCoeff][coeff_ctr[SideCoeff]] = new FGCoefficient(FDMExec, aircraftfile);
-  	      coeff_ctr[SideCoeff]++;
-  	    } else {
-  	    	cout << "      None found ..." << endl;
-  	    }
+				axis_descript = "   Side Coefficients ...";
+				axis = SideCoeff;
 
 			} else if (holding_string == "ROLL") {
 
-				cout << "   Roll Coefficients ..." << endl;
-        aircraftfile >> tag;
-        streampos gpos = aircraftfile.tellg();
-				aircraftfile >> tag;
-				if ( !(tag == "}") ) {
-					aircraftfile.seekg(gpos);
-	        Coeff[RollCoeff][coeff_ctr[RollCoeff]] = new FGCoefficient(FDMExec, aircraftfile);
-  	      coeff_ctr[RollCoeff]++;
-  	    } else {
-  	    	cout << "      None found ..." << endl;
-  	    }
+				axis_descript = "   Roll Coefficients ...";
+				axis = RollCoeff;
 
 			} else if (holding_string == "PITCH") {
 
-				cout << "   Pitch Coefficients ..." << endl;
-        aircraftfile >> tag;
-        streampos gpos = aircraftfile.tellg();
-				aircraftfile >> tag;
-				if ( !(tag == "}") ) {
-					aircraftfile.seekg(gpos);
-	        Coeff[PitchCoeff][coeff_ctr[PitchCoeff]] = new FGCoefficient(FDMExec, aircraftfile);
-  	      coeff_ctr[PitchCoeff]++;
-  	    } else {
-  	    	cout << "      None found ..." << endl;
-  	    }
+				axis_descript = "   Pitch Coefficients ...";
+				axis = PitchCoeff;
 
 			} else if (holding_string == "YAW") {
 
-				cout << "   Yaw Coefficients ..." << endl;
-        aircraftfile >> tag;
-        streampos gpos = aircraftfile.tellg();
-				aircraftfile >> tag;
-				if ( !(tag == "}") ) {
-					aircraftfile.seekg(gpos);
-	        Coeff[YawCoeff][coeff_ctr[YawCoeff]] = new FGCoefficient(FDMExec, aircraftfile);
-  	      coeff_ctr[YawCoeff]++;
-  	    } else {
-  	    	cout << "      None found ..." << endl;
-  	    }
+				axis_descript = "   Yaw Coefficients ...";
+				axis = YawCoeff;
 
-			} else {
 			}
 
+			if (axis >= 0) {
+				cout << axis_descript << endl;
+  	    aircraftfile >> tag;
+    	  gpos = aircraftfile.tellg();
+				aircraftfile >> tag;
+				if (tag != "}" ) {
+					while (tag != "}") {
+						aircraftfile.seekg(gpos);
+    		    Coeff[axis][coeff_ctr[axis]] = new FGCoefficient(FDMExec, aircraftfile);
+ 		    	  coeff_ctr[axis]++;
+  		    	aircraftfile >> tag;
+		        gpos = aircraftfile.tellg();
+						aircraftfile >> tag;
+  		    }
+ 	    	} else {
+ 	    		cout << "      None found ..." << endl;
+ 	    	}
+ 	    }
+ 	    axis = -1;
+			
     } else {
     	aircraftfile.getline(scratch, 127);
     }
   }
 	cout << "End of Configuration File Parsing." << endl;
-	return true;
+
+  return true;
 }
 
 

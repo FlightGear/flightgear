@@ -104,7 +104,7 @@
 
 
 extern COCKPIT cockpit_;
-FILE *out;
+
 
 SCALAR interp(SCALAR *y_table, SCALAR *x_table, int Ntable, SCALAR x)
 {
@@ -135,16 +135,11 @@ SCALAR interp(SCALAR *y_table, SCALAR *x_table, int Ntable, SCALAR x)
 	return y;
 }    	
 				
-void record()
-{
 
-	fprintf(out,"%g,%g,%g,%g,%g,%g,%g,%g,%g,",Long_control,Lat_control,Rudder_pedal,Aft_trim,Fwd_trim,V_rel_wind,Dynamic_pressure,P_body,R_body);
-	fprintf(out,"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",Alpha,Cos_alpha,Sin_alpha,Alpha_dot,Q_body,Theta_dot,Sin_theta,Cos_theta,Beta,Cos_beta,Sin_beta);
-	fprintf(out,"%g,%g,%g,%g,%g,%g,%g,%g\n",Sin_phi,Cos_phi,F_X_aero,F_Y_aero,F_Z_aero,M_l_aero,M_m_aero,M_n_aero);
-    fflush(out);
-}
 	
 void aero( SCALAR dt, int Initialize ) {
+  
+  
   static int init = 0;
 
   
@@ -153,6 +148,8 @@ void aero( SCALAR dt, int Initialize ) {
 
   
   SCALAR elevator, aileron, rudder;
+  
+  
   
   static SCALAR alpha_ind[NCL]={-0.087,0,0.175,0.209,0.24,0.262,0.278,0.303,0.314,0.332,0.367};	
   static SCALAR CLtable[NCL]={-0.14,0.31,1.21,1.376,1.51249,1.591,1.63,1.60878,1.53712,1.376,1.142};
@@ -183,7 +180,7 @@ void aero( SCALAR dt, int Initialize ) {
   static SCALAR Clbeta=-0.089;
   static SCALAR Clp=-0.47;
   static SCALAR Clr=0.096;
-  static SCALAR Clda=0.178;
+  static SCALAR Clda=-0.178;
   static SCALAR Cldr=0.0147;
   
   static SCALAR Cnbeta=0.065;
@@ -219,13 +216,12 @@ void aero( SCALAR dt, int Initialize ) {
     {
       
 
-      out=fopen("flight.csv","w");
-	  /* Initialize aero coefficients */
+     
 
       
     }
     
-  record();
+  
   
   /*
   LaRCsim uses:
@@ -243,33 +239,18 @@ void aero( SCALAR dt, int Initialize ) {
   
   /*scale pct control to degrees deflection*/
   if ((Long_control+long_trim) <= 0)
-  	elevator=(Long_control+long_trim)*-28*DEG_TO_RAD;
+  	elevator=(Long_control+long_trim)*28*DEG_TO_RAD;
   else
   	elevator=(Long_control+long_trim)*23*DEG_TO_RAD;
   
   aileron  = Lat_control*17.5*DEG_TO_RAD;
   rudder   = Rudder_pedal*16*DEG_TO_RAD; 
-  
-  
-  
-  
-  
-  /*check control surface travel limits*/
-  /* if((elevator+long_trim) > 23)
-     elevator=23;
-  else if((elevator+long_trim) < -28)
-  	 elevator=-23; */
-	 	 
-  
   /*
     The aileron travel limits are 20 deg. TEU and 15 deg TED
     but since we don't distinguish between left and right we'll
 	use the average here (17.5 deg) 
   */	
-  /* if(fabs(aileron) > 17.5)
-  	 aileron = 17.5;
-  if(fabs(rudder) > 16)
-  	 rudder = 16; */
+  
     
   /*calculate rate derivative nondimensionalization (is that a word?) factors */
   /*hack to avoid divide by zero*/
@@ -286,6 +267,7 @@ void aero( SCALAR dt, int Initialize ) {
 	b_2V=0;
   }		
   
+  
   /*calcuate the qS nondimensionalization factors*/
   
   qS=Dynamic_pressure*Sw;
@@ -296,6 +278,9 @@ void aero( SCALAR dt, int Initialize ) {
   ps=-P_body*Cos_alpha + R_body*Sin_alpha;
   rs=-P_body*Sin_alpha + R_body*Cos_alpha;
   
+/*   printf("Wb: %7.4f, Ub: %7.4f, Alpha: %7.4f, elev: %7.4f, ail: %7.4f, rud: %7.4f\n",W_body,U_body,Alpha*RAD_TO_DEG,elevator*RAD_TO_DEG,aileron*RAD_TO_DEG,rudder*RAD_TO_DEG);
+  printf("Theta: %7.4f, Gamma: %7.4f, Beta: %7.4f, Phi: %7.4f, Psi: %7.4f\n",Theta*RAD_TO_DEG,Gamma_vert_rad*RAD_TO_DEG,Beta*RAD_TO_DEG,Phi*RAD_TO_DEG,Psi*RAD_TO_DEG);
+ */
   
   /* sum coefficients */
   CLwbh = interp(CLtable,alpha_ind,NCL,Alpha);
@@ -307,11 +292,14 @@ void aero( SCALAR dt, int Initialize ) {
   cn = Cnbeta*Beta + (Cnp*ps + Cnr*rs)*b_2V + Cnda*aileron + Cndr*rudder; 
   croll=Clbeta*Beta + (Clp*ps + Clr*rs)*b_2V + Clda*aileron + Cldr*rudder;
   
-  /*calculate wind axes forces*/
+/*   printf("CL: %7.4f, Cd: %7.4f, Cm: %7.4f, Cy: %7.4f, Cn: %7.4f, Cl: %7.4f\n",CL,cd,cm,cy,cn,croll);
+ */  /*calculate wind axes forces*/
   F_X_wind=-1*cd*qS;
   F_Y_wind=cy*qS;
   F_Z_wind=-1*CL*qS;
   
+/*   printf("V_rel_wind: %7.4f, Fxwind: %7.4f Fywind: %7.4f Fzwind: %7.4f\n",V_rel_wind,F_X_wind,F_Y_wind,F_Z_wind);
+ */  
   /*calculate moments and body axis forces */
   
   /*find body-axis components of weight*/
@@ -322,13 +310,18 @@ void aero( SCALAR dt, int Initialize ) {
   
   /* requires ugly wind-axes to body-axes transform */
   F_X_aero = W_X + F_X_wind*Cos_alpha*Cos_beta - F_Y_wind*Cos_alpha*Sin_beta - F_Z_wind*Sin_alpha;
-  F_Y_aero = W_Y + F_X_wind*Sin_beta + F_Z_wind*Cos_beta;
+  F_Y_aero = W_Y + F_X_wind*Sin_beta + F_Y_wind*Cos_beta;
   F_Z_aero = W_Z*NZ + F_X_wind*Sin_alpha*Cos_beta - F_Y_wind*Sin_alpha*Sin_beta + F_Z_wind*Cos_alpha;
   
   /*no axes transform here */
-  M_l_aero = I_xx*croll*qSb;
-  M_m_aero = I_yy*cm*qScbar;
-  M_n_aero = I_zz*cn*qSb;
+  M_l_aero = croll*qSb;
+  M_m_aero = cm*qScbar;
+  M_n_aero = cn*qSb;
+  
+/*   printf("I_yy: %7.4f, qScbar: %7.4f, qbar: %7.4f, Sw: %7.4f, cbar: %7.4f, 0.5*rho*V^2: %7.4f\n",I_yy,qScbar,Dynamic_pressure,Sw,cbar,0.5*0.0023081*V_rel_wind*V_rel_wind);
+  printf("Fxbody: %7.4f Fybody: %7.4f Fzbody: %7.4f Weight: %7.4f\n",F_X_wind,F_Y_wind,F_Z_wind,W);
+  printf("Maero: %7.4f Naero: %7.4f Raero: %7.4f\n",M_m_aero,M_n_aero,M_l_aero);
+ */
   
 }
 

@@ -65,7 +65,7 @@ int fgJSBsimInit(double dt) {
     FGPath engine_path( current_options.get_fg_root() );
     engine_path.append( "Engine" );
 
-    FDMExec.GetAircraft()->LoadAircraftEx(aircraft_path.str(), 
+    FDMExec.GetAircraft()->LoadAircraft(aircraft_path.str(), 
 					  engine_path.str(), "X15");
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft" );
 
