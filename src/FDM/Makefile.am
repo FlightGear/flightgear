@@ -1,4 +1,4 @@
-SUBDIRS	= Balloon External JSBsim LaRCsim Slew
+SUBDIRS	= Balloon External JSBsim LaRCsim
 
 noinst_LIBRARIES = libFlight.a
 
