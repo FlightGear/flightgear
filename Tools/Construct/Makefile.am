@@ -4,6 +4,7 @@ SUBDIRS = \
 	Combine \
 	GenOutput \
 	Match \
+	Parallel \
 	Triangulate \
 	Main
 
