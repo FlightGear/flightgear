@@ -159,7 +159,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(-25.0, 25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(-25.0, 25.0, 1.0);
 		v->set_view_offset( FG_PI * 0.75 );
 	    }
 	    return;
@@ -168,7 +168,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(-25.0, 0.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(-25.0, 0.0, 1.0);
 		v->set_view_offset( FG_PI );
 	    }
 	    return;
@@ -177,7 +177,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(-25.0, -25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(-25.0, -25.0, 1.0);
 		v->set_view_offset( FG_PI * 1.25 );
 	    }
 	    return;
@@ -186,7 +186,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(0.0, 25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(0.0, 25.0, 1.0);
 		v->set_view_offset( FG_PI * 0.50 );
 	    }
 	    return;
@@ -195,7 +195,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(0.0, -25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(0.0, -25.0, 1.0);
 		v->set_view_offset( FG_PI * 1.50 );
 	    }
 	    return;
@@ -204,7 +204,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(25.0, 25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(25.0, 25.0, 1.0);
 		v->set_view_offset( FG_PI * 0.25 );
 	    }
 	    return;
@@ -213,7 +213,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(25.0, 0.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(25.0, 0.0, 1.0);
 		v->set_view_offset( 0.00 );
 	    }
 	    return;
@@ -222,7 +222,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(25.0, -25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(25.0, -25.0, 1.0);
 		v->set_view_offset( FG_PI * 1.75 );
 	    }
 	    return;
@@ -270,7 +270,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 		fov = FG_FOV_MAX;
 	    }
 	    globals->get_options()->set_fov(fov);
-	    v->force_update_fov_math();
+	    // v->force_update_fov_math();
 	    return;
 	case 90: // Z key
 #ifndef FG_OLD_WEATHER
@@ -434,7 +434,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 		globals->get_options()->set_view_mode( FGOptions::FG_VIEW_FOLLOW );
 		v->set_goal_view_offset( FG_PI * 1.75 );
 		v->set_view_offset( FG_PI * 1.75 );
-		globals->get_pilot_view()->set_pilot_offset(25.0, -25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(25.0, -25.0, 1.0);
 	    }
 	    fgReshape( globals->get_options()->get_xsize(),
 		       globals->get_options()->get_ysize() );
@@ -446,7 +446,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 		fov = FG_FOV_MIN;
 	    }
 	    globals->get_options()->set_fov(fov);
-	    v->force_update_fov_math();
+	    // v->force_update_fov_math();
 	    return;
 	case 122: // z key
 #ifndef FG_OLD_WEATHER
@@ -561,7 +561,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW)
 	    {
-		globals->get_pilot_view()->set_pilot_offset(-25.0, 25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(-25.0, 25.0, 1.0);
 		v->set_view_offset( FG_PI * 0.75 );
 	    }
 	    return;
@@ -570,7 +570,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(-25.0, 0.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(-25.0, 0.0, 1.0);
 		v->set_view_offset( FG_PI );
 	    }
 	    return;
@@ -579,7 +579,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW)
 	    {
-		globals->get_pilot_view()->set_pilot_offset(-25.0, -25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(-25.0, -25.0, 1.0);
 		v->set_view_offset( FG_PI * 1.25 );
 	    }
 	    return;
@@ -588,7 +588,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(0.0, 25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(0.0, 25.0, 1.0);
 		v->set_view_offset( FG_PI * 0.50 );
 	    }
 	    return;
@@ -597,7 +597,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(0.0, -25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(0.0, -25.0, 1.0);
 		v->set_view_offset( FG_PI * 1.50 );
 	    }
 	    return;
@@ -606,7 +606,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(25.0, 25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(25.0, 25.0, 1.0);
 		v->set_view_offset( FG_PI * 0.25 );
 	    }
 	    return;
@@ -615,7 +615,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(25.0, 0.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(25.0, 0.0, 1.0);
 		v->set_view_offset( 0.00 );
 	    }
 	    return;
@@ -624,7 +624,7 @@ void GLUTspecialkey(int k, int x, int y) {
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
-		globals->get_pilot_view()->set_pilot_offset(25.0, -25.0, 1.0);
+		globals->get_current_view()->set_pilot_offset(25.0, -25.0, 1.0);
 		v->set_view_offset( FG_PI * 1.75 );
 	    }
 	    return;

@@ -293,7 +293,7 @@ void fgRenderFrame( void ) {
     fgLIGHT *l = &cur_light_params;
     static double last_visibility = -9999;
 
-    double angle;
+    // double angle;
     // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     // GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     // GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
@@ -317,21 +317,51 @@ void fgRenderFrame( void ) {
 	// timerText -> setLabel (ctime (&t->cur_time));
 	// end of hack
 
+	// calculate our current position in cartesian space
+	scenery.center = scenery.next_center;
+	// printf("scenery center = %.2f %.2f %.2f\n", scenery.center.x(),
+	//        scenery.center.y(), scenery.center.z());
+
+	globals->get_current_view()->
+	    set_geod_view_pos( cur_fdm_state->get_Longitude(), 
+			       cur_fdm_state->get_Lat_geocentric(), 
+			       cur_fdm_state->get_Altitude() *
+			       FEET_TO_METER );
+	globals->get_current_view()->
+	    set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
+				  FEET_TO_METER ); 
+	globals->get_current_view()->
+	    set_hpr( cur_fdm_state->get_Psi(),
+		     cur_fdm_state->get_Theta(),
+		     cur_fdm_state->get_Phi() );
+
 	// update view volume parameters
 	// cout << "before pilot_view update" << endl;
-        if ( globals->get_options()->get_view_mode()
-	     == FGOptions::FG_VIEW_FOLLOW )
+        if ( globals->get_options()->get_view_mode() ==
+	     FGOptions::FG_VIEW_FOLLOW )
 	{
-	    float * offset = globals->get_pilot_view()->get_pilot_offset();
+	    float * offset = globals->get_current_view()->get_pilot_offset();
 	    globals->get_current_view()->set_pilot_offset( offset[0],
 							   offset[1],
 							   offset[2] );
 	} else {
 	    globals->get_current_view()->set_pilot_offset(0.0, 0.0, 0.0);
 	}
-	globals->get_pilot_view()->UpdateViewParams(*cur_fdm_state);
-	// cout << "after pilot_view update" << endl;
-	globals->get_current_view()->UpdateViewParams(cur_view_fdm);
+
+	if ( ! fgPanelVisible() ) {
+	    xglViewport( 0, 0 ,
+			 (GLint)(globals->get_options()->get_xsize()),
+			 (GLint)(globals->get_options()->get_ysize()) );
+	} else {
+	    int view_h =
+		int( (current_panel->getViewHeight() -
+		      current_panel->getYOffset())
+		     * (globals->get_options()->get_ysize() / 768.0) );
+	    glViewport( 0, 
+			(GLint)(globals->get_options()->get_ysize() - view_h),
+			(GLint)(globals->get_options()->get_xsize()),
+			(GLint)(view_h) );
+	}
 
 	// set the sun position
 	glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
@@ -505,8 +535,7 @@ void fgRenderFrame( void ) {
 	// glMatrixMode( GL_PROJECTION );
 	// glLoadIdentity();
  	float fov = globals->get_options()->get_fov();
- 	// ssgSetFOV(fov * current_view.get_win_ratio(), fov);
- 	ssgSetFOV(fov, fov * globals->get_current_view()->get_win_ratio());
+ 	ssgSetFOV(fov, fov * globals->get_options()->get_win_ratio());
 
 	double agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
 	    - scenery.cur_elev;
@@ -537,9 +566,9 @@ void fgRenderFrame( void ) {
 
 	    sgMat4 sgTRANS;
 	    sgMakeTransMat4( sgTRANS, 
-			     globals->get_pilot_view()->get_view_pos().x(),
-			     globals->get_pilot_view()->get_view_pos().y(),
-			     globals->get_pilot_view()->get_view_pos().z() );
+			     globals->get_current_view()->get_view_pos().x(),
+			     globals->get_current_view()->get_view_pos().y(),
+			     globals->get_current_view()->get_view_pos().z() );
 
 	    sgVec3 ownship_up;
 	    sgSetVec3( ownship_up, 0.0, 0.0, 1.0);
@@ -555,7 +584,7 @@ void fgRenderFrame( void ) {
 	    // sgTUX = ( sgROT * pilot_view.VIEW_ROT ) * sgTRANS
 	    sgMat4 sgTUX;
 	    sgCopyMat4( sgTUX, sgROT );
-	    sgPostMultMat4( sgTUX, globals->get_pilot_view()->get_VIEW_ROT() );
+	    sgPostMultMat4( sgTUX, globals->get_current_view()->get_VIEW_ROT() );
 	    sgPostMultMat4( sgTUX, sgTRANS );
 	
 	    sgCoord tuxpos;
@@ -1144,32 +1173,24 @@ static void fgIdleFunction ( void ) {
 // Handle new window size or exposure
 void fgReshape( int width, int height ) {
     if ( ! fgPanelVisible() || idle_state != 1000 ) {
-	globals->get_current_view()->set_win_ratio( (float)height /
-						    (float)width );
+	globals->get_options()->set_win_ratio( (float)height /
+					       (float)width );
 	glViewport(0, 0 , (GLint)(width), (GLint)(height) );
     } else {
         int view_h =
 	  int((current_panel->getViewHeight() - current_panel->getYOffset())
 	      * (height / 768.0)) + 1;
-	globals->get_current_view()->set_win_ratio( (float)view_h /
-						    (float)width );
+	globals->get_options()->set_win_ratio( (float)view_h /
+					       (float)width );
 	glViewport(0, (GLint)(height - view_h),
 		   (GLint)(width), (GLint)(view_h) );
     }
 
     globals->get_options()->set_xsize( width );
     globals->get_options()->set_ysize( height );
-    globals->get_current_view()->force_update_fov_math();
 
-    // set these fov to be the same as in fgRenderFrame()
-    // float x_fov = globals->get_options()->get_fov();
-    // float y_fov = x_fov * 1.0 / current_view.get_win_ratio();
-    // ssgSetFOV( x_fov, y_fov );
-
-    // glViewport ( 0, 0, width, height );
     float fov = globals->get_options()->get_fov();
-    // ssgSetFOV(fov * current_view.get_win_ratio(), fov);
-    ssgSetFOV(fov, fov * globals->get_current_view()->get_win_ratio());
+    ssgSetFOV(fov, fov * globals->get_options()->get_win_ratio());
 
     fgHUDReshape();
 
@@ -1177,7 +1198,7 @@ void fgReshape( int width, int height ) {
 	// yes we've finished all our initializations and are running
 	// the main loop, so this will now work without seg faulting
 	// the system.
-	globals->get_current_view()->UpdateViewParams(cur_view_fdm);
+	// globals->get_current_view()->UpdateViewParams();
     }
 }
 
@@ -1332,9 +1353,9 @@ int main( int argc, char **argv ) {
     globals->set_options( options );
 
     FGViewer *pv = new FGViewer;
-    globals->set_pilot_view( pv );
-    FGViewer *cv = new FGViewer;
-    globals->set_current_view( cv );
+    globals->set_current_view( pv );
+    // FGViewer *cv = new FGViewer;
+    // globals->set_current_view( cv );
     
     // Scan the config file(s) and command line options to see if
     // fg_root was specified (ignore all other options for now)
@@ -1571,8 +1592,6 @@ int main( int argc, char **argv ) {
 // $$$ end - added VS Renganathan, 15 Oct 2K
 void fgLoadDCS(void) {
 
-    double obj_lat,obj_lon,obj_alt;
-    int i = 1;
     string obj_filename;
 
     FGPath tile_path( globals->get_options()->get_fg_root());
@@ -1621,14 +1640,13 @@ void fgLoadDCS(void) {
 
 void fgUpdateDCS (void) {
 
-    double eye_lat,eye_lon,eye_alt;
+    // double eye_lat,eye_lon,eye_alt;
     static double obj_lat=15.377603*DEG_TO_RAD;
     static double obj_lon= 73.816436*DEG_TO_RAD;
     static double obj_alt=0.15;
-    static double obj_head;
+    // static double obj_head;
     double sl_radius,obj_latgc;
-    float nresultmat[4][4];
-    sgMat4 Trans,rothead,rotlon,rot180,rotlat,resultmat1,resultmat2,resultmat3;
+    // float nresultmat[4][4];
     double bz[3];
 
     obj_lat = obj_lat + 0.0000001;

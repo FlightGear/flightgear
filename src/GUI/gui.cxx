@@ -882,35 +882,31 @@ static GlBitmap *b1 = NULL;
 extern FGInterface cur_view_fdm;
 GLubyte *hiResScreenCapture( int multiplier )
 {
-	float oldfov = globals->get_options()->get_fov();
-	float fov = oldfov / multiplier;
-	FGViewer *v = globals->get_current_view();
-	globals->get_options()->set_fov(fov);
-	v->force_update_fov_math();
+    float oldfov = globals->get_options()->get_fov();
+    float fov = oldfov / multiplier;
+    FGViewer *v = globals->get_current_view();
+    globals->get_options()->set_fov(fov);
     fgInitVisuals();
     int cur_width = globals->get_current_view()->get_winWidth( );
     int cur_height = globals->get_current_view()->get_winHeight( );
-	if (b1) delete( b1 );
-	// New empty (mostly) bitmap
-	b1 = new GlBitmap( GL_RGB, 1, 1, (unsigned char *)"123" );
-	int x,y;
-	for ( y = 0; y < multiplier; y++ )
-	{
-		for ( x = 0; x < multiplier; x++ )
-		{
-			fgReshape( cur_width, cur_height );
-			// pan to tile
-			rotateView( 0, (y*fov)-((multiplier-1)*fov/2), (x*fov)-((multiplier-1)*fov/2) );
-			fgRenderFrame();
-			// restore view
-			GlBitmap b2;
-			b1->copyBitmap( &b2, cur_width*x, cur_height*y );
-		}
+    if (b1) delete( b1 );
+    // New empty (mostly) bitmap
+    b1 = new GlBitmap( GL_RGB, 1, 1, (unsigned char *)"123" );
+    int x,y;
+    for ( y = 0; y < multiplier; y++ ) {
+	for ( x = 0; x < multiplier; x++ ) {
+	    fgReshape( cur_width, cur_height );
+	    // pan to tile
+	    rotateView( 0, (y*fov)-((multiplier-1)*fov/2), (x*fov)-((multiplier-1)*fov/2) );
+	    fgRenderFrame();
+	    // restore view
+	    GlBitmap b2;
+	    b1->copyBitmap( &b2, cur_width*x, cur_height*y );
 	}
-	globals->get_current_view()->UpdateViewParams(cur_view_fdm);
-	globals->get_options()->set_fov(oldfov);
-	v->force_update_fov_math();
-	return b1->getBitmap();
+    }
+    globals->get_current_view()->UpdateViewParams(cur_view_fdm);
+    globals->get_options()->set_fov(oldfov);
+    return b1->getBitmap();
 }
 #endif
 

@@ -65,7 +65,7 @@ private:
     FGOptions *options;
 
     // viewers
-    FGViewer *pilot_view;
+    // FGViewer *pilot_view;
     FGViewer *current_view;
 
 public:
@@ -99,8 +99,8 @@ public:
     inline FGOptions *get_options() const { return options; }
     inline void set_options( FGOptions *o ) { options = o; }
 
-    inline FGViewer *get_pilot_view() const { return pilot_view; }
-    inline void set_pilot_view( FGViewer *v ) { pilot_view = v; }
+    // inline FGViewer *get_pilot_view() const { return pilot_view; }
+    // inline void set_pilot_view( FGViewer *v ) { pilot_view = v; }
     
     inline FGViewer *get_current_view() const { return current_view; }
     inline void set_current_view( FGViewer *v ) { current_view = v; }

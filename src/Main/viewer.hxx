@@ -54,6 +54,9 @@ class FGViewer {
 
 private:
 
+    // flag forcing a recalc of derived view parameters
+    bool dirty;
+	
     // the current view offset angle from forward (rotated about the
     // view_up vector)
     double view_offset;
@@ -61,15 +64,11 @@ private:
     // the goal view offset angle  (used for smooth view changes)
     double goal_view_offset;
 
-    // flag forcing update of fov related stuff
-    bool update_fov;
-	
-    // fov of view is specified in the X direction, win_ratio is used to
-    // calculate the fov in the Y direction.  fov(y) = fov(x) * win_ratio
-    double win_ratio;
+    // geodetic view position
+    Point3D geod_view_pos;
 
-    // width & height of window
-    // int winWidth, winHeight;
+    // radius to sea level from center of the earth (m)
+    double sea_level_radius;
 
     // absolute view position in earth coordinates
     Point3D abs_view_pos;
@@ -82,6 +81,9 @@ private:
     // out the tail, Y is out the right wing, and Z is positive up.
     // Distances in meters of course.
     sgVec3 pilot_offset;
+
+    // view orientation (heading, pitch, roll)
+    sgVec3 hpr;
 
     // cartesion coordinates of current lon/lat if at sea level
     // translated to scenery.center
@@ -119,15 +121,15 @@ private:
     // the vector pointing straight out the nose of the aircraft
     sgVec3 view_forward;
 
-    // Transformation matrix for eye coordinates to aircraft coordinates
-    // sgMat4 AIRCRAFT;
-
     // Transformation matrix for the view direction offset relative to
     // the AIRCRAFT matrix
     sgMat4 VIEW_OFFSET;
 
     // sg versions of our friendly matrices
     sgMat4 LOCAL, UP, VIEW_ROT, TRANS, VIEW, LARC_TO_SSG;
+
+    // Update the view volume, position, and orientation
+    void update();
 
 public:
 
@@ -138,43 +140,100 @@ public:
     ~FGViewer( void );
 
     // Initialize a view class
-    void Init( void );
-
-    // Update the view volume, position, and orientation
-    void UpdateViewParams( const FGInterface& f );
-
-    // Flag to request that UpdateFOV() be called next time
-    // UpdateViewMath() is run.
-    inline void force_update_fov_math() { update_fov = true; }
-
-    // Update the view parameters
-    void UpdateViewMath( const FGInterface& f );
-
-    // Update the field of view coefficients
-    void UpdateFOV( const FGOptions *o );
+    void init( void );
 
     // Transform a vector from world coordinates to the local plane
     void CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src);
 
-    // accessor functions
-    inline double get_view_offset() const { return view_offset; }
-    inline void set_view_offset( double a ) { view_offset = a; }
-    inline void inc_view_offset( double amt ) { view_offset += amt; }
-    inline double get_goal_view_offset() const { return goal_view_offset; }
-    inline void set_goal_view_offset( double a) { goal_view_offset = a; }
-    inline double get_win_ratio() const { return win_ratio; }
-    inline void set_win_ratio( double r ) { win_ratio = r; }
-    // inline int get_winWidth() const { return winWidth; }
-    // inline void set_winWidth( int w ) { winWidth = w; }
-    // inline int get_winHeight() const { return winHeight; }
-    // inline void set_winHeight( int h ) { winHeight = h; }
-    inline Point3D get_abs_view_pos() const { return abs_view_pos; }
-    inline Point3D get_view_pos() const { return view_pos; }
-    inline float *get_pilot_offset() { return pilot_offset; }
+    //////////////////////////////////////////////////////////////////////
+    // setter functions
+    //////////////////////////////////////////////////////////////////////
+    inline void set_geod_view_pos( double lon, double lat, double alt ) {
+	// data should be in radians and meters asl
+	dirty = true;
+	// cout << "set_geod_view_pos = " << lon << ", " << lat << ", " << alt
+	//      << endl;
+	geod_view_pos = Point3D( lon, lat, alt );
+    }
+    inline void set_sea_level_radius( double r ) {
+	// data should be in meters from the center of the earth
+	dirty = true;
+	sea_level_radius = r;
+    }
+    inline void set_hpr( double h, double p, double r ) {
+	// data should be in radians
+	dirty = true;
+	sgSetVec3( hpr, h, p, r );
+    }
     inline void set_pilot_offset( float x, float y, float z ) {
+	dirty = true;
 	sgSetVec3( pilot_offset, x, y, z );
     }
-    inline Point3D get_cur_zero_elev() const { return cur_zero_elev; }
+    inline void set_view_offset( double a ) {
+	dirty = true;
+	view_offset = a;
+    }
+    inline void inc_view_offset( double amt ) {
+	dirty = true;
+	view_offset += amt;
+    }
+    inline void set_goal_view_offset( double a) {
+	dirty = true;
+	goal_view_offset = a;
+    }
+
+    //////////////////////////////////////////////////////////////////////
+    // accessor functions
+    //////////////////////////////////////////////////////////////////////
+    inline double get_view_offset() const { return view_offset; }
+    inline double get_goal_view_offset() const { return goal_view_offset; }
+    inline float *get_pilot_offset() { return pilot_offset; }
+    inline double get_sea_level_radius() const { return sea_level_radius; }
+    inline float *get_hpr() { return hpr; }
+
+    //////////////////////////////////////////////////////////////////////
+    // derived values accessor functions
+    //////////////////////////////////////////////////////////////////////
+    inline Point3D get_abs_view_pos() {
+	if ( dirty ) { update(); }
+	return abs_view_pos;
+    }
+    inline Point3D get_view_pos() {
+	if ( dirty ) { update(); }
+	return view_pos;
+    }
+    inline Point3D get_cur_zero_elev() {
+	if ( dirty ) { update(); }
+	return cur_zero_elev;
+    }
+    inline float *get_surface_south() {
+	if ( dirty ) { update(); }
+	return surface_south;
+    }
+    inline float *get_surface_east() {
+	if ( dirty ) { update(); }
+	return surface_east;
+    }
+    inline float *get_local_up() {
+	if ( dirty ) { update(); }
+	return local_up;
+    }
+    inline float *get_view_forward() {
+	if ( dirty ) { update(); }
+	return view_forward;
+    }
+    inline const sgVec4 *get_VIEW() {
+	if ( dirty ) { update(); }
+	return VIEW;
+    }
+    inline const sgVec4 *get_VIEW_ROT() {
+	if ( dirty ) { update(); }
+	return VIEW_ROT;
+    }
+
+    //////////////////////////////////////////////////////////////////////
+    // need to fix these
+    //////////////////////////////////////////////////////////////////////
     inline float *get_to_sun() { return to_sun; }
     inline void set_to_sun( float x, float y, float z ) {
 	sgSetVec3( to_sun, x, y, z );
@@ -191,14 +250,8 @@ public:
     inline void set_surface_to_moon( float x, float y, float z) {
 	sgSetVec3( surface_to_moon, x, y, z );
     }
-    inline float *get_surface_south() { return surface_south; }
-    inline float *get_surface_east() { return surface_east; }
-    inline float *get_local_up() { return local_up; }
-    inline float *get_view_forward() { return view_forward; }
-
-    inline const sgVec4 *get_VIEW() { return VIEW; }
-    inline const sgVec4 *get_VIEW_ROT() { return VIEW_ROT; }
 };
+
 
 #endif // _VIEWER_HXX
 

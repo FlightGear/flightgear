@@ -191,7 +191,7 @@ bool fgFindAirportID( const string& id, FGAirport *a ) {
 // Set current_options lon/lat given an airport id
 bool fgSetPosFromAirportID( const string& id ) {
     FGAirport a;
-    double lon, lat;
+    // double lon, lat;
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Attempting to set starting position from airport code " << id );
@@ -602,11 +602,25 @@ bool fgInitSubsystems( void ) {
 
     // Initialize view parameters
     FG_LOG( FG_GENERAL, FG_DEBUG, "Before current_view.init()");
-    globals->get_current_view()->Init();
-    globals->get_pilot_view()->Init();
+    globals->get_current_view()->init();
+    // globals->get_pilot_view()->Init();
     FG_LOG( FG_GENERAL, FG_DEBUG, "After current_view.init()");
-    globals->get_current_view()->UpdateViewMath(*cur_fdm_state);
-    globals->get_pilot_view()->UpdateViewMath(*cur_fdm_state);
+
+    globals->get_current_view()->
+	set_geod_view_pos( cur_fdm_state->get_Longitude(), 
+			   cur_fdm_state->get_Lat_geocentric(), 
+			   cur_fdm_state->get_Altitude() *
+			   FEET_TO_METER );
+    globals->get_current_view()->
+	set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
+			      FEET_TO_METER ); 
+    globals->get_current_view()->
+	set_hpr( cur_fdm_state->get_Psi(),
+		 cur_fdm_state->get_Theta(),
+		 cur_fdm_state->get_Phi() );
+
+    // globals->get_current_view()->UpdateViewMath();
+    // globals->get_pilot_view()->UpdateViewMath();
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = "
 	    << globals->get_current_view()->get_abs_view_pos());
     // current_view.UpdateWorldToEye(f);
@@ -879,12 +893,26 @@ void fgReInitSubsystems( void )
     // Initialize view parameters
     globals->get_current_view()->set_view_offset( 0.0 );
     globals->get_current_view()->set_goal_view_offset( 0.0 );
-    globals->get_pilot_view()->set_view_offset( 0.0 );
-    globals->get_pilot_view()->set_goal_view_offset( 0.0 );
+    // globals->get_pilot_view()->set_view_offset( 0.0 );
+    // globals->get_pilot_view()->set_goal_view_offset( 0.0 );
 
     FG_LOG( FG_GENERAL, FG_DEBUG, "After current_view.init()");
-    globals->get_current_view()->UpdateViewMath(*cur_fdm_state);
-    globals->get_pilot_view()->UpdateViewMath(*cur_fdm_state);
+
+    globals->get_current_view()->
+	set_geod_view_pos( cur_fdm_state->get_Longitude(), 
+			   cur_fdm_state->get_Lat_geocentric(), 
+			   cur_fdm_state->get_Altitude() *
+			   FEET_TO_METER );
+    globals->get_current_view()->
+	set_sea_level_radius( cur_fdm_state->get_Sea_level_radius() *
+			      FEET_TO_METER ); 
+    globals->get_current_view()->
+	set_hpr( cur_fdm_state->get_Psi(),
+		 cur_fdm_state->get_Theta(),
+		 cur_fdm_state->get_Phi() );
+
+    // globals->get_current_view()->UpdateViewMath();
+    // globals->get_pilot_view()->UpdateViewMath();
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = "
 	    << globals->get_current_view()->get_abs_view_pos());
 

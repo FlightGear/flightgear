@@ -2061,6 +2061,21 @@ SOURCE=.\src\FDM\LaRCsim.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\LaRCsimIC.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\MagicCarpet.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"

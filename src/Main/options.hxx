@@ -191,6 +191,7 @@ private:
     bool textures;      // Textures enabled/disabled
     bool wireframe;     // Wireframe mode enabled/disabled
     int xsize, ysize;   // window size derived from geometry string
+    double win_ratio;	// ratio of x and y fov's; fov(y) = fov(x) * win_ratio
     int bpp;            // bits per pixel
     fgViewMode view_mode; // view mode
     double default_view_offset;	// default forward view offset (for use by
@@ -301,6 +302,7 @@ public:
     inline bool get_wireframe() const { return wireframe; }
     inline int get_xsize() const { return xsize; }
     inline int get_ysize() const { return ysize; }
+    inline double get_win_ratio() const { return win_ratio; }
     inline int get_bpp() const { return bpp; }
     inline fgViewMode get_view_mode() const { return view_mode; }
     inline double get_default_view_offset() const {
@@ -375,6 +377,7 @@ public:
     void toggle_panel();
     inline void set_xsize( int x ) { xsize = x; }
     inline void set_ysize( int y ) { ysize = y; }
+    inline void set_win_ratio( double r ) { win_ratio = r; }
     inline void set_view_mode (fgViewMode value) { view_mode = value; }
     inline void set_tile_radius (int value) { tile_radius = value; }
     inline void set_tile_diameter (int value) { tile_diameter = value; }

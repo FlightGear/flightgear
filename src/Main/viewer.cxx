@@ -45,8 +45,10 @@
 
 
 // Constructor
-FGViewer::FGViewer( void ) {
+FGViewer::FGViewer( void )
+{
 }
+
 
 #define USE_FAST_VIEWROT
 #ifdef USE_FAST_VIEWROT
@@ -79,15 +81,20 @@ inline static void fgMakeViewRot( sgMat4 dst, const sgMat4 m1, const sgMat4 m2 )
 }
 #endif
 
+
 // Initialize a view structure
-void FGViewer::Init( void ) {
+void FGViewer::init( void ) {
+    dirty = true;
+
     FG_LOG( FG_VIEW, FG_INFO, "Initializing View parameters" );
 
-    view_offset = goal_view_offset = globals->get_options()->get_default_view_offset();
+    view_offset = goal_view_offset =
+	globals->get_options()->get_default_view_offset();
     sgSetVec3( pilot_offset, 0.0, 0.0, 0.0 );
 
-    set_win_ratio( globals->get_options()->get_xsize() /
-		   globals->get_options()->get_ysize() );
+    globals->get_options()->set_win_ratio( globals->get_options()->get_xsize() /
+					   globals->get_options()->get_ysize()
+					   );
 
 #ifndef USE_FAST_VIEWROT
     // This never changes -- NHV
@@ -111,8 +118,6 @@ void FGViewer::Init( void ) {
     LARC_TO_SSG[3][2] = 0.0; 
     LARC_TO_SSG[3][3] = 1.0; 
 #endif // USE_FAST_VIEWROT
-
-    force_update_fov_math();
 }
 
 
@@ -151,25 +156,6 @@ inline static void fgMakeLOCAL( sgMat4 dst, const double Theta,
 #endif
 
 
-// Update the view volume, position, and orientation
-void FGViewer::UpdateViewParams( const FGInterface& f ) {
-    UpdateViewMath(f);
-    
-    if ( ! fgPanelVisible() ) {
-	xglViewport( 0, 0 ,
-		     (GLint)(globals->get_options()->get_xsize()),
-		     (GLint)(globals->get_options()->get_ysize()) );
-    } else {
-        int view_h =
-	  int((current_panel->getViewHeight() - current_panel->getYOffset())
-	      * (globals->get_options()->get_ysize() / 768.0));
-	glViewport( 0, (GLint)(globals->get_options()->get_ysize() - view_h),
-		    (GLint)(globals->get_options()->get_xsize()),
-		    (GLint)(view_h) );
-    }
-}
-
-
 // convert sgMat4 to MAT3 and print
 static void print_sgMat4( sgMat4 &in) {
     int i, j;
@@ -183,36 +169,23 @@ static void print_sgMat4( sgMat4 &in) {
 
 
 // Update the view parameters
-void FGViewer::UpdateViewMath( const FGInterface& f ) {
+void FGViewer::update() {
 
-    Point3D p;
-    sgVec3 v0, minus_z, sgvec, forward;
-    sgMat4 VIEWo, TMP;
-
-    if ( update_fov ) {
-	ssgSetFOV( globals->get_options()->get_fov(), 
-		   globals->get_options()->get_fov() * win_ratio );
-	update_fov = false;
-    }
-		
-    scenery.center = scenery.next_center;
-
-    // printf("scenery center = %.2f %.2f %.2f\n", scenery.center.x,
-    //        scenery.center.y, scenery.center.z);
+    sgVec3 v0, minus_z, forward;
+    sgMat4 VIEWo;
 
     // calculate the cartesion coords of the current lat/lon/0 elev
-    p = Point3D( f.get_Longitude(), 
-		 f.get_Lat_geocentric(), 
-		 f.get_Sea_level_radius() * FEET_TO_METER );
+    Point3D p = Point3D( geod_view_pos.lon(), 
+			 geod_view_pos.lat(), 
+			 sea_level_radius );
 
     cur_zero_elev = sgPolarToCart3d(p) - scenery.center;
 
     // calculate view position in current FG view coordinate system
     // p.lon & p.lat are already defined earlier, p.radius was set to
     // the sea level radius, so now we add in our altitude.
-    if ( f.get_Altitude() * FEET_TO_METER > 
-	 (scenery.cur_elev + 0.5 * METER_TO_FEET) ) {
-	p.setz( p.radius() + f.get_Altitude() * FEET_TO_METER );
+    if ( geod_view_pos.elev() > (scenery.cur_elev + 0.5 * METER_TO_FEET) ) {
+	p.setz( p.radius() + geod_view_pos.elev() );
     } else {
 	p.setz( p.radius() + scenery.cur_elev + 0.5 * METER_TO_FEET );
     }
@@ -221,6 +194,7 @@ void FGViewer::UpdateViewMath( const FGInterface& f ) {
 	
     view_pos = abs_view_pos - scenery.center;
 
+    FG_LOG( FG_VIEW, FG_DEBUG, "sea level radius = " << sea_level_radius );
     FG_LOG( FG_VIEW, FG_DEBUG, "Polar view pos = " << p );
     FG_LOG( FG_VIEW, FG_DEBUG, "Absolute view pos = " << abs_view_pos );
     FG_LOG( FG_VIEW, FG_DEBUG, "Relative view pos = " << view_pos );
@@ -231,19 +205,19 @@ void FGViewer::UpdateViewMath( const FGInterface& f ) {
 	
 #ifdef USE_FAST_LOCAL
 	
-    fgMakeLOCAL( LOCAL, f.get_Theta(), f.get_Phi(), -f.get_Psi() );
+    fgMakeLOCAL( LOCAL, hpr[1], hpr[2], -hpr[0] );
 	
 #else // USE_TEXT_BOOK_METHOD
 	
     sgVec3 rollvec;
     sgSetVec3( rollvec, 0.0, 0.0, 1.0 );
     sgMat4 PHI;		// roll
-    sgMakeRotMat4( PHI, f.get_Phi() * RAD_TO_DEG, rollvec );
+    sgMakeRotMat4( PHI, hpr[2] * RAD_TO_DEG, rollvec );
 
     sgVec3 pitchvec;
     sgSetVec3( pitchvec, 0.0, 1.0, 0.0 );
     sgMat4 THETA;		// pitch
-    sgMakeRotMat4( THETA, f.get_Theta() * RAD_TO_DEG, pitchvec );
+    sgMakeRotMat4( THETA, hpr[1] * RAD_TO_DEG, pitchvec );
 
     // ROT = PHI * THETA
     sgMat4 ROT;
@@ -253,23 +227,23 @@ void FGViewer::UpdateViewMath( const FGInterface& f ) {
 
     sgVec3 yawvec;
     sgSetVec3( yawvec, 1.0, 0.0, 0.0 );
-    sgMat4 PSI;		// pitch
-    sgMakeRotMat4( PSI, -f.get_Psi() * RAD_TO_DEG, yawvec );
+    sgMat4 PSI;		// heading
+    sgMakeRotMat4( PSI, -hpr[0] * RAD_TO_DEG, yawvec );
 
     // LOCAL = ROT * PSI
     // sgMultMat4( LOCAL, ROT, PSI );
     sgCopyMat4( LOCAL, ROT );
     sgPostMultMat4( LOCAL, PSI );
 
-#endif // YIKES
+#endif // USE_FAST_LOCAL
 	
     // cout << "LOCAL matrix" << endl;
     // print_sgMat4( LOCAL );
 	
     sgMakeRotMat4( UP, 
-		   f.get_Longitude() * RAD_TO_DEG,
+		   geod_view_pos.lon() * RAD_TO_DEG,
 		   0.0,
-		   -f.get_Latitude() * RAD_TO_DEG );
+		   -geod_view_pos.lat() * RAD_TO_DEG );
 
     sgSetVec3( local_up, UP[0][0], UP[0][1], UP[0][2] );
     // sgXformVec3( local_up, UP );
@@ -376,6 +350,8 @@ void FGViewer::UpdateViewMath( const FGInterface& f ) {
     //      << surface_east[1] << "," << surface_east[2] << endl;
     // cout << "Should be close to zero = "
     //      << sgScalarProductVec3(surface_south, surface_east) << endl;
+
+    dirty = false;
 }
 
 
