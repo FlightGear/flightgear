@@ -688,6 +688,9 @@ ssgBranch* FGTileEntry::gen_runway_lights( ssgVertexArray *points,ssgVertexArray
 // is intended to spread the load of freeing a complex tile out over
 // several frames.
 static int fgPartialFreeSSGtree( ssgBranch *b, int n ) {
+    ssgDeRefDelete( b );
+    return 0;
+
     int num_deletes = 0;
 
     if ( n > 0 ) {
