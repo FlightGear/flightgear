@@ -223,7 +223,20 @@ if test "x$ac_cv_lib_pthread_pthread_exit" != "xyes" \
     fi
     LIBS=$save_LIBS
 fi
-AC_CHECK_LIB(socket, socket)
+
+case "${host}" in
+*-*-irix*)
+    ;;
+*-*-solaris*)
+    AC_CHECK_LIB(nsl, main)
+    AC_CHECK_LIB(dl, dlclose)
+    AC_CHECK_LIB(xnet,inet_addr)
+    AC_CHECK_LIB(socket, socket)
+    ;;
+*)
+    AC_CHECK_LIB(socket, socket)
+    ;;
+esac
 
 dnl check for glut location
 AC_CHECK_HEADER(GL/glut.h)
