@@ -226,7 +226,7 @@ char calc_nmea_cksum(char *sentence) {
 }
 
 
-static void send_nmea_out( fgIOCHANNEL& p ) {
+static void send_nmea_out( fgIOCHANNEL *p ) {
     char rmc[256], gga[256];
     char rmc_sum[10], gga_sum[10];
     char dir;
@@ -236,10 +236,10 @@ static void send_nmea_out( fgIOCHANNEL& p ) {
     fgTIME *t;
 
     // run once every two seconds
-    if ( p.last_time == cur_time_params.cur_time ) {
+    if ( p->last_time == cur_time_params.cur_time ) {
 	return;
     }
-    p.last_time = cur_time_params.cur_time;
+    p->last_time = cur_time_params.cur_time;
     if ( cur_time_params.cur_time % 2 != 0 ) {
 	return;
     }
@@ -310,8 +310,8 @@ static void send_nmea_out( fgIOCHANNEL& p ) {
     rmc_sentence += "*";
     rmc_sentence += rmc_sum;
     rmc_sentence += "\n";
-    p.port.write_port(rmc_sentence);
-    cout << rmc_sentence;
+    p->port.write_port(rmc_sentence);
+    // cout << rmc_sentence;
 
     // GGA sentence
     string gga_sentence = "$";
@@ -319,15 +319,15 @@ static void send_nmea_out( fgIOCHANNEL& p ) {
     gga_sentence += "*";
     gga_sentence += gga_sum;
     gga_sentence += "\n";
-    p.port.write_port(gga_sentence);
-    cout << gga_sentence;
+    p->port.write_port(gga_sentence);
+    // cout << gga_sentence;
 }
 
-static void read_nmea_in( fgIOCHANNEL& p ) {
+static void read_nmea_in( fgIOCHANNEL *p ) {
 }
 
-static void send_garmin_out( fgIOCHANNEL& p ) {
-    char rmc[256], rmz[256];
+static void send_garmin_out( fgIOCHANNEL *p ) {
+    char rmc[256], rmc_sum[256], rmz[256], rmz_sum[256];
     char dir;
     int deg;
     double min;
@@ -335,10 +335,10 @@ static void send_garmin_out( fgIOCHANNEL& p ) {
     fgTIME *t;
 
     // run once per second
-    if ( p.last_time == cur_time_params.cur_time ) {
+    if ( p->last_time == cur_time_params.cur_time ) {
 	return;
     }
-    p.last_time = cur_time_params.cur_time;
+    p->last_time = cur_time_params.cur_time;
     if ( cur_time_params.cur_time % 2 != 0 ) {
 	return;
     }
@@ -391,49 +391,61 @@ static void send_garmin_out( fgIOCHANNEL& p ) {
 	     t->gmt->tm_mday, t->gmt->tm_mon+1, t->gmt->tm_year );
 
     // $GPRMC,HHMMSS,A,DDMM.MMM,N,DDDMM.MMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E*XX
-    sprintf( rmc, "$GPRMC,%s,A,%s,%s,%s,%s,%s,000.0,E*00\r\n",
+    sprintf( rmc, "GPRMC,%s,A,%s,%s,%s,%s,%s,000.0,E",
 	     utc, lat, lon, speed, heading, date );
+    sprintf( rmc_sum, "%02X", calc_nmea_cksum(rmc) );
 
     // sprintf( gga, "$GPGGA,%s,%s,%s,1,04,0.0,%s,M,00.0,M,,*00\r\n",
     //          utc, lat, lon, altitude_m );
 
-    sprintf( rmz, "$PGRMZ,%s,f,3*00\r\n", altitude_ft );
+    sprintf( rmz, "PGRMZ,%s,f,3", altitude_ft );
+    sprintf( rmz_sum, "%02X", calc_nmea_cksum(rmz) );
 
     FG_LOG( FG_SERIAL, FG_DEBUG, rmc );
     FG_LOG( FG_SERIAL, FG_DEBUG, rmz );
 
     // RMC sentence
-    p.port.write_port(rmc);
-    cout << rmc;
+    string rmc_sentence = "$";
+    rmc_sentence += rmc;
+    rmc_sentence += "*";
+    rmc_sentence += rmc_sum;
+    rmc_sentence += "\n";
+    p->port.write_port(rmc_sentence);
+    // cout << rmc_sentence;
 
     // RMZ sentence (garmin proprietary)
-    p.port.write_port(rmz);
-    cout << rmz;
+    string rmz_sentence = "$";
+    rmz_sentence += rmz;
+    rmz_sentence += "*";
+    rmz_sentence += rmz_sum;
+    rmz_sentence += "\n";
+    p->port.write_port(rmz_sentence);
+    // cout << rmz_sentence;
 }
 
-static void read_garmin_in( fgIOCHANNEL& p ) {
+static void read_garmin_in( fgIOCHANNEL *p ) {
 }
 
-static void send_fgfs_out( fgIOCHANNEL& p ) {
+static void send_fgfs_out( fgIOCHANNEL *p ) {
 }
 
-static void read_fgfs_in( fgIOCHANNEL& p ) {
+static void read_fgfs_in( fgIOCHANNEL *p ) {
 }
 
 
 // one more level of indirection ...
-static void process_port( fgIOCHANNEL& p ) {
-    if ( p.kind == fgIOCHANNEL::FG_SERIAL_NMEA_OUT ) {
+static void process_port( fgIOCHANNEL *p ) {
+    if ( p->kind == fgIOCHANNEL::FG_SERIAL_NMEA_OUT ) {
 	send_nmea_out(p);
-    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_NMEA_IN ) {
+    } else if ( p->kind == fgIOCHANNEL::FG_SERIAL_NMEA_IN ) {
 	read_nmea_in(p);
-    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_GARMIN_OUT ) {
+    } else if ( p->kind == fgIOCHANNEL::FG_SERIAL_GARMIN_OUT ) {
 	send_garmin_out(p);
-    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_GARMIN_IN ) {
+    } else if ( p->kind == fgIOCHANNEL::FG_SERIAL_GARMIN_IN ) {
 	read_garmin_in(p);
-    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_FGFS_OUT ) {
+    } else if ( p->kind == fgIOCHANNEL::FG_SERIAL_FGFS_OUT ) {
 	send_fgfs_out(p);
-    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_FGFS_IN ) {
+    } else if ( p->kind == fgIOCHANNEL::FG_SERIAL_FGFS_IN ) {
 	read_fgfs_in(p);
     }
 }
@@ -441,14 +453,14 @@ static void process_port( fgIOCHANNEL& p ) {
 
 // process any serial port work
 void fgSerialProcess() {
-    fgIOCHANNEL port;
+    fgIOCHANNEL *port;
     
-    const_io_iterator current = port_list.begin();
-    const_io_iterator last = port_list.end();
+    io_iterator current = port_list.begin();
+    io_iterator last = port_list.end();
 
     for ( ; current != last; ++current ) {
-	port = *current;
-	if ( port.kind != fgIOCHANNEL::FG_SERIAL_DISABLED ) {
+	port = current;
+	if ( port->kind != fgIOCHANNEL::FG_SERIAL_DISABLED ) {
 	    process_port ( port );
 	}
     }
@@ -456,6 +468,10 @@ void fgSerialProcess() {
 
 
 // $Log$
+// Revision 1.10  1999/01/21 00:55:01  curt
+// Fixed some problems with timing of output strings.
+// Added checksum support for nmea and garmin output.
+//
 // Revision 1.9  1999/01/20 13:42:26  curt
 // Tweaked FDM interface.
 // Testing check sum support for NMEA serial output.

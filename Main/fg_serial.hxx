@@ -30,8 +30,15 @@
 # error This library requires C++
 #endif
 
+#include "Include/compiler.h"
 
 #include <string>
+
+#ifdef FG_HAVE_STD_INCLUDES
+#  include <ctime>
+#else
+#  include <time.h>
+#endif
 
 #include <Serial/serial.hxx>
 
@@ -58,7 +65,7 @@ public:
 
     fgPortKind kind;
     fgSERIAL port;
-    long last_time;
+    time_t last_time;
     bool valid_config;
 
     fgIOCHANNEL();
@@ -89,6 +96,10 @@ void fgSerialProcess();
 
 
 // $Log$
+// Revision 1.5  1999/01/21 00:55:02  curt
+// Fixed some problems with timing of output strings.
+// Added checksum support for nmea and garmin output.
+//
 // Revision 1.4  1998/11/30 17:43:34  curt
 // Lots of tweaking to get serial output to actually work.
 //
