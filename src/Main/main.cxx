@@ -342,7 +342,7 @@ void fgRenderFrame( void ) {
 
 	// I really should create a derived ssg node or use a call
 	// back or something so that I can draw the sky within the
-	// ssgCullandDraw() function, but for now I just mimic what
+	// ssgCullAndDraw() function, but for now I just mimic what
 	// ssg does to set up the model view matrix
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -406,7 +406,8 @@ void fgRenderFrame( void ) {
 		 << " moon ra = " << ephem->getMoonRightAscension()
 		 << " moon dec = " << ephem->getMoonDeclination() << endl; */
 
-	    thesky->reposition( view_pos, zero_elev, 
+	    thesky->reposition( view_pos, zero_elev,
+				current_view.get_local_up(),
 				cur_fdm_state->get_Longitude(),
 				cur_fdm_state->get_Latitude(),
 				cur_light_params.sun_rotation,
@@ -631,9 +632,14 @@ void fgRenderFrame( void ) {
 	//    m_ptr->get_state()->force();
 	// }
 
+	// draw the sky backdrop
+	thesky->draw_background();
+
 	// draw the ssg scene
 	ssgCullAndDraw( scene );
 
+	// draw the sky cloud layers
+	thesky->draw_scene();
 
 	// display HUD && Panel
 	glDisable( GL_FOG );
@@ -1396,12 +1402,13 @@ int main( int argc, char **argv ) {
     thesky = new SGSky;
     thesky->texture_path( sky_tex_path.str() );
 
-    ssgBranch *sky = thesky->build( 550.0, 550.0,
-				    ephem->getNumPlanets(), 
-				    ephem->getPlanets(), 60000.0,
-				    ephem->getNumStars(),
-				    ephem->getStars(), 60000.0 );
-    scene->addKid( sky );
+    thesky->build( 550.0, 550.0,
+		   ephem->getNumPlanets(), 
+		   ephem->getPlanets(), 60000.0,
+		   ephem->getNumStars(),
+		   ephem->getStars(), 60000.0 );
+    thesky->add_cloud_layer( 1500.0 );
+    thesky->add_cloud_layer( 2100.0 );
 
     // Terrain branch
     terrain = new ssgBranch;
