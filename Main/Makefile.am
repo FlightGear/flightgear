@@ -17,13 +17,13 @@ if ENABLE_XMESA_FX
 DEFS += -DXMESA -DFX
 endif
 
-EXTRA_DIST = runfg.in runfg.bat.in
+EXTRA_DIST = runfgfs.in runfgfs.bat.in
 
-bin_PROGRAMS = fg
+bin_PROGRAMS = fgfs
 
-bin_SCRIPTS = runfg runfg.bat
+bin_SCRIPTS = runfgfs runfgfs.bat
 
-fg_SOURCES = \
+fgfs_SOURCES = \
 	GLUTkey.cxx GLUTkey.hxx \
 	GLUTmain.cxx \
 	airports.cxx airports.hxx \
@@ -33,7 +33,7 @@ fg_SOURCES = \
 	splash.cxx splash.hxx \
 	views.cxx views.hxx
 
-fg_LDADD = \
+fgfs_LDADD = \
 	$(top_builddir)/Simulator/Aircraft/libAircraft.a \
 	$(top_builddir)/Simulator/Astro/libAstro.a \
 	$(top_builddir)/Simulator/Autopilot/libAutopilot.a \
