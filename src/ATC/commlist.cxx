@@ -86,23 +86,25 @@ bool FGCommList::LoadComms(SGPath path) {
         ATCData a;
 		fin >> a;
 		if(a.type == INVALID) {
-            break;
-        }
-		
-		// Push all stations onto frequency map
-        commlist_freq[a.freq].push_back(a);
-		
-		// Push approach stations onto bucket map as well
-		if(a.type == APPROACH) {
-			// get bucket number
-    		SGBucket bucket(a.lon, a.lat);
-    		int bucknum = bucket.gen_index();
-			commlist_bck[bucknum].push_back(a);
+			cout << "WARNING - INVALID type found in " << path.str() << '\n';
+		} else {		
+			// Push all stations onto frequency map
+			commlist_freq[a.freq].push_back(a);
+			
+			// Push approach stations onto bucket map as well
+			if(a.type == APPROACH) {
+				// get bucket number
+				SGBucket bucket(a.lon, a.lat);
+				int bucknum = bucket.gen_index();
+				commlist_bck[bucknum].push_back(a);
+			}
 		}
 		
-        fin >> skipcomment;
-    }
-    return true;	
+		fin >> skipcomment;
+	}
+	
+	fin.close();
+	return true;	
 }
 
 
