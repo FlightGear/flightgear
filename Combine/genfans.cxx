@@ -70,7 +70,7 @@ static int_list make_best_fan( const triele_list& master_tris,
 
     // try starting with local triangle to find the best fan arrangement
     for ( int start = 0; start < (int)local_tris.size(); ++start ) {
-	cout << "trying with first triangle = " << local_tris[start] << endl;
+	// cout << "trying with first triangle = " << local_tris[start] << endl;
 
 	int_list tmp_result;
 	tmp_result.clear();
@@ -90,7 +90,7 @@ static int_list make_best_fan( const triele_list& master_tris,
 		test = canonify( master_tris[local_tris[i]], center );
 		if ( current_tri.get_n3() == test.get_n2() ) {
 		    if ( i != start ) {
-			cout << "  next triangle = " << local_tris[i] << endl;
+			// cout << " next triangle = " << local_tris[i] << endl;
 			current_tri = test;
 			tmp_result.push_back( local_tris[i] );
 			matches = true;
@@ -103,12 +103,12 @@ static int_list make_best_fan( const triele_list& master_tris,
 
 	if ( tmp_result.size() == local_tris.size() ) {
 	    // we found a complete usage, no need to go on
-	    cout << "we found a complete usage, no need to go on" << endl;
+	    // cout << "we found a complete usage, no need to go on" << endl;
 	    best_result = tmp_result;
 	    break;
 	} else if ( tmp_result.size() > best_result.size() ) {
 	    // we found a better way to fan
-	    cout << "we found a better fan arrangement" << endl;
+	    // cout << "we found a better fan arrangement" << endl;
 	    best_result = tmp_result;
 	}
     }
@@ -200,11 +200,17 @@ fan_list FGGenFans::greedy_build( triele_list tris ) {
 	triele_list_iterator t_current = tris.begin();
 	triele_list_iterator t_last = tris.end();
 	counter = 0;
-	for ( ; t_current != t_last; ++t_current ) {
+	while ( t_current != t_last ) {
 	    if ( in_fan(counter, best_fan) ) {
-		cout << "erasing " << counter << " from master tri pool" 
+		cout << "erasing " 
+		     << t_current->get_n1() << ","
+		     << t_current->get_n2() << ","
+		     << t_current->get_n3()
+		     << " from master tri pool"
 		     << endl;
 		tris.erase( t_current );
+	    } else {
+		++t_current;
 	    }
 	    ++counter;
 	}
@@ -232,6 +238,9 @@ double FGGenFans::ave_size() {
 
 
 // $Log$
+// Revision 1.3  1999/03/31 05:35:04  curt
+// Fixed bug in genfans (deleting the wrong triangles from the available pool.)
+//
 // Revision 1.2  1999/03/30 23:50:15  curt
 // Fannifier is clearly bugging ... working on debugging it.  I suspect there
 // is a problem related to deleting triangles from the triangle pool as they

@@ -196,13 +196,13 @@ main(int argc, char **argv) {
     string work_base = argv[1];
     string output_base = argv[2];
    
-    lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
+    // lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
     // lon = -110.664244; lat = 33.352890;     // P13
     // lon = -93.211389; lat = 45.145000;      // KANE
     // lon = -92.486188; lat = 44.590190;      // KRGK
     // lon = -89.744682312011719; lat= 29.314495086669922;
     // lon = -122.488090; lat = 42.743183;     // 64S
-    // lon = -114.861097; lat = 35.947480;     // 61B
+    lon = -114.861097; lat = 35.947480;     // 61B
     // lon = -112.012175; lat = 41.195944;     // KOGD
     // lon = -90.757128; lat = 46.790212;      // WI32
 
@@ -212,9 +212,9 @@ main(int argc, char **argv) {
     FGBucket b_max( lon + 1, lat + 1 );
 
     // FGBucket b(566664L);
-    FGBucket b(-146.248360, 61.133950);
-    construct_tile( work_base, output_base, b );
-    exit(0);
+    // FGBucket b(-146.248360, 61.133950);
+    // construct_tile( work_base, output_base, b );
+    // exit(0);
 
     if ( b_min == b_max ) {
 	construct_tile( work_base, output_base, b_min );
@@ -230,9 +230,9 @@ main(int argc, char **argv) {
 	    for ( i = 0; i <= dx; i++ ) {
 		b_cur = fgBucketOffset(min_x, min_y, i, j);
 
-		if ( b_cur != b ) {
-		    construct_tile( work_base, output_base, b_cur );
-		}
+		// if ( b_cur != b ) {
+		construct_tile( work_base, output_base, b_cur );
+		// }
 	    }
 	}
 	// string answer; cin >> answer;
@@ -241,6 +241,9 @@ main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.13  1999/03/31 05:35:06  curt
+// Fixed bug in genfans (deleting the wrong triangles from the available pool.)
+//
 // Revision 1.12  1999/03/30 23:51:14  curt
 // fiddling ...
 //

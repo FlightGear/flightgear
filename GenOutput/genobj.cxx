@@ -400,20 +400,22 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
 		}
 		fprintf( fp, "\n" );
 
+#if 0
 		{
-		int_list_iterator i_current = f_current->begin();
-		int_list_iterator i_last = f_current->end();
-		int center = *i_current;
-		++i_current;
-		int n2 = *i_current;
-		++i_current;
-		for ( ; i_current != i_last; ++i_current ) {
-		    int n3 = *i_current;
-		    fprintf( fp, "f %d %d %d\n", center, n2, n3 );
-		    ++total_tris;
-		    n2 = n3;
+		    int_list_iterator i_current = f_current->begin();
+		    int_list_iterator i_last = f_current->end();
+		    int center = *i_current;
+		    ++i_current;
+		    int n2 = *i_current;
+		    ++i_current;
+		    for ( ; i_current != i_last; ++i_current ) {
+			int n3 = *i_current;
+			fprintf( fp, "f %d %d %d\n", center, n2, n3 );
+			++total_tris;
+			n2 = n3;
+		    }
 		}
-		}
+#endif
 	    }
 
 	    fprintf( fp, "\n" );
@@ -431,6 +433,9 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
 
 
 // $Log$
+// Revision 1.8  1999/03/31 05:35:05  curt
+// Fixed bug in genfans (deleting the wrong triangles from the available pool.)
+//
 // Revision 1.7  1999/03/30 23:50:43  curt
 // Modifications to fanify by attribute.
 //
