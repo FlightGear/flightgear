@@ -24,16 +24,11 @@
  **************************************************************************/
 
 
-#include <math.h>
 #include <stdio.h>
 
 #include "aircraft.h"
+#include "../constants.h"
 
-#ifndef M_PI
-#define M_PI        3.14159265358979323846	/* pi */
-#endif
-
-#define FG_RAD_2_DEG(RAD) ((RAD) * 180.0 / M_PI)
 
 /* Display various parameters to stdout */
 void aircraft_debug(int type) {
@@ -44,8 +39,8 @@ void aircraft_debug(int type) {
     c = &current_aircraft.controls;
 
     printf("Pos = (%.2f,%.2f,%.2f)  (Phi,Theta,Psi)=(%.2f,%.2f,%.2f)\n",
-	   FG_RAD_2_DEG(FG_Longitude) * 3600.0, 
-           FG_RAD_2_DEG(FG_Latitude) * 3600.0, 
+	   FG_Longitude * 3600.0 * RAD_TO_DEG, 
+           FG_Latitude  * 3600.0 * RAD_TO_DEG,
 	   FG_Altitude, FG_Phi, FG_Theta, FG_Psi);
     printf("Kts = %.0f  Elev = %.2f, Aileron = %.2f, Rudder = %.2f  Power = %.2f\n", 
 	   FG_V_equiv_kts, FG_Elevator, FG_Aileron, FG_Rudder, FG_Throttle[0]);
@@ -53,9 +48,12 @@ void aircraft_debug(int type) {
 
 
 /* $Log$
-/* Revision 1.8  1997/06/25 15:39:45  curt
-/* Minor changes to compile with rsxnt/win32.
+/* Revision 1.9  1997/07/19 22:39:08  curt
+/* Moved PI to ../constants.h
 /*
+ * Revision 1.8  1997/06/25 15:39:45  curt
+ * Minor changes to compile with rsxnt/win32.
+ *
  * Revision 1.7  1997/06/02 03:01:39  curt
  * Working on views (side, front, back, transitions, etc.)
  *
