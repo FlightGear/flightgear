@@ -49,8 +49,10 @@ INCLUDES
 #include "FGPosition.h"
 #include "FGAuxiliary.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_OUTPUT;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -69,13 +71,15 @@ FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
 #ifdef FG_WITH_JSBSIM_SOCKET
   socket = new FGfdmSocket("localhost",1138);
 #endif
+  if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGOutput::~FGOutput(void)
+FGOutput::~FGOutput()
 {
   if (socket) delete socket;
+  if (debug_lvl & 2) cout << "Destroyed:    FGOutput" << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -524,4 +528,9 @@ void FGOutput::SocketStatusOutput(string out_str)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGOutput::Debug(void)
+{
+    //TODO: Add your source code here
+}
 

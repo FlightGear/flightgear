@@ -1,40 +1,40 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- 
+
  Module:       FGTranslation.cpp
  Author:       Jon Berndt
  Date started: 12/02/98
  Purpose:      Integrates the translational EOM
  Called by:    FDMExec
- 
+
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
- 
+
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
  Foundation; either version 2 of the License, or (at your option) any later
  version.
- 
+
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
  details.
- 
+
  You should have received a copy of the GNU General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
- 
+
  Further information about the GNU General Public License can also be found on
  the world wide web at http://www.gnu.org.
- 
+
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 This class integrates the translational EOM.
- 
+
 HISTORY
 --------------------------------------------------------------------------------
 12/02/98   JSB   Created
- 7/23/99   TP    Added data member and modified Run and PutState to calcuate 
- 	  	  	       Mach number
- 
+ 7/23/99   TP    Added data member and modified Run and PutState to calcuate
+                 Mach number
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES,  and NOTES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -49,10 +49,10 @@ COMMENTS, REFERENCES,  and NOTES
     Wiley & Sons, 1979 ISBN 0-471-03032-5
 [5] Bernard Etkin, "Dynamics of Flight, Stability and Control", Wiley & Sons,
     1982 ISBN 0-471-08936-2
- 
+
   The order of rotations used in this class corresponds to a 3-2-1 sequence,
   or Y-P-R, or Z-Y-X, if you prefer.
- 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -68,8 +68,10 @@ INCLUDES
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_TRANSLATION;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -78,7 +80,6 @@ CLASS IMPLEMENTATION
 
 FGTranslation::FGTranslation(FGFDMExec* fdmex) : FGModel(fdmex),
     vUVW(3),
-    vWindUVW(3),
     vUVWdot(3),
     vNcg(3),
     vPQR(3),
@@ -92,11 +93,16 @@ FGTranslation::FGTranslation(FGFDMExec* fdmex) : FGModel(fdmex),
   alpha = beta = 0.0;
   adot = bdot = 0.0;
   rho = 0.002378;
+
+  if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGTranslation::~FGTranslation(void) {}
+FGTranslation::~FGTranslation()
+{
+  if (debug_lvl & 2) cout << "Destroyed:    FGTranslation" << endl;
+}
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -119,11 +125,11 @@ bool FGTranslation::Run(void) {
     mVel(3,3) =  0.0;
 
     vUVWdot = mVel*vPQR + vForces/Mass;
-    
-    vNcg=vUVWdot*INVGRAVITY;
 
-    vUVW += 0.5*dt*rate*(vlastUVWdot + vUVWdot) + vWindUVW;
-    
+    vNcg = vUVWdot*INVGRAVITY;
+
+    vUVW += 0.5*dt*rate*(vlastUVWdot + vUVWdot);
+
     Vt = vUVW.Magnitude();
 
     if (vUVW(eW) != 0.0)
@@ -131,27 +137,23 @@ bool FGTranslation::Run(void) {
     if (vUVW(eV) != 0.0)
       beta = vUVW(eU)*vUVW(eU)+vUVW(eW)*vUVW(eW) > 0.0 ? atan2(vUVW(eV),
              sqrt(vUVW(eU)*vUVW(eU) + vUVW(eW)*vUVW(eW))) : 0.0;
-    
-     
-	
-	  // stolen, quite shamelessly, from LaRCsim
+
+    // stolen, quite shamelessly, from LaRCsim
     float mUW = (vUVW(eU)*vUVW(eU) + vUVW(eW)*vUVW(eW));
     float signU=1;
     if (vUVW(eU) != 0.0)
-		  signU = vUVW(eU)/fabs(vUVW(eU));
+      signU = vUVW(eU)/fabs(vUVW(eU));
 
-	  if( (mUW == 0.0) || (Vt == 0.0) ) {
-		  adot = 0.0;
-		  bdot = 0.0;
-	  } else {
-		  adot = (vUVW(eU)*vUVWdot(eW) - vUVW(eW)*vUVWdot(eU))/mUW;
-		  bdot = (signU*mUW*vUVWdot(eV) - vUVW(eV)*(vUVW(eU)*vUVWdot(eU) 
+    if ( (mUW == 0.0) || (Vt == 0.0) ) {
+      adot = 0.0;
+      bdot = 0.0;
+    } else {
+      adot = (vUVW(eU)*vUVWdot(eW) - vUVW(eW)*vUVWdot(eU))/mUW;
+      bdot = (signU*mUW*vUVWdot(eV) - vUVW(eV)*(vUVW(eU)*vUVWdot(eU)
               + vUVW(eW)*vUVWdot(eW)))/(Vt*Vt*sqrt(mUW));
-	  }
-    //
-    
-    qbar = 0.5*rho*Vt*Vt;
+    }
 
+    qbar = 0.5*rho*Vt*Vt;
     Mach = Vt / State->Geta();
 
     vlastUVWdot = vUVWdot;
@@ -173,7 +175,12 @@ void FGTranslation::GetState(void) {
   rho = Atmosphere->GetDensity();
 
   vEuler = Rotation->GetEuler();
+}
 
-  vWindUVW = Atmosphere->GetWindUVW();
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGTranslation::Debug(void)
+{
+    //TODO: Add your source code here
 }
 

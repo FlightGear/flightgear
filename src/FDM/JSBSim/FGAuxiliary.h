@@ -46,7 +46,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_AUXILIARY "$Header"
+#define ID_AUXILIARY "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -76,7 +76,7 @@ public:
       @param Executive a pointer to the parent executive object */
   FGAuxiliary(FGFDMExec*);
   /// Destructor
-  ~FGAuxiliary(void);
+  ~FGAuxiliary();
 
   /** Runs the Auxiliary routines; called by the Executive
       @return false if no error */
@@ -92,6 +92,9 @@ public:
   inline FGColumnVector GetNpilot(void) { return vPilotAccel*INVGRAVITY; }
   
   inline float GetEarthPositionAngle(void) { return earthPosAngle; }
+  
+  float GetHeadWind(void);
+  float GetCrossWind(void);
   
  
 protected:
@@ -112,9 +115,12 @@ private:
   FGColumnVector vPilotAccel;
   
   float earthPosAngle;
+  
 
   void GetState(void);
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

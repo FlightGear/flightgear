@@ -37,22 +37,75 @@ INCLUDES
 
 #include "FGNozzle.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_NOZZLE;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGNozzle::FGNozzle(FGFDMExec *FDMExec) : FGThruster(FDMExec)
+FGNozzle::FGNozzle(FGFDMExec* FDMExec, FGConfigFile* Nzl_cfg) : FGThruster(FDMExec)
 {
+  string token;
 
+  Name = Nzl_cfg->GetValue("NAME");
+  cout << "      Nozzle Name: " << Name << endl;
+  Nzl_cfg->GetNextConfigLine();
+  while (Nzl_cfg->GetValue() != "/FG_NOZZLE") {
+    *Nzl_cfg >> token;
+    if (token == "PE") {
+      *Nzl_cfg >> PE;
+      cout << "      Nozzle Exit Pressure = " << PE << endl;
+    } else if (token == "EXPR") {
+      *Nzl_cfg >> ExpR;
+      cout << "      Nozzle Expansion Ratio = " << ExpR << endl;
+    } else if (token == "NZL_EFF") {
+      *Nzl_cfg >> nzlEff;
+      cout << "      Nozzle Efficiency = " << nzlEff << endl;
+    } else if (token == "DIAM") {
+      *Nzl_cfg >> Diameter;
+      cout << "      Nozzle Diameter = " << Diameter << endl;
+    } else {
+      cout << "Unhandled token in Nozzle config file: " << token << endl;
+    }
+  }
+
+  if (debug_lvl & 2) cout << "Instantiated: FGNozzle" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGNozzle::Calculate(void)
+FGNozzle::~FGNozzle()
 {
-  FGThruster::Calculate();
-
+  if (debug_lvl & 2) cout << "Destroyed:    FGNozzle" << endl;
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGNozzle::Calculate(float CfPc)
+{
+  float Thrust;
+  float pAtm = fdmex->GetAtmosphere()->GetPressure();
+  
+  Thrust = (CfPc + (PE - pAtm)*ExpR) * (Diameter / ExpR) * nzlEff;
+
+  return Thrust;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGNozzle::GetPowerRequired(void)
+{
+  return PE;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGNozzle::Debug(void)
+{
+    //TODO: Add your source code here
+}
+

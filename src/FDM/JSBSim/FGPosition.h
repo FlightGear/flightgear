@@ -45,7 +45,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_POSITION "$Header$"
+#define ID_POSITION "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -74,7 +74,7 @@ public:
       @param Executive a pointer to the parent executive object */
   FGPosition(FGFDMExec*);
   /// Destructor
-  ~FGPosition(void);
+  ~FGPosition();
 
   /** Runs the Position model; called by the Executive
       @see JSBSim.cpp documentation
@@ -88,6 +88,7 @@ public:
   inline double GetVe(void)  { return vVel(eY); }
   inline double GetVd(void)  { return vVel(eZ); }
   inline double GetVground(void) { return Vground; }
+  inline double GetGroundTrack(void) { return psigt; }
   inline double Geth(void)  { return h; }
   inline double Gethdot(void) { return RadiusDot; }
   inline double GetLatitude(void) { return Latitude; }
@@ -131,10 +132,12 @@ private:
   double Vt, Vground;
   double hoverb,b;
 
-  void GetState(void);
+  double psigt;
 
-  
+  void GetState(void);
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

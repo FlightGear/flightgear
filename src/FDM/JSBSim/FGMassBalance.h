@@ -44,7 +44,7 @@ INCLUDES
 
 #include "FGModel.h"
 
-#define ID_MASSBALANCE "$Header"
+#define ID_MASSBALANCE "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -58,6 +58,9 @@ public:
   ~FGMassBalance();
 
   bool Run(void);
+  
+private:  
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

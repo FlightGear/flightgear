@@ -40,7 +40,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <fstream>
 #  else
 #    include <fstream.h>
@@ -56,7 +56,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_CONFIGFILE "$Header"
+#define ID_CONFIGFILE "$Id$"
 
 using std::string;
 using std::ifstream;
@@ -91,7 +91,7 @@ public:
       @param Filename the name of the config file to be read. */
   FGConfigFile(string Filename);
   /// Destructor
-  ~FGConfigFile(void);
+  ~FGConfigFile();
 
   string GetLine(void);
   string GetNextConfigLine(void);
@@ -106,15 +106,15 @@ public:
   FGConfigFile& operator>>(eParam&);
   void ResetLineIndexToZero(void);
 
-protected:
-
 private:
   ifstream cfgfile;
   string   CurrentLine;
   bool     CommentsOn;
   bool     Opened;
   unsigned int      CurrentIndex;
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

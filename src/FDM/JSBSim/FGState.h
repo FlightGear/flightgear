@@ -46,7 +46,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <fstream>
 #  else
 #    include <fstream.h>
@@ -65,7 +65,7 @@ INCLUDES
 DEFINES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_STATE "$Header$"
+#define ID_STATE "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -76,7 +76,7 @@ class FGFDMExec;
 class FGState {
 public:
   FGState(FGFDMExec*);
-  ~FGState(void);
+  ~FGState();
 
   bool Reset(string, string, string);
   void Initialize(float, float, float, float, float, float, float, float, float);
@@ -94,7 +94,6 @@ public:
   float GetParameter(eParam val_idx);
   float GetParameter(string val_string);
   eParam GetParameterIndex(string val_string);
-
 
   inline void Seta(float tt) { a = tt; }
 
@@ -131,9 +130,12 @@ private:
   FGMatrix mTl2b;
   FGMatrix mTs2b;
   FGColumnVector vQtrn;
+  FGColumnVector vlastQdot;
 
   typedef map<string, eParam> CoeffMap;
   CoeffMap coeffdef;
+  void Debug(void);
+  int ActiveEngine;
 
 protected:
   enum {ePhi=1, eTht, ePsi};
@@ -142,3 +144,4 @@ protected:
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

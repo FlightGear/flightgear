@@ -58,7 +58,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <cmath>
 #  else
 #    include <math.h>
@@ -69,13 +69,13 @@ INCLUDES
 
 #ifndef M_PI
 #  include <simgear/constants.h>
-#  define M_PI SGD_PI
+#  define M_PI FG_PI
 #endif
 
 #include "FGModel.h"
 #include "FGMatrix.h"
 
-#define ID_ROTATION "$Header$"
+#define ID_ROTATION "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -83,24 +83,9 @@ CLASS DECLARATION
 
 class FGRotation : public FGModel
 {
-  FGColumnVector vPQR;
-  FGColumnVector vPQRdot;
-  FGColumnVector vMoments;
-  FGColumnVector vEuler;
-  FGColumnVector vEulerRates;
-  
-  float cTht,sTht;
-  float cPhi,sPhi;
-  float cPsi,sPsi;
-  
-  float Ixx, Iyy, Izz, Ixz;
-  float dt;
-
-  void GetState(void);
-
 public:
   FGRotation(FGFDMExec*);
-  ~FGRotation(void);
+  ~FGRotation();
 
   bool Run(void);
 
@@ -123,9 +108,25 @@ public:
   inline float GetSintht(void) {return sTht;}
   inline float GetSinpsi(void) {return sPsi;}
 
+private:
+  FGColumnVector vPQR;
+  FGColumnVector vPQRdot;
+  FGColumnVector vMoments;
+  FGColumnVector vEuler;
+  FGColumnVector vEulerRates;
+  
+  float cTht,sTht;
+  float cPhi,sPhi;
+  float cPsi,sPsi;
+  
+  float Ixx, Iyy, Izz, Ixz;
+  float dt;
 
+  void GetState(void);
 
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

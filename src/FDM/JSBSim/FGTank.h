@@ -55,7 +55,7 @@ INCLUDES
 DEFINES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_TANK "$Header"
+#define ID_TANK "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -65,7 +65,7 @@ class FGTank
 {
 public:
   FGTank(FGConfigFile*);
-  ~FGTank(void);
+  ~FGTank();
 
   float Reduce(float);
   int GetType(void) {return Type;}
@@ -86,9 +86,9 @@ private:
   float PctFull;
   float Contents;
   bool  Selected;
-
-protected:
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

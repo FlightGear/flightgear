@@ -39,8 +39,10 @@ INCLUDES
 
 #include "FGfdmSocket.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FDMSOCKET;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -87,9 +89,11 @@ FGfdmSocket::FGfdmSocket(string address, int port)
       cout << "Could not create socket for FDM, error = " << errno << endl;
     }
   }
+
+  if (debug_lvl & 2) cout << "Instantiated: FGfdmSocket" << endl;
 }
 
-FGfdmSocket::~FGfdmSocket(void)
+FGfdmSocket::~FGfdmSocket()
 {
   #ifndef macintosh
   if (sckt) shutdown(sckt,2);

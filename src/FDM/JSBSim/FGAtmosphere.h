@@ -45,13 +45,13 @@ INCLUDES
 #include "FGModel.h"
 #include "FGMatrix.h"
 
-#define ID_ATMOSPHERE "$Header$"
+#define ID_ATMOSPHERE "$Id$"
 
 /*******************************************************************************
 COMMENTS, REFERENCES,  and NOTES
 ********************************************************************************
  
-[1]    Anderson, John D. "Introduction to Flight, Third Edition", McGraw-Hill,
+[1]   Anderson, John D. "Introduction to Flight, Third Edition", McGraw-Hill,
       1989, ISBN 0-07-001641-0
  
 *******************************************************************************
@@ -62,7 +62,7 @@ class FGAtmosphere : public FGModel {
 public:
 
   FGAtmosphere(FGFDMExec*);
-  ~FGAtmosphere(void);
+  ~FGAtmosphere();
   bool Run(void);
 
   inline float GetTemperature(void) {return temperature;}
@@ -90,12 +90,10 @@ public:
 
   inline void SetWindNED(float wN, float wE, float wD) { vWindNED(1)=wN; vWindNED(2)=wE; vWindNED(3)=wD;}
 
-  inline float GetWindN(void) { return vWindNED(1); }
-  inline float GetWindE(void) { return vWindNED(2); }
-  inline float GetWindD(void) { return vWindNED(3); }
-
-  inline FGColumnVector GetWindUVW(void) { return vWindUVW; }
-
+  inline FGColumnVector GetWindNED(void) { return vWindNED; }
+  
+  inline float GetWindPsi(void) { return psiw; }
+  
 protected:
 
 private:
@@ -106,13 +104,14 @@ private:
   float temperature,density,pressure,soundspeed;
   bool useExternal;
   float exTemperature,exDensity,exPressure;
-  FGColumnVector vWindNED,vWindUVW;
+  
+  FGColumnVector vWindNED;
+  float psiw;
 
   void Calculate(float altitude);
-
+  void Debug(void);
 };
-
-
 
 /******************************************************************************/
 #endif
+

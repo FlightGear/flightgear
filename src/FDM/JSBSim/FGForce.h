@@ -57,7 +57,7 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FORCE "$Header"
+#define ID_FORCE "$Id$"
 
 #include "FGFDMExec.h"
 #include "FGMatrix.h"
@@ -66,14 +66,15 @@ INCLUDES
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-typedef enum { tNone, tWindBody, tLocalBody, tCustom } TransformType;
 
 class FGForce {
 
 public:
 
   FGForce(FGFDMExec *FDMExec);
-  ~FGForce(void);
+  ~FGForce();
+
+  enum TransformType { tNone, tWindBody, tLocalBody, tCustom } ttype;
 
   inline void SetNativeForces(float Fnx, float Fny, float Fnz) {
     vFn(1)=Fnx;
@@ -130,6 +131,8 @@ public:
 protected:
   FGColumnVector vFn;
   FGColumnVector vMn;
+  FGFDMExec *fdmex;
+  void Debug(void);
 
 private:
   FGColumnVector vFb;
@@ -139,10 +142,6 @@ private:
   FGColumnVector vSense;
 
   FGMatrix mT;
-
-  FGFDMExec *fdmex;
-  TransformType ttype;
-
 };
 
 #endif

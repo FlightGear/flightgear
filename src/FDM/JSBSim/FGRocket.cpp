@@ -40,17 +40,101 @@ INCLUDES
 
 #include "FGRocket.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_ROCKET;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-
-FGRocket::FGRocket(FGFDMExec* fdex, string enginePath, string engineName, int num) :
-                                 FGEngine(fdex, enginePath, engineName, num)
+FGRocket::FGRocket(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec)
 {
-  //
+  string token;
+
+  Name = Eng_cfg->GetValue("NAME");
+  cout << "      Engine Name: " << Name << endl;
+  Eng_cfg->GetNextConfigLine();
+  while (Eng_cfg->GetValue() != "/FG_ROCKET") {
+    *Eng_cfg >> token;
+    if (token == "SHR") {
+      *Eng_cfg >> SHR;
+      cout << "      Specific Heat Ratio = " << SHR << endl;
+    } else if (token == "MAX_PC") {
+      *Eng_cfg >> maxPC;
+      cout << "      Maximum Chamber Pressure = " << maxPC << endl;
+    } else if (token == "PROP_EFF") {
+      *Eng_cfg >> propEff;
+      cout << "      Propulsive Efficiency = " << propEff << endl;
+    } else if (token == "MAXTHROTTLE") {
+      *Eng_cfg >> MaxThrottle;
+      cout << "      MaxThrottle = " << MaxThrottle << endl;
+    } else if (token == "MINTHROTTLE") {
+      *Eng_cfg >> MinThrottle;
+      cout << "      MinThrottle = " << MinThrottle << endl;
+    } else if (token == "SLFUELFLOWMAX") {
+      *Eng_cfg >> SLFuelFlowMax;
+      cout << "      FuelFlowMax = " << SLFuelFlowMax << endl;
+    } else if (token == "SLOXIFLOWMAX") {
+      *Eng_cfg >> SLOxiFlowMax;
+      cout << "      OxiFlowMax = " << SLOxiFlowMax << endl;
+    } else if (token == "VARIANCE") {
+      *Eng_cfg >> Variance;
+      cout << "      Variance = " << Variance << endl;
+    } else {
+      cout << "Unhandled token in Engine config file: " << token << endl;
+    }
+  }
+
+  EngineNumber = 0;
+
+  kFactor = (2.0*SHR*SHR/(SHR-1.0))*pow(2.0/(SHR+1), (SHR+1)/(SHR-1));
+
+  if (debug_lvl & 2) cout << "Instantiated: FGRocket" << endl;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGRocket::~FGRocket()
+{
+  if (debug_lvl & 2) cout << "Destroyed:    FGRocket" << endl;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGRocket::Calculate(float pe)
+{
+  float lastThrust;
+  float Cf;
+  float chamberPress;
+
+  ConsumeFuel();
+
+  Throttle = FCS->GetThrottlePos(EngineNumber);
+  lastThrust = Thrust;                 // last actual thrust
+
+  if (Throttle < MinThrottle || Starved) {
+    PctPower = Thrust = 0.0; // desired thrust
+    Flameout = true;
+  } else {
+    PctPower = Throttle / MaxThrottle;
+    chamberPress = maxPC*PctPower * (1.0 + Variance * ((float)rand()/(float)RAND_MAX - 0.5));
+    Cf = sqrt(kFactor*(1 - pow(pe/(chamberPress), (SHR-1)/SHR)));
+    Flameout = false;
+  }
+
+  if (State->Getdt() > 0.0) {  // actual thrust - if not in freeze
+    Thrust -= 0.8*(Thrust - lastThrust);
+  }
+
+  return Cf*maxPC*PctPower;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGRocket::Debug(void)
+{
+    //TODO: Add your source code here
 }
 

@@ -66,8 +66,10 @@ INCLUDES
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_ROTATION;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -81,15 +83,18 @@ FGRotation::FGRotation(FGFDMExec* fdmex) : FGModel(fdmex),
         vEuler(3),
         vEulerRates(3)
 {
-    Name = "FGRotation";
-    cTht=cPhi=cPsi=1.0;
-    sTht=sPhi=sPsi=0.0;
+  Name = "FGRotation";
+  cTht=cPhi=cPsi=1.0;
+  sTht=sPhi=sPsi=0.0;
+
+  if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGRotation::~FGRotation(void)
+FGRotation::~FGRotation()
 {
+  if (debug_lvl & 2) cout << "Destroyed:    FGRotation" << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,11 +121,9 @@ bool FGRotation::Run(void)
         State->CalcMatrices();
         vEuler = State->CalcEuler();
         
-        
         cTht = cos(vEuler(eTht));   sTht = sin(vEuler(eTht));
         cPhi = cos(vEuler(ePhi));   sPhi = sin(vEuler(ePhi));
         cPsi = cos(vEuler(ePsi));   sPsi = sin(vEuler(ePsi));
-
 
         vEulerRates(eTht) = vPQR(2)*cPhi - vPQR(3)*sPhi;
         if (cTht != 0.0) {
@@ -141,7 +144,6 @@ bool FGRotation::Run(void)
 void FGRotation::GetState(void)
 {
     dt = State->Getdt();
-
     vMoments = Aircraft->GetMoments();
 
     Ixx = Aircraft->GetIxx();
@@ -151,4 +153,9 @@ void FGRotation::GetState(void)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGRotation::Debug(void)
+{
+    //TODO: Add your source code here
+}
 

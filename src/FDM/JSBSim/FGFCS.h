@@ -40,7 +40,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <vector>
 #  else
 #    include <vector.h>
@@ -59,7 +59,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FCS "$Header"
+#define ID_FCS "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -89,7 +89,7 @@ CLASS DOCUMENTATION
     &lt COMPONENT NAME="Pitch Trim Sum" TYPE="SUMMER"&gt
       ID            0
       INPUT        FG_ELEVATOR_CMD
-      INPUT        SGD_PITCH_TRIM_CMD
+      INPUT        FG_PITCH_TRIM_CMD
       CLIPTO       -1 1
     &lt/COMPONENT&gt
 
@@ -161,7 +161,7 @@ public:
       @param Executive a pointer to the parent executive object */
   FGFCS(FGFDMExec*);
   /// Destructor
-  ~FGFCS(void);
+  ~FGFCS();
 
   /** Runs the Flight Controls model; called by the Executive
       @return false if no error */
@@ -308,7 +308,7 @@ public:
   /** Gets the brake for a specified group.
       @param bg which brakegroup to retrieve the command for
       @return the brake setting for the supplied brake group argument */
-  float GetBrake(FGLGear::eBrakeGroup bg);
+  float GetBrake(FGLGear::BrakeGroup bg);
   //@}
 
   /** Loads the Flight Control System.
@@ -322,19 +322,22 @@ public:
   /** The name of the flight control laws for this aircraft.
       This is given in the config file, and is not used for anything currently.*/
   string FCSName;
-  
+
+  void AddThrottle(void);
+
 private:
   float DaCmd, DeCmd, DrCmd, DfCmd, DsbCmd, DspCmd;
   float DaPos, DePos, DrPos, DfPos, DsbPos, DspPos;
   float PTrimCmd;
-  float ThrottleCmd[MAX_ENGINES];       // Needs to be changed: s/b no limit
-  float ThrottlePos[MAX_ENGINES];       // Needs to be changed: s/b no limit
+  vector <float> ThrottleCmd;
+  vector <float> ThrottlePos;
   float LeftBrake, RightBrake, CenterBrake; // Brake settings
 
   vector <FGFCSComponent*> Components;
-
+  void Debug(void);
 };
 
 #include "FGState.h"
 
 #endif
+

@@ -23,12 +23,9 @@
  Further information about the GNU General Public License can also be found on
  the world wide web at http://www.gnu.org.
  
- 
  HISTORY
 --------------------------------------------------------------------------------
 7/3/00  TP   Created
- 
- 
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
@@ -54,40 +51,44 @@ INCLUDES
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 
-#define ID_TRIMAXIS "$Header"
+#define ID_TRIMAXIS "$Id$"
 
-const string AccelNames[6]=   { "udot","vdot","wdot","qdot","pdot","rdot" };
-const string ControlNames[13]= { "Throttle","Sideslip","Angle of Attack",
+#define DEFAULT_TOLERANCE 0.001
+
+const string StateNames[7]=   { "udot","vdot","wdot","qdot","pdot","rdot","hmgt" };
+const string ControlNames[14]= { "Throttle","Sideslip","Angle of Attack",
                                  "Elevator","Ailerons","Rudder",
                                  "Altitude AGL", "Pitch Angle",
                                  "Roll Angle", "Flight Path Angle", 
-                                 "Pitch Trim", "Roll Trim", "Yaw Trim"
+                                 "Pitch Trim", "Roll Trim", "Yaw Trim",
+                                 "Heading"
                                };
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-enum Accel { tUdot,tVdot,tWdot,tQdot,tPdot,tRdot };
+enum State { tUdot,tVdot,tWdot,tQdot,tPdot,tRdot,tHmgt };
 enum Control { tThrottle, tBeta, tAlpha, tElevator, tAileron, tRudder, tAltAGL,
-               tTheta, tPhi, tGamma, tPitchTrim, tRollTrim, tYawTrim };
+               tTheta, tPhi, tGamma, tPitchTrim, tRollTrim, tYawTrim, tHeading };
 
 class FGTrimAxis {
 public:
-  FGTrimAxis(FGFDMExec* fdmex, FGInitialCondition *ic, Accel acc,
-             Control ctrl, float tolerance);
+  FGTrimAxis(FGFDMExec* fdmex, FGInitialCondition *ic, State st,
+             Control ctrl );
   ~FGTrimAxis();
 
   void Run(void);
  
-  float GetAccel(void) { getAccel(); return accel_value; }
+  float GetState(void) { getState(); return state_value; }
   //Accels are not settable
   inline void SetControl(float value ) { control_value=value; }
   inline float GetControl(void) { return control_value; }
 
-  inline Accel GetAccelType(void) { return accel; }
+  inline State GetStateType(void) { return state; }
   inline Control GetControlType(void) { return control; }
 
-  inline string GetAccelName(void) { return AccelNames[accel]; }
+  inline string GetStateName(void) { return StateNames[state]; }
   inline string GetControlName(void) { return ControlNames[control]; }
 
   inline float GetControlMin(void) { return control_min; }
@@ -121,17 +122,16 @@ public:
   
   void AxisReport(void);
   
-  bool InTolerance(void) { getAccel(); return (fabs(accel_value) <= tolerance); }
+  bool InTolerance(void) { getState(); return (fabs(state_value) <= tolerance); }
 
 private:
   FGFDMExec *fdmex;
   FGInitialCondition *fgic;
 
-
-  Accel   accel;
+  State   state;
   Control control;
 
-  float accel_value;
+  float state_value;
   float control_value;
 
   float control_min;
@@ -141,7 +141,7 @@ private:
 
   float solver_eps;
 
-  float accel_convert;
+  float state_convert;
   float control_convert;
 
   int max_iterations;
@@ -150,15 +150,15 @@ private:
   int total_stability_iterations;
   int total_iterations;
 
-
   void setThrottlesPct(void);
 
-  void getAccel(void);
+  void getState(void);
   void getControl(void);
   void setControl(void);
   
+  float computeHmgt(void);
   
-
+  void Debug(void);
 };
 
 #endif

@@ -24,17 +24,28 @@ libJSBSim_a_SOURCES = \
 	FGDefs.h \
 	FGFCS.cpp FGFCS.h \
 	FGFDMExec.cpp FGFDMExec.h \
+	FGForce.cpp FGForce.h \
 	FGInitialCondition.cpp FGInitialCondition.h \
 	FGLGear.cpp FGLGear.h \
 	FGMatrix.cpp FGMatrix.h \
 	FGModel.cpp FGModel.h \
+	FGNozzle.cpp FGNozzle.h \
 	FGOutput.cpp FGOutput.h \
+        FGPiston.cpp FGPiston.h \
+        FGPropeller.cpp FGPropeller.h \
+        FGPropulsion.cpp FGPropulsion.h \
 	FGPosition.cpp FGPosition.h \
 	FGRotation.cpp FGRotation.h \
+	FGRocket.cpp FGRocket.h \
 	FGState.cpp FGState.h \
+	FGTable.cpp FGTable.h \
+	FGThruster.cpp FGThruster.h \
 	FGTranslation.cpp FGTranslation.h \
 	FGTrim.cpp FGTrim.h \
 	FGTrimAxis.cpp FGTrimAxis.h \
+	FGTurboJet.cpp FGTurboJet.h \
+	FGTurboProp.cpp FGTurboProp.h \
+	FGTurboShaft.cpp FGTurboShaft.h \
 	FGUtility.cpp FGUtility.h \
 	FGEngine.cpp FGEngine.h \
 	FGTank.cpp FGTank.h \

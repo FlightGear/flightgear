@@ -43,8 +43,9 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGEngine.h"
+#include "FGConfigFile.h"
 
-#define ID_TURBOJET "$Header"
+#define ID_TURBOJET "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -52,12 +53,16 @@ CLASS DECLARATION
 
 class FGTurboJet : public FGEngine
 {
-
 public:
-  FGTurboJet(FGFDMExec*, string, string, int);
+  FGTurboJet(FGFDMExec* exec, FGConfigFile* Eng_cfg);
   ~FGTurboJet();
 
+  float Calculate(float);
+  
+private:
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

@@ -29,11 +29,11 @@ FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 This class encapsulates the integration of rates and accelerations to get the
 current position of the aircraft.
- 
+
 HISTORY
 --------------------------------------------------------------------------------
 01/05/99   JSB   Created
- 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES,  and NOTES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -48,14 +48,14 @@ COMMENTS, REFERENCES,  and NOTES
     Wiley & Sons, 1979 ISBN 0-471-03032-5
 [5] Bernard Etkin, "Dynamics of Flight, Stability and Control", Wiley & Sons,
     1982 ISBN 0-471-08936-2
- 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <cmath>
 #    include <iomanip>
 #  else
@@ -78,8 +78,10 @@ INCLUDES
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_POSITION;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -106,13 +108,19 @@ FGPosition::FGPosition(FGFDMExec* fdmex) : FGModel(fdmex),
   RunwayRadius   = SeaLevelRadius;
   DistanceAGL    = Radius - RunwayRadius;  // Geocentric
   vRunwayNormal(3) = -1.0;                 // Initialized for standalone mode
+
+  if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGPosition::~FGPosition(void) {}
+FGPosition::~FGPosition()
+{
+  if (debug_lvl & 2) cout << "Destroyed:    FGPosition" << endl;
+}
 
-/*************************************************************************** Run
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/*
 Purpose: Called on a schedule to perform Positioning algorithms
 Notes:   [TP] Make sure that -Vt <= hdot <= Vt, which, of course, should always
          be the case
@@ -128,7 +136,10 @@ bool FGPosition:: Run(void) {
     GetState();
 
     Vground = sqrt( vVel(eNorth)*vVel(eNorth) + vVel(eEast)*vVel(eEast) );
-    
+    psigt =  atan2(vVel(eEast), vVel(eNorth));
+    if(psigt < 0.0)
+      psigt += 2*M_PI;
+
     invMass   = 1.0 / Aircraft->GetMass();
     Radius    = h + SeaLevelRadius;
     invRadius = 1.0 / Radius;
@@ -174,21 +185,32 @@ void FGPosition::GetState(void) {
 
   vUVW      = Translation->GetUVW();
   Vt        = Translation->GetVt();
-  vVel      = State->GetTb2l()*vUVW;
+  vVel      = State->GetTb2l()*vUVW + Atmosphere->GetWindNED();
   vVelDot   = State->GetTb2l() * Translation->GetUVWdot();
 
   b = Aircraft->GetWingSpan();
-  
 }
 
-void FGPosition::Seth(double tt) { 
- h=tt;
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPosition::Seth(double tt) {
+ h = tt;
  Radius    = h + SeaLevelRadius;
- DistanceAGL = Radius - RunwayRadius;   // Geocentric 
-}  
+ DistanceAGL = Radius - RunwayRadius;   // Geocentric
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGPosition::SetDistanceAGL(double tt) {
   DistanceAGL=tt;
   Radius = RunwayRadius + DistanceAGL;
   h = Radius - SeaLevelRadius;
-}  
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPosition::Debug(void)
+{
+    //TODO: Add your source code here
+}
+

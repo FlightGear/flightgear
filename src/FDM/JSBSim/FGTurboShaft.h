@@ -43,8 +43,9 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGEngine.h"
+#include "FGConfigFile.h"
 
-#define ID_TURBOSHAFT "$Header"
+#define ID_TURBOSHAFT "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -52,12 +53,15 @@ CLASS DECLARATION
 
 class FGTurboShaft : public FGEngine
 {
-
 public:
-  FGTurboShaft(FGFDMExec*, string, string, int);
+  FGTurboShaft(FGFDMExec* exec, FGConfigFile* Eng_cfg);
   ~FGTurboShaft();
 
+  float Calculate(float);
+private:
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

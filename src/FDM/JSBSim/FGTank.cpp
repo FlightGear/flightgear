@@ -38,29 +38,39 @@ INCLUDES
 
 #include "FGTank.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_TANK;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+using std::cerr;
+using std::endl;
+using std::cout;
 
 FGTank::FGTank(FGConfigFile* AC_cfg)
 {
-  string type;
-
-  *AC_cfg >> type;                              // Type = 0: fuel, 1: oxidizer
-
-  if (type == "FUEL") Type = ttFUEL;
+  string type = AC_cfg->GetValue("TYPE");
+  string token;
+  
+  if      (type == "FUEL")     Type = ttFUEL;
   else if (type == "OXIDIZER") Type = ttOXIDIZER;
-  else Type = ttUNKNOWN;
-  *AC_cfg >> X;                                 // inches
-  *AC_cfg >> Y;                                 // "
-  *AC_cfg >> Z;                                 // "
-  *AC_cfg >> Radius;                            // "
-  *AC_cfg >> Capacity;                          // pounds (amount it can hold)
-  *AC_cfg >> Contents;                          // pounds  (amount it is holding)
+  else                         Type = ttUNKNOWN;
+  
+  AC_cfg->GetNextConfigLine();
+  while ((token = AC_cfg->GetValue()) != "/AC_TANK") {
+    if (token == "XLOC") *AC_cfg >> X;
+    else if (token == "YLOC") *AC_cfg >> Y;
+    else if (token == "ZLOC") *AC_cfg >> Z;
+    else if (token == "RADIUS") *AC_cfg >> Radius;
+    else if (token == "CAPACITY") *AC_cfg >> Capacity;
+    else if (token == "CONTENTS") *AC_cfg >> Contents;
+    else cerr << "Unknown identifier: " << token << " in tank definition." << endl;
+  }
+  
   Selected = true;
 
   if (Capacity != 0) {
@@ -69,13 +79,23 @@ FGTank::FGTank(FGConfigFile* AC_cfg)
     Contents = 0;
     PctFull  = 0;
   }     
+
+  cout << "      " << type << " tank holds " << Capacity << " lbs. " << type << endl;
+  cout << "      currently at " << PctFull << "% of maximum capacity" << endl;
+  cout << "      Tank location (X, Y, Z): " << X << ", " << Y << ", " << Z << endl;
+  cout << "      Effective radius: " << Radius << " inches" << endl;
+
+  if (debug_lvl & 2) cout << "Instantiated: FGTank" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGTank::~FGTank(void)
+FGTank::~FGTank()
 {
+  if (debug_lvl & 2) cout << "Destroyed:    FGTank" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 float FGTank::Reduce(float used)
 {
@@ -84,7 +104,7 @@ float FGTank::Reduce(float used)
   if (used < Contents) {
     Contents -= used;
     PctFull = 100.0*Contents/Capacity;
-    return Contents;
+    return 0.0;
   } else {
     shortage = Contents - used;
     Contents = 0.0;
@@ -92,5 +112,12 @@ float FGTank::Reduce(float used)
     Selected = false;
     return shortage;
   }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGTank::Debug(void)
+{
+    //TODO: Add your source code here
 }
 

@@ -19,7 +19,7 @@
  You should have received a copy of the GNU General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
- 
+
  Further information about the GNU General Public License can also be found on
  the world wide web at http://www.gnu.org.
  
@@ -40,7 +40,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <vector>
 #    include <iterator>
 #    include <map>
@@ -57,8 +57,7 @@ INCLUDES
 
 #include "FGModel.h"
 #include "FGCoefficient.h"
-#include "FGEngine.h"
-#include "FGTank.h"
+#include "FGPropulsion.h"
 #include "FGLGear.h"
 #include "FGConfigFile.h"
 #include "FGMatrix.h"
@@ -67,7 +66,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_AIRCRAFT "$Header$"
+#define ID_AIRCRAFT "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -86,7 +85,11 @@ CLASS DOCUMENTATION
     the Engines, Tanks, Propellers, Nozzles, Aerodynamic and Mass properties,
     landing gear, etc. These constituent parts may actually run as separate
     JSBSim models themselves, but the responsibility for initializing them and
-    for retrieving their force and moment contributions falls to FGAircraft.
+    for retrieving their force and moment contributions falls to FGAircraft.<br>
+    When an aircraft model is loaded the config file is parsed and for each of the
+    sections of the config file (propulsion, flight control, etc.) the
+    corresponding "ReadXXX()" method is called. From within this method the 
+    "Load()" method of that system is called (e.g. LoadFCS).
     @author Jon S. Berndt
     @version $Id$
     @see
@@ -119,7 +122,7 @@ public:
   FGAircraft(FGFDMExec *Executive);
   
   /// Destructor
-  ~FGAircraft(void);
+  ~FGAircraft();
 
   /** Runs the Aircraft model; called by the Executive
       @see JSBSim.cpp documentation
@@ -154,14 +157,6 @@ public:
   inline float GetWingSpan(void) { return WingSpan; }
   /// Gets the average wing chord
   inline float Getcbar(void) { return cbar; }
-  /** Gets an engine instance.
-      @param engine index of the engine instance
-      @return a pointer to the FGEngine instance of the requested engine */
-  inline FGEngine* GetEngine(int engine) { return Engine[engine]; }
-  /** Gets a tank instance.
-      @param tank index of the tank instance
-      @return a pointer to the FGTank instance of the requested tank */
-  inline FGTank* GetTank(int tank) { return Tank[tank]; }
   inline float GetWeight(void) { return Weight; }
   inline float GetMass(void) { return Mass; }
   inline FGColumnVector GetMoments(void) { return vMoments; }
@@ -171,7 +166,6 @@ public:
   inline float GetIyy(void) { return Iyy; }
   inline float GetIzz(void) { return Izz; }
   inline float GetIxz(void) { return Ixz; }
-  inline unsigned int GetNumEngines(void) { return numEngines; }
   inline FGColumnVector GetXYZcg(void) { return vXYZcg; }
   inline FGColumnVector GetXYZrp(void) { return vXYZrp; }
   inline FGColumnVector GetXYZep(void) { return vXYZep; }
@@ -230,18 +224,11 @@ private:
   string CFGVersion;
   string AircraftName;
 
-  unsigned int numTanks;
-  unsigned int numEngines;
-  unsigned int numSelectedOxiTanks;
-  unsigned int numSelectedFuelTanks;
-  FGTank* Tank[MAX_TANKS];           // need to make a vector
-  FGEngine *Engine[MAX_ENGINES];     // need to make a vector
-
   typedef map<string,int> AxisIndex;
   AxisIndex AxisIdx;
 
   typedef vector<FGCoefficient*> CoeffArray;
-  
+
   CoeffArray* Coeff;
 
   void DisplayCoeffFactors(vector <eParam> multipliers);
@@ -260,7 +247,9 @@ private:
   void ReadUndercarriage(FGConfigFile*);
   void ReadPrologue(FGConfigFile*);
   void ReadOutput(FGConfigFile*);
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

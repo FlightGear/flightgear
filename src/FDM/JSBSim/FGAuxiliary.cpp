@@ -17,25 +17,25 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
  details.
- 
+
  You should have received a copy of the GNU General Public License along with
  this program; if not, write to the Free Software Foundation, Inc., 59 Temple
  Place - Suite 330, Boston, MA  02111-1307, USA.
- 
+
  Further information about the GNU General Public License can also be found on
  the world wide web at http://www.gnu.org.
- 
+
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
 This class calculates various auxiliary parameters.
- 
+
 REFERENCES
   Anderson, John D. "Introduction to Flight", 3rd Edition, McGraw-Hill, 1989
                     pgs. 112-126
 HISTORY
 --------------------------------------------------------------------------------
 01/26/99   JSB   Created
- 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -52,24 +52,33 @@ INCLUDES
 #include "FGOutput.h"
 #include "FGMatrix.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_AUXILIARY;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 
 FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex) {
   Name = "FGAuxiliary";
   vcas = veas = mach = qbar = pt = 0;
   psl = rhosl = 1;
   earthPosAngle = 0.0;
+  
+  if (debug_lvl & 2) cout << "Instantiated: " << Name << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGAuxiliary::~FGAuxiliary() {}
+FGAuxiliary::~FGAuxiliary()
+{
+  if (debug_lvl & 2) cout << "Destroyed:    FGAuxiliary" << endl;
+}
 
-
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGAuxiliary::Run() {
   float A,B,D;
@@ -95,19 +104,42 @@ bool FGAuxiliary::Run() {
     A = pow(((pt-p)/psl+1),0.28571);
     vcas = sqrt(7*psl/rhosl*(A-1));
     veas = sqrt(2*qbar/rhosl);
-    
+
     vPilotAccel = Translation->GetUVWdot() + Aircraft->GetXYZep() * Rotation->GetPQRdot();
-    
-    
-    
+
     earthPosAngle += State->Getdt()*OMEGA_EARTH;
 
   } else {
   }
 
-
   return false;
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGAuxiliary::GetHeadWind(void) {
+
+  float psiw,vw,psi;
+
+  psiw = Atmosphere->GetWindPsi();
+  psi = Rotation->Getpsi();
+  vw = Atmosphere->GetWindNED().Magnitude();
+  return -vw*cos(psiw - psi);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGAuxiliary::GetCrossWind(void) {
+
+  float psiw,vw,psi;
+
+  psiw = Atmosphere->GetWindPsi();
+  psi = Rotation->Getpsi();
+  vw = Atmosphere->GetWindNED().Magnitude();
+  return  vw*sin(psiw - psi);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGAuxiliary::GetState(void) {
   qbar = Translation->Getqbar();
@@ -116,5 +148,12 @@ void FGAuxiliary::GetState(void) {
   rhosl = Atmosphere->GetDensitySL();
   psl = Atmosphere->GetPressureSL();
 
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGAuxiliary::Debug(void)
+{
+    //TODO: Add your source code here
 }
 

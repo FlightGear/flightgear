@@ -54,13 +54,15 @@ SENTRY
 #define FPSTOKTS        0.592484
 #define INCHTOFT        0.08333333
 #define OMEGA_EARTH .00007272205217  
-#define NEEDED_CFG_VERSION "1.36"
+#define NEEDED_CFG_VERSION "1.38"
+#define JSBSIM_VERSION  "0.8.2"
 
 #define HPTOFTLBSSEC 550
 #define METERS_TO_FEET 3.2808
 
 enum eParam {
   FG_UNDEF = 0,
+  FG_TIME,
   FG_QBAR,
   FG_WINGAREA,
   FG_WINGSPAN,
@@ -69,7 +71,7 @@ enum eParam {
   FG_ALPHADOT,
   FG_BETA,
   FG_BETADOT,
-  SGD_PITCHRATE,
+  FG_PITCHRATE,
   FG_ROLLRATE,
   FG_YAWRATE,
   FG_MACH,
@@ -90,8 +92,21 @@ enum eParam {
   FG_FLAPS_CMD,
   FG_THROTTLE_CMD,
   FG_THROTTLE_POS,
+  FG_ACTIVE_ENGINE,
   FG_HOVERB,
-  SGD_PITCH_TRIM_CMD
+  FG_PITCH_TRIM_CMD
+};
+
+enum eAction {
+  FG_RAMP  = 1,
+  FG_STEP  = 2,
+  FG_EXP   = 3
+};
+
+enum eType {
+  FG_VALUE = 1,
+  FG_DELTA = 2,
+  FG_BOOL  = 3
 };
 
 /******************************************************************************/

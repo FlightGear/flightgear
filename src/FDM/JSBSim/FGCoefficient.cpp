@@ -50,8 +50,22 @@ INCLUDES
 
 #include <iomanip.h>
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = "ID_COEFFICIENT";
+
+extern char highint[5];
+extern char halfint[5];
+extern char normint[6];
+extern char reset[5];
+extern char underon[5];
+extern char underoff[6];
+extern char fgblue[6];
+extern char fgcyan[6];
+extern char fgred[6];
+extern char fggreen[6];
+extern char fgdef[6];
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -59,17 +73,12 @@ CLASS IMPLEMENTATION
 
 FGCoefficient::FGCoefficient(FGFDMExec* fdex, FGConfigFile* AC_cfg)
 {
-  int r, c, start, end, n;
-  float ftrashcan;
+  int start, end, n;
   string multparms;
-  char nullstring[13] = "            ";
-  
-  bias =0.0;
-  gain = 1.0;
-  
-  FDMExec     = fdex;
-  State       = FDMExec->GetState();
-  Table = 0;
+
+  FDMExec = fdex;
+  State   = FDMExec->GetState();
+  Table   = 0;
 
   if (AC_cfg) {
     name = AC_cfg->GetValue("NAME");
@@ -78,22 +87,7 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, FGConfigFile* AC_cfg)
     AC_cfg->GetNextConfigLine();
     *AC_cfg >> description;
 
-    char bolden[5];
-    char unbolden[5];
-
-    bolden[0] = 27;
-    bolden[1] = '[';
-    bolden[2] = '1';
-    bolden[3] = 'm';
-    bolden[4] = '\0';
-
-    unbolden[0] = 27;
-    unbolden[1] = '[';
-    unbolden[2] = '0';
-    unbolden[3] = 'm';
-    unbolden[4] = '\0';
-
-    cout << "   " << bolden << name << unbolden << endl;
+    cout << "\n   " << highint << underon << name << underoff << normint << endl;
     cout << "   " << description << endl;
     cout << "   " << method << endl;
 
@@ -109,6 +103,9 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, FGConfigFile* AC_cfg)
       if (type == TABLE) {
         *AC_cfg >> columns;
         cout << "Cols: " << columns;
+        Table = new FGTable(rows, columns);
+      } else {
+        Table = new FGTable(rows);
       }
 
       cout << endl;
@@ -151,136 +148,41 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, FGConfigFile* AC_cfg)
       cout << "      Value = " << StaticValue << endl;
       break;
     case VECTOR:
-      Allocate(rows,2);
-
-      for (r=1;r<=rows;r++) {
-        *AC_cfg >> Table[r][0];
-        *AC_cfg >> Table[r][1];
-      }
-
-      for (r=1;r<=rows;r++) {
-        cout << "	";
-        for (c=0;c<columns;c++) {
-          cout << Table[r][c] << "	";
-        }
-        cout << endl;
-      }
-
-      break;
     case TABLE:
-      Allocate(rows, columns);
-
-      Table[0][0] = 0.0;
-
-      // Read the table in -- it should be in matrix format with the row
-      // independents as the first column and the column independents in
-      // the first row.  The implication of this layout is that there should
-      // be no value in the upper left corner of the matrix e.g:
-      //      0  10  20 30 ...
-      // -5   1  2   3  4  ...
-      //  ...
-
-      for (r=0; r<=rows; r++) {
-        for (c=0; c <= columns; c++) {
-          if ( !((r == 0) && (c == 0)) ) {
-            *AC_cfg >> Table[r][c];
-          }
-        }
-      }   
-      
-      /* for (c=1;c<=columns;c++) {
-        *AC_cfg >> Table[0][c];
-        for (r=1;r<=rows;r++) {
-          if ( c==1 ) *AC_cfg >> Table[r][0];
-          else *AC_cfg >> ftrashcan;
-          *AC_cfg >> Table[r][c];
-        }
-      } */
-      
-      for (r=0;r<=rows;r++) {
-        cout << "	";
-        for (c=0;c<=columns;c++) {
-          if( ((r == 0) && (c == 0)) ) {
-             cout << nullstring;
-          } else {
-             cout.flags(ios::left);
-             cout << setw(12) << Table[r][c];
-          }
-        }
-        cout << endl;
-      }
+      *Table << *AC_cfg;
+      Table->Print();
 
       break;
     case EQUATION:
     case UNKNOWN:
       cerr << "Unimplemented coefficient type: " << type << endl;
-      break;  
+      break;
     }
     AC_cfg->GetNextConfigLine();
   }
+  if (debug_lvl & 2) cout << "Instantiated: FGCoefficient" << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGCoefficient::~FGCoefficient(void) {
-  DeAllocate();
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-bool FGCoefficient::DeAllocate(void)
+FGCoefficient::~FGCoefficient()
 {
-  if (Table != NULL ) {
-    for (unsigned int i=0; i<=rows; i++) delete[] Table[i];
-    
-    delete[] Table;
-  } 
-  
-  return true;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-bool FGCoefficient::Allocate(int r, int c)
-{
-  rows = r;
-  columns = c;
-  Table = new float*[r+1];
-  for (int i=0;i<=r;i++) Table[i] = new float[c+1];
-  return true;
+  if (Table) delete Table;
+  if (debug_lvl & 2) cout << "Destroyed:    FGCoefficient" << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 float FGCoefficient::Value(float rVal, float cVal)
 {
-  float rFactor, cFactor, col1temp, col2temp, Value;
-  int r, c;
-  unsigned midx;
+  float Value;
+  unsigned int midx;
 
-  if (rows < 2 || columns < 2) return 0.0;
+  SD = Value = Table->GetValue(rVal, cVal);
 
-  for (r=1;r<=rows;r++) if (Table[r][0] >= rVal) break;
-  for (c=1;c<=columns;c++) if (Table[0][c] >= cVal) break;
-  //cout << "Value(): rVal: " << rVal << " cVal: " << cVal << endl;
-  //cout << "Value(): r: " << r << " c: " << c << endl;
-  c = c < 2 ? 2 : (c > columns ? columns : c);
-  r = r < 2 ? 2 : (r > rows    ? rows    : r);
-
-  rFactor = (rVal - Table[r-1][0]) / (Table[r][0] - Table[r-1][0]);
-  cFactor = (cVal - Table[0][c-1]) / (Table[0][c] - Table[0][c-1]);
-
-  col1temp = rFactor*(Table[r][c-1] - Table[r-1][c-1]) + Table[r-1][c-1];
-  col2temp = rFactor*(Table[r][c] - Table[r-1][c]) + Table[r-1][c];
-
-  Value = col1temp + cFactor*(col2temp - col1temp);
-  Value = (Value + bias)*gain;
-  SD = Value;
-  
   for (midx=0; midx < multipliers.size(); midx++) {
-    Value *= State->GetParameter(multipliers[midx]);
+      Value *= State->GetParameter(multipliers[midx]);
   }
-
   return Value;
 }
 
@@ -288,33 +190,13 @@ float FGCoefficient::Value(float rVal, float cVal)
 
 float FGCoefficient::Value(float Val)
 {
+  float Value;
+
+  SD = Value = Table->GetValue(Val);
   
+  for (unsigned int midx=0; midx < multipliers.size(); midx++) 
+      Value *= State->GetParameter(multipliers[midx]);
   
-  float Factor, Value;
-  int r;
-  unsigned midx;
-
-  if (rows < 2) return 0.0;
-
-  for (r=1;r<=rows;r++) if (Table[r][0] >= Val) break;
-  r = r < 2 ? 2 : (r > rows    ? rows    : r);
-
-  // make sure denominator below does not go to zero.
-  if (Table[r][0] != Table[r-1][0]) {
-    Factor = (Val - Table[r-1][0]) / (Table[r][0] - Table[r-1][0]);
-  } else {
-    Factor = 1.0;
-  }
-
-  Value = Factor*(Table[r][1] - Table[r-1][1]) + Table[r-1][1];
-  Value = (Value + bias)*gain;
-  SD = Value;
-
-  for (midx=0; midx < multipliers.size(); midx++) {
-    Value *= State->GetParameter(multipliers[midx]);
-
-  }
-
   return Value;
 }
 
@@ -323,15 +205,11 @@ float FGCoefficient::Value(float Val)
 float FGCoefficient::Value(void)
 {
 	float Value;
-	unsigned midx;
 
-	Value = StaticValue;
-  Value = (Value + bias)*gain;
-  SD = Value;
+  SD = Value = StaticValue;
 
-  for (midx=0; midx < multipliers.size(); midx++) {
+  for (unsigned int midx=0; midx < multipliers.size(); midx++)
     Value *= State->GetParameter(multipliers[midx]);
-  }
 
   return Value;
 }
@@ -340,6 +218,7 @@ float FGCoefficient::Value(void)
 
 float FGCoefficient::TotalValue()
 {
+  
   switch(type) {
   case 0:
     return -1;
@@ -363,4 +242,9 @@ void FGCoefficient::DumpSD(void)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGCoefficient::Debug(void)
+{
+    //TODO: Add your source code here
+}
 

@@ -45,9 +45,8 @@ INCLUDES
 #include <stdio.h>
 
 #ifdef FGFS
-#  pragma message("FGFS defined")
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <iostream>
 #    include <fstream>
 #  else
@@ -55,7 +54,6 @@ INCLUDES
 #    include <fstream.h>
 #  endif
 #else
-#  pragma message("FGFS not defined")
 #  include <iostream>
 #  include <fstream>
 #endif
@@ -76,7 +74,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FDMSOCKET "$Header"
+#define ID_FDMSOCKET "$Id$"
 
 using std::cout;
 using std::endl;
@@ -90,7 +88,7 @@ using std::string;
 class FGfdmSocket {
 public:
   FGfdmSocket(string, int);
-  ~FGfdmSocket(void);
+  ~FGfdmSocket();
   void Send(void);
   void Append(const char*);
   void Append(float);

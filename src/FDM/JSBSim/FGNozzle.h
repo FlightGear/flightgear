@@ -44,7 +44,7 @@ INCLUDES
 
 #include "FGThruster.h"
 
-#define ID_NOZZLE "$Header$";
+#define ID_NOZZLE "$Id$";
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -53,11 +53,20 @@ CLASS DECLARATION
 class FGNozzle : public FGThruster {
 
 public:
-  FGNozzle(FGFDMExec *FDMExec);
-  ~FGNozzle(void);
+  FGNozzle(FGFDMExec* exec, FGConfigFile* AC_cfg);
+  ~FGNozzle();
 
-  void Calculate(void);
+  float Calculate(float CfPc);
+  float GetPowerRequired(void);
+  
+private:
+  float PE;
+  float ExpR;
+  float nzlEff;
+  float Diameter;
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

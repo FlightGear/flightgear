@@ -38,7 +38,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <cmath>
 #  else
 #    include <math.h>
@@ -49,7 +49,7 @@ INCLUDES
 
 #ifndef M_PI 
 #  include <simgear/constants.h>
-#  define M_PI SGD_PI
+#  define M_PI FG_PI
 #endif
 
 #include "FGState.h"
@@ -63,8 +63,10 @@ INCLUDES
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_STATE;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 MACROS
@@ -86,14 +88,17 @@ CLASS IMPLEMENTATION
 FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
     mTl2b(3,3),
     mTs2b(3,3),
-    vQtrn(4)
+    vQtrn(4),
+    vlastQdot(4)
 {
   FDMExec = fdex;
 
   a = 1000.0;
   sim_time = 0.0;
   dt = 1.0/120.0;
-
+  ActiveEngine = -1;
+  
+  RegisterVariable(FG_TIME,           " time "           );
   RegisterVariable(FG_QBAR,           " qbar "           );
   RegisterVariable(FG_WINGAREA,       " wing_area "      );
   RegisterVariable(FG_WINGSPAN,       " wingspan "       );
@@ -102,7 +107,7 @@ FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
   RegisterVariable(FG_ALPHADOT,       " alphadot "       );
   RegisterVariable(FG_BETA,           " beta "           );
   RegisterVariable(FG_BETADOT,        " betadot "        );
-  RegisterVariable(SGD_PITCHRATE,      " pitch_rate "     );
+  RegisterVariable(FG_PITCHRATE,      " pitch_rate "     );
   RegisterVariable(FG_ROLLRATE,       " roll_rate "      );
   RegisterVariable(FG_YAWRATE,        " yaw_rate "       );
   RegisterVariable(FG_MACH,           " mach "           );
@@ -123,18 +128,26 @@ FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
   RegisterVariable(FG_FLAPS_CMD,      " flaps_cmd "      );
   RegisterVariable(FG_THROTTLE_CMD,   " throttle_cmd "   );
   RegisterVariable(FG_THROTTLE_POS,   " throttle_pos "   );
+  RegisterVariable(FG_ACTIVE_ENGINE,  " active_engine "  );
   RegisterVariable(FG_HOVERB,         " height/span "    );
-  RegisterVariable(SGD_PITCH_TRIM_CMD, " pitch_trim_cmd " );
+  RegisterVariable(FG_PITCH_TRIM_CMD, " pitch_trim_cmd " );
+
+  if (debug_lvl & 2) cout << "Instantiated: FGState" << endl;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGState::~FGState(void) {}
+FGState::~FGState()
+{
+  if (debug_lvl & 2) cout << "Destroyed:    FGState" << endl;
+}
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 float FGState::GetParameter(eParam val_idx) {
   switch(val_idx) {
+  case FG_TIME:
+    return sim_time;
   case FG_QBAR:
     return FDMExec->GetTranslation()->Getqbar();
   case FG_WINGAREA:
@@ -151,7 +164,7 @@ float FGState::GetParameter(eParam val_idx) {
     return FDMExec->GetTranslation()->Getbeta();
   case FG_BETADOT:
     return FDMExec->GetTranslation()->Getbdot();
-  case SGD_PITCHRATE:
+  case FG_PITCHRATE:
     return (FDMExec->GetRotation()->GetPQR())(2);
   case FG_ROLLRATE:
     return (FDMExec->GetRotation()->GetPQR())(1);
@@ -201,7 +214,7 @@ float FGState::GetParameter(eParam val_idx) {
     return FDMExec->GetFCS()->GetThrottlePos(0);
   case FG_HOVERB:
     return FDMExec->GetPosition()->GetHOverB();
-  case SGD_PITCH_TRIM_CMD:
+  case FG_PITCH_TRIM_CMD:
     return FDMExec->GetFCS()->GetPitchTrimCmd();
   default:
     cerr << "FGState::GetParameter() - No handler for parameter " << val_idx << endl;
@@ -245,7 +258,37 @@ void FGState::SetParameter(eParam val_idx, float val) {
     FDMExec->GetFCS()->SetDfPos(val);
     break;
   case FG_THROTTLE_POS:
-    FDMExec->GetFCS()->SetThrottlePos(-1,val);
+    FDMExec->GetFCS()->SetThrottlePos(ActiveEngine,val);
+    break;
+
+  case FG_ELEVATOR_CMD:
+    FDMExec->GetFCS()->SetDeCmd(val);
+    break;
+  case FG_AILERON_CMD:
+    FDMExec->GetFCS()->SetDaCmd(val);
+    break;
+  case FG_RUDDER_CMD:
+    FDMExec->GetFCS()->SetDrCmd(val);
+    break;
+  case FG_SPDBRAKE_CMD:
+    FDMExec->GetFCS()->SetDsbCmd(val);
+    break;
+  case FG_SPOILERS_CMD:
+    FDMExec->GetFCS()->SetDspCmd(val);
+    break;
+  case FG_FLAPS_CMD:
+    FDMExec->GetFCS()->SetDfCmd(val);
+    break;
+  case FG_THROTTLE_CMD:
+    FDMExec->GetFCS()->SetThrottleCmd(ActiveEngine,val);
+    break;
+
+  case FG_ACTIVE_ENGINE:
+    ActiveEngine = (int)val;
+    break;
+
+  default:
+    cerr << "Parameter '" << val_idx << "' (" << paramdef[val_idx] << ") not handled" << endl;
   }
 }
 
@@ -461,14 +504,13 @@ void FGState::CalcMatrices(void) {
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGState::IntegrateQuat(FGColumnVector vPQR, int rate) {
-  static FGColumnVector vlastQdot(4);
   static FGColumnVector vQdot(4);
+  static FGColumnVector vTmp(4);
 
   vQdot(1) = -0.5*(vQtrn(2)*vPQR(eP) + vQtrn(3)*vPQR(eQ) + vQtrn(4)*vPQR(eR));
   vQdot(2) =  0.5*(vQtrn(1)*vPQR(eP) + vQtrn(3)*vPQR(eR) - vQtrn(4)*vPQR(eQ));
   vQdot(3) =  0.5*(vQtrn(1)*vPQR(eQ) + vQtrn(4)*vPQR(eP) - vQtrn(2)*vPQR(eR));
   vQdot(4) =  0.5*(vQtrn(1)*vPQR(eR) + vQtrn(2)*vPQR(eQ) - vQtrn(3)*vPQR(eP));
-
   vQtrn += 0.5*dt*rate*(vlastQdot + vQdot);
 
   vQtrn.Normalize();
@@ -517,4 +559,9 @@ FGMatrix FGState::GetTs2b(float alpha, float beta) {
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGState::Debug(void)
+{
+    //TODO: Add your source code here
+}
 

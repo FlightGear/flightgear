@@ -44,7 +44,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <cmath>
 #  else
 #    include <math.h>
@@ -57,8 +57,10 @@ INCLUDES
 #include "FGState.h"
 #include "FGFDMExec.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_UTILITY;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -66,10 +68,20 @@ CLASS IMPLEMENTATION
 
 FGUtility::FGUtility()
 {
+  if (debug_lvl & 2) cout << "Instantiated: FGUtility" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGUtility::~FGUtility()
 {
+  if (debug_lvl & 2) cout << "Destroyed:    FGUtility" << endl;
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGUtility::Debug(void)
+{
+}
+
 

@@ -24,7 +24,7 @@
 
 #include "FGControls.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = "ID_CONTROLS";
 
 FGControls controls;
@@ -53,8 +53,17 @@ FGControls::~FGControls() {
 
 
 // $Log$
-// Revision 1.21  2000/11/14 19:32:03  curt
-// Nov. 14, 2000 JSBSim updates
+// Revision 1.22  2001/03/29 23:04:51  curt
+// Latest round of JSBSim updates.
+//
+// Revision 1.7  2001/03/22 14:10:24  jberndt
+// Fixed ID comment
+//
+// Revision 1.6  2001/02/04 13:16:13  jsb
+// ** JSB ** Got rid of extra carriage return in code
+//
+// Revision 1.5  2001/02/02 01:16:57  jsb
+// ** JSB ** trim, prop, gear changes
 //
 // Revision 1.4  2000/10/13 19:21:02  jsb
 // ** JSB ** Added version identifiers for all files

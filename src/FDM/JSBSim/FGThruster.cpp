@@ -37,8 +37,10 @@ INCLUDES
 
 #include "FGThruster.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_THRUSTER;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -47,12 +49,22 @@ CLASS IMPLEMENTATION
 
 FGThruster::FGThruster(FGFDMExec *FDMExec) : FGForce(FDMExec)
 {
+  SetTransformType(FGForce::tCustom);
 
+  if (debug_lvl & 2) cout << "Instantiated: FGThruster" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGThruster::Calculate(void)
+FGThruster::~FGThruster()
 {
+  if (debug_lvl & 2) cout << "Destroyed:    FGThruster" << endl;
+}
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGThruster::Debug(void)
+{
+    //TODO: Add your source code here
 }
 

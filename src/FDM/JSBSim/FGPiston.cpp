@@ -40,17 +40,86 @@ INCLUDES
 
 #include "FGPiston.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_PISTON;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-
-FGPiston::FGPiston(FGFDMExec* fdex, string enginePath, string engineName, int num) :
-                                 FGEngine(fdex, enginePath, engineName, num)
+FGPiston::FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec)
 {
-  //
+  string token;
+
+  Name = Eng_cfg->GetValue("NAME");
+  cout << "\n    Engine Name: " << Name << endl;
+  Eng_cfg->GetNextConfigLine();
+  while (Eng_cfg->GetValue() != "/FG_PISTON") {
+    *Eng_cfg >> token;
+    if (token == "BRAKEHORSEPOWER") {
+      *Eng_cfg >> BrakeHorsePower;
+      cout << "      BrakeHorsePower = " << BrakeHorsePower << endl;
+    } else if (token == "MAXTHROTTLE") {
+      *Eng_cfg >> MaxThrottle;
+      cout << "      MaxThrottle = " << MaxThrottle << endl;
+    } else if (token == "MINTHROTTLE") {
+      *Eng_cfg >> MinThrottle;
+      cout << "      MinThrottle = " << MinThrottle << endl;
+    } else if (token == "SLFUELFLOWMAX") {
+      *Eng_cfg >> SLFuelFlowMax;
+      cout << "      SLFuelFlowMax = " << SLFuelFlowMax << endl;
+    } else if (token == "SPEEDSLOPE") {
+      *Eng_cfg >> SpeedSlope;
+      cout << "      SpeedSlope = " << SpeedSlope << endl;
+    } else if (token == "SPEEDINTERCEPT") {
+      *Eng_cfg >> SpeedIntercept;
+      cout << "      SpeedIntercept = " << SpeedIntercept << endl;
+    } else if (token == "ALTITUDESLOPE") {
+      *Eng_cfg >> AltitudeSlope;
+      cout << "      AltitudeSlope = " << AltitudeSlope << endl;
+    } else {
+      cout << "Unhandled token in Engine config file: " << token << endl;
+    }
+  }
+
+  EngineNumber = 0;
+
+  if (debug_lvl & 2) cout << "Instantiated: FGPiston" << endl;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGPiston::~FGPiston()
+{
+  if (debug_lvl & 2) cout << "Destroyed:    FGPiston" << endl;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGPiston::Calculate(float PowerRequired)
+{
+  float h,EngineMaxPower;
+
+  ConsumeFuel();
+
+  Throttle = FCS->GetThrottlePos(EngineNumber);
+
+  h = Position->Geth();
+
+  if (h < 0) h = 0;
+
+  EngineMaxPower = (1 + AltitudeSlope*h)*BrakeHorsePower;
+  PowerAvailable = Throttle*EngineMaxPower*HPTOFTLBSSEC - PowerRequired;
+  
+  return PowerAvailable;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPiston::Debug(void)
+{
+    //TODO: Add your source code here
 }
 

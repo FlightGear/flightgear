@@ -29,7 +29,7 @@
 # error This library requires C++
 #endif                                   
 
-#define ID_CONTROLS "$Header"
+#define ID_CONTROLS "$Id"
 
 // Define a structure containing the control parameters
 
@@ -178,8 +178,17 @@ extern FGControls controls;
 
 
 // $Log$
-// Revision 1.20  2000/11/14 19:32:03  curt
-// Nov. 14, 2000 JSBSim updates
+// Revision 1.21  2001/03/29 23:04:51  curt
+// Latest round of JSBSim updates.
+//
+// Revision 1.10  2001/03/22 14:10:24  jberndt
+// Fixed ID comment
+//
+// Revision 1.9  2001/02/04 13:16:13  jsb
+// ** JSB ** Got rid of extra carriage return in code
+//
+// Revision 1.8  2001/02/02 01:16:57  jsb
+// ** JSB ** trim, prop, gear changes
 //
 // Revision 1.7  2000/10/13 19:21:02  jsb
 // ** JSB ** Added version identifiers for all files

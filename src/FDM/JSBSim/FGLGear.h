@@ -52,7 +52,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_LGEAR "$Header"
+#define ID_LGEAR "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -61,6 +61,7 @@ FORWARD DECLARATIONS
 class FGAircraft;
 class FGPosition;
 class FGRotation;
+class FGFCS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
@@ -143,6 +144,7 @@ CLASS DOCUMENTATION
     length times the spring coefficient and the gear velocity times the damping
     coefficient.</li>
     <li>The lateral/directional force acting on the aircraft through the landing
+
     gear (along the local frame X and Y axes) is calculated next. First, the
     friction coefficient is multiplied by the recently calculated Z-force. This
     is the friction force. It must be given direction in addition to magnitude.
@@ -171,7 +173,9 @@ class FGLGear
 {
 public:
   /// Brake grouping enumerators
-  enum eBrakeGroup {bgNone=0, bgLeft, bgRight, bgCenter, bgNose, bgTail };
+  enum BrakeGroup {bgNone=0, bgLeft, bgRight, bgCenter, bgNose, bgTail };
+  /// Steering group membership enumerators
+  enum SteerType {stSteer, stFixed, stCaster};
   /** Constructor
       @param Executive a pointer to the parent executive object
       @param File a pointer to the config file instance */
@@ -180,13 +184,14 @@ public:
       @param lgear a reference to an existing FGLGear object     */
   FGLGear(const FGLGear& lgear);
   /// Destructor
-  ~FGLGear(void);
+  ~FGLGear();
 
 
   /// The Force vector for this gear
   FGColumnVector Force(void);
   /// The Moment vector for this gear
   FGColumnVector Moment(void) {return vMoment;}
+
   /// Gets the location of the gear in Body axes
   FGColumnVector GetBodyLocation(void) { return vWhlBodyVec; }
   
@@ -223,7 +228,7 @@ private:
   float bDamp;
   float compressLength;
   float compressSpeed;
-  float staticFCoeff, dynamicFCoeff;
+  float staticFCoeff, dynamicFCoeff, rollingFCoeff;
   float brakePct;
   float maxCompLen;
   double SinkRate;
@@ -236,23 +241,27 @@ private:
   bool Reported;
   bool ReportEnable;
   string name;
-  string SteerType;
-  string BrakeGroup;
-  eBrakeGroup eBrakeGrp;
+  string sSteerType;
+  string sBrakeGroup;
+  BrakeGroup eBrakeGrp;
+  SteerType  eSteerType;
   float  maxSteerAngle;
 
-  FGFDMExec*     Exec;
-  FGState*       State;
-  FGAircraft*    Aircraft;
-  FGPosition*    Position;
-  FGRotation*    Rotation;
+  FGFDMExec*  Exec;
+  FGState*    State;
+  FGAircraft* Aircraft;
+  FGPosition* Position;
+  FGRotation* Rotation;
+  FGFCS*      FCS;
 
   void Report(void);
+  void Debug(void);
 };
 
 #include "FGAircraft.h"
 #include "FGPosition.h"
 #include "FGRotation.h"
+#include "FGFCS.h"
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

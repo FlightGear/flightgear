@@ -23,7 +23,7 @@ INCLUDES
 #include <stdlib.h>
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <fstream>
 #    include <cmath>
 #    include <iostream>
@@ -44,7 +44,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MATRIX "$Header"
+#define ID_MATRIX "$Id$"
 
 using std::string;
 using std::ostream;
@@ -74,20 +74,10 @@ DECLARATION: FGMatrix
 
 class FGMatrix
 {
-protected:
-  double **data;
-
-private:
-  unsigned int rows,cols;
-  char delim;
-  int width,prec,origin;
-  void TransposeSquare(void);
-  void TransposeNonSquare(void);
-  unsigned int rowCtr, colCtr;
-
 public:
   FGMatrix(unsigned int r, unsigned int c);
   FGMatrix(const FGMatrix& A);
+  FGMatrix(void) {};
   ~FGMatrix(void);
 
   FGMatrix& operator=(const FGMatrix& A);
@@ -120,6 +110,18 @@ public:
   friend FGMatrix operator*(double scalar,FGMatrix& A);
 
   void SetOParams(char delim,int width,int prec, int origin=0);
+
+protected:
+  double **data;
+  unsigned int rows,cols;
+
+private:
+  char delim;
+  int width,prec,origin;
+  void TransposeSquare(void);
+  void TransposeNonSquare(void);
+  unsigned int rowCtr, colCtr;
+  void Debug(void);
 };
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -132,12 +134,12 @@ public:
   FGColumnVector(void);
   FGColumnVector(int m);
   FGColumnVector(const FGColumnVector& b);
-  ~FGColumnVector();
+  ~FGColumnVector(void);
 
   FGColumnVector operator*(const double scalar);
-  FGColumnVector operator*(const FGColumnVector& V);   // Cross product operator
+  FGColumnVector& operator*(const FGColumnVector& V);   // Cross product operator
   FGColumnVector operator/(const double scalar);
-  FGColumnVector operator+(const FGColumnVector& B);
+  FGColumnVector operator+(const FGColumnVector& B); // must not return reference
   FGColumnVector operator-(const FGColumnVector& B);
   float Magnitude(void);
   FGColumnVector Normalize(void);
@@ -147,7 +149,43 @@ public:
 
   double& operator()(int m) const;
   
-  FGColumnVector multElementWise(const FGColumnVector& V);
+  FGColumnVector& multElementWise(const FGColumnVector& V);
+
+private:
+  void Debug(void);
+};
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DECLARATION: FGMatrix3x3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+class FGMatrix3x3 : public FGMatrix
+{
+public:
+  FGMatrix3x3(void) {FGMatrix(3,3);}
+//  ~FGMatrix3x3(void) {~FGMatrix();}
+};
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DECLARATION: FGColumnVector4
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+class FGColumnVector4 : public FGColumnVector
+{
+public:
+  FGColumnVector4(void) {FGColumnVector(4);}
+//  ~FGColumnVector4(void) {~FGColumnVector();}
+};
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DECLARATION: FGColumnVector3
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+class FGColumnVector3 : public FGColumnVector
+{
+public:
+  FGColumnVector3(void) {FGColumnVector(3);}
+//  ~FGColumnVector3(void) {~FGColumnVector();}
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

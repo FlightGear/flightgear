@@ -175,52 +175,64 @@ FGInterface::bind ()
 			// Aircraft position
   fgTie("/position/latitude", this,
 	&FGInterface::get_Latitude_deg,
-	&FGInterface::set_Latitude_deg);
+	&FGInterface::set_Latitude_deg,
+	false);
   fgTie("/position/longitude", this,
 	&FGInterface::get_Longitude_deg,
-	&FGInterface::set_Longitude_deg);
+	&FGInterface::set_Longitude_deg,
+	false);
   fgTie("/position/altitude", this,
 	&FGInterface::get_Altitude,
-	&FGInterface::set_Altitude);
+	&FGInterface::set_Altitude,
+	false);
   fgTie("/position/altitude-agl", this,
 	&FGInterface::get_Altitude_AGL); // read-only
 
 				// Orientation
   fgTie("/orientation/roll", this,
 	&FGInterface::get_Phi_deg,
-	&FGInterface::set_Phi_deg);
+	&FGInterface::set_Phi_deg,
+	false);
   fgTie("/orientation/pitch", this,
 	&FGInterface::get_Theta_deg,
-	&FGInterface::set_Theta_deg);
+	&FGInterface::set_Theta_deg,
+	false);
   fgTie("/orientation/heading", this,
 	&FGInterface::get_Psi_deg,
-	&FGInterface::set_Psi_deg);
+	&FGInterface::set_Psi_deg,
+	false);
 
 				// Calibrated airspeed
   fgTie("/velocities/airspeed", this,
 	&FGInterface::get_V_calibrated_kts,
-	&FGInterface::set_V_calibrated_kts);
+	&FGInterface::set_V_calibrated_kts,
+	false);
 
 				// Local velocities
   fgTie("/velocities/speed-north", this,
-	&FGInterface::get_V_north);
+	&FGInterface::get_V_north); // read-only
   fgTie("/velocities/speed-east", this,
 	&FGInterface::get_V_east,
-	&FGInterface::set_V_east);
+	&FGInterface::set_V_east,
+	false);
   fgTie("/velocities/speed-down", this,
 	&FGInterface::get_V_down,
-	&FGInterface::set_V_down);
+	&FGInterface::set_V_down,
+	false);
 
 				// Relative wind
   fgTie("/velocities/uBody", this,
 	&FGInterface::get_uBody,
-	&FGInterface::set_uBody);
+	&FGInterface::set_uBody,
+	false);
   fgTie("/velocities/vBody", this,
 	&FGInterface::get_vBody,
-	&FGInterface::set_vBody);
+	&FGInterface::set_vBody,
+	false);
   fgTie("/velocities/wBody", this,
 	&FGInterface::get_wBody,
-	&FGInterface::set_wBody);
+	&FGInterface::set_wBody,
+	false);
 
 				// Climb and slip (read-only)
   fgTie("/velocities/vertical-speed", this,

@@ -113,6 +113,21 @@ SOURCE=.\src\Aircraft\aircraft.cxx
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=.\src\Aircraft\aircraft.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Aircraft"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Aircraft"
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "Lib_Airports"
 
@@ -134,7 +149,37 @@ SOURCE=.\src\Airports\runways.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Airports\runways.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Airports"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Airports"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Airports\simple.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Airports"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Airports"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Airports\simple.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -168,7 +213,37 @@ SOURCE=.\src\Autopilot\auto_gui.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Autopilot\auto_gui.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Autopilot"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Autopilot"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Autopilot\newauto.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Autopilot"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Autopilot"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Autopilot\newauto.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -202,7 +277,52 @@ SOURCE=.\src\Cockpit\cockpit.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Cockpit\cockpit.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Cockpit"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Cockpit"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Cockpit\hud.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Cockpit"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Cockpit"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Cockpit\hud.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Cockpit"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Cockpit"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Cockpit\hud_opts.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -382,7 +502,37 @@ SOURCE=.\src\Cockpit\panel.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Cockpit\panel.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Cockpit"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Cockpit"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Cockpit\panel_io.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Cockpit"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Cockpit"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Cockpit\panel_io.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -412,7 +562,37 @@ SOURCE=.\src\Cockpit\radiostack.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Cockpit\radiostack.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Cockpit"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Cockpit"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Cockpit\steam.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Cockpit"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Cockpit"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Cockpit\steam.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -444,6 +624,21 @@ SOURCE=.\src\Controls\controls.cxx
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=.\src\Controls\controls.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Controls"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Controls"
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "Lib_Balloon"
 
@@ -451,6 +646,21 @@ SOURCE=.\src\Controls\controls.cxx
 # Begin Source File
 
 SOURCE=.\src\FDM\Balloon\BalloonSim.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Balloon"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Balloon"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\Balloon\BalloonSim.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -484,7 +694,37 @@ SOURCE=.\src\FDM\JSBSim\FGAircraft.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGAircraft.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGAtmosphere.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGAtmosphere.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -514,7 +754,37 @@ SOURCE=.\src\FDM\JSBSim\FGAuxiliary.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGAuxiliary.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGCoefficient.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGCoefficient.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -544,7 +814,52 @@ SOURCE=.\src\FDM\JSBSim\FGConfigFile.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGConfigFile.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGControls.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGControls.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGDefs.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -574,7 +889,37 @@ SOURCE=.\src\FDM\JSBSim\FGFCS.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGFCS.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGFDMExec.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGFDMExec.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -604,7 +949,37 @@ SOURCE=.\src\FDM\JSBSim\FGInitialCondition.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGInitialCondition.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGLGear.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGLGear.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -634,7 +1009,37 @@ SOURCE=.\src\FDM\JSBSim\FGMatrix.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGMatrix.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGModel.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGModel.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -664,7 +1069,37 @@ SOURCE=.\src\FDM\JSBSim\FGOutput.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGOutput.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGPosition.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGPosition.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -694,7 +1129,37 @@ SOURCE=.\src\FDM\JSBSim\FGRotation.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGRotation.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGState.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGState.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -724,7 +1189,37 @@ SOURCE=.\src\FDM\JSBSim\FGTranslation.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGTranslation.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGTrim.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGTrim.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -754,7 +1249,37 @@ SOURCE=.\src\FDM\JSBSim\FGTrimAxis.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGTrimAxis.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGUtility.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGUtility.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -784,6 +1309,21 @@ SOURCE=.\src\FDM\JSBSim\FGEngine.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGEngine.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGTank.cpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -799,7 +1339,37 @@ SOURCE=.\src\FDM\JSBSim\FGTank.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\FGTank.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\FGfdmSocket.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_JSBSim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_JSBSim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\FGfdmSocket.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -833,7 +1403,37 @@ SOURCE=.\src\FDM\JSBSim\filtersjb\FGDeadBand.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\filtersjb\FGDeadBand.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_filtersjb"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_filtersjb"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\filtersjb\FGFCSComponent.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_filtersjb"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_filtersjb"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\filtersjb\FGFCSComponent.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -863,7 +1463,37 @@ SOURCE=.\src\FDM\JSBSim\filtersjb\FGFilter.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\filtersjb\FGFilter.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_filtersjb"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_filtersjb"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\filtersjb\FGFlaps.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_filtersjb"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_filtersjb"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\filtersjb\FGFlaps.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -893,7 +1523,37 @@ SOURCE=.\src\FDM\JSBSim\filtersjb\FGGain.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\filtersjb\FGGain.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_filtersjb"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_filtersjb"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\filtersjb\FGGradient.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_filtersjb"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_filtersjb"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\filtersjb\FGGradient.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -923,7 +1583,37 @@ SOURCE=.\src\FDM\JSBSim\filtersjb\FGSummer.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\JSBSim\filtersjb\FGSummer.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_filtersjb"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_filtersjb"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim\filtersjb\FGSwitch.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_filtersjb"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_filtersjb"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim\filtersjb\FGSwitch.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -957,7 +1647,37 @@ SOURCE=.\src\FDM\LaRCsim\atmos_62.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\LaRCsim\atmos_62.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\LaRCsim\default_model_routines.c
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\LaRCsim\default_model_routines.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -987,7 +1707,82 @@ SOURCE=.\src\FDM\LaRCsim\ls_accel.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\LaRCsim\ls_accel.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\LaRCsim\ls_aux.c
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\LaRCsim\ls_aux.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\LaRCsim\ls_cockpit.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\LaRCsim\ls_constants.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\LaRCsim\ls_generic.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1017,7 +1812,37 @@ SOURCE=.\src\FDM\LaRCsim\ls_geodesy.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\LaRCsim\ls_geodesy.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\LaRCsim\ls_gravity.c
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\LaRCsim\ls_gravity.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1047,7 +1872,37 @@ SOURCE=.\src\FDM\LaRCsim\ls_init.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\LaRCsim\ls_init.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\LaRCsim\ls_matrix.c
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\LaRCsim\ls_matrix.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1077,6 +1932,36 @@ SOURCE=.\src\FDM\LaRCsim\ls_model.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\LaRCsim\ls_model.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\LaRCsim\ls_sim_control.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\LaRCsim\ls_step.c
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -1092,7 +1977,52 @@ SOURCE=.\src\FDM\LaRCsim\ls_step.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\LaRCsim\ls_step.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\LaRCsim\ls_sym.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\LaRCsim\ls_trim.c
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\LaRCsim\ls_types.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1330,6 +2260,21 @@ SOURCE=.\src\FDM\LaRCsim\ls_interface.c
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\LaRCsim\ls_interface.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_LaRCsim"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_LaRCsim"
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "Lib_UIUCModel"
 
@@ -1337,6 +2282,21 @@ SOURCE=.\src\FDM\LaRCsim\ls_interface.c
 # Begin Source File
 
 SOURCE=.\src\FDM\UIUCModel\uiuc_1DdataFileReader.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_1DdataFileReader.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1366,7 +2326,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_1Dinterpolation.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_1Dinterpolation.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_2DdataFileReader.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_2DdataFileReader.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1396,7 +2386,67 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_2Dinterpolation.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_2Dinterpolation.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_aerodeflections.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_aerodeflections.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_aircraftdir.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_aircraft.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1426,7 +2476,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_betaprobe.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_betaprobe.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_coef_drag.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_coef_drag.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1456,7 +2536,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_coef_lift.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_coef_lift.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_coef_pitch.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_coef_pitch.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1486,7 +2596,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_coef_roll.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_coef_roll.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_coef_sideforce.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_coef_sideforce.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1516,7 +2656,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_coef_yaw.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_coef_yaw.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_coefficients.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_coefficients.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1546,7 +2716,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_controlInput.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_controlInput.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_convert.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_convert.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1576,7 +2776,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_engine.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_engine.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_ice.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_ice.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1606,7 +2836,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_initializemaps.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_initializemaps.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_map_CD.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_CD.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1636,7 +2896,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_map_CL.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_CL.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_map_CY.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_CY.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1666,7 +2956,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_map_Cm.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_Cm.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_map_Cn.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_Cn.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1696,7 +3016,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_map_Croll.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_Croll.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_map_controlSurface.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_controlSurface.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1726,7 +3076,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_map_engine.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_engine.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_map_geometry.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_geometry.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1756,7 +3136,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_map_ice.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_ice.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_map_init.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_init.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1786,7 +3196,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_map_keyword.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_keyword.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_map_mass.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_mass.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1816,7 +3256,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_map_misc.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_misc.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_map_record1.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_record1.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1846,7 +3316,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_map_record2.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_record2.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_map_record3.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_record3.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1876,7 +3376,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_map_record4.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_record4.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_map_record5.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_map_record5.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1906,7 +3436,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_menu.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_menu.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_parsefile.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_parsefile.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1936,6 +3496,21 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_recorder.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_recorder.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_warnings_errors.cpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -1951,7 +3526,37 @@ SOURCE=.\src\FDM\UIUCModel\uiuc_warnings_errors.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\UIUCModel\uiuc_warnings_errors.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\UIUCModel\uiuc_wrapper.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_UIUCModel"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_UIUCModel"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\UIUCModel\uiuc_wrapper.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -1985,7 +3590,37 @@ SOURCE=.\src\FDM\ADA.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\ADA.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\Balloon.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\Balloon.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2015,7 +3650,37 @@ SOURCE=.\src\FDM\External.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\External.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\flight.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\flight.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2045,7 +3710,37 @@ SOURCE=.\src\FDM\IO360.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\IO360.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\JSBSim.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\JSBSim.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2075,6 +3770,21 @@ SOURCE=.\src\FDM\LaRCsim.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\LaRCsim.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\LaRCsimIC.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -2090,7 +3800,37 @@ SOURCE=.\src\FDM\LaRCsimIC.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\FDM\LaRCsimIC.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\FDM\MagicCarpet.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Flight"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Flight"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\FDM\MagicCarpet.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2124,6 +3864,21 @@ SOURCE=.\src\GUI\apt_dlg.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\GUI\apt_dlg.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_GUI"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_GUI"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\GUI\gui.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -2139,7 +3894,37 @@ SOURCE=.\src\GUI\gui.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\GUI\gui.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_GUI"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_GUI"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\GUI\gui_local.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_GUI"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_GUI"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\GUI\gui_local.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2184,7 +3969,37 @@ SOURCE=.\src\GUI\net_dlg.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\GUI\net_dlg.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_GUI"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_GUI"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\GUI\sgVec3Slider.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_GUI"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_GUI"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\GUI\sgVec3Slider.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2212,6 +4027,21 @@ SOURCE=.\src\GUI\trackball.c
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=.\src\GUI\trackball.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_GUI"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_GUI"
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "Lib_Joystick"
 
@@ -2219,6 +4049,21 @@ SOURCE=.\src\GUI\trackball.c
 # Begin Source File
 
 SOURCE=.\src\Joystick\joystick.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Joystick"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Joystick"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Joystick\joystick.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2267,7 +4112,37 @@ SOURCE=.\src\Main\bfi.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Main\bfi.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Main\fg_init.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Main\fg_init.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2297,7 +4172,37 @@ SOURCE=.\src\Main\fg_io.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Main\fg_io.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Main\fg_props.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Main\fg_props.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2327,7 +4232,37 @@ SOURCE=.\src\Main\fgfs.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Main\fgfs.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Main\globals.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Main\globals.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2357,7 +4292,37 @@ SOURCE=.\src\Main\keyboard.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Main\keyboard.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Main\options.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Main\options.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2387,7 +4352,37 @@ SOURCE=.\src\Main\splash.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Main\splash.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Main\viewer.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Main\viewer.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2417,7 +4412,37 @@ SOURCE=.\src\Main\viewer_lookat.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Main\viewer_lookat.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Main\viewer_rph.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Main\viewer_rph.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2445,13 +4470,88 @@ SOURCE=.\src\Main\viewmgr.cxx
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=.\src\Main\viewmgr.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\main"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\main"
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "Lib_Navaids"
 
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\src\Navaids\fix.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Navaids"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Navaids"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Navaids\fixlist.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Navaids"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Navaids"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Navaids\fixlist.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Navaids"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Navaids"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Navaids\ils.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Navaids"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Navaids"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Navaids\ilslist.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2481,7 +4581,52 @@ SOURCE=.\src\Navaids\ilslist.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Navaids\mkrbeacons.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Navaids"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Navaids"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Navaids\mkrbeacons.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Navaids"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Navaids"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Navaids\nav.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Navaids"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Navaids"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Navaids\navlist.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2530,7 +4675,37 @@ SOURCE=.\src\Network\protocol.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Network\protocol.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Network\atlas.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\atlas.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2560,7 +4735,37 @@ SOURCE=.\src\Network\garmin.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Network\garmin.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Network\joyclient.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\joyclient.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2590,7 +4795,37 @@ SOURCE=.\src\Network\native.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Network\native.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Network\nmea.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\nmea.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2620,7 +4855,37 @@ SOURCE=.\src\Network\props.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Network\props.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Network\pve.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\pve.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2650,7 +4915,37 @@ SOURCE=.\src\Network\ray.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Network\ray.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Network\rul.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\rul.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2714,7 +5009,52 @@ SOURCE=.\src\NetworkOLK\network.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\NetworkOLK\network.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_NetworkOLK"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_NetworkOLK"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\NetworkOLK\fgd.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_NetworkOLK"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_NetworkOLK"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\NetworkOLK\features.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_NetworkOLK"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_NetworkOLK"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\NetworkOLK\features.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2748,7 +5088,37 @@ SOURCE=.\src\Objects\newmat.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Objects\newmat.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Objects"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Objects"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Objects\matlib.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Objects"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Objects"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Objects\matlib.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2778,7 +5148,52 @@ SOURCE=.\src\Objects\obj.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Objects\obj.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Objects"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Objects"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Objects\texload.c
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Objects"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Objects"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Objects\texload.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Objects"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Objects"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Objects\colours.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2812,7 +5227,37 @@ SOURCE=.\src\Scenery\hitlist.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Scenery\hitlist.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Scenery"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Scenery"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Scenery\newcache.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Scenery"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Scenery"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Scenery\newcache.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2842,7 +5287,37 @@ SOURCE=.\src\Scenery\scenery.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Scenery\scenery.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Scenery"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Scenery"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Scenery\tileentry.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Scenery"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Scenery"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Scenery\tileentry.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2870,10 +5345,55 @@ SOURCE=.\src\Scenery\tilemgr.cxx
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=.\src\Scenery\tilemgr.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Scenery"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Scenery"
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "Lib_Sound"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\src\Sound\beacon.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Sound"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Sound"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Sound\beacon.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Sound"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Sound"
+
+!ENDIF 
+
+# End Source File
 # Begin Source File
 
 SOURCE=.\src\Sound\morse.cxx
@@ -2891,7 +5411,37 @@ SOURCE=.\src\Sound\morse.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Sound\morse.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Sound"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Sound"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Sound\soundmgr.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Sound"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Sound"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Sound\soundmgr.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2925,7 +5475,37 @@ SOURCE=.\src\Time\event.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Time\event.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Time"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Time"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Time\fg_timer.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Time"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Time"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Time\fg_timer.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2955,7 +5535,37 @@ SOURCE=.\src\Time\light.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Time\light.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Time"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Time"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Time\moonpos.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Time"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Time"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Time\moonpos.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -2985,7 +5595,37 @@ SOURCE=.\src\Time\sunpos.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Time\sunpos.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Time"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Time"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Time\tmp.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Time"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Time"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Time\tmp.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -3005,6 +5645,21 @@ SOURCE=.\src\Time\tmp.cxx
 # Begin Source File
 
 SOURCE=.\src\Weather\weather.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Weather"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Weather"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Weather\weather.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -3038,7 +5693,52 @@ SOURCE=.\src\WeatherCM\FGAirPressureItem.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\WeatherCM\FGAirPressureItem.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\WeatherCM\FGCloud.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\WeatherCM\FGCloudItem.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\WeatherCM\FGCloudItem.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -3068,7 +5768,37 @@ SOURCE=.\src\WeatherCM\FGLocalWeatherDatabase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\WeatherCM\FGLocalWeatherDatabase.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\WeatherCM\FGPhysicalProperties.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\WeatherCM\FGPhysicalProperties.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -3098,7 +5828,52 @@ SOURCE=.\src\WeatherCM\FGPhysicalProperty.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\WeatherCM\FGPhysicalProperty.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\WeatherCM\FGSnowRain.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\WeatherCM\FGTemperatureItem.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\WeatherCM\FGTemperatureItem.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -3128,7 +5903,37 @@ SOURCE=.\src\WeatherCM\FGThunderstorm.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\WeatherCM\FGThunderstorm.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\WeatherCM\FGTurbulenceItem.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\WeatherCM\FGTurbulenceItem.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 
@@ -3158,6 +5963,66 @@ SOURCE=.\src\WeatherCM\FGVaporPressureItem.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\WeatherCM\FGVaporPressureItem.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\WeatherCM\FGWeatherDefs.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\WeatherCM\FGWeatherFeature.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\WeatherCM\FGWeatherUtils.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\WeatherCM\FGWeatherParse.cpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -3173,7 +6038,52 @@ SOURCE=.\src\WeatherCM\FGWeatherParse.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\WeatherCM\FGWeatherParse.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\WeatherCM\FGWeatherVectorWrap.h
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\WeatherCM\FGWindItem.cpp
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_WeatherCM"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_WeatherCM"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\WeatherCM\FGWindItem.h
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 

@@ -40,8 +40,10 @@ INCLUDES
 
 #include "FGMassBalance.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_MASSBALANCE;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -50,11 +52,12 @@ CLASS IMPLEMENTATION
 
 FGMassBalance::FGMassBalance(FGFDMExec* fdmex) : FGModel(fdmex)
 {
-  //
+  if (debug_lvl & 2) cout << "Instantiated: FGMassBalance" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGMassBalance:: Run(void) {
+bool FGMassBalance::Run(void) {
 
   if (!FGModel::Run()) {
 
@@ -62,5 +65,12 @@ bool FGMassBalance:: Run(void) {
   } else {
     return true;
   }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGMassBalance::Debug(void)
+{
+  // TODO: Add user code here
 }
 

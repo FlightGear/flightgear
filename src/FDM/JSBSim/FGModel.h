@@ -42,7 +42,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <iostream>
 #  else
 #    include <iostream.h>
@@ -53,7 +53,7 @@ INCLUDES
 
 #include <string>
 
-#define ID_MODEL "$Header$"
+#define ID_MODEL "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -69,6 +69,7 @@ class FGFDMExec;
 class FGState;
 class FGAtmosphere;
 class FGFCS;
+class FGPropulsion;
 class FGAircraft;
 class FGTranslation;
 class FGRotation;
@@ -99,7 +100,7 @@ public:
   /// Constructor
   FGModel(FGFDMExec*);
   /// Destructor
-  virtual ~FGModel(void);
+  virtual ~FGModel();
 
   FGModel* NextModel;
   string Name;
@@ -122,20 +123,21 @@ protected:
 
   int exe_ctr;
   int rate;
-  
+
   FGFDMExec*      FDMExec;
   FGState*        State;
   FGAtmosphere*   Atmosphere;
   FGFCS*          FCS;
+  FGPropulsion*   Propulsion;
   FGAircraft*     Aircraft;
   FGTranslation*  Translation;
   FGRotation*     Rotation;
   FGPosition*     Position;
   FGAuxiliary*    Auxiliary;
   FGOutput*       Output;
-
-private:
+  virtual void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

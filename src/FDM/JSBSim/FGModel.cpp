@@ -50,8 +50,14 @@ INCLUDES
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_MODEL;
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+GLOBAL DECLARATIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -61,10 +67,11 @@ FGModel::FGModel(FGFDMExec* fdmex)
 {
   FDMExec     = fdmex;
   NextModel   = 0L;
-  
+
   State       = 0;
   Atmosphere  = 0;
   FCS         = 0;
+  Propulsion  = 0;
   Aircraft    = 0;
   Translation = 0;
   Rotation    = 0;
@@ -73,19 +80,25 @@ FGModel::FGModel(FGFDMExec* fdmex)
   Output      = 0;
 
   exe_ctr     = 1;
+
+  if (debug_lvl & 2) cout << "              FGModel Base Class" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGModel::~FGModel()
 {
+  if (debug_lvl & 2) cout << "Destroyed:    FGModel" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGModel::InitModel(void)
 {
   State       = FDMExec->GetState();
   Atmosphere  = FDMExec->GetAtmosphere();
   FCS         = FDMExec->GetFCS();
+  Propulsion  = FDMExec->GetPropulsion();
   Aircraft    = FDMExec->GetAircraft();
   Translation = FDMExec->GetTranslation();
   Rotation    = FDMExec->GetRotation();
@@ -96,6 +109,7 @@ bool FGModel::InitModel(void)
   if (!State ||
       !Atmosphere ||
       !FCS ||
+      !Propulsion ||
       !Aircraft ||
       !Translation ||
       !Rotation ||
@@ -105,9 +119,12 @@ bool FGModel::InitModel(void)
   else return(true);
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGModel::Run()
 {
+  if (debug_lvl & 4) cout << "Entering Run() for model " << Name << endl;
+
   if (exe_ctr == 1) {
     if (exe_ctr++ >= rate) exe_ctr = 1;
     return false;
@@ -117,4 +134,10 @@ bool FGModel::Run()
   }
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGModel::Debug(void)
+{
+    //TODO: Add your source code here
+}
 

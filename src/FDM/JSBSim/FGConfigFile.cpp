@@ -21,8 +21,10 @@ INCLUDES
 #include <stdlib.h>
 #include <math.h>
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = "ID_CONFIGFILE";
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -36,21 +38,28 @@ FGConfigFile::FGConfigFile(string cfgFileName)
   Opened = true;
   if (cfgfile.is_open()) GetNextConfigLine();
   else Opened = false;
+
+  if (debug_lvl & 2) cout << "Instantiated: FGConfigFile" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGConfigFile::~FGConfigFile(void)
+FGConfigFile::~FGConfigFile()
 {
   cfgfile.close();
+  if (debug_lvl & 2) cout << "Destroyed:    FGConfigFile" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 string FGConfigFile::GetNextConfigLine(void)
 {
   do {
     CurrentLine = GetLine();
-    if (CurrentLine.find("<COMMENT>") != CurrentLine.npos) CommentsOn = true;
-    if (CurrentLine.find("</COMMENT>") != CurrentLine.npos) {
+    if ((CurrentLine.find("<COMMENT>") != CurrentLine.npos) ||
+        (CurrentLine.find("<!--") != CurrentLine.npos)) CommentsOn = true;
+    if ((CurrentLine.find("</COMMENT>") != CurrentLine.npos) ||
+        (CurrentLine.find("-->") != CurrentLine.npos)) {
       CommentsOn = false;
       GetNextConfigLine();
     }
@@ -60,6 +69,7 @@ string FGConfigFile::GetNextConfigLine(void)
   return CurrentLine;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 string FGConfigFile::GetValue(string val)
 {
@@ -128,12 +138,14 @@ string FGConfigFile::GetValue(string val)
   return string("");
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 string FGConfigFile::GetValue(void)
 {
   return GetValue("");
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGConfigFile::IsCommentLine(void)
 {
@@ -143,11 +155,12 @@ bool FGConfigFile::IsCommentLine(void)
   return false;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 string FGConfigFile::GetLine(void)
 {
   string scratch = "";
-  unsigned int test;
+  int test;
 
   while ((test = cfgfile.get()) != EOF) {
     if (test >= 0x20) {
@@ -162,6 +175,8 @@ string FGConfigFile::GetLine(void)
   if (cfgfile.eof()) return string("EOF");
   return scratch;
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGConfigFile& FGConfigFile::operator>>(double& val)
 {
@@ -178,6 +193,8 @@ FGConfigFile& FGConfigFile::operator>>(double& val)
   return *this;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 FGConfigFile& FGConfigFile::operator>>(float& val)
 {
   unsigned int pos, end;
@@ -192,6 +209,8 @@ FGConfigFile& FGConfigFile::operator>>(float& val)
   if (CurrentIndex >= CurrentLine.length()) GetNextConfigLine();
   return *this;
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 FGConfigFile& FGConfigFile::operator>>(int& val)
 {
@@ -208,6 +227,8 @@ FGConfigFile& FGConfigFile::operator>>(int& val)
   return *this;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 FGConfigFile& FGConfigFile::operator>>(eParam& val)
 {
   unsigned int pos, end;
@@ -223,6 +244,8 @@ FGConfigFile& FGConfigFile::operator>>(eParam& val)
   return *this;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 FGConfigFile& FGConfigFile::operator>>(string& str)
 {
   unsigned int pos, end;
@@ -237,9 +260,17 @@ FGConfigFile& FGConfigFile::operator>>(string& str)
   return *this;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGConfigFile::ResetLineIndexToZero(void)
 {
   CurrentIndex = 0;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGConfigFile::Debug(void)
+{
+    //TODO: Add your source code here
 }
 

@@ -40,7 +40,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <vector>
 #  else
 #    include <vector.h>
@@ -56,7 +56,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_AERODYNAMICS "$Header$"
+#define ID_AERODYNAMICS "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -90,7 +90,7 @@ public:
       @param Executive a pointer to the parent executive object */
   FGAerodynamics(FGFDMExec*);
   /// Destructor
-  ~FGAerodynamics(void);
+  ~FGAerodynamics();
 
   /** Runs the Aerodynamics model; called by the Executive
       @return false if no error */
@@ -99,6 +99,9 @@ public:
   /** Loads the Aerodynamics model
       @return true if successful */
   bool LoadAerodynamics(FGConfigFile* AC_cfg);
+  
+private:
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

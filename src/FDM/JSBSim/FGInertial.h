@@ -44,7 +44,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <vector>
 #  else
 #    include <vector.h>
@@ -56,19 +56,18 @@ INCLUDES
 #include "FGModel.h"
 #include "FGConfigFile.h"
 
-#define ID_INERTIAL "$Header"
+#define ID_INERTIAL "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-const char *Id_Inertial = "JSBSim $Header$";
 
 class FGInertial : public FGModel {
 
 public:
   FGInertial(FGFDMExec*);
-  ~FGInertial(void);
+  ~FGInertial();
 
   bool Run(void);
   bool LoadInertial(FGConfigFile* AC_cfg);

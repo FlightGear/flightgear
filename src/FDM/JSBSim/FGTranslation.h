@@ -58,7 +58,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <cmath>
 #  else
 #    include <math.h>
@@ -70,7 +70,7 @@ INCLUDES
 #include "FGModel.h"
 #include "FGMatrix.h"
 
-#define ID_TRANSLATION "$Header"
+#define ID_TRANSLATION "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -79,7 +79,7 @@ CLASS DECLARATION
 class FGTranslation : public FGModel {
 public:
   FGTranslation(FGFDMExec*);
-  ~FGTranslation(void);
+  ~FGTranslation();
 
   inline FGColumnVector GetUVW(void) { return vUVW; }
   inline FGColumnVector GetUVWdot(void) { return vUVWdot; }
@@ -104,13 +104,13 @@ public:
   inline void Setbdot (float tt) { bdot = tt; }
 
   inline void SetAB(float t1, float t2) { alpha=t1; beta=t2; }
-
+  
   bool Run(void);
 
 protected:
 
 private:
-  FGColumnVector vUVW,vWindUVW;
+  FGColumnVector vUVW;
   FGColumnVector vUVWdot;
   FGColumnVector vNcg;
   FGColumnVector vPQR;
@@ -124,7 +124,9 @@ private:
   float rho;
 
   void GetState(void);
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

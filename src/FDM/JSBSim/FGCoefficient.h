@@ -46,12 +46,13 @@ INCLUDES
 #include <string>
 #include "FGConfigFile.h"
 #include "FGDefs.h"
+#include "FGTable.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_COEFFICIENT "$Header"
+#define ID_COEFFICIENT "$Id$"
 
 using std::vector;
 
@@ -105,13 +106,12 @@ class FGCoefficient
   string name;
   string method;
   float StaticValue;
-  float **Table;
   eParam LookupR, LookupC;
   MultVec multipliers;
   int rows, columns;
   Type type;
   float SD; // Actual stability derivative (or other coefficient) value
-  float gain,bias;
+  FGTable *Table;
 
   FGFDMExec*      FDMExec;
   FGState*        State;
@@ -123,14 +123,11 @@ class FGCoefficient
   FGPosition*     Position;
   FGAuxiliary*    Auxiliary;
   FGOutput*       Output;
-  
-  bool DeAllocate(void);
-  bool Allocate(int, int);
 
 public:
   FGCoefficient(FGFDMExec*, FGConfigFile*);
-  ~FGCoefficient(void);
-  
+  ~FGCoefficient();
+
   float Value(float, float);
   float Value(float);
   float Value(void);
@@ -139,14 +136,10 @@ public:
   inline float GetSD(void) {return SD;}
   inline MultVec Getmultipliers(void) {return multipliers;}
   void DumpSD(void);
-  
-  inline float GetGain(void) { return gain; }
-  inline float GetBias(void) { return bias; }
-  inline void SetGain(float tt) { gain = tt; }
-  inline void SetBias(float tt) { bias = tt; }
-  inline void ResetGB(void) { gain = 1.0; bias = 0.0; }
-
+private:
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

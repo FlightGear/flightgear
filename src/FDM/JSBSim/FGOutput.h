@@ -42,7 +42,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <iostream>
 #    include <fstream>
 #  else
@@ -56,7 +56,7 @@ INCLUDES
 
 #include "FGfdmSocket.h"
 
-#define ID_OUTPUT "$Header$"
+#define ID_OUTPUT "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -66,7 +66,7 @@ class FGOutput : public FGModel
 {
 public:
   FGOutput(FGFDMExec*);
-  ~FGOutput(void);
+  ~FGOutput();
 
   bool Run(void);
 
@@ -89,6 +89,7 @@ private:
   enum {otNone, otCSV, otTab, otSocket, otTerminal, otUnknown} Type;
   ofstream datafile;
   FGfdmSocket* socket;
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -44,7 +44,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <vector>
 #  else
 #    include <vector.h>
@@ -56,7 +56,7 @@ INCLUDES
 #include "FGModel.h"
 #include "FGConfigFile.h"
 
-#define ID_GROUNDREACTIONS "$Header"
+#define ID_GROUNDREACTIONS "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -66,10 +66,13 @@ class FGGroundReactions : public FGModel {
 
 public:
   FGGroundReactions(FGFDMExec*);
-  ~FGGroundReactions(void);
+  ~FGGroundReactions();
 
   bool Run(void);
   bool LoadGroundReactions(FGConfigFile* AC_cfg);
+
+private:
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -40,17 +40,37 @@ INCLUDES
 
 #include "FGTurboShaft.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_TURBOSHAFT;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-
-FGTurboShaft::FGTurboShaft(FGFDMExec* fdex, string enginePath, string engineName, int num) :
-                                 FGEngine(fdex, enginePath, engineName, num)
+FGTurboShaft::FGTurboShaft(FGFDMExec* exec, FGConfigFile* cfg) : FGEngine(exec)
 {
-  //
+  if (debug_lvl & 2) cout << "Instantiated: FGTurboShaft" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGTurboShaft::~FGTurboShaft()
+{
+  if (debug_lvl & 2) cout << "Destroyed:    FGTurboShaft" << endl;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGTurboShaft::Calculate(float dummy) {
+  ConsumeFuel();
+  return 0.0;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGTurboShaft::Debug(void)
+{
+    //TODO: Add your source code here
+}

@@ -43,8 +43,9 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGForce.h"
+#include "FGConfigFile.h"
 
-#define ID_THRUSTER "$Header"
+#define ID_THRUSTER "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -54,12 +55,23 @@ class FGThruster : public FGForce {
 
 public:
   FGThruster(FGFDMExec *FDMExec);
-  ~FGThruster(void);
+  virtual ~FGThruster();
 
   enum Type {ttNozzle, ttRotor, ttPropeller};
 
-  virtual void Calculate(void);
+  virtual float Calculate(float) {return 0.0;}
+  void SetName(string name) {Name = name;}
+  virtual float GetPowerRequired(void) {return 0.0;}
+  virtual void SetdeltaT(float dt) {deltaT = dt;}
+
+protected:
+  string Name;
+  float Thrust;
+  float PowerRequired;
+  float deltaT;
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+

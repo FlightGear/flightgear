@@ -40,7 +40,7 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
+#  ifdef FG_HAVE_STD_INCLUDES
 #    include <fstream>
 #  else
 #    include <fstream.h>
@@ -50,35 +50,24 @@ INCLUDES
 #endif
 
 #include "FGEngine.h"
-#include "FGState.h"
-#include "FGFDMExec.h"
-#include "FGAtmosphere.h"
-#include "FGFCS.h"
-#include "FGAircraft.h"
-#include "FGTranslation.h"
-#include "FGRotation.h"
-#include "FGPosition.h"
-#include "FGAuxiliary.h"
-#include "FGOutput.h"
-#include "FGDefs.h"
+#include "FGTank.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = "ID_ENGINE";
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, int num) {
-  string fullpath;
-  string tag;
-
-  FDMExec = fdex;
-
+FGEngine::FGEngine(FGFDMExec* exec) {
+  FDMExec     = exec;
   State       = FDMExec->GetState();
   Atmosphere  = FDMExec->GetAtmosphere();
   FCS         = FDMExec->GetFCS();
+  Propulsion  = FDMExec->GetPropulsion();
   Aircraft    = FDMExec->GetAircraft();
   Translation = FDMExec->GetTranslation();
   Rotation    = FDMExec->GetRotation();
@@ -86,152 +75,82 @@ FGEngine::FGEngine(FGFDMExec* fdex, string enginePath, string engineName, int nu
   Auxiliary   = FDMExec->GetAuxiliary();
   Output      = FDMExec->GetOutput();
 
-  Name = engineName;
-
-# ifndef macintosh  
-    fullpath = enginePath + "/" + engineName + ".xml";
-# else
-    fullpath = enginePath + ";" + engineName + ".xml";
-# endif
-      
-  cout << "    Reading engine: " << engineName << " from file: " << fullpath << endl;
-  ifstream enginefile(fullpath.c_str());
-
-  if (enginefile) {
-    enginefile >> tag;
-
-    if      (tag == "ROCKET")    Type = etRocket;
-    else if (tag == "PISTON")    Type = etPiston;
-    else if (tag == "TURBOPROP") Type = etTurboProp;
-    else if (tag == "TURBOJET")  Type = etTurboJet;
-    else                         Type = etUnknown;
-
-    switch(Type) {
-    case etTurboProp:
-    case etTurboJet: 
-      cerr << "Unsupported Engine type" << tag << endl;
-      break;
-    case etUnknown:
-      cerr << "Unknown engine type: " << tag << endl;
-      break;
-    case etPiston:
-      enginefile >> X;
-      enginefile >> Y;
-      enginefile >> Z;
-      enginefile >> EnginePitch;
-      enginefile >> EngineYaw;
-      enginefile >> BrakeHorsePower;
-      enginefile >> MaxThrottle;
-      enginefile >> MinThrottle;
-      enginefile >> SLFuelFlowMax;
-      enginefile >> SpeedSlope;
-      enginefile >> SpeedIntercept;
-      enginefile >> AltitudeSlope;
-
-      break;
-    case etRocket:
-      enginefile >> X;
-      enginefile >> Y;
-      enginefile >> Z;
-      enginefile >> EnginePitch;
-      enginefile >> EngineYaw;
-      enginefile >> SLThrustMax;
-      enginefile >> VacThrustMax;
-      enginefile >> MaxThrottle;
-      enginefile >> MinThrottle;
-      enginefile >> SLFuelFlowMax;
-      enginefile >> SLOxiFlowMax;
-      break;
-    }
-
-    enginefile.close();
-  } else {
-    cerr << "Unable to open engine definition file " << fullpath.c_str() << endl;
-  }
-
-  EngineNumber = num;
   Thrust = PctPower = 0.0;
   Starved = Flameout = false;
   Running = true;
+
+  if (debug_lvl & 2) cout << "Instantiated: FGEngine" << endl;
+  TrimMode = false;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGEngine::~FGEngine(void) {}
-
-
-float FGEngine::CalcRocketThrust(void) {
-  float lastThrust;
-
-  Throttle = FCS->GetThrottlePos(EngineNumber);
-  lastThrust = Thrust;                 // last actual thrust
-
-  if (Throttle < MinThrottle || Starved) {
-    PctPower = Thrust = 0.0; // desired thrust
-    Flameout = true;
-  } else {
-    PctPower = Throttle / MaxThrottle;
-    Thrust = PctPower*((1.0 - Atmosphere->GetDensityRatio())*(VacThrustMax - SLThrustMax) +
-                       SLThrustMax); // desired thrust
-    Flameout = false;
-  }
-
-
-  if(State->Getdt() > 0.0) {
-    Thrust -= 0.8*(Thrust - lastThrust); // actual thrust
-  }
-
-  return Thrust;
+FGEngine::~FGEngine()
+{
+  if (debug_lvl & 2) cout << "Destroyed:    FGEngine" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// This base class function should be called from within the
+// derived class' Calculate() function before any other calculations are done.
+// This base class method removes fuel from the fuel tanks as appropriate,
+// and sets the starved flag if necessary.
 
-float FGEngine::CalcPistonThrust(void) {
-  float v,h,pa;
+void FGEngine::ConsumeFuel(void) {
+  float Fshortage, Oshortage;
+  FGTank* Tank;
 
-  Throttle = FCS->GetThrottlePos(EngineNumber);
-  Throttle /= 100;
+  if (TrimMode) return;
 
-  v = Translation->GetVt();
-  h = Position->Geth();
-
-  if (v < 10)
-    v = 10;
-  if (h < 0)
-    h = 0;
-
-  pa=(SpeedSlope*v + SpeedIntercept)*(1 +AltitudeSlope*h)*BrakeHorsePower;
-
-  Thrust = Throttle*(pa*HPTOFTLBSSEC)/v;
-
-  return Thrust;
-}
-
-
-float FGEngine::CalcThrust(void) {
-  if(Running) {
-    switch(Type) {
-    case etRocket:
-      return CalcRocketThrust();
-      // break;
-    case etPiston:
-      return CalcPistonThrust();
-      // break;
-    default:
-      return 9999.0;
-      // break;
+  Fshortage = Oshortage = 0.0;
+  for (unsigned int i=0; i<SourceTanks.size(); i++) {
+    Tank = Propulsion->GetTank(i);
+    if (Tank->GetType() == FGTank::ttFUEL) {
+      Fshortage += Tank->Reduce(CalcFuelNeed()/Propulsion->GetnumSelectedFuelTanks());
+    } else {
+      Oshortage += Tank->Reduce(CalcOxidizerNeed()/Propulsion->GetnumSelectedOxiTanks());
     }
-  } else {
-    return 0;
   }
+
+  if (Fshortage < 0.00 || Oshortage < 0.00) Starved = true;
+  else Starved = false;
 }
 
-float FGEngine::CalcFuelNeed() {
-  FuelNeed = SLFuelFlowMax*PctPower;
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGEngine::CalcFuelNeed(void) {
+  FuelNeed = SLFuelFlowMax*PctPower*State->Getdt()*Propulsion->GetRate();
   return FuelNeed;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-float FGEngine::CalcOxidizerNeed() {
-  OxidizerNeed = SLOxiFlowMax*PctPower;
+float FGEngine::CalcOxidizerNeed(void) {
+  OxidizerNeed = SLOxiFlowMax*PctPower*State->Getdt()*Propulsion->GetRate();
   return OxidizerNeed;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGEngine::SetPlacement(float x, float y, float z, float pitch, float yaw) {
+  X = x;
+  Y = y;
+  Z = z;
+  EnginePitch = pitch;
+  EngineYaw = yaw;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGEngine::AddFeedTank(int tkID)
+{
+  SourceTanks.push_back(tkID);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGEngine::Debug(void)
+{
+    //TODO: Add your source code here
 }
 

@@ -37,22 +37,148 @@ INCLUDES
 
 #include "FGPropeller.h"
 
-static const char *IdSrc = "$Header$";
+static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_PROPELLER;
+
+extern short debug_lvl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
-FGPropeller::FGPropeller(FGFDMExec *FDMExec) : FGThruster(FDMExec)
+FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(exec)
 {
+  string token;
+  int rows, cols;
 
+  PropName = Prop_cfg->GetValue("NAME");
+  cout << "\n    Propeller Name: " << PropName << endl;
+  Prop_cfg->GetNextConfigLine();
+  while (Prop_cfg->GetValue() != "/FG_PROPELLER") {
+    *Prop_cfg >> token;
+    if (token == "IXX") {
+      *Prop_cfg >> Ixx;
+      cout << "      IXX = " << Ixx << endl;
+    } else if (token == "DIAMETER") {
+      *Prop_cfg >> Diameter;
+      Diameter /= 12.0;
+      cout << "      Diameter = " << Diameter << " ft." << endl;
+    } else if (token == "NUMBLADES") {
+      *Prop_cfg >> numBlades;
+      cout << "      Number of Blades  = " << numBlades << endl;
+    } else if (token == "EFFICIENCY") {
+       *Prop_cfg >> rows >> cols;
+       if (cols == 1) Efficiency = new FGTable(rows);
+	     else           Efficiency = new FGTable(rows, cols);
+       *Efficiency << *Prop_cfg;
+       cout << "      Efficiency: " <<  endl;
+       Efficiency->Print();
+    } else if (token == "C_THRUST") {
+       *Prop_cfg >> rows >> cols;
+       if (cols == 1) cThrust = new FGTable(rows);
+	     else           cThrust = new FGTable(rows, cols);
+       *cThrust << *Prop_cfg;
+       cout << "      Thrust Coefficient: " <<  endl;
+       cThrust->Print();
+    } else if (token == "C_POWER") {
+       *Prop_cfg >> rows >> cols;
+       if (cols == 1) cPower = new FGTable(rows);
+	     else           cPower = new FGTable(rows, cols);
+       *cPower << *Prop_cfg;
+       cout << "      Power Coefficient: " <<  endl;
+       cPower->Print();
+    } else if (token == "EOF") {
+       cout << "      End of file reached" <<  endl;
+       break;
+    } else {
+      cout << "Unhandled token in Propeller config file: " << token << endl;
+    }
+  }
+
+  if (debug_lvl & 2) cout << "Instantiated: FGPropeller" << endl;
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropeller::Calculate(void)
+FGPropeller::~FGPropeller()
 {
-  FGThruster::Calculate();
-
+  if (Efficiency) delete Efficiency;
+  if (cThrust)    delete cThrust;
+  if (cPower)     delete cPower;
+  if (debug_lvl & 2) cout << "Destroyed:    FGPropeller" << endl;
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+// We must be getting the aerodynamic velocity here, NOT the inertial velocity.
+// We need the velocity with respect to the wind.
+//
+// Note that PowerAvailable is the excess power available after the drag of the
+// propeller has been subtracted. At equilibrium, PowerAvailable will be zero -
+// indicating that the propeller will not accelerate or decelerate.
+// Remembering that Torque * omega = Power, we can derive the torque on the
+// propeller and its acceleration to give a new RPM. The current RPM will be
+// used to calculate thrust.
+//
+// Because RPM could be zero, we need to be creative about what RPM is stated as.
+
+float FGPropeller::Calculate(float PowerAvailable)
+{
+  float J, C_Thrust, omega;
+  float Vel = (fdmex->GetTranslation()->GetUVW())(1);
+  float rho = fdmex->GetAtmosphere()->GetDensity();
+  float RPS = RPM/60.0;
+
+  if (RPM > 0.10) {
+    J = Vel / (Diameter * RPM / 60.0);
+  } else {
+    J = 0.0;
+  }
+
+  if (MaxPitch == MinPitch) { // Fixed pitch prop
+    C_Thrust = cThrust->GetValue(J);
+  } else {                    // Variable pitch prop
+    C_Thrust = cThrust->GetValue(J, Pitch);
+  }
+
+  Thrust = C_Thrust*RPS*RPS*Diameter*Diameter*Diameter*Diameter*rho;
+  vFn(1) = Thrust;
+  omega = RPS*2.0*M_PI;
+
+  if (omega <= 500) omega = 1.0;
+
+  Torque = PowerAvailable / omega;
+  RPM = (RPS + ((Torque / Ixx) / (2.0 * M_PI)) * deltaT) * 60.0;
+  return Thrust; // return thrust in pounds
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+float FGPropeller::GetPowerRequired(void)
+{
+  if (RPM <= 0.10) return 0.0; // If the prop ain't turnin', the fuel ain't burnin'.
+
+  float cPReq, RPS = RPM / 60.0;
+
+  float J = (fdmex->GetTranslation()->GetUVW())(1) / (Diameter * RPS);
+  float rho = fdmex->GetAtmosphere()->GetDensity();
+
+  if (MaxPitch == MinPitch) { // Fixed pitch prop
+    cPReq = cPower->GetValue(J);
+  } else {                    // Variable pitch prop
+    cPReq = cPower->GetValue(J, Pitch);
+  }
+
+  PowerRequired = cPReq*RPS*RPS*RPS*Diameter*Diameter*Diameter*Diameter
+                                                       *Diameter*rho;
+  return PowerRequired;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropeller::Debug(void)
+{
+    //TODO: Add your source code here
+}
+

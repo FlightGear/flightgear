@@ -43,8 +43,9 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGEngine.h"
+#include "FGConfigFile.h"
 
-#define ID_PISTON "$Header$";
+#define ID_PISTON "$Id$";
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
@@ -52,12 +53,22 @@ CLASS DECLARATION
 
 class FGPiston : public FGEngine
 {
-
 public:
-  FGPiston(FGFDMExec*, string, string, int);
+  FGPiston(FGFDMExec* exec, FGConfigFile* Eng_cfg);
   ~FGPiston();
 
+  float Calculate(float PowerRequired);
+  float GetPowerAvailable(void) {return PowerAvailable;}
+
+private:
+  float BrakeHorsePower;
+  float SpeedSlope;
+  float SpeedIntercept;
+  float AltitudeSlope;
+  float PowerAvailable;
+  void Debug(void);
 };
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif
+
