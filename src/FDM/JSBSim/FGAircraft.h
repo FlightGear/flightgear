@@ -162,14 +162,14 @@ public:
   inline float GetAlphaCLMax(void) { return alphaclmax; }
   inline float GetAlphaCLMin(void) { return alphaclmin; }
 
-  inline void SetGearUp(bool tt) { GearUp = tt; }
+  inline void SetGear(bool tt) { GearUp = tt; }
+  inline void SetGearUp(void) { GearUp = true; }
+  inline void SetGearDown(bool tt) { GearUp = false; }
   inline void SetAlphaCLMax(float tt) { alphaclmax=tt; }
   inline void SetAlphaCLMin(float tt) { alphaclmin=tt; }
 
   string GetGroundReactionStrings(void);
   string GetGroundReactionValues(void);
-
-  float GetLoD(void);
 
   /// Subsystem types for specifying which will be output in the FDM data logging
   enum  SubSystems {

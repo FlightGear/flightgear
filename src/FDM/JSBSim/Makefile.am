@@ -21,6 +21,7 @@ libJSBSim_a_SOURCES = \
 	FGDefs.h \
 	FGFCS.cpp FGFCS.h \
 	FGFDMExec.cpp FGFDMExec.h \
+	FGFactorGroup.cpp FGFactorGroup.h \
 	FGForce.cpp FGForce.h \
         FGInertial.cpp FGInertial.h \
 	FGInitialCondition.cpp FGInitialCondition.h \

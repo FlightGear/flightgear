@@ -129,7 +129,7 @@ private:
   double SeaLevelRadius;
   double gamma;
   double Vt, Vground;
-  double hoverb,b;
+  float hoverb,b;
 
   double psigt;
 

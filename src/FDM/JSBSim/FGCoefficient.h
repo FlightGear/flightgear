@@ -98,16 +98,25 @@ CLASS DECLARATION
 class FGCoefficient
 {
 public:
-  FGCoefficient(FGFDMExec*, FGConfigFile*);
+  FGCoefficient(FGFDMExec*);
   ~FGCoefficient();
-
+  
+  virtual bool Load(FGConfigFile* AC_cfg);
+  
   typedef vector <eParam> MultVec;
-  float TotalValue(void);
-  inline string Getname(void) {return name;}
-  inline float GetSD(void) {return SD;}
+  virtual float TotalValue(void);
+  virtual inline string Getname(void) {return name;}
+  virtual inline float GetSD(void) { return SD;}
   inline MultVec Getmultipliers(void) {return multipliers;}
-  void DumpSD(void);
-
+  void DumpSD(void);  
+  
+  /** Outputs coefficient information.
+      Non-dimensionalizing parameter descriptions are output
+      for each aero coefficient defined.
+      @param multipliers the list of multipliers for this coefficient.*/
+  virtual void DisplayCoeffFactors(void);
+  virtual inline string GetCoefficientStrings(void) { return name; }
+  virtual string GetCoefficientValues(void);
 private:
   enum Type {UNKNOWN, VALUE, VECTOR, TABLE, EQUATION};
 

@@ -58,12 +58,14 @@ INCLUDES
 #include "FGMassBalance.h"
 #include "FGTranslation.h"
 #include "FGCoefficient.h"
+#include "FGFactorGroup.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #define ID_AERODYNAMICS "$Id$"
+
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -106,12 +108,6 @@ public:
   /** Loads the Aerodynamics model
       @return true if successful */
   bool Load(FGConfigFile* AC_cfg);
-
-  /** Outputs coefficient information.
-      Non-dimensionalizing parameter descriptions are output
-      for each aero coefficient defined.
-      @param multipliers the list of multipliers for this coefficient.*/
-  void DisplayCoeffFactors(vector <eParam> multipliers);
 
   /** Gets the total aerodynamic force vector.
       @return a force vector reference. */
