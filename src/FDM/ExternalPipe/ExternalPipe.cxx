@@ -46,8 +46,6 @@ FGExternalPipe::FGExternalPipe( double dt, string name ) {
 
     buf = new char[sizeof(ctrls) + 1];
 
-    cout << "dt = " << dt << endl;
-
 #if defined( HAVE_SYS_TYPES_H ) && defined( HAVE_SYS_STAT_H )
     fifo_name_1 = name + "1";
     fifo_name_2 = name + "2";
@@ -71,13 +69,11 @@ FGExternalPipe::FGExternalPipe( double dt, string name ) {
     }
 
     pd1 = open( fifo_name_1.c_str(), O_RDWR );
-    cout << "pd1 = " << pd1 << endl;
     if ( pd1 == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Unable to open named pipe: " << fifo_name_1 );
         valid = false;
     }
     pd2 = open( fifo_name_2.c_str(), O_RDWR );
-    cout << "pd2 = " << pd2 << endl;
     if ( pd2 == -1 ) {
         SG_LOG( SG_IO, SG_ALERT, "Unable to open named pipe: " << fifo_name_2 );
         valid = false;
@@ -208,7 +204,6 @@ void FGExternalPipe::update( double dt ) {
         SG_LOG( SG_IO, SG_ALERT, "Write error to named pipe: "
                 << fifo_name_1 );
     }
-    // cout << "  wrote to pipe" << endl;
 
     length = sizeof(fdm);
     result = read( pd2, (char *)(& fdm), length );
@@ -217,8 +212,5 @@ void FGExternalPipe::update( double dt ) {
                 << fifo_name_2 );
     }
     FGNetFDM2Props( &fdm, false );
-    // cout << "read from pipe" << endl;
-
-    // SG_LOG( SG_IO, SG_INFO, "  End FGExternalPipe::udpate()" );
 #endif
 }
