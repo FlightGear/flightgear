@@ -108,9 +108,7 @@ void FGAILocalTraffic::FlyCircuits(int numCircuits, bool tag) {
 	//And just teleport to the threshold to start.
 	//This is a hack though, we need to check where we are and taxi out if appropriate.
 	operatingState = IN_PATTERN;
-#define DCL_KEMT true
-	//#define DCL_KPAO true
-#ifdef DCL_KEMT
+
 	// Hardwire to KEMT for now
 	// Hardwired points at each end of KEMT runway
 	Point3D P010(-118.037483, 34.081358, 296 * SG_FEET_TO_METER);
@@ -132,17 +130,6 @@ void FGAILocalTraffic::FlyCircuits(int numCircuits, bool tag) {
 		patternDirection = 1;	// Right
 		pos.setelev(rwy.threshold_pos.elev() + (-0.0 * SG_FEET_TO_METER));  // This is a complete hack - the rendered runway takes the underlying scenery elev rather than the published runway elev so I should use height above terrain or something.
 	}
-#else	
-	//KPAO - might be a better choice since its in the default scenery
-	//Hardwire it to the default (no wind) direction
-	Point3D threshold_end(-122.1124358, 37.45848783, 6.8 * SG_FEET_TO_METER);	// These positions are from airnav.com and don't quite seem to correspond with the sim scenery
-	Point3D takeoff_end(-122.1176522, 37.463752, 6.7 * SG_FEET_TO_METER);
-	rwy.threshold_pos = threshold_end;
-	rwy.hdg = 315.0;
-	rwy.ID = ???
-		patternDirection = 1;	// Right
-	pos.setelev(rwy.threshold_pos.elev() + (-0.0 * SG_FEET_TO_METER));  // This is a complete hack - the rendered runway takes the underlying scenery elev rather than the published runway elev so I should use height above terrain or something.
-#endif
 	
 	//rwy.threshold_pos.setlat(34.081358);
 	//rwy.threshold_pos.setlon(-118.037483);
@@ -494,8 +481,13 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 	//cout << "In ExitRunway" << endl;
 	//cout << "Runway ID is " << rwy.ID << endl;
 	node_array_type exitNodes = airport.GetExits(rwy.ID);	//I suppose we ought to have some fallback for rwy with no defined exits?
-	//cout << "Got exits" << endl;
-	//cout << "Size of exits array is " << exitNodes.size() << endl;
+	/*
+	cout << "Node ID's of exits are ";
+	for(unsigned int i=0; i<exitNodes.size(); ++i) {
+		cout << exitNodes[i]->nodeID << ' ';
+	}
+	cout << endl;
+	*/
 	if(exitNodes.size()) {
 		//Find the next exit from orthopos.y
 		double d;
@@ -503,7 +495,7 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 		double backdist = 100000;
 		node_array_iterator nItr = exitNodes.begin();
 		node* rwyExit = *(exitNodes.begin());
-		int gateID;		//This might want to be more persistant at some point
+		//int gateID;		//This might want to be more persistant at some point
 		while(nItr != exitNodes.end()) {
 			d = ortho.ConvertToLocal((*nItr)->pos).y() - ortho.ConvertToLocal(pos).y(); 	//FIXME - consider making orthopos a class variable
 			if(d > 0.0) {
@@ -519,15 +511,23 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 			}
 			++nItr;
 		}
-		//cout << "Calculated dist, dist = " << dist << endl;
-		// GetNodeList(exitNode->parking) and add to from here to exit node 
-		gateID = airport.GetRandomGateID();
-		//cout << "gateID = " << gateID << endl;
-		in_dest = airport.GetGateNode(gateID);
-		//cout << "in_dest got..." << endl;
-		path = airport.GetPath(rwyExit, in_dest);	//TODO - need to convert a and b to actual nodes!!
-		//cout << "path got..." << endl;
-		//cout << "Size of path is " << path.size() << endl;
+		in_dest = airport.GetGateNode();
+		// TODO - add a NULL pointer (no available gates) check for in_dest and have a fallback position
+		// (possibly taxi off runway and disappear?)
+		path = airport.GetPath(rwyExit, in_dest);
+		//cout << "path returned was:" << endl;
+		/*
+		for(unsigned int i=0; i<path.size(); ++i) {
+			switch(path[i]->struct_type) {
+			case NODE:
+				cout << "NODE " << ((node*)(path[i]))->nodeID << endl;
+				break;
+			case ARC:
+				cout << "ARC\n";
+				break;
+			}
+		}
+		*/
 		taxiState = TD_INBOUND;
 		StartTaxi();
 	} else {
