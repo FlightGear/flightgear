@@ -179,6 +179,12 @@ FGInput::init ()
   fgRegisterMouseMotionHandler(mouseMotionHandler);
 }
 
+void
+FGInput::reinit ()
+{
+    init();
+}
+
 void 
 FGInput::update (double dt)
 {

@@ -194,6 +194,7 @@ public:
   // Implementation of SGSubsystem.
   //
   virtual void init ();
+  virtual void reinit ();
   virtual void update (double dt);
   virtual void suspend ();
   virtual void resume ();
