@@ -107,6 +107,14 @@ static inline double get_ground_speed() {
 
 
 void FGAutopilot::MakeTargetWPStr( double distance ) {
+    static time_t last_time = 0;
+    time_t current_time = time(NULL);
+    if ( last_time == current_time ) {
+	return;
+    }
+
+    last_time = current_time;
+
     double accum = 0.0;
 
     int size = globals->get_route()->size();
@@ -529,10 +537,28 @@ int FGAutopilot::run() {
 	    double x = current_radiostack->get_nav1_gs_dist();
 	    double y = (FGBFI::getAltitude() 
 			- current_radiostack->get_nav1_elev()) * FEET_TO_METER;
-	    double angle = atan2( y, x ) * RAD_TO_DEG;
-	    double gs_diff = current_radiostack->get_nav1_target_gs() - angle;
-	    climb_error_accum += gs_diff * 2.0;
-	    TargetClimbRate = gs_diff * 200.0 + climb_error_accum;
+	    double current_angle = atan2( y, x ) * RAD_TO_DEG;
+	    // cout << "current angle = " << current_angle << endl;
+
+	    double target_angle = current_radiostack->get_nav1_target_gs();
+	    // cout << "target angle = " << target_angle << endl;
+
+	    double gs_diff = target_angle - current_angle;
+	    // cout << "difference from desired = " << gs_diff << endl;
+
+	    // convert desired vertical path angle into a climb rate
+	    double des_angle = current_angle - 10 * gs_diff;
+	    // cout << "desired angle = " << des_angle << endl;
+
+	    // convert to meter/min
+	    // cout << "raw ground speed = " << cur_fdm_state->get_V_ground_speed() << endl;
+	    double horiz_vel = cur_fdm_state->get_V_ground_speed()
+		* FEET_TO_METER * 60.0;
+	    // cout << "Horizontal vel = " << horiz_vel << endl;
+	    TargetClimbRate = -sin( des_angle * DEG_TO_RAD ) * horiz_vel;
+	    // cout << "TargetClimbRate = " << TargetClimbRate << endl;
+	    /* climb_error_accum += gs_diff * 2.0; */
+	    /* TargetClimbRate = gs_diff * 200.0 + climb_error_accum; */
 	} else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
 	    // brain dead ground hugging with no look ahead
 	    TargetClimbRate =
@@ -584,7 +610,7 @@ int FGAutopilot::run() {
 	// calculate integral error, and adjustment amount
 	int_error = alt_error_accum;
 	// printf("error = %.2f  int_error = %.2f\n", error, int_error);
-	int_adj = int_error / 8000.0;
+	int_adj = int_error / 20000.0;
 
 	// caclulate proportional error
 	prop_error = error;
