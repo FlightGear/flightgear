@@ -185,10 +185,16 @@
 #endif // __BORLANDC__
 
 #if defined ( sun )
-  extern "C" {
-      extern void *memmove(void *, const void *, size_t);
-  }
-#endif
+#  include <memory.h>
+#  if defined ( __cplusplus )
+     // typedef unsigned int size_t;
+     extern "C" {
+       extern void *memmove(void *, const void *, size_t);
+     }
+#  else
+     extern void *memmove(void *, const void *, size_t);
+#  endif // __cplusplus
+#endif // sun
 
 //
 // No user modifiable definitions beyond here.
@@ -270,6 +276,9 @@ inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
 #endif // _COMPILER_H
 
 // $Log$
+// Revision 1.7  1999/02/05 21:27:41  curt
+// Tweaks for the solaris platform.
+//
 // Revision 1.6  1999/01/27 04:45:17  curt
 // Tweak for solaris.
 //
