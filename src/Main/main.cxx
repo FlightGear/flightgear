@@ -80,7 +80,12 @@
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/radiostack.hxx>
 #include <Cockpit/steam.hxx>
-#include <FDM/UIUCModel/uiuc_aircraft.h>
+
+// bfi.hxx has to be included before uiuc_aircraft.h because of nasty
+// #defines in uiuc_aircraft.h
+#include "bfi.hxx"
+
+// #include <FDM/UIUCModel/uiuc_aircraft.h>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
 #include <Joystick/joystick.hxx>
@@ -268,6 +273,9 @@ void fgInitVisuals( void ) {
 
 // Update all Visuals (redraws anything graphics related)
 void fgRenderFrame( void ) {
+    // Update the BFI.
+    FGBFI::update();
+
     fgLIGHT *l = &cur_light_params;
     FGTime *t = FGTime::cur_time_params;
     // FGView *v = &current_view;

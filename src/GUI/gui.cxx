@@ -66,6 +66,8 @@
 #include <Main/options.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/views.hxx>
+#include <Main/save.hxx>
+#include <Main/bfi.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
@@ -713,6 +715,36 @@ void guiToggleMenu(void)
 the Gui callback functions 
 ____________________________________________________________________*/
 
+static void saveFlight(puObject *cv)
+{
+    BusyCursor(0);
+    ofstream output("fgfs.sav");
+    if (output.good() && fgSaveFlight(output)) {
+      output.close();
+      mkDialog("Saved flight to ./fgfs.sav");
+      FG_LOG(FG_INPUT, FG_INFO, "Saved flight to fgfs.sav");
+    } else {
+      mkDialog("Cannot save flight to ./fgfs.sav");
+      FG_LOG(FG_INPUT, FG_ALERT, "Cannot save flight to fgfs.sav");
+    }
+    BusyCursor(1);
+}
+
+static void loadFlight(puObject *cb)
+{
+    BusyCursor(0);
+    ifstream input("fgfs.sav");
+    if (input.good() && fgLoadFlight(input)) {
+      input.close();
+      mkDialog("Loaded flight from fgfs.sav");
+      FG_LOG(FG_INPUT, FG_INFO, "Restored flight from ./fgfs.sav");
+    } else {
+      mkDialog("Failed to load flight from fgfs.sav");
+      FG_LOG(FG_INPUT, FG_ALERT, "Cannot load flight from ./fgfs.sav");
+    }
+    BusyCursor(1);
+}
+
 void reInit(puObject *cb)
 {
     BusyCursor(0);
@@ -720,6 +752,11 @@ void reInit(puObject *cb)
     build_rotmatrix(quat_mat, curquat);
     fgReInitSubsystems();
     BusyCursor(1);
+}
+
+static void toggleClouds(puObject *cb)
+{
+    FGBFI::setClouds(!FGBFI::getClouds());
 }
 	
 // This is the accessor function
@@ -1362,8 +1399,11 @@ char *fileSubmenu               [] = {
     "Print",
 #endif
     "Snap Shot",
-    /* "---------", "Save", */ 
-    "Reset", NULL
+    "---------", 
+    "Reset", 
+    "Load flight",
+    "Save flight",
+    NULL
 };
 puCallback fileSubmenuCb        [] = {
     MayBeGoodBye, /* hideMenuCb, NULL, */
@@ -1372,7 +1412,11 @@ puCallback fileSubmenuCb        [] = {
 #endif
     /* NULL, notCb, */
     dumpSnapShot,
-    reInit, NULL
+    NULL,
+    reInit, 
+    loadFlight,
+    saveFlight,
+    NULL
 };
 
 /*
@@ -1406,9 +1450,11 @@ puCallback aircraftSubmenuCb    [] = {
 };
 
 char *environmentSubmenu        [] = {
-    "Airport", /* "Terrain", "Weather", */ NULL
+    "Toggle Clouds",
+    "Goto Airport", /* "Terrain", "Weather", */ NULL
 };
 puCallback environmentSubmenuCb [] = {
+    toggleClouds,
     NewAirport, /* notCb, notCb, */ NULL
 };
 

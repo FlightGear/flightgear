@@ -70,11 +70,11 @@ fgSaveFlight (ostream &output)
   SAVE("longitude", FGBFI::getLongitude());
 
 				// KLUDGE: deal with gear wierdness
-  if (FGBFI::getAGL() < 6) {
-    SAVE("altitude", FGBFI::getAltitude() - 6);
-  } else {
+//   if (FGBFI::getAGL() < 6) {
+//     SAVE("altitude", FGBFI::getAltitude() - FGBFI::getAGL());
+//   } else {
     SAVE("altitude", FGBFI::getAltitude());
-  }
+//   }
 
   //
   // Orientation

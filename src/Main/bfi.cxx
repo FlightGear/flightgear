@@ -108,6 +108,16 @@ FGBFI::reinit ()
 
   cout << "BFI: start reinit\n";
 
+  setHeading(getHeading());
+  setPitch(getPitch());
+  setRoll(getRoll());
+  setSpeedNorth(getSpeedNorth());
+  setSpeedEast(getSpeedEast());
+  setSpeedDown(getSpeedDown());
+  setLatitude(getLatitude());
+  setLongitude(getLongitude());
+  setAltitude(getAltitude());
+  setTargetAirport("");
 				// TODO: add more AP stuff
   double elevator = getElevator();
   double aileron = getAileron();
@@ -1164,6 +1174,7 @@ FGBFI::setVisibility (double visibility)
 void
 FGBFI::setClouds (bool clouds)
 {
+  cout << "Set clouds to " << clouds << endl;
   current_options.set_clouds(clouds);
   needReinit();
 }
