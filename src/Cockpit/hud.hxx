@@ -49,7 +49,7 @@
 
 #include <simgear/constants.h>
 
-#include <fg_typedefs.h>
+#include <Include/fg_typedefs.h>
 #include <Aircraft/aircraft.hxx>
 #include <FDM/flight.hxx>
 #include <Controls/controls.hxx>

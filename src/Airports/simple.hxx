@@ -51,10 +51,14 @@
 #include STL_STRING
 #include <set>
 
-#define NDEBUG			// she don't work without it.
+#ifndef _MSC_VER
+#   define NDEBUG			// she don't work without it.
+#endif
 #include <mk4.h>
 #include <mk4str.h>
-#undef NDEBUG
+#ifndef _MSC_VER
+#  undef NDEBUG
+#endif
 
 FG_USING_STD(string);
 FG_USING_STD(set);
