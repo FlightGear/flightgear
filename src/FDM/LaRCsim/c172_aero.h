@@ -2,47 +2,51 @@
 
 /*global declarations of aero model parameters*/
 
-  static SCALAR CLadot;
-  static SCALAR CLq;
-  static SCALAR CLde;
-  static SCALAR CLo;
+   SCALAR CLadot;
+   SCALAR CLq;
+   SCALAR CLde;
+   SCALAR CLo;
   
   
-  static SCALAR Cdo;
-  static SCALAR Cda;  /*Not used*/
-  static SCALAR Cdde;
+   SCALAR Cdo;
+   SCALAR Cda;  /*Not used*/
+   SCALAR Cdde;
   
-  static SCALAR Cma;
-  static SCALAR Cmadot;
-  static SCALAR Cmq;
-  static SCALAR Cmo; 
-  static SCALAR Cmde;
+   SCALAR Cma;
+   SCALAR Cmadot;
+   SCALAR Cmq;
+   SCALAR Cmo; 
+   SCALAR Cmde;
   
-  static SCALAR Clbeta;
-  static SCALAR Clp;
-  static SCALAR Clr;
-  static SCALAR Clda;
-  static SCALAR Cldr;
+   SCALAR Clbeta;
+   SCALAR Clp;
+   SCALAR Clr;
+   SCALAR Clda;
+   SCALAR Cldr;
   
-  static SCALAR Cnbeta;
-  static SCALAR Cnp;
-  static SCALAR Cnr;
-  static SCALAR Cnda;
-  static SCALAR Cndr;
+   SCALAR Cnbeta;
+   SCALAR Cnp;
+   SCALAR Cnr;
+   SCALAR Cnda;
+   SCALAR Cndr;
   
-  static SCALAR Cybeta;
-  static SCALAR Cyp;
-  static SCALAR Cyr;
-  static SCALAR Cyda;
-  static SCALAR Cydr;
+   SCALAR Cybeta;
+   SCALAR Cyp;
+   SCALAR Cyr;
+   SCALAR Cyda;
+   SCALAR Cydr;
   
   /*nondimensionalization quantities*/
   /*units here are ft and lbs */
-  static SCALAR cbar; /*mean aero chord ft*/
-  static SCALAR b; /*wing span ft */
-  static SCALAR Sw; /*wing planform surface area ft^2*/
-  static SCALAR rPiARe; /*reciprocal of Pi*AR*e*/
-  
+   SCALAR cbar; /*mean aero chord ft*/
+   SCALAR b; /*wing span ft */
+   SCALAR Sw; /*wing planform surface area ft^2*/
+   SCALAR rPiARe; /*reciprocal of Pi*AR*e*/
+   
+   SCALAR Weight; /*lbs*/
+   SCALAR MaxTakeoffWeight,EmptyWeight;
+   SCALAR Cg;     /*%MAC*/
+   SCALAR Zcg;    /*%MAC*/
   
   
   SCALAR CLwbh,CL,cm,cd,cn,cy,croll,cbar_2V,b_2V,qS,qScbar,qSb,ps,rs;

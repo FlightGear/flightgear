@@ -43,6 +43,7 @@ typedef struct
 	double latitude,longitude,altitude;
 	double vc,alpha,beta,gamma;
 	double theta,phi,psi;
+	double weight,cg;
 	int use_gamma_tmg;
 }InitialConditions;
 
@@ -50,6 +51,8 @@ typedef struct
 // vc       knots (calibrated airspeed, close to indicated)
 // altitude ft
 // all angles in degrees
+// weight lbs
+// cg %MAC
 // if use_gamma_tmg =1 then theta will be computed
 // from theta=alpha+gamma and the value given will
 // be ignored. Otherwise gamma is computed from
@@ -60,6 +63,9 @@ void setIC(InitialConditions IC)
 	SCALAR vnu,vnv,vnw,vteu,vtev,vtew,vdu,vdv,vdw;
 	SCALAR alphar,betar,thetar,phir,psir,gammar;
 	SCALAR sigma,ps,Ts,a;
+	
+	Mass=IC.weight*INVG;
+	Dx_cg=(IC.cg-0.25)*4.9;
 	
 	Latitude=IC.latitude*DEG_TO_RAD;
 	Longitude=IC.longitude*DEG_TO_RAD;
@@ -122,7 +128,7 @@ int trim_long(int kmax, InitialConditions IC)
 	double tol=1E-3;
 	double a_tol=tol/10;
 	double alpha_step=0.001;
-	int k=0,i,j=0,jmax=75,sum=0;
+	int k=0,i,j=0,jmax=10,sum=0;
 	ls_loop(0.0,-1);
 	do{
 		//printf("k: %d\n",k);
@@ -175,33 +181,135 @@ int trim_long(int kmax, InitialConditions IC)
 	return k;			 		
 }
 
+int trim_ground(int kmax, InitialConditions IC)
+{
+	double elevator,alpha,qdot_prev,alt_prev,step;
+	double tol=1E-3;
+	double a_tol=tol/10;
+	double alpha_step=0.001;
+	int k=0,i,j=0,jmax=40,sum=0,m=0;
+	Throttle_pct=0;
+	Brake_pct=1;
+	Theta=5*DEG_TO_RAD;
+	IC.altitude=Runway_altitude;
+	printf("udot: %g\n",U_dot_body);
+	setIC(IC);
+	printf("Altitude: %g, Runway_altitude: %g\n",Altitude,Runway_altitude);
+	qdot_prev=1.0E6;
+	
+	ls_loop(0.0,-1);
+	
+	do{
+		//printf("k: %d\n",k);
+		step=1;
+	    printf("IC.altitude: %g, Altitude: %g, Runway_altitude: %g,wdot: %g,F_Z_gear: %g, M_m_gear: %g,F_Z: %g\n",IC.altitude,Altitude,Runway_altitude,W_dot_body,F_Z_gear,M_m_gear,F_Z);
+
+		m=0;
+		while((fabs(W_dot_body) > tol) && (m < 10))
+		{
+			
+			j=0;
+			
+			do{
+				alt_prev=IC.altitude;
+				IC.altitude+=step;
+				setIC(IC);
+            	ls_loop(0.0,-1);
+				printf("IC.altitude: %g, Altitude: %g, Runway_altitude: %g,wdot: %g,F_Z: %g\n",IC.altitude,Altitude,Runway_altitude,W_dot_body,F_Z);
+				j++;
+			}while((W_dot_body < 0) && (j < jmax));
+			IC.altitude-=step;
+			step/=10;
+			printf("step: %g\n",step);
+			m++;
+			
+		}	
+		sum+=j;
+        printf("IC.altitude: %g, Altitude: %g, Runway_altitude: %g,wdot: %g,F_Z_gear: %g, M_m_gear: %g,F_Z: %g\n",IC.altitude,Altitude,Runway_altitude,W_dot_body,F_Z_gear,M_m_gear,F_Z);
+
+        j=0;
+		
+		while((Q_dot_body <= qdot_prev) && (j < jmax))
+		{
+
+            
+			qdot_prev=Q_dot_body;
+			IC.theta+=Q_dot_body;
+            setIC(IC);
+			ls_loop(0.0,-1);
+			j++;
+			
+			printf("\tTheta: %7.4f, qdot: %10.6f, qdot_prev: %10.6f, j: %d\n",Theta*RAD_TO_DEG,Q_dot_body,qdot_prev,j);
+		}
+		IC.theta-=qdot_prev;
+		sum+=j;
+		
+		printf("\tTheta: %7.4f, qdot: %10.6f, W_dot_body: %g\n",Theta,Q_dot_body,W_dot_body);
+        j=0;
+		if(W_dot_body > tol)
+		{
+			step=1;
+			while((W_dot_body > 0) && (j <jmax))
+			{
+				IC.altitude-=step;
+				setIC(IC);
+				ls_loop(0.0,-1);
+				j++;
+			}
+		}		
+		k++;j=0;
+    }while(((fabs(W_dot_body) > tol) || (fabs(Q_dot_body) > tol)) && (k < kmax));
+	printf("Total Iterations: %d\n",sum);
+	return k;			 		
+}
 void do_trims(int kmax,FILE *out,InitialConditions IC)
 {
-	int k=0;
-	double speed,elevator;
+	int k=0,i;
+	double speed,elevator,cmcl;
 	out=fopen("trims.out","w");
 	speed=55;
-	while(speed < 150)
+	
+	for(i=1;i<=5;i++)
 	{
-	   IC.vc=speed;
-	   Long_control=0;Theta=0;Throttle_pct=0.2;
-	   
-	   k=trim_long(kmax,IC);
-	   if(Long_control <= 0)
-		  elevator=Long_control*28;
-	   else
-		 elevator=Long_control*23;	
-	   
-	   fprintf(out,"%g,%g,%g,%g,%g,%d\n",V_calibrated_kts,Alpha*RAD_TO_DEG,Long_control,Throttle_pct,Gamma_vert_rad,k);
-	   printf("%g,%g,%g,%g,%d,%g,%g,%g\n",V_calibrated_kts,Alpha*RAD_TO_DEG,elevator,Throttle_pct,k,W_body,U_body,Q_body);
+		switch(i)
+		{
+			case 1: IC.weight=1500;IC.cg=0.155;break;
+			case 2: IC.weight=1500;IC.cg=0.364;break;
+			case 3: IC.weight=1950;IC.cg=0.155;break;
+			case 4: IC.weight=2550;IC.cg=0.257;break;
+			case 5: IC.weight=2550;IC.cg=0.364;break;
+		}
+		
+		speed=50;
+		while(speed <= 150)
+		{
+		   IC.vc=speed;
+		   Long_control=0;Theta=0;Throttle_pct=0.0;
 
-	   if(k >= kmax)
-	   {
-	   	 printf("kmax exceeded at: %g knots\n",V_calibrated_kts);
-		 printf("wdot: %g, udot: %g, qdot: %g\n\n",W_dot_body,U_dot_body,Q_dot_body);
-	   }
-	   speed+=10;	  
-	}	 
+		   k=trim_long(kmax,IC);
+		   if(Long_control <= 0)
+			  elevator=Long_control*28;
+		   else
+			 elevator=Long_control*23;	
+		   if(fabs(CL) > 1E-3)
+		   {
+	   			cmcl=cm / CL;
+		   }	
+		   if(k < kmax)
+		   {
+	   			fprintf(out,"%g,%g,%g,%g,%g,%d",V_calibrated_kts,Alpha*RAD_TO_DEG,Long_control,Throttle_pct,Gamma_vert_rad,k);
+	   			fprintf(out,",%g,%g,%g,%g,%g\n",CL,cm,cmcl,Weight,Cg);
+/* 	   			printf("%g,%g,%g,%g,%g,%g,%g,%g,%g,%g\n",V_calibrated_kts,Alpha*RAD_TO_DEG,elevator,CL,cm,Cmo,Cma,Cmde,Mass*32.174,Dx_cg);
+ */		   }	
+    	   else
+		   {
+	   		 printf("kmax exceeded at: %g knots, %g lbs, %g %%MAC\n",V_calibrated_kts,Weight,Cg);
+			 printf("wdot: %g, udot: %g, qdot: %g\n\n",W_dot_body,U_dot_body,Q_dot_body);
+
+		   }
+		   speed+=10;	  
+		}
+    }
 	fclose(out);
 }	
 
@@ -354,7 +462,7 @@ int main(int argc, char *argv[]) {
 	
 	double save_alt = 0.0;
     int multiloop=1,k=0,i;
-	double time=0,elev_trim,elev_trim_save,elevator,speed;
+	double time=0,elev_trim,elev_trim_save,elevator,speed,cmcl;
 	FILE *out;
 	double hgain,hdiffgain,herr,herrprev,herr_diff,htarget;
 	InitialConditions IC;
@@ -370,22 +478,46 @@ int main(int argc, char *argv[]) {
 	Runway_altitude =   18.0;
 	IC.altitude=strtod(argv[2],NULL); 
 	IC.vc=strtod(argv[1],NULL);
-	IC.alpha=strtod(argv[3],NULL);
+	IC.alpha=10;
 	IC.beta=0;
-	IC.gamma=strtod(argv[3],NULL);
-	IC.use_gamma_tmg=1;
+	IC.theta=strtod(argv[3],NULL);
+	IC.use_gamma_tmg=0;
 	IC.phi=0;
 	IC.psi=0;
+	IC.weight=1500;
+	IC.cg=0.155;
 	Long_control=strtod(argv[4],NULL);
     setIC(IC);
 	printf("Out setIC\n");
 	ls_ForceAltitude(IC.altitude);  
     fgLaRCsimInit(0.01);
 	
-	/* printf("trim_long():\n");
-	k=trim_long(200,IC); */
+	while(IC.alpha < 30.0)
+	{
+		setIC(IC);
+		ls_loop(0.0,-1);
+		printf("CL: %g ,Alpha: %g\n",CL,IC.alpha);
+		IC.alpha+=1.0;
+	}
 	
-	
+	/*trim_ground(10,IC);*/
+	/* printf("%g,%g\n",Theta,Gamma_vert_rad); 
+	printf("trim_long():\n");
+	k=trim_long(200,IC);
+	Throttle_pct=Throttle_pct-0.2;
+	printf("%g,%g\n",Theta,Gamma_vert_rad); 
+	out=fopen("dive.out","w");
+	time=0;
+	while(time < 30.0)
+	{
+			ls_update(1);
+			
+			cmcl=cm/CL;
+			fprintf(out,"%g,%g,%g,%g,%g,%d",V_calibrated_kts,Alpha*RAD_TO_DEG,Long_control,Throttle_pct,Gamma_vert_rad,k);
+	   		fprintf(out,",%g,%g,%g\n",CL,cm,cmcl);
+			time+=0.01;
+    }
+	fclose(out);
 	printf("V_rel_wind: %8.2f, Alpha: %8.2f, Beta: %8.2f\n",V_rel_wind,Alpha*RAD_TO_DEG,Beta*RAD_TO_DEG);
 	printf("Theta: %8.2f, Gamma: %8.2f, Alpha_tmg: %8.2f\n",Theta*RAD_TO_DEG,Gamma_vert_rad*RAD_TO_DEG,Theta*RAD_TO_DEG-Gamma_vert_rad*RAD_TO_DEG);
 	printf("V_north: %8.2f, V_east_rel_ground: %8.2f, V_east: %8.2f, V_down: %8.2f\n",V_north,V_east_rel_ground,V_east,V_down);
@@ -396,12 +528,12 @@ int main(int argc, char *argv[]) {
 	ls_update(1);
 	printf("V_rel_wind: %8.2f, Alpha: %8.2f, Beta: %8.2f\n",V_rel_wind,Alpha*RAD_TO_DEG,Beta*RAD_TO_DEG);
 	printf("Theta: %8.2f, Gamma: %8.2f, Alpha_tmg: %8.2f\n",Theta*RAD_TO_DEG,Gamma_vert_rad*RAD_TO_DEG,Theta*RAD_TO_DEG-Gamma_vert_rad*RAD_TO_DEG);
-
+ */
 	
     /* Inform LaRCsim of the local terrain altitude */
     
     
-    do_trims(200,out,IC);
+    
     return 1;
 }
 
@@ -581,143 +713,7 @@ int FGInterface_2_LaRCsim (FGInterface& f) {
 
     return( 0 );
 }
+*/
 
-
-// Convert from the LaRCsim generic_ struct to the FGInterface struct
-int fgLaRCsim_2_FGInterface (FGInterface& f) {
-
-    // Mass properties and geometry values
-    f.set_Inertias( Mass, I_xx, I_yy, I_zz, I_xz );
-    // f.set_Pilot_Location( Dx_pilot, Dy_pilot, Dz_pilot );
-    f.set_CG_Position( Dx_cg, Dy_cg, Dz_cg );
-
-    // Forces
-    // f.set_Forces_Body_Total( F_X, F_Y, F_Z );
-    // f.set_Forces_Local_Total( F_north, F_east, F_down );
-    // f.set_Forces_Aero( F_X_aero, F_Y_aero, F_Z_aero );
-    // f.set_Forces_Engine( F_X_engine, F_Y_engine, F_Z_engine );
-    // f.set_Forces_Gear( F_X_gear, F_Y_gear, F_Z_gear );
-
-    // Moments
-    // f.set_Moments_Total_RP( M_l_rp, M_m_rp, M_n_rp );
-    // f.set_Moments_Total_CG( M_l_cg, M_m_cg, M_n_cg );
-    // f.set_Moments_Aero( M_l_aero, M_m_aero, M_n_aero );
-    // f.set_Moments_Engine( M_l_engine, M_m_engine, M_n_engine );
-    // f.set_Moments_Gear( M_l_gear, M_m_gear, M_n_gear );
-
-    // Accelerations
-    // f.set_Accels_Local( V_dot_north, V_dot_east, V_dot_down );
-    // f.set_Accels_Body( U_dot_body, V_dot_body, W_dot_body );
-    // f.set_Accels_CG_Body( A_X_cg, A_Y_cg, A_Z_cg );
-    // f.set_Accels_Pilot_Body( A_X_pilot, A_Y_pilot, A_Z_pilot );
-    // f.set_Accels_CG_Body_N( N_X_cg, N_Y_cg, N_Z_cg );
-    // f.set_Accels_Pilot_Body_N( N_X_pilot, N_Y_pilot, N_Z_pilot );
-    // f.set_Accels_Omega( P_dot_body, Q_dot_body, R_dot_body );
-
-    // Velocities
-    f.set_Velocities_Local( V_north, V_east, V_down );
-    // f.set_Velocities_Ground( V_north_rel_ground, V_east_rel_ground, 
-    // 		     V_down_rel_ground );
-    // f.set_Velocities_Local_Airmass( V_north_airmass, V_east_airmass,
-    // 			    V_down_airmass );
-    // f.set_Velocities_Local_Rel_Airmass( V_north_rel_airmass, 
-    //                          V_east_rel_airmass, V_down_rel_airmass );
-    // f.set_Velocities_Gust( U_gust, V_gust, W_gust );
-    // f.set_Velocities_Wind_Body( U_body, V_body, W_body );
-
-    // f.set_V_rel_wind( V_rel_wind );
-    // f.set_V_true_kts( V_true_kts );
-    // f.set_V_rel_ground( V_rel_ground );
-    // f.set_V_inertial( V_inertial );
-    // f.set_V_ground_speed( V_ground_speed );
-    // f.set_V_equiv( V_equiv );
-    f.set_V_equiv_kts( V_equiv_kts );
-    // f.set_V_calibrated( V_calibrated );
-    // f.set_V_calibrated_kts( V_calibrated_kts );
-
-    f.set_Omega_Body( P_body, Q_body, R_body );
-    // f.set_Omega_Local( P_local, Q_local, R_local );
-    // f.set_Omega_Total( P_total, Q_total, R_total );
-    
-    // f.set_Euler_Rates( Phi_dot, Theta_dot, Psi_dot );
-    f.set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
-
-    FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << Longitude 
-	    << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 
-	    << " alt = " << Altitude << " sl_radius = " << Sea_level_radius 
-	    << " radius_to_vehicle = " << Radius_to_vehicle );
-	    
-    // Positions
-    f.set_Geocentric_Position( Lat_geocentric, Lon_geocentric, 
-                               Radius_to_vehicle );
-    f.set_Geodetic_Position( Latitude, Longitude, Altitude );
-    f.set_Euler_Angles( Phi, Theta, Psi );
-
-    // Miscellaneous quantities
-    f.set_T_Local_to_Body(T_local_to_body_m);
-    // f.set_Gravity( Gravity );
-    // f.set_Centrifugal_relief( Centrifugal_relief );
-
-    f.set_Alpha( Alpha );
-    f.set_Beta( Beta );
-    // f.set_Alpha_dot( Alpha_dot );
-    // f.set_Beta_dot( Beta_dot );
-
-    // f.set_Cos_alpha( Cos_alpha );
-    // f.set_Sin_alpha( Sin_alpha );
-    // f.set_Cos_beta( Cos_beta );
-    // f.set_Sin_beta( Sin_beta );
-
-    // f.set_Cos_phi( Cos_phi );
-    // f.set_Sin_phi( Sin_phi );
-    // f.set_Cos_theta( Cos_theta );
-    // f.set_Sin_theta( Sin_theta );
-    // f.set_Cos_psi( Cos_psi );
-    // f.set_Sin_psi( Sin_psi );
-
-    f.set_Gamma_vert_rad( Gamma_vert_rad );
-    // f.set_Gamma_horiz_rad( Gamma_horiz_rad );
-
-    // f.set_Sigma( Sigma );
-    // f.set_Density( Density );
-    // f.set_V_sound( V_sound );
-    // f.set_Mach_number( Mach_number );
-
-    // f.set_Static_pressure( Static_pressure );
-    // f.set_Total_pressure( Total_pressure );
-    // f.set_Impact_pressure( Impact_pressure );
-    // f.set_Dynamic_pressure( Dynamic_pressure );
-
-    // f.set_Static_temperature( Static_temperature );
-    // f.set_Total_temperature( Total_temperature );
-
-    f.set_Sea_level_radius( Sea_level_radius );
-    f.set_Earth_position_angle( Earth_position_angle );
-
-    f.set_Runway_altitude( Runway_altitude );
-    // f.set_Runway_latitude( Runway_latitude );
-    // f.set_Runway_longitude( Runway_longitude );
-    // f.set_Runway_heading( Runway_heading );
-    // f.set_Radius_to_rwy( Radius_to_rwy );
-
-    // f.set_CG_Rwy_Local( D_cg_north_of_rwy, D_cg_east_of_rwy, D_cg_above_rwy);
-    // f.set_CG_Rwy_Rwy( X_cg_rwy, Y_cg_rwy, H_cg_rwy );
-    // f.set_Pilot_Rwy_Local( D_pilot_north_of_rwy, D_pilot_east_of_rwy, 
-    //                        D_pilot_above_rwy );
-    // f.set_Pilot_Rwy_Rwy( X_pilot_rwy, Y_pilot_rwy, H_pilot_rwy );
-
-    f.set_sin_lat_geocentric(Lat_geocentric);
-    f.set_cos_lat_geocentric(Lat_geocentric);
-    f.set_sin_cos_longitude(Longitude);
-    f.set_sin_cos_latitude(Latitude);
-
-    // printf("sin_lat_geo %f  cos_lat_geo %f\n", sin_Lat_geoc, cos_Lat_geoc);
-    // printf("sin_lat     %f  cos_lat     %f\n", 
-    //        f.get_sin_latitude(), f.get_cos_latitude());
-    // printf("sin_lon     %f  cos_lon     %f\n",
-    //        f.get_sin_longitude(), f.get_cos_longitude());
-
-    return 0;
-} */
 
 

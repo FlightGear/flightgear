@@ -123,9 +123,11 @@ SCALAR interp(SCALAR *y_table, SCALAR *x_table, int Ntable, SCALAR x)
 	}	 
 	else if(x >= x_table[Ntable-1])
 	{
-		 y=y_table[Ntable-1];
-		 /* printf("x larger than x_table[N]: %g %g %d\n",x,x_table[NCL-1],Ntable-1); */
-	}	 
+		slope=(y_table[Ntable-1]-y_table[Ntable-2])/(x_table[Ntable-1]-x_table[Ntable-2]);
+	    y=slope*(x-x_table[Ntable-1]) +y_table[Ntable-1];
+		 
+/* 		 printf("x larger than x_table[N]: %g %g %d\n",x,x_table[NCL-1],Ntable-1);
+ */	}	 
 	else /*x is within the table, interpolate linearly to find y value*/
 	{
 	    
@@ -150,11 +152,8 @@ void aero( SCALAR dt, int Initialize ) {
   static SCALAR alpha_ind[NCL]={-0.087,0,0.175,0.209,0.24,0.262,0.278,0.303,0.314,0.332,0.367};	
   static SCALAR CLtable[NCL]={-0.14,0.31,1.21,1.376,1.51249,1.591,1.63,1.60878,1.53712,1.376,1.142};
 
- /*Note that CLo,Cdo,Cmo will likely change with flap setting so 
-  they may not be declared static in the future */
+ 
    /* printf("Initialize= %d\n",Initialize); */
-   /* if (Initialize != 0)
-    { */
 /* 	   printf("Initializing aero model...Initialize= %d\n", Initialize);
  */	   CLadot=1.7;
 	   CLq=3.9;
@@ -196,7 +195,11 @@ void aero( SCALAR dt, int Initialize ) {
 	   b=35.8; /*wing span ft */
 	   Sw=174; /*wing planform surface area ft^2*/
 	   rPiARe=0.054; /*reciprocal of Pi*AR*e*/
-    /* } */
+	   
+	   MaxTakeoffWeight=2550;
+	   EmptyWeight=1500;
+       
+	   Zcg=0.51;
   
   /*
   LaRCsim uses:
@@ -208,6 +211,29 @@ void aero( SCALAR dt, int Initialize ) {
 	aileron > 0  => right wing up
 	rudder > 0   => ANL
   */
+  
+  /*do weight & balance here since there is no better place*/
+  Weight=Mass / INVG;
+  
+  if(Weight > 2550)
+  {  Weight=2550; }
+  else if(Weight < 1500)
+  {  Weight=1500; }
+  
+  
+  if(Dx_cg > 0.5586)
+  {  Dx_cg = 0.5586; }
+  else if(Dx_cg < -0.4655)
+  {  Dx_cg = -0.4655; }
+  
+  Cg=Dx_cg/cbar +0.25;
+  
+  Dz_cg=Zcg*cbar;
+  
+  	
+  
+  
+  
   long_trim=0;
   if(Aft_trim) long_trim = long_trim - trim_inc;
   if(Fwd_trim) long_trim = long_trim + trim_inc;
