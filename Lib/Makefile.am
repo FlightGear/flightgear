@@ -15,7 +15,6 @@ SUBDIRS = \
 	Bucket \
 	Debug \
 	DEM \
-	gpc \
 	Math \
 	Misc \
 	PUI \
