@@ -514,7 +514,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
                     FGHitList *hit_list,
                     double *terrain_elev, double *radius, double *normal)
 {
-    SGTimeStamp start; start.stamp();
+    // SGTimeStamp start; start.stamp();
 
     bool result;
     sgdVec3 view_pos;
@@ -569,8 +569,8 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
         result = false;
     }
 
-    SGTimeStamp finish; finish.stamp();
-    hitlist1_time = ( 29.0 * hitlist1_time + (finish - start) ) / 30.0;
+    // SGTimeStamp finish; finish.stamp();
+    // hitlist1_time = ( 29.0 * hitlist1_time + (finish - start) ) / 30.0;
     // cout << " time per call = " << hitlist1_time << endl;
 
     return result;
@@ -587,7 +587,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
                     FGHitList *hit_list,
                     double *terrain_elev, double *radius, double *normal)
 {
-    SGTimeStamp start; start.stamp();
+    // SGTimeStamp start; start.stamp();
 
     bool result;
     sgdVec3 view_pos;
@@ -647,9 +647,9 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, double max_alt_m,
                                 hit_list, terrain_elev, radius, normal);
     }
 
-    SGTimeStamp finish; finish.stamp();
-    hitlist2_time = ( 29.0 * hitlist2_time + (finish - start) ) / 30.0;
-    cout << "time per call 2 = " << hitlist2_time << endl;
+    // SGTimeStamp finish; finish.stamp();
+    // hitlist2_time = ( 29.0 * hitlist2_time + (finish - start) ) / 30.0;
+    // cout << "time per call 2 = " << hitlist2_time << endl;
 
     return result;
 }
