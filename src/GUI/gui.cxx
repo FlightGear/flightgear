@@ -1044,5 +1044,9 @@ void guiInit()
     mainMenuBar-> close ();
     // Set up menu bar toggle
     gui_menu_on = ~0;
+
+    if (fgGetString("/sim/flight-model") == "ada") {
+        guiToggleMenu(); // Menu off by default
+    }
 }
 
