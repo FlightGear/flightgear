@@ -200,7 +200,7 @@ dnl Checks for libraries.
 
 null_LIBS="$LIBS"
 
-AC_CHECK_LIB(m, cos)
+AC_SEARCH_LIBS(cos, m)
 
 base_LIBS="$LIBS"
 
@@ -224,19 +224,10 @@ if test "x$ac_cv_lib_pthread_pthread_exit" != "xyes" \
     LIBS=$save_LIBS
 fi
 
-case "${host}" in
-*-*-irix*)
-    ;;
-*-*-solaris*)
-    AC_CHECK_LIB(nsl, main)
-    AC_CHECK_LIB(dl, dlclose)
-    AC_CHECK_LIB(xnet,inet_addr)
-    AC_CHECK_LIB(socket, socket)
-    ;;
-*)
-    AC_CHECK_LIB(socket, socket)
-    ;;
-esac
+AC_SEARCH_LIBS(inet_addr, xnet)
+AC_SEARCH_LIBS(socket, socket)
+AC_SEARCH_LIBS(main, nsl)
+AC_SEARCH_LIBS(dlclose, dl)
 
 dnl check for glut location
 AC_CHECK_HEADER(GL/glut.h)
@@ -287,48 +278,32 @@ case "${host}" in
 
     dnl Skip X11 library tests if requested.
     if test "x$no_x" != "xyes"; then
-        AC_CHECK_LIB(X11, XCreateWindow)
-        AC_CHECK_LIB(Xext, XShmCreateImage)
-        AC_CHECK_LIB(Xi, XGetExtensionVersion)
-        AC_CHECK_LIB(ICE, IceOpenConnection)
-        AC_CHECK_LIB(SM, SmcOpenConnection)
-        AC_CHECK_LIB(Xt, XtMalloc)
-        AC_CHECK_LIB(Xmu, XmuLookupStandardColormap)
+        AC_SEARCH_LIBS(XCreateWindow, X11)
+        AC_SEARCH_LIBS(XShmCreateImage, Xext)
+        AC_SEARCH_LIBS(XGetExtensionVersion, Xi)
+        AC_SEARCH_LIBS(IceOpenConnection, ICE)
+        AC_SEARCH_LIBS(SmcOpenConnection, SM)
+        AC_SEARCH_LIBS(XtMalloc, Xt)
+        AC_SEARCH_LIBS(XmuLookupStandardColormap, Xmu)
     fi
 
-    AC_CHECK_LIB(GLcore, glNewList)
-    if test "x$ac_cv_lib_GLcore_glNewList" = "xno" ; then
-	dnl if no GLcore, check for GL
-	AC_CHECK_LIB(GL, glNewList)
-	if test "x$ac_cv_lib_GL_glNewList" = "xno" ; then
-	    dnl if no GL, check for MesaGL
-	    AC_CHECK_LIB(MesaGL, glNewList)
-	fi
-    else
-    	dnl if GLcore found, then also check for GL
-	AC_CHECK_LIB(GL, glXCreateContext)
+    AC_SEARCH_LIBS(glNewList, [ GL GLcore MesaGL ])
+    if test "x$ac_cv_search_glNewList" = "x-lGLcore"; then
+        dnl if GLcore found, then also check for GL
+        AC_SEARCH_LIBS(glXCreateContext, GL)
     fi
 
     dnl if using mesa, check for xmesa.h
-    if test "x$ac_cv_lib_MesaGL_glNewList" = "xyes" ; then
-	AC_CHECK_HEADER(GL/fxmesa.h)
-	if test "x$ac_cv_header_GL_fxmesa_h" = "xyes"; then
-	    AC_DEFINE([XMESA], 1, [Define for fxmesa])
+    if test "x$ac_cv_search_glNewList" = "x-lMesaGL"; then
+        AC_CHECK_HEADER(GL/fxmesa.h)
+        if test "x$ac_cv_header_GL_fxmesa_h" = "xyes"; then
+            AC_DEFINE([XMESA], 1, [Define for fxmesa])
             AC_DEFINE([FX], 1, [Define for fxmesa])
         fi
     fi
 
-    AC_CHECK_LIB(GLU, gluLookAt)
-    if test "x$ac_cv_lib_GLU_gluLookAt" = "xno" ; then
-	dnl if no GLU, check for MesaGLU
-	AC_CHECK_LIB(MesaGLU, gluLookAt)
-    fi
-
-    AC_CHECK_LIB(glut, glutGetModifiers)
-    if test "x$ac_cv_lib_glut_glutGetModifiers" = "xno" ; then
-        dnl if no "real" glut, check for freeglut
-        AC_CHECK_LIB(freeglut, glutGetModifiers)
-    fi
+    AC_SEARCH_LIBS(gluLookAt, [ GLU MesaGLU ])
+    AC_SEARCH_LIBS(glutGetModifiers, [ glut freeglut ])
     ;;
 
 esac
