@@ -53,12 +53,14 @@ HISTORY
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <vector>
+#include "sg.h"
+
 #include "FGPhysicalProperties.h"
 #include "FGGlobalWeatherDatabase.h"
 #include "FGMicroWeather.h"
 #include "FGWeatherFeature.h"
 #include "FGWeatherDefs.h"
-#include <vector>
 
 /****************************************************************************/
 /* DEFINES								    */
@@ -138,7 +140,10 @@ public:
     /* Get the physical properties on the specified point p		    */
     /************************************************************************/
     FGPhysicalProperty get(const Point3D& p) const;
+    FGPhysicalProperty get(const sgVec3& p) const;
+
     WeatherPrecition getAirDensity(const Point3D& p) const;
+    WeatherPrecition getAirDensity(const sgVec3& p) const;
     
     /************************************************************************/
     /* Add a weather feature at the point p and surrounding area	    */

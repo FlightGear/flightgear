@@ -201,6 +201,17 @@ FGPhysicalProperty FGLocalWeatherDatabase::get(const Point3D& p) const
 	return global->get(p);
 }
 
+FGPhysicalProperty FGLocalWeatherDatabase::get(const sgVec3& p) const
+{
+    Point3D temp(p[0], p[1], p[2]);
+
+    unsigned int a = AreaWith(temp);
+    if (a != 0)
+	return WeatherAreas[a-1].get(temp.elev());
+    else    //point is outside => ask GlobalWeatherDatabase
+	return global->get(temp);
+}
+
 WeatherPrecition FGLocalWeatherDatabase::getAirDensity(const Point3D& p) const
 {
     FGPhysicalProperty dummy;
@@ -215,6 +226,21 @@ WeatherPrecition FGLocalWeatherDatabase::getAirDensity(const Point3D& p) const
 	(dummy.Temperature*FG_WEATHER_DEFAULT_AIRPRESSURE);
 }
 
+WeatherPrecition FGLocalWeatherDatabase::getAirDensity(const sgVec3& p) const
+{
+    Point3D temp(p[0], p[1], p[2]);
+
+    FGPhysicalProperty dummy;
+    unsigned int a = AreaWith(temp);
+    if (a != 0)
+	dummy = WeatherAreas[a-1].get(temp.elev());
+    else    //point is outside => ask GlobalWeatherDatabase
+	dummy = global->get(temp);
+
+    return 
+	(dummy.AirPressure*FG_WEATHER_DEFAULT_AIRDENSITY*FG_WEATHER_DEFAULT_TEMPERATURE) / 
+	(dummy.Temperature*FG_WEATHER_DEFAULT_AIRPRESSURE);
+}
 
 /****************************************************************************/
 /* Add a weather feature at the point p and surrounding area		    */
