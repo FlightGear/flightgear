@@ -48,10 +48,12 @@ extern int displayInstruments;
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
     struct fgCONTROLS *c;
+    struct fgTIME *t;
     struct fgVIEW *v;
     struct fgWEATHER *w;
 
     c = &current_aircraft.controls;
+    t = &cur_time_params;
     v = &current_view;
     w = &current_weather;
 
@@ -86,6 +88,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 72: /* H key */
 	    show_hud = !show_hud;
+	    return;
+	case 77: /* M key */
+	    t->warp -= 60;
+	    return;
+	case 84: /* T key */
+	    t->warp_delta -= 30;
 	    return;
 	case 87: /* W key */
 	    displayInstruments = !displayInstruments;
@@ -133,6 +141,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 51: /* numeric keypad 3 (Pg Dn) */
 	    fgThrottleMove(0, -0.01);
+	    return;
+	case 109: /* m key */
+	    t->warp += 60;
+	    return;
+	case 116: /* t key */
+	    t->warp_delta += 30;
 	    return;
 	case 122: /* z key */
 	    w->visibility *= 1.10;
@@ -229,9 +243,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.24  1997/12/30 16:36:46  curt
-/* Merged in Durk's changes ...
+/* Revision 1.25  1998/01/05 18:44:34  curt
+/* Add an option to advance/decrease time from keyboard.
 /*
+ * Revision 1.24  1997/12/30 16:36:46  curt
+ * Merged in Durk's changes ...
+ *
  * Revision 1.23  1997/12/15 23:54:44  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

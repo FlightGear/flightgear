@@ -273,6 +273,10 @@ void fgMoonInit() {
 	   moonPos.Declination);
 #endif
 
+    xMoon = 60000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
+    yMoon = 60000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
+    zMoon = 60000.0 * sin(moonPos.Declination);
+
     if ( !dl_exists ) {
 	dl_exists = 1;
 
@@ -285,12 +289,6 @@ void fgMoonInit() {
 	   xglMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color); */
 
 
-	xMoon = 60000.0 * cos(moonPos.RightAscension) * 
-	    cos(moonPos.Declination);
-	yMoon = 60000.0 * sin(moonPos.RightAscension) * 
-	    cos(moonPos.Declination);
-	zMoon = 60000.0 * sin(moonPos.Declination);
-
 	glutSolidSphere(1.0, 10, 10);
 
 	xglEndList();
@@ -302,6 +300,8 @@ void fgMoonInit() {
 void fgMoonRender() {
     struct fgLIGHT *l;
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
+
+    /* printf("Rendering moon\n"); */
 
     l = &cur_light_params;
 
@@ -319,9 +319,12 @@ void fgMoonRender() {
 
 
 /* $Log$
-/* Revision 1.14  1997/12/30 20:47:50  curt
-/* Integrated new event manager with subsystem initializations.
+/* Revision 1.15  1998/01/05 18:44:35  curt
+/* Add an option to advance/decrease time from keyboard.
 /*
+ * Revision 1.14  1997/12/30 20:47:50  curt
+ * Integrated new event manager with subsystem initializations.
+ *
  * Revision 1.13  1997/12/30 16:41:00  curt
  * Added log at end of file.
  *

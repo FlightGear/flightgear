@@ -66,7 +66,7 @@ TAR = tar
 # -
 #---------------------------------------------------------------------------
 
-GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(FG_VERSION)\"
+GLOBAL_CFLAGS = -Wall -DVERSION=\"$(FG_VERSION)\"
 
 
 #---------------------------------------------------------------------------
@@ -159,6 +159,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.29  1998/01/05 18:44:33  curt
+# Add an option to advance/decrease time from keyboard.
+#
 # Revision 1.28  1997/12/30 23:08:50  curt
 # Version 0.21
 #

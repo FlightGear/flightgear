@@ -55,6 +55,13 @@ struct fgTIME {
 			    sidereal time algorithm result and the
 			    course result.  course + diff has good
 			    accuracy for the short term */
+
+    long int warp;       /* An offset in seconds from the true time.
+			    Allows us to adjust the effective time of day. */
+
+    long int warp_delta; /* How much to change the value of warp each
+			    iteration.  Allows us to make time
+			    progress faster than normal. */
 };
 
 extern struct fgTIME cur_time_params;
@@ -92,9 +99,12 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t);
 
 
 /* $Log$
-/* Revision 1.11  1997/12/19 23:35:07  curt
-/* Lot's of tweaking with sky rendering and lighting.
+/* Revision 1.12  1998/01/05 18:44:37  curt
+/* Add an option to advance/decrease time from keyboard.
 /*
+ * Revision 1.11  1997/12/19 23:35:07  curt
+ * Lot's of tweaking with sky rendering and lighting.
+ *
  * Revision 1.10  1997/12/15 23:55:07  curt
  * Add xgl wrappers for debugging.
  * Generate terrain normals on the fly.

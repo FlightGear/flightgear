@@ -106,6 +106,10 @@ void fgSunInit() {
 	   sunPos.Declination);
 #endif
 
+    xSun = 60000.0 * cos(sunPos.RightAscension) * cos(sunPos.Declination);
+    ySun = 60000.0 * sin(sunPos.RightAscension) * cos(sunPos.Declination);
+    zSun = 60000.0 * sin(sunPos.Declination);
+
     if ( !dl_exists ) {
 	dl_exists = 1;
 
@@ -113,10 +117,6 @@ void fgSunInit() {
 
 	sun_obj = xglGenLists(1);
 	xglNewList(sun_obj, GL_COMPILE );
-
-	xSun = 60000.0 * cos(sunPos.RightAscension) * cos(sunPos.Declination);
-	ySun = 60000.0 * sin(sunPos.RightAscension) * cos(sunPos.Declination);
-	zSun = 60000.0 * sin(sunPos.Declination);
 
 	glutSolidSphere(1.0, 10, 10);
 
@@ -190,10 +190,13 @@ void fgSunRender() {
 
 
 /* $Log$
-/* Revision 1.11  1997/12/30 23:09:40  curt
-/* Worked on winding problem without luck, so back to calling glFrontFace()
-/* 3 times for each scenery area.
+/* Revision 1.12  1998/01/05 18:44:36  curt
+/* Add an option to advance/decrease time from keyboard.
 /*
+ * Revision 1.11  1997/12/30 23:09:40  curt
+ * Worked on winding problem without luck, so back to calling glFrontFace()
+ * 3 times for each scenery area.
+ *
  * Revision 1.10  1997/12/30 20:47:54  curt
  * Integrated new event manager with subsystem initializations.
  *

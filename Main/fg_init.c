@@ -217,7 +217,7 @@ void fgInitSubsystems( void ) {
     fgEventRegister( "fgSunInit()", fgSunInit, FG_EVENT_READY, 600000 );
 
     /* Intialize the moon's position */
-    fgEventRegister( "fgMoonInit()", fgSunInit, FG_EVENT_READY, 600000 );
+    fgEventRegister( "fgMoonInit()", fgMoonInit, FG_EVENT_READY, 600000 );
 
     /* Initialize the "sky" */
     fgSkyInit();
@@ -267,9 +267,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.26  1997/12/30 23:09:04  curt
-/* Tweaking initialization sequences.
+/* Revision 1.27  1998/01/05 18:44:35  curt
+/* Add an option to advance/decrease time from keyboard.
 /*
+ * Revision 1.26  1997/12/30 23:09:04  curt
+ * Tweaking initialization sequences.
+ *
  * Revision 1.25  1997/12/30 22:22:33  curt
  * Further integration of event manager.
  *

@@ -56,6 +56,8 @@ void fgTimeInit(struct fgTIME *t) {
     printf("Initializing Time\n");
 
     t->gst_diff = -9999.0;
+    t->warp = 0;
+    t->warp_delta = 0;
 }
 
 
@@ -238,17 +240,15 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 
 void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
     double gst_precise, gst_course;
-    static long int warp = 0;
 
     printf("Updating time\n");
 
     /* get current Unix calendar time (in seconds) */
     /* warp = 60; */
-    warp += 0;
-    t->cur_time = time(NULL) + (0) * 60 * 60;
-    t->cur_time += warp;
-    printf("  Current Unix calendar time = %ld  warp = %ld\n", 
-	   t->cur_time, warp);
+    t->warp += t->warp_delta;
+    t->cur_time = time(NULL) + t->warp;
+    printf("  Current Unix calendar time = %ld  warp = %ld  delta = %ld\n", 
+	   t->cur_time, t->warp, t->warp_delta);
 
     /* get GMT break down for current time */
     t->gmt = gmtime(&t->cur_time);
@@ -298,9 +298,12 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.25  1997/12/31 17:46:50  curt
-/* Tweaked fg_time.c to be able to use ftime() instead of gettimeofday()
+/* Revision 1.26  1998/01/05 18:44:36  curt
+/* Add an option to advance/decrease time from keyboard.
 /*
+ * Revision 1.25  1997/12/31 17:46:50  curt
+ * Tweaked fg_time.c to be able to use ftime() instead of gettimeofday()
+ *
  * Revision 1.24  1997/12/30 22:22:42  curt
  * Further integration of event manager.
  *
