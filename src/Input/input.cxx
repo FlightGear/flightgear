@@ -184,7 +184,7 @@ FGInput::update (double dt)
 {
   _update_keyboard();
   _update_joystick(dt);
-  _update_mouse();
+  _update_mouse(dt);
 }
 
 void
@@ -303,15 +303,23 @@ FGInput::doMouseMotion (int x, int y)
 
   int xsize = fgGetInt("/sim/startup/xsize", 800);
   int ysize = fgGetInt("/sim/startup/ysize", 600);
+
   mouse &m = _mouse_bindings[0];
-  if (m.current_mode < 0 || m.current_mode >= m.nModes)
-    return;
+
+  if (m.current_mode < 0 || m.current_mode >= m.nModes) {
+      m.x = x;
+      m.y = y;
+      return;
+  }
   mouse_mode &mode = m.modes[m.current_mode];
 
                                 // Pass on to PUI if requested, and return
                                 // if PUI consumed the event.
-  if (mode.pass_through && puMouse(x, y))
-    return;
+  if (mode.pass_through && puMouse(x, y)) {
+      m.x = x;
+      m.y = y;
+      return;
+  }
 
                                 // OK, PUI didn't want the event,
                                 // so we can play with it.
@@ -709,12 +717,13 @@ FGInput::_update_joystick (double dt)
 }
 
 void
-FGInput::_update_mouse ()
+FGInput::_update_mouse ( double dt )
 {
   mouse &m = _mouse_bindings[0];
   int mode =  m.mode_node->getIntValue();
   if (mode != m.current_mode) {
     m.current_mode = mode;
+    m.timeout = fgGetDouble( "/sim/mouse/cursor-timeout-sec", 10.0 );
     if (mode >= 0 && mode < m.nModes) {
       fgSetMouseCursor(m.modes[mode].cursor);
       m.x = fgGetInt("/sim/startup/xsize", 800) / 2;
@@ -724,6 +733,21 @@ FGInput::_update_mouse ()
       SG_LOG(SG_INPUT, SG_DEBUG, "Mouse mode " << mode << " out of range");
       fgSetMouseCursor(MOUSE_CURSOR_POINTER);
     }
+  }
+
+  if ( fgGetBool( "/sim/mouse/hide-cursor", true ) ) {
+      if ( m.x != m.save_x || m.y != m.save_y ) {
+          m.timeout = fgGetDouble( "/sim/mouse/cursor-timeout-sec", 10.0 );
+          fgSetMouseCursor(m.modes[mode].cursor);
+      } else {
+          m.timeout -= dt;
+          if ( m.timeout <= 0.0 ) {
+              fgSetMouseCursor(MOUSE_CURSOR_NONE);
+              m.timeout = 0.0;
+          }
+      }
+      m.save_x = m.x;
+      m.save_y = m.y;
   }
 }
 

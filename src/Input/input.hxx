@@ -339,6 +339,9 @@ private:
     SGPropertyNode * mouse_button_nodes[MAX_MOUSE_BUTTONS];
     int nModes;
     int current_mode;
+    double timeout;
+    int save_x;
+    int save_y;
     mouse_mode * modes;
   };
 
@@ -384,7 +387,7 @@ private:
   /**
    * Update the mouse.
    */
-  void _update_mouse ();
+  void _update_mouse (double dt);
 
 
   /**
