@@ -30,8 +30,9 @@
 #include <Astro/orbits.h>
 #include <Astro/sun.h>
 #include <Main/fg_debug.h>
+#include <Include/fg_constants.h>
 
-GLint sun_obj;
+GLint sun_obj = 0;
 
 static struct CelestialCoord sunPos;
 
@@ -77,7 +78,7 @@ struct CelestialCoord fgCalculateSun(struct OrbElements params, struct fgTIME t)
 
     /* calculate the angle between ecliptic and equatorial coordinate system */
     actTime = fgCalcActTime(t);
-    ecl = fgDegToRad(23.4393 - 3.563E-7 * actTime);			// Angle now in Rads
+    ecl = DEG_TO_RAD * (23.4393 - 3.563E-7 * actTime);			// Angle now in Rads
 
     /* calculate the sun's ecliptic position */
     SolarPosition = fgCalcSunPos(params);
@@ -96,47 +97,40 @@ struct CelestialCoord fgCalculateSun(struct OrbElements params, struct fgTIME t)
 
 /* Initialize the Sun */
 void fgSunInit( void ) {
-    static int dl_exists = 0;
+    struct fgLIGHT *l;
+    struct fgTIME *t;
+    struct fgVIEW *v;  
+
+    /* GLfloat color[4] = { 1.00, 1.00, 1.00, 1.00 }; */
+    double x_2, x_4, x_8, x_10;
+    GLfloat ambient;
+    GLfloat amb[4];
+
+    l = &cur_light_params;
+    t = &cur_time_params;
+    v = &current_view;
 
     fgPrintf( FG_ASTRO, FG_INFO, "  Initializing the Sun\n");
 
     fgSolarSystemUpdate(&(pltOrbElements[0]), cur_time_params);
     sunPos = fgCalculateSun(pltOrbElements[0], cur_time_params);
-#ifdef DEBUG
     fgPrintf( FG_ASTRO, FG_INFO, 
 	      "Sun found at %f (ra), %f (dec)\n", 
 	      sunPos.RightAscension, sunPos.Declination);
-#endif
 
     xSun = 60000.0 * cos(sunPos.RightAscension) * cos(sunPos.Declination);
     ySun = 60000.0 * sin(sunPos.RightAscension) * cos(sunPos.Declination);
     zSun = 60000.0 * sin(sunPos.Declination);
 
-    if ( !dl_exists ) {
-	dl_exists = 1;
 
-	/* printf("First time through, creating sun display list\n"); */
-
-	sun_obj = xglGenLists(1);
-	xglNewList(sun_obj, GL_COMPILE );
-
-	glutSolidSphere(1.0, 10, 10);
-
-	xglEndList();
+    if (sun_obj) {
+	xglDeleteLists(sun_obj, 1);
     }
-}
 
+    /* printf("First time through, creating sun display list\n"); */
 
-/* Draw the Sun */
-void fgSunRender( void ) {
-    struct fgVIEW *v;
-    struct fgTIME *t;
-    struct fgLIGHT *l;
-    /* GLfloat color[4] = { 0.85, 0.65, 0.05, 1.0 }; */
-    GLfloat color[4] = { 1.00, 1.00, 1.00, 1.00 };
-    double x_2, x_4, x_8, x_10;
-    GLfloat ambient;
-    GLfloat amb[3], diff[3];
+    sun_obj = xglGenLists(1);
+    xglNewList(sun_obj, GL_COMPILE );
 
 
     t = &cur_time_params;
@@ -152,29 +146,29 @@ void fgSunRender( void ) {
     if ( ambient < 0.3 ) ambient = 0.3;
     if ( ambient > 1.0 ) ambient = 1.0;
 
-    amb[0] = 0.50 + ((ambient * 6.66) - 1.6);
-    amb[1] = 0.00 + ((ambient * 6.66) - 1.6);
-    amb[2] = 0.00 + ((ambient * 6.66) - 1.6);
-    amb[3] = 0.00;
-#ifdef DEBUG
-    fgPrintf( FG_ASTRO, FG_INFO, 
-	      "Color of the sun: %f, %f, %f\n"
-	      "Ambient value   : %f\n"
-	      "Sun Angle       : %f\n" , amb[0], amb[1], amb[2], ambient, t->sun_angle);
-#endif
-    diff[0] = 0.0;
-    diff[1] = 0.0;
-    diff[2] = 0.0;
-    diff[3] = 1.0;
+    amb[0] = 0.00 + ((ambient * 6.0) - 1.0);     /* minimum val = 0.8 */
+    amb[1] = 0.00 + ((ambient * 11.0) - 3.0);     /* minimum val = 0.3 */ 
+    amb[2] = 0.00 + ((ambient * 12.0) - 3.6);    /* minimum val = 0.0 */ 
+    amb[3] = 1.00;   
 
+    if (amb[0] > 1.0) amb[0] = 1.0;
+    if (amb[1] > 1.0) amb[1] = 1.0;
+    if (amb[2] > 1.0) amb[2] = 1.0;
+
+    fgPrintf( FG_ASTRO, FG_DEBUG, 
+	    "Color of the sun: %f, %f, %f\n"
+	    "Ambient value   : %f\n"
+	    "Sun Angle       : %f\n" , 
+	    amb[0], amb[1], amb[2], ambient, l->sun_angle);
+    
     /* set lighting parameters */
-    xglLightfv(GL_LIGHT0, GL_AMBIENT, color );
-    xglLightfv(GL_LIGHT0, GL_DIFFUSE, color );
-    xglMaterialfv(GL_FRONT, GL_AMBIENT, amb);
-    xglMaterialfv(GL_FRONT, GL_DIFFUSE, diff); 
-    xglMaterialfv(GL_FRONT, GL_SHININESS, diff);
-    xglMaterialfv(GL_FRONT, GL_EMISSION, diff);
-    xglMaterialfv(GL_FRONT, GL_SPECULAR, diff);
+    /*xglLightfv(GL_LIGHT0, GL_AMBIENT, color );
+      xglLightfv(GL_LIGHT0, GL_DIFFUSE, color );
+      xglMaterialfv(GL_FRONT, GL_AMBIENT, amb);
+      xglMaterialfv(GL_FRONT, GL_DIFFUSE, diff); 
+      xglMaterialfv(GL_FRONT, GL_SHININESS, diff);
+      xglMaterialfv(GL_FRONT, GL_EMISSION, diff);
+      xglMaterialfv(GL_FRONT, GL_SPECULAR, diff); */
 
     /* xglDisable( GL_LIGHTING ); */
 
@@ -182,21 +176,32 @@ void fgSunRender( void ) {
     xglTranslatef(xSun, ySun, zSun);
     xglScalef(1400, 1400, 1400);
 
-    xglColor3f(0.85, 0.65, 0.05);
-
-    xglCallList(sun_obj);
+    /*xglColor3f(0.85, 0.65, 0.05);*/
+    xglColor3f(amb[0], amb[1], amb[2]); 
+    glutSolidSphere(1.0, 10, 10);
 
     xglPopMatrix();
 
     /* xglEnable( GL_LIGHTING ); */
+
+    xglEndList();
+}
+
+
+/* Draw the Sun */
+void fgSunRender( void ) {
+    xglCallList(sun_obj);
 }
 
 
 /* $Log$
-/* Revision 1.4  1998/01/27 00:47:50  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.5  1998/02/02 20:53:24  curt
+/* To version 0.29
 /*
+ * Revision 1.4  1998/01/27 00:47:50  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.3  1998/01/19 19:27:00  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

@@ -40,120 +40,18 @@ struct CelestialCoord moonPos;
 static float xMoon, yMoon, zMoon;
 static GLint moon;
 
-/*
-static GLfloat vdata[12][3] =
-{
-   {-X, 0.0, Z }, { X, 0.0, Z }, {-X, 0.0, -Z}, {X, 0.0, -Z },
-   { 0.0, Z, X }, { 0.0, Z, -X}, {0.0, -Z, -X}, {0.0, -Z, -X},
-   { Z, X, 0.0 }, { -Z, X, 0.0}, {Z, -X, 0.0 }, {-Z, -X, 0.0}
-};
 
-static GLuint tindices[20][3] =
-{
-   {0,4,1}, {0,9,4}, {9,5,4}, {4,5,8}, {4,8,1},
-   {8,10,1}, {8,3,10}, {5,3,8}, {5,2,3}, {2,7,3},
-   {7,10,3}, {7,6,10}, {7,11,6}, {11,0,6}, {0,1,6},
-   {6,1,10}, {9,0,11}, {9,11,2}, {9,2,5}, {7,2,11}
-};*/
-
-/* -------------------------------------------------------------
-      This section contains the code that generates a yellow
-      Icosahedron. It's under development... (of Course)
-______________________________________________________________*/
-/*
-void NormalizeVector(float v[3])
-{
-   GLfloat d = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-   if (d == 0.0)
-   {
-      printf("zero length vector\n");
-      return;
-   }
-   v[0] /= d;
-   v[1] /= d;
-   v[2] /= d;
-}
-
-void drawTriangle(float *v1, float *v2, float *v3)
-{
-   xglBegin(GL_POLYGON);
-   //xglBegin(GL_POINTS);
-      xglNormal3fv(v1);
-      xglVertex3fv(v1);
-      xglNormal3fv(v2);
-      xglVertex3fv(v2);
-      xglNormal3fv(v3);
-      xglVertex3fv(v3);
-   xglEnd();
-}
-
-void subdivide(float *v1, float *v2, float *v3, long depth)
-{
-   GLfloat v12[3], v23[3], v31[3];
-   GLint i;
-
-   if (!depth)
-   {
-     drawTriangle(v1, v2, v3);
-     return;
-   }
-   for (i = 0; i < 3; i++)
-   {
-       v12[i] = (v1[i] + v2[i]);
-       v23[i] = (v2[i] + v3[i]);
-       v31[i] = (v3[i] + v1[i]);
-   }
-   NormalizeVector(v12);
-   NormalizeVector(v23);
-   NormalizeVector(v31);
-   subdivide(v1, v12, v31, depth - 1);
-   subdivide(v2, v23, v12, depth - 1);
-   subdivide(v3, v31, v23, depth - 1);
-   subdivide(v12, v23, v31,depth - 1);
-
-} */
-/*
-void display(void)
-{
-   int i;
-   xglClear(GL_COLOR_BUFFER_BIT);
-   xglPushMatrix();
-   xglRotatef(spin, 0.0, 0.0, 0.0);
-   xglColor3f(1.0, 1.0, 0.0);
-//   xglBegin(GL_LINE_LOOP);
-   for (i = 0; i < 20; i++)
-   {
-
-       //xglVertex3fv(&vdata[tindices[i][0]][0]);
-       //xglVertex3fv(&vdata[tindices[i][1]][0]);
-       //xglVertex3fv(&vdata[tindices[i][2]][0]);
-
-       subdivide(&vdata[tindices[i][0]][0],
-                 &vdata[tindices[i][1]][0],
-                 &vdata[tindices[i][2]][0], 3);
-
-
-   }
-//   xglEnd();
-  // xglFlush();
-  xglPopMatrix();
-  glutSwapBuffers();
-} */
 
 /* --------------------------------------------------------------
-
       This section contains the code that calculates the actual
       position of the moon in the night sky.
-
 ----------------------------------------------------------------*/
-
 struct CelestialCoord fgCalculateMoon(struct OrbElements params,
                                       struct OrbElements sunParams,
                                       struct fgTIME t)
 {
   struct CelestialCoord
     geocCoord, topocCoord; 
-  
   
   double
     eccAnom, ecl, lonecl, latecl, actTime,
@@ -166,14 +64,16 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
   a = &current_aircraft;
   f = &a->flight;
   
-/* calculate the angle between ecliptic and equatorial coordinate system */
+  /* calculate the angle between ecliptic and equatorial coordinate
+   * system, in Radians */
   actTime = fgCalcActTime(t);
-  ecl = fgDegToRad(23.4393 - 3.563E-7 * actTime);  // in radians of course
+  /* ecl = DEG_TO_RAD * (23.4393 - 3.563E-7 * actTime);*/
+  ecl = 0.409093 - 6.2186E-9 * actTime;
 							
   /* calculate the eccentric anomaly */
   eccAnom = fgCalcEccAnom(params.M, params.e);
 
-  /* calculate the moon's distance (d) and  true anomaly (v) */
+  /* calculate the moon's distance (r) and  true anomaly (v) */
   xv = params.a * ( cos(eccAnom) - params.e);
   yv = params.a * ( sqrt(1.0 - params.e*params.e) * sin(eccAnom));
   v =atan2(yv, xv);
@@ -188,39 +88,41 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
   lonecl = atan2( yh, xh);
   latecl = atan2( zh, sqrt( xh*xh + yh*yh));
 
-  /* calculate a number of perturbations */
+  /* calculate a number of perturbations, i.e. disturbances caused by
+   * the gravitational influence of the sun and the other mayor
+   * planets, the largest even have their own names */
   Ls = sunParams.M + sunParams.w;
   Lm =    params.M +    params.w + params.N;
   D = Lm - Ls;
   F = Lm - params.N;
   
-  lonecl += fgDegToRad(
-		       - 1.274 * sin (params.M - 2*D)    			// the Evection
-		       + 0.658 * sin (2 * D)							// the Variation
-		       - 0.186 * sin (sunParams.M)					// the yearly variation
-		       - 0.059 * sin (2*params.M - 2*D)
-		       - 0.057 * sin (params.M - 2*D + sunParams.M)
-		       + 0.053 * sin (params.M + 2*D)
-		       + 0.046 * sin (2*D - sunParams.M)
-		       + 0.041 * sin (params.M - sunParams.M)
-		       - 0.035 * sin (D)                             // the Parallactic Equation
-		       - 0.031 * sin (params.M + sunParams.M)
-		       - 0.015 * sin (2*F - 2*D)
-		       + 0.011 * sin (params.M - 4*D)
-		       ); /* Pheeuuwwww */
-  latecl += fgDegToRad(
-		       - 0.173 * sin (F - 2*D)
-		       - 0.055 * sin (params.M - F - 2*D)
-		       - 0.046 * sin (params.M + F - 2*D)
-		       + 0.033 * sin (F + 2*D)
-		       + 0.017 * sin (2 * params.M + F)
-		       );  /* Yep */
-
+  lonecl += DEG_TO_RAD * (
+			  - 1.274 * sin (params.M - 2*D)    			/* the Evection         */
+			  + 0.658 * sin (2 * D)				        /* the Variation        */
+			  - 0.186 * sin (sunParams.M)				/* the yearly variation */
+			  - 0.059 * sin (2*params.M - 2*D)
+			  - 0.057 * sin (params.M - 2*D + sunParams.M)
+			  + 0.053 * sin (params.M + 2*D)
+			  + 0.046 * sin (2*D - sunParams.M)
+			  + 0.041 * sin (params.M - sunParams.M)
+			  - 0.035 * sin (D)                                      /* the Parallactic Equation */
+			  - 0.031 * sin (params.M + sunParams.M)
+			  - 0.015 * sin (2*F - 2*D)
+			  + 0.011 * sin (params.M - 4*D)
+			  );
+  latecl += DEG_TO_RAD * (
+			  - 0.173 * sin (F - 2*D)
+			  - 0.055 * sin (params.M - F - 2*D)
+			  - 0.046 * sin (params.M + F - 2*D)
+			  + 0.033 * sin (F + 2*D)
+			  + 0.017 * sin (2 * params.M + F)
+			  );
+  
   r += (
 	- 0.58 * cos(params.M - 2*D)
 	- 0.46 * cos(2*D)
-	); /* Ok! */
-
+	);
+  
   xg = r * cos(lonecl) * cos(latecl);
   yg = r * sin(lonecl) * cos(latecl);
   zg = r *               sin(latecl);
@@ -238,10 +140,11 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
   /* New since 25 december 1997 */
   /* Calculate the moon's topocentric position instead of it's geocentric! */
 
-  mpar = asin( 1 / r); /* calculate the moon's parrallax, i.e. the apparent size of the
-			  (equatorial) radius of the Earth, as seen from the moon */
-  gclat = FG_Latitude - 0.083358 * sin (2 * fgDegToRad( FG_Latitude));
-  rho = 0.99883 + 0.00167 * cos(2 * fgDegToRad(FG_Latitude));
+  /* calculate the moon's parrallax, i.e. the apparent size of the
+   * (equatorial) radius of the Earth, as seen from the moon */
+  mpar = asin( 1 / r); 
+  gclat = FG_Latitude - 0.083358 * sin (2 * DEG_TO_RAD *  FG_Latitude);
+  rho = 0.99883 + 0.00167 * cos(2 * DEG_TO_RAD * FG_Latitude);
 
   if (geocCoord.RightAscension < 0)
     geocCoord.RightAscension += (2*FG_PI);
@@ -259,22 +162,23 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
 
 
 void fgMoonInit( void ) {
-    struct fgLIGHT *l;
+    /* struct fgLIGHT *l; */
     static int dl_exists = 0;
+    /* GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 }; */
+    GLfloat moonColor[4] = {0.85, 0.65, 0.05, 1.0};
+    GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing the Moon\n");
 
-    l = &cur_light_params;
+    /* l = &cur_light_params; */
 
     /* position the moon */
     fgSolarSystemUpdate(&(pltOrbElements[1]), cur_time_params);
     moonPos = fgCalculateMoon(pltOrbElements[1], pltOrbElements[0], 
 			      cur_time_params);
-#ifdef DEBUG
     fgPrintf( FG_ASTRO, FG_DEBUG, 
 	      "Moon found at %f (ra), %f (dec)\n", moonPos.RightAscension, 
 	      moonPos.Declination);
-#endif
 
     xMoon = 60000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
     yMoon = 60000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
@@ -290,7 +194,8 @@ void fgMoonInit( void ) {
 
 	/* xglMaterialfv(GL_FRONT, GL_AMBIENT, l->scene_clear);
 	   xglMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color); */
-
+	xglMaterialfv(GL_FRONT, GL_AMBIENT, black);
+	xglMaterialfv(GL_FRONT, GL_DIFFUSE, moonColor);
 
 	glutSolidSphere(1.0, 10, 10);
 
@@ -301,15 +206,14 @@ void fgMoonInit( void ) {
 
 /* Draw the moon */
 void fgMoonRender( void ) {
-    struct fgLIGHT *l;
-    GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
+    /* struct fgLIGHT *l; */
 
     /* printf("Rendering moon\n"); */
 
-    l = &cur_light_params;
+    /* l = &cur_light_params; */
 
-    xglMaterialfv(GL_FRONT, GL_AMBIENT, l->sky_color );
-    xglMaterialfv(GL_FRONT, GL_DIFFUSE, white);
+    /* xglMaterialfv(GL_FRONT, GL_AMBIENT, l->sky_color ); */
+    /* xglMaterialfv(GL_FRONT, GL_DIFFUSE, white); */
 
     xglPushMatrix();
     xglTranslatef(xMoon, yMoon, zMoon);
@@ -322,10 +226,13 @@ void fgMoonRender( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/01/27 00:47:46  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.5  1998/02/02 20:53:21  curt
+/* To version 0.29
 /*
+ * Revision 1.4  1998/01/27 00:47:46  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.3  1998/01/19 19:26:57  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

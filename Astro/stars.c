@@ -59,14 +59,14 @@
 void fgStarsInit( void ) {
     FILE *fd;
     struct fgGENERAL *g;
-    struct CelestialCoord pltPos;
+    /* struct CelestialCoord pltPos; */
     char path[1024];
     char line[256], name[256];
     char *front, *end;
     double right_ascension, declination, magnitude;
     /* double ra_save, decl_save; */
     /* double ra_save1, decl_save1; */
-    int count, i, j, max_stars;
+    int count, i, max_stars;
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing stars\n");
 
@@ -81,10 +81,12 @@ void fgStarsInit( void ) {
     max_stars = FG_MAX_STARS;
 
     for ( i = 0; i < FG_STAR_LEVELS; i++ ) {
-	fgPrintf( FG_ASTRO, FG_INFO, "  Loading %d Stars: %s\n", max_stars, path);
+	fgPrintf( FG_ASTRO, FG_INFO, 
+		  "  Loading %d Stars: %s\n", max_stars, path);
 
 	if ( (fd = fopen(path, "r")) == NULL ) {
-	    fgPrintf( FG_ASTRO, FG_ALERT, "Cannot open star file: '%s'\n", path);
+	    fgPrintf( FG_ASTRO, FG_ALERT, 
+		      "Cannot open star file: '%s'\n", path);
 	    return;
 	}
 	
@@ -166,31 +168,6 @@ void fgStarsInit( void ) {
 
 	fclose(fd);
 
-	/* Add the planets to all four display lists */
-	for ( j = 2; j < 9; j++ ) {
-	    pltPos = fgCalculatePlanet(pltOrbElements[j], 
-				       pltOrbElements[0], cur_time_params, j);
-	    /* give the planets a temporary color, for testing purposes */
-	    /* xglColor3f( 1.0, 0.0, 0.0); */
-
-	    /* scale magnitudes to (0.0 - 1.0) */
-	    magnitude = (0.0 - pltPos.magnitude) / 5.0 + 1.0;
-	    
-	    /* scale magnitudes again so they look ok */
-	    if ( magnitude > 1.0 ) { magnitude = 1.0; }
-	    if ( magnitude < 0.0 ) { magnitude = 0.0; }
-	    magnitude = 
-	      magnitude * 0.7 + (((FG_STAR_LEVELS - 1) - i) * 0.1);	   
-	    
-
-	    xglColor3f(magnitude, magnitude, magnitude);
-
-	    xglVertex3f( 50000.0 * cos(pltPos.RightAscension) * 
-			 cos(pltPos.Declination),
-			 50000.0 * sin(pltPos.RightAscension) * 
-			 cos(pltPos.Declination),
-			 50000.0 * sin(pltPos.Declination) );
-	}
 	xglEnd();
 
 	/*
@@ -276,9 +253,12 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/01/27 18:35:53  curt
-/* Minor tweaks.
+/* Revision 1.6  1998/02/02 20:53:23  curt
+/* To version 0.29
 /*
+ * Revision 1.5  1998/01/27 18:35:53  curt
+ * Minor tweaks.
+ *
  * Revision 1.4  1998/01/27 00:47:49  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

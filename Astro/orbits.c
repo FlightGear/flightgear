@@ -28,6 +28,7 @@
 
 #include <Astro/orbits.h>
 
+#include <Include/fg_constants.h>
 #include <Include/general.h>
 #include <Time/fg_time.h>
 #include <Main/fg_debug.h>
@@ -35,40 +36,48 @@
 struct OrbElements pltOrbElements[9];
 
 
+//double fgCalcActTime(struct fgTIME t)
+//{
+//   double
+//         actTime, UT;
+//   int year;
+//
+//   /* a hack. This one introduces the 2000 problem into the program */
+//   year = t.gmt->tm_year + 1900;
+//
+//   /* calculate the actual time, remember to add 1 to tm_mon! */
+//   actTime = 367 * year - 7 *
+//	          (year + ((t.gmt->tm_mon+1) + 9) / 12) / 4 + 275 *
+//	           (t.gmt->tm_mon+1) / 9 + t.gmt->tm_mday - 730530;
+//
+//    UT = t.gmt->tm_hour + ((double) t.gmt->tm_min / 60);
+//    /*printf("UT = %f\n", UT); */
+//    actTime += (UT / 24.0);
+//    #define DEBUG 1
+//    #ifdef DEBUG
+//    /* printf("  Actual Time:\n"); */
+//    /* printf("  current day = %f\t", actTime); */
+//    /* printf("  GMT = %d, %d, %d, %d, %d, %d\n",
+//	   year, t.gmt->tm_mon, t.gmt->tm_mday,
+//	   t.gmt->tm_hour, t.gmt->tm_min, t.gmt->tm_sec); */
+//    #endif
+//    return actTime;
+//}
+
+
 double fgCalcActTime(struct fgTIME t)
 {
-   double
-         actTime, UT;
-   int year;
-
-   /* a hack. This one introduces the 2000 problem into the program */
-   year = t.gmt->tm_year + 1900;
-
-   /* calculate the actual time, rember to add 1 to tm_mon! */
-   actTime = 367 * year - 7 *
-	          (year + ((t.gmt->tm_mon+1) + 9) / 12) / 4 + 275 *
-	           (t.gmt->tm_mon+1) / 9 + t.gmt->tm_mday - 730530;
-
-    UT = t.gmt->tm_hour + ((double) t.gmt->tm_min / 60);
-    /*printf("UT = %f\n", UT); */
-    actTime += (UT / 24.0);
-    #define DEBUG 1
-    #ifdef DEBUG
-    /* printf("  Actual Time:\n"); */
-    /* printf("  current day = %f\t", actTime); */
-    /* printf("  GMT = %d, %d, %d, %d, %d, %d\n",
-	   year, t.gmt->tm_mon, t.gmt->tm_mday,
-	   t.gmt->tm_hour, t.gmt->tm_min, t.gmt->tm_sec); */
-    #endif
-    return actTime;
+  return (t.mjd - 36523.5);
 }
 
+
 /* convert degrees to radians */
+/*
 double fgDegToRad(double angle)
 {
 	return (angle * PIOVER180);
 }
-
+*/
 double fgCalcEccAnom(double M, double e)
 {
     double
@@ -85,7 +94,7 @@ double fgCalcEccAnom(double M, double e)
             diff = fabs(E0 - E1);
             E0 = E1;
 		}
-        while (diff > fgDegToRad(0.001));
+        while (diff > (DEG_TO_RAD * 0.001));
         return E0;
 	}
     return eccAnom;
@@ -137,12 +146,11 @@ void fgSolarSystemInit(struct fgTIME t)
 
    if ( (data = fopen(path, "r")) == NULL )
    {
-	    fgPrintf( FG_ASTRO, FG_ALERT, "Cannot open data file: '%s'\n", path);
+	    fgPrintf( FG_ASTRO, FG_ALERT, 
+		      "Cannot open data file: '%s'\n", path);
 	    return;
    }
-   #ifdef DEBUG
    fgPrintf( FG_ASTRO, FG_INFO, "  reading datafile %s\n", path);
-   #endif
 
    /* for all the objects... */
    for (i = 0; i < 9; i ++)
@@ -164,20 +172,23 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
    actTime = fgCalcActTime(t);
 
    /* calculate the actual orbital elements */
-    planet->M = fgDegToRad(planet->MFirst + (planet->MSec * actTime));	// angle in radians
-    planet->w = fgDegToRad(planet->wFirst + (planet->wSec * actTime));	// angle in radians
-    planet->N = fgDegToRad(planet->NFirst + (planet->NSec * actTime));	// angle in radians
-    planet->i = fgDegToRad(planet->iFirst + (planet->iSec * actTime));  // angle in radians
+    planet->M = DEG_TO_RAD * (planet->MFirst + (planet->MSec * actTime));	// angle in radians
+    planet->w = DEG_TO_RAD * (planet->wFirst + (planet->wSec * actTime));	// angle in radians
+    planet->N = DEG_TO_RAD * (planet->NFirst + (planet->NSec * actTime));	// angle in radians
+    planet->i = DEG_TO_RAD * (planet->iFirst + (planet->iSec * actTime));  // angle in radians
     planet->e = planet->eFirst + (planet->eSec * actTime);
     planet->a = planet->aFirst + (planet->aSec * actTime);
 }
 
 
 /* $Log$
-/* Revision 1.4  1998/01/27 00:47:47  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.5  1998/02/02 20:53:22  curt
+/* To version 0.29
 /*
+ * Revision 1.4  1998/01/27 00:47:47  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.3  1998/01/22 02:59:27  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

@@ -23,11 +23,21 @@
  **************************************************************************/
 
 
+#ifdef WIN32
+#  include <windows.h>
+#endif
+
+#include <GL/glut.h>
+#include <XGL/xgl.h>
+
 #include <Time/fg_time.h>
 #include <Astro/orbits.h>
 #include <Astro/planets.h>
 #include <Astro/sun.h>
+#include <Include/fg_constants.h>
 #include <Main/fg_debug.h>
+
+GLint planets = 0;
 
 struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
                                         struct OrbElements theSun,
@@ -45,8 +55,8 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 
       actTime = fgCalcActTime(t);
       /* calculate the angle between ecliptic and equatorial coordinate system */
-      ecl = fgDegToRad(23.4393 - 3.563E-7 * actTime);
-
+      /* ecl = DEG_TO_RAD * (23.4393 - 3.563E-7 * actTime); */
+      ecl = 0.409093 - 6.2186E-9 * actTime;
 
     /* calculate the eccentric anomaly */
 	eccAnom  = fgCalcEccAnom(planet.M, planet.e);
@@ -62,7 +72,7 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
     yh = r * ( sin(planet.N) * cos(v+planet.w) + cos(planet.N) * sin(v+planet.w) * cos(planet.i));
     zh = r * ( sin(v+planet.w) * sin(planet.i));
 
-    /* calculate the ecleptic longitude and latitude */
+    /* calculate the ecliptic longitude and latitude */
 
     /*
     lonecl = atan2(yh, xh);
@@ -133,12 +143,74 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 }
 
 
+void fgPlanetsInit( void )
+{
+  int i;
+  struct CelestialCoord pltPos;
+  double magnitude;
+
+  /* if the display list was already built during a previous init,
+     recycle it */
+
+  if (planets)
+      xglDeleteLists(planets, 1);
+
+  planets = xglGenLists(1);
+  xglNewList( planets, GL_COMPILE );
+  xglBegin( GL_POINTS );
+
+
+  /* Add the planets to all four display lists */
+  for ( i = 2; i < 9; i++ ) {
+    fgSolarSystemUpdate(&(pltOrbElements[i]), cur_time_params);
+    pltPos = fgCalculatePlanet(pltOrbElements[i], 
+			       pltOrbElements[0], cur_time_params, i);
+    
+    /* give the planets a temporary color, for testing purposes */
+    /* xglColor3f( 1.0, 0.0, 0.0); */
+    /* scale magnitudes to (0.0 - 1.0) */
+    
+    magnitude = (0.0 - pltPos.magnitude) / 5.0 + 1.0;
+    
+    /* scale magnitudes again so they look ok */
+    /* magnitude = 
+       magnitude * 0.7 + (((FG_STAR_LEVELS - 1) - i) * 0.1); */
+
+    /* the following statement could be made a little more sopisticated
+       for the moment: Stick to this one */
+    magnitude = magnitude * 0.7 + (3 * 0.1);
+    if ( magnitude > 1.0 ) { magnitude = 1.0; }
+    if ( magnitude < 0.0 ) { magnitude = 0.0; }
+    
+    
+    xglColor3f(magnitude, magnitude, magnitude);
+    /* xglColor3f(1.0, 1.0,1.0); */
+    
+    xglVertex3f( 50000.0 * cos(pltPos.RightAscension) * 
+		           cos(pltPos.Declination),
+		 50000.0 * sin(pltPos.RightAscension) * 
+		           cos(pltPos.Declination),
+		 50000.0 * sin(pltPos.Declination) );
+  }
+  xglEnd();
+  xglEndList();
+
+}
+
+
+void fgPlanetsRender( void ) {
+	xglCallList(planets);
+}
+
 
 /* $Log$
-/* Revision 1.3  1998/01/27 00:47:47  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.4  1998/02/02 20:53:23  curt
+/* To version 0.29
 /*
+ * Revision 1.3  1998/01/27 00:47:47  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.2  1998/01/19 19:26:59  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

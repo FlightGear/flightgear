@@ -31,14 +31,14 @@
 #include <Time/fg_time.h>
 #include <math.h>
 
-#define X .525731112119133606
-#define Z .850650808352039932
+/* #define X .525731112119133606 */
+/* #define Z .850650808352039932 */
 
 
  /* Initialize the Moon Display management Subsystem */
 void fgMoonInit( void );
 
-/* Draw the Stars */
+/* Draw the Moon */
 void fgMoonRender( void );
 
 struct CelestialCoord fgCalculateMoon(struct OrbElements Params,
@@ -51,9 +51,12 @@ extern struct OrbElements pltOrbElements[9];
 
 
 /* $Log$
-/* Revision 1.4  1998/01/22 02:59:27  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.5  1998/02/02 20:53:21  curt
+/* To version 0.29
 /*
+ * Revision 1.4  1998/01/22 02:59:27  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.3  1998/01/19 19:26:58  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

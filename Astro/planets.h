@@ -31,13 +31,21 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
                                          struct OrbElements theSun,
                                          struct fgTIME t, int idx);
 
+
+void fgPlanetsInit();
+void fgPlanetsRender();
+
+
 #endif /* PLANETS_H */
 
 
 /* $Log$
-/* Revision 1.2  1998/01/22 02:59:28  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.3  1998/02/02 20:53:23  curt
+/* To version 0.29
 /*
+ * Revision 1.2  1998/01/22 02:59:28  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.1  1998/01/07 03:16:18  curt
  * Moved from .../Src/Scenery/ to .../Src/Astro/
  *

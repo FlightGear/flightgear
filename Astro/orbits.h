@@ -68,7 +68,7 @@ struct CelestialCoord {
 };
 
 
-double fgDegToRad(double angle);
+/* double fgDegToRad(double angle); */
 double fgCalcEccAnom(double M, double e);
 double fgCalcActTime(struct fgTIME t);
 
@@ -81,9 +81,12 @@ void fgSolarSystemUpdate(struct OrbElements *planets, struct fgTIME t);
 
 
 /* $Log$
-/* Revision 1.3  1998/01/22 02:59:27  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.4  1998/02/02 20:53:22  curt
+/* To version 0.29
 /*
+ * Revision 1.3  1998/01/22 02:59:27  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.2  1998/01/19 19:26:58  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.
