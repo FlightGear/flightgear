@@ -135,9 +135,12 @@ bool FGClipper::load_polys(const string& path) {
     }
 
     int area = (int)poly_type;
-    if ( area == OceanArea ) {
-	// TEST - Ignore
-    } else if ( area < FG_MAX_AREA_TYPES ) {
+
+    // if ( area == OceanArea ) {
+    // TEST - Ignore
+    // } else 
+
+    if ( area < FG_MAX_AREA_TYPES ) {
 	polys_in.polys[area].push_back(poly);
     } else {
 	FG_LOG( FG_CLIPPER, FG_ALERT, "Polygon type out of range = " 
