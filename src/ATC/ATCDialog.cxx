@@ -45,10 +45,10 @@ ATCMenuEntry::ATCMenuEntry() {
 ATCMenuEntry::~ATCMenuEntry() {
 }
 
-static char* t0 = "Contact tower for landing";
-static char* t1 = "Request departure clearance";
-static char* t2 = "Report Runway vacated";
-static char** towerOptions = new char*[4];
+static char* t0 = "No communication currently available";
+//static char* t1 = "Request departure clearance";
+//static char* t2 = "Report Runway vacated";
+static char** towerOptions = new char*[2];
 
 // ----------------------- DCL ------------------------------------------
 // For the ATC dialog - copied from the Autopilot new heading dialog code!
@@ -117,6 +117,7 @@ static void ATCDialogOK (puObject *me)
 	case ATIS:
 		break;
 	case TOWER: {
+		/*
 		FGTower* twr = (FGTower*)globals->get_ATC_mgr()->GetComm1ATCPointer();
 		switch(atcDialogCommunicationOptions->getValue()) {
 		case 0:
@@ -134,6 +135,7 @@ static void ATCDialogOK (puObject *me)
 		default:
 			break;
 		}
+		*/
 		break;
 	}
 	case GROUND:
@@ -165,11 +167,11 @@ void ATCDialogInit()
 	// Option lists hardwired per ATC type	
 	towerOptions[0] = new char[strlen(t0)+1];
 	strcpy(towerOptions[0], t0);
-	towerOptions[1] = new char[strlen(t1)+1];
-	strcpy(towerOptions[1], t1);
-	towerOptions[2] = new char[strlen(t2)+1];
-	strcpy(towerOptions[2], t2);
-	towerOptions[3] = NULL;
+	//towerOptions[1] = new char[strlen(t1)+1];
+	//strcpy(towerOptions[1], t1);
+	//towerOptions[2] = new char[strlen(t2)+1];
+	//strcpy(towerOptions[2], t2);
+	towerOptions[1] = NULL;
 	
 	atcDialog = new puDialogBox (150, 50);
 	{
