@@ -31,6 +31,12 @@
 #  include <windows.h>
 #endif
 
+
+#ifdef __BORLANDC__
+#  define exception c_exception
+#endif
+#include <math.h>
+
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 #include <Debug/logstream.hxx>

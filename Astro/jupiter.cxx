@@ -23,6 +23,12 @@
  * (Log is kept at end of this file)
  **************************************************************************/
 
+
+#ifdef __BORLANDC__
+#  define exception c_exception
+#endif
+#include <math.h>
+
 #include "jupiter.hxx"
 
 /*************************************************************************

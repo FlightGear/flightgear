@@ -39,6 +39,10 @@
                          // contains milliseconds
 #endif
 
+#if defined( linux ) || defined( __FreeBSD__ )
+#  define _G_NO_EXTERN_TEMPLATES
+#endif
+
 #include "Include/fg_stl_config.h"
 #include STL_ALGORITHM
 #include STL_FUNCTIONAL
@@ -261,6 +265,9 @@ fgEVENT_MGR::~fgEVENT_MGR( void ) {
 
 
 // $Log$
+// Revision 1.12  1998/11/23 21:49:07  curt
+// Borland portability tweaks.
+//
 // Revision 1.11  1998/11/09 23:41:51  curt
 // Log message clean ups.
 //

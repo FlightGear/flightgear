@@ -29,6 +29,12 @@
 #include <Debug/logstream.hxx>
 #include <Objects/texload.h>
 
+
+#ifdef __BORLANDC__
+#  define exception c_exception
+#endif
+#include <math.h>
+
 static GLuint moon_texid;
 static GLubyte *moon_texbuf;
 

@@ -36,15 +36,10 @@
 #include <Debug/logstream.hxx>
 #include <Flight/flight.hxx>
 #include <Include/fg_constants.h>
+#include <Main/options.hxx>
 #include <Misc/fgstream.hxx>
 
 #include "fg_serial.hxx"
-
-#include "options.hxx"
-
-
-const int fgOPTIONS::FG_RADIUS_MIN;
-const int fgOPTIONS::FG_RADIUS_MAX;
 
 
 inline double
@@ -623,7 +618,7 @@ void fgOPTIONS::usage ( void ) {
     printf("\t--enable-textures:  enable textures\n");
     printf("\t--disable-wireframe:  disable wireframe drawing mode\n");
     printf("\t--enable-wireframe:  enable wireframe drawing mode\n");
-    printf("\t--geomtry=WWWxHHH:  specify window geometry: 640x480, 800x600\n");
+    printf("\t--geometry=WWWxHHH:  window geometry: 640x480, 800x600, etc.\n");
     printf("\n");
 
     printf("Scenery Options:\n");
@@ -647,6 +642,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.31  1998/11/23 21:49:04  curt
+// Borland portability tweaks.
+//
 // Revision 1.30  1998/11/16 14:00:02  curt
 // Added pow() macro bug work around.
 // Added support for starting FGFS at various resolutions.

@@ -31,6 +31,11 @@
 using namespace std;
 #endif
 
+#ifdef __BORLANDC__
+#  define exception c_exception
+#endif
+#include <math.h>
+
 #include <Debug/logstream.hxx>
 // #include <Include/fg_types.h>
 #include <Math/fg_geodesy.hxx>
@@ -285,6 +290,9 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.11  1998/11/23 21:48:09  curt
+// Borland portability tweaks.
+//
 // Revision 1.10  1998/11/07 19:07:06  curt
 // Enable release builds using the --without-logging option to the configure
 // script.  Also a couple log message cleanups, plus some C to C++ comment

@@ -40,6 +40,10 @@
 using namespace std;
 #endif
 
+#ifdef __BORLANDC__
+#  define exception c_exception
+#endif
+
 #include <Scenery/tile.hxx>
 
 
@@ -61,6 +65,9 @@ fgAptGenerate(const string& path, fgTILE *tile);
 
 
 // $Log$
+// Revision 1.2  1998/11/23 21:48:10  curt
+// Borland portability tweaks.
+//
 // Revision 1.1  1998/09/14 02:14:01  curt
 // Initial revision of genapt.[ch]xx for generating airport scenery.
 //

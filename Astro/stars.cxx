@@ -31,6 +31,7 @@
 #  include <windows.h>
 #endif
 
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -255,6 +256,9 @@ void fgStarsRender( void ) {
 
 
 // $Log$
+// Revision 1.23  1998/11/23 21:48:28  curt
+// Borland portability tweaks.
+//
 // Revision 1.22  1998/11/07 19:07:07  curt
 // Enable release builds using the --without-logging option to the configure
 // script.  Also a couple log message cleanups, plus some C to C++ comment

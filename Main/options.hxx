@@ -42,10 +42,8 @@
 #include <XGL/xgl.h>
 
 #include <string>
-
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
+#include <Include/compiler.h>
+FG_USING_STD(string);
 
 #include "fg_serial.hxx"
 
@@ -74,8 +72,11 @@ public:
 	FG_FOG_NICEST   = 2
     };
 
-    static const int FG_RADIUS_MIN = 1;
-    static const int FG_RADIUS_MAX = 4;
+    enum
+    {
+	FG_RADIUS_MIN = 1,
+	FG_RADIUS_MAX = 4
+    };
 
 private:
 
@@ -243,6 +244,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.23  1998/11/23 21:49:05  curt
+// Borland portability tweaks.
+//
 // Revision 1.22  1998/11/20 01:02:38  curt
 // Try to detect Mesa/Glide/Voodoo and chose the appropriate resolution.
 //

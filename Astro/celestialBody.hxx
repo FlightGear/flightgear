@@ -32,9 +32,6 @@
 #endif                                   
 
 
-#include <stdio.h>
-#include <math.h>
-
 #include <Time/fg_time.hxx>
 #include <Include/fg_constants.h>
 

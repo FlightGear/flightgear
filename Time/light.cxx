@@ -33,6 +33,11 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#ifdef __BORLANDC__
+#  define exception c_exception
+#endif
+#include <math.h>
+
 #include <string.h>
 
 #include <Aircraft/aircraft.hxx>
@@ -212,6 +217,9 @@ fgLIGHT::~fgLIGHT( void ) {
 
 
 // $Log$
+// Revision 1.21  1998/11/23 21:49:09  curt
+// Borland portability tweaks.
+//
 // Revision 1.20  1998/11/06 21:18:27  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

@@ -30,6 +30,11 @@
 #  include <windows.h>
 #endif
 
+#ifdef __BORLANDC__
+#  define exception c_exception
+#endif
+#include <math.h>
+
 #include <GL/glut.h>
 #include <stdlib.h>
 #include <string.h>
@@ -835,6 +840,9 @@ void fgUpdateHUD( void ) {
 }
 
 // $Log$
+// Revision 1.28  1998/11/23 21:48:59  curt
+// Borland portability tweaks.
+//
 // Revision 1.27  1998/11/06 21:17:47  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

@@ -35,11 +35,10 @@
 
 #include <math.h>
 
-#include "weather.hxx"
-
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
 #include <Math/fg_random.h>
+#include <Weather/weather.hxx>
 
 
 // This is a record containing current weather info
@@ -105,6 +104,9 @@ void fgWeatherSetVisibility( float visibility ) {
 
 
 // $Log$
+// Revision 1.3  1998/11/23 21:49:11  curt
+// Borland portability tweaks.
+//
 // Revision 1.2  1998/11/06 21:18:29  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

@@ -27,6 +27,11 @@
 #include "star.hxx"
 #include <Debug/logstream.hxx>
 
+#ifdef __BORLANDC__
+#  define exception c_exception
+#endif
+#include <math.h>
+
 /**************************************************************************
  * void CelestialBody::updatePosition(fgTIME *t, Star *ourSun)
  *
