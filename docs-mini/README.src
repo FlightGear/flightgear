@@ -1,0 +1,58 @@
+majordomo writes:
+Subdirectories
+==============
+Main/
+-------
+"main()" and GLUT dependent mouse/keyboard/graphics code.
+
+
+Aircraft/
+---------
+Structure and code to tie together all the pieces of an aircraft such
+as flight model, engine model, panel, controls, etc.
+
+
+Controls/
+---------
+Provide a standardized interface to all aircraft controls.
+
+
+FDM/
+-------
+Strucures and code to implement various flight models.  Provides a 
+standardized interface to all interesting flight model variabls.
+
+
+Math/
+-----
+Contains miscellaneous matrix/vector routines.
+
+
+Scenery/
+--------
+Scenery parsing/generating code.
+
+
+Sound/
+------
+Sound management code
+
+
+Timer/
+------
+Code to handle time and timing of events.
+
+
+Utils/
+------
+Miscellaneous utility routines such as a general random number generator
+
+
+Weather/
+--------
+Weather management and modeling code.
+
+
+Win32/
+------
+Win32 support stuff

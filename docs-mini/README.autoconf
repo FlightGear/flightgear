@@ -1,0 +1,43 @@
+Flight Gear uses the Gnu autoconf and automake tools for managing
+Makefiles.  It also uses libtool to manage building shared and static
+libraries.  Key input files for this system are:
+
+    configure.in - Top level directory
+    Makefile.am - One in each subdirectory
+    Include/config.in - input file for building config.h
+
+If you need to modify any of these files, you will need to build and
+install the following packages:
+
+    - GNU autoconf 2.12 (available from ftp://prep.ai.mit.edu/pub/gnu)
+    - GNU automake 1.2h (available from ftp://ftp.cygnus.com/pub/tromey)
+
+Libtool is not currently used:
+
+    - GNU libtool 1.2   (available from ftp://prep.ai.mit.edu/pub/gnu)
+                        (or maybe ftp://alpha.gnu.org/gnu)
+    - After upgrading libtool, if we were using it, you would want to run:
+
+      libtoolize --force
+
+When making a change to any of these files you will need to run:
+
+    aclocal ; automake -a ; autoconf
+
+Then follow the regular build procedure:
+
+    ./configure; make; make install
+
+For debuging purposes you might want to try something like:
+
+    CFLAGS=-Wall CXXFLAGS=-Wall ./configure; make; make install
+
+For full optimization using the EGCS compiler on an Intel processor you 
+could try something like:
+
+    MACH="-mpentium"   # -m486 -mpentiumpro etc.
+    export CC=egcc     # for Linux
+    export CFLAGS="-Wall -O5 -fomit-frame-pointer -ffast-math -funroll-loops $MACH"
+    export CXXFLAGS="-Wall -O5 -fomit-frame-pointer -ffast-math -funroll-loops $MACH"
+    ./configure
+

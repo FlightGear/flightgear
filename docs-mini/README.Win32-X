@@ -1,0 +1,85 @@
+http://www.cygnus.com/ml/gnu-win32/1998-Nov/0177.html
+
+Building cross cygwin b20 tools [Re: Linux->Win32 cross
+compiler ?]
+
+Mumit Khan (khan@xraylith.wisc.edu)
+Wed, 4 Nov 1998 09:38:23 -0600 (CST) 
+
+      Messages sorted by: [ date ][ thread ][ subject ][ author ] 
+      Next message: Austin David France: "RE: B20 & bash 2.02.1(2) broken" 
+      Previous message: Neil Schemenauer: "Bash exits after background command exits (B20)" 
+      In reply to: Felix E. Klee: "Linux->Win32 cross compiler ?" 
+      Next in thread: Peter Dalgaard BSA: "Re: Linux->Win32 cross compiler ?" 
+
+On Mon, 2 Nov 1998, Felix E. Klee wrote:
+
+> Hi,
+> 
+> does anyone know if a cross compiler exists for Linux which
+> creates Win32 executables just like gnuwin32 does?
+> 
+
+============ building CROSS
+
+You can always build one yourself. Download the CDK source, and do the
+following:
+  
+  $ mkdir /cygwin-b20
+  $ cd /cygwin-b20
+  $ tar zxvf /tmp/dev-src.tar.gz
+  $ cd src
+  $ mkdir CROSS
+  $ cd CROSS
+  $ ../configure --prefix=/usr/local/cygb20 --target=i386-cygwin32 -v
+  $ make > make.log 2>&1
+  [ check for errors . If OK ]
+  $ make install > install.log 2>&1
+
+After you're done, add it to path (if you're using a bourne-shell
+compatible, otherwise use csh syntax).
+  
+  $ export PATH=$PATH:/usr/local/cygb20/bin
+  $ i386-cygwin32-gcc -v
+  [ should report egcs-1.1 etc ]
+
+All the binaries for i386-cygwin32 target are prefixed with i386-cygwin32-
+prefix.
+
+============ building NATIVE tools using CROSS tools just built.
+
+Now if you want to build native tools on eg., a i686-pc-linux-gnu box with 
+the same pathnames that wCygnus uses:
+
+  $ cd /cygwin-b20/src
+  $ mkdir NATIVE
+  $ cd NATIVE
+  $ ../configure --prefix=/Cygnus/cygwin-b20 \
+    --exec-prefix=/Cygnus/cygwin-b20/H-i586-cygwin32 \
+    --target=i386-cygwin32 --host=i386-cygwin32 \
+    --build=i686-pc-linux-gnu -v
+  $ make > make.log 2>&1
+  [ check for errors . If OK ]
+
+Now of course, you want to install it to a *DIFFERENT* location than
+/Cygnus/cygwin-b20 on your Unix host before creating an archive to
+copy to a Cygwin box. Let's say you first install it to /tmp/cygwin.
+
+  $ make prefix=/tmp/cygwin exec_prefix=/tmp/cygwin/H-i586-cygwin32 \
+    install > install.log 2>&1
+  $ cd /tmp/cygwin
+  $ tar zcvf /tmp/dev-cygwin-b20.tar.gz .
+
+Copy /tmp/dev-cygwin-b20.tar.gz to your Cygwin box and unpack:
+  
+  [win32]$ cd /Cygnus/cygwin-b20
+  [win32]$ tar zxvf /tmp/dev-cygwin-b20.tar.gz
+
+Regards,
+Mumit
+
+
+-
+For help on using this list (especially unsubscribing), send a message to
+"gnu-win32-request@cygnus.com" with one line of text: "help".
+

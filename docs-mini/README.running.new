@@ -1,0 +1,178 @@
+Starting the executable
+=======================
+
+Unix:    runfgfs
+Windows: runfgfs.bat
+
+"runfgfs" is a script which runs the Flight Gear executable with
+(hopefully) the correct $FG_ROOT directory specified.
+
+
+First Flight
+============
+
+By default, the plane should be looking more or less straight down a
+runway, and the mouse cursor should be a regular pointer.  The
+following steps will help you to get into the air:
+
+- click the right mouse button once, so that a cross cursor
+  appears (now, the mouse will act as a control yoke)
+
+- while holding down the left mouse button, push the mouse cursor up
+  until the engine is at full power (the throttle indicator is on the
+  left side of the HUD), then release the left mouse button
+
+- when the plane is moving fast enough (say, 100 knots for the default 
+  Navion), slowly pull the mouse cursor down (with no buttons pressed) 
+  to raise the elevators until the plane rolls off the runway and into
+  the air
+
+- while holding down the left mouse button, move the mouse cursor down 
+  slightly to ease up on the throttle, then release the left mouse
+  button
+
+- move the mouse up, down, and sideways as necessary to establish
+  level flight -- small movements are best, or you may lose control of
+  the plane
+
+- click the right mouse button once more, so that a double-arrow
+  cursor appears (now, the mouse will allow you to look around)
+
+- move the mouse around to look out of the plane at different angles
+
+- press the left mouse button once to return the view to front and
+  centre
+
+- click the right mouse button *twice*, so that the cross cursor
+  appears again (you're in yoke mode)
+
+- now that you know how to operate the throttle, ailerons, and
+  elevators (as well as how to look around), try to circle around and
+  land back on the runway (best of luck)
+
+
+Mouse controls
+==============
+
+It is possible to manipulate the basic flight controls and the view
+using only the mouse.  Clicking the right mouse button toggles the
+mouse among three different modes:
+
+1. Pointer mode (the default: mouse cursor is a pointer)
+2. Yoke mode (mouse cursor is a cross)
+3. Look-around mode (mouse pointer is a double arrow)
+
+In yoke mode and look-around mode, the mouse cursor will remain
+trapped in the Flight Gear window.
+
+
+Yoke mode
+---------
+
+In yoke mode (mouse cursor as cross), mouse movement adjusts the main
+flight controls, depending on which buttons you press.
+
+With no button pressed:
+(like a control yoke on an airplane)
+- horizontal movement controls the ailerons
+- vertical movement controls the elevators
+
+With left button pressed:
+- horizontal movement controls the brakes
+- vertical movement controls the throttle
+
+With middle button pressed:
+- horizontal movement controls the rudder
+- vertical movement controls the trim
+
+
+Look-around mode
+----------------
+
+In look-around mode (mouse cursor as double arrow), mouse movement
+changes the viewing direction: horizontal movement scrolls the view
+horizontally, and vertical movement scrolls the view vertically in the
+direction of mouse movement.
+
+To return the view to front and center, click the left mouse button
+once.
+
+
+Keyboard controls
+=================
+
+It is also possible to fly using the numeric keypad.  There is some
+unresolved wierdness with the GLUT libraries and keyboard input, so
+for now, the state of the "Num Lock" key is important.
+
+Num Lock Active
+---------------
+
+    Pg Up/Pg Dn             Throttle
+    Left Arrow/Right Arrow  Aileron
+    Up Arrow/Down Arrow     Elevator
+    Ins/Enter               Rudder
+    "5"                     Center aileron/elevator/rudder
+    Home/End                Elevator Trim
+
+Num Lock Inactive
+-----------------
+    Shift + <Numeric Keypad Key>   Change view
+
+    where key is one of:
+
+    8 = forward
+    7 = left/forward
+    4 = left
+    1 = left/back
+    2 = back
+    3 = right/back
+    6 = right
+    9 = right/forward
+
+Brakes
+------
+    Press the "b" key to toggle
+
+Autopilot
+---------
+    Control + A             Toggle autopilot altitude lock.
+    Control + H             Toggle autopilot heading lock.
+    Control + S             Toggle autopilot autothrottle.
+    Control + T             Toggle autopilot terrain follow.
+
+Simulation
+----------
+
+    ESC                     Quit Flight Gear.
+
+    a                       Increase speedup.
+    b                       Toggle brakes.
+    h                       Dim HUD.
+    i                       Revert to full HUD.
+    m                       Increase time warp.
+    p                       Toggle pause.
+    t                       Increase time warp delta.
+    v                       Toggle external view mode.
+    x                       Zoom out (narrow field of view).
+    z                       Increase visibility.
+
+    Shift + A               Decrease speedup.
+    Shift + H               Brighten HUD
+    Shift + I               Minimize HUD
+    Shift + M               Decrease time warp.
+    Shift + P               Toggle 2D panel display.
+    Shift + T               Decrease time warp delta.
+    Shift + W               Toggle fullscreen/window mode.
+    Shift + X               Zoom out (widen field of view).
+    Shift + Z               Decrease visibility.
+
+Other
+-----
+    F2 = Reload tile cache.
+    F6 = Toggle autopilot target location.
+    F8 = Toggle fog modes (off, fastest, nicest)
+    F9 = Toggle textures on/off
+    F10 = Toggle menu
+    F11 = Set autopilot altitude
+    F12 = Set autopilot heading
