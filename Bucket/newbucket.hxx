@@ -72,6 +72,9 @@ public:
     // create a bucket based on "long int" index
     FGBucket(const long int bindex);
 
+    // create an impossible bucket if false
+    FGBucket(const bool is_good);
+
     ~FGBucket();
 
     // Set the bucket params for the specified lat and lon
@@ -79,6 +82,7 @@ public:
 
     // Generate the unique scenery tile index for this bucket
     long int gen_index();
+    string gen_index_str();
 
     // Build the path name for this bucket
     string gen_base_path();
@@ -203,6 +207,14 @@ inline FGBucket::FGBucket(const double dlon, const double dlat) {
     set_bucket(dlon, dlat);
 }
 
+// create an impossible bucket if false
+inline FGBucket::FGBucket(const bool is_good) {
+    set_bucket(0.0, 0.0);
+    if ( !is_good ) {
+	lon = -1000;
+    }
+}
+    
 
 // Parse a unique scenery tile index and find the lon, lat, x, and y
 inline FGBucket::FGBucket(const long int bindex) {
@@ -242,6 +254,12 @@ inline FGBucket::~FGBucket() {}
 
 inline long int FGBucket::gen_index() {
     return ((lon + 180) << 14) + ((lat + 90) << 6) + (y << 3) + x;
+}
+
+inline string FGBucket::gen_index_str() {
+    char tmp[20];
+    sprintf(tmp, "%ld", (((long)lon + 180) << 14) + ((lat + 90) << 6) + (y << 3) + x);
+    return (string)tmp;
 }
 
 
@@ -306,23 +324,14 @@ operator== ( const FGBucket& b1, const FGBucket& b2 )
 	     b1.y == b2.y );
 }
 
-/*
-inline string
-fgBucketGenIndex( const fgBUCKET& p )
-{
-    char index_str[256];
-    sprintf( index_str, "%ld", fgBucketGenIndex( &p ) );
-    return string( index_str );
-}
-
-*/
-
-
 
 #endif // _NEWBUCKET_HXX
 
 
 // $Log$
+// Revision 1.7  1999/03/25 19:01:51  curt
+// Jettisoned old bucketutils.[ch] for newbucket.[ch]xx
+//
 // Revision 1.6  1999/03/15 17:58:41  curt
 // MSVC++ portability tweaks contributed by Bernie Bright.
 //   Added using std::ostream declaration.
