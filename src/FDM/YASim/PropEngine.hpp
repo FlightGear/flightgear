@@ -2,16 +2,18 @@
 #define _PROPENGINE_HPP
 
 #include "Thruster.hpp"
+#include "Engine.hpp"
 
 namespace yasim {
 
 class Propeller;
-class Engine;
 
 class PropEngine : public Thruster {
 public:
     PropEngine(Propeller* prop, Engine* eng, float moment);
     virtual ~PropEngine();
+
+    void setEngine(Engine* eng) { delete _eng; _eng = eng; }
 
     void setMagnetos(int magnetos);
     void setAdvance(float advance);

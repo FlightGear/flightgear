@@ -18,9 +18,11 @@ SHARED_SOURCE_FILES = \
         Jet.cpp Jet.hpp \
         Math.cpp Math.hpp \
         Model.cpp Model.hpp \
-        PistonEngine.cpp PistonEngine.hpp \
         PropEngine.cpp PropEngine.hpp \
         Propeller.cpp Propeller.hpp \
+	Engine.hpp \
+        PistonEngine.cpp PistonEngine.hpp \
+        TurbineEngine.cpp TurbineEngine.hpp \
         RigidBody.cpp RigidBody.hpp \
         Rotor.cpp Rotor.hpp \
         Rotorblade.cpp Rotorblade.hpp \

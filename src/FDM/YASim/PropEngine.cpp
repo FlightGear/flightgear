@@ -113,6 +113,7 @@ void PropEngine::stabilize()
 	float ptau, dummy;
 	_prop->calc(_rho, speed, _omega * _gearRatio, &dummy, &ptau);
 	_eng->calc(_pressure, _temp, _omega);
+        _eng->stabilize();
         float etau = _eng->getTorque();
 	float tdiff = etau - ptau;
 
@@ -157,6 +158,7 @@ void PropEngine::integrate(float dt)
     
     _prop->calc(_rho, speed, _omega * _gearRatio, &thrust, &propTorque);
     _eng->calc(_pressure, _temp, _omega);
+    _eng->integrate(dt);
     engTorque = _eng->getTorque();
     _fuelFlow = _eng->getFuelFlow();
 

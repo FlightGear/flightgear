@@ -4,6 +4,7 @@
 namespace yasim {
 
 class PistonEngine;
+class TurbineEngine;
 
 //
 // Interface for the "Engine" part of a PropEngine object.  This is a
@@ -15,6 +16,7 @@ class PistonEngine;
 class Engine {
 public:
     virtual PistonEngine* isPistonEngine() { return 0; }
+    virtual TurbineEngine* isTurbineEngine() { return 0; }
 
     void setThrottle(float throttle) { _throttle = throttle; }
     void setStarter(bool starter) { _starter = starter; }
@@ -28,6 +30,8 @@ public:
     virtual bool isCranking() { return false; }
 
     virtual void calc(float pressure, float temp, float speed) = 0;
+    virtual void stabilize() {}
+    virtual void integrate(float dt) {}
     virtual float getTorque() = 0;
     virtual float getFuelFlow() = 0;
 

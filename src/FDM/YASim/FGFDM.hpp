@@ -41,6 +41,8 @@ private:
     int parseAxis(const char* name);
     int parseOutput(const char* name);
     void parseWeight(XMLAttributes* a);
+    void parseTurbineEngine(XMLAttributes* a);
+    void parsePistonEngine(XMLAttributes* a);
     void parsePropeller(XMLAttributes* a);
     bool eq(const char* a, const char* b);
     bool caseeq(const char* a, const char* b);

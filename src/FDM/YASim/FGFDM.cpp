@@ -11,6 +11,7 @@
 #include "PropEngine.hpp"
 #include "Propeller.hpp"
 #include "PistonEngine.hpp"
+#include "TurbineEngine.hpp"
 #include "Rotor.hpp"
 #include "Rotorpart.hpp"
 #include "Rotorblade.hpp"
@@ -34,6 +35,8 @@ static const float K2DEGF = 1.8;
 static const float K2DEGFOFFSET = -459.4;
 static const float CIN2CM = 1.6387064e-5;
 static const float YASIM_PI = 3.14159265358979323846;
+
+static const float NM2FTLB = (1/(LBS2N*FT2M));
 
 // Stubs, so that this can be compiled without the FlightGear
 // binary.  What's the best way to handle this?
@@ -175,6 +178,10 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	_airplane.setTail(parseWing(a, name));
     } else if(eq(name, "vstab") || eq(name, "mstab")) {
 	_airplane.addVStab(parseWing(a, name));
+    } else if(eq(name, "piston-engine")) {
+        parsePistonEngine(a);
+    } else if(eq(name, "turbine-engine")) {
+        parseTurbineEngine(a);
     } else if(eq(name, "propeller")) {
 	parsePropeller(a);
     } else if(eq(name, "thruster")) {
@@ -448,22 +455,24 @@ void FGFDM::setOutputProperties()
         float lbs = Math::mag3(tmp) * (KG2LBS/9.8);
 	node->setFloatValue("prop-thrust", lbs); // Deprecated name
 	node->setFloatValue("thrust-lbs", lbs);
-
         node->setFloatValue("fuel-flow-gph",
                             (t->getFuelFlow()/fuelDensity) * 3600 * CM2GALS);
 
 	if(t->getPropEngine()) {
             PropEngine* p = t->getPropEngine();
             node->setFloatValue("rpm", p->getOmega() * (1/RPM2RAD));
-            
+            node->setFloatValue("torque-ftlb",
+                                p->getEngine()->getTorque() * NM2FTLB);
+        
             if(p->getEngine()->isPistonEngine()) {
                 PistonEngine* pe = p->getEngine()->isPistonEngine();
                 node->setFloatValue("mp-osi", pe->getMP() * (1/INHG2PA));
                 node->setFloatValue("mp-inhg", pe->getMP() * (1/INHG2PA));
                 node->setFloatValue("egt-degf",
                                     pe->getEGT() * K2DEGF + K2DEGFOFFSET);
-//             } else if(p->isTurbineEngine()) {
-//                 TurbineEngine* te = p->isTurbineEngine();
+            } else if(p->getEngine()->isTurbineEngine()) {
+                TurbineEngine* te = p->getEngine()->isTurbineEngine();
+                node->setFloatValue("n2", te->getN2());
             }
         }
 
@@ -595,28 +604,12 @@ Rotor* FGFDM::parseRotor(XMLAttributes* a, const char* type)
     return w;
 }
 
-void FGFDM::parsePropeller(XMLAttributes* a)
+void FGFDM::parsePistonEngine(XMLAttributes* a)
 {
-    float cg[3];
-    cg[0] = attrf(a, "x");
-    cg[1] = attrf(a, "y");
-    cg[2] = attrf(a, "z");
-    float mass = attrf(a, "mass") * LBS2KG;
-    float moment = attrf(a, "moment");
-    float radius = attrf(a, "radius");
-    float speed = attrf(a, "cruise-speed") * KTS2MPS;
-    float omega = attrf(a, "cruise-rpm") * RPM2RAD;
-    float power = attrf(a, "cruise-power") * HP2W;
-    float rho = Atmosphere::getStdDensity(attrf(a, "cruise-alt") * FT2M);
-
-    // Hack, fix this pronto:
     float engP = attrf(a, "eng-power") * HP2W;
     float engS = attrf(a, "eng-rpm") * RPM2RAD;
 
-    Propeller* prop = new Propeller(radius, speed, omega, rho, power);
     PistonEngine* eng = new PistonEngine(engP, engS);
-    PropEngine* thruster = new PropEngine(prop, eng, moment);
-    _airplane.addThruster(thruster, mass, cg);
 
     if(a->hasAttribute("displacement"))
         eng->setDisplacement(attrf(a, "displacement") * CIN2CM);
@@ -629,6 +622,66 @@ void FGFDM::parsePropeller(XMLAttributes* a)
         float mp = attrf(a, "wastegate-mp", 1e6) * INHG2PA;
         eng->setTurboParams(mul, mp);
     }
+
+    ((PropEngine*)_currObj)->setEngine(eng);
+}
+
+void FGFDM::parseTurbineEngine(XMLAttributes* a)
+{
+    float power = attrf(a, "eng-power") * HP2W;
+    float omega = attrf(a, "eng-rpm") * RPM2RAD;
+    float alt = attrf(a, "alt") * FT2M;
+    float flatRating = attrf(a, "flat-rating") * HP2W;
+    TurbineEngine* eng = new TurbineEngine(power, omega, alt, flatRating);
+
+    if(a->hasAttribute("min-n2"))
+        eng->setN2Range(attrf(a, "min-n2"), attrf(a, "max-n2"));
+
+    // Nasty units conversion: lbs/hr per hp -> kg/s per watt
+    if(a->hasAttribute("bsfc"))
+        eng->setFuelConsumption(attrf(a, "bsfc") * (LBS2KG/(3600*HP2W)));
+
+    ((PropEngine*)_currObj)->setEngine(eng);
+}
+
+void FGFDM::parsePropeller(XMLAttributes* a)
+{
+    // Legacy Handling for the old engines syntax:
+    PistonEngine* eng = 0;
+    if(a->hasAttribute("eng-power")) {
+        SG_LOG(SG_FLIGHT,SG_ALERT, "WARNING: "
+               << "Legacy engine definition in YASim configuration file.  "
+               << "Please fix.");
+        float engP = attrf(a, "eng-power") * HP2W;
+        float engS = attrf(a, "eng-rpm") * RPM2RAD;
+        eng = new PistonEngine(engP, engS);
+        if(a->hasAttribute("displacement"))
+            eng->setDisplacement(attrf(a, "displacement") * CIN2CM);
+        if(a->hasAttribute("compression"))
+            eng->setCompression(attrf(a, "compression"));        
+        if(a->hasAttribute("turbo-mul")) {
+            float mul = attrf(a, "turbo-mul");
+            float mp = attrf(a, "wastegate-mp", 1e6) * INHG2PA;
+            eng->setTurboParams(mul, mp);
+        }
+    }
+
+    // Now parse the actual propeller definition:
+    float cg[3];
+    cg[0] = attrf(a, "x");
+    cg[1] = attrf(a, "y");
+    cg[2] = attrf(a, "z");
+    float mass = attrf(a, "mass") * LBS2KG;
+    float moment = attrf(a, "moment");
+    float radius = attrf(a, "radius");
+    float speed = attrf(a, "cruise-speed") * KTS2MPS;
+    float omega = attrf(a, "cruise-rpm") * RPM2RAD;
+    float power = attrf(a, "cruise-power") * HP2W;
+    float rho = Atmosphere::getStdDensity(attrf(a, "cruise-alt") * FT2M);
+
+    Propeller* prop = new Propeller(radius, speed, omega, rho, power);
+    PropEngine* thruster = new PropEngine(prop, eng, moment);
+    _airplane.addThruster(thruster, mass, cg);
 
     if(a->hasAttribute("takeoff-power")) {
 	float power0 = attrf(a, "takeoff-power") * HP2W;
