@@ -49,6 +49,7 @@ public:
    double strength;     // used by thermal objects
    double diameter;     // used by thermal objects
    double eda;          // used by ballistic objects
+   double life;         // life span in seconds
   } entry;
 
    FGAIScenario(string filename);

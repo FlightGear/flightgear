@@ -98,7 +98,8 @@ public:
                          double azimuth,    // in degrees (same as heading)
                          double elevation,  // in degrees (same as pitch)
                          double speed,      // in feet per second
-                         double eda );      // equivalent drag area, ft2
+                         double eda,        // equivalent drag area, ft2
+                         double life );     // life span in seconds
 
     int createStorm( string path,        // path to exterior model
                      double latitude,    // in degrees -90 to 90

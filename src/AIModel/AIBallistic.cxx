@@ -32,6 +32,7 @@ FGAIBallistic::FGAIBallistic(FGAIManager* mgr) {
     _type_str = "ballistic";
     _otype = otBallistic;
     drag_area = 0.007;
+    life_timer = 0.0;
 }
 
 FGAIBallistic::~FGAIBallistic() {
@@ -79,7 +80,14 @@ void FGAIBallistic::setDragArea(double a) {
    drag_area = a;
 }
 
+void FGAIBallistic::setLife(double seconds) {
+   life = seconds;
+}
+
 void FGAIBallistic::Run(double dt) {
+
+   life_timer += dt;
+   if (life_timer > life) setDie(true); 
 
    double speed_north_deg_sec;
    double speed_east_deg_sec;

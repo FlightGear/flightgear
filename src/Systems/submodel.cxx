@@ -88,7 +88,7 @@ SubmodelSystem::release (submodel* sm, double dt)
 
   //cout << "Creating a submodel." << endl; 
   int rval = ai->createBallistic( sm->model, IC.lat, IC.lon, IC.alt, IC.azimuth,
-                                  IC.elevation, IC.speed, sm->drag_area );
+                                  IC.elevation, IC.speed, sm->drag_area, sm->life );
   //cout << "Submodel created." << endl;
   (sm->count)--; 
 
@@ -136,6 +136,7 @@ SubmodelSystem::load ()
      sm->yaw_offset     = entry_node->getDoubleValue("yaw-offset", 0.0); 
      sm->pitch_offset   = entry_node->getDoubleValue("pitch-offset", 0.0);
      sm->drag_area      = entry_node->getDoubleValue("eda", 0.007);
+     sm->life           = entry_node->getDoubleValue("life", 900.0);
 
      sm->trigger->setBoolValue(false);
      sm->timer = sm->delay;

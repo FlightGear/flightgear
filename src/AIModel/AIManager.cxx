@@ -253,7 +253,7 @@ int FGAIManager::createShip( string path, FGAIFlightPlan* flightplan ) {
 
 int FGAIManager::createBallistic( string path, double latitude, double longitude,
                                   double altitude, double azimuth, double elevation,
-                                  double speed, double eda ) {
+                                  double speed, double eda, double life ) {
 
         FGAIBallistic* ai_ballistic = new FGAIBallistic(this);
         ai_list.push_back(ai_ballistic);
@@ -267,6 +267,7 @@ int FGAIManager::createBallistic( string path, double latitude, double longitude
         ai_ballistic->setLongitude(longitude);
         ai_ballistic->setLatitude(latitude);
         ai_ballistic->setDragArea(eda);
+        ai_ballistic->setLife(life);
         ai_ballistic->init();
         ai_ballistic->bind();
         return ai_ballistic->getID();
@@ -384,7 +385,7 @@ void FGAIManager::processScenario( string filename ) {
       } else if (en->aitype == "ballistic"){
         createBallistic( en->model_path, en->latitude, en->longitude,
                          en->altitude, en->azimuth, en->elevation, en->speed,
-                         en->eda );
+                         en->eda, en->life );
       }      
     }
   }

@@ -51,6 +51,7 @@ FGAIBase::FGAIBase() {
     in_range = false;
     invisible = true;
     no_roll = true;
+    life = 900;
     model_path = "";
     model = 0;
     _otype = otNull;

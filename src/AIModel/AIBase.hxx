@@ -108,6 +108,7 @@ protected:
     int id;
     bool invisible;
     bool no_roll;
+    double life;
     FGAIFlightPlan *fp;
 
     void Transform();

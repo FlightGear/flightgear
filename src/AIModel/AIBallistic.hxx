@@ -40,6 +40,7 @@ public:
     void setElevation( double el );
     void setStabilization( bool val );
     void setDragArea( double a );
+    void setLife( double seconds );
 
 private:
 
@@ -48,6 +49,7 @@ private:
     double hs;              // horizontal speed (fps)
     bool aero_stabilized;   // if true, object will point where it's going
     double drag_area;       // equivalent drag area in ft2
+    double life_timer;      // seconds
     void Run(double dt);
 };
 
