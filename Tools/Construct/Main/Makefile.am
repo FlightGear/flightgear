@@ -1,4 +1,4 @@
-bin_PROGRAMS = construct
+bin_PROGRAMS = construct master
 
 construct_SOURCES = construct.cxx construct.hxx main.cxx construct_types.hxx
 
@@ -17,6 +17,8 @@ construct_LDADD = \
 	$(top_builddir)/Lib/Debug/libDebug.a \
 	$(top_builddir)/Lib/zlib/libz.a \
 	-lgpc -lgfc
+
+master_SOURCES = master.cxx
 
 INCLUDES += \
 	-I$(top_builddir) \
