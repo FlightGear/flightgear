@@ -77,8 +77,8 @@ FGKR_87::FGKR_87() :
     valid(false),
     freq(0.0),
     stby_freq(0.0),
-    on_off_vol_btn(0.0),
-    adf_btn(false),
+    on_off_vol_btn(0.5),
+    adf_btn(true),
     bfo_btn(false),
     frq_btn(false),
     last_frq_btn(false),
@@ -335,7 +335,8 @@ FGKR_87::update(double dt)
         elapsed_timer = 0.0;
     }
 
-    cout << "goal = " << goal_needle_deg << "actual = " << needle_deg << endl;
+    // cout << "goal = " << goal_needle_deg << "actual = " << needle_deg
+    //      << endl;
     double diff = goal_needle_deg - needle_deg;
     while ( diff < -180.0 ) { diff += 360.0; }
     while ( diff > 180.0 ) { diff -= 360.0; }
