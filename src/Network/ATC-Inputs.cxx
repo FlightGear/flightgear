@@ -63,6 +63,7 @@ FGATCInput::FGATCInput( const int _board, const SGPath &_config_file ) :
 
 // Read analog inputs
 static void ATCReadAnalogInputs( int fd, unsigned char *analog_in_bytes ) {
+#if defined( unix ) || defined( __CYGWIN__ )
     // rewind
     lseek( fd, 0, SEEK_SET );
 
@@ -71,11 +72,13 @@ static void ATCReadAnalogInputs( int fd, unsigned char *analog_in_bytes ) {
 	SG_LOG( SG_IO, SG_ALERT, "Read failed" );
 	exit( -1 );
     }
+#endif
 }
 
 
 // Read status of radio switches and knobs
 static void ATCReadRadios( int fd, unsigned char *switch_data ) {
+#if defined( unix ) || defined( __CYGWIN__ )
     // rewind
     lseek( fd, 0, SEEK_SET );
 
@@ -84,11 +87,13 @@ static void ATCReadRadios( int fd, unsigned char *switch_data ) {
 	SG_LOG( SG_IO, SG_ALERT, "Read failed" );
 	exit( -1 );
     }
+#endif
 }
 
 
 // Read switch inputs
 static void ATCReadSwitches( int fd, unsigned char *switch_bytes ) {
+#if defined( unix ) || defined( __CYGWIN__ )
     // rewind
     lseek( fd, 0, SEEK_SET );
 
@@ -97,6 +102,7 @@ static void ATCReadSwitches( int fd, unsigned char *switch_bytes ) {
 	SG_LOG( SG_IO, SG_ALERT, "Read failed" );
 	exit( -1 );
     }
+#endif
 }
 
 
