@@ -20,6 +20,7 @@
 #include <simgear/misc/sg_path.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/location.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "model.hxx"
@@ -121,123 +122,6 @@ set_translation (sgMat4 &matrix, double position_m, sgVec3 &axis)
   sgMakeTransMat4(matrix, xyz);
 }
 
-/**
- * make model transformation Matrix - based on optimizations by NHV
- */
-static void MakeTRANS( sgMat4 dst, const double Theta,
-			const double Phi, const double Psi, 
-                        const double lon, const double lat)
-{
-    SGfloat cosTheta = (SGfloat) cos(Theta);
-    SGfloat sinTheta = (SGfloat) sin(Theta);
-    SGfloat cosPhi   = (SGfloat) cos(Phi);
-    SGfloat sinPhi   = (SGfloat) sin(Phi);
-    SGfloat sinPsi   = (SGfloat) sin(Psi) ;
-    SGfloat cosPsi   = (SGfloat) cos(Psi) ;
-
-    SGfloat cosLon = SGD_ONE;
-    SGfloat sinLon = SGD_ZERO;
-    SGfloat cosLat = SGD_ONE;
-    SGfloat sinLat = SGD_ZERO;
-
-    if ( lon != SG_ZERO ) { 
-      sinLon = (SGfloat) sin( lon ) ;
-      cosLon = (SGfloat) cos( lon ) ;
-    }
-    if ( lat != SG_ZERO ) {
-      sinLat   = (SGfloat) sin( lat ) ;
-      cosLat   = (SGfloat) cos( lat ) ;
-    }
-
-
-    sgMat4 tmp;
-	
-    tmp[0][0] = cosPhi * cosTheta;
-    tmp[0][1] =	sinPhi * cosPsi + cosPhi * -sinTheta * -sinPsi;
-    tmp[0][2] =	sinPhi * sinPsi + cosPhi * -sinTheta * cosPsi;
-
-    tmp[1][0] = -sinPhi * cosTheta;
-    tmp[1][1] =	cosPhi * cosPsi + -sinPhi * -sinTheta * -sinPsi;
-    tmp[1][2] =	cosPhi * sinPsi + -sinPhi * -sinTheta * cosPsi;
-	
-    tmp[2][0] = sinTheta;
-    tmp[2][1] =	cosTheta * -sinPsi;
-    tmp[2][2] =	cosTheta * cosPsi;
-	
-    float a = cosLon * cosLat;  // world up [0]
-    float b = -sinLon;
-    float c = sinLat * cosLon;
-    dst[2][0] = a*tmp[0][0] + b*tmp[0][1] + c*tmp[0][2] ;
-    dst[1][0] = a*tmp[1][0] + b*tmp[1][1] + c*tmp[1][2] ;
-    dst[0][0] = -(a*tmp[2][0] + b*tmp[2][1] + c*tmp[2][2]) ;
-    dst[3][0] = SG_ZERO ;
-
-    a = cosLat * sinLon;  // world up [1]
-    b = cosLon;
-    c = sinLat * sinLon;
-    dst[2][1] = a*tmp[0][0] + b*tmp[0][1] + c*tmp[0][2] ;
-    dst[1][1] = a*tmp[1][0] + b*tmp[1][1] + c*tmp[1][2] ;
-    dst[0][1] = -(a*tmp[2][0] + b*tmp[2][1] + c*tmp[2][2]) ;
-    dst[3][1] = SG_ZERO ;
-
-    a = -sinLat;  // world up [2]
-    c = cosLat;
-    dst[2][2] = a*tmp[0][0] + c*tmp[0][2] ;
-    dst[1][2] = a*tmp[1][0] + c*tmp[1][2] ;
-    dst[0][2] = -(a*tmp[2][0] + c*tmp[2][2]) ;
-    dst[3][2] = SG_ZERO ;
-
-    dst[2][3] = SG_ZERO ;
-    dst[1][3] = SG_ZERO ;
-    dst[0][3] = SG_ZERO ;
-    dst[3][3] = SG_ONE ;
-
-}
-
-
-// TODO: once this is working, look at Norm's optimized version
-static void
-world_coordinate( sgCoord *obj_pos,
-		  double lat_deg, double lon_deg, double elev_ft,
-		  double roll_deg, double pitch_deg, double hdg_deg)
-{
-  // setup translation
-  double sea_level_radius_m;
-  double lat_geoc_rad;
-
-  // Convert from geodetic to geocentric
-  // coordinates.
-  sgGeodToGeoc(lat_deg * SGD_DEGREES_TO_RADIANS,
-	       elev_ft * SG_FEET_TO_METER,
-	       &sea_level_radius_m,
-	       &lat_geoc_rad);
-
-  Point3D center = scenery.get_center();
-
-  Point3D geod = Point3D(lon_deg * SG_DEGREES_TO_RADIANS,
-			 lat_geoc_rad,
-			 sea_level_radius_m);
-  geod.setz(geod.radius() + elev_ft * SG_FEET_TO_METER);
-	
-  Point3D world_pos = sgPolarToCart3d( geod );
-  Point3D offset = world_pos - center;
-	
-  sgMat4 POS;
-  sgMakeTransMat4( POS, offset.x(), offset.y(), offset.z() );
-
-  sgMat4 TRANS;
-
-  MakeTRANS( TRANS, pitch_deg * SG_DEGREES_TO_RADIANS, 
-                    roll_deg * SG_DEGREES_TO_RADIANS,
-                    -hdg_deg * SG_DEGREES_TO_RADIANS, 
-                    lon_deg * SG_DEGREES_TO_RADIANS, 
-                    -lat_deg * SG_DEGREES_TO_RADIANS );
-
-  sgPostMultMat4( TRANS, POS );
-
-  sgSetCoord( obj_pos, TRANS );
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -332,6 +216,11 @@ FG3DModel::init (const string &path)
 				// Set up the selector node
   _selector->addKid(_position);
   _selector->clrTraversalMaskBits(SSGTRAV_HOT);
+
+
+				// Set up a location class
+  _location = (FGLocation *) new FGLocation;
+
 }
 
 void
@@ -340,11 +229,19 @@ FG3DModel::update (int dt)
   for (unsigned int i = 0; i < _animations.size(); i++)
     _animations[i]->update(dt);
 
-  _selector->select(true);
-
   sgCoord obj_pos;
-  world_coordinate(&obj_pos, _lat_deg, _lon_deg, _elev_ft,
-		   _roll_deg, _pitch_deg, _heading_deg);
+
+  sgMat4 POS, TRANS;
+
+  _location->setPosition( _lon_deg, _lat_deg, _elev_ft );
+  _location->setOrientation( _roll_deg, _pitch_deg, _heading_deg );
+  sgCopyMat4(TRANS, _location->getTransformMatrix());
+  sgMakeTransMat4( POS, _location->get_view_pos() );
+
+  sgPostMultMat4( TRANS, POS );
+
+  sgSetCoord( &obj_pos, TRANS );
+
   _position->setTransform(&obj_pos);
 }
 
@@ -670,5 +567,7 @@ FG3DModel::TranslateAnimation::update (int dt)
 
 
 // end of model.cxx
+
+
 
 

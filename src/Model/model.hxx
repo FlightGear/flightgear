@@ -11,10 +11,12 @@
 #endif
 
 #include <vector>
+#include <plib/ssg.h>
 
 SG_USING_STD(vector);
 
 #include <Main/fg_props.hxx>
+#include <Main/location.hxx>
 
 // Has anyone done anything *really* stupid, like making min and max macros?
 #ifdef min
@@ -52,6 +54,8 @@ public:
 
   virtual ssgEntity * getSceneGraph () const { return _selector; }
 
+  virtual FGLocation * getFGLocation () const { return _location; }
+
 private:
 
   class Animation;
@@ -77,6 +81,8 @@ private:
   ssgSelector * _selector;
   ssgTransform * _position;
 
+				// Location
+  FGLocation * _location;
 
   
   //////////////////////////////////////////////////////////////////////
@@ -222,4 +228,6 @@ private:
 };
 
 #endif // __MODEL_HXX
+
+
 

@@ -33,6 +33,8 @@ public:
   virtual void bind ();
   virtual void unbind ();
   virtual void update (int dt);
+  virtual void draw ();
+  virtual FG3DModel * get3DModel() { return _aircraft; }
 
 private:
 
@@ -44,4 +46,5 @@ private:
 };
 
 #endif // __ACMODEL_HXX
+
 

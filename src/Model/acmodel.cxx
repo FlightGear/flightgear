@@ -69,10 +69,9 @@ FGAircraftModel::update (int dt)
 
   if (view_number == 0 && !fgGetBool("/sim/view/internal")) {
     _aircraft->setVisible(false);
-    return;
+  } else {
+    _aircraft->setVisible(true);
   }
-
-  _aircraft->setVisible(true);
 
   _aircraft->setPosition(fgGetDouble("/position/longitude-deg"),
 			 fgGetDouble("/position/latitude-deg"),
@@ -82,16 +81,21 @@ FGAircraftModel::update (int dt)
 			    fgGetDouble("/orientation/heading-deg"));
   _aircraft->update(dt);
 
+}
+
+void
+FGAircraftModel::draw ()
+{
 				// OK, now adjust the clip planes and draw
 				// FIXME: view number shouldn't be 
 				// hard-coded.
-  if (globals->get_current_view()->getType() == 0) {
+  if (_aircraft->getVisible()) {
     glClearDepth(1);
     glClear(GL_DEPTH_BUFFER_BIT);
     ssgSetNearFar(_nearplane, _farplane);
+    ssgCullAndDraw(_scene);
   }
-  ssgCullAndDraw(_scene);
-}
 
+}
 
 // end of model.cxx
