@@ -72,6 +72,9 @@ bool FGILSList::init( FGPath path ) {
 
 #else
 
+    double min = 1000000.0;
+    double max = 0.0;
+
     while ( ! in.eof() && ils.get_ilstype() != '[' ) {
         in >> ils;
 	/* cout << "id = " << n.get_ident() << endl;
@@ -85,7 +88,17 @@ bool FGILSList::init( FGPath path ) {
 	    ilslist[ils.get_locfreq()].push_back(ils);
 	}
         in >> skipcomment;
+
+	if ( ils.get_locfreq() < min ) {
+	    min = ils.get_locfreq();
+	}
+	if ( ils.get_locfreq() > max ) {
+	    max = ils.get_locfreq();
+	}
     }
+
+    cout << "min freq = " << min << endl;
+    cout << "max freq = " << max << endl;
 
 #endif
 

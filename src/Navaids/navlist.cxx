@@ -72,6 +72,9 @@ bool FGNavList::init( FGPath path ) {
 
 #else
 
+    double min = 100000;
+    double max = 0;
+
     while ( ! in.eof() && n.get_type() != '[' ) {
         in >> n;
 	/* cout << "id = " << n.get_ident() << endl;
@@ -85,7 +88,19 @@ bool FGNavList::init( FGPath path ) {
 	    navaids[n.get_freq()].push_back(n);
 	}
         in >> skipcomment;
+
+	if ( n.get_type() != 'N' ) {
+	    if ( n.get_freq() < min ) {
+		min = n.get_freq();
+	    }
+	    if ( n.get_freq() > max ) {
+		max = n.get_freq();
+	    }
+	}
     }
+
+    cout << "min freq = " << min << endl;
+    cout << "max freq = " << max << endl;
 
 #endif
 

@@ -455,6 +455,8 @@ bool fgInitSubsystems( void ) {
 #endif
 
     // Initialize vor/ndb/ils/fix list management and query systems
+    FG_LOG(FG_GENERAL, FG_INFO, "Loading Navaids");
+
     current_navlist = new FGNavList;
     FGPath p_nav( current_options.get_fg_root() );
     p_nav.append( "Navaids/default.nav" );
