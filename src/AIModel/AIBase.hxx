@@ -29,8 +29,13 @@ SG_USING_STD(string);
 
 class FGAIBase {
 
+private:
+
+    static FGAIBase *_self;
+
 public:
 
+    FGAIBase();
     virtual ~FGAIBase();
     virtual void update(double dt);
     inline Point3D GetPos() { return(pos); }
@@ -42,9 +47,9 @@ public:
     void setPath( const char* model );
     void setSpeed( double speed_KTAS );
     void setAltitude( double altitude_ft );
-    void setLongitude( double longitude );
-    void setLatitude( double latitude );
     void setHeading( double heading );
+    void setLatitude( double latitude );
+    void setLongitude( double longitude );
 
     void setDie( bool die );
     bool getDie();
@@ -54,7 +59,6 @@ protected:
     SGPropertyNode *props;
 
     Point3D pos;	// WGS84 lat & lon in degrees, elev above sea-level in meters
-    double lat, lon;	// As above, this is needed for the property bindings
     double hdg;		// True heading in degrees
     double roll;	// degrees, left is negative
     double pitch;	// degrees, nose-down is negative
@@ -77,6 +81,11 @@ protected:
 
     void Transform();
 
+private:
+    static void _setLongitude( double longitude );
+    static void _setLatitude ( double latitude );
+    static double _getLongitude();
+    static double _getLatitude ();
 };
 
 
@@ -93,19 +102,16 @@ inline void FGAIBase::setAltitude( double altitude_ft ) {
   pos.setelev(altitude * SG_FEET_TO_METER);
 }
 
-
-inline void FGAIBase::setLongitude( double longitude ) {
-  lon = longitude;
-  pos.setlon(longitude);
-}
-
-inline void FGAIBase::setLatitude( double latitude ) {
-  lat = latitude;
-  pos.setlat(latitude);
-}
-
 inline void FGAIBase::setHeading( double heading ) {
   hdg = tgt_heading = heading;
+}
+
+inline void FGAIBase::setLongitude( double longitude ) {
+    pos.setlon( longitude );
+}
+
+inline void FGAIBase::setLatitude ( double latitude ) {
+    pos.setlat( latitude );
 }
 
 inline void FGAIBase::setDie( bool die ) { delete_me = die; }

@@ -42,7 +42,14 @@
 
 #include "AIBase.hxx"
 
+FGAIBase *FGAIBase::_self = NULL;
+
+FGAIBase::FGAIBase() {
+    _self = this;
+}
+
 FGAIBase::~FGAIBase() {
+    _self = NULL;
 }
 
 void FGAIBase::update(double dt) {
@@ -81,8 +88,12 @@ void FGAIBase::bind() {
    props->tie("velocities/vertical-speed-fps", SGRawValuePointer<double>(&vs));
 
    props->tie("position/altitude-ft", SGRawValuePointer<double>(&altitude));
-   props->tie("position/latitude-deg", SGRawValuePointer<double>(&lat));
-   props->tie("position/longitude-deg", SGRawValuePointer<double>(&lon));
+   props->tie("position/latitude-deg",
+               SGRawValueFunctions<double>(FGAIBase::_getLatitude,
+                                           FGAIBase::_setLatitude));
+   props->tie("position/longitude-deg",
+               SGRawValueFunctions<double>(FGAIBase::_getLongitude,
+                                           FGAIBase::_setLongitude));
 
    props->tie("orientation/pitch-deg", SGRawValuePointer<double>(&pitch));
    props->tie("orientation/roll-deg", SGRawValuePointer<double>(&roll));
@@ -101,3 +112,16 @@ void FGAIBase::unbind() {
     props->untie("orientation/roll-deg");
     props->untie("orientation/heading-deg");
 }
+
+
+void FGAIBase::_setLongitude( double longitude ) {
+    _self->pos.setlon(longitude);
+}
+
+void FGAIBase::_setLatitude ( double latitude )  {
+    _self->pos.setlat(latitude);
+}
+
+double FGAIBase::_getLongitude() { return _self->pos.lon(); }
+
+double FGAIBase::_getLatitude () { return _self->pos.lat(); }
