@@ -5,7 +5,6 @@ EXTRA_DIST = \
 	compiler.h \
 	fg_callback.hxx \
 	fg_constants.h \
-	fg_memory.h \
 	fg_traits.hxx \
 	fg_typedefs.h \
 	fg_types.hxx \
