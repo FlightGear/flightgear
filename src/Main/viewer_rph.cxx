@@ -176,12 +176,12 @@ void FGViewerRPH::update() {
     tmp = sgPolarToCart3d(p);
     sgdSetVec3( abs_view_pos, tmp[0], tmp[1], tmp[2] );
 
+    // view_pos = abs_view_pos - scenery.center;
     sgdVec3 sc;
     sgdSetVec3( sc, scenery.center.x(), scenery.center.y(), scenery.center.z());
     sgdVec3 vp;
     sgdSubVec3( vp, abs_view_pos, sc );
     sgSetVec3( view_pos, vp );
-    // view_pos = abs_view_pos - scenery.center;
 
     FG_LOG( FG_VIEW, FG_DEBUG, "sea level radius = " << sea_level_radius );
     FG_LOG( FG_VIEW, FG_DEBUG, "Polar view pos = " << p );

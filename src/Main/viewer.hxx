@@ -89,6 +89,9 @@ protected:
     // translated to scenery.center
     sgVec3 zero_elev;
 
+    // height ASL of the terrain for our current view position
+    // (future?) double ground_elev;
+
     // pilot offset from center of gravity.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
     // Distances in meters of course.
@@ -185,6 +188,11 @@ public:
 	if ( dirty ) { update(); }
 	return zero_elev;
     }
+    // (future?)
+    // inline double get_ground_elev() {
+    //  if ( dirty ) { update(); }
+    //	return ground_elev;
+    // }
     inline float *get_surface_south() {
 	if ( dirty ) { update(); }
 	return surface_south;
