@@ -66,12 +66,12 @@ static void global2raw( const FGControls *global, FGRawCtrls *raw ) {
     raw->elevator_trim = globals->get_controls()->get_elevator_trim();
     raw->rudder = globals->get_controls()->get_rudder();
     raw->flaps = globals->get_controls()->get_flaps();
-    for ( i = 0; i < FG_MAX_ENGINES; ++i ) {    
+    for ( i = 0; i < FGRawCtrls::FG_MAX_ENGINES; ++i ) {    
 	raw->throttle[i] = globals->get_controls()->get_throttle(i);
 	raw->mixture[i] = globals->get_controls()->get_mixture(i);
 	raw->prop_advance[i] = globals->get_controls()->get_prop_advance(i);
     }
-    for ( i = 0; i < FG_MAX_WHEELS; ++i ) {
+    for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
 	raw->brake[i] =  globals->get_controls()->get_brake(i);
     }
 
@@ -88,12 +88,12 @@ static void raw2global( const FGRawCtrls *raw, FGControls *global ) {
 	globals->get_controls()->set_elevator_trim( raw->elevator_trim );
 	globals->get_controls()->set_rudder( raw->rudder );
 	globals->get_controls()->set_flaps( raw->flaps );
-	for ( i = 0; i < FG_MAX_ENGINES; ++i ) {    
+	for ( i = 0; i < FGRawCtrls::FG_MAX_ENGINES; ++i ) {    
 	    globals->get_controls()->set_throttle( i, raw->throttle[i] );
 	    globals->get_controls()->set_mixture( i, raw->mixture[i] );
 	    globals->get_controls()->set_prop_advance( i, raw->prop_advance[i]);
 	}
-	for ( i = 0; i < FG_MAX_WHEELS; ++i ) {
+	for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
 	    globals->get_controls()->set_brake( i, raw->brake[i] );
 	}
 	scenery.set_cur_elev( raw->hground );

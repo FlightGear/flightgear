@@ -65,40 +65,23 @@ static void htond (double &x)
 static void global2raw( FGRawCtrls *raw ) {
     int i;
 
-#if 0
-    // these can probably get wiped as soon as David spots them. :-)
-    static const SGPropertyNode *aileron
-        = fgGetNode("/controls/aileron");
-    static const SGPropertyNode *elevator
-        = fgGetNode("/controls/elevator");
-    static const SGPropertyNode *elevator_trim
-        = fgGetNode("/controls/elevator-trim");
-    static const SGPropertyNode *rudder
-        = fgGetNode("/controls/rudder");
-    static const SGPropertyNode *flaps
-        = fgGetNode("/controls/flaps");
-#endif
-
-    char buf[256];
-
     // fill in values
+    SGPropertyNode * node = fgGetNode("/controls", true);
     raw->version = FG_RAW_CTRLS_VERSION;
-    raw->aileron = fgGetDouble( "/controls/aileron" );
-    raw->elevator = fgGetDouble( "/controls/elevator" );
-    raw->elevator_trim = fgGetDouble( "/controls/elevator-trim" );
-    raw->rudder = fgGetDouble( "/controls/rudder" );
-    raw->flaps = fgGetDouble( "/controls/flaps" );
-    for ( i = 0; i < FG_MAX_ENGINES; ++i ) {
-	sprintf( buf, "/controls/throttle[%d]", i );
-	raw->throttle[i] = fgGetDouble( buf );
-	sprintf( buf, "/controls/mixture[%d]", i );
-	raw->mixture[i] = fgGetDouble( buf );
-	sprintf( buf, "/controls/propeller-pitch[%d]", i );
-	raw->prop_advance[i] = fgGetDouble( buf );
+    raw->aileron = node->getDoubleValue( "aileron" );
+    raw->elevator = node->getDoubleValue( "elevator" );
+    raw->elevator_trim = node->getDoubleValue( "elevator-trim" );
+    raw->rudder = node->getDoubleValue( "rudder" );
+    raw->flaps = node->getDoubleValue( "flaps" );
+    for ( i = 0; i < FGRawCtrls::FG_MAX_ENGINES; ++i ) {
+	raw->throttle[i] = node->getDoubleValue( "throttle", i );
+	raw->mixture[i] = node->getDoubleValue( "mixture", i );
+	raw->prop_advance[i] = node->getDoubleValue( "propeller-pitch", i );
+	raw->magnetos[i] = node->getIntValue( "magnetos", i );
+	raw->starter[i] = node->getBoolValue( "starter", i );
     }
-    for ( i = 0; i < FG_MAX_WHEELS; ++i ) {
-	sprintf( buf, "/controls/brakes[%d]", i );
-	raw->brake[i] = fgGetDouble( buf );
+    for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
+	raw->brake[i] = node->getDoubleValue( "brakes", i );
     }
     raw->hground = fgGetDouble( "/environment/ground-elevation-m" );
     raw->magvar = fgGetDouble("/environment/magnetic-variation-deg");
@@ -111,12 +94,14 @@ static void global2raw( FGRawCtrls *raw ) {
     htond(raw->elevator_trim);
     htond(raw->rudder);
     htond(raw->flaps);
-    for ( i = 0; i < FG_MAX_ENGINES; ++i ) {
+    for ( i = 0; i < FGRawCtrls::FG_MAX_ENGINES; ++i ) {
 	htond(raw->throttle[i]);
 	htond(raw->mixture[i]);
 	htond(raw->prop_advance[i]);
+	htonl(raw->magnetos[i]);
+	htonl(raw->starter[i]);
     }
-    for ( i = 0; i < FG_MAX_WHEELS; ++i ) {
+    for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
 	htond(raw->brake[i]);
     }
     htond(raw->hground);
@@ -126,29 +111,56 @@ static void global2raw( FGRawCtrls *raw ) {
 
 
 static void net2global( FGNetFDM *net ) {
+    int i;
+
     // Convert to the net buffer from network format
     net->version = ntohl(net->version);
+
     htond(net->longitude);
     htond(net->latitude);
     htond(net->altitude);
     htond(net->phi);
     htond(net->theta);
     htond(net->psi);
+
     htond(net->phidot);
     htond(net->thetadot);
     htond(net->psidot);
     htond(net->vcas);
     htond(net->climb_rate);
+
     htond(net->A_X_pilot);
     htond(net->A_Y_pilot);
     htond(net->A_Z_pilot);
+
+    net->num_engines = htonl(net->num_engines);
+    for ( i = 0; i < net->num_engines; ++i ) {
+	htonl(net->eng_state[i]);
+	htond(net->rpm[i]);
+	htond(net->fuel_flow[i]);
+	htond(net->EGT[i]);
+	htond(net->oil_temp[i]);
+	htond(net->oil_px[i]);
+    }
+
+    net->num_tanks = htonl(net->num_tanks);
+    for ( i = 0; i < net->num_tanks; ++i ) {
+	htond(net->fuel_quantity[i]);
+    }
+
+    net->num_wheels = htonl(net->num_wheels);
+    for ( i = 0; i < net->num_wheels; ++i ) {
+	net->wow[i] = htonl(net->wow[i]);
+    }
+
     net->cur_time = ntohl(net->cur_time);
     net->warp = ntohl(net->warp);
     htond(net->visibility);
 
     if ( net->version == FG_NET_FDM_VERSION ) {
         // cout << "pos = " << net->longitude << " " << net->latitude << endl;
-        // cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius() << endl;
+        // cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius()
+	//      << endl;
         cur_fdm_state->_updateGeodeticPosition( net->latitude,
                                                 net->longitude,
                                                 net->altitude
@@ -164,6 +176,44 @@ static void net2global( FGNetFDM *net ) {
         cur_fdm_state->_set_Accels_Pilot_Body( net->A_X_pilot,
 					       net->A_Y_pilot,
 					       net->A_Z_pilot );
+
+	for ( i = 0; i < net->num_engines; ++i ) {
+	    SGPropertyNode *node = fgGetNode( "engines/engine", i, true );
+	    
+	    // node->setBoolValue("running", t->isRunning());
+	    // node->setBoolValue("cranking", t->isCranking());
+	    
+	    // cout << net->eng_state[i] << endl;
+	    if ( net->eng_state[i] == 0 ) {
+		node->setBoolValue( "cranking", false );
+		node->setBoolValue( "running", false );
+	    } else if ( net->eng_state[i] == 1 ) {
+		node->setBoolValue( "cranking", true );
+		node->setBoolValue( "running", false );
+	    } else if ( net->eng_state[i] == 2 ) {
+		node->setBoolValue( "cranking", false );
+		node->setBoolValue( "running", true );
+	    }
+
+	    node->setDoubleValue( "rpm", net->rpm[i] );
+	    node->setDoubleValue( "fuel-flow-gph", net->fuel_flow[i] );
+	    node->setDoubleValue( "egt-degf", net->EGT[i] );
+	    node->setDoubleValue( "oil-temperature-degf", net->oil_temp[i] );
+	    node->setDoubleValue( "oil-pressure-psi", net->oil_px[i] );		
+	}
+
+	for (i = 0; i < net->num_tanks; ++i ) {
+	    SGPropertyNode * node
+		= fgGetNode("/consumables/fuel/tank", i, true);
+	    node->setDoubleValue("level-gal_us", net->fuel_quantity[i] );
+	}
+
+	for (i = 0; i < net->num_wheels; ++i ) {
+	    SGPropertyNode * node
+		= fgGetNode("/gear/gear", i, true);
+	    node->setDoubleValue("wow", net->wow[i] );
+	}
+
 	/* these are ignored for now  ... */
 	/*
 	if ( net->cur_time ) {

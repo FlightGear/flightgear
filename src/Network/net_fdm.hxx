@@ -32,7 +32,8 @@
 
 #include <time.h> // time_t
 
-const int FG_NET_FDM_VERSION = 5;
+const int FG_NET_FDM_VERSION = 6;
+
 
 // Define a structure containing the top level flight dynamics model
 // parameters
@@ -46,6 +47,10 @@ public:
                                 // hardware platforms, such as the Sun
                                 // SPARC, which don't like misaligned
                                 // data
+
+    static const int FG_MAX_ENGINES = 4;
+    static const int FG_MAX_WHEELS = 3;
+    static const int FG_MAX_TANKS = 2;
 
     // Positions
     double longitude;		// geodetic (radians)
@@ -67,6 +72,23 @@ public:
     double A_X_pilot;		// X accel in body frame ft/sec^2
     double A_Y_pilot;		// Y accel in body frame ft/sec^2
     double A_Z_pilot;		// Z accel in body frame ft/sec^2
+
+    // Engine status
+    int num_engines;		// Number of valid engines
+    int eng_state[FG_MAX_ENGINES]; // Engine state (off, cranking, running)
+    double rpm[FG_MAX_ENGINES];	// Engine RPM rev/min
+    double fuel_flow[FG_MAX_ENGINES]; // Fuel flow gallons/hr
+    double EGT[FG_MAX_ENGINES];	// Exhuast gas temp deg F
+    double oil_temp[FG_MAX_ENGINES]; // Oil temp deg F
+    double oil_px[FG_MAX_ENGINES]; // Oil pressure psi
+
+    // Consumables
+    int num_tanks;		// Max number of fuel tanks
+    double fuel_quantity[FG_MAX_TANKS];
+
+    // Gear status
+    int num_wheels;
+    bool wow[FG_MAX_WHEELS];
 
     // Environment
     time_t cur_time;            // current unix time

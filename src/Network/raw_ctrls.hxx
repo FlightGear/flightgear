@@ -30,10 +30,8 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_RAW_CTRLS_VERSION = 4;
+const int FG_RAW_CTRLS_VERSION = 5;
 
-const int FG_MAX_ENGINES = 4;
-const int FG_MAX_WHEELS = 3;
 
 // Define a structure containing the control parameters
 
@@ -43,20 +41,29 @@ public:
 
     int version;		         // increment when data values change
 
-    // Controls
+    static const int FG_MAX_ENGINES = 4;
+    static const int FG_MAX_WHEELS = 3;
+
+    // Aero controls
     double aileron;		         // -1 ... 1
     double elevator;		         // -1 ... 1
     double elevator_trim;	         // -1 ... 1
     double rudder;		         // -1 ... 1
     double flaps;		         //  0 ... 1
+
+    // Engine controls
+    int num_engines;		         // number of valid engines
     int magnetos[FG_MAX_ENGINES];
-    bool starter[FG_MAX_ENGINES];        //  true = starter engauged
+    bool starter[FG_MAX_ENGINES];        // true = starter engauged
     double throttle[FG_MAX_ENGINES];     //  0 ... 1
     double mixture[FG_MAX_ENGINES];      //  0 ... 1
     double prop_advance[FG_MAX_ENGINES]; //  0 ... 1
+
+    // Brake controls
+    int num_wheels;		         // number of valid wheels
     double brake[FG_MAX_WHEELS];         //  0 ... 1
 
-    // Other interesting/useful values
+    // Other values of use to a remote FDM
     double hground;		         // ground elevation (meters)
     double magvar;		         // local magnetic variation in degrees.
     int speedup;		         // integer speedup multiplier
