@@ -1,4 +1,4 @@
-// controls.h -- defines a standard interface to all flight sim controls
+// controls.hxx -- defines a standard interface to all flight sim controls
 //
 // Written by Curtis Olson, started May 1997.
 //
@@ -22,19 +22,19 @@
 // (Log is kept at end of this file)
 
 
-#ifndef _CONTROLS_H
-#define _CONTROLS_H
+#ifndef _CONTROLS_HXX
+#define _CONTROLS_HXX
 
 
 #include <Include/fg_limits.h>
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
-/* Define a structure containing the control parameters */
+// Define a structure containing the control parameters
 
 typedef struct {
     double aileron;
@@ -84,15 +84,14 @@ void fgThrottleSet(int engine, double pos);
 void fgBrakeSet( double brake_amt );
 double fgBrakeGet( void );
 
-#ifdef __cplusplus
-}
-#endif
 
-
-#endif /* _CONTROLS_H */
+#endif // _CONTROLS_HXX
 
 
 // $Log$
+// Revision 1.1  1998/10/18 01:51:07  curt
+// c++-ifying ...
+//
 // Revision 1.17  1998/09/29 14:57:00  curt
 // c++-ified some comments.
 //
