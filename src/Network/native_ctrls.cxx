@@ -24,6 +24,8 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 
+#include <Scenery/scenery.hxx>	// ground elevation
+
 #include "native_ctrls.hxx"
 
 
@@ -72,6 +74,8 @@ static void global2raw( const FGControls *global, FGRawCtrls *raw ) {
     for ( i = 0; i < FG_MAX_WHEELS; ++i ) {
 	raw->brake[i] =  globals->get_controls()->get_brake(i);
     }
+
+    raw->hground = scenery.cur_elev;
 }
 
 
@@ -92,6 +96,7 @@ static void raw2global( const FGRawCtrls *raw, FGControls *global ) {
 	for ( i = 0; i < FG_MAX_WHEELS; ++i ) {
 	    globals->get_controls()->set_brake( i, raw->brake[i] );
 	}
+	scenery.cur_elev = raw->hground;
     } else {
 	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in raw2global()" );
 	SG_LOG( SG_IO, SG_ALERT,

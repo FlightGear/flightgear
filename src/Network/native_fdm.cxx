@@ -60,12 +60,18 @@ bool FGNativeFDM::open() {
 
 static void global2raw( const FGInterface *global, FGRawFDM *raw ) {
     raw->version = FG_RAW_FDM_VERSION;
+
+    // positions
     raw->longitude = cur_fdm_state->get_Longitude();
     raw->latitude = cur_fdm_state->get_Latitude();
     raw->altitude = cur_fdm_state->get_Altitude();
     raw->phi = cur_fdm_state->get_Phi();
     raw->theta = cur_fdm_state->get_Theta();
     raw->psi = cur_fdm_state->get_Psi();
+
+    // velocities
+    raw->vcas = cur_fdm_state->get_V_calibrated_kts();
+    raw->climb_rate = cur_fdm_state->get_Climb_Rate();
 }
 
 
@@ -78,6 +84,8 @@ static void raw2global( const FGRawFDM *raw, FGInterface *global ) {
 	cur_fdm_state->_set_Euler_Angles( raw->phi,
 					  raw->theta,
 					  raw->psi );
+	cur_fdm_state->_set_V_calibrated_kts( raw->vcas );
+	cur_fdm_state->_set_Climb_Rate( raw->climb_rate );
     } else {
 	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in raw2global()" );
 	SG_LOG( SG_IO, SG_ALERT,

@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_RAW_FDM_VERSION = 1;
+const int FG_RAW_FDM_VERSION = 3;
 
 // Define a structure containing the top level flight dynamics model
 // parameters
@@ -40,6 +40,8 @@ class FGRawFDM {
 public:
 
     int version;		// increment when data values change
+
+    // Positions
     double longitude;		// radians
     double latitude;		// radians
     double altitude;		// meters (above sea level)
@@ -47,6 +49,10 @@ public:
     double phi;			// radians
     double theta;		// radians
     double psi;			// radians
+
+    // Velocities
+    double vcas;		// calibrated airspeed
+    double climb_rate;		// feet per second
 };
 
 
