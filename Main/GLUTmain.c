@@ -489,8 +489,9 @@ int main( int argc, char *argv[] ) {
       /* Define initial window size */
       glutInitWindowSize(640, 480);
 
-      /* Initialize the main window */
+      /* Initialize windows */
       glutCreateWindow("Flight Gear");
+
     #elif MESA_TK
       /* Define initial window size */
       tkInitPosition(0, 0, 640, 480);
@@ -655,9 +656,12 @@ int printf (const char *format, ...) {
 
 
 /* $Log$
-/* Revision 1.43  1997/08/02 16:23:47  curt
-/* Misc. tweaks.
+/* Revision 1.1  1997/08/02 18:45:00  curt
+/* Renamed GLmain.c GLUTmain.c
 /*
+ * Revision 1.43  1997/08/02 16:23:47  curt
+ * Misc. tweaks.
+ *
  * Revision 1.42  1997/08/01 19:43:33  curt
  * Making progress with coordinate system overhaul.
  *

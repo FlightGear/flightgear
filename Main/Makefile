@@ -26,7 +26,7 @@
 
 TARGET=fg0
 
-CFILES = GLmain.c $(INTERFACE_FILES) mesh2GL.c
+CFILES = GLUTmain.c $(INTERFACE_FILES) mesh2GL.c
 OFILES = $(CFILES:.c=.o)
 AFILES = ../Aircraft/libAircraft.a ../Controls/libControls.a \
 	../Flight/libFlight.a ../Flight/LaRCsim/libLaRCsim.a \
@@ -61,8 +61,8 @@ clean:
 
 include depend
 
-GLmain.o:
-	$(CC) $(CFLAGS) -c GLmain.c -o $@
+GLUTmain.o:
+	$(CC) $(CFLAGS) -c GLUTmain.c -o $@
 
 GLUTkey.o:
 	$(CC) $(CFLAGS) -c GLUTkey.c -o $@
@@ -76,6 +76,9 @@ mesh2GL.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.28  1997/08/02 18:45:01  curt
+# Renamed GLmain.c GLUTmain.c
+#
 # Revision 1.27  1997/07/31 22:52:39  curt
 # Working on redoing internal coordinate systems & scenery transformations.
 #
