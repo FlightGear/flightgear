@@ -1534,7 +1534,8 @@ bool fgMainInit( int argc, char **argv ) {
                     fgGetInt("/sim/startup/ysize"),
                     fgGetInt("/sim/rendering/bits-per-pixel"),
                     fgGetBool("/sim/rendering/clouds3d"),
-                    get_stencil_buffer );
+                    get_stencil_buffer,
+                    fgGetBool("/sim/startup/fullscreen") );
 
     // This seems to be the absolute earliest in the init sequence
     // that these calls will return valid info.  Too bad it's after

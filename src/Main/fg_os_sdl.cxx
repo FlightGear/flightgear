@@ -57,7 +57,8 @@ void fgRegisterMouseMotionHandler(fgMouseMotionHandler func)
 //
 static void initCursors();
 
-void fgOSOpenWindow(int w, int h, int bpp, bool alpha, bool fullscreen)
+void fgOSOpenWindow(int w, int h, int bpp,
+                    bool alpha, bool stencil, bool fullscreen)
 {
     int cbits = (bpp <= 16) ?  5 :  8;
     int zbits = (bpp <= 16) ? 16 : 32;
@@ -69,11 +70,16 @@ void fgOSOpenWindow(int w, int h, int bpp, bool alpha, bool fullscreen)
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, cbits);
     if(alpha)
         SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+    if(stencil)
+        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, zbits);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     int vidmask = SDL_OPENGL;
-    if(fullscreen) vidmask |= SDL_FULLSCREEN;
+    if(fullscreen) {
+        __builtin_printf("FULLSCREEN!\n");
+        vidmask |= SDL_FULLSCREEN;
+    }
     SDL_SetVideoMode(w, h, 16, vidmask); // FIXME: handle errors
 
     SDL_WM_SetCaption("FlightGear", "FlightGear");

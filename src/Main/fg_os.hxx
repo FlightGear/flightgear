@@ -38,7 +38,8 @@ enum { KEYMOD_NONE     = 0,
 //
 
 void fgOSInit(int* argc, char** argv);
-void fgOSOpenWindow(int w, int h, int bpp, bool alpha, bool stencil);
+void fgOSOpenWindow(int w, int h, int bpp, bool alpha, bool stencil,
+                    bool fullscreen);
 void fgOSFullScreen();
 void fgOSMainLoop();
 
