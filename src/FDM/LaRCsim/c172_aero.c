@@ -94,7 +94,7 @@
 #include <stdio.h>
 
 
-#define NCL 11
+#define NCL 9
 #define Ndf 4
 #define DYN_ON_SPEED 33 /*20 knots*/
 
@@ -150,13 +150,13 @@ void aero( SCALAR dt, int Initialize ) {
   
   static SCALAR trim_inc = 0.0002;
 
-  static SCALAR alpha_ind[NCL]={-0.087,0,0.175,0.209,0.24,0.262,0.278,0.303,0.314,0.332,0.367};	
-  static SCALAR CLtable[NCL]={-0.14,0.31,1.21,1.376,1.51249,1.591,1.63,1.60878,1.53712,1.376,1.142};
+  static SCALAR alpha_ind[NCL]={-0.087,0,0.14,0.21,0.24,0.26,0.28,0.31,0.35};	
+  static SCALAR CLtable[NCL]={-0.22,0.25,1.02,1.252,1.354,1.44,1.466,1.298,0.97};  
   
   static SCALAR flap_ind[Ndf]={0,10,20,30};
   static SCALAR dCLf[Ndf]={0,0.20,0.30,0.35};
   static SCALAR dCdf[Ndf]={0,0.0021,0.0085,0.0191};
-  static SCALAR dCmf[Ndf]={0,-0.186,-0.28,-0.325};
+  static SCALAR dCmf[Ndf]={0,-0.0654,-0.0981,-0.114};
   
   static SCALAR flap_transit_rate=2.5;
   
@@ -188,8 +188,8 @@ void aero( SCALAR dt, int Initialize ) {
 	   Cma=-1.8;
 	   Cmadot=-5.2;
 	   Cmq=-12.4;
-	   Cmob=-0.00; 
-	   Cmde=-1.00;
+	   Cmob=-0.02; 
+	   Cmde=-1.28;
 	   
 	   CLde=-Cmde / lbare; /* kinda backwards, huh? */
 
@@ -202,7 +202,7 @@ void aero( SCALAR dt, int Initialize ) {
 	   Cnbeta=0.065;
 	   Cnp=-0.03;
 	   Cnr=-0.099;
-	   Cnda=-0.053;
+	   Cnda=-0.0053;
 	   Cndr=-0.0657;
 
 	   Cybeta=-0.31;
@@ -247,6 +247,7 @@ void aero( SCALAR dt, int Initialize ) {
   
   Dz_cg=Zcg*cbar;
   
+
   if(Flap_handle < flap_ind[0])
   {
   	Flap_handle=flap_ind[0];
@@ -341,10 +342,13 @@ void aero( SCALAR dt, int Initialize ) {
 /*   printf("aero: Wb: %7.4f, Ub: %7.4f, Alpha: %7.4f, elev: %7.4f, ail: %7.4f, rud: %7.4f, long_trim: %7.4f\n",W_body,U_body,Alpha*RAD_TO_DEG,elevator*RAD_TO_DEG,aileron*RAD_TO_DEG,rudder*RAD_TO_DEG,long_trim*RAD_TO_DEG);
   printf("aero: Theta: %7.4f, Gamma: %7.4f, Beta: %7.4f, Phi: %7.4f, Psi: %7.4f\n",Theta*RAD_TO_DEG,Gamma_vert_rad*RAD_TO_DEG,Beta*RAD_TO_DEG,Phi*RAD_TO_DEG,Psi*RAD_TO_DEG);
  */
+
  
   
   /* sum coefficients */
   CLwbh = interp(CLtable,alpha_ind,NCL,Alpha);
+/*   printf("CLwbh: %g\n",CLwbh);
+ */
   CLo = CLob + interp(dCLf,flap_ind,Ndf,Flap_Position);
   Cdo = Cdob + interp(dCdf,flap_ind,Ndf,Flap_Position);
   Cmo = Cmob + interp(dCmf,flap_ind,Ndf,Flap_Position);
@@ -352,8 +356,9 @@ void aero( SCALAR dt, int Initialize ) {
   /* printf("FP: %g\n",Flap_Position);
   printf("CLo: %g\n",CLo);
   printf("Cdo: %g\n",Cdo);
-  printf("Cmo: %g\n",Cmo);	 
- */
+  printf("Cmo: %g\n",Cmo); */
+ 
+
 
   CL = CLo + CLwbh + (CLadot*Alpha_dot + CLq*Theta_dot)*cbar_2V + CLde*elevator;
   cd = Cdo + rPiARe*CL*CL + Cdde*elevator;
@@ -365,13 +370,15 @@ void aero( SCALAR dt, int Initialize ) {
   
 /*   printf("aero: CL: %7.4f, Cd: %7.4f, Cm: %7.4f, Cy: %7.4f, Cn: %7.4f, Cl: %7.4f\n",CL,cd,cm,cy,cn,croll);
  */
+
   /*calculate wind axes forces*/
   F_X_wind=-1*cd*qS;
   F_Y_wind=cy*qS;
   F_Z_wind=-1*CL*qS;
   
 /*   printf("V_rel_wind: %7.4f, Fxwind: %7.4f Fywind: %7.4f Fzwind: %7.4f\n",V_rel_wind,F_X_wind,F_Y_wind,F_Z_wind);
- */  
+ */
+  
   /*calculate moments and body axis forces */
   
   
@@ -387,11 +394,12 @@ void aero( SCALAR dt, int Initialize ) {
   M_n_aero = cn*qSb;
   
 /*   printf("I_yy: %7.4f, qScbar: %7.4f, qbar: %7.4f, Sw: %7.4f, cbar: %7.4f, 0.5*rho*V^2: %7.4f\n",I_yy,qScbar,Dynamic_pressure,Sw,cbar,0.5*0.0023081*V_rel_wind*V_rel_wind);
- */  
-/*  printf("Fxaero: %7.4f Fyaero: %7.4f Fzaero: %7.4f Weight: %7.4f\n",F_X_aero,F_Y_aero,F_Z_aero,Weight);
- */
-/*  printf("Maero: %7.4f Naero: %7.4f Raero: %7.4f\n",M_m_aero,M_n_aero,M_l_aero);
- */  
+  
+  printf("Fxaero: %7.4f Fyaero: %7.4f Fzaero: %7.4f Weight: %7.4f\n",F_X_aero,F_Y_aero,F_Z_aero,Weight); 
+
+  printf("Maero: %7.4f Naero: %7.4f Raero: %7.4f\n",M_m_aero,M_n_aero,M_l_aero);
+  */
+ 
 }
 
 

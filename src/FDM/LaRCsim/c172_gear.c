@@ -36,8 +36,9 @@
 
 $Header$
 $Log$
-Revision 1.8  1999/08/24 21:17:05  curt
-Updates from Tony.
+Revision 1.9  1999/11/01 18:17:16  curt
+c172 updates from Tony.  Fix extra yaw when using ailerons.  Flaps and elevator
+tweaks.
 
 
 ----------------------------------------------------------------------------

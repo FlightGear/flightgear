@@ -72,8 +72,8 @@ void model_init( void ) {
   I_yy=1346;
   I_zz=1967;
   I_xz=0;
+
   Flap_Position=Flap_handle;
   Flaps_In_Transit=0;
-  
   
 }

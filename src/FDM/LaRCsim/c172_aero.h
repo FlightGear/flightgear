@@ -1,5 +1,12 @@
 /*c172_aero.h*/
 
+#ifndef __C172_AERO_H
+#define __C172_AERO_H
+
+
+
+#include <FDM/LaRCsim/ls_types.h>
+
 /*global declarations of aero model parameters*/
 
    SCALAR CLadot;
@@ -64,3 +71,5 @@
   /* float Flap_Handle; */
   int Flaps_In_Transit;
   
+#endif
+
