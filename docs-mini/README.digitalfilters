@@ -1,0 +1,51 @@
+Four different types of digital low-pass filters can be configured inside the
+autopilot configuration file. The types of filter are:
+
+* Exponential
+* Double exponential
+* Moving average
+* Noise spike filter
+
+Example:
+
+  <filter>
+    <name>pressure-rate-filter</name>
+    <debug>false</debug>
+    <type>double-exponential</type>
+    <input>/autopilot/internal/pressure-rate</input>
+    <output>/autopilot/internal/filtered-pressure-rate</output>
+    <filter-time>0.1</filter-time>
+   </filter>
+
+This will filter the pressure-rate property. The output will be to a new
+property called filtered-pressure-rate. You can select any numerical property
+from the property tree. The input property will not be affected by the filter,
+it will stay the same as it would if no filter was configured.
+
+<name> The name of the filter. Give it a sensible name!
+
+<debug> If this tag is set to true debugging info will be printed on the
+console.
+
+<type> The type of filter. This can be exponential, double-exponential,
+moving-average or noise-spike.
+
+<input> The input property to be filtered. This should of course be a
+numerical property, filtering a text string or a boolean value does not make
+sense.
+
+<output> The filtered value. You can make up any new property.
+
+These are the tags that are applicable to all filter types. The folowing tags
+are filter specific.
+
+<filter-time> This tag is only applicable for the exponential and
+double-exponential filter types. It controls the bandwidth of the filter. The
+bandwith in Hz of the filter is: 1/filter-time. So a low-pass filter with a
+bandwith of 10Hz would have a filter time of 1/10 = 0.1
+
+<samples> This tag only makes sense for the moving-average filter. It says how
+many past samples to average.
+
+<max-rate-of-change> This tag is applicable for the noise-spike filter. Is
+says how much the value is allowed to change per second.
