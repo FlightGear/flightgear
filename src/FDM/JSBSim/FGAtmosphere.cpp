@@ -277,8 +277,8 @@ void FGAtmosphere::Turbulence(void)
     Magnitude         += MagnitudeAccel*rate*State->Getdt();
 
     vDirectiondAccelDt.Normalize();
+    vDirectiondAccelDt(eX) *= vDirectiondAccelDt(eX);
     vDirectiondAccelDt(eY) *= vDirectiondAccelDt(eY);
-    vDirectiondAccelDt(eZ) *= vDirectiondAccelDt(eZ);
     vDirectionAccel += vDirectiondAccelDt*rate*TurbRate*State->Getdt();
     vDirectionAccel.Normalize();
     vDirection      += vDirectionAccel*rate*State->Getdt();
