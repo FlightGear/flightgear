@@ -1399,6 +1399,7 @@ void fgReshape( int width, int height ) {
     int view_h;
 
     if ( (!fgGetBool("/sim/virtual-cockpit"))
+         && (globals->get_current_panel() != NULL)
 	 && fgPanelVisible() && idle_state == 1000 ) {
 	view_h = (int)(height * (globals->get_current_panel()->getViewHeight() -
 				 globals->get_current_panel()->getYOffset()) / 768.0);

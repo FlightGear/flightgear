@@ -57,6 +57,7 @@ FGGlobals::FGGlobals() :
     autopilot( NULL ),
     route( NULL ),
     soundmgr( NULL ),
+    current_panel( NULL ),
     environment_mgr( NULL ),
     ATC_mgr( NULL ),
     ATC_display( NULL ),
