@@ -44,7 +44,9 @@
 
 // Handle keyboard events
 void GLUTkey(unsigned char k, int x, int y);
+void GLUTkeyup(unsigned char k, int x, int y);
 void GLUTspecialkey(int k, int x, int y);
+void GLUTspecialkeyup(int k, int x, int y);
 
 
 #endif // _KEYBOARD_HXX
