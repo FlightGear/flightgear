@@ -78,7 +78,7 @@ Moon::Moon(fgTIME *t) :
 	 == NULL )
     {
       fgPrintf( FG_GENERAL, FG_EXIT, 
-		"Error in loading moon texture %s\n", tpath );
+		"Error in loading moon texture %s\n", tpath.c_str() );
       exit(1);
     } 
   } 

@@ -50,10 +50,13 @@ extern fgTIME cur_time_params;
 
 
 /* $Log$
-/* Revision 1.4  1998/09/15 04:26:23  curt
-/* New textured moon and rewritten/restructured Astro code contributed by Durk
-/* Talsma.
+/* Revision 1.5  1998/09/17 18:25:13  curt
+/* Fixed output message.
 /*
+ * Revision 1.4  1998/09/15 04:26:23  curt
+ * New textured moon and rewritten/restructured Astro code contributed by Durk
+ * Talsma.
+ *
  * Revision 1.3  1998/08/06 12:45:20  curt
  * Modified to bring in stars in 8 increments based on magnitude, not number
  * of stars.

@@ -261,10 +261,13 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.14  1998/09/15 04:26:22  curt
-/* New textured moon and rewritten/restructured Astro code contributed by Durk
-/* Talsma.
+/* Revision 1.15  1998/09/17 18:25:12  curt
+/* Fixed output message.
 /*
+ * Revision 1.14  1998/09/15 04:26:22  curt
+ * New textured moon and rewritten/restructured Astro code contributed by Durk
+ * Talsma.
+ *
  * Revision 1.13  1998/09/01 19:03:04  curt
  * Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
  *  - The new classes in libmisc.tgz define a stream interface into zlib.
