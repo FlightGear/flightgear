@@ -778,10 +778,12 @@ do_presets_commit (const SGPropertyNode * arg)
 
     globals->get_tile_mgr()->update( fgGetDouble("/environment/visibility-m") );
 
+#if 0
     if ( ! fgGetBool("/sim/presets/onground") ) {
         fgSetBool( "/sim/freeze/master", true );
         fgSetBool( "/sim/freeze/clock", true );
     }
+#endif
 
     return true;
 }
