@@ -119,6 +119,15 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 20: // Ctrl-T key
 	    fgAPToggleTerrainFollow();
 	    return;
+	case 21: // Ctrl-U key
+	    // add 1000' of emergency altitude.  Possibly good for 
+	    // unflipping yourself :-)
+	    {
+		double alt = cur_fdm_state->get_Altitude() + 1000;
+		fgFDMForceAltitude( current_options.get_flight_model(), 
+				    alt * FEET_TO_METER );
+	    }
+	    return;
 	case 49: // numeric keypad 1
 	    v->set_goal_view_offset( FG_PI * 0.75 );
 	    return;

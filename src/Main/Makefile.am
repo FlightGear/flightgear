@@ -7,8 +7,7 @@ endif
 if ENABLE_OLD_WEATHER
 WEATHER_LIBS =	$(top_builddir)/Simulator/Weather/libWeather.a
 else
-WEATHER_LIBS =	$(top_builddir)/Simulator/WeatherCM/libWeatherCM.a \
-		$(top_builddir)/Lib/Voronoi/libVoronoi.a
+WEATHER_LIBS =	$(top_builddir)/Simulator/WeatherCM/libWeatherCM.a
 endif
 
 if OLD_AUTOMAKE
