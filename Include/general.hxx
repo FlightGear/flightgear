@@ -32,7 +32,10 @@
 #endif                                   
 
 
-// #define FG_FRAME_RATE_HISTORY 10
+// #define FANCY_FRAME_COUNTER
+#ifdef FANCY_FRAME_COUNTER
+#define FG_FRAME_RATE_HISTORY 10
+#endif
 
 
 // the general house keeping structure definition
@@ -44,7 +47,9 @@ class FGGeneral {
 
     // Last frame rate measurement
     int frame_rate;
-    // double frames[FG_FRAME_RATE_HISTORY];
+#ifdef FANCY_FRAME_COUNTER
+    double frames[FG_FRAME_RATE_HISTORY];
+#endif
 
 public:
 
@@ -53,7 +58,13 @@ public:
     inline void set_glRenderer( char *str ) { glRenderer = str; }
     inline void set_glVersion( char *str ) { glVersion = str; }
     inline double get_frame_rate() const { return frame_rate; }
+#ifdef FANCY_FRAME_COUNTER
+    inline double get_frame(int idx) const { return frames[idx]; }
+    inline void set_frame( int idx, double value ) { frames[idx] = value; }
+    inline void set_frame_rate( double rate ) { frame_rate = rate; }
+#else
     inline void set_frame_rate( int rate ) { frame_rate = rate; }
+#endif
 };
 
 // general contains all the general house keeping parameters.
