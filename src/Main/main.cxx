@@ -1247,10 +1247,11 @@ static void fgMainLoop( void ) {
     // END Tile Manager udpates
 
     if (fgGetBool("/sim/rendering/specular-highlight")) {
-        glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);        glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+        glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
+	// glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     } else {
         glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SINGLE_COLOR);
-         glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+        // glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
     }
 
     // redraw display
