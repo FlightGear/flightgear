@@ -16,6 +16,12 @@ else
 MPLAYER_DIRS =
 endif
 
+if ENABLE_MSERVER_AS
+MSERVER_DIRS = Server
+else
+MSERVER_DIRS =
+endif
+
 if ENABLE_NETWORK_OLK
 NETWORK_DIRS = NetworkOLK
 else
@@ -38,6 +44,7 @@ SUBDIRS = \
         Navaids \
         Network \
 	$(MPLAYER_DIRS) \
+	$(MSERVER_DIRS) \
         $(NETWORK_DIRS) \
         Objects \
 	Replay \

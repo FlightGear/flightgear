@@ -79,6 +79,16 @@ fi
 AM_CONDITIONAL(ENABLE_NETWORK_OLK, test "x$with_network_olk" != "xno" -a "x$with_multiplayer" = "xno")
 AM_CONDITIONAL(ENABLE_MPLAYER_AS, test "x$with_multiplayer" != "xno")
 
+AC_ARG_WITH(multiserver, [  --with-multiserver      Include multiplayer client/server support])
+
+if test "x$with_multiserver" = "xno"; then
+  echo "Building without multiplayer client/server support"
+else
+  echo "Building with multiplayer client/server support"
+  AC_DEFINE([FG_MSERVER_AS], 1, [Define to build with multiplayer client/server support])
+fi
+
+AM_CONDITIONAL(ENABLE_MSERVER_AS, test "x$with_multiserver" != "xno")
 
 # Specify if we want to use WeatherCM instead of FGEnvironment.
 # default to with_weathercm=no
@@ -546,6 +556,7 @@ AC_CONFIG_FILES([ \
 	src/Replay/Makefile \
 	src/Scenery/Makefile \
 	src/Scripting/Makefile \
+	src/Server/Makefile \
 	src/Sound/Makefile \
 	src/Systems/Makefile \
 	src/Time/Makefile \
@@ -593,6 +604,10 @@ if test "x$with_multiplayer" != "xno"; then
     echo "Using default multiplayer support"
 elif test "x$with_network_olk" != "xno"; then
     echo "Using Oliver's multi-pilot network support"
+fi
+
+if test "x$with_multiserver" != "xno"; then
+    echo "Using multiplayer client/server support"
 fi
 
 if test "x$with_threads" = "xyes"; then
