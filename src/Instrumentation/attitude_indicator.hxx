@@ -24,6 +24,7 @@
  *
  * Input properties:
  *
+ * /instrumentation/attitude-indicator/config/tumble-flag
  * /instrumentation/attitude-indicator/serviceable
  * /orientation/pitch-deg
  * /orientation/roll-deg
@@ -51,6 +52,9 @@ private:
 
     Gyro _gyro;
 
+    double _tumble;
+
+    SGPropertyNode_ptr _tumble_flag_node;
     SGPropertyNode_ptr _pitch_in_node;
     SGPropertyNode_ptr _roll_in_node;
     SGPropertyNode_ptr _suction_node;

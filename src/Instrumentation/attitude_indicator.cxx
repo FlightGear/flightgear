@@ -4,14 +4,15 @@
 // This file is in the Public Domain and comes with no warranty.
 
 // TODO:
-// - tumble
 // - better spin-up
 
 #include "attitude_indicator.hxx"
 #include <Main/fg_props.hxx>
+#include <Main/util.hxx>
 
 
 AttitudeIndicator::AttitudeIndicator ()
+    : _tumble(0)
 {
 }
 
@@ -27,6 +28,9 @@ AttitudeIndicator::init ()
     _pitch_in_node = fgGetNode("/orientation/pitch-deg", true);
     _roll_in_node = fgGetNode("/orientation/roll-deg", true);
     _suction_node = fgGetNode("/systems/vacuum[0]/suction-inhg", true);
+    _tumble_flag_node =
+        fgGetNode("/instrumentation/attitude-indicator/config/tumble-flag",
+                  true);
     _pitch_out_node =
         fgGetNode("/instrumentation/attitude-indicator/indicated-pitch-deg",
                   true);
@@ -59,14 +63,47 @@ AttitudeIndicator::update (double dt)
     _gyro.update(dt);
     double spin = _gyro.get_spin_norm();
 
-                                // Next, calculate the indicated roll
-                                // and pitch, introducing errors.
-    double factor = 1.0 - ((1.0 - spin) * (1.0 - spin) * (1.0 - spin));
+                                // Calculate the responsiveness
+    double responsiveness = spin * spin * spin * spin * spin * spin;
+
+                                // Get the indicated roll and pitch
     double roll = _roll_in_node->getDoubleValue();
     double pitch = _pitch_in_node->getDoubleValue();
-    roll = 35 + (factor * (roll - 35));
-    pitch = 15 + (factor * (pitch - 15));
 
+                                // Calculate the tumble for the
+                                // next pass.
+    if (_tumble_flag_node->getBoolValue()) {
+        if (_tumble < 1.0) {
+            if (fabs(roll) > 45.0) {
+                double target = (fabs(roll) - 45.0) / 45.0;
+                if (_tumble < target)
+                    _tumble = target;
+            }
+            if (fabs(pitch) > 45.0) {
+                double target = (fabs(pitch) - 45.0) / 45.0;
+                if (_tumble < target)
+                    _tumble = target;
+            }
+            if (_tumble > 1.0) {
+                _tumble = 1.0;
+            }
+        }
+                                // Reerect in 5 minutes
+        _tumble -= dt/300.0;
+        if (_tumble < 0.0)
+            _tumble = 0.0;
+
+        responsiveness *= ((1.0 - _tumble) * (1.0 - _tumble) *
+                           (1.0 - _tumble) * (1.0 - _tumble));
+
+    }
+
+    roll = fgGetLowPass(_roll_out_node->getDoubleValue(), roll,
+                        responsiveness);
+    pitch = fgGetLowPass(_pitch_out_node->getDoubleValue(), pitch,
+                         responsiveness);
+
+                                // Assign the new values
     _roll_out_node->setDoubleValue(roll);
     _pitch_out_node->setDoubleValue(pitch);
 }
