@@ -44,6 +44,13 @@
 SG_USING_STD(map);
 SG_USING_STD(vector);
 
+
+
+////////////////////////////////////////////////////////////////////////
+// General binding support.
+////////////////////////////////////////////////////////////////////////
+
+
 /**
  * An input binding of some sort.
  *
@@ -134,6 +141,12 @@ private:
 };
 
 
+
+////////////////////////////////////////////////////////////////////////
+// General input mapping support.
+////////////////////////////////////////////////////////////////////////
+
+
 /**
  * Generic input module.
  *
@@ -154,7 +167,16 @@ public:
     FG_MOD_MAX = 16		// enough to handle all combinations
   };
 
-  FGInput();
+
+  /**
+   * Default constructor.
+   */
+  FGInput ();
+
+
+  /**
+   * Destructor.
+   */
   virtual ~FGInput();
 
   //
@@ -184,7 +206,6 @@ public:
 
 
 private:
-
 				// Constants
   enum 
   {
@@ -206,15 +227,8 @@ private:
    * Settings for a key or button.
    */
   struct button {
-    button ()
-      : is_repeatable(false),
-	last_state(-1)
-    {}
-    virtual ~button () {
-      for (int i = 0; i < FG_MOD_MAX; i++)
-	for (int j = 0; i < bindings[i].size(); j++)
-	  delete bindings[i][j];
-    }
+    button ();
+    virtual ~button ();
     bool is_repeatable;
     int last_state;
     binding_list_t bindings[FG_MOD_MAX];
@@ -225,17 +239,8 @@ private:
    * Settings for a single joystick axis.
    */
   struct axis {
-    axis ()
-      : last_value(9999999),
-	tolerance(0.002),
-	low_threshold(-0.9),
-	high_threshold(0.9)
-    {}
-    virtual ~axis () {
-      for (int i = 0; i < FG_MOD_MAX; i++)
-	for (int j = 0; i < bindings[i].size(); j++)
-	  delete bindings[i][j];
-    }
+    axis ();
+    virtual ~axis ();
     float last_value;
     float tolerance;
     binding_list_t bindings[FG_MOD_MAX];
@@ -250,14 +255,12 @@ private:
    * Settings for a joystick.
    */
   struct joystick {
-    virtual ~joystick () {
-      delete js;
-      delete[] axes;
-      delete[] buttons;
-    }
+    joystick ();
+    virtual ~joystick ();
+    int jsnum;
+    jsJoystick * js;
     int naxes;
     int nbuttons;
-    jsJoystick * js;
     axis * axes;
     button * buttons;
   };
@@ -319,12 +322,19 @@ private:
 
 };
 
+
+extern FGInput current_input;
+
+
+
+////////////////////////////////////////////////////////////////////////
+// GLUT callbacks.
+////////////////////////////////////////////////////////////////////////
+
 // Handle keyboard events
 void GLUTkey(unsigned char k, int x, int y);
 void GLUTkeyup(unsigned char k, int x, int y);
 void GLUTspecialkey(int k, int x, int y);
 void GLUTspecialkeyup(int k, int x, int y);
-
-extern FGInput current_input;
 
 #endif // _CONTROLS_HXX

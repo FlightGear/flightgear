@@ -181,7 +181,7 @@ FGInput::FGInput ()
 
 FGInput::~FGInput ()
 {
-  // TODO: delete all FGBinding objects explicitly
+  // no op
 }
 
 void
@@ -630,6 +630,70 @@ FGInput::_find_key_bindings (unsigned int k, int modifiers)
   else
     return b.bindings[modifiers];
 }
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGInput::button.
+////////////////////////////////////////////////////////////////////////
+
+FGInput::button::button ()
+  : is_repeatable(false),
+    last_state(-1)
+{
+}
+
+FGInput::button::~button ()
+{
+				// FIXME: memory leak
+//   for (int i = 0; i < FG_MOD_MAX; i++)
+//     for (int j = 0; i < bindings[i].size(); j++)
+//       delete bindings[i][j];
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGInput::axis.
+////////////////////////////////////////////////////////////////////////
+
+FGInput::axis::axis ()
+  : last_value(9999999),
+    tolerance(0.002),
+    low_threshold(-0.9),
+    high_threshold(0.9)
+{
+}
+
+FGInput::axis::~axis ()
+{
+  for (int i = 0; i < FG_MOD_MAX; i++)
+    for (unsigned int j = 0; i < bindings[i].size(); j++)
+      delete bindings[i][j];
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGInput::joystick.
+////////////////////////////////////////////////////////////////////////
+
+FGInput::joystick::joystick ()
+{
+}
+
+FGInput::joystick::~joystick ()
+{
+  delete js;
+  delete[] axes;
+  delete[] buttons;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of GLUT callbacks.
+////////////////////////////////////////////////////////////////////////
 
 
 /**
