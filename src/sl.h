@@ -112,6 +112,7 @@ public:
 
   void play ( void *buffer, size_t length ) { write ( buffer, length ) ; } 
 
+  int working () { return !error ; }
   int not_working () { return error ; }
 
   int getBps   () { return bps    ; }
