@@ -25,12 +25,6 @@
 #  include <config.h>
 #endif
 
-#if defined(WIN32) && !defined(__CYGWIN__)
-#  include <windows.h>
-#else
-#  include <netinet/in.h>	// htonl() ntohl()
-#endif
-
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/lowlevel.hxx> // endian tests
 #include <simgear/io/iochannel.hxx>
@@ -40,6 +34,12 @@
 
 #include "native_fdm.hxx"
 
+// FreeBSD works better with this included last ... (?)
+#if defined(WIN32) && !defined(__CYGWIN__)
+#  include <windows.h>
+#else
+#  include <netinet/in.h>	// htonl() ntohl()
+#endif
 
 
 // The function htond is defined this way due to the way some
