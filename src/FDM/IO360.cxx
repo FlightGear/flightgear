@@ -67,8 +67,8 @@
 // but it is by no means currently at a completed stage - DCL 15/9/00
 //
 // DCL 28/9/00 - Added estimate of engine and prop inertia and changed engine speed calculation to be calculated from Angular acceleration = Torque / Inertia.  
-//		 Requires a timestep to be passed to FGEngine::init and currently assumes this timestep does not change.
-//		 Could easily be altered to pass a variable timestep to FGEngine::update every step instead if required.
+//		 Requires a timestep to be passed to FGNewEngine::init and currently assumes this timestep does not change.
+//		 Could easily be altered to pass a variable timestep to FGNewEngine::update every step instead if required.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -88,7 +88,7 @@ FG_USING_STD(cout);
 
 
 // Calculate Engine RPM based on Propellor Lever Position
-float FGEngine::Calc_Engine_RPM (float LeverPosition)
+float FGNewEngine::Calc_Engine_RPM (float LeverPosition)
 {
     // Calculate RPM as set by Prop Lever Position. Assumes engine
     // will run at 1000 RPM at full course
@@ -104,7 +104,7 @@ float FGEngine::Calc_Engine_RPM (float LeverPosition)
     return RPM;
 }
 
-float FGEngine::Lookup_Combustion_Efficiency(float thi_actual)
+float FGNewEngine::Lookup_Combustion_Efficiency(float thi_actual)
 {
     float thi[11];  //array of equivalence ratio values
     float neta_comb[11];  //corresponding array of combustion efficiency values
@@ -165,12 +165,12 @@ float FGEngine::Lookup_Combustion_Efficiency(float thi_actual)
     }
 
     //if we get here something has gone badly wrong
-    cout << "ERROR: error in FGEngine::Lookup_Combustion_Efficiency\n";
+    cout << "ERROR: error in FGNewEngine::Lookup_Combustion_Efficiency\n";
     //exit(-1);
     return neta_comb_actual;  //keeps the compiler happy
 }
 /*
-float FGEngine::Calculate_Delta_T_Exhaust(void)
+float FGNewEngine::Calculate_Delta_T_Exhaust(void)
 {
 	float dT_exhaust;
 	heat_capacity_exhaust = (Cp_air * m_dot_air) + (Cp_fuel * m_dot_fuel);
@@ -201,7 +201,7 @@ static float Calc_Manifold_Pressure ( float LeverPosn, float MaxMan, float MinMa
 
 
 // set initial default values
-void FGEngine::init(double dt) {
+void FGNewEngine::init(double dt) {
 
     CONVERT_CUBIC_INCHES_TO_METERS_CUBED = 1.638706e-5;
     // Control and environment inputs
@@ -346,7 +346,7 @@ static float IAS_to_FPS (float x)
 
 
 // update the engine model based on current control positions
-void FGEngine::update() {
+void FGNewEngine::update() {
     // Declare local variables
     int num = 0;
     // const int num2 = 500;	// default is 100, number if iterations to run

@@ -147,23 +147,25 @@ bool FGJSBsim::init( double dt ) {
           <<  current_options.get_altitude() );
   //must check > 0, != 0 will give bad result if --notrim set
   if(current_options.get_trim_mode() > 0) {
-    FDMExec.RunIC(fgic);
-    FG_LOG( FG_FLIGHT, FG_INFO, "  Starting trim..." );
-    FGTrim *fgtrim=new FGTrim(&FDMExec,fgic,tLongitudinal);
-    fgtrim->DoTrim();
-    fgtrim->Report();
-    fgtrim->TrimStats();
-    fgtrim->ReportState();
+    if(fgic->GetVcalibratedKtsIC() > 50) {
+      FDMExec.RunIC(fgic);
+      FG_LOG( FG_FLIGHT, FG_INFO, "  Starting trim..." );
+      FGTrim *fgtrim=new FGTrim(&FDMExec,fgic,tLongitudinal);
+      fgtrim->DoTrim();
+      fgtrim->Report();
+      fgtrim->TrimStats();
+      fgtrim->ReportState();
 
 
-    controls.set_elevator_trim(FDMExec.GetFCS()->GetPitchTrimCmd());
-    controls.set_throttle(FGControls::ALL_ENGINES,FDMExec.GetFCS()->GetThrottleCmd(0)/100);
-    trimmed=true;
-    trim_elev=FDMExec.GetFCS()->GetPitchTrimCmd();
-    trim_throttle=FDMExec.GetFCS()->GetThrottleCmd(0)/100;
-    //the trimming routine only knows how to get 1 value for throttle
-    
-    delete fgtrim;
+      controls.set_elevator_trim(FDMExec.GetFCS()->GetPitchTrimCmd());
+      controls.set_throttle(FGControls::ALL_ENGINES,FDMExec.GetFCS()->GetThrottleCmd(0)/100);
+      trimmed=true;
+      trim_elev=FDMExec.GetFCS()->GetPitchTrimCmd();
+      trim_throttle=FDMExec.GetFCS()->GetThrottleCmd(0)/100;
+      //the trimming routine only knows how to get 1 value for throttle
+
+      delete fgtrim;
+    }  
     FG_LOG( FG_FLIGHT, FG_INFO, "  Trim complete." );
   } else {
     FG_LOG( FG_FLIGHT, FG_INFO, "  Initializing without trim" );
@@ -247,7 +249,7 @@ bool FGJSBsim::copy_to_JSBsim() {
   FDMExec.GetFCS()->SetDaCmd( controls.get_aileron());
   FDMExec.GetFCS()->SetDeCmd( controls.get_elevator());
   FDMExec.GetFCS()->SetPitchTrimCmd(controls.get_elevator_trim());
-  FDMExec.GetFCS()->SetDrCmd( controls.get_rudder());
+  FDMExec.GetFCS()->SetDrCmd( -1*controls.get_rudder());
   FDMExec.GetFCS()->SetDfCmd( controls.get_flaps() );
   FDMExec.GetFCS()->SetDsbCmd( 0.0 ); //speedbrakes
   FDMExec.GetFCS()->SetDspCmd( 0.0 ); //spoilers

@@ -29,6 +29,7 @@
 
 #include <Aircraft/aircraft.hxx>
 
+#define ID_JSBSIMXX "$Header"
 
 class FGJSBsim: public FGInterface {
 

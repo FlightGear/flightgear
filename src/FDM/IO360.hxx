@@ -64,7 +64,7 @@
 
 FG_USING_STD(ofstream);
 
-class FGEngine {
+class FGNewEngine {
 
 private:
 
@@ -194,12 +194,12 @@ public:
     ofstream outfile;
 
     //constructor
-    FGEngine() {
+    FGNewEngine() {
 //	outfile.open("FGEngine.dat", ios::out|ios::trunc);
     }
 
     //destructor
-    ~FGEngine() {
+    ~FGNewEngine() {
 //	outfile.close();
     }
 

@@ -33,7 +33,7 @@
 
 class FGLaRCsim: public FGInterface {
 
-    FGEngine eng;
+    FGNewEngine eng;
 
 public:
 

@@ -3,7 +3,7 @@
 #include "IO360.hxx"
 
 int main() {
-    FGEngine e;
+    FGNewEngine e;
 
     e.init( 1.0 / 120.0 );
 
