@@ -33,20 +33,13 @@
 
 #include <Include/compiler.h>
 
-#include <vector>
-
 #include <Math/point3d.hxx>
 
-FG_USING_STD(vector);
+#include <Main/construct_types.hxx>
 
 
 #define FG_PROXIMITY_EPSILON 0.000001
 #define FG_COURSE_EPSILON 0.0003
-
-
-typedef vector < Point3D > point_list;
-typedef point_list::iterator point_list_iterator;
-typedef point_list::const_iterator const_point_list_iterator;
 
 
 class FGTriNodes {
@@ -119,6 +112,10 @@ inline bool FGTriNodes::course_close_enough( const Point3D& p1,
 
 
 // $Log$
+// Revision 1.7  1999/03/29 13:11:10  curt
+// Shuffled stl type names a bit.
+// Began adding support for tri-fanning (or maybe other arrangments too.)
+//
 // Revision 1.6  1999/03/27 05:30:16  curt
 // Handle corner nodes separately from the rest of the fitted nodes.
 // Add fitted nodes in after corners and polygon nodes since the fitted nodes

@@ -76,7 +76,7 @@ void FGTriSegments::unique_divide_and_add( const point_list& nodes,
     Point3D p1 = nodes[ s.get_n2() ];
 
     bool found_extra = false;
-    int extra_index;
+    int extra_index = 0;
     int counter;
     double m, b, y_err, x_err;
     const_point_list_iterator current, last;
@@ -170,6 +170,10 @@ void FGTriSegments::unique_divide_and_add( const point_list& nodes,
 
 
 // $Log$
+// Revision 1.5  1999/03/29 13:11:13  curt
+// Shuffled stl type names a bit.
+// Began adding support for tri-fanning (or maybe other arrangments too.)
+//
 // Revision 1.4  1999/03/27 05:30:17  curt
 // Handle corner nodes separately from the rest of the fitted nodes.
 // Add fitted nodes in after corners and polygon nodes since the fitted nodes

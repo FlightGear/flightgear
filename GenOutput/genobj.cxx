@@ -64,7 +64,7 @@ void FGGenOutput::gen_wgs84_points( const FGArray& array ) {
 // is an entry for each point containing a list of all the triangles
 // that share that point.
 void FGGenOutput::gen_node_ele_lookup_table() {
-    belongs_to ele_list;
+    int_list ele_list;
     ele_list.erase( ele_list.begin(), ele_list.end() );
 
     // initialize reverse_ele_lookup structure by creating an empty
@@ -128,10 +128,10 @@ void FGGenOutput::gen_normals() {
 
     // for each node
     for ( int i = 0; i < (int)wgs84_nodes.size(); ++i ) {
-	belongs_to tri_list = reverse_ele_lookup[i];
+	int_list tri_list = reverse_ele_lookup[i];
 
-	belongs_to_iterator current = tri_list.begin();
-	belongs_to_iterator last = tri_list.end();
+	int_list_iterator current = tri_list.begin();
+	int_list_iterator last = tri_list.end();
 
 	Point3D average( 0.0 );
 
@@ -189,6 +189,10 @@ int FGGenOutput::build( const FGArray& array, const FGTriangle& t ) {
 
     // copy the triangle list into this class
     tri_elements = t.get_elelist();
+
+    // build the trifan list
+    FGGenFans f;
+    fans = f.greedy_build( tri_elements );
 
     // generate the point list in wgs-84 coordinates
     gen_wgs84_points( array );
@@ -400,6 +404,10 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
 
 
 // $Log$
+// Revision 1.6  1999/03/29 13:11:03  curt
+// Shuffled stl type names a bit.
+// Began adding support for tri-fanning (or maybe other arrangments too.)
+//
 // Revision 1.5  1999/03/27 14:06:42  curt
 // Tweaks to bounding sphere calculation routines.
 // Group like triangles together for output to be in a single display list,

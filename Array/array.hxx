@@ -39,16 +39,13 @@
 #include <Math/point3d.hxx>
 #include <Misc/fgstream.hxx>
 
+#include <Main/construct_types.hxx>
+
 FG_USING_STD(vector);
 
 
 #define ARRAY_SIZE 1200
 #define ARRAY_SIZE_1 1201
-
-
-typedef vector < Point3D > fitnode_list;
-typedef fitnode_list::iterator fitnode_list_iterator;
-typedef fitnode_list::const_iterator const_fitnode_list_iterator;
 
 
 class FGArray {
@@ -73,8 +70,8 @@ private:
     // float (*out_data)[ARRAY_SIZE_1];
 
     // output nodes
-    fitnode_list corner_list;
-    fitnode_list node_list;
+    point_list corner_list;
+    point_list node_list;
 
 public:
 
@@ -116,8 +113,8 @@ public:
     inline double get_col_step() const { return col_step; }
     inline double get_row_step() const { return row_step; }
 
-    inline fitnode_list get_corner_node_list() const { return corner_list; }
-    inline fitnode_list get_fit_node_list() const { return node_list; }
+    inline point_list get_corner_node_list() const { return corner_list; }
+    inline point_list get_fit_node_list() const { return node_list; }
 };
 
 
@@ -125,6 +122,10 @@ public:
 
 
 // $Log$
+// Revision 1.5  1999/03/29 13:11:02  curt
+// Shuffled stl type names a bit.
+// Began adding support for tri-fanning (or maybe other arrangments too.)
+//
 // Revision 1.4  1999/03/27 05:20:14  curt
 // Handle corner nodes separately from the rest of the fitted nodes.
 // Fixed some "const" related warnings.

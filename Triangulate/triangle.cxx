@@ -37,8 +37,8 @@ FGTriangle::~FGTriangle( void ) {
 
 // populate this class based on the specified gpc_polys list
 int 
-FGTriangle::build( const fitnode_list& corner_list,
-		   const fitnode_list& fit_list, 
+FGTriangle::build( const point_list& corner_list,
+		   const point_list& fit_list, 
 		   const FGgpcPolyList& gpc_polys )
 {
     FGTriPoly poly;
@@ -55,7 +55,7 @@ FGTriangle::build( const fitnode_list& corner_list,
     // listing the points explicitely
 
     // first the corners since these are important
-    const_fitnode_list_iterator f_current, f_last;
+    const_point_list_iterator f_current, f_last;
     f_current = corner_list.begin();
     f_last = corner_list.end();
     for ( ; f_current != f_last; ++f_current ) {
@@ -328,7 +328,7 @@ int FGTriangle::run_triangulate() {
     vorout.normlist = (REAL *) NULL;      // Needed only if -v switch used.
     
     // TEMPORARY
-    write_out_data(&in);
+    // write_out_data(&in);
 
     // Triangulate the points.  Switches are chosen to read and write
     // a PSLG (p), preserve the convex hull (c), number everything
@@ -343,7 +343,7 @@ int FGTriangle::run_triangulate() {
     triangulate(tri_options.c_str(), &in, &out, &vorout);
 
     // TEMPORARY
-    // write_out_data(&out);
+    write_out_data(&out);
 
     // now copy the results back into the corresponding FGTriangle
     // structures
@@ -398,6 +398,10 @@ int FGTriangle::run_triangulate() {
 
 
 // $Log$
+// Revision 1.13  1999/03/29 13:11:07  curt
+// Shuffled stl type names a bit.
+// Began adding support for tri-fanning (or maybe other arrangments too.)
+//
 // Revision 1.12  1999/03/27 05:30:12  curt
 // Handle corner nodes separately from the rest of the fitted nodes.
 // Add fitted nodes in after corners and polygon nodes since the fitted nodes

@@ -35,21 +35,18 @@
 
 #include <vector>
 
+#include <Main/construct_types.hxx>
+
 #include "trinodes.hxx"
 
 FG_USING_STD(vector);
-
-
-typedef vector < int > tripoly;
-typedef tripoly::iterator tripoly_iterator;
-typedef tripoly::const_iterator const_tripoly_iterator;
 
 
 class FGTriPoly {
 
 private:
 
-    tripoly poly;
+    int_list poly;
     Point3D inside;
 
 public:
@@ -85,6 +82,10 @@ typedef tripoly_list::const_iterator const_tripoly_list_iterator;
 
 
 // $Log$
+// Revision 1.5  1999/03/29 13:11:12  curt
+// Shuffled stl type names a bit.
+// Began adding support for tri-fanning (or maybe other arrangments too.)
+//
 // Revision 1.4  1999/03/23 22:02:56  curt
 // Refinements in naming and organization.
 //

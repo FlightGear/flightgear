@@ -13,7 +13,10 @@ testarray_LDADD = \
 	$(top_builddir)/Lib/Misc/libMisc.a \
 	$(top_builddir)/Lib/zlib/libz.a
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
+INCLUDES += \
+	-I$(top_builddir) \
+	-I$(top_builddir)/Lib \
+	-I$(top_builddir)/Tools/Construct
 
 # We can't build this with "-O2" (optimization) since this causes a seg fault
 # I haven't found a way to strip this out of the CXXFLAGS, so I'm just

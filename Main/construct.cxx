@@ -37,7 +37,7 @@
 // load regular grid of elevation data (dem based), return list of
 // fitted nodes
 int load_dem(const string& work_base, FGBucket& b, FGArray& array) {
-    fitnode_list result;
+    point_list result;
     string base = b.gen_base_path();
 
     string dem_path = work_base + ".dem" + "/Scenery/" + base 
@@ -138,8 +138,8 @@ void do_triangulate( const FGArray& array, const FGClipper& clipper,
     // first we need to consolidate the points of the DEM fit list and
     // all the polygons into a more "Triangle" friendly format
 
-    fitnode_list corner_list = array.get_corner_node_list();
-    fitnode_list fit_list = array.get_fit_node_list();
+    point_list corner_list = array.get_corner_node_list();
+    point_list fit_list = array.get_fit_node_list();
     FGgpcPolyList gpc_polys = clipper.get_polys_clipped();
 
     cout << "ready to build node list and polygons" << endl;
@@ -184,7 +184,6 @@ void construct_tile( const string& work_base, const string& output_base,
 
 
 main(int argc, char **argv) {
-    fitnode_list fit_list;
     double lon, lat;
 
     fglog().setLogLevels( FG_ALL, FG_DEBUG );
@@ -204,16 +203,18 @@ main(int argc, char **argv) {
     // lon = -89.744682312011719; lat= 29.314495086669922;
     // lon = -122.488090; lat = 42.743183;     // 64S
     // lon = -114.861097; lat = 35.947480;     // 61B
-    lon = -112.012175; lat = 41.195944;      // KOGD
+    // lon = -112.012175; lat = 41.195944;     // KOGD
+    lon = -90.757128; lat = 46.790212;       // WI32
 
     double min_x = lon - 1;
     double min_y = lat - 1;
     FGBucket b_min( min_x, min_y );
     FGBucket b_max( lon + 1, lat + 1 );
 
-    // FGBucket b(550363L);
-    // construct_tile( work_base, output_base, b );
-    // exit(0);
+    // FGBucket b(533955L);
+    FGBucket b(-146.248360, 61.133950);
+    construct_tile( work_base, output_base, b );
+    exit(0);
 
     if ( b_min == b_max ) {
 	construct_tile( work_base, output_base, b_min );
@@ -237,6 +238,10 @@ main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.11  1999/03/29 13:11:06  curt
+// Shuffled stl type names a bit.
+// Began adding support for tri-fanning (or maybe other arrangments too.)
+//
 // Revision 1.10  1999/03/27 05:25:02  curt
 // Fit with a value of 200 rather than 100.
 // Handle corner nodes separately from the rest of the fitted nodes.

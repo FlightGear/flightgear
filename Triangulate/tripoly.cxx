@@ -95,7 +95,7 @@ void FGTriPoly::calc_point_inside( const FGTriNodes& trinodes ) {
     // int min_index;
     int min_node_index = 0;
 
-    tripoly_iterator current, last;
+    int_list_iterator current, last;
     current = poly.begin();
     last = poly.end();
 
@@ -180,6 +180,10 @@ void FGTriPoly::calc_point_inside( const FGTriNodes& trinodes ) {
 
 
 // $Log$
+// Revision 1.2  1999/03/29 13:11:11  curt
+// Shuffled stl type names a bit.
+// Began adding support for tri-fanning (or maybe other arrangments too.)
+//
 // Revision 1.1  1999/03/20 13:21:36  curt
 // Initial revision.
 //

@@ -39,17 +39,16 @@
 #include <Bucket/newbucket.hxx>
 #include <Math/fg_geodesy.hxx>
 #include <Math/point3d.hxx>
+
+#include <GenFans/genfans.hxx>
+#include <Main/construct_types.hxx>
 #include <Triangulate/triangle.hxx>
 
 FG_USING_STD(string);
 FG_USING_STD(vector);
 
 
-typedef vector < int > belongs_to;
-typedef belongs_to::iterator belongs_to_iterator;
-typedef belongs_to::const_iterator belongs_to_tripoly_iterator;
-
-typedef vector < belongs_to > belongs_to_list;
+typedef vector < int_list > belongs_to_list;
 typedef belongs_to_list::iterator belongs_to_list_iterator;
 typedef belongs_to_list::const_iterator belongs_to_list_tripoly_iterator;
 
@@ -73,6 +72,9 @@ private:
 
     // triangles (by index into point list)
     triele_list tri_elements;
+
+    // fan list
+    fan_list fans;
 
     // for each node, a list of triangle indices that contain this node
     belongs_to_list reverse_ele_lookup;
@@ -129,6 +131,10 @@ public:
 
 
 // $Log$
+// Revision 1.7  1999/03/29 13:11:04  curt
+// Shuffled stl type names a bit.
+// Began adding support for tri-fanning (or maybe other arrangments too.)
+//
 // Revision 1.6  1999/03/27 14:06:43  curt
 // Tweaks to bounding sphere calculation routines.
 // Group like triangles together for output to be in a single display list,
