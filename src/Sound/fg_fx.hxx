@@ -56,9 +56,14 @@ public:
   virtual void update ();
 
 private:
-  bool _is_cranking;
-  bool _is_stalling;
-  bool _is_rumbling;
+
+  void set_playing (const char * soundName, bool state = true);
+
+  static const int MAX_GEAR = 20;
+
+  double _old_flap_position;
+
+  bool _gear_on_ground[MAX_GEAR];
 
 				// looped sounds
   FGSimpleSound * _engine;
@@ -71,6 +76,12 @@ private:
   FGSimpleSound * _flaps;
   FGSimpleSound * _squeal;
   FGSimpleSound * _click;
+
+				// Cached property nodes.
+  const SGPropertyNode * _engine_running_prop;
+  const SGPropertyNode * _engine_cranking_prop;
+  const SGPropertyNode * _stall_warning_prop;
+  const SGPropertyNode * _flaps_prop;
 
 };
 

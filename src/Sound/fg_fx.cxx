@@ -22,17 +22,14 @@
 // $Id$
 
 #include "fg_fx.hxx"
+#include <Main/fg_props.hxx>
 
 // FIXME: remove direct dependencies
-#include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
-#include <Main/fg_props.hxx>
 
 
 FGFX::FGFX ()
-  : _is_cranking(false),
-    _is_stalling(false),
-    _is_rumbling(false),
+  : _old_flap_position(0),
     _engine(0),
     _crank(0),
     _wind(0),
@@ -40,7 +37,11 @@ FGFX::FGFX ()
     _rumble(0),
     _flaps(0),
     _squeal(0),
-    _click(0)
+    _click(0),
+    _engine_running_prop(0),
+    _engine_cranking_prop(0),
+    _stall_warning_prop(0),
+    _flaps_prop(0)
 {
 }
 
@@ -70,33 +71,24 @@ FGFX::init ()
   //
   _engine =
     new FGSimpleSound(fgGetString("/sim/sounds/engine", "Sounds/wasp.wav"));
-  mgr->add(_engine, "engine loop");
-  mgr->play_looped("engine loop");
-
-  SG_LOG( SG_GENERAL, SG_INFO,
-	  "Rate = " << _engine->get_sample()->getRate()
-	  << "  Bps = " << _engine->get_sample()->getBps()
-	  << "  Stereo = " << _engine->get_sample()->getStereo() );
-
+  mgr->add(_engine, "engine");
 
   //
   // Create and add the cranking sound.
   //
-  _crank =
-    new FGSimpleSound(fgGetString("/sim/sounds/cranking",
-				  "Sounds/cranking.wav"));
-  mgr->add(_crank, "crank");
+  _crank = new FGSimpleSound(fgGetString("/sim/sounds/cranking",
+					 "Sounds/cranking.wav"));
   _crank->set_pitch(1.5);
   _crank->set_volume(0.25);
+  mgr->add(_crank, "crank");
 
 
   //
   // Create and add the wind noise.
   //
-  _wind =
-    new FGSimpleSound(fgGetString("/sim/sounds/wind", "Sounds/wind.wav"));
+  _wind = new FGSimpleSound(fgGetString("/sim/sounds/wind",
+					"Sounds/wind.wav"));
   mgr->add(_wind, "wind");
-  mgr->play_looped("wind");
 
 
   //
@@ -113,6 +105,14 @@ FGFX::init ()
 					  "Sounds/rumble.wav"));
   mgr->add(_rumble, "rumble");
 
+
+  //
+  // Create and add the flaps noise
+  //
+  _flaps = new FGSimpleSound(fgGetString("/sim/sounds/flaps",
+					 "Sounds/flaps.wav"));
+  mgr->add(_flaps, "flaps");
+
   //
   // Create and add the squeal noise.
   //
@@ -125,6 +125,16 @@ FGFX::init ()
   _click = new FGSimpleSound(fgGetString("/sim/sounds/click",
 					 "Sounds/click.wav"));
   mgr->add(_click, "click");
+
+
+  ////////////////////////////////////////////////////////////////////
+  // Grab some properties.
+  ////////////////////////////////////////////////////////////////////
+
+  _engine_running_prop = fgGetNode("/engines/engine[0]/running", true);
+  _engine_cranking_prop = fgGetNode("/engines/engine[0]/cranking", true);
+  _stall_warning_prop = fgGetNode("/sim/aircraft/alarms/stall-warning", true);
+  _flaps_prop = fgGetNode("/controls/flaps", true);
 }
 
 void
@@ -140,14 +150,14 @@ FGFX::unbind ()
 void
 FGFX::update ()
 {
-  // FGSoundMgr * mgr = globals->get_soundmgr();
+  FGSoundMgr * mgr = globals->get_soundmgr();
 
 
   ////////////////////////////////////////////////////////////////////
   // Update the engine sound.
   ////////////////////////////////////////////////////////////////////
 
-  if (fgGetBool("/engines/engine[0]/running")) { // FIXME
+  if (_engine_running_prop->getBoolValue()) {
 	  // pitch corresponds to rpm
 	  // volume corresponds to manifold pressure
 
@@ -181,9 +191,9 @@ FGFX::update ()
 
     _engine->set_pitch( pitch );
     _engine->set_volume( volume );
+    set_playing("engine", true);
   } else {
-    _engine->set_pitch(0.0);
-    _engine->set_volume(0.0);
+    set_playing("engine", false);
   }
 
 
@@ -191,38 +201,110 @@ FGFX::update ()
   // Update the cranking sound.
   ////////////////////////////////////////////////////////////////////
 
-  if (fgGetBool("/engines/engine[0]/cranking")) { // FIXME
-    if(!_is_cranking) {
-      globals->get_soundmgr()->play_looped("crank");
-      _is_cranking = true;
-    }
-  } else {
-    if(_is_cranking) {
-      globals->get_soundmgr()->stop("crank");
-      _is_cranking = false;
-    }
-  }
+				// FIXME
+  set_playing("crank", _engine_cranking_prop->getBoolValue());
 
 
   ////////////////////////////////////////////////////////////////////
   // Update the wind noise.
   ////////////////////////////////////////////////////////////////////
 
-  float rel_wind = cur_fdm_state->get_V_rel_wind();
-  float volume = rel_wind/300.0;	// FIXME!!!
-  _wind->set_volume(volume);
+  float rel_wind = cur_fdm_state->get_V_rel_wind(); // FPS
+  if (rel_wind > 60.0) {	// a little off 30kt
+    float volume = rel_wind/1200.0;	// FIXME!!!
+    _wind->set_volume(volume);
+    set_playing("wind", true);
+  } else {
+    set_playing("wind", false);
+  }
 
 
-  // TODO: stall
+  ////////////////////////////////////////////////////////////////////
+  // Update the stall horn.
+  ////////////////////////////////////////////////////////////////////
 
-  // TODO: rumble
+  double stall = _stall_warning_prop->getDoubleValue();
+  if (stall > 0.0) {
+    _stall->set_volume(stall);
+    set_playing("stall", true);
+  } else {
+    set_playing("stall", false);
+  }
 
-  // TODO: flaps
 
-  // TODO: squeal
+  ////////////////////////////////////////////////////////////////////
+  // Update the rumble.
+  ////////////////////////////////////////////////////////////////////
+
+  float totalGear = min(cur_fdm_state->get_num_gear(), MAX_GEAR);
+  float gearOnGround = 0;
+
+
+				// Calculate whether a squeal is
+				// required, and set the volume.
+				// Currently, the squeal volume is the
+				// current local down velocity in feet
+				// per second divided by 10.0, and
+				// will not be played if under 0.1.
+
+				// FIXME: take rotational velocities
+				// into account as well.
+  for (int i = 0; i < totalGear; i++) {
+    if (cur_fdm_state->get_gear_unit(i)->GetWoW()) {
+      gearOnGround++;
+      if (!_gear_on_ground[i]) {
+	double squeal_volume = cur_fdm_state->get_V_down() / 5.0;
+	if (squeal_volume > 0.1) {
+	  _squeal->set_volume(squeal_volume);
+	  mgr->play_once("squeal");
+	}
+	_gear_on_ground[i] = true;
+      }
+    } else {
+      _gear_on_ground[i] = false;
+    }
+  }
+
+				// Now, if any of the gear is in
+				// contact with the ground play the
+				// rumble sound.  The volume is the
+				// absolute velocity in knots divided
+				// by 120.0.  No rumble will be played
+				// if the velocity is under 6kt.
+  double speed = cur_fdm_state->get_V_equiv_kts();
+  if (gearOnGround > 0 && speed >= 6.0) {
+    double volume = (gearOnGround/totalGear) * (speed/60.0);
+    _rumble->set_volume(volume);
+    set_playing("rumble", true);
+  } else {
+    set_playing("rumble", false);
+  }
+
+
+  ////////////////////////////////////////////////////////////////////////
+  // Check for flap movement.
+  ////////////////////////////////////////////////////////////////////
+
+  double flap_position = _flaps_prop->getDoubleValue();
+  if (fabs(flap_position - _old_flap_position) > 0.1) {
+    mgr->play_once("flaps");
+    _old_flap_position = flap_position;
+  }
 
   // TODO: click
 
+}
+
+
+void
+FGFX::set_playing (const char * soundName, bool state)
+{
+  FGSoundMgr * mgr = globals->get_soundmgr();
+  bool playing = mgr->is_playing(soundName);
+  if (state && !playing)
+    mgr->play_looped(soundName);
+  else if (!state && playing)
+    mgr->stop(soundName);
 }
 
 // end of fg_fx.cxx
