@@ -123,10 +123,10 @@ void fgVIEW::Update( fgFLIGHT *f ) {
     // p.lon & p.lat are already defined earlier, p.radius was set to
     // the sea level radius, so now we add in our altitude.
     if ( FG_Altitude * FEET_TO_METER > 
-	 (scenery.cur_elev + 3.758099 * METER_TO_FEET) ) {
+	 (scenery.cur_elev + 0.5 * METER_TO_FEET) ) {
 	p.radius += FG_Altitude * FEET_TO_METER;
     } else {
-	p.radius += scenery.cur_elev + 3.758099 * METER_TO_FEET;
+	p.radius += scenery.cur_elev + 0.5 * METER_TO_FEET;
     }
 
     abs_view_pos = fgPolarToCart3d(p);
@@ -470,6 +470,9 @@ void fg_gluLookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 
 
 // $Log$
+// Revision 1.18  1998/07/24 21:57:02  curt
+// Set near clip plane to 0.5 meters when close to the ground.  Also, let the view get a bit closer to the ground before hitting the hard limit.
+//
 // Revision 1.17  1998/07/24 21:39:12  curt
 // Debugging output tweaks.
 // Cast glGetString to (char *) to avoid compiler errors.

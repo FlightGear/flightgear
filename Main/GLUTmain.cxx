@@ -202,7 +202,7 @@ static void fgUpdateViewParams( void ) {
     if ( FG_Altitude * FEET_TO_METER - scenery.cur_elev > 10.0 ) {
 	gluPerspective(current_options.get_fov(), v->win_ratio, 10.0, 100000.0);
     } else {
-	gluPerspective(current_options.get_fov(), v->win_ratio, 1.0, 100000.0);
+	gluPerspective(current_options.get_fov(), v->win_ratio, 0.5, 100000.0);
 	// printf("Near ground, minimizing near clip plane\n");
     }
     // }
@@ -924,6 +924,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.40  1998/07/24 21:56:59  curt
+// Set near clip plane to 0.5 meters when close to the ground.  Also, let the view get a bit closer to the ground before hitting the hard limit.
+//
 // Revision 1.39  1998/07/24 21:39:08  curt
 // Debugging output tweaks.
 // Cast glGetString to (char *) to avoid compiler errors.
