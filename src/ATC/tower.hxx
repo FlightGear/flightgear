@@ -62,18 +62,6 @@ enum TwrPatternLeg {
 	TWR_UNKNOWN
 };
 
-// perhaps we could use an FGRunway instead of this
-struct RunwayDetails {
-	Point3D threshold_pos;
-	Point3D end1ortho;	// ortho projection end1 (the threshold ATM)
-	Point3D end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
-	//double mag_hdg;
-	//double mag_var;
-	double hdg;		// true runway heading
-	double length;	// In *METERS*
-	string rwyID;
-};
-
 // Structure for holding details of a plane under tower control.
 // Not fixed yet - may include more stuff later.
 class TowerPlaneRec {
@@ -148,7 +136,7 @@ public:
 	// Public interface to the active runway - this will get more complex 
 	// in the future and consider multi-runway use, airplane weight etc.
 	inline string GetActiveRunway() { return activeRwy; }
-	inline RunwayDetails* GetActiveRunwayDetails() { return &rwy; }
+	inline RunwayDetails GetActiveRunwayDetails() { return rwy; }
 	
 	inline void SetDisplay() { display = true; }
 	inline void SetNoDisplay() { display = false; }

@@ -336,6 +336,7 @@ void FGTower::DoRwyDetails() {
 	bool rwyGood = runways.search(ident, int(hdg), &runway);
 	if(rwyGood) {
 		activeRwy = runway.rwy_no;
+		rwy.rwyID = runway.rwy_no;
 		SG_LOG(SG_ATC, SG_INFO, "Active runway for airport " << ident << " is " << activeRwy);
 		
 		// Get the threshold position
