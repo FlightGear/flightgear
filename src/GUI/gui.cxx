@@ -1043,7 +1043,9 @@ void AptDialog_OK (puObject *)
         {
             current_options.set_airport_id( AptId.c_str() );
             current_options.set_altitude( -9999.0 );
-	    fgSetPosFromAirportID( AptId );
+	    // fgSetPosFromAirportID( AptId );
+	    fgSetPosFromAirportIDandHdg( AptId, 
+					 cur_fdm_state->get_Psi() * RAD_TO_DEG);
             BusyCursor(0);
             fgReInitSubsystems();
             BusyCursor(1);
