@@ -65,10 +65,8 @@ DEFINITIONS
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-typedef enum { iDe=0, iDaL, iDaR, iDr, iDsb, iDsp, iDf } FcIdx;
-int const NNorm=7;
-typedef enum { ofRad=0, ofNorm, ofMag } OutputForm;
-int const NForms=3;
+typedef enum { iDe=0, iDaL, iDaR, iDr, iDsb, iDsp, iDf, NNorm } FcIdx;
+typedef enum { ofRad=0, ofNorm, ofMag , NForms} OutputForm;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
@@ -152,6 +150,10 @@ CLASS DOCUMENTATION
     @see FGGradient
     @see FGFilter
     @see FGDeadBand
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGFCS.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Header File </a>
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGFCS.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Source File </a>
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -200,7 +202,7 @@ public:
   /** Gets the throttle command.
       @param engine engine ID number
       @return throttle command in percent ( 0 - 100) for the given engine */
-  double GetThrottleCmd(int engine);
+  double GetThrottleCmd(int engine) const;
 
   /** Gets the mixture command.
       @param engine engine ID number
@@ -272,7 +274,7 @@ public:
   /** Gets the throttle position.
       @param engine engine ID number
       @return throttle position for the given engine in percent ( 0 - 100)*/
-  double GetThrottlePos(int engine);
+  double GetThrottlePos(int engine) const;
 
   /** Gets the mixture position.
       @param engine engine ID number
@@ -297,7 +299,7 @@ public:
   /** Retrieves a components output value
       @param idx the index of the component (the component ID)
       @return output value from the component */
-  double GetComponentOutput(eParam idx);
+  double GetComponentOutput(int idx);
 
   /** Retrieves the component name
       @param idx the index of the component (the component ID)
@@ -456,9 +458,11 @@ public:
 
   void AddThrottle(void);
   
+  FGPropertyManager* GetPropertyManager(void) { return PropertyManager; }
+  
   void bind(void);
+  void bindModel(void);
   void unbind(void);
-
   
 private:
   double DaCmd, DeCmd, DrCmd, DfCmd, DsbCmd, DspCmd;

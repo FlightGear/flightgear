@@ -69,6 +69,7 @@ FGPropulsion::FGPropulsion(FGFDMExec* exec) : FGModel(exec)
   numSelectedFuelTanks = numSelectedOxiTanks = 0;
   numTanks = numEngines = numThrusters = 0;
   numOxiTanks = numFuelTanks = 0;
+  dt = 0.0;
   bind();
   Debug(0);
 }

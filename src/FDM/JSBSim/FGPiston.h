@@ -70,6 +70,10 @@ DOCUMENTATION
     @author Dave Luff (engine operational code)
     @author David Megginson (porting and additional code)
     @version $Id$
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGPiston.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Header File </a>
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGPiston.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Source File </a>
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -61,6 +61,8 @@ CLASS DOCUMENTATION
     @author David Megginson, Tony Peden
     @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGPropertyManager.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
          Header File </a>
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGPropertyManager.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Source File </a>
   */
   
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -113,6 +115,13 @@ class FGPropertyManager:public SGPropertyNode {
       return (GetNode(path, false) != 0);
     }
 
+    /**
+     * Get the name of a node
+     */
+    inline string
+    GetName( void ) {
+      return string( getName() );
+    }  
 
     /**
      * Get a bool value for a property.

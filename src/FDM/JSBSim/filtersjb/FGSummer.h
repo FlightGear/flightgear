@@ -75,7 +75,10 @@ CLASS DOCUMENTATION
     state variables, or even floating point numbers (e.g. for a bias).
     @author Jon S. Berndt
     @version $Id$
-    @see
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGSummer.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Header File </a>
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGSummer.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Source File </a>
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -97,8 +100,12 @@ public:
 
 private:
   FGConfigFile* AC_cfg;
-  vector <eParam> InputIndices;
-  vector <int> InputTypes;
+  typedef struct {
+    FGPropertyManager* Node;
+    int Idx;
+    int Type;
+  } InputRec;   
+  vector <InputRec*> Inputs;
   bool clip;
   double clipmin,clipmax;
   double Bias;

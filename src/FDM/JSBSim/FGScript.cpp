@@ -73,6 +73,7 @@ CLASS IMPLEMENTATION
 FGScript::FGScript(FGFDMExec* fgex) : FDMExec(fgex)
 {
   State = FDMExec->GetState();
+  PropertyManager=FDMExec->GetPropertyManager();
   Debug(0);
 }
 
@@ -91,6 +92,7 @@ bool FGScript::LoadScript(string script)
   string token="";
   string aircraft="";
   string initialize="";
+  string prop_name;
   bool result = false;
   double dt = 0.0;
   struct condition *newCondition;
@@ -113,6 +115,11 @@ bool FGScript::LoadScript(string script)
     if (token == "use") {
       if ((token = Script.GetValue("aircraft")) != string("")) {
         aircraft = token;
+        result = FDMExec->LoadModel("aircraft", "engine", aircraft);
+        if (!result) {
+          cerr << "Aircraft file " << aircraft << " was not found" << endl;
+          exit(-1);
+        }
         if (debug_lvl > 0) cout << "  Use aircraft: " << token << endl;
       } else if ((token = Script.GetValue("initialize")) != string("")) {
         initialize = token;
@@ -136,11 +143,13 @@ bool FGScript::LoadScript(string script)
           newCondition = new struct condition();
           while (token != string("/when")) {
             if (token == "parameter") {
-              newCondition->TestParam.push_back(State->GetParameterIndex(Script.GetValue("name")));
+              prop_name = State->GetPropertyName( Script.GetValue("name") );
+              newCondition->TestParam.push_back( PropertyManager->GetNode(prop_name) );
               newCondition->TestValue.push_back(strtod(Script.GetValue("value").c_str(), NULL));
               newCondition->Comparison.push_back(Script.GetValue("comparison"));
             } else if (token == "set") {
-              newCondition->SetParam.push_back(State->GetParameterIndex(Script.GetValue("name")));
+              prop_name = State->GetPropertyName( Script.GetValue("name") );
+              newCondition->SetParam.push_back( PropertyManager->GetNode(prop_name) );
               newCondition->SetValue.push_back(strtod(Script.GetValue("value").c_str(), NULL));
               newCondition->Triggered.push_back(false);
               newCondition->OriginalValue.push_back(0.0);
@@ -194,11 +203,6 @@ bool FGScript::LoadScript(string script)
 
   Debug(4);
 
-  result = FDMExec->LoadModel("aircraft", "engine", aircraft);
-  if (!result) {
-    cerr << "Aircraft file " << aircraft << " was not found" << endl;
-	  exit(-1);
-  }
 
   FGInitialCondition IC(FDMExec);
   if ( ! IC.Load("aircraft", aircraft, initialize)) {
@@ -228,17 +232,17 @@ bool FGScript::RunScript(void)
     // to true
     for (i=0; i<iC->TestValue.size(); i++) {
            if (iC->Comparison[i] == "lt")
-              truth = State->GetParameter(iC->TestParam[i]) <  iC->TestValue[i];
+              truth = iC->TestParam[i]->getDoubleValue() <  iC->TestValue[i];
       else if (iC->Comparison[i] == "le")
-              truth = State->GetParameter(iC->TestParam[i]) <= iC->TestValue[i];
+              truth = iC->TestParam[i]->getDoubleValue() <= iC->TestValue[i];
       else if (iC->Comparison[i] == "eq")
-              truth = State->GetParameter(iC->TestParam[i]) == iC->TestValue[i];
+              truth = iC->TestParam[i]->getDoubleValue() == iC->TestValue[i];
       else if (iC->Comparison[i] == "ge")
-              truth = State->GetParameter(iC->TestParam[i]) >= iC->TestValue[i];
+              truth = iC->TestParam[i]->getDoubleValue() >= iC->TestValue[i];
       else if (iC->Comparison[i] == "gt")
-              truth = State->GetParameter(iC->TestParam[i]) >  iC->TestValue[i];
+              truth = iC->TestParam[i]->getDoubleValue() >  iC->TestValue[i];
       else if (iC->Comparison[i] == "ne")
-              truth = State->GetParameter(iC->TestParam[i]) != iC->TestValue[i];
+              truth = iC->TestParam[i]->getDoubleValue() != iC->TestValue[i];
       else
               cerr << "Bad comparison" << endl;
 
@@ -253,7 +257,7 @@ bool FGScript::RunScript(void)
     if (WholeTruth) {
       for (i=0; i<iC->SetValue.size(); i++) {
         if ( ! iC->Triggered[i]) {
-          iC->OriginalValue[i] = State->GetParameter(iC->SetParam[i]);
+          iC->OriginalValue[i] = iC->SetParam[i]->getDoubleValue();
           switch (iC->Type[i]) {
           case FG_VALUE:
             iC->newValue[i] = iC->SetValue[i];
@@ -289,7 +293,7 @@ bool FGScript::RunScript(void)
           cerr << "Invalid Action specified" << endl;
           break;
         }
-        State->SetParameter(iC->SetParam[i], newSetValue);
+        iC->SetParam[i]->setDoubleValue(newSetValue);
       }
     }
     iC++;
@@ -338,15 +342,15 @@ void FGScript::Debug(int from)
 
         for (i=0; i<iterConditions->TestValue.size(); i++) {
           if (i>0) cout << " and" << endl << "        ";
-          cout << "(" << State->GetParameterName(iterConditions->TestParam[i])
-                      << iterConditions->Comparison[i] << " "
+          cout << "(" << iterConditions->TestParam[i]->GetName()
+                      << " " << iterConditions->Comparison[i] << " "
                       << iterConditions->TestValue[i] << ")";
         }
         cout << ") then {";
 
         for (i=0; i<iterConditions->SetValue.size(); i++) {
-          cout << endl << "      set" << State->GetParameterName(iterConditions->SetParam[i])
-               << "to " << iterConditions->SetValue[i];
+          cout << endl << "      set " << iterConditions->SetParam[i]->GetName()
+               << " to " << iterConditions->SetValue[i];
 
           switch (iterConditions->Type[i]) {
           case FG_VALUE:

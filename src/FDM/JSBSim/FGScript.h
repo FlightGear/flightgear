@@ -63,6 +63,10 @@ CLASS DOCUMENTATION
 /** Encapsulates the JSBSim scripting capability.
     @author Jon S. Berndt
     @version $Id$
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGScript.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Header File </a>
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGScript.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Source File </a>
 
     <h4>Scripting support provided via FGScript.</h4>
 
@@ -163,8 +167,8 @@ private:
   };
 
   struct condition {
-    vector <eParam>  TestParam;
-    vector <eParam>  SetParam;
+    vector <FGPropertyManager*>  TestParam;
+    vector <FGPropertyManager*>  SetParam;
     vector <double>  TestValue;
     vector <double>  SetValue;
     vector <string>  Comparison;
@@ -191,6 +195,7 @@ private:
 
   FGFDMExec* FDMExec;
   FGState* State;
+  FGPropertyManager* PropertyManager;
   void Debug(int from);
 };
 

@@ -43,6 +43,8 @@ INCLUDES
 
 #include <string>
 #include "../FGJSBBase.h"
+#include "../FGPropertyManager.h"
+
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -100,7 +102,7 @@ public:
   virtual bool Run(void);
   virtual void SetOutput(void);
   inline double GetOutput (void) {return Output;}
-  inline int GetOutputIdx(void) { return OutputIdx; }
+  inline FGPropertyManager* GetOutputNode(void) { return OutputNode; }
   inline string GetName(void) {return Name;}
   inline string GetType(void) { return Type; }
   virtual double GetOutputPct(void) { return 0; }
@@ -109,13 +111,14 @@ protected:
    /// Pilot/Aircraft, FCS, Autopilot inputs
   enum eInputType {itPilotAC, itFCS, itAP, itBias} InputType;
   FGFCS* fcs;
+  FGPropertyManager* PropertyManager;
   string Type;
   string Name;
   int ID;
-  eParam InputIdx;
+  FGPropertyManager* InputNode;
+  int InputIdx;
   double Input;
-  string sOutputIdx;
-  eParam OutputIdx;
+  FGPropertyManager* OutputNode;
   double Output;
   bool IsOutput;
   virtual void Debug(int from);

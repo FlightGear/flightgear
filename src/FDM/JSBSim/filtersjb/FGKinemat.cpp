@@ -49,7 +49,7 @@ CLASS IMPLEMENTATION
 FGKinemat::FGKinemat(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
                                                          AC_cfg(AC_cfg)
 {
-  string token;
+  string token,sOutputIdx;
   double tmpDetent;
   double tmpTime;
 
@@ -70,8 +70,12 @@ FGKinemat::FGKinemat(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
       token = AC_cfg->GetValue("INPUT");
       if (token.find("FG_") != token.npos) {
         *AC_cfg >> token;
-        InputIdx = fcs->GetState()->GetParameterIndex(token);
+        InputNode = PropertyManager->GetNode( 
+                    fcs->GetState()->GetPropertyName(token) );
         InputType = itPilotAC;
+      } else {
+        *AC_cfg >> InputIdx;
+        InputType = itFCS;
       }
     } else if ( token == "DETENTS" ) {
       *AC_cfg >> NumDetents;
@@ -85,7 +89,8 @@ FGKinemat::FGKinemat(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
 
       IsOutput = true;
       *AC_cfg >> sOutputIdx;
-      OutputIdx = fcs->GetState()->GetParameterIndex(sOutputIdx);
+      OutputNode = PropertyManager->GetNode( 
+                     fcs->GetState()->GetPropertyName(sOutputIdx) );
     }
   }
 
@@ -107,8 +112,8 @@ bool FGKinemat::Run(void ) {
 
   FGFCSComponent::Run(); // call the base class for initialization of Input
   InputCmd = Input*Detents[NumDetents-1];
-  OutputPos = fcs->GetState()->GetParameter(OutputIdx);
-
+  OutputPos = OutputNode->getDoubleValue();
+  
   if(InputCmd < Detents[0]) {
     fi=0;
     InputCmd=Detents[0];
@@ -127,11 +132,10 @@ bool FGKinemat::Run(void ) {
       OutputPos=InputCmd;
     else {
       if(InputCmd != lastInputCmd) {
-
         InTransit=1;
       }
+      //cout << "FGKinemat::Run, InTransit: " << InTransit << endl;
       if(InTransit) {
-
         //fprintf(stderr,"InputCmd: %g, OutputPos: %g\n",InputCmd,OutputPos);
         fi=0;
         while(Detents[fi] < InputCmd) {
@@ -142,15 +146,18 @@ bool FGKinemat::Run(void ) {
             output_transit_rate=(Detents[fi] - Detents[fi-1])/TransitionTimes[fi];
           else
             output_transit_rate=(Detents[fi] - Detents[fi-1])/5;
+          //cout << "FGKinemat::Run, output_transit_rate: " << output_transit_rate << endl;  
         } else {
           if(TransitionTimes[fi+1] > 0)
             output_transit_rate=(Detents[fi] - Detents[fi+1])/TransitionTimes[fi+1];
           else
             output_transit_rate=(Detents[fi] - Detents[fi+1])/5;
         }
-        if(fabs(OutputPos - InputCmd) > fabs(dt*output_transit_rate) )
+        if(fabs(OutputPos - InputCmd) > fabs(dt*output_transit_rate) ) {
           OutputPos+=output_transit_rate*dt;
-        else {
+          //cout << "FGKinemat::Run, OutputPos: " << OutputPos 
+          //     << " dt: " << dt << endl;
+        } else {
           InTransit=0;
           OutputPos=InputCmd;
         }
@@ -195,12 +202,12 @@ void FGKinemat::Debug(int from)
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
       cout << "      ID: " << ID << endl;
-      cout << "      INPUT: " << InputIdx << endl;
+      cout << "      INPUT: " << InputNode->getName() << endl;
       cout << "      DETENTS: " << NumDetents << endl;
       for(int i=0;i<NumDetents;i++) {
         cout << "        " << Detents[i] << " " << TransitionTimes[i] << endl;
       }
-      if (IsOutput) cout << "      OUTPUT: " <<sOutputIdx << endl;
+      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

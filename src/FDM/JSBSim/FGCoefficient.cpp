@@ -122,13 +122,13 @@ bool FGCoefficient::Load(FGConfigFile *AC_cfg)
       }
 
       *AC_cfg >> multparmsRow;
-      prop = State->GetPropertyName( State->GetParameterIndex(multparmsRow) );
+      prop = State->GetPropertyName( multparmsRow );
       LookupR = PropertyManager->GetNode( prop );
     }
 
     if (type == TABLE) {
       *AC_cfg >> multparmsCol;
-      prop = State->GetPropertyName( State->GetParameterIndex(multparmsCol) );
+      prop = State->GetPropertyName( multparmsCol );
 
       LookupC = PropertyManager->GetNode( prop );
     }
@@ -147,13 +147,12 @@ bool FGCoefficient::Load(FGConfigFile *AC_cfg)
       while (n < end && n >= 0) {
         n -= start;
         mult = multparms.substr(start,n);
-        prop= State->GetPropertyName( State->GetParameterIndex(mult) );
+        prop= State->GetPropertyName( mult );
         multipliers.push_back( PropertyManager->GetNode(prop) );
         start += n+1;
         n = multparms.find("|",start);
       }
-      prop=State->GetPropertyName( 
-            State->GetParameterIndex( multparms.substr(start,n) ) );
+      prop=State->GetPropertyName( multparms.substr(start,n) );
       mult = multparms.substr(start,n);
       multipliers.push_back( PropertyManager->GetNode(prop) );
       // End of non-dimensionalizing parameter read-in

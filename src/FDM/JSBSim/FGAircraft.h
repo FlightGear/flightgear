@@ -99,6 +99,10 @@ CLASS DOCUMENTATION
      Wiley & Sons, 1979 ISBN 0-471-03032-5</li>
      <li>Bernard Etkin, "Dynamics of Flight, Stability and Control", Wiley & Sons,
      1982 ISBN 0-471-08936-2</li></ol>
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGAircraft.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Header File </a>
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGAircraft.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Source File </a>
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -167,7 +171,6 @@ public:
   double GetCI2Vel(void) const { return ci2vel; }
   double GetAlphaW(void) const { return alphaw; }
                                                            
-  
   float GetNlf(void);
   
   inline FGColumnVector3& GetNwcg(void) { return vNwcg; }

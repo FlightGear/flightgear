@@ -85,7 +85,10 @@ CLASS DOCUMENTATION
     as ground effect and maximum lift curve tailoff are handled.
     @author Jon S. Berndt
     @version $Id$
-    @see -
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGAerodynamics.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Header File </a>
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGAerodynamics.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Source File </a>
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -112,17 +115,17 @@ public:
   /** Gets the total aerodynamic force vector.
       @return a force vector reference. */
   FGColumnVector3& GetForces(void) {return vForces;}
-  inline double GetForces(int n) const {return vForces(n);}
+  double GetForces(int n) const {return vForces(n);}
 
   /** Gets the total aerodynamic moment vector.
       @return a moment vector reference. */
   FGColumnVector3& GetMoments(void) {return vMoments;}
-  inline double GetMoments(int n) const {return vMoments(n);}
+  double GetMoments(int n) const {return vMoments(n);}
 
-  inline FGColumnVector3& GetvLastFs(void) { return vLastFs; }
-  inline double GetvLastFs(int axis) const { return vLastFs(axis); }
-  inline FGColumnVector3& GetvFs(void) { return vFs; }
-  inline double GetvFs(int axis) const { return vFs(axis); }
+  FGColumnVector3& GetvLastFs(void) { return vLastFs; }
+  double GetvLastFs(int axis) const { return vLastFs(axis); }
+  FGColumnVector3& GetvFs(void) { return vFs; }
+  double GetvFs(int axis) const { return vFs(axis); }
   inline double GetLoD(void) const { return lod; }
   inline double GetClSquared(void) const { return clsq; } 
 

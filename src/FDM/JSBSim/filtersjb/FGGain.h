@@ -53,6 +53,7 @@ INCLUDES
 #include "../FGConfigFile.h"
 #include "../FGTable.h"
 
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -84,7 +85,7 @@ private:
   double OutputPct;
   bool invert;
   int Rows;
-  eParam ScheduledBy;
+  FGPropertyManager* ScheduledBy;
 
   void Debug(int from);
 };

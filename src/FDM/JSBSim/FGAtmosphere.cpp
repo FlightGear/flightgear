@@ -72,8 +72,9 @@ CLASS IMPLEMENTATION
 FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGAtmosphere";
-  lastIndex=0;
-  h = 0;
+  lastIndex = 0;
+  h = 0.0;
+  psiw = 0.0;
   htab[0]=0;
   htab[1]=36089.239;
   htab[2]=65616.798;

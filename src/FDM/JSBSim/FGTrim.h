@@ -76,7 +76,7 @@ typedef enum { tLongitudinal, tFull, tGround, tPullup,
                tCustom, tNone, tTurn 
              } TrimMode;
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define snprintf _snprintf
 #endif
 
@@ -140,6 +140,10 @@ CLASS DOCUMENTATION
     fgt->ReportState();  
     @author Tony Peden
     @version $Id$
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGTrim.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Header File </a>
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGTrim.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Source File </a>
 */       
   
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -102,12 +102,15 @@ CLASS IMPLEMENTATION
 FGAircraft::FGAircraft(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGAircraft";
-  alphaclmin = alphaclmax = 0;
-  HTailArea = VTailArea = HTailArm = VTailArm = 0.0;
-  lbarh = lbarv = vbarh = vbarv = 0.0;
-  WingIncidence=0;
-  impending_stall = 0;
-  bi2vel=ci2vel=alphaw=0;
+  WingIncidence   = 0.0;
+  impending_stall = 0.0;
+  alphaclmin = alphaclmax = 0.0;
+  HTailArea = VTailArea = 0.0;
+  HTailArm  = VTailArm  = 0.0;
+  lbarh = lbarv = 0.0;
+  vbarh = vbarv = 0.0;
+  bi2vel = ci2vel = 0.0;
+  alphaw = 0.0;
 
   bind();
 
@@ -147,8 +150,8 @@ bool FGAircraft::Run(void)
     vNwcg = State->GetTb2s() * vNcg;
     vNwcg(3) = -1*vNwcg(3) + 1;
     
-    twovel=2*Translation->GetVt();
-    if(twovel > 0) {
+    twovel = 2*Translation->GetVt();
+    if (twovel > 0) {
       bi2vel = WingSpan / twovel;
       ci2vel = cbar / twovel;
     }  
@@ -372,8 +375,8 @@ void FGAircraft::unbind(void)
   PropertyManager->Untie("metrics/eyepoint-x-ft");
   PropertyManager->Untie("metrics/eyepoint-y-ft");
   PropertyManager->Untie("metrics/eyepoint-z-ft");
-  PropertyManager->Untie("metrics/alpha-max-rad");
-  PropertyManager->Untie("metrics/alpha-min-rad");
+  PropertyManager->Untie("metrics/alpha-max-deg");
+  PropertyManager->Untie("metrics/alpha-min-deg");
   PropertyManager->Untie("aero/bi2vel");
   PropertyManager->Untie("aero/ci2vel");
   PropertyManager->Untie("aero/alpha-wing-rad");
