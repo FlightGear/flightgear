@@ -26,7 +26,8 @@
 
 TARGET = libMath.a
 
-CFILES = MAT3geom.c MAT3inv.c MAT3mat.c MAT3vec.c fg_random.c polar.c
+CFILES = MAT3geom.c MAT3inv.c MAT3mat.c MAT3vec.c fg_geodesy.c fg_random.c \
+	 polar.c
 OFILES = $(CFILES:.c=.o)
 
 
@@ -68,6 +69,9 @@ MAT3mat.o:
 MAT3vec.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
+fg_geodesy.o:
+	$(CC) $(CFLAGS) -c fg_geodesy.c -o $@
+
 fg_random.o:
 	$(CC) $(CFLAGS) -c fg_random.c -o $@
 
@@ -77,6 +81,9 @@ polar.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.12  1997/07/31 22:52:27  curt
+# Working on redoing internal coordinate systems & scenery transformations.
+#
 # Revision 1.11  1997/07/30 16:04:08  curt
 # Moved random routines from Utils/ to Math/
 #

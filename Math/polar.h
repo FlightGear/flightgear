@@ -31,10 +31,11 @@
 #include "../types.h"
 
 
-/* Convert a geodetic coordinate to a cartesian coordinat on the unit
- * circle, scaled by the radius of the earth in meters.  Ignores Altitude,
- * since this is just for translating points around on the surface. */
-struct fgCartesianPoint fgGeodetic2Cartesian(double lon, double lat);
+/* Convert a polar coordinate to a cartesian coordinate.  Lon and Lat
+ * must be specified in radians.  The FG convention is for distances
+ * to be specified in meters */
+struct fgCartesianPoint fgPolarToCart(double lon, double lat, double radius);
+
 
 /* Precalculate as much as possible so we can do a batch of transforms
  * through the same angles, will rotates a cartesian point about the
@@ -52,6 +53,7 @@ struct fgCartesianPoint fgGeodetic2Cartesian(double lon, double lat);
  */
 void fgRotateBatchInit(double Theta, double Phi);
 
+
 /* Rotates a cartesian point about the center of the earth by Theta
  * (longitude axis) and Phi (latitude axis) */
 struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p);
@@ -61,9 +63,12 @@ struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p);
 
 
 /* $Log$
-/* Revision 1.2  1997/07/23 21:52:21  curt
-/* Put comments around the text after an #endif for increased portability.
+/* Revision 1.3  1997/07/31 22:52:28  curt
+/* Working on redoing internal coordinate systems & scenery transformations.
 /*
+ * Revision 1.2  1997/07/23 21:52:21  curt
+ * Put comments around the text after an #endif for increased portability.
+ *
  * Revision 1.1  1997/07/07 21:02:37  curt
  * Initial revision.
  *

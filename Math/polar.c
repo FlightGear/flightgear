@@ -35,15 +35,15 @@
 static double st, ct, sp, cp;
 
 
-/* Convert a geodetic coordinate to a cartesian coordinat on the unit
- * circle, scaled by the radius of the earth in meters.  Ignores Altitude,
- * since this is just for translating points around on the surface. */
-struct fgCartesianPoint fgGeodetic2Cartesian(double lon, double lat) {
+/* Convert a polar coordinate to a cartesian coordinate.  Lon and Lat
+ * must be specified in radians.  The FG convention is for distances
+ * to be specified in meters */
+struct fgCartesianPoint fgPolarToCart(double lon, double lat, double radius) {
     struct fgCartesianPoint pnew;
 
-    pnew.x = cos(lon) * cos(lat) * EARTH_RAD;
-    pnew.y = sin(lon) * cos(lat) * EARTH_RAD;
-    pnew.z = sin(lat) * EARTH_RAD;
+    pnew.x = cos(lon) * cos(lat) * radius;
+    pnew.y = sin(lon) * cos(lat) * radius;
+    pnew.z = sin(lat) * radius;
 
     return(pnew);
 }
@@ -101,6 +101,9 @@ struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p) {
 
 
 /* $Log$
-/* Revision 1.1  1997/07/07 21:02:36  curt
-/* Initial revision.
-/* */
+/* Revision 1.2  1997/07/31 22:52:27  curt
+/* Working on redoing internal coordinate systems & scenery transformations.
+/*
+ * Revision 1.1  1997/07/07 21:02:36  curt
+ * Initial revision.
+ * */
