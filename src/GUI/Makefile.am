@@ -1,5 +1,7 @@
 noinst_LIBRARIES = libGUI.a
 
+EXTRA_DIST = net_dlg.cxx net_dlg.hxx
+
 if ENABLE_NETWORK_OLK
 NETWORK_SRCS = net_dlg.cxx net_dlg.hxx 
 else
