@@ -52,6 +52,7 @@ fgfs_LDADD = \
 	$(top_builddir)/Simulator/Controls/libControls.a \
 	$(top_builddir)/Simulator/FDM/libFlight.a \
 	$(top_builddir)/Simulator/FDM/External/libExternal.a \
+	$(top_builddir)/Simulator/FDM/JSBsim/libJSBsim.a \
 	$(top_builddir)/Simulator/FDM/LaRCsim/libLaRCsim.a \
 	$(top_builddir)/Simulator/FDM/Slew/libSlew.a \
 	$(top_builddir)/Simulator/GUI/libGUI.a \

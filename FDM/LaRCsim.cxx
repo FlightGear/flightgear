@@ -26,6 +26,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
+#include <Debug/logstream.hxx>
 #include <FDM/flight.hxx>
 #include <FDM/LaRCsim/ls_cockpit.h>
 #include <FDM/LaRCsim/ls_generic.h>
@@ -42,7 +43,7 @@ int fgLaRCsimInit(double dt) {
 
 
 // Run an iteration of the EOM (equations of motion)
-int fgLaRCsimUpdate(FGState& f, int multiloop) {
+int fgLaRCsimUpdate(FGInterface& f, int multiloop) {
     double save_alt = 0.0;
 
     // lets try to avoid really screwing up the LaRCsim model
@@ -62,9 +63,9 @@ int fgLaRCsimUpdate(FGState& f, int multiloop) {
     // Inform LaRCsim of the local terrain altitude
     Runway_altitude =   f.get_Runway_altitude();
 
-    // old -- FGstate_2_LaRCsim() not needed except for Init()
+    // old -- FGInterface_2_LaRCsim() not needed except for Init()
     // translate FG to LaRCsim structure
-    // FGState_2_LaRCsim(f);
+    // FGInterface_2_LaRCsim(f);
     // printf("FG_Altitude = %.2f\n", FG_Altitude * 0.3048);
     // printf("Altitude = %.2f\n", Altitude * 0.3048);
     // printf("Radius to Vehicle = %.2f\n", Radius_to_vehicle * 0.3048);
@@ -77,7 +78,7 @@ int fgLaRCsimUpdate(FGState& f, int multiloop) {
     // translate LaRCsim back to FG structure so that the
     // autopilot (and the rest of the sim can use the updated
     // values
-    fgLaRCsim_2_FGState(f);
+    fgLaRCsim_2_FGInterface(f);
 
     // but lets restore our original bogus altitude when we are done
     if ( save_alt < -9000.0 ) {
@@ -88,8 +89,8 @@ int fgLaRCsimUpdate(FGState& f, int multiloop) {
 }
 
 
-// Convert from the FGState struct to the LaRCsim generic_ struct
-int FGState_2_LaRCsim (FGState& f) {
+// Convert from the FGInterface struct to the LaRCsim generic_ struct
+int FGInterface_2_LaRCsim (FGInterface& f) {
 
     Mass =      f.get_Mass();
     I_xx =      f.get_I_xx();
@@ -265,8 +266,8 @@ int FGState_2_LaRCsim (FGState& f) {
 }
 
 
-// Convert from the LaRCsim generic_ struct to the FGState struct
-int fgLaRCsim_2_FGState (FGState& f) {
+// Convert from the LaRCsim generic_ struct to the FGInterface struct
+int fgLaRCsim_2_FGInterface (FGInterface& f) {
 
     // Mass properties and geometry values
     f.set_Inertias( Mass, I_xx, I_yy, I_zz, I_xz );
@@ -324,6 +325,11 @@ int fgLaRCsim_2_FGState (FGState& f) {
     // f.set_Euler_Rates( Phi_dot, Theta_dot, Psi_dot );
     f.set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
 
+    FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << Longitude 
+	    << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 
+	    << " alt = " << Altitude << " sl_radius = " << Sea_level_radius 
+	    << " radius_to_vehicle = " << Radius_to_vehicle );
+	    
     // Positions
     f.set_Geocentric_Position( Lat_geocentric, Lon_geocentric, 
                                Radius_to_vehicle );
@@ -389,6 +395,9 @@ int fgLaRCsim_2_FGState (FGState& f) {
 
 
 // $Log$
+// Revision 1.11  1999/02/05 21:28:58  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.10  1999/02/01 21:33:30  curt
 // Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
 // Jon accepted my offer to do this and thought it was a good idea.

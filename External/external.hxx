@@ -76,13 +76,16 @@ public:
 
 
 // reset flight params to a specific position 
-void fgExternalInit( FGState& f );
+void fgExternalInit( FGInterface& f );
 
 
 #endif // _EXTERNAL_HXX
 
 
 // $Log$
+// Revision 1.6  1999/02/05 21:29:04  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.5  1999/01/19 17:52:12  curt
 // Working on being able to extrapolate a new position and orientation
 // based on a position, orientation, and time offset.

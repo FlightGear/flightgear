@@ -232,7 +232,7 @@ private:
     double parse_degree( const string& degree_str );
     int parse_time_offset( const string& time_str );
     int parse_tile_radius( const string& arg );
-    int parse_flight_model( const string& fm );
+    int parse_fdm( const string& fm );
     double parse_fov( const string& arg );
     bool parse_serial( const string& serial_str );
 };
@@ -245,6 +245,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.27  1999/02/05 21:29:13  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.26  1999/02/02 20:13:37  curt
 // MSVC++ portability changes by Bernie Bright:
 //

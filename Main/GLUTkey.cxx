@@ -69,7 +69,7 @@ static void local_update_sky_and_lighting_params( void ) {
 
 // Handle keyboard events
 void GLUTkey(unsigned char k, int x, int y) {
-    FGState *f;
+    FGInterface *f;
     fgTIME *t;
     FGView *v;
     FGWeather *w;
@@ -386,6 +386,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.39  1999/02/05 21:29:07  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.38  1998/12/11 20:26:25  curt
 // Fixed view frustum culling accuracy bug so we can look out the sides and
 // back without tri-stripes dropping out.

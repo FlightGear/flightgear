@@ -52,7 +52,7 @@ static int panel_hist = 0;
 // and external modes wouldn't need to recreate the LaRCsim matrices
 // themselves.
 
-static const bool use_larcsim_local_to_body = true;
+static const bool use_larcsim_local_to_body = false;
 
 
 // This is a record containing current view parameters
@@ -198,7 +198,7 @@ void FGView::LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 
 // Update the view volume, position, and orientation
 void FGView::UpdateViewParams( void ) {
-    FGState *f = current_aircraft.fdm_state;
+    FGInterface *f = current_aircraft.fdm_state;
 
     UpdateViewMath(f);
     UpdateWorldToEye(f);
@@ -262,7 +262,7 @@ void FGView::UpdateViewParams( void ) {
 
 
 // Update the view parameters
-void FGView::UpdateViewMath( FGState *f ) {
+void FGView::UpdateViewMath( FGInterface *f ) {
     Point3D p;
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
@@ -296,15 +296,13 @@ void FGView::UpdateViewMath( FGState *f ) {
 	p.setz( p.radius() + scenery.cur_elev + 0.5 * METER_TO_FEET );
     }
 
+
     abs_view_pos = fgPolarToCart3d(p);
     view_pos = abs_view_pos - scenery.center;
 
-    FG_LOG( FG_VIEW, FG_DEBUG, "Absolute view pos = "
-	    << abs_view_pos.x() << ", " 
-	    << abs_view_pos.y() << ", " 
-	    << abs_view_pos.z() );
-    FG_LOG( FG_VIEW, FG_DEBUG, "Relative view pos = "
-	    << view_pos.x() << ", " << view_pos.y() << ", " << view_pos.z() );
+    FG_LOG( FG_VIEW, FG_DEBUG, "Polar view pos = " << p );
+    FG_LOG( FG_VIEW, FG_DEBUG, "Absolute view pos = " << abs_view_pos );
+    FG_LOG( FG_VIEW, FG_DEBUG, "Relative view pos = " << view_pos );
 
     // Derive the LOCAL aircraft rotation matrix (roll, pitch, yaw)
     // from FG_T_local_to_body[3][3]
@@ -435,7 +433,7 @@ void FGView::UpdateViewMath( FGState *f ) {
 
 // Update the "World to Eye" transformation matrix
 // This is most useful for view frustum culling
-void FGView::UpdateWorldToEye( FGState *f ) {
+void FGView::UpdateWorldToEye( FGInterface *f ) {
     MAT3mat R_Phi, R_Theta, R_Psi, R_Lat, R_Lon, T_view;
     MAT3mat TMP;
     MAT3hvec vec;
@@ -603,6 +601,9 @@ FGView::~FGView( void ) {
 
 
 // $Log$
+// Revision 1.33  1999/02/05 21:29:14  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.32  1999/01/07 20:25:12  curt
 // Updated struct fgGENERAL to class FGGeneral.
 //

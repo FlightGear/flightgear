@@ -113,7 +113,7 @@ void Moon::updatePosition(fgTIME *t, Star *ourSun)
     geoRa, geoDec;
   
   fgAIRCRAFT *air;
-  FGState *f;
+  FGInterface *f;
 
   air = &current_aircraft;
   f = air->fdm_state;

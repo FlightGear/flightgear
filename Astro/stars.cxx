@@ -220,7 +220,7 @@ int fgStarsInit( void ) {
 
 // Draw the Stars
 void fgStarsRender( void ) {
-    FGState *f;
+    FGInterface *f;
     fgLIGHT *l;
     fgTIME *t;
     int i;
@@ -264,6 +264,9 @@ void fgStarsRender( void ) {
 
 
 // $Log$
+// Revision 1.27  1999/02/05 21:28:52  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.26  1999/02/02 20:13:30  curt
 // MSVC++ portability changes by Bernie Bright:
 //

@@ -371,7 +371,7 @@ static void fgRenderFrame( void ) {
 
 // Update internal time dependent calculations (i.e. flight model)
 void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
-    FGState *f = current_aircraft.fdm_state;
+    FGInterface *f = current_aircraft.fdm_state;
     fgLIGHT *l = &cur_light_params;
     fgTIME *t = &cur_time_params;
     FGView *v = &current_view;
@@ -451,7 +451,7 @@ static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
-    FGState *f;
+    FGInterface *f;
     fgTIME *t;
     static long remainder = 0;
     long elapsed, multi_loop;
@@ -927,7 +927,7 @@ int fgGlutInitEvents( void ) {
 
 // Main ...
 int main( int argc, char **argv ) {
-    FGState *f;
+    FGInterface *f;
 
     f = current_aircraft.fdm_state;
 
@@ -1007,6 +1007,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.85  1999/02/05 21:29:08  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.84  1999/02/02 20:13:34  curt
 // MSVC++ portability changes by Bernie Bright:
 //

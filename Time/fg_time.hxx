@@ -98,13 +98,16 @@ void fgTimeInit(fgTIME *t);
 
 
 // Update the time dependent variables
-void fgTimeUpdate(FGState *f, fgTIME *t);
+void fgTimeUpdate(FGInterface *f, fgTIME *t);
 
 
 #endif // _FG_TIME_HXX
 
 
 // $Log$
+// Revision 1.14  1999/02/05 21:29:19  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.13  1999/02/01 21:33:39  curt
 // Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
 // Jon accepted my offer to do this and thought it was a good idea.

@@ -33,51 +33,51 @@
 
 /* Required get_()
 
-   `FGState::get_Longitude ()'
-   `FGState::get_Latitude ()'
-   `FGState::get_Altitude ()'
-   `FGState::get_Phi ()'
-   `FGState::get_Theta ()'
-   `FGState::get_Psi ()'
-   `FGState::get_V_equiv_kts ()'
+   `FGInterface::get_Longitude ()'
+   `FGInterface::get_Latitude ()'
+   `FGInterface::get_Altitude ()'
+   `FGInterface::get_Phi ()'
+   `FGInterface::get_Theta ()'
+   `FGInterface::get_Psi ()'
+   `FGInterface::get_V_equiv_kts ()'
 
-   `FGState::get_Mass ()'
-   `FGState::get_I_xx ()'
-   `FGState::get_I_yy ()'
-   `FGState::get_I_zz ()'
-   `FGState::get_I_xz ()'
+   `FGInterface::get_Mass ()'
+   `FGInterface::get_I_xx ()'
+   `FGInterface::get_I_yy ()'
+   `FGInterface::get_I_zz ()'
+   `FGInterface::get_I_xz ()'
    
-   `FGState::get_V_north ()'
-   `FGState::get_V_east ()'
-   `FGState::get_V_down ()'
+   `FGInterface::get_V_north ()'
+   `FGInterface::get_V_east ()'
+   `FGInterface::get_V_down ()'
 
-   `FGState::get_P_Body ()'
-   `FGState::get_Q_Body ()'
-   `FGState::get_R_Body ()'
+   `FGInterface::get_P_Body ()'
+   `FGInterface::get_Q_Body ()'
+   `FGInterface::get_R_Body ()'
 
-   `FGState::get_Gamma_vert_rad ()'
-   `FGState::get_Climb_Rate ()'
-   `FGState::get_Alpha ()'
-   `FGState::get_Beta ()'
+   `FGInterface::get_Gamma_vert_rad ()'
+   `FGInterface::get_Climb_Rate ()'
+   `FGInterface::get_Alpha ()'
+   `FGInterface::get_Beta ()'
 
-   `FGState::get_Runway_altitude ()'
+   `FGInterface::get_Runway_altitude ()'
 
-   `FGState::get_Lon_geocentric ()'
-   `FGState::get_Lat_geocentric ()'
-   `FGState::get_Sea_level_radius ()'
-   `FGState::get_Earth_position_angle ()'
+   `FGInterface::get_Lon_geocentric ()'
+   `FGInterface::get_Lat_geocentric ()'
+   `FGInterface::get_Sea_level_radius ()'
+   `FGInterface::get_Earth_position_angle ()'
 
-   `FGState::get_Latitude_dot()'
-   `FGState::get_Longitude_dot()'
-   `FGState::get_Radius_dot()'
+   `FGInterface::get_Latitude_dot()'
+   `FGInterface::get_Longitude_dot()'
+   `FGInterface::get_Radius_dot()'
 
-   `FGState::get_Dx_cg ()'
-   `FGState::get_Dy_cg ()'
-   `FGState::get_Dz_cg ()'
+   `FGInterface::get_Dx_cg ()'
+   `FGInterface::get_Dy_cg ()'
+   `FGInterface::get_Dz_cg ()'
 
-   `FGState::get_T_local_to_body_11 ()' ... `FGState::get_T_local_to_body_33 ()'
+   `FGInterface::get_T_local_to_body_11 ()' ... `FGInterface::get_T_local_to_body_33 ()'
 
-   `FGState::get_Radius_to_vehicle ()'
+   `FGInterface::get_Radius_to_vehicle ()'
 
  */
 
@@ -93,7 +93,7 @@ typedef double FG_VECTOR_3[3];
 
 
 // This is based heavily on LaRCsim/ls_generic.h
-class FGState {
+class FGInterface {
 
 public:
 
@@ -102,18 +102,23 @@ public:
 	// Slew (in MS terminology)
 	FG_SLEW = 0,
 	
-	// The only "real" model that is currently implemented
+	// The NASA LaRCsim (Navion) flight model
 	FG_LARCSIM = 1,
 
-	FG_ACM = 2,
-	FG_SUPER_SONIC = 3,
-	FG_HELICOPTER = 4,
-	FG_AUTOGYRO = 5,
-	FG_BALLOON = 6,
-	FG_PARACHUTE = 7,
+	// Jon S. Berndt's new FDM written from the ground up in C++
+	FG_JSBSIM = 2,
+
+	// The following aren't implemented but are here to spark
+	// thoughts and discussions, and maybe even action.
+	FG_ACM = 3,
+	FG_SUPER_SONIC = 4,
+	FG_HELICOPTER = 5,
+	FG_AUTOGYRO = 6,
+	FG_BALLOON = 7,
+	FG_PARACHUTE = 8,
 
 	// Driven externally via a serial port, net, file, etc.
-	FG_EXTERNAL = 8
+	FG_EXTERNAL = 9
     };
 
 /*================== Mass properties and geometry values ==================*/
@@ -792,16 +797,16 @@ public:
 };
 
 
-extern FGState cur_fdm_state;
+extern FGInterface cur_fdm_state;
 
 
 // General interface to the flight model routines
 
 // Initialize the flight model parameters
-int fgFDMInit(int model, FGState& f, double dt);
+int fgFDMInit(int model, FGInterface& f, double dt);
 
 // Run multiloop iterations of the flight model
-int fgFDMUpdate(int model, FGState& f, int multiloop, int jitter);
+int fgFDMUpdate(int model, FGInterface& f, int multiloop, int jitter);
 
 // Set the altitude (force)
 void fgFDMForceAltitude(int model, double alt_meters);
@@ -814,6 +819,9 @@ void fgFDMSetGroundElevation(int model, double alt_meters);
 
 
 // $Log$
+// Revision 1.13  1999/02/05 21:29:02  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.12  1999/01/20 13:42:23  curt
 // Tweaked FDM interface.
 // Testing check sum support for NMEA serial output.

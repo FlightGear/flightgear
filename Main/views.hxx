@@ -172,10 +172,10 @@ public:
     inline void force_update_fov_math() { update_fov = true; }
 
     // Update the view parameters
-    void UpdateViewMath( FGState *f );
+    void UpdateViewMath( FGInterface *f );
 
     // Update the "World to Eye" transformation matrix
-    void UpdateWorldToEye( FGState *f );
+    void UpdateWorldToEye( FGInterface *f );
 
     // Update the field of view coefficients
     void UpdateFOV( const fgOPTIONS& o );
@@ -232,6 +232,9 @@ extern FGView current_view;
 
 
 // $Log$
+// Revision 1.21  1999/02/05 21:29:15  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.20  1999/02/02 20:13:38  curt
 // MSVC++ portability changes by Bernie Bright:
 //

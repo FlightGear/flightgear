@@ -44,7 +44,7 @@ void fgAircraftInit( void ) {
 
 // Display various parameters to stdout
 void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
-    FGState *f;
+    FGInterface *f;
 
     f = a->fdm_state;
 
@@ -68,6 +68,9 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
 
 // $Log$
+// Revision 1.7  1999/02/05 21:28:09  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.6  1998/12/05 15:53:59  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

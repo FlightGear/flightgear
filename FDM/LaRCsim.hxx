@@ -35,19 +35,22 @@
 int fgLaRCsimInit(double dt);
 
 // update position based on inputs, positions, velocities, etc.
-int fgLaRCsimUpdate(FGState& f, int multiloop);
+int fgLaRCsimUpdate(FGInterface& f, int multiloop);
 
-// Convert from the FGState struct to the LaRCsim generic_ struct
-int FGState_2_LaRCsim (FGState& f);
+// Convert from the FGInterface struct to the LaRCsim generic_ struct
+int FGInterface_2_LaRCsim (FGInterface& f);
 
-// Convert from the LaRCsim generic_ struct to the FGState struct
-int fgLaRCsim_2_FGState (FGState& f);
+// Convert from the LaRCsim generic_ struct to the FGInterface struct
+int fgLaRCsim_2_FGInterface (FGInterface& f);
 
 
 #endif // _LARCSIM_HXX
 
 
 // $Log$
+// Revision 1.5  1999/02/05 21:28:59  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.4  1998/12/05 15:54:09  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

@@ -333,7 +333,7 @@ double sidereal_course(fgTIME *t, double lng) {
 
 
 // Update time variables such as gmt, julian date, and sidereal time
-void fgTimeUpdate(FGState *f, fgTIME *t) {
+void fgTimeUpdate(FGInterface *f, fgTIME *t) {
     double gst_precise, gst_course;
 
     FG_LOG( FG_EVENT, FG_DEBUG, "Updating time" );
@@ -399,6 +399,9 @@ void fgTimeUpdate(FGState *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.31  1999/02/05 21:29:18  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.30  1999/02/01 21:33:37  curt
 // Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
 // Jon accepted my offer to do this and thought it was a good idea.

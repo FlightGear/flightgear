@@ -232,7 +232,7 @@ static void send_nmea_out( fgIOCHANNEL *p ) {
     char dir;
     int deg;
     double min;
-    FGState *f;
+    FGInterface *f;
     fgTIME *t;
 
     // run once every two seconds
@@ -331,7 +331,7 @@ static void send_garmin_out( fgIOCHANNEL *p ) {
     char dir;
     int deg;
     double min;
-    FGState *f;
+    FGInterface *f;
     fgTIME *t;
 
     // run once per second
@@ -468,6 +468,9 @@ void fgSerialProcess() {
 
 
 // $Log$
+// Revision 1.11  1999/02/05 21:29:11  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.10  1999/01/21 00:55:01  curt
 // Fixed some problems with timing of output strings.
 // Added checksum support for nmea and garmin output.

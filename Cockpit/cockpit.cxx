@@ -66,50 +66,38 @@ static pCockpit ac_cockpit;
 
 double get_latitude( void )
 {
-	FGState *f;
-	f = current_aircraft.fdm_state;
-
-//	return( toDM(FG_Latitude * RAD_TO_DEG) );
-	return((double)((int)( f->get_Latitude() * RAD_TO_DEG)) );
+    return((double)((int)( current_aircraft.fdm_state->get_Latitude() 
+			   * RAD_TO_DEG)) );
 }
 
 double get_lat_min( void )
 {
-	FGState *f;
-	double      a, d;
+    double a, d;
 
-	f = current_aircraft.fdm_state;
-	
-	a = f->get_Latitude() * RAD_TO_DEG;	
-	if (a < 0.0) {
-		a = -a;
-	}
-	d = (double) ( (int) a);
-	return( (a - d) * 60.0);
+    a = current_aircraft.fdm_state->get_Latitude() * RAD_TO_DEG;	
+    if (a < 0.0) {
+	a = -a;
+    }
+    d = (double) ( (int) a);
+    return( (a - d) * 60.0);
 }
-
 
 double get_longitude( void )
 {
-	FGState *f;
-	f = current_aircraft.fdm_state;
-
-//	return( toDM(FG_Longitude * RAD_TO_DEG) );
-	return((double)((int) (f->get_Longitude() * RAD_TO_DEG)) );
+    return( (double)((int) (current_aircraft.fdm_state->get_Longitude()
+			    * RAD_TO_DEG)) );
 }
+
 double get_long_min( void )
 {
-	FGState *f;
-	double  a, d;
-
-	f = current_aircraft.fdm_state;
-	
-	a = f->get_Longitude() * RAD_TO_DEG;	
-	if (a < 0.0) {
-		a = -a;
-	}
-	d = (double) ( (int) a);
-	return( (a - d) * 60.0);
+    double  a, d;
+    
+    a = current_aircraft.fdm_state->get_Longitude() * RAD_TO_DEG;	
+    if (a < 0.0) {
+	a = -a;
+    }
+    d = (double) ( (int) a);
+    return( (a - d) * 60.0);
 }
 
 double get_throttleval( void )
@@ -139,80 +127,52 @@ double get_rudderval( void )
 
 double get_speed( void )
 {
-	FGState *f;
-
-	f = current_aircraft.fdm_state;
-	return( f->get_V_equiv_kts() );    // Make an explicit function call.
+    return( current_aircraft.fdm_state->get_V_equiv_kts() );
 }
 
 double get_aoa( void )
 {
-	FGState *f;
-              
-	f = current_aircraft.fdm_state;
-	return( f->get_Alpha() * RAD_TO_DEG );
+    return( current_aircraft.fdm_state->get_Alpha() * RAD_TO_DEG );
 }
 
 double get_roll( void )
 {
-	FGState *f;
-
-	f = current_aircraft.fdm_state;
-	return( f->get_Phi() );
+    return( current_aircraft.fdm_state->get_Phi() );
 }
 
 double get_pitch( void )
 {
-	FGState *f;
-              
-	f = current_aircraft.fdm_state;
-	return( f->get_Theta() );
+    return( current_aircraft.fdm_state->get_Theta() );
 }
 
 double get_heading( void )
 {
-	FGState *f;
-
-	f = current_aircraft.fdm_state;
-	return( f->get_Psi() * RAD_TO_DEG );
+    return( current_aircraft.fdm_state->get_Psi() * RAD_TO_DEG );
 }
 
 double get_altitude( void )
 {
-	FGState *f;
-	// double rough_elev;
-
-	f = current_aircraft.fdm_state;
-	// rough_elev = mesh_altitude(f->get_Longitude() * RAD_TO_ARCSEC,
-	//		                   f->get_Latitude()  * RAD_TO_ARCSEC);
-
-	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
-	    return f->get_Altitude();
-	} else {
-	    return f->get_Altitude() * FEET_TO_METER;
-	}
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	return current_aircraft.fdm_state->get_Altitude();
+    } else {
+	return current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER;
+    }
 }
 
 double get_agl( void )
 {
-        FGState *f;
-
-        f = current_aircraft.fdm_state;
-
-	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
-	    return f->get_Altitude() - scenery.cur_elev * METER_TO_FEET;
-	} else {
-	    return f->get_Altitude() * FEET_TO_METER - scenery.cur_elev;
-	}
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	return current_aircraft.fdm_state->get_Altitude()
+	    - scenery.cur_elev * METER_TO_FEET;
+    } else {
+	return current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
+	    - scenery.cur_elev;
+    }
 }
 
 double get_sideslip( void )
 {
-        FGState *f;
-        
-        f = current_aircraft.fdm_state;
-        
-        return( f->get_Beta() );
+    return( current_aircraft.fdm_state->get_Beta() );
 }
 
 double get_frame_rate( void )
@@ -237,15 +197,12 @@ double get_vfc_tris_drawn   ( void )
 
 double get_climb_rate( void )
 {
-	FGState *f;
-
-	f = current_aircraft.fdm_state;
-
-	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
-	    return f->get_Climb_Rate() * 60.0;
-	} else {
-	    return f->get_Climb_Rate() * FEET_TO_METER * 60.0;
-	}
+    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+	return current_aircraft.fdm_state->get_Climb_Rate() * 60.0;
+    } else {
+	return current_aircraft.fdm_state->get_Climb_Rate()
+	    * FEET_TO_METER * 60.0;
+    }
 }
 
 
@@ -303,6 +260,9 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
+// Revision 1.30  1999/02/05 21:28:57  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.29  1999/01/08 19:27:34  curt
 // Fixed AOA reading on HUD.
 // Continued work on time jitter compensation.

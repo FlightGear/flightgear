@@ -25,6 +25,7 @@
 #include <stdio.h>
 
 #include "flight.hxx"
+#include "JSBsim.hxx"
 #include "LaRCsim.hxx"
 
 #include <Debug/logstream.hxx>
@@ -40,12 +41,12 @@
 // world time, so we introduce cur_fdm_state which is extrapolated by
 // the difference between sim time and real world time
 
-FGState cur_fdm_state;
-FGState base_fdm_state;
+FGInterface cur_fdm_state;
+FGInterface base_fdm_state;
 
 
 // Extrapolate fdm based on time_offset (in usec)
-void FGState::extrapolate( int time_offset ) {
+void FGInterface::extrapolate( int time_offset ) {
     double dt = time_offset / 1000000.0;
     cout << "extrapolating FDM by dt = " << dt << endl;
 
@@ -70,17 +71,19 @@ void FGState::extrapolate( int time_offset ) {
 
 
 // Initialize the flight model parameters
-int fgFDMInit(int model, FGState& f, double dt) {
+int fgFDMInit(int model, FGInterface& f, double dt) {
     double save_alt = 0.0;
 
     FG_LOG( FG_FLIGHT ,FG_INFO, "Initializing flight model" );
 
     base_fdm_state = f;
 
-    if ( model == FGState::FG_SLEW ) {
+    if ( model == FGInterface::FG_SLEW ) {
 	// fgSlewInit(dt);
-    } else if ( model == FGState::FG_LARCSIM ) {
-
+    } else if ( model == FGInterface::FG_JSBSIM ) {
+	fgJSBsimInit(dt);
+	fgJSBsim_2_FGInterface(base_fdm_state);
+    } else if ( model == FGInterface::FG_LARCSIM ) {
 	// lets try to avoid really screwing up the LaRCsim model
 	if ( base_fdm_state.get_Altitude() < -9000.0 ) {
 	    save_alt = base_fdm_state.get_Altitude();
@@ -88,7 +91,7 @@ int fgFDMInit(int model, FGState& f, double dt) {
 	}
 
 	// translate FG to LaRCsim structure
-	FGState_2_LaRCsim(base_fdm_state);
+	FGInterface_2_LaRCsim(base_fdm_state);
 
 	// initialize LaRCsim
 	fgLaRCsimInit(dt);
@@ -97,13 +100,13 @@ int fgFDMInit(int model, FGState& f, double dt) {
 		base_fdm_state.get_Latitude() );
 
 	// translate LaRCsim back to FG structure
-	fgLaRCsim_2_FGState(base_fdm_state);
+	fgLaRCsim_2_FGInterface(base_fdm_state);
 
 	// but lets restore our original bogus altitude when we are done
 	if ( save_alt < -9000.0 ) {
 	    base_fdm_state.set_Altitude( save_alt );
 	}
-    } else if ( model == FGState::FG_EXTERNAL ) {
+    } else if ( model == FGInterface::FG_EXTERNAL ) {
 	fgExternalInit(base_fdm_state);
     } else {
 	FG_LOG( FG_FLIGHT, FG_WARN,
@@ -120,7 +123,7 @@ int fgFDMInit(int model, FGState& f, double dt) {
 
 
 // Run multiloop iterations of the flight model
-int fgFDMUpdate(int model, FGState& f, int multiloop, int time_offset) {
+int fgFDMUpdate(int model, FGInterface& f, int multiloop, int time_offset) {
     double time_step, start_elev, end_elev;
 
     // printf("Altitude = %.2f\n", FG_Altitude * 0.3048);
@@ -131,14 +134,17 @@ int fgFDMUpdate(int model, FGState& f, int multiloop, int time_offset) {
     time_step = (1.0 / DEFAULT_MODEL_HZ) * multiloop;
     start_elev = base_fdm_state.get_Altitude();
 
-    if ( model == FGState::FG_SLEW ) {
+    if ( model == FGInterface::FG_SLEW ) {
 	// fgSlewUpdate(f, multiloop);
-    } else if ( model == FGState::FG_LARCSIM ) {
+    } else if ( model == FGInterface::FG_JSBSIM ) {
+	fgJSBsimUpdate(base_fdm_state, multiloop);
+	f = base_fdm_state;
+    } else if ( model == FGInterface::FG_LARCSIM ) {
 	fgLaRCsimUpdate(base_fdm_state, multiloop);
 	// extrapolate position based on actual time
 	// f = extrapolate_fdm( base_fdm_state, time_offset );
 	f = base_fdm_state;
-    } else if ( model == FGState::FG_EXTERNAL ) {
+    } else if ( model == FGInterface::FG_EXTERNAL ) {
 	// fgExternalUpdate(f, multiloop);
 	FGTimeStamp current;
 	current.stamp();
@@ -175,7 +181,7 @@ void fgFDMForceAltitude(int model, double alt_meters) {
 					   METER_TO_FEET) );
 
     // additional work needed for some flight models
-    if ( model == FGState::FG_LARCSIM ) {
+    if ( model == FGInterface::FG_LARCSIM ) {
 	ls_ForceAltitude( base_fdm_state.get_Altitude() );
     }
 }
@@ -189,6 +195,9 @@ void fgFDMSetGroundElevation(int model, double ground_meters) {
 
 
 // $Log$
+// Revision 1.15  1999/02/05 21:29:01  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.14  1999/02/01 21:33:31  curt
 // Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
 // Jon accepted my offer to do this and thought it was a good idea.

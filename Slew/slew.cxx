@@ -34,7 +34,7 @@
 
 // reset flight params to a specific position
 void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
-    FGState *f;
+    FGInterface *f;
     
     f = current_aircraft.fdm_state;
 
@@ -62,7 +62,7 @@ void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading) {
 
 // update position based on inputs, positions, velocities, etc.
 void fgSlewUpdate( void ) {
-    FGState *f;
+    FGInterface *f;
     FGControls *c;
 
     f = current_aircraft.fdm_state;
@@ -83,6 +83,9 @@ void fgSlewUpdate( void ) {
 
 
 // $Log$
+// Revision 1.6  1999/02/05 21:29:05  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.5  1999/02/01 21:33:33  curt
 // Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
 // Jon accepted my offer to do this and thought it was a good idea.

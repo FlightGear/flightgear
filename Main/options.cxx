@@ -128,7 +128,7 @@ fgOPTIONS::fgOPTIONS() :
     sound(1),
 
     // Flight Model options
-    flight_model(FGState::FG_LARCSIM),
+    flight_model(FGInterface::FG_LARCSIM),
 
     // Rendering options
     fog(FG_FOG_NICEST),  // nicest
@@ -303,19 +303,21 @@ fgOPTIONS::parse_tile_radius( const string& arg ) {
 }
 
 
-// Parse --flightmode=abcdefg type option 
+// Parse --fdm=abcdefg type option 
 int
-fgOPTIONS::parse_flight_model( const string& fm ) {
-    // printf("flight model = %s\n", fm);
+fgOPTIONS::parse_fdm( const string& fm ) {
+    // printf("fdm = %s\n", fm);
 
     if ( fm == "slew" ) {
-	return FGState::FG_SLEW;
+	return FGInterface::FG_SLEW;
+    } else if ( fm == "jsb" ) {
+	return FGInterface::FG_JSBSIM;
     } else if ( (fm == "larcsim") || (fm == "LaRCsim") ) {
-	return FGState::FG_LARCSIM;
+	return FGInterface::FG_LARCSIM;
     } else if ( fm == "external" ) {
-	return FGState::FG_EXTERNAL;
+	return FGInterface::FG_EXTERNAL;
     } else {
-	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown flight model = " << fm );
+	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown fdm = " << fm );
 	exit(-1);
     }
 
@@ -426,8 +428,8 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	pitch = atof( arg.substr(8) );
     } else if ( arg.find( "--fg-root=" ) != string::npos ) {
 	fg_root = arg.substr( 10 );
-    } else if ( arg.find( "--flight-model=" ) != string::npos ) {
-	flight_model = parse_flight_model( arg.substr(15) );
+    } else if ( arg.find( "--fdm=" ) != string::npos ) {
+	flight_model = parse_fdm( arg.substr(6) );
     } else if ( arg == "--fog-disable" ) {
 	fog = FG_FOG_DISABLED;	
     } else if ( arg == "--fog-fastest" ) {
@@ -575,7 +577,7 @@ void fgOPTIONS::usage ( void ) {
     printf("\n");
  
     printf("Flight Model:\n");
-    printf("\t--flight-mode=abcd:  one of slew, larcsim, or external\n");
+    printf("\t--fdm=abcd:  one of slew, jsb, larcsim, or external\n");
     printf("\n");
 
     printf("Initial Position and Orientation:\n");
@@ -629,6 +631,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.39  1999/02/05 21:29:12  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.38  1999/02/01 21:33:35  curt
 // Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
 // Jon accepted my offer to do this and thought it was a good idea.

@@ -95,7 +95,7 @@ void fgLIGHT::Init( void ) {
 
 // update lighting parameters based on current sun position
 void fgLIGHT::Update( void ) {
-    FGState *f;
+    FGInterface *f;
     fgTIME *t;
     // if the 4th field is 0.0, this specifies a direction ...
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
@@ -154,7 +154,7 @@ void fgLIGHT::Update( void ) {
 
 // calculate fog color adjusted for sunrise/sunset effects
 void fgLIGHT::UpdateAdjFog( void ) {
-    FGState *f;
+    FGInterface *f;
     double sun_angle_deg, rotation, param1[3], param2[3];
 
     f = current_aircraft.fdm_state;
@@ -220,6 +220,9 @@ fgLIGHT::~fgLIGHT( void ) {
 
 
 // $Log$
+// Revision 1.26  1999/02/05 21:29:20  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.25  1999/01/07 20:25:36  curt
 // Portability changes and updates from Bernie Bright.
 //

@@ -39,7 +39,7 @@
 
 // Define a structure containing all the parameters for an aircraft
 typedef struct{
-    FGState   *fdm_state;
+    FGInterface   *fdm_state;
     FGControls *controls;
 } fgAIRCRAFT ;
 
@@ -61,6 +61,9 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a);
 
 
 // $Log$
+// Revision 1.6  1999/02/05 21:28:10  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.5  1999/02/01 21:33:24  curt
 // Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
 // Jon accepted my offer to do this and thought it was a good idea.

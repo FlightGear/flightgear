@@ -67,7 +67,7 @@ void FGWeather::Init( ) {
 
 // Update the weather parameters for the current position
 void FGWeather::Update( void ) {
-    FGState *f;
+    FGInterface *f;
 
     f = current_aircraft.fdm_state;
 
@@ -79,6 +79,9 @@ void FGWeather::Update( void ) {
 
 
 // $Log$
+// Revision 1.6  1999/02/05 21:29:21  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.5  1998/12/06 13:51:26  curt
 // Turned "struct fgWEATHER" into "class FGWeather".
 //

@@ -255,7 +255,7 @@ void fgSkyInit( void ) {
 
 // Draw the Sky
 void fgSkyRender( void ) {
-    FGState *f;
+    FGInterface *f;
     fgLIGHT *l;
     float inner_color[4];
     float middle_color[4];
@@ -362,6 +362,9 @@ void fgSkyRender( void ) {
 
 
 // $Log$
+// Revision 1.21  1999/02/05 21:28:50  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.20  1999/02/02 20:13:29  curt
 // MSVC++ portability changes by Bernie Bright:
 //

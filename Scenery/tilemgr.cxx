@@ -333,7 +333,7 @@ fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
 // the chunk isn't already in the cache, then read it from disk.
 int fgTileMgrUpdate( void ) {
     fgTILECACHE *c;
-    FGState *f;
+    FGInterface *f;
     fgBUCKET p1, p2;
     static fgBUCKET p_last = {-1000, 0, 0, 0};
     int tile_diameter;
@@ -651,7 +651,7 @@ update_tile_geometry( fgTILE *t, GLdouble *MODEL_VIEW)
 
 // Render the local tiles
 void fgTileMgrRender( void ) {
-    FGState *f;
+    FGInterface *f;
     fgTILECACHE *c;
     fgTILE *t;
     FGView *v;
@@ -758,6 +758,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.53  1999/02/05 21:29:16  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.52  1999/01/27 04:49:48  curt
 // Fixes so that the sim can start out at an airport below sea level.
 //

@@ -74,7 +74,7 @@ extern const char *default_root;
 // Set initial position and orientation
 int fgInitPosition( void ) {
     string id;
-    FGState *f;
+    FGInterface *f;
 
     f = current_aircraft.fdm_state;
 
@@ -154,7 +154,7 @@ int fgInitGeneral( void ) {
 // Returns non-zero if a problem encountered.
 int fgInitSubsystems( void )
 {
-    FGState *f; // assigned later
+    FGInterface *f; // assigned later
     fgLIGHT *l = &cur_light_params;
     fgTIME *t = &cur_time_params;
     FGView *v = &current_view;
@@ -392,6 +392,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.66  1999/02/05 21:29:10  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.65  1999/02/02 20:13:36  curt
 // MSVC++ portability changes by Bernie Bright:
 //

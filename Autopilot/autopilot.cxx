@@ -50,79 +50,51 @@
 
 static double get_speed( void )
 {
-	FGState *f;
-
-	f = current_aircraft.fdm_state;
-	return( f->get_V_equiv_kts() );    // Make an explicit function call.
+    return( current_aircraft.fdm_state->get_V_equiv_kts() );
 }
 
 static double get_aoa( void )
 {
-	FGState *f;
-              
-	f = current_aircraft.fdm_state;
-	return( f->get_Gamma_vert_rad() * RAD_TO_DEG );
+    return( current_aircraft.fdm_state->get_Gamma_vert_rad() * RAD_TO_DEG );
 }
 
 static double fgAPget_roll( void )
 {
-	FGState *f;
-
-	f = current_aircraft.fdm_state;
-	return( f->get_Phi() * RAD_TO_DEG );
+    return( current_aircraft.fdm_state->get_Phi() * RAD_TO_DEG );
 }
 
 static double get_pitch( void )
 {
-	FGState *f;
-              
-	f = current_aircraft.fdm_state;
-	return( f->get_Theta() );
+    return( current_aircraft.fdm_state->get_Theta() );
 }
 
 double fgAPget_heading( void )
 {
-	FGState *f;
-
-	f = current_aircraft.fdm_state;
-	return( f->get_Psi() * RAD_TO_DEG );
+    return( current_aircraft.fdm_state->get_Psi() * RAD_TO_DEG );
 }
 
 static double fgAPget_altitude( void )
 {
-	FGState *f;
-
-	f = current_aircraft.fdm_state;
-
-	return( f->get_Altitude() * FEET_TO_METER /* -rough_elev */ );
+    return( current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER );
 }
 
 static double fgAPget_climb( void )
 {
-	FGState *f;
-
-	f = current_aircraft.fdm_state;
-
-	// return in meters per minute
-	return( f->get_Climb_Rate() * FEET_TO_METER * 60 );
+    // return in meters per minute
+    return( current_aircraft.fdm_state->get_Climb_Rate() * FEET_TO_METER * 60 );
 }
 
 static double get_sideslip( void )
 {
-        FGState *f;
-        
-        f = current_aircraft.fdm_state;
-        
-        return( f->get_Beta() );
+    return( current_aircraft.fdm_state->get_Beta() );
 }
 
 static double fgAPget_agl( void )
 {
-        FGState *f;
         double agl;
 
-        f = current_aircraft.fdm_state;
-        agl = f->get_Altitude() * FEET_TO_METER - scenery.cur_elev;
+        agl = current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER
+	    - scenery.cur_elev;
 
         return( agl );
 }

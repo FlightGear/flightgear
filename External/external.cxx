@@ -31,17 +31,20 @@
 
 
 // reset flight params to a specific position
-void fgExternalInit( FGState &f ) {
+void fgExternalInit( FGInterface &f ) {
 }
 
 
 // update position based on inputs, positions, velocities, etc.
-void fgExternalUpdate( FGState& f, int multiloop ) {
+void fgExternalUpdate( FGInterface& f, int multiloop ) {
 
 }
 
 
 // $Log$
+// Revision 1.5  1999/02/05 21:29:03  curt
+// Modifications to incorporate Jon S. Berndts flight model code.
+//
 // Revision 1.4  1999/02/01 21:33:32  curt
 // Renamed FlightGear/Simulator/Flight to FlightGear/Simulator/FDM since
 // Jon accepted my offer to do this and thought it was a good idea.
