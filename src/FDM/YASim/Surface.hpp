@@ -42,6 +42,9 @@ public:
     // positive is "up" (i.e. "positive AoA")
     void setIncidence(float angle);
 
+    // The offset from base incidence for this surface.
+    void setTwist(float angle);
+
     void setTotalDrag(float c0);
     float getTotalDrag();
 
@@ -92,6 +95,7 @@ private:
     float _flapPos;
     float _spoilerPos;
     float _incidence;
+    float _twist;
     float _inducedDrag;
 };
 

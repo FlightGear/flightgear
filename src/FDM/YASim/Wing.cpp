@@ -15,6 +15,7 @@ Wing::Wing()
     _stall = 0;
     _stallWidth = 0;
     _stallPeak = 0;
+    _twist = 0;
     _camber = 0;
     _incidence = 0;
     _inducedDrag = 1;
@@ -112,6 +113,11 @@ void Wing::setStallWidth(float angle)
 void Wing::setStallPeak(float fraction)
 {
     _stallPeak = fraction;
+}
+
+void Wing::setTwist(float angle)
+{
+    _twist = angle;
 }
 
 void Wing::setCamber(float camber)
@@ -324,6 +330,8 @@ void Wing::compile()
         // and flap1 are set.  Right now flap1 overrides.
 
         int nSegs = (int)Math::ceil((end-start)/segLen);
+        if (_twist != 0 && nSegs < 16) // more segments if twisted
+            nSegs = 16;
         float segWid = _length * (end - start)/nSegs;
 
         int j;
@@ -341,6 +349,7 @@ void Wing::compile()
             sr->surface = s;
             sr->weight = chord * segWid;
             s->setTotalDrag(sr->weight);
+            s->setTwist(_twist * Math::sqrt(1-frac));
             _surfs.add(sr);
 
             if(_mirror) {
@@ -351,6 +360,7 @@ void Wing::compile()
                 sr->surface = s;
                 sr->weight = chord * segWid;
                 s->setTotalDrag(sr->weight);
+                s->setTwist(_twist * Math::sqrt(frac));
                 _surfs.add(sr);
             }
         }

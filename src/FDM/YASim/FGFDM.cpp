@@ -415,6 +415,7 @@ Wing* FGFDM::parseWing(XMLAttributes* a, const char* type)
     w->setDihedral(attrf(a, "dihedral", defDihed) * DEG2RAD);
     w->setCamber(attrf(a, "camber", 0));
     w->setIncidence(attrf(a, "incidence", 0) * DEG2RAD);
+    w->setTwist(attrf(a, "twist", 0) * DEG2RAD);
 
     // The 70% is a magic number that sorta kinda seems to match known
     // throttle settings to approach speed.

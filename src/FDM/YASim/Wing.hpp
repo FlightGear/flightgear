@@ -27,6 +27,7 @@ public:
     void setStall(float aoa);
     void setStallWidth(float angle);
     void setStallPeak(float fraction);
+    void setTwist(float angle);
     void setCamber(float camber);
     void setIncidence(float incidence);
     void setInducedDrag(float drag) { _inducedDrag = drag; }
@@ -92,6 +93,7 @@ private:
     float _stall;
     float _stallWidth;
     float _stallPeak;
+    float _twist;
     float _camber;
     float _incidence;
     float _inducedDrag;

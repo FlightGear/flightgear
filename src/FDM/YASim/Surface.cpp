@@ -20,6 +20,7 @@ Surface::Surface()
     
     _chord = 0;
     _incidence = 0;
+    _twist = 0;
     _slatPos = _spoilerPos = _flapPos = 0;
     _slatDrag = _spoilerDrag = _flapDrag = 1;
 
@@ -103,6 +104,11 @@ void Surface::setIncidence(float angle)
     _incidence = angle;
 }
 
+void Surface::setTwist(float angle)
+{
+    _twist = angle;
+}
+
 void Surface::setSlatParams(float stallDelta, float dragPenalty)
 {
     _slatAlpha = stallDelta;
@@ -160,7 +166,8 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
     // "Rotate" by the incidence angle.  Assume small angles, so we
     // need to diddle only the Z component, X is relatively unchanged
     // by small rotations.
-    out[2] += _incidence * out[0]; // z' = z + incidence * x
+    float incidence = _incidence + _twist;
+    out[2] += incidence * out[0]; // z' = z + incidence * x
 
     // Hold onto the local wind vector so we can multiply the induced
     // drag at the end.
@@ -201,7 +208,7 @@ void Surface::calcForce(float* v, float rho, float* out, float* torque)
 
     // Reverse the incidence rotation to get back to surface
     // coordinates.
-    out[2] -= _incidence * out[0];
+    out[2] -= incidence * out[0];
 
     // Convert back to external coordinates
     Math::tmul33(_orient, out, out);
