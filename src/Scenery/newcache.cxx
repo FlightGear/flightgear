@@ -214,7 +214,7 @@ bool FGNewCache::insert_tile( FGTileEntry *e ) {
 
 // Note this is the old version of FGNewCache::make_space(), currently disabled
 // It uses distance from a center point to determine tiles to be discarded...
-#ifdef 0
+#if 0
 // Ensure at least one entry is free in the cache
 bool FGNewCache::make_space() {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "Make space in cache" );
