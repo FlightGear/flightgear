@@ -40,7 +40,7 @@ fgfs-base-tar:
 	--exclude='*/Textures.high/*.save' \
 	--exclude='*/Textures.high/*.new' \
 	--exclude='*/Docs/source' \
-	-czvf fgfs-base-$(VERSION).tar.gz \
+	-cvf - \
 		data/ATC \
 		data/AUTHORS \
                 data/Aircraft/737 \
@@ -56,6 +56,7 @@ fgfs-base-tar:
                 data/Aircraft/Instruments \
                 data/Aircraft/Instruments-3d \
                 data/Aircraft/OV10 \
+                data/Aircraft/Spitfire \
                 data/Aircraft/T38 \
                 data/Aircraft/UIUC \
                 data/Aircraft/X15 \
@@ -96,6 +97,7 @@ fgfs-base-tar:
 		data/gui \
 		data/[j-p]* \
 		data/version \
+	| bzip2 --best > fgfs-base-$(VERSION).tar.bz2 \
 	)
 
 fgfs-textures-high:
