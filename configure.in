@@ -17,8 +17,8 @@ AC_PROG_LN_S
 dnl Initialize libtool
 AM_PROG_LIBTOOL
 
-dnl Initialize maintainer mode
-AM_MAINTAINER_MODE
+dnl Initialize maintainer mode (I'm not sure what this does)
+dnl AM_MAINTAINER_MODE
 
 dnl This is needed for AC_TRY_COMPILE later
 AC_ISC_POSIX
