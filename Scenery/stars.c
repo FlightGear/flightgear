@@ -49,7 +49,8 @@
 #define DaysSinceEpoch(secs) (((secs)-EpochStart)*(1.0/(24*3600)))
 
 
-static GLint stars;
+/* Define four structures, each with varying amounts of stars */
+static GLint stars[FG_STAR_LEVELS];
 
 
 /* Initialize the Star Management Subsystem */
@@ -62,8 +63,7 @@ void fgStarsInit() {
     double right_ascension, declination, magnitude;
     double ra_save, decl_save;
     double ra_save1, decl_save1;
-    double ra_save2, decl_save2;
-    int count;
+    int count, i, max_stars;
 
     g = &general;
 
@@ -73,89 +73,93 @@ void fgStarsInit() {
     strcat(path, "/Scenery/");
     strcat(path, "Stars.dat");
 
-    printf("Loading Stars: %s\n", path);
+    max_stars = FG_MAX_STARS;
 
-    if ( (fd = fopen(path, "r")) == NULL ) {
-	printf("Cannot open star file: '%s'\n", path);
-	return;
-    }
+    for ( i = 0; i < FG_STAR_LEVELS; i++ ) {
+	printf("Loading %d Stars: %s\n", max_stars, path);
 
-    stars = glGenLists(1);
-    glNewList( stars, GL_COMPILE );
-    glBegin( GL_POINTS );
-
-    /* read in each line of the file */
-    count = 0;
-    while ( (fgets(line, 256, fd) != NULL) && (count < FG_MAX_STARS) ) {
-	front = line;
-
-	/* printf("Read line = %s", front); */
-
-	/* advance to first non-whitespace character */
-	while ( (front[0] == ' ') || (front[0] == '\t') ) {
-	    front++;
+	if ( (fd = fopen(path, "r")) == NULL ) {
+	    printf("Cannot open star file: '%s'\n", path);
+	    return;
 	}
+	
+	stars[i] = glGenLists(1);
+	glNewList( stars[i], GL_COMPILE );
+	glBegin( GL_POINTS );
 
-	/* printf("Line length (after trimming) = %d\n", strlen(front)); */
+	/* read in each line of the file */
+	count = 0;
+	while ( (fgets(line, 256, fd) != NULL) && (count < max_stars) ) {
+	    front = line;
 
-	if ( front[0] == '#' ) {
-	    /* comment */
-	} else if ( strlen(front) <= 1 ) {
-	    /* blank line */
-	} else {
-	    /* star data line */
+	    /* printf("Read line = %s", front); */
 
-	    /* get name */
-	    end = front;
-	    while ( end[0] != ',' ) {
-		end++;
-	    }
-	    end[0] = '\0';
-	    strcpy(name, front);
-	    front = end;
-	    front++;
-
-	    sscanf(front, "%lf,%lf,%lf\n", 
-		   &right_ascension, &declination, &magnitude);
-
-	    if ( strcmp(name, "Hamal") == 0 ) {
-		printf("\n*** Marking %s\n\n", name);
-		ra_save = right_ascension;
-		decl_save = declination;
+	    /* advance to first non-whitespace character */
+	    while ( (front[0] == ' ') || (front[0] == '\t') ) {
+		front++;
 	    }
 
-	    if ( strcmp(name, "Algenib") == 0 ) {
-		printf("\n*** Marking %s\n\n", name);
-		ra_save1 = right_ascension;
-		decl_save1 = declination;
-	    }
+	    /* printf("Line length (after trimming) = %d\n", strlen(front)); */
 
-	    /* scale magnitudes to (0.0 - 1.0) */
-	    magnitude = (0.0 - magnitude) / 5.0 + 1.0;
+	    if ( front[0] == '#' ) {
+		/* comment */
+	    } else if ( strlen(front) <= 1 ) {
+		/* blank line */
+	    } else {
+		/* star data line */
+		
+		/* get name */
+		end = front;
+		while ( end[0] != ',' ) {
+		    end++;
+		}
+		end[0] = '\0';
+		strcpy(name, front);
+		front = end;
+		front++;
 
-	    /* scale magnitudes again so they look ok */
-	    if ( magnitude > 1.0 ) { magnitude = 1.0; }
-	    if ( magnitude < 0.0 ) { magnitude = 0.0; }
-	    magnitude = magnitude * 0.7 + 0.3;
+		sscanf(front, "%lf,%lf,%lf\n", 
+		       &right_ascension, &declination, &magnitude);
 
-	    /* printf("Found star: %d %s, %.3f %.3f %.3f\n", count,
-	       name, right_ascension, declination, magnitude); */
+		if ( strcmp(name, "Hamal") == 0 ) {
+		    printf("  *** Marking %s\n", name);
+		    ra_save = right_ascension;
+		    decl_save = declination;
+		}
 
-	    glColor3f( magnitude, magnitude, magnitude );
-	    glVertex3f( 190000.0 * sin(right_ascension) * cos(declination),
-			-190000.0 * cos(right_ascension) * cos(declination),
-			190000.0 * sin(declination) );
+		if ( strcmp(name, "Algenib") == 0 ) {
+		    printf("  *** Marking %s\n", name);
+		    ra_save1 = right_ascension;
+		    decl_save1 = declination;
+		}
 
-	    count++;
-	} /* if valid line */
+		/* scale magnitudes to (0.0 - 1.0) */
+		magnitude = (0.0 - magnitude) / 5.0 + 1.0;
 
-    } /* while */
+		/* scale magnitudes again so they look ok */
+		if ( magnitude > 1.0 ) { magnitude = 1.0; }
+		if ( magnitude < 0.0 ) { magnitude = 0.0; }
+		magnitude = 
+		    magnitude * 0.7 + (((FG_STAR_LEVELS - 1) - i) * 0.1);
+		printf("Found star: %d %s, %.3f %.3f %.3f\n", count,
+		   name, right_ascension, declination, magnitude);
 
-    fclose(fd);
+		glColor3f( magnitude, magnitude, magnitude );
+		glVertex3f( 190000.0 * sin(right_ascension) * cos(declination),
+			    -190000.0 * cos(right_ascension) * cos(declination),
+			    190000.0 * sin(declination) );
 
-    glEnd();
+		count++;
+	    } /* if valid line */
 
-    glBegin(GL_LINE_LOOP);
+	} /* while */
+
+	fclose(fd);
+
+	glEnd();
+
+
+	glBegin(GL_LINE_LOOP);
         glColor3f(1.0, 0.0, 0.0);
 	glVertex3f( 190000.0 * sin(ra_save-0.2) * cos(decl_save-0.2),
 		    -190000.0 * cos(ra_save-0.2) * cos(decl_save-0.2),
@@ -169,9 +173,9 @@ void fgStarsInit() {
  	glVertex3f( 190000.0 * sin(ra_save-0.2) * cos(decl_save+0.2),
 		    -190000.0 * cos(ra_save-0.2) * cos(decl_save+0.2),
 		    190000.0 * sin(decl_save+0.2) );
-    glEnd();
+	glEnd();
 
-    glBegin(GL_LINE_LOOP);
+	glBegin(GL_LINE_LOOP);
         glColor3f(0.0, 1.0, 0.0);
 	glVertex3f( 190000.0 * sin(ra_save1-0.2) * cos(decl_save1-0.2),
 		    -190000.0 * cos(ra_save1-0.2) * cos(decl_save1-0.2),
@@ -185,9 +189,12 @@ void fgStarsInit() {
  	glVertex3f( 190000.0 * sin(ra_save1-0.2) * cos(decl_save1+0.2),
 		    -190000.0 * cos(ra_save1-0.2) * cos(decl_save1+0.2),
 		    190000.0 * sin(decl_save1+0.2) );
-    glEnd();
+	glEnd();
        
-    glEndList();
+	glEndList();
+
+	max_stars /= 2;
+    }
 }
 
 
@@ -198,6 +205,7 @@ void fgStarsRender() {
     struct fgTIME *t;
     double angle;
     static double warp = 0;
+    int i;
 
     f = &current_aircraft.flight;
     t = &cur_time_params;
@@ -205,8 +213,19 @@ void fgStarsRender() {
 
     /* FG_PI_2 + 0.1 is about 6 degrees after sundown and before sunrise */
 
-    if ( t->sun_angle > (FG_PI_2 + 0.1 ) ) {
-	printf("RENDERING STARS (night)\n");
+    if ( t->sun_angle > (FG_PI_2 + 5 * DEG_TO_RAD ) ) {
+	/* determine which star structure to draw */
+	if ( t->sun_angle > (FG_PI_2 + 7.25 * DEG_TO_RAD ) ) {
+	    i = 0;
+	} else if ( t->sun_angle > (FG_PI_2 + 6.50 * DEG_TO_RAD ) ) {
+	    i = 1;
+	} else if ( t->sun_angle > (FG_PI_2 + 5.75 * DEG_TO_RAD ) ) {
+	    i = 2;
+	} else {
+	    i = 3;
+	}
+
+	printf("RENDERING STARS = %d (night)\n", i);
 
 	glDisable( GL_FOG );
 	glDisable( GL_LIGHTING );
@@ -221,7 +240,7 @@ void fgStarsRender() {
 	printf("Rotating stars by %.2f + %.2f\n", -angle * RAD_TO_DEG,
 	       -warp * RAD_TO_DEG);
 
-	glCallList(stars);
+	glCallList(stars[i]);
 
 	glPopMatrix();
 	glEnable( GL_LIGHTING );
@@ -233,9 +252,12 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.8  1997/09/16 22:14:52  curt
-/* Tweaked time of day lighting equations.  Don't draw stars during the day.
+/* Revision 1.9  1997/09/18 16:20:09  curt
+/* At dusk/dawn add/remove stars in stages.
 /*
+ * Revision 1.8  1997/09/16 22:14:52  curt
+ * Tweaked time of day lighting equations.  Don't draw stars during the day.
+ *
  * Revision 1.7  1997/09/16 15:50:31  curt
  * Working on star alignment and time issues.
  *

@@ -180,7 +180,7 @@ static void fgUpdateViewParams() {
     x_8 = x_4 * x_4;
     x_10 = x_8 * x_2;
 
-    ambient = 0.4 * pow(1.2, -x_10 / 30.0);
+    ambient = 0.4 * pow(1.1, -x_10 / 30.0);
 
     /* diffuse = 0.4 * cos(0.3 * x_2);
     if ( t->sun_angle > FG_PI_2 + 0.05 ) {
@@ -575,9 +575,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.18  1997/09/16 22:14:51  curt
-/* Tweaked time of day lighting equations.  Don't draw stars during the day.
+/* Revision 1.19  1997/09/18 16:20:08  curt
+/* At dusk/dawn add/remove stars in stages.
 /*
+ * Revision 1.18  1997/09/16 22:14:51  curt
+ * Tweaked time of day lighting equations.  Don't draw stars during the day.
+ *
  * Revision 1.17  1997/09/16 15:50:29  curt
  * Working on star alignment and time issues.
  *

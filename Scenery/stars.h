@@ -29,6 +29,7 @@
 
 
 #define FG_MAX_STARS 500
+#define FG_STAR_LEVELS 4         /* how many star transitions */
 #define FG_MIN_STAR_MAG 0.738750 /* magnitude of weakest star we'll display */
 
 /* Initialize the Star Management Subsystem */
@@ -42,9 +43,12 @@ void fgStarsRender();
 
 
 /* $Log$
-/* Revision 1.4  1997/09/05 01:36:00  curt
-/* Working on getting stars right.
+/* Revision 1.5  1997/09/18 16:20:09  curt
+/* At dusk/dawn add/remove stars in stages.
 /*
+ * Revision 1.4  1997/09/05 01:36:00  curt
+ * Working on getting stars right.
+ *
  * Revision 1.3  1997/08/29 17:55:28  curt
  * Worked on properly aligning the stars.
  *
