@@ -440,7 +440,7 @@ void helpCb (puObject *)
     if ( system("xwininfo -name Netscape > /dev/null 2>&1") == 0 ) {
         command = help_app + " -remote \"openURL(" + path.str() + ")\"";
     } else {
-        command = help_app + path.str();
+        command = help_app + " " + path.str();
     }
 #if !defined(WIN32)
     command += " &";
