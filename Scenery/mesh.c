@@ -27,6 +27,11 @@
 #ifndef __CYGWIN32__
 #  include <malloc.h>
 #endif
+
+#ifdef __CYGWIN32__
+#  include <Windows32/Base.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>  /* atof(), atoi() */
 #include <string.h>
@@ -251,9 +256,12 @@ double mesh_altitude(double lon, double lat) {
 
 
 /* $Log$
-/* Revision 1.13  1997/07/12 02:27:11  curt
-/* Looking at potential scenery transformation/coordinate system problems.
+/* Revision 1.14  1997/07/12 04:01:14  curt
+/* Added #include <Windows32/Base.h> to help Win32 compiling.
 /*
+ * Revision 1.13  1997/07/12 02:27:11  curt
+ * Looking at potential scenery transformation/coordinate system problems.
+ *
  * Revision 1.12  1997/07/11 03:23:19  curt
  * Solved some scenery display/orientation problems.  Still have a positioning
  * (or transformation?) problem.
