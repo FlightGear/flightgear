@@ -44,6 +44,9 @@ FGTriangle::build( const point_list& corner_list,
     FGTriPoly poly;
     int index;
 
+    in_nodes.clear();
+    trisegs.clear();
+
     // Point3D junkp;
     // int junkc = 0;
     // char junkn[256];
@@ -70,6 +73,8 @@ FGTriangle::build( const point_list& corner_list,
     cout << "prepairing node list and polygons" << endl;
 
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
+	polylist[i].clear();
+
 	// cout << "area type = " << i << endl;
 	current = gpc_polys.polys[i].begin();
 	last = gpc_polys.polys[i].end();
@@ -328,7 +333,7 @@ int FGTriangle::run_triangulate() {
     vorout.normlist = (REAL *) NULL;      // Needed only if -v switch used.
     
     // TEMPORARY
-    write_out_data(&in);
+    // write_out_data(&in);
 
     // Triangulate the points.  Switches are chosen to read and write
     // a PSLG (p), preserve the convex hull (c), number everything
@@ -343,12 +348,13 @@ int FGTriangle::run_triangulate() {
     triangulate(tri_options.c_str(), &in, &out, &vorout);
 
     // TEMPORARY
-    // write_out_data(&out);
+    write_out_data(&out);
 
     // now copy the results back into the corresponding FGTriangle
     // structures
 
     // nodes
+    out_nodes.clear();
     for ( int i = 0; i < out.numberofpoints; i++ ) {
 	Point3D p( out.pointlist[2*i], out.pointlist[2*i + 1], 0.0 );
 	// cout << "point = " << p << endl;
@@ -356,6 +362,7 @@ int FGTriangle::run_triangulate() {
     }
 
     // triangles
+    elelist.clear();
     int n1, n2, n3;
     double attribute;
     for ( int i = 0; i < out.numberoftriangles; i++ ) {
@@ -398,6 +405,10 @@ int FGTriangle::run_triangulate() {
 
 
 // $Log$
+// Revision 1.16  1999/04/05 02:17:11  curt
+// Dynamically update "error" until the resulting tile data scales within
+// a lower and upper bounds.
+//
 // Revision 1.15  1999/04/03 05:22:58  curt
 // Found a bug in dividing and adding unique verticle segments which could
 // cause the triangulator to end up in an infinite loop.  Basically the code

@@ -84,6 +84,7 @@ public:
     int run_triangulate();
 
     inline FGTriNodes get_out_nodes() const { return out_nodes; }
+    inline size_t get_out_nodes_size() const { return out_nodes.size(); }
     inline triele_list get_elelist() const { return elelist; }
 };
 
@@ -92,6 +93,10 @@ public:
 
 
 // $Log$
+// Revision 1.11  1999/04/05 02:17:12  curt
+// Dynamically update "error" until the resulting tile data scales within
+// a lower and upper bounds.
+//
 // Revision 1.10  1999/03/29 13:11:08  curt
 // Shuffled stl type names a bit.
 // Began adding support for tri-fanning (or maybe other arrangments too.)

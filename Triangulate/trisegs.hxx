@@ -93,6 +93,9 @@ public:
     FGTriSegments( void );
     ~FGTriSegments( void );
 
+    // delete all the data out of seg_list
+    inline void clear() { seg_list.clear(); }
+
     // Add a segment to the segment list if it doesn't already exist.
     // Returns the index (starting at zero) of the segment in the
     // list.
@@ -115,6 +118,10 @@ public:
 
 
 // $Log$
+// Revision 1.4  1999/04/05 02:17:14  curt
+// Dynamically update "error" until the resulting tile data scales within
+// a lower and upper bounds.
+//
 // Revision 1.3  1999/03/27 05:30:18  curt
 // Handle corner nodes separately from the rest of the fitted nodes.
 // Add fitted nodes in after corners and polygon nodes since the fitted nodes

@@ -62,6 +62,9 @@ public:
     FGTriNodes( void );
     ~FGTriNodes( void );
 
+    // delete all the data out of node_list
+    inline void clear() { node_list.clear(); }
+
     // Add a point to the point list if it doesn't already exist.
     // Returns the index (starting at zero) of the point in the list.
     int unique_add( const Point3D& p );
@@ -79,6 +82,9 @@ public:
 
     // return the ith point
     inline Point3D get_node( int i ) const { return node_list[i]; }
+
+    // return the size of the node list
+    inline size_t size() const { return node_list.size(); }
 };
 
 
@@ -112,6 +118,10 @@ inline bool FGTriNodes::course_close_enough( const Point3D& p1,
 
 
 // $Log$
+// Revision 1.8  1999/04/05 02:17:13  curt
+// Dynamically update "error" until the resulting tile data scales within
+// a lower and upper bounds.
+//
 // Revision 1.7  1999/03/29 13:11:10  curt
 // Shuffled stl type names a bit.
 // Began adding support for tri-fanning (or maybe other arrangments too.)

@@ -26,6 +26,7 @@
 #include <dirent.h>     // for directory reading
 
 #include <Bucket/newbucket.hxx>
+#include <Include/fg_constants.h>
 
 #include <Debug/logstream.hxx>
 #include <Array/array.hxx>
@@ -46,13 +47,16 @@ int load_dem(const string& work_base, FGBucket& b, FGArray& array) {
 
     if ( ! array.open(dem_path) ) {
 	cout << "ERROR: cannot open " << dem_path << endl;
-	return 0;
     }
 
-    array.parse();
-    array.fit( 200 );
+    array.parse( b );
 
     return 1;
+}
+
+// fit dem nodes, return number of fitted nodes
+int fit_dem(FGArray& array, int error) {
+    return array.fit( error );
 }
 
 
@@ -165,17 +169,65 @@ void construct_tile( const string& work_base, const string& output_base,
 {
     cout << "Construct tile, bucket = " << b << endl;
 
+    // fit with ever increasing error tolerance until we produce <=
+    // 80% of max nodes.  We should really have the sim end handle
+    // arbitrarily complex tiles.
+
+    const int min_nodes = 50;
+    const int max_nodes = (int)(MAX_NODES * 0.8);
+
+    bool acceptable = false;
+    double error = 200.0;
+    int count = 0;
+
     // load and fit grid of elevation data
     FGArray array;
     load_dem( work_base, b, array );
 
-    // load and clip 2d polygon data
-    FGClipper clipper;
-    load_polys( work_base, b, clipper );
-
-    // triangulate the data for each polygon
     FGTriangle t;
-    do_triangulate( array, clipper, t );
+
+    while ( ! acceptable ) {
+	// fit the data
+	array.fit( error );
+
+	// load and clip 2d polygon data
+	FGClipper clipper;
+	load_polys( work_base, b, clipper );
+
+	// triangulate the data for each polygon
+	do_triangulate( array, clipper, t );
+
+	acceptable = true;
+
+	count = t.get_out_nodes_size();
+
+	if ( (count < min_nodes) && (error >= 25.0) ) {
+	    // reduce error tolerance until number of points exceeds the
+	    // minimum threshold
+	    cout << "produced too few nodes ..." << endl;
+
+	    acceptable = false;
+
+	    error /= 1.5;
+	    cout << "Setting error to " << error << " and retrying fit." 
+		 << endl;
+	}
+
+	if ( (count > max_nodes) && (error <= 1000.0) ) {
+	    // increase error tolerance until number of points drops below
+	    // the maximum threshold
+	    cout << "produced too many nodes ..." << endl;
+	    
+	    acceptable = false;
+
+	    error *= 1.5;
+	    cout << "Setting error to " << error << " and retrying fit." 
+		 << endl;
+	}
+    }
+
+    cout << "finished fit with error = " << error << " node count = " 
+	 << count << endl;
 
     // generate the output
     FGGenOutput output;
@@ -207,15 +259,16 @@ main(int argc, char **argv) {
     // lon = -90.757128; lat = 46.790212;      // WI32
     // lon = -122.220717; lat = 37.721291;     // KOAK
     // lon = -111.721477; lat = 40.215641;     // KPVU
-    lon = -122.309313; lat = 47.448982;     // KSEA
+    // lon = -122.309313; lat = 47.448982;     // KSEA
+    lon = -148.798131; lat = 63.645099;     // AK06 (Danali, AK)
 
-    double min_x = lon - 1;
+    double min_x = lon - 3;
     double min_y = lat - 1;
     FGBucket b_min( min_x, min_y );
-    FGBucket b_max( lon + 1, lat + 1 );
+    FGBucket b_max( lon + 3, lat + 1 );
 
     FGBucket b_omit(550314L);
-    // FGBucket b(942698L);
+    // FGBucket b(517745L);
     // FGBucket b(-146.248360, 61.133950);
     // construct_tile( work_base, output_base, b );
     // exit(0);
@@ -245,6 +298,10 @@ main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.18  1999/04/05 02:16:51  curt
+// Dynamically update "error" until the resulting tile data scales within
+// a lower and upper bounds.
+//
 // Revision 1.17  1999/04/03 05:22:57  curt
 // Found a bug in dividing and adding unique verticle segments which could
 // cause the triangulator to end up in an infinite loop.  Basically the code
