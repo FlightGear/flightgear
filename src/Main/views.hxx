@@ -29,6 +29,10 @@
 # error This library requires C++
 #endif                                   
 
+#include <Include/compiler.h>
+
+#include <list>
+
 #include <sg.h>			// plib include
 
 #include <FDM/flight.hxx>
@@ -39,6 +43,18 @@
 
 #include "options.hxx"
 
+FG_USING_STD(list);
+
+
+class FGMat4Wrapper {
+public:
+    sgMat4 m;
+};
+
+typedef list < FGMat4Wrapper > sgMat4_list;
+typedef sgMat4_list::iterator sgMat4_list_iterator;
+typedef sgMat4_list::const_iterator const_sgMat4_list_iterator;
+
 
 // used in views.cxx and tilemgr.cxx
 #define USE_FAST_FOV_CLIP 
@@ -48,6 +64,12 @@
 class FGView {
 
 public:
+
+    enum fgViewMode
+    {
+	FG_VIEW_FIRST_PERSON = 0,
+	FG_VIEW_FOLLOW  = 1
+    };
 
     // the current offset from forward for viewing
     double view_offset;
@@ -153,7 +175,14 @@ public:
     // Current model view matrix;
     GLfloat MODEL_VIEW[16];
 
-    sgMat4 sgLOCAL, sgUP, sgVIEW, sgLARC_TO_SSG;
+    // view mode
+    fgViewMode view_mode;
+
+    // sg versions of our friendly matrices
+    sgMat4 sgLOCAL, sgUP, sgVIEW_ROT, sgTRANS, sgVIEW, sgLARC_TO_SSG;
+
+    // queue of view matrices so we can have a follow view
+    sgMat4_list follow;
 
 public:
 
@@ -189,6 +218,9 @@ public:
 
     // Update the field of view coefficients
     void UpdateFOV( const fgOPTIONS& o );
+
+    // Cycle view mode
+    void cycle_view_mode();
 
     // accessor functions
     inline double get_view_offset() const { return view_offset; }

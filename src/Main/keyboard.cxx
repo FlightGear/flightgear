@@ -277,7 +277,10 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    t->adjust_warp_delta (+30);
 	    local_update_sky_and_lighting_params();
 	    return;
-	case 120: // X key
+	case 118: // v key
+	    v->cycle_view_mode();
+	    return;
+	case 120: // x key
 	    fov = current_options.get_fov();
 	    fov /= 1.05;
 	    if ( fov < FG_FOV_MIN ) {

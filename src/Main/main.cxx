@@ -402,17 +402,15 @@ static void fgRenderFrame( void ) {
 
 	sgMat4 sgTRANS;
 	sgMakeTransMat4( sgTRANS, 
-			 current_view.view_pos.x() 
-			 + current_view.view_forward[0] * 20,
-			 current_view.view_pos.y() 
-			 + current_view.view_forward[1] * 20,
-			 current_view.view_pos.z() 
-			 + current_view.view_forward[2] * 20 );
+			 current_view.view_pos.x(),
+			 current_view.view_pos.y(),
+			 current_view.view_pos.z() );
 
-	sgMat4 sgTMP;
+	// sgMat4 sgTMP;
 	sgMat4 sgTUX;
-	sgMultMat4( sgTMP, current_view.sgUP, sgTRANS );
-	sgMultMat4( sgTUX, current_view.sgLARC_TO_SSG, sgTMP );
+	// sgMultMat4( sgTMP, current_view.sgUP, sgTRANS );
+	// sgMultMat4( sgTUX, current_view.sgLARC_TO_SSG, sgTMP );
+	sgMultMat4( sgTUX, current_view.sgVIEW_ROT, sgTRANS );
 	
 	sgCoord tuxpos;
 	sgSetCoord( &tuxpos, sgTUX );
@@ -423,7 +421,17 @@ static void fgRenderFrame( void ) {
 			 current_view.view_pos.y(),
 			 current_view.view_pos.z() );
 	sgMat4 sgVIEW;
-	sgMultMat4( sgVIEW, current_view.sgVIEW, sgTRANS );
+
+	if ( current_view.view_mode == FGView::FG_VIEW_FIRST_PERSON ) {
+	    sgCopyMat4( sgVIEW, current_view.sgVIEW );
+	} else if ( current_view.view_mode == FGView::FG_VIEW_FOLLOW ) {
+	    FGMat4Wrapper tmp = current_view.follow.front();
+	    sgCopyMat4( sgVIEW, tmp.m );
+	}
+	if ( current_view.follow.size() > 15 ) {
+	    current_view.follow.pop_front();
+	}
+
 	ssgSetCamera( sgVIEW );
 
 	global_tile_mgr.prep_ssg_nodes();

@@ -744,7 +744,6 @@ void FGTileMgr::prep_ssg_nodes( void ) {
 
     float ranges[2];
     ranges[0] = 0.0f;
-    ranges[1] = current_weather.get_visibility();
 
     // traverse the potentially viewable tile list and update range
     // selector and transform
@@ -753,7 +752,9 @@ void FGTileMgr::prep_ssg_nodes( void ) {
 	t = global_tile_cache.get_tile(index);
 
 	if ( t->is_loaded() ) {
-	    // set range selector (LOD trick)
+	    // set range selector (LOD trick) to be distance to center
+	    // of tile + bounding radius
+	    ranges[1] = current_weather.get_visibility() + t->bounding_radius;
 	    t->range_ptr->setRanges( ranges, 2 );
 
 	    // calculate tile offset

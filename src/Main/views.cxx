@@ -76,6 +76,7 @@ FGView::FGView( void ) {
 void FGView::Init( void ) {
     FG_LOG( FG_VIEW, FG_INFO, "Initializing View parameters" );
 
+    view_mode = FG_VIEW_FIRST_PERSON;
     view_offset = 0.0;
     goal_view_offset = 0.0;
 
@@ -128,6 +129,16 @@ void FGView::UpdateFOV( const fgOPTIONS& o ) {
 #if defined( USE_FAST_FOV_CLIP )
     fov_y_clip = -(slope_y*cos_fov_y + sin_fov_y);	
 #endif // defined( USE_FAST_FOV_CLIP )
+}
+
+
+// Cycle view mode
+void FGView::cycle_view_mode() {
+    if ( view_mode == FG_VIEW_FIRST_PERSON ) {
+	view_mode = FG_VIEW_FOLLOW;
+    } else if ( view_mode == FG_VIEW_FOLLOW ) {
+	view_mode = FG_VIEW_FIRST_PERSON;
+    }
 }
 
 
@@ -742,7 +753,15 @@ void FGView::UpdateViewMath( FGInterface *f ) {
 
     sgMat4 sgTMP;
     sgMultMat4( sgTMP, sgLOCAL, sgUP );
-    sgMultMat4( sgVIEW, sgLARC_TO_SSG, sgTMP );
+    sgMultMat4( sgVIEW_ROT, sgLARC_TO_SSG, sgTMP );
+
+    sgMakeTransMat4( sgTRANS, view_pos.x(), view_pos.y(), view_pos.z() );
+
+    sgMultMat4( sgVIEW, sgVIEW_ROT, sgTRANS );
+
+    FGMat4Wrapper tmp;
+    sgCopyMat4( tmp.m, sgVIEW );
+    follow.push_back( tmp );
 
     /*
     cout << "FG derived VIEW matrix using sg routines" << endl;
