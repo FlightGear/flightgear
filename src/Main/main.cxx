@@ -908,17 +908,6 @@ static const double alt_adjust_m = alt_adjust_ft * SG_FEET_TO_METER;
 // for the next move and update the display?
 static void fgMainLoop( void ) {
 
-    // Update the elapsed time.
-    static bool first_time = true;
-    if ( first_time ) {
-        last_time_stamp.stamp();
-        first_time = false;
-    }
-    current_time_stamp.stamp();
-    delta_time_sec = double(current_time_stamp - last_time_stamp) / 1000000.0;
-    last_time_stamp = current_time_stamp;
-    globals->inc_sim_time_sec( delta_time_sec );
-
     static const SGPropertyNode *longitude
 	= fgGetNode("/position/longitude-deg");
     static const SGPropertyNode *latitude
@@ -929,6 +918,19 @@ static void fgMainLoop( void ) {
 	= fgGetNode("/sim/freeze/clock", true);
     static const SGPropertyNode *cur_time_override
 	= fgGetNode("/sim/time/cur-time-override", true);
+
+    // Update the elapsed time.
+    static bool first_time = true;
+    if ( first_time ) {
+        last_time_stamp.stamp();
+        first_time = false;
+    }
+    current_time_stamp.stamp();
+    delta_time_sec = double(current_time_stamp - last_time_stamp) / 1000000.0;
+    if (clock_freeze->getBoolValue())
+        delta_time_sec = 0;
+    last_time_stamp = current_time_stamp;
+    globals->inc_sim_time_sec( delta_time_sec );
 
     static long remainder = 0;
     long elapsed;
