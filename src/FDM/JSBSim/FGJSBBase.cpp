@@ -46,17 +46,31 @@ static const char *IdHdr = ID_JSBBASE;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-char FGJSBBase::highint[5]  = {27, '[', '1', 'm', '\0'      };
-char FGJSBBase::halfint[5]  = {27, '[', '2', 'm', '\0'      };
-char FGJSBBase::normint[6]  = {27, '[', '2', '2', 'm', '\0' };
-char FGJSBBase::reset[5]    = {27, '[', '0', 'm', '\0'      };
-char FGJSBBase::underon[5]  = {27, '[', '4', 'm', '\0'      };
-char FGJSBBase::underoff[6] = {27, '[', '2', '4', 'm', '\0' };
-char FGJSBBase::fgblue[6]   = {27, '[', '3', '4', 'm', '\0' };
-char FGJSBBase::fgcyan[6]   = {27, '[', '3', '6', 'm', '\0' };
-char FGJSBBase::fgred[6]    = {27, '[', '3', '1', 'm', '\0' };
-char FGJSBBase::fggreen[6]  = {27, '[', '3', '2', 'm', '\0' };
-char FGJSBBase::fgdef[6]    = {27, '[', '3', '9', 'm', '\0' };
+#ifndef _MSC_VER
+    char FGJSBBase::highint[5]  = {27, '[', '1', 'm', '\0'      };
+    char FGJSBBase::halfint[5]  = {27, '[', '2', 'm', '\0'      };
+    char FGJSBBase::normint[6]  = {27, '[', '2', '2', 'm', '\0' };
+    char FGJSBBase::reset[5]    = {27, '[', '0', 'm', '\0'      };
+    char FGJSBBase::underon[5]  = {27, '[', '4', 'm', '\0'      };
+    char FGJSBBase::underoff[6] = {27, '[', '2', '4', 'm', '\0' };
+    char FGJSBBase::fgblue[6]   = {27, '[', '3', '4', 'm', '\0' };
+    char FGJSBBase::fgcyan[6]   = {27, '[', '3', '6', 'm', '\0' };
+    char FGJSBBase::fgred[6]    = {27, '[', '3', '1', 'm', '\0' };
+    char FGJSBBase::fggreen[6]  = {27, '[', '3', '2', 'm', '\0' };
+    char FGJSBBase::fgdef[6]    = {27, '[', '3', '9', 'm', '\0' };
+#else
+    char FGJSBBase::highint[5]  = {'\0' };
+    char FGJSBBase::halfint[5]  = {'\0' };
+    char FGJSBBase::normint[6]  = {'\0' };
+    char FGJSBBase::reset[5]    = {'\0' };
+    char FGJSBBase::underon[5]  = {'\0' };
+    char FGJSBBase::underoff[6] = {'\0' };
+    char FGJSBBase::fgblue[6]   = {'\0' };
+    char FGJSBBase::fgcyan[6]   = {'\0' };
+    char FGJSBBase::fgred[6]    = {'\0' };
+    char FGJSBBase::fggreen[6]  = {'\0' };
+    char FGJSBBase::fgdef[6]    = {'\0' };
+#endif
 
 const double FGJSBBase::radtodeg = 57.29578;
 const double FGJSBBase::degtorad = 1.745329E-2;
