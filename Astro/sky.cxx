@@ -300,12 +300,12 @@ void fgSkyRender( void ) {
     xglBegin( GL_TRIANGLE_FAN );
     xglColor4fv(l->sky_color);
     xglVertex3f(0.0, 0.0, CENTER_ELEV);
-    for ( i = 0; i < 12; i++ ) {
+    for ( i = 11; i >= 0; i++ ) {
 	xglColor4fv( inner_color );
 	xglVertex3fv( inner_vertex[i] );
     }
     xglColor4fv( inner_color );
-    xglVertex3fv( inner_vertex[0] );
+    xglVertex3fv( inner_vertex[11] );
     xglEnd();
 
     // Draw the middle ring
@@ -362,6 +362,9 @@ void fgSkyRender( void ) {
 
 
 // $Log$
+// Revision 1.18  1999/02/01 21:09:00  curt
+// Bug fix in vertex order of inner disk (fan) of the sky dome.
+//
 // Revision 1.17  1998/12/09 18:50:12  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.
