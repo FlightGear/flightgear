@@ -339,13 +339,20 @@ FGKR_87::update(double dt)
         elapsed_timer = 0.0;
     }
 
-    // cout << "goal = " << goal_needle_deg << "actual = " << needle_deg
-    //      << endl;
+    
+    while ( goal_needle_deg < 0.0 ) { goal_needle_deg += 360.0; }
+    while ( goal_needle_deg >= 360.0 ) { goal_needle_deg -= 360.0; }
+
     double diff = goal_needle_deg - needle_deg;
     while ( diff < -180.0 ) { diff += 360.0; }
     while ( diff > 180.0 ) { diff -= 360.0; }
-    needle_deg += diff * dt * 4;
 
+    needle_deg += diff * dt * 4;
+    while ( needle_deg < 0.0 ) { needle_deg += 360.0; }
+    while ( needle_deg >= 360.0 ) { needle_deg -= 360.0; }
+
+    // cout << "goal = " << goal_needle_deg << " actual = " << needle_deg
+    //      << endl;
     // cout << "flt = " << flight_timer << " et = " << elapsed_timer 
     //      << " needle = " << needle_deg << endl;
 
