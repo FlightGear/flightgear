@@ -323,23 +323,16 @@ FGMenuBar::init ()
 void
 FGMenuBar::show ()
 {
-    if (_menuBar != 0) {
+    if (_menuBar != 0)
         _menuBar->reveal();
-        _visible = true;
-    } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "No menu bar to show");
-        _visible = false;
-    }
+    _visible = true;
 }
 
 void
 FGMenuBar::hide ()
 {
-    if (_menuBar != 0) {
+    if (_menuBar != 0)
         _menuBar->hide();
-    } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "No menu bar to show");
-    }
     _visible = false;
 }
 
@@ -403,6 +396,10 @@ FGMenuBar::make_menubar ()
         make_menu(menu_nodes[i]);
 
     _menuBar->close();
+    if (_visible)
+        _menuBar->reveal();
+    else
+        _menuBar->hide();
 }
 
 // end of menubar.cxx
