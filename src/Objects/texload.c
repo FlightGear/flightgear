@@ -15,7 +15,7 @@
 #include <stdlib.h> 
 #include <string.h>
 
-#include <simgear/fg_zlib.h>
+#include <simgear/sg_zlib.h>
 
 #include "texload.h"
 #include "colours.h"
@@ -29,7 +29,7 @@ typedef struct _ImageRec {
     unsigned int wasteBytes;
     char name[80];
     unsigned long colorMap;
-    fgFile file;
+    sgFile file;
     unsigned char *tmp;
     unsigned long rleEnd;
     unsigned int *rowStart;
@@ -97,12 +97,12 @@ static ImageRec *ImageOpen(const char *fileName)
         fprintf(stderr, "Out of memory!\n");
         exit(1);
     }
-    if ((image->file = fgopen(fileName, "rb")) == NULL) {
+    if ((image->file = sgopen(fileName, "rb")) == NULL) {
       return NULL;
     }
 
     // fread(image, 1, 12, image->file);
-    fgread(image->file, image, 12);
+    sgread(image->file, image, 12);
 
     if (swapFlag) {
         ConvertShort(&image->imagic, 6);
@@ -123,11 +123,11 @@ static ImageRec *ImageOpen(const char *fileName)
             exit(1);
         }
         image->rleEnd = 512 + (2 * x);
-        fgseek(image->file, 512, SEEK_SET);
+        sgseek(image->file, 512, SEEK_SET);
         // fread(image->rowStart, 1, x, image->file);
-	fgread(image->file, image->rowStart, x);
+	sgread(image->file, image->rowStart, x);
         // fread(image->rowSize, 1, x, image->file);
-	fgread(image->file, image->rowSize, x);
+	sgread(image->file, image->rowSize, x);
         if (swapFlag) {
             ConvertUint(image->rowStart, x/(int) sizeof(unsigned));
             ConvertUint((unsigned *)image->rowSize, x/(int) sizeof(int));
@@ -138,7 +138,7 @@ static ImageRec *ImageOpen(const char *fileName)
 
 static void
 ImageClose(ImageRec *image) {
-    fgclose(image->file);
+    sgclose(image->file);
     free(image->tmp);
     free(image);
 }
@@ -149,10 +149,10 @@ ImageGetRow(ImageRec *image, unsigned char *buf, int y, int z) {
     int count;
 
     if ((image->type & 0xFF00) == 0x0100) {
-        fgseek(image->file, (long) image->rowStart[y+z*image->ysize], SEEK_SET);
+        sgseek(image->file, (long) image->rowStart[y+z*image->ysize], SEEK_SET);
         // fread(image->tmp, 1, (unsigned int)image->rowSize[y+z*image->ysize],
         //      image->file);
-	fgread(image->file, image->tmp, 
+	sgread(image->file, image->tmp, 
 	       (unsigned int)image->rowSize[y+z*image->ysize]);
 
         iPtr = image->tmp;
@@ -175,10 +175,10 @@ ImageGetRow(ImageRec *image, unsigned char *buf, int y, int z) {
             }
         }
     } else {
-        fgseek(image->file, 512+(y*image->xsize)+(z*image->xsize*image->ysize),
+        sgseek(image->file, 512+(y*image->xsize)+(z*image->xsize*image->ysize),
               SEEK_SET);
         // fread(buf, 1, image->xsize, image->file);
-	fgread(image->file, buf, image->xsize);
+	sgread(image->file, buf, image->xsize);
     }
 }
 
@@ -296,11 +296,11 @@ static ImageRec *RawImageOpen(const char *fileName)
         fprintf(stderr, "Out of memory!\n");
         exit(1);
     }
-    if ((image->file = fgopen(fileName, "rb")) == NULL) {
+    if ((image->file = sgopen(fileName, "rb")) == NULL) {
       return NULL;
     }
 
-    fgread(image->file, image, 12);
+    sgread(image->file, image, 12);
 
     if (swapFlag) {
         ConvertShort(&image->imagic, 6);
@@ -338,7 +338,7 @@ read_raw_texture(const char *name, int *width, int *height)
     }
     ptr = base;
     for(y=0; y<256; y++) {
-		fgread(image->file, ptr, 256*3);
+		sgread(image->file, ptr, 256*3);
 		ptr+=256*3;
     }
     ImageClose(image);
@@ -369,7 +369,7 @@ read_r8_texture(const char *name, int *width, int *height)
     }
     ptr = base;
     for(xy=0; xy<(256*256); xy++) {
-		fgread(image->file,c,1);
+		sgread(image->file,c,1);
 		ptr[0]=msfs_colour[c[0]][0];	//look in the table for the right colours
 		ptr[1]=msfs_colour[c[0]][1];
 		ptr[2]=msfs_colour[c[0]][2];
