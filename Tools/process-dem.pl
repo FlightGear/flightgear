@@ -110,9 +110,9 @@ sub file_root {
 
 sub demfit {
     if ( $dem_file =~ m/.gz$/ ) {
-	$command = "gzip -dc $dem_file | ./Dem2node/demfit $ENV{FG_ROOT} - $error";
+	$command = "gzip -dc $dem_file | ./Dem2node/dem2node $ENV{FG_ROOT} - $error";
     } else {
-	$command = "./Dem2node/demfit $ENV{FG_ROOT} $dem_file $error";
+	$command = "./Dem2node/dem2node $ENV{FG_ROOT} $dem_file $error";
     }
 
     print "Running '$command'\n";
@@ -364,6 +364,10 @@ sub fixobj {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.13  1998/03/19 02:52:52  curt
+# Updated to reflect some minor tool reorganization and the creation of class
+# to handle DEM processing needs.
+#
 # Revision 1.12  1998/03/19 01:48:35  curt
 # Added gpc-2.01 (generic polygon clipping library)
 #

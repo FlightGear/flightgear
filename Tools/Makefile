@@ -27,9 +27,10 @@
 include $(FG_ROOT_SRC)/commondefs
 
 
-SUBDIRS = gpc2.01 AssemTris Dem2node DemRaw2Ascii FixNode FixObj SplitTris \
-	Stripe_u Tri2obj Triangle
-ORDEREDDIRS = $(SUBDIRS)
+LIBDIRS = DEM gpc2.01
+SUBDIRS = Areas AssemTris Dem2node DemRaw2Ascii FixNode FixObj \
+	SplitTris Stripe_u Tri2obj Triangle
+ORDEREDDIRS = $(LIBDIRS) $(SUBDIRS)
 
 
 all: 
@@ -90,6 +91,10 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.13  1998/03/19 02:52:51  curt
+# Updated to reflect some minor tool reorganization and the creation of class
+# to handle DEM processing needs.
+#
 # Revision 1.12  1998/03/19 01:48:34  curt
 # Added gpc-2.01 (generic polygon clipping library)
 #
