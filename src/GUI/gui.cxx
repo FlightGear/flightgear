@@ -30,67 +30,26 @@
 
 #include <simgear/compiler.h>
 
-#ifdef SG_MATH_EXCEPTION_CLASH
-#  include <math.h>
-#endif
-
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
-#include <GL/glut.h>
-#include <GL/gl.h>
-
-#if defined(FX) && defined(XMESA)
-#  include <GL/xmesa.h>
-#endif
-
-#include STL_FSTREAM
-#include STL_STRING
-
-#include <stdlib.h>
-#include <string.h>
-
-#include <simgear/constants.h>
-#include <simgear/debug/logstream.hxx>
+#include <simgear/misc/props.hxx>
+#include <simgear/misc/props_io.hxx>
+#include <simgear/misc/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/screen/screen-dump.hxx>
+
+#include <plib/pu.h>
 
 #include <Include/general.hxx>
-#include <Aircraft/aircraft.hxx>
-#include <Airports/simple.hxx>
-#include <Autopilot/auto_gui.hxx>
-#include <Autopilot/newauto.hxx>
-#include <Cockpit/panel.hxx>
-#include <Controls/controls.hxx>
-#include <FDM/flight.hxx>
-#include <Main/fg_init.hxx>
-#include <Main/fg_io.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Main/viewmgr.hxx>
-
-#ifdef FG_NETWORK_OLK
-#include <NetworkOLK/network.h>
-#endif
-   
-#if defined( WIN32 ) && !defined( __CYGWIN__ ) && !defined(__MINGW32__)
-#  include <simgear/screen/win32-printer.h>
-#  include <simgear/screen/GlBitmaps.h>
-#endif
 
 #include "gui.h"
 #include "gui_local.hxx"
 #include "apt_dlg.hxx"
 #include "net_dlg.hxx"
-#include "sgVec3Slider.hxx"
-#include "prop_picker.hxx"
 
-SG_USING_STD(string);
-
-#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
-SG_USING_STD(cout);
-#endif
 
 // main.cxx hack, should come from an include someplace
 extern void fgInitVisuals( void );
@@ -107,93 +66,6 @@ fntTexFont *guiFntHandle = 0;
 int gui_menu_on = 0;
 puMenuBar    *mainMenuBar = 0;
 //static puButton     *hideMenuButton = 0;
-
-// from cockpit.cxx
-extern void fgLatLonFormatToggle( puObject *);
-
-// from gui_funcs.cxx
-extern void saveFlight(puObject *);
-extern void loadFlight(puObject *);
-extern void reInit(puObject *);
-extern void dumpSnapShot(puObject *);
-#ifdef TR_HIRES_SNAP
-extern void dumpHiResSnapShot(puObject *);
-#endif
-#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
-extern void printScreen(puObject *);
-#endif
-extern void MayBeGoodBye(puObject *);
-extern void guiTogglePanel(puObject *);
-extern void PilotOffsetAdjust(puObject *);
-extern void fgHUDalphaAdjust(puObject *);
-extern void prop_pickerView(puObject *);
-extern void NewAirport(puObject *);
-#ifdef FG_NETWORK_OLK
-extern void net_display_toggle(puObject *);
-extern void NewCallSign(puObject *);
-extern void net_fgd_scan(puObject *);
-extern void net_register(puObject *);
-extern void net_unregister(puObject *);
-#endif
-extern void NewAltitude(puObject *);
-extern void AddWayPoint(puObject *);
-extern void PopWayPoint(puObject *);
-extern void ClearRoute(puObject *);
-extern void fgAPAdjust(puObject *);
-extern void fgLatLonFormatToggle(puObject *);
-extern void helpCb(puObject *);
-
-static const struct {
-        char *name;
-        void (*fn)(puObject *);
-} __fg_gui_fn[] = {
-
-        // File
-        {"saveFlight", saveFlight},
-        {"loadFlight", loadFlight},
-        {"reInit", reInit},
-#ifdef TR_HIRES_SNAP
-        {"dumpHiResSnapShot", dumpHiResSnapShot},
-#endif
-        {"dumpSnapShot", dumpSnapShot},
-#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
-        {"printScreen", printScreen},
-#endif
-        {"MayBeGoodBye", MayBeGoodBye},
-
-        //View
-        {"guiTogglePanel", guiTogglePanel},
-        {"PilotOffsetAdjust", PilotOffsetAdjust},
-        {"fgHUDalphaAdjust", fgHUDalphaAdjust},
-        {"prop_pickerView", prop_pickerView},
-
-        // Environment
-        {"NewAirport", NewAirport},
-
-        // Network
-#ifdef FG_NETWORK_OLK
-        {"net_display_toggle", net_display_toggle},
-        {"NewCallSign", NewCallSign},
-        {"net_fgd_scan", net_fgd_scan},
-        {"net_register", net_register},
-        {"net_unregister", net_unregister},
-#endif
-
-        // Autopilot
-        {"NewAltitude", NewAltitude},
-        {"AddWayPoint", AddWayPoint},
-        {"PopWayPoint", PopWayPoint},
-        {"ClearRoute", ClearRoute},
-        {"fgAPAdjust", fgAPAdjust},
-        {"fgLatLonFormatToggle", fgLatLonFormatToggle},
-
-        // Help
-        {"helpCb", helpCb},
-
-        // Structure termination
-        {"", NULL}
-};
-
 
 
 struct fg_gui_t {

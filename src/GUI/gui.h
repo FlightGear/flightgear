@@ -38,6 +38,9 @@
 
 #include <simgear/misc/exception.hxx>
 
+#define TR_HIRES_SNAP   1
+
+
 // gui.cxx
 extern void guiInit();
 extern void guiToggleMenu(void);
@@ -51,6 +54,44 @@ extern void fgDumpSnapShot();
 extern puFont guiFnt;
 extern fntTexFont *guiFntHandle;
 extern int gui_menu_on;
+
+// from gui_funcs.cxx
+extern void saveFlight(puObject *);
+extern void loadFlight(puObject *);
+extern void reInit(puObject *);
+extern void dumpSnapShot(puObject *);
+#ifdef TR_HIRES_SNAP
+extern void dumpHiResSnapShot(puObject *);
+#endif
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
+extern void printScreen(puObject *);
+#endif
+extern void MayBeGoodBye(puObject *);
+extern void guiTogglePanel(puObject *);
+extern void PilotOffsetAdjust(puObject *);
+extern void fgHUDalphaAdjust(puObject *);
+extern void prop_pickerView(puObject *);
+extern void NewAirport(puObject *);
+#ifdef FG_NETWORK_OLK
+extern void net_display_toggle(puObject *);
+extern void NewCallSign(puObject *);
+extern void net_fgd_scan(puObject *);
+extern void net_register(puObject *);
+extern void net_unregister(puObject *);
+#endif
+extern void NewAltitude(puObject *);
+extern void AddWayPoint(puObject *);
+extern void PopWayPoint(puObject *);
+extern void ClearRoute(puObject *);
+extern void fgAPAdjust(puObject *);
+extern void fgLatLonFormatToggle(puObject *);
+extern void helpCb(puObject *);
+
+typedef struct {
+        char *name;
+        void (*fn)(puObject *);
+} __fg_gui_fn_t;
+extern const __fg_gui_fn_t __fg_gui_fn[];
 
 // GLOBAL COMMON DIALOG BOX TEXT STRINGS
 extern char *gui_msg_OK;     // "OK"

@@ -109,8 +109,6 @@ extern void fgLatLonFormatToggle( puObject *);
 extern void net_fgd_scan(puObject *cb);
 #endif // #ifdef FG_NETWORK_OLK
 
-#define TR_HIRES_SNAP	1
-
 #if defined( TR_HIRES_SNAP)
 #include <simgear/screen/tr.h>
 extern void trRenderFrame( void );
@@ -144,6 +142,54 @@ char msg_CANCEL[] = "Cancel";
 char msg_RESET[]  = "Reset";
 
 char global_dialog_string[256];
+
+const __fg_gui_fn_t __fg_gui_fn[] = {
+
+        // File
+        {"saveFlight", saveFlight},
+        {"loadFlight", loadFlight},
+        {"reInit", reInit},
+#ifdef TR_HIRES_SNAP
+        {"dumpHiResSnapShot", dumpHiResSnapShot},
+#endif
+        {"dumpSnapShot", dumpSnapShot},
+#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
+        {"printScreen", printScreen},
+#endif
+        {"MayBeGoodBye", MayBeGoodBye},
+
+        //View
+        {"guiTogglePanel", guiTogglePanel},
+        {"PilotOffsetAdjust", PilotOffsetAdjust},
+        {"fgHUDalphaAdjust", fgHUDalphaAdjust},
+        {"prop_pickerView", prop_pickerView},
+
+        // Environment
+        {"NewAirport", NewAirport},
+
+        // Network
+#ifdef FG_NETWORK_OLK
+        {"net_display_toggle", net_display_toggle},
+        {"NewCallSign", NewCallSign},
+        {"net_fgd_scan", net_fgd_scan},
+        {"net_register", net_register},
+        {"net_unregister", net_unregister},
+#endif
+
+        // Autopilot
+        {"NewAltitude", NewAltitude},
+        {"AddWayPoint", AddWayPoint},
+        {"PopWayPoint", PopWayPoint},
+        {"ClearRoute", ClearRoute},
+        {"fgAPAdjust", fgAPAdjust},
+        {"fgLatLonFormatToggle", fgLatLonFormatToggle},
+
+        // Help
+        {"helpCb", helpCb},
+
+        // Structure termination
+        {"", NULL}
+};
 
 
 /* ================ General Purpose Functions ================ */
