@@ -282,12 +282,11 @@ FGMenuBar::~FGMenuBar ()
     delete _menuBar;            // FIXME: check if PUI owns the pointer
 
                                 // Delete all those bindings
-    map<string,vector<FGBinding *>*>::iterator it;
+    map<string,vector<FGBinding *> >::iterator it;
     it = _bindings.begin();
     while (it != _bindings.end()) {
-        for (int i = 0; i < it->second->size(); i++)
-            delete (*it->second)[i];
-        delete it->second;
+        for (int i = 0; i < it->second.size(); i++)
+            delete it->second[i];
     }
 }
 
@@ -329,10 +328,10 @@ void
 FGMenuBar::fireItem (puObject * item)
 {
     const char * name = item->getLegend();
-    vector<FGBinding *> * bindings = _bindings[name];
+    vector<FGBinding *> &bindings = _bindings[name];
 
-    for (int i = 0; i < bindings->size(); i++)
-        (*bindings)[i]->fire();
+    for (int i = 0; i < bindings.size(); i++)
+        bindings[i]->fire();
 }
 
 void
@@ -358,10 +357,8 @@ FGMenuBar::make_menu (SGPropertyNode_ptr node)
         vector<SGPropertyNode_ptr> binding_nodes =
             item_nodes[i]->getChildren("binding");
 
-        if (_bindings[items[j]] == 0)
-            _bindings[items[j]] = new vector<FGBinding *>;
         for (int k = 0; k < binding_nodes.size(); k++)
-            _bindings[items[j]]->push_back(new FGBinding(binding_nodes[k]));
+            _bindings[items[j]].push_back(new FGBinding(binding_nodes[k]));
     }
 
     items[item_nodes.size()] = 0;
