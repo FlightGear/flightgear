@@ -56,7 +56,7 @@
 #include <Astro/solarsystem.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
-// #include <FDM/Balloon.h>
+#include <FDM/Balloon.h>
 #include <FDM/JSBsim.hxx>
 #include <FDM/LaRCsim.hxx>
 #include <FDM/MagicCarpet.hxx>
@@ -232,9 +232,9 @@ bool fgInitSubsystems( void ) {
 	cur_fdm_state = new FGLaRCsim;
     } else if ( current_options.get_flight_model() == FGInterface::FG_JSBSIM ) {
 	cur_fdm_state = new FGJSBsim;
-    // } else if ( current_options.get_flight_model() == 
-    //             FGInterface::FG_BALLOONSIM ) {
-    //     cur_fdm_state = new FGBalloonSim;
+    } else if ( current_options.get_flight_model() == 
+		FGInterface::FG_BALLOONSIM ) {
+	cur_fdm_state = new FGBalloonSim;
     } else if ( current_options.get_flight_model() == 
 		FGInterface::FG_MAGICCARPET ) {
 	cur_fdm_state = new FGMagicCarpet;
