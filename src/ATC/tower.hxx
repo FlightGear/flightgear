@@ -151,6 +151,14 @@ public:
 private:
 	FGATCMgr* ATCmgr;	
 	// This is purely for synactic convienience to avoid writing globals->get_ATC_mgr()-> all through the code!
+	
+	void CheckHoldList(double dt);
+
+	void CheckCircuitList(double dt);
+	
+	void CheckRunwayList(double dt);
+
+	void CheckApproachList(double dt);
 
 	// Figure out if a given position lies on the active runway
 	// Might have to change when we consider more than one active rwy.
