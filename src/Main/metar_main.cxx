@@ -31,7 +31,7 @@
 using namespace std;
 
 // text color
-#if defined(__linux__) || defined( __sun__ ) ||defined(__CYGWIN__) || defined( __FreeBSD__ )
+#if defined(__linux__) || defined( __sun__ ) ||defined(__CYGWIN__) || defined( __FreeBSD__ ) || defined ( sgi )
 #	define R "\033[31;1m"		// red
 #	define G "\033[32;1m"		// green
 #	define Y "\033[33;1m"		// yellow
