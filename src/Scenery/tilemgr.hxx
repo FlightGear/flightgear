@@ -37,6 +37,7 @@
 
 #include <simgear/bucket/newbucket.hxx>
 
+#include "hitlist.hxx"
 
 FG_USING_STD(list);
 
@@ -52,6 +53,10 @@ FG_USING_STD(list);
 #endif
 
 
+// forward declaration
+class FGTileEntry;
+
+
 class FGLoadRec {
 
 public:
@@ -59,9 +64,6 @@ public:
     FGBucket b;
     int cache_index;
 };
-
-
-#define MAX_HITS 100
 
 
 class FGTileMgr {
@@ -77,8 +79,24 @@ private:
 
     load_state state;
 
+    enum SCROLL_DIRECTION {
+	SCROLL_INIT = -1,
+	SCROLL_NONE = 0,
+	SCROLL_NORTH,
+	SCROLL_EAST,
+	SCROLL_SOUTH,
+	SCROLL_WEST,
+    };
+
+    SCROLL_DIRECTION scroll_direction;
+
     // pending tile load queue
     list < FGLoadRec > load_queue;
+
+    // initialize the cache
+    void initialize_queue( void );
+
+    FGBucket BucketOffset( int dx, int dy );
 
     // schedule a tile for loading
     int sched_tile( const FGBucket& b );
@@ -86,8 +104,33 @@ private:
     // load a tile
     void load_tile( const FGBucket& b, int cache_index );
 
-    int hitcount;
-    sgdVec3 hit_pts [ MAX_HITS ] ;
+    // schedule a tile row(column) for loading
+    void scroll( void );
+
+    // see comment at prep_ssg_nodes()
+    void prep_ssg_node( int idx );
+	
+    // int hitcount;
+    // sgdVec3 hit_pts [ MAX_HITS ] ;
+
+    // ssgEntity *last_hit;
+    FGHitList hit_list;
+
+    FGBucket previous_bucket;
+    FGBucket current_bucket;
+    FGBucket pending;
+	
+    FGTileEntry *current_tile;
+	
+    // index of current tile in tile cache;
+    long int tile_index;
+    int tile_diameter;
+	
+    // current longitude latitude
+    double longitude;
+    double latitude;
+    double last_longitude;
+    double last_latitude;
 
 public:
 
@@ -109,13 +152,16 @@ public:
     // render the scene, but we'd also like to be able to do this
     // explicitely.  lat & lon are in radians.  abs_view_pos in
     // meters.  Returns result in meters.
-    double current_elev( double lon, double lat, const Point3D& abs_view_pos );
     void my_ssg_los( string s, ssgBranch *branch, sgdMat4 m, 
-		     const sgdVec3 p, const sgdVec3 dir );
-    bool current_elev_ssg( const Point3D& abs_view_pos, 
-			     const Point3D& view_pos );
-    double current_elev_new( const FGBucket& p );
+		     const sgdVec3 p, const sgdVec3 dir, sgdVec3 normal );
+	
+    void my_ssg_los( ssgBranch *branch, sgdMat4 m, 
+		     const sgdVec3 p, const sgdVec3 dir,
+		     FGHitList *list );
 
+    bool current_elev_ssg( const Point3D& abs_view_pos, 
+			   const Point3D& view_pos );
+	
     // Prepare the ssg nodes ... for each tile, set it's proper
     // transform and update it's range selector based on current
     // visibilty
@@ -128,5 +174,3 @@ extern FGTileMgr global_tile_mgr;
 
 
 #endif // _TILEMGR_HXX
-
-

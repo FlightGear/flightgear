@@ -95,5 +95,3 @@ extern FGTileCache global_tile_cache;
 
 
 #endif // _TILECACHE_HXX 
-
-

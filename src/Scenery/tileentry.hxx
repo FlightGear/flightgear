@@ -99,9 +99,6 @@ public:
     double bounding_radius;
     Point3D offset;
 
-    // model view matrix for this tile
-    GLfloat model_view[16];
-
     // this tile's official location in the world
     FGBucket tile_bucket;
 
@@ -178,32 +175,7 @@ public:
 
     // Return this tile's offset
     inline Point3D get_offset( void ) const { return offset; }
-
-    // Calculate the model_view transformation matrix for this tile
-    inline void update_view_matrix(GLfloat *MODEL_VIEW)
-    {
-
-#if defined( USE_MEM ) || defined( WIN32 )
-	memcpy( model_view, MODEL_VIEW, 16*sizeof(GLfloat) );
-#else 
-	bcopy( MODEL_VIEW, model_view, 16*sizeof(GLfloat) );
-#endif
 	
-	// This is equivalent to doing a glTranslatef(x, y, z);
-	model_view[12] += (model_view[0]*offset.x() +
-			   model_view[4]*offset.y() +
-			   model_view[8]*offset.z());
-	model_view[13] += (model_view[1]*offset.x() +
-			   model_view[5]*offset.y() +
-			   model_view[9]*offset.z());
-	model_view[14] += (model_view[2]*offset.x() +
-			   model_view[6]*offset.y() +
-			   model_view[10]*offset.z() );
-	// m[15] += (m[3]*x + m[7]*y + m[11]*z);
-	// m[3] m7[] m[11] are 0.0 see LookAt() in views.cxx
-	// so m[15] is unchanged
-    }
-
     inline bool is_unused() const { return state == Unused; }
     inline bool is_scheduled_for_use() const { 
 	return state == Scheduled_for_use;

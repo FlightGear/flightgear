@@ -53,22 +53,22 @@
 
 #include "scenery.hxx"
 #include "tilecache.hxx"
-#include "tileentry.hxx"
 #include "tilemgr.hxx"
 
-
-// to test clipping speedup in fgTileMgrRender()
-#if defined ( USE_FAST_FOV_CLIP )
-// #define TEST_FOV_CLIP
-// #define TEST_ELEV
-#endif
-
+#define TEST_LAST_HIT_CACHE
 
 extern ssgRoot *scene;
-
+extern ssgBranch *terrain;
 
 // the tile manager
 FGTileMgr global_tile_mgr;
+
+
+// a temporary hack until we get everything rewritten with sgdVec3
+static inline Point3D operator + (const Point3D& a, const sgdVec3 b)
+{
+    return Point3D(a.x()+b[0], a.y()+b[1], a.z()+b[2]);
+}
 
 
 // Constructor
@@ -89,17 +89,31 @@ int FGTileMgr::init( void ) {
 
     // load default material library
     if ( ! material_mgr.loaded() ) {
-	material_mgr.load_lib();
+        material_mgr.load_lib();
     }
 
     global_tile_cache.init();
 
     state = Inited;
 
+    // last_hit = 0;
+
+    tile_diameter = current_options.get_tile_diameter();
+    FG_LOG( FG_TERRAIN, FG_INFO, "Tile Diameter = " << tile_diameter);
+    
+    previous_bucket.make_bad();
+    current_bucket.make_bad();
+
+    scroll_direction = SCROLL_INIT;
+    tile_index = -9999;
+
+    longitude = latitude = -1000.0;
+    last_longitude = last_latitude = -1000.0;
+	
     return 1;
 }
 
-
+#if 0
 // schedule a tile for loading
 static void disable_tile( int cache_index ) {
     // see if tile already exists in the cache
@@ -107,7 +121,7 @@ static void disable_tile( int cache_index ) {
     FGTileEntry *t = global_tile_cache.get_tile( cache_index );
     t->ssg_disable();
 }
-
+#endif
 
 // schedule a tile for loading
 int FGTileMgr::sched_tile( const FGBucket& b ) {
@@ -115,23 +129,23 @@ int FGTileMgr::sched_tile( const FGBucket& b ) {
     int cache_index = global_tile_cache.exists( b );
 
     if ( cache_index >= 0 ) {
-	// tile exists in cache, reenable it.
-	// cout << "REENABLING DISABLED TILE" << endl;
-	FGTileEntry *t = global_tile_cache.get_tile( cache_index );
-	t->select_ptr->select( 1 );
-	t->mark_loaded();
+        // tile exists in cache, reenable it.
+        // cout << "REENABLING DISABLED TILE" << endl;
+        FGTileEntry *t = global_tile_cache.get_tile( cache_index );
+        t->select_ptr->select( 1 );
+        t->mark_loaded();
     } else {
-	// find the next available cache entry and mark it as
-	// scheduled
-	cache_index = global_tile_cache.next_avail();
-	FGTileEntry *t = global_tile_cache.get_tile( cache_index );
-	t->mark_scheduled_for_use();
+        // find the next available cache entry and mark it as
+        // scheduled
+        cache_index = global_tile_cache.next_avail();
+        FGTileEntry *t = global_tile_cache.get_tile( cache_index );
+        t->mark_scheduled_for_use();
 
-	// register a load request
-	FGLoadRec request;
-	request.b = b;
-	request.cache_index = cache_index;
-	load_queue.push_back( request );
+        // register a load request
+        FGLoadRec request;
+        request.b = b;
+        request.cache_index = cache_index;
+        load_queue.push_back( request );
     }
 
     return cache_index;
@@ -142,552 +156,10 @@ int FGTileMgr::sched_tile( const FGBucket& b ) {
 void FGTileMgr::load_tile( const FGBucket& b, int cache_index) {
 
     FG_LOG( FG_TERRAIN, FG_DEBUG, "Loading tile " << b );
-    
+
     global_tile_cache.fill_in(cache_index, b);
 
     FG_LOG( FG_TERRAIN, FG_DEBUG, "Loaded for cache index: " << cache_index );
-}
-
-
-// Calculate shortest distance from point to line
-static double point_line_dist_squared( const Point3D& tc, const Point3D& vp, 
-				       sgVec3 d )
-{
-    sgVec3 p, p0;
-
-    sgSetVec3( p, tc.x(), tc.y(), tc.z() );
-    sgSetVec3( p0, vp.x(), vp.y(), vp.z() );
-
-    return sgPointLineDistSquared(p, p0, d);
-}
-
-
-// Determine scenery altitude.  Normally this just happens when we
-// render the scene, but we'd also like to be able to do this
-// explicitely.  lat & lon are in radians.  abs_view_pos in meters.
-// Returns result in meters.
-double
-FGTileMgr::current_elev_new( const FGBucket& p ) {
-    FGTileEntry *t;
-    fgFRAGMENT *frag_ptr;
-    Point3D abs_view_pos = current_view.get_abs_view_pos();
-    Point3D earth_center(0.0);
-    Point3D result;
-    sgVec3 local_up;
-    double dist, lat_geod, alt, sea_level_r;
-    int index;
-
-    sgSetVec3( local_up, abs_view_pos.x(), abs_view_pos.y(), abs_view_pos.z() );
-
-    // Find current translation offset
-    // fgBucketFind(lon * RAD_TO_DEG, lat * RAD_TO_DEG, &p);
-    index = global_tile_cache.exists(p);
-    if ( index < 0 ) {
-	FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found" );
-	return 0.0;
-    }
-
-    t = global_tile_cache.get_tile(index);
-
-    scenery.next_center = t->center;
-    
-    FG_LOG( FG_TERRAIN, FG_DEBUG, 
-	    "Current bucket = " << p << "  Index = " << p.gen_index_str() );
-    FG_LOG( FG_TERRAIN, FG_DEBUG,
-	    "abs_view_pos = " << abs_view_pos );
-
-    // calculate tile offset
-    // x = (t->offset.x = t->center.x - scenery.center.x);
-    // y = (t->offset.y = t->center.y - scenery.center.y);
-    // z = (t->offset.z = t->center.z - scenery.center.z);
-    
-    // calc current terrain elevation calculate distance from
-    // vertical tangent line at current position to center of
-    // tile.
-	
-    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
-       point_line_dist_squared(&(t->offset), &(v->view_pos), 
-       v->local_up), t->bounding_radius); */
-
-    dist = point_line_dist_squared( t->center, abs_view_pos, local_up );
-    if ( dist < FG_SQUARE(t->bounding_radius) ) {
-
-	// traverse fragment list for tile
-        FGTileEntry::FragmentIterator current = t->begin();
-        FGTileEntry::FragmentIterator last = t->end();
-
-	for ( ; current != last; ++current ) {
-	    frag_ptr = &(*current);
-	    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
-	       point_line_dist_squared( &(frag_ptr->center), 
-	       &abs_view_pos), local_up),
-	       frag_ptr->bounding_radius); */
-
-	    dist = point_line_dist_squared( frag_ptr->center,
-					    abs_view_pos,
-					    local_up);
-	    if ( dist <= FG_SQUARE(frag_ptr->bounding_radius) ) {
-		if ( frag_ptr->intersect( abs_view_pos, 
-					  earth_center, 0, result ) ) {
-		    FG_LOG( FG_TERRAIN, FG_DEBUG, "intersection point " <<
-			    result );
-		    // compute geocentric coordinates of tile center
-		    Point3D pp = fgCartToPolar3d(result);
-		    FG_LOG( FG_TERRAIN, FG_DEBUG, "  polar form = " << pp );
-		    // convert to geodetic coordinates
-		    fgGeocToGeod(pp.lat(), pp.radius(), &lat_geod, 
-				 &alt, &sea_level_r);
-
-		    // printf("alt = %.2f\n", alt);
-		    // exit since we found an intersection
-		    if ( alt > -9999.0 ) {
-			// printf("returning alt\n");
-			return alt;
-		    } else {
-			// printf("returning 0\n");
-			return 0.0;
-		    }
-		}
-	    }
-	}
-    }
-
-    FG_LOG( FG_TERRAIN, FG_INFO, "(new) no terrain intersection found" );
-
-    return 0.0;
-}
-
-
-// Determine scenery altitude.  Normally this just happens when we
-// render the scene, but we'd also like to be able to do this
-// explicitely.  lat & lon are in radians.  abs_view_pos in meters.
-// Returns result in meters.
-double
-FGTileMgr::current_elev( double lon, double lat, const Point3D& abs_view_pos ) {
-    FGTileCache *c;
-    FGTileEntry *t;
-    fgFRAGMENT *frag_ptr;
-    Point3D earth_center(0.0);
-    Point3D result;
-    sgVec3 local_up;
-    double dist, lat_geod, alt, sea_level_r;
-    int index;
-
-    c = &global_tile_cache;
-
-    local_up[0] = abs_view_pos.x();
-    local_up[1] = abs_view_pos.y();
-    local_up[2] = abs_view_pos.z();
-
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "Absolute view pos = " << abs_view_pos );
-
-    // Find current translation offset
-    FGBucket p( lon * RAD_TO_DEG, lat * RAD_TO_DEG );
-    index = c->exists(p);
-    if ( index < 0 ) {
-	FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found" );
-	return 0.0;
-    }
-
-    t = c->get_tile(index);
-
-    scenery.next_center = t->center;
-    
-    FG_LOG( FG_TERRAIN, FG_DEBUG, 
-	    "Pos = (" << lon * RAD_TO_DEG << ", " << lat * RAD_TO_DEG
-	    << ")  Current bucket = " << p 
-	    << "  Index = " << p.gen_index_str() );
-
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "Tile center " << t->center 
-	    << "  bounding radius = " << t->bounding_radius );
-
-    // calculate tile offset
-    // x = (t->offset.x = t->center.x - scenery.center.x);
-    // y = (t->offset.y = t->center.y - scenery.center.y);
-    // z = (t->offset.z = t->center.z - scenery.center.z);
-    
-    // calc current terrain elevation calculate distance from
-    // vertical tangent line at current position to center of
-    // tile.
-	
-    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
-       point_line_dist_squared(&(t->offset), &(v->view_pos), 
-       v->local_up), t->bounding_radius); */
-
-    dist = point_line_dist_squared( t->center, abs_view_pos, local_up );
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "(gross check) dist squared = " << dist );
-
-    if ( dist < FG_SQUARE(t->bounding_radius) ) {
-
-	// traverse fragment list for tile
-        FGTileEntry::FragmentIterator current = t->begin();
-        FGTileEntry::FragmentIterator last = t->end();
-
-	for ( ; current != last; ++current ) {
-	    frag_ptr = &(*current);
-	    /* printf("distance squared = %.2f, bounding radius = %.2f\n", 
-	       point_line_dist_squared( &(frag_ptr->center), 
-	       &abs_view_pos), local_up),
-	       frag_ptr->bounding_radius); */
-
-	    dist = point_line_dist_squared( frag_ptr->center,
-					    abs_view_pos,
-					    local_up);
-	    if ( dist <= FG_SQUARE(frag_ptr->bounding_radius) ) {
-		if ( frag_ptr->intersect( abs_view_pos, 
-					  earth_center, 0, result ) ) {
-		    FG_LOG( FG_TERRAIN, FG_DEBUG, "intersection point " <<
-			    result );
-		    // compute geocentric coordinates of tile center
-		    Point3D pp = fgCartToPolar3d(result);
-		    FG_LOG( FG_TERRAIN, FG_DEBUG, "  polar form = " << pp );
-		    // convert to geodetic coordinates
-		    fgGeocToGeod(pp.lat(), pp.radius(), &lat_geod, 
-				 &alt, &sea_level_r);
-
-		    // printf("alt = %.2f\n", alt);
-		    // exit since we found an intersection
-		    if ( alt > -9999.0 ) {
-			// printf("returning alt\n");
-			return alt;
-		    } else {
-			// printf("returning 0\n");
-			return 0.0;
-		    }
-		}
-	    }
-	}
-    }
-
-    FG_LOG( FG_TERRAIN, FG_INFO, "(old) no terrain intersection found" );
-
-    return 0.0;
-}
-
-
-inline int fg_sign( const double x ) {
-    return x < 0 ? -1 : 1;
-}
-
-inline double fg_min( const double a, const double b ) {
-    return b < a ? b : a;
-}
-
-inline double fg_max( const double a, const double b ) {
-    return a < b ? b : a;
-}
-
-// return the minimum of the three values
-inline double fg_min3( const double a, const double b, const double c ) {
-    return a > b ? fg_min(b, c) : fg_min(a, c);
-}
-
-// return the maximum of the three values
-inline double fg_max3 (const double a, const double b, const double c ) {
-    return a < b ? fg_max(b, c) : fg_max(a, c);
-}
-
-// check for an instersection with the individual triangles of a leaf
-static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgdMat4 m,
-				    const sgdVec3 p, const sgdVec3 dir,
-				    sgdVec3 result )
-{
-    sgdVec3 v1, v2, n;
-    sgdVec3 p1, p2, p3;
-    double x, y, z;  // temporary holding spot for result
-    double a, b, c, d;
-    double x0, y0, z0, x1, y1, z1, a1, b1, c1;
-    double t1, t2, t3;
-    double xmin, xmax, ymin, ymax, zmin, zmax;
-    double dx, dy, dz, min_dim, x2, y2, x3, y3, rx, ry;
-    sgdVec3 tmp;
-    float *ftmp;
-    int side1, side2;
-    short i1, i2, i3;
-
-    // cout << s << "Intersecting" << endl;
-
-    // traverse the triangle list for this leaf
-    for ( int i = 0; i < leaf->getNumTriangles(); ++i ) {
-	// cout << s << "testing triangle = " << i << endl;
-
-	leaf->getTriangle( i, &i1, &i2, &i3 );
-
-	// get triangle vertex coordinates
-
-	ftmp = leaf->getVertex( i1 );
-	sgdSetVec3( tmp, ftmp );
-	// cout << s << "orig point 1 = " << tmp[0] << " " << tmp[1] 
-	//      << " " << tmp[2] << endl;
-	sgdXformPnt3( p1, tmp, m ) ;
-
-	ftmp = leaf->getVertex( i2 );
-	sgdSetVec3( tmp, ftmp );
-	// cout << s << "orig point 2 = " << tmp[0] << " " << tmp[1] 
-	//      << " " << tmp[2] << endl;
-	sgdXformPnt3( p2, tmp, m ) ;
-
-	ftmp = leaf->getVertex( i3 );
-	sgdSetVec3( tmp, ftmp );
-	// cout << s << "orig point 3 = " << tmp[0] << " " << tmp[1] 
-	//      << " " << tmp[2] << endl;
-	sgdXformPnt3( p3, tmp, m ) ;
-
-	// cout << s << "point 1 = " << p1[0] << " " << p1[1] << " " << p1[2]
-	//      << endl;
-	// cout << s << "point 2 = " << p2[0] << " " << p2[1] << " " << p2[2]
-	//      << endl;
-	// cout << s << "point 3 = " << p3[0] << " " << p3[1] << " " << p3[2]
-	//      << endl;
-
-	// calculate two edge vectors, and the face normal
-	sgdSubVec3(v1, p2, p1);
-	sgdSubVec3(v2, p3, p1);
-	sgdVectorProductVec3(n, v1, v2);
-
-	// calculate the plane coefficients for the plane defined by
-	// this face.  If n is the normal vector, n = (a, b, c) and p1
-	// is a point on the plane, p1 = (x0, y0, z0), then the
-	// equation of the line is a(x-x0) + b(y-y0) + c(z-z0) = 0
-	a = n[0];
-	b = n[1];
-	c = n[2];
-	d = a * p1[0] + b * p1[1] + c * p1[2];
-	// printf("a, b, c, d = %.2f %.2f %.2f %.2f\n", a, b, c, d);
-
-	// printf("p1(d) = %.2f\n", a * p1[0] + b * p1[1] + c * p1[2]);
-	// printf("p2(d) = %.2f\n", a * p2[0] + b * p2[1] + c * p2[2]);
-	// printf("p3(d) = %.2f\n", a * p3[0] + b * p3[1] + c * p3[2]);
-
-	// calculate the line coefficients for the specified line
-	x0 = p[0];  x1 = p[0] + dir[0];
-	y0 = p[1];  y1 = p[1] + dir[1];
-	z0 = p[2];  z1 = p[2] + dir[2];
-
-	if ( fabs(x1 - x0) > FG_EPSILON ) {
-	    a1 = 1.0 / (x1 - x0);
-	} else {
-	    // we got a big divide by zero problem here
-	    a1 = 0.0;
-	}
-	b1 = y1 - y0;
-	c1 = z1 - z0;
-
-	// intersect the specified line with this plane
-	t1 = b * b1 * a1;
-	t2 = c * c1 * a1;
-
-	// printf("a = %.2f  t1 = %.2f  t2 = %.2f\n", a, t1, t2);
-
-	if ( fabs(a + t1 + t2) > FG_EPSILON ) {
-	    x = (t1*x0 - b*y0 + t2*x0 - c*z0 + d) / (a + t1 + t2);
-	    t3 = a1 * (x - x0);
-	    y = b1 * t3 + y0;
-	    z = c1 * t3 + z0;	    
-	    // printf("result(d) = %.2f\n", a * x + b * y + c * z);
-	} else {
-	    // no intersection point
-	    continue;
-	}
-
-#if 0
-	if ( side_flag ) {
-	    // check to see if end0 and end1 are on opposite sides of
-	    // plane
-	    if ( (x - x0) > FG_EPSILON ) {
-		t1 = x;
-		t2 = x0;
-		t3 = x1;
-	    } else if ( (y - y0) > FG_EPSILON ) {
-		t1 = y;
-		t2 = y0;
-		t3 = y1;
-	    } else if ( (z - z0) > FG_EPSILON ) {
-		t1 = z;
-		t2 = z0;
-		t3 = z1;
-	    } else {
-		// everything is too close together to tell the difference
-		// so the current intersection point should work as good
-		// as any
-		sgdSetVec3( result, x, y, z );
-		return true;
-	    }
-	    side1 = fg_sign (t1 - t2);
-	    side2 = fg_sign (t1 - t3);
-	    if ( side1 == side2 ) {
-		// same side, punt
-		continue;
-	    }
-	}
-#endif
-
-	// check to see if intersection point is in the bounding
-	// cube of the face
-#ifdef XTRA_DEBUG_STUFF
-	xmin = fg_min3 (p1[0], p2[0], p3[0]);
-	xmax = fg_max3 (p1[0], p2[0], p3[0]);
-	ymin = fg_min3 (p1[1], p2[1], p3[1]);
-	ymax = fg_max3 (p1[1], p2[1], p3[1]);
-	zmin = fg_min3 (p1[2], p2[2], p3[2]);
-	zmax = fg_max3 (p1[2], p2[2], p3[2]);
-	printf("bounding cube = %.2f,%.2f,%.2f  %.2f,%.2f,%.2f\n",
-	       xmin, ymin, zmin, xmax, ymax, zmax);
-#endif
-	// punt if outside bouding cube
-	if ( x < (xmin = fg_min3 (p1[0], p2[0], p3[0])) ) {
-	    continue;
-	} else if ( x > (xmax = fg_max3 (p1[0], p2[0], p3[0])) ) {
-	    continue;
-	} else if ( y < (ymin = fg_min3 (p1[1], p2[1], p3[1])) ) {
-	    continue;
-	} else if ( y > (ymax = fg_max3 (p1[1], p2[1], p3[1])) ) {
-	    continue;
-	} else if ( z < (zmin = fg_min3 (p1[2], p2[2], p3[2])) ) {
-	    continue;
-	} else if ( z > (zmax = fg_max3 (p1[2], p2[2], p3[2])) ) {
-	    continue;
-	}
-
-	// (finally) check to see if the intersection point is
-	// actually inside this face
-
-	//first, drop the smallest dimension so we only have to work
-	//in 2d.
-	dx = xmax - xmin;
-	dy = ymax - ymin;
-	dz = zmax - zmin;
-	min_dim = fg_min3 (dx, dy, dz);
-	if ( fabs(min_dim - dx) <= FG_EPSILON ) {
-	    // x is the smallest dimension
-	    x1 = p1[1];
-	    y1 = p1[2];
-	    x2 = p2[1];
-	    y2 = p2[2];
-	    x3 = p3[1];
-	    y3 = p3[2];
-	    rx = y;
-	    ry = z;
-	} else if ( fabs(min_dim - dy) <= FG_EPSILON ) {
-	    // y is the smallest dimension
-	    x1 = p1[0];
-	    y1 = p1[2];
-	    x2 = p2[0];
-	    y2 = p2[2];
-	    x3 = p3[0];
-	    y3 = p3[2];
-	    rx = x;
-	    ry = z;
-	} else if ( fabs(min_dim - dz) <= FG_EPSILON ) {
-	    // z is the smallest dimension
-	    x1 = p1[0];
-	    y1 = p1[1];
-	    x2 = p2[0];
-	    y2 = p2[1];
-	    x3 = p3[0];
-	    y3 = p3[1];
-	    rx = x;
-	    ry = y;
-	} else {
-	    // all dimensions are really small so lets call it close
-	    // enough and return a successful match
-	    sgdSetVec3( result, x, y, z );
-	    return true;
-	}
-
-	// check if intersection point is on the same side of p1 <-> p2 as p3
-	t1 = (y1 - y2) / (x1 - x2);
-	side1 = fg_sign (t1 * ((x3) - x2) + y2 - (y3));
-	side2 = fg_sign (t1 * ((rx) - x2) + y2 - (ry));
-	if ( side1 != side2 ) {
-	    // printf("failed side 1 check\n");
-	    continue;
-	}
-
-	// check if intersection point is on correct side of p2 <-> p3 as p1
-	t1 = (y2 - y3) / (x2 - x3);
-	side1 = fg_sign (t1 * ((x1) - x3) + y3 - (y1));
-	side2 = fg_sign (t1 * ((rx) - x3) + y3 - (ry));
-	if ( side1 != side2 ) {
-	    // printf("failed side 2 check\n");
-	    continue;
-	}
-
-	// check if intersection point is on correct side of p1 <-> p3 as p2
-	t1 = (y1 - y3) / (x1 - x3);
-	side1 = fg_sign (t1 * ((x2) - x3) + y3 - (y2));
-	side2 = fg_sign (t1 * ((rx) - x3) + y3 - (ry));
-	if ( side1 != side2 ) {
-	    // printf("failed side 3  check\n");
-	    continue;
-	}
-
-	// printf( "intersection point = %.2f %.2f %.2f\n", x, y, z);
-	sgdSetVec3( result, x, y, z );
-	return true;
-    }
-
-    // printf("\n");
-
-    return false;
-}
-
-
-void FGTileMgr::my_ssg_los( string s, ssgBranch *branch, sgdMat4 m, 
-			    const sgdVec3 p, const sgdVec3 dir )
-{
-    sgSphere *bsphere;
-    for ( ssgEntity *kid = branch->getKid( 0 );
-	  kid != NULL; 
-	  kid = branch->getNextKid() )
-    {
-	if ( kid->getTraversalMask() & SSGTRAV_HOT ) {
-	    bsphere = kid->getBSphere();
-	    sgVec3 fcenter;
-	    sgCopyVec3( fcenter, bsphere->getCenter() );
-	    sgdVec3 center;
-	    center[0] = fcenter[0]; 
-	    center[1] = fcenter[1];
-	    center[2] = fcenter[2];
-	    sgdXformPnt3( center, m ) ;
-	    // cout << s << "entity bounding sphere:" << endl;
-	    // cout << s << "center = " << center[0] << " "
-	    //      << center[1] << " " << center[2] << endl;
-    	    // cout << s << "radius = " << bsphere->getRadius() << endl;
-	    double radius_sqd = bsphere->getRadius() * bsphere->getRadius();
-	    if ( sgdPointLineDistSquared( center, p, dir ) < radius_sqd ) {
-		// possible intersections
-		if ( kid->isAKindOf ( ssgTypeBranch() ) ) {
-		    sgdMat4 m_new;
-		    sgdCopyMat4(m_new, m);
-		    if ( kid->isA( ssgTypeTransform() ) ) {
-			sgMat4 fxform;
-			((ssgTransform *)kid)->getTransform( fxform );
-			sgdMat4 xform;
-			sgdSetMat4( xform, fxform );
-			sgdPreMultMat4( m_new, xform );
-		    }
-		    my_ssg_los( s + " ", (ssgBranch *)kid, m_new, p, dir );
-		} else if ( kid->isAKindOf ( ssgTypeLeaf() ) ) {
-		    sgdVec3 result;
-		    if ( my_ssg_instersect_leaf( s, (ssgLeaf *)kid, m, p, dir, 
-						 result ) )
-		    {
-			// cout << "sgLOS hit: " << result[0] << "," 
-			//      << result[1] << "," << result[2] << endl;
-			for (int i=0; i < 3; i++) {
-			    hit_pts[hitcount][i] = result[i];
-			}
-			hitcount++;
-		    }
-		}
-	    } else {
-		// end of the line for this branch
-	    }
-	} else {
-	    // branch requested not to be traversed
-	}
-    }
 }
 
 
@@ -696,60 +168,203 @@ void FGTileMgr::my_ssg_los( string s, ssgBranch *branch, sgdMat4 m,
 // explicitely.  lat & lon are in radians.  view_pos in current world
 // coordinate translated near (0,0,0) (in meters.)  Returns result in
 // meters.
+
 bool
 FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos, 
 			     const Point3D& view_pos )
 {
-    hitcount = 0;
+    sgdVec3 orig, dir;
 
-    sgdMat4 m;
-    sgdMakeIdentMat4 ( m ) ;
+    sgdSetVec3(orig, view_pos.x(), view_pos.y(), view_pos.z() );
+    sgdSetVec3(dir, abs_view_pos.x(), abs_view_pos.y(), abs_view_pos.z() );
 
-    sgdVec3 sgavp, sgvp;
-    sgdSetVec3(sgavp, abs_view_pos.x(), abs_view_pos.y(), abs_view_pos.z() );
-    sgdSetVec3(sgvp, view_pos.x(), view_pos.y(), view_pos.z() );
+    hit_list.Intersect( terrain, orig, dir );
 
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "starting ssg_los, abs view pos = "
-	    << abs_view_pos[0] << " " << abs_view_pos[1] << " " 
-	    << abs_view_pos[2] );
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "starting ssg_los, view pos = "
-	    << view_pos[0] << " " << view_pos[1] << " " << view_pos[2] );
-    my_ssg_los( "", scene, m, sgvp, sgavp );
-    
-    Point3D rel_cart;
-    Point3D abs_cart;
+    int this_hit=0;
     Point3D geoc;
-    double lat_geod, alt, sea_level_r;
     double result = -9999;
 
+    int hitcount = hit_list.num_hits();
     for ( int i = 0; i < hitcount; ++i ) {
-	rel_cart = Point3D( hit_pts[i][0], hit_pts[i][1], hit_pts[i][2] );
-	abs_cart = rel_cart + scenery.center;
-	geoc = fgCartToPolar3d( abs_cart );
-	// FG_LOG( FG_TERRAIN, FG_DEBUG, "  polar form = " << geoc );
-	// convert to geodetic coordinates
+	geoc = fgCartToPolar3d( scenery.center + hit_list.get_point(i) );      
+	double lat_geod, alt, sea_level_r;
 	fgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod, 
 		     &alt, &sea_level_r);
-	// FG_LOG( FG_TERRAIN, FG_DEBUG, "  alt (meters) = " << alt );
-	// FG_LOG( FG_TERRAIN, FG_DEBUG, "  geoc alt (meters) = " << geoc.radius() );
-	// FG_LOG( FG_TERRAIN, FG_DEBUG, "  sea_level_r + alt = " << sea_level_r + alt );
-
-	// printf("alt = %.2f\n", alt);
-	// exit since we found an intersection
 	if ( alt > result && alt < 10000 ) {
-	    // printf("    returning alt = %.2f\n", alt);
 	    result = alt;
+	    this_hit = i;
 	}
     }
 
     if ( result > -9000 ) {
 	scenery.cur_elev = result;
 	scenery.cur_radius = geoc.radius();
+	sgdCopyVec3(scenery.cur_normal, hit_list.get_normal(this_hit));
 	return true;
     } else {
 	FG_LOG( FG_TERRAIN, FG_INFO, "no terrain intersection" );
 	scenery.cur_elev = 0.0;
+	float *up = current_view.local_up;
+	sgdSetVec3(scenery.cur_normal, up[0], up[1], up[2]);
 	return false;
+    }
+}
+
+
+FGBucket FGTileMgr::BucketOffset( int dx, int dy )
+{
+    double clat, clon, span;
+    if( scroll_direction == SCROLL_INIT ) {
+	pending.set_bucket( longitude, latitude );
+	clat = pending.get_center_lat() + dy * FG_BUCKET_SPAN;
+
+	// walk dy units in the lat direction
+	pending.set_bucket( longitude, clat );
+
+	// find the lon span for the new latitude
+	span = bucket_span( clat );
+	
+	// walk dx units in the lon direction
+	clon = longitude + dx * span;
+    } else	{
+	pending.set_bucket( last_longitude, last_latitude );
+	clat = pending.get_center_lat() + dy * FG_BUCKET_SPAN;
+
+	// walk dy units in the lat direction
+	pending.set_bucket( last_longitude, clat );
+
+	// find the lon span for the new latitude
+	span = bucket_span( clat );
+
+	// walk dx units in the lon direction
+	clon = last_longitude + dx * span;
+    }    
+	
+    while ( clon < -180.0 ) clon += 360.0;
+    while ( clon >= 180.0 ) clon -= 360.0;
+    pending.set_bucket( clon, clat );
+
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "    fgBucketOffset " << pending );
+    return pending;
+}
+
+
+// schedule a tile row(column) for loading
+void FGTileMgr::scroll( void )
+{
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "schedule_row: Scrolling" );
+
+    int i, dw, dh;
+	
+    switch( scroll_direction ) {
+    case SCROLL_NORTH:
+	FG_LOG( FG_TERRAIN, FG_DEBUG, 
+		"  (North) Loading " << tile_diameter << " tiles" );
+	dw = tile_diameter / 2;
+	dh = dw + 1;
+	for ( i = 0; i < tile_diameter; i++ ) {
+	    sched_tile( BucketOffset( i - dw, dh) );
+	}
+	break;
+    case SCROLL_EAST:
+	FG_LOG( FG_TERRAIN, FG_DEBUG, 
+		"  (East) Loading " << tile_diameter << " tiles" );
+	dh = tile_diameter / 2;
+	dw = dh + 1;
+	for ( i = 0; i < tile_diameter; i++ ) {
+	    sched_tile( BucketOffset( dw, i - dh ) );
+	}
+	break;
+    case SCROLL_SOUTH:
+	dw = tile_diameter / 2;
+	dh = -dw - 1;
+	FG_LOG( FG_TERRAIN, FG_DEBUG, 
+		"  (South) Loading " << tile_diameter << " tiles" );
+	for ( i = 0; i < tile_diameter; i++ ) {
+	    sched_tile( BucketOffset( i - dw, dh) );
+	}
+	break;
+    case SCROLL_WEST:
+	dh = tile_diameter / 2;
+	dw = -dh - 1;
+	FG_LOG( FG_TERRAIN, FG_DEBUG, 
+		"  (West) Loading " << tile_diameter << " tiles" );
+	for ( i = 0; i < tile_diameter; i++ ) {
+	    sched_tile( BucketOffset( dw, i - dh ) );
+	}
+	break;
+    default:
+	FG_LOG( FG_TERRAIN, FG_WARN, "UNKNOWN SCROLL DIRECTION in schedule_row" );
+	;
+    }
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "\tschedule_row returns" );
+}
+
+
+void FGTileMgr::initialize_queue( void )
+{
+    // First time through or we have teleported, initialize the
+    // system and load all relavant tiles
+
+    FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << current_bucket );
+    FG_LOG( FG_TERRAIN, FG_INFO, "  First time through ... " );
+    FG_LOG( FG_TERRAIN, FG_INFO, "  Updating Tile list for " << current_bucket );
+    FG_LOG( FG_TERRAIN, FG_INFO, "  Loading " 
+            << tile_diameter * tile_diameter << " tiles" );
+
+    int i;
+    scroll_direction = SCROLL_INIT;
+
+    // wipe/initialize tile cache
+    global_tile_cache.init();
+    previous_bucket.make_bad();
+
+    // build the local area list and schedule tiles for loading
+
+    // start with the center tile and work out in concentric
+    // "rings"
+
+    sched_tile( current_bucket );
+    Point3D geod_view_center( current_bucket.get_center_lon(), 
+                              current_bucket.get_center_lat(), 
+                              cur_fdm_state->get_Altitude()*FEET_TO_METER + 3 );
+
+    current_view.abs_view_pos = fgGeodToCart( geod_view_center );
+    current_view.view_pos = current_view.abs_view_pos - scenery.next_center;
+
+    for ( i = 3; i <= tile_diameter; i = i + 2 ) {
+        int j;
+        int span = i / 2;
+
+        // bottom row
+        for ( j = -span; j <= span; ++j ) {
+            sched_tile( BucketOffset( j, -span ) );
+        }
+
+        // top row
+        for ( j = -span; j <= span; ++j ) {
+            sched_tile( BucketOffset( j, span ) );
+        }
+
+        // middle rows
+        for ( j = -span + 1; j <= span - 1; ++j ) {
+            sched_tile( BucketOffset( -span, j ) );
+            sched_tile( BucketOffset( span, j ) );
+        }
+
+    }
+
+    // Now force a load of the center tile and inner ring so we
+    // have something to see in our first frame.
+    for ( i = 0; i < 9; ++i ) {
+        if ( load_queue.size() ) {
+            FG_LOG( FG_TERRAIN, FG_DEBUG, 
+                    "Load queue not empty, loading a tile" );
+
+            FGLoadRec pending = load_queue.front();
+            load_queue.pop_front();
+            load_tile( pending.b, pending.cache_index );
+        }
     }
 }
 
@@ -757,197 +372,72 @@ FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos,
 // given the current lon/lat, fill in the array of local chunks.  If
 // the chunk isn't already in the cache, then read it from disk.
 int FGTileMgr::update( void ) {
-    FGTileCache *c;
-    FGInterface *f;
-    FGTileEntry *t;
-     FGBucket p2;
-    static FGBucket p_last(false);
-    static double last_lon = -1000.0;  // in degrees
-    static double last_lat = -1000.0;  // in degrees
-    int tile_diameter;
-    int i, j, dw, dh;
+    // FG_LOG( FG_TERRAIN, FG_DEBUG, "FGTileMgr::update()" );
 
-    c = &global_tile_cache;
-    f = current_aircraft.fdm_state;
+    FGInterface *f = current_aircraft.fdm_state;
 
-    tile_diameter = current_options.get_tile_diameter();
+    // lonlat for this update 
+    longitude = f->get_Longitude() * RAD_TO_DEG;
+    latitude = f->get_Latitude() * RAD_TO_DEG;
+    // FG_LOG( FG_TERRAIN, FG_DEBUG, "lon "<< lonlat[LON] <<
+    //      " lat " << lonlat[LAT] );
 
-    FGBucket p1( f->get_Longitude() * RAD_TO_DEG,
-		 f->get_Latitude() * RAD_TO_DEG );
+    current_bucket.set_bucket( longitude, latitude );
+    // FG_LOG( FG_TERRAIN, FG_DEBUG, "Updating Tile list for " << current_bucket );
 
-    long int index = c->exists(p1);
-    if ( index >= 0 ) {
-	t = c->get_tile(index);
-	scenery.next_center = t->center;
+    tile_index = global_tile_cache.exists(current_bucket);
+    // FG_LOG( FG_TERRAIN, FG_DEBUG, "tile index " << tile_index );
+
+    if ( tile_index >= 0 ) {
+        current_tile = global_tile_cache.get_tile(tile_index);
+        scenery.next_center = current_tile->center;
     } else {
-	FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found" );
+        FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found" );
     }
 
-    dw = tile_diameter / 2;
-    dh = tile_diameter / 2;
+    if ( state == Running ) {
+	if( current_bucket == previous_bucket) {
+	    FG_LOG( FG_TERRAIN, FG_DEBUG, "Same bucket as last time" );
+	    scroll_direction = SCROLL_NONE;
+	} else {
+	    // We've moved to a new bucket, we need to scroll our
+	    // structures, and load in the new tiles
+	    // CURRENTLY THIS ASSUMES WE CAN ONLY MOVE TO ADJACENT TILES.
+	    // AT ULTRA HIGH SPEEDS THIS ASSUMPTION MAY NOT BE VALID IF
+	    // THE AIRCRAFT CAN SKIP A TILE IN A SINGLE ITERATION.
 
-    if ( (p1 == p_last) && (state == Running) ) {
-	// same bucket as last time
-	FG_LOG( FG_TERRAIN, FG_DEBUG, "Same bucket as last time" );
+	    if ( (current_bucket.get_lon() > previous_bucket.get_lon()) ||
+		 ( (current_bucket.get_lon() == previous_bucket.get_lon()) && 
+		   (current_bucket.get_x() > previous_bucket.get_x()) ) )
+		{
+		    scroll_direction = SCROLL_EAST;
+		}
+	    else if ( (current_bucket.get_lon() < previous_bucket.get_lon()) ||
+		      ( (current_bucket.get_lon() == previous_bucket.get_lon()) && 
+			(current_bucket.get_x() < previous_bucket.get_x()) ) )
+		{   
+		    scroll_direction = SCROLL_WEST;
+		}   
+
+	    if ( (current_bucket.get_lat() > previous_bucket.get_lat()) ||
+		 ( (current_bucket.get_lat() == previous_bucket.get_lat()) && 
+		   (current_bucket.get_y() > previous_bucket.get_y()) ) )
+		{   
+		    scroll_direction = SCROLL_NORTH;
+		}
+	    else if ( (current_bucket.get_lat() < previous_bucket.get_lat()) ||
+		      ( (current_bucket.get_lat() == previous_bucket.get_lat()) && 
+			(current_bucket.get_y() < previous_bucket.get_y()) ) )
+		{
+		    scroll_direction = SCROLL_SOUTH;
+		}
+
+	    scroll();
+	}
+
     } else if ( (state == Start) || (state == Inited) ) {
+	initialize_queue();
 	state = Running;
-
-	// First time through or we have teleported, initialize the
-	// system and load all relavant tiles
-
-	FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << p1 );
-	FG_LOG( FG_TERRAIN, FG_INFO, "  First time through ... " );
-	FG_LOG( FG_TERRAIN, FG_INFO, "  Updating Tile list for " << p1 );
-	FG_LOG( FG_TERRAIN, FG_INFO, "  Loading " 
-		<< tile_diameter * tile_diameter << " tiles" );
-
-	// wipe/initialize tile cache
-	c->init();
-	p_last.make_bad();
-
-	// build the local area list and schedule tiles for loading
-
-	// start with the center tile and work out in concentric
-	// "rings"
-
-	p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
-			     f->get_Latitude() * RAD_TO_DEG,
-			     0, 0 );
-	sched_tile( p2 );
-
-	// prime scenery center calculations
-	Point3D geod_view_center( p2.get_center_lon(), 
-				  p2.get_center_lat(), 
-				  cur_fdm_state->get_Altitude()*FEET_TO_METER +
-				  3 );
-	current_view.abs_view_pos = fgGeodToCart( geod_view_center );
-	current_view.view_pos = current_view.abs_view_pos - scenery.next_center;
-
-	for ( i = 3; i <= tile_diameter; i = i + 2 ) {
-	    int span = i / 2;
-
-	    // bottom row
-	    for ( j = -span; j <= span; ++j ) {
-		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
-				     f->get_Latitude() * RAD_TO_DEG,
-				     j, -span );
-		sched_tile( p2 );
-	    }
-
-	    // top row
-	    for ( j = -span; j <= span; ++j ) {
-		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
-				     f->get_Latitude() * RAD_TO_DEG,
-				     j, span );
-		sched_tile( p2 );
-	    }
-
-	    // middle rows
-	    for ( j = -span + 1; j <= span - 1; ++j ) {
-		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
-				     f->get_Latitude() * RAD_TO_DEG,
-				     -span, j );
-		sched_tile( p2 );
-		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
-				     f->get_Latitude() * RAD_TO_DEG,
-				     span, j );
-		sched_tile( p2 );
-	    }
-
-	}
-
-	/* for ( j = 0; j < tile_diameter; j++ ) {
-	    for ( i = 0; i < tile_diameter; i++ ) {
-		// fgBucketOffset(&p1, &p2, i - dw, j - dh);
-		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
-				     f->get_Latitude() * RAD_TO_DEG,
-				     i - dw, j -dh );
-		sched_tile( p2 );
-	    }
-	} */
-
-	// Now force a load of the center tile and inner ring so we
-	// have something to see in our first frame.
-	for ( i = 0; i < 9; ++i ) {
-	    if ( load_queue.size() ) {
-		FG_LOG( FG_TERRAIN, FG_DEBUG, 
-			"Load queue not empty, loading a tile" );
-	    
-		FGLoadRec pending = load_queue.front();
-		load_queue.pop_front();
-		load_tile( pending.b, pending.cache_index );
-	    }
-	}
-
-    } else {
-	// We've moved to a new bucket, we need to scroll our
-        // structures, and load in the new tiles
-
-#if 0 
-	// make sure load queue is flushed before doing shift
-	while ( load_queue.size() ) {
-	    FG_LOG( FG_TERRAIN, FG_DEBUG, 
-		    "Load queue not empty, flushing queue before tile shift." );
-	    
-	    FGLoadRec pending = load_queue.front();
-	    load_queue.pop_front();
-	    load_tile( pending.b, pending.index );
-	}
-#endif
-
-	// CURRENTLY THIS ASSUMES WE CAN ONLY MOVE TO ADJACENT TILES.
-	// AT ULTRA HIGH SPEEDS THIS ASSUMPTION MAY NOT BE VALID IF
-	// THE AIRCRAFT CAN SKIP A TILE IN A SINGLE ITERATION.
-
-	FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << p1 );
-
-	if ( (p1.get_lon() > p_last.get_lon()) ||
-	     ( (p1.get_lon() == p_last.get_lon()) && 
-	       (p1.get_x() > p_last.get_x()) ) ) {
-	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "  (East) Loading " << tile_diameter << " tiles" );
-	    for ( j = 0; j < tile_diameter; j++ ) {
-		// scrolling East
-		// schedule new column
-		p2 = fgBucketOffset( last_lon, last_lat, dw + 1, j - dh );
-		sched_tile( p2 );
-	    }
-	} else if ( (p1.get_lon() < p_last.get_lon()) ||
-		    ( (p1.get_lon() == p_last.get_lon()) && 
-		      (p1.get_x() < p_last.get_x()) ) ) {
-	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "  (West) Loading " << tile_diameter << " tiles" );
-	    for ( j = 0; j < tile_diameter; j++ ) {
-		// scrolling West
-		// schedule new column
-		p2 = fgBucketOffset( last_lon, last_lat, -dw - 1, j - dh );
-		sched_tile( p2 );
-	    }
-	}
-
-	if ( (p1.get_lat() > p_last.get_lat()) ||
-	     ( (p1.get_lat() == p_last.get_lat()) && 
-	       (p1.get_y() > p_last.get_y()) ) ) {
-	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "  (North) Loading " << tile_diameter << " tiles" );
-	    for ( i = 0; i < tile_diameter; i++ ) {
-		// scrolling North
-		// schedule new row
-		p2 = fgBucketOffset( last_lon, last_lat, i - dw, dh + 1);
-		sched_tile( p2 );
-	    }
-	} else if ( (p1.get_lat() < p_last.get_lat()) ||
-		    ( (p1.get_lat() == p_last.get_lat()) && 
-		      (p1.get_y() < p_last.get_y()) ) ) {
-	    FG_LOG( FG_TERRAIN, FG_INFO, 
-		    "  (South) Loading " << tile_diameter << " tiles" );
-	    for ( i = 0; i < tile_diameter; i++ ) {
-		// scrolling South
-		// schedule new row
-		p2 = fgBucketOffset( last_lon, last_lat, i - dw, -dh - 1);
-		sched_tile( p2 );
-	    }
-	}
     }
 
     if ( load_queue.size() ) {
@@ -968,121 +458,55 @@ int FGTileMgr::update( void ) {
     //      << endl;
 
     // set scenery.cur_elev and scenery.cur_radius
-    current_elev_ssg( current_view.abs_view_pos, current_view.view_pos );
+
+    current_elev_ssg( current_view.abs_view_pos,
+                      current_view.view_pos );
     // cout << "current elevation (ssg) == " << scenery.cur_elev << endl;
-	
-    p_last = p1;
-    last_lon = f->get_Longitude() * RAD_TO_DEG;
-    last_lat = f->get_Latitude() * RAD_TO_DEG;
+
+    previous_bucket = current_bucket;
+    last_longitude = longitude;
+    last_latitude  = latitude;
 
     return 1;
 }
 
-
-// NEW 
-
-// inrange() IS THIS POINT WITHIN POSSIBLE VIEWING RANGE ?
-//	calculate distance from vertical tangent line at
-//	current position to center of object.
-//	this is equivalent to
-//	dist = point_line_dist_squared( &(t->center), &(v->abs_view_pos), 
-//				        v->local_up );
-//	if ( dist < FG_SQUARE(t->bounding_radius) ) {
-//
-// the compiler should inline this for us
-
-static int
-inrange( const double radius, const Point3D& center, const Point3D& vp,
-	 const sgVec3 up)
-{
-    sgVec3 u, u1, v;
-    //	double tmp;
-	
-    // u = p - p0
-    u[0] = center.x() - vp.x();
-    u[1] = center.y() - vp.y();
-    u[2] = center.z() - vp.z();
-	
-    // calculate the projection, u1, of u along d.
-    // u1 = ( dot_prod(u, d) / dot_prod(d, d) ) * d;
-	
-    sgScaleVec3( u1, up,
-		 (sgScalarProductVec3(u, up) / sgScalarProductVec3(up, up)) );
-    
-    // v = u - u1 = vector from closest point on line, p1, to the
-    // original point, p.
-    sgSubVec3( v, u, u1 );
-	
-    return( FG_SQUARE(radius) >= sgScalarProductVec3(v, v));
-}
-
-
-// NEW for legibility
-
-// update this tile's geometry for current view
-// The Compiler should inline this
-static void
-update_tile_geometry( FGTileEntry *t, GLdouble *MODEL_VIEW)
-{
-    GLfloat *m;
-    double x, y, z;
-	
-    // calculate tile offset
-    t->offset = t->center - scenery.center;
-
-    x = t->offset.x();
-    y = t->offset.y();
-    z = t->offset.z();
-	
-    m = t->model_view;
-	
-    // Calculate the model_view transformation matrix for this tile
-    FG_MEM_COPY( m, MODEL_VIEW, 16*sizeof(GLdouble) );
-    
-    // This is equivalent to doing a glTranslatef(x, y, z);
-    m[12] += (m[0]*x + m[4]*y + m[8] *z);
-    m[13] += (m[1]*x + m[5]*y + m[9] *z);
-    m[14] += (m[2]*x + m[6]*y + m[10]*z);
-    // m[15] += (m[3]*x + m[7]*y + m[11]*z);
-    // m[3] m7[] m[11] are 0.0 see LookAt() in views.cxx
-    // so m[15] is unchanged
-}
-
-
 // Prepare the ssg nodes ... for each tile, set it's proper
 // transform and update it's range selector based on current
 // visibilty
+void FGTileMgr::prep_ssg_node( int idx ) {
+}
+
 void FGTileMgr::prep_ssg_nodes( void ) {
     FGTileEntry *t;
-
     float ranges[2];
     ranges[0] = 0.0f;
 
     // traverse the potentially viewable tile list and update range
     // selector and transform
     for ( int i = 0; i < (int)global_tile_cache.get_size(); i++ ) {
-	t = global_tile_cache.get_tile( i );
+        t = global_tile_cache.get_tile( i );
 
-	if ( t->is_loaded() ) {
+        if ( t->is_loaded() ) {
 	    // set range selector (LOD trick) to be distance to center
 	    // of tile + bounding radius
+
 #ifndef FG_OLD_WEATHER
-	    ranges[1] = WeatherDatabase->getWeatherVisibility()
+            ranges[1] = WeatherDatabase->getWeatherVisibility()
 		+ t->bounding_radius;
 #else
-	    ranges[1] = current_weather.get_visibility()+t->bounding_radius;
+            ranges[1] = current_weather.get_visibility()+t->bounding_radius;
 #endif
-	    t->range_ptr->setRanges( ranges, 2 );
+            t->range_ptr->setRanges( ranges, 2 );
 
-	    // calculate tile offset
-	    t->SetOffset( scenery.center );
+            // calculate tile offset
+            t->SetOffset( scenery.center );
 
-	    // calculate ssg transform
-	    sgCoord sgcoord;
-	    sgSetCoord( &sgcoord,
-			t->offset.x(), t->offset.y(), t->offset.z(),
-			0.0, 0.0, 0.0 );
-	    t->transform_ptr->setTransform( &sgcoord );
-	}
+            // calculate ssg transform
+            sgCoord sgcoord;
+            sgSetCoord( &sgcoord,
+                        t->offset.x(), t->offset.y(), t->offset.z(),
+                        0.0, 0.0, 0.0 );
+            t->transform_ptr->setTransform( &sgcoord );
+        }
     }
 }

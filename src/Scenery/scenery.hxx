@@ -30,6 +30,7 @@
 #endif                                   
 
 
+#include <plib/sg.h>
 #include <simgear/math/point3d.hxx>
 
 
@@ -51,6 +52,9 @@ struct fgSCENERY {
     // the distance (radius) from the center of the earth to the
     // current scenery elevation point
     double cur_radius;
+
+    // unit normal at point used to determine current elevation
+    sgdVec3 cur_normal;
 };
 
 extern struct fgSCENERY scenery;

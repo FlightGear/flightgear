@@ -45,6 +45,7 @@ FGTileEntry::FGTileEntry ( void )
       state(Unused)
 {
     nodes.clear();
+    select_ptr = NULL;
 }
 
 
@@ -129,6 +130,7 @@ void FGTileEntry::free_tile() {
 	if( parent ) {
 	    // my_remove_branch( select_ptr );
 	    parent->removeKid( select_ptr );
+	    select_ptr = NULL;
 	} else {
 	    FG_LOG( FG_TERRAIN, FG_ALERT,
 		    "parent pointer is NULL!  Dying" );
