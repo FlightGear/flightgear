@@ -77,6 +77,7 @@ double FGSimTurbine::Calculate(double dummy)
   // calculate virtual throttle position (actual +/- lag) based on
   // FCS Throttle value (except when trimming)
   if (dt > 0.0) {
+    Running = !Starved;
     ThrottleCmd = FCS->GetThrottleCmd(EngineNumber);
     if ( ThrottleCmd > throttle ) {
       throttle += (dt * delay);
@@ -88,13 +89,14 @@ double FGSimTurbine::Calculate(double dummy)
       }
     }
   else {
+    Starved = false;
     throttle = ThrottleCmd = FCS->GetThrottleCmd(EngineNumber);
     }
     
   idlethrust = MaxMilThrust * ThrustTables[0]->TotalValue();
   milthrust = MaxMilThrust * ThrustTables[1]->TotalValue();
 
-  if (!Starved) {
+  if (Running) {
     thrust = milthrust * throttle * throttle;
     if (thrust < idlethrust) thrust = idlethrust;
     FuelFlow_pph = thrust * TSFC;
@@ -113,7 +115,7 @@ double FGSimTurbine::Calculate(double dummy)
     }
   else {
     thrust = 0.0;
-    FuelFlow_pph = 0.0;
+    FuelFlow_pph = 0.000001;
     N1 -= (dt * 3.0);
     if (N1 < (Translation->Getqbar()/10.0)) N1 = Translation->Getqbar()/10.0;
     N2 -= (dt * 3.5);
