@@ -60,7 +60,10 @@ enum AreaType {
 
 
 // return the type of the shapefile record
-AreaType get_area_type(GDBFile *dbf, int rec);
+AreaType get_shapefile_type(GDBFile *dbf, int rec);
+
+// return area type from text name
+AreaType get_area_type( string area );
 
 // return text form of area name
 string get_area_name( AreaType area );
@@ -70,6 +73,9 @@ string get_area_name( AreaType area );
 
 
 // $Log$
+// Revision 1.3  1999/03/01 15:35:53  curt
+// Generalized the routines a bit to make them more useful.
+//
 // Revision 1.2  1999/02/26 22:10:42  curt
 // Updated names and priorities of area types.
 //

@@ -29,7 +29,7 @@
 
 
 // return the type of the shapefile record
-AreaType get_area_type(GDBFile *dbf, int rec) {
+AreaType get_shapefile_type(GDBFile *dbf, int rec) {
     GDBFieldDesc *fdesc[128];	// 128 is an arbitrary number here
     GDBFValue *fields;		//an array of field values
     char* dbf_rec;		//a record containing all the fields
@@ -47,6 +47,8 @@ AreaType get_area_type(GDBFile *dbf, int rec) {
     // parse it into individual fields
     if ( dbf_rec ) {
 	fields = dbf->recordDeform( dbf_rec );
+    } else {
+	return UnknownArea;
     }
 
     string area = fields[4].str_v;
@@ -63,11 +65,18 @@ AreaType get_area_type(GDBFile *dbf, int rec) {
 	area = area.substr(0, area.length() - 1);
     }
 
+    return get_area_type( area );
+}
+
+
+// return area type from text name
+AreaType get_area_type( string area ) {
     if ( area == "AirportKeep" ) {
 	return AirportKeepArea;
     } else if ( area == "AirportIgnore" ) {
 	return AirportIgnoreArea;
-    } else if ( area == "Swamp or Marsh" ) {
+    } else if ( (area == "Swamp or Marsh")
+		|| (area == "Marsh") ) {
 	return MarshArea;
     } else if ( area == "Bay  Estuary or Ocean" ) {
 	return OceanArea;
@@ -75,7 +84,8 @@ AreaType get_area_type(GDBFile *dbf, int rec) {
 	return LakeArea;
     } else if ( area == "Lake   Dry" ) {
 	return DryLakeArea;
-    } else if ( area == "Lake   Intermittent" ) {
+    } else if ( (area == "Lake   Intermittent")
+		|| (area == "IntermittentLake") ) {
 	return IntLakeArea;
     } else if ( area == "Reservoir" ) {
 	return ReservoirArea;
@@ -94,15 +104,15 @@ AreaType get_area_type(GDBFile *dbf, int rec) {
     } else {
 	cout << "unknown area = '" << area << "'" << endl;
 	// cout << "area = " << area << endl;
-	for ( int i = 0; i < area.length(); i++ ) {
-	    cout << i << ") " << (int)area[i] << endl;
-	}
+	// for ( int i = 0; i < area.length(); i++ ) {
+	//  cout << i << ") " << (int)area[i] << endl;
+	// }
 	return UnknownArea;
     }
 }
 
 
-// return text form of area name
+// return text from of area name
 string get_area_name( AreaType area ) {
     if ( area == AirportKeepArea ) {
 	return "AirportKeep";
@@ -140,6 +150,9 @@ string get_area_name( AreaType area ) {
 
 
 // $Log$
+// Revision 1.2  1999/03/01 15:35:52  curt
+// Generalized the routines a bit to make them more useful.
+//
 // Revision 1.1  1999/02/25 21:30:24  curt
 // Initial revision.
 //
