@@ -203,15 +203,7 @@ PropsChannel::foundTerminator()
 	    for (int i = 0; i < dir->nChildren(); i++)
 	    {
 		SGPropertyNode * child = dir->getChild(i);
-		string name = child->getName();
-		string line = name;
-
-		if (dir->getChild( name.c_str(), 1 ))
-		{
-		    char buf[16];
-		    sprintf(buf, "[%d]", child->getIndex());
-		    line += buf;
-		}
+		string line = child->getDisplayName(true);
 
 		if ( child->nChildren() > 0 )
 		{
@@ -221,10 +213,9 @@ PropsChannel::foundTerminator()
 		{
 		    if (mode == PROMPT)
 		    {
-			string value = dir->getStringValue( name.c_str(), "" );
+			string value = child->getStringValue();
 			line += " =\t'" + value + "'\t(";
-			line += getValueTypeString(
-					dir->getNode( name.c_str() ) );
+			line += getValueTypeString( child );
 			line += ")";
 		    }
 		}
