@@ -359,14 +359,15 @@ void FGNewEngine::update() {
     // Hack for testing - should output every 5 seconds
     static int count1 = 0;
     if(count1 == 0) {
-	cout << "P_atmos = " << p_amb << "  T_atmos = " << T_amb << '\n';
-	cout << "Manifold pressure = " << Manifold_Pressure << "  True_Manifold_Pressure = " << True_Manifold_Pressure << '\n';
-	cout << "p_amb_sea_level = " << p_amb_sea_level << '\n';
-	cout << "equivalence_ratio = " << equivalence_ratio << '\n';
-	cout << "combustion_efficiency = " << combustion_efficiency << '\n';
-	cout << "AFR = " << 14.7 / equivalence_ratio << '\n';
-	cout << "Mixture lever = " << Mixture_Lever_Pos << '\n';
-	cout << "n = " << RPM << " rpm\n";
+//	cout << "P_atmos = " << p_amb << "  T_atmos = " << T_amb << '\n';
+//	cout << "Manifold pressure = " << Manifold_Pressure << "  True_Manifold_Pressure = " << True_Manifold_Pressure << '\n';
+//	cout << "p_amb_sea_level = " << p_amb_sea_level << '\n';
+//	cout << "equivalence_ratio = " << equivalence_ratio << '\n';
+//	cout << "combustion_efficiency = " << combustion_efficiency << '\n';
+//	cout << "AFR = " << 14.7 / equivalence_ratio << '\n';
+//	cout << "Mixture lever = " << Mixture_Lever_Pos << '\n';
+//	cout << "n = " << RPM << " rpm\n";
+        cout << "T_amb = " << T_amb << '\n';
     }
     count1++;
     if(count1 == 600)
@@ -451,6 +452,14 @@ void FGNewEngine::update() {
     // Power de-rating for altitude has been removed now that we are basing the power
     // on the actual manifold pressure, which takes air pressure into account.  However - this fails to
     // take the temperature into account - this is TODO.
+
+    // Adjust power for temperature - this is temporary until the power is done as a function of mass flow rate induced
+    // Adjust for Temperature - Temperature above Standard decrease
+    // power by 7/120 % per degree F increase, and incease power for
+    // temps below at the same ratio
+    float T_amb_degF = (T_amb * 1.8) - 459.67;
+    float T_amb_sea_lev_degF = (288 * 1.8) - 459.67; 
+    Percentage_Power = Percentage_Power + ((T_amb_sea_lev_degF - T_amb_degF) * 7 /120);
 
     //DCL - now adjust power to compensate for mixture
     Percentage_of_best_power_mixture_power = Power_Mixture_Correlation(equivalence_ratio);
