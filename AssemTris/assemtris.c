@@ -309,14 +309,22 @@ FILE *my_open(char *basename, char *basepath, char *ext) {
 }
 
 
-/* given a file pointer, read all the gdn (geodetic nodes from it) */
-void read_nodes(FILE *fp) {
+/* given a file pointer, read all the gdn (geodetic nodes from it.)
+   The specified offset values (in arcsec) are used to overlap the
+   edges of the tile slightly to cover gaps induced by floating point
+   precision problems.  1 arcsec == about 100 feet so 0.01 arcsec ==
+   about 1 foot */
+void read_nodes(FILE *fp, double offset_lon, double offset_lat) {
     char line[256];
 
     while ( fgets(line, 250, fp) != NULL ) {
 	if ( strncmp(line, "gdn ", 4) == 0 ) {
 	    sscanf(line, "gdn %lf %lf %lf\n", &nodes[nodecount][0], 
 		   &nodes[nodecount][1], &nodes[nodecount][2]);
+
+	    nodes[nodecount][0] += offset_lon;
+	    nodes[nodecount][1] += offset_lat;
+
 	    /*
 	    printf("read_nodes(%d) %.2f %.2f %.2f %s", nodecount, 
 		   nodes[nodecount][0], nodes[nodecount][1], 
@@ -334,39 +342,39 @@ void build_node_list(char *basename, char *basepath) {
     FILE *ne, *nw, *se, *sw, *north, *south, *east, *west, *body;
 
     ne = my_open(basename, basepath, ".ne");
-    read_nodes(ne);
+    read_nodes(ne, 0.1, 0.1);
     fclose(ne);
 
     nw = my_open(basename, basepath, ".nw");
-    read_nodes(nw);
+    read_nodes(nw, -0.1, 0.1);
     fclose(nw);
 
     se = my_open(basename, basepath, ".se");
-    read_nodes(se);
+    read_nodes(se, 0.1, -0.1);
     fclose(se);
 
     sw = my_open(basename, basepath, ".sw");
-    read_nodes(sw);
+    read_nodes(sw, -0.1, -0.1);
     fclose(sw);
 
     north = my_open(basename, basepath, ".north");
-    read_nodes(north);
+    read_nodes(north, 0.0, 0.1);
     fclose(north);
 
     south = my_open(basename, basepath, ".south");
-    read_nodes(south);
+    read_nodes(south, 0.0, -0.1);
     fclose(south);
 
     east = my_open(basename, basepath, ".east");
-    read_nodes(east);
+    read_nodes(east, 0.1, 0.0);
     fclose(east);
 
     west = my_open(basename, basepath, ".west");
-    read_nodes(west);
+    read_nodes(west, -0.1, 0.0);
     fclose(west);
 
     body = my_open(basename, basepath, ".body");
-    read_nodes(body);
+    read_nodes(body, 0.0, 0.0);
     fclose(body);
 }
 
@@ -454,9 +462,13 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.7  1998/04/14 02:26:00  curt
-/* Code reorganizations.  Added a Lib/ directory for more general libraries.
+/* Revision 1.8  1998/06/01 17:58:19  curt
+/* Added a slight border overlap to try to minimize pixel wide gaps between
+/* tiles due to round off error.  This is not a perfect solution, but helps.
 /*
+ * Revision 1.7  1998/04/14 02:26:00  curt
+ * Code reorganizations.  Added a Lib/ directory for more general libraries.
+ *
  * Revision 1.6  1998/04/08 22:54:58  curt
  * Adopted Gnu automake/autoconf system.
  *
