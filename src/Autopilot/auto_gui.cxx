@@ -722,7 +722,7 @@ void AddWayPoint(puObject *cb)
         WPList = new char* [ WPListsize + 1 ];
         for (i = 0; i < globals->get_route()->size(); i++ ) {
            sprintf(WPString, "%5s %3.2flon %3.2flat", globals->get_route()->get_waypoint(i).get_id().c_str(), globals->get_route()->get_waypoint(i).get_target_lon(), globals->get_route()->get_waypoint(i).get_target_lat());
-           WPList [i] = new char[ strlen(WPString) ];
+           WPList [i] = new char[ strlen(WPString)+1 ];
            strcpy ( WPList [i], WPString );
         }
     } else {
