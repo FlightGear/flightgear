@@ -432,24 +432,24 @@ void helpCb (puObject *)
 #  endif
 #endif
 	
-#if !defined(WIN32)
-    string url = "http://www.flightgear.org/Docs/InstallGuide/getstart.html";
+    SGPath path( globals->get_fg_root() );
+    path.append( "Docs/index.html" );
 	
+    string help_app = fgGetString("/sim/startup/browser-app");
+
     if ( system("xwininfo -name Netscape > /dev/null 2>&1") == 0 ) {
-        command = "netscape -remote \"openURL(" + url + ")\" &";
+        command = help_app + " -remote \"openURL(" + path.str() + ")\"";
     } else {
-        command = "netscape " + url + " &";
+        command = help_app + path.str();
     }
-#else
-    command = "webrun.bat";
+#if !defined(WIN32)
+    command += " &";
 #endif
 	
     system( command.c_str() );
-    //string text = "Help started in netscape window.";
-
-    //mkDialog (text.c_str());
     mkDialog ("Help started in netscape window.");
 }
+
 #define TR_HIRES_SNAP
 #if defined( TR_HIRES_SNAP)
 #include <simgear/screen/tr.h>
