@@ -46,7 +46,7 @@ public:
   double             life;
   double             buoyancy;
   bool               wind;
-    
+  bool               first_time;
  } submodel; 
 
  typedef struct {
@@ -59,7 +59,6 @@ public:
   double     speed;
   double     wind_from_east;
   double     wind_from_north;
-  
  } IC_struct;  
 
     SubmodelSystem ();
@@ -108,11 +107,13 @@ private:
     SGPropertyNode* _user_pitch_node;
     SGPropertyNode* _user_roll_node;
     SGPropertyNode* _user_yaw_node;
+    SGPropertyNode* _user_alpha_node;
     SGPropertyNode* _user_speed_node;
     SGPropertyNode* _user_wind_from_east_node;
     SGPropertyNode* _user_wind_from_north_node;
     FGAIManager* ai;
     IC_struct  IC;
+
 };
 
 #endif // __SYSTEMS_SUBMODEL_HXX

@@ -43,6 +43,7 @@ SubmodelSystem::init ()
     _user_pitch_node =   fgGetNode("/orientation/pitch-deg", true);
     _user_roll_node =    fgGetNode("/orientation/roll-deg", true);
     _user_yaw_node =     fgGetNode("/orientation/yaw-deg", true);
+    _user_alpha_node =   fgGetNode("/orientation/alpha-deg", true);
 
     _user_speed_node = fgGetNode("/velocities/uBody-fps", true);
 
@@ -81,7 +82,9 @@ SubmodelSystem::update (double dt)
         if ((*submodel_iterator)->count != 0) {
           release( (*submodel_iterator), dt);
         } 
-    } 
+    } else {
+      (*submodel_iterator)->first_time = true;
+    }  
     ++submodel_iterator;
   }
    
@@ -94,9 +97,13 @@ SubmodelSystem::release (submodel* sm, double dt)
   if (sm->timer < sm->delay) return false;
   sm->timer = 0.0;
 
+  if (sm->first_time) {
+    dt = 0.0;
+    sm->first_time = false;
+  }
+
   transform(sm);  // calculate submodel's initial conditions in world-coordinates
 
-  //cout << "Creating a submodel." << endl; 
   FGAIModelEntity entity;
 
   entity.path = sm->model.c_str();
@@ -113,8 +120,7 @@ SubmodelSystem::release (submodel* sm, double dt)
   entity.wind_from_north = IC.wind_from_north;
   entity.wind = sm->wind;
   ai->createBallistic( &entity );
-
-  //cout << "Submodel created." << endl;
+ 
   if (sm->count > 0) (sm->count)--; 
 
   return true;                    
@@ -164,6 +170,7 @@ SubmodelSystem::load ()
      sm->life           = entry_node->getDoubleValue("life", 900.0);
      sm->buoyancy       = entry_node->getDoubleValue("buoyancy", 0);
      sm->wind           = entry_node->getBoolValue  ("wind", false); 
+     sm->first_time     = false;
 
      sm->trigger->setBoolValue(false);
      sm->timer = sm->delay;
@@ -171,16 +178,11 @@ SubmodelSystem::load ()
      sm->prop = fgGetNode("/systems/submodels/submodel", i, true);
      sm->prop->tie("count", SGRawValuePointer<int>(&(sm->count)));
 
-//	 in[0] = sm->x_offset;
-//	 in[1] = sm->y_offset;
-//	 in[2] = sm->z_offset; 
- 
-
      submodels.push_back( sm );
    }
 
   submodel_iterator = submodels.begin();
-  // cout << submodels.size() << " submodels read." << endl;
+  
 }
 
 
@@ -193,19 +195,17 @@ SubmodelSystem::transform( submodel* sm)
   IC.lat =        _user_lat_node->getDoubleValue();    
   IC.lon =        _user_lon_node->getDoubleValue();	   
   IC.alt =        _user_alt_node->getDoubleValue();    
-  IC.roll =      - _user_roll_node->getDoubleValue();   // rotation about x axis
-  IC.elevation =  _user_pitch_node->getDoubleValue();  // rotation about y axis
+  IC.roll =     - _user_roll_node->getDoubleValue();    // rotation about x axis
+  IC.elevation =  _user_pitch_node->getDoubleValue();   // rotation about y axis
   IC.azimuth =    _user_heading_node->getDoubleValue(); // rotation about z axis
   
-  IC.speed =           _user_speed_node->getDoubleValue() + sm->speed;
+  IC.speed =           _user_speed_node->getDoubleValue();
   IC.wind_from_east =  _user_wind_from_east_node->getDoubleValue();
   IC.wind_from_north = _user_wind_from_north_node->getDoubleValue();
   
   in[0] = sm->x_offset;
   in[1] = sm->y_offset;
   in[2] = sm->z_offset; 
-  
- 
 
 // pre-process the trig functions
 
@@ -216,49 +216,50 @@ SubmodelSystem::transform( submodel* sm)
     cosRz = cos(IC.azimuth * SG_DEGREES_TO_RADIANS);
     sinRz = sin(IC.azimuth * SG_DEGREES_TO_RADIANS);
 
-
 // set up the transform matrix
 
-    trans[0][0] =	cosRy * cosRz;
-    trans[0][1] =	-1 * cosRx * sinRz + sinRx * sinRy * cosRz ;
-    trans[0][2] =	sinRx * sinRz + cosRx * sinRy * cosRz;
+    trans[0][0] =  cosRy * cosRz;
+    trans[0][1] =  -1 * cosRx * sinRz + sinRx * sinRy * cosRz ;
+    trans[0][2] =  sinRx * sinRz + cosRx * sinRy * cosRz;
 
-    trans[1][0] = 	cosRy * sinRz;
-    trans[1][1] =	cosRx * cosRz + sinRx * sinRy * sinRz;
-    trans[1][2] =	-1 * sinRx * cosRx + cosRx * sinRy * sinRz;
+    trans[1][0] =  cosRy * sinRz;
+    trans[1][1] =  cosRx * cosRz + sinRx * sinRy * sinRz;
+    trans[1][2] =  -1 * sinRx * cosRx + cosRx * sinRy * sinRz;
 
-    trans[2][0] =	-1 * sinRy;
-    trans[2][1] =	sinRx * cosRy;
-    trans[2][2] =   cosRx * cosRy;
+    trans[2][0] =  -1 * sinRy;
+    trans[2][1] =  sinRx * cosRy;
+    trans[2][2] =  cosRx * cosRy;
 
 
 // multiply the input and transform matrices
 
-//	for( int i=0; i<4; i++) {
-//		for( int j=0; j<4; j++ ) {
-//			out[i] += in[j] * trans[i][j];
-//		}
-//	}
+   out[0] = in[0] * trans[0][0] + in[1] * trans[0][1] + in[2] * trans[0][2];
+   out[1] = in[0] * trans[1][0] + in[1] * trans[1][1] + in[2] * trans[1][2];
+   out[2] = in[0] * trans[2][0] + in[1] * trans[2][1] + in[2] * trans[2][2];
 
-out[0] = in[0] * trans[0][0] + in[1] * trans[0][1] + in[2] * trans[0][2];
-out[1] = in[0] * trans[1][0] + in[1] * trans[1][1] + in[2] * trans[1][2];
-out[2] = in[0] * trans[2][0] + in[1] * trans[2][1] + in[2] * trans[2][2];
+   // convert ft to degrees of latitude
+   out[0] = out[0] /(366468.96 - 3717.12 * cos(IC.lat * SG_DEGREES_TO_RADIANS));
 
-// convert ft to degrees of latitude
+   // convert ft to degrees of longitude
+   out[1] = out[1] /(365228.16 * cos(IC.lat * SG_DEGREES_TO_RADIANS));
 
-    out[0] = out[0] /(366468.96 - 3717.12 * cos(IC.lat * SG_DEGREES_TO_RADIANS));
+   // set submodel initial position
+   IC.lat += out[0];
+   IC.lon += out[1];
+   IC.alt += out[2];
 
-// convert ft to degrees of longitude
-
-    out[1] = out[1] /(365228.16 * cos(IC.lat * SG_DEGREES_TO_RADIANS));
-
-
-    IC.lat += out[0];
-    IC.lon += out[1];
-    IC.alt += out[2];
-    IC.elevation += sm->pitch_offset;
-    IC.azimuth   += sm->yaw_offset;
-
+   // get aircraft velocity vector angles in XZ and XY planes
+    //double alpha = _user_alpha_node->getDoubleValue();
+    //double velXZ = IC.elevation - alpha * cosRx;
+    //double velXY = IC.azimuth - (IC.elevation - alpha * sinRx);
+   
+   // Get submodel initial velocity vector angles in XZ and XY planes.
+   // This needs to be fixed. This vector should be added to aircraft's vector. 
+   IC.elevation += (sm->pitch_offset * cosRx) + (sm->yaw_offset * sinRx);
+   IC.azimuth   += (sm->yaw_offset * cosRx) - (sm->pitch_offset * sinRx);
+ 
+   // For now assume vector is close to airplane's vector.  This needs to be fixed.
+   IC.speed += sm->speed; 
 
 }
 
