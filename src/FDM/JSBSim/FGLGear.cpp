@@ -281,7 +281,7 @@ FGColumnVector3& FGLGear::Force(void)
                                              staticFCoeff*FCS->GetBrake(bgCenter);
         break;
       case bgNose:
-        SteerGain = 0.50;
+        SteerGain = -0.50;
         BrakeFCoeff = rollingFCoeff;
         break;
       case bgTail:
