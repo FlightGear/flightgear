@@ -26,6 +26,7 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/misc/exception.hxx>
 
 /* normans fix */
 #if defined(FX) && defined(XMESA)
@@ -49,6 +50,8 @@ bool global_fullscreen = true;
 #ifdef FG_NETWORK_OLK
 #  include <NetworkOLK/network.h>
 #endif
+
+#include <GUI/gui.h>
 
 #include "globals.hxx"
 #include "fg_init.hxx"
@@ -877,10 +880,15 @@ parse_option (const string& arg)
 	parse_flightplan ( arg.substr (14) );
     } else if ( arg.find( "--config=" ) == 0 ) {
         string file = arg.substr(9);
-        if (!readProperties(file, globals->get_props())) {
-	  SG_LOG(SG_IO, SG_ALERT,
-		 "--config: failed to read properties from " << file);
-	  return FG_OPTIONS_ERROR;
+	try {
+	  readProperties(file, globals->get_props());
+	} catch (const sg_io_exception &e) {
+	  string message = "Error loading config file: ";
+	  message += e.getMessage();
+	  message += "\n at ";
+	  message += e.getLocation().asString();
+	  SG_LOG(SG_INPUT, SG_ALERT, message);
+	  exit(2);
 	}
     } else {
 	SG_LOG( SG_GENERAL, SG_ALERT, "Unknown option '" << arg << "'" );

@@ -52,6 +52,7 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/misc/exception.hxx>
 
 #include STL_STRING
 
@@ -215,12 +216,17 @@ bool fgInitConfig ( int argc, char **argv ) {
     SGPath props_path(globals->get_fg_root());
     props_path.append("preferences.xml");
     SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
-    if (!readProperties(props_path.str(), globals->get_props())) {
-      SG_LOG(SG_INPUT, SG_ALERT, "Failed to read global preferences from "
-	     << props_path.str());
-    } else {
-      SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
+    try {
+      readProperties(props_path.str(), globals->get_props());
+    } catch (const sg_io_exception &e) {
+      string message = "Error reading global preferences: ";
+      message += e.getMessage();
+      message += "\n at ";
+      message += e.getLocation().asString();
+      SG_LOG(SG_INPUT, SG_ALERT, message);
+      exit(2);
     }
+    SG_LOG(SG_INPUT, SG_INFO, "Finished Reading global preferences");
 
     // Attempt to locate and parse the various config files in order
     // from least precidence to greatest precidence
