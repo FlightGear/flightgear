@@ -44,24 +44,24 @@ FGLaRCsim::FGLaRCsim( double dt ) {
 
     speed_up = fgGetNode("/sim/speed-up", true);
     aero = fgGetNode("/sim/aero", true);
-    
+
     ls_toplevel_init( 0.0, (char *)(aero->getStringValue().c_str()) );
 
     lsic=new LaRCsimIC; //this needs to be brought up after LaRCsim is
     if ( aero->getStringValue() == "c172" ) {
-	copy_to_LaRCsim(); // initialize all of LaRCsim's vars
+        copy_to_LaRCsim(); // initialize all of LaRCsim's vars
 
-	//this should go away someday -- formerly done in fg_init.cxx
-	Mass = 8.547270E+01;
-	I_xx = 1.048000E+03;
-	I_yy = 3.000000E+03;
-	I_zz = 3.530000E+03;
-	I_xz = 0.000000E+00;
+        //this should go away someday -- formerly done in fg_init.cxx
+        Mass = 8.547270E+01;
+        I_xx = 1.048000E+03;
+        I_yy = 3.000000E+03;
+        I_zz = 3.530000E+03;
+        I_xz = 0.000000E+00;
     }
-    
+
     ls_set_model_dt( get_delta_t() );
-    
-    		// Initialize our little engine that hopefully might
+
+            // Initialize our little engine that hopefully might
     eng.init( get_delta_t() );
     // dcl - in passing dt to init rather than update I am assuming
     // that the LaRCsim dt is fixed at one value (yes it is 120hz CLO)
@@ -75,15 +75,16 @@ FGLaRCsim::FGLaRCsim( double dt ) {
     // Also note that this is the max quantity - the usable quantity
     // is slightly less
     set_Tank1Fuel(28.0);
-    set_Tank2Fuel(28.0);  
+    set_Tank2Fuel(28.0);
 }
 
 FGLaRCsim::~FGLaRCsim(void) {
     if ( lsic != NULL ) {
-	delete lsic;
-	lsic = NULL;
+        free_engines();
+        delete lsic;
+        lsic = NULL;
     }
-}    
+}
 
 // Initialize the LaRCsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
@@ -165,7 +166,7 @@ bool FGLaRCsim::update( int multiloop ) {
 
     // copy control positions into the LaRCsim structure
     Lat_control = globals->get_controls()->get_aileron() /
-	speed_up->getIntValue();
+    speed_up->getIntValue();
     Long_control = globals->get_controls()->get_elevator();
     Long_trim = globals->get_controls()->get_elevator_trim();
     Rudder_pedal = globals->get_controls()->get_rudder() /
@@ -173,7 +174,7 @@ bool FGLaRCsim::update( int multiloop ) {
     Flap_handle = 30.0 * globals->get_controls()->get_flaps();
 
     if ( aero->getStringValue() == "c172" ) {
-	Use_External_Engine = 1;
+        Use_External_Engine = 1;
     } else {
 	Use_External_Engine = 0;
     }
@@ -599,7 +600,7 @@ void FGLaRCsim::set_ls(void) {
     SG_LOG( SG_FLIGHT, SG_INFO, "     V_north_airmass: " <<  V_north_airmass  );
     SG_LOG( SG_FLIGHT, SG_INFO, "     V_east_airmass: " <<  V_east_airmass  );
     SG_LOG( SG_FLIGHT, SG_INFO, "     V_down_airmass: " <<  V_down_airmass  );
-}  
+}
 
 void FGLaRCsim::snap_shot(void) {
     lsic->SetLatitudeGDRadIC( get_Latitude() );
@@ -623,7 +624,7 @@ void FGLaRCsim::set_Latitude(double lat) {
     lsic->SetLatitudeGDRadIC(lat);
     set_ls();
     copy_from_LaRCsim(); //update the bus
-}  
+}
 
 void FGLaRCsim::set_Longitude(double lon) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Longitude: " << lon  );
@@ -631,7 +632,7 @@ void FGLaRCsim::set_Longitude(double lon) {
     lsic->SetLongitudeRadIC(lon);
     set_ls();
     copy_from_LaRCsim(); //update the bus
-}  
+}
 
 void FGLaRCsim::set_Altitude(double alt) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Altitude: " << alt  );
@@ -648,7 +649,7 @@ void FGLaRCsim::set_V_calibrated_kts(double vc) {
     lsic->SetVcalibratedKtsIC(vc);
     set_ls();
     copy_from_LaRCsim(); //update the bus
-}  
+}
 
 void FGLaRCsim::set_Mach_number(double mach) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Mach_number: " << mach  );
@@ -656,7 +657,7 @@ void FGLaRCsim::set_Mach_number(double mach) {
     lsic->SetMachIC(mach);
     set_ls();
     copy_from_LaRCsim(); //update the bus
-}  
+}
 
 void FGLaRCsim::set_Velocities_Local( double north, double east, double down ){
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Velocities_local: " 
@@ -665,7 +666,7 @@ void FGLaRCsim::set_Velocities_Local( double north, double east, double down ){
     lsic->SetVNEDFpsIC(north, east, down);
     set_ls();
     copy_from_LaRCsim(); //update the bus
-}  
+}
 
 void FGLaRCsim::set_Velocities_Wind_Body( double u, double v, double w){
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Velocities_Wind_Body: " 
@@ -674,7 +675,7 @@ void FGLaRCsim::set_Velocities_Wind_Body( double u, double v, double w){
     lsic->SetUVWFpsIC(u,v,w);
     set_ls();
     copy_from_LaRCsim(); //update the bus
-} 
+}
 
 //Euler angles 
 void FGLaRCsim::set_Euler_Angles( double phi, double theta, double psi ) {
@@ -686,8 +687,8 @@ void FGLaRCsim::set_Euler_Angles( double phi, double theta, double psi ) {
     lsic->SetRollAngleRadIC(phi);
     lsic->SetHeadingRadIC(psi);
     set_ls();
-    copy_from_LaRCsim(); //update the bus 
-}  
+    copy_from_LaRCsim(); //update the bus
+}
 
 //Flight Path
 void FGLaRCsim::set_Climb_Rate( double roc) {
@@ -695,24 +696,24 @@ void FGLaRCsim::set_Climb_Rate( double roc) {
     snap_shot();
     lsic->SetClimbRateFpsIC(roc);
     set_ls();
-    copy_from_LaRCsim(); //update the bus 
-}  
+    copy_from_LaRCsim(); //update the bus
+}
 
 void FGLaRCsim::set_Gamma_vert_rad( double gamma) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Gamma_vert_rad: " << gamma  );
     snap_shot();
     lsic->SetFlightPathAngleRadIC(gamma);
     set_ls();
-    copy_from_LaRCsim(); //update the bus  
-}  
+    copy_from_LaRCsim(); //update the bus
+}
 
 void FGLaRCsim::set_Runway_altitude(double ralt) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Runway_altitude: " << ralt  );
     snap_shot();
     lsic->SetRunwayAltitudeFtIC(ralt);
     set_ls();
-    copy_from_LaRCsim(); //update the bus 
-} 
+    copy_from_LaRCsim(); //update the bus
+}
 
 void FGLaRCsim::set_AltitudeAGL(double altagl) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_AltitudeAGL: " << altagl  );
@@ -731,7 +732,7 @@ void FGLaRCsim::set_Velocities_Local_Airmass (double wnorth,
     lsic->SetVNEDAirmassFpsIC( wnorth, weast, wdown );
     set_ls();
     copy_from_LaRCsim();
-}     
+}
 
 void FGLaRCsim::set_Static_pressure(double p) { 
     SG_LOG( SG_FLIGHT, SG_INFO, 
@@ -748,7 +749,7 @@ void FGLaRCsim::set_Static_temperature(double T) {
 
 }
 
-void FGLaRCsim::set_Density(double rho) { 
+void FGLaRCsim::set_Density(double rho) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Density: " << rho  );
     SG_LOG( SG_FLIGHT, SG_INFO, 
 	    "LaRCsim does not support externally supplied atmospheric data" );

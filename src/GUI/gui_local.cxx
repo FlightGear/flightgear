@@ -6,12 +6,16 @@
 #  include <windows.h>
 #endif
 
-#include <GL/glut.h>		// needed before pu.h
-#include <plib/pu.h>		// plib include
+#include <GL/glut.h>        // needed before pu.h
+#include <plib/pu.h>        // plib include
+
+#include <FDM/flight.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/fg_props.hxx>
+#include <Scenery/tilemgr.hxx>
+#include <Time/light.hxx>
 
 #include "gui.h"
 #include "trackball.h"
@@ -32,36 +36,60 @@ float curGuiQuat[4];
 float GuiQuat_mat[4][4];
 
 void Quat0( void ) {
-	curGuiQuat[0] = _quat0[0];
-	curGuiQuat[1] = _quat0[1];
-	curGuiQuat[2] = _quat0[2];
-	curGuiQuat[3] = _quat0[3];
+    curGuiQuat[0] = _quat0[0];
+    curGuiQuat[1] = _quat0[1];
+    curGuiQuat[2] = _quat0[2];
+    curGuiQuat[3] = _quat0[3];
 }
 
 void initMouseQuat(void) {
-	trackball(_quat0, 0.0, 0.0, 0.0, 0.0);  
-	Quat0();
-	build_rotmatrix(GuiQuat_mat, curGuiQuat);
+    trackball(_quat0, 0.0, 0.0, 0.0, 0.0);  
+    Quat0();
+    build_rotmatrix(GuiQuat_mat, curGuiQuat);
 }
 
 
 void reInit(puObject *cb)
 {
-	BusyCursor(0);
-	Quat0();
+    BusyCursor(0);
+    Quat0();
 
-	// in case user has changed window size as
-	// restoreInitialState() overwrites these
-	int xsize = fgGetInt("/sim/startup/xsize");
-	int ysize = fgGetInt("/sim/startup/ysize");
+    int freeze = globals->get_freeze();
+    if(!freeze)
+        globals->set_freeze( true );
 
-	build_rotmatrix(GuiQuat_mat, curGuiQuat);
-	/* check */ globals->restoreInitialState();
+    cur_fdm_state->unbind();
 
-	fgReInitSubsystems();
+    // in case user has changed window size as
+    // restoreInitialState() overwrites these
+    int xsize = fgGetInt("/sim/startup/xsize");
+    int ysize = fgGetInt("/sim/startup/ysize");
 
-	fgReshape( xsize, ysize );
+    build_rotmatrix(GuiQuat_mat, curGuiQuat);
 
-	BusyCursor(1);
+    globals->restoreInitialState();
+
+	// Unsuccessful KLUDGE to fix the 'every other time'
+	// problem when doing a 'reset' after a 'goto airport'
+	
+	// string AptId( fgGetString("/sim/startup/airport-id") );
+	// if( AptId.c_str() != "\0" )
+	//	fgSetPosFromAirportID( AptId );
+	
+    fgReInitSubsystems();
+
+    // reduntant(fgReInitSubsystems) ?
+    global_tile_mgr.update( fgGetDouble("/position/longitude-deg"),
+                            fgGetDouble("/position/latitude-deg") );
+    
+    cur_light_params.Update();
+
+    fgReshape( xsize, ysize );
+
+    BusyCursor(1);
+    
+    if ( !freeze ) {
+        globals->set_freeze( false );
+    }
 }
 

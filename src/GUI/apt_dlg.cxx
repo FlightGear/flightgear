@@ -82,35 +82,35 @@ void AptDialog_OK (puObject *)
                 << AptId );
 
         if ( airports.search( AptId, &a ) )
-            {
-		// unbind the current fdm state so property changes
-		// don't get lost when we subsequently delete this fdm
-		// and create a new one.
-		cur_fdm_state->unbind();
-
-                AptId = a.id.c_str();  /// NHV fix wrong case crash
-                fgSetString("/sim/startup/airport-id",  AptId.c_str() );
-                // fgSetDouble("/position/altitude-ft", -9999.0 );
-                // fgSetPosFromAirportID( AptId );
-                fgSetPosFromAirportIDandHdg( AptId, 
-                                             cur_fdm_state->get_Psi() *
-                                             SGD_RADIANS_TO_DEGREES);
-                BusyCursor(0);
-                fgReInitSubsystems();
-                // if ( global_tile_mgr.init() ) {
-                    // Load the local scenery data
-                    global_tile_mgr.update( longitude->getDoubleValue(),
-                                            latitude->getDoubleValue() );
-	        // } else {
-                    // SG_LOG( SG_GENERAL, SG_ALERT, 
-                            // "Error in Tile Manager initialization!" );
-                    // exit(-1);
-                // }
-                BusyCursor(1);
-            } else {
-                AptId  += " not in database.";
-                mkDialog(AptId.c_str());
-            }
+        {
+            // unbind the current fdm state so property changes
+            // don't get lost when we subsequently delete this fdm
+            // and create a new one.
+            cur_fdm_state->unbind();
+        
+            AptId = a.id.c_str();  /// NHV fix wrong case crash
+            fgSetString("/sim/startup/airport-id",  AptId.c_str() );
+            // fgSetDouble("/position/altitude-ft", -9999.0 );
+            // fgSetPosFromAirportID( AptId );
+            fgSetPosFromAirportIDandHdg( AptId, 
+                                         cur_fdm_state->get_Psi() *
+                                         SGD_RADIANS_TO_DEGREES);
+            BusyCursor(0);
+            fgReInitSubsystems();
+            // if ( global_tile_mgr.init() ) {
+            // Load the local scenery data
+            global_tile_mgr.update( longitude->getDoubleValue(),
+                                    latitude->getDoubleValue() );
+            // } else {
+            // SG_LOG( SG_GENERAL, SG_ALERT, 
+            // "Error in Tile Manager initialization!" );
+            // exit(-1);
+            // }
+            BusyCursor(1);
+        } else {
+            AptId  += " not in database.";
+            mkDialog(AptId.c_str());
+        }
     }
     if ( !freeze ) {
         globals->set_freeze( false );
@@ -130,7 +130,7 @@ void NewAirport(puObject *cb)
 {
     //  strncpy( NewAirportId, fgGetString("/sim/startup/airport-id").c_str(), 16 );
     sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
-    //	cout << "NewAirport " << NewAirportId << endl;
+    // cout << "NewAirport " << NewAirportId << endl;
     AptDialogInput->setValue( NewAirportId );
 
     FG_PUSH_PUI_DIALOG( AptDialog );

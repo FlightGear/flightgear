@@ -52,10 +52,10 @@ FGInterface base_fdm_state;
 
 inline void init_vec(FG_VECTOR_3 vec) {
     vec[0] = 0.0; vec[1] = 0.0; vec[2] = 0.0;
-}  
+}
 
 FGEngInterface::FGEngInterface() {
-    
+
     // inputs
     Throttle=0;
     Mixture=0;
@@ -77,7 +77,7 @@ FGGearInterface::FGGearInterface(void) {
     x=y=z=0.0;
     brake=rolls=WoW=false;
     position=1.0;
-}    
+}
 
 FGGearInterface::~FGGearInterface() {
 }
@@ -85,7 +85,7 @@ FGGearInterface::~FGGearInterface() {
 // Constructor
 FGInterface::FGInterface() {
     _setup();
-}  
+}
 
 FGInterface::FGInterface( double dt ) {
     _setup();
@@ -95,7 +95,7 @@ FGInterface::FGInterface( double dt ) {
 
 // Destructor
 FGInterface::~FGInterface() {
-//   unbind();			// FIXME: should be called explicitly
+    // unbind();                   // FIXME: should be called explicitly
 }
 
 
@@ -130,38 +130,38 @@ FGInterface::_setup ()
     init_vec( n_pilot_body_v );
     init_vec( omega_dot_body_v );
     init_vec( v_local_v );
-    init_vec( v_local_rel_ground_v ); 
-    init_vec( v_local_airmass_v );    
-    init_vec( v_local_rel_airmass_v );  
-    init_vec( v_local_gust_v ); 
-    init_vec( v_wind_body_v );     
-    init_vec( omega_body_v );         
-    init_vec( omega_local_v );        
-    init_vec( omega_total_v );       
+    init_vec( v_local_rel_ground_v );
+    init_vec( v_local_airmass_v );
+    init_vec( v_local_rel_airmass_v );
+    init_vec( v_local_gust_v );
+    init_vec( v_wind_body_v );
+    init_vec( omega_body_v );
+    init_vec( omega_local_v );
+    init_vec( omega_total_v );
     init_vec( euler_rates_v );
-    init_vec( geocentric_rates_v );   
+    init_vec( geocentric_rates_v );
     init_vec( geocentric_position_v );
     init_vec( geodetic_position_v );
     init_vec( euler_angles_v );
-    init_vec( d_cg_rwy_local_v );     
-    init_vec( d_cg_rwy_rwy_v );       
-    init_vec( d_pilot_rwy_local_v );  
-    init_vec( d_pilot_rwy_rwy_v );    
+    init_vec( d_cg_rwy_local_v );
+    init_vec( d_cg_rwy_rwy_v );
+    init_vec( d_pilot_rwy_local_v );
+    init_vec( d_pilot_rwy_rwy_v );
     init_vec( t_local_to_body_m[0] );
     init_vec( t_local_to_body_m[1] );
     init_vec( t_local_to_body_m[2] );
-    
+
     mass=i_xx=i_yy=i_zz=i_xz=0;
-    nlf=0;  
+    nlf=0;
     v_rel_wind=v_true_kts=v_rel_ground=v_inertial=0;
     v_ground_speed=v_equiv=v_equiv_kts=0;
     v_calibrated=v_calibrated_kts=0;
-    gravity=0;            
-    centrifugal_relief=0; 
-    alpha=beta=alpha_dot=beta_dot=0;   
+    gravity=0;
+    centrifugal_relief=0;
+    alpha=beta=alpha_dot=beta_dot=0;
     cos_alpha=sin_alpha=cos_beta=sin_beta=0;
     cos_phi=sin_phi=cos_theta=sin_theta=cos_psi=sin_psi=0;
-    gamma_vert_rad=gamma_horiz_rad=0;    
+    gamma_vert_rad=gamma_horiz_rad=0;
     sigma=density=v_sound=mach_number=0;
     static_pressure=total_pressure=impact_pressure=0;
     dynamic_pressure=0;
@@ -170,7 +170,7 @@ FGInterface::_setup ()
     runway_altitude=runway_latitude=runway_longitude=0;
     runway_heading=0;
     radius_to_rwy=0;
-    climb_rate=0;           
+    climb_rate=0;
     sin_lat_geocentric=cos_lat_geocentric=0;
     sin_latitude=cos_latitude=0;
     sin_longitude=cos_longitude=0;
@@ -185,7 +185,7 @@ FGInterface::init () {}
  *
  * Subclasses of FGInterface may do their own, additional initialization,
  * but there is some that is common to all.  Normally, they should call
- * this before they begin their own init to make sure the basic structures 
+ * this before they begin their own init to make sure the basic structures
  * are set up properly.
  */
 void
@@ -217,7 +217,7 @@ FGInterface::common_init ()
             "...initializing ground elevation to " << ground_elev_ft
             << "ft..." );
     SG_LOG( SG_FLIGHT, SG_INFO, "common_init(): set ground elevation "
-            << ground_elev_ft ); 
+            << ground_elev_ft );
     base_fdm_state.set_Runway_altitude( ground_elev_ft );
     set_Runway_altitude( ground_elev_ft );
 
@@ -290,33 +290,33 @@ FGInterface::bind ()
   bound = true;
 
                                 // Time management (read-only)
-  fgTie("/fdm/time/delta_t", this, 
-	&FGInterface::get_delta_t); // read-only
-  fgTie("/fdm/time/elapsed", this, 
-	&FGInterface::get_elapsed); // read-only
-  fgTie("/fdm/time/remainder", this, 
-	&FGInterface::get_remainder); // read-only
-  fgTie("/fdm/time/multi_loop", this, 
-	&FGInterface::get_multi_loop); // read-only
+  fgTie("/fdm/time/delta_t", this,
+        &FGInterface::get_delta_t); // read-only
+  fgTie("/fdm/time/elapsed", this,
+        &FGInterface::get_elapsed); // read-only
+  fgTie("/fdm/time/remainder", this,
+        &FGInterface::get_remainder); // read-only
+  fgTie("/fdm/time/multi_loop", this,
+        &FGInterface::get_multi_loop); // read-only
 
 			// Aircraft position
   fgTie("/position/latitude-deg", this,
-	&FGInterface::get_Latitude_deg,
-	&FGInterface::set_Latitude_deg,
-	false);
+        &FGInterface::get_Latitude_deg,
+        &FGInterface::set_Latitude_deg,
+        false);
   fgSetArchivable("/position/latitude-deg");
   fgTie("/position/longitude-deg", this,
-	&FGInterface::get_Longitude_deg,
-	&FGInterface::set_Longitude_deg,
-	false);
+        &FGInterface::get_Longitude_deg,
+        &FGInterface::set_Longitude_deg,
+        false);
   fgSetArchivable("/position/longitude-deg");
   fgTie("/position/altitude-ft", this,
-	&FGInterface::get_Altitude,
-	&FGInterface::set_Altitude,
-	false);
+        &FGInterface::get_Altitude,
+        &FGInterface::set_Altitude,
+        false);
   fgSetArchivable("/position/altitude-ft");
   fgTie("/position/altitude-agl-ft", this,
-	&FGInterface::get_Altitude_AGL); // read-only
+        &FGInterface::get_Altitude_AGL); // read-only
 
 				// Orientation
   fgTie("/orientation/roll-deg", this,
@@ -471,6 +471,25 @@ FGInterface::unbind ()
   }
 }
 
+void
+FGInterface::free_engines ()
+{
+    int i;
+    for ( i = 0; i < get_num_engines(); ++i ) {
+        delete get_engine(i);
+    }
+    engines.clear();
+}
+
+void
+FGInterface::free_gear_units ()
+{
+    int i;
+    for ( i = 0; i < get_num_gear(); ++i ) {
+        delete [] get_gear_unit(i);
+    }
+    gear.clear();
+}
 
 /**
  * Update the state of the FDM (i.e. run the equations of motion).
@@ -487,10 +506,10 @@ bool FGInterface::update( int multi_loop ) {
     return false;
 }
 
-  
+
 void FGInterface::_updatePosition( double lat_geoc, double lon, double alt ) {
     double lat_geod, tmp_alt, sl_radius1, sl_radius2, tmp_lat_geoc;
-	
+
     // cout << "starting sea level rad = " << get_Sea_level_radius() << endl;
 
     sgGeocToGeod( lat_geoc, ( get_Sea_level_radius() + alt ) * SG_FEET_TO_METER,
@@ -510,31 +529,31 @@ void FGInterface::_updatePosition( double lat_geoc, double lon, double alt ) {
 			      sl_radius2 * SG_METER_TO_FEET + alt );
 	
     _set_Geodetic_Position( lat_geod, lon, alt );
-	
+
     _set_Sea_level_radius( sl_radius2 * SG_METER_TO_FEET );
-    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET ); 
-	
+    _set_Runway_altitude( scenery.get_cur_elev() * SG_METER_TO_FEET );
+
     _set_sin_lat_geocentric( lat_geoc );
     _set_cos_lat_geocentric( lat_geoc );
-	
+
     _set_sin_cos_longitude( lon );
-	
+
     _set_sin_cos_latitude( lat_geod );
-	
+
     /* Norman's code for slope of the terrain */
     /* needs to be tested -- get it on the HUD and taxi around */
     /* double *tnorm = scenery.cur_normal;
-	
+
        double sy = sin ( -get_Psi() ) ;
        double cy = cos ( -get_Psi() ) ;
 
        double phitb, thetatb, psitb;
-       if(tnorm[1] != 0.0) {
-		psitb = -atan2 ( tnorm[0], tnorm[1] );
+       if ( tnorm[1] != 0.0 ) {
+           psitb = -atan2 ( tnorm[0], tnorm[1] );
        }
-       if(tnorm[2] != 0.0) {	
-		thetatb =  atan2 ( tnorm[0] * cy - tnorm[1] * sy, tnorm[2] );
-		phitb = -atan2 ( tnorm[1] * cy + tnorm[0] * sy, tnorm[2] );  
+       if ( tnorm[2] != 0.0 ) {	
+	   thetatb =  atan2 ( tnorm[0] * cy - tnorm[1] * sy, tnorm[2] );
+	   phitb = -atan2 ( tnorm[1] * cy + tnorm[0] * sy, tnorm[2] );  
        }	
 	
        _set_terrain_slope(phitb, thetatb, psitb) 
@@ -575,7 +594,7 @@ void FGInterface::extrapolate( int time_offset ) {
 // Set the altitude (force)
 void fgFDMForceAltitude(const string &model, double alt_meters) {
     SG_LOG(SG_FLIGHT,SG_INFO, "fgFDMForceAltitude: " << alt_meters );
-    
+
     double sea_level_radius_meters;
     double lat_geoc;
 
@@ -589,7 +608,7 @@ void fgFDMForceAltitude(const string &model, double alt_meters) {
 		
     cur_fdm_state->set_Altitude( alt_meters * SG_METER_TO_FEET );
     cur_fdm_state->set_Sea_level_radius( sea_level_radius_meters * 
-           SG_METER_TO_FEET );			  
+                                         SG_METER_TO_FEET );			  
 
     // additional work needed for some flight models
     if ( model == "larcsim" ) {
@@ -599,38 +618,38 @@ void fgFDMForceAltitude(const string &model, double alt_meters) {
 
 
 // Positions
-void FGInterface::set_Latitude(double lat) { 
+void FGInterface::set_Latitude(double lat) {
     geodetic_position_v[0] = lat;
-}  
+}
 
 void FGInterface::set_Longitude(double lon) {
     geodetic_position_v[1] = lon;
-}       
+}
 
 void FGInterface::set_Altitude(double alt) {
     geodetic_position_v[2] = alt;
-}          
+}
 
 void FGInterface::set_AltitudeAGL(double altagl) {
     altitude_agl=altagl;
-}  
+}
 
 // Velocities
 void FGInterface::set_V_calibrated_kts(double vc) {
     v_calibrated_kts = vc;
-}  
+}
 
 void FGInterface::set_Mach_number(double mach) {
     mach_number = mach;
-}  
+}
 
 void FGInterface::set_Velocities_Local( double north, 
 					double east, 
 					double down ){
     v_local_v[0] = north;
     v_local_v[1] = east;
-    v_local_v[2] = down;                                                 
-}  
+    v_local_v[2] = down;
+}
 
 void FGInterface::set_Velocities_Wind_Body( double u, 
 					    double v, 
@@ -638,7 +657,7 @@ void FGInterface::set_Velocities_Wind_Body( double u,
     v_wind_body_v[0] = u;
     v_wind_body_v[1] = v;
     v_wind_body_v[2] = w;
-} 
+}
 
 // Euler angles 
 void FGInterface::set_Euler_Angles( double phi, 
@@ -652,20 +671,20 @@ void FGInterface::set_Euler_Angles( double phi,
 // Flight Path
 void FGInterface::set_Climb_Rate( double roc) {
     climb_rate = roc;
-}  
+}
 
 void FGInterface::set_Gamma_vert_rad( double gamma) {
     gamma_vert_rad = gamma;
-}  
+}
 
 // Earth
 void FGInterface::set_Sea_level_radius(double slr) {
     sea_level_radius = slr;
-}  
+}
 
 void FGInterface::set_Runway_altitude(double ralt) {
     runway_altitude = ralt;
-}  
+}
 
 void FGInterface::set_Static_pressure(double p) { static_pressure = p; }
 void FGInterface::set_Static_temperature(double T) { static_temperature = T; }
@@ -677,7 +696,7 @@ void FGInterface::set_Velocities_Local_Airmass (double wnorth,
     v_local_airmass_v[0] = wnorth;
     v_local_airmass_v[1] = weast;
     v_local_airmass_v[2] = wdown;
-}     
+}
 
 
 void FGInterface::_busdump(void) {
@@ -719,7 +738,7 @@ void FGInterface::_busdump(void) {
     SG_LOG(SG_FLIGHT,SG_INFO,"d_cg_rwy_rwy_v[3]: " << d_cg_rwy_rwy_v[0] << ", " << d_cg_rwy_rwy_v[1] << ", " << d_cg_rwy_rwy_v[2]);
     SG_LOG(SG_FLIGHT,SG_INFO,"d_pilot_rwy_local_v[3]: " << d_pilot_rwy_local_v[0] << ", " << d_pilot_rwy_local_v[1] << ", " << d_pilot_rwy_local_v[2]);
     SG_LOG(SG_FLIGHT,SG_INFO,"d_pilot_rwy_rwy_v[3]: " << d_pilot_rwy_rwy_v[0] << ", " << d_pilot_rwy_rwy_v[1] << ", " << d_pilot_rwy_rwy_v[2]);
-  
+
     SG_LOG(SG_FLIGHT,SG_INFO,"t_local_to_body_m[0][3]: " << t_local_to_body_m[0][0] << ", " << t_local_to_body_m[0][1] << ", " << t_local_to_body_m[0][2]);
     SG_LOG(SG_FLIGHT,SG_INFO,"t_local_to_body_m[1][3]: " << t_local_to_body_m[1][0] << ", " << t_local_to_body_m[1][1] << ", " << t_local_to_body_m[1][2]);
     SG_LOG(SG_FLIGHT,SG_INFO,"t_local_to_body_m[2][3]: " << t_local_to_body_m[2][0] << ", " << t_local_to_body_m[2][1] << ", " << t_local_to_body_m[2][2]);
@@ -782,7 +801,7 @@ void FGInterface::_busdump(void) {
     SG_LOG(SG_FLIGHT,SG_INFO,"sin_latitude: " << sin_latitude );
     SG_LOG(SG_FLIGHT,SG_INFO,"cos_latitude: " << cos_latitude );
     SG_LOG(SG_FLIGHT,SG_INFO,"altitude_agl: " << altitude_agl );
-}  
+}
 
 
 void fgToggleFDMdataLogging(void) {

@@ -1222,6 +1222,8 @@ public:
     inline void add_engine( FGEngInterface e ) {
 	engines.push_back( e );
     }
+
+    void free_engines();
     
     //gear
     inline int get_num_gear() const {
@@ -1234,7 +1236,10 @@ public:
     
     inline void add_gear_unit( FGGearInterface fgi ) {
        gear.push_back( fgi );
-    }        
+    }
+
+    void free_gear_units();
+	
 };
 
 
