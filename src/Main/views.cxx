@@ -192,15 +192,21 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     sgMat4 THETA;		// pitch
     sgMakeRotMat4( THETA, f.get_Theta() * RAD_TO_DEG, pitchvec );
 
+    // ROT = PHI * THETA
     sgMat4 ROT;
-    sgMultMat4( ROT, PHI, THETA );
+    // sgMultMat4( ROT, PHI, THETA );
+    sgCopyMat4( ROT, PHI );
+    sgPostMultMat4( ROT, THETA );
 
     sgVec3 yawvec;
     sgSetVec3( yawvec, 1.0, 0.0, 0.0 );
     sgMat4 PSI;		// pitch
     sgMakeRotMat4( PSI, -f.get_Psi() * RAD_TO_DEG, yawvec );
 
-    sgMultMat4( LOCAL, ROT, PSI );
+    // LOCAL = ROT * PSI
+    // sgMultMat4( LOCAL, ROT, PSI );
+    sgCopyMat4( LOCAL, ROT );
+    sgPostMultMat4( LOCAL, PSI );
     // cout << "LOCAL matrix" << endl;
     // print_sgMat4( LOCAL );
 	
@@ -220,8 +226,10 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     // printf( "    Alt Up = (%.4f, %.4f, %.4f)\n", 
     //         alt_up.x, alt_up.y, alt_up.z);
 
-    sgMat4 TMP2;
-    sgMultMat4( VIEWo, LOCAL, UP );
+    // VIEWo = LOCAL * UP
+    // sgMultMat4( VIEWo, LOCAL, UP );
+    sgCopyMat4( VIEWo, LOCAL );
+    sgPostMultMat4( VIEWo, UP );
     // cout << "VIEWo matrix" << endl;
     // print_sgMat4( VIEWo );
 
@@ -241,8 +249,13 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     // cout << "VIEW_OFFSET matrix" << endl;
     // print_sgMat4( VIEW_OFFSET );
 	
-    sgMultMat4( TMP2, VIEWo, VIEW_OFFSET );
-    sgMultMat4( VIEW_ROT, LARC_TO_SSG, TMP2 );
+    // VIEW_ROT = LARC_TO_SSG * ( VIEWo * VIEW_OFFSET )
+    sgMat4 TMP2;
+    // sgMultMat4( TMP2, VIEWo, VIEW_OFFSET );
+    // sgMultMat4( VIEW_ROT, LARC_TO_SSG, TMP2 );
+    sgCopyMat4( VIEW_ROT, VIEWo );
+    sgPostMultMat4( VIEW_ROT, VIEW_OFFSET );
+    sgPreMultMat4( VIEW_ROT, LARC_TO_SSG );
     // cout << "VIEW_ROT matrix" << endl;
     // print_sgMat4( VIEW_ROT );
 
@@ -251,7 +264,10 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
 		     view_pos.y() + pilot_offset_world[1],
 		     view_pos.z() + pilot_offset_world[2] );
 
-    sgMultMat4( VIEW, VIEW_ROT, TRANS );
+    // VIEW = VIEW_ROT * TRANS
+    // sgMultMat4( VIEW, VIEW_ROT, TRANS );
+    sgCopyMat4( VIEW, VIEW_ROT );
+    sgPostMultMat4( VIEW, TRANS );
 
 //!!!!!!!!!!!!!!!!!!!	
     // THIS IS THE EXPERIMENTAL VIEWING ANGLE SHIFTER
