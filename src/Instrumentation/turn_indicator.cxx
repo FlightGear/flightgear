@@ -10,7 +10,7 @@
 
 // Use a bigger number to be more responsive, or a smaller number
 // to be more sluggish.
-#define RESPONSIVENESS 0.5
+#define RESPONSIVENESS 1.0
 
 
 TurnIndicator::TurnIndicator () :
