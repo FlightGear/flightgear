@@ -58,8 +58,8 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up,
     sgVectorProductVec3( perp, dir, up );
 
     ssgVertexArray   *vl = new ssgVertexArray( 3 );
-    ssgNormalArray   *nl = new ssgNormalArray( 1 );
-    ssgColourArray   *cl = new ssgColourArray( 1 );
+    ssgNormalArray   *nl = new ssgNormalArray( 3 );
+    ssgColourArray   *cl = new ssgColourArray( 3 );
 
     // front face
     sgVec3 tmp3;
@@ -143,9 +143,9 @@ ssgLeaf *gen_dir_light_group( const point_list &nodes,
     sgVec3 nup;
     sgNormalizeVec3( nup, up );
 
-    ssgVertexArray   *vl = new ssgVertexArray( 3 );
-    ssgNormalArray   *nl = new ssgNormalArray( 3 );
-    ssgColourArray   *cl = new ssgColourArray( 3 );
+    ssgVertexArray   *vl = new ssgVertexArray( 3 * pnt_i.size() );
+    ssgNormalArray   *nl = new ssgNormalArray( 3 * pnt_i.size() );
+    ssgColourArray   *cl = new ssgColourArray( 3 * pnt_i.size() );
 
     unsigned int i;
     sgVec3 pt, normal;
@@ -210,9 +210,9 @@ ssgTimedSelector *gen_reil_lights( const point_list &nodes,
     sgVec3 nup;
     sgNormalizeVec3( nup, up );
 
-    ssgVertexArray   *vl = new ssgVertexArray( 6 );
-    ssgNormalArray   *nl = new ssgNormalArray( 6 );
-    ssgColourArray   *cl = new ssgColourArray( 6 );
+    ssgVertexArray   *vl = new ssgVertexArray( 3 * pnt_i.size() );
+    ssgNormalArray   *nl = new ssgNormalArray( 3 * pnt_i.size() );
+    ssgColourArray   *cl = new ssgColourArray( 3 * pnt_i.size() );
 
     unsigned int i;
     sgVec3 pt, normal;
@@ -296,9 +296,9 @@ ssgTimedSelector *gen_rabbit_lights( const point_list &nodes,
     int i;
     sgVec3 pt, normal;
     for ( i = (int)pnt_i.size() - 1; i >= 0; --i ) {
-        ssgVertexArray   *vl = new ssgVertexArray( 3 );
-        ssgNormalArray   *nl = new ssgNormalArray( 3 );
-        ssgColourArray   *cl = new ssgColourArray( 3 );
+        ssgVertexArray   *vl = new ssgVertexArray( 3 * pnt_i.size() );
+        ssgNormalArray   *nl = new ssgNormalArray( 3 * pnt_i.size() );
+        ssgColourArray   *cl = new ssgColourArray( 3 * pnt_i.size() );
      
         sgSetVec3( pt, nodes[pnt_i[i]][0], nodes[pnt_i[i]][1],
                    nodes[pnt_i[i]][2] );
@@ -366,8 +366,8 @@ ssgTimedSelector *gen_rabbit_lights( const point_list &nodes,
 ssgLeaf *gen_normal_line( sgVec3 pt, sgVec3 dir, sgVec3 up ) {
 
     ssgVertexArray   *vl = new ssgVertexArray( 3 );
-    ssgNormalArray   *nl = new ssgNormalArray( 1 );
-    ssgColourArray   *cl = new ssgColourArray( 1 );
+    ssgNormalArray   *nl = new ssgNormalArray( 3 );
+    ssgColourArray   *cl = new ssgColourArray( 3 );
 
     sgVec3 tmp3;
     sgCopyVec3( tmp3, pt );
