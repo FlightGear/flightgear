@@ -48,6 +48,9 @@ extern "C" void *memset(void *, int, size_t);
 
 #include <string>          // Standard C++ string library
 #include <map>             // STL associative "array"
+#ifdef NEEDNAMESPACESTD
+using namespace std;
+#endif
 
 #include "tile.hxx"
 
@@ -116,6 +119,9 @@ extern fgMATERIAL_MGR material_mgr;
 
 
 // $Log$
+// Revision 1.9  1998/07/06 21:34:33  curt
+// Added using namespace std for compilers that support this.
+//
 // Revision 1.8  1998/06/17 21:36:39  curt
 // Load and manage multiple textures defined in the Materials library.
 // Boost max material fagments for each material property to 800.

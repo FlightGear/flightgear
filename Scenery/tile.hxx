@@ -47,6 +47,9 @@ extern "C" void *memset(void *, int, size_t);
 #endif
 
 #include <list>         // STL list
+#ifdef NEEDNAMESPACESTD
+using namespace std;
+#endif
 
 #include <Bucket/bucketutils.h>
 #include <Include/fg_types.h>
@@ -118,6 +121,9 @@ public:
 
 
 // $Log$
+// Revision 1.9  1998/07/06 21:34:34  curt
+// Added using namespace std for compilers that support this.
+//
 // Revision 1.8  1998/07/04 00:54:30  curt
 // Added automatic mipmap generation.
 //

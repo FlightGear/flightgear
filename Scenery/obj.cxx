@@ -42,6 +42,9 @@ extern "C" void *memset(void *, int, size_t);
 
 #include <string>  // Standard C++ library
 #include <map>     // STL
+#ifdef NEEDNAMESPACESTD
+using namespace std;
+#endif
 
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
@@ -438,6 +441,9 @@ int fgObjLoad(char *path, fgTILE *tile) {
 
 
 // $Log$
+// Revision 1.16  1998/07/06 21:34:33  curt
+// Added using namespace std for compilers that support this.
+//
 // Revision 1.15  1998/07/04 00:54:28  curt
 // Added automatic mipmap generation.
 //
