@@ -138,7 +138,9 @@ fgSetDefaults ()
     fgSetBool("/sim/startup/game-mode", false);
     fgSetBool("/sim/startup/splash-screen", true);
     fgSetBool("/sim/startup/intro-music", true);
-    fgSetString("/sim/startup/mouse-pointer", "disabled");
+    // we want mouse-pointer to have an undefined value if nothing is
+    // specified so we can do the right thing for voodoo-1/2 cards.
+    // fgSetString("/sim/startup/mouse-pointer", "disabled");
     fgSetString("/sim/control-mode", "joystick");
     fgSetBool("/sim/auto-coordination", false);
 
