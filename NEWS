@@ -10,6 +10,8 @@ New in 0.57
   This could cause an unrecoverable bounce and you'd end up flipped on your
   back.  Should be fixed now.
 * Sun now appears to grow in size as it gets very low in the horizon.
+* Fixed a view frustum culling bug where the scene was not accurately culled
+  when your view was anything other than straight forward.
 
 New in 0.56
 * Changed default HUD units to the more standard feet units.  You can still
