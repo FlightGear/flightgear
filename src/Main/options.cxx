@@ -1130,13 +1130,16 @@ fgUsage ()
     SGPath opath( globals->get_fg_root() );
     opath.append( "options.xml" );
 
-    SG_LOG( SG_GENERAL, SG_ALERT, "" );
+    cout << "" << endl;
 
     try {
         readProperties(opath.c_str(), &options_root);
     } catch (const sg_exception &ex) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Unable to read the help file." );
-        SG_LOG( SG_GENERAL, SG_ALERT, "Make sure the file options.xml is located in the FlightGear base directory." );
+        cout << "Unable to read the help file." << endl;
+        cout << "Make sure the file options.xml is located in the FlightGear base directory," << endl;
+        cout << "and the location of the base directory is specified bij setting $FG_ROOT or" << endl;
+        cout << "by adding --fg-root=path as a program argument." << endl;
+        
         exit(-1);
     }
 
@@ -1149,7 +1152,7 @@ fgUsage ()
 
     SGPropertyNode *usage = options->getNode("usage");
     if (usage) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Usage: " << usage->getStringValue() );
+        cout << "Usage: " << usage->getStringValue() << endl;
     }
 
     vector<SGPropertyNode_ptr>section = options->getChildren("section");
@@ -1157,8 +1160,7 @@ fgUsage ()
 
         SGPropertyNode *name = section[j]->getNode("name");
         if (name) {
-            SG_LOG( SG_GENERAL, SG_ALERT, endl << name->getStringValue()
-                    << ":" );
+            cout << endl << name->getStringValue() << ":" << endl;
         }
 
         vector<SGPropertyNode_ptr>option = section[j]->getChildren("option");
@@ -1166,25 +1168,30 @@ fgUsage ()
 
             SGPropertyNode *name = option[k]->getNode("name");
             SGPropertyNode *short_name = option[k]->getNode("short");
+            SGPropertyNode *key = option[k]->getNode("key");
             SGPropertyNode *arg = option[k]->getNode("arg");
 
             if (name) {
                 string tmp = name->getStringValue();
 
-                if (short_name) {
-                    tmp.append(", -");
-                    tmp.append(short_name->getStringValue());
+                if (key){
+                    tmp.append(":");
+                    tmp.append(key->getStringValue());
                 }
                 if (arg) {
                     tmp.append("=");
                     tmp.append(arg->getStringValue());
                 }
+                if (short_name) {
+                    tmp.append(", -");
+                    tmp.append(short_name->getStringValue());
+                }
 
-                char cstr[255];
+                char cstr[96];
                 if (tmp.size() <= 25) {
-                    sprintf(cstr, "   --%-27s", tmp.c_str());
+                    snprintf(cstr, 96, "   --%-27s", tmp.c_str());
                 } else {
-                    sprintf(cstr, "\n   --%s\n%32c", tmp.c_str(), ' ');
+                    snprintf(cstr, 96, "\n   --%s\n%32c", tmp.c_str(), ' ');
                 }
                 string msg = cstr;
 
@@ -1196,11 +1203,12 @@ fgUsage ()
                           (desc = option[k]->getNode("description", l, false));
                           l++ )
                     {
-                        sprintf(cstr, "\n%32c%s", ' ', desc->getStringValue());
+                        snprintf(cstr, 96, "\n%32c%s", ' ',
+                                 desc->getStringValue());
                         msg += cstr;
                     }
                 }
-                SG_LOG( SG_GENERAL, SG_ALERT, msg );
+                cout << msg << endl;
             }
         }
     }
