@@ -204,6 +204,18 @@ FGTriangle::build( const point_list& corner_list,
 }
 
 
+// populate this class based on the specified gpc_polys list
+int FGTriangle::rebuild( FGConstruct& c ) {
+    in_nodes.clear();
+    in_segs.clear();
+
+    in_nodes = c.get_tri_nodes();
+    in_segs = c.get_tri_segs();
+
+    return 0;
+}
+
+
 static void write_out_data(struct triangulateio *out) {
     FILE *node = fopen("tile.node", "w");
     fprintf(node, "%d 2 %d 0\n", 
@@ -254,8 +266,14 @@ static void write_out_data(struct triangulateio *out) {
 }
 
 
-// triangulate each of the polygon areas
-int FGTriangle::run_triangulate() {
+// Front end triangulator for polygon list.  Allocates and builds up
+// all the needed structures for the triangulator, runs it, copies the
+// results, and frees all the data structures used by the
+// triangulator.  "pass" can be 1 or 2.  1 = first pass which
+// generates extra nodes for a better triangulation.  2 = second pass
+// after split/reassem where we don't want any extra nodes generated.
+
+int FGTriangle::run_triangulate( int pass ) {
     FGPolygon poly;
     Point3D p;
     struct triangulateio in, out, vorout;
@@ -391,9 +409,22 @@ int FGTriangle::run_triangulate() {
     // from zero (z), assign a regional attribute to each element (A),
     // and produce an edge list (e), and a triangle neighbor list (n).
 
-    string tri_options = "pczq10Aen";
-    // string tri_options = "pzAen";
-    // string tri_options = "pczq15S400Aen";
+    string tri_options;
+    if ( pass == 1 ) {
+	// use a quality value of 10 (q10) meaning no interior
+	// triangle angles less than 10 degrees
+	tri_options = "pczq10Aen";
+	// string tri_options = "pzAen";
+	// string tri_options = "pczq15S400Aen";
+    } else if ( pass == 2 ) {
+	// no new points on boundary (Y), no internal segment
+	// splitting (YY), no quality refinement ()
+	tri_options = "pczYYAen";
+    } else {
+	cout << "unknown pass number = " << pass 
+	     << " in FGTriangle::run_triangulate()" << endl;
+	exit(-1);
+    }
     cout << "Triangulation with options = " << tri_options << endl;
 
     triangulate(tri_options.c_str(), &in, &out, &vorout);

@@ -34,6 +34,7 @@
 
 #include <Array/array.hxx>
 #include <Clipper/clipper.hxx>
+#include <Main/construct.hxx>
 #include <Math/point3d.hxx>
 #include <Polygon/names.hxx>
 
@@ -80,8 +81,17 @@ public:
 	       const point_list& fit_list,
 	       const FGgpcPolyList& gpc_polys );
 
-    // front end triangulator for polygon list
-    int run_triangulate();
+    // populate this class based on the specified gpc_polys list
+    int rebuild( FGConstruct& c );
+
+    // Front end triangulator for polygon list.  Allocates and builds
+    // up all the needed structures for the triangulator, runs it,
+    // copies the results, and frees all the data structures used by
+    // the triangulator.  "pass" can be 1 or 2.  1 = first pass which
+    // generates extra nodes for a better triangulation.  2 = second
+    // pass after split/reassem where we don't want any extra nodes
+    // generated.
+    int run_triangulate( int pass );
 
     inline FGTriNodes get_out_nodes() const { return out_nodes; }
     inline size_t get_out_nodes_size() const { return out_nodes.size(); }

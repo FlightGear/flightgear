@@ -145,8 +145,8 @@ int fit_dem(FGArray& array, int error) {
 }
 
 
-// triangulate the data for each polygon
-void do_triangulate( FGConstruct& c, const FGArray& array,
+// triangulate the data for each polygon ( first time before splitting )
+void first_triangulate( FGConstruct& c, const FGArray& array,
 		     FGTriangle& t ) {
     // first we need to consolidate the points of the DEM fit list and
     // all the polygons into a more "Triangle" friendly format
@@ -160,8 +160,20 @@ void do_triangulate( FGConstruct& c, const FGArray& array,
     cout << "done building node list and polygons" << endl;
 
     cout << "ready to do triangulation" << endl;
-    t.run_triangulate();
+    t.run_triangulate( 1 );
     cout << "finished triangulation" << endl;
+}
+
+
+// triangulate the data for each polygon ( second time after splitting
+// and reassembling )
+void second_triangulate( FGConstruct& c, FGTriangle& t ) {
+    t.rebuild( c );
+    cout << "done re building node list and polygons" << endl;
+
+    cout << "ready to do second triangulation" << endl;
+    t.run_triangulate( 2 );
+    cout << "finished second triangulation" << endl;
 }
 
 
@@ -314,8 +326,7 @@ static point_list gen_point_normals( FGConstruct& c ) {
 
 
 // generate the flight gear scenery file
-void do_output( FGConstruct& c, const FGTriangle& t, 
-		const FGArray& array, FGGenOutput& output ) {
+void do_output( FGConstruct& c, FGGenOutput& output ) {
     output.build( c );
     output.write( c );
 }
@@ -348,7 +359,7 @@ void construct_tile( FGConstruct& c ) {
 	array.fit( error );
 
 	// triangulate the data for each polygon
-	do_triangulate( c, array, t );
+	first_triangulate( c, array, t );
 
 	acceptable = true;
 
@@ -408,10 +419,19 @@ void construct_tile( FGConstruct& c ) {
     m.assemble_tile( c );
 
     // now we must retriangulate the pasted together tile points
+    second_triangulate( c, t );
+
+    // save the results of the triangulation
+    c.set_tri_nodes( t.get_out_nodes() );
+    c.set_tri_elements( t.get_elelist() );
+    c.set_tri_segs( t.get_out_segs() );
+
+    // calculate wgs84 (cartesian) form of node list
+    fix_point_heights( c, array );
 
     // generate the output
     FGGenOutput output;
-    do_output( c, t, array, output );
+    do_output( c, output );
 }
 
 
