@@ -208,7 +208,11 @@ int fgJoystickRead( void ) {
 				   ((-js_ax0[2] + 1) / 2) );
 	} 
 	if ( js0->getNumAxes() > 3 ) {
-	    controls.set_rudder( js_ax0[3] );
+	    if ( current_options.get_auto_coordination() !=
+		  fgOPTIONS::FG_AUTO_COORD_ENABLED ) 
+	    {
+		controls.set_rudder( js_ax0[3] );
+	    }
 	}
 	//  End of William's code
 
@@ -216,7 +220,11 @@ int fgJoystickRead( void ) {
 
     if ( ! js1->notWorking() ) {
 	js1->read( &b, js_ax1 ) ;
-	controls.set_rudder( js_ax1[0] );
+	if ( current_options.get_auto_coordination() !=
+	     fgOPTIONS::FG_AUTO_COORD_ENABLED ) 
+	{
+	    controls.set_rudder( js_ax1[0] );
+	}
 	controls.set_throttle( FGControls::ALL_ENGINES, -js_ax1[1] * 1.05 );
     }
 

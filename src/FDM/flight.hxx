@@ -665,12 +665,12 @@ public:
     // inline void set_Sin_beta( double sb ) { sin_beta = sb; }
 
     double    cos_phi, sin_phi, cos_theta, sin_theta, cos_psi, sin_psi;
-    // inline double get_Cos_phi() const { return cos_phi; }
-    // inline void set_Cos_phi( double cp ) { cos_phi = cp; }
+    inline double get_Cos_phi() const { return cos_phi; }
+    inline void set_Cos_phi( double cp ) { cos_phi = cp; }
     // inline double get_Sin_phi() const { return sin_phi; }
     // inline void set_Sin_phi( double sp ) { sin_phi = sp; }
-    // inline double get_Cos_theta() const { return cos_theta; }
-    // inline void set_Cos_theta( double ct ) { cos_theta = ct; }
+    inline double get_Cos_theta() const { return cos_theta; }
+    inline void set_Cos_theta( double ct ) { cos_theta = ct; }
     // inline double get_Sin_theta() const { return sin_theta; }
     // inline void set_Sin_theta( double st ) { sin_theta = st; }
     // inline double get_Cos_psi() const { return cos_psi; }

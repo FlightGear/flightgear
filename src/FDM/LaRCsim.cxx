@@ -360,9 +360,9 @@ int fgLaRCsim_2_FGInterface (FGInterface& f) {
     // f.set_Cos_beta( Cos_beta );
     // f.set_Sin_beta( Sin_beta );
 
-    // f.set_Cos_phi( Cos_phi );
+    f.set_Cos_phi( Cos_phi );
     // f.set_Sin_phi( Sin_phi );
-    // f.set_Cos_theta( Cos_theta );
+    f.set_Cos_theta( Cos_theta );
     // f.set_Sin_theta( Sin_theta );
     // f.set_Cos_psi( Cos_psi );
     // f.set_Sin_psi( Sin_psi );

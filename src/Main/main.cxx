@@ -944,11 +944,14 @@ void fgReshape( int width, int height ) {
     ssgSetFOV( x_fov, y_fov );
 
     glViewport ( 0, 0, width, height );
+    float fov = current_options.get_fov();
+    ssgSetFOV(fov * current_view.get_win_ratio(), fov);
 
     if ( idle_state == 1000 ) {
 	// yes we've finished all our initializations and are running
 	// the main loop, so this will now work without seg faulting
 	// the system.
+	solarSystemRebuild();
 	current_view.UpdateViewParams(cur_fdm_state);
 	if ( current_options.get_panel_status() ) {
 	    FGPanel::OurPanel->ReInit(0, 0, 1024, 768);

@@ -49,6 +49,7 @@
 #include <Cockpit/hud.hxx>
 #include <GUI/gui.h>
 #include <Include/fg_constants.h>
+#include <Misc/fgpath.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Objects/materialmgr.hxx>
 #include <Time/fg_time.hxx>
@@ -286,15 +287,27 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 112: // p key
 	    t->togglePauseMode();
-	    // printf position and attitude information
-	    FG_LOG( FG_INPUT, FG_INFO,
-		    "Lon = " << f->get_Longitude() * RAD_TO_DEG
-		    << "  Lat = " << f->get_Latitude() * RAD_TO_DEG
-		    << "  Altitude = " << f->get_Altitude() * FEET_TO_METER );
-	    FG_LOG( FG_INPUT, FG_INFO,
-		    "Heading = " << f->get_Psi() * RAD_TO_DEG 
-		    << "  Roll = " << f->get_Phi() * RAD_TO_DEG
-		    << "  Pitch = " << f->get_Theta() * RAD_TO_DEG );
+
+	    {
+		FGBucket p( f->get_Longitude() * RAD_TO_DEG,
+			    f->get_Latitude() * RAD_TO_DEG );
+		FGPath tile_path( current_options.get_fg_root() );
+		tile_path.append( "Scenery" );
+		tile_path.append( p.gen_base_path() );
+		tile_path.append( p.gen_index_str() );
+
+		// printf position and attitude information
+		FG_LOG( FG_INPUT, FG_INFO,
+			"Lon = " << f->get_Longitude() * RAD_TO_DEG
+			<< "  Lat = " << f->get_Latitude() * RAD_TO_DEG
+			<< "  Altitude = " << f->get_Altitude() * FEET_TO_METER
+			);
+		FG_LOG( FG_INPUT, FG_INFO,
+			"Heading = " << f->get_Psi() * RAD_TO_DEG 
+			<< "  Roll = " << f->get_Phi() * RAD_TO_DEG
+			<< "  Pitch = " << f->get_Theta() * RAD_TO_DEG );
+		FG_LOG( FG_INPUT, FG_INFO, tile_path.c_str());
+	    }
 	    return;
 	case 116: // t key
 	    t->adjust_warp_delta (+30);

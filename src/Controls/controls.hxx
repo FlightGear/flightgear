@@ -58,6 +58,11 @@ private:
     double throttle[MAX_ENGINES];
     double brake[MAX_WHEELS];
 
+    inline void CLAMP(double *x, double min, double max ) {
+	if ( *x < min ) { *x = min; }
+	if ( *x > max ) { *x = max; }
+    }
+		
 public:
 
     FGControls();
@@ -77,9 +82,8 @@ public:
     // Update functions
     inline void set_aileron( double pos ) {
 	aileron = pos;
-	if ( aileron < -1.0 ) aileron = -1.0;
-	if ( aileron >  1.0 ) aileron =  1.0;
-
+	CLAMP( &aileron, -1.0, 1.0 );
+			
 	// check for autocoordination
 	if ( current_options.get_auto_coordination() == 
 	     fgOPTIONS::FG_AUTO_COORD_ENABLED ) 
@@ -89,9 +93,8 @@ public:
     }
     inline void move_aileron( double amt ) {
 	aileron += amt;
-	if ( aileron < -1.0 ) aileron = -1.0;
-	if ( aileron >  1.0 ) aileron =  1.0;
-
+	CLAMP( &aileron, -1.0, 1.0 );
+			
 	// check for autocoordination
 	if ( current_options.get_auto_coordination() == 
 	     fgOPTIONS::FG_AUTO_COORD_ENABLED ) 
@@ -101,46 +104,38 @@ public:
     }
     inline void set_elevator( double pos ) {
 	elevator = pos;
-	if ( elevator < -1.0 ) elevator = -1.0;
-	if ( elevator >  1.0 ) elevator =  1.0;
+	CLAMP( &elevator, -1.0, 1.0 );
     }
     inline void move_elevator( double amt ) {
 	elevator += amt;
-	if ( elevator < -1.0 ) elevator = -1.0;
-	if ( elevator >  1.0 ) elevator =  1.0;
+	CLAMP( &elevator, -1.0, 1.0 );
     }
     inline void set_elevator_trim( double pos ) {
 	elevator_trim = pos;
-	if ( elevator_trim < -1.0 ) elevator_trim = -1.0;
-	if ( elevator_trim >  1.0 ) elevator_trim =  1.0;
+	CLAMP( &elevator_trim, -1.0, 1.0 );
     }
     inline void move_elevator_trim( double amt ) {
 	elevator_trim += amt;
-	if ( elevator_trim < -1.0 ) elevator_trim = -1.0;
-	if ( elevator_trim >  1.0 ) elevator_trim =  1.0;
+	CLAMP( &elevator_trim, -1.0, 1.0 );
     }
     inline void set_rudder( double pos ) {
 	rudder = pos;
-	if ( rudder < -1.0 ) rudder = -1.0;
-	if ( rudder >  1.0 ) rudder =  1.0;
+	CLAMP( &rudder, -1.0, 1.0 );
     }
     inline void move_rudder( double amt ) {
 	rudder += amt;
-	if ( rudder < -1.0 ) rudder = -1.0;
-	if ( rudder >  1.0 ) rudder =  1.0;
+	CLAMP( &rudder, -1.0, 1.0 );
     }
     inline void set_throttle( int engine, double pos ) {
 	if ( engine == ALL_ENGINES ) {
 	    for ( int i = 0; i < MAX_ENGINES; i++ ) {
 		throttle[i] = pos;
-		if ( throttle[i] < 0.0 ) throttle[i] = 0.0;
-		if ( throttle[i] >  1.0 ) throttle[i] =  1.0;
+		CLAMP( &throttle[i], 0.0, 1.0 );
 	    }
 	} else {
 	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
 		throttle[engine] = pos;
-		if ( throttle[engine] < 0.0 ) throttle[engine] = 0.0;
-		if ( throttle[engine] >  1.0 ) throttle[engine] =  1.0;
+		CLAMP( &throttle[engine], 0.0, 1.0 );
 	    }
 	}
     }
@@ -148,14 +143,12 @@ public:
 	if ( engine == ALL_ENGINES ) {
 	    for ( int i = 0; i < MAX_ENGINES; i++ ) {
 		throttle[i] += amt;
-		if ( throttle[i] < 0.0 ) throttle[i] = 0.0;
-		if ( throttle[i] >  1.0 ) throttle[i] =  1.0;
+		CLAMP( &throttle[i], 0.0, 1.0 );
 	    }
 	} else {
 	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
 		throttle[engine] += amt;
-		if ( throttle[engine] < 0.0 ) throttle[engine] = 0.0;
-		if ( throttle[engine] >  1.0 ) throttle[engine] =  1.0;
+		CLAMP( &throttle[engine], 0.0, 1.0 );
 	    }
 	}
     }
@@ -163,14 +156,12 @@ public:
 	if ( wheel == ALL_WHEELS ) {
 	    for ( int i = 0; i < MAX_WHEELS; i++ ) {
 		brake[i] = pos;
-		if ( brake[i] < 0.0 ) brake[i] = 0.0;
-		if ( brake[i] >  1.0 ) brake[i] =  1.0;
+		CLAMP( &brake[i], 0.0, 1.0 );
 	    }
 	} else {
 	    if ( (wheel >= 0) && (wheel < MAX_WHEELS) ) {
 		brake[wheel] = pos;
-		if ( brake[wheel] < 0.0 ) brake[wheel] = 0.0;
-		if ( brake[wheel] >  1.0 ) brake[wheel] =  1.0;
+		CLAMP( &brake[wheel], 0.0, 1.0 );
 	    }
 	}
     }
@@ -178,14 +169,12 @@ public:
 	if ( wheel == ALL_WHEELS ) {
 	    for ( int i = 0; i < MAX_WHEELS; i++ ) {
 		brake[i] += amt;
-		if ( brake[i] < 0.0 ) brake[i] = 0.0;
-		if ( brake[i] >  1.0 ) brake[i] =  1.0;
+		CLAMP( &brake[i], 0.0, 1.0 );
 	    }
 	} else {
 	    if ( (wheel >= 0) && (wheel < MAX_WHEELS) ) {
 		brake[wheel] += amt;
-		if ( brake[wheel] < 0.0 ) brake[wheel] = 0.0;
-		if ( brake[wheel] >  1.0 ) brake[wheel] =  1.0;
+		CLAMP( &brake[wheel], 0.0, 1.0 );
 	    }
 	}
     }
