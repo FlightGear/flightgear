@@ -367,11 +367,12 @@ void FGNetFDM2Props( FGNetFDM *net ) {
         last_warp = net->warp;
 	*/
     } else {
-	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in net2global()" );
+	SG_LOG( SG_IO, SG_ALERT,
+                "Error: version mismatch in FGNetFDM2Props()" );
 	SG_LOG( SG_IO, SG_ALERT,
 		"\tread " << net->version << " need " << FG_NET_FDM_VERSION );
 	SG_LOG( SG_IO, SG_ALERT,
-		"\tsomeone needs to upgrade net_fdm.hxx and recompile." );
+		"\tNeeds to upgrade net_fdm.hxx and recompile." );
     }
 }
 

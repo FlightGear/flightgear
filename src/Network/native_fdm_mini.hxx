@@ -1,8 +1,8 @@
-// native_ctrls.hxx -- FGFS "Native" controls I/O class
+// native_fdm_mini.hxx -- FGFS "Mini-Native" flight dynamics protocal class
 //
-// Written by Curtis Olson, started July 2001.
+// Written by Curtis Olson, started January 2002.
 //
-// Copyright (C) 2001  Curtis L. Olson - curt@flightgear.org
+// Copyright (C) 2002  Curtis L. Olson - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -21,33 +21,27 @@
 // $Id$
 
 
-#ifndef _FG_NATIVE_CTRLS_HXX
-#define _FG_NATIVE_CTRLS_HXX
+#ifndef _FG_NATIVE_FDM_MINI_HXX
+#define _FG_NATIVE_FDM_MINI_HXX
 
 
 #include <simgear/compiler.h>
 
-#include STL_STRING
-
-#include <Controls/controls.hxx>
+#include <FDM/flight.hxx>
 
 #include "protocol.hxx"
-#include "net_ctrls.hxx"
-
-SG_USING_STD(string);
+#include "net_fdm_mini.hxx"
 
 
-class FGNativeCtrls : public FGProtocol {
+class FGNativeFDMmini : public FGProtocol, public FGInterface {
 
-    FGNetCtrls net_ctrls;
-    FGControls ctrls;
-
+    FGNetFDMmini buf;
     int length;
 
 public:
 
-    FGNativeCtrls();
-    ~FGNativeCtrls();
+    FGNativeFDMmini();
+    ~FGNativeFDMmini();
 
     // open hailing frequencies
     bool open();
@@ -62,13 +56,13 @@ public:
 
 // Helper functions which may be useful outside this class
 
-// Populate the FGNetCtrls structure from the property tree.
-void FGProps2NetCtrls( FGNetCtrls *net );
+// Populate the FGNetFDMmini structure from the property tree.
+void FGProps2NetFDMmini( FGNetFDMmini *net );
 
-// Update the property tree from the FGNetCtrls structure.
-void FGNetCtrls2Props( FGNetCtrls *net );
+// Update the property tree from the FGNetFDMmini structure.
+void FGNetFDMmini2Props( FGNetFDMmini *net );
 
 
-#endif // _FG_NATIVE_CTRLS_HXX
+#endif // _FG_NATIVE_FDM_MINI_HXX
 
 
