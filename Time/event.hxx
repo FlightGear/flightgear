@@ -31,7 +31,7 @@
 #endif                                   
 
 
-#ifdef __sun__
+#if defined ( __sun__ )
 extern "C" void *memmove(void *, const void *, size_t);
 extern "C" void *memset(void *, int, size_t);
 #endif
@@ -39,6 +39,7 @@ extern "C" void *memset(void *, int, size_t);
 
 #include <deque>        // STL double ended queue
 #include <list>         // STL list
+
 #ifdef NEEDNAMESPACESTD
 using namespace std;
 #endif
@@ -124,6 +125,9 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.6  1998/07/24 21:42:25  curt
+// Output message tweaks.
+//
 // Revision 1.5  1998/07/13 21:02:07  curt
 // Wrote access functions for current fgOPTIONS.
 //

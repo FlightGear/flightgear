@@ -173,8 +173,8 @@ void fgLIGHT::UpdateAdjFog( void ) {
 	rotation -= FG_2PI;
     }
     rotation *= RAD_TO_DEG;
-    fgPrintf( FG_EVENT, FG_INFO, 
-	      "  View to sun difference in degrees = %.2f\n", rotation);
+    // fgPrintf( FG_EVENT, FG_INFO, 
+    //           "  View to sun difference in degrees = %.2f\n", rotation);
 
     // next check if we are in a sunset/sunrise situation
     sun_angle_deg = sun_angle * RAD_TO_DEG;
@@ -191,12 +191,12 @@ void fgLIGHT::UpdateAdjFog( void ) {
 	param2[0] = param1[0] * (180.0 - rotation) / 180.0;
 	param2[1] = param1[1] * (180.0 - rotation) / 180.0;
 	param2[2] = param1[2] * (180.0 - rotation) / 180.0;
-	printf("param1[0] = %.2f param2[0] = %.2f\n", param1[0], param2[0]);
+	// printf("param1[0] = %.2f param2[0] = %.2f\n", param1[0], param2[0]);
     } else {
 	param2[0] = param1[0] * (rotation - 180.0) / 180.0;
 	param2[1] = param1[1] * (rotation - 180.0) / 180.0;
 	param2[2] = param1[2] * (rotation - 180.0) / 180.0;
-	printf("param1[0] = %.2f param2[0] = %.2f\n", param1[0], param2[0]);
+	// printf("param1[0] = %.2f param2[0] = %.2f\n", param1[0], param2[0]);
     }
 
     adj_fog_color[0] = fog_color[0] + param2[0];
@@ -227,6 +227,9 @@ void fgLightUpdate ( void ) {
 
 
 // $Log$
+// Revision 1.13  1998/07/24 21:42:26  curt
+// Output message tweaks.
+//
 // Revision 1.12  1998/07/22 21:45:38  curt
 // fg_time.cxx: Removed call to ctime() in a printf() which should be harmless
 //   but seems to be triggering a bug.
