@@ -37,7 +37,7 @@ fgFLIGHT cur_flight_params;
 
 
 /* Initialize the flight model parameters */
-int fgFlightModelInit(int model, fgFLIGHT *f, double dt) {
+int fgFlightModelInit(int model, fgFLIGHT& f, double dt) {
     double save_alt = 0.0;
     int result;
 
@@ -47,19 +47,19 @@ int fgFlightModelInit(int model, fgFLIGHT *f, double dt) {
 	// fgSlewInit(dt);
     } else if ( model == FG_LARCSIM ) {
 	/* lets try to avoid really screwing up the LaRCsim model */
-	if ( FG_Altitude < -9000 ) {
-	    save_alt = FG_Altitude;
-	    FG_Altitude = 0;
+	if ( f.get_Altitude() < -9000.0 ) {
+	    save_alt = f.get_Altitude();
+	    f.set_Altitude( 0.0 );
 	}
 
 	fgFlight_2_LaRCsim(f);  /* translate FG to LaRCsim structure */
 	fgLaRCsimInit(dt);
-	FG_LOG( FG_FLIGHT, FG_INFO, "FG pos = " << FG_Latitude );
+	FG_LOG( FG_FLIGHT, FG_INFO, "FG pos = " << f.get_Latitude() );
 	fgLaRCsim_2_Flight(f);  /* translate LaRCsim back to FG	structure */
 
 	/* but lets restore our original bogus altitude when we are done */
-	if ( save_alt < -9000 ) {
-	    FG_Altitude = save_alt;
+	if ( save_alt < -9000.0 ) {
+	    f.set_Altitude( save_alt );
 	}
     } else {
 	FG_LOG( FG_FLIGHT, FG_WARN,
@@ -73,13 +73,13 @@ int fgFlightModelInit(int model, fgFLIGHT *f, double dt) {
 
 
 /* Run multiloop iterations of the flight model */
-int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
+int fgFlightModelUpdate(int model, fgFLIGHT& f, int multiloop) {
     double time_step, start_elev, end_elev;
     int result;
     // printf("Altitude = %.2f\n", FG_Altitude * 0.3048);
 
     time_step = (1.0 / DEFAULT_MODEL_HZ) * multiloop;
-    start_elev = FG_Altitude;
+    start_elev = f.get_Altitude();
 
     if ( model == FG_SLEW ) {
 	// fgSlewUpdate(f, multiloop);
@@ -90,9 +90,10 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
 		"Unimplemented flight model == " <<  model );
     }
 
-    end_elev = FG_Altitude;
+    end_elev = f.get_Altitude();
 
-    FG_Climb_Rate = (end_elev - start_elev) / time_step;  /* feet per second */
+    // feet per second
+    f.set_Climb_Rate( (end_elev - start_elev) / time_step );
 
     result = 1;
 
@@ -101,30 +102,33 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
 
 
 /* Set the altitude (force) */
-void fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters) {
+void fgFlightModelSetAltitude(int model, fgFLIGHT& f, double alt_meters) {
     double sea_level_radius_meters;
     double lat_geoc;
     // Set the FG variables first
-    fgGeodToGeoc( FG_Latitude, alt_meters, 
+    fgGeodToGeoc( f.get_Latitude(), alt_meters, 
 		  &sea_level_radius_meters, &lat_geoc);
 
-    FG_Altitude = alt_meters * METER_TO_FEET;
-    FG_Radius_to_vehicle = FG_Altitude + 
-	(sea_level_radius_meters * METER_TO_FEET);
+    f.set_Altitude( alt_meters * METER_TO_FEET );
+    f.set_Radius_to_vehicle( f.get_Altitude() + 
+			      (sea_level_radius_meters * METER_TO_FEET) );
 
     /* additional work needed for some flight models */
     if ( model == FG_LARCSIM ) {
-	ls_ForceAltitude(FG_Altitude);
+	ls_ForceAltitude( f.get_Altitude() );
     }
 
 }
 
 
 // $Log$
+// Revision 1.4  1998/12/03 01:16:40  curt
+// Converted fgFLIGHT to a class.
+//
 // Revision 1.3  1998/11/06 21:18:03  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using
-// the -DFG_NDEBUG flag.
+// the -DFG_NDEBUGNDEBUG flag.
 //
 // Revision 1.2  1998/10/16 23:27:40  curt
 // C++-ifying.

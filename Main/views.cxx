@@ -216,7 +216,7 @@ void fgVIEW::UpdateViewParams( void ) {
     // Tell GL we are about to modify the projection parameters
     xglMatrixMode(GL_PROJECTION);
     xglLoadIdentity();
-    if ( FG_Altitude * FEET_TO_METER - scenery.cur_elev > 10.0 ) {
+    if ( f->get_Altitude() * FEET_TO_METER - scenery.cur_elev > 10.0 ) {
 	gluPerspective(current_options.get_fov(), win_ratio, 10.0, 100000.0);
     } else {
 	gluPerspective(current_options.get_fov(), win_ratio, 0.5, 100000.0);
@@ -281,18 +281,18 @@ void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
     //        scenery.center.y, scenery.center.z);
 
     // calculate the cartesion coords of the current lat/lon/0 elev
-    p = Point3D( FG_Longitude, 
-		 FG_Lat_geocentric, 
-		 FG_Sea_level_radius * FEET_TO_METER );
+    p = Point3D( f->get_Longitude(), 
+		 f->get_Lat_geocentric(), 
+		 f->get_Sea_level_radius() * FEET_TO_METER );
 
     cur_zero_elev = fgPolarToCart3d(p) - scenery.center;
 
     // calculate view position in current FG view coordinate system
     // p.lon & p.lat are already defined earlier, p.radius was set to
     // the sea level radius, so now we add in our altitude.
-    if ( FG_Altitude * FEET_TO_METER > 
+    if ( f->get_Altitude() * FEET_TO_METER > 
 	 (scenery.cur_elev + 0.5 * METER_TO_FEET) ) {
-	p.setz( p.radius() + FG_Altitude * FEET_TO_METER );
+	p.setz( p.radius() + f->get_Altitude() * FEET_TO_METER );
     } else {
 	p.setz( p.radius() + scenery.cur_elev + 0.5 * METER_TO_FEET );
     }
@@ -312,17 +312,17 @@ void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
 
     // Question: Why is the LaRCsim matrix arranged so differently
     // than the one we need???
-    LOCAL[0][0] = FG_T_local_to_body_33;
-    LOCAL[0][1] = -FG_T_local_to_body_32;
-    LOCAL[0][2] = -FG_T_local_to_body_31;
+    LOCAL[0][0] = f->get_T_local_to_body_33();
+    LOCAL[0][1] = -f->get_T_local_to_body_32();
+    LOCAL[0][2] = -f->get_T_local_to_body_31();
     LOCAL[0][3] = 0.0;
-    LOCAL[1][0] = -FG_T_local_to_body_23;
-    LOCAL[1][1] = FG_T_local_to_body_22;
-    LOCAL[1][2] = FG_T_local_to_body_21;
+    LOCAL[1][0] = -f->get_T_local_to_body_23();
+    LOCAL[1][1] = f->get_T_local_to_body_22();
+    LOCAL[1][2] = f->get_T_local_to_body_21();
     LOCAL[1][3] = 0.0;
-    LOCAL[2][0] = -FG_T_local_to_body_13;
-    LOCAL[2][1] = FG_T_local_to_body_12;
-    LOCAL[2][2] = FG_T_local_to_body_11;
+    LOCAL[2][0] = -f->get_T_local_to_body_13();
+    LOCAL[2][1] = f->get_T_local_to_body_12();
+    LOCAL[2][2] = f->get_T_local_to_body_11();
     LOCAL[2][3] = 0.0;
     LOCAL[3][0] = LOCAL[3][1] = LOCAL[3][2] = LOCAL[3][3] = 0.0;
     LOCAL[3][3] = 1.0;
@@ -334,13 +334,13 @@ void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
         // Theta, and Psi (roll, pitch, yaw)
 
         MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-	MAT3rotate(R, vec, FG_Phi);
+	MAT3rotate(R, vec, f->get_Phi());
 	/* printf("Roll matrix\n"); */
 	/* MAT3print(R, stdout); */
 
 	MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
 	/* MAT3mult_vec(vec, vec, R); */
-	MAT3rotate(TMP, vec, FG_Theta);
+	MAT3rotate(TMP, vec, f->get_Theta());
 	/* printf("Pitch matrix\n"); */
 	/* MAT3print(TMP, stdout); */
 	MAT3mult(R, R, TMP);
@@ -348,7 +348,7 @@ void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
 	MAT3_SET_VEC(vec, 1.0, 0.0, 0.0);
 	/* MAT3mult_vec(vec, vec, R); */
 	/* MAT3rotate(TMP, vec, FG_Psi - FG_PI_2); */
-	MAT3rotate(TMP, vec, -FG_Psi);
+	MAT3rotate(TMP, vec, -f->get_Psi());
 	/* printf("Yaw matrix\n");
 	   MAT3print(TMP, stdout); */
 	MAT3mult(LOCAL, R, TMP);
@@ -359,13 +359,13 @@ void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
     // Derive the local UP transformation matrix based on *geodetic*
     // coordinates
     MAT3_SET_VEC(vec, 0.0, 0.0, 1.0);
-    MAT3rotate(R, vec, FG_Longitude);     // R = rotate about Z axis
+    MAT3rotate(R, vec, f->get_Longitude());     // R = rotate about Z axis
     // printf("Longitude matrix\n");
     // MAT3print(R, stdout);
 
     MAT3_SET_VEC(vec, 0.0, 1.0, 0.0);
     MAT3mult_vec(vec, vec, R);
-    MAT3rotate(TMP, vec, -FG_Latitude);  // TMP = rotate about X axis
+    MAT3rotate(TMP, vec, -f->get_Latitude());  // TMP = rotate about X axis
     // printf("Latitude matrix\n");
     // MAT3print(TMP, stdout);
 
@@ -435,19 +435,19 @@ void fgVIEW::UpdateWorldToEye( fgFLIGHT *f ) {
     if(fabs(view_offset)>FG_EPSILON){ 
 	// Roll Matrix
 	MAT3_SET_HVEC(vec, 0.0, 0.0, -1.0, 1.0);
-	MAT3rotate(R_Phi, vec, FG_Phi);
+	MAT3rotate(R_Phi, vec, f->get_Phi());
 	// printf("Roll matrix (Phi)\n");
 	// MAT3print(R_Phi, stdout);
 
 	// Pitch Matrix
 	MAT3_SET_HVEC(vec, 1.0, 0.0, 0.0, 1.0);
-	MAT3rotate(R_Theta, vec, FG_Theta);
+	MAT3rotate(R_Theta, vec, f->get_Theta());
 	// printf("\nPitch matrix (Theta)\n");
 	// MAT3print(R_Theta, stdout);
 
 	// Yaw Matrix
 	MAT3_SET_HVEC(vec, 0.0, -1.0, 0.0, 1.0);
-	MAT3rotate(R_Psi, vec, FG_Psi + FG_PI - view_offset );
+	MAT3rotate(R_Psi, vec, f->get_Psi() + FG_PI - view_offset );
 	// printf("\nYaw matrix (Psi)\n");
 	// MAT3print(R_Psi, stdout);
 
@@ -458,17 +458,17 @@ void fgVIEW::UpdateWorldToEye( fgFLIGHT *f ) {
     } else { // JUST USE LOCAL_TO_BODY  NHV 5/25/98
 	// hey this is even different then LOCAL[][] above ??
 	 
-	AIRCRAFT[0][0] = -FG_T_local_to_body_22;
-	AIRCRAFT[0][1] = -FG_T_local_to_body_23;
-	AIRCRAFT[0][2] = FG_T_local_to_body_21;
+	AIRCRAFT[0][0] = -f->get_T_local_to_body_22();
+	AIRCRAFT[0][1] = -f->get_T_local_to_body_23();
+	AIRCRAFT[0][2] = f->get_T_local_to_body_21();
 	AIRCRAFT[0][3] = 0.0;
-	AIRCRAFT[1][0] = FG_T_local_to_body_32;
-	AIRCRAFT[1][1] = FG_T_local_to_body_33;
-	AIRCRAFT[1][2] = -FG_T_local_to_body_31;
+	AIRCRAFT[1][0] = f->get_T_local_to_body_32();
+	AIRCRAFT[1][1] = f->get_T_local_to_body_33();
+	AIRCRAFT[1][2] = -f->get_T_local_to_body_31();
 	AIRCRAFT[1][3] = 0.0;
-	AIRCRAFT[2][0] = FG_T_local_to_body_12;
-	AIRCRAFT[2][1] = FG_T_local_to_body_13;
-	AIRCRAFT[2][2] = -FG_T_local_to_body_11;
+	AIRCRAFT[2][0] = f->get_T_local_to_body_12();
+	AIRCRAFT[2][1] = f->get_T_local_to_body_13();
+	AIRCRAFT[2][2] = -f->get_T_local_to_body_11();
 	AIRCRAFT[2][3] = 0.0;
 	AIRCRAFT[3][0] = AIRCRAFT[3][1] = AIRCRAFT[3][2] = AIRCRAFT[3][3] = 0.0;
 	AIRCRAFT[3][3] = 1.0;
@@ -492,14 +492,14 @@ void fgVIEW::UpdateWorldToEye( fgFLIGHT *f ) {
     // Latitude
     MAT3_SET_HVEC(vec, 1.0, 0.0, 0.0, 1.0);
     // R_Lat = rotate about X axis
-    MAT3rotate(R_Lat, vec, FG_Latitude);
+    MAT3rotate(R_Lat, vec, f->get_Latitude());
     // printf("\nLatitude matrix\n");
     // MAT3print(R_Lat, stdout);
 
     // Longitude
     MAT3_SET_HVEC(vec, 0.0, 0.0, 1.0, 1.0);
     // R_Lon = rotate about Z axis
-    MAT3rotate(R_Lon, vec, FG_Longitude - FG_PI_2 );
+    MAT3rotate(R_Lon, vec, f->get_Longitude() - FG_PI_2 );
     // printf("\nLongitude matrix\n");
     // MAT3print(R_Lon, stdout);
 
@@ -599,6 +599,9 @@ fgVIEW::~fgVIEW( void ) {
 
 
 // $Log$
+// Revision 1.28  1998/12/03 01:17:20  curt
+// Converted fgFLIGHT to a class.
+//
 // Revision 1.27  1998/11/16 14:00:06  curt
 // Added pow() macro bug work around.
 // Added support for starting FGFS at various resolutions.

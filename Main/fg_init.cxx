@@ -96,26 +96,26 @@ int fgInitPosition( void ) {
 		    "Failed to find " << id << " in database." );
 	    exit(-1);
 	} else {
-	    FG_Longitude = a.longitude * DEG_TO_RAD;
-	    FG_Latitude  = a.latitude * DEG_TO_RAD;
+	    f->set_Longitude( a.longitude * DEG_TO_RAD );
+	    f->set_Latitude( a.latitude * DEG_TO_RAD );
 	}
     } else {
 	// set initial position from default or command line coordinates
 
-	FG_Longitude = current_options.get_lon() * DEG_TO_RAD;
-	FG_Latitude  = current_options.get_lat() * DEG_TO_RAD;
+	f->set_Longitude( current_options.get_lon() * DEG_TO_RAD );
+	f->set_Latitude( current_options.get_lat() * DEG_TO_RAD );
     }
     FG_LOG( FG_GENERAL, FG_INFO, 
 	    "starting altitude is = " << current_options.get_altitude() );
 
-    FG_Altitude = current_options.get_altitude() * METER_TO_FEET;
-    FG_Runway_altitude = FG_Altitude - 3.758099;
+    f->set_Altitude( current_options.get_altitude() * METER_TO_FEET );
+    f->set_Runway_altitude( f->get_Altitude() - 3.758099 );
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Initial position is: ("
-	    << (FG_Longitude * RAD_TO_DEG) << ", " 
-	    << (FG_Latitude * RAD_TO_DEG) << ", " 
-	    << (FG_Altitude * FEET_TO_METER) << ")" );
+	    << (f->get_Longitude() * RAD_TO_DEG) << ", " 
+	    << (f->get_Latitude() * RAD_TO_DEG) << ", " 
+	    << (f->get_Altitude() * FEET_TO_METER) << ")" );
 
     return(1);
 }
@@ -194,65 +194,60 @@ int fgInitSubsystems( void )
 	exit(-1);
     }
 
+    // Calculate ground elevation at starting point (we didn't have
+    // abs_view_pos calculated when fgTileMgrUpdate() was called above
+
     // calculalate a cartesian point somewhere along the line between
     // the center of the earth and our view position.  Doesn't have to
     // be the exact elevation (this is good because we don't know it
     // yet :-)
-    geod_pos = Point3D( FG_Longitude, FG_Latitude, 0.0);
+    geod_pos = Point3D( f->get_Longitude(), f->get_Latitude(), 0.0);
     abs_view_pos = fgGeodToCart(geod_pos);
 
-    // Calculate ground elevation at starting point
     FG_LOG( FG_GENERAL, FG_DEBUG, 
-	    "Altitude before update " << scenery.cur_elev );
+    	    "Altitude before update " << scenery.cur_elev );
     scenery.cur_elev = 
-	fgTileMgrCurElev( FG_Longitude, FG_Latitude, abs_view_pos );
+	fgTileMgrCurElevOLD( f->get_Longitude(), 
+			     f->get_Latitude(),
+			     abs_view_pos );
     FG_LOG( FG_GENERAL, FG_DEBUG, 
 	    "Altitude after update " << scenery.cur_elev );
-    FG_Runway_altitude = scenery.cur_elev * METER_TO_FEET;
+    f->set_Runway_altitude( scenery.cur_elev * METER_TO_FEET );
 
     // Reset our altitude if we are below ground
-    if ( FG_Altitude < FG_Runway_altitude + 3.758099) {
-	FG_Altitude = FG_Runway_altitude + 3.758099;
+    if ( f->get_Altitude() < f->get_Runway_altitude() + 3.758099) {
+	f->set_Altitude( f->get_Runway_altitude() + 3.758099 );
     }
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Updated position (after elevation adj): ("
-	    << (FG_Latitude * RAD_TO_DEG) << ", " 
-	    << (FG_Longitude * RAD_TO_DEG) << ", " 
-	    << (FG_Altitude * FEET_TO_METER) << ")" );
+	    << (f->get_Latitude() * RAD_TO_DEG) << ", " 
+	    << (f->get_Longitude() * RAD_TO_DEG) << ", " 
+	    << (f->get_Altitude() * FEET_TO_METER) << ")" );
     // end of thing that I just stuck in that I should probably move
 		
     // The following section sets up the flight model EOM parameters
     // and should really be read in from one or more files.
 
     // Initial Velocity
-    FG_V_north = 0.0;   //  7.287719E+00
-    FG_V_east  = 0.0;   //  1.521770E+03
-    FG_V_down  = 0.0;   // -1.265722E-05
+    f->set_Local_Velocities( 0.0, 0.0, 0.0 );
 
     // Initial Orientation
-    FG_Phi   = current_options.get_roll()    * DEG_TO_RAD;
-    FG_Theta = current_options.get_pitch()   * DEG_TO_RAD;
-    FG_Psi   = current_options.get_heading() * DEG_TO_RAD;
+    f->set_Euler_Orientation( current_options.get_roll() * DEG_TO_RAD,
+			      current_options.get_pitch() * DEG_TO_RAD,
+			      current_options.get_heading() * DEG_TO_RAD );
 
-    // Initial Angular B rates
-    FG_P_body = 7.206685E-05;
-    FG_Q_body = 0.000000E+00;
-    FG_R_body = 9.492658E-05;
+    // Initial Angular Body rates
+    f->set_Body_Rates( 7.206685E-05, 0.000000E+00, 9.492658E-05 );
 
-    FG_Earth_position_angle = 0.000000E+00;
+    f->set_Earth_position_angle( 0.000000E+00 );
 
     // Mass properties and geometry values
-    FG_Mass = 8.547270E+01;
-    FG_I_xx = 1.048000E+03;
-    FG_I_yy = 3.000000E+03;
-    FG_I_zz = 3.530000E+03;
-    FG_I_xz = 0.000000E+00;
+    f->set_Inertias( 8.547270E+01, 
+		     1.048000E+03, 3.000000E+03, 3.530000E+03, 0.000000E+00 );
 
     // CG position w.r.t. ref. point
-    FG_Dx_cg = 0.000000E+00;
-    FG_Dy_cg = 0.000000E+00;
-    FG_Dz_cg = 0.000000E+00;
+    f->set_CG_Position( 0.0, 0.0, 0.0 );
 
     // Initialize the event manager
     global_events.Init();
@@ -336,22 +331,22 @@ int fgInitSubsystems( void )
     // Initialize the flight model subsystem data structures base on
     // above values
 
-    fgFlightModelInit( current_options.get_flight_model(), f, 
+    fgFlightModelInit( current_options.get_flight_model(), cur_flight_params, 
 		       1.0 / DEFAULT_MODEL_HZ );
 
     // I'm just sticking this here for now, it should probably move
     // eventually
-    scenery.cur_elev = FG_Runway_altitude * FEET_TO_METER;
+    scenery.cur_elev = f->get_Runway_altitude() * FEET_TO_METER;
 
-    if ( FG_Altitude < FG_Runway_altitude + 3.758099) {
-	FG_Altitude = FG_Runway_altitude + 3.758099;
+    if ( f->get_Altitude() < f->get_Runway_altitude() + 3.758099) {
+	f->set_Altitude( f->get_Runway_altitude() + 3.758099 );
     }
 
     FG_LOG( FG_GENERAL, FG_INFO,
 	    "Updated position (after elevation adj): ("
-	    << (FG_Latitude * RAD_TO_DEG) << ", " 
-	    << (FG_Longitude * RAD_TO_DEG) << ", "
-	    << (FG_Altitude * FEET_TO_METER) << ")" );
+	    << (f->get_Latitude() * RAD_TO_DEG) << ", " 
+	    << (f->get_Longitude() * RAD_TO_DEG) << ", "
+	    << (f->get_Altitude() * FEET_TO_METER) << ")" );
     // end of thing that I just stuck in that I should probably move
 
     // Joystick support
@@ -374,6 +369,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.52  1998/12/03 01:17:17  curt
+// Converted fgFLIGHT to a class.
+//
 // Revision 1.51  1998/11/20 01:02:37  curt
 // Try to detect Mesa/Glide/Voodoo and chose the appropriate resolution.
 //

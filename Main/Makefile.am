@@ -67,8 +67,7 @@ fgfs_LDADD = \
 	$(top_builddir)/Lib/PUI/libPUI.a \
 	$(top_builddir)/Lib/zlib/libz.a \
 	$(top_builddir)/Lib/Misc/libMisc.a \
-	$(opengl_LIBS) \
-	$(base_LIBS)
+	$(opengl_LIBS)
 
 INCLUDES += \
 	-I$(top_builddir) \

@@ -34,361 +34,484 @@
 #endif                                   
 
 
-/* Define the various supported flight models (most not yet implemented) */
-#define FG_SLEW        0    /* Slew (in MS terminology) */
-#define FG_LARCSIM     1    /* The only "real" model  that is currently 
-			       implemented */
-#define FG_ACM         2
-#define FG_SUPER_SONIC 3
-#define FG_HELICOPTER  4
-#define FG_AUTOGYRO    5
-#define FG_BALLOON     6
-#define FG_PARACHUTE   7
-#define FG_EXTERN_GPS  8    /* Driven via a serially connected GPS */
-#define FG_EXTERN_NET  9    /* Driven externally via the net */
-#define FG_EXTERN_NASA 10   /* Track the space shuttle ? */
+// Define the various supported flight models (most not yet implemented)
+
+enum fgFlightModelKind {
+    // Slew (in MS terminology)
+    FG_SLEW = 0,
+
+    // The only "real" model that is currently implemented
+    FG_LARCSIM = 1,
+
+    FG_ACM = 2,
+    FG_SUPER_SONIC = 3,
+    FG_HELICOPTER = 4,
+    FG_AUTOGYRO = 5,
+    FG_BALLOON = 6,
+    FG_PARACHUTE = 7,
+
+    // Driven externally via a serial port, net, file, etc.
+    FG_EXTERN = 8
+};
 
 
 typedef double FG_VECTOR_3[3];
 
-/* This is based heavily on LaRCsim/ls_generic.h */
-typedef struct {
+
+// This is based heavily on LaRCsim/ls_generic.h
+class fgFLIGHT {
+
+public:
 
 /*================== Mass properties and geometry values ==================*/
 
-    double    mass, i_xx, i_yy, i_zz, i_xz; /* Inertias */
-#define FG_Mass                    f->mass
-#define FG_I_xx                    f->i_xx
-#define FG_I_yy                    f->i_yy
-#define FG_I_zz                    f->i_zz
-#define FG_I_xz                    f->i_xz
+    // Inertias
+    double mass, i_xx, i_yy, i_zz, i_xz;
+    inline double get_Mass() const { return mass; }
+    inline double get_I_xx() const { return i_xx; }
+    inline double get_I_yy() const { return i_yy; }
+    inline double get_I_zz() const { return i_zz; }
+    inline double get_I_xz() const { return i_xz; }
 
-    FG_VECTOR_3    d_pilot_rp_body_v;      /* Pilot location rel to ref pt */
-#define FG_D_pilot_rp_body_v       f->d_pilot_rp_body_v
-#define FG_Dx_pilot                f->d_pilot_rp_body_v[0]
-#define FG_Dy_pilot                f->d_pilot_rp_body_v[1]
-#define FG_Dz_pilot                f->d_pilot_rp_body_v[2]
+    // Pilot location rel to ref pt
+    FG_VECTOR_3 d_pilot_rp_body_v;
+    inline double * get_D_pilot_rp_body_v() { 
+	return d_pilot_rp_body_v; 
+    }
+    inline double get_Dx_pilot() const { return d_pilot_rp_body_v[0]; }
+    inline double get_Dy_pilot() const { return d_pilot_rp_body_v[1]; }
+    inline double get_Dz_pilot() const { return d_pilot_rp_body_v[2]; }
 
-    FG_VECTOR_3    d_cg_rp_body_v; /* CG position w.r.t. ref. point */
-#define FG_D_cg_rp_body_v          f->d_cg_rp_body_v
-#define FG_Dx_cg                   f->d_cg_rp_body_v[0]
-#define FG_Dy_cg                   f->d_cg_rp_body_v[1]
-#define FG_Dz_cg                   f->d_cg_rp_body_v[2]
+    // CG position w.r.t. ref. point
+    FG_VECTOR_3 d_cg_rp_body_v;
+    inline double * get_D_cg_rp_body_v() { return d_cg_rp_body_v; }
+    inline double get_Dx_cg() const { return d_cg_rp_body_v[0]; }
+    inline double get_Dy_cg() const { return d_cg_rp_body_v[1]; }
+    inline double get_Dz_cg() const { return d_cg_rp_body_v[2]; }
 
 /*================================ Forces =================================*/
 
-    FG_VECTOR_3    f_body_total_v;
-#define FG_F_body_total_v          f->f_body_total_v
-#define FG_F_X                     f->f_body_total_v[0]
-#define FG_F_Y                     f->f_body_total_v[1]
-#define FG_F_Z                     f->f_body_total_v[2]
+    FG_VECTOR_3 f_body_total_v;
+    inline double * get_F_body_total_v() { return f_body_total_v; }
+    inline double get_F_X() const { return f_body_total_v[0]; }
+    inline double get_F_Y() const { return f_body_total_v[1]; }
+    inline double get_F_Z() const { return f_body_total_v[2]; }
 
-    FG_VECTOR_3    f_local_total_v;
-#define FG_F_local_total_v         f->f_local_total_v
-#define FG_F_north                 f->f_local_total_v[0]
-#define FG_F_east                  f->f_local_total_v[1]
-#define FG_F_down                  f->f_local_total_v[2]
+    FG_VECTOR_3 f_local_total_v;
+    inline double * get_F_local_total_v() { return f_local_total_v; }
+    inline double get_F_north() const { return f_local_total_v[0]; }
+    inline double get_F_east() const { return f_local_total_v[1]; }
+    inline double get_F_down() const { return f_local_total_v[2]; }
 
-    FG_VECTOR_3    f_aero_v;
-#define FG_F_aero_v                f->f_aero_v
-#define FG_F_X_aero                f->f_aero_v[0]
-#define FG_F_Y_aero                f->f_aero_v[1]
-#define FG_F_Z_aero                f->f_aero_v[2]
+    FG_VECTOR_3 f_aero_v;
+    inline double * get_F_aero_v() { return f_aero_v; }
+    inline double get_F_X_aero() const { return f_aero_v[0]; }
+    inline double get_F_Y_aero() const { return f_aero_v[1]; }
+    inline double get_F_Z_aero() const { return f_aero_v[2]; }
+    
+    FG_VECTOR_3 f_engine_v;
+    inline double * get_F_engine_v() { return f_engine_v; }
+    inline double get_F_X_engine() const { return f_engine_v[0]; }
+    inline double get_F_Y_engine() const { return f_engine_v[1]; }
+    inline double get_F_Z_engine() const { return f_engine_v[2]; }
 
-    FG_VECTOR_3    f_engine_v;
-#define FG_F_engine_v              f->f_engine_v
-#define FG_F_X_engine              f->f_engine_v[0]
-#define FG_F_Y_engine              f->f_engine_v[1]
-#define FG_F_Z_engine              f->f_engine_v[2]
+    FG_VECTOR_3 f_gear_v;
+    inline double * get_F_gear_v() { return f_gear_v; }
+    inline double get_F_X_gear() const { return f_gear_v[0]; }
+    inline double get_F_Y_gear() const { return f_gear_v[1]; }
+    inline double get_F_Z_gear() const { return f_gear_v[2]; }
 
-    FG_VECTOR_3    f_gear_v;
-#define FG_F_gear_v                f->f_gear_v
-#define FG_F_X_gear                f->f_gear_v[0]
-#define FG_F_Y_gear                f->f_gear_v[1]
-#define FG_F_Z_gear                f->f_gear_v[2]
-
-/*================================ Moments ================================*/
+    /*================================ Moments ================================*/
 
     FG_VECTOR_3    m_total_rp_v;
-#define FG_M_total_rp_v            f->m_total_rp_v
-#define FG_M_l_rp                  f->m_total_rp_v[0]
-#define FG_M_m_rp                  f->m_total_rp_v[1]
-#define FG_M_n_rp                  f->m_total_rp_v[2]
+    inline double * get_M_total_rp_v() { return m_total_rp_v; }
+    inline double get_M_l_rp() const { return m_total_rp_v[0]; }
+    inline double get_M_m_rp() const { return m_total_rp_v[1]; }
+    inline double get_M_n_rp() const { return m_total_rp_v[2]; }
 
     FG_VECTOR_3    m_total_cg_v;
-#define FG_M_total_cg_v            f->m_total_cg_v
-#define FG_M_l_cg                  f->m_total_cg_v[0]
-#define FG_M_m_cg                  f->m_total_cg_v[1]
-#define FG_M_n_cg                  f->m_total_cg_v[2]
+    inline double * get_M_total_cg_v() { return m_total_cg_v; }
+    inline double get_M_l_cg() const { return m_total_cg_v[0]; }
+    inline double get_M_m_cg() const { return m_total_cg_v[1]; }
+    inline double get_M_n_cg() const { return m_total_cg_v[2]; }
 
     FG_VECTOR_3    m_aero_v;
-#define FG_M_aero_v                f->m_aero_v
-#define FG_M_l_aero                f->m_aero_v[0]
-#define FG_M_m_aero                f->m_aero_v[1]
-#define FG_M_n_aero                f->m_aero_v[2]
+    inline double * get_M_aero_v() { return m_aero_v; }
+    inline double get_M_l_aero() const { return m_aero_v[0]; }
+    inline double get_M_m_aero() const { return m_aero_v[1]; }
+    inline double get_M_n_aero() const { return m_aero_v[2]; }
 
     FG_VECTOR_3    m_engine_v;
-#define FG_M_engine_v              f->m_engine_v
-#define FG_M_l_engine              f->m_engine_v[0]
-#define FG_M_m_engine              f->m_engine_v[1]
-#define FG_M_n_engine              f->m_engine_v[2]
+    inline double * get_M_engine_v() { return m_engine_v; }
+    inline double get_M_l_engine() const { return m_engine_v[0]; }
+    inline double get_M_m_engine() const { return m_engine_v[1]; }
+    inline double get_M_n_engine() const { return m_engine_v[2]; }
 
     FG_VECTOR_3    m_gear_v;
-#define FG_M_gear_v                f->m_gear_v
-#define FG_M_l_gear                f->m_gear_v[0]
-#define FG_M_m_gear                f->m_gear_v[1]
-#define FG_M_n_gear                f->m_gear_v[2]
+    inline double * get_M_gear_v() { return m_gear_v; }
+    inline double get_M_l_gear() const { return m_gear_v[0]; }
+    inline double get_M_m_gear() const { return m_gear_v[1]; }
+    inline double get_M_n_gear() const { return m_gear_v[2]; }
 
-/*============================== Accelerations ============================*/
+    /*============================== Accelerations ============================*/
 
     FG_VECTOR_3    v_dot_local_v;
-#define FG_V_dot_local_v           f->v_dot_local_v
-#define FG_V_dot_north             f->v_dot_local_v[0]
-#define FG_V_dot_east              f->v_dot_local_v[1]
-#define FG_V_dot_down              f->v_dot_local_v[2]
+    inline double * get_V_dot_local_v() { return v_dot_local_v; }
+    inline double get_V_dot_north() const { return v_dot_local_v[0]; }
+    inline double get_V_dot_east() const { return v_dot_local_v[1]; }
+    inline double get_V_dot_down() const { return v_dot_local_v[2]; }
 
     FG_VECTOR_3    v_dot_body_v;
-#define FG_V_dot_body_v            f->v_dot_body_v
-#define FG_U_dot_body              f->v_dot_body_v[0]
-#define FG_V_dot_body              f->v_dot_body_v[1]
-#define FG_W_dot_body              f->v_dot_body_v[2]
+    inline double * get_V_dot_body_v() { return v_dot_body_v; }
+    inline double get_U_dot_body() const { return v_dot_body_v[0]; }
+    inline double get_V_dot_body() const { return v_dot_body_v[1]; }
+    inline double get_W_dot_body() const { return v_dot_body_v[2]; }
 
     FG_VECTOR_3    a_cg_body_v;
-#define FG_A_cg_body_v             f->a_cg_body_v
-#define FG_A_X_cg                  f->a_cg_body_v[0]
-#define FG_A_Y_cg                  f->a_cg_body_v[1]
-#define FG_A_Z_cg                  f->a_cg_body_v[2]
+    inline double * get_A_cg_body_v() { return a_cg_body_v; }
+    inline double get_A_X_cg() const { return a_cg_body_v[0]; }
+    inline double get_A_Y_cg() const { return a_cg_body_v[1]; }
+    inline double get_A_Z_cg() const { return a_cg_body_v[2]; }
 
     FG_VECTOR_3    a_pilot_body_v;
-#define FG_A_pilot_body_v          f->a_pilot_body_v
-#define FG_A_X_pilot               f->a_pilot_body_v[0]
-#define FG_A_Y_pilot               f->a_pilot_body_v[1]
-#define FG_A_Z_pilot               f->a_pilot_body_v[2]
+    inline double * get_A_pilot_body_v() { return a_pilot_body_v; }
+    inline double get_A_X_pilot() const { return a_pilot_body_v[0]; }
+    inline double get_A_Y_pilot() const { return a_pilot_body_v[1]; }
+    inline double get_A_Z_pilot() const { return a_pilot_body_v[2]; }
 
     FG_VECTOR_3    n_cg_body_v;
-#define FG_N_cg_body_v             f->n_cg_body_v
-#define FG_N_X_cg                  f->n_cg_body_v[0]
-#define FG_N_Y_cg                  f->n_cg_body_v[1]
-#define FG_N_Z_cg                  f->n_cg_body_v[2]
+    inline double * get_N_cg_body_v() { return n_cg_body_v; }
+    inline double get_N_X_cg() const { return n_cg_body_v[0]; }
+    inline double get_N_Y_cg() const { return n_cg_body_v[1]; }
+    inline double get_N_Z_cg() const { return n_cg_body_v[2]; }
 
     FG_VECTOR_3    n_pilot_body_v;
-#define FG_N_pilot_body_v          f->n_pilot_body_v
-#define FG_N_X_pilot               f->n_pilot_body_v[0]
-#define FG_N_Y_pilot               f->n_pilot_body_v[1]
-#define FG_N_Z_pilot               f->n_pilot_body_v[2]
+    inline double * get_N_pilot_body_v() { return n_pilot_body_v; }
+    inline double get_N_X_pilot() const { return n_pilot_body_v[0]; }
+    inline double get_N_Y_pilot() const { return n_pilot_body_v[1]; }
+    inline double get_N_Z_pilot() const { return n_pilot_body_v[2]; }
 
     FG_VECTOR_3    omega_dot_body_v;
-#define FG_Omega_dot_body_v        f->omega_dot_body_v
-#define FG_P_dot_body              f->omega_dot_body_v[0]
-#define FG_Q_dot_body              f->omega_dot_body_v[1]
-#define FG_R_dot_body              f->omega_dot_body_v[2]
+    inline double * get_Omega_dot_body_v() { return omega_dot_body_v; }
+    inline double get_P_dot_body() const { return omega_dot_body_v[0]; }
+    inline double get_Q_dot_body() const { return omega_dot_body_v[1]; }
+    inline double get_R_dot_body() const { return omega_dot_body_v[2]; }
 
 
-/*============================== Velocities ===============================*/
+    /*============================== Velocities ===============================*/
 
     FG_VECTOR_3    v_local_v;
-#define FG_V_local_v               f->v_local_v
-#define FG_V_north                 f->v_local_v[0]
-#define FG_V_east                  f->v_local_v[1]
-#define FG_V_down                  f->v_local_v[2]
+    inline double * get_V_local_v() { return v_local_v; }
+    inline double get_V_north() const { return v_local_v[0]; }
+    inline double get_V_east() const { return v_local_v[1]; }
+    inline double get_V_down() const { return v_local_v[2]; }
 
     FG_VECTOR_3    v_local_rel_ground_v; /* V rel w.r.t. earth surface   */
-#define FG_V_local_rel_ground_v    f->v_local_rel_ground_v
-#define FG_V_north_rel_ground      f->v_local_rel_ground_v[0]
-#define FG_V_east_rel_ground       f->v_local_rel_ground_v[1]
-#define FG_V_down_rel_ground       f->v_local_rel_ground_v[2]
+    inline double * get_V_local_rel_ground_v() { return v_local_rel_ground_v; }
+    inline double get_V_north_rel_ground() const {
+	return v_local_rel_ground_v[0];
+    }
+    inline double get_V_east_rel_ground() const {
+	return v_local_rel_ground_v[1];
+    }
+    inline double get_V_down_rel_ground() const {
+	return v_local_rel_ground_v[2];
+    }
 
     FG_VECTOR_3    v_local_airmass_v;   /* velocity of airmass (steady winds) */
-#define FG_V_local_airmass_v       f->v_local_airmass_v
-#define FG_V_north_airmass         f->v_local_airmass_v[0]
-#define FG_V_east_airmass          f->v_local_airmass_v[1]
-#define FG_V_down_airmass          f->v_local_airmass_v[2]
+    inline double * get_V_local_airmass_v() { return v_local_airmass_v; }
+    inline double get_V_north_airmass() const { return v_local_airmass_v[0]; }
+    inline double get_V_east_airmass() const { return v_local_airmass_v[1]; }
+    inline double get_V_down_airmass() const { return v_local_airmass_v[2]; }
 
     FG_VECTOR_3    v_local_rel_airmass_v;  /* velocity of veh. relative to */
-                                           /* airmass */
-#define FG_V_local_rel_airmass_v   f->v_local_rel_airmass_v
-#define FG_V_north_rel_airmass     f->v_local_rel_airmass_v[0]
-#define FG_V_east_rel_airmass      f->v_local_rel_airmass_v[1]
-#define FG_V_down_rel_airmass      f->v_local_rel_airmass_v[2]
+    /* airmass */
+    inline double * get_V_local_rel_airmass_v() {
+	return v_local_rel_airmass_v;
+    }
+    inline double get_V_north_rel_airmass() const {
+	return v_local_rel_airmass_v[0];
+    }
+    inline double get_V_east_rel_airmass() const {
+	return v_local_rel_airmass_v[1];
+    }
+    inline double get_V_down_rel_airmass() const {
+	return v_local_rel_airmass_v[2];
+    }
 
     FG_VECTOR_3    v_local_gust_v; /* linear turbulence components, L frame */
-#define FG_V_local_gust_v          f->v_local_gust_v
-#define FG_U_gust                  f->v_local_gust_v[0]
-#define FG_V_gust                  f->v_local_gust_v[1]
-#define FG_W_gust                  f->v_local_gust_v[2]
+    inline double * get_V_local_gust_v() { return v_local_gust_v; }
+    inline double get_U_gust() const { return v_local_gust_v[0]; }
+    inline double get_V_gust() const { return v_local_gust_v[1]; }
+    inline double get_W_gust() const { return v_local_gust_v[2]; }
 
     FG_VECTOR_3    v_wind_body_v;  /* Wind-relative velocities in body axis */
-#define FG_V_wind_body_v           f->v_wind_body_v
-#define FG_U_body                  f->v_wind_body_v[0]
-#define FG_V_body                  f->v_wind_body_v[1]
-#define FG_W_body                  f->v_wind_body_v[2]
+    inline double * get_V_wind_body_v() { return v_wind_body_v; }
+    inline double get_U_body() const { return v_wind_body_v[0]; }
+    inline double get_V_body() const { return v_wind_body_v[1]; }
+    inline double get_W_body() const { return v_wind_body_v[2]; }
 
     double    v_rel_wind, v_true_kts, v_rel_ground, v_inertial;
     double    v_ground_speed, v_equiv, v_equiv_kts;
     double    v_calibrated, v_calibrated_kts;
-#define FG_V_rel_wind              f->v_rel_wind
-#define FG_V_true_kts              f->v_true_kts
-#define FG_V_rel_ground            f->v_rel_ground
-#define FG_V_inertial              f->v_inertial
-#define FG_V_ground_speed          f->v_ground_speed
-#define FG_V_equiv                 f->v_equiv
-#define FG_V_equiv_kts             f->v_equiv_kts
-#define FG_V_calibrated            f->v_calibrated
-#define FG_V_calibrated_kts        f->v_calibrated_kts
+    inline double get_V_rel_wind() const { return v_rel_wind; }
+    inline double get_V_true_kts() const { return v_true_kts; }
+    inline double get_V_rel_ground() const { return v_rel_ground; }
+    inline double get_V_inertial() const { return v_inertial; }
+    inline double get_V_ground_speed() const { return v_ground_speed; }
+    inline double get_V_equiv() const { return v_equiv; }
+    inline double get_V_equiv_kts() const { return v_equiv_kts; }
+    inline double get_V_calibrated() const { return v_calibrated; }
+    inline double get_V_calibrated_kts() const { return v_calibrated_kts; }
 
     FG_VECTOR_3    omega_body_v;   /* Angular B rates      */
-#define FG_Omega_body_v            f->omega_body_v
-#define FG_P_body                  f->omega_body_v[0]
-#define FG_Q_body                  f->omega_body_v[1]
-#define FG_R_body                  f->omega_body_v[2]
+    inline double * get_Omega_body_v() { return omega_body_v; }
+    inline double get_P_body() const { return omega_body_v[0]; }
+    inline double get_Q_body() const { return omega_body_v[1]; }
+    inline double get_R_body() const { return omega_body_v[2]; }
 
     FG_VECTOR_3    omega_local_v;  /* Angular L rates      */
-#define FG_Omega_local_v           f->omega_local_v
-#define FG_P_local                 f->omega_local_v[0]
-#define FG_Q_local                 f->omega_local_v[1]
-#define FG_R_local                 f->omega_local_v[2]
+    inline double * get_Omega_local_v() { return omega_local_v; }
+    inline double get_P_local() const { return omega_local_v[0]; }
+    inline double get_Q_local() const { return omega_local_v[1]; }
+    inline double get_R_local() const { return omega_local_v[2]; }
 
     FG_VECTOR_3    omega_total_v;  /* Diff btw B & L       */
-#define FG_Omega_total_v           f->omega_total_v
-#define FG_P_total                 f->omega_total_v[0]
-#define FG_Q_total                 f->omega_total_v[1]
-#define FG_R_total                 f->omega_total_v[2]
+    inline double * get_Omega_total_v() { return omega_total_v; }
+    inline double get_P_total() const { return omega_total_v[0]; }
+    inline double get_Q_total() const { return omega_total_v[1]; }
+    inline double get_R_total() const { return omega_total_v[2]; }
 
     FG_VECTOR_3    euler_rates_v;
-#define FG_Euler_rates_v           f->euler_rates_v
-#define FG_Phi_dot                 f->euler_rates_v[0]
-#define FG_Theta_dot               f->euler_rates_v[1]
-#define FG_Psi_dot                 f->euler_rates_v[2]
+    inline double * get_Euler_rates_v() { return euler_rates_v; }
+    inline double get_Phi_dot() const { return euler_rates_v[0]; }
+    inline double get_Theta_dot() const { return euler_rates_v[1]; }
+    inline double get_Psi_dot() const { return euler_rates_v[2]; }
 
     FG_VECTOR_3    geocentric_rates_v;     /* Geocentric linear velocities */
-#define FG_Geocentric_rates_v      f->geocentric_rates_v
-#define FG_Latitude_dot            f->geocentric_rates_v[0]
-#define FG_Longitude_dot           f->geocentric_rates_v[1]
-#define FG_Radius_dot              f->geocentric_rates_v[2]
+    inline double * get_Geocentric_rates_v() { return geocentric_rates_v; }
+    inline double get_Latitude_dot() const { return geocentric_rates_v[0]; }
+    inline double get_Longitude_dot() const { return geocentric_rates_v[1]; }
+    inline double get_Radius_dot() const { return geocentric_rates_v[2]; }
 
-/*=============================== Positions ===============================*/
+    /*=============================== Positions ===============================*/
 
     FG_VECTOR_3    geocentric_position_v;
-#define FG_Geocentric_position_v   f->geocentric_position_v
-#define FG_Lat_geocentric          f->geocentric_position_v[0]
-#define FG_Lon_geocentric          f->geocentric_position_v[1]
-#define FG_Radius_to_vehicle       f->geocentric_position_v[2]
+    inline double * get_Geocentric_position_v() {
+	return geocentric_position_v;
+    }
+    inline double get_Lat_geocentric() const {
+	return geocentric_position_v[0];
+    }
+    inline double get_Lon_geocentric() const { 
+	return geocentric_position_v[1];
+    }
+    inline double get_Radius_to_vehicle() const {
+	return geocentric_position_v[2];
+    }
+    inline void set_Radius_to_vehicle(double radius) {
+	geocentric_position_v[2] = radius;
+    }
 
     FG_VECTOR_3    geodetic_position_v;
-#define FG_Geodetic_position_v     f->geodetic_position_v
-#define FG_Latitude                f->geodetic_position_v[0]
-#define FG_Longitude               f->geodetic_position_v[1]
-#define FG_Altitude                f->geodetic_position_v[2]
+    inline double * get_Geodetic_position_v() { return geodetic_position_v; }
+    inline double get_Latitude() const { return geodetic_position_v[0]; }
+    inline void set_Latitude(double lat) { geodetic_position_v[0] = lat; }
+    inline double get_Longitude() const { return geodetic_position_v[1]; }
+    inline void set_Longitude(double lon) { geodetic_position_v[0] = lon; }
+    inline double get_Altitude() const { return geodetic_position_v[2]; }
+    inline void set_Altitude(double altitude) {
+	geodetic_position_v[2] = altitude;
+    }
 
     FG_VECTOR_3    euler_angles_v;
-#define FG_Euler_angles_v          f->euler_angles_v
-#define FG_Phi                     f->euler_angles_v[0]
-#define FG_Theta                   f->euler_angles_v[1]
-#define FG_Psi                     f->euler_angles_v[2]
+    inline double * get_Euler_angles_v() { return euler_angles_v; }
+    inline double get_Phi() const { return euler_angles_v[0]; }
+    inline double get_Theta() const { return euler_angles_v[1]; }
+    inline double get_Psi() const { return euler_angles_v[2]; }
 
-/*======================= Miscellaneous quantities ========================*/
+    /*======================= Miscellaneous quantities ========================*/
 
     double    t_local_to_body_m[3][3];    /* Transformation matrix L to B */
-#define FG_T_local_to_body_m       f->t_local_to_body_m
-#define FG_T_local_to_body_11      f->t_local_to_body_m[0][0]
-#define FG_T_local_to_body_12      f->t_local_to_body_m[0][1]
-#define FG_T_local_to_body_13      f->t_local_to_body_m[0][2]
-#define FG_T_local_to_body_21      f->t_local_to_body_m[1][0]
-#define FG_T_local_to_body_22      f->t_local_to_body_m[1][1]
-#define FG_T_local_to_body_23      f->t_local_to_body_m[1][2]
-#define FG_T_local_to_body_31      f->t_local_to_body_m[2][0]
-#define FG_T_local_to_body_32      f->t_local_to_body_m[2][1]
-#define FG_T_local_to_body_33      f->t_local_to_body_m[2][2]
+    // inline double * get_T_local_to_body_m() { return t_local_to_body_m; }
+    inline double get_T_local_to_body_11() const {
+	return t_local_to_body_m[0][0];
+    }
+    inline double get_T_local_to_body_12() const {
+	return t_local_to_body_m[0][1];
+    }
+    inline double get_T_local_to_body_13() const {
+	return t_local_to_body_m[0][2];
+    }
+    inline double get_T_local_to_body_21() const {
+	return t_local_to_body_m[1][0];
+    }
+    inline double get_T_local_to_body_22() const {
+	return t_local_to_body_m[1][1];
+    }
+    inline double get_T_local_to_body_23() const {
+	return t_local_to_body_m[1][2];
+    }
+    inline double get_T_local_to_body_31() const {
+	return t_local_to_body_m[2][0];
+    }
+    inline double get_T_local_to_body_32() const {
+	return t_local_to_body_m[2][1];
+    }
+    inline double get_T_local_to_body_33() const {
+	return t_local_to_body_m[2][2];
+    }
 
     double    gravity;            /* Local acceleration due to G  */
-#define FG_Gravity                 f->gravity
+    inline double get_Gravity() const { return gravity; }
 
     double    centrifugal_relief; /* load factor reduction due to speed */
-#define FG_Centrifugal_relief      f->centrifugal_relief
+    inline double get_Centrifugal_relief() const { return centrifugal_relief; }
 
     double    alpha, beta, alpha_dot, beta_dot;   /* in radians   */
-#define FG_Alpha                   f->alpha
-#define FG_Beta                    f->beta
-#define FG_Alpha_dot               f->alpha_dot
-#define FG_Beta_dot                f->beta_dot
+    inline double get_Alpha() const { return alpha; }
+    inline double get_Beta() const { return beta; }
+    inline double get_Alpha_dot() const { return alpha_dot; }
+    inline double get_Beta_dot() const { return beta_dot; }
 
     double    cos_alpha, sin_alpha, cos_beta, sin_beta;
-#define FG_Cos_alpha               f->cos_alpha
-#define FG_Sin_alpha               f->sin_alpha
-#define FG_Cos_beta                f->cos_beta
-#define FG_Sin_beta                f->sin_beta
+    inline double get_Cos_alpha() const { return cos_alpha; }
+    inline double get_Sin_alpha() const { return sin_alpha; }
+    inline double get_Cos_beta() const { return cos_beta; }
+    inline double get_Sin_beta() const { return sin_beta; }
 
     double    cos_phi, sin_phi, cos_theta, sin_theta, cos_psi, sin_psi;
-#define FG_Cos_phi                 f->cos_phi
-#define FG_Sin_phi                 f->sin_phi
-#define FG_Cos_theta               f->cos_theta
-#define FG_Sin_theta               f->sin_theta
-#define FG_Cos_psi                 f->cos_psi
-#define FG_Sin_psi                 f->sin_psi
+    inline double get_Cos_phi() const { return cos_phi; }
+    inline double get_Sin_phi() const { return sin_phi; }
+    inline double get_Cos_theta() const { return cos_theta; }
+    inline double get_Sin_theta() const { return sin_theta; }
+    inline double get_Cos_psi() const { return cos_psi; }
+    inline double get_Sin_psi() const { return sin_psi; }
 
     double    gamma_vert_rad, gamma_horiz_rad;    /* Flight path angles   */
-#define FG_Gamma_vert_rad          f->gamma_vert_rad
-#define FG_Gamma_horiz_rad         f->gamma_horiz_rad
+    inline double get_Gamma_vert_rad() const { return gamma_vert_rad; }
+    inline double get_Gamma_horiz_rad() const { return gamma_horiz_rad; }
 
     double    sigma, density, v_sound, mach_number;
-#define FG_Sigma                   f->sigma
-#define FG_Density                 f->density
-#define FG_V_sound                 f->v_sound
-#define FG_Mach_number             f->mach_number
+    inline double get_Sigma() const { return sigma; }
+    inline double get_Density() const { return density; }
+    inline double get_V_sound() const { return v_sound; }
+    inline double get_Mach_number() const { return mach_number; }
 
     double    static_pressure, total_pressure, impact_pressure;
     double    dynamic_pressure;
-#define FG_Static_pressure         f->static_pressure
-#define FG_Total_pressure          f->total_pressure
-#define FG_Impact_pressure         f->impact_pressure
-#define FG_Dynamic_pressure        f->dynamic_pressure
+    inline double get_Static_pressure() const { return static_pressure; }
+    inline double get_Total_pressure() const { return total_pressure; }
+    inline double get_Impact_pressure() const { return impact_pressure; }
+    inline double get_Dynamic_pressure() const { return dynamic_pressure; }
 
     double    static_temperature, total_temperature;
-#define FG_Static_temperature      f->static_temperature
-#define FG_Total_temperature       f->total_temperature
+    inline double get_Static_temperature() const { return static_temperature; }
+    inline double get_Total_temperature() const { return total_temperature; }
 
     double    sea_level_radius, earth_position_angle;
-#define FG_Sea_level_radius        f->sea_level_radius
-#define FG_Earth_position_angle    f->earth_position_angle
+    inline double get_Sea_level_radius() const { return sea_level_radius; }
+    inline double get_Earth_position_angle() const {
+	return earth_position_angle;
+    }
+    inline void set_Earth_position_angle(double angle) {
+	earth_position_angle = angle;
+    }
 
     double    runway_altitude, runway_latitude, runway_longitude;
     double    runway_heading;
-#define FG_Runway_altitude         f->runway_altitude
-#define FG_Runway_latitude         f->runway_latitude
-#define FG_Runway_longitude        f->runway_longitude
-#define FG_Runway_heading          f->runway_heading
+    inline double get_Runway_altitude() const { return runway_altitude; }
+    inline void set_Runway_altitude( double alt ) { runway_altitude = alt; }
+    inline double get_Runway_latitude() const { return runway_latitude; }
+    inline double get_Runway_longitude() const { return runway_longitude; }
+    inline double get_Runway_heading() const { return runway_heading; }
 
     double    radius_to_rwy;
-#define FG_Radius_to_rwy           f->radius_to_rwy
+    inline double get_Radius_to_rwy() const { return radius_to_rwy; }
 
     FG_VECTOR_3    d_cg_rwy_local_v;       /* CG rel. to rwy in local coords */
-#define FG_D_cg_rwy_local_v        f->d_cg_rwy_local_v
-#define FG_D_cg_north_of_rwy       f->d_cg_rwy_local_v[0]
-#define FG_D_cg_east_of_rwy        f->d_cg_rwy_local_v[1]
-#define FG_D_cg_above_rwy          f->d_cg_rwy_local_v[2]
+    inline double * get_D_cg_rwy_local_v() { return d_cg_rwy_local_v; }
+    inline double get_D_cg_north_of_rwy() const { return d_cg_rwy_local_v[0]; }
+    inline double get_D_cg_east_of_rwy() const { return d_cg_rwy_local_v[1]; }
+    inline double get_D_cg_above_rwy() const { return d_cg_rwy_local_v[2]; }
 
     FG_VECTOR_3    d_cg_rwy_rwy_v; /* CG relative to rwy, in rwy coordinates */
-#define FG_D_cg_rwy_rwy_v          f->d_cg_rwy_rwy_v
-#define FG_X_cg_rwy                f->d_cg_rwy_rwy_v[0]
-#define FG_Y_cg_rwy                f->d_cg_rwy_rwy_v[1]
-#define FG_H_cg_rwy                f->d_cg_rwy_rwy_v[2]
+    inline double * get_D_cg_rwy_rwy_v() { return d_cg_rwy_rwy_v; }
+    inline double get_X_cg_rwy() const { return d_cg_rwy_rwy_v[0]; }
+    inline double get_Y_cg_rwy() const { return d_cg_rwy_rwy_v[1]; }
+    inline double get_H_cg_rwy() const { return d_cg_rwy_rwy_v[2]; }
 
     FG_VECTOR_3    d_pilot_rwy_local_v;  /* pilot rel. to rwy in local coords */
-#define FG_D_pilot_rwy_local_v     f->d_pilot_rwy_local_v
-#define FG_D_pilot_north_of_rwy    f->d_pilot_rwy_local_v[0]
-#define FG_D_pilot_east_of_rwy     f->d_pilot_rwy_local_v[1]
-#define FG_D_pilot_above_rwy       f->d_pilot_rwy_local_v[2]
+    inline double * get_D_pilot_rwy_local_v() { return d_pilot_rwy_local_v; }
+    inline double get_D_pilot_north_of_rwy() const {
+	return d_pilot_rwy_local_v[0];
+    }
+    inline double get_D_pilot_east_of_rwy() const {
+	return d_pilot_rwy_local_v[1];
+    }
+    inline double get_D_pilot_above_rwy() const {
+	return d_pilot_rwy_local_v[2];
+    }
 
     FG_VECTOR_3   d_pilot_rwy_rwy_v;   /* pilot rel. to rwy, in rwy coords. */
-#define FG_D_pilot_rwy_rwy_v       f->d_pilot_rwy_rwy_v
-#define FG_X_pilot_rwy             f->d_pilot_rwy_rwy_v[0]
-#define FG_Y_pilot_rwy             f->d_pilot_rwy_rwy_v[1]
-#define FG_H_pilot_rwy             f->d_pilot_rwy_rwy_v[2]
+    inline double * get_D_pilot_rwy_rwy_v() { return d_pilot_rwy_rwy_v; }
+    inline double get_X_pilot_rwy() const { return d_pilot_rwy_rwy_v[0]; }
+    inline double get_Y_pilot_rwy() const { return d_pilot_rwy_rwy_v[1]; }
+    inline double get_H_pilot_rwy() const { return d_pilot_rwy_rwy_v[2]; }
 
     double        climb_rate;           /* in feet per second */
-#define FG_Climb_Rate              f->climb_rate
+    inline double get_Climb_Rate() const { return climb_rate; }
+    inline void set_Climb_Rate(double rate) { climb_rate = rate; }
 
-} fgFLIGHT, *pfgFlight;
+    // Additional convenience functions
+
+    // Inertias
+    inline void set_Inertias( double m, double xx, double yy, 
+			      double zz, double xz)
+    {
+	mass = m;
+	i_xx = xx;
+	i_yy = yy;
+	i_zz = zz;
+	i_xz = xz;
+    }
+
+    // Local velocities
+    inline void set_Local_Velocities( double v_north, 
+				      double v_east,
+				      double v_down )
+    {
+	v_local_v[0] = v_north;
+	v_local_v[1] = v_east;
+	v_local_v[2] = v_down;
+    }
+
+    // Orientation
+    inline void set_Euler_Orientation( double phi, 
+				       double theta,
+				       double psi )
+    {
+	euler_angles_v[0] = phi;
+	euler_angles_v[1] = theta;
+	euler_angles_v[2] = psi;
+    }
+
+    // Body Rates
+    inline void set_Body_Rates( double p_body, double q_body, double r_body )
+    {
+	omega_body_v[0] = p_body;
+	omega_body_v[1] = q_body;
+	omega_body_v[2] = r_body;
+    }
+
+    // Center of Gravity position w.r.t. ref. point
+    inline void set_CG_Position( double dx, double dy, double dz )
+    {
+	d_cg_rp_body_v[0] = dx;
+	d_cg_rp_body_v[1] = dy;
+	d_cg_rp_body_v[2] = dz;
+    }
+};
 
 
 extern fgFLIGHT cur_flight_params;
@@ -397,19 +520,22 @@ extern fgFLIGHT cur_flight_params;
 /* General interface to the flight model routines */
 
 /* Initialize the flight model parameters */
-int fgFlightModelInit(int model, fgFLIGHT *f, double dt);
+int fgFlightModelInit(int model, fgFLIGHT& f, double dt);
 
 /* Run multiloop iterations of the flight model */
-int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop);
+int fgFlightModelUpdate(int model, fgFLIGHT& f, int multiloop);
 
 /* Set the altitude (force) */
-void fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters);
+void fgFlightModelSetAltitude(int model, fgFLIGHT& f, double alt_meters);
 
 
 #endif /* _FLIGHT_H */
 
 
 // $Log$
+// Revision 1.3  1998/12/03 01:16:41  curt
+// Converted fgFLIGHT to a class.
+//
 // Revision 1.2  1998/10/16 23:27:41  curt
 // C++-ifying.
 //

@@ -392,9 +392,11 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 	fgAPRun();
 
 	// printf("updating flight model x %d\n", multi_loop);
-	fgFlightModelUpdate(current_options.get_flight_model(), f, multi_loop);
+	fgFlightModelUpdate( current_options.get_flight_model(), 
+			     cur_flight_params, multi_loop );
     } else {
-	fgFlightModelUpdate(current_options.get_flight_model(), f, 0);
+	fgFlightModelUpdate( current_options.get_flight_model(), 
+			     cur_flight_params, 0 );
     }
 
     // update the view angle
@@ -425,7 +427,7 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 	}
     }
 
-    double tmp = -(l->sun_rotation + FG_PI) - (FG_Psi - v->view_offset);
+    double tmp = -(l->sun_rotation + FG_PI) - (f->get_Psi() - v->view_offset);
     while ( tmp < 0.0 ) {
 	tmp += FG_2PI;
     }
@@ -480,21 +482,22 @@ static void fgMainLoop( void ) {
 	   FG_Altitude * FEET_TO_METER); */
 
     if ( scenery.cur_elev > -9990 ) {
-	if ( FG_Altitude * FEET_TO_METER < 
+	if ( f->get_Altitude() * FEET_TO_METER < 
 	     (scenery.cur_elev + alt_adjust_m - 3.0) ) {
 	    // now set aircraft altitude above ground
 	    printf("Current Altitude = %.2f < %.2f forcing to %.2f\n", 
-		   FG_Altitude * FEET_TO_METER,
+		   f->get_Altitude() * FEET_TO_METER,
 		   scenery.cur_elev + alt_adjust_m - 3.0,
 		   scenery.cur_elev + alt_adjust_m );
-	    fgFlightModelSetAltitude( current_options.get_flight_model(), f, 
+	    fgFlightModelSetAltitude( current_options.get_flight_model(), 
+				      cur_flight_params, 
 				      scenery.cur_elev + alt_adjust_m );
 
 	    FG_LOG( FG_ALL, FG_BULK, 
 		    "<*> resetting altitude to " 
-		    << FG_Altitude * FEET_TO_METER << " meters" );
+		    << f->get_Altitude() * FEET_TO_METER << " meters" );
 	}
-	FG_Runway_altitude = scenery.cur_elev * METER_TO_FEET;
+	f->set_Runway_altitude( scenery.cur_elev * METER_TO_FEET );
     }
 
     /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
@@ -606,7 +609,7 @@ static void fgMainLoop( void ) {
 	    // Angle of Attack next... -x^3(e^x) is my best guess Just
 	    // need to calculate some reasonable scaling factor and
 	    // then clamp it on the positive aoa (neg adj) side
-	    double aoa = FG_Gamma_vert_rad * 2.2;
+	    double aoa = f->get_Gamma_vert_rad() * 2.2;
 	    double tmp = 3.0;
 	    double aoa_adj = pow(-aoa, tmp) * pow(M_E, aoa);
 	    if (aoa_adj < -0.8) aoa_adj = -0.8;
@@ -1011,6 +1014,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.70  1998/12/03 01:17:14  curt
+// Converted fgFLIGHT to a class.
+//
 // Revision 1.69  1998/11/23 20:51:26  curt
 // Fiddling with when I can get info from the opengl driver.
 //

@@ -50,14 +50,16 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
     FG_LOG( FG_FLIGHT, FG_DEBUG,
 	    "Pos = ("
-	    << (FG_Longitude * 3600.0 * RAD_TO_DEG) << "," 
-	    << (FG_Latitude  * 3600.0 * RAD_TO_DEG) << ","
-	    << FG_Altitude 
+	    << (f->get_Longitude() * 3600.0 * RAD_TO_DEG) << "," 
+	    << (f->get_Latitude()  * 3600.0 * RAD_TO_DEG) << ","
+	    << f->get_Altitude() 
 	    << ")  (Phi,Theta,Psi)=("
-	    << FG_Phi << "," << FG_Theta << "," << FG_Psi << ")" );
+	    << f->get_Phi() << "," 
+	    << f->get_Theta() << "," 
+	    << f->get_Psi() << ")" );
 
     FG_LOG( FG_FLIGHT, FG_DEBUG,
-	    "Kts = " << FG_V_equiv_kts 
+	    "Kts = " << f->get_V_equiv_kts() 
 	    << "  Elev = " << controls.get_elevator() 
 	    << "  Aileron = " << controls.get_aileron() 
 	    << "  Rudder = " << controls.get_rudder() 
@@ -66,6 +68,9 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
 
 // $Log$
+// Revision 1.5  1998/12/03 01:14:58  curt
+// Converted fgFLIGHT to a class.
+//
 // Revision 1.4  1998/11/06 21:17:31  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using

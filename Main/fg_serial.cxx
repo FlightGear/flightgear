@@ -247,7 +247,7 @@ static void send_nmea_out( fgIOCHANNEL& p ) {
 	     t->gmt->tm_hour, t->gmt->tm_min, t->gmt->tm_sec );
 
     char lat[20];
-    double latd = FG_Latitude * RAD_TO_DEG;
+    double latd = f->get_Latitude() * RAD_TO_DEG;
     if ( latd < 0.0 ) {
 	latd *= -1.0;
 	dir = 'S';
@@ -259,7 +259,7 @@ static void send_nmea_out( fgIOCHANNEL& p ) {
     sprintf( lat, "%02d%06.3f,%c", abs(deg), min, dir);
 
     char lon[20];
-    double lond = FG_Longitude * RAD_TO_DEG;
+    double lond = f->get_Longitude() * RAD_TO_DEG;
     if ( lond < 0.0 ) {
 	lond *= -1.0;
 	dir = 'W';
@@ -271,16 +271,16 @@ static void send_nmea_out( fgIOCHANNEL& p ) {
     sprintf( lon, "%03d%06.3f,%c", abs(deg), min, dir);
 
     char speed[10];
-    sprintf( speed, "%05.1f", FG_V_equiv_kts );
+    sprintf( speed, "%05.1f", f->get_V_equiv_kts() );
 
     char heading[10];
-    sprintf( heading, "%05.1f", FG_Psi * RAD_TO_DEG );
+    sprintf( heading, "%05.1f", f->get_Psi() * RAD_TO_DEG );
 
     char altitude_m[10];
-    sprintf( altitude_m, "%02d", (int)(FG_Altitude * FEET_TO_METER) );
+    sprintf( altitude_m, "%02d", (int)(f->get_Altitude() * FEET_TO_METER) );
 
     char altitude_ft[10];
-    sprintf( altitude_ft, "%02d", (int)FG_Altitude );
+    sprintf( altitude_ft, "%02d", (int)f->get_Altitude() );
 
     char date[10];
     sprintf( date, "%02d%02d%02d", 
@@ -346,7 +346,7 @@ static void send_garmin_out( fgIOCHANNEL& p ) {
 	     t->gmt->tm_hour, t->gmt->tm_min, t->gmt->tm_sec );
 
     char lat[20];
-    double latd = FG_Latitude * RAD_TO_DEG;
+    double latd = f->get_Latitude() * RAD_TO_DEG;
     if ( latd < 0.0 ) {
 	latd *= -1.0;
 	dir = 'S';
@@ -358,7 +358,7 @@ static void send_garmin_out( fgIOCHANNEL& p ) {
     sprintf( lat, "%02d%06.3f,%c", abs(deg), min, dir);
 
     char lon[20];
-    double lond = FG_Longitude * RAD_TO_DEG;
+    double lond = f->get_Longitude() * RAD_TO_DEG;
     if ( lond < 0.0 ) {
 	lond *= -1.0;
 	dir = 'W';
@@ -370,16 +370,16 @@ static void send_garmin_out( fgIOCHANNEL& p ) {
     sprintf( lon, "%03d%06.3f,%c", abs(deg), min, dir);
 
     char speed[10];
-    sprintf( speed, "%05.1f", FG_V_equiv_kts );
+    sprintf( speed, "%05.1f", f->get_V_equiv_kts() );
 
     char heading[10];
-    sprintf( heading, "%05.1f", FG_Psi * RAD_TO_DEG );
+    sprintf( heading, "%05.1f", f->get_Psi() * RAD_TO_DEG );
 
     char altitude_m[10];
-    sprintf( altitude_m, "%02d", (int)(FG_Altitude * FEET_TO_METER) );
+    sprintf( altitude_m, "%02d", (int)(f->get_Altitude() * FEET_TO_METER) );
 
     char altitude_ft[10];
-    sprintf( altitude_ft, "%02d", (int)FG_Altitude );
+    sprintf( altitude_ft, "%02d", (int)f->get_Altitude() );
 
     char date[10];
     sprintf( date, "%02d%02d%02d", 
@@ -451,6 +451,9 @@ void fgSerialProcess() {
 
 
 // $Log$
+// Revision 1.6  1998/12/03 01:17:18  curt
+// Converted fgFLIGHT to a class.
+//
 // Revision 1.5  1998/11/30 17:43:32  curt
 // Lots of tweaking to get serial output to actually work.
 //

@@ -434,22 +434,27 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
       gst_course = sidereal_course(t, 0.00);
       t->gst_diff = gst_precise - gst_course;
 
-      t->lst = sidereal_course(t, -(FG_Longitude * RAD_TO_DEG)) + t->gst_diff;
+      t->lst =
+	  sidereal_course(t, -(f->get_Longitude() * RAD_TO_DEG)) + t->gst_diff;
     } else {
 	// course + difference should drift off very slowly
 	t->gst = sidereal_course(t, 0.00) + t->gst_diff;
-	t->lst = sidereal_course(t, -(FG_Longitude * RAD_TO_DEG)) + t->gst_diff;
+	t->lst = sidereal_course(t, -(f->get_Longitude() * RAD_TO_DEG)) + 
+	    t->gst_diff;
     }
     FG_LOG( FG_EVENT, FG_DEBUG,
 	    "  Current lon=0.00 Sidereal Time = " << t->gst );
     FG_LOG( FG_EVENT, FG_DEBUG,
 	    "  Current LOCAL Sidereal Time = " << t->lst << " (" 
-	    << sidereal_precise(t->mjd, -(FG_Longitude * RAD_TO_DEG)) 
+	    << sidereal_precise(t->mjd, -(f->get_Longitude() * RAD_TO_DEG)) 
 	    << ") (diff = " << t->gst_diff << ")" );
 }
 
 
 // $Log$
+// Revision 1.23  1998/12/03 01:18:40  curt
+// Converted fgFLIGHT to a class.
+//
 // Revision 1.22  1998/11/16 14:00:28  curt
 // FG_LOG() message tweaks.
 //

@@ -35,19 +35,22 @@
 int fgLaRCsimInit(double dt);
 
 // update position based on inputs, positions, velocities, etc.
-int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop);
+int fgLaRCsimUpdate(fgFLIGHT& f, int multiloop);
 
 // Convert from the fgFLIGHT struct to the LaRCsim generic_ struct
-int fgFlight_2_LaRCsim (fgFLIGHT *f);
+int fgFlight_2_LaRCsim (fgFLIGHT& f);
 
 // Convert from the LaRCsim generic_ struct to the fgFLIGHT struct
-int fgLaRCsim_2_Flight (fgFLIGHT *f);
+int fgLaRCsim_2_Flight (fgFLIGHT& f);
 
 
 #endif // _LARCSIM_HXX
 
 
 // $Log$
+// Revision 1.3  1998/12/03 01:16:38  curt
+// Converted fgFLIGHT to a class.
+//
 // Revision 1.2  1998/10/17 01:34:13  curt
 // C++ ifying ...
 //

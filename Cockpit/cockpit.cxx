@@ -70,8 +70,9 @@ double get_latitude( void )
 	f = current_aircraft.flight;
 
 //	return( toDM(FG_Latitude * RAD_TO_DEG) );
-	return((double)((int)( FG_Latitude * RAD_TO_DEG)) );
+	return((double)((int)( f->get_Latitude() * RAD_TO_DEG)) );
 }
+
 double get_lat_min( void )
 {
 	fgFLIGHT *f;
@@ -79,7 +80,7 @@ double get_lat_min( void )
 
 	f = current_aircraft.flight;
 	
-	a = FG_Latitude * RAD_TO_DEG;	
+	a = f->get_Latitude() * RAD_TO_DEG;	
 	if (a < 0.0) {
 		a = -a;
 	}
@@ -94,7 +95,7 @@ double get_longitude( void )
 	f = current_aircraft.flight;
 
 //	return( toDM(FG_Longitude * RAD_TO_DEG) );
-	return((double)((int) (FG_Longitude * RAD_TO_DEG)) );
+	return((double)((int) (f->get_Longitude() * RAD_TO_DEG)) );
 }
 double get_long_min( void )
 {
@@ -103,7 +104,7 @@ double get_long_min( void )
 
 	f = current_aircraft.flight;
 	
-	a = FG_Longitude * RAD_TO_DEG;	
+	a = f->get_Longitude() * RAD_TO_DEG;	
 	if (a < 0.0) {
 		a = -a;
 	}
@@ -141,7 +142,7 @@ double get_speed( void )
 	fgFLIGHT *f;
 
 	f = current_aircraft.flight;
-	return( FG_V_equiv_kts );    // Make an explicit function call.
+	return( f->get_V_equiv_kts() );    // Make an explicit function call.
 }
 
 double get_aoa( void )
@@ -149,7 +150,7 @@ double get_aoa( void )
 	fgFLIGHT *f;
               
 	f = current_aircraft.flight;
-	return( FG_Gamma_vert_rad * RAD_TO_DEG );
+	return( f->get_Gamma_vert_rad() * RAD_TO_DEG );
 }
 
 double get_roll( void )
@@ -157,7 +158,7 @@ double get_roll( void )
 	fgFLIGHT *f;
 
 	f = current_aircraft.flight;
-	return( FG_Phi );
+	return( f->get_Phi() );
 }
 
 double get_pitch( void )
@@ -165,7 +166,7 @@ double get_pitch( void )
 	fgFLIGHT *f;
               
 	f = current_aircraft.flight;
-	return( FG_Theta );
+	return( f->get_Theta() );
 }
 
 double get_heading( void )
@@ -173,7 +174,7 @@ double get_heading( void )
 	fgFLIGHT *f;
 
 	f = current_aircraft.flight;
-	return( FG_Psi * RAD_TO_DEG );
+	return( f->get_Psi() * RAD_TO_DEG );
 }
 
 double get_altitude( void )
@@ -182,13 +183,13 @@ double get_altitude( void )
 	// double rough_elev;
 
 	f = current_aircraft.flight;
-	// rough_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC,
-	//		                   FG_Latitude  * RAD_TO_ARCSEC);
+	// rough_elev = mesh_altitude(f->get_Longitude() * RAD_TO_ARCSEC,
+	//		                   f->get_Latitude()  * RAD_TO_ARCSEC);
 
 	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
-	    return FG_Altitude;
+	    return f->get_Altitude();
 	} else {
-	    return FG_Altitude * FEET_TO_METER;
+	    return f->get_Altitude() * FEET_TO_METER;
 	}
 }
 
@@ -199,9 +200,9 @@ double get_agl( void )
         f = current_aircraft.flight;
 
 	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
-	    return FG_Altitude - scenery.cur_elev * METER_TO_FEET;
+	    return f->get_Altitude() - scenery.cur_elev * METER_TO_FEET;
 	} else {
-	    return FG_Altitude * FEET_TO_METER - scenery.cur_elev;
+	    return f->get_Altitude() * FEET_TO_METER - scenery.cur_elev;
 	}
 }
 
@@ -211,7 +212,7 @@ double get_sideslip( void )
         
         f = current_aircraft.flight;
         
-        return( FG_Beta );
+        return( f->get_Beta() );
 }
 
 double get_frame_rate( void )
@@ -249,9 +250,9 @@ double get_climb_rate( void )
 	f = current_aircraft.flight;
 
 	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
-	    return FG_Climb_Rate * 60.0;
+	    return f->get_Climb_Rate() * 60.0;
 	} else {
-	    return FG_Climb_Rate * FEET_TO_METER * 60.0;
+	    return f->get_Climb_Rate() * FEET_TO_METER * 60.0;
 	}
 }
 
@@ -311,6 +312,9 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
+// Revision 1.24  1998/12/03 01:16:00  curt
+// Converted fgFLIGHT to a class.
+//
 // Revision 1.23  1998/11/09 23:38:50  curt
 // Panel updates from Friedemann.
 //

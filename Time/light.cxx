@@ -164,7 +164,7 @@ void fgLIGHT::UpdateAdjFog( void ) {
 
     // first determine the difference between our view angle and local
     // direction to the sun
-    rotation = -(sun_rotation + FG_PI) - (FG_Psi - v->view_offset) ;
+    rotation = -(sun_rotation + FG_PI) - (f->get_Psi() - v->view_offset) ;
     while ( rotation < 0 ) {
 	rotation += FG_2PI;
     }
@@ -217,6 +217,9 @@ fgLIGHT::~fgLIGHT( void ) {
 
 
 // $Log$
+// Revision 1.22  1998/12/03 01:18:42  curt
+// Converted fgFLIGHT to a class.
+//
 // Revision 1.21  1998/11/23 21:49:09  curt
 // Borland portability tweaks.
 //

@@ -53,7 +53,7 @@ static double get_speed( void )
 	fgFLIGHT *f;
 
 	f = current_aircraft.flight;
-	return( FG_V_equiv_kts );    // Make an explicit function call.
+	return( f->get_V_equiv_kts() );    // Make an explicit function call.
 }
 
 static double get_aoa( void )
@@ -61,7 +61,7 @@ static double get_aoa( void )
 	fgFLIGHT *f;
               
 	f = current_aircraft.flight;
-	return( FG_Gamma_vert_rad * RAD_TO_DEG );
+	return( f->get_Gamma_vert_rad() * RAD_TO_DEG );
 }
 
 static double fgAPget_roll( void )
@@ -69,7 +69,7 @@ static double fgAPget_roll( void )
 	fgFLIGHT *f;
 
 	f = current_aircraft.flight;
-	return( FG_Phi * RAD_TO_DEG );
+	return( f->get_Phi() * RAD_TO_DEG );
 }
 
 static double get_pitch( void )
@@ -77,7 +77,7 @@ static double get_pitch( void )
 	fgFLIGHT *f;
               
 	f = current_aircraft.flight;
-	return( FG_Theta );
+	return( f->get_Theta() );
 }
 
 double fgAPget_heading( void )
@@ -85,7 +85,7 @@ double fgAPget_heading( void )
 	fgFLIGHT *f;
 
 	f = current_aircraft.flight;
-	return( FG_Psi * RAD_TO_DEG );
+	return( f->get_Psi() * RAD_TO_DEG );
 }
 
 static double fgAPget_altitude( void )
@@ -94,7 +94,7 @@ static double fgAPget_altitude( void )
 
 	f = current_aircraft.flight;
 
-	return( FG_Altitude * FEET_TO_METER /* -rough_elev */ );
+	return( f->get_Altitude() * FEET_TO_METER /* -rough_elev */ );
 }
 
 static double fgAPget_climb( void )
@@ -104,7 +104,7 @@ static double fgAPget_climb( void )
 	f = current_aircraft.flight;
 
 	// return in meters per minute
-	return( FG_Climb_Rate * FEET_TO_METER * 60 );
+	return( f->get_Climb_Rate() * FEET_TO_METER * 60 );
 }
 
 static double get_sideslip( void )
@@ -113,7 +113,7 @@ static double get_sideslip( void )
         
         f = current_aircraft.flight;
         
-        return( FG_Beta );
+        return( f->get_Beta() );
 }
 
 static double fgAPget_agl( void )
@@ -122,7 +122,7 @@ static double fgAPget_agl( void )
         double agl;
 
         f = current_aircraft.flight;
-        agl = FG_Altitude * FEET_TO_METER - scenery.cur_elev;
+        agl = f->get_Altitude() * FEET_TO_METER - scenery.cur_elev;
 
         return( agl );
 }

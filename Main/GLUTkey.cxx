@@ -231,13 +231,13 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    t->pause = !t->pause;
 	    // printf position and attitude information
 	    FG_LOG( FG_INPUT, FG_INFO,
-		    "Lon = " << FG_Longitude * RAD_TO_DEG
-		    << "  Lat = " << FG_Latitude * RAD_TO_DEG
-		    << "  Altitude = " << FG_Altitude * FEET_TO_METER );
+		    "Lon = " << f->get_Longitude() * RAD_TO_DEG
+		    << "  Lat = " << f->get_Latitude() * RAD_TO_DEG
+		    << "  Altitude = " << f->get_Altitude() * FEET_TO_METER );
 	    FG_LOG( FG_INPUT, FG_INFO,
-		    "Heading = " << FG_Psi * RAD_TO_DEG 
-		    << "  Roll = " << FG_Phi * RAD_TO_DEG
-		    << "  Pitch = " << FG_Theta * RAD_TO_DEG );
+		    "Heading = " << f->get_Psi() * RAD_TO_DEG 
+		    << "  Roll = " << f->get_Phi() * RAD_TO_DEG
+		    << "  Pitch = " << f->get_Theta() * RAD_TO_DEG );
 	    return;
 	case 116: // t key
 	    t->warp_delta += 30;
@@ -386,6 +386,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.33  1998/12/03 01:17:12  curt
+// Converted fgFLIGHT to a class.
+//
 // Revision 1.32  1998/11/06 21:18:06  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using
