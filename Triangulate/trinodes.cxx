@@ -53,11 +53,14 @@ int FGTriNodes::unique_add( const Point3D& p ) {
     point_iterator current, last;
     int counter = 0;
 
+    // cout << p.x() << "," << p.y() << endl;
+
     // see if point already exists
     current = point_list.begin();
     last = point_list.end();
     for ( ; current != last; ++current ) {
 	if ( close_enough(p, *current) ) {
+	    cout << "found an existing match!" << endl;
 	    return counter;
 	}
 	
@@ -72,6 +75,9 @@ int FGTriNodes::unique_add( const Point3D& p ) {
 
 
 // $Log$
+// Revision 1.2  1999/03/19 00:27:12  curt
+// Continued work on triangulation preparation.
+//
 // Revision 1.1  1999/03/17 23:52:00  curt
 // Initial revision.
 //

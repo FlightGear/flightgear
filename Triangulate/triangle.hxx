@@ -37,6 +37,7 @@
 
 #include <Clipper/clipper.hxx>
 #include <Math/point3d.hxx>
+#include <Polygon/names.hxx>
 
 #include "trinodes.hxx"
 
@@ -47,7 +48,7 @@ typedef vector < int > tripoly;
 typedef tripoly::iterator tripoly_iterator;
 typedef tripoly::const_iterator const_tripoly_iterator;
 
-typedef vector < int > tripoly_list;
+typedef vector < tripoly > tripoly_list;
 typedef tripoly_list::iterator tripoly_list_iterator;
 typedef tripoly_list::const_iterator const_tripoly_list_iterator;
 
@@ -57,7 +58,7 @@ class FGTriangle {
 private:
 
     FGTriNodes trinodes;
-    tripoly_list polylist;
+    tripoly_list polylist[FG_MAX_AREA_TYPES];
 
 public:
 
@@ -74,6 +75,9 @@ public:
 
 
 // $Log$
+// Revision 1.3  1999/03/19 00:27:11  curt
+// Continued work on triangulation preparation.
+//
 // Revision 1.2  1999/03/18 04:31:12  curt
 // Let's not pass copies of huge structures on the stack ... ye might see a
 // segfault ... :-)
