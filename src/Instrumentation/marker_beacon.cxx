@@ -46,7 +46,8 @@ FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
     middle_blink(false),
     inner_blink(false),
     name("marker-beacon"),
-    num(0)
+    num(0),
+    _time_before_search_sec(0.0)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;

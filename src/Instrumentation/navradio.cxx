@@ -68,7 +68,8 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     horiz_vel(0.0),
     last_x(0.0),
     name("nav"),
-    num(0)
+    num(0),
+    _time_before_search_sec(0.0)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;
@@ -364,6 +365,8 @@ FGNavRadio::update(double dt)
     {
 	station = Point3D( nav_x, nav_y, nav_z );
 	nav_loc_dist = aircraft.distance3D( station );
+        // cout << "station = " << station << " dist = " << nav_loc_dist
+        //      << endl;
 
 	if ( nav_has_gs ) {
             // find closest distance to the gs base line
