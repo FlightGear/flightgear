@@ -55,6 +55,8 @@
 
 #define FG_LOCAL_X_Y         81  // max(o->tile_diameter) ** 2
 
+#define FG_SQUARE(X) ((X) * (X))
+
 
 // closest (potentially viewable) tiles, centered on current tile.
 // This is an array of pointers to cache indexes.
@@ -216,14 +218,16 @@ int fgTileMgrUpdate( void ) {
 
 
 // Calculate shortest distance from point to line
-static double point_line_dist( fgPoint3d *tc, fgPoint3d *vp, MAT3vec d) {
+static double point_line_dist_squared( fgPoint3d *tc, fgPoint3d *vp, 
+				       MAT3vec d )
+{
     MAT3vec p, p0;
     double dist;
 
     p[0] = tc->x; p[1] = tc->y; p[2] = tc->z;
     p0[0] = vp->x; p0[1] = vp->y; p0[2] = vp->z;
 
-    dist = fgPointLine(p, p0, d);
+    dist = fgPointLineSquared(p, p0, d);
 
     // printf("dist = %.2f\n", dist);
 
@@ -397,12 +401,13 @@ void fgTileMgrRender( void ) {
 	// calculate distance from vertical tangent line at
 	// current position to center of tile.
 	
-	/* printf("distance = %.2f, bounding radius = %.2f\n", 
-	       point_line_dist(&(t->offset), &(v->view_pos), v->local_up),
-	       t->bounding_radius); */
+	/* printf("distance squared = %.2f, bounding radius = %.2f\n", 
+	       point_line_dist_squared(&(t->offset), &(v->view_pos), 
+	       v->local_up), t->bounding_radius); */
 
-	dist = point_line_dist(&(t->center), &(v->abs_view_pos), v->local_up);
-	if ( dist < t->bounding_radius ) {
+	dist = point_line_dist_squared( &(t->center), &(v->abs_view_pos), 
+				        v->local_up );
+	if ( dist < FG_SQUARE(t->bounding_radius) ) {
 
 	    // traverse fragment list for tile
 	    current = t->fragment_list.begin();
@@ -411,14 +416,14 @@ void fgTileMgrRender( void ) {
 	    while ( current != last ) {
 		frag_ptr = &(*current);
 		current++;
-		/* printf("distance = %.2f, bounding radius = %.2f\n", 
-		       point_line_dist( &(frag_ptr->center), 
+		/* printf("distance squared = %.2f, bounding radius = %.2f\n", 
+		       point_line_dist_squared( &(frag_ptr->center), 
 					&(v->abs_view_pos), v->local_up),
 		       frag_ptr->bounding_radius); */
 
-		dist = point_line_dist( &(frag_ptr->center), 
+		dist = point_line_dist_squared( &(frag_ptr->center), 
 					&(v->abs_view_pos), v->local_up);
-		if ( dist <= frag_ptr->bounding_radius ) {
+		if ( dist <= FG_SQUARE(frag_ptr->bounding_radius) ) {
 		    if ( frag_ptr->intersect( &(v->abs_view_pos), 
 					      &earth_center, 0, &result ) ) {
 			// compute geocentric coordinates of tile center
@@ -559,6 +564,12 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.27  1998/07/24 21:42:09  curt
+// material.cxx: whups, double method declaration with no definition.
+// obj.cxx: tweaks to avoid errors in SGI's CC.
+// tile.cxx: optimizations by Norman Vine.
+// tilemgr.cxx: optimizations by Norman Vine.
+//
 // Revision 1.26  1998/07/20 12:51:26  curt
 // Added far clip plane to fragment clipping calculations and tie this to
 // weather->visibility.  This way you can increase framerates by increasing

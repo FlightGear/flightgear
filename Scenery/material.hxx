@@ -41,13 +41,14 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#ifdef __sun__
+#if defined ( __sun__ )
 extern "C" void *memmove(void *, const void *, size_t);
 extern "C" void *memset(void *, int, size_t);
 #endif
 
-#include <string>          // Standard C++ string library
-#include <map>             // STL associative "array"
+#include <string>        // Standard C++ string library
+#include <map>           // STL associative "array"
+
 #ifdef NEEDNAMESPACESTD
 using namespace std;
 #endif
@@ -119,6 +120,12 @@ extern fgMATERIAL_MGR material_mgr;
 
 
 // $Log$
+// Revision 1.10  1998/07/24 21:42:06  curt
+// material.cxx: whups, double method declaration with no definition.
+// obj.cxx: tweaks to avoid errors in SGI's CC.
+// tile.cxx: optimizations by Norman Vine.
+// tilemgr.cxx: optimizations by Norman Vine.
+//
 // Revision 1.9  1998/07/06 21:34:33  curt
 // Added using namespace std for compilers that support this.
 //

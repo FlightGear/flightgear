@@ -35,13 +35,14 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#ifdef __sun__
+#if defined ( __sun__ )
 extern "C" void *memmove(void *, const void *, size_t);
 extern "C" void *memset(void *, int, size_t);
 #endif
 
-#include <string>  // Standard C++ library
-#include <map>     // STL
+#include <string>       // Standard C++ library
+#include <map>          // STL
+
 #ifdef NEEDNAMESPACESTD
 using namespace std;
 #endif
@@ -216,7 +217,7 @@ int fgObjLoad(char *path, fgTILE *t) {
 	    sscanf(line, "usemtl %s\n", material);
 
 	    // give the fragment a pointer back to the tile
-	    (fgTILE *)fragment.tile_ptr = t;
+	    (fgTILE *)(fragment.tile_ptr) = t;
 
 	    // find this material in the properties list
 	    map < string, fgMATERIAL, less<string> > :: iterator myfind = 
@@ -226,7 +227,7 @@ int fgObjLoad(char *path, fgTILE *t) {
 			  "Ack! unknown usemtl name = %s in %s\n",
 			  material, path);
 	    } else {
-		(fgMATERIAL *)fragment.material_ptr = &(*myfind).second;
+		fragment.material_ptr = (void *)(&(*myfind).second);
 	    }
 
 	    // initialize the fragment transformation matrix
@@ -466,6 +467,12 @@ int fgObjLoad(char *path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.20  1998/07/24 21:42:07  curt
+// material.cxx: whups, double method declaration with no definition.
+// obj.cxx: tweaks to avoid errors in SGI's CC.
+// tile.cxx: optimizations by Norman Vine.
+// tilemgr.cxx: optimizations by Norman Vine.
+//
 // Revision 1.19  1998/07/13 21:01:58  curt
 // Wrote access functions for current fgOPTIONS.
 //

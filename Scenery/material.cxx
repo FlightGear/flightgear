@@ -52,10 +52,13 @@ fgMATERIAL::fgMATERIAL ( void ) {
 
 
 // Sorting routines
-void fgMATERIAL::init_sort_list( void );
+void fgMATERIAL::init_sort_list( void ) {
+}
 
 
-int fgMATERIAL::append_sort_list( fgFRAGMENT *object );
+int fgMATERIAL::append_sort_list( fgFRAGMENT *object ) {
+    return(0);
+}
 
 
 // Destructor
@@ -294,6 +297,12 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.10  1998/07/24 21:42:06  curt
+// material.cxx: whups, double method declaration with no definition.
+// obj.cxx: tweaks to avoid errors in SGI's CC.
+// tile.cxx: optimizations by Norman Vine.
+// tilemgr.cxx: optimizations by Norman Vine.
+//
 // Revision 1.9  1998/07/13 21:01:57  curt
 // Wrote access functions for current fgOPTIONS.
 //

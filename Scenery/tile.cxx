@@ -256,16 +256,24 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 	    // check to see if end0 and end1 are on opposite sides of
 	    // plane
 	    if ( (x - x0) > FG_EPSILON ) {
-		t1 = x; t2 = x0; t3 = x1;
+		t1 = x;
+		t2 = x0;
+		t3 = x1;
 	    } else if ( (y - y0) > FG_EPSILON ) {
-		t1 = y; t2 = y0; t3 = y1;
+		t1 = y;
+		t2 = y0;
+		t3 = y1;
 	    } else if ( (z - z0) > FG_EPSILON ) {
-		t1 = z; t2 = z0; t3 = z1;
+		t1 = z;
+		t2 = z0;
+		t3 = z1;
 	    } else {
 		// everything is too close together to tell the difference
 		// so the current intersection point should work as good
 		// as any
-		result->x = x; result->y = y; result->z = z;
+		result->x = x;
+		result->y = y;
+		result->z = z;
 		return(1);
 	    }
 	    side1 = FG_SIGN (t1 - t2);
@@ -287,17 +295,17 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 	// printf("bounding cube = %.2f,%.2f,%.2f  %.2f,%.2f,%.2f\n",
 	//        xmin, ymin, zmin, xmax, ymax, zmax);
 	// punt if outside bouding cube
-	if ( x < xmin ) {
+	if ( x < (xmin = fg_min3 (p1[0], p2[0], p3[0])) ) {
 	    continue;
-	} else if ( x > xmax ) {
+	} else if ( x > (xmax = fg_max3 (p1[0], p2[0], p3[0])) ) {
 	    continue;
-	} else if ( y < ymin ) {
+	} else if ( y < (ymin = fg_min3 (p1[1], p2[1], p3[1])) ) {
 	    continue;
-	} else if ( y > ymax ) {
+	} else if ( y > (ymax = fg_max3 (p1[1], p2[1], p3[1])) ) {
 	    continue;
-	} else if ( z < zmin ) {
+	} else if ( z < (zmin = fg_min3 (p1[2], p2[2], p3[2])) ) {
 	    continue;
-	} else if ( z > zmax ) {
+	} else if ( z > (zmax = fg_max3 (p1[2], p2[2], p3[2])) ) {
 	    continue;
 	}
 
@@ -312,55 +320,74 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
 	min_dim = fg_min3 (dx, dy, dz);
 	if ( fabs(min_dim - dx) <= FG_EPSILON ) {
 	    // x is the smallest dimension
-	    x1 = p1[1]; y1 = p1[2];
-	    x2 = p2[1]; y2 = p2[2];
-	    x3 = p3[1]; y3 = p3[2];
-	    rx = y; ry = z;
+	    x1 = p1[1];
+	    y1 = p1[2];
+	    x2 = p2[1];
+	    y2 = p2[2];
+	    x3 = p3[1];
+	    y3 = p3[2];
+	    rx = y;
+	    ry = z;
 	} else if ( fabs(min_dim - dy) <= FG_EPSILON ) {
 	    // y is the smallest dimension
-	    x1 = p1[0]; y1 = p1[2];
-	    x2 = p2[0]; y2 = p2[2];
-	    x3 = p3[0]; y3 = p3[2];
-	    rx = x; ry = z;
+	    x1 = p1[0];
+	    y1 = p1[2];
+	    x2 = p2[0];
+	    y2 = p2[2];
+	    x3 = p3[0];
+	    y3 = p3[2];
+	    rx = x;
+	    ry = z;
 	} else if ( fabs(min_dim - dz) <= FG_EPSILON ) {
 	    // z is the smallest dimension
-	    x1 = p1[0]; y1 = p1[1];
-	    x2 = p2[0]; y2 = p2[1];
-	    x3 = p3[0]; y3 = p3[1];
-	    rx = x; ry = y;
+	    x1 = p1[0];
+	    y1 = p1[1];
+	    x2 = p2[0];
+	    y2 = p2[1];
+	    x3 = p3[0];
+	    y3 = p3[1];
+	    rx = x;
+	    ry = y;
 	} else {
 	    // all dimensions are really small so lets call it close
 	    // enough and return a successful match
-	    result->x = x; result->y = y; result->z = z;
+	    result->x = x;
+	    result->y = y;
+	    result->z = z;
 	    return(1);
 	}
 
 	// check if intersection point is on the same side of p1 <-> p2 as p3
-	side1 = FG_SIGN ((y1 - y2) * ((x3) - x2) / (x1 - x2) + y2 - (y3));
-	side2 = FG_SIGN ((y1 - y2) * ((rx) - x2) / (x1 - x2) + y2 - (ry));
+	t1 = (y1 - y2) / (x1 - x2);
+	side1 = FG_SIGN (t1 * ((x3) - x2) + y2 - (y3));
+	side2 = FG_SIGN (t1 * ((rx) - x2) + y2 - (ry));
 	if ( side1 != side2 ) {
 	    // printf("failed side 1 check\n");
 	    continue;
 	}
 
 	// check if intersection point is on correct side of p2 <-> p3 as p1
-	side1 = FG_SIGN ((y2 - y3) * ((x1) - x3) / (x2 - x3) + y3 - (y1));
-	side2 = FG_SIGN ((y2 - y3) * ((rx) - x3) / (x2 - x3) + y3 - (ry));
+	t1 = (y2 - y3) / (x2 - x3);
+	side1 = FG_SIGN (t1 * ((x1) - x3) + y3 - (y1));
+	side2 = FG_SIGN (t1 * ((rx) - x3) + y3 - (ry));
 	if ( side1 != side2 ) {
 	    // printf("failed side 2 check\n");
 	    continue;
 	}
 
 	// check if intersection point is on correct side of p1 <-> p3 as p2
-	side1 = FG_SIGN ((y1 - y3) * ((x2) - x3) / (x1 - x3) + y3 - (y2));
-	side2 = FG_SIGN ((y1 - y3) * ((rx) - x3) / (x1 - x3) + y3 - (ry));
+	t1 = (y1 - y3) / (x1 - x3);
+	side1 = FG_SIGN (t1 * ((x2) - x3) + y3 - (y2));
+	side2 = FG_SIGN (t1 * ((rx) - x3) + y3 - (ry));
 	if ( side1 != side2 ) {
 	    // printf("failed side 3  check\n");
 	    continue;
 	}
 
 	// printf( "intersection point = %.2f %.2f %.2f\n", x, y, z);
-	result->x = x; result->y = y; result->z = z;
+	result->x = x;
+	result->y = y;
+	result->z = z;
 	return(1);
     }
 
@@ -419,6 +446,12 @@ fgTILE::~fgTILE ( void ) {
 
 
 // $Log$
+// Revision 1.5  1998/07/24 21:42:08  curt
+// material.cxx: whups, double method declaration with no definition.
+// obj.cxx: tweaks to avoid errors in SGI's CC.
+// tile.cxx: optimizations by Norman Vine.
+// tilemgr.cxx: optimizations by Norman Vine.
+//
 // Revision 1.4  1998/07/22 21:41:42  curt
 // Add basic fgFACE methods contributed by Charlie Hotchkiss.
 // intersect optimization from Norman Vine.

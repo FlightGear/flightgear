@@ -41,7 +41,7 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#ifdef __sun__
+#if defined ( __sun__ )
 extern "C" void *memmove(void *, const void *, size_t);
 extern "C" void *memset(void *, int, size_t);
 #endif
@@ -163,6 +163,12 @@ public:
 
 
 // $Log$
+// Revision 1.13  1998/07/24 21:42:08  curt
+// material.cxx: whups, double method declaration with no definition.
+// obj.cxx: tweaks to avoid errors in SGI's CC.
+// tile.cxx: optimizations by Norman Vine.
+// tilemgr.cxx: optimizations by Norman Vine.
+//
 // Revision 1.12  1998/07/22 21:41:42  curt
 // Add basic fgFACE methods contributed by Charlie Hotchkiss.
 // intersect optimization from Norman Vine.
