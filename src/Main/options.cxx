@@ -1125,195 +1125,83 @@ fgParseOptions (const string& path) {
 void 
 fgUsage ()
 {
-    cout << "Usage: fgfs [ option ... ]" << endl
-         << endl
+    // *** FIXME ***
+    // Began the process of converting output from printf() to
+    // SG_LOG() but this needs to be finished.
 
-         << "General Options:" << endl
-         << "    --help, -h                    Print usage" << endl
-         << "    --fg-root=path                Specify the root data path" << endl
-         << "    --fg-scenery=path             Specify the base scenery path;" << endl
-	 << "                                  Defaults to $FG_ROOT/Scenery" << endl
-         << "    --disable-game-mode           Disable full-screen game mode" << endl
-         << "    --enable-game-mode            Enable full-screen game mode" << endl
-         << "    --disable-splash-screen       Disable splash screen" << endl
-         << "    --enable-splash-screen        Enable splash screen" << endl
-         << "    --disable-intro-music         Disable introduction music" << endl
-         << "    --enable-intro-music          Enable introduction music" << endl
-         << "    --disable-mouse-pointer       Disable extra mouse pointer" << endl
-         << "    --enable-mouse-pointer        Enable extra mouse pointer (i.e. for full-" << endl
-         << "                                  screen Voodoo based cards)" << endl
-         << "    --disable-freeze              Start in a running state" << endl
-         << "    --enable-freeze               Start in a frozen state" << endl
-         << "    --disable-fuel-freeze         Fuel is consumed normally" << endl
-         << "    --enable-fuel-freeze          Fuel tank quantity forced to remain constant" << endl
-         << "    --disable-clock-freeze        Clock advances normally" << endl
-         << "    --enable-clock-freeze         Do not advance clock" << endl
-         << "    --control=mode                Primary control mode (joystick, keyboard," << endl
-         << "                                  mouse)" << endl
-         << "    --enable-auto-coordination    Enable auto coordination" << endl
-         << "    --disable-auto-coordination   Disable auto coordination" << endl
-         << "    --browser-app=path            Specify path to your web browser" << endl
-         << "    --prop:name=value             Set property <name> to <value>" << endl
-         << "    --config=path                 Load additional properties from path" << endl
-         << "    --units-feet                  Use feet for distances" << endl
-         << "    --units-meters                Use meters for distances" << endl
-         << endl
+    SGPropertyNode options_root;
+    SGPath opath( globals->get_fg_root() );
+    opath.append( "options.xml" );
 
-         << "Features:" << endl
-         << "    --disable-hud                 Disable Heads Up Display (HUD)" << endl
-         << "    --enable-hud                  Enable Heads Up Display (HUD)" << endl
-         << "    --disable-panel               Disable instrument panel" << endl
-         << "    --enable-panel                Enable instrument panel" << endl
-         << "    --disable-sound               Disable sound effects" << endl
-         << "    --enable-sound                Enable sound effects" << endl
-         << "    --disable-anti-alias-hud      Disable anti-aliased HUD" << endl
-         << "    --enable-anti-alias-hud       Enable anti-aliased HUD" << endl
-         << endl
+    try {
+        readProperties(opath.c_str(), &options_root);
+    } catch (const sg_exception &ex) {
+        SG_LOG( SG_GENERAL, SG_ALERT, endl << "Unable to read the help file." );
+        SG_LOG( SG_GENERAL, SG_ALERT, "Make sure the file options.xml is located in the FlightGear base directory." );
+        exit(-1);
+    }
 
-         << "Aircraft:" <<endl
-         << "    --aircraft=name               Select an aircraft profile as defined by a" << endl
-         << "                                  top level <name>-set.xml" << endl
-         << endl
+    SGPropertyNode *options = options_root.getNode("options");
+    if (!options) {
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "Error reading options.xml: <options> directive not found." );
+        exit(-1);
+    }
 
-         << "Flight Model:" << endl
-         << "    --fdm=name                    Select the core flight dynamics model" << endl
-         << "                                  Can be one of jsb, larcsim, yasim, magic," << endl
-         << "                                  balloon, ada, external, or null" << endl
-         << "    --aero=name                   Select aircraft aerodynamics model to load" << endl
-         << "    --model-hz=n                  Run the FDM this rate (iterations per" << endl
-         << "                                  second)" << endl
-         << "    --speed=n                     Run the FDM 'n' times faster than real time" << endl
-         << "    --notrim                      Do NOT attempt to trim the model (only with" << endl
-         << "                                  fdm=jsbsim)" << endl
-         << "    --on-ground                   Start at ground level (default)" << endl
-         << "    --in-air                      Start in air (implied when using --altitude)" << endl
-         << "    --wind=DIR@SPEED              Specify wind coming from DIR (degrees) at" << endl
-         << "                                  SPEED (knots); both DIR and SPEED can" << endl
-	 << "                                  optionally contain a colon-separated range." << endl
-         << endl
+    SGPropertyNode *usage = options->getNode("usage");
+    if (usage) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "Usage: " << usage->getStringValue() );
+    }
 
-         << "Aircraft model directory (UIUC FDM ONLY):" << endl
-         << "    --aircraft-dir=path           Aircraft directory relative to the path of" << endl
-         << "                                  the executable" << endl
-         << endl
+    vector<SGPropertyNode_ptr>section = options->getChildren("section");
+    for (unsigned int j = 0; j < section.size(); j++) {
 
-         << "Initial Position and Orientation:" << endl
-         << "    --airport-id=ID               Specify starting position by airport ID" << endl
-         << "    --offset-distance=nm          Specify distance to threshold" << endl 
-         << "    --offset-azimuth=degrees      Specify heading to threshold" << endl    
-         << "    --lon=degrees                 Starting longitude (west = -)" << endl
-         << "    --lat=degrees                 Starting latitude (south = -)" << endl
-         << "    --altitude=value              Starting altitude (in feet unless" << endl
-         << "                                  --units-meters specified)" << endl
-         << "    --heading=degrees             Specify heading (yaw) angle (Psi)" << endl
-         << "    --roll=degrees                Specify roll angle (Phi)" << endl
-         << "    --pitch=degrees               Specify pitch angle (Theta)" << endl
-         << "    --uBody=units_per_sec         Specify velocity along the body X axis" << endl
-         << "                                  (in feet unless --units-meters specified)" << endl
-         << "    --vBody=units_per_sec         Specify velocity along the body Y axis" << endl
-         << "                                  (in feet unless --units-meters specified)" << endl
-         << "    --wBody=units_per_sec         Specify velocity along the body Z axis" << endl
-         << "                                  (in feet unless --units-meters specified)" << endl
-         << "    --vc=knots                    Specify initial airspeed" << endl
-         << "    --mach=num                    Specify initial mach number" << endl
-         << "    --glideslope=degreees         Specify flight path angle (can be positive)" << endl
-         << "    --roc=fpm                     Specify initial climb rate (can be negative)" << endl
-         << endl
+        SGPropertyNode *name = section[j]->getNode("name");
+        if (name) {
+            SG_LOG( SG_GENERAL, SG_ALERT, endl << name->getStringValue()
+                    << ":" );
+        }
 
-         << "Rendering Options:" << endl
-         << "    --bpp=depth                   Specify the bits per pixel" << endl
-         << "    --fog-disable                 Disable fog/haze" << endl
-         << "    --fog-fastest                 Enable fastest fog/haze" << endl
-         << "    --fog-nicest                  Enable nicest fog/haze" << endl
-         << "    --enable-clouds               Enable cloud layers" << endl
-         << "    --disable-clouds              Disable cloud layers" << endl
-         << "                                  level" << endl
-         << "    --fov=degrees                 Specify field of view angle" << endl
-         << "    --disable-fullscreen          Disable fullscreen mode" << endl
-         << "    --enable-fullscreen           Enable fullscreen mode" << endl
-         << "    --shading-flat                Enable flat shading" << endl
-         << "    --shading-smooth              Enable smooth shading" << endl
-         << "    --disable-skyblend            Disable sky blending" << endl
-         << "    --enable-skyblend             Enable sky blending" << endl
-         << "    --disable-textures            Disable textures" << endl
-         << "    --enable-textures             Enable textures" << endl
-         << "    --disable-wireframe           Disable wireframe drawing mode" << endl
-         << "    --enable-wireframe            Enable wireframe drawing mode" << endl
-         << "    --geometry=WxH                Specify window geometry (640x480, etc)" << endl
-         << "    --view-offset=value           Specify the default forward view direction" << endl
-         << "                                  as an offset from straight ahead.  Allowable" << endl
-         << "                                  values are LEFT, RIGHT, CENTER, or a specific" << endl
-         << "                                  number in degrees" << endl
-         << "    --visibility=meters           Specify initial visibility" << endl
-         << "    --visibility-miles=miles      Specify initial visibility in miles" << endl
-         << endl
+        vector<SGPropertyNode_ptr>option = section[j]->getChildren("option");
+        for (unsigned int k = 0; k < option.size(); k++) {
 
-         << "Hud Options:" << endl
-         << "    --hud-tris                    Hud displays number of triangles rendered" << endl
-         << "    --hud-culled                  Hud displays percentage of triangles culled" << endl
-         << endl
-	
-         << "Time Options:" << endl
-         << "    --time-offset=[+-]hh:mm:ss    Add this time offset" << endl
-         << "    --time-match-real             Synchronize time with real-world time" << endl
-         << "    --time-match-local            Synchronize time with local real-world time" << endl
-         << "    --start-date-sys=yyyy:mm:dd:hh:mm:ss" << endl
-         << "                                  Specify a starting date/time with respect to" << endl
-         << "                                  system time" << endl
-         << "    --start-date-gmt=yyyy:mm:dd:hh:mm:ss" << endl
-         << "                                  Specify a starting date/time with respect to" << endl
-         << "                                  Greenwich Mean Time" << endl
-         << "    --start-date-lat=yyyy:mm:dd:hh:mm:ss" << endl
-         << "                                  Specify a starting date/time with respect to" << endl
-         << "                                  Local Aircraft Time" << endl
-         << endl
+            SGPropertyNode *name = option[k]->getNode("name");
+            SGPropertyNode *short_name = option[k]->getNode("short");
+            SGPropertyNode *arg = option[k]->getNode("arg");
 
-         << "Network Options:" << endl
-         << "    --httpd=port                  Enable http server on the specified port" << endl
-	 << "    --telnet=port                 Enable telnet server on the specified port" << endl
-#ifdef FG_JPEG_SERVER
-         << "    --jpg-httpd=port              Enable screen shot http server on the" << endl
-         << "                                  specified port" << endl
-#endif
-#ifdef FG_NETWORK_OLK
-         << "    --disable-network-olk         Disable Multipilot mode (default)" << endl
-         << "    --enable-network-olk          Enable Multipilot mode" << endl
-         << "    --net-hud                     Hud displays network info" << endl
-         << "    --net-id=name                 Specify your own callsign" << endl
-#endif
-         << endl
+            if (name) {
+                string str = name->getStringValue();
+                if (short_name) {
+                    str.append(", -");
+                    str.append(short_name->getStringValue());
+                }
+                if (arg) {
+                    str.append("=");
+                    str.append(arg->getStringValue());
+                }
 
-         << "Route/Way Point Options:" << endl
-         << "    --wp=ID[@alt]                 Specify a waypoint for the GC autopilot;" << endl
-         << "                                  multiple instances can be used to create a" << endl
-         << "                                  route" << endl
-         << "    --flight-plan=file            Read all waypoints from a file" << endl
-         << endl
+                if (str.size() <= 25) {
+                    fprintf(stderr, "   --%-27s", str.c_str());
+                } else {
+                    fprintf(stderr, "\n   --%s\n%32c", str.c_str(), ' ');
+                }
 
-         << "IO Options:" << endl
-         << "    --gamin=params                Open connection using the Garmin GPS protocol" << endl
-         << "    --joyclient=params            Open connection to an Agwagon joystick" << endl
-         << "    --native-ctrls=params         Open connection using the FG Native Controls" << endl
-         << "                                  protocol" << endl
-         << "    --native-fdm=params           Open connection using the FG Native FDM" << endl
-         << "                                  protocol" << endl
-         << "    --native=params               Open connection using the FG Native protocol" << endl
-         << "    --nmea=params                 Open connection using the NMEA protocol" << endl
-         << "    --opengc=params               Open connection using the OpenGC protocol" << endl
-         << "    --props=params                Open connection using the interactive" << endl
-         << "                                  property manager" << endl
-         << "    --pve=params                  Open connection using the PVE protocol" << endl
-         << "    --ray=params                  Open connection using the RayWoodworth" << endl
-         << "                                  motion chair protocol" << endl
-         << "    --rul=params                  Open connection using the RUL protocol" << endl
-         << endl
-         << "    --atc610x                     Enable atc610x interface." << endl
-         << endl
+                str.erase();
+                SGPropertyNode *desc = option[k]->getNode("description");
+                if (desc) {
+                    SG_LOG( SG_GENERAL, SG_ALERT, desc->getStringValue() );
 
-         << "Debugging Options:" << endl
-         << "    --trace-read=property         Trace the reads for a property; multiple" << endl
-         << "                                  instances allowed." << endl
-         << "    --trace-write=property        Trace the writes for a property; multiple" << endl
-         << "                                  instances allowed." << endl
-         << endl;
+                    for ( int l = 1;
+                          (desc = option[k]->getNode("desc", l, false));
+                          l++ )
+                    {
+                        fprintf(stderr, "%32c%s\n", ' ',
+                                desc->getStringValue());
+                    }
+                } else {
+                    SG_LOG( SG_GENERAL, SG_ALERT, "" );
+                }
+            }
+        }
+    }
 }
