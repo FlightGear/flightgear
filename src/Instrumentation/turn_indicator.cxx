@@ -13,7 +13,8 @@
 #define RESPONSIVENESS 0.25
 
 
-TurnIndicator::TurnIndicator ()
+TurnIndicator::TurnIndicator () :
+    _last_rate(0)
 {
 }
 
