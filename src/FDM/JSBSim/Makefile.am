@@ -31,7 +31,6 @@ libJSBSim_a_SOURCES = \
         FGJSBBase.cpp FGJSBBase.h \
 	FGLGear.cpp FGLGear.h \
         FGMassBalance.cpp FGMassBalance.h \
-	FGMatrix.cpp FGMatrix.h \
         FGMatrix33.cpp FGMatrix33.h \
 	FGModel.cpp FGModel.h \
 	FGNozzle.cpp FGNozzle.h \
