@@ -69,7 +69,7 @@
 #      define _FG_MEMBER_TEMPLATES
 
 #    endif
-#  else 
+#  else
 #    error Time to upgrade. GNU compilers < 2.7 not supported
 #  endif
 #endif
@@ -79,6 +79,21 @@
 #  if _MSC_VER < 1100
 #    define _FG_NEED_EXPLICIT
 #  endif
+#endif
+
+#ifdef __BORLANDC__
+
+#  define STL_ALGORITHM  <algorithm>
+#  define STL_FUNCTIONAL <functional>
+#  define STL_IOMANIP    <iomanip>
+#  define STL_IOSTREAM   <iostream>
+#  define STL_STDEXCEPT  <stdexcept>
+#  define STL_STRING     <string>
+#  define STL_STRSTREAM  <strstream>
+
+#  define _FG_NO_DEFAULT_TEMPLATE_ARGS
+#  define NEEDNAMESPACESTD
+
 #endif
 
 #ifdef _FG_NEED_EXPLICIT
@@ -128,6 +143,9 @@ inline const_mem_fun_ref_t<_Ret,_Tp> mem_fun_ref(_Ret (_Tp::*__f)() const)
 #endif // _FG_STL_CONFIG_H
 
 // $Log$
+// Revision 1.3  1998/09/29 02:00:16  curt
+// Start of some borland c support
+//
 // Revision 1.2  1998/09/10 19:07:04  curt
 // /Simulator/Objects/fragment.hxx
 //   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.
