@@ -14,7 +14,6 @@ SUBDIRS = \
 	$(AUDIO_DIRS) \
 	Bucket \
 	Debug \
-	DEM \
 	Math \
 	Misc \
 	PUI \
