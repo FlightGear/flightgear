@@ -24,10 +24,12 @@
 
 #include <simgear/compiler.h>
 
-#include <iostream>
-#include <string>
+#include STL_IOSTREAM
+#include STL_STRING
 
+#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
 SG_USING_STD(ostream);
+#endif
 SG_USING_STD(string);
 
 // Possible types of ATC type that the radios may be tuned to.

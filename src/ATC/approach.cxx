@@ -346,8 +346,9 @@ void FGApproach::calc_hd_course_dist(const double &h1, const double &d1,
 int FGApproach::RemovePlane() {
 
   // first check if anything has to be done
+  int i;
   bool rmplane = false;
-  for (int i=0; i<num_planes; i++) {
+  for (i=0; i<num_planes; i++) {
     if (planes[i].dist > range*SG_NM_TO_METER) {
       rmplane = true;
       break;
@@ -357,13 +358,13 @@ int FGApproach::RemovePlane() {
 
   // now make a copy of the plane list
   PlaneApp tmp[max_planes];
-  for (int i=0; i<num_planes; i++) {
+  for (i=0; i<num_planes; i++) {
     tmp[i] = planes[i];
   }
   
   int np = 0;
   // now check which planes are still in range
-  for (int i=0; i<num_planes; i++) {
+  for (i=0; i<num_planes; i++) {
     if (tmp[i].dist <= range*SG_NM_TO_METER) {
       planes[np] = tmp[i];
       np += 1;
