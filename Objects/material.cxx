@@ -75,7 +75,7 @@ fgMATERIAL_MGR::fgMATERIAL_MGR ( void ) {
 int fgMATERIAL_MGR::load_lib ( void ) {
     fgMATERIAL m;
     char material_name[256];
-    char mpath[256], fg_mpath[256], tpath[256], fg_tpath[256];
+    string mpath, fg_mpath, tpath, fg_tpath;
     char line[256], *line_ptr, value[256];
     GLubyte *texbuf;
     fgFile f;
@@ -83,17 +83,15 @@ int fgMATERIAL_MGR::load_lib ( void ) {
     int alpha;
 
     // build the path name to the material db
-    current_options.get_fg_root(mpath);
-    strcat(mpath, "/");
-    strcat(mpath, "materials");
-    strcpy(fg_mpath, mpath);
-    strcat(fg_mpath, ".gz");
+    mpath = current_options.get_fg_root() + "/materials";
+    fg_mpath = mpath + ".gz";
 
     // first try "path.gz"
-    if ( (f = fgopen(fg_mpath, "rb")) == NULL ) {
+    if ( (f = fgopen(fg_mpath.c_str(), "rb")) == NULL ) {
         // next try "path"    
-        if ( (f = fgopen(mpath, "rb")) == NULL ) {
-            fgPrintf(FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", mpath);
+        if ( (f = fgopen(mpath.c_str(), "rb")) == NULL ) {
+            fgPrintf( FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", 
+		      mpath.c_str() );
         }       
     }
 
@@ -179,24 +177,26 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 			      GL_LINEAR_MIPMAP_LINEAR ) ;
 
 	    /* load in the texture data */
-	    current_options.get_fg_root(tpath);
-	    strcat(tpath, "/Textures/");
-	    strcat(tpath, m.texture_name);
-	    strcat(tpath, ".rgb");
+	    tpath = current_options.get_fg_root() + "/Textures/" + 
+		m.texture_name + ".rgb";
+	    fg_tpath = tpath + ".gz";
 
 	    if ( alpha == 0 ) {
 		// load rgb texture
 
 		// Try uncompressed
-		if ( (texbuf = read_rgb_texture(tpath, &width, &height))
-		     == NULL ) {
+		if ( (texbuf = 
+		      read_rgb_texture(tpath.c_str(), &width, &height)) == 
+		     NULL )
+		{
 		    // Try compressed
-		    strcpy(fg_tpath, tpath);
-		    strcat(fg_tpath, ".gz");
-		    if ( (texbuf = read_rgb_texture(fg_tpath, &width, &height)) 
-			 == NULL ) {
+		    if ( (texbuf = 
+			  read_rgb_texture(fg_tpath.c_str(), &width, &height)) 
+			 == NULL )
+		    {
 			fgPrintf( FG_GENERAL, FG_EXIT, 
-				  "Error in loading texture %s\n", tpath );
+				  "Error in loading texture %s\n", 
+				  tpath.c_str() );
 			return(0);
 		    } 
 		} 
@@ -210,15 +210,18 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 		// load rgba (alpha) texture
 
 		// Try uncompressed
-		if ( (texbuf = read_alpha_texture(tpath, &width, &height))
-		     == NULL ) {
+		if ( (texbuf = 
+		      read_alpha_texture(tpath.c_str(), &width, &height))
+		     == NULL )
+		{
 		    // Try compressed
-		    strcpy(fg_tpath, tpath);
-		    strcat(fg_tpath, ".gz");
-		    if ((texbuf = read_alpha_texture(fg_tpath, &width, &height))
-			== NULL ) {
+		    if ((texbuf = 
+			 read_alpha_texture(fg_tpath.c_str(), &width, &height))
+			== NULL )
+		    {
 			fgPrintf( FG_GENERAL, FG_EXIT, 
-				  "Error in loading texture %s\n", tpath );
+				  "Error in loading texture %s\n",
+				  tpath.c_str() );
 			return(0);
 		    } 
 		} 
@@ -303,6 +306,15 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.3  1998/08/27 17:02:09  curt
+// Contributions from Bernie Bright <bbright@c031.aone.net.au>
+// - use strings for fg_root and airport_id and added methods to return
+//   them as strings,
+// - inlined all access methods,
+// - made the parsing functions private methods,
+// - deleted some unused functions.
+// - propogated some of these changes out a bit further.
+//
 // Revision 1.2  1998/08/25 20:53:33  curt
 // Shuffled $FG_ROOT file layout.
 //

@@ -59,7 +59,7 @@ public:
     fgAIRPORTS( void );
 
     // load the data
-    int load( char *file );
+    int load( const string& file );
 
     // search for the specified id
     fgAIRPORT search( char *id );
@@ -74,6 +74,15 @@ public:
 
 
 // $Log$
+// Revision 1.2  1998/08/27 17:01:56  curt
+// Contributions from Bernie Bright <bbright@c031.aone.net.au>
+// - use strings for fg_root and airport_id and added methods to return
+//   them as strings,
+// - inlined all access methods,
+// - made the parsing functions private methods,
+// - deleted some unused functions.
+// - propogated some of these changes out a bit further.
+//
 // Revision 1.1  1998/08/25 17:19:14  curt
 // Moved from ../Main/
 //

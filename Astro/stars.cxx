@@ -35,6 +35,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <time.h>
 
 #include <GL/glut.h>
@@ -67,7 +68,7 @@ int fgStarsInit( void ) {
     fgPoint3d starlist[FG_MAX_STARS];
     fgFile fd;
     /* struct CelestialCoord pltPos; */
-    char path[256], gzpath[256];
+    string path, gzpath;
     char line[256], name[256];
     char *front, *end;
     double right_ascension, declination, magnitude;
@@ -79,24 +80,21 @@ int fgStarsInit( void ) {
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing stars\n");
 
     /* build the full path name to the stars data base file */
-    current_options.get_fg_root(path);
-    strcat(path, "/Astro/");
-    strcat(path, "stars");
+    path = current_options.get_fg_root() + "/Astro/stars";
+    gzpath = path + ".gz";
 
     if ( FG_STAR_LEVELS < 4 ) {
 	fgPrintf( FG_ASTRO, FG_EXIT, "Big whups in stars.cxx\n");
     }
 
-    fgPrintf( FG_ASTRO, FG_INFO, "  Loading stars from %s\n", path);
+    fgPrintf( FG_ASTRO, FG_INFO, "  Loading stars from %s\n", path.c_str() );
 
     // load star data file
-    if ( (fd = fgopen(path, "rb")) == NULL ) {
-	strcpy(gzpath, path);
-	strcat(gzpath, ".gz");
-	if ( (fd = fgopen(gzpath, "rb")) == NULL ) {
+    if ( (fd = fgopen(path.c_str(), "rb")) == NULL ) {
+	if ( (fd = fgopen(gzpath.c_str(), "rb")) == NULL ) {
 	    // Oops, lets not even try to continue. This is critical.
 	    fgPrintf( FG_ASTRO, FG_EXIT,
-		      "Cannot open star file: '%s'\n", path);
+		      "Cannot open star file: '%s'\n", path.c_str() );
 	}
     }
 
@@ -288,9 +286,18 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.11  1998/08/25 20:53:29  curt
-/* Shuffled $FG_ROOT file layout.
+/* Revision 1.12  1998/08/27 17:02:01  curt
+/* Contributions from Bernie Bright <bbright@c031.aone.net.au>
+/* - use strings for fg_root and airport_id and added methods to return
+/*   them as strings,
+/* - inlined all access methods,
+/* - made the parsing functions private methods,
+/* - deleted some unused functions.
+/* - propogated some of these changes out a bit further.
 /*
+ * Revision 1.11  1998/08/25 20:53:29  curt
+ * Shuffled $FG_ROOT file layout.
+ *
  * Revision 1.10  1998/08/10 20:33:09  curt
  * Rewrote star loading and rendering to:
  *   1. significantly improve load speed

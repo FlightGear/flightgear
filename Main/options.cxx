@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>          // atof(), atoi()
 #include <string.h>
+#include <string>
 
 #include <Debug/fg_debug.h>
 #include <Flight/flight.h>
@@ -39,186 +40,153 @@
 
 #include "options.hxx"
 
+inline double
+atof( const string& str )
+{
+    return ::atof( str.c_str() );
+}
+
+inline int
+atoi( const string& str )
+{
+    return ::atoi( str.c_str() );
+}
 
 // Defined the shared options class here
 fgOPTIONS current_options;
 
 
 // Constructor
-fgOPTIONS::fgOPTIONS( void ) {
-    // set initial values/defaults
+fgOPTIONS::fgOPTIONS() :
+    // starting longitude in degrees (west = -)
+    // starting latitude in degrees (south = -)
 
-    if ( getenv("FG_ROOT") != NULL ) {
+    // Default initial position is Globe, AZ (P13)
+    lon(-110.6642444),
+    lat(  33.3528917),
+
+    // North of the city of Globe
+    // lon(-110.7),
+    // lat(  33.4),
+
+    // North of the city of Globe
+    // lon(-110.742578),
+    // lat(  33.507122),
+
+    // Near where I used to live in Globe, AZ
+    // lon(-110.766000),
+    // lat(  33.377778),
+
+    // 10125 Jewell St. NE
+    // lon(-93.15),
+    // lat( 45.15),
+
+    // Near KHSP (Hot Springs, VA)
+    // lon(-79.8338964 + 0.01),
+    // lat( 37.9514564 + 0.008),
+
+    // (SEZ) SEDONA airport
+    // lon(-111.7884614 + 0.01),
+    // lat(  34.8486289 - 0.015),
+
+    // Somewhere near the Grand Canyon
+    // lon(-112.5),
+    // lat(  36.5),
+
+    // Jim Brennon's Kingmont Observatory
+    // lon(-121.1131667),
+    // lat(  38.8293917),
+
+    // Huaras, Peru (S09d 31.871'  W077d 31.498')
+    // lon(-77.5249667),
+    // lat( -9.5311833),
+ 
+    // Eclipse Watching w73.5 n10 (approx) 18:00 UT
+    // lon(-73.5),
+    // lat( 10.0),
+
+    // Test Position
+    // lon( 8.5),
+    // lat(47.5),
+
+    // Timms Hill (WI)
+    // lon(-90.1953055556),
+    // lat( 45.4511388889),
+
+    // starting altitude in meters (this will be reset to ground level
+    // if it is lower than the terrain
+    altitude(-9999.0),
+
+    // Initial Orientation
+    heading(270.0),      // heading (yaw) angle in degress (Psi)
+    roll(0.0),           // roll angle in degrees (Phi)
+    pitch(0.424),        // pitch angle in degrees (Theta)
+
+    // Miscellaneous
+    game_mode(0),
+    splash_screen(1),
+    intro_music(1),
+    mouse_pointer(0),
+    pause(0),
+
+    // Features
+    hud_status(1),
+    panel_status(0),
+    sound(1),
+
+    // Flight Model options
+    flight_model(FG_LARCSIM),
+
+    // Rendering options
+    fog(FG_FOG_NICEST),  // nicest
+    fov(55.0),
+    fullscreen(0),
+    shading(1),
+    skyblend(1),
+    textures(1),
+    wireframe(0),
+
+    // Scenery options
+    tile_diameter(5),
+
+    // HUD options
+    tris_or_culled(0),
+	
+    // Time options
+    time_offset(0)
+{
+    // set initial values/defaults
+    char* envp = ::getenv( "FG_ROOT" );
+
+    if ( envp != NULL ) {
 	// fg_root could be anywhere, so default to environmental
 	// variable $FG_ROOT if it is set.
-
-	strcpy(fg_root, getenv("FG_ROOT"));
+	fg_root = envp;
     } else {
 	// Otherwise, default to a random compiled in location if
 	// $FG_ROOT is not set.  This can still be overridden from the
 	// command line or a config file.
 
 #if defined(WIN32)
-	strcpy(fg_root, "\\FlightGear");
+	fg_root = "\\FlightGear";
 #else
-	strcpy(fg_root, "/usr/local/lib/FlightGear");
+	fg_root = "/usr/local/lib/FlightGear";
 #endif
     }
 
-    // Starting posistion and orientation
-    strcpy(airport_id, "");  // default airport id
-    lon = 0.0;               // starting longitude in degrees (west = -)
-    lat = 0.0;               // starting latitude in degrees (south = -)
-
-    // If nothing else is specified, default initial position is
-    // Globe, AZ (P13)
-    lon = -110.6642444;
-    lat  =  33.3528917;
-
-    // North of the city of Globe
-    // lon = -110.7;
-    // lat =   33.4;
-
-    // North of the city of Globe
-    // lon = -110.742578;
-    // lat =   33.507122;
-
-    // Near where I used to live in Globe, AZ
-    // lon = -110.766000;
-    // lat =   33.377778;
-
-    // 10125 Jewell St. NE
-    // lon = -93.15;
-    // lat =  45.15;
-
-    // Near KHSP (Hot Springs, VA)
-    // lon = -79.8338964 + 0.01;
-    // lat =  37.9514564 + 0.008;
-
-    // (SEZ) SEDONA airport
-    // lon = -111.7884614 + 0.01;
-    // lat =   34.8486289 - 0.015;
-
-    // Somewhere near the Grand Canyon
-    // lon = -112.5;
-    // lat =   36.5;
-
-    // Jim Brennon's Kingmont Observatory
-    // lon = -121.1131667;
-    // lat =   38.8293917;
-
-    // Huaras, Peru (S09d 31.871'  W077d 31.498')
-    // lon = -77.5249667;
-    // lat =  -9.5311833;
- 
-    // Eclipse Watching w73.5 n10 (approx) 18:00 UT
-    // lon = -73.5;
-    // lat =  10.0;
-
-    // Test Position
-    // lon =  8.5;
-    // lat = 47.5;
-
-    // Timms Hill (WI)
-    // lon = -90.1953055556;
-    // lat =  45.4511388889;
-
-    altitude = -9999.0;      // starting altitude in meters (this will be
-                             // reset to ground level if it is lower
-                             // than the terrain
-
-    // Initial Orientation
-    heading = 270.0;         // heading (yaw) angle in degress (Psi)
-    roll    =   0.0;         // roll angle in degrees (Phi)
-    pitch   =   0.424;       // pitch angle in degrees (Theta)
-
-    // Miscellaneous
-    game_mode = 0;
-    splash_screen = 1;
-    intro_music = 1;
-    mouse_pointer = 0;
-    pause = 0;
-
-    // Features
-    hud_status = 1;
-    panel_status = 0;
-    sound = 1;
-
-    // Flight Model options
-    flight_model = FG_LARCSIM;
-
-    // Rendering options
-    fog = 2;    // nicest
-    fov = 55.0;
-    fullscreen = 0;
-    shading = 1;
-    skyblend = 1;
-    textures = 1;
-    wireframe = 0;
-
-    // Scenery options
-    tile_diameter = 5;
-
-    // HUD options
-    tris_or_culled = 0;
-	
-    // Time options
-    time_offset = 0;
+    airport_id = "";  // default airport id
 }
 
 
-// Parse an int out of a --foo-bar=n type option 
-static int parse_int(char *arg) {
-    int result;
-
-    // advance past the '='
-    while ( (arg[0] != '=') && (arg[0] != '\0') ) {
-	arg++;
-    }
-
-    if ( arg[0] == '=' ) {
-	arg++;
-    }
-
-    // printf("parse_int(): arg = %s\n", arg);
-
-    result = atoi(arg);
-
-    // printf("parse_int(): result = %d\n", result);
-
-    return(result);
-}
-
-
-// Parse an int out of a --foo-bar=n type option 
-static double parse_double(char *arg) {
-    double result;
-
-    // advance past the '='
-    while ( (arg[0] != '=') && (arg[0] != '\0') ) {
-	arg++;
-    }
-
-    if ( arg[0] == '=' ) {
-	arg++;
-    }
-
-    // printf("parse_double(): arg = %s\n", arg);
-
-    result = atof(arg);
-
-    // printf("parse_double(): result = %.4f\n", result);
-
-    return(result);
-}
-
-
-static double parse_time(char *time_str) {
-    char num[256];
+double
+fgOPTIONS::parse_time(const string& time_in) {
+    char *time_str, num[256];
     double hours, minutes, seconds;
     double result = 0.0;
     int sign = 1;
     int i;
+
+    time_str = (char *)time_in.c_str();
 
     // printf("parse_time(): %s\n", time_str);
 
@@ -290,19 +258,9 @@ static double parse_time(char *time_str) {
 
 
 // parse degree in the form of [+/-]hhh:mm:ss
-static double parse_degree(char *degree_str) {
-    double result;
-
-    // advance past the '='
-    while ( (degree_str[0] != '=') && (degree_str[0] != '\0') ) {
-	degree_str++;
-    }
-
-    if ( degree_str[0] == '=' ) {
-	degree_str++;
-    }
-
-    result = parse_time(degree_str);
+double
+fgOPTIONS::parse_degree( const string& degree_str) {
+    double result = parse_time( degree_str );
 
     // printf("Degree = %.4f\n", result);
 
@@ -311,17 +269,9 @@ static double parse_degree(char *degree_str) {
 
 
 // parse time offset command line option
-static int parse_time_offset(char *time_str) {
+int
+fgOPTIONS::parse_time_offset( const string& time_str) {
     int result;
-
-    // advance past the '='
-    while ( (time_str[0] != '=') && (time_str[0] != '\0') ) {
-	time_str++;
-    }
-
-    if ( time_str[0] == '=' ) {
-	time_str++;
-    }
 
     // printf("time offset = %s\n", time_str);
 
@@ -339,13 +289,9 @@ static int parse_time_offset(char *time_str) {
 
 // Parse --tile-diameter=n type option 
 
-#define FG_RADIUS_MIN 1
-#define FG_RADIUS_MAX 4
-
-static int parse_tile_radius(char *arg) {
-    int radius;
-
-    radius = parse_int(arg);
+int
+fgOPTIONS::parse_tile_radius( const string& arg ) {
+    int radius = atoi( arg );
 
     if ( radius < FG_RADIUS_MIN ) { radius = FG_RADIUS_MIN; }
     if ( radius > FG_RADIUS_MAX ) { radius = FG_RADIUS_MAX; }
@@ -357,19 +303,17 @@ static int parse_tile_radius(char *arg) {
 
 
 // Parse --flightmode=abcdefg type option 
-static int parse_flight_model(char *fm) {
-    fm += 15;
-
+int
+fgOPTIONS::parse_flight_model( const string& fm ) {
     // printf("flight model = %s\n", fm);
 
-    if ( strcmp(fm, "slew") == 0 ) {
+    if ( fm == "slew" ) {
 	return(FG_SLEW);
-    } else if ( strcmp(fm, "larcsim") == 0 ) {
-	return(FG_LARCSIM);
-    } else if ( strcmp(fm, "LaRCsim") == 0 ) {
+    } else if ( (fm == "larcsim") || (fm == "LaRCsim") ) {
 	return(FG_LARCSIM);
     } else {
-	fgPrintf( FG_GENERAL, FG_EXIT, "Unknown flight model = %s\n", fm);
+	fgPrintf( FG_GENERAL, FG_EXIT, "Unknown flight model = %s\n",
+		  fm.c_str());
     }
 
     // we'll never get here, but it makes the compiler happy.
@@ -378,10 +322,9 @@ static int parse_flight_model(char *fm) {
 
 
 // Parse --fov=x.xx type option 
-static double parse_fov(char *arg) {
-    double fov;
-
-    fov = parse_double(arg);
+double
+fgOPTIONS::parse_fov( const string& arg ) {
+    double fov = atof(arg);
 
     if ( fov < FG_FOV_MIN ) { fov = FG_FOV_MIN; }
     if ( fov > FG_FOV_MAX ) { fov = FG_FOV_MAX; }
@@ -393,103 +336,101 @@ static double parse_fov(char *arg) {
 
 
 // Parse a single option
-int fgOPTIONS::parse_option( char *arg ) {
+int fgOPTIONS::parse_option( const string& arg ) {
     // General Options
-    if ( (strcmp(arg, "--help") == 0) ||
-	 (strcmp(arg, "-h") == 0) ) {
+    if ( (arg == "--help") || (arg == "-h") ) {
 	// help/usage request
 	return(FG_OPTIONS_HELP);
-    } else if ( strcmp(arg, "--disable-game-mode") == 0 ) {
-	game_mode = 0;
-    } else if ( strcmp(arg, "--enable-game-mode") == 0 ) {
-	game_mode = 1;
-    } else if ( strcmp(arg, "--disable-splash-screen") == 0 ) {
-	splash_screen = 0;
-    } else if ( strcmp(arg, "--enable-splash-screen") == 0 ) {
-	splash_screen = 1;
-    } else if ( strcmp(arg, "--disable-intro-music") == 0 ) {
-	intro_music = 0;
-    } else if ( strcmp(arg, "--enable-intro-music") == 0 ) {
-	intro_music = 1;
-    } else if ( strcmp(arg, "--disable-mouse-pointer") == 0 ) {
+    } else if ( arg == "--disable-game-mode") {
+	game_mode = false;
+    } else if ( arg == "--enable-game-mode" ) {
+	game_mode = true;
+    } else if ( arg == "--disable-splash-screen" ) {
+	splash_screen = false;
+    } else if ( arg == "--enable-splash-screen" ) {
+	splash_screen = true;
+    } else if ( arg == "--disable-intro-music" ) {
+	intro_music = false;
+    } else if ( arg == "--enable-intro-music" ) {
+	intro_music = true;
+    } else if ( arg == "--disable-mouse-pointer" ) {
 	mouse_pointer = 1;
-    } else if ( strcmp(arg, "--enable-mouse-pointer") == 0 ) {
+    } else if ( arg == "--enable-mouse-pointer" ) {
 	mouse_pointer = 2;
-    } else if ( strcmp(arg, "--disable-pause") == 0 ) {
-	pause = 0;	
-    } else if ( strcmp(arg, "--enable-pause") == 0 ) {
-	pause = 1;	
-    } else if ( strcmp(arg, "--disable-hud") == 0 ) {
-	hud_status = 0;	
-    } else if ( strcmp(arg, "--enable-hud") == 0 ) {
-	hud_status = 1;	
-    } else if ( strcmp(arg, "--disable-panel") == 0 ) {
-	panel_status = 0;
-    } else if ( strcmp(arg, "--enable-panel") == 0 ) {
-	panel_status = 1;
-    } else if ( strcmp(arg, "--disable-sound") == 0 ) {
-	sound = 0;
-    } else if ( strcmp(arg, "--enable-sound") == 0 ) {
-	sound = 1;
-    } else if ( strncmp(arg, "--airport-id=", 13) == 0 ) {
-	arg += 13;
-	strncpy(airport_id, arg, 4);
-    } else if ( strncmp(arg, "--lon=", 6) == 0 ) {
-	lon = parse_degree(arg);
-    } else if ( strncmp(arg, "--lat=", 6) == 0 ) {
-	lat = parse_degree(arg);
-    } else if ( strncmp(arg, "--altitude=", 11) == 0 ) {
-	altitude = parse_double(arg);
-    } else if ( strncmp(arg, "--heading=", 6) == 0 ) {
-	heading = parse_double(arg);
-    } else if ( strncmp(arg, "--roll=", 7) == 0 ) {
-	roll = parse_double(arg);
-    } else if ( strncmp(arg, "--pitch=", 8) == 0 ) {
-	pitch = parse_double(arg);
-    } else if ( strncmp(arg, "--fg-root=", 10) == 0 ) {
-	arg += 10;
-	strcpy(fg_root, arg);
-    } else if ( strncmp(arg, "--flight-model=", 15) == 0 ) {
-	flight_model = parse_flight_model(arg);
-    } else if ( strcmp(arg, "--fog-disable") == 0 ) {
-	fog = 0;	
-    } else if ( strcmp(arg, "--fog-fastest") == 0 ) {
-	fog = 1;	
-    } else if ( strcmp(arg, "--fog-nicest") == 0 ) {
-	fog = 2;	
-    } else if ( strncmp(arg, "--fov=", 6) == 0 ) {
-	fov = parse_fov(arg);
-    } else if ( strcmp(arg, "--disable-fullscreen") == 0 ) {
-	fullscreen = 0;	
-    } else if ( strcmp(arg, "--enable-fullscreen") == 0 ) {
-	fullscreen = 1;	
-    } else if ( strcmp(arg, "--shading-flat") == 0 ) {
+    } else if ( arg == "--disable-pause" ) {
+	pause = false;	
+    } else if ( arg == "--enable-pause" ) {
+	pause = true;	
+    } else if ( arg == "--disable-hud" ) {
+	hud_status = false;	
+    } else if ( arg == "--enable-hud" ) {
+	hud_status = true;	
+    } else if ( arg == "--disable-panel" ) {
+	panel_status = false;
+    } else if ( arg == "--enable-panel" ) {
+	panel_status = true;
+    } else if ( arg == "--disable-sound" ) {
+	sound = false;
+    } else if ( arg == "--enable-sound" ) {
+	sound = true;
+    } else if ( arg.find( "--airport-id=") != string::npos ) {
+	airport_id = arg.substr( 13 );
+    } else if ( arg.find( "--lon=" ) != string::npos ) {
+	lon = parse_degree( arg.substr(6) );
+    } else if ( arg.find( "--lat=" ) != string::npos ) {
+	lat = parse_degree( arg.substr(6) );
+    } else if ( arg.find( "--altitude=" ) != string::npos ) {
+	altitude = atof( arg.substr(11) );
+    } else if ( arg.find( "--heading=" ) != string::npos ) {
+	heading = atof( arg.substr(10) );
+    } else if ( arg.find( "--roll=" ) != string::npos ) {
+	roll = atof( arg.substr(7) );
+    } else if ( arg.find( "--pitch=" ) != string::npos ) {
+	pitch = atof( arg.substr(8) );
+    } else if ( arg.find( "--fg-root=" ) != string::npos ) {
+	fg_root = arg.substr( 10 );
+    } else if ( arg.find( "--flight-model=" ) != string::npos ) {
+	flight_model = parse_flight_model( arg.substr(15) );
+    } else if ( arg == "--fog-disable" ) {
+	fog = FG_FOG_DISABLED;	
+    } else if ( arg == "--fog-fastest" ) {
+	fog = FG_FOG_FASTEST;	
+    } else if ( arg == "--fog-nicest" ) {
+	fog = FG_FOG_NICEST;	
+    } else if ( arg.find( "--fov=" ) != string::npos ) {
+	fov = parse_fov( arg.substr(6) );
+    } else if ( arg == "--disable-fullscreen" ) {
+	fullscreen = false;	
+    } else if ( arg== "--enable-fullscreen") {
+	fullscreen = true;	
+    } else if ( arg == "--shading-flat") {
 	shading = 0;	
-    } else if ( strcmp(arg, "--shading-smooth") == 0 ) {
+    } else if ( arg == "--shading-smooth") {
 	shading = 1;	
-    } else if ( strcmp(arg, "--disable-skyblend") == 0 ) {
-	skyblend = 0;	
-    } else if ( strcmp(arg, "--enable-skyblend") == 0 ) {
-	skyblend = 1;	
-    } else if ( strcmp(arg, "--disable-textures") == 0 ) {
-	textures = 0;	
-    } else if ( strcmp(arg, "--enable-textures") == 0 ) {
-	textures = 1;	
-    } else if ( strcmp(arg, "--disable-wireframe") == 0 ) {
-	wireframe = 0;	
-    } else if ( strcmp(arg, "--enable-wireframe") == 0 ) {
-	wireframe = 1;	
-    } else if ( strncmp(arg, "--tile-radius=", 14) == 0 ) {
-	tile_radius = parse_tile_radius(arg);
+    } else if ( arg == "--disable-skyblend") {
+	skyblend = false;	
+    } else if ( arg== "--enable-skyblend" ) {
+	skyblend = true;	
+    } else if ( arg == "--disable-textures" ) {
+	textures = false;	
+    } else if ( arg == "--enable-textures" ) {
+	textures = true;	
+    } else if ( arg == "--disable-wireframe" ) {
+	wireframe = false;	
+    } else if ( arg == "--enable-wireframe" ) {
+	wireframe = true;	
+    } else if ( arg.find( "--tile-radius=" ) != string::npos ) {
+	tile_radius = parse_tile_radius( arg.substr(14) );
 	tile_diameter = tile_radius * 2 + 1;
-    } else if ( strncmp(arg, "--time-offset=", 14) == 0 ) {
-	time_offset = parse_time_offset(arg);
-    } else if ( strcmp(arg, "--hud-tris") == 0 ) {
+    } else if ( arg.find( "--time-offset=" ) != string::npos ) {
+	time_offset = parse_time_offset( (arg.substr(14)) );
+    } else if ( arg == "--hud-tris" ) {
 	tris_or_culled = 0;	
-    } else if ( strcmp(arg, "--hud-culled") == 0 ) {
+    } else if ( arg == "--hud-culled" ) {
 	tris_or_culled = 1;	
     } else {
-	fgPrintf( FG_GENERAL, FG_EXIT, "Unknown option '%s'\n", arg);
+	fgPrintf( FG_GENERAL, FG_EXIT, "Unknown option '%s'\n",
+		  arg.c_str() );
 	return(FG_OPTIONS_ERROR);
     }
     
@@ -519,24 +460,23 @@ int fgOPTIONS::parse_command_line( int argc, char **argv ) {
 }
 
 
-// Parse the command line options
-int fgOPTIONS::parse_config_file( char *path ) {
-    char fgpath[256], line[256];
+// Parse config file options
+int fgOPTIONS::parse_config_file( const string& path ) {
+    char line[256];
     fgFile f;
-    int len, result;
-
-    strcpy(fgpath, path);
-    strcat(fgpath, ".gz");
+    int len;
+    string fgpath = path + ".gz";
 
     // first try "path.gz"
-    if ( (f = fgopen(fgpath, "rb")) == NULL ) {
+    if ( (f = fgopen(fgpath.c_str(), "rb")) == NULL ) {
 	// next try "path"
-        if ( (f = fgopen(path, "rb")) == NULL ) {
+        if ( (f = fgopen(path.c_str(), "rb")) == NULL ) {
 	    return(FG_OPTIONS_ERROR);
 	}
     }
 
-    fgPrintf(FG_GENERAL, FG_INFO, "Processing config file: %s\n", path);
+    fgPrintf( FG_GENERAL, FG_INFO, "Processing config file: %s\n",
+	      path.c_str() );
 
     while ( fggets(f, line, 250) != NULL ) {
 	// strip trailing newline if it exists
@@ -551,15 +491,15 @@ int fgOPTIONS::parse_config_file( char *path ) {
 	    line[len-1] = '\0';
 	}
 
-	result = parse_option(line);
-	if ( result == FG_OPTIONS_ERROR ) {
+	if (  parse_option( line ) == FG_OPTIONS_ERROR ) {
 	    fgPrintf( FG_GENERAL, FG_EXIT, 
-		      "Config file parse error: %s '%s'\n", path, line );
+		      "Config file parse error: %s '%s'\n",
+		      path.c_str(), line );
 	}
     }
 
     fgclose(f);
-    return(FG_OPTIONS_OK);
+    return FG_OPTIONS_OK;
 }
 
 
@@ -633,47 +573,21 @@ void fgOPTIONS::usage ( void ) {
 }
 
 
-#if 0
-// Query functions
-void fgOPTIONS::get_fg_root(char *root) { strcpy(root, fg_root); }
-void fgOPTIONS::get_airport_id(char *id) { strcpy(id, airport_id); }
-double fgOPTIONS::get_lon( void ) { return(lon); }
-double fgOPTIONS::get_lat( void ) { return(lat); }
-double fgOPTIONS::get_altitude( void ) { return(altitude); }
-double fgOPTIONS::get_heading( void ) { return(heading); }
-double fgOPTIONS::get_roll( void ) { return(roll); }
-double fgOPTIONS::get_pitch( void ) { return(pitch); }
-int fgOPTIONS::get_game_mode( void ) { return(game_mode); }
-int fgOPTIONS::get_splash_screen( void ) { return(splash_screen); }
-int fgOPTIONS::get_intro_music( void ) { return(intro_music); }
-int fgOPTIONS::get_mouse_pointer( void ) { return(mouse_pointer); }
-int fgOPTIONS::get_pause( void ) { return(pause); }
-int fgOPTIONS::get_hud_status( void ) { return(hud_status); }
-int fgOPTIONS::get_panel_status( void ) { return(panel_status); }
-int fgOPTIONS::get_sound( void ) { return(sound); }
-int fgOPTIONS::get_flight_model( void ) { return(flight_model); }
-int fgOPTIONS::get_fog( void ) { return(fog); }
-double fgOPTIONS::get_fov( void ) { return(fov); }
-int fgOPTIONS::get_fullscreen( void ) { return(fullscreen); }
-int fgOPTIONS::get_shading( void ) { return(shading); }
-int fgOPTIONS::get_skyblend( void ) { return(skyblend); }
-int fgOPTIONS::get_textures( void ) { return(textures); }
-int fgOPTIONS::get_wireframe( void ) { return(wireframe); }
-int fgOPTIONS::get_tile_radius( void ) { return(tile_radius); }
-int fgOPTIONS::get_tile_diameter( void ) { return(tile_diameter); }
-int fgOPTIONS::get_time_offset( void ) { return(time_offset); }
-
-
-// Update functions
-void fgOPTIONS::set_hud_status( int status ) { hud_status = status; }
-void fgOPTIONS::set_fov( double amount ) { fov = amount; }
-#endif
 // Destructor
 fgOPTIONS::~fgOPTIONS( void ) {
 }
 
 
 // $Log$
+// Revision 1.23  1998/08/27 17:02:07  curt
+// Contributions from Bernie Bright <bbright@c031.aone.net.au>
+// - use strings for fg_root and airport_id and added methods to return
+//   them as strings,
+// - inlined all access methods,
+// - made the parsing functions private methods,
+// - deleted some unused functions.
+// - propogated some of these changes out a bit further.
+//
 // Revision 1.22  1998/08/24 20:11:13  curt
 // Added i/I to toggle full vs. minimal HUD.
 // Added a --hud-tris vs --hud-culled option.

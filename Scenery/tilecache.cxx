@@ -88,7 +88,7 @@ int fgTILECACHE::Exists( fgBUCKET *p ) {
 
 // Fill in a tile cache entry with real data for the specified bucket
 void fgTILECACHE::EntryFillIn( int index, fgBUCKET *p ) {
-    char root[256];
+    string root;
     char base_path[256];
     char file_name[256];
 
@@ -103,8 +103,8 @@ void fgTILECACHE::EntryFillIn( int index, fgBUCKET *p ) {
 
     // Load the appropriate data file and built tile fragment list
     fgBucketGenBasePath(p, base_path);
-    current_options.get_fg_root(root);
-    sprintf(file_name, "%s/Scenery/%s/%ld", root, 
+    root = current_options.get_fg_root();
+    sprintf(file_name, "%s/Scenery/%s/%ld", root.c_str(), 
 	    base_path, fgBucketGenIndex(p));
     fgObjLoad(file_name, &tile_cache[index]);
     /*
@@ -212,6 +212,15 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.15  1998/08/27 17:02:10  curt
+// Contributions from Bernie Bright <bbright@c031.aone.net.au>
+// - use strings for fg_root and airport_id and added methods to return
+//   them as strings,
+// - inlined all access methods,
+// - made the parsing functions private methods,
+// - deleted some unused functions.
+// - propogated some of these changes out a bit further.
+//
 // Revision 1.14  1998/08/25 16:52:43  curt
 // material.cxx material.hxx obj.cxx obj.hxx texload.c texload.h moved to
 //   ../Objects

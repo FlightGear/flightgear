@@ -37,6 +37,7 @@
 #include <XGL/xgl.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 
 #ifdef HAVE_STDLIB_H
 #   include <stdlib.h>
@@ -454,6 +455,8 @@ void fgInitTimeDepCalcs( void ) {
 
 }
 
+static const double alt_adjust_ft = 3.758099;
+static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
 
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
@@ -485,15 +488,14 @@ static void fgMainLoop( void ) {
 
     if ( scenery.cur_elev > -9990 ) {
 	if ( FG_Altitude * FEET_TO_METER < 
-	     (scenery.cur_elev + 3.758099 * FEET_TO_METER - 3.0) ) {
+	     (scenery.cur_elev + alt_adjust_m - 3.0) ) {
 	    // now set aircraft altitude above ground
 	    printf("Current Altitude = %.2f < %.2f forcing to %.2f\n", 
 		   FG_Altitude * FEET_TO_METER,
-		   scenery.cur_elev + 3.758099 * FEET_TO_METER - 3.0,
-		   scenery.cur_elev + 3.758099 * FEET_TO_METER);
+		   scenery.cur_elev + alt_adjust_m - 3.0,
+		   scenery.cur_elev + alt_adjust_m );
 	    fgFlightModelSetAltitude( current_options.get_flight_model(), f, 
-				      scenery.cur_elev + 
-				      3.758099 * FEET_TO_METER);
+				      scenery.cur_elev + alt_adjust_m );
 
 	    fgPrintf( FG_ALL, FG_BULK, 
 		      "<*> resetting altitude to %.0f meters\n", 
@@ -597,8 +599,6 @@ static void fgMainLoop( void ) {
 
 static void fgIdleFunction ( void ) {
     fgGENERAL *g;
-    char path[256], mp3file[256], command[256], slfile[256];
-    static char *lockfile = "/tmp/mpg123.running";
 
     g = &general;
 
@@ -615,16 +615,14 @@ static void fgIdleFunction ( void ) {
 	// Start the intro music
 #if !defined(WIN32)
 	if ( current_options.get_intro_music() ) {
-	    current_options.get_fg_root(mp3file);
-	    strcat(mp3file, "/Sounds/");
-	    strcat(mp3file, "intro.mp3");
-
-	    sprintf(command, 
-		    "(touch %s; mpg123 %s > /dev/null 2>&1; /bin/rm %s) &", 
-		    lockfile, mp3file, lockfile );
+	    string lockfile = "/tmp/mpg123.running";
+	    string mp3file = current_options.get_fg_root() +
+		"/Sounds/intro.mp3";
+	    string command = "(touch " + lockfile + "; mpg123 " + mp3file +
+		 "> /dev/null 2>&1; /bin/rm " + lockfile + ") &";
 	    fgPrintf( FG_GENERAL, FG_INFO, 
-		      "Starting intro music: %s\n", mp3file);
-	    system ( command );
+		      "Starting intro music: %s\n", mp3file.c_str() );
+	    system ( command.c_str() );
 	}
 #endif
 
@@ -672,11 +670,12 @@ static void fgIdleFunction ( void ) {
 #if !defined(WIN32)
 	if ( current_options.get_intro_music() ) {
 	    // Let's wait for mpg123 to finish
+	    string lockfile = "/tmp/mpg123.running";
 	    struct stat stat_buf;
 
 	    fgPrintf( FG_GENERAL, FG_INFO, 
 		      "Waiting for mpg123 player to finish ...\n" );
-	    while ( stat(lockfile, &stat_buf) == 0 ) {
+	    while ( stat(lockfile.c_str(), &stat_buf) == 0 ) {
 		// file exist, wait ...
 		sleep(1);
 		fgPrintf( FG_GENERAL, FG_INFO, ".");
@@ -689,12 +688,9 @@ static void fgIdleFunction ( void ) {
 	audio_mixer = new smMixer;
 	audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
 	audio_sched -> setSafetyMargin ( 1.0 ) ;
-	current_options.get_fg_root(path);
-	strcat(path, "/Sounds/");
-	strcpy(slfile, path);
-	strcat(slfile, "wasp.wav");
+	string slfile = current_options.get_fg_root() + "/Sounds/wasp.wav";
 
-	s1 = new slSample ( slfile );
+	s1 = new slSample ( (char *)slfile.c_str() );
 	printf("Rate = %d  Bps = %d  Stereo = %d\n", 
 	       s1 -> getRate(), s1 -> getBps(), s1 -> getStereo());
 	audio_sched -> loopSample ( s1 );
@@ -805,8 +801,6 @@ int fgGlutInitEvents( void ) {
 // Main ...
 int main( int argc, char **argv ) {
     fgFLIGHT *f;
-    char config[256];
-    int result;  // Used in command line argument.
 
     f = current_aircraft.flight;
 
@@ -821,21 +815,22 @@ int main( int argc, char **argv ) {
 
     // Attempt to locate and parse a config file
     // First check fg_root
-    current_options.get_fg_root(config);
-    strcat(config, "/system.fgfsrc");
-    result = current_options.parse_config_file(config);
+    string config = current_options.get_fg_root() + "/system.fgfsrc";
+    current_options.parse_config_file( config );
 
     // Next check home directory
-    if ( getenv("HOME") != NULL ) {
-	strcpy(config, getenv("HOME"));
-	strcat(config, "/.fgfsrc");
-	result = current_options.parse_config_file(config);
+    char* envp = ::getenv( "HOME" );
+    if ( envp != NULL ) {
+	config = envp;
+	config += "/.fgfsrc";
+	current_options.parse_config_file( config );
     }
 
     // Parse remaining command line options
     // These will override anything specified in a config file
-    result = current_options.parse_command_line(argc, argv);
-    if ( result != FG_OPTIONS_OK ) {
+    if ( current_options.parse_command_line(argc, argv) !=
+	                              fgOPTIONS::FG_OPTIONS_OK )
+    {
 	// Something must have gone horribly wrong with the command
 	// line parsing or maybe the user just requested help ... :-)
 	current_options.usage();
@@ -872,7 +867,16 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
-// Revision 1.46  1998/08/22 14:49:56  curt
+// Revision 1.47  1998/08/27 17:02:04  curt
+// Contributions from Bernie Bright <bbright@c031.aone.net.au>
+// - use strings for fg_root and airport_id and added methods to return
+//   them as strings,
+// - inlined all access methods,
+// - made the parsing functions private methods,
+// - deleted some unused functions.
+// - propogated some of these changes out a bit further.
+//
+// Revision 1.46  1998/08/22  14:49:56  curt
 // Attempting to iron out seg faults and crashes.
 // Did some shuffling to fix a initialization order problem between view
 // position, scenery elevation.

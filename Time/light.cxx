@@ -60,31 +60,25 @@ fgLIGHT::fgLIGHT( void ) {
 
 // initialize lighting tables
 void fgLIGHT::Init( void ) {
-    char path[256];
+    string path, ambient, diffuse, sky;
 
     fgPrintf( FG_EVENT, FG_INFO, 
 	     "Initializing Lighting interpolation tables.\n" );
 
     // build the path name to the ambient lookup table
-    current_options.get_fg_root(path);
-    strcat(path, "/Lighting/");
-    strcat(path, "ambient");
-    // initialize ambient table
-    ambient_tbl = new fgINTERPTABLE(path);
+    path = current_options.get_fg_root();
+    ambient = path + "/Lighting/ambient";
+    diffuse = path + "/Lighting/diffuse";
+    sky     = path + "/Lighting/sky";
 
-    // build the path name to the diffuse lookup table
-    current_options.get_fg_root(path);
-    strcat(path, "/Lighting/");
-    strcat(path, "diffuse");
+    // initialize ambient table
+    ambient_tbl = new fgINTERPTABLE((char *)ambient.c_str());
+
     // initialize diffuse table
-    diffuse_tbl = new fgINTERPTABLE(path);
+    diffuse_tbl = new fgINTERPTABLE((char *)diffuse.c_str());
     
-    // build the path name to the sky lookup table
-    current_options.get_fg_root(path);
-    strcat(path, "/Lighting/");
-    strcat(path, "sky");
     // initialize sky table
-    sky_tbl = new fgINTERPTABLE(path);
+    sky_tbl = new fgINTERPTABLE((char *)sky.c_str());
 }
 
 
@@ -227,6 +221,15 @@ void fgLightUpdate ( void ) {
 
 
 // $Log$
+// Revision 1.16  1998/08/27 17:02:11  curt
+// Contributions from Bernie Bright <bbright@c031.aone.net.au>
+// - use strings for fg_root and airport_id and added methods to return
+//   them as strings,
+// - inlined all access methods,
+// - made the parsing functions private methods,
+// - deleted some unused functions.
+// - propogated some of these changes out a bit further.
+//
 // Revision 1.15  1998/08/25 20:53:33  curt
 // Shuffled $FG_ROOT file layout.
 //

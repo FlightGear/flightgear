@@ -31,22 +31,35 @@
 # error This library requires C++
 #endif                                   
 
-
-#define FG_OPTIONS_OK 0
-#define FG_OPTIONS_HELP 1
-#define FG_OPTIONS_ERROR 2
-
+#include <string>
+#include <string.h>
 
 class fgOPTIONS {
+public:
+    enum
+    {
+	FG_OPTIONS_OK = 0,
+	FG_OPTIONS_HELP = 1,
+	FG_OPTIONS_ERROR = 2
+    };
+
+    enum fgFogKind
+    {
+	FG_FOG_DISABLED = 0,
+	FG_FOG_FASTEST  = 1,
+	FG_FOG_NICEST   = 2
+    };
+
+    const int FG_RADIUS_MIN = 1;
+    const int FG_RADIUS_MAX = 4;
+
+private:
 
     // The flight gear "root" directory
-    char fg_root[256];
+    string fg_root;
 
     // Starting position and orientation
-
-    // ID of initial starting airport, only need 5 bytes but I guess
-    // 16 is good for memory alignment.
-    char airport_id[16];
+    string airport_id;  // ID of initial starting airport
     double lon;         // starting longitude in degrees (west = -)
     double lat;         // starting latitude in degrees (south = -)
     double altitude;    // starting altitude in meters
@@ -55,28 +68,28 @@ class fgOPTIONS {
     double pitch;       // pitch angle in degrees (Theta)
 
     // Miscellaneous
-    int game_mode;      // Game mode enabled/disabled
-    int splash_screen; // show splash screen
-    int intro_music;   // play introductory music
-    int mouse_pointer; // show mouse pointer
-    int pause;         // pause intially enabled/disabled
+    bool game_mode;     // Game mode enabled/disabled
+    bool splash_screen; // show splash screen
+    bool intro_music;   // play introductory music
+    int mouse_pointer;  // show mouse pointer
+    bool pause;         // pause intially enabled/disabled
 
     // Features
-    int hud_status;    // HUD on/off
-    int panel_status;  // Panel on/off
-    int sound;         // play sound effects
+    bool hud_status;    // HUD on/off
+    bool panel_status;  // Panel on/off
+    bool sound;         // play sound effects
 
     // Flight Model options
-    int flight_model;  // Flight Model:  FG_SLEW, FG_LARCSIM, etc.
+    int flight_model;   // Flight Model:  FG_SLEW, FG_LARCSIM, etc.
 
     // Rendering options
-    int fog;           // Fog enabled/disabled
-    double fov;        // Field of View
-    int fullscreen;    // Full screen mode enabled/disabled
-    int shading;       // shading method, 0 = Flat, 1 = Smooth
-    int skyblend;      // Blend sky to haze (using polygons) or just clear
-    int textures;      // Textures enabled/disabled
-    int wireframe;     // Wireframe mode enabled/disabled
+    fgFogKind fog;      // Fog nicest/fastest/disabled
+    double fov;         // Field of View
+    bool fullscreen;    // Full screen mode enabled/disabled
+    int shading;        // shading method, 0 = Flat, 1 = Smooth
+    bool skyblend;      // Blend sky to haze (using polygons) or just clear
+    bool textures;      // Textures enabled/disabled
+    bool wireframe;     // Wireframe mode enabled/disabled
 
     // Scenery options
     int tile_radius;   // Square radius of rendered tiles (around center 
@@ -94,93 +107,64 @@ class fgOPTIONS {
 
 public:
 
-    // Constructor
-    fgOPTIONS( void );
+    fgOPTIONS();
+    ~fgOPTIONS();
 
     // Parse a single option
-    int parse_option( char *arg );
+    int parse_option( const string& arg );
 
     // Parse the command line options
     int parse_command_line( int argc, char **argv );
 
     // Parse the command line options
-    int parse_config_file( char *path );
+    int parse_config_file( const string& path );
 
     // Print usage message
     void usage ( void );
 
     // Query functions
-    void get_fg_root(char *root) { strcpy(root, fg_root); }
-    void get_airport_id(char *id) { strcpy(id, airport_id); }
-    double get_lon( void ) { return(lon); }
-    double get_lat( void ) { return(lat); }
-    double get_altitude( void ) { return(altitude); }
-    double get_heading( void ) { return(heading); }
-    double get_roll( void ) { return(roll); }
-    double get_pitch( void ) { return(pitch); }
-    int get_game_mode( void ) { return(game_mode); }
-    int get_splash_screen( void ) { return(splash_screen); }
-    int get_intro_music( void ) { return(intro_music); }
-    int get_mouse_pointer( void ) { return(mouse_pointer); }
-    int get_pause( void ) { return(pause); }
-    int get_hud_status( void ) { return(hud_status); }
-    int get_panel_status( void ) { return(panel_status); }
-    int get_sound( void ) { return(sound); }
-    int get_flight_model( void ) { return(flight_model); }
-    int get_fog( void ) { return(fog); }
-    double get_fov( void ) { return(fov); }
-    int get_fullscreen( void ) { return(fullscreen); }
-    int get_shading( void ) { return(shading); }
-    int get_skyblend( void ) { return(skyblend); }
-    int get_textures( void ) { return(textures); }
-    int get_wireframe( void ) { return(wireframe); }
-    int get_tile_radius( void ) { return(tile_radius); }
-    int get_tile_diameter( void ) { return(tile_diameter); }
-    int get_time_offset( void ) { return(time_offset); }
-    int get_tris_or_culled( void )   { return(tris_or_culled); }
+    string get_fg_root() const { return fg_root; }
+    string get_airport_id() const { return airport_id; }
+    double get_lon() const { return lon; }
+    double get_lat() const { return lat; }
+    double get_altitude() const { return altitude; }
+    double get_heading() const { return heading; }
+    double get_roll() const { return roll; }
+    double get_pitch() const { return pitch; }
+    bool get_game_mode() const { return game_mode; }
+    bool get_splash_screen() const { return splash_screen; }
+    bool get_intro_music() const { return intro_music; }
+    int get_mouse_pointer() const { return mouse_pointer; }
+    bool get_pause() const { return pause; }
+    bool get_hud_status() const { return hud_status; }
+    bool get_panel_status() const { return panel_status; }
+    bool get_sound() const { return sound; }
+    int get_flight_model() const { return flight_model; }
+    bool fog_enabled() const { return fog != FG_FOG_DISABLED; }
+    fgFogKind get_fog() const { return fog; }
+    double get_fov() const { return fov; }
+    bool get_fullscreen() const { return fullscreen; }
+    int get_shading() const { return shading; }
+    bool get_skyblend() const { return skyblend; }
+    bool get_textures() const { return textures; }
+    bool get_wireframe() const { return wireframe; }
+    int get_tile_radius() const { return tile_radius; }
+    int get_tile_diameter() const { return tile_diameter; }
+    int get_time_offset() const { return time_offset; }
+    int get_tris_or_culled() const { return tris_or_culled; }
 
     // Update functions
-    void set_hud_status( int status ) { hud_status = status; }
+    void set_hud_status( bool status ) { hud_status = status; }
     void set_fov( double amount ) { fov = amount; }
 
-#if 0
-    void get_fg_root(char *root);
-    void get_airport_id(char *id);
-    double get_lon( void );
-    double get_lat( void );
-    double get_altitude( void );
-    double get_heading( void );
-    double get_roll( void );
-    double get_pitch( void );
-    int get_game_mode( void );
-    int get_splash_screen( void );
-    int get_intro_music( void );
-    int get_mouse_pointer( void );
-    int get_pause( void );
-    int get_hud_status( void );
-    int get_panel_status( void );
-    int get_sound( void );
-    int get_flight_model( void );
-    int get_fog( void );
-    double get_fov( void );
-    int get_fullscreen( void );
-    int get_shading( void );
-    int get_skyblend( void );
-    int get_textures( void );
-    int get_wireframe( void );
-    int get_tile_radius( void );
-    int get_tile_diameter( void );
-    int get_time_offset( void );
-    int get_tris_or_culled( void )   { return(tris_or_culled); }
+private:
 
-    // Update functions
-    void set_hud_status( int status );
-    void set_fov( double amount );
-#endif
-
-    // Destructor
-    ~fgOPTIONS( void );
-
+    double parse_time( const string& time_str );
+    double parse_degree( const string& degree_str );
+    int parse_time_offset( const string& time_str );
+    int parse_tile_radius( const string& arg );
+    int parse_flight_model( const string& fm );
+    double parse_fov( const string& arg );
 };
 
 
@@ -191,6 +175,15 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.16  1998/08/27 17:02:08  curt
+// Contributions from Bernie Bright <bbright@c031.aone.net.au>
+// - use strings for fg_root and airport_id and added methods to return
+//   them as strings,
+// - inlined all access methods,
+// - made the parsing functions private methods,
+// - deleted some unused functions.
+// - propogated some of these changes out a bit further.
+//
 // Revision 1.15  1998/08/24 20:11:15  curt
 // Added i/I to toggle full vs. minimal HUD.
 // Added a --hud-tris vs --hud-culled option.

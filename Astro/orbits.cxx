@@ -29,6 +29,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <string>
 
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
@@ -114,27 +115,24 @@ int fgReadOrbElements(struct OrbElements *dest, gzFile src) {
 
 int fgSolarSystemInit(fgTIME t)
 {
-    char path[256], gzpath[256];
+    string path, gzpath;
     int i, ret_val;
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing solar system\n");
 
     /* build the full path name to the orbital elements database file */
-    current_options.get_fg_root(path);
-    strcat(path, "/Astro/");
-    strcat(path, "planets");
+    path = current_options.get_fg_root() + "/Astro/planets";
+    gzpath = path + ".gz";
 
-    if ( (data = fgopen(path, "rb")) == NULL ) {
-	strcpy(gzpath, path);
-	strcat(gzpath, ".gz");
-	if ( (data = fgopen(gzpath, "rb")) == NULL ) {
+    if ( (data = fgopen(path.c_str(), "rb")) == NULL ) {
+	if ( (data = fgopen(gzpath.c_str(), "rb")) == NULL ) {
 	    fgPrintf( FG_ASTRO, FG_EXIT,
-		      "Cannot open data file: '%s'\n", path);
+		      "Cannot open data file: '%s'\n", path.c_str());
 	}
     }
 
     /* printf("  reading datafile %s\n", path); */
-    fgPrintf( FG_ASTRO, FG_INFO, "  reading datafile %s\n", path);
+    fgPrintf( FG_ASTRO, FG_INFO, "  reading datafile %s\n", path.c_str());
 
     /* for all the objects... */
     for (i = 0; i < 9; i ++) {
@@ -170,9 +168,18 @@ void fgSolarSystemUpdate(struct OrbElements *planet, fgTIME t)
 
 
 /* $Log$
-/* Revision 1.9  1998/08/25 20:53:28  curt
-/* Shuffled $FG_ROOT file layout.
+/* Revision 1.10  1998/08/27 17:02:00  curt
+/* Contributions from Bernie Bright <bbright@c031.aone.net.au>
+/* - use strings for fg_root and airport_id and added methods to return
+/*   them as strings,
+/* - inlined all access methods,
+/* - made the parsing functions private methods,
+/* - deleted some unused functions.
+/* - propogated some of these changes out a bit further.
 /*
+ * Revision 1.9  1998/08/25 20:53:28  curt
+ * Shuffled $FG_ROOT file layout.
+ *
  * Revision 1.8  1998/08/22 01:18:59  curt
  * Minor tweaks to avoid using unitialized memory.
  *

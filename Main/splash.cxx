@@ -50,7 +50,7 @@ static GLubyte *splash_texbuf;
 
 // Initialize the splash screen
 void fgSplashInit ( void ) {
-    char tpath[256], fg_tpath[256];
+    string tpath, fg_tpath;
     int width, height;
 
     fgPrintf( FG_GENERAL, FG_INFO, "Initializing splash screen\n");
@@ -70,18 +70,19 @@ void fgSplashInit ( void ) {
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // load in the texture data
-    current_options.get_fg_root(tpath);
-    strcat(tpath, "/Textures/");
-    strcat(tpath, "Splash2.rgb");
+    tpath = current_options.get_fg_root() + "/Textures/Splash2.rgb";
 
-    if ( (splash_texbuf = read_rgb_texture(tpath, &width, &height)) == NULL ) {
+    if ( (splash_texbuf = 
+	  read_rgb_texture(tpath.c_str(), &width, &height)) == NULL )
+    {
 	// Try compressed
-	strcpy(fg_tpath, tpath);
-	strcat(fg_tpath, ".gz");
-	if ( (splash_texbuf = read_rgb_texture(fg_tpath, &width, &height)) 
-	     == NULL ) {
+	fg_tpath = tpath + ".gz";
+	if ( (splash_texbuf = 
+	      read_rgb_texture(fg_tpath.c_str(), &width, &height)) == NULL )
+	{
 	    fgPrintf( FG_GENERAL, FG_EXIT, 
-		      "Error in loading splash screen texture %s\n", tpath );
+		      "Error in loading splash screen texture %s\n", 
+		      tpath.c_str() );
 	} 
     } 
 
@@ -143,6 +144,15 @@ void fgSplashUpdate ( double progress ) {
 
 
 // $Log$
+// Revision 1.4  1998/08/27 17:02:08  curt
+// Contributions from Bernie Bright <bbright@c031.aone.net.au>
+// - use strings for fg_root and airport_id and added methods to return
+//   them as strings,
+// - inlined all access methods,
+// - made the parsing functions private methods,
+// - deleted some unused functions.
+// - propogated some of these changes out a bit further.
+//
 // Revision 1.3  1998/08/25 16:59:10  curt
 // Directory reshuffling.
 //

@@ -40,35 +40,32 @@ fgAIRPORTS::fgAIRPORTS( void ) {
 
 
 // load the data
-int fgAIRPORTS::load( char *file ) {
+int fgAIRPORTS::load( const string& file ) {
     fgAIRPORT a;
-    char path[256], fgpath[256], line[256];
-    char id[5];
-    string id_str;
+    string path, fgpath, id;
+    char id_raw[256], line[256];
     fgFile f;
 
     // build the path name to the airport file
-    current_options.get_fg_root(path);
-    strcat(path, "/Airports/");
-    strcat(path, file);
-    strcpy(fgpath, path);
-    strcat(fgpath, ".gz");
+    path = current_options.get_fg_root() + "/Airports/" + file;
+    fgpath = path + ".gz";
 
     // first try "path.gz"
-    if ( (f = fgopen(fgpath, "rb")) == NULL ) {
+    if ( (f = fgopen(fgpath.c_str(), "rb")) == NULL ) {
 	// next try "path"
-        if ( (f = fgopen(path, "rb")) == NULL ) {
-	    fgPrintf(FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", path);
+        if ( (f = fgopen(path.c_str(), "rb")) == NULL ) {
+	    fgPrintf( FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", 
+		      path.c_str());
 	}
     }
 
     while ( fggets(f, line, 250) != NULL ) {
 	// printf("%s", line);
 
-	sscanf( line, "%s %lf %lf %lfl\n", id, &a.longitude, &a.latitude, 
+	sscanf( line, "%s %lf %lf %lfl\n", id_raw, &a.longitude, &a.latitude, 
 		&a.elevation );
-	id_str = id;
-	airports[id_str] = a;
+	id = id_raw;
+	airports[id] = a;
     }
 
     fgclose(f);
@@ -100,6 +97,15 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.3  1998/08/27 17:01:55  curt
+// Contributions from Bernie Bright <bbright@c031.aone.net.au>
+// - use strings for fg_root and airport_id and added methods to return
+//   them as strings,
+// - inlined all access methods,
+// - made the parsing functions private methods,
+// - deleted some unused functions.
+// - propogated some of these changes out a bit further.
+//
 // Revision 1.2  1998/08/25 20:53:24  curt
 // Shuffled $FG_ROOT file layout.
 //

@@ -38,6 +38,7 @@
 #endif
 
 #include <string.h>
+#include <string>
 
 #include <Include/fg_constants.h>
 #include <Include/general.h>
@@ -74,13 +75,13 @@ extern const char *default_root;
 
 // Set initial position and orientation
 int fgInitPosition( void ) {
-    char id[5];
+    string id;
     fgFLIGHT *f;
 
     f = current_aircraft.flight;
 
-    current_options.get_airport_id(id);
-    if ( strlen(id) ) {
+    id = current_options.get_airport_id();
+    if ( id.length() ) {
 	// set initial position from airport id
 
 	fgAIRPORTS airports;
@@ -88,15 +89,15 @@ int fgInitPosition( void ) {
 
 	fgPrintf( FG_GENERAL, FG_INFO, 
 		  "Attempting to set starting position from airport code %s.\n",
-		  id);
+		  id.c_str() );
 
 	airports.load("apt_simple");
-	a = airports.search(id);
+	a = airports.search( (char *)id.c_str() );
 	if ( (fabs(a.longitude) < FG_EPSILON) &&
 	     (fabs(a.latitude) < FG_EPSILON) &&
 	     (fabs(a.elevation) < FG_EPSILON) ) {
 	    fgPrintf( FG_GENERAL, FG_EXIT, 
-		      "Failed to find %s in database.\n", id);
+		      "Failed to find %s in database.\n", id.c_str() );
 	} else {
 	    FG_Longitude = ( a.longitude ) * DEG_TO_RAD;
 	    FG_Latitude  = ( a.latitude ) * DEG_TO_RAD;
@@ -125,7 +126,7 @@ int fgInitPosition( void ) {
 // General house keeping initializations
 int fgInitGeneral( void ) {
     fgGENERAL *g;
-    char root[256];
+    string root;
     int i;
 
     g = &general;
@@ -137,14 +138,14 @@ int fgInitGeneral( void ) {
     g->glRenderer = (char *)glGetString ( GL_RENDERER );
     g->glVersion = (char *)glGetString ( GL_VERSION );
 
-    current_options.get_fg_root(root);
-    if ( !strlen(root) ) { 
+    root = current_options.get_fg_root();
+    if ( ! root.length() ) { 
 	// No root path set? Then bail ...
 	fgPrintf( FG_GENERAL, FG_EXIT, "%s %s\n",
 		  "Cannot continue without environment variable FG_ROOT",
 		  "being defined.");
     }
-    fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", root);
+    fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", root.c_str() );
 
     // prime the frame rate counter pump
     for ( i = 0; i < FG_FRAME_RATE_HISTORY; i++ ) {
@@ -388,6 +389,15 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.34  1998/08/27 17:02:06  curt
+// Contributions from Bernie Bright <bbright@c031.aone.net.au>
+// - use strings for fg_root and airport_id and added methods to return
+//   them as strings,
+// - inlined all access methods,
+// - made the parsing functions private methods,
+// - deleted some unused functions.
+// - propogated some of these changes out a bit further.
+//
 // Revision 1.33  1998/08/25 20:53:32  curt
 // Shuffled $FG_ROOT file layout.
 //

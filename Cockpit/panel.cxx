@@ -38,6 +38,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
@@ -286,7 +287,7 @@ static IMAGE *ImageLoad(char *fileName)
 
 
 void fgPanelInit ( void ) {
-    char tpath[256];
+    string tpath;
     int x, y;
 
 #ifdef GL_VERSION_1_1
@@ -307,13 +308,11 @@ void fgPanelInit ( void ) {
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     /* load in the texture data */
-    current_options.get_fg_root(tpath);
-    strcat(tpath, "/Textures/");
-    strcat(tpath, "panel1.rgb");
+    tpath = current_options.get_fg_root() + "/Textures/panel1.rgb";
 
-    if ( (img = ImageLoad(tpath)) == NULL ){
+    if ( (img = ImageLoad((char *)tpath.c_str()) ) == NULL ){
 	fgPrintf( FG_COCKPIT, FG_EXIT, 
-		  "Error loading cockpit texture %s\n", tpath );
+		  "Error loading cockpit texture %s\n", tpath.c_str() );
     }
 
     for ( y = 0; y < 256; y++ ) {
@@ -416,10 +415,19 @@ void fgPanelUpdate ( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/07/24 21:37:00  curt
-/* Ran dos2unix to get rid of extraneous ^M's.  Tweaked parameter in
-/* ImageGetRawData() to match usage.
+/* Revision 1.5  1998/08/27 17:02:03  curt
+/* Contributions from Bernie Bright <bbright@c031.aone.net.au>
+/* - use strings for fg_root and airport_id and added methods to return
+/*   them as strings,
+/* - inlined all access methods,
+/* - made the parsing functions private methods,
+/* - deleted some unused functions.
+/* - propogated some of these changes out a bit further.
 /*
+ * Revision 1.4  1998/07/24 21:37:00  curt
+ * Ran dos2unix to get rid of extraneous ^M's.  Tweaked parameter in
+ * ImageGetRawData() to match usage.
+ *
  * Revision 1.3  1998/07/13 21:00:52  curt
  * Integrated Charlies latest HUD updates.
  * Wrote access functions for current fgOPTIONS.
