@@ -8,6 +8,10 @@ AC_INIT(Simulator/Aircraft/aircraft.cxx)
 dnl Initialize the automake stuff
 AM_INIT_AUTOMAKE(FlightGear, 0.6.0)
 
+dnl configure other independant packages included with flight gear for
+dnl convenience
+AC_CONFIG_SUBDIRS( Lib/plib )
+
 dnl Checks for programs.
 AC_PROG_MAKE_SET
 AC_PROG_CC
@@ -298,14 +302,10 @@ AC_OUTPUT( \
 	Makefile \
 	Include/Makefile \
 	Lib/Makefile \
-	Lib/Audio/Makefile \
-	Lib/Audio/src/Makefile \
-	Lib/Audio/example/Makefile \
 	Lib/Bucket/Makefile \
 	Lib/Debug/Makefile \
 	Lib/Math/Makefile \
 	Lib/Misc/Makefile \
-	Lib/PUI/Makefile \
 	Lib/Serial/Makefile \
 	Lib/XGL/Makefile \
 	Lib/zlib/Makefile \
