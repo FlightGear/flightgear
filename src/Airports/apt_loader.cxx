@@ -75,11 +75,11 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
     while ( ! in.eof() ) {
 	in.getline(tmp, 2048);
 	line = tmp;
-	SG_LOG( SG_GENERAL, SG_DEBUG, "-> '" << line << "'" );
+	SG_LOG( SG_GENERAL, SG_BULK, "-> '" << line << "'" );
         if ( line.length() ) {
             token = simgear::strutils::split( line );
             if ( token.size() ) {
-                SG_LOG( SG_GENERAL, SG_DEBUG, "token[0] " << token[0] );
+                SG_LOG( SG_GENERAL, SG_BULK, "token[0] " << token[0] );
             }
         } else {
             token.clear();
@@ -105,7 +105,7 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
 
             string id = token[4];
             double elev = atof( token[1].c_str() );
-            SG_LOG( SG_GENERAL, SG_DEBUG, "Next airport = " << id << " "
+            SG_LOG( SG_GENERAL, SG_BULK, "Next airport = " << id << " "
                     << elev );
 
             if ( !last_apt_id.empty()) {

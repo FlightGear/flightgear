@@ -54,7 +54,7 @@ void FGAirportList::add( const string id, const double longitude,
     a._has_metar = has_metar;
     airports_by_id[a._id] = a;
     airports_array.push_back( &airports_by_id[a._id] );
-    SG_LOG( SG_GENERAL, SG_DEBUG, "Adding " << id << " pos = " << longitude
+    SG_LOG( SG_GENERAL, SG_BULK, "Adding " << id << " pos = " << longitude
             << ", " << latitude << " elev = " << elevation );
 }
 
