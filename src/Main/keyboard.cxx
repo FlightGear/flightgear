@@ -263,6 +263,16 @@ void GLUTkey(unsigned char k, int x, int y) {
 		controls.move_throttle( FGControls::ALL_ENGINES, -0.01 );
 	    }
 	    return;
+ 	case 91: // [ key
+ 	    controls.move_flaps(-0.34);
+ 	    FG_LOG( FG_INPUT, FG_INFO,
+		    "Set flaps to " << controls.get_flaps() );
+ 	    return;
+ 	case 93: // ] key
+ 	    controls.move_flaps(0.34);
+ 	    FG_LOG( FG_INPUT, FG_INFO,
+		    "Set flaps to " << controls.get_flaps() );
+ 	    return;
 	case 97: // a key
 	    speed = current_options.get_speed_up();
 	    speed++;
