@@ -191,7 +191,7 @@ SGSimpleSound *FGMorse::make_ident( const string& id, const int freq ) {
     // 1. Determine byte length of message
     for ( i = 0; i < (int)id.length(); ++i ) {
 	if ( idptr[i] >= 'A' && idptr[i] <= 'Z' ) {
-	    char c = idptr[i] - 'A';
+	    int c = (int)(idptr[i] - 'A');
 	    for ( j = 0; j < 4 || alphabet[c][j] == end; ++j ) {
 		if ( alphabet[c][j] == DIT ) {
 		    length += DIT_SIZE;
@@ -201,7 +201,7 @@ SGSimpleSound *FGMorse::make_ident( const string& id, const int freq ) {
 	    }
 	    length += SPACE_SIZE;
         } else if ( idptr[i] >= '0' && idptr[i] <= '9' ) {
-            char c = idptr[i] - '0';
+            int c = (int)(idptr[i] - '0');
             for ( j = 0; j < 5; ++j) {
                 if ( numerals[c][j] == DIT ) {
                     length += DIT_SIZE;
@@ -225,7 +225,7 @@ SGSimpleSound *FGMorse::make_ident( const string& id, const int freq ) {
 
     for ( i = 0; i < (int)id.length(); ++i ) {
 	if ( idptr[i] >= 'A' && idptr[i] <= 'Z' ) {
-	    char c = idptr[i] - 'A';
+	    int c = (int)(idptr[i] - 'A');
 	    for ( j = 0; j < 4 || alphabet[c][j] == end; ++j ) {
 		if ( alphabet[c][j] == DIT ) {
 		    memcpy( buf_ptr, dit_ptr, DIT_SIZE );
@@ -238,7 +238,7 @@ SGSimpleSound *FGMorse::make_ident( const string& id, const int freq ) {
 	    memcpy( buf_ptr, space, SPACE_SIZE );
 	    buf_ptr += SPACE_SIZE;
         } else if ( idptr[i] >= '0' && idptr[i] <= '9' ) {
-            char c = idptr[i] - '0';
+            int c = (int)(idptr[i] - '0');
             for ( j = 0; j < 5; ++j ) {
                 if ( numerals[c][j] == DIT ) {
                     memcpy( buf_ptr, dit_ptr, DIT_SIZE );
