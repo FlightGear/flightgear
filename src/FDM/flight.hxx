@@ -637,6 +637,9 @@ public:
     inline double get_T_local_to_body_33() const {
 	return t_local_to_body_m[2][2];
     }
+    inline void set_T_Local_to_Body( int i, int j, double value) {
+      t_local_to_body_m[i-1][j-1] = value;
+    }  
     inline void set_T_Local_to_Body( double m[3][3] ) {
 	int i, j;
 	for ( i = 0; i < 3; i++ ) {

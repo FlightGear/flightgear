@@ -160,7 +160,8 @@ int FGJSBsim::init( double dt ) {
   FG_LOG( FG_FLIGHT, FG_INFO, "Finished initializing JSBSim" );
 
   copy_from_JSBsim();
-
+  
+  
   return 1;
 }
 
@@ -344,6 +345,12 @@ int FGJSBsim::copy_from_JSBsim() {
   set_Euler_Angles( FDMExec.GetRotation()->Getphi(),
                     FDMExec.GetRotation()->Gettht(),
                     FDMExec.GetRotation()->Getpsi() );
+                    
+  for(int i=0; i<3; i++ ) {
+    for (int j=0; j<3; j++ ) {
+      set_T_Local_to_Body(i,j,FDMExec.GetState()->GetTl2b()(i,j));
+    }
+  }     
 
   set_Alpha( FDMExec.GetTranslation()->Getalpha() );
   set_Beta( FDMExec.GetTranslation()->Getbeta() );
@@ -365,7 +372,7 @@ int FGJSBsim::copy_from_JSBsim() {
   set_Static_pressure( FDMExec.GetAtmosphere()->GetPressure() );
   set_Static_temperature ( FDMExec.GetAtmosphere()->GetTemperature() );
   
-  
+  set_Earth_position_angle( FDMExec.GetAuxiliary()->GetEarthPositionAngle() );
   
   /* **FIXME*** */ set_Sea_level_radius( sl_radius2 * METER_TO_FEET );
   /* **FIXME*** */ set_Earth_position_angle( 0.0 );
