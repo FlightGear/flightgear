@@ -1,3 +1,30 @@
+New in 0.9.5-pre1
+* July 15, 2004
+
+* New AIModel based air traffic subsystem (Durk Talsma)
+* Updates to the AIModel subsystem.
+* Switched audio subsystem from plib's "sl" to OpenAL.
+* Added support for SDL (pre-compile time configuration option.)
+* Threaded tile loader now enabled by default.
+* Overhauled Nav database code to directly support Robin Peel's default format.
+* Synced with latest JSBSim developments.
+* YASim now supports a nasal (script) based fuel management system.
+* YASim adds a simple turbo prop engine model.
+* Added an xml based gui/widget layout system for building dialog boxes.
+* Make gui windows dragable/repositionable.
+* Hide the mouse pointer when it sits idle.  Mouse pointer reappears
+  on any mouse motion.
+* The GPS module has been overhauled.
+* New joystick configurations added: Cyborg Evo, Top Gun Fox2 Pro USB,
+  MacAlly iStick USB, SideWinder Precision Pro (on Windows.)
+* Updated aircraft: A-10, AN-225, B-52F, BAC-TSR2, T-37, T-38, YF-23, Beech-99,
+  BO-105 (helicopter), DC-3, F-104, F-16, Fokker 50, Fokker 100, Pilatus PC-7.
+* New aircraft: Concorde, MD-11, Spitfire IIA, TU-154.
+* Updated airport, runway, taxiway, windsock, beacon, and tower data.
+* Updated world scenery based on SRTM terrain data.  New scenery includes
+  accurate radio towers for the USA.
+
+
 New in 0.9.4
 * March 26, 2004
 

@@ -12,7 +12,7 @@ AC_PREREQ(2.52)
 dnl Initialize the automake stuff
 dnl set the $host variable based on local machine/os
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE(FlightGear, 0.9.4)
+AM_INIT_AUTOMAKE(FlightGear, 0.9.5-pre1)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -368,7 +368,7 @@ if test "x$ac_cv_header_plib_ul_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for plib 1.7.0 or newer])
+AC_MSG_CHECKING([for plib 1.8.0 or newer])
 AC_TRY_RUN([
 #include <plib/ul.h>
 
@@ -409,7 +409,7 @@ if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for simgear 0.3.5 or newer])
+AC_MSG_CHECKING([for simgear 0.3.6 or newer])
 AC_TRY_RUN([
 #include <stdio.h>
 
@@ -420,7 +420,7 @@ AC_TRY_RUN([
 
 #define MIN_MAJOR 0
 #define MIN_MINOR 3
-#define MIN_MICRO 5
+#define MIN_MICRO 6
 
 int main() {
     int major, minor, micro;
