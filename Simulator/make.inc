@@ -29,9 +29,9 @@
 # Define the version
 #---------------------------------------------------------------------------
 
-VERSION_MAJOR = 0
-VERSION_MINOR = 17
-VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
+FG_VERSION_MAJOR = 0
+FG_VERSION_MINOR = 17
+FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 
 
 #---------------------------------------------------------------------------
@@ -62,7 +62,7 @@ LN = ln -sf
 #              - Other potential compiler optimization flags
 #---------------------------------------------------------------------------
 
-GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(VERSION)\"
+GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(FG_VERSION)\"
 
 
 #---------------------------------------------------------------------------
@@ -108,12 +108,23 @@ GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(VERSION)\"
 #---------------------------------------------------------------------------
 # Linux/Mesa with the GLUT toolkit
 #
+# INTERFACE_FLAGS = -DGLUT
+# INTERFACE_LIBS = -lglut
+# INTERFACE_FILES = GLUTmain.c GLUTkey.c
+# MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
+# X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
+# GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+# FG_CFLAGS = $(GLOBAL_CFLAGS)
+#---------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------
+# Sun/Solaris with the GLUT toolkit
+#
+VERSION=\"$(VERSION)\"
 INTERFACE_FLAGS = -DGLUT
 INTERFACE_LIBS = -lglut
 INTERFACE_FILES = GLUTmain.c GLUTkey.c
-MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
-X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
-GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
+GRAPHICS_LIBS =  -lGLU -lGL -lXext -lXmu -lXi -lX11
 FG_CFLAGS = $(GLOBAL_CFLAGS)
 #---------------------------------------------------------------------------
 
@@ -131,6 +142,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.23  1997/12/12 19:52:32  curt
+# Solaris tweaks.
+#
 # Revision 1.22  1997/12/11 04:43:53  curt
 # Fixed sun vector and lighting problems.  I thing the moon is now lit
 # correctly.
