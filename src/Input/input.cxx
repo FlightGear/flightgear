@@ -304,7 +304,10 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
 void
 FGInput::doMouseMotion (int x, int y)
 {
-  int modifiers = fgGetKeyModifiers();
+  // Don't call fgGetKeyModifiers() here, until we are using a
+  // toolkit that supports getting the mods from outside a key
+  // callback.  Glut doesn't.
+  int modifiers = KEYMOD_NONE;
 
   int xsize = fgGetInt("/sim/startup/xsize", 800);
   int ysize = fgGetInt("/sim/startup/ysize", 600);
