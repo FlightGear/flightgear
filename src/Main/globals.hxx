@@ -86,7 +86,7 @@ private:
     SGPropertyNode *initial_state;
 
     // list of serial port-like configurations
-    string_list channel_options_list;
+    string_list *channel_options_list;
 
 public:
 
@@ -132,8 +132,11 @@ public:
     inline SGPropertyNode *get_props () { return props; }
     inline void set_props( SGPropertyNode *n ) { props = n; }
 
-    inline string_list get_channel_options_list () {
-      return channel_options_list;
+    inline string_list *get_channel_options_list () {
+	return channel_options_list;
+    }
+    inline void set_channel_options_list( string_list *l ) {
+	channel_options_list = l;
     }
 
 

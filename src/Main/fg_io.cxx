@@ -193,9 +193,11 @@ static FGProtocol *parse_port_config( const string& config )
 // step through the port config streams (from fgOPTIONS) and setup
 // serial port channels for each
 void fgIOInit() {
+    // FG_LOG( FG_IO, FG_INFO, "I/O Channel initialization, " << 
+    //         globals->get_channel_options_list()->size() << " requests." );
+
     FGProtocol *p;
-    string_list channel_options_list = 
-	globals->get_channel_options_list();
+    string_list *channel_options_list = globals->get_channel_options_list();
 
     // we could almost do this in a single step except pushing a valid
     // port onto the port list copies the structure and destroys the
@@ -203,8 +205,8 @@ void fgIOInit() {
 
     // parse the configuration strings and store the results in the
     // appropriate FGIOChannel structures
-    for ( int i = 0; i < (int)channel_options_list.size(); ++i ) {
-	p = parse_port_config( channel_options_list[i] );
+    for ( int i = 0; i < (int)channel_options_list->size(); ++i ) {
+	p = parse_port_config( (*channel_options_list)[i] );
 	if ( p != NULL ) {
 	    p->open();
 	    global_io_list.push_back( p );

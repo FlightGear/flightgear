@@ -441,7 +441,7 @@ static bool
 parse_channel( const string& type, const string& channel_str ) {
     // cout << "Channel string = " << channel_str << endl;
 
-    globals->get_channel_options_list().push_back( type + "," + channel_str );
+    globals->get_channel_options_list()->push_back( type + "," + channel_str );
 
     return true;
 }

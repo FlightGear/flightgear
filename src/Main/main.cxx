@@ -480,7 +480,6 @@ void fgRenderFrame( void ) {
 #endif
 
 	thesky->modify_vis( cur_fdm_state->get_Altitude() * FEET_TO_METER,
-				
 			    ( global_multi_loop * 
 			      fgGetInt("/sim/speed-up") ) /
 			    (double)fgGetInt("/sim/model-hz") );
@@ -682,8 +681,10 @@ void fgRenderFrame( void ) {
 	// position tile nodes and update range selectors
 	global_tile_mgr.prep_ssg_nodes();
 
-	// draw the sky backdrop
-	thesky->preDraw();
+	if ( fgGetBool("/sim/rendering/skyblend") ) {
+	    // draw the sky backdrop
+	    thesky->preDraw();
+	}
 
 	// draw the ssg scene
 	glEnable( GL_DEPTH_TEST );
@@ -697,8 +698,10 @@ void fgRenderFrame( void ) {
 
 	ssgCullAndDraw( lighting );
 
-	// draw the sky cloud layers
-	thesky->postDraw( cur_fdm_state->get_Altitude() * FEET_TO_METER );
+	if ( fgGetBool("/sim/rendering/skyblend") ) {
+	    // draw the sky cloud layers
+	    thesky->postDraw( cur_fdm_state->get_Altitude() * FEET_TO_METER );
+	}
 
 	// display HUD && Panel
 	glDisable( GL_FOG );
@@ -769,12 +772,12 @@ void fgUpdateTimeDepCalcs() {
 	}
 
 	// cout << "multi_loop = " << multi_loop << endl;
-	for ( i = 0; i < multi_loop; ++i ) {
+	for ( i = 0; i < multi_loop * fgGetInt("/sim/speed-up"); ++i ) {
 	    // run Autopilot system
 	    current_autopilot->run();
 
-	    // update autopiot
-	    cur_fdm_state->update( 1 * fgGetInt("/sim/speed-up") );
+	    // update autopilot
+	    cur_fdm_state->update( 1 );
 	}
 	FGSteam::update( multi_loop * fgGetInt("/sim/speed-up") );
     } else {
@@ -1407,6 +1410,9 @@ int main( int argc, char **argv ) {
 
     FGViewerLookAt *chase = new FGViewerLookAt;
     globals->get_viewmgr()->add_view( chase );
+
+    string_list *col = new string_list;
+    globals->set_channel_options_list( col );
 
     // set current view to 0 (first) which is our main pilot view
     globals->set_current_view( globals->get_viewmgr()->get_view( 0 ) );
