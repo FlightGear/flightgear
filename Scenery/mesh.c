@@ -155,8 +155,11 @@ void mesh_do_it(struct mesh *m) {
 double mesh_altitude(double lon, double lat) {
     /* we expect incoming (lon,lat) to be in arcsec for now */
 
-    double xoffset, yoffset;
+    double xlocal, ylocal, dx, dy;
+    int x1, y1, z1, x2, y2, z2, x3, y3, z3;
     int xindex, yindex;
+    double tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10;
+    double a, b, c;
 
     /* determine if we are in the lower triangle or the upper triangle 
        ______
@@ -165,54 +168,77 @@ double mesh_altitude(double lon, double lat) {
        | /  |
        |/   |
        ------
+
+       then calculate our end points
      */
 
-    xoffset = lon - eg.originx;
-    yoffset = lat - eg.originy;
+    xlocal = ( lon - eg.originx ) / eg.col_step;
+    ylocal = ( lat - eg.originy ) / eg.row_step;
 
-    xindex = xoffset / eg.col_step;
-    yindex = yoffset / eg.row_step;
+    xindex = (int)xlocal;
+    yindex = (int)ylocal;
 
-    if ( xindex > yindex ) {
+    dx = xlocal - xindex;
+    dy = ylocal - yindex;
+
+    x1 = xindex; 
+    y1 = yindex; 
+    z1 = eg.mesh_data[x1 * eg.rows + y1];
+
+    x2 = xindex + eg.col_step; 
+    y2 = yindex + eg.row_step; 
+    z2 = eg.mesh_data[x2 * eg.rows + y2];
+				  
+    if ( dx > dy ) {
+	x3 = xindex + eg.col_step; 
+	y3 = yindex; 
+	z3 = eg.mesh_data[x3 * eg.rows + y3];
+    } else {
+	x3 = xindex; 
+	y3 = yindex + eg.row_step; 
+	z3 = eg.mesh_data[x3 * eg.rows + y3];
     }
+
+    /* given (x1, y1, z1) (x2, y2, z2) and (x3, y3, z3) calculate (a,
+     * b, c) such that z = ax + by + c is the equation of the plane
+     * intersecting the three given points */
+
+    tmp1 = (x2 * z1 / x1 - z2);
+    tmp2 = (y2 - x2 * y1 / x1);
+    tmp3 = (x2 * y1 / x1 - y2);
+    tmp4 = (1 - x2 / x1);
+    tmp5 = (x3*(z1 + y1*tmp1 / tmp2) / x1 - z3 + y3*tmp1 / tmp3);
+    tmp6 = x3*(y1*tmp4 / tmp2 - 1);
+    tmp7 = tmp5 / (y3*tmp4 / tmp2 - tmp6 / x1 - 1);
+    tmp8 = (tmp6 / x1 + y3*tmp4 / tmp3 + 1);
+    tmp9 = (z1 + tmp5 / tmp8);
+    tmp10 = (tmp7 + x2*tmp9 / x1 - z2);
+      
+    a = (tmp9 + y1*tmp10 / tmp2) / x1;
+    
+    b = tmp10 / tmp3;
+      
+    c = tmp7;
+
+    /* Then, given a position we can calculate the current ground elevation */
+
+    printf("Our true ground elevation is %.2f\n", a*lon + b*lat + c);
+
     if ( (xindex >= 0) && (xindex < eg.cols) ) {
 	if ( (yindex >= 0) && (yindex < eg.rows) ) {
 	    return( eg.mesh_data[xindex * eg.rows + yindex] );
 	}
     }
-
-    /*
-      given (x1, y1, z1) (x2, y2, z2) and (x3, y3, z3) 
-      calculate z = ax + by + c (the equation of the plane intersecting the 
-      three given points
-
-      Then, given a position we can calculate the current ground elevation
-
-      tmp1 = (x2 * z1 / x1 - z2);
-      tmp2 = (y2 - x2 * y1 / x1);
-      tmp3 = (x2 * y1 / x1 - y2);
-      tmp4 = (1 - x2 / x1);
-      tmp5 = (x3*(z1 + y1*tmp1 / tmp2) / x1 - z3 + y3*tmp1 / tmp3);
-      tmp6 = x3*(y1*tmp4 / tmp2 - 1);
-      tmp7 = tmp5 / (y3*tmp4 / tmp2 - tmp6 / x1 - 1);
-      tmp8 = (tmp6 / x1 + y3*tmp4 / tmp3 + 1);
-      tmp9 = (z1 + tmp5 / tmp8);
-      tmp10 = (tmp7 + x2*tmp9 / x1 - z2);
-      
-      a = (tmp9 + y1*tmp10 / tmp2) / x1;
-      
-      b = tmp10 / tmp3;
-      
-      c = tmp7;
-     */
-
 }
 
 
 /* $Log$
-/* Revision 1.8  1997/07/09 21:31:15  curt
-/* Working on making the ground "hard."
+/* Revision 1.9  1997/07/10 02:22:10  curt
+/* Working on terrain elevation interpolation routine.
 /*
+ * Revision 1.8  1997/07/09 21:31:15  curt
+ * Working on making the ground "hard."
+ *
  * Revision 1.7  1997/07/08 18:20:13  curt
  * Working on establishing a hard ground.
  *
