@@ -24,6 +24,10 @@
 // (Log is kept at end of this file)
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <ctype.h>    // isspace()
 #include <math.h>     // rint()
 #include <stdio.h>
@@ -782,6 +786,9 @@ fgDEM::~fgDEM( void ) {
 
 
 // $Log$
+// Revision 1.9  1998/07/13 15:29:49  curt
+// Added #ifdef HAVE_CONFIG_H
+//
 // Revision 1.8  1998/07/04 00:47:18  curt
 // typedef'd struct fgBUCKET.
 //
