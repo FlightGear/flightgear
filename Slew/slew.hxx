@@ -1,5 +1,5 @@
 /**************************************************************************
- * slew.h -- the "slew" flight model
+ * slew.hxx -- the "slew" flight model
  *
  * Written by Curtis Olson, started May 1997.
  *
@@ -24,8 +24,13 @@
  **************************************************************************/
 
 
-#ifndef _SLEW_H
-#define _SLEW_H
+#ifndef _SLEW_HXX
+#define _SLEW_HXX
+
+
+#ifndef __cplusplus                                                          
+# error This library requires C++
+#endif                                   
 
 
 /* reset flight params to a specific position */ 
@@ -35,13 +40,16 @@ void fgSlewInit(double pos_x, double pos_y, double pos_z, double heading);
 void fgSlewUpdate( void );
 
 
-#endif /* _SLEW_H */
+#endif /* _SLEW_HXX */
 
 
 /* $Log$
-/* Revision 1.4  1998/01/22 02:59:34  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.1  1998/10/16 23:27:52  curt
+/* C++-ifying.
 /*
+ * Revision 1.4  1998/01/22 02:59:34  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.3  1998/01/19 18:40:30  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

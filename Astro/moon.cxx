@@ -22,7 +22,7 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
-#include <Flight/flight.h>
+#include <Flight/flight.hxx>
 
 #include <string.h>
 #include "moon.hxx"

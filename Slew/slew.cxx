@@ -1,5 +1,5 @@
 /**************************************************************************
- * slew.c -- the "slew" flight model
+ * slew.cxx -- the "slew" flight model
  *
  * Written by Curtis Olson, started May 1997.
  *
@@ -26,9 +26,10 @@
 
 #include <math.h>
 
-#include <Flight/Slew/slew.h>
-#include <Flight/flight.h>
-#include <Aircraft/aircraft.h>
+#include "slew.hxx"
+
+#include <Flight/flight.hxx>
+#include <Aircraft/aircraft.hxx>
 #include <Controls/controls.h>
 #include <Include/fg_constants.h>
 
@@ -84,9 +85,12 @@ void fgSlewUpdate( void ) {
 
 
 /* $Log$
-/* Revision 1.13  1998/04/25 22:06:29  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.1  1998/10/16 23:27:50  curt
+/* C++-ifying.
 /*
+ * Revision 1.13  1998/04/25 22:06:29  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.12  1998/04/08 23:35:30  curt
  * Tweaks to Gnu automake/autoconf system.
  *

@@ -1,4 +1,3 @@
-//
 // views.hxx -- data structures and routines for managing and view parameters.
 //
 // Written by Curtis Olson, started August 1997.
@@ -32,8 +31,7 @@
 #endif                                   
 
 
-// #include <Include/fg_types.h>
-#include <Flight/flight.h>
+#include <Flight/flight.hxx>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
 #include <Time/fg_time.hxx>
@@ -182,6 +180,9 @@ extern fgVIEW current_view;
 
 
 // $Log$
+// Revision 1.15  1998/10/16 23:27:56  curt
+// C++-ifying.
+//
 // Revision 1.14  1998/10/16 00:54:04  curt
 // Converted to Point3D class.
 //

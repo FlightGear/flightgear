@@ -26,7 +26,7 @@
 
 #include <stdio.h>
 
-#include <Aircraft/aircraft.h>
+#include "aircraft.hxx"
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 
@@ -64,9 +64,12 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
 
 
 /* $Log$
-/* Revision 1.19  1998/04/25 22:06:24  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.1  1998/10/16 23:26:47  curt
+/* C++-ifying.
 /*
+ * Revision 1.19  1998/04/25 22:06:24  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.18  1998/04/18 04:13:56  curt
  * Moved fg_debug.c to it's own library.
  *

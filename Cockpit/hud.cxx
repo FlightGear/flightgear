@@ -38,7 +38,7 @@
 #  include <values.h>  // for MAXINT
 #endif
 
-#include <Aircraft/aircraft.h>
+#include <Aircraft/aircraft.hxx>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
@@ -830,6 +830,9 @@ void fgUpdateHUD( void ) {
 }
 
 // $Log$
+// Revision 1.24  1998/10/16 23:27:25  curt
+// C++-ifying.
+//
 // Revision 1.23  1998/10/16 00:53:00  curt
 // Mods to display a bit more info when mini-hud is active.
 //

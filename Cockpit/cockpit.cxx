@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <Aircraft/aircraft.h>
+#include <Aircraft/aircraft.hxx>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Include/general.h>
@@ -316,6 +316,9 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
+// Revision 1.18  1998/10/16 23:27:23  curt
+// C++-ifying.
+//
 // Revision 1.17  1998/09/29 14:56:30  curt
 // c++-ified comments.
 //

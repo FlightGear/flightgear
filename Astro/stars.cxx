@@ -40,7 +40,7 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Aircraft/aircraft.h>
+#include <Aircraft/aircraft.hxx>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Misc/fgstream.hxx>
@@ -252,6 +252,9 @@ void fgStarsRender( void ) {
 
 
 // $Log$
+// Revision 1.19  1998/10/16 23:27:21  curt
+// C++-ifying.
+//
 // Revision 1.18  1998/10/16 00:52:20  curt
 // Converted to Point3D class.
 //

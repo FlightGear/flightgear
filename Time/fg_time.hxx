@@ -43,7 +43,7 @@
 #include <GL/glut.h>
 #include <time.h>
 
-#include <Flight/flight.h>
+#include <Flight/flight.hxx>
 
 
 // Define a structure containing global time parameters
@@ -117,6 +117,9 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t);
 
 
 // $Log$
+// Revision 1.8  1998/10/16 23:28:00  curt
+// C++-ifying.
+//
 // Revision 1.7  1998/10/16 00:56:09  curt
 // Converted to Point3D class.
 //

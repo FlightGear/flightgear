@@ -28,16 +28,17 @@
 #define _LS_INTERFACE_H
 
 
-#include <Flight/flight.h>
+// #include <Flight/flight.h>
 #include "ls_types.h"
 
 
 /* reset flight params to a specific position */ 
-int fgLaRCsimInit(double dt);
+int ls_toplevel_init(double dt);
 
 /* update position based on inputs, positions, velocities, etc. */
-int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop);
+int ls_update(int multiloop);
 
+#if 0
 /* Convert from the fgFLIGHT struct to the LaRCsim generic_ struct */
 int fgFlight_2_LaRCsim (fgFLIGHT *f);
 
@@ -45,6 +46,7 @@ int fgFlight_2_LaRCsim (fgFLIGHT *f);
 int fgLaRCsim_2_Flight (fgFLIGHT *f);
 
 void ls_loop( SCALAR dt, int initialize );
+#endif
 
 /* Set the altitude (force) */
 int ls_ForceAltitude(double alt_feet);
@@ -54,15 +56,18 @@ int ls_ForceAltitude(double alt_feet);
 
 
 /* $Log$
-/* Revision 1.9  1998/07/12 03:11:04  curt
-/* Removed some printf()'s.
-/* Fixed the autopilot integration so it should be able to update it's control
-/*   positions every time the internal flight model loop is run, and not just
-/*   once per rendered frame.
-/* Added a routine to do the necessary stuff to force an arbitrary altitude
-/*   change.
-/* Gave the Navion engine just a tad more power.
+/* Revision 1.10  1998/10/16 23:27:45  curt
+/* C++-ifying.
 /*
+ * Revision 1.9  1998/07/12 03:11:04  curt
+ * Removed some printf()'s.
+ * Fixed the autopilot integration so it should be able to update it's control
+ *   positions every time the internal flight model loop is run, and not just
+ *   once per rendered frame.
+ * Added a routine to do the necessary stuff to force an arbitrary altitude
+ *   change.
+ * Gave the Navion engine just a tad more power.
+ *
  * Revision 1.8  1998/04/21 16:59:39  curt
  * Integrated autopilot.
  * Prepairing for C++ integration.

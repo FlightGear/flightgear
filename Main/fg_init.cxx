@@ -54,7 +54,7 @@
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
 #include <Joystick/joystick.h>
-#include <Math/fg_geodesy.h>
+#include <Math/fg_geodesy.hxx>
 #include <Math/fg_random.h>
 #include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
@@ -153,31 +153,6 @@ int fgInitGeneral( void ) {
 }
 
 
-// convert a geodetic point lon(radians), lat(radians), elev(meter) to
-// a cartesian point
-static Point3D geod_to_cart(double geod[3]) {
-    Point3D cp;
-    Point3D pp;
-    double gc_lon, gc_lat, sl_radius;
-
-    // printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
-    //        geod[0], geod[1], geod[2]);
-
-    gc_lon = geod[0];
-    fgGeodToGeoc(geod[1], geod[2], &sl_radius, &gc_lat);
-
-    // printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
-    //        gc_lat, sl_radius+geod[2]);
-
-    pp.setvals( gc_lon, gc_lat, sl_radius + geod[2] );
-    cp = fgPolarToCart3d(pp);
-    
-    // printf("A cart point is (%.8f, %.8f, %.8f)\n", cp.x, cp.y, cp.z);
-
-    return(cp);
-}
-
-
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
@@ -188,8 +163,7 @@ int fgInitSubsystems( void )
     fgLIGHT *l;
     fgTIME *t;
     fgVIEW *v;
-    double geod_pos[3];
-    Point3D abs_view_pos;
+    Point3D geod_pos, abs_view_pos;
 
     l = &cur_light_params;
     t = &cur_time_params;
@@ -225,13 +199,11 @@ int fgInitSubsystems( void )
     }
 
     // calculalate a cartesian point somewhere along the line between
-    // the center of the earth and our view position
-    geod_pos[0] = FG_Longitude;
-    geod_pos[1] = FG_Latitude;
-    // doesn't have to be the exact elevation (this is good because we
-    // don't know it yet :-)
-    geod_pos[2] = 0;
-    abs_view_pos = geod_to_cart(geod_pos);
+    // the center of the earth and our view position.  Doesn't have to
+    // be the exact elevation (this is good because we don't know it
+    // yet :-)
+    geod_pos.setvals( FG_Longitude, FG_Latitude, 0.0);
+    abs_view_pos = fgGeodToCart(geod_pos);
 
     // Calculate ground elevation at starting point
     scenery.cur_elev = 
@@ -393,6 +365,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.42  1998/10/16 23:27:54  curt
+// C++-ifying.
+//
 // Revision 1.41  1998/10/16 00:54:01  curt
 // Converted to Point3D class.
 //

@@ -71,6 +71,14 @@
 #define _LS_GENERIC_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
+#include "ls_types.h"
+
+
 typedef struct {
 
 /*================== Mass properties and geometry values ==================*/
@@ -405,6 +413,11 @@ typedef struct {
 } GENERIC;
 
 extern GENERIC generic_;	/* usually defined in ls_main.c */
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* _LS_GENERIC_H */

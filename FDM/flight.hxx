@@ -26,11 +26,11 @@
 #define _FLIGHT_H
 
 
-#include <Flight/Slew/slew.h>
+#include <Flight/Slew/slew.hxx>
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
 
 
@@ -403,18 +403,16 @@ int fgFlightModelInit(int model, fgFLIGHT *f, double dt);
 int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop);
 
 /* Set the altitude (force) */
-int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters);
-
-
-#ifdef __cplusplus
-}
-#endif
+void fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters);
 
 
 #endif /* _FLIGHT_H */
 
 
 // $Log$
+// Revision 1.2  1998/10/16 23:27:41  curt
+// C++-ifying.
+//
 // Revision 1.1  1998/10/16 20:16:44  curt
 // Renamed flight.[ch] to flight.[ch]xx
 //

@@ -241,9 +241,9 @@ $Original log: LaRCsim.c,v $
 #include "ls_model.h"
 #include "ls_init.h"
 
-#include <Flight/flight.h>
-#include <Aircraft/aircraft.h>
-#include <Debug/fg_debug.h>
+// #include <Flight/flight.h>
+// #include <Aircraft/aircraft.h>
+// #include <Debug/fg_debug.h>
 
 
 /* global variable declarations */
@@ -498,17 +498,17 @@ void ls_loop( SCALAR dt, int initialize ) {
 
 
 int ls_cockpit( void ) {
-    fgCONTROLS *c;
+    // fgCONTROLS *c;
 
     sim_control_.paused = 0;
 
-    c = current_aircraft.controls;
+    // c = current_aircraft.controls;
 
-    Lat_control = FG_Aileron;
-    Long_control = FG_Elevator;
-    Long_trim = FG_Elev_Trim;
-    Rudder_pedal = FG_Rudder;
-    Throttle_pct = FG_Throttle[0];
+    // Lat_control = FG_Aileron;
+    // Long_control = FG_Elevator;
+    // Long_trim = FG_Elev_Trim;
+    // Rudder_pedal = FG_Rudder;
+    // Throttle_pct = FG_Throttle[0];
 
     /* printf("Mach = %.2f  ", Mach_number);
     printf("%.4f,%.4f,%.2f  ", Latitude, Longitude, Altitude);
@@ -520,7 +520,7 @@ int ls_cockpit( void ) {
 
 /* Initialize the LaRCsim flight model, dt is the time increment for
    each subsequent iteration through the EOM */
-int fgLaRCsimInit(double dt) {
+int ls_toplevel_init(double dt) {
     model_dt = dt;
 
     ls_setdefopts();		/* set default options */
@@ -548,47 +548,22 @@ int fgLaRCsimInit(double dt) {
 
 
 /* Run an iteration of the EOM (equations of motion) */
-int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop) {
-    double save_alt = 0.0;
+int ls_update(int multiloop) {
     int	i;
 
     if (speedup > 0) {
 	ls_cockpit();
     }
 
-    /* lets try to avoid really screwing up the LaRCsim model */
-    if ( FG_Altitude < -9000 ) {
-	save_alt = FG_Altitude;
-	FG_Altitude = 0;
-    }
-
-    // translate FG to LaRCsim structure
-    fgFlight_2_LaRCsim(f);
-    // printf("FG_Altitude = %.2f\n", FG_Altitude * 0.3048);
-    // printf("Altitude = %.2f\n", Altitude * 0.3048);
-    // printf("Radius to Vehicle = %.2f\n", Radius_to_vehicle * 0.3048);
-
     for ( i = 0; i < multiloop; i++ ) {
 	ls_loop( model_dt, 0);
-    }
-
-    // printf("%d FG_Altitude = %.2f\n", i, FG_Altitude * 0.3048);
-    // printf("%d Altitude = %.2f\n", i, Altitude * 0.3048);
-    
-    // translate LaRCsim back to FG structure so that the
-    // autopilot (and the rest of the sim can use the updated
-    // values
-    fgLaRCsim_2_Flight(f);
-
-    /* but lets restore our original bogus altitude when we are done */
-    if ( save_alt < -9000 ) {
-	FG_Altitude = save_alt;
     }
 
     return 1;
 }
 
 
+#if 0
 /* Convert from the fgFLIGHT struct to the LaRCsim generic_ struct */
 int fgFlight_2_LaRCsim (fgFLIGHT *f) {
     Mass =      FG_Mass;
@@ -939,7 +914,7 @@ int fgLaRCsim_2_Flight (fgFLIGHT *f) {
 
     return ( 0 );
 }
-
+#endif
 
 /* Set the altitude (force) */
 int ls_ForceAltitude(double alt_feet) {
@@ -952,6 +927,9 @@ int ls_ForceAltitude(double alt_feet) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.23  1998/10/16 23:27:44  curt
+ * C++-ifying.
+ *
  * Revision 1.22  1998/09/29 02:02:59  curt
  * Added a brake + autopilot mods.
  *

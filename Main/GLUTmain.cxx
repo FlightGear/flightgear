@@ -65,7 +65,7 @@
 #include <Debug/fg_debug.h>
 #include <GUI/gui.h>
 #include <Joystick/joystick.h>
-#include <Math/fg_geodesy.h>
+#include <Math/fg_geodesy.hxx>
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
 #include <PUI/pu.h>
@@ -894,6 +894,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.58  1998/10/16 23:27:52  curt
+// C++-ifying.
+//
 // Revision 1.57  1998/10/16 00:54:00  curt
 // Converted to Point3D class.
 //

@@ -41,7 +41,7 @@
 #include <string>
 #include <math.h>
 
-#include <Aircraft/aircraft.h>
+#include <Aircraft/aircraft.hxx>
 #include <Debug/fg_debug.h>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
@@ -726,9 +726,12 @@ pointer->vertices[19] = pointer->vertices[3];
 
 
 /* $Log$
-/* Revision 1.7  1998/08/31 20:45:31  curt
-/* Tweaks from Friedemann.
+/* Revision 1.8  1998/10/16 23:27:37  curt
+/* C++-ifying.
 /*
+ * Revision 1.7  1998/08/31 20:45:31  curt
+ * Tweaks from Friedemann.
+ *
  * Revision 1.6  1998/08/28 18:14:40  curt
  * Added new cockpit code from Friedemann Reinhard
  * <mpt218@faupt212.physik.uni-erlangen.de>

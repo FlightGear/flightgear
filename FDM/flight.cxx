@@ -24,11 +24,13 @@
 
 #include <stdio.h>
 
+#include "flight.hxx"
+#include "LaRCsim.hxx"
+
 #include <Debug/fg_debug.h>
-#include <Flight/flight.h>
 #include <Flight/LaRCsim/ls_interface.h>
 #include <Include/fg_constants.h>
-#include <Math/fg_geodesy.h>
+#include <Math/fg_geodesy.hxx>
 
 
 fgFLIGHT cur_flight_params;
@@ -99,7 +101,7 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
 
 
 /* Set the altitude (force) */
-int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters) {
+void fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters) {
     double sea_level_radius_meters;
     double lat_geoc;
     // Set the FG variables first
@@ -119,6 +121,9 @@ int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters) {
 
 
 // $Log$
+// Revision 1.2  1998/10/16 23:27:40  curt
+// C++-ifying.
+//
 // Revision 1.1  1998/10/16 20:16:41  curt
 // Renamed flight.[ch] to flight.[ch]xx
 //

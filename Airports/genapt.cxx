@@ -33,7 +33,7 @@ using namespace std;
 
 #include <Debug/fg_debug.h>
 // #include <Include/fg_types.h>
-#include <Math/fg_geodesy.h>
+#include <Math/fg_geodesy.hxx>
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
@@ -61,30 +61,6 @@ static double calc_dist(const Point3D& p1, const Point3D& p2) {
 }
 */
 
-
-// convert a geodetic point lon(radians), lat(radians), elev(meter) to
-// a cartesian point
-static Point3D geod_to_cart(const Point3D& geod) {
-    Point3D cp;
-    Point3D pp;
-    double gc_lon, gc_lat, sl_radius;
-
-    // printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
-    //        geod[0], geod[1], geod[2]);
-
-    gc_lon = geod.lon();
-    fgGeodToGeoc(geod.lat(), geod.radius(), &sl_radius, &gc_lat);
-
-    // printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
-    //        gc_lat, sl_radius+geod[2]);
-
-    pp.setvals(gc_lon, gc_lat, sl_radius + geod.radius());
-    cp = fgPolarToCart3d(pp);
-    
-    // printf("A cart point is (%.8f, %.8f, %.8f)\n", cp.x, cp.y, cp.z);
-
-    return(cp);
-}
 
 #define FG_APT_BASE_TEX_CONSTANT 2000.0
 
@@ -196,7 +172,7 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 
     // first point on perimeter
     const_iterator current = perimeter.begin();
-    cart = geod_to_cart( *current );
+    cart = fgGeodToCart( *current );
     cart_trans = cart - t->center;
     t->nodes[t->ncount][0] = cart_trans.x();
     t->nodes[t->ncount][1] = cart_trans.y();
@@ -216,7 +192,7 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 
     const_iterator last = perimeter.end();
     for ( ; current != last; ++current ) {
-	cart = geod_to_cart( *current );
+	cart = fgGeodToCart( *current );
 	cart_trans = cart - t->center;
 	t->nodes[t->ncount][0] = cart_trans.x();
 	t->nodes[t->ncount][1] = cart_trans.y();
@@ -236,7 +212,7 @@ gen_base( const Point3D& average, const container& perimeter, fgTILE *t)
 
     // last point (first point in perimeter list)
     current = perimeter.begin();
-    cart = geod_to_cart( *current );
+    cart = fgGeodToCart( *current );
     cart_trans = cart - t->center;
     fragment.add_face(center_num, i - 1, 1);
 
@@ -346,6 +322,9 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.5  1998/10/16 23:27:14  curt
+// C++-ifying.
+//
 // Revision 1.4  1998/10/16 00:51:46  curt
 // Converted to Point3D class.
 //

@@ -28,13 +28,13 @@
 #define _AIRCRAFT_H
 
 
-#include <Flight/flight.h>
-#include <Controls/controls.h>
-
-
-#ifdef __cplusplus                                                          
-extern "C" {                            
+#ifndef __cplusplus                                                          
+# error This library requires C++
 #endif                                   
+
+
+#include <Flight/flight.hxx>
+#include <Controls/controls.h>
 
 
 /* Define a structure containing all the parameters for an aircraft */
@@ -57,18 +57,16 @@ void fgAircraftInit( void );
 void fgAircraftOutputCurrent(fgAIRCRAFT *a);
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
 #endif /* _AIRCRAFT_H */
 
 
 /* $Log$
-/* Revision 1.12  1998/04/22 13:26:15  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.1  1998/10/16 23:26:49  curt
+/* C++-ifying.
 /*
+ * Revision 1.12  1998/04/22 13:26:15  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.11  1998/04/21 17:02:27  curt
  * Prepairing for C++ integration.
  *
@@ -88,9 +86,12 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a);
 
 
 /* $Log$
-/* Revision 1.12  1998/04/22 13:26:15  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.1  1998/10/16 23:26:49  curt
+/* C++-ifying.
 /*
+ * Revision 1.12  1998/04/22 13:26:15  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.11  1998/04/21 17:02:27  curt
  * Prepairing for C++ integration.
  *

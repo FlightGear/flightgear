@@ -7,7 +7,7 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
-#include <Aircraft/aircraft.h>
+#include <Aircraft/aircraft.hxx>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Math/fg_random.h>
