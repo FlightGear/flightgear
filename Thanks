@@ -196,6 +196,12 @@ Gary R. Van Sickle <tiberius@braemarinc.com>
   Contributed some initial GameGLUT support and other fixes.
 
 
+Norman Vine <nhv@laserplot.com>
+  Many performance optimizations throughout the code.  Many contributions
+  and much advice for the scenery generation section.  Lots of windoze
+  related contributions.
+
+
 Carmelo Volpe <carmelo.volpe@csb.ki.se>
   Porting Flight Gear to the Metro Works development environment (PC/Mac)
 
