@@ -45,7 +45,7 @@
 #include <sys/stat.h> /* for stat() */
 
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>    /* for fork() && stat() */
+#  include <unistd.h>    /* for stat() */
 #endif
 
 #include <Include/fg_constants.h>  // for VERSION
@@ -298,7 +298,7 @@ static void fgRenderFrame( void ) {
     fgTIME *t;
     fgVIEW *v;
     double angle;
-    GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
+    // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
     GLbitfield clear_mask;
@@ -335,8 +335,8 @@ static void fgRenderFrame( void ) {
 	if ( current_options.get_skyblend() ) {
 	    if ( current_options.get_textures() ) {
 		// glClearColor(black[0], black[1], black[2], black[3]);
-		glClearColor(l->fog_color[0], l->fog_color[1], 
-			     l->fog_color[2], l->fog_color[3]);
+		glClearColor(l->adj_fog_color[0], l->adj_fog_color[1], 
+			     l->adj_fog_color[2], l->adj_fog_color[3]);
 		clear_mask |= GL_COLOR_BUFFER_BIT;		
 	    }
 	} else {
@@ -401,7 +401,7 @@ static void fgRenderFrame( void ) {
 	xglEnable( GL_DEPTH_TEST );
 	if ( current_options.get_fog() > 0 ) {
 	    xglEnable( GL_FOG );
-	    xglFogfv (GL_FOG_COLOR, l->fog_color);
+	    xglFogfv (GL_FOG_COLOR, l->adj_fog_color);
 	}
 	// set lighting parameters
 	xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
@@ -449,11 +449,13 @@ static void fgRenderFrame( void ) {
 // Update internal time dependent calculations (i.e. flight model)
 void fgUpdateTimeDepCalcs(int multi_loop) {
     fgFLIGHT *f;
+    fgLIGHT *l;
     fgTIME *t;
     fgVIEW *v;
     int i;
 
     f = current_aircraft.flight;
+    l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
 
@@ -492,6 +494,18 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 	    }
 	}
     }
+
+    double tmp = -(l->sun_rotation + FG_PI) - (FG_Psi - v->view_offset);
+    while ( tmp < 0.0 ) {
+	tmp += FG_2PI;
+    }
+    while ( tmp > FG_2PI ) {
+	tmp -= FG_2PI;
+    }
+    printf("Psi = %.2f, viewoffset = %.2f sunrot = %.2f rottosun = %.2f\n",
+	   FG_Psi * RAD_TO_DEG, v->view_offset * RAD_TO_DEG, 
+	   -(l->sun_rotation+FG_PI) * RAD_TO_DEG, tmp * RAD_TO_DEG);
+    l->UpdateAdjFog();
 }
 
 
@@ -672,7 +686,7 @@ static void fgIdleFunction ( void ) {
 		    lockfile, mp3file, lockfile );
 	    fgPrintf( FG_GENERAL, FG_INFO, 
 		      "Starting intro music: %s\n", mp3file);
-	    system(command);
+	    system ( command );
 	}
 #endif
 
@@ -910,6 +924,11 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.38  1998/07/22 21:40:43  curt
+// Clear to adjusted fog color (for sunrise/sunset effects)
+// Make call to fog sunrise/sunset adjustment method.
+// Add a stdc++ library bug work around to fg_init.cxx
+//
 // Revision 1.37  1998/07/20 12:49:44  curt
 // Tweaked color buffer clearing defaults.  We clear the color buffer if we
 // are doing textures.  Assumptions:  If we are doing textures we have hardware

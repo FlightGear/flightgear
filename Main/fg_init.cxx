@@ -30,6 +30,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+// work around a stdc++ lib bug in some versions of linux, but doesn't
+// seem to hurt to have this here for all versions of Linux.
+#ifdef linux
+#  define _G_NO_EXTERN_TEMPLATES
+#endif
+
 #include <string.h>
 
 #include <Include/fg_constants.h>
@@ -394,6 +401,11 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.26  1998/07/22 21:40:44  curt
+// Clear to adjusted fog color (for sunrise/sunset effects)
+// Make call to fog sunrise/sunset adjustment method.
+// Add a stdc++ library bug work around to fg_init.cxx
+//
 // Revision 1.25  1998/07/13 21:01:38  curt
 // Wrote access functions for current fgOPTIONS.
 //
