@@ -62,6 +62,9 @@ public:
     // Constructor
     FGTileCache( void );
 
+    // Destructor
+    ~FGTileCache( void );
+
     // Initialize the tile cache subsystem 
     void init( void );
 
@@ -84,9 +87,6 @@ public:
 
     // Return the cache size
     inline size_t get_size() const { return tile_cache.size(); }
-
-    // Destructor
-    ~FGTileCache( void );
 };
 
 

@@ -66,24 +66,11 @@ typedef point_list::const_iterator const_point_list_iterator;
 // Scenery tile class
 class FGTileEntry {
 
-private:
-
-    // Tile state
-    enum tile_state {
-	Unused = 0,
-	Scheduled_for_use = 1,
-	Scheduled_for_cache = 2,
-	Loaded = 3,
-	Cached = 4
-    };
-
 public:
 
     typedef vector < sgVec3 * > free_vec3_list;
     typedef vector < sgVec2 * > free_vec2_list;
     typedef vector < unsigned short * > free_index_list;
-
-public:
 
     // node list
     point_list nodes;
@@ -96,9 +83,6 @@ public:
 
     // this tile's official location in the world
     FGBucket tile_bucket;
-
-    // the tile cache will keep track here if the tile is being used
-    tile_state state;
 
     // list of pointers to memory chunks that need to be freed when
     // tile entry goes away
@@ -130,10 +114,10 @@ public:
 public:
 
     // Constructor
-    FGTileEntry ( void );
+    FGTileEntry();
 
     // Destructor
-    ~FGTileEntry ( void );
+    ~FGTileEntry();
 
     // Clean up the memory used by this tile and delete the arrays
     // used by ssg as well as the whole ssg branch
@@ -146,34 +130,33 @@ public:
     }
 
     // Return this tile's offset
-    inline Point3D get_offset( void ) const { return offset; }
-	
-    inline bool is_unused() const { return state == Unused; }
-    inline bool is_scheduled_for_use() const { 
-	return state == Scheduled_for_use;
-    }
-    inline bool is_scheduled_for_cache() const {
-	return state == Scheduled_for_cache;
-    }
-    inline bool is_loaded() const { return state == Loaded; }
-    inline bool is_cached() const { return state == Cached; }
+    inline Point3D get_offset() const { return offset; }
 
-    inline void mark_unused() { state = Unused; }
-    inline void mark_scheduled_for_use() { state = Scheduled_for_use; }
-    inline void mark_scheduled_for_cache() { state = Scheduled_for_use; }
-    inline void mark_loaded() { state = Loaded; }
+    // Update the ssg transform node for this tile so it can be
+    // properly drawn relative to our (0,0,0) point
+    inline void prep_ssg_node( const Point3D& p, float vis) {
+        SetOffset( p );
 
+// #define USE_UP_AND_COMING_PLIB_FEATURE
+#ifdef USE_UP_AND_COMING_PLIB_FEATURE
+        range_ptr->setRange( 0, SG_ZERO );
+        range_ptr->setRange( 1, vis + bounding_radius );
+#else
+        float ranges[2];
+        ranges[0] = SG_ZERO;
+        ranges[1] = vis + bounding_radius;
+        range_ptr->setRanges( ranges, 2 );
+#endif
+        sgVec3 sgTrans;
+        sgSetVec3( sgTrans, offset.x(), offset.y(), offset.z() );
+        transform_ptr->setTransform( sgTrans );
+    }
 
     // when a tile is still in the cache, but not in the immediate
     // draw l ist, it can still remain in the scene graph, but we use
     // a range selector to disable it from ever being drawn.
     void ssg_disable();
 };
-
-
-typedef vector < FGTileEntry > tile_list;
-typedef tile_list::iterator tile_list_iterator;
-typedef tile_list::const_iterator const_tile_list_iterator;
 
 
 #endif // _TILEENTRY_HXX 

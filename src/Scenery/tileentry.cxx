@@ -40,9 +40,8 @@ FG_USING_STD(mem_fun_ref);
 
 
 // Constructor
-FGTileEntry::FGTileEntry ( void )
-    : ncount(0),
-      state(Unused)
+FGTileEntry::FGTileEntry ()
+    : ncount(0)
 {
     nodes.clear();
     select_ptr = NULL;
@@ -50,7 +49,7 @@ FGTileEntry::FGTileEntry ( void )
 
 
 // Destructor
-FGTileEntry::~FGTileEntry ( void ) {
+FGTileEntry::~FGTileEntry () {
     // cout << "nodes = " << nodes.size() << endl;;
     // delete[] nodes;
 }
@@ -80,9 +79,6 @@ void FGTileEntry::free_tile() {
     int i;
     FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "FREEING TILE = (" << tile_bucket << ")" );
-
-    // mark tile unused
-    mark_unused();
 
     FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "  deleting " << nodes.size() << " nodes" );
@@ -142,21 +138,6 @@ void FGTileEntry::free_tile() {
 // when a tile is still in the cache, but not in the immediate draw
 // list, it can still remain in the scene graph, but we use a range
 // selector to disable it from ever being drawn.
-void 
-FGTileEntry::ssg_disable() {
-    // cout << "TILE STATE = " << state << endl;
-    if ( state == Scheduled_for_use ) {
-	state = Scheduled_for_cache;
-    } else if ( state == Scheduled_for_cache ) {
-	// do nothing
-    } else if ( (state == Loaded) || (state == Cached) ) {
-	state = Cached;
-	// cout << "DISABLING SSG NODE" << endl;
-	select_ptr->select(0);
-    } else {
-	FG_LOG( FG_TERRAIN, FG_ALERT,
-		"Trying to disable an unused tile!  Dying" );
-	exit(-1);
-    }	
-    // cout << "TILE STATE = " << state << endl;
+void FGTileEntry::ssg_disable() {
+    select_ptr->select(0);
 }

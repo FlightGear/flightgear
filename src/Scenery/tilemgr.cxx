@@ -39,7 +39,6 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/vector.hxx>
 
-// #include <Aircraft/aircraft.hxx>
 #include <Main/globals.hxx>
 #include <Objects/obj.hxx>
 
@@ -49,8 +48,8 @@
 #  include <Weather/weather.hxx>
 #endif
 
+#include "newcache.hxx"
 #include "scenery.hxx"
-#include "tilecache.hxx"
 #include "tilemgr.hxx"
 
 #define TEST_LAST_HIT_CACHE
@@ -70,19 +69,19 @@ static inline Point3D operator + (const Point3D& a, const sgdVec3 b)
 
 
 // Constructor
-FGTileMgr::FGTileMgr ( void ):
+FGTileMgr::FGTileMgr():
     state( Start )
 {
 }
 
 
 // Destructor
-FGTileMgr::~FGTileMgr ( void ) {
+FGTileMgr::~FGTileMgr() {
 }
 
 
 // Initialize the Tile Manager subsystem
-int FGTileMgr::init( void ) {
+int FGTileMgr::init() {
     FG_LOG( FG_TERRAIN, FG_INFO, "Initializing Tile Manager subsystem." );
 
     if ( state != Start ) {
@@ -92,21 +91,15 @@ int FGTileMgr::init( void ) {
     } else {
 	FG_LOG( FG_TERRAIN, FG_INFO,
 		"... First time through." );
+	global_tile_cache.init();
     }
 
-    global_tile_cache.init();
     hit_list.clear();
 
     state = Inited;
 
-    tile_diameter = globals->get_options()->get_tile_diameter();
-    FG_LOG( FG_TERRAIN, FG_INFO, "Tile Diameter = " << tile_diameter);
-    
     previous_bucket.make_bad();
     current_bucket.make_bad();
-
-    scroll_direction = SCROLL_INIT;
-    tile_index = -9999;
 
     longitude = latitude = -1000.0;
     last_longitude = last_latitude = -1000.0;
@@ -116,40 +109,32 @@ int FGTileMgr::init( void ) {
 
 
 // schedule a tile for loading
-int FGTileMgr::sched_tile( const FGBucket& b ) {
+void FGTileMgr::sched_tile( const FGBucket& b ) {
     // see if tile already exists in the cache
-    int cache_index = global_tile_cache.exists( b );
+    FGTileEntry *t = global_tile_cache.get_tile( b );
 
-    if ( cache_index >= 0 ) {
+    if ( t != NULL ) {
         // tile exists in cache, reenable it.
         // cout << "REENABLING DISABLED TILE" << endl;
-        FGTileEntry *t = global_tile_cache.get_tile( cache_index );
         t->select_ptr->select( 1 );
-        t->mark_loaded();
     } else {
-        // find the next available cache entry and mark it as
-        // scheduled
-        cache_index = global_tile_cache.next_avail();
-        FGTileEntry *t = global_tile_cache.get_tile( cache_index );
-        t->mark_scheduled_for_use();
-
         // register a load request
-        FGLoadRec request;
-        request.b = b;
-        request.cache_index = cache_index;
-        load_queue.push_back( request );
+        load_queue.push_back( b );
     }
-
-    return cache_index;
 }
 
 
 // load a tile
-void FGTileMgr::load_tile( const FGBucket& b, int cache_index) {
+void FGTileMgr::load_tile( const FGBucket& b ) {
+    // see if tile already exists in the cache
+    FGTileEntry *t = global_tile_cache.get_tile( b );
 
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "Loading tile " << b );
-    global_tile_cache.fill_in(cache_index, b);
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "Loaded for cache index: " << cache_index );
+    if ( t == NULL ) {
+	FG_LOG( FG_TERRAIN, FG_DEBUG, "Loading tile " << b );
+	global_tile_cache.fill_in( b );
+    } else {
+	FG_LOG( FG_TERRAIN, FG_DEBUG, "Tile already in cache " << b );
+    }
 }
 
 
@@ -214,89 +199,65 @@ bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, sgVec3 view_pos,
 }
 
 
-FGBucket FGTileMgr::BucketOffset( int dx, int dy )
-{
-    double clat, clon, span;
-    if( scroll_direction == SCROLL_INIT ) {
-	// use current latitude and longitude
-	// walk dy units in the lat direction
-	clat = current_bucket.get_center_lat() + dy * FG_BUCKET_SPAN;
+// schedule a needed buckets for loading
+void FGTileMgr::schedule_needed() {
+    double vis;
 
-	// find the lon span for the new latitude
-	span = bucket_span( clat );
-	
-	// walk dx units in the lon direction
-	clon = longitude + dx * span;
-    } else	{
-	// use previous latitude and longitude
-	// walk dy units in the lat direction
-	clat = previous_bucket.get_center_lat() + dy * FG_BUCKET_SPAN;
-
-	// find the lon span for the new latitude
-	span = bucket_span( clat );
-
-	// walk dx units in the lon direction
-	clon = last_longitude + dx * span;
-    }    
-	
-    while ( clon < -180.0 ) clon += 360.0;
-    while ( clon >= 180.0 ) clon -= 360.0;
-    pending.set_bucket( clon, clat );
-
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "    fgBucketOffset " << pending );
-    return pending;
-}
-
-
-// schedule a tile row(column) for loading
-void FGTileMgr::scroll( void )
-{
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "schedule_row: Scrolling" );
-
-    int i, dw, dh;
-	
-    switch( scroll_direction ) {
-    case SCROLL_NORTH:
-	FG_LOG( FG_TERRAIN, FG_DEBUG, 
-		"  (North) Loading " << tile_diameter << " tiles" );
-	dw = tile_diameter / 2;
-	dh = dw + 1;
-	for ( i = 0; i < tile_diameter; i++ ) {
-	    sched_tile( BucketOffset( i - dw, dh ) );
-	}
-	break;
-    case SCROLL_EAST:
-	FG_LOG( FG_TERRAIN, FG_DEBUG, 
-		"  (East) Loading " << tile_diameter << " tiles" );
-	dh = tile_diameter / 2;
-	dw = dh + 1;
-	for ( i = 0; i < tile_diameter; i++ ) {
-	    sched_tile( BucketOffset( dw, i - dh ) );
-	}
-	break;
-    case SCROLL_SOUTH:
-	FG_LOG( FG_TERRAIN, FG_DEBUG, 
-		"  (South) Loading " << tile_diameter << " tiles" );
-	dw = tile_diameter / 2;
-	dh = -dw - 1;
-	for ( i = 0; i < tile_diameter; i++ ) {
-	    sched_tile( BucketOffset( i - dw, dh ) );
-	}
-	break;
-    case SCROLL_WEST:
-	FG_LOG( FG_TERRAIN, FG_DEBUG, 
-		"  (West) Loading " << tile_diameter << " tiles" );
-	dh = tile_diameter / 2;
-	dw = -dh - 1;
-	for ( i = 0; i < tile_diameter; i++ ) {
-	    sched_tile( BucketOffset( dw, i - dh ) );
-	}
-	break;
-    default:
-	FG_LOG( FG_TERRAIN, FG_WARN, "UNKNOWN SCROLL DIRECTION in schedule_row" );
-	;
+#ifndef FG_OLD_WEATHER
+    if ( WeatherDatabase != NULL ) {
+	vis = WeatherDatabase->getWeatherVisibility();
+    } else {
+	vis = 16000;
     }
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "\tschedule_row returns" );
+#else
+    vis = current_weather.get_visibility();
+#endif
+    cout << "visibility = " << vis << endl;
+
+    double clat = (int)current_bucket.get_center_lat();
+    if ( clat > 0 ) {
+	clat = (int)clat + 0.5;
+    } else {
+	clat = (int)clat - 0.5;
+    }
+    double clat_rad = clat * DEG_TO_RAD;
+    double cos_lat = cos( clat_rad );
+    double local_radius = cos_lat * EQUATORIAL_RADIUS_M;
+    double local_perimeter = 2.0 * local_radius * FG_PI;
+    double degree_width = local_perimeter / 360.0;
+
+    // cout << "clat = " << clat << endl;
+    // cout << "clat (radians) = " << clat_rad << endl;
+    // cout << "cos(lat) = " << cos_lat << endl;
+    // cout << "local_radius = " << local_radius << endl;
+    // cout << "local_perimeter = " << local_perimeter << endl;
+    cout << "degree_width = " << degree_width << endl;
+
+    double perimeter = 2.0 * EQUATORIAL_RADIUS_M * FG_PI;
+    double degree_height = perimeter / 360.0;
+    cout << "degree_height = " << degree_height << endl;
+
+    double tile_width = current_bucket.get_width() * degree_width;
+    double tile_height = current_bucket.get_height() * degree_height;
+    cout << "tile width = " << tile_width << "  tile_height = " << tile_height
+	 << endl;
+
+    xrange = (int)(vis / tile_width) + 1;
+    yrange = (int)(vis / tile_height) + 1;
+    if ( xrange < 1 ) { xrange = 1; }
+    if ( yrange < 1 ) { yrange = 1; }
+    cout << "xrange = " << xrange << "  yrange = " << yrange << endl;
+
+    global_tile_cache.set_max_cache_size( (2*xrange + 2) * (2*yrange + 2) );
+
+    for ( int x = -xrange; x <= xrange; ++x ) {
+	for ( int y = -yrange; y <= yrange; ++y ) {
+	    FGBucket b = fgBucketOffset( longitude, latitude, x, y );
+	    if ( ! global_tile_cache.exists( b ) ) {
+		sched_tile( b );
+	    }
+	}
+    }
 }
 
 
@@ -306,15 +267,14 @@ void FGTileMgr::initialize_queue()
     // system and load all relavant tiles
 
     FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << current_bucket );
-    FG_LOG( FG_TERRAIN, FG_INFO, "  Updating Tile list for " << current_bucket );
     FG_LOG( FG_TERRAIN, FG_INFO, "  Loading " 
-            << tile_diameter * tile_diameter << " tiles" );
+            << xrange * yrange << " tiles" );
+    cout << "tile cache size = " << global_tile_cache.get_size() << endl;
 
     int i;
-    scroll_direction = SCROLL_INIT;
 
     // wipe/initialize tile cache
-    global_tile_cache.init();
+    // global_tile_cache.init();
     previous_bucket.make_bad();
 
     // build the local area list and schedule tiles for loading
@@ -322,29 +282,7 @@ void FGTileMgr::initialize_queue()
     // start with the center tile and work out in concentric
     // "rings"
 
-    sched_tile( current_bucket );
-
-    for ( i = 3; i <= tile_diameter; i = i + 2 ) {
-        int j;
-        int span = i / 2;
-
-        // bottom row
-        for ( j = -span; j <= span; ++j ) {
-            sched_tile( BucketOffset( j, -span ) );
-        }
-
-        // top row
-        for ( j = -span; j <= span; ++j ) {
-            sched_tile( BucketOffset( j, span ) );
-        }
-
-        // middle rows
-        for ( j = -span + 1; j <= span - 1; ++j ) {
-            sched_tile( BucketOffset( -span, j ) );
-            sched_tile( BucketOffset( span, j ) );
-        }
-
-    }
+    schedule_needed();
 
     // Now force a load of the center tile and inner ring so we
     // have something to see in our first frame.
@@ -353,9 +291,9 @@ void FGTileMgr::initialize_queue()
             FG_LOG( FG_TERRAIN, FG_DEBUG, 
                     "Load queue not empty, loading a tile" );
 
-            FGLoadRec pending = load_queue.front();
+            FGBucket pending = load_queue.front();
             load_queue.pop_front();
-            load_tile( pending.b, pending.cache_index );
+            load_tile( pending );
         }
     }
 }
@@ -366,19 +304,7 @@ void FGTileMgr::initialize_queue()
 // tile_cache   -- which actually handles all the
 // (de)allocations  
 void FGTileMgr::destroy_queue() {
-    while( load_queue.size() ) {
-	FG_LOG( FG_TERRAIN, FG_INFO, 
-		"Load queue not empty, popping a tile" );
-	FGLoadRec pending = load_queue.front();
-	load_queue.pop_front();
-        FGTileEntry *t = global_tile_cache.get_tile( pending.cache_index );
-	// just t->mark_unused() should be enough
-	// but a little paranoia doesn't hurt us here
-	if(t->is_scheduled_for_use())
-	    t->mark_unused();
-	else
-	    load_tile( pending.b, pending.cache_index );
-    }
+    load_queue.clear();
 }
 
 
@@ -386,7 +312,7 @@ void FGTileMgr::destroy_queue() {
 // chunks.  If the chunk isn't already in the cache, then read it from
 // disk.
 int FGTileMgr::update( double lon, double lat ) {
-    // FG_LOG( FG_TERRAIN, FG_DEBUG, "FGTileMgr::update()" );
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "FGTileMgr::update()" );
 
     // FGInterface *f = current_aircraft.fdm_state;
 
@@ -401,67 +327,31 @@ int FGTileMgr::update( double lon, double lat ) {
     current_bucket.set_bucket( longitude, latitude );
     // FG_LOG( FG_TERRAIN, FG_DEBUG, "Updating Tile list for " << current_bucket );
 
-    tile_index = global_tile_cache.exists(current_bucket);
-    // FG_LOG( FG_TERRAIN, FG_DEBUG, "tile index " << tile_index );
-
-    if ( tile_index >= 0 ) {
-        current_tile = global_tile_cache.get_tile(tile_index);
+    if ( global_tile_cache.exists( current_bucket ) ) {
+        current_tile = global_tile_cache.get_tile( current_bucket );
         scenery.next_center = current_tile->center;
     } else {
         FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found (Ok if initializing)" );
     }
 
     if ( state == Running ) {
-	if( current_bucket == previous_bucket) {
-	    FG_LOG( FG_TERRAIN, FG_DEBUG, "Same bucket as last time" );
-	    scroll_direction = SCROLL_NONE;
-	} else {
-	    // We've moved to a new bucket, we need to scroll our
-	    // structures, and load in the new tiles
-	    // CURRENTLY THIS ASSUMES WE CAN ONLY MOVE TO ADJACENT TILES.
-	    // AT ULTRA HIGH SPEEDS THIS ASSUMPTION MAY NOT BE VALID IF
-	    // THE AIRCRAFT CAN SKIP A TILE IN A SINGLE ITERATION.
-
-	    if ( (current_bucket.get_lon() > previous_bucket.get_lon()) ||
-		 ( (current_bucket.get_lon() == previous_bucket.get_lon()) && 
-		   (current_bucket.get_x() > previous_bucket.get_x()) ) )
-		{
-		    scroll_direction = SCROLL_EAST;
-		}
-	    else if ( (current_bucket.get_lon() < previous_bucket.get_lon()) ||
-		      ( (current_bucket.get_lon() == previous_bucket.get_lon()) && 
-			(current_bucket.get_x() < previous_bucket.get_x()) ) )
-		{   
-		    scroll_direction = SCROLL_WEST;
-		}   
-
-	    if ( (current_bucket.get_lat() > previous_bucket.get_lat()) ||
-		 ( (current_bucket.get_lat() == previous_bucket.get_lat()) && 
-		   (current_bucket.get_y() > previous_bucket.get_y()) ) )
-		{   
-		    scroll_direction = SCROLL_NORTH;
-		}
-	    else if ( (current_bucket.get_lat() < previous_bucket.get_lat()) ||
-		      ( (current_bucket.get_lat() == previous_bucket.get_lat()) && 
-			(current_bucket.get_y() < previous_bucket.get_y()) ) )
-		{
-		    scroll_direction = SCROLL_SOUTH;
-		}
-
-	    scroll();
+	if( current_bucket != previous_bucket) {
+	    // We've moved to a new bucket, we need to schedule any
+	    // needed tiles for loading.
+	    schedule_needed();
 	}
-
     } else if ( state == Start || state == Inited ) {
 	initialize_queue();
 	state = Running;
     }
 
     if ( load_queue.size() ) {
-	FG_LOG( FG_TERRAIN, FG_DEBUG, "Load queue not empty, loading a tile" );
+	FG_LOG( FG_TERRAIN, FG_INFO, "Load queue size = " << load_queue.size()
+		<< " loading a tile" );
 
-	FGLoadRec pending = load_queue.front();
+	FGBucket pending = load_queue.front();
 	load_queue.pop_front();
-	load_tile( pending.b, pending.cache_index );
+	load_tile( pending );
     }
 
     if ( scenery.center == Point3D(0.0) ) {
@@ -509,20 +399,12 @@ int FGTileMgr::update( double lon, double lat ) {
     return 1;
 }
 
-// Prepare the ssg nodes ... for each tile, set it's proper
-// transform and update it's range selector based on current
-// visibilty
-void FGTileMgr::prep_ssg_node( int idx ) {
-}
 
-void FGTileMgr::prep_ssg_nodes( void ) {
-    FGTileEntry *t;
-    float ranges[2];
-    ranges[0] = 0.0f;
-    double vis = 0.0;
+void FGTileMgr::prep_ssg_nodes() {
+    float vis = 0.0;
 
 #ifndef FG_OLD_WEATHER
-    if ( WeatherDatabase != NULL ) {
+    if ( WeatherDatabase ) {
 	vis = WeatherDatabase->getWeatherVisibility();
     } else {
 	vis = 16000;
@@ -534,25 +416,18 @@ void FGTileMgr::prep_ssg_nodes( void ) {
 
     // traverse the potentially viewable tile list and update range
     // selector and transform
-    for ( int i = 0; i < (int)global_tile_cache.get_size(); i++ ) {
-        t = global_tile_cache.get_tile( i );
 
-        if ( t->is_loaded() ) {
-	    // set range selector (LOD trick) to be distance to center
-	    // of tile + bounding radius
+    FGTileEntry *e;
+    Point3D p = scenery.center;
+    global_tile_cache.reset_traversal();
 
-            ranges[1] = vis + t->bounding_radius;
-            t->range_ptr->setRanges( ranges, 2 );
-
-            // calculate tile offset
-            t->SetOffset( scenery.center );
-
-            // calculate ssg transform
-            sgCoord sgcoord;
-            sgSetCoord( &sgcoord,
-                        t->offset.x(), t->offset.y(), t->offset.z(),
-                        0.0, 0.0, 0.0 );
-            t->transform_ptr->setTransform( &sgcoord );
+    while ( ! global_tile_cache.at_end() ) {
+        // cout << "processing a tile" << endl;
+        if ( (e = global_tile_cache.get_current()) ) {
+	    e->prep_ssg_node( p, vis);
+        } else {
+            cout << "warning ... empty tile in cache" << endl;
         }
-    }
+	global_tile_cache.next();
+   }
 }

@@ -2,8 +2,8 @@ noinst_LIBRARIES = libScenery.a
 
 libScenery_a_SOURCES = \
 	hitlist.cxx hitlist.hxx \
+	newcache.cxx newcache.hxx \
 	scenery.cxx scenery.hxx \
-	tilecache.cxx tilecache.hxx \
 	tileentry.cxx tileentry.hxx \
 	tilemgr.cxx tilemgr.hxx
 

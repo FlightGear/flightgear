@@ -42,10 +42,6 @@
 FG_USING_STD(list);
 
 
-#define FG_LOCAL_X_Y         81  // max(o->tile_diameter) ** 2
-
-#define FG_SQUARE( X ) ( (X) * (X) )
-
 #if defined(USE_MEM) || defined(WIN32)
 #  define FG_MEM_COPY(to,from,n)        memcpy(to, from, n)
 #else
@@ -55,15 +51,6 @@ FG_USING_STD(list);
 
 // forward declaration
 class FGTileEntry;
-
-
-class FGLoadRec {
-
-public:
-
-    FGBucket b;
-    int cache_index;
-};
 
 
 class FGTileMgr {
@@ -79,19 +66,8 @@ private:
 
     load_state state;
 
-    enum SCROLL_DIRECTION {
-	SCROLL_INIT = -1,
-	SCROLL_NONE = 0,
-	SCROLL_NORTH,
-	SCROLL_EAST,
-	SCROLL_SOUTH,
-	SCROLL_WEST,
-    };
-
-    SCROLL_DIRECTION scroll_direction;
-
     // pending tile load queue
-    list < FGLoadRec > load_queue;
+    list < FGBucket > load_queue;
 
     // initialize the cache
     void initialize_queue();
@@ -101,16 +77,14 @@ private:
     // handles all the (de)allocations
     void destroy_queue();
 
-    FGBucket BucketOffset( int dx, int dy );
-
     // schedule a tile for loading
-    int sched_tile( const FGBucket& b );
+    void sched_tile( const FGBucket& b );
 
     // load a tile
-    void load_tile( const FGBucket& b, int cache_index );
+    void load_tile( const FGBucket& b );
 
-    // schedule a tile row(column) for loading
-    void scroll( void );
+    // schedule a needed buckets for loading
+    void FGTileMgr::schedule_needed();
 
     // see comment at prep_ssg_nodes()
     void prep_ssg_node( int idx );
@@ -127,9 +101,8 @@ private:
 	
     FGTileEntry *current_tile;
 	
-    // index of current tile in tile cache;
-    long int tile_index;
-    int tile_diameter;
+    // x and y distance of tiles to load/draw
+    int xrange, yrange;
 	
     // current longitude latitude
     double longitude;
@@ -140,13 +113,13 @@ private:
 public:
 
     // Constructor
-    FGTileMgr ( void );
+    FGTileMgr();
 
     // Destructor
-    ~FGTileMgr ( void );
+    ~FGTileMgr();
 
     // Initialize the Tile Manager subsystem
-    int init( void );
+    int init();
 
     // given the current lon/lat (in degrees), fill in the array of
     // local chunks.  If the chunk isn't already in the cache, then
@@ -171,7 +144,7 @@ public:
     // Prepare the ssg nodes ... for each tile, set it's proper
     // transform and update it's range selector based on current
     // visibilty
-    void prep_ssg_nodes( void );
+    void prep_ssg_nodes();
 
     inline int queue_size() const { return load_queue.size(); }
 };
