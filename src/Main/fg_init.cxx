@@ -988,14 +988,6 @@ bool fgInitPosition() {
         fgSetDistOrAltFromGlideSlope();
     }
 
-    // Select ground or air start depending on if an altitude is
-    // specified (this choice can be refined later based on other
-    // input.)
-    if ( fgGetDouble("/sim/presets/altitude-ft") > -9990.0 ) {
-        fgSetBool("/sim/presets/onground", false);
-    } else {
-        fgSetBool("/sim/presets/onground", true);
-    }
 
     // If we have an explicit, in-range lon/lat, don't change it, just use it.
     // If not, check for an airport-id and use that.
