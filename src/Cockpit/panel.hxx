@@ -37,6 +37,8 @@
 #include <GL/glut.h>
 #include <plib/ssg.h>
 
+#include <simgear/misc/props.hxx>
+
 #include <vector>
 #include <map>
 #include <plib/fnt.h>
@@ -57,9 +59,9 @@ class FGPanelInstrument;
 class FGTextureManager
 {
 public:
-  static ssgTexture * createTexture(const char * relativePath);
+  static ssgTexture * createTexture(const string &relativePath);
 private:
-  static map<const char *,ssgTexture *>_textureMap;
+  static map<string,ssgTexture *>_textureMap;
 };
 
 
@@ -73,7 +75,7 @@ private:
 struct CroppedTexture
 {
   CroppedTexture () {}
-  CroppedTexture (const char * path,
+  CroppedTexture (const string &path,
 		  float _minX = 0.0, float _minY = 0.0,
 		  float _maxX = 1.0, float _maxY = 1.0)
     : texture(FGTextureManager::createTexture(path)),
@@ -161,17 +163,13 @@ public:
 class FGAdjustAction : public FGPanelAction
 {
 public:
-  typedef double (*getter_type)();
-  typedef void (*setter_type)(double);
-
-  FGAdjustAction (getter_type getter, setter_type setter, float increment,
+  FGAdjustAction (SGValue * value, float increment,
 		  float min, float max, bool wrap=false);
   virtual ~FGAdjustAction ();
   virtual void doAction ();
 
 private:
-  getter_type _getter;
-  setter_type _setter;
+  SGValue * _value;
   float _increment;
   float _min;
   float _max;
@@ -190,17 +188,13 @@ private:
 class FGSwapAction : public FGPanelAction
 {
 public:
-  typedef double (*getter_type)();
-  typedef void (*setter_type)(double);
-
-  FGSwapAction (getter_type getter1, setter_type setter1,
-		getter_type getter2, setter_type setter2);
+  FGSwapAction (SGValue * value1, SGValue * value2);
   virtual ~FGSwapAction ();
   virtual void doAction ();
 
 private:
-  getter_type _getter1, _getter2;
-  setter_type _setter1, _setter2;
+  SGValue * _value1;
+  SGValue * _value2;
 };
 
 
@@ -214,16 +208,12 @@ private:
 class FGToggleAction : public FGPanelAction
 {
 public:
-  typedef bool (*getter_type)();
-  typedef void (*setter_type)(bool);
-
-  FGToggleAction (getter_type getter, setter_type setter);
+  FGToggleAction (SGValue * value);
   virtual ~FGToggleAction ();
   virtual void doAction ();
 
 private:
-  getter_type _getter;
-  setter_type _setter;
+  SGValue * _value;
 };
 
 
@@ -245,7 +235,7 @@ public:
   FGPanelInstrument (int x, int y, int w, int h);
   virtual ~FGPanelInstrument ();
 
-  virtual void draw () const = 0;
+  virtual void draw () = 0;
 
   virtual void setPosition(int x, int y);
   virtual void setSize(int w, int h);
@@ -304,12 +294,10 @@ public:
     ROTATION
   } transform_type;
 
-  typedef double (*transform_func)();
-
   FGInstrumentLayer (int w = -1, int h = -1);
   virtual ~FGInstrumentLayer ();
 
-  virtual void draw () const = 0;
+  virtual void draw () = 0;
   virtual void transform () const;
 
   virtual int getWidth () const { return _w; }
@@ -317,7 +305,7 @@ public:
   virtual void setWidth (int w) { _w = w; }
   virtual void setHeight (int h) { _h = h; }
 
-  virtual void addTransformation (transform_type type, transform_func func,
+  virtual void addTransformation (transform_type type, const SGValue * value,
 				  float min, float max,
 				  float factor = 1.0, float offset = 0.0);
 
@@ -326,7 +314,7 @@ protected:
 
   typedef struct {
     transform_type type;
-    transform_func func;
+    const SGValue * value;
     float min;
     float max;
     float factor;
@@ -362,14 +350,14 @@ public:
   FGLayeredInstrument (int x, int y, int w, int h);
   virtual ~FGLayeredInstrument ();
 
-  virtual void draw () const;
+  virtual void draw ();
 
 				// Transfer pointer ownership!!
   virtual int addLayer (FGInstrumentLayer *layer);
   virtual int addLayer (CroppedTexture &texture,
 			int w = -1, int h = -1);
   virtual void addTransformation (FGInstrumentLayer::transform_type type,
-				  FGInstrumentLayer::transform_func func,
+				  const SGValue * value,
 				  float min, float max,
 				  float factor = 1.0, float offset = 0.0);
   virtual void addTransformation (FGInstrumentLayer::transform_type type,
@@ -392,32 +380,17 @@ protected:
 class FGTexturedLayer : public FGInstrumentLayer
 {
 public:
-//   FGTexturedLayer (ssgTexture * texture, int w, int h,
-// 		   float texX1 = 0.0, float texY1 = 0.0,
-// 		   float texX2 = 1.0, float texY2 = 1.0);
   FGTexturedLayer (int w = -1, int h = -1) : FGInstrumentLayer(w, h) {}
   FGTexturedLayer (CroppedTexture &texture, int w = -1, int h = -1);
   virtual ~FGTexturedLayer ();
 
-  virtual void draw () const;
+  virtual void draw ();
 
-  virtual void setTexture (ssgTexture * texture) { _texture = texture; }
-  virtual ssgTexture * getTexture () { return _texture; }
-  virtual void setTextureCoords (float x1, float y1, float x2, float y2) {
-    _texX1 = x1; _texY1 = y1; _texX2 = x2; _texY2 = y2;
-  }
-
-protected:
-  
-  virtual void setTextureCoords (float x1, float y1,
-				 float x2, float y2) const {
-    _texX1 = x1; _texY1 = y1; _texX2 = x2; _texY2 = y2;
-  }
-
+  virtual void setTexture (CroppedTexture &texture) { _texture = &texture; }
+  virtual CroppedTexture &getTexture () { return *_texture; }
 
 private:
-  ssgTexture * _texture;
-  mutable float _texX1, _texY1, _texX2, _texY2;
+  mutable CroppedTexture * _texture;
 };
 
 
@@ -433,27 +406,24 @@ private:
 class FGTextLayer : public FGInstrumentLayer
 {
 public:
-  typedef char * (*text_func)();
-  typedef double (*double_func)();
   typedef enum ChunkType {
     TEXT,
-    TEXT_FUNC,
-    DOUBLE_FUNC
+    TEXT_VALUE,
+    DOUBLE_VALUE
   };
 
   class Chunk {
   public:
     Chunk (char * text, char * fmt = "%s");
-    Chunk (text_func func, char * fmt = "%s");
-    Chunk (double_func func, char * fmt = "%.2f", float mult = 1.0);
+    Chunk (ChunkType type, const SGValue * value,
+	   char * fmt = 0, float mult = 1.0);
 
     char * getValue () const;
   private:
     ChunkType _type;
     union {
       char * _text;
-      text_func _tfunc;
-      double_func _dfunc;
+      const SGValue * _value;
     } _value;
     char * _fmt;
     float _mult;
@@ -464,7 +434,7 @@ public:
 	       Chunk * chunk3 = 0);
   virtual ~FGTextLayer ();
 
-  virtual void draw () const;
+  virtual void draw ();
 
 				// Transfer pointer!!
   virtual void addChunk (Chunk * chunk);
@@ -489,18 +459,16 @@ private:
 class FGSwitchLayer : public FGInstrumentLayer
 {
 public:
-  typedef bool (*switch_func)();
-
 				// Transfer pointers!!
-  FGSwitchLayer (int w, int h, switch_func func,
+  FGSwitchLayer (int w, int h, const SGValue * value,
 		 FGInstrumentLayer * layer1,
 		 FGInstrumentLayer * layer2);
   virtual ~FGSwitchLayer ();
 
-  virtual void draw () const;
+  virtual void draw ();
 
 private:
-  switch_func _func;
+  const SGValue * _value;
   FGInstrumentLayer * _layer1, * _layer2;
 };
 

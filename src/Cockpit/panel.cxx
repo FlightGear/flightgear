@@ -46,19 +46,20 @@
 // Implementation of FGTextureManager.
 ////////////////////////////////////////////////////////////////////////
 
-map<const char *,ssgTexture *> FGTextureManager::_textureMap;
+map<string,ssgTexture *> FGTextureManager::_textureMap;
 
 ssgTexture *
-FGTextureManager::createTexture (const char * relativePath)
+FGTextureManager::createTexture (const string &relativePath)
 {
-  ssgTexture *texture;
-
-  texture = _textureMap[relativePath];
+  ssgTexture * texture = _textureMap[relativePath];
   if (texture == 0) {
+    cerr << "Texture " << relativePath << " does not yet exist" << endl;
     FGPath tpath(current_options.get_fg_root());
     tpath.append(relativePath);
     texture = new ssgTexture((char *)tpath.c_str(), false, false);
     _textureMap[relativePath] = texture;
+    if (_textureMap[relativePath] == 0) 
+      cerr << "Texture *still* doesn't exist" << endl;
     cerr << "Created texture " << relativePath
 	 << " handle=" << texture->getHandle() << endl;
   }
@@ -229,11 +230,9 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
 // Implementation of FGAdjustAction.
 ////////////////////////////////////////////////////////////////////////
 
-FGAdjustAction::FGAdjustAction (getter_type getter, setter_type setter,
-				float increment, float min, float max,
-				bool wrap=false)
-  : _getter(getter), _setter(setter), _increment(increment),
-    _min(min), _max(max), _wrap(wrap)
+FGAdjustAction::FGAdjustAction (SGValue * value, float increment, 
+				float min, float max, bool wrap=false)
+  : _value(value), _increment(increment), _min(min), _max(max), _wrap(wrap)
 {
 }
 
@@ -244,16 +243,16 @@ FGAdjustAction::~FGAdjustAction ()
 void
 FGAdjustAction::doAction ()
 {
-  float value = (*_getter)();
+  float val = _value->getFloatValue();
 //   cout << "Do action; value=" << value << '\n';
-  value += _increment;
-  if (value < _min) {
-    value = (_wrap ? _max : _min);
-  } else if (value > _max) {
-    value = (_wrap ? _min : _max);
+  val += _increment;
+  if (val < _min) {
+    val = (_wrap ? _max : _min);
+  } else if (val > _max) {
+    val = (_wrap ? _min : _max);
   }
 //   cout << "New value is " << value << '\n';
-  (*_setter)(value);
+  _value->setDoubleValue(val);
 }
 
 
@@ -262,10 +261,8 @@ FGAdjustAction::doAction ()
 // Implementation of FGSwapAction.
 ////////////////////////////////////////////////////////////////////////
 
-FGSwapAction::FGSwapAction (getter_type getter1, setter_type setter1,
-			    getter_type getter2, setter_type setter2)
-  : _getter1(getter1), _setter1(setter1),
-    _getter2(getter2), _setter2(setter2)
+FGSwapAction::FGSwapAction (SGValue * value1, SGValue * value2)
+  : _value1(value1), _value2(value2)
 {
 }
 
@@ -276,9 +273,9 @@ FGSwapAction::~FGSwapAction ()
 void
 FGSwapAction::doAction ()
 {
-  float value = (*_getter1)();
-  (*_setter1)((*_getter2)());
-  (*_setter2)(value);
+  float val = _value1->getFloatValue();
+  _value1->setDoubleValue(_value2->getFloatValue());
+  _value2->setDoubleValue(val);
 }
 
 
@@ -287,8 +284,8 @@ FGSwapAction::doAction ()
 // Implementation of FGToggleAction.
 ////////////////////////////////////////////////////////////////////////
 
-FGToggleAction::FGToggleAction (getter_type getter, setter_type setter)
-  : _getter(getter), _setter(setter)
+FGToggleAction::FGToggleAction (SGValue * value)
+  : _value(value)
 {
 }
 
@@ -299,7 +296,7 @@ FGToggleAction::~FGToggleAction ()
 void
 FGToggleAction::doAction ()
 {
-  (*_setter)(!((*_getter)()));
+  _value->setBoolValue(!(_value->getBoolValue()));
 }
 
 
@@ -418,7 +415,7 @@ FGLayeredInstrument::~FGLayeredInstrument ()
 }
 
 void
-FGLayeredInstrument::draw () const
+FGLayeredInstrument::draw ()
 {
   for (int i = 0; i < _layers.size(); i++) {
     glPushMatrix();
@@ -451,12 +448,12 @@ FGLayeredInstrument::addLayer (CroppedTexture &texture,
 
 void
 FGLayeredInstrument::addTransformation (FGInstrumentLayer::transform_type type,
-					FGInstrumentLayer::transform_func func,
+					const SGValue * value,
 					float min, float max,
 					float factor, float offset)
 {
   int layer = _layers.size() - 1;
-  _layers[layer]->addTransformation(type, func, min, max, factor, offset);
+  _layers[layer]->addTransformation(type, value, min, max, factor, offset);
 }
 
 void
@@ -495,23 +492,23 @@ FGInstrumentLayer::transform () const
   transformation_list::const_iterator last = _transformations.end();
   while (it != last) {
     transformation *t = *it;
-    float value = (t->func == 0 ? 0.0 : (*(t->func))());
-    if (value < t->min) {
-      value = t->min;
-    } else if (value > t->max) {
-      value = t->max;
+    float val = (t->value == 0 ? 0.0 : t->value->getFloatValue());
+    if (val < t->min) {
+      val = t->min;
+    } else if (val > t->max) {
+      val = t->max;
     }
-    value = value * t->factor + t->offset;
+    val = val * t->factor + t->offset;
 
     switch (t->type) {
     case XSHIFT:
-      glTranslatef(value, 0.0, 0.0);
+      glTranslatef(val, 0.0, 0.0);
       break;
     case YSHIFT:
-      glTranslatef(0.0, value, 0.0);
+      glTranslatef(0.0, val, 0.0);
       break;
     case ROTATION:
-      glRotatef(-value, 0.0, 0.0, 1.0);
+      glRotatef(-val, 0.0, 0.0, 1.0);
       break;
     }
     it++;
@@ -520,13 +517,13 @@ FGInstrumentLayer::transform () const
 
 void
 FGInstrumentLayer::addTransformation (transform_type type,
-				      transform_func func,
+				      const SGValue * value,
 				      float min, float max,
 				      float factor, float offset)
 {
   transformation *t = new transformation;
   t->type = type;
-  t->func = func;
+  t->value = value;
   t->min = min;
   t->max = max;
   t->factor = factor;
@@ -540,45 +537,37 @@ FGInstrumentLayer::addTransformation (transform_type type,
 // Implementation of FGTexturedLayer.
 ////////////////////////////////////////////////////////////////////////
 
-// FGTexturedLayer::FGTexturedLayer (ssgTexture * texture, int w, int h,
-// 				  float texX1 = 0.0, float texY1 = 0.0,
-// 				  float texX2 = 1.0, float texY2 = 1.0)
-//   : FGInstrumentLayer(w, h),
-//     _texX1(texX1), _texY1(texY1), _texX2(texX2), _texY2(texY2)
-// {
-//   setTexture(texture);
-// }
 
 FGTexturedLayer::FGTexturedLayer (CroppedTexture &texture, int w, int h)
-  : FGInstrumentLayer(w, h),
-    _texX1(texture.minX), _texY1(texture.minY),
-    _texX2(texture.maxX), _texY2(texture.maxY)
+  : FGInstrumentLayer(w, h)
 {
-  setTexture(texture.texture);
+  setTexture(texture);
 }
+
 
 FGTexturedLayer::~FGTexturedLayer ()
 {
 }
 
+
 void
-FGTexturedLayer::draw () const
+FGTexturedLayer::draw ()
 {
   int w2 = _w / 2;
   int h2 = _h / 2;
 
   transform();
-  glBindTexture(GL_TEXTURE_2D, _texture->getHandle());
+  glBindTexture(GL_TEXTURE_2D, _texture->texture->getHandle());
   glBegin(GL_POLYGON);
   if ( cur_light_params.sun_angle * RAD_TO_DEG < 95.0 ) {
       glColor4fv( cur_light_params.scene_diffuse );
   } else {
       glColor4f(0.7, 0.2, 0.2, 1.0);
   }
-  glTexCoord2f(_texX1, _texY1); glVertex2f(-w2, -h2);
-  glTexCoord2f(_texX2, _texY1); glVertex2f(w2, -h2);
-  glTexCoord2f(_texX2, _texY2); glVertex2f(w2, h2);
-  glTexCoord2f(_texX1, _texY2); glVertex2f(-w2, h2);
+  glTexCoord2f(_texture->minX, _texture->minY); glVertex2f(-w2, -h2);
+  glTexCoord2f(_texture->maxX, _texture->minY); glVertex2f(w2, -h2);
+  glTexCoord2f(_texture->maxX, _texture->maxY); glVertex2f(w2, h2);
+  glTexCoord2f(_texture->minX, _texture->maxY); glVertex2f(-w2, h2);
   glEnd();
 }
 
@@ -612,7 +601,7 @@ FGTextLayer::~FGTextLayer ()
 }
 
 void
-FGTextLayer::draw () const
+FGTextLayer::draw ()
 {
   glPushMatrix();
   glColor4fv(_color);
@@ -673,17 +662,17 @@ FGTextLayer::Chunk::Chunk (char * text, char * fmt = "%s")
   _value._text = text;
 }
 
-FGTextLayer::Chunk::Chunk (text_func func, char * fmt = "%s")
-  : _type(FGTextLayer::TEXT_FUNC), _fmt(fmt)
+FGTextLayer::Chunk::Chunk (ChunkType type, const SGValue * value,
+			   char * fmt = 0, float mult = 1.0)
+  : _type(type), _fmt(fmt), _mult(mult)
 {
-  _value._tfunc = func;
-}
-
-FGTextLayer::Chunk::Chunk (double_func func, char * fmt = "%.2f",
-			   float mult = 1.0)
-  : _type(FGTextLayer::DOUBLE_FUNC), _fmt(fmt), _mult(mult)
-{
-  _value._dfunc = func;
+  if (_fmt == 0) {
+    if (type == TEXT_VALUE)
+      _fmt = "%s";
+    else
+      _fmt = "%.2f";
+  }
+  _value._value = value;
 }
 
 char *
@@ -693,11 +682,11 @@ FGTextLayer::Chunk::getValue () const
   case TEXT:
     sprintf(_buf, _fmt, _value._text);
     return _buf;
-  case TEXT_FUNC:
-    sprintf(_buf, _fmt, (*(_value._tfunc))());
+  case TEXT_VALUE:
+    sprintf(_buf, _fmt, _value._value->getStringValue().c_str());
     break;
-  case DOUBLE_FUNC:
-    sprintf(_buf, _fmt, (*(_value._dfunc))() * _mult);
+  case DOUBLE_VALUE:
+    sprintf(_buf, _fmt, _value._value->getFloatValue() * _mult);
     break;
   }
   return _buf;
@@ -709,10 +698,10 @@ FGTextLayer::Chunk::getValue () const
 // Implementation of FGSwitchLayer.
 ////////////////////////////////////////////////////////////////////////
 
-FGSwitchLayer::FGSwitchLayer (int w, int h, switch_func func,
+FGSwitchLayer::FGSwitchLayer (int w, int h, const SGValue * value,
 			      FGInstrumentLayer * layer1,
 			      FGInstrumentLayer * layer2)
-  : FGInstrumentLayer(w, h), _func(func), _layer1(layer1), _layer2(layer2)
+  : FGInstrumentLayer(w, h), _value(value), _layer1(layer1), _layer2(layer2)
 {
 }
 
@@ -723,10 +712,10 @@ FGSwitchLayer::~FGSwitchLayer ()
 }
 
 void
-FGSwitchLayer::draw () const
+FGSwitchLayer::draw ()
 {
   transform();
-  if ((*_func)()) {
+  if (_value->getBoolValue()) {
     _layer1->draw();
   } else {
     _layer2->draw();

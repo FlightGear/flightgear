@@ -50,6 +50,7 @@ FG_USING_STD(map);
 #define SMALL_W 112
 
 #define createTexture(a) FGTextureManager::createTexture(a)
+#define V(n) (current_properties.getValue(n, true))
 
 
 
@@ -60,13 +61,15 @@ FG_USING_STD(map);
 // as soon as convenient.
 ////////////////////////////////////////////////////////////////////////
 
-static char * panelGetTime ()
+static const string &panelGetTime ()
 {
-  static char buf[1024];	// FIXME: not thread-safe
+  static string out;		// FIXME: not thread-safe
+  char buf[16];
   struct tm * t = globals->get_time_params()->getGmt();
   sprintf(buf, " %.2d:%.2d:%.2d",
 	  t->tm_hour, t->tm_min, t->tm_sec);
-  return buf;
+  out = buf;
+  return out;
 }
 
 static bool panelGetNAV1TO ()
@@ -269,22 +272,31 @@ class MyTexturedLayer : public FGTexturedLayer
 {
 public:
   MyTexturedLayer (const char * name, int w = -1, int h = -1)
-    : FGTexturedLayer(w, h), _name(name) {}
+    : FGTexturedLayer(w, h), _name(name), _textureLoaded(false) {}
 
-  virtual void draw () const;
+  virtual void draw ();
+  virtual CroppedTexture &getTexture ();
 
 private:
   const char * _name;
+  mutable bool _textureLoaded;
 };
 
-void
-MyTexturedLayer::draw () const {
+CroppedTexture &
+MyTexturedLayer::getTexture ()
+{
   MyTexturedLayer * me = (MyTexturedLayer *)this;
-  if (me->getTexture() == 0) {
-    CroppedTexture &t = tex[_name];
-    me->setTexture(t.texture);
-    me->setTextureCoords(t.minX, t.minY, t.maxX, t.maxY);
+  if (!_textureLoaded) {
+    _textureLoaded = true;
+    me->setTexture(tex[_name]);
   }
+  return FGTexturedLayer::getTexture();
+}
+
+void
+MyTexturedLayer::draw ()
+{
+  getTexture();
   FGTexturedLayer::draw();
 }
 
@@ -316,7 +328,7 @@ public:
   MagRibbon (int w, int h);
   virtual ~MagRibbon () {}
 
-  virtual void draw () const;
+  virtual void draw ();
 };
 
 MagRibbon::MagRibbon (int w, int h)
@@ -325,7 +337,7 @@ MagRibbon::MagRibbon (int w, int h)
 }
 
 void
-MagRibbon::draw () const
+MagRibbon::draw ()
 {
   double heading = FGSteam::get_MH_deg();
   double xoffset, yoffset;
@@ -357,7 +369,12 @@ MagRibbon::draw () const
 				// Adjust to put the number in the centre
   xoffset -= 0.25;
 
-  setTextureCoords(xoffset, yoffset, xoffset + 0.5, yoffset + 0.25);
+  CroppedTexture &t = getTexture();
+  t.minX = xoffset;
+  t.minY = yoffset;
+  t.maxX = xoffset + 0.5;
+  t.maxY = yoffset + 0.5;
+//   setTextureCoords(xoffset, yoffset, xoffset + 0.5, yoffset + 0.25);
   MyTexturedLayer::draw();
 }
 
@@ -382,7 +399,7 @@ struct TransData
     YShift
   };
   Type type;
-  FGInstrumentLayer::transform_func func;
+  const char * propName;
   float min, max, factor, offset;
 };
 
@@ -412,7 +429,7 @@ InstrumentData instruments[] =
     {new MyTexturedLayer("airspeedBG", -1, -1)},
     {new MyTexturedLayer("longNeedle", int(SIX_W*(5.0/64.0)),
        int(SIX_W*(7.0/16.0))), {
-      {TransData::Rotation, FGSteam::get_ASI_kias,
+      {TransData::Rotation, "/steam/airspeed",
 	 30.0, 220.0, 36.0/20.0, -54.0},
       {TransData::YShift, 0,
 	 0.0, 0.0, 0.0, SIX_W*(12.0/64.0)}
@@ -421,16 +438,16 @@ InstrumentData instruments[] =
 
   {"horizon", SIX_X + SIX_SPACING, SIX_Y, SIX_W, SIX_W, {}, {
     {new MyTexturedLayer("horizonBG", -1, -1), {
-      {TransData::Rotation, FGBFI::getRoll, -360.0, 360.0, -1.0, 0.0}
+      {TransData::Rotation, "/orientation/roll", -360.0, 360.0, -1.0, 0.0}
     }},
     {new MyTexturedLayer("horizonFloat",
        int(SIX_W * (13.0/16.0)), int(SIX_W * (33.0/64.0))), {
-      {TransData::Rotation, FGBFI::getRoll, -360.0, 360.0, -1.0, 0.0},
-      {TransData::YShift, FGBFI::getPitch,
+      {TransData::Rotation, "/orientation/roll", -360.0, 360.0, -1.0, 0.0},
+      {TransData::YShift, "/orientation/pitch",
 	 -20.0, 20.0, -(1.5/160.0)*SIX_W, 0.0}
     }},
     {new MyTexturedLayer("horizonRim", -1, -1), {
-      {TransData::Rotation, FGBFI::getRoll, -360.0, 360.0, -1.0, 0.0}
+      {TransData::Rotation, "/orientation/roll", -360.0, 360.0, -1.0, 0.0}
     }},
     {new MyTexturedLayer("horizonFront", -1, -1)}
   }},
@@ -439,18 +456,18 @@ InstrumentData instruments[] =
     {new MyTexturedLayer("altimeterBG", -1, -1)},
     {new MyTexturedLayer("longNeedle",
        int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0))), {
-      {TransData::Rotation, FGSteam::get_ALT_ft,
+      {TransData::Rotation, "/steam/altitude",
 	 0.0, 100000.0, 360.0/1000.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W*(12.0/64.0)}
     }},
     {new MyTexturedLayer("shortNeedle",
        int(SIX_W*(6.0/64.0)), int(SIX_W*(18.0/64.0))), {
-      {TransData::Rotation, FGSteam::get_ALT_ft,
+      {TransData::Rotation, "/steam/altitude",
 	 0.0, 100000.0, 360.0/10000.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W/8.0}
     }},
     {new MyTexturedLayer("bug", int(SIX_W*(4.0/64.0)), int(SIX_W*(4.0/64.0))), {
-      {TransData::Rotation, FGSteam::get_ALT_ft,
+      {TransData::Rotation, "/steam/altitude",
 	 0.0, 100000.0, 360.0/100000.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W/2.0-4}
     }},
@@ -459,12 +476,12 @@ InstrumentData instruments[] =
   {"turn", SIX_X, SIX_Y-SIX_SPACING, SIX_W, SIX_W, {}, {
     {new MyTexturedLayer("turnBG", -1, -1)},
     {new MyTexturedLayer("turnPlane", int(SIX_W * 0.75), int(SIX_W * 0.25)), {
-      {TransData::Rotation, FGSteam::get_TC_std, -2.5, 2.5, 20.0, 0.0},
+      {TransData::Rotation, "/steam/turn-rate", -2.5, 2.5, 20.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, int(SIX_W * 0.0625)}
     }},
     {new MyTexturedLayer("turnBall",
        int(SIX_W * (4.0/64.0)), int(SIX_W * (4.0/64.0))), {
-      {TransData::Rotation, FGSteam::get_TC_rad,
+      {TransData::Rotation, "/steam/slip-skid",
 	 -0.1, 0.1, 400.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -(SIX_W/4)+4}
     }}
@@ -475,7 +492,7 @@ InstrumentData instruments[] =
     {new MyTexturedLayer("verticalBG", -1, -1)},
     {new MyTexturedLayer("longNeedle",
        int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0))), {
-      {TransData::Rotation, FGSteam::get_VSI_fps,
+      {TransData::Rotation, "/steam/vertical-speed",
 	 -2000.0, 2000.0, 42.0/500.0, 270.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W*12.0/64.0}
     }}
@@ -484,25 +501,27 @@ InstrumentData instruments[] =
   {"controls", SIX_X, SIX_Y-(SIX_SPACING*2), SMALL_W, SMALL_W, {}, {
     {new MyTexturedLayer("controlsBG", -1, -1)},
     {new MyTexturedLayer("bug", int(SIX_W*4.0/64.0), int(SIX_W*4.0/64.0)), {
-      {TransData::XShift, FGBFI::getAileron, -1.0, 1.0, SMALL_W*0.75/2.0, 0.0},
+      {TransData::XShift, "/controls/aileron",
+	 -1.0, 1.0, SMALL_W*0.75/2.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, (SIX_W/2.0)-12.0}
     }},
     {new MyTexturedLayer("bug", int(SIX_W*4.0/64.0), int(SIX_W*4.0/64.0)), {
       {TransData::Rotation, 0, 0.0, 0.0, 0.0, 180.0},
-      {TransData::XShift, FGBFI::getRudder, -1.0, 1.0, -SMALL_W*0.75/2.0, 0.0},
+      {TransData::XShift, "/controls/rudder",
+	 -1.0, 1.0, -SMALL_W*0.75/2.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W/2.0-12.0}
     }},
     {new MyTexturedLayer("bug", int(SIX_W*4.0/64.0), int(SIX_W*4.0/64.0)), {
       {TransData::Rotation, 0, 0.0, 0.0, 0.0, 270.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -SMALL_W*3.0/8.0},
-      {TransData::XShift, FGBFI::getElevatorTrim,
+      {TransData::XShift, "/controls/elevator-trim",
 	 -1.0, 1.0, SMALL_W*0.75/2.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, (SIX_W/2.0)-12.0}
     }},
     {new MyTexturedLayer("bug", int(SIX_W*4.0/64.0), int(SIX_W*4.0/64.0)), {
       {TransData::Rotation, 0, 0.0, 0.0, 0.0, 90.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -SMALL_W*(3.0/8.0)},
-      {TransData::XShift, FGBFI::getElevator,
+      {TransData::XShift, "/controls/elevator",
 	 -1.0, 1.0, -SMALL_W*0.75/2.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, (SIX_W/2.0)-12.0}
     }}
@@ -513,7 +532,7 @@ InstrumentData instruments[] =
     {new MyTexturedLayer("longNeedle",
        int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0))), {
       {TransData::XShift, 0, 0.0, 0.0, 0.0, -(SMALL_W/4) + (SMALL_W/16)},
-      {TransData::Rotation, FGBFI::getFlaps, 0.0, 1.0, 120.0, 30.0},
+      {TransData::Rotation, "/controls/flaps", 0.0, 1.0, 120.0, 30.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W*12.0/64.0}
     }}
   }},
@@ -522,44 +541,45 @@ InstrumentData instruments[] =
     {new MyTexturedLayer("rpmBG", -1, -1)},
     {new MyTexturedLayer("longNeedle",
        int(SIX_W*(5.0/64.0)), int(SIX_W*(7.0/16.0))), {
-      {TransData::Rotation, FGBFI::getThrottle, 0.0, 100.0, 300.0, -150.0},
+      {TransData::Rotation, "/controls/throttle", 0.0, 100.0, 300.0, -150.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, SIX_W*12.0/64.0}
     }}
   }},
 
   {"gyro", SIX_X+SIX_SPACING, SIX_Y-SIX_SPACING, SIX_W, SIX_W, {
-    {new FGAdjustAction(FGBFI::getAPHeadingMag, FGBFI::setAPHeadingMag,
+    {new FGAdjustAction(V("/autopilot/settings/heading-magnetic"),
 			-1.0, -360.0, 360.0, true),
        0, SIX_W/2-SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGBFI::getAPHeadingMag, FGBFI::setAPHeadingMag,
+    {new FGAdjustAction(V("/autopilot/settings/heading-magnetic"),
 			1.0, -360.0, 360.0, true),
        0, SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGBFI::getAPHeadingMag, FGBFI::setAPHeadingMag,
+    {new FGAdjustAction(V("/autopilot/settings/heading-magnetic"),
 			-5.0, -360.0, 360.0, true),
        1, SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGBFI::getAPHeadingMag, FGBFI::setAPHeadingMag,
+    {new FGAdjustAction(V("/autopilot/settings/heading-magnetic"),
 			5.0, -360.0, 360.0, true),
        1, SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
+    {new FGAdjustAction(V("/steam/gyro-compass-error"),
 			-1.0, -360.0, 360.0, true),
        0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
+    {new FGAdjustAction(V("/steam/gyro-compass-error"),
 			1.0, -360.0, 360.0, true),
        0, -SIX_W/2+SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
+    {new FGAdjustAction(V("/steam/gyro-compass-error"),
 			-5.0, -360.0, 360.0, true),
        1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGSteam::get_DG_err, FGSteam::set_DG_err,
+    {new FGAdjustAction(V("/steam/gyro-compass-error"),
 			5.0, -360.0, 360.0, true),
        1, -SIX_W/2+SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}
   }, {
     {new MyTexturedLayer("compassBG", -1, -1), {
-      {TransData::Rotation, FGSteam::get_DG_deg, -720.0, 720.0, -1.0, 0.0}
+      {TransData::Rotation, "/steam/gyro-compass", -720.0, 720.0, -1.0, 0.0}
     }},
     {new MyTexturedLayer("bug",
 			 int(SIX_W*(4.0/64.0)), int(SIX_W*(4.0/64.0))), {
-      {TransData::Rotation, FGBFI::getAPHeading, -720.0, 720.0, 1.0, 180.0},
-      {TransData::Rotation, FGSteam::get_DG_deg, -720.0, 720.0, -1.0, 0.0},
+      {TransData::Rotation, "/autopilot/settings/heading",
+	 -720.0, 720.0, 1.0, 180.0},
+      {TransData::Rotation, "/steam/gyro-compass", -720.0, 720.0, -1.0, 0.0},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -(SIX_W/2.0)+4}
     }},
     {new MyTexturedLayer("compassCenter", int(SIX_W*0.625), int(SIX_W*0.625))},
@@ -567,7 +587,8 @@ InstrumentData instruments[] =
        int(SIX_W*(21.0/112.0)), int(SIX_W*(21.0/112.0))), {
       {TransData::XShift, 0, 0.0, 0.0, 0.0, SIX_W/2-10},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
-      {TransData::Rotation, FGBFI::getAPHeading, -360.0, 360.0, 1.0, 0.0}
+      {TransData::Rotation, "/autopilot/settings/heading",
+	 -360.0, 360.0, 1.0, 0.0}
     }},
     {new MyTexturedLayer("knob",
 			 int(SIX_W*(22.0/112.0)), int(SIX_W*(22.0/112.0))), {
@@ -580,28 +601,29 @@ InstrumentData instruments[] =
   {"chronometer", SIX_X-SIX_SPACING-8, SIX_Y, SMALL_W, SMALL_W, {}, {
     {new MyTexturedLayer("clockBG")},
     {new FGTextLayer(SMALL_W, SMALL_W,
-		     new FGTextLayer::Chunk(panelGetTime)), {
+		     new FGTextLayer::Chunk(FGTextLayer::TEXT_VALUE,
+					    V("/panel/time"))), {
       {TransData::XShift, 0, 0.0, 0.0, 0.0, SMALL_W*-0.38},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, SMALL_W*-0.06}
     }}
   }},
 
   {"nav1", SIX_X+(SIX_SPACING*3)+20, SIX_Y, SIX_W, SIX_W, {
-    {new FGAdjustAction(FGBFI::getNAV1SelRadial, FGBFI::setNAV1SelRadial,
+    {new FGAdjustAction(V("/radios/nav1/radials/selected"),
 			1.0, 0.0, 360.0, true),
        0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGBFI::getNAV1SelRadial, FGBFI::setNAV1SelRadial,
+    {new FGAdjustAction(V("/radios/nav1/radials/selected"),
 			-1.0, 0.0, 360.0, true),
        0, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGBFI::getNAV1SelRadial, FGBFI::setNAV1SelRadial,
+    {new FGAdjustAction(V("/radios/nav1/radials/selected"),
 			5.0, 0.0, 360.0, true),
        1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGBFI::getNAV1SelRadial, FGBFI::setNAV1SelRadial,
+    {new FGAdjustAction(V("/radios/nav1/radials/selected"),
 			-5.0, 0.0, 360.0, true),
        1, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}       
   }, {
     {new MyTexturedLayer("compassBG"), {
-      {TransData::Rotation, FGBFI::getNAV1SelRadial,
+      {TransData::Rotation, "/radios/nav1/radials/selected",
 	 -360.0, 360.0, -1.0, 0.0}
     }},
     {new MyTexturedLayer("navFG", SIX_W/2, int(SIX_W*(5.0/8.0)))},
@@ -609,11 +631,13 @@ InstrumentData instruments[] =
 			 int(SIX_W*(21.0/112.0))), {
       {TransData::XShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
-      {TransData::Rotation, FGBFI::getNAV1SelRadial, -360.0, 360.0, 1.0, 0.0}
+      {TransData::Rotation, "/radios/nav1/radials/selected",
+	 -360.0, 360.0, 1.0, 0.0}
     }},
-    {new FGSwitchLayer(SIX_W/8, SIX_W/8, panelGetNAV1TO,
+    {new FGSwitchLayer(SIX_W/8, SIX_W/8, V("/panel/vor1/to-flag"),
 		       new MyTexturedLayer("toFlag", SIX_W/8, SIX_W/8),
-		       new FGSwitchLayer(SIX_W/8, SIX_W/8, panelGetNAV1FROM,
+		       new FGSwitchLayer(SIX_W/8, SIX_W/8,
+					 V("/panel/vor1/from-flag"),
 					 new MyTexturedLayer("fromFlag",
 							     SIX_W/8,
 							     SIX_W/8),
@@ -623,31 +647,31 @@ InstrumentData instruments[] =
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -int(SIX_W*0.1875)}
     }},
     {new MyTexturedLayer("navNeedle", SIX_W/32, SIX_W/2), {
-      {TransData::XShift, FGSteam::get_HackVOR1_deg,
+      {TransData::XShift, "/steam/vor1",
 	 -10.0, 10.0, SIX_W/40.0, 0.0}
     }},
     {new MyTexturedLayer("navNeedle", SIX_W/32, SIX_W/2), {
-      {TransData::YShift, FGSteam::get_HackGS_deg, -1.0, 1.0, SIX_W/5.0, 0.0},
+      {TransData::YShift, "/steam/glidescope1", -1.0, 1.0, SIX_W/5.0, 0.0},
       {TransData::Rotation, 0, 0.0, 0.0, 0.0, 90}
     }}
   }},
 
   {"nav2", SIX_X+(SIX_SPACING*3)+20, SIX_Y-SIX_SPACING, SIX_W, SIX_W, {
-    {new FGAdjustAction(FGBFI::getNAV2SelRadial, FGBFI::setNAV2SelRadial,
+    {new FGAdjustAction(V("/radios/nav2/radials/selected"),
 			1.0, 0.0, 360.0, true),
        0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGBFI::getNAV2SelRadial, FGBFI::setNAV2SelRadial,
+    {new FGAdjustAction(V("/radios/nav2/radials/selected"),
 			-1.0, 0.0, 360.0, true),
        0, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGBFI::getNAV2SelRadial, FGBFI::setNAV2SelRadial,
+    {new FGAdjustAction(V("/radios/nav2/radials/selected"),
 			5.0, 0.0, 360.0, true),
        1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGBFI::getNAV2SelRadial, FGBFI::setNAV2SelRadial,
+    {new FGAdjustAction(V("/radios/nav2/radials/selected"),
 			-5.0, 0.0, 360.0, true),
        1, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}       
   }, {
     {new MyTexturedLayer("compassBG"), {
-      {TransData::Rotation, FGBFI::getNAV2SelRadial,
+      {TransData::Rotation, "/radios/nav2/radials/selected",
 	 -360.0, 360.0, -1.0, 0.0}
     }},
     {new MyTexturedLayer("navFG", SIX_W/2, int(SIX_W*(5.0/8.0)))},
@@ -655,11 +679,13 @@ InstrumentData instruments[] =
 			 int(SIX_W*(21.0/112.0))), {
       {TransData::XShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
-      {TransData::Rotation, FGBFI::getNAV2SelRadial, -360.0, 360.0, 1.0, 0.0}
+      {TransData::Rotation, "/radios/nav2/radials/selected",
+	 -360.0, 360.0, 1.0, 0.0}
     }},
-    {new FGSwitchLayer(SIX_W/8, SIX_W/8, panelGetNAV2TO,
+    {new FGSwitchLayer(SIX_W/8, SIX_W/8, V("/panel/vor2/to-flag"),
 		       new MyTexturedLayer("toFlag", SIX_W/8, SIX_W/8),
-		       new FGSwitchLayer(SIX_W/8, SIX_W/8, panelGetNAV2FROM,
+		       new FGSwitchLayer(SIX_W/8, SIX_W/8,
+					 V("/panel/vor2/from-flag"),
 					 new MyTexturedLayer("fromFlag",
 							     SIX_W/8,
 							     SIX_W/8),
@@ -669,37 +695,37 @@ InstrumentData instruments[] =
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -int(SIX_W*0.1875)}
     }},
     {new MyTexturedLayer("navNeedle", SIX_W/32, SIX_W/2), {
-      {TransData::XShift, FGSteam::get_HackVOR2_deg,
+      {TransData::XShift, "/steam/vor2",
 	 -10.0, 10.0, SIX_W/40.0, 0.0}
     }}
   }},
 
   {"adf", SIX_X+(SIX_SPACING*3)+20, SIX_Y-(SIX_SPACING*2), SIX_W, SIX_W, {
-    {new FGAdjustAction(FGBFI::getADFRotation, FGBFI::setADFRotation,
+    {new FGAdjustAction(V("/radios/adf/rotation"),
 			-1.0, 0.0, 360.0, true),
        0, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGBFI::getADFRotation, FGBFI::setADFRotation,
+    {new FGAdjustAction(V("/radios/adf/rotation"),
 			1.0, 0.0, 360.0, true),
        0, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGBFI::getADFRotation, FGBFI::setADFRotation,
+    {new FGAdjustAction(V("/radios/adf/rotation"),
 			-5.0, 0.0, 360.0, true),
        1, -SIX_W/2, -SIX_W/2, SIX_W/10, SIX_W/5},
-    {new FGAdjustAction(FGBFI::getADFRotation, FGBFI::setADFRotation,
+    {new FGAdjustAction(V("/radios/adf/rotation"),
 			5.0, 0.0, 360.0, true),
        1, -SIX_W/2 + SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5}
   },{
     {new MyTexturedLayer("compassBG"), {
-      {TransData::Rotation, FGBFI::getADFRotation, 0.0, 360.0, 1.0, 0.0}
+      {TransData::Rotation, "/radios/adf/rotation", 0.0, 360.0, 1.0, 0.0}
     }},
     {new MyTexturedLayer("adfFace", -1, -1), {}},
     {new MyTexturedLayer("adfNeedle", SIX_W/8, int(SIX_W*0.625)), {
-      {TransData::Rotation, FGSteam::get_HackADF_deg, -720.0, 720.0, 1.0, 0.0}
+      {TransData::Rotation, "/steam/adf", -720.0, 720.0, 1.0, 0.0}
     }},
     {new MyTexturedLayer("adfKnob", int(SIX_W*(21.0/112.0)),
 			 int(SIX_W*(21.0/112.0))), {
       {TransData::XShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
       {TransData::YShift, 0, 0.0, 0.0, 0.0, -SIX_W/2+10},
-      {TransData::Rotation, FGBFI::getADFRotation, 0.0, 360.0, 1.0, 0.0}
+      {TransData::Rotation, "/radios/adf/rotation", 0.0, 360.0, 1.0, 0.0}
     }}
   }},
 
@@ -729,27 +755,21 @@ createNavCom1 (int x, int y)
 				// Use the button to swap standby and active
 				// NAV frequencies
   inst->addAction(0, int(SIX_W * .375), -SIX_W/4, SIX_W/4, SIX_W/4,
-		  new FGSwapAction(FGBFI::getNAV1Freq,
-				   FGBFI::setNAV1Freq,
-				   FGBFI::getNAV1AltFreq,
-				   FGBFI::setNAV1AltFreq));
+		  new FGSwapAction(V("/radios/nav1/frequencies/selected"),
+				   V("/radios/nav1/frequencies/standby")));
 
 				// Use the knob to tune the standby NAV
   inst->addAction(0, SIX_W-SIX_W/4, -SIX_W/4, SIX_W/8, SIX_W/4,
-		  new FGAdjustAction(FGBFI::getNAV1AltFreq,
-				     FGBFI::setNAV1AltFreq,
+		  new FGAdjustAction(V("/radios/nav1/frequencies/standby"),
 				     -0.05, 108.0, 117.95, true));
   inst->addAction(0, SIX_W-SIX_W/8, -SIX_W/4, SIX_W/8, SIX_W/4,
-		  new FGAdjustAction(FGBFI::getNAV1AltFreq,
-				     FGBFI::setNAV1AltFreq,
+		  new FGAdjustAction(V("/radios/nav1/frequencies/standby"),
 				     0.05, 108.0, 117.95, true));
   inst->addAction(1, SIX_W-SIX_W/4, -SIX_W/4, SIX_W/8, SIX_W/4,
-		  new FGAdjustAction(FGBFI::getNAV1AltFreq,
-				     FGBFI::setNAV1AltFreq,
+		  new FGAdjustAction(V("/radios/nav1/frequencies/standby"),
 				     -0.5, 108.0, 117.95, true));
   inst->addAction(1, SIX_W-SIX_W/8, -SIX_W/4, SIX_W/8, SIX_W/4,
-		  new FGAdjustAction(FGBFI::getNAV1AltFreq,
-				     FGBFI::setNAV1AltFreq,
+		  new FGAdjustAction(V("/radios/nav1/frequencies/standby"),
 				     0.5, 108.0, 117.95, true));
 
 				// Layer 0: background
@@ -757,8 +777,14 @@ createNavCom1 (int x, int y)
 
 				// Layer 1: NAV frequencies
   FGTextLayer * text = new FGTextLayer(SIX_W*2, SMALL_W/2);
-  text->addChunk(new FGTextLayer::Chunk(FGBFI::getNAV1Freq, "%.2f"));
-  text->addChunk(new FGTextLayer::Chunk(FGBFI::getNAV1AltFreq, "%7.2f"));
+  text->addChunk(new
+		 FGTextLayer::Chunk(FGTextLayer::DOUBLE_VALUE,
+				    V("/radios/nav1/frequencies/selected"),
+				    "%.2f"));
+  text->addChunk(new
+		 FGTextLayer::Chunk(FGTextLayer::DOUBLE_VALUE,
+				    V("/radios/nav1/frequencies/standby"),
+				    "%7.2f"));
   text->setPointSize(14);
   text->setColor(1.0, 0.5, 0.0);
   inst->addLayer(text);
@@ -780,27 +806,21 @@ createNavCom2 (int x, int y)
 				// Use the button to swap standby and active
 				// NAV frequencies
   inst->addAction(0, int(SIX_W * .375), -SIX_W/4, SIX_W/4, SIX_W/4,
-		  new FGSwapAction(FGBFI::getNAV2Freq,
-				   FGBFI::setNAV2Freq,
-				   FGBFI::getNAV2AltFreq,
-				   FGBFI::setNAV2AltFreq));
+		  new FGSwapAction(V("/radios/nav2/frequencies/selected"),
+				   V("/radios/nav2/frequencies/standby")));
 
 				// Use the knob to tune the standby NAV
   inst->addAction(0, SIX_W-SIX_W/4, -SIX_W/4, SIX_W/8, SIX_W/4,
-		  new FGAdjustAction(FGBFI::getNAV2AltFreq,
-				     FGBFI::setNAV2AltFreq,
+		  new FGAdjustAction(V("/radios/nav2/frequencies/standby"),
 				     -0.05, 108.0, 117.95, true));
   inst->addAction(0, SIX_W-SIX_W/8, -SIX_W/4, SIX_W/8, SIX_W/4,
-		  new FGAdjustAction(FGBFI::getNAV2AltFreq,
-				     FGBFI::setNAV2AltFreq,
+		  new FGAdjustAction(V("/radios/nav2/frequencies/standby"),
 				     0.05, 108.0, 117.95, true));
   inst->addAction(1, SIX_W-SIX_W/4, -SIX_W/4, SIX_W/8, SIX_W/4,
-		  new FGAdjustAction(FGBFI::getNAV2AltFreq,
-				     FGBFI::setNAV2AltFreq,
+		  new FGAdjustAction(V("/radios/nav2/frequencies/standby"),
 				     -0.5, 108.0, 117.95, true));
   inst->addAction(1, SIX_W-SIX_W/8, -SIX_W/4, SIX_W/8, SIX_W/4,
-		  new FGAdjustAction(FGBFI::getNAV2AltFreq,
-				     FGBFI::setNAV2AltFreq,
+		  new FGAdjustAction(V("/radios/nav2/frequencies/standby"),
 				     0.5, 108.0, 117.95, true));
 
 				// Layer 0: background
@@ -808,8 +828,14 @@ createNavCom2 (int x, int y)
 
 				// Layer 1: NAV frequencies
   FGTextLayer * text = new FGTextLayer(SIX_W*2, SIX_W/2);
-  text->addChunk(new FGTextLayer::Chunk(FGBFI::getNAV2Freq, "%.2f"));
-  text->addChunk(new FGTextLayer::Chunk(FGBFI::getNAV2AltFreq, "%7.2f"));
+  text->addChunk(new
+		 FGTextLayer::Chunk(FGTextLayer::DOUBLE_VALUE,
+				    V("/radios/nav2/frequencies/selected"),
+				    "%.2f"));
+  text->addChunk(new
+		 FGTextLayer::Chunk(FGTextLayer::DOUBLE_VALUE,
+				    V("/radios/nav2/frequencies/standby"),
+				    "%7.2f"));
   text->setPointSize(14);
   text->setColor(1.0, 0.5, 0.0);
   inst->addLayer(text);
@@ -831,23 +857,19 @@ createADFRadio (int x, int y)
 				// Use the knob to tune the standby NAV
   inst->addAction(0, int(SIX_W * 0.7), int(-SIX_W * 0.07),
 		  int(SIX_W * 0.09), int(SIX_W * 0.14),
-		  new FGAdjustAction(FGBFI::getADFFreq,
-				     FGBFI::setADFFreq,
+		  new FGAdjustAction(V("/radios/adf/frequencies/selected"),
 				     -1.0, 100.0, 1299, true));
   inst->addAction(0, int(SIX_W * 0.79), int(-SIX_W * 0.07),
 		  int(SIX_W * 0.09), int(SIX_W * 0.14),
-		  new FGAdjustAction(FGBFI::getADFFreq,
-				     FGBFI::setADFFreq,
+		  new FGAdjustAction(V("/radios/adf/frequencies/selected"),
 				     1.0, 100.0, 1299, true));
   inst->addAction(1, int(SIX_W * 0.7), int(-SIX_W * 0.07),
 		  int(SIX_W * 0.09), int(SIX_W * 0.14),
-		  new FGAdjustAction(FGBFI::getADFFreq,
-				     FGBFI::setADFFreq,
+		  new FGAdjustAction(V("/radios/adf/frequencies/selected"),
 				     -25.0, 100.0, 1299, true));
   inst->addAction(1, int(SIX_W * 0.79), int(-SIX_W * 0.07),
 		  int(SIX_W * 0.09), int(SIX_W * 0.14),
-		  new FGAdjustAction(FGBFI::getADFFreq,
-				     FGBFI::setADFFreq,
+		  new FGAdjustAction(V("/radios/adf/frequencies/selected"),
 				     25.0, 100.0, 1299, true));
 
 				// Layer 0: background
@@ -855,7 +877,10 @@ createADFRadio (int x, int y)
 
 				// Layer: ADF frequency
   FGTextLayer * text = new FGTextLayer(SIX_W*2, SIX_W/2);
-  text->addChunk(new FGTextLayer::Chunk(FGBFI::getADFFreq, "%4.0f"));
+  text->addChunk(new
+		 FGTextLayer::Chunk(FGTextLayer::DOUBLE_VALUE,
+				    V("/radios/adf/frequencies/selected"),
+				    "%4.0f"));
   text->setPointSize(14);
   text->setColor(1.0, 0.5, 0.0);
   inst->addLayer(text);
@@ -876,39 +901,36 @@ createAP (int x, int y)
 
 				// Action: select HDG button
   inst->addAction(0, int(-SIX_W*0.6125), -SIX_W/16, SIX_W/4, SIX_W/8,
-		  new FGToggleAction(FGBFI::getAPHeadingLock,
-				     FGBFI::setAPHeadingLock));
+		  new FGToggleAction(V("/autopilot/locks/heading")));
 
 				// Action: select NAV button
   inst->addAction(0, int(-SIX_W*0.3625), -SIX_W/16, SIX_W/4, SIX_W/8,
-		  new FGToggleAction(FGBFI::getAPNAV1Lock,
-				     FGBFI::setAPNAV1Lock));
+		  new FGToggleAction(V("/autopilot/locks/nav1")));
 
 				// Action: select ALT button
   inst->addAction(0, int(-SIX_W*0.1125), -SIX_W/16, SIX_W/4, SIX_W/8,
-		  new FGToggleAction(FGBFI::getAPAltitudeLock,
-				     FGBFI::setAPAltitudeLock));
+		  new FGToggleAction(V("/autopilot/locks/altitude")));
 
 				// Layer: AP background
   inst->addLayer(tex["autopilotBG"], SIX_W*2, SIX_W/4);
 
 				// Display HDG button
   FGSwitchLayer * sw =
-    new FGSwitchLayer(SIX_W/4, SIX_W/8, FGBFI::getAPHeadingLock,
+    new FGSwitchLayer(SIX_W/4, SIX_W/8, V("/autopilot/locks/heading"),
 		      new FGTexturedLayer(tex["hdgButtonOn"], SIX_W/4, SIX_W/8),
 		      new FGTexturedLayer(tex["hdgButtonOff"], SIX_W/4, SIX_W/8));
   inst->addLayer(sw);
   inst->addTransformation(FGInstrumentLayer::XSHIFT, -SIX_W * 0.5);
 
 				// Display NAV button
-  sw = new FGSwitchLayer(SIX_W/4, SIX_W/8, FGBFI::getAPNAV1Lock,
+  sw = new FGSwitchLayer(SIX_W/4, SIX_W/8, V("/autopilot/locks/nav1"),
 			 new FGTexturedLayer(tex["navButtonOn"], SIX_W/4, SIX_W/8),
 			 new FGTexturedLayer(tex["navButtonOff"], SIX_W/4, SIX_W/8));
   inst->addLayer(sw);
   inst->addTransformation(FGInstrumentLayer::XSHIFT, -SIX_W * 0.25);
 
 				// Display ALT button
-  sw = new FGSwitchLayer(SIX_W/4, SIX_W/8, FGBFI::getAPAltitudeLock,
+  sw = new FGSwitchLayer(SIX_W/4, SIX_W/8, V("/autopilot/locks/altitude"),
 			 new FGTexturedLayer(tex["altButtonOn"], SIX_W/4, SIX_W/8),
 			 new FGTexturedLayer(tex["altButtonOff"], SIX_W/4, SIX_W/8));
   inst->addLayer(sw);
@@ -928,7 +950,9 @@ createDME (int x, int y)
 				// Layer: current distance
 
   FGTextLayer * text1 = new FGTextLayer(SIX_W/2, SIX_W/4);
-  text1->addChunk(new FGTextLayer::Chunk(FGBFI::getNAV1DistDME, "%05.1f",
+  text1->addChunk(new FGTextLayer::Chunk(FGTextLayer::DOUBLE_VALUE,
+					 V("/radios/nav1/dme/distance"),
+					 "%05.1f",
 					 METER_TO_NM));
   text1->setPointSize(12);
   text1->setColor(1.0, 0.5, 0.0);
@@ -939,7 +963,7 @@ createDME (int x, int y)
   text2->setColor(1.0, 0.5, 0.0);
 
   FGSwitchLayer * sw =
-    new FGSwitchLayer(SIX_W/2, SIX_W/4, FGBFI::getNAV1DMEInRange,
+    new FGSwitchLayer(SIX_W/2, SIX_W/4, V("/radios/nav1/dme/in-range"),
 		      text1, text2);
 
   inst->addLayer(sw);
@@ -962,6 +986,14 @@ fgCreateSmallSinglePropPanel (int xpos, int ypos, int finx, int finy)
   int h = finy - ypos;
   FGPanel * panel = new FGPanel(xpos, ypos, w, h);
   int x, y;
+
+				// Tie local functions
+				// FIXME: define these elsewhere...
+  current_properties.tieString("/panel/time", panelGetTime);
+  current_properties.tieBool("/panel/vor1/to-flag", panelGetNAV1TO);
+  current_properties.tieBool("/panel/vor1/from-flag", panelGetNAV1FROM);
+  current_properties.tieBool("/panel/vor2/to-flag", panelGetNAV2TO);
+  current_properties.tieBool("/panel/vor2/from-flag", panelGetNAV2FROM);
 
   setupTextures();
 
@@ -998,8 +1030,8 @@ fgCreateSmallSinglePropPanel (int xpos, int ypos, int finx, int finy)
 	default:
 	  break;
 	}
-	if (trans.func) {
-	  inst->addTransformation(type, trans.func,
+	if (trans.propName != 0) {
+	  inst->addTransformation(type, V(trans.propName),
 				  trans.min, trans.max,
 				  trans.factor, trans.offset);
 	} else {

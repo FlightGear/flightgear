@@ -30,6 +30,7 @@
 #endif
 
 #include <simgear/constants.h>
+#include <simgear/misc/props.hxx>
 #include <simgear/math/fg_types.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Main/options.hxx>
@@ -40,6 +41,8 @@ FG_USING_NAMESPACE(std);
 
 #include "radiostack.hxx"
 #include "steam.hxx"
+
+static bool isTied = false;
 
 
 
@@ -95,6 +98,32 @@ int FGSteam::_UpdatesPending = 1000000;  /* Forces filter to reset */
 
 void FGSteam::update ( int timesteps )
 {
+        if (!isTied) {
+	  isTied = true;
+	  current_properties.tieDouble("/steam/airspeed",
+				       FGSteam::get_ASI_kias);
+	  current_properties.tieDouble("/steam/altitude",
+				       FGSteam::get_ALT_ft);
+	  current_properties.tieDouble("/steam/turn-rate",
+				       FGSteam::get_TC_std);
+	  current_properties.tieDouble("/steam/slip-skid",
+				       FGSteam::get_TC_rad);
+	  current_properties.tieDouble("/steam/vertical-speed",
+				       FGSteam::get_VSI_fps);
+	  current_properties.tieDouble("/steam/gyro-compass",
+				       FGSteam::get_DG_deg);
+	  current_properties.tieDouble("/steam/vor1",
+				       FGSteam::get_HackVOR1_deg);
+	  current_properties.tieDouble("/steam/vor2",
+				       FGSteam::get_HackVOR2_deg);
+	  current_properties.tieDouble("/steam/glidescope1",
+				       FGSteam::get_HackGS_deg);
+	  current_properties.tieDouble("/steam/adf",
+				       FGSteam::get_HackADF_deg);
+	  current_properties.tieDouble("/steam/gyro-compass-error",
+				       FGSteam::get_DG_err,
+				       FGSteam::set_DG_err);
+	}
 	_UpdatesPending += timesteps;
 }
 
