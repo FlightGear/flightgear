@@ -1024,6 +1024,8 @@ static void fgMainLoop( void ) {
 	   cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
 	   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
+    // cout << "Warp = " << globals->get_warp() << endl;
+
     // update "time"
     if ( globals->get_warp_delta() != 0 ) {
 	globals->inc_warp( globals->get_warp_delta() );

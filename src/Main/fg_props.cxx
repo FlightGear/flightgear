@@ -905,7 +905,7 @@ fgInitProps ()
 
 				// View
   fgTie("/sim/field-of-view", getFOV, setFOV);
-  fgTie("/sim/time/warp", getWarp, setWarp);
+  fgTie("/sim/time/warp", getWarp, setWarp, false);
   fgTie("/sim/time/warp-delta", getWarpDelta, setWarpDelta);
   fgTie("/sim/view/axes/long", (double(*)())0, setViewAxisLong);
   fgTie("/sim/view/axes/lat", (double(*)())0, setViewAxisLat);
