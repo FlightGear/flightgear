@@ -141,7 +141,9 @@ void triangulate( const FGArray& array, const FGClipper& clipper,
 
     gpc_polys = clipper.get_polys_clipped();
 
+    cout << "ready to build node list and polygons" << endl;
     t.build( gpc_polys );
+    cout << "done building node list and polygons" << endl;
 }
 
 
@@ -157,6 +159,8 @@ main(int argc, char **argv) {
    
     lon = -146.248360; lat = 61.133950;  // PAVD (Valdez, AK)
     // lon = -110.664244; lat = 33.352890;  // P13
+    lon = -89.744682312011719; lat= 29.314495086669922;
+
     FGBucket b( lon, lat );
 
     // load and fit grid of elevation data
@@ -174,6 +178,9 @@ main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.3  1999/03/19 00:26:52  curt
+// Minor tweaks ...
+//
 // Revision 1.2  1999/03/17 23:49:52  curt
 // Started work on Triangulate/ section.
 //
