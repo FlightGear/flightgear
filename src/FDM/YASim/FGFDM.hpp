@@ -1,0 +1,69 @@
+#ifndef _FGFDM_HPP
+#define _FGFDM_HPP
+
+#include <simgear/easyxml.hxx>
+
+#include "Airplane.hpp"
+#include "util/Vector.hpp"
+
+namespace yasim {
+
+class Wing;
+
+// This class forms the "glue" to the FlightGear codebase.  It handles
+// parsing of XML airplane files, interfacing to the properties
+// system, and providing data for the use of the FGInterface object.
+class FGFDM : public XMLVisitor {
+public:
+    FGFDM();
+    ~FGFDM();
+    void init();
+    void iterate(float dt);
+
+    Airplane* getAirplane();
+
+    // XML parsing callback from XMLVisitor
+    virtual void startElement(const char* name, const XMLAttributes &atts);
+
+private:
+    struct AxisRec { char* name; int handle; };
+    struct EngRec { char* prefix; void* eng; };
+    struct WeightRec { char* prop; float size; int handle; };
+
+    void getExternalInput(float dt);
+    void setOutputProperties();
+
+    Wing* parseWing(XMLAttributes* a, const char* name);
+    int parseAxis(const char* name);
+    int parseOutput(const char* name);
+    void parseWeight(XMLAttributes* a);
+    void parsePropeller(XMLAttributes* a);
+    bool eq(const char* a, const char* b);
+    char* dup(const char* s);
+    int attri(XMLAttributes* atts, char* attr);
+    int attri(XMLAttributes* atts, char* attr, int def); 
+    float attrf(XMLAttributes* atts, char* attr);
+    float attrf(XMLAttributes* atts, char* attr, float def); 
+
+    // The core Airplane object we manage.
+    Airplane _airplane;
+
+    // The list of "axes" that we expect to find as input.  These are
+    // typically property names.
+    Vector _axes;
+
+    // Settable weights
+    Vector _weights;
+
+    // Engine types.  Contains an EngRec structure.
+    Vector _jets;
+    Vector _pistons;
+
+    // Parsing temporaries
+    void* _currObj;
+    bool _cruiseCurr;
+    int _nextEngine;
+};
+
+}; // namespace yasim
+#endif // _FGFDM_HPP

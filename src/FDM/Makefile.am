@@ -1,4 +1,4 @@
-SUBDIRS	= Balloon JSBSim LaRCsim UIUCModel
+SUBDIRS	= Balloon JSBSim LaRCsim UIUCModel YASim
 
 noinst_LIBRARIES = libFlight.a
 
