@@ -54,10 +54,6 @@
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 #include <GUI/gui.h>
-#include <Scenery/tilemgr.hxx>
-#include <Objects/matlib.hxx>
-#include <Time/light.hxx>
-#include <Time/tmp.hxx>
 
 #ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
@@ -260,13 +256,6 @@ FGInput::doKey (int k, int modifiers, int x, int y)
   if (modifiers & FG_MOD_SHIFT) {
 
 	switch (k) {
-	case 7: // Ctrl-G key
-	    current_autopilot->set_AltitudeMode( 
-                  FGAutopilot::FG_ALTITUDE_GS1 );
-	    current_autopilot->set_AltitudeEnabled(
-		  ! current_autopilot->get_AltitudeEnabled()
-	        );
-	    return;
 	case 18: // Ctrl-R key
 	    // temporary
 	    winding_ccw = !winding_ccw;
@@ -276,27 +265,12 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 		glFrontFace ( GL_CW );
 	    }
 	    return;
-	case 20: // Ctrl-T key
-	    current_autopilot->set_AltitudeMode( 
-                  FGAutopilot::FG_ALTITUDE_TERRAIN );
-	    current_autopilot->set_AltitudeEnabled(
-		  ! current_autopilot->get_AltitudeEnabled()
-	        );
-	    return;
 	case 72: // H key
 	    HUD_brightkey( true );
 	    return;
 	case 73: // I key
 	    // Minimal Hud
 	    fgHUDInit2(&current_aircraft);
-	    return;
-	case 77: // M key
-	    globals->inc_warp( -60 );
-	    fgUpdateSkyAndLightingParams();
-	    return;
-	case 84: // T key
-	    globals->inc_warp_delta( -30 );
-	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 87: // W key
 #if defined(FX) && !defined(WIN32)
@@ -305,26 +279,6 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 	    XMesaSetFXmode( global_fullscreen ? 
 			    XMESA_FX_FULLSCREEN : XMESA_FX_WINDOW );
 #  endif
-#endif
-	    return;
-	case 88: // X key
-	    fov = globals->get_current_view()->get_fov();
-	    fov *= 1.05;
-	    if ( fov > FG_FOV_MAX ) {
-		fov = FG_FOV_MAX;
-	    }
-	    globals->get_current_view()->set_fov(fov);
-	    // v->force_update_fov_math();
-	    return;
-	case 90: // Z key
-#ifndef FG_OLD_WEATHER
-	    tmp = WeatherDatabase->getWeatherVisibility();
-	    tmp /= 1.10;
-	    WeatherDatabase->setWeatherVisibility( tmp );
-#else
-	    tmp = current_weather.get_visibility();   // in meters
-	    tmp /= 1.10;
-	    current_weather.set_visibility( tmp );
 #endif
 	    return;
 
@@ -349,94 +303,9 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 	case 105: // i key
 	    fgHUDInit(&current_aircraft);  // normal HUD
 	    return;
-	case 109: // m key
-	    globals->inc_warp( 60 );
-	    fgUpdateSkyAndLightingParams();
-	    return;
-	case 112: // p key
-	    globals->set_freeze( ! globals->get_freeze() );
-
-	    {
-		SGBucket p( f->get_Longitude() * SGD_RADIANS_TO_DEGREES,
-			    f->get_Latitude() * SGD_RADIANS_TO_DEGREES );
-		SGPath tile_path( globals->get_fg_root() );
-		tile_path.append( "Scenery" );
-		tile_path.append( p.gen_base_path() );
-		tile_path.append( p.gen_index_str() );
-
-		// printf position and attitude information
-		SG_LOG( SG_INPUT, SG_INFO,
-			"Lon = " << f->get_Longitude() * SGD_RADIANS_TO_DEGREES
-			<< "  Lat = " << f->get_Latitude() * SGD_RADIANS_TO_DEGREES
-			<< "  Altitude = " << f->get_Altitude() * SG_FEET_TO_METER
-			);
-		SG_LOG( SG_INPUT, SG_INFO,
-			"Heading = " << f->get_Psi() * SGD_RADIANS_TO_DEGREES 
-			<< "  Roll = " << f->get_Phi() * SGD_RADIANS_TO_DEGREES
-			<< "  Pitch = " << f->get_Theta() * SGD_RADIANS_TO_DEGREES );
-		SG_LOG( SG_INPUT, SG_INFO, tile_path.c_str());
-	    }
-	    return;
-	case 116: // t key
-	    globals->inc_warp_delta( 30 );
-	    fgUpdateSkyAndLightingParams();
-	    return;
-	case 120: // x key
-	    fov = globals->get_current_view()->get_fov();
-	    fov /= 1.05;
-	    if ( fov < FG_FOV_MIN ) {
-		fov = FG_FOV_MIN;
-	    }
-	    globals->get_current_view()->set_fov(fov);
-	    // v->force_update_fov_math();
-	    return;
-	case 122: // z key
-#ifndef FG_OLD_WEATHER
-	    tmp = WeatherDatabase->getWeatherVisibility();
-	    tmp *= 1.10;
-	    WeatherDatabase->setWeatherVisibility( tmp );
-#else
-	    tmp = current_weather.get_visibility();   // in meters
-	    tmp *= 1.10;
-	    current_weather.set_visibility( tmp );
-#endif
-	    return;
-	case 27: // ESC
-	    // if( fg_DebugOutput ) {
-	    //   fclose( fg_DebugOutput );
-	    // }
-	    SG_LOG( SG_INPUT, SG_ALERT, 
-		    "Program exit requested." );
-	    ConfirmExitDialog();
-	    return;
 
 // START SPECIALS
 
-	case 256+GLUT_KEY_F2: // F2 Reload Tile Cache...
-	    {
-		bool freeze = globals->get_freeze();
-		SG_LOG(SG_INPUT, SG_INFO, "ReIniting TileCache");
-		if ( !freeze ) 
-		    globals->set_freeze( true );
-		BusyCursor(0);
-		if ( global_tile_mgr.init() ) {
-		    // Load the local scenery data
-		    global_tile_mgr.update( 
-		        cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES,
-			cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES );
-		} else {
-		    SG_LOG( SG_GENERAL, SG_ALERT, 
-			    "Error in Tile Manager initialization!" );
-		    exit(-1);
-		}
-		BusyCursor(1);
-		if ( !freeze )
-		   globals->set_freeze( false );
-		return;
-	    }
-        case 256+GLUT_KEY_F4: // F4 Update lighting manually
-	    fgUpdateSkyAndLightingParams();
-            return;
         case 256+GLUT_KEY_F6: // F6 toggles Autopilot target location
 	    if ( current_autopilot->get_HeadingMode() !=
 		 FGAutopilot::FG_HEADING_WAYPOINT ) {
@@ -466,16 +335,6 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 	    }
  	    return;
 	}
- 	case 256+GLUT_KEY_F9: // F9 toggles textures on and off...
-	    SG_LOG( SG_INPUT, SG_INFO, "Toggling texture" );
-	    if ( fgGetBool("/sim/rendering/textures")) {
-		fgSetBool("/sim/rendering/textures", false);
-		material_lib.set_step( 1 );
-	    } else {
-		fgSetBool("/sim/rendering/textures", true);
-		material_lib.set_step( 0 );
-	    }
- 	    return;
 	case 256+GLUT_KEY_F10: // F10 toggles menu on and off...
 	    SG_LOG(SG_INPUT, SG_INFO, "Invoking call back function");
 	    guiToggleMenu();
