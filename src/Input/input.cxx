@@ -85,19 +85,36 @@ SG_USING_STD(vector);
 ////////////////////////////////////////////////////////////////////////
 
 FGBinding::FGBinding ()
-  : _command(0), _arg(0)
+  : _command(0),
+    _arg(new SGPropertyNode),
+    _setting(0),
+    _command_state(0)
 {
 }
 
+FGBinding::FGBinding (const FGBinding &binding)
+  : _command_name(binding._command_name),
+    _command(binding._command),
+    _arg(new SGPropertyNode),
+    _setting(0),
+    _command_state(0)
+{
+  copyProperties(binding._arg, _arg);
+}
+
 FGBinding::FGBinding (const SGPropertyNode * node)
-  : _command(0), _arg(0)
+  : _command(0),
+    _arg(new SGPropertyNode),
+    _setting(0),
+    _command_state(0)
 {
   read(node);
 }
 
 FGBinding::~FGBinding ()
 {
-  // no op
+  delete _arg;			// Delete the saved arguments
+  delete _command_state;	// Delete the saved command state
 }
 
 void
@@ -116,33 +133,32 @@ FGBinding::read (const SGPropertyNode * node)
     _arg = 0;
     return;
   }
-  _arg = node;			// FIXME: don't use whole node!!!
+
+  delete _arg;
+  _arg = new SGPropertyNode;
+  _setting = 0;
+  copyProperties(node, _arg);  // FIXME: don't use whole node!!!
 }
 
 void
 FGBinding::fire () const
 {
-  _fire(_arg);
+  if (_command == 0) {
+    SG_LOG(SG_INPUT, SG_ALERT, "No command attached to binding");
+  } else if (!(*_command)(_arg, &_command_state)) {
+    SG_LOG(SG_INPUT, SG_ALERT, "Failed to execute command " << _command_name);
+  }
 }
 
 void
 FGBinding::fire (double setting) const
 {
-  SGPropertyNode arg;
-  if (_arg != 0)
-    copyProperties(_arg, &arg);
-  arg.setDoubleValue("setting", setting);
-  _fire(&arg);
-}
-
-void
-FGBinding::_fire(const SGPropertyNode * arg) const
-{
-  if (_command == 0) {
-    SG_LOG(SG_INPUT, SG_ALERT, "No command attached to binding");
-  } else if (!(*_command)(arg)) {
-    SG_LOG(SG_INPUT, SG_ALERT, "Failed to execute command " << _command_name);
-  }
+				// A value is automatically added to
+				// the args
+  if (_setting == 0)		// save the setting node for efficiency
+    _setting = _arg->getChild("setting", 0, true);
+  _setting->setDoubleValue(setting);
+  fire();
 }
 
 
