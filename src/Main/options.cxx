@@ -554,10 +554,11 @@ fgOPTIONS::parse_fov( const string& arg ) {
 //  device = OS device name of serial line to be open()'ed
 //  baud = {300, 1200, 2400, ..., 230400}
 //
-// Socket exacmple "--native=socket,dir,hz,machine,port" where
+// Socket exacmple "--native=socket,dir,hz,machine,port,style" where
 // 
 //  machine = machine name or ip address if client (leave empty if server)
 //  port = port, leave empty to let system choose
+//  style = tcp or udp
 //
 // File example "--garmin=file,dir,hz,filename" where
 // 

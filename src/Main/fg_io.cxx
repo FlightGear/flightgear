@@ -158,23 +158,32 @@ static FGProtocol *parse_port_config( const string& config )
 	ch->set_file_name( config.substr(begin) );
 	FG_LOG( FG_IO, FG_INFO, "  file name = " << ch->get_file_name() );
     } else if ( medium == "socket" ) {
-	SGSocket *ch = new SGSocket;
-	io->set_io_channel( ch );
-
 	// hostname
 	end = config.find(",", begin);
 	if ( end == string::npos ) {
 	    return NULL;
 	}
     
-	ch->set_hostname( config.substr(begin, end - begin) );
+	string hostname = config.substr(begin, end - begin);
 	begin = end + 1;
-	FG_LOG( FG_IO, FG_INFO, "  hostname = " << ch->get_hostname() );
+	FG_LOG( FG_IO, FG_INFO, "  hostname = " << hostname );
 
-	// port
-	ch->set_port_str( config.substr(begin) );
-	FG_LOG( FG_IO, FG_INFO, "  port string = " << ch->get_port_str() );
+	// port string
+	end = config.find(",", begin);
+	if ( end == string::npos ) {
+	    return NULL;
+	}
+    
+	string port = config.substr(begin, end - begin);
+	begin = end + 1;
+	FG_LOG( FG_IO, FG_INFO, "  port string = " << port );
 
+	// socket style
+	string style_str = config.substr(begin);
+	FG_LOG( FG_IO, FG_INFO, "  style string = " << style_str );
+       
+	SGSocket *ch = new SGSocket( hostname, port, style_str );
+	io->set_io_channel( ch );
     }
 
     return io;
