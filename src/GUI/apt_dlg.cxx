@@ -95,7 +95,7 @@ void AptDialog_OK (puObject *)
             fgSetPosFromAirportIDandHdg( AptId, 
                                          cur_fdm_state->get_Psi() *
                                          SGD_RADIANS_TO_DEGREES);
-            BusyCursor(0);
+            // BusyCursor(0);
             fgReInitSubsystems();
             // if ( global_tile_mgr.init() ) {
             // Load the local scenery data
@@ -106,7 +106,7 @@ void AptDialog_OK (puObject *)
             // "Error in Tile Manager initialization!" );
             // exit(-1);
             // }
-            BusyCursor(1);
+            // BusyCursor(1);
         } else {
             AptId  += " not in database.";
             mkDialog(AptId.c_str());

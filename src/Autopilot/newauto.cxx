@@ -358,6 +358,9 @@ int FGAutopilot::run() {
     double lon = longitude_node->getDoubleValue();
     double alt = altitude_node->getDoubleValue() * SG_FEET_TO_METER;
 
+    SG_LOG( SG_ALL, SG_DEBUG, "FGAutopilot::run()  lat = " << lat <<
+            "  lon = " << lon << "  alt = " << alt );
+	
 #ifdef FG_FORCE_AUTO_DISENGAGE
     // see if somebody else has changed them
     if( fabs(aileron - old_aileron) > disengage_threshold ||
@@ -779,7 +782,9 @@ int FGAutopilot::run() {
     old_lat = lat;
     old_lon = lon;
 	
-	// Ok, we are done
+    // Ok, we are done
+    SG_LOG( SG_ALL, SG_DEBUG, "FGAutopilot::run( returns )" );
+
     return 0;
 }
 

@@ -28,6 +28,7 @@
 
 #include STL_IOSTREAM
 
+#include <ATC/ATCdisplay.hxx>
 #include <Autopilot/newauto.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Time/tmp.hxx>
@@ -278,7 +279,15 @@ getFreeze ()
 static void
 setFreeze (bool freeze)
 {
-  globals->set_freeze(freeze);
+    globals->set_freeze(freeze);
+    if ( freeze ) {
+        // BusyCursor( 0 );
+        current_atcdisplay->CancelRepeatingMessage();
+        current_atcdisplay->RegisterRepeatingMessage("****    SIM IS PAUSED    ****    SIM IS PAUSED    ****");
+    } else {
+        // BusyCursor( 1 );
+        current_atcdisplay->CancelRepeatingMessage();
+    }
 }
 
 /**

@@ -271,7 +271,7 @@ do_tile_cache_reload (const SGPropertyNode * arg, SGCommandState ** state)
   SG_LOG(SG_INPUT, SG_INFO, "ReIniting TileCache");
   if ( !freeze ) 
     globals->set_freeze( true );
-  BusyCursor(0);
+  // BusyCursor(0);
   if ( global_tile_mgr.init() ) {
     // Load the local scenery data
     global_tile_mgr.update(fgGetDouble("/position/longitude-deg"),
@@ -281,7 +281,7 @@ do_tile_cache_reload (const SGPropertyNode * arg, SGCommandState ** state)
 	    "Error in Tile Manager initialization!" );
     exit(-1);
   }
-  BusyCursor(1);
+  // BusyCursor(1);
   if ( !freeze )
     globals->set_freeze( false );
   return true;

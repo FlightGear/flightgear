@@ -723,7 +723,7 @@ void printScreen ( puObject *obj ) {
 	show_pu_cursor = true;
 	puHideCursor();
     }
-    BusyCursor( 0 );
+    // BusyCursor( 0 );
     mainMenuBar->hide();
 
     CGlPrinter p( CGlPrinter::PRINT_BITMAP );
@@ -735,7 +735,7 @@ void printScreen ( puObject *obj ) {
     if( gui_menu_on ) {
 	mainMenuBar->reveal();
     }
-    BusyCursor(1);
+    // BusyCursor(1);
     if ( show_pu_cursor ) {
 	puShowCursor();
     }

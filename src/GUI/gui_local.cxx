@@ -51,7 +51,7 @@ void initMouseQuat(void) {
 
 void reInit(puObject *cb)
 {
-    BusyCursor(0);
+    // BusyCursor(0);
     Quat0();
 
     int freeze = globals->get_freeze();
@@ -86,7 +86,7 @@ void reInit(puObject *cb)
 
     fgReshape( xsize, ysize );
 
-    BusyCursor(1);
+    // BusyCursor(1);
     
     if ( !freeze ) {
         globals->set_freeze( false );
