@@ -454,15 +454,16 @@ void fgRenderFrame() {
 	// calculate our current position in cartesian space
 	globals->get_scenery()->set_center( globals->get_scenery()->get_next_center() );
 
+	// do it here. at init time the clouds are loaded BEFORE our position is known
 	if ( fgGetBool("/sim/rendering/clouds3d") ) {
-            posit =  globals->get_scenery()->get_center();
             if ( _bcloud_orig ) {
+                // cloud center can be  anywhere in fgfs coordinates, but the tile
+                // cener is a good place as we'll have some  visible when starting
+                posit =  globals->get_scenery()->get_center();
                 sgClouds3d->Set_Cloud_Orig( _posit );
                 _bcloud_orig = false;
             }
-            /* sgClouds3d->Update( (sgVec4 *)current__view->get_cloud_VIEW(),
-                                _posit );
-            */
+            sgClouds3d->Update( current__view->get_absolute_view_pos() );
         }
 		
 	// update view port
@@ -764,8 +765,14 @@ void fgRenderFrame() {
 	globals->get_model_mgr()->draw();
 	globals->get_aircraft_model()->draw();
 
-	// draw the 3D clouds
-	if ( fgGetBool("/sim/rendering/clouds3d") ) sgClouds3d->Draw();
+	// draw the 3D clouds	
+	if ( fgGetBool("/sim/rendering/clouds3d") ) {
+            //glPushAttrib(GL_ALL_ATTRIB_BITS);
+            // transform the current view matrix with camera offset position
+            sgClouds3d->Draw( (sgVec4 *)current__view->get_VIEW() );
+            //sgClouds3d->Draw();
+            //glPopAttrib();
+        }
 	
 	// display HUD && Panel
 	glDisable( GL_FOG );
@@ -1331,8 +1338,12 @@ int fgGlutInit( int *argc, char **argv ) {
     glutInit(argc, argv);
 #endif
 
-    // Define Display Parameters
-    glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_ALPHA);
+    // Define Display Parameters. Clouds3d works best with --bpp32 option
+    if ( fgGetBool("/sim/rendering/clouds3d") ) {
+        glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_ALPHA );
+    } else {
+        glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
+    }
 
     SG_LOG( SG_GENERAL, SG_INFO, "Opening a window: " <<
 	    fgGetInt("/sim/startup/xsize") << "x"
