@@ -36,8 +36,8 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Scenery/scenery.h>
-#include <Scenery/obj.h>
+#include <Scenery/obj.hxx>
+#include <Scenery/scenery.hxx>
 #include <Scenery/tilecache.hxx>
 
 #include <Aircraft/aircraft.h>
@@ -221,13 +221,16 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/04/27 03:30:14  curt
-/* Minor transformation adjustments to try to keep scenery tiles closer to
-/* (0, 0, 0)  GLfloats run out of precision at the distances we need to model
-/* the earth, but we can do a bunch of pre-transformations using double math
-/* and then cast to GLfloat once everything is close in where we have less
-/* precision problems.
+/* Revision 1.5  1998/04/30 12:35:32  curt
+/* Added a command line rendering option specify smooth/flat shading.
 /*
+ * Revision 1.4  1998/04/27 03:30:14  curt
+ * Minor transformation adjustments to try to keep scenery tiles closer to
+ * (0, 0, 0)  GLfloats run out of precision at the distances we need to model
+ * the earth, but we can do a bunch of pre-transformations using double math
+ * and then cast to GLfloat once everything is close in where we have less
+ * precision problems.
+ *
  * Revision 1.3  1998/04/25 22:06:32  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *

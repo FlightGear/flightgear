@@ -1,5 +1,5 @@
 /**************************************************************************
- * tilecache.c -- routines to handle scenery tile caching
+ * tilecache.cxx -- routines to handle scenery tile caching
  *
  * Written by Curtis Olson, started January 1998.
  *
@@ -41,7 +41,7 @@
 #include <Debug/fg_debug.h>
 #include <Main/views.hxx>
 
-#include "obj.h"
+#include "obj.hxx"
 #include "tilecache.hxx"
 
 
@@ -200,11 +200,14 @@ int fgTileCacheNextAvail( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/04/28 01:21:43  curt
-/* Tweaked texture parameter calculations to keep the number smaller.  This
-/* avoids the "swimming" problem.
-/* Type-ified fgTIME and fgVIEW.
+/* Revision 1.5  1998/04/30 12:35:31  curt
+/* Added a command line rendering option specify smooth/flat shading.
 /*
+ * Revision 1.4  1998/04/28 01:21:43  curt
+ * Tweaked texture parameter calculations to keep the number smaller.  This
+ * avoids the "swimming" problem.
+ * Type-ified fgTIME and fgVIEW.
+ *
  * Revision 1.3  1998/04/25 22:06:32  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *

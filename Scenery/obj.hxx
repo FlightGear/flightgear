@@ -1,5 +1,5 @@
 /**************************************************************************
- * obj.h -- routines to handle WaveFront .obj-ish format files.
+ * obj.hxx -- routines to handle WaveFront .obj-ish format files.
  *
  * Written by Curtis Olson, started October 1997.
  *
@@ -24,8 +24,13 @@
  **************************************************************************/
 
 
-#ifndef _OBJ_H
-#define _OBJ_H
+#ifndef _OBJ_HXX
+#define _OBJ_HXX
+
+
+#ifndef __cplusplus                                                          
+# error This library requires C++
+#endif                                   
 
 
 #ifdef HAVE_CONFIG_H
@@ -41,27 +46,20 @@
 #include <Include/fg_types.h>
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
-#endif                                   
-
-
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius);
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _OBJ_H */
+#endif /* _OBJ_HXX */
 
 
 /* $Log$
-/* Revision 1.11  1998/04/25 22:06:31  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.1  1998/04/30 12:35:29  curt
+/* Added a command line rendering option specify smooth/flat shading.
 /*
+ * Revision 1.11  1998/04/25 22:06:31  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.10  1998/04/24 00:51:07  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Tweaked the scenery file extentions to be "file.obj" (uncompressed)

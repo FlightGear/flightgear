@@ -41,8 +41,8 @@
 
 #include <Debug/fg_debug.h>
 #include <Include/general.h>
-#include <Scenery/obj.h>
-#include <Scenery/scenery.h>
+#include <Scenery/obj.hxx>
+#include <Scenery/scenery.hxx>
 #include <Scenery/texload.h>
 
 
@@ -72,7 +72,7 @@ int fgSceneryInit( void ) {
     path[0] = '\0';
     strcat(path, g->root_dir);
     strcat(path, "/Textures/");
-    strcat(path, "desert.rgb");
+    strcat(path, "forest.rgb");
 
     // Try uncompressed
     if ( (texbuf = read_rgb_texture(path, &width, &height)) == NULL ) {
@@ -123,9 +123,12 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.42  1998/04/28 21:43:27  curt
-/* Wrapped zlib calls up so we can conditionally comment out zlib support.
+/* Revision 1.1  1998/04/30 12:35:30  curt
+/* Added a command line rendering option specify smooth/flat shading.
 /*
+ * Revision 1.42  1998/04/28 21:43:27  curt
+ * Wrapped zlib calls up so we can conditionally comment out zlib support.
+ *
  * Revision 1.41  1998/04/24 00:51:08  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Tweaked the scenery file extentions to be "file.obj" (uncompressed)

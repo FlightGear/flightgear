@@ -41,10 +41,11 @@
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Include/fg_zlib.h>
+#include <Main/options.hxx>
 #include <Math/mat3.h>
 #include <Math/fg_random.h>
-#include <Scenery/obj.h>
-#include <Scenery/scenery.h>
+#include <Scenery/obj.hxx>
+#include <Scenery/scenery.hxx>
 
 
 #define MAXNODES 100000
@@ -98,16 +99,18 @@ float calc_lat(double x, double y, double z) {
 
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
+    fgOPTIONS *o;
     char fgpath[256], line[256], winding_str[256];
     double approx_normal[3], normal[3], scale;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
-    GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
+    // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     GLint tile;
     fgFile f;
     int first, ncount, vncount, n1, n2, n3, n4;
-    static int use_per_vertex_norms = 1;
     int winding;
     int last1, last2, odd;
+
+    o = &current_options;
 
     // First try "path.obz" (compressed format)
     strcpy(fgpath, path);
@@ -244,7 +247,9 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 		scale = 1.0;
 	    }
 
-	    if ( use_per_vertex_norms ) {
+	    if ( o->shading ) {
+		// Shading model is "GL_SMOOTH" so use precalculated
+		// (averaged) normals
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
 		xglNormal3dv(normal);
 		xglTexCoord2f(calc_lon(nodes[n1][0] + ref->x, 
@@ -275,6 +280,8 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 				       nodes[n3][2] + ref->z));
 		xglVertex3d(nodes[n3][0], nodes[n3][1], nodes[n3][2]);
 	    } else {
+		// Shading model is "GL_FLAT" so calculate per face
+		// normals on the fly.
 		if ( odd ) {
 		    calc_normal(nodes[n1], nodes[n2], nodes[n3], approx_normal);
 		} else {
@@ -311,9 +318,11 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	    last2 = n3;
 
 	    if ( n4 > 0 ) {
-		if ( use_per_vertex_norms ) {
+		if ( o->shading ) {
+		    // Shading model is "GL_SMOOTH"
 		    MAT3_SCALE_VEC(normal, normals[n4], scale);
 		} else {
+		    // Shading model is "GL_FLAT"
 		    calc_normal(nodes[n3], nodes[n2], nodes[n4], approx_normal);
 		    MAT3_SCALE_VEC(normal, approx_normal, scale);
 		}
@@ -380,10 +389,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	    sscanf(line, "q %d %d\n", &n1, &n2);
 	    /* fgPrintf( FG_TERRAIN, FG_DEBUG, "read %d %d\n", n1, n2); */
 
-	    if ( use_per_vertex_norms ) {
+	    if ( o->shading ) {
+		// Shading model is "GL_SMOOTH"
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
 		xglNormal3dv(normal);
 	    } else {
+		// Shading model is "GL_FLAT"
 		if ( odd ) {
 		    calc_normal(nodes[last1], nodes[last2], nodes[n1], 
 				approx_normal);
@@ -410,10 +421,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 	    if ( n2 > 0 ) {
 		/* fgPrintf( FG_TERRAIN, FG_DEBUG, " (cont)\n"); */
 
-		if ( use_per_vertex_norms ) {
+		if ( o->shading ) {
+		    // Shading model is "GL_SMOOTH"
 		    MAT3_SCALE_VEC(normal, normals[n2], scale);
 		    xglNormal3dv(normal);
 		} else {
+		    // Shading model is "GL_FLAT"
 		    if ( odd ) {
 			calc_normal(nodes[last1], nodes[last2], nodes[n2], 
 				    approx_normal);
@@ -481,9 +494,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.35  1998/04/28 21:43:26  curt
-/* Wrapped zlib calls up so we can conditionally comment out zlib support.
+/* Revision 1.1  1998/04/30 12:35:28  curt
+/* Added a command line rendering option specify smooth/flat shading.
 /*
+ * Revision 1.35  1998/04/28 21:43:26  curt
+ * Wrapped zlib calls up so we can conditionally comment out zlib support.
+ *
  * Revision 1.34  1998/04/28 01:21:42  curt
  * Tweaked texture parameter calculations to keep the number smaller.  This
  * avoids the "swimming" problem.

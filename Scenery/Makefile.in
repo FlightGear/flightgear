@@ -75,8 +75,8 @@ libdir	= ${exec_prefix}/lib
 lib_LTLIBRARIES = libScenery.la
 
 libScenery_la_SOURCES = \
-	obj.c obj.h \
-	scenery.c scenery.h \
+	obj.cxx obj.hxx \
+	scenery.cxx scenery.hxx \
 	texload.c texload.h \
 	tilecache.cxx tilecache.hxx \
 	tilemgr.cxx tilemgr.hxx

@@ -1,5 +1,5 @@
 /**************************************************************************
- * tilecache.h -- routines to handle scenery tile caching
+ * tilecache.hxx -- routines to handle scenery tile caching
  *
  * Written by Curtis Olson, started January 1998.
  *
@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef _TILECACHE_H
-#define _TILECACHE_H
+#ifndef _TILECACHE_HXX
+#define _TILECACHE_HXX
 
 
 #ifndef __cplusplus                                                          
@@ -84,13 +84,16 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 			   struct fgCartesianPoint *local_ref );
 
 
-#endif /* _TILECACHE_H */
+#endif /* _TILECACHE_HXX */
 
 
 /* $Log$
-/* Revision 1.3  1998/04/25 22:06:32  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.4  1998/04/30 12:35:31  curt
+/* Added a command line rendering option specify smooth/flat shading.
 /*
+ * Revision 1.3  1998/04/25 22:06:32  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.2  1998/04/24 00:51:08  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Tweaked the scenery file extentions to be "file.obj" (uncompressed)

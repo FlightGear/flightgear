@@ -1,5 +1,5 @@
 /**************************************************************************
- * scenery.h -- data structures and routines for managing scenery.
+ * scenery.hxx -- data structures and routines for managing scenery.
  *
  * Written by Curtis Olson, started May 1997.
  *
@@ -24,16 +24,16 @@
  **************************************************************************/
 
 
-#ifndef _SCENERY_H
-#define _SCENERY_H
+#ifndef _SCENERY_HXX
+#define _SCENERY_HXX
+
+
+#ifndef __cplusplus                                                          
+# error This library requires C++
+#endif                                   
 
 
 #include <Include/fg_types.h>
-
-
-#ifdef __cplusplus                                                          
-extern "C" {                            
-#endif                                   
 
 
 /* Define a structure containing global scenery parameters */
@@ -67,18 +67,16 @@ void fgSceneryUpdate(double lon, double lat, double elev);
 void fgSceneryRender( void );
 
 
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif /* _SCENERY_H */
+#endif /* _SCENERY_HXX */
 
 
 /* $Log$
-/* Revision 1.21  1998/04/25 22:06:31  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.1  1998/04/30 12:35:31  curt
+/* Added a command line rendering option specify smooth/flat shading.
 /*
+ * Revision 1.21  1998/04/25 22:06:31  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.20  1998/04/22 13:22:45  curt
  * C++ - ifing the code a bit.
  *
