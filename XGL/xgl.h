@@ -2,14 +2,19 @@
 #define _XGL_H
 
 
-#ifdef __cplusplus                                                          
-extern "C" {                            
-#endif                                   
-
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
 
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <stdio.h>
+
+
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
 
 /* xgl Utilities */
 
