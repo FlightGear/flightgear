@@ -44,5 +44,6 @@ libUIUCModel_a_SOURCES = \
                         uiuc_parsefile.cpp \
                         uiuc_recorder.cpp \
                         uiuc_warnings_errors.cpp \
-                        uiuc_wrapper.cpp \
+                        uiuc_wrapper.cpp
+
 INCLUDES += -I$(top_builddir) 

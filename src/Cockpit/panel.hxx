@@ -120,11 +120,11 @@ public:
   virtual bool doMouseAction (int button, int updown, int x, int y);
 
 private:
-  bool _visibility;
-  bool _mouseDown;
-  int _mouseButton, _mouseX, _mouseY;
+  mutable bool _visibility;
+  mutable bool _mouseDown;
+  mutable int _mouseButton, _mouseX, _mouseY;
   mutable int _mouseDelay;
-  FGPanelInstrument * _mouseInstrument;
+  mutable FGPanelInstrument * _mouseInstrument;
   typedef vector<FGPanelInstrument *> instrument_list_type;
   int _x, _y, _w, _h;
   int _panel_h;
@@ -139,14 +139,46 @@ private:
 // Base class for user action types.
 //
 // Individual instruments can have actions associated with a mouse
-// click in a rectangular area.  Current concrete classes are
-// FGAdjustAction and FGSwapAction.
+// click in a rectangular area.  Current concrete classes include
+// FGAdjustAction, FGSwapAction, and FGToggleAction.
 ////////////////////////////////////////////////////////////////////////
 
 class FGPanelAction
 {
 public:
+  FGPanelAction ();
+  FGPanelAction (int button, int x, int y, int w, int h);
+  virtual ~FGPanelAction ();
+
+  virtual int getButton () const { return _button; }
+  virtual int getX () const { return _x; }
+  virtual int getY () const { return _y; }
+  virtual int getWidth () const { return _w; }
+  virtual int getHeight () const { return _h; }
+
+  virtual void setButton (int button) { _button = button; }
+  virtual void setX (int x) { _x = x; }
+  virtual void setY (int y) { _y = y; }
+  virtual void setWidth (int w) { _w = w; }
+  virtual void setHeight (int h) { _h = h; }
+
+  virtual bool inArea (int button, int x, int y)
+  {
+    return (button == _button &&
+	    x >= _x &&
+	    x < _x + _w &&
+	    y >= _y &&
+	    y < _y + _h);
+  }
+
   virtual void doAction () = 0;
+
+private:
+  int _button;
+  int _x;
+  int _y;
+  int _w;
+  int _h;
 };
 
 
@@ -163,7 +195,8 @@ public:
 class FGAdjustAction : public FGPanelAction
 {
 public:
-  FGAdjustAction (SGValue * value, float increment,
+  FGAdjustAction (int button, int x, int y, int w, int h,
+		  SGValue * value, float increment,
 		  float min, float max, bool wrap=false);
   virtual ~FGAdjustAction ();
   virtual void doAction ();
@@ -188,7 +221,8 @@ private:
 class FGSwapAction : public FGPanelAction
 {
 public:
-  FGSwapAction (SGValue * value1, SGValue * value2);
+  FGSwapAction (int button, int x, int y, int w, int h,
+		SGValue * value1, SGValue * value2);
   virtual ~FGSwapAction ();
   virtual void doAction ();
 
@@ -208,7 +242,8 @@ private:
 class FGToggleAction : public FGPanelAction
 {
 public:
-  FGToggleAction (SGValue * value);
+  FGToggleAction (int button, int x, int y, int w, int h,
+		  SGValue * value);
   virtual ~FGToggleAction ();
   virtual void doAction ();
 
@@ -247,23 +282,14 @@ public:
 
 				// Coordinates relative to centre.
 				// Transfer pointer ownership!!
-  virtual void addAction (int button, int x, int y, int w, int h,
-			  FGPanelAction * action);
+  virtual void addAction (FGPanelAction * action);
 
 				// Coordinates relative to centre.
   virtual bool doMouseAction (int button, int x, int y);
 
 protected:
   int _x, _y, _w, _h;
-  typedef struct {
-    int button;
-    int x;
-    int y;
-    int w;
-    int h;
-    FGPanelAction * action;
-  } inst_action;
-  typedef vector<inst_action> action_list_type;
+  typedef vector<FGPanelAction *> action_list_type;
   action_list_type _actions;
 };
 
@@ -278,6 +304,35 @@ protected:
 // rotate to show the altitude or airspeed.
 ////////////////////////////////////////////////////////////////////////
 
+
+/**
+ * A transformation for a layer.
+ */
+class FGPanelTransformation {
+public:
+
+  enum Type {
+    XSHIFT,
+    YSHIFT,
+    ROTATION
+  };
+
+  FGPanelTransformation ();
+  FGPanelTransformation (Type type, const SGValue * value,
+			 float min, float max,
+			 float factor, float offset);
+  virtual ~FGPanelTransformation ();
+
+  Type type;
+  const SGValue * value;
+  float min;
+  float max;
+  float factor;
+  float offset;
+};
+
+
+
 /**
  * A single layer of a multi-layered instrument.
  *
@@ -288,11 +343,6 @@ protected:
 class FGInstrumentLayer
 {
 public:
-  typedef enum {
-    XSHIFT,
-    YSHIFT,
-    ROTATION
-  } transform_type;
 
   FGInstrumentLayer (int w = -1, int h = -1);
   virtual ~FGInstrumentLayer ();
@@ -305,22 +355,14 @@ public:
   virtual void setWidth (int w) { _w = w; }
   virtual void setHeight (int h) { _h = h; }
 
-  virtual void addTransformation (transform_type type, const SGValue * value,
-				  float min, float max,
-				  float factor = 1.0, float offset = 0.0);
+				// Transfer pointer ownership!!
+				// DEPRECATED
+  virtual void addTransformation (FGPanelTransformation * transformation);
 
 protected:
   int _w, _h;
 
-  typedef struct {
-    transform_type type;
-    const SGValue * value;
-    float min;
-    float max;
-    float factor;
-    float offset;
-  } transformation;
-  typedef vector<transformation *> transformation_list;
+  typedef vector<FGPanelTransformation *> transformation_list;
   transformation_list _transformations;
 };
 
@@ -354,14 +396,10 @@ public:
 
 				// Transfer pointer ownership!!
   virtual int addLayer (FGInstrumentLayer *layer);
-  virtual int addLayer (CroppedTexture &texture,
-			int w = -1, int h = -1);
-  virtual void addTransformation (FGInstrumentLayer::transform_type type,
-				  const SGValue * value,
-				  float min, float max,
-				  float factor = 1.0, float offset = 0.0);
-  virtual void addTransformation (FGInstrumentLayer::transform_type type,
-				  float offset);
+  virtual int addLayer (CroppedTexture &texture, int w = -1, int h = -1);
+
+				// Transfer pointer ownership!!
+  virtual void addTransformation (FGPanelTransformation * transformation);
 
 protected:
   layer_list _layers;
@@ -386,11 +424,11 @@ public:
 
   virtual void draw ();
 
-  virtual void setTexture (CroppedTexture &texture) { _texture = &texture; }
-  virtual CroppedTexture &getTexture () { return *_texture; }
+  virtual void setTexture (CroppedTexture &texture) { _texture = texture; }
+  virtual CroppedTexture &getTexture () { return _texture; }
 
 private:
-  mutable CroppedTexture * _texture;
+  mutable CroppedTexture _texture;
 };
 
 

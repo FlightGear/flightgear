@@ -86,12 +86,11 @@ FGPanel::FGPanel (int x, int y, int w, int h)
 
 FGPanel::~FGPanel ()
 {
-  instrument_list_type::iterator current = _instruments.begin();
-  instrument_list_type::iterator last = _instruments.end();
-  
-  for ( ; current != last; ++current) {
-    delete *current;
-    *current = 0;
+  for (instrument_list_type::iterator it = _instruments.begin();
+       it != _instruments.end();
+       it++) {
+    delete *it;
+    *it = 0;
   }
 }
 
@@ -208,7 +207,6 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
     int iw = inst->getWidth() / 2;
     int ih = inst->getHeight() / 2;
     if (x >= ix - iw && x < ix + iw && y >= iy - ih && y < iy + ih) {
-//       cout << "Do mouse action for component " << i << '\n';
       _mouseDown = true;
       _mouseDelay = 20;
       _mouseInstrument = inst;
@@ -220,8 +218,26 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
       return true;
     }
   }
-//   cout << "Did not click on an instrument\n";
   return false;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////.
+// Implementation of FGPanelAction.
+////////////////////////////////////////////////////////////////////////
+
+FGPanelAction::FGPanelAction ()
+{
+}
+
+FGPanelAction::FGPanelAction (int button, int x, int y, int w, int h)
+  : _button(button), _x(x), _y(y), _w(w), _h(h)
+{
+}
+
+FGPanelAction::~FGPanelAction ()
+{
 }
 
 
@@ -230,9 +246,11 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
 // Implementation of FGAdjustAction.
 ////////////////////////////////////////////////////////////////////////
 
-FGAdjustAction::FGAdjustAction (SGValue * value, float increment, 
+FGAdjustAction::FGAdjustAction (int button, int x, int y, int w, int h,
+				SGValue * value, float increment, 
 				float min, float max, bool wrap=false)
-  : _value(value), _increment(increment), _min(min), _max(max), _wrap(wrap)
+  : FGPanelAction(button, x, y, w, h),
+    _value(value), _increment(increment), _min(min), _max(max), _wrap(wrap)
 {
 }
 
@@ -244,14 +262,12 @@ void
 FGAdjustAction::doAction ()
 {
   float val = _value->getFloatValue();
-//   cout << "Do action; value=" << value << '\n';
   val += _increment;
   if (val < _min) {
     val = (_wrap ? _max : _min);
   } else if (val > _max) {
     val = (_wrap ? _min : _max);
   }
-//   cout << "New value is " << value << '\n';
   _value->setDoubleValue(val);
 }
 
@@ -261,8 +277,9 @@ FGAdjustAction::doAction ()
 // Implementation of FGSwapAction.
 ////////////////////////////////////////////////////////////////////////
 
-FGSwapAction::FGSwapAction (SGValue * value1, SGValue * value2)
-  : _value1(value1), _value2(value2)
+FGSwapAction::FGSwapAction (int button, int x, int y, int w, int h,
+			    SGValue * value1, SGValue * value2)
+  : FGPanelAction(button, x, y, w, h), _value1(value1), _value2(value2)
 {
 }
 
@@ -284,8 +301,9 @@ FGSwapAction::doAction ()
 // Implementation of FGToggleAction.
 ////////////////////////////////////////////////////////////////////////
 
-FGToggleAction::FGToggleAction (SGValue * value)
-  : _value(value)
+FGToggleAction::FGToggleAction (int button, int x, int y, int w, int h,
+				SGValue * value)
+  : FGPanelAction(button, x, y, w, h), _value(value)
 {
 }
 
@@ -297,6 +315,29 @@ void
 FGToggleAction::doAction ()
 {
   _value->setBoolValue(!(_value->getBoolValue()));
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGPanelTransformation.
+////////////////////////////////////////////////////////////////////////
+
+FGPanelTransformation::FGPanelTransformation ()
+{
+}
+
+FGPanelTransformation::FGPanelTransformation (Type _type,
+					      const SGValue * _value,
+					      float _min, float _max,
+					      float _factor, float _offset)
+  : type(_type), value(_value), min(_min), max(_max),
+    factor(_factor), offset(_offset)
+{
+}
+
+FGPanelTransformation::~FGPanelTransformation ()
+{
 }
 
 
@@ -320,10 +361,11 @@ FGPanelInstrument::FGPanelInstrument (int x, int y, int w, int h)
 
 FGPanelInstrument::~FGPanelInstrument ()
 {
-  action_list_type::iterator it = _actions.begin();
-  action_list_type::iterator last = _actions.end();
-  for ( ; it != last; it++) {
-    delete it->action;
+  for (action_list_type::iterator it = _actions.begin();
+       it != _actions.end();
+       it++) {
+    delete *it;
+    *it = 0;
   }
 }
 
@@ -366,17 +408,9 @@ FGPanelInstrument::getHeight () const
 }
 
 void
-FGPanelInstrument::addAction (int button, int x, int y, int w, int h,
-			      FGPanelAction * action)
+FGPanelInstrument::addAction (FGPanelAction * action)
 {
-  FGPanelInstrument::inst_action act;
-  act.button = button;
-  act.x = x;
-  act.y = y;
-  act.w = w;
-  act.h = h;
-  act.action = action;
-  _actions.push_back(act);
+  _actions.push_back(action);
 }
 
 				// Coordinates relative to centre.
@@ -385,13 +419,9 @@ FGPanelInstrument::doMouseAction (int button, int x, int y)
 {
   action_list_type::iterator it = _actions.begin();
   action_list_type::iterator last = _actions.end();
-//   cout << "Mouse action at " << x << ',' << y << '\n';
   for ( ; it != last; it++) {
-//     cout << "Trying action at " << it->x << ',' << it->y << ','
-// 	 << it->w <<',' << it->h << '\n';
-    if (button == it->button &&
-	x >= it->x && x < it->x + it->w && y >= it->y && y < it->y + it->h) {
-      it->action->doAction();
+    if ((*it)->inArea(button, x, y)) {
+      (*it)->doAction();
       return true;
     }
   }
@@ -411,7 +441,10 @@ FGLayeredInstrument::FGLayeredInstrument (int x, int y, int w, int h)
 
 FGLayeredInstrument::~FGLayeredInstrument ()
 {
-  // FIXME: free layers
+  for (layer_list::iterator it = _layers.begin(); it != _layers.end(); it++) {
+    delete *it;
+    *it = 0;
+  }
 }
 
 void
@@ -447,20 +480,10 @@ FGLayeredInstrument::addLayer (CroppedTexture &texture,
 }
 
 void
-FGLayeredInstrument::addTransformation (FGInstrumentLayer::transform_type type,
-					const SGValue * value,
-					float min, float max,
-					float factor, float offset)
+FGLayeredInstrument::addTransformation (FGPanelTransformation * transformation)
 {
   int layer = _layers.size() - 1;
-  _layers[layer]->addTransformation(type, value, min, max, factor, offset);
-}
-
-void
-FGLayeredInstrument::addTransformation (FGInstrumentLayer::transform_type type,
-					float offset)
-{
-  addTransformation(type, 0, 0.0, 0.0, 1.0, offset);
+  _layers[layer]->addTransformation(transformation);
 }
 
 
@@ -477,11 +500,11 @@ FGInstrumentLayer::FGInstrumentLayer (int w, int h)
 
 FGInstrumentLayer::~FGInstrumentLayer ()
 {
-  transformation_list::iterator it = _transformations.begin();
-  transformation_list::iterator end = _transformations.end();
-  while (it != end) {
+  for (transformation_list::iterator it = _transformations.begin();
+       it != _transformations.end();
+       it++) {
     delete *it;
-    it++;
+    *it = 0;
   }
 }
 
@@ -491,7 +514,7 @@ FGInstrumentLayer::transform () const
   transformation_list::const_iterator it = _transformations.begin();
   transformation_list::const_iterator last = _transformations.end();
   while (it != last) {
-    transformation *t = *it;
+    FGPanelTransformation *t = *it;
     float val = (t->value == 0 ? 0.0 : t->value->getFloatValue());
     if (val < t->min) {
       val = t->min;
@@ -501,13 +524,13 @@ FGInstrumentLayer::transform () const
     val = val * t->factor + t->offset;
 
     switch (t->type) {
-    case XSHIFT:
+    case FGPanelTransformation::XSHIFT:
       glTranslatef(val, 0.0, 0.0);
       break;
-    case YSHIFT:
+    case FGPanelTransformation::YSHIFT:
       glTranslatef(0.0, val, 0.0);
       break;
-    case ROTATION:
+    case FGPanelTransformation::ROTATION:
       glRotatef(-val, 0.0, 0.0, 1.0);
       break;
     }
@@ -516,19 +539,9 @@ FGInstrumentLayer::transform () const
 }
 
 void
-FGInstrumentLayer::addTransformation (transform_type type,
-				      const SGValue * value,
-				      float min, float max,
-				      float factor, float offset)
+FGInstrumentLayer::addTransformation (FGPanelTransformation * transformation)
 {
-  transformation *t = new transformation;
-  t->type = type;
-  t->value = value;
-  t->min = min;
-  t->max = max;
-  t->factor = factor;
-  t->offset = offset;
-  _transformations.push_back(t);
+  _transformations.push_back(transformation);
 }
 
 
@@ -557,17 +570,17 @@ FGTexturedLayer::draw ()
   int h2 = _h / 2;
 
   transform();
-  glBindTexture(GL_TEXTURE_2D, _texture->texture->getHandle());
+  glBindTexture(GL_TEXTURE_2D, _texture.texture->getHandle());
   glBegin(GL_POLYGON);
   if ( cur_light_params.sun_angle * RAD_TO_DEG < 95.0 ) {
       glColor4fv( cur_light_params.scene_diffuse );
   } else {
       glColor4f(0.7, 0.2, 0.2, 1.0);
   }
-  glTexCoord2f(_texture->minX, _texture->minY); glVertex2f(-w2, -h2);
-  glTexCoord2f(_texture->maxX, _texture->minY); glVertex2f(w2, -h2);
-  glTexCoord2f(_texture->maxX, _texture->maxY); glVertex2f(w2, h2);
-  glTexCoord2f(_texture->minX, _texture->maxY); glVertex2f(-w2, h2);
+  glTexCoord2f(_texture.minX, _texture.minY); glVertex2f(-w2, -h2);
+  glTexCoord2f(_texture.maxX, _texture.minY); glVertex2f(w2, -h2);
+  glTexCoord2f(_texture.maxX, _texture.maxY); glVertex2f(w2, h2);
+  glTexCoord2f(_texture.minX, _texture.maxY); glVertex2f(-w2, h2);
   glEnd();
 }
 
