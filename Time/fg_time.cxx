@@ -178,7 +178,7 @@ double cal_mjd (int mn, double dy, int yr) {
 }
 
 
-// given an mjd, return greenwich mean siderial time, gst
+// given an mjd, return greenwich mean sidereal time, gst
 
 double utc_gst (double mjd) {
     double gst;
@@ -322,10 +322,13 @@ time_t get_start_gmt(int year) {
 
 
 // return a courser but cheaper estimate of sidereal time
-double sidereal_course(struct tm *gmt, time_t now, double lng) {
-    time_t start_gmt;
+double sidereal_course(fgTIME *t, double lng) {
+    struct tm *gmt;
+    time_t start_gmt, now;
     double diff, part, days, hours, lst;
 
+    gmt = t->gmt;
+    now = t->cur_time;
     start_gmt = get_start_gmt(gmt->tm_year);
 
     fgPrintf(FG_EVENT, FG_DEBUG, 
@@ -403,19 +406,14 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
         // calculation to get the difference.
       fgPrintf( FG_EVENT, FG_INFO, "  First time, doing precise gst\n");
       t->gst = gst_precise = sidereal_precise(t->mjd, 0.00);
-      gst_course = sidereal_course(t->gmt, t->cur_time, 0.00);
+      gst_course = sidereal_course(t, 0.00);
       t->gst_diff = gst_precise - gst_course;
 
-      t->lst = 
-	sidereal_course(t->gmt, t->cur_time, -(FG_Longitude * RAD_TO_DEG))
-	+ t->gst_diff;
+      t->lst = sidereal_course(t, -(FG_Longitude * RAD_TO_DEG)) + t->gst_diff;
     } else {
 	// course + difference should drift off very slowly
-	t->gst = 
-	    sidereal_course(t->gmt, t->cur_time, 0.00) + t->gst_diff;
-	t->lst = 
-	    sidereal_course(t->gmt, t->cur_time, -(FG_Longitude * RAD_TO_DEG))
-	    + t->gst_diff;
+	t->gst = sidereal_course(t, 0.00) + t->gst_diff;
+	t->lst = sidereal_course(t, -(FG_Longitude * RAD_TO_DEG)) + t->gst_diff;
     }
     fgPrintf( FG_EVENT, FG_DEBUG,
 	      "  Current lon=0.00 Sidereal Time = %.3f\n", t->gst);
@@ -427,6 +425,9 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.15  1998/08/24 20:12:16  curt
+// Rewrote sidereal_course with simpler parameters.
+//
 // Revision 1.14  1998/08/05 00:20:07  curt
 // Added a local routine to update lighting params every frame when time is
 // accelerated.
