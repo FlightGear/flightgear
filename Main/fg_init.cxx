@@ -108,7 +108,6 @@ int fgInitPosition( void ) {
 	FG_Longitude = current_options.get_lon() * DEG_TO_RAD;
 	FG_Latitude  = current_options.get_lat() * DEG_TO_RAD;
     }
-    
     printf("starting altitude is = %.2f\n", current_options.get_altitude());
 
     FG_Altitude = current_options.get_altitude() * METER_TO_FEET;
@@ -289,8 +288,10 @@ int fgInitSubsystems( void ) {
     global_events.Init();
 
     // Output event stats every 60 seconds
-    global_events.Register( "fgEventPrintStats()", fgEventPrintStats,
-			    FG_EVENT_READY, 60000 );
+    global_events.Register( "fgEVENT_MGR::PrintStats()",
+			    fgMethodCallback<fgEVENT_MGR>( &global_events,
+						   &fgEVENT_MGR::PrintStats),
+			    fgEVENT::FG_EVENT_READY, 60000 );
 
     // Initialize the time dependent variables
     fgTimeInit(t);
@@ -313,15 +314,15 @@ int fgInitSubsystems( void ) {
 
     // Initialize the planetary subsystem
     global_events.Register( "fgPlanetsInit()", fgPlanetsInit, 
-			    FG_EVENT_READY, 600000);
+			    fgEVENT::FG_EVENT_READY, 600000);
 
     // Initialize the sun's position 
     global_events.Register( "fgSunInit()", fgSunInit, 
-			    FG_EVENT_READY, 30000 );
+			    fgEVENT::FG_EVENT_READY, 30000 );
 
     // Intialize the moon's position
     global_events.Register( "fgMoonInit()", fgMoonInit, 
-			    FG_EVENT_READY, 600000 );
+			    fgEVENT::FG_EVENT_READY, 600000 );
 
     // fgUpdateSunPos() needs a few position and view parameters set
     // so it can calculate local relative sun angle and a few other
@@ -332,15 +333,17 @@ int fgInitSubsystems( void ) {
     l->Init();
 
     // update the lighting parameters (based on sun angle)
-    global_events.Register( "fgLightUpdate()", fgLightUpdate,
-			    FG_EVENT_READY, 30000 );
+    global_events.Register( "fgLight::Update()",
+			    fgMethodCallback<fgLIGHT>( &cur_light_params,
+						       &fgLIGHT::Update),
+			    fgEVENT::FG_EVENT_READY, 30000 );
 
     // Initialize the weather modeling subsystem
     fgWeatherInit();
 
     // update the weather for our current position
     global_events.Register( "fgWeatherUpdate()", fgWeatherUpdate,
-			    FG_EVENT_READY, 120000 );
+			    fgEVENT::FG_EVENT_READY, 120000 );
 
     // Initialize the Cockpit subsystem
     if( fgCockpitInit( &current_aircraft )) {
@@ -389,6 +392,9 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.35  1998/08/29 13:09:26  curt
+// Changes to event manager from Bernie Bright.
+//
 // Revision 1.34  1998/08/27 17:02:06  curt
 // Contributions from Bernie Bright <bbright@c031.aone.net.au>
 // - use strings for fg_root and airport_id and added methods to return

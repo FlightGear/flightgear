@@ -63,7 +63,7 @@
 // Force an update of the sky and lighting parameters
 static void local_update_sky_and_lighting_params( void ) {
     fgSunInit();
-    fgLightUpdate();
+    cur_light_params.Update();
     fgSkyColorsInit();
 }
 
@@ -345,11 +345,14 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.20  1998/08/24 20:11:12  curt
-/* Added i/I to toggle full vs. minimal HUD.
-/* Added a --hud-tris vs --hud-culled option.
-/* Moved options accessor funtions to options.hxx.
+/* Revision 1.21  1998/08/29 13:09:25  curt
+/* Changes to event manager from Bernie Bright.
 /*
+ * Revision 1.20  1998/08/24 20:11:12  curt
+ * Added i/I to toggle full vs. minimal HUD.
+ * Added a --hud-tris vs --hud-culled option.
+ * Moved options accessor funtions to options.hxx.
+ *
  * Revision 1.19  1998/08/05 00:19:33  curt
  * Added a local routine to update lighting params every frame when time is
  * accelerated.
