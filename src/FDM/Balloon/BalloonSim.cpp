@@ -170,7 +170,7 @@ void balloon::update()
 
    // I realy don't think there is a solution for this without WeatherCM
    // but this is a hack, and it's working -- EMH
-   double mAir = 0;
+   double mAir = 1;
    float Q = 0;
 
     // gain of energy by heating:
