@@ -3,6 +3,7 @@
 #include "new_gui.hxx"
 
 #include <plib/pu.h>
+#include <plib/ul.h>
 
 #include <vector>
 SG_USING_STD(vector);
@@ -66,28 +67,11 @@ NewGUI::~NewGUI ()
 void
 NewGUI::init ()
 {
-    SGPropertyNode props;
-
-    try {
-        fgLoadProps("gui.xml", &props);
-    } catch (const sg_exception &ex) {
-        SG_LOG(SG_INPUT, SG_ALERT, "Error parsing gui.xml: "
-               << ex.getMessage());
-        return;
-    }
-
-    int nChildren = props.nChildren();
-    for (int i = 0; i < nChildren; i++) {
-        SGPropertyNode_ptr child = props.getChild(i);
-        if (!child->hasValue("name")) {
-            SG_LOG(SG_INPUT, SG_WARN, "GUI node " << child->getName()
-                   << " has no name; skipping.");
-        } else {
-            string name = child->getStringValue("name");
-            SG_LOG(SG_INPUT, SG_BULK, "Saving GUI node " << name);
-            _objects[name] = child;
-        }
-    }
+    char path[1024];
+    ulMakePath(path, getenv("FG_ROOT"), "gui");
+    std::cerr << "Reading from " << path << std::endl;
+    readDir(path);
+    std::cerr << "Done reading from " << path << std::endl;
 }
 
 void
@@ -148,6 +132,49 @@ NewGUI::closeActiveObject ()
     _propertyObjects.clear();
 }
 
+void
+NewGUI::readDir (const char * path)
+{
+    ulDir * dir = ulOpenDir(path);
+    std::cerr << "Directory opened successfully" << std::endl;
+
+    if (dir == 0) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Failed to read GUI files from "
+               << path);
+        return;
+    }
+
+    ulDirEnt * dirEnt = ulReadDir(dir);
+    while (dirEnt != 0) {
+        char subpath[1024];
+
+        ulMakePath(subpath, path, dirEnt->d_name);
+
+        std::cerr << "Subpath is " << subpath << std::endl;
+        if (dirEnt->d_isdir && dirEnt->d_name[0] != '.') {
+            readDir(subpath);
+        } else {
+            SGPropertyNode_ptr props = new SGPropertyNode;
+            try {
+                readProperties(subpath, props);
+            } catch (const sg_exception &ex) {
+                SG_LOG(SG_INPUT, SG_ALERT, "Error parsing GUI file "
+                       << subpath);
+            }
+            if (!props->hasValue("name")) {
+                SG_LOG(SG_INPUT, SG_WARN, "GUI file " << subpath
+                   << " has no name; skipping.");
+            } else {
+                string name = props->getStringValue("name");
+                SG_LOG(SG_INPUT, SG_BULK, "Saving GUI node " << name);
+                _objects[name] = props;
+            }
+        }
+        dirEnt = ulReadDir(dir);
+    }
+    ulCloseDir(dir);
+}
+
 puObject *
 NewGUI::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 {
@@ -158,6 +185,12 @@ NewGUI::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     int y = props->getIntValue("y", (parentHeight - height) / 2);
 
     string type = props->getName();
+    if (type == "")
+        type = props->getStringValue("type");
+    if (type == "") {
+        SG_LOG(SG_GENERAL, SG_ALERT, "No type specified for GUI object");
+        return 0;
+    }
 
     if (type == "dialog") {
         puPopup * dialog;

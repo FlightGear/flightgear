@@ -36,6 +36,8 @@ public:
 
 private:
 
+    void readDir (const char * path);
+
     puObject * makeObject (SGPropertyNode * props,
                            int parentWidth, int parentHeight);
 
