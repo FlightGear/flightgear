@@ -203,6 +203,8 @@ fgSetDefaults ()
     fgSetBool("/sim/rendering/skyblend", true);
     fgSetBool("/sim/rendering/textures", true);
     fgSetBool("/sim/rendering/wireframe", false);
+    fgSetBool("/sim/rendering/horizon-effect", false);
+    fgSetBool("/sim/rendering/enhanced-lighting", false);
     fgSetBool("/sim/rendering/distance-attenuation", false);
     fgSetInt("/sim/startup/xsize", 800);
     fgSetInt("/sim/startup/ysize", 600);
@@ -1132,9 +1134,13 @@ struct OptionDesc {
     {"in-air",                       false, OPTION_BOOL,   "/sim/presets/onground", false, "", 0 },
     {"fog-disable",                  false, OPTION_STRING, "/sim/rendering/fog", false, "disabled", 0 },
     {"fog-fastest",                  false, OPTION_STRING, "/sim/rendering/fog", false, "fastest", 0 },
-    {"fog-nicest",                   false, OPTION_STRING, "/sim/fog", false, "nicest", 0 },
-    {"disable-distance-attenuation", false, OPTION_BOOL,   "/environment/distance-attenuation", false, "", 0 },
-    {"enable-distance-attenuation",  false, OPTION_BOOL,   "/environment/distance-attenuation", true, "", 0 },
+    {"fog-nicest",                   false, OPTION_STRING, "/sim/rendering/fog", false, "nicest", 0 },
+    {"disable-horizon-effect",       false, OPTION_BOOL,   "/sim/rendering/horizon-effect", false, "", 0 },
+    {"enable-horizon-effect",        false, OPTION_BOOL,   "/sim/rendering/horizon-effect", true, "", 0 },
+    {"disable-enhanced-lighting",    false, OPTION_BOOL,   "/sim/rendering/enhanced-lighting", false, "", 0 },
+    {"enable-enhanced-lighting",     false, OPTION_BOOL,   "/sim/rendering/enhanced-lighting", true, "", 0 },
+    {"disable-distance-attenuation", false, OPTION_BOOL,   "/sim/rendering/distance-attenuation", false, "", 0 },
+    {"enable-distance-attenuation",  false, OPTION_BOOL,   "/sim/rendering/distance-attenuation", true, "", 0 },
     {"disable-clouds",               false, OPTION_BOOL,   "/environment/clouds/status", false, "", 0 },
     {"enable-clouds",                false, OPTION_BOOL,   "/environment/clouds/status", true, "", 0 },
 #ifdef FG_USE_CLOUDS_3D
