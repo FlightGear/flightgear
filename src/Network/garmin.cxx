@@ -373,7 +373,7 @@ bool FGGarmin::process() {
 	    return false;
 	}
     } else if ( get_direction() == in ) {
-	if ( length = io->readline( buf, FG_MAX_MSG_SIZE ) ) {
+	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
 	    FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
 	    if ( parse_message() ) {
 		FG_LOG( FG_IO, FG_ALERT, "Success parsing data." );
@@ -384,7 +384,7 @@ bool FGGarmin::process() {
 	    FG_LOG( FG_IO, FG_ALERT, "Error reading data." );
 	    return false;
 	}
-	if ( length = io->readline( buf, FG_MAX_MSG_SIZE ) ) {
+	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
 	    FG_LOG( FG_IO, FG_ALERT, "Success reading data." );
 	    if ( parse_message() ) {
 		FG_LOG( FG_IO, FG_ALERT, "Success parsing data." );
