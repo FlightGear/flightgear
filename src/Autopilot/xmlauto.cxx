@@ -196,14 +196,14 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
  */
 
 void FGPIDController::update( double dt ) {
-    double ep_n;         // proportional error with reference weighing
-    double e_n;          // error
-    double ed_n;         // derivative error
-    double edf_n;        // derivative error filter
-    double Tf;           // filter time
-    double delta_u_n;    // incremental output
-    double u_n;          // absolute output
-    double Ts = dt;      // Sampling interval (sec)
+    double ep_n;            // proportional error with reference weighing
+    double e_n;             // error
+    double ed_n;            // derivative error
+    double edf_n;           // derivative error filter
+    double Tf;              // filter time
+    double delta_u_n = 0.0; // incremental output
+    double u_n = 0.0;       // absolute output
+    double Ts = dt;         // Sampling interval (sec)
 
     if ( Ts <= 0.0 ) {
         // do nothing if time step is not positive (i.e. no time has
