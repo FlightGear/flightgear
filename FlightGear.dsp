@@ -5173,6 +5173,36 @@ SOURCE=.\src\Network\garmin.hxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\src\Network\httpd.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Network\httpd.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Network"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Network"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\src\Network\joyclient.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
