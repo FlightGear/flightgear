@@ -39,16 +39,16 @@
 // each subsequent iteration through the EOM
 int FGLaRCsim::init( double dt ) {
 
-#ifdef USE_NEW_ENGINE_CODE
-    // Initialize our little engine that hopefully might
-    eng.init(dt);
-    // dcl - in passing dt to init rather than update I am assuming
-    // that the LaRCsim dt is fixed at one value (yes it is 120hz CLO)
+    if ( current_options.get_aircraft() == "c172" ) {
+	// Initialize our little engine that hopefully might
+	eng.init(dt);
+	// dcl - in passing dt to init rather than update I am assuming
+	// that the LaRCsim dt is fixed at one value (yes it is 120hz CLO)
 
-    // update the engines interface
-    FGEngInterface e;
-    add_engine( e );
-#endif
+	// update the engines interface
+	FGEngInterface e;
+	add_engine( e );
+    }
 
     // cout << "FGLaRCsim::init()" << endl;
 
@@ -87,46 +87,46 @@ int FGLaRCsim::init( double dt ) {
 int FGLaRCsim::update( int multiloop ) {
     // cout << "FGLaRCsim::update()" << endl;
 
-#ifdef USE_NEW_ENGINE_CODE
-    // set control inputs
-    eng.set_IAS( V_calibrated_kts );
-    eng.set_Throttle_Lever_Pos( controls.get_throttle( 0 ) * 100.0 );
-    eng.set_Propeller_Lever_Pos( 100 );
-    if ( controls.get_mixture( 0 ) > 0.60 ) {
-	eng.set_Mixture_Lever_Pos( controls.get_mixture( 0 ) * 100.0 );
-    } else {
-	eng.set_Mixture_Lever_Pos( 60.0 );
-    }
+    if ( current_options.get_aircraft() == "c172" ) {
+	// set control inputs
+	eng.set_IAS( V_calibrated_kts );
+	eng.set_Throttle_Lever_Pos( controls.get_throttle( 0 ) * 100.0 );
+	eng.set_Propeller_Lever_Pos( 100 );
+	if ( controls.get_mixture( 0 ) > 0.60 ) {
+	    eng.set_Mixture_Lever_Pos( controls.get_mixture( 0 ) * 100.0 );
+	} else {
+	    eng.set_Mixture_Lever_Pos( 60.0 );
+	}
 
-    // update engine model
-    eng.update();
+	// update engine model
+	eng.update();
 
-    // copy engine state values onto "bus"
-    FGEngInterface *e = get_engine( 0 );
-    e->set_Throttle( controls.get_throttle( 0 ) * 100.0 );
-    e->set_Mixture( 80 );
-    e->set_Prop_Advance( 100 );
-    e->set_RPM( eng.get_RPM() );
-    e->set_Manifold_Pressure( eng.get_Manifold_Pressure() );
-    e->set_MaxHP( eng.get_MaxHP() );
-    e->set_Percentage_Power( eng.get_Percentage_Power() );
-    e->set_EGT( eng.get_EGT() );
-    e->set_prop_thrust( eng.get_prop_thrust_SI() );
+	// copy engine state values onto "bus"
+	FGEngInterface *e = get_engine( 0 );
+	e->set_Throttle( controls.get_throttle( 0 ) * 100.0 );
+	e->set_Mixture( 80 );
+	e->set_Prop_Advance( 100 );
+	e->set_RPM( eng.get_RPM() );
+	e->set_Manifold_Pressure( eng.get_Manifold_Pressure() );
+	e->set_MaxHP( eng.get_MaxHP() );
+	e->set_Percentage_Power( eng.get_Percentage_Power() );
+	e->set_EGT( eng.get_EGT() );
+	e->set_prop_thrust( eng.get_prop_thrust_SI() );
 
 #if 0
-    cout << "Throttle = " << controls.get_throttle( 0 ) * 100.0;
-    cout << " Mixture = " << controls.get_mixture( 0 ) * 100.0;
-    cout << " RPM = " << eng.get_RPM();
-    cout << " MP = " << eng.get_Manifold_Pressure();
-    cout << " HP = " << ( eng.get_MaxHP() * eng.get_Percentage_Power()
+	cout << "Throttle = " << controls.get_throttle( 0 ) * 100.0;
+	cout << " Mixture = " << controls.get_mixture( 0 ) * 100.0;
+	cout << " RPM = " << eng.get_RPM();
+	cout << " MP = " << eng.get_Manifold_Pressure();
+	cout << " HP = " << ( eng.get_MaxHP() * eng.get_Percentage_Power()
 			  / 100.0 );
-    cout << " EGT = " << eng.get_EGT();
-    cout << " Thrust (N) " << eng.get_prop_thrust_SI();	// Thrust in Newtons
-    cout << '\n';
+	cout << " EGT = " << eng.get_EGT();
+	cout << " Thrust (N) " << eng.get_prop_thrust_SI(); // Thrust in Newtons
+	cout << '\n';
 #endif
     
-    F_X_engine = eng.get_prop_thrust_SI() * 0.07;
-#endif // USE_NEW_ENGINE_CODE
+	F_X_engine = eng.get_prop_thrust_SI() * 0.07;
+    }
 
     double save_alt = 0.0;
     double time_step = (1.0 / current_options.get_model_hz()) * multiloop;
@@ -144,11 +144,14 @@ int FGLaRCsim::update( int multiloop ) {
     Long_trim = controls.get_elevator_trim();
     Rudder_pedal = controls.get_rudder() / current_options.get_speed_up();
     Flap_handle = 30.0 * controls.get_flaps();
-#ifdef USE_NEW_ENGINE_CODE
-    Throttle_pct = -1.0;	// tells engine model to use propellor thrust
-#else
+
+    if ( current_options.get_aircraft() == "c172" ) {
+	Use_External_Engine = 1;
+    } else {
+	Use_External_Engine = 0;
+    }
+
     Throttle_pct = controls.get_throttle( 0 ) * 1.0;
-#endif
     Brake_pct[0] = controls.get_brake( 1 );
     Brake_pct[1] = controls.get_brake( 0 );
 

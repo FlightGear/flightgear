@@ -128,6 +128,9 @@ typedef struct {
 #define	F_Y_engine		generic_.f_engine_v[1]
 #define	F_Z_engine		generic_.f_engine_v[2]
 
+    int         use_external_engine;
+#define Use_External_Engine     generic_.use_external_engine
+
     VECTOR_3    f_gear_v;
 #define F_gear_v		generic_.f_gear_v
 #define	F_X_gear		generic_.f_gear_v[0]

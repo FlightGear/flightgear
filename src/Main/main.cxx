@@ -21,10 +21,6 @@
 // $Id$
 
 
-#define USE_NEW_ENGINE_CODE
-#undef MICHAEL_JOHNSON_EXPERIMENTAL_ENGINE_AUDIO
-
-
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -102,6 +98,8 @@
 #  include <Weather/weather.hxx>
 #endif
 
+#include "version.h"
+
 #include "bfi.hxx"
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -174,7 +172,7 @@ sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
   {  0.0f,  0.0f,  0.0f,  1.0f }
 } ;
 
-// The following defines flight gear options. Because glutlib will also
+// The following defines flightgear options. Because glutlib will also
 // want to parse its own options, those options must not be included here
 // or they will get parsed by the main program option parser. Hence case
 // is significant for any option added that might be in conflict with
@@ -897,71 +895,16 @@ static void fgMainLoop( void ) {
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( current_options.get_sound() && !audio_sched->not_working() ) {
 
-#   if defined(MICHAEL_JOHNSON_EXPERIMENTAL_ENGINE_AUDIO)
-
-	static double kts_to_fts = NM_TO_METER * METER_TO_FEET / 3600.0;
-
-	// note: all these factors are relative to the sample.  our
-	// sample format should really contain a conversion factor so
-	// that we can get prop speed right for arbitrary samples.
-	// Note that for normal-size props, there is a point at which
-	// the prop tips approach the speed of sound; that is a pretty
-	// strong limit to how fast the prop can go.
-
-	// multiplication factor is prime pitch control; add some log
-	// component for verisimilitude
-
-	double pitch = log((controls.get_throttle(0) * 14.0) + 1.0);
-	//fprintf(stderr, "pitch1: %f ", pitch);
-	// if (controls.get_throttle(0) > 0.0 ||
-	//     cur_fdm_state->get_V_calibrated_kts() > 40.0) {
-
-	//fprintf(stderr, "rel_wind: %f ", cur_fdm_state->get_V_calibrated_kts());
-	// only add relative wind and AoA if prop is moving
-	// or we're really flying at idle throttle
-	if (pitch < 5.4) {  // this needs tuning
-	    // prop tips not breaking sound barrier
-	    pitch += log(cur_fdm_state->get_V_calibrated_kts() * kts_to_fts + 0.8)/2;
-	} else {
-	    // prop tips breaking sound barrier
-	    pitch += log(cur_fdm_state->get_V_calibrated_kts() * kts_to_fts + 0.8)/10;
-	}
-	//fprintf(stderr, "pitch2: %f ", pitch);
-	//fprintf(stderr, "AoA: %f ", FG_Gamma_vert_rad);
-
-	// Angle of Attack next... -x^3(e^x) is my best guess Just
-	// need to calculate some reasonable scaling factor and
-	// then clamp it on the positive aoa (neg adj) side
-	double aoa = cur_fdm_state->get_Gamma_vert_rad() * 2.2;
-	double tmp = 3.0;
-	double aoa_adj = pow(-aoa, tmp) * pow(M_E, aoa);
-	if (aoa_adj < -0.8) aoa_adj = -0.8;
-	pitch += aoa_adj;
-	//fprintf(stderr, "pitch3: %f ", pitch);
-
-	// don't run at absurdly slow rates -- not realistic
-	// and sounds bad to boot.  :-)
-	if (pitch < 0.8) pitch = 0.8;
-	// }
-	// fprintf(stderr, "pitch4: %f\n", pitch);
-
-	double volume = controls.get_throttle(0) * 0.1 + 0.3 +
-	    log(cur_fdm_state->get_V_calibrated_kts() * kts_to_fts + 1.0)/14.0;
-	if ( volume > 1.0 ) { volume = 1.0; }
-
-	// fprintf(stderr, "volume: %f\n", volume);
-
-	pitch_envelope.setStep  ( 0, 0.01, pitch );
-	volume_envelope.setStep ( 0, 0.01, volume );
-
-#   elif defined(USE_NEW_ENGINE_CODE)
-
-	if ( current_options.get_flight_model() == FGInterface::FG_LARCSIM ) {
+	if ( current_options.get_aircraft() == "c172" ) {
 	    // pitch corresponds to rpm
 	    // volume corresponds to manifold pressure
 
-	    double rpm_factor = cur_fdm_state->get_engine(0)->get_RPM() /
-		2500.0;
+	    double rpm_factor;
+	    if ( cur_fdm_state->get_engine(0) != NULL ) {
+		rpm_factor = cur_fdm_state->get_engine(0)->get_RPM() / 2500.0;
+	    } else {
+		rpm_factor = 1.0;
+	    }
 	    // cout << "rpm = " << cur_fdm_state->get_engine(0)->get_RPM()
 	    //      << endl;
 
@@ -973,8 +916,13 @@ static void fgMainLoop( void ) {
 	    if (pitch > 5.0) { pitch = 5.0; }
 	    // cout << "pitch = " << pitch << endl;
 
-	    double mp_factor =
-		cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 28;
+	    double mp_factor;
+	    if ( cur_fdm_state->get_engine(0) != NULL ) {
+		mp_factor = 
+		    cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 28;
+	    } else {
+		mp_factor = 1.0;
+	    }
 	    // cout << "mp = " 
 	    //      << cur_fdm_state->get_engine(0)->get_Manifold_Pressure()
 	    //      << endl;
@@ -992,7 +940,7 @@ static void fgMainLoop( void ) {
 	    pitch_envelope.setStep  ( 0, 0.01, param );
 	    volume_envelope.setStep ( 0, 0.01, param );
 	}
-#  endif
+
 	audio_sched -> update();
     }
 #endif
@@ -1054,7 +1002,7 @@ static void fgIdleFunction ( void ) {
     } else if ( idle_state == 3 ) {
 	// This is the top level init routine which calls all the
 	// other subsystem initialization routines.  If you are adding
-	// a subsystem to flight gear, its initialization call should
+	// a subsystem to flightgear, its initialization call should
 	// located in this routine.
 	if( !fgInitSubsystems()) {
 	    FG_LOG( FG_GENERAL, FG_ALERT,
@@ -1214,7 +1162,7 @@ int fgGlutInit( int *argc, char **argv ) {
     // Initialize windows
     if ( current_options.get_game_mode() == 0 ) {
 	// Open the regular window
-	glutCreateWindow("Flight Gear");
+	glutCreateWindow("FlightGear");
 #ifndef GLUT_WRONG_VERSION
     } else {
 	// Open the cool new 'game mode' window
@@ -1324,7 +1272,8 @@ int main( int argc, char **argv ) {
     // set default log levels
     fglog().setLogLevels( FG_ALL, FG_INFO );
 
-    FG_LOG( FG_GENERAL, FG_INFO, "Flight Gear:  Version " << VERSION << endl );
+    FG_LOG( FG_GENERAL, FG_INFO, "FlightGear:  Version "
+	    << FLIGHTGEAR_VERSION << endl );
 
     // seed the random number generater
     fg_srandom();

@@ -77,7 +77,7 @@ void c172_engine( SCALAR dt, int init ) {
     Throttle[3] = Throttle_pct;
 
     
-    if ( Throttle_pct >= 0 ) {
+    if ( ! Use_External_Engine ) {
 	/* do a crude engine power calc based on throttle position */
 	v=V_rel_wind;
 	h=Altitude;
