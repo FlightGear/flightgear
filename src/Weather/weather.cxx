@@ -37,6 +37,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_random.h>
 
+#include <Main/fg_props.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Weather/weather.hxx>
 
@@ -45,36 +46,142 @@
 FGWeather current_weather;
 
 
-FGWeather::FGWeather() {
+FGWeather::FGWeather()
+  : visibility_m(32000),
+    wind_from_heading_deg(0),
+    wind_speed_kt(0),
+    wind_from_north_fps(0),
+    wind_from_east_fps(0),
+    wind_from_down_fps(0),
+    fog_exp_density(0),
+    fog_exp2_density(0)
+{
 }
 
 
-FGWeather::~FGWeather() {
+FGWeather::~FGWeather()
+{
 }
 
 
 // Initialize the weather modeling subsystem
-void FGWeather::Init( ) {
+void FGWeather::init ()
+{
     SG_LOG( SG_GENERAL, SG_INFO, "Initializing weather subsystem");
-
-    // Configure some wind
-    // FG_V_north_airmass = 15; // ft/s =~ 10mph
-
-    // set_visibility( 45000.0 );    // in meters
-    set_visibility( 32000.0 );       // about 20 miles (in meters)
 }
 
 
-// Update the weather parameters for the current position
-void FGWeather::Update( void ) {
-    FGInterface *f;
-
-    f = current_aircraft.fdm_state;
-
-    // Add some random turbulence
-    // f->set_U_gust( fg_random() * 5.0 - 2.5 );
-    // f->set_V_gust( fg_random() * 5.0 - 2.5 );
-    // f->set_W_gust( fg_random() * 5.0 - 2.5 );
+void
+FGWeather::bind ()
+{
+  fgTie("/environment/visibility-m", this,
+	&FGWeather::get_visibility_m, &FGWeather::set_visibility_m);
+  fgTie("/environment/wind-from-heading-deg", this,
+	&FGWeather::get_wind_from_heading_deg,
+	&FGWeather::set_wind_from_heading_deg);
+  fgTie("/environment/wind-speed-kt", this,
+	&FGWeather::get_wind_speed_kt, &FGWeather::set_wind_speed_kt);
+  fgTie("/environment/wind-from-north-fps", this,
+	&FGWeather::get_wind_from_north_fps,
+	&FGWeather::set_wind_from_north_fps);
+  fgTie("/environment/wind-from-east-fps", this,
+	&FGWeather::get_wind_from_east_fps,
+	&FGWeather::set_wind_from_east_fps);
+  fgTie("/environment/wind-from-down-fps", this,
+	&FGWeather::get_wind_from_down_fps,
+	&FGWeather::set_wind_from_down_fps);
 }
 
+void
+FGWeather::unbind ()
+{
+  fgUntie("/environment/visibility-m");
+  fgUntie("/environment/wind-from-heading-deg");
+  fgUntie("/environment/wind-speed-kt");
+  fgUntie("/environment/wind-from-north-fps");
+  fgUntie("/environment/wind-from-east-fps");
+  fgUntie("/environment/wind-from-down-fps");
+}
+
+void FGWeather::update (int dt)
+{
+				// FIXME: the FDMs should update themselves
+  current_aircraft.fdm_state
+    ->set_Velocities_Local_Airmass(wind_from_north_fps,
+				   wind_from_east_fps,
+				   wind_from_down_fps);
+}
+
+void
+FGWeather::set_visibility_m (double v)
+{
+	glMatrixMode(GL_MODELVIEW);
+	// in meters
+	visibility_m = v;
+
+        // for GL_FOG_EXP
+	fog_exp_density = -log(0.01 / visibility_m);
+
+	// for GL_FOG_EXP2
+	fog_exp2_density = sqrt( -log(0.01) ) / visibility_m;
+
+	// Set correct opengl fog density
+	glFogf (GL_FOG_DENSITY, fog_exp2_density);
+	glFogi( GL_FOG_MODE, GL_EXP2 );
+
+	// SG_LOG( SG_INPUT, SG_DEBUG, "Fog density = " << fog_density );
+	// SG_LOG( SG_INPUT, SG_INFO, 
+	//     	   "Fog exp2 density = " << fog_exp2_density );
+}
+
+void
+FGWeather::set_wind_from_heading_deg (double h)
+{
+  wind_from_heading_deg = h;
+  _recalc_ne();
+}
+
+void
+FGWeather::set_wind_speed_kt (double s)
+{
+  wind_speed_kt = s;
+  _recalc_ne();
+}
+
+void
+FGWeather::set_wind_from_north_fps (double n)
+{
+  wind_from_north_fps = n;
+  _recalc_hdgspd();
+}
+
+void
+FGWeather::set_wind_from_east_fps (double e)
+{
+  wind_from_east_fps = e;
+  _recalc_hdgspd();
+}
+
+void
+FGWeather::set_wind_from_down_fps (double d)
+{
+  wind_from_down_fps = d;
+  _recalc_hdgspd();
+}
+
+void
+FGWeather::_recalc_hdgspd ()
+{
+  wind_from_heading_deg = acos(wind_from_north_fps / wind_speed_kt);
+  wind_speed_kt = asin(wind_from_north_fps / wind_speed_kt);
+}
+
+void
+FGWeather::_recalc_ne ()
+{
+  wind_from_north_fps = wind_speed_kt * cos(wind_from_heading_deg);
+  wind_from_east_fps = wind_speed_kt * sin(wind_from_heading_deg);
+}
+
+// end of weather.cxx
 

@@ -556,7 +556,7 @@ void fgRenderFrame( void ) {
 #ifndef FG_OLD_WEATHER
 	thesky->set_visibility( WeatherDatabase->getWeatherVisibility() );
 #else
-	thesky->set_visibility( current_weather.get_visibility() );
+	thesky->set_visibility( current_weather.get_visibility_m() );
 #endif
 
 	thesky->modify_vis( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
@@ -1043,7 +1043,7 @@ static void fgMainLoop( void ) {
 #endif
 
 #ifdef FG_OLD_WEATHER
-    current_weather.Update();
+    current_weather.update(0);	// FIXME: use real delta time
 #endif
 
     // Fix elevation.  I'm just sticking this here for now, it should

@@ -326,9 +326,9 @@ bool FGJSBsim::copy_to_JSBsim() {
     Atmosphere->SetExTemperature(get_Static_temperature());
     Atmosphere->SetExPressure(get_Static_pressure());
     Atmosphere->SetExDensity(get_Density());
-    Atmosphere->SetWindNED(get_V_north_airmass() * -1.0,
-                           get_V_east_airmass() * -1.0,
-                           get_V_down_airmass() * -1.0);
+    Atmosphere->SetWindNED(get_V_north_airmass(),
+                           get_V_east_airmass(),
+                           get_V_down_airmass());
 //    SG_LOG(SG_FLIGHT,SG_INFO, "Wind NED: "
 //                  << get_V_north_airmass() << ", "
 //                  << get_V_east_airmass()  << ", "

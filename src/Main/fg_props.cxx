@@ -37,7 +37,7 @@
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
 #  include <Weather/weather.hxx>
-#endif
+#endif // FG_OLD_WEATHER
 #include <Objects/matlib.hxx>
 
 #include <GUI/gui.h>
@@ -52,9 +52,11 @@ SG_USING_STD(istream);
 SG_USING_STD(ostream);
 #endif
 
+#if !defined(FG_OLD_WEATHER)
 static double getWindNorth ();
 static double getWindEast ();
 static double getWindDown ();
+#endif // FG_OLD_WEATHER
 
 // Allow the view to be set from two axes (i.e. a joystick hat)
 // This needs to be in FGViewer itself, somehow.
@@ -888,17 +890,15 @@ setAPThrottleControl (double value)
 }
 
 
+#if !defined(FG_OLD_WEATHER)
+
 /**
  * Get the current visibility (meters).
  */
 static double
 getVisibility ()
 {
-#ifndef FG_OLD_WEATHER
   return WeatherDatabase->getWeatherVisibility();
-#else
-  return current_weather.get_visibility();
-#endif
 }
 
 
@@ -908,11 +908,7 @@ getVisibility ()
 static void
 setVisibility (double visibility)
 {
-#ifndef FG_OLD_WEATHER
   WeatherDatabase->setWeatherVisibility(visibility);
-#else
-  current_weather.set_visibility(visibility);
-#endif
 }
 
 /**
@@ -979,6 +975,8 @@ setWindDown (double speed)
 							   getWindEast(),
 							   speed);
 }
+
+#endif // FG_OLD_WEATHER
 
 static double
 getFOV ()
@@ -1154,6 +1152,7 @@ fgInitProps ()
   fgSetArchivable("/autopilot/control-overrides/throttle");
 
 				// Environment
+#if !defined(FG_OLD_WEATHER)
   fgTie("/environment/visibility-m", getVisibility, setVisibility);
   fgSetArchivable("/environment/visibility-m");
   fgTie("/environment/wind-north-fps", getWindNorth, setWindNorth);
@@ -1162,6 +1161,7 @@ fgInitProps ()
   fgSetArchivable("/environment/wind-east-fps");
   fgTie("/environment/wind-down-fps", getWindDown, setWindDown);
   fgSetArchivable("/environment/wind-down-fps");
+#endif
 
   fgTie("/environment/magnetic-variation-deg", getMagVar);
   fgTie("/environment/magnetic-dip-deg", getMagDip);

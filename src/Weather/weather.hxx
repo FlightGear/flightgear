@@ -29,6 +29,8 @@
 
 #include <GL/gl.h>
 
+#include <Main/fgfs.hxx>
+
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>
 #else
@@ -36,48 +38,61 @@
 #endif
 
 // holds the current weather values
-class FGWeather {
-
-private:
-
-    double visibility;
-    GLfloat fog_exp_density;
-    GLfloat fog_exp2_density;
+class FGWeather : public FGSubsystem
+{
 
 public:
 
-    FGWeather();
-    ~FGWeather();
-
-    void Init();
-    void Update();
+  FGWeather();
+  virtual ~FGWeather();
+  
+  virtual void init ();
+  virtual void bind ();
+  virtual void unbind ();
+  virtual void update (int dt);
     
-    inline double get_visibility() const { return visibility; }
+  inline virtual double get_visibility_m () const { return visibility_m; }
+  inline virtual double get_wind_from_heading_deg () const {
+    return wind_from_heading_deg;
+  }
+  inline virtual double get_wind_speed_kt () const { return wind_speed_kt; }
+  inline virtual double get_wind_from_north_fps () const {
+    return wind_from_north_fps;
+  }
+  inline virtual double get_wind_from_east_fps () const {
+    return wind_from_east_fps;
+  }
+  inline virtual double get_wind_from_down_fps () const {
+    return wind_from_down_fps;
+  }
 
-    inline void set_visibility( double v ) {
-	glMatrixMode(GL_MODELVIEW);
-	// in meters
-	visibility = v;
+  virtual void set_visibility_m (double v);
+  virtual void set_wind_from_heading_deg (double h);
+  virtual void set_wind_speed_kt (double s);
+  virtual void set_wind_from_north_fps (double n);
+  virtual void set_wind_from_east_fps (double e);
+  virtual void set_wind_from_down_fps (double d);
 
-        // for GL_FOG_EXP
-	fog_exp_density = -log(0.01 / visibility);
+private:
 
-	// for GL_FOG_EXP2
-	fog_exp2_density = sqrt( -log(0.01) ) / visibility;
+  void _recalc_hdgspd ();
+  void _recalc_ne ();
 
-	// Set correct opengl fog density
-	glFogf (GL_FOG_DENSITY, fog_exp2_density);
-	glFogi( GL_FOG_MODE, GL_EXP2 );
+  double visibility_m;
 
-	// SG_LOG( SG_INPUT, SG_DEBUG, "Fog density = " << fog_density );
-	// SG_LOG( SG_INPUT, SG_INFO, 
-	//     	   "Fog exp2 density = " << fog_exp2_density );
-    }
+  double wind_from_heading_deg;
+  double wind_speed_kt;
+
+  double wind_from_north_fps;
+  double wind_from_east_fps;
+  double wind_from_down_fps;
+
+				// Do these belong here?
+  GLfloat fog_exp_density;
+  GLfloat fog_exp2_density;
+
 };
 
 extern FGWeather current_weather;
 
-
 #endif // _WEATHER_HXX
-
-

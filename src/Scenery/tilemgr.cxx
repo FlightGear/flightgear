@@ -175,7 +175,7 @@ void FGTileMgr::schedule_needed() {
 	vis = 16000;
     }
 #else
-    vis = current_weather.get_visibility();
+    vis = current_weather.get_visibility_m();
 #endif
     // cout << "visibility = " << vis << endl;
 
@@ -416,7 +416,7 @@ void FGTileMgr::prep_ssg_nodes() {
 	vis = 16000;
     }
 #else
-    vis = current_weather.get_visibility();
+    vis = current_weather.get_visibility_m();
 #endif
     // cout << "visibility = " << vis << endl;
 

@@ -559,9 +559,9 @@ void FGLaRCsim::set_ls(void) {
     Latitude=lsic->GetLatitudeGDRadIC();
     Longitude=lsic->GetLongitudeRadIC();
     Runway_altitude=lsic->GetRunwayAltitudeFtIC();
-    V_north_airmass = lsic->GetVnorthAirmassFpsIC();
-    V_east_airmass = lsic->GetVeastAirmassFpsIC();
-    V_down_airmass = lsic->GetVdownAirmassFpsIC();
+    V_north_airmass = lsic->GetVnorthAirmassFpsIC() * -1;
+    V_east_airmass = lsic->GetVeastAirmassFpsIC() * -1;
+    V_down_airmass = lsic->GetVdownAirmassFpsIC() * -1;
     ls_loop(0.0,-1);
     copy_from_LaRCsim();
 }

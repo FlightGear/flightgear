@@ -96,6 +96,7 @@ FGATIS::~FGATIS() {
 
 string FGATIS::get_transmission() {
 //void FGATIS::get_transmission() {
+#if !defined(FG_OLD_WEATHER)
 
     string transmission = "";
     double visibility;
@@ -218,4 +219,7 @@ string FGATIS::get_transmission() {
 //    }
 
     return(transmission);
+#else
+    return "Station unavailable (not supported by FG_OLD_WEATHER)";
+#endif // FG_OLD_WEATHER
 }

@@ -230,12 +230,12 @@ void uiuc_force_moment(double dt)
        vis *= 1.01;
      WeatherDatabase->setWeatherVisibility( vis );
  #else
-     vis = current_weather->get_visibility();
+     vis = current_weather.get_visibility_m();
      if (Fog > 0)
        vis /= 1.01;
      else
        vis *= 1.01;
-     current_weather->set_visibility( vis );
+     current_weather.set_visibility_m( vis );
  #endif
    }
  

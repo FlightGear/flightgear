@@ -220,9 +220,9 @@ void YASim::copyToYASim(bool copyState)
 
     // Environment
     float wind[3];
-    wind[0] = get_V_north_airmass() * FT2M;
-    wind[1] = get_V_east_airmass() * FT2M;
-    wind[2] = get_V_down_airmass() * FT2M;
+    wind[0] = get_V_north_airmass() * FT2M * -1.0;
+    wind[1] = get_V_east_airmass() * FT2M * -1.0;
+    wind[2] = get_V_down_airmass() * FT2M * -1.0;
 
     // The ground elevation doesn't come from FGInterface; query it
     // from the scenery and set it for others to find.

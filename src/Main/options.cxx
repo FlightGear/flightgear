@@ -904,13 +904,14 @@ parse_option (const string& arg)
 
         // convert to fps
 	speed *= SG_NM_TO_METER * SG_METER_TO_FEET * (1.0/3600);
-	dir += 180;
-	if (dir >= 360)
+	while (dir > 360)
 	  dir -= 360;
+	while (dir <= 0)
+	  dir += 360;
 	dir *= SGD_DEGREES_TO_RADIANS;
-	fgSetDouble("/environment/wind-north-fps",
+	fgSetDouble("/environment/wind-from-north-fps",
 		    speed * cos(dir));
-	fgSetDouble("/environment/wind-east-fps",
+	fgSetDouble("/environment/wind-from-east-fps",
 		    speed * sin(dir));
     } else if ( arg.find( "--wp=" ) == 0 ) {
 	parse_wp( arg.substr( 5 ) );

@@ -805,7 +805,8 @@ bool fgInitSubsystems( void ) {
     global_events.Register( "weather update", fgUpdateWeatherDatabase,
                             fgEVENT::FG_EVENT_READY, 30000);
 #else
-    current_weather.Init();
+    current_weather.init();
+    current_weather.bind();
 #endif
 
     ////////////////////////////////////////////////////////////////////
