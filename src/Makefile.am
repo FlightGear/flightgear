@@ -23,6 +23,7 @@ SUBDIRS = \
         Input \
 	Instrumentation \
         Model \
+	AIModel \
         Navaids \
         Network \
 	$(MPLAYER_DIRS) \

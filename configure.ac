@@ -505,6 +505,7 @@ AC_CONFIG_FILES([ \
 	src/Main/runfgfs \
 	src/Main/runfgfs.bat \
 	src/Model/Makefile \
+	src/AIModel/Makefile \
 	src/MultiPlayer/Makefile \
 	src/Navaids/Makefile \
 	src/Network/Makefile \

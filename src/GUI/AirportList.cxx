@@ -1,3 +1,5 @@
+#include <string.h>	// strncpy()
+
 #include <Main/globals.hxx>
 #include <Airports/simple.hxx>
 

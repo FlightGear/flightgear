@@ -95,6 +95,7 @@
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
 #include <Model/acmodel.hxx>
+#include <AIModel/AIManager.hxx>
 #include <Navaids/fixlist.hxx>
 #include <Navaids/ilslist.hxx>
 #include <Navaids/mkrbeacons.hxx>
@@ -1652,6 +1653,14 @@ bool fgInitSubsystems() {
     SG_LOG(SG_GENERAL, SG_INFO, "  AI Manager");
     globals->set_AI_mgr(new FGAIMgr);
     globals->get_AI_mgr()->init();
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialise the AI Model Manager
+    ////////////////////////////////////////////////////////////////////
+
+    SG_LOG(SG_GENERAL, SG_INFO, "  AI Model Manager");
+    globals->add_subsystem("ai_model", new FGAIManager);
 
 
 #ifdef ENABLE_AUDIO_SUPPORT
