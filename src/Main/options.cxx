@@ -1275,6 +1275,8 @@ fgUsage ()
          << "                                  motion chair protocol" << endl
          << "    --rul=params                  Open connection using the RUL protocol" << endl
          << endl
+         << "    --atc610x                     Enable atc610x interface." << endl
+         << endl
 
          << "Debugging Options:" << endl
          << "    --trace-read=property         Trace the reads for a property; multiple" << endl
