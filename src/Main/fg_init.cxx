@@ -1018,45 +1018,41 @@ bool fgInitPosition() {
     string ndb = fgGetString("/sim/presets/ndb-id");
     double ndb_freq = fgGetDouble("/sim/presets/ndb-freq");
     string fix = fgGetString("/sim/presets/fix");
+
     if ( !set_pos && !apt.empty() && !rwy_no.empty() ) {
         // An airport + runway is requested
         if ( fgSetPosFromAirportIDandRwy( apt, rwy_no ) ) {
-            // set position (a little off the heading for single
+            // set tower position (a little off the heading for single
             // runway airports)
             fgSetTowerPosFromAirportID( apt, hdg );
-
             set_pos = true;
         }
     }
+
     if ( !set_pos && !apt.empty() ) {
         // An airport is requested (find runway closest to hdg)
-        bool ok = false;
-        if (fgGetDouble("/sim/presets/altitude-ft") <= 0 &&
-            fgGetDouble("/sim/presets/offset-distance") == 0)
-            ok = fgSetPosFromAirportIDandHdg( apt, hdg );
-        else
-            ok = fgSetPosFromAirportID( apt );
-            
-        if (ok) {
-                // set position (a little off the heading for single
-                // runway airports)
-                fgSetTowerPosFromAirportID( apt, hdg );
-
+        if ( fgSetPosFromAirportIDandHdg( apt, hdg ) ) {
+            // set tower position (a little off the heading for single
+            // runway airports)
+            fgSetTowerPosFromAirportID( apt, hdg );
             set_pos = true;
         }
     }
+
     if ( !set_pos && !vor.empty() ) {
         // a VOR is requested
         if ( fgSetPosFromNAV( vor, vor_freq ) ) {
             set_pos = true;
         }
     }
+
     if ( !set_pos && !ndb.empty() ) {
         // an NDB is requested
         if ( fgSetPosFromNAV( ndb, ndb_freq ) ) {
             set_pos = true;
         }
     }
+
     if ( !set_pos && !fix.empty() ) {
         // a Fix is requested
         if ( fgSetPosFromFix( fix ) ) {
