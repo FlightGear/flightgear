@@ -294,27 +294,41 @@ int fgAPRun( void )
 	fgRudderSet(0.0);
     }
 
-    // altitude hold enabled?
-    if ( APData->altitude_hold == 1 ) {
-	double error;
+    // altitude hold or terrain follow enabled?
+    if ( (APData->altitude_hold == 1) || (APData->terrain_follow == 1) ) {
+	double speed, max_climb, error;
 	double prop_error, int_error;
 	double prop_adj, int_adj, total_adj;
 
-	// normal altitude hold
-	APData->TargetClimbRate = 
-	    (APData->TargetAltitude - fgAPget_altitude()) * 8.0;
-	
-	// brain dead ground hugging with no look ahead
-	// APData->TargetClimbRate = ( 250 - fgAPget_agl() ) * 8.0;
-
-	// just try to zero out rate of climb ...
-	// APData->TargetClimbRate = 0.0;
-
-	if ( APData->TargetClimbRate > 200.0 ) {
-	    APData->TargetClimbRate = 200.0;
+	if (APData->altitude_hold == 1) {
+	    // normal altitude hold
+	    APData->TargetClimbRate = 
+		(APData->TargetAltitude - fgAPget_altitude()) * 8.0;
+	} else if (APData->terrain_follow == 1) {
+	    // brain dead ground hugging with no look ahead
+	    APData->TargetClimbRate = 
+		( APData->TargetAGL - fgAPget_agl() ) * 16.0;
+	} else {
+	    // just try to zero out rate of climb ...
+	    APData->TargetClimbRate = 0.0;
 	}
-	if ( APData->TargetClimbRate < -200.0 ) {
-	    APData->TargetClimbRate = -200.0;
+
+	speed = get_speed();
+
+	if ( speed < 90.0 ) {
+	    max_climb = 0.0;
+	} else if ( speed < 100.0 ) {
+	    max_climb = (speed - 90.0) * 20;
+	} else {
+	    max_climb = ( speed - 100.0 ) * 4.0 + 200.0;
+	}
+
+	if ( APData->TargetClimbRate > max_climb ) {
+	    APData->TargetClimbRate = max_climb;
+	}
+
+	if ( APData->TargetClimbRate < -400.0 ) {
+	    APData->TargetClimbRate = -400.0;
 	}
 
 	error = fgAPget_climb() - APData->TargetClimbRate;
@@ -342,8 +356,8 @@ int fgAPRun( void )
 	prop_adj = prop_error / 2000.0;
 
 	total_adj = 0.9 * prop_adj + 0.1 * int_adj;
-	if ( total_adj >  0.4 ) { total_adj =  0.4; }
-	if ( total_adj < -0.3 ) { total_adj = -0.3; }
+	if ( total_adj >  0.6 ) { total_adj =  0.6; }
+	if ( total_adj < -0.2 ) { total_adj = -0.2; }
 
 	fgElevSet( total_adj );
     }
@@ -432,6 +446,7 @@ void fgAPToggleAltitude( void )
     } else {
 	// turn on altitude hold, lock at current altitude
 	APData->altitude_hold = 1;
+	APData->terrain_follow = 0;
 	APData->TargetAltitude = fgAPget_altitude();
 	APData->alt_error_accum = 0.0;
 	// alt_error_queue.erase( alt_error_queue.begin(), 
@@ -443,6 +458,30 @@ void fgAPToggleAltitude( void )
 	      APData->TargetAltitude);
 }
 	         
+
+void fgAPToggleTerrainFollow( void )
+{
+    // Remove at a later date
+    fgAPDataPtr APData;
+
+    APData = APDataGlobal;
+    // end section
+
+    if ( APData->terrain_follow ) {
+	// turn off altitude hold
+	APData->terrain_follow = 0;
+    } else {
+	// turn on terrain follow, lock at current agl
+	APData->terrain_follow = 1;
+	APData->altitude_hold = 0;
+	APData->TargetAGL = fgAPget_agl();
+	APData->alt_error_accum = 0.0;
+    }
+
+    fgPrintf( FG_COCKPIT, FG_INFO, " fgAPSetTerrainFollow: (%d) %.2f\n",
+	      APData->terrain_follow,
+	      APData->TargetAGL);
+}
 
 double LinearExtrapolate( double x,double x1,double y1,double x2,double y2)
 {

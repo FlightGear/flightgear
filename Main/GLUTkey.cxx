@@ -94,6 +94,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 8: // Ctrl-H key
 	    fgAPToggleHeading();
 	    return;
+	case 20: // Ctrl-T key
+	    fgAPToggleTerrainFollow();
+	    return;
 	case 49: // numeric keypad 1
 	    v->goal_view_offset = FG_PI * 0.75;
 	    return;
@@ -375,6 +378,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.26  1998/10/01 00:38:04  curt
+// More altitude hold tweaks.
+//
 // Revision 1.25  1998/09/29 02:03:36  curt
 // Autopilot mods.
 //

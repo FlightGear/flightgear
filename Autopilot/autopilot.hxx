@@ -39,13 +39,16 @@ extern "C" {
 
 // Structures
 typedef struct {
-    int heading_hold;  // the current state of the heading hold
-    int altitude_hold; // the current state of the altitude hold
+    int heading_hold;   // the current state of the heading hold
+    int altitude_hold;  // the current state of the altitude hold
+    int terrain_follow; // the current state of the terrain follower
 
     double TargetHeading;     // the heading the AP should steer to.
     double TargetAltitude;    // altitude to hold
     double TargetClimbRate;   // climb rate to shoot for
     double alt_error_accum;   // altitude error accumulator
+
+    double TargetAGL;         // the terrain separation
 
     double TargetSlope; // the glide slope hold value
     
@@ -69,6 +72,7 @@ void fgAPInit( fgAIRCRAFT *current_aircraft );
 int fgAPRun( void );
 void fgAPToggleHeading( void );
 void fgAPToggleAltitude( void );
+void fgAPToggleTerrainFollow( void );
 
 
 #ifdef __cplusplus
