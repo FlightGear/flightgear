@@ -411,6 +411,7 @@ bool FGJSBsim::copy_to_JSBsim() {
       eng->SetIgnition( globals->get_controls()->get_ignition(i) );
       eng->SetCutoff( globals->get_controls()->get_cutoff(i) );
       eng->SetNitrous( globals->get_controls()->get_nitrous_injection(i) );
+      eng->SetRunning( node->getBoolValue("running") );
     }
 
     _set_Runway_altitude( cur_fdm_state->get_Runway_altitude() );
@@ -573,6 +574,7 @@ bool FGJSBsim::copy_from_JSBsim() {
       node->setDoubleValue("nozzle-pos-norm", eng->GetNozzle());
       node->setDoubleValue("inlet-pos-norm", eng->GetInlet());
       node->setBoolValue("running", eng->GetRunning());
+      node->setBoolValue("starter", eng->GetStarter());
       node->setBoolValue("cranking", eng->GetCranking());
       node->setBoolValue("ignition", eng->GetIgnition());
       node->setBoolValue("augmentation", eng->GetAugmentation());
@@ -580,6 +582,11 @@ bool FGJSBsim::copy_from_JSBsim() {
       node->setBoolValue("reversed", eng->GetReversed());
       node->setBoolValue("cutoff", eng->GetCutoff());
       node->setBoolValue("nitrous", eng->GetNitrous());
+      globals->get_controls()->set_starter(i, eng->GetStarter() );
+      globals->get_controls()->set_cutoff(i, eng->GetCutoff() );
+      globals->get_controls()->set_augmentation(i, eng->GetAugmentation() );
+      globals->get_controls()->set_reverser(i, eng->GetReversed() );
+      globals->get_controls()->set_water_injection(i, eng->GetInjection() );
     }
 
     static const SGPropertyNode *fuel_freeze
