@@ -211,8 +211,6 @@ ssgTransform *fgd_pos = NULL;
 SGSky *thesky;
 SkySceneLoader *sgClouds3d;
 bool _bcloud_orig = true;
-Point3D posit;
-Point3D *_posit = &posit;
 
 // hack
 sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
@@ -500,12 +498,11 @@ void fgRenderFrame() {
             glEnable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
             glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
-            posit =  globals->get_scenery()->get_center();
             if ( _bcloud_orig ) {
-                sgClouds3d->Set_Cloud_Orig( _posit );
+                sgClouds3d->Set_Cloud_Orig( &(globals->get_scenery()->
+                                              get_center()) );
                 _bcloud_orig = false;
             }
-            // sgClouds3d->Set_Cloud_Orig(&(globals->get_scenery()->get_center()));
             sgClouds3d->Update( current__view->get_absolute_view_pos() );
         }
 
