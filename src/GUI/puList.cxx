@@ -53,12 +53,14 @@ handle_arrow (puObject * arrow)
 puList::puList (int x, int y, int w, int h)
     : puGroup(x, y)
 {
+    type |= PUCLASS_LIST;
     init(w, h);
 }
 
 puList::puList (int x, int y, int w, int h, char ** contents)
     : puGroup(x, y)
 {
+    type |= PUCLASS_LIST;
     init(w, h);
     newList(contents);
 }
@@ -75,9 +77,15 @@ puList::newList (char ** contents)
 }
 
 char *
-puList::getStringValue ()
+puList::getListStringValue ()
 {
     return _contents[_list_box->getIntegerValue()];
+}
+
+int
+puList::getListIntegerValue()
+{
+  return _list_box->getIntegerValue();
 }
 
 void

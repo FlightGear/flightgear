@@ -15,7 +15,7 @@ class AirportList : public puList
     virtual ~AirportList ();
 
     // FIXME: add other string value functions
-    virtual char * getStringValue ();
+    virtual char * getListStringValue ();
 
  private:
     FGAirportList * _airports;

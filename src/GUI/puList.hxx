@@ -9,6 +9,8 @@
 
 #include <plib/pu.h>
 
+# define PUCLASS_LIST   0x80000000  // Hopefully this value will never be used by plib
+# define PUCLASS_LIST   0x80000000  // Hopefully this value will never be used by plib
 
 /**
  * A scrolling list for PUI.
@@ -24,7 +26,8 @@ class puList : public puGroup
 
     virtual void newList (char ** contents);
     // TODO: other string value funcs
-    virtual char * getStringValue ();
+    virtual char * getListStringValue ();
+    virtual int getListIntegerValue();
 
  protected:
     virtual void init (int w, int h);

@@ -135,7 +135,15 @@ copy_from_pui (puObject * object, SGPropertyNode * node)
         node->setFloatValue(object->getFloatValue());
         break;
     default:
-        node->setStringValue(object->getStringValue());
+        // Special case to handle lists, as getStringValue cannot be overridden
+        if(object->getType() & PUCLASS_LIST)
+        {
+            node->setStringValue(((puList *) object)->getListStringValue());
+        }
+        else
+        {
+            node->setStringValue(object->getStringValue());
+        }
         break;
     }
 }
@@ -398,7 +406,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
              puTextBox->enableInput();
        }
        setupObject(puTextBox,props);
-       return puTextBox; 
+       return puTextBox;
     } else if (type == "select") {
         vector<SGPropertyNode_ptr> value_nodes;
         SGPropertyNode * selection_node =

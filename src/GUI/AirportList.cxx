@@ -41,9 +41,9 @@ AirportList::~AirportList ()
 }
 
 char *
-AirportList::getStringValue ()
+AirportList::getListStringValue ()
 {
-    return (char *)_airports->getAirport(getIntegerValue())->_id.c_str();
+    return (char *)_airports->getAirport(getListIntegerValue())->_id.c_str();
 }
 
 // end of AirportList.cxx
