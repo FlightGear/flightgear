@@ -74,6 +74,7 @@
 #include <Include/general.hxx>
 
 #include <Aircraft/aircraft.hxx>
+#include <Astro/ephemeris.hxx>
 #include <Astro/stars.hxx>
 #include <Astro/solarsystem.hxx>
 
@@ -88,7 +89,7 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Sky/skydome.hxx>
-#include <Sky/sphere.hxx>
+#include <Sky/skysun.hxx>
 #include <Time/event.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/fg_timer.hxx>
@@ -154,6 +155,11 @@ ssgTransform *fgd_pos = NULL;
 
 // current fdm/position used for view
 FGInterface cur_view_fdm;
+
+// Sky structures
+FGEphemeris ephem;
+FGSkyDome current_sky;
+FGSkySun current_sun;
 
 // hack
 sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
@@ -345,24 +351,11 @@ void fgRenderFrame( void ) {
 	// set the opengl state to known default values
 	default_state->force();
 
-	// draw sky
 	xglDisable( GL_DEPTH_TEST );
 	xglDisable( GL_FOG );
-	// xglDisable( GL_TEXTURE_2D );
-	// xglDisable( GL_LIGHTING );
-	// xglDisable( GL_CULL_FACE );
-	// xglShadeModel( GL_SMOOTH );
 
-	/* if ( current_options.get_fog() > 0 ) {
-	    xglEnable( GL_FOG );
-	    xglFogi( GL_FOG_MODE, GL_EXP2 );
-	    xglFogfv( GL_FOG_COLOR, l->adj_fog_color );
-	} */
-
-
+	// draw sky dome
 	if ( current_options.get_skyblend() ) {
-	    // fgSkyRender();
-
 	    sgVec3 zero_elev;
 	    sgSetVec3( zero_elev,
 		       current_view.get_cur_zero_elev().x(),
@@ -378,12 +371,16 @@ void fgRenderFrame( void ) {
 				    cur_fdm_state->get_Latitude(),
 				    cur_light_params.sun_rotation );
 
-	    xglPushMatrix();
-
 	    current_sky.draw();
-
-	    xglPopMatrix();
 	}
+
+	// draw the sun
+	current_sun.repaint( cur_light_params.sun_angle );
+	cout << "ra = " << ephem.getSunRightAscension() << " dec = " 
+	     << ephem.getSunDeclination() << endl;
+	current_sun.reposition( ephem.getSunRightAscension(),
+				ephem.getSunDeclination() );
+	current_sun.draw();
 
 	// xglDisable( GL_FOG );
 
@@ -612,7 +609,7 @@ void fgRenderFrame( void ) {
 	}
 # endif
 
-	ssgSetCamera( current_view.VIEW );
+	// ssgSetCamera( current_view.VIEW );
 
 	// position tile nodes and update range selectors
 	global_tile_mgr.prep_ssg_nodes();
@@ -741,6 +738,9 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	   FG_Psi * RAD_TO_DEG, current_view.view_offset * RAD_TO_DEG, 
 	   -(l->sun_rotation+FG_PI) * RAD_TO_DEG, tmp * RAD_TO_DEG); */
     l->UpdateAdjFog();
+
+    // Update solar system
+    ephem.update( t );
 }
 
 
@@ -1359,12 +1359,13 @@ int main( int argc, char **argv ) {
 
     // Initialize the sky
     current_sky.initialize();
+    current_sun.initialize();
 
     // temporary visible aircraft "own ship"
     penguin_sel = new ssgSelector;
     penguin_pos = new ssgTransform;
-    ssgBranch *tux_obj = ssgMakeSphere( 10.0, 10, 10 );
-    // ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
+    // ssgBranch *tux_obj = ssgMakeSphere( 10.0, 10, 10 );
+    ssgEntity *tux_obj = ssgLoadAC( "glider.ac" );
     // ssgEntity *tux_obj = ssgLoadAC( "Tower1x.ac" );
 
     penguin_pos->addKid( tux_obj );

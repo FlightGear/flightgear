@@ -62,6 +62,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Clouds/libClouds.a \
 	$(top_builddir)/src/Time/libTime.a \
 	$(WEATHER_LIBS) \
+	$(top_builddir)/src/Sky/libSky.a \
 	$(top_builddir)/src/Joystick/libJoystick.a \
 	$(SERIAL_LIBS) \
 	-lsgscreen -lsgmath -lsgbucket -lsgdebug -lsgmisc \
