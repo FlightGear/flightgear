@@ -105,7 +105,7 @@ extern "C" void uiuc_force_moment(double dt);
 extern "C" void uiuc_engine_routine();
 extern "C" void uiuc_gear_routine();
 extern "C" void uiuc_record_routine(double dt);
-extern "C" void uiuc_network_routine();
+//extern "C" void uiuc_network_routine();
 extern "C" void uiuc_vel_init ();
 extern "C" void uiuc_initial_init ();
 
@@ -204,9 +204,17 @@ void uiuc_force_moment(double dt)
     }
   else
     {
+      // Cos_beta * Cos_beta corrects V_rel_wind to get normal q onto wing, 
+      // hence Cos_beta * Cos_beta term included.
+      // Same thing is done w/ moments below.
+      // Without this "die-off" function, lift would be produced in a 90 deg sideslip, when
+      // that should not be the case.  See FGFS notes 021105
       F_X_wind = -CD * qS  * Cos_beta * Cos_beta;
-      F_Y_wind =  CY * qS  * Cos_beta * Cos_beta;
+      F_Y_wind =  CY * qS;
       F_Z_wind = -CL * qS  * Cos_beta * Cos_beta;
+      // F_X_wind = -CD * qS  * Cos_beta * Cos_beta;
+      // F_Y_wind =  CY * qS  * Cos_beta * Cos_beta;
+      // F_Z_wind = -CL * qS  * Cos_beta * Cos_beta;
 
       // wind-axis to body-axis transformation 
       F_X_aero = F_X_wind * Cos_alpha * Cos_beta - F_Y_wind * Cos_alpha * Sin_beta - F_Z_wind * Sin_alpha;
@@ -214,9 +222,12 @@ void uiuc_force_moment(double dt)
       F_Z_aero = F_X_wind * Sin_alpha * Cos_beta - F_Y_wind * Sin_alpha * Sin_beta + F_Z_wind * Cos_alpha;
     }
   // Moment calculations
-  M_l_aero = Cl * qSb    * Cos_beta * Cos_beta;
+  M_l_aero = Cl * qSb    ;
   M_m_aero = Cm * qScbar * Cos_beta * Cos_beta;
-  M_n_aero = Cn * qSb    * Cos_beta * Cos_beta;
+  M_n_aero = Cn * qSb    ;
+  // M_l_aero = Cl * qSb    * Cos_beta * Cos_beta;
+  // M_m_aero = Cm * qScbar * Cos_beta * Cos_beta;
+  // M_n_aero = Cn * qSb    * Cos_beta * Cos_beta;
 
   // Adding in apparent mass effects
   if (Mass_appMass_ratio)
