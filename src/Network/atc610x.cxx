@@ -1801,6 +1801,7 @@ bool FGATC610x::do_switches() {
         mag1 = magnetos;
         if ( mag1 == mag2 && mag2 == mag3 ) {
             fgSetInt( "/controls/engines/engine[0]/magnetos", magnetos );
+            fgSetInt( "/controls/engines/engine[1]/magnetos", magnetos );
         }
         static bool start1, start2, start3;
         start3 = start2;
@@ -1808,11 +1809,14 @@ bool FGATC610x::do_switches() {
         start1 = starter;
         if ( start1 == start2 && start2 == start3 ) {
             fgSetBool( "/controls/engines/engine[0]/starter", starter );
+            fgSetBool( "/controls/engines/engine[1]/starter", starter );
         }
     }
 
     // other toggle switches
     fgSetBool( "/controls/engines/engine[0]/fuel-pump",
+               switch_matrix[board][0][2] );
+    fgSetBool( "/controls/engines/engine[1]/fuel-pump",
                switch_matrix[board][0][2] );
     fgSetBool( "/controls/switches/flashing-beacon",
                switch_matrix[board][1][2] );

@@ -103,6 +103,8 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
 {
     int i;
     SGPropertyNode *node;
+    SGPropertyNode *starter;
+    SGPropertyNode *fuelpump;
     SGPropertyNode *tempnode;
 
     // fill in values
@@ -121,7 +123,9 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
     for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {
         // Controls
         node = fgGetNode("/controls/engines/engine", i );
-	net->throttle[i] = node->getDoubleValue( "throttle", 0.0 );
+        starter = fgGetNode("/systems/electrical/outputs/starter", i );
+        fuelpump = fgGetNode("/systems/electrical/outputs/fuel-pump", i );
+        net->throttle[i] = node->getDoubleValue( "throttle", 0.0 );
 	net->mixture[i] = node->getDoubleValue( "mixture", 0.0 );
 	net->prop_advance[i] = node->getDoubleValue( "propeller-pitch", 0.0 );
 	net->magnetos[i] = node->getIntValue( "magnetos", 0 );
@@ -132,13 +136,18 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
 	  // cout << "Starter -> " << node->getIntValue( "starter", false )
 	  //      << endl;
 	}
-	net->fuel_pump_power[i]
-            = node->getDoubleValue( "/systems/electrical/outputs/fuel-pump",
-                                    1.0 ) >= 1.0;
 
-	net->starter_power[i]
-            = node->getDoubleValue( "/systems/electrical/outputs/starter",
-                                    1.0 ) >= 1.0;
+        if ( fuelpump != NULL ) {
+            net->fuel_pump_power[i] = ( fuelpump->getDoubleValue() >= 1.0 );
+        } else {
+            net->fuel_pump_power[i] = 0.0;
+        }
+
+        if ( starter != NULL ) {
+            net->starter_power[i] = ( starter->getDoubleValue() >= 1.0 );
+        } else {
+            net->starter_power[i] = 0.0;
+        }
 
 	// Faults
 	SGPropertyNode *faults = node->getChild( "faults", 0, true );

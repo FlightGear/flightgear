@@ -163,11 +163,11 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     for ( i = 0; i < net->num_engines; ++i ) {
         SGPropertyNode *node = fgGetNode("engines/engine", i, true);
         if ( node->getBoolValue( "running" ) ) {
-            net->eng_state[0] = 2;
+            net->eng_state[i] = 2;
         } else if ( node->getBoolValue( "cranking" ) ) {
-            net->eng_state[0] = 1;
+            net->eng_state[i] = 1;
         } else {
-            net->eng_state[0] = 0;
+            net->eng_state[i] = 0;
         }
         net->rpm[i] = node->getDoubleValue( "rpm" );
         net->fuel_flow[i] = node->getDoubleValue( "fuel-flow-gph" );
