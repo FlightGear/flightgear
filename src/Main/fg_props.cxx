@@ -702,6 +702,19 @@ fgHasNode (const char * path)
   return (fgGetNode(path, false) != 0);
 }
 
+void
+fgAddChangeListener (SGPropertyChangeListener * listener, const char * path)
+{
+  fgGetNode(path, true)->addChangeListener(listener);
+}
+
+void
+fgAddChangeListener (SGPropertyChangeListener * listener,
+		     const char * path, int index)
+{
+  fgGetNode(path, index, true)->addChangeListener(listener);
+}
+
 bool
 fgGetBool (const char * name, bool defaultValue)
 {

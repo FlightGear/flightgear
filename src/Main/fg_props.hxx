@@ -107,6 +107,30 @@ extern bool fgHasNode (const char * path);
 
 
 /**
+ * Add a listener to a node.
+ *
+ * @param listener The listener to add to the node.
+ * @param path The path of the node, relative to root.
+ * @param index The index for the last member of the path (overrides
+ * any given in the string).
+ */
+extern void fgAddChangeListener (SGPropertyChangeListener * listener,
+				 const char * path);
+
+
+/**
+ * Add a listener to a node.
+ *
+ * @param listener The listener to add to the node.
+ * @param path The path of the node, relative to root.
+ * @param index The index for the last member of the path (overrides
+ * any given in the string).
+ */
+extern void fgAddChangeListener (SGPropertyChangeListener * listener,
+				 const char * path, int index);
+
+
+/**
  * Get a bool value for a property.
  *
  * This method is convenient but inefficient.  It should be used
