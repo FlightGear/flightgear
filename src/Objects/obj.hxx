@@ -37,7 +37,7 @@
 
 #include <plib/ssg.h>           // plib include
 
-#include <simgear/math/sg_types.hxx>
+#include <simgear/math/point3d.hxx>
 
 SG_USING_STD(string);
 
