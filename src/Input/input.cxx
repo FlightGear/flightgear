@@ -616,8 +616,11 @@ FGInput::_init_mouse ()
                                 // Grab node pointers
     char buf[64];
     sprintf(buf, "/devices/status/mice/mouse[%d]/mode", i);
-    m.mode_node = fgGetNode(buf, true);
-    m.mode_node->setIntValue(0);
+    m.mode_node = fgGetNode(buf);
+    if (m.mode_node == NULL) {
+      m.mode_node = fgGetNode(buf, true);
+      m.mode_node->setIntValue(0);
+    }
     for (j = 0; j < MAX_MOUSE_BUTTONS; j++) {
       sprintf(buf, "/devices/status/mice/mouse[%d]/button[%d]", i, j);
       m.mouse_button_nodes[j] = fgGetNode(buf, true);
