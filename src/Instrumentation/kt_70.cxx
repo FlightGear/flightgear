@@ -94,6 +94,7 @@ void FGKT_70::init ()
     bus_power = fgGetNode("/systems/electrical/outputs/transponder", true);
     serviceable_node = (node->getChild("inputs", 0, true))
 	->getChild("serviceable", 0, true);
+    serviceable_node->setBoolValue(true);
 }
 
 
