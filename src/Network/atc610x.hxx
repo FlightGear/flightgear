@@ -118,6 +118,8 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *nav1vol_min, *nav1vol_max;
     SGPropertyNode *nav2vol_min, *nav2vol_max;
 
+    SGPropertyNode *ignore_flight_controls;
+
     int dme_switch;
 
     bool do_analog_in();

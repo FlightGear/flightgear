@@ -511,6 +511,9 @@ bool FGATC610x::open() {
     nav2vol_min = fgGetNode( "/input/atc610x/nav2vol/min", true );
     nav2vol_max = fgGetNode( "/input/atc610x/nav2vol/max", true );
 
+    ignore_flight_controls
+        = fgGetNode( "/input/atc610x/ignore-flight-controls", true );
+
     comm1_serviceable = fgGetNode( "/instrumentation/comm[0]/serviceable", true );
     comm2_serviceable = fgGetNode( "/instrumentation/comm[1]/serviceable", true );
     nav1_serviceable = fgGetNode( "/instrumentation/nav[0]/serviceable", true );
@@ -704,51 +707,57 @@ bool FGATC610x::do_analog_in() {
 
     float tmp;
 
-    // aileron
-    tmp = scale( ailerons_center->getIntValue(), ailerons_min->getIntValue(),
-                 ailerons_max->getIntValue(), analog_in_data[0] );
-    fgSetFloat( "/controls/flight/aileron", tmp );
-    // cout << "aileron = " << analog_in_data[0] << " = " << tmp;
-    // elevator
-    tmp = -scale( elevator_center->getIntValue(), elevator_min->getIntValue(),
-                  elevator_max->getIntValue(), analog_in_data[5] );
-    fgSetFloat( "/controls/flight/elevator", tmp );
-    // cout << "trim = " << analog_in_data[4] << " = " << tmp;
+    if ( !ignore_flight_controls->getBoolValue() ) {
+        // aileron
+        tmp = scale( ailerons_center->getIntValue(),
+                     ailerons_min->getIntValue(),
+                     ailerons_max->getIntValue(), analog_in_data[0] );
+        fgSetFloat( "/controls/flight/aileron", tmp );
+        // cout << "aileron = " << analog_in_data[0] << " = " << tmp;
 
-    // elevator trim
-    tmp = scale( trim_center->getIntValue(), trim_min->getIntValue(),
-                 trim_max->getIntValue(), analog_in_data[4] );
-    fgSetFloat( "/controls/flight/elevator-trim", tmp );
-    // cout << " elev = " << analog_in_data[5] << " = " << tmp << endl;
+        // elevator
+        tmp = -scale( elevator_center->getIntValue(),
+                      elevator_min->getIntValue(),
+                      elevator_max->getIntValue(), analog_in_data[5] );
+        fgSetFloat( "/controls/flight/elevator", tmp );
+        // cout << "trim = " << analog_in_data[4] << " = " << tmp;
 
-    // mixture
-    tmp = scale( mixture_min->getIntValue(), mixture_max->getIntValue(),
-                 analog_in_data[6] );
-    fgSetFloat( "/controls/engines/engine[0]/mixture", tmp );
-    fgSetFloat( "/controls/engines/engine[1]/mixture", tmp );
+        // elevator trim
+        tmp = scale( trim_center->getIntValue(), trim_min->getIntValue(),
+                     trim_max->getIntValue(), analog_in_data[4] );
+        fgSetFloat( "/controls/flight/elevator-trim", tmp );
+        // cout << " elev = " << analog_in_data[5] << " = " << tmp << endl;
 
-    // throttle
-    tmp = scale( throttle_min->getIntValue(), throttle_max->getIntValue(),
-                 analog_in_data[8] );
-    fgSetFloat( "/controls/engines/engine[0]/throttle", tmp );
-    fgSetFloat( "/controls/engines/engine[1]/throttle", tmp );
-    // cout << "throttle = " << tmp << endl;
+        // mixture
+        tmp = scale( mixture_min->getIntValue(), mixture_max->getIntValue(),
+                     analog_in_data[6] );
+        fgSetFloat( "/controls/engines/engine[0]/mixture", tmp );
+        fgSetFloat( "/controls/engines/engine[1]/mixture", tmp );
 
-    if ( use_rudder ) {
-        // rudder
-        tmp = scale( rudder_center->getIntValue(), rudder_min->getIntValue(),
-                     rudder_max->getIntValue(), analog_in_data[10] );
-        fgSetFloat( "/controls/flight/rudder", -tmp );
+        // throttle
+        tmp = scale( throttle_min->getIntValue(), throttle_max->getIntValue(),
+                     analog_in_data[8] );
+        fgSetFloat( "/controls/engines/engine[0]/throttle", tmp );
+        fgSetFloat( "/controls/engines/engine[1]/throttle", tmp );
+        // cout << "throttle = " << tmp << endl;
 
-        // toe brakes
-        tmp = scale( brake_left_min->getIntValue(),
-                     brake_left_max->getIntValue(),
-                     analog_in_data[20] );
-        fgSetFloat( "/controls/gear/brake-left", tmp );
-        tmp = scale( brake_right_min->getIntValue(),
-                     brake_right_max->getIntValue(),
-                     analog_in_data[21] );
-        fgSetFloat( "/controls/gear/brake-right", tmp );
+        if ( use_rudder ) {
+            // rudder
+            tmp = scale( rudder_center->getIntValue(),
+                         rudder_min->getIntValue(),
+                         rudder_max->getIntValue(), analog_in_data[10] );
+            fgSetFloat( "/controls/flight/rudder", -tmp );
+
+            // toe brakes
+            tmp = scale( brake_left_min->getIntValue(),
+                         brake_left_max->getIntValue(),
+                         analog_in_data[20] );
+            fgSetFloat( "/controls/gear/brake-left", tmp );
+            tmp = scale( brake_right_min->getIntValue(),
+                         brake_right_max->getIntValue(),
+                         analog_in_data[21] );
+            fgSetFloat( "/controls/gear/brake-right", tmp );
+        }
     }
 
     // nav1 volume
@@ -1763,41 +1772,43 @@ bool FGATC610x::do_switches() {
     fgSetBool( "/controls/switches/master-avionics",
                switch_matrix[board][0][3] );
 
-    // magnetos and starter switch
-    int magnetos = 0;
-    bool starter = false;
-    if ( switch_matrix[board][3][1] == 1 ) {
-	magnetos = 3;
-	starter = true;
-    } else if ( switch_matrix[board][2][1] == 1 ) {
-	magnetos = 3;
-	starter = false;
-    } else if ( switch_matrix[board][1][1] == 1 ) {
-	magnetos = 2;
-	starter = false;
-    } else if ( switch_matrix[board][0][1] == 1 ) {
-	magnetos = 1;
-	starter = false;
-    } else {
-	magnetos = 0;
-	starter = false;
-    }
+    if ( !ignore_flight_controls->getBoolValue() ) {
+        // magnetos and starter switch
+        int magnetos = 0;
+        bool starter = false;
+        if ( switch_matrix[board][3][1] == 1 ) {
+            magnetos = 3;
+            starter = true;
+        } else if ( switch_matrix[board][2][1] == 1 ) {
+            magnetos = 3;
+            starter = false;
+        } else if ( switch_matrix[board][1][1] == 1 ) {
+            magnetos = 2;
+            starter = false;
+        } else if ( switch_matrix[board][0][1] == 1 ) {
+            magnetos = 1;
+            starter = false;
+        } else {
+            magnetos = 0;
+            starter = false;
+        }
 
-    // do a bit of filtering on the magneto/starter switch and the
-    // flap lever because these are not well debounced in hardware
-    static int mag1, mag2, mag3;
-    mag3 = mag2;
-    mag2 = mag1;
-    mag1 = magnetos;
-    if ( mag1 == mag2 && mag2 == mag3 ) {
-        fgSetInt( "/controls/engines/engine[0]/magnetos", magnetos );
-    }
-    static bool start1, start2, start3;
-    start3 = start2;
-    start2 = start1;
-    start1 = starter;
-    if ( start1 == start2 && start2 == start3 ) {
-        fgSetBool( "/controls/engines/engine[0]/starter", starter );
+        // do a bit of filtering on the magneto/starter switch and the
+        // flap lever because these are not well debounced in hardware
+        static int mag1, mag2, mag3;
+        mag3 = mag2;
+        mag2 = mag1;
+        mag1 = magnetos;
+        if ( mag1 == mag2 && mag2 == mag3 ) {
+            fgSetInt( "/controls/engines/engine[0]/magnetos", magnetos );
+        }
+        static bool start1, start2, start3;
+        start3 = start2;
+        start2 = start1;
+        start1 = starter;
+        if ( start1 == start2 && start2 == start3 ) {
+            fgSetBool( "/controls/engines/engine[0]/starter", starter );
+        }
     }
 
     // other toggle switches
@@ -1813,25 +1824,27 @@ bool FGATC610x::do_switches() {
     fgSetBool( "/controls/switches/pitot-heat", switch_matrix[board][6][2] );
 
     // flaps
-    float flaps = 0.0;
-    if ( switch_matrix[board][6][3] ) {
-	flaps = 1.0;
-    } else if ( switch_matrix[board][5][3] ) {
-	flaps = 2.0 / 3.0;
-    } else if ( switch_matrix[board][4][3] ) {
-	flaps = 1.0 / 3.0;
-    } else if ( !switch_matrix[board][4][3] ) {
-	flaps = 0.0;
-    }
+    if ( !ignore_flight_controls->getBoolValue() ) {
+        float flaps = 0.0;
+        if ( switch_matrix[board][6][3] ) {
+            flaps = 1.0;
+        } else if ( switch_matrix[board][5][3] ) {
+            flaps = 2.0 / 3.0;
+        } else if ( switch_matrix[board][4][3] ) {
+            flaps = 1.0 / 3.0;
+        } else if ( !switch_matrix[board][4][3] ) {
+            flaps = 0.0;
+        }
 
-    // do a bit of filtering on the magneto/starter switch and the
-    // flap lever because these are not well debounced in hardware
-    static float flap1, flap2, flap3;
-    flap3 = flap2;
-    flap2 = flap1;
-    flap1 = flaps;
-    if ( flap1 == flap2 && flap2 == flap3 ) {
-        fgSetFloat( "/controls/flight/flaps", flaps );
+        // do a bit of filtering on the magneto/starter switch and the
+        // flap lever because these are not well debounced in hardware
+        static float flap1, flap2, flap3;
+        flap3 = flap2;
+        flap2 = flap1;
+        flap1 = flaps;
+        if ( flap1 == flap2 && flap2 == flap3 ) {
+            fgSetFloat( "/controls/flight/flaps", flaps );
+        }
     }
 
     // fuel selector (also filtered)
@@ -1888,8 +1901,11 @@ bool FGATC610x::do_switches() {
     fgSetBool( "/controls/circuit-breakers/annunciators", true );
 #endif
 
-    fgSetDouble( "/controls/gear/brake-parking",
-                 switch_matrix[board][7][3] );
+    if ( !ignore_flight_controls->getBoolValue() ) {
+        fgSetDouble( "/controls/gear/brake-parking",
+                     switch_matrix[board][7][3] );
+    }
+
     fgSetDouble( "/radios/marker-beacon/power-btn",
                  switch_matrix[board][6][1] );
 
