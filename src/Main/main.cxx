@@ -481,7 +481,7 @@ void fgRenderFrame() {
     if ( idle_state != 1000 ) {
 	// still initializing, draw the splash screen
 	if ( fgGetBool("/sim/startup/splash-screen") ) {
-	    fgSplashUpdate(0.0);
+	    fgSplashUpdate(0.0, 1.0);
 	}
         // Keep resetting sim time while the sim is initializing
 	globals->set_sim_time_sec( 0.0 );
@@ -864,6 +864,13 @@ void fgRenderFrame() {
         glEnable( GL_DEPTH_TEST );
         glEnable( GL_FOG );
 
+        // Fade out the splash screen over the first three seconds.
+        double t = globals->get_sim_time_sec();
+        if ( t <= 1.0 ) {
+            fgSplashUpdate(0.0, 1.0);
+        } else if ( t <= 3.0) {
+            fgSplashUpdate(0.0, (3.0 - t) / 2.0);
+        }
     }
 
     glutSwapBuffers();
@@ -1348,7 +1355,7 @@ static void fgIdleFunction ( void ) {
 	glutIdleFunc(fgMainLoop);
     } else {
 	if ( fgGetBool("/sim/startup/splash-screen") ) {
-	    fgSplashUpdate(0.0);
+	    fgSplashUpdate(0.0, 1.0);
 	}
     }
 }

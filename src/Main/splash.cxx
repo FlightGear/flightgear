@@ -105,7 +105,7 @@ void fgSplashInit ( void ) {
 
 
 // Update the splash screen with progress specified from 0.0 to 1.0
-void fgSplashUpdate ( double progress ) {
+void fgSplashUpdate ( double progress, float alpha ) {
     int xmin, ymin, xmax, ymax;
     int xsize = 480;
     int ysize = 380;
@@ -121,11 +121,6 @@ void fgSplashUpdate ( double progress ) {
     ymin = (fgGetInt("/sim/startup/ysize") - ysize) / 2;
     ymax = ymin + ysize;
 
-    // first clear the screen;
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
-
-    // now draw the logo
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -137,6 +132,17 @@ void fgSplashUpdate ( double progress ) {
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
+
+    // draw the background
+    glColor4f( 0.0, 0.0, 0.0, alpha );
+    glBegin(GL_POLYGON);
+    glVertex2f(0.0, 0.0);
+    glVertex2f(fgGetInt("/sim/startup/xsize"), 0.0);
+    glVertex2f(fgGetInt("/sim/startup/xsize"), fgGetInt("/sim/startup/ysize"));
+    glVertex2f(0.0, fgGetInt("/sim/startup/ysize")); 
+    glEnd();
+
+    // now draw the logo
     glEnable(GL_TEXTURE_2D);
 #ifdef GL_VERSION_1_1
     glBindTexture(GL_TEXTURE_2D, splash_texid);
@@ -145,8 +151,9 @@ void fgSplashUpdate ( double progress ) {
 #else
 #  error port me
 #endif
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
+    glColor4f( 1.0, 1.0, 1.0, alpha );
     glBegin(GL_POLYGON);
     glTexCoord2f(0.0, 0.0); glVertex2f(xmin, ymin);
     glTexCoord2f(1.0, 0.0); glVertex2f(xmax, ymin);
