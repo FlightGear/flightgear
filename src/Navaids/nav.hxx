@@ -103,12 +103,11 @@ operator >> ( istream& in, FGNav& n )
     char c /* , magvar_dir */ ;
     string magvar_s;
 
-    static SGTime time_params;
     static bool first_time = true;
     static double julian_date = 0;
+    static const double MJD0    = 2415020.0;
     if ( first_time ) {
-	time_params.update( 0.0, 0.0, 0 );
-	julian_date = time_params.getJD();
+	julian_date = sgTimeCurrentMJD( 0 ) + MJD0;
 	first_time = false;
     }
 
@@ -129,9 +128,11 @@ operator >> ( istream& in, FGNav& n )
 	// cout << "lat = " << n.lat << " lon = " << n.lon << " elev = " 
 	//      << n.elev << " JD = " 
 	//      << julian_date << endl;
-	n.magvar = sgGetMagVar(n.lon * SGD_DEGREES_TO_RADIANS, n.lat * SGD_DEGREES_TO_RADIANS,
-				n.elev * SG_FEET_TO_METER,
-				julian_date) * SGD_RADIANS_TO_DEGREES;
+	n.magvar = sgGetMagVar( n.lon * SGD_DEGREES_TO_RADIANS,
+                                n.lat * SGD_DEGREES_TO_RADIANS,
+                                n.elev * SG_FEET_TO_METER,
+                                julian_date )
+            * SGD_RADIANS_TO_DEGREES;
 	// cout << "Default variation at " << n.lon << ',' << n.lat
 	// 	<< " is " << var << endl;
 #if 0
