@@ -909,70 +909,67 @@ static ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
 {
     int i;
 
-    Point3D gbs_center;
-    float gbs_radius;
-    
-    point_list offset_nodes; offset_nodes.clear();
-    point_list normals;      normals.clear();
-    point_list texcoords;    texcoords.clear();
-
-    // allocate and initialize triangle group structures
-    group_list tris_v;   group_list tris_tc;   string_list tri_materials;
-    tris_v.clear();      tris_tc.clear();      tri_materials.clear();
-
-    group_list strips_v; group_list strips_tc; string_list strip_materials;
-    strips_v.clear();    strips_tc.clear();    strip_materials.clear();
-
-    group_list fans_v;   group_list fans_tc;   string_list fan_materials;
-    fans_v.clear();      fans_tc.clear();      fan_materials.clear();
-
-    bool result = sgReadBinObj( path, gbs_center, &gbs_radius, 
-				offset_nodes, normals, texcoords, 
-				tris_v, tris_tc, tri_materials,
-				strips_v, strips_tc, strip_materials, 
-				fans_v, fans_tc, fan_materials );
+    SGBinObject obj;
+    bool result = sgReadBinObj( path, &obj );
 
     if ( !result ) {
 	return NULL;
     }
 
-    cout << "fans size = " << fans_v.size() << " fan_mats size = " <<
-	fan_materials.size() << endl;
+    cout << "fans size = " << obj.get_fans_v().size() << " fan_mats size = " <<
+	obj.get_fan_materials().size() << endl;
 
     ssgBranch *object = new ssgBranch();
     object->setName( (char *)path.c_str() );
    
     if ( is_base && t != NULL ) {
 	// reference point (center offset/bounding sphere)
-	t->center = gbs_center;
-	t->bounding_radius = gbs_radius;
+	t->center = obj.get_gbs_center();
+	t->bounding_radius = obj.get_gbs_radius();
     }
 
+    point_list nodes = obj.get_wgs84_nodes();
+    point_list normals = obj.get_normals();
+    point_list texcoords = obj.get_texcoords();
+
+    string material;
+    int_list vertex_index;
+    int_list tex_index;
+
     // generate triangles
-    for ( i = 0; i < (int)tris_v.size(); ++i ) {
-	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLES, tri_materials[i],
-				  offset_nodes, normals, texcoords,
-				  tris_v[i], tris_tc[i],
+    for ( i = 0; i < (int)obj.get_tris_v().size(); ++i ) {
+	material = obj.get_tri_materials()[i];
+	vertex_index = obj.get_tris_v()[i];
+	tex_index = obj.get_tris_tc()[i];
+	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLES, material,
+				  nodes, normals, texcoords,
+				  vertex_index, tex_index,
 				  is_base, lights );
 
 	object->addKid( leaf );
     }
 
     // generate strips
-    for ( i = 0; i < (int)strips_v.size(); ++i ) {
-	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, strip_materials[i],
-				  offset_nodes, normals, texcoords,
-				  strips_v[i], strips_tc[i],
+    for ( i = 0; i < (int)obj.get_strips_v().size(); ++i ) {
+	material = obj.get_strip_materials()[i];
+	vertex_index = obj.get_strips_v()[i];
+	tex_index = obj.get_strips_tc()[i];
+	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, material,
+				  nodes, normals, texcoords,
+				  vertex_index, tex_index,
 				  is_base, lights );
 
 	object->addKid( leaf );
     }
 
     // generate fans
-    for ( i = 0; i < (int)fans_v.size(); ++i ) {
-	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_FAN, fan_materials[i],
-				  offset_nodes, normals, texcoords,
-				  fans_v[i], fans_tc[i],
+    for ( i = 0; i < (int)obj.get_fans_v().size(); ++i ) {
+	material = obj.get_fan_materials()[i];
+	vertex_index = obj.get_fans_v()[i];
+	tex_index = obj.get_fans_tc()[i];
+	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_FAN, material,
+				  nodes, normals, texcoords,
+				  vertex_index, tex_index,
 				  is_base, lights );
 
 	object->addKid( leaf );
@@ -986,7 +983,7 @@ static ssgBranch *fgBinObjLoad( const string& path, FGTileEntry *t,
 ssgBranch *fgObjLoad( const string& path, FGTileEntry *t,
 		      ssgVertexArray *lights, const bool is_base)
 {
-    ssgBranch *result;
+    ssgBranch *result = NULL;
 
     // try loading binary format
     result = fgBinObjLoad( path, t, lights, is_base );

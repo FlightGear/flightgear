@@ -946,8 +946,12 @@ int FGOptions::parse_option( const string& arg ) {
     // $$$ end - added VS Renganathan, 14 Oct 2K
     } else if ( arg.find( "--visibility=" ) != string::npos ) {
 	visibility = atof( arg.substr( 13 ) );
+	globals->get_props()->setDoubleValue("/environment/visibility",
+					     visibility);
     } else if ( arg.find( "--visibility-miles=" ) != string::npos ) {
 	visibility = atof( arg.substr( 19 ) ) * 5280.0 * FEET_TO_METER;
+	globals->get_props()->setDoubleValue("/environment/visibility",
+					     visibility);
     } else if ( arg.find( "--wp=" ) != string::npos ) {
 	parse_wp( arg.substr( 5 ) );
     } else if ( arg.find( "--flight-plan=") != string::npos) {
