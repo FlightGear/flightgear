@@ -223,7 +223,7 @@ readTexture (const SGPropertyNode * node)
 			   node->getFloatValue("y1"),
 			   node->getFloatValue("x2", 1.0),
 			   node->getFloatValue("y2", 1.0));
-  SG_LOG(SG_INPUT, SG_INFO, "Read texture " << node->getName());
+  SG_LOG(SG_COCKPIT, SG_DEBUG, "Read texture " << node->getName());
   return texture;
 }
 
@@ -268,7 +268,7 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
   int h = int(node->getIntValue("h") * h_scale);
 
   if (type == "") {
-    SG_LOG(SG_INPUT, SG_ALERT,
+    SG_LOG(SG_COCKPIT, SG_ALERT,
 	   "No type supplied for action " << name << " assuming \"adjust\"");
     type = "adjust";
   }
@@ -282,7 +282,7 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
     float max = node->getFloatValue("max", 0.0);
     bool wrap = node->getBoolValue("wrap", false);
     if (min == max)
-      SG_LOG(SG_INPUT, SG_ALERT, "Action " << node->getName()
+      SG_LOG(SG_COCKPIT, SG_ALERT, "Action " << node->getName()
 	     << " has same min and max value");
     action = new FGAdjustAction(button, x, y, w, h, value,
 				increment, min, max, wrap);
@@ -306,7 +306,7 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
 
 				// Unrecognized type
   else {
-    SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized action type " << type);
+    SG_LOG( SG_COCKPIT, SG_ALERT, "Unrecognized action type " << type );
     return 0;
   }
 
@@ -350,9 +350,9 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
   SGValue * value = 0;
 
   if (type == "") {
-    SG_LOG(SG_INPUT, SG_ALERT,
-	   "No type supplied for transformation " << name
-	   << " assuming \"rotation\"");
+    SG_LOG( SG_COCKPIT, SG_ALERT,
+            "No type supplied for transformation " << name
+            << " assuming \"rotation\"" );
     type = "rotation";
   }
 
@@ -369,18 +369,20 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
 				// Check for an interpolation table
   const SGPropertyNode * trans_table = node->getNode("interpolation");
   if (trans_table != 0) {
-    cerr << "Found interpolation table with " << trans_table->nChildren() << "children" << endl;
+    SG_LOG( SG_COCKPIT, SG_INFO, "Found interpolation table with "
+            << trans_table->nChildren() << "children" );
     t->table = new SGInterpTable();
     for(int i = 0; i < trans_table->nChildren(); i++) {
       const SGPropertyNode * node = trans_table->getChild(i);
       if (node->getName() == "entry") {
 	double ind = node->getDoubleValue("ind", 0.0);
 	double dep = node->getDoubleValue("dep", 0.0);
-	cerr << "Adding interpolation entry " << ind << "==>" << dep << endl;
+	SG_LOG( SG_COCKPIT, SG_INFO, "Adding interpolation entry "
+                << ind << "==>" << dep );
 	t->table->addEntry(ind, dep);
       } else {
-	SG_LOG(SG_INPUT, SG_INFO, "Skipping " << node->getName()
-	       << " in interpolation");
+	SG_LOG( SG_COCKPIT, SG_INFO, "Skipping " << node->getName()
+                << " in interpolation" );
       }
     }
   } else {
@@ -413,12 +415,12 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
   } 
 
   else {
-    SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized transformation type " << type);
+    SG_LOG( SG_COCKPIT, SG_ALERT, "Unrecognized transformation type " << type );
     delete t;
     return 0;
   }
 
-  SG_LOG(SG_INPUT, SG_INFO, "Read transformation " << name);
+  SG_LOG( SG_COCKPIT, SG_DEBUG, "Read transformation " << name );
   return t;
 }
 
@@ -449,8 +451,8 @@ readTextChunk (const SGPropertyNode * node)
 
 				// Default to literal text.
   if (type == "") {
-    SG_LOG(SG_INPUT, SG_INFO, "No type provided for text chunk " << name
-	   << " assuming \"literal\"");
+    SG_LOG( SG_COCKPIT, SG_INFO, "No type provided for text chunk " << name
+            << " assuming \"literal\"");
     type = "literal";
   }
 
@@ -478,8 +480,8 @@ readTextChunk (const SGPropertyNode * node)
 
 				// Unknown type.
   else {
-    SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized type " << type
-	   << " for text chunk " << name);
+    SG_LOG( SG_COCKPIT, SG_ALERT, "Unrecognized type " << type
+            << " for text chunk " << name );
     return 0;
   }
 
@@ -523,9 +525,9 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
 
 
   if (type == "") {
-    SG_LOG(SG_INPUT, SG_ALERT,
-	   "No type supplied for layer " << name
-	   << " assuming \"texture\"");
+    SG_LOG( SG_COCKPIT, SG_ALERT,
+            "No type supplied for layer " << name
+            << " assuming \"texture\"" );
     type = "texture";
   }
 
@@ -564,8 +566,8 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
 	  if (chunk != 0)
 	    tlayer->addChunk(chunk);
 	} else {
-	  SG_LOG(SG_INPUT, SG_INFO, "Skipping " << node->getName()
-		 << " in chunks");
+	  SG_LOG( SG_COCKPIT, SG_INFO, "Skipping " << node->getName()
+                  << " in chunks" );
 	}
       }
       layer = tlayer;
@@ -592,21 +594,21 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
     }
 
     else if (layerclass == "") {
-      SG_LOG(SG_INPUT, SG_ALERT, "No class provided for built-in layer "
-	     << name);
+      SG_LOG( SG_COCKPIT, SG_ALERT, "No class provided for built-in layer "
+              << name );
       return 0;
     }
 
     else {
-      SG_LOG(SG_INPUT, SG_ALERT, "Unknown built-in layer class "
-	     << layerclass);
+      SG_LOG( SG_COCKPIT, SG_ALERT, "Unknown built-in layer class "
+              << layerclass);
       return 0;
     }
   }
 
 				// An unknown type.
   else {
-    SG_LOG(SG_INPUT, SG_ALERT, "Unrecognized layer type " << type);
+    SG_LOG( SG_COCKPIT, SG_ALERT, "Unrecognized layer type " << type );
     delete layer;
     return 0;
   }
@@ -624,13 +626,13 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
 	if (t != 0)
 	  layer->addTransformation(t);
       } else {
-	SG_LOG(SG_INPUT, SG_INFO, "Skipping " << node->getName()
-	       << " in transformations");
+	SG_LOG( SG_COCKPIT, SG_INFO, "Skipping " << node->getName()
+                << " in transformations" );
       }
     }
   }
   
-  SG_LOG(SG_INPUT, SG_INFO, "Read layer " << name);
+  SG_LOG( SG_COCKPIT, SG_DEBUG, "Read layer " << name );
   return layer;
 }
 
@@ -658,8 +660,8 @@ readInstrument (const SGPropertyNode * node)
   int h = node->getIntValue("h-base", -1);
 
   if (x == -1 || y == -1) {
-    SG_LOG(SG_INPUT, SG_ALERT,
-	   "x and y positions must be specified and >0");
+    SG_LOG( SG_COCKPIT, SG_ALERT,
+            "x and y positions must be specified and > 0" );
     return 0;
   }
 
@@ -674,7 +676,7 @@ readInstrument (const SGPropertyNode * node)
     h = real_h;
   }
 
-  SG_LOG(SG_INPUT, SG_INFO, "Reading instrument " << name);
+  SG_LOG( SG_COCKPIT, SG_DEBUG, "Reading instrument " << name );
 
   FGLayeredInstrument * instrument =
     new FGLayeredInstrument(x, y, w, h);
@@ -692,8 +694,8 @@ readInstrument (const SGPropertyNode * node)
 	if (action != 0)
 	  instrument->addAction(action);
       } else {
-	SG_LOG(SG_INPUT, SG_INFO, "Skipping " << node->getName()
-	       << " in actions");
+	SG_LOG( SG_COCKPIT, SG_INFO, "Skipping " << node->getName()
+                << " in actions" );
       }
     }
   }
@@ -711,13 +713,13 @@ readInstrument (const SGPropertyNode * node)
 	if (layer != 0)
 	  instrument->addLayer(layer);
       } else {
-	SG_LOG(SG_INPUT, SG_INFO, "Skipping " << node->getName()
-	       << " in layers");
+	SG_LOG( SG_COCKPIT, SG_INFO, "Skipping " << node->getName()
+                << " in layers" );
       }
     }
   }
     
-  SG_LOG(SG_INPUT, SG_INFO, "Done reading instrument " << name);
+  SG_LOG( SG_COCKPIT, SG_DEBUG, "Done reading instrument " << name );
   return instrument;
 }
 
@@ -728,8 +730,8 @@ readInstrument (const SGPropertyNode * node)
 FGPanel *
 readPanel (const SGPropertyNode * root)
 {
-  SG_LOG(SG_INPUT, SG_INFO, "Reading properties for panel " <<
-	 root->getStringValue("name", "[Unnamed Panel]"));
+  SG_LOG( SG_COCKPIT, SG_INFO, "Reading properties for panel " <<
+          root->getStringValue("name", "[Unnamed Panel]") );
 
   FGPanel * panel = new FGPanel(0, 0, 1024, 768);
   panel->setWidth(root->getIntValue("w", 1024));
@@ -757,13 +759,13 @@ readPanel (const SGPropertyNode * root)
   if (bgTexture == "")
     bgTexture = "FOO";
   panel->setBackground(FGTextureManager::createTexture(bgTexture.c_str()));
-  SG_LOG(SG_INPUT, SG_INFO, "Set background texture to " << bgTexture);
+  SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << bgTexture );
 
 
   //
   // Create each instrument.
   //
-  SG_LOG(SG_INPUT, SG_INFO, "Reading panel instruments");
+  SG_LOG( SG_COCKPIT, SG_INFO, "Reading panel instruments" );
   const SGPropertyNode * instrument_group = root->getChild("instruments");
   if (instrument_group != 0) {
     int nInstruments = instrument_group->nChildren();
@@ -774,12 +776,12 @@ readPanel (const SGPropertyNode * root)
 	if (instrument != 0)
 	  panel->addInstrument(instrument);
       } else {
-	SG_LOG(SG_INPUT, SG_INFO, "Skipping " << node->getName()
-	       << " in instruments section");
+	SG_LOG( SG_COCKPIT, SG_INFO, "Skipping " << node->getName()
+                << " in instruments section" );
       }
     }
   }
-  SG_LOG(SG_INPUT, SG_INFO, "Done reading panel instruments");
+  SG_LOG( SG_COCKPIT, SG_INFO, "Done reading panel instruments" );
 
 
   //
@@ -805,7 +807,7 @@ fgReadPanel (istream &input)
   SGPropertyNode root;
 
   if (!readProperties(input, &root)) {
-    SG_LOG(SG_INPUT, SG_ALERT, "Malformed property list for panel.");
+    SG_LOG( SG_COCKPIT, SG_ALERT, "Malformed property list for panel." );
     return 0;
   }
   return readPanel(&root);
@@ -826,7 +828,7 @@ fgReadPanel (const string &relative_path)
   SGPropertyNode root;
 
   if (!readProperties(path.str(), &root)) {
-    SG_LOG(SG_INPUT, SG_ALERT, "Malformed property list for panel.");
+    SG_LOG( SG_COCKPIT, SG_ALERT, "Malformed property list for panel." );
     return 0;
   }
   return readPanel(&root);

@@ -65,15 +65,16 @@ FGTextureManager::createTexture (const string &relativePath)
 {
   ssgTexture * texture = _textureMap[relativePath];
   if (texture == 0) {
-    cerr << "Texture " << relativePath << " does not yet exist" << endl;
+    SG_LOG( SG_COCKPIT, SG_DEBUG,
+            "Texture " << relativePath << " does not yet exist" );
     SGPath tpath(globals->get_fg_root());
     tpath.append(relativePath);
     texture = new ssgTexture((char *)tpath.c_str(), false, false);
     _textureMap[relativePath] = texture;
     if (_textureMap[relativePath] == 0) 
-      cerr << "Texture *still* doesn't exist" << endl;
-    cerr << "Created texture " << relativePath
-	 << " handle=" << texture->getHandle() << endl;
+      SG_LOG( SG_COCKPIT, SG_ALERT, "Texture *still* doesn't exist" );
+    SG_LOG( SG_COCKPIT, SG_DEBUG, "Created texture " << relativePath
+            << " handle=" << texture->getHandle() );
   }
 
   return texture;
