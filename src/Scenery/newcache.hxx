@@ -83,7 +83,7 @@ public:
     bool exists( const SGBucket& b ) const;
 
     // Ensure at least one entry is free in the cache
-    void make_space();
+    bool make_space();
 
     // Clear all completely loaded tiles (ignores partially loaded tiles)
     void clear_cache();
@@ -124,8 +124,9 @@ public:
     /**
      * Create a new tile and enqueue it for loading.
      * @param b 
+     * @return success/failure
      */
-    void insert_tile( FGTileEntry* e );
+    bool insert_tile( FGTileEntry* e );
 };
 
 

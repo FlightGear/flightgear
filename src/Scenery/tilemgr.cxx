@@ -139,10 +139,14 @@ void FGTileMgr::sched_tile( const SGBucket& b ) {
         FGTileEntry *e = new FGTileEntry( b );
 
         // insert the tile into the cache
-	tile_cache.insert_tile( e );
-
-        // Schedule tile for loading
-        loader.add( e );
+	if ( tile_cache.insert_tile( e ) ) {
+	  // Schedule tile for loading
+	  loader.add( e );
+	} else {
+	  // insert failed (cache full with no available entries to
+	  // delete.)  Try again later
+	  delete e;
+	}
     }
 }
 

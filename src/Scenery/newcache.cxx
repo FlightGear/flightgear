@@ -135,14 +135,14 @@ void FGNewCache::fill_in( const SGBucket& b ) {
 
 
 // Ensure at least one entry is free in the cache
-void FGNewCache::make_space() {
+bool FGNewCache::make_space() {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "Make space in cache" );
     SG_LOG( SG_TERRAIN, SG_DEBUG, "cache entries = " << tile_cache.size() );
     SG_LOG( SG_TERRAIN, SG_DEBUG, "max size = " << max_cache_size );
 
     if ( (int)tile_cache.size() < max_cache_size ) {
 	// space in the cache, return
-	return;
+	return true;
     }
 
     while ( (int)tile_cache.size() >= max_cache_size ) {
@@ -186,17 +186,17 @@ void FGNewCache::make_space() {
 	}
 
 	// If we made it this far, then there were no open cache entries.
-	// We will instead free the furthest cache entry and return it's
-	// index.
+	// We will instead free the furthest cache entry and return true
 
 	if ( max_index >= 0 ) {
 	    SG_LOG( SG_TERRAIN, SG_DEBUG, "    max_dist = " << max_dist );
 	    SG_LOG( SG_TERRAIN, SG_DEBUG, "    index = " << max_index );
 	    entry_free( max_index );
+	    return true;
 	} else {
-	    SG_LOG( SG_TERRAIN, SG_ALERT, "WHOOPS!!! Dying in make_space()"
-                    "tile cache is full, but no entries available to removal.");
-	    exit( -1 );
+	    SG_LOG( SG_TERRAIN, SG_ALERT, "WHOOPS!!! can't make_space(), tile "
+                    "cache is full, but no entries available to removal." );
+	    return false;
 	}
     }
 }
@@ -228,14 +228,17 @@ void FGNewCache::clear_cache() {
 /**
  * Create a new tile and schedule it for loading.
  */
-void
-FGNewCache::insert_tile( FGTileEntry *e )
-{
+bool FGNewCache::insert_tile( FGTileEntry *e ) {
     // clear out a distant entry in the cache if needed.
-    make_space();
+    if ( make_space() ) {
+      // register it in the cache
+      long tile_index = e->get_tile_bucket().gen_index();
+      tile_cache[tile_index] = e;
 
-    // register it in the cache
-    long tile_index = e->get_tile_bucket().gen_index();
-    tile_cache[tile_index] = e;
+      return true;
+    } else {
+      // failed to find cache space
 
+      return false;
+    }
 }
