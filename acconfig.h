@@ -141,6 +141,9 @@
 /* Define if you have the strftime function.  */
 #undef HAVE_STRFTIME
 
+/* Define if you have <sys/param.h>  */
+#undef HAVE_SYS_PARAM_H
+
 /* Define if you have <sys/stat.h> that is POSIX.1 compatible.  */
 #undef HAVE_SYS_STAT_H
 
