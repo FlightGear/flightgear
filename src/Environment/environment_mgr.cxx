@@ -65,25 +65,19 @@ FGEnvironmentMgr::bind ()
 	&FGEnvironment::set_temperature_sea_level_degc);
   fgSetArchivable("/environment/temperature-sea-level-degc");
   fgTie("/environment/temperature-degc", _environment,
-	&FGEnvironment::get_temperature_degc,
-	&FGEnvironment::set_temperature_degc);
-  fgSetArchivable("/environment/temperature-degc");
+	&FGEnvironment::get_temperature_degc); // FIXME: read-only for now
   fgTie("/environment/dewpoint-sea-level-degc", _environment,
 	&FGEnvironment::get_dewpoint_sea_level_degc,
 	&FGEnvironment::set_dewpoint_sea_level_degc);
   fgSetArchivable("/environment/dewpoint-sea-level-degc");
   fgTie("/environment/dewpoint-degc", _environment,
-	&FGEnvironment::get_dewpoint_degc,
-	&FGEnvironment::set_dewpoint_degc);
-  fgSetArchivable("/environment/dewpoint-degc");
+	&FGEnvironment::get_dewpoint_degc); // FIXME: read-only for now
   fgTie("/environment/pressure-sea-level-inhg", _environment,
 	&FGEnvironment::get_pressure_sea_level_inhg,
 	&FGEnvironment::set_pressure_sea_level_inhg);
   fgSetArchivable("/environment/pressure-sea-level-inhg");
   fgTie("/environment/pressure-inhg", _environment,
-	&FGEnvironment::get_pressure_inhg,
-	&FGEnvironment::set_pressure_inhg);
-  fgSetArchivable("/environment/pressure-inhg");
+	&FGEnvironment::get_pressure_inhg); // FIXME: read-only for now
   fgTie("/environment/density-slugft3", _environment,
 	&FGEnvironment::get_density_slugft3); // read-only
   fgTie("/environment/wind-from-heading-deg", _environment,
