@@ -239,13 +239,13 @@ void TurnCursorOn( void )
 #if defined(WIN32)
     switch (mouse_mode) {
         case MOUSE_POINTER:
-            fgSetMouseCursor(MOUSE_CURSOR_INHERIT);
+            fgSetMouseCursor(MOUSE_CURSOR_POINTER);
             break;
         case MOUSE_YOKE:
             fgSetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
             break;
         case MOUSE_VIEW:
-            fgSetMouseCursor(MOUSE_CURSOR_LEFT_RIGHT);
+            fgSetMouseCursor(MOUSE_CURSOR_LEFTRIGHT);
             break;
     }
 #endif
