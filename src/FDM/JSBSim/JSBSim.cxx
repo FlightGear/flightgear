@@ -224,8 +224,6 @@ void FGJSBsim::init() {
       Atmosphere->SetTurbGain(tmp * tmp * 100.0);
 
       tmp = turbulence_rate->getDoubleValue();
-      if (tmp <= 0)
-          tmp = 1.0;
       Atmosphere->SetTurbRate(tmp);
 
     } else {
@@ -427,10 +425,7 @@ bool FGJSBsim::copy_to_JSBsim() {
     tmp = turbulence_gain->getDoubleValue();
     Atmosphere->SetTurbGain(tmp * tmp * 100.0);
 
-    if (turbulence_rate->hasValue())
-        tmp = turbulence_rate->getDoubleValue();
-    else
-        tmp = 1.0;
+    tmp = turbulence_rate->getDoubleValue();
     Atmosphere->SetTurbRate(tmp);
 
     Atmosphere->SetWindNED( wind_from_north->getDoubleValue(),
@@ -819,6 +814,7 @@ void FGJSBsim::init_gear(void ) {
       node->setBoolValue("wow", gr->GetGearUnit(i)->GetWOW());
       node->setBoolValue("has-brake", gr->GetGearUnit(i)->GetBrakeGroup() > 0);
       node->setDoubleValue("position-norm", FCS->GetGearPos());
+      node->setDoubleValue("tire-pressure-norm", gr->GetGearUnit(i)->GetTirePressure());
     }  
 }
 
@@ -832,6 +828,7 @@ void FGJSBsim::update_gear(void) {
 	->setBoolValue(gr->GetGearUnit(i)->GetWOW());
       node->getChild("position-norm", 0, true)
 	->setDoubleValue(FCS->GetGearPos());
+      gr->GetGearUnit(i)->SetTirePressure(node->getDoubleValue("tire-pressure-norm"));
     }  
 }
 

@@ -110,6 +110,12 @@ FGSwitch::FGSwitch(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
           current_test->OutputVal = atof(value.c_str());
         } else {
           // "value" must be a property if execution passes to here.
+          if (value[0] == '-') {
+            current_test->sign = -1.0;
+            value.erase(0,1);
+          } else {
+            current_test->sign = 1.0;
+          }
           current_test->OutputProp = PropertyManager->GetNode(value);
         }
       }
@@ -230,7 +236,10 @@ void FGSwitch::Debug(int from)
         }
 
         if (iTests->OutputProp != 0L)
-          cout << indent << "Switch VALUE is " << iTests->OutputProp->GetName() << scratch << endl;
+          if (iTests->sign < 0)
+            cout << indent << "Switch VALUE is - " << iTests->OutputProp->GetName() << scratch << endl;
+          else
+            cout << indent << "Switch VALUE is " << iTests->OutputProp->GetName() << scratch << endl;
         else 
           cout << indent << "Switch VALUE is " << iTests->OutputVal << scratch << endl;
 

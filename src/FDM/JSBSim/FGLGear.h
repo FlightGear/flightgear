@@ -224,6 +224,11 @@ public:
   /// Gets the gear compression force in pounds
   inline double  GetCompForce(void) {return Force()(3);    }
   inline double  GetBrakeFCoeff(void) {return BrakeFCoeff;}
+
+  /// Gets the current normalized tire pressure
+  inline double  GetTirePressure(void) { return TirePressureNorm; }
+  /// Sets the new normalized tire pressure
+  inline void    SetTirePressure(double p) { TirePressureNorm = p; }
   
   /// Sets the brake value in percent (0 - 100)
   inline void SetBrake(double bp) {brakePct = bp;}
@@ -278,6 +283,7 @@ private:
   double RollingForce, SideForce, FCoeff;
   double WheelSlip;
   double lastWheelSlip;
+  double TirePressureNorm;
   bool WOW;
   bool lastWOW;
   bool FirstContact;
@@ -287,6 +293,7 @@ private:
   bool ReportEnable;
   bool isRetractable;
   bool GearUp, GearDown;
+  bool Servicable;
   string name;
   string sSteerType;
   string sBrakeGroup;

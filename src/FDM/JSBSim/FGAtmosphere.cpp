@@ -93,7 +93,7 @@ FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex)
 //   turbType = ttBerndt;
   TurbGain = 0.0;
   TurbRate = 1.0;
-
+  
   bind();
   Debug(0);
 }
@@ -141,7 +141,7 @@ bool FGAtmosphere::Run(void)
       Calculate(h);
     } 
 
-    if (turbType != ttNone && TurbGain > 0.0) {
+    if (turbType != ttNone) {
       Turbulence();
       vWindNED += vTurbulence;
     }
@@ -278,7 +278,7 @@ void FGAtmosphere::Turbulence(void)
     vDirectiondAccelDt(eY) = 1 - 2.0*(double(rand())/double(RAND_MAX));
     vDirectiondAccelDt(eZ) = 1 - 2.0*(double(rand())/double(RAND_MAX));
 
-    MagnitudedAccelDt = 1 - 2.0*(double(rand())/double(RAND_MAX));
+    MagnitudedAccelDt = 1 - 2.0*(double(rand())/double(RAND_MAX)) - Magnitude;
                                 // Scale the magnitude so that it moves
                                 // away from the peaks
     MagnitudedAccelDt = ((MagnitudedAccelDt - Magnitude) /

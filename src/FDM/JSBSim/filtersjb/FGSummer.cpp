@@ -77,6 +77,8 @@ FGSummer::FGSummer(FGFCS* fcs, FGConfigFile* AC_cfg) : FGFCSComponent(fcs),
       }
       
       InputNodes.push_back( resolveSymbol(token) );
+    } else if (token == "BIAS") {
+      *AC_cfg >> Bias;
     } else if (token == "CLIPTO") {
       *AC_cfg >> clipmin >> clipmax;
       if (clipmax > clipmin) {
@@ -116,6 +118,8 @@ bool FGSummer::Run(void )
     Output += InputNodes[idx]->getDoubleValue()*InputSigns[idx];
   }
 
+  Output += Bias;
+
   if (clip) {
     if (Output > clipmax)      Output = clipmax;
     else if (Output < clipmin) Output = clipmin;
@@ -153,8 +157,12 @@ void FGSummer::Debug(int from)
     if (from == 0) { // Constructor
       cout << "      INPUTS: " << endl;
       for (unsigned i=0;i<InputNodes.size();i++) {
-        cout << "       " << InputNodes[i]->getName() << endl;
+        if (InputSigns[i] < 0)
+          cout << "       -" << InputNodes[i]->getName() << endl;
+        else
+          cout << "       " << InputNodes[i]->getName() << endl;
       }
+      if (Bias != 0.0) cout << "       Bias: " << Bias << endl;
       if (clip) cout << "      CLIPTO: " << clipmin 
                                   << ", " << clipmax << endl;
       if (IsOutput) cout << "      OUTPUT: " <<OutputNode->getName() <<  endl;

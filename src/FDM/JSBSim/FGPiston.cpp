@@ -137,7 +137,7 @@ FGPiston::~FGPiston()
 
 double FGPiston::Calculate(double PowerRequired)
 {
-  ConsumeFuel();
+  if (FuelFlow_gph > 0.0) ConsumeFuel();
 
   Throttle = FCS->GetThrottlePos(EngineNumber);
   Mixture = FCS->GetMixturePos(EngineNumber);

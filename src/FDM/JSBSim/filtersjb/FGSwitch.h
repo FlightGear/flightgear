@@ -127,16 +127,18 @@ private:
     eLogic Logic;
     double OutputVal;
     FGPropertyManager *OutputProp;
+    float sign;
     
     double GetValue(void) {
       if (OutputProp == 0L) return OutputVal;
-      else                  return OutputProp->getDoubleValue();
+      else                  return OutputProp->getDoubleValue()*sign;
     }
 
     test(void) { // constructor for the test structure
       Logic      = elUndef;
       OutputVal  = 0.0;
       OutputProp = 0L;
+      sign       = 1.0;
     }
 
   };
