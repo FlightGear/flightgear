@@ -10,7 +10,7 @@ dnl Require at least automake 2.52
 AC_PREREQ(2.52)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(FlightGear, 0.9.3-pre1)
+AM_INIT_AUTOMAKE(FlightGear, 0.9.3)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET

@@ -372,7 +372,9 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     }
     for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
         node = fgGetNode( "/controls/gear/wheel", i );
-        node->getChild( "brake" )->setDoubleValue( net->brake[i] );
+        if ( node != NULL ) {
+            node->getChild( "brake" )->setDoubleValue( net->brake[i] );
+        }
     }
 
     node = fgGetNode( "/controls/gear", true );

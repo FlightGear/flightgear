@@ -4,6 +4,12 @@
 # adapted from a script by Bob Hain, 11/30/99
 #
 
+#
+# default values
+#
+
+$outfile = "new.index.html";
+
 
 #
 # process arguments
@@ -13,6 +19,9 @@ $use_large = 1;
 while ( $arg = shift @ARGV ) {
     if ( $arg eq "--large" ) {
 	$use_large = 1;
+    }
+    if ( $arg eq "--outfile" ) {
+        $outfile = shift @ARGV;
     }
 }
 
@@ -28,7 +37,7 @@ $mdir = "Movies";
 
 $columns = 3;
 
-$swidth = 170;
+$wwidth = 170;
 $sheight = 128;
 
 $lwidth = 1024;
@@ -147,8 +156,6 @@ mkdir $link, 0755;
 #
 # Assemble index.html
 #
-
-$outfile = "index.html";
 
 $dir = `pwd`;
 chop($dir);
@@ -278,8 +285,9 @@ while ( <MASTER> ) {
 	print OUT "<TD WIDTH=$swidth HEIGHT=$sheight>\n";
 
 	$thumbinfo = `identify $mdir/$linkname.jpg`;
-	($name, $geom, $junk) = split(/\s+/, $thumbinfo, 3);
+	($name, $type, $geom, $junk) = split(/\s+/, $thumbinfo, 4);
 	($twidth, $theight) = split(/x/, $geom);
+        print "movie thumb geom = $geom  $twidth  $theight\n";
 
 	print OUT "<A HREF=\"$mdir/$i\">";
 	print OUT "<IMG WIDTH=$twidth HEIGHT=$theight SRC=\"$mdir/$linkname.jpg\" ALT=\"$linkname\">";
@@ -298,8 +306,8 @@ while ( <MASTER> ) {
 	    print OUT "</FONT>\n";
 	} else {
 	    if ( $twidth < $swidth ) {
-		print OUT "<BR>\n";
-	    }
+	        print OUT "<BR>\n";
+            }
 	    print OUT "<FONT SIZE=-1 id=\"fgfs\">\n";
 	    print OUT "$linkname\n";
 	    print OUT "</FONT>\n";

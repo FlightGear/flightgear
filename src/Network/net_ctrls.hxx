@@ -30,7 +30,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_CTRLS_VERSION = 16;
+const int FG_NET_CTRLS_VERSION = 17;
 
 
 // Define a structure containing the control parameters
@@ -43,8 +43,8 @@ public:
 
     enum {
         FG_MAX_ENGINES = 4,
-        FG_MAX_WHEELS = 3,
-        FG_MAX_TANKS = 4
+        FG_MAX_WHEELS = 16,
+        FG_MAX_TANKS = 6
     };
 
     // Aero controls
