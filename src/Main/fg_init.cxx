@@ -158,7 +158,9 @@ bool fgInitFGRoot ( int argc, char **argv ) {
     // Otherwise, default to a random compiled-in location if we can't
     // find fg-root any other way.
     if ( root == "" ) {
-#if defined( WIN32 )
+#if defined( __CYGWIN__ )
+        root = "/FlightGear";
+#elif defined( WIN32 )
 	root = "\\FlightGear";
 #elif defined( macintosh )
 	root = "";
