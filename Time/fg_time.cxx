@@ -257,7 +257,7 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 	daylight = mt.tm_isdst;
 
 	fgPrintf( FG_EVENT, FG_DEBUG, "start1 = %ld\n", start);
-	fgPrintf( FG_EVENT, FG_DEBUG, "start2 = %s (tz = %d)", 
+	fgPrintf( FG_EVENT, FG_DEBUG, "start2 = %s (tm_isdst = %d)", 
 		  ctime(&start), mt.tm_isdst);
 
 	// ftime() needs a little extra help finding the current timezone
@@ -379,6 +379,9 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.7  1998/05/30 01:57:25  curt
+// misc updates.
+//
 // Revision 1.6  1998/05/02 01:53:17  curt
 // Fine tuning mktime() support because of varying behavior on different
 // platforms.
