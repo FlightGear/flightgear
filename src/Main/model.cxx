@@ -231,6 +231,18 @@ FGAircraftModel::read_animation (const string &object_name,
 
   animation.position = node->getFloatValue("initial-position", 0);
   animation.offset = node->getFloatValue("offset", 0);
+  if (node->hasValue("min")) {
+    animation.has_min = true;
+    animation.min = node->getFloatValue("min");
+  } else {
+    animation.has_min = false;
+  }
+  if (node->hasValue("max")) {
+    animation.has_max = true;
+    animation.max = node->getFloatValue("max");
+  } else {
+    animation.has_max = false;
+  }
   animation.factor = node->getFloatValue("factor", 1);
 
 				// Get the center and axis
@@ -238,7 +250,7 @@ FGAircraftModel::read_animation (const string &object_name,
   animation.center[1] = node->getFloatValue("center/y-m", 0);
   animation.center[2] = node->getFloatValue("center/z-m", 0);
   animation.axis[0] = node->getFloatValue("axis/x", 0);
-  animation.axis[1] = node->getFloatValue("axis/y", 1);
+  animation.axis[1] = node->getFloatValue("axis/y", 0);
   animation.axis[2] = node->getFloatValue("axis/z", 0);
 
   sgNormalizeVec3(animation.axis);
@@ -264,6 +276,10 @@ FGAircraftModel::do_animation (Animation &animation, long elapsed_ms)
     animation.position = ((animation.prop->getFloatValue()
 			   + animation.offset)
 			  * animation.factor);
+    if (animation.has_min && animation.position < animation.min)
+      animation.position = animation.min;
+    if (animation.has_max && animation.position > animation.max)
+      animation.position = animation.max;
     animation.setRotation();
     return;
   }

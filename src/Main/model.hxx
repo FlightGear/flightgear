@@ -49,6 +49,10 @@ private:
     float factor;
     float offset;
     float position;
+    bool has_min;
+    float min;
+    bool has_max;
+    float max;
     sgVec3 center;
     sgVec3 axis;
     void setRotation ();
