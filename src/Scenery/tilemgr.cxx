@@ -334,9 +334,8 @@ int FGTileMgr::update( double lon, double lat ) {
 
     if ( scenery.center == Point3D(0.0) ) {
 	// initializing
-	cout << "initializing scenery current elevation  ... " << endl;
+	cout << "initializing scenery current elevation ... " << endl;
 	sgdVec3 tmp_abs_view_pos;
-	sgVec3 tmp_view_pos;
 
 	Point3D geod_pos = Point3D( longitude * SGD_DEGREES_TO_RADIANS,
 				    latitude * SGD_DEGREES_TO_RADIANS,
@@ -347,7 +346,7 @@ int FGTileMgr::update( double lon, double lat ) {
 
 	// cout << "abs_view_pos = " << tmp_abs_view_pos << endl;
 	prep_ssg_nodes();
-	sgSetVec3( tmp_view_pos, 0.0, 0.0, 0.0 );
+
 	double tmp_elev;
 	if ( fgCurrentElev(tmp_abs_view_pos, sc, &hit_list,
 			   &tmp_elev, &scenery.cur_radius, scenery.cur_normal) )

@@ -38,6 +38,7 @@
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/light.hxx>
+#include <Objects/apt_signs.hxx>
 #include <Objects/matlib.hxx>
 #include <Objects/newmat.hxx>
 #include <Objects/obj.hxx>
@@ -530,6 +531,17 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 		    obj_trans -> addKid( custom_obj );
 		}
 		new_tile->addKid( obj_trans );
+	    } else if ( token == "RWY_LIGHTS" ) {
+		double lon, lat, hdg, len, width;
+		string common, end1, end2;
+		in >> lon >> lat >> hdg >> len >> width
+		   >> common >> end1 >> end2;
+		SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+			<< " pos = " << lon << ", " << lat
+			<< " hdg = " << hdg
+			<< " size = " << len << ", " << width
+			<< " codes = " << common << " "
+			<< end1 << " " << end2 );
 	    } else {
 		SG_LOG( SG_TERRAIN, SG_ALERT,
 			"Unknown token " << token << " in "
