@@ -370,6 +370,8 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 118: // v key
+	    // handles GUI state as well as Viewer LookAt Direction
+	    CenterView();
 	    globals->set_current_view( globals->get_viewmgr()->next_view() );
 	    fgReshape( globals->get_options()->get_xsize(),
 		       globals->get_options()->get_ysize() );

@@ -354,6 +354,28 @@ void BusyCursor( int restore )
     }
 }
 
+
+// Center the view offsets
+void CenterView( void ) {
+    if( mouse_mode = MOUSE_VIEW ) {
+	mouse_mode = MOUSE_POINTER;
+	_savedX = globals->get_options()->get_xsize()/2;
+	_savedY = globals->get_options()->get_ysize()/2;
+	_mVtoggle = 0;
+	Quat0();
+	build_rotmatrix(quat_mat, curquat);
+	glutSetCursor(GLUT_CURSOR_INHERIT);
+
+	// Is this necessary ??
+	if( !menu_on )   TurnCursorOff();
+
+	glutWarpPointer( _savedX, _savedY );
+    }
+    globals->get_current_view()->set_goal_view_offset(0.0);
+    globals->get_current_view()->set_view_offset(0.0);
+}
+
+
 int guiGetMouseButton(void)
 {
     return last_buttons;

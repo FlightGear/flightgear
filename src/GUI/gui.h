@@ -33,6 +33,7 @@ extern void guiMotionFunc ( int x, int y );
 extern void guiMouseFunc(int button, int updown, int x, int y);
 extern void maybeToggleMouse( void );
 extern void BusyCursor( int restore );
+extern void CenterView( void );
 
 extern void guiToggleMenu(void);
 extern void mkDialog(const char *txt);

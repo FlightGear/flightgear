@@ -32,9 +32,7 @@ fgfs-base-tar:
 	FlightGear/Scenery/w130n30/w123n37 \
 	FlightGear/Scenery/w130n30/w122n37 \
 	FlightGear/Sounds \
-	FlightGear/Textures \
-	FlightGear/T[A-Za-df-z]* \
-	FlightGear/[U-W]* FlightGear/[c-m]*)
+	FlightGear/[T-Za]* FlightGear/[c-z]*)
 
 fgfs-base-zip:
 	(cd $(HOME); \
@@ -44,9 +42,7 @@ fgfs-base-zip:
 	FlightGear/Scenery/w130n30/w123n37 \
 	FlightGear/Scenery/w130n30/w122n37 \
 	FlightGear/Sounds \
-	FlightGear/Textures \
-	FlightGear/T[A-Za-df-z]* \
-	FlightGear/[U-W]* FlightGear/[c-z]* \
+	FlightGear/[T-Za]* FlightGear/[c-z]* \
 	-x '*/CVS/*' )
 
 fgfs-base-patch:
@@ -57,9 +53,7 @@ fgfs-base-patch:
 	FlightGear/Scenery/w130n30/w123n37 \
 	FlightGear/Scenery/w130n30/w122n37 \
 	FlightGear/Sounds \
-	FlightGear/Textures \
-	FlightGear/T[A-Za-df-z]* \
-	FlightGear/[U-W]* FlightGear/[c-m]*)
+	FlightGear/[T-Za]* FlightGear/[c-z]*)
 
 fgfs-textures-high:
 	(cd $(HOME); \
