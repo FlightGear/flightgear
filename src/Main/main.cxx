@@ -570,9 +570,9 @@ void fgRenderFrame( void ) {
         // set that to black and instead modify GL_LIGHT_MODEL_AMBIENT.
 	GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
 	GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
-	ssgGetLight( 0 ) -> setColour( GL_AMBIENT, black );
+	glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
 
-	glLightModelfv( GL_LIGHT_MODEL_AMBIENT, l->scene_ambient );
+	ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient );
 	ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
 	// ssgGetLight( 0 ) -> setColour( GL_SPECULAR, l->scene_white );
 
