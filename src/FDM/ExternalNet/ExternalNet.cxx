@@ -35,6 +35,10 @@
 #  include <netinet/in.h>	// htonl() ntohl()
 #endif
 
+#if defined( linux )
+#  include <sys/types.h>
+#  include <sys/socket.h>
+#endif
 
 // The function htond is defined this way due to the way some
 // processors and OSes treat floating point values.  Some will raise
@@ -369,6 +373,15 @@ FGExternalNet::FGExternalNet( double dt, string host, int dop, int dip, int cp )
 
     // disable blocking
     data_server.setBlocking( false );
+
+#if defined( linux )
+    // set SO_REUSEADDR flag
+    int socket = data_server.getHandle();
+    int one = 1;
+    int result;
+    result = ::setsockopt( socket, SOL_SOCKET, SO_REUSEADDR,
+                           &one, sizeof(one) );
+#endif
 
     // allowed to read from a broadcast addr
     // data_server.setBroadcast( true );
