@@ -55,7 +55,6 @@ SG_USING_STD(string);
 #include <simgear/screen/colors.hxx>
 #include <simgear/sky/sky.hxx>
 
-#include <Aircraft/aircraft.hxx>
 #include <Main/globals.hxx>
 #include <Main/viewer.hxx>
 
@@ -63,7 +62,6 @@ SG_USING_STD(string);
 #include "sunpos.hxx"
 
 extern SGSky *thesky;           // FIXME: from main.cxx
-
 fgLIGHT cur_light_params;
 
 
@@ -104,22 +102,15 @@ void fgLIGHT::Init( void ) {
 
 // update lighting parameters based on current sun position
 void fgLIGHT::Update( void ) {
-    FGInterface *f;
     // if the 4th field is 0.0, this specifies a direction ...
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     // base sky color
-    GLfloat base_sky_color[4] = { 0.392, 0.539, 0.752, 1.0 };
+    GLfloat base_sky_color[4] = { 0.392, 0.539, 0.712, 1.0 };
     // base fog color
     GLfloat base_fog_color[4] = { 0.90, 0.93, 1.0, 1.0 };
     double deg, ambient, diffuse, specular, sky_brightness;
 
-    f = current_aircraft.fdm_state;
-
     SG_LOG( SG_EVENT, SG_INFO, "Updating light parameters." );
-
-    // first, correct the colors for system specific gamma settings
-    // gamma_correct( (float *)&base_sky_color );
-    // gamma_correct( (float *)&base_fog_color );
 
     // calculate lighting parameters based on sun's relative angle to
     // local up
@@ -176,7 +167,7 @@ void fgLIGHT::Update( void ) {
 
     // update the cloud colors for sunrise/sunset effects (darken them)
     if (sun_angle > 1.0) {
-       float sun2 = sqrt(sun_angle);
+       float sun2 = pow(sun_angle, 1/3);
        cloud_color[0] /= sun2;
        cloud_color[1] /= sun2;
        cloud_color[2] /= sun2;
@@ -205,13 +196,12 @@ void fgLIGHT::UpdateAdjFog( void ) {
     }
 
     if ( heading < -2.0 * SGD_2PI || heading > 2.0 * SGD_2PI ) {
-	SG_LOG( SG_EVENT, SG_ALERT, "Psi rotation bad = " << heading );
+	SG_LOG( SG_EVENT, SG_ALERT, "Heading rotation bad = " << heading );
 	exit(-1);
     }
 
     if ( heading_offset < -2.0 * SGD_2PI || heading_offset > 2.0 * SGD_2PI ) {
-	SG_LOG( SG_EVENT, SG_ALERT, "current view()->view offset bad = " 
-		                     << heading_offset );
+	SG_LOG( SG_EVENT, SG_ALERT, "Heading offset bad = " << heading_offset );
 	exit(-1);
     }
 
@@ -219,7 +209,7 @@ void fgLIGHT::UpdateAdjFog( void ) {
 
     // first determine the difference between our view angle and local
     // direction to the sun
-    rotation = -(sun_rotation + SGD_PI) - heading - heading_offset;
+    rotation = -(sun_rotation + SGD_PI) - heading + heading_offset;
     while ( rotation < 0 ) {
 	rotation += SGD_2PI;
     }
@@ -272,19 +262,19 @@ void fgLIGHT::UpdateAdjFog( void ) {
 
 #else
 
-    float rf1 = fabs((rotation - SG_PI) / SG_PI);		// 0.0 .. 1.0
+    float rf1 = fabs((rotation - SGD_PI) / SGD_PI);		// 0.0 .. 1.0
     float rf2 = rf1 * rf1;
     float rf3 = 1.0 - rf1;
 
     float *sun_color = thesky->get_sun_color();
-    float s_red =   fog_color[0] * (1.25 - sun_color[0]/4.0);	// 100% red
-    float s_green = fog_color[1] * (0.48 + sun_color[1]/1.923);	//  40% green
-    float s_blue =  fog_color[2] * sun_color[2];		//   0% blue
+    float s_red =   fog_color[0] * (1.25 - pow(sun_color[0], 1/2)/4.0);
+    float s_green = fog_color[1] * (0.48 + pow(sun_color[1], 1/1.5)/1.923);
+    float s_blue =  fog_color[2] * sun_color[2];
 
-    float f_brightness = (sun_angle > 1.0) ? sqrt(sun_angle) : 1.0;
-    float f_red =   fog_color[0] / f_brightness;
-    float f_green = fog_color[1] / f_brightness;
-    float f_blue =  (fog_color[2] / f_brightness) * pow(sun_color[2], 1/3);
+    float f_brightness = (sun_angle > 1.0) ? pow(sun_angle, 1/6) : 1.0;
+    float f_red =   cloud_color[0] / f_brightness;
+    float f_green = cloud_color[1] / f_brightness;
+    float f_blue =  (cloud_color[2] / f_brightness) * pow(sun_color[2], 1/6);
 
     adj_fog_color[0] = rf3 * f_red   + rf2 * s_red;
     adj_fog_color[1] = rf3 * f_green + rf2 * s_green;
