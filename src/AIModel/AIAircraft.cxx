@@ -375,11 +375,11 @@ void FGAIAircraft::ProcessFlightPlan( double dt ) {
     return;  
   } // end of initialization
 
-  // let's only process the flight plan every 500 ms.
-  if (dt_count < 0.5) {
+  // let's only process the flight plan every 100 ms.
+  if (dt_count < 0.1) {
     return;
   } else {
-    while (dt_count > 0.5)
+    while (dt_count > 0.1)
       dt_count -= dt;
 
     // check to see if we've reached the lead point for our next turn
