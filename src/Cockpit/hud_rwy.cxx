@@ -43,8 +43,6 @@ runway_instr::runway_instr(int x,
 						   float scale_data,
 						   bool working):instr_item(x,y,width,height,NULL,scale_data,0,working)
 {
-	runway = get_active_runway();
-	get_rwy_points(points3d);
 	stippleOut=0xFFFF;
 	stippleCen=0xFFFF;
 	arrowScale = 1.0;
@@ -65,7 +63,7 @@ runway_instr::runway_instr(int x,
 }
 
 void runway_instr::draw() {
-	if (!is_broken()) {	
+	if (!is_broken() && get_active_runway(runway)) {	
 		glPushAttrib(GL_LINE_STIPPLE | GL_LINE_STIPPLE_PATTERN | GL_LINE_WIDTH);
 		float modelView[4][4],projMat[4][4]; 	
 		bool anyLines;
@@ -90,8 +88,6 @@ void runway_instr::draw() {
 		}		
 		//Set the camera to the cockpit view to get the view of the runway from the cockpit
 		ssgSetCamera((sgVec4 *)cockpit_view->get_VIEW());
-		//Get the currently active runway and the 3d points		
-		runway = get_active_runway();
 		get_rwy_points(points3d);	 
 		//Get the current project matrix
 		ssgGetProjectionMatrix(projMat);
@@ -150,13 +146,11 @@ void runway_instr::draw() {
 	}//if not broken
 }
 
-FGRunway runway_instr::get_active_runway() {
+bool runway_instr::get_active_runway(FGRunway& runway) {
   FGEnvironment stationweather =
       ((FGEnvironmentMgr *)globals->get_subsystem("environment"))->getEnvironment();
   double hdg = stationweather.get_wind_from_heading_deg();  
-  FGRunway runway;
-  globals->get_runways()->search( fgGetString("/sim/presets/airport-id"), int(hdg), &runway);
-  return runway;
+  return globals->get_runways()->search( fgGetString("/sim/presets/airport-id"), int(hdg), &runway);
 }
 
 void runway_instr::get_rwy_points(sgdVec3 *points3d) {	

@@ -692,7 +692,7 @@ private:
 	bool boundOutsidePoints(sgdVec3 v, sgdVec3 m);
 	bool drawLine(sgdVec3 a1, sgdVec3 a2, sgdVec3 p1, sgdVec3 p2);
 	void drawArrow();
-	FGRunway get_active_runway();
+	bool get_active_runway(FGRunway& rwy);
 	void get_rwy_points(sgdVec3 *points);
 	void setLineWidth(void);
 
