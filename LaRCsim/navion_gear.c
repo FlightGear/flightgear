@@ -36,6 +36,9 @@
 
 $Header$
 $Log$
+Revision 1.5  1998/09/29 02:03:00  curt
+Added a brake + autopilot mods.
+
 Revision 1.4  1998/08/06 12:46:40  curt
 Header change.
 
@@ -80,6 +83,7 @@ Initial Flight Gear revision.
 #include "ls_generic.h"
 #include "ls_cockpit.h"
 
+#include <Controls/controls.h>
 
 void sub3( DATA v1[],  DATA v2[], DATA result[] )
 {
@@ -207,7 +211,7 @@ char rcsid[] = "$Id$";
    * Put aircraft specific executable code here
    */
    
-    percent_brake[1] = 0.; /* replace with cockpit brake handle connection code */
+    percent_brake[1] = fgBrakeGet(); /* replace with cockpit brake handle connection code */
     percent_brake[2] = percent_brake[1];
     
     caster_angle_rad[0] = 0.03*Rudder_pedal;

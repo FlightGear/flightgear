@@ -240,9 +240,9 @@ $Original log: LaRCsim.c,v $
 #include "ls_aux.h"
 #include "ls_model.h"
 #include "ls_init.h"
+
 #include <Flight/flight.h>
 #include <Aircraft/aircraft.h>
-#include <Autopilot/autopilot.h>
 #include <Debug/fg_debug.h>
 
 
@@ -556,44 +556,36 @@ int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop) {
 	ls_cockpit();
     }
 
-    for ( i = 0; i < multiloop; i++ ) {
-	//Insertion by Jeff Goeke-Smith for Autopilot.
-	
-	// run Autopilot system
-	// fgPrintf( FG_ALL, FG_BULK, "Attempting autopilot run\n");
-	fgAPRun();
-
-	/* lets try to avoid really screwing up the LaRCsim model */
-	if ( FG_Altitude < -9000 ) {
-	    save_alt = FG_Altitude;
-	    FG_Altitude = 0;
-	}
-
-	// translate FG to LaRCsim structure
-	fgFlight_2_LaRCsim(f);
-	// printf("FG_Altitude = %.2f\n", FG_Altitude * 0.3048);
-	// printf("Altitude = %.2f\n", Altitude * 0.3048);
-	// printf("Radius to Vehicle = %.2f\n", Radius_to_vehicle * 0.3048);
-
-	// end of insertion 
-	
-	ls_loop( model_dt, 0);
-
-	// printf("%d FG_Altitude = %.2f\n", i, FG_Altitude * 0.3048);
-	// printf("%d Altitude = %.2f\n", i, Altitude * 0.3048);
-
-	// translate LaRCsim back to FG structure so that the
-	// autopilot (and the rest of the sim can use the updated
-	// values
-	fgLaRCsim_2_Flight(f);
-
-	/* but lets restore our original bogus altitude when we are done */
-	if ( save_alt < -9000 ) {
-	    FG_Altitude = save_alt;
-	}
+    /* lets try to avoid really screwing up the LaRCsim model */
+    if ( FG_Altitude < -9000 ) {
+	save_alt = FG_Altitude;
+	FG_Altitude = 0;
     }
 
-    return(1);
+    // translate FG to LaRCsim structure
+    fgFlight_2_LaRCsim(f);
+    // printf("FG_Altitude = %.2f\n", FG_Altitude * 0.3048);
+    // printf("Altitude = %.2f\n", Altitude * 0.3048);
+    // printf("Radius to Vehicle = %.2f\n", Radius_to_vehicle * 0.3048);
+
+    for ( i = 0; i < multiloop; i++ ) {
+	ls_loop( model_dt, 0);
+    }
+
+    // printf("%d FG_Altitude = %.2f\n", i, FG_Altitude * 0.3048);
+    // printf("%d Altitude = %.2f\n", i, Altitude * 0.3048);
+    
+    // translate LaRCsim back to FG structure so that the
+    // autopilot (and the rest of the sim can use the updated
+    // values
+    fgLaRCsim_2_Flight(f);
+
+    /* but lets restore our original bogus altitude when we are done */
+    if ( save_alt < -9000 ) {
+	FG_Altitude = save_alt;
+    }
+
+    return 1;
 }
 
 
@@ -960,7 +952,10 @@ int ls_ForceAltitude(double alt_feet) {
 /* Flight Gear Modification Log
  *
  * $Log$
- * Revision 1.21  1998/08/22 14:49:56  curt
+ * Revision 1.22  1998/09/29 02:02:59  curt
+ * Added a brake + autopilot mods.
+ *
+ * Revision 1.21  1998/08/22  14:49:56  curt
  * Attempting to iron out seg faults and crashes.
  * Did some shuffling to fix a initialization order problem between view
  * position, scenery elevation.
