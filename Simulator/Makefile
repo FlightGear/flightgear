@@ -27,31 +27,35 @@
 CC = gcc
 
 
+SUBSUBDIRS = flight/LaRCsim flight/slew
 SUBDIRS = aircraft controls flight scenery
 MAIN = OpenGL
 
 
 all:
-	for dir in $(SUBDIRS) $(MAIN); do \
+	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
 	    ( cd $$dir; make CC=$(CC) ) ; \
 	done
 
 
 install:
-	for dir in $(SUBDIRS) $(MAIN); do \
+	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
 	    ( cd $$dir; make CC=$(CC) install) ; \
 	done
 
 
 clean:
 	-rm -f *~
-	for dir in $(SUBDIRS) $(MAIN); do \
+	for dir in $(SUBSUBDIRS) $(SUBDIRS) $(MAIN); do \
 	    (cd $$dir; make clean) ; \
 	done
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1997/05/29 02:31:43  curt
+# Update subdirectory structure.
+#
 # Revision 1.3  1997/05/23 15:40:04  curt
 # Added GNU copyright headers.
 #
