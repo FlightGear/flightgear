@@ -418,7 +418,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 118: // v key
-// 	    globals->get_options()->cycle_view_mode();
+	    globals->set_current_view( globals->get_viewmgr()->next_view() );
+#if 0
+	    // globals->get_options()->cycle_view_mode();
 	    if ( globals->get_options()->get_view_mode() ==
 		 FGOptions::FG_VIEW_FOLLOW )
 	    {
@@ -433,6 +435,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 		v->set_view_offset( FG_PI * 1.75 );
 		globals->get_current_view()->set_pilot_offset(25.0, -25.0, 1.0);
 	    }
+#endif
 	    fgReshape( globals->get_options()->get_xsize(),
 		       globals->get_options()->get_ysize() );
 	    return;

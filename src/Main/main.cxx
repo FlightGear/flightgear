@@ -336,6 +336,28 @@ void fgRenderFrame( void ) {
 			     cur_fdm_state->get_Theta(),
 			     cur_fdm_state->get_Psi() );
 
+	FGViewerLookAt *chase_view =
+	    (FGViewerLookAt *)globals->get_viewmgr()->get_view( 1 );
+
+	sgVec3 po;		// chase view pilot_offset
+	sgVec3 wup;		// chase view world up
+	sgCopyVec3( po, chase_view->get_pilot_offset() );
+	sgCopyVec3( wup, chase_view->get_world_up() );
+	sgMat4 CXFM;		// chase view + pilot offset xform
+	sgMakeRotMat4( CXFM, cur_fdm_state->get_Psi() * RAD_TO_DEG, wup );
+	sgVec3 npo;		// new pilot offset after rotation
+	sgXformVec3( npo, po, CXFM );
+
+	chase_view->set_geod_view_pos( cur_fdm_state->get_Longitude(), 
+				       cur_fdm_state->get_Lat_geocentric(), 
+				       cur_fdm_state->get_Altitude() *
+				       FEET_TO_METER );
+	chase_view->set_pilot_offset( npo[0], npo[1], npo[2] );
+	sgVec3 negpo;
+	sgNegateVec3( negpo, npo );
+	chase_view->set_view_forward( negpo ); 
+	chase_view->set_view_up( wup );
+
 #if 0
 	// this is a test, we are trying to match RPH and LookAt
 	// matrices
@@ -1347,7 +1369,12 @@ int main( int argc, char **argv ) {
 
     FGViewerRPH *pv = new FGViewerRPH;
     globals->get_viewmgr()->add_view( pv );
-    globals->set_current_view( pv );
+
+    FGViewerLookAt *chase = new FGViewerLookAt;
+    globals->get_viewmgr()->add_view( chase );
+
+    // set current view to 0 (first) which is our main pilot view
+    globals->set_current_view( globals->get_viewmgr()->get_view( 0 ) );
 
     // Scan the config file(s) and command line options to see if
     // fg_root was specified (ignore all other options for now)

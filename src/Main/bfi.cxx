@@ -130,6 +130,8 @@ FGBFI::init ()
 			       getRPM, 0);
   current_properties.tieDouble("/engines/engine0/egt",
 			       getEGT, 0);
+  current_properties.tieDouble("/engines/engine0/cht",
+			       getCHT, 0);
 
 				// Velocities
   current_properties.tieDouble("/velocities/airspeed",
@@ -709,6 +711,18 @@ FGBFI::getEGT ()
 {
   if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
       return current_aircraft.fdm_state->get_engine(0)->get_EGT();
+  }
+}
+
+
+/**
+ * Return the current engine0 CHT.
+ */
+double
+FGBFI::getCHT ()
+{
+  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
+      return current_aircraft.fdm_state->get_engine(0)->get_CHT();
   }
 }
 

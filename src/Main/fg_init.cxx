@@ -583,6 +583,9 @@ bool fgInitSubsystems( void ) {
 			 cur_fdm_state->get_Theta(),
 			 cur_fdm_state->get_Psi() );
 
+    // set current view to 0 (first) which is our main pilot view
+    globals->set_current_view( pilot_view );
+
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = "
 	    << globals->get_current_view()->get_abs_view_pos());
 
@@ -814,6 +817,9 @@ void fgReInitSubsystems( void )
     pilot_view->set_rph( cur_fdm_state->get_Phi(),
 			 cur_fdm_state->get_Theta(),
 			 cur_fdm_state->get_Psi() );
+
+    // set current view to 0 (first) which is our main pilot view
+    globals->set_current_view( pilot_view );
 
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = "
 	    << globals->get_current_view()->get_abs_view_pos());

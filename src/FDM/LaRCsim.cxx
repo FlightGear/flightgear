@@ -134,6 +134,7 @@ bool FGLaRCsim::update( int multiloop ) {
 	e->set_MaxHP( eng.get_MaxHP() );
 	e->set_Percentage_Power( eng.get_Percentage_Power() );
 	e->set_EGT( eng.get_EGT() );
+	e->set_CHT( eng.get_CHT() );
 	e->set_prop_thrust( eng.get_prop_thrust_SI() );
 
 #if 0

@@ -64,6 +64,9 @@ public:
 
     // getters
     inline int size() const { return views.size(); }
+    inline FGViewer *get_view() {
+	return views[current];
+    }
     inline FGViewer *get_view( int i ) {
 	if ( i < 0 ) { i = 0; }
 	if ( i >= (int)views.size() ) { i = views.size() - 1; }

@@ -112,6 +112,7 @@ private:
     double MaxHP;
     double Percentage_Power;
     double EGT;
+    double CHT;
     double prop_thrust;
     
     /* others...
@@ -137,6 +138,7 @@ public:
     inline double get_MaxHP() const { return MaxHP; }
     inline double get_Percentage_Power() const { return Percentage_Power; }
     inline double get_EGT() const { return EGT; }
+    inline double get_CHT() const { return CHT; }
     inline double get_prop_thrust() const { return prop_thrust; }
 
     inline void set_Throttle( double t ) { Throttle = t; }
@@ -147,6 +149,7 @@ public:
     inline void set_MaxHP( double hp ) { MaxHP = hp; }
     inline void set_Percentage_Power( double p ) { Percentage_Power = p; }
     inline void set_EGT( double e ) { EGT = e; }
+    inline void set_CHT( double c ) { CHT = c; }
     inline void set_prop_thrust( double t ) { prop_thrust = t; }
 
 };
