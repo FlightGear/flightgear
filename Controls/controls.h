@@ -44,6 +44,7 @@ typedef struct {
     double elevator_trim;
     double rudder;
     double throttle[FG_MAX_ENGINES];
+    double brake_amt;
 } fgCONTROLS, *pfgControls;
 
 
@@ -53,6 +54,7 @@ typedef struct {
 #define FG_Throttle     c->throttle
 #define FG_Throttle_All -1
 #define FG_Elev_Trim    c->elevator_trim
+#define FG_Brake_Amt    c->brake_amt
 
 /* 
 #define Left_button     cockpit_.left_pb_on_stick
@@ -81,7 +83,8 @@ void fgRudderMove(double amt);
 void fgRudderSet(double pos);
 void fgThrottleMove(int engine, double amt);
 void fgThrottleSet(int engine, double pos);
-
+void fgBrakeSet( double brake_amt );
+double fgBrakeGet( void );
 
 #ifdef __cplusplus
 }
@@ -92,9 +95,12 @@ void fgThrottleSet(int engine, double pos);
 
 
 /* $Log$
-/* Revision 1.15  1998/04/25 22:06:27  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.16  1998/09/29 02:01:32  curt
+/* Added a brake.
 /*
+ * Revision 1.15  1998/04/25 22:06:27  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.14  1998/04/22 13:26:19  curt
  * C++ - ifing the code a bit.
  *

@@ -45,6 +45,7 @@ void fgControlsInit( void ) {
 	FG_Throttle[i] = 0.0;
     }
 
+    FG_Brake_Amt = 0.0;
 }
 
 
@@ -169,11 +170,30 @@ void fgThrottleSet(int engine, double pos) {
 }
 
 
+double fgBrakeGet( void ) {
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
+
+    return FG_Brake_Amt;
+}
+
+
+void fgBrakeSet( double brake_amt ) {
+    fgCONTROLS *c;
+    c = current_aircraft.controls;
+
+    FG_Brake_Amt = brake_amt;
+}
+
+
 /* $Log$
-/* Revision 1.7  1998/02/07 15:29:36  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.8  1998/09/29 02:01:31  curt
+/* Added a brake.
 /*
+ * Revision 1.7  1998/02/07 15:29:36  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.6  1998/01/19 19:27:02  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.
