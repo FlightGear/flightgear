@@ -130,8 +130,11 @@ bool FGNavList::query( double lon, double lat, double elev, double freq,
 
 	// cout << "  dist = " << sqrt(d)
 	//      << "  range = " << current->get_range() * NM_TO_METER << endl;
-	if ( d < (current->get_range() * NM_TO_METER 
-		  * current->get_range() * NM_TO_METER * 5.0) ) {
+
+	// match up to twice the published range so we can model
+	// reduced signal strength
+	if ( d < (2 * current->get_range() * NM_TO_METER 
+		  * 2 * current->get_range() * NM_TO_METER ) ) {
 	    // cout << "matched = " << current->get_ident() << endl;
 	    *n = *current;
 	    return true;

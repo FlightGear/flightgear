@@ -63,65 +63,6 @@ static double kludgeRange ( double stationElev, double aircraftElev,
 }
 
 
-// model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
-static double adjustNavRange( double stationElev, double aircraftElev,
-			      double nominalRange )
-{
-    // assumptions we model the standard service volume, plus
-    // ... rather than specifying a cylinder, we model a cone that
-    // contains the cylinder.  Then we put an upside down cone on top
-    // to model diminishing returns at too-high altitudes.
-
-    // altitude difference
-    double alt = ( aircraftElev - stationElev ) * METER_TO_FEET;
-
-    if ( nominalRange < 25.0 + FG_EPSILON ) {
-	// Standard Terminal Service Volume
-	if ( alt <= 1000.0 ) {
-	    return nominalRange;
-	} else if ( alt <= 12000.0 ) {
-	    return nominalRange + nominalRange * ( alt - 1000.0 ) / 11000.0;
-	} else if ( alt <= 18000.0 ) {
-	    return nominalRange * 2 * ( 1 - ( alt - 12000.0 ) / 6000.0 );
-	} else {
-	    return 0.0;
-	}
-    } else if ( nominalRange < 50.0 + FG_EPSILON ) {
-	// Standard Low Altitude Service Volume
-	if ( alt <= 1000.0 ) {
-	    return nominalRange;
-	} else if ( alt <= 18000.0 ) {
-	    return nominalRange + nominalRange * ( alt - 1000.0 ) / 17000.0;
-	} else if ( alt <= 18000.0 ) {
-	    return nominalRange * 2 * ( 1 - ( alt - 18000.0 ) / 9000.0 );
-	} else {
-	    return 0.0;
-	}
-    } else {
-	// Standard High Altitude Service Volume
-	double lc = nominalRange * 0.31;
-	double mc = nominalRange * 0.77;
-	double hc = nominalRange;
-
-	if ( alt <= 1000.0 ) {
-	    return lc;
-	} else if ( alt <= 14500.0 ) {
-	    return lc + (mc-lc) * ( alt - 1000.0 ) / 13500.0;
-	} else if ( alt <= 18000.0 ) {
-	    return mc + (hc-mc) * ( alt - 14500.0 ) / 3500.0;
-	} else if ( alt <= 45000.0 ) {
-	    return hc + hc * ( 1 - fabs(alt - 31500.0) / 13500.0 );
-	} else if ( alt <= 60000.0 ) {
-	    return mc + (hc-mc) * (60000.0 - alt) / 15000.0;
-	} else if ( alt <= 75000.0 ) {
-	    return mc * ( 75000.0 - alt ) / 15000.0;
-	} else {
-	    return 0.0;
-	}
-    }
-}
-
-
 // periodic radio station search wrapper
 static void fgRadioSearch( void ) {
     current_radiostack->search();
@@ -154,6 +95,18 @@ FGRadioStack::init ()
 
     search();
     update();
+
+    FGPath path( globals->get_fg_root() );
+    FGPath term = path;
+    term.append( "Navaids/range.term" );
+    FGPath low = path;
+    low.append( "Navaids/range.low" );
+    FGPath high = path;
+    high.append( "Navaids/range.high" );
+
+    term_tbl = new SGInterpTable( term.str() );
+    low_tbl = new SGInterpTable( low.str() );
+    high_tbl = new SGInterpTable( high.str() );
 
     // Search radio database once per second
     global_events.Register( "fgRadioSearch()", fgRadioSearch,
@@ -264,6 +217,58 @@ FGRadioStack::unbind ()
     fgUntie("/radios/adf/rotation");
 }
 
+
+// model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
+double FGRadioStack::adjustNavRange( double stationElev, double aircraftElev,
+			      double nominalRange )
+{
+    // assumptions we model the standard service volume, plus
+    // ... rather than specifying a cylinder, we model a cone that
+    // contains the cylinder.  Then we put an upside down cone on top
+    // to model diminishing returns at too-high altitudes.
+
+    // altitude difference
+    double alt = ( aircraftElev * METER_TO_FEET - stationElev );
+    // cout << "aircraft elev = " << aircraftElev * METER_TO_FEET
+    //      << " station elev = " << stationElev << endl;
+
+    if ( nominalRange < 25.0 + FG_EPSILON ) {
+	// Standard Terminal Service Volume
+	return term_tbl->interpolate( alt );
+    } else if ( nominalRange < 50.0 + FG_EPSILON ) {
+	// Standard Low Altitude Service Volume
+	// table is based on range of 40, scale to actual range
+	return low_tbl->interpolate( alt ) * nominalRange / 40.0;
+    } else {
+	// Standard High Altitude Service Volume
+	// table is based on range of 130, scale to actual range
+	return high_tbl->interpolate( alt ) * nominalRange / 130.0;
+    }
+}
+
+
+// model standard ILS service volumes as per AIM 1-1-9
+double FGRadioStack::adjustILSRange( double stationElev, double aircraftElev,
+				     double offsetDegrees, double distance )
+{
+    // assumptions we model the standard service volume, plus
+
+    // altitude difference
+    // double alt = ( aircraftElev * METER_TO_FEET - stationElev );
+    double offset = fabs( offsetDegrees );
+
+    if ( offset < 10 ) {
+	return FG_ILS_DEFAULT_RANGE;
+    } else if ( offset < 35 ) {
+	return 10 + (35 - offset) * (FG_ILS_DEFAULT_RANGE - 10) / 25;
+    } else if ( offset < 45 ) {
+	return (45 - offset);
+    } else {
+	return 0;
+    }
+}
+
+
 // Update the various nav values based on position and valid tuned in navs
 void 
 FGRadioStack::update() 
@@ -297,26 +302,39 @@ FGRadioStack::update()
 	    nav1_gs_dist = 0.0;
 	}
 	
-	nav1_effective_range = kludgeRange(nav1_elev, elev, nav1_range);
+	// wgs84 heading
+	geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
+			    nav1_loclat, nav1_loclon,
+			    &az1, &az2, &s );
+	// cout << "az1 = " << az1 << " magvar = " << nav1_magvar << endl;
+	nav1_heading = az1 - nav1_magvar;
+	// cout << " heading = " << nav1_heading
+	//      << " dist = " << nav1_dist << endl;
+
+	if ( nav1_loc ) {
+	    double offset = nav1_heading - nav1_radial;
+	    while ( offset < -180.0 ) { offset += 360.0; }
+	    while ( offset > 180.0 ) { offset -= 360.0; }
+	    cout << "ils offset = " << offset << endl;
+	    nav1_effective_range = adjustILSRange(nav1_elev, elev, offset,
+						  nav1_loc_dist * METER_TO_NM );
+	} else {
+	    nav1_effective_range = adjustNavRange(nav1_elev, elev, nav1_range);
+	}
+	cout << "nav1 range = " << nav1_effective_range
+	     << " (" << nav1_range << ")" << endl;
+
 	if ( nav1_loc_dist < nav1_effective_range * NM_TO_METER ) {
 	    nav1_inrange = true;
-	    
-	    // wgs84 heading
-	    geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
-				nav1_loclat, nav1_loclon,
-				&az1, &az2, &s );
-	    // cout << "az1 = " << az1 << " magvar = " << nav1_magvar << endl;
-	    nav1_heading = az1 - nav1_magvar;
-	    // Alex: nav1_heading = - (az1 - FGBFI::getMagVar() / RAD_TO_DEG);
-
-	    // cout << " heading = " << nav1_heading
-	    //      << " dist = " << nav1_dist << endl;
+	} else if ( nav1_loc_dist < 2 * nav1_effective_range * NM_TO_METER ) {
+	    nav1_inrange = sg_random() < 
+		( 2 * nav1_effective_range * NM_TO_METER - nav1_loc_dist ) /
+		(nav1_effective_range * NM_TO_METER);
 	} else {
 	    nav1_inrange = false;
 	}
 
-	if ( nav1_loc ) {
-	} else {
+	if ( !nav1_loc ) {
 	    nav1_radial = nav1_sel_radial;
 	}
     } else {
@@ -373,19 +391,33 @@ FGRadioStack::update()
 	    nav2_gs_dist = 0.0;
 	}
 
-	nav2_effective_range = kludgeRange(nav2_elev, elev, nav2_range);
+	// wgs84 heading
+	geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
+			    nav2_loclat, nav2_loclon,
+			    &az1, &az2, &s );
+	nav2_heading = az1 - nav2_magvar;
+	// cout << " heading = " << nav2_heading
+	//      << " dist = " << nav2_dist << endl;
+
+	if ( nav2_loc ) {
+	    double offset = nav2_heading - nav2_radial;
+	    while ( offset < -180.0 ) { offset += 360.0; }
+	    while ( offset > 180.0 ) { offset -= 360.0; }
+	    cout << "ils offset = " << offset << endl;
+	    nav2_effective_range = adjustILSRange(nav2_elev, elev, offset,
+						  nav2_loc_dist * METER_TO_NM );
+	} else {
+	    nav2_effective_range = adjustNavRange(nav2_elev, elev, nav2_range);
+	}
+	cout << "nav2 range = " << nav2_effective_range
+	     << " (" << nav2_range << ")" << endl;
+
 	if ( nav2_loc_dist < nav2_effective_range * NM_TO_METER ) {
 	    nav2_inrange = true;
-
-	    // wgs84 heading
-	    geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
-				nav2_loclat, nav2_loclon,
-				&az1, &az2, &s );
-	    nav2_heading = az1 - nav2_magvar;
-	    // Alex: nav2_heading = - (az1 - FGBFI::getMagVar() / RAD_TO_DEG);
-
-	    // cout << " heading = " << nav2_heading
-	    //      << " dist = " << nav2_dist << endl;
+	} else if ( nav2_loc_dist < 2 * nav2_effective_range * NM_TO_METER ) {
+	    nav2_inrange = sg_random() < 
+		( 2 * nav2_effective_range * NM_TO_METER - nav2_loc_dist ) /
+		(nav2_effective_range * NM_TO_METER);
 	} else {
 	    nav2_inrange = false;
 	}
@@ -395,6 +427,7 @@ FGRadioStack::update()
 	}
     } else {
 	nav2_inrange = false;
+	nav2_dme_dist = 0.0;
 	// cout << "not picking up vor. :-(" << endl;
     }
 
@@ -404,18 +437,21 @@ FGRadioStack::update()
 	station = Point3D( adf_x, adf_y, adf_z );
 	adf_dist = aircraft.distance3D( station );
 
+	// wgs84 heading
+	geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
+			    adf_lat, adf_lon,
+			    &az1, &az2, &s );
+	adf_heading = az1;
+	// cout << " heading = " << nav2_heading
+	//      << " dist = " << nav2_dist << endl;
+
 	adf_effective_range = kludgeRange(adf_elev, elev, adf_range);
 	if ( adf_dist < adf_effective_range * NM_TO_METER ) {
 	    adf_inrange = true;
-
-	    // wgs84 heading
-	    geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
-				adf_lat, adf_lon,
-				&az1, &az2, &s );
-	    adf_heading = az1;
-
-	    // cout << " heading = " << nav2_heading
-	    //      << " dist = " << nav2_dist << endl;
+	} else if ( adf_dist < 2 * adf_effective_range * NM_TO_METER ) {
+	    adf_inrange = sg_random() < 
+		( 2 * adf_effective_range * NM_TO_METER - adf_dist ) /
+		(adf_effective_range * NM_TO_METER);
 	} else {
 	    adf_inrange = false;
 	}
@@ -516,7 +552,7 @@ void FGRadioStack::search()
 	    nav1_elev = nav.get_elev();
 	    nav1_magvar = nav.get_magvar();
 	    nav1_range = nav.get_range();
-	    nav1_effective_range = kludgeRange(nav1_elev, elev, nav1_range);
+	    nav1_effective_range = adjustNavRange(nav1_elev, elev, nav1_range);
 	    nav1_target_gs = 0.0;
 	    nav1_radial = nav1_sel_radial;
 	    nav1_x = nav1_dme_x = nav.get_x();
@@ -607,7 +643,7 @@ void FGRadioStack::search()
 	    nav2_elev = nav.get_elev();
 	    nav2_magvar = nav.get_magvar();
 	    nav2_range = nav.get_range();
-	    nav2_effective_range = kludgeRange(nav2_elev, elev, nav2_range);
+	    nav2_effective_range = adjustNavRange(nav2_elev, elev, nav2_range);
 	    nav2_target_gs = 0.0;
 	    nav2_radial = nav2_sel_radial;
 	    nav2_x = nav2_dme_x = nav.get_x();

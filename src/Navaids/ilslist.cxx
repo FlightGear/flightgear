@@ -135,8 +135,11 @@ bool FGILSList::query( double lon, double lat, double elev, double freq,
 	//      << ")" << endl;
 
 	// cout << "  dist = " << s << endl;
-	if ( d < (FG_ILS_DEFAULT_RANGE * NM_TO_METER 
-		  * FG_ILS_DEFAULT_RANGE * NM_TO_METER) ) {
+
+	// match up to twice the published range so we can model
+	// reduced signal strength
+	if ( d < (2* FG_ILS_DEFAULT_RANGE * NM_TO_METER 
+		  * 2 * FG_ILS_DEFAULT_RANGE * NM_TO_METER) ) {
 	    *ils = *current;
 	    return true;
 	}

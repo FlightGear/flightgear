@@ -44,7 +44,7 @@ FG_USING_STD(istream);
 #endif
 
 
-#define FG_ILS_DEFAULT_RANGE 30
+#define FG_ILS_DEFAULT_RANGE 18
 
 class FGILS {
 

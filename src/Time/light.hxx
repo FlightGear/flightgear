@@ -51,9 +51,9 @@
 class fgLIGHT {
 
     // Lighting look up tables (based on sun angle with local horizon)
-    fgINTERPTABLE *ambient_tbl;
-    fgINTERPTABLE *diffuse_tbl;
-    fgINTERPTABLE *sky_tbl;
+    SGInterpTable *ambient_tbl;
+    SGInterpTable *diffuse_tbl;
+    SGInterpTable *sky_tbl;
 
 public:
 

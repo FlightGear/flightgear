@@ -30,6 +30,8 @@
 
 #include <simgear/compiler.h>
 
+#include <simgear/math/interpolater.hxx>
+
 #include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
 #include <Sound/morse.hxx>
@@ -38,6 +40,10 @@
 class FGRadioStack : public FGSubsystem
 {
     FGMorse morse;
+
+    SGInterpTable *term_tbl;
+    SGInterpTable *low_tbl;
+    SGInterpTable *high_tbl;
 
     SGValue * latitudeVal;
     SGValue * longitudeVal;
@@ -136,6 +142,14 @@ class FGRadioStack : public FGSubsystem
     double adf_x;
     double adf_y;
     double adf_z;
+
+    // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
+    double adjustNavRange( double stationElev, double aircraftElev,
+			   double nominalRange );
+
+    // model standard ILS service volumes as per AIM 1-1-9
+    double adjustILSRange( double stationElev, double aircraftElev,
+			   double offsetDegrees, double distance );
 
 public:
 

@@ -84,13 +84,13 @@ void fgLIGHT::Init( void ) {
     sky.append( "Lighting/sky" );
 
     // initialize ambient table
-    ambient_tbl = new fgINTERPTABLE( ambient.str() );
+    ambient_tbl = new SGInterpTable( ambient.str() );
 
     // initialize diffuse table
-    diffuse_tbl = new fgINTERPTABLE( diffuse.str() );
+    diffuse_tbl = new SGInterpTable( diffuse.str() );
     
     // initialize sky table
-    sky_tbl = new fgINTERPTABLE( sky.str() );
+    sky_tbl = new SGInterpTable( sky.str() );
 }
 
 
