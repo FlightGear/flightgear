@@ -32,14 +32,14 @@
 #include <Controls/controls.hxx>
 
 #include "protocol.hxx"
-#include "raw_ctrls.hxx"
+#include "net_ctrls.hxx"
 
 SG_USING_STD(string);
 
 
 class FGNativeCtrls : public FGProtocol {
 
-    FGRawCtrls raw_ctrls;
+    FGNetCtrls net_ctrls;
     FGControls ctrls;
 
     int length;

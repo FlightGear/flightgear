@@ -17,12 +17,11 @@ libNetwork_a_SOURCES = \
 	native.cxx native.hxx \
 	native_ctrls.cxx native_ctrls.hxx \
 	native_fdm.cxx native_fdm.hxx \
-	net_fdm.hxx \
+	net_ctrls.hxx net_fdm.hxx \
         nmea.cxx nmea.hxx \
         opengc.cxx opengc.hxx opengc_data.hxx \
 	props.cxx props.hxx \
 	pve.cxx pve.hxx \
-	raw_ctrls.hxx \
 	ray.cxx ray.hxx \
 	rul.cxx rul.hxx
 

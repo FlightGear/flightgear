@@ -57,57 +57,57 @@ bool FGNativeCtrls::open() {
 }
 
 
-static void global2raw( const FGControls *global, FGRawCtrls *raw ) {
+static void global2net( const FGControls *global, FGNetCtrls *net ) {
     int i;
 
-    raw->version = FG_RAW_CTRLS_VERSION;
-    raw->aileron = globals->get_controls()->get_aileron();
-    raw->elevator = globals->get_controls()->get_elevator();
-    raw->elevator_trim = globals->get_controls()->get_elevator_trim();
-    raw->rudder = globals->get_controls()->get_rudder();
-    raw->flaps = globals->get_controls()->get_flaps();
-    for ( i = 0; i < FGRawCtrls::FG_MAX_ENGINES; ++i ) {    
-	raw->throttle[i] = globals->get_controls()->get_throttle(i);
-	raw->mixture[i] = globals->get_controls()->get_mixture(i);
-	raw->prop_advance[i] = globals->get_controls()->get_prop_advance(i);
+    net->version = FG_NET_CTRLS_VERSION;
+    net->aileron = globals->get_controls()->get_aileron();
+    net->elevator = globals->get_controls()->get_elevator();
+    net->elevator_trim = globals->get_controls()->get_elevator_trim();
+    net->rudder = globals->get_controls()->get_rudder();
+    net->flaps = globals->get_controls()->get_flaps();
+    for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {    
+	net->throttle[i] = globals->get_controls()->get_throttle(i);
+	net->mixture[i] = globals->get_controls()->get_mixture(i);
+	net->prop_advance[i] = globals->get_controls()->get_prop_advance(i);
     }
-    for ( i = 0; i < FGRawCtrls::FG_MAX_TANKS; ++i ) {
-        raw->fuel_selector[i] = globals->get_controls()->get_fuel_selector(i);
+    for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
+        net->fuel_selector[i] = globals->get_controls()->get_fuel_selector(i);
     }
-    for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
-	raw->brake[i] =  globals->get_controls()->get_brake(i);
+    for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
+	net->brake[i] =  globals->get_controls()->get_brake(i);
     }
 
-    raw->hground = globals->get_scenery()->get_cur_elev();
+    net->hground = globals->get_scenery()->get_cur_elev();
 }
 
 
-static void raw2global( const FGRawCtrls *raw, FGControls *global ) {
+static void net2global( const FGNetCtrls *net, FGControls *global ) {
     int i;
 
-    if ( raw->version == FG_RAW_CTRLS_VERSION ) {
-	globals->get_controls()->set_aileron( raw->aileron );
-	globals->get_controls()->set_elevator( raw->elevator );
-	globals->get_controls()->set_elevator_trim( raw->elevator_trim );
-	globals->get_controls()->set_rudder( raw->rudder );
-	globals->get_controls()->set_flaps( raw->flaps );
-	for ( i = 0; i < FGRawCtrls::FG_MAX_ENGINES; ++i ) {    
-	    globals->get_controls()->set_throttle( i, raw->throttle[i] );
-	    globals->get_controls()->set_mixture( i, raw->mixture[i] );
-	    globals->get_controls()->set_prop_advance( i, raw->prop_advance[i]);
+    if ( net->version == FG_NET_CTRLS_VERSION ) {
+	globals->get_controls()->set_aileron( net->aileron );
+	globals->get_controls()->set_elevator( net->elevator );
+	globals->get_controls()->set_elevator_trim( net->elevator_trim );
+	globals->get_controls()->set_rudder( net->rudder );
+	globals->get_controls()->set_flaps( net->flaps );
+	for ( i = 0; i < FGNetCtrls::FG_MAX_ENGINES; ++i ) {    
+	    globals->get_controls()->set_throttle( i, net->throttle[i] );
+	    globals->get_controls()->set_mixture( i, net->mixture[i] );
+	    globals->get_controls()->set_prop_advance( i, net->prop_advance[i]);
 	}
-	for ( i = 0; i < FGRawCtrls::FG_MAX_TANKS; ++i ) {
-	    globals->get_controls()->set_fuel_selector( i, raw->fuel_selector[i] );
+	for ( i = 0; i < FGNetCtrls::FG_MAX_TANKS; ++i ) {
+	    globals->get_controls()->set_fuel_selector( i, net->fuel_selector[i] );
 	}
-	for ( i = 0; i < FGRawCtrls::FG_MAX_WHEELS; ++i ) {
-	    globals->get_controls()->set_brake( i, raw->brake[i] );
+	for ( i = 0; i < FGNetCtrls::FG_MAX_WHEELS; ++i ) {
+	    globals->get_controls()->set_brake( i, net->brake[i] );
 	}
-	globals->get_controls()->set_gear_down( raw->gear_handle );
-	globals->get_scenery()->set_cur_elev( raw->hground );
+	globals->get_controls()->set_gear_down( net->gear_handle );
+	globals->get_scenery()->set_cur_elev( net->hground );
     } else {
-	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in raw2global()" );
+	SG_LOG( SG_IO, SG_ALERT, "Error: version mismatch in net2global()" );
 	SG_LOG( SG_IO, SG_ALERT,
-		"\tsomeone needs to upgrade raw_ctrls.hxx and recompile." );
+		"\tsomeone needs to upgrade net_ctrls.hxx and recompile." );
     }
 }
 
@@ -115,27 +115,27 @@ static void raw2global( const FGRawCtrls *raw, FGControls *global ) {
 // process work for this port
 bool FGNativeCtrls::process() {
     SGIOChannel *io = get_io_channel();
-    int length = sizeof(FGRawCtrls);
+    int length = sizeof(FGNetCtrls);
 
     if ( get_direction() == SG_IO_OUT ) {
 	// cout << "size of cur_fdm_state = " << length << endl;
 
-	global2raw( globals->get_controls(), &raw_ctrls );
+	global2net( globals->get_controls(), &net_ctrls );
 
-	if ( ! io->write( (char *)(& raw_ctrls), length ) ) {
+	if ( ! io->write( (char *)(& net_ctrls), length ) ) {
 	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
 	    return false;
 	}
     } else if ( get_direction() == SG_IO_IN ) {
 	if ( io->get_type() == sgFileType ) {
-	    if ( io->read( (char *)(& raw_ctrls), length ) == length ) {
+	    if ( io->read( (char *)(& net_ctrls), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		raw2global( &raw_ctrls, globals->get_controls() );
+		net2global( &net_ctrls, globals->get_controls() );
 	    }
 	} else {
-	    while ( io->read( (char *)(& raw_ctrls), length ) == length ) {
+	    while ( io->read( (char *)(& net_ctrls), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		raw2global( &raw_ctrls, globals->get_controls() );
+		net2global( &net_ctrls, globals->get_controls() );
 	    }
 	}
     }

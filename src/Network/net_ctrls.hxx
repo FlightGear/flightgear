@@ -1,4 +1,4 @@
-// raw_ctrls.hxx -- defines a common raw I/O interface to the flight
+// net_ctrls.hxx -- defines a common net I/O interface to the flight
 //                  sim controls
 //
 // Written by Curtis Olson, started July 2001.
@@ -22,20 +22,20 @@
 // $Id$
 
 
-#ifndef _RAW_CTRLS_HXX
-#define _RAW_CTRLS_HXX
+#ifndef _NET_CTRLS_HXX
+#define _NET_CTRLS_HXX
 
 
 #ifndef __cplusplus                                                          
 # error This library requires C++
 #endif                                   
 
-const int FG_RAW_CTRLS_VERSION = 11;
+const int FG_NET_CTRLS_VERSION = 11;
 
 
 // Define a structure containing the control parameters
 
-class FGRawCtrls {
+class FGNetCtrls {
 
 public:
 
@@ -87,6 +87,6 @@ public:
 };
 
 
-#endif // _RAW_CTRLS_HXX
+#endif // _NET_CTRLS_HXX
 
 

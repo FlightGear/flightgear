@@ -26,7 +26,7 @@
 #include <plib/netBuffer.h>
 #include <plib/netSocket.h>
 
-#include <Network/raw_ctrls.hxx>
+#include <Network/net_ctrls.hxx>
 #include <Network/net_fdm.hxx>
 
 #include <FDM/flight.hxx>
@@ -79,7 +79,7 @@ private:
 
     bool valid;
 
-    FGRawCtrls ctrls;
+    FGNetCtrls ctrls;
     FGNetFDM fdm;
 
 public:
