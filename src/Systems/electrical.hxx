@@ -62,7 +62,8 @@ protected:
 
     int kind;
     string name;
-    double value;
+    float volts;
+    float load_amps;
 
     comp_list inputs;
     comp_list outputs;
@@ -76,8 +77,12 @@ public:
     inline string get_name() { return name; }
 
     inline int get_kind() const { return kind; }
-    inline double get_value() const { return value; }
-    inline void set_value( double val ) { value = val; }
+
+    inline float get_volts() const { return volts; }
+    inline void set_volts( float val ) { volts = val; }
+
+    inline float get_load_amps() const { return load_amps; }
+    inline void set_load_amps( float val ) { load_amps = val; }
 
     inline int get_num_inputs() const { return outputs.size(); }
     inline FGElectricalComponent *get_input( const int i ) {
@@ -146,10 +151,43 @@ public:
 // flexibility
 class FGElectricalOutput : public FGElectricalComponent {
 
+private:
+
+    // number of amps drawn by this output
+    float output_amps;
+
 public:
 
     FGElectricalOutput ( SGPropertyNode *node );
     ~FGElectricalOutput () {}
+
+    inline float get_output_amps() const { return output_amps; }
+    inline void set_output_amps( float val ) { output_amps = val; }
+};
+
+
+// Model an electrical switch.  If the rating_amps > 0 then this
+// becomes a circuit breaker type switch that can trip
+class FGElectricalSwitch {
+
+private:
+
+    SGPropertyNode *switch_node;
+    float rating_amps;
+    bool circuit_breaker;
+
+public:
+
+    FGElectricalSwitch( SGPropertyNode *node, float rate, bool cb ) {
+        switch_node = node;
+        rating_amps = rate;
+        circuit_breaker = cb;
+    }
+
+    ~FGElectricalSwitch() { };
+
+    inline bool get_state() const { return switch_node->getBoolValue(); }
+    void set_state( bool val ) { switch_node->setBoolValue( val ); }
 };
 
 
@@ -159,7 +197,7 @@ class FGElectricalConnector : public FGElectricalComponent {
 
     comp_list inputs;
     comp_list outputs;
-    typedef vector<SGPropertyNode *> switch_list;
+    typedef vector< FGElectricalSwitch> switch_list;
     switch_list switches;
 
 public:
@@ -167,8 +205,8 @@ public:
     FGElectricalConnector ( SGPropertyNode *node, FGElectricalSystem *es );
     ~FGElectricalConnector () {}
 
-    void add_switch( SGPropertyNode *node ) {
-        switches.push_back( node );
+    void add_switch( FGElectricalSwitch s ) {
+        switches.push_back( s );
     }
 
     // set all switches to the specified state
@@ -197,7 +235,7 @@ public:
     virtual void update (double dt);
 
     bool build ();
-    void propagate( FGElectricalComponent *node, double val, string s = "" );
+    float propagate( FGElectricalComponent *node, double val, string s = "" );
     FGElectricalComponent *find ( const string &name );
 
 protected:

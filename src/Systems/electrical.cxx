@@ -33,7 +33,8 @@
 FGElectricalComponent::FGElectricalComponent() :
     kind(-1),
     name(""),
-    value(0.0)
+    volts(0.0),
+    load_amps(0.0)
 {
 }
 
@@ -117,6 +118,7 @@ FGElectricalBus::FGElectricalBus ( SGPropertyNode *node ) {
 
 FGElectricalOutput::FGElectricalOutput ( SGPropertyNode *node ) {
     kind = FG_OUTPUT;
+    output_amps = 0.1;
 
     name = node->getStringValue("name");
     int i;
@@ -178,7 +180,10 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
             // set default value of switch to true
             // cout << "Switch = " << child->getStringValue() << endl;
             fgSetBool( child->getStringValue(), true );
-            add_switch( fgGetNode( child->getStringValue(), true ) );
+            FGElectricalSwitch s( fgGetNode(child->getStringValue(), true),
+                                  100.0f,
+                                  false );
+            add_switch( s );
         }
     }
 
@@ -203,7 +208,7 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
 void FGElectricalConnector::set_switches( bool state ) {
     // cout << "setting switch state to " << state << endl;
     for ( unsigned int i = 0; i < switches.size(); ++i ) {
-        switches[i]->setBoolValue( state );
+        switches[i].set_state( state );
     }
 }
 
@@ -214,7 +219,7 @@ void FGElectricalConnector::set_switches( bool state ) {
 bool FGElectricalConnector::get_state() {
     unsigned int i;
     for ( i = 0; i < switches.size(); ++i ) {
-        if ( ! switches[i]->getBoolValue() ) {
+        if ( ! switches[i].get_state() ) {
             return false;
         }
     }
@@ -293,16 +298,20 @@ void FGElectricalSystem::update (double dt) {
 
     // zero everything out before we start
     for ( i = 0; i < suppliers.size(); ++i ) {
-        suppliers[i]->set_value( 0.0 );
+        suppliers[i]->set_volts( 0.0 );
+        suppliers[i]->set_load_amps( 0.0 );
     }
     for ( i = 0; i < buses.size(); ++i ) {
-        buses[i]->set_value( 0.0 );
+        buses[i]->set_volts( 0.0 );
+        buses[i]->set_load_amps( 0.0 );
     }
     for ( i = 0; i < outputs.size(); ++i ) {
-        outputs[i]->set_value( 0.0 );
+        outputs[i]->set_volts( 0.0 );
+        outputs[i]->set_load_amps( 0.0 );
     }
     for ( i = 0; i < connectors.size(); ++i ) {
-        connectors[i]->set_value( 0.0 );
+        connectors[i]->set_volts( 0.0 );
+        connectors[i]->set_load_amps( 0.0 );
     }
 
     // for each supplier, propagate the electrical current
@@ -391,52 +400,68 @@ bool FGElectricalSystem::build () {
 }
 
 
-// propagate the electrical current through the network
-void FGElectricalSystem::propagate( FGElectricalComponent *node, double val,
+// propagate the electrical current through the network, returns the
+// total current drawn by the children of this node.
+float FGElectricalSystem::propagate( FGElectricalComponent *node, double val,
                                     string s ) {
     s += " ";
+    
+    float current_amps = 0.0;
 
     // determine the current to carry forward
-    double current = 0.0;
+    double volts = 0.0;
     if ( !fgGetBool("/systems/electrical/serviceable") ) {
-        current = 0;
+        volts = 0;
     } else if ( node->get_kind() == FG_SUPPLIER ) {
         // cout << s << " is a supplier" << endl;
-        current = ((FGElectricalSupplier *)node)->get_output();
+        volts = ((FGElectricalSupplier *)node)->get_output();
     } else if ( node->get_kind() == FG_BUS ) {
         // cout << s << " is a bus" << endl;
-        current = val;
+        volts = val;
     } else if ( node->get_kind() == FG_OUTPUT ) {
         // cout << s << " is an output" << endl;
-        current = val;
+        volts = val;
+        if ( volts > 1.0 ) {
+            // draw current if we have voltage
+            current_amps = ((FGElectricalOutput *)node)->get_output_amps();
+        }
     } else if ( node->get_kind() == FG_CONNECTOR ) {
         // cout << s << " is a connector" << endl;
         if ( ((FGElectricalConnector *)node)->get_state() ) {
-            current = val;
+            volts = val;
         } else {
-            current = 0.0;
+            volts = 0.0;
         }
-        // cout << s << "  val = " << current << endl;
+        // cout << s << "  val = " << volts << endl;
     } else {
         SG_LOG( SG_ALL, SG_ALERT, "unkown node type" );
     }
 
-    if ( current > node->get_value() ) {
-        node->set_value( current );
+    if ( volts > node->get_volts() ) {
+        node->set_volts( volts );
     }
 
     int i;
 
     // publish values to specified properties
     for ( i = 0; i < node->get_num_props(); ++i ) {
-        fgSetDouble( node->get_prop(i).c_str(), node->get_value() );
+        fgSetDouble( node->get_prop(i).c_str(), node->get_volts() );
     }
     // cout << s << node->get_name() << " -> " << node->get_value() << endl;
 
     // propagate to all children
     for ( i = 0; i < node->get_num_outputs(); ++i ) {
-        propagate( node->get_output(i), current, s );
+        current_amps += propagate( node->get_output(i), volts, s );
     }
+
+    // if not an output node, register the downstream current draw
+    // with this node.  If volts are zero, current draw should be zero.
+    if ( node->get_kind() != FG_OUTPUT ) {
+        node->set_load_amps( current_amps );
+    }
+    // cout << s << node->get_name() << " -> " << current_amps << endl;
+
+    return current_amps;
 }
 
 
