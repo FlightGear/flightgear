@@ -693,9 +693,9 @@ void
 FGInput::_update_joystick (double dt)
 {
 #ifdef REMOVE_ME_AFTER_FLIGHTGEAR_0_9_2_RELEASE
-  static double _last_dt = 1.0;
-#else
   static double _last_dt = 0.0;
+#else
+  static double _last_dt = 1.0;
 #endif
   int modifiers = FG_MOD_NONE;  // FIXME: any way to get the real ones?
   int i, j, buttons;
