@@ -157,19 +157,22 @@ static ssgLeaf *gen_lights( ssgVertexArray *lights, int inc, float bright ) {
 	if ( i % inc == 0 ) {
 	    vl->add( lights->get(i) );
 
-	    // yellow = 1,1,0
+	    // factor = sg_random() ^ 2, range = 0 .. 1 concentrated towards 0
+	    float factor = sg_random();
+	    factor *= factor;
+
 	    if ( zombie > 0.5 ) {
 		// 50% chance of yellowish
-		sgSetVec4( color, 0.9, 0.9, 0.3, bright );
+		sgSetVec4( color, 0.9, 0.9, 0.3, bright - factor * 0.2 );
 	    } else if ( zombie > 0.15 ) {
 		// 35% chance of whitish
-		sgSetVec4( color, 0.9, 0.9, 0.8, bright );
+		sgSetVec4( color, 0.9, 0.9, 0.8, bright - factor * 0.2 );
 	    } else if ( zombie > 0.05 ) {
 		// 10% chance of orangish
-		sgSetVec4( color, 0.9, 0.6, 0.2, bright );
+		sgSetVec4( color, 0.9, 0.6, 0.2, bright - factor * 0.2 );
 	    } else {
 		// 5% chance of redish
-		sgSetVec4( color, 0.9, 0.2, 0.2, bright );
+		sgSetVec4( color, 0.9, 0.2, 0.2, bright - factor * 0.2 );
 	    }
 	    cl->add( color );
 	}
