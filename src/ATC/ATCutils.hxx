@@ -40,6 +40,9 @@ SG_USING_STD(string);
 // Convert any number to spoken digits
 string ConvertNumToSpokenDigits(string n);
 
+// Convert an integer to spoken digits
+string ConvertNumToSpokenDigits(int n);
+
 // Convert a 2 digit rwy number to a spoken-style string
 string ConvertRwyNumToSpokenString(int n);
 

@@ -52,9 +52,18 @@ string ConvertNumToSpokenDigits(string n) {
 			str += " ";
 		}
 	}
-
 	return(str);
 }
+
+
+// Convert an integer to spoken digits
+string ConvertNumToSpokenDigits(int n) {
+	char buf[12];	// should be big enough!!
+	sprintf(buf, "%i", n);
+	string tempstr1 = buf;
+	return(ConvertNumToSpokenDigits(tempstr1));
+}
+
 
 // Convert a 2 digit rwy number to a spoken-style string
 string ConvertRwyNumToSpokenString(int n) {
