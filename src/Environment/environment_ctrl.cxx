@@ -37,9 +37,6 @@
 
 SG_USING_STD(sort);
 
-// FIXME, from options.cxx
-extern void fgSetupWind (double min_hdg, double max_hdg, double speed, double gust);
-
 
 
 ////////////////////////////////////////////////////////////////////////
