@@ -33,17 +33,22 @@ genapts_SOURCES = \
 	point2d.cxx point2d.hxx
 
 genapts_LDADD = \
+	$(top_builddir)/Tools/Polygon/libPolygon.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Debug/libDebug.a \
 	$(top_builddir)/Lib/Misc/libMisc.a \
 	$(top_builddir)/Lib/zlib/libz.a \
 	$(base_LIBS)
 
-INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib
+INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Tools
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1999/02/25 21:32:47  curt
+# Modified to adhere to new polygon naming convention, and also to read the
+# new Robin Peel aiport format.
+#
 # Revision 1.4  1999/02/11 01:10:50  curt
 # Start of scenery revamp project.
 #

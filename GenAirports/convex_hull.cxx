@@ -178,8 +178,8 @@ list_container convex_hull( list_container input_list )
     // double check list size ... this should never fail because a
     // single runway will always generate four points.
     if ( radians_map.size() < 3 ) {
-	// printf("convex hull not possible with < 3 points\n");
-	exit(0);
+	cout << "convex hull not possible with < 3 points" << endl;
+	exit(-1);
     }
 
     // ensure that we run the while loop at least once
@@ -256,6 +256,10 @@ list_container convex_hull( list_container input_list )
 
 
 // $Log$
+// Revision 1.5  1999/02/25 21:32:48  curt
+// Modified to adhere to new polygon naming convention, and also to read the
+// new Robin Peel aiport format.
+//
 // Revision 1.4  1998/09/17 18:40:42  curt
 // Debug message tweaks.
 //
