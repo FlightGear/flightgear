@@ -1,6 +1,7 @@
 noinst_LIBRARIES = libModel.a
 
-libModel_a_SOURCES = model.cxx model.hxx \
+libModel_a_SOURCES = loader.cxx loader.hxx \
+	             model.cxx model.hxx \
                      modelmgr.cxx modelmgr.hxx \
                      acmodel.cxx acmodel.hxx \
                      panelnode.cxx panelnode.hxx

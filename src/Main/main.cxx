@@ -100,8 +100,9 @@ SG_USING_STD(endl);
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
 #include <Model/acmodel.hxx>
-#include <Model/modelmgr.hxx>
+#include <Model/loader.hxx>
 #include <Model/model.hxx>
+#include <Model/modelmgr.hxx>
 #include <Main/location.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
@@ -1543,6 +1544,8 @@ int mainLoop( int argc, char **argv ) {
     // Initialize the general model subsystem.
     ////////////////////////////////////////////////////////////////////
 
+    globals->set_model_loader(new FGModelLoader);
+    globals->set_texture_loader(new FGTextureLoader);
     globals->set_model_mgr(new FGModelMgr);
     globals->get_model_mgr()->init();
     globals->get_model_mgr()->bind();
@@ -1744,7 +1747,8 @@ void fgLoadDCS(void) {
                 // instance of the last object.
 
                 if ( strcmp(obj_filename,"repeat") != 0) {
-                    ship_obj = ssgLoad( obj_filename );
+                    ship_obj =
+                        globals->get_model_loader()->load_model( obj_filename );
                 }
       
                 if ( ship_obj != NULL ) {

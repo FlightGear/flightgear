@@ -35,6 +35,17 @@
 ////////////////////////////////////////////////////////////////////////
 
 /**
+ * Callback to update an animation.
+ */
+static int
+animation_callback (ssgEntity * entity, int mask)
+{
+    ((Animation *)entity->getUserData())->update();
+    return true;
+}
+
+
+/**
  * Locate a named SSG node in a branch.
  */
 static ssgEntity *
@@ -161,29 +172,60 @@ read_interpolation_table (const SGPropertyNode * props)
 }
 
 
+static void
+make_animation (ssgBranch * model,
+                const char * object_name,
+                SGPropertyNode * node)
+{
+  Animation * animation = 0;
+  const char * type = node->getStringValue("type");
+  if (!strcmp("none", type)) {
+    animation = new NullAnimation(node);
+  } else if (!strcmp("range", type)) {
+    animation = new RangeAnimation(node);
+  } else if (!strcmp("billboard", type)) {
+    animation = new BillboardAnimation(node);
+  } else if (!strcmp("select", type)) {
+    animation = new SelectAnimation(node);
+  } else if (!strcmp("spin", type)) {
+    animation = new SpinAnimation(node);
+  } else if (!strcmp("rotate", type)) {
+    animation = new RotateAnimation(node);
+  } else if (!strcmp("translate", type)) {
+    animation = new TranslateAnimation(node);
+  } else {
+    animation = new NullAnimation(node);
+    SG_LOG(SG_INPUT, SG_WARN, "Unknown animation type " << type);
+  }
+
+  ssgEntity * object;
+  if (object_name != 0) {
+    object = find_named_node(model, object_name);
+    if (object == 0) {
+      SG_LOG(SG_INPUT, SG_WARN, "Object " << object_name << " not found");
+      delete animation;
+      animation = 0;
+    }
+  } else {
+    object = model;
+  }
+  
+  ssgBranch * branch = animation->getBranch();
+  splice_branch(branch, object);
+  branch->setUserData(animation);
+  branch->setTravCallback(SSG_CALLBACK_PRETRAV, animation_callback);
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FG3DModel
+// Global functions.
 ////////////////////////////////////////////////////////////////////////
 
-FG3DModel::FG3DModel ()
-  : _model(0)
+ssgBranch *
+fgLoad3DModel (const string &path)
 {
-}
-
-FG3DModel::~FG3DModel ()
-{
-  // since the nodes are attached to the scene graph, they'll be
-  // deleted automatically
-
-  unsigned int i;
-  for (i = 0; i < _animations.size(); i++)
-    delete _animations[i];
-}
-
-void 
-FG3DModel::init (const string &path)
-{
+  ssgBranch * model = 0;
   SGPropertyNode props;
 
                                 // Load the 3D aircraft object itself
@@ -198,23 +240,23 @@ FG3DModel::init (const string &path)
       modelpath = modelpath.dir();
       modelpath.append(props.getStringValue("/path"));
     } else {
-      if (_model == 0)
-	_model = new ssgBranch;
+      if (model == 0)
+	model = new ssgBranch;
     }
   }
 
                                 // Assume that textures are in
                                 // the same location as the XML file.
-  if (_model == 0) {
+  if (model == 0) {
     ssgTexturePath((char *)xmlpath.dir().c_str());
-    _model = (ssgBranch *)ssgLoad((char *)modelpath.c_str());
-    if (_model == 0)
+    model = (ssgBranch *)ssgLoad((char *)modelpath.c_str());
+    if (model == 0)
       throw sg_exception("Failed to load 3D model");
   }
 
                                 // Set up the alignment node
   ssgTransform * align = new ssgTransform;
-  align->addKid(_model);
+  align->addKid(model);
   sgMat4 res_matrix;
   make_offsets_matrix(&res_matrix,
 		      props.getFloatValue("/offsets/heading-deg", 0.0),
@@ -232,15 +274,10 @@ FG3DModel::init (const string &path)
     vector<SGPropertyNode_ptr> name_nodes =
       animation_nodes[i]->getChildren("object-name");
     if (name_nodes.size() < 1) {
-      Animation * animation = make_animation(0, animation_nodes[i]);
-      if (animation != 0)
-	_animations.push_back(animation);
+        make_animation(model, 0, animation_nodes[i]);
     } else {
       for (unsigned int j = 0; j < name_nodes.size(); j++) {
-        Animation * animation =
-          make_animation(name_nodes[j]->getStringValue(), animation_nodes[i]);
-        if (animation != 0)
-          _animations.push_back(animation);
+        make_animation(model, name_nodes[j]->getStringValue(), animation_nodes[i]);
       }
     }
   }
@@ -250,7 +287,7 @@ FG3DModel::init (const string &path)
   for (i = 0; i < panel_nodes.size(); i++) {
     printf("Reading a panel in model.cxx\n");
     FGPanelNode * panel = new FGPanelNode(panel_nodes[i]);
-    _model->addKid(panel);
+    model->addKid(panel);
   }
 
 				// Load sub-models
@@ -267,255 +304,157 @@ FG3DModel::init (const string &path)
 			node->getFloatValue("offsets/y-m", 0.0),
 			node->getFloatValue("offsets/z-m", 0.0));
     align->setTransform(res_matrix);
-    FG3DModel * kid = new FG3DModel;
-    kid->init(node->getStringValue("path"));
-    align->addKid(kid->getSceneGraph());
-    _model->addKid(align);
-    _children.push_back(kid);
-  }
-}
 
-void
-FG3DModel::update (double dt)
-{
-  unsigned int i;
-
-  for (i = 0; i < _children.size(); i++)
-    _children[i]->update(dt);
-  for (i = 0; i < _animations.size(); i++)
-    _animations[i]->update(dt);
-}
-
-FG3DModel::Animation *
-FG3DModel::make_animation (const char * object_name,
-			   SGPropertyNode * node)
-{
-  Animation * animation = 0;
-  const char * type = node->getStringValue("type");
-  if (!strcmp("none", type)) {
-    animation = new NullAnimation();
-  } else if (!strcmp("range", type)) {
-    animation = new RangeAnimation();
-  } else if (!strcmp("billboard", type)) {
-    animation = new BillboardAnimation();
-  } else if (!strcmp("select", type)) {
-    animation = new SelectAnimation();
-  } else if (!strcmp("spin", type)) {
-    animation = new SpinAnimation();
-  } else if (!strcmp("rotate", type)) {
-    animation = new RotateAnimation();
-  } else if (!strcmp("translate", type)) {
-    animation = new TranslateAnimation();
-  } else {
-    animation = new NullAnimation();
-    SG_LOG(SG_INPUT, SG_WARN, "Unknown animation type " << type);
+    ssgBranch * kid = fgLoad3DModel(node->getStringValue("path"));
+    align->addKid(kid);
+    model->addKid(align);
   }
 
-  ssgEntity * object;
-  if (object_name != 0) {
-    object = find_named_node(_model, object_name);
-    if (object == 0) {
-      SG_LOG(SG_INPUT, SG_WARN, "Object " << object_name << " not found");
-      delete animation;
-      animation = 0;
-    }
-  } else {
-    object = _model;
-  }
-
-  if (animation != 0)
-    animation->init(object, node);
-  return animation;
+  return model;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FG3DModel::Animation
+// Implementation of Animation
 ////////////////////////////////////////////////////////////////////////
 
-FG3DModel::Animation::Animation ()
+Animation::Animation (SGPropertyNode_ptr props, ssgBranch * branch)
+    : _branch(branch)
 {
+    _branch->setName(props->getStringValue("name", 0));
 }
 
-FG3DModel::Animation::~Animation ()
+Animation::~Animation ()
 {
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FG3DModel::NullAnimation
+// Implementation of NullAnimation
 ////////////////////////////////////////////////////////////////////////
 
-FG3DModel::NullAnimation::NullAnimation ()
-  : _branch(new ssgBranch)
+NullAnimation::NullAnimation (SGPropertyNode_ptr props)
+  : Animation(props, new ssgBranch)
 {
 }
 
-FG3DModel::NullAnimation::~NullAnimation ()
+NullAnimation::~NullAnimation ()
 {
-  _branch = 0;
 }
 
 void
-FG3DModel::NullAnimation::init (ssgEntity * object,
-                                      SGPropertyNode * props)
-{
-  splice_branch(_branch, object);
-  _branch->setName(props->getStringValue("name", 0));
-}
-
-void
-FG3DModel::NullAnimation::update (double dt)
+NullAnimation::update ()
 {
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FG3DModel::RangeAnimation
+// Implementation of RangeAnimation
 ////////////////////////////////////////////////////////////////////////
 
-FG3DModel::RangeAnimation::RangeAnimation ()
-  : _branch(new ssgRangeSelector)
+RangeAnimation::RangeAnimation (SGPropertyNode_ptr props)
+  : Animation(props, new ssgRangeSelector)
 {
+    float ranges[] = { props->getFloatValue("min-m", 0),
+                       props->getFloatValue("max-m", 5000) };
+    ((ssgRangeSelector *)_branch)->setRanges(ranges, 2);
+                       
 }
 
-FG3DModel::RangeAnimation::~RangeAnimation ()
+RangeAnimation::~RangeAnimation ()
 {
-  _branch = 0;
 }
 
 void
-FG3DModel::RangeAnimation::init (ssgEntity * object,
-                                      SGPropertyNode * props)
-{
-  float ranges[2];
-  splice_branch(_branch, object);
-  _branch->setName(props->getStringValue("name", 0));
-  ranges[0] = props->getFloatValue("min-m", 0);
-  ranges[1] = props->getFloatValue("max-m", 5000);
-  _branch->setRanges(ranges, 2);
-}
-
-void
-FG3DModel::RangeAnimation::update (double dt)
+RangeAnimation::update ()
 {
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FG3DModel::BillboardAnimation
+// Implementation of BillboardAnimation
 ////////////////////////////////////////////////////////////////////////
 
-FG3DModel::BillboardAnimation::BillboardAnimation ()
-  : _branch(0)
+BillboardAnimation::BillboardAnimation (SGPropertyNode_ptr props)
+    : Animation(props, new ssgCutout(props->getBoolValue("spherical", true)))
 {
-  // Note: we cannot allocate the branch until we know whether
-  // it can rotate around the x axis as well as the z axis.
 }
 
-FG3DModel::BillboardAnimation::~BillboardAnimation ()
+BillboardAnimation::~BillboardAnimation ()
 {
-  _branch = 0;
 }
 
 void
-FG3DModel::BillboardAnimation::init (ssgEntity * object,
-				     SGPropertyNode * props)
-{
-  _branch = new ssgCutout(props->getBoolValue("spherical", true));
-  splice_branch(_branch, object);
-  _branch->setName(props->getStringValue("name", 0));
-}
-
-void
-FG3DModel::BillboardAnimation::update (double dt)
+BillboardAnimation::update ()
 {
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FG3DModel::SelectAnimation
+// Implementation of SelectAnimation
 ////////////////////////////////////////////////////////////////////////
 
-FG3DModel::SelectAnimation::SelectAnimation ()
-  : _condition(0),
-    _selector(new ssgSelector)
+SelectAnimation::SelectAnimation (SGPropertyNode_ptr props)
+  : Animation(props, new ssgSelector),
+    _condition(0)
 {
+  SGPropertyNode * node = props->getChild("condition");
+  if (node != 0)
+    _condition = fgReadCondition(node);
 }
 
-FG3DModel::SelectAnimation::~SelectAnimation ()
+SelectAnimation::~SelectAnimation ()
 {
   delete _condition;
-  _selector = 0;
 }
 
 void
-FG3DModel::SelectAnimation::init (ssgEntity * object,
-                                      SGPropertyNode * props)
-{
-  splice_branch(_selector, object);
-  _selector->setName(props->getStringValue("name", 0));
-  SGPropertyNode * node = props->getChild("condition");
-  if (node != 0) {
-    _condition = fgReadCondition(node);
-  }
-}
-
-void
-FG3DModel::SelectAnimation::update (double dt)
+SelectAnimation::update ()
 {
   if (_condition != 0 && _condition->test()) 
-    _selector->select(0xffff);
+      ((ssgSelector *)_branch)->select(0xffff);
   else
-    _selector->select(0x0000);
+      ((ssgSelector *)_branch)->select(0x0000);
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FG3DModel::SpinAnimation
+// Implementation of SpinAnimation
 ////////////////////////////////////////////////////////////////////////
 
-FG3DModel::SpinAnimation::SpinAnimation ()
-  : _prop(0),
-    _factor(0),
-    _position_deg(0),
-    _transform(new ssgTransform)
+SpinAnimation::SpinAnimation (SGPropertyNode_ptr props)
+  : Animation(props, new ssgTransform),
+    _prop(fgGetNode(props->getStringValue("property", "/null"), true)),
+    _factor(props->getDoubleValue("factor", 1.0)),
+    _position_deg(props->getDoubleValue("starting-position-deg", 0)),
+    _last_time_sec(globals->get_sim_time_sec())
 {
+    _center[0] = props->getFloatValue("center/x-m", 0);
+    _center[1] = props->getFloatValue("center/y-m", 0);
+    _center[2] = props->getFloatValue("center/z-m", 0);
+    _axis[0] = props->getFloatValue("axis/x", 0);
+    _axis[1] = props->getFloatValue("axis/y", 0);
+    _axis[2] = props->getFloatValue("axis/z", 0);
+    sgNormalizeVec3(_axis);
 }
 
-FG3DModel::SpinAnimation::~SpinAnimation ()
+SpinAnimation::~SpinAnimation ()
 {
-  _transform = 0;
-}
-
-void
-FG3DModel::SpinAnimation::init (ssgEntity * object,
-                                      SGPropertyNode * props)
-{
-                                // Splice in the new transform node
-  splice_branch(_transform, object);
-  _transform->setName(props->getStringValue("name", 0));
-  _prop = fgGetNode(props->getStringValue("property", "/null"), true);
-  _factor = props->getDoubleValue("factor", 1.0);
-  _position_deg = props->getDoubleValue("starting-position-deg", 0);
-  _center[0] = props->getFloatValue("center/x-m", 0);
-  _center[1] = props->getFloatValue("center/y-m", 0);
-  _center[2] = props->getFloatValue("center/z-m", 0);
-  _axis[0] = props->getFloatValue("axis/x", 0);
-  _axis[1] = props->getFloatValue("axis/y", 0);
-  _axis[2] = props->getFloatValue("axis/z", 0);
-  sgNormalizeVec3(_axis);
 }
 
 void
-FG3DModel::SpinAnimation::update (double dt)
+SpinAnimation::update ()
 {
+  double sim_time = globals->get_sim_time_sec();
+  double dt = sim_time - _last_time_sec;
+  _last_time_sec = sim_time;
+
   float velocity_rpms = (_prop->getDoubleValue() * _factor / 60.0);
   _position_deg += (dt * velocity_rpms * 360);
   while (_position_deg < 0)
@@ -523,55 +462,27 @@ FG3DModel::SpinAnimation::update (double dt)
   while (_position_deg >= 360.0)
     _position_deg -= 360.0;
   set_rotation(_matrix, _position_deg, _center, _axis);
-  _transform->setTransform(_matrix);
+  ((ssgTransform *)_branch)->setTransform(_matrix);
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FG3DModel::RotateAnimation
+// Implementation of RotateAnimation
 ////////////////////////////////////////////////////////////////////////
 
-FG3DModel::RotateAnimation::RotateAnimation ()
-  : _prop(0),
-    _offset_deg(0.0),
-    _factor(1.0),
-    _table(0),
-    _has_min(false),
-    _min_deg(0.0),
-    _has_max(false),
-    _max_deg(1.0),
-    _position_deg(0.0),
-    _transform(new ssgTransform)
+RotateAnimation::RotateAnimation (SGPropertyNode_ptr props)
+    : Animation(props, new ssgTransform),
+      _prop(fgGetNode(props->getStringValue("property", "/null"), true)),
+      _offset_deg(props->getDoubleValue("offset-deg", 0.0)),
+      _factor(props->getDoubleValue("factor", 1.0)),
+      _table(read_interpolation_table(props)),
+      _has_min(props->hasValue("min-deg")),
+      _min_deg(props->getDoubleValue("min-deg")),
+      _has_max(props->hasValue("max-deg")),
+      _max_deg(props->getDoubleValue("max-deg")),
+      _position_deg(props->getDoubleValue("starting-position-deg", 0))
 {
-}
-
-FG3DModel::RotateAnimation::~RotateAnimation ()
-{
-  delete _table;
-  _transform = 0;
-}
-
-void
-FG3DModel::RotateAnimation::init (ssgEntity * object,
-				  SGPropertyNode * props)
-{
-                                // Splice in the new transform node
-  splice_branch(_transform, object);
-  _transform->setName(props->getStringValue("name", 0));
-  _prop = fgGetNode(props->getStringValue("property", "/null"), true);
-  _offset_deg = props->getDoubleValue("offset-deg", 0.0);
-  _factor = props->getDoubleValue("factor", 1.0);
-  _table = read_interpolation_table(props);
-  if (props->hasValue("min-deg")) {
-    _has_min = true;
-    _min_deg = props->getDoubleValue("min-deg");
-  }
-  if (props->hasValue("max-deg")) {
-    _has_max = true;
-    _max_deg = props->getDoubleValue("max-deg");
-  }
-  _position_deg = props->getDoubleValue("starting-position-deg", 0);
   _center[0] = props->getFloatValue("center/x-m", 0);
   _center[1] = props->getFloatValue("center/y-m", 0);
   _center[2] = props->getFloatValue("center/z-m", 0);
@@ -581,8 +492,13 @@ FG3DModel::RotateAnimation::init (ssgEntity * object,
   sgNormalizeVec3(_axis);
 }
 
+RotateAnimation::~RotateAnimation ()
+{
+  delete _table;
+}
+
 void
-FG3DModel::RotateAnimation::update (double dt)
+RotateAnimation::update ()
 {
   if (_table == 0) {
     _position_deg = (_prop->getDoubleValue() + _offset_deg) * _factor;
@@ -594,63 +510,40 @@ FG3DModel::RotateAnimation::update (double dt)
     _position_deg = _table->interpolate(_prop->getDoubleValue());
   }
   set_rotation(_matrix, _position_deg, _center, _axis);
-  _transform->setTransform(_matrix);
+  ((ssgTransform *)_branch)->setTransform(_matrix);
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FG3DModel::TranslateAnimation
+// Implementation of TranslateAnimation
 ////////////////////////////////////////////////////////////////////////
 
-FG3DModel::TranslateAnimation::TranslateAnimation ()
-  : _prop(0),
-    _offset_m(0.0),
-    _factor(1.0),
-    _table(0),
-    _has_min(false),
-    _min_m(0.0),
-    _has_max(false),
-    _max_m(1.0),
-    _position_m(0.0),
-    _transform(new ssgTransform)
+TranslateAnimation::TranslateAnimation (SGPropertyNode_ptr props)
+  : Animation(props, new ssgTransform),
+    _prop(fgGetNode(props->getStringValue("property", "/null"), true)),
+    _offset_m(props->getDoubleValue("offset-m", 0.0)),
+    _factor(props->getDoubleValue("factor", 1.0)),
+    _table(read_interpolation_table(props)),
+    _has_min(props->hasValue("min-m")),
+    _min_m(props->getDoubleValue("min-m")),
+    _has_max(props->hasValue("max-m")),
+    _max_m(props->getDoubleValue("max-m")),
+    _position_m(props->getDoubleValue("starting-position-m", 0))
 {
-}
-
-FG3DModel::TranslateAnimation::~TranslateAnimation ()
-{
-  delete _table;
-  _transform = 0;
-}
-
-void
-FG3DModel::TranslateAnimation::init (ssgEntity * object,
-				     SGPropertyNode * props)
-{
-                                // Splice in the new transform node
-  splice_branch(_transform, object);
-  _transform->setName(props->getStringValue("name", 0));
-  _prop = fgGetNode(props->getStringValue("property", "/null"), true);
-  _offset_m = props->getDoubleValue("offset-m", 0.0);
-  _factor = props->getDoubleValue("factor", 1.0);
-  _table = read_interpolation_table(props);
-  if (props->hasValue("min-m")) {
-    _has_min = true;
-    _min_m = props->getDoubleValue("min-m");
-  }
-  if (props->hasValue("max-m")) {
-    _has_max = true;
-    _max_m = props->getDoubleValue("max-m");
-  }
-  _position_m = props->getDoubleValue("starting-position-m", 0);
   _axis[0] = props->getFloatValue("axis/x", 0);
   _axis[1] = props->getFloatValue("axis/y", 0);
   _axis[2] = props->getFloatValue("axis/z", 0);
   sgNormalizeVec3(_axis);
 }
 
+TranslateAnimation::~TranslateAnimation ()
+{
+  delete _table;
+}
+
 void
-FG3DModel::TranslateAnimation::update (double dt)
+TranslateAnimation::update ()
 {
   if (_table == 0) {
     _position_m = (_prop->getDoubleValue() + _offset_m) * _factor;
@@ -662,7 +555,7 @@ FG3DModel::TranslateAnimation::update (double dt)
     _position_m = _table->interpolate(_prop->getDoubleValue());
   }
   set_translation(_matrix, _position_m, _axis);
-  _transform->setTransform(_matrix);
+  ((ssgTransform *)_branch)->setTransform(_matrix);
 }
 
 
@@ -672,8 +565,7 @@ FG3DModel::TranslateAnimation::update (double dt)
 ////////////////////////////////////////////////////////////////////////
 
 FGModelPlacement::FGModelPlacement ()
-  : _model(new FG3DModel),
-    _lon_deg(0),
+  : _lon_deg(0),
     _lat_deg(0),
     _elev_ft(0),
     _roll_deg(0),
@@ -687,24 +579,21 @@ FGModelPlacement::FGModelPlacement ()
 
 FGModelPlacement::~FGModelPlacement ()
 {
-  delete _model;
-  delete _selector;
 }
 
 void
 FGModelPlacement::init (const string &path)
 {
-  _model->init(path);
-  _position->addKid(_model->getSceneGraph());
+  ssgBranch * model = fgLoad3DModel(path);
+  if (model != 0)
+      _position->addKid(model);
   _selector->addKid(_position);
   _selector->clrTraversalMaskBits(SSGTRAV_HOT);
 }
 
 void
-FGModelPlacement::update (double dt)
+FGModelPlacement::update ()
 {
-  _model->update(dt);
-
   _location->setPosition( _lon_deg, _lat_deg, _elev_ft );
   _location->setOrientation( _roll_deg, _pitch_deg, _heading_deg );
 

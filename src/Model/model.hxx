@@ -15,6 +15,7 @@
 SG_USING_STD(vector);
 
 #include <plib/sg.h>
+#include <plib/ssg.h>
 
 
 // Don't pull in the headers, since we don't need them here.
@@ -40,210 +41,182 @@ class FGLocation;
 #endif
 
 
-class FG3DModel
+/**
+ * Load a 3D model with or without XML wrapper.
+ *
+ * If the path ends in ".xml", then it will be used as a property-
+ * list wrapper to add animations to the model.
+ *
+ * Subsystems should not normally invoke this function directly;
+ * instead, they should use the FGModelLoader declared in loader.hxx.
+ */
+ssgBranch * fgLoad3DModel (const string &path);
+
+
+
+//////////////////////////////////////////////////////////////////////
+// Animation classes
+//////////////////////////////////////////////////////////////////////
+
+/**
+ * Abstract base class for all animations.
+ */
+class Animation :  public ssgBase
 {
 public:
 
-  FG3DModel ();
-  virtual ~FG3DModel ();
+  Animation (SGPropertyNode_ptr props, ssgBranch * branch);
 
-  virtual void init (const string &path);
-  virtual void update (double dt);
-
-  virtual ssgEntity * getSceneGraph () const { return (ssgEntity *)_model; }
-
-private:
-
-  class Animation;
-  Animation * make_animation (const char * object_name, SGPropertyNode * node);
-
-				// Child models.
-  vector<FG3DModel *> _children;
-
-				// Animations
-  vector <Animation *> _animations;
-
-				// Scene graph
-  ssgBranch * _model;
-
-
-  
-  //////////////////////////////////////////////////////////////////////
-  // Internal classes for individual animations.
-  //////////////////////////////////////////////////////////////////////
+  virtual ~Animation ();
 
   /**
-   * Abstract base class for all animations.
+   * Get the SSG branch holding the animation.
    */
-  class Animation
-  {
-  public:
-
-    Animation ();
-
-    virtual ~Animation ();
-
-    /**
-     * Initialize the animation.
-     *
-     * @param object The object to animate.
-     * @param props The property node with configuration information.
-     */
-    virtual void init (ssgEntity * object, SGPropertyNode * props) = 0;
-
-
-    /**
-     * Update the animation.
-     *
-     * @param dt The elapsed time in seconds since the last call.
-     */
-    virtual void update (double dt) = 0;
-
-  };
-
+  virtual ssgBranch * getBranch () { return _branch; }
 
   /**
-   * A no-op animation.
+   * Update the animation.
    */
-  class NullAnimation : public Animation
-  {
-  public:
-    NullAnimation ();
-    virtual ~NullAnimation ();
-    virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (double dt);
-  private:
-    ssgBranch * _branch;
-  };
+  virtual void update () = 0;
 
-  
-  /**
-   * A range, or level-of-detail (LOD) animation.
-   */
-  class RangeAnimation : public Animation
-  {
-  public:
-    RangeAnimation ();
-    virtual ~RangeAnimation ();
-    virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (double dt);
-  private:
-    ssgRangeSelector * _branch;
-  };
+protected:
 
-
-  /**
-   * Animation to turn and face the screen.
-   */
-  class BillboardAnimation : public Animation
-  {
-  public:
-    BillboardAnimation ();
-    virtual ~BillboardAnimation ();
-    virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (double dt);
-  private:
-    ssgCutout * _branch;
-  };
-
-
-  /**
-   * Animation to select alternative versions of the same object.
-   */
-  class SelectAnimation : public Animation
-  {
-  public:
-    SelectAnimation ();
-    virtual ~SelectAnimation ();
-    virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (double dt);
-  private:
-    FGCondition * _condition;
-    ssgSelector * _selector;
-  };
-
-
-  /**
-   * Animation to spin an object around a center point.
-   *
-   * This animation rotates at a specific velocity.
-   */
-  class SpinAnimation : public Animation
-  {
-  public:
-    SpinAnimation ();
-    virtual ~SpinAnimation ();
-    virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (double dt);
-  private:
-    SGPropertyNode * _prop;
-    double _factor;
-    double _position_deg;
-    sgMat4 _matrix;
-    sgVec3 _center;
-    sgVec3 _axis;
-    ssgTransform * _transform;
-  };
-
-
-  /**
-   * Animation to rotate an object around a center point.
-   *
-   * This animation rotates to a specific position.
-   */
-  class RotateAnimation : public Animation
-  {
-  public:
-    RotateAnimation ();
-    virtual ~RotateAnimation ();
-    virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (double dt);
-  private:
-    SGPropertyNode * _prop;
-    double _offset_deg;
-    double _factor;
-    SGInterpTable * _table;
-    bool _has_min;
-    double _min_deg;
-    bool _has_max;
-    double _max_deg;
-    double _position_deg;
-    sgMat4 _matrix;
-    sgVec3 _center;
-    sgVec3 _axis;
-    ssgTransform * _transform;
-  };
-
-
-  /**
-   * Animation to slide along an axis.
-   */
-  class TranslateAnimation : public Animation
-  {
-  public:
-    TranslateAnimation ();
-    virtual ~TranslateAnimation ();
-    virtual void init (ssgEntity * object, SGPropertyNode * props);
-    virtual void update (double dt);
-  private:
-    SGPropertyNode * _prop;
-    double _offset_m;
-    double _factor;
-    SGInterpTable * _table;
-    bool _has_min;
-    double _min_m;
-    bool _has_max;
-    double _max_m;
-    double _position_m;
-    sgMat4 _matrix;
-    sgVec3 _axis;
-    ssgTransform * _transform;
-  };
-
+  ssgBranch * _branch;
 
 };
 
 
+/**
+ * A no-op animation.
+ */
+class NullAnimation : public Animation
+{
+public:
+  NullAnimation (SGPropertyNode_ptr props);
+  virtual ~NullAnimation ();
+  virtual void update ();
+};
+
+
+/**
+ * A range, or level-of-detail (LOD) animation.
+ */
+class RangeAnimation : public Animation
+{
+public:
+  RangeAnimation (SGPropertyNode_ptr props);
+  virtual ~RangeAnimation ();
+  virtual void update ();
+};
+
+
+/**
+ * Animation to turn and face the screen.
+ */
+class BillboardAnimation : public Animation
+{
+public:
+  BillboardAnimation (SGPropertyNode_ptr props);
+  virtual ~BillboardAnimation ();
+  virtual void update ();
+};
+
+
+/**
+ * Animation to select alternative versions of the same object.
+ */
+class SelectAnimation : public Animation
+{
+public:
+  SelectAnimation (SGPropertyNode_ptr props);
+  virtual ~SelectAnimation ();
+  virtual void update ();
+private:
+  FGCondition * _condition;
+};
+
+
+/**
+ * Animation to spin an object around a center point.
+ *
+ * This animation rotates at a specific velocity.
+ */
+class SpinAnimation : public Animation
+{
+public:
+  SpinAnimation (SGPropertyNode_ptr props);
+  virtual ~SpinAnimation ();
+  virtual void update ();
+private:
+  SGPropertyNode * _prop;
+  double _factor;
+  double _position_deg;
+  double _last_time_sec;
+  sgMat4 _matrix;
+  sgVec3 _center;
+  sgVec3 _axis;
+};
+
+
+/**
+ * Animation to rotate an object around a center point.
+ *
+ * This animation rotates to a specific position.
+ */
+class RotateAnimation : public Animation
+{
+public:
+  RotateAnimation (SGPropertyNode_ptr props);
+  virtual ~RotateAnimation ();
+  virtual void update ();
+private:
+  SGPropertyNode * _prop;
+  double _offset_deg;
+  double _factor;
+  SGInterpTable * _table;
+  bool _has_min;
+  double _min_deg;
+  bool _has_max;
+  double _max_deg;
+  double _position_deg;
+  sgMat4 _matrix;
+  sgVec3 _center;
+  sgVec3 _axis;
+};
+
+
+/**
+ * Animation to slide along an axis.
+ */
+class TranslateAnimation : public Animation
+{
+public:
+  TranslateAnimation (SGPropertyNode_ptr props);
+  virtual ~TranslateAnimation ();
+  virtual void update ();
+private:
+  SGPropertyNode * _prop;
+  double _offset_m;
+  double _factor;
+  SGInterpTable * _table;
+  bool _has_min;
+  double _min_m;
+  bool _has_max;
+  double _max_m;
+  double _position_m;
+  sgMat4 _matrix;
+  sgVec3 _axis;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Model placement.
+////////////////////////////////////////////////////////////////////////
+
+/**
+ * A wrapper for a model with a definite placement.
+ */
 class FGModelPlacement
 {
 public:
@@ -252,7 +225,7 @@ public:
   virtual ~FGModelPlacement ();
 
   virtual void init (const string &path);
-  virtual void update (double dt);
+  virtual void update ();
 
   virtual ssgEntity * getSceneGraph () { return (ssgEntity *)_selector; }
 
@@ -278,18 +251,16 @@ public:
   virtual void setPitchDeg (double pitch_deg);
   virtual void setHeadingDeg (double heading_deg);
   virtual void setOrientation (double roll_deg, double pitch_deg,
-			       double heading_deg);
+                               double heading_deg);
 
 private:
   
-  FG3DModel * _model;
-
-				// Geodetic position
+                                // Geodetic position
   double _lon_deg;
   double _lat_deg;
   double _elev_ft;
 
-				// Orientation
+                                // Orientation
   double _roll_deg;
   double _pitch_deg;
   double _heading_deg;
@@ -297,7 +268,7 @@ private:
   ssgSelector * _selector;
   ssgTransform * _position;
 
-				// Location
+                                // Location
   FGLocation * _location;
 
 };

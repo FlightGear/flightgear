@@ -42,6 +42,7 @@
 #include <plib/ssg.h>
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>
+#include <Model/loader.hxx>
 
 //#define printf //
 
@@ -162,7 +163,7 @@ struct list_ele *new_ele;
    new_ele->fgd_sel = new ssgSelector;
    new_ele->fgd_pos = new ssgTransform;
 
-   ssgEntity *fgd_obj = ssgLoadAC( "tuxcopter.ac" );
+   ssgEntity *fgd_obj = globals->get_model_loader()->load_model( "tuxcopter.ac" );
    fgd_obj->clrTraversalMaskBits( SSGTRAV_HOT );
    new_ele->fgd_pos->addKid( fgd_obj );
    new_ele->fgd_sel->addKid( new_ele->fgd_pos );

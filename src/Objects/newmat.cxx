@@ -43,36 +43,14 @@ SG_USING_STD(map);
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Model/loader.hxx>
 
 #include "newmat.hxx"
 
 
 ////////////////////////////////////////////////////////////////////////
-// Local static variables.
-// FIXME: write a proper manager.
-////////////////////////////////////////////////////////////////////////
-
-// Objects already loaded (that can be reused).
-map<string,ssgEntity *> object_map;
-
-
-
-////////////////////////////////////////////////////////////////////////
 // Local static functions.
 ////////////////////////////////////////////////////////////////////////
-
-// FIXME: this is totally evil and non-robust: it assumes that
-// entities will never be refcounted to 0 (which is safe for now).
-static ssgEntity *
-load_object (char * path)
-{
-  ssgEntity * object = object_map[path];
-  if (object == 0) {
-    object = ssgLoad(path);
-    object_map[path] = object;
-  }
-  return object;
-}
 
 /**
  * Internal method to test whether a file exists.
@@ -154,28 +132,18 @@ FGNewMat::Object::load_models () const
 				// Load model only on demand
   if (!_models_loaded) {
     for (int i = 0; i < _paths.size(); i++) {
-
-// Original
-//      SGPath path = globals->get_fg_root();
-//      path.append(_paths[i]);
-//      ssgTexturePath((char *)path.dir().c_str());
-//      ssgEntity * entity = load_object((char *)path.c_str());
-
-// DCL
-      SGPath path = globals->get_fg_root();
-      SGPath modelPath = _paths[i];
-      path.append(_paths[i]);
-      ssgTexturePath((char *)path.dir().c_str());
-      ssgEntity * entity = load_object((char *)modelPath.c_str());
+      ssgEntity * entity = globals->get_model_loader()->load_model(_paths[i]);
       if (entity != 0) {
-        // entity->ref();
+                                // FIXME: this stuff can be handled
+                                // in the XML wrapper as well (at least,
+                                // the billboarding should be handled
+                                // there).
 	float ranges[] = {0, _range_m};
 	ssgRangeSelector * lod = new ssgRangeSelector;
         lod->ref();
         lod->setRanges(ranges, 2);
 	if (_heading_type == HEADING_BILLBOARD) {
 	  ssgCutout * cutout = new ssgCutout(false);
-          // cutout->ref();
 	  cutout->addKid(entity);
 	  lod->addKid(cutout);
 	} else {
@@ -183,7 +151,7 @@ FGNewMat::Object::load_models () const
 	}
 	_models.push_back(lod);
       } else {
-	SG_LOG(SG_INPUT, SG_ALERT, "Failed to load object " << path.str());
+	SG_LOG(SG_INPUT, SG_ALERT, "Failed to load object " << _paths[i]);
       }
     }
   }

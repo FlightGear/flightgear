@@ -43,6 +43,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewer.hxx>
+#include <Model/loader.hxx>
 #include <Objects/obj.hxx>
 
 #include "newcache.hxx"
@@ -329,8 +330,7 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters,
 #endif
 	
 	ssgTexturePath( (char *)(dm->get_texture_path().c_str()) );
-	ssgEntity *obj_model
-	    = ssgLoad( (char *)(dm->get_model_path().c_str()) );
+	ssgEntity *obj_model = globals->get_model_loader()->load_model(dm->get_model_path());
         if ( obj_model != NULL ) {
             dm->get_obj_trans()->addKid( obj_model );
         }

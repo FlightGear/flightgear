@@ -65,6 +65,8 @@ class FGViewer;
 class FGATCMgr;
 class FGATCDisplay;
 class FGAIMgr;
+class FGModelLoader;
+class FGTextureLoader;
 class FGAircraftModel;
 class FGModelMgr;
 class FGScenery;
@@ -155,6 +157,10 @@ private:
     SGPropertyNode *initial_state;
 
     SGCommandMgr *commands;
+
+    FGModelLoader * model_loader;
+
+    FGTextureLoader * texture_loader;
 
     FGAircraftModel *acmodel;
 
@@ -255,6 +261,18 @@ public:
     inline void set_props( SGPropertyNode *n ) { props = n; }
 
     inline SGCommandMgr *get_commands () { return commands; }
+
+    inline FGModelLoader * get_model_loader () { return model_loader; }
+
+    inline void set_model_loader (FGModelLoader * loader) {
+        model_loader = loader;
+    }
+
+    inline FGTextureLoader * get_texture_loader () { return texture_loader; }
+
+    inline void set_texture_loader (FGTextureLoader * loader) {
+        texture_loader = loader;
+    }
 
     inline FGAircraftModel *get_aircraft_model () { return acmodel; }
 

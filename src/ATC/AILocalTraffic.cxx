@@ -28,6 +28,7 @@
 ******************************************************************/
 
 #include <Main/globals.hxx>
+#include <Model/loader.hxx>
 //#include <simgear/constants.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -48,12 +49,11 @@ FGAILocalTraffic::~FGAILocalTraffic() {
 void FGAILocalTraffic::Init() {
     // Hack alert - Hardwired path!!
     string planepath = "Aircraft/c172/Models/c172-dpm.ac";
-    SGPath path = globals->get_fg_root();
-    path.append(planepath);
-    ssgTexturePath((char*)path.dir().c_str());
-    model = ssgLoad((char*)planepath.c_str());
+    model = globals->get_model_loader()->load_model(planepath);
     if (model == 0) {
-	model = ssgLoad((char*)"Models/Geometry/glider.ac");
+	model =
+            globals->get_model_loader()
+            ->load_model("Models/Geometry/glider.ac");
 	if (model == 0)
 	    cout << "Failed to load an aircraft model in AILocalTraffic\n";
     } else {
