@@ -73,7 +73,8 @@ FGGlobals::FGGlobals() :
     channel_options_list( NULL ),
     scenery( NULL ),
     tile_mgr( NULL ),
-    io( new FGIO )
+    io( new FGIO ),
+    initial_waypoints(0)
 {
 }
 
@@ -87,6 +88,11 @@ FGGlobals::~FGGlobals()
   delete props;
   delete commands;
   delete io;
+  
+  // make sure only to delete the initial waypoints list if it acually
+  // still exists. 
+  if (initial_waypoints)
+    delete initial_waypoints;
 }
 
 

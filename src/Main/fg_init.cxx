@@ -140,7 +140,7 @@ SG_USING_STD(string);
 class Sound;
 
 extern const char *default_root;
-extern string_list waypoints;
+
 
 #ifdef FG_USE_CLOUDS_3D
   SkySceneLoader *sgCloud3d;
@@ -1003,42 +1003,22 @@ static bool fgSetPosFromFix( const string& id ) {
  
 static bool parseWaypoints()
   {
-    vector<string>::iterator i;
-    for (i = waypoints.begin(); 
-	 i  != waypoints.end();
-	 i++)
+    string_list *waypoints = globals->get_initial_waypoints();
+    if (waypoints) 
       {
-	NewWaypoint(*i);
-	// string arg = *i;
-// 	string id, alt_str;
-// 	double alt = 0.0;
-	
-// 	string::size_type pos = arg.find( "@" );
-// 	if ( pos != string::npos ) {
-// 	  id = arg.substr( 0, pos );
-// 	  alt_str = arg.substr( pos + 1 );
-// 	  cout << "id str = " << id << "  alt str = " << alt_str << endl;
-// 	  alt = atof( alt_str.c_str() );
-// 	  if ( !strcmp(fgGetString("/sim/startup/units"), "feet") ) {
-// 	    alt *= SG_FEET_TO_METER;
-// 	  }
-// 	} else {
-// 	  id = arg;
-// 	}
-	
-// 	FGAirport a;
-// 	if ( fgFindAirportID( id, &a ) ) {
-// 	  FGRouteMgr *rm = (FGRouteMgr *)globals->get_subsystem("route-manager");
-// 	  SGWayPoint wp( a.longitude, a.latitude, alt, SGWayPoint::WGS84, id );
-// 	  rm->add_waypoint( wp );
-	  
-// 	  //return true;
-// 	} else {
-// 	  return false;
-// 	}
-//       }
-//     //    waypoints.begin() = waypoints.erase(waypoints.begin());
-//     return true;
+	vector<string>::iterator i;
+	for (i = waypoints->begin(); 
+	     i  != waypoints->end();
+	     i++)
+	  {
+	    NewWaypoint(*i);
+	  }
+	// Now were done using the way points we can deallocate the
+	// memory they used
+	while (waypoints->begin() != waypoints->end())
+	  waypoints->pop_back();
+	delete waypoints;
+	globals->set_initial_waypoints(0);
       }
    }
 

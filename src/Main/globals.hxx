@@ -178,6 +178,10 @@ private:
     // list of serial port-like configurations
     string_list *channel_options_list;
 
+    // A list of initial waypoints that are read from the command line
+    // and or flight-plan file during initialization
+    string_list *initial_waypoints;
+
     // FlightGear scenery manager
     FGScenery *scenery;
 
@@ -325,6 +329,14 @@ public:
     }
     inline void set_channel_options_list( string_list *l ) {
 	channel_options_list = l;
+    }
+
+    inline string_list *get_initial_waypoints () {
+        return initial_waypoints;
+    }
+  
+    inline void set_initial_waypoints (string_list *list) {
+        initial_waypoints = list;
     }
 
     inline FGScenery * get_scenery () const { return scenery; }

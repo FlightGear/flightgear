@@ -67,8 +67,6 @@ SG_USING_NAMESPACE(std);
 
 #define NEW_DEFAULT_MODEL_HZ 120
 
-string_list waypoints;
-
 enum
 {
     FG_OPTIONS_OK = 0,
@@ -543,34 +541,11 @@ add_channel( const string& type, const string& channel_str ) {
 // Parse --wp=ID[@alt]
 static bool 
 parse_wp( const string& arg ) {
-  //string id, alt_str;
-  //double alt = 0.0;
-  //
-  //string::size_type pos = arg.find( "@" );
-  //if ( pos != string::npos ) {
-  //id = arg.substr( 0, pos );
-  //alt_str = arg.substr( pos + 1 );
-  //// cout << "id str = " << id << "  alt str = " << alt_str << endl;
-  //alt = atof( alt_str.c_str() );
-  //if ( !strcmp(fgGetString("/sim/startup/units"), "feet") ) {
-  //    alt *= SG_FEET_TO_METER;
-  //}
-  //} else {
-  //id = arg;
-  //}
-  //
-  //FGAirport a;
-  //if ( fgFindAirportID( id, &a ) ) {
-  //    FGRouteMgr *rm = (FGRouteMgr *)globals->get_subsystem("route-manager");
-  //SGWayPoint wp( a.longitude, a.latitude, alt, SGWayPoint::WGS84, id );
-  //rm->add_waypoint( wp );
-  //
-  //return true;
-  //} else {
-  //return false;
-  //}
-  //}
-  waypoints.push_back(arg);
+  string_list *waypoints = globals->get_initial_waypoints();
+  if (!waypoints)
+    waypoints = new string_list;
+  waypoints->push_back(arg);
+  globals->set_initial_waypoints(waypoints);
 }
 
 
@@ -578,32 +553,34 @@ parse_wp( const string& arg ) {
 static bool 
 parse_flightplan(const string& arg)
 {
-    sg_gzifstream in(arg.c_str());
-    if ( !in.is_open() ) {
-	return false;
-    }
-    while ( true ) {
-	string line;
-
+  string_list *waypoints = globals->get_initial_waypoints();
+  if (!waypoints)
+    waypoints = new string_list;
+  sg_gzifstream in(arg.c_str());
+  if ( !in.is_open() ) {
+    return false;
+  }
+  while ( true ) {
+    string line;
+    
 #if defined( macintosh )
-        getline( in, line, '\r' );
+    getline( in, line, '\r' );
 #else
-	getline( in, line, '\n' );
+    getline( in, line, '\n' );
 #endif
-
-        // catch extraneous (DOS) line ending character
-        if ( line[line.length() - 1] < 32 ) {
-            line = line.substr( 0, line.length()-1 );
-        }
-
-	if ( in.eof() ) {
-	    break;
-	}
-	//parse_wp(line);
-	waypoints.push_back(line);
+    
+    // catch extraneous (DOS) line ending character
+    if ( line[line.length() - 1] < 32 ) {
+      line = line.substr( 0, line.length()-1 );
     }
-
-    return true;
+    
+    if ( in.eof() ) {
+      break;
+    }
+    waypoints->push_back(line);
+  }
+  globals->set_initial_waypoints(waypoints);
+  return true;
 }
 
 static int
