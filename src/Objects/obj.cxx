@@ -275,8 +275,8 @@ static void random_pt_inside_tri( float *res,
 
 static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
                                        double factor ) {
-    int num = leaf->getNumTriangles();
-    if ( num > 0 ) {
+    int tris = leaf->getNumTriangles();
+    if ( tris > 0 ) {
         short int n1, n2, n3;
         float *p1, *p2, *p3;
         sgVec3 result;
@@ -286,7 +286,7 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
         unsigned int seed = (unsigned int)(fabs(p1[0]*100));
         sg_srandom( seed );
 
-        for ( int i = 0; i < num; ++i ) {
+        for ( int i = 0; i < tris; ++i ) {
             leaf->getTriangle( i, &n1, &n2, &n3 );
             p1 = leaf->getVertex(n1);
             p2 = leaf->getVertex(n2);
