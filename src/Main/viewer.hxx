@@ -42,6 +42,71 @@
 #define FG_FOV_MAX 179.9
 
 
+/**
+ * Representation of a single viewpoint in the FlightGear world.
+ */
+class FGViewPoint
+{
+public:
+  FGViewPoint ();
+  virtual ~FGViewPoint ();
+
+  /**
+   * Set the geodetic position for the view point.
+   */
+  virtual void setPosition (double lon_deg, double lat_deg, double alt_ft);
+
+
+  /**
+   * Get the longitude in degrees.
+   */
+  virtual double getLongitude_deg () const { return _lon_deg; }
+
+  /**
+   * Get the latitude in degrees.
+   */
+  virtual double getLatitude_deg () const { return _lat_deg; }
+
+  /**
+   * Get the altitude in feet ASL.
+   */
+  virtual double getAltitudeASL_ft () const { return _alt_ft; }
+
+  /**
+   * Get the absolute view position in fgfs coordinates.
+   */
+  virtual const double * getAbsoluteViewPos () const;
+
+
+  /**
+   * Get the relative view position in fgfs coordinates.
+   *
+   * The position is relative to the scenery centre.
+   */
+  virtual const float * getRelativeViewPos () const;
+
+
+  /**
+   * Get the absolute zero-elevation view position in fgfs coordinates.
+   */
+  virtual const float * getZeroElevViewPos () const;
+
+private:
+
+  void recalc () const;
+
+  mutable sgdVec3 _absolute_view_pos;
+  mutable sgVec3 _relative_view_pos;
+  mutable sgVec3 _zero_elev_view_pos;
+
+  bool _dirty;
+  double _lon_deg;
+  double _lat_deg;
+  double _alt_ft;
+
+};
+
+
 // Define a structure containing view information
 class FGViewer {
 
@@ -69,6 +134,8 @@ protected:
 
     fgViewType _type;
     fgScalingType scalingType;
+
+    FGViewPoint view_point;
 
     // the nominal field of view (angle, in degrees)
     double fov; 

@@ -89,57 +89,16 @@ void fgMakeLookAtMat4 ( sgMat4 dst, const sgVec3 eye, const sgVec3 center,
 }
 
 
-#if 0
-// convert sgMat4 to MAT3 and print
-static void print_sgMat4( sgMat4 &in) {
-    int i, j;
-    for ( i = 0; i < 4; i++ ) {
-	for ( j = 0; j < 4; j++ ) {
-	    printf("%10.4f ", in[i][j]);
-	}
-	cout << endl;
-    }
-}
-#endif
-
-
 // Update the view parameters
 void FGViewerLookAt::update() {
-    Point3D tmp;
     sgVec3 minus_z;
 
-    // convert to geocentric coordinates
-    double geoc_lat;
-    sgGeodToGeoc( geod_view_pos[1], geod_view_pos[2],
-		  &sea_level_radius, &geoc_lat );
-
-    // calculate the cartesion coords of the current lat/lon/0 elev
-    Point3D p = Point3D( geod_view_pos[0], geoc_lat, sea_level_radius );
-
-    tmp = sgPolarToCart3d(p) - scenery.get_center();
-    sgSetVec3( zero_elev, tmp[0], tmp[1], tmp[2] );
-
-    // calculate view position in current FG view coordinate system
-    // p.lon & p.lat are already defined earlier, p.radius was set to
-    // the sea level radius, so now we add in our altitude.
-    if ( geod_view_pos[2] > (scenery.get_cur_elev() + 0.5 * SG_METER_TO_FEET) ) {
-	p.setz( p.radius() + geod_view_pos[2] );
-    } else {
-	p.setz( p.radius() + scenery.get_cur_elev() + 0.5 * SG_METER_TO_FEET );
-    }
-
-    tmp = sgPolarToCart3d(p);
-    sgdSetVec3( abs_view_pos, tmp[0], tmp[1], tmp[2] );
-
-    // view_pos = abs_view_pos - scenery.center;
-    sgdVec3 sc;
-    sgdSetVec3( sc,
-		scenery.get_center().x(),
-		scenery.get_center().y(),
-		scenery.get_center().z() );
-    sgdVec3 vp;
-    sgdSubVec3( vp, abs_view_pos, sc );
-    sgSetVec3( view_pos, vp );
+    view_point.setPosition(geod_view_pos[0] * SGD_RADIANS_TO_DEGREES,
+			   geod_view_pos[1] * SGD_RADIANS_TO_DEGREES,
+			   geod_view_pos[2] * SG_METER_TO_FEET);
+    sgCopyVec3(zero_elev, view_point.getZeroElevViewPos());
+    sgdCopyVec3(abs_view_pos, view_point.getAbsoluteViewPos());
+    sgCopyVec3(view_pos, view_point.getRelativeViewPos());
 
     sgVec3 tmp_offset;
     sgCopyVec3( tmp_offset, pilot_offset );
@@ -159,30 +118,8 @@ void FGViewerLookAt::update() {
     sgAddVec3( view_pos, tmp_offset );
     // !!!!!!!!!! testing
 	
-    // sgAddVec3( view_pos, pilot_offset );
-
-    SG_LOG( SG_VIEW, SG_DEBUG, "sea level radius = " << sea_level_radius );
-    SG_LOG( SG_VIEW, SG_DEBUG, "Polar view pos = " << p );
-    SG_LOG( SG_VIEW, SG_DEBUG, "Absolute view pos = "
-	    << abs_view_pos[0] << ","
-	    << abs_view_pos[1] << ","
-	    << abs_view_pos[2] );
-    SG_LOG( SG_VIEW, SG_DEBUG, "Relative view pos = "
-	    << view_pos[0] << "," << view_pos[1] << "," << view_pos[2] );
-    SG_LOG( SG_VIEW, SG_DEBUG, "pilot offset = "
-	    << pilot_offset[0] << "," << pilot_offset[1] << ","
-	    << pilot_offset[2] );
-    SG_LOG( SG_VIEW, SG_DEBUG, "view forward = "
-	    << view_forward[0] << "," << view_forward[1] << ","
-	    << view_forward[2] );
-    SG_LOG( SG_VIEW, SG_DEBUG, "view up = "
-	    << view_up[0] << "," << view_up[1] << ","
-	    << view_up[2] );
-
     // Make the VIEW matrix.
     fgMakeLookAtMat4( VIEW, view_pos, view_forward, view_up );
-    // cout << "VIEW matrix" << endl;
-    // print_sgMat4( VIEW );
 
     // the VIEW matrix includes both rotation and translation.  Let's
     // knock out the translation part to make the VIEW_ROT matrix
@@ -198,9 +135,6 @@ void FGViewerLookAt::update() {
     // use a clever observation into the nature of our tranformation
     // matrix to grab the world_up vector
     sgSetVec3( world_up, UP[0][0], UP[0][1], UP[0][2] );
-    // cout << "World Up = " << world_up[0] << "," << world_up[1] << ","
-    //      << world_up[2] << endl;
-    
 
     // Given a vector pointing straight down (-Z), map into onto the
     // local plane representing "horizontal".  This should give us the
@@ -210,25 +144,11 @@ void FGViewerLookAt::update() {
     sgmap_vec_onto_cur_surface_plane(world_up, view_pos, minus_z,
 				     surface_south);
     sgNormalizeVec3(surface_south);
-    // cout << "Surface direction directly south " << surface_south[0] << ","
-    //      << surface_south[1] << "," << surface_south[2] << endl;
 
     // now calculate the surface east vector
-#define USE_FAST_SURFACE_EAST
-#ifdef USE_FAST_SURFACE_EAST
     sgVec3 world_down;
     sgNegateVec3(world_down, world_up);
     sgVectorProductVec3(surface_east, surface_south, world_down);
-#else
-    sgMakeRotMat4( TMP, SGD_PI_2 * SGD_RADIANS_TO_DEGREES, world_up );
-    // cout << "sgMat4 TMP" << endl;
-    // print_sgMat4( TMP );
-    sgXformVec3(surface_east, surface_south, TMP);
-#endif //  USE_FAST_SURFACE_EAST
-    // cout << "Surface direction directly east " << surface_east[0] << ","
-    //      << surface_east[1] << "," << surface_east[2] << endl;
-    // cout << "Should be close to zero = "
-    //      << sgScalarProductVec3(surface_south, surface_east) << endl;
 
     set_clean();
 }

@@ -48,33 +48,9 @@
 FGViewerRPH::FGViewerRPH( void )
 {
     set_reverse_view_offset(false);
-#ifndef USE_FAST_VIEWROT
-    // This never changes -- NHV
-    LARC_TO_SSG[0][0] = 0.0; 
-    LARC_TO_SSG[0][1] = 1.0; 
-    LARC_TO_SSG[0][2] = -0.0; 
-    LARC_TO_SSG[0][3] = 0.0; 
-
-    LARC_TO_SSG[1][0] = 0.0; 
-    LARC_TO_SSG[1][1] = 0.0; 
-    LARC_TO_SSG[1][2] = 1.0; 
-    LARC_TO_SSG[1][3] = 0.0;
-	
-    LARC_TO_SSG[2][0] = 1.0; 
-    LARC_TO_SSG[2][1] = -0.0; 
-    LARC_TO_SSG[2][2] = 0.0; 
-    LARC_TO_SSG[2][3] = 0.0;
-	
-    LARC_TO_SSG[3][0] = 0.0; 
-    LARC_TO_SSG[3][1] = 0.0; 
-    LARC_TO_SSG[3][2] = 0.0; 
-    LARC_TO_SSG[3][3] = 1.0; 
-#endif // USE_FAST_VIEWROT
 }
 
 
-#define USE_FAST_VIEWROT
-#ifdef USE_FAST_VIEWROT
 // VIEW_ROT = LARC_TO_SSG * ( VIEWo * VIEW_OFFSET )
 // This takes advantage of the fact that VIEWo and VIEW_OFFSET
 // only have entries in the upper 3x3 block
@@ -102,11 +78,8 @@ inline static void fgMakeViewRot( sgMat4 dst, const sgMat4 m1, const sgMat4 m2 )
 	dst[3][2] = SG_ZERO;
     dst[3][3] = SG_ONE;
 }
-#endif
 
 
-#define USE_FAST_LOCAL
-#ifdef USE_FAST_LOCAL
 inline static void fgMakeLOCAL( sgMat4 dst, const double Theta,
 				const double Phi, const double Psi)
 {
@@ -137,113 +110,25 @@ inline static void fgMakeLOCAL( sgMat4 dst, const double Theta,
     dst[3][2] = SG_ZERO;
     dst[3][3] = SG_ONE ;
 }
-#endif
-
-
-#if 0
-// convert sgMat4 to MAT3 and print
-static void print_sgMat4( sgMat4 &in) {
-    int i, j;
-    for ( i = 0; i < 4; i++ ) {
-	for ( j = 0; j < 4; j++ ) {
-	    printf("%10.4f ", in[i][j]);
-	}
-	cout << endl;
-    }
-}
-#endif
 
 
 // Update the view parameters
 void FGViewerRPH::update() {
-    Point3D tmp;
     sgVec3 minus_z, right, forward, tilt;
     sgMat4 VIEWo;
 
-    // convert to geocentric coordinates
-    double geoc_lat;
-    sgGeodToGeoc( geod_view_pos[1], geod_view_pos[2],
-		  &sea_level_radius, &geoc_lat );
-
-    // calculate the cartesion coords of the current lat/lon/0 elev
-    Point3D p = Point3D( geod_view_pos[0], geoc_lat, sea_level_radius );
-
-    tmp = sgPolarToCart3d(p) - scenery.get_center();
-    sgSetVec3( zero_elev, tmp[0], tmp[1], tmp[2] );
-
-    // calculate view position in current FG view coordinate system
-    // p.lon & p.lat are already defined earlier, p.radius was set to
-    // the sea level radius, so now we add in our altitude.
-    if ( geod_view_pos[2] > (scenery.get_cur_elev() + 0.5 * SG_METER_TO_FEET) ) {
-	p.setz( p.radius() + geod_view_pos[2] );
-    } else {
-	p.setz( p.radius() + scenery.get_cur_elev() + 0.5 * SG_METER_TO_FEET );
-    }
-
-    tmp = sgPolarToCart3d(p);
-    sgdSetVec3( abs_view_pos, tmp[0], tmp[1], tmp[2] );
-
-    // view_pos = abs_view_pos - scenery.center;
-    sgdVec3 sc;
-    sgdSetVec3( sc,
-		scenery.get_center().x(),
-		scenery.get_center().y(),
-		scenery.get_center().z() );
-    sgdVec3 vp;
-    sgdSubVec3( vp, abs_view_pos, sc );
-    sgSetVec3( view_pos, vp );
-
-    SG_LOG( SG_VIEW, SG_DEBUG, "sea level radius = " << sea_level_radius );
-    SG_LOG( SG_VIEW, SG_DEBUG, "Polar view pos = " << p );
-    SG_LOG( SG_VIEW, SG_DEBUG, "Absolute view pos = "
-	    << abs_view_pos[0] << ","
-	    << abs_view_pos[1] << ","
-	    << abs_view_pos[2] );
-    SG_LOG( SG_VIEW, SG_DEBUG, "Scenery center = "
-	    << sc[0] << "," << sc[1] << "," << sc[2] );
-    SG_LOG( SG_VIEW, SG_DEBUG, "(RPH) Relative view pos = "
-	    << view_pos[0] << "," << view_pos[1] << "," << view_pos[2] );
+    view_point.setPosition(geod_view_pos[0] * SGD_RADIANS_TO_DEGREES,
+			   geod_view_pos[1] * SGD_RADIANS_TO_DEGREES,
+			   geod_view_pos[2] * SG_METER_TO_FEET);
+    sgCopyVec3(zero_elev, view_point.getZeroElevViewPos());
+    sgdCopyVec3(abs_view_pos, view_point.getAbsoluteViewPos());
+    sgCopyVec3(view_pos, view_point.getRelativeViewPos());
 
     // code to calculate LOCAL matrix calculated from Phi, Theta, and
     // Psi (roll, pitch, yaw) in case we aren't running LaRCsim as our
     // flight model
 	
-#ifdef USE_FAST_LOCAL
-	
     fgMakeLOCAL( LOCAL, rph[1], rph[0], -rph[2] );
-	
-#else // USE_TEXT_BOOK_METHOD
-	
-    sgVec3 rollvec;
-    sgSetVec3( rollvec, 0.0, 0.0, 1.0 );
-    sgMat4 PHI;		// roll
-    sgMakeRotMat4( PHI, rph[0] * SGD_RADIANS_TO_DEGREES, rollvec );
-
-    sgVec3 pitchvec;
-    sgSetVec3( pitchvec, 0.0, 1.0, 0.0 );
-    sgMat4 THETA;		// pitch
-    sgMakeRotMat4( THETA, rph[1] * SGD_RADIANS_TO_DEGREES, pitchvec );
-
-    // ROT = PHI * THETA
-    sgMat4 ROT;
-    // sgMultMat4( ROT, PHI, THETA );
-    sgCopyMat4( ROT, PHI );
-    sgPostMultMat4( ROT, THETA );
-
-    sgVec3 yawvec;
-    sgSetVec3( yawvec, 1.0, 0.0, 0.0 );
-    sgMat4 PSI;		// heading
-    sgMakeRotMat4( PSI, -rph[2] * SGD_RADIANS_TO_DEGREES, yawvec );
-
-    // LOCAL = ROT * PSI
-    // sgMultMat4( LOCAL, ROT, PSI );
-    sgCopyMat4( LOCAL, ROT );
-    sgPostMultMat4( LOCAL, PSI );
-
-#endif // USE_FAST_LOCAL
-	
-    // cout << "LOCAL matrix" << endl;
-    // print_sgMat4( LOCAL );
 	
     sgMakeRotMat4( UP, 
 		   geod_view_pos[0] * SGD_RADIANS_TO_DEGREES,
@@ -251,31 +136,13 @@ void FGViewerRPH::update() {
 		   -geod_view_pos[1] * SGD_RADIANS_TO_DEGREES );
 
     sgSetVec3( world_up, UP[0][0], UP[0][1], UP[0][2] );
-    // sgXformVec3( world_up, UP );
-    // cout << "World Up = " << world_up[0] << "," << world_up[1] << ","
-    //      << world_up[2] << endl;
-    
-    // Alternative method to Derive world up vector based on
-    // *geodetic* coordinates
-    // alt_up = sgPolarToCart(FG_Longitude, FG_Latitude, 1.0);
-    // printf( "    Alt Up = (%.4f, %.4f, %.4f)\n", 
-    //         alt_up.x, alt_up.y, alt_up.z);
-
-    // VIEWo = LOCAL * UP
-    // sgMultMat4( VIEWo, LOCAL, UP );
     sgCopyMat4( VIEWo, LOCAL );
     sgPostMultMat4( VIEWo, UP );
-    // cout << "VIEWo matrix" << endl;
-    // print_sgMat4( VIEWo );
 
     // generate the sg view up and forward vectors
     sgSetVec3( view_up, VIEWo[0][0], VIEWo[0][1], VIEWo[0][2] );
-    // cout << "view = " << view[0] << ","
-    //      << view[1] << "," << view[2] << endl;
     sgSetVec3( right, VIEWo[1][0], VIEWo[1][1], VIEWo[1][2] );
     sgSetVec3( forward, VIEWo[2][0], VIEWo[2][1], VIEWo[2][2] );
-    // cout << "forward = " << forward[0] << ","
-    //      << forward[1] << "," << forward[2] << endl;
 
     // generate the pilot offset vector in world coordinates
     sgVec3 pilot_offset_world;
@@ -297,17 +164,7 @@ void FGViewerRPH::update() {
 	    << view_forward[2] );
 	
     // VIEW_ROT = LARC_TO_SSG * ( VIEWo * VIEW_OFFSET )
-#ifdef USE_FAST_VIEWROT
     fgMakeViewRot( VIEW_ROT, VIEW_OFFSET, VIEWo );
-#else
-    // sgMultMat4( VIEW_ROT, VIEW_OFFSET, VIEWo );
-    // sgPreMultMat4( VIEW_ROT, LARC_TO_SSG );
-    sgCopyMat4( VIEW_ROT, VIEWo );
-    sgPostMultMat4( VIEW_ROT, VIEW_OFFSET );
-    sgPreMultMat4( VIEW_ROT, LARC_TO_SSG );
-#endif
-    // cout << "VIEW_ROT matrix" << endl;
-    // print_sgMat4( VIEW_ROT );
 
     sgVec3 trans_vec;
     sgAddVec3( trans_vec, view_pos, pilot_offset_world );
@@ -336,21 +193,9 @@ void FGViewerRPH::update() {
     //      << surface_south[1] << "," << surface_south[2] << endl;
 
     // now calculate the surface east vector
-#define USE_FAST_SURFACE_EAST
-#ifdef USE_FAST_SURFACE_EAST
     sgVec3 world_down;
     sgNegateVec3(world_down, world_up);
     sgVectorProductVec3(surface_east, surface_south, world_down);
-#else
-    sgMakeRotMat4( TMP, SGD_PI_2 * SGD_RADIANS_TO_DEGREES, world_up );
-    // cout << "sgMat4 TMP" << endl;
-    // print_sgMat4( TMP );
-    sgXformVec3(surface_east, surface_south, TMP);
-#endif //  USE_FAST_SURFACE_EAST
-    // cout << "Surface direction directly east " << surface_east[0] << ","
-    //      << surface_east[1] << "," << surface_east[2] << endl;
-    // cout << "Should be close to zero = "
-    //      << sgScalarProductVec3(surface_south, surface_east) << endl;
 
     set_clean();
 }

@@ -30,9 +30,109 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/constants.h>
+#include <simgear/math/point3d.hxx>
+#include <simgear/math/polar3d.hxx>
+#include <simgear/math/sg_geodesy.hxx>
+
+#include <Scenery/scenery.hxx>
 
 #include "viewer.hxx"
 
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGViewPoint.
+////////////////////////////////////////////////////////////////////////
+
+FGViewPoint::FGViewPoint ()
+  : _dirty(true),
+    _lon_deg(0),
+    _lat_deg(0),
+    _alt_ft(0)
+{
+}
+
+FGViewPoint::~FGViewPoint ()
+{
+}
+
+void
+FGViewPoint::setPosition (double lon_deg, double lat_deg, double alt_ft)
+{
+  _dirty = true;
+  _lon_deg = lon_deg;
+  _lat_deg = lat_deg;
+  _alt_ft = alt_ft;
+}
+
+const double *
+FGViewPoint::getAbsoluteViewPos () const
+{
+  if (_dirty)
+    recalc();
+  return _absolute_view_pos;
+}
+
+const float *
+FGViewPoint::getRelativeViewPos () const
+{
+  if (_dirty)
+    recalc();
+  return _relative_view_pos;
+}
+
+const float *
+FGViewPoint::getZeroElevViewPos () const
+{
+  if (_dirty)
+    recalc();
+  return _zero_elev_view_pos;
+}
+
+void
+FGViewPoint::recalc () const
+{
+  double sea_level_radius_m;
+  double lat_geoc_rad;
+
+				// Convert from geodetic to geocentric
+				// coordinates.
+  sgGeodToGeoc(_lat_deg * SGD_DEGREES_TO_RADIANS,
+	       _alt_ft * SG_FEET_TO_METER,
+	       &sea_level_radius_m,
+	       &lat_geoc_rad);
+
+				// Calculate the cartesian coordinates
+				// of point directly below at sea level.
+  Point3D p = Point3D(_lon_deg * SG_DEGREES_TO_RADIANS,
+		      lat_geoc_rad,
+		      sea_level_radius_m);
+  Point3D tmp = sgPolarToCart3d(p) - scenery.get_center();
+  sgSetVec3(_zero_elev_view_pos, tmp[0], tmp[1], tmp[2]);
+
+				// Calculate the absolute view position
+				// in fgfs coordinates.
+  p.setz(p.radius() + _alt_ft * SG_FEET_TO_METER);
+  tmp = sgPolarToCart3d(p);
+  sgdSetVec3(_absolute_view_pos, tmp[0], tmp[1], tmp[2]);
+
+				// Calculate the relative view position
+				// from the scenery center.
+  sgdVec3 scenery_center;
+  sgdSetVec3(scenery_center,
+	     scenery.get_center().x(),
+	     scenery.get_center().y(),
+	     scenery.get_center().z());
+  sgdVec3 view_pos;
+  sgdSubVec3(view_pos, _absolute_view_pos, scenery_center);
+  sgSetVec3(_relative_view_pos, view_pos);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGViewer.
+////////////////////////////////////////////////////////////////////////
 
 // Constructor
 FGViewer::FGViewer( void ):
