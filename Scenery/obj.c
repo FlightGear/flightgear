@@ -36,13 +36,13 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
-#include <Main/fg_debug.h>
 #include <Math/mat3.h>
 #include <Math/fg_random.h>
 #include <Scenery/obj.h>
 #include <Scenery/scenery.h>
-
+#include <zlib/zlib.h>
 
 
 #define MAXNODES 100000
@@ -91,20 +91,26 @@ float calc_lat(double x, double y, double z) {
 
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
-    char line[256], winding_str[256];
+    char gzpath[256], line[256], winding_str[256];
     double approx_normal[3], normal[3], scale;
     double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     GLint tile;
-    FILE *f;
+    gzFile *f;
     int first, ncount, vncount, n1, n2, n3, n4;
     static int use_per_vertex_norms = 1;
     int winding;
     int last1, last2, odd;
 
-    if ( (f = fopen(path, "r")) == NULL ) {
-	fgPrintf(FG_TERRAIN, FG_ALERT, "Cannot open file: %s\n", path);
-	return(-1);
+    // First try "path.gz"
+    strcpy(gzpath, path);
+    strcat(gzpath, ".gz");
+    if ( (f = gzopen(gzpath, "r")) == NULL ) {
+	// Next try "path"
+	if ( (f = gzopen(path, "r")) == NULL ) {
+	    fgPrintf(FG_TERRAIN, FG_ALERT, "Cannot open file: %s\n", path);
+	    return(-1);
+	}
     }
 
     tile = xglGenLists(1);
@@ -125,7 +131,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
     ncount = 1;
     vncount = 1;
 
-    while ( fgets(line, 250, f) != NULL ) {
+    while ( gzgets(f, line, 250) != NULL ) {
 	if ( line[0] == '#' ) {
 	    /* comment -- ignore */
 	} else if ( line[0] == '\n' ) {
@@ -380,7 +386,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
     xglEndList();
 
-    fclose(f);
+    gzclose(f);
 
     /* reference point is the "center" */
     ref->x = (xmin + xmax) / 2.0;
@@ -392,9 +398,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.26  1998/04/03 22:11:36  curt
-/* Converting to Gnu autoconf system.
+/* Revision 1.27  1998/04/18 04:13:17  curt
+/* Added zlib on the fly decompression support for loading scenery objects.
 /*
+ * Revision 1.26  1998/04/03 22:11:36  curt
+ * Converting to Gnu autoconf system.
+ *
  * Revision 1.25  1998/03/14 00:30:50  curt
  * Beginning initial terrain texturing experiments.
  *
