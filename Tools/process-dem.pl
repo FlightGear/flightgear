@@ -91,9 +91,9 @@ while ( $dem_file = shift(@ARGV) ) {
 exit(0);
 
 
-# fix command to work with windoze, replaces first "/" with "\\"
-sub fix_command {
-    my($in) = @_;
+# replace all unix forward slashes with windoze backwards slashes if
+# running on a cygwin32 system
+sub fix_slashes { my($in) = @_;
 
     $system = `uname -s`;
     chop($system);
@@ -126,7 +126,7 @@ sub file_root {
 
 sub dem2node {
     $command = "Dem2node/dem2node $work_dir $dem_file $error";
-    $command = fix_command($command);
+    $command = fix_slashes($command);
     print "Running '$command'\n";
 
     open(OUT, "$command |");
@@ -167,11 +167,11 @@ sub triangle_1 {
 	    $fileroot =~ s/\.node$//;
 	    print "$subdir/$fileroot\n";
 	    $command = "Triangle/triangle";
+	    $command = fix_slashes($command);
 	    if ( -r "$subdir/$fileroot.poly" ) {
 		$command .= " -pc";
 	    }
 	    $command .= " -a$max_area -q10 $subdir/$file";
-	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -181,7 +181,9 @@ sub triangle_1 {
 
 	    # remove input file.node
 	    if ( $remove_tmps ) {
-		unlink("$subdir/$file");
+		$file1 = "$subdir/$file";
+		$file1 = fix_slashes($file1);
+		unlink($file1);
 	    }
 	}
     }
@@ -195,8 +197,9 @@ sub triangle_1 {
 #     fixed file.1.node
 
 sub fixnode {
-    $command = "FixNode/fixnode $dem_file $subdir";
-    $command = fix_command($command);
+    $command = "FixNode/fixnode";
+    $command = fix_slashes($command);
+    $command .= " $dem_file $subdir";
     print "Running '$command'\n";
     open(OUT, "$command |") || die "cannot run command\n";
     while ( <OUT> ) {
@@ -228,8 +231,9 @@ sub splittris {
 	if ( $file =~ m/\.1\.node$/ ) {
 	    $file =~ s/\.node$//;  # strip off the ".node"
 	
-	    $command = "SplitTris/splittris $subdir/$file";
-	    $command = fix_command($command);
+	    $command = "SplitTris/splittris";
+	    $command = fix_slashes($command);
+	    $command .= " $subdir/$file";
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -238,9 +242,15 @@ sub splittris {
 	    close(OUT);
 
 	    if ( $remove_tmps ) {
-		unlink("$subdir/$file.node");
-		unlink("$subdir/$file.node.orig");
-		unlink("$subdir/$file.ele");
+		$file1 = "$subdir/$file.node";
+		$file1 = fix_slashes($file1);
+		unlink($file1);
+		$file1 = "$subdir/$file.node.orig";
+		$file1 = fix_slashes($file1);
+		unlink($file1);
+		$file1 = "$subdir/$file.ele";
+		$file1 = fix_slashes($file1);
+		unlink($file1);
 	    }
 	}
     }
@@ -258,8 +268,9 @@ sub assemtris {
 	if ( $file =~ m/\.1\.body$/ ) {
 	    $file =~ s/\.1\.body$//;  # strip off the ".body"
 	
-	    $command = "AssemTris/assemtris $subdir/$file";
-	    $command = fix_command($command);
+	    $command = "AssemTris/assemtris";
+	    $command = fix_slashes($command);
+	    $command .= " $subdir/$file";
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -268,7 +279,9 @@ sub assemtris {
 	    close(OUT);
 	}
 	if ( $remove_tmps ) {
-	    unlink("$subdir/$file.body");
+	    $file1 = "$subdir/$file.body";
+	    $file1 = fix_slashes($file1);
+	    unlink($file1);
 	}
     }
 }
@@ -288,6 +301,7 @@ sub triangle_2 {
 	    print("Test for $subdir/$base.q\n");
 
 	    $command = "Triangle/triangle";
+	    $command = fix_slashes($command);
 
 	    if ( -r "$subdir/$base.q" ) {
 		# if triangle hangs, we can create a filebase.q for
@@ -303,7 +317,6 @@ sub triangle_2 {
 		$command .= " $subdir/$file";
 	    }
 
-	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -313,7 +326,9 @@ sub triangle_2 {
 
 	    # remove input file.node
 	    if ( $remove_tmps ) {
-		unlink("$subdir/$file");
+		$file1 = "$subdir/$file";
+		$file1 = fix_slashes($file1);
+		unlink($file1);
 	    }
 	}
     }
@@ -337,8 +352,9 @@ sub tri2obj {
 	if ( $file =~ m/\.1\.node$/ ) {
 	    $file =~ s/\.node$//;  # strip off the ".node"
 	    
-	    $command = "Tri2obj/tri2obj $subdir/$file";
-	    $command = fix_command($command);
+	    $command = "Tri2obj/tri2obj";
+	    $command = fix_slashes($command);
+	    $command .= " $subdir/$file";
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -347,9 +363,15 @@ sub tri2obj {
 	    close(OUT);
 	    
 	    if ( $remove_tmps ) {
-		unlink("$subdir/$file.node");
-		unlink("$subdir/$file.node.orig");
-		unlink("$subdir/$file.ele");
+		$file1 = "$subdir/$file.node";
+		$file1 = fix_slashes($file1);
+		unlink($file1);
+		$file1 = "$subdir/$file.node.orig";
+		$file1 = fix_slashes($file1);
+		unlink($file1);
+		$file1 = "$subdir/$file.ele";
+		$file1 = fix_slashes($file1);
+		unlink($file1);
 	    }
 	}
     }
@@ -372,8 +394,9 @@ sub strips {
 	if ( $file =~ m/\.1\.obj$/ ) {
 	    $newfile = $file;
 	    $newfile =~ s/\.1\.obj$//;
-	    $command = "Stripe_w/strips $subdir/$file $subdir/$newfile.2.obj";
-	    $command = fix_command($command);
+	    $command = "Stripe_w/strips";
+	    $command = fix_slashes($command);
+	    $command .= " $subdir/$file $subdir/$newfile.2.obj";
 	    print "Running '$command'\n";
     	    # $input = <STDIN>;
 	    open(OUT, "$command |");
@@ -396,7 +419,9 @@ sub strips {
 	    # close(OUT);
 	    
 	    if ( $remove_tmps ) {
-		unlink("$subdir/$file");
+		$file1 = "$subdir/$file";
+		$file1 = fix_slashes($file1);
+		unlink($file1);
 	    }
 	}
     }
@@ -415,8 +440,9 @@ sub fixobj {
 	    $newfile = $file;
 	    $newfile =~ s/\.2\.obj$/.obj/;
 	    
-	    $command = "FixObj/fixobj $subdir/$file $subdir/$newfile";
-	    $command = fix_command($command);
+	    $command = "FixObj/fixobj";
+	    $command = fix_slashes($command);
+	    $command .= " $subdir/$file $subdir/$newfile";
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -425,7 +451,9 @@ sub fixobj {
 	    close(OUT);
 
 	    if ( $remove_tmps ) {
-		unlink("$subdir/$file");
+		$file1 = "$subdir/$file";
+		$file1 = fix_slashes($file1);
+		unlink($file1);
 	    }
 	}
     }
@@ -446,15 +474,17 @@ sub install {
     $install_dir =~ s/\/+/\//g;
     print "Install dir = $install_dir\n";
 
+    $system = `uname -s`;
+    chop($system);
+
     if ( $system !~ m/CYGWIN32/ ) {
 	$command = "mkdir -p $install_dir";
     } else {
         $command = "Makedir/makedir $install_dir";
-	$command = fix_command($command);
+	$command = fix_slashes($command);
     }
 
-    # system($command);
-
+    # print "Running '$command'\n";
     open(OUT, "$command |");
     while ( <OUT> ) {
 	print $_;
@@ -463,15 +493,20 @@ sub install {
 
 
     # write out version and info record
-    open(VERSION, ">$install_dir/VERSION") || 
-	die "Cannot open $install_dir/VERSION for writing\n";
+    $version_file = "$install_dir/VERSION";
+    open(VERSION, ">$version_file") || 
+	die "Cannot open $version_file for writing\n";
     print VERSION "FGFS Scenery Version $scenery_format_version\n";
-    $date = `date`; chop($date);
+    if ( $system !~ m/CYGWIN32/ ) {
+	$date = `date`; chop($date);
+    } else {
+	# ???
+	$date = "not available";
+    }
     $hostname = `hostname`; chop($hostname);
     print VERSION "Creator = $ENV{LOGNAME}\n";
     print VERSION "Date = $date\n";
     print VERSION "Machine = $hostname\n";
-    print VERSION "
     print VERSION "\n";
     print VERSION "DEM File Name = $dem_file\n";
     print VERSION "DEM Label = $quad_name\n";
@@ -485,10 +520,9 @@ sub install {
 	    $new_file = file_root($file);
 	    
 	    $command = 
-		"gzip -v --best < $subdir/$file > $install_dir/$new_file.gz";
-	    $command = fix_command($command);
+		"gzip -c --best -v < $subdir/$file > $install_dir/$new_file.gz";
+	    $command = fix_slashes($command);
 
-	    # $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -497,11 +531,13 @@ sub install {
 	    close(OUT);
 
 	    if ( $remove_tmps ) {
-		unlink("$subdir/$file");
+		$file1 = "$subdir/$file";
+		$file1 = fix_slashes($file1);
+		unlink($file1);
 	    }
 	} elsif ( $file =~ m/\d\d.apt$/ ) {
 	    $command = "cp $subdir/$file $install_dir/$file";
-	    # $command = fix_command($command);
+	    $command = fix_slashes($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
@@ -515,6 +551,9 @@ sub install {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.31  1998/10/28 19:39:06  curt
+# Changes to better support win32 scenery development.
+#
 # Revision 1.30  1998/10/22 22:00:10  curt
 # Modified the info that is put in the VERSION file.
 #
