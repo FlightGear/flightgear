@@ -172,6 +172,7 @@ void FGJSBsim::init() {
     // Explicitly call the superclass's
     // init method first.
     common_init();
+    copy_to_JSBsim();
 
     fdmex->GetState()->Initialize(fgic);
     fdmex->RunIC(fgic); //loop JSBSim once w/o integrating
