@@ -236,7 +236,7 @@ void FGMultiplayRxMgr::ProcessData(void) {
                     sCallsign = MsgHdr->sCallsign;
 
                     // Process the player data unless we generated it
-                    if (m_sCallsign != string(MsgHdr->sCallsign)) {
+                    if (m_sCallsign != MsgHdr->sCallsign) {
 
 
                         // Process messages
