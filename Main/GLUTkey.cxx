@@ -38,12 +38,16 @@
 #include <stdlib.h>
 
 #include <Aircraft/aircraft.h>
+#include <Astro/orbits.hxx>
+#include <Astro/sun.hxx>
+#include <Astro/sky.hxx>
 #include <Autopilot/autopilot.h> // Added autopilot.h to list, Jeff Goeke-Smith
 #include <Cockpit/hud.hxx>
 #include <Debug/fg_debug.h>
 #include <GUI/gui.h>
 #include <Include/fg_constants.h>
 #include <PUI/pu.h>
+#include <Time/light.hxx>
 #include <Weather/weather.h>
 
 #include "GLUTkey.hxx"
@@ -54,6 +58,15 @@
 #  include <GL/xmesa.h>
    static int fullscreen = 1;
 #endif
+
+
+// Force an update of the sky and lighting parameters
+static void local_update_sky_and_lighting_params( void ) {
+    fgSunInit();
+    fgLightUpdate();
+    fgSkyColorsInit();
+}
+
 
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
@@ -108,9 +121,11 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 77: /* M key */
 	    t->warp -= 60;
+	    local_update_sky_and_lighting_params();
 	    return;
 	case 84: /* T key */
 	    t->warp_delta -= 30;
+	    local_update_sky_and_lighting_params();
 	    return;
 	case 87: /* W key */
 #if defined(FX) && !defined(WIN32)
@@ -188,6 +203,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 109: /* m key */
 	    t->warp += 60;
+	    local_update_sky_and_lighting_params();
 	    return;
 	case 112: /* p key */
 	    t->pause = !t->pause;
@@ -205,6 +221,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 116: /* t key */
 	    t->warp_delta += 30;
+	    local_update_sky_and_lighting_params();
 	    return;
 	case 120: /* X key */
 	    fov = current_options.get_fov();
@@ -321,13 +338,17 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.18  1998/07/30 23:48:24  curt
-/* Output position & orientation when pausing.
-/* Eliminated libtool use.
-/* Added options to specify initial position and orientation.
-/* Changed default fov to 55 degrees.
-/* Added command line option to start in paused or unpaused state.
+/* Revision 1.19  1998/08/05 00:19:33  curt
+/* Added a local routine to update lighting params every frame when time is
+/* accelerated.
 /*
+ * Revision 1.18  1998/07/30 23:48:24  curt
+ * Output position & orientation when pausing.
+ * Eliminated libtool use.
+ * Added options to specify initial position and orientation.
+ * Changed default fov to 55 degrees.
+ * Added command line option to start in paused or unpaused state.
+ *
  * Revision 1.17  1998/07/27 18:41:23  curt
  * Added a pause command "p"
  * Fixed some initialization order problems between pui and glut.

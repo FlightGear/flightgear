@@ -42,10 +42,14 @@
 #  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
 #endif
 
+#include <Astro/orbits.hxx>
+#include <Astro/sun.hxx>
+#include <Astro/sky.hxx>
 #include <Debug/fg_debug.h>
 #include <Flight/flight.h>
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
+#include <Time/light.hxx>
 
 #include "fg_time.hxx"
 
@@ -60,8 +64,15 @@
 fgTIME cur_time_params;
 
 
-// Initialize the time dependent variables
+// Force an update of the sky and lighting parameters
+static void local_update_sky_and_lighting_params( void ) {
+    fgSunInit();
+    fgLightUpdate();
+    fgSkyColorsInit();
+}
 
+
+// Initialize the time dependent variables
 void fgTimeInit(fgTIME *t) {
     fgPrintf( FG_EVENT, FG_INFO, "Initializing Time\n");
 
@@ -360,6 +371,11 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 	      "  Current Unix calendar time = %ld  warp = %ld  delta = %ld\n", 
 	      t->cur_time, t->warp, t->warp_delta);
 
+    if ( t->warp_delta ) {
+	// time is changing so force an update
+	local_update_sky_and_lighting_params();
+    }
+
     // get GMT break down for current time
     t->gmt = gmtime(&t->cur_time);
     fgPrintf( FG_EVENT, FG_BULK, 
@@ -411,6 +427,10 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.14  1998/08/05 00:20:07  curt
+// Added a local routine to update lighting params every frame when time is
+// accelerated.
+//
 // Revision 1.13  1998/07/30 23:48:55  curt
 // Sgi build tweaks.
 // Pause support.
