@@ -17,6 +17,7 @@ endif
 
 libNetwork_a_SOURCES = \
 	protocol.cxx protocol.hxx \
+	ATC-Inputs.cxx ATC-Inputs.hxx \
 	atc610x.cxx atc610x.hxx \
 	atlas.cxx atlas.hxx \
 	garmin.cxx garmin.hxx \

@@ -34,42 +34,38 @@
 
 #include "protocol.hxx"
 
+#include "ATC-Inputs.hxx"
 
-#define ATC_ANAL_IN_VALUES 32
-#define ATC_ANAL_IN_BYTES (2 * ATC_ANAL_IN_VALUES)
+
 #define ATC_COMPASS_CH 5
 #define ATC_STEPPER_HOME 0xC0
 #define ATC_RADIO_DISPLAY_BYTES 48
-#define ATC_RADIO_SWITCH_BYTES 32
-#define ATC_SWITCH_BYTES 16
-#define ATC_NUM_COLS 8
 
 
 class FGATC610x : public FGProtocol {
 
-    bool use_rudder;
+    FGATCInput *input0;         // board0 input interface class
+    FGATCInput *input1;         // board1 input interface class
+
+    SGPath input0_path;
+    SGPath input1_path;
+    SGPath output0_path;
+    SGPath output1_path;
 
     int board;
 
     int lock_fd;
-    int analog_in_fd;
     int lamps_fd;
     int radios_fd;
     int stepper_fd;
-    int switches_fd;
 
     char lock_file[256];
-    char analog_in_file[256];
     char lamps_file[256];
     char radios_file[256];
     char stepper_file[256];
-    char switches_file[256];
 
-    unsigned char analog_in_bytes[ATC_ANAL_IN_BYTES];
-    int analog_in_data[ATC_ANAL_IN_VALUES];
     unsigned char radio_display_data[ATC_RADIO_DISPLAY_BYTES];
     unsigned char radio_switch_data[ATC_RADIO_SWITCH_BYTES];
-    unsigned char switch_data[ATC_SWITCH_BYTES];
 
     float compass_position;
 
@@ -122,12 +118,10 @@ class FGATC610x : public FGProtocol {
 
     int dme_switch;
 
-    bool do_analog_in();
     bool do_lights();
     bool do_radio_switches();
     bool do_radio_display();
     bool do_steppers();
-    bool do_switches();
 
     // convenience
     inline bool adf_has_power() const {
@@ -153,17 +147,37 @@ class FGATC610x : public FGProtocol {
 
 public:
 
-    FGATC610x() : use_rudder(true) { }
-    ~FGATC610x() { }
+    FGATC610x() :
+        input0(NULL),
+        input1(NULL),
+        input0_path(""),
+        input1_path(""),
+        output0_path(""),
+        output1_path("")
+    { }
 
+    ~FGATC610x() {
+        delete input0;
+        delete input1;
+    }
+
+    // Open and initialize ATC 610x hardware
     bool open();
+
     void init_config();
 
     bool process();
 
     bool close();
 
-    inline void set_use_rudder( bool value ) { use_rudder = value; }
+    inline void set_path_names( const SGPath &in0, const SGPath &in1,
+                                const SGPath &out0, const SGPath &out1 )
+    {
+        input0_path = in0;
+        input1_path = in1;
+        output0_path = out0;
+        output1_path = out1;
+    }
 };
 
 

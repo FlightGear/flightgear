@@ -106,15 +106,21 @@ FGIO::parse_port_config( const string& config )
 
     try
     {
-	if ( protocol == "atc610x" ) {
-            FGATC610x *atc610x = new FGATC610x;
-	    atc610x->set_hz( 30 );
-            if ( tokens.size() > 1 ) {
-                if ( tokens[1] == "no-rudder" ) {
-                    atc610x->set_use_rudder( false );
-                }
+	if ( protocol == "atcsim" ) {
+            FGATC610x *atcsim = new FGATC610x;
+	    atcsim->set_hz( 30 );
+            if ( tokens.size() != 6 ) {
+                SG_LOG( SG_IO, SG_ALERT, "Usage: --atcsim=[no-]pedals,"
+                        << "input0_config,input1_config,"
+                        << "output0_config,output1_config" );
             }
-	    return atc610x;
+            if ( tokens[1] == "no-pedals" ) {
+                fgSetBool( "/input/atcsim/ignore-pedal-controls", true );
+            } else {
+                fgSetBool( "/input/atcsim/ignore-pedal-controls", false );
+            }
+            atcsim->set_path_names(tokens[2], tokens[3], tokens[4], tokens[5]);
+	    return atcsim;
 	} else if ( protocol == "atlas" ) {
 	    FGAtlas *atlas = new FGAtlas;
 	    io = atlas;
