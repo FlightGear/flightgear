@@ -22,6 +22,8 @@
  * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
+
+
 #ifndef _CELESTIALBODY_H_
 #define _CELESTIALBODY_H_
 
