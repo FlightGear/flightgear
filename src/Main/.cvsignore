@@ -1,0 +1,7 @@
+.cvsignore
+.deps
+Makefile
+Makefile.in
+fgfs
+runfgfs
+runfgfs.bat

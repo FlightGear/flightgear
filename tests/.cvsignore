@@ -1,0 +1,10 @@
+.cvsignore
+.deps
+Makefile
+Makefile.in
+est-epsilon
+gl-info
+test-gethostname
+test-mktime
+test-text
+test-up

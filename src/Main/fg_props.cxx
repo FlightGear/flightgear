@@ -157,7 +157,7 @@ getLoggingClasses ()
   string result = "";
   for (int i = 0; log_class_mappings[i].c != SG_UNDEFD; i++) {
     if ((classes&log_class_mappings[i].c) > 0) {
-      if (result != "")
+      if (result != (string)"")
 	result += '|';
       result += log_class_mappings[i].name;
     }
