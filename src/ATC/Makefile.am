@@ -2,9 +2,9 @@ noinst_LIBRARIES = libATC.a
 
 libATC_a_SOURCES = \
 	ATC.hxx ATC.cxx \
-	atis.hxx atis.cxx atislist.hxx atislist.cxx \
-	tower.hxx tower.cxx towerlist.hxx towerlist.cxx \
-	approach.hxx approach.cxx approachlist.hxx approachlist.cxx \
+	atis.hxx atis.cxx \
+	tower.hxx tower.cxx \
+	approach.hxx approach.cxx \
 	ground.hxx ground.cxx \
 	commlist.hxx commlist.cxx \
 	ATCdisplay.hxx ATCdisplay.cxx \
