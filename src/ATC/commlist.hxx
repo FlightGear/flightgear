@@ -77,9 +77,9 @@ public:
 	// The data found is written into the passed-in ATCData structure.
     bool FindByFreq( double lon, double lat, double elev, double freq, ATCData* ad, atc_type tp = INVALID );
 	
-    // query the database by location, lon and lat are
-    // in degrees, elev is in meters, range is in nautical miles.
-	// Returns the number of stations of the specified type that are in range, and pushes them into stations
+    // query the database by location, lon and lat are in degrees, elev is in meters, range is in nautical miles.
+	// Returns the number of stations of the specified atc_type tp that are in range of the position defined by 
+	// lon, lat and elev, and pushes them into stations.
 	// If no atc_type is specifed, returns the number of all stations in range, and pushes them into stations
 	// ** stations is erased before use **
     int FindByPos( double lon, double lat, double elev, double range, comm_list_type* stations, atc_type tp = INVALID );
