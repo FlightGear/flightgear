@@ -51,8 +51,6 @@ StaticSystem::init ()
     _serviceable_node = node->getChild("serviceable", 0, true);
     _pressure_in_node = fgGetNode("/environment/pressure-inhg", true);
     _pressure_out_node = node->getChild("pressure-inhg", 0, true);
-
-    _serviceable_node->setBoolValue(true);
 }
 
 void

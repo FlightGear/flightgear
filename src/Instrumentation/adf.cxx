@@ -131,8 +131,6 @@ ADF::init ()
     std::ostringstream temp;
     temp << name << num;
     adf_ident = temp.str();
-
-    _serviceable_node->setBoolValue(true);
 }
 
 void

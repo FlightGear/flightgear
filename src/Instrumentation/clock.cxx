@@ -66,8 +66,6 @@ Clock::init ()
     _offset_node = node->getChild("offset-sec", 0, true);
     _sec_node = node->getChild("indicated-sec", 0, true);
     _string_node = node->getChild("indicated-string", 0, true);
-
-    _serviceable_node->setBoolValue(true);
 }
 
 void

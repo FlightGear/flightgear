@@ -56,8 +56,6 @@ HeadingIndicator::init ()
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
     _last_heading_deg = (_heading_in_node->getDoubleValue() +
                          _offset_node->getDoubleValue());
-
-    //_serviceable_node->setBoolValue(true);
 }
 
 void

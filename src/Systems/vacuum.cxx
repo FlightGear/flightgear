@@ -60,8 +60,6 @@ VacuumSystem::init()
     _rpm_node = fgGetNode(rpm.c_str(), true);
     _pressure_node = fgGetNode("/environment/pressure-inhg", true);
     _suction_node = node->getChild("suction-inhg", 0, true);
-
-    _serviceable_node->setBoolValue(true);
 }
 
 void

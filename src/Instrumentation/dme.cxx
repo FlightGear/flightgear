@@ -100,8 +100,6 @@ DME::init ()
     _distance_node = node->getChild("indicated-distance-nm", 0, true);
     _speed_node = node->getChild("indicated-ground-speed-kt", 0, true);
     _time_node = node->getChild("indicated-time-min", 0, true);
-
-    _serviceable_node->setBoolValue(true);
 }
 
 void

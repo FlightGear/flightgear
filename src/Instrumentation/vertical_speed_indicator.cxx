@@ -57,7 +57,6 @@ VerticalSpeedIndicator::init ()
     _pressure_node = fgGetNode(static_port.c_str(), true);
     _speed_node = node->getChild("indicated-speed-fpm", 0, true);
 
-    _serviceable_node->setBoolValue(true);
                                 // Initialize at ambient pressure
     _internal_pressure_inhg = _pressure_node->getDoubleValue();
 }

@@ -54,8 +54,6 @@ PitotSystem::init ()
     _density_node = fgGetNode("/environment/density-slugft3", true);
     _velocity_node = fgGetNode("/velocities/airspeed-kt", true);
     _total_pressure_node = node->getChild("total-pressure-inhg", 0, true);
-
-    _serviceable_node->setBoolValue(true);
 }
 
 void

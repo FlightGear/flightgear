@@ -112,8 +112,6 @@ void Encoder::init()
     // Outputs
     pressureAltitudeNode = node->getChild("pressure-alt-ft", 0, true);
     modeCAltitudeNode = node->getChild("mode-c-alt-ft", 0, true);
-    // Init
-    serviceableNode->setBoolValue(true);
 }
 
 

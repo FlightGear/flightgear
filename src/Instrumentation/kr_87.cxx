@@ -114,7 +114,6 @@ FGKR_87::~FGKR_87() {
 
 
 void FGKR_87::init () {
-    serviceable->setBoolValue( true );
     morse.init();
 }
 

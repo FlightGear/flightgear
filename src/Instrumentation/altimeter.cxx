@@ -100,9 +100,6 @@ Altimeter::init ()
     _setting_node = node->getChild("setting-inhg", 0, true);
     _pressure_node = fgGetNode(static_port.c_str(), true);
     _altitude_node = node->getChild("indicated-altitude-ft", 0, true);
-
-    _serviceable_node->setBoolValue(true);
-    _setting_node->setDoubleValue(29.92);
 }
 
 void

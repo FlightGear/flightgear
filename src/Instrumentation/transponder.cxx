@@ -71,8 +71,6 @@ void Transponder::init()
     // Outputs
     idCodeNode = node->getChild("id-code", 0, true);
     flightLevelNode = node->getChild("flight-level", 0, true);
-    // Init
-    serviceableNode->setBoolValue(true);
 }
 
 

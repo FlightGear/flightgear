@@ -67,8 +67,6 @@ AttitudeIndicator::init ()
     _roll_int_node = node->getChild("internal-roll-deg", 0, true);
     _pitch_out_node = node->getChild("indicated-pitch-deg", 0, true);
     _roll_out_node = node->getChild("indicated-roll-deg", 0, true);
-
-    //_serviceable_node->setBoolValue(true);
 }
 
 void

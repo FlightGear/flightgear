@@ -73,8 +73,6 @@ AirspeedIndicator::init ()
     _static_pressure_node = fgGetNode(static_port.c_str(), true);
     _density_node = fgGetNode("/environment/density-slugft3", true);
     _speed_node = node->getChild("indicated-speed-kt", 0, true);
-
-    _serviceable_node->setBoolValue(true);
 }
 
 #ifndef FPSTOKTS
