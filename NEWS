@@ -1,6 +1,10 @@
 New in 0.53
 * Some initial "GameGLUT" support contributed by Gary R. Van Sickle
   (tiberius@braemarinc.com)
+* Tracked down and eliminated some memory access type bugs that were
+  causing segfaults on some platforms, with some compilers using various
+  optimization flags.
+* Assorted code optimizations submitted by Norman Vine.
 
 New in 0.52
 * Stars added in 8 stages as sky gets darker for a smoother more realistic

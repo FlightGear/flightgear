@@ -153,7 +153,7 @@ else
     dnl force a failed check since we will be building under windoze
     AM_CONDITIONAL(ENABLE_XMESA_FX, test "no" = "yes")
 
-    if test "x$with_sgiopengl" = "xyes" ; then
+    if test "x$with_sgi_opengl" = "xyes" ; then
         echo "Building with glut.dll, glu.dll, and opengl.dll"
 	WIN32_GLUT=glut
 	WIN32_GLU=glu
