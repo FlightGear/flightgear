@@ -44,7 +44,7 @@
 
 //using namespace std;
 
-#include <deque.h>       // STL
+#include <deque>         // STL
 
 
 #ifndef WIN32
@@ -446,9 +446,12 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 /* $Log$
-/* Revision 1.5  1998/05/17 16:58:13  curt
-/* Added a View Frustum Culling ratio display to the hud.
+/* Revision 1.6  1998/06/03 00:43:28  curt
+/* No .h when including stl stuff.
 /*
+ * Revision 1.5  1998/05/17 16:58:13  curt
+ * Added a View Frustum Culling ratio display to the hud.
+ *
  * Revision 1.4  1998/05/16 13:04:15  curt
  * New updates from Charlie Hotchkiss.
  *
