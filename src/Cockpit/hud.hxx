@@ -741,6 +741,7 @@ class HudLadder : public dual_instr_item {
     UINT   minor_div;
     UINT   label_pos;
     UINT   scr_hole;
+    UINT   minimal;
     float vmax;
     float vmin;
     float factor;
@@ -754,6 +755,7 @@ class HudLadder : public dual_instr_item {
                int       y,
                UINT      width,
                UINT      height,
+               UINT      minimal        =    0,
                FLTFNPTR  ptch_source    = get_roll,
                FLTFNPTR  roll_source    = get_pitch,
                float     span_units     = 45.0,

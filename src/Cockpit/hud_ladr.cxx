@@ -22,6 +22,7 @@ HudLadder ::   HudLadder(  int       x,
                int       y,
                UINT      width,
                UINT      height,
+               UINT      mini,
                FLTFNPTR  ptch_source,
                FLTFNPTR  roll_source,
                float    span_units,
@@ -47,6 +48,7 @@ HudLadder ::   HudLadder(  int       x,
            width_units = 45;
        }
        factor = (float)get_span() / (float) width_units;
+       minimal = mini;
    }
    
 HudLadder ::  ~HudLadder()
@@ -113,6 +115,11 @@ void HudLadder :: draw( void )
         glVertex2f(0.0, -CENTER_DIAMOND_SIZE);
     glEnd();
 #undef CENTER_DIAMOND_SIZE
+
+    if(minimal) {
+        glPopMatrix();      
+        return;
+    }
 
     if( div_units ) {
         char     TextLadder[8] ;

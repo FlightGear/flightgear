@@ -184,7 +184,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 //  int index;
   int font_size;
 
-  int off = 50;
+//  int off = 50;
   int min_x = 25; //off/2;
   int max_x = 615; //640-(off/2);
 //  int min_y = off;
@@ -221,8 +221,8 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 //  fgHUDSetBrightness( hud, BRT_LIGHT );
 
 //      case 0:     // TBI
-  int x = 290; /*cen_x-30*/
-  int y = 45;  /*off-5*/
+//  int x = 290; /*cen_x-30*/
+//  int y = 45;  /*off-5*/
 //  HIptr = (instr_item *) new fgTBI_instr( x, y, ladr_w2, text_h );
   HIptr = (instr_item *) new fgTBI_instr( 290, 45, 60, 10 );  
   HUD_deque.insert( HUD_deque.begin(), HIptr);
@@ -647,10 +647,10 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 //  int min_y = off;
     int max_y = 480-off;
     int cen_x = 640 / 2;
-//  int cen_y = 480 / 2;
+    int cen_y = 480 / 2;
     int text_h = 10;
     int ladr_w2 = 60;
-//  int ladr_h2 = 90;
+    int ladr_h2 = 90;
 //  int ladr_t = 35;
     int compass_w = 200;
 //  int gap = 10;
@@ -680,6 +680,9 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 //    index = 19;  
 
     instr_item* p;
+
+    p = new HudLadder( cen_x-ladr_w2, cen_y-ladr_h2, 2*ladr_w2, 2*ladr_h2, 1 );
+    HUD_deque.push_front( p );
 
 //      case 4:    // GYRO COMPASS
     p =new hud_card( cen_x-(compass_w/2),
@@ -754,7 +757,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
                          0, 
                          TRUE );
     HUD_deque.push_front( p );
-
+#if 0
     p = new instr_label( x_pos, 40, 120, 10,
                          get_vfc_tris_culled,
                          "%7.0f",
@@ -780,8 +783,10 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
                          0,
                          TRUE );
     HUD_deque.push_front( p );
-    
-    p = new instr_label( x_pos, 70, 90, 10,
+#endif // 0
+	
+//    p = new instr_label( x_pos, 70, 90, 10,
+    p = new instr_label( x_pos, 40, 90, 10,
                          get_fov,
                          "%7.1f",
                          "FOV          = ",
@@ -1259,7 +1264,7 @@ void fgUpdateHUD( void ) {
   extern char *fgAPget_TargetLatLonStr( void );
 
   int apY = 480 - 80;
-  char scratch[128];
+//  char scratch[128];
 //  HUD_TextList.add( fgText( "AUTOPILOT", 20, apY) );
 //  apY -= 15;
   if( fgAPHeadingEnabled() ) {
