@@ -1,2 +1,4 @@
-fgfs.supp
+Makefile
+Makefile.in
 core*
+fgfs.supp
