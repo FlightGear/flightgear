@@ -43,8 +43,8 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 #include <simgear/math/sg_types.hxx>
-#include <simgear/misc/props.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>

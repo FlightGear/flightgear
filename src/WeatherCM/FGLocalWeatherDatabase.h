@@ -63,7 +63,7 @@ HISTORY
 #include <Main/fgfs.hxx>
 
 #include <simgear/constants.h>
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
 
 #include "sphrintp.h"
 

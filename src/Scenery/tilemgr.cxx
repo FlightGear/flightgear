@@ -281,7 +281,10 @@ void FGTileMgr::update_queues()
         try
         {
             ssgEntity *obj_model =
-                  globals->get_model_loader()->load_model(dm->get_model_path());
+                globals->get_model_loader()->load_model( globals->get_fg_root(),
+                                                         dm->get_model_path(),
+                                                         globals->get_props(),
+                                                         globals->get_sim_time_sec() );
             if ( obj_model != NULL ) {
                 dm->get_obj_trans()->addKid( obj_model );
             }

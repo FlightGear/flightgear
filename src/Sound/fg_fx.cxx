@@ -25,13 +25,13 @@
 #pragma warning (disable: 4786)
 #endif
 
-#include <simgear/misc/props.hxx>
-#include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/exception.hxx>
 #ifdef __BORLANDC__
 #  define exception c_exception
 #endif
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props.hxx>
 
 #include <Main/fg_props.hxx>
 

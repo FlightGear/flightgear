@@ -38,7 +38,8 @@
 SG_USING_STD(string);
 SG_USING_STD(vector);
 
-#include <simgear/misc/props.hxx>
+#include <simgear/props/props.hxx>
+
 #include <Main/fgfs.hxx>
 
 

@@ -30,17 +30,14 @@
 # error This library requires C++
 #endif                                   
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <simgear/compiler.h>
+
+#include STL_STRING      // Standard C++ string library
 
 #include <plib/sg.h>
 #include <plib/ssg.h>
 
-#include <simgear/compiler.h>
-#include <simgear/misc/props.hxx>
-
-#include STL_STRING      // Standard C++ string library
+#include <simgear/props/props.hxx>
 
 SG_USING_STD(string);
 

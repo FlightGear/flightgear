@@ -246,7 +246,10 @@ void MPPlayer::LoadModel(void) {
     m_ModelTrans = new ssgTransform;
 
     // Load the model
-    m_Model = globals->get_model_loader()->load_model(m_sModelName);
+    m_Model = globals->get_model_loader()->load_model( globals->get_fg_root(),
+                                                       m_sModelName,
+                                                       globals->get_props(),
+                                                       globals->get_sim_time_sec() );
     m_Model->clrTraversalMaskBits( SSGTRAV_HOT );
 
     // Add model to transform

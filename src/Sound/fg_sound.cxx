@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/props/condition.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -118,7 +119,7 @@ FGSound::init(SGPropertyNode *node)
    _property = fgGetNode(node->getStringValue("property", ""), true);
    SGPropertyNode *condition = node->getChild("condition");
    if (condition != NULL)
-      _condition = fgReadCondition(condition);
+      _condition = fgReadCondition(globals->get_props(), condition);
 
    if (!_property && !_condition)
       SG_LOG(SG_GENERAL, SG_WARN,
@@ -261,38 +262,34 @@ FGSound::update (double dt)
    // If the state changes to false, stop playing.
    //
    if (_property)
-      curr_value = _property->getDoubleValue();
+       curr_value = _property->getDoubleValue();
 
    if (							// Lisp, anyone?
-         (_condition && !_condition->test()) ||
-         (!_condition && _property &&
-            (
-               !curr_value ||
-               ( (_mode == FGSound::IN_TRANSIT) && (curr_value == _prev_value) )
-            )
+       (_condition && !_condition->test()) ||
+       (!_condition && _property &&
+        (
+         !curr_value ||
+         ( (_mode == FGSound::IN_TRANSIT) && (curr_value == _prev_value) )
          )
-      )
+        )
+       )
    {
+       if ((_mode != FGSound::IN_TRANSIT) || (_stopping > MAX_TRANSIT_TIME)) {
+           if (_sample->is_playing()) {
+               SG_LOG(SG_GENERAL, SG_INFO, "Stopping audio after " << _dt_play
+                      << " sec: " << _name );
 
-      if ((_mode != FGSound::IN_TRANSIT) || (_stopping > MAX_TRANSIT_TIME)) {
+               _sample->stop( _mgr->get_scheduler() );
+           }
 
-         if (_sample->is_playing()) {
-            SG_LOG(SG_GENERAL, SG_INFO, "Stopping audio after " << _dt_play
-                                        << " sec: " << _name );
+           _active = false;
+           _dt_stop += dt;
+           _dt_play = 0.0;
+       } else {
+           _stopping += dt;
+       }
 
-            _sample->stop( _mgr->get_scheduler() );
-         }
-
-         _active = false;
-         _dt_stop += dt;
-         _dt_play = 0.0;
-
-
-      } else
-         _stopping += dt;
-
-      return;
-
+       return;
    }
 
    //
@@ -304,9 +301,9 @@ FGSound::update (double dt)
       if (!_sample->is_playing()) {
          _dt_stop += dt;
          _dt_play = 0.0;
-
-      } else
+      } else {
          _dt_play += dt;
+      }
 
       return;
    }

@@ -132,7 +132,11 @@ FGNewMat::Object::load_models () const
 				// Load model only on demand
   if (!_models_loaded) {
     for (unsigned int i = 0; i < _paths.size(); i++) {
-      ssgEntity * entity = globals->get_model_loader()->load_model(_paths[i]);
+      ssgEntity * entity
+        = globals->get_model_loader()->load_model( globals->get_fg_root(),
+                                                   _paths[i],
+                                                   globals->get_props(),
+                                                   globals->get_sim_time_sec());
       if (entity != 0) {
                                 // FIXME: this stuff can be handled
                                 // in the XML wrapper as well (at least,

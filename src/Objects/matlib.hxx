@@ -29,10 +29,6 @@
 # error This library requires C++
 #endif                                   
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <simgear/compiler.h>
 
 #include STL_STRING		// Standard C++ string library

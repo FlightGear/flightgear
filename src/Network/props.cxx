@@ -31,8 +31,8 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/commands.hxx>
 #include <simgear/misc/strutils.hxx>
-#include <simgear/misc/props.hxx>
-#include <simgear/misc/props_io.hxx>
+#include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include STL_STRSTREAM
 

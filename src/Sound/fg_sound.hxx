@@ -28,6 +28,8 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/props/condition.hxx>
+
 #include <Main/fgfs.hxx>
 #include <Main/globals.hxx>
 

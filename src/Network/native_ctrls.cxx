@@ -100,7 +100,6 @@ static void htond (double &x)
 // Populate the FGNetCtrls structure from the property tree.
 void FGProps2NetCtrls( FGNetCtrls *net, bool net_byte_order ) {
     int i;
-    bool b; 
     SGPropertyNode * node;
     SGPropertyNode * tempnode;
 

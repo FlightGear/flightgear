@@ -31,6 +31,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/point3d.hxx>
+#include <simgear/scene/model/location.hxx>
 
 #include <queue>
 
@@ -40,8 +41,6 @@
 #ifdef ENABLE_THREADS
 #  include <simgear/threads/SGQueue.hxx>
 #endif // ENABLE_THREADS
-
-#include <Main/location.hxx>
 
 #include "FGTileLoader.hxx"
 #include "hitlist.hxx"
