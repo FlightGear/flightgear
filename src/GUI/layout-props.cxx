@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <plib/pu.h>
 #include <simgear/props/props.hxx>
 
