@@ -46,6 +46,8 @@
 
 #include <plib/ssg.h>		// plib include
 
+#include <simgear/math/sg_types.hxx>
+
 #include <Scenery/tileentry.hxx>
 
 SG_USING_STD(string);
@@ -67,12 +69,14 @@ ssgBranch *fgAsciiObjLoad(const string& path, FGTileEntry *tile,
 ssgBranch *fgGenTile( const string& path, FGTileEntry *t);
 
 
-// Generate a taxi sign
-ssgBranch *gen_taxi_sign( const string path, const string content );
-
-
-// Generate a runway sign
-ssgBranch *gen_runway_sign( const string path, const string name );
+// Create an ssg leaf
+ssgLeaf *gen_leaf( const string& path,
+		   const GLenum ty, const string& material,
+		   const point_list& nodes, const point_list& normals,
+		   const point_list& texcoords,
+		   const int_list node_index,
+		   const int_list& tex_index,
+		   const bool calc_lights, ssgVertexArray *lights );
 
 
 #endif // _OBJ_HXX
