@@ -146,6 +146,34 @@ reinit ()
   cout << "BFI: end reinit\n";
 }
 
+// BEGIN: kludge 2000-12-07
+// This is a kludge around a LaRCsim problem; see setAltitude()
+// for details.
+static int _altitude_countdown = 0;
+static double _requested_altitude = -9999;
+static bool _saved_freeze = false;
+static inline void _check_altitude ()
+{
+  if (_altitude_countdown > 0) {
+    _altitude_countdown--;
+    if (_altitude_countdown == 0) {
+      current_aircraft.fdm_state->set_Altitude(_requested_altitude);
+      globals->set_freeze(_saved_freeze);
+    }
+  }
+}
+
+static int _lighting_countdown = 0;
+static inline void _check_lighting ()
+{
+  if (_lighting_countdown > 0) {
+    _lighting_countdown--;
+    if (_lighting_countdown == 0)
+      fgUpdateSkyAndLightingParams();
+  }
+}
+// END: kludge
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -337,6 +365,8 @@ FGBFI::init ()
 void
 FGBFI::update ()
 {
+  _check_altitude();
+  _check_lighting();
   if (_needReinit) {
     reinit();
   }
@@ -620,6 +650,8 @@ FGBFI::setLatitude (double latitude)
 {
   current_aircraft.fdm_state->set_Latitude(latitude * DEG_TO_RAD);
   fgUpdateSkyAndLightingParams();
+  if (_lighting_countdown <= 0)
+    _lighting_countdown = 5;
 }
 
 
@@ -641,6 +673,8 @@ FGBFI::setLongitude (double longitude)
 {
   current_aircraft.fdm_state->set_Longitude(longitude * DEG_TO_RAD);
   fgUpdateSkyAndLightingParams();
+  if (_lighting_countdown <= 0)
+    _lighting_countdown = 5;
 }
 
 
@@ -673,7 +707,22 @@ void
 FGBFI::setAltitude (double altitude)
 {
   current_aircraft.fdm_state->set_Altitude(altitude);
-  fgUpdateSkyAndLightingParams();
+
+				// 2000-12-07
+				// This is an ugly kludge around a
+				// LaRCsim problem; if the
+				// requested altitude cannot be
+				// set right away (because it's
+				// below the last-calculated ground
+				// level), pause FGFS, wait for
+				// five frames, and then try again.
+  if (_altitude_countdown <= 0 &&
+      fabs(getAltitude() - altitude) > 5.0) {
+    _altitude_countdown = 5;
+    _requested_altitude = altitude;
+    _saved_freeze = globals->get_freeze();
+    globals->set_freeze(true);
+  }
 }
 
 
