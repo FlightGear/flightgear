@@ -1840,7 +1840,7 @@ void uiuc_recorder( double dt )
               }
 
               /*********************** Moments ***********************/
-/*	    case flapper_freq_record:
+	      /* case flapper_freq_record:
 	      {
 		fout << flapper_freq << " ";
 		break;
@@ -1874,7 +1874,48 @@ void uiuc_recorder( double dt )
 	      {
 		fout << flapper_Moment << " ";
 		break;
-		} */
+		}*/
+              /*********************** debug  ***********************/
+              /* debug variables for use in probing data            */
+              /* comment out old lines, and add new                 */
+              /* only remove code that you have written             */
+	    case debug1_record:
+	      {
+		// eta on tail
+		// fout << eta_q << " ";
+		// engine RPM
+		// fout << engineOmega * 60 / (2 * LS_PI)<< " ";
+		// climb rate in fpm
+		//fout << V_down * 60 << " ";
+		// w_induced downwash at tail due to wing
+		fout << w_induced   << " ";
+		break;
+	      }
+	    case debug2_record:
+	      {
+		//Lift to drag ratio 
+		// fout << V_north/V_down << " ";
+ 		// g's through the c.g. of the aircraft
+		// fout << (-A_Z_cg/32.174) << " ";
+		// gyroscopic moment (see uiuc_wrapper.cpp)
+		// fout << (polarInertia * engineOmega * Q_body) << " ";
+		// downwash_angle at tail
+		fout << downwash_angle * 57.29 << " ";
+
+		break;
+	      }
+	    case debug3_record:
+	      {
+		// die off function for eta_q
+		// fout << (Cos_alpha * Cos_alpha)       << " ";
+		// gyroscopic moment (see uiuc_wrapper.cpp)
+		// fout << (-polarInertia * engineOmega * R_body) << " ";
+		// AlphaTail 
+		fout << AlphaTail * 57.29  << " ";
+		fout << Alpha     * 57.29  << " ";
+		break;
+	      }
+
             };
         } // end record map
     }

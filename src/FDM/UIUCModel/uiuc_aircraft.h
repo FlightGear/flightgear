@@ -69,6 +69,7 @@
 	       04/21/2002   (MSS) Added new variables for apparent mass effects
                             and options for computing *_2U coefficient
                             scale factors.
+               08/29/2002   (MSS) Added simpleSingleModel
 
 ----------------------------------------------------------------------
 
@@ -164,7 +165,7 @@ enum {Dx_pilot_flag = 2000, Dy_pilot_flag, Dz_pilot_flag,
       use_V_rel_wind_2U_flag, nondim_rate_V_rel_wind_flag, 
       use_abs_U_body_2U_flag,
       dyn_on_speed_flag, dyn_on_speed_zero_flag, 
-      use_dyn_on_speed_curve1_flag, Alpha_flag, 
+      use_dyn_on_speed_curve1_flag, use_Alpha_dot_on_speed_flag, Alpha_flag, 
       Beta_flag, U_body_flag, V_body_flag, W_body_flag, ignore_unknown_flag};
 
 // geometry === Aircraft-specific geometric quantities
@@ -190,7 +191,25 @@ enum {Weight_flag = 6000,
       I_yy_appMass_flag,       I_zz_appMass_flag};
 
 // engine ===== Propulsion data
-enum {simpleSingle_flag = 7000, c172_flag, cherokee_flag, 
+enum {simpleSingle_flag = 7000, simpleSingleModel_flag,
+      c172_flag, cherokee_flag, gyroForce_Q_body_flag, gyroForce_R_body_flag, 
+      omega_flag, omegaRPM_flag, polarInertia_flag,
+      slipstream_effects_flag, propDia_flag,
+      eta_q_Cm_q_flag,
+      eta_q_Cm_adot_flag,
+      eta_q_Cmfade_flag,
+      eta_q_Cl_beta_flag,
+      eta_q_Cl_p_flag,
+      eta_q_Cl_r_flag,
+      eta_q_Cl_dr_flag,
+      eta_q_CY_beta_flag,
+      eta_q_CY_p_flag,
+      eta_q_CY_r_flag,
+      eta_q_CY_dr_flag,
+      eta_q_Cn_beta_flag,
+      eta_q_Cn_p_flag,
+      eta_q_Cn_r_flag,
+      eta_q_Cn_dr_flag,
       Throttle_pct_input_flag, forcemom_flag, Xp_input_flag, Zp_input_flag, Mp_input_flag};
 
 // CD ========= Aerodynamic x-force quantities (longitudinal)
@@ -390,11 +409,13 @@ enum {Simtime_record = 16000, dt_record,
 
       flapper_freq_record, flapper_phi_record,
       flapper_phi_deg_record, flapper_Lift_record, flapper_Thrust_record,
-      flapper_Inertia_record, flapper_Moment_record};
+      flapper_Inertia_record, flapper_Moment_record,
+
+      debug1_record, debug2_record, debug3_record};
 
 // misc ======= Miscellaneous inputs
-enum {simpleHingeMomentCoef_flag = 17000, dfTimefdf_flag/*, flapper_flag,
-							  flapper_phi_init_flag*/};
+enum {simpleHingeMomentCoef_flag = 17000, dfTimefdf_flag, flapper_flag,
+      flapper_phi_init_flag};
 
 //321654
 // fog ======== Fog field quantities
@@ -487,6 +508,13 @@ struct AIRCRAFT
   bool use_dyn_on_speed_curve1;
 #define use_dyn_on_speed_curve1 aircraft_->use_dyn_on_speed_curve1
   bool P_body_init_true;
+
+  bool use_Alpha_dot_on_speed;
+#define use_Alpha_dot_on_speed  aircraft_->use_Alpha_dot_on_speed
+  double Alpha_dot_on_speed;
+#define Alpha_dot_on_speed      aircraft_->Alpha_dot_on_speed
+
+
   double P_body_init;
 #define P_body_init_true       aircraft_->P_body_init_true
 #define P_body_init            aircraft_->P_body_init
@@ -700,6 +728,22 @@ struct AIRCRAFT
   
   double simpleSingleMaxThrust;
 #define simpleSingleMaxThrust  aircraft_->simpleSingleMaxThrust
+
+  bool simpleSingleModel;
+#define simpleSingleModel  aircraft_->simpleSingleModel
+  double t_v0;
+#define t_v0  aircraft_->t_v0
+  double dtdv_t0;
+#define dtdv_t0  aircraft_->dtdv_t0
+  double v_t0;
+#define v_t0  aircraft_->v_t0
+  double dtdvvt;
+#define dtdvvt  aircraft_->dtdvvt
+
+  double tc, induced, eta_q;
+#define tc      aircraft_->tc
+#define induced aircraft_->induced
+#define eta_q   aircraft_->eta_q
   
   bool Throttle_pct_input;
   string Throttle_pct_input_file;
@@ -713,6 +757,70 @@ struct AIRCRAFT
 #define Throttle_pct_input_dTArray    aircraft_->Throttle_pct_input_dTArray
 #define Throttle_pct_input_ntime      aircraft_->Throttle_pct_input_ntime
 #define Throttle_pct_input_startTime  aircraft_->Throttle_pct_input_startTime
+  bool gyroForce_Q_body, gyroForce_R_body;
+  double minOmega, maxOmega, minOmegaRPM, maxOmegaRPM, engineOmega, polarInertia;
+#define gyroForce_Q_body              aircraft_->gyroForce_Q_body
+#define gyroForce_R_body              aircraft_->gyroForce_R_body
+#define minOmega                      aircraft_->minOmega
+#define maxOmega                      aircraft_->maxOmega
+#define minOmegaRPM                   aircraft_->minOmegaRPM
+#define maxOmegaRPM                   aircraft_->maxOmegaRPM
+#define engineOmega                   aircraft_->engineOmega
+#define polarInertia                  aircraft_->polarInertia
+
+  // propeller slipstream effects
+  bool slipstream_effects;
+  double propDia;
+  double eta_q_Cm_q, eta_q_Cm_q_fac;
+  double eta_q_Cm_adot, eta_q_Cm_adot_fac;
+  double eta_q_Cmfade, eta_q_Cmfade_fac;
+  double eta_q_Cl_beta, eta_q_Cl_beta_fac;
+  double eta_q_Cl_p, eta_q_Cl_p_fac;
+  double eta_q_Cl_r, eta_q_Cl_r_fac;
+  double eta_q_Cl_dr, eta_q_Cl_dr_fac;
+  double eta_q_CY_beta, eta_q_CY_beta_fac;
+  double eta_q_CY_p, eta_q_CY_p_fac;
+  double eta_q_CY_r, eta_q_CY_r_fac;
+  double eta_q_CY_dr, eta_q_CY_dr_fac;
+  double eta_q_Cn_beta, eta_q_Cn_beta_fac;
+  double eta_q_Cn_p, eta_q_Cn_p_fac;
+  double eta_q_Cn_r, eta_q_Cn_r_fac;
+  double eta_q_Cn_dr, eta_q_Cn_dr_fac;
+
+#define slipstream_effects   aircraft_->slipstream_effects
+#define propDia              aircraft_->propDia
+#define eta_q_Cm_q           aircraft_->eta_q_Cm_q
+#define eta_q_Cm_q_fac       aircraft_->eta_q_Cm_q_fac
+#define eta_q_Cm_adot        aircraft_->eta_q_Cm_adot
+#define eta_q_Cm_adot_fac    aircraft_->eta_q_Cm_adot_fac
+#define eta_q_Cmfade         aircraft_->eta_q_Cmfade
+#define eta_q_Cmfade_fac     aircraft_->eta_q_Cmfade_fac
+#define eta_q_Cl_beta        aircraft_->eta_q_Cl_beta
+#define eta_q_Cl_beta_fac    aircraft_->eta_q_Cl_beta_fac
+#define eta_q_Cl_p           aircraft_->eta_q_Cl_p
+#define eta_q_Cl_p_fac       aircraft_->eta_q_Cl_p_fac
+#define eta_q_Cl_r           aircraft_->eta_q_Cl_r
+#define eta_q_Cl_r_fac       aircraft_->eta_q_Cl_r_fac
+#define eta_q_Cl_dr          aircraft_->eta_q_Cl_dr
+#define eta_q_Cl_dr_fac      aircraft_->eta_q_Cl_dr_fac
+#define eta_q_CY_beta        aircraft_->eta_q_CY_beta
+#define eta_q_CY_beta_fac    aircraft_->eta_q_CY_beta_fac
+#define eta_q_CY_p           aircraft_->eta_q_CY_p
+#define eta_q_CY_p_fac       aircraft_->eta_q_CY_p_fac
+#define eta_q_CY_r           aircraft_->eta_q_CY_r
+#define eta_q_CY_r_fac       aircraft_->eta_q_CY_r_fac
+#define eta_q_CY_dr          aircraft_->eta_q_CY_dr
+#define eta_q_CY_dr_fac      aircraft_->eta_q_CY_dr_fac
+#define eta_q_Cn_beta        aircraft_->eta_q_Cn_beta
+#define eta_q_Cn_beta_fac    aircraft_->eta_q_Cn_beta_fac
+#define eta_q_Cn_p           aircraft_->eta_q_Cn_p
+#define eta_q_Cn_p_fac       aircraft_->eta_q_Cn_p_fac
+#define eta_q_Cn_r           aircraft_->eta_q_Cn_r
+#define eta_q_Cn_r_fac       aircraft_->eta_q_Cn_r_fac
+#define eta_q_Cn_dr          aircraft_->eta_q_Cn_dr
+#define eta_q_Cn_dr_fac      aircraft_->eta_q_Cn_dr_fac
+
+
   bool Xp_input;
   string Xp_input_file;
   double Xp_input_timeArray[5400];
@@ -1153,6 +1261,14 @@ struct AIRCRAFT
 #define Cmfade_nAlphaArray aircraft_->Cmfade_nAlphaArray
 #define Cmfade_nde         aircraft_->Cmfade_nde
 #define CmfadeI            aircraft_->CmfadeI
+
+  double gamma_wing, w_induced, w_coef, downwash_angle, AlphaTail;
+#define gamma_wing         aircraft_->gamma_wing
+#define w_induced          aircraft_->w_induced
+#define w_coef             aircraft_->w_coef
+#define downwash_angle     aircraft_->downwash_angle
+#define AlphaTail          aircraft_->AlphaTail
+
   string Cmfdf;
   double Cmfdf_dfArray[100];
   double Cmfdf_CmArray[100];
@@ -2122,8 +2238,8 @@ struct AIRCRAFT
 #define dfTimefdf_dfArray      aircraft_->dfTimefdf_dfArray
 #define dfTimefdf_TimeArray    aircraft_->dfTimefdf_TimeArray
 #define dfTimefdf_ndf          aircraft_->dfTimefdf_ndf
-  /*
-  FlapData *flapper_data;
+
+  /*  FlapData *flapper_data;
 #define flapper_data           aircraft_->flapper_data
   bool flapper_model;
 #define flapper_model          aircraft_->flapper_model

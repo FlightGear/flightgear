@@ -79,6 +79,10 @@
 			    will compile with certain compilers.
 	       08/29/2002   (RD) Separated each primary keyword into its
 	                    own function to speed up compile time
+               08/29/2002   (RD w/ help from CO) Made changes to shorten
+                            compile time.  [] RD to add more comments here.
+               08/29/3003   (MSS) Adding new keywords for new engine model
+                            and slipstream effects on tail.
 
 ----------------------------------------------------------------------
 
@@ -451,6 +455,16 @@ void parse_init( const string& linetoken2, const string& linetoken3,
       case use_dyn_on_speed_curve1_flag:
 	{
 	  use_dyn_on_speed_curve1 = true;
+	  break;
+	}
+      case use_Alpha_dot_on_speed_flag:
+	{
+	  use_Alpha_dot_on_speed = true;
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  Alpha_dot_on_speed = token_value;
 	  break;
 	}
       case Alpha_flag:
@@ -1076,6 +1090,31 @@ void parse_engine( const string& linetoken2, const string& linetoken3,
 	  engineParts -> storeCommands (*command_line);
 	  break;
 	}
+      case simpleSingleModel_flag:
+	{
+	  simpleSingleModel = true;
+	  /* input the thrust at zero speed */
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  t_v0 = token_value; 
+	  /* input slope of thrust at speed for which thrust is zero */
+	  if (check_float(linetoken4))
+	    token4 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  dtdv_t0 = token_value; 
+	  /* input speed at which thrust is zero */
+	  if (check_float(linetoken5))
+	    token5 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  v_t0 = token_value; 
+	  dtdvvt = -dtdv_t0 * v_t0 / t_v0;
+	  engineParts -> storeCommands (*command_line);
+	  break;
+	}
       case c172_flag:
 	{
 	  engineParts -> storeCommands (*command_line);
@@ -1100,6 +1139,241 @@ void parse_engine( const string& linetoken2, const string& linetoken3,
 				Throttle_pct_input_ntime);
 	  token6 >> token_value;
 	  Throttle_pct_input_startTime = token_value;
+	  break;
+	}
+      case gyroForce_Q_body_flag:
+	{
+	  /* include gyroscopic forces due to pitch */
+	  gyroForce_Q_body = true;
+	  break;
+	}
+      case gyroForce_R_body_flag:
+	{
+	  /* include gyroscopic forces due to yaw */
+	  gyroForce_R_body = true;
+	  break;
+	}
+
+      case slipstream_effects_flag:
+	{
+	// include slipstream effects
+	  slipstream_effects = true;
+	  if (!simpleSingleModel)
+	    uiuc_warnings_errors(3, *command_line);
+	  break;
+	}
+      case propDia_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  propDia = token_value;
+	  break;
+	}
+      case eta_q_Cm_q_flag:
+	{
+	// include slipstream effects due to Cm_q
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_Cm_q_fac = token_value;
+	  if (eta_q_Cm_q_fac == 0.0) {eta_q_Cm_q_fac = 1.0;}
+	  break;
+	}
+      case eta_q_Cm_adot_flag:
+	{
+	// include slipstream effects due to Cm_adot
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_Cm_adot_fac = token_value;
+	  if (eta_q_Cm_adot_fac == 0.0) {eta_q_Cm_adot_fac = 1.0;}
+	  break;
+	}
+      case eta_q_Cmfade_flag:
+	{
+	// include slipstream effects due to Cmfade
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_Cmfade_fac = token_value;
+	  if (eta_q_Cmfade_fac == 0.0) {eta_q_Cmfade_fac = 1.0;}
+	  break;
+	}
+      case eta_q_Cl_beta_flag:
+	{
+	// include slipstream effects due to Cl_beta
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_Cl_beta_fac = token_value;
+	  if (eta_q_Cl_beta_fac == 0.0) {eta_q_Cl_beta_fac = 1.0;}
+	  break;
+	}
+      case eta_q_Cl_p_flag:
+	{
+	// include slipstream effects due to Cl_p
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_Cl_p_fac = token_value;
+	  if (eta_q_Cl_p_fac == 0.0) {eta_q_Cl_p_fac = 1.0;}
+	  break;
+	}
+      case eta_q_Cl_r_flag:
+	{
+	// include slipstream effects due to Cl_r
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_Cl_r_fac = token_value;
+	  if (eta_q_Cl_r_fac == 0.0) {eta_q_Cl_r_fac = 1.0;}
+	  break;
+	}
+      case eta_q_Cl_dr_flag:
+	{
+	// include slipstream effects due to Cl_dr
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_Cl_dr_fac = token_value;
+	  if (eta_q_Cl_dr_fac == 0.0) {eta_q_Cl_dr_fac = 1.0;}
+	  break;
+	}
+      case eta_q_CY_beta_flag:
+	{
+	// include slipstream effects due to CY_beta
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_CY_beta_fac = token_value;
+	  if (eta_q_CY_beta_fac == 0.0) {eta_q_CY_beta_fac = 1.0;}
+	  break;
+	}
+      case eta_q_CY_p_flag:
+	{
+	// include slipstream effects due to CY_p
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_CY_p_fac = token_value;
+	  if (eta_q_CY_p_fac == 0.0) {eta_q_CY_p_fac = 1.0;}
+	  break;
+	}
+      case eta_q_CY_r_flag:
+	{
+	// include slipstream effects due to CY_r
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_CY_r_fac = token_value;
+	  if (eta_q_CY_r_fac == 0.0) {eta_q_CY_r_fac = 1.0;}
+	  break;
+	}
+      case eta_q_CY_dr_flag:
+	{
+	// include slipstream effects due to CY_dr
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_CY_dr_fac = token_value;
+	  if (eta_q_CY_dr_fac == 0.0) {eta_q_CY_dr_fac = 1.0;}
+	  break;
+	}
+      case eta_q_Cn_beta_flag:
+	{
+	// include slipstream effects due to Cn_beta
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_Cn_beta_fac = token_value;
+	  if (eta_q_Cn_beta_fac == 0.0) {eta_q_Cn_beta_fac = 1.0;}
+	  break;
+	}
+      case eta_q_Cn_p_flag:
+	{
+	// include slipstream effects due to Cn_p
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_Cn_p_fac = token_value;
+	  if (eta_q_Cn_p_fac == 0.0) {eta_q_Cn_p_fac = 1.0;}
+	  break;
+	}
+      case eta_q_Cn_r_flag:
+	{
+	// include slipstream effects due to Cn_r
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_Cn_r_fac = token_value;
+	  if (eta_q_Cn_r_fac == 0.0) {eta_q_Cn_r_fac = 1.0;}
+	  break;
+	}
+      case eta_q_Cn_dr_flag:
+	{
+	// include slipstream effects due to Cn_dr
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  eta_q_Cn_dr_fac = token_value;
+	  if (eta_q_Cn_dr_fac == 0.0) {eta_q_Cn_dr_fac = 1.0;}
+	  break;
+	}
+
+      case omega_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  minOmega = token_value; 
+	  if (check_float(linetoken4))
+	    token4 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  maxOmega = token_value; 
+	  break;
+	}
+      case omegaRPM_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  minOmegaRPM = token_value; 
+	  minOmega    = minOmegaRPM * 2.0 * LS_PI / 60;
+	  if (check_float(linetoken4))
+	    token4 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  maxOmegaRPM = token_value; 
+	  maxOmega    = maxOmegaRPM * 2.0 * LS_PI / 60;
+	  break;
+	}
+      case polarInertia_flag:
+	{
+	  if (check_float(linetoken3))
+	    token3 >> token_value;
+	  else
+	    uiuc_warnings_errors(1, *command_line);
+	  polarInertia = token_value; 
 	  break;
 	}
       case forcemom_flag:
@@ -6490,6 +6764,22 @@ void parse_record( const string& linetoken2, LIST command_line ) {
 	recordParts -> storeCommands (*command_line);
 	break;
 	}*/
+      /****************** Flapper Data ***********************/
+    case debug1_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case debug2_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
+    case debug3_record:
+      {
+	recordParts -> storeCommands (*command_line);
+	break;
+      }
     default:
       {
 	if (dont_ignore)
@@ -6530,7 +6820,7 @@ void parse_misc( const string& linetoken2, const string& linetoken3,
 			      dfTimefdf_ndf);
 	break;
       }
-      /*    case flapper_flag:
+      /*case flapper_flag:
       {
 	string flap_file;
 	
@@ -6613,8 +6903,8 @@ void uiuc_menu( string aircraft_name )
 
 /* set speed at which dynamic pressure terms will be accounted for,
    since if velocity is too small, coefficients will go to infinity */
-  dyn_on_speed      = 33;    /* 20 kts, default */
-  dyn_on_speed_zero = 0.5 * dyn_on_speed;    /* only used of use_dyn_on_speed_curve1 is used */
+  dyn_on_speed      = 33;    /* 20 kts (33 ft/sec), default */
+  dyn_on_speed_zero = 0.5 * dyn_on_speed;    /* only used if use_dyn_on_speed_curve1 is used */
   bootindex = 0;  // the index for the bootTime
 
   dont_ignore = true;

@@ -208,18 +208,17 @@ void uiuc_force_moment(double dt)
       F_Y_wind =  CY * qS  * Cos_beta * Cos_beta;
       F_Z_wind = -CL * qS  * Cos_beta * Cos_beta;
 
-      /* wind-axis to body-axis transformation */
+      // wind-axis to body-axis transformation 
       F_X_aero = F_X_wind * Cos_alpha * Cos_beta - F_Y_wind * Cos_alpha * Sin_beta - F_Z_wind * Sin_alpha;
       F_Y_aero = F_X_wind * Sin_beta + F_Y_wind * Cos_beta;
       F_Z_aero = F_X_wind * Sin_alpha * Cos_beta - F_Y_wind * Sin_alpha * Sin_beta + F_Z_wind * Cos_alpha;
     }
-  /* Moment calculations */
+  // Moment calculations
   M_l_aero = Cl * qSb    * Cos_beta * Cos_beta;
   M_m_aero = Cm * qScbar * Cos_beta * Cos_beta;
   M_n_aero = Cn * qSb    * Cos_beta * Cos_beta;
 
-  /* Adding in apparent mass effects */
-
+  // Adding in apparent mass effects
   if (Mass_appMass_ratio)
     F_Z_aero += -(Mass_appMass_ratio * Mass) * W_dot_body;
   if (I_xx_appMass_ratio)
@@ -227,7 +226,7 @@ void uiuc_force_moment(double dt)
   if (I_yy_appMass_ratio)
     M_m_aero += -(I_yy_appMass_ratio * I_yy) * Q_dot_body;
   if (I_zz_appMass_ratio)
-    M_m_aero += -(I_zz_appMass_ratio * I_yy) * R_dot_body;
+    M_n_aero += -(I_zz_appMass_ratio * I_zz) * R_dot_body;
 
   if (Mass_appMass)
     F_Z_aero += -Mass_appMass * W_dot_body;
@@ -236,14 +235,22 @@ void uiuc_force_moment(double dt)
   if (I_yy_appMass)
     M_m_aero += -I_yy_appMass * Q_dot_body;
   if (I_zz_appMass)
-    M_m_aero += -I_zz_appMass * R_dot_body;
+    M_n_aero += -I_zz_appMass * R_dot_body;
 
-  //if (flapper_model)
-  //  {
-  //    F_X_aero += F_X_aero_flapper;
-  //    F_Z_aero += F_Z_aero_flapper;
-  //    M_m_aero += flapper_Moment;
-  //  }
+  // gyroscopic moments
+  // engineOmega is positive when rotation is ccw when viewed from the front
+  if (gyroForce_Q_body)
+    M_n_aero +=  polarInertia * engineOmega * Q_body;
+  if (gyroForce_R_body)
+    M_m_aero += -polarInertia * engineOmega * R_body;
+
+  // ornithopter support
+  if (flapper_model)
+    {
+      F_X_aero += F_X_aero_flapper;
+      F_Z_aero += F_Z_aero_flapper;
+      M_m_aero += flapper_Moment;
+    }
 
   // fog field update
    Fog = 0;
