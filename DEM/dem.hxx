@@ -107,7 +107,7 @@ public:
     double interpolate_altitude( double lon, double lat );
 
     // Use least squares to fit a simpler data set to dem data
-    void fit( char *fg_root, double error, struct fgBUCKET *p );
+    void fit( double error, fgBUCKET *p );
 
     // Initialize output mesh structure
     void outputmesh_init( void );
@@ -119,7 +119,7 @@ public:
     void outputmesh_set_pt( int i, int j, double value );
 
     // Write out a node file that can be used by the "triangle" program
-    void outputmesh_output_nodes( char *fg_root, struct fgBUCKET *p );
+    void outputmesh_output_nodes( char *fg_root, fgBUCKET *p );
 
     // Destructor
     ~fgDEM( void );
@@ -130,6 +130,9 @@ public:
 
 
 // $Log$
+// Revision 1.7  1998/07/04 00:47:19  curt
+// typedef'd struct fgBUCKET.
+//
 // Revision 1.6  1998/06/05 18:14:40  curt
 // Abort out early when reading the "A" record if it doesn't look like
 // a proper DEM file.

@@ -518,7 +518,7 @@ double fgDEM::interpolate_altitude( double lon, double lat ) {
 
 
 // Use least squares to fit a simpler data set to dem data
-void fgDEM::fit( char *fg_root, double error, struct fgBUCKET *p ) {
+void fgDEM::fit( double error, fgBUCKET *p ) {
     double x[DEM_SIZE_1], y[DEM_SIZE_1];
     double m, b, ave_error, max_error;
     double cury, lasty;
@@ -648,7 +648,7 @@ void fgDEM::fit( char *fg_root, double error, struct fgBUCKET *p ) {
 	// printf("Please hit return: "); gets(junk);
     }
 
-    outputmesh_output_nodes(fg_root, p);
+    // outputmesh_output_nodes(fg_root, p);
 }
 
 
@@ -678,7 +678,7 @@ void fgDEM::outputmesh_set_pt( int i, int j, double value ) {
 
 
 // Write out a node file that can be used by the "triangle" program
-void fgDEM::outputmesh_output_nodes( char *fg_root, struct fgBUCKET *p ) {
+void fgDEM::outputmesh_output_nodes( char *fg_root, fgBUCKET *p ) {
     struct stat stat_buf;
     char base_path[256], dir[256], file[256];
 #ifdef WIN32
@@ -776,10 +776,15 @@ void fgDEM::outputmesh_output_nodes( char *fg_root, struct fgBUCKET *p ) {
 
 fgDEM::~fgDEM( void ) {
     // printf("class fgDEM DEstructor called.\n");
+    free(dem_data);
+    free(output_data);
 }
 
 
 // $Log$
+// Revision 1.8  1998/07/04 00:47:18  curt
+// typedef'd struct fgBUCKET.
+//
 // Revision 1.7  1998/06/05 18:14:39  curt
 // Abort out early when reading the "A" record if it doesn't look like
 // a proper DEM file.
