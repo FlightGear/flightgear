@@ -97,6 +97,7 @@
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
 #include <Model/acmodel.hxx>
+#include <Model/modelmgr.hxx>
 #include <AIModel/AIManager.hxx>
 #include <Navaids/fixlist.hxx>
 #include <Navaids/ilslist.hxx>
@@ -1480,6 +1481,37 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     // Initialize the scenery management subsystem.
     ////////////////////////////////////////////////////////////////////
+
+        ////////////////////////////////////////////////////////////////////
+    // Initialize the TG scenery subsystem.
+    ////////////////////////////////////////////////////////////////////
+    FGScenery * scenery = new FGScenery;
+    globals->set_scenery(scenery);
+    globals->add_subsystem("scenery", scenery);
+
+    globals->set_tile_mgr( new FGTileMgr );
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the general model subsystem.
+    ////////////////////////////////////////////////////////////////////
+    FGModelMgr * manager = new FGModelMgr;
+    globals->set_model_mgr(manager);
+    globals->add_subsystem("model-manager", manager);
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the 3D aircraft model subsystem (has a dependency on
+    // the scenery subsystem.)
+    ////////////////////////////////////////////////////////////////////
+    FGAircraftModel * aircraft = new FGAircraftModel;
+    globals->set_aircraft_model(aircraft);
+    globals->add_subsystem("aircraft-model", aircraft);
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the view manager subsystem.
+    ////////////////////////////////////////////////////////////////////
+    FGViewMgr *viewmgr = new FGViewMgr;
+    globals->set_viewmgr( viewmgr );
+    globals->add_subsystem("view-manager", viewmgr);
 
     if ( globals->get_tile_mgr()->init() ) {
         // Load the local scenery data
