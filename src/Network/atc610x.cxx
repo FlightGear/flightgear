@@ -1246,8 +1246,13 @@ bool FGATC610x::do_radio_switches() {
               !(radio_switch_data[23] & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/bfo-btn",
               !(radio_switch_data[23] >> 1 & 0x01) );
+#ifdef CURT_HARDWARE
     fgSetInt( "/radios/kr-87/inputs/frq-btn",
               !(radio_switch_data[23] >> 2 & 0x01) );
+#else
+    fgSetInt( "/radios/kr-87/inputs/frq-btn",
+              (radio_switch_data[23] >> 2 & 0x01) );
+#endif
     fgSetInt( "/radios/kr-87/inputs/flt-et-btn",
               !(radio_switch_data[23] >> 3 & 0x01) );
     fgSetInt( "/radios/kr-87/inputs/set-rst-btn",
