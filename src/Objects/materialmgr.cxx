@@ -202,9 +202,9 @@ fgMATERIAL_MGR::load_lib ( void )
 	    textured->disable( GL_BLEND );
 	    textured->disable( GL_ALPHA_TEST );
 	    textured->setTexture( (char *)tex_file.c_str() );
-	    textured->setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
-	    textured->setMaterial ( GL_SPECULAR, 0, 0, 0, 0 ) ;
-	    textured->setMaterial ( GL_EMISSION, 0, 0, 0, 0 ) ;
+	    textured->enable( GL_COLOR_MATERIAL );
+	    textured->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
+	    textured->setMaterial( GL_SPECULAR, 0.0, 0.0, 0.0, 1.0 );
 
 	    // Set up the coloured state
 	    nontextured->enable( GL_LIGHTING );

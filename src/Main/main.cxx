@@ -228,37 +228,37 @@ void fgInitVisuals( void ) {
 
     // If enabled, normal vectors specified with glNormal are scaled
     // to unit length after transformation.  See glNormal.
-    // xglEnable( GL_NORMALIZE );
+    // glEnable( GL_NORMALIZE );
 
-    xglEnable( GL_LIGHTING );
-    xglEnable( GL_LIGHT0 );
-    xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
+    glEnable( GL_LIGHTING );
+    glEnable( GL_LIGHT0 );
+    glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
     sgVec3 sunpos;
     sgSetVec3( sunpos, l->sun_vec[0], l->sun_vec[1], l->sun_vec[2] );
     ssgGetLight( 0 ) -> setPosition( sunpos );
 
-    // xglFogi (GL_FOG_MODE, GL_LINEAR);
-    xglFogi (GL_FOG_MODE, GL_EXP2);
+    // glFogi (GL_FOG_MODE, GL_LINEAR);
+    glFogi (GL_FOG_MODE, GL_EXP2);
     if ( (current_options.get_fog() == 1) || 
 	 (current_options.get_shading() == 0) ) {
 	// if fastest fog requested, or if flat shading force fastest
-	xglHint ( GL_FOG_HINT, GL_FASTEST );
+	glHint ( GL_FOG_HINT, GL_FASTEST );
     } else if ( current_options.get_fog() == 2 ) {
-	xglHint ( GL_FOG_HINT, GL_NICEST );
+	glHint ( GL_FOG_HINT, GL_NICEST );
     }
     if ( current_options.get_wireframe() ) {
 	// draw wire frame
-	xglPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     }
 
     // This is the default anyways, but it can't hurt
-    xglFrontFace ( GL_CCW );
+    glFrontFace ( GL_CCW );
 
     // Just testing ...
-    // xglEnable(GL_POINT_SMOOTH);
-    // xglEnable(GL_LINE_SMOOTH);
-    // xglEnable(GL_POLYGON_SMOOTH);      
+    // glEnable(GL_POINT_SMOOTH);
+    // glEnable(GL_LINE_SMOOTH);
+    // glEnable(GL_POLYGON_SMOOTH);      
 }
 
 
@@ -305,7 +305,7 @@ void fgRenderFrame( void ) {
 	current_view.UpdateViewParams(cur_view_fdm);
 
 	// set the sun position
-	xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
+	glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
 	clear_mask = GL_DEPTH_BUFFER_BIT;
 	if ( current_options.get_wireframe() ) {
@@ -325,7 +325,7 @@ void fgRenderFrame( void ) {
 			 l->sky_color[2], l->sky_color[3]);
 	    clear_mask |= GL_COLOR_BUFFER_BIT;
 	}
-	xglClear( clear_mask );
+	glClear( clear_mask );
 
 	// Tell GL we are switching to model view parameters
 
@@ -333,8 +333,8 @@ void fgRenderFrame( void ) {
 	// back or something so that I can draw the sky within the
 	// ssgCullandDraw() function, but for now I just mimic what
 	// ssg does to set up the model view matrix
-	xglMatrixMode(GL_MODELVIEW);
-	xglLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 	ssgSetCamera( current_view.VIEW );
 
 	/*
@@ -342,7 +342,7 @@ void fgRenderFrame( void ) {
 	sgTransposeNegateMat4 ( vm_tmp, current_view.VIEW ) ;
 	sgCopyMat4( view_mat, copy_of_ssgOpenGLAxisSwapMatrix ) ;
 	sgPreMultMat4( view_mat, vm_tmp ) ;
-	xglLoadMatrixf( (float *)view_mat );
+	glLoadMatrixf( (float *)view_mat );
 	*/
 
 	// set the opengl state to known default values
@@ -376,7 +376,7 @@ void fgRenderFrame( void ) {
 		 << "    moon_angle = " << cur_light_params.moon_angle
                  << endl; */
 	    thesky->repaint( cur_light_params.sky_color,
-			     cur_light_params.fog_color,
+			     cur_light_params.adj_fog_color,
 			     cur_light_params.sun_angle,
 			     cur_light_params.moon_angle,
 			     ephem->getNumPlanets(), ephem->getPlanets(),
@@ -406,11 +406,11 @@ void fgRenderFrame( void ) {
 				ephem->getMoonDeclination(), 50000.0 );
 	}
 
-	xglEnable( GL_DEPTH_TEST );
+	glEnable( GL_DEPTH_TEST );
 	if ( current_options.get_fog() > 0 ) {
-	    xglEnable( GL_FOG );
-	    xglFogi( GL_FOG_MODE, GL_EXP2 );
-	    xglFogfv( GL_FOG_COLOR, l->adj_fog_color );
+	    glEnable( GL_FOG );
+	    glFogi( GL_FOG_MODE, GL_EXP2 );
+	    glFogfv( GL_FOG_COLOR, l->adj_fog_color );
 	}
 
 	// update fog params if visibility has changed
@@ -502,30 +502,30 @@ void fgRenderFrame( void ) {
 	    fog_exp2_density = sqrt( -log(0.01) ) / actual_visibility;
     
 	    // Set correct opengl fog density
-	    xglFogf (GL_FOG_DENSITY, fog_exp2_density);
+	    glFogf (GL_FOG_DENSITY, fog_exp2_density);
 	}
  
 	// set lighting parameters
-	xglLightfv( GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
-	xglLightfv( GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
-	// xglLightfv(GL_LIGHT0, GL_SPECULAR, white );
+	glLightfv( GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
+	glLightfv( GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
+	// glLightfv(GL_LIGHT0, GL_SPECULAR, white );
 
 	// texture parameters
-	// xglEnable( GL_TEXTURE_2D );
-	xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
-	xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
+	// glEnable( GL_TEXTURE_2D );
+	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
+	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
 	// set base color (I don't think this is doing anything here)
-	// xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
+	// glMaterialfv (GL_FRONT, GL_AMBIENT, white);
 	//  (GL_FRONT, GL_DIFFUSE, white);
-	// xglMaterialfv (GL_FRONT, GL_SPECULAR, white);
-	// xglMaterialfv (GL_FRONT, GL_SHININESS, mat_shininess);
+	// glMaterialfv (GL_FRONT, GL_SPECULAR, white);
+	// glMaterialfv (GL_FRONT, GL_SHININESS, mat_shininess);
 
 	sgVec3 sunpos;
 	sgSetVec3( sunpos, l->sun_vec[0], l->sun_vec[1], l->sun_vec[2] );
 	ssgGetLight( 0 ) -> setPosition( sunpos );
 
-	// xglMatrixMode( GL_PROJECTION );
-	// xglLoadIdentity();
+	// glMatrixMode( GL_PROJECTION );
+	// glLoadIdentity();
  	float fov = current_options.get_fov();
  	ssgSetFOV(fov * current_view.get_win_ratio(), fov);
 
@@ -617,24 +617,24 @@ void fgRenderFrame( void ) {
 
 
 	// display HUD && Panel
-	xglDisable( GL_FOG );
-	xglDisable( GL_DEPTH_TEST );
-	// xglDisable( GL_CULL_FACE );
-	// xglDisable( GL_TEXTURE_2D );
+	glDisable( GL_FOG );
+	glDisable( GL_DEPTH_TEST );
+	// glDisable( GL_CULL_FACE );
+	// glDisable( GL_TEXTURE_2D );
 	hud_and_panel->apply();
 	fgCockpitUpdate();
 
 	// We can do translucent menus, so why not. :-)
-	// xglEnable ( GL_BLEND ) ;
+	// glEnable ( GL_BLEND ) ;
 	menus->apply();
-	xglBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
+	glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
 	puDisplay();
-	// xglDisable ( GL_BLEND ) ;
+	// glDisable ( GL_BLEND ) ;
 
-	// xglEnable( GL_FOG );
+	// glEnable( GL_FOG );
     }
 
-    xglutSwapBuffers();
+    glutSwapBuffers();
 }
 
 
@@ -1123,11 +1123,11 @@ static void fgIdleFunction ( void ) {
 void fgReshape( int width, int height ) {
     if ( ! current_options.get_panel_status() ) {
 	current_view.set_win_ratio( (GLfloat) width / (GLfloat) height );
-	xglViewport(0, 0 , (GLint)(width), (GLint)(height) );
+	glViewport(0, 0 , (GLint)(width), (GLint)(height) );
     } else {
 	current_view.set_win_ratio( (GLfloat) width / 
 	                            ((GLfloat) (height)*0.4232) );
-	xglViewport(0, (GLint)((height)*0.5768), (GLint)(width), 
+	glViewport(0, (GLint)((height)*0.5768), (GLint)(width), 
 		    (GLint)((height)*0.4232) );
     }
 
@@ -1162,23 +1162,23 @@ int fgGlutInit( int *argc, char **argv ) {
 #if !defined( MACOS )
     // GLUT will extract all glut specific options so later on we only
     // need wory about our own.
-    xglutInit(argc, argv);
+    glutInit(argc, argv);
 #endif
 
     // Define Display Parameters
-    xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
+    glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
 
     FG_LOG( FG_GENERAL, FG_INFO, "Opening a window: " <<
 	    current_options.get_xsize() << "x" << current_options.get_ysize() );
 
     // Define initial window size
-    xglutInitWindowSize( current_options.get_xsize(),
+    glutInitWindowSize( current_options.get_xsize(),
 			 current_options.get_ysize() );
 
     // Initialize windows
     if ( current_options.get_game_mode() == 0 ) {
 	// Open the regular window
-	xglutCreateWindow("Flight Gear");
+	glutCreateWindow("Flight Gear");
 #ifndef GLUT_WRONG_VERSION
     } else {
 	// Open the cool new 'game mode' window
@@ -1246,10 +1246,10 @@ int fgGlutInit( int *argc, char **argv ) {
 // Initialize GLUT event handlers
 int fgGlutInitEvents( void ) {
     // call fgReshape() on window resizes
-    xglutReshapeFunc( fgReshape );
+    glutReshapeFunc( fgReshape );
 
     // call GLUTkey() on keyboard event
-    xglutKeyboardFunc( GLUTkey );
+    glutKeyboardFunc( GLUTkey );
     glutSpecialFunc( GLUTspecialkey );
 
     // call guiMouseFunc() whenever our little rodent is used
@@ -1259,10 +1259,10 @@ int fgGlutInitEvents( void ) {
 
     // call fgMainLoop() whenever there is
     // nothing else to do
-    xglutIdleFunc( fgIdleFunction );
+    glutIdleFunc( fgIdleFunction );
 
     // draw the scene
-    xglutDisplayFunc( fgRenderFrame );
+    glutDisplayFunc( fgRenderFrame );
 
     return(1);
 }

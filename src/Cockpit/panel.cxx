@@ -528,7 +528,10 @@ FGPanel::Update () const
 				// Draw the background
   glEnable(GL_TEXTURE_2D);
   glDisable(GL_LIGHTING);
-  glColor3f(1.0, 1.0, 1.0);
+  glEnable(GL_BLEND);
+  glEnable(GL_ALPHA_TEST);
+  glEnable(GL_COLOR_MATERIAL);
+  glColor4f(1.0, 1.0, 1.0, 1.0);
   glBindTexture(GL_TEXTURE_2D, _bg->getHandle());
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -813,6 +816,7 @@ FGCharInstrumentLayer::FGCharInstrumentLayer (text_func func,
   _renderer.setFont(guiFntHandle);
   _renderer.setPointSize(14);
   _color[0] = _color[1] = _color[2] = 0.0;
+  _color[3] = 1.0;
 }
 
 FGCharInstrumentLayer::~FGCharInstrumentLayer ()
@@ -823,13 +827,13 @@ void
 FGCharInstrumentLayer::draw () const
 {
   glPushMatrix();
-  glColor3fv(_color);
+  glColor4fv(_color);
   transform();
   _renderer.begin();
   _renderer.start3f(0, 0, 0);
   _renderer.puts((*_func)(_buf));
   _renderer.end();
-  glColor3f(1.0, 1.0, 1.0);	// FIXME
+  glColor4f(1.0, 1.0, 1.0, 1.0);	// FIXME
   glPopMatrix();
 }
 
@@ -839,6 +843,7 @@ FGCharInstrumentLayer::setColor (float r, float g, float b)
   _color[0] = r;
   _color[1] = g;
   _color[2] = b;
+  _color[3] = 1.0;
 }
 
 void

@@ -117,7 +117,7 @@ void fgLIGHT::Update( void ) {
     // calculate lighting parameters based on sun's relative angle to
     // local up
 
-    deg = sun_angle * 180.0 / FG_PI;
+    deg = sun_angle * RAD_TO_DEG;
     FG_LOG( FG_EVENT, FG_INFO, "  Sun angle = " << deg );
 
     ambient = ambient_tbl->interpolate( deg );

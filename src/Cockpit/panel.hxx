@@ -246,7 +246,7 @@ public:
 
 private:
   text_func _func;
-  float _color[3];
+  float _color[4];
 				// FIXME: need only one globally
   mutable fntRenderer _renderer;
   mutable char _buf[1024];
