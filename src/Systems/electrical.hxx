@@ -215,6 +215,9 @@ private:
     comp_list buses;
     comp_list outputs;
     comp_list connectors;
+
+    SGPropertyNode *_volts_out;
+    SGPropertyNode *_amps_out;
 };
 
 

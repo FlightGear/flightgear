@@ -237,6 +237,8 @@ void FGElectricalSystem::init () {
     config_props = new SGPropertyNode;
 
     SGPropertyNode *path_n = fgGetNode("/sim/systems/electrical/path");
+    _volts_out = fgGetNode( "/systems/electrical/volts", true );
+    _amps_out = fgGetNode( "/systems/electrical/amps", true );
 
     if (path_n) {
         SGPath config( globals->get_fg_root() );
@@ -281,6 +283,7 @@ void FGElectricalSystem::unbind () {
 
 void FGElectricalSystem::update (double dt) {
     if ( !enabled ) {
+        _amps_out->setDoubleValue(0);
         return;
     }
 
@@ -308,6 +311,45 @@ void FGElectricalSystem::update (double dt) {
         propagate( suppliers[i], 0.0, " " );
     }
 
+    double alt_norm
+        = fgGetDouble("/systems/electrical/suppliers/alternator") / 60.0;
+
+    // impliment an extremely simplistic voltage model (assumes
+    // certain naming conventions in electrical system config)
+    double volts = 0.0;
+    if ( fgGetBool("/controls/switches/master-bat") ) {
+        volts = 24.0;
+    }
+    if ( fgGetBool("/controls/switches/master-alt") &&
+         fgGetDouble("/engines/engine[0]/rpm") > 800 )
+    {
+        double alt_contrib = 28.0;
+        if ( alt_contrib > volts ) {
+            volts = alt_contrib;
+        }
+    }
+    _volts_out->setDoubleValue( volts );
+
+    // impliment an extremely simplistic amps model (assumes certain
+    // naming conventions in the electrical system config) ... FIXME:
+    // make this more generic
+    double amps = 0.0;
+    if ( fgGetBool("/controls/switches/master-bat") ) {
+        if ( fgGetBool("/controls/switches/master-alt") ) {
+            amps += 40.0 * alt_norm;
+        }
+        amps -= 15.0;            // normal load
+        if ( fgGetBool("/controls/switches/flashing-beacon") ) {
+            amps -= 7.5;
+        }
+        if ( fgGetBool("/controls/switches/nav-lights") ) {
+            amps -= 7.5;
+        }
+        if ( amps > 7.0 ) {
+            amps = 7.0;
+        }
+    }
+    _amps_out->setDoubleValue( amps );
 }
 
 
