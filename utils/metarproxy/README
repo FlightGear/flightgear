@@ -4,7 +4,7 @@
 
 
 metarproxy is a caching proxy server for METAR data strings written in
-Perl. It can be used from the FlightGear flight simulator to:
+Perl. It can be used to:
 
 - provide METAR data for machines without internet connection
 - centralize METAR fetching: one machine in a network runs the proxy, all
@@ -129,7 +129,7 @@ Ranges are allowed, too:
   $ metarproxy --download 0-2     ... download first three hours after
                                       midnight GMT
 
-These three methods can be use in combination:
+These three methods can be used in combination:
 
   $ metarproxy --download 6h 0-2 4
 
@@ -176,7 +176,7 @@ stored in the cache. Additionally, you can specify one or more files
 with station IDs:
 
   $ metarproxy --record --file=$FG_HOME/station-list
-  $ metarproxy --record EDDM --file=tmp/Austria --file=/tmp/Hungary
+  $ metarproxy --record EDDM --file=/tmp/Austria --file=/tmp/Hungary
 
 These files simply contain station IDs separated by spaces in one
 or more lines:
@@ -232,7 +232,8 @@ All you need to do is point FlightGear to the metar proxy and let
 it run at a simulated time for which you actually have cached METAR
 data:
 
-  $ fgfs --proxy=localhost:5509 --start-date-lat=2005:01:12:12:00:00
+  $ fgfs --enable-real-weather-fetch --proxy=localhost:5509 \
+         --start-date-lat=2005:01:12:12:00:00
 
 FlightGear will then fetch the metar data from the proxy as if it
 were weather.noaa.gov. If no appropriate data set is found at all,

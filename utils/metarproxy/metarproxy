@@ -113,12 +113,6 @@ sub parse_options()
 	while (1) {
 		$_ = $ARGV[0];
 		defined $_ or last;
-		# dissolve glued together short options (e.g. -cvv)
-		if (/^-([^-]{2,})$/) {
-			shift @ARGV;
-			map { unshift @ARGV, "-$_" } split //, $1;
-			next;
-		}
 		if (!/^-/) {
 			push @ITEMS, $_;
 		} elsif (/^(-d|--download)$/) {
@@ -148,8 +142,10 @@ sub parse_options()
 			$PROXY = &argument($2, $4);
 			defined $PROXY or &fatal("--proxy option lacks <host> definition");
 			&log($BULK, "set option --proxy: '$PROXY'");
-		} elsif (/^(-v|--verbose)$/) {
+		} elsif (/^--verbose$/) {
 			$VERBOSITY++;
+		} elsif (/^-(v+)$/) {
+			$VERBOSITY += length($1);
 		} elsif (/^(-q|--quiet)$/) {
 			$VERBOSITY = 0;
 		} elsif (/^(-h|--help)$/) {
@@ -390,6 +386,7 @@ sub serve()
 	my $server = IO::Socket::INET->new(Proto => 'tcp', LocalPort => $PORT, Listen => SOMAXCONN, Reuse => 1);
 	$server or &fatal("cannot setup server ($!)");
 	&log($BULK, "server $0 accepting clients on port $PORT");
+	my %last_metar;
 
 	while (my $client = $server->accept()) {
 		$client->autoflush(1);
@@ -425,9 +422,9 @@ sub serve()
 				if ($age <= $METAR_MAX_AGE) {
 					&log($BULK, "found (" . int($age / 60) . " min old)");
 					$metar =~ s/\s*$//s;
-					$METAR_DEFAULT = $metar;
-					$METAR_DEFAULT =~ s/.*\015?\012[A-Z0-9]{4}\s+[0-9]{6}Z\s+//s;
-					&log($DEBUG, "setting default to '$METAR_DEFAULT'");
+					$last_metar{$addr} = $metar;
+					$last_metar{$addr} =~ s/.*\015?\012[A-Z0-9]{4}\s+[0-9]{6}Z\s+//s;
+					&log($DEBUG, "setting default for [$addr] to '$last_metar{$addr}'");
 					$metar =~ s/\015?\012/\015\012/g;
 				} else {
 					&log($INFO, "found, but too old (" . int($age / 60) . " min)");
@@ -441,8 +438,8 @@ sub serve()
 				&log($INFO, "sending last successful data again");
 				$metar = sprintf "%04d/%02d/%02d %02d:%02d\015\012",
 						$year, $mon, $day, $hour, $min;
-				$metar .= sprintf "$icao %02d%02d%02dZ $METAR_DEFAULT",
-						$day, $hour, $min;
+				$metar .= sprintf "$icao %02d%02d%02dZ ", $day, $hour, $min;
+				$metar .= $last_metar{$addr} || $METAR_DEFAULT;
 			}
 			print $client "Content-Type: text/plain\015\012"
 					. "X-MetarProxy: nasse Maus\015\012"
