@@ -754,9 +754,9 @@ bool fgMainInit( int argc, char **argv ) {
     _bootstrap_OSInit++;
 #endif
 
-    fgRegisterWindowResizeHandler( FGRenderer::resize );
-    fgRegisterIdleHandler( fgIdleFunction );
-    fgRegisterDrawHandler( FGRenderer::update );
+    fgRegisterWindowResizeHandler( &FGRenderer::resize );
+    fgRegisterIdleHandler( &fgIdleFunction );
+    fgRegisterDrawHandler( &FGRenderer::update );
 
 #ifdef FG_ENABLE_MULTIPASS_CLOUDS
     bool get_stencil_buffer = true;
