@@ -139,6 +139,7 @@ void FGAILocalTraffic::GetRwyDetails() {
 	}
 }
 
+
 /* 
 There are two possible scenarios during initialisation:
 The first is that the user is flying towards the airport, and hence the traffic
@@ -273,6 +274,17 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	return(true);
 }
 
+
+// Return what type of landing we're doing on this circuit
+LandingType FGAILocalTraffic::GetLandingOption() {
+	if(circuitsToFly) {
+		return(touchAndGo ? TOUCH_AND_GO : STOP_AND_GO);
+	} else {
+		return(FULL_STOP);
+	}
+}
+	
+
 // Commands to do something from higher level logic
 void FGAILocalTraffic::FlyCircuits(int numCircuits, bool tag) {
 	//cout << "FlyCircuits called" << endl;
@@ -350,7 +362,7 @@ void FGAILocalTraffic::FlyCircuits(int numCircuits, bool tag) {
 // Run the internal calculations
 void FGAILocalTraffic::Update(double dt) {
 	//cout << "A" << flush;
-	double responseTime = 10.0;		// seconds - this should get more sophisticated at some point
+	//double responseTime = 10.0;		// seconds - this should get more sophisticated at some point
 	responseCounter += dt;
 	if((contactTower) && (responseCounter >= 8.0)) {
 		// Acknowledge request before changing frequency so it gets rendered if the user is on the same freq

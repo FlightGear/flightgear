@@ -70,6 +70,9 @@ public:
 	// Go out and practice circuits
 	void FlyCircuits(int numCircuits, bool tag);
 	
+	// Return what type of landing we're doing on this circuit
+	LandingType GetLandingOption();
+	
 	// TODO - this will get more complex and moved into the main class
 	// body eventually since the position approved to taxi to will have
 	// to be passed.
