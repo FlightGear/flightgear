@@ -77,6 +77,7 @@ SG_USING_STD(endl);
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/model/animation.hxx>
 #include <simgear/scene/model/location.hxx>
 #ifdef FG_USE_CLOUDS_3D
 #  include <simgear/sky/clouds3d/SkySceneLoader.hpp>
