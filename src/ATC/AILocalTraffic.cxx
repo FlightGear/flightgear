@@ -417,7 +417,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		double magg = sqrt(gxx*gxx + gyy*gyy);
 		crab = acos((axx*gxx + ayy*gyy) / (maga * magg));
 		// At this point this works except we're getting the modulus of the angle
-		cout << "crab = " << crab << '\n';
+		//cout << "crab = " << crab << '\n';
 		
 		// Make sure both headings are in the 0->360 circle in order to get sane differences
 		dclBoundHeading(wind_from);
