@@ -225,7 +225,7 @@ void parse_gear( const string& linetoken2, const string& linetoken3,
 	    uiuc_warnings_errors(1, *command_line);
 	  
 	  use_gear = true;
-	  gear_rate = token_value/3;
+	  gear_rate = token_value;
 	  break;
 	}
       default:

@@ -232,8 +232,11 @@ void uiuc_defaults_inits ()
   Zp_input = 0;
   Mp_input = 0;
   b_CLK = 0;
-  //  gear_model[MAX_GEAR] = 0;
+  //  gear_model[MAX_GEAR]
+  memset(gear_model,0,MAX_GEAR*sizeof(gear_model[0])); 
   use_gear = 0;
+  // start with gear down if it is ultimately used
+  gear_pos_norm = 1;
   ice_model = 0;
   ice_on = 0;
   beta_model = 0;
