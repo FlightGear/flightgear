@@ -33,20 +33,17 @@
 FGElectricalComponent::FGElectricalComponent() :
     kind(-1),
     name(""),
-    prop(""),
     value(0.0)
 {
 }
 
 
-FGElectricalSupplier::FGElectricalSupplier ( string _name, string _prop,
-                                             string _model,
-                                             double _volts, double _amps )
-{
+FGElectricalSupplier::FGElectricalSupplier ( SGPropertyNode *node ) {
     kind = FG_SUPPLIER;
 
-    name = _name;
-    prop = _prop;
+    // cout << "Creating a supplier" << endl;
+    name = node->getStringValue("name");
+    string _model = node->getStringValue("kind");
     // cout << "_model = " << _model << endl;
     if ( _model == "battery" ) {
         model = FG_BATTERY;
@@ -57,10 +54,20 @@ FGElectricalSupplier::FGElectricalSupplier ( string _name, string _prop,
     } else {
         model = FG_UNKNOWN;
     }
-    volts = _volts;
-    amps = _amps;
+    volts = node->getDoubleValue("volts");
+    amps = node->getDoubleValue("amps");
 
-    fgSetDouble( prop.c_str(), amps );
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        // cout << " scanning: " << child->getName() << endl;
+        if ( (string)child->getName() == "prop" ) {
+            string prop = child->getStringValue();
+            // cout << "  Adding prop = " << prop << endl;
+            add_prop( prop );
+            fgSetDouble( prop.c_str(), amps );
+        }
+    }
 
     _rpm_node = fgGetNode("/engines/engine[0]/rpm", true);
 }  
@@ -92,28 +99,87 @@ double FGElectricalSupplier::get_output() {
 }
 
 
-FGElectricalBus::FGElectricalBus ( string _name, string _prop )
-{
+FGElectricalBus::FGElectricalBus ( SGPropertyNode *node ) {
     kind = FG_BUS;
 
-    name = _name;
-    prop = _prop;
+    name = node->getStringValue("name");
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        if ( (string)child->getName() == "prop" ) {
+            string prop = child->getStringValue();
+            add_prop( prop );
+        }
+    }
 }  
 
 
-FGElectricalOutput::FGElectricalOutput ( string _name, string _prop )
-{
+FGElectricalOutput::FGElectricalOutput ( SGPropertyNode *node ) {
     kind = FG_OUTPUT;
 
-    name = _name;
-    prop = _prop;
+    name = node->getStringValue("name");
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        if ( (string)child->getName() == "prop" ) {
+            string prop = child->getStringValue();
+            add_prop( prop );
+        }
+    }
 }  
 
 
-FGElectricalConnector::FGElectricalConnector ()
-{
+FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
+                                               FGElectricalSystem *es ) {
     kind = FG_CONNECTOR;
     name = "connector";
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        // cout << "  " << cname << " = " << cval << endl;
+        if ( cname == "input" ) {
+            FGElectricalComponent *s = es->find( child->getStringValue() );
+            if ( s != NULL ) {
+                add_input( s );
+                if ( s->get_kind() == FG_SUPPLIER ) {
+                    s->add_output( this );
+                } else if ( s->get_kind() == FG_BUS ) {
+                    s->add_output( this );
+                } else {
+                    SG_LOG( SG_ALL, SG_ALERT,
+                            "Attempt to connect to something that can't provide an output: " 
+                            << child->getStringValue() );
+                }
+            } else {
+                SG_LOG( SG_ALL, SG_ALERT, "Can't find named source: " 
+                        << child->getStringValue() );
+            }
+        } else if ( cname == "output" ) {
+            FGElectricalComponent *s = es->find( child->getStringValue() );
+            if ( s != NULL ) {
+                add_output( s );
+                if ( s->get_kind() == FG_BUS ) {
+                    s->add_input( this );
+                } else if ( s->get_kind() == FG_OUTPUT ) {
+                    s->add_input( this );
+                } else {
+                    SG_LOG( SG_ALL, SG_ALERT,
+                            "Attempt to connect to something that can't provide an input: " 
+                            << child->getStringValue() );
+                }
+            } else {
+                SG_LOG( SG_ALL, SG_ALERT, "Can't find named source: " 
+                        << child->getStringValue() );
+            }
+        } else if ( cname == "switch" ) {
+            // set default value of switch to true
+            // cout << "Switch = " << child->getStringValue() << endl;
+            fgSetBool( child->getStringValue(), true );
+            add_switch( fgGetNode( child->getStringValue(), true ) );
+        }
+    }
 }  
 
 
@@ -215,7 +281,7 @@ void FGElectricalSystem::update (double dt) {
 
 bool FGElectricalSystem::build () {
     SGPropertyNode *node;
-    int i, j;
+    int i;
 
     int count = config_props->nChildren();
     for ( i = 0; i < count; ++i ) {
@@ -224,80 +290,20 @@ bool FGElectricalSystem::build () {
         // cout << name << endl;
         if ( name == "supplier" ) {
             FGElectricalSupplier *s =
-                new FGElectricalSupplier( node->getStringValue("name"),
-                                          node->getStringValue("prop"),
-                                          node->getStringValue("kind"),
-                                          node->getDoubleValue("volts"),
-                                          node->getDoubleValue("amps") );
+                new FGElectricalSupplier( node );
             suppliers.push_back( s );
         } else if ( name == "bus" ) {
             FGElectricalBus *b =
-                new FGElectricalBus( node->getStringValue("name"),
-                                     node->getStringValue("prop") );
+                new FGElectricalBus( node );
             buses.push_back( b );
         } else if ( name == "output" ) {
             FGElectricalOutput *o =
-                new FGElectricalOutput( node->getStringValue("name"),
-                                        node->getStringValue("prop") );
+                new FGElectricalOutput( node );
             outputs.push_back( o );
         } else if ( name == "connector" ) {
             FGElectricalConnector *c =
-                new FGElectricalConnector();
+                new FGElectricalConnector( node, this );
             connectors.push_back( c );
-            SGPropertyNode *child;
-            int ccount = node->nChildren();
-            for ( j = 0; j < ccount; ++j ) {
-                child = node->getChild(j);
-                string cname = child->getName();
-                string cval = child->getStringValue();
-                // cout << "  " << cname << " = " << cval << endl;
-                if ( cname == "input" ) {
-                    FGElectricalComponent *s = find( child->getStringValue() );
-                    if ( s != NULL ) {
-                        c->add_input( s );
-                        if ( s->get_kind() == FG_SUPPLIER ) {
-                            s->add_output( c );
-                        } else if ( s->get_kind() == FG_BUS ) {
-                            s->add_output( c );
-                        } else {
-                            SG_LOG( SG_ALL, SG_ALERT,
-                                    "Attempt to connect to something that can't provide an output: " 
-                                    << child->getStringValue() );
-                            return false;
-                        }
-                    } else {
-                        SG_LOG( SG_ALL, SG_ALERT,
-                                "Can't find named source: " 
-                                << child->getStringValue() );
-                        return false;
-                    }
-                } else if ( cname == "output" ) {
-                    FGElectricalComponent *s = find( child->getStringValue() );
-                    if ( s != NULL ) {
-                        c->add_output( s );
-                        if ( s->get_kind() == FG_BUS ) {
-                            s->add_input( c );
-                        } else if ( s->get_kind() == FG_OUTPUT ) {
-                            s->add_input( c );
-                        } else {
-                            SG_LOG( SG_ALL, SG_ALERT,
-                                    "Attempt to connect to something that can't provide an input: " 
-                                    << child->getStringValue() );
-                            return false;
-                        }
-                    } else {
-                        SG_LOG( SG_ALL, SG_ALERT,
-                                "Can't find named source: " 
-                                << child->getStringValue() );
-                        return false;
-                    }
-                } else if ( cname == "switch" ) {
-                    // set default value of switch to true
-                    // cout << "Switch = " << child->getStringValue() << endl;
-                    fgSetBool( child->getStringValue(), true );
-                    c->add_switch( fgGetNode( child->getStringValue(), true ) );
-                }
-            }
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown component type specified: " 
                     << name );
@@ -341,13 +347,15 @@ void FGElectricalSystem::propogate( FGElectricalComponent *node, double val,
         node->set_value( current );
     }
 
-    if ( ! node->get_prop().empty() ) {
-        fgSetDouble( node->get_prop().c_str(), node->get_value() );
+    int i;
+
+    // publish values to specified properties
+    for ( i = 0; i < node->get_num_props(); ++i ) {
+        fgSetDouble( node->get_prop(i).c_str(), node->get_value() );
     }
     // cout << s << node->get_name() << " -> " << node->get_value() << endl;
 
     // propogate to all children
-    int i;
     for ( i = 0; i < node->get_num_outputs(); ++i ) {
         propogate( node->get_output(i), current, s );
     }

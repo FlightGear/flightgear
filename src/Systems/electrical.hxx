@@ -42,6 +42,10 @@ SG_USING_STD(vector);
 #include <Main/fgfs.hxx>
 
 
+// Forward declaration
+class FGElectricalSystem;
+
+
 #define FG_UNKNOWN  -1
 #define FG_SUPPLIER  0
 #define FG_BUS       1
@@ -58,11 +62,11 @@ protected:
 
     int kind;
     string name;
-    string prop;
     double value;
 
     comp_list inputs;
     comp_list outputs;
+    string_list props;
 
 public:
 
@@ -70,11 +74,18 @@ public:
     virtual ~FGElectricalComponent() {}
 
     inline string get_name() { return name; }
-    inline string get_prop() { return prop; }
 
     inline int get_kind() const { return kind; }
     inline double get_value() const { return value; }
     inline void set_value( double val ) { value = val; }
+
+    inline int get_num_inputs() const { return outputs.size(); }
+    inline FGElectricalComponent *get_input( const int i ) {
+        return inputs[i];
+    }
+    inline void add_input( FGElectricalComponent *c ) {
+        inputs.push_back( c );
+    }
 
     inline int get_num_outputs() const { return outputs.size(); }
     inline FGElectricalComponent *get_output( const int i ) {
@@ -84,13 +95,14 @@ public:
         outputs.push_back( c );
     }
 
-    inline int get_num_inputs() const { return outputs.size(); }
-    inline FGElectricalComponent *get_input( const int i ) {
-        return inputs[i];
+    inline int get_num_props() const { return props.size(); }
+    inline string get_prop( const int i ) {
+        return props[i];
     }
-    inline void add_input( FGElectricalComponent *c ) {
-        inputs.push_back( c );
+    inline void add_prop( const string &s ) {
+        props.push_back( s );
     }
+
 };
 
 
@@ -111,8 +123,7 @@ class FGElectricalSupplier : public FGElectricalComponent {
 
 public:
 
-    FGElectricalSupplier ( string _name, string _prop, string _model,
-                           double _volts, double _amps );
+    FGElectricalSupplier ( SGPropertyNode *node );
     ~FGElectricalSupplier () {}
 
     double get_output();
@@ -125,7 +136,7 @@ class FGElectricalBus : public FGElectricalComponent {
 
 public:
 
-    FGElectricalBus ( string _name, string _prop );
+    FGElectricalBus ( SGPropertyNode *node );
     ~FGElectricalBus () {}
 };
 
@@ -136,7 +147,7 @@ class FGElectricalOutput : public FGElectricalComponent {
 
 public:
 
-    FGElectricalOutput ( string _name, string _prop );
+    FGElectricalOutput ( SGPropertyNode *node );
     ~FGElectricalOutput () {}
 };
 
@@ -152,7 +163,7 @@ class FGElectricalConnector : public FGElectricalComponent {
 
 public:
 
-    FGElectricalConnector ();
+    FGElectricalConnector ( SGPropertyNode *node, FGElectricalSystem *es );
     ~FGElectricalConnector () {}
 
     void add_switch( SGPropertyNode *node ) {
