@@ -36,11 +36,18 @@
 
 #include <simgear/compiler.h>
 
+#include <vector>		// STL
 #include STL_STRING
 
 #include <plib/ssg.h>		// plib include
 
 SG_USING_STD(string);
+SG_USING_STD(vector);
+
+
+typedef vector < int > int_list;
+typedef int_list::iterator int_list_iterator;
+typedef int_list::const_iterator int_point_list_iterator;
 
 
 // Define the various supported light types
@@ -88,5 +95,11 @@ enum {
 
 ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir );
 
+
+/* ssgLeaf *gen_directional_lights( const point_list &nodes,
+				 const point_list &normals,
+				 const int_list &pnt_i,
+				 const int_list &nml_i );
+*/
 
 #endif // _DIR_LIGHTS_HXX

@@ -10,8 +10,7 @@ libCockpit_a_SOURCES = \
 	panel.cxx panel.hxx \
         panel_io.cxx panel_io.hxx \
 	radiostack.cxx radiostack.hxx \
-	steam.cxx steam.hxx \
-	libBuilt_in.a
+	steam.cxx steam.hxx
 
 if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src

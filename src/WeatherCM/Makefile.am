@@ -1,7 +1,5 @@
 noinst_LIBRARIES = libWeatherCM.a
 
-EXTRA_DIST = linintp2.inl sphrintp.inl
-
 libWeatherCM_a_SOURCES = \
 	FGAirPressureItem.cpp FGAirPressureItem.h \
 	FGCloud.h FGCloudItem.cpp FGCloudItem.h \
@@ -19,7 +17,7 @@ libWeatherCM_a_SOURCES = \
 	FGWeatherVectorWrap.h \
 	FGWindItem.cpp FGWindItem.h \
         linintp2.cpp linintp2.h \
-        sphrintp.cpp sphrint.h
+        sphrintp.cpp sphrintp.h
 
 if OLD_AUTOMAKE
 INCLUDES += -I$(top_srcdir) -I$(top_srcdir)/src
