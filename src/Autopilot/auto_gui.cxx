@@ -140,9 +140,15 @@ static puDialogBox     *TgtAptDialog = 0;
 static puFrame         *TgtAptDialogFrame = 0;
 static puText          *TgtAptDialogMessage = 0;
 static puInput         *TgtAptDialogInput = 0;
+static puListBox       *TgtAptDialogWPList = 0;
+static puSlider        *TgtAptDialogSlider = 0;
+static puArrowButton   *TgtAptDialogUPArrow = 0;
+static puArrowButton   *TgtAptDialogDNArrow = 0;
+static char**          WPList;
+static int             WPListsize;
 
 static char NewTgtAirportId[16];
-static char NewTgtAirportLabel[] = "Enter New TgtAirport ID"; 
+static char NewTgtAirportLabel[] = "New Apt/Fix ID";
 
 static puOneShot       *TgtAptDialogOkButton = 0;
 static puOneShot       *TgtAptDialogCancelButton = 0;
@@ -159,7 +165,6 @@ static int scan_number(char *s, double *new_value)
     char WordBuf[64];
     char *cptr = s;
     char *WordBufPtr = WordBuf;
-
     if (*cptr == '+')
 	cptr++;
     if (*cptr == '-') {
@@ -629,6 +634,11 @@ void TgtAptDialog_OK (puObject *)
 	 SGWayPoint wp( a.longitude, a.latitude, alt,
 			SGWayPoint::WGS84, TgtAptId );
 	 globals->get_route()->add_waypoint( wp );
+
+         /* and turn on the autopilot */
+         current_autopilot->set_HeadingEnabled( true );
+         current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
+
     } else if ( current_fixlist->query( TgtAptId, 0.0, 0.0, 0.0,
 					&f, &t1, &t2 ) )
     {
@@ -640,6 +650,10 @@ void TgtAptDialog_OK (puObject *)
 	 SGWayPoint wp( f.get_lon(), f.get_lat(), alt,
 			SGWayPoint::WGS84, TgtAptId );
 	 globals->get_route()->add_waypoint( wp );
+
+         /* and turn on the autopilot */
+         current_autopilot->set_HeadingEnabled( true );
+         current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_WAYPOINT );
     } else {
 	TgtAptId  += " not in database.";
 	mkDialog(TgtAptId.c_str());
@@ -653,11 +667,84 @@ void TgtAptDialog_Reset(puObject *)
     TgtAptDialogInput->setCursor( 0 ) ;
 }
 
+void TgtAptDialog_HandleSlider ( puObject * slider )
+{
+  float val ;
+  slider -> getValue ( &val ) ;
+  val = 1.0f - val ;
+
+  int index = int ( TgtAptDialogWPList -> getNumItems () * val ) ;
+  TgtAptDialogWPList -> setTopItem ( index ) ;
+}
+
+void TgtAptDialog_HandleArrow( puObject *arrow )
+{
+    int type = ((puArrowButton *)arrow)->getArrowType() ;
+    int inc = ( type == PUARROW_DOWN     ) ?   1 :
+            ( type == PUARROW_UP       ) ?  -1 :
+            ( type == PUARROW_FASTDOWN ) ?  10 :
+            ( type == PUARROW_FASTUP   ) ? -10 : 0 ;
+
+    float val ;
+    TgtAptDialogSlider -> getValue ( &val ) ;
+    val = 1.0f - val ;
+    int num_items = TgtAptDialogWPList->getNumItems () - 1 ;
+    if ( num_items > 0 )
+    {
+      int index = int ( num_items * val + 0.5 ) + inc ;
+      if ( index > num_items ) index = num_items ;
+      if ( index < 0 ) index = 0 ;
+
+      TgtAptDialogSlider -> setValue ( 1.0f - (float)index / num_items ) ;
+      TgtAptDialogWPList -> setTopItem ( index ) ;
+  }
+
+}
+
 void AddWayPoint(puObject *cb)
 {
     sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
     TgtAptDialogInput->setValue( NewTgtAirportId );
     
+    /* refresh waypoint list */
+    char WPString[100];
+
+    int i;
+    if ( WPList != NULL ) {
+        for (i = 0; i < WPListsize; i++ ) {
+          delete WPList[i];
+        }
+        delete [] WPList[i];
+    }
+    if ( globals->get_route()->size() > 0 ) { 
+        WPListsize = globals->get_route()->size();
+        WPList = new char* [ WPListsize + 1 ];
+        for (i = 0; i < globals->get_route()->size(); i++ ) {
+           sprintf(WPString, "%5s %3.2flon %3.2flat", globals->get_route()->get_waypoint(i).get_id().c_str(), globals->get_route()->get_waypoint(i).get_target_lon(), globals->get_route()->get_waypoint(i).get_target_lat());
+           WPList [i] = new char[ strlen(WPString) ];
+           strcpy ( WPList [i], WPString );
+        }
+    } else {
+        WPListsize = 1;
+        WPList = new char* [ 2 ];
+        WPList [0] = new char[18];
+        strcpy ( WPList [0], "** List Empty **");
+    }    
+    WPList [ WPListsize ] = NULL;
+    TgtAptDialogWPList->newList( WPList );
+
+   // if non-empty list, adjust the size of the slider...
+   TgtAptDialogSlider->setSliderFraction (0.9999f) ;
+   TgtAptDialogSlider->hide();
+   TgtAptDialogUPArrow->hide();
+   TgtAptDialogDNArrow->hide();
+   if (WPListsize > 10) {
+      TgtAptDialogSlider->setSliderFraction (10.0f/(WPListsize-1)) ;
+      TgtAptDialogSlider->reveal();
+      TgtAptDialogUPArrow->reveal();
+      TgtAptDialogDNArrow->reveal();
+    }
+
     FG_PUSH_PUI_DIALOG( TgtAptDialog );
 }
 
@@ -693,13 +780,33 @@ void NewTgtAirportInit()
     int len = 150
         - puGetDefaultLabelFont().getStringWidth( NewTgtAirportLabel ) / 2;
     
-    TgtAptDialog = new puDialogBox (150, 50);
+    TgtAptDialog = new puDialogBox (150, 350);
     {
-        TgtAptDialogFrame   = new puFrame           (0,0,350, 150);
-        TgtAptDialogMessage = new puText            (len, 110);
-        TgtAptDialogMessage ->    setLabel          (NewTgtAirportLabel);
+        TgtAptDialogFrame   = new puFrame           (0,0,350, 350);
         
+        TgtAptDialogWPList = new puListBox ( 50, 130, 300, 320 ) ;
+        TgtAptDialogWPList -> setLabel ( "Flight Plan" );
+        TgtAptDialogWPList -> setLabelPlace ( PUPLACE_ABOVE ) ;
+        TgtAptDialogWPList -> setStyle ( -PUSTYLE_SMALL_SHADED ) ;
+        TgtAptDialogWPList -> setValue ( 0 ) ;
+
+        TgtAptDialogSlider = new puSlider (300, 150, 150 ,TRUE,20);
+        TgtAptDialogSlider->setValue(1.0f);
+        TgtAptDialogSlider->setSliderFraction (0.2f) ;
+        TgtAptDialogSlider->setDelta(0.1f);
+        TgtAptDialogSlider->setCBMode( PUSLIDER_DELTA );
+        TgtAptDialogSlider->setCallback( TgtAptDialog_HandleSlider );
+
+        TgtAptDialogUPArrow = new puArrowButton ( 300, 300, 320, 320, PUARROW_UP ) ;
+        TgtAptDialogUPArrow->setCallback ( TgtAptDialog_HandleArrow ) ;
+
+        TgtAptDialogDNArrow = new puArrowButton ( 300, 130, 320, 150, PUARROW_DOWN ) ;
+        TgtAptDialogDNArrow->setCallback ( TgtAptDialog_HandleArrow ) ;
+
+
         TgtAptDialogInput   = new puInput           (50, 70, 300, 100);
+        TgtAptDialogInput -> setLabel ( NewTgtAirportLabel );
+        TgtAptDialogInput -> setLabelPlace ( PUPLACE_ABOVE ) ;
         TgtAptDialogInput   ->    setValue          (NewTgtAirportId);
         TgtAptDialogInput   ->    acceptInput();
         
@@ -715,7 +822,12 @@ void NewTgtAirportInit()
         TgtAptDialogResetButton  =  new puOneShot   (240, 10, 300, 50);
         TgtAptDialogResetButton  ->     setLegend   (gui_msg_RESET);
         TgtAptDialogResetButton  ->     setCallback (TgtAptDialog_Reset);
+
     }
+
     FG_FINALIZE_PUI_DIALOG( TgtAptDialog );
     printf("leave NewTgtAirportInit()");
 }
+
+
+
