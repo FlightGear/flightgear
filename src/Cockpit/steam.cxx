@@ -103,19 +103,29 @@ void FGSteam::update ( int timesteps )
     if (!isTied) {
         isTied = true;
         fgTie("/steam/airspeed-kt", FGSteam::get_ASI_kias);
+	fgSetArchivable("/steam/airspeed-kt");
         fgTie("/steam/altitude-ft", FGSteam::get_ALT_ft);
+	fgSetArchivable("/steam/altitude-ft");
         fgTie("/steam/altimeter-datum-mb",
               FGSteam::get_ALT_datum_mb, FGSteam::set_ALT_datum_mb,
               false);  /* don't modify the value */
+	fgSetArchivable("/steam/altimeter-datum-mb");
         fgTie("/steam/turn-rate", FGSteam::get_TC_std);
+	fgSetArchivable("/steam/turn-rate");
         fgTie("/steam/slip-skid", FGSteam::get_TC_rad);
+	fgSetArchivable("/steam/slip-skid");
         fgTie("/steam/vertical-speed-fpm", FGSteam::get_VSI_fps);
+	fgSetArchivable("/steam/vertical-speed-fpm");
         fgTie("/steam/gyro-compass-deg", FGSteam::get_DG_deg);
+	fgSetArchivable("/steam/gyro-compass-deg");
         fgTie("/steam/adf-deg", FGSteam::get_HackADF_deg);
+	fgSetArchivable("/steam/adf-deg");
         fgTie("/steam/gyro-compass-error-deg",
               FGSteam::get_DG_err, FGSteam::set_DG_err,
               false);  /* don't modify the value */
+	fgSetArchivable("/steam/gyro-compass-error-deg");
         fgTie("/steam/mag-compass-deg", FGSteam::get_MH_deg);
+	fgSetArchivable("/steam/mag-compass-deg");
     }
     _UpdatesPending += timesteps;
 }
