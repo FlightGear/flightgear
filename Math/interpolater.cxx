@@ -27,7 +27,7 @@
 #include <string.h>
 
 #include <Debug/fg_debug.h>
-#include <zlib/zlib.h>
+#include <Include/fg_zlib.h>
 
 #include "interpolater.hxx"
 
@@ -35,23 +35,23 @@
 // Constructor -- loads the interpolation table from the specified
 // file
 fgINTERPTABLE::fgINTERPTABLE( char *file ) {
-    char gzfile[256], line[256];
-    gzFile fd;
+    char fgfile[256], line[256];
+    fgFile fd;
 
     fgPrintf( FG_MATH, FG_INFO, "Initializing Interpolator for %s\n", file);
 
     // First try "file.gz"
-    strcpy(gzfile, file);
-    strcat(gzfile, ".gz");
-    if ( (fd = gzopen(gzfile, "rb")) == NULL ) {
+    strcpy(fgfile, file);
+    strcat(fgfile, ".gz");
+    if ( (fd = fgopen(fgfile, "rb")) == NULL ) {
         // Next try "path"
-        if ( (fd = gzopen(file, "rb")) == NULL ) {
+        if ( (fd = fgopen(file, "rb")) == NULL ) {
             fgPrintf(FG_MATH, FG_EXIT, "Cannot open file: %s\n", file);
         }
     }
 
     size = 0;
-    while ( gzgets(fd, line, 250) != NULL ) {
+    while ( fggets(fd, line, 250) != NULL ) {
 	if ( size < MAX_TABLE_SIZE ) {
 	    sscanf(line, "%lf %lf\n", &(table[size][0]), &(table[size][1]));
 	    size++;
@@ -62,7 +62,7 @@ fgINTERPTABLE::fgINTERPTABLE( char *file ) {
 	}
     }
 
-    gzclose(fd);
+    fgclose(fd);
 }
 
 
@@ -107,6 +107,9 @@ fgINTERPTABLE::~fgINTERPTABLE( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/05/13 18:24:25  curt
+// Wrapped zlib calls so zlib can be optionally disabled.
+//
 // Revision 1.3  1998/04/25 15:05:01  curt
 // Changed "r" to "rb" in gzopen() options.  This fixes bad behavior in win32.
 //
