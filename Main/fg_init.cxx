@@ -104,10 +104,10 @@ int fgInitPosition( void ) {
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position at (SEZ) SEDONA airport
-    FG_Longitude = (-111.7884614 + 0.01) * DEG_TO_RAD;
-    FG_Latitude  = (  34.8486289 - 0.015) * DEG_TO_RAD;
-    FG_Runway_altitude = (4827 + 450);
-    FG_Altitude = FG_Runway_altitude + 3.758099;
+    // FG_Longitude = (-111.7884614 + 0.01) * DEG_TO_RAD;
+    // FG_Latitude  = (  34.8486289 - 0.015) * DEG_TO_RAD;
+    // FG_Runway_altitude = (4827 + 450);
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position: Somewhere near the Grand Canyon
     // FG_Longitude = ( -112.5 ) * DEG_TO_RAD;
@@ -381,6 +381,9 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.9  1998/05/03 00:47:31  curt
+// Added an option to enable/disable full-screen mode.
+//
 // Revision 1.8  1998/04/30 12:34:18  curt
 // Added command line rendering options:
 //   enable/disable fog/haze

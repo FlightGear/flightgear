@@ -53,7 +53,7 @@
 #include <Joystick/joystick.h>
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
-#include <Math/polar.h>
+#include <Math/polar3d.h>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
@@ -191,7 +191,10 @@ static void fgInitVisuals( void ) {
     o = &current_options;
     w = &current_weather;
 
-    // xglDisable( GL_DITHER );
+    // Go full screen if requested ...
+    if ( o->fullscreen ) {
+	glutFullScreen();
+    }
 
     // If enabled, normal vectors specified with glNormal are scaled
     // to unit length after transformation.  See glNormal.
@@ -607,6 +610,10 @@ static void fgReshape( int width, int height ) {
 
 // Initialize GLUT and define a main window
 int fgGlutInit( int argc, char **argv ) {
+    fgOPTIONS *o;
+
+    o = &current_options;
+
     // GLUT will extract all glut specific options so later on we only
     // need wory about our own.
     xglutInit(&argc, argv);
@@ -718,6 +725,9 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.10  1998/05/03 00:47:31  curt
+// Added an option to enable/disable full-screen mode.
+//
 // Revision 1.9  1998/04/30 12:34:17  curt
 // Added command line rendering options:
 //   enable/disable fog/haze

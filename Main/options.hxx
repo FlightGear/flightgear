@@ -49,6 +49,7 @@ public:
 
     // Rendering options
     int fog;           // Fog enabled/disabled
+    int fullscreen;    // Full screen mode enabled/disabled
     int shading;       // shading method, 0 = Flat, 1 = Smooth
     int skyblend;      // Blend sky to haze (using polygons) or just clear
     int textures;      // Textures enabled/disabled
@@ -79,6 +80,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.5  1998/05/03 00:47:32  curt
+// Added an option to enable/disable full-screen mode.
+//
 // Revision 1.4  1998/04/30 12:34:19  curt
 // Added command line rendering options:
 //   enable/disable fog/haze

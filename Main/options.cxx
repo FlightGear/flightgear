@@ -52,6 +52,7 @@ fgOPTIONS::fgOPTIONS( void ) {
 
     // Rendering options
     fog = 1;
+    fullscreen = 0;
     shading = 1;
     skyblend = 1;
     textures = 1;
@@ -185,6 +186,10 @@ int fgOPTIONS::parse( int argc, char **argv ) {
 	    fog = 0;	
 	} else if ( strcmp(argv[i], "--enable-fog") == 0 ) {
 	    fog = 1;	
+	} else if ( strcmp(argv[i], "--disable-fullscreen") == 0 ) {
+	    fullscreen = 0;	
+	} else if ( strcmp(argv[i], "--enable-fullscreen") == 0 ) {
+	    fullscreen = 1;	
 	} else if ( strcmp(argv[i], "--shading-flat") == 0 ) {
 	    shading = 0;	
 	} else if ( strcmp(argv[i], "--shading-smooth") == 0 ) {
@@ -235,6 +240,8 @@ void fgOPTIONS::usage ( void ) {
     printf("Rendering Options:\n");
     printf("\t--disable-fog:  disable fog/haze\n");
     printf("\t--enable-fog:  enable fog/haze\n");
+    printf("\t--disable-fullscreen:  disable fullscreen mode\n");
+    printf("\t--enable-fullscreen:  enable fullscreen mode\n");
     printf("\t--shading-flat:  enable flat shading\n");
     printf("\t--shading-smooth:  enable smooth shading\n");
     printf("\t--disable-skyblend:  disable sky blending\n");
@@ -256,6 +263,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.6  1998/05/03 00:47:32  curt
+// Added an option to enable/disable full-screen mode.
+//
 // Revision 1.5  1998/04/30 12:34:19  curt
 // Added command line rendering options:
 //   enable/disable fog/haze
