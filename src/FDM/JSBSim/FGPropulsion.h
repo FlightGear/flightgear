@@ -56,9 +56,7 @@ INCLUDES
 
 #include "FGRocket.h"
 #include "FGPiston.h"
-#include "FGTurboShaft.h"
-#include "FGTurboJet.h"
-#include "FGTurboProp.h"
+#include "FGTurbine.h"
 #include "FGTank.h"
 #include "FGPropeller.h"
 #include "FGNozzle.h"
