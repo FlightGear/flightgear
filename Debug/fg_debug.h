@@ -27,6 +27,12 @@
 #ifndef _FG_DEBUG_H
 #define _FG_DEBUG_H
 
+
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <stdio.h>
 
 /* NB: To add a dbg_class, add it here, and add it to the structure in
@@ -138,6 +144,12 @@ extern fgDebugClass    fg_DebugClass;
 extern fgDebugPriority fg_DebugPriority;
 
 extern FILE *          fg_DebugOutput;
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* _FG_DEBUG_H */
 

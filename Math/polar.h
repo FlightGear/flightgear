@@ -28,6 +28,11 @@
 #define _POLAR_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <Include/fg_types.h>
 
 
@@ -59,14 +64,22 @@ void fgRotateBatchInit(double Theta, double Phi);
 struct fgCartesianPoint fgRotateCartesianPoint(struct fgCartesianPoint p);
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _POLAR_H */
 
 
 /* $Log$
-/* Revision 1.7  1998/01/27 00:48:00  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.8  1998/04/21 17:03:50  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.7  1998/01/27 00:48:00  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.6  1998/01/22 02:59:39  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

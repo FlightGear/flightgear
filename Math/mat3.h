@@ -7,6 +7,10 @@
 #ifndef MAT3_HAS_BEEN_INCLUDED
 #define MAT3_HAS_BEEN_INCLUDED
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
 /* -----------------------------  Constants  ------------------------------ */
 
 /*
@@ -142,6 +146,10 @@ void		MAT3mult_vec(MAT3vec result_vec, MAT3vec vec, MAT3mat mat);
 int		MAT3mult_hvec (MAT3hvec result_vec, MAT3hvec vec, MAT3mat mat, int normalize);
 void		MAT3cross_product(MAT3vec result,MAT3vec,MAT3vec);
 void		MAT3perp_vec(MAT3vec result_vec, MAT3vec vec, int is_unit);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* MAT3_HAS_BEEN_INCLUDED */
 

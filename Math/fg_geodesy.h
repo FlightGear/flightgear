@@ -15,6 +15,11 @@
 #define _FG_GEODESY_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 /* fgGeocToGeod(lat_geoc, radius, *lat_geod, *alt, *sea_level_r)
  *     INPUTS:	
  *         lat_geoc	Geocentric latitude, radians, + = North
@@ -89,6 +94,9 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.3  1998/04/21 17:03:48  curt
+Prepairing for C++ integration.
+
 Revision 1.2  1998/01/22 02:59:38  curt
 Changed #ifdef FILE_H to #ifdef _FILE_H
 
@@ -144,13 +152,20 @@ Initial Flight Gear revision.
 --------------------------------------------------------------------------*/
 
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* _FG_GEODESY_H */
 
 
 /* $Log$
-/* Revision 1.2  1998/01/22 02:59:38  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.3  1998/04/21 17:03:48  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.2  1998/01/22 02:59:38  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.1  1997/07/31 23:13:14  curt
  * Initial revision.
  *

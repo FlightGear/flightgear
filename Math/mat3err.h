@@ -1,3 +1,12 @@
+#ifndef _MAT3ERR_H
+#define _MAT3ERR_H
+
+
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include "sph_errtypes.h"
 
 #ifdef THINK_C
@@ -24,3 +33,9 @@ typedef int ERRid;
 #define ERRregister_package(S)    100
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif /* _MAT3ERR_H */

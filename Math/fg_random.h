@@ -28,6 +28,11 @@
 #define _FG_RANDOM_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 /* Seed the random number generater with time() so we don't see the
  * same sequence every time */
 void fg_srandom(void);
@@ -36,13 +41,21 @@ void fg_srandom(void);
 double fg_random(void);
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _FG_RANDOM_H */
 
 
 /* $Log$
-/* Revision 1.2  1998/01/22 02:59:38  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.3  1998/04/21 17:03:48  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.2  1998/01/22 02:59:38  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.1  1997/07/30 16:04:09  curt
  * Moved random routines from Utils/ to Math/
  *

@@ -1,5 +1,14 @@
 /* Copyright 1988, Brown Computer Graphics Group.  All Rights Reserved. */
 
+
+#ifndef _MAT3DEFS_H
+#define _MAT3DEFS_H
+
+
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
 #include <stdio.h>
 /* #include <Math/mat3err.h> */
 #include <Math/mat3.h>
@@ -37,3 +46,11 @@
 /* -------------------------  Global Variables ---------------------------- */
 
 /* extern ERRid	*MAT3_errid; */
+
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif /* _MAT3DEFS_H */

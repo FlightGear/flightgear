@@ -1,5 +1,8 @@
 libdir	= ${exec_prefix}/lib
 
+EXTRA_DIST = ChangeLog INDEX Make_vms.com Makefile.riscos README \
+	algorithm.txt descrip.mms example.c maketree.c minigzip.c zlib.3
+
 lib_LTLIBRARIES = libz.la
 
 libz_la_SOURCES = \
@@ -22,6 +25,7 @@ libz_la_SOURCES = \
 	infutil.c \
 	infutil.h \
 	trees.c \
+	trees.h \
 	uncompr.c \
 	zconf.h \
 	zlib.h \

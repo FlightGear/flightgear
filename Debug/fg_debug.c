@@ -87,10 +87,12 @@ void fgInitDebug( void ) {
     // Support for log file/alt debug output via command line, environment or
     // reasonable default.
 
+    /*
     if( strlen( logArgbuf ) > 3) {   // First check for command line option
 	// Assumed that we will append.
 	fg_DebugOutput = fopen(logArgbuf, "a+" );
     }
+    */
 
     if( !fg_DebugOutput ) {          // If not set on command line, environment?
 	pszFile = getenv( "FG_DEBUGFILE" );
@@ -110,9 +112,11 @@ void fgInitDebug( void ) {
     // is in range (properly optioned) the we will override both defaults
     // and the environmental value.
 
+    /*
     if ((priorityArgValue >= FG_BULK) && (priorityArgValue <= FG_ABORT)) {
 	fg_DebugPriority = priorityArgValue;
     } else {  // Either not set or out of range. We will not warn the user.
+    */
 	pszPrio = getenv( "FG_DEBUGPRIORITY" );
 	if( pszPrio ) {
 	    fg_DebugPriority = atoi( pszPrio );
@@ -120,12 +124,14 @@ void fgInitDebug( void ) {
 		     "fg_debug.c: Environment overrides default debug priority (%d)\n",
 		     fg_DebugPriority );
 	}
-    }
+    /* } */
 
 
+    /*
     if ((debugArgValue >= FG_ALL) && (debugArgValue < FG_UNDEFD)) {
 	fg_DebugPriority = priorityArgValue;
     } else {  // Either not set or out of range. We will not warn the user.
+    */
 	pszClass = getenv( "FG_DEBUGCLASS" );
 	if( pszClass ) {
 	    fg_DebugClass = fgDebugStrToClass( pszClass );
@@ -133,7 +139,7 @@ void fgInitDebug( void ) {
 		     "fg_debug.c: Environment overrides default debug class (0x%08X)\n",
 		     fg_DebugClass );
 	}
-    }
+    /* } */
 
     FG_RELEASEDEBUGSEM;
 }
@@ -266,9 +272,12 @@ int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... ) {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/18 03:52:04  curt
-/* Moved to Lib directory and created a libDebug.
+/* Revision 1.2  1998/04/21 17:03:45  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.1  1998/04/18 03:52:04  curt
+ * Moved to Lib directory and created a libDebug.
+ *
  * Revision 1.10  1998/03/14 00:31:21  curt
  * Beginning initial terrain texturing experiments.
  *

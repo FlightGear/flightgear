@@ -28,6 +28,11 @@
 #define _VECTOR_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <Math/mat3.h>
 
 
@@ -36,13 +41,21 @@ void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
 				    MAT3vec result);
 
 
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* _VECTOR_H */
 
 
 /* $Log$
-/* Revision 1.3  1998/01/22 02:59:39  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.4  1998/04/21 17:03:51  curt
+/* Prepairing for C++ integration.
 /*
+ * Revision 1.3  1998/01/22 02:59:39  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.2  1998/01/19 19:27:14  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

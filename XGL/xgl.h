@@ -2,6 +2,11 @@
 #define _XGL_H
 
 
+#ifdef __cplusplus                                                          
+extern "C" {                            
+#endif                                   
+
+
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <stdio.h>
@@ -825,5 +830,11 @@ void xglPrioritizeTexturesEXT       ( GLsizei n, GLuint *textures, GLclampf *pri
 #endif
 
 #endif
+
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* _XGL_H */
