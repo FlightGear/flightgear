@@ -199,6 +199,8 @@ fgMATERIAL_MGR::load_lib ( void )
 
 	    textured->enable ( GL_CULL_FACE ) ;
 	    textured->enable( GL_TEXTURE_2D );
+	    textured->disable( GL_BLEND );
+	    textured->disable( GL_ALPHA_TEST );
 	    textured->setTexture( (char *)tex_file.c_str() );
 	    textured->setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
 	    textured->setMaterial ( GL_SPECULAR, 0, 0, 0, 0 ) ;
@@ -214,6 +216,8 @@ fgMATERIAL_MGR::load_lib ( void )
 
 	    nontextured->enable ( GL_CULL_FACE      ) ;
 	    nontextured->disable( GL_TEXTURE_2D );
+	    nontextured->disable( GL_BLEND );
+	    nontextured->disable( GL_ALPHA_TEST );
 	    nontextured->disable( GL_COLOR_MATERIAL );
 	    GLfloat *ambient, *diffuse, *specular, *emission;
 	    ambient = m.get_ambient();
