@@ -69,7 +69,7 @@ void Star::updatePosition(fgTIME *t)
   xv = cos(eccAnom) - e;
   yv = sqrt (1.0 - e*e) * sin(eccAnom);
   v = atan2 (yv, xv);                   // the sun's true anomaly
-  r = sqrt (xv*xv + yv*yv);             // and its distance
+  distance = r = sqrt (xv*xv + yv*yv);  // and its distance
 
   longitude = v + w; // the sun's true longitude
   
