@@ -243,7 +243,11 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
         switch ( primType )
         {
         case GL_POLYGON :
+            SG_LOG( SG_TERRAIN, SG_ALERT,
+                    "WARNING: dubiously handled GL_POLYGON" );
         case GL_TRIANGLE_FAN :
+            /* SG_LOG( SG_TERRAIN, SG_ALERT,
+               "IntersectLeaf: GL_TRIANGLE_FAN" ); */
             if ( !n ) {
                 sgdSetVec3( tri[0], leaf->getVertex( short(0) ) );
                 sgdSetVec3( tri[1], leaf->getVertex( short(1) ) );
@@ -254,35 +258,42 @@ int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
             }
             break;
         case GL_TRIANGLES :
+            /* SG_LOG( SG_TERRAIN, SG_DEBUG,
+               "IntersectLeaf: GL_TRIANGLES" ); */
             sgdSetVec3( tri[0], leaf->getVertex( short(n*3) ) );
             sgdSetVec3( tri[1], leaf->getVertex( short(n*3+1) ) );
             sgdSetVec3( tri[2], leaf->getVertex( short(n*3+2) ) );
             break;
-        case GL_TRIANGLE_STRIP :
         case GL_QUAD_STRIP :
+            SG_LOG( SG_TERRAIN, SG_ALERT,
+                    "WARNING: dubiously handled GL_QUAD_STRIP" );
+        case GL_TRIANGLE_STRIP :
+            /* SG_LOG( SG_TERRAIN, SG_ALERT,
+               "IntersectLeaf: GL_TRIANGLE_STRIP" ); */
             if ( !n ) {
                 sgdSetVec3( tri[0], leaf->getVertex( short(0) ) );
                 sgdSetVec3( tri[1], leaf->getVertex( short(1) ) );
                 sgdSetVec3( tri[2], leaf->getVertex( short(2) ) );
             } else {
                 if ( n & 1 ) {
-                    sgdSetVec3( tri[0], leaf->getVertex( short(n+2) ) );
-                    sgdCopyVec3( tri[1], tri[2] );
-                    sgdCopyVec3( tri[2], tri[1] );
-
+                    sgdCopyVec3( tri[0], tri[2] );
+                    sgdSetVec3( tri[2], leaf->getVertex( short(n+2) ) );
                 } else {
-                    sgdCopyVec3( tri[0], tri[1] );
-                    sgdCopyVec3( tri[1], tri[2] );
+                    sgdCopyVec3( tri[2], tri[1] );
                     sgdSetVec3( tri[2], leaf->getVertex( short(n+2) ) );
                 }
             }
             break;
         case GL_QUADS :
+            SG_LOG( SG_TERRAIN, SG_ALERT,
+                    "WARNING: dubiously handled GL_QUADS" );
             sgdSetVec3( tri[0], leaf->getVertex( short(n*2) ) );
             sgdSetVec3( tri[1], leaf->getVertex( short(n*2+1) ) );
             sgdSetVec3( tri[2], leaf->getVertex( short(n*2 + 2 - (n&1)*4) ) );
             break;
         default:
+            SG_LOG( SG_TERRAIN, SG_ALERT,
+                    "WARNING: not-handled structure: " << primType );
             return IntersectLeaf( leaf, m, orig, dir);
         }
 
@@ -519,14 +530,15 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
     double result = -9999;
     Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
 
-    // cout << "hits = ";
     int hitcount = hit_list->num_hits();
+    // cout << "hits = " << hitcount << endl;
     for ( int i = 0; i < hitcount; ++i ) {
         geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );
         double lat_geod, alt, sea_level_r;
         sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod,
                      &alt, &sea_level_r);
-        // cout << alt << " ";
+        // cout << "hit " << i << " lon = " << geoc.lon() << " lat = "
+        //      << lat_geod << " alt = " << alt << endl;
         if ( alt > result && alt < 10000 ) {
             result = alt;
             this_hit = i;
