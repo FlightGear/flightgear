@@ -343,6 +343,7 @@ void fgTileMgrRender( void ) {
     int index;
     int culled = 0;
     int drawn = 0;
+    int total_faces = 0;
 
     c = &global_tile_cache;
     f = current_aircraft.flight;
@@ -467,7 +468,7 @@ void fgTileMgrRender( void ) {
 			// frag_ptr->tile_offset.y = t->offset.y;
 			// frag_ptr->tile_offset.z = t->offset.z;
 
-			mtl_ptr = (fgMATERIAL *)(frag_ptr->material_ptr);
+			mtl_ptr = frag_ptr->material_ptr;
 			// printf(" lookup = %s\n", mtl_ptr->texture_name);
 			if ( mtl_ptr->list_size < FG_MAX_MATERIAL_FRAGS ) {
 			    mtl_ptr->list[mtl_ptr->list_size] = frag_ptr;
@@ -539,12 +540,16 @@ void fgTileMgrRender( void ) {
 	    for ( i = 0; i < size; i++ ) {
 		frag_ptr = mtl_ptr->list[i];
 		
+		// count up the number of polygons we are drawing in
+		// case someone is interested.
+		total_faces += frag_ptr->num_faces;
+
 		if ( frag_ptr->tile_ptr == last_tile_ptr ) {
 		    // same tile as last time, no transform necessary
 		} else {
 		    // new tile, new translate
 		    // xglLoadMatrixf( frag_ptr->matrix );
-		    t = (fgTILE *)(frag_ptr->tile_ptr);
+		    t = frag_ptr->tile_ptr;
 		    xglLoadMatrixd(t->model_view );
 		}
 	    
@@ -552,7 +557,7 @@ void fgTileMgrRender( void ) {
 		// printf("  display_list = %d\n", frag_ptr->display_list);
 		xglCallList(frag_ptr->display_list);
 
-		last_tile_ptr = (fgTILE *)(frag_ptr->tile_ptr);
+		last_tile_ptr = frag_ptr->tile_ptr;
 	    }
 	}
 
@@ -560,10 +565,18 @@ void fgTileMgrRender( void ) {
     }
 
     xglPopMatrix();
+
+    fgPrintf( FG_TERRAIN, FG_DEBUG, "Rendered %d polygons this frame.\n", 
+	      total_faces);
 }
 
 
 // $Log$
+// Revision 1.29  1998/08/20 15:12:06  curt
+// Used a forward declaration of classes fgTILE and fgMATERIAL to eliminate
+// the need for "void" pointers and casts.
+// Quick hack to count the number of scenery polygons that are being drawn.
+//
 // Revision 1.28  1998/08/12 21:13:06  curt
 // material.cxx: don't load textures if they are disabled
 // obj.cxx: optimizations from Norman Vine

@@ -178,7 +178,7 @@ int fgFRAGMENT::intersect( fgPoint3d *end0, fgPoint3d *end1, int side_flag,
     list < fgFACE > :: iterator last;
 
     // find the associated tile
-    t = (fgTILE *)tile_ptr;
+    t = tile_ptr;
 
     // printf("Intersecting\n");
 
@@ -448,6 +448,11 @@ fgTILE::~fgTILE ( void ) {
 
 
 // $Log$
+// Revision 1.7  1998/08/20 15:12:05  curt
+// Used a forward declaration of classes fgTILE and fgMATERIAL to eliminate
+// the need for "void" pointers and casts.
+// Quick hack to count the number of scenery polygons that are being drawn.
+//
 // Revision 1.6  1998/08/12 21:13:05  curt
 // material.cxx: don't load textures if they are disabled
 // obj.cxx: optimizations from Norman Vine

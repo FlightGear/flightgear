@@ -221,7 +221,7 @@ int fgObjLoad(char *path, fgTILE *t) {
 	    sscanf(line, "usemtl %s\n", material);
 
 	    // give the fragment a pointer back to the tile
-	    (fgTILE *)(fragment.tile_ptr) = t;
+	    fragment.tile_ptr = t;
 
 	    // find this material in the properties list
 	    map < string, fgMATERIAL, less<string> > :: iterator myfind = 
@@ -231,7 +231,7 @@ int fgObjLoad(char *path, fgTILE *t) {
 			  "Ack! unknown usemtl name = %s in %s\n",
 			  material, path);
 	    } else {
-		fragment.material_ptr = (void *)(&(*myfind).second);
+		fragment.material_ptr = &(*myfind).second;
 	    }
 
 	    // initialize the fragment transformation matrix
@@ -490,6 +490,11 @@ int fgObjLoad(char *path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.22  1998/08/20 15:12:03  curt
+// Used a forward declaration of classes fgTILE and fgMATERIAL to eliminate
+// the need for "void" pointers and casts.
+// Quick hack to count the number of scenery polygons that are being drawn.
+//
 // Revision 1.21  1998/08/12 21:13:04  curt
 // material.cxx: don't load textures if they are disabled
 // obj.cxx: optimizations from Norman Vine

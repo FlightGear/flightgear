@@ -3,6 +3,14 @@
 
 /* texload is a simplistic routine for reading an SGI .rgb image file. */
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h> 
 #include <string.h>

@@ -61,6 +61,11 @@ using namespace std;
 #define MAX_NODES 1000
 
 
+// Forward declarations
+class fgTILE;
+class fgMATERIAL;
+
+
 class fgFACE {
 public:
     int n1, n2, n3;
@@ -92,10 +97,10 @@ public:
     // material property this fragment is assigned to.
 
     // material property pointer
-    void *material_ptr;
+    fgMATERIAL *material_ptr;
 
     // tile pointer
-    void *tile_ptr;
+    fgTILE *tile_ptr;
 
     // OpenGL display list for fragment data
     GLint display_list;
@@ -166,6 +171,11 @@ public:
 
 
 // $Log$
+// Revision 1.15  1998/08/20 15:12:06  curt
+// Used a forward declaration of classes fgTILE and fgMATERIAL to eliminate
+// the need for "void" pointers and casts.
+// Quick hack to count the number of scenery polygons that are being drawn.
+//
 // Revision 1.14  1998/08/12 21:13:06  curt
 // material.cxx: don't load textures if they are disabled
 // obj.cxx: optimizations from Norman Vine
