@@ -53,11 +53,12 @@ FGAIMgr::FGAIMgr() {
 	// TODO - use the proper user callsign when it becomes user settable.
 	removalList.clear();
 	activated.clear();
+	_havePiperModel = true;
 }
 
 FGAIMgr::~FGAIMgr() {
 	_defaultModel->deRef();
-	_piperModel->deRef();
+	if(_havePiperModel) _piperModel->deRef();
 }
 
 void FGAIMgr::init() {
@@ -75,20 +76,39 @@ void FGAIMgr::init() {
 	// Load up models at the start to avoid pausing later
 	// Hack alert - Hardwired paths!!
 	string planepath = "Aircraft/c172/Models/c172-dpm.ac";
-	_defaultModel = sgLoad3DModel( globals->get_fg_root(),
-	                               planepath.c_str(),
-	                               globals->get_props(),
-	                               globals->get_sim_time_sec() );
+	bool _loadedDefaultOK = true;
+	try {
+		_defaultModel = sgLoad3DModel( globals->get_fg_root(),
+	    	                           planepath.c_str(),
+									   globals->get_props(),
+									   globals->get_sim_time_sec() );
+	} catch(sg_exception& e) {
+		_loadedDefaultOK = false;
+	}
+	
+	if(!_loadedDefaultOK ) {
+		// Just load the same 3D model as the default user plane - that's *bound* to exist!
+		// TODO - implement robust determination of availability of GA AI aircraft models
+		planepath = "Aircraft/c172p/Models/c172p.ac";
+		_defaultModel = sgLoad3DModel( globals->get_fg_root(),
+	    	                           planepath.c_str(),
+									   globals->get_props(),
+									   globals->get_sim_time_sec() );
+	}
 
 	planepath = "Aircraft/pa28-161/Models/pa28-161.ac";
-	_piperModel = sgLoad3DModel( globals->get_fg_root(),
-	                             planepath.c_str(),
-	                             globals->get_props(),
-	                             globals->get_sim_time_sec() );
+	try {
+		_piperModel = sgLoad3DModel( globals->get_fg_root(),
+	    	                         planepath.c_str(),
+									 globals->get_props(),
+									 globals->get_sim_time_sec() );
+	} catch(sg_exception& e) {
+		_havePiperModel = false;
+	}
 
 	// We need to keep one ref of the models open to stop ssg deleting them behind our back!
 	_defaultModel->ref();
-	_piperModel->ref();
+	if(_havePiperModel) _piperModel->ref();
 
 	// go through the $FG_ROOT/ATC directory and find all *.taxi files
 	SGPath path(globals->get_fg_root());
@@ -448,7 +468,7 @@ void FGAIMgr::GenerateSimpleAirportTraffic(string ident, double min_dist) {
 			else cessna = true;
 			string s = GenerateShortForm(GenerateUniqueCallsign(), (cessna ? "Cessna-" : "Piper-"));
 			FGAIGAVFRTraffic* t = new FGAIGAVFRTraffic();
-			t->SetModel(cessna ? _defaultModel : _piperModel);
+			t->SetModel(cessna ? _defaultModel : (_havePiperModel ? _piperModel : _defaultModel));
 			//cout << "Generating VFR traffic " << s << " inbound to " << ident << " " << ad << " meters out from " << dir << " degrees\n";
 			Point3D tpos = dclUpdatePosition(aptpos, dir, 6.0, ad);
 			if(tpos.elev() > (aptpos.elev() + 3000.0)) tpos.setelev(aptpos.elev() + 3000.0);	// FEET yuk :-(

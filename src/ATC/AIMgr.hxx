@@ -131,7 +131,9 @@ private:
 	string GenerateUniqueCallsign();
 	
 	string GenerateShortForm(string callsign, string plane_str = "Cessna-", bool local = false);
-
+	
+	// TODO - implement a proper robust system for registering and loading AI GA aircraft models
+	bool _havePiperModel;
 };
 
 #endif  // _FG_AIMGR_HXX
