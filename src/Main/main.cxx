@@ -222,6 +222,7 @@ static GLfloat fog_exp_density;
 static GLfloat fog_exp2_density;
 static GLfloat rwy_exp2_punch_through;
 static GLfloat taxi_exp2_punch_through;
+static GLfloat ground_exp2_punch_through;
 
 #ifdef FG_NETWORK_OLK
 ssgSelector *fgd_sel = NULL;
@@ -467,6 +468,7 @@ void fgRenderFrame() {
 
         fog_exp_density = m_log01 / actual_visibility;
         fog_exp2_density = sqrt_m_log01 / actual_visibility;
+        ground_exp2_punch_through = sqrt_m_log01 / (actual_visibility * 1.5);
         if ( actual_visibility < 8000 ) {
             rwy_exp2_punch_through = sqrt_m_log01 / (actual_visibility * 2.5);
             taxi_exp2_punch_through = sqrt_m_log01 / (actual_visibility * 1.5);
@@ -801,6 +803,7 @@ void fgRenderFrame() {
 #endif
 
         // draw ground lighting
+	glFogf (GL_FOG_DENSITY, ground_exp2_punch_through);
 	ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
 
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
