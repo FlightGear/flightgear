@@ -92,12 +92,14 @@ FGTileLoader::add( FGTileEntry* tile )
     static bool beenhere = false;
     if (!beenhere)
     {
+        SGPath tmp;
 	if ( !globals->get_fg_scenery().empty() ) {
-	    tile_path.set( globals->get_fg_scenery() );
+	    tmp.set( globals->get_fg_scenery() );
 	} else {
-	    tile_path.set( globals->get_fg_root() );
+	    tmp.set( globals->get_fg_root() );
 	    tile_path.append( "Scenery" );
 	}
+        tile_path = tmp.str();
 	beenhere = true;
     }
 

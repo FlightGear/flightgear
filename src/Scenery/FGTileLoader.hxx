@@ -111,7 +111,7 @@ private:
     /**
      * Base name of directory containing tile data file.
      */
-    SGPath tile_path;
+    string tile_path;
 
 #ifdef ENABLE_THREADS
     /**

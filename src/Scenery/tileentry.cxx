@@ -557,17 +557,6 @@ bool FGTileEntry::obj_load( const string& path,
             center = c;
             bounding_radius = br;
         }
-    } else {
-        // default to an ocean tile
-        if ( sgGenTile( path, tile_bucket, &c, &br,
-                        globals->get_matlib(), geometry ) )
-        {
-            center = c;
-            bounding_radius = br;
-        } else {
-            SG_LOG( SG_TERRAIN, SG_ALERT,
-                    "Warning: failed to generate ocean tile!" );
-        }
     }
 
     return (geometry != NULL);
@@ -575,212 +564,230 @@ bool FGTileEntry::obj_load( const string& path,
 
 
 void
-FGTileEntry::load( const SGPath& base, bool is_base )
+FGTileEntry::load( const string &base_path, bool is_base )
 {
-    SG_LOG( SG_TERRAIN, SG_INFO, "load() base = " << base.str() );
+    SG_LOG( SG_TERRAIN, SG_INFO, "load() base search path = "
+            << base_path );
 
-    // Generate names for later use
-    string index_str = tile_bucket.gen_index_str();
+    bool found_tile_base = false;
 
-    SGPath tile_path = base;
-    tile_path.append( tile_bucket.gen_base_path() );
-
-    SGPath basename = tile_path;
-    basename.append( index_str );
-    // string path = basename.str();
-
-    SG_LOG( SG_TERRAIN, SG_INFO, "Loading tile " << basename.str() );
-
-#define FG_MAX_LIGHTS 1000
+    string_list search = sgPathSplit( base_path );
 
     // obj_load() will generate ground lighting for us ...
     ssgVertexArray *light_pts = new ssgVertexArray( 100 );
 
     ssgBranch* new_tile = new ssgBranch;
 
-    // Check for master .stg (scene terra gear) file
-    SGPath stg_name = basename;
-    stg_name.concat( ".stg" );
+    unsigned int i = 0;
+    while ( i < search.size() && !found_tile_base ) {
 
-    sg_gzifstream in( stg_name.str() );
+        // Generate names for later use
+        string index_str = tile_bucket.gen_index_str();
 
-    if ( in.is_open() ) {
-        string token, name;
+        SGPath tile_path = search[i];
+        tile_path.append( tile_bucket.gen_base_path() );
 
-        while ( ! in.eof() ) {
-            in >> token;
+        SGPath basename = tile_path;
+        basename.append( index_str );
+        // string path = basename.str();
 
-            if ( token == "OBJECT_BASE" ) {
-                in >> name >> ::skipws;
-                SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
-                        << " name = " << name );
+        SG_LOG( SG_TERRAIN, SG_INFO, "Loading tile " << basename.str() );
 
-                SGPath custom_path = tile_path;
-                custom_path.append( name );
+#define FG_MAX_LIGHTS 1000
 
-                ssgBranch *geometry = new ssgBranch;
-                if ( obj_load( custom_path.str(),
-                               geometry, NULL, NULL, light_pts, true ) )
-                {
-                    new_tile -> addKid( geometry );
-                } else {
-                    delete geometry;
-                }
-            } else if ( token == "OBJECT" ) {
-                in >> name >> ::skipws;
-                SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
-                        << " name = " << name );
+        // Check for master .stg (scene terra gear) file
+        SGPath stg_name = basename;
+        stg_name.concat( ".stg" );
 
-                SGPath custom_path = tile_path;
-                custom_path.append( name );
+        sg_gzifstream in( stg_name.str() );
 
-                ssgBranch *geometry = new ssgBranch;
-                ssgBranch *rwy_lights = new ssgBranch;
-                ssgBranch *taxi_lights = new ssgBranch;
-                if ( obj_load( custom_path.str(),
-                               geometry, rwy_lights, taxi_lights,
-                               NULL, false ) )
-                {
-                    if ( geometry -> getNumKids() > 0 ) {
+        if ( in.is_open() ) {
+            string token, name;
+
+            while ( ! in.eof() ) {
+                in >> token;
+
+                if ( token == "OBJECT_BASE" ) {
+                    in >> name >> ::skipws;
+                    SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+                            << " name = " << name );
+
+                    found_tile_base = true;
+
+                    SGPath custom_path = tile_path;
+                    custom_path.append( name );
+
+                    ssgBranch *geometry = new ssgBranch;
+                    if ( obj_load( custom_path.str(),
+                                   geometry, NULL, NULL, light_pts, true ) )
+                    {
                         new_tile -> addKid( geometry );
                     } else {
                         delete geometry;
                     }
-                    if ( rwy_lights -> getNumKids() > 0 ) {
-                        rwy_lights_transform -> addKid( rwy_lights );
+                } else if ( token == "OBJECT" ) {
+                    in >> name >> ::skipws;
+                    SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+                            << " name = " << name );
+
+                    SGPath custom_path = tile_path;
+                    custom_path.append( name );
+
+                    ssgBranch *geometry = new ssgBranch;
+                    ssgBranch *rwy_lights = new ssgBranch;
+                    ssgBranch *taxi_lights = new ssgBranch;
+                    if ( obj_load( custom_path.str(),
+                                   geometry, rwy_lights, taxi_lights,
+                                   NULL, false ) )
+                    {
+                        if ( geometry -> getNumKids() > 0 ) {
+                            new_tile -> addKid( geometry );
+                        } else {
+                            delete geometry;
+                        }
+                        if ( rwy_lights -> getNumKids() > 0 ) {
+                            rwy_lights_transform -> addKid( rwy_lights );
+                        } else {
+                            delete rwy_lights;
+                        }
+                        if ( taxi_lights -> getNumKids() > 0 ) {
+                            taxi_lights_transform -> addKid( taxi_lights );
+                        } else {
+                            delete taxi_lights;
+                        }
                     } else {
+                        delete geometry;
                         delete rwy_lights;
-                    }
-                    if ( taxi_lights -> getNumKids() > 0 ) {
-                        taxi_lights_transform -> addKid( taxi_lights );
-                    } else {
                         delete taxi_lights;
                     }
-                } else {
-                    delete geometry;
-                    delete rwy_lights;
-                    delete taxi_lights;
-                }
 
-            } else if ( token == "OBJECT_STATIC" ||
-                        token == "OBJECT_SHARED" ) {
-                // load object info
-                double lon, lat, elev, hdg;
-                in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
-                SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
-                        << " name = " << name 
-                        << " pos = " << lon << ", " << lat
-                        << " elevation = " << elev
-                        << " heading = " << hdg );
+                } else if ( token == "OBJECT_STATIC" ||
+                            token == "OBJECT_SHARED" ) {
+                    // load object info
+                    double lon, lat, elev, hdg;
+                    in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
+                    SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+                            << " name = " << name 
+                            << " pos = " << lon << ", " << lat
+                            << " elevation = " << elev
+                            << " heading = " << hdg );
 
-                // object loading is deferred to main render thread,
-                // but lets figure out the paths right now.
-                SGPath custom_path;
-                if ( token == "OBJECT_STATIC" )
-                    custom_path= tile_path;
-                custom_path.append( name );
+                    // object loading is deferred to main render thread,
+                    // but lets figure out the paths right now.
+                    SGPath custom_path;
+                    if ( token == "OBJECT_STATIC" ) {
+                        custom_path= tile_path;
+                    }
+                    custom_path.append( name );
 
-                sgCoord obj_pos;
-                WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
+                    sgCoord obj_pos;
+                    WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
                 
-                ssgTransform *obj_trans = new ssgTransform;
-                obj_trans->setTransform( &obj_pos );
+                    ssgTransform *obj_trans = new ssgTransform;
+                    obj_trans->setTransform( &obj_pos );
 
-                // wire as much of the scene graph together as we can
-                new_tile->addKid( obj_trans );
+                    // wire as much of the scene graph together as we can
+                    new_tile->addKid( obj_trans );
 
-                // bump up the pending models count
-                pending_models++;
+                    // bump up the pending models count
+                    pending_models++;
 
-                // push an entry onto the model load queue
-                FGDeferredModel *dm
-                    = new FGDeferredModel( custom_path.str(), tile_path.str(),
-                                           this, obj_trans );
-                FGTileMgr::model_ready( dm );
-            } else if ( token == "OBJECT_TAXI_SIGN" ) {
-                // load object info
-                double lon, lat, elev, hdg;
-                in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
-                SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
-                        << " name = " << name 
-                        << " pos = " << lon << ", " << lat
-                        << " elevation = " << elev
-                        << " heading = " << hdg );
+                    // push an entry onto the model load queue
+                    FGDeferredModel *dm
+                        = new FGDeferredModel( custom_path.str(),
+                                               tile_path.str(),
+                                               this, obj_trans );
+                    FGTileMgr::model_ready( dm );
+                } else if ( token == "OBJECT_TAXI_SIGN" ) {
+                    // load object info
+                    double lon, lat, elev, hdg;
+                    in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
+                    SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+                            << " name = " << name 
+                            << " pos = " << lon << ", " << lat
+                            << " elevation = " << elev
+                            << " heading = " << hdg );
 
-                // load the object itself
-                SGPath custom_path = tile_path;
-                custom_path.append( name );
+                    // load the object itself
+                    SGPath custom_path = tile_path;
+                    custom_path.append( name );
 
-                sgCoord obj_pos;
-                WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
+                    sgCoord obj_pos;
+                    WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
 
-                ssgTransform *obj_trans = new ssgTransform;
-                obj_trans->setTransform( &obj_pos );
+                    ssgTransform *obj_trans = new ssgTransform;
+                    obj_trans->setTransform( &obj_pos );
 
-                ssgBranch *custom_obj
-                    = sgMakeTaxiSign( globals->get_matlib(),
-                                      custom_path.str(), name );
+                    ssgBranch *custom_obj
+                        = sgMakeTaxiSign( globals->get_matlib(),
+                                          custom_path.str(), name );
 
-                // wire the pieces together
-                if ( custom_obj != NULL ) {
-                    obj_trans -> addKid( custom_obj );
+                    // wire the pieces together
+                    if ( custom_obj != NULL ) {
+                        obj_trans -> addKid( custom_obj );
+                    }
+                    new_tile->addKid( obj_trans );
+                } else if ( token == "OBJECT_RUNWAY_SIGN" ) {
+                    // load object info
+                    double lon, lat, elev, hdg;
+                    in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
+                    SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+                            << " name = " << name 
+                            << " pos = " << lon << ", " << lat
+                            << " elevation = " << elev
+                            << " heading = " << hdg );
+
+                    // load the object itself
+                    SGPath custom_path = tile_path;
+                    custom_path.append( name );
+
+                    sgCoord obj_pos;
+                    WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
+
+                    ssgTransform *obj_trans = new ssgTransform;
+                    obj_trans->setTransform( &obj_pos );
+
+                    ssgBranch *custom_obj
+                        = sgMakeRunwaySign( globals->get_matlib(),
+                                            custom_path.str(), name );
+
+                    // wire the pieces together
+                    if ( custom_obj != NULL ) {
+                        obj_trans -> addKid( custom_obj );
+                    }
+                    new_tile->addKid( obj_trans );
+                } else if ( token == "RWY_LIGHTS" ) {
+                    double lon, lat, hdg, len, width;
+                    string common, end1, end2;
+                    in >> lon >> lat >> hdg >> len >> width
+                       >> common >> end1 >> end2;
+                    SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+                            << " pos = " << lon << ", " << lat
+                            << " hdg = " << hdg
+                            << " size = " << len << ", " << width
+                            << " codes = " << common << " "
+                            << end1 << " " << end2 );
+                } else {
+                    SG_LOG( SG_TERRAIN, SG_ALERT,
+                            "Unknown token " << token << " in "
+                            << stg_name.str() );
+                    in >> ::skipws;
                 }
-                new_tile->addKid( obj_trans );
-            } else if ( token == "OBJECT_RUNWAY_SIGN" ) {
-                // load object info
-                double lon, lat, elev, hdg;
-                in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
-                SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
-                        << " name = " << name 
-                        << " pos = " << lon << ", " << lat
-                        << " elevation = " << elev
-                        << " heading = " << hdg );
-
-                // load the object itself
-                SGPath custom_path = tile_path;
-                custom_path.append( name );
-
-                sgCoord obj_pos;
-                WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
-
-                ssgTransform *obj_trans = new ssgTransform;
-                obj_trans->setTransform( &obj_pos );
-
-                ssgBranch *custom_obj
-                    = sgMakeRunwaySign( globals->get_matlib(),
-                                        custom_path.str(), name );
-
-                // wire the pieces together
-                if ( custom_obj != NULL ) {
-                    obj_trans -> addKid( custom_obj );
-                }
-                new_tile->addKid( obj_trans );
-            } else if ( token == "RWY_LIGHTS" ) {
-                double lon, lat, hdg, len, width;
-                string common, end1, end2;
-                in >> lon >> lat >> hdg >> len >> width
-                   >> common >> end1 >> end2;
-                SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
-                        << " pos = " << lon << ", " << lat
-                        << " hdg = " << hdg
-                        << " size = " << len << ", " << width
-                        << " codes = " << common << " "
-                        << end1 << " " << end2 );
-            } else {
-                SG_LOG( SG_TERRAIN, SG_ALERT,
-                        "Unknown token " << token << " in "
-                        << stg_name.str() );
-                in >> ::skipws;
             }
         }
-    } else {
-        // no .stg file, generate an ocean tile on the fly for this
-        // area
+
+        i++;
+    }
+
+    if ( !found_tile_base ) {
+        // no tile base found, generate an ocean tile on the fly for
+        // this area
         ssgBranch *geometry = new ssgBranch;
         Point3D c;
         double br;
-        if ( sgGenTile( basename.str(), tile_bucket, &c, &br,
-                        globals->get_matlib(), geometry ) ) {
+        if ( sgGenTile( search[0], tile_bucket, &c, &br,
+                        globals->get_matlib(), geometry ) )
+        {
             center = c;
             bounding_radius = br;
             new_tile -> addKid( geometry );

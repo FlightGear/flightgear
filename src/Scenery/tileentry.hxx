@@ -212,7 +212,7 @@ public:
      * @param base name of directory containing tile data file.
      * @param is_base is this a base terrain object for which we should generate
      *        random ground light points */
-    void load( const SGPath& base, bool is_base );
+    void load( const string &base_path, bool is_base );
 
     /**
      * Return true if the tile entry is loaded, otherwise return false
