@@ -1,0 +1,16 @@
+The following files were unashamedly borrowed from other projects:
+
+zfstream.hxx
+zfstream.cxx
+	zlib/contrib/iostream
+
+stopwatch.hxx was (blitz/time.h)
+	blitz
+
+Some modifications have been made to fit in with the FlightGear scheme of things.
+
+As far as I'm aware they are all covered by GNU's licensing agreements.
+
+Many thanks to their respective authors.
+
+Bernie Bright (bbright@c031.aone.net.au)
