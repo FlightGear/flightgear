@@ -577,23 +577,54 @@ void fgInitFDM() {
     const string &model = fgGetString("/sim/flight-model");
 
     try {
-	if (model == "larcsim") {
+	if ( model == "larcsim" ) {
 	    cur_fdm_state = new FGLaRCsim( dt );
-	} else if (model == "jsb") {
+	} else if ( model == "jsb" ) {
 	    cur_fdm_state = new FGJSBsim( dt );
-	} else if (model == "ada") {
+	} else if ( model == "ada" ) {
 	    cur_fdm_state = new FGADA( dt );
-	} else if (model == "balloon") {
+	} else if ( model == "balloon" ) {
 	    cur_fdm_state = new FGBalloonSim( dt );
-	} else if (model == "magic") {
+	} else if ( model == "magic" ) {
 	    cur_fdm_state = new FGMagicCarpet( dt );
-	} else if (model == "external") {
+	} else if ( model == "external" ) {
 	    cur_fdm_state = new FGExternal( dt );
-	} else if (model == "network") {
-	    cur_fdm_state = new FGExternalNet( dt, 5501, 5502, 5503, "10.0.2.4" );
-	} else if (model == "null") {
+	} else if ( model.find("network,") == 0 ) {
+            string host = "localhost";
+            int port1 = 5501;
+            int port2 = 5502;
+            int port3 = 5503;
+            string net_options = model.substr(8);
+            string::size_type begin, end;
+            begin = 0;
+            // host
+            end = net_options.find( ",", begin );
+            if ( end != string::npos ) {
+                host = net_options.substr(begin, end - begin);
+                begin = end + 1;
+            }
+            // port1
+            end = net_options.find( ",", begin );
+            if ( end != string::npos ) {
+                port1 = atoi( net_options.substr(begin, end - begin).c_str() );
+                begin = end + 1;
+            }
+            // port2
+            end = net_options.find( ",", begin );
+            if ( end != string::npos ) {
+                port2 = atoi( net_options.substr(begin, end - begin).c_str() );
+                begin = end + 1;
+            }
+            // port3
+            end = net_options.find( ",", begin );
+            if ( end != string::npos ) {
+                port3 = atoi( net_options.substr(begin, end - begin).c_str() );
+                begin = end + 1;
+            }
+	    cur_fdm_state = new FGExternalNet( dt, host, port1, port2, port3 );
+	} else if ( model == "null" ) {
 	    cur_fdm_state = new FGNullFDM( dt );
-	} else if (model == "yasim") {
+	} else if ( model == "yasim" ) {
 	    cur_fdm_state = new YASim( dt );
 	} else {
 	    SG_LOG(SG_GENERAL, SG_ALERT,
