@@ -58,7 +58,8 @@ FGTileEntry::FGTileEntry ( const SGBucket& b )
       terra_range( new ssgRangeSelector ),
       rwy_lights_range( new ssgRangeSelector ),
       loaded(false),
-      pending_models(0)
+      pending_models(0),
+      free_tracker(0)
 {
     nodes.clear();
 
@@ -691,60 +692,115 @@ void FGTileEntry::sched_removal() {
 #endif
 
 
+// Free "n" leaf elements of an ssg tree.  returns the number of
+// elements freed.  An empty branch node is considered a leaf.  This
+// is intended to spread the load of freeing a complex tile out over
+// several frames.
+static int fgPartialFreeSSGtree( ssgBranch *b, int n ) {
+    if ( n > 0 ) {
+        // we still have some delete budget left
+        int num_deletes = 0;
+        for ( int i = 0; i < b->getNumKids(); ++i ) {
+            ssgEntity *kid = b->getKid(i);
+            if ( kid->isAKindOf( ssgTypeBranch() ) ) {
+                int result = fgPartialFreeSSGtree( (ssgBranch *)kid, n );
+                num_deletes += result;
+                n -= result;
+                if ( kid->getNumKids() == 0 ) {
+                    b->removeKid(i);
+                    num_deletes++;
+                    n--;
+                }
+                if ( n < 0 ) {
+                    break;
+                }
+            } else {
+                b->removeKid(i);
+                num_deletes++;
+            }
+        }
+        return num_deletes;
+    } else {
+        return 0;
+    }
+}
+
+
 // Clean up the memory used by this tile and delete the arrays used by
 // ssg as well as the whole ssg branch
-void FGTileEntry::free_tile() {
+bool FGTileEntry::free_tile() {
     int i;
-    SG_LOG( SG_TERRAIN, SG_INFO,
+    int delete_size = 100;
+    SG_LOG( SG_TERRAIN, SG_DEBUG,
 	    "FREEING TILE = (" << tile_bucket << ")" );
 
-    SG_LOG( SG_TERRAIN, SG_DEBUG,
-	    "  deleting " << nodes.size() << " nodes" );
-    nodes.clear();
+    if ( !(free_tracker & NODES) ) {
+        SG_LOG( SG_TERRAIN, SG_DEBUG,
+                "  deleting " << nodes.size() << " nodes" );
+        nodes.clear();
 
-    // delete the ssg structures
-    SG_LOG( SG_TERRAIN, SG_DEBUG,
-	    "  deleting (leaf data) vertex, normal, and "
-	    << " texture coordinate arrays" );
+        free_tracker |= NODES;
+    } else if ( !(free_tracker & VEC_PTRS) ) {
+        // delete the vector pointers
+        SG_LOG( SG_TERRAIN, SG_DEBUG,
+                "  deleting (leaf data) vertex, normal, and "
+                << " texture coordinate arrays" );
 
-    for ( i = 0; i < (int)vec3_ptrs.size(); ++i ) {
-	delete [] vec3_ptrs[i];
-    }
-    vec3_ptrs.clear();
+        for ( i = 0; i < (int)vec3_ptrs.size(); ++i ) {
+            delete [] vec3_ptrs[i];
+        }
+        vec3_ptrs.clear();
 
-    for ( i = 0; i < (int)vec2_ptrs.size(); ++i ) {
-	delete [] vec2_ptrs[i];
-    }
-    vec2_ptrs.clear();
+        for ( i = 0; i < (int)vec2_ptrs.size(); ++i ) {
+            delete [] vec2_ptrs[i];
+        }
+        vec2_ptrs.clear();
 
-    for ( i = 0; i < (int)index_ptrs.size(); ++i ) {
-	delete index_ptrs[i];
-    }
-    index_ptrs.clear();
+        for ( i = 0; i < (int)index_ptrs.size(); ++i ) {
+            delete index_ptrs[i];
+        }
+        index_ptrs.clear();
 
-    // delete the terrain branch (this should already have been
-    // disconnected from the scene graph)
-    ssgDeRefDelete( terra_transform );
-
-    if ( gnd_lights_transform ) {
+        free_tracker |= VEC_PTRS;
+    } else if ( !(free_tracker & TERRA_NODE) ) {
+        // delete the terrain branch (this should already have been
+        // disconnected from the scene graph)
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING terra_transform" );
+        if ( fgPartialFreeSSGtree( terra_transform, delete_size ) == 0 ) {
+            ssgDeRefDelete( terra_transform ); // polish off the parent
+            free_tracker |= TERRA_NODE;
+        }
+    } else if ( !(free_tracker & GROUND_LIGHTS) && gnd_lights_transform ) {
+        // delete the terrain lighting branch (this should already have been
+        // disconnected from the scene graph)
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING gnd_lights_transform" );
+        if ( fgPartialFreeSSGtree( gnd_lights_transform, delete_size ) == 0 ) {
+            ssgDeRefDelete( gnd_lights_transform ); // polish off the parent
+            free_tracker |= GROUND_LIGHTS;
+        }
+    } else if ( !(free_tracker & RWY_LIGHTS) && rwy_lights_transform ) {
 	// delete the terrain lighting branch (this should already have been
 	// disconnected from the scene graph)
-	ssgDeRefDelete( gnd_lights_transform );
-    }
-
-    if ( rwy_lights_transform ) {
-	// delete the terrain lighting branch (this should already have been
-	// disconnected from the scene graph)
-	ssgDeRefDelete( rwy_lights_transform );
-    }
-
-    // ADA
-    if ( lightmaps_transform ) {
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING rwy_lights_transform" );
+	if ( fgPartialFreeSSGtree( rwy_lights_transform, delete_size ) == 0 ) {
+            ssgDeRefDelete( rwy_lights_transform ); // polish off the parent
+            free_tracker |= RWY_LIGHTS;
+        }
+    } else if ( !(free_tracker & LIGHTMAPS) && lightmaps_transform ) {
+        // ADA
 	// delete the terrain lighting branch (this should already have been
         // disconnected from the scene graph)
-	ssgDeRefDelete( lightmaps_transform );
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING lightmaps_transform" );
+	if ( fgPartialFreeSSGtree( lightmaps_transform, delete_size ) == 0 ) {
+            ssgDeRefDelete( lightmaps_transform ); // polish off the parent
+            free_tracker |= LIGHTMAPS;
+        }
+    } else {
+        return true;
     }
-    // ADA
+
+    // if we fall down to here, we still have work todo, return false
+    return false;
 }
 
 

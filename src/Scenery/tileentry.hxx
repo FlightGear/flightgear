@@ -192,6 +192,18 @@ private:
 
     double timestamp;
 
+
+    // this variable tracks the status of the incremental memory freeing.
+    enum {
+        NODES = 0x01,
+        VEC_PTRS = 0x02,
+        TERRA_NODE = 0x04,
+        GROUND_LIGHTS = 0x08,
+        RWY_LIGHTS = 0x10,
+        LIGHTMAPS = 0x20
+    };
+    int free_tracker;
+
 public:
 
     // ADA --->
@@ -212,8 +224,12 @@ public:
 #endif
 
     // Clean up the memory used by this tile and delete the arrays
-    // used by ssg as well as the whole ssg branch
-    void free_tile();
+    // used by ssg as well as the whole ssg branch.  This does a
+    // partial clean up and exits so we can spread the load across
+    // multiple frames.  Returns false if work remaining to be done,
+    // true if dynamically allocated memory used by this tile is
+    // completely freed.
+    bool free_tile();
 
     // Calculate this tile's offset
     void SetOffset( const Point3D& p)

@@ -70,8 +70,8 @@ FGTileMgr::FGTileMgr():
     state( Start ),
     current_tile( NULL ),
     vis( 16000 ),
-    counter_hack(0),
-    max_cache_size(100)
+    max_cache_size(100),
+    counter_hack(0)
 {
 }
 
@@ -131,10 +131,11 @@ void FGTileMgr::sched_tile( const SGBucket& b ) {
 
     if ( t == NULL ) {
         // make space in the cache
-        while ( tile_cache.get_size() > max_cache_size ) {
+        while ( (int)tile_cache.get_size() > max_cache_size ) {
             long index = tile_cache.get_oldest_tile();
             if ( index >= 0 ) {
                 FGTileEntry *old = tile_cache.get_tile( index );
+                old->disconnect_ssg_nodes();
                 delete_queue.push( old );
                 tile_cache.clear_entry( index );
             } else {
@@ -271,6 +272,7 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
                        globals->get_scenery()->get_center() );
 }
 
+
 int FGTileMgr::update( double lon, double lat, double visibility_meters,
                        sgdVec3 abs_pos_vector, SGBucket p_current,
                        SGBucket p_previous, Point3D center ) {
@@ -360,12 +362,13 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters,
 	// cout << "Adding ssg nodes for "
     }
 
+    // cout << "delete queue = " << delete_queue.size() << endl;
     if ( !delete_queue.empty() ) {
 	FGTileEntry* e = delete_queue.front();
-	delete_queue.pop();
-        e->disconnect_ssg_nodes();
-        e->free_tile();
-        delete e;
+        if ( e->free_tile() ) {
+            delete_queue.pop();
+            delete e;
+        }
     }
 
     // no reason to update this if we haven't moved...
@@ -392,6 +395,7 @@ void FGTileMgr::refresh_view_timestamps() {
     schedule_needed(fgGetDouble("/environment/visibility-m"), current_bucket);
 }
 
+
 // check and set current tile and scenery center...
 void FGTileMgr::setCurrentTile(double longitude, double latitude) {
 
@@ -405,6 +409,7 @@ void FGTileMgr::setCurrentTile(double longitude, double latitude) {
         globals->get_scenery()->set_next_center( Point3D(0.0) );
     }
 }
+
 
 int FGTileMgr::updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center) {
 
@@ -446,6 +451,7 @@ int FGTileMgr::updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center) {
     return hit;
 }
 
+
 void FGTileMgr::prep_ssg_nodes(float vis) {
 
     // traverse the potentially viewable tile list and update range
@@ -461,6 +467,7 @@ void FGTileMgr::prep_ssg_nodes(float vis) {
     prep_ssg_nodes( vis, up, center );
 
 }
+
 
 void FGTileMgr::prep_ssg_nodes(float vis, sgVec3 up, Point3D center) {
 
