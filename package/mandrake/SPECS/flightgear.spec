@@ -17,7 +17,7 @@ Source11: %{name}.32.xpm.bz2
 Source12: %{name}.48.xpm.bz2
 Patch1: FlightGear-0.7.8-fix-sound.patch.bz2
 Packager: Guillaume Cottenceau <gc@mandrakesoft.com>
-BuildRequires: plib >= 1.4.0 SimGear SimGear-devel >= 0.0.16
+BuildRequires: plib >= 1.4.2 SimGear SimGear-devel >= 0.0.16
 Requires: SimGear >= 0.0.16
 URL: http://www.flightgear.org
 
