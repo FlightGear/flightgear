@@ -49,26 +49,30 @@ AttitudeIndicator::update (double dt)
                                 // First, calculate the bogo-spin from 0 to 1.
                                 // All numbers are made up.
 
-    _spin -= 0.01 * dt;         // spin decays every 1% every second.
+    _spin -= 0.005 * dt;         // spin decays every 0.5% every second.
 
-                                // spin increases up to 10% every second
+                                // spin increases up to 25% every second
                                 // if suction is available and the gauge
                                 // is serviceable.
     if (_serviceable_node->getBoolValue()) {
         double suction = _suction_node->getDoubleValue();
-        double step = 0.10 * (suction / 5.0) * dt;
+        double step = 0.25 * (suction / 5.0) * dt;
         if ((_spin + step) <= (suction / 5.0))
             _spin += step;
     }
+    if (_spin > 1.0)
+        _spin = 1.0;
+    else if (_spin < 0.0)
+        _spin = 0.0;
 
                                 // Next, calculate the indicated roll
-                                // and pitch, introducing errors if
-                                // the spin is less than 0.8 (80%).
+                                // and pitch, introducing errors.
+    double factor = 1.0 - ((1.0 - _spin) * (1.0 - _spin));
     double roll = _roll_in_node->getDoubleValue();
     double pitch = _pitch_in_node->getDoubleValue();
-    if (_spin < 0.8) {
-        // TODO
-    }
+    roll = 35 + (factor * (roll - 35));
+    pitch = 15 + (factor * (pitch - 15));
+
     _roll_out_node->setDoubleValue(roll);
     _pitch_out_node->setDoubleValue(pitch);
 }
