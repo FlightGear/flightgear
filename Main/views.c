@@ -63,12 +63,14 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
     v->cur_zero_elev.z -= scenery.center.z;
 
     /* calculate view position in current FG view coordinate system */
-    v->view_pos = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
+    v->abs_view_pos = fgPolarToCart(FG_Longitude, FG_Lat_geocentric, 
 			     FG_Radius_to_vehicle * FEET_TO_METER + 1.0);
-    v->view_pos.x -= scenery.center.x;
-    v->view_pos.y -= scenery.center.y;
-    v->view_pos.z -= scenery.center.z;
+    v->view_pos.x = v->abs_view_pos.x - scenery.center.x;
+    v->view_pos.y = v->abs_view_pos.y - scenery.center.y;
+    v->view_pos.z = v->abs_view_pos.z - scenery.center.z;
 
+    printf( "View pos = %.4f, %.4f, %.4f\n", 
+	   v->abs_view_pos.x, v->abs_view_pos.y, v->abs_view_pos.z);
     fgPrintf( FG_VIEW, FG_DEBUG, "View pos = %.4f, %.4f, %.4f\n", 
 	   v->view_pos.x, v->view_pos.y, v->view_pos.z);
 
@@ -182,10 +184,13 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l) {
 
 
 /* $Log$
-/* Revision 1.11  1998/01/27 00:47:58  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.12  1998/01/29 00:50:28  curt
+/* Added a view record field for absolute x, y, z position.
 /*
+ * Revision 1.11  1998/01/27 00:47:58  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.10  1998/01/19 19:27:09  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

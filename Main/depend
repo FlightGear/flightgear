@@ -1,5 +1,7 @@
 GLUTkey.o: GLUTkey.c
 GLUTmain.o: GLUTmain.c
+fg_configvars.o: fg_configvars.c
+fg_debug.o: fg_debug.c
 fg_init.o: fg_init.c
 probdemo.o: probdemo.c
 views.o: views.c

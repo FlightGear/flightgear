@@ -36,6 +36,9 @@
 
 /* Define a structure containing view information */
 struct fgVIEW {
+    /* absolute view position */
+    struct fgCartesianPoint abs_view_pos;
+
     /* view position translated to scenery.center */
     struct fgCartesianPoint view_pos;
 
@@ -89,10 +92,13 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v, struct fgLIGHT *l);
 
 
 /* $Log$
-/* Revision 1.8  1998/01/27 00:47:58  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.9  1998/01/29 00:50:29  curt
+/* Added a view record field for absolute x, y, z position.
 /*
+ * Revision 1.8  1998/01/27 00:47:58  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.7  1998/01/22 02:59:38  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *
