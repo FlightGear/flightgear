@@ -35,13 +35,15 @@ private:
     void hashset(naRef hash, const char* key, naRef val);
     void logError();
     naRef parse(const char* filename, const char* buf, int len);
-    void handleTimer(NasalTimer* t);
 
     naContext _context;
     naRef _globals;
     naRef _timerHash;
 
     int _nextTimerHashKey;
+
+public:
+         void handleTimer(NasalTimer* t);
 };
 
 #endif // __NASALSYS_HXX
