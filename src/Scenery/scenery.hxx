@@ -47,6 +47,10 @@ struct fgSCENERY {
     // elevation of terrain at our current lat/lon (based on the
     // actual drawn polygons)
     double cur_elev;
+
+    // the distance (radius) from the center of the earth to the
+    // current scenery elevation point
+    double cur_radius;
 };
 
 extern struct fgSCENERY scenery;

@@ -696,7 +696,7 @@ void FGTileMgr::my_ssg_los( string s, ssgBranch *branch, sgdMat4 m,
 // explicitely.  lat & lon are in radians.  view_pos in current world
 // coordinate translated near (0,0,0) (in meters.)  Returns result in
 // meters.
-double
+bool
 FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos, 
 			     const Point3D& view_pos )
 {
@@ -716,32 +716,40 @@ FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos,
 	    << view_pos[0] << " " << view_pos[1] << " " << view_pos[2] );
     my_ssg_los( "", scene, m, sgvp, sgavp );
     
+    Point3D rel_cart;
+    Point3D abs_cart;
+    Point3D geoc;
+    double lat_geod, alt, sea_level_r;
     double result = -9999;
 
     for ( int i = 0; i < hitcount; ++i ) {
-	Point3D rel_cart( hit_pts[i][0], hit_pts[i][1], hit_pts[i][2] );
-	Point3D abs_cart = rel_cart + scenery.center;
-	Point3D pp = fgCartToPolar3d( abs_cart );
-	FG_LOG( FG_TERRAIN, FG_DEBUG, "  polar form = " << pp );
+	rel_cart = Point3D( hit_pts[i][0], hit_pts[i][1], hit_pts[i][2] );
+	abs_cart = rel_cart + scenery.center;
+	geoc = fgCartToPolar3d( abs_cart );
+	// FG_LOG( FG_TERRAIN, FG_DEBUG, "  polar form = " << geoc );
 	// convert to geodetic coordinates
-	double lat_geod, alt, sea_level_r;
-	fgGeocToGeod(pp.lat(), pp.radius(), &lat_geod, 
+	fgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod, 
 		     &alt, &sea_level_r);
-	FG_LOG( FG_TERRAIN, FG_DEBUG, "  alt (meters) = " << alt );
+	// FG_LOG( FG_TERRAIN, FG_DEBUG, "  alt (meters) = " << alt );
+	// FG_LOG( FG_TERRAIN, FG_DEBUG, "  geoc alt (meters) = " << geoc.radius() );
+	// FG_LOG( FG_TERRAIN, FG_DEBUG, "  sea_level_r + alt = " << sea_level_r + alt );
 
 	// printf("alt = %.2f\n", alt);
 	// exit since we found an intersection
 	if ( alt > result && alt < 10000 ) {
-	    // printf("returning alt\n");
+	    // printf("    returning alt = %.2f\n", alt);
 	    result = alt;
 	}
     }
 
     if ( result > -9000 ) {
-	return result;
+	scenery.cur_elev = result;
+	scenery.cur_radius = geoc.radius();
+	return true;
     } else {
 	FG_LOG( FG_TERRAIN, FG_INFO, "no terrain intersection" );
-	return 0.0;
+	scenery.cur_elev = 0.0;
+	return false;
     }
 }
 
@@ -951,15 +959,16 @@ int FGTileMgr::update( void ) {
     }
 
     // find our current elevation (feed in the current bucket to save work)
-    Point3D geod_pos = Point3D( f->get_Longitude(), f->get_Latitude(), 0.0);
+    // Point3D geod_pos = Point3D( f->get_Longitude(), f->get_Latitude(), 0.0);
     // Point3D tmp_abs_view_pos = fgGeodToCart(geod_pos);
 
     // cout << "current elevation (old) == " 
     //      << current_elev( f->get_Longitude(), f->get_Latitude(), 
     //                       tmp_abs_view_pos ) 
     //      << endl;
-    scenery.cur_elev = current_elev_ssg( current_view.abs_view_pos,
-					 current_view.view_pos );
+
+    // set scenery.cur_elev and scenery.cur_radius
+    current_elev_ssg( current_view.abs_view_pos, current_view.view_pos );
     // cout << "current elevation (ssg) == " << scenery.cur_elev << endl;
 	
     p_last = p1;

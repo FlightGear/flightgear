@@ -112,7 +112,7 @@ public:
     double current_elev( double lon, double lat, const Point3D& abs_view_pos );
     void my_ssg_los( string s, ssgBranch *branch, sgdMat4 m, 
 		     const sgdVec3 p, const sgdVec3 dir );
-    double current_elev_ssg( const Point3D& abs_view_pos, 
+    bool current_elev_ssg( const Point3D& abs_view_pos, 
 			     const Point3D& view_pos );
     double current_elev_new( const FGBucket& p );
 
