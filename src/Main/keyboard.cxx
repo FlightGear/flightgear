@@ -413,9 +413,12 @@ void GLUTspecialkey(int k, int x, int y) {
 		    t->togglePauseMode();
 		return;
 	    }
+	case GLUT_KEY_F3: // F2 Take a screen shot
+	    fgDumpSnapShot();
+	    return;
         case GLUT_KEY_F6: // F6 toggles Autopilot target location
-                fgAPToggleWayPoint();
-                return;
+	    fgAPToggleWayPoint();
+	    return;
 	case GLUT_KEY_F8: // F8 toggles fog ... off fastest nicest...
 	    current_options.cycle_fog();
 	

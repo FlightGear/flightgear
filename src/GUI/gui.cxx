@@ -880,8 +880,13 @@ void printScreen ( puObject *obj ) {
 #endif // #ifdef WIN32
 
 
-// do a screen snap shot
 void dumpSnapShot ( puObject *obj ) {
+    fgDumpSnapShot();
+}
+
+
+// do a screen snap shot
+void fgDumpSnapShot () {
     bool show_pu_cursor = false;
 
     mainMenuBar->hide();

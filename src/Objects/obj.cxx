@@ -234,7 +234,9 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     }
     
     unsigned short *vindex = new unsigned short [ 4 ];
+    t->free_ptrs.push_back( vindex );
     unsigned short *tindex = new unsigned short [ 4 ];
+    t->free_ptrs.push_back( tindex );
     for ( i = 0; i < 4; ++i ) {
 	vindex[i] = i;
 	tindex[i] = i;
@@ -284,6 +286,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     ssgSimpleState *state = NULL;
 
     ssgBranch *tile = new ssgBranch () ;
+
     tile -> setName ( (char *)path.c_str() ) ;
 
     // Attempt to open "path.gz" or "path"
@@ -726,8 +729,12 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		// build the ssg entity
 		unsigned short *vindex = 
 		    new unsigned short [ fan_vertices.size() ];
+		t->free_ptrs.push_back( vindex );
+
 		unsigned short *tindex = 
 		    new unsigned short [ fan_tex_coords.size() ];
+		t->free_ptrs.push_back( tindex );
+
 		for ( i = 0; i < (int)fan_vertices.size(); ++i ) {
 		    vindex[i] = fan_vertices[i];
 		}

@@ -81,11 +81,15 @@ FGTileCache::init( void )
     FG_LOG( FG_TERRAIN, FG_DEBUG, "  current cache size = " 
 	    << tile_cache.size() );
     FGTileEntry e;
+    e.mark_unused();
+    e.vtlist = NULL;
+    e.vnlist = NULL;
+    e.tclist = NULL;
+    
     FG_LOG( FG_TERRAIN, FG_DEBUG, "  size of tile = " 
 	    << sizeof( e ) );
     if ( target_cache_size > (int)tile_cache.size() ) {
 	// FGTileEntry e;
-	e.mark_unused();
 	int expansion_amt = target_cache_size - (int)tile_cache.size();
 	for ( i = 0; i < expansion_amt; ++i ) {
 	    tile_cache.push_back( e );
@@ -129,18 +133,38 @@ FGTileCache::exists( const FGBucket& p )
 }
 
 
+#if 0
+static void print_refs( ssgSelector *sel, ssgTransform *trans, 
+		 ssgRangeSelector *range) 
+{
+    cout << "selector -> " << sel->getRef()
+	 << "  transform -> " << trans->getRef()
+	 << "  range -> " << range->getRef() << endl;
+}
+#endif
+
+
 // Fill in a tile cache entry with real data for the specified bucket
 void
 FGTileCache::fill_in( int index, const FGBucket& p )
 {
     // cout << "FILL IN CACHE ENTRY = " << index << endl;
 
+    tile_cache[index].center = Point3D( 0.0 );
+    if ( (tile_cache[index].vtlist != NULL) || 
+	 (tile_cache[index].vnlist != NULL) || 
+	 (tile_cache[index].tclist != NULL) )
+    {
+	FG_LOG( FG_TERRAIN, FG_ALERT, 
+		"Attempting to overwrite existing or"
+		<< " not properly freed leaf data." );
+	exit(-1);
+    }
     // Force some values in case the tile fails to load (i.e. fill
     // doesn't exist)
-    tile_cache[index].center = Point3D( 0.0 );
-    tile_cache[index].vtlist = NULL;
-    tile_cache[index].vnlist = NULL;
-    tile_cache[index].tclist = NULL;
+    // tile_cache[index].vtlist = NULL;
+    // tile_cache[index].vnlist = NULL;
+    // tile_cache[index].tclist = NULL;
 
     // Load the appropriate data file and build tile fragment list
     FGPath tile_path( current_options.get_fg_root() );

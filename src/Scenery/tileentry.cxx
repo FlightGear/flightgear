@@ -58,6 +58,24 @@ FGTileEntry::~FGTileEntry ( void ) {
 }
 
 
+// recurse an ssg tree and call removeKid() on every node from the
+// bottom up.  Leaves the original branch in existance, but empty so
+// it can be removed by the calling routine.
+static void my_remove_branch( ssgBranch * branch ) {
+    for ( ssgEntity *k = branch->getKid( 0 );
+	  k != NULL; 
+	  k = branch->getNextKid() )
+    {
+	if ( k -> isAKindOf ( ssgTypeBranch() ) ) {
+	    my_remove_branch( (ssgBranch *)k );
+	    branch -> removeKid ( k );
+	} else if ( k -> isAKindOf ( ssgTypeLeaf() ) ) {
+	    branch -> removeKid ( k ) ;
+	}
+    }
+}
+
+
 // Step through the fragment list, deleting the display list, then the
 // fragment, until the list is empty.  Also delete the arrays used by
 // ssg as well as the whole ssg branch
@@ -85,17 +103,24 @@ FGTileEntry::free_tile()
 	    "    deleting vertex array" );
     if ( vtlist != NULL ) {
 	delete vtlist;
+	vtlist = NULL;
     }
     FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "    deleting normal array" );
     if ( vnlist != NULL ) {
 	delete vnlist;
+	vnlist = NULL;
     }
     FG_LOG( FG_TERRAIN, FG_DEBUG,
 	    "    deleting texture coordinate array" );
     if ( tclist != NULL ) {
 	delete tclist;
+	tclist = NULL;
     }
+    for ( int i = 0; i < (int)free_ptrs.size(); ++i ) {
+	delete free_ptrs[i];
+    }
+    free_ptrs.clear();
 
     // delete the ssg branch
 
@@ -104,34 +129,13 @@ FGTileEntry::free_tile()
 	// find the first parent (should only be one)
 	ssgBranch *parent = select_ptr->getParent( 0 ) ;
 	if( parent ) {
-	    parent->removeKid(select_ptr);
+	    my_remove_branch( select_ptr );
+	    parent->removeKid( select_ptr );
 	} else {
 	    FG_LOG( FG_TERRAIN, FG_ALERT,
 		    "parent pointer is NULL!  Dying" );
 	    exit(-1);
 	}
-
-#if 0
-	// find the number of kids this parent has
-	int kcount = parent->getNumKids();
-	// find the kid that matches our original select_ptr
-	bool found_kid = false;
-	for ( int i = 0; i < kcount; ++i ) {
-	    ssgEntity *kid = parent->getKid( i );
-	    if ( kid == select_ptr ) {
-		FG_LOG( FG_TERRAIN, FG_DEBUG,
-			"Found a kid to delete " << kid);
-		found_kid = true;
-		parent->removeKid( i );
-	    }
-	}
-	if ( ! found_kid ) {
-	    FG_LOG( FG_TERRAIN, FG_ALERT,
-		    "Couldn't find the kid to delete!  Dying" );
-	    exit(-1);
-	}
-#endif
-
     } else {
 	FG_LOG( FG_TERRAIN, FG_ALERT,
 		"Parent count is zero for an ssg tile!  Dying" );

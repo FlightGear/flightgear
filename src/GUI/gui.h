@@ -38,6 +38,8 @@ extern void mkDialog(const char *txt);
 extern void ConfirmExitDialog(void);
 extern void guiFixPanel( void );
 
+extern void fgDumpSnapShot();
+
 extern puFont guiFnt;
 extern fntTexFont *guiFntHandle;
 

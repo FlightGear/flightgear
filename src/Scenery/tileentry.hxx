@@ -84,6 +84,8 @@ public:
     typedef container::iterator FragmentIterator;
     typedef container::const_iterator FragmentConstIterator;
 
+    typedef vector < unsigned short * > free_list;
+
 public:
     // node list (the per fragment face lists reference this node list)
     point_list nodes;
@@ -109,6 +111,8 @@ public:
     sgVec3 *vtlist;
     sgVec3 *vnlist;
     sgVec2 *tclist;
+    free_list free_ptrs; // list of pointers to free when tile
+                                 // entry goes away
 
     // ssg tree structure for this tile is as follows:
     // ssgRoot(scene)
@@ -160,9 +164,9 @@ public:
     void free_tile();
 
     // Calculate this tile's offset
-    void SetOffset( const Point3D& off)
+    void SetOffset( const Point3D& p)
     {
-	offset = center - off;
+	offset = center - p;
     }
 
     // Return this tile's offset

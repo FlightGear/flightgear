@@ -110,10 +110,3 @@ typedef vector<FGVoronoiOutput> FGVoronoiOutputList;
 FGVoronoiOutputList Voronoiate(const FGVoronoiInputList& input);
 
 #endif /*FGVoronoi_H*/
-
-
-
-
-
-
-
