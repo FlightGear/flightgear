@@ -1,0 +1,45 @@
+fgjs -- a small program for creating a basic FlightGear joystick 
+        configuration
+        
+fgjs requires plib to be installed on your system.  If you've 
+successfully installed and built FlightGear then you should be
+all set
+
+Build instructions
+At this point, fgjs has only been built and tested under Linux, 
+so the makefile is a simple one. cd into the directory in which
+the fgjs source resides and type 'make' and, if you are lucky,
+all will go well.  You can e-mail me (apeden@earthlink.net) any
+changes needed to make it work on other systems.  It's quite 
+possible that this program will become part of the regular 
+FlightGear package so 
+
+Running
+Set up your joystick and make sure it works with js_demo from the 
+FlightGear distribution.  Upon executing fgjs, it will prompt you
+to move the control you wish to use for elevator, ailerons, etc.
+Note that when being prompted for an analog control, you can skip
+the current one by pressing any button and vice-versa when being
+prompted for a button.  You may want to do this if for, as an
+example, rudder if you have only one joystick or your joystick
+doesn't have as many analog axes as FlightGear supports.
+
+Once you've run with this configuration, you may wish to tune
+the dead-band a bit (see fgfsrc.js) as the default, 0.02, may 
+be too narrow for your particular hardware/taste.
+
+
+And last, but not least, this thing needs a GUI!!!!  Hopefully,
+the joystick handling code and interface code are separate 
+enough that using that a GUI version could be built using this
+source as a starting point.
+
+
+
+ 
+
+
+
+
+   
+        
