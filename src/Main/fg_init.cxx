@@ -1052,6 +1052,37 @@ static bool fgSetPosFromFix( const string& id ) {
 }
 
 
+/**
+ * Initialize vor/ndb/ils/fix list management and query systems
+ */
+bool
+fgInitNav ()
+{
+
+    SG_LOG(SG_GENERAL, SG_INFO, "Loading Navaids");
+
+    SG_LOG(SG_GENERAL, SG_INFO, "  VOR/NDB");
+    current_navlist = new FGNavList;
+    SGPath p_nav( globals->get_fg_root() );
+    p_nav.append( "Navaids/default.nav" );
+    current_navlist->init( p_nav );
+
+    SG_LOG(SG_GENERAL, SG_INFO, "  ILS and Marker Beacons");
+    current_beacons = new FGMarkerBeacons;
+    current_beacons->init();
+    current_ilslist = new FGILSList;
+    SGPath p_ils( globals->get_fg_root() );
+    p_ils.append( "Navaids/default.ils" );
+    current_ilslist->init( p_ils );
+
+    SG_LOG(SG_GENERAL, SG_INFO, "  Fixes");
+    current_fixlist = new FGFixList;
+    SGPath p_fix( globals->get_fg_root() );
+    p_fix.append( "Navaids/default.fix" );
+    current_fixlist->init( p_fix );
+}
+
+
 // Set the initial position based on presets (or defaults)
 bool fgInitPosition() {
     bool set_pos = false;
@@ -1095,10 +1126,17 @@ bool fgInitPosition() {
     }
     if ( !set_pos && !apt.empty() ) {
         // An airport is requested (find runway closest to hdg)
-        if ( fgSetPosFromAirportIDandHdg( apt, hdg ) ) {
-            // set position (a little off the heading for single
-            // runway airports)
-            fgSetTowerPosFromAirportID( apt, hdg );
+        bool ok = false;
+        if (fgGetDouble("/sim/presets/altitude-ft") <= 0 &&
+            fgGetDouble("/sim/presets/offset-distance") == 0)
+            ok = fgSetPosFromAirportIDandHdg( apt, hdg );
+        else
+            ok = fgSetPosFromAirportID( apt );
+            
+        if (ok) {
+                // set position (a little off the heading for single
+                // runway airports)
+                fgSetTowerPosFromAirportID( apt, hdg );
 
             set_pos = true;
         }
@@ -1569,32 +1607,6 @@ bool fgInitSubsystems() {
         SG_LOG(SG_GENERAL, SG_INFO, "CLOUDS3d Loaded: ");
     }
 #endif
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize vor/ndb/ils/fix list management and query systems
-    ////////////////////////////////////////////////////////////////////
-
-    SG_LOG(SG_GENERAL, SG_INFO, "Loading Navaids");
-
-    SG_LOG(SG_GENERAL, SG_INFO, "  VOR/NDB");
-    current_navlist = new FGNavList;
-    SGPath p_nav( globals->get_fg_root() );
-    p_nav.append( "Navaids/default.nav" );
-    current_navlist->init( p_nav );
-
-    SG_LOG(SG_GENERAL, SG_INFO, "  ILS and Marker Beacons");
-    current_beacons = new FGMarkerBeacons;
-    current_beacons->init();
-    current_ilslist = new FGILSList;
-    SGPath p_ils( globals->get_fg_root() );
-    p_ils.append( "Navaids/default.ils" );
-    current_ilslist->init( p_ils );
-
-    SG_LOG(SG_GENERAL, SG_INFO, "  Fixes");
-    current_fixlist = new FGFixList;
-    SGPath p_fix( globals->get_fg_root() );
-    p_fix.append( "Navaids/default.fix" );
-    current_fixlist->init( p_fix );
 
     ////////////////////////////////////////////////////////////////////
     // Initialise ATC display system
