@@ -28,6 +28,11 @@
 #define _DEM_H
 
 
+#ifndef __cplusplus                                                          
+# error This library requires C++
+#endif                                   
+
+
 #include <stdio.h>
 
 #include <Bucket/bucketutils.h>
@@ -125,6 +130,9 @@ public:
 
 
 // $Log$
+// Revision 1.4  1998/04/21 17:03:41  curt
+// Prepairing for C++ integration.
+//
 // Revision 1.3  1998/04/18 03:53:06  curt
 // Added zlib support.
 //
