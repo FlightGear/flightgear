@@ -59,8 +59,6 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Time/light.hxx>
-
 
 #include "obj.hxx"
 
@@ -71,17 +69,6 @@ SG_USING_STD(vector);
 typedef vector < int > int_list;
 typedef int_list::iterator int_list_iterator;
 typedef int_list::const_iterator int_point_list_iterator;
-
-
-// not used because plib branches don't honor call backs.
-static int
-runway_lights_pretrav (ssgEntity * e, int mask)
-{
-                                // Turn on lights only at night
-    float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
-    return int((sun_angle > 85.0) ||
-               (fgGetDouble("/environment/visibility-m") < 5000.0));
-}
 
 
 // Generate an ocean tile
@@ -684,14 +671,13 @@ bool fgBinObjLoad( const string& path, const bool is_base,
                    Point3D *center,
                    double *bounding_radius,
                    SGMaterialLib *matlib,
+                   bool use_random_objects,
                    ssgBranch* geometry,
                    ssgBranch* rwy_lights,
                    ssgBranch* taxi_lights,
                    ssgVertexArray *ground_lights )
 {
     SGBinObject obj;
-    bool use_random_objects =
-      fgGetBool("/sim/rendering/random-objects", true);
 
     if ( ! obj.read_bin( path ) ) {
         return false;
@@ -727,10 +713,6 @@ bool fgBinObjLoad( const string& path, const bool is_base,
                                                          pts_v[i], pts_n[i],
                                                          matlib,
                                                          pt_materials[i], up );
-            // branches don't honor callbacks as far as I know so I'm
-            // commenting this out to avoid a plib runtime warning.
-            branch->setTravCallback( SSG_CALLBACK_PRETRAV,
-                                     runway_lights_pretrav );
             if ( pt_materials[i].substr(0, 16) == "RWY_BLUE_TAXIWAY" ) {
                 taxi_lights->addKid( branch );
             } else {

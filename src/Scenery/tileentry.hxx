@@ -132,6 +132,13 @@ private:
     // want based on lighting conditions.
     ssgSelector *gnd_lights_brightness;
 
+    // we need to be able to turn runway lights on or off (doing this
+    // via a call back would be nifty, but then the call back needs to
+    // know about the higher level application's global state which is
+    // a problem if we move the code into simgear.)
+    ssgSelector *rwy_lights_selector;
+    ssgSelector *taxi_lights_selector;
+
     /**
      * Indicates this tile has been loaded from a file and connected
      * into the scene graph.  Note that this may be set asynchronously

@@ -40,6 +40,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/viewer.hxx>
 #include <Scenery/scenery.hxx>
@@ -54,13 +55,14 @@ SG_USING_STD(string);
 
 // Constructor
 FGTileEntry::FGTileEntry ( const SGBucket& b )
-    : /* ncount( 0 ), */
-      center( Point3D( 0.0 ) ),
+    : center( Point3D( 0.0 ) ),
       tile_bucket( b ),
       terra_transform( new ssgTransform ),
       rwy_lights_transform( new ssgTransform ),
       taxi_lights_transform( new ssgTransform ),
       terra_range( new ssgRangeSelector ),
+      rwy_lights_selector( new ssgSelector ),
+      taxi_lights_selector( new ssgSelector ),
       loaded(false),
       pending_models(0),
       free_tracker(0)
@@ -264,20 +266,20 @@ bool FGTileEntry::free_tile() {
             ssgDeRefDelete( gnd_lights_transform );
             free_tracker |= GROUND_LIGHTS;
         }
-    } else if ( !(free_tracker & RWY_LIGHTS) && rwy_lights_transform ) {
+    } else if ( !(free_tracker & RWY_LIGHTS) && rwy_lights_selector ) {
         // delete the runway lighting branch (this should already have
         // been disconnected from the scene graph)
-        SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING rwy_lights_transform" );
-        if ( fgPartialFreeSSGtree( rwy_lights_transform, delete_size ) == 0 ) {
-            ssgDeRefDelete( rwy_lights_transform );
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING rwy_lights_selector" );
+        if ( fgPartialFreeSSGtree( rwy_lights_selector, delete_size ) == 0 ) {
+            ssgDeRefDelete( rwy_lights_selector );
             free_tracker |= RWY_LIGHTS;
         }
-    } else if ( !(free_tracker & TAXI_LIGHTS) && taxi_lights_transform ) {
+    } else if ( !(free_tracker & TAXI_LIGHTS) && taxi_lights_selector ) {
         // delete the taxi lighting branch (this should already have been
         // disconnected from the scene graph)
-        SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING taxi_lights_transform" );
-        if ( fgPartialFreeSSGtree( taxi_lights_transform, delete_size ) == 0 ) {
-            ssgDeRefDelete( taxi_lights_transform );
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING taxi_lights_selector" );
+        if ( fgPartialFreeSSGtree( taxi_lights_selector, delete_size ) == 0 ) {
+            ssgDeRefDelete( taxi_lights_selector );
             free_tracker |= TAXI_LIGHTS;
         }
     } else if ( !(free_tracker & LIGHTMAPS) ) {
@@ -391,17 +393,14 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         sgAddVec3( lt_trans, lift_vec );
         rwy_lights_transform->setTransform( lt_trans );
 
-        // select which set of lights based on sun angle
-        // float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
-        // if ( sun_angle > 95 ) {
-        //     gnd_lights_brightness->select(0x04);
-        // } else if ( sun_angle > 92 ) {
-        //     gnd_lights_brightness->select(0x02);
-        // } else if ( sun_angle > 89 ) {
-        //     gnd_lights_brightness->select(0x01);
-        // } else {
-        //     gnd_lights_brightness->select(0x00);
-        // }
+        // turn runway lights on/off based on sun angle and visibility
+        float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
+        if ( sun_angle > 85 ||
+             (fgGetDouble("/environment/visibility-m") < 5000.0) ) {
+            rwy_lights_selector->select(0x01);
+        } else {
+            rwy_lights_selector->select(0x00);
+        }
     }
 
     if ( taxi_lights_transform ) {
@@ -434,17 +433,14 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         sgAddVec3( lt_trans, lift_vec );
         taxi_lights_transform->setTransform( lt_trans );
 
-        // select which set of lights based on sun angle
-        // float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
-        // if ( sun_angle > 95 ) {
-        //     gnd_lights_brightness->select(0x04);
-        // } else if ( sun_angle > 92 ) {
-        //     gnd_lights_brightness->select(0x02);
-        // } else if ( sun_angle > 89 ) {
-        //     gnd_lights_brightness->select(0x01);
-        // } else {
-        //     gnd_lights_brightness->select(0x00);
-        // }
+        // turn taxi lights on/off based on sun angle and visibility
+        float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
+        if ( sun_angle > 85 ||
+             (fgGetDouble("/environment/visibility-m") < 5000.0) ) {
+            taxi_lights_selector->select(0x01);
+        } else {
+            taxi_lights_selector->select(0x00);
+        }
     }
 }
 
@@ -549,10 +545,13 @@ bool FGTileEntry::obj_load( const string& path,
     Point3D c;                  // returned center point
     double br;                  // returned bounding radius
 
+    bool use_random_objects =
+        fgGetBool("/sim/rendering/random-objects", true);
+
     // try loading binary format
     if ( fgBinObjLoad( path, is_base,
-                       &c, &br, globals->get_matlib(), geometry,
-                       rwy_lights, taxi_lights, ground_lights ) )
+                       &c, &br, globals->get_matlib(), use_random_objects,
+                       geometry, rwy_lights, taxi_lights, ground_lights ) )
     {
         if ( is_base ) {
             center = c;
@@ -831,15 +830,13 @@ FGTileEntry::load( const SGPath& base, bool is_base )
         gnd_lights_transform->setTransform( &sgcoord );
     }
 
-    // Add runway lights to scene graph if any exist
+    // Update runway lights transform
     if ( rwy_lights_transform->getNumKids() > 0 ) {
-        SG_LOG( SG_TERRAIN, SG_DEBUG, "adding runway lights" );
         rwy_lights_transform->setTransform( &sgcoord );
     }
 
-     // Add taxi lights to scene graph if any exist
+     // Update taxi lights transform
     if ( taxi_lights_transform->getNumKids() > 0 ) {
-        SG_LOG( SG_TERRAIN, SG_DEBUG, "adding taxi lights" );
         taxi_lights_transform->setTransform( &sgcoord );
     }
 }
@@ -872,15 +869,17 @@ FGTileEntry::add_ssg_nodes( ssgBranch* terrain_branch,
     if ( rwy_lights_transform != NULL ) {
         // bump up the ref count so we can remove this later without
         // having ssg try to free the memory.
-        rwy_lights_transform->ref();
-        rwy_lights_branch->addKid( rwy_lights_transform );
+        rwy_lights_selector->ref();
+        rwy_lights_selector->addKid( rwy_lights_transform );
+        rwy_lights_branch->addKid( rwy_lights_selector );
     }
 
     if ( taxi_lights_transform != NULL ) {
         // bump up the ref count so we can remove this later without
         // having ssg try to free the memory.
-        taxi_lights_transform->ref();
-        taxi_lights_branch->addKid( taxi_lights_transform );
+        taxi_lights_selector->ref();
+        taxi_lights_selector->addKid( taxi_lights_transform );
+        taxi_lights_branch->addKid( taxi_lights_selector );
     }
 
     loaded = true;
