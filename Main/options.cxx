@@ -36,9 +36,12 @@
 #include <Debug/fg_debug.h>
 #include <Flight/flight.h>
 #include <Include/fg_constants.h>
-#include <Include/fg_zlib.h>
+#include <Misc/fgstream.hxx>
 
 #include "options.hxx"
+
+const int fgOPTIONS::FG_RADIUS_MIN;
+const int fgOPTIONS::FG_RADIUS_MAX;
 
 inline double
 atof( const string& str )
@@ -462,43 +465,27 @@ int fgOPTIONS::parse_command_line( int argc, char **argv ) {
 
 // Parse config file options
 int fgOPTIONS::parse_config_file( const string& path ) {
-    char line[256];
-    fgFile f;
-    int len;
-    string fgpath = path + ".gz";
-
-    // first try "path.gz"
-    if ( (f = fgopen(fgpath.c_str(), "rb")) == NULL ) {
-	// next try "path"
-        if ( (f = fgopen(path.c_str(), "rb")) == NULL ) {
-	    return(FG_OPTIONS_ERROR);
-	}
-    }
+    fg_gzifstream in( path );
+    if ( !in )
+	return(FG_OPTIONS_ERROR);
 
     fgPrintf( FG_GENERAL, FG_INFO, "Processing config file: %s\n",
 	      path.c_str() );
 
-    while ( fggets(f, line, 250) != NULL ) {
-	// strip trailing newline if it exists
-	len = strlen(line);
-	if ( line[len-1] == '\n' ) {
-	    line[len-1] = '\0';
-	}
+    in.eat_comments();
+    while ( !in.eof() )
+    {
+	string line;
+	getline( in.stream(), line );
 
-        // strip dos ^M if it exists
-	len = strlen(line);
-	if ( line[len-1] == '\r' ) {
-	    line[len-1] = '\0';
-	}
-
-	if (  parse_option( line ) == FG_OPTIONS_ERROR ) {
+	if ( parse_option( line ) == FG_OPTIONS_ERROR ) {
 	    fgPrintf( FG_GENERAL, FG_EXIT, 
 		      "Config file parse error: %s '%s'\n",
-		      path.c_str(), line );
+		      path.c_str(), line.c_str() );
 	}
+	in.eat_comments();
     }
 
-    fgclose(f);
     return FG_OPTIONS_OK;
 }
 
@@ -579,6 +566,25 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.25  1998/09/15 02:09:27  curt
+// Include/fg_callback.hxx
+//   Moved code inline to stop g++ 2.7 from complaining.
+//
+// Simulator/Time/event.[ch]xx
+//   Changed return type of fgEVENT::printStat().  void caused g++ 2.7 to
+//   complain bitterly.
+//
+// Minor bugfix and changes.
+//
+// Simulator/Main/GLUTmain.cxx
+//   Added missing type to idle_state definition - eliminates a warning.
+//
+// Simulator/Main/fg_init.cxx
+//   Changes to airport lookup.
+//
+// Simulator/Main/options.cxx
+//   Uses fg_gzifstream when loading config file.
+//
 // Revision 1.24  1998/09/08 15:04:33  curt
 // Optimizations by Norman Vine.
 //

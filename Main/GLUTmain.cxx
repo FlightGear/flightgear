@@ -93,7 +93,7 @@ fgGENERAL general;
 // Specify our current idle function state.  This is used to run all
 // our initializations out of the glutIdleLoop() so that we can get a
 // splash screen up and running right away.
-static idle_state = 0;
+static int idle_state = 0;
 
 // Another hack
 int use_signals = 0;
@@ -609,7 +609,6 @@ static void fgMainLoop( void ) {
 
 static void fgIdleFunction ( void ) {
     fgGENERAL *g;
-
     g = &general;
 
     // printf("idle state == %d\n", idle_state);
@@ -889,6 +888,25 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.50  1998/09/15 02:09:24  curt
+// Include/fg_callback.hxx
+//   Moved code inline to stop g++ 2.7 from complaining.
+//
+// Simulator/Time/event.[ch]xx
+//   Changed return type of fgEVENT::printStat().  void caused g++ 2.7 to
+//   complain bitterly.
+//
+// Minor bugfix and changes.
+//
+// Simulator/Main/GLUTmain.cxx
+//   Added missing type to idle_state definition - eliminates a warning.
+//
+// Simulator/Main/fg_init.cxx
+//   Changes to airport lookup.
+//
+// Simulator/Main/options.cxx
+//   Uses fg_gzifstream when loading config file.
+//
 // Revision 1.49  1998/09/09 16:25:39  curt
 // Only use GLUT_STENCIL if the instument panel has been requested.
 //

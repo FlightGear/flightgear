@@ -68,7 +68,7 @@ public:
 	FG_EVENT_QUEUED = 2
     };
 
-    fgEVENT(); // Required by deque<>.
+    fgEVENT() {} // Required by deque<>.
 
     fgEVENT( const string& desc,
 	     const fgCallback& cb,
@@ -81,7 +81,8 @@ public:
 
     void run();
 
-    void PrintStats() const;
+//     void PrintStats() const;
+    int PrintStats() const;
 
 public:
 
@@ -168,6 +169,25 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.11  1998/09/15 02:09:30  curt
+// Include/fg_callback.hxx
+//   Moved code inline to stop g++ 2.7 from complaining.
+//
+// Simulator/Time/event.[ch]xx
+//   Changed return type of fgEVENT::printStat().  void caused g++ 2.7 to
+//   complain bitterly.
+//
+// Minor bugfix and changes.
+//
+// Simulator/Main/GLUTmain.cxx
+//   Added missing type to idle_state definition - eliminates a warning.
+//
+// Simulator/Main/fg_init.cxx
+//   Changes to airport lookup.
+//
+// Simulator/Main/options.cxx
+//   Uses fg_gzifstream when loading config file.
+//
 // Revision 1.10  1998/09/08 21:41:06  curt
 // Added constructor for fgEVENT.
 //

@@ -91,15 +91,12 @@ int fgInitPosition( void ) {
 		  id.c_str() );
 
 	airports.load("apt_simple");
-	a = airports.search( (char *)id.c_str() );
-	if ( (fabs(a.longitude) < FG_EPSILON) &&
-	     (fabs(a.latitude) < FG_EPSILON) &&
-	     (fabs(a.elevation) < FG_EPSILON) ) {
+	if ( ! airports.search( id, &a ) ) {
 	    fgPrintf( FG_GENERAL, FG_EXIT, 
 		      "Failed to find %s in database.\n", id.c_str() );
 	} else {
-	    FG_Longitude = ( a.longitude ) * DEG_TO_RAD;
-	    FG_Latitude  = ( a.latitude ) * DEG_TO_RAD;
+	    FG_Longitude = a.longitude * DEG_TO_RAD;
+	    FG_Latitude  = a.latitude * DEG_TO_RAD;
 	}
     } else {
 	// set initial position from default or command line coordinates
@@ -392,6 +389,25 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.37  1998/09/15 02:09:26  curt
+// Include/fg_callback.hxx
+//   Moved code inline to stop g++ 2.7 from complaining.
+//
+// Simulator/Time/event.[ch]xx
+//   Changed return type of fgEVENT::printStat().  void caused g++ 2.7 to
+//   complain bitterly.
+//
+// Minor bugfix and changes.
+//
+// Simulator/Main/GLUTmain.cxx
+//   Added missing type to idle_state definition - eliminates a warning.
+//
+// Simulator/Main/fg_init.cxx
+//   Changes to airport lookup.
+//
+// Simulator/Main/options.cxx
+//   Uses fg_gzifstream when loading config file.
+//
 // Revision 1.36  1998/09/08 21:40:08  curt
 // Fixes by Charlie Hotchkiss.
 //

@@ -128,7 +128,7 @@ fgEVENT::run()
 
 
 // Dump scheduling stats
-void
+int
 fgEVENT::PrintStats() const
 {
     printf("  %-30s int=%.2fs cum=%ld min=%ld max=%ld count=%ld ave=%.2f\n",
@@ -136,8 +136,8 @@ fgEVENT::PrintStats() const
 	   interval / 1000.0,
 	   cum_time, min_time, max_time, count, 
 	   cum_time / (double)count);
+    return 0;
 }
-
 
 // Constructor
 fgEVENT_MGR::fgEVENT_MGR( void ) {
@@ -190,7 +190,6 @@ void fgEVENT_MGR::Suspend( void ) {
 // Resume scheduling and event
 void fgEVENT_MGR::Resume( void ) {
 }
-
 
 // Dump scheduling stats
 void
@@ -259,6 +258,25 @@ fgEVENT_MGR::~fgEVENT_MGR( void ) {
 
 
 // $Log$
+// Revision 1.8  1998/09/15 02:09:29  curt
+// Include/fg_callback.hxx
+//   Moved code inline to stop g++ 2.7 from complaining.
+//
+// Simulator/Time/event.[ch]xx
+//   Changed return type of fgEVENT::printStat().  void caused g++ 2.7 to
+//   complain bitterly.
+//
+// Minor bugfix and changes.
+//
+// Simulator/Main/GLUTmain.cxx
+//   Added missing type to idle_state definition - eliminates a warning.
+//
+// Simulator/Main/fg_init.cxx
+//   Changes to airport lookup.
+//
+// Simulator/Main/options.cxx
+//   Uses fg_gzifstream when loading config file.
+//
 // Revision 1.7  1998/08/29 13:11:31  curt
 // Bernie Bright writes:
 //   I've created some new classes to enable pointers-to-functions and
