@@ -43,9 +43,9 @@ fgINTERPTABLE::fgINTERPTABLE( char *file ) {
     // First try "file.gz"
     strcpy(gzfile, file);
     strcat(gzfile, ".gz");
-    if ( (fd = gzopen(gzfile, "r")) == NULL ) {
+    if ( (fd = gzopen(gzfile, "rb")) == NULL ) {
         // Next try "path"
-        if ( (fd = gzopen(file, "r")) == NULL ) {
+        if ( (fd = gzopen(file, "rb")) == NULL ) {
             fgPrintf(FG_MATH, FG_EXIT, "Cannot open file: %s\n", file);
         }
     }
@@ -107,6 +107,9 @@ fgINTERPTABLE::~fgINTERPTABLE( void ) {
 
 
 // $Log$
+// Revision 1.3  1998/04/25 15:05:01  curt
+// Changed "r" to "rb" in gzopen() options.  This fixes bad behavior in win32.
+//
 // Revision 1.2  1998/04/22 13:18:10  curt
 // C++ - ified comments.  Make file open errors fatal.
 //
