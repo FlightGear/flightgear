@@ -12,3 +12,8 @@ model.cxx
 model.hxx
   This module defines the FG3DModel class, which represents any 3D
   model in the FlightGear world.
+
+modelmgr.cxx
+modelmgr.hxx
+  This module defines the FGModelMgr subsystem, which manages all 3D
+  models except for the aircraft.
