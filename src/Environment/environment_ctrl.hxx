@@ -27,6 +27,11 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/environment/metar.hxx>
 
+#ifdef ENABLE_THREADS
+# include <simgear/threads/SGThread.hxx>
+# include <simgear/threads/SGQueue.hxx>
+#endif
+
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>
 #else
@@ -159,6 +164,58 @@ private:
     float elapsed;
     bool fetch_data (const string &icao);
     void update_env_config();
+
+private:
+
+#ifdef ENABLE_THREADS
+    /**
+     * FIFO queue which holds a pointer to the fetched metar data.
+     */
+    SGBlockingQueue< SGMetar * > metar_queue;
+
+    /**
+     * This class represents the thread of execution responsible for
+     * fetching the metar data.
+     */
+    class MetarThread : public SGThread
+    {
+    public:
+        MetarThread( FGMetarEnvironmentCtrl* f ) : fetcher(f) {}
+        ~MetarThread() {}
+
+        /**
+         * Reads the tile from disk.
+         */
+        void run();
+
+    private:
+        FGMetarEnvironmentCtrl *fetcher;
+
+    private:
+        // not implemented.
+        MetarThread();
+        MetarThread( const MetarThread& );
+        MetarThread& operator=( const MetarThread& );
+    };
+
+    friend class MetarThread;
+
+    /**
+     * Metar data fetching thread.
+     */
+    MetarThread* thread;
+
+    /**
+     * Lock and synchronize access to metar queue.
+     */
+    SGMutex mutex;
+    SGPthreadCond metar_cond;
+
+    /**
+     * Thread cleanup handler.
+     */
+    friend void metar_cleanup_handler( void* );
+#endif // ENABLE_THREADS
 };
 
 #endif // _ENVIRONMENT_CTRL_HXX

@@ -320,10 +320,19 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
       update_interval_sec( 60.0 ),
       elapsed( 60.0 )
 {
+#ifdef ENABLE_THREADS
+    thread = new MetarThread(this);
+    thread->start();
+#endif // ENABLE_THREADS
 }
 
 FGMetarEnvironmentCtrl::~FGMetarEnvironmentCtrl ()
 {
+#ifdef ENABLE_THREADS
+   thread->cancel();
+   thread->join();
+#endif // ENABLE_THREADS
+
    delete env;
    env = NULL;
 }
@@ -411,9 +420,9 @@ FGMetarEnvironmentCtrl::reinit ()
 void
 FGMetarEnvironmentCtrl::update(double delta_time_sec)
 {
-    const SGPropertyNode *longitude
+    static const SGPropertyNode *longitude
         = fgGetNode( "/position/longitude-deg", true );
-    const SGPropertyNode *latitude
+    static const SGPropertyNode *latitude
         = fgGetNode( "/position/latitude-deg", true );
     elapsed += delta_time_sec;
     if ( elapsed > update_interval_sec ) {
@@ -434,6 +443,7 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
             globals->get_airports()->no_metar( a.id );
         }
     }
+
     env->update(delta_time_sec);
 }
 
@@ -462,7 +472,26 @@ FGMetarEnvironmentCtrl::fetch_data (const string &icao)
     station_elevation_ft = a.elevation;
 
     // fetch current metar data
-    SGMetar *m;
+    SGMetar *m = NULL;
+#ifdef ENABLE_THREADS
+
+    bool valid_data = false;
+    if (!metar_queue.empty())
+    {
+        m = metar_queue.pop();
+
+        if (m != NULL)
+            valid_data = true;
+    }
+
+    if ( valid_data == false ) {
+        mutex.lock();
+        metar_cond.signal();
+        mutex.unlock();
+
+        return false;
+    }
+#else
     try {
         m = new SGMetar( _icao.c_str() );
     } catch (const sg_io_exception& e) {
@@ -470,6 +499,7 @@ FGMetarEnvironmentCtrl::fetch_data (const string &icao)
                                       << e.getFormattedMessage().c_str() );
         return false;
     }
+#endif // ENABLE_THREADS
 
     d = m->getMinVisibility().getVisibility_m();
     d = (d != SGMetarNaN) ? d : 10000;
@@ -576,8 +606,61 @@ FGMetarEnvironmentCtrl::fetch_data (const string &icao)
 
     delete m;
 
+#ifdef ENABLE_THREADS
+    mutex.lock();
+    metar_cond.signal();
+    mutex.unlock();
+#endif // ENABLE_THREADS
+
     return true;
 }
+
+#ifdef ENABLE_THREADS
+/**
+ *
+ */
+void
+FGMetarEnvironmentCtrl::MetarThread::run()
+{
+    SGMetar *m = NULL;
+
+    // pthread_cleanup_push( metar_cleanup_handler, fetcher );
+    while ( true )
+    {
+        set_cancel( SGThread::CANCEL_DISABLE );
+        try
+        {
+            cout << "Fetching ..." << endl;
+            // if (m != NULL)  m = NULL;
+            m = new SGMetar( fetcher->_icao.c_str() );
+
+        } catch (const sg_io_exception& e) {
+            // SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: "
+            //                             << e.getFormattedMessage().c_str() );
+            m = NULL;
+        }
+        set_cancel( SGThread::CANCEL_DEFERRED );
+
+        fetcher->metar_queue.push( m );
+
+        // Wait for the next frame signal before we fetch the next metar data
+        fetcher->mutex.lock();
+        fetcher->metar_cond.wait( fetcher->mutex );
+        fetcher->mutex.unlock();
+    }
+    // pthread_cleanup_pop(1);
+}
+
+/**
+ * Ensure mutex is unlocked.
+ */
+void
+metar_cleanup_handler( void* arg )
+{
+    FGMetarEnvironmentCtrl* fetcher = (FGMetarEnvironmentCtrl*) arg;
+    fetcher->mutex.unlock();
+}
+#endif // ENABLE_THREADS
 
 
 // end of environment_ctrl.cxx
