@@ -28,4 +28,4 @@ testJSBsim_LDADD = libJSBsim.a
 
 INCLUDES += -I$(top_builddir)
 
-# DEFS += -DFGFS
+DEFS += -DFGFS
