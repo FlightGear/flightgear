@@ -2,14 +2,14 @@ New in 0.7.11pre1
 * August 31, 2002
 
 * The world is now populated with random ground objects with
-  apropriate type and density for the local ground cover type
+  appropriate type and density for the local ground cover type
   (buildings, water towers, farm houses, silos, cows, trees, etc.)
 * Many (most?) ground textures updated for a much nicer, more coherent,
   more realistic overall look and feel.
 * Added a java client library for FlightGear.
 * Added some external scripting examples (python.)
-* Implimented a Bendix/King KT 70 transponder.
-* Implimented a Bendix/King KR 87 adf.
+* Implemented a Bendix/King KT 70 transponder.
+* Implemented a Bendix/King KR 87 adf.
 * Added support for 3d instrument panels inside 3d cockpits.
 * Added support for animation of 3d models tied to internal properties.
 * New/updated aircraft include: Cessna 172, Piper J3 Cub, DC-3, A4
@@ -27,7 +27,7 @@ New in 0.7.11pre1
 * Improvements to the sound effects module.
 * Autopilot fixes to allow it to work much better on large airliners.
 * Added a generic interface for running the flight dynamics model as a
-  seperate process communicating via a network connection.
+  separate process communicating via a network connection.
 * Synced with the latest JSBSim code.
 * Synced with the latest UIUCmodel code.
 * Many fixes and updates to the YASim FDM (fixed flap drag issue, new
@@ -60,16 +60,16 @@ New in 0.7.11pre1
 * Bumped minimum plib version required up to 1.4.2, however the latest
   cvs (and hopefully release) works much better.
 * Added valgrind debugging config files/scripts.
-* Weeded out many warnings/errors flaged by valgrind.
+* Weeded out many warnings/errors flagged by valgrind.
 * Overhauled the FGSubsystem class.
-* Fixed reporting of winds, cloundbase and altimeter setting.
+* Fixed reporting of winds, cloudbase and altimeter setting.
 * FGSteam converted to a proper FGSubsystem.
 * Fix fog on 3dfx cards.
 * Added internal support for turning each tank on/off individually.
 * Added support for a fuel selector switch.
 * Fixes to builtin property browser.
 * Fixed several math overflow problems with time elapsed calculations
-  that had crept in.  Thes would cause some things to stop updating
+  that had crept in.  These would cause some things to stop updating
   (like portions of the instrument panel, and radio station frequency
   matching.)
 * Updates to the network OpenGC interface.
