@@ -29,6 +29,8 @@
 #include <stdio.h>	// sprintf
 #include <string.h>
 
+#include <GL/glu.h>
+
 #include <plib/ssg.h>
 #include <plib/fnt.h>
 

@@ -22,6 +22,8 @@
 #  include <config.h>
 #endif
 
+#include <GL/glu.h>
+
 #include <simgear/props/props.hxx>
 
 #include <Include/general.hxx>
