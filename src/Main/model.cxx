@@ -69,22 +69,24 @@ FGAircraftModel::init ()
   SG_LOG(SG_INPUT, SG_INFO, "Initializing aircraft 3D model");
 
 				// Load the 3D aircraft object itself
-  SGPath path = globals->get_fg_root();
-  path.append(fgGetString("/sim/model/path", "Models/Geometry/glider.ac"));
+  // DCL - the xml parser requires the full path but the ssgLoader doesn't
+  // so lets have two paths.
+  SGPath xmlpath = globals->get_fg_root();
+  SGPath modelpath = (string)fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
+  xmlpath.append(modelpath.str());
 
-  if (path.str().substr(path.str().size() - 4, 4) == ".xml") {
-    readProperties(path.str(), &props);
+  if (xmlpath.str().substr(xmlpath.str().size() - 4, 4) == ".xml") {
+    readProperties(xmlpath.str(), &props);
     if (props.hasValue("/path")) {
-      path = path.dir();;
-      path.append(props.getStringValue("/path"));
+      modelpath = modelpath.dir();
+      modelpath.append(props.getStringValue("/path"));
     } else {
-      path = globals->get_fg_root();
-      path.append("Models/Geometry/glider.ac");
+      modelpath = "Models/Geometry/glider.ac";
     }
   }
 
-  ssgTexturePath((char *)path.dir().c_str());
-  _model = ssgLoad((char *)path.c_str());
+  ssgTexturePath((char *)xmlpath.dir().c_str());
+  _model = ssgLoad((char *)modelpath.c_str());
   if (_model == 0) {
     _model = ssgLoad((char *)"Models/Geometry/glider.ac");
     if (_model == 0)
@@ -381,7 +383,3 @@ FGAircraftModel::Animation::setRotation()
 
 
 // end of model.cxx
-
-
-
-
