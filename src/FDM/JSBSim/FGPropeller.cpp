@@ -177,6 +177,12 @@ double FGPropeller::Calculate(double PowerAvailable)
   ExcessTorque = PowerAvailable / omega;
   RPM = (RPS + ((ExcessTorque / Ixx) / (2.0 * M_PI)) * deltaT) * 60.0;
 
+				// The friction from the engine should
+				// stop it somewhere; I chose an
+				// arbitrary point.
+  if (RPM < 5.0)
+    RPM = 0;
+
   vMn = fdmex->GetRotation()->GetPQR()*vH + vTorque*Sense;
 
   return Thrust; // return thrust in pounds
