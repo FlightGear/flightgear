@@ -302,7 +302,9 @@ static void fgRenderFrame( void ) {
 
     if ( idle_state != 1000 ) {
 	// still initializing, draw the splash screen
-	fgSplashUpdate(0.0);
+	if ( o->splash_screen == 1 ) {
+	    fgSplashUpdate(0.0);
+	}
     } else {
 	// idle_state is now 1000 meaning we've finished all our
 	// initializations and are running the main loop, so this will
@@ -610,21 +612,25 @@ static void fgIdleFunction ( void ) {
 
     if ( idle_state == 0 ) {
 	// Initialize the splash screen right away
-	fgSplashInit();
+	if ( o->splash_screen ) {
+	    fgSplashInit();
+	}
 	
 	idle_state++;
     } else if ( idle_state == 1 ) {
 	// Start the intro music
-#ifndef WIN32
-	strcpy(mp3file, o->fg_root);
-	strcat(mp3file, "/Sounds/");
-	strcat(mp3file, "intro.mp3");
-	sprintf(command, 
-		"(touch %s; ampg123 %s > /dev/null 2>&1; /bin/rm %s) &", 
-		lockfile, mp3file, lockfile );
-	fgPrintf( FG_GENERAL, FG_INFO, 
-		  "Starting intro music: %s\n", mp3file);
-	system(command);
+#if !defined(WIN32)
+	if ( o->intro_music ) {
+	    strcpy(mp3file, o->fg_root);
+	    strcat(mp3file, "/Sounds/");
+	    strcat(mp3file, "intro.mp3");
+	    sprintf(command, 
+		    "(touch %s; ampg123 %s > /dev/null 2>&1; /bin/rm %s) &", 
+		    lockfile, mp3file, lockfile );
+	    fgPrintf( FG_GENERAL, FG_INFO, 
+		      "Starting intro music: %s\n", mp3file);
+	    system(command);
+	}
 #endif
 
 	idle_state++;
@@ -673,18 +679,20 @@ static void fgIdleFunction ( void ) {
 	// Initialize audio support
 #ifdef HAVE_AUDIO_SUPPORT
 
-#ifndef WIN32
-	// Let's wait for mpg123 to finish
-	struct stat stat_buf;
+#if !defined(WIN32)
+	if ( o->intro_music ) {
+	    // Let's wait for mpg123 to finish
+	    struct stat stat_buf;
 
-	fgPrintf( FG_GENERAL, FG_INFO, 
-		  "Waiting for mpg123 player to finish " );
-	while ( stat(lockfile, &stat_buf) == 0 ) {
-	    // file exist, wait ...
-	    sleep(1);
-	    fgPrintf( FG_GENERAL, FG_INFO, ".");
+	    fgPrintf( FG_GENERAL, FG_INFO, 
+		      "Waiting for mpg123 player to finish " );
+	    while ( stat(lockfile, &stat_buf) == 0 ) {
+		// file exist, wait ...
+		sleep(1);
+		fgPrintf( FG_GENERAL, FG_INFO, ".");
+	    }
+	    fgPrintf( FG_GENERAL, FG_INFO, "\n");
 	}
-	fgPrintf( FG_GENERAL, FG_INFO, "\n");
 #endif // WIN32
 
 	// audio_sched = new slScheduler ( 8000 );
@@ -720,7 +728,9 @@ static void fgIdleFunction ( void ) {
 
 	fgMainLoop();
     } else {
-	fgSplashUpdate(0.0);
+	if ( o->splash_screen == 1 ) {
+	    fgSplashUpdate(0.0);
+	}
     }
 }
 
@@ -859,6 +869,13 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.31  1998/07/06 21:34:17  curt
+// Added an enable/disable splash screen option.
+// Added an enable/disable intro music option.
+// Added an enable/disable instrument panel option.
+// Added an enable/disable mouse pointer option.
+// Added using namespace std for compilers that support this.
+//
 // Revision 1.30  1998/07/06 02:42:03  curt
 // Added support for switching between fullscreen and window mode for
 // Mesa/3dfx/glide.

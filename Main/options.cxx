@@ -67,6 +67,11 @@ fgOPTIONS::fgOPTIONS( void ) {
     // default airport id
     strcpy(airport_id, "");
 
+    // Miscellaneous
+    splash_screen = 1;
+    intro_music = 1;
+    mouse_pointer = 0;
+
     // Features
     hud_status = 1;
     panel_status = 0;
@@ -101,11 +106,11 @@ static int parse_int(char *arg) {
 	arg++;
     }
 
-    printf("parse_int(): arg = %s\n", arg);
+    // printf("parse_int(): arg = %s\n", arg);
 
     result = atoi(arg);
 
-    printf("parse_int(): result = %d\n", result);
+    // printf("parse_int(): result = %d\n", result);
 
     return(result);
 }
@@ -244,7 +249,7 @@ static int parse_tile_radius(char *arg) {
     if ( radius < FG_RADIUS_MIN ) { radius = FG_RADIUS_MIN; }
     if ( radius > FG_RADIUS_MAX ) { radius = FG_RADIUS_MAX; }
 
-    printf("parse_tile_radius(): radius = %d\n", radius);
+    // printf("parse_tile_radius(): radius = %d\n", radius);
 
     return(radius);
 }
@@ -272,10 +277,26 @@ int fgOPTIONS::parse_option( char *arg ) {
 	 (strcmp(arg, "-h") == 0) ) {
 	// help/usage request
 	return(FG_OPTIONS_HELP);
+    } else if ( strcmp(arg, "--disable-splash-screen") == 0 ) {
+	splash_screen = 0;
+    } else if ( strcmp(arg, "--enable-splash-screen") == 0 ) {
+	splash_screen = 1;
+    } else if ( strcmp(arg, "--disable-intro-music") == 0 ) {
+	intro_music = 0;
+    } else if ( strcmp(arg, "--enable-intro-music") == 0 ) {
+	intro_music = 1;
+    } else if ( strcmp(arg, "--disable-mouse-pointer") == 0 ) {
+	mouse_pointer = 1;
+    } else if ( strcmp(arg, "--enable-mouse-pointer") == 0 ) {
+	mouse_pointer = 2;
     } else if ( strcmp(arg, "--disable-hud") == 0 ) {
 	hud_status = 0;	
     } else if ( strcmp(arg, "--enable-hud") == 0 ) {
 	hud_status = 1;	
+    } else if ( strcmp(arg, "--disable-panel") == 0 ) {
+	panel_status = 0;
+    } else if ( strcmp(arg, "--enable-panel") == 0 ) {
+	panel_status = 1;
     } else if ( strncmp(arg, "--airport-id=", 13) == 0 ) {
 	arg += 13;
 	strncpy(airport_id, arg, 4);
@@ -331,7 +352,7 @@ int fgOPTIONS::parse_command_line( int argc, char **argv ) {
     fgPrintf(FG_GENERAL, FG_INFO, "Processing command line arguments\n");
 
     while ( i < argc ) {
-	fgPrintf(FG_GENERAL, FG_INFO, "argv[%d] = %s\n", i, argv[i]);
+	fgPrintf(FG_GENERAL, FG_DEBUG, "argv[%d] = %s\n", i, argv[i]);
 
 	result = parse_option(argv[i]);
 	if ( (result == FG_OPTIONS_HELP) || (result == FG_OPTIONS_ERROR) ) {
@@ -391,11 +412,20 @@ void fgOPTIONS::usage ( void ) {
     printf("General Options:\n");
     printf("\t--help -h:  print usage\n");
     printf("\t--fg-root=path:  specify the root path for all the data files\n");
+    printf("\t--disable-splash-screen:  disable splash screen\n");
+    printf("\t--enable-splash-screen:  enable splash screen\n");
+    printf("\t--disable-intro-music:  disable introduction music\n");
+    printf("\t--enable-intro-music:  enable introduction music\n");
+    printf("\t--disable-mouse-pointer:  disable extra mouse pointer\n");
+    printf("\t--enable-mouse-pointer:  enable extra mouse pointer (i.e. for\n");
+    printf("\t\tfull screen voodoo/voodoo-II based cards.\n");
     printf("\n");
 
     printf("Features:\n");
     printf("\t--disable-hud:  disable heads up display\n");
     printf("\t--enable-hud:  enable heads up display\n");
+    printf("\t--disable-panel:  disable instrument panel\n");
+    printf("\t--enable-panel:  enable instrumetn panel\n");
     printf("\n");
  
     printf("Initial Position:\n");
@@ -434,6 +464,13 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.15  1998/07/06 21:34:19  curt
+// Added an enable/disable splash screen option.
+// Added an enable/disable intro music option.
+// Added an enable/disable instrument panel option.
+// Added an enable/disable mouse pointer option.
+// Added using namespace std for compilers that support this.
+//
 // Revision 1.14  1998/07/04 00:52:26  curt
 // Add my own version of gluLookAt() (which is nearly identical to the
 // Mesa/glu version.)  But, by calculating the Model View matrix our selves

@@ -36,6 +36,9 @@
 
 #include <string>          // Standard C++ string library
 #include <map>             // STL associative "array"
+#ifdef NEEDNAMESPACESTD
+using namespace std;
+#endif
 
 
 typedef struct {
@@ -70,6 +73,13 @@ public:
 
 
 // $Log$
+// Revision 1.6  1998/07/06 21:34:19  curt
+// Added an enable/disable splash screen option.
+// Added an enable/disable intro music option.
+// Added an enable/disable instrument panel option.
+// Added an enable/disable mouse pointer option.
+// Added using namespace std for compilers that support this.
+//
 // Revision 1.5  1998/06/17 21:35:11  curt
 // Refined conditional audio support compilation.
 // Moved texture parameter setup calls to ../Scenery/materials.cxx
