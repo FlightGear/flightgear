@@ -4,5 +4,6 @@ SUBDIRS = \
 	Lib \
 	Prep \
 	Construct \
-	Utils \
-	Areas
+	Utils
+
+#	Areas
