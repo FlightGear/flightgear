@@ -4418,6 +4418,40 @@ SOURCE=.\src\GUI\trackball.h
 
 # End Source File
 # End Group
+# Begin Group "Lib_Input"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\src\Input\input.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Input"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Input"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Input\input.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Input"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Input"
+
+!ENDIF 
+
+# End Source File
+# End Group
 # Begin Group "Lib_Joystick"
 
 # PROP Default_Filter ""

@@ -248,20 +248,20 @@ FGInput::init ()
     globals->get_props()->getNode("/input/keyboard", true);
   vector<const SGPropertyNode *> keys = keyboard->getChildren("key");
 
-  for (int i = 0; i < keys.size(); i++) {
+  for (unsigned int i = 0; i < keys.size(); i++) {
     int index = keys[i]->getIndex();
-    int modifiers = MOD_NONE;
+    int modifiers = FG_MOD_NONE;
     if (keys[i]->getBoolValue("mod-shift"))
-      modifiers |= MOD_SHIFT;
+      modifiers |= FG_MOD_SHIFT;
     if (keys[i]->getBoolValue("mod-ctrl"))
-      modifiers |= MOD_CTRL;
+      modifiers |= FG_MOD_CTRL;
     if (keys[i]->getBoolValue("mod-alt"))
-      modifiers |= MOD_ALT;
+      modifiers |= FG_MOD_ALT;
     SG_LOG(SG_INPUT, SG_INFO, "Binding key " << index
 	   << " with modifiers " << modifiers);
 
     vector<const SGPropertyNode *> bindings = keys[i]->getChildren("binding");
-    for (int j = 0; j < bindings.size(); j++) {
+    for (unsigned int j = 0; j < bindings.size(); j++) {
       SG_LOG(SG_INPUT, SG_INFO, "  Adding binding " << j);
       _key_bindings[modifiers][index].push_back(FGBinding(bindings[j]));
     }
@@ -298,7 +298,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
   if (_key_bindings[modifiers].find(k) != _key_bindings[modifiers].end()) {
     const vector<FGBinding> &bindings = _key_bindings[modifiers][k];
-    for (int i = 0; i < bindings.size(); i++) {
+    for (unsigned int i = 0; i < bindings.size(); i++) {
       bindings[i].fire();
     }
     return;
@@ -312,7 +312,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
   
   // everything after here will be removed sooner or later...
 
-  if (modifiers & MOD_SHIFT) {
+  if (modifiers & FG_MOD_SHIFT) {
 
 	switch (k) {
 	case 7: // Ctrl-G key

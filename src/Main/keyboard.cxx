@@ -47,11 +47,11 @@ static inline int get_mods ()
   int modifiers = 0;
 
   if (glut_modifiers & GLUT_ACTIVE_SHIFT)
-    modifiers |= FGInput::MOD_SHIFT;
+    modifiers |= FGInput::FG_MOD_SHIFT;
   if (glut_modifiers & GLUT_ACTIVE_CTRL)
-    modifiers |= FGInput::MOD_CTRL;
+    modifiers |= FGInput::FG_MOD_CTRL;
   if (glut_modifiers & GLUT_ACTIVE_ALT)
-    modifiers |= FGInput::MOD_ALT;
+    modifiers |= FGInput::FG_MOD_ALT;
 
   return modifiers;
 }

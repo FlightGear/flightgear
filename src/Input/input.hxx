@@ -100,11 +100,11 @@ class FGInput : public FGSubsystem
 public:
 
   enum {
-    MOD_NONE = 0,
-    MOD_SHIFT = 1,
-    MOD_CTRL = 2,
-    MOD_ALT = 4,
-    MOD_MAX = 8			// one past all modifiers
+    FG_MOD_NONE = 0,
+    FG_MOD_SHIFT = 1,
+    FG_MOD_CTRL = 2,
+    FG_MOD_ALT = 4,
+    FG_MOD_MAX = 8			// one past all modifiers
   };
 
   FGInput();
@@ -129,9 +129,9 @@ public:
    * @param modifiers Modifier keys pressed (bitfield).
    * @param x The mouse x position at the time of keypress.
    * @param y The mouse y position at the time of keypress.
-   * @see #MOD_SHIFT
-   * @see #MOD_CTRL
-   * @see #MOD_ALT
+   * @see #FG_MOD_SHIFT
+   * @see #FG_MOD_CTRL
+   * @see #FG_MOD_ALT
    */
   virtual void doKey (int k, int modifiers, int x, int y);
 
@@ -175,7 +175,7 @@ public:
 private:
 
   typedef map<int,vector<FGBinding> > keyboard_map;
-  keyboard_map _key_bindings[MOD_MAX];
+  keyboard_map _key_bindings[FG_MOD_MAX];
 
 };
 
