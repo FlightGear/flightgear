@@ -81,11 +81,6 @@
 #include <Cockpit/radiostack.hxx>
 #include <Cockpit/steam.hxx>
 
-// bfi.hxx has to be included before uiuc_aircraft.h because of nasty
-// #defines in uiuc_aircraft.h
-#include "bfi.hxx"
-
-#include <FDM/UIUCModel/uiuc_aircraft.h>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <GUI/gui.h>
 #include <Joystick/joystick.hxx>
@@ -107,6 +102,7 @@
 #  include <Weather/weather.hxx>
 #endif
 
+#include "bfi.hxx"
 #include "fg_init.hxx"
 #include "fg_io.hxx"
 #include "keyboard.hxx"
@@ -1316,10 +1312,6 @@ int main( int argc, char **argv ) {
     // seed the random number generater
     fg_srandom();
 
-    // AIRCRAFT defined in uiuc_aircraft.h
-    // AIRCRAFTDIR defined in uiuc_aircraftdir.h
-    aircraft_ = new AIRCRAFT;
-    aircraftdir_ = new AIRCRAFTDIR;
     aircraft_dir = ""; // Initialize the Aircraft directory to "" (UIUC)
 
     // Load the configuration parameters

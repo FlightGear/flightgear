@@ -78,8 +78,8 @@ extern "C" void uiuc_init_aeromodel ();
 extern "C" void uiuc_force_moment(double dt);
 extern "C" void uiuc_engine_routine();
 
-AIRCRAFT *aircraft_;
-AIRCRAFTDIR *aircraftdir_;
+AIRCRAFT *aircraft_ = new AIRCRAFT;
+AIRCRAFTDIR *aircraftdir_ = new AIRCRAFTDIR;
 
 void uiuc_init_aeromodel ()
 {

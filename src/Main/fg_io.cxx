@@ -232,9 +232,9 @@ void fgIOProcess() {
 
 	if ( p->is_enabled() ) {
 	    p->dec_count_down( interval );
-	    if ( p->get_count_down() < 0 ) {
+	    while ( p->get_count_down() < 0 ) {
 		p->process();
-		p->set_count_down( 1000000.0 / p->get_hz() );
+		p->dec_count_down( -1000000.0 / p->get_hz() );
 	    }
 	}
     }
