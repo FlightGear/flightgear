@@ -35,6 +35,7 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 #include <stdio.h>
+#include <string.h>
 
 #ifdef HAVE_STDLIB_H
 #   include <stdlib.h>
@@ -214,6 +215,9 @@ static void fgInitVisuals( void ) {
 	// draw wire frame
 	xglPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     }
+
+    // This is the default anyways, but it can't hurt
+    xglFrontFace ( GL_CCW );
 }
 
 
@@ -335,6 +339,7 @@ static void fgRenderFrame( void ) {
     double angle;
     GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat gray90[4] = { 0.9, 0.9, 0.9, 1.0 };
     GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
 	
     l = &cur_light_params;
@@ -424,7 +429,7 @@ static void fgRenderFrame( void ) {
 	xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
 	xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
 	// set base color (I don't think this is doing anything here)
-	xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
+	xglMaterialfv (GL_FRONT, GL_AMBIENT, gray90);
 	xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
     } else {
 	xglDisable( GL_TEXTURE_2D );
@@ -773,6 +778,10 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.16  1998/05/20 20:51:33  curt
+// Tweaked smooth shaded texture lighting properties.
+// Converted fgLIGHT to a C++ class.
+//
 // Revision 1.15  1998/05/16 13:08:34  curt
 // C++ - ified views.[ch]xx
 // Shuffled some additional view parameters into the fgVIEW class.

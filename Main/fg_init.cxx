@@ -300,7 +300,7 @@ int fgInitSubsystems( void ) {
     fgUpdateSunPos();
 
     // Initialize Lighting interpolation tables
-    fgLightInit();
+    l->Init();
 
     // update the lighting parameters (based on sun angle)
     fgEventRegister( "fgLightUpdate()", fgLightUpdate,
@@ -381,6 +381,10 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.14  1998/05/20 20:51:35  curt
+// Tweaked smooth shaded texture lighting properties.
+// Converted fgLIGHT to a C++ class.
+//
 // Revision 1.13  1998/05/16 13:08:35  curt
 // C++ - ified views.[ch]xx
 // Shuffled some additional view parameters into the fgVIEW class.

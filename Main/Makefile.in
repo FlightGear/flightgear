@@ -73,7 +73,7 @@ VERSION = @VERSION@
 
 EXTRA_DIST = runfg.in runfg.bat.in
 
-bin_PROGRAMS = fg ttest
+bin_PROGRAMS = fg
 
 bin_SCRIPTS = runfg runfg.bat
 
@@ -103,8 +103,6 @@ fg_LDADD = \
 	$(top_builddir)/Lib/Bucket/libBucket.la \
 	$(top_builddir)/Lib/Debug/libDebug.la \
 	$(top_builddir)/Lib/zlib/libz.la
-
-ttest_SOURCES = ttest.cxx
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../../Include/config.h
 CONFIG_CLEAN_FILES =  runfg runfg.bat
@@ -137,10 +135,6 @@ $(top_builddir)/Lib/Math/libMath.la \
 $(top_builddir)/Lib/Bucket/libBucket.la \
 $(top_builddir)/Lib/Debug/libDebug.la $(top_builddir)/Lib/zlib/libz.la
 fg_LDFLAGS = 
-ttest_OBJECTS =  ttest.o
-ttest_LDADD = $(LDADD)
-ttest_DEPENDENCIES = 
-ttest_LDFLAGS = 
 SCRIPTS =  $(bin_SCRIPTS)
 
 CXXFLAGS = @CXXFLAGS@
@@ -155,10 +149,10 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 TAR = tar
 GZIP = --best
 DEP_FILES =  .deps/GLUTkey.P .deps/GLUTmain.P .deps/airports.P \
-.deps/fg_init.P .deps/options.P .deps/ttest.P .deps/views.P
+.deps/fg_init.P .deps/options.P .deps/views.P
 CXXMKDEP = $(CXX) -M $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
-SOURCES = $(fg_SOURCES) $(ttest_SOURCES)
-OBJECTS = $(fg_OBJECTS) $(ttest_OBJECTS)
+SOURCES = $(fg_SOURCES)
+OBJECTS = $(fg_OBJECTS)
 
 all: Makefile $(PROGRAMS) $(SCRIPTS)
 
@@ -236,10 +230,6 @@ maintainer-clean-libtool:
 fg: $(fg_OBJECTS) $(fg_DEPENDENCIES)
 	@rm -f fg
 	$(CXXLINK) $(fg_LDFLAGS) $(fg_OBJECTS) $(fg_LDADD) $(LIBS)
-
-ttest: $(ttest_OBJECTS) $(ttest_DEPENDENCIES)
-	@rm -f ttest
-	$(CXXLINK) $(ttest_LDFLAGS) $(ttest_OBJECTS) $(ttest_LDADD) $(LIBS)
 
 install-binSCRIPTS: $(bin_SCRIPTS)
 	@$(NORMAL_INSTALL)
