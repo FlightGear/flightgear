@@ -561,26 +561,24 @@ void fgRenderFrame( void ) {
 	    glFogfv( GL_FOG_COLOR, l->adj_fog_color );
 	}
 
-	// set lighting parameters
+	// set sun/lighting parameters
+	ssgGetLight( 0 ) -> setPosition( l->sun_vec );
+
+        // GL_LIGHT_MODEL_AMBIENT has a default non-zero value so if
+        // we only set GL_AMBIENT we will never get a completely dark
+        // scene.  Thus instead of playing with GL_AMBIENT, we just
+        // set that to black and instead modify GL_LIGHT_MODEL_AMBIENT.
 	GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
+	ssgGetLight( 0 ) -> setColour( GL_AMBIENT, black );
+
 	glLightModelfv( GL_LIGHT_MODEL_AMBIENT, l->scene_ambient );
-	glLightfv( GL_LIGHT0, GL_AMBIENT, black );
-	glLightfv( GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
-	// glLightfv(GL_LIGHT0, GL_SPECULAR, white );
+	ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
+	// ssgGetLight( 0 ) -> setColour( GL_SPECULAR, l->scene_white );
 
 	// texture parameters
 	// glEnable( GL_TEXTURE_2D );
 	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
 	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
-	// set base color (I don't think this is doing anything here)
-	// glMaterialfv (GL_FRONT, GL_AMBIENT, white);
-	//  (GL_FRONT, GL_DIFFUSE, white);
-	// glMaterialfv (GL_FRONT, GL_SPECULAR, white);
-	// glMaterialfv (GL_FRONT, GL_SHININESS, mat_shininess);
-
-	sgVec3 sunpos;
-	sgSetVec3( sunpos, l->sun_vec[0], l->sun_vec[1], l->sun_vec[2] );
-	ssgGetLight( 0 ) -> setPosition( sunpos );
 
 	// glMatrixMode( GL_PROJECTION );
 	// glLoadIdentity();
@@ -756,7 +754,7 @@ void fgUpdateTimeDepCalcs() {
 	multi_loop = (long)(((double)elapsed * 0.000001) /
 			       cur_fdm_state->get_delta_t() );
 	cur_fdm_state->set_multi_loop( multi_loop );
-	long remainder = elapsed - ( (multi_loop*1000000) *
+	long remainder = elapsed - (long)( (multi_loop*1000000) *
 				     cur_fdm_state->get_delta_t() );
 	cur_fdm_state->set_remainder( remainder );
 	// cout << "remainder = " << remainder << endl;
@@ -1655,8 +1653,7 @@ void fgLoadDCS(void) {
     // int j=0;
     char obj_filename[25];
 
-    for (int k=0;k<32;k++)
-    {
+    for ( int k = 0; k < 32; k++ ) {
         ship_pos[k]=NULL;
     }
 
@@ -1666,62 +1663,64 @@ void fgLoadDCS(void) {
     sg_gzifstream in( tile_path.str() );
     if ( ! in.is_open() ) {
 	SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: " << tile_path.str() );
+    } else {
+
+        SGPath modelpath( globals->get_fg_root() );
+        modelpath.append( "Models" );
+        modelpath.append( "Geometry" );
+  
+        SGPath texturepath( globals->get_fg_root() );
+        texturepath.append( "Models" );
+        texturepath.append( "Textures" );
+ 
+        ssgModelPath( (char *)modelpath.c_str() );
+        ssgTexturePath( (char *)texturepath.c_str() );
+
+        ship_sel = new ssgSelector;
+
+        char c;
+        while ( ! in.eof() ) {
+            in >> ::skipws;
+            if ( in.get( c ) && c == '#' ) { 
+                in >> skipeol;
+            } else { 
+                in.putback(c);
+                in >> obj_filename >> obj_lat[objc] >> obj_lon[objc] >> obj_alt[objc];
+                /* cout << endl << obj_filename << " " << obj_lat[objc] << " " << obj_lon[objc] <<  " " << obj_alt[objc] << endl;
+                   int chj=getchar();*/
+                
+                obj_lon[objc] *=SGD_DEGREES_TO_RADIANS;
+                obj_lat[objc] *=SGD_DEGREES_TO_RADIANS;
+                
+                ship_pos[objc] = new ssgTransform;
+       
+                // type "repeat" in objects.txt to load one more
+                // instance of the last object.
+
+                if ( strcmp(obj_filename,"repeat") != 0) {
+                    ship_obj = ssgLoadOBJ( obj_filename );
+                }
+      
+                if ( ship_obj != NULL ) {
+                    ship_pos[objc]->addKid( ship_obj ); // add object to transform node
+                    ship_sel->addKid( ship_pos[objc] ); // add transform node to selector
+                } else {
+                    SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: "
+                            << obj_filename );
+                }
+            
+                objc++;
+
+                if (in.eof()) break;
+            }
+        } // while
+
+        SG_LOG ( SG_TERRAIN, SG_ALERT, "Finished object processing." );
+
+        ship_sel->clrTraversalMaskBits( SSGTRAV_HOT );
+        scene->addKid( ship_sel ); //add selector node to root node
     }
 
-    SGPath modelpath( globals->get_fg_root() );
-    modelpath.append( "Models" );
-    modelpath.append( "Geometry" );
-  
-    SGPath texturepath( globals->get_fg_root() );
-    texturepath.append( "Models" );
-    texturepath.append( "Textures" );
- 
-    ssgModelPath( (char *)modelpath.c_str() );
-    ssgTexturePath( (char *)texturepath.c_str() );
-
-    ship_sel = new ssgSelector;
-
-    char c;
-    while ( ! in.eof() ) 
-    {
-       in >> ::skipws;
-       if ( in.get( c ) && c == '#' )
-       { 
-            in >> skipeol;
-       }
-       else 
-       { 
-       	in.putback(c);
-           	in >> obj_filename >> obj_lat[objc] >> obj_lon[objc] >> obj_alt[objc];
-/*       	cout << endl << obj_filename << " " << obj_lat[objc] << " " << obj_lon[objc] <<  " " << obj_alt[objc] << endl;
-       	int chj=getchar();*/
-                
-	      obj_lon[objc] *=SGD_DEGREES_TO_RADIANS;
-      	obj_lat[objc] *=SGD_DEGREES_TO_RADIANS;
-    
-            ship_pos[objc] = new ssgTransform;
-       
-       
-       	// type "repeat" in objects.txt to load one more instance of the last object.
-
-       	if ( strcmp(obj_filename,"repeat") != 0)
-                  ship_obj = ssgLoadOBJ( obj_filename );
-      
-	      if ( ship_obj != NULL ) 
-            {
-	 		ship_pos[objc]->addKid( ship_obj ); // add object to transform node
-		 	ship_sel->addKid( ship_pos[objc] ); // add transform node to selector
-			}
-       	else
-       		SG_LOG( SG_TERRAIN, SG_ALERT, "Cannot open file: " << obj_filename );
-            
-      	if (in.eof()) break;
-            objc++;
-         }
-     } // while
-
-    ship_sel->clrTraversalMaskBits( SSGTRAV_HOT );
-    scene->addKid( ship_sel ); //add selector node to root node
     return;
  }
 
@@ -1740,15 +1739,13 @@ void fgUpdateDCS (void) {
     
     // Deck should be the first object in objects.txt in case of fdm=ada
 
-    if (fgGetString("/sim/flight-model") == "ada")
-    {
-      obj_lon[0] = fdm->get_aux5()*SGD_DEGREES_TO_RADIANS;
-      obj_lat[0] = fdm->get_aux6()*SGD_DEGREES_TO_RADIANS;
-      obj_alt[0] = fdm->get_aux7();
+    if (fgGetString("/sim/flight-model") == "ada") {
+        obj_lon[0] = fdm->get_aux5()*SGD_DEGREES_TO_RADIANS;
+        obj_lat[0] = fdm->get_aux6()*SGD_DEGREES_TO_RADIANS;
+        obj_alt[0] = fdm->get_aux7();
     }
     
-    for (int m=0; m<=objc; m++)
-    {
+    for ( int m = 0; m < objc; m++ ) {
     	//cout << endl <<  obj_lat[m]*SGD_RADIANS_TO_DEGREES << " " << obj_lon[m]*SGD_RADIANS_TO_DEGREES << " " << obj_alt[m] << " " << objc << endl;
 	//int v=getchar();
 
@@ -1790,9 +1787,10 @@ void fgUpdateDCS (void) {
 	sgSetCoord(&shippos, sgTUX );
 	ship_pos[m]->setTransform( &shippos );
     }
-   if ( ship_sel != NULL ) 
+    if ( ship_sel != NULL ) {
 	ship_sel->select(0xFFFFFFFF);
-  }
+    }
+}
 
 // $$$ end - added VS Renganathan, 15 Oct 2K
 //           added Venky         , 12 Nov 2K
