@@ -36,12 +36,6 @@
 #define MAX_TRIS  400000
 
 
-extern int nodecount, tricount;
-extern struct fgCartesianPoint nodes[MAX_NODES];
-extern int tris[MAX_TRIS][3];
-extern int new_tris[MAX_TRIS][3];
-
-
 /* Initialize a new mesh structure */
 void triload(char *basename, char *basepath);
 
@@ -50,9 +44,12 @@ void triload(char *basename, char *basepath);
 
 
 /* $Log$
-/* Revision 1.4  1998/01/17 01:25:40  curt
-/* Added support for shared normals.
+/* Revision 1.5  1998/03/03 16:01:00  curt
+/* More c++ compile tweaks.
 /*
+ * Revision 1.4  1998/01/17 01:25:40  curt
+ * Added support for shared normals.
+ *
  * Revision 1.3  1997/11/15 18:05:06  curt
  * minor tweaks ...
  *

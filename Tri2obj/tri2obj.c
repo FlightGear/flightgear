@@ -42,11 +42,10 @@
 
 int nodecount, tricount;
 int normalcount = 0;
-struct fgCartesianPoint nodes[MAX_NODES];
-int tris[MAX_TRIS][3];
-int new_tris[MAX_TRIS][3];
+static struct fgCartesianPoint nodes[MAX_NODES];
+static int tris[MAX_TRIS][3];
 
-double normals[MAX_NODES][3];
+static double normals[MAX_NODES][3];
 
 struct fgBUCKET my_index;
 struct fgBUCKET ne_index, nw_index, sw_index, se_index;
@@ -640,9 +639,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.10  1998/01/31 00:41:27  curt
-/* Made a few changes converting floats to doubles.
+/* Revision 1.11  1998/03/03 16:01:00  curt
+/* More c++ compile tweaks.
 /*
+ * Revision 1.10  1998/01/31 00:41:27  curt
+ * Made a few changes converting floats to doubles.
+ *
  * Revision 1.9  1998/01/27 18:37:04  curt
  * Lots of updates to get back in sync with changes made over in .../Src/
  *

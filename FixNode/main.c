@@ -35,8 +35,10 @@
 
 
 /* Original DEM which is used to interpolate z values */
-struct MESH dem_mesh;
+static struct MESH dem_mesh;
 
+/* Node list */
+static double nodes[MAX_NODES][3];
 
 /* find all the matching files in the specified directory and fix them */
 void process_files(char *root_path) {
@@ -65,9 +67,9 @@ void process_files(char *root_path) {
 		printf("File = %s\n", file_path);
 
 		/* load the input data files */
-		triload(file_path);
+		triload(file_path, nodes);
 
-		fixnodes(file_path, &dem_mesh);
+		fixnodes(file_path, &dem_mesh, nodes);
 	    }
 	}
     }
@@ -97,9 +99,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/09 23:03:08  curt
-/* Restructured to split 1deg x 1deg dem's into 64 subsections.
+/* Revision 1.4  1998/03/03 16:00:58  curt
+/* More c++ compile tweaks.
 /*
+ * Revision 1.3  1998/01/09 23:03:08  curt
+ * Restructured to split 1deg x 1deg dem's into 64 subsections.
+ *
  * Revision 1.2  1997/12/02 13:12:07  curt
  * Updated to fix every node.
  *

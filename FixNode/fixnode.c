@@ -34,7 +34,7 @@
 
 
 /* load the node information */
-void fixnodes(char *filename, struct MESH *m) {
+void fixnodes(char *filename, struct MESH *m, double nodes[MAX_NODES][3]) {
     char toname[256];
     FILE *fd;
     int i;
@@ -77,9 +77,12 @@ void fixnodes(char *filename, struct MESH *m) {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/09 23:03:08  curt
-/* Restructured to split 1deg x 1deg dem's into 64 subsections.
+/* Revision 1.4  1998/03/03 16:00:57  curt
+/* More c++ compile tweaks.
 /*
+ * Revision 1.3  1998/01/09 23:03:08  curt
+ * Restructured to split 1deg x 1deg dem's into 64 subsections.
+ *
  * Revision 1.2  1997/12/02 13:12:07  curt
  * Updated to fix every node.
  *

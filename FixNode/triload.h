@@ -37,20 +37,22 @@
 
 
 extern int nodecount, tricount;
-double nodes[MAX_NODES][3];
 
 
 /* Initialize a new mesh structure */
-void triload(char *basename);
+void triload(char *basename, double nodes[MAX_NODES][3]);
 
 
 #endif /* TRILOAD_H */
 
 
 /* $Log$
-/* Revision 1.2  1998/01/09 23:03:09  curt
-/* Restructured to split 1deg x 1deg dem's into 64 subsections.
+/* Revision 1.3  1998/03/03 16:00:59  curt
+/* More c++ compile tweaks.
 /*
+ * Revision 1.2  1998/01/09 23:03:09  curt
+ * Restructured to split 1deg x 1deg dem's into 64 subsections.
+ *
  * Revision 1.1  1997/11/27 00:17:35  curt
  * Initial revision.
  *

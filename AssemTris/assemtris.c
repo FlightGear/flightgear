@@ -41,7 +41,7 @@
 
 int nodecount = 0;
 
-double nodes[MAX_NODES][3];
+static double nodes[MAX_NODES][3];
 
 
 struct fgBUCKET my_index;
@@ -454,9 +454,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.4  1998/01/31 00:41:23  curt
-/* Made a few changes converting floats to doubles.
+/* Revision 1.5  1998/03/03 16:00:52  curt
+/* More c++ compile tweaks.
 /*
+ * Revision 1.4  1998/01/31 00:41:23  curt
+ * Made a few changes converting floats to doubles.
+ *
  * Revision 1.3  1998/01/27 18:37:00  curt
  * Lots of updates to get back in sync with changes made over in .../Src/
  *

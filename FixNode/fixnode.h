@@ -31,21 +31,24 @@
 #include <stdio.h>
 #include <string.h>
 
-/* #include "fixnode.h" */
+#include "triload.h"
 #include "../Dem2node/mesh.h"
 
 
 /* load the node information */
-void fixnodes(char *basename, struct MESH *m);
+void fixnodes(char *basename, struct MESH *m, double nodes[MAX_NODES][3]);
 
 
 #endif /* FIXNODE_H */
 
 
 /* $Log$
-/* Revision 1.2  1997/12/02 13:12:07  curt
-/* Updated to fix every node.
+/* Revision 1.3  1998/03/03 16:00:58  curt
+/* More c++ compile tweaks.
 /*
+ * Revision 1.2  1997/12/02 13:12:07  curt
+ * Updated to fix every node.
+ *
  * Revision 1.1  1997/11/27 00:17:33  curt
  * Initial revision.
  *
