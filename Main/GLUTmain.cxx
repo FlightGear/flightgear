@@ -42,6 +42,12 @@
 #   include <stdlib.h>
 #endif
 
+#include <sys/stat.h> /* for stat() */
+
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>   /* for stat() */
+#endif
+
 #include <Include/fg_constants.h>  // for VERSION
 #include <Include/general.h>
 
@@ -76,19 +82,25 @@
 #include "GLUTkey.hxx"
 #include "fg_init.hxx"
 #include "options.hxx"
+#include "splash.hxx"
 #include "views.hxx"
 
 
 // This is a record containing global housekeeping information
 fgGENERAL general;
 
+// Specify our current idle function state.  This is used to run all
+// our initializations out of the glutIdleLoop() so that we can get a
+// splash screen up and running right away.
+static idle_state = 0;
+
 // Another hack
 int use_signals = 0;
 
 // Global structures for the Audio library
 #ifdef HAVE_AUDIO_SUPPORT
-slScheduler audio_sched ( 8000 ) ;
-smMixer audio_mixer ;
+slScheduler audio_sched ( 8000 );
+smMixer audio_mixer;
 slSample *s1;
 slSample *s2;
 #endif
@@ -288,108 +300,119 @@ static void fgRenderFrame( void ) {
     t = &cur_time_params;
     v = &current_view;
 
-    // this is just a temporary hack, to make me understand Pui
-    timerText -> setLabel (ctime (&t->cur_time));
-    // end of hack
-
-    // update view volume parameters
-    fgUpdateViewParams();
-
-    if ( o->skyblend ) {
-	glClearColor(black[0], black[1], black[2], black[3]);
-	xglClear( GL_DEPTH_BUFFER_BIT );
+    if ( idle_state != 1000 ) {
+	// still initializing, draw the splash screen
+	fgSplashUpdate(0.0);
     } else {
-	glClearColor(l->sky_color[0], l->sky_color[1], 
-		     l->sky_color[2], l->sky_color[3]);
-	xglClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
-    }
+	// idle_state is now 1000 meaning we've finished all our
+	// initializations and are running the main loop, so this will
+	// now work without seg faulting the system.
 
-    // Tell GL we are switching to model view parameters
-    xglMatrixMode(GL_MODELVIEW);
-    // xglLoadIdentity();
+	// this is just a temporary hack, to make me understand Pui
+	timerText -> setLabel (ctime (&t->cur_time));
+	// end of hack
 
-    // draw sky
-    xglDisable( GL_DEPTH_TEST );
-    xglDisable( GL_LIGHTING );
-    xglDisable( GL_CULL_FACE );
-    xglDisable( GL_FOG );
-    xglShadeModel( GL_SMOOTH );
-    if ( o->skyblend ) {
-	fgSkyRender();
-    }
+	// update view volume parameters
+	fgUpdateViewParams();
 
-    // setup transformation for drawing astronomical objects
-    xglPushMatrix();
-    // Translate to view position
-    xglTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
-    // Rotate based on gst (sidereal time)
-    angle = t->gst * 15.041085; /* should be 15.041085, Curt thought it was 15*/
-    // printf("Rotating astro objects by %.2f degrees\n",angle);
-    xglRotatef( angle, 0.0, 0.0, -1.0 );
+	if ( o->skyblend ) {
+	    glClearColor(black[0], black[1], black[2], black[3]);
+	    xglClear( GL_DEPTH_BUFFER_BIT );
+	} else {
+	    glClearColor(l->sky_color[0], l->sky_color[1], 
+			 l->sky_color[2], l->sky_color[3]);
+	    xglClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+	}
 
-    // draw stars and planets
-    fgStarsRender();
-    fgPlanetsRender();
+	// Tell GL we are switching to model view parameters
+	xglMatrixMode(GL_MODELVIEW);
+	// xglLoadIdentity();
 
-    // draw the sun
-    fgSunRender();
+	// draw sky
+	xglDisable( GL_DEPTH_TEST );
+	xglDisable( GL_LIGHTING );
+	xglDisable( GL_CULL_FACE );
+	xglDisable( GL_FOG );
+	xglShadeModel( GL_SMOOTH );
+	if ( o->skyblend ) {
+	    fgSkyRender();
+	}
 
-    // render the moon
-    xglEnable( GL_LIGHTING );
-    // set lighting parameters
-    xglLightfv(GL_LIGHT0, GL_AMBIENT, white );
-    xglLightfv(GL_LIGHT0, GL_DIFFUSE, white );
-    xglEnable( GL_CULL_FACE );
+	// setup transformation for drawing astronomical objects
+	xglPushMatrix();
+	// Translate to view position
+	xglTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
+	// Rotate based on gst (sidereal time)
+	// note: constant should be 15.041085, Curt thought it was 15
+	angle = t->gst * 15.041085;
+	// printf("Rotating astro objects by %.2f degrees\n",angle);
+	xglRotatef( angle, 0.0, 0.0, -1.0 );
+
+	// draw stars and planets
+	fgStarsRender();
+	fgPlanetsRender();
+
+	// draw the sun
+	fgSunRender();
+
+	// render the moon
+	xglEnable( GL_LIGHTING );
+	// set lighting parameters
+	xglLightfv(GL_LIGHT0, GL_AMBIENT, white );
+	xglLightfv(GL_LIGHT0, GL_DIFFUSE, white );
+	xglEnable( GL_CULL_FACE );
     
-    // Let's try some blending technique's (Durk)
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);
-    fgMoonRender();
-    glDisable(GL_BLEND);
+	// Let's try some blending technique's (Durk)
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
+	fgMoonRender();
+	glDisable(GL_BLEND);
 
-    xglPopMatrix();
+	xglPopMatrix();
 
-    // draw scenery
-    if ( o->shading ) {
-	xglShadeModel( GL_SMOOTH ); 
-    } else {
-	xglShadeModel( GL_FLAT ); 
-    }
-    xglEnable( GL_DEPTH_TEST );
-    if ( o->fog > 0 ) {
-	xglEnable( GL_FOG );
-	xglFogfv (GL_FOG_COLOR, l->fog_color);
-    }
-    // set lighting parameters
-    xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
-    xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
+	// draw scenery
+	if ( o->shading ) {
+	    xglShadeModel( GL_SMOOTH ); 
+	} else {
+	    xglShadeModel( GL_FLAT ); 
+	}
+	xglEnable( GL_DEPTH_TEST );
+	if ( o->fog > 0 ) {
+	    xglEnable( GL_FOG );
+	    xglFogfv (GL_FOG_COLOR, l->fog_color);
+	}
+	// set lighting parameters
+	xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
+	xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
+	
+	if ( o->textures ) {
+	    // texture parameters
+	    xglEnable( GL_TEXTURE_2D );
+	    // set base color (I don't think this is doing anything here)
+	    xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
+	    xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
+	} else {
+	    xglDisable( GL_TEXTURE_2D );
+	    xglMaterialfv (GL_FRONT, GL_AMBIENT, terrain_color);
+	    xglMaterialfv (GL_FRONT, GL_DIFFUSE, terrain_color);
+	    // xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
+	    // xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
+	}
 
-    if ( o->textures ) {
-	// texture parameters
-	xglEnable( GL_TEXTURE_2D );
-	// set base color (I don't think this is doing anything here)
-	xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
-	xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
-    } else {
+	fgTileMgrRender();
+
 	xglDisable( GL_TEXTURE_2D );
-	xglMaterialfv (GL_FRONT, GL_AMBIENT, terrain_color);
-	xglMaterialfv (GL_FRONT, GL_DIFFUSE, terrain_color);
-	// xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
-	// xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
+
+	// display HUD && Panel
+	fgCockpitUpdate();
+	
+	// display instruments
+	// if (!o->panel_status) {
+	// fgUpdateInstrViewParams();
+	// }
+	puDisplay();
     }
 
-    fgTileMgrRender();
-
-    xglDisable( GL_TEXTURE_2D );
-
-    // display HUD && Panel
-    fgCockpitUpdate();
-
-    // display instruments
-    // if (!o->panel_status) {
-    // fgUpdateInstrViewParams();
-    // }
-    puDisplay();
     xglutSwapBuffers();
 }
 
@@ -556,13 +579,149 @@ static void fgMainLoop( void ) {
 
     // Run audio scheduler
 #ifdef HAVE_AUDIO_SUPPORT
-    audio_sched.update();
+    audio_sched . update();
 #endif
 
     // redraw display
     fgRenderFrame();
 
     fgPrintf( FG_ALL, FG_DEBUG, "\n");
+}
+
+
+// This is the top level master main function that is registered as
+// our idle funciton
+//
+
+// The first few passes take care of initialization things (a couple
+// per pass) and once everything has been initialized fgMainLoop from
+// then on.
+
+static void fgIdleFunction ( void ) {
+    fgGENERAL *g;
+    fgOPTIONS *o;
+    char path[256], mp3file[256], command[256], slfile[256];
+    static char *lockfile = "/tmp/mpg123.running";
+
+    g = &general;
+    o = &current_options;
+
+    // printf("idle state == %d\n", idle_state);
+
+    if ( idle_state == 0 ) {
+	// Initialize the splash screen right away
+	fgSplashInit();
+	
+	idle_state++;
+    } else if ( idle_state == 1 ) {
+	// Start the intro music
+#ifndef WIN32
+	strcpy(mp3file, o->fg_root);
+	strcat(mp3file, "/Sounds/");
+	strcat(mp3file, "intro.mp3");
+	sprintf(command, 
+		"(touch %s; ampg123 %s > /dev/null 2>&1; /bin/rm %s) &", 
+		lockfile, mp3file, lockfile );
+	fgPrintf( FG_GENERAL, FG_INFO, 
+		  "Starting intro music: %s\n", mp3file);
+	system(command);
+#endif
+
+	idle_state++;
+    } else if ( idle_state == 2 ) {
+	// These are a few miscellaneous things that aren't really
+	// "subsystems" but still need to be initialized.
+	if( !fgInitGeneral()) {
+	    fgPrintf( FG_GENERAL, FG_EXIT, 
+		      "General initializations failed ...\n" );
+	}
+#ifdef USE_GLIDE
+	if ( strstr ( g->glRenderer, "Glide" ) ) {
+	    grTexLodBiasValue ( GR_TMU0, 1.0 ) ;
+	}
+#endif
+
+	idle_state++;
+    } else if ( idle_state == 3 ) {
+	// This is the top level init routine which calls all the
+	// other subsystem initialization routines.  If you are adding
+	// a subsystem to flight gear, its initialization call should
+	// located in this routine.
+	if( !fgInitSubsystems()) {
+	    fgPrintf( FG_GENERAL, FG_EXIT,
+		      "Subsystem initializations failed ...\n" );
+	}
+
+	idle_state++;
+    } else if ( idle_state == 4 ) {
+	// setup OpenGL view parameters
+	fgInitVisuals();
+
+	if ( use_signals ) {
+	    // init timer routines, signals, etc.  Arrange for an alarm
+	    // signal to be generated, etc.
+	    fgInitTimeDepCalcs();
+	}
+
+	idle_state++;
+    } else if ( idle_state == 5 ) {
+	//Init the user interface
+	guiInit();
+
+	idle_state++;
+    } else if ( idle_state == 6 ) {
+	// Initialize audio support
+#ifdef HAVE_AUDIO_SUPPORT
+
+#ifndef WIN32
+	// Let's wait for mpg123 to finish
+	struct stat stat_buf;
+
+	fgPrintf( FG_GENERAL, FG_INFO, 
+		  "Waiting for mpg123 player to finish " );
+	while ( stat(lockfile, &stat_buf) == 0 ) {
+	    // file exist, wait ...
+	    sleep(1);
+	    fgPrintf( FG_GENERAL, FG_INFO, ".");
+	}
+	fgPrintf( FG_GENERAL, FG_INFO, "\n");
+#endif // WIN32
+
+	// audio_sched = new slScheduler ( 8000 );
+	// audio_mixer = new smMixer;
+	audio_mixer . setMasterVolume ( 30 ) ;  /* 50% of max volume. */
+	audio_sched . setSafetyMargin ( 1.0 ) ;
+	strcpy(path, o->fg_root);
+	strcat(path, "/Sounds/");
+
+	strcpy(slfile, path);
+	strcat(slfile, "prpidle.wav");
+	// s1 = new slSample ( slfile );
+	s1 = new slSample ( "/dos/X-System-HSR/sounds/xp_recip.wav", 
+			    &audio_sched );
+	printf("Rate = %d  Bps = %d  Stereo = %d\n", 
+	       s1 -> getRate(), s1 -> getBps(), s1 -> getStereo());
+	audio_sched . loopSample ( s1 );
+	
+	// strcpy(slfile, path);
+	// strcat(slfile, "thunder.wav");
+	// s2 -> loadFile ( slfile );
+	// s2 -> adjustVolume(0.5);
+	// audio_sched -> playSample ( s2 );
+#endif
+
+	sleep(1);
+	idle_state = 1000;
+    } 
+
+    if ( idle_state == 1000 ) {
+	// We've finished all our initialization steps, from now on we
+	// run the main loop.
+
+	fgMainLoop();
+    } else {
+	fgSplashUpdate(0.0);
+    }
 }
 
 
@@ -583,7 +742,12 @@ static void fgReshape( int width, int height ) {
 
     // Inform gl of our view window size (now handled elsewhere)
     // xglViewport(0, 0, (GLint)width, (GLint)height);
-    fgUpdateViewParams();
+    if ( idle_state == 1000 ) {
+	// yes we've finished all our initializations and are running
+	// the main loop, so this will now work without seg faulting
+	// the system.
+	fgUpdateViewParams();
+    }
     
     // xglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 }
@@ -624,7 +788,7 @@ int fgGlutInitEvents( void ) {
 
     // call fgMainLoop() whenever there is
     // nothing else to do
-    xglutIdleFunc( fgMainLoop );
+    xglutIdleFunc( fgIdleFunction );
 
     // draw the scene
     xglutDisplayFunc( fgRenderFrame );
@@ -638,7 +802,6 @@ int main( int argc, char **argv ) {
     fgFLIGHT *f;
     fgOPTIONS *o;
     char config[256];
-    char path[256], slfile[256];
     int result;  // Used in command line argument.
 
     f = current_aircraft.flight;
@@ -656,6 +819,12 @@ int main( int argc, char **argv ) {
     // Initialize the Window/Graphics environment.
     if( !fgGlutInit(&argc, argv) ) {
 	fgPrintf( FG_GENERAL, FG_EXIT, "GLUT initialization failed ...\n" );
+    }
+
+    // Initialize the various GLUT Event Handlers.
+    if( !fgGlutInitEvents() ) {
+	fgPrintf( FG_GENERAL, FG_EXIT, 
+		  "GLUT event handler initialization failed ...\n" );
     }
 
     // Attempt to locate and parse a config file
@@ -681,61 +850,6 @@ int main( int argc, char **argv ) {
 	fgPrintf( FG_GENERAL, FG_EXIT, "\nExiting ...\n");
     }
 
-    // These are a few miscellaneous things that aren't really
-    // "subsystems" but still need to be initialized.
-    if( !fgInitGeneral()) {
-	fgPrintf( FG_GENERAL, FG_EXIT, "General initializations failed ...\n" );
-    }
-
-    // This is the top level init routine which calls all the other
-    // subsystem initialization routines.  If you are adding a
-    // subsystem to flight gear, its initialization call should
-    // located in this routine.
-    if( !fgInitSubsystems()) {
-	fgPrintf( FG_GENERAL, FG_EXIT,
-		  "Subsystem initializations failed ...\n" );
-    }
-
-    // setup OpenGL view parameters
-    fgInitVisuals();
-
-    if ( use_signals ) {
-	// init timer routines, signals, etc.  Arrange for an alarm
-	// signal to be generated, etc.
-	fgInitTimeDepCalcs();
-    }
-
-    // Initialize the various GLUT Event Handlers.
-    if( !fgGlutInitEvents() ) {
-	fgPrintf( FG_GENERAL, FG_EXIT, 
-		  "GLUT event handler initialization failed ...\n" );
-    }
-
-    //Init the user interface
-    guiInit();
-
-    // Initialize audio support
-#ifdef HAVE_AUDIO_SUPPORT
-    audio_mixer . setMasterVolume ( 30 ) ;  /* 50% of max volume. */
-    audio_sched . setSafetyMargin ( 1.0 ) ;
-    strcpy(path, o->fg_root);
-    strcat(path, "/Sounds/");
-
-    strcpy(slfile, path);
-    strcat(slfile, "prpidle.wav");
-    // s1 = new slSample ( slfile );
-    s1 = new slSample ( "/dos/X-System-HSR/sounds/xp_recip.wav", &audio_sched );
-    printf("Rate = %d  Bps = %d  Stereo = %d\n", 
-	   s1 -> getRate(), s1 -> getBps(), s1 -> getStereo());
-    audio_sched . loopSample ( s1 );
-
-    // strcpy(slfile, path);
-    // strcat(slfile, "thunder.wav");
-    // s2 -> loadFile ( slfile );
-    // s2 -> adjustVolume(0.5);
-    // audio_sched -> playSample ( s2 );
-#endif
-
     // pass control off to the master GLUT event handler
     glutMainLoop();
 
@@ -745,6 +859,18 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.30  1998/07/06 02:42:03  curt
+// Added support for switching between fullscreen and window mode for
+// Mesa/3dfx/glide.
+//
+// Added a basic splash screen.  Restructured the main loop and top level
+// initialization routines to do this.
+//
+// Hacked in some support for playing a startup mp3 sound file while rest
+// of sim initializes.  Currently only works in Unix using the mpg123 player.
+// Waits for the mpg123 player to finish before initializing internal
+// sound drivers.
+//
 // Revision 1.29  1998/07/04 00:52:22  curt
 // Add my own version of gluLookAt() (which is nearly identical to the
 // Mesa/glu version.)  But, by calculating the Model View matrix our selves

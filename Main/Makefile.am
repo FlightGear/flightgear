@@ -22,6 +22,7 @@ fg_SOURCES = \
 	fg_config.h \
 	fg_init.cxx fg_init.hxx \
 	options.cxx options.hxx \
+	splash.cxx splash.hxx \
 	views.cxx views.hxx
 
 fg_LDADD = \
