@@ -4,7 +4,7 @@
 namespace yasim {
 
 class RigidBody;
-class State;
+struct State;
 
 // A landing gear has the following parameters:
 //

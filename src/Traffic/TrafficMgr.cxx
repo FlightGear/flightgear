@@ -41,6 +41,7 @@
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include <plib/sg.h>
 
@@ -63,6 +64,7 @@
 
 #include "TrafficMgr.hxx"
 
+SG_USING_STD(sort);
  
 /******************************************************************************
  * TrafficManager

@@ -28,7 +28,11 @@
 #  include <config.h>
 #endif
 
+#ifdef _MSC_VER
+#  define _USE_MATH_DEFINES
+#endif
 #include <math.h>
+#include <algorithm>
 
 #include <simgear/compiler.h>
 #include <Environment/environment_mgr.hxx>
@@ -45,7 +49,7 @@
 
 #include "simple.hxx"
 
-SG_USING_NAMESPACE(std);
+SG_USING_STD(sort);
 
 /******************************************************************************
  * ScheduleTime
@@ -192,6 +196,7 @@ RunwayGroup& RunwayGroup:: operator= (const RunwayGroup &other)
   choice[0] = other.choice[0];
   choice[1] = other.choice[1];
   nrActive = other.nrActive;
+  return *this;
 }
 
 void RunwayGroup::setActive(string aptId, 
@@ -399,6 +404,7 @@ ScheduleTime *FGRunwayPreference::getSchedule(const char *trafficType)
   if (!(strcmp(trafficType, "mil"))) {
     return &milTimes;
   }
+  return 0;
 }
 
 RunwayGroup *FGRunwayPreference::getGroup(const string groupName)
@@ -620,16 +626,16 @@ FGAirport::FGAirport(const FGAirport& other)
   _elevation = other._elevation;
   _name      = other._name;
   _has_metar = other._has_metar;
-  for (FGParkingVecConstIterator i= other.parkings.begin(); i != other.parkings.end(); i++)
-    parkings.push_back(*(i));
+  for (FGParkingVecConstIterator ip= other.parkings.begin(); ip != other.parkings.end(); ip++)
+    parkings.push_back(*(ip));
   rwyPrefs = other.rwyPrefs;
   lastUpdate = other.lastUpdate;
   
-  stringVecConstIterator i;
-  for (i = other.landing.begin(); i != other.landing.end(); i++)
-    landing.push_back(*i);
-  for (i = other.takeoff.begin(); i != other.takeoff.end(); i++)
-    takeoff.push_back(*i);
+  stringVecConstIterator il;
+  for (il = other.landing.begin(); il != other.landing.end(); il++)
+    landing.push_back(*il);
+  for (il = other.takeoff.begin(); il != other.takeoff.end(); il++)
+    takeoff.push_back(*il);
   lastUpdate = other.lastUpdate;
   for (int i = 0; i < 10; i++)
     {

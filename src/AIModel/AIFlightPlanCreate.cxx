@@ -18,7 +18,7 @@
  *
  *
  **************************************************************************/
-#include <AIFlightPlan.hxx>
+#include "AIFlightPlan.hxx"
 #include <simgear/math/sg_geodesy.hxx>
 #include <Airports/runways.hxx>
 

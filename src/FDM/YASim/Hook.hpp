@@ -5,7 +5,7 @@ namespace yasim {
 
 class Ground;
 class RigidBody;
-class State;
+struct State;
 
 // A landing hook has the following parameters:
 //

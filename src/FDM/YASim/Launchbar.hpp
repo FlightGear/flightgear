@@ -5,7 +5,7 @@ namespace yasim {
 
 class Ground;
 class RigidBody;
-class State;
+struct State;
 
 // A launchbar has the following parameters:
 //
