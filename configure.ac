@@ -198,11 +198,7 @@ esac
 
 dnl Checks for libraries.
 
-null_LIBS="$LIBS"
-
 AC_SEARCH_LIBS(cos, m)
-
-base_LIBS="$LIBS"
 
 dnl Thread related checks
 AC_CHECK_LIB(pthread, pthread_exit)
@@ -228,6 +224,9 @@ AC_SEARCH_LIBS(inet_addr, xnet)
 AC_SEARCH_LIBS(socket, socket)
 AC_SEARCH_LIBS(main, nsl)
 AC_SEARCH_LIBS(dlclose, dl)
+
+base_LIBS="$LIBS"
+opengl_LIBS=""
 
 dnl check for glut location
 AC_CHECK_HEADER(GL/glut.h)
