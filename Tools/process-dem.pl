@@ -67,7 +67,7 @@ while ( $dem_file = shift(@ARGV) ) {
     if ( $do_dem2node ) {
 	dem2node() ;
     } else {
-	$subdir = "./work/Scenery/e010n080/e019n084";
+	$subdir = "./work/Scenery/w100n040/w093n045/";
 	print "WARNING:  Hardcoding subdir = $subdir\n";
     }
 
@@ -332,9 +332,10 @@ sub strips {
     foreach $file ( @FILES ) {
 	chop($file);
 	if ( $file =~ m/\.1\.obj$/ ) {
-	    $command = "Stripe_u/strips $subdir/$file";
+	    $command = "Stripe_w/strips $subdir/$file";
 	    $command = fix_command($command);
 	    print "Running '$command'\n";
+    	    # $input = <STDIN>;
 	    open(OUT, "$command |");
 	    while ( <OUT> ) {
 		print $_;
@@ -345,7 +346,8 @@ sub strips {
 	    $newfile = $file;
 	    $newfile =~ s/\.1\.obj$//;
 	    print "Copying to $subdir/$newfile.2.obj\n";
-	    open(IN, "<bands.d");
+	    # open(IN, "<bands.d");
+	    open(IN, "<stripe.objf");
 	    open(OUT, ">$subdir/$newfile.2.obj");
 	    while ( <IN> ) {
 		print OUT $_;
@@ -421,6 +423,9 @@ sub install {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.21  1998/06/08 17:18:37  curt
+# Mods to test new Stripe fixes from Wilbur Streett.
+#
 # Revision 1.20  1998/06/05 18:20:24  curt
 # Added DemInfo to dump out "A" record DEM info.
 # Modified process-dem.pl to work in a temp directory and compress/copy the

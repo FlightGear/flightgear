@@ -8,7 +8,7 @@ SUBDIRS = \
 	FixNode \
 	FixObj \
 	SplitTris \
-	Stripe_u \
+	Stripe_w \
 	Tri2obj \
 	Triangle
 
