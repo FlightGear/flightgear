@@ -1,12 +1,23 @@
 // fg_commands.cxx - internal FGFS commands.
 
-#include "fg_commands.hxx"
+#include <simgear/compiler.h>
+
+#include STL_STRING
+#include STL_FSTREAM
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/commands.hxx>
 #include <simgear/misc/props.hxx>
 
 #include <GUI/gui.h>
+#include <Cockpit/panel.hxx>
+#include <Cockpit/panel_io.hxx>
+
+#include "fg_commands.hxx"
+
+SG_USING_STD(string);
+SG_USING_STD(ifstream);
+SG_USING_STD(ofstream);
 
 #include "fg_props.hxx"
 #include "fg_io.hxx"
@@ -34,6 +45,104 @@ do_exit (const SGPropertyNode * arg)
   fgIOShutdownAll();
   exit(0);
   return true;
+}
+
+
+/**
+ * Built-in command: load flight.
+ *
+ * file (optional): the name of the file to load (relative to current
+ * directory).  Defaults to "fgfs.sav".
+ */
+static bool
+do_load (const SGPropertyNode * arg)
+{
+  const string &file = arg->getStringValue("file", "fgfs.sav");
+  ifstream input(file.c_str());
+  if (input.good() && fgLoadFlight(input)) {
+    input.close();
+    SG_LOG(SG_INPUT, SG_INFO, "Restored flight from " << file);
+    return true;
+  } else {
+    SG_LOG(SG_INPUT, SG_ALERT, "Cannot load flight from " << file);
+    return false;
+  }
+}
+
+
+/**
+ * Built-in command: save flight.
+ *
+ * file (optional): the name of the file to save (relative to the
+ * current directory).  Defaults to "fgfs.sav".
+ */
+static bool
+do_save (const SGPropertyNode * arg)
+{
+  const string &file = arg->getStringValue("file", "fgfs.sav");
+  SG_LOG(SG_INPUT, SG_INFO, "Saving flight");
+  ofstream output(file.c_str());
+  if (output.good() && fgSaveFlight(output)) {
+    output.close();
+    SG_LOG(SG_INPUT, SG_INFO, "Saved flight to " << file);
+    return true;
+  } else {
+    SG_LOG(SG_INPUT, SG_ALERT, "Cannot save flight to " << file);
+    return false;
+  }
+}
+
+
+/**
+ * Built-in command: (re)load the panel.
+ *
+ * path (optional): the file name to load the panel from 
+ * (relative to FG_ROOT).  Defaults to the value of /sim/panel/path,
+ * and if that's unspecified, to "Panels/Default/default.xml".
+ */
+static bool
+do_panel_load (const SGPropertyNode * arg)
+{
+  string panel_path =
+    arg->getStringValue("path",
+			fgGetString("/sim/panel/path",
+				    "Panels/Default/default.xml"));
+  FGPanel * new_panel = fgReadPanel(panel_path);
+  if (new_panel == 0) {
+    SG_LOG(SG_INPUT, SG_ALERT,
+	   "Error reading new panel from " << panel_path);
+    return false;
+  }
+  SG_LOG(SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path);
+  current_panel->unbind();
+  delete current_panel;
+  current_panel = new_panel;
+  current_panel->bind();
+  return true;
+}
+
+
+/**
+ * Built-in command: (re)load preferences.
+ *
+ * path (optional): the file name to load the panel from (relative
+ * to FG_ROOT). Defaults to "preferences.xml".
+ */
+static bool
+do_preferences_load (const SGPropertyNode * arg)
+{
+  const string &path = arg->getStringValue("path", "preferences.xml");
+  SGPath props_path(globals->get_fg_root());
+  props_path.append(path);
+  SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences from "
+	 << props_path.str());
+  if (!readProperties(props_path.str(), globals->get_props())) {
+    SG_LOG(SG_INPUT, SG_ALERT, "Failed to reread global preferences");
+    return false;
+  } else {
+    SG_LOG(SG_INPUT, SG_INFO, "Successfully read global preferences.");
+    return true;
+  }
 }
 
 
@@ -205,6 +314,10 @@ static struct {
 } built_ins [] = {
   "null", do_null,
   "exit", do_exit,
+  "load", do_load,
+  "save", do_save,
+  "panel-load", do_panel_load,
+  "preferences-load", do_preferences_load,
   "view-cycle", do_view_cycle,
   "screen-capture", do_screen_capture,
   "property-toggle", do_property_toggle,
