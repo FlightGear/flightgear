@@ -137,19 +137,19 @@ public:
  * A simplistic P [ + I ] PID controller
  */
 
-class FGSimplePIController : public FGXMLAutoComponent {
+class FGPISimpleController : public FGXMLAutoComponent {
 
 private:
 
     // proportional component data
     bool proportional;
-    double factor;
+    double Kp;
     SGPropertyNode *offset_prop;
     double offset_value;
 
     // integral component data
     bool integral;
-    double gain;
+    double Ki;
     double int_sum;
 
     // post functions for output
@@ -168,8 +168,8 @@ private:
     
 public:
 
-    FGSimplePIController( SGPropertyNode *node );
-    ~FGSimplePIController() {}
+    FGPISimpleController( SGPropertyNode *node );
+    ~FGPISimpleController() {}
 
     void update( double dt );
 };

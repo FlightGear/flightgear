@@ -296,13 +296,13 @@ void FGPIDController::update( double dt ) {
 }
 
 
-FGSimplePIController::FGSimplePIController( SGPropertyNode *node ):
+FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
     proportional( false ),
-    factor( 0.0 ),
+    Kp( 0.0 ),
     offset_prop( NULL ),
     offset_value( 0.0 ),
     integral( false ),
-    gain( 0.0 ),
+    Ki( 0.0 ),
     int_sum( 0.0 ),
     clamp( false ),
     debug( false ),
@@ -318,6 +318,8 @@ FGSimplePIController::FGSimplePIController( SGPropertyNode *node ):
         string cval = child->getStringValue();
         if ( cname == "name" ) {
             name = cval;
+        } else if ( cname == "debug" ) {
+            debug = child->getBoolValue();
         } else if ( cname == "enable" ) {
             // cout << "parsing enable" << endl;
             SGPropertyNode *prop = child->getChild( "prop" );
@@ -331,8 +333,6 @@ FGSimplePIController::FGSimplePIController( SGPropertyNode *node ):
             if ( val != NULL ) {
                 enable_value = val->getStringValue();
             }
-        } else if ( cname == "debug" ) {
-            debug = child->getBoolValue();
         } else if ( cname == "input" ) {
             SGPropertyNode *prop = child->getChild( "prop" );
             if ( prop != NULL ) {
@@ -345,7 +345,7 @@ FGSimplePIController::FGSimplePIController( SGPropertyNode *node ):
             } else {
                 prop = child->getChild( "value" );
                 if ( prop != NULL ) {
-                    r_n_value = prop->getDoubleValue();
+                    r_n = prop->getDoubleValue();
                 }
             }
         } else if ( cname == "output" ) {
@@ -356,64 +356,43 @@ FGSimplePIController::FGSimplePIController( SGPropertyNode *node ):
                 output_list.push_back( tmp );
                 i++;
             }
-            prop = child->getChild( "clamp" );
+        } else if ( cname == "config" ) {
+            SGPropertyNode *prop;
+
+            prop = child->getChild( "Kp" );
             if ( prop != NULL ) {
+                Kp = prop->getDoubleValue();
+                proportional = true;
+            }
+
+            prop = child->getChild( "Ki" );
+            if ( prop != NULL ) {
+                Ki = prop->getDoubleValue();
+                integral = true;
+            }
+
+            prop = child->getChild( "u_min" );
+            if ( prop != NULL ) {
+                u_min = prop->getDoubleValue();
                 clamp = true;
-
-                SGPropertyNode *tmp;
-
-                tmp = prop->getChild( "min" );
-                if ( tmp != NULL ) {
-                    u_min = tmp->getDoubleValue();
-                    // cout << "min = " << u_min << endl;
-                }
-
-                tmp = prop->getChild( "max" );
-                if ( tmp != NULL ) {
-                    u_max = tmp->getDoubleValue();
-                    // cout << "max = " << u_max << endl;
-                }
-            }
-        } else if ( cname == "proportional" ) {
-            proportional = true;
-
-            SGPropertyNode *prop;
-
-            prop = child->getChild( "factor" );
-            if ( prop != NULL ) {
-                factor = prop->getDoubleValue();
             }
 
-            prop = child->getChild( "offset" );
+            prop = child->getChild( "u_max" );
             if ( prop != NULL ) {
-                SGPropertyNode *sub = prop->getChild( "prop" );
-                if ( sub != NULL ) {
-                    offset_prop = fgGetNode( sub->getStringValue(), true );
-                    // cout << "offset prop = " << sub->getStringValue() << endl;
-                } else {
-                    sub = prop->getChild( "value" );
-                    if ( sub != NULL ) {
-                        offset_value = sub->getDoubleValue();
-                        // cout << "offset value = " << offset_value << endl;
-                    }
-                }
-            }
-        } else if ( cname == "integral" ) {
-            integral = true;
-
-            SGPropertyNode *prop;
-            prop = child->getChild( "gain" );
-            if ( prop != NULL ) {
-                gain = prop->getDoubleValue();
+                u_max = prop->getDoubleValue();
+                clamp = true;
             }
         } else {
             SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in autopilot config logic" );
+            if ( name.length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            }
         }
     }   
 }
 
 
-void FGSimplePIController::update( double dt ) {
+void FGPISimpleController::update( double dt ) {
     if (enable_prop != NULL && enable_prop->getStringValue() == enable_value) {
         if ( !enabled ) {
             // we have just been enabled, zero out int_sum
@@ -454,11 +433,11 @@ void FGSimplePIController::update( double dt ) {
         }
 
         if ( proportional ) {
-            prop_comp = error * factor + offset;
+            prop_comp = error * Kp + offset;
         }
 
         if ( integral ) {
-            int_sum += error * gain * dt;
+            int_sum += error * Ki * dt;
         } else {
             int_sum = 0.0;
         }
@@ -553,6 +532,9 @@ bool FGXMLAutopilot::build() {
         // cout << name << endl;
         if ( name == "pid-controller" ) {
             FGXMLAutoComponent *c = new FGPIDController( node );
+            components.push_back( c );
+        } else if ( name == "pi-simple-controller" ) {
+            FGXMLAutoComponent *c = new FGPISimpleController( node );
             components.push_back( c );
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
