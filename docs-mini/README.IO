@@ -1,9 +1,9 @@
 This document describes how to invoke FlightGear's generic IO subsystem.
 
 FlightGear has a fairly flexible generic IO subsystem that allows you
-to speak any supported protocol over any supported medium.  The IO
+to "speak" any supported protocol over any supported medium.  The IO
 options are configured at runtime via command line options.  You can
-specify multiple entries, one per option.
+specify multiple entries if you like, one per command line option.
 
 The general form of the command line option is as follows:
 
@@ -26,7 +26,7 @@ Serial Port Communication:
 
     --nmea=serial,out,0.5,COM1,4800
 
-    Note that for unix varient you might use a device name like "/dev/ttyS0"
+    Note that for unix varients you might use a device name like "/dev/ttyS0"
 
 Socket Communication:
 
@@ -63,7 +63,7 @@ File I/O:
 
     example to replay your flight
 
-    --native=file,in,10,flight1.fgfs
+    --native=file,in,10,flight1.fgfs --fdm=external
 
 
 Moving Map Example:
@@ -86,5 +86,5 @@ Moving Map Example:
 
     Once both programs are running, the Atlas program should display
     your current location.  Atlas is a really nifty program with many
-    neat optoins such as the ability to generate and use background
+    neat options such as the ability to generate and use background
     bitmaps that show the terrain, cities, lakes, oceans, rivers, etc.
