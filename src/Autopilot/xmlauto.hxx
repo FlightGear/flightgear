@@ -230,7 +230,8 @@ private:
     double rateOfChange;  // The maximum allowable rate of change [1/s]
     deque <double> output;
     deque <double> input;
-    string filterType;
+    enum filterTypes { exponential, doubleExponential, movingAverage, noiseSpike };
+    filterTypes filterType;
 
     bool debug;
 

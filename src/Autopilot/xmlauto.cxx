@@ -607,7 +607,15 @@ FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node)
         } else if ( cname == "debug" ) {
             debug = child->getBoolValue();
         } else if ( cname == "type" ) {
-            filterType = cval;
+            if ( cval == "exponential" ) {
+                filterType = exponential;
+            } else if (cval == "double-exponential") {
+                filterType = doubleExponential;
+            } else if (cval == "moving-average") {
+                filterType = movingAverage;
+            } else if (cval == "noise-spike") {
+                filterType = noiseSpike;
+            }
         } else if ( cname == "input" ) {
             input_prop = fgGetNode( child->getStringValue(), true );
         } else if ( cname == "filter-time" ) {
@@ -645,7 +653,7 @@ void FGDigitalFilter::update(double dt)
          *
          */
 
-        if (filterType == "exponential")
+        if (filterType == exponential)
         {
             double alpha = 1 / ((Tf/dt) + 1);
             output.push_front(alpha * input[0] + 
@@ -656,7 +664,7 @@ void FGDigitalFilter::update(double dt)
             }
             output.resize(1);
         } 
-        else if (filterType == "double-exponential")
+        else if (filterType == doubleExponential)
         {
             double alpha = 1 / ((Tf/dt) + 1);
             output.push_front(alpha * alpha * input[0] + 
@@ -668,7 +676,7 @@ void FGDigitalFilter::update(double dt)
             }
             output.resize(2);
         }
-        else if (filterType == "moving-average")
+        else if (filterType == movingAverage)
         {
             output.push_front(output[0] + 
                               (input[0] - input.back()) / samples);
@@ -678,7 +686,7 @@ void FGDigitalFilter::update(double dt)
             }
             output.resize(1);
         }
-        else if (filterType == "noise-spike")
+        else if (filterType == noiseSpike)
         {
             double maxChange = rateOfChange * dt;
 
