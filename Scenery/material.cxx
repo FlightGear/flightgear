@@ -137,8 +137,15 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 	    sscanf(line_ptr, "%s\n", m.texture_name);
 
 	    // create the texture object and bind it
+#ifdef GL_VERSION_1_1
 	    xglGenTextures(1, &m.texture_id);
 	    xglBindTexture(GL_TEXTURE_2D, m.texture_id);
+#elif GL_EXT_texture_object
+	    xglGenTexturesEXT(1, &m.texture_id);
+	    xglBindTextureEXT(GL_TEXTURE_2D, m.texture_id);
+#else
+#  error port me
+#endif
 
 	    // set the texture parameters for this texture
 	    xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
@@ -164,7 +171,7 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 		if ( (texbuf = read_rgb_texture(fg_tpath, &width, &height)) 
 		     == NULL ) {
 		    fgPrintf( FG_GENERAL, FG_EXIT, 
-			      "Error in loading texture %s\n", tpath );
+			      "Error loading texture %s\n", tpath );
 		    return(0);
 		} 
 	    } 
@@ -248,6 +255,10 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.6  1998/06/27 16:54:59  curt
+// Check for GL_VERSION_1_1 or GL_EXT_texture_object to decide whether to use
+//   "EXT" versions of texture management routines.
+//
 // Revision 1.5  1998/06/17 21:36:39  curt
 // Load and manage multiple textures defined in the Materials library.
 // Boost max material fagments for each material property to 800.

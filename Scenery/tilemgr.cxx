@@ -433,7 +433,13 @@ void fgTileMgrRender( void ) {
 	size = mtl_ptr->list_size;
 	if ( size > 0 ) {
 	    if ( o->textures ) {
+#ifdef GL_VERSION_1_1
 		xglBindTexture(GL_TEXTURE_2D, mtl_ptr->texture_id);
+#elif GL_EXT_texture_object
+		xglBindTextureEXT(GL_TEXTURE_2D, mtl_ptr->texture_id);
+#else
+#  error port me
+#endif
 	    } else {
 		xglMaterialfv (GL_FRONT, GL_AMBIENT, mtl_ptr->ambient);
 		xglMaterialfv (GL_FRONT, GL_DIFFUSE, mtl_ptr->diffuse);
@@ -474,6 +480,10 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.21  1998/06/27 16:54:59  curt
+// Check for GL_VERSION_1_1 or GL_EXT_texture_object to decide whether to use
+//   "EXT" versions of texture management routines.
+//
 // Revision 1.20  1998/06/17 21:36:42  curt
 // Load and manage multiple textures defined in the Materials library.
 // Boost max material fagments for each material property to 800.
