@@ -35,5 +35,6 @@ extern string fgScanForRoot (const string &file_path);
 extern void fgParseArgs (int argc, char ** argv);
 extern void fgParseOptions (const string &file_path);
 extern void fgUsage (bool verbose = false);
+extern void fgShowAircraft();
 
 #endif /* _OPTIONS_HXX */

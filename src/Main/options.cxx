@@ -35,6 +35,8 @@
 
 #include STL_STRING
 
+#include <plib/ul.h>
+
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -69,7 +71,8 @@ enum
     FG_OPTIONS_OK = 0,
     FG_OPTIONS_HELP = 1,
     FG_OPTIONS_ERROR = 2,
-    FG_OPTIONS_VERBOSE_HELP = 3
+    FG_OPTIONS_VERBOSE_HELP = 3,
+    FG_OPTIONS_SHOW_AIRCRAFT = 4
 };
 
 static double
@@ -745,6 +748,8 @@ parse_option (const string& arg)
 	fgSetString("/sim/aero", arg.substr(7).c_str());
     } else if ( arg.find( "--aircraft-dir=" ) == 0 ) {
         fgSetString("/sim/aircraft-dir", arg.substr(15).c_str());
+    } else if ( arg.find( "--show-aircraft") == 0) {
+        return(FG_OPTIONS_SHOW_AIRCRAFT);
     } else if ( arg.find( "--model-hz=" ) == 0 ) {
 	fgSetInt("/sim/model-hz", atoi(arg.substr(11)));
     } else if ( arg.find( "--speed=" ) == 0 ) {
@@ -1083,6 +1088,11 @@ fgParseArgs (int argc, char **argv)
 
             else if (result == FG_OPTIONS_VERBOSE_HELP)
               verbose = true;
+
+            else if (result == FG_OPTIONS_SHOW_AIRCRAFT) {
+               fgShowAircraft();
+               exit(0);
+            }
 	  }
 	} else {
 	  in_options = false;
@@ -1243,4 +1253,55 @@ fgUsage (bool verbose)
         cout << endl;
         cout << "For a complete list of options use --help --verbose" << endl;
     }
+}
+
+// Show available aircraft types
+void fgShowAircraft(void) {
+   SGPath path( globals->get_fg_root() );
+   path.append("Aircraft");
+
+   ulDirEnt* dire;
+   ulDir *dirp;
+
+   dirp = ulOpenDir(path.c_str());
+   if (dirp == NULL) {
+      cout << "Unable to open aircraft directory." << endl;
+      exit(-1);
+   }
+
+   cout << "Available aircraft:" << endl;
+   while ((dire = ulReadDir(dirp)) != NULL) {
+      char *ptr;
+
+      if ((ptr = strstr(dire->d_name, "-set.xml")) ) {
+          SGPath afile = path;
+          afile.append(dire->d_name);
+
+          *ptr = '\0';
+
+          SGPropertyNode root;
+          try {
+             readProperties(afile.str(), &root);
+          } catch (...) {
+             continue;
+          }
+
+          SGPropertyNode *desc, *node = root.getNode("sim");
+          if (node)
+             desc = node->getNode("description");
+
+          char cstr[96];
+          if (strlen(dire->d_name) <= 27)
+             snprintf(cstr, 96, "   %-27s  %s", dire->d_name,
+                      (desc) ? desc->getStringValue() : "" );
+
+          else
+             snprintf(cstr, 96, "   %-27s\n%32c%s", dire->d_name, ' ',
+                      (desc) ? desc->getStringValue() : "" );
+
+          cout << cstr << endl;
+      }
+   }
+
+   ulCloseDir(dirp);
 }
