@@ -1,0 +1,221 @@
+HowTo compile FlightGear with Microsoft Visual C++ 6.0
+======================================================
+
+This HowTo is written for FlightGear 0.7.4. You might be able to
+figure out how to get any other version running by reading it as the
+steps are quite simmilar.
+
+First you need FlightGear 0.7.4 or on of the current snapshots from
+
+  ftp://ftp.flightgear.org/pub/fgfs/Source
+
+or
+
+  ftp://ftp.flightgear.org/pub/fgfs/Source/snapshots
+
+The you need the libraries that it depends on. This is SimGear 0.0.9
+and plib 1.1.11. Those libraries can be found at
+
+  ftp://ftp.flightgear.org/pub/fgfs/Source
+
+and
+
+  http://plib.sourceforge.net/
+
+Then you've got two posibilities. Either use the MSVC workspace that
+you can find at
+
+  ftp://ftp.flightgear.org/pub/fgfs/Source
+
+or create your own workspace.
+
+The premade workspace will give you a quicker start (it takes some
+time to create your own), but it will most probably be outdatet so
+that you'd have to fix it.
+
+Any wich way you choose you'll have to create the plib library now
+(i.e. before you touch anything from FGFS). You can either use the
+workspace that comes with it (most probably outdated) or create your
+own ones. The way to do that is very similar to those of the creation
+of the SimGear workspaces which is described below.
+
+If you use the premade workspace (one for SimGear and one for
+FlightGear) you'll have to open the SimGear one first and compile it,
+then the FlightGear one. After that you should be read to run FGFS.
+
+The universal approach is by creating your own workspace.
+
+Make sure that you've compiled PLIB sucessfully and that you've got in
+...\plib (I'm using ...\ for the directory where all your projects
+are. The name of the directory doesn't matter as all paths will be
+relative):
+
+  ...\plib\plib.lib
+  ...\plib\fnt.h
+  ...\plib\plib\js.h
+  ...\plib\pu.h 
+  ...\plib\sg.h
+  ...\plib\sl.h
+  ...\plib\sm.h
+  ...\plib\ssg.h
+  ...\plib\ssgKeyFlier.h
+
+(This also important when you are using the premade workspaces)
+
+Now unzip SimGear-0.0.9 into ...\SimGear (NOTE: There's no -0.0.9 at
+the end of the directory) and run MSVC. Create a new and empty
+workspace, call it 'SimGear Workspace' and make sure it'S path is
+'...\SimGear\SimGear Workspace'
+
+Then you'll have to add lots of new projects. The best way is by right
+clicking on the workspace and select 'Add new project'. Select
+Win32-Library (static) in the dialog and set the name to the first
+subdir in ...\SimGear\simgear. That'll be most probably 'bucket'. The
+path will automatically be set to ...\SimGear\bucket. Then press OK as
+often as necessary (we don't need any of the checkboxes that'll
+apear).
+
+Repeat that with all subdirectories. (If you'll open both, MSVC and
+the Explorer it'll be quite fast). With SimGear 0.0.9 you should have
+11 projects.
+
+Now do it the last time and create a project with the name 'simgear'
+and make it dependant on all other projects (through the projects
+menu).
+
+Now it's time to fill the projects. Right click on the first one and
+select the item to add new files. In the file selector select the
+files of the corresponding directory. That'll be e.g. for the 'bucket'
+project:
+
+  ...\SimGear\simgear\bucket\newbucket.cxx
+  ...\SimGear\simgear\bucket\newbucket.hxx
+
+The files for the MetaKit live in
+
+  ...\SimGear\simgear\metakit\src\
+
+and
+
+  ...\SimGear\simgear\metakit\include\
+
+NOTE: borc.h, gnuc.h, mk4dll.h and mwcw.h aren't needed and shouldn't
+be included
+
+Then add to all projects the additional search path
+'..\..\,..\..\..\,..\..\simgear\'. Do that by pressing Alt-F7,
+selecting all projects, selecting 'all configurations', selecting the
+'C/C++' tab, selecting 'preprocessor' and then add that path to the
+additional include path.
+
+The 'metakit' project needs a special addition to its include path:
+'..\..\\simgear\metakit\win,..\..\simgear\metakit\include'
+
+All projects need the additon of a few preprocessor defines. You can
+set those in the Alt-F7 dialog on the same tab where you set the
+include paths. The necessary defines are:
+
+  HAVE_WINDOWS_H and HAVE_RAND
+
+Now we are nearly ready for compiling SimGear. The only thing missing
+is the exclusion of all those test programms. These programms are
+
+  debug:  logtest.cxx
+  magvar: testmagvar.cxx
+  metar:  Drvmetar.c
+  serial: testserial.cxx
+  zlib:   example.c
+  zlib:   maketree.obj
+  zlib:   minigzip.c
+
+To exclude them, press Alt-F7, select 'all configurations' and then
+select all those files, and then exlclude those files.
+
+Last thing to do before you can compile SimGear is to press Alt-F7
+once again, select simgear and all configurations and the general
+tab. Add '..\..\' to the directory for the output files.
+
+Finally you can hit compile.
+
+When you've done everything correctly you'll have a 'simgear.lib' at
+...\SimGear\.
+
+Congratulations for completing step 1.
+
+To compile FlightGear you'll have to do quite similar steps.
+
+Make sure that FlighGear lives in ...\FlightGear, create a new and
+empty workspace named 'FlightGear Workspace' at
+'...\FlightGear\FlightGear Workspace'. Now add the projects that are
+named after the directories in ...\FlightGear\src.
+
+NOTE: Create a project named 'FDM' as well as projects named
+      'FDM Balloon', 'FDM JSBsim', ...
+NOTE: There'll even be a project named 'FDM JSBsim Filtersjb'
+NOTE: The directory 'Include' doesn't get its own project
+NOTE: The directory 'Main' is special. It's project name is 
+      'FlightGear' and it's not a win32 libraray. It's a 
+      win32-console application.
+
+Then it's time to add the files in those directories to the
+projects. (See description of SimGear for the details).
+
+Next step is to set the dependancies. 'FDM JSBsim' depends on 'FDM
+JSBsim Filtersjb', 'FDM' depends on the other 'FDM ...' projects and
+'FlightGear' depends on all other projects (but not 'FDM Ballon'
+etc. as other projects do already depend on them).
+
+NOTE: No project is allowed to depend on 'NetworkOLK' as it isn'T
+compatible with MSVC yet.
+
+Now make sure that the 'FlightGear' project is the active one (that's
+the bold one).
+
+Then add those include paths: ..\..\..\SimGear\,..\..\src,..\..\src\Include,..\..\..\,..\..\..\SimGear\simgear\metakit\include\
+
+Exclude the following files:
+
+airports:   buildsimple.cxx
+Navaids:    testnavs.cxx
+Joystick:   js_demo.cxx
+FDM JSBsim: JSBSim.cpp
+
+Wolfram Kuss (w_kuss@rz-online.de) figured out that the following
+files also have to be excluded:
+
+LaRCsim/c172_main.c
+airports/testair
+airports/genrunwas
+airports/gensimple
+the rest of airports ??
+scenery/test
+time/win32test
+time/test_event
+
+Add those preprocessor defines
+
+HAVE_WINDOWS_H, FGFS, ENABLE_PLIB_JOYSTICK
+
+Add those libraries to the linker
+
+plib.lib simgear.lib ws2_32.lib
+
+and those paths to the library paths
+
+..\..\..\plib,..\..\..\simgear
+
+Now press Alt-F7 again, select 'FlightGear' and 'all
+configurations'. Now specify your FG_ROOT/bin directory as the
+directory for the output data and FG_ROOT as the working directory.
+
+Now you are ready to compile FGFS! Have fun.
+
+NOTE: Wolfram Kuss (w_kuss@rz-online.de) Figured out that a lot of
+files are useing header files from SimGear. This leads to problems
+with using precompiled headers as long as you didn't declare all
+dependencies. He simply turned off precompiled headers.
+
+NOTE: As most developers aren't using MSVC the source code is probably
+broken. If that's the case and you know how to fix it it'll be nice if
+you could mail a bug report with it's fix to the FlightGear
+development list.
