@@ -1,4 +1,4 @@
-21 February 2000 - CLO
+21 February 2001 - CLO
 
 As of version 0.7.2, FlightGear now requires the SimGear supporting
 libraries to be installed before configuring and building FlightGear.
@@ -6,9 +6,9 @@ You must also have SimGear installed if you build the TerraGear
 scenery creating tools (TerraGear is not required to run the
 simulator).
 
-You can get a copy of SimGear from the same place you get FlightGear:
+You can get a copy of SimGear from the simgear web page:
 
-    ftp://ftp.flightgear.org/pub/fgfs/Source/
+    http://www.simgear.org
 
 SimGear build notes:
 

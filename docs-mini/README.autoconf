@@ -1,26 +1,18 @@
 Flight Gear uses the Gnu autoconf and automake tools for managing
-Makefiles.  It also uses libtool to manage building shared and static
-libraries.  Key input files for this system are:
+Makefiles.  Key input files for this system are:
 
     configure.in - Top level directory
     Makefile.am - One in each subdirectory
     Include/config.in - input file for building config.h
 
-If you need to modify any of these files, you will need to build and
-install the following packages:
+If you need to modify any of these files, you will need to install the
+following packages.  If you don't have a prebuilt package for your OS,
+you can fetch them from the locations listed below:
 
-    - GNU autoconf 2.12 (available from ftp://prep.ai.mit.edu/pub/gnu)
-    - GNU automake 1.2h (available from ftp://ftp.cygnus.com/pub/tromey)
+    - GNU autoconf (available from ftp://prep.ai.mit.edu/pub/gnu)
+    - GNU automake (available from ftp://ftp.cygnus.com/pub/tromey)
 
-Libtool is not currently used:
-
-    - GNU libtool 1.2   (available from ftp://prep.ai.mit.edu/pub/gnu)
-                        (or maybe ftp://alpha.gnu.org/gnu)
-    - After upgrading libtool, if we were using it, you would want to run:
-
-      libtoolize --force
-
-When making a change to any of these files you will need to run:
+After making a change to configure.in you will need to run:
 
     aclocal ; automake -a ; autoconf
 

@@ -6,7 +6,7 @@ suggest that I include the answer here.
 I. Compilers and Portability
 ============================
 
-Flight Gear is known to build with egcs-1.1 and higher, as well as
+FlightGear is known to build with egcs-1.1 and higher, as well as
 gcc-2.8 and higher.  Your mileage may vary with earlier versions of
 these compilers although support for gcc-2.7.x is mostly there.
 
@@ -20,11 +20,18 @@ platforms, but I must depend on others to make sure their favorite
 platform and compiler is well supported.
 
 
-II. GLUT
-========
+II. OpenGL
+==========
 
-Flight Gear requires GLUT version 3.7 or later (aka GameGLUT._ GLUT
-needs to be installed on your system before you can build Flight Gear.
+FlightGear requires accelerated OpenGL drivers to be properly
+installed and configured on your system.
+
+
+III. GLUT
+=========
+
+FlightGear requires GLUT version 3.7 or later (aka GameGLUT._ GLUT
+needs to be installed on your system before you can build FlightGear.
 GLUT can be found at:
 
     http://reality.sgi.com/opengl/glut3/glut3.html
@@ -38,172 +45,13 @@ you can write a single OpenGL program that works on both Win32 PCs and
 X11 workstations.
 
 
-III. Joystick Support
+IV. Joystick Support
 =====================
 
-GLUT only has win32 joystick support but even at that, it is not well
-implimented.  So we use Steve Backer's joystick library when possible,
-and fall back to GLUT for win32 until Steve's library adds win32
-support.
+We use the plib joystick library for joystick support.
 
 To make sure joystick support is included when building under Linux:
 
   - make sure you have the proper joystick module installed.
   - make sure the proper devices are created in /dev.
   - /usr/include/linux/joystick.h must exist on your system.
-
-
-IV. Procedure to build FGFS with Native SGI Irix Compilers from CVS Sources
-===========================================================================
-
-(Contributed by Todd Smith <msmith@sikorsky.com> with modifications
-and updates by Curt Olson)
-
-Download the latest version of plib (1.0.18) from:
-
-    http://www.woodsoup.org/~sbaker/plib/
-
-Configure it with the default prefix of /usr/local which places
-everthing in a tree rooted at /usr/local/plib:
-
-    sh$ CC="cc -Xcpluscomm" CXX=CC ./configure
-
-*Before* running make, fix up the plib Makefiles using the script
-provided with the Flight Gear distribution:
-
-    find . -name Makefile -exec .../src/FlightGear-0.7.x/irix-hack.pl {} \;
-
-This applies a fix in all the Makefiles to the lib creation command
-(to use CC -ar rather than ar) as per a tip in the SGI pipeline
-periodical.
-
-Now, make and install plib.
-
-Download the latest fgfs source snapshot from:
-
-    ftp://ftp.flightgear.org/pub/fgfs/Source/Snapshots/
-
-Configure and build fgfs as you did plib:
-
-    sh$ CC="cc -Xcpluscomm" CXX=CC ./configure
-    sh$ find . -name Makefile -exec .../src/FlightGear-0.7.x/irix-hack.pl {} \;
-
-
-V. Additional Notes for Building from CVS Sources
-==================================================
-
-(Contributed by Todd Smith <msmith@sikorsky.com>)
-and updates by Curt Olson)
-
-Download the FlightGear-0.7.x via anonymous cvs as usual, then do:
-
-> aclocal		# normal
-> automake -a -i	# added '-i' flag to avoid dependency calc
-			# that only sgi cc/CC doesn't support
-> autoconf		# normal
-
-Note the change in automake's command argument.
-
-Now set env variables to use native compilers (csh syntax).
-
-> setenv CC cc
-> setenv CXX CC
-> setenv CFLAGS '-Xcpluscomm -DEBUG:suppress=1001,1012,1014,
-                            1116,1172,1174,1401,1460,1551,1552'
-> setenv CXXFLAGS '-DEBUG:suppress=1001,1012,1014,1116,1172,
-                          1174,1401,1460,1551,1552,3303,3322'
-
-The '-DEBUG:suppress=' stuff just suppresses anonying warnings during
-compile.  The meaning of each one is shown later in this file.
-You can use all or none of these here.
-
-> setenv CPPFLAGS '-woff 1014'
-
-This is required so that configure will really believe that plib
-is installed.  ( Otherwise a compiler warning makes configure
-that plib/pu.h couldn't be found. )
-
-> ./configure
-> find . -name Makefile -exec irix-hack.pl {} \;	# normal irix hack
-> gmake
-
-Runs great.
-
-Todd
-msmith@sikorsky.com
-
--------------------------------------------
-Warnings that I get. Ignore at your lesiure.
-
-C and C++:
-warning(1001): last line of file ends without a newline
-warning(1012): parsing restarts here after previous syntax error
-warning(1014): extra text after expected end of preprocessing directive		(breaks configure)
-warning(1116): non-void function "poly_index_init" should return a value
-warning(1172): subscript out of range
-warning(1174): variable "j" was declared but never referenced
-warning(1401): qualified name is not allowed in member declaration
-warning(1460): function "..." redeclared "inline" after being called
-warning(1551): variable "Altitude" is used before its value is set
-warning(1552): variable "last" was set but never used
-
-C++ only:
-warning(3303): type qualifier on return type is meaningless
-warning(3322): omission of explicit type is nonstandard ("int" assumed)
-
-
-VI. Additional Native SGI Irix Compilers Notes
-==============================================
-
-Fixing all the Makefiles' with irix-hack.pl is *VERY* important for
-your success):
-
-  find . -name Makefile -exec irix-hack.pl {} \;
-
-This touches up the Makefiles to build libfoo.a with 
-
-  CC -ar -o libfoo.a file1.o file2.o ...
-
-The traditional method is to run:
-
-  ar cru libfoo.a file1.o file2.o
-
-I wonder if this means that the native SGI "ar" is somewhat broke?
-
-Note, you should make sure you have perl installed on your system.  The
-"irix-hack.pl" script assumes that perl is located in /usr/bin/perl so
-if this isn't the proper location on your system, change it in the first
-line of "irix-hack.pl" before running the above command.  One way to see
-if perl is on your system (and determine where) is to run:
-
-  which perl
-
-Perl can be installed from "eoe.sw.gifts_perl" or can be fetched and
-built from the net.
-
-Finally you should run Gnu make.  The native Irix make utility just
-can't handle the makefiles generated by the automake program.  Thus 
-you will need to use Gnu make.  It's called "gmake" on my system so I 
-just run:
-
-  gmake
-
-Don't worry about the make failing in the Tools directory.  That's all
-under construction stuff right now (10/7/99) and if you get that far, 
-rejoice because it means the simulator was successfully built in the 
-Simulator/Main subdirectory.
-
-Special note for those Irix users using the native compilers *AND* checking
-out the current source tree via CVS:
-
-You will need to run "aclocal ; automake -a ; autoconf" as per 
-README.autoconf, but you need an additional flag for automake to disable
-automatic dependency building (which breaks the native Irix compilers.)
-You should instead run:
-
-    aclocal ; automake -a --include-deps; autoconf
-
-Then, proceed on to the configure step.  
-
-Questions?  I realize this section is a big heap of random information so
-if something isn't quite working for you, please ask.
