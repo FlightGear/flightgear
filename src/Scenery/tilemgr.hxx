@@ -85,7 +85,7 @@ private:
     void load_tile( const FGBucket& b, int cache_index );
 
     int hitcount;
-    sgVec3 hit_pts [ MAX_HITS ] ;
+    sgdVec3 hit_pts [ MAX_HITS ] ;
 
 public:
 
@@ -108,8 +108,8 @@ public:
     // explicitely.  lat & lon are in radians.  abs_view_pos in
     // meters.  Returns result in meters.
     double current_elev( double lon, double lat, const Point3D& abs_view_pos );
-    void my_ssg_los( string s, ssgBranch *branch, sgMat4 m, 
-		     const sgVec3 p, const sgVec3 dir );
+    void my_ssg_los( string s, ssgBranch *branch, sgdMat4 m, 
+		     const sgdVec3 p, const sgdVec3 dir );
     double current_elev_ssg( const Point3D& abs_view_pos, 
 			     const Point3D& view_pos );
     double current_elev_new( const FGBucket& p );

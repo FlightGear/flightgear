@@ -391,21 +391,37 @@ inline double fg_max3 (const double a, const double b, const double c ) {
     return a < b ? fg_max(b, c) : fg_max(a, c);
 }
 
+inline void sgdSetVec3 ( sgdVec3 dst, sgVec3 src )
+{
+  dst [ 0 ] = src [ 0 ] ;
+  dst [ 1 ] = src [ 1 ] ;
+  dst [ 2 ] = src [ 2 ] ;
+}
+
+inline void sgdSetMat4 ( sgdMat4 dst, sgMat4 src )
+{
+  for ( int i = 0; i < 4; ++i ) {
+      for ( int j = 0; j < 4; ++j ) {
+	  dst [ i ] [ j ] = src [ i ] [ j ];
+      }
+  }
+}
 
 // check for an instersection with the individual triangles of a leaf
-static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgMat4 m,
-				    const sgVec3 p, const sgVec3 dir,
-				    sgVec3 result )
+static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgdMat4 m,
+				    const sgdVec3 p, const sgdVec3 dir,
+				    sgdVec3 result )
 {
-    sgVec3 v1, v2, n;
-    sgVec3 p1, p2, p3;
+    sgdVec3 v1, v2, n;
+    sgdVec3 p1, p2, p3;
     double x, y, z;  // temporary holding spot for result
     double a, b, c, d;
     double x0, y0, z0, x1, y1, z1, a1, b1, c1;
     double t1, t2, t3;
     double xmin, xmax, ymin, ymax, zmin, zmax;
     double dx, dy, dz, min_dim, x2, y2, x3, y3, rx, ry;
-    float *tmp;
+    sgdVec3 tmp;
+    float *ftmp;
     int side1, side2;
     short i1, i2, i3;
 
@@ -419,20 +435,23 @@ static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgMat4 m,
 
 	// get triangle vertex coordinates
 
-	tmp = leaf->getVertex( i1 );
+	ftmp = leaf->getVertex( i1 );
+	sgdSetVec3( tmp, ftmp );
 	// cout << s << "orig point 1 = " << tmp[0] << " " << tmp[1] 
 	//      << " " << tmp[2] << endl;
-	sgXformPnt3( p1, tmp, m ) ;
+	sgdXformPnt3( p1, tmp, m ) ;
 
-	tmp = leaf->getVertex( i2 );
+	ftmp = leaf->getVertex( i2 );
+	sgdSetVec3( tmp, ftmp );
 	// cout << s << "orig point 2 = " << tmp[0] << " " << tmp[1] 
 	//      << " " << tmp[2] << endl;
-	sgXformPnt3( p2, tmp, m ) ;
+	sgdXformPnt3( p2, tmp, m ) ;
 
-	tmp = leaf->getVertex( i3 );
+	ftmp = leaf->getVertex( i3 );
+	sgdSetVec3( tmp, ftmp );
 	// cout << s << "orig point 3 = " << tmp[0] << " " << tmp[1] 
 	//      << " " << tmp[2] << endl;
-	sgXformPnt3( p3, tmp, m ) ;
+	sgdXformPnt3( p3, tmp, m ) ;
 
 	// cout << s << "point 1 = " << p1[0] << " " << p1[1] << " " << p1[2]
 	//      << endl;
@@ -442,9 +461,9 @@ static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgMat4 m,
 	//      << endl;
 
 	// calculate two edge vectors, and the face normal
-	sgSubVec3(v1, p2, p1);
-	sgSubVec3(v2, p3, p1);
-	sgVectorProductVec3(n, v1, v2);
+	sgdSubVec3(v1, p2, p1);
+	sgdSubVec3(v2, p3, p1);
+	sgdVectorProductVec3(n, v1, v2);
 
 	// calculate the plane coefficients for the plane defined by
 	// this face.  If n is the normal vector, n = (a, b, c) and p1
@@ -511,7 +530,7 @@ static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgMat4 m,
 		// everything is too close together to tell the difference
 		// so the current intersection point should work as good
 		// as any
-		sgSetVec3( result, x, y, z );
+		sgdSetVec3( result, x, y, z );
 		return true;
 	    }
 	    side1 = fg_sign (t1 - t2);
@@ -592,7 +611,7 @@ static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgMat4 m,
 	} else {
 	    // all dimensions are really small so lets call it close
 	    // enough and return a successful match
-	    sgSetVec3( result, x, y, z );
+	    sgdSetVec3( result, x, y, z );
 	    return true;
 	}
 
@@ -624,7 +643,7 @@ static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgMat4 m,
 	}
 
 	// printf( "intersection point = %.2f %.2f %.2f\n", x, y, z);
-	sgSetVec3( result, x, y, z );
+	sgdSetVec3( result, x, y, z );
 	return true;
     }
 
@@ -634,8 +653,8 @@ static bool my_ssg_instersect_leaf( string s, ssgLeaf *leaf, sgMat4 m,
 }
 
 
-void FGTileMgr::my_ssg_los( string s, ssgBranch *branch, sgMat4 m, 
-			    const sgVec3 p, const sgVec3 dir )
+void FGTileMgr::my_ssg_los( string s, ssgBranch *branch, sgdMat4 m, 
+			    const sgdVec3 p, const sgdVec3 dir )
 {
     sgSphere *bsphere;
     for ( ssgEntity *kid = branch->getKid( 0 );
@@ -644,32 +663,38 @@ void FGTileMgr::my_ssg_los( string s, ssgBranch *branch, sgMat4 m,
     {
 	if ( kid->getTraversalMask() & SSGTRAV_HOT ) {
 	    bsphere = kid->getBSphere();
-	    sgVec3 center;
-	    sgCopyVec3( center, bsphere->getCenter() );
-	    sgXformPnt3( center, m ) ;
+	    sgVec3 fcenter;
+	    sgCopyVec3( fcenter, bsphere->getCenter() );
+	    sgdVec3 center;
+	    center[0] = fcenter[0]; 
+	    center[1] = fcenter[1];
+	    center[2] = fcenter[2];
+	    sgdXformPnt3( center, m ) ;
 	    // cout << s << "entity bounding sphere:" << endl;
 	    // cout << s << "center = " << center[0] << " "
 	    //      << center[1] << " " << center[2] << endl;
     	    // cout << s << "radius = " << bsphere->getRadius() << endl;
 	    double radius_sqd = bsphere->getRadius() * bsphere->getRadius();
-	    if ( sgPointLineDistSquared( center, p, dir ) < radius_sqd ) {
+	    if ( sgdPointLineDistSquared( center, p, dir ) < radius_sqd ) {
 		// possible intersections
 		if ( kid->isAKindOf ( ssgTypeBranch() ) ) {
-		    sgMat4 m_new;
-		    sgCopyMat4(m_new, m);
+		    sgdMat4 m_new;
+		    sgdCopyMat4(m_new, m);
 		    if ( kid->isA( ssgTypeTransform() ) ) {
-			sgMat4 xform;
-			((ssgTransform *)kid)->getTransform( xform );
-			sgPreMultMat4( m_new, xform );
+			sgMat4 fxform;
+			((ssgTransform *)kid)->getTransform( fxform );
+			sgdMat4 xform;
+			sgdSetMat4( xform, fxform );
+			sgdPreMultMat4( m_new, xform );
 		    }
 		    my_ssg_los( s + " ", (ssgBranch *)kid, m_new, p, dir );
 		} else if ( kid->isAKindOf ( ssgTypeLeaf() ) ) {
-		    sgVec3 result;
+		    sgdVec3 result;
 		    if ( my_ssg_instersect_leaf( s, (ssgLeaf *)kid, m, p, dir, 
 						 result ) )
 		    {
-			cout << "sgLOS hit: " << result[0] << "," 
-			     << result[1] << "," << result[2] << endl;
+			// cout << "sgLOS hit: " << result[0] << "," 
+			//      << result[1] << "," << result[2] << endl;
 			hit_pts[hitcount] = result;
 			hitcount++;
 		    }
@@ -695,26 +720,26 @@ FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos,
 {
     hitcount = 0;
 
-    sgMat4 m;
-    sgMakeIdentMat4 ( m ) ;
+    sgdMat4 m;
+    sgdMakeIdentMat4 ( m ) ;
 
-    sgVec3 sgavp, sgvp;
-    sgSetVec3(sgavp, abs_view_pos.x(), abs_view_pos.y(), abs_view_pos.z() );
-    sgSetVec3(sgvp, view_pos.x(), view_pos.y(), view_pos.z() );
+    sgdVec3 sgavp, sgvp;
+    sgdSetVec3(sgavp, abs_view_pos.x(), abs_view_pos.y(), abs_view_pos.z() );
+    sgdSetVec3(sgvp, view_pos.x(), view_pos.y(), view_pos.z() );
 
-    cout << "starting ssg_los, abs view pos = " << abs_view_pos[0] << " "
-         << abs_view_pos[1] << " " << abs_view_pos[2] << endl;
-    cout << "starting ssg_los, view pos = " << view_pos[0] << " "
-         << view_pos[1] << " " << view_pos[2] << endl;
+    // cout << "starting ssg_los, abs view pos = " << abs_view_pos[0] << " "
+    //      << abs_view_pos[1] << " " << abs_view_pos[2] << endl;
+    // cout << "starting ssg_los, view pos = " << view_pos[0] << " "
+    //      << view_pos[1] << " " << view_pos[2] << endl;
     my_ssg_los( "", scene, m, sgvp, sgavp );
-
+    
     double result = -9999;
 
     for ( int i = 0; i < hitcount; ++i ) {
 	Point3D rel_cart( hit_pts[i][0], hit_pts[i][1], hit_pts[i][2] );
 	Point3D abs_cart = rel_cart + scenery.center;
 	Point3D pp = fgCartToPolar3d( abs_cart );
-	FG_LOG( FG_TERRAIN, FG_INFO, "  polar form = " << pp );
+	FG_LOG( FG_TERRAIN, FG_DEBUG, "  polar form = " << pp );
 	// convert to geodetic coordinates
 	double lat_geod, alt, sea_level_r;
 	fgGeocToGeod(pp.lat(), pp.radius(), &lat_geod, 
@@ -742,7 +767,8 @@ FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos,
 int FGTileMgr::update( void ) {
     FGTileCache *c;
     FGInterface *f;
-    FGBucket p2;
+    FGTileEntry *t;
+     FGBucket p2;
     static FGBucket p_last(false);
     static double last_lon = -1000.0;  // in degrees
     static double last_lat = -1000.0;  // in degrees
@@ -756,6 +782,15 @@ int FGTileMgr::update( void ) {
 
     FGBucket p1( f->get_Longitude() * RAD_TO_DEG,
 		 f->get_Latitude() * RAD_TO_DEG );
+
+    long int index = c->exists(p1);
+    if ( index >= 0 ) {
+	t = c->get_tile(index);
+	scenery.next_center = t->center;
+    } else {
+	FG_LOG( FG_TERRAIN, FG_WARN, "Tile not found" );
+    }
+
     dw = tile_diameter / 2;
     dh = tile_diameter / 2;
 
@@ -789,16 +824,12 @@ int FGTileMgr::update( void ) {
 	sched_tile( p2 );
 
 	// prime scenery center calculations
-	Point3D geod_center( p2.get_center_lon() * RAD_TO_DEG,
-			     p2.get_center_lat() * RAD_TO_DEG, 0.0 );
-	scenery.center = scenery.next_center = fgGeodToCart( geod_center );
-
-	Point3D geod_view_center( p2.get_center_lon() * RAD_TO_DEG, 
-				  p2.get_center_lat() * RAD_TO_DEG, 
+	Point3D geod_view_center( p2.get_center_lon(), 
+				  p2.get_center_lat(), 
 				  cur_fdm_state->get_Altitude()*FEET_TO_METER +
 				  3 );
 	current_view.abs_view_pos = fgGeodToCart( geod_view_center );
-	current_view.view_pos = current_view.abs_view_pos - scenery.center;
+	current_view.view_pos = current_view.abs_view_pos - scenery.next_center;
 
 	for ( i = 3; i <= tile_diameter; i = i + 2 ) {
 	    int span = i / 2;
@@ -939,13 +970,13 @@ int FGTileMgr::update( void ) {
     Point3D geod_pos = Point3D( f->get_Longitude(), f->get_Latitude(), 0.0);
     Point3D tmp_abs_view_pos = fgGeodToCart(geod_pos);
 
-    cout << "current elevation (old) == " 
-	 << current_elev( f->get_Longitude(), f->get_Latitude(), 
-			  tmp_abs_view_pos ) 
-	 << endl;
+    // cout << "current elevation (old) == " 
+    //      << current_elev( f->get_Longitude(), f->get_Latitude(), 
+    //                       tmp_abs_view_pos ) 
+    //      << endl;
     scenery.cur_elev = current_elev_ssg( current_view.abs_view_pos,
 					 current_view.view_pos );
-    cout << "current elevation (ssg) == " << scenery.cur_elev << endl;
+    // cout << "current elevation (ssg) == " << scenery.cur_elev << endl;
 	
     p_last = p1;
     last_lon = f->get_Longitude() * RAD_TO_DEG;
