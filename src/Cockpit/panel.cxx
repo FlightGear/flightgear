@@ -1096,6 +1096,7 @@ const char *
 FGTextLayer::Chunk::getValue () const
 {
   if (test()) {
+    _buf[0] = '\0';
     switch (_type) {
     case TEXT:
       sprintf(_buf, _fmt.c_str(), _text.c_str());
