@@ -56,7 +56,9 @@ public:
 	FG_SERIAL_FGFS_OUT = 5,
 	FG_SERIAL_FGFS_IN = 6,
 
-	FG_SERIAL_RUL_OUT = 7         // Raul E Horcasitas <rul@compuserve.com>
+	FG_SERIAL_RUL_OUT = 7,	// Raul E Horcasitas <rul@compuserve.com>
+	FG_SERIAL_PVE_OUT = 8	// "Jeff Vrachan" 
+				// <jeffv@provisionentertainment.com>
     };
 
     string device;

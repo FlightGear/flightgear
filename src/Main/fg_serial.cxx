@@ -181,6 +181,17 @@ static bool config_port( fgIOCHANNEL &p )
 	    FG_LOG( FG_SERIAL, FG_ALERT, "Unknown direction" );
 	    return false;
 	}
+    } else if ( p.format == "pve" ) {
+	if ( p.direction == "out" ) {
+	    p.kind = fgIOCHANNEL::FG_SERIAL_PVE_OUT;
+	} else if ( p.direction == "in" ) {
+	    FG_LOG( FG_SERIAL, FG_ALERT, 
+		    "ProVision Entertainment format is outgoing only" );
+	    return false;
+	} else {
+	    FG_LOG( FG_SERIAL, FG_ALERT, "Unknown direction" );
+	    return false;
+	}
     } else {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Unknown format" );
 	return false;
@@ -450,7 +461,7 @@ static void read_fgfs_in( fgIOCHANNEL *p ) {
 //
 // For position it requires a 3-byte data packet defined as follows:
 //
-// First bite: ascII character"p" ( 80 decimal )
+// First bite: ascII character "P" ( 0x50 or 80 decimal )
 // Second byte X pos. (1-255) 1 being 0* and 255 being 359*
 // Third byte Y pos.( 1-255) 1 being 0* and 255 359*
 //
@@ -510,6 +521,75 @@ static void send_rul_out( fgIOCHANNEL *p ) {
 }
 
 
+// "PVE" (ProVision Entertainment) output format (for some sort of
+// motion platform)
+//
+// Outputs a 5-byte data packet defined as follows:
+//
+// First bite:  ASCII character "P" ( 0x50 or 80 decimal )
+// Second byte:  "roll" value (1-255) 1 being 0* and 255 being 359*
+// Third byte:  "pitch" value (1-255) 1 being 0* and 255 being 359*
+// Fourth byte:  "heave" value (or forward acceleration)
+//
+// So sending 80 127 127 to the two axis motors will position on 180*
+// The RS- 232 port is a nine pin connector and the only pins used are
+// 3&5.
+
+static void send_pve_out( fgIOCHANNEL *p ) {
+    char pve[256];
+
+    FGInterface *f;
+    FGTime *t;
+
+    f = current_aircraft.fdm_state;
+    t = FGTime::cur_time_params;
+
+    // run as often as possibleonce per second
+
+    // this runs once per second
+    // if ( p->last_time == t->get_cur_time() ) {
+    //    return;
+    // }
+    // p->last_time = t->get_cur_time();
+    // if ( t->get_cur_time() % 2 != 0 ) {
+    //    return;
+    // }
+    
+    // get roll and pitch, convert to degrees
+    int roll_deg = (int)(f->get_Phi() * RAD_TO_DEG);
+    while ( roll_deg < -180 ) {
+	roll_deg += 360;
+    }
+    while ( roll_deg > 179 ) {
+	roll_deg -= 360;
+    }
+
+    int pitch_deg = (int)(f->get_Theta() * RAD_TO_DEG);
+    while ( pitch_deg < -180 ) {
+	pitch_deg += 360;
+    }
+    while ( pitch_deg > 179 ) {
+	pitch_deg -= 360;
+    }
+
+    int heave = (int)(f->get_U_dot_body() * 3.0);
+
+    // scale roll and pitch to output format (1 - 255)
+    // straight && level == (128, 128)
+
+    int roll = (int)( (roll_deg+180.0) * 255.0 / 360.0) + 1;
+    int pitch = (int)( (pitch_deg+180.0) * 255.0 / 360.0) + 1;
+
+    sprintf( pve, "p%c%c\n", roll, pitch);
+
+    FG_LOG( FG_SERIAL, FG_INFO, "roll=" << roll << " pitch=" << pitch <<
+	    " heave=" << heave );
+
+    string pve_sentence = pve;
+    p->port.write_port(pve_sentence);
+}
+
+
 // one more level of indirection ...
 static void process_port( fgIOCHANNEL *p ) {
     if ( p->kind == fgIOCHANNEL::FG_SERIAL_NMEA_OUT ) {
@@ -526,6 +606,8 @@ static void process_port( fgIOCHANNEL *p ) {
 	read_fgfs_in(p);
     } else if ( p->kind == fgIOCHANNEL::FG_SERIAL_RUL_OUT ) {
 	send_rul_out(p);
+    } else if ( p->kind == fgIOCHANNEL::FG_SERIAL_PVE_OUT ) {
+	send_pve_out(p);
     }
 }
 
