@@ -62,6 +62,11 @@ float PropEngine::getOmega()
     return _omega;
 }
 
+void PropEngine::setOmega (float omega)
+{
+    _omega = omega;
+}
+
 void PropEngine::getThrust(float* out)
 {
     int i;

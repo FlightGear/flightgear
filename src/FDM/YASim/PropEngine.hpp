@@ -36,6 +36,7 @@ public:
     virtual void stabilize();
 
     float getOmega();
+    void setOmega (float omega);
     
 private:
     float _moment;
