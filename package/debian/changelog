@@ -1,0 +1,179 @@
+flightgear (0.9.3-1.0.0.45.lindows0.1) unstable; urgency=low
+
+  * Added desktop file and icon
+  * replaced cchar* with const char* to compile against plib1.8.3
+
+ -- Brian Thomason <brian.thomason@lindows.com>  Wed, 26 May 2004 12:22:25 -0400
+
+flightgear (0.9.3-1) unstable; urgency=low
+
+  * New upstream release. Yay, helicopters!
+  * Install TerraSync README file into /usr/share/doc/flightgear.
+    Closes: #201256.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Sun,  9 Nov 2003 23:07:41 +0100
+
+flightgear (0.9.2-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Fri,  6 Jun 2003 02:06:36 +0200
+
+flightgear (0.9.1-2) unstable; urgency=low
+
+  * Rebuilt with metakit 2.4.9.2. Closes: #179391.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Thu, 17 Apr 2003 12:18:36 +0200
+
+flightgear (0.9.1-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Wed, 11 Dec 2002 14:50:48 +0100
+
+flightgear (0.8.0-1) unstable; urgency=low
+
+  * New upstream release.
+  * This release compiles against plib 1.6.0. Closes: #160191.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Mon,  9 Sep 2002 19:47:56 +0200
+
+flightgear (0.7.10-2) unstable; urgency=low
+
+  * Forgot to update the version of that simgear build-dep
+    again, needs 0.0.18. Closes: #146788.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Mon, 13 May 2002 05:32:34 +0200
+
+flightgear (0.7.10-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Sat, 27 Apr 2002 19:45:50 +0200
+
+flightgear (0.7.9-3) unstable; urgency=low
+
+  * Rebuilt with metakit 2.4.3.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Wed, 27 Mar 2002 21:50:15 +0100
+
+flightgear (0.7.9-2) unstable; urgency=low
+
+  * Made debian/rules try hard to get this compiled; if compiling
+    with optimization fails, then it'll try again without.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Thu,  7 Mar 2002 13:46:58 +0100
+
+flightgear (0.7.9-1) unstable; urgency=low
+
+  * New upstream release.
+  * Yes, I'm subscribed to flightgear-announce, so I knew about 0.7.9
+    already, but packaging new releases of this stuff takes some time.
+    Closes: #134302.
+  * Playing the intro music doesn't seem to hang fgfs in this release,
+    and it's no longer played by default anyway. Closes: #104168.
+  * Man pages seem to be available now. Closes: #87556, #87557, #87560, #87561.
+  * Some binaries without manpages are no longer installed.
+    (This includes runfgfs.) Closes: #87558, #87559, #87562.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Sun, 17 Feb 2002 12:35:41 +0100
+
+flightgear (0.7.8-1) unstable; urgency=low
+
+  * New upstream release.
+  * Build-depend on plib >= 1.4.1.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Sat, 14 Jul 2001 21:55:05 +0200
+
+flightgear (0.7.7-3) unstable; urgency=low
+
+  * Grr... if the plib maintainer keeps insisting on keeping
+    an "=" dependency on stable releases so I have to keep rebuilding
+    this stuff all the time, I'll soon be in the mood to hijack plib.
+    Well, this rebuild closes: #102769.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Tue,  3 Jul 2001 03:41:31 +0200
+
+flightgear (0.7.7-2) unstable; urgency=low
+
+  * I realized I ought to do a versioned simgear-dev build-dep a few
+    hours after the last upload, but this stuff takes a while to
+    rebuild and I thought the autobuilders might be able to get it
+    right this one time anyway, but they don't, it seems, so I
+    guess I have to. It build-depends on simgear-dev >= 0.0.15,
+    and plib-dev >= 1.4.0 while I'm at it. Closes: #102364.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Tue, 26 Jun 2001 19:56:30 +0200
+
+flightgear (0.7.7-1) unstable; urgency=low
+
+  * New upstream release.
+  * This release has support for multithreaded tile loading.
+    Since Debian can do multithreading, I added --with-threads
+    to the configure command.
+  * Build-depend on autotools-dev.
+    Update config.guess and config.sub from it.
+  * Build-depend on debhelper v3.
+  * Standards-Version updated to 3.5.5.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Fri, 22 Jun 2001 17:27:20 +0200
+
+flightgear (0.7.6-6) unstable; urgency=low
+
+  * I can't believe I put the wrong bug number in my previos
+    changelog entry (I managed to try to close one of my
+    already-closed bugs)... Oh well, for the "install binaries
+    into /usr/games" change, I meant: Closes: #90569. So there!
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Mon,  2 Apr 2001 02:18:47 +0200
+
+flightgear (0.7.6-5) unstable; urgency=low
+
+  * Install binaries into /usr/games. Closes: #87269.
+  * Data directory moved from /usr/share/FlightGear to
+    /usr/share/games/FlightGear.
+    Depends on fgfs-base (>= 0.7.6-4) to do this move.
+  * Handle DEB_BUILD_OPTIONS. Upgrade Standars-Version to 3.5.2.
+    (it's a cleaner way to "build without -g on sparc" anyway)
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Thu, 29 Mar 2001 21:26:36 +0200
+
+flightgear (0.7.6-4) unstable; urgency=low
+
+  * Build without -g, to work around a g++ bug on sparc.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Sun, 18 Mar 2001 17:12:08 +0100
+
+flightgear (0.7.6-3) unstable; urgency=low
+
+  * The plib maintainer keeps on making the lives of
+    plib users miserable with his shlibs file. Despite being
+    completely equivalent with the previous build, the new plib
+    package still has incompatible shlibs, forcing me to recompile.
+    Closes: #87269.
+  * Added --with-network-olk (networking support) to configure options
+    since I had to recompile anyway, so not completely for naught.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Sat,  3 Mar 2001 19:23:00 +0100
+
+flightgear (0.7.6-2) unstable; urgency=low
+
+  * For some reason the plib maintainer use shlibs depending
+    on the exact debian revision, so everything using plib has
+    to be rebuilt whenever he uploads a bugfix or something.
+  * Well, now built with debhelper v3, at least.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Wed, 21 Feb 2001 15:58:38 +0100
+
+flightgear (0.7.6-1) unstable; urgency=low
+
+  * Initial Release. Closes: #85060.
+  * Patched for FHS conformance.
+  * Added missing libs to a few link command lines.
+
+ -- Ove Kaaven <ovek@arcticnet.no>  Tue, 13 Feb 2001 16:05:02 +0100
+
+Local variables:
+mode: debian-changelog
+add-log-mailing-address "ovek@arcticnet.no"
+End:

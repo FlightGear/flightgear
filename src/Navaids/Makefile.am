@@ -9,12 +9,12 @@ libNavaids_a_SOURCES = \
 	navrecord.hxx
 
 #	ils.hxx ilslist.hxx ilslist.cxx \
-#	mkrbeacons.hxx mkrbeacons.cxx \
-
+#	mkrbeacons.hxx mkrbeacons.cxx 
+#
 # testnavs_SOURCES = testnavs.cxx
 # testnavs_LDADD = \
 # 	libNavaids.a \
 # 	-lsgtiming -lsgmath -lsgmisc -lsgdebug -lsgmagvar -lsgxml \
-# 	$(base_LIBS) -lz
+# 	-lsgstructure $(base_LIBS) -lz
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

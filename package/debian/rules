@@ -1,0 +1,99 @@
+#!/usr/bin/make -f
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This is the debhelper compatability version to use.
+export DH_COMPAT=3
+
+CFLAGS=-O2 $(DEBUGFLAGS)
+ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
+CFLAGS+=-g
+endif
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	./configure --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
+		    --bindir=\$${prefix}/games --datadir=\$${prefix}/share/games \
+		    --with-simgear=/usr --with-network-olk --with-threads
+	touch configure-stamp
+
+build: configure-stamp build-stamp
+build-stamp:
+	dh_testdir
+
+	# try standard build options first; if that fails,
+	# clean up and then try again without optimization
+	$(MAKE) CFLAGS="$(CFLAGS)" CXXFLAGS="$(CFLAGS)" || \
+	$(MAKE) clean && $(MAKE) CFLAGS="" CXXFLAGS=""
+	#/usr/bin/docbook-to-man debian/flightgear.sgml > flightgear.1
+
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+
+	-$(MAKE) distclean
+	# weird... (and they still didn't fix it in 0.7.9)
+	rm -f src/Weather/Makefile
+
+	dh_clean
+
+	# update from autotools-dev
+	cp -f /usr/share/misc/config.guess /usr/share/misc/config.sub .
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	$(MAKE) install prefix=$(CURDIR)/debian/flightgear/usr
+	uudecode flightgear.png.uue
+	cp flightgear.png debian/flightgear/usr/share/icons/hicolor/48x48/apps
+	cp flightgear.desktop debian/flightgear/usr/share/applnk/Applications/Games
+
+# Build architecture-independent files here.
+binary-indep: build install
+# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testversion 2
+	dh_testdir
+	dh_testroot
+#	dh_installdebconf	
+	dh_installdocs
+	cp docs-mini/* debian/flightgear/usr/share/doc/flightgear || true
+	cp utils/TerraSync/README.txt debian/flightgear/usr/share/doc/flightgear/README.TerraSync
+	dh_installexamples
+	dh_installmenu
+#	dh_installemacsen
+#	dh_installpam
+#	dh_installinit
+	dh_installcron
+	dh_installmanpages
+	dh_installinfo
+#	dh_undocumented
+	dh_installchangelogs ChangeLog
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	# You may want to make some executables suid here.
+#	dh_suidregister
+#	dh_makeshlibs
+	dh_installdeb
+#	dh_perl
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure

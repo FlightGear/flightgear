@@ -1,0 +1,2 @@
+?package(flightgear):needs=X11 section=Games/Simulation\
+  title="Flight Gear" command="/usr/games/fgfs"

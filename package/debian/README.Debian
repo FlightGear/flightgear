@@ -1,0 +1,9 @@
+Flight Gear for Debian
+----------------------
+
+Start Flight Gear with fgfs.
+
+Additional scenery is available at http://www.flightgear.org/.
+They should be unpacked into /usr/share/games/FlightGear/Scenery.
+
+ -- Ove Kaaven <ovek@arcticnet.no>

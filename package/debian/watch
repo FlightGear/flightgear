@@ -1,0 +1,3 @@
+# Site			Directory				Pattern				Version	Script
+#ftp.flightgear.org	/pub/fgfs/Source			FlightGear-(.*)\.tar\.gz	debian	uupdate
+ftp.ihg.uni-duisburg.de	/Mirrors/ftp.flightgear.org/Source	FlightGear-(.*)\.tar\.gz	debian	uupdate

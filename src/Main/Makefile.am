@@ -22,7 +22,7 @@ else
 CLOUD3D_LIBS = 
 endif
 
-AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkglibdir)\"
+AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkgdatadir)\"
 
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
 

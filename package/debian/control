@@ -1,0 +1,16 @@
+Source: flightgear
+Section: games
+Priority: extra
+Maintainer: Ove Kaaven <ovek@arcticnet.no>
+Build-Depends: debhelper (>> 3.0.0), xlibs-dev, xlibmesa-dev, libglut3-dev,
+ zlib1g-dev, autotools-dev, plib1.8.3-dev, simgear-dev (>= 0.3.4), sharutils,
+ libjpeg-dev, libmetakit2.4.9.2-dev | libmetakit1-dev (>= 2.4.3) | libmetakit-dev
+Standards-Version: 3.5.5
+
+Package: flightgear
+Architecture: any
+Depends: ${shlibs:Depends}, fgfs-base (>= 0.9.3)
+Description: Flight Gear Flight Simulator
+ Flight Gear is a free and highly sophisticated flight simulator.
+ .
+ This package contains the runtime binaries.
