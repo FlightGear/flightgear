@@ -126,17 +126,11 @@ int fgInitSubsystems( void ) {
     fgAircraftInit();   // In the future this might not be the case.
     f = current_aircraft.flight;
 
-    /* Globe Aiport, AZ */
-    FG_Runway_longitude = -398391.28;
-    FG_Runway_latitude = 120070.41;
-    FG_Runway_altitude = 3234.5;
-    FG_Runway_heading = 102.0 * DEG_TO_RAD;
-
-    /* Initial Position at (P13) Globe, AZ */
+    // Initial Position at (P13) Globe, AZ
     FG_Longitude = ( -110.6642444 ) * DEG_TO_RAD;
     FG_Latitude  = (  33.3528917 ) * DEG_TO_RAD;
     FG_Runway_altitude = (3234.5 + 300);
-    FG_Altitude = FG_Runway_altitude + 3.758099 + 30000;
+    FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position at (E81) Superior, AZ
     // FG_Longitude = ( -111.1270650 ) * DEG_TO_RAD;
@@ -174,18 +168,18 @@ int fgInitSubsystems( void ) {
     // FG_Runway_altitude = 912;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
-    /* Initial Position north of the city of Globe */
-    /* FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
-    /* FG_Latitude  = (  120625.64 / 3600.0 ) * DEG_TO_RAD; */
-    /* FG_Longitude = ( -397867.44 / 3600.0 ) * DEG_TO_RAD; */
-    /* FG_Latitude  = (  119548.21 / 3600.0 ) * DEG_TO_RAD; */
-    /* FG_Altitude = 0.0 + 3.758099; */
+    // Initial Position north of the city of Globe
+    // FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD;
+    // FG_Latitude  = (  120625.64 / 3600.0 ) * DEG_TO_RAD;
+    // FG_Longitude = ( -397867.44 / 3600.0 ) * DEG_TO_RAD;
+    // FG_Latitude  = (  119548.21 / 3600.0 ) * DEG_TO_RAD;
+    // FG_Altitude = 0.0 + 3.758099;
 
-    /* Initial Position near where I used to live in Globe, AZ */
-    /* FG_Longitude = ( -398757.6 / 3600.0 ) * DEG_TO_RAD; */
-    /* FG_Latitude  = (  120160.0 / 3600.0 ) * DEG_TO_RAD;  */
-    /* FG_Runway_altitude = 5000.0; */
-    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+    // Initial Position near where I used to live in Globe, AZ
+    // FG_Longitude = ( -398757.6 / 3600.0 ) * DEG_TO_RAD;
+    // FG_Latitude  = (  120160.0 / 3600.0 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 5000.0;
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position: 10125 Jewell St. NE
     // FG_Longitude = ( -93.15 ) * DEG_TO_RAD;
@@ -233,9 +227,9 @@ int fgInitSubsystems( void ) {
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Test Position
-    // FG_Longitude = ( -122.1469647 ) * DEG_TO_RAD;
-    // FG_Latitude  = (   35.9523539 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 2000.0;
+    // FG_Longitude = ( -110.4 ) * DEG_TO_RAD;
+    // FG_Latitude  = (   32.9375 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 6000.0;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // A random test position
@@ -406,9 +400,12 @@ int fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.51  1998/03/14 00:31:22  curt
-/* Beginning initial terrain texturing experiments.
+/* Revision 1.52  1998/03/23 21:24:38  curt
+/* Source code formating tweaks.
 /*
+ * Revision 1.51  1998/03/14 00:31:22  curt
+ * Beginning initial terrain texturing experiments.
+ *
  * Revision 1.50  1998/03/09 22:46:19  curt
  * Minor tweaks.
  *

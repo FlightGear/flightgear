@@ -405,7 +405,7 @@ static void fgRenderFrame( void ) {
     xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
     xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
     /* texture parameters */
-    xglEnable( GL_TEXTURE_2D );
+    xglEnable( GL_TEXTURE_2D ); /* xglDisable( GL_TEXTURE_2D ); */
     xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ) ;
     xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ) ;
     xglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR ) ;
@@ -811,9 +811,12 @@ extern "C" {
 #endif
 
 /* $Log$
-/* Revision 1.66  1998/03/14 00:31:20  curt
-/* Beginning initial terrain texturing experiments.
+/* Revision 1.67  1998/03/23 21:24:37  curt
+/* Source code formating tweaks.
 /*
+ * Revision 1.66  1998/03/14 00:31:20  curt
+ * Beginning initial terrain texturing experiments.
+ *
  * Revision 1.65  1998/03/09 22:45:57  curt
  * Minor tweaks for building on sparc platform.
  *
