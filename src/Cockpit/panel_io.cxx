@@ -724,7 +724,7 @@ readPanel (const SGPropertyNode * root)
   // Get multibackground if any...
   //
   string mbgTexture = root->getStringValue("multibackground[0]");
-  if (mbgTexture != "") {
+  if (mbgTexture != (string)"") {
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 0);
     SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
