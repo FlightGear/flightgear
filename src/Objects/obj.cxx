@@ -380,8 +380,8 @@ void TriUserData::fill_in_triangle ()
 
       // place an object each unit of area
       while ( num > 1.0 ) {
-            add_object_to_triangle(object);
-        num -= 1.0;
+          add_object_to_triangle(object);
+          num -= 1.0;
       }
       // for partial units of area, use a zombie door method to
       // create the proper random chance of an object being created
