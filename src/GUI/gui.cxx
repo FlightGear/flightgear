@@ -210,7 +210,7 @@ void SaveDialogOk(puObject*) {
     char *s;
     SaveDialogInput->getValue(&s);
 
-    ofstream output(s);
+    ofstream output(s, ios::binary);
     cout << saveFile << endl;
     if (output.good() && fgSaveFlight(output)) {
 	output.close();
@@ -270,7 +270,7 @@ void LoadDialogOk(puObject *) {
     char *l;
     LoadDialogInput->getValue(&l);
 
-    ifstream input(l);
+    ifstream input(l, ios::binary);
     if (input.good() && fgLoadFlight(input)) {
 	input.close();
 	mkDialog("Loaded flight");
