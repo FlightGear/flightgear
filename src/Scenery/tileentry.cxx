@@ -34,6 +34,7 @@
 #include <simgear/debug/logstream.hxx>
 
 #include <Aircraft/aircraft.hxx>
+#include <Include/general.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/light.hxx>
@@ -207,7 +208,11 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 	sgCopyVec3( to, sgTrans );
 	double dist = sgLengthVec3( to );
 
-	sgScaleVec3( up, 10.0 + agl / 100.0 + dist / 10000 );
+	if ( general.get_glDepthBits() > 16 ) {
+	    sgScaleVec3( up, 10.0 + agl / 100.0 + dist / 10000 );
+	} else {
+	    sgScaleVec3( up, 10.0 + agl / 20.0 + dist / 5000 );
+	}
 	sgAddVec3( sgTrans, up );
 	lights_transform->setTransform( sgTrans );
 

@@ -1267,11 +1267,16 @@ int fgGlutInit( int *argc, char **argv ) {
     general.set_glVendor( (char *)glGetString ( GL_VENDOR ) );
     general.set_glRenderer( (char *)glGetString ( GL_RENDERER ) );
     general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
+    FG_LOG( FG_GENERAL, FG_INFO, general.get_glRenderer() );
+
     int tmp;
     glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
     general.set_glMaxTexSize( tmp );
-    FG_LOG ( FG_GENERAL, FG_INFO, general.get_glRenderer() );
     FG_LOG ( FG_GENERAL, FG_INFO, "Max texture size = " << tmp );
+
+    glGetIntegerv( GL_DEPTH_BITS, &tmp );
+    general.set_glDepthBits( tmp );
+    FG_LOG ( FG_GENERAL, FG_INFO, "Depth buffer bits = " << tmp );
 
 #if 0
     // try to determine if we should adjust the initial default
