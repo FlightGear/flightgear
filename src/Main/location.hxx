@@ -108,10 +108,10 @@ public:
     virtual float *get_surface_south() { return _surface_south; }
 
     // Matrices...
-    virtual const sgMat4 &getTransformMatrix() { if ( _dirty ) { recalc(); }	return TRANS; }
-    virtual const sgMat4 &getCachedTransformMatrix() { return TRANS; }
-    virtual const sgMat4 &getUpMatrix()  { if ( _dirty ) { recalc(); }	return UP; }
-    virtual const sgMat4 &getCachedUpMatrix()  { return UP; }
+    virtual const sgVec4 * getTransformMatrix() { if ( _dirty ) { recalc(); }	return TRANS; }
+    virtual const sgVec4 * getCachedTransformMatrix() { return TRANS; }
+    virtual const sgVec4 * getUpMatrix()  { if ( _dirty ) { recalc(); }	return UP; }
+    virtual const sgVec4 * getCachedUpMatrix()  { return UP; }
 
 
 private:
@@ -163,6 +163,7 @@ private:
 
 
 #endif // _LOCATION_HXX
+
 
 
 

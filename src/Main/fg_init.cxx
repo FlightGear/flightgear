@@ -640,6 +640,8 @@ void fgInitFDM() {
 
 // Initialize view parameters
 void fgInitView() {
+  // force update of model so that viewer can get some data...
+  globals->get_aircraft_model()->update(0);
   globals->get_viewmgr()->update(0);
 }
 
@@ -770,6 +772,13 @@ bool fgInitSubsystems( void ) {
 
 
     ////////////////////////////////////////////////////////////////////
+    // Initialize the view manager subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    fgInitView();
+
+
+    ////////////////////////////////////////////////////////////////////
     // Initialize the event manager subsystem.
     ////////////////////////////////////////////////////////////////////
 
@@ -779,13 +788,6 @@ bool fgInitSubsystems( void ) {
     global_events.Register( "FGEventMgr::print_stats()",
 			    &global_events, &FGEventMgr::print_stats,
 			    60000 );
-
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the view manager subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    fgInitView();
 
 
     ////////////////////////////////////////////////////////////////////
@@ -805,6 +807,8 @@ bool fgInitSubsystems( void ) {
     // Initialize Lighting interpolation tables
     l->Init();
 
+    // force one lighting update to make it right to start with...
+    l->Update();
     // update the lighting parameters (based on sun angle)
     global_events.Register( "fgLight::Update()",
 			    &cur_light_params, &fgLIGHT::Update,
@@ -1126,3 +1130,4 @@ void fgReInitSubsystems( void )
 	fgSetBool("/sim/freeze/master", false);
     }
 }
+
