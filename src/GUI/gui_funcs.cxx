@@ -80,10 +80,6 @@
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
 
-#ifdef FG_NETWORK_OLK
-#include <NetworkOLK/network.h>
-#endif
-   
 #if defined( WIN32 ) && !defined( __CYGWIN__ ) && !defined(__MINGW32__)
 #  include <simgear/screen/win32-printer.h>
 #  include <simgear/screen/GlBitmaps.h>
@@ -91,7 +87,6 @@
 
 #include "gui.h"
 #include "gui_local.hxx"
-#include "net_dlg.hxx"
 #include "preset_dlg.hxx"
 #include "prop_picker.hxx"
 #include "sgVec3Slider.hxx"
@@ -103,10 +98,6 @@ extern void fgHUDalphaAdjust( puObject * );
 
 // from cockpit.cxx
 extern void fgLatLonFormatToggle( puObject *);
-
-#ifdef FG_NETWORK_OLK
-extern void net_fgd_scan(puObject *cb);
-#endif // #ifdef FG_NETWORK_OLK
 
 #if defined( TR_HIRES_SNAP)
 #include <simgear/screen/tr.h>
@@ -169,15 +160,6 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
         {"fgPresetGlideslope", fgPresetGlideslope},
         {"fgPresetAirspeed", fgPresetAirspeed},
         {"fgPresetCommit", fgPresetCommit},
-
-        // Network
-#ifdef FG_NETWORK_OLK
-        {"net_display_toggle", net_display_toggle},
-        {"NewCallSign", NewCallSign},
-        {"net_fgd_scan", net_fgd_scan},
-        {"net_register", net_register},
-        {"net_unregister", net_unregister},
-#endif
 
         // Autopilot
         {"NewAltitude", NewAltitude},
@@ -403,12 +385,6 @@ void goodBye(puObject *)
     // SG_LOG( SG_INPUT, SG_ALERT,
     //      "Program exiting normally at user request." );
     cout << "Program exiting normally at user request." << endl;
-
-#ifdef FG_NETWORK_OLK    
-    if ( fgGetBool("/sim/networking/network-olk") ) {
-	if ( net_is_registered == 0 ) fgd_send_com( "8", FGFS_host);
-    }
-#endif
 
     // close all external I/O connections
     globals->get_io()->shutdown_all();
@@ -861,25 +837,3 @@ void fgDumpSnapShot () {
     }
 }
 
-#ifdef FG_NETWORK_OLK
-void net_display_toggle( puObject *cb)
-{
-	net_hud_display = (net_hud_display) ? 0 : 1;
-	printf("Toggle net_hud_display : %d\n", net_hud_display);
-}
-
-void net_register( puObject *cb)
-{
-	fgd_send_com( "1", FGFS_host );
-	net_is_registered = 0;
-	printf("Registering to deamon\n");
-}
-
-void net_unregister( puObject *cb)
-{
-	fgd_send_com( "8", FGFS_host );
-	net_is_registered = -1;
-	printf("Unregistering from deamon\n");
-}
-
-#endif // #ifdef FG_NETWORK_OLK

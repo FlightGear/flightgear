@@ -50,9 +50,6 @@
 // #include <Cockpit/cockpit.hxx>
 // #include <FDM/flight.hxx>
 // #include <FDM/UIUCModel/uiuc_aircraftdir.h>
-#ifdef FG_NETWORK_OLK
-#  include <NetworkOLK/network.h>
-#endif
 
 #include <GUI/gui.h>
 
@@ -222,9 +219,6 @@ fgSetDefaults ()
     fgSetInt("/sim/startup/time-offset", 0);
     fgSetString("/sim/startup/time-offset-type", "system-offset");
     fgSetLong("/sim/time/cur-time-override", 0);
-
-    fgSetBool("/sim/networking/network-olk", false);
-    fgSetString("/sim/networking/call-sign", "Johnny");
 
                                 // Freeze options
     fgSetBool("/sim/freeze/master", false);
@@ -936,16 +930,6 @@ fgOptStartDateGmt( const char *arg )
     return FG_OPTIONS_OK;
 }
 
-#ifdef FG_NETWORK_OLK
-static int
-fgOptNetHud( const char *arg )
-{
-    fgSetBool("/sim/hud/net-display", true);
-    net_hud_display = 1;	// FIXME
-    return FG_OPTIONS_OK;
-}
-#endif
-
 static int
 fgOptTraceRead( const char *arg )
 {
@@ -1368,12 +1352,6 @@ struct OptionDesc {
     {"rul",                          true,  OPTION_CHANNEL, "", false, "", 0 },
     {"joyclient",                    true,  OPTION_CHANNEL, "", false, "", 0 },
     {"jsclient",                     true,  OPTION_CHANNEL, "", false, "", 0 },
-#ifdef FG_NETWORK_OLK
-    {"disable-network-olk",          false, OPTION_BOOL,   "/sim/networking/olk", false, "", 0 },
-    {"enable-network-olk",           false, OPTION_BOOL,   "/sim/networking/olk", true, "", 0 },
-    {"net-hud",                      false, OPTION_FUNC,   "", false, "", fgOptNetHud },
-    {"net-id",                       true,  OPTION_STRING, "sim/networking/call-sign", false, "", 0 },
-#endif
 #ifdef FG_MPLAYER_AS
     {"callsign",                     true, OPTION_STRING,  "sim/multiplay/callsign", false, "", 0 },
     {"multiplay",                    true,  OPTION_CHANNEL, "", false, "", 0 },

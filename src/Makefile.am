@@ -16,12 +16,6 @@ else
 MPLAYER_DIRS =
 endif
 
-if ENABLE_NETWORK_OLK
-NETWORK_DIRS = NetworkOLK
-else
-NETWORK_DIRS =
-endif
-
 SUBDIRS = \
         Include \
         Aircraft \
@@ -38,7 +32,6 @@ SUBDIRS = \
         Navaids \
         Network \
 	$(MPLAYER_DIRS) \
-        $(NETWORK_DIRS) \
         Objects \
 	Replay \
         Scenery \

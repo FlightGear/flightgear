@@ -1,13 +1,5 @@
 noinst_LIBRARIES = libGUI.a
 
-EXTRA_DIST = net_dlg.cxx net_dlg.hxx
-
-if ENABLE_NETWORK_OLK
-NETWORK_SRCS = net_dlg.cxx net_dlg.hxx 
-else
-NETWORK_SRCS = 
-endif
-
 libGUI_a_SOURCES = \
         new_gui.cxx new_gui.hxx \
         dialog.cxx dialog.hxx \
@@ -15,7 +7,6 @@ libGUI_a_SOURCES = \
 	gui.cxx gui.h gui_funcs.cxx \
 	gui_local.cxx gui_local.hxx \
 	mouse.cxx \
-	$(NETWORK_SRCS) \
 	preset_dlg.cxx preset_dlg.hxx \
 	prop_picker.cxx prop_picker.hxx \
 	sgVec3Slider.cxx sgVec3Slider.hxx \

@@ -59,24 +59,14 @@ fi
 
 # Specify if we want to build with Multiplayer support
 # default to with_network=yes
-AC_ARG_WITH(multiplayer, [  --with-multiplayer      Include default multiplayer support])
-AC_ARG_WITH(network_olk, [  --with-network-olk      Include Oliver's multi-pilot networking support [default=no]])
+AC_ARG_WITH(multiplayer, [  --with-multiplayer      Include multiplayer support [default=yes]])
 
-if test "x$with_multiplayer" = "xno" -a "x$with_network_olk" = "xno"; then
+if test "x$with_multiplayer" = "xno"; then
   echo "Building without any kind of multiplayer support"
-
-elif test "x$with_multiplayer" = "xno"; then
-# echo "Building without default multiplayer support"
-  echo "Building with Oliver's multi-pilot network support"
-  AC_DEFINE([FG_NETWORK_OLK], 1, [Define to build with Oliver's networking])
-
 else
-  echo "Building with default multiplayer support"
-# echo "Building without Oliver's multi-pilot network support"
-  AC_DEFINE([FG_MPLAYER_AS], 1, [Define to build with default multiplayer support])
+  echo "Building with multiplayer support"
+  AC_DEFINE([FG_MPLAYER_AS], 1, [Define to build with multiplayer support])
 fi
-
-AM_CONDITIONAL(ENABLE_NETWORK_OLK, test "x$with_network_olk" != "xno" -a "x$with_multiplayer" = "xno")
 AM_CONDITIONAL(ENABLE_MPLAYER_AS, test "x$with_multiplayer" != "xno")
 
 
@@ -541,7 +531,6 @@ AC_CONFIG_FILES([ \
 	src/MultiPlayer/Makefile \
 	src/Navaids/Makefile \
 	src/Network/Makefile \
-	src/NetworkOLK/Makefile \
 	src/Objects/Makefile \
 	src/Replay/Makefile \
 	src/Scenery/Makefile \
@@ -592,9 +581,7 @@ else
 fi
 
 if test "x$with_multiplayer" != "xno"; then
-    echo "Using default multiplayer support"
-elif test "x$with_network_olk" != "xno"; then
-    echo "Using Oliver's multi-pilot network support"
+    echo "Building with multiplayer support"
 fi
 
 if test "x$with_threads" = "xyes"; then

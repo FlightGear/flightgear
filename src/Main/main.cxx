@@ -88,10 +88,6 @@
 #include <Time/fg_timer.hxx>
 #include <Environment/environment_mgr.hxx>
 
-#ifdef FG_NETWORK_OLK
-#include <NetworkOLK/network.h>
-#endif
-
 #ifdef FG_MPLAYER_AS
 #include <MultiPlayer/multiplaytxmgr.hxx>
 #include <MultiPlayer/multiplayrxmgr.hxx>
@@ -150,11 +146,6 @@ static GLfloat fog_exp2_density;
 static GLfloat rwy_exp2_punch_through;
 static GLfloat taxi_exp2_punch_through;
 static GLfloat ground_exp2_punch_through;
-
-#ifdef FG_NETWORK_OLK
-ssgSelector *fgd_sel = NULL;
-ssgTransform *fgd_pos = NULL;
-#endif
 
 // Sky structures
 SGSky *thesky;
@@ -637,27 +628,6 @@ void fgRenderFrame() {
           fgUpdateDCS();
         // $$$ end - added VS Renganthan 17 Oct 2K
 
-# ifdef FG_NETWORK_OLK
-        if ( fgGetBool("/sim/networking/network-olk") ) {
-            sgCoord fgdpos;
-            other = head->next;             /* put listpointer to start  */
-            while ( other != tail) {        /* display all except myself */
-            if ( strcmp( other->ipadr, fgd_mcp_ip) != 0) {
-                other->fgd_sel->select(1);
-                sgSetCoord( &fgdpos, other->sgFGD_COORD );
-                other->fgd_pos->setTransform( &fgdpos );
-            }
-            other = other->next;
-            }
-
-            // fgd_sel->select(1);
-            // sgCopyMat4( sgTUX, current_view.sgVIEW);
-            // sgCoord fgdpos;
-            // sgSetCoord( &fgdpos, sgFGD_VIEW );
-            // fgd_pos->setTransform( &fgdpos);
-        }
-# endif
-
 #ifdef FG_MPLAYER_AS
         // Update any multiplayer models
         globals->get_multiplayer_rx_mgr()->Update();
@@ -1022,16 +992,6 @@ static void fgMainLoop( void ) {
 
     SG_LOG( SG_ALL, SG_DEBUG, "Running Main Loop");
     SG_LOG( SG_ALL, SG_DEBUG, "======= ==== ====");
-
-#ifdef FG_NETWORK_OLK
-    if ( fgGetBool("/sim/networking/network-olk") ) {
-        if ( net_is_registered == 0 ) {	     // We first have to reg. to fgd
-            // printf("FGD: Netupdate\n");
-            fgd_send_com( "A", FGFS_host);   // Send Mat4 data
-            fgd_send_com( "B", FGFS_host);   // Recv Mat4 data
-        }
-    }
-#endif
 
 #if defined( ENABLE_PLIB_JOYSTICK )
     // Read joystick and update control settings
@@ -1746,14 +1706,6 @@ bool fgMainInit( int argc, char **argv ) {
     // ADA
     fgLoadDCS();
     // ADA
-
-#ifdef FG_NETWORK_OLK
-    // Do the network intialization
-    if ( fgGetBool("/sim/networking/network-olk") ) {
-        printf("Multipilot mode %s\n",
-               fg_net_init( globals->get_scenery()->get_scene_graph() ) );
-    }
-#endif
 
     // build our custom render states
     fgBuildRenderStates();

@@ -48,7 +48,6 @@
 
 #include "gui.h"
 #include "gui_local.hxx"
-#include "net_dlg.hxx"
 #include "preset_dlg.hxx"
 
 
@@ -126,10 +125,5 @@ void guiInit()
     ConfirmExitDialogInit();
     fgPresetInit();
 	
-#ifdef FG_NETWORK_OLK
-    NewNetIdInit();
-    NewNetFGDInit();
-#endif
-
     mkDialogInit();
 }

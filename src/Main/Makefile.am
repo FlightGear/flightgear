@@ -10,12 +10,6 @@ else
 MPLAYER_LIBS = 
 endif
 
-if ENABLE_NETWORK_OLK
-NETWORK_LIBS = $(top_builddir)/src/NetworkOLK/libNetworkOLK.a
-else
-NETWORK_LIBS =
-endif
-
 if WITH_THREADS
 THREAD_LIBS = -lsgthreads $(thread_LIBS)
 else
@@ -92,7 +86,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Sound/libSound.a \
 	$(top_builddir)/src/Airports/libAirports.a \
 	$(MPLAYER_LIBS) \
-        $(NETWORK_LIBS) \
 	$(top_builddir)/src/Objects/libObjects.a \
 	$(top_builddir)/src/Replay/libReplay.a \
 	$(top_builddir)/src/Systems/libSystems.a \

@@ -54,9 +54,6 @@
 #include <GUI/gui.h>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#ifdef FG_NETWORK_OLK
-#include <NetworkOLK/network.h>
-#endif
 #include <Scenery/scenery.hxx>
 
 #if defined ( __sun__ ) || defined ( __sgi )
@@ -1164,12 +1161,6 @@ void drawHUD()
     for_each(HUD_deque.begin(), HUD_deque.end(), HUDdraw());
 
     HUD_TextList.add( fgText(40, 10, get_formated_gmt_time(), 0) );
-
-#ifdef FG_NETWORK_OLK
-    if ( net_hud_display ) {
-        net_hud_update();
-    }
-#endif
 
 
     int apY = 480 - 80;

@@ -23,7 +23,6 @@ SG_USING_STD(vector);
 
 // Don't pull in the headers, since we don't need them here.
 class ssgBranch;
-class ssgCutout;
 class ssgEntity;
 class ssgRangeSelector;
 class ssgSelector;
