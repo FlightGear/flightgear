@@ -46,7 +46,7 @@
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
 #include <Math/polar.h>
-#include <Scenery/scenery.h>
+#include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
 #include <Weather/weather.h>
 
@@ -1605,9 +1605,12 @@ void fgHUDSetBrightness( Hptr hud, int brightness )
 }
 
 /* $Log$
-/* Revision 1.2  1998/04/25 22:06:27  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.3  1998/04/30 12:36:02  curt
+/* C++-ifying a couple source files.
 /*
+ * Revision 1.2  1998/04/25 22:06:27  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.1  1998/04/24 00:45:57  curt
  * C++-ifing the code a bit.
  *

@@ -52,7 +52,7 @@
 #include <Math/mat3.h>
 #include <Math/polar.h>
 #include <Math/vector.h>
-#include <Scenery/scenery.h>
+#include <Scenery/scenery.hxx>
 
 #include "fg_time.hxx"
 #include "sunpos.hxx"
@@ -346,6 +346,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.7  1998/04/30 12:36:05  curt
+// C++-ifying a couple source files.
+//
 // Revision 1.6  1998/04/28 01:22:18  curt
 // Type-ified fgTIME and fgVIEW.
 //

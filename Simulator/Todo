@@ -2,6 +2,8 @@
 | Todo 
 --------------------------------------------------------------------------
 
+4/29/98 -  Option to toggle between smooth / flat shading.
+
 4/28/98 -  Write a perl script to rename -> *.[ch]xx to *.[ch]pp and update
            #include entries as well.
 
@@ -29,13 +31,13 @@
            version of stripe)
 
 12/29/97 - Add a mechanism to parse command line options
-    * A simple clear-screen sky.
-    * No fog.
+    * (done) A simple clear-screen sky.
+    * (done) No fog.
     * No astronomy.
     * Less detailed terrain.
     * Texture - but no MIP-mapping.
     * Texture - but no bilinear blending.
-    * No texture.
+    * (done) No texture.
 
 12/29/97 - sky tweaking
   Steve Baker writes:
