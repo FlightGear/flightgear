@@ -122,14 +122,6 @@ void fgLIGHT::Update( void ) {
     // calculate lighting parameters based on sun's relative angle to
     // local up
 
-    // base fog color
-    float *sun_color = thesky->get_sun_color();
-
-    base_fog_color[0] *= (1.25 - sun_color[0]/4.0);	// 100% red
-    base_fog_color[1] *= (0.48 + sun_color[1]/1.923);	//  40% green
-    base_fog_color[2] *= sun_color[2];			//   0% blue
-
-
     deg = sun_angle * SGD_RADIANS_TO_DEGREES;
     SG_LOG( SG_EVENT, SG_INFO, "  Sun angle = " << deg );
 
@@ -169,11 +161,18 @@ void fgLIGHT::Update( void ) {
     sky_color[2] = base_sky_color[2] * sky_brightness;
     sky_color[3] = base_sky_color[3];
 
+    // set cloud color
+    cloud_color[0] = base_fog_color[0] * sky_brightness;
+    cloud_color[1] = base_fog_color[1] * sky_brightness;
+    cloud_color[2] = base_fog_color[2] * sky_brightness;
+    cloud_color[3] = base_fog_color[3];
+
     // set fog color
-    fog_color[0] = base_fog_color[0] * sky_brightness;
-    fog_color[1] = base_fog_color[1] * sky_brightness;
-    fog_color[2] = base_fog_color[2] * sky_brightness;
-    fog_color[3] = base_fog_color[3];
+    float *sun_color = thesky->get_sun_color();
+    fog_color[0] = cloud_color[0] * (1.25 - sun_color[0]/4.0);    // 100% red
+    fog_color[1] = cloud_color[1] * (0.48 + sun_color[1]/1.923);  //  40% green
+    fog_color[2] = cloud_color[2] * sun_color[2];                 //   0% blue
+    fog_color[3] = cloud_color[3];
 }
 
 

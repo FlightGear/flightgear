@@ -127,6 +127,9 @@ public:
     // fog color adjusted for sunset effects
     GLfloat adj_fog_color[4];
 
+    // cloud color
+    GLfloat cloud_color[4];
+
     // clear screen color
     GLfloat sky_color[4];
 

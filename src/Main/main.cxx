@@ -593,6 +593,7 @@ void fgRenderFrame() {
             */
             thesky->repaint( cur_light_params.sky_color,
                              cur_light_params.adj_fog_color,
+                             cur_light_params.cloud_color,
                              cur_light_params.sun_angle,
                              cur_light_params.moon_angle,
                              globals->get_ephem()->getNumPlanets(),
