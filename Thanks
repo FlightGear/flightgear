@@ -144,6 +144,7 @@ Christian Mayer <Vader@t-online.de>
 
 
 David Megginson <david@megginson.com>
+  Contributed a patch to allow mouse input to control view direction.
   Contributed a patch to allow mouse input to control the yoke.
   Contributed financially towards hard drive space for use by the flight
   gear project.
@@ -173,6 +174,12 @@ Curt Olson <curt@flightgear.org>
   on building better scenery.
 
 
+Tony Peden <apeden@earthlink.net>
+  Contributions on the flight model front, including a LaRCsim based 
+  Cessna 172.  JSBsim: the initial conditions code, a more complete standard 
+  atmosphere model, and other bugfixes/additions.
+
+
 Robin Peel <robinp@mindspring.com>
   Maintains the ever growing worldwide airport and runway database for
   the Flight Gear project as well as for X-Plane.
@@ -190,7 +197,8 @@ Petter Reinholdtsen <pere@games.no>
 
 
 William Riley <riley@technologist.com>
-  Contributed code to add "brakes".
+  Contributed code to add "brakes".  Patch to support a first joystick
+  with more than two axes.
 
 
 Paul Schlyter <pausch@saaf.se>.  Mr. Schlyter provided Durk Talsma with 
