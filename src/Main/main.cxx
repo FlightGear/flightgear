@@ -244,6 +244,7 @@ sgMat4 copy_of_ssgOpenGLAxisSwapMatrix =
 //
 
 
+ssgSimpleState *cloud3d_imposter_state;
 ssgSimpleState *default_state;
 ssgSimpleState *hud_and_panel;
 ssgSimpleState *menus;
@@ -263,6 +264,20 @@ void fgBuildRenderStates( void ) {
     default_state->disable( GL_BLEND );
     default_state->disable( GL_ALPHA_TEST );
     default_state->disable( GL_LIGHTING );
+
+    cloud3d_imposter_state = new ssgSimpleState;
+    cloud3d_imposter_state->ref();
+    cloud3d_imposter_state->enable( GL_TEXTURE_2D );
+    cloud3d_imposter_state->enable( GL_CULL_FACE );
+    cloud3d_imposter_state->enable( GL_COLOR_MATERIAL );
+    cloud3d_imposter_state->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
+    cloud3d_imposter_state->setMaterial( GL_DIFFUSE, 1, 1, 1, 1 );
+    cloud3d_imposter_state->setMaterial( GL_AMBIENT, 1, 1, 1, 1 );
+    cloud3d_imposter_state->setMaterial( GL_EMISSION, 0, 0, 0, 1 );
+    cloud3d_imposter_state->setMaterial( GL_SPECULAR, 0, 0, 0, 1 );
+    cloud3d_imposter_state->enable( GL_BLEND );
+    cloud3d_imposter_state->enable( GL_ALPHA_TEST );
+    cloud3d_imposter_state->enable( GL_LIGHTING );
 
     hud_and_panel = new ssgSimpleState;
     hud_and_panel->ref();
@@ -397,6 +412,9 @@ void trRenderFrame( void ) {
 // Update all Visuals (redraws anything graphics related)
 void fgRenderFrame() {
   
+    GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
+    GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
+
     // Process/manage pending events
     global_events.update( delta_time_sec );
 
@@ -475,6 +493,20 @@ void fgRenderFrame() {
 	}
 	glClear( clear_mask );
 
+        cloud3d_imposter_state->force();
+	glDisable( GL_FOG );
+        glEnable( GL_LIGHTING );
+        glEnable( GL_LIGHT0 );
+        ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
+        glColorMaterial( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
+        glColor4f( 1.0, 1.0, 1.0, 1.0 );
+        glEnable(GL_COLOR_MATERIAL);
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_DEPTH_TEST);
+	glEnable(GL_ALPHA_TEST);
+	glEnable(GL_BLEND);
+        glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
+        glEnable(GL_CULL_FACE);
         if ( fgGetBool("/sim/rendering/clouds3d") ) {
             posit =  globals->get_scenery()->get_center();
             if ( _bcloud_orig ) {
@@ -577,8 +609,6 @@ void fgRenderFrame() {
         // we only update GL_AMBIENT for our lights we will never get
         // a completely dark scene.  So, we set GL_LIGHT_MODEL_AMBIENT
         // explicitely to black.
-	GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
-	GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 	glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
 
 	ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient );
@@ -757,6 +787,20 @@ void fgRenderFrame() {
 	globals->get_model_mgr()->draw();
 	globals->get_aircraft_model()->draw();
 
+	glDisable( GL_FOG );
+	glEnable(GL_BLEND);
+        glEnable(GL_TEXTURE_2D);
+	glEnable(GL_ALPHA_TEST);
+        glBlendFunc ( GL_ONE, GL_ONE_MINUS_SRC_ALPHA ) ;
+        glDisable( GL_DEPTH_TEST );
+        glDisable( GL_LIGHTING );
+        if ( fgGetBool("/sim/rendering/clouds3d") ) {
+            // cout << "drawing new clouds" << endl;
+            // set the opengl state to known default values
+            // default_state->force();
+            sgClouds3d->Draw((sgVec4 *)current__view->get_VIEW());
+        }
+
 	// display HUD && Panel
 	glDisable( GL_FOG );
 	glDisable( GL_DEPTH_TEST );
@@ -786,13 +830,6 @@ void fgRenderFrame() {
 	glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
 	puDisplay();
 	// glDisable ( GL_BLEND ) ;
-
-        if ( fgGetBool("/sim/rendering/clouds3d") ) {
-            // cout << "drawing new clouds" << endl;
-            // set the opengl state to known default values
-            // default_state->force();
-            sgClouds3d->Draw((sgVec4 *)current__view->get_VIEW());
-        }
 
         glEnable( GL_DEPTH_TEST );
         glEnable( GL_FOG );
