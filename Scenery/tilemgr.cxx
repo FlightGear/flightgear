@@ -130,7 +130,7 @@ static double point_line_dist_squared( const Point3D& tc, const Point3D& vp,
 // explicitely.  lat & lon are in radians.  abs_view_pos in meters.
 // Returns result in meters.
 double
-fgTileMgrCurElev( const fgBUCKET& p ) {
+fgTileMgrCurElevNEW( const fgBUCKET& p ) {
     fgTILE *t;
     fgFRAGMENT *frag_ptr;
     Point3D abs_view_pos = current_view.get_abs_view_pos();
@@ -217,7 +217,8 @@ fgTileMgrCurElev( const fgBUCKET& p ) {
 	}
     }
 
-    cout << "(new) no terrain intersection found\n";
+    FG_LOG( FG_TERRAIN, FG_INFO, "(new) no terrain intersection found" );
+
     return 0.0;
 }
 
@@ -227,7 +228,7 @@ fgTileMgrCurElev( const fgBUCKET& p ) {
 // explicitely.  lat & lon are in radians.  abs_view_pos in meters.
 // Returns result in meters.
 double
-fgTileMgrCurElevOLD( double lon, double lat, const Point3D& abs_view_pos ) {
+fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
     fgTILECACHE *c;
     fgTILE *t;
     // fgVIEW *v;
@@ -247,6 +248,8 @@ fgTileMgrCurElevOLD( double lon, double lat, const Point3D& abs_view_pos ) {
     local_up[1] = abs_view_pos.y();
     local_up[2] = abs_view_pos.z();
 
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "Absolute view pos = " << abs_view_pos );
+
     // Find current translation offset
     fgBucketFind(lon * RAD_TO_DEG, lat * RAD_TO_DEG, &p);
     index = c->exists(p);
@@ -259,8 +262,6 @@ fgTileMgrCurElevOLD( double lon, double lat, const Point3D& abs_view_pos ) {
 
     scenery.next_center = t->center;
     
-    // earth_center = Point3D(0.0, 0.0, 0.0);
-
     FG_LOG( FG_TERRAIN, FG_DEBUG, 
 	    "Pos = (" << lon * RAD_TO_DEG << ", " << lat * RAD_TO_DEG
 	    << ")  Current bucket = " << p 
@@ -322,7 +323,8 @@ fgTileMgrCurElevOLD( double lon, double lat, const Point3D& abs_view_pos ) {
 	}
     }
 
-    cout << "(old) no terrain intersection found\n";
+    FG_LOG( FG_TERRAIN, FG_INFO, "(old) no terrain intersection found" );
+
     return 0.0;
 }
 
@@ -354,6 +356,7 @@ int fgTileMgrUpdate( void ) {
 	// First time through, initialize the system and load all
 	// relavant tiles
 
+	FG_LOG( FG_TERRAIN, FG_INFO, "Updating Tile list for " << p1 );
 	FG_LOG( FG_TERRAIN, FG_INFO, "  First time through ... " );
 	FG_LOG( FG_TERRAIN, FG_INFO, "  Updating Tile list for " << p1 );
 	FG_LOG( FG_TERRAIN, FG_INFO, "  Loading " 
@@ -443,7 +446,12 @@ int fgTileMgrUpdate( void ) {
     }
 
     // find our current elevation (feed in the current bucket to save work)
-    scenery.cur_elev = fgTileMgrCurElev( p1 );
+    Point3D geod_pos = Point3D( f->get_Longitude(), f->get_Latitude(), 0.0);
+    Point3D tmp_abs_view_pos = fgGeodToCart(geod_pos);
+
+    scenery.cur_elev = 
+	fgTileMgrCurElev( f->get_Longitude(), f->get_Latitude(), 
+			  tmp_abs_view_pos );
 
     p_last.lon = p1.lon;
     p_last.lat = p1.lat;
@@ -750,6 +758,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.52  1999/01/27 04:49:48  curt
+// Fixes so that the sim can start out at an airport below sea level.
+//
 // Revision 1.51  1998/12/09 18:50:33  curt
 // Converted "class fgVIEW" to "class FGView" and updated to make data
 // members private and make required accessor functions.
