@@ -26,6 +26,8 @@ Gyro::update (double delta_time_sec)
         double step = 0.25 * _power_norm * delta_time_sec;
         if ((_spin_norm + step) <= _power_norm)
             _spin_norm += step;
+    } else {
+        _spin_norm = 0;         // stop right away if the gyro breaks
     }
 
                                 // clamp the spin to 0.0:1.0
