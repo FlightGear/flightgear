@@ -102,7 +102,8 @@ private:
     float Torque;
     float CHT;			// Cylinder head temperature deg K
     float CHT_degF;		// Ditto in deg Fahrenheit
-    float EGT;			// Exhaust gas temperature
+    float EGT;			// Exhaust gas temperature deg K
+    float EGT_degF;		// Exhaust gas temperature deg Fahrenheit
     float Mixture;
     float Oil_Pressure;		// PSI
     float Oil_Temp;		// Deg C
@@ -230,9 +231,8 @@ public:
     inline float get_Rho() const { return Rho; }
     inline float get_MaxHP() const { return MaxHP; }
     inline float get_Percentage_Power() const { return Percentage_Power; }
-    inline float get_EGT() const { return EGT; }
-    // Note this returns CHT in Fahrenheit
-    inline float get_CHT() const { return CHT_degF; }
+    inline float get_EGT() const { return EGT_degF; }	 // Returns EGT in Fahrenheit
+    inline float get_CHT() const { return CHT_degF; }    // Note this returns CHT in Fahrenheit
     inline float get_prop_thrust_SI() const { return prop_thrust; }
 };
 

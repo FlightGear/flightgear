@@ -70,6 +70,11 @@
 //		 Requires a timestep to be passed to FGNewEngine::init and currently assumes this timestep does not change.
 //		 Could easily be altered to pass a variable timestep to FGNewEngine::update every step instead if required.
 //
+// DCL 27/10/00 - Added first stab at cylinder head temperature model
+//		  See the comment block in the code for details
+//
+// DCL 02/11/00 - Modified EGT code to reduce values to those more representative of a sensor downstream  
+//
 //////////////////////////////////////////////////////////////////////
 
 #include <simgear/compiler.h>
@@ -454,7 +459,80 @@ void FGNewEngine::update() {
     // cout << "fuel " << m_dot_fuel;
     // cout << " air " << m_dot_air << '\n';
 
-//**************
+//***********************************************************************
+//Calculate percentage power
+
+    // For a given Manifold Pressure and RPM calculate the % Power
+    // Multiply Manifold Pressure by RPM
+    ManXRPM = Manifold_Pressure * RPM;
+    //	cout << ManXRPM;
+    // cout << endl;
+
+/*
+//  Phil's %power correlation
+    //  Calculate % Power
+    Percentage_Power = (+ 7E-09 * ManXRPM * ManXRPM) + ( + 7E-04 * ManXRPM) - 0.1218;
+    // cout << Percentage_Power <<  "%" << "\t";   
+*/
+
+// DCL %power correlation - basically Phil's correlation modified to give slighty less power at the low end
+// might need some adjustment as the prop model is adjusted
+// My aim is to match the prop model and engine model at the low end to give the manufacturer's recommended idle speed with the throttle closed - 600rpm for the Continental IO520
+    //  Calculate % Power
+    Percentage_Power = (+ 6E-09 * ManXRPM * ManXRPM) + ( + 8E-04 * ManXRPM) - 1.8524;
+    // cout << Percentage_Power <<  "%" << "\t";
+    
+    
+    // Adjust for Temperature - Temperature above Standard decrease
+    // power % by 7/120 per degree F increase, and incease power for
+    // temps below at the same ratio
+    Percentage_Power = Percentage_Power - (FG_ISA_VAR * 7 /120);
+    // cout << Percentage_Power <<  "%" << "\t";
+
+//******DCL - this bit will need altering or removing if I go to true altitude adjusted manifold pressure
+    // Adjust for Altitude. In this version a linear variation is
+    // used. Decrease 1% for each 1000' increase in Altitde
+    Percentage_Power = Percentage_Power + (FG_Pressure_Ht * 12/10000);	
+    // cout << Percentage_Power <<  "%" << "\t";
+    
+    
+    //DCL - now adjust power to compensate for mixture
+    //uses a curve fit to the data in the IO360 / O360 operating manual
+    //due to the shape of the curve I had to use a 6th order fit - I am sure it must be possible to reduce this in future,
+    //possibly by using separate fits for rich and lean of best power mixture
+    //first adjust actual mixture to abstract mixture - this is a temporary hack in order to account for the fact that the data I have
+    //dosn't specify actual mixtures and I want to be able to change what I think they are without redoing the curve fit each time.
+    //y=10x-12 for now
+    abstract_mixture = 10.0 * equivalence_ratio - 12.0;
+    float m = abstract_mixture;  //to simplify writing the next equation
+    Percentage_of_best_power_mixture_power = ((-0.0012*m*m*m*m*m*m) + (0.021*m*m*m*m*m) + (-0.1425*m*m*m*m) + (0.4395*m*m*m) + (-0.8909*m*m) + (-0.5155*m) + 100.03);
+    Percentage_Power = Percentage_Power * Percentage_of_best_power_mixture_power / 100.0;
+    
+    //cout << " %POWER = " << Percentage_Power << '\n';
+    
+//***DCL - FIXME - this needs altering - for instance going richer than full power mixture decreases the %power but increases the fuel flow    
+    // Now Calculate Fuel Flow based on % Power Best Power Mixture
+    Fuel_Flow = Percentage_Power * Max_Fuel_Flow / 100.0;
+    // cout << Fuel_Flow << " lbs/hr"<< endl;
+    
+    // Now Derate engine for the effects of Bad/Switched off magnetos
+    if (Magneto_Left == 0 && Magneto_Right == 0) {
+	// cout << "Both OFF\n";
+	Percentage_Power = 0;
+    } else if (Magneto_Left && Magneto_Right) {
+	// cout << "Both On    ";
+    } else if (Magneto_Left == 0 || Magneto_Right== 0) {
+	// cout << "1 Magneto Failed   ";
+	
+	Percentage_Power = Percentage_Power * 
+	    ((100.0 - Mag_Derate_Percent)/100.0);
+	//  cout << FGEng1_Percentage_Power <<  "%" << "\t";
+    }	
+
+
+
+//**********************************************************************
+//Calculate Exhaust gas temperature
 
     // cout << "Thi = " << equivalence_ratio << '\n'; 
 
@@ -476,7 +554,15 @@ void FGNewEngine::update() {
 
     EGT = T_amb + delta_T_exhaust;
 
-    // cout << " EGT = " << EGT << '\n';
+    //The above gives the exhaust temperature immediately prior to leaving the combustion chamber
+    //Now derate to give a more realistic figure as measured downstream
+    //For now we will aim for a peak of around 400 degC (750 degF)
+
+    EGT *= 0.444 + ((0.544 - 0.444) * Percentage_Power / 100.0);
+
+    EGT_degF = (EGT * 1.8) - 459.67;
+
+    //cout << " EGT = " << EGT << " degK " << EGT_degF << " degF";// << '\n';
 
 //***************************************************************************************
 // Calculate Cylinder Head Temperature
@@ -561,7 +647,7 @@ the values from file to avoid the necessity for re-compilation every time I chan
 
     CHT_degF = (CHT * 1.8) - 459.67;
 
-    // cout << "CHT = " << CHT_degF << " degF\n";
+    //cout << " CHT = " << CHT_degF << " degF\n";
 
 
 // End calculate Cylinder Head Temperature
@@ -571,69 +657,7 @@ the values from file to avoid the necessity for re-compilation every time I chan
 // Engine Power & Torque Calculations
 
 
-	// For a given Manifold Pressure and RPM calculate the % Power
-	// Multiply Manifold Pressure by RPM
-	ManXRPM = Manifold_Pressure * RPM;
-	//	cout << ManXRPM;
-	// cout << endl;
 
-/*
-//  Phil's %power correlation
-	//  Calculate % Power
-	Percentage_Power = (+ 7E-09 * ManXRPM * ManXRPM) + ( + 7E-04 * ManXRPM) - 0.1218;
-	// cout << Percentage_Power <<  "%" << "\t";   
-*/
-
-// DCL %power correlation - basically Phil's correlation modified to give slighty less power at the low end
-// might need some adjustment as the prop model is adjusted
-// My aim is to match the prop model and engine model at the low end to give the manufacturer's recommended idle speed with the throttle closed - 600rpm for the Continental IO520
-	//  Calculate % Power
-	Percentage_Power = (+ 6E-09 * ManXRPM * ManXRPM) + ( + 8E-04 * ManXRPM) - 1.8524;
-	// cout << Percentage_Power <<  "%" << "\t";
-
-	
-	// Adjust for Temperature - Temperature above Standard decrease
-	// power % by 7/120 per degree F increase, and incease power for
-	// temps below at the same ratio
-	Percentage_Power = Percentage_Power - (FG_ISA_VAR * 7 /120);
-	// cout << Percentage_Power <<  "%" << "\t";
-    
-	// Adjust for Altitude. In this version a linear variation is
-	// used. Decrease 1% for each 1000' increase in Altitde
-	Percentage_Power = Percentage_Power + (FG_Pressure_Ht * 12/10000);	
-	// cout << Percentage_Power <<  "%" << "\t";
-
-
-	//DCL - now adjust power to compensate for mixture
-	//uses a curve fit to the data in the IO360 / O360 operating manual
-	//due to the shape of the curve I had to use a 6th order fit - I am sure it must be possible to reduce this in future,
-	//possibly by using separate fits for rich and lean of best power mixture
-	//first adjust actual mixture to abstract mixture - this is a temporary hack in order to account for the fact that the data I have
-	//dosn't specify actual mixtures and I want to be able to change what I think they are without redoing the curve fit each time.
-	//y=10x-12 for now
-	abstract_mixture = 10.0 * equivalence_ratio - 12.0;
-	float m = abstract_mixture;  //to simplify writing the next equation
-	Percentage_of_best_power_mixture_power = ((-0.0012*m*m*m*m*m*m) + (0.021*m*m*m*m*m) + (-0.1425*m*m*m*m) + (0.4395*m*m*m) + (-0.8909*m*m) + (-0.5155*m) + 100.03);
-	Percentage_Power = Percentage_Power * Percentage_of_best_power_mixture_power / 100.0;
-	
-
-	// Now Calculate Fuel Flow based on % Power Best Power Mixture
-	Fuel_Flow = Percentage_Power * Max_Fuel_Flow / 100.0;
-	// cout << Fuel_Flow << " lbs/hr"<< endl;
-	
-	// Now Derate engine for the effects of Bad/Switched off magnetos
-	if (Magneto_Left == 0 && Magneto_Right == 0) {
-	    // cout << "Both OFF\n";
-	    Percentage_Power = 0;
-	} else if (Magneto_Left && Magneto_Right) {
-	    // cout << "Both On    ";
-	} else if (Magneto_Left == 0 || Magneto_Right== 0) {
-	    // cout << "1 Magneto Failed   ";
-
-	    Percentage_Power = Percentage_Power * 
-		((100.0 - Mag_Derate_Percent)/100.0);
-	    //  cout << FGEng1_Percentage_Power <<  "%" << "\t";
-	}	
 
 	// Calculate Engine Horsepower
 
