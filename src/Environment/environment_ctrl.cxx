@@ -367,8 +367,13 @@ static void set_dewpoint_at_altitude( float dewpoint_degc, float altitude_ft ) {
 void
 FGMetarEnvironmentCtrl::update_env_config ()
 {
-    fgSetupWind( fgGetDouble("/environment/metar/base-wind-range-from"),
-                 fgGetDouble("/environment/metar/base-wind-range-to"),
+    double wind_dir1 = fgGetDouble("/environment/metar/base-wind-range-from");
+    double wind_dir2 = fgGetDouble("/environment/metar/base-wind-range-to");
+
+    wind_dir1 = fmod (wind_dir1 + 180.0, 360.0);
+    wind_dir2 = fmod (wind_dir2 + 180.0, 360.0);
+
+    fgSetupWind( wind_dir1, wind_dir2,
                  fgGetDouble("/environment/metar/base-wind-speed-kt"),
                  fgGetDouble("/environment/metar/gust-wind-speed-kt") );
 
