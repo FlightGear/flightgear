@@ -18,7 +18,7 @@ Steve Baker <sbaker@link.com>
   of the more sophisticated features of Flight Gear.
 
 
-Paul Bleisch <bleisch@chromatic.com>
+Paul Bleisch <pbleisch@acm.org>
   Paul redid the "debug" system so that it would be much more
   flexible, so it could be easily disabled for production system, and
   so that messages for certain subsystems could be selectively
