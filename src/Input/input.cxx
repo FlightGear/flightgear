@@ -403,12 +403,12 @@ FGInput::doMouseMotion (int x, int y)
 				// so we can play with it.
   if (x != m.x) {
     int delta = x - m.x;
-    for (int i = 0; i < mode.x_bindings[modifiers].size(); i++)
+    for (unsigned int i = 0; i < mode.x_bindings[modifiers].size(); i++)
       mode.x_bindings[modifiers][i]->fire(double(delta), double(xsize));
   }
   if (y != m.y) {
     int delta = y - m.y;
-    for (int i = 0; i < mode.y_bindings[modifiers].size(); i++)
+    for (unsigned int i = 0; i < mode.y_bindings[modifiers].size(); i++)
       mode.y_bindings[modifiers][i]->fire(double(delta), double(ysize));
   }
 
@@ -487,7 +487,7 @@ FGInput::_init_joystick ()
       std::cout << "Looking for bindings for joystick \""
 		<< name << '"' << std::endl;
       vector<SGPropertyNode_ptr> nodes = js_nodes->getChildren("js-named");
-      for (int i = 0; i < nodes.size(); i++) {
+      for (unsigned int i = 0; i < nodes.size(); i++) {
 	SGPropertyNode_ptr node = nodes[i];
 	std::cout << "  Trying \"" << node->getStringValue("name") << '"' << std::endl;
 	if (!strcmp(node->getStringValue("name"), name)) {
@@ -968,10 +968,10 @@ FGInput::mouse_mode::~mouse_mode ()
 ////////////////////////////////////////////////////////////////////////
 
 FGInput::mouse::mouse ()
-  : nModes(1),
-    current_mode(0),
-    x(-1),
+  : x(-1),
     y(-1),
+    nModes(1),
+    current_mode(0),
     modes(0)
 {
 }
