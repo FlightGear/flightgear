@@ -50,6 +50,7 @@
 
 #include "simple.hxx"
 
+FG_USING_NAMESPACE(std);
 
 FGAirports::FGAirports( const string& file ) {
     dbf = gdbm_open( (char *)file.c_str(), 0, GDBM_READER, 0, NULL );
@@ -180,13 +181,13 @@ bool FGAirportsUtil::dump_gdbm( const string& file ) {
 
     GDBM_FILE dbf;
 
-#if !defined( MACOS )
+#if defined( MACOS ) || defined( _MSC_VER )
+    dbf = gdbm_open( (char *)file.c_str(), 0, GDBM_NEWDB | GDBM_FAST,
+		     NULL, NULL );
+#else
     dbf = gdbm_open( (char *)file.c_str(), 0, GDBM_NEWDB | GDBM_FAST, 
 		     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH,
 		     NULL );
-#else
-    dbf = gdbm_open( (char *)file.c_str(), 0, GDBM_NEWDB | GDBM_FAST,
-		     NULL, NULL );
 #endif
 
     if ( dbf == NULL ) {

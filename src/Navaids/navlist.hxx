@@ -44,7 +44,8 @@ class FGNavList {
     typedef nav_list_type::iterator nav_list_iterator;
     typedef nav_list_type::const_iterator nav_list_const_iterator;
 
-    typedef map < int, nav_list_type, less<int> > nav_map_type;
+    // typedef map < int, nav_list_type, less<int> > nav_map_type;
+    typedef map < int, nav_list_type > nav_map_type;
     typedef nav_map_type::iterator nav_map_iterator;
     typedef nav_map_type::const_iterator nav_map_const_iterator;
 

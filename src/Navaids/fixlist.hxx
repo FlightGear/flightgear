@@ -41,7 +41,8 @@ FG_USING_STD(string);
 
 class FGFixList {
 
-    typedef map < string, FGFix, less<string> > fix_map_type;
+    // typedef map < string, FGFix, less<string> > fix_map_type;
+    typedef map < string, FGFix > fix_map_type;
     typedef fix_map_type::iterator fix_map_iterator;
     typedef fix_map_type::const_iterator fix_map_const_iterator;
 

@@ -34,6 +34,9 @@
 
 $Header$
 $Log$
+Revision 1.3  2000/05/24 04:10:01  curt
+MSVC5 portability changes contributed by Bruce Finney.
+
 Revision 1.2  2000/04/10 18:09:41  curt
 David Megginson made a few (mostly minor) mods to the LaRCsim files, and
 it's now possible to choose the LaRCsim model at runtime, as in
@@ -141,6 +144,9 @@ static char rcsid[] = "$Id$";
 #define FACILITY_NAME_STRING "init"
 #define CURRENT_VERSION 10
 
+void cherokee_init( void );
+void c172_init( void );
+
 typedef struct
 {
     symbol_rec	Symbol;
@@ -215,7 +221,12 @@ void ls_init_init( void ) {
 	    if (error) Discrete_States[i].Symbol.Addr = NIL_POINTER;
 	}
     */
+
 }
+/* not all system have strcasecmp */
+#ifdef _MSC_VER
+#  define strcasecmp stricmp
+#endif
 
 void ls_init( char * aircraft ) {
     /* int i; */

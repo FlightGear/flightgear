@@ -25,6 +25,10 @@
 
 #include STL_STRING
 
+#ifdef _MSC_VER
+#  include <io.h>
+#endif
+
 #include <simgear/debug/logstream.hxx>
 
 #include "fg_file.hxx"
@@ -43,11 +47,20 @@ FGFile::~FGFile() {
 // open the file based on specified direction
 bool FGFile::open( FGProtocol::fgProtocolDir dir ) {
     if ( dir == FGProtocol::out ) {
+#ifdef _MSC_VER
+	fp = _open( file_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC,
+			00666 );
+#else
 	fp = std::open( file_name.c_str(), O_WRONLY | O_CREAT | O_TRUNC,
 			S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | 
 			S_IROTH | S_IWOTH );
+#endif
     } else if ( dir == FGProtocol::in ) {
+#ifdef _MSC_VER
+	fp = _open( file_name.c_str(), O_RDONLY );
+#else
 	fp = std::open( file_name.c_str(), O_RDONLY );
+#endif
     } else {
 	FG_LOG( FG_IO, FG_ALERT, 
 		"Error:  bidirection mode not available for files." );
@@ -66,7 +79,11 @@ bool FGFile::open( FGProtocol::fgProtocolDir dir ) {
 // read a block of data of specified size
 int FGFile::read( char *buf, int length ) {
     // read a chunk
+#ifdef _MSC_VER
+    int result = _read( fp, buf, length );
+#else
     int result = std::read( fp, buf, length );
+#endif
 
     return result;
 }
@@ -78,7 +95,11 @@ int FGFile::readline( char *buf, int length ) {
     int pos = lseek( fp, 0, SEEK_CUR );
 
     // read a chunk
+#ifdef _MSC_VER
+    int result = _read( fp, buf, length );
+#else
     int result = std::read( fp, buf, length );
+#endif
 
     // find the end of line and reset position
     int i;
@@ -99,7 +120,11 @@ int FGFile::readline( char *buf, int length ) {
 
 // write data to a file
 int FGFile::write( char *buf, int length ) {
+#ifdef _MSC_VER
+    int result = _write( fp, buf, length );
+#else
     int result = std::write( fp, buf, length );
+#endif
     if ( result != length ) {
 	FG_LOG( FG_IO, FG_ALERT, "Error writing data: " << file_name );
     }
@@ -117,7 +142,11 @@ int FGFile::writestring( char *str ) {
 
 // close the port
 bool FGFile::close() {
+#ifdef _MSC_VER
+    if ( _close( fp ) == -1 ) {
+#else
     if ( std::close( fp ) == -1 ) {
+#endif
 	return false;
     }
 

@@ -49,6 +49,7 @@
 #include "tilecache.hxx"
 #include "tileentry.hxx"
 
+FG_USING_NAMESPACE(std);
 
 // a cheesy hack (to be fixed later)
 extern ssgBranch *terrain;
@@ -201,7 +202,7 @@ FGTileCache::fill_in( int index, const FGBucket& p )
 	while ( ! in.eof() ) {
 	    in >> token;
 	    in >> name;
-#ifdef MACOS
+#if defined ( MACOS ) || defined ( _MSC_VER )
 	    in >> ::skipws;
 #else
 	    in >> skipws;
@@ -333,6 +334,9 @@ FGTileCache::next_avail( void )
 	FG_LOG( FG_TERRAIN, FG_ALERT, "WHOOPS!!! Dying in next_avail()" );
 	exit( -1 );
     }
+
+    // avoid a potential compiler warning
+    return -1;
 }
 
 

@@ -49,6 +49,7 @@
 #include <plib/ssg.h>		// plib include
 
 #include "material.hxx"
+#include "fragment.hxx"
 
 FG_USING_STD(string);
 FG_USING_STD(map);

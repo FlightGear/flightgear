@@ -148,7 +148,8 @@ private:
     T* object;
     Method0v method0v;
 
-    typedef void * (fgMethodCallback::*DoPtr)( void ** );
+    // typedef void * (fgMethodCallback::*DoPtr)( void ** );
+    typedef void * (fgMethodCallback<T>::*DoPtr)( void ** );
     DoPtr doPtr;
 };
 

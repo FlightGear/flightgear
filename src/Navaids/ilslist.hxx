@@ -44,7 +44,8 @@ class FGILSList {
     typedef ils_list_type::iterator ils_list_iterator;
     typedef ils_list_type::const_iterator ils_list_const_iterator;
 
-    typedef map < int, ils_list_type, less<int> > ils_map_type;
+    // typedef map < int, ils_list_type, less<int> > ils_map_type;
+    typedef map < int, ils_list_type > ils_map_type;
     typedef ils_map_type::iterator ils_map_iterator;
     typedef ils_map_type::const_iterator ils_map_const_iterator;
 

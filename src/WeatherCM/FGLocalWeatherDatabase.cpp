@@ -270,8 +270,8 @@ void fgUpdateWeatherDatabase(void)
 	#define KPHTOFPS 0.9113 //km/hr to ft/s
 	#define MSTOFPS  3.2808 //m/s to ft/s
 	current_aircraft.fdm_state->set_Velocities_Local_Airmass(my_value.Wind[1]*KPHTOFPS,
-    													    my_value.Wind[0]*KPHTOFPS,
-														    my_value.Wind[2]*KPHTOFPS);
+		my_value.Wind[0]*KPHTOFPS,
+		my_value.Wind[2]*KPHTOFPS);
 	
 }
 

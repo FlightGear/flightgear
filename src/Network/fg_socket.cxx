@@ -134,7 +134,11 @@ int FGSocket::make_client_socket () {
     if ( connect(sock, (struct sockaddr *) &name, 
 		 sizeof(struct sockaddr_in)) < 0 )
     {
+#ifdef _MSC_VER
+	_close(sock);
+#else
 	std::close(sock);
+#endif
 	FG_LOG( FG_IO, FG_ALERT, 
 		"Error: connect() failed in make_client_socket()" );
 	return -1;
@@ -207,7 +211,11 @@ int FGSocket::read( char *buf, int length ) {
     select(32, &ready, 0, 0, &tv);
 
     if ( FD_ISSET(sock, &ready) ) {
+#ifdef _MSC_VER
+	result = _read( sock, buf, length );
+#else
 	result = std::read( sock, buf, length );
+#endif
 	if ( result != length ) {
 	    FG_LOG( FG_IO, FG_INFO, 
 		    "Warning: read() not enough bytes." );
@@ -239,7 +247,11 @@ int FGSocket::readline( char *buf, int length ) {
 	// requested amount read
 
 	char *buf_ptr = save_buf + save_len;
+#ifdef _MSC_VER
+	result = _read( sock, buf_ptr, FG_MAX_MSG_SIZE - save_len );
+#else
 	result = std::read( sock, buf_ptr, FG_MAX_MSG_SIZE - save_len );
+#endif
 	save_len += result;
 	// cout << "current read = " << buf_ptr << endl;
 	// cout << "current save_buf = " << save_buf << endl;
@@ -313,7 +325,11 @@ int FGSocket::write( char *buf, int length ) {
 	// std::read( msgsock, junk, FG_MAX_MSG_SIZE );
 
 	// write the interesting data to the socket
+#ifdef _MSC_VER
+	if ( _write(msgsock, buf, length) < 0 ) {
+#else
 	if ( std::write(msgsock, buf, length) < 0 ) {
+#endif
 	    FG_LOG( FG_IO, FG_ALERT, "Error writing to socket: " << port );
 	    error_condition = true;
 	} else {
@@ -344,10 +360,17 @@ int FGSocket::writestring( char *str ) {
 bool FGSocket::close() {
     for ( int i = 0; i < (int)client_connections.size(); ++i ) {
 	int msgsock = client_connections[i];
+#ifdef _MSC_VER
+	_close( msgsock );
+#else
 	std::close( msgsock );
+#endif
     }
 
+#ifdef _MSC_VER
+    _close( sock );
+#else
     std::close( sock );
-
+#endif
     return true;
 }
