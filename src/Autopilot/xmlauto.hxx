@@ -96,6 +96,8 @@ private:
     // Input values
     double y_n;                 // measured process value
     double r_n;                 // reference (set point) value
+    double y_scale;             // scale process input from property system
+    double r_scale;             // scale reference input from property system
 
     // Configuration values
     double Kp;                  // proportional gain
@@ -161,6 +163,8 @@ private:
     // Input values
     double y_n;                 // measured process value
     double r_n;                 // reference (set point) value
+    double y_scale;             // scale process input from property system
+    double r_scale;             // scale reference input from property system
 
     double u_min;               // Minimum output clamp
     double u_max;               // Maximum output clamp

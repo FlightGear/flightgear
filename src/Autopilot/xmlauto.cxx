@@ -45,7 +45,9 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
     ep_n_1( 0.0 ),
     edf_n_1( 0.0 ),
     edf_n_2( 0.0 ),
-    u_n_1( 0.0 )
+    u_n_1( 0.0 ),
+    r_scale( 1.0 ),
+    y_scale( 1.0 )
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
@@ -74,6 +76,10 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
             if ( prop != NULL ) {
                 input_prop = fgGetNode( prop->getStringValue(), true );
             }
+            prop = child->getChild( "scale" );
+            if ( prop != NULL ) {
+                y_scale = prop->getDoubleValue();
+            }
         } else if ( cname == "reference" ) {
             SGPropertyNode *prop = child->getChild( "prop" );
             if ( prop != NULL ) {
@@ -83,6 +89,10 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
                 if ( prop != NULL ) {
                     r_n = prop->getDoubleValue();
                 }
+            }
+            prop = child->getChild( "scale" );
+            if ( prop != NULL ) {
+                r_scale = prop->getDoubleValue();
             }
         } else if ( cname == "output" ) {
             int i = 0;
@@ -231,12 +241,12 @@ void FGPIDController::update( double dt ) {
 
         double y_n = 0.0;
         if ( input_prop != NULL ) {
-            y_n = input_prop->getDoubleValue();
+            y_n = input_prop->getDoubleValue() * y_scale;
         }
 
         double r_n = 0.0;
         if ( r_n_prop != NULL ) {
-            r_n = r_n_prop->getDoubleValue();
+            r_n = r_n_prop->getDoubleValue() * r_scale;
         } else {
             r_n = r_n_value;
         }
@@ -335,7 +345,9 @@ FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
     y_n( 0.0 ),
     r_n( 0.0 ),
     u_min( 0.0 ),
-    u_max( 0.0 )
+    u_max( 0.0 ),
+    y_scale( 1.0 ),
+    r_scale ( 1.0 )
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
@@ -364,6 +376,10 @@ FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
             if ( prop != NULL ) {
                 input_prop = fgGetNode( prop->getStringValue(), true );
             }
+            prop = child->getChild( "scale" );
+            if ( prop != NULL ) {
+                y_scale = prop->getDoubleValue();
+            }
         } else if ( cname == "reference" ) {
             SGPropertyNode *prop = child->getChild( "prop" );
             if ( prop != NULL ) {
@@ -373,6 +389,10 @@ FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
                 if ( prop != NULL ) {
                     r_n = prop->getDoubleValue();
                 }
+            }
+            prop = child->getChild( "scale" );
+            if ( prop != NULL ) {
+                r_scale = prop->getDoubleValue();
             }
         } else if ( cname == "output" ) {
             int i = 0;
@@ -433,12 +453,12 @@ void FGPISimpleController::update( double dt ) {
         if ( debug ) cout << "Updating " << name << endl;
         double input = 0.0;
         if ( input_prop != NULL ) {
-            input = input_prop->getDoubleValue();
+            input = input_prop->getDoubleValue() * y_scale;
         }
 
         double r_n = 0.0;
         if ( r_n_prop != NULL ) {
-            r_n = r_n_prop->getDoubleValue();
+            r_n = r_n_prop->getDoubleValue() * r_scale;
         } else {
             r_n = r_n_value;
         }
