@@ -19,10 +19,6 @@
 
 #include <Main/fgfs.hxx>
 
-#include <vector>
-
-SG_USING_STD(vector);
-
 
 /**
  * Manage aircraft systems.
@@ -30,21 +26,12 @@ SG_USING_STD(vector);
  * In the initial draft, the systems present are hard-coded, but they
  * will soon be configurable for individual aircraft.
  */
-class FGSystemMgr : public FGSubsystem
+class FGSystemMgr : public FGSubsystemGroup
 {
 public:
 
     FGSystemMgr ();
     virtual ~FGSystemMgr ();
-
-    virtual void init ();
-    virtual void bind ();
-    virtual void unbind ();
-    virtual void update (double dt);
-
-private:
-    vector<FGSubsystem *> _systems;
-
 };
 
 #endif // __SYSTEM_MGR_HXX

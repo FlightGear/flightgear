@@ -13,48 +13,14 @@
 
 FGSystemMgr::FGSystemMgr ()
 {
-    // NO-OP
+    set_subsystem("electrical", new FGElectricalSystem);
+    set_subsystem("pitot", new PitotSystem);
+    set_subsystem("static", new StaticSystem);
+    set_subsystem("vacuum", new VacuumSystem);
 }
 
 FGSystemMgr::~FGSystemMgr ()
 {
-    for (unsigned int i = 0; i < _systems.size(); i++) {
-        delete _systems[i];
-        _systems[i] = 0;
-    }
-}
-
-void
-FGSystemMgr::init ()
-{
-                                // TODO: replace with XML configuration
-    _systems.push_back(new FGElectricalSystem);
-    _systems.push_back(new PitotSystem);
-    _systems.push_back(new StaticSystem);
-    _systems.push_back(new VacuumSystem);
-
-                                // Initialize the individual systems
-    for (unsigned int i = 0; i < _systems.size(); i++)
-        _systems[i]->init();
-}
-
-void
-FGSystemMgr::bind ()
-{
-    // NO-OP
-}
-
-void
-FGSystemMgr::unbind ()
-{
-    // NO-OP
-}
-
-void
-FGSystemMgr::update (double dt)
-{
-    for (unsigned int i = 0; i < _systems.size(); i++)
-        _systems[i]->update(dt);
 }
 
 // end of system_manager.cxx
