@@ -7,6 +7,7 @@
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <Aircraft/aircraft.h>
@@ -22,7 +23,9 @@
 
 #include "hud.hxx"
 
-UINT instr_item :: instances;  // Initial value of zero
+UINT instr_item :: instances = 0;  // Initial value of zero
+int  instr_item :: brightness = BRT_MEDIUM;
+glRGBTRIPLE instr_item :: color = {0.1, 0.7, 0.0};
 
 // constructor    ( No default provided )
 instr_item  ::
@@ -31,14 +34,15 @@ instr_item  ::
                UINT             width,
                UINT             height,
                DBLFNPTR         data_source,
+               double           data_scaling,
                UINT             options,
                bool             working) :
                       handle         ( ++instances  ),
                       load_value_fn  ( data_source  ),
+                      disp_factor    ( data_scaling ),
                       opts           ( options      ),
                       is_enabled     ( working      ),
-                      broken         ( FALSE        ),
-                      brightness     ( BRT_MEDIUM   )
+                      broken         ( FALSE        )
 {
   scrn_pos.left   = x;
   scrn_pos.top    = y;
@@ -76,10 +80,10 @@ instr_item  ::
                          handle       ( ++instances        ),
                          scrn_pos     ( image.scrn_pos     ),
                          load_value_fn( image.load_value_fn),
+                         disp_factor  ( image.disp_factor  ),
                          opts         ( image.opts         ),
                          is_enabled   ( image.is_enabled   ),
                          broken       ( image.broken       ),
-                         brightness   ( image.brightness   ),
                          scr_span     ( image.scr_span     ),
                          mid_span     ( image.mid_span     )
 {
@@ -92,10 +96,10 @@ instr_item & instr_item :: operator = ( const instr_item & rhs )
   if( !(this == &rhs )) { // Not an identity assignment
     scrn_pos      = rhs.scrn_pos;
     load_value_fn = rhs.load_value_fn;
+    disp_factor   = rhs.disp_factor;
     opts          = rhs.opts;
     is_enabled    = rhs.is_enabled;
     broken        = rhs.broken;
-    brightness    = rhs.brightness;
     }
   return *this;
 }

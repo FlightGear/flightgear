@@ -28,25 +28,14 @@
 #define _COCKPIT_HXX
 
 
+#ifndef __cplusplus
+# error This library requires C++
+#endif
+
+
 #include "hud.hxx"
 #include "panel.hxx"
 
-
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif                                   
-
-
-//typedef struct  {
-//	int code;
-//	Hptr hud;
-//	// As above.
-//	// PANEL *panel;
-//	int status;
-//}fgCOCKPIT, *pfgCockpit;
-
-// And in the future (near future i hope).
-// #include <Cockpit/panel.h>
 // Class fg_Cockpit          This class is a holder for the heads up display
 //                          and is initialized with a
 class fg_Cockpit  {
@@ -71,10 +60,14 @@ void fgCockpitUpdate( void );
 
 
 /* $Log$
-/* Revision 1.3  1998/06/27 16:47:54  curt
-/* Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
-/* first pass at an isntrument panel.
+/* Revision 1.4  1998/07/13 21:00:46  curt
+/* Integrated Charlies latest HUD updates.
+/* Wrote access functions for current fgOPTIONS.
 /*
+ * Revision 1.3  1998/06/27 16:47:54  curt
+ * Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
+ * first pass at an isntrument panel.
+ *
  * Revision 1.2  1998/05/11 18:13:10  curt
  * Complete C++ rewrite of all cockpit code by Charlie Hotchkiss.
  *

@@ -30,13 +30,14 @@ instr_label ::
                       const char   *label_format,
                       const char   *pre_label_string,
                       const char   *post_label_string,
+                      double        scale_data,
                       UINT          options,
                       fgLabelJust   justification,
                       int           font_size,
                       int           blinking,
                       bool          working ):
                            instr_item( x, y, width, height,
-                                       data_source, options, working ),
+                                       data_source, scale_data,options, working ),
                            pformat  ( label_format      ),
                            pre_str  ( pre_label_string  ),
                            post_str ( post_label_string ),
@@ -78,7 +79,6 @@ instr_label & instr_label ::operator = (const instr_label & rhs )
 	return *this;
 }
 
-
 //
 // draw                    Draws a label anywhere in the HUD
 //
@@ -106,7 +106,13 @@ draw( void )       // Required method in base class
       }
     } // else do nothing if both pre and post strings are nulls. Interesting.
 
-  sprintf( label_buffer, format_buffer, get_value() );
+  if( data_available() ) {
+    sprintf( label_buffer, format_buffer, get_value() );
+    }
+  else {
+    sprintf( label_buffer, format_buffer );
+    }
+    
 #ifdef DEBUGHUD
 	fgPrintf( FG_COCKPIT, FG_DEBUG,  format_buffer );
 	fgPrintf( FG_COCKPIT, FG_DEBUG,  "\n" );

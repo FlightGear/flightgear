@@ -45,6 +45,7 @@
 
 #include "panel.hxx"
 
+  // Intriquing. Needs documentation.
 
 #define IMAGIC      0x01da
 #define IMAGIC_SWAP 0xda01
@@ -77,13 +78,7 @@ static GLuint panel_tex_id;
 static GLubyte tex[512][256][4];
 
 
-static double get_speed( void )
-{
-	fgFLIGHT *f;
-
-	f = current_aircraft.flight;
-	return( FG_V_equiv_kts );    // Make an explicit function call.
-}
+extern double get_speed( void );
 
 
 /* image.c ,temporary hack, I know*/
@@ -291,11 +286,8 @@ static IMAGE *ImageLoad(char *fileName)
 
 
 void fgPanelInit ( void ) {
-    fgOPTIONS *o;
     char tpath[256];
     int x, y;
-
-    o = &current_options;
 
 #ifdef GL_VERSION_1_1
     xglGenTextures(1, &panel_tex_id);
@@ -315,8 +307,7 @@ void fgPanelInit ( void ) {
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     /* load in the texture data */
-    tpath[0] = '\0';
-    strcat(tpath, o->fg_root);
+    current_options.get_fg_root(tpath);
     strcat(tpath, "/Textures/");
     strcat(tpath, "panel1.rgb");
 
@@ -425,9 +416,13 @@ void fgPanelUpdate ( void ) {
 
 
 /* $Log$
-/* Revision 1.2  1998/07/03 11:55:37  curt
-/* A few small rearrangements and tweaks.
+/* Revision 1.3  1998/07/13 21:00:52  curt
+/* Integrated Charlies latest HUD updates.
+/* Wrote access functions for current fgOPTIONS.
 /*
+ * Revision 1.2  1998/07/03 11:55:37  curt
+ * A few small rearrangements and tweaks.
+ *
  * Revision 1.1  1998/06/27 16:47:54  curt
  * Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
  * first pass at an isntrument panel.

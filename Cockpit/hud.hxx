@@ -79,11 +79,12 @@ enum VIEW_MODES{ HUD_VIEW, PANEL_VIEW, CHASE_VIEW, TOWER_VIEW };
 // Hud general constants
 #define DAY                1
 #define NIGHT              2
-#define BRT_DARK           3
-#define BRT_MEDIUM         4
-#define BRT_LIGHT          5
-#define SIZE_SMALL         6
-#define SIZE_LARGE         7
+#define BRT_BLACK          3
+#define BRT_DARK           4
+#define BRT_MEDIUM         5
+#define BRT_LIGHT          6
+#define SIZE_SMALL         7
+#define SIZE_LARGE         8
 
 // Label constants
 #define SMALL              1
@@ -185,19 +186,28 @@ enum  hudinstype{ HUDno_instr,
               HUDtbi
               };
 
+typedef struct gltagRGBTRIPLE { // rgbt
+    GLfloat Blue;
+    GLfloat Green;
+    GLfloat Red;
+} glRGBTRIPLE;
+
 class instr_item {  // An Abstract Base Class (ABC)
   private:
-    static UINT      instances;     // More than 64K instruments? Nah!
-    UINT             handle;
-    RECT             scrn_pos;      // Framing - affects scale dimensions
+    static UINT        instances;     // More than 64K instruments? Nah!
+    static int         brightness;
+    static glRGBTRIPLE color;
+
+    UINT               handle;
+    RECT               scrn_pos;      // Framing - affects scale dimensions
                                     // and orientation. Vert vs Horz, etc.
-    DBLFNPTR         load_value_fn;
-    UINT             opts;
-    bool             is_enabled;
-    bool             broken;
-    int              brightness;
-    UINT             scr_span;      // Working values for draw;
-    POINT            mid_span;      //
+    DBLFNPTR           load_value_fn;
+    double             disp_factor;   // Multiply by to get numbers shown on scale.
+    UINT               opts;
+    bool               is_enabled;
+    bool               broken;
+    UINT               scr_span;      // Working values for draw;
+    POINT              mid_span;      //
 
   public:
     instr_item( int            x,
@@ -205,6 +215,7 @@ class instr_item {  // An Abstract Base Class (ABC)
                 UINT           height,
                 UINT           width,
                 DBLFNPTR       data_source,
+                double         data_scaling,
                 UINT           options,
                 bool           working      = true);
 
@@ -217,7 +228,9 @@ class instr_item {  // An Abstract Base Class (ABC)
     RECT         get_location    ( void ) { return scrn_pos;  }
     bool         is_broken       ( void ) { return broken;    }
     bool         enabled         ( void ) { return is_enabled;}
-    double       get_value       ( void ) { return load_value_fn();}
+    bool         data_available  ( void ) { return !!load_value_fn; }
+    double       get_value       ( void ) { return load_value_fn(); }
+    double       data_scaling    ( void ) { return disp_factor; }
     UINT         get_span        ( void ) { return scr_span;  }
     POINT        get_centroid    ( void ) { return mid_span;  }
     UINT         get_options     ( void ) { return opts;      }
@@ -259,6 +272,7 @@ class instr_label : public instr_item {
                  const char  *label_format,
                  const char  *pre_label_string  = 0,
                  const char  *post_label_string = 0,
+                 double       scale_data        = 1.0,
                  UINT         options           = HUDS_TOP,
                  fgLabelJust  justification     = CENTER_JUST,
                  int          font_size         = SMALL,
@@ -269,7 +283,6 @@ class instr_label : public instr_item {
 
     instr_label( const instr_label & image);
     instr_label & operator = (const instr_label & rhs );
-
     virtual void draw( void );       // Required method in base class
 };
 
@@ -289,7 +302,6 @@ class instr_scale : public instr_item {
     double scale_factor;  // factor => screen units/range values.
     UINT   Maj_div;       // major division marker units
     UINT   Min_div;       // minor division marker units
-    double disp_factor;   // Multiply by to get numbers shown on scale.
     UINT   Modulo;        // Roll over point
     int    signif_digits; // digits to show to the right.
 
@@ -480,6 +492,7 @@ class HudLadder : public dual_instr_item {
 //using namespace std;
 //deque <instr_item>  * Hdeque_ptr;
 
+extern void HUD_brightkey( bool incr_bright );
 extern int  fgHUDInit( fgAIRCRAFT * /* current_aircraft */ );
 extern void fgUpdateHUD( void );
 
@@ -509,9 +522,13 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 /* $Log$
-/* Revision 1.8  1998/07/03 13:16:29  curt
-/* Added Charlie Hotchkiss's HUD updates and improvementes.
+/* Revision 1.9  1998/07/13 21:00:48  curt
+/* Integrated Charlies latest HUD updates.
+/* Wrote access functions for current fgOPTIONS.
 /*
+ * Revision 1.8  1998/07/03 13:16:29  curt
+ * Added Charlie Hotchkiss's HUD updates and improvementes.
+ *
  * Revision 1.6  1998/06/03 00:43:28  curt
  * No .h when including stl stuff.
  *

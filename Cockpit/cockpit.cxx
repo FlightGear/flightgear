@@ -215,29 +215,25 @@ double get_sideslip( void )
 
 double get_frame_rate( void )
 {
-    fgGENERAL *g;                                                               
+    fgGENERAL *pgeneral;
  
-    g = &general;                     
+    pgeneral = &general;                     
  
-    return g->frame_rate;                                                      
+    return pgeneral->frame_rate;
 }
 
 double get_fov( void )
 {
-    fgOPTIONS *o;                                                               
- 
-    o = &current_options;                     
- 
-    return o->fov;                                                      
+    return (current_options.get_fov()); 
 }
 
 double get_vfc_ratio( void )
 {
-    fgVIEW *v;                                                               
+    fgVIEW *pview;
  
-    v = &current_view;                     
+    pview = &current_view;
  
-    return v->vfc_ratio;                                                      
+    return pview->vfc_ratio;
 }
 
 bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
@@ -270,32 +266,35 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 
 
 void fgCockpitUpdate( void ) {
-    fgOPTIONS *o;
-    fgVIEW *v;
+    fgVIEW *pview;
 
-    o = &current_options;
-    v = &current_view;
+    pview = &current_view;
 
     fgPrintf( FG_COCKPIT, FG_DEBUG,
 	      "Cockpit: code %d   status %d\n",
 	      ac_cockpit->code(), ac_cockpit->status() );
 
-    if ( o->hud_status ) {
+    if ( current_options.get_hud_status() ) {
 	// This will check the global hud linked list pointer.
 	// If these is anything to draw it will.
 	fgUpdateHUD();
     }
 
-    if ( o->panel_status && (fabs(v->view_offset) < 0.2) ) {
+    if ( current_options.get_panel_status() && 
+	 (fabs(pview->view_offset) < 0.2) ) {
 	fgPanelUpdate();
     }
 }
 
 
 /* $Log$
-/* Revision 1.10  1998/07/08 14:41:08  curt
-/* Renamed polar3d.h to polar3d.hxx
+/* Revision 1.11  1998/07/13 21:00:45  curt
+/* Integrated Charlies latest HUD updates.
+/* Wrote access functions for current fgOPTIONS.
 /*
+ * Revision 1.10  1998/07/08 14:41:08  curt
+ * Renamed polar3d.h to polar3d.hxx
+ *
  * Revision 1.9  1998/06/27 16:47:53  curt
  * Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
  * first pass at an isntrument panel.

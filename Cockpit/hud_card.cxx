@@ -78,7 +78,7 @@ draw( void ) //  (HUD_scale * pscale )
   int marker_xe;
   int marker_ys;
   int marker_ye;
-  register i;
+  /* register */ int i;
   char TextScale[80];
   bool condition;
   int disp_val;
@@ -170,8 +170,8 @@ draw( void ) //  (HUD_scale * pscale )
           }
         if( div_min()) {
           if( (i%div_min()) == 0) {
-            if((( marker_ys + 5) > scrn_rect.top ) ||
-               (( marker_ys - 5) < (scrn_rect.top + scrn_rect.bottom))){
+            if((( marker_ys - 5) > scrn_rect.top ) &&
+               (( marker_ys + 5) < (scrn_rect.top + scrn_rect.bottom))){
               if( (options & HUDS_BOTH) == HUDS_BOTH ) {
                 drawOneLine( scrn_rect.left, marker_ys,
                              marker_xs,      marker_ys );
@@ -204,9 +204,9 @@ draw( void ) //  (HUD_scale * pscale )
             else {
               disp_val = i;
               }
-            sprintf( TextScale, "%d", disp_val );
-            if(( (marker_ys - 5 ) > scrn_rect.top ) ||
-               ( (marker_ys + 5) < (scrn_rect.top + scrn_rect.bottom))){
+            sprintf( TextScale, "%d", (int)(disp_val  * data_scaling() +.5));
+            if(( (marker_ys - 8 ) > scrn_rect.top ) &&
+               ( (marker_ys + 8) < (scrn_rect.top + scrn_rect.bottom))){
               if( (options & HUDS_BOTH) == HUDS_BOTH) {
                 drawOneLine( scrn_rect.left, marker_ys,
                              marker_xs,      marker_ys);
@@ -232,7 +232,7 @@ draw( void ) //  (HUD_scale * pscale )
                                 TextScale, GLUT_BITMAP_8_BY_13 );
                     }
                   }
-                }  
+                }
               } // Else read oriented right
             } // End if modulo division by major interval is zero
           }  // End if major interval divisor non-zero
@@ -291,20 +291,23 @@ draw( void ) //  (HUD_scale * pscale )
 //      marker_ye = marker_xe;
 //      }
 
+    // printf("vmin = %d  vmax = %d\n", (int)vmin, (int)vmax);
     for( i = (int)vmin; i <= (int)vmax; i++ )     {
+      // printf("<*> i = %d\n", i);
       condition = true;
       if( !modulo()) {
         if( i < min_val()) {
           condition = false;
           }
         }
+      // printf("<**> i = %d\n", i);
       if( condition )        {
         marker_xs = scrn_rect.left + (int)((i - vmin) * factor() + .5);
         if( div_min()){
           if( (i%(int)div_min()) == 0 ) {
             // draw in ticks only if they aren't too close to the edge.
-            if((( marker_xs + 5) > scrn_rect.left ) ||
-               (( marker_xs - 5 )< (scrn_rect.left + scrn_rect.right))){
+            if((( marker_xs - 5) > scrn_rect.left ) &&
+               (( marker_xs + 5 )< (scrn_rect.left + scrn_rect.right))){
 
               if( (options & HUDS_BOTH) == HUDS_BOTH ) {
                 drawOneLine( marker_xs, scrn_rect.top,
@@ -325,7 +328,9 @@ draw( void ) //  (HUD_scale * pscale )
               }
             }
           }
+	// printf("<***> i = %d\n", i);
         if( div_max()) {
+	  // printf("i = %d\n", i);
           if( (i%(int)div_max())==0 ) {
             if(modulo()) {
               if( disp_val < 0) {
@@ -338,7 +343,9 @@ draw( void ) //  (HUD_scale * pscale )
             else {
               disp_val = i;
               }
-            sprintf( TextScale, "%d", disp_val );
+	    // printf("disp_val = %d\n", disp_val);
+	    // printf("%d\n", (int)(disp_val  * (double)data_scaling() + 0.5));
+            sprintf( TextScale, "%d", (int)(disp_val  * data_scaling() +.5));
             // Draw major ticks and text only if far enough from the edge.
             if(( (marker_xs - 10)> scrn_rect.left ) &&
                ( (marker_xs + 10) < (scrn_rect.left + scrn_rect.right))){
@@ -372,7 +379,8 @@ draw( void ) //  (HUD_scale * pscale )
                 }
               }
             }
-          }
+	  }
+	// printf("<****> i = %d\n", i);
         }
       }
     }

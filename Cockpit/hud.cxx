@@ -43,6 +43,7 @@
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
+#include <Main/options.hxx>
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
@@ -169,17 +170,17 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
   do {
     switch ( index ) {
       case 0:     // TBI
-        HIptr = (instr_item *) new fgTBI_instr( 300, 100, 60, 10 );
+        HIptr = (instr_item *) new fgTBI_instr( 270, 100, 60, 10 );
         break;
 
       case 1:     // Artificial Horizon
-        HIptr = (instr_item *) new HudLadder( 270, 195, 120, 180 );
+        HIptr = (instr_item *) new HudLadder( 240, 195, 120, 180 );
         break;
 
       case 2:    // KIAS
-        HIptr = (instr_item *) new hud_card( 160,
+        HIptr = (instr_item *) new hud_card( 130,
                                              170,
-                                              35,
+                                              28,
                                              200,
                                              get_speed,
                                              HUDS_LEFT | HUDS_VERT,
@@ -194,39 +195,39 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
         break;
 
       case 3:    // Angle of Attack
-        HIptr = (instr_item *) new hud_card( 450,
+        HIptr = (instr_item *) new hud_card( 420,
                                              195,
-                                              30,
+                                              25,
                                              150,
                                              get_aoa,
                                              HUDS_LEFT | HUDS_VERT,
                                              50, -40,
                                              1.0,
-                                             5,    1,
+                                             2,    1,
                                              0,
                                              1,
-                                             21.0,
+                                             5.0,
                                              true);
         break;
 
       case 4:    // GYRO COMPASS
         HIptr = (instr_item *) new hud_card( 200,
                                              375,
-                                             260,
-                                              32,
+                                             200,
+                                              28,
                                              get_heading,
                                              HUDS_TOP,
                                              360, 0,
-                                             1.0,
-                                             10,   5,
+                                               1.0,
+                                               5,   1,
                                              360,
-                                             0,
-                                             50,
+                                               0,
+                                              25,
                                              true);
         break;
 
       case 5:    // AMSL
-        HIptr = (instr_item *) new hud_card( 490,
+        HIptr = (instr_item *) new hud_card( 460,
                                              170,
                                               35,
                                              200,
@@ -241,8 +242,56 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                              true);
         break;
 
-      case 6:    // Digital KIAS
-        HIptr = (instr_item *) new instr_label ( 160,
+      case 6:
+        HIptr = (instr_item *) new  guage_instr( 250,            // x
+                                                 350,            // y
+                                                 100,            // width
+                                                  20,            // height
+                                                 get_aileronval, // data source
+                                                 HUDS_BOTTOM | HUDS_NOTEXT,
+                                                 100.0,
+                                                 +1.0,
+                                                 -1.0);
+        break;
+
+      case 7:
+        HIptr = (instr_item *) new  guage_instr( 170,             // x
+                                                 225,             // y
+                                                  20,             // width
+                                                 100,             // height
+                                                 get_elevatorval, // data source
+                                                 HUDS_RIGHT | HUDS_VERT | HUDS_NOTEXT,
+                                                -100.0,           // Scale data
+                                                  +1.0,           // Data Range
+                                                  -1.0);
+        break;
+
+      case 8:
+        HIptr = (instr_item *) new  guage_instr( 250,             // x
+                                                 200,             // y
+                                                 100,             // width
+                                                  20,             // height
+                                                 get_rudderval,   // data source
+                                                 HUDS_TOP | HUDS_NOTEXT,
+                                                 100.0,
+                                                 +1.0,
+                                                 -1.0);
+        break;
+
+      case 9:
+        HIptr = (instr_item *) new  guage_instr( 100,             // x
+                                                 190,
+                                                  20,
+                                                 160,             // height
+                                                 get_throttleval, // data source
+                                                 HUDS_VERT | HUDS_RIGHT | HUDS_NOTEXT,
+                                                 100.0,
+                                                   1.0,
+                                                   0.0);
+        break;
+
+      case 10:    // Digital KIAS
+        HIptr = (instr_item *) new instr_label ( 110,
                                                  150,
                                                   40,
                                                   30,
@@ -250,6 +299,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                  "%5.0f",
                                                  NULL,
                                                  " Kts",
+                                                 1.0,
                                                  HUDS_TOP,
                                                  RIGHT_JUST,
                                                  SMALL,
@@ -257,8 +307,8 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                  TRUE );
         break;
 
-      case 7:    // Digital Altimeter
-        HIptr = (instr_item *) new instr_label ( 160,
+      case 11:    // Digital Altimeter
+        HIptr = (instr_item *) new instr_label ( 110,
                                                  135,
                                                   40,
                                                   10,
@@ -266,6 +316,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                  "MSL  %5.0f",
                                                  NULL,
                                                  " m",
+                                                 1.0,
                                                  HUDS_TOP,
                                                  LEFT_JUST,
                                                  SMALL,
@@ -273,8 +324,8 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                  TRUE );
         break;
 
-      case 8:    // Roll indication diagnostic
-        HIptr = (instr_item *) new instr_label ( 160,
+      case 12:    // Roll indication diagnostic
+        HIptr = (instr_item *) new instr_label ( 110,
                                                  120,
                                                   40,
                                                   10,
@@ -282,6 +333,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                  "%5.2f",
                                                  " Roll",
                                                  " Deg",
+                                                 1.0,
                                                  HUDS_TOP,
                                                  RIGHT_JUST,
                                                  SMALL,
@@ -289,7 +341,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                  TRUE );
         break;
 
-      case 9:    // Angle of attack diagnostic
+      case 13:    // Angle of attack diagnostic
         HIptr = (instr_item *) new instr_label ( 440,
                                                  150,
                                                   60,
@@ -298,6 +350,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                  "      %5.2f",
                                                  "AOA",
                                                  " Deg",
+                                                 1.0,
                                                  HUDS_TOP,
                                                  RIGHT_JUST,
                                                  SMALL,
@@ -305,15 +358,16 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                  TRUE );
         break;
 
-      case 10:
+      case 14:
         HIptr = (instr_item *) new instr_label ( 440,
                                                  135,
                                                   60,
                                                   10,
                                                  get_heading,
-                                                 " %5.0f",
+                                                 " %5.1f",
                                                  "Heading ",
                                                  " Deg",
+                                                 1.0,
                                                  HUDS_TOP,
                                                  RIGHT_JUST,
                                                  SMALL,
@@ -321,7 +375,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                  TRUE );
         break;
 
-      case 11:
+      case 15:
         HIptr = (instr_item *) new instr_label ( 440,
                                                  120,
                                                   60,
@@ -330,6 +384,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                  "%5.2f",
                                                  "Sideslip ",
                                                  NULL,
+                                                 1.0,
                                                  HUDS_TOP,
                                                  RIGHT_JUST,
                                                  SMALL,
@@ -337,7 +392,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                  TRUE );
         break;
 
-      case 12:
+      case 16:
         HIptr = (instr_item *) new instr_label( 440,
                                                 100,
                                                  60,
@@ -346,71 +401,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                 "%5.2f",
                                                 "Throttle ",
                                                 NULL,
-                                                HUDS_TOP,
-                                                RIGHT_JUST,
-                                                SMALL,
-                                                0,
-                                                TRUE );
-        break;
-
-      case 13:
-        HIptr = (instr_item *) new instr_label( 440,
-                                                 85,
-                                                 60,
-                                                 10,
-                                                get_elevatorval,
-                                                "%5.2f",
-                                                "Elevator ",
-                                                NULL,
-                                                HUDS_TOP,
-                                                RIGHT_JUST,
-                                                SMALL,
-                                                0,
-                                                TRUE );
-        break;
-
-      case 14:
-        HIptr = (instr_item *) new instr_label( 440,
-                                                 60,
-                                                 60,
-                                                 10,
-                                                get_aileronval,
-                                                "%5.2f",
-                                                "Aileron  ",
-                                                NULL,
-                                                HUDS_TOP,
-                                                RIGHT_JUST,
-                                                SMALL,
-                                                0,
-                                                TRUE );
-        break;
-
-
-      case 15:
-        HIptr = (instr_item *) new instr_label( 10,
-                                                10,
-                                                60,
-                                                10,
-                                                 get_frame_rate,
-                                                "%.1f",
-                                                "Frame rate = ",
-                                                NULL,
-                                                HUDS_TOP,
-                                                RIGHT_JUST,
-                                                SMALL,
-                                                0,
-                                                TRUE );
-        break;
-
-      case 16:
-        HIptr = (instr_item *) new instr_label( 10,
-                                                25,
-                                                90,
-                                                10,
-                                                 get_vfc_ratio,
-                                                "%.2f",
-                                                "VFC Ratio = ",
-                                                NULL,
+                                                 1.0,
                                                 HUDS_TOP,
                                                 RIGHT_JUST,
                                                 SMALL,
@@ -419,6 +410,75 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
         break;
 
       case 17:
+        HIptr = (instr_item *) new instr_label( 440,
+                                                 85,
+                                                 60,
+                                                 10,
+                                                get_elevatorval,
+                                                "%5.2f",
+                                                "Elevator ",
+                                                NULL,
+                                                 1.0,
+                                                HUDS_TOP,
+                                                RIGHT_JUST,
+                                                SMALL,
+                                                0,
+                                                TRUE );
+        break;
+
+      case 18:
+        HIptr = (instr_item *) new instr_label( 440,
+                                                 60,
+                                                 60,
+                                                 10,
+                                                get_aileronval,
+                                                "%5.2f",
+                                                "Aileron  ",
+                                                NULL,
+                                                 1.0,
+                                                HUDS_TOP,
+                                                RIGHT_JUST,
+                                                SMALL,
+                                                0,
+                                                TRUE );
+        break;
+
+
+      case 19:
+        HIptr = (instr_item *) new instr_label( 10,
+                                                10,
+                                                60,
+                                                10,
+                                                 get_frame_rate,
+                                                "%.1f",
+                                                "Frame rate = ",
+                                                NULL,
+                                                 1.0,
+                                                HUDS_TOP,
+                                                RIGHT_JUST,
+                                                SMALL,
+                                                0,
+                                                TRUE );
+        break;
+
+      case 20:
+        HIptr = (instr_item *) new instr_label( 10,
+                                                25,
+                                                90,
+                                                10,
+                                                 get_vfc_ratio,
+                                                "%.2f",
+                                                "VFC Ratio = ",
+                                                NULL,
+                                                 1.0,
+                                                HUDS_TOP,
+                                                RIGHT_JUST,
+                                                SMALL,
+                                                0,
+                                                TRUE );
+        break;
+
+      case 21:
         HIptr = (instr_item *) new instr_label( 10,
                                                 40,
                                                 90,
@@ -427,46 +487,12 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
                                                 "%.1f",
                                                 "FOV = ",
                                                 NULL,
+                                                 1.0,
                                                 HUDS_TOP,
                                                 RIGHT_JUST,
                                                 SMALL,
                                                 0,
                                                 TRUE );
-        break;
-      case 18:
-        HIptr = (instr_item *) new  guage_instr(  50,            // x
-                                                 200,            // y
-                                                 100,            // width
-                                                  20,            // height
-                                                 get_aileronval, // data source
-                                                 HUDS_BOTTOM,
-                                                 100.0,
-                                                 +1.0,
-                                                 -1.0);
-        break;
-
-      case 19:
-        HIptr = (instr_item *) new  guage_instr(  90,             // x
-                                                 225,             // y
-                                                  20,             // width
-                                                 100,             // height
-                                                 get_elevatorval, // data source
-                                                 HUDS_BOTH | HUDS_VERT,
-                                                 100.0,           // Scale data
-                                                  +1.0,           // Data Range
-                                                  -1.0);
-        break;
-
-      case 20:
-        HIptr = (instr_item *) new  guage_instr(  50,             // x
-                                                 350,             // y
-                                                 100,             // width
-                                                  20,             // height
-                                                 get_rudderval,   // data source
-                                                 HUDS_TOP,
-                                                 100.0,
-                                                 +1.0,
-                                                 -1.0);
         break;
 
       default:
@@ -482,6 +508,79 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
   return 0;  // For now. Later we may use this for an error code.
 }
 
+int global_day_night_switch = DAY;
+
+void HUD_brightkey( bool incr_bright )
+{
+instr_item *pHUDInstr = HUD_deque[0];
+int brightness        = pHUDInstr->get_brightness();
+
+  if( current_options.get_hud_status() ) {
+    if( incr_bright ) {
+      switch (brightness) {
+        case BRT_LIGHT:
+   	      current_options.set_hud_status(0);
+          break;
+
+        case BRT_MEDIUM:
+          brightness = BRT_LIGHT;
+          break;
+
+        case BRT_DARK:
+          brightness = BRT_MEDIUM;
+          break;
+
+        case BRT_BLACK:
+          brightness = BRT_DARK;
+          break;
+
+        default:
+          brightness = BRT_BLACK;
+        }
+      }
+    else {
+      switch (brightness) {
+        case BRT_LIGHT:
+          brightness = BRT_MEDIUM;
+          break;
+
+        case BRT_MEDIUM:
+          brightness = BRT_DARK;
+          break;
+
+        case BRT_DARK:
+          brightness = BRT_BLACK;
+          break;
+
+        case BRT_BLACK:
+        default:
+   	      current_options.set_hud_status(0);
+        }
+      }
+    }
+  else {
+    current_options.set_hud_status(1);
+    if( incr_bright ) {
+      if( DAY == global_day_night_switch ) {
+        brightness = BRT_BLACK;
+        }
+      else {
+        brightness = BRT_DARK;
+        global_day_night_switch = DAY;
+        }
+      }
+    else {
+      if( NIGHT == global_day_night_switch ) {
+        brightness = BRT_DARK;
+        }
+      else {
+        brightness = BRT_MEDIUM;
+        global_day_night_switch = NIGHT;
+        }
+      }
+    }
+  pHUDInstr->SetBrightness( brightness );
+}
 
 // fgUpdateHUD
 //
@@ -489,8 +588,6 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 // the HUD object with requests for redraw. Kinda. It will when this is
 // all C++.
 //
-int global_day_night_switch = DAY;
-
 void fgUpdateHUD( void ) {
   int i;
   int brightness;
@@ -543,6 +640,13 @@ void fgUpdateHUD( void ) {
 
           case BRT_DARK:
             glColor3f (0.0, 0.5, 0.0);
+            break;
+
+          case BRT_BLACK:
+            glColor3f( 0.0, 0.0, 0.0);
+            break;
+
+          default:;
             }
           }
         else {
@@ -582,9 +686,13 @@ void fgUpdateHUD( void ) {
 }
 
 /* $Log$
-/* Revision 1.15  1998/07/08 14:41:08  curt
-/* Renamed polar3d.h to polar3d.hxx
+/* Revision 1.16  1998/07/13 21:00:47  curt
+/* Integrated Charlies latest HUD updates.
+/* Wrote access functions for current fgOPTIONS.
 /*
+ * Revision 1.15  1998/07/08 14:41:08  curt
+ * Renamed polar3d.h to polar3d.hxx
+ *
  * Revision 1.14  1998/07/06 21:31:20  curt
  * Removed an extraneous ^M.
  *

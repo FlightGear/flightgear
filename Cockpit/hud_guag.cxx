@@ -180,7 +180,7 @@ void guage_instr :: draw (void)
 
             if( !(options & HUDS_NOTEXT)) {
               disp_val = i;
-              sprintf( TextScale, "%d", disp_val );
+              sprintf( TextScale, "%d",disp_val  * (int)(data_scaling() +.5));
 
               if((options & HUDS_LEFT) && (options && HUDS_RIGHT)) {
                 text_x = mid_scr.x -  2 - ((3 * strlen( TextScale ))>>1);
@@ -209,16 +209,16 @@ void guage_instr :: draw (void)
 //    text_x = marker_xs - scrn_rect.left;
 
     if( options & HUDS_RIGHT ) {
-      drawOneLine(scrn_rect.left, text_y,
-                  marker_xe, text_y + 5);
-      drawOneLine(scrn_rect.left, text_y,
-                  marker_xe, text_y - 5);
+      drawOneLine(scrn_rect.left, text_y + 5,
+                  marker_xe,      text_y);
+      drawOneLine(scrn_rect.left, text_y - 5,
+                  marker_xe,      text_y);
       }
     if( options & HUDS_LEFT ) {
-      drawOneLine(scrn_rect.left + scrn_rect.right, text_y,
-                  marker_xs, text_y + 5);
-      drawOneLine(scrn_rect.left + scrn_rect.right, text_y,
-                  marker_xs, text_y - 5);
+      drawOneLine(scrn_rect.left + scrn_rect.right, text_y + 5,
+                  marker_xs,                        text_y);
+      drawOneLine(scrn_rect.left + scrn_rect.right, text_y - 5,
+                  marker_xs,                        text_y);
       }
     }  // End if VERTICAL SCALE TYPE
   else {                                // Horizontal scale by default
@@ -315,7 +315,7 @@ void guage_instr :: draw (void)
             else {
               disp_val = i;
               }
-            sprintf( TextScale, "%d", disp_val );
+            sprintf( TextScale, "%d", (int)(disp_val  * data_scaling() +.5));
             // Draw major ticks and text only if far enough from the edge.
             if(( (marker_xs - 10)> scrn_rect.left ) &&
                ( (marker_xs + 10) < (scrn_rect.left + scrn_rect.right))){
