@@ -7,7 +7,16 @@
 #include <FDM/LaRCsim/ls_generic.h>
 #include <FDM/LaRCsim/ls_cockpit.h>
 #include <math.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern double Simtime;
+
+#ifdef __cplusplus
+}
+#endif
 
 void uiuc_get_flapper(double dt);
 
