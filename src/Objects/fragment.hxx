@@ -150,7 +150,7 @@ public:
     }
 
     void init() {
-	faces.erase( faces.begin(), faces.end() );
+	faces.clear();
     }
 
     // int deleteDisplayList() {
