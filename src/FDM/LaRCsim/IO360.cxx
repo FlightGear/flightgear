@@ -95,7 +95,7 @@ void FGNewEngine::init(double dt) {
 //    Torque = 0;
     Torque_SI = 0;
     CHT = 298.0;			//deg Kelvin
-    CHT_degF = (CHT_degF * 1.8) - 459.67;	//deg Fahrenheit
+    CHT_degF = (CHT * 1.8) - 459.67;	//deg Fahrenheit
     Mixture = 14;
     Oil_Pressure = 0;	// PSI
     Oil_Temp = 85;	// Deg C
