@@ -1,4 +1,9 @@
+New in 0.48
+* Fixed polygon winding problem in scenery generation, so all
+  tri-strips are would counter clockwise (opengl default).
+
 New in 0.47
+* Course (per tile) view frustum culling.
 * Added a command line option to specify --fg-root which will override
   $FG_ROOT
 * Hard coded default locations for FG_ROOT for situations when nothing

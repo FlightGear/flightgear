@@ -42,5 +42,6 @@ Num Lock Inactive
 
 Autopilot
 ---------
-    Shift + A               Enable Autopilot
-    Shift + S               Disable Autopilot
+    Shift + A               Enable autopilot (defaults to heading of 000)
+    Shift + S               Disable autopilot
+    Shift + D               Lock autopilot heading to current heading

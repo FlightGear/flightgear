@@ -703,7 +703,7 @@ fi
 
 PACKAGE=FlightGear
 
-VERSION=0.47
+VERSION=0.48
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { echo "configure: error: source directory already configured; run "make distclean" there first" 1>&2; exit 1; }
@@ -1316,7 +1316,7 @@ echo "configure:1316: checking for ld used by GCC" >&5
   ac_prog=`($CC -print-prog-name=ld) 2>&5`
   case "$ac_prog" in
   # Accept absolute paths.
-  /* | [A-Za-z]:\\*)
+  /* | A-Za-z:\\*)
     test -z "$LD" && LD="$ac_prog"
     ;;
   "")
