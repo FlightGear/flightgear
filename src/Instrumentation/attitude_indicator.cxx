@@ -6,6 +6,8 @@
 // TODO:
 // - better spin-up
 
+#include <math.h>	// fabs()
+
 #include "attitude_indicator.hxx"
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
