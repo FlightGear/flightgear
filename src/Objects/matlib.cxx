@@ -63,6 +63,28 @@ FGMaterialLib::FGMaterialLib ( void ) {
 }
 
 
+static bool local_file_exists( const string& path ) {
+    fg_gzifstream in( path );
+    if ( ! in.is_open() ) {
+	return false;
+    } else {
+	return true;
+    }
+
+#if 0
+    cout << path << " ";
+    FILE *fp = fopen( path.c_str(), "r" );
+    if ( fp == NULL ) {
+	cout << " doesn't exist\n";
+	return false;
+    } else {
+	cout << " exists\n";
+	return true;
+    }
+#endif
+}
+
+
 // Load a library of material properties
 bool FGMaterialLib::load( const string& mpath ) {
     string material_name;
@@ -97,8 +119,15 @@ bool FGMaterialLib::load( const string& mpath ) {
 
 	    // build the ssgSimpleState
 	    FGPath tex_path( current_options.get_fg_root() );
-	    tex_path.append( "Textures" );
+	    tex_path.append( "Textures.high" );
 
+	    FGPath tmp_path = tex_path;
+	    tmp_path.append( m.get_texture_name() );
+	    if ( ! local_file_exists( tmp_path.str() ) ) {
+		tex_path = FGPath( current_options.get_fg_root() );
+		tex_path.append( "Textures" );
+	    }
+	    
 	    FG_LOG( FG_TERRAIN, FG_INFO, "  Loading material " 
 		    << material_name << " (" << tex_path.c_str() << ")");
 
