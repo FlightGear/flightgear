@@ -1,0 +1,329 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META NAME="Generator" CONTENT="Microsoft Word 97">
+<TITLE>Airport, navigation aid and intersection data in X-Plane (version 5</TITLE>
+</HEAD>
+<BODY LINK="#0000ff" VLINK="#800080">
+
+<B><U><FONT FACE="Arial"><P ALIGN="CENTER">Airport, navigation aid and IFR intersection data in FlightGear </P>
+</B></U></FONT><FONT>
+<P>&nbsp;</P>
+<P>By Robin Peel, June 17<SUP>th</SUP>, 2001</P>
+<P>robin@cpwd.com</P>
+<P>Version FG1.4</P>
+
+<P>&nbsp;</P>
+<P></FONT><A HREF="#_Toc493997498"><FONT>Purpose of this FAQ&#9;</FONT><A HREF="#_Toc493997498">*</A></A>
+<FONT><P></FONT><A HREF="#_Toc493997499"><FONT>Who am I &amp; what do I do?&#9;</FONT><A HREF="#_Toc493997499">*</A></A></P>
+<FONT><P></FONT><A HREF="#_Toc493997500"><FONT>What is the &quot;master database&quot;?&#9;</FONT><A HREF="#_Toc493997500">*</A></A></P>
+<FONT><P></FONT><A HREF="#_Toc493997501"><FONT>How is the data created, updated and generated for FlightGear?&#9;</FONT><A HREF="#_Toc493997501">*</A></A></P>
+<FONT><P></FONT><A HREF="#_Toc493997502"><FONT>How complete is the data?&#9;</FONT><A HREF="#_Toc493997502">*</A></A></P>
+<FONT><P></FONT><A HREF="#_Toc493997503"><FONT>How can I correct errors or omissions I find in the data?&#9;</FONT><A HREF="#_Toc493997503">*</A></A></P>
+<FONT><P></FONT><A HREF="#_Toc493997504"><FONT>Where is the data stored in FlightGear and what data does each file contain?&#9;</FONT><A HREF="#_Toc493997504">*</A></A></P>
+<FONT><P></FONT><A HREF="#_Toc493997505"><FONT>General structure of default.apt, default.nav, default.ils and default.fix files&#9;</FONT><A HREF="#_Toc493997505">*</A></A></P>
+<FONT><P></FONT><A HREF="#_Toc493997506"><FONT>Details – what do the entries in default.apt mean?&#9;</FONT><A HREF="#_Toc493997506">*</A></A></P>
+<FONT><P></FONT><A HREF="#_Toc493997507"><FONT>Details – what do the entries in default.nav mean?&#9;</FONT><A HREF="#_Toc493997507">*</A></A></P>
+<FONT><P></FONT><A HREF="#_Toc493997508"><FONT>Details – what do the entries in default.ils mean?&#9;</FONT><A HREF="#_Toc493997508">*</A></A></P>
+<FONT><P></FONT><A HREF="#_Toc493997509"><FONT>Details – what do the entries in fix.dat mean?&#9;</FONT><A HREF="#_Toc493997509">*</A></A></P>
+<FONT><P></FONT><A HREF="#_Toc493997510"><FONT>Where are the localiser and glideslope aerials positioned in the &quot;real world&quot;?&#9;</FONT><A HREF="#_Toc493997510">*</A></A></P>
+<FONT><P></FONT><A HREF="#_Toc493997511"><FONT>How do I convert my data to decimal degrees?&#9;</FONT><A HREF="#_Toc493997511">*</A></A></P>
+<FONT></P>
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997498">Purpose of this FAQ</A></P>
+</B></U></FONT><FONT><P>This FAQ describes the contents and structure of the files that store airport, nav-aid (NDB, VOR, DME and ILS) and IFR intersection data within the Flight Gear flight simulator.  </P>
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997499">Who am I &amp; what do I do?</A></P>
+</B></U></FONT><FONT><P>Sometime in 1997, I volunteered to Austin Meyer (the owner/developer of the X-Plane simulator) to try and improve upon the very basic airport data included in X-Plane version 3.x.  I built an application in Microsoft Access 97 (now converted to Access 2000) to store and manipulate the airport, nav-aid and intersection data.  I have worked with Austin to add additional airport and nav-aid details to X-Plane (such as custom taxiways, airports outside the boundaries of the USA, more accurate runway markings, etc) and during this time the master database has grown to over 20MB in size.  This database is also now used to generate data for the FlightGear simulator, using data files that are different in format (and more sophisticated) than the X-Plane data files.</P>
+
+<P>I perform this task as a volunteer.  The data is published as a free resource to the X-Plane and FlightGear communities.</P>
+
+<P>At present, I have around 450hrs of &quot;real&quot; flying experience, gained since 1989.  I have a UK Private Pilot’s Licence (gained at White Waltham, EGLM), a US Private Certificate and a US Instrument Rating.  I currently fly a rented new C-172 SP out of Albuquerque Double Eagle II (KAEG), or more elderly knackered C-172s out of Santa Fe (KSAF).  I have just ordered a new Liberty XL-2 from Liberty Aerospace in Montrose, Colorado (www.libertyaircraft.com).</P>
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997500">What is the &quot;master database&quot;?</A></P>
+</B></U></FONT><FONT><P>The master database is my Microsoft Access 2000 database that stores all the airport, nav-aid and intersection data.  In database parlance, it is highly &quot;normalized&quot; and consists of over 35 Access tables accessed from a custom-designed Access 2000 application.  The master database currently contains over 22,000 airports.  I may &quot;upsize&quot; the database back-end to Microsoft SQLServer (7.0) in the very near future.</P>
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997501">How is the data created, updated and generated for FlightGear?</A></P>
+</B></U></FONT><FONT><P>I regularly import updates and amendments to the master database using routines that will automatically read fragments of new data sent to me by other users, and save the new data into my Access tables.  Similarly, I have routines that will generate the data required by FlightGear and X-Plane in the necessary form</P>
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997502">How complete is the data?</A></P>
+</B></U></FONT><FONT><P>The data is pretty complete for the USA (based upon FAA data sources).  Quality data for other countries is harder to obtain, but dedicated FlightGear and/or X-Plane users have sent me data for much of Canada, Western Europe (with some gaps), Japan and Australia.  Some other random major airports also exist (eg. in Central and South America).</P>
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997503">How can I correct errors or omissions I find in the data?</A></P>
+</B></U></FONT><FONT><P>First, you need to find a good source of information.  An official chart of the airport (such as those published by Jeppesen) is a good starting point – they often have a helpful latitude/longitude scale around the edges that you can use to figure out the exact positions of runways and taxiways.  Remember that these scales appear to be backwards for western longitudes and southern latitudes!</P>
+
+<P>Then you need to get the data into the appropriate files (see below for file names and formats.</P>
+
+<P>Finally, send errors, corrections and additions to me (robin@cpwd.com).  The easiest way to send new or corrected data is to copy just the appropriate lines from your default.apt, default.nav, default.ils and/or default.fix files into a plain text file, and attach the text file to an e-mail.  All of these files are just plain text files, and can be edited with any text editor (or a word processor operating in &quot;text-only&quot; mode).  Note that in Windows, the Notepad editor sometimes balks at the size of these files (it seems to be a problem in Windows 95/98, but not in Windows 2000).  </P>
+
+<P>Please do <U>not</U> send me:</P>
+
+<UL>
+<LI>Your entire file (with your corrections embedded somewhere in its midst) – these are impossible for me to sort through!</LI>
+<LI>Scanned copies of charts in the hope that I will spend several hours trying to plot the positions of runways and taxiways for you.  Unless I have a personal interest in the particular airport, this takes just too much of my time.  Sorry!</LI></UL>
+
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997504">Where is the data stored in FlightGear and what data does each file contain?</A></P>
+</B></U></FONT><FONT><P>The following files contain airport, nav-aid and intersection data in FlightGear.  They may be stored in the Airports and Navaid folders of your FlightGear installation as .gz archives:</P>
+<DIR>
+<DIR>
+<DIR>
+<DIR>
+
+<B><P>default.apt</B> &#9;Airports, with their runways and taxiways (taxiways are not available yet – they will be added very soon).</P>
+<B><P>default.nav</B> &#9;NDBs, VORs and DMEs.</P>
+<B><P>default.ils</B>&#9;ILS elements.</P>
+<B><P>default.fix</B> &#9;IFR intersections (often referred to as &quot;fixes&quot;).</P>
+</DIR>
+</DIR>
+</DIR>
+</DIR>
+
+<P>When un-archived, they are all plain text files that can be viewed or edited with any text editor (such as Notepad on a Windows PC).  </P>
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997505">General structure of default.apt, default.nav, default.ils and default.fix files</A></P>
+</B></U></FONT><FONT><P>Features common to each file are:</P>
+
+<UL>
+<LI>Each data &quot;element&quot; occupies a single line of the file.</LI>
+<LI>Any comments are preceded with a double slash (&quot;//&quot;).  Typically, the first line of each file is a comment that includes a data version number and other descriptive information.  Other comments may be added as required within the file.</LI>
+<LI>The last line of a file is marked with &quot;[End]&quot;.</LI>
+<LI>The first character of each line describes the type of data that the line contains (eg. &quot;A&quot; for airport data, &quot;R&quot; for runway data.</LI>
+<LI>The order in which data is stored in the files is conceptually unimportant.  BUT, airport data must be ordered so that the airport header data (prefixed by &quot;A&quot;) is followed by its runway and taxiway data (prefixed by &quot;R&quot; or &quot;T&quot;).</LI></UL>
+
+
+<B><U><P>IMPORTANT</B></U>:  <U>All</U> headings referenced in the files are <B><U>true</B></U> (<U>not</U> magnetic).  FlightGear has an internal model of magnetic variation that will be used to properly align VORs, etc.</P>
+
+<P>The meanings of these line &quot;prefix&quot; codes in default.apt are:</P>
+<P>A  &#9;Airport header data</P>
+<P>R &#9;Runway at an airport</P>
+<P>T&#9;Taxiway at an airport</P>
+
+<P>The meanings of these line codes in default.nav are:</P>
+<P>D&#9;DME</P>
+<P>N &#9;NDB, including NDB element of LOMs (Locator Outer Markers or ‘Compass Locators’)</P>
+<P>V  &#9;VOR</P>
+
+<P>The meanings of these line codes in default.ils are:</P>
+<P>L&#9;Localiser-only</P>
+<P>I&#9;ILS and LOC/DME</P>
+<P>S&#9;SDF (Simplified Directional Facility)</P>
+<P>D&#9;LDA (Localiser Directional Aid)</P>
+<P>M&#9;MLS (Microwave Landing System)</P>
+
+<P>Since the default.fix file contains only IFR intersections, no &quot;prefix&quot; codes are used to differentiate the data</P>
+
+<P>Individual data elements on each line can be separated by any number of spaces or other ‘white space’ – however, it is a good plan to keep them aligned in tidy columns (this is harder in default.apt, with its mixture of line types) – it is easier to spot silly errors and/or omissions in this way. </P>
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997506">Details – what do the entries in default.apt mean?</A></P>
+</B></U></FONT><FONT><P>Each airport has a header line (code &quot;A&quot;) and one or more runway/taxiway lines (code &quot;R&quot; or &quot;T&quot;).  The runways for each airport MUST follow the airport header line. Taxiways should follow the runways.  A blank line can be used to separate different airports – this helps improve readability but is not required. </P>
+<DIR>
+
+<I><P>[If you do not understand the concepts referenced by these codes, please refer to the AIM (Airman’s Information Manual), or the equivalent publication for your jurisdiction   These documents often contain a wealth of information, diagrams and explanations.]</P>
+</I></DIR>
+
+<P>Here is a simplified fragment for part of an airport in default.apt: </P>
+
+</FONT><FONT FACE="Courier New"><P>A KABQ  35.040361 -106.609306 5352 CYN Albuquerque International Sunport</P>
+<P>R 08  35.044209 -106.598560 090.43  13775 150 NCPHN YNVQ 991 0 NYVN 0 0 </P>
+<P>R 03  35.032077 -106.618983 044.67  10000 150 NCPHN YNPO 0   0 NNPN 0 0 </P>
+<P>R 12  35.039105 -106.614064 128.98   5142 150 NAVMN NNNN 0   0 NYPN 0 0 </P>
+<P>R 17  35.044022 -106.611983 183.36  10000 150 NAVMN NYVN 890 0 NYVN 0 0</P>
+<P>T A 35.044209 -106.588560 090.43  13775 100 GCB</P>
+
+</FONT><FONT><P>&nbsp;</P>
+<P>This shows one airport header line, four runways and a taxiway.  The order of the data on the airport header line is (using the above example):</P>
+
+<P>A &#9;&#9;This is an airport header line</P>
+<P>KABQ &#9;&#9;ICAO code for the airport.  All airports <U>must</U> have a <U>unique</U> ICAO code.</P>
+<P>35.040361&#9;Airport Reference Point (ARP) latitude</P>
+<P>-106.609306 &#9;Airport Reference Point (ARP) longitude</P>
+<P>5352 &#9;&#9;Airport elevation in feet (above MSL).</P>
+<P>C &#9;&#9;Airport usage (C=Civilian, M=Military) – determines airport beacon colours.</P>
+<P>Y &#9;&#9;Control Tower (Y=Yes, N=No)</P>
+<P>N &#9;&#9;Show default airport buildings (Y=Yes, N=No)</P>
+<P>&quot;Albuquerque International Sunport&quot; &#9;Airport name - no limit to length.</P>
+
+<P>The data on the runway lines is a little more complex.  Using the first runway in the above example data:</P>
+
+<P>R &#9;&#9;This is a data line for a runway.</P>
+<P>35.044209 &#9;Latitude (in decimal degrees) of runway center.</P>
+<P>-106.598560&#9;Longitude (in decimal degrees) of runway center.</P>
+<P>08 &#9;&#9;Runway number (eg. &quot;08&quot; or &quot;27L&quot;) </P>
+<P>90.43&#9;&#9;<B>True</B> (<U>not</U> magnetic) heading of the runway in degrees.</P>
+<P>13775&#9;&#9;Runway length in feet.</P>
+<P>150&#9;&#9;Runway width in feet.</P>
+
+<P>The next data chunk describe data common to both ends of the runway:</P>
+<P>N &#9;Runway centre-line lights (Y=Yes, N=No)</P>
+<P>C &#9;Runway surface (A=Asphalt, C=Concrete, T=Turf, D=Dirt, G=Gravel, W=Water, X=Other)</P>
+<P>P &#9;Runway markings (V=Visual, P=Precision, R=Non-Precision, B=Buoys - water)</P>
+<P>H &#9;Edge Lights (N=None, H=High intensity, M=Medium, L=Low, B=Blue taxiway)</P>
+<P>N &#9;Runway guard lights (Y=Yes, N=No) – the flashing orange &quot;wig-wags&quot; that protect runway entrances.</P>
+
+<P>The next two data chunks describe data for each end of the runway, starting with the end defined by the runway number (08 in our example data):</P>
+<P>Y &#9;Touchdown zone lights (Y=Yes, N=No)</P>
+<P>N &#9;REIL (Y=Yes, N=No)</P>
+<P>P&#9;Visual glide scope indicator (N=None, V=VASI, P=PAPI).  [<I>I may make the codes more detailed soon</I>]</P>
+<P>Q&#9;Approach lighting (<I>see code lists below</I>)</P>
+<P>991&#9;Length of displaced threshold in feet</P>
+<P>0 &#9;Length of stopway in feet</P>
+
+<P>This data chunk format is then repeated for the other end of the runway (runway 26 in our example).</P>
+
+<I><P>&nbsp;</P><DIR>
+
+<P>Approach lighting codes:</P>
+</I><P>A&#9;ALS &#9;Approach light system (assumed white lights)</P>
+<P>B&#9;ALSF-I &#9;Approach light system with sequenced flashing lights</P>
+<P>C&#9;ALSF-II &#9;Approach light system with sequenced flashing lights and red side bar lights the last 1000'</P>
+<P>D&#9;CAL &#9;Calvert (British)</P>
+<P>E&#9;CAL-II &#9;Calvert (British) - Cat II and II</P>
+<P>F&#9;LDIN &#9;Sequenced flashing lead-in lights</P>
+<P>G&#9;MALS &#9;Medium intensity approach light system</P>
+<P>N&#9;None&#9;No approach lighting</P>
+<P>H&#9;MALSF &#9;Medium intensity approach light system with sequenced flashing lights</P>
+<P>I&#9;NSTD &#9;Non standard</P>
+<P>J&#9;MALSR &#9;Medium intensity approach light system with runway alignment indicator lights</P>
+<P>K&#9;MIL OVRN &#9;Something military</P>
+<P>L&#9;ODALS &#9;Omni-directional approach light system</P>
+<P>M&#9;RAIL &#9;Runway alignment indicator lights (icw other systems)</P>
+<P>O&#9;SALS &#9;Short approach light system</P>
+<P>P&#9;SALSF &#9;Short approach light system with sequenced flashing lights</P>
+<P>Q&#9;SSALF &#9;Simplified short approach light system with sequenced flashing lights</P>
+<P>R&#9;SSALR &#9;Simplified short approach light system with runway alignment indicator lights</P>
+<P>S&#9;SSALS &#9;Simplified short approach light system</P>
+</DIR>
+
+<P>This data is then repeated (with appropriate values) for the opposite end of this runway (KABQ runway 26 in our example data).</P>
+
+<P>Taxiway data is similar in structure to the runway data:</P>
+<P>T &#9;&#9;This is a data line for a taxiway segement.</P>
+<P>A&#9;&#9;Taxiway identifier, that may be repeated for multiple taxiway segments.  Default is &quot;-&quot;.</P>
+<P>35.044209 &#9;Latitude (in decimal degrees) of taxiway center.</P>
+<P>-106.598560&#9;Longitude (in decimal degrees) of taxiway center.</P>
+<P>90.43&#9;&#9;<B>True</B> (<U>not</U> magnetic) heading of the taxiway segement in degrees.</P>
+<P>13775&#9;&#9;Taxiway segment length in feet.</P>
+<P>150&#9;&#9;Taxiway segment width in feet.</P>
+
+<P>N &#9;Taxiway segment centre-line lights (Y=Yes, N=No) – taxiway center-line lights are </FONT><B><FONT COLOR="#008000">green</B></FONT><FONT>.</P>
+<P>C &#9;Taxiway segment surface (A=Asphalt, C=Concrete, T=Turf, D=Dirt, G=Gravel, W=Water, X=Other)</P>
+<P>B &#9;Edge Lights (N=None, B=Blue taxiway, R=Red edge lights)</P>
+
+</FONT><B><FONT COLOR="#ff0000"><P>[TAXIWAY DEFINITION IS STILL SUBJECT TO CHANGE]</P>
+</FONT><U><FONT FACE="Arial"><P><A NAME="_Toc493997507">Details – what do the entries in default.nav mean?</A></P>
+</B></U></FONT><FONT><P>Each nav-aid is on a separate line, usually sorted by the nav-aid name within each nav-aid type.</P>
+
+<P>Here are some example lines, showing selected nav-aids in the Albuquerque area:</P>
+
+</FONT><FONT FACE="Courier New"><P>V  35.043796 -106.816312  5740  113.20  130 Y ABQ  XXX Albuquerque VORTAC</P>
+<P>N  34.987022 -106.620384  5304  247.00   50 N ILT  XXX Isleta NDB</P>
+<P>D  51.346667 -000.563889   104  109.85   50 Y FRK  05W Fairoaks DME</P>
+
+</FONT><FONT><P>The meaning of this data for the first row (ABQ VORTAC) is:</P>
+<P>V&#9;&#9;Navaid type (D=DME, N=NDB and V=VOR).</P>
+<P>35.043796&#9;Latitude of nav-aid in decimal degrees.</P>
+<P>-106.620384&#9;Longitde of nav-aid in decimal degrees.</P>
+<P>5740 &#9;&#9;Elevation (in feet) of nav-aid.</P>
+<P>113.20 &#9;&#9;Frequency.</P>
+<P>130 &#9;&#9;Range of nav-aid (in nautical miles).</P>
+<P>Y &#9;&#9;Co-located DME (Y=Yes, N=No).</P>
+<P>ABQ&#9;&#9;Nav-aid identifier (note – these are not unique).</P>
+<P>XXX&#9;&#9;Magnetic variation, if known, in format 13E for 13 degrees east.</P>
+<P>&quot;Albuquerque VORTAC&quot;&#9;Nav-aid name.</P>
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997508">Details – what do the entries in default.ils mean?</A></P>
+</B></U></FONT><FONT><P>Each ILS installation is on a separate line.  Here are some example lines, showing the ILS 08 for KABQ (Albuquerque, New Mexico).  These lines are long – so they are wrapped onto multiple lines here (but are on a single long line in default.ils):</P>
+
+</FONT><FONT FACE="Courier New"><P>I ILS   KABQ 08   111.90 ISPT 090.43  35.044026 -106.570548  </P>
+<P>5352  3.00  35.043212 -106.614641  35.044750 -106.570577  </P>
+<P>35.046352 -106.742583  35.044686 -106.628247  00.000000  000.000000</P>
+</FONT><FONT>
+<P>This is not as bad as it looks!  The meaning of this data is:</P>
+<P>I&#9;ILS type (see code list below).</P>
+<P>ILS&#9;ILS type description (used to aid file navigation).  Other values are as in the list of ILS type codes below.</P>
+<P>KABQ&#9;ICAO airport code for the runway this ILS serves.</P>
+<P>08 &#9;Runway number that this ILS serves.</P>
+<P>111.90&#9;ILS frequency (usually the localiser frequency).</P>
+<P>ISPT&#9;ILS identifier.</P>
+<P>090.43 &#9;<U>True</U> heading of the localiser.</P>
+<P>35.044026&#9;Latitude of the localiser aerial.</P>
+<P>-106.570548  &#9;Longitude of the localiser aerial.</P>
+<P>5352 &#9;&#9;Elevation (in feet) of the glideslope aerial.</P>
+<P>3.00 &#9;&#9;Gradient of the glideslope (typically 3.00 degrees).</P>
+<P>35.043212&#9;Latitude of the glideslope aerial.</P>
+<P>-106.614641 &#9;Longitude of the glideslope aerial.</P>
+<P>35.044750 &#9;Latitude of the associated DME aerial.</P>
+<P>-106.570577  &#9;Longitude of the associated DME aerial.</P>
+<P>35.046352&#9;Latitude of the Outer Marker (OM).</P>
+<P>-106.742583&#9;Longitude of the Outer Marker (OM).</P>
+<P>35.044686&#9;Latitude of the Middle Marker (MM).</P>
+<P>-106.628247  &#9;Longitude of the Middle Marker (MM).</P>
+<P>00.000000  &#9;Latitude of the Inner Marker (IM).</P>
+<P>000.000000&#9;Longitude of the Inner Marker (IM).</P>
+<DIR>
+
+<I><P>ILS type codes used above:</P>
+</I><P>L&#9;Localiser-only</P>
+<P>I&#9;ILS and LOC/DME</P>
+<P>S&#9;SDF (Simplified Directional Facility)</P>
+<P>D&#9;LDA (Localiser Directional Aid)</P>
+<P>M&#9;MLS (Microwave Landing System)</P>
+<DIR>
+
+<U><P>Notes</U>&#9;</P></DIR>
+</DIR>
+
+
+<UL>
+<LI>If an ILS component does not exist, its latitude/longitude will be set to zero (eg. the Inner Marker in the above example).</LI>
+<LI>For a Locator Outer Marker (LOM), which is an NDB co-located with an OM, the NDB must be added to default.nav as a separate, stand-alone NDB (at the same location!).  </LI></UL>
+
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997509">Details – what do the entries in fix.dat mean?</A></P>
+</B></U></FONT><FONT><P>This is the easiest file to interpret!  Each intersection is on a separate line.  Here is an example line:</P>
+
+</FONT><FONT FACE="Courier New"><P>WOBIN  35.162472 -106.646500 </P>
+</FONT><FONT>
+<P>The meaning of this data is:</P>
+<P>WOBIN&#9;&#9;Intersection name (always five characters and must be unique).</P>
+<P>35.162472&#9;Latitude in decimal degrees.</P>
+<P>-106.646500&#9;Longitude in decimal degrees</P>
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997510">Where are the localiser and glideslope aerials positioned in the &quot;real world&quot;?</A></P>
+</B></U></FONT><FONT><P>Flight simulator pilots often get confused about where the aerials that form the components of an ILS are positioned in relation to the runway.  Here is a simple example for a fictitious ILS for runway 09.</P>
+
+<P>The localiser aerial (which provides left-right guidance to the pilot) is usually positioned just beyond (500 – 1000 feet) the <B><U>far</B></U> end of the runway it serves (ie. beyond the eastern end of our example runway).  The localiser’s beam points back down the runway (westward in our example) towards an approaching plane – the center of the beam passes through the runway’s touch down zone.  You can see the localiser aerial at your nearest major airport – the aerial is a wide, flat thing, usually painted red, and hidden amongst the forest of approach lighting for the opposite runway (runway 27 in our example).  It is usually the first valuable thing destroyed by an aeroplane that over-runs the end of a runway – or by an aeroplane the approaches the opposite end of the runway a little low.  </P>
+
+<P>Some localisers exist in isolation from other components of an ILS.  These form part of Localiser (LOC), Localiser Directional Aid (LDA) or Simplified Directional Facility (SDF) approaches.  Such aerials can be positioned wherever is most useful … an extreme example is the LOC on top of a mountain near Aspen, Colorado (KASE) that is used to provide guidance for departures, not arrivals!  Washington National (KDCA) runway 18 is served by a localiser positioned on the opposite side of the Potomac River in Maryland – it points to the north-west along the Potomac to provide guidance to aeroplanes following the river towards KDCA runway 18 – this approach heading is significantly offset from the runway heading..</P>
+
+<P>The glideslope (GS) aerial (which provides up-down guidance to the pilot) is usually positioned just to one side of the runway’s touch down zone (TDZ), which is about 1,000’ along the runway from the threshold.  Typically, a GS aerial might be 200 – 300 feet to the left (north in our example for runway 09) of the TDZ.  Again, you can see this vertical aerial at your local airport – it often has a small shack close by housing the electrical gear.  The shack is often painted in lurid red/white or orange – presumably in an attempt to stop errant from aeroplanes flying (or taxying) into it.  The beam from the glideslope is typically angled up from the TDZ at 3 degrees, though this may vary.  Steeper angles may not sound significant (say 5 degrees) but they are surprisingly disconcerting to nervous passengers.</P>
+
+<P>The marker beacons (which provide information to a pilot about the distance from the runway) are placed on the ground at certain distances from the runway’s threshold.  The Inner Marker (IM) is usually very close to (or at) the runway threshold.  The Middle Marker (MM) is typically 3,500’ out from the threshold (to the west in our example) and usually indicates a point at which an approaching aeroplane on the glideslope should be 200’ above the TDZ elevation.  The Outer Marker (OM) varies in location, but is usually 4 – 7 nautical miles for the runway.  Not all ILS approaches have the full complement of marker beacons – inner markers are relatively rare.</P>
+
+<P>Here is a summary for an ILS for our example runway 09:</P>
+</FONT><FONT FACE="Courier New">
+<P>OM        MM     IM     #</P>
+<P>()        ()     ()09==========================27  @                   </P>
+
+<P>Where:</P>
+<P>#  - Glideslope aerial</P>
+<P>@  - Localiser aerial</P>
+<P>=  - Runway 09/27</P>
+<P>() - Marker beacons</P>
+</FONT><B><U><FONT FACE="Arial"><P><A NAME="_Toc493997511">How do I convert my data to decimal degrees?</A></P>
+</B></U></FONT><FONT><P>The FlightGear data files define all positions as &quot;decimal degrees&quot; to six decimal places (eg. –123.456789).  This makes mathematical calculations faster.  </P>
+
+<P>But remember from your basic school geometry that a degree is <I>traditionally</I> subdivided into 60 minutes, and that a minute can be further subdivided in 60 seconds.  Some aviation data sources choose not to use the &quot;seconds&quot; – instead they use decimal parts of a minute.  Other sources use data defined in degrees and the decimal part of degrees, just as in FlightGear.  Here are some example data formats (all refer to the same position):</P>
+</FONT><FONT FACE="Courier New">
+<P>N35.5000 W106.5000 (Decimal degrees, or dd.dddd)</P>
+<P>35 30.00N 106 30.00W (Decimal minutes, or dd mm.mm)</P>
+<P>35 30 00N 106 30 00W (Degrees, minutes and seconds, or dd mm ss)</P>
+</FONT><FONT>
+<P>A common convention is that that western longitudes and southern latitudes are negative numbers when converted to decimal degrees.  So data for the USA will have positive latitudes and negative longitudes (see all the example data quoted above).</P>
+
+<P>So, to convert a dd mm.mm format (eg. 35 30.00N) to decimal degrees), you need to:</P>
+
+<UL>
+<LI>Divide the minutes by 60 (in our example: 30.00/60 = 0.5).</LI>
+<LI>Add this result to the degrees (in our example: 35 + 0.5 = 35.5).</LI>
+<LI>Check the sign – south or west is negative (in our example, north is positive).</LI>
+<LI>And so the converted answer is: 35.50.How do I calculate the position of somewhere in relation to somewhere else?</LI></UL>
+
+
+<P>[From JJ Brennan]  For those who don't like to do the math, there is a very useful little program called LLCALC that will do latitude/longitude calculations.  It's also very useful if you wish to locate a point in some relation to another point (like placing an ILS GS transmitter alongside a runway, or finding the end points of a runway from its center point).</P>
+
+<P>A copy can be found at:</P>
+<P>ftp://ftp.kingmont.com/pub/kingmont/x-plane/llcalc.zip</P>
+
+<P>&nbsp;</P>
+<P>[End]</P></FONT></BODY>
+</HTML>
