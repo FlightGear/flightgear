@@ -175,7 +175,7 @@ void	MAT3shear(MAT3mat result_mat, double xshear, double yshear);
    for (i = 0; i < 4; i++)  mat[i][i] = 1.0; \
 }
 
-#else  !defined( USE_MEM ) || !defined( WIN32 )
+#else //  !defined( USE_MEM ) || !defined( WIN32 )
 
 #define MAT3copy( to, from)    bcopy(from, to, sizeof(MAT3mat))
 #define MAT3zero(mat)   bzero (mat, sizeof(MAT3mat))
