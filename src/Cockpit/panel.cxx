@@ -164,8 +164,7 @@ FGCroppedTexture::getTexture ()
 
 FGPanel * current_panel = NULL;
 static fntRenderer text_renderer;
-static fntTexFont *default_font;
-static fntTexFont *led_font;
+
 
 /**
  * Constructor.
@@ -216,28 +215,7 @@ FGPanel::addInstrument (FGPanelInstrument * instrument)
 void
 FGPanel::init ()
 {
-    SGPath base_path;
-    char* envp = ::getenv( "FG_FONTS" );
-    if ( envp != NULL ) {
-        base_path.set( envp );
-    } else {
-        base_path.set( globals->get_fg_root() );
-	base_path.append( "Fonts" );
-    }
-
-    SGPath fntpath;
-
-    // Install the default font
-    fntpath = base_path;
-    fntpath.append( "typewriter.txf" );
-    default_font = new fntTexFont ;
-    default_font -> load ( (char *)fntpath.c_str() ) ;
-
-    // Install the LED font
-    fntpath = base_path;
-    fntpath.append( "led.txf" );
-    led_font = new fntTexFont ;
-    led_font -> load ( (char *)fntpath.c_str() ) ;
+  // NO-OP
 }
 
 
@@ -354,16 +332,40 @@ FGPanel::update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
   } else {
       glColor4f(0.7, 0.2, 0.2, 1.0);
   }
-  glBindTexture(GL_TEXTURE_2D, _bg->getHandle());
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-  glBegin(GL_POLYGON);
-  glTexCoord2f(0.0, 0.0); glVertex3f(WIN_X, WIN_Y, 0);
-  glTexCoord2f(1.0, 0.0); glVertex3f(WIN_X + _width, WIN_Y, 0);
-  glTexCoord2f(1.0, 1.0); glVertex3f(WIN_X + _width, WIN_Y + _height, 0);
-  glTexCoord2f(0.0, 1.0); glVertex3f(WIN_X, WIN_Y + _height, 0);
-  glEnd();
+  if (_bg != 0) {
+    glBindTexture(GL_TEXTURE_2D, _bg->getHandle());
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glBegin(GL_POLYGON);
+    glTexCoord2f(0.0, 0.0); glVertex3f(WIN_X, WIN_Y, 0);
+    glTexCoord2f(1.0, 0.0); glVertex3f(WIN_X + _width, WIN_Y, 0);
+    glTexCoord2f(1.0, 1.0); glVertex3f(WIN_X + _width, WIN_Y + _height, 0);
+    glTexCoord2f(0.0, 1.0); glVertex3f(WIN_X, WIN_Y + _height, 0);
+    glEnd();
+  } else {
+    for (int i = 0; i < 4; i ++) {
+      // top row of textures...(1,3,5,7)
+      glBindTexture(GL_TEXTURE_2D, _mbg[i*2]->getHandle());
+      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+      glBegin(GL_POLYGON);
+      glTexCoord2f(0.0, 0.0); glVertex3f(WIN_X + (_width/4) * i, WIN_Y + (_height/2), 0);
+      glTexCoord2f(1.0, 0.0); glVertex3f(WIN_X + (_width/4) * (i+1), WIN_Y + (_height/2), 0);
+      glTexCoord2f(1.0, 1.0); glVertex3f(WIN_X + (_width/4) * (i+1), WIN_Y + _height, 0);
+      glTexCoord2f(0.0, 1.0); glVertex3f(WIN_X + (_width/4) * i, WIN_Y + _height, 0);
+      glEnd();
+      // bottom row of textures...(2,4,6,8)
+      glBindTexture(GL_TEXTURE_2D, _mbg[(i*2)+1]->getHandle());
+      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+      glBegin(GL_POLYGON);
+      glTexCoord2f(0.0, 0.0); glVertex3f(WIN_X + (_width/4) * i, WIN_Y, 0);
+      glTexCoord2f(1.0, 0.0); glVertex3f(WIN_X + (_width/4) * (i+1), WIN_Y, 0);
+      glTexCoord2f(1.0, 1.0); glVertex3f(WIN_X + (_width/4) * (i+1), WIN_Y + (_height/2), 0);
+      glTexCoord2f(0.0, 1.0); glVertex3f(WIN_X + (_width/4) * i, WIN_Y + (_height/2), 0);
+      glEnd();
+    }
+
+  }
 
 				// Draw the instruments.
   instrument_list_type::const_iterator current = _instruments.begin();
@@ -415,6 +417,15 @@ FGPanel::setBackground (ssgTexture * texture)
   _bg = texture;
 }
 
+/**
+ * Set the panel's multiple background textures.
+ */
+void
+FGPanel::setMultiBackground (ssgTexture * texture, int idx)
+{
+  _bg = 0;
+  _mbg[idx] = texture;
+}
 
 /**
  * Set the panel's x-offset.
@@ -846,7 +857,7 @@ FGTexturedLayer::draw ()
 ////////////////////////////////////////////////////////////////////////
 
 FGTextLayer::FGTextLayer (int w, int h)
-  : FGInstrumentLayer(w, h), _pointSize(14.0), _font_name("default")
+  : FGInstrumentLayer(w, h), _pointSize(14.0)
 {
   _then.stamp();
   _color[0] = _color[1] = _color[2] = 0.0;
@@ -869,11 +880,7 @@ FGTextLayer::draw ()
     glPushMatrix();
     glColor4fv(_color);
     transform();
-    if ( _font_name == "led" ) {
-	text_renderer.setFont(led_font);
-    } else {
-	text_renderer.setFont(guiFntHandle);
-    }
+    text_renderer.setFont(guiFntHandle);
     text_renderer.setPointSize(_pointSize);
     text_renderer.begin();
     text_renderer.start3f(0, 0, 0);
@@ -911,13 +918,6 @@ FGTextLayer::setPointSize (float size)
 {
   _pointSize = size;
 }
-
-void
-FGTextLayer::setFontName(const string &name)
-{
-  _font_name = name;
-}
-
 
 void
 FGTextLayer::setFont(fntFont * font)
@@ -1019,3 +1019,5 @@ FGSwitchLayer::draw ()
 
 
 // end of panel.cxx
+
+

@@ -150,6 +150,9 @@ public:
 				// Background texture.
   virtual void setBackground (ssgTexture * texture);
 
+				// Background multiple textures.
+  virtual void setMultiBackground (ssgTexture * texture, int idx);
+
 				// Make the panel visible or invisible.
   virtual bool getVisibility () const;
   virtual void setVisibility (bool visibility);
@@ -196,6 +199,7 @@ private:
   const SGPropertyNode * _ysize_node;
   
   ssgTexture * _bg;
+  ssgTexture * _mbg[8];
 				// List of instruments in panel.
   instrument_list_type _instruments;
 };
@@ -498,7 +502,6 @@ public:
   virtual void addChunk (Chunk * chunk);
   virtual void setColor (float r, float g, float b);
   virtual void setPointSize (float size);
-  virtual void setFontName ( const string &name );
   virtual void setFont (fntFont * font);
 
 private:
@@ -510,7 +513,7 @@ private:
   float _color[4];
 
   float _pointSize;
-  mutable string _font_name;
+
   mutable string _value;
   mutable SGTimeStamp _then;
   mutable SGTimeStamp _now;
@@ -564,5 +567,6 @@ extern FGPanel * current_panel;	// TODO: move to globals
 #endif // __PANEL_HXX
 
 // end of panel.hxx
+
 
 

@@ -508,8 +508,7 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
     tlayer->setPointSize(pointSize);
 
 				// Set the font.
-    string fontName = node->getStringValue("font", "default");
-    tlayer->setFontName(fontName);
+    // TODO
 
     const SGPropertyNode * chunk_group = node->getNode("chunks");
     if (chunk_group != 0) {
@@ -706,7 +705,9 @@ readPanel (const SGPropertyNode * root)
   if (!fgHasNode("/sim/panel/x-offset"))
     fgSetInt("/sim/panel/x-offset", root->getIntValue("x-offset", 0));
 
-  if (!fgHasNode("/sim/panel/y-offset"))
+  // conditional removed by jim wilson to allow panel xml code 
+  // with y-offset defined to work...
+  // if (!fgHasNode("/sim/panel/y-offset"))
     fgSetInt("/sim/panel/y-offset", root->getIntValue("y-offset", 0));
 
   //
@@ -717,6 +718,59 @@ readPanel (const SGPropertyNode * root)
     bgTexture = "FOO";
   panel->setBackground(FGTextureManager::createTexture(bgTexture.c_str()));
   SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << bgTexture );
+
+  //
+  // Get multibackground if any...
+  //
+  string mbgTexture = root->getStringValue("multibackground[0]");
+  if (mbgTexture != "") {
+    panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 0);
+    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
+
+    mbgTexture = root->getStringValue("multibackground[1]");
+    if (mbgTexture == "")
+      mbgTexture = "FOO";
+    panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 1);
+    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
+
+    mbgTexture = root->getStringValue("multibackground[2]");
+    if (mbgTexture == "")
+      mbgTexture = "FOO";
+    panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 2);
+    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
+
+    mbgTexture = root->getStringValue("multibackground[3]");
+    if (mbgTexture == "")
+      mbgTexture = "FOO";
+    panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 3);
+    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
+
+    mbgTexture = root->getStringValue("multibackground[4]");
+    if (mbgTexture == "")
+      mbgTexture = "FOO";
+    panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 4);
+    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
+
+    mbgTexture = root->getStringValue("multibackground[5]");
+    if (mbgTexture == "")
+      mbgTexture = "FOO";
+    panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 5);
+    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
+
+    mbgTexture = root->getStringValue("multibackground[6]");
+    if (mbgTexture == "")
+      mbgTexture = "FOO";
+    panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 6);
+    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
+
+    mbgTexture = root->getStringValue("multibackground[7]");
+    if (mbgTexture == "")
+      mbgTexture = "FOO";
+    panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 7);
+    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
+
+  }
+  
 
 
   //
@@ -798,3 +852,6 @@ fgReadPanel (const string &relative_path)
 
 
 // end of panel_io.cxx
+
+
+
