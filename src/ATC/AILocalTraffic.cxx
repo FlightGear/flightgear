@@ -156,7 +156,7 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	string planepath = "Aircraft/c172/Models/c172-dpm.ac";
 	SGPath path = globals->get_fg_root();
 	path.append(planepath);
-        ssgBranch *model = sgLoad3DModel( path.str(),
+        ssgBranch *model = sgLoad3DModel( globals->get_fg_root(),
                                           planepath.c_str(),
                                           globals->get_props(),
                                           globals->get_sim_time_sec() );
