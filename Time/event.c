@@ -39,6 +39,7 @@
 #endif /* USE_FTIME */
 
 
+#include <Main/fg_debug.h>
 #include <Time/event.h>
 
 
@@ -315,7 +316,7 @@ void fgEventProcess( void ) {
 #endif /* USE_FTIME */
     int i;
 
-    printf("Processing events\n");
+    fgPrintf(FG_EVENT, FG_DEBUG, "Processing events\n");
     
     /* get the current time */
 #ifdef USE_FTIME
@@ -370,9 +371,12 @@ void fgEventProcess( void ) {
 
 
 /* $Log$
-/* Revision 1.9  1998/01/31 00:43:44  curt
-/* Added MetroWorks patches from Carmen Volpe.
+/* Revision 1.10  1998/03/14 00:28:34  curt
+/* replaced a printf() with an fgPrintf().
 /*
+ * Revision 1.9  1998/01/31 00:43:44  curt
+ * Added MetroWorks patches from Carmen Volpe.
+ *
  * Revision 1.8  1998/01/27 00:48:05  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.
