@@ -31,8 +31,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdio.h>              //snprintf
+#if defined( _MSCVER_ )
+#  include <io.h>                 //lseek, read, write
+#endif
 
 #include STL_STRING
+
+#include <plib/ul.h>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
@@ -46,6 +52,9 @@
 
 SG_USING_STD(string);
 
+#ifdef _MSC_VER
+#  define snprintf _snprintf
+#endif
 
 // Lock the ATC 610 hardware
 static int ATC610xLock( int fd ) {
@@ -276,7 +285,11 @@ bool FGATC610x::open() {
 
 	ATC610xRelease( lock_fd );
 
+#if defined( _MSCVER_ )
+	ulMilliSecondSleep(33);
+#else
 	usleep(33);
+#endif
     }
 
     compass_position = 0.0;

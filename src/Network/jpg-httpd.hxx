@@ -36,6 +36,16 @@
 
 #ifdef FG_JPEG_SERVER
 #  include <simgear/screen/jpgfactory.hxx>
+#else
+// dummy it in to keep the compiler happy
+class trJpgFactory {
+public:
+    trJpgFactory();
+    void init(int, int);
+    void destroy();
+    int render();
+  void *data();
+};
 #endif
 
 #include "protocol.hxx"
