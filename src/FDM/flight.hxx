@@ -25,9 +25,9 @@
 #define _FLIGHT_HXX
 
 
-#ifndef __cplusplus                                                          
+#ifndef __cplusplus
 # error This library requires C++
-#endif                                   
+#endif
 
 
 /* Required get_()
@@ -92,28 +92,116 @@
 FG_USING_STD(list);
 
 
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif                                   
-
-
 typedef double FG_VECTOR_3[3];
 
 
 // This is based heavily on LaRCsim/ls_generic.h
 class FGInterface {
 
+private:
+  
+    // Pilot location rel to ref pt
+    FG_VECTOR_3 d_pilot_rp_body_v;
+
+    // CG position w.r.t. ref. point
+    FG_VECTOR_3 d_cg_rp_body_v;
+
+    // Forces
+    FG_VECTOR_3 f_body_total_v;
+    FG_VECTOR_3 f_local_total_v;
+    FG_VECTOR_3 f_aero_v;
+    FG_VECTOR_3 f_engine_v;
+    FG_VECTOR_3 f_gear_v;
+
+    // Moments
+    FG_VECTOR_3 m_total_rp_v;
+    FG_VECTOR_3 m_total_cg_v;
+    FG_VECTOR_3 m_aero_v;
+    FG_VECTOR_3 m_engine_v;
+    FG_VECTOR_3 m_gear_v;
+
+    // Accelerations
+    FG_VECTOR_3 v_dot_local_v;
+    FG_VECTOR_3 v_dot_body_v;
+    FG_VECTOR_3 a_cg_body_v;
+    FG_VECTOR_3 a_pilot_body_v;
+    FG_VECTOR_3 n_cg_body_v;
+    FG_VECTOR_3 n_pilot_body_v;
+    FG_VECTOR_3 omega_dot_body_v;
+
+    // Velocities
+    FG_VECTOR_3 v_local_v;
+    FG_VECTOR_3 v_local_rel_ground_v; // V rel w.r.t. earth surface
+    FG_VECTOR_3 v_local_airmass_v;    // velocity of airmass (steady winds)
+    FG_VECTOR_3 v_local_rel_airmass_v;  // velocity of veh. relative to airmass
+    FG_VECTOR_3 v_local_gust_v;       // linear turbulence components, L frame
+    FG_VECTOR_3 v_wind_body_v;        // Wind-relative velocities in body axis
+
+    FG_VECTOR_3 omega_body_v;         // Angular B rates
+    FG_VECTOR_3 omega_local_v;        // Angular L rates
+    FG_VECTOR_3 omega_total_v;        // Diff btw B & L
+    FG_VECTOR_3 euler_rates_v;
+    FG_VECTOR_3 geocentric_rates_v;   // Geocentric linear velocities
+
+    // Positions
+    FG_VECTOR_3 geocentric_position_v;
+    FG_VECTOR_3 geodetic_position_v;
+    FG_VECTOR_3 euler_angles_v;
+
+    // Miscellaneous Quantities
+    FG_VECTOR_3 d_cg_rwy_local_v;     // CG rel. to rwy in local coords
+    FG_VECTOR_3 d_cg_rwy_rwy_v;       // CG relative to rwy, in rwy coordinates
+    FG_VECTOR_3 d_pilot_rwy_local_v;  // pilot rel. to rwy in local coords
+    FG_VECTOR_3 d_pilot_rwy_rwy_v;    // pilot rel. to rwy, in rwy coords.
+
+    // Inertias
+    double mass, i_xx, i_yy, i_zz, i_xz;
+
+    // Normal Load Factor
+    double nlf;
+
+    // Velocities
+    double v_rel_wind, v_true_kts, v_rel_ground, v_inertial;
+    double v_ground_speed, v_equiv, v_equiv_kts;
+    double v_calibrated, v_calibrated_kts;
+
+    // Miscellaneious Quantities
+    double t_local_to_body_m[3][3];   // Transformation matrix L to B
+    double gravity;                   // Local acceleration due to G
+    double centrifugal_relief;        // load factor reduction due to speed
+    double alpha, beta, alpha_dot, beta_dot;  // in radians
+    double cos_alpha, sin_alpha, cos_beta, sin_beta;
+    double cos_phi, sin_phi, cos_theta, sin_theta, cos_psi, sin_psi;
+    double gamma_vert_rad, gamma_horiz_rad;  // Flight path angles
+    double sigma, density, v_sound, mach_number;
+    double static_pressure, total_pressure, impact_pressure;
+    double dynamic_pressure;
+    double static_temperature, total_temperature;
+    double sea_level_radius, earth_position_angle;
+    double runway_altitude, runway_latitude, runway_longitude;
+    double runway_heading;
+    double radius_to_rwy;
+    double climb_rate;                // in feet per second
+    double sin_lat_geocentric, cos_lat_geocentric;
+    double sin_longitude, cos_longitude;
+    double sin_latitude, cos_latitude;
+
+    FGTimeStamp valid_stamp;          // time this record is valid
+    FGTimeStamp next_stamp;           // time this record is valid
+
 public:
+  
+    FGInterface(void);
+    virtual ~FGInterface();
 
     virtual int init( double dt );
     virtual int update( int multi_loop );
-    virtual ~FGInterface();
 
     // Define the various supported flight models (many not yet implemented)
     enum {
 	// Magic Carpet mode
 	FG_MAGICCARPET = 0,
-	
+
 	// The NASA LaRCsim (Navion) flight model
 	FG_LARCSIM = 1,
 
@@ -135,10 +223,9 @@ public:
 	FG_EXTERNAL = 9
     };
 
-/*================== Mass properties and geometry values ==================*/
+    // ========== Mass properties and geometry values ==========
 
     // Inertias
-    double mass, i_xx, i_yy, i_zz, i_xz;
     inline double get_Mass() const { return mass; }
     inline double get_I_xx() const { return i_xx; }
     inline double get_I_yy() const { return i_yy; }
@@ -153,11 +240,10 @@ public:
 	i_zz = zz;
 	i_xz = xz;
     }
-    
+
     // Pilot location rel to ref pt
-    FG_VECTOR_3 d_pilot_rp_body_v;
-    // inline double * get_D_pilot_rp_body_v() { 
-    //  return d_pilot_rp_body_v; 
+    // inline double * get_D_pilot_rp_body_v() {
+    //  return d_pilot_rp_body_v;
     // }
     // inline double get_Dx_pilot() const { return d_pilot_rp_body_v[0]; }
     // inline double get_Dy_pilot() const { return d_pilot_rp_body_v[1]; }
@@ -169,7 +255,6 @@ public:
     } */
 
     // CG position w.r.t. ref. point
-    FG_VECTOR_3 d_cg_rp_body_v;
     // inline double * get_D_cg_rp_body_v() { return d_cg_rp_body_v; }
     inline double get_Dx_cg() const { return d_cg_rp_body_v[0]; }
     inline double get_Dy_cg() const { return d_cg_rp_body_v[1]; }
@@ -180,9 +265,8 @@ public:
 	d_cg_rp_body_v[2] = dz;
     }
 
-/*================================ Forces =================================*/
+    // ========== Forces ==========
 
-    FG_VECTOR_3 f_body_total_v;
     // inline double * get_F_body_total_v() { return f_body_total_v; }
     // inline double get_F_X() const { return f_body_total_v[0]; }
     // inline double get_F_Y() const { return f_body_total_v[1]; }
@@ -193,7 +277,6 @@ public:
 	f_body_total_v[2] = z;
     } */
 
-    FG_VECTOR_3 f_local_total_v;
     // inline double * get_F_local_total_v() { return f_local_total_v; }
     // inline double get_F_north() const { return f_local_total_v[0]; }
     // inline double get_F_east() const { return f_local_total_v[1]; }
@@ -204,7 +287,6 @@ public:
 	f_local_total_v[2] = z;
     } */
 
-    FG_VECTOR_3 f_aero_v;
     // inline double * get_F_aero_v() { return f_aero_v; }
     // inline double get_F_X_aero() const { return f_aero_v[0]; }
     // inline double get_F_Y_aero() const { return f_aero_v[1]; }
@@ -215,7 +297,6 @@ public:
 	f_aero_v[2] = z;
     } */
     
-    FG_VECTOR_3 f_engine_v;
     // inline double * get_F_engine_v() { return f_engine_v; }
     // inline double get_F_X_engine() const { return f_engine_v[0]; }
     // inline double get_F_Y_engine() const { return f_engine_v[1]; }
@@ -226,7 +307,6 @@ public:
 	f_engine_v[2] = z;
     } */
 
-    FG_VECTOR_3 f_gear_v;
     // inline double * get_F_gear_v() { return f_gear_v; }
     // inline double get_F_X_gear() const { return f_gear_v[0]; }
     // inline double get_F_Y_gear() const { return f_gear_v[1]; }
@@ -237,9 +317,8 @@ public:
 	f_gear_v[2] = z;
     } */
 
-    /*================================ Moments ================================*/
+    // ========== Moments ==========
 
-    FG_VECTOR_3 m_total_rp_v;
     // inline double * get_M_total_rp_v() { return m_total_rp_v; }
     // inline double get_M_l_rp() const { return m_total_rp_v[0]; }
     // inline double get_M_m_rp() const { return m_total_rp_v[1]; }
@@ -250,7 +329,6 @@ public:
 	m_total_rp_v[2] = n;
     } */
 
-    FG_VECTOR_3 m_total_cg_v;
     // inline double * get_M_total_cg_v() { return m_total_cg_v; }
     // inline double get_M_l_cg() const { return m_total_cg_v[0]; }
     // inline double get_M_m_cg() const { return m_total_cg_v[1]; }
@@ -261,7 +339,6 @@ public:
 	m_total_cg_v[2] = n;
     } */
 
-    FG_VECTOR_3 m_aero_v;
     // inline double * get_M_aero_v() { return m_aero_v; }
     // inline double get_M_l_aero() const { return m_aero_v[0]; }
     // inline double get_M_m_aero() const { return m_aero_v[1]; }
@@ -272,7 +349,6 @@ public:
 	m_aero_v[2] = n;
     } */
 
-    FG_VECTOR_3    m_engine_v;
     // inline double * get_M_engine_v() { return m_engine_v; }
     // inline double get_M_l_engine() const { return m_engine_v[0]; }
     // inline double get_M_m_engine() const { return m_engine_v[1]; }
@@ -283,7 +359,6 @@ public:
 	m_engine_v[2] = n;
     } */
 
-    FG_VECTOR_3    m_gear_v;
     // inline double * get_M_gear_v() { return m_gear_v; }
     // inline double get_M_l_gear() const { return m_gear_v[0]; }
     // inline double get_M_m_gear() const { return m_gear_v[1]; }
@@ -294,9 +369,8 @@ public:
 	m_gear_v[2] = n;
     } */
 
-    /*============================== Accelerations ============================*/
+    // ========== Accelerations ==========
 
-    FG_VECTOR_3    v_dot_local_v;
     // inline double * get_V_dot_local_v() { return v_dot_local_v; }
     inline double get_V_dot_north() const { return v_dot_local_v[0]; }
     inline double get_V_dot_east() const { return v_dot_local_v[1]; }
@@ -307,7 +381,6 @@ public:
 	v_dot_local_v[2] = down;
     }
 
-    FG_VECTOR_3    v_dot_body_v;
     // inline double * get_V_dot_body_v() { return v_dot_body_v; }
     inline double get_U_dot_body() const { return v_dot_body_v[0]; }
     inline double get_V_dot_body() const { return v_dot_body_v[1]; }
@@ -318,7 +391,6 @@ public:
 	v_dot_body_v[2] = w;
     }
 
-    FG_VECTOR_3    a_cg_body_v;
     // inline double * get_A_cg_body_v() { return a_cg_body_v; }
     inline double get_A_X_cg() const { return a_cg_body_v[0]; }
     inline double get_A_Y_cg() const { return a_cg_body_v[1]; }
@@ -329,7 +401,6 @@ public:
 	a_cg_body_v[2] = z;
     }
 
-    FG_VECTOR_3    a_pilot_body_v;
     // inline double * get_A_pilot_body_v() { return a_pilot_body_v; }
     inline double get_A_X_pilot() const { return a_pilot_body_v[0]; }
     inline double get_A_Y_pilot() const { return a_pilot_body_v[1]; }
@@ -340,7 +411,6 @@ public:
 	a_pilot_body_v[2] = z;
     }
 
-    FG_VECTOR_3    n_cg_body_v;
     // inline double * get_N_cg_body_v() { return n_cg_body_v; }
     // inline double get_N_X_cg() const { return n_cg_body_v[0]; }
     // inline double get_N_Y_cg() const { return n_cg_body_v[1]; }
@@ -349,9 +419,8 @@ public:
     //    n_cg_body_v[0] = x;
     //    n_cg_body_v[1] = y;
     //    n_cg_body_v[2] = z;
-    // } 
+    // }
 
-    FG_VECTOR_3    n_pilot_body_v;
     // inline double * get_N_pilot_body_v() { return n_pilot_body_v; }
     // inline double get_N_X_pilot() const { return n_pilot_body_v[0]; }
     // inline double get_N_Y_pilot() const { return n_pilot_body_v[1]; }
@@ -360,13 +429,11 @@ public:
     //    n_pilot_body_v[0] = x;
     //    n_pilot_body_v[1] = y;
     //    n_pilot_body_v[2] = z;
-    // } 
-    
-    double nlf;  //Normal Load Factor
-    double get_Nlf(void) { return nlf; }  
+    // }
+
+    double get_Nlf(void) { return nlf; }
     void set_Nlf(double n) { nlf=n;  }
 
-    FG_VECTOR_3    omega_dot_body_v;
     // inline double * get_Omega_dot_body_v() { return omega_dot_body_v; }
     // inline double get_P_dot_body() const { return omega_dot_body_v[0]; }
     // inline double get_Q_dot_body() const { return omega_dot_body_v[1]; }
@@ -378,9 +445,8 @@ public:
     } */
 
 
-    /*============================== Velocities ===============================*/
+    // ========== Velocities ==========
 
-    FG_VECTOR_3    v_local_v;
     // inline double * get_V_local_v() { return v_local_v; }
     inline double get_V_north() const { return v_local_v[0]; }
     inline double get_V_east() const { return v_local_v[1]; }
@@ -391,24 +457,25 @@ public:
 	v_local_v[2] = down;
     }
 
-    FG_VECTOR_3    v_local_rel_ground_v; // V rel w.r.t. earth surface  
-    // inline double * get_V_local_rel_ground_v() { return v_local_rel_ground_v; }
+    // inline double * get_V_local_rel_ground_v() {
+    //     return v_local_rel_ground_v;
+    // }
     // inline double get_V_north_rel_ground() const {
-    //	return v_local_rel_ground_v[0];
-    //    }
+    //     return v_local_rel_ground_v[0];
+    // }
     // inline double get_V_east_rel_ground() const {
-    //	return v_local_rel_ground_v[1];
-    //    }
+    //     return v_local_rel_ground_v[1];
+    // }
     // inline double get_V_down_rel_ground() const {
-    //	return v_local_rel_ground_v[2];
-    //    }
-    /* inline void set_Velocities_Ground(double north, double east, double down) {
-	v_local_rel_ground_v[0] = north;
-	v_local_rel_ground_v[1] = east;
-	v_local_rel_ground_v[2] = down;
-    } */
+    //     return v_local_rel_ground_v[2];
+    // }
+    // inline void set_Velocities_Ground(double north, double east, double down)
+    // {
+    //     v_local_rel_ground_v[0] = north;
+    //     v_local_rel_ground_v[1] = east;
+    //     v_local_rel_ground_v[2] = down;
+    // }
 
-    FG_VECTOR_3    v_local_airmass_v;   // velocity of airmass (steady winds)
     // inline double * get_V_local_airmass_v() { return v_local_airmass_v; }
     inline double get_V_north_airmass() const { return v_local_airmass_v[0]; }
     inline double get_V_east_airmass() const { return v_local_airmass_v[1]; }
@@ -419,22 +486,21 @@ public:
 	v_local_airmass_v[0] = north;
 	v_local_airmass_v[1] = east;
 	v_local_airmass_v[2] = down;
-    } 
+    }
 
-    FG_VECTOR_3    v_local_rel_airmass_v;  // velocity of veh. relative to
     // airmass
     // inline double * get_V_local_rel_airmass_v() {
-	//return v_local_rel_airmass_v;
-    //}
+    //   return v_local_rel_airmass_v;
+    // }
     // inline double get_V_north_rel_airmass() const {
-	//return v_local_rel_airmass_v[0];
-    //}
+    //   return v_local_rel_airmass_v[0];
+    // }
     // inline double get_V_east_rel_airmass() const {
-	//return v_local_rel_airmass_v[1];
-    //}
+    //   return v_local_rel_airmass_v[1];
+    // }
     // inline double get_V_down_rel_airmass() const {
-	//return v_local_rel_airmass_v[2];
-    //}
+    //   return v_local_rel_airmass_v[2];
+    // }
     /* inline void set_Velocities_Local_Rel_Airmass( double north, double east, 
 						  double down)
     {
@@ -443,7 +509,6 @@ public:
 	v_local_rel_airmass_v[2] = down;
     } */
 
-    FG_VECTOR_3    v_local_gust_v; // linear turbulence components, L frame
     // inline double * get_V_local_gust_v() { return v_local_gust_v; }
     // inline double get_U_gust() const { return v_local_gust_v[0]; }
     // inline double get_V_gust() const { return v_local_gust_v[1]; }
@@ -455,21 +520,15 @@ public:
 	v_local_gust_v[2] = w;
     } */
     
-    FG_VECTOR_3    v_wind_body_v;  // Wind-relative velocities in body axis
     // inline double * get_V_wind_body_v() { return v_wind_body_v; }
     inline double get_U_body() const { return v_wind_body_v[0]; }
     inline double get_V_body() const { return v_wind_body_v[1]; }
     inline double get_W_body() const { return v_wind_body_v[2]; }
-    inline void set_Velocities_Wind_Body( double u, double v, double w)
-    {
+    inline void set_Velocities_Wind_Body( double u, double v, double w) {
 	v_wind_body_v[0] = u;
 	v_wind_body_v[1] = v;
 	v_wind_body_v[2] = w;
     }
-
-    double    v_rel_wind, v_true_kts, v_rel_ground, v_inertial;
-    double    v_ground_speed, v_equiv, v_equiv_kts;
-    double    v_calibrated, v_calibrated_kts;
 
     // inline double get_V_rel_wind() const { return v_rel_wind; }
     // inline void set_V_rel_wind(double wind) { v_rel_wind = wind; }
@@ -498,7 +557,6 @@ public:
     inline double get_V_calibrated_kts() const { return v_calibrated_kts; }
     inline void set_V_calibrated_kts( double kts ) { v_calibrated_kts = kts; }
 
-    FG_VECTOR_3    omega_body_v;   // Angular B rates     
     // inline double * get_Omega_body_v() { return omega_body_v; }
     inline double get_P_body() const { return omega_body_v[0]; }
     inline double get_Q_body() const { return omega_body_v[1]; }
@@ -509,7 +567,6 @@ public:
 	omega_body_v[2] = r;
     }
 
-    FG_VECTOR_3    omega_local_v;  // Angular L rates     
     // inline double * get_Omega_local_v() { return omega_local_v; }
     // inline double get_P_local() const { return omega_local_v[0]; }
     // inline double get_Q_local() const { return omega_local_v[1]; }
@@ -520,7 +577,6 @@ public:
 	omega_local_v[2] = r;
     } */
 
-    FG_VECTOR_3    omega_total_v;  // Diff btw B & L      
     // inline double * get_Omega_total_v() { return omega_total_v; }
     // inline double get_P_total() const { return omega_total_v[0]; }
     // inline double get_Q_total() const { return omega_total_v[1]; }
@@ -531,7 +587,6 @@ public:
 	omega_total_v[2] = r;
     } */
 
-    FG_VECTOR_3    euler_rates_v;
     // inline double * get_Euler_rates_v() { return euler_rates_v; }
     inline double get_Phi_dot() const { return euler_rates_v[0]; }
     inline double get_Theta_dot() const { return euler_rates_v[1]; }
@@ -540,9 +595,8 @@ public:
 	euler_rates_v[0] = phi;
 	euler_rates_v[1] = theta;
 	euler_rates_v[2] = psi;
-    } 
+    }
 
-    FG_VECTOR_3    geocentric_rates_v;     // Geocentric linear velocities
     // inline double * get_Geocentric_rates_v() { return geocentric_rates_v; }
     inline double get_Latitude_dot() const { return geocentric_rates_v[0]; }
     inline double get_Longitude_dot() const { return geocentric_rates_v[1]; }
@@ -552,17 +606,16 @@ public:
 	geocentric_rates_v[1] = lon;
 	geocentric_rates_v[2] = rad;
     }
-    
-    /*=============================== Positions ===============================*/
 
-    FG_VECTOR_3    geocentric_position_v;
+    // ========== Positions ==========
+
     // inline double * get_Geocentric_position_v() {
     //    return geocentric_position_v;
     // }
     inline double get_Lat_geocentric() const {
 	return geocentric_position_v[0];
     }
-    inline double get_Lon_geocentric() const { 
+    inline double get_Lon_geocentric() const {
 	return geocentric_position_v[1];
     }
     inline double get_Radius_to_vehicle() const {
@@ -578,7 +631,6 @@ public:
 	geocentric_position_v[2] = rad;
     }
 
-    FG_VECTOR_3    geodetic_position_v;
     // inline double * get_Geodetic_position_v() { return geodetic_position_v; }
     inline double get_Latitude() const { return geodetic_position_v[0]; }
     inline void set_Latitude(double lat) { geodetic_position_v[0] = lat; }
@@ -594,7 +646,6 @@ public:
 	geodetic_position_v[2] = alt;
     }
 
-    FG_VECTOR_3 euler_angles_v;
     // inline double * get_Euler_angles_v() { return euler_angles_v; }
     inline double get_Phi() const { return euler_angles_v[0]; }
     inline double get_Theta() const { return euler_angles_v[1]; }
@@ -606,9 +657,8 @@ public:
     }
 
 
-    /*======================= Miscellaneous quantities ========================*/
+    // ========== Miscellaneous quantities ==========
 
-    double    t_local_to_body_m[3][3];    // Transformation matrix L to B
     // inline double * get_T_local_to_body_m() { return t_local_to_body_m; }
     inline double get_T_local_to_body_11() const {
 	return t_local_to_body_m[0][0];
@@ -638,8 +688,8 @@ public:
 	return t_local_to_body_m[2][2];
     }
     inline void set_T_Local_to_Body( int i, int j, double value) {
-      t_local_to_body_m[i-1][j-1] = value;
-    }  
+	t_local_to_body_m[i-1][j-1] = value;
+    }
     inline void set_T_Local_to_Body( double m[3][3] ) {
 	int i, j;
 	for ( i = 0; i < 3; i++ ) {
@@ -649,15 +699,16 @@ public:
 	}
     }
 
-    double    gravity;            // Local acceleration due to G 
     // inline double get_Gravity() const { return gravity; }
     // inline void set_Gravity(double g) { gravity = g; }
-    
-    double    centrifugal_relief; // load factor reduction due to speed
-    // inline double get_Centrifugal_relief() const { return centrifugal_relief; }
-    // inline void set_Centrifugal_relief(double cr) { centrifugal_relief = cr; }
 
-    double    alpha, beta, alpha_dot, beta_dot;   // in radians  
+    // inline double get_Centrifugal_relief() const {
+    //   return centrifugal_relief;
+    // }
+    // inline void set_Centrifugal_relief(double cr) {
+    //   centrifugal_relief = cr;
+    // }
+
     inline double get_Alpha() const { return alpha; }
     inline void set_Alpha( double a ) { alpha = a; }
     inline double get_Beta() const { return beta; }
@@ -667,7 +718,6 @@ public:
     // inline double get_Beta_dot() const { return beta_dot; }
     // inline void set_Beta_dot( double bd ) { beta_dot = bd; }
 
-    double    cos_alpha, sin_alpha, cos_beta, sin_beta;
     // inline double get_Cos_alpha() const { return cos_alpha; }
     // inline void set_Cos_alpha( double ca ) { cos_alpha = ca; }
     // inline double get_Sin_alpha() const { return sin_alpha; }
@@ -677,7 +727,6 @@ public:
     // inline double get_Sin_beta() const { return sin_beta; }
     // inline void set_Sin_beta( double sb ) { sin_beta = sb; }
 
-    double    cos_phi, sin_phi, cos_theta, sin_theta, cos_psi, sin_psi;
     inline double get_Cos_phi() const { return cos_phi; }
     inline void set_Cos_phi( double cp ) { cos_phi = cp; }
     // inline double get_Sin_phi() const { return sin_phi; }
@@ -691,13 +740,11 @@ public:
     // inline double get_Sin_psi() const { return sin_psi; }
     // inline void set_Sin_psi( double sp ) { sin_psi = sp; }
 
-    double    gamma_vert_rad, gamma_horiz_rad;    // Flight path angles  
     inline double get_Gamma_vert_rad() const { return gamma_vert_rad; }
     inline void set_Gamma_vert_rad( double gv ) { gamma_vert_rad = gv; }
     // inline double get_Gamma_horiz_rad() const { return gamma_horiz_rad; }
     // inline void set_Gamma_horiz_rad( double gh ) { gamma_horiz_rad = gh; }
 
-    double    sigma, density, v_sound, mach_number;
     // inline double get_Sigma() const { return sigma; }
     // inline void set_Sigma( double s ) { sigma = s; }
     inline double get_Density() const { return density; }
@@ -707,8 +754,6 @@ public:
     inline double get_Mach_number() const { return mach_number; }
     inline void set_Mach_number( double m ) { mach_number = m; }
 
-    double    static_pressure, total_pressure, impact_pressure;
-    double    dynamic_pressure;
     inline double get_Static_pressure() const { return static_pressure; }
     inline void set_Static_pressure( double sp ) { static_pressure = sp; }
     // inline double get_Total_pressure() const { return total_pressure; }
@@ -718,41 +763,41 @@ public:
     // inline double get_Dynamic_pressure() const { return dynamic_pressure; }
     // inline void set_Dynamic_pressure( double dp ) { dynamic_pressure = dp; }
 
-    double    static_temperature, total_temperature;
     inline double get_Static_temperature() const { return static_temperature; }
     inline void set_Static_temperature( double t ) { static_temperature = t; }
     // inline double get_Total_temperature() const { return total_temperature; }
     // inline void set_Total_temperature( double t ) { total_temperature = t; }
 
-    double    sea_level_radius, earth_position_angle;
     inline double get_Sea_level_radius() const { return sea_level_radius; }
     inline void set_Sea_level_radius( double r ) { sea_level_radius = r; }
     inline double get_Earth_position_angle() const {
 	return earth_position_angle;
     }
-    inline void set_Earth_position_angle(double a) { 
+    inline void set_Earth_position_angle(double a) {
 	earth_position_angle = a;
     }
 
-    double    runway_altitude, runway_latitude, runway_longitude;
-    double    runway_heading;
     inline double get_Runway_altitude() const { return runway_altitude; }
     inline void set_Runway_altitude( double alt ) { runway_altitude = alt; }
     // inline double get_Runway_latitude() const { return runway_latitude; }
     // inline void set_Runway_latitude( double lat ) { runway_latitude = lat; }
     // inline double get_Runway_longitude() const { return runway_longitude; }
-    // inline void set_Runway_longitude( double lon ) { runway_longitude = lon; }
+    // inline void set_Runway_longitude( double lon ) {
+    //   runway_longitude = lon;
+    // }
     // inline double get_Runway_heading() const { return runway_heading; }
     // inline void set_Runway_heading( double h ) { runway_heading = h; }
 
-    double    radius_to_rwy;
     // inline double get_Radius_to_rwy() const { return radius_to_rwy; }
     // inline void set_Radius_to_rwy( double r ) { radius_to_rwy = r; }
 
-    FG_VECTOR_3    d_cg_rwy_local_v;       // CG rel. to rwy in local coords
     // inline double * get_D_cg_rwy_local_v() { return d_cg_rwy_local_v; }
-    // inline double get_D_cg_north_of_rwy() const { return d_cg_rwy_local_v[0]; }
-    // inline double get_D_cg_east_of_rwy() const { return d_cg_rwy_local_v[1]; }
+    // inline double get_D_cg_north_of_rwy() const {
+    //   return d_cg_rwy_local_v[0];
+    // }
+    // inline double get_D_cg_east_of_rwy() const {
+    //   return d_cg_rwy_local_v[1];
+    // }
     // inline double get_D_cg_above_rwy() const { return d_cg_rwy_local_v[2]; }
     /* inline void set_CG_Rwy_Local( double north, double east, double above )
     {
@@ -761,7 +806,6 @@ public:
 	d_cg_rwy_local_v[2] = above;
     } */
 
-    FG_VECTOR_3    d_cg_rwy_rwy_v; // CG relative to rwy, in rwy coordinates
     // inline double * get_D_cg_rwy_rwy_v() { return d_cg_rwy_rwy_v; }
     // inline double get_X_cg_rwy() const { return d_cg_rwy_rwy_v[0]; }
     // inline double get_Y_cg_rwy() const { return d_cg_rwy_rwy_v[1]; }
@@ -773,17 +817,16 @@ public:
 	d_cg_rwy_rwy_v[2] = h;
     } */
 
-    FG_VECTOR_3    d_pilot_rwy_local_v;  // pilot rel. to rwy in local coords
     // inline double * get_D_pilot_rwy_local_v() { return d_pilot_rwy_local_v; }
     // inline double get_D_pilot_north_of_rwy() const {
-	//return d_pilot_rwy_local_v[0];
-  //  }
+    //   return d_pilot_rwy_local_v[0];
+    // }
     // inline double get_D_pilot_east_of_rwy() const {
-//	return d_pilot_rwy_local_v[1];
-//    }
+    //   return d_pilot_rwy_local_v[1];
+    // }
     // inline double get_D_pilot_above_rwy() const {
-	//return d_pilot_rwy_local_v[2];
- //   }
+    //   return d_pilot_rwy_local_v[2];
+    // }
     /* inline void set_Pilot_Rwy_Local( double north, double east, double above )
     {
 	d_pilot_rwy_local_v[0] = north;
@@ -791,7 +834,6 @@ public:
 	d_pilot_rwy_local_v[2] = above;
     } */
 
-    FG_VECTOR_3   d_pilot_rwy_rwy_v;   // pilot rel. to rwy, in rwy coords.
     // inline double * get_D_pilot_rwy_rwy_v() { return d_pilot_rwy_rwy_v; }
     // inline double get_X_pilot_rwy() const { return d_pilot_rwy_rwy_v[0]; }
     // inline double get_Y_pilot_rwy() const { return d_pilot_rwy_rwy_v[1]; }
@@ -803,12 +845,9 @@ public:
 	d_pilot_rwy_rwy_v[2] = h;
     } */
 
-    double        climb_rate;           // in feet per second
     inline double get_Climb_Rate() const { return climb_rate; }
     inline void set_Climb_Rate(double rate) { climb_rate = rate; }
 
-    FGTimeStamp valid_stamp;       // time this record is valid
-    FGTimeStamp next_stamp;       // time this record is valid
     inline FGTimeStamp get_time_stamp() const { return valid_stamp; }
     inline void stamp_time() { valid_stamp = next_stamp; next_stamp.stamp(); }
 
@@ -816,8 +855,6 @@ public:
     void extrapolate( int time_offset );
 
     // sin/cos lat_geocentric
-    double sin_lat_geocentric;
-    double cos_lat_geocentric;
     inline void set_sin_lat_geocentric(double parm) {
 	sin_lat_geocentric = sin(parm);
     }
@@ -831,8 +868,6 @@ public:
 	return cos_lat_geocentric;
     }
 
-    double sin_longitude;
-    double cos_longitude;
     inline void set_sin_cos_longitude(double parm) {
 	sin_longitude = sin(parm);
 	cos_longitude = cos(parm);
@@ -843,9 +878,7 @@ public:
     inline double get_cos_longitude(void) const {
 	return cos_longitude;
     }
-	
-    double sin_latitude;
-    double cos_latitude;
+
     inline void set_sin_cos_latitude(double parm) {
 	sin_latitude = sin(parm);
 	cos_latitude = cos(parm);

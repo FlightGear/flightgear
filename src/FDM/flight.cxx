@@ -47,18 +47,49 @@ FGInterface *cur_fdm_state;
 FGInterface base_fdm_state;
 
 
+// Constructor
+FGInterface::FGInterface(void) {
+   mass=i_xx=i_yy=i_zz=i_xz=0;
+   nlf=0;  
+   v_rel_wind=v_true_kts=v_rel_ground=v_inertial=0;
+   v_ground_speed=v_equiv=v_equiv_kts=0;
+   v_calibrated=v_calibrated_kts=0;
+   gravity=0;            
+   centrifugal_relief=0; 
+   alpha=beta=alpha_dot=beta_dot=0;   
+   cos_alpha=sin_alpha=cos_beta=sin_beta=0;
+   cos_phi=sin_phi=cos_theta=sin_theta=cos_psi=sin_psi=0;
+   gamma_vert_rad=gamma_horiz_rad=0;    
+   sigma=density=v_sound=mach_number=0;
+   static_pressure=total_pressure=impact_pressure=0;
+   dynamic_pressure=0;
+   static_temperature=total_temperature=0;
+   sea_level_radius=earth_position_angle=0;
+   runway_altitude=runway_latitude=runway_longitude=0;
+   runway_heading=0;
+   radius_to_rwy=0;
+   climb_rate=0;           
+   sin_lat_geocentric=cos_lat_geocentric=0;
+   sin_longitude=cos_longitude=0;
+}  
+
+
+// Destructor
+FGInterface::~FGInterface() {
+}
+
+
 int FGInterface::init( double dt ) {
     cout << "dummy init() ... SHOULDN'T BE CALLED!" << endl;
     return 0;
 }
+
 
 int FGInterface::update( int multi_loop ) {
     cout << "dummy update() ... SHOULDN'T BE CALLED!" << endl;
     return 0;
 }
 
-FGInterface::~FGInterface() {
-}
 
 // Extrapolate fdm based on time_offset (in usec)
 void FGInterface::extrapolate( int time_offset ) {

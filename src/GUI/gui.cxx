@@ -1560,7 +1560,9 @@ void guiInit()
     mainMenuBar -> add_submenu ("Environment", environmentSubmenu, environmentSubmenuCb);
     // mainMenuBar -> add_submenu ("Options", optionsSubmenu, optionsSubmenuCb);
 #ifdef FG_NETWORK_OLK
-    mainMenuBar -> add_submenu ("Network", networkSubmenu, networkSubmenuCb);
+    if ( current_options.get_network_olk() ) {
+    	mainMenuBar -> add_submenu ("Network", networkSubmenu, networkSubmenuCb);
+    }
 #endif
     mainMenuBar -> add_submenu ("Help", helpSubmenu, helpSubmenuCb);
     mainMenuBar-> close ();

@@ -1044,6 +1044,8 @@ void fgOPTIONS::usage ( void ) {
     cout << "" << endl;
 
     cout << "Network Options:" << endl;
+    cout << "\t--enable-network-olk:  enable Multipilot mode" << endl;
+    cout << "\t--disable-network-olk:  disable Multipilot mode (default)" << endl;
     cout << "\t--net-hud:  Hud displays network info" << endl;
     cout << "\t--net-id=name:  specify your own callsign" << endl;
 #endif
