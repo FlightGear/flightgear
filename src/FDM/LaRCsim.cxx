@@ -35,6 +35,7 @@
 #include "LaRCsim.hxx"
 
 
+#define USE_NEW_ENGINE_CODE 1
 FGEngine eng;
 
 
@@ -87,12 +88,12 @@ int FGLaRCsim::update( int multiloop ) {
 #ifdef USE_NEW_ENGINE_CODE
     // update simple engine model
     eng.set_IAS( V_calibrated_kts );
-    eng.set_Throttle_Lever_Pos( Throttle_pct * 100.0 );
+    eng.set_Throttle_Lever_Pos( controls.get_throttle( 0 ) * 100.0 );
     eng.set_Propeller_Lever_Pos( 95 );
     eng.set_Mixture_Lever_Pos( 100 );
     eng.update();
     cout << "  Thrust = " << eng.get_FGProp1_Thrust() << endl;
-    F_X_engine = eng.get_FGProp1_Thrust() * 7;
+    F_X_engine = eng.get_FGProp1_Thrust() * 1.5;
 #endif
 
     double save_alt = 0.0;

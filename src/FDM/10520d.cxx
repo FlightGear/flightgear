@@ -64,9 +64,7 @@ float FGEngine::Calc_Engine_RPM (float LeverPosition)
     // Calculate RPM as set by Prop Lever Position. Assumes engine
     // will run at 1000 RPM at full course
     
-    float RPM;
-    RPM = LeverPosition * Max_RPM / 100.0;
-    // * ((FGEng_Max_RPM + FGEng_Min_RPM) / 100);
+    float RPM = LeverPosition * (Max_RPM - Min_RPM) /100 + Min_RPM ;
     
     if ( RPM >= Max_RPM ) {
 	RPM = Max_RPM;
@@ -110,7 +108,7 @@ void FGEngine::init() {
     // Initialise Engine Variables used by this instance
     Percentage_Power = 0;
     Manifold_Pressure = 29.00; // Inches
-    RPM = 2700;
+    RPM = 500;
     Fuel_Flow = 0;	// lbs/hour
     Torque = 0;
     CHT = 370;
@@ -132,6 +130,7 @@ void FGEngine::init() {
     Alpha1 = 13.5;
     FGProp1_Blade_Angle = 13.5;
     FGProp_Fine_Pitch_Stop = 13.5;
+    FGProp_Course_Pitch_Stop = 55;
 
     // Other internal values
     Rho = 0.002378;
@@ -176,46 +175,43 @@ static float Calc_CHT (float Fuel_Flow, float Mixture, float IAS)
 // Calculate Density Ratio
 static float Density_Ratio ( float x )
 {
-    float y ;
-    y = ((3E-10 * x * x) - (3E-05 * x) + 0.9998);
-    return(y);
+    float y = ((3E-10 * x * x) - (3E-05 * x) + 0.9998);
+    return y;
 }
 
 
 // Calculate Air Density - Rho
 static float Density ( float x )
 {
-    float y ;
-    y = ((9E-08 * x * x) - (7E-08 * x) + 0.0024);
-    return(y);
+    float y = ((9E-08 * x * x) - (7E-08 * x) + 0.0024);
+    return y;
 }
 
 
 // Calculate Speed in FPS given Knots CAS
-static float IAS_to_FPS (float x)
+static float IAS_to_FPS (float ias)
 {
-    float y;
-    y = x * 1.68888888;
-    return y;
+    return ias * 1.68888888;
 }
 
 
 // update the engine model based on current control positions
 void FGEngine::update() {
     // Declare local variables
-    int num = 0;
-    const int num2 = 1;		// default is 100, number if iterations to run
+    int num = 0; // Not used. Counting variables
+    int num2 = 100;  // Not used.
     float ManXRPM = 0;
     float Vo = 0;
     float V1 = 0;
 
-
     // Set up the new variables
     float Blade_Station = 30;
+    float Rho =	0.002378;
     float FGProp_Area = 1.405/3;
     float PI = 3.1428571;
 
     // Input Variables
+    // float IAS = 0; 
 
     // 0 = Closed, 100 = Fully Open
     // float Throttle_Lever_Pos = 75;
@@ -226,7 +222,7 @@ void FGEngine::update() {
 
     // Environmental Variables
 
-    // Temp Variation from ISA (Deg F)
+   // Temp Variation from ISA (Deg F)
     float FG_ISA_VAR = 0;
     // Pressure Altitude  1000's of Feet
     float FG_Pressure_Ht = 0;
@@ -269,48 +265,44 @@ void FGEngine::update() {
 
     Manifold_Pressure = 
 	Calc_Manifold_Pressure( Throttle_Lever_Pos, Max_Manifold_Pressure );
-    // cout << "manifold pressure = " << Manifold_Pressure << endl;
+    cout << "manifold pressure = " << Manifold_Pressure << endl;
 
  
-    // Calculate Manifold Pressure (Engine 2) as set by throttle opening
-
-    // FGEng2_Manifold_Pressure = Manifold_Pressure(FGEng2_Throttle_Lever_Pos, FGEng2_Manifold_Pressure);
-    // Show_Manifold_Pressure(FGEng2_Manifold_Pressure);
-
     RPM = Calc_Engine_RPM(Propeller_Lever_Pos);
     // cout << "Engine RPM = " << RPM << endl;
 
     Desired_RPM = RPM;
+    cout << "Desired RPM = " << Desired_RPM << endl;
 
     //==================================================================
     // Engine Power & Torque Calculations
 
     // Loop until stable - required for testing only
     for (num = 0; num < num2; num++) {
-	// cout << Manifold_Pressure << " Inches" << "\t";
-	// cout << RPM << "  RPM" << "\t";
+	// cout << endl << "====================" << endl;
+	// cout << "MP Inches = " << Manifold_Pressure << "\t";
+	// cout << "  RPM = " << RPM << "\t";
 
 	// For a given Manifold Pressure and RPM calculate the % Power
 	// Multiply Manifold Pressure by RPM
 	ManXRPM = Manifold_Pressure * RPM;
-	//	cout << ManXRPM;
-	// cout << endl;
+	// cout << ManXRPM << endl;
 
 	//  Calculate % Power
 	Percentage_Power = (+ 7E-09 * ManXRPM * ManXRPM) 
 	    + ( + 7E-04 * ManXRPM) - 0.1218;
-	// cout << Percentage_Power <<  "%" << "\t";
+	// cout << "percent power = " << Percentage_Power <<  "%" << "\t";
 
 	// Adjust for Temperature - Temperature above Standard decrease
 	// power % by 7/120 per degree F increase, and incease power for
 	// temps below at the same ratio
 	Percentage_Power = Percentage_Power - (FG_ISA_VAR * 7 /120);
-	// cout << Percentage_Power <<  "%" << "\t";
+	// cout << " adjusted T = " << Percentage_Power <<  "%" << "\t";
     
 	// Adjust for Altitude. In this version a linear variation is
 	// used. Decrease 1% for each 1000' increase in Altitde
 	Percentage_Power = Percentage_Power + (FG_Pressure_Ht * 12/10000);	
-	// cout << Percentage_Power <<  "%" << "\t";
+	// cout << " adjusted A = " << Percentage_Power <<  "%" << "\t";
 
 	// Now Calculate Fuel Flow based on % Power Best Power Mixture
 	Fuel_Flow = Percentage_Power * Max_Fuel_Flow / 100.0;
@@ -327,8 +319,8 @@ void FGEngine::update() {
 
 	    Percentage_Power = Percentage_Power * 
 		((100.0 - Mag_Derate_Percent)/100.0);
-	    //  cout << FGEng1_Percentage_Power <<  "%" << "\t";
 	}	
+	// cout << "Final engine % power = " <<  Percentage_Power << "%" << endl;
 
 	// Calculate Engine Horsepower
 
@@ -357,7 +349,7 @@ void FGEngine::update() {
 
 	//Radial Flow Vector (V2) Ft/sec at Ref Blade Station (usually 30")
 	FGProp1_Angular_V = FGProp1_RPS * 2 * PI * (Blade_Station / 12);
-	//  cout << FGProp1_Angular_V << "Angular Velocity "  << endl;
+	// cout << "Angular Velocity " << FGProp1_Angular_V << endl;
 
 	// Axial Flow Vector (Vo) Ft/sec
 	// Some further work required here to allow for inflow at low speeds
@@ -370,18 +362,23 @@ void FGEngine::update() {
 	// Relative Velocity (V1)
 	V1 = sqrt((FGProp1_Angular_V * FGProp1_Angular_V) +
 		  (Vo * Vo));
-	// cout << V1 << "Relative Velocity " << endl;
+	// cout << "Relative Velocity " << V1 << endl;
+
+	if ( FGProp1_Blade_Angle >= FGProp_Course_Pitch_Stop )  {
+	    FGProp1_Blade_Angle = FGProp_Course_Pitch_Stop;
+	}
 
 	// cout << FGProp1_Blade_Angle << " Prop Blade Angle" << endl;
 
 	// Blade Angle of Attack (Alpha1)
 
-	cout << "  Alpha1 = " << Alpha1
-	     << "  Blade angle = " << FGProp1_Blade_Angle
-	     << "  Vo = " << Vo
-	     << "  FGProp1_Angular_V = " << FGProp1_Angular_V << endl;
 	Alpha1 = FGProp1_Blade_Angle -(atan(Vo / FGProp1_Angular_V) * (180/PI));
 	// cout << Alpha1 << " Alpha1" << endl;
+
+	// cout << "  Alpha1 = " << Alpha1
+	//      << "  Blade angle = " << FGProp1_Blade_Angle
+	//      << "  Vo = " << Vo
+	//      << "  FGProp1_Angular_V = " << FGProp1_Angular_V << endl;
 
 	// Calculate Coefficient of Drag at Alpha1
 	FGProp1_Coef_Drag = (0.0005 * (Alpha1 * Alpha1)) + (0.0003 * Alpha1)
@@ -401,21 +398,20 @@ void FGEngine::update() {
 			  * ((FGProp1_Coef_Lift * sin(Alpha1 * PI / 180))
 			     + (FGProp1_Coef_Drag * cos(Alpha1 * PI / 180))))
 	    * (Blade_Station/12);
-	// cout <<  FGProp1_Torque << " Prop Torque" << endl;
+	// cout << "Prop Torque = " << FGProp1_Torque << endl;
 
 	//  Calculate Prop Thrust
 	// cout << "  V1 = " << V1 << "  Alpha1 = " << Alpha1 << endl;
 	FGProp1_Thrust = 0.5 * Rho * (V1 * V1) * FGProp_Area
 	    * ((FGProp1_Coef_Lift * cos(Alpha1 * PI / 180))
 	       - (FGProp1_Coef_Drag * sin(Alpha1 * PI / 180)));
-	// cout << FGProp1_Thrust << " Prop Thrust " <<  endl;
+	// cout << " Prop Thrust = " << FGProp1_Thrust <<  endl;
 
 	// End of Propeller Calculations   
 	//==============================================================
 
 
 
-#if 0	
 	Torque_Imbalance = FGProp1_Torque - Torque; 
 	//  cout <<  Torque_Imbalance << endl;
 
@@ -437,7 +433,6 @@ void FGEngine::update() {
 	if (RPM >= 2700) {
 	    RPM = 2700;
 	}
-#endif
 
 
 	// cout << FGEng1_RPM << " Blade_Angle  " << FGProp1_Blade_Angle << endl << endl;

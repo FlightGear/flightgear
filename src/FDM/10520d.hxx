@@ -104,6 +104,7 @@ private:
     float Alpha1;
     float FGProp1_Blade_Angle;
     float FGProp_Fine_Pitch_Stop;
+    float FGProp_Course_Pitch_Stop;
 
     // Other internal values
     float Rho;
