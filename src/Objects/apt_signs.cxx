@@ -65,6 +65,7 @@ ssgBranch *gen_taxi_sign( const string path, const string content ) {
 	point_list normals; normals.clear();
 	point_list texcoords; texcoords.clear();
 	int_list vertex_index; vertex_index.clear();
+	int_list normal_index; normal_index.clear();
 	int_list tex_index; tex_index.clear();
 
 	nodes.push_back( Point3D( -offset + i, 0, 0.25 ) );
@@ -72,9 +73,6 @@ ssgBranch *gen_taxi_sign( const string path, const string content ) {
 	nodes.push_back( Point3D( -offset + i, 0, 1.25 ) );
 	nodes.push_back( Point3D( -offset + i + 1, 0, 1.25 ) );
 
-	normals.push_back( Point3D( 0, -1, 0 ) );
-	normals.push_back( Point3D( 0, -1, 0 ) );
-	normals.push_back( Point3D( 0, -1, 0 ) );
 	normals.push_back( Point3D( 0, -1, 0 ) );
 
 	texcoords.push_back( Point3D( 0, 0, 0 ) );
@@ -87,6 +85,11 @@ ssgBranch *gen_taxi_sign( const string path, const string content ) {
 	vertex_index.push_back( 2 );
 	vertex_index.push_back( 3 );
 
+	normal_index.push_back( 0 );
+	normal_index.push_back( 0 );
+	normal_index.push_back( 0 );
+	normal_index.push_back( 0 );
+
 	tex_index.push_back( 0 );
 	tex_index.push_back( 1 );
 	tex_index.push_back( 2 );
@@ -94,7 +97,7 @@ ssgBranch *gen_taxi_sign( const string path, const string content ) {
 
 	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, material,
 				  nodes, normals, texcoords,
-				  vertex_index, tex_index,
+				  vertex_index, normal_index, tex_index,
 				  false, NULL );
 
 	object->addKid( leaf );
@@ -119,6 +122,7 @@ ssgBranch *gen_runway_sign( const string path, const string name ) {
     point_list normals; normals.clear();
     point_list texcoords; texcoords.clear();
     int_list vertex_index; vertex_index.clear();
+    int_list normal_index; normal_index.clear();
     int_list tex_index; tex_index.clear();
 
     nodes.push_back( Point3D( -width, 0, 0.25 ) );
@@ -126,9 +130,6 @@ ssgBranch *gen_runway_sign( const string path, const string name ) {
     nodes.push_back( Point3D( -width, 0, 1.25 ) );
     nodes.push_back( Point3D( width + 1, 0, 1.25 ) );
 
-    normals.push_back( Point3D( 0, -1, 0 ) );
-    normals.push_back( Point3D( 0, -1, 0 ) );
-    normals.push_back( Point3D( 0, -1, 0 ) );
     normals.push_back( Point3D( 0, -1, 0 ) );
 
     texcoords.push_back( Point3D( 0, 0, 0 ) );
@@ -141,6 +142,11 @@ ssgBranch *gen_runway_sign( const string path, const string name ) {
     vertex_index.push_back( 2 );
     vertex_index.push_back( 3 );
 
+    normal_index.push_back( 0 );
+    normal_index.push_back( 0 );
+    normal_index.push_back( 0 );
+    normal_index.push_back( 0 );
+
     tex_index.push_back( 0 );
     tex_index.push_back( 1 );
     tex_index.push_back( 2 );
@@ -148,7 +154,7 @@ ssgBranch *gen_runway_sign( const string path, const string name ) {
 
     ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, material,
 			      nodes, normals, texcoords,
-			      vertex_index, tex_index,
+			      vertex_index, normal_index, tex_index,
 			      false, NULL );
 
     object->addKid( leaf );

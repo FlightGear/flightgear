@@ -753,6 +753,7 @@ ssgLeaf *gen_leaf( const string& path,
 		   const point_list& nodes, const point_list& normals,
 		   const point_list& texcoords,
 		   const int_list node_index,
+		   const int_list normal_index,
 		   const int_list& tex_index,
 		   const bool calc_lights, ssgVertexArray *lights )
 {
@@ -824,25 +825,30 @@ ssgLeaf *gen_leaf( const string& path,
 	vl -> add( tmp3 );
     }
 
+    // normals
+    Point3D normal;
+    ssgNormalArray *nl = new ssgNormalArray( size );
+    if ( normal_index.size() ) {
+	// object file specifies normal indices (i.e. normal indices
+	// aren't 'implied'
+        for ( i = 0; i < size; ++i ) {
+            normal = normals[ normal_index[i] ];
+            sgSetVec3( tmp3, normal[0], normal[1], normal[2] );
+            nl -> add( tmp3 );
+        }
+    } else {
+	// use implied normal indices.  normal index = vertex index.
+	for ( i = 0; i < size; ++i ) {
+	    normal = normals[ node_index[i] ];
+	    sgSetVec3( tmp3, normal[0], normal[1], normal[2] );
+	    nl -> add( tmp3 );
+	}
+    }
+
     // colors
     ssgColourArray *cl = new ssgColourArray( 1 );
     sgSetVec4( tmp4, 1.0, 1.0, 1.0, 1.0 );
     cl->add( tmp4 );
-
-    // normals
-    Point3D normal;
-    ssgNormalArray *nl = new ssgNormalArray( size );
-    if ( normals.size() == 1 ) {
-        normal = normals[ 0 ];
-        sgSetVec3( tmp3, normal[0], normal[1], normal[2] );
-        nl -> add( tmp3 );
-    } else if ( normals.size() > 1 ) {
-        for ( i = 0; i < size; ++i ) {
-            normal = normals[ node_index[i] ];
-            sgSetVec3( tmp3, normal[0], normal[1], normal[2] );
-            nl -> add( tmp3 );
-        }
-    }
 
     // texture coordinates
     size = tex_index.size();
@@ -931,6 +937,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 
     string material, tmp_mat;
     int_list vertex_index;
+    int_list normal_index;
     int_list tex_index;
 
     int i;
@@ -939,6 +946,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     // generate points
     string_list pt_materials = obj.get_pt_materials();
     group_list pts_v = obj.get_pts_v();
+    group_list pts_n = obj.get_pts_n();
     for ( i = 0; i < (int)pts_v.size(); ++i ) {
         cout << "pts_v.size() = " << pts_v.size() << endl;
 	tmp_mat = pt_materials[i];
@@ -952,7 +960,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 	tex_index.clear();
 	ssgLeaf *leaf = gen_leaf( path, GL_POINTS, material,
 				  nodes, normals, texcoords,
-				  vertex_index, tex_index,
+				  vertex_index, normal_index, tex_index,
 				  false, ground_lights );
 
 	if ( is_lighting ) {
@@ -965,14 +973,16 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     // generate triangles
     string_list tri_materials = obj.get_tri_materials();
     group_list tris_v = obj.get_tris_v();
+    group_list tris_n = obj.get_tris_n();
     group_list tris_tc = obj.get_tris_tc();
     for ( i = 0; i < (int)tris_v.size(); ++i ) {
 	material = tri_materials[i];
 	vertex_index = tris_v[i];
+	normal_index = tris_n[i];
 	tex_index = tris_tc[i];
 	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLES, material,
 				  nodes, normals, texcoords,
-				  vertex_index, tex_index,
+				  vertex_index, normal_index, tex_index,
 				  is_base, ground_lights );
 
 	geometry->addKid( leaf );
@@ -981,14 +991,16 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     // generate strips
     string_list strip_materials = obj.get_strip_materials();
     group_list strips_v = obj.get_strips_v();
+    group_list strips_n = obj.get_strips_n();
     group_list strips_tc = obj.get_strips_tc();
     for ( i = 0; i < (int)strips_v.size(); ++i ) {
 	material = strip_materials[i];
 	vertex_index = strips_v[i];
+	normal_index = strips_n[i];
 	tex_index = strips_tc[i];
 	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_STRIP, material,
 				  nodes, normals, texcoords,
-				  vertex_index, tex_index,
+				  vertex_index, normal_index, tex_index,
 				  is_base, ground_lights );
 
 	geometry->addKid( leaf );
@@ -997,14 +1009,16 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     // generate fans
     string_list fan_materials = obj.get_fan_materials();
     group_list fans_v = obj.get_fans_v();
+    group_list fans_n = obj.get_fans_n();
     group_list fans_tc = obj.get_fans_tc();
     for ( i = 0; i < (int)fans_v.size(); ++i ) {
 	material = fan_materials[i];
 	vertex_index = fans_v[i];
+	normal_index = fans_n[i];
 	tex_index = fans_tc[i];
 	ssgLeaf *leaf = gen_leaf( path, GL_TRIANGLE_FAN, material,
 				  nodes, normals, texcoords,
-				  vertex_index, tex_index,
+				  vertex_index, normal_index, tex_index,
 				  is_base, ground_lights );
 
 	geometry->addKid( leaf );

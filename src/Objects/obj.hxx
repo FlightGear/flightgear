@@ -82,6 +82,7 @@ ssgLeaf *gen_leaf( const string& path,
 		   const point_list& nodes, const point_list& normals,
 		   const point_list& texcoords,
 		   const int_list node_index,
+		   const int_list normal_index,
 		   const int_list& tex_index,
 		   const bool calc_lights, ssgVertexArray *lights );
 
