@@ -16,7 +16,8 @@ typedef enum {
     FG_EVENT     = 0x00000200,
     FG_AIRCRAFT  = 0x00000400,
     FG_AUTOPILOT = 0x00000800,
-    FG_UNDEFD    = 0x00001000, // For range checking
+    FG_SERIAL    = 0x00001000,
+    FG_UNDEFD    = 0x00002000, // For range checking
 
     FG_ALL     = 0xFFFFFFFF
 } fgDebugClass;
