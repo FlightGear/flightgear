@@ -92,7 +92,12 @@ void FGAIPlane::Update(double dt) {
 		_max_count = 5.0;		// FIXME - hardwired length of message - need to calculate it!
 		
 		//cout << "Transmission = " << pending_transmission << '\n';
-		if(freq == user_freq0 || freq == user_freq1) {
+
+		// The radios dialog seems to set slightly imprecise freqs, eg 118.099998
+		// The eplison stuff below is a work-around
+		double eps0 = fabs(freq - user_freq0);
+		double eps1 = fabs(freq - user_freq1);
+		if(eps0 < 0.002 || eps1 < 0.002) {
 			//cout << "Transmitting..." << endl;
 			// we are on the same frequency, so check distance to the user plane
 			if(1) {
