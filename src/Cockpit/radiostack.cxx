@@ -27,6 +27,30 @@
 
 #include "radiostack.hxx"
 
+/**
+ * Boy, this is ugly!  Make the VOR range vary by altitude difference.
+ */
+static inline double
+kludgeRange (double stationElev, double aircraftElev, double nominalRange)
+{
+				// Assume that the nominal range (usually
+				// 50nm) applies at a 5,000 ft difference.
+				// Just a wild guess!
+  double factor = ((aircraftElev*METER_TO_FEET) - stationElev) / 5000.0;
+  double range = fabs(nominalRange * factor);
+
+				// Clamp the range to keep it sane; for
+				// now, never less than 25% or more than
+				// 500% of nominal range.
+  if (range < nominalRange/4.0) {
+    range = nominalRange/4.0;
+  } else if (range > nominalRange*5.0) {
+    range = nominalRange*5.0;
+  }
+
+  return range;
+}
+
 
 FGRadioStack *current_radiostack;
 
@@ -205,7 +229,7 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
 	nav1_loclon = nav.get_lon();
 	nav1_loclat = nav.get_lat();
 	nav1_elev = nav.get_elev();
-	nav1_effective_range = nav.get_range();
+	nav1_effective_range = kludgeRange(nav1_elev, elev, nav.get_range());
 	nav1_target_gs = 0.0;
 	nav1_radial = nav1_sel_radial;
 	nav1_x = nav1_dme_x = nav.get_x();
@@ -251,7 +275,7 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
 	nav2_loclon = nav.get_lon();
 	nav2_loclat = nav.get_lat();
 	nav2_elev = nav.get_elev();
-	nav2_effective_range = nav.get_range();
+	nav2_effective_range = kludgeRange(nav2_elev, elev, nav.get_range());
 	nav2_target_gs = 0.0;
 	nav2_radial = nav2_sel_radial;
 	nav2_x = nav2_dme_x = nav.get_x();
@@ -271,7 +295,7 @@ void FGRadioStack::search( double lon, double lat, double elev ) {
 	adf_lon = nav.get_lon();
 	adf_lat = nav.get_lat();
 	adf_elev = nav.get_elev();
-	adf_effective_range = nav.get_range();
+	adf_effective_range = kludgeRange(adf_elev, elev, nav.get_range());
 	adf_x = nav.get_x();
 	adf_y = nav.get_y();
 	adf_z = nav.get_z();

@@ -131,7 +131,7 @@ bool FGNavList::query( double lon, double lat, double elev, double freq,
 	// cout << "  dist = " << sqrt(d)
 	//      << "  range = " << current->get_range() * NM_TO_METER << endl;
 	if ( d < (current->get_range() * NM_TO_METER 
-		  * current->get_range() * NM_TO_METER) ) {
+		  * current->get_range() * NM_TO_METER * 5.0) ) {
 	    // cout << "matched = " << current->get_ident() << endl;
 	    *n = *current;
 	    return true;
