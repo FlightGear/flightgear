@@ -41,12 +41,6 @@
 #include "pluto.hxx"
 
 
-extern fgLIGHT cur_light_params;
-extern fgTIME  cur_time_params;
-extern fgVIEW  current_view;
-
-
-
 class SolarSystem
 {
 private:

@@ -123,15 +123,12 @@ fgTILECACHE::entry_free( int index )
 int
 fgTILECACHE::next_avail( void )
 {
-    fgVIEW *v;
-    Point3D delta;
+    Point3D delta, abs_view_pos;
     int i;
     float max, med, min, tmp;
     float dist, max_dist;
     int max_index;
     
-    v = &current_view;
-
     max_dist = 0.0;
     max_index = 0;
 
@@ -140,14 +137,16 @@ fgTILECACHE::next_avail( void )
 	    return(i);
 	} else {
 	    // calculate approximate distance from view point
+	    abs_view_pos = current_view.get_abs_view_pos();
+
 	    FG_LOG( FG_TERRAIN, FG_DEBUG,
-		    "DIST Abs view pos = " << v->abs_view_pos );
+		    "DIST Abs view pos = " << abs_view_pos );
 	    FG_LOG( FG_TERRAIN, FG_DEBUG,
 		    "    ref point = " << tile_cache[i].center );
 
-	    delta.setx( fabs(tile_cache[i].center.x() - v->abs_view_pos.x() ) );
-	    delta.sety( fabs(tile_cache[i].center.y() - v->abs_view_pos.y() ) );
-	    delta.setz( fabs(tile_cache[i].center.z() - v->abs_view_pos.z() ) );
+	    delta.setx( fabs(tile_cache[i].center.x() - abs_view_pos.x() ) );
+	    delta.sety( fabs(tile_cache[i].center.y() - abs_view_pos.y() ) );
+	    delta.setz( fabs(tile_cache[i].center.z() - abs_view_pos.z() ) );
 
 	    max = delta.x(); med = delta.y(); min = delta.z();
 	    if ( max < med ) {
@@ -182,6 +181,10 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.21  1998/12/09 18:50:32  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.20  1998/11/09 23:40:49  curt
 // Bernie Bright <bbright@c031.aone.net.au> writes:
 // I've made some changes to the Scenery handling.  Basically just tidy ups.

@@ -43,16 +43,16 @@
 
 
 // This is a record containing current view parameters
-fgVIEW current_view;
+FGView current_view;
 
 
 // Constructor
-fgVIEW::fgVIEW( void ) {
+FGView::FGView( void ) {
 }
 
 
 // Initialize a view structure
-void fgVIEW::Init( void ) {
+void FGView::Init( void ) {
     FG_LOG( FG_VIEW, FG_INFO, "Initializing View parameters" );
 
     view_offset = 0.0;
@@ -66,7 +66,7 @@ void fgVIEW::Init( void ) {
 
 
 // Update the field of view parameters
-void fgVIEW::UpdateFOV( fgOPTIONS *o ) {
+void FGView::UpdateFOV( fgOPTIONS *o ) {
     double fov, theta_x, theta_y;
 
     fov = o->get_fov();
@@ -101,7 +101,7 @@ void fgVIEW::UpdateFOV( fgOPTIONS *o ) {
 // Basically, this is a modified version of the Mesa gluLookAt()
 // function that's been modified slightly so we can capture the
 // result before sending it off to OpenGL land.
-void fgVIEW::LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
+void FGView::LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 		     GLdouble centerx, GLdouble centery, GLdouble centerz,
 		     GLdouble upx, GLdouble upy, GLdouble upz ) {
     GLdouble *m;
@@ -184,7 +184,7 @@ void fgVIEW::LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 
 
 // Update the view volume, position, and orientation
-void fgVIEW::UpdateViewParams( void ) {
+void FGView::UpdateViewParams( void ) {
     FGState *f;
     fgLIGHT *l;
 
@@ -263,7 +263,7 @@ void fgVIEW::UpdateViewParams( void ) {
 
 
 // Update the view parameters
-void fgVIEW::UpdateViewMath( FGState *f ) {
+void FGView::UpdateViewMath( FGState *f ) {
     Point3D p;
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
@@ -426,7 +426,7 @@ void fgVIEW::UpdateViewMath( FGState *f ) {
 
 // Update the "World to Eye" transformation matrix
 // This is most useful for view frustum culling
-void fgVIEW::UpdateWorldToEye( FGState *f ) {
+void FGView::UpdateWorldToEye( FGState *f ) {
     MAT3mat R_Phi, R_Theta, R_Psi, R_Lat, R_Lon, T_view;
     MAT3mat TMP;
     MAT3hvec vec;
@@ -550,7 +550,7 @@ void fgVIEW::UpdateWorldToEye( FGState *f ) {
 // Olson curt@me.umn.edu and Norman Vine nhv@yahoo.com with 'gentle
 // guidance' from Steve Baker sbaker@link.com
 int
-fgVIEW::SphereClip( const Point3D& cp, const double radius )
+FGView::SphereClip( const Point3D& cp, const double radius )
 {
     double x1, y1;
 
@@ -594,11 +594,15 @@ fgVIEW::SphereClip( const Point3D& cp, const double radius )
 
 
 // Destructor
-fgVIEW::~fgVIEW( void ) {
+FGView::~FGView( void ) {
 }
 
 
 // $Log$
+// Revision 1.30  1998/12/09 18:50:28  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.29  1998/12/05 15:54:24  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

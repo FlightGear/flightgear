@@ -154,15 +154,11 @@ int fgInitGeneral( void ) {
 // Returns non-zero if a problem encountered.
 int fgInitSubsystems( void )
 {
-    FGState *f;
-    fgLIGHT *l;
-    fgTIME *t;
-    fgVIEW *v;
+    FGState *f; // assigned later
+    fgLIGHT *l = &cur_light_params;
+    fgTIME *t = &cur_time_params;
+    FGView *v = &current_view;
     Point3D geod_pos, tmp_abs_view_pos;
-
-    l = &cur_light_params;
-    t = &cur_time_params;
-    v = &current_view;
 
     FG_LOG( FG_GENERAL, FG_INFO, "Initialize Subsystems");
     FG_LOG( FG_GENERAL, FG_INFO, "========== ==========");
@@ -282,7 +278,7 @@ int fgInitSubsystems( void )
     v->Init();
     FG_LOG( FG_GENERAL, FG_DEBUG, "After v->init()");
     v->UpdateViewMath(f);
-    FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << v->abs_view_pos );
+    FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << v->get_abs_view_pos());
     v->UpdateWorldToEye(f);
 
     // Build the solar system
@@ -385,6 +381,10 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.58  1998/12/09 18:50:25  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.57  1998/12/06 14:52:56  curt
 // Fixed a problem with the initial starting altitude.  "v->abs_view_pos" wasn't
 // being calculated correctly at the beginning causing the first terrain

@@ -71,7 +71,7 @@ static void local_update_sky_and_lighting_params( void ) {
 void GLUTkey(unsigned char k, int x, int y) {
     FGState *f;
     fgTIME *t;
-    fgVIEW *v;
+    FGView *v;
     FGWeather *w;
     float fov, tmp;
     static bool winding_ccw = true;
@@ -109,28 +109,28 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    fgAPToggleTerrainFollow();
 	    return;
 	case 49: // numeric keypad 1
-	    v->goal_view_offset = FG_PI * 0.75;
+	    v->set_goal_view_offset( FG_PI * 0.75 );
 	    return;
 	case 50: // numeric keypad 2
-	    v->goal_view_offset = FG_PI;
+	    v->set_goal_view_offset( FG_PI );
 	    return;
 	case 51: // numeric keypad 3
-	    v->goal_view_offset = FG_PI * 1.25;
+	    v->set_goal_view_offset( FG_PI * 1.25 );
 	    return;
 	case 52: // numeric keypad 4
-	    v->goal_view_offset = FG_PI * 0.50;
+	    v->set_goal_view_offset( FG_PI * 0.50 );
 	    return;
 	case 54: // numeric keypad 6
-	    v->goal_view_offset = FG_PI * 1.50;
+	    v->set_goal_view_offset( FG_PI * 1.50 );
 	    return;
 	case 55: // numeric keypad 7
-	    v->goal_view_offset = FG_PI * 0.25;
+	    v->set_goal_view_offset( FG_PI * 0.25 );
 	    return;
 	case 56: // numeric keypad 8
-	    v->goal_view_offset = 0.00;
+	    v->set_goal_view_offset( 0.00 );
 	    return;
 	case 57: // numeric keypad 9
-	    v->goal_view_offset = FG_PI * 1.75;
+	    v->set_goal_view_offset( FG_PI * 1.75 );
 	    return;
 	case 72: // H key
 	    // status = current_options.get_hud_status();
@@ -164,7 +164,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 		fov = FG_FOV_MAX;
 	    }
 	    current_options.set_fov(fov);
-	    v->update_fov = TRUE;
+	    v->set_update_fov( true );
 	    return;
 	case 90: // Z key
 	    tmp = w->get_visibility();   // in meters
@@ -250,7 +250,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 		fov = FG_FOV_MIN;
 	    }
 	    current_options.set_fov(fov);
-	    v->update_fov = TRUE;
+	    v->set_update_fov( true );
 	    return;
 	case 122: // z key
 	    tmp = w->get_visibility();   // in meters
@@ -271,7 +271,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 
 // Handle "special" keyboard events
 void GLUTspecialkey(int k, int x, int y) {
-    fgVIEW *v;
+    FGView *v;
 
     v = &current_view;
 
@@ -282,28 +282,28 @@ void GLUTspecialkey(int k, int x, int y) {
 	FG_LOG( FG_INPUT, FG_DEBUG, " SHIFTED" );
 	switch (k) {
 	case GLUT_KEY_END: // numeric keypad 1
-	    v->goal_view_offset = FG_PI * 0.75;
+	    v->set_goal_view_offset( FG_PI * 0.75 );
 	    return;
 	case GLUT_KEY_DOWN: // numeric keypad 2
-	    v->goal_view_offset = FG_PI;
+	    v->set_goal_view_offset( FG_PI );
 	    return;
 	case GLUT_KEY_PAGE_DOWN: // numeric keypad 3
-	    v->goal_view_offset = FG_PI * 1.25;
+	    v->set_goal_view_offset( FG_PI * 1.25 );
 	    return;
 	case GLUT_KEY_LEFT: // numeric keypad 4
-	    v->goal_view_offset = FG_PI * 0.50;
+	    v->set_goal_view_offset( FG_PI * 0.50 );
 	    return;
 	case GLUT_KEY_RIGHT: // numeric keypad 6
-	    v->goal_view_offset = FG_PI * 1.50;
+	    v->set_goal_view_offset( FG_PI * 1.50 );
 	    return;
 	case GLUT_KEY_HOME: // numeric keypad 7
-	    v->goal_view_offset = FG_PI * 0.25;
+	    v->set_goal_view_offset( FG_PI * 0.25 );
 	    return;
 	case GLUT_KEY_UP: // numeric keypad 8
-	    v->goal_view_offset = 0.00;
+	    v->set_goal_view_offset( 0.00 );
 	    return;
 	case GLUT_KEY_PAGE_UP: // numeric keypad 9
-	    v->goal_view_offset = FG_PI * 1.75;
+	    v->set_goal_view_offset( FG_PI * 1.75 );
 	    return;
 	}
     } else {
@@ -386,6 +386,10 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.37  1998/12/09 18:50:22  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.36  1998/12/06 13:51:20  curt
 // Turned "struct fgWEATHER" into "class FGWeather".
 //

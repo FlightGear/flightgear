@@ -257,7 +257,6 @@ void fgSkyInit( void ) {
 void fgSkyRender( void ) {
     FGState *f;
     fgLIGHT *l;
-    fgVIEW *v;
     float inner_color[4];
     float middle_color[4];
     float outer_color[4];
@@ -266,7 +265,6 @@ void fgSkyRender( void ) {
 
     f = current_aircraft.fdm_state;
     l = &cur_light_params;
-    v = &current_view;
 
     // printf("Rendering the sky.\n");
 
@@ -286,11 +284,10 @@ void fgSkyRender( void ) {
     xglPushMatrix();
 
     // Translate to view position
-    xglTranslatef( v->cur_zero_elev.x(), 
-		   v->cur_zero_elev.y(),
-		   v->cur_zero_elev.z() );
+    Point3D zero_elev = current_view.get_cur_zero_elev();
+    xglTranslatef( zero_elev.x(), zero_elev.y(), zero_elev.z() );
     // printf("  Translated to %.2f %.2f %.2f\n", 
-    //        v->cur_zero_elev.x, v->cur_zero_elev.y, v->cur_zero_elev.z );
+    //        zero_elev.x, zero_elev.y, zero_elev.z );
 
     // Rotate to proper orientation
     // printf("  lon = %.2f  lat = %.2f\n", FG_Longitude * RAD_TO_DEG,
@@ -365,6 +362,10 @@ void fgSkyRender( void ) {
 
 
 // $Log$
+// Revision 1.17  1998/12/09 18:50:12  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.16  1998/12/05 15:54:03  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

@@ -299,14 +299,11 @@ static IMAGE *ImageLoad(char *fileName)
 
 // Beginning of the "panel-code"
 void fgPanelInit ( void ) {
-    fgVIEW *v;
     string tpath;
     int x, y;
 
-    v = &current_view;
-
-    Xzoom = (float)((float)(current_view.winWidth)/1024);
-    Yzoom = (float)((float)(current_view.winHeight)/768);
+    Xzoom = (float)((float)(current_view.get_winWidth())/1024.0);
+    Yzoom = (float)((float)(current_view.get_winHeight())/768.0);
 
 pointer[1].XPos = 357;
 pointer[1].YPos = 167;
@@ -420,15 +417,13 @@ CreatePointer(&pointer[i]);
 }
 
 void fgPanelReInit( int x, int y, int finx, int finy){
-    fgVIEW *v;
     fgOPTIONS *o;
     int i;
     
     o = &current_options;
-    v = &current_view;
     
-    Xzoom = (float)((float)(current_view.winWidth)/1024);
-    Yzoom = (float)((float)(current_view.winHeight)/768);
+    Xzoom = (float)((float)(current_view.get_winWidth())/1024);
+    Yzoom = (float)((float)(current_view.get_winHeight())/768);
     
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
@@ -451,7 +446,6 @@ void fgPanelReInit( int x, int y, int finx, int finy){
 }
 
 void fgPanelUpdate ( void ) {
-    fgVIEW *v;
     float alpha;
     double pitch;
     double roll;
@@ -462,7 +456,6 @@ void fgPanelUpdate ( void ) {
     var[1] = get_altitude();
     var[2] = get_aoa(); // A placeholder. It should be the vertical speed once. 
     var[3] = get_throttleval();
-    v = &current_view;
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
@@ -671,6 +664,10 @@ printf("         %f %f %f %f \n", mvmatrix[12], mvmatrix[13], mvmatrix[14], mvma
 }
 
 // $Log$
+// Revision 1.12  1998/12/09 18:50:20  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.11  1998/11/11 00:19:27  curt
 // Updated comment delimeter to C++ style.
 //

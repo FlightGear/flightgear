@@ -133,7 +133,7 @@ double
 fgTileMgrCurElev( const fgBUCKET& p ) {
     fgTILE *t;
     fgFRAGMENT *frag_ptr;
-    Point3D abs_view_pos = current_view.abs_view_pos;
+    Point3D abs_view_pos = current_view.get_abs_view_pos();
     Point3D earth_center(0.0);
     Point3D result;
     MAT3vec local_up;
@@ -471,7 +471,7 @@ static int viewable( const Point3D& cp, double radius ) {
     y = cp.y();
     z = cp.z();
 	
-    mat = (double *)(current_view.WORLD_TO_EYE);
+    mat = (double *)(current_view.get_WORLD_TO_EYE());
 	
     eye[2] =  x*mat[2] + y*mat[6] + z*mat[10] + mat[14];
 	
@@ -482,19 +482,21 @@ static int viewable( const Point3D& cp, double radius ) {
 	return(0);
     }
 	
-    eye[0] = (x*mat[0] + y*mat[4] + z*mat[8] + mat[12]) * current_view.slope_x;
+    eye[0] = (x*mat[0] + y*mat[4] + z*mat[8] + mat[12])
+	* current_view.get_slope_x();
 
     // check right and left clip plane (from eye perspective)
-    x1 = radius * current_view.fov_x_clip;
+    x1 = radius * current_view.get_fov_x_clip();
     if( (eye[2] > -(eye[0]+x1)) || (eye[2] > (eye[0]-x1)) )
     {
 	return(0);
     }
 	
-    eye[1] = (x*mat[1] + y*mat[5] + z*mat[9] + mat[13]) * current_view.slope_y;
+    eye[1] = (x*mat[1] + y*mat[5] + z*mat[9] + mat[13]) 
+	* current_view.get_slope_y();
 
     // check bottom and top clip plane (from eye perspective)
-    y1 = radius * current_view.fov_y_clip;
+    y1 = radius * current_view.get_fov_y_clip();
     if( (eye[2] > -(eye[1]+y1)) || (eye[2] > (eye[1]-y1)) )
     {
 	return(0);
@@ -644,7 +646,7 @@ void fgTileMgrRender( void ) {
     FGState *f;
     fgTILECACHE *c;
     fgTILE *t;
-    fgVIEW *v;
+    FGView *v;
     Point3D frag_offset;
     fgFRAGMENT *frag_ptr;
     fgMATERIAL *mtl_ptr;
@@ -684,7 +686,7 @@ void fgTileMgrRender( void ) {
 	    
 	    // Calculate the model_view transformation matrix for this tile
 	    // This is equivalent to doing a glTranslatef(x, y, z);
-	    t->UpdateViewMatrix( v->MODEL_VIEW );
+	    t->UpdateViewMatrix( v->get_MODEL_VIEW() );
 
 	    // xglPushMatrix();
 	    // xglTranslatef(t->offset.x, t->offset.y, t->offset.z);
@@ -731,9 +733,9 @@ void fgTileMgrRender( void ) {
     }
 
     if ( (drawn + culled) > 0 ) {
-	v->vfc_ratio = (double)culled / (double)(drawn + culled);
+	v->set_vfc_ratio( (double)culled / (double)(drawn + culled) );
     } else {
-	v->vfc_ratio = 0.0;
+	v->set_vfc_ratio( 0.0 );
     }
     // printf("drawn = %d  culled = %d  saved = %.2f\n", drawn, culled, 
     //        v->vfc_ratio);
@@ -748,6 +750,10 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.51  1998/12/09 18:50:33  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.50  1998/12/06 13:51:25  curt
 // Turned "struct fgWEATHER" into "class FGWeather".
 //

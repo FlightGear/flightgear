@@ -91,7 +91,6 @@ void fgLIGHT::Init( void ) {
 void fgLIGHT::Update( void ) {
     FGState *f;
     fgTIME *t;
-    fgVIEW *v;
     // if the 4th field is 0.0, this specifies a direction ...
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     // base sky color
@@ -102,7 +101,6 @@ void fgLIGHT::Update( void ) {
 
     f = current_aircraft.fdm_state;
     t = &cur_time_params;
-    v = &current_view;
 
     FG_LOG( FG_EVENT, FG_INFO, "Updating light parameters." );
 
@@ -151,11 +149,9 @@ void fgLIGHT::Update( void ) {
 // calculate fog color adjusted for sunrise/sunset effects
 void fgLIGHT::UpdateAdjFog( void ) {
     FGState *f;
-    fgVIEW *v;
     double sun_angle_deg, rotation, param1[3], param2[3];
 
     f = current_aircraft.fdm_state;
-    v = &current_view;
 
     FG_LOG( FG_EVENT, FG_DEBUG, "Updating adjusted fog parameters." );
 
@@ -164,7 +160,8 @@ void fgLIGHT::UpdateAdjFog( void ) {
 
     // first determine the difference between our view angle and local
     // direction to the sun
-    rotation = -(sun_rotation + FG_PI) - (f->get_Psi() - v->view_offset) ;
+    rotation = -(sun_rotation + FG_PI) 
+	- (f->get_Psi() - current_view.get_view_offset());
     while ( rotation < 0 ) {
 	rotation += FG_2PI;
     }
@@ -217,6 +214,10 @@ fgLIGHT::~fgLIGHT( void ) {
 
 
 // $Log$
+// Revision 1.24  1998/12/09 18:50:35  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.23  1998/12/05 15:54:30  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

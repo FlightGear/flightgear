@@ -182,9 +182,7 @@ static void fgUpdateInstrViewParams( void ) {
 
     exit(0);
 
-    fgVIEW *v;
-
-    v = &current_view;
+    fgVIEW *v = &current_view;
 
     xglViewport(0, 0 , (GLint)(v->winWidth), (GLint)(v->winHeight) / 2);
   
@@ -226,21 +224,17 @@ static void fgUpdateInstrViewParams( void ) {
 
 // Update all Visuals (redraws anything graphics related)
 static void fgRenderFrame( void ) {
-    FGState *f;
-    fgLIGHT *l;
-    fgTIME *t;
-    fgVIEW *v;
+    FGState *f = current_aircraft.fdm_state;
+    fgLIGHT *l = &cur_light_params;
+    fgTIME *t = &cur_time_params;
+    FGView *v = &current_view;
+
     double angle;
     static int iteration = 0;
     // GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
     GLbitfield clear_mask;
-
-    f = current_aircraft.fdm_state;
-    l = &cur_light_params;
-    t = &cur_time_params;
-    v = &current_view;
 
     if ( idle_state != 1000 ) {
 	// still initializing, draw the splash screen
@@ -299,7 +293,8 @@ static void fgRenderFrame( void ) {
 	// setup transformation for drawing astronomical objects
 	xglPushMatrix();
 	// Translate to view position
-	xglTranslatef( v->view_pos.x(), v->view_pos.y(), v->view_pos.z() );
+	Point3D view_pos = v->get_view_pos();
+	xglTranslatef( view_pos.x(), view_pos.y(), view_pos.z() );
 	// Rotate based on gst (sidereal time)
 	// note: constant should be 15.041085, Curt thought it was 15
 	angle = t->gst * 15.041085;
@@ -346,6 +341,7 @@ static void fgRenderFrame( void ) {
 	fgTileMgrRender();
 
 	xglDisable( GL_TEXTURE_2D );
+	xglDisable( GL_FOG );
 
 	if ( (iteration == 0) && (current_options.get_panel_status()) ) {   
 	    // Did we run this loop before ?? ...and do we need the panel ??
@@ -361,6 +357,7 @@ static void fgRenderFrame( void ) {
 	xglBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
 	puDisplay();
 	xglDisable   ( GL_BLEND ) ;
+	xglEnable( GL_FOG );
     }
 
     xglutSwapBuffers();
@@ -369,16 +366,11 @@ static void fgRenderFrame( void ) {
 
 // Update internal time dependent calculations (i.e. flight model)
 void fgUpdateTimeDepCalcs(int multi_loop) {
-    FGState *f;
-    fgLIGHT *l;
-    fgTIME *t;
-    fgVIEW *v;
+    FGState *f = current_aircraft.fdm_state;
+    fgLIGHT *l = &cur_light_params;
+    fgTIME *t = &cur_time_params;
+    FGView *v = &current_view;
     int i;
-
-    f = current_aircraft.fdm_state;
-    l = &cur_light_params;
-    t = &cur_time_params;
-    v = &current_view;
 
     // update the flight model
     if ( multi_loop < 0 ) {
@@ -399,33 +391,34 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 
     // update the view angle
     for ( i = 0; i < multi_loop; i++ ) {
-	if ( fabs(v->goal_view_offset - v->view_offset) < 0.05 ) {
-	    v->view_offset = v->goal_view_offset;
+	if ( fabs(v->get_goal_view_offset() - v->get_view_offset()) < 0.05 ) {
+	    v->set_view_offset( v->get_goal_view_offset() );
 	    break;
 	} else {
 	    // move v->view_offset towards v->goal_view_offset
-	    if ( v->goal_view_offset > v->view_offset ) {
-		if ( v->goal_view_offset - v->view_offset < FG_PI ) {
-		    v->view_offset += 0.01;
+	    if ( v->get_goal_view_offset() > v->get_view_offset() ) {
+		if ( v->get_goal_view_offset() - v->get_view_offset() < FG_PI ){
+		    v->inc_view_offset( 0.01 );
 		} else {
-		    v->view_offset -= 0.01;
+		    v->inc_view_offset( -0.01 );
 		}
 	    } else {
-		if ( v->view_offset - v->goal_view_offset < FG_PI ) {
-		    v->view_offset -= 0.01;
+		if ( v->get_view_offset() - v->get_goal_view_offset() < FG_PI ){
+		    v->inc_view_offset( -0.01 );
 		} else {
-		    v->view_offset += 0.01;
+		    v->inc_view_offset( 0.01 );
 		}
 	    }
-	    if ( v->view_offset > FG_2PI ) {
-		v->view_offset -= FG_2PI;
-	    } else if ( v->view_offset < 0 ) {
-		v->view_offset += FG_2PI;
+	    if ( v->get_view_offset() > FG_2PI ) {
+		v->inc_view_offset( -FG_2PI );
+	    } else if ( v->get_view_offset() < 0 ) {
+		v->inc_view_offset( FG_2PI );
 	    }
 	}
     }
 
-    double tmp = -(l->sun_rotation + FG_PI) - (f->get_Psi() - v->view_offset);
+    double tmp = -(l->sun_rotation + FG_PI) 
+	- (f->get_Psi() - v->get_view_offset() );
     while ( tmp < 0.0 ) {
 	tmp += FG_2PI;
     }
@@ -792,23 +785,21 @@ static void fgIdleFunction ( void ) {
 
 // Handle new window size or exposure
 static void fgReshape( int width, int height ) {
-    fgVIEW *v;
-
-    v = &current_view;
+    FGView *v = &current_view;
 
     // Do this so we can call fgReshape(0,0) ourselves without having
     // to know what the values of width & height are.
     if ( (height > 0) && (width > 0) ) {
 	if ( ! current_options.get_panel_status() ) {
-	    v->win_ratio = (GLfloat) width / (GLfloat) height;
+	    v->set_win_ratio( (GLfloat) width / (GLfloat) height );
 	} else {
-	    v->win_ratio = (GLfloat) width / ((GLfloat) (height)*0.4232);
+	    v->set_win_ratio( (GLfloat) width / ((GLfloat) (height)*0.4232) );
 	}
     }
 
-    v->winWidth = width;
-    v->winHeight = height;
-    v->update_fov = true;
+    v->set_winWidth( width );
+    v->set_winHeight( height );
+    v->set_update_fov( true );
 
     // Inform gl of our view window size (now handled elsewhere)
     // xglViewport(0, 0, (GLint)width, (GLint)height);
@@ -1012,6 +1003,10 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.75  1998/12/09 18:50:23  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.74  1998/12/06 14:52:54  curt
 // Fixed a problem with the initial starting altitude.  "v->abs_view_pos" wasn't
 // being calculated correctly at the beginning causing the first terrain

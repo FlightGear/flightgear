@@ -217,11 +217,7 @@ double get_sideslip( void )
 
 double get_frame_rate( void )
 {
-    fgGENERAL *pgeneral;
- 
-    pgeneral = &general;                     
- 
-    return pgeneral->frame_rate;
+    return general.frame_rate;
 }
 
 double get_fov( void )
@@ -231,16 +227,12 @@ double get_fov( void )
 
 double get_vfc_ratio( void )
 {
-    fgVIEW *pview;
- 
-    pview = &current_view;
- 
-    return pview->vfc_ratio;
+    return current_view.get_vfc_ratio();
 }
 
 double get_vfc_tris_drawn   ( void )
 {
-    return current_view.tris_rendered;
+    return current_view.get_tris_rendered();
 }
 
 double get_climb_rate( void )
@@ -289,10 +281,6 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
 
 
 void fgCockpitUpdate( void ) {
-    fgVIEW *pview;
-
-    pview = &current_view;
-
     FG_LOG( FG_COCKPIT, FG_DEBUG,
 	    "Cockpit: code " << ac_cockpit->code() << " status " 
 	    << ac_cockpit->status() );
@@ -304,14 +292,21 @@ void fgCockpitUpdate( void ) {
     }
 
     if ( current_options.get_panel_status() && 
-	 (fabs(pview->view_offset) < 0.2) ) {
-	xglViewport(0, 0, pview->winWidth, pview->winHeight);
+	 (fabs( current_view.get_view_offset() ) < 0.2) )
+    {
+	xglViewport( 0, 0, 
+		     current_view.get_winWidth(), 
+		     current_view.get_winHeight() );
 	fgPanelUpdate();
     }
 }
 
 
 // $Log$
+// Revision 1.26  1998/12/09 18:50:19  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.25  1998/12/05 15:54:07  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

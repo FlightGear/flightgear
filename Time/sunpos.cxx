@@ -329,8 +329,8 @@ static void fgSunPositionGST(double gst, double *lon, double *lat) {
 void fgUpdateSunPos( void ) {
     fgLIGHT *l;
     fgTIME *t;
-    fgVIEW *v;
-    MAT3vec nup, nsun, v0;
+    FGView *v;
+    MAT3vec nup, nsun, v0, surface_to_sun;
     Point3D p, rel_sunpos;
     double dot, east_dot;
     double sun_gd_lat, sl_radius;
@@ -371,7 +371,7 @@ void fgUpdateSunPos( void ) {
     //        l->sun_vec[2]);
 
     // calculate the sun's relative angle to local up
-    MAT3_COPY_VEC(nup, v->local_up);
+    MAT3_COPY_VEC(nup, v->get_local_up());
     nsun[0] = l->fg_sunpos.x(); 
     nsun[1] = l->fg_sunpos.y();
     nsun[2] = l->fg_sunpos.z();
@@ -383,22 +383,23 @@ void fgUpdateSunPos( void ) {
     //        l->sun_angle);
     
     // calculate vector to sun's position on the earth's surface
-    rel_sunpos = l->fg_sunpos - (v->view_pos + scenery.center);
-    v->to_sun[0] = rel_sunpos.x();
-    v->to_sun[1] = rel_sunpos.y();
-    v->to_sun[2] = rel_sunpos.z();
+    rel_sunpos = l->fg_sunpos - (v->get_view_pos() + scenery.center);
+    v->set_to_sun( rel_sunpos.x(), rel_sunpos.y(), rel_sunpos.z() );
     // printf( "Vector to sun = %.2f %.2f %.2f\n",
     //         v->to_sun[0], v->to_sun[1], v->to_sun[2]);
 
     // make a vector to the current view position
-    MAT3_SET_VEC(v0, v->view_pos.x(), v->view_pos.y(), v->view_pos.z());
+    Point3D view_pos = v->get_view_pos();
+    MAT3_SET_VEC(v0, view_pos.x(), view_pos.y(), view_pos.z());
 
     // Given a vector from the view position to the point on the
     // earth's surface the sun is directly over, map into onto the
     // local plane representing "horizontal".
-    map_vec_onto_cur_surface_plane(v->local_up, v0, v->to_sun, 
-				   v->surface_to_sun);
-    MAT3_NORMALIZE_VEC(v->surface_to_sun, ntmp);
+    map_vec_onto_cur_surface_plane( v->get_local_up(), v0, v->get_to_sun(), 
+				    surface_to_sun );
+    MAT3_NORMALIZE_VEC(surface_to_sun, ntmp);
+    v->set_surface_to_sun( surface_to_sun[0], surface_to_sun[1], 
+			   surface_to_sun[2] );
     // printf("Surface direction to sun is %.2f %.2f %.2f\n",
     //        v->surface_to_sun[0], v->surface_to_sun[1], v->surface_to_sun[2]);
     // printf("Should be close to zero = %.2f\n", 
@@ -407,13 +408,13 @@ void fgUpdateSunPos( void ) {
     // calculate the angle between v->surface_to_sun and
     // v->surface_east.  We do this so we can sort out the acos()
     // ambiguity.  I wish I could think of a more efficient way ... :-(
-    east_dot = MAT3_DOT_PRODUCT(v->surface_to_sun, v->surface_east);
+    east_dot = MAT3_DOT_PRODUCT( surface_to_sun, v->get_surface_east() );
     // printf("  East dot product = %.2f\n", east_dot);
 
     // calculate the angle between v->surface_to_sun and
     // v->surface_south.  this is how much we have to rotate the sky
     // for it to align with the sun
-    dot = MAT3_DOT_PRODUCT(v->surface_to_sun, v->surface_south);
+    dot = MAT3_DOT_PRODUCT( surface_to_sun, v->get_surface_south() );
     // printf("  Dot product = %.2f\n", dot);
     if ( east_dot >= 0 ) {
 	l->sun_rotation = acos(dot);
@@ -426,6 +427,10 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.18  1998/12/09 18:50:36  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.17  1998/11/09 23:41:53  curt
 // Log message clean ups.
 //

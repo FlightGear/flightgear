@@ -211,7 +211,6 @@ int fgStarsInit( void ) {
 // Draw the Stars
 void fgStarsRender( void ) {
     FGState *f;
-    fgVIEW *v;
     fgLIGHT *l;
     fgTIME *t;
     int i;
@@ -219,7 +218,6 @@ void fgStarsRender( void ) {
     f = current_aircraft.fdm_state;
     l = &cur_light_params;
     t = &cur_time_params;
-    v = &current_view;
 
     // FG_PI_2 + 0.1 is about 6 degrees after sundown and before sunrise
 
@@ -256,6 +254,10 @@ void fgStarsRender( void ) {
 
 
 // $Log$
+// Revision 1.25  1998/12/09 18:50:15  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.24  1998/12/05 15:54:04  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

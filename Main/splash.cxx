@@ -97,10 +97,10 @@ void fgSplashUpdate ( double progress ) {
     int xsize = 480;
     int ysize = 380;
 
-    xmin = (current_view.winWidth - xsize) / 2;
+    xmin = (current_view.get_winWidth() - xsize) / 2;
     xmax = xmin + xsize;
 
-    ymin = (current_view.winHeight - ysize) / 2;
+    ymin = (current_view.get_winHeight() - ysize) / 2;
     ymax = ymin + ysize;
 
     // first clear the screen;
@@ -111,7 +111,7 @@ void fgSplashUpdate ( double progress ) {
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
-    gluOrtho2D(0, current_view.winWidth, 0, current_view.winHeight);
+    gluOrtho2D(0, current_view.get_winWidth(), 0, current_view.get_winHeight());
     xglMatrixMode(GL_MODELVIEW);
     xglPushMatrix();
     xglLoadIdentity();
@@ -149,6 +149,10 @@ void fgSplashUpdate ( double progress ) {
 
 
 // $Log$
+// Revision 1.9  1998/12/09 18:50:26  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.8  1998/11/16 14:00:05  curt
 // Added pow() macro bug work around.
 // Added support for starting FGFS at various resolutions.

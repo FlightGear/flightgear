@@ -226,6 +226,8 @@ fgMATERIAL_MGR::fgMATERIAL_MGR ( void ) {
 void
 fgMATERIAL::render_fragments()
 {
+    int tris_rendered = current_view.get_tris_rendered();
+
     // cout << "rendering " + texture_name + " = " << list_size << "\n";
 
     if ( empty() )
@@ -251,7 +253,7 @@ fgMATERIAL::render_fragments()
 
     for ( ; current != last; ++current ) {
 	fgFRAGMENT* frag_ptr = *current;
-	current_view.tris_rendered += frag_ptr->num_faces();
+	tris_rendered += frag_ptr->num_faces();
 	if ( frag_ptr->tile_ptr != last_tile_ptr )
 	{
 	    // new tile, new translate
@@ -263,6 +265,8 @@ fgMATERIAL::render_fragments()
 	// printf("  display_list = %d\n", frag_ptr->display_list);
 	xglCallList( frag_ptr->display_list );
     }
+
+    current_view.set_tris_rendered( tris_rendered );
 }
 
 
@@ -348,7 +352,8 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 void
 fgMATERIAL_MGR::render_fragments()
 {
-    current_view.tris_rendered = 0;
+    current_view.set_tris_rendered( 0 );
+
     iterator last = end();
     for ( iterator current = begin(); current != last; ++current )
 	(*current).second.render_fragments();
@@ -356,6 +361,10 @@ fgMATERIAL_MGR::render_fragments()
 
 
 // $Log$
+// Revision 1.12  1998/12/09 18:50:30  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.11  1998/11/07 19:07:12  curt
 // Enable release builds using the --without-logging option to the configure
 // script.  Also a couple log message cleanups, plus some C to C++ comment

@@ -45,9 +45,7 @@
 
 
 // Define a structure containing view information
-class fgVIEW {
-
-public:
+class FGView {
 
     // the current offset from forward for viewing
     double view_offset;
@@ -141,13 +139,18 @@ public:
     // Current model view matrix;
     GLdouble MODEL_VIEW[16];
 
+public:
+
     // Constructor
-    fgVIEW( void );
+    FGView( void );
+
+    // Destructor
+    ~FGView( void );
 
     // Initialize a view class
     void Init( void );
 
-    void update_globals( FGState *f );
+    void UpdateGlobals( FGState *f );
 
     // Basically, this is a modified version of the Mesa gluLookAt()
     // function that's been modified slightly so we can capture the
@@ -168,19 +171,65 @@ public:
 
     // Update the field of view parameters
     void UpdateFOV( fgOPTIONS *o );
-	
-    // Destructor
-    ~fgVIEW( void );
+
+    // accessor functions
+    inline double get_view_offset() const { return view_offset; }
+    inline void set_view_offset( double a ) { view_offset = a; }
+    inline void inc_view_offset( double amt ) { view_offset += amt; }
+    inline double get_goal_view_offset() const { return goal_view_offset; }
+    inline void set_goal_view_offset( double a) { goal_view_offset = a; }
+    inline bool get_update_fov() const { return update_fov; }
+    inline void set_update_fov(bool value) { update_fov = value; }
+    inline double get_win_ratio() const { return win_ratio; }
+    inline void set_win_ratio( double r ) { win_ratio = r; }
+    inline int get_winWidth() const { return winWidth; }
+    inline void set_winWidth( int w ) { winWidth = w; }
+    inline int get_winHeight() const { return winHeight; }
+    inline void set_winHeight( int h ) { winHeight = h; }
+    inline double get_slope_y() const { return slope_y; }
+    inline double get_slope_x() const { return slope_x; }
+#if defined( USE_FAST_FOV_CLIP )
+    inline double get_fov_x_clip() const { return fov_x_clip; }
+    inline double get_fov_y_clip() const { return fov_y_clip; }
+#endif // USE_FAST_FOV_CLIP
+    inline double get_vfc_ratio() const { return vfc_ratio; }
+    inline void set_vfc_ratio(double r) { vfc_ratio = r; }
+    inline int get_tris_rendered() const { return tris_rendered; }
+    inline void set_tris_rendered( int tris) { tris_rendered = tris; }
+    inline Point3D get_abs_view_pos() const { return abs_view_pos; }
+    inline Point3D get_view_pos() const { return view_pos; }
+    inline Point3D get_cur_zero_elev() const { return cur_zero_elev; }
+    inline double *get_to_sun() { return to_sun; }
+    inline void set_to_sun( double x, double y, double z) {
+	to_sun[0] = x;
+	to_sun[1] = y;
+	to_sun[2] = z;
+    }
+    inline double *get_surface_to_sun() { return surface_to_sun; }
+    inline void set_surface_to_sun( double x, double y, double z) {
+	surface_to_sun[0] = x;
+	surface_to_sun[1] = y;
+	surface_to_sun[2] = z;
+    }
+    inline double *get_surface_south() { return surface_south; }
+    inline double *get_surface_east() { return surface_east; }
+    inline double *get_local_up() { return local_up; }
+    inline MAT3mat *get_WORLD_TO_EYE() const { return &WORLD_TO_EYE; }
+    inline GLdouble *get_MODEL_VIEW() { return MODEL_VIEW; }
 };
 
 
-extern fgVIEW current_view;
+extern FGView current_view;
 
 
 #endif // _VIEWS_HXX
 
 
 // $Log$
+// Revision 1.17  1998/12/09 18:50:29  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
 // Revision 1.16  1998/12/05 15:54:25  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //
