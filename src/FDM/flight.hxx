@@ -1168,7 +1168,7 @@ public:
     inline double get_Tank2Fuel() const { return Tank2Fuel; }
 
     // engines
-    inline double get_num_engines() const {
+    inline int get_num_engines() const {
 	return engines.size();
     }
 
