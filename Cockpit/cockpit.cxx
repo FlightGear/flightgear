@@ -52,6 +52,7 @@
 #include <Time/fg_timer.hxx>
 
 #include "cockpit.hxx"
+#include "panel.hxx"
 
 
 // This is a structure that contains all data related to
@@ -226,7 +227,7 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
     ac_cockpit = new fg_Cockpit();
     
     if ( current_options.get_panel_status() ) {
-	fgPanelInit();
+        new FGPanel;
     }
 
     FG_LOG( FG_COCKPIT, FG_INFO,
@@ -254,12 +255,15 @@ void fgCockpitUpdate( void ) {
 	xglViewport( 0, 0, 
 		     current_view.get_winWidth(), 
 		     current_view.get_winHeight() );
-	fgPanelUpdate();
+	FGPanel::OurPanel->Update();
     }
 }
 
 
 // $Log$
+// Revision 1.31  1999/03/08 21:56:08  curt
+// Added panel changes sent in by Friedemann.
+//
 // Revision 1.30  1999/02/05 21:28:57  curt
 // Modifications to incorporate Jon S. Berndts flight model code.
 //

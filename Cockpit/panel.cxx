@@ -30,63 +30,32 @@
 #  include <windows.h>
 #endif
 
-// #include <GL/gl.h>
-// #include <GL/glu.h>
+#define FILLED true
+
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include "Include/compiler.h"
-#ifdef FG_HAVE_STD_INCLUDES
-#  include <cstdlib>
-#  include <cstdio>
-#  include <cstring>
-#  include <cmath>
-#else
-#  include <stdlib.h>
-#  include <stdio.h>
-#  include <string.h>
-#  include <math.h>
-#endif
-
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include <string>
-FG_USING_STD(string);
+#include <math.h>
 
-#include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
+#include <Aircraft/aircraft.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
+#include <Objects/texload.h>
 
 #include "panel.hxx"
 #include "cockpit.hxx"
 #include "hud.hxx"
 
-#define IMAGIC      0x01da
-#define IMAGIC_SWAP 0xda01
+GLubyte *imag;
+int imag_width, imag_height;
 
-#define SWAP_SHORT_BYTES(x) ((((x) & 0xff) << 8) | (((x) & 0xff00) >> 8))
-#define SWAP_LONG_BYTES(x) (((((x) & 0xff) << 24) | (((x) & 0xff00) << 8)) | \
-((((x) & 0xff0000) >> 8) | (((x) & 0xff000000) >> 24)))
-
-typedef struct {
-    unsigned short imagic;
-    unsigned short type;
-    unsigned short dim;
-    unsigned short sizeX, sizeY, sizeZ;
-    unsigned long min, max;
-    unsigned long wasteBytes;
-    char name[80];
-    unsigned long colorMap;
-    FILE *file;
-    unsigned char *tmp[5];
-    unsigned long rleEnd;
-    unsigned long *rowStart;
-    unsigned long *rowSize;
-} Image;
-
-
-IMAGE *imag;
-IMAGE *img2;
-IMAGE *img;
+GLubyte *img;
+int img_width, img_height;
 
 static float value[4];
 static GLuint panel_tex_id[2];
@@ -94,18 +63,13 @@ static GLubyte tex[32][128][3];
 static float alphahist;
 static float Xzoom, Yzoom;
 static Pointer pointer[20];
-static TurnCoordinator Turny;
-static int NumPoint = 5;
+static int NumPoint = 4;
 static int i = 0;
 static GLdouble mvmatrix[16];
 static GLdouble matrix[16];
 static double var[20];
 static double offset;
 static float alpha;
-static float vertices[180][2];
-static float normals[180][3];
-static float texCoord[180][2];
-static arthor myarthor;
 static int n1;
 static int n2;
 
@@ -113,331 +77,35 @@ static GLfloat Wings[] = {-1.25, -28.125, 1.255, -28.125, 1.255, 28.125,        
 static GLfloat Elevator[] = { 3.0, -10.9375, 4.5, -10.9375, 4.5, 10.9375,                                  3.0, 10.9375};
 static GLfloat Rudder[] = {2.0, -0.45, 10.625, -0.45, 10.625, 0.55,                                           2.0, 0.55};
 
-// image.c THIS FILE WAS COPIED FROM THE MESA GRAPHICS LIBRARY
+FGPanel* FGPanel::OurPanel = 0;
 
+// FGPanel::FGPanel() - constructor to initialize the panel.                 
+FGPanel::FGPanel(void){
 
-static Image *ImageOpen(char *fileName)
-{
-  Image *image;
-  unsigned long *rowStart, *rowSize, ulTmp;
-  int x, i;
-
-  image = (Image *)malloc(sizeof(Image));
-  if (image == NULL) 
-    {
-      fprintf(stderr, "Out of memory!\n");
-      exit(-1);
-    }
-  if ((image->file = fopen(fileName, "rb")) == NULL) 
-    {
-      perror(fileName);
-      exit(-1);
-    }
-  /*
-   *	Read the image header
-   */
-  fread(image, 1, 12, image->file);
-  /*
-   *	Check byte order
-   */
-  if (image->imagic == IMAGIC_SWAP) 
-    {
-      image->type = SWAP_SHORT_BYTES(image->type);
-      image->dim = SWAP_SHORT_BYTES(image->dim);
-      image->sizeX = SWAP_SHORT_BYTES(image->sizeX);
-      image->sizeY = SWAP_SHORT_BYTES(image->sizeY);
-      image->sizeZ = SWAP_SHORT_BYTES(image->sizeZ);
-    }
-
-  for ( i = 0 ; i <= image->sizeZ ; i++ )
-    {
-      image->tmp[i] = (unsigned char *)malloc(image->sizeX*256);
-      if (image->tmp[i] == NULL ) 
-	{
-	  fprintf(stderr, "Out of memory!\n");
-	  exit(-1);
-	}
-    }
-
-  if ((image->type & 0xFF00) == 0x0100) // RLE image
-    {
-      x = image->sizeY * image->sizeZ * sizeof(long);
-      image->rowStart = (unsigned long *)malloc(x);
-      image->rowSize = (unsigned long *)malloc(x);
-      if (image->rowStart == NULL || image->rowSize == NULL) 
-	{
-	  fprintf(stderr, "Out of memory!\n");
-	  exit(-1);
-	}
-      image->rleEnd = 512 + (2 * x);
-      fseek(image->file, 512, SEEK_SET);
-      fread(image->rowStart, 1, x, image->file);
-      fread(image->rowSize, 1, x, image->file);
-      if (image->imagic == IMAGIC_SWAP) 
-	{
-	  x /= sizeof(long);
-	  rowStart = image->rowStart;
-	  rowSize = image->rowSize;
-	  while (x--) 
-	    {
-	      ulTmp = *rowStart;
-	      *rowStart++ = SWAP_LONG_BYTES(ulTmp);
-	      ulTmp = *rowSize;
-	      *rowSize++ = SWAP_LONG_BYTES(ulTmp);
-	    }
-	}
-    }
-  return image;
-}
-
-static void ImageClose( Image *image)
-{
-  int i;
-
-  fclose(image->file);
-  for ( i = 0 ; i <= image->sizeZ ; i++ )
-    free(image->tmp[i]);
-  free(image);
-}
-
-static void ImageGetRow( Image *image, unsigned char *buf, int y, int z)
-{
-  unsigned char *iPtr, *oPtr, pixel;
-  int count;
-
-  if ((image->type & 0xFF00) == 0x0100)  // RLE image
-    {
-      fseek(image->file, image->rowStart[y+z*image->sizeY], SEEK_SET);
-      fread(image->tmp[0], 1, (unsigned int)image->rowSize[y+z*image->sizeY],
-	    image->file);
-
-      iPtr = image->tmp[0];
-      oPtr = buf;
-      while (1) 
-	{
-	  pixel = *iPtr++;
-	  count = (int)(pixel & 0x7F);
-	  if (!count)
-	    return;
-	  if (pixel & 0x80) 
-	    {
-	      while (count--) 
-		{
-		  *oPtr++ = *iPtr++;
-		}
-	    } 
-	  else 
-	    {
-	      pixel = *iPtr++;
-	      while (count--) 
-		{
-		  *oPtr++ = pixel;
-		}
-	    }
-	}
-    }
-  else // verbatim image
-    {
-      fseek(image->file, 512+(y*image->sizeX)+(z*image->sizeX*image->sizeY),
-	    SEEK_SET);
-      fread(buf, 1, image->sizeX, image->file);
-    }
-}
-
-static void ImageGetRawData( Image *image, char *data)
-{
-  int i, j, k;
-  int remain;
-
-  switch ( image->sizeZ )
-    {
-    case 1:
-      remain = image->sizeX % 4;
-      break;
-    case 2:
-      remain = image->sizeX % 2;
-      break;
-    case 3:
-      remain = (image->sizeX * 3) & 0x3;
-      if (remain)
-	remain = 4 - remain;
-      break;
-    case 4:
-      remain = 0;
-      break;
-    }
-
-  for (i = 0; i < image->sizeY; i++) 
-    {
-      for ( k = 0; k < image->sizeZ ; k++ )
-	ImageGetRow(image, image->tmp[k+1], i, k);
-      for (j = 0; j < image->sizeX; j++) 
-	for ( k = 1; k <= image->sizeZ ; k++ )
-	  *data++ = *(image->tmp[k] + j);
-      data += remain;
-    }
-}
-
-static IMAGE *ImageLoad(char *fileName)
-{
-  Image *image;
-  IMAGE *final;
-  int sx;
-
-  image = ImageOpen(fileName);
-
-  final = (IMAGE *)malloc(sizeof(IMAGE));
-  if (final == NULL) 
-    {
-      fprintf(stderr, "Out of memory!\n");
-      exit(-1);
-    }
-  final->imagic = image->imagic;
-  final->type = image->type;
-  final->dim = image->dim;
-  final->sizeX = image->sizeX; 
-  final->sizeY = image->sizeY;
-  final->sizeZ = image->sizeZ;
-
-  /* 
-   * Round up so rows are long-word aligned 
-   */
-  sx = ( (image->sizeX) * (image->sizeZ) + 3) >> 2;
-
-  final->data 
-    = (unsigned char *)malloc( sx * image->sizeY * sizeof(unsigned int));
-
-  if (final->data == NULL) 
-    {
-      fprintf(stderr, "Out of memory!\n");
-      exit(-1);
-    }
-
-  ImageGetRawData(image, (char*)final->data);
-  ImageClose(image);
-  return final;
-}
-
-// Beginning of the "panel-code" 
-
-// fgPanelInit() - routine to initialize a panel.                 
-void fgPanelInit ( void ) {
-    // fgVIEW *v;
     string tpath;
     int x, y;
     FILE *f;
     char line[256];
     GLint test;
+    GLubyte tex[262144];
 
-    // v = &current_view;
+OurPanel = this;   
 
     Xzoom = (float)((float)(current_view.get_winWidth())/1024);
     Yzoom = (float)((float)(current_view.get_winHeight())/768);
 
-pointer[1].XPos = 357.5;
-pointer[1].YPos = 167;
-pointer[1].radius = 5;
-pointer[1].length = 32;
-pointer[1].width = 3;
-pointer[1].angle = 30;
-pointer[1].value1 = 0;
-pointer[1].value2 = 3000;
-pointer[1].alpha1 = 0;
-pointer[1].alpha2 = 1080;
-pointer[1].variable = 1;
-pointer[1].teXpos = 194;
-pointer[1].texYpos = 191;
+test_instr[3] = new FGTexInstrument(144.375, 166.875, 4, 32, 3, 30, 15.0,                                           260.0, -20.0, 360, 65, 193, 0);
+test_instr[4] = new FGTexInstrument(358, 52, 4, 30, 3, 30, -3.0, 3.0, 100,                                          440, 66.15, 66, 2);
+test_instr[5] = new FGTexInstrument(357.5, 167, 5, 25, 4, 30, 0, 10000, 0,                                          360, 194, 191, 1);
+test_instr[6] = new FGTexInstrument(357.5, 167, 5, 32, 3, 30, 0, 3000, 0,                                           1080, 194, 191, 1);
+test_instr[0] = new FGHorizon(251, 166.75);
+test_instr[1] = new FGTurnCoordinator(143.75, 51.75);
+//test_instr[2] = new FGRpmGauge(462.5, 133);
+test_instr[2] = new FGTexInstrument(462.5, 133, 10, 20, 5.5, 60, 0.0, 1.0,                                            -67, 180, 174, 83, 3); 
 
-pointer[0].XPos = 357.5;
-pointer[0].YPos = 167;
-pointer[0].radius = 5;
-pointer[0].length = 25;
-pointer[0].width = 4;
-pointer[0].angle = 30;
-pointer[0].value1 = 0;
-pointer[0].value2 = 10000;
-pointer[0].alpha1 = 0;
-pointer[0].alpha2 = 360;
-pointer[0].variable = 1;
-pointer[0].teXpos = 194;
-pointer[0].texYpos = 191;
-
-pointer[2].XPos = 358;
-pointer[2].YPos = 52;
-pointer[2].radius = 4;
-pointer[2].length = 30;
-pointer[2].width = 3;
-pointer[2].angle = 30;
-pointer[2].value1 = -3;
-pointer[2].value2 = 3;
-pointer[2].alpha1 = 100;
-pointer[2].alpha2 = 440;
-pointer[2].variable = 2;
-pointer[2].teXpos = 66.15;
-pointer[2].texYpos = 66;
-
-
-pointer[3].XPos = 462;
-pointer[3].YPos = 133;
-pointer[3].radius = 9;
-pointer[3].length = 20;
-pointer[3].width = 5;
-pointer[3].angle = 50;
-pointer[3].value1 = 0.0;
-pointer[3].value2 = 1.0;
-pointer[3].alpha1 = 280;
-pointer[3].alpha2 = 540;
-pointer[3].variable = 3;
-pointer[3].teXpos = 173.6;
-pointer[3].texYpos = 83;
-
-
-// These values define the airspeed pointer. Please note: 
-// As we have a Bonanza panel, but a navion airplane, this gauge 
-// doesn't show the true values !!!    
-
-pointer[4].XPos = 144.375;
-pointer[4].YPos = 166.875;
-pointer[4].radius = 4;
-pointer[4].length = 32;
-pointer[4].width = 3;
-pointer[4].angle = 30;
-pointer[4].value1 = 15.0;
-pointer[4].value2 = 260.0;
-pointer[4].alpha1 = -20.0;
-pointer[4].alpha2 = 360.0;
-pointer[4].variable = 0;
-pointer[4].teXpos = 64;
-pointer[4].texYpos = 193;
-
-
-myarthor.XPos = 251;
-myarthor.YPos = 168;
-myarthor.radius = 29;
-myarthor.texXPos = 56;
-myarthor.texYPos = 174;
-myarthor.bottom = 36.5;
-myarthor.top = 36.5;
-
-Turny.PlaneXPos = 143.75;
-Turny.PlaneYPos = 51.75;
-Turny.PlaneTexXPos = 49;
-Turny.PlaneTexYPos = 59.75;
-Turny.BallXPos = 145;
-Turny.BallYPos = 24;
-Turny.BallTexXPos = 49;
-Turny.BallTexYPos = 16;
-Turny.BallRadius = 3.5;
-Turny.alphahist = 0;
-Turny.PlaneAlphaHist = 0;
-
-for(i=0;i<NumPoint;i++){
-CreatePointer(&pointer[i]);
-}
-
-fgHorizonInit(myarthor);
-
-fgInitTurnCoordinator(&Turny);
+// FontList = glGenLists (256);
+// glListBase(FontList);
+// InitLists();
 
 #ifdef GL_VERSION_1_1
     xglGenTextures(2, panel_tex_id);
@@ -467,19 +135,35 @@ fgInitTurnCoordinator(&Turny);
     
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 256);
     tpath = current_options.get_fg_root() + "/Textures/gauges.rgb";
-    if((img = ImageLoad( (char *)tpath.c_str() ))==NULL){
+    if((img = read_rgb_texture( (char *)tpath.c_str(), &img_width,                      &img_height ))==NULL){
     }
 
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 256);
     tpath = current_options.get_fg_root() + "/Textures/gauges2.rgb";
-    if((imag = ImageLoad( (char *)tpath.c_str() ))==NULL){
+    if((imag = read_rgb_texture( (char *)tpath.c_str(), &imag_width,                     &imag_height ))==NULL){
     }
 
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 1024);
 
     tpath = current_options.get_fg_root() + "/Textures/Fullone.rgb";
-    if ((img2 = ImageLoad( (char *)tpath.c_str() ))==NULL ){
+    if ((background = read_rgb_texture( (char *)tpath.c_str(), &width,                         &height ))==NULL ){
         }
+
+//    for(y=0;y<256;y++){
+//    	for(x=0;x<256;x++){
+//    	tex[(y+x*256)*3] = imag[(y+x*256)*3];
+//    	tex[(y+x*256)*3 + 1] = imag[(y+x*256)*3 + 1];
+//    	tex[(y+x*256)*3 + 2] = imag[(y+x*256)*3 + 2];
+//    	tex[(y+x*256)*3 + 3] = (imag[(y+x*256)*3 + 1] + imag[(y+x*256)*3 + 2]   //                               + imag[(y+x*256)*3 + 0])/3;
+//    	
+//	if((imag[(y+x*256)*3] < 150) && (imag[(y+x*256)*3 +1] < 150) &&         //             (imag[(y+x*256)*3 + 2] < 150) ){
+//              tex[(y+x*256)*3 + 3] = 0x0;
+//               }
+//           else{
+//             tex[(y+x*256)*3 + 3] = 0xff;
+//             }
+//    	 }
+// }
 
     xglPixelZoom(Xzoom, Yzoom);
     xglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -488,7 +172,7 @@ fgInitTurnCoordinator(&Turny);
     xglRasterPos2i(0,0);
     xglPixelZoom(Xzoom, Yzoom);
     xglPixelStorei(GL_UNPACK_ROW_LENGTH, 256);
-    xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB,                                  GL_UNSIGNED_BYTE, (GLvoid *)(imag->data));
+    xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB,                                   GL_UNSIGNED_BYTE, imag);
 		  
 #ifdef GL_VERSION_1_1
     xglBindTexture(GL_TEXTURE_2D, panel_tex_id[0]);
@@ -501,18 +185,20 @@ fgInitTurnCoordinator(&Turny);
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);   
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-   xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB,                                  GL_UNSIGNED_BYTE, (GLvoid *)(img->data)); 
+   xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB,                                  GL_UNSIGNED_BYTE, (GLvoid *)(img)); 
 		  
     xglMatrixMode(GL_MODELVIEW);
     xglPopMatrix();
 }
 
-void fgPanelReInit( int x, int y, int finx, int finy){
+void FGPanel::ReInit( int x, int y, int finx, int finy){
     fgOPTIONS *o;
     int i;
     GLint buffer;
     
     o = &current_options;
+    
+    xglDisable(GL_DEPTH_TEST);
     
     Xzoom = (float)((float)(current_view.get_winWidth())/1024);
     Yzoom = (float)((float)(current_view.get_winHeight())/768);
@@ -539,27 +225,31 @@ void fgPanelReInit( int x, int y, int finx, int finy){
     xglPixelStorei(GL_UNPACK_SKIP_ROWS, y);
     xglRasterPos2i(x, y);
     xglPixelZoom(Xzoom, Yzoom);
-    xglDrawPixels(finx - x, finy - y, GL_RGB, GL_UNSIGNED_BYTE,                     (GLvoid *)(img2->data));
-    
+    xglDrawPixels(finx - x, finy - y, GL_RGB, GL_UNSIGNED_BYTE,                     (GLvoid *)(background));
+
     // restore original buffer state
     xglDrawBuffer( buffer );
+    xglEnable(GL_DEPTH_TEST);
 }
 
-void fgPanelUpdate ( void ) {
-    // fgVIEW *v;
+void FGPanel::Update ( void ) {
+
     float alpha;
     double pitch;
     double roll;
     float alpharad;
     double speed;
     int i;
+    
+//    static bool beech_drawn = false;
+//    char *test = "ALM 100";
                           
-    var[0] = get_speed() * 1.4; // We have to multiply the airspeed by a 
+    var[0] = get_speed() /* * 1.4 */; // We have to multiply the airspeed by a 
                                 // factor, to simulate flying a Bonanza 
     var[1] = get_altitude();
     var[2] = get_climb_rate() / 1000.0; 
     var[3] = get_throttleval();
-    // v = &current_view;
+
     xglMatrixMode(GL_PROJECTION);
     xglPushMatrix();
     xglLoadIdentity();
@@ -576,29 +266,25 @@ void fgPanelUpdate ( void ) {
     xglPopMatrix();
     xglPushMatrix();
 
-    for(i=0;i<NumPoint;i++){
-    xglLoadIdentity();
-    xglTranslatef(pointer[i].XPos, pointer[i].YPos, 0.0);
-    xglRotatef(-pointer[i].tape[0], 0.0, 0.0, 1.0);
-    fgEraseArea(pointer[i].vertices, 20, (GLfloat)(pointer[i].teXpos),                          (GLfloat)(pointer[i].texYpos), (GLfloat)(pointer[i].XPos),                      (GLfloat)(pointer[i].YPos), 0, 1);
-    xglLoadIdentity();
-    }
-
     xglDisable(GL_LIGHTING);
-    for(i=0;i<NumPoint;i++){
-    UpdatePointer( &pointer[i]);
+     test_instr[3]->Render();
+     test_instr[4]->Render();
+     test_instr[5]->Render();
+     test_instr[6]->Render();
     xglPopMatrix();
     xglPushMatrix();
-    }
     
-    fgUpdateTurnCoordinator(&Turny);
+    test_instr[1]->Render();
+    test_instr[2]->Render();
+
+//   DrawBeechcraftLogo(230, 235, 30, 10);
+//   DrawScale(144.375, 166.875, 38, 41.0, 18, 340, 44, 2.0, 1.0, 1.0, 1.0);
     
     xglEnable(GL_LIGHTING);
             
-    horizon(myarthor);  
-
-  //  DrawScale(200, 200, 25, 28, 10, 270, 2, 3.0, 1.0, 0.1, 0.1); 
-
+    test_instr[0]->Render();
+    
+    
     xglDisable(GL_TEXTURE_2D);
     xglPopMatrix();   
     xglEnable(GL_DEPTH_TEST);
@@ -614,7 +300,7 @@ void fgPanelUpdate ( void ) {
 // horizon - Let's draw an artificial horizon using both texture mapping and 
 //           primitive drawing
  
-void horizon(arthor hor){ 
+void FGHorizon::Render(void){ 
     double pitch;
     double roll;
     float shifted, alpha, theta;
@@ -654,7 +340,7 @@ void horizon(arthor hor){
     xglDisable(GL_LIGHT0);
     xglMatrixMode(GL_MODELVIEW);
     xglLoadIdentity();
-    xglTranslatef(hor.XPos, hor.YPos, 0);
+    xglTranslatef(XPos, YPos, 0);
     xglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     xglMatrixMode(GL_TEXTURE);
     xglPushMatrix();
@@ -663,8 +349,8 @@ void horizon(arthor hor){
     
     shifted = -((pitch / 10) * 7.0588235);
         
-    if(shifted > (hor.bottom - hor.radius)){
-    theta = (180 - (acos((hor.bottom - shifted) / hor.radius)*RAD_TO_DEG));
+    if(shifted > (bottom - radius)){
+    theta = (180 - (acos((bottom - shifted) / radius)*RAD_TO_DEG));
     n = (int)(theta / epsi) - 1;
     n1 = n;
     n2 = (180 - n1) + 2;
@@ -674,8 +360,8 @@ void horizon(arthor hor){
     n2 += rot + 45;
     }
     
-    if(shifted < (-hor.top + hor.radius)){
-    theta = ((acos((-hor.top - shifted) / hor.radius)*RAD_TO_DEG));
+    if(shifted < (-top + radius)){
+    theta = ((acos((-top - shifted) / radius)*RAD_TO_DEG));
     n = (int)(theta / epsi) + 1;
     n1 = n;
     n2 = (180 - n1) + 2;
@@ -708,7 +394,7 @@ void horizon(arthor hor){
 
     xglLoadIdentity();
     xglTranslatef(0.0, ((pitch / 10) * 0.046875), 0.0);
-    xglTranslatef((hor.texXPos/256), (hor.texYPos/256), 0.0);
+    xglTranslatef((texXPos/256), (texYPos/256), 0.0);
     xglRotatef(-roll, 0.0, 0.0, 1.0);
     xglScalef(1.7, 1.7, 0.0);
 
@@ -728,8 +414,7 @@ void horizon(arthor hor){
                      xglVertex3f(0.0, 0.0, 0.0);
 	       	     xglTexCoord2f(texCoord[i % 180][0], texCoord[i % 180][1]);
 	             xglNormal3f(normals[i % 180][0], normals[i % 180][1], 0.6);
-		     xglVertex3f(vertices[i % 180][0], vertices[i % 180][1],
-				 0.0);
+		     xglVertex3f(vertices[i % 180][0], vertices[i % 180][1],                                     0.0);
 		     n = (i + 1) % 180;
 		     xglTexCoord2f(texCoord[n][0], texCoord[n][1]);
 		     xglNormal3f(normals[n][0], normals[n][1], 0.6);
@@ -738,7 +423,7 @@ void horizon(arthor hor){
      xglEnd();
     
             
-    if((shifted > (hor.bottom - hor.radius)) && (n1 < 1000) && (n1 > 0)){
+    if((shifted > (bottom - radius)) && (n1 < 1000) && (n1 > 0)){
     
     a = sin(theta * DEG_TO_RAD) * sin(theta * DEG_TO_RAD);
 light_ambient2[0] = a;
@@ -771,7 +456,7 @@ light_ambient2[2] = a;
      xglEnd();
     }
             
-    if((shifted < (-hor.top + hor.radius)) && (n1 < 1000) && (n1 > 0)){
+    if((shifted < (-top + radius)) && (n1 < 1000) && (n1 > 0)){
     a = sin(theta * DEG_TO_RAD) * sin(theta * DEG_TO_RAD);
 light_ambient2[0] = a;
 light_ambient2[1] = a;
@@ -810,9 +495,9 @@ light_ambient2[2] = a;
     
     xglBegin(GL_TRIANGLES);
     xglColor3f(1.0, 1.0, 1.0);
-    xglVertex3f(0.0, hor.radius, 0.0);
-    xglVertex3f(-3.0, (hor.radius - 7.0), 0.0);
-    xglVertex3f(3.0, (hor.radius - 7.0), 0.0);    
+    xglVertex3f(0.0, radius, 0.0);
+    xglVertex3f(-3.0, (radius - 7.0), 0.0);
+    xglVertex3f(3.0, (radius - 7.0), 0.0);    
     xglEnd();
     
     xglLoadIdentity();
@@ -843,45 +528,51 @@ light_ambient2[2] = a;
 
 // fgHorizonInit - initialize values for the AH
 
-void fgHorizonInit( arthor hor){
-int n;
+void FGHorizon::Init(void){
+	radius = 28.9;
+	texXPos = 56;
+	texYPos = 174;
+	bottom = 36.5;
+	top = 36.5;
+	int n;
+
 float step = (360*DEG_TO_RAD)/180;
 
 for(n=0;n<180;n++){
-	   vertices[n][0] = cos(n * step) * hor.radius;
-	   vertices[n][1] = sin(n * step) * hor.radius;
-           texCoord[n][0] = (cos(n * step) * hor.radius)/256;
-           texCoord[n][1] = (sin(n * step) * hor.radius)/256;
-         normals[n][0] = cos(n * step) * hor.radius + sin(n * step);
-         normals[n][1] = sin(n * step) * hor.radius + cos(n * step);
+	   vertices[n][0] = cos(n * step) * radius;
+	   vertices[n][1] = sin(n * step) * radius;
+           texCoord[n][0] = (cos(n * step) * radius)/256;
+           texCoord[n][1] = (sin(n * step) * radius)/256;
+         normals[n][0] = cos(n * step) * radius + sin(n * step);
+         normals[n][1] = sin(n * step) * radius + cos(n * step);
            normals[n][2] = 0.0;
            }
 }
 
-void UpdatePointer(Pointer *pointer){
+void FGTexInstrument::UpdatePointer(void){
     double pitch;
     double roll;
     float alpharad;
     double speed;    
     glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(2, GL_FLOAT, 0, pointer->vertices);
+    glVertexPointer(2, GL_FLOAT, 0, vertices);
 
-    alpha=((((float)((var[pointer->variable]) - (pointer->value1))) /                       (pointer->value2 - pointer->value1))*                                           (pointer->alpha2 - pointer->alpha1)                                            + pointer->alpha1);
+    alpha=((((float)((var[variable]) - (value1))) /                                        (value2 - value1))*                                                             (alpha2 - alpha1) + alpha1);
     
-    	if (alpha < pointer->alpha1)
-       		alpha = pointer->alpha1;
-    	if (alpha > pointer->alpha2)
-    	        alpha = pointer->alpha2;
+    	if (alpha < alpha1)
+       		alpha = alpha1;
+    	if (alpha > alpha2)
+    	        alpha = alpha2;
     xglMatrixMode(GL_MODELVIEW);  
     xglPushMatrix();
     xglLoadIdentity();
     xglDisable(GL_TEXTURE_2D);
-    xglTranslatef(pointer->XPos, pointer->YPos, 0);
+    xglTranslatef(XPos, YPos, 0);
     xglRotatef(-alpha, 0.0, 0.0, 1.0);
     xglColor4f(1.0, 1.0, 1.0, 1.0);
     glDrawArrays(GL_POLYGON, 0, 10);
-    pointer->tape[0] = pointer->tape[1];
-    pointer->tape[1] = alpha;
+    tape[0] = tape[1];
+    tape[1] = alpha;
     xglEnable(GL_TEXTURE_2D);
     glDisableClientState(GL_VERTEX_ARRAY);
 }
@@ -889,10 +580,7 @@ void UpdatePointer(Pointer *pointer){
 // fgEraseArea - 'Erases' a drawn Polygon by overlaying it with a textured 
 //                 area. Shall be a method of a panel class once.
 
-void fgEraseArea( GLfloat *array, int NumVerti, GLfloat texXPos,
-		  GLfloat texYPos, GLfloat XPos, GLfloat YPos,
-		  int Texid, float ScaleFactor = 1)
-{
+void fgEraseArea(GLfloat *array, int NumVerti, GLfloat texXPos,                                  GLfloat texYPos, GLfloat XPos, GLfloat YPos,                                    int Texid, float ScaleFactor = 1){
 int i, j;
 int n;
 float a;
@@ -941,76 +629,80 @@ xglVertex2f(array[n] * ScaleFactor, array[n + 1] * ScaleFactor);
 
 // CreatePointer - calculate the vertices of a pointer 
 
-void CreatePointer(Pointer *pointer){
+void FGTexInstrument::CreatePointer(void){
 int i;
 float alpha;
 float alphastep;
-float r = pointer->radius;
-float angle = pointer->angle;
-float length = pointer->length;
-float width = pointer->width;
+float r = radius;
 
-pointer->vertices[0] = 0;
-pointer->vertices[1] = length;
-pointer->vertices[2] = -(width/2);
-pointer->vertices[3] = length - ((width/2)/(tan(angle*DEG_TO_RAD/2)));
-pointer->vertices[4] = -(width/2);
-pointer->vertices[5] = cos(asin((width/2)/r))*r;
+vertices[0] = 0;
+vertices[1] = length;
+vertices[2] = -(width/2);
+vertices[3] = length - ((width/2)/(tan(angle*DEG_TO_RAD/2)));
+vertices[4] = -(width/2);
+vertices[5] = cos(asin((width/2)/r))*r;
+
 alphastep = (asin((width/2)/r)+asin((width/2)/r))/5;
 alpha = asin(-(width/2)/r);
+
 for(i=0;i<5;i++){
 alpha += alphastep;
-pointer->vertices[(i*2)+6] = sin(alpha)*r;
-}
+vertices[(i*2)+6] = sin(alpha)*r;
+   }
+
 alpha = asin(-(width/2)/r);
+
 for(i=0;i<5;i++){
 alpha +=alphastep;
-pointer->vertices[(i*2)+7]= cos(alpha)*r;
-}
-pointer->vertices[16] = - pointer->vertices[4];
-pointer->vertices[17] = pointer->vertices[5];
-pointer->vertices[18] = - pointer->vertices[2];
-pointer->vertices[19] = pointer->vertices[3];
+vertices[(i*2)+7]= cos(alpha)*r;
+   }
+
+vertices[16] = - vertices[4];
+vertices[17] = vertices[5];
+vertices[18] = - vertices[2];
+vertices[19] = vertices[3];
+
 }
 
 // fgUpdateTurnCoordinator - draws turn coordinator related stuff
 
-void fgUpdateTurnCoordinator(TurnCoordinator *turn){
+void FGTurnCoordinator::Render(void){
 int n;
 
 xglDisable(GL_LIGHTING);
 xglDisable(GL_BLEND);
 xglEnable(GL_TEXTURE_2D);
 
- turn->alpha = (get_sideslip() / 1.5) * 560;
- if(turn->alpha > 56){
- turn->alpha = 56;
+ alpha = (get_sideslip() / 1.5) * 560;
+ if(alpha > 56){
+ alpha = 56;
  }
- if(turn->alpha < -56){
- turn->alpha = -56;
+ if(alpha < -56){
+ alpha = -56;
  }
  
- turn->PlaneAlpha = get_roll();
+ PlaneAlpha = get_roll();
 
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+     xglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 
 xglMatrixMode(GL_MODELVIEW);
 xglLoadIdentity();
-xglTranslatef(turn->BallXPos, turn->BallYPos, 0.0);
-xglTranslatef(0.75 * sin(turn->alphahist * DEG_TO_RAD) * 31,                                  0.3 * (39 - (cos(turn->alphahist * DEG_TO_RAD) * 39)),                          0.0);
-fgEraseArea(turn->vertices, 72,                                                 turn->BallTexXPos + ((0.75 * sin(turn->alphahist * DEG_TO_RAD) * 31) / 0.625),  turn->BallTexYPos + ((0.3 * (39 - (cos(turn->alphahist * DEG_TO_RAD)                                  * 39))) / 0.625),                                                   turn->BallXPos + (0.75 * sin(turn->alphahist * DEG_TO_RAD) * 31),               turn->BallYPos + (0.3 * (39 - (cos(turn->alphahist * DEG_TO_RAD)                                  * 39))), 1);
+xglTranslatef(BallXPos, BallYPos, 0.0);
+xglTranslatef(0.75 * sin(alphahist[0] * DEG_TO_RAD) * 31,                                     0.3 * (39 - (cos(alphahist[0] * DEG_TO_RAD) * 39)),                             0.0);
+fgEraseArea(vertices, 72, BallTexXPos +                                                     ((0.75 * sin(alphahist[0] * DEG_TO_RAD) * 31) / 0.625),                         BallTexYPos + ((0.3 * (39 - (cos(alphahist[0] * DEG_TO_RAD)                                  * 39))) / 0.625),                                                   BallXPos + (0.75 * sin(alphahist[0] * DEG_TO_RAD) * 31),                       BallYPos + (0.3 * (39 - (cos(alphahist[0] * DEG_TO_RAD)                         * 39))), 1);
 xglDisable(GL_TEXTURE_2D);
 xglEnable(GL_BLEND);
 xglBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
 xglMatrixMode(GL_MODELVIEW);
 xglLoadIdentity();
-xglTranslatef(turn->BallXPos, turn->BallYPos, 0.0);
-xglTranslatef(0.75 * sin(turn->alpha * DEG_TO_RAD) * 31,                                      0.3 * (39 - (cos(turn->alpha * DEG_TO_RAD) * 39)), 0.0);
+xglTranslatef(BallXPos, BallYPos, 0.0);
+xglTranslatef(0.75 * sin(alpha * DEG_TO_RAD) * 31,                                            0.3 * (39 - (cos(alpha * DEG_TO_RAD) * 39)), 0.0);
 xglBegin(GL_POLYGON);
 xglColor3f(0.8, 0.8, 0.8);
 for(i=0;i<36;i++){
-xglVertex2f(turn->vertices[2 * i],                                                          turn->vertices[(2 * i) + 1]);
+xglVertex2f(vertices[2 * i],                                                                vertices[(2 * i) + 1]);
 }
 xglEnd(); 
 
@@ -1019,15 +711,15 @@ xglDisable(GL_BLEND);
 
 xglMatrixMode(GL_MODELVIEW);
 xglLoadIdentity();
-xglTranslatef(turn->PlaneXPos, turn->PlaneYPos, 0.0);
-xglRotatef(turn->rollhist * RAD_TO_DEG + 90, 0.0, 0.0, 1.0);
+xglTranslatef(XPos, YPos, 0.0);
+xglRotatef(rollhist[0] * RAD_TO_DEG + 90, 0.0, 0.0, 1.0);
 
-fgEraseArea(Wings, 8, turn->PlaneTexXPos, turn->PlaneTexYPos,                                         turn->PlaneXPos, turn->PlaneYPos, 1); 
-fgEraseArea(Elevator, 8, turn->PlaneTexXPos, turn->PlaneTexYPos,                                         turn->PlaneXPos, turn->PlaneYPos, 1); 
-fgEraseArea(Rudder, 8, turn->PlaneTexXPos, turn->PlaneTexYPos,                                         turn->PlaneXPos, turn->PlaneYPos, 1); 
+fgEraseArea(Wings, 8, PlaneTexXPos, PlaneTexYPos,                                                     XPos, YPos, 1); 
+fgEraseArea(Elevator, 8, PlaneTexXPos, PlaneTexYPos,                                                     XPos, YPos, 1); 
+fgEraseArea(Rudder, 8, PlaneTexXPos, PlaneTexYPos,                                                     XPos, YPos, 1); 
 
 xglLoadIdentity();
-xglTranslatef(turn->PlaneXPos, turn->PlaneYPos, 0.0);
+xglTranslatef(XPos, YPos, 0.0);
 xglRotatef(-get_roll() * RAD_TO_DEG + 90, 0.0, 0.0, 1.0);
 
 xglBegin(GL_POLYGON);
@@ -1062,26 +754,42 @@ xglVertex2f(Rudder[0], Rudder[1]);
 xglEnd();
 
 
-turn->alphahist = turn->alpha;
-turn->PlaneAlphaHist = turn->PlaneAlpha;
-turn->rollhist = -get_roll();
+alphahist[0] = alphahist[1];
+alphahist[1] = alpha;
+rollhist[0] = rollhist[1];
+rollhist[1] = -get_roll();
 
 xglDisable(GL_BLEND);
 }
 
-void fgInitTurnCoordinator(TurnCoordinator *turn){
+void FGTurnCoordinator::Init(void){
 int n;
+PlaneTexXPos = 49;
+PlaneTexYPos = 59.75;
+BallXPos = 145;
+BallYPos = 24;
+BallTexXPos = 49;
+BallTexYPos = 16;
+BallRadius = 3.5;
 
 for(n=0;n<36;n++){
-turn->vertices[2 * n] = cos(10 * n * DEG_TO_RAD) * turn->BallRadius;
-turn->vertices[(2 * n) + 1] = sin(10 * n * DEG_TO_RAD) * turn->BallRadius;
+vertices[2 * n] = cos(10 * n * DEG_TO_RAD) * BallRadius;
+vertices[(2 * n) + 1] = sin(10 * n * DEG_TO_RAD) * BallRadius;
 	}	
 }
 
-void DrawScale(float XPos, float YPos, float InnerRadius, float OuterRadius,                   float alpha1, float alpha2, int steps, float LineWidth,                       float red, float green, float blue){
+void DrawScale(float XPos, float YPos, float InnerRadius, float OuterRadius,                   float alpha1, float alpha2, int steps, float LineWidth,                       float red, float green, float blue, bool filled = false){
      int i;
-     float diff = (alpha2 - alpha1) / (float)(steps);
+     float diff = (alpha2 - alpha1) / (float)(steps - 1);
+     
+     #define ANTIALIASED_INSTRUMENTS
 
+     #ifdef ANTIALIASED_INSTRUMENTS
+     xglEnable(GL_LINE_SMOOTH);
+     xglEnable(GL_BLEND);
+     xglHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);
+     #endif
+     
      xglMatrixMode(GL_MODELVIEW);
      xglLoadIdentity();
      
@@ -1091,7 +799,13 @@ void DrawScale(float XPos, float YPos, float InnerRadius, float OuterRadius,    
      xglLineWidth(LineWidth);
      xglColor3f(red, green, blue);
      
+     if(!filled){
      xglBegin(GL_LINES);
+     }
+     else{
+     xglBegin(GL_QUAD_STRIP);
+     }
+     
      for(i=0;i < steps; i++){
      xglVertex3f(sin(i * diff * DEG_TO_RAD) * OuterRadius,                                       cos(i * diff * DEG_TO_RAD) * OuterRadius, 0.0);
      xglVertex3f(sin(i * diff * DEG_TO_RAD) * InnerRadius,                                       cos(i * diff * DEG_TO_RAD) * InnerRadius, 0.0);
@@ -1099,7 +813,44 @@ void DrawScale(float XPos, float YPos, float InnerRadius, float OuterRadius,    
      xglEnd();
      
      xglLoadIdentity();
+     xglDisable(GL_LINE_SMOOTH);
+     xglDisable(GL_BLEND);
      }
+
+void DrawBeechcraftLogo(float XPos, float YPos, float width, float height){
+     xglMatrixMode(GL_MODELVIEW);
+     xglLoadIdentity();
+     xglTranslatef(XPos, YPos, 0.0);
+     xglEnable(GL_BLEND);
+     xglEnable(GL_TEXTURE_2D);
+//   xglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
+//   xglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    #ifdef GL_VERSION_1_1
+    xglBindTexture(GL_TEXTURE_2D, panel_tex_id[1]);
+    #elif GL_EXT_texture_object
+    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id[1]);
+    #else
+    #  error port me
+    #endif
+
+    xglBegin(GL_POLYGON);
+    
+    xglTexCoord2f(.39844, .01953);
+    xglVertex2f(0.0, 0.0);
+    xglTexCoord2f(.58594, .01953);
+    xglVertex2f(width, 0.0);
+    xglTexCoord2f(.58594, .074219);
+    xglVertex2f(width, height);
+    xglTexCoord2f(.39844, .074219);
+    xglVertex2f(0.0, height);
+    
+    xglEnd();
+    
+    xglDisable(GL_BLEND);
+    xglDisable(GL_TEXTURE_2D);
+ }
+    
 
 // PrintMatrix - routine to print the current modelview matrix.                 
 
@@ -1111,28 +862,205 @@ printf("         %f %f %f %f \n", mvmatrix[8], mvmatrix[9], mvmatrix[10], mvmatr
 printf("         %f %f %f %f \n", mvmatrix[12], mvmatrix[13], mvmatrix[14], mvmatrix[15]);
 }
 
+void FGRpmGauge::Init(void){
+     list = xglGenLists (1);
+     int n;
+     
+     xglNewList(list, GL_COMPILE);
+     
+     xglColor3f(.26, .289, .3281);
+     xglBegin(GL_POLYGON);
+     for(n = 0; n < 180; n++){
+     xglVertex2f(cos(n * 0.0349066) * 24.5, sin(n * 0.0349066) * 24.5);
+     }
+     xglEnd();
+     
+DrawScale(XPos, YPos, 22.5, 25.625, 50, 135, 10, 1.0, 0.0, 0.7,                           0.0,FILLED);
+DrawScale(XPos, YPos, 21.0, 25.625, -70, 180, 8, 1.8, 0.88, 0.88, 0.88);
+DrawScale(XPos, YPos, 22.5, 25.0, -70, 180, 40, 0.6, 0.5, 0.5, 0.5);
+          
+     xglEndList();
+     }
+     
+void FGRpmGauge::Render(void){
+     xglMatrixMode(GL_MODELVIEW);
+     xglLoadIdentity();
+     xglTranslatef(XPos, YPos, 0.0);
+     
+     xglCallList(list);
+          
+     }
+     
+void FGPanel::DrawTestLetter(float X, float Y){
+     xglEnable(GL_TEXTURE_2D);
+     xglEnable(GL_BLEND);
+     
+     xglMatrixMode(GL_TEXTURE);
+     xglLoadIdentity();
+     xglTranslatef(X, Y, 0.0);
+     
+    DrawLetter();
+    
+     xglMatrixMode(GL_MODELVIEW); 
+     xglTranslatef(6.0, 0.0, 0.0);
+     xglDisable(GL_TEXTURE_2D);
+     xglDisable(GL_BLEND);
+     }
+    
+void FGPanel::InitLists(void){
+     xglNewList(FontList + 'A', GL_COMPILE);
+     DrawTestLetter(0.391625, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'B', GL_COMPILE);
+     DrawTestLetter(0.391625 + 1 * LETTER_OFFSET, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'C', GL_COMPILE);
+     DrawTestLetter(0.391625 + 2 * LETTER_OFFSET, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'D', GL_COMPILE);
+     DrawTestLetter(0.391625 + 3 * LETTER_OFFSET, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'E', GL_COMPILE);
+     DrawTestLetter(0.391625 + 4 * LETTER_OFFSET, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'F', GL_COMPILE);
+     DrawTestLetter(0.391625 + 5 * LETTER_OFFSET, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'G', GL_COMPILE);
+     DrawTestLetter(0.391625 + 6 * LETTER_OFFSET, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'H', GL_COMPILE);
+     DrawTestLetter(0.391625 + 7 * LETTER_OFFSET, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'I', GL_COMPILE);
+     DrawTestLetter(0.391625 + 8 * LETTER_OFFSET, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'J', GL_COMPILE);
+     DrawTestLetter(0.391625 + 9 * LETTER_OFFSET, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'K', GL_COMPILE);
+     DrawTestLetter(0.391625 + 9.7 * LETTER_OFFSET, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'L', GL_COMPILE);
+     DrawTestLetter(0.399625 + 10.6 * LETTER_OFFSET, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'M', GL_COMPILE);
+     DrawTestLetter(0.80459375, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'N', GL_COMPILE);
+     DrawTestLetter(0.83975, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'O', GL_COMPILE);
+     DrawTestLetter(0.871, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'P', GL_COMPILE);
+     DrawTestLetter(0.90715625, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + 'Q', GL_COMPILE);
+     DrawTestLetter(0.9413125, 0.29296875);
+     xglEndList();
+     
+     xglNewList(FontList + '1', GL_COMPILE);
+     DrawTestLetter(0.390625, 0.35546875);
+     xglEndList();
+     
+     xglNewList(FontList + '2', GL_COMPILE);
+     DrawTestLetter(0.390625 + 1*LETTER_OFFSET, 0.3515625); 
+     xglEndList();
+     
+     xglNewList(FontList + '3', GL_COMPILE);
+     DrawTestLetter(0.390625 + 2*LETTER_OFFSET, 0.3515625); 
+     xglEndList();
+     
+     xglNewList(FontList + '4', GL_COMPILE);
+     DrawTestLetter(0.390625 + 3*LETTER_OFFSET, 0.3515625); 
+     xglEndList();
+     
+     xglNewList(FontList + '5', GL_COMPILE);
+     DrawTestLetter(0.390625 + 4*LETTER_OFFSET, 0.3515625); 
+     xglEndList();
+     
+     xglNewList(FontList + '6', GL_COMPILE);
+     DrawTestLetter(0.390625 + 5*LETTER_OFFSET, 0.3515625); 
+     xglEndList();
+     
+     xglNewList(FontList + '7', GL_COMPILE);
+     DrawTestLetter(0.390625 + 6*LETTER_OFFSET, 0.3515625); 
+     xglEndList();
+     
+     xglNewList(FontList + '8', GL_COMPILE);
+     DrawTestLetter(0.390625 + 7*LETTER_OFFSET, 0.3515625); 
+     xglEndList();
+     
+     xglNewList(FontList + '9', GL_COMPILE);
+     DrawTestLetter(0.390625 + 8*LETTER_OFFSET, 0.3515625); 
+     xglEndList();
+     
+     xglNewList(FontList + '0', GL_COMPILE);
+     DrawTestLetter(0.383625 + 9*LETTER_OFFSET, 0.3515625); 
+     xglEndList();
+     
+     xglNewList(FontList + ' ', GL_COMPILE);
+     xglTranslatef(8.0, 0.0, 0.0);
+     xglEndList();
+     }
+    
+void FGPanel::TexString(char *s, float XPos, float YPos, float size){
+     xglMatrixMode(GL_MODELVIEW);
+     xglLoadIdentity();
+     xglTranslatef(XPos, YPos, 0.0);
+     xglScalef(size, size, 1.0);
+     
+    #ifdef GL_VERSION_1_1
+    xglBindTexture(GL_TEXTURE_2D, panel_tex_id[1]);
+    #elif GL_EXT_texture_object
+    xglBindTextureEXT(GL_TEXTURE_2D, panel_tex_id[1]);
+    #else
+    #  error port me
+    #endif
+    
+     while((*s) != '\0'){
+     xglCallList(FontList + (*s));
+     s++;
+      }
+      xglLoadIdentity();
+     }
+     
+void FGTexInstrument::Init(void){
+     CreatePointer();
+     }
+     
+void FGTexInstrument::Render(void){
+xglEnable(GL_TEXTURE_2D);
+     xglLoadIdentity();
+     xglTranslatef(XPos, YPos, 0.0);
+     xglRotatef(-tape[0], 0.0, 0.0, 1.0);
+    fgEraseArea(vertices, 20, (GLfloat)(teXpos),                                               (GLfloat)(texYpos), (GLfloat)(XPos),                                            (GLfloat)(YPos), 0);
+     
+     UpdatePointer();
+     
+     xglDisable(GL_TEXTURE_2D);
+     }
+     
 // $Log$
-// Revision 1.16  1999/02/26 22:08:46  curt
-// Added initial support for native SGI compilers.
-//
-// Revision 1.15  1999/02/12 01:46:29  curt
-// Updates and fixes from Friedemann.
-//
-// Revision 1.14  1999/02/02 20:13:33  curt
-// MSVC++ portability changes by Bernie Bright:
-//
-// Lib/Serial/serial.[ch]xx: Initial Windows support - incomplete.
-// Simulator/Astro/stars.cxx: typo? included <stdio> instead of <cstdio>
-// Simulator/Cockpit/hud.cxx: Added Standard headers
-// Simulator/Cockpit/panel.cxx: Redefinition of default parameter
-// Simulator/Flight/flight.cxx: Replaced cout with FG_LOG.  Deleted <stdio.h>
-// Simulator/Main/fg_init.cxx:
-// Simulator/Main/GLUTmain.cxx:
-// Simulator/Main/options.hxx: Shuffled <fg_serial.hxx> dependency
-// Simulator/Objects/material.hxx:
-// Simulator/Time/timestamp.hxx: VC++ friend kludge
-// Simulator/Scenery/tile.[ch]xx: Fixed using std::X declarations
-// Simulator/Main/views.hxx: Added a constant
+// Revision 1.17  1999/03/08 21:56:09  curt
+// Added panel changes sent in by Friedemann.
 //
 // Revision 1.13  1999/01/07 19:25:53  curt
 // Updates from Friedemann Reinhard.
@@ -1162,3 +1090,5 @@ printf("         %f %f %f %f \n", mvmatrix[12], mvmatrix[13], mvmatrix[14], mvma
 // Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
 // first pass at an isntrument panel.
 //
+
+
