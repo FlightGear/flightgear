@@ -126,7 +126,8 @@ void fgSkyColorsInit( void ) {
 
     /* setup for the possibility of sunset effects */
     sun_angle = l->sun_angle * RAD_TO_DEG;
-    fgPrintf( FG_ASTRO, FG_INFO, "  Sun angle in degrees = %.2f\n", sun_angle);
+    // fgPrintf( FG_ASTRO, FG_INFO, 
+    //           "  Sun angle in degrees = %.2f\n", sun_angle);
 
     if ( (sun_angle > 80.0) && (sun_angle < 100.0) ) {
 	/* 0.0 - 0.4 */
@@ -262,7 +263,10 @@ void fgSkyRender( void ) {
     fgFLIGHT *f;
     fgLIGHT *l;
     fgVIEW *v;
-    // float east_dot, dot, angle;
+    float inner_color[4];
+    float middle_color[4];
+    float outer_color[4];
+    double diff;
     int i;
 
     f = current_aircraft.flight;
@@ -271,28 +275,19 @@ void fgSkyRender( void ) {
 
     /* printf("Rendering the sky.\n"); */
 
-    xglPushMatrix();
+    // calculate the proper colors
+    for ( i = 0; i < 3; i++ ) {
+	diff = l->sky_color[i] - l->adj_fog_color[i];
 
-#ifdef INCLUDE_THIS_CODE
-    /* calculate the angle between v->surface_to_sun and
-     * v->surface_east.  We do this so we can sort out the acos()
-     * ambiguity.  I wish I could think of a more efficient way ... :-( */
-    east_dot = MAT3_DOT_PRODUCT(v->surface_to_sun, v->surface_east);
-    /* printf("  East dot product = %.2f\n", east_dot); */
+	/* printf("sky = %.2f  fog = %.2f  diff = %.2f\n", 
+	   l->sky_color[j], l->adj_fog_color[j], diff); */
 
-    /* calculate the angle between v->surface_to_sun and
-     * v->surface_south.  this is how much we have to rotate the sky
-     * for it to align with the sun */
-    dot = MAT3_DOT_PRODUCT(v->surface_to_sun, v->surface_south);
-    /* printf("  Dot product = %.2f\n", dot); */
-    if ( east_dot >= 0 ) {
-	angle = acos(dot);
-    } else {
-	angle = -acos(dot);
+	inner_color[i] = l->sky_color[i] - diff * 0.3;
+	middle_color[i] = l->sky_color[i] - diff * 0.9;
+	outer_color[i] = l->adj_fog_color[i];
     }
-    /* printf("  Sky needs to rotate = %.3f rads = %.1f degrees.\n", 
-	   angle, angle * RAD_TO_DEG); */
-#endif
+
+    xglPushMatrix();
 
     /* Translate to view position */
     xglTranslatef( v->cur_zero_elev.x, v->cur_zero_elev.y, v->cur_zero_elev.z );
@@ -311,33 +306,33 @@ void fgSkyRender( void ) {
     xglColor4fv(l->sky_color);
     xglVertex3f(0.0, 0.0, CENTER_ELEV);
     for ( i = 0; i < 12; i++ ) {
-	xglColor4fv( inner_color[i] );
+	xglColor4fv( inner_color );
 	xglVertex3fv( inner_vertex[i] );
     }
-    xglColor4fv( inner_color[0] );
+    xglColor4fv( inner_color );
     xglVertex3fv( inner_vertex[0] );
     xglEnd();
 
     // Draw the middle ring
     xglBegin( GL_TRIANGLE_STRIP );
     for ( i = 0; i < 12; i++ ) {
-	xglColor4fv( middle_color[i] );
+	xglColor4fv( middle_color );
 	/* printf("middle_color[%d] = %.2f %.2f %.2f %.2f\n", i, 
 	       middle_color[i][0], middle_color[i][1], middle_color[i][2], 
 	       middle_color[i][3]); */
 	// xglColor4f(1.0, 0.0, 0.0, 1.0);
 	xglVertex3fv( middle_vertex[i] );
-	xglColor4fv( inner_color[i] );
+	xglColor4fv( inner_color );
 	/* printf("inner_color[%d] = %.2f %.2f %.2f %.2f\n", i, 
 	       inner_color[i][0], inner_color[i][1], inner_color[i][2], 
 	       inner_color[i][3]); */
 	// xglColor4f(0.0, 0.0, 1.0, 1.0);
 	xglVertex3fv( inner_vertex[i] );
     }
-    xglColor4fv( middle_color[0] );
+    xglColor4fv( middle_color );
     // xglColor4f(1.0, 0.0, 0.0, 1.0);
     xglVertex3fv( middle_vertex[0] );
-    xglColor4fv( inner_color[0] );
+    xglColor4fv( inner_color );
     // xglColor4f(0.0, 0.0, 1.0, 1.0);
     xglVertex3fv( inner_vertex[0] );
     xglEnd();
@@ -345,28 +340,25 @@ void fgSkyRender( void ) {
     /* Draw the outer ring */
     xglBegin( GL_TRIANGLE_STRIP );
     for ( i = 0; i < 12; i++ ) {
-	xglColor4fv( outer_color[i] );
+	xglColor4fv( outer_color );
 	xglVertex3fv( outer_vertex[i] );
-	xglColor4fv( middle_color[i] );
+	xglColor4fv( middle_color );
 	xglVertex3fv( middle_vertex[i] );
     }
-    xglColor4fv( outer_color[0] );
+    xglColor4fv( outer_color );
     xglVertex3fv( outer_vertex[0] );
-    xglColor4fv( middle_color[0] );
+    xglColor4fv( middle_color );
     xglVertex3fv( middle_vertex[0] );
     xglEnd();
 
     /* Draw the bottom skirt */
     xglBegin( GL_TRIANGLE_STRIP );
+    xglColor4fv( outer_color );
     for ( i = 0; i < 12; i++ ) {
-	xglColor4fv( l->adj_fog_color );
 	xglVertex3fv( bottom_vertex[i] );
-	xglColor4fv( outer_color[i] );
 	xglVertex3fv( outer_vertex[i] );
     }
-    xglColor4fv( l->adj_fog_color );
     xglVertex3fv( bottom_vertex[0] );
-    xglColor4fv( outer_color[0] );
     xglVertex3fv( outer_vertex[0] );
     xglEnd();
 
@@ -375,9 +367,12 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.7  1998/07/22 21:39:21  curt
-/* Lower skirt tracks adjusted fog color, not fog color.
+/* Revision 1.8  1998/08/12 21:40:44  curt
+/* Sky now tracks adjusted fog color so it blends well with terrain.
 /*
+ * Revision 1.7  1998/07/22 21:39:21  curt
+ * Lower skirt tracks adjusted fog color, not fog color.
+ *
  * Revision 1.6  1998/05/23 14:07:14  curt
  * Use new C++ events class.
  *
