@@ -498,7 +498,8 @@ bool FGATC610x::do_lights() {
 /////////////////////////////////////////////////////////////////////
 
 bool FGATC610x::do_radio_switches() {
-    float freq, coarse_freq, fine_freq, inc;
+    float freq, coarse_freq, fine_freq;
+    int diff;
 
     ATC610xReadRadios( radios_fd, radio_switch_data );
 
@@ -560,223 +561,248 @@ bool FGATC610x::do_radio_switches() {
     last_nav2_swap = nav2_swap;
 
     // Com1 Tuner
-    int com1_tuner_fine = (radio_switch_data[5] >> 4) & 0x0f;
-    int com1_tuner_course = radio_switch_data[5] & 0x0f;
-    // cout << "com1 = " << com1_tuner_fine << " " << com1_tuner_course << endl;
+    int com1_tuner_fine = ((radio_switch_data[5] >> 4) & 0x0f) - 1;
+    int com1_tuner_coarse = (radio_switch_data[5] & 0x0f) - 1;
     static int last_com1_tuner_fine = com1_tuner_fine;
-    static int last_com1_tuner_course = com1_tuner_course;
-    inc = 0.0;
-    if ( com1_tuner_fine != last_com1_tuner_fine ) {
-	if ( com1_tuner_fine == 0x0c && last_com1_tuner_fine == 0x01 ) {
-	    inc = -0.025;
-	} else if ( com1_tuner_fine == 0x01 && last_com1_tuner_fine == 0x0c ) {
-	    inc = 0.025;
-	} else if ( com1_tuner_fine > last_com1_tuner_fine ) {
-	    inc = 0.025;
-	} else {
-	    inc = -0.025;
-	}
-    }
-    if ( com1_tuner_course != last_com1_tuner_course ) {
-	if ( com1_tuner_course == 0x0c && last_com1_tuner_course == 0x01 ) {
-	    inc = -1.0;
-	} else if ( com1_tuner_course == 0x01
-		    && last_com1_tuner_course == 0x0c ) {
-	    inc = 1.0;
-	} else if ( com1_tuner_course > last_com1_tuner_course ) {
-	    inc = 1.0;
-	} else {
-	    inc = -1.0;
-	}
-    }
-    last_com1_tuner_fine = com1_tuner_fine;
-    last_com1_tuner_course = com1_tuner_course;
+    static int last_com1_tuner_coarse = com1_tuner_coarse;
 
-    freq = com1_stby_freq->getFloatValue() + inc;
-    if ( freq < 0.0 ) {
-	freq = 140.0;
+    freq = com1_stby_freq->getFloatValue();
+    coarse_freq = (int)freq;
+    fine_freq = (int)((freq - coarse_freq) * 40 + 0.5);
+
+    if ( com1_tuner_fine != last_com1_tuner_fine ) {
+        diff = com1_tuner_fine - last_com1_tuner_fine;
+        if ( abs(diff) > 4 ) {
+            // roll over
+            if ( com1_tuner_fine < last_com1_tuner_fine ) {
+                // going up
+                diff = 12 - last_com1_tuner_fine + com1_tuner_fine;
+            } else {
+                // going down
+                diff = com1_tuner_fine - 12 - last_com1_tuner_fine;
+            }
+        }
+        fine_freq += diff;
     }
-    if ( freq > 140.0 ) {
-	freq = 0.0;
+    while ( fine_freq >= 40.0 ) { fine_freq -= 40.0; }
+    while ( fine_freq < 0.0 )  { fine_freq += 40.0; }
+
+    if ( com1_tuner_coarse != last_com1_tuner_coarse ) {
+        diff = com1_tuner_coarse - last_com1_tuner_coarse;
+        if ( abs(diff) > 4 ) {
+            // roll over
+            if ( com1_tuner_coarse < last_com1_tuner_coarse ) {
+                // going up
+                diff = 12 - last_com1_tuner_coarse + com1_tuner_coarse;
+            } else {
+                // going down
+                diff = com1_tuner_coarse - 12 - last_com1_tuner_coarse;
+            }
+        }
+        coarse_freq += diff;
     }
-    fgSetFloat( "/radios/comm[0]/frequencies/standby-mhz", freq );
+    if ( coarse_freq < 118.0 ) { coarse_freq += 19.0; }
+    if ( coarse_freq > 136.0 ) { coarse_freq -= 19.0; }
+
+    last_com1_tuner_fine = com1_tuner_fine;
+    last_com1_tuner_coarse = com1_tuner_coarse;
+
+    fgSetFloat( "/radios/comm[0]/frequencies/standby-mhz", 
+                coarse_freq + fine_freq / 40.0 );
 
     // Com2 Tuner
-    int com2_tuner_fine = (radio_switch_data[13] >> 4) & 0x0f;
-    int com2_tuner_course = radio_switch_data[13] & 0x0f;
+    int com2_tuner_fine = ((radio_switch_data[13] >> 4) & 0x0f) - 1;
+    int com2_tuner_coarse = (radio_switch_data[13] & 0x0f) - 1;
     static int last_com2_tuner_fine = com2_tuner_fine;
-    static int last_com2_tuner_course = com2_tuner_course;
-    inc = 0.0;
-    if ( com2_tuner_fine != last_com2_tuner_fine ) {
-	if ( com2_tuner_fine == 0x0c && last_com2_tuner_fine == 0x01 ) {
-	    inc = -0.025;
-	} else if ( com2_tuner_fine == 0x01 && last_com2_tuner_fine == 0x0c ) {
-	    inc = 0.025;
-	} else if ( com2_tuner_fine > last_com2_tuner_fine ) {
-	    inc = 0.025;
-	} else {
-	    inc = -0.025;
-	}
-    }
-    if ( com2_tuner_course != last_com2_tuner_course ) {
-	if ( com2_tuner_course == 0x0c && last_com2_tuner_course == 0x01 ) {
-	    inc = -1.0;
-	} else if ( com2_tuner_course == 0x01
-		    && last_com2_tuner_course == 0x0c ) {
-	    inc = 1.0;
-	} else if ( com2_tuner_course > last_com2_tuner_course ) {
-	    inc = 1.0;
-	} else {
-	    inc = -1.0;
-	}
-    }
-    last_com2_tuner_fine = com2_tuner_fine;
-    last_com2_tuner_course = com2_tuner_course;
+    static int last_com2_tuner_coarse = com2_tuner_coarse;
 
-    freq = com2_stby_freq->getFloatValue() + inc;
-    if ( freq < 0.0 ) {
-	freq = 140.0;
+    freq = com2_stby_freq->getFloatValue();
+    coarse_freq = (int)freq;
+    fine_freq = (int)((freq - coarse_freq) * 40 + 0.5);
+
+    if ( com2_tuner_fine != last_com2_tuner_fine ) {
+        diff = com2_tuner_fine - last_com2_tuner_fine;
+        if ( abs(diff) > 4 ) {
+            // roll over
+            if ( com2_tuner_fine < last_com2_tuner_fine ) {
+                // going up
+                diff = 12 - last_com2_tuner_fine + com2_tuner_fine;
+            } else {
+                // going down
+                diff = com2_tuner_fine - 12 - last_com2_tuner_fine;
+            }
+        }
+        fine_freq += diff;
     }
-    if ( freq > 140.0 ) {
-	freq = 0.0;
+    while ( fine_freq >= 40.0 ) { fine_freq -= 40.0; }
+    while ( fine_freq < 0.0 )  { fine_freq += 40.0; }
+
+    if ( com2_tuner_coarse != last_com2_tuner_coarse ) {
+        diff = com2_tuner_coarse - last_com2_tuner_coarse;
+        if ( abs(diff) > 4 ) {
+            // roll over
+            if ( com2_tuner_coarse < last_com2_tuner_coarse ) {
+                // going up
+                diff = 12 - last_com2_tuner_coarse + com2_tuner_coarse;
+            } else {
+                // going down
+                diff = com2_tuner_coarse - 12 - last_com2_tuner_coarse;
+            }
+        }
+        coarse_freq += diff;
     }
-    fgSetFloat( "/radios/comm[1]/frequencies/standby-mhz", freq );
+    if ( coarse_freq < 118.0 ) { coarse_freq += 19.0; }
+    if ( coarse_freq > 136.0 ) { coarse_freq -= 19.0; }
+
+    last_com2_tuner_fine = com2_tuner_fine;
+    last_com2_tuner_coarse = com2_tuner_coarse;
+
+    fgSetFloat( "/radios/comm[1]/frequencies/standby-mhz",
+                coarse_freq + fine_freq / 40.0 );
 
     // Nav1 Tuner
-    int nav1_tuner_fine = (radio_switch_data[9] >> 4) & 0x0f;
-    int nav1_tuner_course = radio_switch_data[9] & 0x0f;
+    int nav1_tuner_fine = ((radio_switch_data[9] >> 4) & 0x0f) - 1;
+    int nav1_tuner_coarse = (radio_switch_data[9] & 0x0f) - 1;
     static int last_nav1_tuner_fine = nav1_tuner_fine;
-    static int last_nav1_tuner_course = nav1_tuner_course;
+    static int last_nav1_tuner_coarse = nav1_tuner_coarse;
 
     freq = nav1_stby_freq->getFloatValue();
     coarse_freq = (int)freq;
-    fine_freq = freq - coarse_freq;
+    fine_freq = (int)((freq - coarse_freq) * 20 + 0.5);
 
-    inc = 0.0;
     if ( nav1_tuner_fine != last_nav1_tuner_fine ) {
-	if ( nav1_tuner_fine == 0x0c && last_nav1_tuner_fine == 0x01 ) {
-	  fine_freq -= 0.05;
-	} else if ( nav1_tuner_fine == 0x01 && last_nav1_tuner_fine == 0x0c ) {
-	  fine_freq += 0.05;
-	} else if ( nav1_tuner_fine > last_nav1_tuner_fine ) {
-	  fine_freq += 0.05;
-	} else {
-	  fine_freq -= 0.05;
-	}
+        diff = nav1_tuner_fine - last_nav1_tuner_fine;
+        if ( abs(diff) > 4 ) {
+            // roll over
+            if ( nav1_tuner_fine < last_nav1_tuner_fine ) {
+                // going up
+                diff = 12 - last_nav1_tuner_fine + nav1_tuner_fine;
+            } else {
+                // going down
+                diff = nav1_tuner_fine - 12 - last_nav1_tuner_fine;
+            }
+        }
+        fine_freq += diff;
     }
-    if ( fine_freq < 0.0 ) {
-	fine_freq = 0.95;
-    }
-    if ( fine_freq > 0.95 ) {
-	fine_freq = 0.0;
-    }
+    while ( fine_freq >= 20.0 ) { fine_freq -= 20.0; }
+    while ( fine_freq < 0.0 )  { fine_freq += 20.0; }
 
-    if ( nav1_tuner_course != last_nav1_tuner_course ) {
-	if ( nav1_tuner_course == 0x0c && last_nav1_tuner_course == 0x01 ) {
-	  coarse_freq -= 1.0;
-	} else if ( nav1_tuner_course == 0x01
-		    && last_nav1_tuner_course == 0x0c ) {
-	  coarse_freq += 1.0;
-	} else if ( nav1_tuner_course > last_nav1_tuner_course ) {
-	  coarse_freq += 1.0;
-	} else {
-	  coarse_freq -= 1.0;
-	}
+    if ( nav1_tuner_coarse != last_nav1_tuner_coarse ) {
+        diff = nav1_tuner_coarse - last_nav1_tuner_coarse;
+        if ( abs(diff) > 4 ) {
+            // roll over
+            if ( nav1_tuner_coarse < last_nav1_tuner_coarse ) {
+                // going up
+                diff = 12 - last_nav1_tuner_coarse + nav1_tuner_coarse;
+            } else {
+                // going down
+                diff = nav1_tuner_coarse - 12 - last_nav1_tuner_coarse;
+            }
+        }
+        coarse_freq += diff;
     }
-    if ( coarse_freq < 108.0 ) {
-	coarse_freq = 117.0;
-    }
-    if ( coarse_freq > 117.0 ) {
-	coarse_freq = 108.0;
-    }
+    if ( coarse_freq < 108.0 ) { coarse_freq += 10.0; }
+    if ( coarse_freq > 117.0 ) { coarse_freq -= 10.0; }
 
     last_nav1_tuner_fine = nav1_tuner_fine;
-    last_nav1_tuner_course = nav1_tuner_course;
+    last_nav1_tuner_coarse = nav1_tuner_coarse;
 
     fgSetFloat( "/radios/nav[0]/frequencies/standby-mhz",
-		coarse_freq + fine_freq );
+                coarse_freq + fine_freq / 20.0 );
 
     // Nav2 Tuner
-    int nav2_tuner_fine = (radio_switch_data[17] >> 4) & 0x0f;
-    int nav2_tuner_course = radio_switch_data[17] & 0x0f;
+    int nav2_tuner_fine = ((radio_switch_data[17] >> 4) & 0x0f) - 1;
+    int nav2_tuner_coarse = (radio_switch_data[17] & 0x0f) - 1;
     static int last_nav2_tuner_fine = nav2_tuner_fine;
-    static int last_nav2_tuner_course = nav2_tuner_course;
-    inc = 0.0;
-    if ( nav2_tuner_fine != last_nav2_tuner_fine ) {
-	if ( nav2_tuner_fine == 0x0c && last_nav2_tuner_fine == 0x01 ) {
-	    inc = -0.05;
-	} else if ( nav2_tuner_fine == 0x01 && last_nav2_tuner_fine == 0x0c ) {
-	    inc = 0.05;
-	} else if ( nav2_tuner_fine > last_nav2_tuner_fine ) {
-	    inc = 0.05;
-	} else {
-	    inc = -0.05;
-	}
-    }
-    if ( nav2_tuner_course != last_nav2_tuner_course ) {
-	if ( nav2_tuner_course == 0x0c && last_nav2_tuner_course == 0x01 ) {
-	    inc = -1.0;
-	} else if ( nav2_tuner_course == 0x01
-		    && last_nav2_tuner_course == 0x0c ) {
-	    inc = 1.0;
-	} else if ( nav2_tuner_course > last_nav2_tuner_course ) {
-	    inc = 1.0;
-	} else {
-	    inc = -1.0;
-	}
-    }
-    last_nav2_tuner_fine = nav2_tuner_fine;
-    last_nav2_tuner_course = nav2_tuner_course;
+    static int last_nav2_tuner_coarse = nav2_tuner_coarse;
 
-    freq = nav2_stby_freq->getFloatValue() + inc;
-    if ( freq < 108.0 ) {
-	freq = 117.95;
+    freq = nav2_stby_freq->getFloatValue();
+    coarse_freq = (int)freq;
+    fine_freq = (int)((freq - coarse_freq) * 20 + 0.5);
+
+    if ( nav2_tuner_fine != last_nav2_tuner_fine ) {
+        diff = nav2_tuner_fine - last_nav2_tuner_fine;
+        if ( abs(diff) > 4 ) {
+            // roll over
+            if ( nav2_tuner_fine < last_nav2_tuner_fine ) {
+                // going up
+                diff = 12 - last_nav2_tuner_fine + nav2_tuner_fine;
+            } else {
+                // going down
+                diff = nav2_tuner_fine - 12 - last_nav2_tuner_fine;
+            }
+        }
+        fine_freq += diff;
     }
-    if ( freq > 117.95 ) {
-	freq = 108.0;
+    while ( fine_freq >= 20.0 ) { fine_freq -= 20.0; }
+    while ( fine_freq < 0.0 )  { fine_freq += 20.0; }
+
+    if ( nav2_tuner_coarse != last_nav2_tuner_coarse ) {
+        diff = nav2_tuner_coarse - last_nav2_tuner_coarse;
+        if ( abs(diff) > 4 ) {
+            // roll over
+            if ( nav2_tuner_coarse < last_nav2_tuner_coarse ) {
+                // going up
+                diff = 12 - last_nav2_tuner_coarse + nav2_tuner_coarse;
+            } else {
+                // going down
+                diff = nav2_tuner_coarse - 12 - last_nav2_tuner_coarse;
+            }
+        }
+        coarse_freq += diff;
     }
-    fgSetFloat( "/radios/nav[1]/frequencies/standby-mhz", freq );
+    if ( coarse_freq < 108.0 ) { coarse_freq += 10.0; }
+    if ( coarse_freq > 117.0 ) { coarse_freq -= 10.0; }
+
+    last_nav2_tuner_fine = nav2_tuner_fine;
+    last_nav2_tuner_coarse = nav2_tuner_coarse;
+
+    fgSetFloat( "/radios/nav[1]/frequencies/standby-mhz", 
+                coarse_freq + fine_freq / 20.0);
 
     // ADF Tuner
-    int adf_tuner_fine = (radio_switch_data[21] >> 4) & 0x0f;
-    int adf_tuner_course = radio_switch_data[21] & 0x0f;
-    // cout << "adf = " << adf_tuner_fine << " " << adf_tuner_course << endl;
+    int adf_tuner_fine = ((radio_switch_data[21] >> 4) & 0x0f) - 1;
+    int adf_tuner_coarse = (radio_switch_data[21] & 0x0f) - 1;
     static int last_adf_tuner_fine = adf_tuner_fine;
-    static int last_adf_tuner_course = adf_tuner_course;
-    inc = 0.0;
-    if ( adf_tuner_fine != last_adf_tuner_fine ) {
-	if ( adf_tuner_fine == 0x0c && last_adf_tuner_fine == 0x01 ) {
-	    inc = -1.0;
-	} else if ( adf_tuner_fine == 0x01 && last_adf_tuner_fine == 0x0c ) {
-	    inc = -1.0;
-	} else if ( adf_tuner_fine > last_adf_tuner_fine ) {
-	    inc = 1.0;
-	} else {
-	    inc = -1.0;
-	}
-    }
-    if ( adf_tuner_course != last_adf_tuner_course ) {
-	if ( adf_tuner_course == 0x0c && last_adf_tuner_course == 0x01 ) {
-	    inc = -25.0;
-	} else if ( adf_tuner_course == 0x01
-		    && last_adf_tuner_course == 0x0c ) {
-	    inc = -25.0;
-	} else if ( adf_tuner_course > last_adf_tuner_course ) {
-	    inc = 25.0;
-	} else {
-	    inc = -25.0;
-	}
-    }
-    last_adf_tuner_fine = adf_tuner_fine;
-    last_adf_tuner_course = adf_tuner_course;
+    static int last_adf_tuner_coarse = adf_tuner_coarse;
 
-    freq = adf_freq->getFloatValue() + inc;
-    if ( freq < 100.0 ) {
-	freq = 1299;
+    freq = adf_stby_freq->getFloatValue();
+
+    if ( adf_tuner_fine != last_adf_tuner_fine ) {
+        diff = adf_tuner_fine - last_adf_tuner_fine;
+        if ( abs(diff) > 4 ) {
+            // roll over
+            if ( adf_tuner_fine < last_adf_tuner_fine ) {
+                // going up
+                diff = 12 - last_adf_tuner_fine + adf_tuner_fine;
+            } else {
+                // going down
+                diff = adf_tuner_fine - 12 - last_adf_tuner_fine;
+            }
+        }
+        freq += diff;
     }
-    if ( freq > 1299 ) {
-	freq = 100.0;
+
+    if ( adf_tuner_coarse != last_adf_tuner_coarse ) {
+        diff = adf_tuner_coarse - last_adf_tuner_coarse;
+        if ( abs(diff) > 4 ) {
+            // roll over
+            if ( adf_tuner_coarse < last_adf_tuner_coarse ) {
+                // going up
+                diff = 12 - last_adf_tuner_coarse + adf_tuner_coarse;
+            } else {
+                // going down
+                diff = adf_tuner_coarse - 12 - last_adf_tuner_coarse;
+            }
+        }
+        freq += 25 * diff;
     }
+    if ( freq < 100 ) { freq += 1200; }
+    if ( freq > 1299 ) { freq -= 1200; }
+ 
+    last_adf_tuner_fine = adf_tuner_fine;
+    last_adf_tuner_coarse = adf_tuner_coarse;
+
     fgSetFloat( "/radios/adf/frequencies/selected-khz", freq );
 
     return true;
@@ -1040,32 +1066,61 @@ bool FGATC610x::do_switches() {
     update_switch_matrix( board, switch_data, switch_matrix );
 
     // magnetos and starter switch
+    int magnetos = 0;
+    bool starter = false;
     if ( switch_matrix[board][3][1] == 1 ) {
-	fgSetInt( "/controls/magnetos[0]", 3 );
-	fgSetBool( "/controls/starter[0]", true );
+	magnetos = 3;
+	starter = true;
     } else if ( switch_matrix[board][2][1] == 1 ) {
-	fgSetInt( "/controls/magnetos[0]", 3 );
-	fgSetBool( "/controls/starter[0]", false );
+	magnetos = 3;
+	starter = false;
     } else if ( switch_matrix[board][1][1] == 1 ) {
-	fgSetInt( "/controls/magnetos[0]", 2 );
-	fgSetBool( "/controls/starter[0]", false );
+	magnetos = 2;
+	starter = false;
     } else if ( switch_matrix[board][0][1] == 1 ) {
-	fgSetInt( "/controls/magnetos[0]", 1 );
-	fgSetBool( "/controls/starter[0]", false );
+	magnetos = 1;
+	starter = false;
     } else {
-	fgSetInt( "/controls/magnetos[0]", 0 );
-	fgSetBool( "/controls/starter[0]", false );
+	magnetos = 0;
+	starter = false;
     }
 
     // flaps
+    float flaps = 0.0;
     if ( switch_matrix[board][6][3] == 1 ) {
-	fgSetFloat( "/controls/flaps", 1.0 );
+	flaps = 1.0;
     } else if ( switch_matrix[board][5][3] == 1 ) {
-	fgSetFloat( "/controls/flaps", 2.0 / 3.0 );
+	flaps = 2.0 / 3.0;
     } else if ( switch_matrix[board][4][3] == 1 ) {
-	fgSetFloat( "/controls/flaps", 1.0 / 3.0 );
+	flaps = 1.0 / 3.0;
     } else if ( switch_matrix[board][4][3] == 0 ) {
-	fgSetFloat( "/controls/flaps", 0.0 );
+	flaps = 0.0;
+    }
+
+    // do a bit of filtering on the magneto/starter switch and the
+    // flap lever because these are not well debounced in hardware
+    static int mag1, mag2, mag3;
+    mag3 = mag2;
+    mag2 = mag1;
+    mag1 = magnetos;
+    if ( mag1 == mag2 && mag2 == mag3 ) {
+        fgSetInt( "/controls/magnetos[0]", magnetos );
+    }
+
+    static bool start1, start2, start3;
+    start3 = start2;
+    start2 = start1;
+    start1 = starter;
+    if ( start1 == start2 && start2 == start3 ) {
+        fgSetBool( "/controls/starter[0]", starter );
+    }
+
+    static float flap1, flap2, flap3;
+    flap3 = flap2;
+    flap2 = flap1;
+    flap1 = flaps;
+    if ( flap1 == flap2 && flap2 == flap3 ) {
+        fgSetFloat( "/controls/flaps", flaps );
     }
 
     return true;
