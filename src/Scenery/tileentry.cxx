@@ -91,10 +91,10 @@ FGTileEntry::WorldCoordinate( sgCoord *obj_pos, Point3D center,
     Point3D geod( lon * SGD_DEGREES_TO_RADIANS,
                   lat * SGD_DEGREES_TO_RADIANS,
                   elev );
-	
+        
     Point3D world_pos = sgGeodToCart( geod );
     Point3D offset = world_pos - center;
-	
+        
     sgMat4 POS;
     sgMakeTransMat4( POS, offset.x(), offset.y(), offset.z() );
 
@@ -128,7 +128,7 @@ static void WorldCoordinate( sgCoord *obj_pos, Point3D center, double lat,
 
     // setup transforms
     Point3D geod( lon_rad, lat_rad, elev );
-	
+        
     Point3D world_pos = sgGeodToCart( geod );
     Point3D offset = world_pos - center;
 
@@ -143,17 +143,17 @@ static void WorldCoordinate( sgCoord *obj_pos, Point3D center, double lat,
 
     mat[0][0] =  cos_hdg * (SGfloat)sin_lat * (SGfloat)cos_lon - sin_hdg * (SGfloat)sin_lon;
     mat[0][1] =  cos_hdg * (SGfloat)sin_lat * (SGfloat)sin_lon + sin_hdg * (SGfloat)cos_lon;
-    mat[0][2] =	-cos_hdg * (SGfloat)cos_lat;
-    mat[0][3] =	 SG_ZERO;
+    mat[0][2] = -cos_hdg * (SGfloat)cos_lat;
+    mat[0][3] =  SG_ZERO;
 
     mat[1][0] = -sin_hdg * (SGfloat)sin_lat * (SGfloat)cos_lon - cos_hdg * (SGfloat)sin_lon;
     mat[1][1] = -sin_hdg * (SGfloat)sin_lat * (SGfloat)sin_lon + cos_hdg * (SGfloat)cos_lon;
-    mat[1][2] =	 sin_hdg * (SGfloat)cos_lat;
-    mat[1][3] =	 SG_ZERO;
+    mat[1][2] =  sin_hdg * (SGfloat)cos_lat;
+    mat[1][3] =  SG_ZERO;
 
     mat[2][0] = (SGfloat)cos_lat * (SGfloat)cos_lon;
     mat[2][1] = (SGfloat)cos_lat * (SGfloat)sin_lon;
-    mat[2][2] =	(SGfloat)sin_lat;
+    mat[2][2] = (SGfloat)sin_lat;
     mat[2][3] =  SG_ZERO;
 
     mat[3][0] = offset.x();
@@ -170,15 +170,15 @@ static void WorldCoordinate( sgCoord *obj_pos, Point3D center, double lat,
 // it can be removed by the calling routine.
 static void my_remove_branch( ssgBranch * branch ) {
     for ( ssgEntity *k = branch->getKid( 0 );
-	  k != NULL; 
-	  k = branch->getNextKid() )
+          k != NULL; 
+          k = branch->getNextKid() )
     {
-	if ( k -> isAKindOf ( ssgTypeBranch() ) ) {
-	    my_remove_branch( (ssgBranch *)k );
-	    branch -> removeKid ( k );
-	} else if ( k -> isAKindOf ( ssgTypeLeaf() ) ) {
-	    branch -> removeKid ( k ) ;
-	}
+        if ( k -> isAKindOf ( ssgTypeBranch() ) ) {
+            my_remove_branch( (ssgBranch *)k );
+            branch -> removeKid ( k );
+        } else if ( k -> isAKindOf ( ssgTypeLeaf() ) ) {
+            branch -> removeKid ( k ) ;
+        }
     }
 }
 
@@ -321,7 +321,7 @@ void *fgBillboard( ssgBranch *lightmaps, ssgVertexArray *light_maps, ssgSimpleSt
     sgSetVec2( texcoords[3], 1.0, 0.0 );
     
     for (int j = 0; j < 4; j++ ) {
-        sgCopyVec3(lmaps[j]	,quads[j]);
+        sgCopyVec3(lmaps[j]     ,quads[j]);
     }
 
     for ( int i = 0; i < light_maps->getNum(); ++i ) {
@@ -334,7 +334,7 @@ void *fgBillboard( ssgBranch *lightmaps, ssgVertexArray *light_maps, ssgSimpleSt
         sgSetVec3(pt,temp[0],temp[1],temp[2]);
 
         for (int k=0; k<4; k++) {
-            sgAddVec3( quads[k],lmaps[k], pt );			
+            sgAddVec3( quads[k],lmaps[k], pt );                 
             vl->add(quads[k]);
             tl->add(texcoords[k]);
             cl->add(color);
@@ -407,7 +407,7 @@ ssgBranch* FGTileEntry::gen_runway_lights( ssgVertexArray *points,ssgVertexArray
     touchdown_state->disable( GL_LIGHTING );
     touchdown_state->enable( GL_TEXTURE_2D );
     touchdown_state->setShadeModel( GL_SMOOTH );
-	
+        
     //THRESHOLD
     setColor(0.0,0.0,-1.0,180.0, 1, 0, 0, 1);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -588,7 +588,7 @@ ssgBranch* FGTileEntry::gen_runway_lights( ssgVertexArray *points,ssgVertexArray
             runway_lights->addKid( leaf3 );
 
         } else if (type[i] == 4) {  //BACK-TO-BACK POLYGONS,TOUCHDOWN/THRESHOLD
-	        
+                
             vl->add(v1);
             nl->add(d1);
             vl->add(v3);
@@ -631,7 +631,7 @@ ssgBranch* FGTileEntry::gen_runway_lights( ssgVertexArray *points,ssgVertexArray
             leaf6->setState( yellow_state );
             ols_transform->addKid (leaf6);
             // DO NOT DELETE THIS CODE - This is to compare a discrete FLOLS (without LOD) with analog FLOLS
-            //			lightmaps_sequence->addKid (leaf6);
+            //                  lightmaps_sequence->addKid (leaf6);
             // DO NOT DELETE THIS CODE - This is to compare a discrete FLOLS (without LOD) with analog FLOLS
 
         } else if (type[i] == 7) {  //POINT,RED
@@ -660,7 +660,7 @@ ssgBranch* FGTileEntry::gen_runway_lights( ssgVertexArray *points,ssgVertexArray
     leaf2 = new ssgVtxTable ( GL_POINTS, vlt, nlt, NULL, NULL );
     leaf2->setState( taxi_state );
     runway_lights->addKid( leaf2 );
-	
+        
     leaf7 = new ssgVtxTable ( GL_POINTS, vlr, nlr, NULL, NULL );
     leaf7->setState( red_state );
     runway_lights->addKid( leaf7 );
@@ -677,11 +677,11 @@ ssgBranch* FGTileEntry::gen_runway_lights( ssgVertexArray *points,ssgVertexArray
     leaf9->setState( yellow_state );
     runway_lights->addKid( leaf9 );
 
-    lightmaps_sequence->select(0xFFFFFF);	
+    lightmaps_sequence->select(0xFFFFFF);       
     return runway_lights;
 }
 // ADA
-	
+        
 
 // Free "n" leaf elements of an ssg tree.  returns the number of
 // elements freed.  An empty branch node is considered a leaf.  This
@@ -724,7 +724,7 @@ bool FGTileEntry::free_tile() {
     int i;
     int delete_size = 100;
     SG_LOG( SG_TERRAIN, SG_DEBUG,
-	    "FREEING TILE = (" << tile_bucket << ")" );
+            "FREEING TILE = (" << tile_bucket << ")" );
 
     SG_LOG( SG_TERRAIN, SG_DEBUG, "(start) free_tracker = " << free_tracker );
     
@@ -773,19 +773,19 @@ bool FGTileEntry::free_tile() {
             free_tracker |= GROUND_LIGHTS;
         }
     } else if ( !(free_tracker & RWY_LIGHTS) && rwy_lights_transform ) {
-	// delete the terrain lighting branch (this should already have been
-	// disconnected from the scene graph)
+        // delete the terrain lighting branch (this should already have been
+        // disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING rwy_lights_transform" );
-	if ( fgPartialFreeSSGtree( rwy_lights_transform, delete_size ) == 0 ) {
+        if ( fgPartialFreeSSGtree( rwy_lights_transform, delete_size ) == 0 ) {
             ssgDeRefDelete( rwy_lights_transform );
             free_tracker |= RWY_LIGHTS;
         }
     } else if ( !(free_tracker & LIGHTMAPS) && lightmaps_transform ) {
         // ADA
-	// delete the terrain lighting branch (this should already have been
+        // delete the terrain lighting branch (this should already have been
         // disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING lightmaps_transform" );
-	if ( fgPartialFreeSSGtree( lightmaps_transform, delete_size ) == 0 ) {
+        if ( fgPartialFreeSSGtree( lightmaps_transform, delete_size ) == 0 ) {
             ssgDeRefDelete( lightmaps_transform );
             free_tracker |= LIGHTMAPS;
         }
@@ -825,12 +825,12 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
     ranges[1] = vis + bounding_radius;
     terra_range->setRanges( ranges, 2 );
     if ( gnd_lights_range ) {
-	ranges[1] = vis * 1.5 + bounding_radius;
-	gnd_lights_range->setRanges( ranges, 2 );
+        ranges[1] = vis * 1.5 + bounding_radius;
+        gnd_lights_range->setRanges( ranges, 2 );
     }
     if ( rwy_lights_range ) {
-	ranges[1] = vis * 1.5 + bounding_radius;
-	rwy_lights_range->setRanges( ranges, 2 );
+        ranges[1] = vis * 1.5 + bounding_radius;
+        rwy_lights_range->setRanges( ranges, 2 );
     }
 #endif
     sgVec3 sgTrans;
@@ -838,94 +838,94 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
     terra_transform->setTransform( sgTrans );
 
     if ( gnd_lights_transform ) {
-	// we need to lift the lights above the terrain to avoid
-	// z-buffer fighting.  We do this based on our altitude and
-	// the distance this tile is away from scenery center.
+        // we need to lift the lights above the terrain to avoid
+        // z-buffer fighting.  We do this based on our altitude and
+        // the distance this tile is away from scenery center.
 
         // we expect 'up' to be a unit vector coming in, but since we
         // modify the value of lift_vec, we need to create a local
         // copy.
-	sgVec3 lift_vec;
-	sgCopyVec3( lift_vec, up );
+        sgVec3 lift_vec;
+        sgCopyVec3( lift_vec, up );
 
-	double agl;
+        double agl;
         agl = globals->get_current_view()->getAltitudeASL_ft()
             * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev();
 
-	// sgTrans just happens to be the
-	// vector from scenery center to the center of this tile which
-	// is what we want to calculate the distance of
-	sgVec3 to;
-	sgCopyVec3( to, sgTrans );
-	double dist = sgLengthVec3( to );
+        // sgTrans just happens to be the
+        // vector from scenery center to the center of this tile which
+        // is what we want to calculate the distance of
+        sgVec3 to;
+        sgCopyVec3( to, sgTrans );
+        double dist = sgLengthVec3( to );
 
-	if ( general.get_glDepthBits() > 16 ) {
-	    sgScaleVec3( lift_vec, 10.0 + agl / 100.0 + dist / 10000 );
-	} else {
-	    sgScaleVec3( lift_vec, 10.0 + agl / 20.0 + dist / 5000 );
-	}
+        if ( general.get_glDepthBits() > 16 ) {
+            sgScaleVec3( lift_vec, 10.0 + agl / 100.0 + dist / 10000 );
+        } else {
+            sgScaleVec3( lift_vec, 10.0 + agl / 20.0 + dist / 5000 );
+        }
 
-	sgVec3 lt_trans;
-	sgCopyVec3( lt_trans, sgTrans );
+        sgVec3 lt_trans;
+        sgCopyVec3( lt_trans, sgTrans );
 
-	sgAddVec3( lt_trans, lift_vec );
-	gnd_lights_transform->setTransform( lt_trans );
+        sgAddVec3( lt_trans, lift_vec );
+        gnd_lights_transform->setTransform( lt_trans );
 
-	// select which set of lights based on sun angle
-	float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
-	if ( sun_angle > 95 ) {
-	    gnd_lights_brightness->select(0x04);
-	} else if ( sun_angle > 92 ) {
-	    gnd_lights_brightness->select(0x02);
-	} else if ( sun_angle > 89 ) {
-	    gnd_lights_brightness->select(0x01);
-	} else {
-	    gnd_lights_brightness->select(0x00);
-	}
+        // select which set of lights based on sun angle
+        float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
+        if ( sun_angle > 95 ) {
+            gnd_lights_brightness->select(0x04);
+        } else if ( sun_angle > 92 ) {
+            gnd_lights_brightness->select(0x02);
+        } else if ( sun_angle > 89 ) {
+            gnd_lights_brightness->select(0x01);
+        } else {
+            gnd_lights_brightness->select(0x00);
+        }
     }
 
     if ( rwy_lights_transform ) {
-	// we need to lift the lights above the terrain to avoid
-	// z-buffer fighting.  We do this based on our altitude and
-	// the distance this tile is away from scenery center.
+        // we need to lift the lights above the terrain to avoid
+        // z-buffer fighting.  We do this based on our altitude and
+        // the distance this tile is away from scenery center.
 
-	sgVec3 lift_vec;
-	sgCopyVec3( lift_vec, up );
+        sgVec3 lift_vec;
+        sgCopyVec3( lift_vec, up );
 
-	double agl;
+        double agl;
         agl = globals->get_current_view()->getAltitudeASL_ft()
             * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev();
 
-	// sgTrans just happens to be the
-	// vector from scenery center to the center of this tile which
-	// is what we want to calculate the distance of
-	sgVec3 to;
-	sgCopyVec3( to, sgTrans );
-	double dist = sgLengthVec3( to );
+        // sgTrans just happens to be the
+        // vector from scenery center to the center of this tile which
+        // is what we want to calculate the distance of
+        sgVec3 to;
+        sgCopyVec3( to, sgTrans );
+        double dist = sgLengthVec3( to );
 
-	if ( general.get_glDepthBits() > 16 ) {
-	    sgScaleVec3( lift_vec, 0.0 + agl / 100.0 + dist / 10000 );
-	} else {
-	    sgScaleVec3( lift_vec, 1.0 + agl / 20.0 + dist / 5000 );
-	}
+        if ( general.get_glDepthBits() > 16 ) {
+            sgScaleVec3( lift_vec, 0.0 + agl / 100.0 + dist / 10000 );
+        } else {
+            sgScaleVec3( lift_vec, 1.0 + agl / 20.0 + dist / 5000 );
+        }
 
-	sgVec3 lt_trans;
-	sgCopyVec3( lt_trans, sgTrans );
+        sgVec3 lt_trans;
+        sgCopyVec3( lt_trans, sgTrans );
 
-	sgAddVec3( lt_trans, lift_vec );
-	rwy_lights_transform->setTransform( lt_trans );
+        sgAddVec3( lt_trans, lift_vec );
+        rwy_lights_transform->setTransform( lt_trans );
 
-	// select which set of lights based on sun angle
-	// float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
-	// if ( sun_angle > 95 ) {
-	//     gnd_lights_brightness->select(0x04);
-	// } else if ( sun_angle > 92 ) {
-	//     gnd_lights_brightness->select(0x02);
-	// } else if ( sun_angle > 89 ) {
-	//     gnd_lights_brightness->select(0x01);
-	// } else {
-	//     gnd_lights_brightness->select(0x00);
-	// }
+        // select which set of lights based on sun angle
+        // float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
+        // if ( sun_angle > 95 ) {
+        //     gnd_lights_brightness->select(0x04);
+        // } else if ( sun_angle > 92 ) {
+        //     gnd_lights_brightness->select(0x02);
+        // } else if ( sun_angle > 89 ) {
+        //     gnd_lights_brightness->select(0x01);
+        // } else {
+        //     gnd_lights_brightness->select(0x00);
+        // }
     }
 
     // ADA
@@ -933,12 +933,12 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
     sgSetVec3( sgTrans, offset.x(), offset.y(), offset.z() );
     if ( lightmaps_transform ) {
         static unsigned int selectnode = 0;
-	// Run-time extension check.
-	if (!glutExtensionSupported("GL_EXT_point_parameters")) {
+        // Run-time extension check.
+        if (!glutExtensionSupported("GL_EXT_point_parameters")) {
             //use lightmaps on billboarded polygons
         } else {
             // using GL_EXT_point_parameters
-		
+                
             // This part is same as ground-lights code above by Curt
             sgVec3 lift_vec;
             sgCopyVec3( lift_vec, up );
@@ -973,7 +973,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
                 lightmaps_brightness->select(0x00);
                 lightmaps_sequence->select(0x000000);
             } 
-	} // end of GL_EXT_point_parameters section
+        } // end of GL_EXT_point_parameters section
 
     } // end of runway lights section
     // ADA
@@ -986,10 +986,10 @@ static int fgLightsPredraw( ssgEntity *e ) {
 #if 0
 #ifdef GL_EXT_point_parameters
     if (glutExtensionSupported("GL_EXT_point_parameters")) {
-	static float quadratic[3] = {1.0, 0.01, 0.0001};
-	glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
-	glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
-	glPointSize(4.0);
+        static float quadratic[3] = {1.0, 0.01, 0.0001};
+        glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
+        glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
+        glPointSize(4.0);
     }
 #endif
 #endif
@@ -1000,10 +1000,10 @@ static int fgLightsPostdraw( ssgEntity *e ) {
 #if 0
 #ifdef GL_EXT_point_parameters
     if (glutExtensionSupported("GL_EXT_point_parameters")) {
-	static float default_attenuation[3] = {1.0, 0.0, 0.0};
-	glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
-			      default_attenuation);
-	glPointSize(1.0);
+        static float default_attenuation[3] = {1.0, 0.0, 0.0};
+        glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
+                              default_attenuation);
+        glPointSize(1.0);
     }
 #endif
 #endif
@@ -1027,38 +1027,38 @@ ssgLeaf* FGTileEntry::gen_lights( ssgVertexArray *lights, int inc, float bright 
 
     sgVec4 color;
     for ( int i = 0; i < lights->getNum(); ++i ) {
-	// this loop is slightly less efficient than it otherwise
-	// could be, but we want a red light to always be red, and a
-	// yellow light to always be yellow, etc. so we are trying to
-	// preserve the random sequence.
-	float zombie = sg_random();
-	if ( i % inc == 0 ) {
-	    vl->add( lights->get(i) );
+        // this loop is slightly less efficient than it otherwise
+        // could be, but we want a red light to always be red, and a
+        // yellow light to always be yellow, etc. so we are trying to
+        // preserve the random sequence.
+        float zombie = sg_random();
+        if ( i % inc == 0 ) {
+            vl->add( lights->get(i) );
 
-	    // factor = sg_random() ^ 2, range = 0 .. 1 concentrated towards 0
-	    float factor = sg_random();
-	    factor *= factor;
+            // factor = sg_random() ^ 2, range = 0 .. 1 concentrated towards 0
+            float factor = sg_random();
+            factor *= factor;
 
-	    if ( zombie > 0.5 ) {
-		// 50% chance of yellowish
-		sgSetVec4( color, 0.9, 0.9, 0.3, bright - factor * 0.2 );
-	    } else if ( zombie > 0.15 ) {
-		// 35% chance of whitish
-		sgSetVec4( color, 0.9, 0.9, 0.8, bright - factor * 0.2 );
-	    } else if ( zombie > 0.05 ) {
-		// 10% chance of orangish
-		sgSetVec4( color, 0.9, 0.6, 0.2, bright - factor * 0.2 );
-	    } else {
-		// 5% chance of redish
-		sgSetVec4( color, 0.9, 0.2, 0.2, bright - factor * 0.2 );
-	    }
-	    cl->add( color );
-	}
+            if ( zombie > 0.5 ) {
+                // 50% chance of yellowish
+                sgSetVec4( color, 0.9, 0.9, 0.3, bright - factor * 0.2 );
+            } else if ( zombie > 0.15 ) {
+                // 35% chance of whitish
+                sgSetVec4( color, 0.9, 0.9, 0.8, bright - factor * 0.2 );
+            } else if ( zombie > 0.05 ) {
+                // 10% chance of orangish
+                sgSetVec4( color, 0.9, 0.6, 0.2, bright - factor * 0.2 );
+            } else {
+                // 5% chance of redish
+                sgSetVec4( color, 0.9, 0.2, 0.2, bright - factor * 0.2 );
+            }
+            cl->add( color );
+        }
     }
 
     // create ssg leaf
     ssgLeaf *leaf = 
-	new ssgVtxTable ( GL_POINTS, vl, nl, tl, cl );
+        new ssgVtxTable ( GL_POINTS, vl, nl, tl, cl );
 
     // assign state
     FGNewMat *newmat = material_lib.find( "LIGHTS" );
@@ -1071,38 +1071,38 @@ ssgLeaf* FGTileEntry::gen_lights( ssgVertexArray *lights, int inc, float bright 
 
 
 bool FGTileEntry::obj_load( const std::string& path,
-		       ssgBranch* geometry,
-		       ssgBranch* rwy_lights,
-		       ssgVertexArray* ground_lights, bool is_base )
+                       ssgBranch* geometry,
+                       ssgBranch* rwy_lights,
+                       ssgVertexArray* ground_lights, bool is_base )
 {
-    Point3D c;			// returned center point
-    double br;			// returned bounding radius
+    Point3D c;                  // returned center point
+    double br;                  // returned bounding radius
 
     // try loading binary format
     if ( fgBinObjLoad( path, is_base,
-		       &c, &br, geometry, rwy_lights, ground_lights ) )
+                       &c, &br, geometry, rwy_lights, ground_lights ) )
     {
-	if ( is_base ) {
-	    center = c;
-	    bounding_radius = br;
-	}
+        if ( is_base ) {
+            center = c;
+            bounding_radius = br;
+        }
     } else {
-	// next try the older ascii format, this is some ugly
-	// weirdness because the ascii loader is *old* and hasn't been
-	// updated, but hopefully we can can the ascii format soon.
-	ssgBranch *tmp = fgAsciiObjLoad( path, this, ground_lights, is_base );
-	if ( tmp ) {
-	    return (NULL != tmp);
-	} else {
-	    // default to an ocean tile
-	    if ( fgGenTile( path, tile_bucket, &c, &br, geometry ) ) {
-		center = c;
-		bounding_radius = br;
-	    } else {
-		SG_LOG( SG_TERRAIN, SG_ALERT,
-			"Warning: failed to generate ocean tile!" );
-	    }
-	}
+        // next try the older ascii format, this is some ugly
+        // weirdness because the ascii loader is *old* and hasn't been
+        // updated, but hopefully we can can the ascii format soon.
+        ssgBranch *tmp = fgAsciiObjLoad( path, this, ground_lights, is_base );
+        if ( tmp ) {
+            return (NULL != tmp);
+        } else {
+            // default to an ocean tile
+            if ( fgGenTile( path, tile_bucket, &c, &br, geometry ) ) {
+                center = c;
+                bounding_radius = br;
+            } else {
+                SG_LOG( SG_TERRAIN, SG_ALERT,
+                        "Warning: failed to generate ocean tile!" );
+            }
+        }
     }
 
     return (NULL != geometry);
@@ -1147,164 +1147,164 @@ FGTileEntry::load( const SGPath& base, bool is_base )
     sg_gzifstream in( stg_name.str() );
 
     if ( in.is_open() ) {
-	string token, name;
+        string token, name;
 
-	while ( ! in.eof() ) {
-	    in >> token;
+        while ( ! in.eof() ) {
+            in >> token;
 
-	    if ( token == "OBJECT_BASE" ) {
-		in >> name >> ::skipws;
-		SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
-			<< " name = " << name );
+            if ( token == "OBJECT_BASE" ) {
+                in >> name >> ::skipws;
+                SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+                        << " name = " << name );
 
-		SGPath custom_path = tile_path;
-		custom_path.append( name );
+                SGPath custom_path = tile_path;
+                custom_path.append( name );
 
-		ssgBranch *geometry = new ssgBranch;
-		if ( obj_load( custom_path.str(),
-			       geometry, NULL, light_pts, true ) )
-		{
-		    new_tile -> addKid( geometry );
-		} else {
-		    delete geometry;
-		}
-	    } else if ( token == "OBJECT" ) {
-		in >> name >> ::skipws;
-		SG_LOG( SG_TERRAIN, SG_DEBUG, "token = " << token
-			<< " name = " << name );
+                ssgBranch *geometry = new ssgBranch;
+                if ( obj_load( custom_path.str(),
+                               geometry, NULL, light_pts, true ) )
+                {
+                    new_tile -> addKid( geometry );
+                } else {
+                    delete geometry;
+                }
+            } else if ( token == "OBJECT" ) {
+                in >> name >> ::skipws;
+                SG_LOG( SG_TERRAIN, SG_DEBUG, "token = " << token
+                        << " name = " << name );
 
-		SGPath custom_path = tile_path;
-		custom_path.append( name );
+                SGPath custom_path = tile_path;
+                custom_path.append( name );
 
-		ssgBranch *geometry = new ssgBranch;
-		ssgBranch *rwy_lights = new ssgBranch;
-		if ( obj_load( custom_path.str(),
-			       geometry, rwy_lights, NULL, false ) )
-		{
-		    if ( geometry -> getNumKids() > 0 ) {
-			new_tile -> addKid( geometry );
-		    } else {
-			delete geometry;
-		    }
-		    if ( rwy_lights -> getNumKids() > 0 ) {
-			rwy_lights_range -> addKid( rwy_lights );
-		    } else {
-			delete rwy_lights;
-		    }
-		} else {
-		    delete geometry;
-		    delete rwy_lights;
-		}
+                ssgBranch *geometry = new ssgBranch;
+                ssgBranch *rwy_lights = new ssgBranch;
+                if ( obj_load( custom_path.str(),
+                               geometry, rwy_lights, NULL, false ) )
+                {
+                    if ( geometry -> getNumKids() > 0 ) {
+                        new_tile -> addKid( geometry );
+                    } else {
+                        delete geometry;
+                    }
+                    if ( rwy_lights -> getNumKids() > 0 ) {
+                        rwy_lights_range -> addKid( rwy_lights );
+                    } else {
+                        delete rwy_lights;
+                    }
+                } else {
+                    delete geometry;
+                    delete rwy_lights;
+                }
 
-	    } else if ( token == "OBJECT_STATIC" ||
+            } else if ( token == "OBJECT_STATIC" ||
                         token == "OBJECT_SHARED" ) {
-		// load object info
-		double lon, lat, elev, hdg;
-		in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
-		SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
-			<< " name = " << name 
-			<< " pos = " << lon << ", " << lat
-			<< " elevation = " << elev
-			<< " heading = " << hdg );
+                // load object info
+                double lon, lat, elev, hdg;
+                in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
+                SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+                        << " name = " << name 
+                        << " pos = " << lon << ", " << lat
+                        << " elevation = " << elev
+                        << " heading = " << hdg );
 
-		// object loading is deferred to main render thread,
-		// but lets figure out the paths right now.
-		SGPath custom_path;
+                // object loading is deferred to main render thread,
+                // but lets figure out the paths right now.
+                SGPath custom_path;
                 if ( token == "OBJECT_STATIC" )
                     custom_path= tile_path;
-		custom_path.append( name );
+                custom_path.append( name );
 
-		sgCoord obj_pos;
-		WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
-		
-		ssgTransform *obj_trans = new ssgTransform;
-		obj_trans->setTransform( &obj_pos );
+                sgCoord obj_pos;
+                WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
+                
+                ssgTransform *obj_trans = new ssgTransform;
+                obj_trans->setTransform( &obj_pos );
 
-		// wire as much of the scene graph together as we can
-		new_tile->addKid( obj_trans );
+                // wire as much of the scene graph together as we can
+                new_tile->addKid( obj_trans );
 
-		// bump up the pending models count
-		pending_models++;
+                // bump up the pending models count
+                pending_models++;
 
-		// push an entry onto the model load queue
-		FGDeferredModel *dm
-		    = new FGDeferredModel( custom_path.str(), tile_path.str(),
-					   this, obj_trans );
-		FGTileMgr::model_ready( dm );
-	    } else if ( token == "OBJECT_TAXI_SIGN" ) {
-		// load object info
-		double lon, lat, elev, hdg;
-		in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
-		SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
-			<< " name = " << name 
-			<< " pos = " << lon << ", " << lat
-			<< " elevation = " << elev
-			<< " heading = " << hdg );
+                // push an entry onto the model load queue
+                FGDeferredModel *dm
+                    = new FGDeferredModel( custom_path.str(), tile_path.str(),
+                                           this, obj_trans );
+                FGTileMgr::model_ready( dm );
+            } else if ( token == "OBJECT_TAXI_SIGN" ) {
+                // load object info
+                double lon, lat, elev, hdg;
+                in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
+                SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+                        << " name = " << name 
+                        << " pos = " << lon << ", " << lat
+                        << " elevation = " << elev
+                        << " heading = " << hdg );
 
-		// load the object itself
-		SGPath custom_path = tile_path;
-		custom_path.append( name );
+                // load the object itself
+                SGPath custom_path = tile_path;
+                custom_path.append( name );
 
-		sgCoord obj_pos;
-		WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
+                sgCoord obj_pos;
+                WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
 
-		ssgTransform *obj_trans = new ssgTransform;
-		obj_trans->setTransform( &obj_pos );
+                ssgTransform *obj_trans = new ssgTransform;
+                obj_trans->setTransform( &obj_pos );
 
-		ssgBranch *custom_obj
-		    = gen_taxi_sign( custom_path.str(), name );
+                ssgBranch *custom_obj
+                    = gen_taxi_sign( custom_path.str(), name );
 
-		// wire the pieces together
-		if ( custom_obj != NULL ) {
-		    obj_trans -> addKid( custom_obj );
-		}
-		new_tile->addKid( obj_trans );
-	    } else if ( token == "OBJECT_RUNWAY_SIGN" ) {
-		// load object info
-		double lon, lat, elev, hdg;
-		in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
-		SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
-			<< " name = " << name 
-			<< " pos = " << lon << ", " << lat
-			<< " elevation = " << elev
-			<< " heading = " << hdg );
+                // wire the pieces together
+                if ( custom_obj != NULL ) {
+                    obj_trans -> addKid( custom_obj );
+                }
+                new_tile->addKid( obj_trans );
+            } else if ( token == "OBJECT_RUNWAY_SIGN" ) {
+                // load object info
+                double lon, lat, elev, hdg;
+                in >> name >> lon >> lat >> elev >> hdg >> ::skipws;
+                SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+                        << " name = " << name 
+                        << " pos = " << lon << ", " << lat
+                        << " elevation = " << elev
+                        << " heading = " << hdg );
 
-		// load the object itself
-		SGPath custom_path = tile_path;
-		custom_path.append( name );
+                // load the object itself
+                SGPath custom_path = tile_path;
+                custom_path.append( name );
 
-		sgCoord obj_pos;
-		WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
+                sgCoord obj_pos;
+                WorldCoordinate( &obj_pos, center, lat, lon, elev, hdg );
 
-		ssgTransform *obj_trans = new ssgTransform;
-		obj_trans->setTransform( &obj_pos );
+                ssgTransform *obj_trans = new ssgTransform;
+                obj_trans->setTransform( &obj_pos );
 
-		ssgBranch *custom_obj
-		    = gen_runway_sign( custom_path.str(), name );
+                ssgBranch *custom_obj
+                    = gen_runway_sign( custom_path.str(), name );
 
-		// wire the pieces together
-		if ( custom_obj != NULL ) {
-		    obj_trans -> addKid( custom_obj );
-		}
-		new_tile->addKid( obj_trans );
-	    } else if ( token == "RWY_LIGHTS" ) {
-		double lon, lat, hdg, len, width;
-		string common, end1, end2;
-		in >> lon >> lat >> hdg >> len >> width
-		   >> common >> end1 >> end2;
-		SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
-			<< " pos = " << lon << ", " << lat
-			<< " hdg = " << hdg
-			<< " size = " << len << ", " << width
-			<< " codes = " << common << " "
-			<< end1 << " " << end2 );
-	    } else {
-		SG_LOG( SG_TERRAIN, SG_ALERT,
-			"Unknown token " << token << " in "
-			<< stg_name.str() );
-		in >> ::skipws;
-	    }
-	}
+                // wire the pieces together
+                if ( custom_obj != NULL ) {
+                    obj_trans -> addKid( custom_obj );
+                }
+                new_tile->addKid( obj_trans );
+            } else if ( token == "RWY_LIGHTS" ) {
+                double lon, lat, hdg, len, width;
+                string common, end1, end2;
+                in >> lon >> lat >> hdg >> len >> width
+                   >> common >> end1 >> end2;
+                SG_LOG( SG_TERRAIN, SG_INFO, "token = " << token
+                        << " pos = " << lon << ", " << lat
+                        << " hdg = " << hdg
+                        << " size = " << len << ", " << width
+                        << " codes = " << common << " "
+                        << end1 << " " << end2 );
+            } else {
+                SG_LOG( SG_TERRAIN, SG_ALERT,
+                        "Unknown token " << token << " in "
+                        << stg_name.str() );
+                in >> ::skipws;
+            }
+        }
     } else {
         // no .stg file, generate an ocean tile on the fly for this
         // area
@@ -1332,8 +1332,8 @@ FGTileEntry::load( const SGPath& base, bool is_base )
     SetOffset( globals->get_scenery()->get_center() );
     sgCoord sgcoord;
     sgSetCoord( &sgcoord,
-		offset.x(), offset.y(), offset.z(),
-		0.0, 0.0, 0.0 );
+                offset.x(), offset.y(), offset.z(),
+                0.0, 0.0, 0.0 );
     terra_transform->setTransform( &sgcoord );
     // terrain->addKid( terra_transform );
 
@@ -1341,31 +1341,31 @@ FGTileEntry::load( const SGPath& base, bool is_base )
     gnd_lights_transform = NULL;
     gnd_lights_range = NULL;
     if ( light_pts->getNum() ) {
-	SG_LOG( SG_TERRAIN, SG_DEBUG, "generating lights" );
-	gnd_lights_transform = new ssgTransform;
-	gnd_lights_range = new ssgRangeSelector;
-	gnd_lights_brightness = new ssgSelector;
-	ssgLeaf *lights;
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "generating lights" );
+        gnd_lights_transform = new ssgTransform;
+        gnd_lights_range = new ssgRangeSelector;
+        gnd_lights_brightness = new ssgSelector;
+        ssgLeaf *lights;
 
-	lights = gen_lights( light_pts, 4, 0.7 );
-	gnd_lights_brightness->addKid( lights );
+        lights = gen_lights( light_pts, 4, 0.7 );
+        gnd_lights_brightness->addKid( lights );
 
-	lights = gen_lights( light_pts, 2, 0.85 );
-	gnd_lights_brightness->addKid( lights );
+        lights = gen_lights( light_pts, 2, 0.85 );
+        gnd_lights_brightness->addKid( lights );
 
-	lights = gen_lights( light_pts, 1, 1.0 );
-	gnd_lights_brightness->addKid( lights );
+        lights = gen_lights( light_pts, 1, 1.0 );
+        gnd_lights_brightness->addKid( lights );
 
-	gnd_lights_range->addKid( gnd_lights_brightness );
-	gnd_lights_transform->addKid( gnd_lights_range );
-	gnd_lights_transform->setTransform( &sgcoord );
+        gnd_lights_range->addKid( gnd_lights_brightness );
+        gnd_lights_transform->addKid( gnd_lights_range );
+        gnd_lights_transform->setTransform( &sgcoord );
     }
 
     // Add runway lights to scene graph if any exist
     if ( rwy_lights_range->getNumKids() > 0 ) {
-	SG_LOG( SG_TERRAIN, SG_INFO, "adding runway lights" );
-	rwy_lights_transform->addKid( rwy_lights_range );
-	rwy_lights_transform->setTransform( &sgcoord );
+        SG_LOG( SG_TERRAIN, SG_INFO, "adding runway lights" );
+        rwy_lights_transform->addKid( rwy_lights_range );
+        rwy_lights_transform->setTransform( &sgcoord );
     }
 
     // ADA
@@ -1376,26 +1376,26 @@ FGTileEntry::load( const SGPath& base, bool is_base )
     //    lightmaps_range = NULL;
 
     if ( lights_rway->getNum() ) {
-	SG_LOG( SG_TERRAIN, SG_DEBUG, "generating airport lights" );
-	lightmaps_transform = new ssgTransform;
-        //	lightmaps_range = new ssgRangeSelector;
-	lightmaps_brightness = new ssgSelector;
-	lightmaps_sequence = new ssgSelector;
-	ols_transform = new ssgTransform;
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "generating airport lights" );
+        lightmaps_transform = new ssgTransform;
+        //      lightmaps_range = new ssgRangeSelector;
+        lightmaps_brightness = new ssgSelector;
+        lightmaps_sequence = new ssgSelector;
+        ols_transform = new ssgTransform;
         ssgBranch *lightmaps_branch;
 
         // call function to generate the runway lights
         lightmaps_branch = gen_runway_lights( lights_rway, 
                                               lights_normal, lights_dir, lights_type);
-	lightmaps_brightness->addKid( lightmaps_branch );
-	
-	// build the runway lights' scene
+        lightmaps_brightness->addKid( lightmaps_branch );
+        
+        // build the runway lights' scene
         //    lightmaps_range->addKid( lightmaps_brightness ); //dont know why this doesnt work !!
-        //	lightmaps_transform->addKid( lightmaps_range );    //dont know why this doesnt work !!
-	lightmaps_transform->addKid( lightmaps_brightness );
+        //      lightmaps_transform->addKid( lightmaps_range );    //dont know why this doesnt work !!
+        lightmaps_transform->addKid( lightmaps_brightness );
         lightmaps_sequence->setTraversalMaskBits( SSGTRAV_HOT );
-	lightmaps_transform->addKid( lightmaps_sequence );
-	lightmaps_transform->setTransform( &sgcoord );
+        lightmaps_transform->addKid( lightmaps_sequence );
+        lightmaps_transform->setTransform( &sgcoord );
     }
     // ADA
 }
@@ -1403,8 +1403,8 @@ FGTileEntry::load( const SGPath& base, bool is_base )
 
 void
 FGTileEntry::add_ssg_nodes( ssgBranch* terrain_branch,
-			    ssgBranch* gnd_lights_branch,
-			    ssgBranch* rwy_lights_branch )
+                            ssgBranch* gnd_lights_branch,
+                            ssgBranch* rwy_lights_branch )
 {
     // bump up the ref count so we can remove this later without
     // having ssg try to free the memory.
@@ -1418,25 +1418,25 @@ FGTileEntry::add_ssg_nodes( ssgBranch* terrain_branch,
             << terra_transform->getNumParents() );
 
     if ( gnd_lights_transform != NULL ) {
-	// bump up the ref count so we can remove this later without
-	// having ssg try to free the memory.
-	gnd_lights_transform->ref();
-	gnd_lights_branch->addKid( gnd_lights_transform );
+        // bump up the ref count so we can remove this later without
+        // having ssg try to free the memory.
+        gnd_lights_transform->ref();
+        gnd_lights_branch->addKid( gnd_lights_transform );
     }
 
     if ( rwy_lights_transform != NULL ) {
-	// bump up the ref count so we can remove this later without
-	// having ssg try to free the memory.
-	rwy_lights_transform->ref();
-	rwy_lights_branch->addKid( rwy_lights_transform );
+        // bump up the ref count so we can remove this later without
+        // having ssg try to free the memory.
+        rwy_lights_transform->ref();
+        rwy_lights_branch->addKid( rwy_lights_transform );
     }
 
     // ADA
     if ( lightmaps_transform != 0 ) {
-	// bump up the ref count so we can remove this later without
-	// having ssg try to free the memory.
-	lightmaps_transform->ref();
-	gnd_lights_branch->addKid( lightmaps_transform );
+        // bump up the ref count so we can remove this later without
+        // having ssg try to free the memory.
+        lightmaps_transform->ref();
+        gnd_lights_branch->addKid( lightmaps_transform );
     }
     // ADA
 
@@ -1458,89 +1458,89 @@ FGTileEntry::disconnect_ssg_nodes()
     // find the terrain branch parent
     int pcount = terra_transform->getNumParents();
     if ( pcount > 0 ) {
-	// find the first parent (should only be one)
-	ssgBranch *parent = terra_transform->getParent( 0 ) ;
-	if( parent ) {
-	    // disconnect the tile (we previously ref()'d it so it
-	    // won't get freed now)
-	    parent->removeKid( terra_transform );
-	} else {
-	    SG_LOG( SG_TERRAIN, SG_ALERT,
-		    "parent pointer is NULL!  Dying" );
-	    exit(-1);
-	}
+        // find the first parent (should only be one)
+        ssgBranch *parent = terra_transform->getParent( 0 ) ;
+        if( parent ) {
+            // disconnect the tile (we previously ref()'d it so it
+            // won't get freed now)
+            parent->removeKid( terra_transform );
+        } else {
+            SG_LOG( SG_TERRAIN, SG_ALERT,
+                    "parent pointer is NULL!  Dying" );
+            exit(-1);
+        }
     } else {
-	SG_LOG( SG_TERRAIN, SG_ALERT,
-		"Parent count is zero for an ssg tile!  Dying" );
-	exit(-1);
+        SG_LOG( SG_TERRAIN, SG_ALERT,
+                "Parent count is zero for an ssg tile!  Dying" );
+        exit(-1);
     }
 
     // find the ground lighting branch
     if ( gnd_lights_transform ) {
-	pcount = gnd_lights_transform->getNumParents();
-	if ( pcount > 0 ) {
-	    // find the first parent (should only be one)
-	    ssgBranch *parent = gnd_lights_transform->getParent( 0 ) ;
-	    if( parent ) {
-		// disconnect the light branch (we previously ref()'d
-		// it so it won't get freed now)
-		parent->removeKid( gnd_lights_transform );
-	    } else {
-		SG_LOG( SG_TERRAIN, SG_ALERT,
-			"parent pointer is NULL!  Dying" );
-		exit(-1);
-	    }
-	} else {
-	    SG_LOG( SG_TERRAIN, SG_ALERT,
-		    "Parent count is zero for an ssg light tile!  Dying" );
-	    exit(-1);
-	}
+        pcount = gnd_lights_transform->getNumParents();
+        if ( pcount > 0 ) {
+            // find the first parent (should only be one)
+            ssgBranch *parent = gnd_lights_transform->getParent( 0 ) ;
+            if( parent ) {
+                // disconnect the light branch (we previously ref()'d
+                // it so it won't get freed now)
+                parent->removeKid( gnd_lights_transform );
+            } else {
+                SG_LOG( SG_TERRAIN, SG_ALERT,
+                        "parent pointer is NULL!  Dying" );
+                exit(-1);
+            }
+        } else {
+            SG_LOG( SG_TERRAIN, SG_ALERT,
+                    "Parent count is zero for an ssg light tile!  Dying" );
+            exit(-1);
+        }
     }
 
     // find the runway lighting branch
     if ( rwy_lights_transform ) {
-	pcount = rwy_lights_transform->getNumParents();
-	if ( pcount > 0 ) {
-	    // find the first parent (should only be one)
-	    ssgBranch *parent = rwy_lights_transform->getParent( 0 ) ;
-	    if( parent ) {
-		// disconnect the light branch (we previously ref()'d
-		// it so it won't get freed now)
-		parent->removeKid( rwy_lights_transform );
-	    } else {
-		SG_LOG( SG_TERRAIN, SG_ALERT,
-			"parent pointer is NULL!  Dying" );
-		exit(-1);
-	    }
-	} else {
-	    SG_LOG( SG_TERRAIN, SG_ALERT,
-		    "Parent count is zero for an ssg light tile!  Dying" );
-	    exit(-1);
-	}
+        pcount = rwy_lights_transform->getNumParents();
+        if ( pcount > 0 ) {
+            // find the first parent (should only be one)
+            ssgBranch *parent = rwy_lights_transform->getParent( 0 ) ;
+            if( parent ) {
+                // disconnect the light branch (we previously ref()'d
+                // it so it won't get freed now)
+                parent->removeKid( rwy_lights_transform );
+            } else {
+                SG_LOG( SG_TERRAIN, SG_ALERT,
+                        "parent pointer is NULL!  Dying" );
+                exit(-1);
+            }
+        } else {
+            SG_LOG( SG_TERRAIN, SG_ALERT,
+                    "Parent count is zero for an ssg light tile!  Dying" );
+            exit(-1);
+        }
     }
 
     // ADA
     //runway lights - 23 Mar 2001
     // Delete runway lights and free memory
     if ( lightmaps_transform ) {
-	// delete the runway lighting branch
-	pcount = lightmaps_transform->getNumParents();
-	if ( pcount > 0 ) {
-	    // find the first parent (should only be one)
-	    ssgBranch *parent = lightmaps_transform->getParent( 0 ) ;
-	    if( parent ) {
-		parent->removeKid( lightmaps_transform );
-		lightmaps_transform = NULL;
-	    } else {
-		SG_LOG( SG_TERRAIN, SG_ALERT,
-			"lightmaps parent pointer is NULL!  Dying" );
-		exit(-1);
-	    }
-	} else {
-	    SG_LOG( SG_TERRAIN, SG_ALERT,
-		    "Parent count is zero for an ssg lightmap tile!  Dying" );
-	    exit(-1);
-	}
+        // delete the runway lighting branch
+        pcount = lightmaps_transform->getNumParents();
+        if ( pcount > 0 ) {
+            // find the first parent (should only be one)
+            ssgBranch *parent = lightmaps_transform->getParent( 0 ) ;
+            if( parent ) {
+                parent->removeKid( lightmaps_transform );
+                lightmaps_transform = NULL;
+            } else {
+                SG_LOG( SG_TERRAIN, SG_ALERT,
+                        "lightmaps parent pointer is NULL!  Dying" );
+                exit(-1);
+            }
+        } else {
+            SG_LOG( SG_TERRAIN, SG_ALERT,
+                    "Parent count is zero for an ssg lightmap tile!  Dying" );
+            exit(-1);
+        }
     }
     // ADA
 }
