@@ -29,27 +29,27 @@
 struct ATCMenuEntry {
 
   string  stationid;	// ID of transmitting station
-  int     stationfr;	// ?
+  //int     stationfr;	// ?
   string  transmission;	// Actual speech of transmission
   string  menuentry;	// Shortened version for display in the dialog
+  int callback_code;    // This code is supplied by the registering station, and then
+                        // returned to the registering station if that option is chosen.
+                        // The actual value is only understood by the registering station - 
+                        // FGATCDialog only stores it and returns it if appropriate.
 
   ATCMenuEntry();
   ~ATCMenuEntry();
 };
 
-// convenience types
-typedef vector < ATCMenuEntry > atcmentry_list_type;
-typedef atcmentry_list_type::iterator atcmentry_list_iterator;
-typedef atcmentry_list_type::const_iterator atcmentry_list_const_iterator;
+typedef vector < ATCMenuEntry > atcmentry_vec_type;
+typedef atcmentry_vec_type::iterator atcmentry_vec_iterator;
   
-// typedef map < string, atcmentry_list_type, less<string> > atcmentry_map_type;
-typedef map < string, atcmentry_list_type > atcmentry_map_type;
+typedef map < string, atcmentry_vec_type > atcmentry_map_type;
 typedef atcmentry_map_type::iterator atcmentry_map_iterator;
-typedef atcmentry_map_type::const_iterator atcmentry_map_const_iterator;
 
-void ATCDialogInit();
+//void ATCDialogInit();
 
-void ATCDoDialog(atc_type type);
+//void ATCDoDialog(atc_type type);
 
 class FGATCDialog {
 	
@@ -60,11 +60,17 @@ public:
 	
 	void Init();
 	
-	void DoDialog();
+	void PopupDialog();
 	
-	void add_entry( string station, string transmission, string menutext );
+	void add_entry( string station, string transmission, string menutext, atc_type type, int code);
 	
-	bool trans_reg( const string &station, const string &trans );
+	void remove_entry( const string &station, const string &trans, atc_type type );
+	
+	void remove_entry( const string &station, int code, atc_type type );
+	
+	bool trans_reg( const string &station, const string &trans, atc_type type );
+	
+	bool trans_reg( const string &station, int code, atc_type type );
 	
 	// Display a frequency search dialog for nearby stations
 	void FreqDialog();
@@ -75,7 +81,7 @@ public:
 
 private:
 
-	atcmentry_map_type atcmentrylist_station;
+	atcmentry_map_type available_dialog[ATC_NUM_TYPES];
   
 	int  freq;
 	bool reset;

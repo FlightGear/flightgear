@@ -111,6 +111,9 @@ public:
 	// wish to use the response timer functionality.
 	virtual void Update(double dt);
 	
+	// Recieve a coded callback from the ATC menu system based on the user's selection
+	virtual void ReceiveUserCallback(int code);
+	
 	// Add plane to a stack
 	virtual void AddPlane(string pid);
 	

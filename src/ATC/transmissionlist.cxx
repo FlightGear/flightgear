@@ -117,7 +117,7 @@ bool FGTransmissionList::init( SGPath path ) {
 
 // query the database for the specified station type; 
 // for station see FlightGear/ATC/default.transmissions
-bool FGTransmissionList::query_station( const int &station, FGTransmission *t,
+bool FGTransmissionList::query_station( const atc_type &station, FGTransmission *t,
 					int max_trans, int &num_trans ) 
 {
   transmission_list_type     tmissions = transmissionlist_station[station];
@@ -142,7 +142,7 @@ bool FGTransmissionList::query_station( const int &station, FGTransmission *t,
   }
 }
 
-string FGTransmissionList::gen_text(const int &station, const TransCode code, 
+string FGTransmissionList::gen_text(const atc_type &station, const TransCode code, 
                                     const TransPar &tpars, const bool ttext )
 {
 	const int cmax = 300;

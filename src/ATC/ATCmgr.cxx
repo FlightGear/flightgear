@@ -131,12 +131,6 @@ void FGATCMgr::init() {
     current_atcdialog = new FGATCDialog;
     current_atcdialog->Init();
 
-	ATCDialogInit();
-	
-	// DCL - testing
-	//current_atcdialog->add_entry( "EGNX", "Request vectoring for approach", "Request Vectors" );
-	//current_atcdialog->add_entry( "EGNX", "Mayday, Mayday", "Declare Emergency" );
-	
 	initDone = true;
 }
 
@@ -474,11 +468,6 @@ FGATCVoice* FGATCMgr::GetVoicePointer(atc_type type) {
 	} else {
 		return(NULL);
 	}
-}
-
-// Display a dialog box with options relevant to the currently tuned ATC service.
-void FGATCMgr::doPopupDialog() {
-	ATCDoDialog(comm_type[0]);	// FIXME - currently hardwired to comm1
 }
 
 // Search for ATC stations by frequency

@@ -36,17 +36,11 @@
 
 SG_USING_STD(ostringstream);
 
-static void atcUppercase(string &s) {
-	for(unsigned int i=0; i<s.size(); ++i) {
-		s[i] = toupper(s[i]);
-	}
-}
-
 FGATCDialog *current_atcdialog;
 
 // For the command manager - maybe eventually this should go in the built in command list
 static bool do_ATC_dialog(const SGPropertyNode* arg) {
-	globals->get_ATC_mgr()->doPopupDialog();
+	current_atcdialog->PopupDialog();
 	return(true);
 }
 
@@ -57,36 +51,31 @@ static bool do_ATC_freq_search(const SGPropertyNode* arg) {
 
 ATCMenuEntry::ATCMenuEntry() {
   stationid    = "";
-  stationfr    = 0;
+  //stationfr    = 0;
   transmission = "";
   menuentry    = "";
+  callback_code = 0;
 }
 
 ATCMenuEntry::~ATCMenuEntry() {
 }
 
-static char* t0 = "No communication currently available";
-//static char* t1 = "Request departure clearance";
-//static char* t2 = "Report Runway vacated";
-static char** towerOptions = new char*[2];
+static void atcUppercase(string &s) {
+	for(unsigned int i=0; i<s.size(); ++i) {
+		s[i] = toupper(s[i]);
+	}
+}
 
-// ----------------------- DCL ------------------------------------------
-// For the ATC dialog - copied from the Autopilot new heading dialog code!
+// ----------------------- Popup Dialog Statics------------------
 static puDialogBox*		atcDialog;
 static puFrame*			atcDialogFrame;
 static puText*			atcDialogMessage;
-//static puInput*			atcDialogInput;
 static puOneShot*		atcDialogOkButton;
 static puOneShot*		atcDialogCancelButton;
 static puButtonBox*		atcDialogCommunicationOptions;
-// ----------------------------------------------------------------------
+// --------------------------------------------------------------
 
-//////////////////////////////////////////////////////
-//
-//  STUFF FOR THE FREQUENCY SEARCH DIALOG
-//
-//////////////////////////////////////////////////////
-
+// ----------------------- Freq Dialog Statics-------------------
 static const int ATC_MAX_FREQ_DISPLAY = 20;		// Maximum number of frequencies that can be displayed for any one airport
 
 static puDialogBox*     atcFreqDialog;
@@ -101,34 +90,12 @@ static puFrame*         atcFreqDisplayFrame;
 static puText*          atcFreqDisplayMessage;
 static puOneShot*       atcFreqDisplayOkButton;
 static puText*          atcFreqDisplayText[ATC_MAX_FREQ_DISPLAY];
-	
-static void FreqDialogCancel(puObject*) {
-	FG_POP_PUI_DIALOG(atcFreqDialog);
-}
+// --------------------------------------------------------------
 
-static void FreqDialogOK(puObject*) {
-	string tmp = atcFreqDialogInput->getStringValue();
-	FG_POP_PUI_DIALOG(atcFreqDialog);
-	current_atcdialog->FreqDisplay(tmp);
-}
-
-static void FreqDisplayOK(puObject*) {
-	FG_POP_PUI_DIALOG(atcFreqDisplay);
-}
-
-////////////// end freq search statics ///////////////
-
-// ------------------------ AK ------------------------------------------
-static puDialogBox  *ATCMenuBox = 0;
-static puFrame      *ATCMenuFrame = 0;
-static puText       *ATCMenuBoxMessage = 0;
-static puButtonBox	*ATCOptionsList = 0;
-// ----------------------------------------------------------------------
-
-// AK
-static void AKATCDialogOK(puObject *)
+//////////////// Popup callbacks ///////////////////
+static void ATCDialogOK(puObject *)
 {
-	switch(ATCOptionsList->getValue()) {
+	switch(atcDialogCommunicationOptions->getValue()) {
 	case 0:
 		//cout << "Option 0 chosen\n";
 		fgSetBool("/sim/atc/opt0",true);
@@ -148,165 +115,45 @@ static void AKATCDialogOK(puObject *)
 	default:
 		break;
 	}
-	FG_POP_PUI_DIALOG( ATCMenuBox );
+	FG_POP_PUI_DIALOG( atcDialog );
 }
 
-// AK
-static void AKATCDialogCancel(puObject *)
-{
-    FG_POP_PUI_DIALOG( ATCMenuBox );
-}
-
-// DCL
 static void ATCDialogCancel(puObject *)
 {
-    //ATCDialogInput->rejectInput();
     FG_POP_PUI_DIALOG( atcDialog );
 }
+//////////////////////////////////////////////////
 
-// DCL
-static void ATCDialogOK (puObject *me)
-{
-	// Note that currently the dialog is hardwired to comm1 only here.
-	switch(globals->get_ATC_mgr()->GetComm1ATCType()) {
-	case INVALID:
-		break;
-	case ATIS:
-		break;
-	case TOWER: {
-		/*
-		FGTower* twr = (FGTower*)globals->get_ATC_mgr()->GetComm1ATCPointer();
-		switch(atcDialogCommunicationOptions->getValue()) {
-		case 0:
-			//cout << "Option 0 chosen\n";
-			twr->RequestLandingClearance("charlie foxtrot sierra");
-			break;
-		case 1:
-			//cout << "Option 1 chosen\n";
-			twr->RequestDepartureClearance("charlie foxtrot sierra");
-			break;
-		case 2:
-			//cout << "Option 2 chosen\n";
-			twr->ReportRunwayVacated("charlie foxtrot sierra");
-			break;
-		default:
-			break;
-		}
-		*/
-		break;
-	}
-	case GROUND:
-		break;
-	case APPROACH:
-		break;
-	default:
-		break;
-	}
 
-    ATCDialogCancel(me);
-    //if(error) mkDialog(s.c_str());
+///////////////// Freq search callbacks ///////////
+static void FreqDialogCancel(puObject*) {
+	FG_POP_PUI_DIALOG(atcFreqDialog);
 }
 
-// DCL
-static void ATCDialog(puObject *cb)
-{
-    FG_PUSH_PUI_DIALOG(atcDialog);
+static void FreqDialogOK(puObject*) {
+	string tmp = atcFreqDialogInput->getStringValue();
+	FG_POP_PUI_DIALOG(atcFreqDialog);
+	current_atcdialog->FreqDisplay(tmp);
 }
 
-// DCL
-void ATCDialogInit()
-{
-	char defaultATCLabel[] = "Enter desired option to communicate with ATC:";
-	char *s;
-
-	// Option lists hardwired per ATC type	
-	towerOptions[0] = new char[strlen(t0)+1];
-	strcpy(towerOptions[0], t0);
-	//towerOptions[1] = new char[strlen(t1)+1];
-	//strcpy(towerOptions[1], t1);
-	//towerOptions[2] = new char[strlen(t2)+1];
-	//strcpy(towerOptions[2], t2);
-	towerOptions[1] = NULL;
-	
-	atcDialog = new puDialogBox (150, 50);
-	{
-		atcDialogFrame   = new puFrame (0, 0, 500, 250);
-		
-		atcDialogMessage = new puText          (250, 220);
-		atcDialogMessage    -> setDefaultValue (defaultATCLabel);
-		atcDialogMessage    -> getDefaultValue (&s);
-		atcDialogMessage    -> setLabel        (s);
-		atcDialogMessage    -> setLabelPlace   (PUPLACE_TOP_CENTERED);
-
-		atcDialogCommunicationOptions = new puButtonBox (50, 50, 450, 210, NULL, true);
-		
-		atcDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
-		atcDialogOkButton     ->     setLegend         (gui_msg_OK);
-		atcDialogOkButton     ->     makeReturnDefault (TRUE);
-		atcDialogOkButton     ->     setCallback       (ATCDialogOK);
-		
-		atcDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
-		atcDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
-		atcDialogCancelButton ->     setCallback       (ATCDialogCancel);
-		
-	}
-	FG_FINALIZE_PUI_DIALOG(atcDialog);
-	
-	// Add ATC-dialog to the command list
-	globals->get_commands()->addCommand("ATC-dialog", do_ATC_dialog);
+static void FreqDisplayOK(puObject*) {
+	FG_POP_PUI_DIALOG(atcFreqDisplay);
 }
+//////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////////////
-//
-// ATCDoDialog is in a state of flux at the moment
-// Stations other than approach are handled by DCL's simple code
-// Approach is handled by AK's fancy dynamic-list code
-// Hopefully all interactive stations should go to AK's code eventually
-//
-///////////////////////////////////////////////////////////////////////
-void ATCDoDialog(atc_type type) {
-	switch(type) {
-	case INVALID:
-		atcDialogCommunicationOptions->newList(NULL);
-		atcDialogMessage->setLabel("Not tuned in to any ATC service.");
-		break;
-	case ATIS:
-		atcDialogCommunicationOptions->newList(NULL);
-		atcDialogMessage->setLabel("Tuned in to ATIS: no communication possible.");
-		break;
-	case TOWER: 
-		atcDialogCommunicationOptions->newList(towerOptions);
-		atcDialogMessage->setLabel("Tuned in to Tower - select communication to transmit:");
-		break;
-	case GROUND:
-		atcDialogCommunicationOptions->newList(NULL);
-		atcDialogMessage->setLabel("Tuned in to Ground - select communication to transmit:");
-		break;
-	case APPROACH:
-		current_atcdialog->DoDialog();
-		break;
-	default:
-		atcDialogCommunicationOptions->newList(NULL);
-		atcDialogMessage->setLabel("Tuned in to unknown ATC service - enter transmission:");
-		break;
-	}
-
-	// Third - display the dialog without pausing sim.
-	if(type != APPROACH) {	
-		ATCDialog(NULL);
-	}
-}
 
 FGATCDialog::FGATCDialog() {
 }
 
 FGATCDialog::~FGATCDialog() {
+	if(atcDialog) puDeleteObject(atcDialog);
 	if(atcFreqDialog) puDeleteObject(atcFreqDialog);
 	if(atcFreqDisplay) puDeleteObject(atcFreqDisplay);
-	if(ATCMenuBox) puDeleteObject(ATCMenuBox);
 }
 
 void FGATCDialog::Init() {
+	// Add ATC-dialog to the command list
+	globals->get_commands()->addCommand("ATC-dialog", do_ATC_dialog);
 	// Add ATC-freq-search to the command list
 	globals->get_commands()->addCommand("ATC-freq-search", do_ATC_freq_search);
 	
@@ -380,47 +227,69 @@ void FGATCDialog::Init() {
 	x = (fgGetInt("/sim/startup/xsize") / 2) - (w / 2);
 	//y = (fgGetInt("/sim/startup/ysize") / 2) - (h / 2);
 	y = 50;
-	ATCMenuBox = new puDialogBox (x, y);
+	atcDialog = new puDialogBox (x, y);
 	{
-		ATCMenuFrame = new puFrame (0,0,w,h);
-		ATCMenuBoxMessage = new puText (w / 2, h - 30);
-		ATCMenuBoxMessage -> setLabel( "No transmission available" );
-		ATCMenuBoxMessage -> setLabelPlace(PUPLACE_TOP_CENTERED);
-		ATCOptionsList = new puButtonBox (50, 60, 450, 50, NULL, true);
-		ATCOptionsList -> hide();
+		atcDialogFrame = new puFrame (0,0,w,h);
+		atcDialogMessage = new puText (w / 2, h - 30);
+		atcDialogMessage -> setLabel( "No transmission available" );
+		atcDialogMessage -> setLabelPlace(PUPLACE_TOP_CENTERED);
+		atcDialogCommunicationOptions = new puButtonBox (50, 60, 450, 50, NULL, true);
+		atcDialogCommunicationOptions -> hide();
 		atcDialogOkButton     =  new puOneShot         ((w/2)-85, 10, (w/2)-25, 50);
 		atcDialogOkButton     ->     setLegend         (gui_msg_OK);
 		atcDialogOkButton     ->     makeReturnDefault (TRUE);
-		atcDialogOkButton     ->     setCallback       (AKATCDialogOK);
+		atcDialogOkButton     ->     setCallback       (ATCDialogOK);
 		
 		atcDialogCancelButton =  new puOneShot         ((w/2)+25, 10, (w/2)+85, 50);
 		atcDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
-		atcDialogCancelButton ->     setCallback       (AKATCDialogCancel);
+		atcDialogCancelButton ->     setCallback       (ATCDialogCancel);
 	}
-	FG_FINALIZE_PUI_DIALOG(ATCMenuBox);
+	FG_FINALIZE_PUI_DIALOG(atcDialog);
 }
 
-// AK
 // Add an entry
-void FGATCDialog::add_entry(string station, string transmission, string menutext ) {
-  
+void FGATCDialog::add_entry(string station, string transmission, string menutext, atc_type type, int code) {
+
   ATCMenuEntry a;
 
   a.stationid = station;
   a.transmission = transmission;
   a.menuentry = menutext;
+  a.callback_code = code;
 
-  atcmentrylist_station[station.c_str()].push_back(a);
+  //atcmentrylist_station[station.c_str()].push_back(a);
+  (available_dialog[type])[station.c_str()].push_back(a);
 
 }
 
-// AK
-// query the database whether the transmission is already registered; 
-bool FGATCDialog::trans_reg( const string &station, const string &trans ) {
+void FGATCDialog::remove_entry( const string &station, const string &trans, atc_type type ) {
+  atcmentry_vec_type     atcmlist = (available_dialog[type])[station];
+  atcmentry_vec_iterator current  = atcmlist.begin();
+  atcmentry_vec_iterator last     = atcmlist.end();
+  
+  while(current != last) {
+    if(current->transmission == trans) current = atcmlist.erase(current);
+	else ++current;
+  }
+}
 
-  atcmentry_list_type     atcmlist = atcmentrylist_station[station];
-  atcmentry_list_iterator current  = atcmlist.begin();
-  atcmentry_list_iterator last     = atcmlist.end();
+void FGATCDialog::remove_entry( const string &station, int code, atc_type type ) {
+  atcmentry_vec_type     atcmlist = (available_dialog[type])[station];
+  atcmentry_vec_iterator current  = atcmlist.begin();
+  atcmentry_vec_iterator last     = atcmlist.end();
+  
+  while(current != last) {
+    if(current->callback_code == code) current = atcmlist.erase(current);
+	else ++current;
+  }
+}
+
+// query the database whether the transmission is already registered; 
+bool FGATCDialog::trans_reg( const string &station, const string &trans, atc_type type ) {
+  //atcmentry_list_type     atcmlist = atcmentrylist_station[station];
+  atcmentry_vec_type     atcmlist = (available_dialog[type])[station];
+  atcmentry_vec_iterator current  = atcmlist.begin();
+  atcmentry_vec_iterator last     = atcmlist.end();
   
   for ( ; current != last ; ++current ) {
     if ( current->transmission == trans ) return true;
@@ -428,11 +297,21 @@ bool FGATCDialog::trans_reg( const string &station, const string &trans ) {
   return false;
 }
 
-// AK
-// ===================================================
-// ===  Update ATC menue and look for keys pressed ===
-// ===================================================
-void FGATCDialog::DoDialog() {
+// query the database whether the transmission is already registered; 
+bool FGATCDialog::trans_reg( const string &station, int code, atc_type type ) {
+  //atcmentry_list_type     atcmlist = atcmentrylist_station[station];
+  atcmentry_vec_type     atcmlist = (available_dialog[type])[station];
+  atcmentry_vec_iterator current  = atcmlist.begin();
+  atcmentry_vec_iterator last     = atcmlist.end();
+  
+  for ( ; current != last ; ++current ) {
+    if ( current->callback_code == code ) return true;
+  }
+  return false;
+}
+
+// Display the ATC popup dialog box with options relevant to the users current situation.
+void FGATCDialog::PopupDialog() {
 	
 	static string mentry[10];
 	static string mtrans[10];
@@ -440,92 +319,74 @@ void FGATCDialog::DoDialog() {
 	TransPar TPar;
 	FGATC* atcptr = globals->get_ATC_mgr()->GetComm1ATCPointer();	// Hardwired to comm1 at the moment
 	
-	if(atcptr != NULL) {
-		
-		atcmentry_list_type     atcmlist = atcmentrylist_station[atcptr->get_ident()];
-		//atcmentry_list_type     atcmlist = atcmentrylist_station["EGNX"];
-		atcmentry_list_iterator current  = atcmlist.begin();
-		atcmentry_list_iterator last     = atcmlist.end();
-		
-		// Set all opt flags to false before displaying box
-		fgSetBool("/sim/atc/opt0",false);
-		fgSetBool("/sim/atc/opt1",false);
-		fgSetBool("/sim/atc/opt2",false);
-		fgSetBool("/sim/atc/opt3",false);
-		fgSetBool("/sim/atc/opt4",false);
-		fgSetBool("/sim/atc/opt5",false);
-		fgSetBool("/sim/atc/opt6",false);
-		fgSetBool("/sim/atc/opt7",false);
-		fgSetBool("/sim/atc/opt8",false);
-		fgSetBool("/sim/atc/opt9",false);
-		
-		int w = 500;
-		int k = atcmlist.size();
-		int h = 110 + k * 25;
-		//cout << "k = " << k << '\n';
-		
-		ATCMenuFrame->setSize(w, h); 
-		
-		if(k) { 
-			// loop over all entries in atcmentrylist
-			char** optList = new char*[k+1];
-			int kk = 0;
-			for ( ; current != last ; ++current ) {
-				string dum;
-				sprintf( buf, "%i", kk+1 );
-				buf[1] = '\0';
-				dum = buf;
-				mentry[kk] = dum + ". " + current->menuentry;
-				optList[kk] = new char[strlen(mentry[kk].c_str()) + 1];
-				strcpy(optList[kk], mentry[kk].c_str());
-				//cout << "optList[" << kk << "] = " << optList[kk] << endl; 
-				mtrans[kk] =              current->transmission;
-				++kk;
-			} 
-			optList[k] = NULL;
-			ATCOptionsList->newList(optList);
-			ATCOptionsList->setSize(w-100, h-100);
-			ATCOptionsList->reveal();
-			ATCMenuBoxMessage -> setLabel( "ATC Menu" );
-			ATCMenuBoxMessage -> setPosition(w / 2, h - 30);
+	int w = 500;
+	int h = 100;
+	if(atcptr) {
+		if(atcptr->GetType() == ATIS) {
+			atcDialogCommunicationOptions->hide();
+			atcDialogMessage -> setLabel( "Tuned to ATIS - no communication possible" );
+			atcDialogFrame->setSize(w, h);
+			atcDialogMessage -> setPosition(w / 2, h - 30);
 		} else {
-			ATCOptionsList->hide();
-			ATCMenuBoxMessage ->     setLabel( "No transmission available" );
-			ATCMenuBoxMessage -> setPosition(w / 2, h - 20);
-		}
-		
-		FG_PUSH_PUI_DIALOG( ATCMenuBox );
-		
-		/*	
-		if ( atckey != -1 && TransDisplayed && mtrans[atckey-1].c_str() != "" ) {
-			cout << mtrans[atckey-1].c_str() << endl;
-			TPar = current_transmissionlist->extract_transpar( mtrans[atckey-1].c_str() );
-			current_atcmentrylist->reset = true;
-			current_transparlist->add_entry( TPar );
 			
-			//    transpar_list_type test = current_transparlist;
-			// transpar_list_iterator current = test.begin();
-			//for ( ; current != test.end(); ++current ) {
-				// current->tpar.intention;
-			//}
-		}
-		
-		if ( current_atcmentrylist->freq != (int)(comm1_freq*100.0 + 0.5) ) {
-			current_atcmentrylist->reset = true;
-		}
-		
-		// reset (delete) ATCmenue list if reset is true
-		if ( current_atcmentrylist->reset == true ) {
-			delete ( current_atcmentrylist );
-			current_atcmentrylist = new FGatcmentryList;
-			current_atcmentrylist->init( (int)(comm1_freq*100.0 + 0.5) );
-			if ( TransDisplayed ) {
-				FG_POP_PUI_DIALOG( ATCMenuBox ); 
-				TransDisplayed = false;
+			atcmentry_vec_type atcmlist = (available_dialog[atcptr->GetType()])[atcptr->get_ident()];
+			atcmentry_vec_iterator current = atcmlist.begin();
+			atcmentry_vec_iterator last = atcmlist.end();
+			
+			// Set all opt flags to false before displaying box
+			fgSetBool("/sim/atc/opt0",false);
+			fgSetBool("/sim/atc/opt1",false);
+			fgSetBool("/sim/atc/opt2",false);
+			fgSetBool("/sim/atc/opt3",false);
+			fgSetBool("/sim/atc/opt4",false);
+			fgSetBool("/sim/atc/opt5",false);
+			fgSetBool("/sim/atc/opt6",false);
+			fgSetBool("/sim/atc/opt7",false);
+			fgSetBool("/sim/atc/opt8",false);
+			fgSetBool("/sim/atc/opt9",false);
+			
+			int k = atcmlist.size();
+			h += k * 25;
+			//cout << "k = " << k << '\n';
+			
+			atcDialogFrame->setSize(w, h); 
+			
+			if(k) { 
+				// loop over all entries in atcmentrylist
+				char** optList = new char*[k+1];
+				int kk = 0;
+				for ( ; current != last ; ++current ) {
+					string dum;
+					sprintf( buf, "%i", kk+1 );
+					buf[1] = '\0';
+					dum = buf;
+					mentry[kk] = dum + ". " + current->menuentry;
+					optList[kk] = new char[strlen(mentry[kk].c_str()) + 1];
+					strcpy(optList[kk], mentry[kk].c_str());
+					//cout << "optList[" << kk << "] = " << optList[kk] << endl; 
+					mtrans[kk] =              current->transmission;
+					++kk;
+				} 
+				optList[k] = NULL;
+				atcDialogCommunicationOptions->newList(optList);
+				atcDialogCommunicationOptions->setSize(w-100, h-100);
+				atcDialogCommunicationOptions->reveal();
+				atcDialogMessage -> setLabel( "ATC Menu" );
+				atcDialogMessage -> setPosition(w / 2, h - 30);
+			} else {
+				atcDialogCommunicationOptions->hide();
+				atcDialogMessage -> setLabel( "No transmission available" );
+				atcDialogMessage -> setPosition(w / 2, h - 30);
 			}
 		}
-		*/	
+	} else {
+		atcDialogCommunicationOptions->hide();
+		atcDialogMessage -> setLabel( "Not currently tuned to any ATC service" );
+		atcDialogFrame->setSize(w, h);
+		atcDialogMessage -> setPosition(w / 2, h - 30);
 	}
+		
+	FG_PUSH_PUI_DIALOG(atcDialog);
 }
 
 

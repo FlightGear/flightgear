@@ -87,7 +87,7 @@ void FGApproach::Update(double dt) {
 	const int max_trans = 20;
 	FGTransmission tmissions[max_trans];
 	int    wpn;
-	int    station = 1;
+	atc_type station = APPROACH;
 	TransCode code;
 	TransPar TPar;
 	int    i,j;
@@ -111,7 +111,7 @@ void FGApproach::Update(double dt) {
 	
 	for (i=0; i<num_planes; i++) {
 		if ( planes[i].ident == "Player") { 
-			station = 1;
+			station = APPROACH;
 			tpars.station = name;
 			tpars.callsign = "Player";
 			tpars.airport = ident;
@@ -133,8 +133,8 @@ void FGApproach::Update(double dt) {
 						    mentry = current_transmissionlist->gen_text(station, code, tpars, false);
 						    transm = current_transmissionlist->gen_text(station, code, tpars, true);
 						    // is the transmission already registered?
-						    if (!current_atcdialog->trans_reg( ident, transm )) {
-							    current_atcdialog->add_entry( ident, transm, mentry );
+						    if (!current_atcdialog->trans_reg( ident, transm, APPROACH )) {
+							    current_atcdialog->add_entry( ident, transm, mentry, APPROACH, 0 );
 						    }
 					    }
 					}
@@ -233,7 +233,7 @@ void FGApproach::Update(double dt) {
 					tpars.alt = planes[i].aalt;
 					message = current_transmissionlist->gen_text(station, code, tpars, true );
 					//cout << "Approach transmitting...\n";
-					//cout << message << '\n';
+					//cout << message << endl;
 					globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
 					
 				}
@@ -244,7 +244,7 @@ void FGApproach::Update(double dt) {
 					tpars.runway = active_runway;
 					message = current_transmissionlist->gen_text(station, code, tpars, true);
 					//cout << "Approach transmitting 2 ...\n";
-					//cout << message << '\n';
+					//cout << message << endl;
 					globals->get_ATC_display()->RegisterSingleMessage( message, 0 );
 				}
 				planes[i].lmc = code;

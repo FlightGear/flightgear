@@ -46,6 +46,8 @@
 #include <iomanip.h>
 #endif
 
+#include "ATC.hxx"
+
 #if ! defined( SG_HAVE_NATIVE_SGI_COMPILERS )
 SG_USING_STD(istream);
 #endif
@@ -79,7 +81,8 @@ struct TransPar {
 // FGTransmission - a class to encapsulate a speech transmission
 class FGTransmission {
 
-  int       StationType;    // Type of ATC station: 1 Approach
+  //int       StationType;    // Type of ATC station: 1 Approach
+  atc_type  StationType;
   TransCode Code;           // DCL - no idea what this is.
   string    TransText;      // The text of the spoken transmission
   string    MenuText;       // An abbreviated version of the text for the menu entry
@@ -91,8 +94,8 @@ public:
 
   void Init();
 
-  inline int       get_station()   const { return StationType; }
-  inline TransCode get_code()     { return Code; }
+  inline atc_type  get_station()   const { return StationType; }
+  inline TransCode get_code()      { return Code; }
   inline string    get_transtext() { return TransText; }
   inline string    get_menutext()  { return MenuText; }
 
@@ -109,6 +112,7 @@ private:
 inline istream&
 operator >> ( istream& in, FGTransmission& a ) {
 	char ch;
+	int tmp;
 	
 	static bool first_time = true;
 	static double julian_date = 0;
@@ -117,7 +121,13 @@ operator >> ( istream& in, FGTransmission& a ) {
 		julian_date = sgTimeCurrentMJD(0, 0) + MJD0;
 		first_time = false;
 	}
-	in >> a.StationType;
+	// Ugly hack alert - eventually we'll use xml format for the transmissions file
+	in >> tmp;
+	if(tmp == 1) {
+		a.StationType = APPROACH;
+	} else {
+		a.StationType = INVALID;
+	}
 	in >> a.Code.c1;
 	in >> a.Code.c2;
 	in >> a.Code.c3;

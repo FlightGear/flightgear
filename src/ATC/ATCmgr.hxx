@@ -167,9 +167,6 @@ public:
 	// Returns NULL if service doesn't exist - calling function should check for this.
     FGATC* GetATCPointer(string icao, atc_type type);
 	
-	// Display a dialog box with options relevant to the currently tuned ATC service.
-	void doPopupDialog();
-	
 	// Return a pointer to an appropriate voice for a given type of ATC
 	// creating the voice if necessary - ie. make sure exactly one copy
 	// of every voice in use exists in memory.

@@ -55,6 +55,10 @@ void FGATC::Update(double dt) {
 	}
 }
 
+void FGATC::ReceiveUserCallback(int code) {
+	SG_LOG(SG_ATC, SG_WARN, "WARNING - whichever ATC class was intended to receive callback code " << code << " didn't get it!!!");
+}
+
 void FGATC::SetResponseReqd(string rid) {
 	receiving = false;
 	responseReqd = true;

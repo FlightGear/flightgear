@@ -33,6 +33,7 @@
 
 #include <plib/pu.h>
 
+#include "ATC.hxx"
 #include "transmission.hxx"
 
 SG_USING_STD(map);
@@ -47,7 +48,7 @@ class FGTransmissionList {
   
   // Map of transmission lists by station type
   // typedef map < int, transmission_list_type, less<int> > transmission_map_type;
-  typedef map < int, transmission_list_type > transmission_map_type;
+  typedef map < atc_type, transmission_list_type > transmission_map_type;
   typedef transmission_map_type::iterator transmission_map_iterator;
   typedef transmission_map_type::const_iterator transmission_map_const_iterator;
   
@@ -62,13 +63,13 @@ public:
   bool init( SGPath path );
   
   // query the database for the specified code,
-  bool query_station( const int &station, FGTransmission *a, int max_trans, int &num_trans );
+  bool query_station( const atc_type &station, FGTransmission *a, int max_trans, int &num_trans );
 
   // generate the transmission text given the code of the message 
   // and the parameters
   // Set ttext = true to generate the spoken transmission text, 
   // or false to generate the abridged menu entry text.
-  string gen_text(const int &station, const TransCode code,
+  string gen_text(const atc_type &station, const TransCode code,
 		  const TransPar &tpars, const bool ttext);
 
 };
