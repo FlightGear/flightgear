@@ -2,6 +2,7 @@
 
  Module:       FGAtmosphere.cpp
  Author:       Jon Berndt
+               Implementation of 1959 Standard Atmosphere added by Tony Peden 
  Date started: 11/24/98
  Purpose:      Models the atmosphere
  Called by:    FGSimExec
@@ -33,6 +34,13 @@ curve fit using Excel. The data is from the ICAO atmosphere model.
 HISTORY
 --------------------------------------------------------------------------------
 11/24/98   JSB   Created
+07/23/99   TP    Added implementation of 1959 Standard Atmosphere
+                 Moved calculation of Mach number to FGTranslation
+********************************************************************************
+COMMENTS, REFERENCES,  and NOTES
+********************************************************************************
+[1]   Anderson, John D. "Introduction to Flight, Third Edition", McGraw-Hill,
+      1989, ISBN 0-07-001641-0
 
 ********************************************************************************
 INCLUDES
@@ -48,14 +56,18 @@ INCLUDES
 #include "FGPosition.h"
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
+#include "FGDefs.h"
 
 /*******************************************************************************
 ************************************ CODE **************************************
 *******************************************************************************/
 
+
 FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGAtmosphere";
+  h=0;
+  Calculate();
 }
 
 
@@ -67,21 +79,147 @@ FGAtmosphere::~FGAtmosphere()
 bool FGAtmosphere::Run(void)
 {
   if (!FGModel::Run()) {                 // if false then execute this Run()
-    rho = 0.002377 - 7.0E-08*State->Geth()
-        + 7.0E-13*State->Geth()*State->Geth()
-        - 2.0E-18*State->Geth()*State->Geth()*State->Geth();
-
-    State->SetMach(State->GetVt()/State->Geta());
+    h = State->Geth();
+    Calculate();
+    State->Seta(soundspeed);
   } else {                               // skip Run() execution this time
   }
   return false;
 }
 
+
 float FGAtmosphere::CalcRho(float altitude)
 {
-  return (0.002377 - 7.0E-08*altitude
+  return (0.00237 - 7.0E-08*altitude
         + 7.0E-13*altitude*altitude
         - 2.0E-18*altitude*altitude*altitude);
+}
 
+
+void FGAtmosphere::Calculate(void)
+{
+  //see reference [1]
+
+  float slope,reftemp,refpress,refdens;
+  int i=0;
+  float htab[]={0,36089,82020,154198,173882,259183,295272,344484}; //ft.
+
+  if (h <= htab[0]) {
+    h=0;
+  } else if (h >= htab[7]){
+    i = 7;
+    h = htab[7];
+  } else {
+    while (htab[i+1] < h) {
+      i++;
+    }
+  }
+
+  switch(i) {
+  case 0:     // sea level
+    slope     = -0.0035662; // R/ft.
+    reftemp   = 518.688;    // R
+    refpress  = 2116.17;    // psf
+    refdens   = 0.0023765;  // slugs/cubic ft.
+    break;
+  case 1:     // 36089 ft.
+    slope     = 0;
+    reftemp   = 389.988;
+    refpress  = 474.1;
+    refdens   = 0.0007078;
+    break;
+  case 2:     // 82020 ft.
+    slope     = 0.00164594;
+    reftemp   = 389.988;
+    refpress  = 52.7838;
+    refdens   = 7.8849E-5;
+    break;
+  case 3:     // 154198 ft.
+    slope     = 0;
+    reftemp   = 508.788;
+    refpress  = 2.62274;
+    refdens   = 3.01379E-6;
+    break;
+  case 4:     // 173882 ft.
+    slope     = -0.00246891;
+    reftemp   = 508.788;
+    refpress  = 1.28428;
+    refdens   = 1.47035e-06;
+    break;
+  case 5:     // 259183 ft.
+    slope     = 0;
+    reftemp   = 298.188;
+    refpress  = 0.0222008;
+    refdens   = 4.33396e-08;
+    break;
+  case 6:     // 295272 ft.
+    slope     = 0.00219459;
+    reftemp   = 298.188;
+    refpress  = 0.00215742;
+    refdens   = 4.21368e-09;
+    break;
+  case 7:     // 344484 ft.
+    slope     = 0;
+    reftemp   = 406.188;
+    refpress  = 0.000153755;
+    refdens   = 2.20384e-10;
+    break;
+  }
+
+
+  if (slope == 0) {
+    temperature = reftemp;
+    pressure = refpress*exp(-GRAVITY/(reftemp*Reng)*(h-htab[i]));
+    density = refdens*exp(-GRAVITY/(reftemp*Reng)*(h-htab[i]));
+  } else {
+    temperature = reftemp+slope*(h-htab[i]);
+    pressure = refpress*pow(temperature/reftemp,-GRAVITY/(slope*Reng));
+    density = refdens*pow(temperature/reftemp,-(GRAVITY/(slope*Reng)+1));
+  }
+
+  soundspeed = sqrt(SHRATIO*Reng*temperature);
+
+}
+
+
+float FGAtmosphere::GetTemperature(float altitude)
+{
+  if (altitude != h) {
+    h = altitude;
+    Calculate();
+  }
+  return temperature;
+}
+
+
+float FGAtmosphere::GetPressure(float altitude)
+{
+  if (altitude != h) {
+    h = altitude;
+    Calculate();
+  }
+
+  return pressure;
+}
+
+float FGAtmosphere::GetDensity(float altitude)
+{
+  if (altitude != h) {
+    h = altitude;
+    Calculate();
+  }
+
+  return density;
+}
+
+
+float FGAtmosphere::GetSoundSpeed(float altitude)
+{
+  if (altitude != h) {
+    h = altitude;
+    Calculate();
+  }
+
+  return soundspeed;
 }
 

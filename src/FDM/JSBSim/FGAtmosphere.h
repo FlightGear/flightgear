@@ -2,6 +2,7 @@
 
  Header:       FGAtmosphere.h
  Author:       Jon Berndt
+               Implementation of 1959 Standard Atmosphere added by Tony Peden
  Date started: 11/24/98
 
  ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
@@ -26,13 +27,16 @@
 HISTORY
 --------------------------------------------------------------------------------
 11/24/98   JSB   Created
+07/23/99   TP   Added implementation of 1959 Standard Atmosphere
+           Moved calculation of Mach number to FGTranslation
+
 
 ********************************************************************************
 SENTRY
 *******************************************************************************/
 
-#ifndef FGATMOSPHERE_H
-#define FGATMOSPHERE_H
+#ifndef FGAtmosphere_H
+#define FGAtmosphere_H
 
 /*******************************************************************************
 INCLUDES
@@ -42,22 +46,22 @@ INCLUDES
 
 /*******************************************************************************
 COMMENTS, REFERENCES,  and NOTES
-*******************************************************************************/
-/**
-The equation used in this model was determined by a third order curve fit using
-Excel. The data is from the ICAO atmosphere model.
-@memo Models the atmosphere.
-@author Jon S. Berndt
-*/
+********************************************************************************
+
+[1]    Anderson, John D. "Introduction to Flight, Third Edition", McGraw-Hill,
+      1989, ISBN 0-07-001641-0
+
 /*******************************************************************************
 CLASS DECLARATION
 *******************************************************************************/
+
 
 using namespace std;
 
 class FGAtmosphere : public FGModel
 {
 public:
+
   FGAtmosphere(FGFDMExec*);
   ~FGAtmosphere(void);
   bool Run(void);
@@ -65,10 +69,29 @@ public:
   inline float Getrho(void) {return rho;}
   float CalcRho(float altitude);
 
+  inline float GetTemperature(void){return temperature;}
+  inline float GetDensity(void)    {return density;}     // use only after Run() has been called
+  inline float GetPressure(void)   {return pressure;}
+  inline float GetSoundSpeed(void) {return soundspeed;}
+
+  float GetTemperature(float altitude); //Rankine, altitude in feet
+  float GetDensity(float altitude);     //slugs/ft^3
+  float GetPressure(float altitude);    //lbs/ft^2
+  float GetSoundSpeed(float altitude);  //ft/s
+
 protected:
 
 private:
   float rho;
+
+  float h;
+  float temperature;
+  float pressure;
+  float density;
+  float soundspeed;
+  void Calculate(void);
+
+
 };
 
 /******************************************************************************/

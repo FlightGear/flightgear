@@ -32,6 +32,8 @@ This class integrates the translational EOM.
 HISTORY
 --------------------------------------------------------------------------------
 12/02/98   JSB   Created
+ 7/23/99   TP    Added data member and modified Run and PutState to calcuate 
+ 			     Mach number
 
 ********************************************************************************
 COMMENTS, REFERENCES,  and NOTES
@@ -110,6 +112,8 @@ bool FGTranslation::Run(void)
 
     qbar = 0.5*rho*Vt*Vt;
 
+    mach = Vt / State->Geta();
+
     PutState();
   } else {
   }
@@ -130,7 +134,7 @@ void FGTranslation::GetState(void)
   Fz = Aircraft->GetFz();
 
   Mass = Aircraft->GetMass();
-  rho = Atmosphere->Getrho();
+  rho = Atmosphere->GetDensity();
 
   phi = Rotation->Getphi();
   tht = Rotation->Gettht();
@@ -142,5 +146,6 @@ void FGTranslation::PutState(void)
 {
   State->SetVt(Vt);
   State->Setqbar(qbar);
+  State->SetMach(mach);
 }
 

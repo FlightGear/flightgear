@@ -59,6 +59,7 @@ INCLUDES
 #endif
 
 #include "FGDefs.h"
+#include "FGInitialCondition.h"
 
 /*******************************************************************************
 DEFINES
@@ -71,6 +72,7 @@ CLASS DECLARATION
 *******************************************************************************/
 
 class FGFDMExec;
+
 class FGState
 {
 public:
@@ -79,6 +81,7 @@ public:
 
   bool Reset(string, string);
   void Initialize(float, float, float, float, float, float, float, float, float);
+  void Initialize(FGInitialCondition *FGIC);
   bool StoreData(string);
   bool DumpData(string);
   bool DisplayData(void);

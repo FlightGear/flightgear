@@ -26,6 +26,9 @@
 HISTORY
 --------------------------------------------------------------------------------
 11/17/98   JSB   Created
+7/31/99     TP   Added RunIC function that runs the sim so that every frame
+                 begins with the IC values from the given FGInitialCondition 
+				 object and dt=0. 
 
 ********************************************************************************
 SENTRY
@@ -39,6 +42,7 @@ INCLUDES
 *******************************************************************************/
 
 #include "FGModel.h"
+#include "FGInitialCondition.h"
 
 using namespace std;
 
@@ -55,6 +59,7 @@ class FGRotation;
 class FGPosition;
 class FGAuxiliary;
 class FGOutput;
+class FGInitialCondition;
 
 class FGFDMExec
 {
@@ -67,6 +72,7 @@ public:
   bool Initialize(void);
   int  Schedule(FGModel* model, int rate);
   bool Run(void);
+  bool RunIC(FGInitialCondition *fgic); 
   void Freeze(void) {frozen = true;}
   void Resume(void) {frozen = false;}
 

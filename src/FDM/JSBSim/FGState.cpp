@@ -82,14 +82,16 @@ FGState::~FGState(void)
 }
 
 
+//***************************************************************************
+//
+// Reset: Assume all angles READ FROM FILE IN DEGREES !!
+//
+
 bool FGState::Reset(string path, string fname)
 {
   string resetDef;
   float U, V, W;
   float phi, tht, psi;
-  float alpha, beta, gamma;
-  float Q0, Q1, Q2, Q3;
-  float T[4][4];
 
   resetDef = path + "/" + FDMExec->GetAircraft()->GetAircraftName() + "/" + fname;
 
@@ -107,7 +109,8 @@ bool FGState::Reset(string path, string fname)
     resetfile >> h;
     resetfile.close();
 
-    Initialize(U, V, W, phi, tht, psi, latitude, longitude, h);
+    Initialize(U, V, W, phi*DEGTORAD, tht*DEGTORAD, psi*DEGTORAD,
+                                   latitude*DEGTORAD, longitude*DEGTORAD, h);
 
     return true;
   } else {
@@ -116,6 +119,10 @@ bool FGState::Reset(string path, string fname)
   }
 }
 
+//***************************************************************************
+//
+// Initialize: Assume all angles GIVEN IN RADIANS !!
+//
 
 void FGState::Initialize(float U, float V, float W,
                          float phi, float tht, float psi,
@@ -129,8 +136,6 @@ void FGState::Initialize(float U, float V, float W,
   longitude = Longitude;
   h = H;
 
-// Change all angular measurements from degrees (as in config file) to radians
-
   gamma = 0.0;
   if (W != 0.0)
     alpha = U*U > 0.0 ? atan2(W, U) : 0.0;
@@ -140,12 +145,6 @@ void FGState::Initialize(float U, float V, float W,
     beta = U*U+W*W > 0.0 ? atan2(V, (fabs(U)/U)*sqrt(U*U + W*W)) : 0.0;
   else
     beta = 0.0;
-
-  latitude  *= M_PI / 180.0;
-  longitude *= M_PI / 180.0;
-  phi       *= M_PI / 180.0;
-  tht       *= M_PI / 180.0;
-  psi       *= M_PI / 180.0;
 
   FDMExec->GetTranslation()->SetUVW(U, V, W);
   FDMExec->GetRotation()->SetEuler(phi, tht, psi);
@@ -175,6 +174,27 @@ void FGState::Initialize(float U, float V, float W,
                                T[2][1], T[2][2], T[2][3],
                                T[3][1], T[3][2], T[3][3]);
   DisplayData();
+}
+
+
+void FGState::Initialize(FGInitialCondition *FGIC)
+{
+	
+  float tht,psi,phi;
+  float U,V,W;
+
+  latitude = FGIC->GetLatitudeRadIC();
+  longitude = FGIC->GetLongitudeRadIC();
+  h = FGIC->GetAltitudeFtIC();
+  U = FGIC->GetUBodyFpsIC();
+  V = FGIC->GetVBodyFpsIC();
+  W = FGIC->GetWBodyFpsIC();
+  tht = FGIC->GetThetaRadIC();
+  phi = FGIC->GetPhiRadIC();
+  psi = FGIC->GetPsiRadIC();
+
+  Initialize(U, V, W, phi*DEGTORAD, tht*DEGTORAD, psi*DEGTORAD,
+                                   latitude*DEGTORAD, longitude*DEGTORAD, h);
 }
 
 
@@ -246,24 +266,24 @@ bool FGState::DisplayData(void)
   cout << "U: " << FDMExec->GetTranslation()->GetU() << endl;
   cout << "V: " << FDMExec->GetTranslation()->GetV() << endl;
   cout << "W: " << FDMExec->GetTranslation()->GetW() << endl;
-  cout << "P: " << FDMExec->GetRotation()->GetP() << endl;
-  cout << "Q: " << FDMExec->GetRotation()->GetQ() << endl;
-  cout << "R: " << FDMExec->GetRotation()->GetR() << endl;
+  cout << "P: " << FDMExec->GetRotation()->GetP()*RADTODEG << endl;
+  cout << "Q: " << FDMExec->GetRotation()->GetQ()*RADTODEG << endl;
+  cout << "R: " << FDMExec->GetRotation()->GetR()*RADTODEG << endl;
   cout << "L: " << FDMExec->GetAircraft()->GetL() << endl;
   cout << "M: " << FDMExec->GetAircraft()->GetM() << endl;
   cout << "N: " << FDMExec->GetAircraft()->GetN() << endl;
   cout << "Vt: " << Vt << endl;
   cout << "latitude: " << latitude << endl;
   cout << "longitude: " << longitude << endl;
-  cout << "alpha: " << FDMExec->GetTranslation()->Getalpha() << endl;
-  cout << "beta: " << FDMExec->GetTranslation()->Getbeta() << endl;
-  cout << "gamma: " << FDMExec->GetTranslation()->Getgamma() << endl;
-  cout << "phi: " << FDMExec->GetRotation()->Getphi() << endl;
-  cout << "tht: " << FDMExec->GetRotation()->Gettht() << endl;
-  cout << "psi: " << FDMExec->GetRotation()->Getpsi() << endl;
-  cout << "Pdot: " << FDMExec->GetRotation()->GetPdot() << endl;
-  cout << "Qdot: " << FDMExec->GetRotation()->GetQdot() << endl;
-  cout << "Rdot: " << FDMExec->GetRotation()->GetRdot() << endl;
+  cout << "alpha: " << FDMExec->GetTranslation()->Getalpha()*RADTODEG << endl;
+  cout << "beta: " << FDMExec->GetTranslation()->Getbeta()*RADTODEG << endl;
+  cout << "gamma: " << FDMExec->GetTranslation()->Getgamma()*RADTODEG << endl;
+  cout << "phi: " << FDMExec->GetRotation()->Getphi()*RADTODEG << endl;
+  cout << "tht: " << FDMExec->GetRotation()->Gettht()*RADTODEG << endl;
+  cout << "psi: " << FDMExec->GetRotation()->Getpsi()*RADTODEG << endl;
+  cout << "Pdot: " << FDMExec->GetRotation()->GetPdot()*RADTODEG << endl;
+  cout << "Qdot: " << FDMExec->GetRotation()->GetQdot()*RADTODEG << endl;
+  cout << "Rdot: " << FDMExec->GetRotation()->GetRdot()*RADTODEG << endl;
   cout << "h: " << h << endl;
   cout << "a: " << a << endl;
   cout << "rho: " << FDMExec->GetAtmosphere()->Getrho() << endl;

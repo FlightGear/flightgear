@@ -46,6 +46,13 @@ SENTRY
 #define INVECCENTSQRD   1.0067395
 #define INVECCENTSQRDM1 0.0067395
 #define EPS             0.081819221
+#define Reng 			1716			//Specific Gas Constant,ft^2/(sec^2*R)
+#define SHRATIO			1.4			    //Specific Heat Ratio
+#define RADTODEG        57.29578
+#define DEGTORAD        1.745329E-2
+#define KTSTOFPS        1.68781
+#define FPSTOKTS        0.592484
+
 
 
 /******************************************************************************/

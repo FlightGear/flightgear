@@ -112,7 +112,7 @@ protected:
 private:
   float U, V, W;                 // Body frame velocities owned by FGTranslation
   float P, Q, R;
-  float Vt, qbar;
+  float Vt, qbar, mach;
   float Udot, Vdot, Wdot;
   float lastUdot, lastVdot, lastWdot;
   float phi, tht, psi;

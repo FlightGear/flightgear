@@ -93,7 +93,7 @@ FGFDMExec::FGFDMExec(void)
   Rotation    = new FGRotation(this);
   Position    = new FGPosition(this);
   Auxiliary   = new FGAuxiliary(this);
-//  Output      = new FGOutput(this);
+  Output      = new FGOutput(this);
 
   State       = new FGState(this);
 
@@ -106,7 +106,11 @@ FGFDMExec::FGFDMExec(void)
   if (!Rotation->InitModel())   {cerr << "Rotation model init failed"; Error+=16;}
   if (!Position->InitModel())   {cerr << "Position model init failed"; Error+=32;}
   if (!Auxiliary->InitModel())  {cerr << "Auxiliary model init failed"; Error+=64;}
-//  if (!Output->InitModel())     {cerr << "Output model init failed"; Error+=128;}
+  if (!Output->InitModel())     {cerr << "Output model init failed"; Error+=128;}
+
+  // Schedule a model. The second arg (the integer) is the pass number. For
+  // instance, the atmosphere model gets executed every fifth pass it is called
+  // by the executive. Everything else here gets executed each pass.
 
   Schedule(Atmosphere,  5);
   Schedule(FCS,         1);
@@ -115,7 +119,7 @@ FGFDMExec::FGFDMExec(void)
   Schedule(Translation, 1);
   Schedule(Position,    1);
   Schedule(Auxiliary,   1);
-//  Schedule(Output,      1);
+  Schedule(Output,      1);
 
   terminate = false;
   frozen = false;
@@ -171,4 +175,15 @@ bool FGFDMExec::Run(void)
 
   return true;
 }
+
+bool FGFDMExec::RunIC(FGInitialCondition *fgic)
+{
+  float save_dt=State->Getdt();
+  State->Setdt(0.0);
+  State->Initialize(fgic);
+  Run();
+  State->Setdt(save_dt);
+  return true;
+}
+  
 

@@ -51,7 +51,7 @@ FGControls::~FGControls() {
 
 
 // $Log$
-// Revision 1.4  1999/07/31 02:55:24  curt
+// Revision 1.5  1999/08/17 19:18:11  curt
 // Updates from Jon.
 //
 // Revision 1.1  1999/02/13 01:12:03  curt

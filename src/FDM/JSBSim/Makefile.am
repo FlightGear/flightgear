@@ -1,3 +1,5 @@
+EXTRA_DIST = JSBSim.cpp Makefile.solo
+
 noinst_LIBRARIES = libJSBsim.a
 
 libJSBsim_a_SOURCES = FGAircraft.cpp FGAircraft.h \
@@ -7,6 +9,7 @@ libJSBsim_a_SOURCES = FGAircraft.cpp FGAircraft.h \
 	FGDefs.h \
 	FGFCS.cpp FGFCS.h \
 	FGFDMExec.cpp FGFDMExec.h \
+	FGInitialCondition.cpp FGInitialCondition.h \
 	FGModel.cpp FGModel.h \
 	FGOutput.cpp FGOutput.h \
 	FGPosition.cpp FGPosition.h \
@@ -19,7 +22,7 @@ libJSBsim_a_SOURCES = FGAircraft.cpp FGAircraft.h \
 
 noinst_PROGRAMS = testJSBsim
 
-testJSBsim_SOURCES = FGMain.cpp
+testJSBsim_SOURCES = JSBSim.cpp
 
 testJSBsim_LDADD = libJSBsim.a
 
