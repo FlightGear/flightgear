@@ -463,7 +463,7 @@ parse_wp( const string& arg ) {
     string id, alt_str;
     double alt = 0.0;
 
-    int pos = arg.find( "@" );
+    unsigned int pos = arg.find( "@" );
     if ( pos != string::npos ) {
 	id = arg.substr( 0, pos );
 	alt_str = arg.substr( pos + 1 );
@@ -492,20 +492,25 @@ parse_wp( const string& arg ) {
 static bool 
 parse_flightplan(const string& arg)
 {
-    sg_gzifstream infile(arg.c_str());
-    if ( !infile.is_open() ) {
+    sg_gzifstream in(arg.c_str());
+    if ( !in.is_open() ) {
 	return false;
     }
     while ( true ) {
 	string line;
-#ifdef GETLINE_NEEDS_TERMINATOR
-	getline( infile, line, '\n' );
-#elif defined( macintosh )
-	getline( infile, line, '\r' );
+
+#if defined( macintosh )
+        getline( in, line, '\r' );
 #else
-	getline( infile, line );
+	getline( in, line, '\n' );
 #endif
-	if ( infile.eof() ) {
+
+        // catch extraneous (DOS) line ending character
+        if ( line[line.length() - 1] < 32 ) {
+            line = line.substr( 0, line.length()-1 );
+        }
+
+	if ( in.eof() ) {
 	    break;
 	}
 	parse_wp(line);
@@ -804,9 +809,9 @@ parse_option (const string& arg)
 #endif
     } else if ( arg.find( "--prop:" ) == 0 ) {
         string assign = arg.substr(7);
-	int pos = assign.find('=');
-	if (pos == arg.npos || pos == 0) {
-	    SG_LOG(SG_GENERAL, SG_ALERT, "Bad property assignment: " << arg);
+	unsigned int pos = assign.find('=');
+	if ( pos == arg.npos || pos == 0 ) {
+	    SG_LOG( SG_GENERAL, SG_ALERT, "Bad property assignment: " << arg );
 	    return FG_OPTIONS_ERROR;
 	}
 	string name = assign.substr(0, pos);
@@ -841,9 +846,9 @@ parse_option (const string& arg)
 	fgSetDouble("/environment/visibility", visibility);
     } else if ( arg.find( "--wind=" ) == 0 ) {
         string val = arg.substr(7);
-	int pos = val.find('@');
-	if (pos == string::npos) {
-	  SG_LOG(SG_GENERAL, SG_ALERT, "bad wind value " << val);
+	unsigned int pos = val.find('@');
+	if ( pos == string::npos ) {
+	  SG_LOG( SG_GENERAL, SG_ALERT, "bad wind value " << val );
 	  return FG_OPTIONS_ERROR;
 	}
 	double dir = atof(val.substr(0,pos).c_str());
@@ -924,13 +929,16 @@ fgScanForRoot (const string& path)
 #endif
 	string line;
 
-#ifdef GETLINE_NEEDS_TERMINATOR
-        getline( in, line, '\n' );
-#elif defined( macintosh )
-	getline( in, line, '\r' );
+#if defined( macintosh )
+        getline( in, line, '\r' );
 #else
-        getline( in, line );
+	getline( in, line, '\n' );
 #endif
+
+        // catch extraneous (DOS) line ending character
+        if ( line[line.length() - 1] < 32 ) {
+            line = line.substr( 0, line.length()-1 );
+        }
 
 	if ( line.find( "--fg-root=" ) == 0 ) {
 	    return line.substr( 10 );
@@ -969,8 +977,9 @@ fgParseOptions (int argc, char **argv) {
 void
 fgParseOptions (const string& path) {
     sg_gzifstream in( path );
-    if ( !in.is_open() )
-      return;
+    if ( !in.is_open() ) {
+        return;
+    }
 
     SG_LOG( SG_GENERAL, SG_INFO, "Processing config file: " << path );
 
@@ -984,13 +993,16 @@ fgParseOptions (const string& path) {
 #endif
 	string line;
 
-#ifdef GETLINE_NEEDS_TERMINATOR
-        getline( in, line, '\n' );
-#elif defined( macintosh )
-	getline( in, line, '\r' );
+#if defined( macintosh )
+        getline( in, line, '\r' );
 #else
-        getline( in, line );
+	getline( in, line, '\n' );
 #endif
+
+        // catch extraneous (DOS) line ending character
+        if ( line[line.length() - 1] < 32 ) {
+            line = line.substr( 0, line.length()-1 );
+        }
 
 	if ( parse_option( line ) == FG_OPTIONS_ERROR ) {
 	    SG_LOG( SG_GENERAL, SG_ALERT, 
