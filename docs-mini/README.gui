@@ -1,0 +1,341 @@
+FlightGear GUI Mini-HOWTO
+
+David Megginson
+Started: 2003-01-20
+Last revised: 2003-01-20
+
+
+FlightGear creates its drop-down menubar and dialog boxes from XML
+configuration files under $FG_ROOT/gui.  This document gives a quick
+explanation of how to create or modify the menubar and dialogs.  The
+toolkit for the FlightGear GUI is PUI, which is part of plib.
+
+All of the XML files use the standard FlightGear PropertyList format.
+
+
+MENUBAR
+-------
+
+FlightGear reads the configuration for its menubar from
+$FG_ROOT/gui/menubar.xml.  The file consists of a series of top-level
+elements named "menu", each of which defines on of the drop-down
+menus, from left to right.  Each menu contains a series of items,
+representing the actual items a user can select from the menu, and
+each item has a series of bindings that FlightGear will activate when
+the user selects the item.
+
+Here's a simplified grammar:
+
+  [menubar] : menu*
+
+  menu : label, item*
+
+  item : label, binding*
+
+The bindings are standard FlightGear bindings, the same as the ones
+used for the keyboard, mouse, joysticks, and the instrument panel.
+Any commands allowed in those bindings are allowed here as well.
+
+Here's an example of a simple menubar with a "File" drop-down menu and
+a single "Quit" item:
+
+  <PropertyList>
+
+   <menu>
+    <label>File</label>
+ 
+    <item>
+     <label>Quit</label>
+     <binding>
+      <command>exit</command>
+     </binding>
+    </item>
+
+  </PropertyList>
+
+PUI menus do not allow advanced features like submenus or checkmarks.
+The most common command to include in a menu item binding is the
+'dialog-show' command, which will open a user-defined dialog box as
+described in the next section.
+
+
+DIALOGS
+-------
+
+The configuration files for XML dialogs use a nested structure to set
+up dialog boxes.  The top-level always describes a dialog box, and the
+lower levels describe the groups and widgets that make it up.  Here is
+a simple, "hello world" dialog:
+
+  <PropertyList>
+
+   <name>hello</name>
+
+   <width>150</width>
+   <height>100</height>
+   <modal>false</modal>
+
+   <text>
+    <x>10</x>
+    <y>50</y>
+    <label>Hello, world</label>
+   </text>
+
+   <button>
+    <x>40</x>
+    <y>10</y>
+    <legend>Close</legend>
+    <binding>
+     <command>dialog-close</command>
+    </binding>
+   </button>
+
+  </PropertyList>
+
+The dialog contains two sub-objects: a text field and a button.  The
+button contains one binding, which closes the active dialog when the
+user clicks on the button.
+
+Coordinates are pseudo-pixels.  The screen is always assumed to be
+1024x768, no matter what the actual resolution is.  The origin is the
+bottom left corner of the screen (or parent dialog or group); x goes
+from left to right, and y goes from bottom to top.
+
+All objects, including the top-level dialog, accept the following
+properties, though they will ignore any that are not relevant:
+
+ x - the X position of the bottom left corner of the object, in
+   pseudo-pixels.  The default is 0.
+
+ y - the Y position of the bottom left corner of the object, in
+   pseudo-pixels.  The default is 0.
+
+ width - the width of the object, in pseudo-pixels.  The default is
+   the width of the parent container.
+
+ height - the height of the object, in pseudo-pixels.  The default is
+   the width of the parent container.
+
+ legend - the text legend to display in the object.
+
+ label - the text label to display near the object.
+
+ property - the name of the FlightGear property whose value will
+   be displayed in the object (and possibly modified through it).
+
+ binding - a FlightGear command binding that will be fired when the
+   user activates this object (more than one allowed).
+
+ default - true if this is the default object for when the user
+   presses the [RETURN] key.
+
+Objects may appear nested within the top-level dialog or a "group"
+object.  Here are all the object types allowed, with their special
+properties:
+
+
+dialog
+------
+
+The top-level dialog box; the name does not actually appear in the
+file, since the root element is named PropertyList.
+
+  name - (REQUIRED) the unique name of the dialog for use with the
+    "dialog-show" command.
+
+  modal - true if the dialog is modal (it blocks the rest of the
+    program), false otherwise.  The default is false.
+
+Example:
+
+<PropertyList>
+
+ <name>sample</name>
+ <width>500</width>
+ <height>210</height>
+ <modal>false</modal>
+
+ <text>
+  ...
+ </text>
+
+ <button>
+  ...
+ </button>
+
+</PropertyList>
+
+
+group
+-----
+
+A group of subobjects.  This object does not draw anything on the
+screen, but all of its children specify their coordinates relative to
+the group; using groups makes it easy to move parts of a dialog
+around.
+
+Example:
+
+  <group>
+   <x>0</x>
+   <y>50</y>
+
+   <text>
+    ...
+   </text>
+
+   <input>
+    ...
+   </input>
+
+   <button>
+    ...
+   </button>
+
+  </group>
+
+
+input
+-----
+
+A simple editable text field.
+
+Example:
+
+  <input>
+   <x>10</x>
+   <y>60</y>
+   <width>200</width>
+   <height>25</height>
+   <label>sea-level temperature (degC)</label>
+   <property>/environment/temperature-sea-level-degc</property>
+  </input>
+
+
+text
+----
+
+A non-editable text label.
+
+Example:
+
+  <text>
+   <x>10</x>
+   <y>200</y>
+   <label>Heading</label>
+  </text>
+
+
+checkbox
+--------
+
+A checkbox, useful for linking to boolean properties.
+
+Example:
+
+  <checkbox>
+   <x>150</x>
+   <y>200</y>
+   <width>12</width>
+   <height>12</height>
+   <property>/autopilot/locks/heading</property>
+  </checkbox>
+
+
+
+button
+------
+
+A push button, useful for firing command bindings.
+
+  one-shot - true if the button should pop up again after it is
+    pushed, false otherwise.  The default is true.
+
+  <button>
+   <x>0</x>
+   <y>0</y>
+   <legend>OK</legend>
+   <binding>
+    <command>dialog-apply</command>
+   </binding>
+   <binding>
+    <command>dialog-close</command>
+   </binding>
+   <default>true</default>
+  </button>
+
+
+
+combo
+-----
+
+A pop-up list of selections.
+
+  value - one of the selections available for the combo.  There may be
+  any number of "value" fields.
+
+Example:
+
+  <combo>
+   <x>10</x>
+   <y>50</y>
+   <width>200</width>
+   <height>25</height>
+   <property>/environment/clouds/layer[0]/type</property>
+   <value>clear</value>
+   <value>mostly-sunny</value>
+   <value>mostly-cloudy</value>
+   <value>overcast</value>
+   <value>cirrus</value>
+  </combo>
+
+
+slider
+------
+
+A horizontal or vertical slider for setting a value.
+
+  vertical - true if the slider should be vertical, false if it should
+    be horizontal.  The default is false.
+
+  min - the minimum value for the slider.  The default is 0.0.
+
+  max - the maximum value for the slider.  The default is 1.0.
+
+Example:
+
+  <slider>
+   <x>10</x>
+   <y>50</y>
+   <width>200</width>
+   <property>/environment/visibility-m</property>
+   <min>5</min>
+   <max>50000</max>
+  </slider>
+
+
+dial
+----
+
+A circular dial for choosing a direction.
+
+  wrap - true if the dial should wrap around, false otherwise.  The
+    default is true.
+
+  min - the minimum value for the dial.  The default is 0.0.
+
+  max - the maximum value for the dial.  The default is 1.0.
+
+Example:
+
+  <dial>
+   <x>10</x>
+   <y>50</y>
+   <width>20</width>
+   <property>/environment/wind-from-direction-deg</property>
+   <min>0</min>
+   <max>360</max>
+  </dial>
+
+
+__end__
