@@ -17,6 +17,8 @@ install" to configure, build, and install SimGear.  By default,
 SimGear is installed in /usr/local/lib/libsg*.a and
 /usr/local/include/simgear/.
 
-You may specify an alternate prefix, but then you may then also have
-to do addition things to add your non-standard include and lib paths
-to your compilers search path when you build FlightGear.
+You may specify an alternate prefix for building and installing
+SimGear.  If you do this, you may have to point the FlightGear
+configure script to the correct location of SimGear.  For instance, if
+you installed SimGear in /usr/site/include and /usr/site/lib, you
+could configure FlightGear with "./configure --with-simgear=/usr/site"
