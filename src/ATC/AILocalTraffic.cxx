@@ -65,6 +65,7 @@ void FGAILocalTraffic::Init() {
     // Hardwire to KEMT
     lat = 34.081358;
     lon = -118.037483;
+    hdg = 0.0;
     elev = (287.0 + 0.5) * SG_FEET_TO_METER;  // Ground is 296 so this should be above it
     mag_hdg = -10.0;
     pitch = 0.0;
