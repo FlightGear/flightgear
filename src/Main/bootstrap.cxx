@@ -188,7 +188,8 @@ int main ( int argc, char **argv ) {
                             // disabled.
         cerr << "Fatal error: " << t.getFormattedMessage()
              << "\n (received from " << t.getOrigin() << ')' << endl;
-        exit(1);
+    } catch (...) {
+        cerr << "Unknown exception in the main loop. Aborting..." << endl;
     }
 
     return 0;

@@ -110,7 +110,6 @@ FGGeneral general;
 int idle_state = 0;
 long global_multi_loop;
 
-
 SGTimeStamp last_time_stamp;
 SGTimeStamp current_time_stamp;
 
@@ -722,6 +721,8 @@ bool fgMainInit( int argc, char **argv ) {
         exit(-1);
     }
 
+    sgUseDisplayList = fgGetBool( "/sim/rendering/use-display-list", true );
+
     // Initialize the Aircraft directory to "" (UIUC)
     aircraft_dir = "";
 
@@ -938,13 +939,8 @@ bool fgMainInit( int argc, char **argv ) {
     // build our custom render states
     globals->get_renderer()->build_states();
 
-    try {
-        // pass control off to the master event handler
-        fgOSMainLoop();
-    } catch (...) {
-        SG_LOG( SG_ALL, SG_ALERT,
-            "Unknown exception in the main loop. Aborting..." );
-    }
+    // pass control off to the master event handler
+    fgOSMainLoop();
 
     // we never actually get here ... but to avoid compiler warnings,
     // etc.
