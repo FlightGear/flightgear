@@ -563,6 +563,7 @@ void FGXMLAutopilot::init() {
 
 void FGXMLAutopilot::reinit() {
     components.clear();
+    init();
     build();
 }
 
