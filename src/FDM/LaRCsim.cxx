@@ -305,7 +305,7 @@ int fgLaRCsim_2_FGInterface (FGInterface& f) {
     // f.set_Velocities_Local_Rel_Airmass( V_north_rel_airmass, 
     //                          V_east_rel_airmass, V_down_rel_airmass );
     // f.set_Velocities_Gust( U_gust, V_gust, W_gust );
-    // f.set_Velocities_Wind_Body( U_body, V_body, W_body );
+    f.set_Velocities_Wind_Body( U_body, V_body, W_body );
 
     // f.set_V_rel_wind( V_rel_wind );
     // f.set_V_true_kts( V_true_kts );

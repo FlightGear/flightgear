@@ -580,7 +580,7 @@ void FGTexInstrument::UpdatePointer(void){
     if (alpha < alpha1)
         alpha = alpha1;
     if (alpha > alpha2)
-        alpha = alpha2;
+        alpha -= alpha2;
     xglMatrixMode(GL_MODELVIEW);  
     xglPushMatrix();
     xglLoadIdentity();

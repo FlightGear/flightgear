@@ -447,15 +447,15 @@ public:
     
     FG_VECTOR_3    v_wind_body_v;  // Wind-relative velocities in body axis
     // inline double * get_V_wind_body_v() { return v_wind_body_v; }
-    // inline double get_U_body() const { return v_wind_body_v[0]; }
-    // inline double get_V_body() const { return v_wind_body_v[1]; }
-    // inline double get_W_body() const { return v_wind_body_v[2]; }
-    /* inline void set_Velocities_Wind_Body( double u, double v, double w)
+    inline double get_U_body() const { return v_wind_body_v[0]; }
+    inline double get_V_body() const { return v_wind_body_v[1]; }
+    inline double get_W_body() const { return v_wind_body_v[2]; }
+    inline void set_Velocities_Wind_Body( double u, double v, double w)
     {
 	v_wind_body_v[0] = u;
 	v_wind_body_v[1] = v;
 	v_wind_body_v[2] = w;
-    } */
+    }
 
     double    v_rel_wind, v_true_kts, v_rel_ground, v_inertial;
     double    v_ground_speed, v_equiv, v_equiv_kts;

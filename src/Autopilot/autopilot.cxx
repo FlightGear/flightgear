@@ -1063,7 +1063,7 @@ void fgAPInit( fgAIRCRAFT *current_aircraft ) {
 
     // Hardwired for now should be in options
     // 25% max control variablilty  0.5 / 2.0
-    APData->disengage_threshold = 0.5;
+    APData->disengage_threshold = 1.0;
 
 #if !defined( USING_SLIDER_CLASS )
     MaxRollAdjust = 2 * APData->MaxRoll;

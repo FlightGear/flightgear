@@ -195,6 +195,7 @@ void guiMotionFunc ( int x, int y )
 	while (offset > full) {
 	  offset -= full;
 	}
+	v->set_view_offset(offset);
 	v->set_goal_view_offset(offset);
       }
 
@@ -221,6 +222,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
       case MOUSE_YOKE:
 	break;
       case MOUSE_VIEW:
+        current_view.set_view_offset( 0.00 );
         current_view.set_goal_view_offset( 0.00 );
 	break;
       }

@@ -529,7 +529,7 @@ static void send_rul_out( fgIOCHANNEL *p ) {
 // First bite:  ASCII character "P" ( 0x50 or 80 decimal )
 // Second byte:  "roll" value (1-255) 1 being 0* and 255 being 359*
 // Third byte:  "pitch" value (1-255) 1 being 0* and 255 being 359*
-// Fourth byte:  "heave" value (or forward acceleration)
+// Fourth byte:  "heave" value (or vertical acceleration?)
 //
 // So sending 80 127 127 to the two axis motors will position on 180*
 // The RS- 232 port is a nine pin connector and the only pins used are
@@ -572,7 +572,7 @@ static void send_pve_out( fgIOCHANNEL *p ) {
 	pitch_deg -= 360;
     }
 
-    int heave = (int)(f->get_U_dot_body() * 3.0);
+    int heave = (int)(f->get_W_body());
 
     // scale roll and pitch to output format (1 - 255)
     // straight && level == (128, 128)
