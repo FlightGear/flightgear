@@ -248,10 +248,10 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
         net->num_tanks = htonl(net->num_tanks);
 
         for ( i = 0; i < net->num_wheels; ++i ) {
-            net->wow[i] = htonl(net->wow[i]);
-            net->gear_pos[i] = htonl(net->gear_pos[i]);
-            net->gear_steer[i] = htonl(net->gear_steer[i]);
-            net->gear_compression[i] = htonl(net->gear_compression[i]);
+            htonl(net->wow[i]);
+            htonf(net->gear_pos[i]);
+            htonf(net->gear_steer[i]);
+            htonf(net->gear_compression[i]);
         }
         net->num_wheels = htonl(net->num_wheels);
 
@@ -319,10 +319,10 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
 
         net->num_wheels = htonl(net->num_wheels);
         for ( i = 0; i < net->num_wheels; ++i ) {
-            net->wow[i] = htonl(net->wow[i]);
-            net->gear_pos[i] = htonl(net->gear_pos[i]);
-            net->gear_steer[i] = htonl(net->gear_steer[i]);
-            net->gear_compression[i] = htonl(net->gear_compression[i]);
+            htonl(net->wow[i]);
+            htonf(net->gear_pos[i]);
+            htonf(net->gear_steer[i]);
+            htonf(net->gear_compression[i]);
         }
 
         net->cur_time = ntohl(net->cur_time);
