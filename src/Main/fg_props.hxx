@@ -65,11 +65,18 @@ extern bool fgLoadFlight (istream &input);
 
 
 /**
- * Load properties from a file relative to $FG_ROOT.
+ * Load properties from a file.
  *
- * @param file The file name relative to $FG_ROOT.
+ * @param file The relative or absolute filename.
+ * @param props The property node to load the properties into.
+ * @param in_fg_root If true, look for the file relative to
+ *        $FG_ROOT; otherwise, look for the file relative to the
+ *        current working directory.
+ * @return true if the properties loaded successfully, false
+ *         otherwise.
  */
-extern void fgLoadProps (const char * path, SGPropertyNode * props);
+extern bool fgLoadProps (const char * path, SGPropertyNode * props,
+                         bool in_fg_root = true);
 
 
 

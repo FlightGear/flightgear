@@ -683,12 +683,25 @@ fgLoadFlight (istream &input)
 }
 
 
-void
-fgLoadProps (const char * path, SGPropertyNode * props)
+bool
+fgLoadProps (const char * path, SGPropertyNode * props, bool in_fg_root)
 {
-    SGPath loadpath(globals->get_fg_root());
-    loadpath.append(path);
-    readProperties(loadpath.c_str(), props);
+    string fullpath;
+    if (in_fg_root) {
+        SGPath loadpath(globals->get_fg_root());
+        loadpath.append(path);
+        fullpath = loadpath.str();
+    } else {
+        fullpath = path;
+    }
+
+    try {
+        readProperties(fullpath, props);
+    } catch (const sg_exception &e) {
+        guiErrorMessage("Error reading properties: ", e);
+        return false;
+    }
+    return true;
 }
 
 
