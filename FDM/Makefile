@@ -26,7 +26,7 @@
 
 TARGET=libflight.a
 
-CFILES = slew.c
+CFILES = flight.c
 OFILES = $(CFILES:.c=.o)
 
 CC = gcc
@@ -57,15 +57,18 @@ clean:
 # Secondary Targets
 #---------------------------------------------------------------------------
 
-flight.h: slew.h
+flight.h:  slew/slew.h LaRCsim/ls_interface.h
 	touch flight.h
 
-slew.o: slew.c slew.h flight.h ../aircraft/aircraft.h ../controls/controls.h
-	$(CC) $(CFLAGS) $(INCLUDES) -c slew.c
+flight.o: flight.c flight.h
+	$(CC) $(CFLAGS) $(INCLUDES) -c flight.c
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1997/05/29 02:32:25  curt
+# Starting to build generic flight model interface.
+#
 # Revision 1.2  1997/05/23 15:40:36  curt
 # Added GNU copyright headers.
 #
