@@ -82,7 +82,7 @@ public:
   bool Load(FGConfigFile* AC_cfg);
 
   /// Subsystem types for specifying which will be output in the FDM data logging
-  enum  SubSystems {
+  enum  eSubSystems {
     /** Subsystem: Simulation (= 1)          */ ssSimulation      = 1,
     /** Subsystem: Aerosurfaces (= 2)        */ ssAerosurfaces    = 2,
     /** Subsystem: Body rates (= 4)          */ ssRates           = 4,
