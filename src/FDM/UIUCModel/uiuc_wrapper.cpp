@@ -18,10 +18,12 @@
 ----------------------------------------------------------------------
 
  HISTORY:      01/26/2000   initial release
+               03/09/2001   (DPM) added support for gear
  
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
+               David Megginson    <david@megginson.com>
  
 ----------------------------------------------------------------------
 
@@ -69,6 +71,7 @@
 #include "uiuc_aircraftdir.h"
 #include "uiuc_coefficients.h"
 #include "uiuc_engine.h"
+#include "uiuc_gear.h"
 #include "uiuc_aerodeflections.h"
 #include "uiuc_recorder.h"
 #include "uiuc_menu.h"
@@ -81,6 +84,7 @@ SG_USING_STD(endl);
 extern "C" void uiuc_init_aeromodel ();
 extern "C" void uiuc_force_moment(double dt);
 extern "C" void uiuc_engine_routine();
+extern "C" void uiuc_gear_routine();
 
 AIRCRAFT *aircraft_ = new AIRCRAFT;
 AIRCRAFTDIR *aircraftdir_ = new AIRCRAFTDIR;
@@ -135,6 +139,11 @@ void uiuc_force_moment(double dt)
 void uiuc_engine_routine()
 {
   uiuc_engine();
+}
+
+void uiuc_gear_routine ()
+{
+  uiuc_gear();
 }
 
 //end uiuc_wrapper.cpp

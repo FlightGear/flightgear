@@ -41,12 +41,14 @@
                04/05/2000   (JS) added Altitude to init and record
                             maps; added zero_Long_trim to 
                             controlSurface map
+               03/09/2001   (DPM) added support for gear.
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
                Michael Selig      <m-selig@uiuc.edu>
+               David Megginson    <david@megginson.com>
 
 ----------------------------------------------------------------------
 
@@ -98,7 +100,7 @@
 #endif
 
 #include <stdlib.h>
-#include <iostream>
+#include STL_IOSTREAM
 
 #include "uiuc_menu.h"
 
@@ -2124,27 +2126,93 @@ void uiuc_menu( string aircraft_name )
           } // end Cn map
           
         
-     /*   
-        
         case gear_flag:
           {
+	    int index;
+	    token3 >> index;
+	    if (index < 0 || index >= 16)
+	      uiuc_warnings_errors(1, *command_line);
             switch(gear_map[linetoken2])
               {
-              case kgear:
+	      case Dx_gear_flag:
+		{
+                  if (check_float(linetoken3))
+                    token4 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+		  D_gear_v[index][0] = token_value;
+		  gear_model[index] = true;
+		  break;
+		}
+	      case Dy_gear_flag:
+		{
+                  if (check_float(linetoken3))
+                    token4 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+		  D_gear_v[index][1] = token_value;
+		  gear_model[index] = true;
+		  break;
+		}
+	      case Dz_gear_flag:
+		{
+                  if (check_float(linetoken3))
+                    token4 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+		  D_gear_v[index][2] = token_value;
+		  gear_model[index] = true;
+		  break;
+		}
+	      case cgear_flag:
+		{
+                  if (check_float(linetoken3))
+                    token4 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+		  cgear[index] = token_value;
+		  gear_model[index] = true;
+		  break;
+		}
+              case kgear_flag:
                 {
-                  // none yet
+                  if (check_float(linetoken3))
+                    token4 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+		  kgear[index] = token_value;
+		  gear_model[index] = true;
                   break;
                 }
+	      case muGear_flag:
+		{
+                  if (check_float(linetoken3))
+                    token4 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+		  muGear[index] = token_value;
+		  gear_model[index] = true;
+		  break;
+		}
+	      case strutLength_flag:
+		{
+                  if (check_float(linetoken3))
+                    token4 >> token_value;
+                  else
+                    uiuc_warnings_errors(1, *command_line);
+		  strutLength[index] = token_value;
+		  gear_model[index] = true;
+		  break;
+		}
               default:
                 {
                   uiuc_warnings_errors(2, *command_line);
-          break;
+		  break;
                 }
               };
+	    break;
           } // end gear map
       
-*/
-
 
         case ice_flag:
           {

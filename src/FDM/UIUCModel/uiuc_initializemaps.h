@@ -15,6 +15,7 @@
 #include "uiuc_map_Croll.h"
 #include "uiuc_map_Cn.h"
 #include "uiuc_map_ice.h"
+#include "uiuc_map_gear.h"
 #include "uiuc_map_record1.h"
 #include "uiuc_map_record2.h"
 #include "uiuc_map_record3.h"

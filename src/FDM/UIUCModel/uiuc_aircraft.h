@@ -36,11 +36,13 @@
 	                    and Weight; added misc map
                04/01/2000   (JS) added throttle, longitudinal, lateral, 
 	                    and rudder inputs to record map
+               03/09/2001   (DPM) added support for gear
 
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+               David Megginson    <david@megginson.com>
 
 ----------------------------------------------------------------------
 
@@ -96,7 +98,7 @@
 #include <simgear/compiler.h>
 
 #include <map>
-#include <iostream>
+#include STL_IOSTREAM
 #include <math.h>
 
 #include "uiuc_parsefile.h"
@@ -171,7 +173,8 @@ enum {Cno_flag = 13000, Cn_beta_flag, Cn_p_flag, Cn_r_flag, Cn_da_flag,
       Cn_dr_flag, Cn_q_flag, Cn_b3_flag, Cnfada_flag, Cnfbetadr_flag};
 
 // gear ======= Landing gear model quantities
-// enum {xxx = 14000};
+enum {Dx_gear_flag = 14000, Dy_gear_flag, Dz_gear_flag, cgear_flag,
+      kgear_flag, muGear_flag, strutLength_flag};
 
 // ice ======== Ice model quantities
 enum {iceTime_flag = 15000, transientTime_flag, eta_ice_final_flag, 
@@ -851,6 +854,19 @@ typedef struct
   map <string,int> gear_map;
   
 #define      gear_map              aircraft_->gear_map
+#define MAX_GEAR 16
+  bool gear_model[MAX_GEAR];
+  double D_gear_v[MAX_GEAR][3];
+  double cgear[MAX_GEAR];
+  double kgear[MAX_GEAR];
+  double muGear[MAX_GEAR];
+  double strutLength[MAX_GEAR];
+#define D_gear_v aircraft_->D_gear_v
+#define gear_model aircraft_->gear_model
+#define cgear aircraft_->cgear
+#define kgear aircraft_->kgear
+#define muGear aircraft_->muGear
+#define strutLength aircraft_->strutLength
   
 
   /* Variables (token2) ===========================================*/

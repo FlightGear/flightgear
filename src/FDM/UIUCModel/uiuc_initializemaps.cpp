@@ -18,11 +18,13 @@
  
  HISTORY:      01/26/2000   initial release
                04/08/2000   broke up into multiple map_xxxx functions
+               03/09/2001   (DPM) initialize gear map
 
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
                Jeff Scott         <jscott@mail.com>
+               David Megginson    <david@megginson.com>
  
 ----------------------------------------------------------------------
  
@@ -81,7 +83,7 @@ void uiuc_initializemaps()
   uiuc_map_CY();
   uiuc_map_Croll();
   uiuc_map_Cn();
-  //  uiuc_map_gear();
+  uiuc_map_gear();
   uiuc_map_ice();
   uiuc_map_record1();
   uiuc_map_record2();

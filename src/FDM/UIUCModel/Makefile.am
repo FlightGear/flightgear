@@ -20,6 +20,7 @@ libUIUCModel_a_SOURCES = \
 			uiuc_controlInput.cpp uiuc_controlInput.h \
                         uiuc_convert.cpp uiuc_convert.h \
                         uiuc_engine.cpp uiuc_engine.h \
+                        uiuc_gear.cpp uiuc_gear.h \
                         uiuc_ice.cpp uiuc_ice.h \
                         uiuc_initializemaps.cpp uiuc_initializemaps.h \
 			uiuc_map_CD.cpp uiuc_map_CD.h \
@@ -32,6 +33,7 @@ libUIUCModel_a_SOURCES = \
 			uiuc_map_engine.cpp uiuc_map_engine.h \
 			uiuc_map_geometry.cpp uiuc_map_geometry.h \
 			uiuc_map_ice.cpp uiuc_map_ice.h \
+                        uiuc_map_gear.cpp uiuc_map_gear.h \
 			uiuc_map_init.cpp uiuc_map_init.h \
 			uiuc_map_keyword.cpp uiuc_map_keyword.h \
 			uiuc_map_mass.cpp uiuc_map_mass.h \
