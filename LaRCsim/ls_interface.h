@@ -46,15 +46,27 @@ int fgLaRCsim_2_Flight (fgFLIGHT *f);
 
 void ls_loop( SCALAR dt, int initialize );
 
+/* Set the altitude (force) */
+int ls_ForceAltitude(double alt_feet);
+
 
 #endif /* _LS_INTERFACE_H */
 
 
 /* $Log$
-/* Revision 1.8  1998/04/21 16:59:39  curt
-/* Integrated autopilot.
-/* Prepairing for C++ integration.
+/* Revision 1.9  1998/07/12 03:11:04  curt
+/* Removed some printf()'s.
+/* Fixed the autopilot integration so it should be able to update it's control
+/*   positions every time the internal flight model loop is run, and not just
+/*   once per rendered frame.
+/* Added a routine to do the necessary stuff to force an arbitrary altitude
+/*   change.
+/* Gave the Navion engine just a tad more power.
 /*
+ * Revision 1.8  1998/04/21 16:59:39  curt
+ * Integrated autopilot.
+ * Prepairing for C++ integration.
+ *
  * Revision 1.7  1998/02/07 15:29:39  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

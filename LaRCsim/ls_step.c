@@ -50,6 +50,15 @@
 
 $Header$
 $Log$
+Revision 1.3  1998/07/12 03:11:04  curt
+Removed some printf()'s.
+Fixed the autopilot integration so it should be able to update it's control
+  positions every time the internal flight model loop is run, and not just
+  once per rendered frame.
+Added a routine to do the necessary stuff to force an arbitrary altitude
+  change.
+Gave the Navion engine just a tad more power.
+
 Revision 1.2  1998/01/19 18:40:28  curt
 Tons of little changes to clean up the code and to remove fatal errors
 when building with the c++ compiler.
@@ -144,7 +153,7 @@ void ls_step( SCALAR dt, int Initialize ) {
 	e_dot_0_past = e_dot_1_past = e_dot_2_past = e_dot_3_past = 0;
 	
 /* Initialize geocentric position from geodetic latitude and altitude */
-	
+
 	ls_geod_to_geoc( Latitude, Altitude, &Sea_level_radius, &Lat_geocentric);
 	Earth_position_angle = 0;
 	Lon_geocentric = Longitude;

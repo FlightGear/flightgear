@@ -532,11 +532,11 @@ int fgLaRCsimInit(double dt) {
 	return 1;
     }
 
-    printf("LS pre Init pos = %.2f\n", Latitude);
+    /* printf("LS pre Init pos = %.2f\n", Latitude); */
 
     ls_init();
 
-    printf("LS post Init pos = %.2f\n", Latitude);
+    /* printf("LS post Init pos = %.2f\n", Latitude); */
 
     if (speedup > 0) {
 	/* Initialize (get) cockpit (controls) settings */
@@ -555,9 +555,6 @@ int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop) {
 	ls_cockpit();
     }
 
-    // translate FG to LaRCsim structure
-    fgFlight_2_LaRCsim(f);
-
     for ( i = 0; i < multiloop; i++ ) {
 	//Insertion by Jeff Goeke-Smith for Autopilot.
 	
@@ -565,10 +562,18 @@ int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop) {
 	// fgPrintf( FG_ALL, FG_BULK, "Attempting autopilot run\n");
 	              
 	fgAPRun();
-	
+	// translate FG to LaRCsim structure
+	fgFlight_2_LaRCsim(f);
+	// printf("FG_Altitude = %.2f\n", FG_Altitude * 0.3048);
+	// printf("Altitude = %.2f\n", Altitude * 0.3048);
+	// printf("Radius to Vehicle = %.2f\n", Radius_to_vehicle * 0.3048);
+
 	// end of insertion 
 	
 	ls_loop( model_dt, 0);
+
+	// printf("%d FG_Altitude = %.2f\n", i, FG_Altitude * 0.3048);
+	// printf("%d Altitude = %.2f\n", i, Altitude * 0.3048);
 
 	// translate LaRCsim back to FG structure so that the
 	// autopilot (and the rest of the sim can use the updated
@@ -931,9 +936,27 @@ int fgLaRCsim_2_Flight (fgFLIGHT *f) {
     return ( 0 );
 }
 
+
+/* Set the altitude (force) */
+int ls_ForceAltitude(double alt_feet) {
+    Altitude = alt_feet;
+    ls_geod_to_geoc( Latitude, Altitude, &Sea_level_radius, &Lat_geocentric);
+    Radius_to_vehicle = Altitude + Sea_level_radius;
+}
+
+
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.20  1998/07/12 03:11:03  curt
+ * Removed some printf()'s.
+ * Fixed the autopilot integration so it should be able to update it's control
+ *   positions every time the internal flight model loop is run, and not just
+ *   once per rendered frame.
+ * Added a routine to do the necessary stuff to force an arbitrary altitude
+ *   change.
+ * Gave the Navion engine just a tad more power.
+ *
  * Revision 1.19  1998/05/11 18:17:28  curt
  * Output message tweaking.
  *

@@ -34,6 +34,15 @@
 
 $Header$
 $Log$
+Revision 1.5  1998/07/12 03:11:03  curt
+Removed some printf()'s.
+Fixed the autopilot integration so it should be able to update it's control
+  positions every time the internal flight model loop is run, and not just
+  once per rendered frame.
+Added a routine to do the necessary stuff to force an arbitrary altitude
+  change.
+Gave the Navion engine just a tad more power.
+
 Revision 1.4  1998/01/19 18:40:26  curt
 Tons of little changes to clean up the code and to remove fatal errors
 when building with the c++ compiler.
@@ -190,11 +199,12 @@ void ls_init( void ) {
 
     Simtime = 0;
 
-    printf("LS in init() pos = %.2f\n", Latitude);
+    /* printf("LS in init() pos = %.2f\n", Latitude); */
 
     ls_init_init();
 
-    printf("LS after init_init() pos = %.2f\n", Latitude);
+    /* printf("LS after init_init() pos = %.2f\n", Latitude); */
+
     /* move the states to proper values */
 
     /* commented out by CLO
@@ -211,11 +221,11 @@ void ls_init( void ) {
   
     model_init();
 
-    printf("LS after model_init() pos = %.2f\n", Latitude);
+    /* printf("LS after model_init() pos = %.2f\n", Latitude); */
 
     ls_step(0.0, -1);
 
-    printf("LS after ls_step() pos = %.2f\n", Latitude);
+    /* printf("LS after ls_step() pos = %.2f\n", Latitude); */
 }
 
 
