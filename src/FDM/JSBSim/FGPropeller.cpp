@@ -127,7 +127,7 @@ FGPropeller::~FGPropeller()
 double FGPropeller::Calculate(double PowerAvailable)
 {
   double J, C_Thrust, omega;
-  double Vel = fdmex->GetTranslation()->GetvAeroUVW(eU);
+  double Vel = fdmex->GetTranslation()->GetAeroUVW(eU);
   double rho = fdmex->GetAtmosphere()->GetDensity();
   double RPS = RPM/60.0;
   double alpha, beta;
@@ -190,7 +190,7 @@ double FGPropeller::GetPowerRequired(void)
 
   double cPReq, RPS = RPM / 60.0;
 
-  double J = fdmex->GetTranslation()->GetvAeroUVW(eU) / (Diameter * RPS);
+  double J = fdmex->GetTranslation()->GetAeroUVW(eU) / (Diameter * RPS);
   double rho = fdmex->GetAtmosphere()->GetDensity();
 
   if (MaxPitch == MinPitch) { // Fixed pitch prop

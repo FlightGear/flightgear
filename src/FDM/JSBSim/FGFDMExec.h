@@ -113,7 +113,6 @@ class FGFDMExec : public FGJSBBase
 {
 public:
 
-  
   /// Default constructor
   FGFDMExec(FGPropertyManager* root = 0);
   
@@ -202,6 +201,8 @@ public:
   inline string GetAircraftPath(void)        {return AircraftPath;}
   
   FGPropertyManager* GetPropertyManager(void);
+  vector <string> EnumerateFDMs(void);
+  void SetSlave(void) {IsSlave = true;}
 
 private:
   FGModel* FirstModel;
@@ -213,9 +214,28 @@ private:
   unsigned int IdFDM;
   static unsigned int FDMctr;
   bool modelLoaded;
-  
-  FGPropertyManager *master;
+  bool IsSlave;
+  static FGPropertyManager *master;
   FGPropertyManager *instance;
+
+  struct slaveData {
+    FGFDMExec* exec;
+    string info;
+    double x, y, z;
+    double roll, pitch, yaw;
+    bool mated;
+
+    slaveData(void) {
+      info = "";
+      x = y = z = 0.0;
+      roll = pitch = yaw = 0.0;
+      mated = true;
+    }
+
+    ~slaveData(void) {
+      delete exec;
+    }
+  };
 
   string AircraftPath;
   string EnginePath;
@@ -236,7 +256,10 @@ private:
   FGAuxiliary*       Auxiliary;
   FGOutput*          Output;
 
+  vector <slaveData*> SlaveFDMList;
+
   bool ReadMetrics(FGConfigFile*);
+  bool ReadSlave(FGConfigFile*);
   bool ReadPropulsion(FGConfigFile*);
   bool ReadFlightControls(FGConfigFile*);
   bool ReadAerodynamics(FGConfigFile*);
@@ -244,6 +267,7 @@ private:
   bool ReadPrologue(FGConfigFile*);
   bool ReadOutput(FGConfigFile*);
 
+  void TransferState(int idx);
   bool Allocate(void);
   bool DeAllocate(void);
   void Debug(int from);

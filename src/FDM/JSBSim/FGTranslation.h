@@ -91,8 +91,8 @@ public:
   inline FGColumnVector3& GetUVW   (void)    { return vUVW; }
   inline FGColumnVector3& GetUVWdot(void)    { return vUVWdot; }
   inline double           GetUVWdot(int idx) const { return vUVWdot(idx); }
-  inline FGColumnVector3& GetvAeroUVW (void)    { return vAeroUVW; }
-  inline double           GetvAeroUVW (int idx) const { return vAeroUVW(idx); }
+  inline FGColumnVector3& GetAeroUVW (void)    { return vAeroUVW; }
+  inline double           GetAeroUVW (int idx) const { return vAeroUVW(idx); }
 
   double Getalpha(void) const { return alpha; }
   double Getbeta (void) const { return beta; }
@@ -104,6 +104,7 @@ public:
   double Getbdot (void) const { return bdot; }
 
   void SetUVW(FGColumnVector3 tt) { vUVW = tt; }
+  void SetAeroUVW(FGColumnVector3 tt) { vAeroUVW = tt; }
 
   inline void Setalpha(double tt) { alpha = tt; }
   inline void Setbeta (double tt) { beta  = tt; }

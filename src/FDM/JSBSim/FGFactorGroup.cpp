@@ -129,6 +129,35 @@ double FGFactorGroup::TotalValue(void)
 }
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+void FGFactorGroup::bind(FGPropertyManager* parent) {
+  
+  cout << "In FGFactorGroup::bind" << endl;
+  cout << parent->getName() << endl;
+  unsigned i;
+  node=parent->GetNode(name,true);
+  cout << node->getName() << endl;
+  node->SetString("description",description);
+  FGCoefficient::bind(node);
+  for (i=0; i < sum.size(); i++) { 
+    sum[i]->bind(node);
+  } 
+  node=(FGPropertyManager*)node->getParent();                                         
+
+}
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+  
+void FGFactorGroup::unbind(void) {
+  unsigned i;
+  
+  FGCoefficient::unbind();
+  for (i=0; i < sum.size(); i++) { 
+    sum[i]->unbind();
+  } 
+}
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print
 //       out the normally expected messages, essentially echoing

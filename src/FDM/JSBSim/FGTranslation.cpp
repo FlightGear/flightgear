@@ -245,11 +245,11 @@ void FGTranslation::bind(void){
   PropertyManager->Tie("accelerations/wdot-fps", this,3,
                        &FGTranslation::GetUVWdot);
   PropertyManager->Tie("velocities/u-aero-fps", this,1,
-                       &FGTranslation::GetvAeroUVW);
+                       &FGTranslation::GetAeroUVW);
   PropertyManager->Tie("velocities/v-aero-fps", this,2,
-                       &FGTranslation::GetvAeroUVW);
+                       &FGTranslation::GetAeroUVW);
   PropertyManager->Tie("velocities/w-aero-fps", this,3,
-                       &FGTranslation::GetvAeroUVW);
+                       &FGTranslation::GetAeroUVW);
   PropertyManager->Tie("aero/alpha-rad", this,
                        &FGTranslation::Getalpha,
                        &FGTranslation::Setalpha,

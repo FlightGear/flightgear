@@ -245,7 +245,7 @@ void FGOutput::DelimitedOutput(string fname)
     outstream << Translation->Getqbar() << ", ";
     outstream << Translation->GetVt() << ", ";
     outstream << Translation->GetUVW() << ", ";
-    outstream << Translation->GetvAeroUVW() << ", ";
+    outstream << Translation->GetAeroUVW() << ", ";
     outstream << Position->GetVel();
   }
   if (SubSystems & ssForces) {
@@ -367,9 +367,9 @@ void FGOutput::SocketOutput(void)
   socket->Append(Translation->GetUVW(eU));
   socket->Append(Translation->GetUVW(eV));
   socket->Append(Translation->GetUVW(eW));
-  socket->Append(Translation->GetvAeroUVW(eU));
-  socket->Append(Translation->GetvAeroUVW(eV));
-  socket->Append(Translation->GetvAeroUVW(eW));
+  socket->Append(Translation->GetAeroUVW(eU));
+  socket->Append(Translation->GetAeroUVW(eV));
+  socket->Append(Translation->GetAeroUVW(eW));
   socket->Append(Position->GetVn());
   socket->Append(Position->GetVe());
   socket->Append(Position->GetVd());

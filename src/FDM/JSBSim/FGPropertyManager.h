@@ -1,23 +1,79 @@
-// FGPropertyManager.h
-// Class wrapper for property handling.
-// based on FlightGear source src/Main/fg_props.hxx 
-// Originally written by David Megginson, started 2000.
-//
-// This file is in the Public Domain, and comes with no warranty.
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+ Header:       FGPropertyManager.h
+ Author:       Tony Peden
+               Based on work originally by David Megginson
+ Date:         2/2002
+ 
+ ------------- Copyright (C) 2002 -------------
+ 
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 2 of the License, or (at your option) any later
+ version.
+ 
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ details.
+ 
+ You should have received a copy of the GNU General Public License along with
+ this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ Place - Suite 330, Boston, MA  02111-1307, USA.
+
+ Further information about the GNU General Public License can also be found on
+ the world wide web at http://www.gnu.org.
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+SENTRY
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifndef FGPROPERTYMANAGER_H
 #define FGPROPERTYMANAGER_H
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+INCLUDES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 #include <simgear/misc/props.hxx>
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DEFINITIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+#define ID_PROPERTYMANAGER "$Id$"
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+FORWARD DECLARATIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 using namespace std;
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/** Class wrapper for property handling.
+    @author David Megginson, Tony Peden
+    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGPropertyManager.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
+         Header File </a>
+  */
+  
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DECLARATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 class FGPropertyManager:public SGPropertyNode {
   public:
+    /// Constructor
     FGPropertyManager(void) {
       
     }
-    
+    /// Destructor
     ~FGPropertyManager(void) {
       
     }   
@@ -505,19 +561,19 @@ class FGPropertyManager:public SGPropertyNode {
     }
 
     /* template <class V> void
-    FGPropertyManager::Tie (const string &name, V (*getter)(), void (*setter)(V) = 0,
+    Tie (const string &name, V (*getter)(), void (*setter)(V) = 0,
            bool useDefault = true);
     
     template <class V> void
-    FGPropertyManager::Tie (const string &name, int index, V (*getter)(int),
+    Tie (const string &name, int index, V (*getter)(int),
            void (*setter)(int, V) = 0, bool useDefault = true);
     
     template <class T, class V> void
-    FGPropertyManager::Tie (const string &name, T * obj, V (T::*getter)() const,
+    Tie (const string &name, T * obj, V (T::*getter)() const,
            void (T::*setter)(V) = 0, bool useDefault = true);
 
     template <class T, class V> void 
-    FGPropertyManager::Tie (const string &name, T * obj, int index,
+    Tie (const string &name, T * obj, int index,
            V (T::*getter)(int) const, void (T::*setter)(int, V) = 0,
            bool useDefault = true); */
 
@@ -539,7 +595,7 @@ class FGPropertyManager:public SGPropertyNode {
      */
     template <class V>
     inline void
-    FGPropertyManager::Tie (const string &name, V (*getter)(), void (*setter)(V) = 0,
+    Tie (const string &name, V (*getter)(), void (*setter)(V) = 0,
            bool useDefault = true)
     {
       if (!tie(name.c_str(), SGRawValueFunctions<V>(getter, setter),
@@ -569,7 +625,7 @@ class FGPropertyManager:public SGPropertyNode {
      */
     template <class V>
     inline void
-    FGPropertyManager::Tie (const string &name, int index, V (*getter)(int),
+    Tie (const string &name, int index, V (*getter)(int),
            void (*setter)(int, V) = 0, bool useDefault = true)
     {
       if (!tie(name.c_str(),
@@ -603,7 +659,7 @@ class FGPropertyManager:public SGPropertyNode {
      */
     template <class T, class V>
     inline void
-    FGPropertyManager::Tie (const string &name, T * obj, V (T::*getter)() const,
+    Tie (const string &name, T * obj, V (T::*getter)() const,
            void (T::*setter)(V) = 0, bool useDefault = true)
     {
       if (!tie(name.c_str(),
@@ -635,7 +691,7 @@ class FGPropertyManager:public SGPropertyNode {
      */
     template <class T, class V>
     inline void 
-    FGPropertyManager::Tie (const string &name, T * obj, int index,
+    Tie (const string &name, T * obj, int index,
            V (T::*getter)(int) const, void (T::*setter)(int, V) = 0,
            bool useDefault = true)
     {

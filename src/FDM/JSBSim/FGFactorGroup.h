@@ -105,6 +105,8 @@ class FGFactorGroup: public FGCoefficient {
     inline double GetSD(void) { return SDtotal; }
     inline double GetFactorSD(void) { return FGCoefficient::GetSD(); }
     
+    void bind(FGPropertyManager* parent);
+    void unbind(void);
   private:
     FGFDMExec *FDMExec;
     string name;
@@ -113,6 +115,7 @@ class FGFactorGroup: public FGCoefficient {
     CoeffArray sum;
     double SDtotal;
     double totalValue;
+    FGPropertyManager* node;
     void Debug(int from);
 };
     

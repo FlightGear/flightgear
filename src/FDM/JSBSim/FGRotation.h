@@ -100,6 +100,10 @@ public:
   inline void SetPQR(double p, double q, double r) {vPQR(eP)=p;
                                                     vPQR(eQ)=q;
                                                     vPQR(eR)=r;}
+  inline void SetAeroPQR(FGColumnVector3 tt) {vAeroPQR = tt;}
+  inline void SetAeroPQR(double p, double q, double r) {vAeroPQR(eP)=p;
+                                                        vAeroPQR(eQ)=q;
+                                                        vAeroPQR(eR)=r;}
   inline void SetEuler(FGColumnVector3 tt) {vEuler = tt;}
   
   inline double Getphi(void) const {return vEuler(1);}

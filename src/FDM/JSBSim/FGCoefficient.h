@@ -125,8 +125,8 @@ public:
   inline double getBias(void) const { return bias; }
   inline double getGain(void) const { return gain; }
   
-  void bind(FGPropertyManager *node);
-  void unbind(void);
+  virtual void bind(FGPropertyManager *parent);
+  virtual void unbind(void);
 
 private:
   enum Type {UNKNOWN, VALUE, VECTOR, TABLE, EQUATION};
