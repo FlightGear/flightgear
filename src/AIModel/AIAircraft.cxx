@@ -52,12 +52,12 @@ const FGAIAircraft::PERF_STRUCT FGAIAircraft::settings[] = {
 FGAIAircraft *FGAIAircraft::_self = NULL;
 
 FGAIAircraft::FGAIAircraft(FGAIManager* mgr) {
+   _self = this;	// This needs to be the first entry.
    manager = mgr;   
-   _self = this;
    _type_str = "aircraft";
    _otype = otAircraft;
    fp = 0;
-   fp_count = 0;
+   dt_count = 0;
    use_perf_vs = true;
 
    // set heading and altitude locks
@@ -113,7 +113,7 @@ void FGAIAircraft::Run(double dt) {
 
    FGAIAircraft::dt = dt;
 
-   if (fp) ProcessFlightPlan();
+   if (fp) ProcessFlightPlan(dt);
 	
    double turn_radius_ft;
    double turn_circum_ft;
@@ -336,14 +336,14 @@ void FGAIAircraft::SetFlightPlan(FGAIFlightPlan *f) {
   fp = f;
 }
 
-void FGAIAircraft::ProcessFlightPlan( void ) {
+void FGAIAircraft::ProcessFlightPlan( double dt ) {
   FGAIFlightPlan::waypoint* prev = 0; // the one behind you
   FGAIFlightPlan::waypoint* curr = 0; // the one ahead
   FGAIFlightPlan::waypoint* next = 0; // the next plus 1
   prev = fp->getPreviousWaypoint();
   curr = fp->getCurrentWaypoint();
   next = fp->getNextWaypoint();
-  ++fp_count;
+  dt_count += dt;
 
   if (!prev) {  //beginning of flightplan, do this initialization once
     fp->IncrementWaypoint();
@@ -375,11 +375,12 @@ void FGAIAircraft::ProcessFlightPlan( void ) {
     return;  
   } // end of initialization
 
-  // let's only process the flight plan every 11 time steps
-  if (fp_count < 11) { 
+  // let's only process the flight plan every 500 ms.
+  if (dt_count < 0.5) {
     return;
   } else {
-    fp_count = 0;
+    while (dt_count > 0.5)
+      dt_count -= dt;
 
     // check to see if we've reached the lead point for our next turn
     double dist_to_go = fp->getDistanceToGo(pos.lat(), pos.lon(), curr); 
@@ -388,7 +389,7 @@ void FGAIAircraft::ProcessFlightPlan( void ) {
     //cout << "dist_to_go: " << dist_to_go << ",  lead_dist: " << lead_dist << endl;
 
     if ( dist_to_go < lead_dist ) {
-      if (curr->name == "END") {  //end of the flight plan, so terminate
+      if (curr->finished) {  //end of the flight plan, so terminate
         setDie(true);
         return;
       }

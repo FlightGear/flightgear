@@ -37,6 +37,7 @@ public:
    double altitude;
    double speed;
    double crossat;
+   bool finished;
    bool gear_down;
    bool flaps_down;
   } waypoint;

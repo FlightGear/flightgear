@@ -50,7 +50,6 @@ FGAIFlightPlan::FGAIFlightPlan(string filename)
   for (i = 0; i < node->nChildren(); i++) { 
      //cout << "Reading waypoint " << i << endl;        
      waypoint* wpt = new waypoint;
-     waypoints.push_back( wpt );
      SGPropertyNode * wpt_node = node->getChild(i);
      wpt->name      = wpt_node->getStringValue("name", "END");
      wpt->latitude  = wpt_node->getDoubleValue("lat", 0);
@@ -60,6 +59,11 @@ FGAIFlightPlan::FGAIFlightPlan(string filename)
      wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
      wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
      wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
+
+     if (wpt->name == "END") wpt->finished = true;
+     else wpt->finished = false;
+
+     waypoints.push_back( wpt );
    }
 
   wpt_iterator = waypoints.begin();
@@ -163,6 +167,8 @@ double FGAIFlightPlan::getBearing(double lat, double lon, waypoint* wp){
   if (!southerly && easterly) return 90.0 - angle;
   if (southerly && !easterly) return 270.0 - angle;
   if (!southerly && !easterly) return 270.0 + angle; 
-}
 
+  // Omit a compiler warning.
+  return 0;
+}
 

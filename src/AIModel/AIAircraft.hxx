@@ -66,7 +66,7 @@ public:
         void YawTo(double angle);
         void ClimbTo(double altitude);
         void TurnTo(double heading);
-        void ProcessFlightPlan( void );
+        void ProcessFlightPlan( double dt );
         //double getHeading(double lat1, double lon1, double lat2, double lon2);
 
 protected:
@@ -77,7 +77,7 @@ private:
         bool hdg_lock;
         bool alt_lock;
         FGAIFlightPlan *fp;
-        int fp_count;  
+        double dt_count;  
         double dt; 
 
         const PERF_STRUCT *performance;
@@ -91,7 +91,6 @@ private:
 
 inline bool FGAIAircraft::_getGearDown() {
     return ((fgGetFloat("/position/altitude-agl-ft") < 150.0)
-             && (fgGetFloat("/orientation/pitch-deg") < 0.0)
              && (fgGetFloat("/velocities/airspeed-kt")
                    < _self->performance->land_speed*1.5));
 }
