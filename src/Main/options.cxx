@@ -881,9 +881,9 @@ parse_option (const string& arg)
 	  dir -= 360;
 	dir *= SGD_DEGREES_TO_RADIANS;
 	fgSetDouble("/environment/wind-north-fps",
-					     speed * cos(dir));
+		    speed * cos(dir));
 	fgSetDouble("/environment/wind-east-fps",
-					     speed * sin(dir));
+		    speed * sin(dir));
     } else if ( arg.find( "--wp=" ) == 0 ) {
 	parse_wp( arg.substr( 5 ) );
     } else if ( arg.find( "--flight-plan=") == 0) {
