@@ -60,7 +60,7 @@ FGMaterial::FGMaterial ( void )
     ambient[0]  = ambient[1]  = ambient[2]  = ambient[3]  = 0.0;
     diffuse[0]  = diffuse[1]  = diffuse[2]  = diffuse[3]  = 0.0;
     specular[0] = specular[1] = specular[2] = specular[3] = 0.0;
-    emissive[0] = emissive[1] = emissive[2] = emissive[3] = 0.0;
+    emission[0] = emission[1] = emission[2] = emission[3] = 0.0;
 }
 
 
@@ -86,9 +86,9 @@ operator >> ( istream& in, FGMaterial& m )
 	} else if ( token == "specular" ) {
 	    in >> token >> m.specular[0] >> m.specular[1]
 	       >> m.specular[2] >> m.specular[3];
-	} else if ( token == "emissive" ) {
-	    in >> token >> m.emissive[0] >> m.emissive[1]
-	       >> m.emissive[2] >> m.emissive[3];
+	} else if ( token == "emission" ) {
+	    in >> token >> m.emission[0] >> m.emission[1]
+	       >> m.emission[2] >> m.emission[3];
 	} else if ( token == "alpha" ) {
 	    in >> token >> token;
 	    if ( token == "yes" ) {

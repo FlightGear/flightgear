@@ -71,7 +71,7 @@ private:
     double xsize, ysize;
 
     // material properties
-    GLfloat ambient[4], diffuse[4], specular[4], emissive[4];
+    GLfloat ambient[4], diffuse[4], specular[4], emission[4];
     GLint texture_ptr;
 
 public:
@@ -94,7 +94,7 @@ public:
     inline GLfloat *get_ambient() { return ambient; }
     inline GLfloat *get_diffuse() { return diffuse; }
     inline GLfloat *get_specular() { return specular; }
-    inline GLfloat *get_emissive() { return emissive; }
+    inline GLfloat *get_emission() { return emission; }
 };
 
 

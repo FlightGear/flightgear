@@ -29,14 +29,8 @@
 #  include <math.h>
 #endif
 
-// #ifdef HAVE_WINDOWS_H
-// #  include <windows.h>
-// #endif
-
 #include <stdio.h>
 #include <string.h>
-// #include <GL/glut.h>
-// #include <XGL/xgl.h>
 
 // #if defined ( __sun__ )
 // extern "C" void *memmove(void *, const void *, size_t);
@@ -55,6 +49,7 @@
 #include <Include/fg_constants.h>
 #include <Main/options.hxx>
 #include <Math/mat3.h>
+#include <Math/fg_geodesy.hxx>
 #include <Math/fg_random.h>
 #include <Math/point3d.hxx>
 #include <Math/polar3d.hxx>
@@ -134,6 +129,128 @@ static Point3D calc_tex_coords(const Point3D& node, const Point3D& ref) {
 }
 
 
+// Generate a generic ocean tile on the fly
+ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
+    fgFRAGMENT fragment;
+    fragment.init();
+    fragment.tile_ptr = t;
+
+    ssgSimpleState *state = NULL;
+
+    ssgBranch *tile = new ssgBranch () ;
+    tile -> setName ( (char *)path.c_str() ) ;
+
+    // find Ocean material in the properties list
+    if ( ! material_mgr.find( "Ocean", fragment.material_ptr )) {
+	FG_LOG( FG_TERRAIN, FG_ALERT, 
+		"Ack! unknown usemtl name = " << "Ocean" 
+		<< " in " << path );
+    }
+
+    // set the texture width and height values for this
+    // material
+    FGMaterial m = fragment.material_ptr->get_m();
+    double tex_width = m.get_xsize();
+    double tex_height = m.get_ysize();
+
+    // set ssgState
+    state = fragment.material_ptr->get_state();
+
+    // Calculate center point
+    FGBucket b = t->tile_bucket;
+    double clon = b.get_center_lon();
+    double clat = b.get_center_lat();
+    double height = b.get_height();
+    double width = b.get_width();
+
+    Point3D center = fgGeodToCart(Point3D(clon*DEG_TO_RAD,clat*DEG_TO_RAD,0.0));
+    t->center = center;
+    fragment.center = center;
+    // cout << "center = " << center << endl;;
+    
+    // Caculate corner vertices
+    Point3D geod[4];
+    geod[0] = Point3D( clon - width/2.0, clat - height/2.0, 0.0 );
+    geod[1] = Point3D( clon + width/2.0, clat - height/2.0, 0.0 );
+    geod[2] = Point3D( clon + width/2.0, clat + height/2.0, 0.0 );
+    geod[3] = Point3D( clon - width/2.0, clat + height/2.0, 0.0 );
+
+    Point3D rad[4];
+    for ( int i = 0; i < 4; ++i ) {
+	rad[i] = Point3D( geod[i].x() * DEG_TO_RAD, geod[i].y() * DEG_TO_RAD,
+			  geod[i].z() );
+    }
+
+    Point3D cart[4], rel[4];
+    for ( int i = 0; i < 4; ++i ) {
+	cart[i] = fgGeodToCart(rad[i]);
+	rel[i] = cart[i] - center;
+	t->nodes.push_back( rel[i] );
+	// cout << "corner " << i << " = " << cart[i] << endl;
+    }
+
+    t->ncount = 4;
+
+    // Calculate bounding radius
+    t->bounding_radius = center.distance3D( cart[0] );
+    fragment.bounding_radius = t->bounding_radius;
+    // cout << "bounding radius = " << t->bounding_radius << endl;
+
+    // Calculate normals
+    Point3D normals[4];
+    for ( int i = 0; i < 4; ++i ) {
+	normals[i] = cart[i];
+	double length = normals[i].distance3D( Point3D(0.0) );
+	normals[i] /= length;
+	// cout << "normal = " << normals[i] << endl;
+    }
+
+    // Calculate texture coordinates
+    Point3D texs[4];
+    for ( int i = 0; i < 4; ++i ) {
+	texs[i] = calc_tex_coords( rel[i], center );
+	// cout << "texture coordinate = " << texs[i] << endl;
+    }
+
+    // Build flight gear structure
+    fragment.add_face(1, 2, 3);
+    fragment.add_face(1, 3, 4);
+    t->fragment_list.push_back(fragment);
+
+    // Build ssg structure
+    t->vtlist = new sgVec3 [ 4 ];
+    t->vnlist = new sgVec3 [ 4 ];
+    t->tclist = new sgVec2 [ 4 ];
+
+    for ( int i = 0; i < 4; ++i ) {
+	sgSetVec3( t->vtlist[i], 
+		   rel[i].x(), rel[i].y(), rel[i].z() );
+	sgSetVec3( t->vnlist[i], 
+		   normals[i].x(), normals[i].y(), normals[i].z() );
+	sgSetVec2( t->tclist[i], texs[i].x(), texs[i].y() );
+    }
+    
+    unsigned short *vindex = new unsigned short [ 4 ];
+    unsigned short *tindex = new unsigned short [ 4 ];
+    for ( int i = 0; i < 4; ++i ) {
+	vindex[i] = i;
+	tindex[i] = i;
+    }
+
+    ssgLeaf *leaf = 
+	new ssgVTable ( GL_TRIANGLE_FAN,
+			4, vindex, t->vtlist,
+			4, vindex, t->vnlist,
+			4, tindex, t->tclist,
+			0, NULL, NULL ) ;
+    leaf->setState( state );
+
+    tile->addKid( leaf );
+
+    return tile;
+}
+
+
 // Load a .obj file and build the fragment list
 ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     fgFRAGMENT fragment;
@@ -165,7 +282,9 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     fg_gzifstream in( path );
     if ( ! in.is_open() ) {
 	FG_LOG( FG_TERRAIN, FG_ALERT, "Cannot open file: " << path );
-	return NULL;
+	FG_LOG( FG_TERRAIN, FG_ALERT, "default to ocean tile: " << path );
+
+	return fgGenTile( path, t );
     }
 
     shading = current_options.get_shading();

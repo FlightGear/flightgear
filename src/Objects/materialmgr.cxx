@@ -189,12 +189,17 @@ fgMATERIAL_MGR::load_lib ( void )
 		state->enable( GL_TEXTURE_2D );
 		state->setTexture( (char *)tex_file.c_str() );
 		state->setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
+		state->setMaterial ( GL_SPECULAR, 0, 0, 0, 0 ) ;
+		state->setMaterial ( GL_EMISSION, 0, 0, 0, 0 ) ;
 	    } else {
 		state->disable( GL_TEXTURE_2D );
 		state->disable( GL_COLOR_MATERIAL );
-		GLfloat *ambient, *diffuse;
+		GLfloat *ambient, *diffuse, *specular, *emission;
 		ambient = m.get_ambient();
 		diffuse = m.get_diffuse();
+		specular = m.get_specular();
+		emission = m.get_emission();
+
 		/* cout << "ambient = " << ambient[0] << "," << ambient[1] 
 		     << "," << ambient[2] << endl; */
 		state->setMaterial ( GL_AMBIENT, 
@@ -203,7 +208,13 @@ fgMATERIAL_MGR::load_lib ( void )
 		state->setMaterial ( GL_DIFFUSE, 
 				     diffuse[0], diffuse[1], 
 				     diffuse[2], diffuse[3] ) ;
-	    }
+		state->setMaterial ( GL_SPECULAR, 
+				     specular[0], specular[1], 
+				     specular[2], specular[3] ) ;
+		state->setMaterial ( GL_EMISSION, 
+				     emission[0], emission[1], 
+				     emission[2], emission[3] ) ;
+    }
 	    m_slot.set_state( state );
 
 	    material_mgr.material_map[material_name] = m_slot;
