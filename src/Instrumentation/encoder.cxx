@@ -67,10 +67,10 @@ Encoder::Encoder(SGPropertyNode *node)
     num(0),
     staticPort("/systems/static")
 {
-    for (int i = 0; altitude_data[i][0] != -1; i++)
+    int i;
+    for ( i = 0; altitude_data[i][0] != -1; i++ )
         altitudeTable->addEntry(altitude_data[i][0], altitude_data[i][1]);
 
-    int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         string cname = child->getName();
