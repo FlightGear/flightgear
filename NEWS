@@ -1,3 +1,23 @@
+New in 0.7.5
+* September 18, 2000
+* Aircraft now starts at end of runway closest to desired heading.
+* Runways now have accurate markings.
+* Addition of a completely reconfigurable instrument panel.
+* Tons of panel tweaks and fixes.  Gyro now drifts, relocated whisky compass,
+  skid ball moves in the right direction, etc.
+* Updates and tweaks to network multiplayer code.
+* Tweaks to ground steering sensitivity.
+* Updates to the UIUC flightmodel and icing research code.
+* Fixed the sound problem in the previous version.
+* Current scenery normal is now available for use.
+* Current load queue size is now available for use.
+* Added a configure time check for proper simgear version.
+* Explicitely link in -lpthread if it exists.
+* Fixed a couple namespace problems.
+* MacOS and MSVC tweaks.
+* Renamed JSBsim to JSBSim
+* Added support in the material library for non-repeating textures.
+
 New in 0.7.4
 * July 19, 2000
 
