@@ -33,6 +33,8 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <string.h>
+
 #include <Debug/fg_debug.h>
 #include <Include/fg_zlib.h>
 #include <Main/options.hxx>
@@ -207,6 +209,10 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/06/12 00:58:04  curt
+// Build only static libraries.
+// Declare memmove/memset for Sloaris.
+//
 // Revision 1.3  1998/06/05 22:39:53  curt
 // Working on sorting by, and rendering by material properties.
 //

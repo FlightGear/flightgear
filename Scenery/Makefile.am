@@ -1,8 +1,6 @@
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libScenery.a
 
-lib_LTLIBRARIES = libScenery.la
-
-libScenery_la_SOURCES = \
+libScenery_a_SOURCES = \
 	material.cxx material.hxx \
 	obj.cxx obj.hxx \
 	scenery.cxx scenery.hxx \

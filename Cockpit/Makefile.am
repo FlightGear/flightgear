@@ -1,7 +1,6 @@
-libdir	= ${exec_prefix}/lib
+noinst_LIBRARIES = libCockpit.a
 
-lib_LTLIBRARIES = libCockpit.la
-libCockpit_la_SOURCES = \
+libCockpit_a_SOURCES = \
 	cockpit.cxx cockpit.hxx \
 	hud.cxx hud.hxx
 

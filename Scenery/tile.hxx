@@ -41,6 +41,11 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#ifdef __sun__
+extern "C" void *memmove(void *, const void *, size_t);
+extern "C" void *memset(void *, int, size_t);
+#endif
+
 #include <list>         // STL list
 
 #include <Bucket/bucketutils.h>
@@ -105,6 +110,10 @@ public:
 
 
 // $Log$
+// Revision 1.7  1998/06/12 00:58:05  curt
+// Build only static libraries.
+// Declare memmove/memset for Sloaris.
+//
 // Revision 1.6  1998/06/08 17:57:54  curt
 // Working first pass at material proporty sorting.
 //

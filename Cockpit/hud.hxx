@@ -33,11 +33,18 @@
 #endif
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
+#ifdef __sun__
+extern "C" void *memmove(void *, const void *, size_t);
+extern "C" void *memset(void *, int, size_t);
+#endif
 
 #include <fg_typedefs.h>
 #include <fg_constants.h>
+
 #include <Aircraft/aircraft.h>
 #include <Flight/flight.h>
 #include <Controls/controls.h>
@@ -446,9 +453,13 @@ void fgHUDSetTimeMode( Hptr hud, int time_of_day );
 #endif // _HUD_H
 
 /* $Log$
-/* Revision 1.6  1998/06/03 00:43:28  curt
-/* No .h when including stl stuff.
+/* Revision 1.7  1998/06/12 00:56:00  curt
+/* Build only static libraries.
+/* Declare memmove/memset for Sloaris.
 /*
+ * Revision 1.6  1998/06/03 00:43:28  curt
+ * No .h when including stl stuff.
+ *
  * Revision 1.5  1998/05/17 16:58:13  curt
  * Added a View Frustum Culling ratio display to the hud.
  *

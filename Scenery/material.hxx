@@ -41,6 +41,11 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#ifdef __sun__
+extern "C" void *memmove(void *, const void *, size_t);
+extern "C" void *memset(void *, int, size_t);
+#endif
+
 #include <map>             // STL associative "array"
 #include <string>          // Standard C++ string library
 
@@ -108,6 +113,10 @@ extern fgMATERIAL_MGR material_mgr;
 
 
 // $Log$
+// Revision 1.7  1998/06/12 00:58:04  curt
+// Build only static libraries.
+// Declare memmove/memset for Sloaris.
+//
 // Revision 1.6  1998/06/06 01:09:31  curt
 // I goofed on the log message in the last commit ... now fixed.
 //
