@@ -42,6 +42,7 @@
 
 #include <Aircraft/aircraft.h>
 #include <Astro/moon.h>
+#include <Astro/planets.h>
 #include <Astro/sky.h>
 #include <Astro/stars.h>
 #include <Astro/sun.h>
@@ -257,13 +258,14 @@ static void fgRenderFrame( void ) {
     xglPushMatrix();
     /* Translate to view position */
     xglTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
-    /* Rotate based on gst (side real time) */
+    /* Rotate based on gst (sidereal time) */
     angle = t->gst * 15.041085; /* should be 15.041085, Curt thought it was 15*/
     /* printf("Rotating astro objects by %.2f degrees\n",angle); */
     xglRotatef( angle, 0.0, 0.0, -1.0 );
 
     /* draw stars and planets */
     fgStarsRender();
+    fgPlanetsRender();
 
     /* draw the sun */
     fgSunRender();
@@ -274,7 +276,12 @@ static void fgRenderFrame( void ) {
     xglLightfv(GL_LIGHT0, GL_AMBIENT, white );
     xglLightfv(GL_LIGHT0, GL_DIFFUSE, white );
     xglEnable( GL_CULL_FACE );
+    
+    /* Let's try some blending technique's (Durk)*/
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
     fgMoonRender();
+    glDisable(GL_BLEND);
 
     xglPopMatrix();
 
@@ -633,9 +640,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.54  1998/01/31 00:43:10  curt
-/* Added MetroWorks patches from Carmen Volpe.
+/* Revision 1.55  1998/02/02 20:53:58  curt
+/* Incorporated Durk's changes.
 /*
+ * Revision 1.54  1998/01/31 00:43:10  curt
+ * Added MetroWorks patches from Carmen Volpe.
+ *
  * Revision 1.53  1998/01/27 18:35:54  curt
  * Minor tweaks.
  *

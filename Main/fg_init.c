@@ -35,6 +35,7 @@
 
 #include <Aircraft/aircraft.h>
 #include <Astro/moon.h>
+#include <Astro/planets.h>
 #include <Astro/sky.h>
 #include <Astro/stars.h>
 #include <Astro/sun.h>
@@ -254,8 +255,11 @@ void fgInitSubsystems( void ) {
     /* Initialize the Stars subsystem */
     fgStarsInit();
 
+    /* Initialize the planetary subsystem */
+    fgEventRegister("fgPlanetsInit()", fgPlanetsInit, FG_EVENT_READY, 600000);
+
     /* Initialize the sun's position */
-    fgEventRegister( "fgSunInit()", fgSunInit, FG_EVENT_READY, 600000 );
+    fgEventRegister( "fgSunInit()", fgSunInit, FG_EVENT_READY, 60000 );
 
     /* Intialize the moon's position */
     fgEventRegister( "fgMoonInit()", fgMoonInit, FG_EVENT_READY, 600000 );
@@ -314,9 +318,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.37  1998/02/01 03:39:54  curt
-/* Minor tweaks.
+/* Revision 1.38  1998/02/02 20:53:58  curt
+/* Incorporated Durk's changes.
 /*
+ * Revision 1.37  1998/02/01 03:39:54  curt
+ * Minor tweaks.
+ *
  * Revision 1.36  1998/01/31 00:43:13  curt
  * Added MetroWorks patches from Carmen Volpe.
  *

@@ -211,7 +211,8 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     if ( daylight > 0 ) {
 	daylight = 1;
     } else if ( daylight < 0 ) {
-	fgPrintf( FG_EVENT, FG_WARN, "OOOPS, big time problem in fg_time.c, no daylight savings info.\n");
+	fgPrintf( FG_EVENT, FG_WARN, 
+	   "OOOPS, big time problem in fg_time.c, no daylight savings info.\n");
     }
 
     offset = -(timezone / 3600 - daylight);
@@ -310,9 +311,12 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.32  1998/02/01 03:39:56  curt
-/* Minor tweaks.
+/* Revision 1.33  1998/02/02 20:54:04  curt
+/* Incorporated Durk's changes.
 /*
+ * Revision 1.32  1998/02/01 03:39:56  curt
+ * Minor tweaks.
+ *
  * Revision 1.31  1998/01/27 00:48:06  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.
