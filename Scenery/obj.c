@@ -40,11 +40,11 @@
 
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
+#include <Include/fg_zlib.h>
 #include <Math/mat3.h>
 #include <Math/fg_random.h>
 #include <Scenery/obj.h>
 #include <Scenery/scenery.h>
-#include <zlib/zlib.h>
 
 
 #define MAXNODES 100000
@@ -98,28 +98,32 @@ float calc_lat(double x, double y, double z) {
 
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
-    char gzpath[256], line[256], winding_str[256];
+    char fgpath[256], line[256], winding_str[256];
     double approx_normal[3], normal[3], scale;
     // double x, y, z, xmax, xmin, ymax, ymin, zmax, zmin;
     GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     GLint tile;
-    gzFile f;
+    fgFile f;
     int first, ncount, vncount, n1, n2, n3, n4;
     static int use_per_vertex_norms = 1;
     int winding;
     int last1, last2, odd;
 
     // First try "path.obz" (compressed format)
-    strcpy(gzpath, path);
-    strcat(gzpath, ".obz");
-    if ( (f = gzopen(gzpath, "rb")) == NULL ) {
+    strcpy(fgpath, path);
+    strcat(fgpath, ".obz");
+    if ( (f = fgopen(fgpath, "rb")) == NULL ) {
 	// Next try "path.obj" (uncompressed format)
-	strcat(path, ".obj");
-	if ( (f = gzopen(path, "rb")) == NULL ) {
+	strcpy(fgpath, path);
+	strcat(fgpath, ".obj");
+	if ( (f = fgopen(fgpath, "rb")) == NULL ) {
 	    // Next try "path.obj.gz" (compressed format)
-	    strcat(path, ".gz");
-	    if ( (f = gzopen(path, "rb")) == NULL ) {
-		fgPrintf(FG_TERRAIN, FG_ALERT, "Cannot open file: %s\n", path);
+	    strcat(fgpath, ".gz");
+	    if ( (f = fgopen(fgpath, "rb")) == NULL ) {
+		strcpy(fgpath, path);
+		strcat(fgpath, ".obj");
+		fgPrintf( FG_TERRAIN, FG_ALERT, 
+			  "Cannot open file: %s\n", fgpath );
 		return(-1);
 	    }
 	}
@@ -143,7 +147,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
     ncount = 1;
     vncount = 1;
 
-    while ( gzgets(f, line, 250) != NULL ) {
+    while ( fggets(f, line, 250) != NULL ) {
 	if ( line[0] == '#' ) {
 	    /* comment -- ignore */
 	} else if ( line[0] == '\n' ) {
@@ -463,7 +467,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
     xglEndList();
 
-    gzclose(f);
+    fgclose(f);
 
     /* reference point is the "center" (now included in input file) */
     /*
@@ -477,11 +481,14 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.34  1998/04/28 01:21:42  curt
-/* Tweaked texture parameter calculations to keep the number smaller.  This
-/* avoids the "swimming" problem.
-/* Type-ified fgTIME and fgVIEW.
+/* Revision 1.35  1998/04/28 21:43:26  curt
+/* Wrapped zlib calls up so we can conditionally comment out zlib support.
 /*
+ * Revision 1.34  1998/04/28 01:21:42  curt
+ * Tweaked texture parameter calculations to keep the number smaller.  This
+ * avoids the "swimming" problem.
+ * Type-ified fgTIME and fgVIEW.
+ *
  * Revision 1.33  1998/04/27 15:58:15  curt
  * Screwing around with texture coordinate generation ... still needs work.
  *

@@ -57,7 +57,7 @@ struct fgSCENERY scenery;
 /* Initialize the Scenery Management system */
 int fgSceneryInit( void ) {
     fgGENERAL *g;
-    char path[1024];
+    char path[1024], fgpath[1024];
     GLubyte *texbuf;
     int width, height;
 
@@ -74,9 +74,16 @@ int fgSceneryInit( void ) {
     strcat(path, "/Textures/");
     strcat(path, "desert.rgb");
 
+    // Try uncompressed
     if ( (texbuf = read_rgb_texture(path, &width, &height)) == NULL ) {
-    	fgPrintf( FG_GENERAL, FG_EXIT, "Error in loading textures!\n" );
-	return(0);
+	// Try compressed
+	strcpy(fgpath, path);
+	strcat(fgpath, ".gz");
+	if ( (texbuf = read_rgb_texture(fgpath, &width, &height)) == NULL ) {
+	    fgPrintf( FG_GENERAL, FG_EXIT, "Error in loading texture %s\n",
+		      path );
+	    return(0);
+	} 
     } 
 
     xglTexImage2D(GL_TEXTURE_2D, 0, 3, height, width, 0,
@@ -116,11 +123,14 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.41  1998/04/24 00:51:08  curt
-/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
-/* Tweaked the scenery file extentions to be "file.obj" (uncompressed)
-/* or "file.obz" (compressed.)
+/* Revision 1.42  1998/04/28 21:43:27  curt
+/* Wrapped zlib calls up so we can conditionally comment out zlib support.
 /*
+ * Revision 1.41  1998/04/24 00:51:08  curt
+ * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+ * Tweaked the scenery file extentions to be "file.obj" (uncompressed)
+ * or "file.obz" (compressed.)
+ *
  * Revision 1.40  1998/04/18 04:14:06  curt
  * Moved fg_debug.c to it's own library.
  *

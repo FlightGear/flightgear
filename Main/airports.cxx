@@ -29,7 +29,7 @@
 
 #include <Debug/fg_debug.h>
 #include <Include/general.h>
-#include <zlib/zlib.h>
+#include <Include/fg_zlib.h>
 
 #include "airports.hxx"
 
@@ -42,10 +42,10 @@ fgAIRPORTS::fgAIRPORTS( void ) {
 // load the data
 int fgAIRPORTS::load( char *file ) {
     fgGENERAL *g;
-    char path[256], gzpath[256], line[256];
+    char path[256], fgpath[256], line[256];
     char id[5];
     double lon, lat, elev;
-    gzFile f;
+    fgFile f;
 
     g = &general;
 
@@ -54,30 +54,36 @@ int fgAIRPORTS::load( char *file ) {
     strcat(path, g->root_dir);
     strcat(path, "/Scenery/");
     strcat(path, "Airports");
-    strcpy(gzpath, path);
-    strcat(gzpath, ".gz");
+    strcpy(fgpath, path);
+    strcat(fgpath, ".gz");
 
     // first try "path.gz"
-    if ( (f = gzopen(gzpath, "rb")) == NULL ) {
+    if ( (f = fgopen(fgpath, "rb")) == NULL ) {
 	// next try "path"
-        if ( (f = gzopen(path, "rb")) == NULL ) {
+        if ( (f = fgopen(path, "rb")) == NULL ) {
 	    fgPrintf(FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", path);
 	}
     }
 
     size = 0;
-    while ( gzgets(f, line, 250) != NULL ) {
+    while ( fggets(f, line, 250) != NULL ) {
 	// printf("%s", line);
-	sscanf( line, "%s %lf %lf %lfl\n", id, &lon, &lat, &elev );
-	strcpy(airports[size].id, id);
-	airports[size].longitude = lon;
-	airports[size].latitude = lat;
-	airports[size].elevation = elev;
+
+	if ( size < MAX_AIRPORTS ) {
+	    sscanf( line, "%s %lf %lf %lfl\n", id, &lon, &lat, &elev );
+	    strcpy(airports[size].id, id);
+	    airports[size].longitude = lon;
+	    airports[size].latitude = lat;
+	    airports[size].elevation = elev;
+	} else {
+	    fgPrintf( FG_GENERAL, FG_EXIT, 
+		      "Overran size of airport list in fgAIRPORTS::load()\n");
+	}
 
 	size++;
     }
 
-    gzclose(f);
+    fgclose(f);
 }
 
 
@@ -103,6 +109,9 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.2  1998/04/28 21:42:50  curt
+// Wrapped zlib calls up so we can conditionally comment out zlib support.
+//
 // Revision 1.1  1998/04/25 15:11:11  curt
 // Added an command line option to set starting position based on airport ID.
 //
