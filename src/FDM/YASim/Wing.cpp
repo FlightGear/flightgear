@@ -330,8 +330,8 @@ void Wing::compile()
         // and flap1 are set.  Right now flap1 overrides.
 
         int nSegs = (int)Math::ceil((end-start)/segLen);
-        if (_twist != 0 && nSegs < 16) // more segments if twisted
-            nSegs = 16;
+        if (_twist != 0 && nSegs < 8) // more segments if twisted
+            nSegs = 8;
         float segWid = _length * (end - start)/nSegs;
 
         int j;
@@ -349,7 +349,7 @@ void Wing::compile()
             sr->surface = s;
             sr->weight = chord * segWid;
             s->setTotalDrag(sr->weight);
-            s->setTwist(_twist * Math::sqrt(1-frac));
+            s->setTwist(_twist * frac);
             _surfs.add(sr);
 
             if(_mirror) {
