@@ -22,49 +22,56 @@
 // (Log is kept at end of this file)
 
 
-#ifndef _WEATHER_H
-#define _WEATHER_H
-
-
-#ifdef __cplusplus                                                          
-extern "C" {                            
-#endif                                   
+#ifndef _WEATHER_HXX
+#define _WEATHER_HXX
 
 
 // holds the current weather values
-struct fgWEATHER {
-    float visibility;
-    float fog_density;
+class FGWeather {
+
+private:
+
+    double visibility;
+    GLfloat fog_exp_density;
+    GLfloat fog_exp2_density;
+
+public:
+
+    FGWeather();
+    ~FGWeather();
+
+    void Init();
+    void Update();
+    
+    inline double get_visibility() const { return visibility; }
+
+    inline void set_visibility( double v ) {
+	// in meters
+	visibility = v;
+
+        // for GL_FOG_EXP
+	fog_exp_density = -log(0.01 / visibility);
+
+	// for GL_FOG_EXP2
+	fog_exp2_density = sqrt( -log(0.01) ) / visibility;
+
+	// Set correct opengl fog density
+	xglFogf (GL_FOG_DENSITY, fog_exp2_density);
+
+	// FG_LOG( FG_INPUT, FG_DEBUG, "Fog density = " << w->fog_density );
+    }
 };
 
-extern struct fgWEATHER current_weather;
+extern FGWeather current_weather;
 
 
-// Initialize the weather modeling subsystem
-void fgWeatherInit( void );
-
-
-// Update the weather parameters for the current position
-void fgWeatherUpdate( void );
-
-
-// Get the current visibility
-float fgWeatherGetVisibility( void );
-
-
-// Set the visibility and update fog parameters
-void fgWeatherSetVisibility( float visibility );
-
-
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif // _WEATHER_H
+#endif // _WEATHER_HXX
 
 
 // $Log$
+// Revision 1.2  1998/12/06 13:51:27  curt
+// Turned "struct fgWEATHER" into "class FGWeather".
+//
 // Revision 1.1  1998/10/17 01:34:37  curt
 // C++ ifying ...
 //

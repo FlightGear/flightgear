@@ -477,7 +477,7 @@ static int viewable( const Point3D& cp, double radius ) {
 	
     // Check near and far clip plane
     if( ( eye[2] > radius ) ||
-	( eye[2] + radius + current_weather.visibility < 0) )
+	( eye[2] + radius + current_weather.get_visibility() < 0) )
     {
 	return(0);
     }
@@ -526,7 +526,7 @@ static int viewable( const Point3D& cp, double radius ) {
     }
 
     // Check far clip plane
-    if ( eye[2] + radius < -current_weather.visibility ) {
+    if ( eye[2] + radius < -current_weather.get_visibility() ) {
 	return(0);
     }
 
@@ -748,6 +748,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.50  1998/12/06 13:51:25  curt
+// Turned "struct fgWEATHER" into "class FGWeather".
+//
 // Revision 1.49  1998/12/05 15:54:26  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

@@ -42,68 +42,46 @@
 
 
 // This is a record containing current weather info
-struct fgWEATHER current_weather;
+FGWeather current_weather;
+
+
+FGWeather::FGWeather() {
+}
+
+
+FGWeather::~FGWeather() {
+}
 
 
 // Initialize the weather modeling subsystem
-void fgWeatherInit( void ) {
-    struct fgWEATHER *w;
-
-    w = &current_weather;
-
+void FGWeather::Init( ) {
     FG_LOG( FG_GENERAL, FG_INFO, "Initializing weather subsystem");
 
     // Configure some wind
     // FG_V_north_airmass = 15; // ft/s =~ 10mph
 
-    // fgWeatherSetVisibility(45000.0);    // in meters
-    fgWeatherSetVisibility(32000.0);    // about 20 miles (in meters)
+    // set_visibility( 45000.0 );    // in meters
+    set_visibility( 32000.0 );       // about 20 miles (in meters)
 }
 
 
 // Update the weather parameters for the current position
-void fgWeatherUpdate( void ) {
-
-    // temporarily remove the code of this do-nothing routine
-
-// #ifdef FG_WEATHER_UPDATE
+void FGWeather::Update( void ) {
     FGState *f;
-    struct fgWEATHER *w;
 
     f = current_aircraft.fdm_state;
-    w = &current_weather;
 
     // Add some random turbulence
-    // FG_U_gust = fg_random() * 5.0 - 2.5;
-    // FG_V_gust = fg_random() * 5.0 - 2.5;
-    // FG_W_gust = fg_random() * 5.0 - 2.5;
-// #endif FG_WEATHER_UPDATE
-}
-
-
-// Get the current visibility
-float fgWeatherGetVisibility( void ) {
-    struct fgWEATHER *w;
-    w = &current_weather;
-
-    return ( w->visibility );
-}
-
-
-// Set the visibility and update fog parameters
-void fgWeatherSetVisibility( float visibility ) {
-    struct fgWEATHER *w;
-    w = &current_weather;
-
-    w->visibility = visibility;       // in meters
-    // w->fog_density = -log(0.01 / w->visibility;        // for GL_FOG_EXP
-    w->fog_density = sqrt( -log(0.01) ) / w->visibility;  // for GL_FOG_EXP2
-    xglFogf (GL_FOG_DENSITY, w->fog_density);
-    FG_LOG( FG_INPUT, FG_DEBUG, "Fog density = " << w->fog_density );
+    // f->set_U_gust( fg_random() * 5.0 - 2.5 );
+    // f->set_V_gust( fg_random() * 5.0 - 2.5 );
+    // f->set_W_gust( fg_random() * 5.0 - 2.5 );
 }
 
 
 // $Log$
+// Revision 1.5  1998/12/06 13:51:26  curt
+// Turned "struct fgWEATHER" into "class FGWeather".
+//
 // Revision 1.4  1998/12/05 15:54:31  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

@@ -72,7 +72,7 @@ void GLUTkey(unsigned char k, int x, int y) {
     FGState *f;
     fgTIME *t;
     fgVIEW *v;
-    struct fgWEATHER *w;
+    FGWeather *w;
     float fov, tmp;
     static bool winding_ccw = true;
 
@@ -167,9 +167,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->update_fov = TRUE;
 	    return;
 	case 90: // Z key
-	    tmp = fgWeatherGetVisibility();   // in meters
+	    tmp = w->get_visibility();   // in meters
 	    tmp /= 1.10;
-	    fgWeatherSetVisibility( tmp );
+	    w->set_visibility( tmp );
 	    return;
 	}
     } else {
@@ -253,9 +253,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->update_fov = TRUE;
 	    return;
 	case 122: // z key
-	    tmp = fgWeatherGetVisibility();   // in meters
+	    tmp = w->get_visibility();   // in meters
 	    tmp *= 1.10;
-	    fgWeatherSetVisibility( tmp );
+	    w->set_visibility( tmp );
 	    return;
 	case 27: // ESC
 	    // if( fg_DebugOutput ) {
@@ -386,6 +386,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.36  1998/12/06 13:51:20  curt
+// Turned "struct fgWEATHER" into "class FGWeather".
+//
 // Revision 1.35  1998/12/05 16:13:17  curt
 // Renamed class fgCONTROLS to class FGControls.
 //

@@ -134,10 +134,8 @@ slSample *s2;
 // fgInitVisuals() -- Initialize various GL/view parameters
 static void fgInitVisuals( void ) {
     fgLIGHT *l;
-    struct fgWEATHER *w;
 
     l = &cur_light_params;
-    w = &current_weather;
 
     // Go full screen if requested ...
     if ( current_options.get_fullscreen() ) {
@@ -471,7 +469,7 @@ static void fgMainLoop( void ) {
     FG_LOG( FG_ALL, FG_DEBUG, "Running Main Loop");
     FG_LOG( FG_ALL, FG_DEBUG, "======= ==== ====");
 
-    fgWeatherUpdate();
+    current_weather.Update();
 
     // Fix elevation.  I'm just sticking this here for now, it should
     // probably move eventually
@@ -946,7 +944,7 @@ int main( int argc, char **argv ) {
     // fgInitDebug();
 
     // set default log levels
-    fglog().setLogLevels( FG_ALL, FG_DEBUG );
+    fglog().setLogLevels( FG_ALL, FG_INFO );
 
     FG_LOG( FG_GENERAL, FG_INFO, "Flight Gear:  Version " << VERSION << endl );
 
@@ -1014,6 +1012,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.73  1998/12/06 13:51:22  curt
+// Turned "struct fgWEATHER" into "class FGWeather".
+//
 // Revision 1.72  1998/12/05 15:54:18  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

@@ -316,7 +316,7 @@ int fgInitSubsystems( void )
 			    fgEVENT::FG_EVENT_READY, 30000 );
 
     // Initialize the weather modeling subsystem
-    fgWeatherInit();
+    current_weather.Init();
 
     // Initialize the Cockpit subsystem
     if( fgCockpitInit( &current_aircraft )) {
@@ -370,6 +370,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.56  1998/12/06 13:51:23  curt
+// Turned "struct fgWEATHER" into "class FGWeather".
+//
 // Revision 1.55  1998/12/05 15:54:20  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //
