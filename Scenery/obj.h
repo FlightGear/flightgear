@@ -28,7 +28,9 @@
 #define _OBJ_H
 
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
@@ -45,9 +47,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius);
 
 
 /* $Log$
-/* Revision 1.6  1998/01/31 00:43:25  curt
-/* Added MetroWorks patches from Carmen Volpe.
+/* Revision 1.7  1998/04/03 22:11:37  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.6  1998/01/31 00:43:25  curt
+ * Added MetroWorks patches from Carmen Volpe.
+ *
  * Revision 1.5  1998/01/27 00:48:03  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
@@ -79,7 +81,7 @@ int fgTileCacheExists( struct fgBUCKET *p ) {
 
 /* Fill in a tile cache entry with real data for the specified bucket */
 void fgTileCacheEntryFillIn( int index, struct fgBUCKET *p ) {
-    struct fgGENERAL *g;
+    fgGENERAL *g;
     char base_path[256];
     char file_name[256];
 
@@ -194,9 +196,12 @@ int fgTileCacheNextAvail( void ) {
 
 
 /* $Log$
-/* Revision 1.7  1998/02/01 03:39:55  curt
-/* Minor tweaks.
+/* Revision 1.8  1998/04/03 22:11:38  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.7  1998/02/01 03:39:55  curt
+ * Minor tweaks.
+ *
  * Revision 1.6  1998/01/31 00:43:26  curt
  * Added MetroWorks patches from Carmen Volpe.
  *

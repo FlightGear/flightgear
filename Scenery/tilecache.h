@@ -28,7 +28,9 @@
 #define _TILECACHE_H
 
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
@@ -79,10 +81,13 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 
 
 /* $Log$
-/* Revision 1.6  1998/02/18 15:07:10  curt
-/* Tweaks to build with SGI OpenGL (and therefor hopefully other accelerated
-/* drivers will work.)
+/* Revision 1.7  1998/04/03 22:11:38  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.6  1998/02/18 15:07:10  curt
+ * Tweaks to build with SGI OpenGL (and therefor hopefully other accelerated
+ * drivers will work.)
+ *
  * Revision 1.5  1998/02/16 13:39:45  curt
  * Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
  * tiles to occasionally be missing.

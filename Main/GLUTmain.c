@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>                     
 #endif
 
@@ -32,9 +34,10 @@
 #include <XGL/xgl.h>
 #include <stdio.h>
 
-#ifdef __sun
+#ifdef HAVE_STDLIB_H
 #   include <stdlib.h>
-#else
+#endif
+#ifdef HAVE_GETOPT_H
 #   include <getopt.h>
 #endif
 
@@ -245,7 +248,7 @@ static void fgUpdateViewParams( void ) {
 	/* Tell GL we are about to modify the projection parameters */
 	xglMatrixMode(GL_PROJECTION);
 	xglLoadIdentity();
-	gluPerspective(55.0, 2.0/win_ratio, 1.0, 100000.0);
+	gluPerspective(45.0, 2.0/win_ratio, 1.0, 100000.0);
       }
     else
       {
@@ -253,7 +256,7 @@ static void fgUpdateViewParams( void ) {
 	/* Tell GL we are about to modify the projection parameters */    
 	xglMatrixMode(GL_PROJECTION);
 	xglLoadIdentity();
-	gluPerspective(55.0, 1.0/win_ratio, 10.0, 100000.0);
+	gluPerspective(45.0, 1.0/win_ratio, 10.0, 100000.0);
       }
 
     xglMatrixMode(GL_MODELVIEW);
@@ -487,9 +490,9 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 void fgInitTimeDepCalcs( void ) {
     /* initialize timer */
 
-#ifdef USE_ITIMER
+#ifdef HAVE_SETITIMER
     fgTimerInit( 1.0 / DEFAULT_TIMER_HZ, fgUpdateTimeDepCalcs );
-#endif USE_ITIMER
+#endif HAVE_SETITIMER
 
 }
 
@@ -811,9 +814,12 @@ extern "C" {
 #endif
 
 /* $Log$
-/* Revision 1.67  1998/03/23 21:24:37  curt
-/* Source code formating tweaks.
+/* Revision 1.68  1998/04/03 22:09:03  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.67  1998/03/23 21:24:37  curt
+ * Source code formating tweaks.
+ *
  * Revision 1.66  1998/03/14 00:31:20  curt
  * Beginning initial terrain texturing experiments.
  *

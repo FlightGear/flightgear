@@ -28,7 +28,9 @@
 #define _GLUTKEY_H
 
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>                     
 #endif
 
@@ -44,10 +46,13 @@ void GLUTspecialkey(int k, int x, int y);
 
 
 /* $Log$
-/* Revision 1.7  1998/02/12 21:59:44  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.8  1998/04/03 22:09:02  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.7  1998/02/12 21:59:44  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.6  1998/01/22 02:59:36  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

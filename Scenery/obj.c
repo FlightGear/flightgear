@@ -25,7 +25,9 @@
  **************************************************************************/
 
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
@@ -66,7 +68,7 @@ void calc_normal(double p1[3], double p2[3], double p3[3], double normal[3])
 }
 
 
-#define FG_TEX_CONSTANT 64.0
+#define FG_TEX_CONSTANT 128.0
 
 float calc_lon(double x, double y, double z) {
     float tmp;
@@ -390,9 +392,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.25  1998/03/14 00:30:50  curt
-/* Beginning initial terrain texturing experiments.
+/* Revision 1.26  1998/04/03 22:11:36  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.25  1998/03/14 00:30:50  curt
+ * Beginning initial terrain texturing experiments.
+ *
  * Revision 1.24  1998/02/09 21:30:18  curt
  * Fixed a nagging problem with terrain tiles not "quite" matching up perfectly.
  *

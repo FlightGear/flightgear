@@ -25,7 +25,9 @@
  **************************************************************************/
 
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
@@ -68,7 +70,7 @@ int fgSceneryInit( void ) {
     path[0] = '\0';
     strcat(path, g->root_dir);
     strcat(path, "/Textures/");
-    strcat(path, "desert.rgb");
+    strcat(path, "forest.rgb");
 
     if ( (texbuf = read_rgb_texture(path, &width, &height)) == NULL ) {
     	fgPrintf( FG_GENERAL, FG_EXIT, "Error in loading textures!\n" );
@@ -112,9 +114,12 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.37  1998/03/23 21:23:05  curt
-/* Debugging output tweaks.
+/* Revision 1.38  1998/04/03 22:11:37  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.37  1998/03/23 21:23:05  curt
+ * Debugging output tweaks.
+ *
  * Revision 1.36  1998/03/14 00:30:50  curt
  * Beginning initial terrain texturing experiments.
  *

@@ -135,7 +135,7 @@ int fgInitSubsystems( void ) {
     // Initial Position at (E81) Superior, AZ
     // FG_Longitude = ( -111.1270650 ) * DEG_TO_RAD;
     // FG_Latitude  = (  33.2778339 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = (2646 + 1000);
+    // FG_Runway_altitude = (2646 + 100);
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position at (TUS) Tucson, AZ
@@ -144,23 +144,23 @@ int fgInitSubsystems( void ) {
     // FG_Runway_altitude = (2641 + 0);
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
+    // Initial Position at (SEZ) SEDONA airport
+    // FG_Longitude = (-111.7884614 + 0.01) * DEG_TO_RAD;
+    // FG_Latitude  = (  34.8486289 - 0.015) * DEG_TO_RAD;
+    // FG_Runway_altitude = (4827 + 450);
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
+        
     // Initial Position at near Anchoraze, AK
     // FG_Longitude = ( -152.00 ) * DEG_TO_RAD;
     // FG_Latitude  = (  61.17 ) * DEG_TO_RAD;
     // FG_Runway_altitude = (0);
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
-    // Initial Position at (SEZ) SEDONA airport
-    // FG_Longitude = (-111.7884614 + 0.02) * DEG_TO_RAD;
-    // FG_Latitude  = (  34.8486289 - 0.04) * DEG_TO_RAD;
-    // FG_Runway_altitude = (4827 + 800);
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
-        
     // Initial Position at (HSP) Hot Springs, VA
-    // FG_Longitude = (-79.8338964 + 0.02) * DEG_TO_RAD;
-    // FG_Latitude  = ( 37.9514564 + 0.05) * DEG_TO_RAD;
-    // FG_Runway_altitude = (792 + 1500);
-    // FG_Altitude = FG_Runway_altitude + 3.758099;
+    FG_Longitude = (-79.8338964 + 0.01) * DEG_TO_RAD;
+    FG_Latitude  = ( 37.9514564 + 0.008) * DEG_TO_RAD;
+    FG_Runway_altitude = (3792 + 1300);
+    FG_Altitude = FG_Runway_altitude + 3.758099;
     
     // Initial Position at (ANE) Anoka County airport
     // FG_Longitude = -93.2113889 * DEG_TO_RAD;
@@ -178,7 +178,7 @@ int fgInitSubsystems( void ) {
     // Initial Position near where I used to live in Globe, AZ
     // FG_Longitude = ( -398757.6 / 3600.0 ) * DEG_TO_RAD;
     // FG_Latitude  = (  120160.0 / 3600.0 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 5000.0;
+    // FG_Runway_altitude = 4000.0;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position: 10125 Jewell St. NE
@@ -200,9 +200,9 @@ int fgInitSubsystems( void ) {
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Initial Position: Jim Brennon's Kingmont Observatory
-    // FG_Longitude = ( -121.1131666 ) * DEG_TO_RAD;
-    // FG_Latitude  = (   38.8293916 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 920.0 + 100;
+    // FG_Longitude = ( -121.1131667 ) * DEG_TO_RAD;
+    // FG_Latitude  = (   38.8293917 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 920.0;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // probably interesting for european team members
@@ -227,9 +227,9 @@ int fgInitSubsystems( void ) {
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // Test Position
-    // FG_Longitude = ( -110.4 ) * DEG_TO_RAD;
-    // FG_Latitude  = (   32.9375 ) * DEG_TO_RAD;
-    // FG_Runway_altitude = 6000.0;
+    // FG_Longitude = ( -139.5 ) * DEG_TO_RAD;
+    // FG_Latitude  = (  -9.5 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 13000.0 * METER_TO_FEET;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
     // A random test position
@@ -249,7 +249,7 @@ int fgInitSubsystems( void ) {
     /* Initial Orientation */
     FG_Phi   = -2.658474E-06;
     FG_Theta =  7.401790E-03;
-    FG_Psi   =  270.0 * DEG_TO_RAD;
+    FG_Psi   =  260.0 * DEG_TO_RAD;
 
     /* Initial Angular B rates */
     FG_P_body = 7.206685E-05;
@@ -400,9 +400,12 @@ int fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.52  1998/03/23 21:24:38  curt
-/* Source code formating tweaks.
+/* Revision 1.53  1998/04/03 22:09:06  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.52  1998/03/23 21:24:38  curt
+ * Source code formating tweaks.
+ *
  * Revision 1.51  1998/03/14 00:31:22  curt
  * Beginning initial terrain texturing experiments.
  *

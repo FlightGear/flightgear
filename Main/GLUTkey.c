@@ -1,5 +1,5 @@
 /**************************************************************************
- * tkglkey.c -- handle tkgl keyboard events
+ * GLUTkey.c -- handle GLUT keyboard events
  *
  * Written by Curtis Olson, started May 1997.
  *
@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>                     
 #endif
 
@@ -245,10 +247,13 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.29  1998/02/07 15:29:40  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.30  1998/04/03 22:09:02  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.29  1998/02/07 15:29:40  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.28  1998/02/03 23:20:23  curt
  * Lots of little tweaks to fix various consistency problems discovered by
  * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper

@@ -25,7 +25,9 @@
  **************************************************************************/
 
 
-#ifdef WIN32
+#include <config.h>
+
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
@@ -217,9 +219,12 @@ void fgTileMgrRender( void ) {
 
 
 /* $Log$
-/* Revision 1.21  1998/03/23 21:23:05  curt
-/* Debugging output tweaks.
+/* Revision 1.22  1998/04/03 22:11:38  curt
+/* Converting to Gnu autoconf system.
 /*
+ * Revision 1.21  1998/03/23 21:23:05  curt
+ * Debugging output tweaks.
+ *
  * Revision 1.20  1998/03/14 00:30:51  curt
  * Beginning initial terrain texturing experiments.
  *
