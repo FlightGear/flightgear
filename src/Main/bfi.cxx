@@ -1457,7 +1457,7 @@ FGBFI::setCloudsASL (double cloudsASL)
 double
 FGBFI::getMagVar ()
 {
-  return cur_magvar.get_magvar() * RAD_TO_DEG;
+  return globals->get_mag()->get_magvar() * RAD_TO_DEG;
 }
 
 
@@ -1467,7 +1467,7 @@ FGBFI::getMagVar ()
 double
 FGBFI::getMagDip ()
 {
-  return cur_magvar.get_magdip() * RAD_TO_DEG;
+  return globals->get_mag()->get_magdip() * RAD_TO_DEG;
 }
 
 

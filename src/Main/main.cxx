@@ -810,10 +810,10 @@ static void fgMainLoop( void ) {
     }
 
     // update magvar model
-    cur_magvar.update( cur_fdm_state->get_Longitude(),
-		       cur_fdm_state->get_Latitude(),
-		       cur_fdm_state->get_Altitude()* FEET_TO_METER,
-		       globals->get_time_params()->getJD() );
+    globals->get_mag()->update( cur_fdm_state->get_Longitude(),
+				cur_fdm_state->get_Latitude(),
+				cur_fdm_state->get_Altitude()* FEET_TO_METER,
+				globals->get_time_params()->getJD() );
 
     // Get elapsed time (in usec) for this past frame
     elapsed = fgGetTimeInterval();
@@ -1427,6 +1427,10 @@ int main( int argc, char **argv ) {
     // thesky->add_cloud_layer( 1000.0, 200.0, 50.0, SG_CLOUD_MOSTLY_SUNNY );
     // thesky->add_cloud_layer( 1800.0, 400.0, 100.0, SG_CLOUD_OVERCAST );
     // thesky->add_cloud_layer( 5000.0, 20.0, 10.0, SG_CLOUD_CIRRUS );
+
+    // Initialize MagVar model
+    SGMagVar *magvar = new SGMagVar();
+    globals->set_mag( magvar );
 
     // Terrain branch
     terrain = new ssgBranch;

@@ -41,25 +41,5 @@ void fgUpdateLocalTime();
 // update sky and lighting parameters
 void fgUpdateSkyAndLightingParams();
 
-class FGMagVar {
-
-private:
-
-    double magvar;
-    double magdip;
-
-public:
-
-    FGMagVar();
-    ~FGMagVar();
-
-    void update( double lon, double lat, double alt_m, double jd );
-
-    double get_magvar() const { return magvar; }
-    double get_magdip() const { return magdip; }
-};
-
-extern FGMagVar cur_magvar;
-
 
 #endif // _LIGHT_HXX

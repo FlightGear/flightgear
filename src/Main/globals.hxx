@@ -26,6 +26,7 @@
 
 
 #include <simgear/ephemeris/ephemeris.hxx>
+#include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
 
 
@@ -50,6 +51,9 @@ private:
     // Sky structures
     SGEphemeris *ephem;
 
+    // Magnetic Variation
+    SGMagVar *mag;
+
 public:
 
     FGGlobals();
@@ -71,6 +75,9 @@ public:
 
     inline SGEphemeris *get_ephem() const { return ephem; }
     inline void set_ephem( SGEphemeris *e ) { ephem = e; }
+
+    inline SGMagVar *get_mag() const { return mag; }
+    inline void set_mag( SGMagVar *m ) { mag = m; }
 };
 
 
