@@ -202,7 +202,7 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // away as we approach cruise RPMs, though, to prevent interaction
     // with the power computations.  Ugly.
     if(speed > 0 && speed < _omega0)
-	_torque -= 0.05f * (_power0/_omega0) * (1 - speed/_omega0);
+	_torque -= 0.16f * (_power0/_omega0) * (1 - speed/_omega0);
 
     // Now EGT.  This one gets a little goofy.  We can calculate the
     // work done by an isentropically expanding exhaust gas as the
