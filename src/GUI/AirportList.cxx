@@ -17,12 +17,15 @@ AirportList::AirportList (int x, int y, int width, int height)
     _content = new char *[_nAirports+1];
     for (int i = 0; i < _nAirports; i++) {
         const FGAirport * airport = _airports->getAirport(i);
-        snprintf(buf, 1023, "%s  %s\n",
+        snprintf(buf, 1023, "%s  %s\0",
                  airport->id.c_str(),
                  airport->name.c_str());
-        int str_len = strlen(buf);
-        _content[i] = new char[(str_len > 1023) ? 1024 : str_len+1];
-        strncpy(_content[i], buf, 1023);
+
+        unsigned int buf_len = (strlen(buf) > 1023) ? 1023 : strlen(buf);
+        
+        _content[i] = new char[buf_len+1];
+        memcpy(_content[i], buf, buf_len);
+        _content[i][buf_len+1] = '\0';
     }
     _content[_nAirports] = 0;
     newList(_content);
