@@ -59,6 +59,12 @@ public:
   double     speed;
   double     wind_from_east;
   double     wind_from_north;
+  double     speed_down_fps;
+  double     speed_east_fps;
+  double     speed_north_fps;
+  double     total_speed_down;
+  double     total_speed_east;
+  double     total_speed_north;
  } IC_struct;  
 
     SubmodelSystem ();
@@ -111,6 +117,10 @@ private:
     SGPropertyNode* _user_speed_node;
     SGPropertyNode* _user_wind_from_east_node;
     SGPropertyNode* _user_wind_from_north_node;
+	SGPropertyNode* _user_speed_down_fps_node;
+	SGPropertyNode* _user_speed_east_fps_node;
+	SGPropertyNode* _user_speed_north_fps_node;
+	
     FGAIManager* ai;
     IC_struct  IC;
 

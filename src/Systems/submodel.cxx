@@ -1,3 +1,4 @@
+
 // submodel.cxx - models a releasable submodel.
 // Written by Dave Culp, started Aug 2004
 //
@@ -50,6 +51,10 @@ SubmodelSystem::init ()
     _user_wind_from_east_node  = fgGetNode("/environment/wind-from-east-fps",true);
     _user_wind_from_north_node = fgGetNode("/environment/wind-from-north-fps",true);
 
+    _user_speed_down_fps_node   = fgGetNode("/velocities/speed-down-fps",true);
+    _user_speed_east_fps_node   = fgGetNode("/velocities/speed-east-fps",true);
+	_user_speed_north_fps_node  = fgGetNode("/velocities/speed-north-fps",true);
+	
     ai = (FGAIManager*)globals->get_subsystem("ai_model");
 
 
@@ -195,13 +200,18 @@ SubmodelSystem::transform( submodel* sm)
   IC.lat =        _user_lat_node->getDoubleValue();    
   IC.lon =        _user_lon_node->getDoubleValue();	   
   IC.alt =        _user_alt_node->getDoubleValue();    
-  IC.roll =     - _user_roll_node->getDoubleValue();    // rotation about x axis
-  IC.elevation =  _user_pitch_node->getDoubleValue();   // rotation about y axis
+  IC.roll =     - _user_roll_node->getDoubleValue();    // rotation about x axis (-ve)
+  IC.elevation = - _user_pitch_node->getDoubleValue();   // rotation about y axis (-ve)
   IC.azimuth =    _user_heading_node->getDoubleValue(); // rotation about z axis
   
   IC.speed =           _user_speed_node->getDoubleValue();
   IC.wind_from_east =  _user_wind_from_east_node->getDoubleValue();
   IC.wind_from_north = _user_wind_from_north_node->getDoubleValue();
+  
+  IC.speed_down_fps =   _user_speed_down_fps_node->getDoubleValue();
+  IC.speed_east_fps =   _user_speed_east_fps_node->getDoubleValue();
+  IC.speed_north_fps =  _user_speed_north_fps_node ->getDoubleValue();
+
   
   in[0] = sm->x_offset;
   in[1] = sm->y_offset;
@@ -255,11 +265,50 @@ SubmodelSystem::transform( submodel* sm)
    
    // Get submodel initial velocity vector angles in XZ and XY planes.
    // This needs to be fixed. This vector should be added to aircraft's vector. 
-   IC.elevation += (sm->pitch_offset * cosRx) + (sm->yaw_offset * sinRx);
+   IC.elevation += (sm->yaw_offset * sinRx) - (sm->pitch_offset * cosRx);
    IC.azimuth   += (sm->yaw_offset * cosRx) - (sm->pitch_offset * sinRx);
  
    // For now assume vector is close to airplane's vector.  This needs to be fixed.
-   IC.speed += sm->speed; 
+   //IC.speed += ; 
+
+   // calcuate the total speed north
+
+   IC.total_speed_north = sm->speed * cos(IC.elevation*SG_DEGREES_TO_RADIANS)*
+                    cos(IC.azimuth*SG_DEGREES_TO_RADIANS) + IC.speed_north_fps;
+
+   // calculate the total speed east
+
+   IC.total_speed_east = sm->speed * cos(IC.elevation*SG_DEGREES_TO_RADIANS)*
+                     sin(IC.azimuth*SG_DEGREES_TO_RADIANS) + IC.speed_east_fps;
+
+   // calculate the total speed down
+  
+   IC.total_speed_down = sm->speed * -sin(IC.elevation*SG_DEGREES_TO_RADIANS) +
+                        IC.speed_down_fps;
+
+  // re-calculate speed, elevation and azimuth
+
+   IC.speed = sqrt( IC.total_speed_north * IC.total_speed_north + 
+                      IC.total_speed_east * IC.total_speed_east +
+					  IC.total_speed_down * IC.total_speed_down);
+   			  
+   IC.azimuth = atan(IC.total_speed_east/IC.total_speed_north) * SG_RADIANS_TO_DEGREES;
+   
+   // rationalise the output
+   
+   if (IC.total_speed_north <= 0){
+    IC.azimuth = 180 + IC.azimuth;
+	}
+   else{
+     if(IC.total_speed_east <= 0){
+     IC.azimuth = 360 + IC.azimuth;
+	 }
+  }
+	 
+   
+   
+   IC.elevation = atan(IC.total_speed_down/sqrt(IC.total_speed_north * IC.total_speed_north + 
+                      IC.total_speed_east * IC.total_speed_east)) * SG_RADIANS_TO_DEGREES;
 
 }
 
@@ -272,4 +321,5 @@ SubmodelSystem::updatelat(double lat)
 }
 
 // end of submodel.cxx
+
 

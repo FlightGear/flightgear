@@ -19,7 +19,7 @@ FGSystemMgr::FGSystemMgr ()
     set_subsystem( "static", new StaticSystem );
     set_subsystem( "vacuum-l", new VacuumSystem(0) );
     set_subsystem( "vacuum-r", new VacuumSystem(1) );
-    // set_subsystem( "submodel", new SubmodelSystem() );
+    set_subsystem( "submodel", new SubmodelSystem() );
 }
 
 FGSystemMgr::~FGSystemMgr ()

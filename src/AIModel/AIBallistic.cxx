@@ -46,6 +46,7 @@ bool FGAIBallistic::init() {
    aero_stabilized = true;
    hdg = azimuth;
    pitch = elevation;
+   Transform();
    return true;
 }
 
