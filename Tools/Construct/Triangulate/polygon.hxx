@@ -86,7 +86,7 @@ public:
 	return poly[contour][i];
     }
 
-    // calculate an "arbitrary" point inside the specified contour for
+    // calculate some "arbitrary" point inside the specified contour for
     // assigning attribute areas
     void calc_point_inside( const int contour, const FGTriNodes& trinodes );
     inline Point3D get_point_inside( const int contour ) const { 

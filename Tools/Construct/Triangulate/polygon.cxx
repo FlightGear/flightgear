@@ -82,13 +82,13 @@ static bool intersects( const Point3D& p0, const Point3D& p1, double x,
 }
 
 
-// calculate an "arbitrary" point inside the specified contour for
+// calculate some "arbitrary" point inside the specified contour for
 // assigning attribute areas
 void FGPolygon::calc_point_inside( const int contour, 
 				   const FGTriNodes& trinodes ) {
     Point3D tmp, min, ln, p1, p2, p3, m, result;
 
-    // 1. find point, min, with smallest y
+    // 1. find a point on the specified contour, min, with smallest y
 
     // min.y() starts greater than the biggest possible lat (degrees)
     min.sety( 100.0 );
@@ -161,7 +161,7 @@ void FGPolygon::calc_point_inside( const int contour,
 	    if ( intersects(p1, p2, m.x(), &result) ) {
 		// cout << "intersection = " << result << endl;
 		if ( ( result.y() < p3.y() ) &&
-		     ( fabs(result.y() - m.y()) > FG_EPSILON ) ) {
+		     ( result.y() > m.y() + FG_EPSILON ) ) {
 		    p3 = result;
 		}
 	    }
@@ -173,7 +173,7 @@ void FGPolygon::calc_point_inside( const int contour,
 	if ( intersects(p1, p2, m.x(), &result) ) {
 	    // cout << "intersection = " << result << endl;
 	    if ( ( result.y() < p3.y() ) &&
-	     ( fabs(result.y() - m.y()) > FG_EPSILON ) ) {
+		 ( result.y() > m.y() + FG_EPSILON ) ) {
 		p3 = result;
 	    }
 	}

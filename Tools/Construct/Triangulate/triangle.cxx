@@ -40,6 +40,7 @@ FGTriangle::build( const point_list& corner_list,
 		   const point_list& fit_list, 
 		   const FGgpcPolyList& gpc_polys )
 {
+    int debug_counter = 0;
     FGPolygon poly;
     int index;
 
@@ -75,6 +76,7 @@ FGTriangle::build( const point_list& corner_list,
 	polylist[i].clear();
 
 	// cout << "area type = " << i << endl;
+	debug_counter = 0;
 	current = gpc_polys.polys[i].begin();
 	last = gpc_polys.polys[i].end();
 	for ( ; current != last; ++current ) {
@@ -85,12 +87,6 @@ FGTriangle::build( const point_list& corner_list,
 	    if (gpc_poly->num_contours <= 0 ) {
 		cout << "FATAL ERROR! no contours in this polygon" << endl;
 		exit(-1);
-	    }
-
-	    if (gpc_poly->num_contours > 1 ) {
-		cout << "FATAL ERROR! no multi-contour support" << endl;
-		sleep(2);
-		// exit(-1);
 	    }
 
 	    poly.erase();
@@ -123,11 +119,38 @@ FGTriangle::build( const point_list& corner_list,
 		poly.set_hole_flag( j, gpc_poly->hole[j] );
 	    }
 
-	    for ( j = 0; j < gpc_poly->num_contours; j++ ) {
+	    for ( j = 0; j < gpc_poly->num_contours; ++j ) {
 		poly.calc_point_inside( j, in_nodes );
 	    }
 
+	    // temporary ... write out/hole polygon info for debugging
+	    for ( j = 0; j < (int)poly.contours(); ++j ) {
+		char pname[256];
+		sprintf(pname, "poly%02d-%02d-%02d", i, debug_counter, j);
+		FILE *fp = fopen( pname, "w" );
+		int index;
+		Point3D point;
+		for ( int k = 0; k < poly.contour_size( j ); ++k ) {
+		    index = poly.get_pt_index( j, k );
+		    point = in_nodes.get_node( index );
+		    fprintf( fp, "%.6f %.6f\n", point.x(), point.y() );
+		}
+		index = poly.get_pt_index( j, 0 );
+		point = in_nodes.get_node( index );
+		fprintf( fp, "%.6f %.6f\n", point.x(), point.y() );
+		fclose(fp);
+
+		char hname[256];
+		sprintf(hname, "hole%02d-%02d-%02d", i, debug_counter, j);
+		FILE *fh = fopen( hname, "w" );
+		point = poly.get_point_inside( j );
+		fprintf( fh, "%.6f %.6f\n", point.x(), point.y() );
+		fclose(fh);
+	    }
+
 	    polylist[i].push_back( poly );
+
+	    ++debug_counter;
 	}
     }
 
