@@ -49,8 +49,10 @@ AirportATC::AirportATC() :
     set_by_AI(false),
 	numAI(0)
 {
-    set_by_comm[0] = false;
-	set_by_comm[1] = false;
+	for(int i=0; i<ATC_NUM_TYPES; ++i) {
+		set_by_comm[0][i] = false;
+		set_by_comm[1][i] = false;
+	}
 }
 
 FGATCMgr::FGATCMgr() {
@@ -231,20 +233,11 @@ bool FGATCMgr::AIRegisterAirport(string ident) {
 
 // Register the fact that the comm radio is tuned to an airport
 // Channel is zero based
-bool FGATCMgr::CommRegisterAirport(string ident, int chan) {
+bool FGATCMgr::CommRegisterAirport(string ident, int chan, atc_type tp) {
 	SG_LOG(SG_ATC, SG_BULK, "Comm channel " << chan << " registered airport " << ident);
 	if(airport_atc_map.find(ident) != airport_atc_map.end()) {
 		//cout << "IN MAP - flagging set by comm..." << endl;
-		if(chan == 0) {
-			airport_atc_map[ident]->set_by_comm[0] = true;
-		} else if(chan == 1) {
-			airport_atc_map[ident]->set_by_comm[1] = true;
-		} else {
-			SG_LOG(SG_ATC, SG_ALERT, "COMM CHANNEL NOT 0 OR 1 IN FGATCMGR!");
-			// Just register both and accept the fact that this ATC will probably never get removed!
-			airport_atc_map[ident]->set_by_comm[0] = true;
-			airport_atc_map[ident]->set_by_comm[1] = true;
-		}
+		airport_atc_map[ident]->set_by_comm[chan][tp] = true;
 		return(true);
 	} else {
 		//cout << "NOT IN MAP - creating new..." << endl;
@@ -264,16 +257,7 @@ bool FGATCMgr::CommRegisterAirport(string ident, int chan) {
 			// TODO - some airports will have a tower/ground frequency but be inactive overnight.
 			a->set_by_AI = false;
 			a->numAI = 0;
-			if(chan == 0) {
-				a->set_by_comm[0] = true;
-			} else if(chan == 1) {
-				a->set_by_comm[1] = true;
-			} else {
-				SG_LOG(SG_ATC, SG_ALERT, "COMM CHANNEL NOT 1 OR 2 IN FGATCMGR!");
-				// Just register both and accept the fact that this ATC will probably never get removed!
-				a->set_by_comm[0] = true;
-				a->set_by_comm[1] = true;
-			}			
+			a->set_by_comm[chan][tp] = true;			
 			airport_atc_map[ident] = a;
 			return(true);
 		}
@@ -290,14 +274,14 @@ void FGATCMgr::CommRemoveFromList(const char* id, atc_type tp, int chan) {
 		AirportATC* a = airport_atc_map[(string)id];
 		//cout << "In CommRemoveFromList, a->ground_freq = " << a->ground_freq << endl;
 		if(a->set_by_AI && tp != ATIS) {
+			// Set by AI, so don't remove simply because user isn't tuned in any more - just stop displaying
 			SG_LOG(SG_ATC, SG_BULK, "In CommRemoveFromList, service was set by AI\n");
-			// Don't remove
 			FGATC* aptr = GetATCPointer((string)id, tp);
 			switch(chan) {
 			case 0:
 				//cout << "chan 1\n";
-				a->set_by_comm[0] = false;
-				if(!a->set_by_comm[1]) {
+				a->set_by_comm[0][tp] = false;
+				if(!a->set_by_comm[1][tp]) {
 					//cout << "not set by comm2\n";
 					if(aptr != NULL) {
 						//cout << "Got pointer\n";
@@ -309,8 +293,8 @@ void FGATCMgr::CommRemoveFromList(const char* id, atc_type tp, int chan) {
 				}
 				break;
 			case 1:
-				a->set_by_comm[1] = false;
-				if(!a->set_by_comm[0]) {
+				a->set_by_comm[1][tp] = false;
+				if(!a->set_by_comm[0][tp]) {
 					if(aptr != NULL) {
 						aptr->SetNoDisplay();
 						//cout << "Setting no display...\n";
@@ -323,15 +307,15 @@ void FGATCMgr::CommRemoveFromList(const char* id, atc_type tp, int chan) {
 		} else {
 			switch(chan) {
 			case 0:
-				a->set_by_comm[0] = false;
+				a->set_by_comm[0][tp] = false;
 				// Remove only if not also set by the other comm channel
-				if(!a->set_by_comm[1]) {
+				if(!a->set_by_comm[1][tp]) {
 					RemoveFromList(id, tp);
 				}
 				break;
 			case 1:
-				a->set_by_comm[1] = false;
-				if(!a->set_by_comm[0]) {
+				a->set_by_comm[1][tp] = false;
+				if(!a->set_by_comm[0][tp]) {
 					RemoveFromList(id, tp);
 				}
 				break;
@@ -537,7 +521,7 @@ void FGATCMgr::FreqSearch(int channel) {
 		
 		// This was a switch-case statement but the compiler didn't like the new variable creation with it. 
 		if(comm_type[chan] == ATIS) {
-			CommRegisterAirport(comm_ident[chan], chan);
+			CommRegisterAirport(comm_ident[chan], chan, ATIS);
 			FGATC* app = FindInList(comm_ident[chan], ATIS);
 			if(app != NULL) {
 				// The station is already in the ATC list
@@ -554,7 +538,7 @@ void FGATCMgr::FreqSearch(int channel) {
 				atc_list.push_back(a);
 			}
 		} else if (comm_type[chan] == TOWER) {
-			CommRegisterAirport(comm_ident[chan], chan);
+			CommRegisterAirport(comm_ident[chan], chan, TOWER);
 			//cout << "Done (TOWER)" << endl;
 			FGATC* app = FindInList(comm_ident[chan], TOWER);
 			if(app != NULL) {
@@ -572,7 +556,7 @@ void FGATCMgr::FreqSearch(int channel) {
 				atc_list.push_back(t);
 			}
 		}  else if (comm_type[chan] == GROUND) {
-			CommRegisterAirport(comm_ident[chan], chan);
+			CommRegisterAirport(comm_ident[chan], chan, GROUND);
 			//cout << "Done (GROUND)" << endl;
 			FGATC* app = FindInList(comm_ident[chan], GROUND);
 			if(app != NULL) {
@@ -589,7 +573,7 @@ void FGATCMgr::FreqSearch(int channel) {
 			}
 		} else if (comm_type[chan] == APPROACH) {
 			// We have to be a bit more carefull here since approaches are also searched by area
-			CommRegisterAirport(comm_ident[chan], chan);
+			CommRegisterAirport(comm_ident[chan], chan, APPROACH);
 			//cout << "Done (APPROACH)" << endl;
 			FGATC* app = FindInList(comm_ident[chan], APPROACH);
 			if(app != NULL) {
