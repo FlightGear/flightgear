@@ -104,9 +104,9 @@
 #include "fg_init.hxx"
 #include "fg_io.hxx"
 #include "fg_commands.hxx"
+#include "fg_props.hxx"
 #include "options.hxx"
 #include "globals.hxx"
-#include "bfi.hxx"
 
 #if defined(FX) && defined(XMESA)
 #include <GL/xmesa.h>
@@ -748,10 +748,10 @@ bool fgInitSubsystems( void ) {
 
     
     ////////////////////////////////////////////////////////////////////
-    // Initialize the BFI.
+    // Initialize the default (kludged) properties.
     ////////////////////////////////////////////////////////////////////
 
-    FGBFI::init();
+    fgInitProps();
 
 
     ////////////////////////////////////////////////////////////////////
