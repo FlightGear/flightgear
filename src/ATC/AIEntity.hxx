@@ -49,6 +49,8 @@ public:
     // Send a transmission *TO* the AIEntity.
     // FIXME int code is a hack - eventually this will receive Alexander's coded messages.
     virtual void RegisterTransmission(int code);
+	
+	inline Point3D GetPos() { return(pos); }
 
 protected:
 
