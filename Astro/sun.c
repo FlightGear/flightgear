@@ -47,7 +47,7 @@ void fgCalcSunPos(struct OrbElements params)
     EccAnom = fgCalcEccAnom(params.M, params.e);
 
     /* calculate the Suns distance (r) and its true anomaly (v) */
-	 xv = cos(EccAnom) - params.e;
+    xv = cos(EccAnom) - params.e;
     yv = sqrt(1.0 - params.e*params.e) * sin(EccAnom);
     v = atan2(yv, xv);
     r = sqrt(xv*xv + yv*yv);
@@ -64,24 +64,29 @@ void fgCalcSunPos(struct OrbElements params)
 }
 
 
-struct CelestialCoord fgCalculateSun(struct OrbElements params, struct fgTIME t)
+struct CelestialCoord fgCalculateSun (struct OrbElements params, 
+				      struct fgTIME t)
 {
     struct CelestialCoord result;
     double xe, ye, ze, ecl, actTime;
 
-    /* calculate the angle between ecliptic and equatorial coordinate system */
-    actTime = fgCalcActTime(t);
+    /* calculate the angle between ecliptic and equatorial coordinate
+     * system */
+    actTime = fgCalcActTime (t);
     ecl = DEG_TO_RAD * (23.4393 - 3.563E-7 * actTime);	// Angle now in Rads
 
+    /* calculate the sun's ecliptic position */
+    fgCalcSunPos (params);
+
     /* convert ecliptic coordinates to equatorial rectangular
-       geocentric coordinates */
+     * geocentric coordinates */
     xe = solarPosition.xs;
     ye = solarPosition.ys * cos (ecl);
     ze = solarPosition.ys * sin (ecl);
 
     /* and finally... Calulate Right Ascention and Declination */
-    result.RightAscension = atan2( ye, xe);
-    result.Declination = atan2(ze, sqrt(xe*xe + ye*ye));
+    result.RightAscension = atan2 (ye, xe);
+    result.Declination = atan2 (ze, sqrt (xe * xe + ye * ye));
     return result;
 }
 
@@ -176,11 +181,14 @@ void fgSunRender( void ) {
 
 
 /* $Log$
-/* Revision 1.7  1998/02/23 19:07:56  curt
-/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
-/* calculation code between sun display, and other FG sections that use this
-/* for things like lighting.
+/* Revision 1.8  1998/03/09 22:47:25  curt
+/* Incorporated Durk's updates.
 /*
+ * Revision 1.7  1998/02/23 19:07:56  curt
+ * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+ * calculation code between sun display, and other FG sections that use this
+ * for things like lighting.
+ *
  * Revision 1.6  1998/02/12 21:59:39  curt
  * Incorporated code changes contributed by Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>
