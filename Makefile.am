@@ -13,7 +13,7 @@ EXTRA_DIST = \
 	FlightGear.dsw
 
 dist-hook:
-	(cd $(top_srcdir); $(HOME)/projects/FlightGear-0.9/admin/am2dsp.pl)
+	(cd $(top_srcdir); $(HOME)/Projects/FlightGear-0.9/admin/am2dsp.pl)
 	(cd $(top_srcdir); tar --exclude docs-mini/CVS --exclude hints/CVS \
 		-cf - docs-mini ) | (cd $(distdir); tar xvf -)
 
@@ -121,7 +121,7 @@ fgfs-docs-tar:
 	tar czvf fgfs-docs-$(VERSION).tar.gz FlightGear/Docs )
 
 # fgfs-docs-zip:
-# 	( cd $(HOME)/projects ; \
+# 	( cd $(HOME)/Projects ; \
 # 	zip -r fgfs-docs-$(VERSION).zip FlightGear-0.7/docs )
 
 fgfs-manual-zip:

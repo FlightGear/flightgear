@@ -1,5 +1,5 @@
-New in 0.9.6-pre1
-* September 10, 2004
+New in 0.9.6
+* October 12, 2004
 
 * Added some initial support for "submodels" which can be used to
   impliment things like contrails, flares, tracers, etc.
@@ -10,10 +10,21 @@ New in 0.9.6-pre1
   might benefit from consistent and fast frame rates.)
 * Other various (and minor) code cleanups, tweaks, and fixes.
 * Fixed ATIS voice file.
-* Updated aircraft: MD11, Spitfire, Bo-105, adjust C172 cockpit sound levels,
-  F16, Fokker-50, Fokker-100, and Sgs-233.
+* Updated aircraft: A320, Bo-105, Comper Swift, Concorde, F16,
+  Fokker-50, Fokker-100, Hunter, MD11, PC7, Spitfire, adjust
+  C172 cockpit sound levels, and Sgs-233.
+
 * Updated joystick configs: CH pro yoke usb, Cyborg Evo, Thrustmaster FCS.
 * Fix a bug in the nasal fuel tank management code.
+* Return Canadian ILS's to nav data.
+* Add support for display list based rendering which yields
+  substantial performance gains for many systems.
+* Synced with latest JSBSim code.
+* Fixed a reference point bug in YASim.
+* Revived the hi-res (tiled) screen shot code so you can again produce
+  insanely and arbitrarily large resolution screen shots.
+* Beefed up the tile pager so it can more sensibly handle insanely
+  rapid motion.
 
 
 New in 0.9.5
