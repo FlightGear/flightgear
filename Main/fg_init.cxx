@@ -65,18 +65,17 @@ extern const char *default_root;
 
 // Set initial position
 int fgInitPosition( void ) {
+    char id[5];
     fgFLIGHT *f;
-    fgOPTIONS *o;
 
     f = current_aircraft.flight;
-    o = &current_options;
 
     // If nothing else is specified, default initial position is
     // Globe, AZ (P13)
     FG_Longitude = ( -110.6642444 ) * DEG_TO_RAD;
     FG_Latitude  = (  33.3528917 ) * DEG_TO_RAD;
-    FG_Runway_altitude = (3234.5 + 300);
-    FG_Altitude = FG_Runway_altitude + 3.758099;
+    FG_Runway_altitude = (3234.5);
+    FG_Altitude = -1000 /* FG_Runway_altitude + 3.758099 */;
 
     // Initial Position north of the city of Globe
     // FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD;
@@ -133,24 +132,25 @@ int fgInitPosition( void ) {
     // Test Position
     // FG_Longitude = (  8.5 ) * DEG_TO_RAD;
     // FG_Latitude  = ( 47.5 ) * DEG_TO_RAD;
-    FG_Runway_altitude = ( 6000 );
-    FG_Altitude = FG_Runway_altitude + 3.758099;
+    // FG_Runway_altitude = ( 6000 );
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
 
-    if ( strlen(o->airport_id) ) {
+    current_options.get_airport_id(id);
+    if ( strlen(id) ) {
 	fgAIRPORTS airports;
 	fgAIRPORT a;
 
 	fgPrintf( FG_GENERAL, FG_INFO, 
 		  "Attempting to set starting position from airport code %s.\n",
-		  o->airport_id);
+		  id);
 
 	airports.load("Airports");
-	a = airports.search(o->airport_id);
+	a = airports.search(id);
 	if ( (fabs(a.longitude) < FG_EPSILON) &&
 	     (fabs(a.latitude) < FG_EPSILON) &&
 	     (fabs(a.elevation) < FG_EPSILON) ) {
 	    fgPrintf( FG_GENERAL, FG_EXIT, 
-		      "Failed to find %s in database.\n", o->airport_id);
+		      "Failed to find %s in database.\n", id);
 	} else {
 	    FG_Longitude = ( a.longitude ) * DEG_TO_RAD;
 	    FG_Latitude  = ( a.latitude ) * DEG_TO_RAD;
@@ -171,11 +171,10 @@ int fgInitPosition( void ) {
 // General house keeping initializations
 int fgInitGeneral( void ) {
     fgGENERAL *g;
-    fgOPTIONS *o;
+    char root[256];
     int i;
 
     g = &general;
-    o = &current_options;
 
     fgPrintf( FG_GENERAL, FG_INFO, "General Initialization\n" );
     fgPrintf( FG_GENERAL, FG_INFO, "======= ==============\n" );
@@ -184,14 +183,14 @@ int fgInitGeneral( void ) {
     g->glRenderer = glGetString ( GL_RENDERER );
     g->glVersion = glGetString ( GL_VERSION );
 
-    if ( !strlen(o->fg_root) ) { 
-	// No root path set? Then assume, we will exit if this is
-	// wrong when looking for support files.
+    current_options.get_fg_root(root);
+    if ( !strlen(root) ) { 
+	// No root path set? Then bail ...
 	fgPrintf( FG_GENERAL, FG_EXIT, "%s %s\n",
 		  "Cannot continue without environment variable FG_ROOT",
 		  "being defined.");
     }
-    fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", o->fg_root);
+    fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", root);
 
     // prime the frame rate counter pump
     for ( i = 0; i < FG_FRAME_RATE_HISTORY; i++ ) {
@@ -395,6 +394,9 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.25  1998/07/13 21:01:38  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.24  1998/07/13 15:32:39  curt
 // Clear color buffer if drawing wireframe.
 // When specifying and airport, start elevation at -1000 and let the system

@@ -71,7 +71,6 @@ fgMATERIAL_MGR::fgMATERIAL_MGR ( void ) {
 // Load a library of material properties
 int fgMATERIAL_MGR::load_lib ( void ) {
     fgMATERIAL m;
-    fgOPTIONS *o;
     char material_name[256];
     char mpath[256], fg_mpath[256], tpath[256], fg_tpath[256];
     char line[256], *line_ptr, value[256];
@@ -80,11 +79,8 @@ int fgMATERIAL_MGR::load_lib ( void ) {
     int width, height;
     int alpha;
 
-    o = &current_options;
-
     // build the path name to the material db
-    mpath[0] = '\0';
-    strcat(mpath, o->fg_root);
+    current_options.get_fg_root(mpath);
     strcat(mpath, "/Scenery/");
     strcat(mpath, "Materials");
     strcpy(fg_mpath, mpath);
@@ -174,8 +170,7 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 			      GL_LINEAR_MIPMAP_LINEAR ) ;
 
 	    /* load in the texture data */
-	    tpath[0] = '\0';
-	    strcat(tpath, o->fg_root);
+	    current_options.get_fg_root(tpath);
 	    strcat(tpath, "/Textures/");
 	    strcat(tpath, m.texture_name);
 	    strcat(tpath, ".rgb");
@@ -299,6 +294,9 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.9  1998/07/13 21:01:57  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.8  1998/07/08 14:47:20  curt
 // Fix GL_MODULATE vs. GL_DECAL problem introduced by splash screen.
 // polare3d.h renamed to polar3d.hxx

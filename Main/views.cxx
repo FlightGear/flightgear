@@ -65,11 +65,13 @@ void fgVIEW::Init( void ) {
 
 // Update the field of view parameters
 void fgVIEW::UpdateFOV( fgOPTIONS *o ) {
-    double theta_x, theta_y;
+    double fov, theta_x, theta_y;
+
+    fov = o->get_fov();
 	
     // printf("win_ratio = %.2f\n", win_ratio);
     // calculate sin() and cos() of fov / 2 in X direction;
-    theta_x = (o->fov * win_ratio * DEG_TO_RAD) / 2.0;
+    theta_x = (fov * win_ratio * DEG_TO_RAD) / 2.0;
     // printf("theta_x = %.2f\n", theta_x);
     sin_fov_x = sin(theta_x);
     cos_fov_x = cos(theta_x);
@@ -77,7 +79,7 @@ void fgVIEW::UpdateFOV( fgOPTIONS *o ) {
     // printf("slope_x = %.2f\n", slope_x);
 
     // calculate sin() and cos() of fov / 2 in Y direction;
-    theta_y = (o->fov * DEG_TO_RAD) / 2.0;
+    theta_y = (fov * DEG_TO_RAD) / 2.0;
     // printf("theta_y = %.2f\n", theta_y);
     sin_fov_y = sin(theta_y);
     cos_fov_y = cos(theta_y);
@@ -88,17 +90,14 @@ void fgVIEW::UpdateFOV( fgOPTIONS *o ) {
 
 // Update the view parameters
 void fgVIEW::Update( fgFLIGHT *f ) {
-    fgOPTIONS *o;
     fgPoint3d p;
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
     double ntmp;
 
-    o = &current_options;
-
     if(update_fov == TRUE) {
 	// printf("Updating fov\n");
-	UpdateFOV(o);
+	UpdateFOV(&current_options);
 	update_fov = FALSE;
     }
 		
@@ -464,6 +463,9 @@ void fg_gluLookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 
 
 // $Log$
+// Revision 1.16  1998/07/13 21:01:41  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.15  1998/07/12 03:14:43  curt
 // Added ground collision detection.
 // Did some serious horsing around to be able to "hug" the ground properly

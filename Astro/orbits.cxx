@@ -111,16 +111,13 @@ int fgReadOrbElements(struct OrbElements *dest, gzFile src) {
 
 int fgSolarSystemInit(fgTIME t)
 {
-    fgOPTIONS *o;
     char path[256], gzpath[256];
     int i, ret_val;
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing solar system\n");
 
     /* build the full path name to the orbital elements database file */
-    o = &current_options;
-    path[0] = '\0';
-    strcat(path, o->fg_root);
+    current_options.get_fg_root(path);
     strcat(path, "/Scenery/");
     strcat(path, "Planets");
 
@@ -170,9 +167,12 @@ void fgSolarSystemUpdate(struct OrbElements *planet, fgTIME t)
 
 
 /* $Log$
-/* Revision 1.6  1998/05/29 20:35:41  curt
-/* Added zlib support for reading in compressed data files.
+/* Revision 1.7  1998/07/13 21:00:09  curt
+/* Wrote access functions for current fgOPTIONS.
 /*
+ * Revision 1.6  1998/05/29 20:35:41  curt
+ * Added zlib support for reading in compressed data files.
+ *
  * Revision 1.5  1998/05/13 18:25:34  curt
  * Root path info moved to fgOPTIONS.
  *

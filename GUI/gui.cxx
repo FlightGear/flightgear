@@ -133,16 +133,14 @@ puCallback helpSubmenuCb        [] = { notCb, notCb, NULL };
 void guiInit()
 {
     fgGENERAL *g;
-    fgOPTIONS *o;
     char *mesa_win_state;
 
     g = &general;
-    o = &current_options;
 
     // Initialize PUI
     puInit();
 
-    if ( o->mouse_pointer == 0 ) {
+    if ( current_options.get_mouse_pointer() == 0 ) {
 	// no preference specified for mouse pointer, attempt to autodetect...
 	// Determine if we need to render the cursor, or if the windowing
 	// system will do it.  First test if we are rendering with glide.
@@ -156,9 +154,9 @@ void guiInit()
 		}
 	    }
 	}
-    } else if ( o->mouse_pointer == 1 ) {
+    } else if ( current_options.get_mouse_pointer() == 1 ) {
 	// don't show pointer
-    } else if ( o->mouse_pointer == 2 ) {
+    } else if ( current_options.get_mouse_pointer() == 2 ) {
 	// force showing pointer
 	puShowCursor();
     }

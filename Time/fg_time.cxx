@@ -63,16 +63,14 @@ fgTIME cur_time_params;
 // Initialize the time dependent variables
 
 void fgTimeInit(fgTIME *t) {
-    fgOPTIONS *o;
-
-    o = &current_options;
-
     fgPrintf( FG_EVENT, FG_INFO, "Initializing Time\n");
 
     t->gst_diff = -9999.0;
-    fgPrintf( FG_EVENT, FG_DEBUG, "o->time_offset = %d\n", o->time_offset);
 
-    t->warp = o->time_offset;
+    fgPrintf( FG_EVENT, FG_DEBUG, "time offset = %d\n", 
+	      current_options.get_time_offset() );
+
+    t->warp = current_options.get_time_offset();
     t->warp_delta = 0;
 }
 
@@ -409,6 +407,9 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.10  1998/07/13 21:02:07  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.9  1998/06/12 00:59:53  curt
 // Build only static libraries.
 // Declare memmove/memset for Sloaris.

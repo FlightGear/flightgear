@@ -104,7 +104,6 @@ fgPoint3d calc_tex_coords(double *node, fgPoint3d *ref) {
 
 // Load a .obj file and build the GL fragment list
 int fgObjLoad(char *path, fgTILE *t) {
-    fgOPTIONS *o;
     fgFRAGMENT fragment;
     fgPoint3d pp;
     char fgpath[256], line[256], material[256];
@@ -113,10 +112,9 @@ int fgObjLoad(char *path, fgTILE *t) {
     // GLfloat sgenparams[] = { 1.0, 0.0, 0.0, 0.0 };
     GLint display_list;
     fgFile f;
+    int shading;
     int in_fragment, in_faces, vncount, n1, n2, n3, n4;
     int last1, last2, odd;
-
-    o = &current_options;
 
     // First try "path.gz" (compressed format)
     strcpy(fgpath, path);
@@ -135,6 +133,8 @@ int fgObjLoad(char *path, fgTILE *t) {
 	    }
 	}
     }
+
+    shading = current_options.get_shading();
 
     in_fragment = 0;
     t->ncount = 1;
@@ -254,7 +254,7 @@ int fgObjLoad(char *path, fgTILE *t) {
 	    odd = 1; 
 	    scale = 1.0;
 
-	    if ( o->shading ) {
+	    if ( shading ) {
 		// Shading model is "GL_SMOOTH" so use precalculated
 		// (averaged) normals
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
@@ -307,7 +307,7 @@ int fgObjLoad(char *path, fgTILE *t) {
 	    if ( n4 > 0 ) {
 		fragment.add_face(n3, n2, n4);
 
-		if ( o->shading ) {
+		if ( shading ) {
 		    // Shading model is "GL_SMOOTH"
 		    MAT3_SCALE_VEC(normal, normals[n4], scale);
 		} else {
@@ -367,7 +367,7 @@ int fgObjLoad(char *path, fgTILE *t) {
 		fragment.add_face(last2, last1, n1);
 	    }
 
-	    if ( o->shading ) {
+	    if ( shading ) {
 		// Shading model is "GL_SMOOTH"
 		MAT3_SCALE_VEC(normal, normals[n1], scale);
 		xglNormal3dv(normal);
@@ -401,7 +401,7 @@ int fgObjLoad(char *path, fgTILE *t) {
 		    fragment.add_face(last2, last1, n2);
 		}
 
-		if ( o->shading ) {
+		if ( shading ) {
 		    // Shading model is "GL_SMOOTH"
 		    MAT3_SCALE_VEC(normal, normals[n2], scale);
 		    xglNormal3dv(normal);
@@ -466,6 +466,9 @@ int fgObjLoad(char *path, fgTILE *t) {
 
 
 // $Log$
+// Revision 1.19  1998/07/13 21:01:58  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.18  1998/07/12 03:18:27  curt
 // Added ground collision detection.  This involved:
 // - saving the entire vertex list for each tile with the tile records.

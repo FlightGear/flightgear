@@ -39,6 +39,9 @@ extern "C" void *memset(void *, int, size_t);
 
 #include <deque>        // STL double ended queue
 #include <list>         // STL list
+#ifdef NEEDNAMESPACESTD
+using namespace std;
+#endif
 
 #include "fg_time.hxx"
 
@@ -121,6 +124,9 @@ extern fgEVENT_MGR global_events;
 
 
 // $Log$
+// Revision 1.5  1998/07/13 21:02:07  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.4  1998/06/12 00:59:52  curt
 // Build only static libraries.
 // Declare memmove/memset for Sloaris.

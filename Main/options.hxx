@@ -39,7 +39,6 @@
 
 class fgOPTIONS {
 
-public:
     // The flight gear "root" directory
     char fg_root[256];
 
@@ -75,6 +74,8 @@ public:
     // Time options
     int time_offset;   // Offset true time by this many seconds
 
+public:
+
     // Constructor
     fgOPTIONS( void );
 
@@ -90,6 +91,29 @@ public:
     // Print usage message
     void usage ( void );
 
+    // Query functions
+    void get_fg_root(char *root);
+    void get_airport_id(char *id);
+    int get_splash_screen( void );
+    int get_intro_music( void );
+    int get_mouse_pointer( void );
+    int get_hud_status( void );
+    int get_panel_status( void );
+    int get_fog( void );
+    double get_fov( void );
+    int get_fullscreen( void );
+    int get_shading( void );
+    int get_skyblend( void );
+    int get_textures( void );
+    int get_wireframe( void );
+    int get_tile_radius( void );
+    int get_tile_diameter( void );
+    int get_time_offset( void );
+
+    // Update functions
+    void set_hud_status( int status );
+    void set_fov( double amount );
+
     // Destructor
     ~fgOPTIONS( void );
 
@@ -103,6 +127,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.11  1998/07/13 21:01:39  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.10  1998/07/06 21:34:20  curt
 // Added an enable/disable splash screen option.
 // Added an enable/disable intro music option.

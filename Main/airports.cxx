@@ -42,16 +42,13 @@ fgAIRPORTS::fgAIRPORTS( void ) {
 // load the data
 int fgAIRPORTS::load( char *file ) {
     fgAIRPORT a;
-    fgOPTIONS *o;
     char path[256], fgpath[256], line[256];
     char id[5];
     string id_str;
     fgFile f;
 
-    o = &current_options;
-
     // build the path name to the airport file
-    strcpy(path, o->fg_root);
+    current_options.get_fg_root(path);
     strcat(path, "/Scenery/");
     strcat(path, "Airports");
     strcpy(fgpath, path);
@@ -103,6 +100,9 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.8  1998/07/13 21:01:37  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.7  1998/06/03 22:01:07  curt
 // Tweaking sound library usage.
 //

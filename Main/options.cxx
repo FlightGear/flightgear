@@ -458,12 +458,39 @@ void fgOPTIONS::usage ( void ) {
 }
 
 
+// Query functions
+void fgOPTIONS::get_fg_root(char *root) { strcpy(root, fg_root); }
+void fgOPTIONS::get_airport_id(char *id) { strcpy(id, airport_id); }
+int fgOPTIONS::get_splash_screen( void ) { return(splash_screen); }
+int fgOPTIONS::get_intro_music( void ) { return(intro_music); }
+int fgOPTIONS::get_mouse_pointer( void ) { return(mouse_pointer); }
+int fgOPTIONS::get_hud_status( void ) { return(hud_status); }
+int fgOPTIONS::get_panel_status( void ) { return(panel_status); }
+int fgOPTIONS::get_fog( void ) { return(fog); }
+double fgOPTIONS::get_fov( void ) { return(fov); }
+int fgOPTIONS::get_fullscreen( void ) { return(fullscreen); }
+int fgOPTIONS::get_shading( void ) { return(shading); }
+int fgOPTIONS::get_skyblend( void ) { return(skyblend); }
+int fgOPTIONS::get_textures( void ) { return(textures); }
+int fgOPTIONS::get_wireframe( void ) { return(wireframe); }
+int fgOPTIONS::get_tile_radius( void ) { return(tile_radius); }
+int fgOPTIONS::get_tile_diameter( void ) { return(tile_diameter); }
+int fgOPTIONS::get_time_offset( void ) { return(time_offset); }
+
+
+// Update functions
+void fgOPTIONS::set_hud_status( int status ) { hud_status = status; }
+void fgOPTIONS::set_fov( double amount ) { fov = amount; }
+
 // Destructor
 fgOPTIONS::~fgOPTIONS( void ) {
 }
 
 
 // $Log$
+// Revision 1.16  1998/07/13 21:01:39  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.15  1998/07/06 21:34:19  curt
 // Added an enable/disable splash screen option.
 // Added an enable/disable intro music option.

@@ -64,7 +64,6 @@
 /* Initialize the Star Management Subsystem */
 int fgStarsInit( void ) {
     fgFile fd;
-    fgOPTIONS *o;
     /* struct CelestialCoord pltPos; */
     char path[256], gzpath[256];
     char line[256], name[256];
@@ -76,11 +75,8 @@ int fgStarsInit( void ) {
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing stars\n");
 
-    o = &current_options;
-
     /* build the full path name to the stars data base file */
-    path[0] = '\0';
-    strcat(path, o->fg_root);
+    current_options.get_fg_root(path);
     strcat(path, "/Scenery/");
     strcat(path, "Stars");
 
@@ -265,9 +261,12 @@ void fgStarsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.7  1998/05/29 20:35:42  curt
-/* Added zlib support for reading in compressed data files.
+/* Revision 1.8  1998/07/13 21:00:10  curt
+/* Wrote access functions for current fgOPTIONS.
 /*
+ * Revision 1.7  1998/05/29 20:35:42  curt
+ * Added zlib support for reading in compressed data files.
+ *
  * Revision 1.6  1998/05/13 18:25:35  curt
  * Root path info moved to fgOPTIONS.
  *

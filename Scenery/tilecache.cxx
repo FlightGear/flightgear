@@ -88,11 +88,9 @@ int fgTILECACHE::Exists( fgBUCKET *p ) {
 
 // Fill in a tile cache entry with real data for the specified bucket
 void fgTILECACHE::EntryFillIn( int index, fgBUCKET *p ) {
-    fgOPTIONS *o;
+    char root[256];
     char base_path[256];
     char file_name[256];
-
-    o = &current_options;
 
     // Mark this cache entry as used
     tile_cache[index].used = 1;
@@ -105,7 +103,8 @@ void fgTILECACHE::EntryFillIn( int index, fgBUCKET *p ) {
 
     // Load the appropriate data file and built tile fragment list
     fgBucketGenBasePath(p, base_path);
-    sprintf(file_name, "%s/Scenery/%s/%ld", o->fg_root, 
+    current_options.get_fg_root(root);
+    sprintf(file_name, "%s/Scenery/%s/%ld", root, 
 	    base_path, fgBucketGenIndex(p));
     fgObjLoad(file_name, &tile_cache[index]);
     /*
@@ -213,6 +212,9 @@ fgTILECACHE::~fgTILECACHE( void ) {
 
 
 // $Log$
+// Revision 1.13  1998/07/13 21:02:00  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.12  1998/07/12 03:18:29  curt
 // Added ground collision detection.  This involved:
 // - saving the entire vertex list for each tile with the tile records.

@@ -50,11 +50,8 @@ static GLubyte *splash_texbuf;
 
 // Initialize the splash screen
 void fgSplashInit ( void ) {
-    fgOPTIONS *o;
     char tpath[256], fg_tpath[256];
     int width, height;
-
-    o = &current_options;
 
     fgPrintf( FG_GENERAL, FG_INFO, "Initializing splash screen\n");
 #ifdef GL_VERSION_1_1
@@ -73,8 +70,7 @@ void fgSplashInit ( void ) {
     xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // load in the texture data
-    tpath[0] = '\0';
-    strcat(tpath, o->fg_root);
+    current_options.get_fg_root(tpath);
     strcat(tpath, "/Textures/");
     strcat(tpath, "Splash2.rgb");
 
@@ -147,6 +143,9 @@ void fgSplashUpdate ( double progress ) {
 
 
 // $Log$
+// Revision 1.2  1998/07/13 21:01:40  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.1  1998/07/06 02:42:36  curt
 // Initial revision.
 //

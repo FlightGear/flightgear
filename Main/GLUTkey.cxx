@@ -57,14 +57,13 @@
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
     fgCONTROLS *c;
-    fgOPTIONS *o;
     fgTIME *t;
     fgVIEW *v;
     struct fgWEATHER *w;
-    float tmp;
+    float fov, tmp;
+    int status;
 
     c = current_aircraft.controls;
-    o = &current_options;
     t = &cur_time_params;
     v = &current_view;
     w = &current_weather;
@@ -100,7 +99,8 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->goal_view_offset = FG_PI * 1.75;
 	    return;
 	case 72: /* H key */
-	    o->hud_status = !(o->hud_status);
+	    status = current_options.get_hud_status();
+	    current_options.set_hud_status(!status);
 	    return;
 	case 77: /* M key */
 	    t->warp -= 60;
@@ -115,10 +115,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 #endif
 	    return;
 	case 88: /* X key */
-	    o->fov *= 1.05;
-	    if ( o->fov > FG_FOV_MAX ) {
-		o->fov = FG_FOV_MAX;
+	    fov = current_options.get_fov();
+	    fov *= 1.05;
+	    if ( fov > FG_FOV_MAX ) {
+		fov = FG_FOV_MAX;
 	    }
+	    current_options.set_fov(fov);
 	    v->update_fov = TRUE;
 	    return;
 	case 90: /* Z key */
@@ -182,10 +184,12 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    t->warp_delta += 30;
 	    return;
 	case 120: /* X key */
-	    o->fov /= 1.05;
-	    if ( o->fov < FG_FOV_MIN ) {
-		o->fov = FG_FOV_MIN;
+	    fov = current_options.get_fov();
+	    fov /= 1.05;
+	    if ( fov < FG_FOV_MIN ) {
+		fov = FG_FOV_MIN;
 	    }
+	    current_options.set_fov(fov);
 	    v->update_fov = TRUE;
 	    return;
 	case 122: /* z key */
@@ -294,18 +298,21 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.14  1998/07/06 02:42:02  curt
-/* Added support for switching between fullscreen and window mode for
-/* Mesa/3dfx/glide.
+/* Revision 1.15  1998/07/13 21:01:34  curt
+/* Wrote access functions for current fgOPTIONS.
 /*
-/* Added a basic splash screen.  Restructured the main loop and top level
-/* initialization routines to do this.
-/*
-/* Hacked in some support for playing a startup mp3 sound file while rest
-/* of sim initializes.  Currently only works in Unix using the mpg123 player.
-/* Waits for the mpg123 player to finish before initializing internal
-/* sound drivers.
-/*
+ * Revision 1.14  1998/07/06 02:42:02  curt
+ * Added support for switching between fullscreen and window mode for
+ * Mesa/3dfx/glide.
+ *
+ * Added a basic splash screen.  Restructured the main loop and top level
+ * initialization routines to do this.
+ *
+ * Hacked in some support for playing a startup mp3 sound file while rest
+ * of sim initializes.  Currently only works in Unix using the mpg123 player.
+ * Waits for the mpg123 player to finish before initializing internal
+ * sound drivers.
+ *
  * Revision 1.13  1998/06/27 16:54:32  curt
  * Replaced "extern displayInstruments" with a entry in fgOPTIONS.
  * Don't change the view port when displaying the panel.

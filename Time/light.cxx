@@ -59,33 +59,27 @@ fgLIGHT::fgLIGHT( void ) {
 
 // initialize lighting tables
 void fgLIGHT::Init( void ) {
-    fgOPTIONS *o;
     char path[256];
 
     fgPrintf( FG_EVENT, FG_INFO, 
 	     "Initializing Lighting interpolation tables.\n" );
 
-    o = &current_options;
-
     // build the path name to the ambient lookup table
-    path[0] = '\0';
-    strcat(path, o->fg_root);
+    current_options.get_fg_root(path);
     strcat(path, "/Scenery/");
     strcat(path, "Ambient");
     // initialize ambient table
     ambient_tbl = new fgINTERPTABLE(path);
 
     // build the path name to the diffuse lookup table
-    path[0] = '\0';
-    strcat(path, o->fg_root);
+    current_options.get_fg_root(path);
     strcat(path, "/Scenery/");
     strcat(path, "Diffuse");
     // initialize diffuse table
     diffuse_tbl = new fgINTERPTABLE(path);
     
     // build the path name to the sky lookup table
-    path[0] = '\0';
-    strcat(path, o->fg_root);
+    current_options.get_fg_root(path);
     strcat(path, "/Scenery/");
     strcat(path, "Sky");
     // initialize sky table
@@ -167,6 +161,9 @@ void fgLightUpdate ( void ) {
 
 
 // $Log$
+// Revision 1.11  1998/07/13 21:02:08  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.10  1998/07/08 14:48:38  curt
 // polar3d.h renamed to polar3d.hxx
 //

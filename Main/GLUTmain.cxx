@@ -130,15 +130,13 @@ slSample *s2;
 // fgInitVisuals() -- Initialize various GL/view parameters
 static void fgInitVisuals( void ) {
     fgLIGHT *l;
-    fgOPTIONS *o;
     struct fgWEATHER *w;
 
     l = &cur_light_params;
-    o = &current_options;
     w = &current_weather;
 
     // Go full screen if requested ...
-    if ( o->fullscreen ) {
+    if ( current_options.get_fullscreen() ) {
 	glutFullScreen();
     }
 
@@ -154,13 +152,14 @@ static void fgInitVisuals( void ) {
     xglFogi (GL_FOG_MODE, GL_EXP2);
     // Fog density is now set when the weather system is initialized
     // xglFogf (GL_FOG_DENSITY, w->fog_density);
-    if ( (o->fog == 1) || (o->shading == 0) ) {
+    if ( (current_options.get_fog() == 1) || 
+	 (current_options.get_shading() == 0) ) {
 	// if fastest fog requested, or if flat shading force fastest
 	xglHint (GL_FOG_HINT, GL_FASTEST );
-    } else if ( o->fog == 2 ) {
+    } else if ( current_options.get_fog() == 2 ) {
 	xglHint (GL_FOG_HINT, GL_NICEST );
     }
-    if ( o->wireframe ) {
+    if ( current_options.get_wireframe() ) {
 	// draw wire frame
 	xglPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     }
@@ -174,12 +173,10 @@ static void fgInitVisuals( void ) {
 static void fgUpdateViewParams( void ) {
     fgFLIGHT *f;
     fgLIGHT *l;
-    fgOPTIONS *o;
     fgVIEW *v;
 
     f = current_aircraft.flight;
     l = &cur_light_params;
-    o = &current_options;
     v = &current_view;
 
     v->Update(f);
@@ -198,9 +195,9 @@ static void fgUpdateViewParams( void ) {
     xglMatrixMode(GL_PROJECTION);
     xglLoadIdentity();
     if ( FG_Altitude * FEET_TO_METER - scenery.cur_elev > 10.0 ) {
-	gluPerspective(o->fov, v->win_ratio, 10.0, 100000.0);
+	gluPerspective(current_options.get_fov(), v->win_ratio, 10.0, 100000.0);
     } else {
-	gluPerspective(o->fov, v->win_ratio, 1.0, 100000.0);
+	gluPerspective(current_options.get_fov(), v->win_ratio, 1.0, 100000.0);
 	// printf("Near ground, minimizing near clip plane\n");
     }
     // }
@@ -293,7 +290,6 @@ static void fgUpdateInstrViewParams( void ) {
 static void fgRenderFrame( void ) {
     fgFLIGHT *f;
     fgLIGHT *l;
-    fgOPTIONS *o;
     fgTIME *t;
     fgVIEW *v;
     double angle;
@@ -304,13 +300,12 @@ static void fgRenderFrame( void ) {
 
     f = current_aircraft.flight;
     l = &cur_light_params;
-    o = &current_options;
     t = &cur_time_params;
     v = &current_view;
 
     if ( idle_state != 1000 ) {
 	// still initializing, draw the splash screen
-	if ( o->splash_screen == 1 ) {
+	if ( current_options.get_splash_screen() == 1 ) {
 	    fgSplashUpdate(0.0);
 	}
     } else {
@@ -329,10 +324,10 @@ static void fgRenderFrame( void ) {
 	fgUpdateViewParams();
 
 	clear_mask = GL_DEPTH_BUFFER_BIT;
-	if ( o->wireframe ) {
+	if ( current_options.get_wireframe() ) {
 	    clear_mask |= GL_COLOR_BUFFER_BIT;
 	}
-	if ( o->skyblend ) {
+	if ( current_options.get_skyblend() ) {
 	    glClearColor(black[0], black[1], black[2], black[3]);
 	} else {
 	    glClearColor(l->sky_color[0], l->sky_color[1], 
@@ -351,7 +346,7 @@ static void fgRenderFrame( void ) {
 	xglDisable( GL_CULL_FACE );
 	xglDisable( GL_FOG );
 	xglShadeModel( GL_SMOOTH );
-	if ( o->skyblend ) {
+	if ( current_options.get_skyblend() ) {
 	    fgSkyRender();
 	}
 
@@ -388,13 +383,13 @@ static void fgRenderFrame( void ) {
 	xglPopMatrix();
 
 	// draw scenery
-	if ( o->shading ) {
+	if ( current_options.get_shading() ) {
 	    xglShadeModel( GL_SMOOTH ); 
 	} else {
 	    xglShadeModel( GL_FLAT ); 
 	}
 	xglEnable( GL_DEPTH_TEST );
-	if ( o->fog > 0 ) {
+	if ( current_options.get_fog() > 0 ) {
 	    xglEnable( GL_FOG );
 	    xglFogfv (GL_FOG_COLOR, l->fog_color);
 	}
@@ -402,7 +397,7 @@ static void fgRenderFrame( void ) {
 	xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
 	xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
 	
-	if ( o->textures ) {
+	if ( current_options.get_textures() ) {
 	    // texture parameters
 	    xglEnable( GL_TEXTURE_2D );
 	    xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
@@ -635,18 +630,16 @@ static void fgMainLoop( void ) {
 
 static void fgIdleFunction ( void ) {
     fgGENERAL *g;
-    fgOPTIONS *o;
     char path[256], mp3file[256], command[256], slfile[256];
     static char *lockfile = "/tmp/mpg123.running";
 
     g = &general;
-    o = &current_options;
 
     // printf("idle state == %d\n", idle_state);
 
     if ( idle_state == 0 ) {
 	// Initialize the splash screen right away
-	if ( o->splash_screen ) {
+	if ( current_options.get_splash_screen() ) {
 	    fgSplashInit();
 	}
 	
@@ -654,8 +647,8 @@ static void fgIdleFunction ( void ) {
     } else if ( idle_state == 1 ) {
 	// Start the intro music
 #if !defined(WIN32)
-	if ( o->intro_music ) {
-	    strcpy(mp3file, o->fg_root);
+	if ( current_options.get_intro_music() ) {
+	    current_options.get_fg_root(mp3file);
 	    strcat(mp3file, "/Sounds/");
 	    strcat(mp3file, "intro.mp3");
 	    sprintf(command, 
@@ -714,7 +707,7 @@ static void fgIdleFunction ( void ) {
 #ifdef HAVE_AUDIO_SUPPORT
 
 #if !defined(WIN32)
-	if ( o->intro_music ) {
+	if ( current_options.get_intro_music() ) {
 	    // Let's wait for mpg123 to finish
 	    struct stat stat_buf;
 
@@ -733,7 +726,7 @@ static void fgIdleFunction ( void ) {
 	audio_mixer = new smMixer;
 	audio_mixer -> setMasterVolume ( 30 ) ;  /* 50% of max volume. */
 	audio_sched -> setSafetyMargin ( 1.0 ) ;
-	strcpy(path, o->fg_root);
+	current_options.get_fg_root(path);
 	strcat(path, "/Sounds/");
 
 	strcpy(slfile, path);
@@ -762,7 +755,7 @@ static void fgIdleFunction ( void ) {
 
 	fgMainLoop();
     } else {
-	if ( o->splash_screen == 1 ) {
+	if ( current_options.get_splash_screen() == 1 ) {
 	    fgSplashUpdate(0.0);
 	}
     }
@@ -844,12 +837,10 @@ int fgGlutInitEvents( void ) {
 // Main ...
 int main( int argc, char **argv ) {
     fgFLIGHT *f;
-    fgOPTIONS *o;
     char config[256];
     int result;  // Used in command line argument.
 
     f = current_aircraft.flight;
-    o = &current_options;
 
 #ifdef HAVE_BC5PLUS
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
@@ -873,24 +864,24 @@ int main( int argc, char **argv ) {
 
     // Attempt to locate and parse a config file
     // First check fg_root
-    strcpy(config, o->fg_root);
+    current_options.get_fg_root(config);
     strcat(config, "/system.fgfsrc");
-    result = o->parse_config_file(config);
+    result = current_options.parse_config_file(config);
 
     // Next check home directory
     if ( getenv("HOME") != NULL ) {
 	strcpy(config, getenv("HOME"));
 	strcat(config, "/.fgfsrc");
-	result = o->parse_config_file(config);
+	result = current_options.parse_config_file(config);
     }
 
     // Parse remaining command line options
     // These will override anything specified in a config file
-    result = o->parse_command_line(argc, argv);
+    result = current_options.parse_command_line(argc, argv);
     if ( result != FG_OPTIONS_OK ) {
 	// Something must have gone horribly wrong with the command
 	// line parsing or maybe the user just requested help ... :-)
-	o->usage();
+	current_options.usage();
 	fgPrintf( FG_GENERAL, FG_EXIT, "\nExiting ...\n");
     }
 
@@ -903,6 +894,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.35  1998/07/13 21:01:36  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.34  1998/07/13 15:32:37  curt
 // Clear color buffer if drawing wireframe.
 // When specifying and airport, start elevation at -1000 and let the system

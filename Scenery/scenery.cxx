@@ -75,24 +75,7 @@ int fgSceneryInit( void ) {
 /* Tell the scenery manager where we are so it can load the proper data, and
  * build the proper structures. */
 void fgSceneryUpdate(double lon, double lat, double elev) {
-    fgOPTIONS *o;
-    // double max_radius;
-    char path[1024];
-
-    o = &current_options;
-
-    /* a hardcoded hack follows */
-
-    /* this routine should parse the file, and make calls back to the
-     * scenery management system to build the appropriate structures */
-    path[0] = '\0';
-    strcat(path, o->fg_root);
-    strcat(path, "/Scenery/");
-    strcat(path, "mesa-e.obj");
-
-    // fgPrintf(FG_TERRAIN, FG_DEBUG, "  Loading Scenery: %s\n", path);
-
-    // area_terrain = fgObjLoad(path, &scenery.center, &max_radius);
+    // does nothing;
 }
 
 
@@ -102,14 +85,17 @@ void fgSceneryRender( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/07/12 03:18:27  curt
-/* Added ground collision detection.  This involved:
-/* - saving the entire vertex list for each tile with the tile records.
-/* - saving the face list for each fragment with the fragment records.
-/* - code to intersect the current vertical line with the proper face in
-/*   an efficient manner as possible.
-/* Fixed a bug where the tiles weren't being shifted to "near" (0,0,0)
+/* Revision 1.7  1998/07/13 21:01:59  curt
+/* Wrote access functions for current fgOPTIONS.
 /*
+ * Revision 1.6  1998/07/12 03:18:27  curt
+ * Added ground collision detection.  This involved:
+ * - saving the entire vertex list for each tile with the tile records.
+ * - saving the face list for each fragment with the fragment records.
+ * - code to intersect the current vertical line with the proper face in
+ *   an efficient manner as possible.
+ * Fixed a bug where the tiles weren't being shifted to "near" (0,0,0)
+ *
  * Revision 1.5  1998/06/17 21:36:41  curt
  * Load and manage multiple textures defined in the Materials library.
  * Boost max material fagments for each material property to 800.

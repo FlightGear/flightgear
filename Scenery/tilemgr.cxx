@@ -95,18 +95,19 @@ void fgTileMgrLoadTile( fgBUCKET *p, int *index) {
 int fgTileMgrUpdate( void ) {
     fgTILECACHE *c;
     fgFLIGHT *f;
-    fgOPTIONS *o;
     fgBUCKET p1, p2;
     static fgBUCKET p_last = {-1000, 0, 0, 0};
+    int tile_diameter;
     int i, j, dw, dh;
 
     c = &global_tile_cache;
     f = current_aircraft.flight;
-    o = &current_options;
+
+    tile_diameter = current_options.get_tile_diameter();
 
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p1);
-    dw = o->tile_diameter / 2;
-    dh = o->tile_diameter / 2;
+    dw = tile_diameter / 2;
+    dh = tile_diameter / 2;
 
     if ( (p1.lon == p_last.lon) && (p1.lat == p_last.lat) &&
 	 (p1.x == p_last.x) && (p1.y == p_last.y) ) {
@@ -120,16 +121,16 @@ int fgTileMgrUpdate( void ) {
 	fgPrintf( FG_TERRAIN, FG_INFO, "  Updating Tile list for %d,%d %d,%d\n",
 		  p1.lon, p1.lat, p1.x, p1.y);
 	fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		  o->tile_diameter * o->tile_diameter);
+		  tile_diameter * tile_diameter);
 
 	// wipe/initialize tile cache
 	c->Init();
 
 	// build the local area list and update cache
-	for ( j = 0; j < o->tile_diameter; j++ ) {
-	    for ( i = 0; i < o->tile_diameter; i++ ) {
+	for ( j = 0; j < tile_diameter; j++ ) {
+	    for ( i = 0; i < tile_diameter; i++ ) {
 		fgBucketOffset(&p1, &p2, i - dw, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_diameter) + i]);
+		fgTileMgrLoadTile(&p2, &tiles[(j*tile_diameter) + i]);
 	    }
 	}
     } else {
@@ -146,58 +147,58 @@ int fgTileMgrUpdate( void ) {
 	if ( (p1.lon > p_last.lon) ||
 	     ( (p1.lon == p_last.lon) && (p1.x > p_last.x) ) ) {
 	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		      o->tile_diameter);
-	    for ( j = 0; j < o->tile_diameter; j++ ) {
+		      tile_diameter);
+	    for ( j = 0; j < tile_diameter; j++ ) {
 		// scrolling East
-		for ( i = 0; i < o->tile_diameter - 1; i++ ) {
-		    tiles[(j*o->tile_diameter) + i] = 
-			tiles[(j*o->tile_diameter) + i + 1];
+		for ( i = 0; i < tile_diameter - 1; i++ ) {
+		    tiles[(j*tile_diameter) + i] = 
+			tiles[(j*tile_diameter) + i + 1];
 		}
 		// load in new column
 		fgBucketOffset(&p_last, &p2, dw + 1, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_diameter) + 
-					     o->tile_diameter - 1]);
+		fgTileMgrLoadTile(&p2, &tiles[(j*tile_diameter) + 
+					     tile_diameter - 1]);
 	    }
 	} else if ( (p1.lon < p_last.lon) ||
 		    ( (p1.lon == p_last.lon) && (p1.x < p_last.x) ) ) {
 	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		      o->tile_diameter);
-	    for ( j = 0; j < o->tile_diameter; j++ ) {
+		      tile_diameter);
+	    for ( j = 0; j < tile_diameter; j++ ) {
 		// scrolling West
-		for ( i = o->tile_diameter - 1; i > 0; i-- ) {
-		    tiles[(j*o->tile_diameter) + i] = 
-			tiles[(j*o->tile_diameter) + i - 1];
+		for ( i = tile_diameter - 1; i > 0; i-- ) {
+		    tiles[(j*tile_diameter) + i] = 
+			tiles[(j*tile_diameter) + i - 1];
 		}
 		// load in new column
 		fgBucketOffset(&p_last, &p2, -dw - 1, j - dh);
-		fgTileMgrLoadTile(&p2, &tiles[(j*o->tile_diameter) + 0]);
+		fgTileMgrLoadTile(&p2, &tiles[(j*tile_diameter) + 0]);
 	    }
 	}
 
 	if ( (p1.lat > p_last.lat) ||
 	     ( (p1.lat == p_last.lat) && (p1.y > p_last.y) ) ) {
 	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		      o->tile_diameter);
-	    for ( i = 0; i < o->tile_diameter; i++ ) {
+		      tile_diameter);
+	    for ( i = 0; i < tile_diameter; i++ ) {
 		// scrolling North
-		for ( j = 0; j < o->tile_diameter - 1; j++ ) {
-		    tiles[(j * o->tile_diameter) + i] =
-			tiles[((j+1) * o->tile_diameter) + i];
+		for ( j = 0; j < tile_diameter - 1; j++ ) {
+		    tiles[(j * tile_diameter) + i] =
+			tiles[((j+1) * tile_diameter) + i];
 		}
 		// load in new column
 		fgBucketOffset(&p_last, &p2, i - dw, dh + 1);
-		fgTileMgrLoadTile(&p2, &tiles[((o->tile_diameter-1) * 
-					       o->tile_diameter) + i]);
+		fgTileMgrLoadTile(&p2, &tiles[((tile_diameter-1) * 
+					       tile_diameter) + i]);
 	    }
 	} else if ( (p1.lat < p_last.lat) ||
 		    ( (p1.lat == p_last.lat) && (p1.y < p_last.y) ) ) {
 	    fgPrintf( FG_TERRAIN, FG_INFO, "  Loading %d tiles\n", 
-		      o->tile_diameter);
-	    for ( i = 0; i < o->tile_diameter; i++ ) {
+		      tile_diameter);
+	    for ( i = 0; i < tile_diameter; i++ ) {
 		// scrolling South
-		for ( j = o->tile_diameter - 1; j > 0; j-- ) {
-		    tiles[(j * o->tile_diameter) + i] = 
-			tiles[((j-1) * o->tile_diameter) + i];
+		for ( j = tile_diameter - 1; j > 0; j-- ) {
+		    tiles[(j * tile_diameter) + i] = 
+			tiles[((j-1) * tile_diameter) + i];
 		}
 		// load in new column
 		fgBucketOffset(&p_last, &p2, i - dw, -dh - 1);
@@ -315,7 +316,6 @@ static int viewable( fgPoint3d *cp, double radius ) {
 void fgTileMgrRender( void ) {
     fgTILECACHE *c;
     fgFLIGHT *f;
-    fgOPTIONS *o;
     fgTILE *t, *last_tile_ptr;
     fgVIEW *v;
     fgBUCKET p;
@@ -329,14 +329,17 @@ void fgTileMgrRender( void ) {
     list < fgFRAGMENT > :: iterator current;
     list < fgFRAGMENT > :: iterator last;
     int i, j, size;
+    int tile_diameter, textures;
     int index;
     int culled = 0;
     int drawn = 0;
 
     c = &global_tile_cache;
     f = current_aircraft.flight;
-    o = &current_options;
     v = &current_view;
+
+    tile_diameter = current_options.get_tile_diameter();
+    textures = current_options.get_textures();
 
     // Find current translation offset
     fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
@@ -362,7 +365,7 @@ void fgTileMgrRender( void ) {
 
     // Pass 1
     // traverse the potentially viewable tile list
-    for ( i = 0; i < (o->tile_diameter * o->tile_diameter); i++ ) {
+    for ( i = 0; i < (tile_diameter * tile_diameter); i++ ) {
 	index = tiles[i];
 	// fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index);
 	t = c->GetTile(index);
@@ -507,7 +510,7 @@ void fgTileMgrRender( void ) {
 
 	size = mtl_ptr->list_size;
 	if ( size > 0 ) {
-	    if ( o->textures ) {
+	    if ( textures ) {
 #ifdef GL_VERSION_1_1
 		xglBindTexture(GL_TEXTURE_2D, mtl_ptr->texture_id);
 #elif GL_EXT_texture_object
@@ -550,6 +553,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.25  1998/07/13 21:02:01  curt
+// Wrote access functions for current fgOPTIONS.
+//
 // Revision 1.24  1998/07/12 03:18:29  curt
 // Added ground collision detection.  This involved:
 // - saving the entire vertex list for each tile with the tile records.
