@@ -74,8 +74,8 @@ FGLaRCsim::FGLaRCsim( double dt ) {
     // Hardwired to C172 full tanks for now - need to fix this sometime
     // Also note that this is the max quantity - the usable quantity
     // is slightly less
-    set_Tank1Fuel(28.0);
-    set_Tank2Fuel(28.0);  
+    set_Tank1Fuel(14.0);
+    set_Tank2Fuel(14.0);  
 
 
 }
@@ -128,6 +128,7 @@ bool FGLaRCsim::update( int multiloop ) {
 	e->set_CHT( eng.get_CHT() );
 	e->set_prop_thrust( eng.get_prop_thrust_SI() );
 	e->set_Fuel_Flow( eng.get_fuel_flow_gals_hr() );
+	e->set_Oil_Temp( eng.get_oil_temp() );
 
         //Assume we are using both tanks equally for now
 	reduce_Tank1Fuel( (eng.get_fuel_flow_gals_hr() / (2 * 3600))

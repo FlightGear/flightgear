@@ -120,6 +120,7 @@ private:
     double CHT;                   //deg F
     double prop_thrust;           //lbs
     double Fuel_Flow;             //Gals/hr
+    double Oil_Temp;		  //deg F
     
     /* others...
     double PercentN1,N1;  //GE,CFM
@@ -147,6 +148,7 @@ public:
     inline double get_CHT() const { return CHT; }
     inline double get_prop_thrust() const { return prop_thrust; }
     inline double get_Fuel_Flow() const { return Fuel_Flow; }
+    inline double get_Oil_Temp() const { return Oil_Temp; }
 
     inline void set_Throttle( double t ) { Throttle = t; }
     inline void set_Mixture( double m ) { Mixture = m; }
@@ -159,6 +161,7 @@ public:
     inline void set_CHT( double c ) { CHT = c; }
     inline void set_prop_thrust( double t ) { prop_thrust = t; }
     inline void set_Fuel_Flow( double f ) { Fuel_Flow = f; }
+    inline void set_Oil_Temp (double o) { Oil_Temp = o; }
 
 };
 

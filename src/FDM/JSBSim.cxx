@@ -246,8 +246,15 @@ bool FGJSBsim::update( int multiloop ) {
     }
   
     for( i=0; i<get_num_engines(); i++ ) {
-      get_engine(i)->set_RPM( Propulsion->GetThruster(i)->GetRPM() );
-      get_engine(i)->set_Throttle( globals->get_controls()->get_throttle(i) );
+      FGEngInterface * e = get_engine(i);
+      FGEngine * eng = Propulsion->GetEngine(i);
+      FGThruster * thrust = Propulsion->GetThruster(i);
+      e->set_Manifold_Pressure( eng->getManifoldPressure_inHg() );
+      e->set_RPM( thrust->GetRPM() );
+      e->set_EGT( eng->getExhaustGasTemp_degF() );
+      e->set_CHT( eng->getCylinderHeadTemp_degF() );
+      e->set_Oil_Temp( eng->getOilTemp_degF() );
+      e->set_Throttle( globals->get_controls()->get_throttle(i) );
     }
 
     for ( i=0; i < multiloop; i++ ) {
@@ -283,6 +290,7 @@ bool FGJSBsim::copy_to_JSBsim() {
     FCS->SetCBrake( globals->get_controls()->get_brake( 2 ) );
     for (int i = 0; i < get_num_engines(); i++) {
       FCS->SetThrottleCmd(i, globals->get_controls()->get_throttle(i));
+      FCS->SetMixtureCmd(i, globals->get_controls()->get_mixture(i));
     }
 
     Position->SetSeaLevelRadius( get_Sea_level_radius() );
