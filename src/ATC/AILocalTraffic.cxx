@@ -150,7 +150,7 @@ void FGAILocalTraffic::Init() {
 
 // Run the internal calculations
 void FGAILocalTraffic::Update(double dt) {
-    std::cout << "In FGAILocalTraffic::Update\n";
+    // cout << "In FGAILocalTraffic::Update\n";
     // Hardwire flying traffic pattern for now - eventually also needs to be able to taxi to and from runway and GA parking area.
     FlyTrafficPattern(dt);
     Transform();
