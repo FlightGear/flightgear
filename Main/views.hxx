@@ -72,6 +72,7 @@ public:
 
     // sin and cos of (fov / 2) in Y axis
     double sin_fov_y, cos_fov_y;
+    double sinlon, coslon;
 
     // slope of view frustum edge in eye space Y axis
     double slope_y;
@@ -144,8 +145,20 @@ public:
     // Initialize a view class
     void Init( void );
 
+    void update_globals( fgFLIGHT *f );
+
+    // Basically, this is a modified version of the Mesa gluLookAt()
+    // function that's been modified slightly so we can capture the
+    // result before sending it off to OpenGL land.
+    void LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
+		 GLdouble centerx, GLdouble centery, GLdouble centerz,
+		 GLdouble upx, GLdouble upy, GLdouble upz );
+
+    // Update the view volume, position, and orientation
+    void UpdateViewParams( void );
+
     // Update the view parameters
-    void Update( fgFLIGHT *f );
+    void UpdateViewMath( fgFLIGHT *f );
 
     // Update the "World to Eye" transformation matrix
     void UpdateWorldToEye(  fgFLIGHT *f );
@@ -161,18 +174,13 @@ public:
 extern fgVIEW current_view;
 
 
-// Basically, this is a modified version of the Mesa gluLookAt()
-// function that's been modified slightly so we can capture the result
-// before sending it off to OpenGL land.
-void fg_gluLookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
-		   GLdouble centerx, GLdouble centery, GLdouble centerz,
-		   GLdouble upx, GLdouble upy, GLdouble upz );
-
-
 #endif // _VIEWS_HXX
 
 
 // $Log$
+// Revision 1.11  1998/08/20 20:32:35  curt
+// Reshuffled some of the code in and around views.[ch]xx
+//
 // Revision 1.10  1998/07/08 14:45:09  curt
 // polar3d.h renamed to polar3d.hxx
 // vector.h renamed to vector.hxx

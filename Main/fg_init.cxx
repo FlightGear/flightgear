@@ -227,7 +227,7 @@ int fgInitSubsystems( void ) {
 
     // Initialize view parameters
     v->Init();
-    v->Update(f);
+    v->UpdateViewMath(f);
     v->UpdateWorldToEye(f);
 
     // Initialize the orbital elements of sun, moon and mayor planets
@@ -347,6 +347,9 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.30  1998/08/20 20:32:33  curt
+// Reshuffled some of the code in and around views.[ch]xx
+//
 // Revision 1.29  1998/07/30 23:48:27  curt
 // Output position & orientation when pausing.
 // Eliminated libtool use.

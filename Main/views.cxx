@@ -27,8 +27,8 @@
 #  include <config.h>
 #endif
 
+#include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
-#include <Flight/flight.h>
 #include <Include/fg_constants.h>
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
@@ -76,6 +76,7 @@ void fgVIEW::UpdateFOV( fgOPTIONS *o ) {
     sin_fov_x = sin(theta_x);
     cos_fov_x = cos(theta_x);
     slope_x =  - cos_fov_x / sin_fov_x;
+    // (HUH?) sin_fov_x /= slope_x;
     // printf("slope_x = %.2f\n", slope_x);
 
     // calculate sin() and cos() of fov / 2 in Y direction;
@@ -84,12 +85,165 @@ void fgVIEW::UpdateFOV( fgOPTIONS *o ) {
     sin_fov_y = sin(theta_y);
     cos_fov_y = cos(theta_y);
     slope_y = cos_fov_y / sin_fov_y;
+    // (HUH?) sin_fov_y /= slope_y;
     // printf("slope_y = %.2f\n", slope_y);
 }
 
 
+// Basically, this is a modified version of the Mesa gluLookAt()
+// function that's been modified slightly so we can capture the
+// result before sending it off to OpenGL land.
+void fgVIEW::LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
+		     GLdouble centerx, GLdouble centery, GLdouble centerz,
+		     GLdouble upx, GLdouble upy, GLdouble upz ) {
+    GLdouble *m;
+    GLdouble x[3], y[3], z[3];
+    GLdouble mag;
+
+    m = current_view.MODEL_VIEW;
+
+    /* Make rotation matrix */
+
+    /* Z vector */
+    z[0] = eyex - centerx;
+    z[1] = eyey - centery;
+    z[2] = eyez - centerz;
+    mag = sqrt( z[0]*z[0] + z[1]*z[1] + z[2]*z[2] );
+    if (mag) {  /* mpichler, 19950515 */
+	z[0] /= mag;
+	z[1] /= mag;
+	z[2] /= mag;
+    }
+
+    /* Y vector */
+    y[0] = upx;
+    y[1] = upy;
+    y[2] = upz;
+
+    /* X vector = Y cross Z */
+    x[0] =  y[1]*z[2] - y[2]*z[1];
+    x[1] = -y[0]*z[2] + y[2]*z[0];
+    x[2] =  y[0]*z[1] - y[1]*z[0];
+    
+    /* Recompute Y = Z cross X */
+    y[0] =  z[1]*x[2] - z[2]*x[1];
+    y[1] = -z[0]*x[2] + z[2]*x[0];
+    y[2] =  z[0]*x[1] - z[1]*x[0];
+
+    /* mpichler, 19950515 */
+    /* cross product gives area of parallelogram, which is < 1.0 for
+     * non-perpendicular unit-length vectors; so normalize x, y here
+     */
+
+    mag = sqrt( x[0]*x[0] + x[1]*x[1] + x[2]*x[2] );
+    if (mag) {
+	x[0] /= mag;
+	x[1] /= mag;
+      x[2] /= mag;
+    }
+
+    mag = sqrt( y[0]*y[0] + y[1]*y[1] + y[2]*y[2] );
+    if (mag) {
+	y[0] /= mag;
+	y[1] /= mag;
+	y[2] /= mag;
+    }
+
+#define M(row,col)  m[col*4+row]
+    M(0,0) = x[0];  M(0,1) = x[1];  M(0,2) = x[2];  M(0,3) = 0.0;
+    M(1,0) = y[0];  M(1,1) = y[1];  M(1,2) = y[2];  M(1,3) = 0.0;
+    M(2,0) = z[0];  M(2,1) = z[1];  M(2,2) = z[2];  M(2,3) = 0.0;
+    // the following is part of the original gluLookAt(), but we are
+    // commenting it out because we know we are going to be doing a
+    // translation below which will set these values anyways
+    // M(3,0) = 0.0;   M(3,1) = 0.0;   M(3,2) = 0.0;   M(3,3) = 1.0;
+#undef M
+
+    // Translate Eye to Origin
+    // replaces: glTranslated( -eyex, -eyey, -eyez );
+
+    // this has been slightly modified from the original glTranslate()
+    // code because we know that coming into this m[12] = m[13] =
+    // m[14] = 0.0, and m[15] = 1.0;
+    m[12] = m[0] * -eyex + m[4] * -eyey + m[8]  * -eyez /* + m[12] */;
+    m[13] = m[1] * -eyex + m[5] * -eyey + m[9]  * -eyez /* + m[13] */;
+    m[14] = m[2] * -eyex + m[6] * -eyey + m[10] * -eyez /* + m[14] */;
+    m[15] = 1.0 /* m[3] * -eyex + m[7] * -eyey + m[11] * -eyez + m[15] */;
+
+    // xglMultMatrixd( m );
+    xglLoadMatrixd( m );
+}
+
+
+// Update the view volume, position, and orientation
+void fgVIEW::UpdateViewParams( void ) {
+    fgFLIGHT *f;
+    fgLIGHT *l;
+
+    f = current_aircraft.flight;
+    l = &cur_light_params;
+
+    UpdateViewMath(f);
+    UpdateWorldToEye(f);
+
+    // if (!o->panel_status) {
+    // xglViewport( 0, (GLint)((winHeight) / 2 ) , 
+    // (GLint)(winWidth), (GLint)(winHeight) / 2 );
+    // Tell GL we are about to modify the projection parameters
+    // xglMatrixMode(GL_PROJECTION);
+    // xglLoadIdentity();
+    // gluPerspective(o->fov, win_ratio / 2.0, 1.0, 100000.0);
+    // } else {
+    xglViewport(0, 0 , (GLint)(winWidth), (GLint)(winHeight) );
+    // Tell GL we are about to modify the projection parameters
+    xglMatrixMode(GL_PROJECTION);
+    xglLoadIdentity();
+    if ( FG_Altitude * FEET_TO_METER - scenery.cur_elev > 10.0 ) {
+	gluPerspective(current_options.get_fov(), win_ratio, 10.0, 100000.0);
+    } else {
+	gluPerspective(current_options.get_fov(), win_ratio, 0.5, 100000.0);
+	// printf("Near ground, minimizing near clip plane\n");
+    }
+    // }
+
+    xglMatrixMode(GL_MODELVIEW);
+    xglLoadIdentity();
+    
+    // set up our view volume (default)
+    LookAt(view_pos.x, view_pos.y, view_pos.z,
+	   view_pos.x + view_forward[0], 
+	       view_pos.y + view_forward[1], 
+	       view_pos.z + view_forward[2],
+	       view_up[0], view_up[1], view_up[2]);
+
+    // look almost straight up (testing and eclipse watching)
+    /* LookAt(view_pos.x, view_pos.y, view_pos.z,
+	       view_pos.x + view_up[0] + .001, 
+	       view_pos.y + view_up[1] + .001, 
+	       view_pos.z + view_up[2] + .001,
+	       view_up[0], view_up[1], view_up[2]); */
+
+    // lock view horizontally towards sun (testing)
+    /* LookAt(view_pos.x, view_pos.y, view_pos.z,
+	       view_pos.x + surface_to_sun[0], 
+	       view_pos.y + surface_to_sun[1], 
+	       view_pos.z + surface_to_sun[2],
+	       view_up[0], view_up[1], view_up[2]); */
+
+    // lock view horizontally towards south (testing)
+    /* LookAt(view_pos.x, view_pos.y, view_pos.z,
+	       view_pos.x + surface_south[0], 
+	       view_pos.y + surface_south[1], 
+	       view_pos.z + surface_south[2],
+	       view_up[0], view_up[1], view_up[2]); */
+
+    // set the sun position
+    xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
+}
+
+
 // Update the view parameters
-void fgVIEW::Update( fgFLIGHT *f ) {
+void fgVIEW::UpdateViewMath( fgFLIGHT *f ) {
     fgPoint3d p;
     MAT3vec vec, forward, v0, minus_z;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
@@ -383,93 +537,10 @@ fgVIEW::~fgVIEW( void ) {
 }
 
 
-// Basically, this is a modified version of the Mesa gluLookAt()
-// function that's been modified slightly so we can capture the result
-// before sending it off to OpenGL land.
-void fg_gluLookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
-		   GLdouble centerx, GLdouble centery, GLdouble centerz,
-		   GLdouble upx, GLdouble upy, GLdouble upz )
-{
-    GLdouble *m;
-    GLdouble x[3], y[3], z[3];
-    GLdouble mag;
-
-    m = current_view.MODEL_VIEW;
-
-    /* Make rotation matrix */
-
-    /* Z vector */
-    z[0] = eyex - centerx;
-    z[1] = eyey - centery;
-    z[2] = eyez - centerz;
-    mag = sqrt( z[0]*z[0] + z[1]*z[1] + z[2]*z[2] );
-    if (mag) {  /* mpichler, 19950515 */
-	z[0] /= mag;
-	z[1] /= mag;
-	z[2] /= mag;
-    }
-
-    /* Y vector */
-    y[0] = upx;
-    y[1] = upy;
-    y[2] = upz;
-
-    /* X vector = Y cross Z */
-    x[0] =  y[1]*z[2] - y[2]*z[1];
-    x[1] = -y[0]*z[2] + y[2]*z[0];
-    x[2] =  y[0]*z[1] - y[1]*z[0];
-    
-    /* Recompute Y = Z cross X */
-    y[0] =  z[1]*x[2] - z[2]*x[1];
-    y[1] = -z[0]*x[2] + z[2]*x[0];
-    y[2] =  z[0]*x[1] - z[1]*x[0];
-
-    /* mpichler, 19950515 */
-    /* cross product gives area of parallelogram, which is < 1.0 for
-     * non-perpendicular unit-length vectors; so normalize x, y here
-     */
-
-    mag = sqrt( x[0]*x[0] + x[1]*x[1] + x[2]*x[2] );
-    if (mag) {
-	x[0] /= mag;
-	x[1] /= mag;
-      x[2] /= mag;
-    }
-
-    mag = sqrt( y[0]*y[0] + y[1]*y[1] + y[2]*y[2] );
-    if (mag) {
-	y[0] /= mag;
-	y[1] /= mag;
-	y[2] /= mag;
-    }
-
-#define M(row,col)  m[col*4+row]
-    M(0,0) = x[0];  M(0,1) = x[1];  M(0,2) = x[2];  M(0,3) = 0.0;
-    M(1,0) = y[0];  M(1,1) = y[1];  M(1,2) = y[2];  M(1,3) = 0.0;
-    M(2,0) = z[0];  M(2,1) = z[1];  M(2,2) = z[2];  M(2,3) = 0.0;
-    // the following is part of the original gluLookAt(), but we are
-    // commenting it out because we know we are going to be doing a
-    // translation below which will set these values anyways
-    // M(3,0) = 0.0;   M(3,1) = 0.0;   M(3,2) = 0.0;   M(3,3) = 1.0;
-#undef M
-
-    // Translate Eye to Origin
-    // replaces: glTranslated( -eyex, -eyey, -eyez );
-
-    // this has been slightly modified from the original glTranslate()
-    // code because we know that coming into this m[12] = m[13] =
-    // m[14] = 0.0, and m[15] = 1.0;
-    m[12] = m[0] * -eyex + m[4] * -eyey + m[8]  * -eyez /* + m[12] */;
-    m[13] = m[1] * -eyex + m[5] * -eyey + m[9]  * -eyez /* + m[13] */;
-    m[14] = m[2] * -eyex + m[6] * -eyey + m[10] * -eyez /* + m[14] */;
-    m[15] = 1.0 /* m[3] * -eyex + m[7] * -eyey + m[11] * -eyez + m[15] */;
-
-    // xglMultMatrixd( m );
-    xglLoadMatrixd( m );
-}
-
-
 // $Log$
+// Revision 1.19  1998/08/20 20:32:34  curt
+// Reshuffled some of the code in and around views.[ch]xx
+//
 // Revision 1.18  1998/07/24 21:57:02  curt
 // Set near clip plane to 0.5 meters when close to the ground.  Also, let the view get a bit closer to the ground before hitting the hard limit.
 //

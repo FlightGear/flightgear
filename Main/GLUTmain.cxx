@@ -174,75 +174,6 @@ static void fgInitVisuals( void ) {
 }
 
 
-// Update the view volume, position, and orientation
-static void fgUpdateViewParams( void ) {
-    fgFLIGHT *f;
-    fgLIGHT *l;
-    fgVIEW *v;
-
-    f = current_aircraft.flight;
-    l = &cur_light_params;
-    v = &current_view;
-
-    v->Update(f);
-    v->UpdateWorldToEye(f);
-
-    // if (!o->panel_status) {
-    // xglViewport( 0, (GLint)((v->winHeight) / 2 ) , 
-    // (GLint)(v->winWidth), (GLint)(v->winHeight) / 2 );
-    // Tell GL we are about to modify the projection parameters
-    // xglMatrixMode(GL_PROJECTION);
-    // xglLoadIdentity();
-    // gluPerspective(o->fov, v->win_ratio / 2.0, 1.0, 100000.0);
-    // } else {
-    xglViewport(0, 0 , (GLint)(v->winWidth), (GLint)(v->winHeight) );
-    // Tell GL we are about to modify the projection parameters
-    xglMatrixMode(GL_PROJECTION);
-    xglLoadIdentity();
-    if ( FG_Altitude * FEET_TO_METER - scenery.cur_elev > 10.0 ) {
-	gluPerspective(current_options.get_fov(), v->win_ratio, 10.0, 100000.0);
-    } else {
-	gluPerspective(current_options.get_fov(), v->win_ratio, 0.5, 100000.0);
-	// printf("Near ground, minimizing near clip plane\n");
-    }
-    // }
-
-    xglMatrixMode(GL_MODELVIEW);
-    xglLoadIdentity();
-    
-    // set up our view volume (default)
-    fg_gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
-	       v->view_pos.x + v->view_forward[0], 
-	       v->view_pos.y + v->view_forward[1], 
-	       v->view_pos.z + v->view_forward[2],
-	       v->view_up[0], v->view_up[1], v->view_up[2]);
-
-    // look almost straight up (testing and eclipse watching)
-    /* fg_gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
-	       v->view_pos.x + v->view_up[0] + .001, 
-	       v->view_pos.y + v->view_up[1] + .001, 
-	       v->view_pos.z + v->view_up[2] + .001,
-	       v->view_up[0], v->view_up[1], v->view_up[2]); */
-
-    // lock view horizontally towards sun (testing)
-    /* fg_gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
-	       v->view_pos.x + v->surface_to_sun[0], 
-	       v->view_pos.y + v->surface_to_sun[1], 
-	       v->view_pos.z + v->surface_to_sun[2],
-	       v->view_up[0], v->view_up[1], v->view_up[2]); */
-
-    // lock view horizontally towards south (testing)
-    /* fg_gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
-	       v->view_pos.x + v->surface_south[0], 
-	       v->view_pos.y + v->surface_south[1], 
-	       v->view_pos.z + v->surface_south[2],
-	       v->view_up[0], v->view_up[1], v->view_up[2]); */
-
-    // set the sun position
-    xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
-}
-
-
 #ifdef IS_THIS_BETTER_THAN_A_ZERO_CHARLIE
 // Draw a basic instrument panel
 static void fgUpdateInstrViewParams( void ) {
@@ -326,7 +257,7 @@ static void fgRenderFrame( void ) {
 	// end of hack
 
 	// update view volume parameters
-	fgUpdateViewParams();
+	v->UpdateViewParams();
 
 	clear_mask = GL_DEPTH_BUFFER_BIT;
 	if ( current_options.get_wireframe() ) {
@@ -813,7 +744,7 @@ static void fgReshape( int width, int height ) {
 	// yes we've finished all our initializations and are running
 	// the main loop, so this will now work without seg faulting
 	// the system.
-	fgUpdateViewParams();
+	v->UpdateViewParams();
     }
     
     // xglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -941,6 +872,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.45  1998/08/20 20:32:31  curt
+// Reshuffled some of the code in and around views.[ch]xx
+//
 // Revision 1.44  1998/08/20 15:10:33  curt
 // Added GameGLUT support.
 //
