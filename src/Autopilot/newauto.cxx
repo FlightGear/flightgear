@@ -38,12 +38,13 @@
 #include <Cockpit/radiostack.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
-#include <Main/bfi.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "newauto.hxx"
 
+
+#define DEFAULT_AP_HEADING_LOCK FGAutopilot::FG_DG_HEADING_LOCK
 
 FGAutopilot *current_autopilot;
 
@@ -225,8 +226,8 @@ void FGAutopilot::init() {
     DGTargetHeading = sg_random() * 360.0;
 
     // Initialize target location to startup location
-    old_lat = FGBFI::getLatitude();
-    old_lon = FGBFI::getLongitude();
+    old_lat = fgGetDouble("/position/latitude");
+    old_lon = fgGetDouble("/position/longitude");
     // set_WayPoint( old_lon, old_lat, 0.0, "default" );
 
     MakeTargetLatLonStr( get_TargetLatitude(), get_TargetLongitude() );
@@ -295,10 +296,6 @@ void FGAutopilot::reset() {
 
     sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
 	
-    // TargetLatitude = FGBFI::getLatitude();
-    // TargetLongitude = FGBFI::getLongitude();
-    // set_WayPoint( FGBFI::getLongitude(), FGBFI::getLatitude(), 0.0, "reset" );
-
     MakeTargetLatLonStr( get_TargetLatitude(), get_TargetLongitude() );
 }
 
@@ -347,14 +344,10 @@ int FGAutopilot::run() {
     // passing in the data pointer
 
     // get control settings 
-    // double aileron = FGBFI::getAileron();
-    // double elevator = FGBFI::getElevator();
-    // double elevator_trim = FGBFI::getElevatorTrim();
-    // double rudder = FGBFI::getRudder();
 	
-    double lat = FGBFI::getLatitude();
-    double lon = FGBFI::getLongitude();
-    double alt = FGBFI::getAltitude() * SG_FEET_TO_METER;
+    double lat = fgGetDouble("/position/latitude");
+    double lon = fgGetDouble("/position/longitude");
+    double alt = fgGetDouble("/position/altitude") * SG_FEET_TO_METER;
 
 #ifdef FG_FORCE_AUTO_DISENGAGE
     // see if somebody else has changed them
@@ -496,7 +489,7 @@ int FGAutopilot::run() {
 		    // end of the line
 		    heading_mode = FG_TRUE_HEADING_LOCK;
 		    // use current heading
-		    TargetHeading = FGBFI::getHeading();
+		    TargetHeading = fgGetDouble("/orientation/heading");
 		}
 	    }
 	    MakeTargetHeadingStr( TargetHeading );
@@ -523,7 +516,8 @@ int FGAutopilot::run() {
 	    double AileronSet;
 
 	    RelHeading
-		= NormalizeDegrees( TargetHeading - FGBFI::getHeading() );
+		= NormalizeDegrees( TargetHeading
+				    - fgGetDouble("/orientation/heading") );
 	    // figure out how far off we are from desired heading
 
 	    // Now it is time to deterime how far we should be rolled.
@@ -558,7 +552,8 @@ int FGAutopilot::run() {
 
 	    SG_LOG( SG_COCKPIT, SG_BULK, "TargetRoll: " << TargetRoll );
 
-	    RelRoll = NormalizeDegrees( TargetRoll - FGBFI::getRoll() );
+	    RelRoll = NormalizeDegrees( TargetRoll 
+					- fgGetDouble("/orientation/roll") );
 
 	    // Check if we are further from heading than the roll out
 	    // smooth point
@@ -590,15 +585,11 @@ int FGAutopilot::run() {
 	double prop_adj, int_adj, total_adj;
 
 	if ( altitude_mode == FG_ALTITUDE_LOCK ) {
-	    // normal altitude hold
-	    // cout << "TargetAltitude = " << TargetAltitude
-	    //      << "Altitude = " << FGBFI::getAltitude() * SG_FEET_TO_METER
-	    //      << endl;
 	    climb_rate =
 		( TargetAltitude - FGSteam::get_ALT_ft() * SG_FEET_TO_METER ) * 8.0;
 	} else if ( altitude_mode == FG_ALTITUDE_GS1 ) {
 	    double x = current_radiostack->get_nav1_gs_dist();
-	    double y = (FGBFI::getAltitude() 
+	    double y = (fgGetDouble("/position/altitude")
 			- current_radiostack->get_nav1_elev()) * SG_FEET_TO_METER;
 	    double current_angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
 	    // cout << "current angle = " << current_angle << endl;
@@ -625,7 +616,8 @@ int FGAutopilot::run() {
 	} else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
 	    // brain dead ground hugging with no look ahead
 	    climb_rate =
-		( TargetAGL - FGBFI::getAGL()*SG_FEET_TO_METER ) * 16.0;
+		( TargetAGL - fgGetDouble("/position/altitude-agl")
+                  * SG_FEET_TO_METER ) * 16.0;
 	    // cout << "target agl = " << TargetAGL 
 	    //      << "  current agl = " << fgAPget_agl() 
 	    //      << "  target climb rate = " << climb_rate 
@@ -666,9 +658,8 @@ int FGAutopilot::run() {
 	//      << climb_rate * SG_METER_TO_FEET 
 	//      << " fpm" << endl;
 
-	error = FGBFI::getVerticalSpeed() * SG_FEET_TO_METER - climb_rate;
-	// cout << "climb rate = " << FGBFI::getVerticalSpeed()
-	//      << "  vsi rate = " << FGSteam::get_VSI_fps() << endl;
+	error = fgGetDouble("/velocities/vertical-speed")
+            * SG_FEET_TO_METER - climb_rate;
 
 	// accumulate the error under the curve ... this really should
 	// be *= delta t
@@ -792,18 +783,19 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 	// set autopilot to hold a zero turn (as reported by the TC)
     } else if ( heading_mode == FG_TRUE_HEADING_LOCK ) {
 	// set heading hold to current heading
-	TargetHeading = FGBFI::getHeading();
+	TargetHeading = fgGetDouble("/orientation/heading");
     } else if ( heading_mode == FG_HEADING_WAYPOINT ) {
 	if ( globals->get_route()->size() ) {
 	    double course, distance;
 
-	    old_lat = FGBFI::getLatitude();
-	    old_lon = FGBFI::getLongitude();
+	    old_lat = fgGetDouble("/position/latitude");
+	    old_lon = fgGetDouble("/position/longitude");
 
 	    waypoint = globals->get_route()->get_first();
-	    waypoint.CourseAndDistance( FGBFI::getLongitude(),
-					FGBFI::getLatitude(),
-					FGBFI::getLatitude() * SG_FEET_TO_METER,
+	    waypoint.CourseAndDistance( fgGetDouble("/position/longitude"),
+					fgGetDouble("/position/latitude"),
+					fgGetDouble("/position/latitude")
+                                        * SG_FEET_TO_METER,
 					&course, &distance );
 	    TargetHeading = course;
 	    TargetDistance = distance;
@@ -825,7 +817,6 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 	} else {
 	    // no more way points, default to heading lock.
 	    heading_mode = FG_TC_HEADING_LOCK;
-	    // TargetHeading = FGBFI::getHeading();
 	}
     }
 
@@ -840,8 +831,8 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
     alt_error_accum = 0.0;
 
     if ( altitude_mode == FG_ALTITUDE_LOCK ) {
-	if ( TargetAltitude < FGBFI::getAGL() * SG_FEET_TO_METER ) {
-	    // TargetAltitude = FGBFI::getAltitude() * SG_FEET_TO_METER;
+	if ( TargetAltitude < fgGetDouble("/position/altitude-agl")
+             * SG_FEET_TO_METER ) {
 	}
 
 	if ( fgGetString("/sim/startup/units") == "feet" ) {
@@ -853,7 +844,7 @@ void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
 	climb_error_accum = 0.0;
 
     } else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
-	TargetAGL = FGBFI::getAGL() * SG_FEET_TO_METER;
+	TargetAGL = fgGetDouble("/position/altitude-agl") * SG_FEET_TO_METER;
 
 	if ( fgGetString("/sim/startup/units") == "feet" ) {
 	    MakeTargetAltitudeStr( TargetAGL * SG_METER_TO_FEET );
@@ -1042,7 +1033,7 @@ void FGAutopilot::set_AutoThrottleEnabled( bool value ) {
     auto_throttle = value;
 
     if ( auto_throttle == true ) {
-	TargetSpeed = FGBFI::getAirspeed();
+        TargetSpeed = fgGetDouble("/velocities/airspeed");
 	speed_error_accum = 0.0;
     }
 
