@@ -48,6 +48,7 @@ class FGNavCom : public FGSubsystem
     SGPropertyNode *lon_node;
     SGPropertyNode *lat_node;
     SGPropertyNode *alt_node;
+    SGPropertyNode *bus_power;
 
     string last_nav_id;
     bool last_nav_vor;
@@ -171,6 +172,9 @@ public:
     inline void set_nav_ident_btn( bool val ) { nav_ident_btn = val; }
 
     // NavCom Accessors
+    inline bool has_power() const {
+        return power_btn && (bus_power->getDoubleValue() > 1.0);
+    }
     inline bool get_power_btn() const { return power_btn; }
 
     // COMM Accessors

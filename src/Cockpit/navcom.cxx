@@ -41,29 +41,6 @@
 SG_USING_STD(string);
 
 
-/**
- * Boy, this is ugly!  Make the VOR range vary by altitude difference.
- */
-static double kludgeRange ( double stationElev, double aircraftElev,
-			    double nominalRange)
-{
-    // Assume that the nominal range (usually 50nm) applies at a 5,000
-    // ft difference.  Just a wild guess!
-    double factor = ((aircraftElev*SG_METER_TO_FEET) - stationElev) / 5000.0;
-    double range = fabs(nominalRange * factor);
-
-    // Clamp the range to keep it sane; for now, never less than 25%
-    // or more than 500% of nominal range.
-    if (range < nominalRange/4.0) {
-        range = nominalRange/4.0;
-    } else if (range > nominalRange*5.0) {
-        range = nominalRange*5.0;
-    }
-
-    return range;
-}
-
-
 // Constructor
 FGNavCom::FGNavCom() :
     lon_node(fgGetNode("/position/longitude-deg", true)),
@@ -122,6 +99,13 @@ void
 FGNavCom::bind ()
 {
     char propname[256];
+
+    // we know index is valid now so lets bind to the bus property
+    // here.
+    sprintf( propname, "/systems/electrical/outputs/navcomm[%d]", index );
+    // default to true in case no electrical system defined.
+    fgSetDouble( propname, 60.0 );
+    bus_power = fgGetNode( propname, true );
 
 				// User inputs
     sprintf( propname, "/radios/comm[%d]/inputs/power-btn", index );
@@ -304,7 +288,7 @@ FGNavCom::update(double dt)
     // Nav.
     ////////////////////////////////////////////////////////////////////////
 
-    if ( nav_valid && power_btn ) {
+    if ( nav_valid && power_btn && (bus_power->getDoubleValue() > 1.0) ) {
 	station = Point3D( nav_x, nav_y, nav_z );
 	nav_loc_dist = aircraft.distance3D( station );
 
@@ -359,7 +343,9 @@ FGNavCom::update(double dt)
     if ( nav_valid && nav_inrange ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
-	if ( power_btn && nav_ident_btn ) {
+	if ( power_btn && (bus_power->getDoubleValue() > 1.0)
+             && nav_ident_btn )
+        {
 	    FGSimpleSound *sound;
 	    sound = globals->get_soundmgr()->find( nav_fx_name );
             if ( sound != NULL ) {

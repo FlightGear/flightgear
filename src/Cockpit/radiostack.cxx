@@ -320,12 +320,12 @@ void FGRadioStack::search()
 				// don't worry about overhead for now,
 				// since this is handled only periodically
     int dme_switch_pos = fgGetInt("/radios/dme/switch-position");
-    if ( dme_switch_pos == 1 && navcom1.get_power_btn() ) {
+    if ( dme_switch_pos == 1 && navcom1.has_power() ) {
         if ( dme_freq != navcom1.get_nav_freq() ) {
             dme_freq = navcom1.get_nav_freq();
             need_update = true;
         }
-    } else if ( dme_switch_pos == 3 && navcom2.get_power_btn() ) {
+    } else if ( dme_switch_pos == 3 && navcom2.has_power() ) {
         if ( dme_freq != navcom2.get_nav_freq() ) {
             dme_freq = navcom2.get_nav_freq();
             need_update = true;
@@ -440,8 +440,6 @@ void FGRadioStack::search()
     }
     last_beacon = beacon_type;
 
-    navcom1.search();
-    navcom2.search();
     adf.search();
     xponder.search();
 }
