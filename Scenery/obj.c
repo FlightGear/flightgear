@@ -58,7 +58,7 @@ void calc_normal(float p1[3], float p2[3], float p3[3], double normal[3])
     MAT3cross_product(normal, v1, v2);
     MAT3_NORMALIZE_VEC(normal,temp);
 
-    printf("  Normal = %.2f %.2f %.2f\n", normal[0], normal[1], normal[2]);
+    /* printf("  Normal = %.2f %.2f %.2f\n", normal[0], normal[1], normal[2]);*/
 }
 
 
@@ -325,10 +325,13 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.11  1997/12/15 23:55:01  curt
-/* Add xgl wrappers for debugging.
-/* Generate terrain normals on the fly.
+/* Revision 1.12  1997/12/17 23:13:47  curt
+/* Began working on rendering the sky.
 /*
+ * Revision 1.11  1997/12/15 23:55:01  curt
+ * Add xgl wrappers for debugging.
+ * Generate terrain normals on the fly.
+ *
  * Revision 1.10  1997/12/12 21:41:28  curt
  * More light/material property tweaking ... still a ways off.
  *
