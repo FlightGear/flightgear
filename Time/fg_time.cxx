@@ -42,15 +42,6 @@
 #  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
 #endif
 
-#ifdef  WIN32
-#  include <windows.h>
-#  if defined( __CYGWIN__ ) || defined( __CYGWIN32__ )
-#    define NEAR /* */
-#    define FAR  /* */
-#  endif
-#  include <mmsystem.h>
-#endif
-
 #include <Astro/sky.hxx>
 #include <Astro/solarsystem.hxx>
 #include <Debug/logstream.hxx>
@@ -398,6 +389,9 @@ void fgTimeUpdate(FGState *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.27  1998/12/11 20:26:55  curt
+// #include tweaks.
+//
 // Revision 1.26  1998/12/05 15:54:28  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

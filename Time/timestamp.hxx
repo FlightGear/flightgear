@@ -52,6 +52,15 @@
 #  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
 #endif
 
+#ifdef  WIN32
+#  include <windows.h>
+#  if defined( __CYGWIN__ ) || defined( __CYGWIN32__ )
+#    define NEAR /* */
+#    define FAR  /* */
+#  endif
+#  include <mmsystem.h>
+#endif
+
 
 class fgTIMESTAMP {
 
@@ -149,6 +158,9 @@ inline long operator - (const fgTIMESTAMP& a, const fgTIMESTAMP& b)
 
 
 // $Log$
+// Revision 1.2  1998/12/11 20:26:56  curt
+// #include tweaks.
+//
 // Revision 1.1  1998/12/05 14:21:33  curt
 // Moved struct fg_timestamp to class fgTIMESTAMP and moved it's definition
 // to it's own file, timestamp.hxx.
