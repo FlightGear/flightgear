@@ -156,6 +156,13 @@ void do_triangulate( const FGArray& array, const FGClipper& clipper,
 }
 
 
+// generate the flight gear scenery file
+void do_output( const FGTriangle& t, FGGenOutput& output ) {
+    output.build( t );
+    output.write( "output" );
+}
+
+
 main(int argc, char **argv) {
     fitnode_list fit_list;
     double lon, lat;
@@ -188,11 +195,15 @@ main(int argc, char **argv) {
     do_triangulate( array, clipper, t );
 
     // generate the output
-    fgGenOutput( t );
+    FGGenOutput output;
+    do_output( t, output );
 }
 
 
 // $Log$
+// Revision 1.8  1999/03/23 22:02:17  curt
+// Worked on creating data to output ... normals, bounding spheres, etc.
+//
 // Revision 1.7  1999/03/22 23:48:29  curt
 // Added GenOutput/
 //
