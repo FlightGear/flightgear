@@ -282,15 +282,15 @@ inline double FGBucket::get_center_lon() const {
 }
 
 
-// return width of the tile
-inline double FGBucket::get_width() const {
-    return bucket_span( get_center_lat() );
-}
-
-
 // return the center lat of a tile
 inline double FGBucket::get_center_lat() const {
     return lat + y / 8.0 + FG_HALF_BUCKET_SPAN;
+}
+
+
+// return width of the tile
+inline double FGBucket::get_width() const {
+    return bucket_span( get_center_lat() );
 }
 
 
