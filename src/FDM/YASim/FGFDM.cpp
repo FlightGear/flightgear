@@ -38,10 +38,10 @@ FGFDM::FGFDM()
 {
     _nextEngine = 0;
 
-    // Map /controls/elevator to the approach elevator control.  This
+    // Map /controls/flight/elevator to the approach elevator control.  This
     // should probably be settable, but there are very few aircraft
     // who trim their approaches using things other than elevator.
-    _airplane.setElevatorControl(parseAxis("/controls/elevator-trim"));
+    _airplane.setElevatorControl(parseAxis("/controls/flight/elevator-trim"));
 }
 
 FGFDM::~FGFDM()
@@ -90,7 +90,7 @@ void FGFDM::init()
 
     // This has a nasty habit of being false at startup.  That's not
     // good.
-    fgSetBool("/controls/gear-down", true);
+    fgSetBool("/controls/gear/gear-down", true);
 }
 
 // Not the worlds safest parser.  But it's short & sweet.

@@ -51,7 +51,7 @@ FGOpenGC::FGOpenGC() :
 	p_elevator_trim(fgGetNode("surface-positions/elevator_trim-pos-norm", true)),
 	p_rudder(fgGetNode("surface-positions/rudder-pos-norm", true)),
 	p_flaps(fgGetNode("surface-positions/flap-pos-norm", true)),
-	p_flaps_cmd(fgGetNode("/controls/flaps", true)),
+	p_flaps_cmd(fgGetNode("/controls/flight/flaps", true)),
 	p_alphadot(fgGetNode("/fdm/jsbsim/aero/alphadot-radsec", true)),
 	p_betadot(fgGetNode("/fdm/jsbsim/aero/betadot-radsec", true))
 {

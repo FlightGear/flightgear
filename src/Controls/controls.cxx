@@ -408,7 +408,7 @@ FGControls::bind ()
   fgTie("/controls/gear/parking-brake", this,
 	&FGControls::get_parking_brake, 
         &FGControls::set_parking_brake);
-  fgSetArchivable("/controls/parking-brake");
+  fgSetArchivable("/controls/gear/parking-brake");
 
   fgTie("/controls/gear/steering", this,
 	&FGControls::get_steering, &FGControls::set_steering);

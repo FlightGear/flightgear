@@ -70,13 +70,13 @@ SG_USING_STD(map);
  * <pre>
  * void MySubsystem::bind ()
  * {
- *   fgTie("/controls/elevator", &_elevator);
- *   fgSetArchivable("/controls/elevator");
+ *   fgTie("/controls/flight/elevator", &_elevator);
+ *   fgSetArchivable("/controls/flight/elevator");
  * }
  *
  * void MySubsystem::unbind ()
  * {
- *   fgUntie("/controls/elevator");
+ *   fgUntie("/controls/flight/elevator");
  * }
  * </pre>
  *

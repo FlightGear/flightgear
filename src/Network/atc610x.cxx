@@ -706,45 +706,45 @@ bool FGATC610x::do_analog_in() {
     // aileron
     tmp = scale( ailerons_center->getIntValue(), ailerons_min->getIntValue(),
                  ailerons_max->getIntValue(), analog_in_data[0] );
-    fgSetFloat( "/controls/aileron", tmp );
+    fgSetFloat( "/controls/flight/aileron", tmp );
     // cout << "aileron = " << analog_in_data[0] << " = " << tmp;
     // elevator
     tmp = -scale( elevator_center->getIntValue(), elevator_min->getIntValue(),
                   elevator_max->getIntValue(), analog_in_data[5] );
-    fgSetFloat( "/controls/elevator", tmp );
+    fgSetFloat( "/controls/flight/elevator", tmp );
     // cout << "trim = " << analog_in_data[4] << " = " << tmp;
 
     // elevator trim
     tmp = scale( trim_center->getIntValue(), trim_min->getIntValue(),
                  trim_max->getIntValue(), analog_in_data[4] );
-    fgSetFloat( "/controls/elevator-trim", tmp );
+    fgSetFloat( "/controls/flight/elevator-trim", tmp );
     // cout << " elev = " << analog_in_data[5] << " = " << tmp << endl;
 
     // mixture
     tmp = scale( mixture_min->getIntValue(), mixture_max->getIntValue(),
                  analog_in_data[6] );
-    fgSetFloat( "/controls/mixture[0]", tmp );
-    fgSetFloat( "/controls/mixture[1]", tmp );
+    fgSetFloat( "/controls/engines/engine[0]/mixture", tmp );
+    fgSetFloat( "/controls/engines/engine[1]/mixture", tmp );
 
     // throttle
     tmp = scale( throttle_min->getIntValue(), throttle_max->getIntValue(),
                  analog_in_data[8] );
-    fgSetFloat( "/controls/throttle[0]", tmp );
-    fgSetFloat( "/controls/throttle[1]", tmp );
+    fgSetFloat( "/controls/engines/engine[0]/throttle", tmp );
+    fgSetFloat( "/controls/engines/engine[1]/throttle", tmp );
     // cout << "throttle = " << tmp << endl;
 
     // rudder
     tmp = scale( rudder_center->getIntValue(), rudder_min->getIntValue(),
                  rudder_max->getIntValue(), analog_in_data[10] );
-    fgSetFloat( "/controls/rudder", -tmp );
+    fgSetFloat( "/controls/flight/rudder", -tmp );
 
     // toe brakes
     tmp = scale( brake_left_min->getIntValue(), brake_left_max->getIntValue(),
                  analog_in_data[20] );
-    fgSetFloat( "/controls/brakes[0]", tmp );
+    fgSetFloat( "/controls/gear/wheel[0]/brake", tmp );
     tmp = scale( brake_right_min->getIntValue(), brake_right_max->getIntValue(),
                  analog_in_data[21] );
-    fgSetFloat( "/controls/brakes[1]", tmp );
+    fgSetFloat( "/controls/gear/wheel[1]/brake", tmp );
 
     // nav1 volume
     tmp = (float)analog_in_data[25] / 1024.0f;
@@ -1767,18 +1767,19 @@ bool FGATC610x::do_switches() {
     mag2 = mag1;
     mag1 = magnetos;
     if ( mag1 == mag2 && mag2 == mag3 ) {
-        fgSetInt( "/controls/magnetos[0]", magnetos );
+        fgSetInt( "/controls/engines/engine[0]/magneto", magnetos );
     }
     static bool start1, start2, start3;
     start3 = start2;
     start2 = start1;
     start1 = starter;
     if ( start1 == start2 && start2 == start3 ) {
-        fgSetBool( "/controls/starter[0]", starter );
+        fgSetBool( "/controls/engines/engine[0]/starter", starter );
     }
 
     // other toggle switches
-    fgSetBool( "/controls/fuel-pump[0]", switch_matrix[board][0][2] );
+    fgSetBool( "/controls/engines/engine[0]/fuel-pump",
+               switch_matrix[board][0][2] );
     fgSetBool( "/controls/switches/flashing-beacon",
                switch_matrix[board][1][2] );
     fgSetBool( "/controls/switches/landing-light", switch_matrix[board][2][2] );
@@ -1807,7 +1808,7 @@ bool FGATC610x::do_switches() {
     flap2 = flap1;
     flap1 = flaps;
     if ( flap1 == flap2 && flap2 == flap3 ) {
-        fgSetFloat( "/controls/flaps", flaps );
+        fgSetFloat( "/controls/flight/flaps", flaps );
     }
 
     // fuel selector (also filtered)
@@ -1864,7 +1865,7 @@ bool FGATC610x::do_switches() {
     fgSetBool( "/controls/circuit-breakers/annunciators", true );
 #endif
 
-    fgSetDouble( "/controls/parking-brake",
+    fgSetDouble( "/controls/gear/parking-brake",
                  switch_matrix[board][7][3] );
     fgSetDouble( "/radios/marker-beacon/power-btn",
                  switch_matrix[board][6][1] );
