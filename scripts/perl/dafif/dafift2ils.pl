@@ -10,11 +10,13 @@ my($faa_ils_file) = shift(@ARGV);
 my($dafift_arpt_file) = shift(@ARGV);
 my($dafift_ils_file) = shift(@ARGV);
 my($fgfs_ils_file) = shift(@ARGV);
+my($output_file) = shift(@ARGV);
 
 die "Usage: $0 " .
-    "<faa_ils_file> <dafift_arpt_file> <dafift_ils_file> <fgfs_ils_file>\n"
+    "<faa_ils_file> <dafift_arpt_file> <dafift_ils_file> <fgfs_ils_file> <output_file>\n"
     if !defined($faa_ils_file) || !defined($dafift_arpt_file)
-       || !defined($dafift_ils_file) || !defined($fgfs_ils_file);
+       || !defined($dafift_ils_file) || !defined($fgfs_ils_file)
+       || !defined($output_file);
 
 my( %Airports );
 my( %ILS );
@@ -22,8 +24,8 @@ my( %ILS );
 
 &load_dafift( $dafift_arpt_file, $dafift_ils_file );
 &load_faa( $faa_ils_file );
-&load_fgfs( $faa_ils_file );
-&write_result();
+# &load_fgfs( $fgfs_ils_file );
+&write_result( $output_file );
 
 exit;
 
@@ -63,10 +65,13 @@ sub load_faa() {
             = $_ =~
             m/^(.{4})(.{11})(.{3})(.{10})(.{10})(.{42})(.{26})(.{2})(.{20})(.{3})(.{4})(.{5})(.{4})(.{9})(.{50})(.{50})(.{3})(.{3})(.{15})(.{5})(.{6})(.{14})(.{11})(.{14})(.{11})(.{5})(.{5})(.{6})(.{15})(.{4})(.{6})(.{14})(.{11})(.{14})(.{11})(.{6})(.{7})(.{15})(.{14})(.{11})(.{14})(.{11})(.{6})(.{15})(.{2})(.{5})(.{3})(.{14})(.{11})(.{14})(.{11})(.{6})(.{15})(.{2})(.{5})(.{3})(.{14})(.{11})(.{14})(.{11})(.{6})(.{9})(.{4})(.{14})(.{11})(.{14})(.{11})(.{6})(.{5})(.{34})/;
 
-        $loc_id =~ s/-//;
+        $id = &strip_ws( $id );
+        $rwy = &strip_ws( $rwy );
+        $loc_id =~ s/I-//;
         my( $loc_hdg ) = $faa_bearing + make_dmagvar($faa_magvar);
         my( $loc_lat ) = make_dcoord($faa_loc_lats) / 3600.0;
         my( $loc_lon ) = make_dcoord($faa_loc_lons) / 3600.0;
+        print "$loc_lon $loc_lat $faa_loc_lons $faa_loc_lats\n";
         my( $gs_lat ) = make_dcoord($faa_gs_lats) / 3600.0;
         my( $gs_lon ) = make_dcoord($faa_gs_lons) / 3600.0;
         my( $im_lat ) = make_dcoord($faa_im_lats) / 3600.0;
@@ -78,13 +83,27 @@ sub load_faa() {
         my( $dme_lat ) = make_dcoord($faa_dme_lats) / 3600.0;
         my( $dme_lon ) = make_dcoord($faa_dme_lons) / 3600.0;
 
+        # my( $key );
+        # print "$id - $rwy\n";
+        # $key = $id . $rwy;
+        # print "-> $key -> $ILS{$key}\n";
+        # $key = "K" . $id . $rwy;
+        # print "-> $key -> $ILS{$key}\n";
+
         if ( $rec_type eq "ILS1" ) {
-            if ( $ILS{$id . $rwy} eq "" ) {
+            if ( $ILS{$id . $rwy} ne "" ) {
+                print "FAA updating: $id - $rwy $type\n";
+                &update_type( $id, $rwy, $type );
+            } elsif ( $ILS{ "K" . $id . $rwy} ne "" ) {
+                print "FAA updating: [K]$id - $rwy $type\n";
+                &update_type( "K" . $id, $rwy, $type );
+            } else {
                 print "FAA adding: $id - $rwy\n";
-                add_record( $id, $rwy, $loc_freq, $loc_id, $loc_hdg, $loc_lat,
-                            $loc_lon, $gs_elev, $gs_angle, $gs_lat, $gs_lon,
-                            $dme_lat, $dme_lon, $om_lat, $om_lon, $mm_lat,
-                            $mm_lon, $im_lat, $im_lon );
+                &safe_add_record( $id, $rwy, $type, $loc_freq, $loc_id,
+                                  $loc_hdg, $loc_lat, $loc_lon, $gs_elev,
+                                  $gs_angle, $gs_lat, $gs_lon, $dme_lat,
+                                  $dme_lon, $om_lat, $om_lon, $mm_lat,
+                                  $mm_lon, $im_lat, $im_lon );
             }
         }
     }
@@ -164,11 +183,12 @@ sub load_dafift() {
             }
             if ( $ILS{$Airports{$last_id} . $last_rwy} eq "" ) {
                 print "DAFIFT adding: $Airports{$last_id} - $last_rwy\n";
-                add_record( $Airports{$last_id}, $last_rwy, $loc_freq,
-                            $loc_id, $loc_hdg, $loc_lat, $loc_lon,
-                            $gs_elev, $gs_angle, $gs_lat, $gs_lon,
-                            $dme_lat, $dme_lon, $om_lat, $om_lon, $mm_lat,
-                            $mm_lon, $im_lat, $im_lon );
+                &safe_add_record( $Airports{$last_id}, $last_rwy, "ILS", 
+                                  $loc_freq, $loc_id, $loc_hdg, $loc_lat,
+                                  $loc_lon, $gs_elev, $gs_angle, $gs_lat,
+                                  $gs_lon, $dme_lat, $dme_lon, $om_lat,
+                                  $om_lon, $mm_lat, $mm_lon, $im_lat,
+                                  $im_lon );
             }
 
             $has_dme = 0;
@@ -224,6 +244,9 @@ sub load_dafift() {
             $loc_hdg = $F[24] + make_dmagvar( $F[22] );
             $loc_width = $F[25];
             $loc_id = $F[18];
+            if ( length( $loc_id ) >= 4 ) {
+                $loc_id =~ s/^I//;
+            }
             # print "$id LOC $loc_lon $loc_lat $loc_elev $loc_freq $loc_hdg $loc_width\n";
         } elsif ( $type eq "I" ) {
             # Inner marker entry
@@ -267,11 +290,11 @@ sub load_dafift() {
     }
     if ( $ILS{$Airports{$last_id} . $last_rwy} eq "" ) {
         print "DAFIFT adding (last): $Airports{$last_id} - $last_rwy\n";
-        add_record( $Airports{$last_id}, $last_rwy, $loc_freq,
-                    $loc_id, $loc_hdg, $loc_lat, $loc_lon,
-                    $gs_elev, $gs_angle, $gs_lat, $gs_lon,
-                    $dme_lat, $dme_lon, $om_lat, $om_lon, $mm_lat,
-                    $mm_lon, $im_lat, $im_lon );
+        &safe_add_record( $Airports{$last_id}, $last_rwy, "ILS", $loc_freq,
+                          $loc_id, $loc_hdg, $loc_lat, $loc_lon,
+                          $gs_elev, $gs_angle, $gs_lat, $gs_lon,
+                          $dme_lat, $dme_lon, $om_lat, $om_lon, $mm_lat,
+                          $mm_lon, $im_lat, $im_lon );
     }
 }
 
@@ -282,7 +305,6 @@ sub load_dafift() {
 
 sub load_fgfs() {
     my( $ils_file ) = shift;
-
 
     open( FGILS, "zcat $ils_file|" ) || die "Cannot open FGFS: $ils_file\n";
 
@@ -300,6 +322,8 @@ sub load_fgfs() {
                 print "FGFS adding: $icao $rwy\n";
                 $ILS{$icao . $rwy} = $_;
             }
+        } else {
+            print "FGFS discarding: $_\n";
         }
     }
 }
@@ -310,13 +334,18 @@ sub load_fgfs() {
 ########################################################################
 
 sub write_result() {
+    my( $outfile ) = shift;
+
+    open( OUT, ">$outfile" )  || die "Cannot write to: $outfile\n";
+
     # dump out the final results
-    print "// FlightGear ILS data, generated from DAFIFT ARPT/ILS.TXT\n";
-    my($key);
+    print OUT "// FlightGear ILS data, generated from DAFIFT ARPT/ILS.TXT and FAA data\n";
+
+    my( $key );
     foreach $key ( sort (keys %ILS) ) {
-        print "$ILS{$key}\n";
+        print OUT "$ILS{$key}\n";
     }
-    print "[End]\n";
+    print OUT "[End]\n";
 }
 
 
@@ -325,11 +354,47 @@ sub write_result() {
 ########################################################################
 
 
-# add a record to the master list
+# add a record to the master list if it doesn't already exist
 
-sub add_record() {
+sub safe_add_record() {
     my( $apt_id ) = shift;
     my( $rwy ) = shift;
+    my( $type ) = shift;
+    my( $loc_freq ) = shift;
+    my( $loc_id ) = shift;
+    my( $loc_hdg ) = shift;
+    my( $loc_lat ) = shift;
+    my( $loc_lon ) = shift;
+    my( $gs_elev ) = shift;
+    my( $gs_angle ) = shift;
+    my( $gs_lat ) = shift;
+    my( $gs_lon ) = shift;
+    my( $dme_lat ) = shift;
+    my( $dme_lon ) = shift;
+    my( $om_lat ) = shift;
+    my( $om_lon ) = shift;
+    my( $mm_lat ) = shift;
+    my( $mm_lon ) = shift;
+    my( $im_lat ) = shift;
+    my( $im_lon ) = shift;
+
+    if ( $ILS{$apt_id . $rwy} eq "" ) {
+        # print "Safe adding (common): $apt_id - $rwy\n";
+        &update_record( $apt_id, $rwy, $type, $loc_freq, $loc_id,
+                        $loc_hdg, $loc_lat, $loc_lon, $gs_elev,
+                        $gs_angle, $gs_lat, $gs_lon, $dme_lat,
+                        $dme_lon, $om_lat, $om_lon, $mm_lat,
+                        $mm_lon, $im_lat, $im_lon );
+    }
+}
+
+
+# replace a record in the master list (or add it if it doesn't exist)
+
+sub update_record() {
+    my( $apt_id ) = shift;
+    my( $rwy ) = shift;
+    my( $type ) = shift;
     my( $loc_freq ) = shift;
     my( $loc_id ) = shift;
     my( $loc_hdg ) = shift;
@@ -349,8 +414,25 @@ sub add_record() {
     my( $im_lon ) = shift;
 
     my( $record );
-    $record = sprintf( "I ILS   %-4s %-3s  %06.2f %-4s %06.2f %10.6f %11.6f ",
-                       $apt_id, $rwy,
+
+    # remap $type as needed
+    $type = &strip_ws( $type );
+    if ( $type eq "LOCALIZER" ) {
+        $type = "LOC";
+    } elsif ( $type eq "ILS/DME" ) {
+        $type = "ILS";
+    } elsif ( $type eq "SDF/DME" ) {
+        $type = "SDF";
+    } elsif ( $type eq "LOC/DME" ) {
+        $type = "ILS";
+    } elsif ( $type eq "LOC/GS" ) {
+        $type = "LOC";
+    } elsif ( $type eq "LDA/DME" ) {
+        $type = "LDA";
+    }
+
+    $record = sprintf( "%1s %-5s %-4s %-3s  %06.2f %-4s %06.2f %10.6f %11.6f ",
+                       substr( $type, 0, 1 ), $type, $apt_id, $rwy,
                        $loc_freq, $loc_id, $loc_hdg, $loc_lat, $loc_lon );
     $record .= sprintf( "%5d %5.2f %10.6f %11.6f ",
                         $gs_elev, $gs_angle, $gs_lat, $gs_lon );
@@ -359,9 +441,33 @@ sub add_record() {
     $record .= sprintf( "%10.6f %11.6f ", $mm_lat, $mm_lon );
     $record .= sprintf( "%10.6f %11.6f ", $im_lat, $im_lon );
 
-    if ( $ILS{$apt_id . $rwy} eq "" ) {
-        print "Adding (common): $apt_id - $rwy\n";
-        $ILS{$apt_id . $rwy} = $record;
+    # print "Updating (common): $apt_id - $rwy\n";
+    $ILS{$apt_id . $rwy} = $record;
+}
+
+
+# update the $type of the record
+sub update_type() {
+    my( $apt_id ) = shift;
+    my( $rwy ) = shift;
+    my( $new_type ) = shift;
+
+    my( $record );
+
+    if ( $ILS{$apt_id . $rwy} ne "" ) {
+        my( $type_code, $type_name, $apt_id, $rwy, $loc_freq, $loc_id,
+            $loc_hdg, $loc_lat, $loc_lon, $gs_elev, $gs_angle, $gs_lat,
+            $gs_lon, $dme_lat, $dme_lon, $om_lat, $om_lon, $mm_lat, $mm_lon,
+            $im_lat, $im_lon ) = split( /\s+/, $ILS{$apt_id . $rwy} );
+        print "Updating type: $apt_id $rwy: $type_name -> $new_type\n";
+        $type_name = $new_type;
+        &update_record( $apt_id, $rwy, $type_name, $loc_freq, $loc_id,
+                        $loc_hdg, $loc_lat, $loc_lon, $gs_elev,
+                        $gs_angle, $gs_lat, $gs_lon, $dme_lat,
+                        $dme_lon, $om_lat, $om_lon, $mm_lat,
+                        $mm_lon, $im_lat, $im_lon );
+    } else {
+        die "Error, trying to update $apt_id - $rwy which doesn't exist\n";
     }
 }
 
@@ -371,7 +477,10 @@ sub add_record() {
 sub make_dcoord() {
     my($coord) = shift;
     my( $dir, $deg, $min, $sec );
-    my( $value );
+    my( $value ) = 0.0;
+
+    $coord = &strip_ws( $coord );
+
     if ( $coord =~ m/^[WE]/ ) {
         ( $dir, $deg, $min, $sec )
             = $coord =~ m/^([EW])(\d\d\d)(\d\d)(\d\d\d\d)/;
@@ -387,13 +496,13 @@ sub make_dcoord() {
             $value = -$value;
         }
     } elsif ( $coord =~ m/[EW]$/ ) {
-        ($value, $dir) = $coord =~ m/(\d{6}\.\d{3})(.)/;
-        if ( $value eq "W" ) {
+        ($value, $dir) = $coord =~ m/([\d\s\.]+)([EW])/;
+        if ( $dir eq "W" ) {
             $value = -$value;
         }
     } elsif ( $coord =~ m/[NS]$/ ) {
-        ($value, $dir) = $coord =~ m/(\d{6}\.\d{3})(.)/;
-        if ( $value eq "S" ) {
+        ($value, $dir) = $coord =~ m/([\d\s\.]+)([NS])/;
+        if ( $dir eq "S" ) {
             $value = -$value;
         }
     }
@@ -406,6 +515,7 @@ sub make_dcoord() {
 sub make_dmagvar() {
     my( $coord ) = shift;
     my( $value );
+
     if ( $coord =~ m/^[EW]/ ) {
         my( $dir, $deg, $min, $date )
             = $coord =~ m/^([EW])(\d\d\d)(\d\d\d) (\d\d\d\d)/;
@@ -424,4 +534,13 @@ sub make_dmagvar() {
     # print "$dir $deg:$min = $value\n";
 
     return $value;
+}
+
+# strip white space off front and back of string
+
+sub strip_ws() {
+    my( $string ) = shift;
+    $string =~ s/^\s+//;
+    $string =~ s/\s+$//;
+    return $string;
 }
