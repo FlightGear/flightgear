@@ -1594,6 +1594,7 @@ static bool fgMainInit( int argc, char **argv ) {
     glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
 #endif
 
+#ifdef FG_EXPERIMENTAL_POINT_LIGHTING
             // get the address of our OpenGL extensions
     if ( fgGetBool("/sim/rendering/distance-attenuation") )
     {
@@ -1609,6 +1610,7 @@ static bool fgMainInit( int argc, char **argv ) {
             glXGetProcAddressARB((GLubyte *)"glPointParameterfvEXT");
 #endif
    }
+#endif
 
     // based on the requested presets, calculate the true starting
     // lon, lat
