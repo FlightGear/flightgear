@@ -649,9 +649,8 @@ FGModelPlacement::update ()
   _location->setPosition( _lon_deg, _lat_deg, _elev_ft );
   _location->setOrientation( _roll_deg, _pitch_deg, _heading_deg );
 
-  sgMat4 POS;
   sgCopyMat4(POS, _location->getTransformMatrix());
-  
+
   sgVec3 trans;
   sgCopyVec3(trans, _location->get_view_pos());
 

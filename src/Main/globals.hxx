@@ -31,6 +31,7 @@
 
 #include "fgfs.hxx"
 
+
 SG_USING_STD( vector );
 SG_USING_STD( string );
 
@@ -67,6 +68,10 @@ class FGIO;
 class FGModelLoader;
 class FGModelMgr;
 class FGScenery;
+#ifdef FG_MPLAYER_AS
+class FGMultiplayRxMgr;
+class FGMultiplayTxMgr;
+#endif
 class FGSoundMgr;
 class FGTextureLoader;
 class FGTileMgr;
@@ -170,6 +175,13 @@ private:
 
     FGIO* io;
 
+#ifdef FG_MPLAYER_AS
+    //Mulitplayer managers
+    FGMultiplayTxMgr *multiplayer_tx_mgr;
+
+    FGMultiplayRxMgr *multiplayer_rx_mgr;
+#endif
+
 public:
 
     FGGlobals();
@@ -236,8 +248,8 @@ public:
     inline void set_ATC_mgr( FGATCMgr *a ) {ATC_mgr = a; }
 
     inline FGATCDisplay *get_ATC_display() const { return ATC_display; }
-    inline void set_ATC_display( FGATCDisplay *d ) {ATC_display = d; } 
-    
+    inline void set_ATC_display( FGATCDisplay *d ) {ATC_display = d; }
+
     inline FGAIMgr *get_AI_mgr() const { return AI_mgr; }
     inline void set_AI_mgr( FGAIMgr *a ) {AI_mgr = a; }
 
@@ -285,6 +297,22 @@ public:
       model_mgr = mgr;
     }
 
+#ifdef FG_MPLAYER_AS
+    inline FGMultiplayTxMgr *get_multiplayer_tx_mgr () { return multiplayer_tx_mgr; }
+
+    inline void set_multiplayer_tx_mgr (FGMultiplayTxMgr * mgr)
+    {
+      multiplayer_tx_mgr = mgr;
+    }
+
+    inline FGMultiplayRxMgr *get_multiplayer_rx_mgr () { return multiplayer_rx_mgr; }
+
+    inline void set_multiplayer_rx_mgr (FGMultiplayRxMgr * mgr)
+    {
+      multiplayer_rx_mgr = mgr;
+    }
+#endif
+
     inline string_list *get_channel_options_list () {
 	return channel_options_list;
     }
@@ -299,6 +327,7 @@ public:
     inline void set_tile_mgr ( FGTileMgr *t ) { tile_mgr = t; }
 
     FGIO* get_io() const { return io; }
+
 
     /**
      * Save the current state as the initial state.

@@ -82,7 +82,7 @@ static double
 atof( const string& str )
 {
 
-#ifdef __MWERKS__ 
+#ifdef __MWERKS__
     // -dw- if ::atof is called, then we get an infinite loop
     return std::atof( str.c_str() );
 #else
@@ -93,7 +93,7 @@ atof( const string& str )
 static int
 atoi( const string& str )
 {
-#ifdef __MWERKS__ 
+#ifdef __MWERKS__
     // -dw- if ::atoi is called, then we get an infinite loop
     return std::atoi( str.c_str() );
 #else
@@ -106,7 +106,7 @@ atoi( const string& str )
  * Set a few fail-safe default property values.
  *
  * These should all be set in $FG_ROOT/preferences.xml, but just
- * in case, we provide some initial sane values here. This method 
+ * in case, we provide some initial sane values here. This method
  * should be invoked *before* reading any init files.
  */
 void
@@ -224,6 +224,15 @@ fgSetDefaults ()
     fgSetBool("/sim/freeze/position", false);
     fgSetBool("/sim/freeze/clock", false);
     fgSetBool("/sim/freeze/fuel", false);
+
+#ifdef FG_MPLAYER_AS
+    fgSetString("/sim/multiplay/callsign", "callsign");
+    fgSetString("/sim/multiplay/rxhost", "0");
+    fgSetString("/sim/multiplay/txhost", "0");
+    fgSetInt("/sim/multiplay/rxport", 0);
+    fgSetInt("/sim/multiplay/txport", 0);
+#endif
+
 }
 
 
@@ -506,20 +515,22 @@ parse_fov( const string& arg ) {
 //  baud = {300, 1200, 2400, ..., 230400}
 //
 // Socket exacmple "--native=socket,dir,hz,machine,port,style" where
-// 
+//
 //  machine = machine name or ip address if client (leave empty if server)
 //  port = port, leave empty to let system choose
 //  style = tcp or udp
 //
 // File example "--garmin=file,dir,hz,filename" where
-// 
+//
 //  filename = file system file name
 
-static bool 
+static bool
 add_channel( const string& type, const string& channel_str ) {
-    // cout << "Channel string = " << channel_str << endl;
+    cout << "Channel string = " << channel_str << endl;
 
     globals->get_channel_options_list()->push_back( type + "," + channel_str );
+    
+    cout << "here" << endl;
 
     return true;
 }
@@ -1156,8 +1167,8 @@ struct OptionDesc {
 #endif
 
 // Parse a single option
-static int 
-parse_option (const string& arg) 
+static int
+parse_option (const string& arg)
 {
 #ifdef NEW_OPTION_PARSING
     if ( fgOptionMap.size() == 0 ) {
@@ -1287,7 +1298,7 @@ parse_option (const string& arg)
     } else if ( arg == "--enable-game-mode" ) {
 	fgSetBool("/sim/startup/game-mode", true);
     } else if ( arg == "--disable-splash-screen" ) {
-	fgSetBool("/sim/startup/splash-screen", false); 
+	fgSetBool("/sim/startup/splash-screen", false);
     } else if ( arg == "--enable-splash-screen" ) {
         fgSetBool("/sim/startup/splash-screen", true);
     } else if ( arg == "--disable-intro-music" ) {
@@ -1559,6 +1570,10 @@ parse_option (const string& arg)
 	add_channel( "atc610x", "dummy" );
     } else if ( arg.find( "--atlas=" ) == 0 ) {
 	add_channel( "atlas", arg.substr(8) );
+
+    } else if ( arg.find( "--multiplay=" ) == 0 ) {
+	add_channel( "multiplay", arg.substr(12) );
+
     } else if ( arg.find( "--httpd=" ) == 0 ) {
 	add_channel( "httpd", arg.substr(8) );
 #ifdef FG_JPEG_SERVER
@@ -1604,6 +1619,12 @@ parse_option (const string& arg)
     } else if ( arg.find( "--net-id=") == 0 ) {
         fgSetString("sim/networking/call-sign", arg.substr(9).c_str());
 #endif
+
+#ifdef FG_MPLAYER_AS
+    } else if ( arg.find( "--callsign=") == 0 ) {
+        fgSetString("sim/multiplay/callsign", arg.substr(11).c_str());
+#endif
+
     } else if ( arg.find( "--prop:" ) == 0 ) {
         string assign = arg.substr(7);
 	string::size_type pos = assign.find('=');
@@ -1640,7 +1661,7 @@ parse_option (const string& arg)
 	} else {
 	    default_view_offset = atof( woffset.c_str() ) * SGD_DEGREES_TO_RADIANS;
 	}
-	/* apparently not used (CLO, 11 Jun 2002) 
+	/* apparently not used (CLO, 11 Jun 2002)
            FGViewer *pilot_view =
 	      (FGViewer *)globals->get_viewmgr()->get_view( 0 ); */
         // this will work without calls to the viewer...

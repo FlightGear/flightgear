@@ -57,6 +57,10 @@
 #include <Network/ray.hxx>
 #include <Network/rul.hxx>
 
+#ifdef FG_MPLAYER_AS
+#include <Network/multiplay.hxx>
+#endif
+
 #include "globals.hxx"
 #include "fg_io.hxx"
 
@@ -155,6 +159,17 @@ FGIO::parse_port_config( const string& config )
 	} else if ( protocol == "rul" ) {
 	    FGRUL *rul = new FGRUL;
 	    io = rul;
+
+#ifdef FG_MPLAYER_AS
+	} else if ( protocol == "multiplay" ) {\
+	    //Determine dir, rate, host & port
+	    string dir = tokens[1];
+	    string rate = tokens[2];
+	    string host = tokens[3];
+	    string port = tokens[4];
+	    return new FGMultiplay(dir, atoi(rate.c_str()), host, atoi(port.c_str()));
+#endif
+
 	} else {
 	    return NULL;
 	}
@@ -204,7 +219,7 @@ FGIO::parse_port_config( const string& config )
 	SG_LOG( SG_IO, SG_INFO, "  hostname = " << hostname );
 	SG_LOG( SG_IO, SG_INFO, "  port = " << port );
 	SG_LOG( SG_IO, SG_INFO, "  style = " << style );
-            
+
 	io->set_io_channel( new SGSocket( hostname, port, style ) );
     }
 
@@ -217,7 +232,7 @@ FGIO::parse_port_config( const string& config )
 void
 FGIO::init()
 {
-    // SG_LOG( SG_IO, SG_INFO, "I/O Channel initialization, " << 
+    // SG_LOG( SG_IO, SG_INFO, "I/O Channel initialization, " <<
     //         globals->get_channel_options_list()->size() << " requests." );
 
     FGProtocol *p;

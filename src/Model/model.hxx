@@ -228,7 +228,7 @@ private:
 };
 
 
-
+
 ////////////////////////////////////////////////////////////////////////
 // Model placement.
 ////////////////////////////////////////////////////////////////////////
@@ -271,9 +271,13 @@ public:
   virtual void setHeadingDeg (double heading_deg);
   virtual void setOrientation (double roll_deg, double pitch_deg,
                                double heading_deg);
+  
+  // Addition by Diarmuid Tyson for Multiplayer Support
+  // Allows multiplayer to get players position transform
+  virtual const sgVec4 *get_POS() { return POS; }
 
 private:
-  
+
                                 // Geodetic position
   double _lon_deg;
   double _lat_deg;
@@ -289,6 +293,12 @@ private:
 
                                 // Location
   FGLocation * _location;
+
+
+  // Addition by Diarmuid Tyson for Multiplayer Support
+  // Moved from update method
+  // POS for transformation Matrix
+  sgMat4 POS;
 
 };
 

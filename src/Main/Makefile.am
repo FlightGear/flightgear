@@ -73,6 +73,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Input/libInput.a \
 	$(top_builddir)/src/Instrumentation/libInstrumentation.a \
 	$(top_builddir)/src/Model/libModel.a \
+	$(top_builddir)/src/MultiPlayer/libMultiPlayer.a \
 	$(top_builddir)/src/Navaids/libNavaids.a \
 	$(top_builddir)/src/Scenery/libScenery.a \
         $(SCRIPTING_LIBS) \

@@ -57,16 +57,30 @@ if test "x$with_logging" = "xno" ; then
     AC_DEFINE([FG_NDEBUG], 1, [Define for no logging output])
 fi
 
+# Specify if we want to build with default Multiplayer support
+# default to with_network=yes
+AC_ARG_WITH(multiplayer, [  --with-multiplayer      Include default multiplayer support])
+if test "x$with_multiplayer" = "xno" ; then
+    echo "Building without default multiplayer support"
+else
+    echo "Building with default multiplayer support"
+    AC_DEFINE([FG_MPLAYER_AS], 1, [Define to build with default multiplayer support])
+fi
+AM_CONDITIONAL(ENABLE_MPLAYER_AS, test "x$with_multiplayer" != "xno")
+
+
 # Specify if we want to build with Oliver's networking support
 # default to with_network=yes
-AC_ARG_WITH(network_olk, [  --with-network-olk      Include Oliver's multi-pilot networking support])
+NETWORK_DIRS=Network
+AC_ARG_WITH(network_olk, [  --with-network-olk      Include Oliver's multi-pilot networking support [default=no]])
 if test "x$with_network_olk" = "xno" ; then
     echo "Building without Oliver's multi-pilot network support"
 else
     echo "Building with Oliver's multi-pilot network support"
     AC_DEFINE([FG_NETWORK_OLK], 1, [Define to build with Oliver's networking])
 fi
-AM_CONDITIONAL(ENABLE_NETWORK_OLK, test "x$with_network_olk" != "xno")
+AM_CONDITIONAL(ENABLE_NETWORK_OLK, test "x$with_network_olk" != "xno" -a "x$with_multiplayer" = "xno")
+
 
 
 # Specify if we want to use WeatherCM instead of FGEnvironment.
@@ -82,7 +96,7 @@ fi
 AM_CONDITIONAL(ENABLE_WEATHERCM, test "x$with_weathercm" = "xyes")
 
 dnl Specify if we want the old menubar; default to the new one
-AC_ARG_WITH(old-menubar, [  --with-old-menubar        Use the old menu bar])
+AC_ARG_WITH(old-menubar, [  --with-old-menubar      Use the old menu bar])
 if test "x$with_old_menubar" = "xyes" ; then
     echo "Building with old menubar"
     AC_DEFINE([FG_OLD_MENUBAR], 1,
@@ -90,7 +104,6 @@ if test "x$with_old_menubar" = "xyes" ; then
 else
     echo "Building with new menubar"
 fi
-AM_CONDITIONAL(ENABLE_WEATHERCM, test "x$with_weathercm" = "xyes")
 
 dnl Thread related checks
 AC_ARG_WITH(threads, [  --with-threads          Include tile loading threads [default=no]])
@@ -590,6 +603,7 @@ AC_CONFIG_FILES([ \
 	src/Main/runfgfs \
 	src/Main/runfgfs.bat \
 	src/Model/Makefile \
+	src/MultiPlayer/Makefile \
 	src/Navaids/Makefile \
 	src/Network/Makefile \
 	src/NetworkOLK/Makefile \
@@ -637,6 +651,12 @@ if test "x$with_weathercm" != "x"; then
     echo "WeatherCM instead of FGEnvironment: $with_weathercm"
 else
     echo "Using FGEnvironment"
+fi
+
+if test "x$with_multiplayer" != "xno"; then
+    echo "Using default multiplayer support"
+elif test "x$with_network_olk" != "xno"; then
+    echo "Using Oliver's multi-pilot network support"
 fi
 
 if test "x$with_old_menubar" != "x"; then

@@ -21,6 +21,7 @@ libNetwork_a_SOURCES = \
 	net_ctrls.hxx net_fdm.hxx net_fdm_mini.hxx \
         nmea.cxx nmea.hxx \
         opengc.cxx opengc.hxx opengc_data.hxx \
+	multiplay.cxx multiplay.hxx \
 	props.cxx props.hxx \
 	pve.cxx pve.hxx \
 	ray.cxx ray.hxx \

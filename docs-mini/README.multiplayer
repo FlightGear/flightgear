@@ -1,0 +1,72 @@
+The commands are of the form:
+
+--multiplay=in | out,Hz,destination address,destination port
+--callsign=a_unique_name
+
+
+Below are some examples of startup commands that demonstrate the use of the 
+multiplayer facilities.
+
+For two players on a local network or across the internet:
+----------------------------------------------------------
+Player1:
+--multiplay=out,10,192.168.0.3,5500 --multiplay=in,10,192.168.0.2,5501 
+--callsign=player1
+
+Player2:
+--multiplay=out,10,192.168.0.2,5501 --multiplay=in,10,192.168.0.3,5500 
+--callsign=player2
+
+
+For multiple players on a local network:
+----------------------------------------
+Player1:
+--multiplay=out,10,255.255.255.255,5500 
+--multiplay=in,10,255.255.255.255,5500 --callsign=player1
+
+Playern:
+--multiplay=out,10,255.255.255.255,5500 
+--multiplay=in,10,255.255.255.255,5500 --callsign=playern
+
+Note that the callsign is used to identify each player in a multiplayer game 
+so the callsigns must be unique. The multiplayer code ignores packets that 
+are sent back to itself, as would occur with broadcasting when the rx and tx 
+ports are the same.
+
+
+Multiple players sending to a single player:
+--------------------------------------------
+Player1:
+--multiplay=out,10,192.168.0.2,5500 --callsign=player1
+
+Player2:
+--multiplay=out,10,192.168.0.2,5500 --callsign=player2
+
+Player3:
+--multiplay=out,10,192.168.0.2,5500 --callsign=player3
+
+Player4 (rx only):
+--multiplay=in,10,192.168.0.2,5500 --callsign=player4
+
+This demonstrates that it is possible to have multiple instances of 
+Flightgear that send to a single instance that displays all the traffic. This 
+is the sort of implementation that we are considering for use as a tower 
+visual simulator.
+
+
+For use with a server (when one is created):
+--------------------------------------------
+Player1:
+--multiplay=out,10,serveraddress,6000 --multiplay=in,10,myaddress,5500 
+--callsign=player1
+
+Player2:
+--multiplay=out,10,serveraddress,6000 --multiplay=in,10,myaddress,5501 
+--callsign=player2
+
+Playern:
+--multiplay=out,10,serveraddress,6000 --multiplay=in,10,myaddress,5502 
+--callsign=playern
+
+The server would simply act as a packet forwarding mechanism. When it 
+receives a packet, it sends it to all other active players.

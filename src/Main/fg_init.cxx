@@ -118,6 +118,11 @@
 #include <Time/moonpos.hxx>
 #include <Time/tmp.hxx>
 
+#ifdef FG_MPLAYER_AS
+#include <MultiPlayer/multiplaytxmgr.hxx>
+#include <MultiPlayer/multiplayrxmgr.hxx>
+#endif
+
 #ifdef FG_WEATHERCM
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
@@ -249,7 +254,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
             root = fgScanForOption( "--fg-root=", config.str() );
         }
     }
-    
+
     // Next check if fg-root is set as an env variable
     if ( root.empty() ) {
         envp = ::getenv( "FG_ROOT" );
@@ -951,7 +956,7 @@ static void fgSetDistOrAltFromGlideSlope() {
         SG_LOG( SG_GENERAL, SG_ALERT, "Resetting glideslope to zero" );
         fgSetDouble("/sim/presets/glideslope-deg", 0);
         fgSetBool("/sim/presets/onground", true);
-    }                              
+    }
 }                       
 
 
@@ -1716,7 +1721,7 @@ bool fgInitSubsystems() {
         current_panel->bind();
     }
 
-    
+
     ////////////////////////////////////////////////////////////////////
     // Initialize the default (kludged) properties.
     ////////////////////////////////////////////////////////////////////
@@ -1746,6 +1751,18 @@ bool fgInitSubsystems() {
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
 
+
+#ifdef FG_MPLAYER_AS
+    ////////////////////////////////////////////////////////////////////
+    // Initialize multiplayer subsystem
+    ////////////////////////////////////////////////////////////////////
+
+    globals->set_multiplayer_tx_mgr(new FGMultiplayTxMgr);
+    globals->get_multiplayer_tx_mgr()->init();
+
+    globals->set_multiplayer_rx_mgr(new FGMultiplayRxMgr);
+    globals->get_multiplayer_rx_mgr()->init();
+#endif
 
     ////////////////////////////////////////////////////////////////////////
     // End of subsystem initialization.

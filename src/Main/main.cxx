@@ -109,6 +109,12 @@ SG_USING_STD(endl);
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
+
+#ifdef FG_MPLAYER_AS
+#include <MultiPlayer/multiplaytxmgr.hxx>
+#include <MultiPlayer/multiplayrxmgr.hxx>
+#endif
+
 #include <Objects/matlib.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -433,7 +439,7 @@ void trRenderFrame( void ) {
 
 // Update all Visuals (redraws anything graphics related)
 void fgRenderFrame() {
-  
+
     GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
@@ -484,7 +490,7 @@ void fgRenderFrame() {
     // GLfloat terrain_color[4] = { 0.54, 0.44, 0.29, 1.0 };
     // GLfloat mat_shininess[] = { 10.0 };
     GLbitfield clear_mask;
-    
+
     if ( idle_state != 1000 ) {
 	// still initializing, draw the splash screen
 	if ( fgGetBool("/sim/startup/splash-screen") ) {
@@ -533,12 +539,12 @@ void fgRenderFrame() {
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    if ( fgGetBool("/sim/rendering/textures") ) {
 		// glClearColor(black[0], black[1], black[2], black[3]);
-		glClearColor(l->adj_fog_color[0], l->adj_fog_color[1], 
+		glClearColor(l->adj_fog_color[0], l->adj_fog_color[1],
 			     l->adj_fog_color[2], l->adj_fog_color[3]);
 		clear_mask |= GL_COLOR_BUFFER_BIT;
 	    }
 	} else {
-	    glClearColor(l->sky_color[0], l->sky_color[1], 
+	    glClearColor(l->sky_color[0], l->sky_color[1],
 			 l->sky_color[2], l->sky_color[3]);
 	    clear_mask |= GL_COLOR_BUFFER_BIT;
 	}
@@ -591,7 +597,7 @@ void fgRenderFrame() {
 			     globals->get_ephem()->getPlanets(),
 			     globals->get_ephem()->getNumStars(),
 			     globals->get_ephem()->getStars() );
- 
+
 	    /* cout << "thesky->reposition( view_pos = " << view_pos[0] << " "
 		 << view_pos[1] << " " << view_pos[2] << endl;
 	    cout << "    zero_elev = " << zero_elev[0] << " "
@@ -601,7 +607,7 @@ void fgRenderFrame() {
 	    cout << "    sun_rot = " << cur_light_params.sun_rotation
 		 << " gst = " << SGTime::cur_time_params->getGst() << endl;
 	    cout << "    sun ra = " << globals->get_ephem()->getSunRightAscension()
-		 << " sun dec = " << globals->get_ephem()->getSunDeclination() 
+		 << " sun dec = " << globals->get_ephem()->getSunDeclination()
 		 << " moon ra = " << globals->get_ephem()->getMoonRightAscension()
 		 << " moon dec = " << globals->get_ephem()->getMoonDeclination() << endl; */
 
@@ -692,6 +698,11 @@ void fgRenderFrame() {
 	    // fgd_pos->setTransform( &fgdpos);
 	}
 # endif
+
+#ifdef FG_MPLAYER_AS
+        // Update any multiplayer models
+        globals->get_multiplayer_rx_mgr()->Update();
+#endif
 
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    // draw the sky backdrop
