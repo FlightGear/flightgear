@@ -157,7 +157,7 @@ AC_OUTPUT( \
 	Lib/Debug/Makefile \
 	Lib/DEM/Makefile \
 	Lib/Math/Makefile \
-	Lib/Pui/Makefile \
+	Lib/PUI/Makefile \
 	Lib/XGL/Makefile \
 	Lib/zlib/Makefile \
 	Simulator/Makefile \
@@ -169,7 +169,7 @@ AC_OUTPUT( \
 	Simulator/Flight/LaRCsim/Makefile \
 	Simulator/Flight/Slew/Makefile \
 	Simulator/Flight/Makefile \
-	Simulator/Gui/Makefile \
+	Simulator/GUI/Makefile \
 	Simulator/Joystick/Makefile \
 	Simulator/Main/Makefile \
 	Simulator/Main/runfg \
