@@ -33,6 +33,8 @@
 
 #include <list>
 
+#include <plib/ssg.h>
+
 #include <simgear/bucket/newbucket.hxx>
 
 
