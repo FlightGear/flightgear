@@ -1328,6 +1328,10 @@ int fgAPRun( void ) {
 	    // brain dead ground hugging with no look ahead
 	    APData->TargetClimbRate =
 		( APData->TargetAGL - fgAPget_agl() ) * 16.0;
+	    // cout << "target agl = " << APData->TargetAGL 
+	    //      << "  current agl = " << fgAPget_agl() 
+	    //      << "  target climb rate = " << APData->TargetClimbRate 
+	    //      << endl;
 	} else {
 	    // just try to zero out rate of climb ...
 	    APData->TargetClimbRate = 0.0;
@@ -1355,6 +1359,8 @@ int fgAPRun( void ) {
 	}
 
 	error = fgAPget_climb() - APData->TargetClimbRate;
+	// cout << "climb rate = " << fgAPget_climb() 
+	//      << "  error = " << error << endl;
 
 	// accumulate the error under the curve ... this really should
 	// be *= delta t
