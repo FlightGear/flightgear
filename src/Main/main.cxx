@@ -595,22 +595,23 @@ void fgRenderFrame() {
             static int init = 50;
             static double sun_pos_angle = 9999.0;
             static double sun_pos_rotation = 9999.0;
-            static double cur_lat = 9999.0;
-            static double cur_long = 9999.0;
-            static double cur_alt = -9999.0;
             static float view_heading = 9999.0;
+            static float view_heading_offset = 9999.0;
 
             if ((fabs(sun_pos_rotation - cur_light_params.sun_rotation) > 5e-3)
                 || (fabs(sun_pos_angle - cur_light_params.sun_angle) > 5e-3)
                 || (fabs(view_heading - current__view->getHeading_deg()) > 5e-3)
-                || (init != 0))
+                || (fabs(view_heading_offset
+                                - current__view->getHeadingOffset_deg()) > 5e-3)
+                || init || fgGetBool("/sim/rendering/debug"))
             {
-                if (init > 0)
+                if ( init )
                    init--;
 
                 sun_pos_angle = cur_light_params.sun_angle;
                 sun_pos_rotation = cur_light_params.sun_rotation;
                 view_heading = current__view->getHeading_deg ();
+                view_heading_offset = current__view->getHeadingOffset_deg();
 
                 thesky->repaint( cur_light_params.sky_color,
                              cur_light_params.adj_fog_color,
@@ -640,23 +641,8 @@ void fgRenderFrame() {
               << " moon ra = " << globals->get_ephem()->getMoonRightAscension()
               << " moon dec = " << globals->get_ephem()->getMoonDeclination() );
             */
-#if 0
-            if ((fabs(cur_long - current__view->getLongitude_deg()) > 5e-4)
-                || (fabs(cur_lat - current__view->getLatitude_deg()) > 5e-4)
-                || (fabs(cur_alt - current__view->getAltitudeASL_ft()) > 3)
-                || (init != 0))
-            {
- 
-                // Hyperjump?
-                if ((fabs(cur_long - current__view->getLongitude_deg()) > 2)
-                     || (fabs(cur_lat - current__view->getLatitude_deg()) > 2))
-                   init = 50;
 
-                cur_lat = current__view->getLatitude_deg();
-                cur_long = current__view->getLongitude_deg();
-                cur_alt = current__view->getAltitudeASL_ft();
-#endif
-                thesky->reposition( current__view->get_view_pos(),
+            thesky->reposition( current__view->get_view_pos(),
                             current__view->get_zero_elev(),
                             current__view->get_world_up(),
                             current__view->getLongitude_deg()
@@ -673,9 +659,6 @@ void fgRenderFrame() {
                             globals->get_ephem()->getMoonRightAscension(),
                             globals->get_ephem()->getMoonDeclination(),
                             50000.0 );
-#if 0
-            }
-#endif
         }
 
         glEnable( GL_DEPTH_TEST );
