@@ -124,9 +124,10 @@ void fgLIGHT::Update( void ) {
 
     // base fog color
     float *sun_color = thesky->get_sun_color();
-    base_fog_color[0] *= (0.75 + sun_color[0]/4);
-    base_fog_color[1] *= (0.5 + sun_color[1]/2);
-    base_fog_color[2] *= sun_color[2];
+
+    base_fog_color[0] *= (1.25 - sun_color[0]/4.0);	// 100% red
+    base_fog_color[1] *= (0.48 + sun_color[1]/1.923);	//  40% green
+    base_fog_color[2] *= sun_color[2];			//   0% blue
 
 
     deg = sun_angle * SGD_RADIANS_TO_DEGREES;
