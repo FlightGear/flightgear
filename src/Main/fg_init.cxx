@@ -76,9 +76,6 @@
 #include <Airports/simple.hxx>
 #include <ATC/ATCdisplay.hxx>
 #include <ATC/ATCmgr.hxx>
-#include <ATC/atislist.hxx>
-#include <ATC/towerlist.hxx>
-#include <ATC/approachlist.hxx>
 #include <ATC/AIMgr.hxx>
 #include <Autopilot/auto_gui.hxx>
 #include <Autopilot/newauto.hxx>
@@ -1598,28 +1595,6 @@ bool fgInitSubsystems() {
     SGPath p_fix( globals->get_fg_root() );
     p_fix.append( "Navaids/default.fix" );
     current_fixlist->init( p_fix );
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize ATC list management and query systems
-    ////////////////////////////////////////////////////////////////////
-
-    SG_LOG(SG_GENERAL, SG_INFO, "  ATIS");
-    current_atislist = new FGATISList;
-    SGPath p_atis( globals->get_fg_root() );
-    p_atis.append( "ATC/default.atis" );
-    current_atislist->init( p_atis );
-
-    SG_LOG(SG_GENERAL, SG_INFO, "  Tower");
-    current_towerlist = new FGTowerList;
-    SGPath p_tower( globals->get_fg_root() );
-    p_tower.append( "ATC/default.tower" );
-    current_towerlist->init( p_tower );
-
-    SG_LOG(SG_GENERAL, SG_INFO, "  Approach");
-    current_approachlist = new FGApproachList;
-    SGPath p_approach( globals->get_fg_root() );
-    p_approach.append( "ATC/default.approach" );
-    current_approachlist->init( p_approach );
 
     ////////////////////////////////////////////////////////////////////
     // Initialise ATC display system
