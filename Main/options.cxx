@@ -69,6 +69,7 @@ fgOPTIONS::fgOPTIONS( void ) {
 
     // Features
     hud_status = 1;
+    panel_status = 1;
 
     // Rendering options
     fog = 2;    // nicest
@@ -433,6 +434,10 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.13  1998/06/27 16:54:34  curt
+// Replaced "extern displayInstruments" with a entry in fgOPTIONS.
+// Don't change the view port when displaying the panel.
+//
 // Revision 1.12  1998/06/17 21:35:13  curt
 // Refined conditional audio support compilation.
 // Moved texture parameter setup calls to ../Scenery/materials.cxx

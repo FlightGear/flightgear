@@ -48,6 +48,7 @@ public:
 
     // Features
     int hud_status;    // HUD on/off
+    int panel_status;  // Panel on/off
 
     // Rendering options
     int fog;           // Fog enabled/disabled
@@ -97,6 +98,10 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.9  1998/06/27 16:54:34  curt
+// Replaced "extern displayInstruments" with a entry in fgOPTIONS.
+// Don't change the view port when displaying the panel.
+//
 // Revision 1.8  1998/05/16 13:08:36  curt
 // C++ - ified views.[ch]xx
 // Shuffled some additional view parameters into the fgVIEW class.

@@ -50,9 +50,6 @@
 #include "views.hxx"
 
 
-extern int displayInstruments;
-
-
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
     fgCONTROLS *c;
@@ -108,7 +105,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    t->warp_delta -= 30;
 	    return;
 	case 87: /* W key */
-	    displayInstruments = !displayInstruments;
+	    o->panel_status = !(o->panel_status);
 	    return;
 	case 88: /* X key */
 	    o->fov *= 1.05;
@@ -290,9 +287,13 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.12  1998/06/12 14:27:26  curt
-/* Pui -> PUI, Gui -> GUI.
+/* Revision 1.13  1998/06/27 16:54:32  curt
+/* Replaced "extern displayInstruments" with a entry in fgOPTIONS.
+/* Don't change the view port when displaying the panel.
 /*
+ * Revision 1.12  1998/06/12 14:27:26  curt
+ * Pui -> PUI, Gui -> GUI.
+ *
  * Revision 1.11  1998/06/12 00:57:38  curt
  * Added support for Pui/Gui.
  * Converted fog to GL_FOG_EXP2.

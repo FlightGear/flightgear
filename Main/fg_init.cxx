@@ -59,8 +59,7 @@
 #include "options.hxx"
 #include "views.hxx"
 
-// extern int show_hud;             // HUD state
-extern int displayInstruments;
+
 extern const char *default_root;
 
 
@@ -367,9 +366,6 @@ int fgInitSubsystems( void ) {
 
     fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
 
-    // Let's not show the instrument panel
-    displayInstruments = 0;
-
     // Joystick support
     if (fgJoystickInit(0) ) {
 	// Joystick initialized ok.
@@ -387,6 +383,10 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.21  1998/06/27 16:54:33  curt
+// Replaced "extern displayInstruments" with a entry in fgOPTIONS.
+// Don't change the view port when displaying the panel.
+//
 // Revision 1.20  1998/06/17 21:35:12  curt
 // Refined conditional audio support compilation.
 // Moved texture parameter setup calls to ../Scenery/materials.cxx

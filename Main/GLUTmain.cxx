@@ -85,9 +85,6 @@ fgGENERAL general;
 // Another hack
 int use_signals = 0;
 
-// Yet another other hack. Used for my prototype instrument code. (Durk)
-int displayInstruments; 
-
 // Global structures for the Audio library
 #ifdef HAVE_AUDIO_SUPPORT
 slScheduler audio_sched ( 8000 ) ;
@@ -176,20 +173,20 @@ static void fgUpdateViewParams( void ) {
     v->Update(f);
     v->UpdateWorldToEye(f);
 
-    if (displayInstruments) {
-	xglViewport( 0, (GLint)((v->winHeight) / 2 ) , 
-		     (GLint)(v->winWidth), (GLint)(v->winHeight) / 2 );
-	// Tell GL we are about to modify the projection parameters
-	xglMatrixMode(GL_PROJECTION);
-	xglLoadIdentity();
-	gluPerspective(o->fov, v->win_ratio / 2.0, 1.0, 100000.0);
-    } else {
-	xglViewport(0, 0 , (GLint)(v->winWidth), (GLint)(v->winHeight) );
-	// Tell GL we are about to modify the projection parameters
-	xglMatrixMode(GL_PROJECTION);
-	xglLoadIdentity();
-	gluPerspective(o->fov, v->win_ratio, 10.0, 100000.0);
-    }
+    // if (!o->panel_status) {
+    // xglViewport( 0, (GLint)((v->winHeight) / 2 ) , 
+    // (GLint)(v->winWidth), (GLint)(v->winHeight) / 2 );
+    // Tell GL we are about to modify the projection parameters
+    // xglMatrixMode(GL_PROJECTION);
+    // xglLoadIdentity();
+    // gluPerspective(o->fov, v->win_ratio / 2.0, 1.0, 100000.0);
+    // } else {
+    xglViewport(0, 0 , (GLint)(v->winWidth), (GLint)(v->winHeight) );
+    // Tell GL we are about to modify the projection parameters
+    xglMatrixMode(GL_PROJECTION);
+    xglLoadIdentity();
+    gluPerspective(o->fov, v->win_ratio, 10.0, 100000.0);
+    // }
 
     xglMatrixMode(GL_MODELVIEW);
     xglLoadIdentity();
@@ -227,8 +224,12 @@ static void fgUpdateViewParams( void ) {
 }
 
 
+#ifdef 0
 // Draw a basic instrument panel
 static void fgUpdateInstrViewParams( void ) {
+
+    exit(0);
+
     fgVIEW *v;
 
     v = &current_view;
@@ -268,6 +269,7 @@ static void fgUpdateInstrViewParams( void ) {
     xglMatrixMode(GL_MODELVIEW);
     xglPopMatrix();
 }
+#endif
 
 
 // Update all Visuals (redraws anything graphics related)
@@ -380,15 +382,13 @@ static void fgRenderFrame( void ) {
 
     xglDisable( GL_TEXTURE_2D );
 
-    // display HUD
-    if( o->hud_status ) {
-     	fgCockpitUpdate();
-    }
+    // display HUD && Panel
+    fgCockpitUpdate();
 
     // display instruments
-    if (displayInstruments) {
-	fgUpdateInstrViewParams();
-    }
+    // if (!o->panel_status) {
+    // fgUpdateInstrViewParams();
+    // }
     puDisplay();
     xglutSwapBuffers();
 }
@@ -745,6 +745,10 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.28  1998/06/27 16:54:32  curt
+// Replaced "extern displayInstruments" with a entry in fgOPTIONS.
+// Don't change the view port when displaying the panel.
+//
 // Revision 1.27  1998/06/17 21:35:10  curt
 // Refined conditional audio support compilation.
 // Moved texture parameter setup calls to ../Scenery/materials.cxx
