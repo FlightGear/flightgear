@@ -36,6 +36,7 @@ extern "C" {
 /* holds the current weather values */
 struct fgWEATHER {
     float visibility;
+    float fog_density;
 };
 
 extern struct fgWEATHER current_weather;
@@ -49,6 +50,14 @@ void fgWeatherInit( void );
 void fgWeatherUpdate( void );
 
 
+/* Get the current visibility */
+float fgWeatherGetVisibility( void );
+
+
+/* Set the visibility and update fog parameters */
+void fgWeatherSetVisibility( float visibility );
+
+
 #ifdef __cplusplus
 }
 #endif
@@ -58,9 +67,15 @@ void fgWeatherUpdate( void );
 
 
 /* $Log$
-/* Revision 1.9  1998/04/21 17:02:46  curt
-/* Prepairing for C++ integration.
+/* Revision 1.10  1998/06/12 01:01:00  curt
+/* Build only static libraries.
+/* Declare memmove/memset for Sloaris.
+/* Added support for exponetial fog, which solves for the proper density to
+/* achieve the desired visibility range.
 /*
+ * Revision 1.9  1998/04/21 17:02:46  curt
+ * Prepairing for C++ integration.
+ *
  * Revision 1.8  1998/01/22 02:59:44  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

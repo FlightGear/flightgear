@@ -24,11 +24,24 @@
  **************************************************************************/
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>                     
+#endif
+
+#include <GL/glut.h>
+#include <XGL/xgl.h>
+
+#include <math.h>
 #include <stdio.h>
 
-#include <Weather/weather.h>
 #include <Aircraft/aircraft.h>
+#include <Debug/fg_debug.h>
 #include <Math/fg_random.h>
+#include <Weather/weather.h>
 
 
 /* This is a record containing current weather info */
@@ -46,7 +59,7 @@ void fgWeatherInit( void ) {
     /* Configure some wind */
     /* FG_V_north_airmass = 15; */ /* ft/s =~ 10mph */
 
-    w->visibility = 45000.0;       /* in meters */
+    fgWeatherSetVisibility(45000.0);    /* in meters */
 }
 
 
@@ -70,10 +83,39 @@ void fgWeatherUpdate( void ) {
 }
 
 
+/* Get the current visibility */
+float fgWeatherGetVisibility( void ) {
+    struct fgWEATHER *w;
+    w = &current_weather;
+
+    return ( w->visibility );
+}
+
+
+/* Set the visibility and update fog parameters */
+void fgWeatherSetVisibility( float visibility ) {
+    struct fgWEATHER *w;
+    w = &current_weather;
+
+    w->visibility = visibility;       /* in meters */
+    // w->fog_density = -log(0.01 / w->visibility;        /* for GL_FOG_EXP */
+    w->fog_density = sqrt( -log(0.01) ) / w->visibility;  /* for GL_FOG_EXP2 */
+    xglFogf (GL_FOG_DENSITY, w->fog_density);
+    fgPrintf( FG_INPUT, FG_DEBUG, 
+	      "Fog density = %.4f\n", w->fog_density);
+}
+
+
 /* $Log$
-/* Revision 1.15  1998/04/25 22:06:34  curt
-/* Edited cvs log messages in source files ... bad bad bad!
+/* Revision 1.16  1998/06/12 01:00:59  curt
+/* Build only static libraries.
+/* Declare memmove/memset for Sloaris.
+/* Added support for exponetial fog, which solves for the proper density to
+/* achieve the desired visibility range.
 /*
+ * Revision 1.15  1998/04/25 22:06:34  curt
+ * Edited cvs log messages in source files ... bad bad bad!
+ *
  * Revision 1.14  1998/02/09 15:07:54  curt
  * Minor tweaks.
  *

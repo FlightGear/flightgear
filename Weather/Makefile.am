@@ -1,7 +1,9 @@
-libdir	= ${exec_prefix}/lib
+# libdir	= ${exec_prefix}/lib
+# lib_LTLIBRARIES = libWeather.la
+# libWeather_la_SOURCES = weather.c weather.h
 
-lib_LTLIBRARIES = libWeather.la
+noinst_LIBRARIES = libWeather.a
 
-libWeather_la_SOURCES = weather.c weather.h
+libWeather_a_SOURCES = weather.c weather.h
 
 INCLUDES += -I$(top_builddir) -I$(top_builddir)/Lib -I$(top_builddir)/Simulator
