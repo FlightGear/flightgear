@@ -31,13 +31,13 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/point3d.hxx>
+#include <simgear/timing/fg_time.hxx>
 
 #include <list>
 
 #include <plib/sg.h>		// plib include
 
 #include <FDM/flight.hxx>
-#include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 
 #include "options.hxx"

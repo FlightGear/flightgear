@@ -74,15 +74,25 @@ static int msk_gearmove, msk_flapup, msk_flapdn, msk_eltrimup, msk_eltrimdn;
 // you use USB devices, they appear in a semi-random order.  Sigh.
 void to_find_A ( int firstcall, float **ptr, int axes, int axis )
 {	int a;
-	if (firstcall) (*ptr) = NULL;
-	for ( a = 0; a < jsN; a++ )
-	if ( ( NULL != js[a] )
-	  && ( NULL == *ptr )
-	  && ( axes == js[a]->getNumAxes() )
-	  && ( (js_ax[a])[axis] > 0.5 )
-	   )	{	( *ptr) = (js_ax[a]) + axis;
-			(**ptr) = 0;
+
+	if (firstcall) {
+	    (*ptr) = NULL;
+	}
+
+	for ( a = 0; a < jsN; a++ ) {
+	    if ( NULL != js[a] ) {
+		if ( NULL == *ptr ) {
+		    if ( axes == js[a]->getNumAxes() ) {
+			cout << "axis[" << a << "][" << axis << "] = "
+			     << (js_ax[a])[axis] << endl;
+			if ( (js_ax[a])[axis] > 0.5 ) {
+			    ( *ptr) = (js_ax[a]) + axis;
+			    (**ptr) = 0;
+			}
+		    }
 		}
+	    }
+	}
 }
 
 // this finds a specific button on a given controller device
@@ -185,8 +195,8 @@ int fgJoystickInit( void ) {
     for ( i = 0; i < jsN; i ++ )
     {   js[i] = new jsJoystick ( i );
         if ( js[i]->notWorking () ) 
-	{   // not working
-//BUG	    free ( js[i] );
+	{   
+	    delete js[i];
             js[i] = NULL;
         } else {
 	    j = js[i]->getNumAxes();
@@ -222,14 +232,17 @@ int fgJoystickInit( void ) {
 
     to_find_A ( 1, &to_aileron	, 6, 0 );	// Yoke
     to_find_A ( 0, &to_aileron	, 2, 0 );	// Analog JS
+    to_find_A ( 0, &to_aileron	, 4, 0 );	// Gaming JS
+
     to_find_A ( 1, &to_elevator	, 6, 1 );	// Yoke
     to_find_A ( 0, &to_elevator	, 2, 1 );	// Analog JS
+    to_find_A ( 0, &to_elevator	, 4, 1 );	// Gaming JS
 
     to_find_A ( 1, &to_throttle	, 6, 3 );	// Yoke
     to_find_A ( 0, &to_throttle	, 2, 0 );	// Analog JS, presume second
-    to_find_A ( 0, &to_throttle	, 4, 2 );	// gaming joystick
+    to_find_A ( 0, &to_throttle	, 4, 3 );	// Game JS
 
-    to_find_A ( 1, &to_rudder	, 4, 3 );	// Pedals or gaming joystick
+    to_find_A ( 1, &to_rudder	, 4, 2 );	// Pedals or gaming joystick
     to_find_A ( 0, &to_rudder	, 2, 1 );	// Analog JS, maybe second
 
     to_find_A ( 1, &to_viewhat	, 6, 4 );	// Yoke

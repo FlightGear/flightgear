@@ -42,6 +42,7 @@ bool global_fullscreen = true;
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgstream.hxx>
 #include <simgear/misc/props.hxx>
+#include <simgear/timing/fg_time.hxx>
 
 #include <Include/general.hxx>
 #include <Cockpit/cockpit.hxx>
@@ -50,7 +51,6 @@ bool global_fullscreen = true;
 #ifdef FG_NETWORK_OLK
 #  include <NetworkOLK/network.h>
 #endif
-#include <Time/fg_time.hxx>
 
 #include "views.hxx"
 #include "options.hxx"
@@ -200,7 +200,7 @@ fgOPTIONS::fgOPTIONS() :
     network_olk(false)
 {
     // set initial values/defaults
-    time_offset_type=FG_TIME_SYS_OFFSET;
+    time_offset_type = SG_TIME_SYS_OFFSET;
     char* envp = ::getenv( "FG_ROOT" );
 
     if ( envp != NULL ) {
@@ -231,12 +231,8 @@ fgOPTIONS::fgOPTIONS() :
 void 
 fgOPTIONS::toggle_panel() {
     
-    FGTime *t = FGTime::cur_time_params;
-    
-    int toggle_pause = t->getPause();
-    
-    if( !toggle_pause )
-        t->togglePauseMode();
+    if( !pause )
+        toggle_pause();
     
     if( panel_status ) {
 	panel_status = false;
@@ -255,8 +251,8 @@ fgOPTIONS::toggle_panel() {
     // fgReshape( xsize, ysize);
     fgReshape( current_view.get_winWidth(), current_view.get_winHeight() );
 
-    if( !toggle_pause )
-        t->togglePauseMode();
+    if( !pause )
+        toggle_pause();
 }
 
 double
@@ -777,22 +773,22 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	tile_diameter = tile_radius * 2 + 1;
     } else if ( arg.find( "--time-offset" ) != string::npos ) {
 	time_offset = parse_time_offset( (arg.substr(14)) );
-	//time_offset_type = FG_TIME_SYS_OFFSET;
+	//time_offset_type = SG_TIME_SYS_OFFSET;
     } else if ( arg.find( "--time-match-real") != string::npos ) {
       //time_offset = parse_time_offset(arg.substr(18));
-	time_offset_type = FG_TIME_SYS_OFFSET;
+	time_offset_type = SG_TIME_SYS_OFFSET;
     } else if ( arg.find( "--time-match-local") != string::npos ) {
       //time_offset = parse_time_offset(arg.substr(18));
-	time_offset_type = FG_TIME_LAT_OFFSET;
+	time_offset_type = SG_TIME_LAT_OFFSET;
     } else if ( arg.find( "--start-date-sys=") != string::npos ) {
         time_offset = parse_date( (arg.substr(17)) );
-	time_offset_type = FG_TIME_SYS_ABSOLUTE;
+	time_offset_type = SG_TIME_SYS_ABSOLUTE;
     } else if ( arg.find( "--start-date-lat=") != string::npos ) {
         time_offset = parse_date( (arg.substr(17)) );
-	time_offset_type = FG_TIME_LAT_ABSOLUTE;
+	time_offset_type = SG_TIME_LAT_ABSOLUTE;
     } else if ( arg.find( "--start-date-gmt=") != string::npos ) {
         time_offset = parse_date( (arg.substr(17)) );
-	time_offset_type = FG_TIME_GMT_ABSOLUTE;
+	time_offset_type = SG_TIME_GMT_ABSOLUTE;
 
     } else if ( arg == "--hud-tris" ) {
 	tris_or_culled = 0;	

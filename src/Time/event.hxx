@@ -31,6 +31,7 @@
 
 
 #include <simgear/compiler.h>
+#include <simgear/timing/fg_time.hxx>
 
 #include <Include/fg_callback.hxx>
 
@@ -38,7 +39,6 @@
 #include <list>         // STL list
 #include STL_STRING
 
-#include "fg_time.hxx"
 #include "timestamp.hxx"
 
 FG_USING_STD(deque);

@@ -66,16 +66,17 @@
 
 #include <simgear/constants.h>  // for VERSION
 #include <simgear/debug/logstream.hxx>
+#include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/math/fg_geodesy.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/fg_random.h>
 #include <simgear/misc/fgpath.hxx>
 #include <simgear/sky/sky.hxx>
+#include <simgear/timing/fg_time.hxx>
 
 #include <Include/general.hxx>
 
 #include <Aircraft/aircraft.hxx>
-#include <Ephemeris/ephemeris.hxx>
 
 #include <Autopilot/newauto.hxx>
 #include <Cockpit/cockpit.hxx>
@@ -91,9 +92,9 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
-#include <Time/fg_time.hxx>
 #include <Time/fg_timer.hxx>
 #include <Time/sunpos.hxx>
+#include <Time/tmp.hxx>
 
 #ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
@@ -316,9 +317,8 @@ void fgRenderFrame( void ) {
 	if ( current_options.get_wireframe() ) {
 	    clear_mask |= GL_COLOR_BUFFER_BIT;
 	}
-	if ( current_options.get_panel_status() ) {
-	    // we can't clear the screen when the panel is active
-	} else if ( current_options.get_skyblend() ) {
+
+	if ( current_options.get_skyblend() ) {
 	    if ( current_options.get_textures() ) {
 		// glClearColor(black[0], black[1], black[2], black[3]);
 		glClearColor(l->adj_fog_color[0], l->adj_fog_color[1], 
@@ -616,7 +616,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	multi_loop = 1;
     }
 
-    if ( !t->getPause() ) {
+    if ( !current_options.get_pause() ) {
 	// run Autopilot system
 	current_autopilot->run();
 
@@ -799,6 +799,16 @@ static void fgMainLoop( void ) {
     t->update( cur_fdm_state->get_Longitude(),
 	       cur_fdm_state->get_Latitude(),
 	       cur_fdm_state->get_Altitude()* FEET_TO_METER );
+
+    if ( t->get_warp_delta() != 0 ) {
+	fgUpdateSkyAndLightingParams();
+    }
+
+    // update magvar model
+    cur_magvar.update( cur_fdm_state->get_Longitude(),
+		       cur_fdm_state->get_Latitude(),
+		       cur_fdm_state->get_Altitude()* FEET_TO_METER,
+		       FGTime::cur_time_params->getJD() );
 
     // Get elapsed time (in usec) for this past frame
     elapsed = fgGetTimeInterval();
@@ -1296,11 +1306,14 @@ int main( int argc, char **argv ) {
     guiInit();
 
     // Initialize time
-    FGTime::cur_time_params = new FGTime();
+    FGTime::cur_time_params = new FGTime( current_options.get_fg_root() );
     // FGTime::cur_time_params->init( cur_fdm_state->get_Longitude(), 
     //                                cur_fdm_state->get_Latitude() );
     // FGTime::cur_time_params->update( cur_fdm_state->get_Longitude() );
-    FGTime::cur_time_params->init( 0.0, 0.0 );
+    FGTime::cur_time_params->init( 0.0, 0.0,
+				   current_options.get_fg_root(), 
+				   current_options.get_time_offset(),
+				   current_options.get_time_offset_type() );
     FGTime::cur_time_params->update( 0.0, 0.0, 0.0 );
 
     // Do some quick general initializations
@@ -1347,9 +1360,15 @@ int main( int argc, char **argv ) {
 		   ephem->getPlanets(), 60000.0,
 		   ephem->getNumStars(),
 		   ephem->getStars(), 60000.0 );
-    thesky->add_cloud_layer( 213.0, 50.0, 50.0, SG_CLOUD_MOSTLY_SUNNY );
-    thesky->add_cloud_layer( 2600.0, 200.0, 50.0, SG_CLOUD_MOSTLY_SUNNY );
-    thesky->add_cloud_layer( 6000.0, 20.0, 10.0, SG_CLOUD_CIRRUS );
+
+    thesky->add_cloud_layer( 2600.0, 200.0, 50.0, 40000.0,
+			     SG_CLOUD_MOSTLY_SUNNY );
+    thesky->add_cloud_layer( 6000.0, 20.0, 10.0, 40000.0,
+			     SG_CLOUD_CIRRUS );
+
+    // thesky->add_cloud_layer( 1000.0, 200.0, 50.0, SG_CLOUD_MOSTLY_SUNNY );
+    // thesky->add_cloud_layer( 1800.0, 400.0, 100.0, SG_CLOUD_OVERCAST );
+    // thesky->add_cloud_layer( 5000.0, 20.0, 10.0, SG_CLOUD_CIRRUS );
 
     // Terrain branch
     terrain = new ssgBranch;

@@ -54,12 +54,12 @@ FG_USING_STD(string);
 #include <simgear/math/interpolater.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/fgpath.hxx>
+#include <simgear/timing/fg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 
-#include "fg_time.hxx"
 #include "light.hxx"
 #include "sunpos.hxx"
 

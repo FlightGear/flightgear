@@ -41,7 +41,6 @@
 #include <Main/bfi.hxx>
 #include <Main/fg_init.hxx>
 #include <Main/options.hxx>
-#include <Time/fg_time.hxx>
 
 #include "auto_gui.hxx"
 #include "newauto.hxx"

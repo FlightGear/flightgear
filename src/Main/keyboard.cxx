@@ -48,6 +48,7 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
+#include <simgear/timing/fg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Autopilot/auto_gui.hxx>
@@ -56,8 +57,8 @@
 #include <GUI/gui.h>
 #include <Scenery/tilemgr.hxx>
 #include <Objects/matlib.hxx>
-#include <Time/fg_time.hxx>
 #include <Time/light.hxx>
+#include <Time/tmp.hxx>
 
 #ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
@@ -70,13 +71,6 @@
 #include "options.hxx"
 #include "save.hxx"
 #include "views.hxx"
-
-
-// Force an update of the sky and lighting parameters
-static void local_update_sky_and_lighting_params( void ) {
-    FGTime::cur_time_params->updateLocal();
-    cur_light_params.Update();
-}
 
 
 // Handle keyboard events
@@ -201,14 +195,14 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 77: // M key
 	    t->adjust_warp(-60);
-	    local_update_sky_and_lighting_params();
+	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 80: // P key
 	    current_options.toggle_panel();
 	    break;
 	case 84: // T key
 	    t->adjust_warp_delta(-30);
-	    local_update_sky_and_lighting_params();
+	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 87: // W key
 #if defined(FX) && !defined(WIN32)
@@ -346,10 +340,10 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 109: // m key
 	    t->adjust_warp (+60);
-	    local_update_sky_and_lighting_params();
+	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 112: // p key
-	    t->togglePauseMode();
+	    current_options.toggle_pause();
 
 	    {
 		FGBucket p( f->get_Longitude() * RAD_TO_DEG,
@@ -374,7 +368,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 116: // t key
 	    t->adjust_warp_delta (+30);
-	    local_update_sky_and_lighting_params();
+	    fgUpdateSkyAndLightingParams();
 	    return;
 	case 118: // v key
 	    current_options.cycle_view_mode();
@@ -480,9 +474,8 @@ void GLUTspecialkey(int k, int x, int y) {
 	    {
 		int toggle_pause;
 		FG_LOG(FG_INPUT, FG_INFO, "ReIniting TileCache");
-		FGTime *t = FGTime::cur_time_params;
-		if( (toggle_pause = !t->getPause()) )
-		    t->togglePauseMode();
+		if( (toggle_pause = !current_options.get_pause()) )
+		    current_options.toggle_pause();
 		BusyCursor(0);
 		if( global_tile_mgr.init() ) {
 		    // Load the local scenery data
@@ -495,7 +488,7 @@ void GLUTspecialkey(int k, int x, int y) {
 		}
 		BusyCursor(1);
 		if(toggle_pause)
-		    t->togglePauseMode();
+		    current_options.toggle_pause();
 		return;
 	    }
 	case GLUT_KEY_F3: // F3 Take a screen shot

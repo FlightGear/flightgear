@@ -29,8 +29,9 @@
 #include <map>
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/timing/fg_time.hxx>
+
 #include <Main/bfi.hxx>
-#include <Time/fg_time.hxx>
 
 #include "panel.hxx"
 #include "steam.hxx"

@@ -47,7 +47,6 @@
 #include <Main/views.hxx>
 #include <Scenery/scenery.hxx>
 #include <Time/fg_timer.hxx>
-#include <Time/fg_time.hxx>
 #include <GUI/gui.h>
 
 #include "cockpit.hxx"

@@ -36,7 +36,8 @@
 #  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
 #endif
 
-#include "fg_time.hxx"
+#include <simgear/timing/fg_time.hxx>
+
 #include "fg_timer.hxx"
 #include "timestamp.hxx"
 

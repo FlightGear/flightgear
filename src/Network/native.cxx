@@ -23,8 +23,7 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/fg_geodesy.hxx>
-
-#include <Time/fg_time.hxx>
+#include <simgear/timing/fg_time.hxx>
 
 #include "iochannel.hxx"
 #include "native.hxx"

@@ -33,20 +33,21 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/math/fg_types.hxx>
 #include <simgear/misc/props.hxx>
+#include <simgear/timing/fg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <Controls/controls.hxx>
 #include <Autopilot/newauto.hxx>
 #include <Scenery/scenery.hxx>
-#include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 #include <Time/event.hxx>
 #include <Time/sunpos.hxx>
+#include <Time/tmp.hxx>
 #include <Cockpit/radiostack.hxx>
-#include <Ephemeris/ephemeris.hxx>
 #ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
@@ -270,7 +271,7 @@ FGBFI::reinit ()
   fgUpdateSunPos();
   fgUpdateMoonPos();
   cur_light_params.Update();
-  FGTime::cur_time_params->updateLocal();
+  fgUpdateLocalTime();
   fgUpdateWeatherDatabase();
   fgRadioSearch();
 
@@ -389,9 +390,12 @@ FGBFI::setTimeGMT (time_t time)
 				// FIXME: need to update lighting
 				// and solar system
   current_options.set_time_offset(time);
-  current_options.set_time_offset_type(fgOPTIONS::FG_TIME_GMT_ABSOLUTE);
+  current_options.set_time_offset_type(SG_TIME_GMT_ABSOLUTE);
   FGTime::cur_time_params->init( cur_fdm_state->get_Longitude(),
-				 cur_fdm_state->get_Latitude() );
+				 cur_fdm_state->get_Latitude(),
+				 current_options.get_fg_root(),
+				 current_options.get_time_offset(),
+				 current_options.get_time_offset_type() );
   FGTime::cur_time_params->update( cur_fdm_state->get_Longitude(),
 				   cur_fdm_state->get_Latitude(),
 				   cur_fdm_state->get_Altitude()
@@ -1358,7 +1362,7 @@ FGBFI::setCloudsASL (double cloudsASL)
 double
 FGBFI::getMagVar ()
 {
-  return FGTime::cur_time_params->getMagVar() * RAD_TO_DEG;
+  return cur_magvar.get_magvar() * RAD_TO_DEG;
 }
 
 
@@ -1368,7 +1372,7 @@ FGBFI::getMagVar ()
 double
 FGBFI::getMagDip ()
 {
-  return FGTime::cur_time_params->getMagDip() * RAD_TO_DEG;
+  return cur_magvar.get_magdip() * RAD_TO_DEG;
 }
 
 

@@ -47,6 +47,7 @@ extern bool global_fullscreen;
 #endif
 
 #include <simgear/math/fg_types.hxx>
+#include <simgear/timing/fg_time.hxx>
 
 #include STL_STRING
 #include <vector>
@@ -85,16 +86,6 @@ public:
     {
 	FG_RADIUS_MIN = 1,
 	FG_RADIUS_MAX = 4
-    };
-
-    enum
-    {
-      FG_TIME_SYS_OFFSET   = 1,
-      FG_TIME_GMT_OFFSET   = 2,
-      FG_TIME_LAT_OFFSET   = 3,
-      FG_TIME_SYS_ABSOLUTE = 4,
-      FG_TIME_GMT_ABSOLUTE = 5,
-      FG_TIME_LAT_ABSOLUTE = 6
     };
 
     enum fgControlMode
@@ -195,8 +186,9 @@ private:
 
     // Time options
     int time_offset;		// Use this value to change time.
-    int time_offset_type;	// Will be set to one of the FG_TIME_* enums,
-				// To deterine how time_offset should be used 
+    sgTimingOffsetType time_offset_type; // Will be set to one of the
+				// SG_TIME_* enums, to deterine how
+				// time_offset should be used 
 
     // Serial port configuration strings
     string_list channel_options_list;
@@ -282,7 +274,9 @@ public:
     inline int get_tris_or_culled() const { return tris_or_culled; }
 
     inline int get_time_offset() const { return time_offset; }
-    inline int get_time_offset_type() const { return time_offset_type; };
+    inline sgTimingOffsetType  get_time_offset_type() const {
+	return time_offset_type;
+    };
 
     inline string_list get_channel_options_list() const { 
 	return channel_options_list;
@@ -310,6 +304,7 @@ public:
     inline void set_intro_music (bool value) { intro_music = value; }
     inline void set_mouse_pointer (int value) { mouse_pointer = value; }
     inline void set_pause (bool value) { pause = value; }
+    inline void toggle_pause () { pause = !pause; }
     inline void set_anti_alias_hud (bool value) { anti_alias_hud = value; }
     inline void set_hud_status( bool status ) { hud_status = status; }
     inline void set_sound (bool value) { sound = value; }
@@ -346,7 +341,9 @@ public:
     inline void set_units (int value) { units = value; }
     inline void set_tris_or_culled (int value) { tris_or_culled = value; }
     inline void set_time_offset (int value) { time_offset = value; }
-    inline void set_time_offset_type (int value) { time_offset_type = value; }
+    inline void set_time_offset_type (sgTimingOffsetType value) {
+	time_offset_type = value;
+    }
     inline void cycle_view_mode() { 
 	if ( view_mode == FG_VIEW_PILOT ) {
 	    view_mode = FG_VIEW_FOLLOW;

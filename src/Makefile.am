@@ -17,7 +17,6 @@ SUBDIRS = \
         Autopilot \
         Cockpit \
         Controls \
-        Ephemeris \
         FDM \
         GUI \
         Joystick \

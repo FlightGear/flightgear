@@ -55,6 +55,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 #include <simgear/screen/screen-dump.hxx>
+#include <simgear/timing/fg_time.hxx>
 
 #include <Include/general.hxx>
 #include <Aircraft/aircraft.hxx>
@@ -72,7 +73,6 @@
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
-#include <Time/fg_time.hxx>
 
 #if defined( WIN32 ) && !defined( __CYGWIN__ )
 #  include <simgear/screen/win32-printer.h>
@@ -369,14 +369,6 @@ void guiMotionFunc ( int x, int y )
     int ww, wh, need_warp = 0;
     float W, H;
     double offset;
-//  FGTime *t = FGTime::cur_time_params;
-//  if( mouse_timed_out ) {
-//      if( t->get_cur_time() > mouse_off_time ) {
-//          moused_timed_out = 0;
-//          TurnCursorOn();
-//          glutPostRedisplay () ;
-//      }
-//  }
 
     if (mouse_mode == MOUSE_POINTER) {
         puMouse ( x, y ) ;
@@ -682,13 +674,11 @@ void guiFixPanel( void )
 
     if ( current_options.get_panel_status() ) {
         // FGView *v = &current_view;
-        FGTime *t = FGTime::cur_time_params;
-
-        if( (toggle_pause = !t->getPause()) )
-            t->togglePauseMode();
+        if( (toggle_pause = !current_options.get_pause()) )
+            current_options.toggle_pause();
 
         if(toggle_pause)
-            t->togglePauseMode();
+            current_options.toggle_pause();
     }
 }
 
@@ -1040,10 +1030,9 @@ void AptDialog_OK (puObject *)
 
     FGAirport a;
     
-    FGTime *t = FGTime::cur_time_params;
-    int PauseMode = t->getPause();
+    int PauseMode = current_options.get_pause();
     if(!PauseMode)
-        t->togglePauseMode();
+        current_options.toggle_pause();
 
     char *s;
     AptDialogInput->getValue(&s);
@@ -1070,8 +1059,8 @@ void AptDialog_OK (puObject *)
             mkDialog(AptId.c_str());
         }
     }
-    if( PauseMode != t->getPause() )
-        t->togglePauseMode();
+    if( PauseMode != current_options.get_pause() )
+        current_options.toggle_pause();
 }
 
 void AptDialog_Reset(puObject *)
@@ -1151,10 +1140,9 @@ void NetIdDialog_OK (puObject *)
 {
     string NetId;
     
-    FGTime *t = FGTime::cur_time_params;
-    int PauseMode = t->getPause();
+    int PauseMode = current_options.get_pause();
     if(!PauseMode)
-        t->togglePauseMode();
+        current_options.toggle_pause();
 /*  
    The following needs some cleanup because 
    "string options.NetId" and "char *net_callsign" 
@@ -1169,8 +1157,8 @@ void NetIdDialog_OK (puObject *)
 /* Entering a callsign indicates : user wants Net HUD Info */
     net_hud_display = 1;
 
-    if( PauseMode != t->getPause() )
-        t->togglePauseMode();
+    if( PauseMode != current_options.get_pause() )
+        current_options.toggle_pause();
 }
 
 void NewCallSign(puObject *cb)
@@ -1270,16 +1258,15 @@ void NetFGDDialog_OK (puObject *)
 {
     char *NetFGD;    
 
-    FGTime *t = FGTime::cur_time_params;
-    int PauseMode = t->getPause();
-    if(!PauseMode) t->togglePauseMode();
+    int PauseMode = current_options.get_pause();
+    if(!PauseMode) current_options.toggle_pause();
     NetFGDHostDialogInput->getValue( &NetFGD );
     strcpy( fgd_host, NetFGD);
     NetFGDPortLoDialogInput->getValue( (int *) &base_port );
     NetFGDPortHiDialogInput->getValue( (int *) &end_port );
     NetFGDDialog_Cancel( NULL );
-    if( PauseMode != t->getPause() )
-        t->togglePauseMode();
+    if( PauseMode != current_options.get_pause() )
+        current_options.toggle_pause();
 }
 
 void NetFGDDialog_SCAN (puObject *)
@@ -1287,9 +1274,8 @@ void NetFGDDialog_SCAN (puObject *)
     char *NetFGD;
     int fgd_port;
     
-    FGTime *t = FGTime::cur_time_params;
-    int PauseMode = t->getPause();
-    if(!PauseMode) t->togglePauseMode();
+    int PauseMode = current_options.get_pause();
+    if(!PauseMode) current_options.toggle_pause();
 //    printf("Vor getvalue %s\n");
     NetFGDHostDialogInput->getValue( &NetFGD );
 //    printf("Vor strcpy %s\n", (char *) NetFGD);
@@ -1300,7 +1286,9 @@ void NetFGDDialog_SCAN (puObject *)
                  base_port, end_port);
     net_resolv_fgd(fgd_host);
     printf("Resolve : %d\n", net_r);
-    if( PauseMode != t->getPause() )  t->togglePauseMode();
+    if( PauseMode != current_options.get_pause() ) {
+	current_options.toggle_pause();
+    }
     if ( net_r == 0 ) {
       fgd_port = 10000;
       strcpy( fgd_name, "");

@@ -49,7 +49,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Autopilot/libAutopilot.a \
 	$(top_builddir)/src/Cockpit/libCockpit.a \
 	$(top_builddir)/src/Controls/libControls.a \
-	$(top_builddir)/src/Ephemeris/libEphemeris.a \
 	$(top_builddir)/src/FDM/libFlight.a \
 	$(top_builddir)/src/FDM/Balloon/libBalloon.a \
 	$(top_builddir)/src/FDM/JSBsim/libJSBsim.a \
@@ -66,7 +65,8 @@ fgfs_LDADD = \
 	$(WEATHER_LIBS) \
 	$(top_builddir)/src/Joystick/libJoystick.a \
 	$(SERIAL_LIBS) \
-	-lsgsky -lsgscreen -lsgmath -lsgbucket -lsgdebug -lsgmagvar -lsgmisc \
+	-lsgsky -lsgephem -lsgtiming -lsgscreen -lsgmath -lsgbucket \
+	-lsgdebug -lsgmagvar -lsgmisc \
 	-lplibpu -lplibfnt -lplibssg -lplibsg \
 	-lmk4 -lz \
 	$(opengl_LIBS) \

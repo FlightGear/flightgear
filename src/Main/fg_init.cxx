@@ -54,6 +54,7 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/fgpath.hxx>
+#include <simgear/timing/fg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
@@ -77,10 +78,10 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
-#include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 #include <Time/sunpos.hxx>
 #include <Time/moonpos.hxx>
+#include <Time/tmp.hxx>
 
 #ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
@@ -441,9 +442,7 @@ bool fgInitSubsystems( void ) {
 						       &fgLIGHT::Update),
 			    fgEVENT::FG_EVENT_READY, 30000 );
     // update the current timezone each 30 minutes
-    global_events.Register( "fgTIME::updateLocal()",
-			    fgMethodCallback<FGTime>(FGTime::cur_time_params, 
-						     &FGTime::updateLocal),
+    global_events.Register( "fgUpdateLocalTime()", fgUpdateLocalTime,
 			    fgEVENT::FG_EVENT_READY, 1800000);
 
     // Initialize the weather modeling subsystem
@@ -594,12 +593,10 @@ bool fgInitSubsystems( void ) {
 
 void fgReInitSubsystems( void )
 {
-    FGTime *t = FGTime::cur_time_params;
-    
-    int toggle_pause = t->getPause();
+    int toggle_pause = current_options.get_pause();
     
     if( !toggle_pause )
-        t->togglePauseMode();
+        current_options.toggle_pause();
     
     fgInitPosition();
     if( global_tile_mgr.init() ) {
@@ -687,5 +684,5 @@ void fgReInitSubsystems( void )
     current_autopilot->reset();
 
     if( !toggle_pause )
-        t->togglePauseMode();
+        current_options.toggle_pause();
 }

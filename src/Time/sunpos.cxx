@@ -55,16 +55,16 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/math/fg_geodesy.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/vector.hxx>
+#include <simgear/timing/fg_time.hxx>
 
-#include <Ephemeris/ephemeris.hxx>
 #include <Main/views.hxx>
 #include <Scenery/scenery.hxx>
 
-#include "fg_time.hxx"
 #include "sunpos.hxx"
 
 // extern SolarSystem *solarSystem;
