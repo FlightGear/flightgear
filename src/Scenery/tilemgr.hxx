@@ -77,14 +77,11 @@ private:
     void initialize_queue();
 
     // schedule a tile for loading
-    void sched_tile( const SGBucket& b );
+    void sched_tile( const SGBucket& b, const bool is_inner_ring );
 
     // schedule a needed buckets for loading
     void schedule_needed(double visibility_meters, SGBucket curr_bucket);
 
-    // see comment at prep_ssg_nodes()
-    void prep_ssg_node( int idx );
-	
     FGHitList hit_list;
 
     SGBucket previous_bucket;

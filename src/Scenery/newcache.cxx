@@ -207,6 +207,20 @@ long FGNewCache::get_oldest_tile() {
 }
 
 
+// Clear the inner ring flag for all tiles in the cache so that the
+// external tile scheduler can flag the inner ring correctly.
+void FGNewCache::clear_inner_ring_flags() {
+    tile_map_iterator current = tile_cache.begin();
+    tile_map_iterator end = tile_cache.end();
+    
+    for ( ; current != end; ++current ) {
+        FGTileEntry *e = current->second;
+        if ( e->is_loaded() && (e->get_pending_models() == 0) ) {
+            e->set_inner_ring( false );
+        }
+    }
+}
+
 // Clear a cache entry, note that the cache only holds pointers
 // and this does not free the object which is pointed to.
 void FGNewCache::clear_entry( long cache_index ) {

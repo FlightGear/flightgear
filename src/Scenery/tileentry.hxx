@@ -168,8 +168,19 @@ private:
 
     double timestamp;
 
+    /**
+     * this value is used by the tile scheduler/loader to mark which
+     * tiles are in the primary ring (i.e. the current tile or the
+     * surrounding eight.)  Other routines then can use this as an
+     * optimization and not do some operation to tiles outside of this
+     * inner ring.  (For instance vasi color updating)
+     */
+    bool is_inner_ring;
 
-    // this variable tracks the status of the incremental memory freeing.
+    /**
+     * this variable tracks the status of the incremental memory
+     * freeing.
+     */
     enum {
         NODES = 0x01,
         VEC_PTRS = 0x02,
@@ -260,10 +271,11 @@ public:
      */
     inline ssgTransform *get_terra_transform() { return terra_transform; }
 
-    void set_timestamp(double time_ms) { timestamp = time_ms; }
-
     inline double get_timestamp() const { return timestamp; }
+    inline void set_timestamp( double time_ms ) { timestamp = time_ms; }
 
+    inline bool get_inner_ring() const { return is_inner_ring; }
+    inline void set_inner_ring( bool val ) { is_inner_ring = val; }
 };
 
 

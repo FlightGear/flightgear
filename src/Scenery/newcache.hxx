@@ -85,15 +85,16 @@ public:
     // nothing available to be removed.
     long get_oldest_tile();
 
+    // Clear the inner ring flag for all tiles in the cache so that
+    // the external tile scheduler can flag the inner ring correctly.
+    void clear_inner_ring_flags();
+
     // Clear a cache entry, note that the cache only holds pointers
     // and this does not free the object which is pointed to.
     void clear_entry( long cache_entry );
 
     // Clear all completely loaded tiles (ignores partially loaded tiles)
     void clear_cache();
-
-    // Fill in a tile cache entry with real data for the specified bucket 
-    // void fill_in( const SGBucket& b );
 
     // Return a pointer to the specified tile cache entry 
     inline FGTileEntry *get_tile( const long tile_index ) {

@@ -114,7 +114,7 @@ int FGTileMgr::init() {
 
 
 // schedule a tile for loading
-void FGTileMgr::sched_tile( const SGBucket& b ) {
+void FGTileMgr::sched_tile( const SGBucket& b, const bool is_inner_ring ) {
     // see if tile already exists in the cache
     FGTileEntry *t = tile_cache.get_tile( b );
 
@@ -145,6 +145,8 @@ void FGTileMgr::sched_tile( const SGBucket& b ) {
             // delete.)  Try again later
             delete e;
         }
+    } else {
+        t->set_inner_ring( is_inner_ring );
     }
 }
 
@@ -180,18 +182,23 @@ void FGTileMgr::schedule_needed( double vis, SGBucket curr_bucket) {
 
     // note * 2 at end doubles cache size (for fdm and viewer)
     tile_cache.set_max_cache_size( (2*xrange + 2) * (2*yrange + 2) * 2 );
-
     /*
     cout << "xrange = " << xrange << "  yrange = " << yrange << endl;
     cout << "max cache size = " << tile_cache.get_max_cache_size()
          << " current cache size = " << tile_cache.get_size() << endl;
     */
 
+    // clear the inner ring flags so we can set them below.  This
+    // prevents us from having "true" entries we aren't able to find
+    // to get rid of if we teleport a long ways away from the current
+    // location.
+    tile_cache.clear_inner_ring_flags();
+
     SGBucket b;
 
     // schedule center tile first so it can be loaded first
     b = sgBucketOffset( longitude, latitude, 0, 0 );
-    sched_tile( b );
+    sched_tile( b, true );
 
     int x, y;
 
@@ -200,7 +207,7 @@ void FGTileMgr::schedule_needed( double vis, SGBucket curr_bucket) {
         for ( y = -1; y <= 1; ++y ) {
             if ( x != 0 || y != 0 ) {
                 b = sgBucketOffset( longitude, latitude, x, y );
-                sched_tile( b );
+                sched_tile( b, true );
             }
         }
     }
@@ -210,7 +217,7 @@ void FGTileMgr::schedule_needed( double vis, SGBucket curr_bucket) {
         for ( y = -yrange; y <= yrange; ++y ) {
             if ( x < -1 || x > 1 || y < -1 || y > 1 ) {
                 SGBucket b = sgBucketOffset( longitude, latitude, x, y );
-                sched_tile( b );
+                sched_tile( b, false );
             }
         }
     }

@@ -72,6 +72,7 @@ FGTileEntry::FGTileEntry ( const SGBucket& b )
       taxi_lights_selector( new ssgSelector ),
       loaded(false),
       pending_models(0),
+      is_inner_ring(false),
       free_tracker(0)
 {
     // update the contents
@@ -493,9 +494,11 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         }
     }
 
-    if ( vasi_lights_transform ) {
+    if ( vasi_lights_transform && is_inner_ring ) {
         // now we need to traverse the list of vasi lights and update
-        // their coloring
+        // their coloring (but only for the inner ring, no point in
+        // doing this extra work for tiles that are relatively far
+        // away.)
         for ( int i = 0; i < vasi_lights_transform->getNumKids(); ++i ) {
             // cout << "vasi root = " << i << endl;
             ssgBranch *v = (ssgBranch *)vasi_lights_transform->getKid(i);
