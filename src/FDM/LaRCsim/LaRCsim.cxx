@@ -31,16 +31,17 @@
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
-#include <FDM/LaRCsim/ls_cockpit.h>
-#include <FDM/LaRCsim/ls_generic.h>
-#include <FDM/LaRCsim/ls_interface.h>
-#include <FDM/LaRCsim/ls_constants.h>
+#include <FDM/IO360.hxx>
 #include <FDM/LaRCsimIC.hxx>
 #include <FDM/UIUCModel/uiuc_aircraft.h>
 #include <Main/fg_props.hxx>
 #include <Model/acmodel.hxx>
 
-#include "IO360.hxx"
+#include "ls_cockpit.h"
+#include "ls_generic.h"
+#include "ls_interface.h"
+#include "ls_constants.h"
+
 #include "LaRCsim.hxx"
 
 

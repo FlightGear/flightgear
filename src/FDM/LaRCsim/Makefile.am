@@ -16,6 +16,7 @@ AIRCRAFT_MODEL =  c172_aero.c c172_engine.c c172_gear.c c172_init.c \
 noinst_LIBRARIES = libLaRCsim.a
 
 libLaRCsim_a_SOURCES = \
+	LaRCsim.cxx LaRCsim.hxx \
 	atmos_62.c atmos_62.h \
 	default_model_routines.c default_model_routines.h \
 	ls_accel.c ls_accel.h \

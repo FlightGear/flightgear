@@ -27,8 +27,8 @@
 #define _LARCSIM_HXX
 
 
-#include "IO360.hxx"
-#include "flight.hxx"
+#include <FDM/IO360.hxx>
+#include <FDM/flight.hxx>
 #include <FDM/LaRCsimIC.hxx>
 
 class FGLaRCsim: public FGInterface {

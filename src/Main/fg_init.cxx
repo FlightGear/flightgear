@@ -89,7 +89,7 @@
 #include <FDM/ExternalNet/ExternalNet.hxx>
 #include <FDM/ExternalPipe/ExternalPipe.hxx>
 #include <FDM/JSBSim/JSBSim.hxx>
-#include <FDM/LaRCsim.hxx>
+#include <FDM/LaRCsim/LaRCsim.hxx>
 #include <FDM/MagicCarpet.hxx>
 #include <FDM/UFO.hxx>
 #include <FDM/NullFDM.hxx>

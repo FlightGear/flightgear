@@ -7,7 +7,6 @@ libFlight_a_SOURCES = \
 	Balloon.cxx Balloon.h \
 	flight.cxx flight.hxx \
 	IO360.cxx IO360.hxx \
-	LaRCsim.cxx LaRCsim.hxx \
 	LaRCsimIC.cxx LaRCsimIC.hxx \
 	MagicCarpet.cxx MagicCarpet.hxx \
 	UFO.cxx UFO.hxx \
