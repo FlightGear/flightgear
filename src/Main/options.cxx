@@ -1059,7 +1059,7 @@ fgUsage ()
     cout << "\t--enable-mouse-pointer:  enable extra mouse pointer (i.e. for"
 	 << endl;
     cout << "\t\tfull screen voodoo/voodoo-II based cards.)" << endl;
-    cout << "\t--disable-freeze:  start out in an running state" << endl;
+    cout << "\t--disable-freeze:  start out in a running state" << endl;
     cout << "\t--enable-freeze:  start out in a frozen state" << endl;
     cout << "\t--control=mode:  primary control mode " 
 	 << "(joystick, keyboard, mouse)" << endl;
@@ -1074,7 +1074,7 @@ fgUsage ()
     cout << "\t--disable-hud:  disable heads up display" << endl;
     cout << "\t--enable-hud:  enable heads up display" << endl;
     cout << "\t--disable-panel:  disable instrument panel" << endl;
-    cout << "\t--enable-panel:  enable instrumetn panel" << endl;
+    cout << "\t--enable-panel:  enable instrument panel" << endl;
     cout << "\t--disable-sound:  disable sound effects" << endl;
     cout << "\t--enable-sound:  enable sound effects" << endl;
     cout << "\t--disable-anti-alias-hud:  disable anti aliased hud" << endl;
@@ -1104,17 +1104,17 @@ fgUsage ()
     cout << "Initial Position and Orientation:" << endl;
     cout << "\t--airport-id=ABCD:  specify starting postion by airport id" 
 	 << endl;
-    cout << "\t--offset-distance:  specify distance to threshhold"
+    cout << "\t--offset-distance:  specify distance to threshold"
          << " (NM)" << endl; 
-    cout << "\t--offset-azimuth:  specify heading to threshhold (deg) " 
+    cout << "\t--offset-azimuth:  specify heading to threshold (deg) " 
          << endl;    
     cout << "\t--lon=degrees:  starting longitude in degrees (west = -)" 
 	 << endl;
     cout << "\t--lat=degrees:  starting latitude in degrees (south = -)"
 	 << endl;
     cout << "\t--altitude=feet:  starting altitude in feet" << endl;
-    cout << "\t\t(unless --units-meters specified" << endl;
-    cout << "\t--heading=degrees:  heading (yaw) angle in degress (Psi)"
+    cout << "\t\t(unless --units-meters specified)" << endl;
+    cout << "\t--heading=degrees:  heading (yaw) angle in degrees (Psi)"
 	 << endl;
     cout << "\t--roll=degrees:  roll angle in degrees (Phi)" << endl;
     cout << "\t--pitch=degrees:  pitch angle in degrees (Theta)" << endl;
@@ -1124,7 +1124,7 @@ fgUsage ()
 	 << endl;
     cout << "\t--wBody=feet per second:  velocity along the body Z axis"
 	 << endl;
-    cout << "\t\t(unless --units-meters specified" << endl;
+    cout << "\t\t(unless --units-meters specified)" << endl;
     cout << "\t--vc= initial airspeed in knots" << endl;
     cout << "\t--mach= initial mach number" << endl;
     cout << endl;
