@@ -48,15 +48,15 @@ HISTORY
 #include <Voronoi/voronoi.h>
 #include <Voronoi/my_memory.h>
 
-extern "C" {
 #include <Voronoi/defs.h>
 
-//forward definitions
-void voronoi(int triangulate, struct Site *(*nextsite)());
-void geominit(void);
-void freeinit(struct Freelist *fl, int size);
-struct Site *nextone(void);
-bool readsites(PointList input);
+extern "C" {
+    //forward definitions
+    void voronoi(int triangulate, struct Site *(*nextsite)());
+    void geominit();
+    void freeinit(struct Freelist *fl, int size);
+    struct Site *nextone();
+    bool readsites(PointList input);
 };
 
 /****************************************************************************/
