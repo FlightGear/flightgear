@@ -98,8 +98,22 @@ void FGAIBase::update(double dt) {
     }
 
     rho = p / (1718 * (T + 459.7));
+	
+	// calculate the speed of sound at altitude
+	// a = sqrt ( g * R * (T + 459.7))
+	// where:
+	// a = speed of sound [ft/s]
+	// g = specific heat ratio, which is usually equal to 1.4  
+	// R = specific gas constant, which equals 1716 ft-lb/slug/°R 
+	
+	a = sqrt ( 1.4 * 1716 * (T + 459.7));
+	
+	// calculate Mach number
+	
+	Mach = speed/a;
+	
+//	cout  << "Speed(ft/s) "<< speed <<" Altitude(ft) "<< altitude << " Mach " << Mach;
 }
-
 
 void FGAIBase::Transform() {
     if (!invisible) {

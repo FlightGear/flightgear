@@ -182,6 +182,9 @@ public:
     double rho;
     double T;                             // temperature, degs farenheit
     double p;                             // pressure lbs/sq ft
+	double a;                             // speed of sound at altitude (ft/s)
+	double Mach;                          // Mach number
+	
     static const double e;
     static const double lbs_to_slugs;
 

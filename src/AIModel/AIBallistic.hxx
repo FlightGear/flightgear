@@ -67,7 +67,6 @@ private:
     bool wind;              // if true, local wind will be applied to object
     double Cd;              // drag coefficient
     double mass;            // slugs
-    double Mach;
 
     void Run(double dt);
 };
