@@ -406,20 +406,20 @@ createNAV1 (int x, int y)
 
 				// Action: increase selected radial
   inst->addAction(SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getNAV1SelRadial,
-				     FGBFI::setNAV1SelRadial,
+		  new FGAdjustAction(FGBFI::getNAV1Radial,
+				     FGBFI::setNAV1Radial,
 				     1.0, 0.0, 360.0, true));
 
 				// Action: decrease selected radial
   inst->addAction(SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getNAV1SelRadial,
-				     FGBFI::setNAV1SelRadial,
+		  new FGAdjustAction(FGBFI::getNAV1Radial,
+				     FGBFI::setNAV1Radial,
 				     -1.0, 0.0, 360.0, true));
 
 				// Layer 0: background
   inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
   inst->addTransformation(0, FGInstrumentLayer::ROTATION,
-			  FGBFI::getNAV1SelRadial,
+			  FGBFI::getNAV1Radial,
 			  -360.0, 360.0, -1.0, 0.0);
 
 				// Layer 1: left-right needle.
@@ -445,7 +445,7 @@ createNAV1 (int x, int y)
   inst->addTransformation(4, FGInstrumentLayer::XSHIFT, SIX_W/2 - 10); 
   inst->addTransformation(4, FGInstrumentLayer::YSHIFT, -SIX_W/2 + 10); 
   inst->addTransformation(4, FGInstrumentLayer::ROTATION,
-			  FGBFI::getNAV1SelRadial,
+			  FGBFI::getNAV1Radial,
 			  -360.0, 360.0, -1.0, 0.0);
 
   return inst;
@@ -462,20 +462,20 @@ createNAV2 (int x, int y)
 
 				// Action: increase selected radial
   inst->addAction(SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getNAV2SelRadial,
-				     FGBFI::setNAV2SelRadial,
+		  new FGAdjustAction(FGBFI::getNAV2Radial,
+				     FGBFI::setNAV2Radial,
 				     1.0, 0.0, 360.0, true));
 
 				// Action: decrease selected radial
   inst->addAction(SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
-		  new FGAdjustAction(FGBFI::getNAV2SelRadial,
-				     FGBFI::setNAV2SelRadial,
+		  new FGAdjustAction(FGBFI::getNAV2Radial,
+				     FGBFI::setNAV2Radial,
 				     -1.0, 0.0, 360.0, true));
 
 				// Layer 0: background
   inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
   inst->addTransformation(0, FGInstrumentLayer::ROTATION,
-			  FGBFI::getNAV2SelRadial,
+			  FGBFI::getNAV2Radial,
 			  -360.0, 360.0, -1.0, 0.0);
 
 				// Layer 1: left-right needle.
@@ -495,7 +495,7 @@ createNAV2 (int x, int y)
   inst->addTransformation(3, FGInstrumentLayer::XSHIFT, SIX_W/2 - 10); 
   inst->addTransformation(3, FGInstrumentLayer::YSHIFT, -SIX_W/2 + 10); 
   inst->addTransformation(3, FGInstrumentLayer::ROTATION,
-			  FGBFI::getNAV2SelRadial,
+			  FGBFI::getNAV2Radial,
 			  -360.0, 360.0, -1.0, 0.0);
 
   return inst;

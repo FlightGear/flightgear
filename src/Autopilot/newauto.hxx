@@ -34,9 +34,9 @@ public:
 
     enum fgAutoHeadingMode {
 	FG_HEADING_LOCK = 0,
-        FG_HEADING_WAYPOINT = 1,
-	FG_HEADING_NAV1 = 2,
-	FG_HEADING_NAV2 = 3
+	FG_HEADING_NAV1 = 1,
+	FG_HEADING_NAV2 = 2,
+        FG_HEADING_WAYPOINT = 3
     };
 
     enum fgAutoAltitudeMode {
@@ -64,6 +64,7 @@ private:
     double TargetClimbRate;	// climb rate to shoot for
     double TargetSpeed;		// speed to shoot for
     double alt_error_accum;	// altitude error accumulator
+    double climb_error_accum;	// climb error accumulator (for GS)
     double speed_error_accum;	// speed error accumulator
 
     double TargetSlope;		// the glide slope hold value

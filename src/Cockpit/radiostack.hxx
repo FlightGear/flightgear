@@ -36,7 +36,6 @@ class FGRadioStack {
     bool nav1_loc;
     double nav1_freq;
     double nav1_alt_freq;
-    double nav1_selected_radial;
     double nav1_radial;
     double nav1_lon;
     double nav1_lat;
@@ -49,7 +48,6 @@ class FGRadioStack {
     bool nav2_loc;
     double nav2_freq;
     double nav2_alt_freq;
-    double nav2_selected_radial;
     double nav2_radial;
     double nav2_lon;
     double nav2_lat;
@@ -80,8 +78,8 @@ public:
 	nav1_freq = freq; need_update = true;
     }
     inline void set_nav1_alt_freq( double freq ) { nav1_alt_freq = freq; }
-    inline void set_nav1_sel_radial( double radial ) {
-	nav1_selected_radial = radial; need_update = true;
+    inline void set_nav1_radial( double radial ) {
+	nav1_radial = radial; need_update = true;
     }
 
     // NAV2 Setters
@@ -89,8 +87,8 @@ public:
 	nav2_freq = freq; need_update = true;
     }
     inline void set_nav2_alt_freq( double freq ) { nav2_alt_freq = freq; }
-    inline void set_nav2_sel_radial( double radial ) {
-	nav2_selected_radial = radial; need_update = true;
+    inline void set_nav2_radial( double radial ) {
+	nav2_radial = radial; need_update = true;
     }
 
     // ADF Setters
@@ -104,12 +102,12 @@ public:
     // NAV1 Accessors
     inline double get_nav1_freq () { return nav1_freq; }
     inline double get_nav1_alt_freq () { return nav1_alt_freq; }
-    inline double get_nav1_sel_radial () { return nav1_selected_radial; }
+    inline double get_nav1_radial() const { return nav1_radial; }
 
     // NAV2 Accessors
     inline double get_nav2_freq () { return nav2_freq; }
     inline double get_nav2_alt_freq () { return nav2_alt_freq; }
-    inline double get_nav2_sel_radial () { return nav2_selected_radial; }
+    inline double get_nav2_radial() const { return nav2_radial; }
 
     // ADF Accessors
     inline double get_adf_freq () { return adf_freq; }
@@ -119,7 +117,6 @@ public:
     // Calculated values.
     inline bool get_nav1_inrange() const { return nav1_inrange; }
     inline bool get_nav1_loc() const { return nav1_loc; }
-    inline double get_nav1_radial() const { return nav1_radial; }
     inline double get_nav1_lon() const { return nav1_lon; }
     inline double get_nav1_lat() const { return nav1_lat; }
     inline double get_nav1_elev() const { return nav1_elev; }
@@ -129,7 +126,6 @@ public:
 
     inline bool get_nav2_inrange() const { return nav2_inrange; }
     inline bool get_nav2_loc() const { return nav2_loc; }
-    inline double get_nav2_radial() const { return nav2_radial; }
     inline double get_nav2_lon() const { return nav2_lon; }
     inline double get_nav2_lat() const { return nav2_lat; }
     inline double get_nav2_elev() const { return nav2_elev; }

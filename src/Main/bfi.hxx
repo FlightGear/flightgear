@@ -127,12 +127,10 @@ public:
 				// Radio Navigation
   static double getNAV1Freq ();
   static double getNAV1AltFreq ();
-  static double getNAV1SelRadial ();
   static double getNAV1Radial ();
 
   static double getNAV2Freq ();
   static double getNAV2AltFreq ();
-  static double getNAV2SelRadial ();
   static double getNAV2Radial ();
 
   static double getADFFreq ();
@@ -141,11 +139,11 @@ public:
 
   static void setNAV1Freq (double freq);
   static void setNAV1AltFreq (double freq);
-  static void setNAV1SelRadial (double radial);
+  static void setNAV1Radial (double radial);
 
   static void setNAV2Freq (double freq);
   static void setNAV2AltFreq (double freq);
-  static void setNAV2SelRadial (double radial);
+  static void setNAV2Radial (double radial);
 
   static void setADFFreq (double freq);
   static void setADFAltFreq (double freq);

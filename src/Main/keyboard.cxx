@@ -102,9 +102,23 @@ void GLUTkey(unsigned char k, int x, int y) {
 		  ! current_autopilot->get_AltitudeEnabled()
 	        );
 	    return;
+	case 7: // Ctrl-G key
+	    current_autopilot->set_AltitudeMode( 
+                  FGAutopilot::FG_ALTITUDE_GS1 );
+	    current_autopilot->set_AltitudeEnabled(
+		  ! current_autopilot->get_AltitudeEnabled()
+	        );
+	    return;
 	case 8: // Ctrl-H key
 	    current_autopilot->set_HeadingMode( 
                   FGAutopilot::FG_HEADING_LOCK );
+	    current_autopilot->set_HeadingEnabled(
+		  ! current_autopilot->get_HeadingEnabled()
+	        );
+	    return;
+	case 14: // Ctrl-N key
+	    current_autopilot->set_HeadingMode( 
+                  FGAutopilot::FG_HEADING_NAV1 );
 	    current_autopilot->set_HeadingEnabled(
 		  ! current_autopilot->get_HeadingEnabled()
 	        );

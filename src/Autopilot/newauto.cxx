@@ -33,6 +33,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/fg_geodesy.hxx>
 
+#include <Cockpit/radiostack.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
 #include <Main/bfi.hxx>
@@ -57,18 +58,6 @@ static double MaxRollAdjust;        // MaxRollAdjust       = 2 * APData->MaxRoll
 static double RollOutAdjust;        // RollOutAdjust       = 2 * APData->RollOut;
 static double MaxAileronAdjust;     // MaxAileronAdjust    = 2 * APData->MaxAileron;
 static double RollOutSmoothAdjust;  // RollOutSmoothAdjust = 2 * APData->RollOutSmooth;
-
-#if 0
-static float MaxRollValue;          // 0.1 -> 1.0
-static float RollOutValue;
-static float MaxAileronValue;
-static float RollOutSmoothValue;
-
-static float TmpMaxRollValue;       // for cancel operation
-static float TmpRollOutValue;
-static float TmpMaxAileronValue;
-static float TmpRollOutSmoothValue;
-#endif
 
 static char NewTgtAirportId[16];
 // static char NewTgtAirportLabel[] = "Enter New TgtAirport ID"; 
@@ -103,6 +92,41 @@ void FGAutopilot::MakeTargetHeadingStr( double bearing ) {
 }
 
 
+static inline double get_speed( void ) {
+    return( cur_fdm_state->get_V_equiv_kts() );
+}
+
+static inline double get_ground_speed() {
+    // starts in ft/s so we convert to kts
+    double ft_s = cur_fdm_state->get_V_ground_speed() 
+	* current_options.get_speed_up();;
+    double kts = ft_s * FEET_TO_METER * 3600 * METER_TO_NM;
+
+    return kts;
+}
+
+
+void FGAutopilot::MakeTargetDistanceStr( double distance ) {
+    double eta = distance*METER_TO_NM / get_ground_speed();
+    if ( eta >= 100.0 ) { eta = 99.999; }
+    int major, minor;
+    if ( eta < (1.0/6.0) ) {
+	// within 10 minutes, bump up to min/secs
+	eta *= 60.0;
+    }
+    major = (int)eta;
+    minor = (int)((eta - (int)eta) * 60.0);
+    sprintf( TargetDistanceStr, "APDistance %.2f NM  ETA %d:%02d",
+	     distance*METER_TO_NM, major, minor );
+    // cout << "distance = " << distance*METER_TO_NM
+    //      << "  gndsp = " << get_ground_speed() 
+    //      << "  time = " << eta
+    //      << "  major = " << major
+    //      << "  minor = " << minor
+    //      << endl;
+}
+
+
 void FGAutopilot::update_old_control_values() {
     old_aileron = FGBFI::getAileron();
     old_elevator = FGBFI::getElevator();
@@ -128,6 +152,7 @@ void FGAutopilot::init() {
     TargetHeading = 0.0;	// default direction, due north
     TargetAltitude = 3000;	// default altitude in meters
     alt_error_accum = 0.0;
+    climb_error_accum = 0.0;
 
     MakeTargetAltitudeStr( 3000.0);
     MakeTargetHeadingStr( 0.0 );
@@ -181,6 +206,7 @@ void FGAutopilot::reset() {
     MakeTargetAltitudeStr( TargetAltitude );
 	
     alt_error_accum = 0.0;
+    climb_error_accum = 0.0;
 	
     update_old_control_values();
 
@@ -189,41 +215,6 @@ void FGAutopilot::reset() {
     TargetLatitude = FGBFI::getLatitude();
     TargetLongitude = FGBFI::getLongitude();
     MakeTargetLatLonStr( TargetLatitude, TargetLongitude );
-}
-
-
-static inline double get_speed( void ) {
-    return( cur_fdm_state->get_V_equiv_kts() );
-}
-
-static inline double get_ground_speed() {
-    // starts in ft/s so we convert to kts
-    double ft_s = cur_fdm_state->get_V_ground_speed() 
-	* current_options.get_speed_up();;
-    double kts = ft_s * FEET_TO_METER * 3600 * METER_TO_NM;
-
-    return kts;
-}
-
-
-void FGAutopilot::MakeTargetDistanceStr( double distance ) {
-    double eta = distance*METER_TO_NM / get_ground_speed();
-    if ( eta >= 100.0 ) { eta = 99.999; }
-    int major, minor;
-    if ( eta < (1.0/6.0) ) {
-	// within 10 minutes, bump up to min/secs
-	eta *= 60.0;
-    }
-    major = (int)eta;
-    minor = (int)((eta - (int)eta) * 60.0);
-    sprintf( TargetDistanceStr, "APDistance %.2f NM  ETA %d:%02d",
-	     distance*METER_TO_NM, major, minor );
-    // cout << "distance = " << distance*METER_TO_NM
-    //      << "  gndsp = " << get_ground_speed() 
-    //      << "  time = " << eta
-    //      << "  major = " << major
-    //      << "  minor = " << minor
-    //      << endl;
 }
 
 
@@ -309,6 +300,22 @@ int FGAutopilot::run() {
 
 	if ( heading_mode == FG_HEADING_LOCK ) {
 	    // leave target heading alone
+	} else if ( heading_mode == FG_HEADING_NAV1 ) {
+	    double tgt_radial = current_radiostack->get_nav1_radial();
+	    double cur_radial = current_radiostack->get_nav1_heading() + 180.0;
+	    // cout << "target rad = " << tgt_radial 
+	    //      << "  current rad = " << cur_radial
+	    //      << endl;
+
+	    double diff = (tgt_radial - cur_radial) 
+		* (current_radiostack->get_nav1_dist() * METER_TO_NM);
+	    if ( diff < -30.0 ) { diff = -30.0; }
+	    if ( diff >  30.0 ) { diff =  30.0; }
+
+	    TargetHeading = cur_radial - diff;
+	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
+	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
+	    // cout << "target course = " << TargetHeading << endl;
 	} else if ( heading_mode == FG_HEADING_WAYPOINT ) {
 	    // update target heading to waypoint
 
@@ -441,6 +448,14 @@ int FGAutopilot::run() {
 	    //      << endl;
 	    TargetClimbRate =
 		( TargetAltitude - FGBFI::getAltitude() * FEET_TO_METER ) * 8.0;
+	} else if ( altitude_mode == FG_ALTITUDE_GS1 ) {
+	    double x = current_radiostack->get_nav1_dist();
+	    double y = (FGBFI::getAltitude() 
+			- current_radiostack->get_nav1_elev()) * FEET_TO_METER;
+	    double angle = atan2( y, x ) * RAD_TO_DEG;
+	    double gs_diff = current_radiostack->get_nav1_target_gs() - angle;
+	    climb_error_accum += gs_diff * 2.0;
+	    TargetClimbRate = gs_diff * 200.0 + climb_error_accum;
 	} else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
 	    // brain dead ground hugging with no look ahead
 	    TargetClimbRate =
@@ -636,19 +651,22 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 void FGAutopilot::set_AltitudeMode( fgAutoAltitudeMode mode ) {
     altitude_mode = mode;
 
+    alt_error_accum = 0.0;
+
     if ( altitude_mode == FG_ALTITUDE_LOCK ) {
 	// lock at current altitude
 	TargetAltitude = FGBFI::getAltitude() * FEET_TO_METER;
-	alt_error_accum = 0.0;
 
 	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
 	    MakeTargetAltitudeStr( TargetAltitude * METER_TO_FEET );
 	} else {
 	    MakeTargetAltitudeStr( TargetAltitude * METER_TO_FEET );
 	}
+    } else if ( altitude_mode == FG_ALTITUDE_GS1 ) {
+	climb_error_accum = 0.0;
+
     } else if ( altitude_mode == FG_ALTITUDE_TERRAIN ) {
 	TargetAGL = FGBFI::getAGL() * FEET_TO_METER;
-	alt_error_accum = 0.0;
 
 	if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
 	    MakeTargetAltitudeStr( TargetAGL * METER_TO_FEET );

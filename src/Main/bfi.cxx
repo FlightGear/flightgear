@@ -765,12 +765,6 @@ FGBFI::getNAV1AltFreq ()
 }
 
 double
-FGBFI::getNAV1SelRadial ()
-{
-  return current_radiostack->get_nav1_sel_radial();
-}
-
-double
 FGBFI::getNAV1Radial ()
 {
   return current_radiostack->get_nav1_radial();
@@ -786,12 +780,6 @@ double
 FGBFI::getNAV2AltFreq ()
 {
   return current_radiostack->get_nav2_alt_freq();
-}
-
-double
-FGBFI::getNAV2SelRadial ()
-{
-  return current_radiostack->get_nav2_sel_radial();
 }
 
 double
@@ -831,9 +819,9 @@ FGBFI::setNAV1AltFreq (double freq)
 }
 
 void
-FGBFI::setNAV1SelRadial (double radial)
+FGBFI::setNAV1Radial (double radial)
 {
-  current_radiostack->set_nav1_sel_radial(radial);
+  current_radiostack->set_nav1_radial(radial);
 }
 
 void
@@ -849,9 +837,9 @@ FGBFI::setNAV2AltFreq (double freq)
 }
 
 void
-FGBFI::setNAV2SelRadial (double radial)
+FGBFI::setNAV2Radial (double radial)
 {
-  current_radiostack->set_nav2_sel_radial(radial);
+  current_radiostack->set_nav2_radial(radial);
 }
 
 void

@@ -214,24 +214,6 @@ void FGSteam::_CatchUp()
 // Everything below is a transient hack; expect it to disappear
 ////////////////////////////////////////////////////////////////////////
 
-#if 0
-/* KMYF ILS */
-#define NAV1_LOC	(1)
-#define NAV1_Lat	(  32.0 + 48.94/60.0)
-#define NAV1_Lon	(-117.0 - 08.37/60.0)
-#define NAV1_Rad  	280.0
-#define NAV1_Alt	423
-
-/* MZB stepdown radial */
-#define NAV2_Lat	(  32.0 + 46.93/60.0)
-#define NAV2_Lon	(-117.0 - 13.53/60.0)
-#define NAV2_Rad	068.0
-
-/* HAILE intersection */
-#define ADF_Lat		(  32.0 + 46.79/60.0)
-#define ADF_Lon		(-117.0 - 02.70/60.0)
-#endif
-
 
 double FGSteam::get_HackGS_deg () {
 
@@ -272,7 +254,7 @@ double FGSteam::get_HackVOR1_deg () {
 
     if ( current_radiostack->get_nav1_inrange() ) {
 	r = current_radiostack->get_nav1_radial() - 
-	    current_radiostack->get_nav1_heading() + 180.0;
+	    current_radiostack->get_nav1_heading();
 	// cout << "Radial = " << current_radiostack->get_nav1_radial() 
 	//      << "  Bearing = " << current_radiostack->get_nav1_heading()
 	//      << endl;
@@ -303,7 +285,7 @@ double FGSteam::get_HackVOR2_deg () {
 
     if ( current_radiostack->get_nav2_inrange() ) {
 	r = current_radiostack->get_nav2_radial() -
-	    current_radiostack->get_nav2_heading();
+	    current_radiostack->get_nav2_heading() + 180.0;
 	// cout << "Radial = " << current_radiostack->get_nav1_radial() 
 	// << "  Bearing = " << current_radiostack->get_nav1_heading() << endl;
     

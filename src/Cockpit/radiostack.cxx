@@ -45,10 +45,6 @@ FGRadioStack::~FGRadioStack() {
 void FGRadioStack::update( double lon, double lat, double elev ) {
     need_update = false;
 
-    // Start with the selected radials.
-    nav1_radial = nav1_selected_radial;
-    nav2_radial = nav2_selected_radial;
-
     // nav1
     FGILS ils;
     if ( current_ilslist->query( lon, lat, elev, nav1_freq,
@@ -59,7 +55,9 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	nav1_lat = ils.get_loclat();
 	nav1_elev = ils.get_gselev();
 	nav1_target_gs = ils.get_gsangle();
-	nav1_radial = ils.get_locheading();
+	nav1_radial = ils.get_locheading() + 180.0;
+	while ( nav1_radial <   0.0 ) { nav1_radial += 360.0; }
+	while ( nav1_radial > 360.0 ) { nav1_radial -= 360.0; }
 	// cout << "Found a vor station in range" << endl;
 	// cout << " id = " << ils.get_locident() << endl;
 	// cout << " heading = " << nav1_heading
@@ -69,7 +67,7 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	// cout << "not picking up vor. :-(" << endl;
     }
 
-    // nav1
+    // nav2
     FGNav nav;
     if ( current_navlist->query( lon, lat, elev, nav2_freq,
 				 &nav, &nav2_heading, &nav2_dist) ) {
@@ -78,6 +76,9 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	nav2_lon = nav.get_lon();
 	nav2_lat = nav.get_lat();
 	nav2_elev = nav.get_elev();
+	nav2_radial = nav2_heading + 180.0;
+	while ( nav2_radial <   0.0 ) { nav2_radial += 360.0; }
+	while ( nav2_radial > 360.0 ) { nav2_radial -= 360.0; }
 	// cout << "Found a vor station in range" << endl;
 	// cout << " id = " << nav.get_ident() << endl;
 	// cout << " heading = " << nav2_heading
