@@ -1,0 +1,24 @@
+This directory contains code for the FlightGear user interface.
+Currently, the code is based on PUI, which is part of PLIB.
+
+The code is currently in transition between the old, hard-coded C++
+interface and a new, XML-configurable modular subsystem.
+
+Files:
+
+dialog.[ch]xx           XML-configurable dialog box.
+gui.cxx, gui.h          Top-level GUI functions (deprecated).
+gui_funcs.cxx           Implementation of internal GUI functions (deprecated).
+gui_local.[ch]xx        More internal GUI functions (deprecated).
+menubar.[ch]xx          XML-configurable menu bar.
+mouse.cxx               Old GUI mouse support (deprecated).
+net_dlg.[ch]xx          Hard-coded network dialog (deprecated).
+new_gui.[ch]xx          Top-level for the GUI subsystem.
+preset_dlg.[ch]xx       Internal functions for presets (deprecated).
+prop_picker.[ch]xx      Built-in property-tree dialog.
+sgVec3Slider.[ch]xx     Built-in dialog for adjusting the view.
+trackball.[ch]          Old mouse view support (deprecated).
+
+
+David Megginson
+2003-09-26
