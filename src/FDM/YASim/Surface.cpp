@@ -236,8 +236,16 @@ float Surface::controlDrag()
     d *= 1 + _spoilerPos * (_spoilerDrag - 1);
     d *= 1 + _slatPos * (_slatDrag - 1);
 
-    // FIXME: flaps should REDUCE drag when the reduce lift!
-    d *= 1 + Math::abs(_flapPos) * (_flapDrag - 1);
+    // Negative flap deflections don't affect drag until their lift
+    // multiplier exceeds the "camber" (cz0) of the surface.
+    float fp = _flapPos;
+    if(fp < 0) {
+        fp = -fp;
+        fp -= _cz0/(_flapLift-1);
+        if(fp < 0) fp = 0;
+    }
+
+    d *= 1 + fp * (_flapDrag - 1);
 
     return d;
 }

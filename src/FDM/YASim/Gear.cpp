@@ -49,7 +49,7 @@ void Gear::setDynamicFriction(float dfric)
 
 void Gear::setBrake(float brake)
 {
-    _brake = brake;
+    _brake = Math::clamp(brake, 0, 1);
 }
 
 void Gear::setRotation(float rotation)
@@ -59,7 +59,7 @@ void Gear::setRotation(float rotation)
 
 void Gear::setExtension(float extension)
 {
-    _extension = extension;
+    _extension = Math::clamp(extension, 0, 1);
 }
 
 void Gear::getPosition(float* out)

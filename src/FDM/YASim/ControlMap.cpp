@@ -1,5 +1,6 @@
 #include "Jet.hpp"
 #include "Thruster.hpp"
+#include "PropEngine.hpp"
 #include "Gear.hpp"
 #include "Wing.hpp"
 #include "Math.hpp"
@@ -114,7 +115,7 @@ void ControlMap::applyControls()
 	switch(o->type) {
 	case THROTTLE: ((Thruster*)obj)->setThrottle(lval);    break;
 	case MIXTURE:  ((Thruster*)obj)->setMixture(lval);     break;
-	case PROP:     ((Thruster*)obj)->setPropAdvance(lval); break;
+	case ADVANCE:  ((PropEngine*)obj)->setAdvance(lval);   break;
 	case REHEAT:   ((Jet*)obj)->setReheat(lval);           break;
 	case BRAKE:    ((Gear*)obj)->setBrake(lval);           break;
 	case STEER:    ((Gear*)obj)->setRotation(lval);        break;

@@ -44,6 +44,9 @@ public:
     // Compile the thing into a bunch of Surface objects
     void compile();
 
+    // Ground effect information
+    float getGroundEffect(float* posOut);
+    
     // Query the list of Surface objects
     int numSurfaces();
     Surface* getSurface(int n);

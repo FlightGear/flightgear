@@ -3,6 +3,13 @@
 #include "Math.hpp"
 namespace yasim {
 
+float Math::clamp(float val, float min, float max)
+{
+    if(val < min) return min;
+    if(val > max) return max;
+    return val;
+}
+
 float Math::abs(float f)
 {
     return ::fabs(f);

@@ -6,6 +6,9 @@ namespace yasim {
 class Math
 {
 public:
+    // Dumb utilities
+    static float clamp(float val, float min, float max);
+
     // Simple wrappers around library routines
     static float abs(float f);
     static float sqrt(float f);

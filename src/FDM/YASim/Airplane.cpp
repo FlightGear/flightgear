@@ -10,8 +10,6 @@
 #include "Airplane.hpp"
 namespace yasim {
 
-// FIXME: hook gear extension into the force calculation somehow...
-
 Airplane::Airplane()
 {
     _emptyWeight = 0;
@@ -19,10 +17,12 @@ Airplane::Airplane()
     _wing = 0;
     _tail = 0;
     _ballast = 0;
-    _cruiseRho = 0;
+    _cruiseP = 0;
+    _cruiseT = 0;
     _cruiseSpeed = 0;
     _cruiseWeight = 0;
-    _approachRho = 0;
+    _approachP = 0;
+    _approachT = 0;
     _approachSpeed = 0;
     _approachAoA = 0;
     _approachWeight = 0;
@@ -51,8 +51,7 @@ void Airplane::iterate(float dt)
 {
     _model.iterate();
 
-    // Consume fuel
-    // FIXME
+    // FIXME: Consume fuel
 }
 
 ControlMap* Airplane::getControlMap()
@@ -139,14 +138,16 @@ void Airplane::setApproach(float speed, float altitude)
 void Airplane::setApproach(float speed, float altitude, float aoa)
 {
     _approachSpeed = speed;
-    _approachRho = Atmosphere::getStdDensity(altitude);
+    _approachP = Atmosphere::getStdPressure(altitude);
+    _approachT = Atmosphere::getStdTemperature(altitude);
     _approachAoA = aoa;
 }
  
 void Airplane::setCruise(float speed, float altitude)
 {
     _cruiseSpeed = speed;
-    _cruiseRho = Atmosphere::getStdDensity(altitude);
+    _cruiseP = Atmosphere::getStdPressure(altitude);
+    _cruiseT = Atmosphere::getStdTemperature(altitude);
     _cruiseAoA = 0;
     _tailIncidence = 0;
 }
@@ -254,6 +255,7 @@ int Airplane::addWeight(float* pos, float size)
     wr->handle = _model.getBody()->addMass(0, pos);
 
     wr->surf = new Surface();
+    wr->surf->setPosition(pos);
     wr->surf->setTotalDrag(size*size);
     _model.addSurface(wr->surf);
     _surfs.add(wr->surf);
@@ -364,7 +366,7 @@ float Airplane::compileFuselage(Fuselage* f)
     float len = Math::mag3(fwd);
     float wid = f->width;
     int segs = (int)Math::ceil(len/wid);
-    float segWgt = wid*wid/segs;
+    float segWgt = len*wid/segs;
     for(int j=0; j<segs; j++) {
         float frac = (j+0.5) / segs;
         float pos[3];
@@ -406,10 +408,11 @@ void Airplane::compileGear(GearRec* gr)
 
     // Put the surface at the half-way point on the gear strut, give
     // it a drag coefficient equal to a square of the same dimension
-    // (gear are really draggy) and make it symmetric.
+    // (gear are really draggy) and make it symmetric.  Assume that
+    // the "length" of the gear is 3x the compression distance
     float pos[3], cmp[3];
     g->getCompression(cmp);
-    float length = Math::mag3(cmp);
+    float length = 3 * Math::mag3(cmp);
     g->getPosition(pos);
     Math::mul3(0.5, cmp, cmp);
     Math::add3(pos, cmp, pos);
@@ -486,6 +489,11 @@ void Airplane::compile()
         tr->handle = _model.addThruster(tr->thruster);
     }
 
+    // Ground effect
+    float gepos[3];
+    float gespan = _wing->getGroundEffect(gepos);
+    _model.setGroundEffect(gepos, gespan, .3);
+
     solveGear();
     solve();
 
@@ -550,31 +558,15 @@ void Airplane::solveGear()
 
 void Airplane::stabilizeThrust()
 {
-    float thrust[3], tmp[3];
-    float last = 0;
-    while(1) {
-        thrust[0] = thrust[1] = thrust[2] = 0;
-        for(int i=0; i<_thrusters.size(); i++) {
-            Thruster* t = _model.getThruster(i);
-            t->integrate(0.033);
-            t->getThrust(tmp);
-            Math::add3(thrust, tmp, thrust);
-        }
-
-        float t = Math::mag3(thrust);
-        float ratio = (t+0.1)/(last+0.1);
- 	if(ratio < 1.00001 && ratio > 0.99999)
- 	    break;
-
-        last = t;
-    }
+    for(int i=0; i<_thrusters.size(); i++)
+	_model.getThruster(i)->stabilize();
 }
 
 void Airplane::runCruise()
 {
     setupState(_cruiseAoA, _cruiseSpeed, &_cruiseState);
     _model.setState(&_cruiseState);
-    _model.setAirDensity(_cruiseRho);
+    _model.setAir(_cruiseP, _cruiseT);
 
     // The control configuration
     _controls.reset();
@@ -600,7 +592,7 @@ void Airplane::runCruise()
     for(int i=0; i<_thrusters.size(); i++) {
 	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
 	t->setWind(wind);
-	t->setDensity(_cruiseRho);
+	t->setAir(_cruiseP, _cruiseT);
     }
     stabilizeThrust();
 
@@ -614,7 +606,7 @@ void Airplane::runApproach()
 {
     setupState(_approachAoA, _approachSpeed, &_approachState);
     _model.setState(&_approachState);
-    _model.setAirDensity(_approachRho);
+    _model.setAir(_approachP, _approachT);
 
     // The control configuration
     _controls.reset();
@@ -640,7 +632,7 @@ void Airplane::runApproach()
     for(int i=0; i<_thrusters.size(); i++) {
 	Thruster* t = ((ThrustRec*)_thrusters.get(i))->thruster;
 	t->setWind(wind);
-	t->setDensity(_approachRho);
+	t->setAir(_approachP, _approachT);
     }
     stabilizeThrust();
 

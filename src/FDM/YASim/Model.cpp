@@ -77,7 +77,7 @@ void Model::initIteration()
         localWind(pos, _s, v);
 
 	t->setWind(v);
-	t->setDensity(_rho);
+	t->setAir(_P, _T);
 	t->integrate(_integrator.getInterval());
 
 	t->getTorque(v);
@@ -126,6 +126,11 @@ int Model::addThruster(Thruster* t)
     return _thrusters.add(t);
 }
 
+int Model::numThrusters()
+{
+    return _thrusters.size();
+}
+
 Thruster* Model::getThruster(int handle)
 {
     return (Thruster*)_thrusters.get(handle);
@@ -146,6 +151,13 @@ int Model::addGear(Gear* gear)
     return _gears.add(gear);
 }
 
+void Model::setGroundEffect(float* pos, float span, float mul)
+{
+    Math::set3(pos, _wingCenter);
+    _groundEffectSpan = span;
+    _groundEffect = mul;
+}
+
 // The first three elements are a unit vector pointing from the global
 // origin to the plane, the final element is the distance from the
 // origin (the radius of the earth, in most implementations).  So
@@ -156,13 +168,10 @@ void Model::setGroundPlane(double* planeNormal, double fromOrigin)
     _ground[3] = fromOrigin;
 }
 
-void Model::setAirDensity(float rho)
-{
-    _rho = rho;
-}
-
 void Model::setAir(float pressure, float temp)
 {
+    _P = pressure;
+    _T = temp;
     _rho = Atmosphere::calcDensity(pressure, temp);
 }
 
@@ -197,6 +206,8 @@ void Model::calcForces(State* s)
 
     // Do each surface, remembering that the local velocity at each
     // point is different due to rotation.
+    float faero[3];
+    faero[0] = faero[1] = faero[2] = 0;
     for(int i=0; i<_surfaces.size(); i++) {
 	Surface* sf = (Surface*)_surfaces.get(i);
 
@@ -207,6 +218,7 @@ void Model::calcForces(State* s)
 
 	float force[3], torque[3];
 	sf->calcForce(vs, _rho, force, torque);
+	Math::add3(faero, force, faero);
 	_body.addForce(pos, force);
 	_body.addTorque(torque);
     }
@@ -218,6 +230,17 @@ void Model::calcForces(State* s)
     float ground[4];
     ground[3] = localGround(s, ground);
 
+    // Account for ground effect by multiplying the vertical force
+    // component by an amount linear with the fraction of the wingspan
+    // above the ground.
+    float dist = ground[4] - Math::dot3(ground, _wingCenter);
+    if(dist > 0 && dist < _groundEffectSpan) {
+	float fz = Math::dot3(faero, ground);
+	Math::mul3(fz * _groundEffect * dist/_groundEffectSpan,
+		   ground, faero);
+	_body.addForce(faero);
+    }
+    
     // Convert the velocity and rotation vectors to local coordinates
     float lrot[3], lv[3];
     Math::vmul33(s->orient, s->rot, lrot);

@@ -22,6 +22,7 @@ static const float LBS2N = 4.44822;
 static const float LBS2KG = 0.45359237;
 static const float CM2GALS = 264.172037284;
 static const float HP2W = 745.700;
+static const float INHG2PA = 3386.389;
 
 // Stubs, so that this can be compiled without the FlightGear
 // binary.  What's the best way to handle this?
@@ -141,6 +142,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	v[2] = attrf(a, "z");
 	float mass = attrf(a, "mass") * LBS2KG;
 	j->setDryThrust(attrf(a, "thrust") * LBS2N);
+	j->setReheatThrust(attrf(a, "afterburner", 0) * LBS2N);
 	j->setPosition(v);
 	_airplane.addThruster(j, mass, v);
 	sprintf(buf, "/engines/engine[%d]", _nextEngine++);
@@ -333,20 +335,35 @@ void FGFDM::parsePropeller(XMLAttributes* a)
     float radius = attrf(a, "radius");
     float speed = attrf(a, "cruise-speed") * KTS2MPS;
     float omega = attrf(a, "cruise-rpm") * RPM2RAD;
-    float rho = Atmosphere::getStdDensity(attrf(a, "alt") * FT2M);
-    float power = attrf(a, "takeoff-power") * HP2W;
-    float omega0 = attrf(a, "takeoff-rpm") * RPM2RAD;
-    
-    // FIXME: this is a hack.  Find a better way to ask the engine how
-    // much power it can produce under cruise conditions.
-    float cruisePower = (power * (rho/Atmosphere::getStdDensity(0))
-			 * (omega/omega0));
+    float power = attrf(a, "cruise-power") * HP2W;
+    float rho = Atmosphere::getStdDensity(attrf(a, "cruise-alt") * FT2M);
 
-    Propeller* prop = new Propeller(radius, speed, omega, rho, cruisePower,
-                                    omega0, power);
-    PistonEngine* eng = new PistonEngine(power, omega0);
+    // Hack, fix this pronto:
+    float engP = attrf(a, "eng-power") * HP2W;
+    float engS = attrf(a, "eng-rpm") * RPM2RAD;
+
+    Propeller* prop = new Propeller(radius, speed, omega, rho, power);
+    PistonEngine* eng = new PistonEngine(engP, engS);
     PropEngine* thruster = new PropEngine(prop, eng, moment);
     _airplane.addThruster(thruster, mass, cg);
+
+    if(a->hasAttribute("turbo-mul")) {
+        float mul = attrf(a, "turbo-mul");
+        float mp = attrf(a, "wastegate-mp", 1e6) * INHG2PA;
+        eng->setTurboParams(mul, mp);
+    }
+
+    if(a->hasAttribute("takeoff-power")) {
+	float power0 = attrf(a, "takeoff-power") * HP2W;
+	float omega0 = attrf(a, "takeoff-rpm") * RPM2RAD;
+	prop->setTakeoff(omega0, power0);
+    }
+
+    if(a->hasAttribute("max-rpm")) {
+	float max = attrf(a, "max-rpm") * RPM2RAD;
+	float min = attrf(a, "min-rpm") * RPM2RAD;
+	thruster->setVariableProp(min, max);
+    }
 
     char buf[64];
     sprintf(buf, "/engines/engine[%d]", _nextEngine++);
@@ -381,6 +398,7 @@ int FGFDM::parseOutput(const char* name)
 {
     if(eq(name, "THROTTLE"))  return ControlMap::THROTTLE;
     if(eq(name, "MIXTURE"))   return ControlMap::MIXTURE;
+    if(eq(name, "ADVANCE"))   return ControlMap::ADVANCE;
     if(eq(name, "REHEAT"))    return ControlMap::REHEAT;
     if(eq(name, "PROP"))      return ControlMap::PROP;
     if(eq(name, "BRAKE"))     return ControlMap::BRAKE;

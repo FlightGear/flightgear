@@ -7,7 +7,7 @@ namespace yasim {
 // McCormick lists 299.16/101325/1.22500, but those don't agree with
 // R=287.  I chose to correct the temperature to 288.20, since 79F is
 // pretty hot for a "standard" atmosphere.
-//                             meters   kelvin     kPa   kg/m^3
+//                             meters   kelvin      Pa   kg/m^3
 float Atmosphere::data[][4] = {{ 0,     288.20, 101325, 1.22500 },
 			       { 900,   282.31,  90971, 1.12260 },
 			       { 1800,  276.46,  81494, 1.02690 },

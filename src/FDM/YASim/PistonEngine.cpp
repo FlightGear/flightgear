@@ -1,3 +1,5 @@
+#include "Atmosphere.hpp"
+#include "Math.hpp"
 #include "PistonEngine.hpp"
 namespace yasim {
 
@@ -11,13 +13,34 @@ PistonEngine::PistonEngine(float power, float speed)
     _omega0 = speed;
 
     // We must be at sea level under standard conditions
-    _rho0 = 1.225; // kg/m^3
+    _rho0 = Atmosphere::getStdDensity(0);
 
     // Further presume that takeoff is (duh) full throttle and
     // peak-power, that means that by our efficiency function, we are
     // at 11/8 of "ideal" fuel flow.
     float realFlow = _f0 * (11.0/8.0);
     _mixCoeff = realFlow * 1.1 / _omega0;
+
+    _turbo = 1;
+    _maxMP = 1e6; // No waste gate on non-turbo engines.
+}
+
+void PistonEngine::setTurboParams(float turbo, float maxMP)
+{
+    _turbo = turbo;
+    _maxMP = maxMP;
+
+    // This changes the "sea level" manifold air density
+    float P0 = Atmosphere::getStdPressure(0);
+    float P = P0 * _turbo;
+    if(P > _maxMP) P = _maxMP;
+    float T = Atmosphere::getStdTemperature(0) * Math::pow(P/P0, 2./7.);
+    _rho0 = P / (287.1 * T);
+}
+
+float PistonEngine::getPower()
+{
+    return _P0;
 }
 
 void PistonEngine::setThrottle(float t)
@@ -30,13 +53,21 @@ void PistonEngine::setMixture(float m)
     _mixture = m;
 }
 
-void PistonEngine::calc(float density, float speed,
+void PistonEngine::calc(float P, float T, float speed,
 			float* torqueOut, float* fuelFlowOut)
 {
     // The actual fuel flow
     float fuel = _mixture * _mixCoeff * speed;
 
     // manifold air density
+    if(_turbo != 1) {
+        float P1 = P * _turbo;
+        if(P1 > _maxMP) P1 = _maxMP;
+        T *= Math::pow(P1/P, 2./7.);
+        P = P1;
+    }
+    float density = P / (287.1 * T);
+    
     float rho = density * _throttle;
 
     // How much fuel could be burned with ideal (i.e. uncorrected!)

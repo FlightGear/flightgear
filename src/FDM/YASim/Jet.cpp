@@ -7,15 +7,13 @@ Jet::Jet()
 {
     _rho0 = Atmosphere::getStdDensity(0);
     _thrust = 0;
+    _abThrust = 0;
     _reheat = 0;
 }
 
-Thruster* Jet::clone()
+void Jet::stabilize()
 {
-    Jet* j = new Jet();
-    j->_thrust = _thrust;
-    j->_rho0 = _rho0;
-    return j;
+    return; // no-op for now
 }
 
 void Jet::setDryThrust(float thrust)
@@ -23,14 +21,21 @@ void Jet::setDryThrust(float thrust)
     _thrust = thrust;
 }
 
+void Jet::setReheatThrust(float thrust)
+{
+    _abThrust = thrust;
+}
+
 void Jet::setReheat(float reheat)
 {
-    _reheat = reheat;
+    _reheat = Math::clamp(reheat, 0, 1);
 }
 
 void Jet::getThrust(float* out)
 {
-    float t = _thrust * _throttle * (_rho / _rho0);
+    float t = _thrust * _throttle;
+    t += (_abThrust - _thrust) * _reheat;
+    t *= _rho / _rho0;
     Math::mul3(t, _dir, out);
 }
 

@@ -3,23 +3,33 @@
 
 namespace yasim {
 
+class Jet;
+class PropEngine;
+class Propeller;
+class PistonEngine;
+
 class Thruster {
 public:
     Thruster();
     virtual ~Thruster();
 
+    // Typing info, these are the possible sub-type (or sub-parts)
+    // that a thruster might have.  Any might return null.  A little
+    // clumsy, but much simpler than an RTTI-based implementation.
+    virtual Jet* getJet() { return 0; }
+    virtual PropEngine* getPropEngine() { return 0; }
+    virtual Propeller* getPropeller() { return 0; }
+    virtual PistonEngine* getPistonEngine() { return 0; }
+    
     // Static data
     void getPosition(float* out);
     void setPosition(float* pos);
     void getDirection(float* out);
     void setDirection(float* dir);
 
-    virtual Thruster* clone()=0;
-
     // Controls
     void setThrottle(float throttle);
     void setMixture(float mixture);
-    void setPropAdvance(float advance);
 
     // Dynamic output
     virtual void getThrust(float* out)=0;
@@ -29,19 +39,19 @@ public:
 
     // Runtime instructions
     void setWind(float* wind);
-    void setDensity(float rho);
+    void setAir(float pressure, float temp);
     virtual void integrate(float dt)=0;
+    virtual void stabilize()=0;
 
 protected:
-    void cloneInto(Thruster* out);
-
     float _pos[3];
     float _dir[3];
     float _throttle;
     float _mixture;
-    float _propAdvance;
 
     float _wind[3];
+    float _P;
+    float _T;
     float _rho;
 };
 

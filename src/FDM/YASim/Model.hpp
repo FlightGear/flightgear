@@ -35,6 +35,7 @@ public:
     Gear* getGear(int handle);
 
     // Semi-private methods for use by the Airplane solver.
+    int numThrusters();
     Thruster* getThruster(int handle);
     void setThruster(int handle, Thruster* t);
     void initIteration();
@@ -44,8 +45,8 @@ public:
     // Per-iteration settables
     //
     void setGroundPlane(double* planeNormal, double fromOrigin);
+    void setGroundEffect(float* pos, float span, float mul);
     void setWind(float* wind);
-    void setAirDensity(float rho);
     void setAir(float pressure, float temp);
 
     // BodyEnvironment callbacks
@@ -65,7 +66,13 @@ private:
     Vector _surfaces;
     Vector _gears;
 
+    float _groundEffectSpan;
+    float _groundEffect;
+    float _wingCenter[3];
+
     double _ground[4];
+    float _P;
+    float _T;
     float _rho;
     float _wind[3];
 

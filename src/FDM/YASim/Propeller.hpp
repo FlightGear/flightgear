@@ -14,8 +14,11 @@ public:
     // numbers for RPM and power (with air speed and density being
     // zero and sea level).  RPM values are in radians per second, of
     // course.
-    Propeller(float radius, float v, float omega, float rho, float power,
-              float omega0, float power0);
+    Propeller(float radius, float v, float omega, float rho, float power);
+
+    void setTakeoff(float omega0, float power0);
+
+    void modPitch(float mod);
 
     void calc(float density, float v, float omega,
 	      float* thrustOut, float* torqueOut);
@@ -23,12 +26,13 @@ public:
 private:
     float _r;           // characteristic radius
     float _J0;          // zero-thrust advance ratio
-    float _lambdaS;     // "propeller stall" normalized advance ratio
+    float _baseJ0;      //  ... uncorrected for prop advance
     float _F0;          // thrust coefficient
     float _etaC;        // Peak efficiency
     float _lambdaPeak;  // constant, ~0.759835;
     float _beta;        // constant, ~1.48058;
-    float _takeoffCoef; // correction to get the zero-speed torque right
+    float _tc0;         // thrust "coefficient" at takeoff
+    bool  _matchTakeoff; // Does _tc0 mean anything?
 };
 
 }; // namespace yasim

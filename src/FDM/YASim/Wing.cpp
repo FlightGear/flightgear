@@ -157,6 +157,8 @@ void Wing::setSpoiler(float start, float end, float lift, float drag)
 
 void Wing::setFlap0(float lval, float rval)
 {
+    lval = Math::clamp(lval, -1, 1);
+    rval = Math::clamp(rval, -1, 1);
     for(int i=0; i<_flap0Surfs.size(); i++) {
 	((Surface*)_flap0Surfs.get(i))->setFlap(lval);
 	if(_mirror) ((Surface*)_flap0Surfs.get(++i))->setFlap(rval);
@@ -165,6 +167,8 @@ void Wing::setFlap0(float lval, float rval)
 
 void Wing::setFlap1(float lval, float rval)
 {
+    lval = Math::clamp(lval, -1, 1);
+    rval = Math::clamp(rval, -1, 1);
     for(int i=0; i<_flap1Surfs.size(); i++) {
 	((Surface*)_flap1Surfs.get(i))->setFlap(lval);
 	if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlap(rval);
@@ -173,6 +177,8 @@ void Wing::setFlap1(float lval, float rval)
 
 void Wing::setSpoiler(float lval, float rval)
 {
+    lval = Math::clamp(lval, 0, 1);
+    rval = Math::clamp(rval, 0, 1);
     for(int i=0; i<_spoilerSurfs.size(); i++) {
 	((Surface*)_spoilerSurfs.get(i))->setSpoiler(lval);
 	if(_mirror) ((Surface*)_spoilerSurfs.get(++i))->setSpoiler(rval);
@@ -181,8 +187,17 @@ void Wing::setSpoiler(float lval, float rval)
 
 void Wing::setSlat(float val)
 {
+    val = Math::clamp(val, 0, 1);
     for(int i=0; i<_slatSurfs.size(); i++)
 	((Surface*)_slatSurfs.get(i))->setSlat(val);
+}
+
+float Wing::getGroundEffect(float* posOut)
+{
+    for(int i=0; i<3; i++) posOut[i] = _base[i];
+    float span = _length * Math::cos(_sweep) * Math::cos(_dihedral);
+    span = 2*(span + Math::abs(_base[2]));
+    return span;
 }
 
 void Wing::compile()

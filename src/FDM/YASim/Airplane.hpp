@@ -112,13 +112,15 @@ private:
 
     Vector _cruiseControls;
     State _cruiseState;
-    float _cruiseRho;
+    float _cruiseP;
+    float _cruiseT;
     float _cruiseSpeed;
     float _cruiseWeight;
 
     Vector _approachControls;
     State _approachState;
-    float _approachRho;
+    float _approachP;
+    float _approachT;
     float _approachSpeed;
     float _approachAoA;
     float _approachWeight;

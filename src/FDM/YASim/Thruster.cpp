@@ -8,8 +8,7 @@ Thruster::Thruster()
     for(int i=0; i<3; i++) _pos[i] = _wind[i] = 0;
     _throttle = 0;
     _mixture = 0;
-    _propAdvance = 0;
-    _rho = 0;
+    _P = _T = _rho = 0;
 }
 
 Thruster::~Thruster()
@@ -38,17 +37,12 @@ void Thruster::setDirection(float* dir)
 
 void Thruster::setThrottle(float throttle)
 {
-    _throttle = throttle;
+    _throttle = Math::clamp(throttle, 0, 1);
 }
 
 void Thruster::setMixture(float mixture)
 {
-    _mixture = mixture;
-}
-
-void Thruster::setPropAdvance(float propAdvance)
-{
-    _propAdvance = propAdvance;
+    _mixture = Math::clamp(mixture, 0, 1);
 }
 
 void Thruster::setWind(float* wind)
@@ -56,20 +50,11 @@ void Thruster::setWind(float* wind)
     for(int i=0; i<3; i++) _wind[i] = wind[i];
 }
 
-void Thruster::setDensity(float rho)
+void Thruster::setAir(float pressure, float temp)
 {
-    _rho = rho;
-}
-
-void Thruster::cloneInto(Thruster* out)
-{
-    for(int i=0; i<3; i++) {
-	out->_pos[i] = _pos[i];
-	out->_dir[i] = _dir[i];
-    }
-    out->_throttle = _throttle;
-    out->_mixture  = _mixture;
-    out->_propAdvance = _propAdvance;
+    _P = pressure;
+    _T = temp;
+    _rho = _P / (287.1 * _T);
 }
 
 }; // namespace yasim

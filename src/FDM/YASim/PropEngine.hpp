@@ -12,8 +12,13 @@ class PropEngine : public Thruster {
 public:
     PropEngine(Propeller* prop, PistonEngine* eng, float moment);
     virtual ~PropEngine();
-    
-    virtual Thruster* clone();
+
+    void setAdvance(float advance);
+    void setVariableProp(float min, float max);
+
+    virtual PropEngine* getPropEngine() { return this; }
+    virtual PistonEngine* getPistonEngine() { return _eng; }
+    virtual Propeller* getPropeller() { return _prop; }
 
     // Dynamic output
     virtual void getThrust(float* out);
@@ -23,6 +28,7 @@ public:
 
     // Runtime instructions
     virtual void integrate(float dt);
+    virtual void stabilize();
 
     float getOmega();
     
@@ -30,6 +36,11 @@ private:
     float _moment;
     Propeller* _prop;
     PistonEngine* _eng;
+
+    bool _variable;
+    float _advance; // control input, 0-1
+    float _maxOmega;
+    float _minOmega;
 
     float _omega; // RPM, in radians/sec
     float _thrust[3];
