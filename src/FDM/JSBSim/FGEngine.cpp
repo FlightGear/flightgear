@@ -68,7 +68,7 @@ CLASS IMPLEMENTATION
 
 FGEngine::FGEngine(FGFDMExec* exec)
 {
-  Name.clear();
+  Name = "";
   Type = etUnknown;
   X = Y = Z = 0.0;
   EnginePitch = EngineYaw = 0.0;
