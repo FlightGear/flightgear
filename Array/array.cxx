@@ -85,7 +85,7 @@ FGArray::open( const string& file ) {
 	return 0;
     } else {
 	in = new fg_gzifstream( file );
-	if ( !(*in) ) {
+	if ( ! in->is_open() ) {
 	    cout << "  Cannot open " << file << endl;
 	    return 0;
 	}
@@ -341,7 +341,7 @@ double FGArray::interpolate_altitude( double lon, double lat ) const {
 	 (yindex < 0) || (yindex + 1 >= rows) ) {
 	cout << "WARNING: Attempt to interpolate value outside of array!!!" 
 	     << endl;
-	return(-9999);
+	return 0;
     }
 
     dx = xlocal - xindex;
@@ -539,6 +539,10 @@ FGArray::~FGArray( void ) {
 
 
 // $Log$
+// Revision 1.7  1999/03/27 14:05:10  curt
+// More sensible handling of the case where no dem file for this tile exists
+// (or has been generated).
+//
 // Revision 1.6  1999/03/27 05:20:13  curt
 // Handle corner nodes separately from the rest of the fitted nodes.
 // Fixed some "const" related warnings.
