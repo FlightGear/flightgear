@@ -412,7 +412,7 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters,
         }
     } else if ( state == Start || state == Inited ) {
         SG_LOG( SG_TERRAIN, SG_INFO, "State == Start || Inited" );
-        initialize_queue();
+//        initialize_queue();
         state = Running;
 
         // load the next tile in the load queue (or authorize the next
@@ -437,7 +437,11 @@ void FGTileMgr::refresh_view_timestamps() {
     SG_LOG( SG_TERRAIN, SG_INFO,
             "Refreshing timestamps for " << current_bucket.get_center_lon()
             << " " << current_bucket.get_center_lat() );
-    schedule_needed(fgGetDouble("/environment/visibility-m"), current_bucket);
+    if ( longitude >= -180.0 && longitude <= 180.0 
+         && latitude >= -90.0 && latitude <= 90.0 )
+    {
+        schedule_needed(fgGetDouble("/environment/visibility-m"), current_bucket);
+    }
 }
 
 
