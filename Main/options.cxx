@@ -129,7 +129,7 @@ fgOPTIONS::fgOPTIONS() :
     sound(1),
 
     // Flight Model options
-    flight_model(FG_LARCSIM),
+    flight_model(fgFLIGHT::FG_LARCSIM),
 
     // Rendering options
     fog(FG_FOG_NICEST),  // nicest
@@ -310,9 +310,11 @@ fgOPTIONS::parse_flight_model( const string& fm ) {
     // printf("flight model = %s\n", fm);
 
     if ( fm == "slew" ) {
-	return FG_SLEW;
+	return fgFLIGHT::FG_SLEW;
     } else if ( (fm == "larcsim") || (fm == "LaRCsim") ) {
-	return FG_LARCSIM;
+	return fgFLIGHT::FG_LARCSIM;
+    } else if ( fm == "external" ) {
+	return fgFLIGHT::FG_EXTERNAL;
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT, "Unknown flight model = " << fm );
 	exit(-1);
@@ -569,6 +571,10 @@ void fgOPTIONS::usage ( void ) {
     printf("\t--enable-sound:  enable sound effects\n");
     printf("\n");
  
+    printf("Flight Model:\n");
+    printf("\t--flight-mode=abcd:  one of slew, larcsim, or external\n");
+    printf("\n");
+
     printf("Initial Position and Orientation:\n");
     printf("\t--airport-id=ABCD:  specify starting postion by airport id\n");
     printf("\t--lon=degrees:  starting longitude in degrees (west = -)\n");
@@ -618,6 +624,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.33  1998/12/04 01:30:44  curt
+// Added support for the External flight model.
+//
 // Revision 1.32  1998/11/25 01:34:00  curt
 // Support for an arbitrary number of serial ports.
 //
