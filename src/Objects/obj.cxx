@@ -46,10 +46,10 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/fg_random.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/sg_random.h>
 #include <simgear/misc/fgstream.hxx>
 #include <simgear/misc/stopwatch.hxx>
 #include <simgear/misc/texcoord.hxx>
@@ -264,6 +264,37 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     // }
 
     return tile;
+}
+
+
+void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights ) {
+    int num = leaf->getNumVertices();
+    float *n1, *n2, *n3;
+    sgVec3 p1, p2, p3;
+    sgVec3 result;
+    float remainder = 1.0;
+    float weight;
+
+    n1 = leaf->getVertex( 1 );
+    n2 = leaf->getVertex( 2 );
+    for ( int i = 3; i < num; ++i ) {
+	n3 = leaf->getVertex( i );
+	weight = sg_random();
+	remainder -= weight;
+	sgScaleVec3( p1, n1, weight );
+
+	weight = sg_random() * remainder;
+	remainder -= weight;
+	sgScaleVec3( p2, n2, weight );
+
+	sgScaleVec3( p3, n3, remainder );
+
+	sgAddVec3( result, p1, p2 );
+	sgAddVec3( result, p3 );
+
+	sgScaleVec3( result, 1.0 / 3.0 );
+	lights->add( result );
+    }
 }
 
 
@@ -667,6 +698,15 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 		leaf->setState( state );
 
 		tile->addKid( leaf );
+
+		/*
+		ssgVertexArray *lights = NULL;
+		if ( is_base ) {
+		    // generate lighting
+		    lights = new ssgVertexArray( size );
+		    gen_random_surface_points( leaf, lights );
+		}
+		*/
 	    } else {
 		FG_LOG( FG_TERRAIN, FG_WARN, "Unknown token in " 
 			<< path << " = " << token );

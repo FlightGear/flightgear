@@ -85,6 +85,7 @@ void FGNewMat::build_ssg_state( const string& path,
 
     // Set up the textured state
     textured->setShadeModel( shade_model );
+    textured->enable( GL_LIGHTING );
     textured->enable ( GL_CULL_FACE ) ;
     textured->enable( GL_TEXTURE_2D );
     textured->disable( GL_BLEND );

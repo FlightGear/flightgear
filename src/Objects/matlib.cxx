@@ -161,6 +161,23 @@ bool FGMaterialLib::load( const string& mpath ) {
 	}
     }
 
+    // hard coded light state
+    ssgSimpleState *lights = new ssgSimpleState;
+    lights->ref();
+    lights->disable( GL_TEXTURE_2D );
+    lights->enable( GL_CULL_FACE );
+    lights->enable( GL_COLOR_MATERIAL );
+    lights->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
+    lights->setMaterial( GL_EMISSION, 0, 0, 0, 1 );
+    lights->setMaterial( GL_SPECULAR, 0, 0, 0, 1 );
+    lights->disable( GL_BLEND );
+    lights->disable( GL_ALPHA_TEST );
+    lights->disable( GL_LIGHTING );
+
+    FGNewMat m;
+    m.set_ssg_state( lights );
+    matlib["LIGHTS"] = m;
+
     return true;
 }
 
@@ -257,3 +274,13 @@ void FGMaterialLib::set_step ( int step )
 	slot.get_state()->selectStep(step);
     }
 }
+
+
+
+
+
+
+
+
+
+
