@@ -23,7 +23,7 @@ or PLib) can be compiled on Irix:
         x_dev.sw.dev
 
             MipsPro C and C++ Compiler environment
-            --------------------------------------
+            ---------------------------------------
 
         c++_dev.hdr.lib			c_dev.sw.c
         c++_dev.sw.c++			c_fe.sw.c
@@ -31,16 +31,20 @@ or PLib) can be compiled on Irix:
         c++_eoe.sw.lib
         c++_fe.sw.c++
 
+            SGI Freeware packages
+            ---------------------------------------
+
+        GLUT:		http://freeware.sgi.com
+	ZLIB:		http://freeware.sgi.com
+
 
             FlightGear Flight Simulator Software
-            ----------------------------------------
+            ---------------------------------------
 
         FlightGear:	http://www.flightgear.org
         SimGear:	http://www.simgear.org
         Plib:		http://plib.sourceforge.net
-        GLUT:		http://
-        ZLIB:		http://
-        MetaKit:	http://www.a1.nl/~ehofman/fgfs/downloads/metakit-2.0.1-FGFS.tar.gz
+        MetaKit:	http://www.equi4.com/metakit/
 
 
 
@@ -49,24 +53,8 @@ or PLib) can be compiled on Irix:
 To create a set of binaries it is important to follow these steps. This
 will build a statically linked executable /opt/bin/fgfs
 
-   1. Install GLUT, Zlib and MetaKit.
-
-   2. Extract, configure and install Plib:
-        automake -a -i
-        CXXFLAGS="-O2 -I/opt/include" LDFLAGS="-L/opt/lib32"
-        ./configure --prefix=/opt --libdir=/opt/lib32
-        make install
-
-   3. Extract, configure and install SimGear:
-        CXXFLAGS="-O2" LDFLAGS="-L/opt/lib32"
-        ./configure --prefix=/opt --libdir=/opt/lib32 --without-logging
-        make install
-
-   4. Extract, configure and install FlightGear:
-        CXXFLAGS="-O2" CFLAGS="-O2 -Xcpluscomm" LDFLAGS="-L/opt/lib32"
-        ./configure --prefix=/opt --with-simgear=/opt --without-loging
-        make install
-
+   1. Install GLUT and Zlib
+   2. Extract, configure and install MetaKit, Plib, SimGear and FlightGear
 
 The irix-hack.sh script fixes some compiler specific problems which were 
 introduced after the adoption of the C++ Standard Template Library.
@@ -83,7 +71,5 @@ FlightGear base package (the default is to extract the base package into
 
 This package can be found at: http://www.flightgear.org
 
-When all is set and done, just run /opt/bin/runfgfs
-To see the command line options, type "man -M /opt/man fgfs"
-
-
+When all is set and done, just run: /opt/bin/fgfs
+To see the command line options, type: /opt/bin/fgfs -h
