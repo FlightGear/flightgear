@@ -51,7 +51,7 @@ HISTORY
 /****************************************************************************/
 /* DEFINES								    */
 /****************************************************************************/
-typedef float WeatherPrecision;
+typedef double WeatherPrecision;
 
 //set the minimum visibility to get a at least half way realistic weather
 #define MINIMUM_WEATHER_VISIBILITY 10.0    /* metres */
