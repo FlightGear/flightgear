@@ -342,18 +342,7 @@ add_object_to_triangle (sgVec3 p1, sgVec3 p2, sgVec3 p3, sgVec3 center,
     sgPostMultMat4(OBJ, OBJ_pos);
     ssgTransform * pos = new ssgTransform;
     pos->setTransform(OBJ);
-    float obj_range = mat->get_object_lod(object_index);
-    float range_div = (sg_random() * obj_range);
-    if (range_div < 0.0000001) {
-      // avoid a divide by zero error
-      range_div = 1.0;
-    }
-    float random_range = 160.0 * obj_range / range_div + obj_range;
-    float ranges[] = {0, random_range};
-    ssgRangeSelector *range = new ssgRangeSelector;
-    range->setRanges(ranges, 2);
-    range->addKid(mat->get_object(object_index));
-    pos->addKid(range);
+    pos->addKid(mat->get_object(object_index));
     branch->addKid(pos);
 }
 
@@ -397,73 +386,94 @@ gen_random_surface_objects (ssgLeaf *leaf,
 			    float lat_deg,
 			    const string &material_name)
 {
+    float hdg_deg = 0.0;	// do something here later
+
+				// First, look up the material
+				// for this surface.
     FGNewMat * mat = material_lib.find(material_name);
     if (mat == 0) {
       SG_LOG(SG_INPUT, SG_ALERT, "Unknown material " << material_name);
       return;
     }
 
-    int num = leaf->getNumTriangles();
-    float hdg_deg = 0.0;	// do something here later
+				// If the material has no randomly-placed
+				// objects, return now.
+    int num_objects = mat->get_object_count();
+    if (num_objects < 1)
+      return;
 
+				// If the surface has no triangles, return
+				// now.
+    int num_tris = leaf->getNumTriangles();
+    if (num_tris < 1)
+      return;
 
+				// Make a rotation matrix to align the
+				// object for this point on the earth's
+				// surface.
     sgMat4 ROT;
     makeWorldUpRotationMatrix(ROT, hdg_deg, lon_deg, lat_deg);
 
-    if ( num > 0 ) {
-	short int n1, n2, n3;
-	float *p1, *p2, *p3;
-	sgVec3 result;
+    short int n1, n2, n3;
+    float *p1, *p2, *p3;
+    sgVec3 result;
 
-	// generate a repeatable random seed
-	p1 = leaf->getVertex( 0 );
-	unsigned int seed = (unsigned int)p1[0];
-	sg_srandom( seed );
+				// generate a repeatable random seed
+    p1 = leaf->getVertex( 0 );
+    unsigned int seed = (unsigned int)p1[0];
+    sg_srandom( seed );
 
-	int num_objects = mat->get_object_count();
-	for ( int i = 0; i < num; ++i ) {
-	    leaf->getTriangle( i, &n1, &n2, &n3 );
-	    p1 = leaf->getVertex(n1);
-	    p2 = leaf->getVertex(n2);
-	    p3 = leaf->getVertex(n3);
-	    double area = sgTriArea( p1, p2, p3 );
+				// Iterate through all the triangles
+    for ( int i = 0; i < num_tris; ++i ) {
+      leaf->getTriangle( i, &n1, &n2, &n3 );
+      p1 = leaf->getVertex(n1);
+      p2 = leaf->getVertex(n2);
+      p3 = leaf->getVertex(n3);
+      double area = sgTriArea( p1, p2, p3 );
+
 				// Set up a single center point for LOD
-	    sgVec3 center;
-	    sgSetVec3(center,
-		      (p1[0] + p2[0] + p3[0]) / 3.0,
-		      (p1[1] + p2[1] + p3[1]) / 3.0,
-		      (p1[2] + p2[2] + p3[2]) / 3.0);
-	    ssgTransform * location = new ssgTransform;
-	    sgMat4 TRANS;
-	    sgMakeTransMat4(TRANS, center);
-	    location->setTransform(TRANS);
+      sgVec3 center;
+      sgSetVec3(center,
+		(p1[0] + p2[0] + p3[0]) / 3.0,
+		(p1[1] + p2[1] + p3[1]) / 3.0,
+		(p1[2] + p2[2] + p3[2]) / 3.0);
+      
+				// Set up a transformation to the center
+				// point, so that everything else can
+				// be specified relative to it.
+      ssgTransform * location = new ssgTransform;
+      sgMat4 TRANS;
+      sgMakeTransMat4(TRANS, center);
+      location->setTransform(TRANS);
+      branch->addKid(location);
 
-	    for (int j = 0; j < num_objects; j++) {
-	      double num = area / mat->get_object_coverage(j);
-	      float ranges[] = {0, mat->get_object_group_lod(j)};
-	      ssgRangeSelector * lod = new ssgRangeSelector;
-	      lod->setRanges(ranges, 2);
-	      lod->addKid(location);
-	      branch->addKid(lod);
+				// Iterate through all the objects.
+      for (int j = 0; j < num_objects; j++) {
+	double num = area / mat->get_object_coverage(j);
+	float ranges[] = {0, mat->get_object_lod(j)};
+	ssgRangeSelector * lod = new ssgRangeSelector;
+	lod->setRanges(ranges, 2);
+	location->addKid(lod);
+	ssgBranch * objects = new ssgBranch;
+	lod->addKid(objects);
 	      
-	      // place an object each unit of area
-	      while ( num > 1.0 ) {
-		add_object_to_triangle(p1, p2, p3, center,
-				       ROT, mat, j, location);
-		num -= 1.0;
-	      }
-	      // for partial units of area, use a zombie door method to
-	      // create the proper random chance of an object being created
-	      // for this triangle
-	      if ( num > 0.0 ) {
-		if ( sg_random() <= num ) {
-		  // a zombie made it through our door
-		  add_object_to_triangle(p1, p2, p3, center,
-					 ROT, mat, j, location);
-		}
-	      }
-	    }
+	// place an object each unit of area
+	while ( num > 1.0 ) {
+	  add_object_to_triangle(p1, p2, p3, center,
+				 ROT, mat, j, objects);
+	  num -= 1.0;
 	}
+	// for partial units of area, use a zombie door method to
+	// create the proper random chance of an object being created
+	// for this triangle
+	if ( num > 0.0 ) {
+	  if ( sg_random() <= num ) {
+	    // a zombie made it through our door
+	    add_object_to_triangle(p1, p2, p3, center,
+				   ROT, mat, j, objects);
+	  }
+	}
+      }
     }
 }
 
