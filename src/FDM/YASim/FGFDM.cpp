@@ -91,7 +91,7 @@ void FGFDM::iterate(float dt)
         t->setFuelState(!fgGetBool(buf));
 
         sprintf(buf, "/engines/engine[%d]/fuel-consumed-lbs", i);
-        double consumed = fgGetDouble(buf) + dt * t->getFuelFlow();
+        double consumed = fgGetDouble(buf) + dt * KG2LBS * t->getFuelFlow();
         fgSetDouble(buf, consumed);
     }
     for(int i=0; i<_airplane.numTanks(); i++) {
