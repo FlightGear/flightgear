@@ -33,104 +33,156 @@
 #include <plib/sg.h>
 #include <plib/ssg.h>
 #include <simgear/math/point3d.hxx>
+#include <Main/fg_props.hxx>
 
 #include "tower.hxx"
 #include "AIPlane.hxx"
 #include "ATCProjection.hxx"
+#include "ground.hxx"
 
 typedef enum PatternLeg {
-    TAKEOFF_ROLL,
-    CLIMBOUT,
-    TURN1,
-    CROSSWIND,
-    TURN2,
-    DOWNWIND,
-    TURN3,
-    BASE,
-    TURN4,
-    FINAL,
-    LANDING_ROLL
+	TAKEOFF_ROLL,
+	CLIMBOUT,
+	TURN1,
+	CROSSWIND,
+	TURN2,
+	DOWNWIND,
+	TURN3,
+	BASE,
+	TURN4,
+	FINAL,
+	LANDING_ROLL
+};
+
+typedef enum TaxiState {
+	TD_INBOUND,
+	TD_OUTBOUND,
+	TD_NONE
+};
+
+typedef enum OperatingState {
+	IN_PATTERN,
+	TAXIING,
+	PARKED
 };
 
 // perhaps we could use an FGRunway instead of this
 typedef struct RunwayDetails {
-    Point3D threshold_pos;
-    Point3D end1ortho;	// ortho projection end1 (the threshold ATM)
-    Point3D end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
-    double mag_hdg;
-    double mag_var;
-    double hdg;		// true runway heading
+	Point3D threshold_pos;
+	Point3D end1ortho;	// ortho projection end1 (the threshold ATM)
+	Point3D end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
+	double mag_hdg;
+	double mag_var;
+	double hdg;		// true runway heading
+	int ID;		// 1 -> 36
 };
 
 typedef struct StartofDescent {
-    PatternLeg leg;
-    double orthopos_x;
-    double orthopos_y;
+	PatternLeg leg;
+	double orthopos_x;
+	double orthopos_y;
 };
 
 class FGAILocalTraffic : public FGAIPlane {
-
+	
 public:
-
-    FGAILocalTraffic();
-    ~FGAILocalTraffic();
-
-    // Initialise
-    void Init();
-
-    // Run the internal calculations
-    void Update(double dt);
-
+	
+	FGAILocalTraffic();
+	~FGAILocalTraffic();
+	
+	// Initialise
+	void Init();
+	
+	// Run the internal calculations
+	void Update(double dt);
+	
+	// Go out and practice circuits
+	void FlyCircuits(int numCircuits, bool tag);
+	
 protected:
-
-    // Attempt to enter the traffic pattern in a reasonably intelligent manner
-    void EnterTrafficPattern(double dt);
-
+	
+	// Attempt to enter the traffic pattern in a reasonably intelligent manner
+	void EnterTrafficPattern(double dt);
+	
+	// Do what is necessary to land and parkup at home airport
+	void ReturnToBase(double dt);
+	
 private:
-    FGATCAlignedProjection ortho;	// Orthogonal mapping of the local area with the threshold at the origin
-					// and the runway aligned with the y axis.
+	// High-level stuff
+	OperatingState operatingState;
+	int circuitsToFly;	//Number of circuits still to do in this session NOT INCLUDING THE CURRENT ONE
+	bool touchAndGo;	//True if circuits should be flown touch and go, false for full stop
+	
+	// Its possible that this might be moved out to the ground/airport class at some point.
+	FGATCAlignedProjection ortho;	// Orthogonal mapping of the local area with the threshold at the origin
+	// and the runway aligned with the y axis.
+	
+	// Airport/runway/pattern details
+	char* airportID;	// The ICAO code of the airport that we're operating around
+	FGGround airport;	// FIXME FIXME FIXME This is a complete hardwired cop-out at the moment - we need to connect to the correct ground in the same way we do to the tower.
+	FGTower* tower;	// A pointer to the tower control.
+	RunwayDetails rwy;
+	double patternDirection;	// 1 for right, -1 for left (This is double because we multiply/divide turn rates
+	// with it to get RH/LH turns - DON'T convert it to int under ANY circumstances!!
+	double glideAngle;		// Assumed to be visual glidepath angle for FGAILocalTraffic - can be found at www.airnav.com
+	// Its conceivable that patternDirection and glidePath could be moved into the RunwayDetails structure.
+	
+	// Performance characteristics of the plane in knots and ft/min - some of this might get moved out into FGAIPlane
+	double Vr;
+	double best_rate_of_climb_speed;
+	double best_rate_of_climb;
+	double nominal_climb_speed;
+	double nominal_climb_rate;
+	double nominal_circuit_speed;
+	double min_circuit_speed;
+	double max_circuit_speed;
+	double nominal_descent_rate;
+	double nominal_approach_speed;
+	double nominal_final_speed;
+	double stall_speed_landing_config;
+	double nominal_taxi_speed;
+	
+	// environment - some of this might get moved into FGAIPlane
+	SGPropertyNode* wind_from_hdg;	//degrees
+	SGPropertyNode* wind_speed_knots;		//knots
+	
+	// Pattern details that (may) change
+	int numInPattern;		// Number of planes in the pattern (this might get more complicated if high performance GA aircraft fly a higher pattern eventually)
+	int numAhead;		// More importantly - how many of them are ahead of us?
+	double distToNext;		// And even more importantly, how near are we getting to the one immediately ahead?
+	PatternLeg leg;		// Out current position in the pattern
+	StartofDescent SoD;		// Start of descent calculated wrt wind, pattern size & altitude, glideslope etc
 
-    // Airport/runway/pattern details
-    char* airport;	// The ICAO code of the airport that we're operating around
-    FGTower* tower;	// A pointer to the tower control.
-    RunwayDetails rwy;
-    double patternDirection;	// 1 for right, -1 for left (This is double because we multiply/divide turn rates
-				// with it to get RH/LH turns - DON'T convert it to int under ANY circumstances!!
-    double glideAngle;		// Assumed to be visual glidepath angle for FGAILocalTraffic - can be found at www.airnav.com
-    // Its conceivable that patternDirection and glidePath could be moved into the RunwayDetails structure.
+	// Taxiing details
+	// At the moment this assumes that all taxiing in is to gates (a loose term that includes
+	// any permitted parking spot) and that all taxiing out is to runways.
+	bool parked;
+	bool taxiing;
+	TaxiState taxiState;
+	double desiredTaxiHeading;
+	double taxiTurnRadius;
+	double nominalTaxiSpeed;
+	Gate* in_dest;
+	ground_network_path_type path;	// a path through the ground network for the plane to taxi
+	int taxiPathPos;	// position of iterator in taxi path when applicable
+	node* nextTaxiNode;	// next node in taxi path
+	//Runway out_dest; //FIXME - implement this
 
-    // Performance characteristics of the plane in knots and ft/min - some of this might get moved out into FGAIPlane
-    double Vr;
-    double best_rate_of_climb_speed;
-    double best_rate_of_climb;
-    double nominal_climb_speed;
-    double nominal_climb_rate;
-    double nominal_circuit_speed;
-    double min_circuit_speed;
-    double max_circuit_speed;
-    double nominal_descent_rate;
-    double nominal_approach_speed;
-    double nominal_final_speed;
-    double stall_speed_landing_config;
+	void FlyTrafficPattern(double dt);
 
-    // environment - some of this might get moved into FGAIPlane
-    double wind_from_hdg;	// degrees
-    double wind_speed_knots;	// knots
+	// TODO - need to add something to define what option we are flying - Touch and go / Stop and go / Landing properly / others?
 
-    // Pattern details that (may) change
-    int numInPattern;		// Number of planes in the pattern (this might get more complicated if high performance GA aircraft fly a higher pattern eventually)
-    int numAhead;		// More importantly - how many of them are ahead of us?
-    double distToNext;		// And even more importantly, how near are we getting to the one immediately ahead?
-    PatternLeg leg;		// Out current position in the pattern
-    StartofDescent SoD;		// Start of descent calculated wrt wind, pattern size & altitude, glideslope etc
+	void TransmitPatternPositionReport();
 
-    void FlyTrafficPattern(double dt);
+	void CalculateStartofDescent();
 
-    // TODO - need to add something to define what option we are flying - Touch and go / Stop and go / Landing properly / others?
+	void ExitRunway(Point3D orthopos);
 
-    void TransmitPatternPositionReport();
+	void StartTaxi();
 
-    void CalculateStartofDescent();
+	void Taxi(double dt);
+
+	void GetNextTaxiNode();
 };
 
 #endif  // _FG_AILocalTraffic_HXX
