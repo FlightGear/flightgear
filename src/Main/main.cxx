@@ -47,16 +47,13 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/math/sg_random.h>
 
-// Class refferences
+// Class references
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/animation.hxx>
 #include <simgear/scene/sky/sky.hxx>
 #include <Time/light.hxx>
-
-
-
 #include <Include/general.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/hud.hxx>
@@ -233,19 +230,57 @@ static void fgMainLoop( void ) {
 
     double throttle_hz = fgGetDouble("/sim/frame-rate-throttle-hz", 0.0);
     if ( throttle_hz > 0.0 && scenery_loaded ) {
-        static double remainder = 0.0;
+        // optionally throttle the frame rate (to get consistant frame
+        // rates or reduce cpu usage.
 
-        // simple frame rate throttle
-        double dt = 1000000.0 / throttle_hz + remainder;
-        int wait = dt / 1000;
-        remainder = dt - ( wait * 1000.0 );
+        double frame_us = 1000000.0 / throttle_hz;
 
-        current_time_stamp.stamp();
-        int t_ms = (int) ( ( current_time_stamp - last_time_stamp ) / 1000 ) ; /* Convert to ms */
-        if ( t_ms < wait ) {
-            ulMilliSecondSleep ( wait - t_ms ) ;
+#define FG_SLEEP_BASED_TIMING 1
+#if defined(FG_SLEEP_BASED_TIMING)
+        // sleep based timing loop.
+        //
+        // Calling sleep, even usleep() on linux is less accurate than
+        // we like, but it does free up the cpu for other tasks during
+        // the sleep so it is desireable.  Because of the way sleep()
+        // is implimented in consumer operating systems like windows
+        // and linux, you almost always sleep a little longer than the
+        // requested amount.
+        // 
+        // To combat the problem of sleeping to long, we calculate the
+        // desired wait time and shorten it by 2000us (2ms) to avoid
+        // [hopefully] over-sleep'ing.  The 2ms value was arrived at
+        // via experimentation.  We follow this up at the end with a
+        // simple busy-wait loop to get the final pause timing exactly
+        // right.
+        // 
+        // Assuming we don't oversleep by more than 2000us, this
+        // should be a reasonable compromise between sleep based
+        // waiting, and busy waiting.
+
+        // sleep() will always overshoot by a bit so undersleep by
+        // 2000us in the hopes of never oversleeping.
+        frame_us -= 2000.0;
+        if ( frame_us < 0.0 ) {
+            frame_us = 0.0;
         }
         current_time_stamp.stamp();
+        /* Convert to ms */
+        double elapsed_us = current_time_stamp - last_time_stamp;
+        if ( elapsed_us < frame_us ) {
+            double requested_us = frame_us - elapsed_us;
+            ulMilliSecondSleep ( (int)(requested_us / 1000.0) ) ;
+        }
+#endif
+
+        // busy wait timing loop.
+        // 
+        // This yields the most accurate timing.  If the previous
+        // ulMilliSecondSleep() call is ommitted this will peg the cpu
+        // (which is just fine if FG is the only app you care about.)
+        current_time_stamp.stamp();
+        while ( current_time_stamp - last_time_stamp < frame_us ) {
+            current_time_stamp.stamp();
+        }
     } else {
         // run as fast as the app will go
         current_time_stamp.stamp();
