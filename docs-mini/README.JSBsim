@@ -1,0 +1,43 @@
+JSBSim
+
+JSBSim is an ongoing attempt at producing an OO Flight Dynamics Model (FDM)
+to replace LaRCsim as the default FDM for FlightGear. It can also be used
+standalone.
+
+JSBSim uses config files to represent aircraft and engines. Also, the flight
+control system is described in the config file. Normally, for use with
+FlightGear, the config files are named this way:
+<FG_ROOT>/Aircraft/<aircraft name>/<aircraft name>.cfg . Engines are named
+like this: <FG_ROOT>/Engines/<engine name>.dat .
+
+Aircraft and engine config files are present in the FGFS-Base package which
+must be downloaded from the FlightGear web site at www.flightgear.org or one
+of the mirror sites listed there.
+
+How to run FGFS using JSBSim
+
+All the various FDMs are currently compiled into FGFS. You can specify which
+FDM you want at run time. You can also specify which aircraft you want.
+Currently, for JSBSim only the X-15 is available, and possibly the C-172.
+Here is an example command line used to start up FlightGear using JSBSim as
+the FDM:
+
+fgfs --fdm=jsb --aircraft=X15 --units-feet --altitude=60000 --uBody=2000 --w
+Body=120
+
+[Note: uBody is the forward velocity of the aircraft, wBody is the downward
+velocity - from the aircraft point of view. This essentially means that the
+aircraft is going forward fast and has an angle of attack of about 4 degrees
+or so]
+
+ The above command line sets up the initial velocity and altitude to allow
+the X15 to glide down. Note that if you fire up the engine, it will burn for
+only about two minutes and then run out of fuel - but you will go very, very
+fast!
+
+Check out the JSBSim home page at www.hal-pc.org/~jsb/flightsim.html. Please
+report any bugs to jsb@hal-pc.org, or apeden@earthlink.net, or post them to
+the fgfs-devel mailing list.
+
+JSBSim is written by Jon S. Berndt and Tony Peden with contributions by
+other FlightGear programmers, as well.
