@@ -1,4 +1,5 @@
 New in 0.54
+* Textured moon, and rewritten/restructured Astro code.
 * More optimizations and code cleanups.  (Norman Vine, Bernie Bright, Charlie
   Hotchkiss.)
 * Bug fixed that was causing odd display artifacts due to a degenerate
