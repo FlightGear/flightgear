@@ -1,11 +1,11 @@
 /***********************************************************/
 /* FGD_COM.C by Oliver Delise                              */
 /* Contact info:                                           */
-/* e-mail: delise@rp-plus.de                               */
+/* e-mail: delise@mail-isis.de                             */
 /* www: http://www.online-club.de/~olk/progs/mmx-emu/      */
 /* ftp: http://www.online-club.de/~olk/progs/flightgear    */ 
 /*                                                         */
-/* Version 0.1pre-alpha                                    */
+/* Version 0.1-alpha                                       */
 /* The author of this program offers no waranty at all     */
 /* about the correct execution of this software material.  */
 /* Furthermore, the author can NOT be held responsible for */
@@ -17,7 +17,7 @@
 /* This is Open Source Software with many parts            */
 /* shamelessly stolen from others...                       */
 /*                                                         */
-/* -> This program will scan for TCP port listening on a   */
+/* -> This program will use a TCP port listening on a      */
 /*    remote or local host inside the range you give to it.*/
 /*    I offer no warranty over the accuracy though :)      */
 /*    There are 3 verbose modes: No info, service info, and*/
@@ -27,6 +27,7 @@
 /*    output is STDOUT, and ALL the errors go to STDERR.   */
 /*                                                         */
 /*    History: v0.1pre-alpha: May 25 1999 -> First release */
+/*             v0.1-alpha     Nov 08 1999                  */
 /***********************************************************/
 
 #include <stdio.h>
@@ -39,7 +40,8 @@
 #include <fcntl.h>
 #include <sys/utsname.h>
 
-int i;
+
+/* Netstuff */
 int sock = -1;
 int my_sock;
 struct sockaddr_in address;
@@ -55,53 +57,29 @@ struct hostent *host_info, *f_host_info;
 struct servent *service_info;
 struct utsname myname;
 
+/* Program-stuff */
+int i;
+int fgd_len_msg = 1;
 size_t anz;
 char *buff;
-char *src_host;
+char *src_host, *fgd_host, fgfs_host;
+char *usage = "Usage:\n fgd_com [FGD host] [start port] [end port] [-v or -vv] [Commando] [FGFS host]\n";
 
-void port_scan( char *FGD_com, char *FGFS_host);
 
-int main(int argc, char **argv)
-{ 
-   if (argc < 6) {
-    fprintf(stderr," Usage:\n fgd_com [FGD host] [start port] [end port] [-v or -vv] [Commando] [FGFS host]\n");
-    exit(1);
-   }
-   printf("argc %d argv[5] %s\n",argc,argv[5]);
-   switch (argc) {
-     case 7: printf("fgd commando : %s\n",argv[5]);
-             base_port = (u_short)atoi(argv[2]);
-             end_port = (u_short)atoi(argv[3]);
-             verbose = 2;
-//             src_host = argv[6];
-             break;
-     case 5: if (!strcmp(argv[4],"-v")) 
-               verbose = 1;
-             else if (!strcmp(argv[4],"-vv"))
-                    verbose = 2;
-               else { fprintf(stderr," Usage:\n fgd_com [FGD host] [start port] [end port] <-v or -vv> [FGFS-host]\n");
-                      exit(1); }
+void fgd_init(void){
 
-     case 4: base_port = (u_short)atoi(argv[2]);
-             end_port = (u_short)atoi(argv[3]);
-             break;
-     default: fprintf(stderr,"Usage:\n fgd_com [FGD host] [start port] [end port] <-v> [FGFS-host]\n");
-              exit(1);
-              break;
-   }
-   
    bzero((char *)&address, sizeof(address));
    address.sin_family = AF_INET;
 /* determinating the source/sending host */
    if (uname(&myname) == 0) src_host = myname.nodename;
    printf("I'm running on HOST : %s\n", src_host);
 /* resolving the destination host, here fgd's host */   
-   if (verbose == 2) printf("Resolving: %s ->",argv[1]);
-   if (host_info = gethostbyname(argv[1])) {
+   if (verbose == 2) printf("Resolving: %s ->", fgd_host);
+   if (host_info = gethostbyname( fgd_host)) {
      bcopy(host_info->h_addr, (char *)&address.sin_addr,host_info->h_length);
      if (verbose == 2) printf(" resolved\n");
-   } else if ((address.sin_addr.s_addr = inet_addr(argv[1])) == INADDR_NONE) {
-            fprintf(stderr,"Could not get %s host entry !\n",argv[1]);
+   } else if ((address.sin_addr.s_addr = inet_addr( fgd_host)) == INADDR_NONE) {
+            fprintf(stderr,"Could not get %s host entry !\n", fgd_host);
             printf(" NOT resolved !!!\n");
             exit(1);
           } else if (verbose == 2) printf(" address valid\n");
@@ -111,14 +89,11 @@ int main(int argc, char **argv)
      exit(1);
    } else if (verbose == 2) {
             printf("Port range: %d to %d\n",base_port,end_port);
-     }
-   port_scan( argv[5], argv[6]);
-   exit(0);
+            }
 }
 
-int fgd_len_msg = 1;
 
-void port_scan( char *FGD_com, char *FGFS_host) {
+void fgd_send_com( char *FGD_com, char *FGFS_host) {
    current_port = base_port;
    printf("Sending : %s\n", FGD_com);
    while (current_port <= end_port) {
@@ -190,3 +165,36 @@ void port_scan( char *FGD_com, char *FGFS_host) {
   if (verbose == 2) printf("fgd_com terminated.\n");
 }
 
+
+int main(int argc, char **argv) { 
+
+   if (argc < 6) {
+    fprintf(stderr, usage);
+    exit(1);
+   }
+   printf("argc %d argv[5] %s\n",argc,argv[5]);
+   switch (argc) {
+     case 7: printf("fgd commando : %s\n",argv[5]);
+             base_port = (u_short)atoi(argv[2]);
+             end_port = (u_short)atoi(argv[3]);
+             fgd_host = argv[1];
+             verbose = 2;
+             break;
+     case 5: if (!strcmp(argv[4],"-v")) 
+               verbose = 1;
+             else if (!strcmp(argv[4],"-vv"))
+                    verbose = 2;
+               else { fprintf(stderr, usage);
+                      exit(1); }
+
+     case 4: base_port = (u_short)atoi(argv[2]);
+             end_port = (u_short)atoi(argv[3]);
+             break;
+     default: fprintf(stderr, usage);
+              exit(1);
+              break;
+   }
+   fgd_init();
+   fgd_send_com( argv[5], argv[6]);
+   exit(0);
+}

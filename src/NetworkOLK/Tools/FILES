@@ -1,0 +1,9 @@
+FILES        - This file, describing the other files
+HEADERS      - Necessairy headers to compile the programs
+README       - Infos about programs
+Makefile     -  
+fgd.h        - Headerfile included by all programs
+fgd.c        - Flightgear deamon
+fgd_com.c    - Sends commandos to fgd
+fgd_scan.c   - Scanner to detect Flightgear deamons via TCP
+fgd_mcp.c    - Master Control Program for fgd

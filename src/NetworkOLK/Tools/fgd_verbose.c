@@ -41,7 +41,7 @@
 #include <fcntl.h>
 #include <sys/utsname.h>
 
-#define printf //
+// #define printf //
 
 /* Net-stuff */
 fd_set rset, allset;

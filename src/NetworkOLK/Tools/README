@@ -1,117 +1,287 @@
 Welcome to FlightGear Deamon fgd
 --------------------------------
 Here the first Tools to play with FlightGear Deamon.
-This is yet pre-alpha and the sources remain to be tidied up,
+This is yet alpha and the sources remain to be tidied up,
 and to get documented.
+
+
+Why this software?
+------------------
+The goal of the author is to keep unnecessairy jobs out of FGFS. This keeps 
+FGFS doing what it should do: simulate!  
+Adding more fancy stuff into FGFS would maybe spoil it's framerates and lead
+to larger compiletimes. For that reason an external solution comes in quite
+handy. Firing up the deamon on another machine than FGFS is running does not
+affect the cpu-time of FGFS. Let the deamon do all the other jobs for your
+FGFS, also let *him* communicate with the outer world and present the
+results in a "precooked" way.
 
 
 Theory of operation:
 --------------------
-The FlightGear Deamon called fgd is a standalone program which registers
+The FlightGear Deamon, called fgd, is a standalone program which registers
 FGFS players willing to have a multiplayer FGFS environment via TCP/IP.
-Information like player's ip/lon/lat/alt etc. can be send to fgd.
+Information like player's IP/lon/lat/alt etc and also messages can be send
+to fgd. 
+
 The deamon fgd in turn sends back the gathered information upon request.
+
 The purpose of the scan prog "fgd_scan" is to locate free ports on the
 network, which can be used for exchanging data between FGFS and fgd.
-The commando program fgd_com serves as an example of how the communication
-to fgd can be done. For the moment consider fgd_com as FGFS.
-Parts of fgd_com will be later incorporated into FGFS.
+
+The commando program "fgd_com" serves as an example of how the communication
+to fgd can be done. For the moment, the functionality of fgd_com is not yet
+integrated into FGFS. Parts of fgd_com will be later incorporated into FGFS.
+
+The master control program "fgd_mcp" is some sort virtual fgfs. It simulates
+up to x FlightGear simulators. It's main purpose is being a development 
+platform for network related stuff. The coolest advantage here is the 
+possibilty of having multiple fgfs's in one little program. That saves *much*
+memory and also time because recompiling fgd_mcp is way faster then FGFS.
 
 
 How to play with the tools:
 ---------------------------
-Just fire up fgd on whatever machine reachable from the one on which
-FGFS will be running. Even the same machine is ok.
+Just fire up fgd on whatever machine reachable from the one on which FGFS 
+will be running. Even the same machine is ok.
 Then use fgd_scan to locate the fgd-deamon.
 Also use fgd_com to pass some commandos to fgd.
+Try setting up various scenarios with fgd_mcp and see if everything works.
 
 
 How to compile:
 ---------------
+Have a look at the HEADERS file and check the presence of the required headers
+on your machine and adjust them in the fgd.h file just in case of being located
+elsewhere. This software is libc5 proof, so maybe on glibc (>=2), the header
+files will be located elsewhere.
+
 Use the Makefile with make or just gcc -o prog prog.c
+Default location for "make" is current directory, so be sure to have r/w-access 
+to it. For "make install" you have to be root, binaries go by default into 
+/usr/local/bin.
 
 
 Usage:
 ------
-- fgd [start port] [end port] <-v -vv>
+- fgd [start port] [end port] [name] <-v -vv>
 
 where 
-      - start port  and  end port is the range where it should listen and
-        talk to. (Later the range will be used to check for a free port
-        within this range, which can be used for communicating with FGFS.
+      - start port  and  end port is the (numeric) range where it should
+        listen and talk to. (Later the range will be used to check for a 
+        free port within this range, which can be used for communicating
+        with FGFS.
         for the moment make sure you use the _SAME_ port value for start
-        and stop. A good starting point should be above 10000.
+        and stop. A good starting point should be above or equal 10000.
+      - name (string) of the deamon.
       - -v or -vv is the verbose level. This param can be ommitted.
+      
+        Be careful, trying fgd on a used port doesn't work. Also it doesn't
+        make any sense and luckyly doesn't goof the service of the used port. 
+        Just in case you did fgd will complain and advise you to look for an 
+        unused port first.
         
 
 - fgd_scan [host] [start port] [end port] <-v -vv>
 
-comment: params are the same as for fgd except that the start-stop range
-         must be different to detect fgd.
+comment: params are the same as for fgd except that the start/stop values
+         should be different to detect fgd. In case of knowning the port, 
+         which fgd uses, one should of course set equal port-values.
          
          Also host means the host running fgd, not where the scanner is 
          fired up.
          
          Just for fun you can take also the dangerous (priviledged ports)
-         But the fgd-scanner will be stuck at some used ports.
+         But the fgd-scanner could maybe get stuck at some used ports.
          It doesn't hurt to experiment in the used regions, a ctrl-c
          will abort the scanning so that new params can be used.
+
+
+ACHTUNG!      A well configured system, in this case the target-ip the
+              scanner inquires, will log the replies of various services 
+              trying to react to the scanner. It depends on the vigilance 
+              and mood of the respective sysadmin what will happen to the 
+              *evil* person sending requests to the target system.
+              Scanning unused ports doesn't hurt at all.
+
+              Have a look at the "/etc/services" file which describes all
+              the "official" services & deamons lurking on various ports.
 
       
 - fgd_com  [FGD-host] [start port] [end port] [-v -vv] [commando] <FGFS-host>
 
-comment: see fgd_scan, but you must enter either a ip/fqdn or dummystring as 
-         last param, some commandos use it to pass it as real information to 
-         fgd.
+comment: like fgd_scan, but you must enter either an ip (numeric) or alias
+         (string) or a fqdn (like foo.bar.com) or dummystring as last parameter
+         here: <FGFS-host>.
+         Some commandos use it to pass it as real information to fgd. Maybe the 
+         start/end port options will go away later because it's the job of the 
+         scanner to find fgd within a range.
+         It's a waste to spoil the net with commands (tcp-packets).
+         
+
+- fgd_mcp
+
+comment: works like fgd_com except that it is *not* a single shot program as
+         the other programs, yes it works interactively so you have to enter
+         all relevant values yourself at runtime. You can stresstest any
+         FlightGear deamon to see if it responds a) accurate b) fast enough. 
+
+         You can enter a Flight route just by entering the start/stop coords 
+         and the speed. This master control program will then automagically
+         send information about current aircraft to the deamon, like a real
+         FGFS would do. 
+         
+         You can even define multiple scenarios. That means that all defined
+         aircrafts fly simultaneous at the same time.
+         Relevant params here are alt, lon, lat, speed, roll, pitch, yaw, 
+         pilot, model, start/stop-coords and update frequency.
+
+         Watch out for broken pipes, never had any in a xterm but often on
+         text consoles. They will go away when the "recv"-loops will be
+         replaced by "select"-calls.
+
+         The default values suit my personal needs. So don't be paniked if
+         you get some errormessages. You just have to adjust some values
+         like IP's and HOST-names in either sourcecode or to enter them at
+         runtime.
 
 
 The commandos for fgd_com:
 --------------------------
 
- 0 : fgd idenditfies itself, answeres back to scanner
+ 0 : fgd identifies itself and answeres back to scanner
  1 : registering to fgd
  2 : show who's registered
  3 : send message to one specific user           (not implemented yet)
  4 : send message to all users                   (not implemented yet)
  5 : scan for other fgd's                        (not implemented yet)
- 6 : update (fgd sends it's database to user)    (not implemented yet)
+ 6 : push (fgd_com sends FGFS-data to fgd)       (not implemented yet)
+ 7 : pop  (fgd_com receives data from fgd)       (not implemented yet)
  8 : unregister from fgd
  9 : shutdown fgd
 
 Comments:
 ---------
-Commands 1/2/8 use the last parameter (see above, dummy-string) for the
+Commandos 1/2/8 use the last parameter (see above, dummy-string) for the
 ip or hostname or fqdn of the fgfs-machine which will be added/listed/removed
 from fgd.
+
+Commandos 3+4 are some sort of "talk" to registered users on fgd.
+The messages are keyed in, then send and stored into fgd until the 
+recepient user requests fgd data via command 7 (pop).
+
+Command 5 scans the net (within a range given) for other fgd-deamons.
+
+Commandos 6+7 are seperated send/receive requests to/from fgd.
+Later it will be FGFS who queries fgd in given intervalls. By now it's
+the user who sends/receives at will via menu or keyboard while flying.
+
+Command 9 is a remote shutdown for fgd. This at least avoids telnetting
+to the remote machine, where fgd is fired up. Caveat Emptor: be careful, 
+everybody connected to fgd can send the "fgd-shutdown"-command. And hey,
+also everybody can unregister another user...
+
+Since all FGFS pilots are friendly and Multipilot-mode is considered
+cooperative rather then deathmatch, I don't expect any malicious mis-use
+of Multipilot-mode, err...yes?  Also this keeps me from adding foolproof
+if/then/else-stuff because FGFS is a serious Simulation Software used by 
+serious people who *know* what they are doing, even if they store FGFS in 
+directories like:
+  /usr/games/fgfs   or   D:\SPEL\FlightGear  or  /home/olk/spiele/fgfs
+
 Try registering and unregistering various hosts to see if the add/remove
-mechanism works well. It should work correctly.
+mechanism works well. It should work correctly as it can be veryfied
+with the "2" command.
 
 
 Examples:
 ---------
-- fgd olk 10003 10003 -vv
-  fgd runs on host "olk" using port "10003" using max. verbose level
+- fgd 10003 10003 Johnney -vv
+  fgd runs locally on port "10003" called "Johnney" using max. verbose level
+
+- fgd_scan olk 1 1024 -vv
+  scans for flightgear deamons on host "olk" using ports "1" thru "1024"
+  beeing very verbose. Using ports below 10000 is, err...you know.
 
 - fgd_com olk 10003 10003 -vv 1 johnny
   send "register host"-command to fgd running on host "olk" using port"10003"
-  and register machine "johnny"
+  and register machine "johnny", here "johnny" is a fqdn.
+
+- fgd_mcp  (without any commandline params)
+
 
 To do:
 ------
+- modify FGFS to talk to fgd and display the data on HUD and draw any found
+  pilot's aircraft within visible area
+- porting to Mac and Windows(95/98/2K/NT)
 - clean-up code
+- replace "recv"-loops by "select" (blocking vs nonblocking discussion)
+- concatenate the elements of one command into one single net-call instead
+  of sending each element seperately !!!
+- reducing of data to be transfered - here: wiping out redundancy,
+  computers can be upgraded easily but upgrading the bandwith of the net is 
+  almost impossible ;-((
 - document the code
-- convert code from c to c++
-- find a place within FGFS where to reside
+- convert code from c to c++ ?
+- find a place within FGFS, where to reside
+- make fgd a *REAL* deamon which is forked in background
+- make fgd concurrent instead of iterative, hmmm...
 - make the code more autodetectable, to reduce commandline params
 - implement missing commands
 - find other useful commands
 - find and resolve bugs ;-)
 
 
+History:
+--------
+  v0.1pre-alpha: May 25 1999 -> First release
+  v0.1-alpha   : Nov 08 1999 -> Introducing fgd-Master-Control-Program 
+                                Some cleanups, implementing missing commands
+                                of fgd_com into fgd_mcp
+                 Nov 29 1999 -> Implementing scenario functions like virtual
+                                Pilots
+                 Nov 30 1999 -> ???
+
+
+Future Plans:
+-------------
+  Adding support for downloading files from Webserververs or FTP sites,
+  eg. weather data (METAR) and passing the infos to FGFS.
+
+  Adding some sort of "Tower Control" to the deamon. It could for instance
+  calculate the nearest airport for each pilot.
+
+  Modifying FGFS in a way to accept foreign-data. A so called remote-used
+  FGFS could display another view of the same flight. Well this requires
+  at least two or more machines, err...hummm.
+  On the other hand a remote used FGFS could serve as a teaching facility,
+  watching somebody else's fly could be very instructive ;-)
+
+  Another idea is to implement "black box" features into fgd. The deamon
+  would serve here as a flightrecorder. By this one could review a past 
+  flight or any flight recorded by somebody else. The recorded "scenario files"
+  could be read by any deamon and serve as input data for any FGFS switched
+  into remote mode, see above paragraph.
+
+
+Thanks:
+-------
+  - W.Richard Stevens+, for his fantastic Unix Network Programming books
+  - Tennessee Carmel-Veilleux, e-mail: veilleux@ameth.org, for his portscan
+    program which inspired me writing the FlightGear metwork support.
+
+
 REMEMBER:
 ---------
-This 3 toys are pre-alpha and dirty and need also to be documented.
+Those 4 toys are alpha and dirty and need also to be documented.
+The programs are fairly well tested under Linux only, but the code should 
+conform to Unix98.
 
-Send comments/flame/beer/whatever to delise@rp-plus.de
+This software is OPEN SOURCE SOFTWARE, this helps to avoid this package to
+be involved into _EVIL_ discussions about copyrights etc...
+You can do whatever you want with this software, even enhance it.
 
-Oliver Delise 25/May/99
+Send comments/flames/BEER/whatever to delise@mail.isis.de
+
+Oliver Delise Nov/08/99

@@ -1,11 +1,11 @@
 /***********************************************************/
 /* FGD_SCAN.C by Oliver Delise                             */
 /* Contact info:                                           */
-/* e-mail: delise@rp-plus.de                               */
+/* e-mail: delise@mail-isis.de                             */
 /* www: http://www.online-club.de/~olk/progs/mmx-emu/      */
 /* ftp: http://www.online-club.de/~olk/progs/flightgear    */ 
 /*                                                         */
-/* Version 0.1pre-alpha                                    */
+/* Version 0.1-alpha                                       */
 /* The author of this program offers no waranty at all     */
 /* about the correct execution of this software material.  */
 /* Furthermore, the author can NOT be held responsible for */
@@ -27,6 +27,7 @@
 /*    output is STDOUT, and ALL the errors go to STDERR.   */
 /*                                                         */
 /*    History: v0.1pre-alpha: May 25 1999 -> First release */
+/*             v0.1-alpha     Nov 08 1999                  */
 /***********************************************************/
 
 
@@ -166,10 +167,11 @@ void fgd_scan() {
               break; 
       case 2: service_info = getservbyport(htons(current_port),"tcp");
               if (!service_info) {
-                read( sock, &buff, 3);
+                read( sock, &buff, 4);
                 printf(" Got reply : %s\n", &buff);
                 if (strncmp(&buff, "FGD", 3) == 0) {
-                  printf(" FlightGear-Deamon detected\n");
+                  read( sock, &buff, (int) &buff[3]);
+                  printf(" FlightGear-Deamon %s detected.\n", &buff);
                   break;
                 }
               printf("Port %d found. Service name unknown\n",current_port);
