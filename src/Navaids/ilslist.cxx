@@ -130,6 +130,9 @@ bool FGILSList::query( double lon, double lat, double elev, double freq,
     ils_list_iterator current = stations.begin();
     ils_list_iterator last = stations.end();
 
+    double best_angle = 362.0;
+    bool found_one = false;
+
     // double az1, az2, s;
     Point3D aircraft = sgGeodToCart( Point3D(lon, lat, elev) );
     Point3D station;
@@ -155,9 +158,8 @@ bool FGILSList::query( double lon, double lat, double elev, double freq,
 	if ( d < (2* FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
 		  * 2 * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER) ) {
 
-	    *ils = *current;
-	    return true;
-#if 0
+            found_one = true;
+
             // Get our bearing from this station.
             double reciprocal_bearing, dummy;
             double a_lat_deg = lat * SGD_RADIANS_TO_DEGREES;
@@ -174,13 +176,12 @@ bool FGILSList::query( double lon, double lat, double elev, double freq,
                                 current->get_loclon(), a_lat_deg, a_lon_deg,
                                 &reciprocal_bearing, &dummy, &dummy );
             angle_to_beam_deg = fabs(reciprocal_bearing - s_ils_deg);
-            if ( angle_to_beam_deg < 90.0 ) {
+            if ( angle_to_beam_deg <= best_angle ) {
                 *ils = *current;
-                return true;
+                best_angle = angle_to_beam_deg;
             }
-#endif
 	}
     }
 
-    return false;
+    return found_one;
 }
