@@ -82,7 +82,7 @@ void calc_normal(struct fgCartesianPoint p1, struct fgCartesianPoint p2,
 		 struct fgCartesianPoint p3, double normal[3])
 {
     double v1[3], v2[3];
-    float temp;
+    double temp;
 
     v1[0] = p2.x - p1.x; v1[1] = p2.y - p1.y; v1[2] = p2.z - p1.z;
     v2[0] = p3.x - p1.x; v2[1] = p3.y - p1.y; v2[2] = p3.z - p1.z;
@@ -609,9 +609,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/27 18:37:04  curt
-/* Lots of updates to get back in sync with changes made over in .../Src/
+/* Revision 1.4  1998/01/31 00:41:26  curt
+/* Made a few changes converting floats to doubles.
 /*
+ * Revision 1.3  1998/01/27 18:37:04  curt
+ * Lots of updates to get back in sync with changes made over in .../Src/
+ *
  * Revision 1.2  1998/01/14 15:54:43  curt
  * Initial revision completed.
  *

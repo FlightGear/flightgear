@@ -41,7 +41,7 @@
 
 int nodecount = 0;
 
-float nodes[MAX_NODES][3];
+double nodes[MAX_NODES][3];
 
 
 struct fgBUCKET my_index;
@@ -315,7 +315,7 @@ void read_nodes(FILE *fp) {
 
     while ( fgets(line, 250, fp) != NULL ) {
 	if ( strncmp(line, "gdn ", 4) == 0 ) {
-	    sscanf(line, "gdn %f %f %f\n", &nodes[nodecount][0], 
+	    sscanf(line, "gdn %lf %lf %lf\n", &nodes[nodecount][0], 
 		   &nodes[nodecount][1], &nodes[nodecount][2]);
 	    /*
 	    printf("read_nodes(%d) %.2f %.2f %.2f %s", nodecount, 
@@ -454,9 +454,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/27 18:37:00  curt
-/* Lots of updates to get back in sync with changes made over in .../Src/
+/* Revision 1.4  1998/01/31 00:41:23  curt
+/* Made a few changes converting floats to doubles.
 /*
+ * Revision 1.3  1998/01/27 18:37:00  curt
+ * Lots of updates to get back in sync with changes made over in .../Src/
+ *
  * Revision 1.2  1998/01/15 21:33:36  curt
  * Assembling triangles and building a new .node file with the proper shared
  * vertices now works.  Now we just have to use the shared normals and we'll

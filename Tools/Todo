@@ -20,6 +20,11 @@
 1/12/98 -  Try reversing cw-wound strips rather than calling glFrontFace() 
            in the display list.
 
+           gnuplot> set label "1" at 1,1
+           gnuplot> set label "2" at 2,2
+
+           gnuplot> plot x
+
 1/21/98 -  Generate an elevation quad tree.
 
 1/12/98 -  Generate a face adjacency matrix

@@ -60,16 +60,16 @@ clean:
 source-tar: clean
 	(cd ..; \
 	tar cvzf demtools-$(FG_VERSION).tar.gz Tools/Makefile Tools/README \
-	Tools/Todo Tools/make.inc Tools/AssemTris Tools/Dem2node \
-	Tools/FixNode Tools/FixObj Tools/SplitTris Tools/Stripe_u \
-	Tools/Tri2obj Tools/Triangle)
+	Tools/Todo Tools/make.inc Tools/process-dem.pl Tools/AssemTris \
+        Tools/Dem2node Tools/FixNode Tools/FixObj Tools/SplitTris \
+	Tools/Stripe_u Tools/Tri2obj Tools/Triangle)
 
 source-zip: clean
 	(cd ..; \
 	zip -r demtools-$(FG_VERSION).zip Tools/Makefile Tools/README \
-	Tools/Todo Tools/make.inc Tools/AssemTris Tools/Dem2node \
-	Tools/FixNode Tools/FixObj Tools/SplitTris Tools/Stripe_u \
-	Tools/Tri2obj Tools/Triangle)
+	Tools/Todo Tools/make.inc Tools/process-dem.pl Tools/AssemTris \
+        Tools/Dem2node Tools/FixNode Tools/FixObj Tools/SplitTris \
+	Tools/Stripe_u Tools/Tri2obj Tools/Triangle)
 
 bin-tar: all
 	echo "need to fix this"
@@ -89,6 +89,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.8  1998/01/31 00:41:19  curt
+# Made a few changes converting floats to doubles.
+#
 # Revision 1.7  1998/01/27 18:36:53  curt
 # Lots of updates to get back in sync with changes made over in .../Src/
 #

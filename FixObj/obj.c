@@ -33,8 +33,8 @@
 
 
 /* what do ya' know, here's some global variables */
-float nodes[MAXNODES][3];
-float normals[MAXNODES][3];
+double nodes[MAXNODES][3];
+double normals[MAXNODES][3];
 
 int ccw_list[MAXNODES];
 int ccw_list_ptr;
@@ -175,7 +175,7 @@ void obj_fix(char *infile, char *outfile) {
 	    /* save vertex to memory and output to file */
             if ( ncount < MAXNODES ) {
                 /* printf("vertex = %s", line); */
-                sscanf(line, "v %f %f %f\n", 
+                sscanf(line, "v %lf %lf %lf\n", 
                        &nodes[ncount][0], &nodes[ncount][1], &nodes[ncount][2]);
 		fprintf(out, "v %.2f %.2f %.2f\n", 
 		       nodes[ncount][0], nodes[ncount][1], nodes[ncount][2]);
@@ -188,7 +188,7 @@ void obj_fix(char *infile, char *outfile) {
 	    /* save vertex normals to memory and output to file */
             if ( vncount < MAXNODES ) {
                 /* printf("vertex normal = %s", line); */
-                sscanf(line, "vn %f %f %f\n", 
+                sscanf(line, "vn %lf %lf %lf\n", 
                        &normals[vncount][0], &normals[vncount][1], 
                        &normals[vncount][2]);
 		fprintf(out, "vn %.4f %.4f %.4f\n", normals[vncount][0], 
@@ -288,9 +288,12 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.3  1998/01/19 19:51:07  curt
-/* A couple final pre-release tweaks.
+/* Revision 1.4  1998/01/31 00:41:25  curt
+/* Made a few changes converting floats to doubles.
 /*
+ * Revision 1.3  1998/01/19 19:51:07  curt
+ * A couple final pre-release tweaks.
+ *
  * Revision 1.2  1998/01/09 23:03:12  curt
  * Restructured to split 1deg x 1deg dem's into 64 subsections.
  *

@@ -46,7 +46,7 @@ struct fgCartesianPoint nodes[MAX_NODES];
 int tris[MAX_TRIS][3];
 int new_tris[MAX_TRIS][3];
 
-float normals[MAX_NODES][3];
+double normals[MAX_NODES][3];
 
 struct fgBUCKET my_index;
 struct fgBUCKET ne_index, nw_index, sw_index, se_index;
@@ -80,13 +80,13 @@ void calc_normal(struct fgCartesianPoint p1, struct fgCartesianPoint p2,
 		 struct fgCartesianPoint p3, double normal[3])
 {
     double v1[3], v2[3];
-    float temp;
+    double temp;
 
     v1[0] = p2.x - p1.x; v1[1] = p2.y - p1.y; v1[2] = p2.z - p1.z;
     v2[0] = p3.x - p1.x; v2[1] = p3.y - p1.y; v2[2] = p3.z - p1.z;
 
     MAT3cross_product(normal, v1, v2);
-    MAT3_NORMALIZE_VEC(normal,temp);
+    MAT3_NORMALIZE_VEC(normal, temp);
 
 /*  printf("  Normal = %.2f %.2f %.2f\n", normal[0], normal[1], normal[2]); */
 }
@@ -363,8 +363,10 @@ void read_normals(FILE *fp) {
 
     while ( fgets(line, 250, fp) != NULL ) {
 	if ( strncmp(line, "vn ", 3) == 0 ) {
-	    sscanf(line, "vn %f %f %f\n", &normals[normalcount][0], 
-		   &normals[normalcount][1], &normals[normalcount][2]);
+	    sscanf( line, "vn %lf %lf %lf\n", 
+		    &normals[normalcount][0], 
+		    &normals[normalcount][1], 
+		    &normals[normalcount][2] );
 	    /*
 	    printf("read_normals(%d) %.2f %.2f %.2f %s", normalcount, 
 		   normals[normalcount][0], normals[normalcount][1], 
@@ -638,9 +640,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.9  1998/01/27 18:37:04  curt
-/* Lots of updates to get back in sync with changes made over in .../Src/
+/* Revision 1.10  1998/01/31 00:41:27  curt
+/* Made a few changes converting floats to doubles.
 /*
+ * Revision 1.9  1998/01/27 18:37:04  curt
+ * Lots of updates to get back in sync with changes made over in .../Src/
+ *
  * Revision 1.8  1998/01/17 01:25:39  curt
  * Added support for shared normals.
  *
