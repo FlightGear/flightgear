@@ -59,7 +59,7 @@ GLint mesh2GL(struct mesh *m) {
     int i, j, istep, jstep, iend, jend;
     float temp;
 
-    istep = jstep = 10;  /* Detail level 1 -- 1200 ... */
+    istep = jstep = 1;  /* Detail level 1 -- 1200 ... */
 
     mesh = glGenLists(1);
     glNewList(mesh, GL_COMPILE);
@@ -83,23 +83,21 @@ GLint mesh2GL(struct mesh *m) {
 	    z22 = 0.03 * m->mesh_data[(j+jstep) * m->rows + (i+istep)];
 
 	    v1[0] = x2 - x1; v1[1] = 0;       v1[2] = z21 - z11;
-	    v2[0] = x2 - x1; v2[1] = y2 - y1; v2[2] = z22 - z11;
+	    v2[0] = 0;       v2[1] = y2 - y1; v2[2] = z12 - z11;
 	    mat3_cross_product(normal, v1, v2);
 	    MAT3_NORMALIZE_VEC(normal,temp);
+	    glNormal3fv(normal);
 
 	    if ( j == 0 ) {
 		/* first time through */
-		glNormal3fv(normal);
 		glVertex3f(x1, y1, z11);
 		glVertex3f(x1, y2, z12);
-	    } else {
-		glNormal3fv(normal);
 	    }
 
 	    glVertex3f(x2, y1, z21);
 	    
-	    v1[0] = x2 - x1; v1[1] = y2 - y1; v1[2] = z22 - z11;
-	    v2[0] = 0;       v2[1] = y2 - y1; v2[2] = z12 - z11;
+	    v1[0] = x2 - x1; v1[1] = y1 - y2; v1[2] = z21 - z12;
+	    v2[0] = x2 - x1; v2[1] = 0; v2[2] = z22 - z12;
 	    mat3_cross_product(normal, v1, v2);
 	    MAT3_NORMALIZE_VEC(normal,temp);
 	    glNormal3fv(normal);
@@ -121,10 +119,13 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.4  1997/05/23 20:05:24  curt
-/* First stab at using GL_TRIANGLE_STRIP's instead of GL_POLYGONS (to conserve
-/* memory)
+/* Revision 1.5  1997/05/24 01:45:32  curt
+/* Fixed surface normals for triangle mesh.
 /*
+ * Revision 1.4  1997/05/23 20:05:24  curt
+ * First stab at using GL_TRIANGLE_STRIP's instead of GL_POLYGONS (to conserve
+ * memory)
+ *
  * Revision 1.3  1997/05/23 15:40:26  curt
  * Added GNU copyright headers.
  * Fog now works!
