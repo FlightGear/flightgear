@@ -3,7 +3,7 @@
  *
  * Written by Curtis Olson, started May 1997.
  *
- * Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+ * Copyright (C) 1997  Curtis L. Olson  - http://www.flightgear.org/~curt
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -66,8 +66,11 @@ int ls_ForceAltitude(double alt_feet);
 
 
 // $Log$
-// Revision 1.1  2002/09/10 01:14:02  curt
-// Initial revision
+// Revision 1.2  2004/11/19 22:10:42  curt
+// Fix my mailing address by replacing it with my web page.
+//
+// Revision 1.1.1.1  2002/09/10 01:14:02  curt
+// Initial revision of FlightGear-0.9.0
 //
 // Revision 1.5  2001/03/24 05:03:12  curt
 // SG-ified logstream.

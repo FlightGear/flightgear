@@ -145,7 +145,7 @@ int main() {
         printf("This will cause the sun/moon/stars/planets to be in the\n");
 	printf("wrong place in the sky and the rendered time of day will be\n");
 	printf("incorrect.\n\n");
-	printf("Please report this to curt@me.umn.edu so we can work to fix\n");
+	printf("Please report this to http://www.flightgear.org/~curt so we can work to fix\n");
 	printf("the problem on your platform.\n");
     }
 }

@@ -3,7 +3,7 @@
 // Started by David Megginson, October 2001
 // (Reuses some code from main.cxx, probably by Curtis Olson)
 //
-// Copyright (C) 2001  Curtis L. Olson - curt@flightgear.org
+// Copyright (C) 2001  Curtis L. Olson - http://www.flightgear.org/~curt
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as

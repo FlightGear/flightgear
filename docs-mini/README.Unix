@@ -1,5 +1,5 @@
 If you are reading this in hopes that you will find the answer to a
-specific question, please send the question to curt@flightgear.org and
+specific question, please send the question to http://www.flightgear.org/~curt and
 suggest that I include the answer here.
 
 
@@ -14,7 +14,7 @@ For other platforms where you may have access to native compilers,
 again your mileage may vary.  We would like to support as many
 different compilers and platforms as possible.  Please relay any
 changes you make (or problems you encounter) back to
-curt@flightgear.org, so that in the future we can better support your
+http://www.flightgear.org/~curt, so that in the future we can better support your
 platform and your compiler.  I have access to a few different
 platforms, but I must depend on others to make sure their favorite
 platform and compiler is well supported.

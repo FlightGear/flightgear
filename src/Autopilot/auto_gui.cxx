@@ -1,7 +1,7 @@
 // auto_gui.cxx -- autopilot gui interface
 //
 // Written by Norman Vine <nhv@cape.com>
-// Arranged by Curt Olson <curt@flightgear.org>
+// Arranged by Curt Olson <http://www.flightgear.org/~curt>
 //
 // Copyright (C) 1998 - 2000
 //

@@ -5,7 +5,7 @@
  Maintained by: Tony Peden, Curt Olson
  Date started:  02/01/1999
 
------- Copyright (C) 1999 - 2000  Curtis L. Olson (curt@flightgear.org) ------
+------ Copyright (C) 1999 - 2000  Curtis L. Olson (http://www.flightgear.org/~curt) ------
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License as

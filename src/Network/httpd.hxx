@@ -3,7 +3,7 @@
 //
 // Written by Curtis Olson, started June 2001.
 //
-// Copyright (C) 2001  Curtis L. Olson - curt@flightgear.org
+// Copyright (C) 2001  Curtis L. Olson - http://www.flightgear.org/~curt
 //
 // Jpeg Image Support added August 2001
 //  by Norman Vine - nhv@cape.com

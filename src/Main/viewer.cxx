@@ -5,7 +5,7 @@
 //   partially rewritten by Jim Wilson jim@kelcomaine.com using interface
 //                          by David Megginson March 2002
 //
-// Copyright (C) 1997 - 2000  Curtis L. Olson  - curt@flightgear.org
+// Copyright (C) 1997 - 2000  Curtis L. Olson  - http://www.flightgear.org/~curt
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as

@@ -4,7 +4,7 @@
 #
 # Written by Curtis L. Olson, started January 2004
 #
-# Copyright (C) 2004  Curtis L. Olson - curt@flightgear.org
+# Copyright (C) 2004  Curtis L. Olson - http://www.flightgear.org/~curt
 #
 # This code is placed in the public domain by Curtis L. Olson.
 # There is no warranty, etc. etc. etc.

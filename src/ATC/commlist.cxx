@@ -3,7 +3,7 @@
 // Written by David Luff and Alexander Kappes, started Jan 2003.
 // Based on navlist.cxx by Curtis Olson, started April 2000.
 //
-// Copyright (C) 2000  Curtis L. Olson - curt@flightgear.org
+// Copyright (C) 2000  Curtis L. Olson - http://www.flightgear.org/~curt
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as

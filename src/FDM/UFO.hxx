@@ -3,7 +3,7 @@
 // Written by Curtis Olson, started October 1999.
 // Slightly modified from MagicCarpet.hxx by Jonathan Polley, April 2002
 //
-// Copyright (C) 1999-2002  Curtis L. Olson  - curt@flightgear.org
+// Copyright (C) 1999-2002  Curtis L. Olson  - http://www.flightgear.org/~curt
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as

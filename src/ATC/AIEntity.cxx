@@ -21,7 +21,7 @@
 /*****************************************************************
 *
 * WARNING - Curt has some ideas about AI traffic so anything in here
-* may get rewritten or scrapped.  Contact Curt curt@flightgear.org 
+* may get rewritten or scrapped.  Contact Curt http://www.flightgear.org/~curt 
 * before spending any time or effort on this code!!!
 *
 ******************************************************************/

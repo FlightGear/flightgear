@@ -4,7 +4,7 @@
 // Written by Curtis Olson, started September 2000.
 // Modified by Bernie Bright, May 2002.
 //
-// Copyright (C) 2000  Curtis L. Olson - curt@flightgear.org
+// Copyright (C) 2000  Curtis L. Olson - http://www.flightgear.org/~curt
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as

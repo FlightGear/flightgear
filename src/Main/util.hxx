@@ -1,5 +1,5 @@
 // util.hxx - general-purpose utility functions.
-// Copyright (C) 2002  Curtis L. Olson  - curt@me.umn.edu
+// Copyright (C) 2002  Curtis L. Olson  - http://www.flightgear.org/~curt
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
