@@ -165,6 +165,7 @@ void FGFDM::startElement(const char* name, const XMLAttributes &atts)
 	v[1] = 0;
 	v[2] = attrf(a, "compression", 1);
 	g->setCompression(v);
+        g->setBrake(attrf(a, "skid", 0));
 	g->setStaticFriction(attrf(a, "sfric", 0.8));
 	g->setDynamicFriction(attrf(a, "dfric", 0.7));
 	if(a->hasAttribute("castering"))
