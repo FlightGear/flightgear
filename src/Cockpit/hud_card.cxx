@@ -149,6 +149,7 @@ draw( void ) //  (HUD_scale * pscale )
 
     height = scrn_rect.top  + scrn_rect.bottom;
     width = scrn_rect.left + scrn_rect.right;
+    marker_xs = scrn_rect.left;  // x start
 
     if(type=="guage") {
 
