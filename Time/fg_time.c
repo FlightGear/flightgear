@@ -45,6 +45,7 @@
 
 
 struct fgTIME cur_time_params;
+struct fgLIGHT cur_light_params;
 
 
 /* Initialize the time dependent variables */
@@ -284,9 +285,12 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.11  1997/11/25 19:25:40  curt
-/* Changes to integrate Durk's moon/sun code updates + clean up.
+/* Revision 1.12  1997/12/09 04:25:37  curt
+/* Working on adding a global lighting params structure.
 /*
+ * Revision 1.11  1997/11/25 19:25:40  curt
+ * Changes to integrate Durk's moon/sun code updates + clean up.
+ *
  * Revision 1.10  1997/11/15 18:16:42  curt
  * minor tweaks.
  *

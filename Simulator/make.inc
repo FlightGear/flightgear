@@ -30,7 +30,7 @@
 #---------------------------------------------------------------------------
 
 VERSION_MAJOR = 0
-VERSION_MINOR = 14
+VERSION_MINOR = 15
 VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 
 
@@ -131,6 +131,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.20  1997/12/09 04:25:25  curt
+# Working on adding a global lighting params structure.
+#
 # Revision 1.19  1997/11/25 19:25:27  curt
 # Changes to integrate Durk's moon/sun code updates + clean up.
 #

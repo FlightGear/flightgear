@@ -69,11 +69,13 @@ void fgAstroInit() {
 /* Render Astronomical Objects */
 void fgAstroRender() {
     struct FLIGHT *f;
+    struct fgLIGHT *l;
     struct VIEW *v;
     struct fgTIME *t;
     double angle;
 
     f = &current_aircraft.flight;
+    l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
 
@@ -88,7 +90,7 @@ void fgAstroRender() {
     glDisable( GL_FOG );
 
     /* reverse light direction so the moon is displayed properly */
-    glLightfv( GL_LIGHT0, GL_POSITION, t->sun_vec_inv );
+    glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec_inv );
 
     glPushMatrix();
 
@@ -119,7 +121,10 @@ void fgAstroRender() {
 
 
 /* $Log$
-/* Revision 1.1  1997/11/25 23:20:22  curt
-/* Initial revision.
+/* Revision 1.2  1997/12/09 04:25:33  curt
+/* Working on adding a global lighting params structure.
 /*
+ * Revision 1.1  1997/11/25 23:20:22  curt
+ * Initial revision.
+ *
  */

@@ -100,9 +100,11 @@ int show_hud;
  **************************************************************************/
 
 static void fgInitVisuals() {
+    struct fgLIGHT *l;
     struct fgTIME *t;
     struct WEATHER *w;
 
+    l = &cur_light_params;
     t = &cur_time_params;
     w = &current_weather;
 
@@ -114,7 +116,7 @@ static void fgInitVisuals() {
        to unit length after transformation.  See glNormal. */
     glEnable( GL_NORMALIZE );
 
-    glLightfv( GL_LIGHT0, GL_POSITION, t->sun_vec );
+    glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
     glEnable( GL_LIGHTING );
     glEnable( GL_LIGHT0 );
 
@@ -139,6 +141,7 @@ static void fgInitVisuals() {
 
 static void fgUpdateViewParams() {
     struct FLIGHT *f;
+    struct fgLIGHT *l;
     struct fgTIME *t;
     struct VIEW *v;
     double x_2, x_4, x_8, x_10;
@@ -147,6 +150,7 @@ static void fgUpdateViewParams() {
     GLfloat amb[3], diff[3], fog[4], clear[4];
 
     f = &current_aircraft.flight;
+    l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
 
@@ -168,14 +172,14 @@ static void fgUpdateViewParams() {
 	      v->view_up[0], v->view_up[1], v->view_up[2]);
 
     /* set the sun position */
-    glLightfv( GL_LIGHT0, GL_POSITION, t->sun_vec );
+    glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
     /* calculate lighting parameters based on sun's relative angle to
      * local up */
     /* ya kind'a have to plot this to see the magic */
 
     /* x = t->sun_angle^8 */
-    x_2 = t->sun_angle * t->sun_angle;
+    x_2 = l->sun_angle * l->sun_angle;
     x_4 = x_2 * x_2;
     x_8 = x_4 * x_4;
     x_10 = x_8 * x_2;
@@ -577,9 +581,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.25  1997/12/08 22:54:09  curt
-/* Enabled GL_CULL_FACE.
+/* Revision 1.26  1997/12/09 04:25:29  curt
+/* Working on adding a global lighting params structure.
 /*
+ * Revision 1.25  1997/12/08 22:54:09  curt
+ * Enabled GL_CULL_FACE.
+ *
  * Revision 1.24  1997/11/25 19:25:32  curt
  * Changes to integrate Durk's moon/sun code updates + clean up.
  *

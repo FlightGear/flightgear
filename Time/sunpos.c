@@ -261,54 +261,59 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
 
 /* update the cur_time_params structure with the current sun position */
 void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
+    struct fgLIGHT *l;
     struct fgTIME *t;
     struct VIEW *v;
     MAT3vec nup, nsun;
     double sun_gd_lat, sl_radius, temp;
     static int time_warp = 0;
 
+    l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
 
     time_warp += 0; /* increase this to make the world spin real fast */
 
-    fgSunPosition(t->cur_time + time_warp, &t->sun_lon, &sun_gd_lat);
+    fgSunPosition(t->cur_time + time_warp, &l->sun_lon, &sun_gd_lat);
 
-    fgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &t->sun_gc_lat);
+    fgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &l->sun_gc_lat);
 
-    t->fg_sunpos = fgPolarToCart(t->sun_lon, t->sun_gc_lat, sl_radius);
+    l->fg_sunpos = fgPolarToCart(l->sun_lon, l->sun_gc_lat, sl_radius);
 
     /* printf("Geodetic lat = %.5f Geocentric lat = %.5f\n", sun_gd_lat,
        t->sun_gc_lat); */
 
     /* the sun position has to be translated just like everything else */
-    t->sun_vec_inv[0] = t->fg_sunpos.x - scenery_center.x; 
-    t->sun_vec_inv[1] = t->fg_sunpos.y - scenery_center.y;
-    t->sun_vec_inv[2] = t->fg_sunpos.z - scenery_center.z;
-    MAT3_SCALE_VEC(t->sun_vec, t->sun_vec_inv, -1.0);
+    l->sun_vec_inv[0] = l->fg_sunpos.x - scenery_center.x; 
+    l->sun_vec_inv[1] = l->fg_sunpos.y - scenery_center.y;
+    l->sun_vec_inv[2] = l->fg_sunpos.z - scenery_center.z;
+    MAT3_SCALE_VEC(l->sun_vec, l->sun_vec_inv, -1.0);
 
     /* make these are directional light sources only */
-    t->sun_vec[3] = 0.0;
-    t->sun_vec_inv[3] = 0.0;
+    l->sun_vec[3] = 0.0;
+    l->sun_vec_inv[3] = 0.0;
 
     /* calculate thesun's relative angle to local up */
     MAT3_COPY_VEC(nup, v->local_up);
-    nsun[0] = t->fg_sunpos.x; 
-    nsun[1] = t->fg_sunpos.y;
-    nsun[2] = t->fg_sunpos.z;
+    nsun[0] = l->fg_sunpos.x; 
+    nsun[1] = l->fg_sunpos.y;
+    nsun[2] = l->fg_sunpos.z;
     MAT3_NORMALIZE_VEC(nup, temp);
     MAT3_NORMALIZE_VEC(nsun, temp);
 
-    t->sun_angle = acos(MAT3_DOT_PRODUCT(nup, nsun));
+    l->sun_angle = acos(MAT3_DOT_PRODUCT(nup, nsun));
     printf("SUN ANGLE relative to current location = %.3f rads.\n", 
-	   t->sun_angle);
+	   l->sun_angle);
 }
 
 
 /* $Log$
-/* Revision 1.13  1997/11/25 19:25:42  curt
-/* Changes to integrate Durk's moon/sun code updates + clean up.
+/* Revision 1.14  1997/12/09 04:25:39  curt
+/* Working on adding a global lighting params structure.
 /*
+ * Revision 1.13  1997/11/25 19:25:42  curt
+ * Changes to integrate Durk's moon/sun code updates + clean up.
+ *
  * Revision 1.12  1997/11/15 18:15:39  curt
  * Reverse direction of sun vector, so object normals can be more normal.
  *

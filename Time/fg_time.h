@@ -55,7 +55,14 @@ struct fgTIME {
 			    sidereal time algorithm result and the
 			    course result.  course + diff has good
 			    accuracy for the short term */
+};
 
+extern struct fgTIME cur_time_params;
+
+
+/* Lighting is time dependent so it shows up here */
+/* Define a structure containing the global lighting parameters */
+struct fgLIGHT {
     /* position of the sun in various forms */
     double sun_lon, sun_gc_lat;         /* in geocentric coordinates */
     struct fgCartesianPoint fg_sunpos;  /* in cartesian coordiantes */
@@ -63,9 +70,15 @@ struct fgTIME {
     GLfloat sun_vec_inv[4];             /* inverse (in view coordinates) */
     double sun_angle;                   /* the angle between the sun and the 
 					   local horizontal */
+
+    /* Derived lighting values */
+    GLfloat scene_ambient[3];           /* ambient component */
+    GLfloat scene_diffuse[3];           /* diffuse component */
+    GLfloat scene_fog[4];               /* fog color */
+    GLfloat scene_clear[4];             /* clear screen color */
 };
 
-extern struct fgTIME cur_time_params;
+extern struct fgLIGHT cur_light_params;
 
 
 /* Initialize the time dependent variables */
@@ -79,9 +92,12 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t);
 
 
 /* $Log$
-/* Revision 1.7  1997/11/25 19:25:41  curt
-/* Changes to integrate Durk's moon/sun code updates + clean up.
+/* Revision 1.8  1997/12/09 04:25:38  curt
+/* Working on adding a global lighting params structure.
 /*
+ * Revision 1.7  1997/11/25 19:25:41  curt
+ * Changes to integrate Durk's moon/sun code updates + clean up.
+ *
  * Revision 1.6  1997/09/20 03:34:35  curt
  * Still trying to get those durned stars aligned properly.
  *

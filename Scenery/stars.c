@@ -218,10 +218,12 @@ void fgStarsInit() {
 void fgStarsRender() {
     struct FLIGHT *f;
     struct VIEW *v;
+    struct fgLIGHT *l;
     struct fgTIME *t;
     int i;
 
     f = &current_aircraft.flight;
+    l = &cur_light_params;
     t = &cur_time_params;
     v = &current_view;
 
@@ -230,13 +232,13 @@ void fgStarsRender() {
     /* t->sun_angle = 3.0; */ /* to force stars to be drawn (for testing) */
 
     /* render the stars */
-    if ( t->sun_angle > (FG_PI_2 + 5 * DEG_TO_RAD ) ) {
+    if ( l->sun_angle > (FG_PI_2 + 5 * DEG_TO_RAD ) ) {
 	/* determine which star structure to draw */
-	if ( t->sun_angle > (FG_PI_2 + 7.25 * DEG_TO_RAD ) ) {
+	if ( l->sun_angle > (FG_PI_2 + 7.25 * DEG_TO_RAD ) ) {
 	    i = 0;
-	} else if ( t->sun_angle > (FG_PI_2 + 6.50 * DEG_TO_RAD ) ) {
+	} else if ( l->sun_angle > (FG_PI_2 + 6.50 * DEG_TO_RAD ) ) {
 	    i = 1;
-	} else if ( t->sun_angle > (FG_PI_2 + 5.75 * DEG_TO_RAD ) ) {
+	} else if ( l->sun_angle > (FG_PI_2 + 5.75 * DEG_TO_RAD ) ) {
 	    i = 2;
 	} else {
 	    i = 3;
@@ -254,9 +256,12 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.16  1997/11/25 19:25:38  curt
-/* Changes to integrate Durk's moon/sun code updates + clean up.
+/* Revision 1.17  1997/12/09 04:25:33  curt
+/* Working on adding a global lighting params structure.
 /*
+ * Revision 1.16  1997/11/25 19:25:38  curt
+ * Changes to integrate Durk's moon/sun code updates + clean up.
+ *
  * Revision 1.15  1997/10/30 12:38:45  curt
  * Working on new scenery subsystem.
  *
