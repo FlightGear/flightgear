@@ -186,6 +186,8 @@ bool FGTileMgr::current_elev_ssg( sgdVec3 abs_view_pos, double *terrain_elev ) {
 	scenery.cur_radius = geoc.radius();
 	sgVec3 tmp;
 	sgSetVec3(tmp, hit_list.get_normal(this_hit));
+	// cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "
+	//      << tmp[2] << endl;
 	ssgState *IntersectedLeafState =
 	    ((ssgLeaf*)hit_list.get_entity(this_hit))->getState();
 	CurrentNormalInLocalPlane(tmp, tmp);

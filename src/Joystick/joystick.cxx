@@ -438,9 +438,8 @@ fgJoystickRead()
 		    flag = b.value->setDoubleValue(b.step);
 		    break;
 		case button::ADJUST:
-		    if (!b.value->setDoubleValue(b.value->getDoubleValue() + b.step))
-			FG_LOG(FG_INPUT, FG_ALERT, "Failed to set value for joystick "
-			       << i << ", axis " << j);
+		    flag = b.value->setDoubleValue(b.value->getDoubleValue() +
+						   b.step);
 		    break;
 		default:
 		    flag = false;
