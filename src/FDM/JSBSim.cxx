@@ -120,9 +120,11 @@ FGJSBsim::FGJSBsim( double dt )
 
 /******************************************************************************/
 FGJSBsim::~FGJSBsim(void) {
-    if(fdmex != NULL) {
+    if ( fdmex != NULL ) {
         delete fdmex;
+	fdmex = NULL;
         delete fgic;
+	fgic = NULL;
     }  
 }
 
