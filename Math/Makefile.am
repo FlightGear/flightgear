@@ -8,7 +8,7 @@ libMath_la_SOURCES = \
 	MAT3vec.c \
 	fg_geodesy.c fg_geodesy.h \
 	fg_random.c fg_random.h \
-	interpolater.c interpolater.h \
+	interpolater.cxx interpolater.hxx \
 	mat3.h mat3defs.h mat3err.h \
 	polar.c polar.h \
 	vector.c vector.h

@@ -80,7 +80,7 @@ libMath_la_SOURCES = \
 	MAT3vec.c \
 	fg_geodesy.c fg_geodesy.h \
 	fg_random.c fg_random.h \
-	interpolater.c interpolater.h \
+	interpolater.cxx interpolater.hxx \
 	mat3.h mat3defs.h mat3err.h \
 	polar.c polar.h \
 	vector.c vector.h
@@ -102,6 +102,10 @@ libMath_la_LDFLAGS =
 libMath_la_LIBADD = 
 libMath_la_OBJECTS =  MAT3geom.lo MAT3inv.lo MAT3mat.lo MAT3vec.lo \
 fg_geodesy.lo fg_random.lo interpolater.lo polar.lo vector.lo
+CXXFLAGS = @CXXFLAGS@
+CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
+CXXLINK = $(LIBTOOL) --mode=link $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
@@ -116,13 +120,14 @@ GZIP = --best
 DEP_FILES =  .deps/MAT3geom.P .deps/MAT3inv.P .deps/MAT3mat.P \
 .deps/MAT3vec.P .deps/fg_geodesy.P .deps/fg_random.P \
 .deps/interpolater.P .deps/polar.P .deps/vector.P
+CXXMKDEP = $(CXX) -M $(DEFS) $(INCLUDES) $(CPPFLAGS) $(CXXFLAGS)
 SOURCES = $(libMath_la_SOURCES)
 OBJECTS = $(libMath_la_OBJECTS)
 
 all: Makefile $(LTLIBRARIES)
 
 .SUFFIXES:
-.SUFFIXES: .S .c .lo .o .s
+.SUFFIXES: .S .c .cxx .lo .o .s
 $(srcdir)/Makefile.in: @MAINT@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && $(AUTOMAKE) --gnu Lib/Math/Makefile
 
@@ -189,7 +194,11 @@ distclean-libtool:
 maintainer-clean-libtool:
 
 libMath.la: $(libMath_la_OBJECTS) $(libMath_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libMath_la_LDFLAGS) $(libMath_la_OBJECTS) $(libMath_la_LIBADD) $(LIBS)
+	$(CXXLINK) -rpath $(libdir) $(libMath_la_LDFLAGS) $(libMath_la_OBJECTS) $(libMath_la_LIBADD) $(LIBS)
+.cxx.o:
+	$(CXXCOMPILE) -c $<
+.cxx.lo:
+	$(LTCXXCOMPILE) -c $<
 
 tags: TAGS
 
@@ -253,6 +262,17 @@ maintainer-clean-depend:
 %.lo: %.c
 	@echo '$(LTCOMPILE) -c $<'; \
 	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).p -c $<
+	@-sed -e 's/^\([^:]*\)\.o:/\1.lo \1.o:/' \
+	  < .deps/$(*F).p > .deps/$(*F).P
+	@-rm -f .deps/$(*F).p
+
+%.o: %.cxx
+	@echo '$(CXXCOMPILE) -c $<'; \
+	$(CXXCOMPILE) -Wp,-MD,.deps/$(*F).P -c $<
+
+%.lo: %.cxx
+	@echo '$(LTCXXCOMPILE) -c $<'; \
+	$(LTCXXCOMPILE) -Wp,-MD,.deps/$(*F).p -c $<
 	@-sed -e 's/^\([^:]*\)\.o:/\1.lo \1.o:/' \
 	  < .deps/$(*F).p > .deps/$(*F).P
 	@-rm -f .deps/$(*F).p
