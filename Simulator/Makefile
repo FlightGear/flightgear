@@ -27,7 +27,7 @@
 CC = gcc
 
 
-SUBSUBDIRS = Flight/LaRCsim Flight/Slew Scenery/ParseScn
+SUBSUBDIRS = Flight/LaRCsim Flight/Slew Scenery/ParseScn Scenery/ParseVrml
 SUBDIRS = Aircraft Controls Flight mat3 Scenery Timer
 MAIN = OpenGL
 
@@ -59,6 +59,9 @@ tar: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.9  1997/06/22 21:44:40  curt
+# Working on intergrating the VRML (subset) parser.
+#
 # Revision 1.8  1997/06/21 17:52:22  curt
 # Continue directory shuffling ... everything should be compilable/runnable
 # again.

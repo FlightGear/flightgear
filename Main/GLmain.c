@@ -23,6 +23,7 @@
  * (Log is kept at end of this file)
  **************************************************************************/
 
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,8 +66,9 @@ extern struct mesh *mesh_ptr;
 /* Function prototypes */
 GLint fgSceneryCompile();
 static void fgSceneryDraw();
-/* pointer to terrain mesh structure */
-static GLint terrain, runway;
+
+/* pointer to scenery structure */
+static GLint scenery, runway;
 
 /* Another hack */
 double fogDensity = 2000.0;
@@ -202,7 +204,7 @@ static void fgUpdateVisuals( void ) {
     glMatrixMode(GL_MODELVIEW);
     /* glLoadIdentity(); */
 
-    /* draw terrain mesh */
+    /* draw scenery */
     fgSceneryDraw();
 
     #ifdef GLUT
@@ -271,19 +273,19 @@ void fgInitTimeDepCalcs() {
  **************************************************************************/
 
 static void fgSceneryInit() {
-    /* make terrain mesh */
-    terrain = fgSceneryCompile();
+    /* make scenery */
+    scenery = fgSceneryCompile();
     runway = fgRunwayHack(0.69, 53.07);
 }
 
 
-/* create the terrain mesh */
+/* create the scenery */
 GLint fgSceneryCompile() {
-    GLint terrain;
+    GLint scenery;
 
-    terrain = mesh2GL(mesh_ptr);
+    scenery = mesh2GL(mesh_ptr);
 
-    return(terrain);
+    return(scenery);
 }
 
 
@@ -332,13 +334,13 @@ GLint fgRunwayHack(double width, double length) {
 }
 
 
-/* draw the terrain mesh */
+/* draw the scenery */
 static void fgSceneryDraw() {
     static float z = 32.35;
 
     glPushMatrix();
 
-    glCallList(terrain);
+    glCallList(scenery);
 
     printf("*** Drawing runway at %.2f\n", z);
 
@@ -405,9 +407,6 @@ int main( int argc, char *argv[] ) {
 
     f = &current_aircraft.flight;
 
-    /* parse the scenery file */
-    parse_scenery(argv[1]);
-
     #ifdef GLUT
       /* initialize GLUT */
       glutInit(&argc, argv);
@@ -419,7 +418,7 @@ int main( int argc, char *argv[] ) {
       glutInitWindowSize(640, 480);
 
       /* Initialize the main window */
-      glutCreateWindow("Terrain Demo");
+      glutCreateWindow("Flight Gear");
     #elif MESA_TK
       /* Define initial window size */
       tkInitPosition(0, 0, 640, 480);
@@ -428,7 +427,7 @@ int main( int argc, char *argv[] ) {
       tkInitDisplayMode( TK_RGB | TK_DEPTH | TK_DOUBLE | TK_DIRECT );
 
       /* Initialize the main window */
-      if (tkInitWindow("Terrain Demo") == GL_FALSE) {
+      if (tkInitWindow("Flight Gear") == GL_FALSE) {
 	  tkQuit();
       }
     #endif
@@ -494,6 +493,14 @@ int main( int argc, char *argv[] ) {
     }
 
     /* build all objects */
+
+    /* parse the scenery file, and build the OpenGL call list */
+    /* this function will eventually move to the scenery management system */
+    if ( strlen(argv[1]) ) {
+	parse_scenery(argv[1]);
+    }
+
+    /* initialize the scenery */
     fgSceneryInit();
 
     #ifdef GLUT
@@ -537,9 +544,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.20  1997/06/21 17:12:53  curt
-/* Capitalized subdirectory names.
+/* Revision 1.21  1997/06/22 21:44:41  curt
+/* Working on intergrating the VRML (subset) parser.
 /*
+ * Revision 1.20  1997/06/21 17:12:53  curt
+ * Capitalized subdirectory names.
+ *
  * Revision 1.19  1997/06/18 04:10:31  curt
  * A couple more runway tweaks ...
  *

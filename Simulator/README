@@ -5,18 +5,18 @@ OpenGL/
 "main" and OpenGL dependent mouse/keyboard/graphics code.
 
 
-aircraft/
+Aircraft/
 ---------
 Structure and code to tie together all the pieces of an aircraft such
 as flight model, engine model, panel, controls, etc.
 
 
-controls/
+Controls/
 ---------
 Provide a standardized interface to all aircraft controls.
 
 
-flight/
+Flight/
 -------
 Strucures and code to implement various flight models.  Provides a 
 standardized interface to all interesting flight model variabls.
@@ -27,11 +27,21 @@ mat3/
 Contains miscellaneous matrix/vector routines.
 
 
-scenery/
+Scenery/
 --------
 Scenery parsing/generating code.
 
 
-timer/
+Sound/
+------
+Sound management code
+
+
+Timer/
 ------
 Code to handle time and timing of events.
+
+
+Weather/
+--------
+Weather management and modeling code.

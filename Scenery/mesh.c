@@ -33,6 +33,23 @@
 #include "common.h"
 
 
+/* initialize the non-array mesh values */
+void mesh_init(struct mesh *m) {
+    m->originx = 0.0;
+    m->originy = 0.0;
+
+    m->rows = 0;
+    m->cols = 0;
+
+    m->row_step = 0.0;
+    m->col_step = 0.0;
+
+    m->cur_row = 0;
+    m->cur_col = 0;
+    m->do_data = 0;
+}
+
+
 /* return a pointer to a new mesh structure (no data array allocated yet) */
 struct mesh *(new_mesh)() {
     struct mesh *mesh_ptr;
@@ -76,13 +93,32 @@ void mesh_set_option_name(struct mesh *m, char *name) {
 	strncpy(m->option_name, name, MAX_IDENT_LEN - 1);
 	m->option_name[MAX_IDENT_LEN - 1] = '\0';
     }
+    if ( strcmp(m->option_name, "do_data") == 0 ) {
+	m->do_data = 1;
+    } else {
+	m->do_data = 0;
+    }
 }
+
 
 /* set an option value in the mesh data structure */
 void mesh_set_option_value(struct mesh *m, char *value) {
-    printf("Setting %s to %s\n", m->option_name, value);
+    /* printf("Setting %s to %s\n", m->option_name, value); */
 
-    if ( strcmp(m->option_name, "origin_lon") == 0 ) {
+    if ( m->do_data ) {
+	/* mesh data is a pseudo 2d array */
+	/* printf("Setting mesh_data[%d][%d] to %s\n", m->cur_row, m->cur_col, 
+	       value); */
+	m->mesh_data[m->cur_row * m->rows + m->cur_col] = atof(value);
+	m->cur_col++;
+	if ( m->cur_col >= m->cols ) {
+	    m->cur_col = 0;
+	    m->cur_row++;
+	    if ( m->cur_row > m->rows ) {
+		m->do_data = 0;
+	    }
+	}
+    } else if ( strcmp(m->option_name, "origin_lon") == 0 ) {
 	m->originx = atof(value);
     } else if ( strcmp(m->option_name, "origin_lat") == 0 ) {
 	m->originy = atof(value);
@@ -101,10 +137,20 @@ void mesh_set_option_value(struct mesh *m, char *value) {
 }
 
 
+/* do whatever needs to be done with the mesh now that it's been
+   loaded, such as generating the OpenGL call list. */
+void mesh_do_it(struct mesh *m) {
+    mesh2GL(m);
+}
+
+
 /* $Log$
-/* Revision 1.4  1997/05/30 19:30:17  curt
-/* The LaRCsim flight model is starting to look like it is working.
+/* Revision 1.5  1997/06/22 21:44:41  curt
+/* Working on intergrating the VRML (subset) parser.
 /*
+ * Revision 1.4  1997/05/30 19:30:17  curt
+ * The LaRCsim flight model is starting to look like it is working.
+ *
  * Revision 1.3  1997/05/23 15:40:41  curt
  * Added GNU copyright headers.
  *
