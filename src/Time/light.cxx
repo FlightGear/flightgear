@@ -1,5 +1,5 @@
 //
-// light.hxx -- lighting routines
+// light.cxx -- lighting routines
 //
 // Written by Curtis Olson, started April 1998.
 //
@@ -187,9 +187,11 @@ void fgLIGHT::Update( void ) {
 
 // calculate fog color adjusted for sunrise/sunset effects
 void fgLIGHT::UpdateAdjFog( void ) {
-    FGInterface *f;
 
-    f = current_aircraft.fdm_state;
+    double heading = globals->get_current_view()->getHeading_deg()
+                     * SGD_DEGREES_TO_RADIANS;
+    double heading_offset = globals->get_current_view()->getHeadingOffset_deg()
+                            * SGD_DEGREES_TO_RADIANS;
 
     SG_LOG( SG_EVENT, SG_DEBUG, "Updating adjusted fog parameters." );
 
@@ -201,14 +203,15 @@ void fgLIGHT::UpdateAdjFog( void ) {
 	SG_LOG( SG_EVENT, SG_ALERT, "Sun rotation bad = " << sun_rotation );
 	exit(-1);
     }
-    if ( f->get_Psi() < -2.0 * SGD_2PI || f->get_Psi() > 2.0 * SGD_2PI ) {
-	SG_LOG( SG_EVENT, SG_ALERT, "Psi rotation bad = " << f->get_Psi() );
+
+    if ( heading < -2.0 * SGD_2PI || heading > 2.0 * SGD_2PI ) {
+	SG_LOG( SG_EVENT, SG_ALERT, "Psi rotation bad = " << heading );
 	exit(-1);
     }
-    if ( globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS < -2.0 * SGD_2PI ||
-	 globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS > 2.0 * SGD_2PI ) {
+
+    if ( heading_offset < -2.0 * SGD_2PI || heading_offset > 2.0 * SGD_2PI ) {
 	SG_LOG( SG_EVENT, SG_ALERT, "current view()->view offset bad = " 
-		<< globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS );
+		                     << heading_offset );
 	exit(-1);
     }
 
@@ -216,8 +219,7 @@ void fgLIGHT::UpdateAdjFog( void ) {
 
     // first determine the difference between our view angle and local
     // direction to the sun
-    rotation = -(sun_rotation + SGD_PI) 
-	- (f->get_Psi() - globals->get_current_view()->getHeadingOffset_deg() * SGD_DEGREES_TO_RADIANS);
+    rotation = -(sun_rotation + SGD_PI) - heading - heading_offset;
     while ( rotation < 0 ) {
 	rotation += SGD_2PI;
     }
