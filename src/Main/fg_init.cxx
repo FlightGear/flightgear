@@ -89,6 +89,7 @@
 #include <FDM/JSBSim/JSBSim.hxx>
 #include <FDM/LaRCsim.hxx>
 #include <FDM/MagicCarpet.hxx>
+#include <FDM/UFO.hxx>
 #include <FDM/NullFDM.hxx>
 #include <FDM/YASim/YASim.hxx>
 #include <Include/general.hxx>
@@ -586,6 +587,8 @@ void fgInitFDM() {
 	    cur_fdm_state = new FGBalloonSim( dt );
 	} else if ( model == "magic" ) {
 	    cur_fdm_state = new FGMagicCarpet( dt );
+	} else if ( model == "ufo" ) {
+	    cur_fdm_state = new FGUFO( dt );
 	} else if ( model == "external" ) {
 	    cur_fdm_state = new FGExternal( dt );
 	} else if ( model.find("network,") == 0 ) {

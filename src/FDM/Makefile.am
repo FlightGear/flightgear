@@ -12,6 +12,7 @@ libFlight_a_SOURCES = \
 	LaRCsim.cxx LaRCsim.hxx \
 	LaRCsimIC.cxx LaRCsimIC.hxx \
 	MagicCarpet.cxx MagicCarpet.hxx \
+	UFO.cxx UFO.hxx \
 	NullFDM.cxx NullFDM.hxx
 
 if OLD_AUTOMAKE
