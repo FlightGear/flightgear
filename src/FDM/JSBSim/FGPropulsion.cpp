@@ -662,7 +662,7 @@ void FGPropulsion::bind(void)
                        (PMF)&FGPropulsion::GetMoments);
 
   PropertyManager->Tie("propulsion/active_engine", this,
-           &FGPropulsion::GetActiveEngine, &FGPropulsion::SetActiveEngine, true);
+           (iPMF)&FGPropulsion::GetActiveEngine, &FGPropulsion::SetActiveEngine, true);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
