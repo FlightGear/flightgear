@@ -40,9 +40,11 @@
 
 #include STL_STRING
 #include <map>
+#include <vector>
 
 SG_USING_STD(string);
 SG_USING_STD(map);
+SG_USING_STD(vector);
 
 
 struct FGAirport {
@@ -60,12 +62,15 @@ typedef map < string, FGAirport > airport_map;
 typedef airport_map::iterator airport_map_iterator;
 typedef airport_map::const_iterator const_airport_map_iterator;
 
+typedef vector < FGAirport * > airport_list;
+
 
 class FGAirportList {
 
 private:
 
     airport_map airports;
+    airport_list airports2;
 
 public:
 
@@ -80,6 +85,18 @@ public:
     // On success, airport data is returned thru "airport" pointer.
     // "airport" is not changed if "apt" is not found.
     FGAirport search( const string& id );
+
+    /**
+     * Return the number of airports in the list.
+     */
+    int size () const;
+
+
+    /**
+     * Return a specific airport, by position.
+     */
+    const FGAirport * getAirport (int index) const;
+
 };
 
 

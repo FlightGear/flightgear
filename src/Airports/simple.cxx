@@ -73,7 +73,9 @@ FGAirportList::FGAirportList( const string& file ) {
     while ( in ) {
         in >> a;
         airports[a.id] = a;
+        airports2.push_back(&airports[a.id]);
     }
+
 }
 
 
@@ -85,4 +87,16 @@ FGAirport FGAirportList::search( const string& id) {
 
 // Destructor
 FGAirportList::~FGAirportList( void ) {
+}
+
+int
+FGAirportList::size () const
+{
+    return airports2.size();
+}
+
+const FGAirport *
+FGAirportList::getAirport (int index) const
+{
+    return airports2[index];
 }
