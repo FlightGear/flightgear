@@ -58,7 +58,7 @@ void fgSplashInit ( void ) {
     splash.bind();
 
     // load in the texture data
-    int num = (int)(sg_random() * 3.0 + 1.0);
+    int num = (int)(sg_random() * 5.0 + 1.0);
     char num_str[256];
     sprintf(num_str, "%d", num);
 
