@@ -81,6 +81,13 @@ extern "C" {
 
 typedef struct {
 
+/*
+ * Needed for windows builds
+ */
+#ifdef ALpha
+#undef Alpha
+#endif
+
 /*================== Mass properties and geometry values ==================*/
 	
     DATA    mass, i_xx, i_yy, i_zz, i_xz;	/* Inertias */
