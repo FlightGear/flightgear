@@ -478,8 +478,10 @@ ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 		    string file = path;
 		    int pos = file.rfind( "/" );
 		    file = file.substr( 0, pos );
+		    // cout << "current file = " << file << endl;
 		    file += "/";
 		    file += material;
+		    // cout << "current file = " << file << endl;
 		    if ( ! material_lib.add_item( file ) ) {
 			SG_LOG( SG_TERRAIN, SG_ALERT, 
 				"Ack! unknown usemtl name = " << material 
@@ -502,6 +504,8 @@ ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 		    tex_height = newmat->get_ysize();
 		    state = newmat->get_state();
 		    coverage = newmat->get_light_coverage();
+		    // cout << "(w) = " << tex_width << " (h) = "
+		    //      << tex_width << endl;
 		} else {
 		    coverage = -1;
 		}
@@ -515,6 +519,8 @@ ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 	    in.putback( c );
 	
 	    in >> token;
+
+	    // cout << "token = " << token << endl;
 
 	    if ( token == "vn" ) {
 		// vertex normal
@@ -628,6 +634,10 @@ ssgBranch *fgAsciiObjLoad( const string& path, FGTileEntry *t,
 
 		    in >> n3;
 		    fan_vertices.push_back( n3 );
+		    // cout << "  triangle = "
+		    //      << n1 << "," << n2 << "," << n3
+		    //      << endl;
+		    // xglNormal3dv(normals[n3]);
 		    if ( in.get( c ) && c == '/' ) {
 			in >> tex;
 			fan_tex_coords.push_back( tex );
@@ -757,8 +767,10 @@ ssgLeaf *gen_leaf( const string& path,
 	string file = path;
 	int pos = file.rfind( "/" );
 	file = file.substr( 0, pos );
+	// cout << "current file = " << file << endl;
 	file += "/";
 	file += material;
+	// cout << "current file = " << file << endl;
 	if ( ! material_lib.add_item( file ) ) {
 	    SG_LOG( SG_TERRAIN, SG_ALERT, 
 		    "Ack! unknown usemtl name = " << material 
@@ -781,6 +793,8 @@ ssgLeaf *gen_leaf( const string& path,
 	tex_height = newmat->get_ysize();
 	state = newmat->get_state();
 	coverage = newmat->get_light_coverage();
+	// cout << "(w) = " << tex_width << " (h) = "
+	//      << tex_width << endl;
     } else {
 	coverage = -1;
     }
@@ -919,6 +933,7 @@ bool fgBinObjLoad( const string& path, const bool is_base,
     group_list pts_v = obj.get_pts_v();
     group_list pts_n = obj.get_pts_n();
     for ( i = 0; i < (int)pts_v.size(); ++i ) {
+	// cout << "pts_v.size() = " << pts_v.size() << endl;
 	tmp_mat = pt_materials[i];
 	if ( tmp_mat.substr(0, 3) == "RWY" ) {
 	    material = "LIGHTS";
