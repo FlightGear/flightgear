@@ -84,12 +84,6 @@ FG_USING_STD(string);
 FG_USING_STD(cout);
 #endif
 
-#if defined(WIN32) || defined(__CYGWIN32__)
-#define WIN32_CURSOR_TWEAKS
-#elif (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
-#define X_CURSOR_TWEAKS
-#endif
-
 /* --------------------------------------------------------------------
 Mouse stuff
 ---------------------------------------------------------------------*/
