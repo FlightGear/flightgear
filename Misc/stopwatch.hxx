@@ -25,6 +25,9 @@
  *
  ***************************************************************************
  * $Log$
+ * Revision 1.2  1998/11/02 18:28:31  curt
+ * Additional win32 support.
+ *
  * Revision 1.1  1998/09/01 19:06:30  curt
  * Initial revision.
  *
@@ -58,10 +61,16 @@
 #  define HAVE_GETRUSAGE
 #endif
 
-#ifdef HAVE_GETRUSAGE
- #include <sys/resource.h>
+#if defined( WIN32 ) && defined( HAVE_GETRUSAGE )
+#  undef HAVE_GETRUSAGE
+#endif // WIN32
+
+#if defined( HAVE_GETRUSAGE )
+#  include <sys/resource.h>
+#elif defined( WIN32 )
+#  include <windows.h>
 #else
- #include <time.h>
+#  include <time.h>
 #endif
 
 class StopWatch {
@@ -97,13 +106,15 @@ private:
 
     double systemTime()
     {
-#ifdef HAVE_GETRUSAGE
+#if defined( HAVE_GETRUSAGE )
         getrusage(RUSAGE_SELF, &resourceUsage_);
         double seconds = resourceUsage_.ru_utime.tv_sec 
             + resourceUsage_.ru_stime.tv_sec;
         double micros  = resourceUsage_.ru_utime.tv_usec 
             + resourceUsage_.ru_stime.tv_usec;
         return seconds + micros/1.0e6;
+#elif defined( WIN32 )
+	return double(GetTickCount()) * double(1e-3);
 #else
         return clock() / (double) CLOCKS_PER_SEC;
 #endif
@@ -111,7 +122,7 @@ private:
 
 //     enum { uninitialized, running, stopped } state_;
 
-#ifdef HAVE_GETRUSAGE
+#if defined( HAVE_GETRUSAGE )
     struct rusage resourceUsage_;
 #endif
 
