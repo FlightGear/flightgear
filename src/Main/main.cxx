@@ -648,33 +648,23 @@ void fgRenderFrame() {
 	ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
 
 	// This is a bit kludgy.  Every 200 frames, do an extra
-	// traversal of the scene graph without drawing anything and
-	// the frustum set to a different 25% of the full range of
-	// view.  This ensures that out-of-range random objects that
-	// are not in the current view frustum will still be freed
-	// properly.
+	// traversal of the scene graph without drawing anything, but
+	// with the field-of-view set to 360x360 degrees.  This
+	// ensures that out-of-range random objects that are not in
+	// the current view frustum will still be freed properly.
 	static int counter = 0;
 	counter++;
-	if (counter % 200 == 0) {
+	if (counter == 200) {
 	  sgFrustum f;
-	  switch (counter) {
-	  case 200:
-	    f.setFrustum(SG_180, SG_ZERO, SG_90, SG_ZERO, 0, 500000000);
-	    break;
-	  case 400:
-	    f.setFrustum(SG_ZERO, SG_180, SG_90, SG_ZERO, 0, 500000000);
-	    break;
-	  case 600:
-	    f.setFrustum(SG_180, SG_ZERO, SG_ZERO, SG_90, 0, 500000000);
-	    break;
-	  case 800:
-	    f.setFrustum(SG_ZERO, SG_180, SG_ZERO, SG_90, 0, 500000000);
-	    counter = 0;
-	    break;
-	  }
+	  f.setFOV(360, 360);
+				// No need to put the near plane too close;
+				// this way, at least the aircraft can be
+				// culled.
+	  f.setNearFar(1000, 1000000);
 	  sgMat4 m;
 	  ssgGetModelviewMatrix(m);
 	  globals->get_scenery()->get_scene_graph()->cull(&f, m, true);
+	  counter = 0;
 	}
 
 	// change state for lighting here
