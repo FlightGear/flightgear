@@ -22,6 +22,7 @@
 // (Log is kept at end of this file)
 
 
+#include <errno.h>
 #include <termios.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -89,7 +90,7 @@ bool fgSERIAL::open_port(const string& device) {
 
 bool fgSERIAL::set_baud(int baud) {
     struct termios config;
-    speed_t speed;
+    speed_t speed = B9600;
 
     if ( tcgetattr( fd, &config ) != 0 ) {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Unable to poll port settings" );
@@ -114,8 +115,10 @@ bool fgSERIAL::set_baud(int baud) {
 	speed = B57600;
     } else if ( baud == 115200 ) {
 	speed = B115200;
+#if defined( linux ) || defined( __FreeBSD__ )
     } else if ( baud == 230400 ) {
 	speed = B230400;
+#endif
     } else {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Unsupported baud rate " << baud );
 	return false;
@@ -180,6 +183,9 @@ int fgSERIAL::write_port(const string& value) {
 
 
 // $Log$
+// Revision 1.4  1998/11/23 21:47:00  curt
+// Cygnus tools compatibility tweaks.
+//
 // Revision 1.3  1998/11/19 13:52:54  curt
 // port configuration tweaks & experiments.
 //
