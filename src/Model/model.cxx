@@ -156,9 +156,9 @@ make_offsets_matrix (sgMat4 * result, double h_rot, double p_rot, double r_rot,
  * Read an interpolation table from properties.
  */
 static SGInterpTable *
-read_interpolation_table (const SGPropertyNode * props)
+read_interpolation_table (SGPropertyNode_ptr props)
 {
-  const SGPropertyNode * table_node = props->getNode("interpolation");
+  SGPropertyNode_ptr table_node = props->getNode("interpolation");
   if (table_node != 0) {
     SGInterpTable * table = new SGInterpTable();
     vector<SGPropertyNode_ptr> entries = table_node->getChildren("entry");
@@ -174,8 +174,8 @@ read_interpolation_table (const SGPropertyNode * props)
 
 static void
 make_animation (ssgBranch * model,
-                const char * object_name,
-                SGPropertyNode * node)
+                vector<SGPropertyNode_ptr> &name_nodes,
+                SGPropertyNode_ptr node)
 {
   Animation * animation = 0;
   const char * type = node->getStringValue("type");
@@ -199,10 +199,11 @@ make_animation (ssgBranch * model,
   }
 
   ssgEntity * object;
-  if (object_name != 0) {
-    object = find_named_node(model, object_name);
+  if (name_nodes.size() > 0) {
+    object = find_named_node(model, name_nodes[0]->getStringValue());
     if (object == 0) {
-      SG_LOG(SG_INPUT, SG_WARN, "Object " << object_name << " not found");
+      SG_LOG(SG_INPUT, SG_WARN, "Object " << name_nodes[0]->getStringValue()
+             << " not found");
       delete animation;
       animation = 0;
     }
@@ -212,6 +213,23 @@ make_animation (ssgBranch * model,
   
   ssgBranch * branch = animation->getBranch();
   splice_branch(branch, object);
+
+  for (int i = 1; i < name_nodes.size(); i++) {
+      const char * name = name_nodes[i]->getStringValue();
+      object = find_named_node(model, name);
+      if (object == 0) {
+          SG_LOG(SG_INPUT, SG_WARN, "Object " << name << " not found");
+          delete animation;
+          animation = 0;
+      }
+      ssgBranch * oldParent = object->getParent(0);
+      std::cerr << "Moving " << name << " to new parent\n";
+      branch->addKid(object);
+      oldParent->removeKid(object);
+      std::cerr << "  leaf has " << object->getNumParents() << " parents\n";
+      std::cerr << "  branch has " << branch->getNumKids() << " kids\n";
+  }
+
   branch->setUserData(animation);
   branch->setTravCallback(SSG_CALLBACK_PRETRAV, animation_callback);
 }
@@ -279,13 +297,7 @@ fgLoad3DModel (const string &path)
   for (i = 0; i < animation_nodes.size(); i++) {
     vector<SGPropertyNode_ptr> name_nodes =
       animation_nodes[i]->getChildren("object-name");
-    if (name_nodes.size() < 1) {
-        make_animation(model, 0, animation_nodes[i]);
-    } else {
-      for (unsigned int j = 0; j < name_nodes.size(); j++) {
-        make_animation(model, name_nodes[j]->getStringValue(), animation_nodes[i]);
-      }
-    }
+    make_animation(model, name_nodes, animation_nodes[i]);
   }
 
                                 // Load panels
@@ -409,7 +421,7 @@ SelectAnimation::SelectAnimation (SGPropertyNode_ptr props)
   : Animation(props, new ssgSelector),
     _condition(0)
 {
-  SGPropertyNode * node = props->getChild("condition");
+  SGPropertyNode_ptr node = props->getChild("condition");
   if (node != 0)
     _condition = fgReadCondition(node);
 }

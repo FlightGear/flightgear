@@ -17,6 +17,8 @@ SG_USING_STD(vector);
 #include <plib/sg.h>
 #include <plib/ssg.h>
 
+#include <simgear/misc/props.hxx>
+
 
 // Don't pull in the headers, since we don't need them here.
 class ssgBranch;
@@ -26,7 +28,6 @@ class ssgRangeSelector;
 class ssgSelector;
 class ssgTransform;
 
-class SGPropertyNode;
 class SGInterpTable;
 class FGCondition;
 class FGLocation;
@@ -148,7 +149,7 @@ public:
   virtual ~SpinAnimation ();
   virtual void update ();
 private:
-  SGPropertyNode * _prop;
+  SGPropertyNode_ptr _prop;
   double _factor;
   double _position_deg;
   double _last_time_sec;
@@ -170,7 +171,7 @@ public:
   virtual ~RotateAnimation ();
   virtual void update ();
 private:
-  SGPropertyNode * _prop;
+  SGPropertyNode_ptr _prop;
   double _offset_deg;
   double _factor;
   SGInterpTable * _table;
@@ -195,7 +196,7 @@ public:
   virtual ~TranslateAnimation ();
   virtual void update ();
 private:
-  SGPropertyNode * _prop;
+  SGPropertyNode_ptr _prop;
   double _offset_m;
   double _factor;
   SGInterpTable * _table;
