@@ -5,7 +5,6 @@
 #include <simgear/compiler.h>
 #include <vector>
 
-#include <GL/gl.h>
 #include <plib/sg.h>
 
 #include <Cockpit/panel.hxx>
