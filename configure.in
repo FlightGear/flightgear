@@ -10,7 +10,7 @@ AM_INIT_AUTOMAKE(FlightGear, 0.6.0)
 
 dnl configure other independant packages included with flight gear for
 dnl convenience
-AC_CONFIG_SUBDIRS( Lib/plib Lib/zlib )
+AC_CONFIG_SUBDIRS( Lib/plib )
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -317,6 +317,7 @@ AC_OUTPUT( \
 	Lib/Misc/Makefile \
 	Lib/Serial/Makefile \
 	Lib/XGL/Makefile \
+	Lib/zlib/Makefile \
 	Simulator/Makefile \
 	Simulator/Aircraft/Makefile \
 	Simulator/Airports/Makefile \
