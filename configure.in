@@ -335,7 +335,7 @@ AC_OUTPUT( \
 	Tools/Construct/Makefile \
 	Tools/Construct/Array/Makefile \
 	Tools/Construct/Clipper/Makefile \
-	Tools/Construct/GenFans/Makefile \
+	Tools/Construct/Combine/Makefile \
 	Tools/Construct/GenOutput/Makefile \
 	Tools/Construct/Triangulate/Makefile \
 	Tools/Construct/Main/Makefile \

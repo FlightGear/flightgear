@@ -1,6 +1,34 @@
 New in 0.59
+
+(This is an intermediate/stepping stone release.  Skip this if you are
+interested in stability.)
+
+* IRIX portability changes and support for native SGI compilers.
+* Solaris portability tweaks
+* Incorporated some MacOS portability changes (although the port is not
+  yet complete.)
 * Changes to allow adjustment of the autopilot settings while it is
   activated.
+* Began complete overhaul of scenery generation tools.
+* Fixed a view frustum culling bug.
+* separated lib GPC (generic polygon clipper.)  GPC is not "freeware" and
+  the author has explicitely refused our request to distribute source code
+  for this library with Flight Gear.
+* updated installation and getting started guide
+* switched to a simpler, lighter weight frame rate calculation method.
+* new tile division scheme.
+* GPS serial *output* fixes.
+* Added a nifty halo to both the sun and moon.  Preparation for allowing
+  subtle moon lighting effects at night.
+* Incorporated Jon Berndt's new C++ flight model rewrite.
+* Autopilot settings can be adjusted while active.
+* Updates to the instrument panel.
+* Fixed AOA reading on the HUD.
+* Added random splash screens.
+* Modified scenery loader to accept tri-fans.
+* Other non-backwards compatible changes to scenery file format and tile
+  layout.
+
 
 New in 0.58
 * Added JSBsim alpha code ... this is Jon S. Berndts alpha FDM rewrite.
