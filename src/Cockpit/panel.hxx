@@ -498,6 +498,7 @@ public:
   virtual void addChunk (Chunk * chunk);
   virtual void setColor (float r, float g, float b);
   virtual void setPointSize (float size);
+  virtual void setFontName ( const string &name );
   virtual void setFont (fntFont * font);
 
 private:
@@ -509,7 +510,7 @@ private:
   float _color[4];
 
   float _pointSize;
-
+  mutable string _font_name;
   mutable string _value;
   mutable SGTimeStamp _then;
   mutable SGTimeStamp _now;
