@@ -1,0 +1,90 @@
+This document describes how to invoke FlightGear's generic IO subsystem.
+
+FlightGear has a fairly flexible generic IO subsystem that allows you
+to speak any supported protocol over any supported medium.  The IO
+options are configured at runtime via command line options.  You can
+specify multiple entries, one per option.
+
+The general form of the command line option is as follows:
+
+    --protocol=medium,direction,hz,medium_options,...
+
+    protocol = { native, nmea, garmin, fgfs, rul, pve, ray, etc. }
+    medium = { serial, socket, file, etc. }
+    direction = { in, out, bi }
+    hz = number of times to process channel per second (floating
+         point values are ok.
+
+Serial Port Communication:
+
+    --nmea=serial,dir,hz,device,baud
+
+    device = OS device name of serial line to be open()'ed
+    baud = {300, 1200, 2400, ..., 230400}
+
+    example to pretend we are a real gps and output to a moving map application:
+
+    --nmea=serial,out,0.5,COM1,4800
+
+    Note that for unix varient you might use a device name like "/dev/ttyS0"
+
+Socket Communication:
+
+    --native=socket,dir,hz,machine,port,style
+
+    machine = machine name or ip address if client (leave empty if server)
+    port = port, leave empty to let system choose
+    style = tcp or udp
+
+    example to slave one copy of fgfs to another
+
+    fgfs1:  --native=socket,out,30,fgfs2,5500,udp
+    fgfs2:  --native=socket,in,30,,5500,udp --fdm=external
+
+    This instructs the first copy of fgfs to send UDP packets in the
+    native format to a machine called fgfs2 on port 5500.
+
+    The second copy of fgfs will accept UDP packets (from anywhere) on
+    port 5500.  Note the additional --fdm=external option.  This tells
+    the second copy of fgfs to not run the normal flight model, but
+    instead set the FDM values based on an external source (the
+    network in this case.)
+
+
+File I/O:
+
+    --garmin=file,dir,hz,filename
+
+    filename = file system file name
+
+    example to record a flight path at 10 hz:
+
+    --native=file,out,10,flight1.fgfs
+
+    example to replay your flight
+
+    --native=file,in,10,flight1.fgfs
+
+
+Moving Map Example:
+
+    Per Liedman has developed a moving map program called Atlas
+    (atlas.sourceforge.net) The initial inspiration and much code came
+    from Alexei Novikov.
+
+    The moving map supports NMEA format input either via network or
+    via serial port.  Either way will work, but this example
+    demonstrates the use of a socket connection.
+
+    Start up fgfs with:
+
+        fgfs --nmea=socket,out,0.5,atas-host-name,5500,udp
+
+    Start up the Atlas program with:
+
+        Atlas --udp=5500 --fgroot=path-to-fg-root --glutfonts
+
+    Once both programs are running, the Atlas program should display
+    your current location.  Atlas is a really nifty program with many
+    neat optoins such as the ability to generate and use background
+    bitmaps that show the terrain, cities, lakes, oceans, rivers, etc.
