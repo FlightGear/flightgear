@@ -354,7 +354,7 @@ bool fgInitSubsystems( void ) {
     FG_LOG( FG_GENERAL, FG_DEBUG, "After v->init()");
     v->UpdateViewMath(f);
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << v->get_abs_view_pos());
-    v->UpdateWorldToEye(f);
+    // v->UpdateWorldToEye(f);
 
     // Build the solar system
     //fgSolarSystemInit(*t);
@@ -537,7 +537,7 @@ void fgReInitSubsystems( void )
     FG_LOG( FG_GENERAL, FG_DEBUG, "After v->init()");
     v->UpdateViewMath(f);
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = " << v->get_abs_view_pos());
-    v->UpdateWorldToEye(f);
+    // v->UpdateWorldToEye(f);
 
     fgFDMInit( current_options.get_flight_model(), cur_fdm_state, 
 	       1.0 / DEFAULT_MODEL_HZ );

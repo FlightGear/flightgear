@@ -114,9 +114,6 @@ public:
     // transform and update it's range selector based on current
     // visibilty
     void prep_ssg_nodes( void );
-
-    // Render the local tiles --- hack, hack, hack
-    void render( void );
 };
 
 

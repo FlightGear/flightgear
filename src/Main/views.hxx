@@ -161,17 +161,6 @@ public:
     // the AIRCRAFT matrix
     MAT3mat VIEW_OFFSET;
 
-    // Transformation matrix for aircraft coordinates to world
-    // coordinates
-    MAT3mat WORLD;
-
-    // Combined transformation from eye coordinates to world coordinates
-    MAT3mat EYE_TO_WORLD;
-
-    // Inverse of EYE_TO_WORLD which is a transformation from world
-    // coordinates to eye coordinates
-    MAT3mat WORLD_TO_EYE;
-
     // Current model view matrix;
     GLfloat MODEL_VIEW[16];
 
@@ -199,9 +188,9 @@ public:
     // function that's been modified slightly so we can capture the
     // result (and use it later) otherwise this all gets calculated in
     // OpenGL land and we don't have access to the results.
-    void LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
+    /* void LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
 		 GLdouble centerx, GLdouble centery, GLdouble centerz,
-		 GLdouble upx, GLdouble upy, GLdouble upz );
+		 GLdouble upx, GLdouble upy, GLdouble upz ); */
 
     // Update the view volume, position, and orientation
     void UpdateViewParams( void );
@@ -212,9 +201,6 @@ public:
 
     // Update the view parameters
     void UpdateViewMath( FGInterface *f );
-
-    // Update the "World to Eye" transformation matrix
-    void UpdateWorldToEye( FGInterface *f );
 
     // Update the field of view coefficients
     void UpdateFOV( const fgOPTIONS& o );
@@ -277,7 +263,6 @@ public:
     inline double *get_surface_east() { return surface_east; }
     inline double *get_local_up() { return local_up; }
     inline double *get_view_forward() { return view_forward; }
-    inline const MAT3mat *get_WORLD_TO_EYE() const { return &WORLD_TO_EYE; }
     inline GLfloat *get_MODEL_VIEW() { return MODEL_VIEW; }
 };
 

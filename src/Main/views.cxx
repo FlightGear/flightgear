@@ -68,7 +68,6 @@ FGView current_view;
 
 // Constructor
 FGView::FGView( void ) {
-    MAT3identity(WORLD);
 }
 
 
@@ -142,6 +141,7 @@ void FGView::cycle_view_mode() {
 }
 
 
+#ifdef 0
 // Basically, this is a modified version of the Mesa gluLookAt()
 // function that's been modified slightly so we can capture the
 // result before sending it off to OpenGL land.
@@ -225,6 +225,7 @@ void FGView::LookAt( GLdouble eyex, GLdouble eyey, GLdouble eyez,
     // xglMultMatrixd( m );
     xglLoadMatrixf( m );
 }
+#endif
 
 
 // Update the view volume, position, and orientation
@@ -232,7 +233,7 @@ void FGView::UpdateViewParams( void ) {
     FGInterface *f = current_aircraft.fdm_state;
 
     UpdateViewMath(f);
-    UpdateWorldToEye(f);
+    // UpdateWorldToEye(f);
     
     if ((current_options.get_panel_status() != panel_hist) &&                          (current_options.get_panel_status()))
     {
@@ -865,260 +866,6 @@ void FGView::UpdateViewMath( FGInterface *f ) {
     //         MAT3_DOT_PRODUCT(surface_south, surface_east));
 #endif // !defined(FG_VIEW_INLINE_OPTIMIZATIONS)
 }
-
-
-// Update the "World to Eye" transformation matrix
-// This is most useful for view frustum culling
-void FGView::UpdateWorldToEye( FGInterface *f ) {
-    MAT3mat R_Phi, R_Theta, R_Psi, R_Lat, R_Lon, T_view;
-    MAT3mat TMP;
-    MAT3hvec vec;
-
-    if ( use_larcsim_local_to_body ) {
-
-	// Question: hey this is even different then LOCAL[][] above??
-	// Answer: yet another coordinate system, this time the
-	// coordinate system in which we do our view frustum culling.
-
-	AIRCRAFT[0][0] = -f->get_T_local_to_body_22();
-	AIRCRAFT[0][1] = -f->get_T_local_to_body_23();
-	AIRCRAFT[0][2] = f->get_T_local_to_body_21();
-	AIRCRAFT[0][3] = 0.0;
-	AIRCRAFT[1][0] = f->get_T_local_to_body_32();
-	AIRCRAFT[1][1] = f->get_T_local_to_body_33();
-	AIRCRAFT[1][2] = -f->get_T_local_to_body_31();
-	AIRCRAFT[1][3] = 0.0;
-	AIRCRAFT[2][0] = f->get_T_local_to_body_12();
-	AIRCRAFT[2][1] = f->get_T_local_to_body_13();
-	AIRCRAFT[2][2] = -f->get_T_local_to_body_11();
-	AIRCRAFT[2][3] = 0.0;
-	AIRCRAFT[3][0] = AIRCRAFT[3][1] = AIRCRAFT[3][2] = AIRCRAFT[3][3] = 0.0;
-	AIRCRAFT[3][3] = 1.0;
-
-    } else {
-
-	// Roll Matrix
-	MAT3_SET_HVEC(vec, 0.0, 0.0, -1.0, 1.0);
-	MAT3rotate(R_Phi, vec, f->get_Phi());
-	// printf("Roll matrix (Phi)\n");
-	// MAT3print(R_Phi, stdout);
-
-	// Pitch Matrix
-	MAT3_SET_HVEC(vec, 1.0, 0.0, 0.0, 1.0);
-	MAT3rotate(R_Theta, vec, f->get_Theta());
-	// printf("\nPitch matrix (Theta)\n");
-	// MAT3print(R_Theta, stdout);
-
-	// Yaw Matrix
-	MAT3_SET_HVEC(vec, 0.0, -1.0, 0.0, 1.0);
-	MAT3rotate(R_Psi, vec, f->get_Psi() + FG_PI /* - view_offset */ );
-	// MAT3rotate(R_Psi, vec, f->get_Psi() + FG_PI - view_offset );
-	// printf("\nYaw matrix (Psi)\n");
-	// MAT3print(R_Psi, stdout);
-
-	// aircraft roll/pitch/yaw
-	MAT3mult(TMP, R_Phi, R_Theta);
-	MAT3mult(AIRCRAFT, TMP, R_Psi);
-
-    } // if ( use_larcsim_local_to_body )
-
-#if !defined(FG_VIEW_INLINE_OPTIMIZATIONS)
-	
-    // printf("AIRCRAFT matrix\n");
-    // MAT3print(AIRCRAFT, stdout);
-
-    // View rotation matrix relative to current aircraft orientation
-    MAT3_SET_HVEC(vec, 0.0, -1.0, 0.0, 1.0);
-    MAT3mult_vec(vec, vec, AIRCRAFT);
-    // printf("aircraft up vector = %.2f %.2f %.2f\n", 
-    //        vec[0], vec[1], vec[2]);
-    MAT3rotate(TMP, vec, -view_offset );
-    MAT3mult(VIEW_OFFSET, AIRCRAFT, TMP);
-    // printf("VIEW_OFFSET matrix\n");
-    // MAT3print(VIEW_OFFSET, stdout);
-
-    // View position in scenery centered coordinates
-    MAT3_SET_HVEC(vec, view_pos.x(), view_pos.y(), view_pos.z(), 1.0);
-    MAT3translate(T_view, vec);
-    // printf("\nTranslation matrix\n");
-    // MAT3print(T_view, stdout);
-
-    // Latitude
-    MAT3_SET_HVEC(vec, 1.0, 0.0, 0.0, 1.0);
-    // R_Lat = rotate about X axis
-    MAT3rotate(R_Lat, vec, f->get_Latitude());
-    // printf("\nLatitude matrix\n");
-    // MAT3print(R_Lat, stdout);
-
-    // Longitude
-    MAT3_SET_HVEC(vec, 0.0, 0.0, 1.0, 1.0);
-    // R_Lon = rotate about Z axis
-    MAT3rotate(R_Lon, vec, f->get_Longitude() - FG_PI_2 );
-    // printf("\nLongitude matrix\n");
-    // MAT3print(R_Lon, stdout);
-
-    // lon/lat
-    MAT3mult(WORLD, R_Lat, R_Lon);
-    // printf("\nworld\n");
-    // MAT3print(WORLD, stdout);
-
-    MAT3mult(EYE_TO_WORLD, VIEW_OFFSET, WORLD);
-    MAT3mult(EYE_TO_WORLD, EYE_TO_WORLD, T_view);
-    // printf("\nEye to world\n");
-    // MAT3print(EYE_TO_WORLD, stdout);
-
-    MAT3invert(WORLD_TO_EYE, EYE_TO_WORLD);
-    // printf("\nWorld to eye\n");
-    // MAT3print(WORLD_TO_EYE, stdout);
-
-    // printf( "\nview_pos = %.2f %.2f %.2f\n", 
-    //         view_pos.x, view_pos.y, view_pos.z );
-
-    // MAT3_SET_HVEC(eye, 0.0, 0.0, 0.0, 1.0);
-    // MAT3mult_vec(vec, eye, EYE_TO_WORLD);
-    // printf("\neye -> world = %.2f %.2f %.2f\n", vec[0], vec[1], vec[2]);
-
-    // MAT3_SET_HVEC(vec1, view_pos.x, view_pos.y, view_pos.z, 1.0);
-    // MAT3mult_vec(vec, vec1, WORLD_TO_EYE);
-    // printf( "\nabs_view_pos -> eye = %.2f %.2f %.2f\n", 
-    //         vec[0], vec[1], vec[2]);
-#else  // FG_VIEW_INLINE_OPTIMIZATIONS
-	
-    MAT3_SET_HVEC(vec, -AIRCRAFT[1][0], -AIRCRAFT[1][1], -AIRCRAFT[1][2], -AIRCRAFT[1][3]);
-    getRotMatrix((double *)TMP, vec, -view_offset );
-    MAT3mult(VIEW_OFFSET, AIRCRAFT, TMP);
-    // MAT3print_formatted(VIEW_OFFSET, stdout, "VIEW_OFFSET matrix:\n",
-    //					 NULL, "%#8.6f  ", "\n");
-
-    // Build spherical to cartesian transform matrix directly
-    double *mat = (double *)WORLD; //T_view; //WORLD;
-    double cos_lat = f->get_cos_latitude(); //cos(f->get_Latitude());
-    double sin_lat = f->get_sin_latitude(); //sin(f->get_Latitude());
-    // using trig identities  this:
-    //	mat[0]  =  cos(f->get_Longitude() - FG_PI_2);//cos_lon;
-    //	mat[1]  =  sin(f->get_Longitude() - FG_PI_2);//sin_lon;
-    // becomes this: :-)
-    mat[0]  =  f->get_sin_longitude(); //cos_lon;
-    mat[1]  = -f->get_cos_longitude(); //sin_lon;
-    mat[4]  = -cos_lat*mat[1]; //mat[1]=sin_lon;
-    mat[5]  =  cos_lat*mat[0]; //mat[0]=cos_lon;
-    mat[6]  =  sin_lat;
-    mat[8]  =  sin_lat*mat[1]; //mat[1]=sin_lon;
-    mat[9]  = -sin_lat*mat[0]; //mat[0]=cos_lon;
-    mat[10] =  cos_lat;
-
-    // BUILD EYE_TO_WORLD = AIRCRAFT * WORLD
-    // and WORLD_TO_EYE = Inverse( EYE_TO_WORLD) concurrently
-    // by Transposing the 3x3 rotation sub-matrix
-    WORLD_TO_EYE[0][0] = EYE_TO_WORLD[0][0] =
-	VIEW_OFFSET[0][0]*mat[0] + VIEW_OFFSET[0][1]*mat[4] + VIEW_OFFSET[0][2]*mat[8];
-	
-    WORLD_TO_EYE[1][0] = EYE_TO_WORLD[0][1] =
-	VIEW_OFFSET[0][0]*mat[1] + VIEW_OFFSET[0][1]*mat[5] + VIEW_OFFSET[0][2]*mat[9];
-	
-    WORLD_TO_EYE[2][0] = EYE_TO_WORLD[0][2] =
-	VIEW_OFFSET[0][1]*mat[6] + VIEW_OFFSET[0][2]*mat[10];
-	
-    WORLD_TO_EYE[0][1] = EYE_TO_WORLD[1][0] =
-	VIEW_OFFSET[1][0]*mat[0] + VIEW_OFFSET[1][1]*mat[4] + VIEW_OFFSET[1][2]*mat[8];
-	
-    WORLD_TO_EYE[1][1] = EYE_TO_WORLD[1][1] =
-	VIEW_OFFSET[1][0]*mat[1] + VIEW_OFFSET[1][1]*mat[5] + VIEW_OFFSET[1][2]*mat[9];
-	
-    WORLD_TO_EYE[2][1] = EYE_TO_WORLD[1][2] =
-	VIEW_OFFSET[1][1]*mat[6] + VIEW_OFFSET[1][2]*mat[10];
-	
-    WORLD_TO_EYE[0][2] = EYE_TO_WORLD[2][0] =
-	VIEW_OFFSET[2][0]*mat[0] + VIEW_OFFSET[2][1]*mat[4] + VIEW_OFFSET[2][2]*mat[8];
-	
-    WORLD_TO_EYE[1][2] = EYE_TO_WORLD[2][1] =
-	VIEW_OFFSET[2][0]*mat[1] + VIEW_OFFSET[2][1]*mat[5] + VIEW_OFFSET[2][2]*mat[9];
-	
-    WORLD_TO_EYE[2][2] = EYE_TO_WORLD[2][2] =
-	VIEW_OFFSET[2][1]*mat[6] + VIEW_OFFSET[2][2]*mat[10];
-	
-    // TRANSLATE TO VIEW POSITION
-    EYE_TO_WORLD[3][0] = view_pos.x();
-    EYE_TO_WORLD[3][1] = view_pos.y();
-    EYE_TO_WORLD[3][2] = view_pos.z();
-	
-    // FILL 0 ENTRIES
-    WORLD_TO_EYE[0][3] = WORLD_TO_EYE[1][3] = WORLD_TO_EYE[2][3] = 
-	EYE_TO_WORLD[0][3] = EYE_TO_WORLD[1][3] = EYE_TO_WORLD[2][3] = 0.0;
-
-    // FILL UNITY ENTRIES
-    WORLD_TO_EYE[3][3] = EYE_TO_WORLD[3][3] = 1.0;
-	
-    /* MAKE THE INVERTED TRANSLATIONS */
-    mat = (double *)EYE_TO_WORLD;
-    WORLD_TO_EYE[3][0] = -mat[12]*mat[0]
-	-mat[13]*mat[1]
-	-mat[14]*mat[2];
-	
-    WORLD_TO_EYE[3][1] = -mat[12]*mat[4]
-	-mat[13]*mat[5]
-	-mat[14]*mat[6];
-	
-    WORLD_TO_EYE[3][2] = -mat[12]*mat[8]
-	-mat[13]*mat[9]
-	-mat[14]*mat[10];
-	
-    // MAT3print_formatted(EYE_TO_WORLD, stdout, "EYE_TO_WORLD matrix:\n",
-    //					 NULL, "%#8.6f  ", "\n");
-
-    // MAT3print_formatted(WORLD_TO_EYE, stdout, "WORLD_TO_EYE matrix:\n",
-    //					 NULL, "%#8.6f  ", "\n");
-
-#endif // defined(FG_VIEW_INLINE_OPTIMIZATIONS)
-}
-
-
-#if 0
-// Reject non viewable spheres from current View Frustrum by Curt
-// Olson curt@me.umn.edu and Norman Vine nhv@yahoo.com with 'gentle
-// guidance' from Steve Baker sbaker@link.com
-int
-FGView::SphereClip( const Point3D& cp, const double radius )
-{
-    double x1, y1;
-
-    MAT3vec eye;	
-    double *mat;
-    double x, y, z;
-
-    x = cp->x;
-    y = cp->y;
-    z = cp->z;
-	
-    mat = (double *)(WORLD_TO_EYE);
-	
-    eye[2] =  x*mat[2] + y*mat[6] + z*mat[10] + mat[14];
-	
-    // Check near and far clip plane
-    if( ( eye[2] > radius ) ||
-	( eye[2] + radius + current_weather.visibility < 0) )
-	// ( eye[2] + radius + far_plane < 0) )
-    {
-	return 1;
-    }
-	
-    // check right and left clip plane (from eye perspective)
-    x1 = radius * fov_x_clip;
-    eye[0] = (x*mat[0] + y*mat[4] + z*mat[8] + mat[12]) * slope_x;
-    if( (eye[2] > -(eye[0]+x1)) || (eye[2] > (eye[0]-x1)) ) {
-	return(1);
-    }
-	
-    // check bottom and top clip plane (from eye perspective)
-    y1 = radius * fov_y_clip;
-    eye[1] = (x*mat[1] + y*mat[5] + z*mat[9] + mat[13]) * slope_y; 
-    if( (eye[2] > -(eye[1]+y1)) || (eye[2] > (eye[1]-y1)) ) {
-	return 1;
-    }
-
-    return 0;
-}
-#endif
 
 
 // Destructor
