@@ -24,20 +24,6 @@ my( $tmp_dir ) = "/tmp";
 
 my( $field_index ) = 0;
 
-# my( $page );
-# my( $server, $port, $timeout );
-# my( $last_plot_image ) = "";
-# my( $image_handle );
-# my( $junk );
-# my( @PLOTFIELDS );
-# my( $field_choice );
-# my( $plot_field );
-
-# my( $home ) = $ENV{"HOME"};
-# my( $log_dir ) = "$home/ATC/data";
-# my( $log_file ) = "$log_dir/default.txt";
-# my( $plot_file ) = $log_file;
-
 
 sub clear_logging {
     my( $fgfs ) = shift;
@@ -69,7 +55,7 @@ sub add_field {
     # spaces seem to not work well.
     $title =~ s/ /\_/g;
 
-    print "$title - $prop\n";
+    # print "$title - $prop\n";
     &set_prop( $fgfs,
                "/logging/log[$lognum]/entry[$field_index]/title", $title );
     &set_prop( $fgfs,

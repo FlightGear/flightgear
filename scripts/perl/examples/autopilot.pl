@@ -1,4 +1,17 @@
 #!/usr/bin/perl
+#
+# autopilot.pl - Handle autopilot functions
+#
+# Written by Curtis L. Olson, started January 2004
+#
+# Copyright (C) 2004  Curtis L. Olson - curt@flightgear.org
+#
+# This code is placed in the public domain by Curtis L. Olson.
+# There is no warranty, etc. etc. etc.
+#
+# $Id$
+# ----------------------------------------------------------------------------
+
 
 require "telnet.pl";
 

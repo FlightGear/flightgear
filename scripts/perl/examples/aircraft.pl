@@ -1,4 +1,16 @@
 #!/usr/bin/perl
+#
+# aircraft.pl - Handle aircraft functions
+#
+# Written by Curtis L. Olson, started January 2004
+#
+# Copyright (C) 2004  Curtis L. Olson - curt@flightgear.org
+#
+# This code is placed in the public domain by Curtis L. Olson.
+# There is no warranty, etc. etc. etc.
+#
+# $Id$
+# ----------------------------------------------------------------------------
 
 require "telnet.pl";
 
@@ -80,6 +92,13 @@ sub set_elevator {
     my( $pos_norm ) = shift;
 
     &set_prop( $fgfs, "/controls/flight/elevator", $pos_norm );
+}
+
+sub set_elevator_trim {
+    my( $fgfs ) = shift;
+    my( $pos_norm ) = shift;
+
+    &set_prop( $fgfs, "/controls/flight/elevator-trim", $pos_norm );
 }
 
 sub set_rudder {
