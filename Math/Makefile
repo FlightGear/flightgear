@@ -26,8 +26,7 @@
 
 TARGET = libMath.a
 
-CFILES = MAT3geom.c MAT3inv.c MAT3mat.c MAT3vec.c
-HFILES = mat3.h mat3defs.h mat3err.h
+CFILES = MAT3geom.c MAT3inv.c MAT3mat.c MAT3vec.c polar.c
 OFILES = $(CFILES:.c=.o)
 
 
@@ -41,7 +40,7 @@ CFLAGS = $(FG_CFLAGS)
 # Primary Targets
 #---------------------------------------------------------------------------
 
-$(TARGET): $(OFILES) $(HFILES)
+$(TARGET): $(OFILES)
 	$(AR) rv $(TARGET) $(OFILES)
 
 all: $(TARGET)
@@ -56,9 +55,16 @@ clean:
 
 include depend
 
+polar.o:
+	$(CC) $(CFLAGS) -c polar.c
+
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.8  1997/07/07 20:59:48  curt
+# Working on scenery transformations to enable us to fly fluidly over the
+# poles with no discontinuity/distortion in scenery.
+#
 # Revision 1.7  1997/07/05 20:43:31  curt
 # renamed mat3 directory to Math so we could add other math related routines.
 #
