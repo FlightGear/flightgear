@@ -147,6 +147,7 @@ void aero( SCALAR dt, int Initialize ) {
   static int init = 0;
   static int flap_dir=0;
   static SCALAR lastFlapHandle=0;
+  static SCALAR Ai;
   
   static SCALAR trim_inc = 0.0002;
 
@@ -180,9 +181,8 @@ void aero( SCALAR dt, int Initialize ) {
 	   
 	   CLob=0;
 
-
-	   /* original */ /* Cdob=0.031; */
-	   Cdob=0.046;
+       Ai=1.24;
+	   Cdob=0.036;
 	   Cda=0.13;  /*Not used*/
 	   Cdde=0.06;
 
@@ -263,11 +263,13 @@ void aero( SCALAR dt, int Initialize ) {
   {		
 	 
 	 
-	 if((Flap_handle != lastFlapHandle) && (dt > 0)) {
+	 if((Flap_handle != lastFlapHandle) && (dt > 0))
+	 {
 	 	Flaps_In_Transit=1;
-	 } else if(dt <= 0) {
+		
+	 }	
+	 else if(dt <= 0)
 	 	Flap_Position=Flap_handle;
-	 }
 			
 	 lastFlapHandle=Flap_handle;
 	 if((Flaps_In_Transit) && (dt > 0))	
@@ -317,7 +319,7 @@ void aero( SCALAR dt, int Initialize ) {
     
   /*calculate rate derivative nondimensionalization (is that a word?) factors */
   /*hack to avoid divide by zero*/
-  /*the dynamic terms might be negligible at low ground speeds anyway*/ 
+  /*the dynamic terms are negligible at low ground speeds anyway*/ 
   
 /*   printf("Vinf: %g, Span: %g\n",V_rel_wind,b);
  */  
@@ -357,12 +359,14 @@ void aero( SCALAR dt, int Initialize ) {
   /* printf("FP: %g\n",Flap_Position);
   printf("CLo: %g\n",CLo);
   printf("Cdo: %g\n",Cdo);
-  printf("Cmo: %g\n",Cmo); */
+  printf("Cmo: %g\n",Cmo);	  */
+
+
  
 
 
   CL = CLo + CLwbh + (CLadot*Alpha_dot + CLq*Theta_dot)*cbar_2V + CLde*elevator;
-  cd = Cdo + rPiARe*CL*CL + Cdde*elevator;
+  cd = Cdo + rPiARe*Ai*Ai*CL*CL + Cdde*elevator;
   cy = Cybeta*Beta + (Cyp*P_body + Cyr*R_body)*b_2V + Cyda*aileron + Cydr*rudder;
   
   cm = Cmo + Cma*Alpha + (Cmq*Q_body + Cmadot*Alpha_dot)*cbar_2V + Cmde*(elevator);

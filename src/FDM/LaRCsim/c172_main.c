@@ -43,22 +43,22 @@
 
 void do_trims(int kmax,FILE *out,InitialConditions IC)
 {
-	int k=0,i,j;
+	int bad_trim=0,i,j;
 	double speed,elevator,cmcl,maxspeed;
 	out=fopen("trims.out","w");
 	speed=55;
 	
-	for(j=0;j<=30;j+=10)
+	for(j=0;j<=0;j+=10)
 	{
 		IC.flap_handle=j;
-		for(i=1;i<=5;i++)
+		for(i=4;i<=4;i++)
 		{
 			switch(i)
 			{
 				case 1: IC.weight=1500;IC.cg=0.155;break;
 				case 2: IC.weight=1500;IC.cg=0.364;break;
 				case 3: IC.weight=1950;IC.cg=0.155;break;
-				case 4: IC.weight=2550;IC.cg=0.257;break;
+				case 4: IC.weight=2400;IC.cg=0.257;break;
 				case 5: IC.weight=2550;IC.cg=0.364;break;
 			}
 
@@ -70,7 +70,7 @@ void do_trims(int kmax,FILE *out,InitialConditions IC)
 			   IC.vc=speed;
 			   Long_control=0;Theta=0;Throttle_pct=0.0;
 
-			   k=trim_long(kmax,IC);
+			   bad_trim=trim_long(kmax,IC);
 			   if(Long_control <= 0)
 				  elevator=Long_control*28;
 			   else
@@ -79,15 +79,15 @@ void do_trims(int kmax,FILE *out,InitialConditions IC)
 			   {
 	   				cmcl=cm / CL;
 			   }	
-			   if(k < kmax)
+			   if(!bad_trim)
 			   {
-	   				fprintf(out,"%g,%g,%g,%g,%g,%d",V_calibrated_kts,Alpha*RAD_TO_DEG,Long_control,Throttle_pct,Flap_Position,k);
+	   				fprintf(out,"%g,%g,%g,%g,%g",V_calibrated_kts,Alpha*RAD_TO_DEG,Long_control,Throttle_pct,Flap_Position);
 	   				fprintf(out,",%g,%g,%g,%g,%g\n",CL,cm,cmcl,Weight,Cg);
 	/* 	   			printf("%g,%g,%g,%g,%g,%g,%g,%g,%g,%g\n",V_calibrated_kts,Alpha*RAD_TO_DEG,elevator,CL,cm,Cmo,Cma,Cmde,Mass*32.174,Dx_cg);
 	 */		   }	
     		   else
 			   {
-		   		 printf("kmax exceeded at: %g knots, %g lbs, %g %%MAC, Flaps: %g\n",V_calibrated_kts,Weight,Cg,Flap_Position);
+		   		 printf("kmax exceeded at: %g knots, %g lbs, %g %%MAC, Flaps: %g\n",V_true_kts,Weight,Cg,Flap_Position);
 				 printf("wdot: %g, udot: %g, qdot: %g\n",W_dot_body,U_dot_body,Q_dot_body);
             	 printf("Alpha: %g, Throttle_pct: %g, Long_control: %g\n\n",Alpha*RAD_TO_DEG,Throttle_pct,Long_control);
 			   }
@@ -96,7 +96,38 @@ void do_trims(int kmax,FILE *out,InitialConditions IC)
     	}
 	}	
 	fclose(out);
-}	
+}
+
+find_max_alt(int kmax,InitialConditions IC)
+{
+	int bad_trim=0,i=0;
+	float min=0,max=30000;
+	IC.use_gamma_tmg=1;
+	IC.gamma=0;
+	IC.vc=73;
+	IC.altitude==1000;
+	while(!bad_trim)
+	{
+		bad_trim=trim_long(200,IC);
+		IC.altitude+=1000;
+	}	
+	while((fabs(max-min) > 100) && (i < 50))
+	{
+	    
+		IC.altitude=(max-min)/2 + min;
+		printf("\nIC.altitude: %g, max: %g, min: %g, bad_trim: %d\n",IC.altitude,max,min,bad_trim);
+		printf("Alpha: %g, Throttle_pct: %g, Long_control: %g\n\n",Alpha*RAD_TO_DEG,Throttle_pct,Long_control);
+
+		bad_trim=trim_long(200,IC);
+		
+		if(bad_trim == 1 )
+			max=IC.altitude;
+		else
+			min=IC.altitude;
+		i++;	
+	}
+}			
+				
 
 void find_trim_stall(int kmax,FILE *out,InitialConditions IC)
 {
@@ -213,79 +244,41 @@ int main(int argc, char *argv[]) {
 	IC.latitude=47.5299892; //BFI
 	IC.longitude=122.3019561;
 	Runway_altitude =   18.0;
+	
 	IC.altitude=strtod(argv[2],NULL); 
+	printf("h: %g, argv[2]: %s\n",IC.altitude,argv[2]);
 	IC.vc=strtod(argv[1],NULL);
 	IC.alpha=0;
 	IC.beta=0;
-	IC.gamma=strtod(argv[3],NULL);
-	IC.use_gamma_tmg=1;
-	IC.phi=0;
-	IC.psi=10;
-	IC.weight=2300;
+	IC.theta=strtod(argv[3],NULL);
+	IC.use_gamma_tmg=0;
+	IC.phi=strtod(argv[4],NULL);
+	IC.psi=0;
+	IC.weight=2400;
 	IC.cg=0.25;
 	IC.flap_handle=0;
-	IC.long_control=strtod(argv[4],NULL);
+	IC.long_control=0;
 	IC.rudder_pedal=0;
     
 	printf("IC.vc: %g\n",IC.vc);
 	ls_ForceAltitude(IC.altitude);  
     fgLaRCsimInit(0.01);
-	printf("\nLong_control: %g\n\n",Long_control);
-	
-	
-	IC.cg=0.155;
-    IC.alpha=-5;
-	setIC(IC);ls_loop(0.0,-1);
-	newcm=CLwbh*(IC.cg - 0.557);
-	lastcm=newcm;
-	out=fopen("cmcl.out","w");
-	while(IC.alpha < 22)
-	{
-		IC.alpha+=1;
-		setIC(IC);ls_loop(0.0,-1);
-		newcm=CLwbh*(IC.cg - 0.557);
-		cmalpha=newcm-lastcm;
-		printf("alpha: %4.0f, CL: %5.2f, Cm: %5.2f, Cma: %7.4f\n",Alpha*RAD_TO_DEG,CLwbh,newcm,cmalpha);
-		fprintf(out,"%g %g\n",newcm,CLwbh);
-		lastcm=newcm;
-	}	
-	fclose(out);
-	/* find_trim_stall(200,out,IC);
-	
-    IC.vc=120;
-	IC.altitude=8000;
-	IC.weight=2300;
-	IC.cg=0.25;
-	IC.flap_handle=0;
-
-	
-    setIC(IC);
-	printIC(IC);
-	k=trim_long(100,IC);
-
-	printf("Flap_handle: %g, Flap_Position: %g\n",Flap_handle,Flap_Position);
-	printf("k: %d, %g knots, %g lbs, %g %%MAC\n",k,V_calibrated_kts,Weight,Cg);
-	printf("wdot: %g, udot: %g, qdot: %g\n",W_dot_body,U_dot_body,Q_dot_body);
-    printf("Alpha: %g, Throttle_pct: %g, Long_control: %g\n\n",Alpha,Throttle_pct,Long_control);
-
-	printf("Cme: %g, elevator: %g, Cmde: %g\n",elevator*Cmde,elevator,Cmde);
- 
-    IC.cg=0.155;
-    setIC(IC);
-	k=trim_long(100,IC);
-
-	printf("Flap_handle: %g, Flap_Position: %g\n",Flap_handle,Flap_Position);
-	printf("k: %d, %g knots, %g lbs, %g %%MAC\n",k,V_calibrated_kts,Weight,Cg);
-	printf("wdot: %g, udot: %g, qdot: %g\n",W_dot_body,U_dot_body,Q_dot_body);
-    printf("Alpha: %g, Throttle_pct: %g, Long_control: %g\n\n",Alpha,Throttle_pct,Long_control);
-
-	printf("Cme: %g, elevator: %g, Cmde: %g\n",elevator*Cmde,elevator,Cmde);
-	
-	IC.cg=0.364;
 	setIC(IC);
-	k=trim_long(100,IC);
+	ls_loop(0,-1);
+	printf("\nAltitude: %g\n\n",Altitude);
+	i=0;
+	while(i <= 1) 
+	{ 
+	  if(i > 0)
+	     Brake_pct=1;
+	  ls_update(1); 
+	  printf("\tAltitude: %g, Theta: %g, Phi: %g\n\n",Altitude,Theta*RAD_TO_DEG,Phi*RAD_TO_DEG);
+	  i++; 
+	}
+	printf("w: %g, u: %g, q: %g\n",W_body,U_body,Q_body);
+    
 
-	printf("Flap_handle: %g, Flap_Position: %g\n",Flap_handle,Flap_Position);
+	/*printf("Flap_handle: %g, Flap_Position: %g\n",Flap_handle,Flap_Position);
 	printf("k: %d, %g knots, %g lbs, %g %%MAC\n",k,V_calibrated_kts,Weight,Cg);
 	printf("wdot: %g, udot: %g, qdot: %g\n",W_dot_body,U_dot_body,Q_dot_body);
     printf("Alpha: %g, Throttle_pct: %g, Long_control: %g\n\n",Alpha,Throttle_pct,Long_control);
@@ -297,7 +290,7 @@ int main(int argc, char *argv[]) {
 	
 				
 	
-	/* do_trims(400,out,IC); */
+	
 	
 	/* ls_loop(0.0,-1);
 	

@@ -70,18 +70,26 @@ $Header$
 extern SIM_CONTROL	sim_control_;
 
 void engine( SCALAR dt, int init ) {
-    /* if (init) { */
+    
+	float v,h,pa;
+	float bhp=160;
+	
     Throttle[3] = Throttle_pct;
-    /* } */
 
-    /* F_X_engine = Throttle[3]*813.4/0.2; */  /* original code */
-    /* F_Z_engine = Throttle[3]*11.36/0.2; */  /* original code */
-    F_X_engine = Throttle[3]*400/0.83;
-    F_Z_engine = Throttle[3]*4.9/0.83;
+    
+	v=V_rel_wind;
+	h=Altitude;
+	if(V_rel_wind < 10)
+		v=10;
+    if(Altitude < 0)
+	   h=0;
+	pa=(0.00144*v + 0.546)*(1 - 1.6E-5*h)*bhp;
+	if(pa < 0)
+		pa=0;
+	F_X_engine= Throttle[3]*(pa*550)/v;
 	M_m_engine = F_X_engine*0.734*cbar;
 	/* 0.734 - estimated (WAGged) location of thrust line in the z-axis*/
 
-    Throttle_pct = Throttle[3];
 }
 
 
