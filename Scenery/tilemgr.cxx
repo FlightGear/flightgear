@@ -156,10 +156,10 @@ fgTileMgrCurElev( const fgBUCKET& p ) {
 
     scenery.next_center = t->center;
     
-    // earth_center = Point3D(0.0, 0.0, 0.0);
-
     FG_LOG( FG_TERRAIN, FG_DEBUG, 
 	    "Current bucket = " << p << "  Index = " << fgBucketGenIndex(&p) );
+    FG_LOG( FG_TERRAIN, FG_DEBUG,
+	    "abs_view_pos = " << abs_view_pos );
 
     // calculate tile offset
     // x = (t->offset.x = t->center.x - scenery.center.x);
@@ -217,7 +217,7 @@ fgTileMgrCurElev( const fgBUCKET& p ) {
 	}
     }
 
-    cout << "no terrain intersection found\n";
+    cout << "(new) no terrain intersection found\n";
     return 0.0;
 }
 
@@ -322,7 +322,7 @@ fgTileMgrCurElevOLD( double lon, double lat, const Point3D& abs_view_pos ) {
 	}
     }
 
-    cout << "no terrain intersection found\n";
+    cout << "(old) no terrain intersection found\n";
     return 0.0;
 }
 
@@ -748,6 +748,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.48  1998/12/05 14:20:21  curt
+// Looking into a terrain intersection problem.
+//
 // Revision 1.47  1998/12/05 14:11:19  curt
 // Sun portability tweak.
 //
