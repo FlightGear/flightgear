@@ -41,6 +41,8 @@
 
 #include <simgear/timing/timestamp.hxx>
 
+#include <Main/fgfs.hxx>
+
 SG_USING_STD(map);
 SG_USING_STD(string);
 
@@ -82,7 +84,8 @@ typedef sound_map::iterator sound_map_iterator;
 typedef sound_map::const_iterator const_sound_map_iterator;
 
 
-class FGSoundMgr {
+class FGSoundMgr : public FGSubsystem
+{
 
     slScheduler *audio_sched;
     smMixer *audio_mixer;
@@ -96,11 +99,30 @@ public:
     FGSoundMgr();
     ~FGSoundMgr();
 
-    // initialize the sound manager
-    bool init();
 
-    // run the audio scheduler
-    bool update();
+    /**
+     * Initialize the sound manager.
+     */
+    void init();
+
+
+    /**
+     * Bind properties for the sound manager.
+     */
+    void bind ();
+
+
+    /**
+     * Unbind properties for the sound manager.
+     */
+    void unbind ();
+
+
+    /**
+     * Run the audio scheduler.
+     */
+    void update();
+
 
     // is audio working?
     inline bool is_working() const { return !audio_sched->not_working(); }

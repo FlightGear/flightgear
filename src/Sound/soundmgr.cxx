@@ -75,6 +75,7 @@ FGSoundMgr::FGSoundMgr() {
 }
 
 // destructor
+
 FGSoundMgr::~FGSoundMgr() {
     sound_map_iterator current = sounds.begin();
     sound_map_iterator end = sounds.end();
@@ -90,7 +91,7 @@ FGSoundMgr::~FGSoundMgr() {
 
 
 // initialize the sound manager
-bool FGSoundMgr::init() {
+void FGSoundMgr::init() {
     last.stamp();
     safety = FG_MAX_SOUND_SAFETY;
 
@@ -106,16 +107,21 @@ bool FGSoundMgr::init() {
     }
     sounds.clear();
 
-    if ( audio_sched->not_working() ) {
-	return false;
-    } else {
-	return true;
-    }
+}
+
+void FGSoundMgr::bind ()
+{
+  // no properties yet
+}
+
+void FGSoundMgr::unbind ()
+{
+  // no properties yet
 }
 
 
 // run the audio scheduler
-bool FGSoundMgr::update() {
+void FGSoundMgr::update() {
     SGTimeStamp current;
     current.stamp();
 
@@ -133,12 +139,8 @@ bool FGSoundMgr::update() {
     // cout << "safety = " << safety << endl;
     audio_sched -> setSafetyMargin ( FG_SOUND_SAFETY_MULT * safety ) ;
 
-    if ( !audio_sched->not_working() ) {
+    if ( !audio_sched->not_working() )
 	audio_sched -> update();
-	return true;
-    } else {
-	return false;
-    }
 }
 
 

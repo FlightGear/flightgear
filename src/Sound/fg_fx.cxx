@@ -140,7 +140,7 @@ FGFX::unbind ()
 void
 FGFX::update ()
 {
-  FGSoundMgr * mgr = globals->get_soundmgr();
+  // FGSoundMgr * mgr = globals->get_soundmgr();
 
 
   ////////////////////////////////////////////////////////////////////
