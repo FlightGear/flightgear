@@ -6,17 +6,23 @@
 ; source?.)  The official web site for this package building software is:
 ;
 ;     http://www.jrsoftware.org/isinfo.php
+;
+; You can use something like the following to help the script find
+; your official flightgear tree location:
+;
+;     C:\> subst X: F:\Path\to\FlightGear\root
+;
 
 [Setup]
 AppName=FlightGear
-AppVerName=FlightGear 0.9.3-pre1
+AppVerName=FlightGear 0.9.3
 AppPublisher=The FlightGear Organization
 AppPublisherURL=http://www.flightgear.org
 AppSupportURL=http://www.flightgear.org
 AppUpdatesURL=http://www.flightgear.org
-DefaultDirName={pf}\FlightGear-0.9.3-pre1
-DefaultGroupName=FlightGear
-LicenseFile=F:\data\COPYING
+DefaultDirName={sd}\FlightGear\FlightGear-0.9.3
+DefaultGroupName=FlightGear-0.9.3
+LicenseFile=X:\data\COPYING
 Uninstallable=yes
 
 [Tasks]
@@ -24,21 +30,27 @@ Uninstallable=yes
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
 
 [Files]
-Source: "F:\*.*"; DestDir: "{app}"; Flags: ignoreversion
-Source: "F:\bin\*.*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs
-Source: "F:\data\*.*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs
-Source: "F:\docs\*.*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs
-Source: "F:\src\*.*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs
+Source: "X:\*.*"; DestDir: "{app}"; Flags: ignoreversion
+Source: "X:\bin\*.*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs
+Source: "X:\data\*.*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs
+Source: "X:\docs\*.*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs
+Source: "X:\bin\Win32\fgrun.prefs"; DestDir: "{userappdata}\flightgear.org"; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall
+; Source: "X:\src\*.*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\FlightGear-0.9.3-pre1"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}";
-Name: "{group}\FlightGear Manual"; Filename: "{app}\data\docs\index.html"
+Name: "{group}\FlightGear-0.9.3"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}";
+Name: "{group}\Fgrun FlightGear"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}";
+Name: "{group}\FlightGear Documentation"; Filename: "{app}\data\docs\index.html"
 Name: "{group}\Explore Documentation Folder"; Filename: "{app}\docs"
-Name: "{group}\Uninstall FlightGear-0.9.3-pre1"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\FlightGear-0.9.3-pre1"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{group}\Uninstall FlightGear-0.9.3"; Filename: "{uninstallexe}"
+Name: "{userdesktop}\FlightGear-0.9.3"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+; For running flightgear directly
+; Name: "{userdesktop}\FlightGear-0.9.3"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
 ; NOTE: The following entry contains an English phrase ("Launch"). You are free to translate it into another language if required.
-Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
+Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
+; For running flightgear directly
+; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
 
