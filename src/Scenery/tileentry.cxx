@@ -119,7 +119,7 @@ void FGTileEntry::free_tile() {
 	// find the first parent (should only be one)
 	ssgBranch *parent = select_ptr->getParent( 0 ) ;
 	if( parent ) {
-	    my_remove_branch( select_ptr );
+	    // my_remove_branch( select_ptr );
 	    parent->removeKid( select_ptr );
 	} else {
 	    FG_LOG( FG_TERRAIN, FG_ALERT,

@@ -12,7 +12,7 @@ WEATHER_LIBS =	$(top_builddir)/Simulator/WeatherCM/libWeatherCM.a \
 endif
 
 
-CPPFLAGS += -DPKGLIBDIR=\"$(pkglibdir)\"
+AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkglibdir)\"
 
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
 
