@@ -49,7 +49,7 @@ FGAutopilot *current_autopilot;
 // Climb speed constants
 const double min_climb = 70.0;	// kts
 const double best_climb = 75.0;	// kts
-const double ideal_climb_rate = 500.0; // fpm
+const double ideal_climb_rate = 500.0 * FEET_TO_METER; // fpm -> mpm
 
 /// These statics will eventually go into the class
 /// they are just here while I am experimenting -- NHV :-)
