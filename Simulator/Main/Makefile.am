@@ -35,7 +35,6 @@ bin_SCRIPTS = runfgfs runfgfs.bat
 
 fgfs_SOURCES = \
 	GLUTkey.cxx GLUTkey.hxx GLUTmain.cxx \
-	fg_config.h \
 	fg_init.cxx fg_init.hxx \
 	fg_serial.cxx fg_serial.hxx \
 	options.cxx options.hxx \
