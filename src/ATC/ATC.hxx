@@ -24,7 +24,7 @@
 
 // Possible types of ATC type that the radios may be tuned to.
 // INVALID implies not tuned in to anything.
-typedef enum atc_type {
+enum atc_type {
     INVALID,
     ATIS,
     GROUND,

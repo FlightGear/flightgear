@@ -19,8 +19,10 @@
 #include <simgear/misc/exception.hxx>
 #include <simgear/misc/props.hxx>
 
+#ifndef SG_HAVE_NATIVE_SGI_COMPILERS
 #include <iostream>
 SG_USING_STD(ostream);
+#endif
 
 #include <vector>
 SG_USING_STD(vector);

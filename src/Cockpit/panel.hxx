@@ -473,7 +473,7 @@ private:
 class FGTextLayer : public FGInstrumentLayer
 {
 public:
-  typedef enum ChunkType {
+  enum ChunkType {
     TEXT,
     TEXT_VALUE,
     DOUBLE_VALUE
