@@ -595,8 +595,9 @@ void fgRenderFrame() {
             static int init = 50;
             static double sun_pos_angle = 9999.0;
             static double sun_pos_rotation = 9999.0;
-            static double lat_curr = 9999.0;
-            static double long_curr = 9999.0;
+            static double cur_lat = 9999.0;
+            static double cur_long = 9999.0;
+            static double cur_alt = -9999.0;
 
             if ((fabs(sun_pos_rotation - cur_light_params.sun_rotation) > 5e-3)
                 || (fabs(sun_pos_angle - cur_light_params.sun_angle) > 5e-3)
@@ -636,14 +637,22 @@ void fgRenderFrame() {
               << " moon ra = " << globals->get_ephem()->getMoonRightAscension()
               << " moon dec = " << globals->get_ephem()->getMoonDeclination() );
             */
-
-            if ((fabs(long_curr - current__view->getLongitude_deg()) > 5e-4)
-                || (fabs(lat_curr - current__view->getLatitude_deg()) > 5e-4)
+#if 0
+            if ((fabs(cur_long - current__view->getLongitude_deg()) > 5e-4)
+                || (fabs(cur_lat - current__view->getLatitude_deg()) > 5e-4)
+                || (fabs(cur_alt - current__view->getAltitudeASL_ft()) > 3)
                 || (init != 0))
             {
-                lat_curr = current__view->getLatitude_deg();
-                long_curr = current__view->getLongitude_deg();
+ 
+                // Hyperjump?
+                if ((fabs(cur_long - current__view->getLongitude_deg()) > 2)
+                     || (fabs(cur_lat - current__view->getLatitude_deg()) > 2))
+                   init = 50;
 
+                cur_lat = current__view->getLatitude_deg();
+                cur_long = current__view->getLongitude_deg();
+                cur_alt = current__view->getAltitudeASL_ft();
+#endif
                 thesky->reposition( current__view->get_view_pos(),
                             current__view->get_zero_elev(),
                             current__view->get_world_up(),
@@ -661,7 +670,9 @@ void fgRenderFrame() {
                             globals->get_ephem()->getMoonRightAscension(),
                             globals->get_ephem()->getMoonDeclination(),
                             50000.0 );
+#if 0
             }
+#endif
         }
 
         glEnable( GL_DEPTH_TEST );
