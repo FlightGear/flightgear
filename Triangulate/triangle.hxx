@@ -1,4 +1,4 @@
-// triandgle.hxx -- "Triangle" interface class
+// triangle.hxx -- "Triangle" interface class
 //
 // Written by Curtis Olson, started March 1999.
 //
@@ -45,15 +45,12 @@ extern "C" {
 }
 
 #include "trinodes.hxx"
+#include "tripoly.hxx"
 
 FG_USING_STD(vector);
 
 
-typedef vector < int > tripoly;
-typedef tripoly::iterator tripoly_iterator;
-typedef tripoly::const_iterator const_tripoly_iterator;
-
-typedef vector < tripoly > tripoly_list;
+typedef vector < FGTriPoly > tripoly_list;
 typedef tripoly_list::iterator tripoly_list_iterator;
 typedef tripoly_list::const_iterator const_tripoly_list_iterator;
 
@@ -78,7 +75,7 @@ public:
     int build( const FGgpcPolyList& gpc_polys );
 
     // do actual triangulation
-    int do_triangulate( const tripoly& poly );
+    int do_triangulate( const FGTriPoly& poly );
 
     // front end triangulator for polygon list
     int triangulate();
@@ -89,6 +86,10 @@ public:
 
 
 // $Log$
+// Revision 1.5  1999/03/20 02:21:53  curt
+// Continue shaping the code towards triangulation bliss.  Added code to
+// calculate some point guaranteed to be inside a polygon.
+//
 // Revision 1.4  1999/03/19 22:29:05  curt
 // Working on preparationsn for triangulation.
 //

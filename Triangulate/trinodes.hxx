@@ -43,16 +43,16 @@ FG_USING_STD(vector);
 #define FG_PROXIMITY_EPSILON 0.000001
 
 
-typedef vector < Point3D > point_container;
-typedef point_container::iterator point_iterator;
-typedef point_container::const_iterator const_point_iterator;
+typedef vector < Point3D > trinode_list;
+typedef trinode_list::iterator trinode_list_iterator;
+typedef trinode_list::const_iterator const_trinode_list_iterator;
 
 
 class FGTriNodes {
 
 private:
 
-    point_container point_list;
+    trinode_list node_list;
 
     // return true of the two points are "close enough" as defined by
     // FG_PROXIMITY_EPSILON
@@ -69,7 +69,10 @@ public:
     int unique_add( const Point3D& p );
 
     // return the master node list
-    inline point_container get_node_list() const { return point_list; }
+    inline trinode_list get_node_list() const { return node_list; }
+
+    // return the ith point
+    inline Point3D get_node( int i ) const { return node_list[i]; }
 };
 
 
@@ -77,6 +80,10 @@ public:
 
 
 // $Log$
+// Revision 1.3  1999/03/20 02:21:55  curt
+// Continue shaping the code towards triangulation bliss.  Added code to
+// calculate some point guaranteed to be inside a polygon.
+//
 // Revision 1.2  1999/03/19 22:29:06  curt
 // Working on preparationsn for triangulation.
 //

@@ -50,17 +50,17 @@ inline bool FGTriNodes::close_enough( const Point3D& p1, const Point3D& p2 ) {
 // Add a point to the point list if it doesn't already exist.  Returns
 // the index (starting at zero) of the point in the list.
 int FGTriNodes::unique_add( const Point3D& p ) {
-    point_iterator current, last;
+    trinode_list_iterator current, last;
     int counter = 0;
 
     // cout << p.x() << "," << p.y() << endl;
 
     // see if point already exists
-    current = point_list.begin();
-    last = point_list.end();
+    current = node_list.begin();
+    last = node_list.end();
     for ( ; current != last; ++current ) {
 	if ( close_enough(p, *current) ) {
-	    cout << "found an existing match!" << endl;
+	    // cout << "found an existing match!" << endl;
 	    return counter;
 	}
 	
@@ -68,13 +68,17 @@ int FGTriNodes::unique_add( const Point3D& p ) {
     }
 
     // add to list
-    point_list.push_back( p );
+    node_list.push_back( p );
 
     return counter;
 }
 
 
 // $Log$
+// Revision 1.3  1999/03/20 02:21:54  curt
+// Continue shaping the code towards triangulation bliss.  Added code to
+// calculate some point guaranteed to be inside a polygon.
+//
 // Revision 1.2  1999/03/19 00:27:12  curt
 // Continued work on triangulation preparation.
 //

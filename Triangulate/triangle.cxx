@@ -23,6 +23,7 @@
 
 
 #include "triangle.hxx"
+#include "tripoly.hxx"
 
 
 // Constructor
@@ -38,8 +39,6 @@ FGTriangle::~FGTriangle( void ) {
 // populate this class based on the specified gpc_polys list
 int FGTriangle::build( const FGgpcPolyList& gpc_polys ) {
     int index;
-    tripoly poly;
-
     // traverse the gpc_polys and build a unified node list and a set
     // of Triangle PSLG that reference the node list by index
     // (starting at zero)
@@ -59,7 +58,7 @@ int FGTriangle::build( const FGgpcPolyList& gpc_polys ) {
 	    cout << "processing a polygon, contours = " 
 		 << gpc_poly->num_contours << endl;
 
-	    poly.erase(poly.begin(), poly.end());
+	    FGTriPoly poly;
 
 	    if (gpc_poly->num_contours <= 0 ) {
 		cout << "FATAL ERROR! no contours in this polygon" << endl;
@@ -78,9 +77,11 @@ int FGTriangle::build( const FGgpcPolyList& gpc_polys ) {
 			       gpc_poly->contour[j].vertex[k].y,
 			       0 );
 		    index = trinodes.unique_add( p );
-		    poly.push_back(index);
+		    poly.add_node(index);
 		    // cout << index << endl;
 		}
+		poly.calc_point_inside( trinodes );
+		cout << endl;
 		polylist[i].push_back(poly);
 	    }
 	}
@@ -97,8 +98,8 @@ int FGTriangle::build( const FGgpcPolyList& gpc_polys ) {
 
 
 // do actual triangulation
-int FGTriangle::do_triangulate( const tripoly& poly ) {
-    point_container node_list;
+int FGTriangle::do_triangulate( const FGTriPoly& poly ) {
+    trinode_list node_list;
     struct triangulateio in, mid, out, vorout;
     int counter;
 
@@ -108,7 +109,7 @@ int FGTriangle::do_triangulate( const tripoly& poly ) {
     in.numberofpoints = node_list.size();
     in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
 
-    point_iterator current, last;
+    trinode_list_iterator current, last;
     current = node_list.begin();
     last = node_list.end();
     counter = 0;
@@ -116,12 +117,14 @@ int FGTriangle::do_triangulate( const tripoly& poly ) {
 	in.pointlist[counter++] = current->x();
 	in.pointlist[counter++] = current->y();
     }
+
+    return 0;
 }
 
 
 // triangulate each of the polygon areas
 int FGTriangle::triangulate() {
-    tripoly poly;
+    FGTriPoly poly;
 
     tripoly_list_iterator current, last;
 
@@ -142,6 +145,10 @@ int FGTriangle::triangulate() {
 
 
 // $Log$
+// Revision 1.5  1999/03/20 02:21:52  curt
+// Continue shaping the code towards triangulation bliss.  Added code to
+// calculate some point guaranteed to be inside a polygon.
+//
 // Revision 1.4  1999/03/19 22:29:04  curt
 // Working on preparationsn for triangulation.
 //
