@@ -73,13 +73,18 @@ void reInit(puObject *cb)
 
     globals->restoreInitialState();
 
-	// Unsuccessful KLUDGE to fix the 'every other time'
-	// problem when doing a 'reset' after a 'goto airport'
+    // Unsuccessful KLUDGE to fix the 'every other time'
+    // problem when doing a 'reset' after a 'goto airport'
 	
-	// string AptId( fgGetString("/sim/startup/airport-id") );
-	// if( AptId.c_str() != "\0" )
-	//	fgSetPosFromAirportID( AptId );
+    // string AptId( fgGetString("/sim/startup/airport-id") );
+    // if( AptId.c_str() != "\0" )
+    //      fgSetPosFromAirportID( AptId );
 	
+    SGTime *t = globals->get_time_params();
+    delete t;
+    t = fgInitTime();
+    globals->set_time_params( t );
+
     fgReInitSubsystems();
 
     // reduntant(fgReInitSubsystems) ?

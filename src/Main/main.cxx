@@ -561,9 +561,8 @@ void fgRenderFrame( void ) {
 #endif
 
 	thesky->modify_vis( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
-			    ( global_multi_loop * 
-			      fgGetInt("/sim/speed-up") ) /
-			    (double)fgGetInt("/sim/model-hz") );
+			    ( global_multi_loop * fgGetInt("/sim/speed-up") )
+                            / (double)fgGetInt("/sim/model-hz") );
 
 	double actual_visibility = thesky->get_visibility();
 	// cout << "actual visibility = " << actual_visibility << endl;
@@ -1518,59 +1517,7 @@ int mainLoop( int argc, char **argv ) {
 				     fgGetDouble("/orientation/heading-deg") );
     }
 
-    // Any time after globals is created we are ready to use the
-    // property system
-    static const SGPropertyNode *longitude
-	= fgGetNode("/position/longitude-deg", true);
-    static const SGPropertyNode *latitude
-	= fgGetNode("/position/latitude-deg", true);
-
-
-    // Initialize time
-    SGPath zone( globals->get_fg_root() );
-    zone.append( "Timezone" );
-    SGTime *t = new SGTime( longitude->getDoubleValue()
-			      * SGD_DEGREES_TO_RADIANS,
-			    latitude->getDoubleValue()
-			      * SGD_DEGREES_TO_RADIANS,
-			    zone.str() );
-
-    // Handle potential user specified time offsets
-    time_t cur_time = t->get_cur_time();
-    time_t currGMT = sgTimeGetGMT( gmtime(&cur_time) );
-    time_t systemLocalTime = sgTimeGetGMT( localtime(&cur_time) );
-    time_t aircraftLocalTime = 
-	sgTimeGetGMT( fgLocaltime(&cur_time, t->get_zonename() ) );
-
-    // Okay, we now have six possible scenarios
-    int offset = fgGetInt("/sim/startup/time-offset");
-    const string &offset_type = fgGetString("/sim/startup/time-offset-type");
-    if (offset_type == "system-offset") {
-        globals->set_warp( offset );
-    } else if (offset_type == "gmt-offset") {
-	globals->set_warp( offset - (currGMT - systemLocalTime) );
-    } else if (offset_type == "latitude-offset") {
-	globals->set_warp( offset - (aircraftLocalTime - systemLocalTime) );
-    } else if (offset_type == "system") {
-	globals->set_warp( offset - cur_time );
-    } else if (offset_type == "gmt") {
-	globals->set_warp( offset - currGMT );
-    } else if (offset_type == "latitude") {
-	globals->set_warp( offset - (aircraftLocalTime - systemLocalTime) - 
-			   cur_time ); 
-    } else {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-		"Unsupported offset type " << offset_type );
-	exit( -1 );
-    }
-
-    SG_LOG( SG_GENERAL, SG_INFO, "After time init, warp = " 
-	    << globals->get_warp() );
-
-    globals->set_warp_delta( 0 );
-
-    t->update( 0.0, 0.0, globals->get_warp() );
-
+    SGTime *t = fgInitTime();
     globals->set_time_params( t );
 
     // Do some quick general initializations

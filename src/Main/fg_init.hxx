@@ -36,6 +36,7 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/timing/sg_time.hxx>
 
 #include STL_STRING
 
@@ -79,6 +80,9 @@ bool fgSetPosFromAirportID( const string& id );
 // Set position and heading given an airport id and heading (degrees)
 bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg );
 
+// Initialize various time dependent systems (lighting, sun position, etc.)
+// returns a new instance of the SGTime class
+SGTime *fgInitTime();
 
 #endif // _FG_INIT_HXX
 
