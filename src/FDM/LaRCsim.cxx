@@ -369,7 +369,7 @@ int FGLaRCsim::copy_from_LaRCsim() {
     set_Euler_Rates( Phi_dot, Theta_dot, Psi_dot );
     set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
 
-    set_Mach_number( mach_number );
+    set_Mach_number( Mach_number );
 
     FG_LOG( FG_FLIGHT, FG_DEBUG, "lon = " << Longitude 
 	    << " lat_geoc = " << Lat_geocentric << " lat_geod = " << Latitude 
@@ -456,5 +456,3 @@ int FGLaRCsim::copy_from_LaRCsim() {
 
     return 1;
 }
-
-
