@@ -58,6 +58,7 @@
 #include "options.hxx"
 #include "save.hxx"
 #include "fg_init.hxx"
+#include <simgear/misc/props.hxx>
 
 FG_USING_NAMESPACE(std);
 

@@ -53,6 +53,8 @@
 #include <Autopilot/auto_gui.hxx>
 #include <Autopilot/newauto.hxx>
 #include <Cockpit/hud.hxx>
+#include <Cockpit/panel.hxx>
+#include <Cockpit/panel_io.hxx>
 #include <GUI/gui.h>
 #include <Scenery/tilemgr.hxx>
 #include <Objects/matlib.hxx>
@@ -441,6 +443,24 @@ void GLUTspecialkey(int k, int x, int y) {
  	    }
  	    return;
  	}
+	case GLUT_KEY_F3: {
+	  ifstream input("panel.xml");
+	  if (!input.good()) {
+	    FG_LOG(FG_INPUT, FG_ALERT, 
+		   "Cannot read panel configuration from panel.xml");
+	    return;
+	  }
+	  FGPanel * new_panel = fgReadPanel(input);
+	  if (new_panel == 0) {
+	    FG_LOG(FG_INPUT, FG_ALERT,
+		   "Error reading new panel from panel.xml");
+	    return;
+	  }
+	  FG_LOG(FG_INPUT, FG_INFO, "Loaded new panel from panel.xml");
+	  delete current_panel;
+	  current_panel = new_panel;
+	  return;
+	}
 	case GLUT_KEY_END: // numeric keypad 1
 	    v->set_goal_view_offset( FG_PI * 0.75 );
 	    return;
