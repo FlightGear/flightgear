@@ -102,9 +102,6 @@ void FGATCMgr::init() {
     current_commlist = new FGCommList;
     SGPath p_comm( globals->get_fg_root() );
     current_commlist->init( p_comm );
-	
-	// Set the user callsign - bit of a hack at the moment - eventually should be read from aircraft file and user-over-rideable
-	fgSetString("/sim/user/callsign", "Golf Foxtrot Sierra");	// C-FGFS
 
 #ifdef ENABLE_AUDIO_SUPPORT	
 	// Load all available voices.
@@ -142,8 +139,6 @@ void FGATCMgr::update(double dt) {
 		init();
 		SG_LOG(SG_ATC, SG_WARN, "Warning - ATCMgr::update(...) called before ATCMgr::init()");
 	}
-	
-	current_atcdialog->Update(dt);
 	
 	//cout << "Entering update..." << endl;
 	//Traverse the list of active stations.
@@ -537,16 +532,16 @@ void FGATCMgr::FreqSearch(int channel) {
 			FGATC* app = FindInList(comm_ident[chan], TOWER);
 			if(app != NULL) {
 				// The station is already in the ATC list
-				cout << comm_ident[chan] << " is in list - flagging SetDisplay..." << endl;
+				//cout << "In list - flagging SetDisplay..." << endl;
 				app->SetDisplay();
 			} else {
 				// Generate the station and put in the ATC list
-				cout << comm_ident[chan] << " is not in list - generating..." << endl;
+				//cout << "Not in list - generating..." << endl;
 				FGTower* t = new FGTower;
 				t->SetData(&data);
 				comm_atc_ptr[chan] = t;
-				t->Init();
 				t->SetDisplay();
+				t->Init();
 				atc_list.push_back(t);
 			}
 		}  else if (comm_type[chan] == GROUND) {
@@ -561,8 +556,8 @@ void FGATCMgr::FreqSearch(int channel) {
 				FGGround* g = new FGGround;
 				g->SetData(&data);
 				comm_atc_ptr[chan] = g;
-				g->Init();
 				g->SetDisplay();
+				g->Init();
 				atc_list.push_back(g);
 			}
 		} else if (comm_type[chan] == APPROACH) {
@@ -580,8 +575,8 @@ void FGATCMgr::FreqSearch(int channel) {
 				FGApproach* a = new FGApproach;
 				a->SetData(&data);
 				comm_atc_ptr[chan] = a;
-				a->Init();
 				a->SetDisplay();
+				a->Init();
 				a->AddPlane("Player");
 				atc_list.push_back(a);
 			}			
