@@ -1,3 +1,6 @@
+EXTRA_DIST = jpg-httpd.cxx jpg-httpd.hxx \
+             multiplay.cxx multiplay.hxx
+
 noinst_LIBRARIES = libNetwork.a
 
 if ENABLE_JPEG_SERVER
