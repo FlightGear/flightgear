@@ -48,6 +48,7 @@
 #include <plib/fnt.h>
 
 #include <Main/fgfs.hxx>
+#include <Main/fg_props.hxx>
 
 #include <Input/input.hxx>
 
@@ -59,11 +60,15 @@ class FGPanelInstrument;
 
 
 ////////////////////////////////////////////////////////////////////////
-// Texture manager (should migrate out into FGFS).
-//
-// This class ensures that no texture is loaded more than once.
+// Texture management.
 ////////////////////////////////////////////////////////////////////////
 
+
+/**
+ * Texture manager (should migrate out into FGFS).
+ *
+ * This class ensures that no texture is loaded more than once.
+ */
 class FGTextureManager
 {
 public:
@@ -73,13 +78,11 @@ private:
 };
 
 
-
-////////////////////////////////////////////////////////////////////////
-// Cropped texture (should migrate out into FGFS).
-//
-// This structure wraps an SSG texture with cropping information.
-////////////////////////////////////////////////////////////////////////
-
+/**
+ * Cropped texture (should migrate out into FGFS).
+ *
+ * This structure wraps an SSG texture with cropping information.
+ */
 class FGCroppedTexture
 {
 public:
@@ -115,14 +118,18 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////
-// Instrument panel class.
-//
-// The panel is a container that has a background texture and holds
-// zero or more instruments.  The panel will order the instruments to
-// redraw themselves when necessary, and will pass mouse clicks on to
-// the appropriate instruments for processing.
+// Top-level panel.
 ////////////////////////////////////////////////////////////////////////
 
+
+/**
+ * Instrument panel class.
+ *
+ * The panel is a container that has a background texture and holds
+ * zero or more instruments.  The panel will order the instruments to
+ * redraw themselves when necessary, and will pass mouse clicks on to
+ * the appropriate instruments for processing.
+ */
 class FGPanel : public FGSubsystem
 {
 public:
@@ -195,14 +202,18 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////
-// Base class for user action types.
-//
-// Individual instruments can have actions associated with a mouse
-// click in a rectangular area.  Current concrete classes include
-// FGAdjustAction, FGSwapAction, and FGToggleAction.
+// Actions
 ////////////////////////////////////////////////////////////////////////
 
-class FGPanelAction
+
+/**
+ * Class for user actions.
+ *
+ * The actions are command bindings, like bindings for the keyboard
+ * or joystick, but they are tied to specific mouse actions in
+ * rectangular areas of the panel.
+ */
+class FGPanelAction : public FGConditional
 {
 public:
   FGPanelAction ();
@@ -251,16 +262,93 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////
-// Abstract base class for a panel instrument.
-//
-// A panel instrument consists of zero or more actions, associated
-// with mouse clicks in rectangular areas.  Currently, the only
-// concrete class derived from this is FGLayeredInstrument, but others
-// may show up in the future (some complex instruments could be 
-// entirely hand-coded, for example).
+// Transformations.
 ////////////////////////////////////////////////////////////////////////
 
-class FGPanelInstrument
+
+/**
+ * A transformation for a layer.
+ */
+class FGPanelTransformation : public FGConditional
+{
+public:
+
+  enum Type {
+    XSHIFT,
+    YSHIFT,
+    ROTATION
+  };
+
+  FGPanelTransformation ();
+  virtual ~FGPanelTransformation ();
+
+  Type type;
+  const SGPropertyNode * node;
+  float min;
+  float max;
+  float factor;
+  float offset;
+  SGInterpTable * table;
+};
+
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Layers
+////////////////////////////////////////////////////////////////////////
+
+
+/**
+ * A single layer of a multi-layered instrument.
+ *
+ * Each layer can be subject to a series of transformations based
+ * on current FGFS instrument readings: for example, a texture
+ * representing a needle can rotate to show the airspeed.
+ */
+class FGInstrumentLayer : public FGConditional
+{
+public:
+
+  FGInstrumentLayer (int w = -1, int h = -1);
+  virtual ~FGInstrumentLayer ();
+
+  virtual void draw () = 0;
+  virtual void transform () const;
+
+  virtual int getWidth () const { return _w; }
+  virtual int getHeight () const { return _h; }
+  virtual void setWidth (int w) { _w = w; }
+  virtual void setHeight (int h) { _h = h; }
+
+				// Transfer pointer ownership!!
+				// DEPRECATED
+  virtual void addTransformation (FGPanelTransformation * transformation);
+
+protected:
+  int _w, _h;
+
+  typedef vector<FGPanelTransformation *> transformation_list;
+  transformation_list _transformations;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Instruments.
+////////////////////////////////////////////////////////////////////////
+
+
+/**
+ * Abstract base class for a panel instrument.
+ *
+ * A panel instrument consists of zero or more actions, associated
+ * with mouse clicks in rectangular areas.  Currently, the only
+ * concrete class derived from this is FGLayeredInstrument, but others
+ * may show up in the future (some complex instruments could be 
+ * entirely hand-coded, for example).
+ */
+class FGPanelInstrument : public FGConditional
 {
 public:
   FGPanelInstrument ();
@@ -291,89 +379,6 @@ protected:
 };
 
 
-
-////////////////////////////////////////////////////////////////////////
-// Abstract base class for an instrument layer.
-//
-// The FGLayeredInstrument class builds up instruments by using layers
-// of textures or text.  Each layer can have zero or more
-// transformations applied to it: for example, a needle layer can
-// rotate to show the altitude or airspeed.
-////////////////////////////////////////////////////////////////////////
-
-
-/**
- * A transformation for a layer.
- */
-class FGPanelTransformation {
-public:
-
-  enum Type {
-    XSHIFT,
-    YSHIFT,
-    ROTATION
-  };
-
-  FGPanelTransformation ();
-  virtual ~FGPanelTransformation ();
-
-  Type type;
-  const SGPropertyNode * node;
-  float min;
-  float max;
-  float factor;
-  float offset;
-  SGInterpTable * table;
-};
-
-
-
-/**
- * A single layer of a multi-layered instrument.
- *
- * Each layer can be subject to a series of transformations based
- * on current FGFS instrument readings: for example, a texture
- * representing a needle can rotate to show the airspeed.
- */
-class FGInstrumentLayer
-{
-public:
-
-  FGInstrumentLayer (int w = -1, int h = -1);
-  virtual ~FGInstrumentLayer ();
-
-  virtual void draw () = 0;
-  virtual void transform () const;
-
-  virtual int getWidth () const { return _w; }
-  virtual int getHeight () const { return _h; }
-  virtual void setWidth (int w) { _w = w; }
-  virtual void setHeight (int h) { _h = h; }
-
-				// Transfer pointer ownership!!
-				// DEPRECATED
-  virtual void addTransformation (FGPanelTransformation * transformation);
-
-protected:
-  int _w, _h;
-
-  typedef vector<FGPanelTransformation *> transformation_list;
-  transformation_list _transformations;
-};
-
-
-
-////////////////////////////////////////////////////////////////////////
-// An instrument composed of layers.
-//
-// This class represents an instrument which is simply a series of
-// layers piled one on top of the other, each one undergoing its own
-// set of transformations.  For example, one layer can represent
-// the instrument's face (which doesn't move), while the next layer
-// can represent a needle that rotates depending on an FGFS variable.
-////////////////////////////////////////////////////////////////////////
-
-
 /**
  * An instrument constructed of multiple layers.
  *
@@ -401,15 +406,33 @@ protected:
 };
 
 
-
-////////////////////////////////////////////////////////////////////////
-// A textured layer of an instrument.
-//
-// This is a layer holding a single texture.  Normally, the texture's
-// backgound should be transparent so that lower layers and the panel
-// background can show through.
-////////////////////////////////////////////////////////////////////////
+/**
+ * An instrument layer containing a group of sublayers.
+ *
+ * This class is useful for gathering together a group of related
+ * layers, either to hold in an external file or to work under
+ * the same condition.
+ */
+class FGGroupLayer : public FGInstrumentLayer
+{
+public:
+  FGGroupLayer ();
+  virtual ~FGGroupLayer ();
+  virtual void draw ();
+				// transfer pointer ownership
+  virtual void addLayer (FGInstrumentLayer * layer);
+private:
+  vector<FGInstrumentLayer *> _layers;
+};
 
+
+/**
+ * A textured layer of an instrument.
+ *
+ * This is a layer holding a single texture.  Normally, the texture's
+ * backgound should be transparent so that lower layers and the panel
+ * background can show through.
+ */
 class FGTexturedLayer : public FGInstrumentLayer
 {
 public:
@@ -430,15 +453,13 @@ private:
 };
 
 
-
-////////////////////////////////////////////////////////////////////////
-// A text layer of an instrument.
-//
-// This is a layer holding a string of static and/or generated text.
-// It is useful for instruments that have text displays, such as
-// a chronometer, GPS, or NavCom radio.
-////////////////////////////////////////////////////////////////////////
-
+/**
+ * A text layer of an instrument.
+ *
+ * This is a layer holding a string of static and/or generated text.
+ * It is useful for instruments that have text displays, such as
+ * a chronometer, GPS, or NavCom radio.
+ */
 class FGTextLayer : public FGInstrumentLayer
 {
 public:
@@ -448,7 +469,8 @@ public:
     DOUBLE_VALUE
   };
 
-  class Chunk {
+  class Chunk : public FGConditional
+  {
   public:
     Chunk (const string &text, const string &fmt = "%s");
     Chunk (ChunkType type, const SGPropertyNode * node,
@@ -491,11 +513,12 @@ private:
 };
 
 
-
-////////////////////////////////////////////////////////////////////////
-// A layer that switches between two other layers.
-////////////////////////////////////////////////////////////////////////
-
+/**
+ * A layer that switches between two other layers.
+ *
+ * The usefulness of this layer is questionable now that all layers
+ * can have conditions, and it may be deprecated soon.
+ */
 class FGSwitchLayer : public FGInstrumentLayer
 {
 public:
@@ -513,11 +536,15 @@ private:
 };
 
 
+
 
 ////////////////////////////////////////////////////////////////////////
 // Functions.
 ////////////////////////////////////////////////////////////////////////
 
+/**
+ * Test whether the panel should be visible.
+ */
 bool fgPanelVisible ();
 
 
@@ -526,7 +553,7 @@ bool fgPanelVisible ();
 // The current panel, if any.
 ////////////////////////////////////////////////////////////////////////
 
-extern FGPanel * current_panel;
+extern FGPanel * current_panel;	// TODO: move to globals
 
 
 
