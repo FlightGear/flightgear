@@ -1286,32 +1286,60 @@ void fgInitTimeOffset() {
 
     // Okay, we now have several possible scenarios
     int offset = fgGetInt("/sim/startup/time-offset");
-    int warp = 0;
     const string &offset_type = fgGetString("/sim/startup/time-offset-type");
-    if ( offset_type == "noon" ) {
-        warp = fgTimeSecondsUntilNoon( cur_time,
-                                       longitude->getDoubleValue()
-                                         * SGD_DEGREES_TO_RADIANS,
-                                       latitude->getDoubleValue()
-                                         * SGD_DEGREES_TO_RADIANS ); 
-    } else if ( offset_type == "midnight" ) {
-        warp = fgTimeSecondsUntilMidnight( cur_time,
+
+    int warp = 0;
+    if ( offset_type == "real" ) {
+        warp = 0;
+    } else if ( offset_type == "dawn" ) {
+        warp = fgTimeSecondsUntilSunAngle( cur_time,
                                            longitude->getDoubleValue()
                                              * SGD_DEGREES_TO_RADIANS,
                                            latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS ); 
-    } else if ( offset_type == "dawn" ) {
-        warp = fgTimeSecondsUntilDawn( cur_time,
-                                       longitude->getDoubleValue()
-                                         * SGD_DEGREES_TO_RADIANS,
-                                       latitude->getDoubleValue()
-                                         * SGD_DEGREES_TO_RADIANS ); 
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           90.0, true ); 
+    } else if ( offset_type == "morning" ) {
+        warp = fgTimeSecondsUntilSunAngle( cur_time,
+                                           longitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           latitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           75.0, true ); 
+    } else if ( offset_type == "noon" ) {
+        warp = fgTimeSecondsUntilSunAngle( cur_time,
+                                           longitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           latitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           0.0, true ); 
+    } else if ( offset_type == "afternoon" ) {
+        warp = fgTimeSecondsUntilSunAngle( cur_time,
+                                           longitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           latitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           60.0, false ); 
      } else if ( offset_type == "dusk" ) {
-        warp = fgTimeSecondsUntilDusk( cur_time,
-                                       longitude->getDoubleValue()
-                                         * SGD_DEGREES_TO_RADIANS,
-                                       latitude->getDoubleValue()
-                                         * SGD_DEGREES_TO_RADIANS ); 
+        warp = fgTimeSecondsUntilSunAngle( cur_time,
+                                           longitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           latitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           90.0, false ); 
+     } else if ( offset_type == "evening" ) {
+        warp = fgTimeSecondsUntilSunAngle( cur_time,
+                                           longitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           latitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           100.0, false ); 
+    } else if ( offset_type == "midnight" ) {
+        warp = fgTimeSecondsUntilSunAngle( cur_time,
+                                           longitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           latitude->getDoubleValue()
+                                             * SGD_DEGREES_TO_RADIANS,
+                                           180.0, false ); 
     } else if ( offset_type == "system-offset" ) {
         warp = offset;
     } else if ( offset_type == "gmt-offset" ) {

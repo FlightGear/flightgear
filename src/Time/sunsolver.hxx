@@ -41,37 +41,17 @@
 #endif
 
 /**
- * Given the current unix time in seconds, calculate seconds to
- * highest sun angle.
+ * Given the current unix time in seconds, calculate seconds to the
+ * specified sun angle (relative to straight up.)  Also specify if we
+ * want the angle while the sun is ascending or descending.  For
+ * instance noon is when the sun angle is 0 (or the closest it can
+ * get.)  Dusk is when the sun angle is 90 and descending.  Dawn is
+ * when the sun angle is 90 and ascending.
  */
-time_t fgTimeSecondsUntilNoon( time_t cur_time,
-                               double lon_rad,
-                               double lat_rad );
-
-
-/**
- * Given the current unix time in seconds, calculate seconds to lowest
- * sun angle.
- */
-time_t fgTimeSecondsUntilMidnight( time_t cur_time,
+time_t fgTimeSecondsUntilSunAngle( time_t cur_time,
                                    double lon_rad,
-                                   double lat_rad );
-
-/**
- * Given the current unix time in seconds, calculate seconds to dusk
- */
-time_t fgTimeSecondsUntilDusk( time_t cur_time,
-                               double lon_rad,
-                               double lat_rad );
-
-
-/**
- * Given the current unix time in seconds, calculate seconds to dawn
- */
-time_t fgTimeSecondsUntilDawn( time_t cur_time,
-                               double lon_rad,
-                               double lat_rad );
-
-
+                                   double lat_rad,
+                                   double target_angle_deg,
+                                   bool ascending );
 
 #endif /* _SUNSOLVER_HXX */

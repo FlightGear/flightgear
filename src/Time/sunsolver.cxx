@@ -81,47 +81,18 @@ static double sun_angle( const SGTime &t, sgVec3 world_up,
 
 
 /**
- * Given the current unix time in seconds, calculate seconds to noon
+ * Given the current unix time in seconds, calculate seconds to the
+ * specified sun angle (relative to straight up.)  Also specify if we
+ * want the angle while the sun is ascending or descending.  For
+ * instance noon is when the sun angle is 0 (or the closest it can
+ * get.)  Dusk is when the sun angle is 90 and descending.  Dawn is
+ * when the sun angle is 90 and ascending.
  */
-time_t fgTimeSecondsUntilNoon( time_t cur_time,
-                               double lon_rad,
-                               double lat_rad )
-{
-    // cout << "location = " << lon_rad * SG_RADIANS_TO_DEGREES << ", "
-    //      << lat_rad * SG_RADIANS_TO_DEGREES << endl;
-    Point3D geod( lon_rad, lat_rad, 0 );
-    Point3D tmp = sgGeodToCart( geod );
-    sgVec3 world_up;
-    sgSetVec3( world_up, tmp.x(), tmp.y(), tmp.z() );
-    SGTime t = SGTime( lon_rad, lat_rad, "", 0 );
-
-    double best_angle = 180.0;
-    time_t best_time = cur_time;
-
-    for ( time_t secs = cur_time - half_day_secs;
-          secs < cur_time + half_day_secs;
-          secs += step_secs )
-    {
-        t.update( lon_rad, lat_rad, secs, 0 );
-        double angle = sun_angle( t, world_up, lon_rad, lat_rad );
-        if ( angle < best_angle ) {
-            // cout << "best angle = " << angle << " offset = "
-            // << secs - cur_time << endl;
-            best_angle = angle;
-            best_time = secs;
-        }
-    }
-
-    return best_time - cur_time;
-}
-
-
-/**
- * Given the current unix time in seconds, calculate seconds to midnight
- */
-time_t fgTimeSecondsUntilMidnight( time_t cur_time,
+time_t fgTimeSecondsUntilSunAngle( time_t cur_time,
                                    double lon_rad,
-                                   double lat_rad )
+                                   double lat_rad,
+                                   double target_angle_deg,
+                                   bool ascending )
 {
     // cout << "location = " << lon_rad * SG_RADIANS_TO_DEGREES << ", "
     //      << lat_rad * SG_RADIANS_TO_DEGREES << endl;
@@ -131,43 +102,7 @@ time_t fgTimeSecondsUntilMidnight( time_t cur_time,
     sgSetVec3( world_up, tmp.x(), tmp.y(), tmp.z() );
     SGTime t = SGTime( lon_rad, lat_rad, "", 0 );
 
-    double best_angle = 0.0;
-    time_t best_time = cur_time;
-
-    for ( time_t secs = cur_time - half_day_secs;
-          secs < cur_time + half_day_secs;
-          secs += step_secs )
-    {
-        t.update( lon_rad, lat_rad, secs, 0 );
-        double angle = sun_angle( t, world_up, lon_rad, lat_rad );
-        if ( angle > best_angle ) {
-            // cout << "best angle = " << angle << " offset = "
-            //      << secs - cur_time << endl;
-            best_angle = angle;
-            best_time = secs;
-        }
-    }
-
-    return best_time - cur_time;
-}
-
-
-/**
- * Given the current unix time in seconds, calculate seconds to dusk
- */
-time_t fgTimeSecondsUntilDusk( time_t cur_time,
-                               double lon_rad,
-                               double lat_rad )
-{
-    // cout << "location = " << lon_rad * SG_RADIANS_TO_DEGREES << ", "
-    //      << lat_rad * SG_RADIANS_TO_DEGREES << endl;
-    Point3D geod( lon_rad, lat_rad, 0 );
-    Point3D tmp = sgGeodToCart( geod );
-    sgVec3 world_up;
-    sgSetVec3( world_up, tmp.x(), tmp.y(), tmp.z() );
-    SGTime t = SGTime( lon_rad, lat_rad, "", 0 );
-
-    double best_diff = 90.0;
+    double best_diff = 180.0;
     double last_angle = -99999.0;
     time_t best_time = cur_time;
 
@@ -176,10 +111,17 @@ time_t fgTimeSecondsUntilDusk( time_t cur_time,
           secs += step_secs )
     {
         t.update( lon_rad, lat_rad, secs, 0 );
-        double angle = sun_angle( t, world_up, lon_rad, lat_rad );
-        double diff = fabs( angle - 90.0 );
+        double angle_deg = sun_angle( t, world_up, lon_rad, lat_rad );
+        double diff = fabs( angle_deg - target_angle_deg );
         if ( diff < best_diff ) {
-            if ( last_angle <= 180.0 && ( last_angle < angle ) ) {
+            if ( last_angle <= 180.0 && ascending
+                 && ( last_angle > angle_deg ) ) {
+                // cout << "best angle = " << angle << " offset = "
+                //      << secs - cur_time << endl;
+                best_diff = diff;
+                best_time = secs;
+            } else if ( last_angle <= 180.0 && !ascending
+                        && ( last_angle < angle_deg ) ) {
                 // cout << "best angle = " << angle << " offset = "
                 //      << secs - cur_time << endl;
                 best_diff = diff;
@@ -187,49 +129,7 @@ time_t fgTimeSecondsUntilDusk( time_t cur_time,
             }
         }
 
-        last_angle = angle;
-    }
-
-    return best_time - cur_time;
-}
-
-
-/**
- * Given the current unix time in seconds, calculate seconds to dawn
- */
-time_t fgTimeSecondsUntilDawn( time_t cur_time,
-                               double lon_rad,
-                               double lat_rad )
-{
-    // cout << "location = " << lon_rad * SG_RADIANS_TO_DEGREES << ", "
-    //      << lat_rad * SG_RADIANS_TO_DEGREES << endl;
-    Point3D geod( lon_rad, lat_rad, 0 );
-    Point3D tmp = sgGeodToCart( geod );
-    sgVec3 world_up;
-    sgSetVec3( world_up, tmp.x(), tmp.y(), tmp.z() );
-    SGTime t = SGTime( lon_rad, lat_rad, "", 0 );
-
-    double best_diff = 90.0;
-    double last_angle = -99999.0;
-    time_t best_time = cur_time;
-
-    for ( time_t secs = cur_time - half_day_secs;
-          secs < cur_time + half_day_secs;
-          secs += step_secs )
-    {
-        t.update( lon_rad, lat_rad, secs, 0 );
-        double angle = sun_angle( t, world_up, lon_rad, lat_rad );
-        double diff = fabs( angle - 90.0 );
-        if ( diff < best_diff ) {
-            if ( last_angle <= 180.0 && ( last_angle > angle ) ) {
-                // cout << "best angle = " << angle << " offset = "
-                //      << secs - cur_time << endl;
-                best_diff = diff;
-                best_time = secs;
-            }
-        }
-
-        last_angle = angle;
+        last_angle = angle_deg;
     }
 
     return best_time - cur_time;
