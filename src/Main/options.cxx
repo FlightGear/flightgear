@@ -52,8 +52,9 @@ bool global_fullscreen = true;
 #  include <NetworkOLK/network.h>
 #endif
 
-#include "views.hxx"
+#include "globals.hxx"
 #include "options.hxx"
+#include "views.hxx"
 
 FG_USING_STD(string);
 FG_USING_NAMESPACE(std);
@@ -432,12 +433,12 @@ long int fgOPTIONS::parse_date( const string& date)
 	num[i] = '\0';
 	gmt.tm_sec = atoi(num);
     }
-    time_t theTime = SGTime::cur_time_params->get_gmt(gmt.tm_year,
-                                                      gmt.tm_mon,
-						      gmt.tm_mday,
-						      gmt.tm_hour,
-						      gmt.tm_min,
-						      gmt.tm_sec);
+    time_t theTime = globals->get_time_params()->get_gmt(gmt.tm_year,
+							 gmt.tm_mon,
+							 gmt.tm_mday,
+							 gmt.tm_hour,
+							 gmt.tm_min,
+							 gmt.tm_sec);
     //printf ("Date is %s\n", ctime(&theTime));
     //printf ("in seconds that is %d\n", theTime);
     //exit(1);

@@ -378,7 +378,7 @@ FGBFI::setAircraftDir (const string &dir)
 time_t
 FGBFI::getTimeGMT ()
 {
-  return SGTime::cur_time_params->get_cur_time();
+  return globals->get_time_params()->get_cur_time();
 }
 
 
@@ -392,14 +392,14 @@ FGBFI::setTimeGMT (time_t time)
 				// and solar system
   current_options.set_time_offset(time);
   current_options.set_time_offset_type(SG_TIME_GMT_ABSOLUTE);
-  SGTime::cur_time_params->init( cur_fdm_state->get_Longitude(),
-				 cur_fdm_state->get_Latitude(),
-				 current_options.get_fg_root() );
-  SGTime::cur_time_params->update( cur_fdm_state->get_Longitude(),
-				   cur_fdm_state->get_Latitude(),
-				   cur_fdm_state->get_Altitude()
-				   * FEET_TO_METER,
-				   globals->get_warp() );
+  globals->get_time_params()->init( cur_fdm_state->get_Longitude(),
+				    cur_fdm_state->get_Latitude(),
+				    current_options.get_fg_root() );
+  globals->get_time_params()->update( cur_fdm_state->get_Longitude(),
+				      cur_fdm_state->get_Latitude(),
+				      cur_fdm_state->get_Altitude()
+				      * FEET_TO_METER,
+				      globals->get_warp() );
   needReinit();
 }
 

@@ -25,6 +25,9 @@
 #define _GLOBALS_HXX
 
 
+#include <simgear/timing/sg_time.hxx>
+
+
 class FGGlobals {
 
 private:
@@ -39,6 +42,9 @@ private:
     // How much to change the value of warp each iteration.  Allows us
     // to make time progress faster than normal (or even run in reverse.)
     long int warp_delta;
+
+    // Time structure
+    SGTime *time_params;
 
 public:
 
@@ -55,6 +61,9 @@ public:
     inline long int get_warp_delta() const { return warp_delta; }
     inline void set_warp_delta( long int d ) { warp_delta = d; }
     inline void inc_warp_delta( long int d ) { warp_delta += d; }
+
+    inline SGTime *get_time_params() const { return time_params; }
+    inline void set_time_params( SGTime *t ) { time_params = t; }
 };
 
 

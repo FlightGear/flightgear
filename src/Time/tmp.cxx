@@ -26,9 +26,9 @@
 #endif
 
 #include <simgear/magvar/magvar.hxx>
-#include <simgear/timing/sg_time.hxx>
 
 #include <FDM/flight.hxx>
+#include <Main/globals.hxx>
 #include <Main/options.hxx>
 
 #include "light.hxx"
@@ -58,9 +58,9 @@ FGMagVar cur_magvar;
 // periodic time updater wrapper
 void fgUpdateLocalTime() {
 
-    SGTime::cur_time_params->updateLocal( cur_fdm_state->get_Longitude(),
-					  cur_fdm_state->get_Latitude(),
-					  current_options.get_fg_root() );
+    globals->get_time_params()->updateLocal( cur_fdm_state->get_Longitude(),
+					     cur_fdm_state->get_Latitude(),
+					     current_options.get_fg_root() );
 }
 
 

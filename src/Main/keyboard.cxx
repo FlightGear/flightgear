@@ -48,7 +48,6 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
-#include <simgear/timing/sg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Autopilot/auto_gui.hxx>
@@ -84,7 +83,6 @@ void GLUTkey(unsigned char k, int x, int y) {
     int speed;
 
     f = current_aircraft.fdm_state;
-    t = SGTime::cur_time_params;
     v = &current_view;
 
     FG_LOG( FG_INPUT, FG_DEBUG, "Key hit = " << k );

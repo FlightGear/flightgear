@@ -278,8 +278,6 @@ void fgRenderFrame( void ) {
     FGBFI::update();
 
     fgLIGHT *l = &cur_light_params;
-    SGTime *t = SGTime::cur_time_params;
-    // FGView *v = &current_view;
     static double last_visibility = -9999;
 
     double angle;
@@ -442,7 +440,7 @@ void fgRenderFrame( void ) {
 				cur_fdm_state->get_Latitude(),
 				cur_fdm_state->get_Altitude() * FEET_TO_METER,
 				cur_light_params.sun_rotation,
-				SGTime::cur_time_params->getGst(),
+				globals->get_time_params()->getGst(),
 				ephem->getSunRightAscension(),
 				ephem->getSunDeclination(), 50000.0,
 				ephem->getMoonRightAscension(),
@@ -607,10 +605,7 @@ void fgRenderFrame( void ) {
 // Update internal time dependent calculations (i.e. flight model)
 void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
     static fdm_state_list fdm_list;
-    // FGInterface fdm_state;
     fgLIGHT *l = &cur_light_params;
-    SGTime *t = SGTime::cur_time_params;
-    // FGView *v = &current_view;
     int i;
 
     // update the flight model
@@ -698,7 +693,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
     l->UpdateAdjFog();
 
     // Update solar system
-    ephem->update( t, cur_fdm_state->get_Latitude() );
+    ephem->update( globals->get_time_params(), cur_fdm_state->get_Latitude() );
 
     // Update radio stack model
     current_radiostack->update( cur_fdm_state->get_Longitude(),
@@ -724,7 +719,6 @@ static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
-    SGTime *t;
     static long remainder = 0;
     long elapsed;
 #ifdef FANCY_FRAME_COUNTER
@@ -735,7 +729,7 @@ static void fgMainLoop( void ) {
     static int frames = 0;
 #endif // FANCY_FRAME_COUNTER
 
-    t = SGTime::cur_time_params;
+    SGTime *t = globals->get_time_params();
 
     FG_LOG( FG_ALL, FG_DEBUG, "Running Main Loop");
     FG_LOG( FG_ALL, FG_DEBUG, "======= ==== ====");
@@ -815,7 +809,7 @@ static void fgMainLoop( void ) {
     cur_magvar.update( cur_fdm_state->get_Longitude(),
 		       cur_fdm_state->get_Latitude(),
 		       cur_fdm_state->get_Altitude()* FEET_TO_METER,
-		       SGTime::cur_time_params->getJD() );
+		       globals->get_time_params()->getJD() );
 
     // Get elapsed time (in usec) for this past frame
     elapsed = fgGetTimeInterval();
@@ -1316,20 +1310,15 @@ int main( int argc, char **argv ) {
     guiInit();
 
     // Initialize time
-    SGTime::cur_time_params = new SGTime( current_options.get_fg_root() );
-    // SGTime::cur_time_params->init( cur_fdm_state->get_Longitude(), 
-    //                                cur_fdm_state->get_Latitude() );
-    // SGTime::cur_time_params->update( cur_fdm_state->get_Longitude() );
-    SGTime::cur_time_params->init( 0.0, 0.0, current_options.get_fg_root() );
+    SGTime *t = new SGTime( current_options.get_fg_root() );
+    t->init( 0.0, 0.0, current_options.get_fg_root() );
 
-    // Handle user specified offsets
-    // current_options.get_time_offset(),
-    // current_options.get_time_offset_type() );
-
-    time_t cur_time = SGTime::cur_time_params->get_cur_time();
-    time_t currGMT = SGTime::cur_time_params->get_gmt( gmtime(&cur_time) );
-    time_t systemLocalTime = SGTime::cur_time_params->get_gmt( localtime(&cur_time) );
-    time_t aircraftLocalTime = SGTime::cur_time_params->get_gmt( fgLocaltime(&cur_time, SGTime::cur_time_params->get_zonename() ) );
+    // Handle potential user specified time offsets
+    time_t cur_time = t->get_cur_time();
+    time_t currGMT = t->get_gmt( gmtime(&cur_time) );
+    time_t systemLocalTime = t->get_gmt( localtime(&cur_time) );
+    time_t aircraftLocalTime = 
+	t->get_gmt( fgLocaltime(&cur_time, t->get_zonename() ) );
 
     // Okay, we now have six possible scenarios
     switch ( current_options.get_time_offset_type() ) {
@@ -1366,7 +1355,9 @@ int main( int argc, char **argv ) {
 
     globals->set_warp_delta( 0 );
 
-    SGTime::cur_time_params->update( 0.0, 0.0, 0.0, globals->get_warp() );
+    t->update( 0.0, 0.0, 0.0, globals->get_warp() );
+
+    globals->set_time_params( t );
 
     // Do some quick general initializations
     if( !fgInitGeneral()) {
@@ -1399,7 +1390,7 @@ int main( int argc, char **argv ) {
     FGPath ephem_data_path( current_options.get_fg_root() );
     ephem_data_path.append( "Astro" );
     ephem = new FGEphemeris( ephem_data_path.c_str() );
-    ephem->update( SGTime::cur_time_params, 0.0 );
+    ephem->update( globals->get_time_params(), 0.0 );
 
     FGPath sky_tex_path( current_options.get_fg_root() );
     sky_tex_path.append( "Textures" );

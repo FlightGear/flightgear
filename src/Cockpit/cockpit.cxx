@@ -43,6 +43,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
+#include <Main/globals.hxx>
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Scenery/scenery.hxx>
@@ -101,8 +102,7 @@ char*
 get_formated_gmt_time( void )
 {
     static char buf[32];
-    SGTime *t = SGTime::cur_time_params;
-    const struct tm *p = t->getGmt();
+    const struct tm *p = globals->get_time_params()->getGmt();
     sprintf( buf, "%d/%d/%4d %d:%02d:%02d", 
          p->tm_mon+1, p->tm_mday, 1900 + p->tm_year,
          p->tm_hour, p->tm_min, p->tm_sec);

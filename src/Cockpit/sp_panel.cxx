@@ -29,9 +29,9 @@
 #include <map>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/timing/sg_time.hxx>
 
 #include <Main/bfi.hxx>
+#include <Main/globals.hxx>
 
 #include "panel.hxx"
 #include "steam.hxx"
@@ -63,7 +63,7 @@ FG_USING_STD(map);
 static char * panelGetTime ()
 {
   static char buf[1024];	// FIXME: not thread-safe
-  struct tm * t = SGTime::cur_time_params->getGmt();
+  struct tm * t = globals->get_time_params()->getGmt();
   sprintf(buf, " %.2d:%.2d:%.2d",
 	  t->tm_hour, t->tm_min, t->tm_sec);
   return buf;

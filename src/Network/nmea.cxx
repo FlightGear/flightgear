@@ -23,9 +23,9 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/fg_geodesy.hxx>
-#include <simgear/timing/sg_time.hxx>
 
 #include <FDM/flight.hxx>
+#include <Main/globals.hxx>
 
 #include "iochannel.hxx"
 #include "nmea.hxx"
@@ -68,7 +68,7 @@ bool FGNMEA::gen_message() {
     int deg;
     double min;
 
-    SGTime *t = SGTime::cur_time_params;
+    SGTime *t = globals->get_time_params();
 
     char utc[10];
     sprintf( utc, "%02d%02d%02d", 
