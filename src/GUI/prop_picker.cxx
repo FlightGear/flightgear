@@ -501,10 +501,13 @@ void fgPropPicker::find_props ()
 
   files [ num_files ] = NULL ;
 
+  // leave the . and .. alone...
+  int ii = ( strcmp(files [0], "." ) == 0 ) ? 2 : 0;
+
   // Sort the entries.  This is a simple N^2 extraction sort.  More
   // elaborate algorithms aren't necessary for the few dozen
   // properties we're going to sort.
-  for(i=0; i<num_files; i++) {
+  for(i=ii; i<num_files; i++) {
     int j, min = i;
     char df, *tmp;
     for(j=i+1; j<num_files; j++)
@@ -603,3 +606,5 @@ fgPropEdit::fgPropEdit ( char *name, char *value, char *proppath ) : puDialogBox
         
     FG_FINALIZE_PUI_DIALOG( this );
 }
+
+
