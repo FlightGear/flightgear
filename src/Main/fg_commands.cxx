@@ -1224,6 +1224,74 @@ do_hud_init2(const SGPropertyNode *)
     return true;
 }
 
+/**
+ * An fgcommand to allow loading of xml files via nasal,
+ * the xml file's structure will be made available within
+ * a (definable) property tree node
+ *
+ * @param filename a string to hold the complete path & filename of a XML file
+ * @param targetnode a string pointing to a location within the property tree
+ * where to store the parsed XML file
+ */
+
+static bool 
+do_load_xml_to_proptree(const SGPropertyNode * node)
+{
+    // SG_LOG(SG_GENERAL, SG_ALERT, "fgcommand loadxml executed");
+
+    SGPropertyNode * targetnode;
+    targetnode = fgGetNode(node->getNode("targetnode")->getStringValue(),true);
+		
+    const char *filename = node->getNode("filename")->getStringValue();
+    try {
+        fgLoadProps(filename, targetnode);
+    } catch (const sg_exception &e) {
+        string errmsg = "Error reading file " + string(filename) + ":\n";
+        guiErrorMessage(errmsg.c_str(), e);
+        return false;
+    }
+
+    return  true;
+}
+
+
+/**
+ * an fgcommand to allow saving of xml files via nasal,
+ * the file's structure will be determined based on what's
+ * encountered in the passed (source) property tree node
+ *
+ * @param filename a string to hold the complete path & filename of the (new)
+ * XML file
+ * @param sourcenode a string pointing to a location within the property tree
+ * where to find the nodes that should be written recursively into an XML file
+ *
+ * TODO: 
+ *   deal with already existing filenames, optionally return error/success
+ *   values in a separate node to provide status information
+ *
+ * note: it's directly using writeProperties, which is not necessarily
+ *       preferable, but for now it should work ...
+ */
+
+static bool 
+do_save_xml_from_proptree(const SGPropertyNode * node)
+{
+    //TODO: do Parameter validation !
+    SGPropertyNode * sourcenode;
+    sourcenode = fgGetNode(node->getNode("sourcenode")->getStringValue(),true);
+
+    const char *filename = node->getNode("filename")->getStringValue();
+    try {
+        writeProperties (filename, sourcenode, true);
+    } catch (const sg_exception &e) {
+        string errmsg = "Error writing file " + string(filename) + ":\n";
+        guiErrorMessage(errmsg.c_str(), e);
+        return false;
+    }
+
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Command setup.
 ////////////////////////////////////////////////////////////////////////
@@ -1286,6 +1354,8 @@ static struct {
     { "hud-masterswitch", do_hud_masterswitch },
     { "hud-init", do_hud_init },
     { "hud-init2", do_hud_init2 },
+    { "loadxml", do_load_xml_to_proptree},
+    { "savexml", do_save_xml_from_proptree },    
     { 0, 0 }			// zero-terminated
 };
 
