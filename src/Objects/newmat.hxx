@@ -92,6 +92,10 @@ private:
     // true if texture loading deferred, and not yet loaded
     bool texture_loaded;
 
+    // ref count so we can properly delete if we have multiple
+    // pointers to this record
+    int refcount;
+
 public:
 
     // Constructor
@@ -143,6 +147,10 @@ public:
     }
 
     inline ssgStateSelector *get_state() const { return state; }
+
+    inline void ref() { refcount++; }
+    inline void deRef() { refcount--; }
+    inline int getRef() const { return refcount; }
 
     void dump_info();
 };

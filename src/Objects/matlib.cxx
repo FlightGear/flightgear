@@ -72,18 +72,6 @@ static bool local_file_exists( const string& path ) {
     } else {
 	return true;
     }
-
-#if 0
-    cout << path << " ";
-    FILE *fp = fopen( path.c_str(), "r" );
-    if ( fp == NULL ) {
-	cout << " doesn't exist\n";
-	return false;
-    } else {
-	cout << " exists\n";
-	return true;
-    }
-#endif
 }
 
 
@@ -123,6 +111,7 @@ bool FGMaterialLib::load( const string& mpath ) {
 	    FGNewMat *m = matlib[src_mat];
             if ( m != NULL ) {
                 matlib[dst_mat] = m;
+		m->ref();
             } else {
                 SG_LOG( SG_GENERAL, SG_ALERT,
                         "Bad material alias pointing to nonexistant material" );
@@ -139,6 +128,7 @@ bool FGMaterialLib::load( const string& mpath ) {
                 // create a pointer to a heap allocated copy of the structure
 		FGNewMat *m = new FGNewMat;
                 *m = tmp;
+		m->ref();
 
 		// build the ssgSimpleState
 		SGPath tex_path( globals->get_fg_root() );
@@ -277,9 +267,9 @@ FGMaterialLib::~FGMaterialLib ( void ) {
     // Free up all the material entries first
     for ( material_map_iterator it = begin(); it != end(); it++ ) {
 	FGNewMat *slot = it->second;
-        if ( slot != NULL ) {
+	slot->deRef();
+	if ( slot->getRef() <= 0 ) {
             delete slot;
-	    it->second = NULL;
         }
     }
 }

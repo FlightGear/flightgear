@@ -43,6 +43,7 @@ FGNewMat::FGNewMat ( void ) {
     wrapu = wrapv = 1;
     mipmap = 1;
     light_coverage = -1.0;
+    refcount = 0;
 }
 
 
@@ -67,6 +68,7 @@ FGNewMat::FGNewMat ( const string &mat_name, const string &tex_name )
     specular[0] = specular[1] = specular[2] = specular[3] = 1.0;
     emission[0] = emission[1] = emission[2] = emission[3] = 1.0;
     light_coverage = -1.0;
+    refcount = 0;
 }
 
 
