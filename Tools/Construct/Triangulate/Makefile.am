@@ -1,10 +1,10 @@
 noinst_LIBRARIES = libTriangulate.a
 
 libTriangulate_a_SOURCES = \
+	polygon.cxx polygon.hxx \
 	triangle.cxx triangle.hxx \
 	trieles.cxx trieles.hxx \
 	trinodes.cxx trinodes.hxx \
-	tripoly.cxx tripoly.hxx \
 	trisegs.cxx trisegs.hxx
 
 INCLUDES += \

@@ -21,8 +21,8 @@
 // $Id$
 
 
+#include "polygon.hxx"
 #include "triangle.hxx"
-#include "tripoly.hxx"
 
 // Constructor
 FGTriangle::FGTriangle( void ) {
@@ -40,7 +40,7 @@ FGTriangle::build( const point_list& corner_list,
 		   const point_list& fit_list, 
 		   const FGgpcPolyList& gpc_polys )
 {
-    FGTriPoly poly;
+    FGPolygon poly;
     int index;
 
     in_nodes.clear();
@@ -93,11 +93,13 @@ FGTriangle::build( const point_list& corner_list,
 		// exit(-1);
 	    }
 
-	    for ( int j = 0; j < gpc_poly->num_contours; j++ ) {
-		cout << " processing contour, nodes = " 
-		     << gpc_poly->contour[j].num_vertices << endl;
+	    poly.erase();
 
-		poly.erase();
+	    int j;
+
+	    for ( j = 0; j < gpc_poly->num_contours; j++ ) {
+		cout << " processing contour = " << j << ", nodes = " 
+		     << gpc_poly->contour[j].num_vertices << endl;
 
 		// sprintf(junkn, "g.%d", junkc++);
 		// junkfp = fopen(junkn, "w");
@@ -109,7 +111,7 @@ FGTriangle::build( const point_list& corner_list,
 		    index = in_nodes.unique_add( p );
 		    // junkp = in_nodes.get_node( index );
 		    // fprintf(junkfp, "%.4f %.4f\n", junkp.x(), junkp.y());
-		    poly.add_node(index);
+		    poly.add_node(j, index);
 		    // cout << index << endl;
 		}
 		// fprintf(junkfp, "%.4f %.4f\n", 
@@ -117,9 +119,12 @@ FGTriangle::build( const point_list& corner_list,
 		//    gpc_poly->contour[j].vertex[0].y);
 		// fclose(junkfp);
 
-		poly.calc_point_inside( in_nodes );
+		poly.set_hole_flag( j, gpc_poly->hole[j] );
+		polylist[i].push_back( poly );
+	    }
 
-		polylist[i].push_back(poly);
+	    for ( j = 0; j < gpc_poly->num_contours; j++ ) {
+		poly.calc_point_inside( j, in_nodes );
 	    }
 	}
     }
@@ -145,7 +150,7 @@ FGTriangle::build( const point_list& corner_list,
     point_list node_list = in_nodes.get_node_list();
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
 	// cout << "area type = " << i << endl;
-	tripoly_list_iterator tp_current, tp_last;
+	poly_list_iterator tp_current, tp_last;
 	tp_current = polylist[i].begin();
 	tp_last = polylist[i].end();
 
@@ -153,16 +158,18 @@ FGTriangle::build( const point_list& corner_list,
 	for ( ; tp_current != tp_last; ++tp_current ) {
 	    poly = *tp_current;
 
-	    for ( int j = 0; j < (int)(poly.size()) - 1; ++j ) {
-		i1 = poly.get_pt_index( j );
-		i2 = poly.get_pt_index( j + 1 );
+	    for ( int j = 0; j < (int)poly.contours(); ++j) {
+		for ( int k = 0; k < (int)(poly.contour_size(j)) - 1; ++k ) {
+		    i1 = poly.get_pt_index( j, k );
+		    i2 = poly.get_pt_index( j, k + 1 );
+		    // calc_line_params(i1, i2, &m, &b);
+		    trisegs.unique_divide_and_add( node_list, FGTriSeg(i1, i2) );
+		}
+		i1 = poly.get_pt_index( j, 0 );
+		i2 = poly.get_pt_index( j, poly.contour_size(j) - 1 );
 		// calc_line_params(i1, i2, &m, &b);
 		trisegs.unique_divide_and_add( node_list, FGTriSeg(i1, i2) );
 	    }
-	    i1 = poly.get_pt_index( 0 );
-	    i2 = poly.get_pt_index( poly.size() - 1 );
-	    // calc_line_params(i1, i2, &m, &b);
-	    trisegs.unique_divide_and_add( node_list, FGTriSeg(i1, i2) );
 	}
     }
 
@@ -222,7 +229,7 @@ static void write_out_data(struct triangulateio *out) {
 
 // triangulate each of the polygon areas
 int FGTriangle::run_triangulate() {
-    FGTriPoly poly;
+    FGPolygon poly;
     Point3D p;
     struct triangulateio in, out, vorout;
     int counter;
@@ -276,15 +283,17 @@ int FGTriangle::run_triangulate() {
     in.numberofholes = polylist[(int)AirportIgnoreArea].size();
     in.holelist = (REAL *) malloc(in.numberofholes * 2 * sizeof(REAL));
 
-    tripoly_list_iterator h_current, h_last;
+    poly_list_iterator h_current, h_last;
     h_current = polylist[(int)AirportIgnoreArea].begin();
     h_last = polylist[(int)AirportIgnoreArea].end();
     counter = 0;
     for ( ; h_current != h_last; ++h_current ) {
 	poly = *h_current;
-	p = poly.get_point_inside();
-	in.holelist[counter++] = p.x();
-	in.holelist[counter++] = p.y();
+	for ( int j = 0; j < poly.contours(); j++ ) {
+	    p = poly.get_point_inside( j );
+	    in.holelist[counter++] = p.x();
+	    in.holelist[counter++] = p.y();
+	}
     }
 
     // region list
@@ -296,16 +305,18 @@ int FGTriangle::run_triangulate() {
     in.regionlist = (REAL *) malloc(in.numberofregions * 4 * sizeof(REAL));
     counter = 0;
     for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
-	tripoly_list_iterator h_current, h_last;
+	poly_list_iterator h_current, h_last;
 	h_current = polylist[(int)i].begin();
 	h_last = polylist[(int)i].end();
 	for ( ; h_current != h_last; ++h_current ) {
 	    poly = *h_current;
-	    p = poly.get_point_inside();
-	    in.regionlist[counter++] = p.x();  // x coord
-	    in.regionlist[counter++] = p.y();  // y coord
-	    in.regionlist[counter++] = i;      // region attribute
-	    in.regionlist[counter++] = -1.0;   // area constraint (unused)
+	    for ( int j = 0; j < poly.contours(); j++ ) {
+		p = poly.get_point_inside( j );
+		in.regionlist[counter++] = p.x();  // x coord
+		in.regionlist[counter++] = p.y();  // y coord
+		in.regionlist[counter++] = i;      // region attribute
+		in.regionlist[counter++] = -1.0;   // area constraint (unused)
+	    }
 	}
     }
 

@@ -42,9 +42,9 @@ extern "C" {
 #include <Triangle/triangle.h>
 }
 
+#include "polygon.hxx"
 #include "trieles.hxx"
 #include "trinodes.hxx"
-#include "tripoly.hxx"
 #include "trisegs.hxx"
 
 
@@ -60,7 +60,7 @@ private:
     FGTriSegments trisegs;
 
     // polygon list
-    tripoly_list polylist[FG_MAX_AREA_TYPES];
+    poly_list polylist[FG_MAX_AREA_TYPES];
     
     // triangle list
     triele_list elelist;
