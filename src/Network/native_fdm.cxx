@@ -34,6 +34,7 @@
 #include <Time/tmp.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <Scenery/scenery.hxx>
 
 #include "native_fdm.hxx"
 
@@ -346,7 +347,13 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
                                                 net->longitude,
                                                 net->altitude
                                                   * SG_METER_TO_FEET );
-        cur_fdm_state->_set_Altitude_AGL( net->agl * SG_METER_TO_FEET );
+	if ( net->agl > -9000 ) {
+	    cur_fdm_state->_set_Altitude_AGL( net->agl * SG_METER_TO_FEET );
+	} else {
+	    double agl_m
+	      = net->altitude - globals->get_scenery()->get_cur_elev();
+	    cur_fdm_state->_set_Altitude_AGL( agl_m * SG_METER_TO_FEET );
+	}
         cur_fdm_state->_set_Euler_Angles( net->phi,
                                           net->theta,
                                           net->psi );
