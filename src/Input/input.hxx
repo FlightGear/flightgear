@@ -375,19 +375,19 @@ private:
   /**
    * Update the keyboard.
    */
-  void _update_keyboard ();
+  void _update_keyboard (double dt);
 
 
   /**
    * Update the joystick.
    */
-  void _update_joystick ();
+  void _update_joystick (double dt);
 
 
   /**
    * Update the mouse.
    */
-  void _update_mouse ();
+  void _update_mouse (double dt);
 
 
   /**

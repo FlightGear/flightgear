@@ -194,9 +194,9 @@ FGInput::init ()
 void 
 FGInput::update (double dt)
 {
-  _update_keyboard();
-  _update_joystick();
-  _update_mouse();
+  _update_keyboard(dt);
+  _update_joystick(dt);
+  _update_mouse(dt);
 }
 
 void
@@ -683,22 +683,26 @@ FGInput::_init_button (const SGPropertyNode * node,
 
 
 void
-FGInput::_update_keyboard ()
+FGInput::_update_keyboard (double dt)
 {
   // no-op
 }
 
 
 void
-FGInput::_update_joystick ()
+FGInput::_update_joystick (double dt)
 {
+  static double _last_dt = 0.0;
   int modifiers = FG_MOD_NONE;  // FIXME: any way to get the real ones?
-  int buttons;
+  int i, j, buttons;
   // float js_val, diff;
   float axis_values[MAX_JOYSTICK_AXES];
 
-  int i;
-  int j;
+  // update the joystick 20 times per second.
+  if ((dt += dt) > 50)
+    _last_dt = 0.0;
+  else
+    return;
 
   for ( i = 0; i < MAX_JOYSTICKS; i++) {
 
@@ -751,7 +755,7 @@ FGInput::_update_joystick ()
 }
 
 void
-FGInput::_update_mouse ()
+FGInput::_update_mouse (double dt)
 {
   mouse &m = _mouse_bindings[0];
   int mode =  m.mode_node->getIntValue();
