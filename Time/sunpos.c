@@ -271,6 +271,7 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
     v = &current_view;
 
     time_warp += 200; /* increase this to make the world spin real fast */
+    time_warp = 3600*10; /* increase this to make the world spin real fast */
 
     fgSunPosition(time(NULL) + time_warp, &t->sun_lon, &sun_gd_lat);
 
@@ -303,9 +304,12 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
 
 
 /* $Log$
-/* Revision 1.7  1997/09/04 02:17:40  curt
-/* Shufflin' stuff.
+/* Revision 1.8  1997/09/05 01:36:04  curt
+/* Working on getting stars right.
 /*
+ * Revision 1.7  1997/09/04 02:17:40  curt
+ * Shufflin' stuff.
+ *
  * Revision 1.6  1997/08/27 03:30:37  curt
  * Changed naming scheme of basic shared structures.
  *

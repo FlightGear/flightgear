@@ -28,8 +28,8 @@
 #define STARS_H
 
 
-#define FG_MAX_STARS 1000
-
+#define FG_MAX_STARS 500
+#define FG_MIN_STAR_MAG 0.738750 /* magnitude of weakest star we'll display */
 
 /* Initialize the Star Management Subsystem */
 void fgStarsInit();
@@ -42,9 +42,12 @@ void fgStarsRender();
 
 
 /* $Log$
-/* Revision 1.3  1997/08/29 17:55:28  curt
-/* Worked on properly aligning the stars.
+/* Revision 1.4  1997/09/05 01:36:00  curt
+/* Working on getting stars right.
 /*
+ * Revision 1.3  1997/08/29 17:55:28  curt
+ * Worked on properly aligning the stars.
+ *
  * Revision 1.2  1997/08/27 21:32:30  curt
  * Restructured view calculation code.  Added stars.
  *

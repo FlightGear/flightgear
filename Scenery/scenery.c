@@ -80,7 +80,7 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
 /* Render out the current scene */
 void fgSceneryRender() {
     glPushMatrix();
-    glCallList(mesh_hack);
+    /* glCallList(mesh_hack); */
     glPopMatrix();
 
     fgStarsRender();
@@ -88,9 +88,12 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.17  1997/08/29 17:55:27  curt
-/* Worked on properly aligning the stars.
+/* Revision 1.18  1997/09/05 01:35:59  curt
+/* Working on getting stars right.
 /*
+ * Revision 1.17  1997/08/29 17:55:27  curt
+ * Worked on properly aligning the stars.
+ *
  * Revision 1.16  1997/08/27 21:32:29  curt
  * Restructured view calculation code.  Added stars.
  *

@@ -57,8 +57,11 @@ void fgStarsInit() {
     struct GENERAL *g;
     char path[1024];
     char line[256], name[256];
-    char *tmp_ptr;
+    char *front, *end;
     double right_ascension, declination, magnitude;
+    double ra_save, decl_save;
+    double ra_save1, decl_save1;
+    double ra_save2, decl_save2;
     GLfloat mag[4] = {0.0, 0.0, 0.0, 1.0};
     int count;
 
@@ -84,36 +87,105 @@ void fgStarsInit() {
     /* read in each line of the file */
     count = 0;
     while ( (fgets(line, 256, fd) != NULL) && (count < FG_MAX_STARS) ) {
-	tmp_ptr = line;
-	
+	front = line;
+
+	/* printf("Read line = %s", front); */
+
 	/* advance to first non-whitespace character */
-	while ( (tmp_ptr[0] == ' ') || (tmp_ptr[0] == '\t') ) {
-	    tmp_ptr++;
+	while ( (front[0] == ' ') || (front[0] == '\t') ) {
+	    front++;
 	}
 
-	if ( tmp_ptr[0] == '#' ) {
+	/* printf("Line length (after trimming) = %d\n", strlen(front)); */
+
+	if ( front[0] == '#' ) {
 	    /* comment */
-	} else if ( strlen(tmp_ptr) == 0 ) {
+	} else if ( strlen(front) <= 1 ) {
 	    /* blank line */
 	} else {
 	    /* star data line */
-	    fscanf(fd, "%s %lf %lf %lf\n", 
-		   name, &right_ascension, &declination, &magnitude);
-	    /* printf("Found star: %d %s, %.3f %.3f %.3f\n", count,
-	       name, right_ascension, declination, magnitude); */
-	    count++;
+
+	    /* get name */
+	    end = front;
+	    while ( end[0] != ',' ) {
+		end++;
+	    }
+	    end[0] = '\0';
+	    strcpy(name, front);
+	    front = end;
+	    front++;
+
+	    sscanf(front, "%lf,%lf,%lf\n", 
+		   &right_ascension, &declination, &magnitude);
+
+	    if ( strcmp(name, "Deneb") == 0 ) {
+		printf("\n*** Marking %s\n\n", name);
+		ra_save = right_ascension;
+		decl_save = declination;
+	    }
+
+	    if ( strcmp(name, "Alderamin") == 0 ) {
+		printf("\n*** Marking %s\n\n", name);
+		ra_save1 = right_ascension;
+		decl_save1 = declination;
+	    }
+
+	    /* scale magnitudes to (0.0 - 1.0) */
+	    magnitude = (-1.46 - magnitude) / 10.0 + 1.0;
+
+	    /* scale magnitudes again so they look ok */
 	    magnitude = magnitude * 0.8 + 0.2;
 	    mag[0] = mag[1] = mag[2] = magnitude;
+
+	    printf("Found star: %d %s, %.3f %.3f %.3f\n", count,
+	       name, right_ascension, declination, magnitude);
+
 	    glColor3f( mag[0], mag[1], mag[2] );
 	    glVertex3f( 190000.0 * sin(right_ascension) * cos(declination),
 			190000.0 * cos(right_ascension) * cos(declination),
 			190000.0 * sin(declination) );
 
+	    count++;
 	} /* if valid line */
 
     } /* while */
 
+    fclose(fd);
+
     glEnd();
+
+    glBegin(GL_LINE_LOOP);
+        glColor3f(1.0, 0.0, 0.0);
+	glVertex3f( 190000.0 * sin(ra_save-0.2) * cos(decl_save-0.2),
+		    190000.0 * cos(ra_save-0.2) * cos(decl_save-0.2),
+		    190000.0 * sin(decl_save-0.2) );
+	glVertex3f( 190000.0 * sin(ra_save+0.2) * cos(decl_save-0.2),
+		    190000.0 * cos(ra_save+0.2) * cos(decl_save-0.2),
+		    190000.0 * sin(decl_save-0.2) );
+ 	glVertex3f( 190000.0 * sin(ra_save+0.2) * cos(decl_save+0.2),
+		    190000.0 * cos(ra_save+0.2) * cos(decl_save+0.2),
+		    190000.0 * sin(decl_save+0.2) );
+ 	glVertex3f( 190000.0 * sin(ra_save-0.2) * cos(decl_save+0.2),
+		    190000.0 * cos(ra_save-0.2) * cos(decl_save+0.2),
+		    190000.0 * sin(decl_save+0.2) );
+    glEnd();
+
+    glBegin(GL_LINE_LOOP);
+        glColor3f(0.0, 1.0, 0.0);
+	glVertex3f( 190000.0 * sin(ra_save1-0.2) * cos(decl_save1-0.2),
+		    190000.0 * cos(ra_save1-0.2) * cos(decl_save1-0.2),
+		    190000.0 * sin(decl_save1-0.2) );
+	glVertex3f( 190000.0 * sin(ra_save1+0.2) * cos(decl_save1-0.2),
+		    190000.0 * cos(ra_save1+0.2) * cos(decl_save1-0.2),
+		    190000.0 * sin(decl_save1-0.2) );
+ 	glVertex3f( 190000.0 * sin(ra_save1+0.2) * cos(decl_save1+0.2),
+		    190000.0 * cos(ra_save1+0.2) * cos(decl_save1+0.2),
+		    190000.0 * sin(decl_save1+0.2) );
+ 	glVertex3f( 190000.0 * sin(ra_save1-0.2) * cos(decl_save1+0.2),
+		    190000.0 * cos(ra_save1-0.2) * cos(decl_save1+0.2),
+		    190000.0 * sin(decl_save1+0.2) );
+    glEnd();
+       
     glEndList();
 }
 
@@ -148,9 +220,12 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.4  1997/09/04 02:17:38  curt
-/* Shufflin' stuff.
+/* Revision 1.5  1997/09/05 01:35:59  curt
+/* Working on getting stars right.
 /*
+ * Revision 1.4  1997/09/04 02:17:38  curt
+ * Shufflin' stuff.
+ *
  * Revision 1.3  1997/08/29 17:55:28  curt
  * Worked on properly aligning the stars.
  *
