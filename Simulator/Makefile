@@ -58,19 +58,43 @@ clean:
 	done
 
 
-tar: clean
+source-tar: clean
 	(cd ../..; \
-	tar cvf source-$(VERSION).tar FlightGear/COPYING FlightGear/Docs \
-	FlightGear/Src FlightGear/Thanks)
+	tar cvzf source-$(VERSION).tar.gz FlightGear/fgtop FlightGear/COPYING \
+	FlightGear/Docs FlightGear/Src FlightGear/Thanks)
 
-zip: clean
+source-zip: clean
 	(cd ../..; \
-	zip -r source-$(VERSION).zip FlightGear/COPYING FlightGear/Docs \
-	FlightGear/Src FlightGear/Thanks)
+	zip -r source-$(VERSION).zip FlightGear/fgtop FlightGear/COPYING \
+	FlightGear/Docs FlightGear/Src FlightGear/Thanks)
+
+scenery-tar:
+	(cd ../..; \
+	tar cvzf scenery-$(VERSION).tar.gz FlightGear/Scenery)
+
+scenery-zip:
+	(cd ../..; \
+	zip -r scenery-$(VERSION).zip FlightGear/Scenery)
+
+bin-tar: all
+	cp GLUT/fg0 GLUT/runfg ..
+	(cd ../..; \
+	tar cvzf bin-$(VERSION).tar.gz FlightGear/fgtop FlightGear/fg0 \
+	FlightGear/runfg FlightGear/COPYING FlightGear/Docs FlightGear/Thanks)
+
+bin-zip: all
+	cp GLUT/fg0.exe GLUT/runfg.bat GLUT/cygwin.dll ..
+	(cd ../..; \
+	zip -r bin-$(VERSION).zip FlightGear/fgtop FlightGear/fg0.exe \
+	FlightGear/runfg.bat FlightGear/cygwin.dll FlightGear/COPYING \
+	FlightGear/Docs FlightGear/Thanks)
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.26  1997/09/04 02:17:18  curt
+# Shufflin' stuff.
+#
 # Revision 1.25  1997/08/25 20:27:21  curt
 # Merged in initial HUD and Joystick code.
 #

@@ -38,6 +38,9 @@ struct SCENERY {
 
     /* center of current scenery chunk */
     struct fgCartesianPoint center;
+
+    /* angle of sun relative to current local horizontal */
+    double sun_angle;
 };
 
 extern struct SCENERY scenery;
@@ -60,9 +63,12 @@ void fgSceneryRender();
 
 
 /* $Log$
-/* Revision 1.9  1997/08/27 03:30:33  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.10  1997/09/04 02:17:37  curt
+/* Shufflin' stuff.
 /*
+ * Revision 1.9  1997/08/27 03:30:33  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.8  1997/08/06 00:24:30  curt
  * Working on correct real time sun lighting.
  *

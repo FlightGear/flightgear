@@ -46,7 +46,9 @@
 #include "sunpos.h"
 #include "fg_time.h"
 #include "../constants.h"
+#include "../GLUT/views.h"
 #include "../Math/fg_geodesy.h"
+#include "../Math/mat3.h"
 #include "../Math/polar.h"
 
 #undef E
@@ -258,12 +260,15 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
 
 
 /* update the cur_time_params structure with the current sun position */
-void fgUpdateSunPos() {
+void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
     struct fgTIME *t;
-    double sun_gd_lat, sl_radius;
+    struct VIEW *v;
+    MAT3vec nup, nsun;
+    double sun_gd_lat, sl_radius, temp;
     static int time_warp = 0;
 
     t = &cur_time_params;
+    v = &current_view;
 
     time_warp += 200; /* increase this to make the world spin real fast */
 
@@ -275,13 +280,35 @@ void fgUpdateSunPos() {
 
     /* printf("Geodetic lat = %.5f Geocentric lat = %.5f\n", sun_gd_lat,
        t->sun_gc_lat); */
+
+    /* the sun position has to be translated just like everything else */
+    t->sun_vec[0] = t->fg_sunpos.x - scenery_center.x; 
+    t->sun_vec[1] = t->fg_sunpos.y - scenery_center.y;
+    t->sun_vec[2] = t->fg_sunpos.z - scenery_center.z;
+    /* make this a directional light source only */
+    t->sun_vec[3] = 0.0;
+
+    /* calculate thesun's relative angle to local up */
+    MAT3_COPY_VEC(nup, v->local_up);
+    nsun[0] = t->fg_sunpos.x; 
+    nsun[1] = t->fg_sunpos.y;
+    nsun[2] = t->fg_sunpos.z;
+    MAT3_NORMALIZE_VEC(nup, temp);
+    MAT3_NORMALIZE_VEC(nsun, temp);
+
+    t->sun_angle = acos(MAT3_DOT_PRODUCT(nup, nsun));
+    printf("SUN ANGLE relative to current location = %.3f rads.\n", 
+	   t->sun_angle);
 }
 
 
 /* $Log$
-/* Revision 1.6  1997/08/27 03:30:37  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.7  1997/09/04 02:17:40  curt
+/* Shufflin' stuff.
 /*
+ * Revision 1.6  1997/08/27 03:30:37  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.5  1997/08/22 21:34:41  curt
  * Doing a bit of reorganizing and house cleaning.
  *

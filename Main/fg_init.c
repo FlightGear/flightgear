@@ -96,7 +96,8 @@ void fgInitSubsystems( void ) {
     FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
     FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
     FG_Altitude = FG_Runway_altitude + 3.758099;
-
+    /* FG_Altitude = 20000; */
+    
     /* Initial Position north of the city of Globe */
     /* FG_Latitude  = (  120625.64 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
@@ -142,7 +143,7 @@ void fgInitSubsystems( void ) {
     /* fgSlewInit(-398673.28,120625.64, 53, 4.38); */
 
     /* Initialize shared sun position and sun_vec */
-    fgUpdateSunPos();
+    fgUpdateSunPos(scenery.center);
 
     /* Initialize view parameters */
     fgViewInit(v);
@@ -151,7 +152,11 @@ void fgInitSubsystems( void ) {
     fgWeatherInit();
 
     /* Initialize the Cockpit subsystem */
-    fgCockpitInit( current_aircraft );
+    if( fgCockpitInit( current_aircraft ) == NULL )
+    {
+    	printf( "Error in Cockpit initialization!\n" );
+    	exit( 1 );
+    }
 
     /* Initialize the Stars subsystem  */
     fgStarsInit();
@@ -195,9 +200,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1997/08/27 21:32:26  curt
-/* Restructured view calculation code.  Added stars.
+/* Revision 1.5  1997/09/04 02:17:36  curt
+/* Shufflin' stuff.
 /*
+ * Revision 1.4  1997/08/27 21:32:26  curt
+ * Restructured view calculation code.  Added stars.
+ *
  * Revision 1.3  1997/08/27 03:30:19  curt
  * Changed naming scheme of basic shared structures.
  *

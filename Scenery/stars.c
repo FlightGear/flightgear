@@ -133,12 +133,6 @@ void fgStarsRender() {
     glDisable( GL_LIGHTING );
     glPushMatrix();
 
-    /* set lighting parameters for stars */
-    /* amb[0] = amb[1] = amb[2] = 1.0;
-    diff[0] = diff[1] = diff[2] = 1.0;
-    glLightfv(GL_LIGHT0, GL_AMBIENT, amb );
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, diff ); */
-
     glTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
 
     angle = FG_2PI * fmod(DaysSinceEpoch(time(NULL)), 1.0);
@@ -154,9 +148,12 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.3  1997/08/29 17:55:28  curt
-/* Worked on properly aligning the stars.
+/* Revision 1.4  1997/09/04 02:17:38  curt
+/* Shufflin' stuff.
 /*
+ * Revision 1.3  1997/08/29 17:55:28  curt
+ * Worked on properly aligning the stars.
+ *
  * Revision 1.2  1997/08/27 21:32:30  curt
  * Restructured view calculation code.  Added stars.
  *

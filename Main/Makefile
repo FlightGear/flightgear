@@ -32,7 +32,7 @@ AFILES = ../Aircraft/libAircraft.a ../Cockpit/libCockpit.a \
 	../Controls/libControls.a ../Flight/libFlight.a \
 	../Joystick/libJoystick.a ../Flight/LaRCsim/libLaRCsim.a \
 	../Flight/Slew/libSlew.a ../Scenery/libScenery.a \
-	../Time/libTime.a ../Weather/libWeather.a ../Math/libMath.a 
+	../Time/libTime.a ../Weather/libWeather.a ../Math/libMath.a
 
 
 include ../make.inc
@@ -73,6 +73,9 @@ GLTKkey.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.33  1997/09/04 02:17:35  curt
+# Shufflin' stuff.
+#
 # Revision 1.32  1997/08/27 21:31:27  curt
 # Added views.[ch]
 #

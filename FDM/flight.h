@@ -44,20 +44,6 @@
 #define FG_EXTERN_NET  8
 
 
-/* Define a structure containing the shared flight model parameters */
-/* struct flight_params {
-    double pos_x, pos_y, pos_z;
-    double vel_x, vel_y, vel_z;
-
-    double Phi;
-    double Theta;
-    double Psi;
-    double vel_Phi;
-    double vel_Theta;
-    double vel_Psi;
-}; */
-
-
 typedef double FG_VECTOR_3[3];
 
 /* This is based heavily on LaRCsim/ls_generic.h */
@@ -410,9 +396,12 @@ int fgFlightModelUpdate(int model, struct FLIGHT *f, int multiloop);
 
 
 /* $Log$
-/* Revision 1.8  1997/08/27 03:30:06  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.9  1997/09/04 02:17:33  curt
+/* Shufflin' stuff.
 /*
+ * Revision 1.8  1997/08/27 03:30:06  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.7  1997/07/23 21:52:19  curt
  * Put comments around the text after an #endif for increased portability.
  *

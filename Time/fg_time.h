@@ -28,6 +28,12 @@
 #define FG_TIME_H
 
 
+#ifdef WIN32
+#  include <windows.h>
+#endif
+
+#include <GL/glut.h>
+
 #include "../types.h"
 
 
@@ -35,8 +41,11 @@
 struct fgTIME {
     /* the point on the earth's surface above which the sun is directly 
      * overhead */
-    struct fgCartesianPoint fg_sunpos;  /* in cartesian coordiantes */
     double sun_lon, sun_gc_lat;         /* in geocentric coordinates */
+    struct fgCartesianPoint fg_sunpos;  /* in cartesian coordiantes */
+    GLfloat sun_vec[4];                 /* in view coordinates */
+    double sun_angle;                   /* the angle between the sun and the 
+					   local horizontal */
 };
 
 extern struct fgTIME cur_time_params;
@@ -46,9 +55,12 @@ extern struct fgTIME cur_time_params;
 
 
 /* $Log$
-/* Revision 1.2  1997/08/27 03:30:36  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.3  1997/09/04 02:17:39  curt
+/* Shufflin' stuff.
 /*
+ * Revision 1.2  1997/08/27 03:30:36  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.1  1997/08/13 21:56:00  curt
  * Initial revision.
  *

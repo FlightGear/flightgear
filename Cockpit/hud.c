@@ -25,8 +25,10 @@
  
 
 #include <GL/glut.h>
-
 #include <stdlib.h>
+#ifndef WIN32
+#  include <values.h>  /* for MAXINT */
+#endif /* not WIN32 */
 #include "hud.h"
 
 #include "../constants.h"
@@ -392,10 +394,10 @@ static void drawhorizon( struct HUD_horizon horizon )
 	
 	bank_angle = (*horizon.load_value)();
 
-	// sin_bank = sin( 2*PI-FG_Phi );
-	// cos_bank = cos( 2*PI-FG_Phi );
-	sin_bank = sin(2*PI-bank_angle);
-	cos_bank = cos(2*PI-bank_angle);
+	// sin_bank = sin( FG_2PI-FG_Phi );
+	// cos_bank = cos( FG_2PI-FG_Phi );
+	sin_bank = sin(FG_2PI-bank_angle);
+	cos_bank = cos(FG_2PI-bank_angle);
 	x_inc1 = (int)(horizon.scr_width*cos_bank);
 	y_inc1 = (int)(horizon.scr_width*sin_bank);
 	x_inc2 = (int)(horizon.scr_hole*cos_bank);
@@ -531,13 +533,13 @@ Hptr fgHUDInit( struct AIRCRAFT current_aircraft, int color )
 	hud->code = 123;
 	hud->status = 0;
 	
-	// For now let's just hardcode a hud here .
+	// For now lets just hardcode a hud here .
 	// In the future, hud information has to come from the same place 
 	// aircraft information came
 	
 	fgHUDAddHorizon( hud, 590, 50, 40, 20, get_roll );
 	fgHUDAddScale( hud, VERTICAL, 220, 100, 280, 5, 10, LEFT, LEFT, 0, 100, get_speed );
-	fgHUDAddScale( hud, VERTICAL, 440, 100, 280, 1, 5, RIGHT, RIGHT, -MAXINT, 25, get_aoa );
+	fgHUDAddScale( hud, VERTICAL, 440, 100, 280, 1, 5, RIGHT, RIGHT, -400, 25, get_aoa );
 	fgHUDAddScale( hud, HORIZONTAL, 280, 220, 440, 5, 10, TOP, TOP, 0, 50, get_heading );
 	fgHUDAddLabel( hud, 180, 85, SMALL, NOBLINK, RIGHT_JUST, NULL, " Kts", "%5.0f", get_speed );
 	fgHUDAddLabel( hud, 180, 73, SMALL, NOBLINK, RIGHT_JUST, NULL, " m", "%5.0f", get_altitude );
@@ -545,7 +547,6 @@ Hptr fgHUDInit( struct AIRCRAFT current_aircraft, int color )
 	
 	return( hud );
 }
-
 
 Hptr fgHUDAddHorizon( Hptr hud, int x_pos, int y_pos, int length, \
 						int hole_len, double (*load_value)() )
@@ -683,7 +684,7 @@ Hptr fgHUDAddLadder( Hptr hud, int x_pos, int y_pos, int scr_width, int scr_heig
 	ladder = (struct HUD_ladder *)calloc(sizeof(struct HUD_ladder),1);
 	if( ladder == NULL )
 		return( NULL );
-	
+
 	instrument->type = LADDER;
 	instrument->instr = *ladder;
 	instrument->instr.ladder.type = 0;	// Not used.
@@ -702,7 +703,6 @@ Hptr fgHUDAddLadder( Hptr hud, int x_pos, int y_pos, int scr_width, int scr_heig
 	hud->instruments = instrument;
 
 	return( hud );
-
 }
 
 /*
@@ -799,7 +799,10 @@ void fgUpdateHUD( Hptr hud )
 
 
 /* $Log$
-/* Revision 1.1  1997/08/29 18:03:22  curt
-/* Initial revision.
+/* Revision 1.2  1997/09/04 02:17:30  curt
+/* Shufflin' stuff.
 /*
+ * Revision 1.1  1997/08/29 18:03:22  curt
+ * Initial revision.
+ *
  */

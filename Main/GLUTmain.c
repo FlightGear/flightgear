@@ -69,7 +69,7 @@ struct VIEW current_view;
 static GLfloat win_ratio = 1.0;
 
 /* sun direction */
-static GLfloat sun_vec[4] = {1.0, 0.0, 0.0, 0.0 };
+/* static GLfloat sun_vec[4] = {1.0, 0.0, 0.0, 0.0 }; */
 
 /* if the 4th field is 0.0, this specifies a direction ... */
 /* clear color (sky) */
@@ -86,10 +86,6 @@ static GLfloat fgFogColor[4] =   {0.65, 0.65, 0.85, 1.0};
 /* pointer to scenery structure */
 /* static GLint scenery, runway; */
 
-/* Another hack */
-/* double view_offset = 0.0;
-double goal_view_offset = 0.0; */
-
 double Simtime;
 
 /* Another hack */
@@ -104,8 +100,10 @@ int show_hud;
  **************************************************************************/
 
 static void fgInitVisuals() {
+    struct fgTIME *t;
     struct WEATHER *w;
 
+    t = &cur_time_params;
     w = &current_weather;
 
     glEnable( GL_DEPTH_TEST );
@@ -116,7 +114,7 @@ static void fgInitVisuals() {
        to unit length after transformation.  See glNormal. */
     glEnable( GL_NORMALIZE );
 
-    glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
+    glLightfv( GL_LIGHT0, GL_POSITION, t->sun_vec );
     glEnable( GL_LIGHTING );
     glEnable( GL_LIGHT0 );
 
@@ -143,8 +141,7 @@ static void fgUpdateViewParams() {
     struct FLIGHT *f;
     struct fgTIME *t;
     struct VIEW *v;
-    MAT3vec nup, nsun;
-    double sun_angle, temp, ambient, diffuse, sky;
+    double ambient, diffuse, sky;
     GLfloat color[4] = { 1.0, 1.0, 0.50, 1.0 };
     GLfloat amb[3], diff[3], fog[4], clear[4];
 
@@ -170,24 +167,17 @@ static void fgUpdateViewParams() {
 	      v->view_up[0], v->view_up[1], v->view_up[2]);
 
     /* set the sun position */
-    glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
+    glLightfv( GL_LIGHT0, GL_POSITION, t->sun_vec );
 
     /* calculate lighting parameters based on sun's relative angle to
      * local up */
-    MAT3_COPY_VEC(nup, v->local_up);
-    nsun[0] = t->fg_sunpos.x; 
-    nsun[1] = t->fg_sunpos.y;
-    nsun[2] = t->fg_sunpos.z;
-    MAT3_NORMALIZE_VEC(nup, temp);
-    MAT3_NORMALIZE_VEC(nsun, temp);
-
-    sun_angle = acos(MAT3_DOT_PRODUCT(nup, nsun));
-    printf("SUN ANGLE relative to current location = %.3f rads.\n", sun_angle);
-
     /* ya kind'a have to plot this to see the magic */
-    ambient = 0.4 * pow(2.4, -sun_angle*sun_angle*sun_angle*sun_angle/3.0);
-    diffuse = 0.4 * cos(0.6*sun_angle*sun_angle);
-    sky = 0.85 * pow(1.6, -sun_angle*sun_angle*sun_angle*sun_angle/2.0) + 0.15;
+    ambient = 0.4 * 
+	pow(2.4, -t->sun_angle*t->sun_angle*t->sun_angle*t->sun_angle / 3.0);
+    diffuse = 0.4 * cos(0.6 * t->sun_angle * t->sun_angle);
+    sky = 0.85 * 
+	pow(1.6, -t->sun_angle*t->sun_angle*t->sun_angle*t->sun_angle/2.0) 
+	+ 0.15;
 
     if ( ambient < 0.1 ) { ambient = 0.1; }
     if ( diffuse < 0.0 ) { diffuse = 0.0; }
@@ -240,10 +230,8 @@ static void fgUpdateVisuals( void ) {
     fgSceneryRender();
 
     /* display HUD */
-    if( show_hud ) {
+    if( show_hud )
      	fgCockpitUpdate();
-	/* fgUpdateHUD(); */
-    }
 
     #ifdef GLUT
       glutSwapBuffers();
@@ -274,14 +262,7 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
     fgFlightModelUpdate(FG_LARCSIM, f, multi_loop);
 
     /* refresh shared sun position and sun_vec */
-    fgUpdateSunPos();
-
-    /* the sun position has to be translated just like everything else */
-    sun_vec[0] = t->fg_sunpos.x - scenery.center.x; 
-    sun_vec[1] = t->fg_sunpos.y - scenery.center.y;
-    sun_vec[2] = t->fg_sunpos.z - scenery.center.z;
-    /* make this a directional light source only */
-    sun_vec[3] = 0.0;
+    fgUpdateSunPos(scenery.center);
 
     /* update the view angle */
     for ( i = 0; i < multi_loop; i++ ) {
@@ -420,8 +401,8 @@ static void fgMainLoop( void ) {
     f = &current_aircraft.flight;
 
     /* Read joystick */
-    /* fgJoystickRead( &joy_x, &joy_y, &joy_b1, &joy_b2 ); */
-    /* printf( "Joystick X %f  Y %f  B1 %d  B2 %d\n",  
+    /* fgJoystickRead( &joy_x, &joy_y, &joy_b1, &joy_b2 );
+    printf( "Joystick X %f  Y %f  B1 %d  B2 %d\n",  
 	    joy_x, joy_y, joy_b1, joy_b2 );
     fgElevSet( -joy_y );
     fgAileronSet( joy_x ); */
@@ -574,9 +555,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.12  1997/08/27 21:32:24  curt
-/* Restructured view calculation code.  Added stars.
+/* Revision 1.13  1997/09/04 02:17:34  curt
+/* Shufflin' stuff.
 /*
+ * Revision 1.12  1997/08/27 21:32:24  curt
+ * Restructured view calculation code.  Added stars.
+ *
  * Revision 1.11  1997/08/27 03:30:16  curt
  * Changed naming scheme of basic shared structures.
  *
