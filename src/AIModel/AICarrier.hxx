@@ -78,6 +78,9 @@ public:
         void setSolidObjects(const list<string>& solid_objects);
         void setWireObjects(const list<string>& wire_objects);
         void setCatapultObjects(const list<string>& catapult_objects);
+        void setParkingPositions(const list<Point3D>& p);
+        void setSign(const string& );
+        void setFlolsOffset(const Point3D& off);
 
 	void getVelocityWrtEarth(sgVec3 v);
 	virtual void bind();
@@ -85,6 +88,8 @@ public:
     void UpdateFlols ( double dt );
 	
 	bool init();
+
+        static SGPropertyNode* getStartPosition(const string& id);
 
 private:
 
@@ -97,29 +102,18 @@ private:
 	list<string> solid_objects;       // List of solid object names
 	list<string> wire_objects;        // List of wire object names
 	list<string> catapult_objects;    // List of catapult object names
+	list<Point3D> ppositions;         // List of positions where an aircraft can start.
+	string sign;                      // The sign of this carrier.
 
 	// Velocity wrt earth.
 	sgVec3 vel_wrt_earth;
-    
-    float trans[3][3];
-    float in[3];
-    float out[3];
 
-    double Rx, Ry, Rz;
-    double Sx, Sy, Sz;
-    double Tx, Ty, Tz;
-
-    float cosRx, sinRx;
-    float cosRy, sinRy;
-    float cosRz, sinRz;
-        
-    double flolsXYZ[3], eyeXYZ[3]; 
-    double lat, lon, alt;
-    double dist, angle;
-    int source;
+        // these describe the flols 
+        Point3D flols_off;
     
-    Point3D eyepos;
-    Point3D flolspos;	
+        double dist;            // the distance of the eyepoint from the flols
+        double angle;
+        int source;             // the flols light which is visible at the moment
 };
 
 #endif  // _FG_AICARRIER_HXX

@@ -36,6 +36,7 @@ public:
         virtual void unbind();
 	void update(double dt);
         void setFlightPlan(FGAIFlightPlan* f);
+        void setName(const string&);
         void ProcessFlightPlan( double dt );
 
         void AccelTo(double speed);
@@ -45,6 +46,10 @@ public:
         void ClimbTo(double altitude);
         void TurnTo(double heading);
 	
+protected:
+
+	string name; // The name of this ship.
+
 private:
 
         bool hdg_lock;

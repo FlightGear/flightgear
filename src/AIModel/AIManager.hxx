@@ -69,7 +69,6 @@ private:
     // Everything put in this list should be created dynamically
     // on the heap and ***DELETED WHEN REMOVED!!!!!***
     ai_list_type ai_list;
-    ai_list_iterator ai_list_itr;
   ModelVec loadedModels;
 
 public:

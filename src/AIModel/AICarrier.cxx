@@ -34,6 +34,8 @@
 
 
 FGAICarrier::FGAICarrier(FGAIManager* mgr) : FGAIShip(mgr) {
+  _type_str = "carrier";
+  _otype = otCarrier;
 }
 
 FGAICarrier::~FGAICarrier() {
@@ -49,6 +51,18 @@ void FGAICarrier::setWireObjects(const list<string>& wo) {
 
 void FGAICarrier::setCatapultObjects(const list<string>& co) {
   catapult_objects = co;
+}
+
+void FGAICarrier::setParkingPositions(const list<Point3D>& p) {
+  ppositions = p;
+}
+
+void FGAICarrier::setSign(const string& s) {
+  sign = s;
+}
+
+void FGAICarrier::setFlolsOffset(const Point3D& off) {
+  flols_off = off;
 }
 
 void FGAICarrier::getVelocityWrtEarth(sgVec3 v) {
@@ -96,28 +110,31 @@ bool FGAICarrier::init() {
 
    return true;
 }
+
 void FGAICarrier::bind() {
-   FGAIBase::bind();
+   FGAIShip::bind();
 
    props->tie("controls/flols/source-lights",
                 SGRawValuePointer<int>(&source));
    props->tie("controls/flols/distance-m",
-                SGRawValuePointer<double>(&dist)); 
+                SGRawValuePointer<double>(&dist));
    props->tie("controls/flols/angle-degs",
-                SGRawValuePointer<double>(&angle));                                              
+                SGRawValuePointer<double>(&angle));
    props->setBoolValue("controls/flols/cut-lights", false);
    props->setBoolValue("controls/flols/wave-off-lights", false);
-   props->setBoolValue("controls/flols/cond-datum-lights", true);  
-   props->setBoolValue("controls/crew", false);  
-   }
+   props->setBoolValue("controls/flols/cond-datum-lights", true);
+   props->setBoolValue("controls/crew", false);
+
+   props->setStringValue("sign", sign.c_str());
+}
 
 void FGAICarrier::unbind() {
-    FGAIBase::unbind();
+    FGAIShip::unbind();
     props->untie("controls/flols/source-lights");
-    props->untie("controls/flols/distance-m"); 
-    props->untie("controls/flols/angle-degs");    
+    props->untie("controls/flols/distance-m");
+    props->untie("controls/flols/angle-degs");
 }
-   
+
 void FGAICarrier::mark_nohot(ssgEntity* e) {
   if (e->isAKindOf(ssgTypeBranch())) {
     ssgBranch* br = (ssgBranch*)e;
@@ -300,6 +317,20 @@ bool FGAICarrier::mark_cat(ssgEntity* e, const list<string>& cat_objects, bool m
 }
 
 void FGAICarrier::UpdateFlols( double dt) {
+    
+    float trans[3][3];
+    float in[3];
+    float out[3];
+
+    float cosRx, sinRx;
+    float cosRy, sinRy;
+    float cosRz, sinRz;
+        
+    double flolsXYZ[3], eyeXYZ[3]; 
+    double lat, lon, alt;
+    Point3D eyepos;
+    Point3D flolspos;	
+
 /*    cout << "x_offset " << flols_x_offset 
           << " y_offset " << flols_y_offset 
           << " z_offset " << flols_z_offset << endl;
@@ -326,9 +357,9 @@ void FGAICarrier::UpdateFlols( double dt) {
        << "flols_y_offset " << flols_y_offset << endl
        << "flols_z_offset " << flols_z_offset << endl;*/
      
-  in[0] = flols_x_offset;  
-  in[1] = flols_y_offset;
-  in[2] = flols_z_offset;    
+  in[0] = flols_off.x();  
+  in[1] = flols_off.y();
+  in[2] = flols_off.z();    
 
 // pre-process the trig functions
 

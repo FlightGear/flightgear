@@ -51,7 +51,7 @@ FGAIManager::FGAIManager() {
 }
 
 FGAIManager::~FGAIManager() {
-  ai_list_itr = ai_list.begin();
+  ai_list_iterator ai_list_itr = ai_list.begin();
   while(ai_list_itr != ai_list.end()) {
       (*ai_list_itr)->unbind();
       delete (*ai_list_itr);
@@ -105,7 +105,7 @@ void FGAIManager::update(double dt) {
 
         _dt = dt;
 
-        ai_list_itr = ai_list.begin();
+        ai_list_iterator ai_list_itr = ai_list.begin();
         while(ai_list_itr != ai_list.end()) {
                 if ((*ai_list_itr)->getDie()) {      
 		  tmgr->release((*ai_list_itr)->getID());
@@ -191,6 +191,7 @@ FGAIManager::createShip( FGAIModelEntity *entity ) {
         ai_ship->setLongitude(entity->longitude);
         ai_ship->setLatitude(entity->latitude);
         ai_ship->setBank(entity->rudder);
+        ai_ship->setName(entity->name);
 
         if ( entity->fp ) {
            ai_ship->setFlightPlan(entity->fp);
@@ -209,7 +210,7 @@ FGAIManager::createCarrier( FGAIModelEntity *entity ) {
         FGAICarrier* ai_carrier = new FGAICarrier(this);
         ai_list.push_back(ai_carrier);
         ++numObjects[0];
-        ++numObjects[FGAIBase::otShip];
+        ++numObjects[FGAIBase::otCarrier];
         ai_carrier->setHeading(entity->heading);
         ai_carrier->setSpeed(entity->speed);
         ai_carrier->setPath(entity->path.c_str());
@@ -220,10 +221,11 @@ FGAIManager::createCarrier( FGAIModelEntity *entity ) {
         ai_carrier->setSolidObjects(entity->solid_objects);
         ai_carrier->setWireObjects(entity->wire_objects);
         ai_carrier->setCatapultObjects(entity->catapult_objects);
+        ai_carrier->setParkingPositions(entity->ppositions);
         ai_carrier->setRadius(entity->radius);
-        ai_carrier->setXoffset(entity->x_offset);
-        ai_carrier->setYoffset(entity->y_offset);
-        ai_carrier->setZoffset(entity->z_offset);
+        ai_carrier->setSign(entity->pennant_number);
+        ai_carrier->setName(entity->name);
+        ai_carrier->setFlolsOffset(entity->flols_offset);
 
         if ( entity->fp ) {
            ai_carrier->setFlightPlan(entity->fp);
@@ -298,7 +300,7 @@ FGAIManager::createThermal( FGAIModelEntity *entity ) {
 }
 
 void FGAIManager::destroyObject( void* ID ) {
-        ai_list_itr = ai_list.begin();
+        ai_list_iterator ai_list_itr = ai_list.begin();
         while(ai_list_itr != ai_list.end()) {
             if ((*ai_list_itr)->getID() == ID) {
               --numObjects[0];

@@ -73,12 +73,13 @@ typedef struct {
    list<string> solid_objects;    // List of solid object names
    list<string> wire_objects;     // List of wire object names
    list<string> catapult_objects; // List of catapult object names
-   double radius;             // used by ship ojects, in feet
-   double x_offset;           // used by ship ojects, in meters
-   double y_offset;           // used by ship ojects, in meters
-   double z_offset;           // used by ship ojects, in meters   
-  string acType;              // used by aircraft objects
-  string company;             // used by aircraft objects
+   list<Point3D> ppositions;  // List of positions on a carrier where an aircraft can start.
+   Point3D flols_offset;      // used by carrier objects, in meters
+   double radius;             // used by ship objects, in feet
+   string name;               // used by carrier objects
+   string pennant_number;     // used by carrier objects
+   string acType;             // used by aircraft objects
+   string company;            // used by aircraft objects
 } FGAIModelEntity;
 
 
@@ -91,7 +92,7 @@ public:
     virtual void update(double dt);
     inline Point3D GetPos() { return(pos); }
 
-    enum object_type { otNull = 0, otAircraft, otShip, otBallistic,
+    enum object_type { otNull = 0, otAircraft, otShip, otCarrier, otBallistic,
                        otRocket, otStorm, otThermal, 
                        MAX_OBJECTS };	// Needs to be last!!!
 
@@ -131,12 +132,6 @@ protected:
     double vs;          // vertical speed, feet per minute  
     double turn_radius_ft; // turn radius ft at 15 kts rudder angle 15 degrees
 
-    // these describe the flols 
-    Point3D flolspos; // WGS84 lat & lon in degrees, elev above sea-level in meters
-    double flols_x_offset;	// longitudinal distance, in meters
-    double flols_y_offset;	// lateral distance, in meters
-    double flols_z_offset;	// height, in meters
-    
     double ft_per_deg_lon;
     double ft_per_deg_lat;
 
@@ -238,17 +233,6 @@ inline void FGAIBase::setRadius( double radius ) {
   turn_radius_ft = radius;
 }
 
-inline void FGAIBase::setXoffset( double x_offset ) {
-  flols_x_offset = x_offset;
-}
-
-inline void FGAIBase::setYoffset( double y_offset ) {
-  flols_y_offset = y_offset;
-}
-
-inline void FGAIBase::setZoffset( double z_offset ) {
-  flols_z_offset = z_offset;
-}
 inline void FGAIBase::setHeading( double heading ) {
   hdg = tgt_heading = heading;
 }

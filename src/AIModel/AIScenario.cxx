@@ -34,7 +34,9 @@
 #include "AIFlightPlan.hxx"
 
 static list<string>
-getAllNodeVals(const char* name, SGPropertyNode * entry_node);
+getAllStringNodeVals(const char* name, SGPropertyNode * entry_node);
+static list<Point3D>
+getAllOffsetNodeVals(const char* name, SGPropertyNode * entry_node);
 
 FGAIScenario::FGAIScenario(string &filename)
 {
@@ -96,13 +98,14 @@ FGAIScenario::FGAIScenario(string &filename)
      en->cd              = entry_node->getDoubleValue("cd", 0.029); 
      en->mass            = entry_node->getDoubleValue("mass", 0.007); 
      en->radius          = entry_node->getDoubleValue("turn-radius-ft", 2000);
-     en->x_offset        = entry_node->getDoubleValue("x-offset-m", 5.5); 
-     en->y_offset        = entry_node->getDoubleValue("y-offset-m", 1.0); 
-     en->z_offset        = entry_node->getDoubleValue("z-offset-m", 1.0); 
- /*  en->name            = entry_node->getStringValue("name", "");*/
-     en->wire_objects     = getAllNodeVals("wire", entry_node);
-     en->catapult_objects = getAllNodeVals("catapult", entry_node);
-     en->solid_objects    = getAllNodeVals("solid", entry_node);
+     en->name            = entry_node->getStringValue("name", "");
+     en->pennant_number  = entry_node->getStringValue("pennant-number", "");
+     en->wire_objects     = getAllStringNodeVals("wire", entry_node);
+     en->catapult_objects = getAllStringNodeVals("catapult", entry_node);
+     en->solid_objects    = getAllStringNodeVals("solid", entry_node);
+     en->ppositions       = getAllOffsetNodeVals("parking-pos", entry_node);
+     list<Point3D> flolspos = getAllOffsetNodeVals("flols-pos", entry_node);
+     en->flols_offset     = flolspos.front();
 
      en->fp             = NULL;
      if (en->flightplan != ""){
@@ -139,7 +142,7 @@ int FGAIScenario::nEntries( void )
 }
 
 static list<string>
-getAllNodeVals(const char* name, SGPropertyNode * entry_node)
+getAllStringNodeVals(const char* name, SGPropertyNode * entry_node)
 {
   list<string> retval;
   int i=0;
@@ -157,6 +160,22 @@ getAllNodeVals(const char* name, SGPropertyNode * entry_node)
   return retval;
 }
 
+static list<Point3D>
+getAllOffsetNodeVals(const char* name, SGPropertyNode * entry_node)
+{
+  list<Point3D> retval;
+
+  vector<SGPropertyNode_ptr>::iterator it;
+  vector<SGPropertyNode_ptr> children = entry_node->getChildren(name);
+  for (it = children.begin(); it != children.end(); ++it) {
+    double offset_x = (*it)->getDoubleValue("x-offset-m", 0);
+    double offset_y = (*it)->getDoubleValue("y-offset-m", 0);
+    double offset_z = (*it)->getDoubleValue("z-offset-m", 0);
+    retval.push_back(Point3D(offset_x, offset_y, offset_z));
+  }
+
+  return retval;
+}
 
 // end scenario.cxx
 

@@ -49,6 +49,8 @@ void FGAIShip::bind() {
 
     props->tie("surface-positions/rudder-pos-deg",
                 SGRawValuePointer<double>(&rudder));
+
+    props->setStringValue("name", name.c_str());
 }
 
 void FGAIShip::unbind() {
@@ -192,6 +194,10 @@ double FGAIShip::sign(double x) {
 
 void FGAIShip::setFlightPlan(FGAIFlightPlan* f) {
   fp = f;
+}
+
+void FGAIShip::setName(const string& n) {
+  name = n;
 }
 
 void FGAIShip::ProcessFlightPlan(double dt) {
