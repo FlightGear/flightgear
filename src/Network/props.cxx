@@ -72,25 +72,27 @@ bool FGProps::open() {
 
 
 // return a human readable form of the value "type"
-static string getValueTypeString( const SGValue *v ) {
+static string getValueTypeString( const SGPropertyNode *node ) {
     string result;
 
-    if ( v == NULL ) {
+    if ( node == NULL ) {
 	return "unknown";
     }
 
-    SGValue::Type type = v->getType();
-    if ( type == SGValue::UNKNOWN ) {
+    SGPropertyNode::Type type = node->getType();
+    if ( type == SGPropertyNode::UNKNOWN ) {
 	result = "unknown";
-    } else if ( type == SGValue::BOOL ) {
+    } else if ( type == SGPropertyNode::BOOL ) {
 	result = "bool";
-    } else if ( type == SGValue::INT ) {
+    } else if ( type == SGPropertyNode::INT ) {
 	result = "int";
-    } else if ( type == SGValue::FLOAT ) {
+    } else if ( type == SGPropertyNode::LONG ) {
+	result = "long";
+    } else if ( type == SGPropertyNode::FLOAT ) {
 	result = "float";
-    } else if ( type == SGValue::DOUBLE ) {
+    } else if ( type == SGPropertyNode::DOUBLE ) {
 	result = "double";
-    } else if ( type == SGValue::STRING ) {
+    } else if ( type == SGPropertyNode::STRING ) {
 	result = "string";
     }
 
@@ -127,7 +129,7 @@ bool FGProps::process_command( const char *cmd ) {
 	    } else {
 		string value = node->getStringValue ( name, "" );
 		line += " =\t'" + value + "'\t(";
-		line += getValueTypeString( node->getValue( name ) );
+		line += getValueTypeString( node->getNode( name ) );
 		line += ")\n";
 	    }
 	    io->writestring( line.c_str() );
@@ -180,7 +182,7 @@ bool FGProps::process_command( const char *cmd ) {
 
 	    string value = node->getStringValue ( tokens[1], "" );
 	    string tmp = tokens[1] + " = '" + value + "' (";
-	    tmp += getValueTypeString( node->getValue( tokens[1] ) );
+	    tmp += getValueTypeString( node->getNode( tokens[1] ) );
 	    tmp += ")\n";
  
 	    io->writestring( tmp.c_str() );
@@ -189,13 +191,13 @@ bool FGProps::process_command( const char *cmd ) {
         if ( tokens.size() <= 2 ) {
 	    // do nothing
 	} else {
-	    node->getValue( tokens[1], true )->setStringValue(tokens[2]);
+	    node->getNode( tokens[1], true )->setStringValue(tokens[2]);
 
 	    // now fetch and write out the new value as confirmation
 	    // of the change
 	    string value = node->getStringValue ( tokens[1], "" );
 	    string tmp = tokens[1] + " = '" + value + "' (";
-	    tmp += getValueTypeString( node->getValue( tokens[1] ) );
+	    tmp += getValueTypeString( node->getNode( tokens[1] ) );
 	    tmp += ")\n";
  
 	    io->writestring( tmp.c_str() );
