@@ -29,9 +29,11 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/bucket/newbucket.hxx>
+#include <Airports/simple.hxx>
 
 #include "commlist.hxx"
 //#include "atislist.hxx"
+#include "ATCutils.hxx"
 
 
 FGCommList *current_commlist;
@@ -86,13 +88,13 @@ bool FGCommList::LoadComms(SGPath path) {
         ATCData a;
 		fin >> a;
 		if(a.type == INVALID) {
-			cout << "WARNING - INVALID type found in " << path.str() << '\n';
+			SG_LOG(SG_GENERAL, SG_ALERT, "WARNING - INVALID type found in " << path.str() << '\n');
 		} else {		
 			// Push all stations onto frequency map
 			commlist_freq[a.freq].push_back(a);
 			
-			// Push approach stations onto bucket map as well
-			if(a.type == APPROACH) {
+			// Push non-atis stations onto bucket map as well
+			if(a.type != ATIS) {
 				// get bucket number
 				SGBucket bucket(a.lon, a.lat);
 				int bucknum = bucket.gen_index();
@@ -154,7 +156,6 @@ bool FGCommList::FindByFreq( double lon, double lat, double elev, double freq,
 	return false;
 }
 
-
 int FGCommList::FindByPos(double lon, double lat, double elev, comm_list_type* stations, atc_type tp)
 {
 	// number of relevant stations found within range
@@ -199,6 +200,30 @@ int FGCommList::FindByPos(double lon, double lat, double elev, comm_list_type* s
 		}
 	}
 	return found;
+}
+
+
+// Find by Airport code.
+// This is basically a wrapper for a call to the airport database to get the airport
+// position followed by a call to FindByPos(...)
+bool FGCommList::FindByCode( string ICAO, ATCData& ad, atc_type tp ) {
+    FGAirport a;
+    if ( dclFindAirportID( ICAO, &a ) ) {
+		comm_list_type stations;
+		int found = FindByPos(a.longitude, a.latitude, a.elevation, &stations, tp);
+		if(found) {
+			comm_list_iterator itr = stations.begin();
+			while(itr != stations.end()) {
+				if(((*itr).ident == ICAO) && ((*itr).type == tp)) {
+					ad = *itr;
+					return true;
+				}
+			}
+		}
+    } else {
+        return false;
+    }
+	return false;
 }
 
 

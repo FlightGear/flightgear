@@ -70,9 +70,10 @@ public:
     bool init( SGPath path );
 
     // query the database for the specified frequency, lon and lat are
-    // in degrees, elev is in meters
-	// If no atc_type is specified, it returns true if any non-invalid type is found
-	// If atc_type is specifed, returns true only if the specified type is found
+    // in degrees, elev is in meters.
+	// If no atc_type is specified, it returns true if any non-invalid type is found.
+	// If atc_type is specifed, returns true only if the specified type is found.
+	// Returns the station closest to the supplied position.
 	// The data found is written into the passed-in ATCData structure.
     bool FindByFreq( double lon, double lat, double elev, double freq, ATCData* ad, atc_type tp = INVALID );
 	
@@ -82,6 +83,9 @@ public:
 	// If atc_type is specifed, returns the number of all stations in range, and pushes them into stations
 	// ** stations is erased before use **
     int FindByPos( double lon, double lat, double elev, comm_list_type* stations, atc_type tp = INVALID );
+	
+	// Find by Airport code.
+	bool FindByCode( string ICAO, ATCData& ad, atc_type tp = INVALID );
 
     // Return the callsign for an ATIS transmission given transmission time and airpord id
 	// This maybe should get moved somewhere else!!
