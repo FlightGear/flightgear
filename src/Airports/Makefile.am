@@ -13,6 +13,6 @@ genrunways_SOURCES = genrunways.cxx
 genrunways_LDADD = libAirports.a -lsgdebug -lsgmisc -lsgxml -lmk4 -lz
 
 calc_loc_SOURCES = calc_loc.cxx
-calc_loc_LDADD = -lsgmath
+calc_loc_LDADD = -lsgmath -lsgdebug -lsgmisc -lz
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
