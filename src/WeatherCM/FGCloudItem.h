@@ -4,7 +4,7 @@
  Author:       Christian Mayer
  Date started: 28.05.99
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -25,7 +25,7 @@
 
 FUNCTIONAL DESCRIPTION
 ------------------------------------------------------------------------------
-Air pressure item that is stored in the micro weather class
+Cloud item that is stored in the micro weather class
 
 HISTORY
 ------------------------------------------------------------------------------
@@ -35,6 +35,8 @@ HISTORY
 09.10.1999 Christian Mayer	changed CloudItem on Durks request
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -58,17 +60,17 @@ HISTORY
 class FGCloudItem
 {
 private:
-    WeatherPrecition thickness;
-    WeatherPrecition density;
+    WeatherPrecision thickness;
+    WeatherPrecision density;
 
 protected:
 public:
 
-    FGCloudItem(const WeatherPrecition& t, const WeatherPrecition& d)	{thickness = t; density = d;}
-    FGCloudItem()							{thickness = 0.0; density = 0.0;}
+    FGCloudItem(const WeatherPrecision t, const WeatherPrecision d) {thickness = t; density = d;}
+    FGCloudItem()						    {thickness = 0.0; density = 0.0;}
 
-    WeatherPrecition getThickness(void) const { return thickness; }
-    WeatherPrecition getDensity  (void) const { return density;   }
+    WeatherPrecision getThickness(void) const { return thickness; }
+    WeatherPrecision getDensity  (void) const { return density;   }
 };
 
 /****************************************************************************/

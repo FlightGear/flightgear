@@ -4,7 +4,7 @@
  Author:       Christian Mayer
  Date started: 28.05.99
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -36,6 +36,8 @@ HISTORY
 30.06.1999 Christian Mayer	STL portability
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -48,63 +50,68 @@ HISTORY
 /* INCLUDES								    */
 /****************************************************************************/
 #include <Include/compiler.h>
-#include <vector>
-FG_USING_STD(vector);
-FG_USING_NAMESPACE(std);
 
-#include <Math/point3d.hxx>
-#include <Voronoi/point2d.h>
+#include <vector>
+
+#include "sg.h"
+
 #include "FGWeatherDefs.h"
 #include "FGPhysicalProperties.h"
+
+FG_USING_STD(vector);
+FG_USING_NAMESPACE(std);
 
 /****************************************************************************/
 /* used for output:							    */
 /****************************************************************************/
+class FGPhysicalProperty;
+bool operator == (const FGPhysicalProperty& a, const FGPhysicalProperty& b);  // p1 == p2?
+
 class FGPhysicalProperty
 {
 private:
 protected:
 public:
-    Point3D Wind;			//Wind vector
-    Point3D Turbulence;			//Turbulence vector
-    WeatherPrecition Temperature;	//in deg. Kelvin (I *only* accept SI!)
-    WeatherPrecition AirPressure;	//in Pascal (I *only* accept SI!)
-    WeatherPrecition VaporPressure;	//in Pascal (I *only* accept SI!)
+    sgVec3           Wind;		//Wind vector
+    sgVec3           Turbulence;	//Turbulence vector
+    WeatherPrecision Temperature;	//in deg. Kelvin (I *only* accept SI!)
+    WeatherPrecision AirPressure;	//in Pascal (I *only* accept SI!)
+    WeatherPrecision VaporPressure;	//in Pascal (I *only* accept SI!)
 
     FGPhysicalProperty();   //consructor to fill it with FG standart weather
-    FGPhysicalProperty(const FGPhysicalProperties& p, const WeatherPrecition& altitude);
+    FGPhysicalProperty(const FGPhysicalProperties& p, const WeatherPrecision altitude);
 
     //allow calculations for easier handling such as interpolating
-    FGPhysicalProperty& operator = ( const FGPhysicalProperty& p );	 // assignment of a Point3D
-    FGPhysicalProperty& operator += ( const FGPhysicalProperty& p );	 // incrementation by a Point3D
-    FGPhysicalProperty& operator -= ( const FGPhysicalProperty& p );	 // decrementation by a Point3D
-    FGPhysicalProperty& operator *= ( const double& d );		 // multiplication by a constant
-    FGPhysicalProperty& operator /= ( const double& d );		 // division by a constant
+    FGPhysicalProperty& operator =  ( const FGPhysicalProperty& p );	// assignment of a FGPhysicalProperty
+    FGPhysicalProperty& operator += ( const FGPhysicalProperty& p );	// incrementation by a FGPhysicalProperty
+    FGPhysicalProperty& operator -= ( const FGPhysicalProperty& p );	// decrementation by a FGPhysicalProperty
+    FGPhysicalProperty& operator *= ( const double d );			// multiplication by a constant
+    FGPhysicalProperty& operator /= ( const double d );			// division by a constant
 
-    friend FGPhysicalProperty operator - (const FGPhysicalProperty& p);	            // -p1
-    friend bool operator == (const FGPhysicalProperty& a, const FGPhysicalProperty& b);  // p1 == p2?
+    friend FGPhysicalProperty operator - (const FGPhysicalProperty& p);			// -p1
+    friend bool operator == (const FGPhysicalProperty& a, const FGPhysicalProperty& b);	// p1 == p2?
 };
-
-typedef vector<FGPhysicalProperty> FGPhysicalPropertyVector;
-typedef FGPhysicalPropertyVector::iterator FGPhysicalPropertyVectorIt;
-typedef FGPhysicalPropertyVector::const_iterator FGPhysicalPropertyVectorConstIt;
 
 class FGPhysicalProperty3D : public FGPhysicalProperty
 {
 private:
 protected:
 public:
-    Point3D p;	    //position of the property (lat/lon/alt)
+    sgVec3 p;	    //position of the property (lat/lon/alt)
 };
 
-typedef vector<FGPhysicalProperty3D> FGPhysicalProperty3DVector;
-typedef FGPhysicalProperty3DVector::iterator FGPhysicalProperty3DVectorIt;
+typedef vector<FGPhysicalProperty>               FGPhysicalPropertyVector;
+typedef FGPhysicalPropertyVector::iterator       FGPhysicalPropertyVectorIt;
+typedef FGPhysicalPropertyVector::const_iterator FGPhysicalPropertyVectorConstIt;
+
+typedef vector<FGPhysicalProperty3D>               FGPhysicalProperty3DVector;
+typedef FGPhysicalProperty3DVector::iterator       FGPhysicalProperty3DVectorIt;
 typedef FGPhysicalProperty3DVector::const_iterator FGPhysicalProperty3DVectorConstIt;
 
 inline FGPhysicalProperty& FGPhysicalProperty::operator = ( const FGPhysicalProperty& p )
 {
-    Wind = p.Wind; 
-    Turbulence = p.Turbulence; 
+    sgCopyVec3(Wind, p.Wind); 
+    sgCopyVec3(Turbulence, p.Turbulence); 
     Temperature = p.Temperature; 
     AirPressure = p.AirPressure; 
     VaporPressure = p.VaporPressure; 
@@ -113,8 +120,8 @@ inline FGPhysicalProperty& FGPhysicalProperty::operator = ( const FGPhysicalProp
 
 inline FGPhysicalProperty& FGPhysicalProperty::operator += ( const FGPhysicalProperty& p )
 {
-    Wind += p.Wind; 
-    Turbulence += p.Turbulence; 
+    sgAddVec3(Wind, p.Wind); 
+    sgAddVec3(Turbulence, p.Turbulence); 
     Temperature += p.Temperature; 
     AirPressure += p.AirPressure; 
     VaporPressure += p.VaporPressure; 
@@ -123,28 +130,28 @@ inline FGPhysicalProperty& FGPhysicalProperty::operator += ( const FGPhysicalPro
 
 inline FGPhysicalProperty& FGPhysicalProperty::operator -= ( const FGPhysicalProperty& p )
 {
-    Wind -= p.Wind; 
-    Turbulence -= p.Turbulence; 
+    sgSubVec3(Wind, p.Wind); 
+    sgSubVec3(Turbulence, p.Turbulence); 
     Temperature -= p.Temperature; 
     AirPressure -= p.AirPressure; 
     VaporPressure -= p.VaporPressure; 
     return *this;
 }
 
-inline FGPhysicalProperty& FGPhysicalProperty::operator *= ( const double& d )
+inline FGPhysicalProperty& FGPhysicalProperty::operator *= ( const double d )
 {
-    Wind *= d; 
-    Turbulence *= d; 
+    sgScaleVec3(Wind, d); 
+    sgScaleVec3(Turbulence, d); 
     Temperature *= d; 
     AirPressure *= d; 
     VaporPressure *= d; 
     return *this;
 }
 
-inline FGPhysicalProperty& FGPhysicalProperty::operator /= ( const double& d )
+inline FGPhysicalProperty& FGPhysicalProperty::operator /= ( const double d )
 {
-    Wind /= d; 
-    Turbulence /= d; 
+    sgScaleVec3(Wind, 1.0 / d); 
+    sgScaleVec3(Turbulence, 1.0 / d); 
     Temperature /= d; 
     AirPressure /= d; 
     VaporPressure /= d; 
@@ -154,8 +161,8 @@ inline FGPhysicalProperty& FGPhysicalProperty::operator /= ( const double& d )
 inline  FGPhysicalProperty operator - (const FGPhysicalProperty& p)
 {
     FGPhysicalProperty x;
-    x.Wind = -p.Wind; 
-    x.Turbulence = -p.Turbulence; 
+    sgNegateVec3(x.Wind, p.Wind); 
+    sgNegateVec3(x.Turbulence, p.Turbulence); 
     x.Temperature = -p.Temperature; 
     x.AirPressure = -p.AirPressure; 
     x.VaporPressure = -p.VaporPressure; 
@@ -165,8 +172,8 @@ inline  FGPhysicalProperty operator - (const FGPhysicalProperty& p)
 inline bool operator == (const FGPhysicalProperty& a, const FGPhysicalProperty& b)
 {
     return (
-    (a.Wind == b.Wind) &&
-    (a.Turbulence == b.Turbulence) && 
+    sgEqualVec3(a.Wind, b.Wind) &&
+    sgEqualVec3(a.Turbulence, b.Turbulence) && 
     (a.Temperature == b.Temperature) && 
     (a.AirPressure == b.AirPressure) && 
     (a.VaporPressure == b.VaporPressure)); 
@@ -187,21 +194,20 @@ inline FGPhysicalProperty operator - (const FGPhysicalProperty& a, const FGPhysi
     return FGPhysicalProperty(a) -= b;
 }
 
-inline FGPhysicalProperty operator * (const FGPhysicalProperty& a, const WeatherPrecition& b)
+inline FGPhysicalProperty operator * (const FGPhysicalProperty& a, const WeatherPrecision b)
 {
     return FGPhysicalProperty(a) *= b;
 }
 
-inline FGPhysicalProperty operator * (const WeatherPrecition& b, const FGPhysicalProperty& a)
+inline FGPhysicalProperty operator * (const WeatherPrecision b, const FGPhysicalProperty& a)
 {
     return FGPhysicalProperty(a) *= b;
 }
 
-inline FGPhysicalProperty operator / (const FGPhysicalProperty& a, const WeatherPrecition& b)
+inline FGPhysicalProperty operator / (const FGPhysicalProperty& a, const WeatherPrecision b)
 {
     return FGPhysicalProperty(a) *= (1.0/b);
 }
-
 
 /****************************************************************************/
 #endif /*FGPhysicalProperty_H*/

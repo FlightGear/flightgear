@@ -4,7 +4,7 @@
  Author:       Christian Mayer
  Date started: 28.05.99
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -37,6 +37,8 @@ HISTORY
 30.06.1999 Christian Mayer	STL portability
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -48,18 +50,27 @@ HISTORY
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
-#include "FGPhysicalProperties.h"
-#include "FGPhysicalProperty.h"
-#include "sg.h"
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <Include/compiler.h>
+
 #include <vector>
 #include STL_IOSTREAM
+
+#include <sg.h>
+
+#include "FGPhysicalProperties.h"
+#include "FGPhysicalProperty.h"
 		
 /****************************************************************************/
 /* DEFINES								    */
 /****************************************************************************/
 FG_USING_STD(vector);
+#ifndef FG_HAVE_NATIVE_SGI_COMPILERS
 FG_USING_STD(iostream);
+#endif
 FG_USING_NAMESPACE(std);
 
 enum FGGlobalWeatherDatabaseStatus {
@@ -86,50 +97,63 @@ public:
     /************************************************************************/
     /* Constructor and Destructor					    */
     /************************************************************************/
-    FGGlobalWeatherDatabase(const FGGlobalWeatherDatabaseStatus& s = FGGlobalWeatherDatabase_not_used);
+    FGGlobalWeatherDatabase(const FGGlobalWeatherDatabaseStatus s = FGGlobalWeatherDatabase_not_used);
     ~FGGlobalWeatherDatabase();
 
     /************************************************************************/
     /* Get the physical properties on the specified point p		    */
     /************************************************************************/
-    FGPhysicalProperties get(const Point2D& p) const;
-    FGPhysicalProperties get(const sgVec2& p) const {return get(Point2D(p[0], p[1]));}
-    inline FGPhysicalProperty get(const Point3D& p) const {return FGPhysicalProperty(get(Point2D(p)), p.elev());}
-    inline FGPhysicalProperty get(const sgVec3& p) const {return FGPhysicalProperty(get(Point2D(p[0], p[1])), p[3]);}
+    FGPhysicalProperties get(const sgVec2& p) const; 
+    FGPhysicalProperty   get(const sgVec3& p) const 
+    {
+	sgVec2 temp;
+	sgSetVec2( temp, p[0], p[1] );
+
+	return FGPhysicalProperty( get(temp), p[3] );
+    }
 
     /************************************************************************/
     /* update the database. Since the last call we had dt seconds	    */
     /************************************************************************/
-    void update(const WeatherPrecition& dt);
+    void update(const WeatherPrecision dt);
 
     /************************************************************************/
     /* Add a physical property on the specified point p			    */
     /************************************************************************/
-    void add(const Point2D& p, const FGPhysicalProperties& x);
-    inline void add(const FGPhysicalProperties2D& x) {database.push_back(x);}
+    void add(const sgVec2& p, const FGPhysicalProperties& x);
+    void add(const FGPhysicalProperties2D& x) 
+    {
+	database.push_back(x);
+    }
 
     /************************************************************************/
     /* Change the closest physical property to p. If p is further away than */
     /* tolerance I'm returning false otherwise true			    */
     /************************************************************************/
-    bool change(const FGPhysicalProperties2D& p, const WeatherPrecition& tolerance = 0.0000001);
+    bool change(const FGPhysicalProperties2D& p, const WeatherPrecision tolerance = 0.0000001);
 
     /************************************************************************/
     /* Get all stored points in the circle around p with the radius r, but  */
     /* at least min points.						    */
     /************************************************************************/
-    FGPhysicalProperties2DVector getAll(const Point2D& p, const WeatherPrecition& r, const unsigned int& min = 0);
+    FGPhysicalProperties2DVector getAll(const sgVec2& p, const WeatherPrecision r, const unsigned int min = 0);
+    FGPhysicalProperties2DVector getAll(const sgVec3& p, const WeatherPrecision r, const unsigned int min = 0)
+    {
+	sgVec2 temp;
+	sgSetVec2(temp, p[0], p[1]);
+
+	return getAll(temp, r, min);
+    }
 
     /************************************************************************/
     /* get/set the operating status of the database			    */
     /************************************************************************/
-    FGGlobalWeatherDatabaseStatus getDatabaseStatus(void) const { return DatabaseStatus; }
+    FGGlobalWeatherDatabaseStatus getDatabaseStatus(void) const    { return DatabaseStatus; }
     void setDatabaseStatus(const FGGlobalWeatherDatabaseStatus& s) { DatabaseStatus = s; }
 
     /************************************************************************/
     /* Dump the whole database						    */
     /************************************************************************/
-    //friend istream& operator>> ( istream&, Point3D& );
     friend ostream& operator<< ( ostream& out, const FGGlobalWeatherDatabase& p );
 
 };

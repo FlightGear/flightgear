@@ -3,9 +3,8 @@
  Module:       FGVoronoi.cpp
  Author:       Christian Mayer
  Date started: 28.05.99
- Called by:    main program
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -38,6 +37,8 @@ HISTORY
 16.06.99   Durk Talsma		Portability for Linux
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -67,12 +68,12 @@ FGVoronoiOutputList Voronoiate(const FGVoronoiInputList& input)
 
     PointList p2ds;
 
-    FGVoronoiInputList::iterator it1;
+    FGVoronoiInputList::const_iterator it1;
 
     //get the points
-    for (it1 = (FGVoronoiInputList::iterator)input.begin(); it1 != input.end(); it1++)
+    for (it1 = input.begin(); it1 != input.end(); it1++)
     {
-	p2ds.push_back(VoronoiPoint(it1->position.x(), it1->position.y()));
+	p2ds.push_back(VoronoiPoint(it1->position[0], it1->position[1]));
     }
 
     cl.clear();	//make sure that it's empty
@@ -104,28 +105,35 @@ FGVoronoiOutputList Voronoiate(const FGVoronoiInputList& input)
 	PointList::iterator it3 = it2->boundary.begin();
 	
 	if (it3->infinity == false)
-	    boundary.push_back( *it3 );
+	    boundary.push_back( sgVec2Wrap(it3->p) );
 	else
 	{
-	    Point2D direction_vector = *it3;
+	    sgVec2 direction_vector;
+	    sgCopyVec2(direction_vector, it3->p);
+
 	    it3++;
-	    boundary.push_back( (*it3) + direction_vector);
+	    sgAddVec2(direction_vector, it3->p);
+
+	    boundary.push_back( direction_vector );
 	}
 	
 	for (; it3 != it2->boundary.end(); it3++)
 	{
-	    boundary.push_back( *it3 );
+	    boundary.push_back( sgVec2Wrap(it3->p) );
 	    
 	}
 
 	it3--;
 	if (it3->infinity == true)
 	{
-	    Point2D direction_vector = *it3;
+	    sgVec2 direction_vector;
+	    sgCopyVec2(direction_vector, it3->p);
+
 	    it3--;
-	    Point2D value = *it3;
+	    sgAddVec2(direction_vector, it3->p);
+
 	    boundary.pop_back();
-	    boundary.push_back(value + direction_vector);
+	    boundary.push_back(direction_vector);
 	}
 
 	ret_list.push_back(FGVoronoiOutput(boundary, input[it2->ID].value));
@@ -182,8 +190,8 @@ bool readsites(PointList input)
 
     while(It != input.end())
     {	
-	sites[nsites].coord.x = It->x();
-	sites[nsites].coord.y = It->y();
+	sites[nsites].coord.x = It->p[0];
+	sites[nsites].coord.y = It->p[1];
 
 	sites[nsites].sitenbr = nsites;
 	sites[nsites].refcnt = 0;

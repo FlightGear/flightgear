@@ -5,7 +5,7 @@
  Date started: 28.05.99
  Called by:    main program
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -37,6 +37,8 @@ HISTORY
 20.06.1999 Christian Mayer	added lots of consts
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -60,23 +62,28 @@ HISTORY
 /*   |     \      \		    If p isn't in the triangle the algoritm */
 /*  x1------q------x2		    extrapolates it's value		    */
 /****************************************************************************/
-template<class P, class V>
-V triangle_interpolate(const P& x1, const V& v1, const P& x2, const V& v2, const P& x3, const V& v3, const P& p)
+template<class V>
+V triangle_interpolate(const sgVec2& x1, const V& v1, const sgVec2& x2, const V& v2, const sgVec2& x3, const V& v3, const sgVec2& p)
 {
-    P q;
+    sgVec2 q;
     V q_value;
     
-    q = x1 + (x2 - x1)*( ((x3-x1).x()*(x1-x2).y() - (x1-x2).x()*(x3-x1).y())/((p-x3).x()*(x2-x1).y() - (x2-x1).x()*(p-x3).y()) );
+    //q = x1 + (x2 - x1)*( ((x3-x1).x()*(x1-x2).y() - (x1-x2).x()*(x3-x1).y())/((p-x3).x()*(x2-x1).y() - (x2-x1).x()*(p-x3).y()) );
     
-    q_value = v1 + (v2 - v1) * (x1.distance3D(q) / x1.distance3D(x2));
+    sgSubVec2  (q, x2, x1);
+    sgScaleVec2(q,         (x3[0]-x1[0])*(x1[1]-x2[1]) - (x1[0]-x2[0])*(x3[1]-x1[1])   );
+    sgScaleVec2(q, 1.0 / ( (p [0]-x3[0])*(x2[1]-x1[1]) - (x2[0]-x1[0])*(p [1]-x3[1]) ) );
+    sgAddVec2  (q, x1);
+
+    q_value = v1 + (v2 - v1) * ( sgDistanceVec2(x1, q) / sgDistanceVec2(x1, x2) );
     
-    return q_value + (v3 - q_value) * (q.distance3D(p) / q.distance3D(x3));
+    return q_value + (v3 - q_value) * ( sgDistanceVec2(q, p) / sgDistanceVec2(q, x3));
 }
 
 /****************************************************************************/
 /* Constructor and Destructor						    */
 /****************************************************************************/
-FGGlobalWeatherDatabase::FGGlobalWeatherDatabase(const FGGlobalWeatherDatabaseStatus& s)
+FGGlobalWeatherDatabase::FGGlobalWeatherDatabase(const FGGlobalWeatherDatabaseStatus s)
 {
     DatabaseStatus = s;	
 }
@@ -89,11 +96,11 @@ FGGlobalWeatherDatabase::~FGGlobalWeatherDatabase()
 /* Get the physical properties on the specified point p			    */
 /* do this by interpolating between the 3 closest points		    */
 /****************************************************************************/
-FGPhysicalProperties FGGlobalWeatherDatabase::get(const Point2D& p) const
+FGPhysicalProperties FGGlobalWeatherDatabase::get(const sgVec2& p) const
 {
-    WeatherPrecition distance[3];		//store the 3 closest distances
+    WeatherPrecision distance[3];		//store the 3 closest distances
     FGPhysicalProperties2DVectorConstIt iterator[3];	//and the coresponding iterators
-    WeatherPrecition d;
+    WeatherPrecision d;
     
     distance[0] = 9.46e15;	//init with a distance that every calculated
     distance[1] = 9.46e15;	//distance is guranteed to be shorter as
@@ -101,7 +108,7 @@ FGPhysicalProperties FGGlobalWeatherDatabase::get(const Point2D& p) const
     
     for (FGPhysicalProperties2DVectorConstIt it=database.begin(); it!=database.end(); it++)
     {	//go through the whole database
-	d = it->p.distance2Dsquared(p);
+	d = sgScalarProductVec2(it->p, p);
 	
 	if (d<distance[0])
 	{
@@ -135,7 +142,7 @@ FGPhysicalProperties FGGlobalWeatherDatabase::get(const Point2D& p) const
 /****************************************************************************/
 /* update the database. Since the last call we had dt seconds		    */
 /****************************************************************************/
-void FGGlobalWeatherDatabase::update(const WeatherPrecition& dt)
+void FGGlobalWeatherDatabase::update(const WeatherPrecision dt)
 {
     // I've got nothing to update here (yet...)
 }
@@ -143,11 +150,11 @@ void FGGlobalWeatherDatabase::update(const WeatherPrecition& dt)
 /****************************************************************************/
 /* Add a physical property on the specified point p			    */
 /****************************************************************************/
-void FGGlobalWeatherDatabase::add(const Point2D& p, const FGPhysicalProperties& x)
+void FGGlobalWeatherDatabase::add(const sgVec2& p, const FGPhysicalProperties& x)
 {
     FGPhysicalProperties2D e;
     
-    e.p = p;
+    sgCopyVec2(e.p, p);
     
     e.Wind = x.Wind;	
     e.Turbulence = x.Turbulence;	  
@@ -167,11 +174,11 @@ void FGGlobalWeatherDatabase::add(const Point2D& p, const FGPhysicalProperties& 
 /* Change the closest physical property to p. If p is further away than	    */
 /* tolerance I'm returning false otherwise true				    */
 /****************************************************************************/
-bool FGGlobalWeatherDatabase::change(const FGPhysicalProperties2D& p, const WeatherPrecition& tolerance)
+bool FGGlobalWeatherDatabase::change(const FGPhysicalProperties2D& p, const WeatherPrecision tolerance)
 {
     for (FGPhysicalProperties2DVectorIt it = database.begin(); it != database.end(); it++)
     {
-	if (it->p.distance3Dsquared(p.p) < (tolerance*tolerance))
+	if (sgScalarProductVec2(it->p, p.p) < (tolerance*tolerance))
 	{   //assume that's my point
 	    (*it) = p;
 	    return true;
@@ -185,25 +192,25 @@ bool FGGlobalWeatherDatabase::change(const FGPhysicalProperties2D& p, const Weat
 /* Get all, but at least min, stored point in the circle around p with the  */
 /* radius r								    */
 /****************************************************************************/
-FGPhysicalProperties2DVector FGGlobalWeatherDatabase::getAll(const Point2D& p, const WeatherPrecition& r, const unsigned int& min)
+FGPhysicalProperties2DVector FGGlobalWeatherDatabase::getAll(const sgVec2& p, const WeatherPrecision r, const unsigned int min)
 {
     FGPhysicalProperties2DVector ret_list;
     
-    if ((DatabaseStatus == FGGlobalWeatherDatabase_only_static)
-	||(DatabaseStatus == FGGlobalWeatherDatabase_working) )
+    if (  (DatabaseStatus == FGGlobalWeatherDatabase_only_static)
+	||(DatabaseStatus == FGGlobalWeatherDatabase_working    ) )
     {	//doest it make sense?
 	
 	FGPhysicalProperties2DVectorIt *it;	    //store the closest entries
-	WeatherPrecition *d;
+	WeatherPrecision *d;
 	unsigned int act_it = 0;
 	int i;
 	
 	it = new FGPhysicalProperties2DVectorIt[min+1];
-	d = new WeatherPrecition[min+1];
+	d = new WeatherPrecision[min+1];
 	
 	for (it[0]=database.begin(); it[act_it]!=database.end(); it[act_it]++)
 	{	//go through the whole database
-	    d[act_it] = it[act_it]->p.distance2Dsquared(p);
+	    d[act_it] = sgScalarProductVec2(it[act_it]->p, p);
 	    
 	    if (r >= d[act_it])
 	    {   //add it
@@ -213,7 +220,7 @@ FGPhysicalProperties2DVector FGGlobalWeatherDatabase::getAll(const Point2D& p, c
 	    {
 		if (act_it>0)
 		{   //figure out if this distance belongs to the closest ones
-		    WeatherPrecition dummy;
+		    WeatherPrecision dummy;
 		    FGPhysicalProperties2DVectorIt dummyIt;
 		    
 		    for (i = act_it++; i >= 0;)

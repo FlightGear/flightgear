@@ -4,7 +4,7 @@
  Author:       Christian Mayer
  Date started: 28.05.99
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -32,9 +32,10 @@ HISTORY
 28.05.1999 Christian Mayer	Created
 16.06.1999 Durk Talsma		Portability for Linux
 20.06.1999 Christian Mayer	added lots of consts
-10.10.1999 Christian Mayer	added mutable for gcc 2.95 portability
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -46,12 +47,10 @@ HISTORY
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
-#include <Math/point3d.hxx>
+#include "sg.h"
+
 #include "FGWeatherDefs.h"
 
-//for the case that mutable isn't supported:
-#include "Include/compiler.h"
-		
 /****************************************************************************/
 /* DEFINES								    */
 /****************************************************************************/
@@ -64,50 +63,55 @@ FGWindItem operator-(const FGWindItem& arg);
 class FGWindItem
 {
 private:
-    mutable Point3D value;
-    WeatherPrecition alt;
+    sgVec3 value;
 
 protected:
 public:
 
-    FGWindItem(const WeatherPrecition& a, const Point3D& v) {alt = a; value = v;}
-    FGWindItem(const Point3D& v)			    {alt = 0.0; value = v;}
-    FGWindItem()					    {alt = 0.0; value = Point3D(0.0);}
+    FGWindItem(const sgVec3& v)	{ sgCopyVec3(value, v); }
+    FGWindItem()		{ sgZeroVec3(value);    }
 
-    Point3D          getValue() const { return value; };
-    WeatherPrecition getAlt()   const { return alt;   };
+    void          getValue(sgVec3 ret) const { sgCopyVec3(ret, value); };
+    const sgVec3* getValue(void)       const { return &value;          };
 
-    FGWindItem& operator*= (const WeatherPrecition& arg);
-    FGWindItem& operator+= (const FGWindItem& arg);
-    FGWindItem& operator-= (const FGWindItem& arg);
+    WeatherPrecision x(void) const { return value[0]; };
+    WeatherPrecision y(void) const { return value[1]; };
+    WeatherPrecision z(void) const { return value[2]; };
 
-    friend bool operator<(const FGWindItem& arg1, const FGWindItem& arg2);
+    FGWindItem& operator*= (const WeatherPrecision arg);
+    FGWindItem& operator+= (const FGWindItem&      arg);
+    FGWindItem& operator-= (const FGWindItem&      arg);
+
     friend FGWindItem operator-(const FGWindItem& arg);
-
 };
 
-inline FGWindItem& FGWindItem::operator*= (const WeatherPrecition& arg)
+inline FGWindItem& FGWindItem::operator*= (const WeatherPrecision arg)
 {
-  value *= arg;
+  sgScaleVec3(value, arg);
   return *this;
 }
 
 inline FGWindItem& FGWindItem::operator+= (const FGWindItem& arg)
 {
-  value += arg.value;
+  sgAddVec3(value, *arg.getValue());
   return *this;
 }
 
 inline FGWindItem& FGWindItem::operator-= (const FGWindItem& arg)
 {
-  value -= arg.value;
+  sgSubVec3(value, *arg.getValue());
   return *this;
 }
 
 
 inline FGWindItem operator-(const FGWindItem& arg)
 {
-    return FGWindItem(arg.alt, -arg.value);
+    sgVec3 temp;
+
+    sgNegateVec3(temp, *arg.getValue());
+
+    return FGWindItem(temp);
 }
+
 /****************************************************************************/
 #endif /*FGWindItem_H*/

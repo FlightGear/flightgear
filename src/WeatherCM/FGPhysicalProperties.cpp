@@ -5,7 +5,7 @@
  Date started: 28.05.99
  Called by:    main program
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -35,6 +35,8 @@ HISTORY
 20.06.1999 Christian Mayer	added lots of consts
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -48,15 +50,17 @@ HISTORY
 /****************************************************************************/
 FGPhysicalProperties::FGPhysicalProperties()
 {
+    sgVec3 zero;
+    sgZeroVec3( zero );
     /************************************************************************/
     /* This standart constructor fills the class with a standard weather    */
     /************************************************************************/
 
-    Wind[-1000.0] = Point3D(0.0);	//no Wind by default
-    Wind[10000.0] = Point3D(0.0);	//no Wind by default
+    Wind[-1000.0] = FGWindItem(zero);		    //no Wind by default
+    Wind[10000.0] = FGWindItem(zero);		    //no Wind by default
 
-    Turbulence[-1000.0] = Point3D(0.0);	//no Turbulence by default
-    Turbulence[10000.0] = Point3D(0.0);	//no Turbulence by default
+    Turbulence[-1000.0] = FGTurbulenceItem(zero);   //no Turbulence by default
+    Turbulence[10000.0] = FGTurbulenceItem(zero);   //no Turbulence by default
 
     //Initialice with the CINA atmosphere
     Temperature[    0.0] = +15.0 + 273.16;  
@@ -81,7 +85,7 @@ unsigned int FGPhysicalProperties::getNumberOfCloudLayers(void) const
 
 FGCloudItem FGPhysicalProperties::getCloudLayer(unsigned int nr) const
 {
-    map<WeatherPrecition,FGCloudItem>::const_iterator CloudsIt = Clouds.begin();
+    map<WeatherPrecision,FGCloudItem>::const_iterator CloudsIt = Clouds.begin();
 
     //set the iterator to the 'nr'th entry
     for (; nr > 0; nr--)

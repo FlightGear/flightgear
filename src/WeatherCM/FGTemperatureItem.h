@@ -48,7 +48,7 @@ HISTORY
 /****************************************************************************/
 #include "FGWeatherDefs.h"
 
-//for the case that mutable isn't supported:
+// for the case that mutable isn't supported:
 #include "Include/compiler.h"
 		
 /****************************************************************************/
@@ -63,20 +63,20 @@ FGTemperatureItem operator-(const FGTemperatureItem& arg);
 class FGTemperatureItem
 {
 private:
-    mutable WeatherPrecition value;
-    WeatherPrecition alt;
+    mutable WeatherPrecision value;
+    WeatherPrecision alt;
 
 protected:
 public:
 
-    FGTemperatureItem(const WeatherPrecition& a, const WeatherPrecition& v) {alt = a; value = v;}
-    FGTemperatureItem(const WeatherPrecition& v)			    {alt = 0.0; value = v;}
-    FGTemperatureItem()							    {alt = 0.0; value = (WeatherPrecition)FG_WEATHER_DEFAULT_TEMPERATURE;}
+    FGTemperatureItem(const WeatherPrecision& a, const WeatherPrecision& v) {alt = a; value = v;}
+    FGTemperatureItem(const WeatherPrecision& v)			    {alt = 0.0; value = v;}
+    FGTemperatureItem()							    {alt = 0.0; value = (WeatherPrecision)FG_WEATHER_DEFAULT_TEMPERATURE;}
 
-    WeatherPrecition getValue() const { return value; };
-    WeatherPrecition getAlt()   const { return alt;   };  
+    WeatherPrecision getValue() const { return value; };
+    WeatherPrecision getAlt()   const { return alt;   };  
 
-    FGTemperatureItem& operator*= (const WeatherPrecition& arg);
+    FGTemperatureItem& operator*= (const WeatherPrecision& arg);
     FGTemperatureItem& operator+= (const FGTemperatureItem& arg);
     FGTemperatureItem& operator-= (const FGTemperatureItem& arg);
 
@@ -85,7 +85,7 @@ public:
     
 };
 
-inline FGTemperatureItem& FGTemperatureItem::operator*= (const WeatherPrecition& arg)
+inline FGTemperatureItem& FGTemperatureItem::operator*= (const WeatherPrecision& arg)
 {
   value *= arg;
   return *this;

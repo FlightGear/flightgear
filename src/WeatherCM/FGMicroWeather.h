@@ -4,7 +4,7 @@
  Author:       Christian Mayer
  Date started: 28.05.99
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -35,6 +35,8 @@ HISTORY
 30.06.1999 Christian Mayer	STL portability
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -46,22 +48,23 @@ HISTORY
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
+#include <set>
+
+#include "sg.h"
+#include "FGWeatherVectorWrap.h"
+
+#include "FGWeatherDefs.h"
+
 //Include all the simulated weather features
 #include "FGCloud.h"
 #include "FGSnowRain.h"
 
 #include "FGAirPressureItem.h"
-#include "FGTemperatureItem.h"
 #include "FGWindItem.h"
 #include "FGTurbulenceItem.h"
-#include "FGVaporPressureItem.h"
 
-#include "FGWeatherDefs.h"
 #include "FGPhysicalProperties.h"
 #include "FGPhysicalProperty.h"
-#include <Voronoi/point2d.h>
-
-#include <set>
 
 /****************************************************************************/
 /* DEFINES								    */
@@ -76,12 +79,11 @@ class FGMicroWeather
 {
 private:
 protected:
-    typedef vector<Point2D> positionList;
-    typedef positionList::iterator positionListIt;
+    typedef vector<sgVec2Wrap>           positionList;
+    typedef positionList::iterator       positionListIt;
     typedef positionList::const_iterator const_positionListIt;
     positionList position;	//the points that specify the outline of the
 				//micro weather (lat/lon)
-
 
     FGPhysicalProperties2D StoredWeather;    //property if nothing is specified
 
@@ -95,39 +97,45 @@ public:
     /************************************************************************/
     /* Add a feature to the micro weather				    */
     /************************************************************************/
-    void addWind(const WeatherPrecition alt, const Point3D& x);
-    void addTurbulence(const WeatherPrecition alt, const Point3D& x);
-    void addTemperature(const WeatherPrecition alt, const WeatherPrecition x);
-    void addAirPressure(const WeatherPrecition alt, const WeatherPrecition x);
-    void addVaporPressure(const WeatherPrecition alt, const WeatherPrecition x);
-    void addCloud(const WeatherPrecition alt, const FGCloudItem& x);
+    void addWind         (const WeatherPrecision alt, const FGWindItem&       x);
+    void addTurbulence   (const WeatherPrecision alt, const FGTurbulenceItem& x);
+    void addTemperature  (const WeatherPrecision alt, const WeatherPrecision  x);
+    void addAirPressure  (const WeatherPrecision alt, const WeatherPrecision  x);
+    void addVaporPressure(const WeatherPrecision alt, const WeatherPrecision  x);
+    void addCloud        (const WeatherPrecision alt, const FGCloudItem&      x);
 
-    void setSnowRainIntensity(const WeatherPrecition& x);
-    void setSnowRainType(const SnowRainType& x);
-    void setLightningProbability(const WeatherPrecition& x);
+    void setSnowRainIntensity   (const WeatherPrecision x);
+    void setSnowRainType        (const SnowRainType x);
+    void setLightningProbability(const WeatherPrecision x);
 
-    void setStoredWeather(const FGPhysicalProperties2D& x);
+    void setStoredWeather       (const FGPhysicalProperties2D& x);
 
     /************************************************************************/
     /* get physical properties in the micro weather			    */
     /* NOTE: I don't neet to speify a positon as the properties don't	    */
     /*       change in a micro weather					    */
     /************************************************************************/
-    inline FGPhysicalProperty get(const WeatherPrecition& altitude) const
-    {
-	return FGPhysicalProperty(StoredWeather, altitude);
-    }
-
-    inline FGPhysicalProperties get(void) const
+    FGPhysicalProperties get(void) const
     {
 	return FGPhysicalProperties();
+    }
+
+    FGPhysicalProperty   get(const WeatherPrecision altitude) const
+    {
+	return FGPhysicalProperty(StoredWeather, altitude);
     }
 
     /************************************************************************/
     /* return true if p is inside this micro weather			    */
     /************************************************************************/
-    inline bool hasPoint(const Point3D& p) const { return hasPoint((Point2D) p); } 
-    bool hasPoint(const Point2D& p) const;
+    bool hasPoint(const sgVec2& p) const;
+    bool hasPoint(const sgVec3& p) const 
+    { 
+	sgVec2 temp;
+	sgSetVec2(temp, p[0], p[1]);
+
+	return hasPoint( temp ); 
+    } 
 };
 
 /****************************************************************************/

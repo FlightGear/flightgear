@@ -63,20 +63,20 @@ FGVaporPressureItem operator-(const FGVaporPressureItem& arg);
 class FGVaporPressureItem
 {
 private:
-    mutable WeatherPrecition value;
-    WeatherPrecition alt;
+    mutable WeatherPrecision value;
+    WeatherPrecision alt;
 
 protected:
 public:
 
-    FGVaporPressureItem(const WeatherPrecition& a, const WeatherPrecition& v)	{alt = a; value = v;}
-    FGVaporPressureItem(const WeatherPrecition& v)				{alt = 0.0; value = v;}
+    FGVaporPressureItem(const WeatherPrecision& a, const WeatherPrecision& v)	{alt = a; value = v;}
+    FGVaporPressureItem(const WeatherPrecision& v)				{alt = 0.0; value = v;}
     FGVaporPressureItem()							{alt = 0.0; value = FG_WEATHER_DEFAULT_VAPORPRESSURE;}
 
-    WeatherPrecition getValue() const { return value; };
-    WeatherPrecition getAlt()   const { return alt;   };
+    WeatherPrecision getValue() const { return value; };
+    WeatherPrecision getAlt()   const { return alt;   };
 
-    FGVaporPressureItem& operator*= (const WeatherPrecition& arg);
+    FGVaporPressureItem& operator*= (const WeatherPrecision& arg);
     FGVaporPressureItem& operator+= (const FGVaporPressureItem& arg);
     FGVaporPressureItem& operator-= (const FGVaporPressureItem& arg);
 
@@ -85,7 +85,7 @@ public:
 
 };
 
-inline FGVaporPressureItem& FGVaporPressureItem::operator*= (const WeatherPrecition& arg)
+inline FGVaporPressureItem& FGVaporPressureItem::operator*= (const WeatherPrecision& arg)
 {
   value *= arg;
   return *this;

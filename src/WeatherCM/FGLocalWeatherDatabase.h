@@ -4,7 +4,7 @@
  Author:       Christian Mayer
  Date started: 28.05.99
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -36,6 +36,8 @@ HISTORY
 30.06.1999 Christian Mayer	STL portability
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -56,6 +58,7 @@ HISTORY
 #include <XGL/xgl.h>
 
 #include <vector>
+
 #include "sg.h"
 
 #include "FGPhysicalProperties.h"
@@ -79,10 +82,10 @@ private:
 protected:
     FGGlobalWeatherDatabase *global;	//point to the global database
 
-    typedef vector<FGMicroWeather> FGMicroWeatherList;
+    typedef vector<FGMicroWeather>       FGMicroWeatherList;
     typedef FGMicroWeatherList::iterator FGMicroWeatherListIt;
 
-    typedef vector<Point2D> pointVector;
+    typedef vector<sgVec2>      pointVector;
     typedef vector<pointVector> tileVector;
 
     /************************************************************************/
@@ -92,9 +95,22 @@ protected:
 
     FGMicroWeatherList WeatherAreas;
 
-    WeatherPrecition WeatherVisibility;	//how far do I need to simulate the
+    WeatherPrecision WeatherVisibility;	//how far do I need to simulate the
 					//local weather? Unit: metres
-    Point3D last_known_position;
+    sgVec3 last_known_position;
+
+
+    /************************************************************************/
+    /* return the index of the area with point p			    */
+    /************************************************************************/
+    unsigned int AreaWith(const sgVec2& p) const;
+    unsigned int AreaWith(const sgVec3& p) const
+    {
+	sgVec2 temp;
+	sgSetVec2(temp, p[0], p[1]);
+
+	return AreaWith(temp);
+    }
 
 public:
     static FGLocalWeatherDatabase *theFGLocalWeatherDatabase;  
@@ -108,60 +124,65 @@ public:
 	default_mode	//use only default values
     };
 
-protected:
     DatabaseWorkingType DatabaseStatus;
 
-    /************************************************************************/
-    /* return the index of the area with point p			    */
-    /************************************************************************/
-    unsigned int AreaWith(const Point2D& p) const;
-
-public:
     /************************************************************************/
     /* Constructor and Destructor					    */
     /************************************************************************/
     FGLocalWeatherDatabase(
-	const Point3D& posititon,
-	const WeatherPrecition& visibility = DEFAULT_WEATHER_VISIBILIY,
-	const DatabaseWorkingType& type = PREFERED_WORKING_TYPE);
+	const sgVec3&             posititon,
+	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILIY,
+	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE);
+
+    FGLocalWeatherDatabase(
+	const WeatherPrecision    posititon_lat,
+	const WeatherPrecision    posititon_lon,
+	const WeatherPrecision    posititon_alt,
+	const WeatherPrecision    visibility = DEFAULT_WEATHER_VISIBILIY,
+	const DatabaseWorkingType type       = PREFERED_WORKING_TYPE)
+    {
+	sgVec3 position;
+	sgSetVec3( position, posititon_lat, posititon_lon, posititon_alt );
+
+	FGLocalWeatherDatabase( position, visibility, type );
+    }
+
     ~FGLocalWeatherDatabase();
 
     /************************************************************************/
     /* reset the whole database						    */
     /************************************************************************/
-    void reset(const DatabaseWorkingType& type = PREFERED_WORKING_TYPE);
+    void reset(const DatabaseWorkingType type = PREFERED_WORKING_TYPE);
 
     /************************************************************************/
     /* update the database. Since the last call we had dt seconds	    */
     /************************************************************************/
-    void update(const WeatherPrecition& dt);			//time has changed
-    void update(const Point3D& p);				//position has  changed
-    void update(const Point3D& p, const WeatherPrecition& dt);	//time and/or position has changed
+    void update(const WeatherPrecision dt);			//time has changed
+    void update(const sgVec3& p);				//position has  changed
+    void update(const sgVec3& p, const WeatherPrecision dt);	//time and/or position has changed
 
     /************************************************************************/
     /* Get the physical properties on the specified point p		    */
     /************************************************************************/
-    FGPhysicalProperty get(const Point3D& p) const;
-    FGPhysicalProperty get(const sgVec3& p) const;
     FGPhysicalProperties get(const sgVec2& p) const;
+    FGPhysicalProperty   get(const sgVec3& p) const;
 
-    WeatherPrecition getAirDensity(const Point3D& p) const;
-    WeatherPrecition getAirDensity(const sgVec3& p) const;
+    WeatherPrecision     getAirDensity(const sgVec3& p) const;
     
     /************************************************************************/
     /* Add a weather feature at the point p and surrounding area	    */
     /************************************************************************/
 
-    void addWind(const WeatherPrecition alt, const Point3D& x, const Point2D& p);
-    void addTurbulence(const WeatherPrecition alt, const Point3D& x, const Point2D& p);
-    void addTemperature(const WeatherPrecition alt, const WeatherPrecition x, const Point2D& p);
-    void addAirPressure(const WeatherPrecition alt, const WeatherPrecition x, const Point2D& p);
-    void addVaporPressure(const WeatherPrecition alt, const WeatherPrecition x, const Point2D& p);
-    void addCloud(const WeatherPrecition alt, const FGCloudItem& x, const Point2D& p);
+    void addWind         (const WeatherPrecision alt, const sgVec3& x,          const sgVec2& p);
+    void addTurbulence   (const WeatherPrecision alt, const sgVec3& x,          const sgVec2& p);
+    void addTemperature  (const WeatherPrecision alt, const WeatherPrecision x, const sgVec2& p);
+    void addAirPressure  (const WeatherPrecision alt, const WeatherPrecision x, const sgVec2& p);
+    void addVaporPressure(const WeatherPrecision alt, const WeatherPrecision x, const sgVec2& p);
+    void addCloud        (const WeatherPrecision alt, const FGCloudItem& x,     const sgVec2& p);
 
-    void setSnowRainIntensity(const WeatherPrecition& x, const Point2D& p);
-    void setSnowRainType(const SnowRainType& x, const Point2D& p);
-    void setLightningProbability(const WeatherPrecition& x, const Point2D& p);
+    void setSnowRainIntensity   (const WeatherPrecision x, const sgVec2& p);
+    void setSnowRainType        (const SnowRainType x,     const sgVec2& p);
+    void setLightningProbability(const WeatherPrecision x, const sgVec2& p);
 
     void addProperties(const FGPhysicalProperties2D& x);    //add a property
     void setProperties(const FGPhysicalProperties2D& x);    //change a property
@@ -169,8 +190,8 @@ public:
     /************************************************************************/
     /* get/set weather visibility					    */
     /************************************************************************/
-    void setWeatherVisibility(const WeatherPrecition& visibility);
-    WeatherPrecition getWeatherVisibility(void) const;
+    void             setWeatherVisibility(const WeatherPrecision visibility);
+    WeatherPrecision getWeatherVisibility(void) const;
 };
 
 extern FGLocalWeatherDatabase *WeatherDatabase;
@@ -179,7 +200,7 @@ void fgUpdateWeatherDatabase(void);
 /****************************************************************************/
 /* get/set weather visibility						    */
 /****************************************************************************/
-void inline FGLocalWeatherDatabase::setWeatherVisibility(const WeatherPrecition& visibility)
+void inline FGLocalWeatherDatabase::setWeatherVisibility(const WeatherPrecision visibility)
 {
     if (visibility >= MINIMUM_WEATHER_VISIBILIY)
 	WeatherVisibility = visibility;
@@ -210,7 +231,7 @@ void inline FGLocalWeatherDatabase::setWeatherVisibility(const WeatherPrecition&
 
 }
 
-WeatherPrecition inline FGLocalWeatherDatabase::getWeatherVisibility(void) const
+WeatherPrecision inline FGLocalWeatherDatabase::getWeatherVisibility(void) const
 {
     //cerr << "FGLocalWeatherDatabase::getWeatherVisibility() = " << WeatherVisibility << "\n";
     return WeatherVisibility;

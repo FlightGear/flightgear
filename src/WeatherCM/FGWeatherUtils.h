@@ -4,7 +4,7 @@
  Author:       Christian Mayer
  Date started: 28.05.99
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -35,6 +35,8 @@ HISTORY
 20.06.1999 Christian Mayer	added lots of consts
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -78,7 +80,7 @@ HISTORY
 #define SAT_VP_CONST2 7.444072452
 #define SAT_VP_CONST3 235.3120919
 
-inline WeatherPrecition sat_vp(const WeatherPrecition& temp)
+inline WeatherPrecision sat_vp(const WeatherPrecision temp)
 {
     //old:
     //return 6.112 * pow( 10, (7.5*dp)/(237.7+dp) );    //in mbar
@@ -90,21 +92,21 @@ inline WeatherPrecition sat_vp(const WeatherPrecition& temp)
     return SAT_VP_CONST1 * pow( 10, (SAT_VP_CONST2*temp)/(SAT_VP_CONST3+temp) );    //in pascal
 }
 
-inline WeatherPrecition rel_hum(const WeatherPrecition& act_vp, const WeatherPrecition& sat_vp)
+inline WeatherPrecision rel_hum(const WeatherPrecision act_vp, const WeatherPrecision sat_vp)
 {
     return (act_vp / sat_vp) * 100;	//in %
 }
 
-inline WeatherPrecition dp(const WeatherPrecition& sat_vp)
+inline WeatherPrecision dp(const WeatherPrecision sat_vp)
 {
     return (SAT_VP_CONST3*log10(sat_vp/SAT_VP_CONST1))/(SAT_VP_CONST2-log10(sat_vp/SAT_VP_CONST1)); //in °C 
 }
 
-inline WeatherPrecition wb(const WeatherPrecition& t, const WeatherPrecition& p, const WeatherPrecition& dp)
+inline WeatherPrecision wb(const WeatherPrecision t, const WeatherPrecision p, const WeatherPrecision dp)
 {
-    WeatherPrecition e = sat_vp(dp); 
-    WeatherPrecition tcur, tcvp, peq, diff;
-    WeatherPrecition tmin, tmax;
+    WeatherPrecision e = sat_vp(dp); 
+    WeatherPrecision tcur, tcvp, peq, diff;
+    WeatherPrecision tmin, tmax;
 
     if (t > dp)
     {
@@ -137,37 +139,37 @@ inline WeatherPrecition wb(const WeatherPrecition& t, const WeatherPrecition& p,
 
 }
 
-inline WeatherPrecition Celsius(const WeatherPrecition& celsius)
+inline WeatherPrecision Celsius(const WeatherPrecision celsius)
 {
     return celsius + 273.16;				//Kelvin
 }
 
-inline WeatherPrecition Fahrenheit(const WeatherPrecition& fahrenheit)
+inline WeatherPrecision Fahrenheit(const WeatherPrecision fahrenheit)
 {
     return (fahrenheit * 9.0 / 5.0) + 32.0 + 273.16;	//Kelvin
 }
 
-inline WeatherPrecition Kelvin2Celsius(const WeatherPrecition& kelvin)
+inline WeatherPrecision Kelvin2Celsius(const WeatherPrecision kelvin)
 {
     return kelvin - 273.16;				//Celsius
 }
 
-inline WeatherPrecition Kelvin2Fahrenheit(const WeatherPrecition& kelvin)
+inline WeatherPrecision Kelvin2Fahrenheit(const WeatherPrecision kelvin)
 {
     return ((kelvin - 273.16) * 9.0 / 5.0) + 32.0;	 //Fahrenheit
 }
 
-inline WeatherPrecition Celsius2Fahrenheit(const WeatherPrecition& celsius)
+inline WeatherPrecision Celsius2Fahrenheit(const WeatherPrecision celsius)
 {
     return (celsius * 9.0 / 5.0) + 32.0;		 //Fahrenheit
 }
 
-inline WeatherPrecition Fahrenheit2Celsius(const WeatherPrecition& fahrenheit)
+inline WeatherPrecision Fahrenheit2Celsius(const WeatherPrecision fahrenheit)
 {
     return (fahrenheit - 32.0) * 5.0 / 9.0;		//Celsius
 }
 
-inline WeatherPrecition Torr2Pascal(const WeatherPrecition& torr)
+inline WeatherPrecision Torr2Pascal(const WeatherPrecision torr)
 {
     return (101325.0/760.0)*torr;
 }

@@ -5,7 +5,7 @@
  Date started: 28.05.99
  Called by:    FGLocalWeatherDatabase
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -35,13 +35,17 @@ HISTORY
 20.06.1999 Christian Mayer	added lots of consts
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
+#include <Include/compiler.h>
+#include <Include/fg_constants.h>
+
 #include "FGMicroWeather.h"
-#include "fg_constants.h"
 
 /****************************************************************************/
 /********************************** CODE ************************************/
@@ -60,48 +64,48 @@ FGMicroWeather::~FGMicroWeather()
 /* Add the features to the micro weather				    */
 /* return succss							    */
 /****************************************************************************/
-void FGMicroWeather::addWind(const WeatherPrecition alt, const Point3D& x)
+void FGMicroWeather::addWind(const WeatherPrecision alt, const FGWindItem& x)
 {
     StoredWeather.Wind[alt] = x;
 }
 
-void FGMicroWeather::addTurbulence(const WeatherPrecition alt, const Point3D& x)
+void FGMicroWeather::addTurbulence(const WeatherPrecision alt, const FGTurbulenceItem& x)
 {
     StoredWeather.Turbulence[alt] = x;
 }
 
-void FGMicroWeather::addTemperature(const WeatherPrecition alt, const WeatherPrecition x)
+void FGMicroWeather::addTemperature(const WeatherPrecision alt, const WeatherPrecision x)
 {
     StoredWeather.Temperature[alt] = x;
 }
 
-void FGMicroWeather::addAirPressure(const WeatherPrecition alt, const WeatherPrecition x)
+void FGMicroWeather::addAirPressure(const WeatherPrecision alt, const WeatherPrecision x)
 {
     cerr << "Error: caught attempt to add AirPressure which is logical wrong\n";
     //StoredWeather.AirPressure[alt] = x;
 }
 
-void FGMicroWeather::addVaporPressure(const WeatherPrecition alt, const WeatherPrecition x)
+void FGMicroWeather::addVaporPressure(const WeatherPrecision alt, const WeatherPrecision x)
 {
     StoredWeather.VaporPressure[alt] = x;
 }
 
-void FGMicroWeather::addCloud(const WeatherPrecition alt, const FGCloudItem& x)
+void FGMicroWeather::addCloud(const WeatherPrecision alt, const FGCloudItem& x)
 {
     StoredWeather.Clouds[alt] = x;
 }
 
-void FGMicroWeather::setSnowRainIntensity(const WeatherPrecition& x)
+void FGMicroWeather::setSnowRainIntensity(const WeatherPrecision x)
 {
     StoredWeather.SnowRainIntensity = x;
 }
 
-void FGMicroWeather::setSnowRainType(const SnowRainType& x)
+void FGMicroWeather::setSnowRainType(const SnowRainType x)
 {
     StoredWeather.snowRainType = x;
 }
 
-void FGMicroWeather::setLightningProbability(const WeatherPrecition& x)
+void FGMicroWeather::setLightningProbability(const WeatherPrecision x)
 {
     StoredWeather.LightningProbability = x;
 }
@@ -122,7 +126,7 @@ inline const int FG_SIGN(const T& x) {
     return x < T(0) ? -1 : 1;
 }
 
-bool FGMicroWeather::hasPoint(const Point2D& p) const
+bool FGMicroWeather::hasPoint(const sgVec2& p) const
 {
     if (position.size()==0)
 	return true;	//no border => this tile is infinite
@@ -132,7 +136,7 @@ bool FGMicroWeather::hasPoint(const Point2D& p) const
 
     //when I'm here I've got at least 2 points
     
-    WeatherPrecition t;
+    WeatherPrecision t;
     signed char side1, side2;
     const_positionListIt it = position.begin();
     const_positionListIt it2 = it; it2++;
@@ -143,19 +147,21 @@ bool FGMicroWeather::hasPoint(const Point2D& p) const
 	if (it2 == position.end())
 	    break;
 
-	if (fabs(it->x() - it2->x()) >= FG_EPSILON)
+	if (fabs(it->p[0] - it2->p[0]) >= FG_EPSILON)
 	{
-	    t = (it->y() - it2->y()) / (it->x() - it2->x());
-	    side1 = FG_SIGN (t * (StoredWeather.p.x() - it2->x()) + it2->y() - StoredWeather.p.y());
-	    side2 = FG_SIGN (t * (              p.x() - it2->x()) + it2->y() -               p.y());
+	    t = (it->p[1] - it2->p[1]) / (it->p[0] - it2->p[0]);
+
+	    side1 = FG_SIGN (t * (StoredWeather.p[0] - it2->p[0]) + it2->p[1] - StoredWeather.p[1]);
+	    side2 = FG_SIGN (t * (              p[0] - it2->p[0]) + it2->p[1] -               p[1]);
 	    if ( side1 != side2 ) 
 		return false; //cout << "failed side check\n";
 	}
 	else
 	{
-	    t = (it->x() - it2->x()) / (it->y() - it2->y());
-	    side1 = FG_SIGN (t * (StoredWeather.p.y() - it2->y()) + it2->x() - StoredWeather.p.x());
-	    side2 = FG_SIGN (t * (              p.y() - it2->y()) + it2->x() -               p.x());
+	    t = (it->p[0] - it2->p[0]) / (it->p[1] - it2->p[1]);
+
+	    side1 = FG_SIGN (t * (StoredWeather.p[1] - it2->p[1]) + it2->p[0] - StoredWeather.p[0]);
+	    side2 = FG_SIGN (t * (              p[1] - it2->p[1]) + it2->p[0] -               p[0]);
 	    if ( side1 != side2 ) 
 		return false; //cout << "failed side check\n";
 	}

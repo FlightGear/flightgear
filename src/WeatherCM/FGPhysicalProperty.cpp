@@ -5,7 +5,7 @@
  Date started: 28.05.99
  Called by:    main program
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -35,36 +35,34 @@ HISTORY
 20.06.1999 Christian Mayer	added lots of consts
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
-#include "FGPhysicalProperty.h"
 #include "FGWeatherDefs.h"
+#include "FGPhysicalProperty.h"
 
 /****************************************************************************/
 /********************************** CODE ************************************/
 /****************************************************************************/
 FGPhysicalProperty::FGPhysicalProperty()
 {
-    Wind.setx(0.0);		//Wind vector
-    Wind.sety(0.0);		//Wind vector
-    Wind.setz(0.0);		//Wind vector
+    sgZeroVec3(Wind);		//Wind vector
 
-    Turbulence.setx(0.0);	//Turbulence vector
-    Turbulence.sety(0.0);	//Turbulence vector
-    Turbulence.setz(0.0);	//Turbulence vector
+    sgZeroVec3(Turbulence);	//Turbulence vector
 
     Temperature = FG_WEATHER_DEFAULT_TEMPERATURE;	//a nice warm day
     AirPressure = FG_WEATHER_DEFAULT_AIRPRESSURE;	//mbar, that's ground level
     VaporPressure = FG_WEATHER_DEFAULT_VAPORPRESSURE;	//that gives about 50% relatvie humidity
 }
 
-FGPhysicalProperty::FGPhysicalProperty(const FGPhysicalProperties& p, const WeatherPrecition& altitude)
+FGPhysicalProperty::FGPhysicalProperty(const FGPhysicalProperties& p, const WeatherPrecision altitude)
 {
-    Wind = p.WindAt(altitude);
-    Turbulence = p.TurbulenceAt(altitude);
+    p.WindAt(Wind, altitude);
+    p.TurbulenceAt(Turbulence, altitude);
     Temperature = p.TemperatureAt(altitude);
     AirPressure = p.AirPressureAt(altitude);
     VaporPressure = p.VaporPressureAt(altitude);

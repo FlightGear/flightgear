@@ -4,7 +4,7 @@
  Author:       Christian Mayer
  Date started: 28.05.99
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -35,6 +35,8 @@ HISTORY
 20.06.1999 Christian Mayer	added lots of consts
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -46,8 +48,9 @@ HISTORY
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
-#include "FGWeatherDefs.h"
 #include <math.h>
+
+#include "FGWeatherDefs.h"
 		
 /****************************************************************************/
 /* DEFINES								    */
@@ -64,31 +67,30 @@ FGAirPressureItem operator-(const FGAirPressureItem& arg);
 class FGAirPressureItem
 {
 private:
-    WeatherPrecition value;
+    WeatherPrecision value;
+
 protected:
 public:
 
-    FGAirPressureItem(const WeatherPrecition& v)    {value = v;}
-    FGAirPressureItem()				    {value = FG_WEATHER_DEFAULT_AIRPRESSURE;}
+    FGAirPressureItem(const WeatherPrecision v)	{value = v;}
+    FGAirPressureItem()				{value = FG_WEATHER_DEFAULT_AIRPRESSURE;}
 
-    //WeatherPrecition getValue(WeatherPrecition alt) { return value * pow(1.0 - 0.0065*alt/288.0, 5.255); };
-
-    WeatherPrecition getValue(const WeatherPrecition& alt) const
+    WeatherPrecision getValue(const WeatherPrecision& alt) const
     { 
-	return (WeatherPrecition)((value / 101325.0) *
+	return (WeatherPrecision)((value / 101325.0) *
 	    (
 	    1.01325e5 + alt * (-1.19459535223623e1 + alt * (5.50461110007561e-4 + alt * (-1.13574703113648e-8 + alt * 8.61601726143988e-14)))
 	    ));
     };
    
-    FGAirPressureItem& operator*=(const WeatherPrecition& arg);
+    FGAirPressureItem& operator*=(const WeatherPrecision   arg);
     FGAirPressureItem& operator+=(const FGAirPressureItem& arg);
     FGAirPressureItem& operator-=(const FGAirPressureItem& arg);
 
     friend FGAirPressureItem operator-(const FGAirPressureItem& arg);
 };
 
-inline FGAirPressureItem& FGAirPressureItem::operator*= (const WeatherPrecition& arg)
+inline FGAirPressureItem& FGAirPressureItem::operator*= (const WeatherPrecision arg)
 {
   value *= arg;
   return *this;

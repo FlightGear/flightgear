@@ -4,7 +4,7 @@
  Author:       Christian Mayer
  Date started: 28.05.99
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -39,6 +39,8 @@ HISTORY
 30.06.1999 Christian Mayer	STL portability
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -51,27 +53,32 @@ HISTORY
 /* INCLUDES								    */
 /****************************************************************************/
 #include "compiler.h"
-#include <vector>
-#include <set>
 
-#include <Voronoi/point2d.h>
+#include <vector>
+
+#include "sg.h"
+
+#include "FGWeatherVectorWrap.h"
 #include "FGPhysicalProperties.h"
 		
 /****************************************************************************/
 /* DEFINES								    */
 /****************************************************************************/
 FG_USING_STD(vector);
-FG_USING_STD(set);
 FG_USING_NAMESPACE(std);
 
-typedef vector<Point2D>	Point2DList;
+typedef vector<sgVec2Wrap>	Point2DList;
 
 struct FGVoronoiInput
 {
-    Point2D position;
+    sgVec2 position;
     FGPhysicalProperties2D value;
 
-    FGVoronoiInput(const Point2D& p, const FGPhysicalProperties2D& v) { position = p; value = v; }
+    FGVoronoiInput(const sgVec2& p, const FGPhysicalProperties2D& v) 
+    { 
+	sgCopyVec2(position, p); 
+	value = v; 
+    }
 };
 
 struct FGVoronoiOutput
@@ -79,10 +86,14 @@ struct FGVoronoiOutput
     Point2DList boundary;
     FGPhysicalProperties2D value;
 
-    FGVoronoiOutput(const Point2DList& b, const FGPhysicalProperties2D& v) {boundary = b; value = v;};
+    FGVoronoiOutput(const Point2DList& b, const FGPhysicalProperties2D& v) 
+    {
+	boundary = b; 
+	value = v;
+    };
 };
 
-typedef vector<FGVoronoiInput> FGVoronoiInputList;
+typedef vector<FGVoronoiInput>  FGVoronoiInputList;
 typedef vector<FGVoronoiOutput> FGVoronoiOutputList;
 
 /****************************************************************************/

@@ -4,7 +4,7 @@
  Author:       Christian Mayer
  Date started: 28.05.99
 
- ---------- Copyright (C) 1999  Christian Mayer (vader@t-online.de) ----------
+ -------- Copyright (C) 1999 Christian Mayer (fgfs@christianmayer.de) --------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License as published by the Free Software
@@ -34,6 +34,8 @@ HISTORY
 20.06.1999 Christian Mayer	added lots of consts
 11.10.1999 Christian Mayer	changed set<> to map<> on Bernie Bright's 
 				suggestion
+19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
+				and lots of wee code cleaning
 *****************************************************************************/
 
 /****************************************************************************/
@@ -49,7 +51,7 @@ HISTORY
 /****************************************************************************/
 /* DEFINES								    */
 /****************************************************************************/
-typedef float WeatherPrecition;
+typedef float WeatherPrecision;
 
 //set the minimum visibility to get a at least half way realistic weather
 #define MINIMUM_WEATHER_VISIBILIY 10.0    /* metres */
@@ -57,10 +59,11 @@ typedef float WeatherPrecition;
 //prefered way the database is working
 #define PREFERED_WORKING_TYPE default_mode
 
-#define FG_WEATHER_DEFAULT_TEMPERATURE (15.0+273.16)	    /*15°C or 288.16°K*/
+#define FG_WEATHER_DEFAULT_TEMPERATURE   (15.0+273.16)	    /*15°C or 288.16°K*/
 #define FG_WEATHER_DEFAULT_VAPORPRESSURE (0.0)		    /*in Pascal 1 Pa = N/m^2*/
-#define FG_WEATHER_DEFAULT_AIRPRESSURE (1013.25*100.0)	    /*in Pascal 1 Pa = N/m^2*/
-#define FG_WEATHER_DEFAULT_AIRDENSITY (1.22501)		    /*in kg/m^3*/
+#define FG_WEATHER_DEFAULT_AIRPRESSURE   (1013.25*100.0)    /*in Pascal 1 Pa = N/m^2*/
+#define FG_WEATHER_DEFAULT_AIRDENSITY    (1.22501)	    /*in kg/m^3*/
+
 /****************************************************************************/
 /* CLASS DECLARATION							    */
 /****************************************************************************/
