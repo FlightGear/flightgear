@@ -138,7 +138,7 @@ public:
 
     inline double _getRange() { return range; };
 
-    bool _isNight() const;
+    static bool _isNight();
 };
 
 

@@ -118,21 +118,21 @@ void FGAIBase::bind() {
    props->tie("velocities/true-airspeed-kt",  SGRawValuePointer<double>(&speed));
    props->tie("velocities/vertical-speed-fps",
                SGRawValueMethods<FGAIBase,double>(*this,
-                                         FGAIBase::_getVS_fps,
-                                         FGAIBase::_setVS_fps));
+                                         &FGAIBase::_getVS_fps,
+                                         &FGAIBase::_setVS_fps));
 
    props->tie("position/altitude-ft",
                SGRawValueMethods<FGAIBase,double>(*this,
-                                         FGAIBase::_getAltitude,
-                                         FGAIBase::_setAltitude));
+                                         &FGAIBase::_getAltitude,
+                                         &FGAIBase::_setAltitude));
    props->tie("position/latitude-deg",
                SGRawValueMethods<FGAIBase,double>(*this,
-                                         FGAIBase::_getLatitude,
-                                         FGAIBase::_setLatitude));
+                                         &FGAIBase::_getLatitude,
+                                         &FGAIBase::_setLatitude));
    props->tie("position/longitude-deg",
                SGRawValueMethods<FGAIBase,double>(*this,
-                                         FGAIBase::_getLongitude,
-                                         FGAIBase::_setLongitude));
+                                         &FGAIBase::_getLongitude,
+                                         &FGAIBase::_setLongitude));
 
    props->tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
    props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
@@ -148,7 +148,7 @@ void FGAIBase::bind() {
    props->tie("radar/rotation", SGRawValuePointer<double>(&rotation));
 
    props->tie("controls/lighting/nav-lights",
-               SGRawValueMethods<FGAIBase,bool>(*this, _isNight));
+               SGRawValueFunctions<bool>(_isNight));
    props->setBoolValue("controls/lighting/beacon", true);
    props->setBoolValue("controls/lighting/strobe", true);
 }
@@ -212,7 +212,7 @@ void FGAIBase::_setAltitude( double _alt ) {
     setAltitude( _alt );
 }
 
-bool FGAIBase::_isNight() const {
+bool FGAIBase::_isNight() {
     return (fgGetFloat("/sim/time/sun-angle-rad") > 1.57);
 }
 
