@@ -189,7 +189,7 @@ static puInput         *SaveDialogInput = 0;
 
 static puOneShot       *SaveDialogOkButton = 0;
 static puOneShot       *SaveDialogCancelButton = 0;
-static puOneShot       *SaveDialogResetButton = 0;
+// static puOneShot       *SaveDialogResetButton = 0;
 
 // Default save filename
 static char saveFile[256] = "fgfs.sav";
@@ -254,7 +254,7 @@ static puInput         *LoadDialogInput = 0;
 
 static puOneShot       *LoadDialogOkButton = 0;
 static puOneShot       *LoadDialogCancelButton = 0;
-static puOneShot       *LoadDialogResetButton = 0;
+// static puOneShot       *LoadDialogResetButton = 0;
 
 // Default load filename
 static char loadFile[256] = "fgfs.sav";

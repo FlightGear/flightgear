@@ -138,8 +138,8 @@ sgVec3Slider::sgVec3Slider ( int x, int y, sgVec3 vec, const char *title,
                              const char *Ztitle )
     : puDialogBox ( x, y )
 {
-        int DialogX = x;
-        int DialogY = y;
+        // int DialogX = x;
+        // int DialogY = y;
         int fudge = 20;
         static const int DialogWidth = 230 + fudge;
 
@@ -151,8 +151,8 @@ sgVec3Slider::sgVec3Slider ( int x, int y, sgVec3 vec, const char *title,
         static const int slider_x = 10+fudge;
         int slider_y = 55;
         static const int slider_width = 210;
-        static const int slider_title_x = 15;
-        static const int slider_value_x = 160;
+        // static const int slider_title_x = 15;
+        // static const int slider_value_x = 160;
 
         puFont LegendFont, LabelFont;
         puGetDefaultFonts ( &LegendFont, &LabelFont );
