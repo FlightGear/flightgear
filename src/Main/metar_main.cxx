@@ -265,7 +265,7 @@ void printReport(SGMetar *m)
 
 		// assemble surface string
 		vector<string> surface;
-		if ((s = rwy.getDeposit()) && strlen(s))
+		if ((s = rwy.getDepositString()) && strlen(s))
 			surface.push_back(s);
 		if ((s = rwy.getExtentString()) && strlen(s))
 			surface.push_back(s);

@@ -541,7 +541,13 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
         string host = proxy_host->getStringValue();
         string auth = proxy_auth->getStringValue();
         string port = proxy_port->getStringValue();
-        result.m = new SGMetar( icao, host, port, auth);
+        result.m = new FGMetar( icao, host, port, auth);
+
+        if (result.m->getAge_min() > 4 * 60) {
+            SG_LOG( SG_GENERAL, SG_WARN, "METAR data too old");
+            delete result.m;
+            result.m = NULL;
+        }
 
     } catch (const sg_io_exception& e) {
         SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: "
@@ -564,28 +570,24 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
 
 
 void
-FGMetarEnvironmentCtrl::update_metar_properties( SGMetar *m )
+FGMetarEnvironmentCtrl::update_metar_properties( FGMetar *m )
 {
     int i;
-    double d, dt;
+    double d;
     char s[128];
 
-    d = m->getMinVisibility().getVisibility_m();
-    d = (d != SGMetarNaN) ? d : 10000;
-    fgSetDouble("/environment/metar/min-visibility-m", d);
-
-    dt =  m->getMaxVisibility().getVisibility_m();
-    d = (dt != SGMetarNaN) ? dt : d;
-    fgSetDouble("/environment/metar/max-visibility-m", d);
+    fgSetString("/environment/metar/station-id", m->getId());
+    fgSetDouble("/environment/metar/min-visibility-m",
+                m->getMinVisibility().getVisibility_m() );
+    fgSetDouble("/environment/metar/max-visibility-m",
+                m->getMaxVisibility().getVisibility_m() );
 
     SGMetarVisibility *dirvis = m->getDirVisibility();
     for (i = 0; i < 8; i++, dirvis++) {
         const char *min = "/environment/metar/visibility[%d]/min-m";
         const char *max = "/environment/metar/visibility[%d]/max-m";
-        char s[128];
 
         d = dirvis->getVisibility_m();
-        d = (d != SGMetarNaN) ? d : 10000;
 
         snprintf(s, 128, min, i);
         fgSetDouble(s, d);
@@ -593,37 +595,22 @@ FGMetarEnvironmentCtrl::update_metar_properties( SGMetar *m )
         fgSetDouble(s, d);
     }
 
-    i = m->getWindDir();
-    if ( i == -1 ) {
-        fgSetInt("/environment/metar/base-wind-range-from",
-                 m->getWindRangeFrom() );
-        fgSetInt("/environment/metar/base-wind-range-to",
-                 m->getWindRangeTo() );
-    } else {
-        fgSetInt("/environment/metar/base-wind-range-from", i);
-        fgSetInt("/environment/metar/base-wind-range-to", i);
-    }
+    fgSetInt("/environment/metar/base-wind-range-from",
+             m->getWindRangeFrom() );
+    fgSetInt("/environment/metar/base-wind-range-to",
+             m->getWindRangeTo() );
     fgSetDouble("/environment/metar/base-wind-speed-kt",
                 m->getWindSpeed_kt() );
-
-    d = m->getGustSpeed_kt();
-    d = (d != SGMetarNaN) ? d : 0.0;
-    fgSetDouble("/environment/metar/gust-wind-speed-kt", d);
-
-    d = m->getTemperature_C();
-    if (d != SGMetarNaN) {
-        dt = m->getDewpoint_C();
-        dt = (dt != SGMetarNaN) ? dt : 0.0;
-        fgSetDouble("/environment/metar/dewpoint-degc", dt);
-        fgSetDouble("/environment/metar/rel-humidity-norm",
-                    m->getRelHumidity() );
-    }
-    d = (d != SGMetarNaN) ? d : 15.0;
-    fgSetDouble("/environment/metar/temperature-degc", d);
-
-    d = m->getPressure_inHg();
-    d = (d != SGMetarNaN) ? d : 30.0;
-    fgSetDouble("/environment/metar/pressure-inhg", d);
+    fgSetDouble("/environment/metar/gust-wind-speed-kt",
+                m->getGustSpeed_kt() );
+    fgSetDouble("/environment/metar/temperature-degc",
+                m->getTemperature_C() );
+    fgSetDouble("/environment/metar/dewpoint-degc",
+                m->getDewpoint_C() );
+    fgSetDouble("/environment/metar/rel-humidity-norm",
+                m->getRelHumidity() );
+    fgSetDouble("/environment/metar/pressure-inhg",
+                m->getPressure_inHg() );
 
     vector<SGMetarCloud> cv = m->getClouds();
     vector<SGMetarCloud>::iterator cloud;
@@ -638,14 +625,11 @@ FGMetarEnvironmentCtrl::update_metar_properties( SGMetar *m )
         snprintf(s, 128, cl, i);
         strncat(s, "/coverage", 128);
         q = cloud->getCoverage();
-        q = (q != -1 ) ? q : 0;
         fgSetString(s, coverage_string[q] );
 
         snprintf(s, 128, cl, i);
         strncat(s, "/elevation-ft", 128);
-        d = cloud->getAltitude_ft();
-        d = (d != SGMetarNaN) ? d : -9999;
-        fgSetDouble(s, d + station_elevation_ft);
+        fgSetDouble(s, cloud->getAltitude_ft() + station_elevation_ft);
 
         snprintf(s, 128, cl, i);
         strncat(s, "/thickness-ft", 128);
@@ -673,6 +657,11 @@ FGMetarEnvironmentCtrl::update_metar_properties( SGMetar *m )
         strncat(s, "/span-m", 128);
         fgSetDouble(s, 40000.0);
     }
+
+    fgSetDouble("/environment/metar/rain-norm", m->getRain());
+    fgSetDouble("/environment/metar/hail-norm", m->getHail());
+    fgSetDouble("/environment/metar/snow-norm", m->getSnow());
+    fgSetBool("/environment/metar/snow-cover", m->getSnowCover());
 }
 
 

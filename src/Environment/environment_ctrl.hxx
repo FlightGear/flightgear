@@ -47,6 +47,7 @@ SG_USING_STD(vector);
 class SGPropertyNode;
 
 #include "environment.hxx"
+#include "fgmetar.hxx"
 
 
 
@@ -141,16 +142,16 @@ private:
 };
 
 
-// A convenience wrapper around SGMetar
+// A convenience wrapper around FGMetar
 struct FGMetarResult {
     string icao;
-    SGMetar *m;
+    FGMetar *m;
 };
 
 
 
 /**
- * Interplation controller using the SGMetar class
+ * Interplation controller using the FGMetar class
  */
 class FGMetarEnvironmentCtrl : public FGEnvironmentCtrl
 {
@@ -178,7 +179,7 @@ private:
     SGPropertyNode *proxy_auth;
 
     FGMetarResult fetch_data( const string &icao );
-    virtual void update_metar_properties( SGMetar *m );
+    virtual void update_metar_properties( FGMetar *m );
     void update_env_config();
 
 private:

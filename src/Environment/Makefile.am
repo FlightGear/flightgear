@@ -7,6 +7,7 @@ noinst_LIBRARIES = libEnvironment.a
 libEnvironment_a_SOURCES = \
 	environment.cxx environment.hxx \
 	environment_mgr.cxx environment_mgr.hxx \
-	environment_ctrl.cxx environment_ctrl.hxx
+	environment_ctrl.cxx environment_ctrl.hxx \
+	fgmetar.cxx fgmetar.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
