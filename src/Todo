@@ -15,9 +15,6 @@
            kind of like the xgl stuff.  The debugging version can do
            bounds checking and such.
 
-6/10/98 -  problem with view culling when not looking forward.  Need to 
-           generate the correct matrix and work it into the calculations.
-
 6/10/98 -  terrain generation - add an option to try to iteratively change
            the error tolerance to try to generate "close" to a certain
            number of vertices so that we can have consistent size, rendering
