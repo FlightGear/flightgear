@@ -1,4 +1,4 @@
-// hitlist.hxx 
+// hitlist.hxx
 // Height Over Terrain and Assosciated Routines for FlightGear based Scenery
 // Written by Norman Vine, started 2000.
 
@@ -15,8 +15,6 @@
 
 #include <plib/ssg.h>
 
-#define FAST_HITLIST__TEST 1
-
 SG_USING_STD(vector);
 
 class FGHitRec {
@@ -30,10 +28,10 @@ private:
 public:
 
     FGHitRec( ssgEntity *e, int idx, sgdVec3 p, sgdVec3 n ) {
-	ent = e;
-	index = idx;
-	sgdSetVec3(point,p[0],p[1],p[2]);
-	sgdSetVec3(normal,n[0],n[1],n[2]);
+        ent = e;
+        index = idx;
+        sgdSetVec3(point,p[0],p[1],p[2]);
+        sgdSetVec3(normal,n[0],n[1],n[2]);
     }
 
     ssgEntity *get_entity(void) { return ent; }
@@ -53,12 +51,14 @@ private:
 
 public:
 
-    FGHitList() { last = NULL; test_dist=DBL_MAX; }
+    FGHitList();
+    ~FGHitList();
+	
     void init(void) { list.clear(); test_dist=DBL_MAX; }
     void clear(void) { init(); last = NULL; }
     void add( ssgEntity *ent, int idx, sgdVec3 point, sgdVec3 normal ) {
-	list.push_back( FGHitRec( ent,idx,point,normal) );
-	last = ent;
+        list.push_back( FGHitRec( ent,idx,point,normal) );
+        last = ent;
     }
     int num_hits(void) { return list.size(); }
     ssgEntity *get_entity(int i)  { return list[i].get_entity(); }
@@ -66,50 +66,37 @@ public:
     int get_face(int i)           { return list[i].get_face(); }
     double *get_point(int i)      { return list[i].get_point(); }
     double *get_normal(int i)     { return list[i].get_normal(); }
-		
-    void Intersect( ssgBranch *branch,
-		    sgdVec3 orig, sgdVec3 dir );
-    void Intersect( ssgBranch *scene, sgdMat4 m,
-		    sgdVec3 orig, sgdVec3 dir );
-		
-    void IntersectBranch( ssgBranch *branch, sgdMat4 m,
-			  sgdVec3 orig, sgdVec3 dir);
-		
-    void IntersectCachedLeaf( sgdVec3 orig, sgdVec3 dir);
-		
+
+    void Intersect( ssgBranch *branch, sgdVec3 orig, sgdVec3 dir );
+    void Intersect( ssgBranch *scene, sgdMat4 m, sgdVec3 orig, sgdVec3 dir );
+
+    void IntersectBranch( ssgBranch *branch, sgdMat4 m, sgdVec3 orig, sgdVec3 dir);
+
     int IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
-		       sgdVec3 orig, sgdVec3 dir );
+                       sgdVec3 orig, sgdVec3 dir );
 
-    int IntersectPolyOrFanLeaf( ssgLeaf *leaf, sgdMat4 m,
-				sgdVec3 orig, sgdVec3 dir );
-
-    int IntersectTriLeaf( ssgLeaf *leaf, sgdMat4 m,
-			  sgdVec3 orig, sgdVec3 dir );
-	
-    int IntersectStripLeaf( ssgLeaf *leaf, sgdMat4 m,
-			    sgdVec3 orig, sgdVec3 dir );
-
-    int IntersectQuadsLeaf( ssgLeaf *leaf, sgdMat4 m,
-			    sgdVec3 orig, sgdVec3 dir );
+    int IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
+                       sgdVec3 orig, sgdVec3 dir,
+                       GLenum primType );
 };
 
 
-// Associated function, assuming a wgs84 world with 0,0,0 at the
+// Associated functions, assuming a wgs84 world with 0,0,0 at the
 // center, find the current terrain intersection elevation for the
 // point specified.
 bool fgCurrentElev( sgdVec3 abs_view_pos,
-		    sgdVec3 scenery_center,
-		    ssgTransform *terra_transform,
-		    FGHitList *hit_list,
-		    double *terrain_elev,
-		    double *radius,
-		    double *normal );
+                    sgdVec3 scenery_center,
+                    ssgTransform *terra_transform,
+                    FGHitList *hit_list,
+                    double *terrain_elev,
+                    double *radius,
+                    double *normal );
 
 bool fgCurrentElev( sgdVec3 abs_view_pos,
-		    sgdVec3 scenery_center,
-		    FGHitList *hit_list,
-		    double *terrain_elev,
-		    double *radius,
-		    double *normal );
+                    sgdVec3 scenery_center,
+                    FGHitList *hit_list,
+                    double *terrain_elev,
+                    double *radius,
+                    double *normal );
 
 #endif // _HITLIST_HXX

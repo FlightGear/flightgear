@@ -6,19 +6,9 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <float.h>
 #include <math.h>
 
-#include <GL/glut.h>
-#include <GL/gl.h>
-
-#include <plib/sg.h>
-
-#include <simgear/constants.h>
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/point3d.hxx>
@@ -32,29 +22,41 @@
 
 extern ssgBranch *terrain_branch;
 
-static int sgdIsectInfLinePlane( sgdVec3 dst, const sgdVec3 l_org,
+// forward declaration of our helper/convenience functions
+static void sgMultMat4(sgdMat4 dst, sgdMat4 m1, sgMat4 m2);
+static void ssgGetEntityTransform(ssgEntity *entity, sgMat4 m );
+static void ssgGetCurrentBSphere( ssgEntity *entity, sgVec3 center, float *radius, sgMat4 m );
+
+
+// ======================
+// This is same as PLib's sgdIsectInfLinePlane()
+// and can be replaced by it after the next PLib release
+static int fgdIsectInfLinePlane( sgdVec3 dst, const sgdVec3 l_org,
                                  const sgdVec3 l_vec, const sgdVec4 plane )
 {
     SGDfloat tmp = sgdScalarProductVec3 ( l_vec, plane ) ;
 
-  /* Is line parallel to plane? */
+    /* Is line parallel to plane? */
 
     if ( fabs ( tmp ) < FLT_EPSILON )
         return false ;
 
     sgdScaleVec3 ( dst, l_vec, -( sgdScalarProductVec3 ( l_org, plane )
-                                 + plane[3] ) / tmp ) ;
+                                  + plane[3] ) / tmp ) ;
     sgdAddVec3  ( dst, l_org ) ;
 
     return true ;
 }
 
+// ======================
 
 /*
  * Given a point and a triangle lying on the same plane
  * check to see if the point is inside the triangle
  */
-static bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
+// This is same as PLib's sgdPointInTriangle()
+// and can be replaced by it after the next PLib release
+static bool fgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
 {
     sgdVec3 dif;
 
@@ -114,7 +116,7 @@ static bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
         return true;
     }
 
-    // check if intersection point is on the same side of p1 <-> p2 as p3  
+    // check if intersection point is on the same side of p1 <-> p2 as p3
     SGDfloat tmp = (y2 - y3) / (x2 - x3);
     int side1 = SG_SIGN (tmp * (rx - x3) + y3 - ry);
     int side2 = SG_SIGN (tmp * (x1 - x3) + y3 - y1);
@@ -144,405 +146,193 @@ static bool sgdPointInTriangle( sgdVec3 point, sgdVec3 tri[3] )
     return true;
 }
 
+// ======================
 
 inline static int isZeroAreaTri( sgdVec3 tri[3] )
 {
     return( sgdEqualVec3(tri[0], tri[1]) ||
-	    sgdEqualVec3(tri[1], tri[2]) ||
-	    sgdEqualVec3(tri[2], tri[0]) );
+            sgdEqualVec3(tri[1], tri[2]) ||
+            sgdEqualVec3(tri[2], tri[0]) );
 }
 
-/*
- * Given a point and a triangle lying on the same plane
- * check to see if the point is inside the triangle
- */
-
-#if 0
-static bool PointInTri( sgdVec3 P, sgdVec3 V[3] )
+FGHitList::FGHitList() :
+        last(NULL), test_dist(DBL_MAX)
 {
-    sgdVec3 X,W1,W2;
-    sgdSubVec3(X,P,V[0]);
-    sgdSubVec3(W1,V[1],V[2]);
-    sgdSubVec3(W2,V[2],V[0]);
-
-    sgdVec3 C;
-    sgdVectorProductVec3(C, W1, W2);
-
-    double d = sgdScalarProductVec3(X,C);
-
-    // Test not needed if you KNOW point is on plane of triangle
-    // and triangle is not degenerate
-    if( d > -FLT_EPSILON && d < FLT_EPSILON )
-	return false;
-
-    double u11 = sgdScalarProductVec3(W1,W1);
-    double u22 = sgdScalarProductVec3(W2,W2);
-    double u12 = sgdScalarProductVec3(W1,W2);
-
-    double y1 = sgdScalarProductVec3(X,W1);
-    double y2 = sgdScalarProductVec3(X,W2);
-    double z1 = (y1*u22 - y2*u12)/d;
-
-    if( z1>0 || z1>1 )
-	return false;
-
-    double z2 = (y2*u11 - y1*u12)/d;
-
-    if( z2>0 || z2>1 )
-	return false;
-
-    return true;
 }
-#endif
+
+FGHitList::~FGHitList() {}
+
 
 /*
-   Find the intersection of an infinite line with a leaf
-   the line being defined by a point and direction.
+Find the intersection of an infinite line with a leaf
+the line being defined by a point and direction.
 
-   Variables
-    In:
-     ssgLeaf pointer  -- leaf
-     qualified matrix -- m
-     line origin      -- orig
-     line direction   -- dir
-    Out:
-     result  -- intersection point
-     normal  -- intersected tri's normal
+Variables
+In:
+ssgLeaf pointer  -- leaf
+qualified matrix -- m
+line origin      -- orig
+line direction   -- dir
+Out:
+result  -- intersection point
+normal  -- intersected tri's normal
 
-   Returns:
-    true if intersection found
-    false otherwise
+Returns:
+true if intersection found
+false otherwise
 
-   !!! WARNING !!!
-    If you need an exhaustive list of hitpoints YOU MUST use
-    the generic version of this function as the specialized
-    versions will do an early out of expensive tests if the point
-    can not be the closest one found
-   !!! WARNING !!!
+!!! WARNING !!!
+If you need an exhaustive list of hitpoints YOU MUST use
+the generic version of this function as the specialized
+versions will do an early out of expensive tests if the point
+can not be the closest one found
+!!! WARNING !!!
 */
 int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
-			      sgdVec3 orig, sgdVec3 dir )
+                              sgdVec3 orig, sgdVec3 dir )
 {
     int num_hits = 0;
     int i = 0;
 
     for ( ; i < leaf->getNumTriangles(); ++i ) {
-	short i1, i2, i3;
-	leaf->getTriangle( i, &i1, &i2, &i3 );
+        short i1, i2, i3;
+        leaf->getTriangle( i, &i1, &i2, &i3 );
 
-	sgdVec3 tri[3];
-	sgdSetVec3( tri[0], leaf->getVertex( i1 ) );
-	sgdSetVec3( tri[1], leaf->getVertex( i2 ) );
-	sgdSetVec3( tri[2], leaf->getVertex( i3 ) );
+        sgdVec3 tri[3];
+        sgdSetVec3( tri[0], leaf->getVertex( i1 ) );
+        sgdSetVec3( tri[1], leaf->getVertex( i2 ) );
+        sgdSetVec3( tri[2], leaf->getVertex( i3 ) );
 
-	// avoid division by zero when two points are the same
-	if( isZeroAreaTri( tri ) )
-	    continue;
+        if( isZeroAreaTri( tri ) )
+            continue;
 
-	sgdVec4 plane;
-	sgdMakePlane( plane, tri[0], tri[1], tri[2] );
+        sgdVec4 plane;
+        sgdMakePlane( plane, tri[0], tri[1], tri[2] );
 
-	sgdVec3 point;
-	if( sgdIsectInfLinePlane( point, orig, dir, plane ) ) {
-	    if( sgdPointInTriangle( point, tri ) ) {
-				// transform point into passed into desired coordinate frame
-		sgdXformPnt3( point, point, m );
-		add(leaf,i,point,plane);
-		num_hits++;
-	    }
-	}
-    }
-    return num_hits;
-}
-
-
-//=================
-int FGHitList::IntersectPolyOrFanLeaf( ssgLeaf *leaf, sgdMat4 m,
-				       sgdVec3 orig, sgdVec3 dir )
-{
-    double tmp_dist;
-
-    // number of hits but there could be more that
-    // were not found because of short circut switch !
-    // so you may want to use the unspecialized IntersectLeaf()
-    int num_hits = 0;
-
-    int ntri = leaf->getNumTriangles();
-    for ( int n = 0; n < ntri; ++n ) {
-	sgdVec3 tri[3];
-
-	if ( !n ) {
-	    sgdSetVec3( tri[0], leaf->getVertex( short(0) ) );
-	    sgdSetVec3( tri[1], leaf->getVertex( short(1) ) );
-	    sgdSetVec3( tri[2], leaf->getVertex( short(2) ) );
-	} else {
-	    sgdCopyVec3( tri[1], tri[2] );
-	    sgdSetVec3( tri[2], leaf->getVertex( short(n+2) ) );
-	}
-
-	if( isZeroAreaTri( tri ) )
-	    continue;
-
-	sgdVec4 plane;
-	sgdMakePlane( plane, tri[0], tri[1], tri[2] );
-
-	sgdVec3 point;
-
-	//inlined IsectInfLinePlane( point dst, orig, dir, plane )
-	{
-	    SGDfloat tmp = sgdScalarProductVec3 ( dir, plane ) ;
-
-	    /* Is line parallel to plane? */
-	    if ( sgdAbs ( tmp ) < FLT_EPSILON /*DBL_EPSILON*/ )
-		continue ;
-
-	    sgdScaleVec3 ( point, dir,
-			   -( sgdScalarProductVec3 ( orig, plane ) + plane[3] )
-			   / tmp ) ;
-
-	    sgdAddVec3  ( point, orig ) ;
-	}  // end of inlined intersection routine 
-
-	// short circut if this point is further away then a previous hit
-	tmp_dist = sgdScalarProductVec3(point,point);
-	if( tmp_dist > test_dist )
-	    continue;
-
-	if( sgdPointInTriangle( point, tri ) ) {
-	    // transform point into passed coordinate frame
-	    sgdXformPnt3( point, point, m );
-	    add(leaf,n,point,plane);
-	    test_dist = tmp_dist;
-	    num_hits++;
-	}
-    }
-    return num_hits;
-}
-
-
-//===============
-
-int FGHitList::IntersectTriLeaf( ssgLeaf *leaf, sgdMat4 m,
-				 sgdVec3 orig, sgdVec3 dir )
-{
-    double tmp_dist;
-	
-    // number of hits but there could be more that
-    // were not found because of short circut switch !
-    // so you may want to use the unspecialized IntersectLeaf()
-    int num_hits = 0;
-
-    int ntri = leaf->getNumTriangles();
-    for ( int n = 0; n < ntri; ++n ) {
-	sgdVec3 tri[3];
-	sgdSetVec3( tri[0], leaf->getVertex( short(n*3) ) );
-	sgdSetVec3( tri[1], leaf->getVertex( short(n*3+1) ) );
-	sgdSetVec3( tri[2], leaf->getVertex( short(n*3+2) ) );
-
-	// avoid division by zero when two points are the same
-	if( isZeroAreaTri( tri ) )
-	    continue;
-
-	sgdVec4 plane;
-	sgdMakePlane( plane, tri[0], tri[1], tri[2] );
-
-	sgdVec3 point;
-	//inlined IsectInfLinePlane( point dst, orig, dir, plane )
-	{
-	    SGDfloat tmp = sgdScalarProductVec3 ( dir, plane ) ;
-
-	    /* Is line parallel to plane? */
-	    if ( sgdAbs ( tmp ) < FLT_EPSILON /*DBL_EPSILON*/ )
-		continue ;
-
-	    sgdScaleVec3 ( point, dir,
-			   -( sgdScalarProductVec3 ( orig, plane ) + plane[3] )
-			   / tmp ) ;
-
-	    sgdAddVec3  ( point, orig ) ;
-	}  // end of inlined intersection routine 
-
-	// short circut if this point is further away then a previous hit
-	tmp_dist = sgdScalarProductVec3(point,point);
-	if( tmp_dist > test_dist )
-	    continue;
-
-	if( sgdPointInTriangle( point, tri ) ) {
-	    // transform point into passed coordinate frame
-	    sgdXformPnt3( point, point, m );
-	    add(leaf,n,point,plane);
-	    test_dist = tmp_dist;
-	    num_hits++;
-	}
-    }
-    return num_hits;
-}
-
-//============================
-
-int FGHitList::IntersectStripLeaf( ssgLeaf *leaf, sgdMat4 m,
-				   sgdVec3 orig, sgdVec3 dir )
-{
-    double tmp_dist;
-
-    // number of hits but there could be more that
-    // were not found because of short circut switch !
-    // so you may want to use the unspecialized IntersectLeaf()
-    int num_hits = 0;
-
-    int ntri = leaf->getNumTriangles();
-    for ( int n = 0; n < ntri; ++n ) {
-	sgdVec3 tri[3];
-
-	if ( !n ) {
-	    sgdSetVec3( tri[0], leaf->getVertex( short(0) ) );
-	    sgdSetVec3( tri[1], leaf->getVertex( short(1) ) );
-	    sgdSetVec3( tri[2], leaf->getVertex( short(2) ) );
-	} else {
-	    if ( n & 1 ) {
-		sgdSetVec3( tri[0], leaf->getVertex( short(n+2) ) );
-		sgdCopyVec3( tri[1], tri[2] );
-		sgdCopyVec3( tri[2], tri[1] );
-
-	    } else {
-		sgdCopyVec3( tri[0], tri[1] );
-		sgdCopyVec3( tri[1], tri[2] );
-		sgdSetVec3( tri[2], leaf->getVertex( short(n+2) ) );
-	    }
-	}
-		
-	if( isZeroAreaTri( tri ) )
-	    continue;
-
-	sgdVec4 plane;
-	sgdMakePlane( plane, tri[0], tri[1], tri[2] );
-
-	sgdVec3 point;
-
-	//inlined IsectInfLinePlane( point dst, orig, dir, plane )
-	{
-	    SGDfloat tmp = sgdScalarProductVec3 ( dir, plane ) ;
-
-	    /* Is line parallel to plane? */
-	    if ( sgdAbs ( tmp ) < FLT_EPSILON /*DBL_EPSILON*/ )
-		continue ;
-
-	    sgdScaleVec3 ( point, dir,
-			   -( sgdScalarProductVec3 ( orig, plane ) + plane[3] )
-			   / tmp ) ;
-
-	    sgdAddVec3  ( point, orig ) ;
-	}  // end of inlined intersection routine 
-
-	// short circut if this point is further away then a previous hit
-	tmp_dist = sgdScalarProductVec3(point,point);
-	if( tmp_dist > test_dist )
-	    continue;
-
-	if( sgdPointInTriangle( point, tri ) ) {
-	    // transform point into passed coordinate frame
-	    sgdXformPnt3( point, point, m );
-	    add(leaf,n,point,plane);
-	    test_dist = tmp_dist;
-	    num_hits++;
-	}
+        sgdVec3 point;
+        if( fgdIsectInfLinePlane( point, orig, dir, plane ) ) {
+            if( fgdPointInTriangle( point, tri ) ) {
+                // transform point into passed into desired coordinate frame
+                sgdXformPnt3( point, point, m );
+                add(leaf,i,point,plane);
+                num_hits++;
+            }
+        }
     }
     return num_hits;
 }
 
 // ======================
 
-int FGHitList::IntersectQuadsLeaf( ssgLeaf *leaf, sgdMat4 m,
-				   sgdVec3 orig, sgdVec3 dir )
+int FGHitList::IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
+                              sgdVec3 orig, sgdVec3 dir,
+                              GLenum primType )
 {
     double tmp_dist;
 
     // number of hits but there could be more that
     // were not found because of short circut switch !
     // so you may want to use the unspecialized IntersectLeaf()
-    int num_hits = 0;
+    int n, num_hits = 0;
 
     int ntri = leaf->getNumTriangles();
-    for ( int n = 0; n < ntri; ++n ) {
-	sgdVec3 tri[3];
+    for ( n = 0; n < ntri; ++n )
+    {
+        sgdVec3 tri[3];
 
-	sgdSetVec3( tri[0], leaf->getVertex( short(n*2) ) );
-	sgdSetVec3( tri[1], leaf->getVertex( short(n*2+1) ) );
-	sgdSetVec3( tri[2], leaf->getVertex( short(n*2 + 2 - (n&1)*4) ) );
+        switch ( primType )
+        {
+        case GL_POLYGON :
+        case GL_TRIANGLE_FAN :
+            if ( !n ) {
+                sgdSetVec3( tri[0], leaf->getVertex( short(0) ) );
+                sgdSetVec3( tri[1], leaf->getVertex( short(1) ) );
+                sgdSetVec3( tri[2], leaf->getVertex( short(2) ) );
+            } else {
+                sgdCopyVec3( tri[1], tri[2] );
+                sgdSetVec3( tri[2], leaf->getVertex( short(n+2) ) );
+            }
+            break;
+        case GL_TRIANGLES :
+            sgdSetVec3( tri[0], leaf->getVertex( short(n*3) ) );
+            sgdSetVec3( tri[1], leaf->getVertex( short(n*3+1) ) );
+            sgdSetVec3( tri[2], leaf->getVertex( short(n*3+2) ) );
+            break;
+        case GL_TRIANGLE_STRIP :
+        case GL_QUAD_STRIP :
+            if ( !n ) {
+                sgdSetVec3( tri[0], leaf->getVertex( short(0) ) );
+                sgdSetVec3( tri[1], leaf->getVertex( short(1) ) );
+                sgdSetVec3( tri[2], leaf->getVertex( short(2) ) );
+            } else {
+                if ( n & 1 ) {
+                    sgdSetVec3( tri[0], leaf->getVertex( short(n+2) ) );
+                    sgdCopyVec3( tri[1], tri[2] );
+                    sgdCopyVec3( tri[2], tri[1] );
 
-	if( isZeroAreaTri( tri ) )
-	    continue;
+                } else {
+                    sgdCopyVec3( tri[0], tri[1] );
+                    sgdCopyVec3( tri[1], tri[2] );
+                    sgdSetVec3( tri[2], leaf->getVertex( short(n+2) ) );
+                }
+            }
+            break;
+        case GL_QUADS :
+            sgdSetVec3( tri[0], leaf->getVertex( short(n*2) ) );
+            sgdSetVec3( tri[1], leaf->getVertex( short(n*2+1) ) );
+            sgdSetVec3( tri[2], leaf->getVertex( short(n*2 + 2 - (n&1)*4) ) );
+            break;
+        default:
+            return IntersectLeaf( leaf, m, orig, dir);
+        }
 
-	sgdVec4 plane;
-	sgdMakePlane( plane, tri[0], tri[1], tri[2] );
+        if( isZeroAreaTri( tri ) )
+            continue;
 
-	sgdVec3 point;
+        sgdVec4 plane;
+        sgdMakePlane( plane, tri[0], tri[1], tri[2] );
 
-	//inlined IsectInfLinePlane( point dst, orig, dir, plane )
-	{
-	    SGDfloat tmp = sgdScalarProductVec3 ( dir, plane ) ;
+        sgdVec3 point, test;
 
-	    /* Is line parallel to plane? */
-	    if ( sgdAbs ( tmp ) < FLT_EPSILON /*DBL_EPSILON*/ )
-		continue ;
+        // find point of intersection of line from point org
+        // in direction dir with triangle's plane
+        SGDfloat tmp = sgdScalarProductVec3 ( dir, plane ) ;
+        /* Is line parallel to plane? */
+        if ( sgdAbs ( tmp ) < FLT_EPSILON /*DBL_EPSILON*/ )
+            continue ;
 
-	    sgdScaleVec3 ( point, dir,
-			   -( sgdScalarProductVec3 ( orig, plane ) + plane[3] )
-			   / tmp ) ;
+        // find parametric point
+        sgdScaleVec3 ( point, dir,
+                       -( sgdScalarProductVec3 ( orig, plane ) + plane[3] )
+                       / tmp ) ;
 
-	    sgdAddVec3  ( point, orig ) ;
-	}  // end of inlined intersection routine 
+        // short circut if this point is further away then a previous hit
+        tmp_dist = sgdDistanceSquaredVec3(point, orig );
+        if( tmp_dist > test_dist )
+            continue;
 
-	// short circut if this point is further away then a previous hit
-	tmp_dist = sgdScalarProductVec3(point,point);
-	if( tmp_dist > test_dist )
-	    continue;
+        // place parametric point in world
+        sgdAddVec3 ( point, orig ) ;
 
-	if( sgdPointInTriangle( point, tri ) ) {
-	    // transform point into passed coordinate frame
-	    sgdXformPnt3( point, point, m );
-	    add(leaf,n,point,plane);
-	    test_dist = tmp_dist;
-	    num_hits++;
-	}
+        if( fgdPointInTriangle( point, tri ) ) {
+            // transform point into passed coordinate frame
+            sgdXformPnt3( point, point, m );
+            add(leaf,n,point,plane);
+            test_dist = tmp_dist;
+            num_hits++;
+        }
     }
     return num_hits;
 }
 
-
-
-// Need these because of mixed matrix types
-static void sgMultMat4(sgdMat4 dst, sgdMat4 m1, sgMat4 m2)
-{
-    for ( int j = 0 ; j < 4 ; j++ ) {
-	dst[0][j] = m2[0][0] * m1[0][j] +
-	    m2[0][1] * m1[1][j] +
-	    m2[0][2] * m1[2][j] +
-	    m2[0][3] * m1[3][j] ;
-
-	dst[1][j] = m2[1][0] * m1[0][j] +
-	    m2[1][1] * m1[1][j] +
-	    m2[1][2] * m1[2][j] +
-	    m2[1][3] * m1[3][j] ;
-
-	dst[2][j] = m2[2][0] * m1[0][j] +
-	    m2[2][1] * m1[1][j] +
-	    m2[2][2] * m1[2][j] +
-	    m2[2][3] * m1[3][j] ;
-
-	dst[3][j] = m2[3][0] * m1[0][j] +
-	    m2[3][1] * m1[1][j] +
-	    m2[3][2] * m1[2][j] +
-	    m2[3][3] * m1[3][j] ;
-    }
+// ======================
+inline static bool IN_RANGE( sgdVec3 v, double radius ) {
+    return ( sgdScalarProductVec3(v, v) < (radius*radius) );
 }
 
-/*
- *
- */
-
-void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m, 
-				 sgdVec3 orig, sgdVec3 dir )
+// ======================
+void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
+                                 sgdVec3 orig, sgdVec3 dir )
 {
     /* the lookat vector and matrix in branch's coordinate frame
      * but we won't determine these unless needed,
@@ -550,150 +340,152 @@ void FGHitList::IntersectBranch( ssgBranch *branch, sgdMat4 m,
     sgdVec3 orig_leaf, dir_leaf;
     sgdMat4 m_leaf;
 
-
     // 'lazy evaluation' flag
     int first_time = 1;
-	
+
     for ( ssgEntity *kid = branch->getKid( 0 );
-	  kid != NULL; 
-	  kid = branch->getNextKid() )
+            kid != NULL;
+            kid = branch->getNextKid() )
     {
-	if ( kid->getTraversalMask() & SSGTRAV_HOT ) {
-	    sgdVec3 center;
-	    sgdSetVec3( center,
-			kid->getBSphere()->getCenter()[0],
-			kid->getBSphere()->getCenter()[1],
-			kid->getBSphere()->getCenter()[2] ); 
-	    sgdXformPnt3( center, m ) ;
+        if ( kid->getTraversalMask() & SSGTRAV_HOT )
+        {
+            sgdVec3 center;
+            sgdSetVec3( center,
+                        kid->getBSphere()->getCenter()[0],
+                        kid->getBSphere()->getCenter()[1],
+                        kid->getBSphere()->getCenter()[2] );
+            sgdXformPnt3( center, m ) ;
 
-	    // sgdClosestPointToLineDistSquared( center, orig, dir ) 
-	    // inlined here because because of profiling results
-	    sgdVec3 u, u1, v;
-	    sgdSubVec3(u, center, orig);
-	    sgdScaleVec3( u1, dir, sgdScalarProductVec3(u,dir)
-			  / sgdScalarProductVec3(dir,dir) );
-	    sgdSubVec3(v, u, u1);
+            // sgdClosestPointToLineDistSquared( center, orig, dir )
+            // inlined here because because of profiling results
+            sgdVec3 u, u1, v;
+            sgdSubVec3(u, center, orig);
+            sgdScaleVec3( u1, dir, sgdScalarProductVec3(u,dir)
+                          / sgdScalarProductVec3(dir,dir) );
+            sgdSubVec3(v, u, u1);
 
-	    // doubles because of possible overflow
-#define SQUARE(x) (x*x)
-	    if( sgdScalarProductVec3(v, v)
-		< SQUARE( double(kid->getBSphere()->getRadius()) ) )
-	    {
-		// possible intersections
-		if ( kid->isAKindOf ( ssgTypeBranch() ) ) {
-		    sgdMat4 m_new;
-		    if ( kid->isA( ssgTypeTransform() ) )
-		    {
-			sgMat4 fxform;
-			((ssgTransform *)kid)->getTransform( fxform );
-			sgMultMat4(m_new, m, fxform);
-		    } else {
-			sgdCopyMat4(m_new, m);
-		    }
-		    IntersectBranch( (ssgBranch *)kid, m_new, orig, dir );
-		} else if ( kid->isAKindOf( ssgTypeLeaf() ) ) {
-		    if ( first_time ) {
-			// OK we need these
-			sgdTransposeNegateMat4( m_leaf, m);
-			sgdXformPnt3( orig_leaf, orig, m_leaf );
-			sgdXformPnt3( dir_leaf,  dir,  m_leaf );
-			first_time = 0;
-		    }
-					
-		    GLenum primType = ((ssgLeaf *)kid)->getPrimitiveType();
-					
-		    switch ( primType ) {
-		    case GL_POLYGON :
-		    case GL_TRIANGLE_FAN :
-			IntersectPolyOrFanLeaf( (ssgLeaf *)kid, m,
-						orig_leaf, dir_leaf );
-			break;
-		    case GL_TRIANGLES :
-			IntersectTriLeaf( (ssgLeaf *)kid, m,
-					  orig_leaf, dir_leaf );
-			break;
-		    case GL_TRIANGLE_STRIP :
-		    case GL_QUAD_STRIP :
-			IntersectStripLeaf( (ssgLeaf *)kid, m,
-					    orig_leaf, dir_leaf );
-			break;
-		    case GL_QUADS :
-			IntersectQuadsLeaf( (ssgLeaf *)kid, m,
-					    orig_leaf, dir_leaf );
-			break;
-		    default:
-			IntersectLeaf( (ssgLeaf *)kid, m,
-				       orig_leaf, dir_leaf );
-		    }
-		}
-	    } else {
-		// end of the line for this branch
-	    }
-	} else {
-	    // branch requested not to be traversed
-	}
+            // double because of possible overflow
+            if ( IN_RANGE( v, double(kid->getBSphere()->getRadius()) ) )
+            {
+                if ( kid->isAKindOf ( ssgTypeBranch() ) )
+                {
+                    sgdMat4 m_new;
+                    if ( kid->isA( ssgTypeTransform() ) )
+                    {
+                        sgMat4 fxform;
+                        ((ssgTransform *)kid)->getTransform( fxform );
+                        sgMultMat4(m_new, m, fxform);
+                    } else {
+                        sgdCopyMat4(m_new, m);
+                    }
+                    IntersectBranch( (ssgBranch *)kid, m_new, orig, dir );
+                }
+                else if ( kid->isAKindOf( ssgTypeLeaf() ) )
+                {
+                    if ( first_time ) {
+                        sgdTransposeNegateMat4( m_leaf, m );
+                        sgdXformPnt3( orig_leaf, orig, m_leaf );
+                        sgdXformPnt3( dir_leaf,  dir,  m_leaf );
+                        first_time = 0;
+                    }
+                    GLenum primType = ((ssgLeaf *)kid)->getPrimitiveType();
+                    IntersectLeaf( (ssgLeaf *)kid, m, orig_leaf, dir_leaf, primType );
+                }
+            }  // Out of range
+        } // branch not requested to be traversed
+    } // end for loop
+}
+
+
+
+// ======================
+// a temporary hack until we get everything rewritten with sgdVec3
+static inline Point3D operator + (const Point3D& a, const sgdVec3 b)
+{
+    return Point3D(a.x()+b[0], a.y()+b[1], a.z()+b[2]);
+}
+
+
+// ======================
+void FGHitList::Intersect( ssgBranch *scene, sgdVec3 orig, sgdVec3 dir ) {
+    sgdMat4 m;
+    clear();
+    sgdMakeIdentMat4 ( m ) ;
+    IntersectBranch( scene, m, orig, dir );
+}
+
+// ======================
+void FGHitList::Intersect( ssgBranch *scene, sgdMat4 m, sgdVec3 orig, sgdVec3 dir )
+{
+    clear();
+    IntersectBranch( scene, m, orig, dir );
+}
+
+// ======================
+// Need these because of mixed matrix types
+static void sgMultMat4(sgdMat4 dst, sgdMat4 m1, sgMat4 m2)
+{
+    for ( int j = 0 ; j < 4 ; j++ )
+    {
+        dst[0][j] = m2[0][0] * m1[0][j] +
+                    m2[0][1] * m1[1][j] +
+                    m2[0][2] * m1[2][j] +
+                    m2[0][3] * m1[3][j] ;
+
+        dst[1][j] = m2[1][0] * m1[0][j] +
+                    m2[1][1] * m1[1][j] +
+                    m2[1][2] * m1[2][j] +
+                    m2[1][3] * m1[3][j] ;
+
+        dst[2][j] = m2[2][0] * m1[0][j] +
+                    m2[2][1] * m1[1][j] +
+                    m2[2][2] * m1[2][j] +
+                    m2[2][3] * m1[3][j] ;
+
+        dst[3][j] = m2[3][0] * m1[0][j] +
+                    m2[3][1] * m1[1][j] +
+                    m2[3][2] * m1[2][j] +
+                    m2[3][3] * m1[3][j] ;
     }
 }
 
-void ssgGetEntityTransform(ssgEntity *entity, sgMat4 m )
+// ======================
+static void ssgGetEntityTransform(ssgEntity *entity, sgMat4 m )
 {
     /*
-      Walk backwards up the tree, transforming the
-      vertex by all the matrices along the way.
+       Walk backwards up the tree, transforming the
+       vertex by all the matrices along the way.
 
-      Upwards recursion hurts my head.
-    */
+       Upwards recursion hurts my head.
+       */
 
     sgMat4 mat ;
 
     /*
-      If this node has a parent - get the composite
-      matrix for the parent.
-    */
-
+       If this node has a parent - get the composite
+       matrix for the parent.
+       */
     if ( entity->getNumParents() > 0 )
-	ssgGetEntityTransform ( entity->getParent(0), mat ) ;
-    else 
-	sgMakeIdentMat4 ( mat ) ;
+        ssgGetEntityTransform ( entity->getParent(0), mat ) ;
+    else
+        sgMakeIdentMat4 ( mat ) ;
 
-  /*
-  If this node has a transform - then concatenate it.
-  */
-
+    /*
+       If this node has a transform - then concatenate it.
+       */
     if ( entity -> isAKindOf ( ssgTypeTransform () ) ) {
-	sgMat4 this_mat ;
-	((ssgTransform *) entity) -> getTransform ( this_mat ) ;
-	sgPostMultMat4 ( mat, this_mat ) ;
+        sgMat4 this_mat ;
+        ((ssgTransform *) entity) -> getTransform ( this_mat ) ;
+        sgPostMultMat4 ( mat, this_mat ) ;
     }
 
     sgCopyMat4 ( m, mat ) ;
 }
-#if 0
-// previously used method
-// This expects the inital m to be the identity transform
-void ssgGetEntityTransform(ssgEntity *branch, sgMat4 m )
-{
-    for ( ssgEntity *parent = branch->getParent(0);
-          parent != NULL;
-	  parent = parent->getParent(0) )
-    {
-	// recurse till we are at the scene root
-	// then just unwinding the stack should 
-	// give us our cumulative transform :-)  NHV
-	ssgGetEntityTransform( parent, m );
-	if ( parent->isA( ssgTypeTransform() ) ) {
-	    sgMat4 xform;
-	    ((ssgTransform *)parent)->getTransform( xform );
-	    sgPreMultMat4( m, xform );
-	}
-    }
-}
-#endif // 0
 
+// ======================
 // return the passed entitity's bsphere's center point radius and
 // fully formed current model matrix for entity
-void ssgGetCurrentBSphere( ssgEntity *entity, sgVec3 center,
-			   float *radius, sgMat4 m )
+static void ssgGetCurrentBSphere( ssgEntity *entity, sgVec3 center, float *radius, sgMat4 m )
 {
     sgSphere *bsphere = entity->getBSphere();
     *radius = (double)bsphere->getRadius();
@@ -703,166 +495,126 @@ void ssgGetCurrentBSphere( ssgEntity *entity, sgVec3 center,
 }
 
 
-void FGHitList::Intersect( ssgBranch *scene, sgdVec3 orig, sgdVec3 dir ) {
-    sgdMat4 m;
-    clear();
-    sgdMakeIdentMat4 ( m ) ;
-    IntersectBranch( scene, m, orig, dir);
-}
-
-
-static void CurrentNormalInLocalPlane(sgVec3 dst, sgVec3 src) {
-    sgVec3 tmp;
-    sgSetVec3(tmp, src[0], src[1], src[2] );
-    sgMat4 TMP;
-    sgTransposeNegateMat4 ( TMP, globals->get_current_view()->get_UP() ) ;
-    sgXformVec3(tmp, tmp, TMP);
-    sgSetVec3(dst, tmp[2], tmp[1], tmp[0] );
-}
-
-
-// a temporary hack until we get everything rewritten with sgdVec3
-static inline Point3D operator + (const Point3D& a, const sgdVec3 b)
-{
-    return Point3D(a.x()+b[0], a.y()+b[1], a.z()+b[2]);
-}
-
-
-/*
- * This method is faster
- */
-
-void FGHitList::Intersect( ssgBranch *scene, sgdMat4 m, sgdVec3 orig,
-			   sgdVec3 dir )
-{
-    clear();
-    IntersectBranch( scene, m, orig, dir);
-}
-
-
+// ======================
 // Determine scenery altitude via ssg.
 // returned results are in meters
 bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
-		    FGHitList *hit_list,
-		    double *terrain_elev, double *radius, double *normal)
+					FGHitList *hit_list,
+					double *terrain_elev, double *radius, double *normal)
 {
-    sgdVec3 view_pos;
-    sgdSubVec3( view_pos, abs_view_pos, scenery_center );
+	sgdVec3 view_pos;
+	sgdSubVec3( view_pos, abs_view_pos, scenery_center );
 
-    sgdVec3 orig, dir;
-    sgdCopyVec3(orig, view_pos );
-    sgdCopyVec3(dir, abs_view_pos );
-    // sgdNormalizeVec3(dir);
+	sgdVec3 orig, dir;
+	sgdCopyVec3(orig, view_pos );
+	sgdCopyVec3(dir, abs_view_pos );
 
-    // !! why is terrain not globals->get_terrain()
-    hit_list->Intersect( terrain_branch, orig, dir );
+	// !! why is terrain not globals->get_terrain()
+	hit_list->Intersect( terrain_branch, orig, dir );
 
-    int this_hit=0;
-    Point3D geoc;
-    double result = -9999;
-    Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
+	int this_hit=0;
+	Point3D geoc;
+	double result = -9999;
+	Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
 
-    // cout << "hits = ";
-    int hitcount = hit_list->num_hits();
-    for ( int i = 0; i < hitcount; ++i ) {
-        geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );      
-        double lat_geod, alt, sea_level_r;
-        sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod, 
-                     &alt, &sea_level_r);
-	// cout << alt << " ";
-        if ( alt > result && alt < 10000 ) {
-            result = alt;
-            this_hit = i;
-        }
-    }
-    // cout << endl;
-
-    if ( result > -9000 ) {
-        *terrain_elev = result;
-        *radius = geoc.radius();
-        sgVec3 tmp;
-        sgSetVec3(tmp, hit_list->get_normal(this_hit));
-        // cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "
-        //      << tmp[2] << endl;
-        /* ssgState *IntersectedLeafState =
-           ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
-        CurrentNormalInLocalPlane(tmp, tmp);
-        sgdSetVec3( normal, tmp );
-        // cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
-        return true;
-    } else {
-	SG_LOG( SG_TERRAIN, SG_INFO, "no terrain intersection" );
-	*terrain_elev = 0.0;
-	float *up = globals->get_current_view()->get_world_up();
-	sgdSetVec3(normal, up[0], up[1], up[2]);
-	return false;
-    }
-}
-
-
-// Determine scenery altitude via ssg.
-// returned results are in meters
-bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
-		    ssgTransform *terra_transform,
-		    FGHitList *hit_list,
-		    double *terrain_elev, double *radius, double *normal)
-{
-#ifndef FAST_HITLIST__TEST
-    return fgCurrentElev( abs_view_pos, scenery_center, hit_list,
-			  terrain_elev,radius,normal);
-#else
-    sgdVec3 view_pos;
-    sgdSubVec3( view_pos, abs_view_pos, scenery_center );
-
-    sgdVec3 orig, dir;
-    sgdCopyVec3(orig, view_pos );
-
-    sgdCopyVec3(dir, abs_view_pos );
-    sgdNormalizeVec3(dir);
-
-    sgMat4 fxform;
-    sgMakeIdentMat4 ( fxform ) ;
-    ssgGetEntityTransform( terra_transform, fxform );
-
-    sgdMat4 xform;
-    sgdSetMat4(xform,fxform);
-    hit_list->Intersect( terra_transform, xform, orig, dir );
-
-    int this_hit=0;
-    Point3D geoc;
-    double result = -9999;
-    Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
-
-    int hitcount = hit_list->num_hits();
-    for ( int i = 0; i < hitcount; ++i ) {
-	geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );      
-	double lat_geod, alt, sea_level_r;
-	sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod, 
-		     &alt, &sea_level_r);
-	if ( alt > result && alt < 20000 ) {
-	    result = alt;
-	    this_hit = i;
+	// cout << "hits = ";
+	int hitcount = hit_list->num_hits();
+	for ( int i = 0; i < hitcount; ++i ) {
+		geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );
+		double lat_geod, alt, sea_level_r;
+		sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod,
+					 &alt, &sea_level_r);
+		// cout << alt << " ";
+		if ( alt > result && alt < 10000 ) {
+			result = alt;
+			this_hit = i;
+		}
 	}
-    }
+	// cout << endl;
 
-    if ( result > -9000 ) {
-	*terrain_elev = result;
-	*radius = geoc.radius();
-	sgVec3 tmp;
-	sgSetVec3(tmp, hit_list->get_normal(this_hit));
-	// cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "
-	//      << tmp[2] << endl;
-	/* ssgState *IntersectedLeafState =
-           ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
-	CurrentNormalInLocalPlane(tmp, tmp);
-	sgdSetVec3( normal, tmp );
-	// cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
-	return true;
-    } else {
-	SG_LOG( SG_TERRAIN, SG_DEBUG, "DOING FULL TERRAIN INTERSECTION" );
-	return fgCurrentElev( abs_view_pos, scenery_center, hit_list,
-			      terrain_elev,radius,normal);
-    }
-#endif // !FAST_HITLIST__TEST
+	if ( result > -9000 ) {
+		*terrain_elev = result;
+		*radius = geoc.radius();
+		sgVec3 tmp;
+		sgMat4 TMP;
+		sgSetVec3(tmp, hit_list->get_normal(this_hit));
+		// cout << "cur_normal: " << tmp[0] << " " << tmp[1] << " "
+		//      << tmp[2] << endl;
+		sgTransposeNegateMat4 ( TMP, globals->get_current_view()->get_UP() ) ;
+		sgXformVec3(tmp, tmp, TMP);
+		// cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
+		sgdSetVec3( normal, tmp[2], tmp[1], tmp[0] );
+		/* ssgState *IntersectedLeafState =
+        ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
+		return true;
+	} else {
+		SG_LOG( SG_TERRAIN, SG_INFO, "no terrain intersection" );
+		*terrain_elev = 0.0;
+		float *up = globals->get_current_view()->get_world_up();
+		sgdSetVec3(normal, up[0], up[1], up[2]);
+		return false;
+	}
+}
+
+
+// ======================
+// Determine scenery altitude via ssg.
+// returned results are in meters
+bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
+					ssgTransform *terra_transform,
+					FGHitList *hit_list,
+					double *terrain_elev, double *radius, double *normal)
+{
+	sgdVec3 view_pos;
+	sgdSubVec3( view_pos, abs_view_pos, scenery_center );
+
+	sgdVec3 orig, dir;
+	sgdCopyVec3(orig, view_pos );
+
+	sgdCopyVec3(dir, abs_view_pos );
+	sgdNormalizeVec3(dir);
+
+	sgMat4 fxform;
+	sgMakeIdentMat4 ( fxform ) ;
+	ssgGetEntityTransform( terra_transform, fxform );
+
+	sgdMat4 xform;
+	sgdSetMat4(xform,fxform);
+	hit_list->Intersect( terra_transform, xform, orig, dir );
+
+	int this_hit=0;
+	Point3D geoc;
+	double result = -9999;
+	Point3D sc(scenery_center[0], scenery_center[1], scenery_center[2]) ;
+
+	int hitcount = hit_list->num_hits();
+	for ( int i = 0; i < hitcount; ++i ) {
+		geoc = sgCartToPolar3d( sc + hit_list->get_point(i) );
+		double lat_geod, alt, sea_level_r;
+		sgGeocToGeod(geoc.lat(), geoc.radius(), &lat_geod,
+					 &alt, &sea_level_r);
+		if ( alt > result && alt < 20000 ) {
+			result = alt;
+			this_hit = i;
+		}
+	}
+
+	if ( result > -9000 ) {
+		*terrain_elev = result;
+		*radius = geoc.radius();
+		sgVec3 tmp;
+		sgMat4 TMP;
+		sgSetVec3(tmp, hit_list->get_normal(this_hit));
+		sgTransposeNegateMat4 ( TMP, globals->get_current_view()->get_UP() ) ;
+		sgXformVec3(tmp, tmp, TMP);
+		sgdSetVec3( normal, tmp[2], tmp[1], tmp[0] );
+		/* ssgState *IntersectedLeafState =
+        ((ssgLeaf*)hit_list->get_entity(this_hit))->getState(); */
+		return true;
+	} else {
+		SG_LOG( SG_TERRAIN, SG_DEBUG, "DOING FULL TERRAIN INTERSECTION" );
+		return fgCurrentElev( abs_view_pos, scenery_center, hit_list,
+							  terrain_elev,radius,normal);
+	}
 }
 
