@@ -195,6 +195,10 @@ Chris Schoeneman <crs@millpond.engr.sgi.com>
   will have an influence on the development of our own audio library.
 
 
+Phil Schubert <philings@zedley.com>
+  Contributed various textures.
+
+
 Jonathan R Shewchuk <Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu>
   Author of the Triangle program.  Triangle is used to calculate the
   Delauney triangulation of our irregular terrain.

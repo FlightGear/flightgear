@@ -1,8 +1,8 @@
 SUBDIRS = Include Lib Simulator Tools Tests
 
 EXTRA_DIST = FG-FAQ.v3 README.Unix README.Linux README.MacOS README.Win32 \
-	README.autoconf README.gfc README.gpc README.plib README.running \
-	Thanks VERSION acsite.m4 acconfig.h irix-hack.pl
+	README.Win32-X README.autoconf README.gfc README.gpc README.plib \
+	README.running Thanks VERSION acsite.m4 acconfig.h irix-hack.pl
 
 dist-hook:
 	tar cf - Hints | (cd $(distdir); tar xvf -)
