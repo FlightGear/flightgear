@@ -37,6 +37,7 @@ public:
   virtual void update (double dt);
   virtual void draw ();
   virtual SGModelPlacement * get3DModel() { return _aircraft; }
+  void select( bool s ) { _selector->select( s ? 0xffffffff : 0 ); }
 
 private:
 
