@@ -40,7 +40,6 @@
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
 #include <Astro/sun.hxx>
-#include <Audio/sl.h>
 #include <Autopilot/autopilot.h>
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
@@ -387,6 +386,12 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.18  1998/06/03 00:47:14  curt
+// Updated to compile in audio support if OSS available.
+// Updated for new version of Steve's audio library.
+// STL includes don't use .h
+// Small view optimizations.
+//
 // Revision 1.17  1998/06/01 17:54:42  curt
 // Added Linux audio support.
 // avoid glClear( COLOR_BUFFER_BIT ) when not using it to set the sky color.

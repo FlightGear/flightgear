@@ -34,13 +34,8 @@
 #endif                                   
 
 
-#include <map.h>         // STL associative "array"
-
-#if defined(WIN32)
-#  include <string>        // Standard C++ string library
-#else
-#  include <std/string.h>  // Standard C++ string library
-#endif
+#include <map>             // STL associative "array"
+#include <string>          // Standard C++ string library
 
 
 typedef struct {
@@ -75,6 +70,12 @@ public:
 
 
 // $Log$
+// Revision 1.4  1998/06/03 00:47:14  curt
+// Updated to compile in audio support if OSS available.
+// Updated for new version of Steve's audio library.
+// STL includes don't use .h
+// Small view optimizations.
+//
 // Revision 1.3  1998/06/01 17:54:42  curt
 // Added Linux audio support.
 // avoid glClear( COLOR_BUFFER_BIT ) when not using it to set the sky color.

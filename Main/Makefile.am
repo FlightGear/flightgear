@@ -1,3 +1,11 @@
+if HAVE_OSS_AUDIO
+AUDIO_DEFS = -DHAVE_OSS_AUDIO
+AUDIO_LIBS = $(top_builddir)/Lib/Audio/libAudio.la
+else
+AUDIO_DEFS = 
+AUDIO_LIBS = 
+endif
+
 EXTRA_DIST = runfg.in runfg.bat.in
 
 bin_PROGRAMS = fg
@@ -26,14 +34,15 @@ fg_LDADD = \
 	$(top_builddir)/Simulator/Time/libTime.la \
 	$(top_builddir)/Simulator/Weather/libWeather.la \
         $(top_builddir)/Simulator/Joystick/libJoystick.la \
-	$(top_builddir)/Lib/Audio/libAudio.la \
+	$(AUDIO_LIBS) \
 	$(top_builddir)/Lib/Math/libMath.la \
 	$(top_builddir)/Lib/Bucket/libBucket.la \
 	$(top_builddir)/Lib/Debug/libDebug.la \
 	$(top_builddir)/Lib/zlib/libz.la
 
+DEFS += $(AUDIO_DEFS)
+
 INCLUDES += \
-	-DGLUT \
 	-I$(top_builddir) \
 	-I$(top_builddir)/Lib \
 	-I$(top_builddir)/Simulator

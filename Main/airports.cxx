@@ -25,7 +25,7 @@
 // (Log is kept at end of this file)
 
 
-#include <string.h>
+#include <string>
 
 #include <Debug/fg_debug.h>
 #include <Include/fg_zlib.h>
@@ -104,6 +104,12 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.6  1998/06/03 00:47:13  curt
+// Updated to compile in audio support if OSS available.
+// Updated for new version of Steve's audio library.
+// STL includes don't use .h
+// Small view optimizations.
+//
 // Revision 1.5  1998/05/29 20:37:22  curt
 // Tweaked material properties & lighting a bit in GLUTmain.cxx.
 // Read airport list into a "map" STL for dynamic list sizing and fast tree

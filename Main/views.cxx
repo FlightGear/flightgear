@@ -67,22 +67,22 @@ void fgVIEW::Init( void ) {
 void fgVIEW::UpdateFOV( fgOPTIONS *o ) {
     double theta_x, theta_y;
 	
-	// printf("win_ratio = %.2f\n", win_ratio);
-	// calculate sin() and cos() of fov / 2 in X direction;
-	theta_x = (o->fov * win_ratio * DEG_TO_RAD) / 2.0;
-	// printf("theta_x = %.2f\n", theta_x);
-	sin_fov_x = sin(theta_x);
-	cos_fov_x = cos(theta_x);
-	slope_x = sin_fov_x / cos_fov_x;
-	// printf("slope_x = %.2f\n", slope_x);
+    // printf("win_ratio = %.2f\n", win_ratio);
+    // calculate sin() and cos() of fov / 2 in X direction;
+    theta_x = (o->fov * win_ratio * DEG_TO_RAD) / 2.0;
+    // printf("theta_x = %.2f\n", theta_x);
+    sin_fov_x = sin(theta_x);
+    cos_fov_x = cos(theta_x);
+    slope_x =  - cos_fov_x / sin_fov_x;
+    // printf("slope_x = %.2f\n", slope_x);
 
-	// calculate sin() and cos() of fov / 2 in Y direction;
-	theta_y = (o->fov * DEG_TO_RAD) / 2.0;
-	// printf("theta_y = %.2f\n", theta_y);
-	sin_fov_y = sin(theta_y);
-	cos_fov_y = cos(theta_y);
-	slope_y = sin_fov_y / cos_fov_y;
-	// printf("slope_y = %.2f\n", slope_y);
+    // calculate sin() and cos() of fov / 2 in Y direction;
+    theta_y = (o->fov * DEG_TO_RAD) / 2.0;
+    // printf("theta_y = %.2f\n", theta_y);
+    sin_fov_y = sin(theta_y);
+    cos_fov_y = cos(theta_y);
+    slope_y = cos_fov_y / sin_fov_y;
+    // printf("slope_y = %.2f\n", slope_y);
 }
 
 
@@ -376,6 +376,12 @@ fgVIEW::~fgVIEW( void ) {
 
 
 // $Log$
+// Revision 1.12  1998/06/03 00:47:15  curt
+// Updated to compile in audio support if OSS available.
+// Updated for new version of Steve's audio library.
+// STL includes don't use .h
+// Small view optimizations.
+//
 // Revision 1.11  1998/05/27 02:24:05  curt
 // View optimizations by Norman Vine.
 //

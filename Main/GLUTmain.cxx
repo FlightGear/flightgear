@@ -50,7 +50,12 @@
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
 #include <Astro/sun.hxx>
-#include <Audio/sl.h>
+
+#ifdef HAVE_OSS_AUDIO
+#  include <Audio/sl.h>
+#  include <Audio/sm.h>
+#endif
+
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
 #include <Joystick/joystick.h>
@@ -81,10 +86,12 @@ int use_signals = 0;
 int displayInstruments; 
 
 // Global structures for the Audio library
-slScheduler audio_sched ;
-slMixer audio_mixer ;
+#ifdef HAVE_OSS_AUDIO
+slScheduler audio_sched ( 8000 ) ;
+smMixer audio_mixer ;
 slSample *s1;
 slSample *s2;
+#endif
 
 
 // The following defines flight gear options. Because glutlib will also
@@ -547,7 +554,9 @@ static void fgMainLoop( void ) {
     global_events.Process();
 
     // Run audio scheduler
+#ifdef HAVE_OSS_AUDIO
     audio_sched.update();
+#endif
 
     // redraw display
     fgRenderFrame();
@@ -695,17 +704,16 @@ int main( int argc, char **argv ) {
 		  "GLUT event handler initialization failed ...\n" );
     }
 
-    // Audio support
+    // Initialize audio support
+#ifdef HAVE_OSS_AUDIO
     audio_mixer . setMasterVolume ( 30 ) ;  /* 50% of max volume. */
-    audio_sched . setRate ( 8000 ) ;        /* 8KHz sample rate.  */
-    // audio_sched . setSafetyMargin ( 0.128 ) ;
-    audio_sched . stereo  ( SL_FALSE ) ;    /* Monophonic.        */
-    audio_sched . setBps  (   8   ) ;       /* 8 bit samples.     */
-    s1 = new slSample ( "/dos/X-System-HSR/sounds/xp_recip.wav" );
-    s2 = new slSample ( "/dos/X-System-HSR/sounds/wind.wav" );
+    audio_sched . setSafetyMargin ( 1.0 ) ;
+    s1 = new slSample ( "/dos/X-System-HSR/sounds/xp_recip.wav", &audio_sched );
+    s2 = new slSample ( "/dos/X-System-HSR/sounds/wind.wav", &audio_sched );
     s2 -> adjustVolume(0.5);
     audio_sched . loopSample ( s1 );
     audio_sched . loopSample ( s2 );
+#endif
 
     // pass control off to the master GLUT event handler
     glutMainLoop();
@@ -724,6 +732,12 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.20  1998/06/03 00:47:11  curt
+// Updated to compile in audio support if OSS available.
+// Updated for new version of Steve's audio library.
+// STL includes don't use .h
+// Small view optimizations.
+//
 // Revision 1.19  1998/06/01 17:54:40  curt
 // Added Linux audio support.
 // avoid glClear( COLOR_BUFFER_BIT ) when not using it to set the sky color.
