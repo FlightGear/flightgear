@@ -162,8 +162,27 @@ bool FGILSList::query( double lon, double lat, double elev, double freq,
 	// reduced signal strength
 	if ( d < (2* FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER 
 		  * 2 * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER) ) {
-	    *ils = *current;
-	    return true;
+
+            // Get our bearing from this station.
+            double reciprocal_bearing, dummy;
+            double a_lat_deg = lat * SGD_RADIANS_TO_DEGREES;
+            double a_lon_deg = lon * SGD_RADIANS_TO_DEGREES;
+            // Locator beam direction
+            double s_ils_deg = current->get_locheading() - 180.0;
+            if ( s_ils_deg < 0.0 ) { s_ils_deg += 360.0; }
+            double angle_to_beam_deg;
+
+            // printf("**ALI geting geo_inverse_wgs_84 with elev = %.2f, a.lat = %.2f, a.lon = %.2f,
+            // s.lat = %.2f, s.lon = %.2f\n", elev,a_lat_deg,a_lon_deg,current->get_loclat(),current->get_loclon());
+
+            geo_inverse_wgs_84( elev, current->get_loclat(),
+                                current->get_loclon(), a_lat_deg, a_lon_deg,
+                                &reciprocal_bearing, &dummy, &dummy );
+            angle_to_beam_deg = fabs(reciprocal_bearing - s_ils_deg);
+            if ( angle_to_beam_deg < 90.0 ) {
+                *ils = *current;
+                return true;
+            }
 	}
     }
 
