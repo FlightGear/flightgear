@@ -205,9 +205,9 @@ int fgInitSubsystems( void )
 	exit(-1);
     }
 
-    if( fgTileMgrInit() ) {
+    if( global_tile_mgr.init() ) {
 	// Load the local scenery data
-	fgTileMgrUpdate();
+	global_tile_mgr.update();
     } else {
     	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Tile Manager initialization!" );
 	exit(-1);
@@ -438,9 +438,9 @@ void fgReInitSubsystems( void )
         t->togglePauseMode();
     
     fgInitPosition();
-    if( fgTileMgrInit() ) {
+    if( global_tile_mgr.init() ) {
 	// Load the local scenery data
-	fgTileMgrUpdate();
+	global_tile_mgr.update();
     } else {
     	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Tile Manager initialization!" );
 		exit(-1);

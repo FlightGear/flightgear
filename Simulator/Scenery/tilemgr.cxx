@@ -61,34 +61,24 @@
 #endif
 
 
-#define FG_LOCAL_X_Y         81  // max(o->tile_diameter) ** 2
-
-#define FG_SQUARE( X ) ( (X) * (X) )
-
-#if defined(USE_MEM) || defined(WIN32)
-#  define FG_MEM_COPY(to,from,n)        memcpy(to, from, n)
-#else
-#  define FG_MEM_COPY(to,from,n)        bcopy(from, to, n)
-#endif
+// the tile manager
+FGTileMgr global_tile_mgr;
 
 
-// Tile loading state
-enum fgTileLoadState {
-    START = 0,
-    INITED = 1,
-    RUNNING = 2
-};
+// Constructor
+FGTileMgr::FGTileMgr ( void ):
+    state( Start )
+{
+}
 
 
-// closest (potentially viewable) tiles, centered on current tile.
-// This is an array of pointers to cache indexes.
-int tiles[FG_LOCAL_X_Y];
-
-static fgTileLoadState state = START;
+// Destructor
+FGTileMgr::~FGTileMgr ( void ) {
+}
 
 
 // Initialize the Tile Manager subsystem
-int fgTileMgrInit( void ) {
+int FGTileMgr::init( void ) {
     FG_LOG( FG_TERRAIN, FG_INFO, "Initializing Tile Manager subsystem." );
 
     // load default material library
@@ -96,28 +86,39 @@ int fgTileMgrInit( void ) {
 	material_mgr.load_lib();
     }
 
-    state = INITED;
+    state = Inited;
 
     return 1;
 }
 
 
-// load a tile
-void fgTileMgrLoadTile( FGBucket& p, int *index) {
-    FGTileCache *c;
-
-    c = &global_tile_cache;
-
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "Updating for bucket " << p );
-    
-    // if not in cache, load tile into the next available slot
-    *index = c->exists(p);
+// schedule a tile for loading
+void FGTileMgr::sched_tile( const FGBucket& b, int *index ) {
+    // see if tile already exists in the cache
+    *index = global_tile_cache.exists( b );
     if ( *index < 0 ) {
-	*index = c->next_avail();
-	c->fill_in(*index, p);
-    }
+	// find the next availabel cache entry and mark it as scheduled
+	*index = global_tile_cache.next_avail();
+	FGTileEntry *t = global_tile_cache.get_tile( *index );
+	t->mark_scheduled();
 
-    FG_LOG( FG_TERRAIN, FG_DEBUG, "Selected cache index: " << *index );
+	// register a load request
+	FGLoadRec request;
+	request.b = b;
+	request.index = *index;
+	load_queue.push_back( request );
+    }
+}
+
+
+// load a tile
+void FGTileMgr::load_tile( const FGBucket& b, int cache_index) {
+
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "Loading tile " << b );
+    
+    global_tile_cache.fill_in(cache_index, b);
+
+    FG_LOG( FG_TERRAIN, FG_DEBUG, "Loaded for cache index: " << cache_index );
 }
 
 
@@ -139,7 +140,7 @@ static double point_line_dist_squared( const Point3D& tc, const Point3D& vp,
 // explicitely.  lat & lon are in radians.  abs_view_pos in meters.
 // Returns result in meters.
 double
-fgTileMgrCurElevNEW( const FGBucket& p ) {
+FGTileMgr::current_elev_new( const FGBucket& p ) {
     FGTileEntry *t;
     fgFRAGMENT *frag_ptr;
     Point3D abs_view_pos = current_view.get_abs_view_pos();
@@ -237,7 +238,7 @@ fgTileMgrCurElevNEW( const FGBucket& p ) {
 // explicitely.  lat & lon are in radians.  abs_view_pos in meters.
 // Returns result in meters.
 double
-fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
+FGTileMgr::current_elev( double lon, double lat, const Point3D& abs_view_pos ) {
     FGTileCache *c;
     FGTileEntry *t;
     fgFRAGMENT *frag_ptr;
@@ -341,7 +342,7 @@ fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos ) {
 
 // given the current lon/lat, fill in the array of local chunks.  If
 // the chunk isn't already in the cache, then read it from disk.
-int fgTileMgrUpdate( void ) {
+int FGTileMgr::update( void ) {
     FGTileCache *c;
     FGInterface *f;
     FGBucket p2;
@@ -361,11 +362,11 @@ int fgTileMgrUpdate( void ) {
     dw = tile_diameter / 2;
     dh = tile_diameter / 2;
 
-    if ( (p1 == p_last) && (state == RUNNING) ) {
+    if ( (p1 == p_last) && (state == Running) ) {
 	// same bucket as last time
 	FG_LOG( FG_TERRAIN, FG_DEBUG, "Same bucket as last time" );
-    } else if ( (state == START) || (state == INITED) ) {
-	state = RUNNING;
+    } else if ( (state == Start) || (state == Inited) ) {
+	state = Running;
 
 	// First time through or we have teleporte, initialize the
 	// system and load all relavant tiles
@@ -380,16 +381,72 @@ int fgTileMgrUpdate( void ) {
 	c->init();
 	p_last.make_bad();
 
-	// build the local area list and update cache
-	for ( j = 0; j < tile_diameter; j++ ) {
+	// build the local area list and schedule tiles for loading
+
+	// start with the center tile and work out in concentric
+	// "rings"
+
+	p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
+			     f->get_Latitude() * RAD_TO_DEG,
+			     0, 0 );
+	sched_tile( p2, &tiles[(dh*tile_diameter) + dw]);
+
+	for ( i = 3; i <= tile_diameter; i = i + 2 ) {
+	    int span = i / 2;
+
+	    // bottom row
+	    for ( j = -span; j <= span; ++j ) {
+		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
+				     f->get_Latitude() * RAD_TO_DEG,
+				     j, -span );
+		sched_tile( p2, &tiles[((dh-span)*tile_diameter) + dw+j]);
+	    }
+
+	    // top row
+	    for ( j = -span; j <= span; ++j ) {
+		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
+				     f->get_Latitude() * RAD_TO_DEG,
+				     j, span );
+		sched_tile( p2, &tiles[((dh+span)*tile_diameter) + dw+j]);
+	    }
+
+	    // middle rows
+	    for ( j = -span + 1; j <= span - 1; ++j ) {
+		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
+				     f->get_Latitude() * RAD_TO_DEG,
+				     -span, j );
+		sched_tile( p2, &tiles[((dh+j)*tile_diameter) + dw-span]);
+		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
+				     f->get_Latitude() * RAD_TO_DEG,
+				     span, j );
+		sched_tile( p2, &tiles[((dh+j)*tile_diameter) + dw+span]);
+	    }
+
+	}
+
+	/* for ( j = 0; j < tile_diameter; j++ ) {
 	    for ( i = 0; i < tile_diameter; i++ ) {
 		// fgBucketOffset(&p1, &p2, i - dw, j - dh);
 		p2 = fgBucketOffset( f->get_Longitude() * RAD_TO_DEG,
 				     f->get_Latitude() * RAD_TO_DEG,
 				     i - dw, j -dh );
-		fgTileMgrLoadTile( p2, &tiles[(j*tile_diameter) + i]);
+		sched_tile( p2, &tiles[(j*tile_diameter) + i]);
+	    }
+	} */
+
+	// Now force a load of the center tile and inner ring so we
+	// have something to see in our first frame.
+	for ( i = 0; i < 9; ++i ) {
+	    if ( load_queue.size() ) {
+		FG_LOG( FG_TERRAIN, FG_INFO, 
+			"Load queue not empty, loading a tile" );
+	    
+		FGLoadRec pending = load_queue.front();
+		load_queue.pop_front();
+		load_tile( pending.b, pending.index );
 	    }
 	}
+
     } else {
 	// We've moved to a new bucket, we need to scroll our
         // structures, and load in the new tiles
@@ -413,7 +470,7 @@ int fgTileMgrUpdate( void ) {
 		// load in new column
 		// fgBucketOffset(&p_last, &p2, dw + 1, j - dh);
 		p2 = fgBucketOffset( last_lon, last_lat, dw + 1, j - dh );
-		fgTileMgrLoadTile( p2, &tiles[(j*tile_diameter) + 
+		sched_tile( p2, &tiles[(j*tile_diameter) + 
 					     tile_diameter - 1]);
 	    }
 	} else if ( (p1.get_lon() < p_last.get_lon()) ||
@@ -429,7 +486,7 @@ int fgTileMgrUpdate( void ) {
 		// load in new column
 		// fgBucketOffset(&p_last, &p2, -dw - 1, j - dh);
 		p2 = fgBucketOffset( last_lon, last_lat, -dw - 1, j - dh );
-		fgTileMgrLoadTile( p2, &tiles[(j*tile_diameter) + 0]);
+		sched_tile( p2, &tiles[(j*tile_diameter) + 0]);
 	    }
 	}
 
@@ -446,7 +503,7 @@ int fgTileMgrUpdate( void ) {
 		// load in new column
 		// fgBucketOffset(&p_last, &p2, i - dw, dh + 1);
 		p2 = fgBucketOffset( last_lon, last_lat, i - dw, dh + 1);
-		fgTileMgrLoadTile( p2, &tiles[((tile_diameter-1) * 
+		sched_tile( p2, &tiles[((tile_diameter-1) * 
 					       tile_diameter) + i]);
 	    }
 	} else if ( (p1.get_lat() < p_last.get_lat()) ||
@@ -462,9 +519,17 @@ int fgTileMgrUpdate( void ) {
 		// load in new column
 		// fgBucketOffset(&p_last, &p2, i - dw, -dh - 1);
 		p2 = fgBucketOffset( last_lon, last_lat, i - dw, -dh - 1);
-		fgTileMgrLoadTile( p2, &tiles[0 + i]);
+		sched_tile( p2, &tiles[0 + i]);
 	    }
 	}
+    }
+
+    if ( load_queue.size() ) {
+	FG_LOG( FG_TERRAIN, FG_INFO, "Load queue not empty, loading a tile" );
+
+	FGLoadRec pending = load_queue.front();
+	load_queue.pop_front();
+	load_tile( pending.b, pending.index );
     }
 
     // find our current elevation (feed in the current bucket to save work)
@@ -472,8 +537,7 @@ int fgTileMgrUpdate( void ) {
     Point3D tmp_abs_view_pos = fgGeodToCart(geod_pos);
 
     scenery.cur_elev = 
-	fgTileMgrCurElev( f->get_Longitude(), f->get_Latitude(), 
-			  tmp_abs_view_pos );
+	current_elev( f->get_Longitude(), f->get_Latitude(), tmp_abs_view_pos );
 
     p_last = p1;
     last_lon = f->get_Longitude() * RAD_TO_DEG;
@@ -671,7 +735,7 @@ update_tile_geometry( FGTileEntry *t, GLdouble *MODEL_VIEW)
 
 
 // Render the local tiles
-void fgTileMgrRender( void ) {
+void FGTileMgr::render( void ) {
     FGInterface *f;
     FGTileCache *c;
     FGTileEntry *t;
@@ -706,58 +770,68 @@ void fgTileMgrRender( void ) {
 	// fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index);
 	t = c->get_tile(index);
 
-	// calculate tile offset
-	t->SetOffset( scenery.center );
+	if ( t->is_loaded() ) {
 
-	// Course (tile based) culling
-	if ( viewable(t->offset, t->bounding_radius) ) {
-	    // at least a portion of this tile could be viewable
+	    // calculate tile offset
+	    t->SetOffset( scenery.center );
+
+	    // Course (tile based) culling
+	    if ( viewable(t->offset, t->bounding_radius) ) {
+		// at least a portion of this tile could be viewable
 	    
-	    // Calculate the model_view transformation matrix for this tile
-	    // This is equivalent to doing a glTranslatef(x, y, z);
-	    t->update_view_matrix( v->get_MODEL_VIEW() );
+		// Calculate the model_view transformation matrix for this tile
+		// This is equivalent to doing a glTranslatef(x, y, z);
+		t->update_view_matrix( v->get_MODEL_VIEW() );
 
-	    // xglPushMatrix();
-	    // xglTranslatef(t->offset.x, t->offset.y, t->offset.z);
+		// xglPushMatrix();
+		// xglTranslatef(t->offset.x, t->offset.y, t->offset.z);
 
-	    // traverse fragment list for tile
-            FGTileEntry::FragmentIterator current = t->begin();
-            FGTileEntry::FragmentIterator last = t->end();
+		// traverse fragment list for tile
+		FGTileEntry::FragmentIterator current = t->begin();
+		FGTileEntry::FragmentIterator last = t->end();
 
-	    for ( ; current != last; ++current ) {
-		frag_ptr = &(*current);
+		for ( ; current != last; ++current ) {
+		    frag_ptr = &(*current);
 		
-		if ( frag_ptr->display_list >= 0 ) {
-		    // Fine (fragment based) culling
-		    frag_offset = frag_ptr->center - scenery.center;
+		    if ( frag_ptr->display_list >= 0 ) {
+			// Fine (fragment based) culling
+			frag_offset = frag_ptr->center - scenery.center;
 
-		    if ( viewable(frag_offset, frag_ptr->bounding_radius*2) ) {
-			// add to transient per-material property fragment list
-			// frag_ptr->tile_offset.x = t->offset.x;
-			// frag_ptr->tile_offset.y = t->offset.y;
-			// frag_ptr->tile_offset.z = t->offset.z;
+			if ( viewable(frag_offset, 
+				      frag_ptr->bounding_radius*2) )
+			{
+			    // add to transient per-material property
+			    // fragment list
 
-			mtl_ptr = frag_ptr->material_ptr;
-			// printf(" lookup = %s\n", mtl_ptr->texture_name);
-			if ( ! mtl_ptr->append_sort_list( frag_ptr ) ) {
-			    FG_LOG( FG_TERRAIN, FG_ALERT,
-				    "Overran material sorting array" );
+			    // frag_ptr->tile_offset.x = t->offset.x;
+			    // frag_ptr->tile_offset.y = t->offset.y;
+			    // frag_ptr->tile_offset.z = t->offset.z;
+
+			    mtl_ptr = frag_ptr->material_ptr;
+			    // printf(" lookup = %s\n", mtl_ptr->texture_name);
+			    if ( ! mtl_ptr->append_sort_list( frag_ptr ) ) {
+				FG_LOG( FG_TERRAIN, FG_ALERT,
+					"Overran material sorting array" );
+			    }
+
+			    // xglCallList(frag_ptr->display_list);
+			    drawn++;
+			} else {
+			    // printf("Culled a fragment %.2f %.2f %.2f %.2f\n",
+			    //        frag_ptr->center.x, frag_ptr->center.y,
+			    //        frag_ptr->center.z, 
+			    //        frag_ptr->bounding_radius);
+			    culled++;
 			}
-
-			// xglCallList(frag_ptr->display_list);
-			drawn++;
-		    } else {
-			// printf("Culled a fragment %.2f %.2f %.2f %.2f\n",
-			//        frag_ptr->center.x, frag_ptr->center.y,
-			//        frag_ptr->center.z, frag_ptr->bounding_radius);
-			culled++;
 		    }
 		}
-	    }
 
-	    // xglPopMatrix();
+		// xglPopMatrix();
+	    } else {
+		culled += t->fragment_list.size();
+	    }
 	} else {
-	    culled += t->fragment_list.size();
+	    FG_LOG( FG_TERRAIN, FG_DEBUG, "Skipping a not yet loaded tile" );
 	}
     }
 

@@ -68,6 +68,15 @@ typedef point_list::const_iterator const_point_list_iterator;
 // Scenery tile class
 class FGTileEntry {
 
+private:
+
+    // Tile state
+    enum tile_state {
+	Unused = 0,
+	Scheduled = 1,
+	Loaded = 2
+    };
+
 public:
 
     typedef vector < fgFRAGMENT > container;
@@ -91,7 +100,7 @@ public:
     FGBucket tile_bucket;
 
     // the tile cache will mark here if the tile is being used
-    bool used;
+    tile_state state;
 
     container fragment_list;
 
@@ -156,6 +165,12 @@ public:
 	// so m[15] is unchanged
     }
 
+    inline bool is_unused() const { return state == Unused; }
+    inline bool is_loaded() const { return state == Loaded; }
+
+    inline void mark_unused() { state = Unused; }
+    inline void mark_scheduled() { state = Scheduled; }
+    inline void mark_loaded() { state = Loaded; }
 };
 
 

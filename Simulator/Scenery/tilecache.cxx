@@ -78,7 +78,7 @@ FGTileCache::init( void )
 	    << sizeof( e ) );
     if ( target_cache_size > (int)tile_cache.size() ) {
 	// FGTileEntry e;
-	e.used = false;
+	e.mark_unused();
 	int expansion_amt = target_cache_size - (int)tile_cache.size();
 	for ( i = 0; i < expansion_amt; ++i ) {
 	    tile_cache.push_back( e );
@@ -90,10 +90,10 @@ FGTileCache::init( void )
 	    << tile_cache.size() );
 
     for ( i = 0; i < (int)tile_cache.size(); i++ ) {
-	if ( tile_cache[i].used ) {
+	if ( !tile_cache[i].is_unused() ) {
 	    entry_free(i);
 	}
-	tile_cache[i].used = false;
+	tile_cache[i].mark_unused();
 	tile_cache[i].tile_bucket.make_bad();
     }
     FG_LOG( FG_TERRAIN, FG_DEBUG, "  done with init()"  );
@@ -120,7 +120,7 @@ FGTileCache::exists( const FGBucket& p )
 
 // Fill in a tile cache entry with real data for the specified bucket
 void
-FGTileCache::fill_in( int index, FGBucket& p )
+FGTileCache::fill_in( int index, const FGBucket& p )
 {
     // Load the appropriate data file and build tile fragment list
     FGPath tile_path( current_options.get_fg_root() );
@@ -128,7 +128,7 @@ FGTileCache::fill_in( int index, FGBucket& p )
     tile_path.append( p.gen_base_path() );
     tile_path.append( p.gen_index_str() );
 
-    tile_cache[index].used = true;
+    tile_cache[index].mark_loaded();
     tile_cache[index].tile_bucket = p;
     fgObjLoad( tile_path.str(), &tile_cache[index] );
 //     tile_cache[ index ].ObjLoad( tile_path, p );
@@ -169,7 +169,7 @@ FGTileCache::next_avail( void )
     max_index = 0;
 
     for ( i = 0; i < (int)tile_cache.size(); i++ ) {
-	if ( ! tile_cache[i].used ) {
+	if ( tile_cache[i].is_unused() ) {
 	    return(i);
 	} else {
 	    // calculate approximate distance from view point

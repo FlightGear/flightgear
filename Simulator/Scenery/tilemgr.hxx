@@ -29,29 +29,92 @@
 # error This library requires C++
 #endif                                   
 
+#include <Include/compiler.h>
+
+#include <list>
 
 #include <Bucket/newbucket.hxx>
 
 
-// Initialize the Tile Manager subsystem
-int fgTileMgrInit( void );
+FG_USING_STD(list);
 
 
-// given the current lon/lat, fill in the array of local chunks.  If
-// the chunk isn't already in the cache, then read it from disk.
-int fgTileMgrUpdate( void );
+#define FG_LOCAL_X_Y         81  // max(o->tile_diameter) ** 2
+
+#define FG_SQUARE( X ) ( (X) * (X) )
+
+#if defined(USE_MEM) || defined(WIN32)
+#  define FG_MEM_COPY(to,from,n)        memcpy(to, from, n)
+#else
+#  define FG_MEM_COPY(to,from,n)        bcopy(from, to, n)
+#endif
 
 
-// Determine scenery altitude.  Normally this just happens when we
-// render the scene, but we'd also like to be able to do this
-// explicitely.  lat & lon are in radians.  abs_view_pos in meters.
-// Returns result in meters.
-double fgTileMgrCurElevNEW( const FGBucket& p );
-double fgTileMgrCurElev( double lon, double lat, const Point3D& abs_view_pos );
+class FGLoadRec {
+
+public:
+
+    FGBucket b;
+    int index;
+};
 
 
-// Render the local tiles --- hack, hack, hack
-void fgTileMgrRender( void );
+class FGTileMgr {
+
+private:
+
+    // closest (potentially viewable) tiles, centered on current tile.
+    // This is an array of pointers to cache indexes.
+    int tiles[FG_LOCAL_X_Y];
+
+    // Tile loading state
+    enum load_state {
+	Start = 0,
+	Inited = 1,
+	Running = 2
+    };
+
+    load_state state;
+
+    // pending tile load queue
+    list < FGLoadRec > load_queue;
+
+    // schedule a tile for loading
+    void sched_tile( const FGBucket& b, int *index );
+
+    // load a tile
+    void load_tile( const FGBucket& b, int cache_index );
+
+public:
+
+    // Constructor
+    FGTileMgr ( void );
+
+    // Destructor
+    ~FGTileMgr ( void );
+
+    // Initialize the Tile Manager subsystem
+    int init( void );
+
+    // given the current lon/lat, fill in the array of local chunks.
+    // If the chunk isn't already in the cache, then read it from
+    // disk.
+    int update( void );
+
+    // Determine scenery altitude.  Normally this just happens when we
+    // render the scene, but we'd also like to be able to do this
+    // explicitely.  lat & lon are in radians.  abs_view_pos in
+    // meters.  Returns result in meters.
+    double current_elev_new( const FGBucket& p );
+    double current_elev( double lon, double lat, const Point3D& abs_view_pos );
+
+    // Render the local tiles --- hack, hack, hack
+    void render( void );
+};
+
+
+// the tile manager
+extern FGTileMgr global_tile_mgr;
 
 
 #endif // _TILEMGR_HXX

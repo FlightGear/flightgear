@@ -354,8 +354,14 @@ void GLUTspecialkey(int k, int x, int y) {
 		if( (toggle_pause = !t->getPause()) )
 		    t->togglePauseMode();
 		BusyCursor(0);
-		fgTileMgrInit();
-		fgTileMgrUpdate();
+		if( global_tile_mgr.init() ) {
+		    // Load the local scenery data
+		    global_tile_mgr.update();
+		} else {
+		    FG_LOG( FG_GENERAL, FG_ALERT, 
+			    "Error in Tile Manager initialization!" );
+		    exit(-1);
+		}
 		BusyCursor(1);
 		if(toggle_pause)
 		    t->togglePauseMode();

@@ -360,7 +360,7 @@ static void fgRenderFrame( void ) {
 	    // xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
 	}
 
-	fgTileMgrRender();
+	global_tile_mgr.render();
 
 	xglDisable( GL_TEXTURE_2D );
 	xglDisable( GL_FOG );
@@ -587,7 +587,7 @@ static void fgMainLoop( void ) {
 #endif
 
     // see if we need to load any new scenery tiles
-    fgTileMgrUpdate();
+    global_tile_mgr.update();
 
     // Process/manage pending events
     global_events.Process();

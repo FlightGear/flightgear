@@ -42,7 +42,7 @@ FG_USING_STD(mem_fun_ref);
 // Constructor
 FGTileEntry::FGTileEntry ( void )
     : ncount(0),
-      used(false)
+      state(Unused)
 {
     nodes.clear();
 }
@@ -65,7 +65,7 @@ FGTileEntry::release_fragments()
     for_each( begin(), end(),
 	      mem_fun_ref( &fgFRAGMENT::deleteDisplayList ));
     fragment_list.erase( begin(), end() );
-    used = false;
+    mark_unused();
 }
 
 

@@ -75,7 +75,7 @@ public:
     void entry_free( int index );
 
     // Fill in a tile cache entry with real data for the specified bucket 
-    void fill_in( int index, FGBucket& p );
+    void fill_in( int index, const FGBucket& p );
 
     // Return a pointer to the specified tile cache entry 
     FGTileEntry *get_tile( int index ) {
