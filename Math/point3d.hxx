@@ -120,7 +120,8 @@ public:
     friend ostream& operator<< ( ostream&, const Point3D& );
 
     // Special functions
-    double distance3D(const Point3D& a) const; // distance between
+    double distance3D(const Point3D& a) const;        // distance between
+    double distance3Dsquared(const Point3D& a) const; // distance between ^ 2
 };
 
 
@@ -316,10 +317,27 @@ Point3D::distance3D(const Point3D& a ) const
     return sqrt(x*x + y*y + z*z);
 }
 
+
+inline double
+Point3D::distance3Dsquared(const Point3D& a ) const
+{
+    double x, y, z;
+
+    x = n[PX] - a.n[PX];
+    y = n[PY] - a.n[PY];
+    z = n[PZ] - a.n[PZ];
+
+    return(x*x + y*y + z*z);
+}
+
+
 #endif // _POINT3D_HXX
 
 
 // $Log$
+// Revision 1.9  1999/02/01 21:08:28  curt
+// Optimizations from Norman Vine.
+//
 // Revision 1.8  1999/01/27 04:46:18  curt
 // Portability tweaks by Bernie Bright.
 //
