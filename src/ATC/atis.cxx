@@ -181,10 +181,10 @@ void FGATIS::UpdateTransmission() {
 	
 	// Get the pressure / altimeter
 	double P = fgGetDouble("/environment/pressure-sea-level-inhg");
-	if(ident.substr(0,2) == "EG") {
+	if(ident.substr(0,2) == "EG" && fgGetBool("/sim/atc/use-millibars") == true) {
 		// Convert to millibars for the UK!
 		P *= 33.864;
-		sprintf(buf, "%.1f", P);
+		sprintf(buf, "%.0f", P);
 	} else {
 		sprintf(buf, "%.2f", P);
 	}		
