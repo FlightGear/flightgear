@@ -177,7 +177,14 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
 #else
     if (holding_string.compare("//",0,2) != 0) {
 #endif
-      if (holding_string == "AIRCRAFT") {
+      if (holding_string == "CFG_VERSION") {
+        aircraftfile >> CFGVersion;
+        cout << "Config file version: " << CFGVersion << endl;
+        if (CFGVersion < NEEDED_CFG_VERSION) {
+          cout << endl << "YOU HAVE AN OLD CFG FILE FOR THIS AIRCRAFT."
+                          " RESULTS WILL BE UNPREDICTABLE !!" << endl << endl;
+        }
+      } else if (holding_string == "AIRCRAFT") {
         cout << "Reading in Aircraft parameters ..." << endl;
       } else if (holding_string == "AERODYNAMICS") {
         cout << "Reading in Aerodynamic parameters ..." << endl;
@@ -451,13 +458,19 @@ void FGAircraft::FMAero(void)
                - F[SideCoeff]*sin(alpha)*sin(beta)
                - F[LiftCoeff]*cos(alpha);
 
-  dxcg = (Xcg - Xrp)/12; //cg and rp values are in inches
-  dycg = (Ycg - Yrp)/12;
-  dzcg = (Zcg - Zrp)/12;
+  // The d*cg distances below, given in inches, are the distances FROM the c.g.
+  // TO the reference point. Since the c.g. and ref point are given in inches in
+  // the structural system (X positive rearwards) and the body coordinate system
+  // is given with X positive out the nose, the dxcg and dzcg values are
+  // *rotated* 180 degrees about the Y axis.
 
-  Moments[0] += -Fzaero*dycg - Fyaero*dzcg; //rolling moment
+  dxcg = -(Xrp - Xcg)/12; //cg and rp values are in inches
+  dycg =  (Yrp - Ycg)/12;
+  dzcg = -(Zrp - Zcg)/12;
+
+  Moments[0] +=  Fzaero*dycg - Fyaero*dzcg; //rolling moment
   Moments[1] +=  Fxaero*dzcg - Fzaero*dxcg; //pitching moment
-  Moments[2] +=  Fxaero*dycg + Fyaero*dxcg; //yawing moment
+  Moments[2] += -Fxaero*dycg + Fyaero*dxcg; //yawing moment
 
   for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
     for (ctr = 0; ctr < coeff_ctr[axis_ctr+3]; ctr++) {

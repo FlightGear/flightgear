@@ -74,8 +74,8 @@ FGOutput::~FGOutput(void)
 bool FGOutput::Run(void)
 {
   if (!FGModel::Run()) {
-    SocketOutput();
-//    DelimitedOutput("JSBSimData.csv");
+//    SocketOutput();
+    DelimitedOutput("JSBSimData.csv");
   } else {
   }
   return false;
@@ -116,7 +116,11 @@ void FGOutput::DelimitedOutput(void)
     cout << "Alpha,";
     cout << "L,";
     cout << "M,";
-    cout << "N";
+    cout << "N,";
+    cout << "Throttle,";
+    cout << "Aileron,";
+    cout << "Elevator,";
+    cout << "Rudder";
     cout << endl;
     dFirstPass = false;
   }
@@ -152,7 +156,11 @@ void FGOutput::DelimitedOutput(void)
   cout << Translation->Getalpha() << ",";
   cout << Aircraft->GetL() << ",";
   cout << Aircraft->GetM() << ",";
-  cout << Aircraft->GetN() << "";
+  cout << Aircraft->GetN() << ",";
+  cout << FCS->GetThrottle(0) << ",";
+  cout << FCS->GetDa() << ",";
+  cout << FCS->GetDe() << ",";
+  cout << FCS->GetDr() << "";
   cout << endl;
 
 }
@@ -193,7 +201,11 @@ void FGOutput::DelimitedOutput(string fname)
     datafile << "Alpha,";
     datafile << "L,";
     datafile << "M,";
-    datafile << "N";
+    datafile << "N,";
+    datafile << "Throttle,";
+    datafile << "Aileron,";
+    datafile << "Elevator,";
+    datafile << "Rudder";
     datafile << endl;
     sFirstPass = false;
   }
@@ -229,7 +241,11 @@ void FGOutput::DelimitedOutput(string fname)
   datafile << Translation->Getalpha() << ",";
   datafile << Aircraft->GetL() << ",";
   datafile << Aircraft->GetM() << ",";
-  datafile << Aircraft->GetN() << "";
+  datafile << Aircraft->GetN() << ",";
+  datafile << FCS->GetThrottle(0) << ",";
+  datafile << FCS->GetDa() << ",";
+  datafile << FCS->GetDe() << ",";
+  datafile << FCS->GetDr() << "";
   datafile << endl;
   datafile.flush();
 }

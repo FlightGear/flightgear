@@ -625,21 +625,21 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	}
     } else if ( arg.find( "--uBody=" ) != string::npos ) {
 	if ( units == FG_UNITS_FEET ) {
-	    uBody = atof( arg.substr(8) ) * FEET_TO_METER;
-	} else {
 	    uBody = atof( arg.substr(8) );
+	} else {
+	    uBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
     } else if ( arg.find( "--vBody=" ) != string::npos ) {
 	if ( units == FG_UNITS_FEET ) {
-	    vBody = atof( arg.substr(8) ) * FEET_TO_METER;
-	} else {
 	    vBody = atof( arg.substr(8) );
+	} else {
+	    vBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
     } else if ( arg.find( "--wBody=" ) != string::npos ) {
 	if ( units == FG_UNITS_FEET ) {
-	    wBody = atof( arg.substr(8) ) * FEET_TO_METER;
-	} else {
 	    wBody = atof( arg.substr(8) );
+	} else {
+	    wBody = atof( arg.substr(8) ) * FEET_TO_METER;
 	}
     } else if ( arg.find( "--heading=" ) != string::npos ) {
 	heading = atof( arg.substr(10) );

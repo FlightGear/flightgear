@@ -52,6 +52,7 @@ SENTRY
 #define DEGTORAD        1.745329E-2
 #define KTSTOFPS        1.68781
 #define FPSTOKTS        0.592484
+#define NEEDED_CFG_VERSION 1.10
 
 #define HPTOFTLBSSEC 550
 

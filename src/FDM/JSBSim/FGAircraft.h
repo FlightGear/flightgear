@@ -179,7 +179,8 @@ private:
   float phi, tht, psi;
   float Weight, EmptyWeight;
   float dt;
-
+  float CFGVersion;
+  
   int numTanks;
   int numEngines;
   int numSelectedOxiTanks;
