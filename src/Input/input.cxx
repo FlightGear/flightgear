@@ -476,11 +476,11 @@ FGInput::_init_joystick ()
       const SGPropertyNode * num_node = axis_node->getChild("number");
       size_t n_axis = axis_node->getIndex();
       if (num_node != 0) {
-          n_axis = num_node->getIntValue(TGT_PLATFORM, 0);
+          n_axis = num_node->getIntValue(TGT_PLATFORM, -1);
 
           // Silently ignore platforms that are not specified within the
           // <number></number> section
-          if (n_axis == 0)
+          if (n_axis < 0)
              continue;
       }
 
