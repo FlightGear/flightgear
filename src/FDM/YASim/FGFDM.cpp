@@ -26,6 +26,7 @@ static const float CM2GALS = 264.172037284;
 static const float HP2W = 745.700;
 static const float INHG2PA = 3386.389;
 static const float K2DEGF = 1.8;
+static const float K2DEGFOFFSET = -459.4;
 static const float CIN2CM = 1.6387064e-5;
 
 // Stubs, so that this can be compiled without the FlightGear
@@ -371,7 +372,7 @@ void FGFDM::setOutputProperties()
 	    fgSetFloat(buf, p->getMP() * (1/INHG2PA));
 
 	    sprintf(buf, "%s/egt-degf", er->prefix);
-	    fgSetFloat(buf, p->getEGT() * K2DEGF + 459.4);
+	    fgSetFloat(buf, p->getEGT() * K2DEGF + K2DEGFOFFSET);
         }
 
         if(t->getJet()) {
@@ -387,7 +388,7 @@ void FGFDM::setOutputProperties()
             fgSetFloat(buf, j->getEPR());
 
             sprintf(buf, "%s/egt-degf", er->prefix);
-            fgSetFloat(buf, j->getEGT() * K2DEGF + 459.4);
+            fgSetFloat(buf, j->getEGT() * K2DEGF + K2DEGFOFFSET);
         }
     }
 }
