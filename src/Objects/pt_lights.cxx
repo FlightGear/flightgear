@@ -113,26 +113,231 @@ ssgLeaf *gen_directional_light( sgVec3 pt, sgVec3 dir, sgVec3 up,
 }
 
 
-// Generate a REIL light
-ssgBranch *gen_reil_light( sgVec3 pt, sgVec3 dir, sgVec3 up, 
-                         const string &material ) {
+ssgLeaf *gen_dir_light_group( const point_list &nodes,
+                              const point_list &normals,
+                              const int_list &pnt_i,
+                              const int_list &nml_i,
+                              const string &material,
+                              sgVec3 up )
+{
+    sgVec3 nup;
+    sgNormalizeVec3( nup, up );
+
+    ssgVertexArray   *vl = new ssgVertexArray( 3 );
+    ssgNormalArray   *nl = new ssgNormalArray( 3 );
+    ssgColourArray   *cl = new ssgColourArray( 3 );
+
+    unsigned int i;
+    sgVec3 pt, normal;
+    for ( i = 0; i < pnt_i.size(); ++i ) {
+        sgSetVec3( pt, nodes[pnt_i[i]][0], nodes[pnt_i[i]][1],
+                   nodes[pnt_i[i]][2] );
+        sgSetVec3( normal, normals[nml_i[i]][0], normals[nml_i[i]][1],
+                   normals[nml_i[i]][2] );
+
+        // calculate a vector perpendicular to dir and up
+        sgVec3 perp;
+        sgVectorProductVec3( perp, normal, nup );
+
+       // front face
+        sgVec3 tmp3;
+        sgCopyVec3( tmp3, pt );
+        vl->add( tmp3 );
+        sgAddVec3( tmp3, nup );
+        vl->add( tmp3 );
+        sgAddVec3( tmp3, perp );
+        vl->add( tmp3 );
+        // sgSubVec3( tmp3, nup );
+        // vl->add( tmp3 );
+
+        nl->add( normal );
+        nl->add( normal );
+        nl->add( normal );
+        // nl->add( normal );
+
+        sgVec4 color;
+        sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
+        cl->add( color );
+        sgSetVec4( color, 1.0, 1.0, 1.0, 0.0 );
+        cl->add( color );
+        cl->add( color );
+        // cl->add( color );
+    }
+
+    ssgLeaf *leaf = 
+        new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
+
+    FGNewMat *newmat = material_lib.find( material );
+
+    if ( newmat != NULL ) {
+        leaf->setState( newmat->get_state() );
+    } else {
+        SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
+                << material );
+    }
+
+    return leaf;
+}
+
+
+ssgTimedSelector *gen_reil_lights( const point_list &nodes,
+                                   const point_list &normals,
+                                   const int_list &pnt_i,
+                                   const int_list &nml_i,
+                                   const string &material,
+                                   sgVec3 up )
+{
+    sgVec3 nup;
+    sgNormalizeVec3( nup, up );
+
+    ssgVertexArray   *vl = new ssgVertexArray( 6 );
+    ssgNormalArray   *nl = new ssgNormalArray( 6 );
+    ssgColourArray   *cl = new ssgColourArray( 6 );
+
+    unsigned int i;
+    sgVec3 pt, normal;
+    for ( i = 0; i < pnt_i.size(); ++i ) {
+        sgSetVec3( pt, nodes[pnt_i[i]][0], nodes[pnt_i[i]][1],
+                   nodes[pnt_i[i]][2] );
+        sgSetVec3( normal, normals[nml_i[i]][0], normals[nml_i[i]][1],
+                   normals[nml_i[i]][2] );
+
+        // calculate a vector perpendicular to dir and up
+        sgVec3 perp;
+        sgVectorProductVec3( perp, normal, nup );
+
+        // front face
+        sgVec3 tmp3;
+        sgCopyVec3( tmp3, pt );
+        vl->add( tmp3 );
+        sgAddVec3( tmp3, nup );
+        vl->add( tmp3 );
+        sgAddVec3( tmp3, perp );
+        vl->add( tmp3 );
+        // sgSubVec3( tmp3, nup );
+        // vl->add( tmp3 );
+
+        nl->add( normal );
+        nl->add( normal );
+        nl->add( normal );
+        // nl->add( normal );
+
+        sgVec4 color;
+        sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
+        cl->add( color );
+        sgSetVec4( color, 1.0, 1.0, 1.0, 0.0 );
+        cl->add( color );
+        cl->add( color );
+        // cl->add( color );
+    }
+
+    ssgLeaf *leaf = 
+        new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
+
+    FGNewMat *newmat = material_lib.find( "RWY_WHITE_LIGHTS" );
+
+    if ( newmat != NULL ) {
+        leaf->setState( newmat->get_state() );
+    } else {
+        SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
+                << material );
+    }
 
     ssgTimedSelector *reil = new ssgTimedSelector;
 
-    ssgLeaf *leaf;
-
-    leaf = gen_directional_light( pt, dir, up, "RWY_WHITE_LIGHTS" );
+    // need to add this twice to work around an ssg bug
     reil->addKid( leaf );
-
-    leaf = gen_directional_light( pt, dir, up, "RWY_WHITE_LIGHTS" );
     reil->addKid( leaf );
 
     reil->setDuration( 60 );
     reil->setLimits( 0, 2 );
     reil->setMode( SSG_ANIM_SHUTTLE );
     reil->control( SSG_ANIM_START );
-
+   
     return reil;
+}
+
+
+ssgTimedSelector *gen_rabbit_lights( const point_list &nodes,
+                                     const point_list &normals,
+                                     const int_list &pnt_i,
+                                     const int_list &nml_i,
+                                     const string &material,
+                                     sgVec3 up )
+{
+    bool first = true;
+
+    sgVec3 nup;
+    sgNormalizeVec3( nup, up );
+
+    ssgTimedSelector *rabbit = new ssgTimedSelector;
+
+    unsigned int i;
+    sgVec3 pt, normal;
+    for ( i = 0; i < pnt_i.size(); ++i ) {
+        ssgVertexArray   *vl = new ssgVertexArray( 3 );
+        ssgNormalArray   *nl = new ssgNormalArray( 3 );
+        ssgColourArray   *cl = new ssgColourArray( 3 );
+     
+        sgSetVec3( pt, nodes[pnt_i[i]][0], nodes[pnt_i[i]][1],
+                   nodes[pnt_i[i]][2] );
+        sgSetVec3( normal, normals[nml_i[i]][0], normals[nml_i[i]][1],
+                   normals[nml_i[i]][2] );
+
+        // calculate a vector perpendicular to dir and up
+        sgVec3 perp;
+        sgVectorProductVec3( perp, normal, nup );
+
+        // front face
+        sgVec3 tmp3;
+        sgCopyVec3( tmp3, pt );
+        vl->add( tmp3 );
+        sgAddVec3( tmp3, nup );
+        vl->add( tmp3 );
+        sgAddVec3( tmp3, perp );
+        vl->add( tmp3 );
+        // sgSubVec3( tmp3, nup );
+        // vl->add( tmp3 );
+
+        nl->add( normal );
+        nl->add( normal );
+        nl->add( normal );
+        // nl->add( normal );
+
+        sgVec4 color;
+        sgSetVec4( color, 1.0, 1.0, 1.0, 1.0 );
+        cl->add( color );
+        sgSetVec4( color, 1.0, 1.0, 1.0, 0.0 );
+        cl->add( color );
+        cl->add( color );
+        // cl->add( color );
+
+        ssgLeaf *leaf = 
+            new ssgVtxTable ( GL_TRIANGLES, vl, nl, NULL, cl );
+
+        FGNewMat *newmat = material_lib.find( "RWY_WHITE_LIGHTS" );
+
+        if ( newmat != NULL ) {
+            leaf->setState( newmat->get_state() );
+        } else {
+            SG_LOG( SG_TERRAIN, SG_ALERT, "Warning: can't material = "
+                    << material );
+        }
+
+        rabbit->addKid( leaf );
+        if ( first ) {
+            // ssg bug where first entry in animation is ignored.
+            rabbit->addKid( leaf );
+        }
+            
+    }
+
+    rabbit->setDuration( 5 );
+    rabbit->setLimits( 0, pnt_i.size() );
+    rabbit->setMode( SSG_ANIM_SHUTTLE );
+    rabbit->control( SSG_ANIM_START );
+   
+    return rabbit;
 }
 
 
@@ -176,24 +381,21 @@ ssgBranch *gen_directional_lights( const point_list &nodes,
     sgVec3 nup;
     sgNormalizeVec3( nup, up );
 
-    unsigned int i;
-    sgVec3 pt, normal;
-    for ( i = 0; i < pnt_i.size(); ++i ) {
-        sgSetVec3( pt, nodes[pnt_i[i]][0], nodes[pnt_i[i]][1],
-                   nodes[pnt_i[i]][2] );
-        sgSetVec3( normal, normals[nml_i[i]][0], normals[nml_i[i]][1],
-                   normals[nml_i[i]][2] );
-        if ( material == "RWY_REIL_LIGHTS" ) {
-            cout << "found a reil" << endl;
-            ssgBranch *light = gen_reil_light( pt, normal, nup, material );
-            result->addKid( light );
-        } else {
-            // standard directional lights
-            ssgLeaf *light = gen_directional_light( pt, normal, nup, material );
-            result->addKid( light );
-        }
-        // light = gen_normal_line( pt, normal, nup );
-        // result->addKid( light );
+    if ( material == "RWY_REIL_LIGHTS" ) {
+        cout << "found a reil" << endl;
+        ssgTimedSelector *reil = gen_reil_lights( nodes, normals, pnt_i, nml_i,
+                                                  material, up );
+        result->addKid( reil );
+    } else if ( material == "RWY_SEQUENCED_LIGHTS" ) {
+        cout << "found a rabbit" << endl;
+        ssgTimedSelector *rabbit = gen_rabbit_lights( nodes, normals,
+                                                      pnt_i, nml_i,
+                                                      material, up );
+        result->addKid( rabbit );
+    } else {
+        ssgLeaf *light_group = gen_dir_light_group( nodes, normals, pnt_i,
+                                                    nml_i, material, up );
+        result->addKid( light_group );
     }
 
     return result;
