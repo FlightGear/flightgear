@@ -4,6 +4,14 @@ else
 SERIAL_LIBS =
 endif
 
+if ENABLE_NEW_WEATHER
+WEATHER_LIBS =	$(top_builddir)/Simulator/WeatherCM/libWeatherCM.a \
+		$(top_builddir)/Lib/Voronoi/libVoronoi.a
+else
+WEATHER_LIBS =	$(top_builddir)/Simulator/Weather/libWeather.a
+endif
+
+
 CPPFLAGS += -DPKGLIBDIR=\"$(pkglibdir)\"
 
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in
@@ -38,8 +46,7 @@ fgfs_LDADD = \
         $(top_builddir)/Simulator/Network/libNetwork.a \
 	$(top_builddir)/Simulator/Objects/libObjects.a \
 	$(top_builddir)/Simulator/Time/libTime.a \
-	$(top_builddir)/Simulator/Weather/libWeather.a \
-	$(top_builddir)/Simulator/WeatherCM/libWeatherCM.a \
+	$(WEATHER_LIBS) \
 	$(top_builddir)/Simulator/Joystick/libJoystick.a \
 	$(SERIAL_LIBS) \
 	$(top_builddir)/Lib/Math/libMath.a \

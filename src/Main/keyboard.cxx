@@ -53,8 +53,12 @@
 #include <Objects/materialmgr.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
-// #include <Weather/weather.hxx>
-#include <WeatherCM/FGLocalWeatherDatabase.h>
+
+#ifdef FG_NEW_WEATHER
+#  include <WeatherCM/FGLocalWeatherDatabase.h>
+#else
+#  include <Weather/weather.hxx>
+#endif
 
 #include "keyboard.hxx"
 #include "options.hxx"
@@ -77,7 +81,6 @@ void GLUTkey(unsigned char k, int x, int y) {
     FGInterface *f;
     FGTime *t;
     FGView *v;
-    // FGWeather *w;
     float fov, tmp;
     static bool winding_ccw = true;
     int speed;
@@ -85,7 +88,6 @@ void GLUTkey(unsigned char k, int x, int y) {
     f = current_aircraft.fdm_state;
     t = FGTime::cur_time_params;
     v = &current_view;
-    // w = &current_weather;
 
     FG_LOG( FG_INPUT, FG_DEBUG, "Key hit = " << k );
     if ( puKeyboard(k, PU_DOWN) ) {
@@ -187,12 +189,15 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->force_update_fov_math();
 	    return;
 	case 90: // Z key
-	    // tmp = w->get_visibility();   // in meters
-	    // tmp /= 1.10;
-	    // w->set_visibility( tmp );
+#ifdef FG_NEW_WEATHER
 	    tmp = WeatherDatabase->getWeatherVisibility();
 	    tmp /= 1.10;
 	    WeatherDatabase->setWeatherVisibility( tmp );
+#else
+	    tmp = current_weather.get_visibility();   // in meters
+	    tmp /= 1.10;
+	    current_weather.set_visibility( tmp );
+#endif
 	    return;
 	}
     } else {
@@ -308,12 +313,15 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->force_update_fov_math();
 	    return;
 	case 122: // z key
-	    // tmp = w->get_visibility();   // in meters
-	    // tmp *= 1.10;
-	    // w->set_visibility( tmp );
+#ifdef FG_NEW_WEATHER
 	    tmp = WeatherDatabase->getWeatherVisibility();
 	    tmp *= 1.10;
 	    WeatherDatabase->setWeatherVisibility( tmp );
+#else
+	    tmp = current_weather.get_visibility();   // in meters
+	    tmp *= 1.10;
+	    current_weather.set_visibility( tmp );
+#endif
 	    return;
 	case 27: // ESC
 	    // if( fg_DebugOutput ) {

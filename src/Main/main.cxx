@@ -91,8 +91,10 @@
 #include <Time/fg_time.hxx>
 #include <Time/fg_timer.hxx>
 #include <Time/sunpos.hxx>
-// #include <Weather/weather.hxx>
-// #include <WeatherCM/FGLocalWeatherDatabase.h>
+
+#ifndef FG_NEW_WEATHER
+#  include <Weather/weather.hxx>
+#endif
 
 #include "fg_init.hxx"
 #include "keyboard.hxx"
@@ -371,10 +373,8 @@ static void fgRenderFrame( void ) {
 	//         << current_weather.get_visibility() );
 	    
 	if ( agl > 10.0 ) {
-	    // ssgSetNearFar( 10.0f, current_weather.get_visibility() );
 	    ssgSetNearFar( 10.0f, 100000.0f );
 	} else {
-	    // ssgSetNearFar( 0.5f, current_weather.get_visibility() );
 	    ssgSetNearFar( 0.5f, 100000.0f );
 	}
 
@@ -568,7 +568,9 @@ static void fgMainLoop( void ) {
     // init routine and we don't have to worry about it again.
 #endif
 
-    // current_weather.Update();
+#ifndef FG_NEW_WEATHER
+    current_weather.Update();
+#endif
 
     // Fix elevation.  I'm just sticking this here for now, it should
     // probably move eventually
