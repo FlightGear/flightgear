@@ -307,12 +307,12 @@ void fgPanelInit ( void ) {
 #  error port me
 #endif
 
-    // glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 512);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);   
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // xglPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    xglPixelStorei(GL_UNPACK_ROW_LENGTH, 512);
+    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);   
+    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    xglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     /* load in the texture data */
     tpath[0] = '\0';
@@ -338,27 +338,27 @@ void fgPanelInit ( void ) {
 	    }
 	}
     }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 512, 256, 0, GL_RGBA, 
-		 GL_UNSIGNED_BYTE, (GLvoid *)(tex));
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 512, 256, 0, GL_RGBA, 
+		  GL_UNSIGNED_BYTE, (GLvoid *)(tex));
+    xglPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
     printf("ALPHA=%d\n", tex[0][0][3]);
     printf("ALPHA=%d\n", tex[512][0][3]);
     printf("ALPHA=%d\n", tex[512][256][3]);
     printf("ALPHA=%d\n", tex[0][256][3]);
 
-    panel_list = glGenLists (1);
-    glNewList(panel_list, GL_COMPILE);
-    glBegin(GL_POLYGON);
-    glTexCoord2f(0.0,0.0); glVertex2f(0.0,0.0);
-    glTexCoord2f(1.0,0.0); glVertex2f(640.0,0.0);
-    glTexCoord2f(1.0,1.0); glVertex2f(640.0,330.0);
-    // glTexCoord2f(0.6,1.0); glVertex2f(384.0,330.0); 
-    // glTexCoord2f(0.166666,0.91111); glVertex2f(106.66666,303.182);
-    // glTexCoord2f(0.0, 0.75769231); glVertex2f(0.0, 279.61); 
-    glTexCoord2f(0.0,1.0); glVertex2f(0.0,330.0); 
-    glEnd();
-    glEndList ();
+    panel_list = xglGenLists (1);
+    xglNewList(panel_list, GL_COMPILE);
+    xglBegin(GL_POLYGON);
+    xglTexCoord2f(0.0,0.0); glVertex2f(0.0,0.0);
+    xglTexCoord2f(1.0,0.0); glVertex2f(640.0,0.0);
+    xglTexCoord2f(1.0,1.0); glVertex2f(640.0,330.0);
+    // xglTexCoord2f(0.6,1.0); glVertex2f(384.0,330.0); 
+    // xglTexCoord2f(0.166666,0.91111); glVertex2f(106.66666,303.182);
+    // xglTexCoord2f(0.0, 0.75769231); glVertex2f(0.0, 279.61); 
+    xglTexCoord2f(0.0,1.0); glVertex2f(0.0,330.0); 
+    xglEnd();
+    xglEndList ();
 }
 
 
@@ -366,18 +366,18 @@ void fgPanelUpdate ( void ) {
     float alpha;
     double speed;
 
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    //glViewport(0, 0, 640, 480);
+    xglMatrixMode(GL_PROJECTION);
+    xglPushMatrix();
+    xglLoadIdentity();
+    // xglViewport(0, 0, 640, 480);
     gluOrtho2D(0, 640, 0, 480);
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
+    xglMatrixMode(GL_MODELVIEW);
+    xglPushMatrix();
+    xglLoadIdentity();
 
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    glEnable(GL_TEXTURE_2D);
+    xglDisable(GL_DEPTH_TEST);
+    xglDisable(GL_LIGHTING);
+    xglEnable(GL_TEXTURE_2D);
 #ifdef GL_VERSION_1_1
     xglBindTexture(GL_TEXTURE_2D, panel_tex_id);
 #elif GL_EXT_texture_object
@@ -385,48 +385,51 @@ void fgPanelUpdate ( void ) {
 #else
 #  error port me
 #endif
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_BLEND);
-    glColor4f(1.0, 1.0, 1.0, 1.0);
+    xglEnable(GL_BLEND);
+    xglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    xglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_BLEND);
+    xglColor4f(1.0, 1.0, 1.0, 1.0);
 
-    glCallList(panel_list);
+    xglCallList(panel_list);
 
-    glPushMatrix();
-    glDisable(GL_TEXTURE_2D);
+    xglPushMatrix();
+    xglDisable(GL_TEXTURE_2D);
     speed = get_speed();
     alpha=((((float)(speed))/150)*270 + 20);
-    glTranslatef(130, 146, 0);
-    glRotatef(-alpha, 0.0, 0.0, 1.0);
-    glScalef(20, 23, 0.0);
-    glBegin(GL_POLYGON);
-    glColor4f(1.0, 1.0, 1.0, 1.0);
-    glVertex2f(0.0, 0.0);
-    glVertex2f(0.1, 0.2);
-    glVertex2f(0.0, 1.0);
-    glVertex2f(-0.1, 0.2);
-    glVertex2f(0.0, 0.0);
-    glEnd();  
-    glPopMatrix();   
+    xglTranslatef(130, 146, 0);
+    xglRotatef(-alpha, 0.0, 0.0, 1.0);
+    xglScalef(20, 23, 0.0);
+    xglBegin(GL_POLYGON);
+    xglColor4f(1.0, 1.0, 1.0, 1.0);
+    xglVertex2f(0.0, 0.0);
+    xglVertex2f(0.1, 0.2);
+    xglVertex2f(0.0, 1.0);
+    xglVertex2f(-0.1, 0.2);
+    xglVertex2f(0.0, 0.0);
+    xglEnd();  
+    xglPopMatrix();   
 
-    glFlush();
+    // xglFlush();
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_BLEND);
-    glDisable(GL_ALPHA_TEST);
+    xglEnable(GL_DEPTH_TEST);
+    xglEnable(GL_LIGHTING);
+    xglDisable(GL_TEXTURE_2D);
+    xglDisable(GL_BLEND);
+    xglDisable(GL_ALPHA_TEST);
 
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
+    xglMatrixMode(GL_PROJECTION);
+    xglPopMatrix();
+    xglMatrixMode(GL_MODELVIEW);
+    xglPopMatrix();
 }
 
 
 /* $Log$
-/* Revision 1.1  1998/06/27 16:47:54  curt
-/* Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
-/* first pass at an isntrument panel.
+/* Revision 1.2  1998/07/03 11:55:37  curt
+/* A few small rearrangements and tweaks.
 /*
+ * Revision 1.1  1998/06/27 16:47:54  curt
+ * Incorporated Friedemann Reinhard's <mpt218@faupt212.physik.uni-erlangen.de>
+ * first pass at an isntrument panel.
+ *
  */
