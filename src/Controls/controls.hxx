@@ -24,6 +24,7 @@
 #ifndef _CONTROLS_HXX
 #define _CONTROLS_HXX
 
+#include <Main/options.hxx>
 
 #ifndef __cplusplus                                                          
 # error This library requires C++
@@ -78,11 +79,25 @@ public:
 	aileron = pos;
 	if ( aileron < -1.0 ) aileron = -1.0;
 	if ( aileron >  1.0 ) aileron =  1.0;
+
+	// check for autocoordination
+	if ( current_options.get_auto_coordination() == 
+	     fgOPTIONS::FG_AUTO_COORD_ENABLED ) 
+	{
+	    set_rudder( aileron / 2.0 );
+	}
     }
     inline void move_aileron( double amt ) {
 	aileron += amt;
 	if ( aileron < -1.0 ) aileron = -1.0;
 	if ( aileron >  1.0 ) aileron =  1.0;
+
+	// check for autocoordination
+	if ( current_options.get_auto_coordination() == 
+	     fgOPTIONS::FG_AUTO_COORD_ENABLED ) 
+	{
+	    set_rudder( aileron / 2.0 );
+	}
     }
     inline void set_elevator( double pos ) {
 	elevator = pos;
