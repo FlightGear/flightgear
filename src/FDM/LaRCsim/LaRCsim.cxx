@@ -31,8 +31,6 @@
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
 #include <FDM/flight.hxx>
-#include <FDM/IO360.hxx>
-#include <FDM/LaRCsimIC.hxx>
 #include <FDM/UIUCModel/uiuc_aircraft.h>
 #include <Main/fg_props.hxx>
 #include <Model/acmodel.hxx>
@@ -42,6 +40,8 @@
 #include "ls_interface.h"
 #include "ls_constants.h"
 
+#include "IO360.hxx"
+#include "LaRCsimIC.hxx"
 #include "LaRCsim.hxx"
 
 

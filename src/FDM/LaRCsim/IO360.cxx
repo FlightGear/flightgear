@@ -26,10 +26,11 @@
 #include STL_FSTREAM
 #include STL_IOSTREAM
 
-#include "IO360.hxx"
-#include "LaRCsim/ls_constants.h"
-
 #include <Main/fg_props.hxx>
+
+#include "IO360.hxx"
+#include "ls_constants.h"
+
 
 //*************************************************************************************
 // Initialise the engine model

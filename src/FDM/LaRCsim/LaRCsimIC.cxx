@@ -30,13 +30,14 @@
 #include <math.h>
 #include STL_IOSTREAM
 
-#include "FDM/LaRCsimIC.hxx"
-#include <FDM/LaRCsim/ls_cockpit.h>
-#include <FDM/LaRCsim/ls_generic.h>
-#include <FDM/LaRCsim/ls_interface.h>
-#include <FDM/LaRCsim/atmos_62.h>
-#include <FDM/LaRCsim/ls_constants.h>
-#include <FDM/LaRCsim/ls_geodesy.h>
+#include "ls_cockpit.h"
+#include "ls_generic.h"
+#include "ls_interface.h"
+#include "atmos_62.h"
+#include "ls_constants.h"
+#include "ls_geodesy.h"
+
+#include "LaRCsimIC.hxx"
 
 SG_USING_STD(cout);
 SG_USING_STD(endl);

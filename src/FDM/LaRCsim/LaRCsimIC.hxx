@@ -32,8 +32,8 @@ INCLUDES
 
 #include <plib/sg.h>
 
-#include <FDM/LaRCsim/ls_constants.h>
-#include <FDM/LaRCsim/ls_types.h>
+#include "ls_constants.h"
+#include "ls_types.h"
 
 /*******************************************************************************
 CLASS DECLARATION

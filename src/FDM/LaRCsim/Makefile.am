@@ -17,6 +17,8 @@ noinst_LIBRARIES = libLaRCsim.a
 
 libLaRCsim_a_SOURCES = \
 	LaRCsim.cxx LaRCsim.hxx \
+	LaRCsimIC.cxx LaRCsimIC.hxx \
+	IO360.cxx IO360.hxx \
 	atmos_62.c atmos_62.h \
 	default_model_routines.c default_model_routines.h \
 	ls_accel.c ls_accel.h \
