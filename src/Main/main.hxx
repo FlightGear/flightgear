@@ -7,6 +7,8 @@
 class SGSky;
 extern SGSky *thesky;
 
+#define FG_ENABLE_MULTIPASS_CLOUDS 1
+
 extern glPointParameterfProc glPointParameterfPtr;
 extern glPointParameterfvProc glPointParameterfvPtr;
 extern bool glPointParameterIsSupported;
