@@ -23,7 +23,14 @@
 
 
 #include <stdlib.h>   // atoi()
+
 #include <string>
+#include <vector>                                                               
+#include "Include/fg_stl_config.h"                                              
+
+#ifdef NEEDNAMESPACESTD                                                         
+using namespace std;                                                            
+#endif                                                                          
 
 #include <Aircraft/aircraft.hxx>
 #include <Debug/logstream.hxx>
@@ -36,27 +43,34 @@
 #include "fg_serial.hxx"
 
 
-// support up to four serial channels.  Each channel can be assigned
-// to an arbitrary port.  Bi-directional communication is supported by
-// the underlying layer.
+// support an arbitrary number of serial channels.  Each channel can
+// be assigned to an arbitrary port.  Bi-directional communication is
+// supported by the underlying layer, but probably will never be
+// needed by FGFS?
+
+typedef vector < fgIOCHANNEL > io_container;
+typedef io_container::iterator io_iterator;
+typedef io_container::const_iterator const_io_iterator;
 
 // define the four channels
-fgSERIAL port_a;
-fgSERIAL port_b;
-fgSERIAL port_c;
-fgSERIAL port_d;
+io_container port_list;
 
-// the type of each channel
-fgSerialPortKind port_a_kind = FG_SERIAL_DISABLED;
-fgSerialPortKind port_b_kind = FG_SERIAL_DISABLED;
-fgSerialPortKind port_c_kind = FG_SERIAL_DISABLED;
-fgSerialPortKind port_d_kind = FG_SERIAL_DISABLED;
+
+fgIOCHANNEL::fgIOCHANNEL() :
+    kind( FG_SERIAL_DISABLED )
+{
+}
+
+
+fgIOCHANNEL::~fgIOCHANNEL() {
+}
 
 
 // configure a port based on the config string
-static bool config_port(fgSERIAL& s, fgSerialPortKind& kind,
-				    const string& config)
+static fgIOCHANNEL config_port( const string& config )
 {
+    fgIOCHANNEL p;
+
     string::size_type begin, end;
 
     string device;
@@ -64,108 +78,106 @@ static bool config_port(fgSERIAL& s, fgSerialPortKind& kind,
     string baud;
     string direction;
 
-    begin = 0;;
+    begin = 0;
+
+    FG_LOG( FG_SERIAL, FG_INFO, "Configuring serial port: " << config );
 
     // device name
     end = config.find(",", begin);
     if ( end == string::npos ) {
-	return false;
+	return p;
     }
     
     device = config.substr(begin, end - begin);
     begin = end + 1;
-    cout << "  device = " << device << endl;
+    FG_LOG( FG_SERIAL, FG_INFO, "  device = " << device );
 
     // format
     end = config.find(",", begin);
     if ( end == string::npos ) {
-	return false;
+	return p;
     }
     
     format = config.substr(begin, end - begin);
     begin = end + 1;
-    cout << "  format = " << format << endl;
+    FG_LOG( FG_SERIAL, FG_INFO, "  format = " << format );
 
     // baud
     end = config.find(",", begin);
     if ( end == string::npos ) {
-	return false;
+	return p;
     }
     
     baud = config.substr(begin, end - begin);
     begin = end + 1;
-    cout << "  baud = " << baud << endl;
+    FG_LOG( FG_SERIAL, FG_INFO, "  baud = " << baud );
 
     // direction
     direction = config.substr(begin);
-    cout << "  direction = " << direction << endl;
+    FG_LOG( FG_SERIAL, FG_INFO, "  direction = " << direction );
 
-    if ( s.is_enabled() ) {
+    if ( p.port.is_enabled() ) {
 	FG_LOG( FG_SERIAL, FG_ALERT, "This shouldn't happen, but the port " 
 		<< "is already in use, ignoring" );
-	return false;
+	return p;
     }
 
-    if ( ! s.open_port( device ) ) {
+    if ( ! p.port.open_port( device ) ) {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Error opening device: " << device );
+	return p;
     }
 
-    if ( ! s.set_baud( atoi( baud.c_str() ) ) ) {
+    if ( ! p.port.set_baud( atoi( baud.c_str() ) ) ) {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Error setting baud: " << baud );
+	return p;
     }
 
     if ( format == "nmea" ) {
 	if ( direction == "out" ) {
-	    kind = FG_SERIAL_NMEA_OUT;
+	    p.kind = fgIOCHANNEL::FG_SERIAL_NMEA_OUT;
 	} else if ( direction == "in" ) {
-	    kind = FG_SERIAL_NMEA_IN;
+	    p.kind = fgIOCHANNEL::FG_SERIAL_NMEA_IN;
 	} else {
 	    FG_LOG( FG_SERIAL, FG_ALERT, "Unknown direction" );
-	    return false;
 	}
     } else if ( format == "garman" ) {
 	if ( direction == "out" ) {
-	    kind = FG_SERIAL_GARMAN_OUT;
+	    p.kind = fgIOCHANNEL::FG_SERIAL_GARMAN_OUT;
 	} else if ( direction == "in" ) {
-	    kind = FG_SERIAL_GARMAN_IN;
+	    p.kind = fgIOCHANNEL::FG_SERIAL_GARMAN_IN;
 	} else {
 	    FG_LOG( FG_SERIAL, FG_ALERT, "Unknown direction" );
-	    return false;
 	}
     } else if ( format == "fgfs" ) {
 	if ( direction == "out" ) {
-	    kind = FG_SERIAL_FGFS_OUT;
+	    p.kind = fgIOCHANNEL::FG_SERIAL_FGFS_OUT;
 	} else if ( direction == "in" ) {
-	    kind = FG_SERIAL_FGFS_IN;
+	    p.kind = fgIOCHANNEL::FG_SERIAL_FGFS_IN;
 	} else {
 	    FG_LOG( FG_SERIAL, FG_ALERT, "Unknown direction" );
-	    return false;
 	}
     } else {
 	FG_LOG( FG_SERIAL, FG_ALERT, "Unknown format" );
-	return false;
     }
 
-    return true;
+    return p;
 }
 
 
-// initialize serial ports based on command line options (if any)
+// step through the port config streams (from fgOPTIONS) and setup
+// serial port channels for each
 void fgSerialInit() {
-    if ( current_options.get_port_a_config() != "" ) {
-	config_port(port_a, port_a_kind, current_options.get_port_a_config() );
-    }
+    fgIOCHANNEL port;
+    str_container port_options_list = current_options.get_port_options_list();
 
-    if ( current_options.get_port_b_config() != "" ) {
-	config_port(port_b, port_b_kind, current_options.get_port_b_config() );
-    }
+    const_str_iterator current = port_options_list.begin();
+    const_str_iterator last = port_options_list.end();
 
-    if ( current_options.get_port_c_config() != "" ) {
-	config_port(port_c, port_c_kind, current_options.get_port_c_config() );
-    }
-
-    if ( current_options.get_port_d_config() != "" ) {
-	config_port(port_d, port_d_kind, current_options.get_port_d_config() );
+    for ( ; current != last; ++current ) {
+	port = config_port( *current );
+	if ( port.kind != fgIOCHANNEL::FG_SERIAL_DISABLED ) {
+	    port_list.push_back( port );
+	}
     }
 }
 
@@ -189,7 +201,7 @@ char calc_nmea_cksum(char *sentence) {
 }
 
 
-static void send_nmea_out( fgSERIAL& s ) {
+static void send_nmea_out( fgIOCHANNEL& p ) {
     char rmc[256], gga[256];
     char rmc_sum[10], gga_sum[10];
     char dir;
@@ -198,6 +210,12 @@ static void send_nmea_out( fgSERIAL& s ) {
     fgFLIGHT *f;
     fgTIME *t;
 
+    // run once per second
+    if ( p.last_time == cur_time_params.cur_time ) {
+	return;
+    }
+    p.last_time = cur_time_params.cur_time;
+    
     f = current_aircraft.flight;
     t = &cur_time_params;
 
@@ -266,7 +284,7 @@ static void send_nmea_out( fgSERIAL& s ) {
 	rmc_sentence += "*";
 	rmc_sentence += rmc_sum;
 	rmc_sentence += "\r\n";
-	s.write_port(rmc_sentence);
+	p.port.write_port(rmc_sentence);
     } else {
 	// gga on odd seconds
 	string gga_sentence = "$";
@@ -274,14 +292,14 @@ static void send_nmea_out( fgSERIAL& s ) {
 	gga_sentence += "*";
 	gga_sentence += gga_sum;
 	gga_sentence += "\n";
-	// s.write_port(gga_sentence);
+	// p.port.write_port(gga_sentence);
     }
 }
 
-static void read_nmea_in( fgSERIAL& s ) {
+static void read_nmea_in( fgIOCHANNEL& p ) {
 }
 
-static void send_garman_out( fgSERIAL& s ) {
+static void send_garman_out( fgIOCHANNEL& p ) {
     char rmc[256], rmz[256];
     char dir;
     int deg;
@@ -289,6 +307,12 @@ static void send_garman_out( fgSERIAL& s ) {
     fgFLIGHT *f;
     fgTIME *t;
 
+    // run once per second
+    if ( p.last_time == cur_time_params.cur_time ) {
+	return;
+    }
+    p.last_time = cur_time_params.cur_time;
+    
     f = current_aircraft.flight;
     t = &cur_time_params;
 
@@ -352,69 +376,61 @@ static void send_garman_out( fgSERIAL& s ) {
     // one full frame every 2 seconds according to the standard
     if ( cur_time_params.cur_time % 2 == 0 ) {
 	// rmc on even seconds
-	s.write_port(rmc);
+	p.port.write_port(rmc);
     } else {
-	// gga on odd seconds
-	s.write_port(rmz);
+	// rmz on odd seconds
+	p.port.write_port(rmz);
     }
 }
 
-static void read_garman_in( fgSERIAL& s ) {
+static void read_garman_in( fgIOCHANNEL& p ) {
 }
 
-static void send_fgfs_out( fgSERIAL& s ) {
+static void send_fgfs_out( fgIOCHANNEL& p ) {
 }
 
-static void read_fgfs_in( fgSERIAL& s ) {
+static void read_fgfs_in( fgIOCHANNEL& p ) {
 }
 
 
 // one more level of indirection ...
-static void process_port( fgSERIAL& s, const fgSerialPortKind kind ) {
-    static long last_time;
-    if ( kind == FG_SERIAL_NMEA_OUT ) {
-	if (cur_time_params.cur_time > last_time ) {
-	    send_nmea_out(s);
-	} 
-	last_time = cur_time_params.cur_time;
-    } else if ( kind == FG_SERIAL_NMEA_IN ) {
-	read_nmea_in(s);
-    } else if ( kind == FG_SERIAL_GARMAN_OUT ) {
-	if (cur_time_params.cur_time > last_time ) {
-	    send_garman_out(s);
-	} 
-	last_time = cur_time_params.cur_time;
-    } else if ( kind == FG_SERIAL_GARMAN_IN ) {
-	read_garman_in(s);
-    } else if ( kind == FG_SERIAL_FGFS_OUT ) {
-	send_fgfs_out(s);
-    } else if ( kind == FG_SERIAL_FGFS_IN ) {
-	read_fgfs_in(s);
+static void process_port( fgIOCHANNEL& p ) {
+    if ( p.kind == fgIOCHANNEL::FG_SERIAL_NMEA_OUT ) {
+	send_nmea_out(p);
+    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_NMEA_IN ) {
+	read_nmea_in(p);
+    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_GARMAN_OUT ) {
+	send_garman_out(p);
+    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_GARMAN_IN ) {
+	read_garman_in(p);
+    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_FGFS_OUT ) {
+	send_fgfs_out(p);
+    } else if ( p.kind == fgIOCHANNEL::FG_SERIAL_FGFS_IN ) {
+	read_fgfs_in(p);
     }
 }
 
 
 // process any serial port work
 void fgSerialProcess() {
-    if ( port_a_kind != FG_SERIAL_DISABLED ) {
-	process_port(port_a, port_a_kind);
-    }
+    fgIOCHANNEL port;
+    
+    const_io_iterator current = port_list.begin();
+    const_io_iterator last = port_list.end();
 
-    if ( port_b_kind != FG_SERIAL_DISABLED ) {
-	process_port(port_b, port_b_kind);
-    }
-
-    if ( port_c_kind != FG_SERIAL_DISABLED ) {
-	process_port(port_c, port_c_kind);
-    }
-
-    if ( port_d_kind != FG_SERIAL_DISABLED ) {
-	process_port(port_d, port_d_kind);
+    for ( ; current != last; ++current ) {
+	port = *current;
+	if ( port.kind != fgIOCHANNEL::FG_SERIAL_DISABLED ) {
+	    process_port ( port );
+	}
     }
 }
 
 
 // $Log$
+// Revision 1.4  1998/11/25 01:33:58  curt
+// Support for an arbitrary number of serial ports.
+//
 // Revision 1.3  1998/11/23 20:51:51  curt
 // Tweaking serial stuff.
 //

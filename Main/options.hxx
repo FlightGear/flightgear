@@ -45,7 +45,19 @@
 #include <Include/compiler.h>
 FG_USING_STD(string);
 
+#include <vector>                                                               
+#include "Include/fg_stl_config.h"                                              
+
+#ifdef NEEDNAMESPACESTD                                                         
+using namespace std;                                                            
+#endif                                                                          
+
 #include "fg_serial.hxx"
+
+
+typedef vector < string > str_container;
+typedef str_container::iterator str_iterator;
+typedef str_container::const_iterator const_str_iterator;
 
 
 class fgOPTIONS {
@@ -139,10 +151,7 @@ private:
     // fgSerialPortKind port_d_kind;  // Port d kind
 
     // Serial port configuration strings
-    string port_a_config;
-    string port_b_config;
-    string port_c_config;
-    string port_d_config;
+    str_container port_options_list;
     
 public:
 
@@ -197,15 +206,9 @@ public:
 
     inline int get_time_offset() const { return time_offset; }
 
-    // inline fgSerialPortKind get_port_a_kind() const { return port_a_kind; }
-    // inline fgSerialPortKind get_port_b_kind() const { return port_b_kind; }
-    // inline fgSerialPortKind get_port_c_kind() const { return port_c_kind; }
-    // inline fgSerialPortKind get_port_d_kind() const { return port_d_kind; }
-
-    inline string get_port_a_config() const { return port_a_config; }
-    inline string get_port_b_config() const { return port_b_config; }
-    inline string get_port_c_config() const { return port_c_config; }
-    inline string get_port_d_config() const { return port_d_config; }
+    inline str_container get_port_options_list() const { 
+	return port_options_list;
+    }
 
     // Update functions
     inline void set_hud_status( bool status ) { hud_status = status; }
@@ -244,6 +247,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.24  1998/11/25 01:34:01  curt
+// Support for an arbitrary number of serial ports.
+//
 // Revision 1.23  1998/11/23 21:49:05  curt
 // Borland portability tweaks.
 //

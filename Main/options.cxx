@@ -150,18 +150,7 @@ fgOPTIONS::fgOPTIONS() :
     tris_or_culled(0),
 	
     // Time options
-    time_offset(0),
-
-    // Serial port options
-    // port_a(FG_SERIAL_DISABLED),
-    // port_b(FG_SERIAL_DISABLED),
-    // port_c(FG_SERIAL_DISABLED),
-    // port_d(FG_SERIAL_DISABLED),
-
-    port_a_config(""),
-    port_b_config(""),
-    port_c_config(""),
-    port_d_config("")
+    time_offset(0)
 
 {
     // set initial values/defaults
@@ -184,6 +173,10 @@ fgOPTIONS::fgOPTIONS() :
     }
 
     airport_id = "";  // default airport id
+
+    // initialize port config string list
+    port_options_list.erase ( port_options_list.begin(), 
+			      port_options_list.end() );
 }
 
 
@@ -344,25 +337,23 @@ fgOPTIONS::parse_fov( const string& arg ) {
 }
 
 
-// Parse serial port option --serial=a,/dev/ttyS1,nmea,4800,out
+// Parse serial port option --serial=/dev/ttyS1,nmea,4800,out
 //
-// Format is "--serial=port_id,device,format,baud,direction" where
+// Format is "--serial=device,format,baud,direction" where
 // 
-//  port_id = {a, b, c, d}
 //  device = OS device name to be open()'ed
 //  format = {nmea, fgfs}
 //  baud = {300, 1200, 2400, ..., 230400}
 //  direction = {in, out, bi}
-//
+
 bool 
 fgOPTIONS::parse_serial( const string& serial_str ) {
     string::size_type pos;
-    string port;
-    string config;
 
     // cout << "Serial string = " << serial_str << endl;
 
-    // port
+    // a flailing attempt to see if the port config string has a
+    // chance at being valid
     pos = serial_str.find(",");
     if ( pos == string::npos ) {
 	FG_LOG( FG_GENERAL, FG_ALERT, 
@@ -370,22 +361,7 @@ fgOPTIONS::parse_serial( const string& serial_str ) {
 	return false;
     }
     
-    port = serial_str.substr(0, pos);
-    config = serial_str.substr(++pos);
-
-    if ( port == "a" ) {
-	port_a_config = config;
-    } else if ( port == "b" ) {
-	port_b_config = config;
-    } else if ( port == "c" ) {
-	port_c_config = config;
-    } else if ( port == "d" ) {
-	port_d_config = config;
-    } else {
-	FG_LOG( FG_GENERAL, FG_ALERT, "Valid ports are a - d, config for port "
-		<< port << " ignored" );
-	return false;
-    }
+    port_options_list.push_back( serial_str );
 
     return true;
 }
@@ -642,6 +618,9 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.32  1998/11/25 01:34:00  curt
+// Support for an arbitrary number of serial ports.
+//
 // Revision 1.31  1998/11/23 21:49:04  curt
 // Borland portability tweaks.
 //

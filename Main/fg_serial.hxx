@@ -34,15 +34,27 @@
 #include <Serial/serial.hxx>
 
 
-// Types of serial port protocols
-enum fgSerialPortKind {
-    FG_SERIAL_DISABLED = 0,
-    FG_SERIAL_NMEA_OUT = 1,
-    FG_SERIAL_NMEA_IN = 2,
-    FG_SERIAL_GARMAN_OUT = 3,
-    FG_SERIAL_GARMAN_IN = 4,
-    FG_SERIAL_FGFS_OUT = 5,
-    FG_SERIAL_FGFS_IN = 6
+class fgIOCHANNEL {
+
+public:
+
+    // Types of serial port protocols
+    enum fgPortKind {
+	FG_SERIAL_DISABLED = 0,
+	FG_SERIAL_NMEA_OUT = 1,
+	FG_SERIAL_NMEA_IN = 2,
+	FG_SERIAL_GARMAN_OUT = 3,
+	FG_SERIAL_GARMAN_IN = 4,
+	FG_SERIAL_FGFS_OUT = 5,
+	FG_SERIAL_FGFS_IN = 6
+    };
+
+    fgPortKind kind;
+    fgSERIAL port;
+    long last_time;
+
+    fgIOCHANNEL();
+    ~fgIOCHANNEL();
 };
 
 
@@ -51,10 +63,10 @@ enum fgSerialPortKind {
 // the underlying layer.
 
 // define the four channels
-extern fgSERIAL port_a;
-extern fgSERIAL port_b;
-extern fgSERIAL port_c;
-extern fgSERIAL port_d;
+// extern fgIOCHANNEL port_a;
+// extern fgIOCHANNEL port_b;
+// extern fgIOCHANNEL port_c;
+// extern fgIOCHANNEL port_d;
 
 
 // initialize serial ports based on command line options (if any)
@@ -69,6 +81,9 @@ void fgSerialProcess();
 
 
 // $Log$
+// Revision 1.3  1998/11/25 01:33:59  curt
+// Support for an arbitrary number of serial ports.
+//
 // Revision 1.2  1998/11/19 13:53:27  curt
 // Added a "Garman" mode.
 //
