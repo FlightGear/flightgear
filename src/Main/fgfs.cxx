@@ -1,6 +1,7 @@
 #include "fgfs.hxx"
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/misc/exception.hxx>
 
 #include "globals.hxx"
 #include "fg_props.hxx"
@@ -91,6 +92,13 @@ FGSubsystemGroup::init ()
 }
 
 void
+FGSubsystemGroup::reinit ()
+{
+    for (int i = 0; i < _members.size(); i++)
+        _members[i]->subsystem->reinit();
+}
+
+void
 FGSubsystemGroup::bind ()
 {
     for (int i = 0; i < _members.size(); i++)
@@ -111,6 +119,28 @@ FGSubsystemGroup::update (double delta_time_sec)
         for (int i = 0; i < _members.size(); i++)
             _members[i]->update(delta_time_sec); // indirect call
     }
+}
+
+void
+FGSubsystemGroup::suspend ()
+{
+    FGSubsystem::suspend();
+    for (int i = 0; i < _members.size(); i++)
+        _members[i]->subsystem->suspend();
+}
+
+void
+FGSubsystemGroup::resume ()
+{
+    FGSubsystem::resume();
+    for (int i = 0; i < _members.size(); i++)
+        _members[i]->subsystem->resume();
+}
+
+bool
+FGSubsystemGroup::is_suspended () const
+{
+    return FGSubsystem::is_suspended();
 }
 
 void
@@ -227,6 +257,13 @@ FGSubsystemMgr::init ()
 }
 
 void
+FGSubsystemMgr::reinit ()
+{
+    for (int i = 0; i < MAX_GROUPS; i++)
+            _groups[i].reinit();
+}
+
+void
 FGSubsystemMgr::bind ()
 {
     for (int i = 0; i < MAX_GROUPS; i++)
@@ -250,17 +287,56 @@ FGSubsystemMgr::update (double delta_time_sec)
 }
 
 void
+FGSubsystemMgr::suspend ()
+{
+    FGSubsystem::suspend();
+    for (int i = 0; i < MAX_GROUPS; i++)
+        _groups[i].suspend();
+}
+
+void
+FGSubsystemMgr::resume ()
+{
+    FGSubsystem::resume();
+    for (int i = 0; i < MAX_GROUPS; i++)
+        _groups[i].resume();
+}
+
+bool
+FGSubsystemMgr::is_suspended () const
+{
+    return FGSubsystem::is_suspended();
+}
+
+void
 FGSubsystemMgr::add (GroupType group, const string &name,
                      FGSubsystem * subsystem, double min_time_sec)
 {
     SG_LOG(SG_GENERAL, SG_INFO, "Adding subsystem " << name);
     get_group(group)->set_subsystem(name, subsystem, min_time_sec);
+
+    if (_subsystem_map.find(name) != _subsystem_map.end()) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Adding duplicate subsystem " << name);
+        throw sg_exception("duplicate subsystem");
+    }
+    _subsystem_map[name] = subsystem;
 }
 
 FGSubsystemGroup *
 FGSubsystemMgr::get_group (GroupType group)
 {
     return &(_groups[group]);
+}
+
+FGSubsystem *
+FGSubsystemMgr::get_subsystem (const string &name)
+{
+    map<string,FGSubsystem *>::iterator s =_subsystem_map.find(name);
+
+    if (s == _subsystem_map.end())
+        return 0;
+    else
+        return s->second;
 }
 
 // end of fgfs.cxx

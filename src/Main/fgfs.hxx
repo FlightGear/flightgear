@@ -252,9 +252,13 @@ public:
     virtual ~FGSubsystemGroup ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void bind ();
     virtual void unbind ();
     virtual void update (double delta_time_sec);
+    virtual void suspend ();
+    virtual void resume ();
+    virtual bool is_suspended () const;
 
     virtual void set_subsystem (const string &name,
                                 FGSubsystem * subsystem,
@@ -287,12 +291,29 @@ private:
 
 
 /**
- * Manage subsystems for the application.
+ * Manage subsystems for FlightGear.
+ *
+ * This top-level subsystem will eventually manage all of the
+ * subsystems in FlightGear: it broadcasts its life-cycle events
+ * (init, bind, etc.) to all of the subsystems it manages.  Subsystems
+ * are grouped to guarantee order of initialization and execution --
+ * currently, the only two groups are INIT and GENERAL, but others
+ * will appear in the future.
+ *
+ * All subsystems are named as well as grouped, and subsystems can be
+ * looked up by name and cast to the appropriate subtype when another
+ * subsystem needs to invoke specialized methods.
+ *
+ * The subsystem manager owns the pointers to all the subsystems in
+ * it.
  */
 class FGSubsystemMgr : public FGSubsystem
 {
 public:
 
+    /**
+     * Types of subsystem groups.
+     */
     enum GroupType {
         INIT = 0,
         GENERAL,
@@ -303,9 +324,13 @@ public:
     virtual ~FGSubsystemMgr ();
 
     virtual void init ();
+    virtual void reinit ();
     virtual void bind ();
     virtual void unbind ();
     virtual void update (double delta_time_sec);
+    virtual void suspend ();
+    virtual void resume ();
+    virtual bool is_suspended () const;
 
     virtual void add (GroupType group, const string &name,
                       FGSubsystem * subsystem,
@@ -313,9 +338,12 @@ public:
 
     virtual FGSubsystemGroup * get_group (GroupType group);
 
+    virtual FGSubsystem * get_subsystem(const string &name);
+
 private:
 
     FGSubsystemGroup _groups[MAX_GROUPS];
+    map<string,FGSubsystem *> _subsystem_map;
 
 };
 
