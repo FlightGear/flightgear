@@ -1,3 +1,4 @@
 fg_time.o: fg_time.c fg_time.h ../types.h
 fg_timer.o: fg_timer.c fg_timer.h
-sunpos.o: sunpos.c sunpos.h ../constants.h
+sunpos.o: sunpos.c sunpos.h fg_time.h ../types.h ../constants.h \
+ ../Math/fg_geodesy.h ../Math/polar.h ../Math/../types.h

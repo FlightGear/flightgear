@@ -126,10 +126,15 @@ static void fgInitVisuals() {
 static void fgUpdateViewParams() {
     struct fgCartesianPoint view_pos /*, alt_up */;
     struct flight_params *f;
+    struct time_params *t;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
-    MAT3vec vec, view_up, forward, view_forward, local_up;
+    MAT3vec vec, view_up, forward, view_forward, local_up, nup, nsun;
+    double sun_angle, temp, ambient, diffuse;
+    GLfloat color[4] = { 1.0, 1.0, 0.50, 1.0 };
+    GLfloat amb[4], diff[4];
 
     f = &current_aircraft.flight;
+    t = &cur_time_params;
 
     /* Tell GL we are about to modify the projection parameters */
     glMatrixMode(GL_PROJECTION);
@@ -217,12 +222,50 @@ static void fgUpdateViewParams() {
     MAT3rotate(TMP, view_up, view_offset);
     MAT3mult_vec(view_forward, forward, TMP);
 
+    /* set up our view volume */
     gluLookAt(view_pos.x, view_pos.y, view_pos.z,
 	      view_pos.x + view_forward[0], view_pos.y + view_forward[1], 
 	      view_pos.z + view_forward[2],
 	      view_up[0], view_up[1], view_up[2]);
 
+    /* set the sun position */
     glLightfv( GL_LIGHT0, GL_POSITION, sun_vec );
+
+    /* calculate lighting parameters based on sun's relative angle to
+     * local up */
+    MAT3_COPY_VEC(nup, local_up);
+    nsun[0] = t->fg_sunpos.x; 
+    nsun[1] = t->fg_sunpos.y;
+    nsun[2] = t->fg_sunpos.z;
+    MAT3_NORMALIZE_VEC(nup, temp);
+    MAT3_NORMALIZE_VEC(nsun, temp);
+
+    sun_angle = acos(MAT3_DOT_PRODUCT(nup, nsun));
+    printf("SUN ANGLE relative to current location = %.3f\n", sun_angle);
+
+    if ( (sun_angle >= -FG_PI) && (sun_angle <= FG_PI) ) {
+	/* day time */
+	/* ya kind'a have to plot this to see the magic */
+	ambient = 0.4 * cos(0.15*sun_angle*sun_angle);
+	diffuse = 0.4 * cos(0.45*sun_angle);
+    } else {
+	/* night time */
+	ambient = 0.4;
+	diffuse = 0.0;
+    }
+
+    amb[0] = color[0] * ambient;
+    amb[1] = color[1] * ambient;
+    amb[2] = color[2] * ambient;
+    amb[3] = color[3];
+
+    diff[0] = color[0] * diffuse;
+    diff[1] = color[1] * diffuse;
+    diff[2] = color[2] * diffuse;
+    diff[3] = color[3];
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT, amb );
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diff );
 }
 
 
@@ -641,9 +684,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.6  1997/08/13 20:24:56  curt
-/* Changes due to changing sunpos interface.
+/* Revision 1.7  1997/08/16 12:22:38  curt
+/* Working on improving the lighting/shading.
 /*
+ * Revision 1.6  1997/08/13 20:24:56  curt
+ * Changes due to changing sunpos interface.
+ *
  * Revision 1.5  1997/08/06 21:08:32  curt
  * Sun position now *really* works (I think) ... I still have sun time warping
  * code in place, probably should remove it soon.

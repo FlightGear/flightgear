@@ -12,4 +12,5 @@ GLUTmain.o: GLUTmain.c ../constants.h ../Aircraft/aircraft.h \
  ../Aircraft/../Controls/../limits.h ../Scenery/mesh.h \
  ../Scenery/scenery.h ../Scenery/../types.h ../Math/fg_geodesy.h \
  ../Math/fg_random.h ../Math/mat3.h ../Math/polar.h ../Math/../types.h \
- ../Time/fg_timer.h ../Time/sunpos.h ../Weather/weather.h
+ ../Time/fg_time.h ../Time/../types.h ../Time/fg_timer.h \
+ ../Time/sunpos.h ../Weather/weather.h
