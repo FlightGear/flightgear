@@ -327,6 +327,8 @@ void fgRenderFrame( void ) {
 	xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 	//xglEnable(GL_DEPTH_TEST);
 	SolarSystem::theSolarSystem->draw();
+	// reset blending function
+	glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
 
 	xglPopMatrix();
 
