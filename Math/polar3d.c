@@ -55,16 +55,19 @@ fgPolarPoint3d fgCartToPolar3d(fgCartesianPoint3d cp) {
     pp.lat = FG_PI_2 - atan2( sqrt(cp.x*cp.x + cp.y*cp.y), cp.z );
     pp.radius = sqrt(cp.x*cp.x + cp.y*cp.y + cp.z*cp.z);
 
-    printf("lon = %.l2f  lat = %.l2f  radius = %.l2f\n", 
-	   pp.lon, pp.lat, pp.radius);
+    /* printf("lon = %.2f  lat = %.2f  radius = %.2f\n", 
+              pp.lon, pp.lat, pp.radius); */
     return(pp);
 }
 
 
 /* $Log$
-/* Revision 1.1  1998/05/02 01:50:11  curt
-/* polar.[ch] renamed to polar3d.[ch]
+/* Revision 1.2  1998/05/03 00:45:49  curt
+/* Commented out a debugging printf.
 /*
+ * Revision 1.1  1998/05/02 01:50:11  curt
+ * polar.[ch] renamed to polar3d.[ch]
+ *
  * Revision 1.6  1998/04/25 22:06:23  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *
