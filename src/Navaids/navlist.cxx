@@ -108,75 +108,74 @@ bool FGNavList::init( SGPath path ) {
 }
 
 
-// query the database for the specified frequency, lon and lat are in
-// degrees, elev is in meters
-bool FGNavList::query( double lon, double lat, double elev, double freq,
-		       FGNav *nav )
+// Query the database for the specified frequency.  It is assumed that
+// there will be multiple stations with matching frequencies so a
+// position must be specified.  Lon and lat are in degrees, elev is in
+// meters.
+FGNav *FGNavList::findByFreq( double freq, double lon, double lat, double elev )
 {
     nav_list_type stations = navaids[(int)(freq*100.0 + 0.5)];
-
-    nav_list_iterator current = stations.begin();
-    nav_list_iterator last = stations.end();
-
     Point3D aircraft = sgGeodToCart( Point3D(lon, lat, elev) );
-    return findNavFromList(aircraft, current, last, nav);
+
+    return findNavFromList( aircraft, stations );
 }
 
 
-bool FGNavList::findByIdent(const char* ident, double lon, double lat,
-                            FGNav *nav)
+FGNav *FGNavList::findByIdent( const char* ident,
+                               const double lon, const double lat )
 {
     nav_list_type stations = ident_navaids[ident];
-
-    nav_list_iterator current = stations.begin();
-    nav_list_iterator last = stations.end();
-	
     Point3D aircraft = sgGeodToCart( Point3D(lon, lat, 0.0) );
-    return findNavFromList(aircraft, current, last, nav);
+
+    return findNavFromList( aircraft, stations );
 }
 
 
-bool FGNavList::findByIdentAndFreq(const char* ident, const double& freq,
-                                   FGNav *nav)
+// Given an Ident and optional freqency, return the first matching
+// station.
+FGNav *FGNavList::findByIdentAndFreq( const char* ident, const double freq )
 {
-    cout << "ident = " << ident << endl;
     nav_list_type stations = ident_navaids[ident];
-    cout << " matches = " << stations.size() << endl;
-    nav_list_iterator current = stations.begin();
-    nav_list_iterator last = stations.end();
 
-    if ( stations.size() > 1 ) {
-        // more than one match on this ident, use freq to refine
+    if ( freq > 0.0 ) {
+        // sometimes there can be duplicated idents.  If a freq is
+        // specified, use it to refine the search.
         int f = (int)(freq*100.0 + 0.5);
-        for ( ; current != last ; ++current ) {
-            if ( f == (*current)->get_freq() ) {
-                *nav = (**current);
-                return true;
+        for ( unsigned int i = 0; i < stations.size(); ++i ) {
+            if ( f == stations[i]->get_freq() ) {
+                return stations[i];
             }
         }
     } else {
-        *nav = (**current);
-        return true;
+        return stations[0];
     }
 
-    return false;
+    return NULL;
 }
 
 
-bool FGNavList::findNavFromList(const Point3D &aircraft, 
-                                nav_list_iterator current,
-                                nav_list_iterator end, FGNav *nav)
+// Given a point and a list of stations, return the closest one to the
+// specified point.
+FGNav *FGNavList::findNavFromList( const Point3D &aircraft, 
+                                   const nav_list_type &stations )
 {
-    // double az1, az2, s;
-    
+    FGNav *nav = NULL;
     Point3D station;
     double d2;
-    double min_dist = 99999999999999.9;
-    bool found_one = false;
-    for ( ; current != end ; ++current ) {
+    double min_dist;
+
+    // prime the pump with info from stations[0]
+    if ( stations.size() > 0 ) {
+        nav = stations[0];
+	station = Point3D( nav->get_x(), nav->get_y(), nav->get_z());
+	min_dist = aircraft.distance3Dsquared( station );
+    }
+
+    // check if any of the remaining stations are closer
+    for ( unsigned int i = 1; i < stations.size(); ++i ) {
 	// cout << "testing " << current->get_ident() << endl;
-	station = Point3D((*current)->get_x(), (*current)->get_y(),
-                          (*current)->get_z());
+	station = Point3D( stations[i]->get_x(), stations[i]->get_y(),
+                           stations[i]->get_z());
 
 	d2 = aircraft.distance3Dsquared( station );
 
@@ -184,22 +183,11 @@ bool FGNavList::findNavFromList(const Point3D &aircraft,
 	//      << "  range = " << current->get_range() * SG_NM_TO_METER
         //      << endl;
 
-	// match d^2 < 2 * range^2 the published range so we can model
-	// reduced signal strength
-	double twiceRange = 2 * (*current)->get_range() * SG_NM_TO_METER;
-	if ( d2 < (twiceRange * twiceRange)) {
-            // cout << "d2 = " << d2 << " min_dist = " << min_dist << endl;
-            if ( d2 < min_dist ) {
-                min_dist = d2;
-                found_one = true;
-                *nav = (**current);
-                // cout << "matched = " << (*current)->get_ident() << endl;
-            } else {
-                // cout << "matched, but too far away = "
-                //      << (*current)->get_ident() << endl;
-            }
-	}
+        if ( d2 < min_dist ) {
+            min_dist = d2;
+            nav = stations[i];
+        }
     }
 
-    return found_one;
+    return nav;
 }

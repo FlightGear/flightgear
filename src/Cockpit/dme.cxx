@@ -218,7 +218,7 @@ void FGDME::search()
     }
 
     FGILS ils;
-    FGNav nav;
+    FGNav *nav;
 
     if ( current_ilslist->query( lon, lat, elev, freq, &ils ) ) {
         if (ils.get_has_dme()) {
@@ -232,17 +232,17 @@ void FGDME::search()
             y = ils.get_dme_y();
             z = ils.get_dme_z();
         }
-    } else if ( current_navlist->query( lon, lat, elev, freq, &nav ) ) {
-        if (nav.get_has_dme()) {
+    } else if ( (nav = current_navlist->findByFreq(freq, lon, lat, elev)) != NULL ) {
+        if (nav->get_has_dme()) {
             valid = true;
-            lon = nav.get_lon();
-            lat = nav.get_lat();
-            elev = nav.get_elev();
-            range = nav.get_range();
+            lon = nav->get_lon();
+            lat = nav->get_lat();
+            elev = nav->get_elev();
+            range = nav->get_range();
             effective_range = kludgeRange(elev, elev, range);
-            x = nav.get_x();
-            y = nav.get_y();
-            z = nav.get_z();
+            x = nav->get_x();
+            y = nav->get_y();
+            z = nav->get_z();
         }
     } else {
         valid = false;

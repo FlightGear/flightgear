@@ -451,7 +451,7 @@ void FGNavCom::search()
     double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
 
     FGILS ils;
-    FGNav nav;
+    FGNav *nav;
 
     ////////////////////////////////////////////////////////////////////////
     // Nav.
@@ -515,27 +515,27 @@ void FGNavCom::search()
 	    // cout << "Found an ils station in range" << endl;
 	    // cout << " id = " << ils.get_locident() << endl;
 	}
-    } else if ( current_navlist->query( lon, lat, elev, nav_freq, &nav ) ) {
-	nav_id = nav.get_ident();
+    } else if ( (nav = current_navlist->findByFreq(nav_freq, lon, lat, elev)) != NULL ) {
+	nav_id = nav->get_ident();
 	nav_valid = true;
 	if ( last_nav_id != nav_id || !last_nav_vor ) {
 	    last_nav_id = nav_id;
 	    last_nav_vor = true;
-	    nav_trans_ident = nav.get_trans_ident();
+	    nav_trans_ident = nav->get_trans_ident();
 	    nav_loc = false;
-	    nav_has_dme = nav.get_has_dme();
+	    nav_has_dme = nav->get_has_dme();
 	    nav_has_gs = false;
-	    nav_loclon = nav.get_lon();
-	    nav_loclat = nav.get_lat();
-	    nav_elev = nav.get_elev();
-	    nav_magvar = nav.get_magvar();
-	    nav_range = nav.get_range();
+	    nav_loclon = nav->get_lon();
+	    nav_loclat = nav->get_lat();
+	    nav_elev = nav->get_elev();
+	    nav_magvar = nav->get_magvar();
+	    nav_range = nav->get_range();
 	    nav_effective_range = adjustNavRange(nav_elev, elev, nav_range);
 	    nav_target_gs = 0.0;
 	    nav_radial = nav_sel_radial;
-	    nav_x = nav.get_x();
-	    nav_y = nav.get_y();
-	    nav_z = nav.get_z();
+	    nav_x = nav->get_x();
+	    nav_y = nav->get_y();
+	    nav_z = nav->get_z();
 
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );
@@ -566,7 +566,7 @@ void FGNavCom::search()
 	    //      << globals->get_time_params()->get_cur_time() << endl;
 
 	    // cout << "Found a vor station in range" << endl;
-	    // cout << " id = " << nav.get_ident() << endl;
+	    // cout << " id = " << nav->get_ident() << endl;
 	}
     } else {
 	nav_valid = false;

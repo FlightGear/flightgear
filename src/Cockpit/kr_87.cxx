@@ -482,33 +482,34 @@ void FGKR_87::search() {
     double acft_elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
 
 				// FIXME: the panel should handle this
-    FGNav nav;
-
     static string last_ident = "";
 
     ////////////////////////////////////////////////////////////////////////
     // ADF.
     ////////////////////////////////////////////////////////////////////////
 
-    if ( current_navlist->query( acft_lon, acft_lat, acft_elev, freq, &nav ) ) {
+    FGNav *nav
+        = current_navlist->findByFreq(freq, acft_lon, acft_lat, acft_elev);
+
+    if ( nav != NULL ) {
 	char sfreq[128];
 	snprintf( sfreq, 10, "%.0f", freq );
 	ident = sfreq;
-	ident += nav.get_ident();
-// 	cout << "adf ident = " << ident << endl;
+	ident += nav->get_ident();
+        // cout << "adf ident = " << ident << endl;
 	valid = true;
 	if ( last_ident != ident ) {
 	    last_ident = ident;
 
-	    trans_ident = nav.get_trans_ident();
-	    stn_lon = nav.get_lon();
-	    stn_lat = nav.get_lat();
-	    stn_elev = nav.get_elev();
-	    range = nav.get_range();
+	    trans_ident = nav->get_trans_ident();
+	    stn_lon = nav->get_lon();
+	    stn_lat = nav->get_lat();
+	    stn_elev = nav->get_elev();
+	    range = nav->get_range();
 	    effective_range = kludgeRange(stn_elev, acft_elev, range);
-	    x = nav.get_x();
-	    y = nav.get_y();
-	    z = nav.get_z();
+	    x = nav->get_x();
+	    y = nav->get_y();
+	    z = nav->get_z();
 
 	    if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
 		globals->get_soundmgr()->remove( "adf-ident" );
@@ -528,7 +529,7 @@ void FGKR_87::search() {
 	    //      << globals->get_time_params()->get_cur_time() << endl;
 
 	    // cout << "Found an adf station in range" << endl;
-	    // cout << " id = " << nav.get_ident() << endl;
+	    // cout << " id = " << nav->get_ident() << endl;
 	}
     } else {
 	valid = false;

@@ -54,12 +54,10 @@ class FGNavList {
     nav_map_type navaids;
     nav_ident_map_type ident_navaids;
 	
-    // internal helper to pick a Nav item from a nav_list based on
-    // distance from the aircraft point
-    bool findNavFromList(const Point3D &aircraft, 
-                         nav_list_iterator current,
-                         nav_list_iterator last,
-                         FGNav *n);
+    // Given a point and a list of stations, return the closest one to
+    // the specified point.
+    FGNav *findNavFromList( const Point3D &aircraft, 
+                            const nav_list_type &stations );
 	
 public:
 
@@ -69,15 +67,18 @@ public:
     // load the navaids and build the map
     bool init( SGPath path );
 
-    // query the database for the specified frequency, lon and lat are
-    // in degrees, elev is in meters
-    bool query( double lon, double lat, double elev, double freq, FGNav *nav );
+    // Query the database for the specified frequency.  It is assumed
+    // that there will be multiple stations with matching frequencies
+    // so a position must be specified.  Lon and lat are in degrees,
+    // elev is in meters.
+    FGNav *findByFreq( double freq, double lon, double lat, double elev );
 
     // locate closest item in the DB matching the requested ident
-    bool findByIdent(const char* ident, double lon, double lat, FGNav *nav);
+    FGNav *findByIdent( const char* ident, const double lon, const double lat );
 
-    // locate item in the DB matching the requested ident
-    bool findByIdentAndFreq(const char* ident, const double& freq, FGNav *nav);
+    // Given an Ident and optional freqency, return the first matching
+    // station.
+    FGNav *findByIdentAndFreq( const char* ident, const double freq = 0.0 );
 };
 
 

@@ -16,25 +16,27 @@ int main() {
 
     current_navlist->init( p_nav );
 	
-    FGNav n;
-    if ( current_navlist->query( -93.2 * SG_DEGREES_TO_RADIANS,
-                                 45.14 * SG_DEGREES_TO_RADIANS,
-                                 3000, 117.30, &n) )
+    FGNav *n;
+    if ( (n = current_navlist->findByFreq( -93.2 * SG_DEGREES_TO_RADIANS,
+                                           45.14 * SG_DEGREES_TO_RADIANS,
+                                           3000, 117.30)) != NULL )
     {
 	cout << "Found a vor station in range" << endl;
-	cout << " id = " << n.get_ident() << endl;
+	cout << " id = " << n->get_ident() << endl;
     } else {
 	cout << "not picking up vor. :-(" << endl;
     }
 
-    FGNav dcs;
-    if (current_navlist->findByIdent("DCS", -3.3 * SG_DEGREES_TO_RADIANS,
-                                     55.9 * SG_DEGREES_TO_RADIANS, &dcs)) {
+    FGNav *dcs;
+    if ( (dcs = current_navlist->findByIdent( "DCS",
+                                              -3.3 * SG_DEGREES_TO_RADIANS,
+                                              55.9 * SG_DEGREES_TO_RADIANS))
+         != NULL ) {
 						
         cout << "Found DCS by ident" << endl;
-        if (dcs.get_freq() != 11520)
+        if (dcs->get_freq() != 11520)
             cout << "Frequency for DCS VOR is wrong (should be 115.20), it's " 
-                 << dcs.get_freq() << endl;
+                 << dcs->get_freq() << endl;
     } else {
         cout << "couldn't locate DCS (Dean-Cross) VOR" << endl;
     }

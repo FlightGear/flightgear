@@ -960,15 +960,15 @@ static void fgSetDistOrAltFromGlideSlope() {
 
 // Set current_options lon/lat given an airport id and heading (degrees)
 static bool fgSetPosFromNAV( const string& id, const double& freq ) {
-    FGNav nav;
+    FGNav *nav = current_navlist->findByIdentAndFreq( id.c_str(), freq );
 
     // set initial position from runway and heading
-    if ( current_navlist->findByIdentAndFreq( id.c_str(), freq, &nav ) ) {
+    if ( nav != NULL ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
                 << id << ":" << freq );
 
-        double lon = nav.get_lon();
-        double lat = nav.get_lat();
+        double lon = nav->get_lon();
+        double lat = nav->get_lat();
 
         if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON )
         {
