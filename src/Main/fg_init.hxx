@@ -31,14 +31,18 @@
 #endif                                   
 
 
+// Read in configuration (file and command line)
+bool fgInitConfig ( int argc, char **argv );
+
+
 // General house keeping initializations
-int fgInitGeneral ( void );
+bool fgInitGeneral ( void );
 
 
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
-int fgInitSubsystems( void );
+bool fgInitSubsystems( void );
 
 
 // Reset

@@ -1,8 +1,8 @@
-// GLUTmain.cxx -- top level sim routines
+// main.cxx -- top level sim routines
 //
 // Written by Curtis Olson for OpenGL, started May 1997.
 //
-// Copyright (C) 1997  Curtis L. Olson  - curt@me.umn.edu
+// Copyright (C) 1997 - 1999  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -20,7 +20,9 @@
 //
 // $Id$
 
+
 #define MICHAEL_JOHNSON_EXPERIMENTAL_ENGINE_AUDIO
+
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -53,6 +55,14 @@
 #  include <unistd.h>    /* for stat() */
 #endif
 
+#include <pu.h>			// plib include
+#include <ssg.h>		// plib include
+
+#ifdef ENABLE_AUDIO_SUPPORT
+#  include <sl.h>		// plib include
+#  include <sm.h>		// plib include
+#endif
+
 #include <Include/fg_constants.h>  // for VERSION
 #include <Include/general.hxx>
 
@@ -61,11 +71,6 @@
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
 #include <Astro/solarsystem.hxx>
-
-#ifdef ENABLE_AUDIO_SUPPORT
-#  include <plib/sl.h>
-#  include <plib/sm.h>
-#endif
 
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
@@ -76,7 +81,6 @@
 #include <Math/polar3d.hxx>
 #include <Math/fg_random.h>
 #include <Misc/fgpath.hxx>
-#include <plib/pu.h>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
@@ -85,8 +89,8 @@
 #include <Time/sunpos.hxx>
 #include <Weather/weather.hxx>
 
-#include "GLUTkey.hxx"
 #include "fg_init.hxx"
+#include "keyboard.hxx"
 #include "options.hxx"
 #include "splash.hxx"
 #include "views.hxx"
@@ -122,6 +126,11 @@ smMixer *audio_mixer;
 slSample *s1;
 slSample *s2;
 #endif
+
+
+// ssg variables
+ssgRoot *scene = NULL;
+ssgTransform *penguin = NULL;
 
 
 // The following defines flight gear options. Because glutlib will also
@@ -165,6 +174,10 @@ static void fgInitVisuals( void ) {
     xglEnable( GL_LIGHTING );
     xglEnable( GL_LIGHT0 );
     xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
+
+    sgVec3 sunpos;
+    sgSetVec3( sunpos, l->sun_vec[0], l->sun_vec[1], l->sun_vec[2] );
+    ssgGetLight( 0 ) -> setPosition( sunpos );
 
     // xglFogi (GL_FOG_MODE, GL_LINEAR);
     xglFogi (GL_FOG_MODE, GL_EXP2);
@@ -274,6 +287,10 @@ static void fgRenderFrame( void ) {
 	// set the sun position
 	xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
+	sgVec3 sunpos;
+	sgSetVec3( sunpos, l->sun_vec[0], l->sun_vec[1], l->sun_vec[2] );
+	ssgGetLight( 0 ) -> setPosition( sunpos );
+
 	clear_mask = GL_DEPTH_BUFFER_BIT;
 	if ( current_options.get_wireframe() ) {
 	    clear_mask |= GL_COLOR_BUFFER_BIT;
@@ -376,6 +393,34 @@ static void fgRenderFrame( void ) {
 	puDisplay();
 	xglDisable   ( GL_BLEND ) ;
 	xglEnable( GL_FOG );
+
+	// ssg test
+	cout << "trying to draw ssg scene" << endl;
+
+	xglMatrixMode(GL_PROJECTION);
+	xglLoadIdentity();
+	ssgSetFOV(60.0f, 0.0f);
+	ssgSetNearFar(1.0f, 700.0f);
+	sgCoord tuxpos;
+	sgSetCoord( &tuxpos, 
+		    current_view.view_pos.x() + current_view.view_forward[0] 
+		    * 20, 
+		    current_view.view_pos.y() + current_view.view_forward[1]
+		    * 20,
+		    current_view.view_pos.z() + current_view.view_forward[2]
+		    * 20, 
+		    0.0, 0.0, 0.0 );
+	penguin->setTransform( &tuxpos );
+
+	sgCoord campos;
+	sgSetCoord( &campos, 
+		    current_view.view_pos.x(), 
+		    current_view.view_pos.y(),
+		    current_view.view_pos.z(), 
+		    0, 0, 0 );
+	ssgSetCamera( &campos );
+	ssgCullAndDraw( scene );
+
     }
 
     xglutSwapBuffers();
@@ -817,23 +862,20 @@ static void fgIdleFunction ( void ) {
 // options.cxx needs to see this for toggle_panel()
 // Handle new window size or exposure
 void fgReshape( int width, int height ) {
-    // Do this so we can call fgReshape(0,0) ourselves without having
-    // to know what the values of width & height are.
-    if ( (height > 0) && (width > 0) ) {
-	if ( ! current_options.get_panel_status() ) {
-	    current_view.set_win_ratio( (GLfloat) width / (GLfloat) height );
-	} else {
-	    current_view.set_win_ratio( (GLfloat) width / 
-					((GLfloat) (height)*0.4232) );
-	}
+    if ( ! current_options.get_panel_status() ) {
+	current_view.set_win_ratio( (GLfloat) width / (GLfloat) height );
+	xglViewport(0, 0 , (GLint)(width), (GLint)(height) );
+    } else {
+	current_view.set_win_ratio( (GLfloat) width / 
+				    ((GLfloat) (height)*0.4232) );
+	xglViewport(0, (GLint)((height)*0.5768), (GLint)(width), 
+		    (GLint)((height)*0.4232) );
     }
 
     current_view.set_winWidth( width );
     current_view.set_winHeight( height );
     current_view.force_update_fov_math();
 
-    // Inform gl of our view window size (now handled elsewhere)
-    // xglViewport(0, 0, (GLint)width, (GLint)height);
     if ( idle_state == 1000 ) {
 	// yes we've finished all our initializations and are running
 	// the main loop, so this will now work without seg faulting
@@ -965,10 +1007,6 @@ int main( int argc, char **argv ) {
     argc = ccommand( &argv );
 #endif
 
-    FGInterface *f;
-
-    f = current_aircraft.fdm_state;
-
 #ifdef HAVE_BC5PLUS
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
 #endif
@@ -978,40 +1016,15 @@ int main( int argc, char **argv ) {
 
     FG_LOG( FG_GENERAL, FG_INFO, "Flight Gear:  Version " << VERSION << endl );
 
-    string root;
-
-    FG_LOG( FG_GENERAL, FG_INFO, "General Initialization" );
-    FG_LOG( FG_GENERAL, FG_INFO, "======= ==============" );
-
     // seed the random number generater
     fg_srandom();
 
-    // Attempt to locate and parse a config file
-    // First check fg_root
-    FGPath config( current_options.get_fg_root() );
-    config.append( "system.fgfsrc" );
-    current_options.parse_config_file( config.str() );
-
-    // Next check home directory
-    char* envp = ::getenv( "HOME" );
-    if ( envp != NULL ) {
-	config.set( envp );
-	config.append( ".fgfsrc" );
-	current_options.parse_config_file( config.str() );
-    }
-
-    // Parse remaining command line options
-    // These will override anything specified in a config file
-    if ( current_options.parse_command_line(argc, argv) !=
-	 fgOPTIONS::FG_OPTIONS_OK )
-    {
-	// Something must have gone horribly wrong with the command
-	// line parsing or maybe the user just requested help ... :-)
-	current_options.usage();
-	FG_LOG( FG_GENERAL, FG_ALERT, "\nExiting ...");
+    // Load the configuration parameters
+    if ( !fgInitConfig(argc, argv) ) {
+	FG_LOG( FG_GENERAL, FG_ALERT, "Config option parsing failed ..." );
 	exit(-1);
     }
-    
+
     // Initialize the Window/Graphics environment.
     if( !fgGlutInit(&argc, argv) ) {
 	FG_LOG( FG_GENERAL, FG_ALERT, "GLUT initialization failed ..." );
@@ -1025,20 +1038,45 @@ int main( int argc, char **argv ) {
 	exit(-1);
     }
 
-    // Init the user interface (we need to do this before passing off
-    // control to glut and before fgInitGeneral to get our fonts !!!
+    // Initialize ssg (from plib)
+    ssgInit();
+
+    // Initialize the user interface (we need to do this before
+    // passing off control to glut and before fgInitGeneral to get our
+    // fonts !!!
     guiInit();
 
-    // First do some quick general initializations
+    // Do some quick general initializations
     if( !fgInitGeneral()) {
 	FG_LOG( FG_GENERAL, FG_ALERT, 
 		"General initializations failed ..." );
 	exit(-1);
     }
 
+    //
+    // some ssg test stuff (requires data from the plib source
+    // distribution) specifically from the ssg tux example
+    //
+
+    ssgModelPath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+    ssgTexturePath( "/h/curt/src/Libs/plib-1.0.12/examples/ssg/tux/data/" );
+
+    scene = new ssgRoot;
+    penguin = new ssgTransform;
+
+    ssgEntity *tux_obj = ssgLoadAC( "tuxedo.ac" );
+    penguin->addKid( tux_obj );
+    ssgFlatten( tux_obj );
+    ssgStripify( penguin );
+
+    scene->addKid( penguin );
+
+    cout << "loaded ssg scene so it should be ready to go" << endl;
+
     // pass control off to the master GLUT event handler
     glutMainLoop();
 
-    // we never actually get here ... but just in case ... :-)
-    return(0);
+    // we never actually get here ... but to avoid compiler warnings,
+    // etc.
+    return 0;
 }

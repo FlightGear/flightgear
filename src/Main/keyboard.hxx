@@ -1,8 +1,8 @@
-// GLUTkey.hxx -- handle GLUT keyboard events
+// keyboard.hxx -- handle GLUT keyboard events
 //
 // Written by Curtis Olson, started May 1997.
 //
-// Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+// Copyright (C) 1997 - 1999  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -21,8 +21,8 @@
 // $Id$
 
 
-#ifndef _GLUTKEY_HXX
-#define _GLUTKEY_HXX
+#ifndef _KEYBOARD_HXX
+#define _KEYBOARD_HXX
 
 
 #ifndef __cplusplus                                                          
@@ -47,6 +47,6 @@ void GLUTkey(unsigned char k, int x, int y);
 void GLUTspecialkey(int k, int x, int y);
 
 
-#endif // _GLUTKEY_HXX
+#endif // _KEYBOARD_HXX
 
 

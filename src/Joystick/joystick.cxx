@@ -2,7 +2,7 @@
 //
 // Written by Curtis Olson, started October 1998.
 //
-// Copyright (C) 1998  Curtis L. Olson - curt@me.umn.edu
+// Copyright (C) 1998 - 1999  Curtis L. Olson - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -33,7 +33,7 @@
 #include <Debug/logstream.hxx>
 
 #if defined( ENABLE_PLIB_JOYSTICK )
-#  include <plib/js.h>
+#  include <js.h>		// plib include
 #elif defined( ENABLE_GLUT_JOYSTICK )
 #  include <GL/glut.h>
 #  include <XGL/xgl.h>

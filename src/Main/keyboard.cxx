@@ -1,8 +1,8 @@
-// GLUTkey.cxx -- handle GLUT keyboard events
+// keyboard.cxx -- handle GLUT keyboard events
 //
 // Written by Curtis Olson, started May 1997.
 //
-// Copyright (C) 1997  Curtis L. Olson  - curt@me.umn.edu
+// Copyright (C) 1997 - 1999  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -39,6 +39,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <pu.h>			// plib include
+
 #include <Debug/logstream.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Astro/solarsystem.hxx>
@@ -49,12 +51,11 @@
 #include <Include/fg_constants.h>
 #include <Scenery/tilemgr.hxx>
 #include <Objects/materialmgr.hxx>
-#include <plib/pu.h>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 #include <Weather/weather.hxx>
 
-#include "GLUTkey.hxx"
+#include "keyboard.hxx"
 #include "options.hxx"
 #include "views.hxx"
 

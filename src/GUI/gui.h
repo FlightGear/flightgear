@@ -25,7 +25,7 @@
 #ifndef _GUI_H_
 #define _GUI_H_
 
-#include <plib/pu.h>
+#include <pu.h>			// plib include
 
 extern void guiInit();
 extern void guiMotionFunc ( int x, int y );

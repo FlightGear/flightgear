@@ -36,9 +36,10 @@ bin_PROGRAMS = fgfs
 bin_SCRIPTS = runfgfs runfgfs.bat
 
 fgfs_SOURCES = \
-	GLUTkey.cxx GLUTkey.hxx GLUTmain.cxx \
 	fg_init.cxx fg_init.hxx \
 	fg_serial.cxx fg_serial.hxx \
+	keyboard.cxx keyboard.hxx \
+	main.cxx \
 	options.cxx options.hxx \
 	splash.cxx splash.hxx \
 	views.cxx views.hxx
@@ -66,7 +67,7 @@ fgfs_LDADD = \
 	$(top_builddir)/Lib/Math/libMath.a \
 	$(top_builddir)/Lib/Bucket/libBucket.a \
 	$(top_builddir)/Lib/Debug/libDebug.a \
-	-lpu -lfnt \
+	-lpu -lfnt -lssg -lsg \
 	$(top_builddir)/Lib/Misc/libMisc.a \
 	$(top_builddir)/Lib/zlib/libz.a \
 	$(opengl_LIBS)

@@ -45,7 +45,7 @@
 #include <vector>
 #include STL_STRING
 
-#include <plib/sg.h>
+#include <sg.h>			// plib includes
 
 #include <Bucket/newbucket.hxx>
 #include <Math/mat3.h>
