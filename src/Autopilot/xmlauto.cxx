@@ -26,6 +26,7 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <Main/util.hxx>
 
 #include "xmlauto.hxx"
 
@@ -773,7 +774,42 @@ static void update_helper( double dt ) {
     static SGPropertyNode *vs_fpm
         = fgGetNode( "/autopilot/internal/vert-speed-fpm", true );
 
-    vs_fpm->setDoubleValue( vs_fps->getDoubleValue() * 60.0 );  
+    vs_fpm->setDoubleValue( vs_fps->getDoubleValue() * 60.0 );
+
+
+    // Calculate static port pressure rate in [inhg/s].
+    // Used to determine vertical speed.
+    static SGPropertyNode *static_pressure
+	= fgGetNode( "/systems/static[0]/pressure-inhg", true );
+    static SGPropertyNode *pressure_rate
+	= fgGetNode( "/autopilot/internal/pressure-rate", true );
+    static SGPropertyNode *filter_time 
+	= fgGetNode( "/autopilot/internal/ft", true );
+
+    static double last_static_pressure = 0.0;
+    static double last_pressure_rate = 0.0;
+
+    double Tf = filter_time->getDoubleValue();
+
+    if ( dt > 0.0 && Tf > 0.0) {
+	double current_static_pressure = static_pressure->getDoubleValue();
+
+	double current_pressure_rate = 
+	    ( current_static_pressure - last_static_pressure ) / dt;
+
+	double W = dt/Tf;
+
+        // Low Pass Filter
+	current_pressure_rate =
+	    (1.0/(W + 1.0))*last_pressure_rate +
+	    ((W)/(W + 1.0))*current_pressure_rate;
+
+	pressure_rate->setDoubleValue(current_pressure_rate);
+
+	last_static_pressure = current_static_pressure;
+	last_pressure_rate = current_pressure_rate;
+    }
+
 }
 
 
