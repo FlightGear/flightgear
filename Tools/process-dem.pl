@@ -28,14 +28,15 @@
 
 $| = 1;                         # flush buffers after every write
 
-$do_demfit = 0;
+$do_demfit =     0;
 $do_triangle_1 = 0;
-$do_fixnode = 0;
-$do_splittris = 1;
+$do_fixnode =    0;
+$do_splittris =  0;
+$do_assemtris =  1;
 
-$do_tri2obj = 0;
-$do_strips = 0;
-$do_fixobj = 0;
+$do_tri2obj =    0;
+$do_strips =     0;
+$do_fixobj =     0;
 
 
 # return the file name root (ending at last ".")
@@ -92,12 +93,14 @@ if ( $do_demfit ) {
 	}
     }
     close(OUT);
+} else {
+    $subdir = "../Scenery/w120n030/w111n033";
+    printf("WARNING:  Hardcoding subdir = $subdir
 }
 
 # 3.  triangle -q file (Takes file.node and produces file.1.node and
 #                      file.1.ele)
 
-$subdir = "../Scenery/w120n030/w111n033";
 print "Subdirectory for this dem file is $subdir\n";
 
 if ( $do_triangle_1 ) {
@@ -274,6 +277,9 @@ if ( $do_fixobj ) {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.4  1998/01/14 15:55:34  curt
+# Finished splittris, started assemtris.
+#
 # Revision 1.3  1998/01/14 02:15:52  curt
 # Updated front end script to keep plugging away on tile fitting.
 #

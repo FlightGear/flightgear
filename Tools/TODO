@@ -4,14 +4,17 @@
 
 1/10/98 -  Split areas into smaller tiles
 
+1/14/98 -  Don't create shared corners or edges if one already exists.
+
 
 --------------------------------------------------------------------------
 | Todo 
 --------------------------------------------------------------------------
 
+1/14/98 -  Reassemble triangles using only body, shared corners, and 
+           shared edges.
+
 1/12/98 -  Try reversing cw-wound strips rather than calling glFrontFace() 
            in the display list.
 
 1/12/98 -  Generate a face adjacency matrix
-
-1/12/98 -  Don't create shared corners or edges if one already exists.

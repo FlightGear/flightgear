@@ -27,7 +27,7 @@
 include make.inc
 
 
-SUBDIRS = Dem2node FixNode FixObj Stripe_u Tri2obj Triangle
+SUBDIRS = AssemTris Dem2node FixNode FixObj SplitTris Stripe_u Tri2obj Triangle
 
 
 all: 
@@ -88,6 +88,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.5  1998/01/14 15:55:34  curt
+# Finished splittris, started assemtris.
+#
 # Revision 1.4  1997/12/10 01:18:25  curt
 # Initial revision.
 #
