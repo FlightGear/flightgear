@@ -152,7 +152,8 @@ private:
     bool sound;         // play sound effects
 
     // Flight Model options
-    int flight_model;   // Flight Model:  FG_SLEW, FG_LARCSIM, etc.
+    int flight_model;   // Core flight model code:  jsb, larcsim, magic, etc.
+    string aircraft;    // Aircraft to model
     int model_hz;       // number of FDM iterations per second
     int speed_up;       // Sim mechanics run this much faster than normal speed
 
@@ -238,6 +239,7 @@ public:
     inline bool get_panel_status() const { return panel_status; }
     inline bool get_sound() const { return sound; }
     inline int get_flight_model() const { return flight_model; }
+    inline string get_aircraft() const { return aircraft; }
     inline int get_model_hz() const { return model_hz; }
     inline int get_speed_up() const { return speed_up; }
     inline void set_speed_up( int speed ) { speed_up = speed; }

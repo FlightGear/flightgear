@@ -161,6 +161,7 @@ fgOPTIONS::fgOPTIONS() :
 
     // Flight Model options
     flight_model( FGInterface::FG_LARCSIM ),
+    aircraft( "c172" ),
     model_hz( NEW_DEFAULT_MODEL_HZ ),
     speed_up( 1 ),
 
@@ -495,7 +496,7 @@ fgOPTIONS::parse_tile_radius( const string& arg ) {
 // Parse --fdm=abcdefg type option 
 int
 fgOPTIONS::parse_fdm( const string& fm ) {
-    // printf("fdm = %s\n", fm);
+    // cout << "fdm = " << fm << endl;
 
     if ( fm == "balloon" ) {
 	return FGInterface::FG_BALLOONSIM;
@@ -650,6 +651,8 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	fg_root = arg.substr( 10 );
     } else if ( arg.find( "--fdm=" ) != string::npos ) {
 	flight_model = parse_fdm( arg.substr(6) );
+    } else if ( arg.find( "--aircraft=" ) != string::npos ) {
+	aircraft = arg.substr(11);
     } else if ( arg.find( "--model-hz=" ) != string::npos ) {
 	model_hz = atoi( arg.substr(11) );
     } else if ( arg.find( "--speed=" ) != string::npos ) {
@@ -865,7 +868,9 @@ void fgOPTIONS::usage ( void ) {
     cout << endl;
  
     cout << "Flight Model:" << endl;
-    cout << "\t--fdm=abcd:  one of slew, jsb, larcsim, or external" << endl;
+    cout << "\t--fdm=abcd:  selects the core flight model code." << endl;
+    cout << "\t\tcan be one of jsb, larcsim, magic, or external" << endl;
+    cout << "\t--aircraft=abcd:  aircraft model to load" << endl;
     cout << "\t--model-hz=n:  run the FDM this rate (iterations per second)" 
 	 << endl;
     cout << "\t--speed=n:  run the FDM this much faster than real time" << endl;
