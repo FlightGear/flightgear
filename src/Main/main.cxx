@@ -1207,19 +1207,41 @@ static void fgIdleFunction ( void ) {
 	
 	idle_state++;
     } else if ( idle_state == 1 ) {
+	// Initialize audio support
+#ifdef ENABLE_AUDIO_SUPPORT
+
 	// Start the intro music
 #if !defined(WIN32)
 	if ( fgGetBool("/sim/startup/intro-music") ) {
-	    string lockfile = "/tmp/mpg123.running";
 	    SGPath mp3file( globals->get_fg_root() );
 	    mp3file.append( "Sounds/intro.mp3" );
 
-	    string command = "(touch " + lockfile + "; mpg123 "
-		+ mp3file.str() + "> /dev/null 2>&1; /bin/rm "
-		+ lockfile + ") &";
 	    SG_LOG( SG_GENERAL, SG_INFO, 
 		    "Starting intro music: " << mp3file.str() );
+
+	    string command = "mpg123 " + mp3file.str() + "> /dev/null 2>&1";
 	    system ( command.c_str() );
+	}
+#endif // !WIN32
+
+	FGSoundMgr *soundmgr = new FGSoundMgr;
+	globals->set_soundmgr( soundmgr );
+
+	if ( fgGetBool("/sim/sound") ) {
+	    globals->get_soundmgr()->init();
+
+	    s1 = new FGSimpleSound( fgGetString("/sim/sounds/engine",
+						"Sounds/wasp.wav") );
+	    globals->get_soundmgr()->add( s1, "engine loop" );
+	    globals->get_soundmgr()->play_looped( "engine loop" );
+	    SG_LOG( SG_GENERAL, SG_INFO,
+		    "Rate = " << s1->get_sample()->getRate()
+		    << "  Bps = " << s1->get_sample()->getBps()
+		    << "  Stereo = " << s1->get_sample()->getStereo() );
+
+	    // s2 = new FGSimpleSound( "Sounds/corflaps.wav" );
+	    // s2->set_volume( 0.3 );
+	    // globals->get_soundmgr()->add( s2, "flaps" );
 	}
 #endif
 
@@ -1256,47 +1278,6 @@ static void fgIdleFunction ( void ) {
 
 	idle_state++;
     } else if ( idle_state == 6 ) {
-	// Initialize audio support
-#ifdef ENABLE_AUDIO_SUPPORT
-
-#if !defined(WIN32)
-	if ( fgGetBool("/sim/startup/intro-music") ) {
-	    // Let's wait for mpg123 to finish
-	    string lockfile = "/tmp/mpg123.running";
-	    struct stat stat_buf;
-
-	    SG_LOG( SG_GENERAL, SG_INFO, 
-		    "Waiting for mpg123 player to finish ..." );
-	    while ( stat(lockfile.c_str(), &stat_buf) == 0 ) {
-		// file exist, wait ...
-		sleep(1);
-		SG_LOG( SG_GENERAL, SG_INFO, ".");
-	    }
-	    SG_LOG( SG_GENERAL, SG_INFO, "");
-	}
-#endif // WIN32
-
-	if ( fgGetBool("/sim/sound") ) {
-	    globals->get_soundmgr()->init();
-
-	    s1 = new FGSimpleSound( fgGetString("/sim/sounds/engine",
-						"Sounds/wasp.wav") );
-	    globals->get_soundmgr()->add( s1, "engine loop" );
-	    globals->get_soundmgr()->play_looped( "engine loop" );
-	    SG_LOG( SG_GENERAL, SG_INFO,
-		    "Rate = " << s1->get_sample()->getRate()
-		    << "  Bps = " << s1->get_sample()->getBps()
-		    << "  Stereo = " << s1->get_sample()->getStereo() );
-
-	    s2 = new FGSimpleSound( "Sounds/corflaps.wav" );
-	    // FGMorse mmm;
-	    // mmm.init();
-	    // s2 = mmm.make_ident( "JLI" );
-	    s2->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( s2, "flaps" );
-	}
-#endif
-
 	// sleep(1);
 	idle_state = 1000;
 
@@ -1478,11 +1459,6 @@ int main( int argc, char **argv ) {
 
     SGRoute *route = new SGRoute;
     globals->set_route( route );
-
-#ifdef ENABLE_AUDIO_SUPPORT
-    FGSoundMgr *soundmgr = new FGSoundMgr;
-    globals->set_soundmgr( soundmgr );
-#endif
 
     FGViewMgr *viewmgr = new FGViewMgr;
     globals->set_viewmgr( viewmgr );
