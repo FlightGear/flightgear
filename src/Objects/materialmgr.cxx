@@ -178,12 +178,28 @@ fgMATERIAL_MGR::load_lib ( void )
 	    tex_file.concat( ".rgb" );
 
 	    ssgSimpleState *state = new ssgSimpleState;
-	    state->setTexture( tex_file.c_str() );
-	    state->enable( GL_TEXTURE_2D );
 	    state->enable( GL_LIGHTING );
 	    state->setShadeModel( GL_SMOOTH );
 	    state->enable ( GL_CULL_FACE      ) ;
-	    state->setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
+	    if ( current_options.get_textures() ) {
+		state->enable( GL_TEXTURE_2D );
+		state->setTexture( tex_file.c_str() );
+		state->setMaterial ( GL_AMBIENT_AND_DIFFUSE, 1, 1, 1, 1 ) ;
+	    } else {
+		state->disable( GL_TEXTURE_2D );
+		state->disable( GL_COLOR_MATERIAL );
+		GLfloat *ambient, *diffuse;
+		ambient = m.get_ambient();
+		diffuse = m.get_diffuse();
+		/* cout << "ambient = " << ambient[0] << "," << ambient[1] 
+		     << "," << ambient[2] << endl; */
+		state->setMaterial ( GL_AMBIENT, 
+				     ambient[0], ambient[1], 
+				     ambient[2], ambient[3] ) ;
+		state->setMaterial ( GL_DIFFUSE, 
+				     diffuse[0], diffuse[1], 
+				     diffuse[2], diffuse[3] ) ;
+	    }
 	    m_slot.set_state( state );
 
 	    material_mgr.material_map[material_name] = m_slot;

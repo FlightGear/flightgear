@@ -45,7 +45,6 @@
 #include <vector>
 
 #include <Include/fg_constants.h>
-#include <Math/mat3.h>
 #include <Math/point3d.hxx>
 
 FG_USING_STD(vector);
