@@ -105,13 +105,13 @@ void fgLIGHT::Update( void ) {
     // if the 4th field is 0.0, this specifies a direction ...
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     // base sky color
-#if defined (sgi)
-    GLfloat base_sky_color[4] = { 0.20, 0.32, 0.50, 1.0 };
-#else // PC
-    GLfloat base_sky_color[4] = { 0.24, 0.29, 0.41, 1.0 };
+#if defined (sgi) || defined( macintosh )
+    GLfloat base_sky_color[4] = { 0.252, 0.403, 0.657, 1.0 };
+#else // default
+    GLfloat base_sky_color[4] = { 0.336, 0.406, 0.574, 1.0 };
 #endif
     // base fog color
-    GLfloat base_fog_color[4] = { 0.65, 0.62, 0.70, 1.0 };
+    GLfloat base_fog_color[4] = { 0.90, 0.90, 1.00, 1.0 };
     double deg, ambient, diffuse, specular, sky_brightness;
 
     f = current_aircraft.fdm_state;
