@@ -1087,17 +1087,8 @@ static void fgMainLoop( void ) {
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( fgGetBool("/sim/sound/audible")
            && globals->get_soundmgr()->is_working() ) {
-        static double dt = 0.0;
-        static double sound_update_rate = 0.05;
-
-        dt += delta_time_sec;
-
-	// Updating four times a second should be enough
-        if ( dt >= sound_update_rate ) {
-	    globals->get_fx()->update( dt );
-	    globals->get_soundmgr()->update( dt );
-            dt = 0.0;
-        }
+        globals->get_fx()->update( delta_time_sec );
+        globals->get_soundmgr()->update( delta_time_sec );
     }
 #endif
 

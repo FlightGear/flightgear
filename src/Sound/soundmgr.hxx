@@ -114,7 +114,6 @@ class FGSoundMgr : public FGSubsystem
     sound_map sounds;
     sample_map samples;
 
-    SGTimeStamp last;
     double safety;
 
 public:

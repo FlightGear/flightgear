@@ -146,7 +146,6 @@ FGSoundMgr::~FGSoundMgr() {
 
 // initialize the sound manager
 void FGSoundMgr::init() {
-    last.stamp();
     safety = FG_MAX_SOUND_SAFETY;
 
     // audio_mixer -> setMasterVolume ( 80 ) ;  /* 80% of max volume. */
@@ -191,18 +190,11 @@ void FGSoundMgr::unbind ()
 
 
 // run the audio scheduler
-void FGSoundMgr::update(double dt) {
-				// FIXME: use dt supplied (seconds)
-    SGTimeStamp current;
-    current.stamp();
-
-    double elapsed = (double)(current - last) / 1000000.0;
-    last = current;
-
-    if ( elapsed > safety ) {
-	safety = elapsed;
+void FGSoundMgr::update( double dt ) {
+    if ( dt > safety ) {
+	safety = dt;
     } else {
-	safety = safety * 0.99 + elapsed * 0.01;
+	safety = safety * 0.99 + dt * 0.01;
     }
     if ( safety > FG_MAX_SOUND_SAFETY ) {
 	safety = FG_MAX_SOUND_SAFETY;

@@ -206,9 +206,9 @@ long FGNewCache::get_oldest_tile() {
         }
     }
 
-    SG_LOG( SG_TERRAIN, SG_INFO, "    min_time = " << min_time );
-    SG_LOG( SG_TERRAIN, SG_INFO, "    index = " << min_index );
-    SG_LOG( SG_TERRAIN, SG_INFO, "    max_time = " << max_time );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "    min_time = " << min_time );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "    index = " << min_index );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "    max_time = " << max_time );
 
     return min_index;
 }
