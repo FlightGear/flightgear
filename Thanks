@@ -140,6 +140,11 @@ Bob Kuehne <rpk@sgi.com>
 Christian Mayer <Vader@t-online.de>
   Working on a multi-lingual conversion tools for fgfs.
   Contributed code to read msfs formated texture files.
+  Contributed a completely new weather subsystem.
+
+
+David Megginson <david@megginson.com>
+  Contributed a patch to allow mouse input to control the yoke.
 
 
 Eric Mitchell <mitchell@mars.ark.com>
