@@ -27,7 +27,7 @@
 #include "star.hxx"
 #include <Debug/logstream.hxx>
 
-#ifdef __BORLANDC__
+#ifdef FG_MATH_EXCEPTION_CLASH
 #  define exception c_exception
 #endif
 #include <math.h>
@@ -90,7 +90,19 @@ void CelestialBody::updatePosition(fgTIME *t, Star *ourSun)
   //of the planet
   R = sqrt (xg*xg + yg*yg + zg*zg);
   s = ourSun->getDistance();
-  FV = RAD_TO_DEG * acos( (r*r + R*R - s*s) / (2*r*R));
+
+  // It is possible from these calculations for the argument to acos
+  // to exceed the valid range for acos(). So we do a little extra
+  // checking.
+
+  double tmp = (r*r + R*R - s*s) / (2*r*R);
+  if ( tmp > 1.0) { 
+      tmp = 1.0;
+  } else if ( tmp < -1.0) {
+      tmp = -1.0;
+  }
+
+  FV = RAD_TO_DEG * acos( tmp );
 };
 
 /****************************************************************************
