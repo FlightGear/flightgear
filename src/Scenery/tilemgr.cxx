@@ -407,7 +407,7 @@ int FGTileMgr::update( FGLocation *location, double visibility_meters,
     if ( longitude != last_longitude || latitude != last_latitude ) {
         // update current elevation... 
         if ( updateCurrentElevAtPos( abs_pos_vector,
-                                     globals->get_scenery()->get_center() ) )
+                                     globals->get_scenery()->get_next_center() ) )
         {
             last_longitude = longitude;
             last_latitude = latitude;
