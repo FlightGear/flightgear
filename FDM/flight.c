@@ -41,13 +41,16 @@ int fgFlightModelInit(int model, fgFLIGHT *f, double dt) {
 
     fgPrintf(FG_FLIGHT,FG_INFO,"Initializing flight model\n");
 
-    if ( model == FG_LARCSIM ) {
+    if ( model == FG_SLEW ) {
+	// fgSlewInit(dt);
+    } else if ( model == FG_LARCSIM ) {
 	fgFlight_2_LaRCsim(f);  /* translate FG to LaRCsim structure */
 	fgLaRCsimInit(dt);
-	fgPrintf(FG_FLIGHT,FG_INFO,"FG pos = %.2f\n", FG_Latitude);
+	fgPrintf( FG_FLIGHT, FG_INFO, "FG pos = %.2f\n", FG_Latitude );
 	fgLaRCsim_2_Flight(f);  /* translate LaRCsim back to FG	structure */
     } else {
-	fgPrintf(FG_FLIGHT,FG_WARN,"Unimplemented flight model == %d\n", model);
+	fgPrintf( FG_FLIGHT, FG_WARN,
+		  "Unimplemented flight model == %d\n", model );
     }
 
     result = 1;
@@ -62,10 +65,13 @@ int fgFlightModelUpdate(int model, fgFLIGHT *f, int multiloop) {
 
     // printf("Altitude = %.2f\n", FG_Altitude * 0.3048);
 
-    if ( model == FG_LARCSIM ) {
+    if ( model == FG_SLEW ) {
+	// fgSlewUpdate(f, multiloop);
+    } else if ( model == FG_LARCSIM ) {
 	fgLaRCsimUpdate(f, multiloop);
     } else {
-	fgPrintf(FG_FLIGHT,FG_WARN,"Unimplemented flight model == %d\n", model);
+	fgPrintf( FG_FLIGHT, FG_WARN,
+		  "Unimplemented flight model == %d\n", model );
     }
 
     result = 1;
@@ -86,22 +92,23 @@ int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters) {
     FG_Radius_to_vehicle = FG_Altitude + 
 	(sea_level_radius_meters * METER_TO_FEET);
 
+    /* additional work needed for some flight models */
     if ( model == FG_LARCSIM ) {
 	ls_ForceAltitude(FG_Altitude);
-    } else {
-	fgPrintf( FG_FLIGHT, FG_WARN, 
-		  "Unimplemented flight model == %d\n", model );
     }
 
 }
 
 
 /* $Log$
-/* Revision 1.14  1998/07/12 03:08:27  curt
-/* Added fgFlightModelSetAltitude() to force the altitude to something
-/* other than the current altitude.  LaRCsim doesn't let you do this by just
-/* changing FG_Altitude.
+/* Revision 1.15  1998/07/30 23:44:36  curt
+/* Beginning to add support for multiple flight models.
 /*
+ * Revision 1.14  1998/07/12 03:08:27  curt
+ * Added fgFlightModelSetAltitude() to force the altitude to something
+ * other than the current altitude.  LaRCsim doesn't let you do this by just
+ * changing FG_Altitude.
+ *
  * Revision 1.13  1998/04/25 22:06:28  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *

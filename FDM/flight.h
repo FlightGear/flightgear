@@ -37,14 +37,15 @@ extern "C" {
 
 
 /* Define the various supported flight models (most not yet implemented) */
-#define FG_LARCSIM     0   /* The only one that is currently implemented */
-#define FG_ACM         1
-#define FG_SUPER_SONIC 2
-#define FG_HELICOPTER  3
-#define FG_AUTOGYRO    4
-#define FG_BALLOON     5
-#define FG_PARACHUTE   6
-#define FG_SLEW        7    /* Slew (in MS terminology) */
+#define FG_SLEW        0    /* Slew (in MS terminology) */
+#define FG_LARCSIM     1    /* The only "real" model  that is currently 
+			       implemented */
+#define FG_ACM         2
+#define FG_SUPER_SONIC 3
+#define FG_HELICOPTER  4
+#define FG_AUTOGYRO    5
+#define FG_BALLOON     6
+#define FG_PARACHUTE   7
 #define FG_EXTERN_GPS  8    /* Driven via a serially connected GPS */
 #define FG_EXTERN_NET  9    /* Driven externally via the net */
 #define FG_EXTERN_NASA 10   /* Track the space shuttle ? */
@@ -413,11 +414,14 @@ int fgFlightModelSetAltitude(int model, fgFLIGHT *f, double alt_meters);
 
 
 /* $Log$
-/* Revision 1.17  1998/07/12 03:08:28  curt
-/* Added fgFlightModelSetAltitude() to force the altitude to something
-/* other than the current altitude.  LaRCsim doesn't let you do this by just
-/* changing FG_Altitude.
+/* Revision 1.18  1998/07/30 23:44:36  curt
+/* Beginning to add support for multiple flight models.
 /*
+ * Revision 1.17  1998/07/12 03:08:28  curt
+ * Added fgFlightModelSetAltitude() to force the altitude to something
+ * other than the current altitude.  LaRCsim doesn't let you do this by just
+ * changing FG_Altitude.
+ *
  * Revision 1.16  1998/04/22 13:26:20  curt
  * C++ - ifing the code a bit.
  *
