@@ -55,7 +55,7 @@ public:
     inline double get_visibility() const { return visibility; }
 
     inline void set_visibility( double v ) {
-	xglMatrixMode(GL_MODELVIEW);
+	glMatrixMode(GL_MODELVIEW);
 	// in meters
 	visibility = v;
 
@@ -66,8 +66,8 @@ public:
 	fog_exp2_density = sqrt( -log(0.01) ) / visibility;
 
 	// Set correct opengl fog density
-	xglFogf (GL_FOG_DENSITY, fog_exp2_density);
-	xglFogi( GL_FOG_MODE, GL_EXP2 );
+	glFogf (GL_FOG_DENSITY, fog_exp2_density);
+	glFogi( GL_FOG_MODE, GL_EXP2 );
 
 	// SG_LOG( SG_INPUT, SG_DEBUG, "Fog density = " << fog_density );
 	// SG_LOG( SG_INPUT, SG_INFO, 
