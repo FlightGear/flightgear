@@ -43,7 +43,7 @@ fgfs-base-zip:
 
 fgfs-base-patch:
 	(cd $(HOME); \
-	tar --newer 9/18/2000 -czvf fgfs-base-patch-$(VERSION).tar.gz \
+	tar --newer 9/18/2000 -czvf fgfs-base-patch-$(VERSION)a.tar.gz \
 	FlightGear/A[A-su-z]* \
 	FlightGear/[B-CE-R]* \
 	FlightGear/Scenery/w120n30/w111n33 \
