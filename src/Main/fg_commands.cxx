@@ -205,17 +205,17 @@ do_property_assign (const SGPropertyNode * arg)
   SGPropertyNode * node = fgGetNode(propname, true);
 
   switch (node->getType()) {
-  case SGValue::BOOL:
+  case SGPropertyNode::BOOL:
     return node->setBoolValue(arg->getBoolValue("value"));
-  case SGValue::INT:
+  case SGPropertyNode::INT:
     return node->setIntValue(arg->getIntValue("value"));
-  case SGValue::LONG:
+  case SGPropertyNode::LONG:
     return node->setLongValue(arg->getLongValue("value"));
-  case SGValue::FLOAT:
+  case SGPropertyNode::FLOAT:
     return node->setFloatValue(arg->getFloatValue("value"));
-  case SGValue::DOUBLE:
+  case SGPropertyNode::DOUBLE:
     return node->setDoubleValue(arg->getDoubleValue("value"));
-  case SGValue::STRING:
+  case SGPropertyNode::STRING:
     return node->setStringValue(arg->getStringValue("value"));
   default:
     return node->setUnknownValue(arg->getStringValue("value"));
@@ -239,21 +239,21 @@ do_property_adjust (const SGPropertyNode * arg)
   SGPropertyNode * node = fgGetNode(propname, true);
 
   switch (node->getType()) {
-  case SGValue::BOOL:
+  case SGPropertyNode::BOOL:
     if (arg->getBoolValue("step"))
       return node->setBoolValue(!node->getBoolValue());
     else
       return true;
-  case SGValue::INT:
+  case SGPropertyNode::INT:
     return node->setIntValue(node->getIntValue()
 			     + arg->getIntValue("step"));
-  case SGValue::LONG:
+  case SGPropertyNode::LONG:
     return node->setLongValue(node->getLongValue()
 			      + arg->getLongValue("step"));
-  case SGValue::FLOAT:
+  case SGPropertyNode::FLOAT:
     return node->setFloatValue(node->getFloatValue()
 			       + arg->getFloatValue("step"));
-  case SGValue::DOUBLE:
+  case SGPropertyNode::DOUBLE:
     return node->setDoubleValue(node->getDoubleValue()
 				+ arg->getDoubleValue("step"));
   default:			// doesn't make sense with strings
