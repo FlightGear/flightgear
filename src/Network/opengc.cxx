@@ -71,7 +71,7 @@ static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
 												
     data->version_id = 0x0012;
 
-    data->longitude = fdm->get_Longitude_deg();   
+    data->longitude = cur_fdm_state->get_Longitude_deg();   
     data->latitude = cur_fdm_state->get_Latitude_deg();
     data->magvar = globals->get_mag()->get_magvar();
    
@@ -86,17 +86,28 @@ static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
     data->groundspeed = cur_fdm_state->get_V_ground_speed();
     data->v_tas = cur_fdm_state->get_V_equiv_kts();
 
+    data->phi_dot = cur_fdm_state->get_Phi_dot();
+    data->theta_dot = cur_fdm_state->get_Theta_dot();
+    data->psi_dot = cur_fdm_state->get_Psi_dot();
+
     data->alpha = cur_fdm_state->get_Alpha();
     data->beta = cur_fdm_state->get_Beta();
     data->alpha_dot = cur_fdm_state->get_Alpha_dot();
     data->beta_dot = cur_fdm_state->get_Beta_dot();
 
-    data->static_temperature = cur_fdm_state->get_Static_temperature();
-    data->total_temperature = cur_fdm_state->get_Total_temperature();
+ 
+    data->aileron = globals->get_controls()->get_aileron();
+    //data->aileron_trim = p_Controls->get_aileron_trim();
+    data->elevator = globals->get_controls()->get_elevator();
+    data->elevator_trim = globals->get_controls()->get_elevator_trim();
+    data->rudder = globals->get_controls()->get_rudder();
+    //data->rudder_trim = p_Controls->get_rudder_trim();
+    //data->flaps = fgGetDouble("/controls/flaps");
+    data->flaps = globals->get_controls()->get_flaps();
 
-    data->static_pressure = cur_fdm_state->get_Static_pressure();
-    data->total_pressure = cur_fdm_state->get_Total_pressure();
-    data->dynamic_pressure = cur_fdm_state->get_Dynamic_pressure();
+    //data->gear_nose = p_gear[0]->GetPosition();
+    //data->gear_left = p_gear[1]->GetPosition();
+    //data->gear_right = p_gear[2]->GetPosition();
 
     data->rpm[0] = fgGetDouble("/engines/engine[0]/rpm");
     data->rpm[1] = fgGetDouble("/engines/engine[1]/rpm");   
@@ -134,18 +145,11 @@ static void collect_data( const FGInterface *fdm, ogcFGData *data ) {
     data->man_pressure[0] = fgGetDouble("/engines/engine[0]/mp-osi");
     data->man_pressure[1] = fgGetDouble("/engines/engine[1]/mp-osi");    
 
-    //data->gear_nose = p_gear[0]->GetPosition();
-    //data->gear_left = p_gear[1]->GetPosition();
-    //data->gear_right = p_gear[2]->GetPosition();
-    
-    data->aileron = globals->get_controls()->get_aileron();
-    //data->aileron_trim = p_Controls->get_aileron_trim();
-    data->elevator = globals->get_controls()->get_elevator();
-    data->elevator_trim = globals->get_controls()->get_elevator_trim();
-    data->rudder = globals->get_controls()->get_rudder();
-    //data->rudder_trim = p_Controls->get_rudder_trim();
-    //data->flaps = fgGetDouble("/controls/flaps");
-    data->flaps = globals->get_controls()->get_flaps();
+    data->static_temperature = cur_fdm_state->get_Static_temperature();
+    data->total_temperature = cur_fdm_state->get_Total_temperature();
+    data->static_pressure = cur_fdm_state->get_Static_pressure();
+    data->total_pressure = cur_fdm_state->get_Total_pressure();
+    data->dynamic_pressure = cur_fdm_state->get_Dynamic_pressure();
 }
 
 static void distribute_data( const ogcFGData *data, FGInterface *chunk ) {
