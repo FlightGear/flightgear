@@ -2,4 +2,5 @@ MAT3geom.o: MAT3geom.c mat3defs.h mat3.h
 MAT3inv.o: MAT3inv.c mat3defs.h mat3.h
 MAT3mat.o: MAT3mat.c mat3defs.h mat3.h
 MAT3vec.o: MAT3vec.c mat3.h
+fg_random.o: fg_random.c fg_random.h
 polar.o: polar.c polar.h ../types.h ../constants.h
