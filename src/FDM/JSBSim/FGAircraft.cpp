@@ -613,6 +613,10 @@ void FGAircraft::ReadOutput(FGConfigFile* AC_cfg) {
       *AC_cfg >> parameter;
       if (parameter == "ON") subsystems += ssFCS;
     }
+    if (parameter == "PROPULSION") {
+      *AC_cfg >> parameter;
+      if (parameter == "ON") subsystems += ssPropulsion;
+    }
   }
 
   Output->SetSubsystems(subsystems);

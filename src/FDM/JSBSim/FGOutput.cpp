@@ -199,6 +199,10 @@ void FGOutput::DelimitedOutput(void)
       cout << ", ";
       cout << Aircraft->GetGroundReactionStrings();
     }
+    if (SubSystems & FGAircraft::ssPropulsion) {
+      cout << ", ";
+      cout << Propulsion->GetPropulsionStrings();
+    }
 
     cout << endl;
     dFirstPass = false;
@@ -268,6 +272,11 @@ void FGOutput::DelimitedOutput(void)
     cout << ", ";
     cout << Aircraft->GetGroundReactionValues();
   }
+  if (SubSystems & FGAircraft::ssPropulsion) {
+    cout << ", ";
+    cout << Propulsion->GetPropulsionValues();
+  }
+
   cout << endl;
 }
 
@@ -346,6 +355,10 @@ void FGOutput::DelimitedOutput(string fname)
       datafile << ", ";
       datafile << FCS->GetComponentStrings();
     }
+    if (SubSystems & FGAircraft::ssPropulsion) {
+      datafile << ", ";
+      datafile << Propulsion->GetPropulsionStrings();
+    }
     datafile << endl;
     sFirstPass = false;
   }
@@ -417,6 +430,10 @@ void FGOutput::DelimitedOutput(string fname)
   if (SubSystems & FGAircraft::ssFCS) {
     datafile << ", ";
     datafile << FCS->GetComponentValues();
+  }
+  if (SubSystems & FGAircraft::ssPropulsion) {
+    datafile << ", ";
+    datafile << Propulsion->GetPropulsionValues();
   }
   datafile << endl;
   datafile.flush();

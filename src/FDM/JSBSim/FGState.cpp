@@ -134,6 +134,7 @@ FGState::FGState(FGFDMExec* fdex) : mTb2l(3,3),
   RegisterVariable(FG_LEFT_BRAKE_CMD, " left_brake_cmd " );
   RegisterVariable(FG_RIGHT_BRAKE_CMD," right_brake_cmd ");
   RegisterVariable(FG_CENTER_BRAKE_CMD," center_brake_cmd ");
+  RegisterVariable(FG_SET_LOGGING,    " data_logging "   );
 
   if (debug_lvl & 2) cout << "Instantiated: FGState" << endl;
 }
@@ -298,6 +299,12 @@ void FGState::SetParameter(eParam val_idx, float val) {
     break;
   case FG_RIGHT_BRAKE_CMD:
     FDMExec->GetFCS()->SetRBrake(val);
+    break;
+
+  case FG_SET_LOGGING:
+    if      (val < -0.01) FDMExec->GetOutput()->Disable();
+    else if (val >  0.01) FDMExec->GetOutput()->Enable();
+    else                  FDMExec->GetOutput()->Toggle();
     break;
 
   default:

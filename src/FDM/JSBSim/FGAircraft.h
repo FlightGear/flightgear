@@ -196,7 +196,8 @@ public:
     /** Subsystem: Coefficients (= 256)      */ ssCoefficients    = 256,
     /** Subsystem: Position (= 512)          */ ssPosition        = 512,
     /** Subsystem: Ground Reactions (= 1024) */ ssGroundReactions = 1024,
-    /** Subsystem: Ground Reactions (= 2048) */ ssFCS             = 2048
+    /** Subsystem: FCS (= 2048)              */ ssFCS             = 2048,
+    /** Subsystem: Propulsion (= 4096)       */ ssPropulsion      = 4096
   } subsystems;
 
 private:

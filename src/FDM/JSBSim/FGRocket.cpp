@@ -88,6 +88,7 @@ FGRocket::FGRocket(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec)
   }
 
   EngineNumber = 0;
+  Type = etRocket;
 
   kFactor = (2.0*SHR*SHR/(SHR-1.0))*pow(2.0/(SHR+1), (SHR+1)/(SHR-1));
 
@@ -107,7 +108,6 @@ float FGRocket::Calculate(float pe)
 {
   float lastThrust;
   float Cf;
-  float chamberPress;
 
   ConsumeFuel();
 
@@ -119,8 +119,8 @@ float FGRocket::Calculate(float pe)
     Flameout = true;
   } else {
     PctPower = Throttle / MaxThrottle;
-    chamberPress = maxPC*PctPower * (1.0 + Variance * ((float)rand()/(float)RAND_MAX - 0.5));
-    Cf = sqrt(kFactor*(1 - pow(pe/(chamberPress), (SHR-1)/SHR)));
+    PC = maxPC*PctPower * (1.0 + Variance * ((float)rand()/(float)RAND_MAX - 0.5));
+    Cf = sqrt(kFactor*(1 - pow(pe/(PC), (SHR-1)/SHR)));
     Flameout = false;
   }
 
