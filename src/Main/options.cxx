@@ -535,7 +535,7 @@ fgOPTIONS::parse_fov( const string& arg ) {
 //
 // Format is "--protocol=medium,direction,hz,medium_options,..."
 //
-//   protocol = { nmea, garmin, fgfs, rul, pve, etc. }
+//   protocol = { native, nmea, garmin, fgfs, rul, pve, etc. }
 //   medium = { serial, socket, file, etc. }
 //   direction = { in, out, bi }
 //   hz = number of times to process channel per second (floating
@@ -746,8 +746,8 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	tris_or_culled = 0;	
     } else if ( arg == "--hud-culled" ) {
 	tris_or_culled = 1;
-    } else if ( arg.find( "--fgfs=" ) != string::npos ) {
-	parse_channel( "fgfs", arg.substr(7) );
+    } else if ( arg.find( "--native=" ) != string::npos ) {
+	parse_channel( "native", arg.substr(9) );
     } else if ( arg.find( "--garmin=" ) != string::npos ) {
 	parse_channel( "garmin", arg.substr(9) );
     } else if ( arg.find( "--nmea=" ) != string::npos ) {

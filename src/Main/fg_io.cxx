@@ -35,6 +35,7 @@
 #include <Network/fg_socket.hxx>
 
 #include <Network/protocol.hxx>
+#include <Network/native.hxx>
 #include <Network/garmin.hxx>
 #include <Network/nmea.hxx>
 #include <Network/pve.hxx>
@@ -69,7 +70,10 @@ static FGProtocol *parse_port_config( const string& config )
     FG_LOG( FG_IO, FG_INFO, "  protocol = " << protocol );
 
     FGProtocol *io;
-    if ( protocol == "garmin" ) {
+    if ( protocol == "native" ) {
+	FGNative *native = new FGNative;
+	io = native;
+    } else if ( protocol == "garmin" ) {
 	FGGarmin *garmin = new FGGarmin;
 	io = garmin;
     } else if ( protocol == "nmea" ) {
