@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifndef __CYGWIN32__
+#if !defined( __CYGWIN__ ) && !defined( __CYGWIN32__ )
 #  include <malloc.h>
 #endif
 

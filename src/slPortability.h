@@ -19,10 +19,9 @@
 #include <sys/ioctl.h>
 #else
 #include <windows.h>
-#ifdef __CYGWIN32__
+#if defined( __CYGWIN__ ) || defined( __CYGWIN32__ )
 #  define NEAR /* */
 #  define FAR  /* */
-#  define WHERE_EVER_YOU_ARE /* Curt: optional, but it reminds me of a song */
 #endif
 #include <mmsystem.h>
 #endif
