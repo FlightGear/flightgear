@@ -100,7 +100,7 @@ void FGATIS::UpdateTransmission() {
 	
 	FGEnvironment stationweather =
             ((FGEnvironmentMgr *)globals->get_subsystem("environment"))
-              ->getEnvironment(lat, lon, elev);
+              ->getEnvironment(lat, lon, 0.0);
 	
 	transmission = "";
 	
