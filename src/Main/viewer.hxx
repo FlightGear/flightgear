@@ -62,7 +62,8 @@ public:
 
     // Constructor
     FGViewer( fgViewType Type, bool from_model, int from_model_index,
-              bool at_model, int at_model_index, double damping,
+              bool at_model, int at_model_index,
+              double damp_alt, double damp_roll, double damp_pitch, double damp_heading,
               double x_offset_m, double y_offset_m, double z_offset_m,
               double heading_offset_deg, double pitch_offset_deg,
               double roll_offset_deg, double fov_deg,
@@ -285,12 +286,16 @@ private:
     double _target_pitch_deg;
     double _target_heading_deg;
 
-    double _damp;
+    double _damp_sync;
+    double _damp_alt;
+    double _damp_roll;
+    double _damp_pitch;
+    double _damp_heading;
+
+    double _damped_alt_ft;
     double _damped_roll_deg;
     double _damped_pitch_deg;
     double _damped_heading_deg;
-    double _damp_alt;
-    double _damped_alt_ft;
 
     // Position offsets from FDM origin.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
@@ -383,6 +388,7 @@ private:
     void updateAtModelLocation (SGLocation * location);
     void recalcOurOwnLocation (SGLocation * location, double lon_deg, double lat_deg, double alt_ft,
                  double roll_deg, double pitch_deg, double heading_deg);
+    void dampEyeData (double &alt_ft, double &roll_deg, double &pitch_deg, double &heading_deg);
 
     // add to _heading_offset_deg
     inline void incHeadingOffset_deg( double amt ) {

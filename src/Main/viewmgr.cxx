@@ -51,7 +51,7 @@ FGViewMgr::init ()
   bool at_model = false;
   int from_model_index = 0;
   int at_model_index = 0;
-  double at_model_damping;
+  double damp_alt, damp_roll, damp_pitch, damp_heading;
   double x_offset_m, y_offset_m, z_offset_m, fov_deg;
   double heading_offset_deg, pitch_offset_deg, roll_offset_deg;
   double target_x_offset_m, target_y_offset_m, target_z_offset_m;
@@ -96,8 +96,20 @@ FGViewMgr::init ()
 
         // view damping (0.0: no damping; <0.0: all but alt; >0.0: damp all)
         nodepath = viewpath;
-        nodepath += "/config/at-model-damping";
-        at_model_damping = fgGetDouble(nodepath.c_str(), 0.0);
+        nodepath += "/config/at-model-alt-damping";
+        damp_alt = fgGetDouble(nodepath.c_str(), 0.0);
+
+        nodepath = viewpath;
+        nodepath += "/config/at-model-roll-damping";
+        damp_roll = fgGetDouble(nodepath.c_str(), 0.0);
+
+        nodepath = viewpath;
+        nodepath += "/config/at-model-pitch-damping";
+        damp_pitch = fgGetDouble(nodepath.c_str(), 0.0);
+
+        nodepath = viewpath;
+        nodepath += "/config/at-model-heading-damping";
+        damp_heading = fgGetDouble(nodepath.c_str(), 0.0);
       }
     }
 
@@ -144,15 +156,17 @@ FGViewMgr::init ()
     // supporting two types now "lookat" = 1 and "lookfrom" = 0
     if ( strcmp("lookat",strdata.c_str()) == 0 )
       add_view(new FGViewer ( FG_LOOKAT, from_model, from_model_index,
-                              at_model, at_model_index, at_model_damping,
+                              at_model, at_model_index,
+                              damp_alt, damp_roll, damp_pitch, damp_heading,
                               x_offset_m, y_offset_m,z_offset_m,
                               heading_offset_deg, pitch_offset_deg,
                               roll_offset_deg, fov_deg,
                               target_x_offset_m, target_y_offset_m,
                               target_z_offset_m, near_m ));
     else
-      add_view(new FGViewer ( FG_LOOKFROM, from_model, from_model_index, false,
-                              0, 0.0, x_offset_m, y_offset_m, z_offset_m,
+      add_view(new FGViewer ( FG_LOOKFROM, from_model, from_model_index,
+                              false, 0, 0.0, 0.0, 0.0, 0.0,
+                              x_offset_m, y_offset_m, z_offset_m,
                               heading_offset_deg, pitch_offset_deg,
                               roll_offset_deg, fov_deg, 0, 0, 0, near_m ));
   }
@@ -367,8 +381,8 @@ FGViewMgr::update (double dt)
       nodepath = viewpath;
       nodepath += "/config/target-heading-deg-path";
       heading_deg = fgGetDouble(fgGetString(nodepath.c_str()));
-  
-      loop_view ->setTargetPosition(lon_deg, lat_deg, alt_ft);
+
+      loop_view->setTargetPosition(lon_deg, lat_deg, alt_ft);
       loop_view->setTargetOrientation(roll_deg, pitch_deg, heading_deg);
     } else {
       loop_view->set_dirty();
