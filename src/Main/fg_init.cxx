@@ -745,7 +745,6 @@ bool fgInitSubsystems( void ) {
     // Initialize the scenery management subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->set_scenery( new FGScenery );
     globals->get_scenery()->init();
     globals->get_scenery()->bind();
 

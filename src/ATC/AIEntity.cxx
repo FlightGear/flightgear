@@ -53,7 +53,7 @@ void FGAIEntity::Transform() {
     sgCoord shippos;
     FastWorldCoordinate(&shippos, sc);
     position->setTransform( &shippos );
-    globals->get_scene_graph()->addKid(position);
+    globals->get_scenery()->get_scene_graph()->addKid(position);
     //cout << "Transform called\n";
 }
 

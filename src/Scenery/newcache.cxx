@@ -197,7 +197,7 @@ void FGNewCache::clear_cache() {
     }
 
     // and ... just in case we missed something ... 
-    globals->get_terrain_branch()->removeAllKids();
+    globals->get_scenery()->get_terrain_branch()->removeAllKids();
 }
 
 

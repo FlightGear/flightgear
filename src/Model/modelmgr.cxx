@@ -6,6 +6,7 @@
 #include <plib/ssg.h>
 
 #include <Main/fg_props.hxx>
+#include <Scenery/scenery.hxx>
 
 #include "modelmgr.hxx"
 #include "model.hxx"
@@ -18,8 +19,8 @@ FGModelMgr::FGModelMgr ()
 
 FGModelMgr::~FGModelMgr ()
 {
-  for (int i = 0; i < _instances.size(); i++) {
-    globals->get_models_branch()
+  for (unsigned int i = 0; i < _instances.size(); i++) {
+    globals->get_scenery()->get_models_branch()
       ->removeKid(_instances[i]->model->getSceneGraph());
     delete _instances[i];
   }
@@ -30,7 +31,7 @@ FGModelMgr::init ()
 {
   vector<SGPropertyNode_ptr> model_nodes =
     fgGetNode("/models", true)->getChildren("model");
-  for (int i = 0; i < model_nodes.size(); i++) {
+  for (unsigned int i = 0; i < model_nodes.size(); i++) {
     SGPropertyNode * node = model_nodes[i];
     SG_LOG(SG_GENERAL, SG_INFO,
 	   "Adding model " << node->getStringValue("name", "[unnamed]"));
@@ -79,7 +80,7 @@ FGModelMgr::init ()
       model->setHeadingDeg(node->getDoubleValue("heading-deg"));
 
 				// Add this model to the global scene graph
-    globals->get_scene_graph()->addKid(model->getSceneGraph());
+    globals->get_scenery()->get_scene_graph()->addKid(model->getSceneGraph());
 
 				// Save this instance for updating
     _instances.push_back(instance);
@@ -99,7 +100,7 @@ FGModelMgr::unbind ()
 void
 FGModelMgr::update (double dt)
 {
-  for (int i = 0; i < _instances.size(); i++) {
+  for (unsigned int i = 0; i < _instances.size(); i++) {
     Instance * instance = _instances[i];
     FG3DModel * model = instance->model;
 

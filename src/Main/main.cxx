@@ -373,7 +373,7 @@ void trRenderFrame( void ) {
     ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
     glEnable( GL_DEPTH_TEST );
     ssgSetNearFar( scene_nearplane, scene_farplane );
-    ssgCullAndDraw( globals->get_scene_graph() );
+    ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
 
     // draw the lights
     glFogf (GL_FOG_DENSITY, fog_exp2_punch_through);
@@ -643,7 +643,7 @@ void fgRenderFrame() {
 	glEnable( GL_DEPTH_TEST );
 
         ssgSetNearFar( scene_nearplane, scene_farplane );
-	ssgCullAndDraw( globals->get_scene_graph() );
+	ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
 
 	// change state for lighting here
 
@@ -1451,35 +1451,38 @@ int mainLoop( int argc, char **argv ) {
 
     SGPath modelpath( globals->get_fg_root() );
     ssgModelPath( (char *)modelpath.c_str() );
-  
+
+    // Initialize the global scenery manager
+    globals->set_scenery( new FGScenery );
+
     // Scene graph root
-    globals->set_scene_graph(new ssgRoot);
-    globals->get_scene_graph()->setName( "Scene" );
+    globals->get_scenery()->set_scene_graph(new ssgRoot);
+    globals->get_scenery()->get_scene_graph()->setName( "Scene" );
 
     lighting = new ssgRoot;
     lighting->setName( "Lighting" );
 
     // Terrain branch
-    globals->set_terrain_branch(new ssgBranch);
-    globals->get_terrain_branch()->setName( "Terrain" );
-    globals->get_scene_graph()->addKid( globals->get_terrain_branch() );
+    globals->get_scenery()->set_terrain_branch(new ssgBranch);
+    globals->get_scenery()->get_terrain_branch()->setName( "Terrain" );
+    globals->get_scenery()->get_scene_graph()->addKid( globals->get_scenery()->get_terrain_branch() );
 
-    globals->set_models_branch(new ssgBranch);
-    globals->get_models_branch()->setName( "Models" );
-    globals->get_scene_graph()->addKid( globals->get_models_branch() );
+    globals->get_scenery()->set_models_branch(new ssgBranch);
+    globals->get_scenery()->get_models_branch()->setName( "Models" );
+    globals->get_scenery()->get_scene_graph()->addKid( globals->get_scenery()->get_models_branch() );
 
-    globals->set_aircraft_branch(new ssgBranch);
-    globals->get_aircraft_branch()->setName( "Aircraft" );
-    globals->get_scene_graph()->addKid( globals->get_aircraft_branch() );
+    globals->get_scenery()->set_aircraft_branch(new ssgBranch);
+    globals->get_scenery()->get_aircraft_branch()->setName( "Aircraft" );
+    globals->get_scenery()->get_scene_graph()->addKid( globals->get_scenery()->get_aircraft_branch() );
 
     // Lighting
-    globals->set_gnd_lights_branch(new ssgBranch);
-    globals->get_gnd_lights_branch()->setName( "Ground Lighting" );
-    lighting->addKid( globals->get_gnd_lights_branch() );
+    globals->get_scenery()->set_gnd_lights_branch(new ssgBranch);
+    globals->get_scenery()->get_gnd_lights_branch()->setName( "Ground Lighting" );
+    lighting->addKid( globals->get_scenery()->get_gnd_lights_branch() );
 
-    globals->set_rwy_lights_branch(new ssgBranch);
-    globals->get_rwy_lights_branch()->setName( "Runway Lighting" );
-    lighting->addKid( globals->get_rwy_lights_branch() );
+    globals->get_scenery()->set_rwy_lights_branch(new ssgBranch);
+    globals->get_scenery()->get_rwy_lights_branch()->setName( "Runway Lighting" );
+    lighting->addKid( globals->get_scenery()->get_rwy_lights_branch() );
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the general model subsystem.
@@ -1558,7 +1561,7 @@ int mainLoop( int argc, char **argv ) {
     // Do the network intialization
     if ( fgGetBool("/sim/networking/network-olk") ) {
 	printf("Multipilot mode %s\n",
-	       fg_net_init( globals->get_scene_graph() ) );
+	       fg_net_init( globals->get_scenery()->get_scene_graph() ) );
     }
 #endif
 
@@ -1797,7 +1800,7 @@ void fgLoadDCS(void) {
 						    //dummy_tile->lightmaps_sequence->setTraversalMaskBits( SSGTRAV_HOT );
 							lightpoints_transform->addKid( dummy_tile->lightmaps_sequence );
 							lightpoints_transform->ref();
-							globals->get_gnd_lights_branch()->addKid( lightpoints_transform );
+							globals->get_scenery()->get_gnd_lights_branch()->addKid( lightpoints_transform );
 						} 
 					} //if in1 
                 } //if objc
@@ -1811,7 +1814,7 @@ void fgLoadDCS(void) {
 
         SG_LOG ( SG_TERRAIN, SG_ALERT, "Finished object processing." );
 
-        globals->get_terrain_branch()->addKid( ship_sel ); //add selector node to root node 
+        globals->get_scenery()->get_terrain_branch()->addKid( ship_sel ); //add selector node to root node 
     }
 
     return;

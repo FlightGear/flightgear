@@ -20,6 +20,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
+#include <Scenery/scenery.hxx>
 
 #include "acmodel.hxx"
 #include "model.hxx"
@@ -44,7 +45,7 @@ FGAircraftModel::~FGAircraftModel ()
   delete _aircraft;
   delete _scene;
 				// SSG will delete it
-  globals->get_aircraft_branch()->removeKid(_selector);
+  globals->get_scenery()->get_aircraft_branch()->removeKid(_selector);
 }
 
 void 
@@ -54,7 +55,7 @@ FGAircraftModel::init ()
   _aircraft->init(fgGetString("/sim/model/path", "Models/Geometry/glider.ac"));
   _scene->addKid(_aircraft->getSceneGraph());
   _selector->addKid(_aircraft->getSceneGraph());
-  globals->get_aircraft_branch()->addKid(_selector);
+  globals->get_scenery()->get_aircraft_branch()->addKid(_selector);
 }
 
 void 

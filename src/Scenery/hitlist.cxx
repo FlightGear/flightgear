@@ -17,6 +17,7 @@
 
 #include <Main/globals.hxx>
 #include <Main/viewer.hxx>
+#include <Scenery/scenery.hxx>
 
 #include "hitlist.hxx"
 
@@ -509,7 +510,8 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
     sgdCopyVec3(orig, view_pos );
     sgdCopyVec3(dir, abs_view_pos );
 
-    hit_list->Intersect( globals->get_terrain_branch(), orig, dir );
+    hit_list->Intersect( globals->get_scenery()->get_terrain_branch(),
+                         orig, dir );
 
     int this_hit=0;
     Point3D geoc;
