@@ -328,13 +328,10 @@ sub load_fgfs() {
             my( $code ) = $icao;
             $code =~ s/^K//;
             if ( $ILS{$icao . $rwy} ne "" ) {
+                print "FGFS: Skipping $icao - $rwy - already exists\n";
                 # skip approaches already in FAA or DAFIFT data
-            } elsif ( $AIRPORTS{$icao} != 1 && $AIRPORTS{$code} != 1 ) {
-                # skip approaches if the FAA or DAFIFT data has any other
-                # approach already for this airport.  (Avoids carrying over
-                # extraneous data if an approach was deactivated or runway
-                # numbers were changed.)
             } elsif ( length( $icao ) < 4 || $icao =~ m/^K/ ) {
+                print "FGFS: Skipping $icao - $rwy - USA\n";
                 # skip USA approaches not found in FAA or DAFIFT data
             } else {
                 print "FGFS adding: $icao $rwy\n";
