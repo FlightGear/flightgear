@@ -124,7 +124,15 @@ void uiuc_coef_sideforce()
                 CY_beta = uiuc_ice_filter(CY_beta_clean,kCY_beta);
               }
 	    CY_beta_save = CY_beta * Beta;
-            CY += CY_beta * Beta;
+	    //       CY += CY_beta * Beta;
+	    if (eta_q_CY_beta_fac)
+	      {
+		CY += CY_beta_save * eta_q_CY_beta_fac;
+	      }
+	    else
+	      {
+		CY += CY_beta_save;
+	      }
             break;
           }
         case CY_p_flag:
@@ -136,7 +144,15 @@ void uiuc_coef_sideforce()
             /* CY_p must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    CY_p_save = CY_p * P_body * b_2U;
-            CY += CY_p * P_body * b_2U;
+	    //    CY += CY_p * P_body * b_2U;
+	    if (eta_q_CY_p_fac)
+	      {
+		CY += CY_p_save * eta_q_CY_p_fac;
+	      }
+	    else
+	      {
+		CY += CY_p_save;
+	      }
             break;
           }
         case CY_r_flag:
@@ -148,7 +164,15 @@ void uiuc_coef_sideforce()
             /* CY_r must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    CY_r_save = CY_r * R_body * b_2U;
-            CY += CY_r * R_body * b_2U;
+	    //    CY += CY_r * R_body * b_2U;
+	    if (eta_q_CY_r_fac)
+	      {
+		CY += CY_r_save * eta_q_CY_r_fac;
+	      }
+	    else
+	      {
+		CY += CY_r_save;
+	      }
             break;
           }
         case CY_da_flag:
@@ -168,7 +192,15 @@ void uiuc_coef_sideforce()
                 CY_dr = uiuc_ice_filter(CY_dr_clean,kCY_dr);
               }
 	    CY_dr_save = CY_dr * rudder;
-            CY += CY_dr * rudder;
+	    //     CY += CY_dr * rudder;
+	    if (eta_q_CY_dr_fac)
+	      {
+		CY += CY_dr_save * eta_q_CY_dr_fac;
+	      }
+	    else
+	      {
+		CY += CY_dr_save;
+	      }
             break;
           }
         case CY_dra_flag:

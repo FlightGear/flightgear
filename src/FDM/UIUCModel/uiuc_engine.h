@@ -5,6 +5,7 @@
 #include "uiuc_1Dinterpolation.h"
 #include <FDM/LaRCsim/ls_generic.h>
 #include <FDM/LaRCsim/ls_cockpit.h>
+#include <FDM/LaRCsim/ls_constants.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -124,7 +124,15 @@ void uiuc_coef_yaw()
                 Cn_beta = uiuc_ice_filter(Cn_beta_clean,kCn_beta);
               }
 	    Cn_beta_save = Cn_beta * Beta;
-            Cn += Cn_beta * Beta;
+	    //       Cn += Cn_beta * Beta;
+	    if (eta_q_Cn_beta_fac)
+	      {
+		Cn += Cn_beta_save * eta_q_Cn_beta_fac;
+	      }
+	    else
+	      {
+		Cn += Cn_beta_save;
+	      }
             break;
           }
         case Cn_p_flag:
@@ -136,7 +144,15 @@ void uiuc_coef_yaw()
             /* Cn_p must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    Cn_p_save = Cn_p * P_body * b_2U;
-            Cn += Cn_p * P_body * b_2U;
+	    //    Cn += Cn_p * P_body * b_2U;
+	    if (eta_q_Cn_p_fac)
+	      {
+		Cn += Cn_p_save * eta_q_Cn_p_fac;
+	      }
+	    else
+	      {
+		Cn += Cn_p_save;
+	      }
             break;
           }
         case Cn_r_flag:
@@ -148,7 +164,15 @@ void uiuc_coef_yaw()
             /* Cn_r must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    Cn_r_save = Cn_r * R_body * b_2U;
-            Cn += Cn_r * R_body * b_2U;
+	    //    Cn += Cn_r * R_body * b_2U;
+	    if (eta_q_Cn_r_fac)
+	      {
+		Cn += Cn_r_save * eta_q_Cn_r_fac;
+	      }
+	    else
+	      {
+		Cn += Cn_r_save;
+	      }
             break;
           }
         case Cn_da_flag:
@@ -168,7 +192,15 @@ void uiuc_coef_yaw()
                 Cn_dr = uiuc_ice_filter(Cn_dr_clean,kCn_dr);
               }
 	    Cn_dr_save = Cn_dr * rudder;
-            Cn += Cn_dr * rudder;
+	    //     Cn += Cn_dr * rudder;
+	    if (eta_q_Cn_dr_fac)
+	      {
+		Cn += Cn_dr_save * eta_q_Cn_dr_fac;
+	      }
+	    else
+	      {
+		Cn += Cn_dr_save;
+	      }
             break;
           }
         case Cn_q_flag:

@@ -96,6 +96,7 @@ void uiuc_map_init()
   init_map["dyn_on_speed"]        =      dyn_on_speed_flag          ;
   init_map["dyn_on_speed_zero"]   =      dyn_on_speed_zero_flag     ;
   init_map["use_dyn_on_speed_curve1"] =  use_dyn_on_speed_curve1_flag;
+  init_map["use_Alpha_dot_on_speed"]  =  use_Alpha_dot_on_speed_flag;
   init_map["Alpha"]               =      Alpha_flag                 ;
   init_map["Beta"]                =      Beta_flag                  ;
   init_map["U_body"]              =      U_body_flag                ;

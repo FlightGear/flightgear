@@ -117,6 +117,7 @@ void uiuc_coefficients(double dt)
 	{
 	  cbar_2U = cbar / (2.0 * V_rel_wind);
 	  b_2U    = bw /   (2.0 * V_rel_wind);
+	  // ch is the horizontal tail chord
 	  ch_2U   = ch /   (2.0 * V_rel_wind);
 	}
       else if (use_dyn_on_speed_curve1)
@@ -125,12 +126,14 @@ void uiuc_coefficients(double dt)
   	  cbar_2U        = cbar / (2.0 * V_rel_wind_dum);
   	  b_2U           = bw /   (2.0 * V_rel_wind_dum);
   	  ch_2U          = ch /   (2.0 * V_rel_wind_dum);
+	  Alpha_dot      = 0.0;
   	}
       else
 	{
-	  cbar_2U = 0.0;
-	  b_2U    = 0.0;
-	  ch_2U   = 0.0;
+	  cbar_2U   = 0.0;
+	  b_2U      = 0.0;
+	  ch_2U     = 0.0;
+	  Alpha_dot = 0.0;
 	}
     }
   else if(use_abs_U_body_2U)      // use absolute(U_body)
@@ -147,12 +150,14 @@ void uiuc_coefficients(double dt)
 	  cbar_2U    = cbar / (2.0 * U_body_dum);
 	  b_2U       = bw /   (2.0 * U_body_dum);
 	  ch_2U      = ch /   (2.0 * U_body_dum);
+	  Alpha_dot  = 0.0;
 	}
       else
 	{
-	  cbar_2U = 0.0;
-	  b_2U    = 0.0;
-	  ch_2U   = 0.0;
+	  cbar_2U   = 0.0;
+	  b_2U      = 0.0;
+	  ch_2U     = 0.0;
+	  Alpha_dot = 0.0;
 	}
     }
   else      // use U_body
@@ -169,15 +174,25 @@ void uiuc_coefficients(double dt)
 	  cbar_2U    = cbar / (2.0 * U_body_dum);
 	  b_2U       = bw /   (2.0 * U_body_dum);
 	  ch_2U      = ch /   (2.0 * U_body_dum);
+	  Alpha_dot  = 0.0;
 	  beta_flow_clean_tail = cbar_2U;
 	}
       else
 	{
-	  cbar_2U = 0.0;
-	  b_2U    = 0.0;
-	  ch_2U   = 0.0;
+	  cbar_2U   = 0.0;
+	  b_2U      = 0.0;
+	  ch_2U     = 0.0;
+	  Alpha_dot = 0.0;
 	}
     }
+
+  // check if speed is sufficient to "trust" Alpha_dot value
+  if (use_Alpha_dot_on_speed)
+    {
+      if (V_rel_wind     < Alpha_dot_on_speed)
+	  Alpha_dot = 0.0;
+    }
+
 
   // check to see if icing model engaged
   if (ice_model)

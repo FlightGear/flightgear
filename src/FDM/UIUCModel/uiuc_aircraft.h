@@ -139,7 +139,7 @@
 #include <math.h>
 
 #include "uiuc_parsefile.h"
-//#include "uiuc_flapdata.h"
+// #include "uiuc_flapdata.h"
 
 SG_USING_STD(map);
 #if !defined (SG_HAVE_NATIVE_SGI_COMPILERS)
@@ -2258,7 +2258,7 @@ struct AIRCRAFT
   double F_X_aero_flapper, F_Z_aero_flapper;
 #define F_X_aero_flapper       aircraft_->F_X_aero_flapper
 #define F_Z_aero_flapper       aircraft_->F_Z_aero_flapper
-  */
+
   /* Other variables (not tokens) =================================*/
 
   double convert_x, convert_y, convert_z;

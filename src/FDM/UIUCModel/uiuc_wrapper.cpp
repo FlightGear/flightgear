@@ -245,12 +245,12 @@ void uiuc_force_moment(double dt)
     M_m_aero += -polarInertia * engineOmega * R_body;
 
   // ornithopter support
-  if (flapper_model)
-    {
-      F_X_aero += F_X_aero_flapper;
-      F_Z_aero += F_Z_aero_flapper;
-      M_m_aero += flapper_Moment;
-    }
+  //if (flapper_model)
+  //  {
+  //    F_X_aero += F_X_aero_flapper;
+  //    F_Z_aero += F_Z_aero_flapper;
+  //    M_m_aero += flapper_Moment;
+  //  }
 
   // fog field update
    Fog = 0;

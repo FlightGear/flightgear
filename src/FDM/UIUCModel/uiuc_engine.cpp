@@ -123,6 +123,38 @@ void uiuc_engine()
             F_X_engine = Throttle[3] * simpleSingleMaxThrust;
             break;
           }
+        case simpleSingleModel_flag:
+          {
+	    /* simple model based on Hepperle's equation
+	     * exponent dtdvvt was computed in uiuc_menu.cpp */
+	    F_X_engine = Throttle[3] * t_v0 * (1 - pow((V_rel_wind/v_t0),dtdvvt));
+	    if (slipstream_effects) {
+	      tc = F_X_engine/(Dynamic_pressure * LS_PI * propDia * propDia / 4);
+	      w_induced = 0.5 *  V_rel_wind * (-1 + pow((1+tc),.5));
+	      eta_q = (2* w_induced + V_rel_wind)*(2* w_induced + V_rel_wind)/(V_rel_wind * V_rel_wind);
+	      /* add in a die-off function so that eta falls off w/ alfa and beta */
+	      eta_q = Cos_alpha * Cos_alpha * Cos_beta * Cos_beta * eta_q;
+	      /* determine the eta_q values for the respective coefficients */
+	      if (eta_q_Cm_q_fac)    {eta_q_Cm_q    *= eta_q * eta_q_Cm_q_fac;}
+	      if (eta_q_Cm_adot_fac) {eta_q_Cm_adot *= eta_q * eta_q_Cm_adot_fac;}
+	      if (eta_q_Cmfade_fac)  {eta_q_Cmfade  *= eta_q * eta_q_Cmfade_fac;}
+	      if (eta_q_Cl_beta_fac) {eta_q_Cl_beta *= eta_q * eta_q_Cl_beta_fac;}
+	      if (eta_q_Cl_p_fac)    {eta_q_Cl_p    *= eta_q * eta_q_Cl_p_fac;}
+	      if (eta_q_Cl_r_fac)    {eta_q_Cl_r    *= eta_q * eta_q_Cl_r_fac;}
+	      if (eta_q_Cl_dr_fac)   {eta_q_Cl_dr   *= eta_q * eta_q_Cl_dr_fac;}
+	      if (eta_q_CY_beta_fac) {eta_q_CY_beta *= eta_q * eta_q_CY_beta_fac;}
+	      if (eta_q_CY_p_fac)    {eta_q_CY_p    *= eta_q * eta_q_CY_p_fac;}
+	      if (eta_q_CY_r_fac)    {eta_q_CY_r    *= eta_q * eta_q_CY_r_fac;}
+	      if (eta_q_CY_dr_fac)   {eta_q_CY_dr   *= eta_q * eta_q_CY_dr_fac;}
+	      if (eta_q_Cn_beta_fac) {eta_q_Cn_beta *= eta_q * eta_q_Cn_beta_fac;}
+	      if (eta_q_Cn_p_fac)    {eta_q_Cn_p    *= eta_q * eta_q_Cn_p_fac;}
+	      if (eta_q_Cn_r_fac)    {eta_q_Cn_r    *= eta_q * eta_q_Cn_r_fac;}
+	      if (eta_q_Cn_dr_fac)   {eta_q_Cn_dr   *= eta_q * eta_q_Cn_dr_fac;}
+	    }
+	    /* Need engineOmega for gyroscopic moments */
+	    engineOmega = minOmega + Throttle[3] * (maxOmega - minOmega);
+	    break;
+          }
         case c172_flag:
           {
             //c172 engine lines ... looks like 0.83 is just a thrust increase

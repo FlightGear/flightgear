@@ -144,7 +144,15 @@ void uiuc_coef_pitch()
             /* Cm_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    Cm_adot_save = Cm_adot * Alpha_dot * cbar_2U;
-            Cm += Cm_adot * Alpha_dot * cbar_2U;
+            //Cm        += Cm_adot * Alpha_dot * cbar_2U;
+	    if (eta_q_Cm_adot_fac)
+	      {
+		Cm += Cm_adot_save * eta_q_Cm_adot_fac;
+	      }
+	    else
+	      {
+		Cm += Cm_adot_save;
+	      }
             break;
           }
         case Cm_q_flag:
@@ -156,7 +164,15 @@ void uiuc_coef_pitch()
             /* Cm_q must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    Cm_q_save = Cm_q * Q_body * cbar_2U;
-            Cm += Cm_q * Q_body * cbar_2U;
+            // Cm    += Cm_q * Q_body * cbar_2U;
+	    if (eta_q_Cm_q_fac)
+	      {
+		Cm += Cm_q_save * eta_q_Cm_q_fac;
+	      }
+	    else
+	      {
+		Cm += Cm_q_save;
+	      }
             break;
           }
         case Cm_ih_flag:
@@ -216,14 +232,28 @@ void uiuc_coef_pitch()
           }
         case Cmfade_flag:
           {
-            CmfadeI = uiuc_2Dinterpolation(Cmfade_aArray,
+	    // compute the induced velocity on the tail to account for tail downwash
+	    gamma_wing = V_rel_wind * Sw * CL / (2.0 * bw);
+	    w_coef = 0.036;
+	    w_induced  = w_coef * gamma_wing;
+	    downwash_angle = atan(w_induced/V_rel_wind);
+	    AlphaTail = Alpha - downwash_angle;
+	    CmfadeI = uiuc_2Dinterpolation(Cmfade_aArray,
                                            Cmfade_deArray,
                                            Cmfade_CmArray,
                                            Cmfade_nAlphaArray,
                                            Cmfade_nde,
-                                           Alpha,
+                                           AlphaTail,
                                            elevator);
-            Cm += CmfadeI;
+	    // Cm += CmfadeI;
+	    if (eta_q_Cmfade_fac)
+	      {
+		Cm += CmfadeI * eta_q_Cmfade_fac;
+	      }
+	    else
+	      {
+		Cm += CmfadeI;
+	      }
             break;
           }
         case Cmfdf_flag:

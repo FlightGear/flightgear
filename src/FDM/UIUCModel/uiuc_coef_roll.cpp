@@ -124,7 +124,15 @@ void uiuc_coef_roll()
                 Cl_beta = uiuc_ice_filter(Cl_beta_clean,kCl_beta);
               }
 	    Cl_beta_save = Cl_beta * Beta;
-            Cl += Cl_beta * Beta;
+	    //       Cl += Cl_beta * Beta;
+	    if (eta_q_Cl_beta_fac)
+	      {
+		Cl += Cl_beta_save * eta_q_Cl_beta_fac;
+	      }
+	    else
+	      {
+		Cl += Cl_beta_save;
+	      }
             break;
           }
         case Cl_p_flag:
@@ -136,7 +144,15 @@ void uiuc_coef_roll()
             /* Cl_p must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    Cl_p_save = Cl_p * P_body * b_2U;
-            Cl += Cl_p * P_body * b_2U;
+	    //    Cl += Cl_p * P_body * b_2U;
+	    if (eta_q_Cl_p_fac)
+	      {
+		Cl += Cl_p_save * eta_q_Cl_p_fac;
+	      }
+	    else
+	      {
+		Cl += Cl_p_save;
+	      }
             break;
           }
         case Cl_r_flag:
@@ -148,7 +164,15 @@ void uiuc_coef_roll()
             /* Cl_r must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    Cl_r_save = Cl_r * R_body * b_2U;
-            Cl += Cl_r * R_body * b_2U;
+	    //    Cl += Cl_r * R_body * b_2U;
+	    if (eta_q_Cl_r_fac)
+	      {
+		Cl += Cl_r_save * eta_q_Cl_r_fac;
+	      }
+	    else
+	      {
+		Cl += Cl_r_save;
+	      }
             break;
           }
         case Cl_da_flag:
@@ -168,7 +192,15 @@ void uiuc_coef_roll()
                 Cl_dr = uiuc_ice_filter(Cl_dr_clean,kCl_dr);
               }
 	    Cl_dr_save = Cl_dr * rudder;
-            Cl += Cl_dr * rudder;
+	    //     Cl += Cl_dr * rudder;
+	    if (eta_q_Cl_dr_fac)
+	      {
+		Cl += Cl_dr_save * eta_q_Cl_dr_fac;
+	      }
+	    else
+	      {
+		Cl += Cl_dr_save;
+	      }
             break;
           }
         case Cl_daa_flag:
