@@ -50,6 +50,11 @@ FGAIMgr::~FGAIMgr() {
 }
 
 void FGAIMgr::init() {
+	// Pointers to user's position
+	lon_node = fgGetNode("/position/longitude-deg", true);
+	lat_node = fgGetNode("/position/latitude-deg", true);
+	elev_node = fgGetNode("/position/altitude-ft", true);
+	
 	// go through the $FG_ROOT/ATC directory and find all *.taxi files
 	SGPath path(globals->get_fg_root());
 	path.append("ATC/");
@@ -81,7 +86,13 @@ void FGAIMgr::init() {
 				if(dclFindAirportID(f_ident, &a)) {
 					SGBucket sgb(a.longitude, a.latitude);
 					int idx = sgb.gen_index();
-					airports[idx] = f_ident;
+					if(airports.find(idx) != airports.end()) {
+						airports[idx]->push_back(f_ident);
+					} else {
+						aptID_list_type* apts = new aptID_list_type;
+						apts->push_back(f_ident);
+						airports[idx] = apts;
+					}
 					cout << "Mapping " << f_ident << " to bucket " << idx << '\n'; 
 				}
 			}
@@ -111,7 +122,13 @@ void FGAIMgr::init() {
 				if(dclFindAirportID(f_ident, &a)) {
 					SGBucket sgb(a.longitude, a.latitude);
 					int idx = sgb.gen_index();
-					airports[idx] = f_ident;
+					if(airports.find(idx) != airports.end()) {
+						airports[idx]->push_back(f_ident);
+					} else {
+						aptID_list_type* apts = new aptID_list_type;
+						apts->push_back(f_ident);
+						airports[idx] = apts;
+					}
 					cout << "Mapping " << f_ident << " to bucket " << idx << '\n'; 
 				}
 			}
@@ -120,14 +137,8 @@ void FGAIMgr::init() {
 	}
 #endif
 	
-	// Hard wire some local traffic for now.
-	// This is regardless of location and hence *very* ugly but it is a start.
-	ATC->AIRegisterAirport("KEMT");
-	FGAILocalTraffic* local_traffic = new FGAILocalTraffic;
-	//local_traffic->Init("KEMT", IN_PATTERN, TAKEOFF_ROLL);
-	local_traffic->Init("KEMT");
-	local_traffic->FlyCircuits(1, true);	// Fly 2 circuits with touch & go in between
-	ai_list.push_back(local_traffic);
+	// See if are in range at startup and activate if necessary
+	SearchByPos(10.0);
 }
 
 void FGAIMgr::bind() {
@@ -137,12 +148,24 @@ void FGAIMgr::unbind() {
 }
 
 void FGAIMgr::update(double dt) {
-	// Don't update any planes for first 50 runs through - this avoids some possible initialisation anomalies
 	static int i = 0;
+	static int j = 0;
+
+	// Don't update any planes for first 50 runs through - this avoids some possible initialisation anomalies
+	// Might not need it now we have fade-in though?
 	if(i < 50) {
-		i++;
+		++i;
 		return;
 	}
+	
+	if(j == 215) {
+		SearchByPos(15.0);
+		j = 0;
+	}
+	
+	++j;
+	
+	// TODO - need to add a check of if any activated airports have gone out of range
 	
 	// Traverse the list of active planes and run all their update methods
 	// TODO - spread the load - not all planes should need updating every frame.
@@ -152,5 +175,70 @@ void FGAIMgr::update(double dt) {
 	while(ai_list_itr != ai_list.end()) {
 		(*ai_list_itr)->Update(dt);
 		++ai_list_itr;
+	}
+}
+
+
+// Activate AI traffic at an airport
+void FGAIMgr::ActivateAirport(string ident) {
+	ATC->AIRegisterAirport(ident);
+	// TODO - need to start the traffic more randomly
+	FGAILocalTraffic* local_traffic = new FGAILocalTraffic;
+	//local_traffic->Init(ident, IN_PATTERN, TAKEOFF_ROLL);
+	local_traffic->Init(ident);
+	local_traffic->FlyCircuits(1, true);	// Fly 2 circuits with touch & go in between
+	ai_list.push_back(local_traffic);
+	activated[ident] = 1;
+}	
+
+
+// Search for valid airports in the vicinity of the user and activate them if necessary
+void FGAIMgr::SearchByPos(double range)
+{
+	//cout << "In SearchByPos(...)\n";
+	
+	// get bucket number for plane position
+	lon = lon_node->getDoubleValue();
+	lat = lat_node->getDoubleValue();
+	SGBucket buck(lon, lat);
+
+	// get neigboring buckets
+	int bx = (int)( range*SG_NM_TO_METER / buck.get_width_m() / 2);
+	//cout << "bx = " << bx << '\n';
+	int by = (int)( range*SG_NM_TO_METER / buck.get_height_m() / 2 );
+	//cout << "by = " << by << '\n';
+	
+	// loop over bucket range 
+	for ( int i=-bx; i<=bx; i++) {
+		//cout << "i loop\n";
+		for ( int j=-by; j<=by; j++) {
+			//cout << "j loop\n";
+			buck = sgBucketOffset(lon, lat, i, j);
+			long int bucket = buck.gen_index();
+			//cout << "bucket is " << bucket << '\n';
+			aptID_list_type* apts = airports[bucket];
+			aptID_list_iterator current = apts->begin();
+			aptID_list_iterator last = apts->end();
+			
+			//cout << "Size of apts is " << apts->size() << '\n';
+			
+			//double rlon = lon * SGD_DEGREES_TO_RADIANS;
+			//double rlat = lat * SGD_DEGREES_TO_RADIANS;
+			//Point3D aircraft = sgGeodToCart( Point3D(rlon, rlat, elev) );
+			//Point3D airport;
+			for(; current != last; ++current) {
+				//cout << "Found " << *current << '\n';
+				if(activated.find(*current) == activated.end()) {
+					//cout << "Activating " << *current << '\n';
+					//FGAirport a;
+					//if(dclFindAirportID(*current, &a)) {
+					//	// We can do something here based on distance from the user if we wish.
+					//}
+					ActivateAirport(*current);
+				} else {
+					//cout << *current << " already activated\n";
+				}
+			}
+		}
 	}
 }

@@ -53,26 +53,28 @@ private:
     // at any point in or at the end of the list.
     // Hence any new access must explicitly first check for atc_list.end() before dereferencing.
 	
+	// A list of airport ID's
+	typedef list < string > aptID_list_type;
+	typedef aptID_list_type::iterator aptID_list_iterator;
+	
 	// A map of airport-IDs that have taxiway network files against bucket number
-	typedef map < int, string > ai_apt_map_type;
+	typedef map < int, aptID_list_type* > ai_apt_map_type;
 	typedef ai_apt_map_type::iterator ai_apt_map_iterator;
 	ai_apt_map_type airports;
+	
+	// A map of airport ID's that we've activated AI traffic at
+	typedef map < string, int > ai_activated_map_type;
+	typedef ai_activated_map_type::iterator ai_activated_map_iterator;
+	ai_activated_map_type activated;
 
     // Position of the Users Aircraft
-    // (This may be needed to calculate the distance from the user when deciding which 3D model to render)
-    double current_lon;
-    double current_lat;
-    double current_elev;
+    double lon;
+    double lat;
+    double elev;
     // Pointers to current users position
-    SGPropertyNode *current_lon_node;
-    SGPropertyNode *current_lat_node;
-    SGPropertyNode *current_elev_node;
-
-    //FGATIS atis;
-    //FGGround ground;
-    //FGTower tower;
-    //FGApproach approach;
-    //FGDeparture departure;
+    SGPropertyNode *lon_node;
+    SGPropertyNode *lat_node;
+    SGPropertyNode *elev_node;
 
 public:
 
@@ -91,6 +93,12 @@ private:
 
     // Remove a class from the ai_list and delete it from memory
     //void RemoveFromList(const char* id, atc_type tp);
+	
+	// Activate AI traffic at an airport
+	void ActivateAirport(string id);
+	
+	// Search for valid airports in the vicinity of the user and activate them if necessary
+	void SearchByPos(double range);
 
 };
 
