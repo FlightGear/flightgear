@@ -43,6 +43,7 @@
 #include <Aircraft/aircraft.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
+#include <Include/general.h>
 #include <Math/fg_random.h>
 #include <Math/mat3.h>
 #include <Math/polar3d.h>
@@ -62,6 +63,14 @@
 // current state and return it to calling instrument display routines.
 // They should eventually be member functions of the aircraft.
 //
+
+double get_frame_rate(void) {
+    fgGENERAL *g;
+
+    g = &general;
+
+    return g->frame_rate;
+}
 
 double get_throttleval( void )
 {
@@ -1093,6 +1102,8 @@ Hptr fgHUDInit( fgAIRCRAFT *current_aircraft )
                       RIGHT_JUST, "Lon  ", "d",     "%04.0f", get_longitude );
   fgHUDAddLabel  ( hud, 440, 90,  SMALL, NOBLINK,
                       RIGHT_JUST, NULL, " m",        "%05.2f", get_long_min );
+  fgHUDAddLabel  ( hud, 10,470, SMALL, NOBLINK,
+		      RIGHT_JUST, "Frame rate =", NULL,  "%2.2f ", get_frame_rate);
 
   fgHUDAddControlSurfaces( hud, 10, 10, NULL );
 
@@ -1605,9 +1616,13 @@ void fgHUDSetBrightness( Hptr hud, int brightness )
 }
 
 /* $Log$
-/* Revision 1.4  1998/05/03 00:46:46  curt
-/* polar.h -> polar3d.h
+/* Revision 1.5  1998/05/06 03:15:08  curt
+/* Durk Talsma contributed a graphical frame rate counter which is displayed
+/* as part of the HUD.
 /*
+ * Revision 1.4  1998/05/03 00:46:46  curt
+ * polar.h -> polar3d.h
+ *
  * Revision 1.3  1998/04/30 12:36:02  curt
  * C++-ifying a couple source files.
  *
