@@ -636,7 +636,7 @@ void fgHiResDump()
         trBeginTile(tr);
         int curColumn = trGet(tr, TR_CURRENT_COLUMN);
         int curRow =  trGet(tr, TR_CURRENT_ROW);
-        globals->get_renderer()->screendump();
+        renderer->screendump();
         if ( do_hud )
             fgUpdateHUD( curColumn*hud_col_step,      curRow*hud_row_step,
                          (curColumn+1)*hud_col_step, (curRow+1)*hud_row_step );
@@ -673,7 +673,7 @@ void fgHiResDump()
 
     }
 
-    globals->get_renderer()->resize( width, height );
+    renderer->resize( width, height );
 
     trDelete(tr);
 
@@ -797,15 +797,16 @@ void fgDumpSnapShot () {
 	puHideCursor();
     }
 
-    globals->get_renderer()->init();
-    globals->get_renderer()->resize( fgGetInt("/sim/startup/xsize"),
-                                     fgGetInt("/sim/startup/ysize") );
+    FGRenderer *renderer = globals->get_renderer();
+    renderer->init();
+    renderer->resize( fgGetInt("/sim/startup/xsize"),
+                        fgGetInt("/sim/startup/ysize") );
 
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgRenderFrame() shouldn't
     // hurt anything
-    globals->get_renderer()->update();
-    globals->get_renderer()->update();
+    renderer->update();
+    renderer->update();
 
     while (count < 1000) {
         FILE *fp;
