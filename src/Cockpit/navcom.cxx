@@ -192,6 +192,9 @@ FGNavCom::bind ()
     sprintf( propname, "/radios/nav[%d]/heading-needle-deflection", index );
     fgTie( propname, this, &FGNavCom::get_nav_heading_needle_deflection );
 
+    sprintf( propname, "/radios/nav[%d]/has-gs", index );
+    fgTie( propname, this, &FGNavCom::get_nav_has_gs );
+
     sprintf( propname, "/radios/nav[%d]/gs-needle-deflection", index );
     fgTie( propname, this, &FGNavCom::get_nav_gs_needle_deflection );
 
