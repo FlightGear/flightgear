@@ -30,7 +30,7 @@
 class Pluto : public CelestialBody
 {
 public:
-  Pluto ( fgTIME t);
+  Pluto ( FGTime t);
 };
 
 #endif // _PLUTO_HXX_

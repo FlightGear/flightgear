@@ -96,7 +96,7 @@ void fgLIGHT::Init( void ) {
 // update lighting parameters based on current sun position
 void fgLIGHT::Update( void ) {
     FGInterface *f;
-    fgTIME *t;
+    FGTime *t;
     // if the 4th field is 0.0, this specifies a direction ...
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     // base sky color
@@ -106,7 +106,7 @@ void fgLIGHT::Update( void ) {
     double deg, ambient, diffuse, sky_brightness;
 
     f = current_aircraft.fdm_state;
-    t = &cur_time_params;
+    t = FGTime::cur_time_params;
 
     FG_LOG( FG_EVENT, FG_INFO, "Updating light parameters." );
 

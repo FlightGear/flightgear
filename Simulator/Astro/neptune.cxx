@@ -30,13 +30,13 @@
 #include "neptune.hxx"
 
 /*************************************************************************
- * Neptune::Neptune(fgTIME *t)
+ * Neptune::Neptune(FGTime *t)
  * Public constructor for class Neptune
  * Argument: The current time.
  * the hard coded orbital elements for Neptune are passed to 
  * CelestialBody::CelestialBody();
  ************************************************************************/
-Neptune::Neptune(fgTIME *t) :
+Neptune::Neptune(FGTime *t) :
   CelestialBody(131.7806,   3.0173000E-5,
 		1.7700,	   -2.550E-7,
 		272.8461,  -6.027000E-6,	
@@ -46,13 +46,13 @@ Neptune::Neptune(fgTIME *t) :
 {
 }
 /*************************************************************************
- * void Neptune::updatePosition(fgTIME *t, Star *ourSun)
+ * void Neptune::updatePosition(FGTime *t, Star *ourSun)
  * 
  * calculates the current position of Neptune, by calling the base class,
  * CelestialBody::updatePosition(); The current magnitude is calculated using 
  * a Neptune specific equation
  *************************************************************************/
-void Neptune::updatePosition(fgTIME *t, Star *ourSun)
+void Neptune::updatePosition(FGTime *t, Star *ourSun)
 {
   CelestialBody::updatePosition(t, ourSun);
   magnitude = -6.90 + 5*log10 (r*R) + 0.001 *FV;

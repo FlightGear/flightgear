@@ -50,7 +50,7 @@
  * return value: none
  *
  *************************************************************************/
-void CelestialBody::updatePosition(fgTIME *t, Star *ourSun)
+void CelestialBody::updatePosition(FGTime *t, Star *ourSun)
 {
   double eccAnom, v, ecl, actTime, 
     xv, yv, xh, yh, zh, xg, yg, zg, xe, ye, ze;

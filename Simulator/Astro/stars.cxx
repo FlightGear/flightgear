@@ -221,12 +221,12 @@ int fgStarsInit( void ) {
 void fgStarsRender( void ) {
     FGInterface *f;
     fgLIGHT *l;
-    fgTIME *t;
+    FGTime *t;
     int i;
 
     f = current_aircraft.fdm_state;
     l = &cur_light_params;
-    t = &cur_time_params;
+    t = FGTime::cur_time_params;
 
     // FG_PI_2 + 0.1 is about 6 degrees after sundown and before sunrise
 

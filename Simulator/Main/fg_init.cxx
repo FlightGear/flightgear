@@ -167,7 +167,7 @@ int fgInitGeneral( void ) {
     }
 #endif
 
-    return ( 1 );
+    return 1;
 }
 
 
@@ -177,9 +177,11 @@ int fgInitGeneral( void ) {
 // Returns non-zero if a problem encountered.
 int fgInitSubsystems( void )
 {
+    FGTime::cur_time_params = new FGTime();
+
     FGInterface *f; // assigned later
     fgLIGHT *l = &cur_light_params;
-    fgTIME *t = &cur_time_params;
+    FGTime *t = FGTime::cur_time_params;
     FGView *v = &current_view;
 
     FG_LOG( FG_GENERAL, FG_INFO, "Initialize Subsystems");
@@ -301,8 +303,8 @@ int fgInitSubsystems( void )
 			    fgEVENT::FG_EVENT_READY, 60000 );
 
     // Initialize the time dependent variables
-    fgTimeInit(t);
-    fgTimeUpdate(f, t);
+    t->init();
+    t->update(f);
 
     // Initialize view parameters
     FG_LOG( FG_GENERAL, FG_DEBUG, "Before v->init()");
@@ -412,5 +414,3 @@ int fgInitSubsystems( void )
 
     return(1);
 }
-
-

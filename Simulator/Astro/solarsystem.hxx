@@ -60,7 +60,7 @@ private:
 
 
 public:
-  SolarSystem(fgTIME *t);
+  SolarSystem(FGTime *t);
   CelestialBody *getSun();
   CelestialBody *getMoon();
   ~SolarSystem();

@@ -30,13 +30,13 @@
 #include "saturn.hxx"
 
 /*************************************************************************
- * Saturn::Saturn(fgTIME *t)
+ * Saturn::Saturn(FGTime *t)
  * Public constructor for class Saturn
  * Argument: The current time.
  * the hard coded orbital elements for Saturn are passed to 
  * CelestialBody::CelestialBody();
  ************************************************************************/
-Saturn::Saturn(fgTIME *t) :
+Saturn::Saturn(FGTime *t) :
   CelestialBody(113.6634,   2.3898000E-5,
 		2.4886,	   -1.081E-7,
 		339.3939,   2.9766100E-5,
@@ -47,13 +47,13 @@ Saturn::Saturn(fgTIME *t) :
 }
 
 /*************************************************************************
- * void Saturn::updatePosition(fgTIME *t, Star *ourSun)
+ * void Saturn::updatePosition(FGTime *t, Star *ourSun)
  * 
  * calculates the current position of Saturn, by calling the base class,
  * CelestialBody::updatePosition(); The current magnitude is calculated using 
  * a Saturn specific equation
  *************************************************************************/
-void Saturn::updatePosition(fgTIME *t, Star *ourSun)
+void Saturn::updatePosition(FGTime *t, Star *ourSun)
 {
   CelestialBody::updatePosition(t, ourSun);
   

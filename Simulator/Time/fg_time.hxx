@@ -1,4 +1,3 @@
-//
 // fg_time.hxx -- data structures and routines for managing time related stuff.
 //
 // Written by Curtis Olson, started August 1997.
@@ -52,8 +51,10 @@
 
 
 // Define a structure containing global time parameters
-typedef struct {
-    // the date/time in various forms
+class FGTime {
+
+private:
+
     // Unix "calendar" time in seconds
     time_t cur_time;
 
@@ -66,6 +67,9 @@ typedef struct {
     // modified Julian date
     double mjd;
 
+    double last_mjd, last_dy;
+    int last_mn, last_yr;
+
     // side real time at prime meridian
     double gst;
 
@@ -73,8 +77,8 @@ typedef struct {
     double lst;
 
     // the difference between the precise sidereal time algorithm
-    // result and the course result.  
-    // course + diff has good accuracy for the short term
+    // result and the course result.  course + diff has good accuracy
+    // for the short term
     double gst_diff;
 
     // An offset in seconds from the true time.  Allows us to adjust
@@ -83,23 +87,47 @@ typedef struct {
 
     // How much to change the value of warp each iteration.  Allows us
     // to make time progress faster than normal.
-    long int warp_delta; 
+    long int warp_delta;
 
-    // Paused (0 = no, 1 = yes)
-    int pause;
-} fgTIME;
+    // Paused?
+    bool pause;
+                                     
+    void local_update_sky_and_lighting_params( void );
 
-extern fgTIME cur_time_params;
+public:
 
+    FGTime();
+    ~FGTime();
 
-// Update time variables such as gmt, julian date, and sidereal time
-void fgTimeInit(fgTIME *t);
+    inline double getMjd() const { return mjd; };
+    inline double getLst() const { return lst; };
+    inline double getGst() const { return gst; };
+    inline time_t get_cur_time() const { return cur_time; };
+    inline struct tm* getGmt()const { return gmt; };
+    inline bool getPause() const { return pause; };
+  
+    void adjust_warp(int val) { warp += val; };
+    void adjust_warp_delta(int val) { warp_delta += val; };
+    void togglePauseMode() { pause = !pause; }; 
 
+    // Initialize the time dependent variables
+    void init();
 
-// Update the time dependent variables
-void fgTimeUpdate(FGInterface *f, fgTIME *t);
+    // Update the time dependent variables
+    void update(FGInterface *f);
+
+    void cal_mjd (int mn, double dy, int yr);
+    void utc_gst(); 
+    double sidereal_precise (double lng);
+    double sidereal_course(double lng); 
+    static FGTime *cur_time_params;
+
+    // Some other stuff which were changed to FGTime members on
+    // questionable grounds -:)
+    time_t get_start_gmt(int year);
+    char* format_time( const struct tm* p, char* buf );
+    long int fix_up_timezone( long int timezone_orig );
+};
 
 
 #endif // _FG_TIME_HXX
-
-

@@ -31,8 +31,8 @@
 class Jupiter : public CelestialBody
 {
 public:
-  Jupiter (fgTIME *t);
-  void updatePosition(fgTIME *t, Star *ourSun);
+  Jupiter (FGTime *t);
+  void updatePosition(FGTime *t, Star *ourSun);
 };
 
 #endif // _JUPITER_HXX_

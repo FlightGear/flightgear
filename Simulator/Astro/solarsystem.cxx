@@ -45,10 +45,10 @@
 /***************************************************************************
  * default constructor for class  SolarSystem:   
  * or course there can only be one way to create an entire solar system -:) )
- * the fgTIME argument is needed to properly initialize the the current orbital
+ * the FGTime argument is needed to properly initialize the the current orbital
  * elements
  *************************************************************************/
-SolarSystem::SolarSystem(fgTIME *t)
+SolarSystem::SolarSystem(FGTime *t)
 {
   if (theSolarSystem)
     {
@@ -96,7 +96,7 @@ SolarSystem::~SolarSystem()
 void SolarSystem::rebuild()
 {
   //fgLIGHT *l = &cur_light_params;
-  fgTIME  *t = &cur_time_params;  
+  FGTime *t = FGTime::cur_time_params;  
   //float x, y, z;
   //double sun_angle;
   double ra, dec;

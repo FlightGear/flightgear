@@ -337,7 +337,7 @@ static void fgMoonPositionGST(double gst, double *lon, double *lat) {
 // update the cur_time_params structure with the current moon position
 void fgUpdateMoonPos( void ) {
     fgLIGHT *l;
-    fgTIME *t;
+    FGTime *t;
     FGView *v;
     MAT3vec nup, nmoon, v0, surface_to_moon;
     Point3D p, rel_moonpos;
@@ -346,21 +346,21 @@ void fgUpdateMoonPos( void ) {
     double ntmp;
 
     l = &cur_light_params;
-    t = &cur_time_params;
+    t = FGTime::cur_time_params;
     v = &current_view;
 
     FG_LOG( FG_EVENT, FG_INFO, "  Updating Moon position" );
 
     // (not sure why there was two)
     // fgMoonPosition(t->cur_time, &l->moon_lon, &moon_gd_lat);
-    fgMoonPositionGST(t->gst, &l->moon_lon, &moon_gd_lat);
+    fgMoonPositionGST(t->getGst(), &l->moon_lon, &moon_gd_lat);
 
     fgGeodToGeoc(moon_gd_lat, 0.0, &sl_radius, &l->moon_gc_lat);
 
     p = Point3D( l->moon_lon, l->moon_gc_lat, sl_radius );
     l->fg_moonpos = fgPolarToCart3d(p);
 
-    FG_LOG( FG_EVENT, FG_INFO, "    t->cur_time = " << t->cur_time );
+    FG_LOG( FG_EVENT, FG_INFO, "    t->cur_time = " << t->get_cur_time() );
     FG_LOG( FG_EVENT, FG_INFO, 
 	    "    Moon Geodetic lat = " << moon_gd_lat
 	    << " Geocentric lat = " << l->moon_gc_lat );

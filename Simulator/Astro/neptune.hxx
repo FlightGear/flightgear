@@ -31,8 +31,8 @@
 class Neptune : public CelestialBody
 {
 public:
-  Neptune ( fgTIME *t);
-  void updatePosition(fgTIME *t, Star *ourSun);
+  Neptune ( FGTime *t);
+  void updatePosition(FGTime *t, Star *ourSun);
 };
 
 #endif // _NEPTUNE_HXX_

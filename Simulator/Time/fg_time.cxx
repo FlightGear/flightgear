@@ -63,35 +63,38 @@
 #define DEGHR(x)        ((x)/15.)
 #define RADHR(x)        DEGHR(x*RAD_TO_DEG)
 
+
 // #define MK_TIME_IS_GMT 0         // default value
 // #define TIME_ZONE_OFFSET_WORK 0  // default value
 
 
-fgTIME cur_time_params;
+FGTime::FGTime()
+{
+    if (cur_time_params) {
+	FG_LOG( FG_GENERAL, FG_ALERT, 
+		"Error: only one instance of FGTime allowed" );
+	exit(-1);
+    }
+
+    cur_time_params = this;
+}
 
 
-// Force an update of the sky and lighting parameters
-static void local_update_sky_and_lighting_params( void ) {
-    // fgSunInit();
-    SolarSystem::theSolarSystem->rebuild();
-    cur_light_params.Update();
-    fgSkyColorsInit();
+FGTime::~FGTime()
+{
 }
 
 
 // Initialize the time dependent variables
-void fgTimeInit(fgTIME *t) {
+void FGTime::init() 
+{
     FG_LOG( FG_EVENT, FG_INFO, "Initializing Time" );
-
-    t->gst_diff = -9999.0;
-
+    gst_diff = -9999.0;
     FG_LOG( FG_EVENT, FG_DEBUG, 
 	    "time offset = " << current_options.get_time_offset() );
-
-    t->warp = current_options.get_time_offset();
-    t->warp_delta = 0;
-
-    t->pause = current_options.get_pause();
+    warp = current_options.get_time_offset();
+    warp_delta = 0;
+    pause = current_options.get_pause();
 }
 
 
@@ -99,25 +102,26 @@ void fgTimeInit(fgTIME *t) {
 // modified Julian date (number of days elapsed since 1900 jan 0.5),
 // mjd.  Adapted from Xephem.
 
-double cal_mjd (int mn, double dy, int yr) {
-    static double last_mjd, last_dy;
-    double mjd;
-    static int last_mn, last_yr;
+void FGTime::cal_mjd (int mn, double dy, int yr) 
+{
+    //static double last_mjd, last_dy;
+    //double mjd;
+    //static int last_mn, last_yr;
     int b, d, m, y;
     long c;
-
+  
     if (mn == last_mn && yr == last_yr && dy == last_dy) {
 	mjd = last_mjd;
-	return(mjd);
+	//return(mjd);
     }
-
+  
     m = mn;
     y = (yr < 0) ? yr + 1 : yr;
     if (mn < 3) {
 	m += 12;
 	y -= 1;
     }
-
+  
     if (yr < 1582 || (yr == 1582 && (mn < 10 || (mn == 10 && dy < 15)))) {
 	b = 0;
     } else {
@@ -125,30 +129,29 @@ double cal_mjd (int mn, double dy, int yr) {
 	a = y/100;
 	b = 2 - a + a/4;
     }
-
+  
     if (y < 0) {
 	c = (long)((365.25*y) - 0.75) - 694025L;
     } else {
 	c = (long)(365.25*y) - 694025L;
     }
-    
+  
     d = (int)(30.6001*(m+1));
-
+  
     mjd = b + c + d + dy - 0.5;
-
+  
     last_mn = mn;
     last_dy = dy;
     last_yr = yr;
     last_mjd = mjd;
-
-    return(mjd);
+  
+    //return(mjd);
 }
 
 
-// given an mjd, return greenwich mean sidereal time, gst
-
-double utc_gst (double mjd) {
-    double gst;
+// given an mjd, calculate greenwich mean sidereal time, gst
+void FGTime::utc_gst () 
+{
     double day = floor(mjd-0.5)+0.5;
     double hr = (mjd-day)*24.0;
     double T, x;
@@ -159,20 +162,18 @@ double utc_gst (double mjd) {
     gst = (1.0/SIDRATE)*hr + x;
 
     FG_LOG( FG_EVENT, FG_DEBUG, "  gst => " << gst );
-
-    return(gst);
 }
 
 
-// given Julian Date and Longitude (decimal degrees West) compute and
-// return Local Sidereal Time, in decimal hours.
+// given Julian Date and Longitude (decimal degrees West) compute
+// Local Sidereal Time, in decimal hours.
 //
 // Provided courtesy of ecdowney@noao.edu (Elwood Downey) 
-//
 
-double sidereal_precise (double mjd, double lng) {
+double FGTime::sidereal_precise (double lng) 
+{
     double gst;
-    double lst;
+    double lstTmp;
 
     /* printf ("Current Lst on JD %13.5f at %8.4f degrees West: ", 
        mjd + MJD0, lng); */
@@ -181,28 +182,130 @@ double sidereal_precise (double mjd, double lng) {
     lng *= DEG_TO_RAD;
 
     // compute LST and print
-    gst = utc_gst (mjd);
-    lst = gst - RADHR (lng);
-    lst -= 24.0*floor(lst/24.0);
+    //gst = utc_gst ();
+    utc_gst();
+    lstTmp = gst - RADHR (lng);
+    lstTmp -= 24.0*floor(lst/24.0);
     // printf ("%7.4f\n", lst);
 
     // that's all
-    return (lst);
+    return (lstTmp);
 }
 
 
-// Fix up timezone if using ftime()
-long int fix_up_timezone( long int timezone_orig ) {
-#if !defined( HAVE_GETTIMEOFDAY ) && defined( HAVE_FTIME )
-    // ftime() needs a little extra help finding the current timezone
-    struct timeb current;
-    ftime(&current);
-    return( current.timezone * 60 );
-#else
-    return( timezone_orig );
-#endif
+// return a courser but cheaper estimate of sidereal time
+double FGTime::sidereal_course(double lng) 
+{
+    //struct tm *gmt;
+    //double lstTmp;
+    time_t start_gmt, now;
+    double diff, part, days, hours, lstTmp;
+    char tbuf[64];
+  
+    //gmt = t->gmt;
+    //now = t->cur_time;
+    now = cur_time;
+    start_gmt = get_start_gmt(gmt->tm_year);
+  
+    FG_LOG( FG_EVENT, FG_DEBUG, "  COURSE: GMT = " << format_time(gmt, tbuf) );
+    FG_LOG( FG_EVENT, FG_DEBUG, "  March 21 noon (GMT) = " << start_gmt );
+  
+    diff = (now - start_gmt) / (3600.0 * 24.0);
+  
+    FG_LOG( FG_EVENT, FG_DEBUG, 
+	    "  Time since 3/21/" << gmt->tm_year << " GMT = " << diff );
+  
+    part = fmod(diff, 1.0);
+    days = diff - part;
+    hours = gmt->tm_hour + gmt->tm_min/60.0 + gmt->tm_sec/3600.0;
+  
+    lstTmp = (days - lng)/15.0 + hours - 12;
+  
+    while ( lstTmp < 0.0 ) {
+	lstTmp += 24.0;
+    }
+  
+    FG_LOG( FG_EVENT, FG_DEBUG,
+	    "  days = " << days << "  hours = " << hours << "  lon = " 
+	    << lng << "  lst = " << lstTmp );
+  
+    return(lstTmp);
 }
 
+
+// Update time variables such as gmt, julian date, and sidereal time
+void FGTime::update(FGInterface *f) 
+{
+    double gst_precise, gst_course;
+
+    FG_LOG( FG_EVENT, FG_DEBUG, "Updating time" );
+
+    // get current Unix calendar time (in seconds)
+    warp += warp_delta;
+    cur_time = time(NULL) + warp;
+    FG_LOG( FG_EVENT, FG_DEBUG, 
+	    "  Current Unix calendar time = " << cur_time 
+	    << "  warp = " << warp << "  delta = " << warp_delta );
+
+    if ( warp_delta ) {
+	// time is changing so force an update
+	local_update_sky_and_lighting_params();
+    }
+
+    // get GMT break down for current time
+    gmt = gmtime(&cur_time);
+    FG_LOG( FG_EVENT, FG_DEBUG, 
+	    "  Current GMT = " << gmt->tm_mon+1 << "/" 
+	    << gmt->tm_mday << "/" << gmt->tm_year << " "
+	    << gmt->tm_hour << ":" << gmt->tm_min << ":" 
+	    << gmt->tm_sec );
+
+    // calculate modified Julian date
+    // t->mjd = cal_mjd ((int)(t->gmt->tm_mon+1), (double)t->gmt->tm_mday, 
+    //     (int)(t->gmt->tm_year + 1900));
+    cal_mjd ((int)(gmt->tm_mon+1), (double)gmt->tm_mday, 
+	     (int)(gmt->tm_year + 1900));
+
+    // add in partial day
+    mjd += (gmt->tm_hour / 24.0) + (gmt->tm_min / (24.0 * 60.0)) +
+	(gmt->tm_sec / (24.0 * 60.0 * 60.0));
+
+    // convert "back" to Julian date + partial day (as a fraction of one)
+    jd = mjd + MJD0;
+    FG_LOG( FG_EVENT, FG_DEBUG, "  Current Julian Date = " << jd );
+
+    // printf("  Current Longitude = %.3f\n", FG_Longitude * RAD_TO_DEG);
+
+    // Calculate local side real time
+    if ( gst_diff < -100.0 ) {
+	// first time through do the expensive calculation & cheap
+        // calculation to get the difference.
+	FG_LOG( FG_EVENT, FG_INFO, "  First time, doing precise gst" );
+	gst_precise = gst = sidereal_precise(0.00);
+	gst_course = sidereal_course(0.00);
+      
+	gst_diff = gst_precise - gst_course;
+
+	lst = sidereal_course(-(f->get_Longitude() * RAD_TO_DEG)) + gst_diff;
+    } else {
+	// course + difference should drift off very slowly
+	gst = sidereal_course( 0.00                              ) + gst_diff;
+	lst = sidereal_course( -(f->get_Longitude() * RAD_TO_DEG)) + gst_diff;
+    }
+    FG_LOG( FG_EVENT, FG_DEBUG,
+	    "  Current lon=0.00 Sidereal Time = " << gst );
+    FG_LOG( FG_EVENT, FG_DEBUG,
+	    "  Current LOCAL Sidereal Time = " << lst << " (" 
+	    << sidereal_precise(-(f->get_Longitude() * RAD_TO_DEG)) 
+	    << ") (diff = " << gst_diff << ")" );
+}
+
+
+/******************************************************************
+ * The following are some functions that were included as FGTime
+ * members, although they currenty don't make used of any of the
+ * class's variables. Maybe this'll change in the future
+ *****************************************************************/
 
 // Return time_t for Sat Mar 21 12:00:00 GMT
 //
@@ -218,7 +321,7 @@ long int fix_up_timezone( long int timezone_orig ) {
 // If you are having problems with incorrectly positioned astronomical
 // bodies, this is a really good place to start looking.
 
-time_t get_start_gmt(int year) {
+time_t FGTime::get_start_gmt(int year) {
     struct tm mt;
 
     // For now we assume that if daylight is not defined in
@@ -284,8 +387,21 @@ time_t get_start_gmt(int year) {
 #   endif // ! defined ( MK_TIME_IS_GMT )
 }
 
-static char*
-format_time( const struct tm* p, char* buf )
+// Fix up timezone if using ftime()
+long int FGTime::fix_up_timezone( long int timezone_orig ) 
+{
+#if !defined( HAVE_GETTIMEOFDAY ) && defined( HAVE_FTIME )
+    // ftime() needs a little extra help finding the current timezone
+    struct timeb current;
+    ftime(&current);
+    return( current.timezone * 60 );
+#else
+    return( timezone_orig );
+#endif
+}
+
+
+char* FGTime::format_time( const struct tm* p, char* buf )
 {
     sprintf( buf, "%d/%d/%2d %d:%02d:%02d", 
 	     p->tm_mon, p->tm_mday, p->tm_year,
@@ -293,106 +409,14 @@ format_time( const struct tm* p, char* buf )
     return buf;
 }
 
-// return a courser but cheaper estimate of sidereal time
-double sidereal_course(fgTIME *t, double lng) {
-    struct tm *gmt;
-    time_t start_gmt, now;
-    double diff, part, days, hours, lst;
-    char tbuf[64];
 
-    gmt = t->gmt;
-    now = t->cur_time;
-    start_gmt = get_start_gmt(gmt->tm_year);
-
-    FG_LOG( FG_EVENT, FG_DEBUG, "  COURSE: GMT = " << format_time(gmt, tbuf) );
-    FG_LOG( FG_EVENT, FG_DEBUG, "  March 21 noon (GMT) = " << start_gmt );
-
-    diff = (now - start_gmt) / (3600.0 * 24.0);
-    
-    FG_LOG( FG_EVENT, FG_DEBUG, 
-	    "  Time since 3/21/" << gmt->tm_year << " GMT = " << diff );
-
-    part = fmod(diff, 1.0);
-    days = diff - part;
-    hours = gmt->tm_hour + gmt->tm_min/60.0 + gmt->tm_sec/3600.0;
-
-    lst = (days - lng)/15.0 + hours - 12;
-
-    while ( lst < 0.0 ) {
-	lst += 24.0;
-    }
-
-    FG_LOG( FG_EVENT, FG_DEBUG,
-	    "  days = " << days << "  hours = " << hours << "  lon = " 
-	    << lng << "  lst = " << lst );
-
-    return(lst);
+// Force an update of the sky and lighting parameters
+void FGTime::local_update_sky_and_lighting_params( void ) {
+    // fgSunInit();
+    SolarSystem::theSolarSystem->rebuild();
+    cur_light_params.Update();
+    fgSkyColorsInit();
 }
 
 
-// Update time variables such as gmt, julian date, and sidereal time
-void fgTimeUpdate(FGInterface *f, fgTIME *t) {
-    double gst_precise, gst_course;
-
-    FG_LOG( FG_EVENT, FG_DEBUG, "Updating time" );
-
-    // get current Unix calendar time (in seconds)
-    t->warp += t->warp_delta;
-    t->cur_time = time(NULL) + t->warp;
-    FG_LOG( FG_EVENT, FG_DEBUG, 
-	    "  Current Unix calendar time = " << t->cur_time 
-	    << "  warp = " << t->warp << "  delta = " << t->warp_delta );
-
-    if ( t->warp_delta ) {
-	// time is changing so force an update
-	local_update_sky_and_lighting_params();
-    }
-
-    // get GMT break down for current time
-    t->gmt = gmtime(&t->cur_time);
-    FG_LOG( FG_EVENT, FG_DEBUG, 
-	    "  Current GMT = " << t->gmt->tm_mon+1 << "/" 
-	    << t->gmt->tm_mday << "/" << t->gmt->tm_year << " "
-	    << t->gmt->tm_hour << ":" << t->gmt->tm_min << ":" 
-	    << t->gmt->tm_sec );
-
-    // calculate modified Julian date
-    t->mjd = cal_mjd ((int)(t->gmt->tm_mon+1), (double)t->gmt->tm_mday, 
-	     (int)(t->gmt->tm_year + 1900));
-
-    // add in partial day
-    t->mjd += (t->gmt->tm_hour / 24.0) + (t->gmt->tm_min / (24.0 * 60.0)) +
-	   (t->gmt->tm_sec / (24.0 * 60.0 * 60.0));
-
-    // convert "back" to Julian date + partial day (as a fraction of one)
-    t->jd = t->mjd + MJD0;
-    FG_LOG( FG_EVENT, FG_DEBUG, "  Current Julian Date = " << t->jd );
-
-    // printf("  Current Longitude = %.3f\n", FG_Longitude * RAD_TO_DEG);
-
-    // Calculate local side real time
-    if ( t->gst_diff < -100.0 ) {
-	// first time through do the expensive calculation & cheap
-        // calculation to get the difference.
-      FG_LOG( FG_EVENT, FG_INFO, "  First time, doing precise gst" );
-      t->gst = gst_precise = sidereal_precise(t->mjd, 0.00);
-      gst_course = sidereal_course(t, 0.00);
-      t->gst_diff = gst_precise - gst_course;
-
-      t->lst =
-	  sidereal_course(t, -(f->get_Longitude() * RAD_TO_DEG)) + t->gst_diff;
-    } else {
-	// course + difference should drift off very slowly
-	t->gst = sidereal_course(t, 0.00) + t->gst_diff;
-	t->lst = sidereal_course(t, -(f->get_Longitude() * RAD_TO_DEG)) + 
-	    t->gst_diff;
-    }
-    FG_LOG( FG_EVENT, FG_DEBUG,
-	    "  Current lon=0.00 Sidereal Time = " << t->gst );
-    FG_LOG( FG_EVENT, FG_DEBUG,
-	    "  Current LOCAL Sidereal Time = " << t->lst << " (" 
-	    << sidereal_precise(t->mjd, -(f->get_Longitude() * RAD_TO_DEG)) 
-	    << ") (diff = " << t->gst_diff << ")" );
-}
-
-
+FGTime* FGTime::cur_time_params = 0;

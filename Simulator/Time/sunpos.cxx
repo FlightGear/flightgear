@@ -242,7 +242,7 @@ static void fgSunPositionGST(double gst, double *lon, double *lat) {
 // update the cur_time_params structure with the current sun position
 void fgUpdateSunPos( void ) {
     fgLIGHT *l;
-    fgTIME *t;
+    FGTime *t;
     FGView *v;
     MAT3vec nup, nsun, v0, surface_to_sun;
     Point3D p, rel_sunpos;
@@ -251,21 +251,21 @@ void fgUpdateSunPos( void ) {
     double ntmp;
 
     l = &cur_light_params;
-    t = &cur_time_params;
+    t = FGTime::cur_time_params;
     v = &current_view;
 
     FG_LOG( FG_EVENT, FG_INFO, "  Updating Sun position" );
 
     // (not sure why there was two)
     // fgSunPosition(t->cur_time, &l->sun_lon, &sun_gd_lat);
-    fgSunPositionGST(t->gst, &l->sun_lon, &sun_gd_lat);
+    fgSunPositionGST(t->getGst(), &l->sun_lon, &sun_gd_lat);
 
     fgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &l->sun_gc_lat);
 
     p = Point3D( l->sun_lon, l->sun_gc_lat, sl_radius );
     l->fg_sunpos = fgPolarToCart3d(p);
 
-    FG_LOG( FG_EVENT, FG_INFO, "    t->cur_time = " << t->cur_time );
+    FG_LOG( FG_EVENT, FG_INFO, "    t->cur_time = " << t->get_cur_time() );
     FG_LOG( FG_EVENT, FG_INFO, 
 	    "    Sun Geodetic lat = " << sun_gd_lat
 	    << " Geocentric lat = " << l->sun_gc_lat );

@@ -29,10 +29,11 @@
 #include <Time/sunpos.hxx>
 #include <Debug/logstream.hxx>
 #include <Time/light.hxx>
+#include <Main/options.hxx>
 #include "star.hxx"
 
 /*************************************************************************
- * Star::Star(fgTIME *t)
+ * Star::Star(FGTime *t)
  * Public constructor for class Star
  * Argument: The current time.
  * the hard coded orbital elements our sun are passed to 
@@ -40,7 +41,7 @@
  * note that the word sun is avoided, in order to prevent some compilation
  * problems on sun systems 
  ************************************************************************/
-Star::Star(fgTIME *t) :
+Star::Star(FGTime *t) :
   CelestialBody (0.000000,  0.0000000000,
 		 0.0000,    0.00000,
 		 282.9404,  4.7093500E-5,	
@@ -144,11 +145,11 @@ void Star::setTexture()
   //free(textureBuf);
 }
 /*************************************************************************
- * void Jupiter::updatePosition(fgTIME *t, Star *ourSun)
+ * void Jupiter::updatePosition(FGTime *t, Star *ourSun)
  * 
  * calculates the current position of our sun.
  *************************************************************************/
-void Star::updatePosition(fgTIME *t)
+void Star::updatePosition(FGTime *t)
 {
   double 
     actTime, eccAnom, 
@@ -232,27 +233,29 @@ void Star::newImage(void)
       xglRotatef(((RAD_TO_DEG * rightAscension)- 90.0), 0.0, 0.0, 1.0);
       xglRotatef((RAD_TO_DEG * declination), 1.0, 0.0, 0.0);
       xglTranslatef(0,60000,0);
-    
-      glEnable(GL_TEXTURE_2D);                                             // TEXTURE ENABLED
-      glEnable(GL_BLEND);                                                  // BLEND ENABLED
-  
-      //glEnable(GL_TEXTURE_2D);
-      //glEnable(GL_BLEND);
-      //glDisable(GL_LIGHTING);
-      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-      //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);  
-      glBindTexture(GL_TEXTURE_2D, sun_texid);
+      if (current_options.get_textures())
+	{
+	  glEnable(GL_TEXTURE_2D);                                             // TEXTURE ENABLED
+	  glEnable(GL_BLEND);                                                  // BLEND ENABLED
+	  
+	  //glEnable(GL_TEXTURE_2D);
+	  //glEnable(GL_BLEND);
+	  //glDisable(GL_LIGHTING);
+	  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	  //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);  
+	  glBindTexture(GL_TEXTURE_2D, sun_texid);
       
-      glBegin(GL_QUADS);
-      glTexCoord2f(0.0f, 0.0f); glVertex3f(-5000, 0.0, -5000);
-      glTexCoord2f(1.0f, 0.0f); glVertex3f( 5000, 0.0, -5000);
-      glTexCoord2f(1.0f, 1.0f); glVertex3f( 5000, 0.0,  5000);
-      glTexCoord2f(0.0f, 1.0f); glVertex3f(-5000, 0.0,  5000);
-      glEnd();
+	  glBegin(GL_QUADS);
+	  glTexCoord2f(0.0f, 0.0f); glVertex3f(-5000, 0.0, -5000);
+	  glTexCoord2f(1.0f, 0.0f); glVertex3f( 5000, 0.0, -5000);
+	  glTexCoord2f(1.0f, 1.0f); glVertex3f( 5000, 0.0,  5000);
+	  glTexCoord2f(0.0f, 1.0f); glVertex3f(-5000, 0.0,  5000);
+	  glEnd();
+	}
+      xglDisable(GL_TEXTURE_2D);
+      glDisable(GL_BLEND);
     }
     glPopMatrix();
-    xglDisable(GL_TEXTURE_2D);
-    glDisable(GL_BLEND);
     glPushMatrix();
     {
       xglRotatef(((RAD_TO_DEG * rightAscension)- 90.0), 0.0, 0.0, 1.0);
@@ -265,7 +268,3 @@ void Star::newImage(void)
     glDisable(GL_BLEND);                                                  // BLEND DISABLED  
   }
 }
-
-  
-  
-  

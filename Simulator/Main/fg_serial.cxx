@@ -231,23 +231,23 @@ static void send_nmea_out( fgIOCHANNEL *p ) {
     int deg;
     double min;
     FGInterface *f;
-    fgTIME *t;
-
-    // run once every two seconds
-    if ( p->last_time == cur_time_params.cur_time ) {
-	return;
-    }
-    p->last_time = cur_time_params.cur_time;
-    if ( cur_time_params.cur_time % 2 != 0 ) {
-	return;
-    }
+    FGTime *t;
 
     f = current_aircraft.fdm_state;
-    t = &cur_time_params;
+    t = FGTime::cur_time_params;
+
+    // run once every two seconds
+    if ( p->last_time == t->get_cur_time() ) {
+	return;
+    }
+    p->last_time = t->get_cur_time();
+    if ( t->get_cur_time() % 2 != 0 ) {
+	return;
+    }
 
     char utc[10];
     sprintf( utc, "%02d%02d%02d", 
-	     t->gmt->tm_hour, t->gmt->tm_min, t->gmt->tm_sec );
+	     t->getGmt()->tm_hour, t->getGmt()->tm_min, t->getGmt()->tm_sec );
 
     char lat[20];
     double latd = f->get_Latitude() * RAD_TO_DEG;
@@ -286,8 +286,8 @@ static void send_nmea_out( fgIOCHANNEL *p ) {
     sprintf( altitude_ft, "%02d", (int)f->get_Altitude() );
 
     char date[10];
-    sprintf( date, "%02d%02d%02d", 
-	     t->gmt->tm_mday, t->gmt->tm_mon+1, t->gmt->tm_year );
+    sprintf( date, "%02d%02d%02d", t->getGmt()->tm_mday, 
+	     t->getGmt()->tm_mon+1, t->getGmt()->tm_year );
 
     // $GPRMC,HHMMSS,A,DDMM.MMM,N,DDDMM.MMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E*XX
     sprintf( rmc, "GPRMC,%s,A,%s,%s,%s,%s,%s,0.000,E",
@@ -330,23 +330,23 @@ static void send_garmin_out( fgIOCHANNEL *p ) {
     int deg;
     double min;
     FGInterface *f;
-    fgTIME *t;
+    FGTime *t;
+
+    f = current_aircraft.fdm_state;
+    t = FGTime::cur_time_params;
 
     // run once per second
-    if ( p->last_time == cur_time_params.cur_time ) {
+    if ( p->last_time == t->get_cur_time() ) {
 	return;
     }
-    p->last_time = cur_time_params.cur_time;
-    if ( cur_time_params.cur_time % 2 != 0 ) {
+    p->last_time = t->get_cur_time();
+    if ( t->get_cur_time() % 2 != 0 ) {
 	return;
     }
     
-    f = current_aircraft.fdm_state;
-    t = &cur_time_params;
-
     char utc[10];
     sprintf( utc, "%02d%02d%02d", 
-	     t->gmt->tm_hour, t->gmt->tm_min, t->gmt->tm_sec );
+	     t->getGmt()->tm_hour, t->getGmt()->tm_min, t->getGmt()->tm_sec );
 
     char lat[20];
     double latd = f->get_Latitude() * RAD_TO_DEG;
@@ -385,8 +385,8 @@ static void send_garmin_out( fgIOCHANNEL *p ) {
     sprintf( altitude_ft, "%02d", (int)f->get_Altitude() );
 
     char date[10];
-    sprintf( date, "%02d%02d%02d", 
-	     t->gmt->tm_mday, t->gmt->tm_mon+1, t->gmt->tm_year );
+    sprintf( date, "%02d%02d%02d", t->getGmt()->tm_mday, 
+	     t->getGmt()->tm_mon+1, t->getGmt()->tm_year );
 
     // $GPRMC,HHMMSS,A,DDMM.MMM,N,DDDMM.MMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E*XX
     sprintf( rmc, "GPRMC,%s,A,%s,%s,%s,%s,%s,000.0,E",
@@ -463,5 +463,3 @@ void fgSerialProcess() {
 	}
     }
 }
-
-

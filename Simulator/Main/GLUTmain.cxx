@@ -225,7 +225,7 @@ static void fgUpdateInstrViewParams( void ) {
 // Update all Visuals (redraws anything graphics related)
 static void fgRenderFrame( void ) {
     fgLIGHT *l = &cur_light_params;
-    fgTIME *t = &cur_time_params;
+    FGTime *t = FGTime::cur_time_params;
     FGView *v = &current_view;
 
     double angle;
@@ -298,7 +298,7 @@ static void fgRenderFrame( void ) {
 	xglTranslatef( view_pos.x(), view_pos.y(), view_pos.z() );
 	// Rotate based on gst (sidereal time)
 	// note: constant should be 15.041085, Curt thought it was 15
-	angle = t->gst * 15.041085;
+	angle = t->getGst() * 15.041085;
 	// printf("Rotating astro objects by %.2f degrees\n",angle);
 	xglRotatef( angle, 0.0, 0.0, -1.0 );
 
@@ -363,7 +363,7 @@ static void fgRenderFrame( void ) {
 void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
     FGInterface *f = current_aircraft.fdm_state;
     fgLIGHT *l = &cur_light_params;
-    fgTIME *t = &cur_time_params;
+    FGTime *t = FGTime::cur_time_params;
     FGView *v = &current_view;
     int i;
 
@@ -372,7 +372,7 @@ void fgUpdateTimeDepCalcs(int multi_loop, int remainder) {
 	multi_loop = DEFAULT_MULTILOOP;
     }
 
-    if ( !t->pause ) {
+    if ( !t->getPause() ) {
 	// run Autopilot system
 	fgAPRun();
 
@@ -442,7 +442,7 @@ static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
 // for the next move and update the display?
 static void fgMainLoop( void ) {
     FGInterface *f;
-    fgTIME *t;
+    FGTime *t;
     static long remainder = 0;
     long elapsed, multi_loop;
     // int i;
@@ -451,7 +451,7 @@ static void fgMainLoop( void ) {
     static int frames = 0;
 
     f = current_aircraft.fdm_state;
-    t = &cur_time_params;
+    t = FGTime::cur_time_params;
 
     FG_LOG( FG_ALL, FG_DEBUG, "Running Main Loop");
     FG_LOG( FG_ALL, FG_DEBUG, "======= ==== ====");
@@ -500,7 +500,7 @@ static void fgMainLoop( void ) {
 	   f->get_Altitude() * FEET_TO_METER); */
 
     // update "time"
-    fgTimeUpdate(f, t);
+    t->update(f);
 
     // Get elapsed time (in usec) for this past frame
     elapsed = fgGetTimeInterval();
@@ -509,13 +509,13 @@ static void fgMainLoop( void ) {
 	    << ", previous remainder is = " << remainder );
 
     // Calculate frame rate average
-    if ( (t->cur_time != last_time) && (last_time > 0) ) {
+    if ( (t->get_cur_time() != last_time) && (last_time > 0) ) {
 	general.set_frame_rate( frames );
 	FG_LOG( FG_ALL, FG_DEBUG, 
 		"--> Frame rate is = " << general.get_frame_rate() );
 	frames = 0;
     }
-    last_time = t->cur_time;
+    last_time = t->get_cur_time();
     ++frames;
 
     /* old fps calculation
@@ -995,5 +995,3 @@ int main( int argc, char **argv ) {
     // we never actually get here ... but just in case ... :-)
     return(0);
 }
-
-

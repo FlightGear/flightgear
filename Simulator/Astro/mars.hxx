@@ -31,8 +31,8 @@
 class Mars : public CelestialBody
 {
 public:
-  Mars ( fgTIME *t);
-  void updatePosition(fgTIME *t, Star *ourSun);
+  Mars ( FGTime *t);
+  void updatePosition(FGTime *t, Star *ourSun);
 };
 
 #endif // _MARS_HXX_

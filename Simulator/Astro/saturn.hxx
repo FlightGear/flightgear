@@ -31,8 +31,8 @@
 class Saturn : public CelestialBody
 {
 public:
-  Saturn ( fgTIME *t);
-  void updatePosition(fgTIME *t, Star *ourSun);
+  Saturn ( FGTime *t);
+  void updatePosition(FGTime *t, Star *ourSun);
 };
 
 #endif // _SATURN_HXX_

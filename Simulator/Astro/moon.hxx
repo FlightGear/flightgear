@@ -46,9 +46,9 @@ private:
   
   void setHalo();
 public:
-  Moon ( fgTIME *t);
+  Moon ( FGTime *t);
   ~Moon();
-  void updatePosition(fgTIME *t, Star *ourSun);
+  void updatePosition(FGTime *t, Star *ourSun);
   void newImage();
 };
 

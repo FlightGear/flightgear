@@ -31,8 +31,8 @@
 class Mercury : public CelestialBody
 {
 public:
-  Mercury ( fgTIME *t);
-  void updatePosition(fgTIME *t, Star* ourSun);
+  Mercury ( FGTime *t);
+  void updatePosition(FGTime *t, Star* ourSun);
 };
 
 #endif // _MERURY_HXX_

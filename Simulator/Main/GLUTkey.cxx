@@ -69,14 +69,14 @@ static void local_update_sky_and_lighting_params( void ) {
 // Handle keyboard events
 void GLUTkey(unsigned char k, int x, int y) {
     FGInterface *f;
-    fgTIME *t;
+    FGTime *t;
     FGView *v;
     FGWeather *w;
     float fov, tmp;
     static bool winding_ccw = true;
 
     f = current_aircraft.fdm_state;
-    t = &cur_time_params;
+    t = FGTime::cur_time_params;
     v = &current_view;
     w = &current_weather;
 
@@ -141,11 +141,11 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    fgHUDInit2(&current_aircraft);
 	    return;
 	case 77: // M key
-	    t->warp -= 60;
+	    t->adjust_warp(-60);
 	    local_update_sky_and_lighting_params();
 	    return;
 	case 84: // T key
-	    t->warp_delta -= 30;
+	    t->adjust_warp_delta(-30);
 	    local_update_sky_and_lighting_params();
 	    return;
 	case 87: // W key
@@ -248,11 +248,11 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    fgHUDInit(&current_aircraft);  // normal HUD
 	    return;
 	case 109: // m key
-	    t->warp += 60;
+	    t->adjust_warp (+60);
 	    local_update_sky_and_lighting_params();
 	    return;
 	case 112: // p key
-	    t->pause = !t->pause;
+	    t->togglePauseMode();
 	    // printf position and attitude information
 	    FG_LOG( FG_INPUT, FG_INFO,
 		    "Lon = " << f->get_Longitude() * RAD_TO_DEG
@@ -264,7 +264,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 		    << "  Pitch = " << f->get_Theta() * RAD_TO_DEG );
 	    return;
 	case 116: // t key
-	    t->warp_delta += 30;
+	    t->adjust_warp_delta (+30);
 	    local_update_sky_and_lighting_params();
 	    return;
 	case 120: // X key

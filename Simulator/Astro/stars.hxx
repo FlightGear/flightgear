@@ -39,8 +39,7 @@ int fgStarsInit( void );
 // Draw the Stars
 void fgStarsRender( void );
 
-// [no longer used?] extern struct OrbElements pltOrbElements[9];
-extern fgTIME cur_time_params;
+// [no longer used?] extern FGTime cur_time_params;
 
 
 #endif // _STARS_HXX

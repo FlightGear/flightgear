@@ -41,9 +41,9 @@ private:
 
   void setTexture();
 public:
-  Star (fgTIME *t);
+  Star (FGTime *t);
   ~Star();
-  void updatePosition(fgTIME *t);
+  void updatePosition(FGTime *t);
   double getM();
   double getw();
   //double getLon();

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-WINDOW=NO
+WINDOW=YES
 
 if [ $WINDOW = "YES" ]; then
     # in a window (slow hack)

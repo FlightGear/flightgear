@@ -29,6 +29,7 @@
 
 #include <Debug/logstream.hxx>
 #include <Objects/texload.h>
+#include <Main/options.hxx>
 
 #ifdef __BORLANDC__
 #  define exception c_exception
@@ -37,14 +38,14 @@
 
 
 /*************************************************************************
- * Moon::Moon(fgTIME *t)
+ * Moon::Moon(FGTime *t)
  * Public constructor for class Moon. Initializes the orbital elements and 
  * sets up the moon texture.
  * Argument: The current time.
  * the hard coded orbital elements for Moon are passed to 
  * CelestialBody::CelestialBody();
  ************************************************************************/
-Moon::Moon(fgTIME *t) :
+Moon::Moon(FGTime *t) :
   CelestialBody(125.1228, -0.0529538083,
 		5.1454,    0.00000,
 		318.0634,  0.1643573223,
@@ -184,12 +185,12 @@ void Moon::setHalo()
 
 
 /*****************************************************************************
- * void Moon::updatePosition(fgTIME *t, Star *ourSun)
+ * void Moon::updatePosition(FGTime *t, Star *ourSun)
  * this member function calculates the actual topocentric position (i.e.) 
  * the position of the moon as seen from the current position on the surface
  * of the moon. 
  ****************************************************************************/
-void Moon::updatePosition(fgTIME *t, Star *ourSun)
+void Moon::updatePosition(FGTime *t, Star *ourSun)
 {
   double 
     eccAnom, ecl, actTime,
@@ -279,7 +280,7 @@ void Moon::updatePosition(fgTIME *t, Star *ourSun)
   if (geoRa < 0)
     geoRa += (2*FG_PI);
   
-  HA = t->lst - (3.8197186 * geoRa);
+  HA = t->getLst() - (3.8197186 * geoRa);
   g = atan (tan(gclat) / cos ((HA / 3.8197186)));
   rightAscension = geoRa - mpar * rho * cos(gclat) * sin(HA) / cos (geoDec);
   declination = geoDec - mpar * rho * sin (gclat) * sin (g - geoDec) / sin(g);
@@ -341,19 +342,22 @@ void Moon::newImage()
 		"Ra = (" << (RAD_TO_DEG *rightAscension) 
 		<< "), Dec= (" << (RAD_TO_DEG *declination) << ")" );
 	xglTranslatef(0.0, 58600.0, 0.0);
-	
-	glEnable(GL_TEXTURE_2D);                                             // TEXTURE ENABLED
-	glEnable(GL_BLEND);                                                  // BLEND ENABLED
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);  
-	glBindTexture(GL_TEXTURE_2D, moon_halotexid);
-	
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(-5000, 0.0, -5000);
-	glTexCoord2f(1.0f, 0.0f); glVertex3f( 5000, 0.0, -5000);
-	glTexCoord2f(1.0f, 1.0f); glVertex3f( 5000, 0.0,  5000);
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(-5000, 0.0,  5000);
-	glEnd();
+	glEnable(GL_BLEND);  // BLEND ENABLED
+
+	if (current_options.get_textures())
+	  {
+	    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	    glEnable(GL_TEXTURE_2D);                                             // TEXTURE ENABLED
+	    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);  
+	    glBindTexture(GL_TEXTURE_2D, moon_halotexid);
+	  
+	    glBegin(GL_QUADS);
+	    glTexCoord2f(0.0f, 0.0f); glVertex3f(-5000, 0.0, -5000);
+	    glTexCoord2f(1.0f, 0.0f); glVertex3f( 5000, 0.0, -5000);
+	    glTexCoord2f(1.0f, 1.0f); glVertex3f( 5000, 0.0,  5000);
+	    glTexCoord2f(0.0f, 1.0f); glVertex3f(-5000, 0.0,  5000);
+	    glEnd();
+	  }
 	
 	xglEnable(GL_LIGHTING);                                                // LIGHTING ENABLED
 	xglEnable( GL_LIGHT0 );
@@ -368,10 +372,12 @@ void Moon::newImage()
 	glBlendFunc(GL_ONE, GL_ONE);
 	
 	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); 
-	glBindTexture(GL_TEXTURE_2D, moon_texid);                         
-	//glDisable(GL_LIGHTING);                                               // LIGHTING DISABLED
-	
-	gluQuadricTexture(moonObject, GL_TRUE );   
+	if (current_options.get_textures())
+	  {
+	    glBindTexture(GL_TEXTURE_2D, moon_texid);                         
+	    //glDisable(GL_LIGHTING);                                               // LIGHTING DISABLED
+	    gluQuadricTexture(moonObject, GL_TRUE );   
+	  }
 	gluSphere(moonObject,  moonSize, 12, 12 );
 	glDisable(GL_TEXTURE_2D);                                             // TEXTURE DISABLED
 	glDisable(GL_BLEND);                                                  // BLEND DISABLED
