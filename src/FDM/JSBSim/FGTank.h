@@ -78,6 +78,9 @@ public:
   bool GetSelected(void) {return Selected;}
   float GetPctFull(void) {return PctFull;}
   float GetContents(void) {return Contents;}
+  float inline GetX(void) {return X;}
+  float inline GetY(void) {return Y;}
+  float inline GetZ(void) {return Z;}
 
   enum TankType {ttUNKNOWN, ttFUEL, ttOXIDIZER};
   

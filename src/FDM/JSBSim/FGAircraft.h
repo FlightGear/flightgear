@@ -167,7 +167,9 @@ private:
   float Moments[3];
   float Forces[3];
   string AircraftName;
-  float Ixx, Iyy, Izz, Ixz, EmptyMass, Mass;
+  float baseIxx, baseIyy, baseIzz, baseIxz, EmptyMass, Mass;
+  float Ixx, Iyy, Izz, Ixz;
+  float baseXcg, baseYcg, baseZcg;
   float Xcg, Ycg, Zcg;
   float Xep, Yep, Zep;
   float rho, qbar, Vt;

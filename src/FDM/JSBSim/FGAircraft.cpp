@@ -190,24 +190,24 @@ bool FGAircraft::LoadAircraft(string aircraft_path, string engine_path, string f
 				aircraftfile >> cbar;
 				cout << "Aircraft Chord: " << cbar << endl;
 			} else if (holding_string == "AC_IXX") {
-				aircraftfile >> Ixx;
-				cout << "Aircraft Ixx: " << Ixx << endl;
+				aircraftfile >> baseIxx;
+				cout << "Aircraft Base Ixx: " << baseIxx << endl;
 			} else if (holding_string == "AC_IYY") {
-				aircraftfile >> Iyy;
-				cout << "Aircraft Iyy: " << Iyy << endl;
+				aircraftfile >> baseIyy;
+				cout << "Aircraft Base Iyy: " << baseIyy << endl;
 			} else if (holding_string == "AC_IZZ") {
-				aircraftfile >> Izz;
-				cout << "Aircraft Izz: " << Izz << endl;
+				aircraftfile >> baseIzz;
+				cout << "Aircraft Base Izz: " << baseIzz << endl;
 			} else if (holding_string == "AC_IXZ") {
-				aircraftfile >> Ixz;
-				cout << "Aircraft Ixz: " << Ixz << endl;
+				aircraftfile >> baseIxz;
+				cout << "Aircraft Base Ixz: " << baseIxz << endl;
 			} else if (holding_string == "AC_EMPTYWT") {
 				aircraftfile >> EmptyWeight;
 				EmptyMass = EmptyWeight / GRAVITY;
 				cout << "Aircraft Empty Weight: " << EmptyWeight << endl;
 			} else if (holding_string == "AC_CGLOC") {
-				aircraftfile >> Xcg >> Ycg >> Zcg;
-				cout << "Aircraft C.G.: " << Xcg << " " << Ycg << " " << Zcg << endl;
+				aircraftfile >> baseXcg >> baseYcg >> baseZcg;
+				cout << "Aircraft Base C.G.: " << baseXcg << " " << baseYcg << " " << baseZcg << endl;
 			} else if (holding_string == "AC_EYEPTLOC") {
 				aircraftfile >> Xep >> Yep >> Zep;
 				cout << "Pilot Eyepoint: " << Xep << " " << Yep << " " << Zep << endl;
@@ -319,6 +319,9 @@ bool FGAircraft::Run(void)
 
 void FGAircraft::MassChange()
 {
+  float Xt, Xw, Yt, Yw, Zt, Zw, Tw;
+  float IXXt, IYYt, IZZt, IXZt;
+
   // UPDATE TANK CONTENTS
   //
   // For each engine, cycle through the tanks and draw an equal amount of
@@ -372,6 +375,38 @@ void FGAircraft::MassChange()
     Weight += Tank[t]->GetContents();
 
   Mass = Weight / GRAVITY;
+
+  // Calculate new CG here.
+
+  Xt = Yt = Zt = 0;
+  Xw = Yw = Zw = 0;
+  for (int t=0; t<numTanks; t++) {
+    Xt += Tank[t]->GetX()*Tank[t]->GetContents();
+    Yt += Tank[t]->GetY()*Tank[t]->GetContents();
+    Zt += Tank[t]->GetZ()*Tank[t]->GetContents();
+
+    Tw += Tank[t]->GetContents();
+  }
+
+  Xcg = (Xt + EmptyWeight*baseXcg) / (Tw + EmptyWeight);
+  Ycg = (Yt + EmptyWeight*baseYcg) / (Tw + EmptyWeight);
+  Zcg = (Zt + EmptyWeight*baseZcg) / (Tw + EmptyWeight);
+
+  // Calculate new moments of inertia here
+
+  IXXt = IYYt = IZZt = IXZt = 0.0;
+  for (int t=0; t<numTanks; t++) {
+    IXXt += ((Tank[t]->GetX()-Xcg)/12.0)*((Tank[t]->GetX() - Xcg)/12.0)*Tank[t]->GetContents()/GRAVITY;
+    IYYt += ((Tank[t]->GetY()-Ycg)/12.0)*((Tank[t]->GetY() - Ycg)/12.0)*Tank[t]->GetContents()/GRAVITY;
+    IZZt += ((Tank[t]->GetZ()-Zcg)/12.0)*((Tank[t]->GetZ() - Zcg)/12.0)*Tank[t]->GetContents()/GRAVITY;
+    IXZt += ((Tank[t]->GetX()-Xcg)/12.0)*((Tank[t]->GetZ() - Zcg)/12.0)*Tank[t]->GetContents()/GRAVITY;
+  }
+
+  Ixx = baseIxx + IXXt;
+  Iyy = baseIyy + IYYt;
+  Izz = baseIzz + IZZt;
+  Ixz = baseIxz + IXZt;
+
 }
 
 
