@@ -143,7 +143,7 @@ ostream& operator<< ( ostream& out, const FGPhysicalProperties2D& p )
 inline double F(const WeatherPrecision factor, const WeatherPrecision a, const WeatherPrecision b, const WeatherPrecision r, const WeatherPrecision x)
 {
     const double c = 1.0 / (-b + a * r);
-    return factor * c * ( 1.0 / (r + x) + a * c * log(abs((r + x) * (b + a * x))) );
+    return factor * c * ( 1.0 / (r + x) + a * c * log(fabs((r + x) * (b + a * x))) );
 }
 
 WeatherPrecision FGPhysicalProperties::AirPressureAt(const WeatherPrecision x) const
