@@ -37,6 +37,8 @@ HISTORY
 				suggestion
 19.10.1999 Christian Mayer	change to use PLIB's sg instead of Point[2/3]D
 				and lots of wee code cleaning
+17.01.2000 Christian Mayer	Added conversion routines make it easier for
+				JSBsim to use the weather database.
 *****************************************************************************/
 
 /****************************************************************************/
@@ -139,39 +141,69 @@ inline WeatherPrecision wb(const WeatherPrecision t, const WeatherPrecision p, c
 
 }
 
-inline WeatherPrecision Celsius(const WeatherPrecision celsius)
+inline WeatherPrecision Celsius		    (const WeatherPrecision celsius)
 {
     return celsius + 273.16;				//Kelvin
 }
 
-inline WeatherPrecision Fahrenheit(const WeatherPrecision fahrenheit)
+inline WeatherPrecision Fahrenheit	    (const WeatherPrecision fahrenheit)
 {
     return (fahrenheit * 9.0 / 5.0) + 32.0 + 273.16;	//Kelvin
 }
 
-inline WeatherPrecision Kelvin2Celsius(const WeatherPrecision kelvin)
+inline WeatherPrecision Kelvin2Celsius	    (const WeatherPrecision kelvin)
 {
     return kelvin - 273.16;				//Celsius
 }
 
-inline WeatherPrecision Kelvin2Fahrenheit(const WeatherPrecision kelvin)
+inline WeatherPrecision Kelvin2Fahrenheit   (const WeatherPrecision kelvin)
 {
-    return ((kelvin - 273.16) * 9.0 / 5.0) + 32.0;	 //Fahrenheit
+    return ((kelvin - 273.16) * 9.0 / 5.0) + 32.0;	//Fahrenheit
 }
 
-inline WeatherPrecision Celsius2Fahrenheit(const WeatherPrecision celsius)
+inline WeatherPrecision Celsius2Fahrenheit  (const WeatherPrecision celsius)
 {
-    return (celsius * 9.0 / 5.0) + 32.0;		 //Fahrenheit
+    return (celsius * 9.0 / 5.0) + 32.0;		//Fahrenheit
 }
 
-inline WeatherPrecision Fahrenheit2Celsius(const WeatherPrecision fahrenheit)
+inline WeatherPrecision Fahrenheit2Celsius  (const WeatherPrecision fahrenheit)
 {
     return (fahrenheit - 32.0) * 5.0 / 9.0;		//Celsius
 }
 
-inline WeatherPrecision Torr2Pascal(const WeatherPrecision torr)
+inline WeatherPrecision Torr2Pascal	    (const WeatherPrecision torr)
 {
-    return (101325.0/760.0)*torr;
+    return (101325.0/760.0)*torr;			//Pascal
+}
+
+inline WeatherPrecision Rankine2Kelvin	    (const WeatherPrecision Rankine)
+{
+    return (5.0 / 9.0) * Rankine;			//Kelvin
+}
+
+inline WeatherPrecision JSBsim2SIdensity    (const WeatherPrecision JSBsim)
+{
+    return JSBsim / 0.0019403203;			//kg / cubic metres
+}
+
+inline WeatherPrecision psf2Pascal	    (const WeatherPrecision psf)
+{
+    return psf / 0.0020885434;				//lbs / square foot (used in JSBsim)
+}
+
+inline WeatherPrecision Kelvin2Rankine	    (const WeatherPrecision kelvin)
+{
+    return (9.0 / 5.0) * kelvin;			//Rankine (used in JSBsim)
+}
+
+inline WeatherPrecision SIdensity2JSBsim    (const WeatherPrecision SIdensity)
+{
+    return 0.0019403203 * SIdensity;			//slug / cubic feet (used in JSBsim)
+}
+
+inline WeatherPrecision Pascal2psf	    (const WeatherPrecision Pascal)
+{
+    return 0.0020885434 * Pascal;			//lbs / square feet (used in JSBsim)
 }
 
 /****************************************************************************/
