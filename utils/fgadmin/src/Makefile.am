@@ -6,7 +6,9 @@ fgadmin_SOURCES = \
 	fgadmin.cxx fgadmin.h \
 	fgadmin_funcs.cxx \
 	main.cxx \
-	tar_utils.cxx tar_utils.hxx
+	untarka.c untarka.h
 
 fgadmin_LDADD = -lsgmisc -lplibul -ltar -lz
 
+fgadmin.cxx fgadmin.h: fgadmin.fl
+	fluid -c fgadmin.fl

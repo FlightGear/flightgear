@@ -20,7 +20,7 @@ class FGAdminUI {open selected
   } {
     Fl_Window main_window {
       label {FlightGear Admin Wizard} open
-      xywh {186 521 465 435} type Double visible
+      xywh {187 544 465 435} type Double visible
     } {
       Fl_Button quit_b {
         label Quit

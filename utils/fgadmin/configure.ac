@@ -10,7 +10,7 @@ dnl Require at least automake 2.52
 AC_PREREQ(2.52)
 
 dnl Initialize the automake stuff
-AM_INIT_AUTOMAKE(fgadmin, 1.0)
+AM_INIT_AUTOMAKE(fgadmin, 1.0.0)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -162,6 +162,8 @@ if test "x$ac_cv_header_zlib_h" != "xyes"; then
     echo "configure aborted."
     echo
     exit
+else
+    AC_DEFINE([HAVE_ZLIB], 1, [Define to enable gz compressed tar archives])
 fi
 
 dnl Check for system installed zlib

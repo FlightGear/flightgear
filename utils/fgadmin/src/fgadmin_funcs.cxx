@@ -25,13 +25,17 @@
 #include <string>
 #include <vector>
 
+#ifdef _MSC_VER
+#  include <direct.h>
+#endif
+
 #include <FL/Fl_File_Chooser.H>
 #include <plib/ul.h>
 
 #include <simgear/misc/sg_path.hxx>
 
 #include "fgadmin.h"
-#include "tar_utils.hxx"
+#include "untarka.h"
 
 using std::cout;
 using std::endl;
@@ -221,13 +225,13 @@ void FGAdminUI::install_selected() {
     char *f;
 
     // traverse install box and install each item
-    for ( int i = 0; i < install_box->nitems(); ++i ) {
+    for ( int i = 0; i <= install_box->nitems(); ++i ) {
         if ( install_box->checked( i ) ) {
             f = install_box->text( i );
             SGPath file( source );
             file.append( f );
             cout << "installing " << file.str() << endl;
-            tarextract( (char *)file.c_str(), (char *)dest.c_str(), true );
+            tarextract( (char *)file.c_str(), (char *)dest.c_str(), true, 0 );
         }
     }
 
@@ -263,7 +267,7 @@ void FGAdminUI::remove_selected() {
     char *f;
 
     // traverse remove box and recursively remove each item
-    for ( int i = 0; i < remove_box->nitems(); ++i ) {
+    for ( int i = 0; i <= remove_box->nitems(); ++i ) {
         if ( remove_box->checked( i ) ) {
             f = remove_box->text( i );
             SGPath dir( dest );
