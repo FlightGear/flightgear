@@ -688,8 +688,8 @@ ssgBranch* FGTileEntry::gen_runway_lights( ssgVertexArray *points,ssgVertexArray
 // is intended to spread the load of freeing a complex tile out over
 // several frames.
 static int fgPartialFreeSSGtree( ssgBranch *b, int n ) {
-    ssgDeRefDelete( b );
-    return 0;
+    // ssgDeRefDelete( b );
+    // return 0;
 
     int num_deletes = 0;
 
@@ -704,17 +704,13 @@ static int fgPartialFreeSSGtree( ssgBranch *b, int n ) {
                 if ( n < 0 ) {
                     break;
                 }
-            } else {
-                b->removeKid(i);
+            }
+            // remove the kid if it is now empty
+            if ( kid->getNumKids() == 0 ) {
+                b->removeKid( kid );
                 num_deletes++;
                 n--;
             }
-        }
-        // remove the parent if it is empty
-        if ( b->getNumKids() == 0 ) {
-            ssgDeRefDelete( b );
-            num_deletes++;
-            n--;
         }
     }
 
@@ -765,6 +761,7 @@ bool FGTileEntry::free_tile() {
         // disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING terra_transform" );
         if ( fgPartialFreeSSGtree( terra_transform, delete_size ) == 0 ) {
+            ssgDeRefDelete( terra_transform );
             free_tracker |= TERRA_NODE;
         }
     } else if ( !(free_tracker & GROUND_LIGHTS) && gnd_lights_transform ) {
@@ -772,6 +769,7 @@ bool FGTileEntry::free_tile() {
         // disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING gnd_lights_transform" );
         if ( fgPartialFreeSSGtree( gnd_lights_transform, delete_size ) == 0 ) {
+            ssgDeRefDelete( gnd_lights_transform );
             free_tracker |= GROUND_LIGHTS;
         }
     } else if ( !(free_tracker & RWY_LIGHTS) && rwy_lights_transform ) {
@@ -779,6 +777,7 @@ bool FGTileEntry::free_tile() {
 	// disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING rwy_lights_transform" );
 	if ( fgPartialFreeSSGtree( rwy_lights_transform, delete_size ) == 0 ) {
+            ssgDeRefDelete( rwy_lights_transform );
             free_tracker |= RWY_LIGHTS;
         }
     } else if ( !(free_tracker & LIGHTMAPS) && lightmaps_transform ) {
@@ -787,6 +786,7 @@ bool FGTileEntry::free_tile() {
         // disconnected from the scene graph)
         SG_LOG( SG_TERRAIN, SG_DEBUG, "FREEING lightmaps_transform" );
 	if ( fgPartialFreeSSGtree( lightmaps_transform, delete_size ) == 0 ) {
+            ssgDeRefDelete( lightmaps_transform );
             free_tracker |= LIGHTMAPS;
         }
     } else {
@@ -1444,12 +1444,12 @@ FGTileEntry::add_ssg_nodes( ssgBranch* terrain_branch,
 void
 FGTileEntry::disconnect_ssg_nodes()
 {
-    SG_LOG( SG_TERRAIN, SG_INFO, "disconnecting ssg nodes" );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "disconnecting ssg nodes" );
 
     if ( ! loaded ) {
-        SG_LOG( SG_TERRAIN, SG_INFO, "removing a not-fully loaded tile!" );
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "removing a not-fully loaded tile!" );
     } else {
-        SG_LOG( SG_TERRAIN, SG_INFO, "removing a fully loaded tile!  terra_transform = " << terra_transform );
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "removing a fully loaded tile!  terra_transform = " << terra_transform );
     }
         
     // find the terrain branch parent

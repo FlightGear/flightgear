@@ -144,7 +144,7 @@ bool FGNewCache::make_space() {
                 }
 
 	    } else {
-                SG_LOG( SG_TERRAIN, SG_INFO, "loaded = " << e->is_loaded()
+                SG_LOG( SG_TERRAIN, SG_DEBUG, "loaded = " << e->is_loaded()
                         << " pending models = " << e->get_pending_models()
                         << " time stamp = " << e->get_timestamp() );
             }
@@ -153,9 +153,9 @@ bool FGNewCache::make_space() {
 	// If we made it this far, then there were no open cache entries.
 	// We will instead free the oldest cache entry and return true
         
-        SG_LOG( SG_TERRAIN, SG_INFO, "    min_time = " << min_time );
-        SG_LOG( SG_TERRAIN, SG_INFO, "    index = " << max_index );
-        SG_LOG( SG_TERRAIN, SG_INFO, "    max_time = " << max_time );
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "    min_time = " << min_time );
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "    index = " << max_index );
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "    max_time = " << max_time );
 	if ( max_index >= 0 ) {
 	    entry_free( max_index );
 	    return true;
