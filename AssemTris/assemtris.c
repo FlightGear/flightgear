@@ -36,6 +36,14 @@
 #include <Bucket/bucketutils.h>
 
 
+/*
+#define OFFSET_LON 0.1
+#define OFFSET_LAT 0.1
+*/
+
+#define OFFSET_LON 0.0
+#define OFFSET_LAT 0.0
+
 int nodecount = 0;
 int excount = 0;
 
@@ -123,8 +131,8 @@ void read_extra_nodes(char *exfile) {
 	    printf("(extra) %d %.2f %.2f %.2f\n", 
 		    i, exnodes[i][0], exnodes[i][1], exnodes[i][2]);
 	}
+        fclose(fd);
     }
-    fclose(fd);
 }
 
 
@@ -403,35 +411,35 @@ void build_node_list(char *basename, char *basepath) {
     read_extra_nodes(exfile);
 
     ne = my_open(basename, basepath, ".ne");
-    read_nodes(ne, 0.1, 0.1);
+    read_nodes(ne, OFFSET_LON, OFFSET_LAT);
     fclose(ne);
 
     nw = my_open(basename, basepath, ".nw");
-    read_nodes(nw, -0.1, 0.1);
+    read_nodes(nw, -1.0 * OFFSET_LON, OFFSET_LAT);
     fclose(nw);
 
     se = my_open(basename, basepath, ".se");
-    read_nodes(se, 0.1, -0.1);
+    read_nodes(se, OFFSET_LON, -1.0 * OFFSET_LAT);
     fclose(se);
 
     sw = my_open(basename, basepath, ".sw");
-    read_nodes(sw, -0.1, -0.1);
+    read_nodes(sw, -1.0 * OFFSET_LON, -1.0 * OFFSET_LAT);
     fclose(sw);
 
     north = my_open(basename, basepath, ".north");
-    read_nodes(north, 0.0, 0.1);
+    read_nodes(north, 0.0, OFFSET_LAT);
     fclose(north);
 
     south = my_open(basename, basepath, ".south");
-    read_nodes(south, 0.0, -0.1);
+    read_nodes(south, 0.0, -1.0 * OFFSET_LAT);
     fclose(south);
 
     east = my_open(basename, basepath, ".east");
-    read_nodes(east, 0.1, 0.0);
+    read_nodes(east, OFFSET_LON, 0.0);
     fclose(east);
 
     west = my_open(basename, basepath, ".west");
-    read_nodes(west, -0.1, 0.0);
+    read_nodes(west, -1.0 * OFFSET_LON, 0.0);
     fclose(west);
 
     body = my_open(basename, basepath, ".body");
@@ -531,9 +539,14 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.11  1998/08/06 12:47:59  curt
-/* Removed overlap in tiles as a test.
+/* Revision 1.12  1998/09/09 16:24:51  curt
+/* Fixed a bug in the handling of exclude files which was causing
+/*   a crash by calling fclose() on an invalid file handle.
+/* Removed overlapping offsets.
 /*
+ * Revision 1.11  1998/08/06 12:47:59  curt
+ * Removed overlap in tiles as a test.
+ *
  * Revision 1.10  1998/07/21 04:34:20  curt
  * Mods to handle extra nodes (i.e. preserve cutouts).
  *
