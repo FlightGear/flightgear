@@ -68,7 +68,7 @@ while ( $dem_file = shift(@ARGV) ) {
     if ( $do_dem2node ) {
 	dem2node() ;
     } else {
-	$subdir = "./work/Scenery/w100n040/w094n045";
+	$subdir = "./work/Scenery/w120n030/w111n033";
 	print "WARNING:  Hardcoding subdir = $subdir\n";
     }
 
@@ -153,11 +153,11 @@ sub triangle_1 {
 	    $fileroot = $file;
 	    $fileroot =~ s/\.node$//;
 	    print "$subdir/$fileroot\n";
+	    $command = "Triangle/triangle";
 	    if ( -r "$subdir/$fileroot.poly" ) {
-		$command = "Triangle/triangle -pc -a$max_area -q5 $subdir/$fileroot";
-	    } else {
-		$command = "Triangle/triangle -c -a$max_area -q5 $subdir/$file";
+		$command = " -pc";
 	    }
+	    $command .= " -a$max_area -q10 $subdir/$file";
 	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
@@ -185,7 +185,7 @@ sub fixnode {
     $command = "FixNode/fixnode $dem_file $subdir";
     $command = fix_command($command);
     print "Running '$command'\n";
-    open(OUT, "$command |");
+    open(OUT, "$command |") || die "cannot run command\n";
     while ( <OUT> ) {
 	print $_;
     }
@@ -287,7 +287,7 @@ sub triangle_2 {
 	    if ( -r "$subdir/$base.poly" ) {
 		$command .= " -pc $subdir/$base";
 	    } else {
-		$command .= " -c $subdir/$file";
+		$command .= " $subdir/$file";
 	    }
 
 	    $command = fix_command($command);
@@ -454,6 +454,9 @@ sub install {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.25  1998/07/22 21:46:09  curt
+# minor tweaks.
+#
 # Revision 1.24  1998/07/21 04:33:47  curt
 # More tweaks for sub-area cutouts.
 #
