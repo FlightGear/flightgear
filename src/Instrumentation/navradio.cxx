@@ -189,9 +189,6 @@ FGNavRadio::bind ()
     fgTie( (branch + "/radials/reciprocal-radial-deg").c_str(),
 	   this, &FGNavRadio::get_nav_reciprocal_radial );
 
-    fgTie( (branch + "/radials/target-radial2-deg").c_str(),
-	   this, &FGNavRadio::get_nav_target_radial );
-
     fgTie( (branch + "/radials/target-auto-hdg-deg").c_str(),
 	   this, &FGNavRadio::get_nav_target_auto_hdg );
 
