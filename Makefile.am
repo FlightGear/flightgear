@@ -2,6 +2,7 @@ EXTRA_DIST = \
 	auto_ptr.hxx \
 	config.h.in \
 	cmdargs.h \
+	compiler.h \
 	fg_callback.hxx \
 	fg_constants.h \
 	fg_limits.h \
