@@ -25,6 +25,7 @@
 #include <simgear/misc/fgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
+#include "mkrbeacons.hxx"
 #include "ilslist.hxx"
 
 
@@ -94,6 +95,23 @@ bool FGILSList::init( FGPath path ) {
 	}
 	if ( ils.get_locfreq() > max ) {
 	    max = ils.get_locfreq();
+	}
+
+	// update the marker beacon list
+	if ( fabs(ils.get_omlon()) > FG_EPSILON ||
+	     fabs(ils.get_omlat()) > FG_EPSILON ) {
+	    current_beacons->add( ils.get_omlon(), ils.get_omlat(),
+				  ils.get_gselev(), FGBeacon::OUTER );
+	}
+	if ( fabs(ils.get_mmlon()) > FG_EPSILON ||
+	     fabs(ils.get_mmlat()) > FG_EPSILON ) {
+	    current_beacons->add( ils.get_mmlon(), ils.get_mmlat(),
+				  ils.get_gselev(), FGBeacon::MIDDLE );
+	}
+	if ( fabs(ils.get_imlon()) > FG_EPSILON ||
+	     fabs(ils.get_imlat()) > FG_EPSILON ) {
+	    current_beacons->add( ils.get_imlon(), ils.get_imlat(),
+				  ils.get_gselev(), FGBeacon::INNER );
 	}
     }
 
