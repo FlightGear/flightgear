@@ -45,6 +45,7 @@
 #include <Math/mat3.h>
 #include <Math/polar3d.hxx>
 #include <Math/vector.hxx>
+#include <Weather/weather.h>
 
 #include "material.hxx"
 #include "obj.hxx"
@@ -249,6 +250,11 @@ static int viewable( fgPoint3d *cp, double radius ) {
 	return(0);
     }
 
+    // Check far clip plane
+    if ( eye[2] + radius < -current_weather.visibility ) {
+	return(0);
+    }
+
     // check right clip plane (from eye perspective)
     // y = m * (x - x0) = equation of a line intercepting X axis at x0
     x1 = v->cos_fov_x * radius;
@@ -371,9 +377,9 @@ void fgTileMgrRender( void ) {
 	t = c->GetTile(index);
 
 	// calculate tile offset
-	x = t->offset.x = t->center.x - scenery.center.x;
-	y = t->offset.y = t->center.y - scenery.center.y;
-	z = t->offset.z = t->center.z - scenery.center.z;
+	x = (t->offset.x = t->center.x - scenery.center.x);
+	y = (t->offset.y = t->center.y - scenery.center.y);
+	z = (t->offset.z = t->center.z - scenery.center.z);
 
 	m = t->model_view;
 	for ( j = 0; j < 16; j++ ) {
@@ -553,6 +559,11 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.26  1998/07/20 12:51:26  curt
+// Added far clip plane to fragment clipping calculations and tie this to
+// weather->visibility.  This way you can increase framerates by increasing
+// for and lowering visibility.
+//
 // Revision 1.25  1998/07/13 21:02:01  curt
 // Wrote access functions for current fgOPTIONS.
 //
