@@ -130,15 +130,15 @@ bool FGProps::process_command( const char *cmd ) {
 
     string command = tokens[0];
 
-    SGPropertyNode * node = globals->get_props()->getNode(path);
+    SGPropertyNode * node = globals->get_props()->getNode(path.c_str());
 
     if ( command == "ls" ) {
 	SGPropertyNode * dir = node;
 	if ( tokens.size() > 2 ) {
 	    if ( tokens[1][0] == '/' ) {
-		dir = globals->get_props()->getNode(tokens[1]);
+		dir = globals->get_props()->getNode(tokens[1].c_str());
 	    } else {
-		dir = globals->get_props()->getNode(path + "/" + tokens[1]);
+		dir = globals->get_props()->getNode((path + "/" + tokens[1]).c_str());
 	    }
 	    if ( dir == 0 ) {
 		tokens[1] = "ERR Node \"" + tokens[1] + "\" not found.\n";
@@ -151,7 +151,7 @@ bool FGProps::process_command( const char *cmd ) {
 	    SGPropertyNode * child = dir->getChild(i);
 	    string name = child->getName();
 	    string line = name;
-	    if ( dir->getChild(name, 1) ) {
+	    if ( dir->getChild(name.c_str(), 1) ) {
 		char buf[16];
 		sprintf(buf, "[%d]", child->getIndex());
 		line += buf;
@@ -160,9 +160,9 @@ bool FGProps::process_command( const char *cmd ) {
 		line += "/";
 	    } else {
 		if ( mode == PROMPT ) {
-		    string value = dir->getStringValue ( name, "" );
+		    string value = dir->getStringValue ( name.c_str(), "" );
 		    line += " =\t'" + value + "'\t(";
-		    line += getValueTypeString( dir->getNode( name ) );
+		    line += getValueTypeString( dir->getNode( name.c_str() ) );
 		    line += ")";
 		}
 	    }
@@ -176,7 +176,7 @@ bool FGProps::process_command( const char *cmd ) {
 	    io->writestring( buf.str() );
 	}
 	else {
-	    SGPropertyNode *child = node->getNode(tokens[1]);
+	    SGPropertyNode *child = node->getNode(tokens[1].c_str());
 	    if ( child ) {
 		writeProperties ( buf, child );
 		io->writestring( buf.str() );
@@ -192,7 +192,7 @@ bool FGProps::process_command( const char *cmd ) {
         if ( tokens.size() <= 1 ) {
 	    // do nothing
 	} else {
-	    SGPropertyNode *child = node->getNode(tokens[1]);
+	    SGPropertyNode *child = node->getNode(tokens[1].c_str());
 	    if ( child ) {
 		node = child;
 		path = node->getPath();
@@ -213,13 +213,13 @@ bool FGProps::process_command( const char *cmd ) {
 	    // do nothing
 	} else {
 	    string tmp;	
-	    string value = node->getStringValue ( tokens[1], "" );
+	    string value = node->getStringValue ( tokens[1].c_str(), "" );
 	    if ( mode == PROMPT ) {
 		//string ttt = "debug = '" + tokens[1] + "'\n";
 		//io->writestring( ttt.c_str() );
 
 		tmp = tokens[1] + " = '" + value + "' (";
-		tmp += getValueTypeString( node->getNode( tokens[1] ) );
+		tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
 		tmp += ")\n";
  	    } else {
 		tmp = value + "\n";
@@ -230,13 +230,13 @@ bool FGProps::process_command( const char *cmd ) {
         if ( tokens.size() <= 2 ) {
 	    // do nothing
 	} else {
-	    node->getNode( tokens[1], true )->setStringValue(tokens[2]);
+	    node->getNode( tokens[1].c_str(), true )->setStringValue(tokens[2].c_str());
 
 	    // now fetch and write out the new value as confirmation
 	    // of the change
-	    string value = node->getStringValue ( tokens[1], "" );
+	    string value = node->getStringValue ( tokens[1].c_str(), "" );
 	    string tmp = tokens[1] + " = '" + value + "' (";
-	    tmp += getValueTypeString( node->getNode( tokens[1] ) );
+	    tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
 	    tmp += ")\n";
  
 	    io->writestring( tmp.c_str() );

@@ -51,15 +51,16 @@ FGFX::init()
    const SGPropertyNode * node = fgGetNode("/sim/sound", true);
    int i;
 
+   string path_str = node->getStringValue("path");
    SGPath path( globals->get_fg_root() );
-   if (node->getStringValue("path") == "") {
-      SG_LOG(SG_GENERAL, SG_ALERT, "Incorect path in configuration file.");
+   if (path_str == "") {
+      SG_LOG(SG_GENERAL, SG_ALERT, "Incorrect path in configuration file.");
       return;
    }
 
-   path.append(node->getStringValue("path"));
+   path.append(path_str.c_str());
    SG_LOG(SG_GENERAL, SG_INFO, "Reading Instrument " << node->getName()
-    << " from " << path.str());
+	  << " from " << path.str());
 
    SGPropertyNode root;
    try {

@@ -82,13 +82,15 @@ bool FGMaterialLib::load( const string& mpath ) {
   int nMaterials = materials.nChildren();
   for (int i = 0; i < nMaterials; i++) {
     const SGPropertyNode * node = materials.getChild(i);
-    if (node->getName() == "material") {
+    if (string(node->getName()) == "material") {
       FGNewMat * m = new FGNewMat(node);
 
       vector<const SGPropertyNode *>names = node->getChildren("name");
       for (unsigned int j = 0; j < names.size(); j++) {
+	string name = names[j]->getStringValue();
 	m->ref();
-	matlib[names[j]->getStringValue()] = m;
+	std::cerr << "Material " << name << endl;
+	matlib[name] = m;
 	SG_LOG( SG_TERRAIN, SG_INFO, "  Loading material "
 		<< names[j]->getStringValue());
       }

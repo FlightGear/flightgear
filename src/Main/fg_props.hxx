@@ -69,7 +69,6 @@ extern bool fgLoadFlight (istream &input);
 // Convenience functions for getting property values.
 ////////////////////////////////////////////////////////////////////////
 
-
 /**
  * Get a property node.
  *
@@ -77,11 +76,7 @@ extern bool fgLoadFlight (istream &input);
  * @param create true to create the node if it doesn't exist.
  * @return The node, or 0 if none exists and none was created.
  */
-inline SGPropertyNode * 
-fgGetNode (const string &path, bool create = false)
-{
-  return globals->get_props()->getNode(path, create);
-}
+extern SGPropertyNode * fgGetNode (const char * path, bool create = false);
 
 
 /**
@@ -98,11 +93,8 @@ fgGetNode (const string &path, bool create = false)
  * @param create true to create the node if it doesn't exist.
  * @return The node, or 0 if none exists and none was created.
  */
-inline SGPropertyNode * 
-fgGetNode (const string &path, int index, bool create = false)
-{
-  return globals->get_props()->getNode(path, index, create);
-}
+extern SGPropertyNode * fgGetNode (const char * path,
+				   int index, bool create = false);
 
 
 /**
@@ -111,11 +103,7 @@ fgGetNode (const string &path, int index, bool create = false)
  * @param path The path of the node, relative to root.
  * @return true if the node exists, false otherwise.
  */
-inline bool
-fgHasNode (const string &path)
-{
-  return (fgGetNode(path, false) != 0);
-}
+extern bool fgHasNode (const char * path);
 
 
 /**
@@ -132,10 +120,7 @@ fgHasNode (const string &path)
  *        does not exist.
  * @return The property's value as a bool, or the default value provided.
  */
-inline bool fgGetBool (const string &name, bool defaultValue = false)
-{
-  return globals->get_props()->getBoolValue(name, defaultValue);
-}
+extern bool fgGetBool (const char * name, bool defaultValue = false);
 
 
 /**
@@ -152,10 +137,7 @@ inline bool fgGetBool (const string &name, bool defaultValue = false)
  *        does not exist.
  * @return The property's value as an int, or the default value provided.
  */
-inline int fgGetInt (const string &name, int defaultValue = 0)
-{
-  return globals->get_props()->getIntValue(name, defaultValue);
-}
+extern int fgGetInt (const char * name, int defaultValue = 0);
 
 
 /**
@@ -172,10 +154,7 @@ inline int fgGetInt (const string &name, int defaultValue = 0)
  *        does not exist.
  * @return The property's value as a long, or the default value provided.
  */
-inline int fgGetLong (const string &name, long defaultValue = 0L)
-{
-  return globals->get_props()->getLongValue(name, defaultValue);
-}
+extern int fgGetLong (const char * name, long defaultValue = 0L);
 
 
 /**
@@ -192,10 +171,7 @@ inline int fgGetLong (const string &name, long defaultValue = 0L)
  *        does not exist.
  * @return The property's value as a float, or the default value provided.
  */
-inline float fgGetFloat (const string &name, float defaultValue = 0.0)
-{
-  return globals->get_props()->getFloatValue(name, defaultValue);
-}
+extern float fgGetFloat (const char * name, float defaultValue = 0.0);
 
 
 /**
@@ -212,10 +188,7 @@ inline float fgGetFloat (const string &name, float defaultValue = 0.0)
  *        does not exist.
  * @return The property's value as a double, or the default value provided.
  */
-inline double fgGetDouble (const string &name, double defaultValue = 0.0)
-{
-  return globals->get_props()->getDoubleValue(name, defaultValue);
-}
+extern double fgGetDouble (const char * name, double defaultValue = 0.0);
 
 
 /**
@@ -232,10 +205,8 @@ inline double fgGetDouble (const string &name, double defaultValue = 0.0)
  *        does not exist.
  * @return The property's value as a string, or the default value provided.
  */
-inline string fgGetString (const string &name, string defaultValue = "")
-{
-  return globals->get_props()->getStringValue(name, defaultValue);
-}
+extern const char * fgGetString (const char * name,
+				 const char * defaultValue = "");
 
 
 /**
@@ -251,10 +222,7 @@ inline string fgGetString (const string &name, string defaultValue = "")
  * @param val The new value for the property.
  * @return true if the assignment succeeded, false otherwise.
  */
-inline bool fgSetBool (const string &name, bool val)
-{
-  return globals->get_props()->setBoolValue(name, val);
-}
+extern bool fgSetBool (const char * name, bool val);
 
 
 /**
@@ -270,10 +238,7 @@ inline bool fgSetBool (const string &name, bool val)
  * @param val The new value for the property.
  * @return true if the assignment succeeded, false otherwise.
  */
-inline bool fgSetInt (const string &name, int val)
-{
-  return globals->get_props()->setIntValue(name, val);
-}
+extern bool fgSetInt (const char * name, int val);
 
 
 /**
@@ -289,10 +254,7 @@ inline bool fgSetInt (const string &name, int val)
  * @param val The new value for the property.
  * @return true if the assignment succeeded, false otherwise.
  */
-inline bool fgSetLong (const string &name, long val)
-{
-  return globals->get_props()->setLongValue(name, val);
-}
+extern bool fgSetLong (const char * name, long val);
 
 
 /**
@@ -308,10 +270,7 @@ inline bool fgSetLong (const string &name, long val)
  * @param val The new value for the property.
  * @return true if the assignment succeeded, false otherwise.
  */
-inline bool fgSetFloat (const string &name, float val)
-{
-  return globals->get_props()->setFloatValue(name, val);
-}
+extern bool fgSetFloat (const char * name, float val);
 
 
 /**
@@ -327,10 +286,7 @@ inline bool fgSetFloat (const string &name, float val)
  * @param val The new value for the property.
  * @return true if the assignment succeeded, false otherwise.
  */
-inline bool fgSetDouble (const string &name, double val)
-{
-  return globals->get_props()->setDoubleValue(name, val);
-}
+extern bool fgSetDouble (const char * name, double val);
 
 
 /**
@@ -346,10 +302,7 @@ inline bool fgSetDouble (const string &name, double val)
  * @param val The new value for the property.
  * @return true if the assignment succeeded, false otherwise.
  */
-inline bool fgSetString (const string &name, const string &val)
-{
-  return globals->get_props()->setStringValue(name, val);
-}
+extern bool fgSetString (const char * name, const char * val);
 
 
 
@@ -370,17 +323,7 @@ inline bool fgSetString (const string &name, const string &val)
  * @param name The property name.
  * @param state The state of the archive attribute (defaults to true).
  */
-inline void
-fgSetArchivable (const string &name, bool state = true)
-{
-  SGPropertyNode * node = globals->get_props()->getNode(name);
-  if (node == 0)
-    SG_LOG(SG_GENERAL, SG_ALERT,
-	   "Attempt to set archive flag for non-existant property "
-	   << name);
-  else
-    node->setAttribute(SGPropertyNode::ARCHIVE, state);
-}
+extern void fgSetArchivable (const char * name, bool state = true);
 
 
 /**
@@ -395,17 +338,7 @@ fgSetArchivable (const string &name, bool state = true)
  * @param name The property name.
  * @param state The state of the read attribute (defaults to true).
  */
-inline void
-fgSetReadable (const string &name, bool state = true)
-{
-  SGPropertyNode * node = globals->get_props()->getNode(name);
-  if (node == 0)
-    SG_LOG(SG_GENERAL, SG_ALERT,
-	   "Attempt to set read flag for non-existant property "
-	   << name);
-  else
-    node->setAttribute(SGPropertyNode::READ, state);
-}
+extern void fgSetReadable (const char * name, bool state = true);
 
 
 /**
@@ -420,17 +353,7 @@ fgSetReadable (const string &name, bool state = true)
  * @param name The property name.
  * @param state The state of the write attribute (defaults to true).
  */
-inline void
-fgSetWritable (const string &name, bool state = true)
-{
-  SGPropertyNode * node = globals->get_props()->getNode(name);
-  if (node == 0)
-    SG_LOG(SG_GENERAL, SG_ALERT,
-	   "Attempt to set write flag for non-existant property "
-	   << name);
-  else
-    node->setAttribute(SGPropertyNode::WRITE, state);
-}
+extern void fgSetWritable (const char * name, bool state = true);
 
 
 
@@ -445,12 +368,7 @@ fgSetWritable (const string &name, bool state = true)
  * Classes should use this function to release control of any
  * properties they are managing.
  */
-inline void
-fgUntie (const string &name)
-{
-  if (!globals->get_props()->untie(name))
-    SG_LOG(SG_GENERAL, SG_WARN, "Failed to untie property " << name);
-}
+extern void fgUntie (const char * name);
 
 
 /**
@@ -471,7 +389,7 @@ fgUntie (const string &name)
  */
 template <class V>
 inline void
-fgTie (const string &name, V (*getter)(), void (*setter)(V) = 0,
+fgTie (const char * name, V (*getter)(), void (*setter)(V) = 0,
        bool useDefault = true)
 {
   if (!globals->get_props()->tie(name, SGRawValueFunctions<V>(getter, setter),
@@ -501,7 +419,7 @@ fgTie (const string &name, V (*getter)(), void (*setter)(V) = 0,
  */
 template <class V>
 inline void
-fgTie (const string &name, int index, V (*getter)(int),
+fgTie (const char * name, int index, V (*getter)(int),
        void (*setter)(int, V) = 0, bool useDefault = true)
 {
   if (!globals->get_props()->tie(name,
@@ -535,7 +453,7 @@ fgTie (const string &name, int index, V (*getter)(int),
  */
 template <class T, class V>
 inline void
-fgTie (const string &name, T * obj, V (T::*getter)() const,
+fgTie (const char * name, T * obj, V (T::*getter)() const,
        void (T::*setter)(V) = 0, bool useDefault = true)
 {
   if (!globals->get_props()->tie(name,
@@ -567,7 +485,7 @@ fgTie (const string &name, T * obj, V (T::*getter)() const,
  */
 template <class T, class V>
 inline void 
-fgTie (const string &name, T * obj, int index,
+fgTie (const char * name, T * obj, int index,
        V (T::*getter)(int) const, void (T::*setter)(int, V) = 0,
        bool useDefault = true)
 {
@@ -614,7 +532,7 @@ public:
 class FGPropertyCondition : public FGCondition
 {
 public:
-  FGPropertyCondition (const string &propname);
+  FGPropertyCondition (const char * propname);
   virtual ~FGPropertyCondition ();
   virtual bool test () const { return _node->getBoolValue(); }
 private:
@@ -691,8 +609,8 @@ public:
   FGComparisonCondition (Type type, bool reverse = false);
   virtual ~FGComparisonCondition ();
   virtual bool test () const;
-  virtual void setLeftProperty (const string &propname);
-  virtual void setRightProperty (const string &propname);
+  virtual void setLeftProperty (const char * propname);
+  virtual void setRightProperty (const char * propname);
 				// will make a local copy
   virtual void setRightValue (const SGPropertyNode * value);
 private:

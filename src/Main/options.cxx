@@ -574,13 +574,13 @@ parse_option (const string& arg)
     } else if ( arg == "--enable-anti-alias-hud" ) {
         fgSetBool("/sim/hud/antialiased", true);
     } else if ( arg.find( "--control=") == 0 ) {
-        fgSetString("/sim/control-mode", arg.substr(10));
+        fgSetString("/sim/control-mode", arg.substr(10).c_str());
     } else if ( arg == "--disable-auto-coordination" ) {
         fgSetBool("/sim/auto-coordination", false);
     } else if ( arg == "--enable-auto-coordination" ) {
 	fgSetBool("/sim/auto-coordination", true);
     } else if ( arg.find( "--browser-app=") == 0 ) {
-	fgSetString("/sim/startup/browser-app", arg.substr(14));
+	fgSetString("/sim/startup/browser-app", arg.substr(14).c_str());
     } else if ( arg == "--disable-hud" ) {
 	fgSetBool("/sim/hud/visibility", false);
     } else if ( arg == "--enable-hud" ) {
@@ -595,7 +595,7 @@ parse_option (const string& arg)
 	fgSetBool("/sim/sound/audible", true);
     } else if ( arg.find( "--airport-id=") == 0 ) {
 				// NB: changed property name!!!
-	fgSetString("/sim/startup/airport-id", arg.substr(13));
+	fgSetString("/sim/startup/airport-id", arg.substr(13).c_str());
     } else if ( arg.find( "--offset-distance=") == 0 ) {
 	fgSetDouble("/sim/startup/offset-distance", atof(arg.substr(18)));
     } else if ( arg.find( "--offset-azimuth=") == 0 ) {
@@ -679,11 +679,11 @@ parse_option (const string& arg)
     } else if ( arg.find( "--fg-scenery=" ) == 0 ) {
         globals->set_fg_scenery(arg.substr( 13 ));
     } else if ( arg.find( "--fdm=" ) == 0 ) {
-	fgSetString("/sim/flight-model", arg.substr(6));
+	fgSetString("/sim/flight-model", arg.substr(6).c_str());
     } else if ( arg.find( "--aero=" ) == 0 ) {
-	fgSetString("/sim/aero", arg.substr(7));
+	fgSetString("/sim/aero", arg.substr(7).c_str());
     } else if ( arg.find( "--aircraft-dir=" ) == 0 ) {
-        fgSetString("/sim/aircraft-dir", arg.substr(15));
+        fgSetString("/sim/aircraft-dir", arg.substr(15).c_str());
     } else if ( arg.find( "--model-hz=" ) == 0 ) {
 	fgSetInt("/sim/model-hz", atoi(arg.substr(11)));
     } else if ( arg.find( "--speed=" ) == 0 ) {
@@ -844,7 +844,7 @@ parse_option (const string& arg)
         fgSetBool("/sim/hud/net-display", true);
 	net_hud_display = 1;	// FIXME
     } else if ( arg.find( "--net-id=") == 0 ) {
-        fgSetString("sim/networking/call-sign", arg.substr(9));
+        fgSetString("sim/networking/call-sign", arg.substr(9).c_str());
 #endif
     } else if ( arg.find( "--prop:" ) == 0 ) {
         string assign = arg.substr(7);
@@ -855,17 +855,19 @@ parse_option (const string& arg)
 	}
 	string name = assign.substr(0, pos);
 	string value = assign.substr(pos + 1);
-	fgSetString(name.c_str(), value);
+	fgSetString(name.c_str(), value.c_str());
 	// SG_LOG(SG_GENERAL, SG_INFO, "Setting default value of property "
 	//        << name << " to \"" << value << '"');
     } else if ( arg.find("--trace-read=") == 0) {
         string name = arg.substr(13);
 	SG_LOG(SG_GENERAL, SG_INFO, "Tracing reads for property " << name);
-	fgGetNode(name, true)->setAttribute(SGPropertyNode::TRACE_READ, true);
+	fgGetNode(name.c_str(), true)
+	  ->setAttribute(SGPropertyNode::TRACE_READ, true);
     } else if ( arg.find("--trace-write=") == 0) {
         string name = arg.substr(14);
 	SG_LOG(SG_GENERAL, SG_INFO, "Tracing writes for property " << name);
-	fgGetNode(name, true)->setAttribute(SGPropertyNode::TRACE_WRITE, true);
+	fgGetNode(name.c_str(), true)
+	  ->setAttribute(SGPropertyNode::TRACE_WRITE, true);
     } else if ( arg.find( "--view-offset=" ) == 0 ) {
         // $$$ begin - added VS Renganathan, 14 Oct 2K
         // for multi-window outside window imagery

@@ -98,7 +98,7 @@ void NetIdDialog_OK (puObject *)
 
 void NewCallSign(puObject *cb)
 {
-	sprintf( NewNetId, "%s", fgGetString("/sim/networking/call-sign").c_str() );
+	sprintf( NewNetId, "%s", fgGetString("/sim/networking/call-sign") );
 //    sprintf( NewNetId, "%s", fgd_callsign );
 	NetIdDialogInput->setValue( NewNetId );
 
@@ -107,7 +107,7 @@ void NewCallSign(puObject *cb)
 
 void NewNetIdInit(void)
 {
-	sprintf( NewNetId, "%s", fgGetString("/sim/networking/call-sign").c_str() );
+	sprintf( NewNetId, "%s", fgGetString("/sim/networking/call-sign") );
 //    sprintf( NewNetId, "%s", fgd_callsign );
 	int len = 150 - puGetDefaultLabelFont().getStringWidth( NewNetIdLabel ) / 2;
 

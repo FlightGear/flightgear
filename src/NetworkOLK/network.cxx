@@ -82,7 +82,7 @@ char *fg_net_init( ssgRoot *orig_scene ){
  // We enable display of netinfos only if user wishes it via cmd-line param
  net_hud_display = (net_hud_display == 0) ? 0 : 1; 
  // Get pilot's name from options, can be modified at runtime via menu
- net_callsign = (char *)(fgGetString("/sim/networking/call-sign").c_str());
+ net_callsign = (char *)(fgGetString("/sim/networking/call-sign"));
  // Disable Blast Mode -1 = Disable, 0 = Enable  
  net_blast_toggle = -1;
  // We start unregistered, we reg. later via menu to fgd 

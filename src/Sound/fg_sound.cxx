@@ -99,29 +99,27 @@ FGSound::init()
    SG_LOG(SG_GENERAL, SG_INFO,
     "Loading sound information for: " << _name );
 
-   if (_node->getStringValue("mode") == "looped") {
+   string mode_str = _node->getStringValue("mode");
+   if (mode_str == "looped") {
        _mode = FGSound::LOOPED;
    } else {
       _mode = FGSound::ONCE;
-      if (_node->getStringValue("mode") != (string)"once")
+      if (mode_str != (string)"once")
         SG_LOG( SG_GENERAL, SG_INFO, "Unknown sound mode, default to 'once'");
    }
 
-   if (_node->getStringValue("type") == "flipflop") {
+   string type_str = _node->getStringValue("type");
+   if (type_str == "flipflop") {
       _type = FGSound::FLIPFLOP;
-
-   } else if (_node->getStringValue("type") == "inverted") {
+   } else if (type_str== "inverted") {
       _type = FGSound::INVERTED;
-
-   } else if (_node->getStringValue("type") == "raise") {
+   } else if (type_str == "raise") {
       _type = FGSound::RAISE;
-
-   } else if (_node->getStringValue("type") == "fall") {
+   } else if (type_str == "fall") {
       _type = FGSound::FALL;
-
    } else {
       _type = FGSound::LEVEL;
-      if (_node->getStringValue("type") != (string)"level")
+      if (type_str != (string)"level")
         SG_LOG( SG_GENERAL, SG_INFO, "Unknown sound type, default to 'level'");
    }
 

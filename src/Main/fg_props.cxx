@@ -98,7 +98,7 @@ LogClassMapping log_class_mappings [] = {
 /**
  * Get the logging classes.
  */
-static string
+static const char *
 getLoggingClasses ()
 {
   sgDebugClass classes = logbuf::get_log_classes();
@@ -110,11 +110,12 @@ getLoggingClasses ()
       result += log_class_mappings[i].name;
     }
   }
-  return result;
+  return result.c_str();
 }
 
 
-static void addLoggingClass (const string &name)
+static void
+addLoggingClass (const string &name)
 {
   sgDebugClass classes = logbuf::get_log_classes();
   for (int i = 0; log_class_mappings[i].c != SG_UNDEFD; i++) {
@@ -131,8 +132,9 @@ static void addLoggingClass (const string &name)
  * Set the logging classes.
  */
 static void
-setLoggingClasses (string classes)
+setLoggingClasses (const char * c)
 {
+  string classes = c;
   logbuf::set_log_classes(SG_NONE);
 
   if (classes == "none") {
@@ -165,7 +167,7 @@ setLoggingClasses (string classes)
 /**
  * Get the logging priority.
  */
-static string
+static const char *
 getLoggingPriority ()
 {
   switch (logbuf::get_log_priority()) {
@@ -191,8 +193,9 @@ getLoggingPriority ()
  * Set the logging priority.
  */
 static void
-setLoggingPriority (string priority)
+setLoggingPriority (const char * p)
 {
+  string priority = p;
   if (priority == "bulk") {
     logbuf::set_log_priority(SG_BULK);
   } else if (priority == "debug") {
@@ -210,42 +213,13 @@ setLoggingPriority (string priority)
 }
 
 
-#if 0
-/**
- * Get the pause state of the sim.
- */
-static bool
-getFreeze ()
-{
-  return globals->get_freeze();
-}
-
-
-/**
- * Set the pause state of the sim.
- */
-static void
-setFreeze (bool freeze)
-{
-    globals->set_freeze(freeze);
-    if ( freeze ) {
-        // BusyCursor( 0 );
-        current_atcdisplay->CancelRepeatingMessage();
-        current_atcdisplay->RegisterRepeatingMessage("****    SIM IS FROZEN    ****    SIM IS FROZEN    ****");
-    } else {
-        // BusyCursor( 1 );
-        current_atcdisplay->CancelRepeatingMessage();
-    }
-}
-#endif
-
 /**
  * Return the current aircraft directory (UIUC) as a string.
  */
-static string 
+static const char *
 getAircraftDir ()
 {
-  return aircraft_dir;
+  return aircraft_dir.c_str();
 }
 
 
@@ -253,12 +227,9 @@ getAircraftDir ()
  * Set the current aircraft directory (UIUC).
  */
 static void
-setAircraftDir (string dir)
+setAircraftDir (const char * dir)
 {
-  if (getAircraftDir() != dir) {
-    aircraft_dir = dir;
-//     needReinit(); FIXME!!
-  }
+  aircraft_dir = dir;
 }
 
 
@@ -275,7 +246,7 @@ getElapsedTime_ms ()
 /**
  * Return the current Zulu time.
  */
-static string 
+static const char *
 getDateString ()
 {
   string out;
@@ -285,7 +256,7 @@ getDateString ()
 	  t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
 	  t->tm_hour, t->tm_min, t->tm_sec);
   out = buf;
-  return out;
+  return out.c_str();
 }
 
 
@@ -293,7 +264,7 @@ getDateString ()
  * Set the current Zulu time.
  */
 static void
-setDateString (string date_string)
+setDateString (const char * date_string)
 {
   static const SGPropertyNode *cur_time_override
 	= fgGetNode("/sim/time/cur-time-override", true);
@@ -304,7 +275,7 @@ setDateString (string date_string)
 
 				// Scan for basic ISO format
 				// YYYY-MM-DDTHH:MM:SS
-  int ret = sscanf(date_string.c_str(), "%d-%d-%dT%d:%d:%d",
+  int ret = sscanf(date_string, "%d-%d-%dT%d:%d:%d",
 		   &(new_time.tm_year), &(new_time.tm_mon),
 		   &(new_time.tm_mday), &(new_time.tm_hour),
 		   &(new_time.tm_min), &(new_time.tm_sec));
@@ -339,7 +310,7 @@ setDateString (string date_string)
 /**
  * Return the GMT as a string.
  */
-static string 
+static const char *
 getGMTString ()
 {
   string out;
@@ -349,7 +320,7 @@ getGMTString ()
 	  t->tm_hour, t->tm_min, t->tm_sec);
   // cout << t << " " << buf << endl;
   out = buf;
-  return out;
+  return out.c_str();
 }
 
 
@@ -684,6 +655,146 @@ fgLoadFlight (istream &input)
 
 
 ////////////////////////////////////////////////////////////////////////
+// Property convenience functions.
+////////////////////////////////////////////////////////////////////////
+
+SGPropertyNode *
+fgGetNode (const char * path, bool create)
+{
+  return globals->get_props()->getNode(path, create);
+}
+
+SGPropertyNode * 
+fgGetNode (const char * path, int index, bool create)
+{
+  return globals->get_props()->getNode(path, index, create);
+}
+
+bool
+fgHasNode (const char * path)
+{
+  return (fgGetNode(path, false) != 0);
+}
+
+bool
+fgGetBool (const char * name, bool defaultValue)
+{
+  return globals->get_props()->getBoolValue(name, defaultValue);
+}
+
+int
+fgGetInt (const char * name, int defaultValue)
+{
+  return globals->get_props()->getIntValue(name, defaultValue);
+}
+
+int
+fgGetLong (const char * name, long defaultValue)
+{
+  return globals->get_props()->getLongValue(name, defaultValue);
+}
+
+float
+fgGetFloat (const char * name, float defaultValue)
+{
+  return globals->get_props()->getFloatValue(name, defaultValue);
+}
+
+double
+fgGetDouble (const char * name, double defaultValue)
+{
+  return globals->get_props()->getDoubleValue(name, defaultValue);
+}
+
+const char *
+fgGetString (const char * name, const char * defaultValue)
+{
+  return globals->get_props()->getStringValue(name, defaultValue);
+}
+
+bool
+fgSetBool (const char * name, bool val)
+{
+  return globals->get_props()->setBoolValue(name, val);
+}
+
+bool
+fgSetInt (const char * name, int val)
+{
+  return globals->get_props()->setIntValue(name, val);
+}
+
+bool
+fgSetLong (const char * name, long val)
+{
+  return globals->get_props()->setLongValue(name, val);
+}
+
+bool
+fgSetFloat (const char * name, float val)
+{
+  return globals->get_props()->setFloatValue(name, val);
+}
+
+bool
+fgSetDouble (const char * name, double val)
+{
+  return globals->get_props()->setDoubleValue(name, val);
+}
+
+bool
+fgSetString (const char * name, const char * val)
+{
+  return globals->get_props()->setStringValue(name, val);
+}
+
+void
+fgSetArchivable (const char * name, bool state)
+{
+  SGPropertyNode * node = globals->get_props()->getNode(name);
+  if (node == 0)
+    SG_LOG(SG_GENERAL, SG_ALERT,
+	   "Attempt to set archive flag for non-existant property "
+	   << name);
+  else
+    node->setAttribute(SGPropertyNode::ARCHIVE, state);
+}
+
+void
+fgSetReadable (const char * name, bool state)
+{
+  SGPropertyNode * node = globals->get_props()->getNode(name);
+  if (node == 0)
+    SG_LOG(SG_GENERAL, SG_ALERT,
+	   "Attempt to set read flag for non-existant property "
+	   << name);
+  else
+    node->setAttribute(SGPropertyNode::READ, state);
+}
+
+void
+fgSetWritable (const char * name, bool state)
+{
+  SGPropertyNode * node = globals->get_props()->getNode(name);
+  if (node == 0)
+    SG_LOG(SG_GENERAL, SG_ALERT,
+	   "Attempt to set write flag for non-existant property "
+	   << name);
+  else
+    node->setAttribute(SGPropertyNode::WRITE, state);
+}
+
+void
+fgUntie (const char * name)
+{
+  if (!globals->get_props()->untie(name))
+    SG_LOG(SG_GENERAL, SG_WARN, "Failed to untie property " << name);
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////
 // Implementation of FGCondition.
 ////////////////////////////////////////////////////////////////////////
 
@@ -701,7 +812,7 @@ FGCondition::~FGCondition ()
 // Implementation of FGPropertyCondition.
 ////////////////////////////////////////////////////////////////////////
 
-FGPropertyCondition::FGPropertyCondition (const string &propname)
+FGPropertyCondition::FGPropertyCondition (const char * propname)
   : _node(fgGetNode(propname, true))
 {
 }
@@ -915,13 +1026,13 @@ FGComparisonCondition::test () const
 }
 
 void
-FGComparisonCondition::setLeftProperty (const string &propname)
+FGComparisonCondition::setLeftProperty (const char * propname)
 {
   _left_property = fgGetNode(propname, true);
 }
 
 void
-FGComparisonCondition::setRightProperty (const string &propname)
+FGComparisonCondition::setRightProperty (const char * propname)
 {
   delete _right_value;
   _right_value = 0;

@@ -471,7 +471,7 @@ void fgPropPicker::find_props ()
   for (i = 0; i < (int)node->nChildren(); i++) {
 	    SGPropertyNode * child = node->getChild(i);
 	    name = child->getName();
-	    if ( node->getChild(name, 1) != 0 ) {
+	    if ( node->getChild(name.c_str(), 1) != 0 ) {
 		iindex = child->getIndex();
 		sprintf(sindex, "[%d]", iindex);
 	        name += sindex;
@@ -487,11 +487,11 @@ void fgPropPicker::find_props ()
    	        values[ pi ] = new char[ 2 ] ;
 	    } else {
                 dflag[ pi ] = 0 ;
-		value = node->getStringValue ( name, "" );
+		value = node->getStringValue ( name.c_str(), "" );
    	        values[ pi ] = new char[ strlen(value.c_str())+2 ] ;
                 strcpy ( values [pi], value.c_str() );
 		line += " = '" + value + "' " + "(";
-		line += getValueTypeString( node->getNode( name ) );
+		line += getValueTypeString( node->getNode( name.c_str() ) );
                 line += ")";
                 files[ pi ] = new char[ strlen(line.c_str())+2 ] ;
 	        strcpy ( files [ pi ], line.c_str() ) ;

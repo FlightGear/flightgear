@@ -376,7 +376,7 @@ void FGAutopilot::reset() {
 	
     update_old_control_values();
 
-    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
+    sprintf( NewTgtAirportId, "%s", fgGetString("/sim/startup/airport-id") );
 	
     MakeTargetLatLonStr( get_TargetLatitude(), get_TargetLongitude() );
 }

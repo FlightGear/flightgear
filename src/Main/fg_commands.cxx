@@ -517,7 +517,7 @@ do_property_swap (const SGPropertyNode * arg, SGCommandState ** state)
 				// FIXME: inefficient
   const string & tmp = prop1->getStringValue();
   return (prop1->setUnspecifiedValue(prop2->getStringValue()) &&
-	  prop2->setUnspecifiedValue(tmp));
+	  prop2->setUnspecifiedValue(tmp.c_str()));
 }
 
 

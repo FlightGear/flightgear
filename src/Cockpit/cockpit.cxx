@@ -183,7 +183,7 @@ float get_altitude( void )
 
     float altitude;
 
-    if ( startup_units_node->getStringValue() == "feet" ) {
+    if ( string(startup_units_node->getStringValue()) == "feet" ) {
         altitude = current_aircraft.fdm_state->get_Altitude();
     } else {
         altitude = (current_aircraft.fdm_state->get_Altitude()

@@ -117,7 +117,7 @@ void AptDialog_OK (puObject *)
 void AptDialog_Reset(puObject *)
 {
     //  strncpy( NewAirportId, fgGetString("/sim/startup/airport-id").c_str(), 16 );
-    sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
+    sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id") );
     AptDialogInput->setValue ( NewAirportId );
     AptDialogInput->setCursor( 0 ) ;
 }
@@ -125,7 +125,7 @@ void AptDialog_Reset(puObject *)
 void NewAirport(puObject *cb)
 {
     //  strncpy( NewAirportId, fgGetString("/sim/startup/airport-id").c_str(), 16 );
-    sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
+    sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id") );
     // cout << "NewAirport " << NewAirportId << endl;
     AptDialogInput->setValue( NewAirportId );
 
@@ -134,7 +134,7 @@ void NewAirport(puObject *cb)
 
 void NewAirportInit(void)
 {
-    sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
+    sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id") );
     int len = 150
         - puGetDefaultLabelFont().getStringWidth( NewAirportLabel ) / 2;
 

@@ -133,7 +133,7 @@ void HttpdChannel::foundTerminator (void) {
                     string b = arg.substr( apos + 1 );
                     printf("    a = %s  b = %s\n", a.c_str(), b.c_str() );
                     if ( a == "value" ) {
-                        fgSetString( request, urlDecode(b) );
+                        fgSetString( request.c_str(), urlDecode(b).c_str() );
                     } 
                 }
             }
@@ -141,7 +141,7 @@ void HttpdChannel::foundTerminator (void) {
             request = urlDecode(request);
 	}
 
-        node = globals->get_props()->getNode(request);
+        node = globals->get_props()->getNode(request.c_str());
 
         string response = "";
         response += "<HTML LANG=\"en\">";
@@ -179,7 +179,7 @@ void HttpdChannel::foundTerminator (void) {
             for (int i = 0; i < node->nChildren(); i++) {
                 SGPropertyNode *child = node->getChild(i);
                 string name = child->getName();
-                if ( node->getChild(name, 1) ) {
+                if ( node->getChild(name.c_str(), 1) ) {
                     char buf[16];
                     sprintf(buf, "[%d]", child->getIndex());
                     name += buf;
@@ -197,7 +197,7 @@ void HttpdChannel::foundTerminator (void) {
                     line += "</A></B>";
                     line += "/<BR>";
                 } else {
-                    string value = node->getStringValue ( name, "" );
+                    string value = node->getStringValue ( name.c_str(), "" );
                     line += "<B>";
                     line += name;
                     line += "</B> <A HREF=\"";

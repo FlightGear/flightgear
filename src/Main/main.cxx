@@ -1405,7 +1405,7 @@ int mainLoop( int argc, char **argv ) {
 
     // set current_options lon/lat if an airport id is specified
     // cout << "3. airport_id = " << fgGetString("/sim/startup/airport-id") << endl;
-    if ( fgGetString("/sim/startup/airport-id").length() ) {
+    if ( fgGetString("/sim/startup/airport-id")[0] != '\0' ) {
 	// fgSetPosFromAirportID( fgGetString("/sim/startup/airport-id") );
 	fgSetPosFromAirportIDandHdg( fgGetString("/sim/startup/airport-id"),
 				     fgGetDouble("/orientation/heading-deg") );
