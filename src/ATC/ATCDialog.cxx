@@ -413,31 +413,36 @@ void FGATCDialog::DoDialog() {
 //
 //////////////////////////////////////////////////////
 
-static puDialogBox*		atcFreqDialog;
-static puFrame*			atcFreqDialogFrame;
-static puText*			atcFreqDialogMessage;
-static puInput*			atcFreqDialogInput;
-static puOneShot*		atcFreqDialogOkButton;
-static puOneShot*		atcFreqDialogCancelButton;
-//static puButtonBox*		atcFreqDialogCommunicationOptions;
+static puDialogBox*     atcFreqDialog;
+static puFrame*         atcFreqDialogFrame;
+static puText*          atcFreqDialogMessage;
+static puInput*         atcFreqDialogInput;
+static puOneShot*       atcFreqDialogOkButton;
+static puOneShot*       atcFreqDialogCancelButton;
 
-static puText* atcFreqDisplayText[20];
+static puDialogBox*     atcFreqDisplay;
+static puFrame*         atcFreqDisplayFrame;
+static puText*          atcFreqDisplayMessage;
+static puOneShot*       atcFreqDisplayOkButton;
+static puOneShot*       atcFreqDisplayCancelButton;
+static puText*          atcFreqDisplayText[20];
 	
 static void FreqDialogCancel(puObject*) {
 	FG_POP_PUI_DIALOG(atcFreqDialog);
-	delete atcFreqDialog;
 }
 
 static void FreqDialogOK(puObject*) {
 	string tmp = atcFreqDialogInput->getStringValue();
 	FG_POP_PUI_DIALOG(atcFreqDialog);
-	delete atcFreqDialog;
 	current_atcdialog->FreqDisplay(tmp);
 }
 
 static void FreqDisplayOK(puObject*) {
-	FG_POP_PUI_DIALOG(atcFreqDialog);
-	delete atcFreqDialog;
+	FG_POP_PUI_DIALOG(atcFreqDisplay);
+}
+
+static void FreqDisplayCancel(puObject*) {
+	FG_POP_PUI_DIALOG(atcFreqDisplay);
 }
 
 void FGATCDialog::FreqDialog() {
@@ -471,8 +476,6 @@ void FGATCDialog::FreqDialog() {
 		atcFreqDialogMessage    -> setDefaultValue ("Enter airport identifier:");
 		atcFreqDialogMessage    -> getDefaultValue (&s);
 		atcFreqDialogMessage    -> setLabel        (s);
-		//atcFreqDialogMessage    -> setLabelPlace   (PUPLACE_TOP_CENTERED);
-		//atcFreqDialogMessage    -> setLabelPlace   (0);
 
 		atcFreqDialogInput = new puInput (50, (hsize - 75), 150, (hsize - 45));
 		atcFreqDialogInput->acceptInput();
@@ -552,14 +555,14 @@ void FGATCDialog::FreqDisplay(string ident) {
 	}
 
 	int hsize = (n < 0 ? 100 : 105 + (n * 30));
-	atcFreqDialog = new puDialogBox (250, 50);
+	atcFreqDisplay = new puDialogBox (250, 50);
 	{
-		atcFreqDialogFrame   = new puFrame (0, 0, 400, hsize);
+		atcFreqDisplayFrame   = new puFrame (0, 0, 400, hsize);
 		
-		atcFreqDialogMessage = new puText          (40, (hsize - 30));
-		atcFreqDialogMessage    -> setDefaultValue (label.c_str());
-		atcFreqDialogMessage    -> getDefaultValue (&s);
-		atcFreqDialogMessage    -> setLabel        (s);
+		atcFreqDisplayMessage = new puText          (40, (hsize - 30));
+		atcFreqDisplayMessage    -> setDefaultValue (label.c_str());
+		atcFreqDisplayMessage    -> getDefaultValue (&s);
+		atcFreqDisplayMessage    -> setLabel        (s);
 		
 		for(int i=0; i<n; ++i) {
 			atcFreqDisplayText[i] = new puText(40, hsize - 65 - (30 * i));
@@ -568,19 +571,19 @@ void FGATCDialog::FreqDisplay(string ident) {
 			atcFreqDisplayText[i]-> setLabel        (s);
 		}
 		
-		atcFreqDialogOkButton     =  new puOneShot         (50, 10, 110, 50);
-		atcFreqDialogOkButton     ->     setLegend         (gui_msg_OK);
-		atcFreqDialogOkButton     ->     makeReturnDefault (TRUE);
-		atcFreqDialogOkButton     ->     setCallback       (FreqDisplayOK);
+		atcFreqDisplayOkButton     =  new puOneShot         (50, 10, 110, 50);
+		atcFreqDisplayOkButton     ->     setLegend         (gui_msg_OK);
+		atcFreqDisplayOkButton     ->     makeReturnDefault (TRUE);
+		atcFreqDisplayOkButton     ->     setCallback       (FreqDisplayOK);
 		
-		atcFreqDialogCancelButton =  new puOneShot         (140, 10, 210, 50);
-		atcFreqDialogCancelButton ->     setLegend         (gui_msg_CANCEL);
-		atcFreqDialogCancelButton ->     setCallback       (FreqDialogCancel);
+		atcFreqDisplayCancelButton =  new puOneShot         (140, 10, 210, 50);
+		atcFreqDisplayCancelButton ->     setLegend         (gui_msg_CANCEL);
+		atcFreqDisplayCancelButton ->     setCallback       (FreqDisplayCancel);
 		
 	}
-	FG_FINALIZE_PUI_DIALOG(atcFreqDialog);
+	FG_FINALIZE_PUI_DIALOG(atcFreqDisplay);
 	
-	FG_PUSH_PUI_DIALOG(atcFreqDialog);
+	FG_PUSH_PUI_DIALOG(atcFreqDisplay);
 	
 }
 
