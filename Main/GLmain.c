@@ -44,10 +44,10 @@
 #include "../Aircraft/aircraft.h"
 #include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
+#include "../Math/fg_random.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
 #include "../Timer/fg_timer.h"
-#include "../Utils/fg_random.h"
 #include "../Weather/weather.h"
 
 
@@ -621,9 +621,12 @@ int printf (const char *format, ...) {
 
 
 /* $Log$
-/* Revision 1.39  1997/07/21 14:45:01  curt
-/* Minor tweaks.
+/* Revision 1.40  1997/07/30 16:12:42  curt
+/* Moved fg_random routines from Util/ to Math/
 /*
+ * Revision 1.39  1997/07/21 14:45:01  curt
+ * Minor tweaks.
+ *
  * Revision 1.38  1997/07/19 23:04:47  curt
  * Added an initial weather section.
  *

@@ -26,7 +26,7 @@
 
 #include "weather.h"
 #include "../Aircraft/aircraft.h"
-#include "../Utils/fg_random.h"
+#include "../Math/fg_random.h"
 
 
 /* Initialize the weather modeling subsystem */
@@ -49,7 +49,10 @@ void fgWeatherUpdate(double lon, double lat, double alt) {
 }
 
 /* $Log$
-/* Revision 1.1  1997/07/19 23:03:57  curt
-/* Initial revision.
+/* Revision 1.2  1997/07/30 16:12:44  curt
+/* Moved fg_random routines from Util/ to Math/
 /*
+ * Revision 1.1  1997/07/19 23:03:57  curt
+ * Initial revision.
+ *
  */

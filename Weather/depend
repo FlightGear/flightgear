@@ -3,4 +3,4 @@ weather.o: weather.c weather.h ../Aircraft/aircraft.h \
  ../Aircraft/../Flight/LaRCsim/ls_interface.h \
  ../Aircraft/../Flight/LaRCsim/../flight.h \
  ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../limits.h ../Utils/fg_random.h
+ ../Aircraft/../Controls/../limits.h ../Math/fg_random.h

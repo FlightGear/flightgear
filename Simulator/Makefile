@@ -28,7 +28,7 @@ include make.inc
 
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew
-SUBDIRS = Aircraft Controls Flight Math Scenery Timer Utils Weather
+SUBDIRS = Aircraft Controls Flight Math Scenery Timer Weather
 MAIN = OpenGL
 
 
@@ -71,6 +71,9 @@ zip: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.21  1997/07/30 16:12:38  curt
+# Moved fg_random routines from Util/ to Math/
+#
 # Revision 1.20  1997/07/20 02:19:09  curt
 # First stab at a system to generate os2 makefiles automatically.
 #

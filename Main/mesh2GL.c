@@ -33,9 +33,9 @@
 #include "../constants.h"
 #include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
+#include "../Math/fg_random.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
-#include "../Utils/fg_random.h"
 
 
 /* The following routine is a real hack used for testing puposes only
@@ -177,14 +177,6 @@ GLint mesh2GL(struct mesh *m) {
 
     /* this will go, it's only here for testing/debugging */
 
-    /*
-    for ( i = m->originy; i < m->originy + (m->row_step * iend); i += 120 ) {
-	for ( j = m->originx; j < m->originx + (m->col_step * jend); j += 120) {
-	    mesh_make_test_object(j, i);
-	}
-    }
-    */
-
     for ( i = 0; i < 200; i++ ) {
 	randx = fg_random() * 3600.0;
 	randy = fg_random() * 3600.0;
@@ -200,9 +192,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.39  1997/07/21 21:20:48  curt
-/* Twiddled with random object placement.
+/* Revision 1.40  1997/07/30 16:12:43  curt
+/* Moved fg_random routines from Util/ to Math/
 /*
+ * Revision 1.39  1997/07/21 21:20:48  curt
+ * Twiddled with random object placement.
+ *
  * Revision 1.38  1997/07/21 14:45:02  curt
  * Minor tweaks.
  *
