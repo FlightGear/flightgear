@@ -1,0 +1,11 @@
+This directory contains a simple, Java network client library for the
+FlightGear flight simulator.  See the JavaDoc documentation for
+org.flightgear.fgfsclient.FGFSConnection for more information.
+
+There is a simple demo application, FGFSDemo, that you can try like this:
+
+  fgfs --telnet=9000
+  java FGFSDemo localhost 9000
+
+To rebuild the program, use the Apache ant utility.
+

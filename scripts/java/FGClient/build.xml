@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+
+<project name="fgfsclient" default="compile" basedir=".">
+
+<target name="init">
+ <tstamp/>
+</target>
+
+<target name="prepare" depends="init">
+ <mkdir dir="classes"/>
+ <mkdir dir="docs/javadoc"/>
+</target>
+
+<target name="compile" depends="prepare">
+ <javac debug="on" optimize="off" srcdir="src" destdir="classes" excludes="**/Makefile"/>
+ <copy todir="classes">
+  <fileset dir="src" includes="**/*.xml,**/*.dtd"/>
+ </copy>
+</target>
+
+<target name="jar" depends="compile">
+ <jar jarfile="fgfsclient.jar" basedir="classes" excludes="**/Makefile"/>
+</target>
+
+<target name="javadoc" depends="prepare">
+ <javadoc Public="yes" Use="yes" packagenames="org.flightgear.fgfsclient.*" 
+   sourcepath="src" destdir="docs/javadoc" Author="Yes" Version="Yes">
+  <link href="http://java.sun.com/products/jdk/1.3/docs/api"/>
+ </javadoc>
+</target>
+
+<target name="run" depends="compile">
+  <java classname="FGFSDemo" fork="yes" failonerror="yes">
+   <classpath>
+    <pathelement location="./classes"/>
+    <pathelement path="${java.class.path}"/>
+   </classpath>
+   <arg value="localhost"/>
+   <arg value="9000"/>
+  </java>
+</target>
+
+<target name="clean" depends="init">
+ <deltree dir="classes"/>
+ <deltree dir="docs/javadoc"/>
+ <delete file="fgfsclient.jar"/>
+</target>
+
+</project>
