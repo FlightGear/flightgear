@@ -475,7 +475,7 @@ main(int argc, char **argv) {
     // lon = -90.757128; lat = 46.790212;      // WI32
     // lon = -122.220717; lat = 37.721291;     // KOAK
     // lon = -111.721477; lat = 40.215641;     // KPVU
-    // lon = -122.309313; lat = 47.448982;     // KSEA
+    lon = -122.309313; lat = 47.448982;     // KSEA
     // lon = -148.798131; lat = 63.645099;     // AK06 (Danali, AK)
     // lon = -92.5; lat = 47.5;                // Marsh test (northern MN)
     // lon = -111.977773; lat = 40.788388;     // KSLC

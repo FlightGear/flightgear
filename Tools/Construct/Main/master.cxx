@@ -21,8 +21,9 @@
 // $Id$
 
 
-#include <sys/types.h>  // for directory reading
-#include <dirent.h>     // for directory reading
+#include <stdlib.h>    // for system()
+#include <sys/stat.h>  // for stat()
+#include <unistd.h>    // for stat()
 
 #include <string>
 
@@ -39,9 +40,31 @@
 // #include <Triangulate/triangle.hxx>
 
 
+// return true if file exists
+static bool file_exists( const string& file ) {
+    struct stat buf;
+
+    if ( stat( file.c_str(), &buf ) == 0 ) {
+	return true;
+    } else {
+	return false;
+    }
+}
+
+
 // check if the specified tile has data defined for it
 static bool has_data( const string& path, const FGBucket& b ) {
-    
+    string dem_file = path + ".dem" + "/Scenery/" + b.gen_base_path()
+	+ "/" + b.gen_index_str() + ".dem";
+    if ( file_exists( dem_file ) ) {
+	return true;
+    }
+
+    dem_file += ".gz";
+    if ( file_exists( dem_file ) ) {
+	return true;
+    }
+
     return false;
 }
 
@@ -49,7 +72,28 @@ static bool has_data( const string& path, const FGBucket& b ) {
 // build the tile and check for success
 bool build_tile( const string& work_base, const string& output_base, 
 		 const FGBucket& b ) {
-    return true;
+    string result_file = "result";
+
+    string command = "./construct " + work_base + " " + output_base + " "
+	+ b.gen_index_str() + " > " + result_file + " 2>&1";
+    cout << command << endl;
+
+    system( command.c_str() );
+
+    FILE *fp = fopen( result_file.c_str(), "r" );
+    char line[256];
+    while ( fgets( line, 256, fp ) != NULL ) {
+	string line_str = line;
+	line_str = line_str.substr(0, line_str.length() - 1);
+ 	cout << line_str << endl;
+ 	if ( line_str == "[Finished successfully]" ) {
+	    fclose(fp);
+	    return true;
+	}
+    }
+
+    fclose(fp);
+    return false;
 }
 
 
@@ -85,7 +129,10 @@ main(int argc, char **argv) {
 	    cout << "Bucket = " << b << endl;
 
 	    if ( has_data( work_base, b ) ) {
-		build_tile( work_base, output_base, b );
+		if ( ! build_tile( work_base, output_base, b ) ) {
+		    cout << "error building last tile" << endl;
+		    exit(-1);
+		}
 	    }
 
 	    lon += dx;

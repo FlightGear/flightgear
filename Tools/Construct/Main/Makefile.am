@@ -20,6 +20,10 @@ construct_LDADD = \
 
 master_SOURCES = master.cxx
 
+master_LDADD = \
+	$(top_builddir)/Lib/Bucket/libBucket.a \
+	$(top_builddir)/Lib/Misc/libMisc.a
+
 INCLUDES += \
 	-I$(top_builddir) \
 	-I$(top_builddir)/Lib \
