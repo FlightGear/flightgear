@@ -43,8 +43,9 @@ INCLUDES
 #include "FGModel.h"
 #include "FGInitialCondition.h"
 #include "FGJSBBase.h"
-#include <vector>
+#include "FGPropertyManager.h"
 
+#include <vector>
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -111,9 +112,11 @@ CLASS DECLARATION
 class FGFDMExec : public FGJSBBase
 {
 public:
-  /// Default constructor
-  FGFDMExec(void);
 
+  
+  /// Default constructor
+  FGFDMExec(FGPropertyManager* root = 0);
+  
   /// Default destructor
   ~FGFDMExec();
 
@@ -197,6 +200,8 @@ public:
   inline string GetEnginePath(void)          {return EnginePath;}
   /// Retrieves the aircraft path.
   inline string GetAircraftPath(void)        {return AircraftPath;}
+  
+  FGPropertyManager* GetPropertyManager(void);
 
 private:
   FGModel* FirstModel;
@@ -208,6 +213,9 @@ private:
   unsigned int IdFDM;
   static unsigned int FDMctr;
   bool modelLoaded;
+  
+  FGPropertyManager *master;
+  FGPropertyManager *instance;
 
   string AircraftPath;
   string EnginePath;

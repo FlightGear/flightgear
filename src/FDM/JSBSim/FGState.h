@@ -176,7 +176,7 @@ public:
   inline double Geta(void) { return a; }
 
   /// Returns the simulation time in seconds.
-  inline double Getsim_time(void) { return sim_time; }
+  inline double Getsim_time(void) const { return sim_time; }
   /// Returns the simulation delta T.
   inline double Getdt(void) { return dt; }
 
@@ -308,6 +308,12 @@ public:
       configuration, etc.)
   */
   void ReportState(void);
+  
+  inline string GetPropertyName(eParam prm) { return ParamToProp[prm]; }
+  inline eParam GetParam(string property) { return PropToParam[property]; }
+  
+  void bind();
+  void unbind();
 
 private:
   double a;                          // speed of sound
@@ -339,14 +345,21 @@ private:
   FGAerodynamics* Aerodynamics;
   FGGroundReactions* GroundReactions;
   FGPropulsion* Propulsion;
+  FGPropertyManager* PropertyManager;
 
   typedef map<string, eParam> CoeffMap;
   CoeffMap coeffdef;
 
   typedef map<eParam, string> ParamMap;
   ParamMap paramdef;
+  
+  ParamMap ParamToProp;
+  CoeffMap PropToParam;
 
   int ActiveEngine;
+  
+  void InitPropertyMaps(void);
+  
   void Debug(int from);
 };
 

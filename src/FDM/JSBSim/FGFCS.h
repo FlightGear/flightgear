@@ -153,7 +153,10 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-typedef enum { iNDe=0, iNDaL, iNDaR, iNDr, iNDsb, iNDsp, iNDf } NormalizeIdx;
+typedef enum { iDe=0, iDaL, iDaR, iDr, iDsb, iDsp, iDf } FcIdx;
+int const NNorm=7;
+typedef enum { ofRad=0, ofNorm, ofMag } OutputForm;
+int const NForms=3;
 
 class FGFCS : public FGModel {
 
@@ -172,27 +175,27 @@ public:
   //@{
   /** Gets the aileron command.
       @return aileron command in percent */
-  inline double GetDaCmd(void) { return DaCmd; }
+  inline double GetDaCmd(void) const { return DaCmd; }
   
   /** Gets the elevator command.
       @return elevator command in percent */
-  inline double GetDeCmd(void) { return DeCmd; }
+  inline double GetDeCmd(void) const { return DeCmd; }
 
   /** Gets the rudder command.
       @return rudder command in percent */
-  inline double GetDrCmd(void) { return DrCmd; }
+  inline double GetDrCmd(void) const { return DrCmd; }
 
   /** Gets the flaps command.
       @return flaps command in percent */
-  inline double GetDfCmd(void) { return DfCmd; }
+  inline double GetDfCmd(void) const { return DfCmd; }
 
   /** Gets the speedbrake command.
       @return speedbrake command in percent */
-  inline double GetDsbCmd(void) { return DsbCmd; }
+  inline double GetDsbCmd(void) const { return DsbCmd; }
 
   /** Gets the spoiler command.
       @return spoiler command in percent */
-  inline double GetDspCmd(void) { return DspCmd; }
+  inline double GetDspCmd(void) const { return DspCmd; }
 
   /** Gets the throttle command.
       @param engine engine ID number
@@ -202,95 +205,71 @@ public:
   /** Gets the mixture command.
       @param engine engine ID number
       @return mixture command in percent ( 0 - 100) for the given engine */
-  inline double GetMixtureCmd(int engine) { return MixtureCmd[engine]; }
+  inline double GetMixtureCmd(int engine) const { return MixtureCmd[engine]; }
 
   /** Gets the prop pitch command.
       @param engine engine ID number
       @return pitch command in percent ( 0.0 - 1.0) for the given engine */
-  inline double GetPropAdvanceCmd(int engine) { return PropAdvanceCmd[engine]; }
+  inline double GetPropAdvanceCmd(int engine) const { return PropAdvanceCmd[engine]; }
 
   /** Gets the pitch trim command.
       @return pitch trim command in percent */
-  inline double GetPitchTrimCmd(void) { return PTrimCmd; }
+  inline double GetPitchTrimCmd(void) const { return PTrimCmd; }
   
   /** Gets the rudder trim command.
       @return rudder trim command in percent */
-  inline double GetYawTrimCmd(void) { return YTrimCmd; }
+  inline double GetYawTrimCmd(void) const { return YTrimCmd; }
   
   /** Gets the aileron trim command.
       @return aileron trim command in percent */
-  inline double GetRollTrimCmd(void) { return RTrimCmd; }
+  inline double GetRollTrimCmd(void) const { return RTrimCmd; }
   
   /** Get the gear extend/retract command. 0 commands gear up, 1 down.
       defaults to down.
       @return the current value of the gear extend/retract command*/
-  inline double GetGearCmd(void) { return GearCmd; }    
+  inline double GetGearCmd(void) const { return GearCmd; }    
   //@}
 
   /// @name Aerosurface position retrieval
   //@{
   /** Gets the left aileron position.
       @return aileron position in radians */
-  inline double GetDaLPos(void) { return DaLPos; }
-
-  /// @name Aerosurface position retrieval
-  //@{
-  /** Gets the normalized left aileron position.
-      @return aileron position in radians */
-  inline double GetDaLPosN(void) { return DaLPosN; }
+  inline double GetDaLPos( int form = ofRad ) 
+                         const { return DaLPos[form]; }
 
   /// @name Aerosurface position retrieval
   //@{
   /** Gets the right aileron position.
       @return aileron position in radians */
-  inline double GetDaRPos(void) { return DaRPos; }
-
-  /// @name Aerosurface position retrieval
-  //@{
-  /** Gets the normalized right aileron position.
-      @return right aileron position in percent (-1..1) */
-  inline double GetDaRPosN(void) { return DaRPosN; }
+  inline double GetDaRPos( int form = ofRad ) 
+                         const { return DaRPos[form]; }
 
   /** Gets the elevator position.
       @return elevator position in radians */
-  inline double GetDePos(void) { return DePos; }
+  inline double GetDePos( int form = ofRad ) 
+                         const { return DePos[form]; }
  
-  /** Gets the normalized elevator position.
-      @return  elevator position in percent (-1..1) */
-  inline double GetDePosN(void) { return DePosN; }
-
   /** Gets the rudder position.
       @return rudder position in radians */
-  inline double GetDrPos(void) { return DrPos; }
-
-  /** Gets the normalized rudder position.
-      @return rudder position in percent (-1..1) */
-  inline double GetDrPosN(void) { return DrPosN; }
-
-  /** Gets the flaps position.
-      @return flaps position in radians */
-  inline double GetDfPos(void) { return DfPos; }
-
-  /** Gets the normalized flaps position.
-      @return flaps position in percent (-1..1) */
-  inline double GetDfPosN(void) { return DfPosN; }
+  inline double GetDrPos( int form = ofRad ) 
+                         const { return DrPos[form]; }
 
   /** Gets the speedbrake position.
       @return speedbrake position in radians */
-  inline double GetDsbPos(void) { return DsbPos; }
-
-  /** Gets the normalized speedbrake position.
-      @return speedbrake position in percent (-1..1) */
-  inline double GetDsbPosN(void) { return DsbPosN; }
+  inline double GetDsbPos( int form = ofRad ) 
+                         const { return DsbPos[form]; }
 
   /** Gets the spoiler position.
       @return spoiler position in radians */
-  inline double GetDspPos(void) { return DspPos; }
+  inline double GetDspPos( int form = ofRad ) 
+                         const { return DspPos[form]; }
   
-  /** Gets the normalized spoiler position.
-      @return spoiler position in percent (-1..1) */
-  inline double GetDspPosN(void) { return DspPosN; }
-
+  /** Gets the flaps position.
+      @return flaps position in radians */
+  inline double GetDfPos( int form = ofRad ) 
+                         const { return DspPos[form]; }
+                         
+  
   /** Gets the throttle position.
       @param engine engine ID number
       @return throttle position for the given engine in percent ( 0 - 100)*/
@@ -299,16 +278,16 @@ public:
   /** Gets the mixture position.
       @param engine engine ID number
       @return mixture position for the given engine in percent ( 0 - 100)*/
-  inline double GetMixturePos(int engine) { return MixturePos[engine]; }
+  inline double GetMixturePos(int engine) const { return MixturePos[engine]; }
   
   /** Gets the gear position (0 up, 1 down), defaults to down
       @return gear position (0 up, 1 down) */
-  inline double GetGearPos(void) { return GearPos; }    
+  inline double GetGearPos(void) const { return GearPos; }    
 
   /** Gets the prop pitch position.
       @param engine engine ID number
       @return prop pitch position for the given engine in percent ( 0.0-1.0)*/
-  inline double GetPropAdvance(int engine) { return PropAdvance[engine]; }
+  inline double GetPropAdvance(int engine) const { return PropAdvance[engine]; }
   //@}
 
   /** Retrieves the State object pointer.
@@ -336,11 +315,11 @@ public:
   //@{
   /** Sets the aileron command
       @param cmd aileron command in percent*/
-  inline void SetDaCmd(double cmd) { DaCmd = cmd; }
+  inline void SetDaCmd( double cmd ) { DaCmd = cmd; }
 
   /** Sets the elevator command
       @param cmd elevator command in percent*/
-  inline void SetDeCmd(double cmd) { DeCmd = cmd; }
+  inline void SetDeCmd(double cmd ) { DeCmd = cmd; }
 
   /** Sets the rudder command
       @param cmd rudder command in percent*/
@@ -394,60 +373,39 @@ public:
   //@{
   /** Sets the left aileron position
       @param cmd left aileron position in radians*/
-  inline void SetDaLPos(double cmd) { DaLPos = cmd; }
-
-  /** Sets the normalized left aileron position
-      @param cmd left aileron position in percent (-1..1)*/
-  inline void SetDaLPosN(double cmd) { DaLPosN = cmd; }
+  inline void SetDaLPos( int form , double pos ) 
+                                      { DaLPos[form] = pos; }
 
   /** Sets the right aileron position
       @param cmd right aileron position in radians*/
-  inline void SetDaRPos(double cmd) { DaRPos = cmd; }
-
-  /** Sets the normalized right aileron position
-      @param cmd right aileron position in percent (-1..1)*/
-  inline void SetDaRPosN(double cmd) { DaRPosN = cmd; }
+  inline void SetDaRPos( int form , double pos ) 
+                                      { DaRPos[form] = pos; }
 
   /** Sets the elevator position
       @param cmd elevator position in radians*/
-  inline void SetDePos(double cmd) { DePos = cmd; }
-
-  /** Sets the normalized elevator position
-      @param cmd elevator position in percent (-1..1) */
-  inline void SetDePosN(double cmd) { DePosN = cmd; }
+  inline void SetDePos( int form , double pos ) 
+                                      { DePos[form] = pos; }
 
   /** Sets the rudder position
       @param cmd rudder position in radians*/
-  inline void SetDrPos(double cmd) { DrPos = cmd; }
+  inline void SetDrPos( int form , double pos ) 
+                                      { DrPos[form] = pos; }
  
-  /** Sets the normalized rudder position
-      @param cmd rudder position in percent (-1..1)*/
-  inline void SetDrPosN(double cmd) { DrPosN = cmd; }
-
-  /** Sets the flaps position
+   /** Sets the flaps position
       @param cmd flaps position in radians*/
-  inline void SetDfPos(double cmd) { DfPos = cmd; }
+  inline void SetDfPos( int form , double pos ) 
+                                      { DfPos[form] = pos; }
   
-  /** Sets the flaps position
-      @param cmd flaps position in radians*/
-  inline void SetDfPosN(double cmd) { DfPosN = cmd; }
-
   /** Sets the speedbrake position
       @param cmd speedbrake position in radians*/
-  inline void SetDsbPos(double cmd) { DsbPos = cmd; }
- 
-  /** Sets the normalized speedbrake position
-      @param cmd normalized speedbrake position in percent (-1..1)*/
-  inline void SetDsbPosN(double cmd) { DsbPosN = cmd; }
+  inline void SetDsbPos( int form , double pos ) 
+                                      { DsbPos[form] = pos; }
 
   /** Sets the spoiler position
       @param cmd spoiler position in radians*/
-  inline void SetDspPos(double cmd) { DspPos = cmd; }
+  inline void SetDspPos( int form , double pos ) 
+                                      { DspPos[form] = pos; }
  
-  /** Sets the normalized spoiler position
-      @param cmd normalized spoiler position in percent (-1..1)*/
-  inline void SetDspPosN(double cmd) { DspPosN = cmd; }
-
   /** Sets the actual throttle setting for the specified engine
       @param engine engine ID number
       @param cmd throttle setting in percent (0 - 100)*/
@@ -498,11 +456,15 @@ public:
   bool Load(FGConfigFile* AC_cfg);
 
   void AddThrottle(void);
+  
+  void bind(void);
+  void unbind(void);
 
+  
 private:
-  double DaCmd,   DeCmd,   DrCmd,  DfCmd,  DsbCmd, DspCmd;
-  double DaLPos,  DaRPos,  DePos,  DrPos,  DfPos,  DsbPos,  DspPos;
-  double DaLPosN, DaRPosN, DePosN, DrPosN, DfPosN, DsbPosN, DspPosN;
+  double DaCmd, DeCmd, DrCmd, DfCmd, DsbCmd, DspCmd;
+  double DePos[NForms], DaLPos[NForms], DaRPos[NForms], DrPos[NForms];  
+  double DfPos[NForms], DsbPos[NForms], DspPos[NForms];
   double PTrimCmd, YTrimCmd, RTrimCmd;
   vector <double> ThrottleCmd;
   vector <double> ThrottlePos;
@@ -517,7 +479,7 @@ private:
   void Normalize(void);
 
   vector <FGFCSComponent*> Components;
-  int ToNormalize[7];
+  int ToNormalize[NNorm];
   void Debug(int from);
 };
 

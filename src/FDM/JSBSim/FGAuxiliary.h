@@ -85,21 +85,24 @@ public:
   bool Run(void);
 
   // Use FGInitialCondition to set these speeds
-  inline double GetVcalibratedFPS(void) { return vcas; }
-  inline double GetVcalibratedKTS(void) { return vcas*fpstokts; }
-  inline double GetVequivalentFPS(void) { return veas; }
-  inline double GetVequivalentKTS(void) { return veas*fpstokts; }
+  inline double GetVcalibratedFPS(void) const { return vcas; }
+  inline double GetVcalibratedKTS(void) const { return vcas*fpstokts; }
+  inline double GetVequivalentFPS(void) const { return veas; }
+  inline double GetVequivalentKTS(void) const { return veas*fpstokts; }
   
   inline FGColumnVector3& GetPilotAccel(void) { return vPilotAccel; }
-  inline double GetPilotAccel(int idx) { return vPilotAccel(idx); }
-  FGColumnVector3 GetNpilot(void);
-  double GetNpilot(int idx);
+  inline double GetPilotAccel(int idx) const { return vPilotAccel(idx); }
+  FGColumnVector3 GetNpilot(void) const { return vPilotAccelN; }
+  double GetNpilot(int idx) const { return vPilotAccelN(idx); }
 
-  inline double GetEarthPositionAngle(void) { return earthPosAngle; }
+  inline double GetEarthPositionAngle(void) const { return earthPosAngle; }
   
   double GetHeadWind(void);
   double GetCrossWind(void);
- 
+  
+  void bind(void);
+  void unbind(void);
+
 private:
   double vcas;
   double veas;
@@ -114,6 +117,7 @@ private:
   // isentropic flow equations
 
   FGColumnVector3 vPilotAccel;
+  FGColumnVector3 vPilotAccelN;
   FGColumnVector3 vToEyePt;
   
   double earthPosAngle;

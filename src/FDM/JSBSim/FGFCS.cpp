@@ -47,6 +47,7 @@ INCLUDES
 #include "FGPosition.h"
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
+#include "FGPropertyManager.h"
 
 #include "filtersjb/FGFilter.h"
 #include "filtersjb/FGDeadBand.h"
@@ -70,12 +71,17 @@ FGFCS::FGFCS(FGFDMExec* fdmex) : FGModel(fdmex)
 
   DaCmd = DeCmd = DrCmd = DfCmd = DsbCmd = DspCmd = 0.0;
   PTrimCmd = YTrimCmd = RTrimCmd = 0.0;
-  DaLPos = DaRPos = DePos = DrPos = DfPos = DsbPos = DspPos = 0.0;
   GearCmd = GearPos = 1; // default to gear down
   LeftBrake = RightBrake = CenterBrake = 0.0;
   DoNormalize=true;
   
-  for(i=0;i<6;i++) { ToNormalize[i]=-1;}
+  bind();
+  for(i=0;i<=NForms;i++) {
+    DePos[i] = DaLPos[i] = DaRPos[i] = DrPos[i] = 0.0;
+    DfPos[i] = DsbPos[i] = DspPos[i] = 0.0;
+  }
+    
+  for(i=0;i<NNorm;i++) { ToNormalize[i]=-1;}
   Debug(0);
 }
 
@@ -91,6 +97,8 @@ FGFCS::~FGFCS()
   PropAdvance.clear();
 
   unsigned int i;
+  
+  unbind();
 
   for (i=0;i<Components.size();i++) delete Components[i];
   Debug(1);
@@ -304,20 +312,20 @@ bool FGFCS::Load(FGConfigFile* AC_cfg)
     if(Components[i]->GetType() == "AEROSURFACE_SCALE" 
         || Components[i]->GetType() == "KINEMAT"  ) {
       if( Components[i]->GetOutputIdx() == FG_ELEVATOR_POS ) {
-        ToNormalize[iNDe]=i;
+        ToNormalize[iDe]=i;
       } else if ( Components[i]->GetOutputIdx() == FG_LEFT_AILERON_POS 
                       || Components[i]->GetOutputIdx() == FG_AILERON_POS ) {
-        ToNormalize[iNDaL]=i;
+        ToNormalize[iDaL]=i;
       } else if ( Components[i]->GetOutputIdx() == FG_RIGHT_AILERON_POS ) {
-        ToNormalize[iNDaR]=i;
+        ToNormalize[iDaR]=i;
       } else if ( Components[i]->GetOutputIdx() == FG_RUDDER_POS ) {
-        ToNormalize[iNDr]=i;
+        ToNormalize[iDr]=i;
       } else if ( Components[i]->GetOutputIdx() == FG_SPDBRAKE_POS ) {
-        ToNormalize[iNDsb]=i;
+        ToNormalize[iDsb]=i;
       } else if ( Components[i]->GetOutputIdx() == FG_SPOILERS_POS ) {
-        ToNormalize[iNDsp]=i;
+        ToNormalize[iDsp]=i;
       } else if ( Components[i]->GetOutputIdx() == FG_FLAPS_POS ) {
-        ToNormalize[iNDf]=i;
+        ToNormalize[iDf]=i;
       }
     }
   }     
@@ -407,29 +415,224 @@ void FGFCS::AddThrottle(void)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGFCS::Normalize(void) {
-  if( ToNormalize[iNDe] > -1 ) 
-    DePosN = Components[ToNormalize[iNDe]]->GetOutputPct();
   
-  if( ToNormalize[iNDaL] > -1 ) 
-    DaLPosN = Components[ToNormalize[iNDaL]]->GetOutputPct();
+  //not all of these are guaranteed to be defined for every model
+  //those that are have an index >=0 in the ToNormalize array
+  //ToNormalize is filled in Load()
   
-  if( ToNormalize[iNDaR] > -1 ) 
-    DaRPosN = Components[ToNormalize[iNDaR]]->GetOutputPct();
+  if( ToNormalize[iDe] > -1 ) {
+    DePos[ofNorm] = Components[ToNormalize[iDe]]->GetOutputPct();
+  }
   
-  if( ToNormalize[iNDr] > -1 ) 
-    DrPosN = Components[ToNormalize[iNDr]]->GetOutputPct();
+  if( ToNormalize[iDaL] > -1 ) {
+    DaLPos[ofNorm] = Components[ToNormalize[iDaL]]->GetOutputPct();
+  }
+  
+  if( ToNormalize[iDaR] > -1 ) {
+    DaRPos[ofNorm] = Components[ToNormalize[iDaR]]->GetOutputPct();
+  }
+
+  if( ToNormalize[iDr] > -1 ) {
+    DrPos[ofNorm] = Components[ToNormalize[iDr]]->GetOutputPct();
+  }
        
-  if( ToNormalize[iNDsb] > -1 ) 
-    DsbPosN = Components[ToNormalize[iNDsb]]->GetOutputPct();
+  if( ToNormalize[iDsb] > -1 ) { 
+    DsbPos[ofNorm] = Components[ToNormalize[iDsb]]->GetOutputPct();
+  }
   
-  if( ToNormalize[iNDsp] > -1 ) 
-    DspPosN = Components[ToNormalize[iNDsp]]->GetOutputPct();
+  if( ToNormalize[iDsp] > -1 ) {
+    DspPos[ofNorm] = Components[ToNormalize[iDsp]]->GetOutputPct();
+  }
   
-  if( ToNormalize[iNDf] > -1 ) 
-    DfPosN = Components[ToNormalize[iNDf]]->GetOutputPct();
+  if( ToNormalize[iDf] > -1 ) {
+    DfPos[ofNorm] = Components[ToNormalize[iDf]]->GetOutputPct();
+  }
+  
+  DePos[ofMag]  = fabs(DePos[ofRad]);
+  DaLPos[ofMag] = fabs(DaLPos[ofRad]);
+  DaRPos[ofMag] = fabs(DaRPos[ofRad]);
+  DrPos[ofMag]  = fabs(DrPos[ofRad]);
+  DsbPos[ofMag] = fabs(DsbPos[ofRad]);
+  DspPos[ofMag] = fabs(DspPos[ofRad]);
+  DfPos[ofMag]  = fabs(DfPos[ofRad]);
    
 }  
     
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFCS::bind(void){
+  PropertyManager->Tie("fcs/aileron-cmd-norm", this,
+                       &FGFCS::GetDaCmd,
+                       &FGFCS::SetDaCmd,
+                       true);
+  PropertyManager->Tie("fcs/elevator-cmd-norm", this,
+                       &FGFCS::GetDeCmd,
+                       &FGFCS::SetDeCmd,
+                       true);
+  PropertyManager->Tie("fcs/rudder-cmd-norm", this,
+                       &FGFCS::GetDrCmd,
+                       &FGFCS::SetDrCmd,
+                       true);
+  PropertyManager->Tie("fcs/flap-cmd-norm", this,
+                       &FGFCS::GetDfCmd,
+                       &FGFCS::SetDfCmd,
+                       true);
+  PropertyManager->Tie("fcs/speedbrake-cmd-norm", this,
+                       &FGFCS::GetDsbCmd,
+                       &FGFCS::SetDsbCmd,
+                       true);
+  PropertyManager->Tie("fcs/spoiler-cmd-norm", this,
+                       &FGFCS::GetDspCmd,
+                       &FGFCS::SetDspCmd,
+                       true);
+  PropertyManager->Tie("fcs/pitch-trim-cmd-norm", this,
+                       &FGFCS::GetPitchTrimCmd,
+                       &FGFCS::SetPitchTrimCmd,
+                       true);
+  PropertyManager->Tie("fcs/roll-trim-cmd-norm", this,
+                       &FGFCS::GetYawTrimCmd,
+                       &FGFCS::SetYawTrimCmd,
+                       true);
+  PropertyManager->Tie("fcs/yaw-trim-cmd-norm", this,
+                       &FGFCS::GetRollTrimCmd,
+                       &FGFCS::SetRollTrimCmd,
+                       true);
+  PropertyManager->Tie("gear/gear-cmd-norm", this,
+                       &FGFCS::GetGearCmd,
+                       &FGFCS::SetGearCmd,
+                       true);
+  
+  PropertyManager->Tie("fcs/left-aileron-pos-rad", this,ofRad,
+                       &FGFCS::GetDaLPos,
+                       &FGFCS::SetDaLPos,
+                       true);
+  PropertyManager->Tie("fcs/left-aileron-pos-norm", this,ofNorm,
+                       &FGFCS::GetDaLPos,
+                       &FGFCS::SetDaLPos,
+                       true);
+  PropertyManager->Tie("fcs/mag-left-aileron-pos-rad", this,ofMag,
+                       &FGFCS::GetDaLPos,
+                       &FGFCS::SetDaLPos,
+                       true);
+ 
+  PropertyManager->Tie("fcs/right-aileron-pos-rad", this,ofRad,
+                       &FGFCS::GetDaRPos,
+                       &FGFCS::SetDaRPos,
+                       true);
+  PropertyManager->Tie("fcs/right-aileron-pos-norm", this,ofNorm,
+                       &FGFCS::GetDaRPos,
+                       &FGFCS::SetDaRPos,
+                       true);
+  PropertyManager->Tie("fcs/mag-right-aileron-pos-rad", this,ofMag,
+                       &FGFCS::GetDaRPos,
+                       &FGFCS::SetDaRPos,
+                       true);
+  
+  PropertyManager->Tie("fcs/elevator-pos-rad", this, ofRad,
+                       &FGFCS::GetDePos,
+                       &FGFCS::SetDePos,
+                       true );
+  PropertyManager->Tie("fcs/elevator-pos-norm", this,ofNorm,
+                       &FGFCS::GetDePos,                       
+                       &FGFCS::SetDePos,
+                       true );
+  PropertyManager->Tie("fcs/mag-elevator-pos-rad", this,ofMag,
+                       &FGFCS::GetDePos,
+                       &FGFCS::SetDePos,
+                       true );
+  
+  PropertyManager->Tie("fcs/rudder-pos-rad", this,ofRad,
+                       &FGFCS::GetDrPos,
+                       &FGFCS::SetDrPos,
+                       true);
+  PropertyManager->Tie("fcs/rudder-pos-norm", this,ofNorm,
+                       &FGFCS::GetDrPos,
+                       &FGFCS::SetDrPos,
+                       true);
+  PropertyManager->Tie("fcs/mag-rudder-pos-rad", this,ofMag,
+                       &FGFCS::GetDrPos,
+                       &FGFCS::SetDrPos,
+                       true);
+                       
+  PropertyManager->Tie("fcs/flap-pos-deg", this,ofRad,
+                       &FGFCS::GetDfPos,
+                       &FGFCS::SetDfPos,
+                       true);
+  PropertyManager->Tie("fcs/flap-pos-norm", this,ofNorm,
+                       &FGFCS::GetDfPos,
+                       &FGFCS::SetDfPos,
+                       true);
+  
+  PropertyManager->Tie("fcs/speedbrake-pos-rad", this,ofRad,
+                       &FGFCS::GetDsbPos,
+                       &FGFCS::SetDsbPos,
+                       true);
+  PropertyManager->Tie("fcs/speedbrake-pos-norm", this,ofNorm,
+                       &FGFCS::GetDsbPos,
+                       &FGFCS::SetDsbPos,
+                       true);
+  PropertyManager->Tie("fcs/mag-speedbrake-pos-rad", this,ofMag,
+                       &FGFCS::GetDsbPos,
+                       &FGFCS::SetDsbPos,
+                       true);
+                       
+  PropertyManager->Tie("fcs/spoiler-pos-rad", this,ofRad,
+                       &FGFCS::GetDspPos,
+                       &FGFCS::SetDspPos,
+                       true);
+  PropertyManager->Tie("fcs/spoiler-pos-norm", this,ofNorm,
+                       &FGFCS::GetDspPos,
+                       &FGFCS::SetDspPos,
+                       true);
+  PropertyManager->Tie("fcs/mag-spoiler-pos-rad", this,ofMag,
+                       &FGFCS::GetDspPos,
+                       &FGFCS::SetDspPos,
+                       true);
+                       
+  PropertyManager->Tie("gear/gear-pos-norm", this,
+                       &FGFCS::GetGearPos,
+                       &FGFCS::SetGearPos,
+                       true);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFCS::unbind(void){
+  PropertyManager->Untie("fcs/aileron-cmd-norm");
+  PropertyManager->Untie("fcs/elevator-cmd-norm");
+  PropertyManager->Untie("fcs/rudder-cmd-norm");
+  PropertyManager->Untie("fcs/flap-cmd-norm");
+  PropertyManager->Untie("fcs/speedbrake-cmd-norm");
+  PropertyManager->Untie("fcs/spoiler-cmd-norm");
+  PropertyManager->Untie("fcs/pitch-trim-cmd-norm");
+  PropertyManager->Untie("fcs/roll-trim-cmd-norm");
+  PropertyManager->Untie("fcs/yaw-trim-cmd-norm");
+  PropertyManager->Untie("gear/gear-cmd-norm");
+  PropertyManager->Untie("fcs/left-aileron-pos-rad");
+  PropertyManager->Untie("fcs/mag-left-aileron-pos-rad");
+  PropertyManager->Untie("fcs/left-aileron-pos-norm");
+  PropertyManager->Untie("fcs/right-aileron-pos-rad");
+  PropertyManager->Untie("fcs/mag-right-aileron-pos-rad");
+  PropertyManager->Untie("fcs/right-aileron-pos-norm");
+  PropertyManager->Untie("fcs/elevator-pos-rad");
+  PropertyManager->Untie("fcs/mag-elevator-pos-rad");
+  PropertyManager->Untie("fcs/elevator-pos-norm");
+  PropertyManager->Untie("fcs/rudder-pos-rad");
+  PropertyManager->Untie("fcs/mag-rudder-pos-rad");
+  PropertyManager->Untie("fcs/rudder-pos-norm");
+  PropertyManager->Untie("fcs/flap-pos-deg");
+  PropertyManager->Untie("fcs/flap-pos-norm");
+  PropertyManager->Untie("fcs/speedbrake-pos-rad");
+  PropertyManager->Untie("fcs/mag-speedbrake-pos-rad");
+  PropertyManager->Untie("fcs/speedbrake-pos-norm");
+  PropertyManager->Untie("fcs/spoiler-pos-rad");
+  PropertyManager->Untie("fcs/mag-spoiler-pos-rad");
+  PropertyManager->Untie("fcs/spoiler-pos-norm");
+  PropertyManager->Untie("gear/gear-pos-norm");
+}
+
+
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print

@@ -39,9 +39,14 @@ INCLUDES
 #include "FGAerodynamics.h"
 #include "FGFactorGroup.h"
 #include "FGCoefficient.h"
+#include "FGPropertyManager.h"
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_AERODYNAMICS;
+
+const unsigned NAxes=6;                           
+const char* AxisNames[] = { "drag", "side-force", "lift", "rolling-moment",
+                            "pitching-moment","yawing-moment" }; 
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -60,6 +65,10 @@ FGAerodynamics::FGAerodynamics(FGFDMExec* FDMExec) : FGModel(FDMExec)
   AxisIdx["YAW"]   = 5;
 
   Coeff = new CoeffArray[6];
+  
+  clsq=lod=0;
+  
+  bind();
 
   Debug(0);
 }
@@ -69,13 +78,16 @@ FGAerodynamics::FGAerodynamics(FGFDMExec* FDMExec) : FGModel(FDMExec)
 FGAerodynamics::~FGAerodynamics()
 {
   unsigned int i,j;
+  
+  unbind();
+  
   for (i=0; i<6; i++) {
     for (j=0; j<Coeff[i].size(); j++) {
       delete Coeff[i][j];
     }
   }
   delete[] Coeff;
-
+  
   Debug(1);
 }
 
@@ -92,12 +104,25 @@ bool FGAerodynamics::Run(void)
 
     for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
       for (ctr=0; ctr < Coeff[axis_ctr].size(); ctr++) {
+        //Coeff[axis_ctr][ctr]->Run();
         vFs(axis_ctr+1) += Coeff[axis_ctr][ctr]->TotalValue();
+        //cout << Coeff[axis_ctr][ctr]->Getname() << "= " 
+        //     << Coeff[axis_ctr][ctr]->TotalValue() << endl;
       }
     }
     //correct signs of drag and lift to wind axes convention
     //positive forward, right, down
-    vFs(1)*=-1; vFs(3)*=-1;
+    if( Translation->Getqbar() > 0) {
+      clsq = vFs(eLift) / (Aircraft->GetWingArea()*Translation->Getqbar());
+      clsq *= clsq;
+    }
+    if ( vFs(eDrag)  > 0) {
+      lod = vFs(eLift) / vFs(eDrag);
+    }  
+        
+    //correct signs of drag and lift to wind axes convention
+    //positive forward, right, down
+    vFs(eDrag)*=-1; vFs(eLift)*=-1;
     //cout << "Aircraft::vFs: " << vFs << endl;
     vForces = State->GetTs2b()*vFs;
 
@@ -112,6 +137,7 @@ bool FGAerodynamics::Run(void)
 
     for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
       for (ctr = 0; ctr < Coeff[axis_ctr+3].size(); ctr++) {
+        //Coeff[axis_ctr+3][ctr]->Run();
         vMoments(axis_ctr+1) += Coeff[axis_ctr+3][ctr]->TotalValue();
       }
     }
@@ -150,6 +176,8 @@ bool FGAerodynamics::Load(FGConfigFile* AC_cfg)
     }
   }
 
+  bindModel();
+  
   return true;
 }
 
@@ -197,11 +225,75 @@ string FGAerodynamics::GetCoefficientValues(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double FGAerodynamics::GetLoD(void)
-{
-  if (vFs(1) != 0.00) return vFs(3)/vFs(1);
-  else                return 0.00;
+void FGAerodynamics::bind(void){
+  
+  PropertyManager->Tie("forces/fbx-aero-lbs", this,1,
+                       &FGAerodynamics::GetForces);
+  PropertyManager->Tie("forces/fby-aero-lbs", this,2,
+                       &FGAerodynamics::GetForces);
+  PropertyManager->Tie("forces/fbz-aero-lbs", this,3,
+                       &FGAerodynamics::GetForces);
+  PropertyManager->Tie("moments/l-aero-lbsft", this,1,
+                       &FGAerodynamics::GetMoments);
+  PropertyManager->Tie("moments/m-aero-lbsft", this,2,
+                       &FGAerodynamics::GetMoments);
+  PropertyManager->Tie("moments/n-aero-lbsft", this,3,
+                       &FGAerodynamics::GetMoments);
+  PropertyManager->Tie("forces/fwx-aero-lbs", this,1,
+                       &FGAerodynamics::GetvFs);
+  PropertyManager->Tie("forces/fwy-aero-lbs", this,2,
+                       &FGAerodynamics::GetvFs);
+  PropertyManager->Tie("forces/fwz-aero-lbs", this,3,
+                       &FGAerodynamics::GetvFs);
+  PropertyManager->Tie("forces/lod-norm", this,
+                       &FGAerodynamics::GetLoD);
+  PropertyManager->Tie("aero/cl-squared-norm", this,
+                       &FGAerodynamics::GetClSquared); 
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGAerodynamics::bindModel(void) { 
+ 
+  unsigned i,j;
+  FGPropertyManager* node;
+  string prop_name;
+  
+  for(i=0;i<NAxes;i++) {
+     for (j=0; j < Coeff[i].size(); j++) { 
+       prop_name = "aero/buildup/" + string(AxisNames[i]) 
+                    + "/" + Coeff[i][j]->Getname();
+       node= PropertyManager->GetNode(prop_name,true);
+       Coeff[i][j]->bind(node);
+     }                                          
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGAerodynamics::unbind(void){
+  unsigned i,j;
+
+  PropertyManager->Untie("forces/fbx-aero-lbs");
+  PropertyManager->Untie("forces/fby-aero-lbs");
+  PropertyManager->Untie("forces/fbz-aero-lbs");
+  PropertyManager->Untie("moments/l-aero-lbsft");
+  PropertyManager->Untie("moments/m-aero-lbsft");
+  PropertyManager->Untie("moments/n-aero-lbsft");
+  PropertyManager->Untie("forces/fwx-aero-lbs");
+  PropertyManager->Untie("forces/fwy-aero-lbs");
+  PropertyManager->Untie("forces/fwz-aero-lbs");
+  PropertyManager->Untie("forces/lod-norm");
+  PropertyManager->Untie("aero/cl-squared-norm");  
+  
+  for( i=0; i<NAxes; i++ ) {
+     for ( j=0; j < Coeff[i].size(); j++ ) {
+       Coeff[i][j]->unbind();
+       
+     }
+  }
+}
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:
 //    unset: In this case (the default) JSBSim would only print

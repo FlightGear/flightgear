@@ -112,18 +112,19 @@ public:
   /** Gets the total aerodynamic force vector.
       @return a force vector reference. */
   FGColumnVector3& GetForces(void) {return vForces;}
-  inline double GetForces(int n) {return vForces(n);}
+  inline double GetForces(int n) const {return vForces(n);}
 
   /** Gets the total aerodynamic moment vector.
       @return a moment vector reference. */
   FGColumnVector3& GetMoments(void) {return vMoments;}
-  inline double GetMoments(int n) {return vMoments(n);}
+  inline double GetMoments(int n) const {return vMoments(n);}
 
   inline FGColumnVector3& GetvLastFs(void) { return vLastFs; }
-  inline double GetvLastFs(int axis) { return vLastFs(axis); }
+  inline double GetvLastFs(int axis) const { return vLastFs(axis); }
   inline FGColumnVector3& GetvFs(void) { return vFs; }
-  inline double GetvFs(int axis) { return vFs(axis); }
-  double GetLoD(void);
+  inline double GetvFs(int axis) const { return vFs(axis); }
+  inline double GetLoD(void) const { return lod; }
+  inline double GetClSquared(void) const { return clsq; } 
 
     /** Gets the strings for the current set of coefficients.
       @return a string containing the descriptive names for all coefficients */
@@ -136,7 +137,10 @@ public:
   
   inline FGCoefficient* GetCoefficient(string name) { return cm[name]; }
 
-
+  void bind(void);
+  void bindModel(void);
+  void unbind(void);
+  
 private:
   typedef map<string,int> AxisIndex;
   AxisIndex AxisIdx;
@@ -149,6 +153,7 @@ private:
   FGColumnVector3 vMoments;
   FGColumnVector3 vLastFs;
   FGColumnVector3 vDXYZcg;
+  double clsq,lod;
 
   void Debug(int from);
 };

@@ -59,6 +59,8 @@ FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex)
   RadiusReference = 20925650.00;
   gAccelReference = GM/(RadiusReference*RadiusReference);
   gAccel          = GM/(RadiusReference*RadiusReference);
+  
+  bind();
 
   Debug(0);
 }
@@ -67,6 +69,7 @@ FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex)
 
 FGInertial::~FGInertial(void)
 {
+  unbind();
   Debug(1);
 }
 
@@ -168,3 +171,17 @@ void FGInertial::Debug(int from)
   }
 }
 
+void FGInertial::bind(void){
+  PropertyManager->Tie("forces/fbx-inertial-lbs", this,1,
+                       &FGInertial::GetForces);
+  PropertyManager->Tie("forces/fby-inertial-lbs", this,2,
+                       &FGInertial::GetForces);
+  PropertyManager->Tie("forces/fbz-inertial-lbs", this,3,
+                       &FGInertial::GetForces);
+}
+
+void FGInertial::unbind(void){
+  PropertyManager->Untie("forces/fbx-inertial-lbs");
+  PropertyManager->Untie("forces/fby-inertial-lbs");
+  PropertyManager->Untie("forces/fbz-inertial-lbs");
+}

@@ -70,7 +70,7 @@ CLASS IMPLEMENTATION
 FGFactorGroup::FGFactorGroup( FGFDMExec* fdmex ) : FGCoefficient( fdmex)
 {
   FDMExec = fdmex;
-
+  totalValue = 0;
   Debug(0);
 }  
 
@@ -115,16 +115,17 @@ bool FGFactorGroup::Load(FGConfigFile *AC_cfg)
 double FGFactorGroup::TotalValue(void)
 {
   unsigned int i;
-  double totalsum = 0;
   SDtotal = 0.0;
+  totalValue = 0.0;
   for (i=0; i<sum.size(); i++) {
-     totalsum += sum[i]->TotalValue();
+     totalValue += sum[i]->TotalValue();
      SDtotal += sum[i]->GetSD();
   }
-  totalsum *= FGCoefficient::TotalValue();
+  //cout << totalValue << "  " << FGCoefficient::TotalValue() << endl;
+  totalValue *= FGCoefficient::TotalValue();
   SDtotal *= FGCoefficient::GetSD();
   Debug(2);
-  return totalsum;
+  return totalValue;
 }
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/

@@ -85,7 +85,13 @@ FGModel::FGModel(FGFDMExec* fdmex)
   Position        = 0;
   Auxiliary       = 0;
   Output          = 0;
-
+  
+  //in order for FGModel derived classes to self-bind (that is, call
+  //their bind function in the constructor, the PropertyManager pointer
+  //must be brought up now.
+  PropertyManager = FDMExec->GetPropertyManager();
+  
+  
   exe_ctr     = 1;
 
   if (debug_lvl & 2) cout << "              FGModel Base Class" << endl;
@@ -116,7 +122,7 @@ bool FGModel::InitModel(void)
   Position        = FDMExec->GetPosition();
   Auxiliary       = FDMExec->GetAuxiliary();
   Output          = FDMExec->GetOutput();
-
+  
   if (!State ||
       !Atmosphere ||
       !FCS ||

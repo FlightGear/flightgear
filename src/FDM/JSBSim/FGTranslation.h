@@ -86,21 +86,22 @@ class FGTranslation : public FGModel {
 public:
   FGTranslation(FGFDMExec*);
   ~FGTranslation();
-
+  
+  inline double           GetUVW   (int idx) const { return vUVW(idx); }
   inline FGColumnVector3& GetUVW   (void)    { return vUVW; }
-  inline double           GetUVW   (int idx) { return vUVW(idx); }
   inline FGColumnVector3& GetUVWdot(void)    { return vUVWdot; }
-  inline double           GetUVWdot(int idx) { return vUVWdot(idx); }
+  inline double           GetUVWdot(int idx) const { return vUVWdot(idx); }
   inline FGColumnVector3& GetvAeroUVW (void)    { return vAeroUVW; }
-  inline double           GetvAeroUVW (int idx) { return vAeroUVW(idx); }
+  inline double           GetvAeroUVW (int idx) const { return vAeroUVW(idx); }
 
-  inline double Getalpha(void) { return alpha; }
-  inline double Getbeta (void) { return beta; }
-  inline double Getqbar (void) { return qbar; }
-  inline double GetVt   (void) { return Vt; }
-  inline double GetMach (void) { return Mach; }
-  inline double Getadot (void) { return adot; }
-  inline double Getbdot (void) { return bdot; }
+  double Getalpha(void) const { return alpha; }
+  double Getbeta (void) const { return beta; }
+  inline double GetMagBeta(void) const { return fabs(beta); }
+  double Getqbar (void) const { return qbar; }
+  inline double GetVt   (void) const { return Vt; }
+  double GetMach (void) const { return Mach; }
+  double Getadot (void) const { return adot; }
+  double Getbdot (void) const { return bdot; }
 
   void SetUVW(FGColumnVector3 tt) { vUVW = tt; }
 
@@ -115,6 +116,9 @@ public:
   inline void SetAB(double t1, double t2) { alpha=t1; beta=t2; }
   
   bool Run(void);
+
+  void bind(void);
+  void unbind(void);
 
 private:
   FGColumnVector3 vUVW;

@@ -39,6 +39,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGMassBalance.h"
+#include "FGPropertyManager.h"
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_MASSBALANCE;
@@ -51,6 +52,7 @@ CLASS IMPLEMENTATION
 FGMassBalance::FGMassBalance(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGMassBalance";
+  bind();
 
   Debug(0);
 }
@@ -59,6 +61,7 @@ FGMassBalance::FGMassBalance(FGFDMExec* fdmex) : FGModel(fdmex)
 
 FGMassBalance::~FGMassBalance()
 {
+  unbind();
   Debug(1);
 }
 
@@ -131,7 +134,7 @@ double FGMassBalance::GetPMIxx(void)
 {
   double I = 0.0;
   for (unsigned int i=0; i<PointMassLoc.size(); i++) {
-    I += PointMassLoc[i](eX)*PointMassLoc[i](eX)*PointMassWeight[i];
+    I += (PointMassLoc[i](eX)-vXYZcg(eX))*(PointMassLoc[i](eX)-vXYZcg(eX))*PointMassWeight[i];
   }
   I /= (144.0*Inertial->gravity());
   return I;
@@ -143,7 +146,7 @@ double FGMassBalance::GetPMIyy(void)
 {
   double I = 0.0;
   for (unsigned int i=0; i<PointMassLoc.size(); i++) {
-    I += PointMassLoc[i](eY)*PointMassLoc[i](eY)*PointMassWeight[i];
+    I += (PointMassLoc[i](eY)-vXYZcg(eY))*(PointMassLoc[i](eY)-vXYZcg(eY))*PointMassWeight[i];
   }
   I /= (144.0*Inertial->gravity());
   return I;
@@ -155,7 +158,7 @@ double FGMassBalance::GetPMIzz(void)
 {
   double I = 0.0;
   for (unsigned int i=0; i<PointMassLoc.size(); i++) {
-    I += PointMassLoc[i](eZ)*PointMassLoc[i](eZ)*PointMassWeight[i];
+    I += (PointMassLoc[i](eZ)-vXYZcg(eZ))*(PointMassLoc[i](eZ)-vXYZcg(eZ))*PointMassWeight[i];
   }
   I /= (144.0*Inertial->gravity());
   return I;
@@ -167,7 +170,7 @@ double FGMassBalance::GetPMIxy(void)
 {
   double I = 0.0;
   for (unsigned int i=0; i<PointMassLoc.size(); i++) {
-    I += PointMassLoc[i](eX)*PointMassLoc[i](eY)*PointMassWeight[i];
+    I += (PointMassLoc[i](eX)-vXYZcg(eX))*(PointMassLoc[i](eY)-vXYZcg(eY))*PointMassWeight[i];
   }
   I /= (144.0*Inertial->gravity());
   return I;
@@ -179,7 +182,7 @@ double FGMassBalance::GetPMIxz(void)
 {
   double I = 0.0;
   for (unsigned int i=0; i<PointMassLoc.size(); i++) {
-    I += PointMassLoc[i](eX)*PointMassLoc[i](eZ)*PointMassWeight[i];
+    I += (PointMassLoc[i](eX)-vXYZcg(eX))*(PointMassLoc[i](eZ)-vXYZcg(eZ))*PointMassWeight[i];
   }
   I /= (144.0*Inertial->gravity());
   return I;
@@ -239,3 +242,38 @@ void FGMassBalance::Debug(int from)
   }
 }
 
+void FGMassBalance::bind(void){
+  PropertyManager->Tie("inertia/mass-slugs", this,
+                       &FGMassBalance::GetMass);
+  PropertyManager->Tie("inertia/weight-lbs", this,
+                       &FGMassBalance::GetWeight);
+  PropertyManager->Tie("inertia/ixx-lbsft2", this,
+                       &FGMassBalance::GetIxx);
+  PropertyManager->Tie("inertia/iyy-lbsft2", this,
+                       &FGMassBalance::GetIyy);
+  PropertyManager->Tie("inertia/izz-lbsft2", this,
+                       &FGMassBalance::GetIzz);
+  PropertyManager->Tie("inertia/ixy-lbsft2", this,
+                       &FGMassBalance::GetIxy);
+  PropertyManager->Tie("inertia/ixz-lbsft2", this,
+                       &FGMassBalance::GetIxz);
+  PropertyManager->Tie("inertia/cg-x-ft", this,1,
+                       &FGMassBalance::GetXYZcg);
+  PropertyManager->Tie("inertia/cg-y-ft", this,2,
+                       &FGMassBalance::GetXYZcg);
+  PropertyManager->Tie("inertia/cg-z-ft", this,3,
+                       &FGMassBalance::GetXYZcg);
+}
+
+void FGMassBalance::unbind(void){
+  PropertyManager->Untie("inertia/mass-slugs");
+  PropertyManager->Untie("inertia/weight-lbs");
+  PropertyManager->Untie("inertia/ixx-lbsft2");
+  PropertyManager->Untie("inertia/iyy-lbsft2");
+  PropertyManager->Untie("inertia/izz-lbsft2");
+  PropertyManager->Untie("inertia/ixy-lbsft2");
+  PropertyManager->Untie("inertia/ixz-lbsft2");
+  PropertyManager->Untie("inertia/cg-x-ft");
+  PropertyManager->Untie("inertia/cg-y-ft");
+  PropertyManager->Untie("inertia/cg-z-ft");
+}

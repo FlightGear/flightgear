@@ -53,6 +53,8 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGPropulsion.h"
+#include "FGPropertyManager.h"
+
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_PROPULSION;
@@ -67,7 +69,7 @@ FGPropulsion::FGPropulsion(FGFDMExec* exec) : FGModel(exec)
   numSelectedFuelTanks = numSelectedOxiTanks = 0;
   numTanks = numEngines = numThrusters = 0;
   numOxiTanks = numFuelTanks = 0;
-
+  bind();
   Debug(0);
 }
 
@@ -77,6 +79,7 @@ FGPropulsion::~FGPropulsion()
 {
   for (unsigned int i=0; i<Engines.size(); i++) delete Engines[i];
   Engines.clear();
+  unbind();
   Debug(1);
 }
 
@@ -588,3 +591,41 @@ void FGPropulsion::Debug(int from)
   }
 }
 
+void FGPropulsion::bind(void){
+  /* PropertyManager->Tie("propulsion/num-engines", this,
+                       &FGPropulsion::GetNumEngines);
+  PropertyManager->Tie("propulsion/num-tanks", this,
+                       &FGPropulsion::GetNumTanks); */
+  PropertyManager->Tie("propulsion/num-sel-fuel-tanks", this,
+                       &FGPropulsion::GetnumSelectedFuelTanks);
+  PropertyManager->Tie("propulsion/num-sel-ox-tanks", this,
+                       &FGPropulsion::GetnumSelectedOxiTanks);
+  PropertyManager->Tie("propulsion/fbx-prop-lbs", this,1,
+                       &FGPropulsion::GetForces);
+  PropertyManager->Tie("propulsion/fby-prop-lbs", this,2,
+                       &FGPropulsion::GetForces);
+  PropertyManager->Tie("propulsion/fbz-prop-lbs", this,3,
+                       &FGPropulsion::GetForces);
+  PropertyManager->Tie("propulsion/l-prop-lbsft", this,1,
+                       &FGPropulsion::GetMoments);
+  PropertyManager->Tie("propulsion/m-prop-lbsft", this,2,
+                       &FGPropulsion::GetMoments);
+  PropertyManager->Tie("propulsion/n-prop-lbsft", this,3,
+                       &FGPropulsion::GetMoments);
+  //PropertyManager->Tie("propulsion/tanks-weight-lbs", this,
+  //                     &FGPropulsion::GetTanksWeight);
+}
+
+void FGPropulsion::unbind(void){
+  /* PropertyManager->Untie("propulsion/num-engines");
+  PropertyManager->Untie("propulsion/num-tanks"); */
+  PropertyManager->Untie("propulsion/num-sel-fuel-tanks");
+  PropertyManager->Untie("propulsion/num-sel-ox-tanks");
+  PropertyManager->Untie("propulsion/fbx-prop-lbs");
+  PropertyManager->Untie("propulsion/fby-prop-lbs");
+  PropertyManager->Untie("propulsion/fbz-prop-lbs");
+  PropertyManager->Untie("propulsion/l-prop-lbsft");
+  PropertyManager->Untie("propulsion/m-prop-lbsft");
+  PropertyManager->Untie("propulsion/n-prop-lbsft");
+  //PropertyManager->Untie("propulsion/tanks-weight-lbs");
+}
