@@ -494,7 +494,7 @@ double FGSteam::get_HackADF_deg () {
 
     if ( current_radiostack->get_adf_inrange() ) {
 	double r = current_radiostack->get_adf_heading()
-            - fgGetDouble("orientation/heading");
+            - fgGetDouble("/orientation/heading-deg");
 	last_r = r;
 	// cout << "Radial = " << current_radiostack->get_adf_heading() 
 	//      << "  Heading = " << FGBFI::getHeading() << endl;
