@@ -65,6 +65,8 @@ FGATCMgr::FGATCMgr() {
 	comm_type[1] = INVALID;
 	comm_atc_ptr[0] = NULL;
 	comm_atc_ptr[1] = NULL;
+        comm_valid[0] = false;
+        comm_valid[1] = false;
 }
 
 FGATCMgr::~FGATCMgr() {
