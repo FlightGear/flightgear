@@ -1,0 +1,96 @@
+#ifndef _HITLIST_HXX
+#define _HITLIST_HXX
+
+#ifndef __cplusplus                                                          
+# error This library requires C++
+#endif                                   
+
+#include <simgear/compiler.h>
+
+#include <vector>
+
+#include <plib/ssg.h>
+
+FG_USING_STD(vector);
+
+
+class FGHitRec {
+
+private:
+    ssgEntity *ent;
+    int index;
+    sgdVec3 point;
+    sgdVec3 normal;
+
+public:
+
+    FGHitRec( ssgEntity *e, int idx, sgdVec3 p, sgdVec3 n ) {
+	ent = e;
+	index = idx;
+	sgdSetVec3(point,p[0],p[1],p[2]);
+	sgdSetVec3(normal,n[0],n[1],n[2]);
+    }
+
+    ssgEntity *get_entity(void) { return ent; }
+    int get_face(void)          { return index; }
+    double *get_point(void)     { return point; }
+    double *get_normal(void)    { return normal; }
+};
+
+
+class FGHitList {
+
+private:
+
+    ssgEntity *last;
+    vector < FGHitRec > list;
+
+public:
+
+    FGHitList() { last = NULL; }
+    void init(void) { list.clear(); }
+    void clear(void) { init(); last = NULL; }
+    void add( ssgEntity *ent, int idx, sgdVec3 point, sgdVec3 normal ) {
+	list.push_back( FGHitRec( ent,idx,point,normal) );
+	last = ent;
+    }
+    int num_hits(void) { return list.size(); }
+    ssgEntity *get_entity(int i)  { return list[i].get_entity(); }
+    ssgEntity *last_hit(void)     { return last; }
+    int get_face(int i)           { return list[i].get_face(); }
+    double *get_point(int i)      { return list[i].get_point(); }
+    double *get_normal(int i)     { return list[i].get_normal(); }
+		
+    void Intersect( ssgBranch *branch,
+		    sgdVec3 orig, sgdVec3 dir );
+		
+    void IntersectBranch( ssgBranch *branch, sgdMat4 m,
+			  sgdVec3 orig, sgdVec3 dir);
+		
+    void IntersectCachedLeaf( sgdMat4 m,
+			      sgdVec3 orig, sgdVec3 dir);
+		
+    int IntersectLeaf( ssgLeaf *leaf, sgdMat4 m,
+		       sgdVec3 orig, sgdVec3 dir );
+};
+
+
+inline void FGHitList::Intersect( ssgBranch *scene,
+				  sgdVec3 orig, sgdVec3 dir )
+{
+    sgdMat4 m;
+
+    init();
+
+    if( last_hit() ) {
+	sgdMakeIdentMat4 ( m ) ;
+	IntersectCachedLeaf(m, orig, dir);
+    }
+    if( ! num_hits() ) {
+	clear();
+	sgdMakeIdentMat4 ( m ) ;
+	IntersectBranch( scene, m, orig, dir);
+    }
+}
+
+#endif // _HITLIST_HXX
