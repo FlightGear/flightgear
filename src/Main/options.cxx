@@ -1166,6 +1166,7 @@ struct OptionDesc {
     {"opengc",                       true,  OPTION_CHANNEL, "", false, "", 0 },
     {"garmin",                       true,  OPTION_CHANNEL, "", false, "", 0 },
     {"nmea",                         true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"generic",                      true,  OPTION_CHANNEL, "", false, "", 0 },
     {"props",                        true,  OPTION_CHANNEL, "", false, "", 0 },
     {"telnet",                       true,  OPTION_CHANNEL, "", false, "", 0 },
     {"pve",                          true,  OPTION_CHANNEL, "", false, "", 0 },

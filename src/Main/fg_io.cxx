@@ -56,6 +56,7 @@
 #include <Network/pve.hxx>
 #include <Network/ray.hxx>
 #include <Network/rul.hxx>
+#include <Network/generic.hxx>
 
 #ifdef FG_MPLAYER_AS
 #include <Network/multiplay.hxx>
@@ -159,6 +160,9 @@ FGIO::parse_port_config( const string& config )
 	} else if ( protocol == "rul" ) {
 	    FGRUL *rul = new FGRUL;
 	    io = rul;
+        } else if ( protocol == "generic" ) {
+            FGGeneric *generic = new FGGeneric( tokens[6] );
+            io = generic;
 
 #ifdef FG_MPLAYER_AS
 	} else if ( protocol == "multiplay" ) {\

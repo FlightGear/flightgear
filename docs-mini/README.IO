@@ -15,6 +15,50 @@ The general form of the command line option is as follows:
     hz = number of times to process channel per second (floating
          point values are ok.
 
+Generic Communction:
+
+    --generic=params
+
+    With this option it is possible to output a pre-configured
+    ASCII string using a predefined seperator. The configuration is
+    defined in an XML file located in the Protocol directiory of 
+    the base package.
+
+    params can be:
+    serial port communication:    serial,dir,hz,device,baud,protocol
+    socket communication:         socket,dir,hz,machine,port,style,protocol
+    output to a file:             file,dir,hz,filename,,protocol
+
+
+    The confinfiguration file is defined as follows:
+
+    <?xml version="1.0"?>
+    <PropertyList>
+
+     <generic>
+      <output>
+       <seperator>\n</seperator>
+
+        <chunk>
+         <name>speed</name>               <!-- for readabillity              -->
+         <type>int</type>	          <!-- one of: bool,int,float,string -->
+         <format>V=%d</format>            <!-- output format string          -->
+         <node>/velocities/speed</node>   <!-- location of the value         -->
+         <offset>0.0</offset>             <!-- add this to the value         -->
+         <factor>1.0</factor>             <!-- multiply by this value        -->
+       </chunk>
+
+       <chunk>
+        ...
+       </chunk>
+
+       ...
+
+      </output>
+     </generic>
+    </PropertyList>
+
+
 Serial Port Communication:
 
     --nmea=serial,dir,hz,device,baud

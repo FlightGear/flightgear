@@ -31,6 +31,7 @@ libNetwork_a_SOURCES = \
 	props.cxx props.hxx \
 	pve.cxx pve.hxx \
 	ray.cxx ray.hxx \
-	rul.cxx rul.hxx
+	rul.cxx rul.hxx \
+	generic.hxx generic.cxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
