@@ -42,45 +42,139 @@ public:
 
 private:
 
-  struct Animation
-  {
-    Animation ();
-    virtual ~Animation ();
-    enum Type {
-      None,
-      Spin,
-      Rotate
-    };
-    string name;
-    Type type;
-    ssgTransform * transform;
-    sgMat4 matrix;
-    SGPropertyNode * prop;
-    float factor;
-    float offset;
-    float position;
-    bool has_min;
-    float min;
-    bool has_max;
-    float max;
-    sgVec3 center;
-    sgVec3 axis;
-    void setRotation ();
-  };
+  class Animation;
 
-  void read_animation (Animation &animation,
-		       const string &object_name,
-		       const SGPropertyNode * node);
-  void do_animation (Animation &animation, long elapsed_ms);
+  Animation * make_animation (const char * object_name, SGPropertyNode * node);
 
   ssgEntity * _model;
   ssgSelector * _selector;
   ssgTransform * _position;
 
-  SGTimeStamp _last_timestamp;
-  SGTimeStamp _current_timestamp;
+  vector <Animation *> _animations;
 
-  vector<Animation> _animations;
+
+  
+  //////////////////////////////////////////////////////////////////////
+  // Internal classes for individual animations.
+  //////////////////////////////////////////////////////////////////////
+
+  /**
+   * Abstract base class for all animations.
+   */
+  class Animation
+  {
+  public:
+
+    Animation ();
+
+    virtual ~Animation ();
+
+    /**
+     * Initialize the animation.
+     *
+     * @param object The object to animate.
+     * @param props The property node with configuration information.
+     */
+    virtual void init (ssgEntity * object, SGPropertyNode * props) = 0;
+
+
+    /**
+     * Update the animation.
+     *
+     * @param dt The elapsed time in milliseconds since the last call.
+     */
+    virtual void update (int dt) = 0;
+
+  };
+
+
+  /**
+   * A no-op animation.
+   */
+  class NullAnimation : public Animation
+  {
+  public:
+    NullAnimation ();
+    virtual ~NullAnimation ();
+    virtual void init (ssgEntity * object, SGPropertyNode * props);
+    virtual void update (int dt);
+  };
+
+
+  /**
+   * Animation to spin an object around a center point.
+   *
+   * This animation rotates at a specific velocity.
+   */
+  class SpinAnimation : public Animation
+  {
+  public:
+    SpinAnimation ();
+    virtual ~SpinAnimation ();
+    virtual void init (ssgEntity * object, SGPropertyNode * props);
+    virtual void update (int dt);
+  private:
+    SGPropertyNode * _prop;
+    double _factor;
+    double _position_deg;
+    sgMat4 _matrix;
+    sgVec3 _center;
+    sgVec3 _axis;
+    ssgTransform * _transform;
+  };
+
+
+  /**
+   * Animation to rotate an object around a center point.
+   *
+   * This animation rotates to a specific position.
+   */
+  class RotateAnimation : public Animation
+  {
+  public:
+    RotateAnimation ();
+    virtual ~RotateAnimation ();
+    virtual void init (ssgEntity * object, SGPropertyNode * props);
+    virtual void update (int dt);
+  private:
+    SGPropertyNode * _prop;
+    double _offset_deg;
+    double _factor;
+    bool _has_min;
+    double _min_deg;
+    bool _has_max;
+    double _max_deg;
+    double _position_deg;
+    sgMat4 _matrix;
+    sgVec3 _center;
+    sgVec3 _axis;
+    ssgTransform * _transform;
+  };
+
+
+  /**
+   * Animation to slide along an axis.
+   */
+  class TranslateAnimation : public Animation
+  {
+  public:
+    TranslateAnimation ();
+    virtual ~TranslateAnimation ();
+    virtual void init (ssgEntity * object, SGPropertyNode * props);
+    virtual void update (int dt);
+  private:
+    SGPropertyNode * _prop;
+    double _offset_m;
+    double _factor;
+    bool _has_min;
+    double _min_m;
+    bool _has_max;
+    double _max_m;
+    double _position_m;
+    sgMat4 _matrix;
+    sgVec3 _axis;
+    ssgTransform * _transform;
+  };
 
 };
 

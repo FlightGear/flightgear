@@ -7,6 +7,8 @@
 #  include <config.h>
 #endif
 
+#include <string.h>		// for strcmp()
+
 #include <plib/sg.h>
 #include <plib/ssg.h>
 
@@ -25,13 +27,16 @@ extern ssgRoot * cockpit;		// FIXME: from main.cxx
 FGAircraftModel current_model;	// FIXME: add to globals
 
 
-
+
+////////////////////////////////////////////////////////////////////////
+// Static utility functions.
+////////////////////////////////////////////////////////////////////////
 
 static ssgEntity *
-find_named_node (ssgEntity * node, const string &name)
+find_named_node (ssgEntity * node, const char * name)
 {
   char * node_name = node->getName();
-  if (node_name != 0 && name == node_name)
+  if (node_name != 0 && !strcmp(name, node_name))
     return node;
   else if (node->isAKindOf(ssgTypeBranch())) {
     int nKids = node->getNumKids();
@@ -45,6 +50,81 @@ find_named_node (ssgEntity * node, const string &name)
   return 0;
 }
 
+/**
+ * Splice a branch in between all child nodes and their parents.
+ */
+static void
+splice_branch (ssgBranch * branch, ssgEntity * child)
+{
+  int nParents = child->getNumParents();
+  branch->addKid(child);
+  for (int i = 0; i < nParents; i++) {
+    ssgBranch * parent = child->getParent(i);
+    parent->replaceKid(child, branch);
+  }
+}
+
+/**
+ * Set up the transform matrix for a spin or rotation.
+ */
+static void
+set_rotation (sgMat4 &matrix, double position_deg,
+	      sgVec3 &center, sgVec3 &axis)
+{
+ float temp_angle = -position_deg * SG_DEGREES_TO_RADIANS ;
+ 
+ float s = (float) sin ( temp_angle ) ;
+ float c = (float) cos ( temp_angle ) ;
+ float t = SG_ONE - c ;
+
+ // axis was normalized at load time 
+ // hint to the compiler to put these into FP registers
+ float x = axis[0];
+ float y = axis[1];
+ float z = axis[2];
+
+ matrix[0][0] = t * x * x + c ;
+ matrix[0][1] = t * y * x - s * z ;
+ matrix[0][2] = t * z * x + s * y ;
+ matrix[0][3] = SG_ZERO;
+ 
+ matrix[1][0] = t * x * y + s * z ;
+ matrix[1][1] = t * y * y + c ;
+ matrix[1][2] = t * z * y - s * x ;
+ matrix[1][3] = SG_ZERO;
+ 
+ matrix[2][0] = t * x * z - s * y ;
+ matrix[2][1] = t * y * z + s * x ;
+ matrix[2][2] = t * z * z + c ;
+ matrix[2][3] = SG_ZERO;
+
+  // hint to the compiler to put these into FP registers
+ x = center[0];
+ y = center[1];
+ z = center[2];
+ 
+ matrix[3][0] = x - x*matrix[0][0] - y*matrix[1][0] - z*matrix[2][0];
+ matrix[3][1] = y - x*matrix[0][1] - y*matrix[1][1] - z*matrix[2][1];
+ matrix[3][2] = z - x*matrix[0][2] - y*matrix[1][2] - z*matrix[2][2];
+ matrix[3][3] = SG_ONE;
+}
+
+/**
+ * Set up the transform matrix for a translation.
+ */
+static void
+set_translation (sgMat4 &matrix, double position_m, sgVec3 &axis)
+{
+  sgVec3 xyz;
+  sgScaleVec3(xyz, axis, position_m);
+  sgMakeTransMat4(matrix, xyz);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGAircraftModel
+////////////////////////////////////////////////////////////////////////
 
 FGAircraftModel::FGAircraftModel ()
   : _model(0),
@@ -57,6 +137,13 @@ FGAircraftModel::~FGAircraftModel ()
 {
   // since the nodes are attached to the scene graph, they'll be
   // deleted automatically
+
+  for (int i = 0; i < _animations.size(); i++) {
+    Animation * tmp = _animations[i];
+    _animations[i] = 0;
+    delete tmp;
+  }
+
 }
 
 void 
@@ -95,8 +182,7 @@ FGAircraftModel::init ()
   }
 
 				// Load animations
-  vector<SGPropertyNode *> animation_nodes =
-    props.getChildren("animation");
+  vector<SGPropertyNode *> animation_nodes = props.getChildren("animation");
   for (unsigned int i = 0; i < animation_nodes.size(); i++) {
     vector<SGPropertyNode *> name_nodes =
       animation_nodes[i]->getChildren("object-name");
@@ -104,10 +190,10 @@ FGAircraftModel::init ()
       SG_LOG(SG_INPUT, SG_ALERT, "No object-name given for transformation");
     } else {
       for (unsigned int j = 0; j < name_nodes.size(); j++) {
-	Animation animation;
-	read_animation(animation, name_nodes[j]->getStringValue(),
-		       animation_nodes[i]);
-	_animations.push_back(animation);
+	Animation * animation =
+	  make_animation(name_nodes[j]->getStringValue(), animation_nodes[i]);
+	if (animation != 0)
+	  _animations.push_back(animation);
       }
     }
   }
@@ -154,17 +240,13 @@ FGAircraftModel::update (int dt)
   sgMat4 MODEL_ROT, LOCAL;
   sgMat4 sgTRANS;
 
-  _current_timestamp.stamp();
-  long elapsed_ms = (_current_timestamp - _last_timestamp) / 1000;
-  _last_timestamp.stamp();
-
   int view_number = globals->get_viewmgr()->get_current();
 
   if (view_number == 0 && !fgGetBool("/sim/view/internal")) {
     _selector->select(false);
   } else {
     for (unsigned int i = 0; i < _animations.size(); i++)
-      do_animation(_animations[i], elapsed_ms);
+      _animations[i]->update(dt);
 
     _selector->select(true);
     FGViewer *current_view = 
@@ -206,107 +288,35 @@ FGAircraftModel::update (int dt)
   }
 }
 
-void
-FGAircraftModel::read_animation (Animation &animation,
-				 const string &object_name,
-				 const SGPropertyNode * node)
+FGAircraftModel::Animation *
+FGAircraftModel::make_animation (const char * object_name,
+				 SGPropertyNode * node)
 {
-				// Find the object to be animated
-  ssgEntity * target = find_named_node(_model, object_name);
-  if (target != 0) {
-    SG_LOG(SG_INPUT, SG_INFO, "  Target object is " << object_name);
+  Animation * animation = 0;
+  const char * type = node->getStringValue("type");
+  if (!strcmp("none", type)) {
+    animation = new NullAnimation();
+  } else if (!strcmp("spin", type)) {
+    animation = new SpinAnimation();
+  } else if (!strcmp("rotate", type)) {
+    animation = new RotateAnimation();
+  } else if (!strcmp("translate", type)) {
+    animation = new TranslateAnimation();
   } else {
-    SG_LOG(SG_INPUT, SG_ALERT, "Object " << object_name
-	   << " not found in model");
-    return;
+    animation = new NullAnimation();
+    SG_LOG(SG_INPUT, SG_WARN, "Unknown animation type " << type);
   }
 
-				// Figure out the animation type
-  string type_name = node->getStringValue("type");
-  if (type_name == "spin") {
-    SG_LOG(SG_INPUT, SG_INFO, "Reading spin animation");
-    animation.type = Animation::Spin;
-  } else if (type_name == "rotate") {
-    SG_LOG(SG_INPUT, SG_INFO, "Reading rotate animation");
-    animation.type = Animation::Rotate;
-  } else if (type_name == "none") {
-    SG_LOG(SG_INPUT, SG_INFO, "Reading disabled animation");
-    animation.type = Animation::None;
-    return;
+  ssgEntity * object = find_named_node(_model, object_name);
+  if (object == 0) {
+    SG_LOG(SG_INPUT, SG_WARN, "Object " << object_name << " not found");
+    delete animation;
+    animation = 0;
   } else {
-    animation.type = Animation::None;
-    SG_LOG(SG_INPUT, SG_ALERT, "Unknown animation type " << type_name);
-    return;
+    animation->init(object, node);
   }
 
-				// Splice a transform node into the tree
-  animation.transform = new ssgTransform;
-  int nParents = target->getNumParents();
-  animation.transform->addKid(target);
-  for (int i = 0; i < nParents; i++) {
-    ssgBranch * parent = target->getParent(i);
-    parent->replaceKid(target, animation.transform);
-  }
-
-				// Get the node
-  animation.prop =
-    fgGetNode(node->getStringValue("property", "/null"), true);
-
-  animation.position = node->getFloatValue("initial-position", 0);
-  animation.offset = node->getFloatValue("offset", 0);
-  if (node->hasValue("min")) {
-    animation.has_min = true;
-    animation.min = node->getFloatValue("min");
-  } else {
-    animation.has_min = false;
-  }
-  if (node->hasValue("max")) {
-    animation.has_max = true;
-    animation.max = node->getFloatValue("max");
-  } else {
-    animation.has_max = false;
-  }
-  animation.factor = node->getFloatValue("factor", 1);
-
-				// Get the center and axis
-  animation.center[0] = node->getFloatValue("center/x-m", 0);
-  animation.center[1] = node->getFloatValue("center/y-m", 0);
-  animation.center[2] = node->getFloatValue("center/z-m", 0);
-  animation.axis[0] = node->getFloatValue("axis/x", 0);
-  animation.axis[1] = node->getFloatValue("axis/y", 0);
-  animation.axis[2] = node->getFloatValue("axis/z", 0);
-
-  sgNormalizeVec3(animation.axis);
-}
-
-void
-FGAircraftModel::do_animation (Animation &animation, long elapsed_ms)
-{
-  switch (animation.type) {
-  case Animation::None:
-    return;
-  case Animation::Spin:
-  {
-    float velocity_rpms = (animation.prop->getDoubleValue()
-			   * animation.factor / 60000.0);
-    animation.position += (elapsed_ms * velocity_rpms * 360);
-    animation.setRotation();
-    return;
-  }
-  case Animation::Rotate: {
-    animation.position = ((animation.prop->getFloatValue()
-			   + animation.offset)
-			  * animation.factor);
-    if (animation.has_min && animation.position < animation.min)
-      animation.position = animation.min;
-    if (animation.has_max && animation.position > animation.max)
-      animation.position = animation.max;
-    animation.setRotation();
-    return;
-  }
-  default:
-    return;
-  }
+  return animation;
 }
 
 
@@ -316,72 +326,211 @@ FGAircraftModel::do_animation (Animation &animation, long elapsed_ms)
 ////////////////////////////////////////////////////////////////////////
 
 FGAircraftModel::Animation::Animation ()
-  : name(""),
-    type(None),
-    transform(0),
-    prop(0),
-    factor(0),
-    offset(0),
-    position(0),
-    has_min(false),
-    min(0),
-    has_max(false),
-    max(0)
 {
 }
 
 FGAircraftModel::Animation::~Animation ()
 {
-  // pointers are managed elsewhere; these are just references
 }
 
-/* 
- * Transform to rotate an object around its local axis
- * from a relative frame of reference at center -- NHV
- */
-void
-FGAircraftModel::Animation::setRotation()
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGAircraftModel::NullAnimation
+////////////////////////////////////////////////////////////////////////
+
+FGAircraftModel::NullAnimation::NullAnimation ()
 {
- float temp_angle = -position * SG_DEGREES_TO_RADIANS ;
- 
- float s = (float) sin ( temp_angle ) ;
- float c = (float) cos ( temp_angle ) ;
- float t = SG_ONE - c ;
-
- // axis was normalized at load time 
- // hint to the compiler to put these into FP registers
- float x = axis[0];
- float y = axis[1];
- float z = axis[2];
-
- sgMat4 matrix;
- matrix[0][0] = t * x * x + c ;
- matrix[0][1] = t * y * x - s * z ;
- matrix[0][2] = t * z * x + s * y ;
- matrix[0][3] = SG_ZERO;
- 
- matrix[1][0] = t * x * y + s * z ;
- matrix[1][1] = t * y * y + c ;
- matrix[1][2] = t * z * y - s * x ;
- matrix[1][3] = SG_ZERO;
- 
- matrix[2][0] = t * x * z - s * y ;
- matrix[2][1] = t * y * z + s * x ;
- matrix[2][2] = t * z * z + c ;
- matrix[2][3] = SG_ZERO;
-
-  // hint to the compiler to put these into FP registers
- x = center[0];
- y = center[1];
- z = center[2];
- 
- matrix[3][0] = x - x*matrix[0][0] - y*matrix[1][0] - z*matrix[2][0];
- matrix[3][1] = y - x*matrix[0][1] - y*matrix[1][1] - z*matrix[2][1];
- matrix[3][2] = z - x*matrix[0][2] - y*matrix[1][2] - z*matrix[2][2];
- matrix[3][3] = SG_ONE;
- 
- transform->setTransform(matrix);
 }
+
+FGAircraftModel::NullAnimation::~NullAnimation ()
+{
+}
+
+void
+FGAircraftModel::NullAnimation::init (ssgEntity * object,
+				      SGPropertyNode * node)
+{
+}
+
+void
+FGAircraftModel::NullAnimation::update (int dt)
+{
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGAircraftModel::SpinAnimation
+////////////////////////////////////////////////////////////////////////
+
+FGAircraftModel::SpinAnimation::SpinAnimation ()
+  : _prop(0),
+    _factor(0),
+    _position_deg(0),
+    _transform(new ssgTransform)
+{
+}
+
+FGAircraftModel::SpinAnimation::~SpinAnimation ()
+{
+  _transform = 0;
+}
+
+void
+FGAircraftModel::SpinAnimation::init (ssgEntity * object,
+				      SGPropertyNode * props)
+{
+				// Splice in the new transform node
+  splice_branch(_transform, object);
+  _prop = fgGetNode(props->getStringValue("property", "/null"), true);
+  _factor = props->getDoubleValue("factor", 1.0);
+  _position_deg = props->getDoubleValue("starting-position-deg", 0);
+  _center[0] = props->getFloatValue("center/x-m", 0);
+  _center[1] = props->getFloatValue("center/y-m", 0);
+  _center[2] = props->getFloatValue("center/z-m", 0);
+  _axis[0] = props->getFloatValue("axis/x", 0);
+  _axis[1] = props->getFloatValue("axis/y", 0);
+  _axis[2] = props->getFloatValue("axis/z", 0);
+  sgNormalizeVec3(_axis);
+}
+
+void
+FGAircraftModel::SpinAnimation::update (int dt)
+{
+  float velocity_rpms = (_prop->getDoubleValue() * _factor / 60000.0);
+  _position_deg += (dt * velocity_rpms * 360);
+  while (_position_deg < 0)
+    _position_deg += 360.0;
+  while (_position_deg >= 360.0)
+    _position_deg -= 360.0;
+  set_rotation(_matrix, _position_deg, _center, _axis);
+  _transform->setTransform(_matrix);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGAircraftModel::RotateAnimation
+////////////////////////////////////////////////////////////////////////
+
+FGAircraftModel::RotateAnimation::RotateAnimation ()
+  : _prop(0),
+    _offset_deg(0.0),
+    _factor(1.0),
+    _has_min(false),
+    _min_deg(0.0),
+    _has_max(false),
+    _max_deg(1.0),
+    _position_deg(0.0),
+    _transform(new ssgTransform)
+{
+}
+
+FGAircraftModel::RotateAnimation::~RotateAnimation ()
+{
+  _transform = 0;
+}
+
+void
+FGAircraftModel::RotateAnimation::init (ssgEntity * object,
+					SGPropertyNode * props)
+{
+				// Splice in the new transform node
+  splice_branch(_transform, object);
+  _prop = fgGetNode(props->getStringValue("property", "/null"), true);
+  _offset_deg = props->getDoubleValue("offset-deg", 0.0);
+  _factor = props->getDoubleValue("factor", 1.0);
+  if (props->hasValue("min-deg")) {
+    _has_min = true;
+    _min_deg = props->getDoubleValue("min-deg");
+  }
+  if (props->hasValue("max-deg")) {
+    _has_max = true;
+    _max_deg = props->getDoubleValue("max-deg");
+  }
+  _position_deg = props->getDoubleValue("starting-position-deg", 0);
+  _center[0] = props->getFloatValue("center/x-m", 0);
+  _center[1] = props->getFloatValue("center/y-m", 0);
+  _center[2] = props->getFloatValue("center/z-m", 0);
+  _axis[0] = props->getFloatValue("axis/x", 0);
+  _axis[1] = props->getFloatValue("axis/y", 0);
+  _axis[2] = props->getFloatValue("axis/z", 0);
+  sgNormalizeVec3(_axis);
+}
+
+void
+FGAircraftModel::RotateAnimation::update (int dt)
+{
+  _position_deg = ((_prop->getDoubleValue() + _offset_deg) * _factor);
+  if (_has_min && _position_deg < _min_deg)
+    _position_deg = _min_deg;
+  if (_has_max && _position_deg > _max_deg)
+    _position_deg = _max_deg;
+  set_rotation(_matrix, _position_deg, _center, _axis);
+  _transform->setTransform(_matrix);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGAircraftModel::TranslateAnimation
+////////////////////////////////////////////////////////////////////////
+
+FGAircraftModel::TranslateAnimation::TranslateAnimation ()
+  : _prop(0),
+    _offset_m(0.0),
+    _factor(1.0),
+    _has_min(false),
+    _min_m(0.0),
+    _has_max(false),
+    _max_m(1.0),
+    _position_m(0.0),
+    _transform(new ssgTransform)
+{
+}
+
+FGAircraftModel::TranslateAnimation::~TranslateAnimation ()
+{
+  _transform = 0;
+}
+
+void
+FGAircraftModel::TranslateAnimation::init (ssgEntity * object,
+					SGPropertyNode * props)
+{
+				// Splice in the new transform node
+  splice_branch(_transform, object);
+  _prop = fgGetNode(props->getStringValue("property", "/null"), true);
+  _offset_m = props->getDoubleValue("offset-m", 0.0);
+  _factor = props->getDoubleValue("factor", 1.0);
+  if (props->hasValue("min-m")) {
+    _has_min = true;
+    _min_m = props->getDoubleValue("min-m");
+  }
+  if (props->hasValue("max-m")) {
+    _has_max = true;
+    _max_m = props->getDoubleValue("max-m");
+  }
+  _position_m = props->getDoubleValue("starting-position-m", 0);
+  _axis[0] = props->getFloatValue("axis/x", 0);
+  _axis[1] = props->getFloatValue("axis/y", 0);
+  _axis[2] = props->getFloatValue("axis/z", 0);
+  sgNormalizeVec3(_axis);
+}
+
+void
+FGAircraftModel::TranslateAnimation::update (int dt)
+{
+  _position_m = ((_prop->getDoubleValue() + _offset_m) * _factor);
+  if (_has_min && _position_m < _min_m)
+    _position_m = _min_m;
+  if (_has_max && _position_m > _max_m)
+    _position_m = _max_m;
+  set_translation(_matrix, _position_m, _axis);
+  _transform->setTransform(_matrix);
+}
+
 
 // end of model.cxx
 
