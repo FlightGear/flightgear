@@ -51,13 +51,15 @@
 class fgFRAGMENT {
 
 public:
+    // positional data for this object fragment
+    fgCartesianPoint3d tile_center;
 
     // culling data for this object fragment (fine grain culling)
     fgCartesianPoint3d center;
     double bounding_radius;
 
     // material property pointer
-    int material_ptr;
+    void *material_ptr;
 
     // OpenGL display list for fragment data
     GLint display_list;
@@ -99,6 +101,9 @@ public:
 
 
 // $Log$
+// Revision 1.3  1998/06/05 22:39:54  curt
+// Working on sorting by, and rendering by material properties.
+//
 // Revision 1.2  1998/06/03 00:47:50  curt
 // No .h for STL includes.
 // Minor view culling optimizations.

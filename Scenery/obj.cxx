@@ -35,6 +35,9 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
+#include <map>     // STL
+#include <string>  // Standard C++ library
+
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
 #include <Include/fg_zlib.h>
@@ -43,6 +46,7 @@
 #include <Math/fg_random.h>
 #include <Math/polar3d.h>
 
+#include "material.hxx"
 #include "obj.hxx"
 #include "scenery.hxx"
 #include "tile.hxx"
@@ -147,6 +151,7 @@ int fgObjLoad(char *path, fgTILE *tile) {
 	    sscanf(line, "bs %lf %lf %lf %lf\n", 
 		   &fragment.center.x, &fragment.center.y, &fragment.center.z, 
 		   &fragment.bounding_radius);
+	    fragment.tile_center = tile->center;
 	} else if ( strncmp(line, "v ", 2) == 0 ) {
 	    // node (vertex)
 	    if ( ncount < MAXNODES ) {
@@ -196,6 +201,18 @@ int fgObjLoad(char *path, fgTILE *tile) {
 
 	    // scan the material line
 	    sscanf(line, "usemtl %s\n", material);
+
+	    // find this material in the properties list
+	    map < string, fgMATERIAL, less<string> > :: iterator myfind = 
+		material_mgr.material_map.find(material);
+	    if ( myfind == material_mgr.material_map.end() ) {
+		fgPrintf( FG_TERRAIN, FG_ALERT, 
+			  "Ack! unknown usemtl name = %s in %s\n",
+			  material, path);
+	    } else {
+		(fgMATERIAL *)fragment.material_ptr = &(*myfind).second;
+	    }
+
 	} else if ( line[0] == 't' ) {
 	    // start a new triangle strip
 
@@ -406,6 +423,9 @@ int fgObjLoad(char *path, fgTILE *tile) {
 
 
 // $Log$
+// Revision 1.9  1998/06/05 22:39:54  curt
+// Working on sorting by, and rendering by material properties.
+//
 // Revision 1.8  1998/06/05 18:19:18  curt
 // Recognize file, file.gz, and file.obj as scenery object files.
 //

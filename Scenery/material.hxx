@@ -54,9 +54,11 @@
 class fgMATERIAL {
 
 public:
+    // file name of texture
+    char texture_name[256];
 
     // material properties
-    GLfloat ambient[4], diffuse[4], specular[4];
+    GLfloat ambient[4], diffuse[4], specular[4], emissive[4];
     GLint texture_ptr;
 
     // transient list of objects with this material type (used for sorting
@@ -82,7 +84,7 @@ class fgMATERIAL_MGR {
 public:
 
     // associative array of materials
-    map < string, fgMATERIAL, less<string> > materials;
+    map < string, fgMATERIAL, less<string> > material_map;
 
     // Constructor
     fgMATERIAL_MGR ( void );
@@ -90,15 +92,25 @@ public:
     // Load a library of material properties
     int load_lib ( void );
 
+    // Initialize the transient list of fragments for each material property
+    void init_transient_material_lists( void );
+
     // Destructor
     ~fgMATERIAL_MGR ( void );
 };
+
+
+// global material management class
+extern fgMATERIAL_MGR material_mgr;
 
 
 #endif // _MATERIAL_HXX 
 
 
 // $Log$
+// Revision 1.4  1998/06/05 22:39:53  curt
+// Working on sorting by, and rendering by material properties.
+//
 // Revision 1.3  1998/06/03 00:47:50  curt
 // No .h for STL includes.
 // Minor view culling optimizations.

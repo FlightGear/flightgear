@@ -35,10 +35,6 @@
 
 #include <Aircraft/aircraft.h>
 
-#include <Scenery/obj.hxx>
-#include <Scenery/scenery.hxx>
-#include <Scenery/tilecache.hxx>
-
 #include <Bucket/bucketutils.h>
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
@@ -46,6 +42,11 @@
 #include <Main/options.hxx>
 #include <Main/views.hxx>
 #include <Math/mat3.h>
+
+#include "material.hxx"
+#include "obj.hxx"
+#include "scenery.hxx"
+#include "tilecache.hxx"
 
 
 #define FG_LOCAL_X_Y         81  // max(o->tile_diameter) ** 2
@@ -59,6 +60,10 @@ int tiles[FG_LOCAL_X_Y];
 // Initialize the Tile Manager subsystem
 int fgTileMgrInit( void ) {
     fgPrintf( FG_TERRAIN, FG_INFO, "Initializing Tile Manager subsystem.\n");
+
+    // load default material library
+    material_mgr.load_lib();
+
     return 1;
 }
 
@@ -295,11 +300,12 @@ void fgTileMgrRender( void ) {
     fgTILE *t;
     fgVIEW *v;
     struct fgBUCKET p;
-    fgCartesianPoint3d offset;
-    fgFRAGMENT fragment;
+    fgCartesianPoint3d offset, last_center;
+    fgFRAGMENT fragment, *frag_ptr;
+    fgMATERIAL *mtl_ptr;
     list < fgFRAGMENT > :: iterator current;
     list < fgFRAGMENT > :: iterator last;
-    int i;
+    int i, size;
     int index;
     int culled = 0;
     int drawn = 0;
@@ -319,6 +325,10 @@ void fgTileMgrRender( void ) {
 	      FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG,
 	      p.lon, p.lat, p.x, p.y, fgBucketGenIndex(&p) );
 
+    // initialize the transient per-material fragment lists
+    material_mgr.init_transient_material_lists();
+
+    // traverse the potentially viewable tile list
     for ( i = 0; i < (o->tile_diameter * o->tile_diameter); i++ ) {
 	index = tiles[i];
 	// fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index);
@@ -350,6 +360,14 @@ void fgTileMgrRender( void ) {
 		    offset.z = fragment.center.z - scenery.center.z;
 
 		    if ( viewable(&offset, fragment.bounding_radius * 2) ) {
+			// add to transient per-material property fragment list
+			mtl_ptr = (fgMATERIAL *)(fragment.material_ptr);
+			// printf(" lookup = %s\n", mtl_ptr->texture_name);
+			if ( mtl_ptr->list_size < FG_MAX_MATERIAL_FRAGS ) {
+			    mtl_ptr->list[mtl_ptr->list_size] = &fragment;
+			    (mtl_ptr->list_size)++;
+			}
+
 			xglCallList(fragment.display_list);
 			drawn++;
 		    } else {
@@ -374,10 +392,33 @@ void fgTileMgrRender( void ) {
     }
     // printf("drawn = %d  culled = %d  saved = %.2f\n", drawn, culled, 
     //        v->vfc_ratio);
+
+    // traverse the transient per-material fragment lists and render
+    // out all fragments for each material property.
+    map < string, fgMATERIAL, less<string> > :: iterator mapcurrent = 
+	material_mgr.material_map.begin();
+    map < string, fgMATERIAL, less<string> > :: iterator maplast = 
+	material_mgr.material_map.end();
+
+    while ( mapcurrent != maplast ) {
+        // (char *)key = (*mapcurrent).first;
+        // (fgMATERIAL)value = (*mapcurrent).second;
+	size = (*mapcurrent).second.list_size;
+	for ( i = 0; i < size; i++ ) {
+	    // frag_ptr = &(*mapcurrent).second.list[i];
+	    // frag_ptr->tile_center
+	}
+
+        *mapcurrent++;
+    }
+
 }
 
 
 // $Log$
+// Revision 1.16  1998/06/05 22:39:55  curt
+// Working on sorting by, and rendering by material properties.
+//
 // Revision 1.15  1998/06/03 00:47:51  curt
 // No .h for STL includes.
 // Minor view culling optimizations.
