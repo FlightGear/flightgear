@@ -209,8 +209,10 @@ FGInterpolateEnvironmentCtrl::read_table (const SGPropertyNode * node,
 {
     for (int i = 0; i < node->nChildren(); i++) {
         const SGPropertyNode * child = node->getChild(i);
-        if (!strcmp(child->getName(), "entry") &&
-            child->getStringValue("elevation-ft", "")[0] != '\0') {
+        if ( strcmp(child->getName(), "entry") == 0
+	     && child->getStringValue("elevation-ft", "")[0] != '\0'
+	     && ( child->getDoubleValue("elevation-ft") > 0.1 || i == 0 ) )
+	{
             bucket * b = new bucket;
             if (i > 0)
                 b->environment.copy(table[i-1]->environment);
