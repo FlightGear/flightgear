@@ -315,3 +315,9 @@ void fgMoonRender() {
     xglPopMatrix();
 }
 
+
+/* $Log$
+/* Revision 1.13  1997/12/30 16:41:00  curt
+/* Added log at end of file.
+/*
+ */
