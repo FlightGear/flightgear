@@ -173,7 +173,7 @@ void FGTileMgr::schedule_needed( double vis, SGBucket curr_bucket) {
     double tile_width = curr_bucket.get_width_m();
     double tile_height = curr_bucket.get_height_m();
     // cout << "tile width = " << tile_width << "  tile_height = "
-    //      << tile_height !<< endl;
+    //      << tile_height << endl;
 
     xrange = (int)(vis / tile_width) + 1;
     yrange = (int)(vis / tile_height) + 1;
@@ -182,11 +182,9 @@ void FGTileMgr::schedule_needed( double vis, SGBucket curr_bucket) {
 
     // note * 2 at end doubles cache size (for fdm and viewer)
     tile_cache.set_max_cache_size( (2*xrange + 2) * (2*yrange + 2) * 2 );
-    /*
-    cout << "xrange = " << xrange << "  yrange = " << yrange << endl;
-    cout << "max cache size = " << tile_cache.get_max_cache_size()
-         << " current cache size = " << tile_cache.get_size() << endl;
-    */
+    // cout << "xrange = " << xrange << "  yrange = " << yrange << endl;
+    // cout << "max cache size = " << tile_cache.get_max_cache_size()
+    //      << " current cache size = " << tile_cache.get_size() << endl;
 
     // clear the inner ring flags so we can set them below.  This
     // prevents us from having "true" entries we aren't able to find
@@ -229,7 +227,8 @@ void FGTileMgr::initialize_queue()
     // First time through or we have teleported, initialize the
     // system and load all relavant tiles
 
-    SG_LOG( SG_TERRAIN, SG_INFO, "Updating Tile list for " << current_bucket );
+    SG_LOG( SG_TERRAIN, SG_INFO, "Initialize_queue(): Updating Tile list for "
+            << current_bucket );
     // cout << "tile cache size = " << tile_cache.get_size() << endl;
 
     // wipe/initialize tile cache
@@ -371,6 +370,8 @@ int FGTileMgr::update( double visibility_meters )
 int FGTileMgr::update( SGLocation *location, double visibility_meters,
                        sgdVec3 abs_pos_vector )
 {
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update()" );
+
     longitude = location->getLongitude_deg();
     latitude = location->getLatitude_deg();
     // add 1.0m to the max altitude to give a little leeway to the
@@ -406,6 +407,7 @@ int FGTileMgr::update( SGLocation *location, double visibility_meters,
         if (!(current_bucket == previous_bucket )) {
             // We've moved to a new bucket, we need to schedule any
             // needed tiles for loading.
+            SG_LOG( SG_TERRAIN, SG_INFO, "FGTileMgr::update()" );
             schedule_needed(visibility_meters, current_bucket);
         }
     } else if ( state == Start || state == Inited ) {

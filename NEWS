@@ -1,3 +1,79 @@
+New in 0.9.4
+* March 16, 2004
+
+* Impliment SimGear's (aka Andy's) Nasal scripting language in
+  FlightGear and integrate with the FG property system.
+* Many updates from David Culp and David Luff to the AI aircraft and
+  ATC modules.
+* Complete overhaul of the autopilot system.  The new system uses a
+  much more advanced PID algorithm, is much more flexible, and is
+  completely reconfigurable for each aircraft.
+* Added the ability to fetch current weather in real time during a
+  flight (via a thread) from the weather.noaa.gov web site and update
+  the current weather conditions in the sim.
+* Added properly working VASI/PAPI lights.
+* Make the ground intersection code smart so allow flying under
+  bridges, taxiing on the lower level of the bay bridge, taxiing into
+  hangers, etc.
+* Added a utility to automatically manage scenery installation and
+  removal.
+* Several updated ground textures, plus a variety of new random
+  scenery objects.
+
+* Much additional work on the San Francisco area buildings and bridges.
+
+* Added a Comper Swift (nice), a Hawker Hunter (nice), added a T37 Tweet, 
+
+* Updates to the 737 (nice panel, 3d model, and flight model), updates
+  to the 747 flight dynamics, updates to the OV10, T38, AN-225, bo105
+  (helicopter), better sounds for the DC-3, updates to f104 model,
+  many updates to the F16, updates to the J3 Cub, 3D cockpit added to
+  the pa28-161, updates to the sgs233, overhaul of the tsr2 and yf23
+  models.
+
+* The UFO became Santa Claus over the holidays, but it is back to
+  being extra terrestial.
+
+
+* First stab at a weather radar instrument.
+
+* Added a number of basic 3d instruments to the instrument library
+  that could be reused used for any general aviation cockpit.
+
+* Added RedHat packaging files.
+* Added some perl script utility functions which are useful when
+  writing remote perl scripts that interact with a running copy of
+  FlightGear.  Includes routines to facility remote control of data
+  logging and even some simple graph plotting.
+* Updates to OpenGC interface.
+* Various JSBSim updates.
+* Various YASim updates.
+* Various UIUCsim updates.
+* More work on the native multiplayer system.
+
+* Sorted out the confusion between left, right, and parking brakes
+  vs. the cockpit controls vs. the wheels they apply to.
+* Much infrastructure added to support future GPS instruments.
+* Fixed a meter/feet conversion problem in DME distance calculations
+  which would cause it to often read quite high.
+* Fixes to nmea output so it can better trick a moving map software
+  application into thinking it is talking to a real gps.
+
+* Fixed a subtle problem with our star database that has been lurking
+  for many years, but it took an astronomy expert to spot the subtle
+  misalignments.
+
+* Add support for Logitech Extreme 3D Pro, thrustmaster top gun
+  afterburner USB, Logitech WingMan Force 3D, Logitech Extreme 3D Pro
+  USB, and Microsoft SideWinder 3D Pro joysticks.
+
+* Removed the old WeatherCM module (it can be resurrected from CVS if
+  any one ever wants to do that.)
+* Removed the NetworkOLK module (it can be resurrected from CVS if
+  any one ever wants to do that.)
+* Removed support for the PSL scripting language.
+
+
 New in 0.9.3
 * October 24, 2003
 

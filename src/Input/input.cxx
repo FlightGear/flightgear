@@ -48,7 +48,6 @@
 #include <simgear/props/props.hxx>
 
 #include <Aircraft/aircraft.hxx>
-// #include <Autopilot/auto_gui.hxx>
 #include <Autopilot/xmlauto.hxx>
 #include <Cockpit/hud.hxx>
 #include <Cockpit/panel.hxx>
