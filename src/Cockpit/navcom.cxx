@@ -198,6 +198,9 @@ FGNavCom::bind ()
     snprintf(propname, 256, "/radios/nav[%d]/has-gs", index);
     fgTie( propname, this, &FGNavCom::get_nav_has_gs );
 
+    snprintf(propname, 256, "/radios/nav[%d]/nav-loc", index);
+    fgTie( propname, this, &FGNavCom::get_nav_loc );
+
     snprintf(propname, 256, "/radios/nav[%d]/gs-needle-deflection", index);
     fgTie( propname, this, &FGNavCom::get_nav_gs_deflection );
 
