@@ -18,6 +18,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+#include <Airports/simple.hxx>
+
 #include <math.h>
 #include <simgear/math/point3d.hxx>
 #include <string>
@@ -39,6 +41,13 @@ string ConvertNumToSpokenDigits(string n);
 
 // Convert a 2 digit rwy number to a spoken-style string
 string ConvertRwyNumToSpokenString(int n);
+
+// Convert rwy number string to a spoken-style string
+// eg "05L" to "zero five left"
+// Assumes we get a two-digit string optionally appended with R or L
+// eg 01 07L 29R 36
+// Anything else is not guaranteed to be handled correctly!
+string ConvertRwyNumToSpokenString(string s);
 
 // Return the phonetic letter of a letter represented as an integer 1->26
 string GetPhoneticIdent(int i);
@@ -66,3 +75,19 @@ double GetHeadingFromTo(Point3D A, Point3D B);
 
 // Given a heading (in degrees), bound it from 0 -> 360
 void dclBoundHeading(double &hdg);
+
+
+/*******************************
+*
+*	Airport-related functions
+*
+********************************/
+
+// The next two functions are straight copies of their fg.... equivalents
+// in fg_init.cxx, and are just here temporarily until some rationalisation occurs.
+
+// find basic airport location info from airport database
+bool dclFindAirportID( const string& id, FGAirport *a );
+
+// get airport elevation
+double dclGetAirportElev( const string& id );

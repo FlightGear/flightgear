@@ -21,8 +21,13 @@
 #include <math.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/constants.h>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/debug/logstream.hxx>
 #include <plib/sg.h>
 //#include <iomanip.h>
+
+#include <Airports/runways.hxx>
+#include <Main/globals.hxx>
 
 #include "ATCutils.hxx"
 
@@ -73,6 +78,19 @@ string ConvertRwyNumToSpokenString(int n) {
 	str += nums[n];
 	return(str);
 }
+
+// Assumes we get a two-digit string optionally appended with R or L
+// eg 01 07L 29R 36
+// Anything else is not guaranteed to be handled correctly!
+string ConvertRwyNumToSpokenString(string s) {
+	if(s.size() < 3) {
+		return(ConvertRwyNumToSpokenString(atoi(s.c_str())));
+	} else {
+		string r = ConvertRwyNumToSpokenString(atoi(s.substr(0,2).c_str()));
+		return(r += (s.substr(2,1) == "L" ? " left" : " right"));	// Warning - not much error checking there!
+	}
+}
+	
 
 // Return the phonetic letter of a letter represented as an integer 1->26
 string GetPhoneticIdent(int i) {
@@ -217,4 +235,48 @@ void dclBoundHeading(double &hdg) {
 	while(hdg > 360.0) {
 		hdg -= 360.0;
 	}
+}
+
+// Airport stuff.  The next two functions are straight copies of their fg.... equivalents
+// in fg_init.cxx, and are just here temporarily until some rationalisation occurs.
+// find basic airport location info from airport database
+bool dclFindAirportID( const string& id, FGAirport *a ) {
+    if ( id.length() ) {
+        SGPath path( globals->get_fg_root() );
+        path.append( "Airports" );
+        path.append( "simple.mk4" );
+        FGAirports airports( path.c_str() );
+
+        SG_LOG( SG_GENERAL, SG_INFO, "Searching for airport code = " << id );
+
+        if ( ! airports.search( id, a ) ) {
+            SG_LOG( SG_GENERAL, SG_ALERT,
+                    "Failed to find " << id << " in " << path.str() );
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    SG_LOG( SG_GENERAL, SG_INFO,
+            "Position for " << id << " is ("
+            << a->longitude << ", "
+            << a->latitude << ")" );
+
+    return true;
+}
+
+// get airport elevation
+double dclGetAirportElev( const string& id ) {
+    FGAirport a;
+    // double lon, lat;
+
+    SG_LOG( SG_GENERAL, SG_INFO,
+            "Finding elevation for airport: " << id );
+
+    if ( dclFindAirportID( id, &a ) ) {
+        return a.elevation;
+    } else {
+        return -9999.0;
+    }
 }
