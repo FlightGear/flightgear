@@ -118,7 +118,9 @@ void fgTileCacheEntryFree( int index ) {
 	      tile_cache[index].tile_bucket.y );
 
     /* Load the appropriate area and get the display list pointer */
-    xglDeleteLists( tile_cache[index].display_list, 1 );
+    if ( tile_cache[index].display_list >= 0 ) {
+	xglDeleteLists( tile_cache[index].display_list, 1 );
+    }
 }
 
 
@@ -192,9 +194,12 @@ int fgTileCacheNextAvail( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/01/31 00:43:26  curt
-/* Added MetroWorks patches from Carmen Volpe.
+/* Revision 1.7  1998/02/01 03:39:55  curt
+/* Minor tweaks.
 /*
+ * Revision 1.6  1998/01/31 00:43:26  curt
+ * Added MetroWorks patches from Carmen Volpe.
+ *
  * Revision 1.5  1998/01/29 00:51:39  curt
  * First pass at tile cache, dynamic tile loading and tile unloading now works.
  *

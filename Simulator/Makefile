@@ -74,11 +74,13 @@ source-zip: clean
 
 scenery-tar:
 	(cd ../..; \
-	$(TAR) cvzf scenery-$(FG_VERSION).tar.gz FlightGear/Scenery)
+	$(TAR) cvzf scenery-$(FG_VERSION).tar.gz FlightGear/Scenery/*.dat \
+	FlightGear/Scenery/*/*/*.obj)
 
 scenery-zip:
 	(cd ../..; \
-	zip -r scenery-$(FG_VERSION).zip FlightGear/Scenery)
+	zip -r scenery-$(FG_VERSION).zip FlightGear/Scenery/*.dat \
+	FlightGear/Scenery/*/*/*.obj)
 
 bin-tar: all
 	cp Main/fg-$(FG_VERSION) README Thanks runfg ..
@@ -102,6 +104,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.40  1998/02/01 03:39:53  curt
+# Minor tweaks.
+#
 # Revision 1.39  1998/01/27 00:47:41  curt
 # Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
 # system and commandline/config file processing code.

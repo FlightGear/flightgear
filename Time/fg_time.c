@@ -190,10 +190,18 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     start = mktime(&mt);
 
     /* printf("start1 = %ld\n", start);
-   fgPrintf( FG_EVENT, FG_DEBUG, "start2 = %s", ctime(&start));
-   fgPrintf( FG_EVENT, FG_DEBUG, "start3 = %ld\n", start); */
+       fgPrintf( FG_EVENT, FG_DEBUG, "start2 = %s", ctime(&start));
+       fgPrintf( FG_EVENT, FG_DEBUG, "start3 = %ld\n", start); */
 
+#ifndef __CYGWIN32__
     daylight = mt.tm_isdst;
+#else
+    /* Yargs ... I'm just hardcoding this arbitrarily so it doesn't
+     * jump around */
+    daylight = 0;
+    fgPrintf( FG_EVENT, FG_WARN, 
+	      "no daylight savings info ... being hardcoded to %d\n", daylight);
+#endif
 
 #ifdef USE_FTIME
     ftime(&current);
@@ -302,10 +310,13 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.31  1998/01/27 00:48:06  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.32  1998/02/01 03:39:56  curt
+/* Minor tweaks.
 /*
+ * Revision 1.31  1998/01/27 00:48:06  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.30  1998/01/21 21:11:35  curt
  * Misc. tweaks.
  *

@@ -77,8 +77,7 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
     if ( (f = fopen(path, "r")) == NULL ) {
 	fgPrintf(FG_TERRAIN, FG_ALERT, "Cannot open file: %s\n", path);
-	/* exit(-1); */
-	return(0);
+	return(-1);
     }
 
     tile = xglGenLists(1);
@@ -355,9 +354,12 @@ GLint fgObjLoad(char *path, struct fgCartesianPoint *ref, double *radius) {
 
 
 /* $Log$
-/* Revision 1.21  1998/01/31 00:43:25  curt
-/* Added MetroWorks patches from Carmen Volpe.
+/* Revision 1.22  1998/02/01 03:39:54  curt
+/* Minor tweaks.
 /*
+ * Revision 1.21  1998/01/31 00:43:25  curt
+ * Added MetroWorks patches from Carmen Volpe.
+ *
  * Revision 1.20  1998/01/29 00:51:39  curt
  * First pass at tile cache, dynamic tile loading and tile unloading now works.
  *

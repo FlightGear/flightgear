@@ -109,11 +109,29 @@ void fgInitSubsystems( void ) {
     FG_Runway_altitude = 3234.5;
     FG_Runway_heading = 102.0 * DEG_TO_RAD;
 
-    /* Initial Position at (P13) GLOBE airport */
+    /* Initial Position at (P13) Globe, AZ */
     FG_Longitude = ( -398391.28 / 3600.0 ) * DEG_TO_RAD;
     FG_Latitude  = (  120070.41 / 3600.0 ) * DEG_TO_RAD;
     FG_Runway_altitude = (3234.5 + 300);
     FG_Altitude = FG_Runway_altitude + 3.758099;
+
+    /* Initial Position at (E81) Superior, AZ */
+    /* FG_Longitude = ( -111.1270650 ) * DEG_TO_RAD; */
+    /* FG_Latitude  = (  33.2778339 ) * DEG_TO_RAD; */
+    /* FG_Runway_altitude = (2646 + 500); */
+    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+
+    /* Initial Position at (TUS) Tucson, AZ */
+    /* FG_Longitude = ( -110.9412597 ) * DEG_TO_RAD; */
+    /* FG_Latitude  = (  32.1162439 ) * DEG_TO_RAD; */
+    /* FG_Runway_altitude = (2641 + 0); */
+    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+
+    /* Initial Position at near Anchoraze, AK */
+    /* FG_Longitude = ( -150.00 ) * DEG_TO_RAD; */
+    /* FG_Latitude  = (  61.17 ) * DEG_TO_RAD; */
+    /* FG_Runway_altitude = (2641 + 07777); */
+    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
 
     /* Initial Position at (SEZ) SEDONA airport */
     /* FG_Longitude = (-111.7884614 + 0.02) * DEG_TO_RAD; */
@@ -296,9 +314,12 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.36  1998/01/31 00:43:13  curt
-/* Added MetroWorks patches from Carmen Volpe.
+/* Revision 1.37  1998/02/01 03:39:54  curt
+/* Minor tweaks.
 /*
+ * Revision 1.36  1998/01/31 00:43:13  curt
+ * Added MetroWorks patches from Carmen Volpe.
+ *
  * Revision 1.35  1998/01/27 00:47:57  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

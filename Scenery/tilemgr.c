@@ -198,20 +198,25 @@ void fgTileMgrRender( void ) {
 	/* fgPrintf( FG_TERRAIN, FG_DEBUG, "Index = %d\n", index); */
 	fgTileCacheEntryInfo(index, &display_list, &local_ref );
 
-	xglPushMatrix();
-	xglTranslatef(local_ref.x - scenery.center.x,
-		      local_ref.y - scenery.center.y,
-		      local_ref.z - scenery.center.z);
-	xglCallList(display_list);
-	xglPopMatrix();
+	if ( display_list >= 0 ) {
+	    xglPushMatrix();
+	    xglTranslatef(local_ref.x - scenery.center.x,
+			  local_ref.y - scenery.center.y,
+			  local_ref.z - scenery.center.z);
+	    xglCallList(display_list);
+	    xglPopMatrix();
+	}
     }
 }
 
 
 /* $Log$
-/* Revision 1.11  1998/01/31 00:43:27  curt
-/* Added MetroWorks patches from Carmen Volpe.
+/* Revision 1.12  1998/02/01 03:39:55  curt
+/* Minor tweaks.
 /*
+ * Revision 1.11  1998/01/31 00:43:27  curt
+ * Added MetroWorks patches from Carmen Volpe.
+ *
  * Revision 1.10  1998/01/29 00:51:40  curt
  * First pass at tile cache, dynamic tile loading and tile unloading now works.
  *
