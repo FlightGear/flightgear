@@ -341,11 +341,16 @@ void fgUpdateSunPos( void ) {
     dot = sgScalarProductVec3( surface_to_sun, v->get_surface_south() );
     // cout << "  Dot product = " << dot << endl;
 
-    if (dot > 1) {
+    if (dot > 1.0) {
         SG_LOG( SG_ASTRO, SG_WARN,
                 "Dot product  = " << dot << " is greater than 1.0" );
         dot = 1.0;
     }
+    else if (dot < -1.0) {
+         SG_LOG( SG_ASTRO, SG_WARN,
+                 "Dot product  = " << dot << " is less than -1.0" );
+         dot = -1.0;
+     }
 
     if ( east_dot >= 0 ) {
 	l->set_sun_rotation( acos(dot) );
