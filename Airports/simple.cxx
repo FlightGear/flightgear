@@ -69,11 +69,12 @@ int fgAIRPORTS::load( const string& file ) {
     */
 
     // read in each line of the file
+    in.eat_comments();
     while ( ! in.eof() )
     {
-	in.eat_comments();
 	in.stream() >> a.id >> a.longitude >> a.latitude >> a.elevation;
 	airports.insert(a);
+	in.eat_comments();
     }
 
     t.stop();
@@ -133,6 +134,9 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.6  1998/09/03 21:25:02  curt
+// tweaked in data file comment handling.
+//
 // Revision 1.5  1998/09/02 14:35:38  curt
 // Rewrote simple airport loader so it can deal with comments and blank lines.
 //
