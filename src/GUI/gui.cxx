@@ -389,7 +389,7 @@ void guiMotionFunc ( int x, int y )
             case MOUSE_YOKE:
                 if( !mouse_joystick_control ) {
                     mouse_joystick_control = 1;
-                    current_options.set_control_mode( fgOPTIONS::FG_MOUSE );
+                    globals->get_options()->set_control_mode( FGOptions::FG_MOUSE );
                 } else {
                     if ( left_button() ) {
                         offset = (_mX - x) * brake_sensitivity;
@@ -596,7 +596,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
                     
                 case MOUSE_YOKE:
                     mouse_mode = MOUSE_VIEW;
-                    current_options.set_control_mode( fgOPTIONS::FG_JOYSTICK );
+                    globals->get_options()->set_control_mode( FGOptions::FG_JOYSTICK );
                     x = globals->get_current_view()->get_winWidth()/2;
                     y = globals->get_current_view()->get_winHeight()/2;
                     _mVtoggle = 0;
@@ -740,7 +740,7 @@ static void toggleClouds(puObject *cb)
 // This is the accessor function
 void guiTogglePanel(puObject *cb)
 {
-    current_options.toggle_panel();
+    globals->get_options()->toggle_panel();
 }
     
 //void MenuHideMenuCb(puObject *cb)
@@ -756,7 +756,7 @@ void goodBye(puObject *)
     cout << "Program exiting normally at user request." << endl;
 
 #ifdef FG_NETWORK_OLK    
-    if ( current_options.get_network_olk() ) {
+    if ( globals->get_options()->get_network_olk() ) {
 	if ( net_is_registered == 0 ) fgd_send_com( "8", FGFS_host);
     }
 #endif
@@ -776,8 +776,8 @@ void goAwayCb (puObject *me)
 void mkDialogInit (void)
 {
     //  printf("mkDialogInit\n");
-    int x = (current_options.get_xsize()/2 - 400/2);
-    int y = (current_options.get_ysize()/2 - 100/2);
+    int x = (globals->get_options()->get_xsize()/2 - 400/2);
+    int y = (globals->get_options()->get_ysize()/2 - 100/2);
     dialogBox = new puDialogBox (x, y); // 150, 50
     {
         dialogFrame = new puFrame (0,0,400,100);
@@ -809,8 +809,8 @@ void ConfirmExitDialogInit(void)
     //  printf("ConfirmExitDialogInit\n");
     int len = 200 - puGetStringWidth( puGetDefaultLabelFont(), msg )/2;
 
-    int x = (current_options.get_xsize()/2 - 400/2);
-    int y = (current_options.get_ysize()/2 - 100/2);
+    int x = (globals->get_options()->get_xsize()/2 - 400/2);
+    int y = (globals->get_options()->get_ysize()/2 - 100/2);
 	
     YNdialogBox = new puDialogBox (x, y); // 150, 50
     //  YNdialogBox = new puDialogBox (150, 50);
@@ -882,10 +882,10 @@ static GlBitmap *b1 = NULL;
 extern FGInterface cur_view_fdm;
 GLubyte *hiResScreenCapture( int multiplier )
 {
-	float oldfov = current_options.get_fov();
+	float oldfov = globals->get_options()->get_fov();
 	float fov = oldfov / multiplier;
 	FGViewer *v = globals->get_current_view();
-	current_options.set_fov(fov);
+	globals->get_options()->set_fov(fov);
 	v->force_update_fov_math();
     fgInitVisuals();
     int cur_width = globals->get_current_view()->get_winWidth( );
@@ -908,7 +908,7 @@ GLubyte *hiResScreenCapture( int multiplier )
 		}
 	}
 	globals->get_current_view()->UpdateViewParams(cur_view_fdm);
-	current_options.set_fov(oldfov);
+	globals->get_options()->set_fov(oldfov);
 	v->force_update_fov_math();
 	return b1->getBitmap();
 }
@@ -976,8 +976,8 @@ void fgDumpSnapShot () {
     fgRenderFrame();
 
     my_glDumpWindow( "fgfs-screen.ppm", 
-		     current_options.get_xsize(), 
-		     current_options.get_ysize() );
+		     globals->get_options()->get_xsize(), 
+		     globals->get_options()->get_ysize() );
     
     mkDialog ("Snap shot saved to fgfs-screen.ppm");
 
@@ -1017,7 +1017,7 @@ void AptDialog_Cancel(puObject *)
 
 void AptDialog_OK (puObject *)
 {
-    FGPath path( current_options.get_fg_root() );
+    FGPath path( globals->get_options()->get_fg_root() );
     path.append( "Airports" );
     path.append( "simple.mk4" );
     FGAirports airports( path.c_str() );
@@ -1044,8 +1044,8 @@ void AptDialog_OK (puObject *)
 
         if ( airports.search( AptId, &a ) )
         {
-            current_options.set_airport_id( AptId.c_str() );
-            current_options.set_altitude( -9999.0 );
+            globals->get_options()->set_airport_id( AptId.c_str() );
+            globals->get_options()->set_altitude( -9999.0 );
 	    // fgSetPosFromAirportID( AptId );
 	    fgSetPosFromAirportIDandHdg( AptId, 
 					 cur_fdm_state->get_Psi() * RAD_TO_DEG);
@@ -1063,16 +1063,16 @@ void AptDialog_OK (puObject *)
 
 void AptDialog_Reset(puObject *)
 {
-    //  strncpy( NewAirportId, current_options.get_airport_id().c_str(), 16 );
-    sprintf( NewAirportId, "%s", current_options.get_airport_id().c_str() );
+    //  strncpy( NewAirportId, globals->get_options()->get_airport_id().c_str(), 16 );
+    sprintf( NewAirportId, "%s", globals->get_options()->get_airport_id().c_str() );
     AptDialogInput->setValue ( NewAirportId );
     AptDialogInput->setCursor( 0 ) ;
 }
 
 void NewAirport(puObject *cb)
 {
-    //  strncpy( NewAirportId, current_options.get_airport_id().c_str(), 16 );
-    sprintf( NewAirportId, "%s", current_options.get_airport_id().c_str() );
+    //  strncpy( NewAirportId, globals->get_options()->get_airport_id().c_str(), 16 );
+    sprintf( NewAirportId, "%s", globals->get_options()->get_airport_id().c_str() );
 //	cout << "NewAirport " << NewAirportId << endl;
     AptDialogInput->setValue( NewAirportId );
 
@@ -1081,7 +1081,7 @@ void NewAirport(puObject *cb)
 
 static void NewAirportInit(void)
 {
-    sprintf( NewAirportId, "%s", current_options.get_airport_id().c_str() );
+    sprintf( NewAirportId, "%s", globals->get_options()->get_airport_id().c_str() );
     int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),
                                       NewAirportLabel ) / 2;
 
@@ -1149,9 +1149,9 @@ void NetIdDialog_OK (puObject *)
     NetId = net_callsign;
     
     NetIdDialog_Cancel( NULL );
-    current_options.set_net_id( NetId.c_str() );
+    globals->get_options()->set_net_id( NetId.c_str() );
     strcpy( fgd_callsign, net_callsign);
-//    strcpy( fgd_callsign, current_options.get_net_id().c_str());
+//    strcpy( fgd_callsign, globals->get_options()->get_net_id().c_str());
 /* Entering a callsign indicates : user wants Net HUD Info */
     net_hud_display = 1;
 
@@ -1161,7 +1161,7 @@ void NetIdDialog_OK (puObject *)
 
 void NewCallSign(puObject *cb)
 {
-    sprintf( NewNetId, "%s", current_options.get_net_id().c_str() );
+    sprintf( NewNetId, "%s", globals->get_options()->get_net_id().c_str() );
 //    sprintf( NewNetId, "%s", fgd_callsign );
     NetIdDialogInput->setValue( NewNetId );
 
@@ -1170,7 +1170,7 @@ void NewCallSign(puObject *cb)
 
 static void NewNetIdInit(void)
 {
-    sprintf( NewNetId, "%s", current_options.get_net_id().c_str() );
+    sprintf( NewNetId, "%s", globals->get_options()->get_net_id().c_str() );
 //    sprintf( NewNetId, "%s", fgd_callsign );
     int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),
                                       NewNetIdLabel ) / 2;
@@ -1323,7 +1323,7 @@ void net_fgd_scan(puObject *cb)
 
 static void NewNetFGDInit(void)
 {
-//    sprintf( NewNetId, "%s", current_options.get_net_id().c_str() );
+//    sprintf( NewNetId, "%s", globals->get_options()->get_net_id().c_str() );
 //    sprintf( NewNetId, "%s", fgd_callsign );
     int len = 170 - puGetStringWidth( puGetDefaultLabelFont(),
                                       NewNetFGDLabel ) / 2;
@@ -1518,7 +1518,7 @@ void guiInit()
     if ( envp != NULL ) {
         fntpath.set( envp );
     } else {
-        fntpath.set( current_options.get_fg_root() );
+        fntpath.set( globals->get_options()->get_fg_root() );
 	fntpath.append( "Fonts" );
     }
 
@@ -1530,7 +1530,7 @@ void guiInit()
     puSetDefaultFonts( GuiFont, GuiFont ) ;
     guiFnt = puGetDefaultLabelFont();
   
-    if ( current_options.get_mouse_pointer() == 0 ) {
+    if ( globals->get_options()->get_mouse_pointer() == 0 ) {
         // no preference specified for mouse pointer, attempt to autodetect...
         // Determine if we need to render the cursor, or if the windowing
         // system will do it.  First test if we are rendering with glide.
@@ -1545,9 +1545,9 @@ void guiInit()
             }
         }
         mouse_active = ~mouse_active;
-    } else if ( current_options.get_mouse_pointer() == 1 ) {
+    } else if ( globals->get_options()->get_mouse_pointer() == 1 ) {
         // don't show pointer
-    } else if ( current_options.get_mouse_pointer() == 2 ) {
+    } else if ( globals->get_options()->get_mouse_pointer() == 2 ) {
         // force showing pointer
         puShowCursor();
         mouse_active = ~mouse_active;
@@ -1576,7 +1576,7 @@ void guiInit()
     mainMenuBar -> add_submenu ("Autopilot", autopilotSubmenu, autopilotSubmenuCb);
     // mainMenuBar -> add_submenu ("Options", optionsSubmenu, optionsSubmenuCb);
 #ifdef FG_NETWORK_OLK
-    if ( current_options.get_network_olk() ) {
+    if ( globals->get_options()->get_network_olk() ) {
     	mainMenuBar -> add_submenu ("Network", networkSubmenu, networkSubmenuCb);
     }
 #endif

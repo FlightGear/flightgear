@@ -225,8 +225,8 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
     int gap = 10;
 #endif
 
-//  int font_size = current_options.get_xsize() / 60;
-  int font_size = (current_options.get_xsize() > 1000) ? LARGE : SMALL;
+//  int font_size = globals->get_options()->get_xsize() / 60;
+  int font_size = (globals->get_options()->get_xsize() > 1000) ? LARGE : SMALL;
   
   HUD_style = 1;
 
@@ -1002,7 +1002,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
   HUD_deque.insert( HUD_deque.begin(), HIptr);
 
 //      case 20:
-      switch( current_options.get_tris_or_culled() ) {
+      switch( globals->get_options()->get_tris_or_culled() ) {
       case 0:
           HIptr = (instr_item *) new instr_label( 10,
                               25,
@@ -1090,8 +1090,8 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
     int compass_w = 200;
 //  int gap = 10;
 
-//	int font_size = current_options.get_xsize() / 60;
-    int font_size = (current_options.get_xsize() > 1000) ? LARGE : SMALL;
+//	int font_size = globals->get_options()->get_xsize() / 60;
+    int font_size = (globals->get_options()->get_xsize() > 1000) ? LARGE : SMALL;
 
     HUD_style = 2;
 
@@ -1266,7 +1266,7 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
                          TRUE );
     HUD_deque.push_front( p );
 
-    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
     strcpy(units, " ft");
     } else {
     strcpy(units, " m");
@@ -1364,14 +1364,14 @@ int global_day_night_switch = DAY;
 
 void HUD_masterswitch( bool incr )
 {
-    if ( current_options.get_hud_status() ) {
+    if ( globals->get_options()->get_hud_status() ) {
 	if ( global_day_night_switch == DAY ) {
 	    global_day_night_switch = NIGHT;
 	} else {
-	    current_options.set_hud_status( false );
+	    globals->get_options()->set_hud_status( false );
 	}
     } else {
-	current_options.set_hud_status( true );
+	globals->get_options()->set_hud_status( true );
 	global_day_night_switch = DAY;
     }	
 }
@@ -1381,7 +1381,7 @@ void HUD_brightkey( bool incr_bright )
     instr_item *pHUDInstr = HUD_deque[0];
     int brightness        = pHUDInstr->get_brightness();
 
-    if( current_options.get_hud_status() ) {
+    if( globals->get_options()->get_hud_status() ) {
 	if( incr_bright ) {
 	    switch (brightness)
 		{
@@ -1424,11 +1424,11 @@ void HUD_brightkey( bool incr_bright )
 		    break;
 
 		default:
-		    current_options.set_hud_status(0);
+		    globals->get_options()->set_hud_status(0);
 		}
 	}
     } else {
-	current_options.set_hud_status(true);
+	globals->get_options()->set_hud_status(true);
     }
 
     pHUDInstr->SetBrightness( brightness );
@@ -1456,7 +1456,7 @@ static void alpha_adj( puObject *hs ) {
 }
 
 void fgHUDalphaAdjust( puObject * ) {
-	current_options.set_anti_alias_hud(1);
+	globals->get_options()->set_anti_alias_hud(1);
 	FG_PUSH_PUI_DIALOG( HUDalphaDialog );
 }
 
@@ -1467,7 +1467,7 @@ static void goAwayHUDalphaAdjust (puObject *)
 
 static void cancelHUDalphaAdjust (puObject *)
 {
-	current_options.set_anti_alias_hud(0);
+	globals->get_options()->set_anti_alias_hud(0);
 	FG_POP_PUI_DIALOG( HUDalphaDialog );
 }
 
@@ -1555,7 +1555,7 @@ void fgHUDReshape(void) {
 	if ( HUDtext )
 		delete HUDtext;
 
-	HUD_TextSize = current_options.get_xsize() / 60;
+	HUD_TextSize = globals->get_options()->get_xsize() / 60;
         HUD_TextSize = 10;
 	HUDtext = new fntRenderer();
 	HUDtext -> setFont      ( guiFntHandle ) ;
@@ -1565,7 +1565,7 @@ void fgHUDReshape(void) {
 
 
 static void set_hud_color(float r, float g, float b) {
-	current_options.get_anti_alias_hud() ?
+	globals->get_options()->get_anti_alias_hud() ?
 			glColor4f(r,g,b,hud_trans_alpha) :
 			glColor3f(r,g,b);
 }
@@ -1608,7 +1608,7 @@ void fgUpdateHUD( void ) {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
 
-  if( current_options.get_anti_alias_hud() ) {
+  if( globals->get_options()->get_anti_alias_hud() ) {
 	  glEnable(GL_LINE_SMOOTH);
 //	  glEnable(GL_BLEND);
 	  glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
@@ -1744,7 +1744,7 @@ void fgUpdateHUD( void ) {
 //  HUD_StippleLineList.draw();
 //  glDisable(GL_LINE_STIPPLE);
 
-  if( current_options.get_anti_alias_hud() ) {
+  if( globals->get_options()->get_anti_alias_hud() ) {
 //	  glDisable(GL_BLEND);
 	  glDisable(GL_LINE_SMOOTH);
 	  glLineWidth(1.0);

@@ -43,7 +43,6 @@
 #include <simgear/math/fg_random.h>
 #include <simgear/misc/fgpath.hxx>
 
-#include <Main/options.hxx>
 #include <Objects/texload.h>
 
 #include "globals.hxx"
@@ -79,7 +78,7 @@ void fgSplashInit ( void ) {
     char num_str[256];
     sprintf(num_str, "%d", num);
 
-    FGPath tpath( current_options.get_fg_root() );
+    FGPath tpath( globals->get_options()->get_fg_root() );
     tpath.append( "Textures/Splash" );
     tpath.concat( num_str );
     tpath.concat( ".rgb" );

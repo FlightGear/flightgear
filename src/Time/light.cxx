@@ -56,7 +56,6 @@ FG_USING_STD(string);
 
 #include <Aircraft/aircraft.hxx>
 #include <Main/globals.hxx>
-#include <Main/options.hxx>
 
 #include "light.hxx"
 #include "sunpos.hxx"
@@ -76,7 +75,7 @@ void fgLIGHT::Init( void ) {
 	    "Initializing Lighting interpolation tables." );
 
     // build the path name to the ambient lookup table
-    FGPath path( current_options.get_fg_root() );
+    FGPath path( globals->get_options()->get_fg_root() );
     FGPath ambient = path;
     ambient.append( "Lighting/ambient" );
     FGPath diffuse = path;

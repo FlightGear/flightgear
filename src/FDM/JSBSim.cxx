@@ -67,23 +67,25 @@ bool FGJSBsim::init( double dt ) {
   FG_LOG( FG_FLIGHT, FG_INFO, "Starting and initializing JSBsim" );
   FG_LOG( FG_FLIGHT, FG_INFO, "  created FDMExec" );
 
-  FGPath aircraft_path( current_options.get_fg_root() );
+  FGPath aircraft_path( globals->get_options()->get_fg_root() );
   aircraft_path.append( "Aircraft" );
 
-  FGPath engine_path( current_options.get_fg_root() );
+  FGPath engine_path( globals->get_options()->get_fg_root() );
   engine_path.append( "Engine" );
 
   //FDMExec.GetState()->Setdt( dt );
 
   result = FDMExec.LoadModel( aircraft_path.str(),
                                        engine_path.str(),
-                                       current_options.get_aircraft() );
+                                       globals->get_options()->get_aircraft() );
   FDMExec.GetState()->Setdt( dt );
   
   if (result) {
-    FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft " << current_options.get_aircraft() );
+    FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft "
+	    << globals->get_options()->get_aircraft() );
   } else {
-    FG_LOG( FG_FLIGHT, FG_INFO, "  aircraft " << current_options.get_aircraft()
+    FG_LOG( FG_FLIGHT, FG_INFO, "  aircraft "
+	    << globals->get_options()->get_aircraft()
 	    << " does not exist" );
     return false;
   }
@@ -105,31 +107,35 @@ bool FGJSBsim::init( double dt ) {
   
   FGInitialCondition *fgic = new FGInitialCondition(&FDMExec);
   fgic->SetAltitudeFtIC(get_Altitude());
-  if((current_options.get_mach() < 0) && (current_options.get_vc() < 0 )) {
-    fgic->SetUBodyFpsIC(current_options.get_uBody());
-    fgic->SetVBodyFpsIC(current_options.get_vBody());
-    fgic->SetWBodyFpsIC(current_options.get_wBody());
-    FG_LOG(FG_FLIGHT,FG_INFO, "  u,v,w= " << current_options.get_uBody()
-           << ", " << current_options.get_vBody()
-           << ", " << current_options.get_wBody());
-  } else if (current_options.get_vc() < 0) {
-    fgic->SetMachIC(current_options.get_mach());
-    FG_LOG(FG_FLIGHT,FG_INFO, "  mach: " << current_options.get_mach() );
+  if ( (globals->get_options()->get_mach() < 0) && 
+      (globals->get_options()->get_vc() < 0 ) )
+  {
+    fgic->SetUBodyFpsIC(globals->get_options()->get_uBody());
+    fgic->SetVBodyFpsIC(globals->get_options()->get_vBody());
+    fgic->SetWBodyFpsIC(globals->get_options()->get_wBody());
+    FG_LOG(FG_FLIGHT,FG_INFO, "  u,v,w= " << globals->get_options()->get_uBody()
+           << ", " << globals->get_options()->get_vBody()
+           << ", " << globals->get_options()->get_wBody());
+  } else if (globals->get_options()->get_vc() < 0) {
+    fgic->SetMachIC(globals->get_options()->get_mach());
+    FG_LOG( FG_FLIGHT,FG_INFO, "  mach: "
+	    << globals->get_options()->get_mach() );
   } else {
-    fgic->SetVcalibratedKtsIC(current_options.get_vc());
-    FG_LOG(FG_FLIGHT,FG_INFO, "  vc: " << current_options.get_vc() );
+    fgic->SetVcalibratedKtsIC(globals->get_options()->get_vc());
+    FG_LOG(FG_FLIGHT,FG_INFO, "  vc: " << globals->get_options()->get_vc() );
     //this should cover the case in which no speed switches are used
-    //current_options.get_vc() will return zero by default
+    //globals->get_options()->get_vc() will return zero by default
   }
 
-  //fgic->SetFlightPathAngleDegIC(current_options.get_Gamma());
+  //fgic->SetFlightPathAngleDegIC(globals->get_options()->get_Gamma());
   fgic->SetRollAngleRadIC(get_Phi());
   fgic->SetPitchAngleRadIC(get_Theta());
   fgic->SetHeadingRadIC(get_Psi());
   fgic->SetLatitudeRadIC(get_Lat_geocentric());
   fgic->SetLongitudeRadIC(get_Longitude());
 
-  //FG_LOG( FG_FLIGHT, FG_INFO, "  gamma: " <<  current_options.get_Gamma());
+  // FG_LOG( FG_FLIGHT, FG_INFO, "  gamma: "
+  //         << globals->get_options()->get_Gamma());
   FG_LOG( FG_FLIGHT, FG_INFO, "  phi: " <<  get_Phi());
   //FG_LOG( FG_FLIGHT, FG_INFO, "  theta: " <<  get_Theta() );
   FG_LOG( FG_FLIGHT, FG_INFO, "  psi: " <<  get_Psi() );
@@ -143,10 +149,10 @@ bool FGJSBsim::init( double dt ) {
           <<  get_Altitude() + get_Sea_level_radius()
                 - scenery.cur_radius*METER_TO_FEET );
   
-  FG_LOG( FG_FLIGHT, FG_INFO, "      current_options.get_altitude(): " 
-          <<  current_options.get_altitude() );
+  FG_LOG( FG_FLIGHT, FG_INFO, "      globals->get_options()->get_altitude(): " 
+          <<  globals->get_options()->get_altitude() );
   //must check > 0, != 0 will give bad result if --notrim set
-  if(current_options.get_trim_mode() > 0) {
+  if(globals->get_options()->get_trim_mode() > 0) {
     if(fgic->GetVcalibratedKtsIC() > 50) {
       FDMExec.RunIC(fgic);
       FG_LOG( FG_FLIGHT, FG_INFO, "  Starting trim..." );
@@ -158,7 +164,8 @@ bool FGJSBsim::init( double dt ) {
 
 
       controls.set_elevator_trim(FDMExec.GetFCS()->GetPitchTrimCmd());
-      controls.set_throttle(FGControls::ALL_ENGINES,FDMExec.GetFCS()->GetThrottleCmd(0)/100);
+      controls.set_throttle( FGControls::ALL_ENGINES,
+			     FDMExec.GetFCS()->GetThrottleCmd(0)/100 );
       trimmed=true;
       trim_elev=FDMExec.GetFCS()->GetPitchTrimCmd();
       trim_throttle=FDMExec.GetFCS()->GetThrottleCmd(0)/100;
@@ -192,7 +199,7 @@ bool FGJSBsim::init( double dt ) {
 
 bool FGJSBsim::update( int multiloop ) {
   double save_alt = 0.0;
-  double time_step = (1.0 / current_options.get_model_hz()) * multiloop;
+  double time_step = (1.0 / globals->get_options()->get_model_hz()) * multiloop;
   double start_elev = get_Altitude();
  
   
@@ -261,7 +268,7 @@ bool FGJSBsim::copy_to_JSBsim() {
   FDMExec.GetFCS()->SetCBrake( controls.get_brake( 2 ) );
 
   // Inform JSBsim of the local terrain altitude; uncommented 5/3/00
-  //  FDMExec.GetPosition()->SetRunwayElevation(get_Runway_altitude()); // seems to work
+  // FDMExec.GetPosition()->SetRunwayElevation(get_Runway_altitude()); // seems to work
   FDMExec.GetPosition()->SetRunwayRadius(scenery.cur_radius*METER_TO_FEET);
   FDMExec.GetPosition()->SetSeaLevelRadius(get_Sea_level_radius());
 
@@ -343,7 +350,8 @@ bool FGJSBsim::copy_from_JSBsim() {
                    FDMExec.GetRotation()->GetEulerRates()(1),
                    FDMExec.GetRotation()->GetEulerRates()(3));
 
-  // ***FIXME*** set_Geocentric_Rates( Latitude_dot, Longitude_dot, Radius_dot );
+  // ***FIXME*** set_Geocentric_Rates( Latitude_dot, Longitude_dot,
+  //                                   Radius_dot );
 
   set_Mach_number( FDMExec.GetTranslation()->GetMach());
 

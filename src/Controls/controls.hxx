@@ -24,7 +24,7 @@
 #ifndef _CONTROLS_HXX
 #define _CONTROLS_HXX
 
-#include <Main/options.hxx>
+#include <Main/globals.hxx>
 
 #ifndef __cplusplus                                                          
 # error This library requires C++
@@ -94,8 +94,8 @@ public:
 	CLAMP( &aileron, -1.0, 1.0 );
 			
 	// check for autocoordination
-	if ( current_options.get_auto_coordination() == 
-	     fgOPTIONS::FG_AUTO_COORD_ENABLED ) 
+	if ( globals->get_options()->get_auto_coordination() == 
+	     FGOptions::FG_AUTO_COORD_ENABLED ) 
 	{
 	    set_rudder( aileron / 2.0 );
 	}
@@ -105,8 +105,8 @@ public:
 	CLAMP( &aileron, -1.0, 1.0 );
 			
 	// check for autocoordination
-	if ( current_options.get_auto_coordination() == 
-	     fgOPTIONS::FG_AUTO_COORD_ENABLED ) 
+	if ( globals->get_options()->get_auto_coordination() == 
+	     FGOptions::FG_AUTO_COORD_ENABLED ) 
 	{
 	    set_rudder( aileron / 2.0 );
 	}

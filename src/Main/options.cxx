@@ -88,11 +88,11 @@ atoi( const string& str )
 
 
 // Defined the shared options class here
-fgOPTIONS current_options;
+// FGOptions current_options;
 
 
 // Constructor
-fgOPTIONS::fgOPTIONS() :
+FGOptions::FGOptions() :
     // starting longitude in degrees (west = -)
     // starting latitude in degrees (south = -)
 
@@ -175,7 +175,7 @@ fgOPTIONS::fgOPTIONS() :
 
     // Rendering options
     fog(FG_FOG_NICEST),  // nicest
-    clouds(false),
+    clouds(true),
     clouds_asl(5000*FEET_TO_METER),
     fov(55.0),
     fullscreen(0),
@@ -185,6 +185,10 @@ fgOPTIONS::fgOPTIONS() :
     wireframe(0),
     xsize(800),
     ysize(600),
+    xmin(0),
+    ymin(0),
+    xmax(800),
+    ymax(600),
     bpp(16),
     view_mode(FG_VIEW_PILOT),
     default_view_offset(0),
@@ -243,7 +247,7 @@ fgOPTIONS::fgOPTIONS() :
 }
 
 void 
-fgOPTIONS::toggle_panel() {
+FGOptions::toggle_panel() {
     
     bool freeze = globals->get_freeze();
 
@@ -276,7 +280,7 @@ fgOPTIONS::toggle_panel() {
 }
 
 double
-fgOPTIONS::parse_time(const string& time_in) {
+FGOptions::parse_time(const string& time_in) {
     char *time_str, num[256];
     double hours, minutes, seconds;
     double result = 0.0;
@@ -354,7 +358,7 @@ fgOPTIONS::parse_time(const string& time_in) {
 }
 
 
-long int fgOPTIONS::parse_date( const string& date)
+long int FGOptions::parse_date( const string& date)
 {
     struct tm gmt;
     char * date_str, num[256];
@@ -462,7 +466,7 @@ long int fgOPTIONS::parse_date( const string& date)
 
 
 // parse degree in the form of [+/-]hhh:mm:ss
-void fgOPTIONS::parse_control( const string& mode ) {
+void FGOptions::parse_control( const string& mode ) {
     if ( mode == "joystick" ) {
 	control_mode = FG_JOYSTICK;
     } else if ( mode == "mouse" ) {
@@ -475,7 +479,7 @@ void fgOPTIONS::parse_control( const string& mode ) {
 
 /// parse degree in the form of [+/-]hhh:mm:ss
 double
-fgOPTIONS::parse_degree( const string& degree_str) {
+FGOptions::parse_degree( const string& degree_str) {
     double result = parse_time( degree_str );
 
     // printf("Degree = %.4f\n", result);
@@ -486,7 +490,7 @@ fgOPTIONS::parse_degree( const string& degree_str) {
 
 // parse time offset command line option
 int
-fgOPTIONS::parse_time_offset( const string& time_str) {
+FGOptions::parse_time_offset( const string& time_str) {
     int result;
 
     // printf("time offset = %s\n", time_str);
@@ -506,7 +510,7 @@ fgOPTIONS::parse_time_offset( const string& time_str) {
 // Parse --tile-diameter=n type option 
 
 int
-fgOPTIONS::parse_tile_radius( const string& arg ) {
+FGOptions::parse_tile_radius( const string& arg ) {
     int radius = atoi( arg );
 
     if ( radius < FG_RADIUS_MIN ) { radius = FG_RADIUS_MIN; }
@@ -520,7 +524,7 @@ fgOPTIONS::parse_tile_radius( const string& arg ) {
 
 // Parse --fdm=abcdefg type option 
 int
-fgOPTIONS::parse_fdm( const string& fm ) {
+FGOptions::parse_fdm( const string& fm ) {
     // cout << "fdm = " << fm << endl;
 
     if ( fm == "ada" ) {
@@ -547,7 +551,7 @@ fgOPTIONS::parse_fdm( const string& fm ) {
 
 // Parse --fov=x.xx type option 
 double
-fgOPTIONS::parse_fov( const string& arg ) {
+FGOptions::parse_fov( const string& arg ) {
     double fov = atof(arg);
 
     if ( fov < FG_FOV_MIN ) { fov = FG_FOV_MIN; }
@@ -585,7 +589,7 @@ fgOPTIONS::parse_fov( const string& arg ) {
 //  filename = file system file name
 
 bool 
-fgOPTIONS::parse_channel( const string& type, const string& channel_str ) {
+FGOptions::parse_channel( const string& type, const string& channel_str ) {
     // cout << "Channel string = " << channel_str << endl;
 
     channel_options_list.push_back( type + "," + channel_str );
@@ -595,7 +599,7 @@ fgOPTIONS::parse_channel( const string& type, const string& channel_str ) {
 
 
 // Parse --wp=ID[,alt]
-bool fgOPTIONS::parse_wp( const string& arg ) {
+bool FGOptions::parse_wp( const string& arg ) {
     string id, alt_str;
     double alt = 0.0;
 
@@ -625,7 +629,7 @@ bool fgOPTIONS::parse_wp( const string& arg ) {
 
 
 // Parse a single option
-int fgOPTIONS::parse_option( const string& arg ) {
+int FGOptions::parse_option( const string& arg ) {
     // General Options
     if ( (arg == "--help") || (arg == "-h") ) {
 	// help/usage request
@@ -822,6 +826,10 @@ int fgOPTIONS::parse_option( const string& arg ) {
  	    FG_LOG( FG_GENERAL, FG_ALERT,
  		    "Setting geometry to " << xsize << 'x' << ysize << '\n');
   	}
+
+	xmin = ymin = 0;
+	xmax = xsize;
+	ymax = ysize;
     } else if ( arg.find( "--bpp=" ) != string::npos ) {
 	string bits_per_pix = arg.substr( 6 );
 	if ( bits_per_pix == "16" ) {
@@ -926,7 +934,7 @@ int fgOPTIONS::parse_option( const string& arg ) {
 
 // Scan the command line options for an fg_root definition and set
 // just that.
-int fgOPTIONS::scan_command_line_for_root( int argc, char **argv ) {
+int FGOptions::scan_command_line_for_root( int argc, char **argv ) {
     int i = 1;
     int result;
 
@@ -948,7 +956,7 @@ int fgOPTIONS::scan_command_line_for_root( int argc, char **argv ) {
 
 
 // Scan the config file for an fg_root definition and set just that.
-int fgOPTIONS::scan_config_file_for_root( const string& path ) {
+int FGOptions::scan_config_file_for_root( const string& path ) {
     fg_gzifstream in( path );
     if ( !in.is_open() )
 	return(FG_OPTIONS_ERROR);
@@ -985,7 +993,7 @@ int fgOPTIONS::scan_config_file_for_root( const string& path ) {
 
 
 // Parse the command line options
-int fgOPTIONS::parse_command_line( int argc, char **argv ) {
+int FGOptions::parse_command_line( int argc, char **argv ) {
     int i = 1;
     int result;
 
@@ -1007,7 +1015,7 @@ int fgOPTIONS::parse_command_line( int argc, char **argv ) {
 
 
 // Parse config file options
-int fgOPTIONS::parse_config_file( const string& path ) {
+int FGOptions::parse_config_file( const string& path ) {
     fg_gzifstream in( path );
     if ( !in.is_open() )
 	return(FG_OPTIONS_ERROR);
@@ -1046,7 +1054,7 @@ int fgOPTIONS::parse_config_file( const string& path ) {
 
 
 // Print usage message
-void fgOPTIONS::usage ( void ) {
+void FGOptions::usage ( void ) {
     cout << "Usage: fg [ options ... ]" << endl;
     cout << endl;
 
@@ -1195,5 +1203,5 @@ void fgOPTIONS::usage ( void ) {
 
 
 // Destructor
-fgOPTIONS::~fgOPTIONS( void ) {
+FGOptions::~FGOptions( void ) {
 }

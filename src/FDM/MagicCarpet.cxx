@@ -26,7 +26,7 @@
 #include <simgear/math/polar3d.hxx>
 
 #include <Controls/controls.hxx>
-#include <Main/options.hxx>
+#include <Main/globals.hxx>
 
 #include "MagicCarpet.hxx"
 
@@ -45,7 +45,8 @@ bool FGMagicCarpet::init( double dt ) {
 bool FGMagicCarpet::update( int multiloop ) {
     // cout << "FGLaRCsim::update()" << endl;
 
-    double time_step = (1.0 / current_options.get_model_hz()) * multiloop;
+    double time_step = (1.0 / globals->get_options()->get_model_hz()) *
+	multiloop;
 
     // speed and distance traveled
     double speed = controls.get_throttle( 0 ) * 2000; // meters/sec

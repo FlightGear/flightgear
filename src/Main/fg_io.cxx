@@ -32,8 +32,6 @@
 #include <simgear/io/sg_socket.hxx>
 #include <simgear/math/sg_types.hxx>
 
-#include <Main/options.hxx>
-
 #include <Network/protocol.hxx>
 #include <Network/native.hxx>
 #include <Network/garmin.hxx>
@@ -45,6 +43,8 @@
 #include <Network/joyclient.hxx>
 
 #include <Time/timestamp.hxx>
+
+#include "globals.hxx"
 
 FG_USING_STD(string);
 
@@ -196,7 +196,7 @@ static FGProtocol *parse_port_config( const string& config )
 void fgIOInit() {
     FGProtocol *p;
     string_list channel_options_list = 
-	current_options.get_channel_options_list();
+	globals->get_options()->get_channel_options_list();
 
     // we could almost do this in a single step except pushing a valid
     // port onto the port list copies the structure and destroys the

@@ -59,13 +59,13 @@ void fgReInitSubsystems( void );
 // find basic airport location info from airport database
 bool fgFindAirportID( const string& id, FGAirport *a );
 
-// Set current_options lon/lat given an airport id
+// Set pos given an airport id
 bool fgSetPosFromAirportID( const string& id );
 
-// Set current_options lon/lat given an airport id and heading (degrees)
+// Set position and heading given an airport id and heading (degrees)
 bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg );
 
 
-#endif // _FG_INIT_H
+#endif // _FG_INIT_HXX
 
 

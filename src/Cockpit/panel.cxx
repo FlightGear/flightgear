@@ -44,8 +44,8 @@
 bool
 fgPanelVisible ()
 {
-  return ((current_options.get_panel_status()) &&
-	  (current_options.get_view_mode() == fgOPTIONS::FG_VIEW_PILOT) &&
+  return ((globals->get_options()->get_panel_status()) &&
+	  (globals->get_options()->get_view_mode() == FGOptions::FG_VIEW_PILOT) &&
 	  (globals->get_current_view()->get_view_offset() == 0.0));
 }
 
@@ -63,7 +63,7 @@ FGTextureManager::createTexture (const string &relativePath)
   ssgTexture * texture = _textureMap[relativePath];
   if (texture == 0) {
     cerr << "Texture " << relativePath << " does not yet exist" << endl;
-    FGPath tpath(current_options.get_fg_root());
+    FGPath tpath(globals->get_options()->get_fg_root());
     tpath.append(relativePath);
     texture = new ssgTexture((char *)tpath.c_str(), false, false);
     _textureMap[relativePath] = texture;

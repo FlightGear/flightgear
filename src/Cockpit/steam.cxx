@@ -166,7 +166,8 @@ void FGSteam::set_lowpass ( double *outthe, double inthe, double tc )
 
 void FGSteam::_CatchUp()
 { if ( _UpdatesPending != 0 )
-  {	double dt = _UpdatesPending * 1.0 / current_options.get_model_hz();
+  {	double dt = _UpdatesPending * 1.0 / 
+	    globals->get_options()->get_model_hz();
         double AccN, AccE, AccU;
 	int i /*,j*/;
 	double d, the_ENGINE_rpm;

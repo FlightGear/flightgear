@@ -54,7 +54,7 @@
 #include <simgear/misc/stopwatch.hxx>
 #include <simgear/misc/texcoord.hxx>
 
-#include <Main/options.hxx>
+#include <Main/globals.hxx>
 #include <Scenery/tileentry.hxx>
 
 #include "matlib.hxx"
@@ -259,7 +259,7 @@ ssgBranch *fgGenTile( const string& path, FGTileEntry *t) {
     leaf->setState( state );
 
     tile->addKid( leaf );
-    // if ( current_options.get_clouds() ) {
+    // if ( globals->get_options()->get_clouds() ) {
     //    fgGenCloudTile(path, t, tile);
     // }
 
@@ -309,7 +309,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 	return fgGenTile( path, t );
     }
 
-    shading = current_options.get_shading();
+    shading = globals->get_options()->get_shading();
 
     if ( is_base ) {
 	t->ncount = 0;
@@ -691,7 +691,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t, const bool is_base) {
 	    << stopwatch.elapsedSeconds() << " seconds" );
 
     // Generate a cloud layer above the tiles
-    // if ( current_options.get_clouds() ) {
+    // if ( globals->get_options()->get_clouds() ) {
     //  	fgGenCloudTile(path, t, tile);
     // }
     return tile;

@@ -40,7 +40,6 @@
 #include <simgear/misc/fgpath.hxx>
 
 #include <Main/globals.hxx>
-#include <Main/options.hxx>
 #include <Objects/obj.hxx>
 #include <Scenery/scenery.hxx>  // for scenery.center
 
@@ -77,7 +76,7 @@ FGTileCache::init( void )
     // 
     //   target_cache_size >= (current.options.tile_diameter + 1) ** 2 
     // 
-    int side = current_options.get_tile_diameter() + 2;
+    int side = globals->get_options()->get_tile_diameter() + 2;
     int target_cache_size = (side*side);
     FG_LOG( FG_TERRAIN, FG_DEBUG, "  target cache size = " 
 	    << target_cache_size );
@@ -170,10 +169,10 @@ FGTileCache::fill_in( int index, const FGBucket& p )
     tile_cache[index].tile_bucket = p;
 
     FGPath tile_path;
-    if ( current_options.get_fg_scenery() != "" ) {
-	tile_path.set( current_options.get_fg_scenery() );
+    if ( globals->get_options()->get_fg_scenery() != "" ) {
+	tile_path.set( globals->get_options()->get_fg_scenery() );
     } else {
-	tile_path.set( current_options.get_fg_root() );
+	tile_path.set( globals->get_options()->get_fg_root() );
 	tile_path.append( "Scenery" );
     }
     tile_path.append( p.gen_base_path() );

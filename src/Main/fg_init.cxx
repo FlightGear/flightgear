@@ -109,21 +109,21 @@ extern const char *default_root;
 bool fgInitFGRoot ( int argc, char **argv ) {
     // Attempt to locate and parse a config file
     // First check fg_root
-    FGPath config( current_options.get_fg_root() );
+    FGPath config( globals->get_options()->get_fg_root() );
     config.append( "system.fgfsrc" );
-    current_options.scan_config_file_for_root( config.str() );
+    globals->get_options()->scan_config_file_for_root( config.str() );
 
     // Next check home directory
     char* envp = ::getenv( "HOME" );
     if ( envp != NULL ) {
 	config.set( envp );
 	config.append( ".fgfsrc" );
-	current_options.scan_config_file_for_root( config.str() );
+	globals->get_options()->scan_config_file_for_root( config.str() );
     }
 
     // Parse remaining command line options
     // These will override anything specified in a config file
-    current_options.scan_command_line_for_root(argc, argv);
+    globals->get_options()->scan_command_line_for_root(argc, argv);
 
     return true;
 }
@@ -133,26 +133,26 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 bool fgInitConfig ( int argc, char **argv ) {
     // Attempt to locate and parse a config file
     // First check fg_root
-    FGPath config( current_options.get_fg_root() );
+    FGPath config( globals->get_options()->get_fg_root() );
     config.append( "system.fgfsrc" );
-    current_options.parse_config_file( config.str() );
+    globals->get_options()->parse_config_file( config.str() );
 
     // Next check home directory
     char* envp = ::getenv( "HOME" );
     if ( envp != NULL ) {
 	config.set( envp );
 	config.append( ".fgfsrc" );
-	current_options.parse_config_file( config.str() );
+	globals->get_options()->parse_config_file( config.str() );
     }
 
     // Parse remaining command line options
     // These will override anything specified in a config file
-    if ( current_options.parse_command_line(argc, argv) !=
-	 fgOPTIONS::FG_OPTIONS_OK )
+    if ( globals->get_options()->parse_command_line(argc, argv) !=
+	 FGOptions::FG_OPTIONS_OK )
     {
 	// Something must have gone horribly wrong with the command
 	// line parsing or maybe the user just requested help ... :-)
-	current_options.usage();
+	globals->get_options()->usage();
 	FG_LOG( FG_GENERAL, FG_ALERT, "\nExiting ...");
 	return false;
     }
@@ -164,7 +164,7 @@ bool fgInitConfig ( int argc, char **argv ) {
 // find basic airport location info from airport database
 bool fgFindAirportID( const string& id, FGAirport *a ) {
     if ( id.length() ) {
-	FGPath path( current_options.get_fg_root() );
+	FGPath path( globals->get_options()->get_fg_root() );
 	path.append( "Airports" );
 	path.append( "simple.mk4" );
 	FGAirports airports( path.c_str() );
@@ -198,8 +198,8 @@ bool fgSetPosFromAirportID( const string& id ) {
 	    "Attempting to set starting position from airport code " << id );
 
     if ( fgFindAirportID( id, &a ) ) {
-	current_options.set_lon( a.longitude );
-	current_options.set_lat( a.latitude );
+	globals->get_options()->set_lon( a.longitude );
+	globals->get_options()->set_lat( a.latitude );
 	current_properties.setDoubleValue("/position/longitude",
 					  a.longitude);
 	current_properties.setDoubleValue("/position/latitude",
@@ -227,7 +227,7 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     if ( id.length() ) {
 	// set initial position from runway and heading
 
-	FGPath path( current_options.get_fg_root() );
+	FGPath path( globals->get_options()->get_fg_root() );
 	path.append( "Airports" );
 	path.append( "runways.mk4" );
 	FGRunways runways( path.c_str() );
@@ -236,12 +236,12 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 		"Attempting to set starting position from runway code "
 		<< id << " heading " << tgt_hdg );
 
-	// FGPath inpath( current_options.get_fg_root() );
+	// FGPath inpath( globals->get_options()->get_fg_root() );
 	// inpath.append( "Airports" );
 	// inpath.append( "apt_simple" );
 	// airports.load( inpath.c_str() );
 
-	// FGPath outpath( current_options.get_fg_root() );
+	// FGPath outpath( globals->get_options()->get_fg_root() );
 	// outpath.append( "Airports" );
 	// outpath.append( "simple.gdbm" );
 	// airports.dump_gdbm( outpath.c_str() );
@@ -309,9 +309,9 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     geo_direct_wgs_84 ( 0, found_r.lat, found_r.lon, 
 			azimuth, found_r.length * FEET_TO_METER * 0.5 - 5.0,
 			&lat2, &lon2, &az2 );
-    current_options.set_lon( lon2 );
-    current_options.set_lat( lat2 );
-    current_options.set_heading( heading );
+    globals->get_options()->set_lon( lon2 );
+    globals->get_options()->set_lat( lat2 );
+    globals->get_options()->set_heading( heading );
     current_properties.setDoubleValue("/position/longitude", lon2);
     current_properties.setDoubleValue("/position/latitude", lat2);
     current_properties.setDoubleValue("/orientation/heading", heading);
@@ -329,21 +329,21 @@ bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 // Set initial position and orientation
 bool fgInitPosition( void ) {
     FGInterface *f = current_aircraft.fdm_state;
-    string id = current_options.get_airport_id();
+    string id = globals->get_options()->get_airport_id();
 
     // set initial position from default or command line coordinates
-    f->set_Longitude( current_options.get_lon() * DEG_TO_RAD );
-    f->set_Latitude( current_options.get_lat() * DEG_TO_RAD );
+    f->set_Longitude( globals->get_options()->get_lon() * DEG_TO_RAD );
+    f->set_Latitude( globals->get_options()->get_lat() * DEG_TO_RAD );
 
-    if ( scenery.cur_elev > current_options.get_altitude() - 1) {
-	current_options.set_altitude( scenery.cur_elev + 1 );
+    if ( scenery.cur_elev > globals->get_options()->get_altitude() - 1) {
+	globals->get_options()->set_altitude( scenery.cur_elev + 1 );
     }
 
     FG_LOG( FG_GENERAL, FG_INFO,
-	    "starting altitude is = " << current_options.get_altitude() );
+	    "starting altitude is = " << globals->get_options()->get_altitude() );
 
-    f->set_Altitude( current_options.get_altitude() * METER_TO_FEET );
-    fgFDMSetGroundElevation( current_options.get_flight_model(),
+    f->set_Altitude( globals->get_options()->get_altitude() * METER_TO_FEET );
+    fgFDMSetGroundElevation( globals->get_options()->get_flight_model(),
 			     f->get_Altitude() * FEET_TO_METER );
 
 #if 0
@@ -376,7 +376,7 @@ bool fgInitGeneral( void ) {
     FG_LOG( FG_GENERAL, FG_INFO, "General Initialization" );
     FG_LOG( FG_GENERAL, FG_INFO, "======= ==============" );
 
-    root = current_options.get_fg_root();
+    root = globals->get_options()->get_fg_root();
     if ( ! root.length() ) {
 	// No root path set? Then bail ...
 	FG_LOG( FG_GENERAL, FG_ALERT,
@@ -416,7 +416,7 @@ bool fgInitSubsystems( void ) {
     FG_LOG( FG_GENERAL, FG_INFO, "========== ==========");
 
     // Initialize the material property lib
-    FGPath mpath( current_options.get_fg_root() );
+    FGPath mpath( globals->get_options()->get_fg_root() );
     mpath.append( "materials" );
     if ( material_lib.load( mpath.str() ) ) {
     } else {
@@ -434,8 +434,8 @@ bool fgInitSubsystems( void ) {
 
     if ( global_tile_mgr.init() ) {
 	// Load the local scenery data
-	global_tile_mgr.update( current_options.get_lon(),
-				current_options.get_lat() );
+	global_tile_mgr.update( globals->get_options()->get_lon(),
+				globals->get_options()->get_lat() );
     } else {
     	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Tile Manager initialization!" );
 	exit(-1);
@@ -445,19 +445,19 @@ bool fgInitSubsystems( void ) {
     	    "Current terrain elevation after tile mgr init " <<
 	    scenery.cur_elev );
 
-    if ( current_options.get_flight_model() == FGInterface::FG_LARCSIM ) {
+    if ( globals->get_options()->get_flight_model() == FGInterface::FG_LARCSIM ) {
 	cur_fdm_state = new FGLaRCsim;
-    } else if ( current_options.get_flight_model() == FGInterface::FG_JSBSIM ) {
+    } else if ( globals->get_options()->get_flight_model() == FGInterface::FG_JSBSIM ) {
 	cur_fdm_state = new FGJSBsim;
-    } else if ( current_options.get_flight_model() == FGInterface::FG_ADA ) {
+    } else if ( globals->get_options()->get_flight_model() == FGInterface::FG_ADA ) {
 	cur_fdm_state = new FGADA;
-    } else if ( current_options.get_flight_model() == 
+    } else if ( globals->get_options()->get_flight_model() == 
 	 	FGInterface::FG_BALLOONSIM ) {
 	cur_fdm_state = new FGBalloonSim;
-    } else if ( current_options.get_flight_model() == 
+    } else if ( globals->get_options()->get_flight_model() == 
 		FGInterface::FG_MAGICCARPET ) {
 	cur_fdm_state = new FGMagicCarpet;
-    } else if ( current_options.get_flight_model() == 
+    } else if ( globals->get_options()->get_flight_model() == 
 		FGInterface::FG_EXTERNAL ) {
 	cur_fdm_state = new FGExternal;
     } else {
@@ -496,7 +496,7 @@ bool fgInitSubsystems( void ) {
 	    "Altitude after update " << scenery.cur_elev );
     */
 
-    fgFDMSetGroundElevation( current_options.get_flight_model(),
+    fgFDMSetGroundElevation( globals->get_options()->get_flight_model(),
 			     scenery.cur_elev );
 
     // Reset our altitude if we are below ground
@@ -538,14 +538,14 @@ bool fgInitSubsystems( void ) {
     // and should really be read in from one or more files.
 
     // Initial Velocity
-    cur_fdm_state->set_Velocities_Local( current_options.get_uBody(),
-                             current_options.get_vBody(),
-                             current_options.get_wBody());
+    cur_fdm_state->set_Velocities_Local( globals->get_options()->get_uBody(),
+                             globals->get_options()->get_vBody(),
+                             globals->get_options()->get_wBody());
 
     // Initial Orientation
-    cur_fdm_state->set_Euler_Angles( current_options.get_roll() * DEG_TO_RAD,
-			 current_options.get_pitch() * DEG_TO_RAD,
-			 current_options.get_heading() * DEG_TO_RAD );
+    cur_fdm_state->set_Euler_Angles( globals->get_options()->get_roll() * DEG_TO_RAD,
+			 globals->get_options()->get_pitch() * DEG_TO_RAD,
+			 globals->get_options()->get_heading() * DEG_TO_RAD );
 
     // Initial Angular Body rates
     cur_fdm_state->set_Omega_Body( 7.206685E-05, 0.0, 9.492658E-05 );
@@ -622,7 +622,7 @@ bool fgInitSubsystems( void ) {
 	       current_aircraft.fdm_state->get_Longitude(),
 	       current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER );
     FGLocalWeatherDatabase::theFGLocalWeatherDatabase = 
-	new FGLocalWeatherDatabase( position, current_options.get_fg_root() );
+	new FGLocalWeatherDatabase( position, globals->get_options()->get_fg_root() );
     // cout << theFGLocalWeatherDatabase << endl;
     // cout << "visibility = " 
     //      << theFGLocalWeatherDatabase->getWeatherVisibility() << endl;
@@ -641,19 +641,19 @@ bool fgInitSubsystems( void ) {
 
     FG_LOG(FG_GENERAL, FG_INFO, "  VOR/NDB");
     current_navlist = new FGNavList;
-    FGPath p_nav( current_options.get_fg_root() );
+    FGPath p_nav( globals->get_options()->get_fg_root() );
     p_nav.append( "Navaids/default.nav" );
     current_navlist->init( p_nav );
 
     FG_LOG(FG_GENERAL, FG_INFO, "  ILS");
     current_ilslist = new FGILSList;
-    FGPath p_ils( current_options.get_fg_root() );
+    FGPath p_ils( globals->get_options()->get_fg_root() );
     p_ils.append( "Navaids/default.ils" );
     current_ilslist->init( p_ils );
 
     FG_LOG(FG_GENERAL, FG_INFO, "  Fixes");
     current_fixlist = new FGFixList;
-    FGPath p_fix( current_options.get_fg_root() );
+    FGPath p_fix( globals->get_options()->get_fg_root() );
     p_fix.append( "Navaids/default.fix" );
     current_fixlist->init( p_fix );
 
@@ -706,9 +706,9 @@ bool fgInitSubsystems( void ) {
     // Initialize the flight model subsystem data structures base on
     // above values
 
-    // fgFDMInit( current_options.get_flight_model(), cur_fdm_state,
-    //            1.0 / current_options.get_model_hz() );
-    if ( cur_fdm_state->init( 1.0 / current_options.get_model_hz() ) ) {
+    // fgFDMInit( globals->get_options()->get_flight_model(), cur_fdm_state,
+    //            1.0 / globals->get_options()->get_model_hz() );
+    if ( cur_fdm_state->init( 1.0 / globals->get_options()->get_model_hz() ) ) {
 	// fdm init successful
     } else {
 	FG_LOG( FG_GENERAL, FG_ALERT, "FDM init() failed!  Cannot continue." );
@@ -780,8 +780,8 @@ void fgReInitSubsystems( void )
     
     if( global_tile_mgr.init() ) {
 	// Load the local scenery data
-	global_tile_mgr.update( current_options.get_lon(),
-				current_options.get_lat() );
+	global_tile_mgr.update( globals->get_options()->get_lon(),
+				globals->get_options()->get_lat() );
     } else {
     	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Tile Manager initialization!" );
 		exit(-1);
@@ -790,7 +790,7 @@ void fgReInitSubsystems( void )
     // cout << "current scenery elev = " << scenery.cur_elev << endl;
 
     fgInitPosition();
-    fgFDMSetGroundElevation( current_options.get_flight_model(), 
+    fgFDMSetGroundElevation( globals->get_options()->get_flight_model(), 
 			     scenery.cur_elev );
 
     // Reset our altitude if we are below ground
@@ -821,14 +821,14 @@ void fgReInitSubsystems( void )
     // and should really be read in from one or more files.
 
     // Initial Velocity
-    cur_fdm_state->set_Velocities_Local( current_options.get_uBody(),
-                             current_options.get_vBody(),
-                             current_options.get_wBody());
+    cur_fdm_state->set_Velocities_Local( globals->get_options()->get_uBody(),
+                             globals->get_options()->get_vBody(),
+                             globals->get_options()->get_wBody());
 
     // Initial Orientation
-    cur_fdm_state->set_Euler_Angles( current_options.get_roll() * DEG_TO_RAD,
-			 current_options.get_pitch() * DEG_TO_RAD,
-			 current_options.get_heading() * DEG_TO_RAD );
+    cur_fdm_state->set_Euler_Angles( globals->get_options()->get_roll() * DEG_TO_RAD,
+			 globals->get_options()->get_pitch() * DEG_TO_RAD,
+			 globals->get_options()->get_heading() * DEG_TO_RAD );
 
     // Initial Angular Body rates
     cur_fdm_state->set_Omega_Body( 7.206685E-05, 0.0, 9.492658E-05 );
@@ -854,9 +854,9 @@ void fgReInitSubsystems( void )
     FG_LOG( FG_GENERAL, FG_DEBUG, "  abs_view_pos = "
 	    << globals->get_current_view()->get_abs_view_pos());
 
-    // fgFDMInit( current_options.get_flight_model(), cur_fdm_state, 
-    //            1.0 / current_options.get_model_hz() );
-    cur_fdm_state->init( 1.0 / current_options.get_model_hz() );
+    // fgFDMInit( globals->get_options()->get_flight_model(), cur_fdm_state, 
+    //            1.0 / globals->get_options()->get_model_hz() );
+    cur_fdm_state->init( 1.0 / globals->get_options()->get_model_hz() );
 
     scenery.cur_elev = cur_fdm_state->get_Runway_altitude() * FEET_TO_METER;
 

@@ -41,7 +41,6 @@
 
 // #include <Aircraft/aircraft.hxx>
 #include <Main/globals.hxx>
-#include <Main/options.hxx>
 #include <Objects/obj.hxx>
 
 #ifndef FG_OLD_WEATHER
@@ -100,7 +99,7 @@ int FGTileMgr::init( void ) {
 
     state = Inited;
 
-    tile_diameter = current_options.get_tile_diameter();
+    tile_diameter = globals->get_options()->get_tile_diameter();
     FG_LOG( FG_TERRAIN, FG_INFO, "Tile Diameter = " << tile_diameter);
     
     previous_bucket.make_bad();

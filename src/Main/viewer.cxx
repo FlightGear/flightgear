@@ -83,11 +83,11 @@ inline static void fgMakeViewRot( sgMat4 dst, const sgMat4 m1, const sgMat4 m2 )
 void FGViewer::Init( void ) {
     FG_LOG( FG_VIEW, FG_INFO, "Initializing View parameters" );
 
-    view_offset = goal_view_offset = current_options.get_default_view_offset();
+    view_offset = goal_view_offset = globals->get_options()->get_default_view_offset();
     sgSetVec3( pilot_offset, 0.0, 0.0, 0.0 );
 
-    winWidth = current_options.get_xsize();
-    winHeight = current_options.get_ysize();
+    winWidth = globals->get_options()->get_xsize();
+    winHeight = globals->get_options()->get_ysize();
 
     set_win_ratio( winHeight / winWidth );
 
@@ -189,8 +189,8 @@ void FGViewer::UpdateViewMath( const FGInterface& f ) {
     sgMat4 VIEWo, TMP;
 
     if ( update_fov ) {
-	ssgSetFOV( current_options.get_fov(), 
-		   current_options.get_fov() * win_ratio );
+	ssgSetFOV( globals->get_options()->get_fov(), 
+		   globals->get_options()->get_fov() * win_ratio );
 	update_fov = false;
     }
 		

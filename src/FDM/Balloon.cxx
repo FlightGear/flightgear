@@ -89,9 +89,9 @@ bool FGBalloonSim::init( double dt ) {
 
     //set velocities
     sgSetVec3( temp,
-	current_options.get_uBody(), 
-	current_options.get_vBody(), 
-	current_options.get_wBody() );
+	globals->get_options()->get_uBody(), 
+	globals->get_options()->get_vBody(), 
+	globals->get_options()->get_wBody() );
     current_balloon.setVelocity( temp );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "Finished initializing BalloonSim" );

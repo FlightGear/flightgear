@@ -35,7 +35,7 @@
 #include <fstream>
 #include <string>
 
-#include <Main/options.hxx>
+#include <Main/globals.hxx>
 
 #include "panel.hxx"
 #include "steam.hxx"
@@ -748,7 +748,7 @@ fgReadPanel (istream &input)
     SGPropertyList props2;
     SGPropertyNode node = instrument_group.getChild(i);
 
-    FGPath path(current_options.get_fg_root());
+    FGPath path( globals->get_options()->get_fg_root() );
     path.append(node.getStringValue("path"));
 
     FG_LOG(FG_INPUT, FG_INFO, "Reading instrument "
@@ -798,7 +798,7 @@ FGPanel *
 fgReadPanel (const string &relative_path)
 {
   FGPanel * panel = 0;
-  FGPath path(current_options.get_fg_root());
+  FGPath path(globals->get_options()->get_fg_root());
   path.append(relative_path);
   ifstream input(path.c_str());
   if (!input.good()) {

@@ -58,7 +58,7 @@ FG_USING_STD(string);
 #define NEW_DEFAULT_MODEL_HZ 120
 
 
-class fgOPTIONS {
+class FGOptions {
 
 public:
 
@@ -180,6 +180,8 @@ private:
     bool textures;      // Textures enabled/disabled
     bool wireframe;     // Wireframe mode enabled/disabled
     int xsize, ysize;   // window size derived from geometry string
+    int xmin, ymin;     // upper left corner of window to draw in
+    int xmax, ymax;     // lower right corner of window to draw in
     int bpp;            // bits per pixel
     fgViewMode view_mode; // view mode
     double default_view_offset;	// default forward view offset (for use by
@@ -212,8 +214,8 @@ private:
     
 public:
 
-    fgOPTIONS();
-    ~fgOPTIONS();
+    FGOptions();
+    ~FGOptions();
 
     // Parse a single option
     int parse_option( const string& arg );
@@ -286,6 +288,10 @@ public:
     inline bool get_wireframe() const { return wireframe; }
     inline int get_xsize() const { return xsize; }
     inline int get_ysize() const { return ysize; }
+    inline int get_xmin() const { return xmin; }
+    inline int get_ymin() const { return ymin; }
+    inline int get_xmax() const { return xmax; }
+    inline int get_ymax() const { return ymax; }
     inline int get_bpp() const { return bpp; }
     inline fgViewMode get_view_mode() const { return view_mode; }
     inline double get_default_view_offset() const {
@@ -395,7 +401,7 @@ private:
 };
 
 
-extern fgOPTIONS current_options;
+// extern FGOptions current_options;
 
 
 #endif /* _OPTIONS_HXX */

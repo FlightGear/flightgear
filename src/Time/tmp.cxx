@@ -30,7 +30,6 @@
 
 #include <FDM/flight.hxx>
 #include <Main/globals.hxx>
-#include <Main/options.hxx>
 
 #include "light.hxx"
 #include "moonpos.hxx"
@@ -40,7 +39,7 @@
 
 // periodic time updater wrapper
 void fgUpdateLocalTime() {
-    FGPath zone( current_options.get_fg_root() );
+    FGPath zone( globals->get_options()->get_fg_root() );
     zone.append( "Timezone" );
 
     globals->get_time_params()->updateLocal( cur_fdm_state->get_Longitude(),

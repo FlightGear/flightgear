@@ -156,7 +156,7 @@ float get_speed( void )
 {
     // Make an explicit function call.
     float speed = current_aircraft.fdm_state->get_V_calibrated_kts()
-	* current_options.get_speed_up();
+	* globals->get_options()->get_speed_up();
     return( speed );
 }
 
@@ -200,7 +200,7 @@ float get_altitude( void )
     //                         f->get_Latitude()  * RAD_TO_ARCSEC);
     float altitude;
 
-    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
         altitude = current_aircraft.fdm_state->get_Altitude();
     } else {
         altitude = (current_aircraft.fdm_state->get_Altitude() * FEET_TO_METER);
@@ -212,7 +212,7 @@ float get_agl( void )
 {
     float agl;
 
-    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
         agl = (current_aircraft.fdm_state->get_Altitude()
                - scenery.cur_elev * METER_TO_FEET);
     } else {
@@ -236,7 +236,7 @@ float get_frame_rate( void )
 
 float get_fov( void )
 {
-    float fov = current_options.get_fov(); 
+    float fov = globals->get_options()->get_fov(); 
     return (fov);
 }
 
@@ -264,7 +264,7 @@ float get_vfc_tris_culled   ( void )
 float get_climb_rate( void )
 {
     float climb_rate;
-    if ( current_options.get_units() == fgOPTIONS::FG_UNITS_FEET ) {
+    if ( globals->get_options()->get_units() == FGOptions::FG_UNITS_FEET ) {
         climb_rate = current_aircraft.fdm_state->get_Climb_Rate() * 60.0;
     } else {
         climb_rate = current_aircraft.fdm_state->get_Climb_Rate() * FEET_TO_METER * 60.0;
@@ -705,7 +705,7 @@ void fgCockpitUpdate( void ) {
 	float width  = iwidth;
 	float height = iheight;
 
-    if ( current_options.get_hud_status() ) {
+    if ( globals->get_options()->get_hud_status() ) {
         // This will check the global hud linked list pointer.
         // If these is anything to draw it will.
         fgUpdateHUD();

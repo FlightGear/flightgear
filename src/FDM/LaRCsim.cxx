@@ -39,7 +39,7 @@
 // each subsequent iteration through the EOM
 bool FGLaRCsim::init( double dt ) {
 
-    if ( current_options.get_aircraft() == "c172" ) {
+    if ( globals->get_options()->get_aircraft() == "c172" ) {
 	// Initialize our little engine that hopefully might
 	eng.init(dt);
 	// dcl - in passing dt to init rather than update I am assuming
@@ -63,7 +63,7 @@ bool FGLaRCsim::init( double dt ) {
     copy_to_LaRCsim();
 
     // actual LaRCsim top level init
-    ls_toplevel_init( dt, (char *)current_options.get_aircraft().c_str() );
+    ls_toplevel_init( dt, (char *)globals->get_options()->get_aircraft().c_str() );
 
     FG_LOG( FG_FLIGHT, FG_INFO, "FG pos = " << 
 	    get_Latitude() );
@@ -87,7 +87,7 @@ bool FGLaRCsim::init( double dt ) {
 bool FGLaRCsim::update( int multiloop ) {
     // cout << "FGLaRCsim::update()" << endl;
 
-    if ( current_options.get_aircraft() == "c172" ) {
+    if ( globals->get_options()->get_aircraft() == "c172" ) {
 	// set control inputs
 	eng.set_IAS( V_calibrated_kts );
 	eng.set_Throttle_Lever_Pos( controls.get_throttle( 0 ) * 100.0 );
@@ -129,7 +129,8 @@ bool FGLaRCsim::update( int multiloop ) {
     }
 
     double save_alt = 0.0;
-    double time_step = (1.0 / current_options.get_model_hz()) * multiloop;
+    double time_step = (1.0 / globals->get_options()->get_model_hz())
+	* multiloop;
     double start_elev = get_Altitude();
 
     // lets try to avoid really screwing up the LaRCsim model
@@ -139,13 +140,15 @@ bool FGLaRCsim::update( int multiloop ) {
     }
 
     // copy control positions into the LaRCsim structure
-    Lat_control = controls.get_aileron() / current_options.get_speed_up();
+    Lat_control = controls.get_aileron() /
+	globals->get_options()->get_speed_up();
     Long_control = controls.get_elevator();
     Long_trim = controls.get_elevator_trim();
-    Rudder_pedal = controls.get_rudder() / current_options.get_speed_up();
+    Rudder_pedal = controls.get_rudder() /
+	globals->get_options()->get_speed_up();
     Flap_handle = 30.0 * controls.get_flaps();
 
-    if ( current_options.get_aircraft() == "c172" ) {
+    if ( globals->get_options()->get_aircraft() == "c172" ) {
 	Use_External_Engine = 1;
     } else {
 	Use_External_Engine = 0;

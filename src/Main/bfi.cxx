@@ -288,7 +288,7 @@ FGBFI::reinit ()
   double gpsLongitude = getGPSTargetLongitude();
 
   setTargetAirport("");
-  cout << "Target airport is " << current_options.get_airport_id() << endl;
+  cout << "Target airport is " << globals->get_options()->get_airport_id() << endl;
 
   fgReInitSubsystems();
 
@@ -338,7 +338,7 @@ FGBFI::reinit ()
 int
 FGBFI::getFlightModel ()
 {
-  return current_options.get_flight_model();
+  return globals->get_options()->get_flight_model();
 }
 
 
@@ -348,7 +348,7 @@ FGBFI::getFlightModel ()
 const string
 FGBFI::getAircraft ()
 {
-  return current_options.get_aircraft();
+  return globals->get_options()->get_aircraft();
 }
 
 
@@ -371,7 +371,7 @@ void
 FGBFI::setFlightModel (int model)
 {
   if (getFlightModel() != model) {
-    current_options.set_flight_model(model);
+    globals->get_options()->set_flight_model(model);
     needReinit();
   }
 }
@@ -384,7 +384,7 @@ void
 FGBFI::setAircraft (const string &aircraft)
 {
   if (getAircraft() != aircraft) {
-    current_options.set_aircraft(aircraft);
+    globals->get_options()->set_aircraft(aircraft);
     needReinit();
   }
 }
@@ -422,8 +422,8 @@ FGBFI::setTimeGMT (time_t time)
   if (getTimeGMT() != time) {
 				// FIXME: need to update lighting
 				// and solar system
-    current_options.set_time_offset(time);
-    current_options.set_time_offset_type(fgOPTIONS::FG_TIME_GMT_ABSOLUTE);
+    globals->get_options()->set_time_offset(time);
+    globals->get_options()->set_time_offset_type(FGOptions::FG_TIME_GMT_ABSOLUTE);
     globals->get_time_params()->update( cur_fdm_state->get_Longitude(),
 					cur_fdm_state->get_Latitude(),
 					globals->get_warp() );
@@ -454,7 +454,7 @@ FGBFI::getGMTString ()
 bool
 FGBFI::getHUDVisible ()
 {
-  return current_options.get_hud_status();
+  return globals->get_options()->get_hud_status();
 }
 
 
@@ -464,7 +464,7 @@ FGBFI::getHUDVisible ()
 void
 FGBFI::setHUDVisible (bool visible)
 {
-  current_options.set_hud_status(visible);
+  globals->get_options()->set_hud_status(visible);
 }
 
 
@@ -474,7 +474,7 @@ FGBFI::setHUDVisible (bool visible)
 bool
 FGBFI::getPanelVisible ()
 {
-  return current_options.get_panel_status();
+  return globals->get_options()->get_panel_status();
 }
 
 
@@ -484,8 +484,8 @@ FGBFI::getPanelVisible ()
 void
 FGBFI::setPanelVisible (bool visible)
 {
-  if (current_options.get_panel_status() != visible) {
-    current_options.toggle_panel();
+  if (globals->get_options()->get_panel_status() != visible) {
+    globals->get_options()->toggle_panel();
   }
 }
 
@@ -513,7 +513,7 @@ void
 FGBFI::setLatitude (double latitude)
 {
   if (getLatitude() != latitude) {
-    current_options.set_lat(latitude);
+    globals->get_options()->set_lat(latitude);
     current_aircraft.fdm_state->set_Latitude(latitude * DEG_TO_RAD);
     needReinit();
   }
@@ -537,7 +537,7 @@ void
 FGBFI::setLongitude (double longitude)
 {
   if (getLongitude() != longitude) {
-    current_options.set_lon(longitude);
+    globals->get_options()->set_lon(longitude);
     current_aircraft.fdm_state->set_Longitude(longitude * DEG_TO_RAD);
     needReinit();
   }
@@ -574,7 +574,7 @@ FGBFI::setAltitude (double altitude)
 {
   if (getAltitude() != altitude) {
     fgFDMForceAltitude(getFlightModel(), altitude);
-    current_options.set_altitude(altitude);
+    globals->get_options()->set_altitude(altitude);
     current_aircraft.fdm_state->set_Altitude(altitude);
   }
 }
@@ -613,7 +613,7 @@ void
 FGBFI::setHeading (double heading)
 {
   if (getHeading() != heading) {
-    current_options.set_heading(heading);
+    globals->get_options()->set_heading(heading);
     current_aircraft.fdm_state->set_Euler_Angles(getRoll() * DEG_TO_RAD,
 						 getPitch() * DEG_TO_RAD,
 						 heading * DEG_TO_RAD);
@@ -639,7 +639,7 @@ void
 FGBFI::setPitch (double pitch)
 {
   if (getPitch() != pitch) {
-    current_options.set_pitch(pitch);
+    globals->get_options()->set_pitch(pitch);
     current_aircraft.fdm_state->set_Euler_Angles(getRoll() * DEG_TO_RAD,
 						 pitch * DEG_TO_RAD,
 						 getHeading() * DEG_TO_RAD);
@@ -665,7 +665,7 @@ void
 FGBFI::setRoll (double roll)
 {
   if (getRoll() != roll) {
-    current_options.set_roll(roll);
+    globals->get_options()->set_roll(roll);
     current_aircraft.fdm_state->set_Euler_Angles(roll * DEG_TO_RAD,
 						 getPitch() * DEG_TO_RAD,
 						 getHeading() * DEG_TO_RAD);
@@ -769,7 +769,7 @@ void
 FGBFI::setSpeedNorth (double speed)
 {
   if (getSpeedNorth() != speed) {
-    current_options.set_uBody(speed);
+    globals->get_options()->set_uBody(speed);
     current_aircraft.fdm_state->set_Velocities_Local(speed,
 						     getSpeedEast(),
 						     getSpeedDown());
@@ -795,7 +795,7 @@ void
 FGBFI::setSpeedEast (double speed)
 {
   if (getSpeedEast() != speed) {
-    current_options.set_vBody(speed);
+    globals->get_options()->set_vBody(speed);
     current_aircraft.fdm_state->set_Velocities_Local(getSpeedNorth(),
 						     speed,
 						     getSpeedDown());
@@ -821,7 +821,7 @@ void
 FGBFI::setSpeedDown (double speed)
 {
   if (getSpeedDown() != speed) {
-    current_options.set_wBody(speed);
+    globals->get_options()->set_wBody(speed);
     current_aircraft.fdm_state->set_Velocities_Local(getSpeedNorth(),
 						     getSpeedEast(),
 						     speed);
@@ -1530,7 +1530,7 @@ FGBFI::getTargetAirport ()
 {
   // FIXME: not thread-safe
   static string out;
-  out = current_options.get_airport_id();
+  out = globals->get_options()->get_airport_id();
 
   return out;
 }
@@ -1543,7 +1543,7 @@ void
 FGBFI::setTargetAirport (const string &airportId)
 {
   // cout << "setting target airport id = " << airportId << endl;
-  current_options.set_airport_id(airportId);
+  globals->get_options()->set_airport_id(airportId);
 }
 
 
@@ -1604,7 +1604,7 @@ FGBFI::getVisibility ()
 bool
 FGBFI::getClouds ()
 {
-  return current_options.get_clouds();
+  return globals->get_options()->get_clouds();
 }
 
 
@@ -1614,7 +1614,7 @@ FGBFI::getClouds ()
 double
 FGBFI::getCloudsASL ()
 {
-  return current_options.get_clouds_asl();
+  return globals->get_options()->get_clouds_asl();
 }
 
 
@@ -1640,7 +1640,7 @@ FGBFI::setClouds (bool clouds)
 {
   if (getClouds() != clouds) {
     cout << "Set clouds to " << clouds << endl;
-    current_options.set_clouds(clouds);
+    globals->get_options()->set_clouds(clouds);
     needReinit();
   }
 }
@@ -1653,7 +1653,7 @@ void
 FGBFI::setCloudsASL (double cloudsASL)
 {
   if (getCloudsASL() != cloudsASL) {
-    current_options.set_clouds_asl(cloudsASL);
+    globals->get_options()->set_clouds_asl(cloudsASL);
     needReinit();
   }
 }
