@@ -78,8 +78,8 @@ FGFX::init ()
   //
   _crank = new FGSimpleSound(fgGetString("/sim/sounds/cranking",
 					 "Sounds/cranking.wav"));
-  _crank->set_pitch(1.5);
-  _crank->set_volume(0.25);
+  _crank->set_pitch(1.25);
+  _crank->set_volume(0.175);
   mgr->add(_crank, "crank");
 
 
@@ -111,6 +111,7 @@ FGFX::init ()
   //
   _flaps = new FGSimpleSound(fgGetString("/sim/sounds/flaps",
 					 "Sounds/flaps.wav"));
+  _flaps->set_volume(0.50);
   mgr->add(_flaps, "flaps");
 
   //
@@ -210,9 +211,13 @@ FGFX::update ()
   ////////////////////////////////////////////////////////////////////
 
   float rel_wind = cur_fdm_state->get_V_rel_wind(); // FPS
+  float airspeed_kt = cur_fdm_state->get_V_equiv_kts();
   if (rel_wind > 60.0) {	// a little off 30kt
-    float volume = rel_wind/600.0;	// FIXME!!!
+    // float volume = rel_wind/600.0;	// FIXME!!!
+    float volume = rel_wind/937.0;      // FIXME!!!
+    double pitch = 1.0+(airspeed_kt/113.0);
     _wind->set_volume(volume);
+    _wind->set_pitch(pitch);
     set_playing("wind", true);
   } else {
     set_playing("wind", false);
