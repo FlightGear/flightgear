@@ -25,6 +25,9 @@
 */ 
  
 
+#include <math.h>
+#include <iostream>
+
 #include "FDM/LaRCsimIC.hxx"
 #include <FDM/LaRCsim/ls_cockpit.h>
 #include <FDM/LaRCsim/ls_generic.h>
@@ -32,8 +35,6 @@
 #include <FDM/LaRCsim/atmos_62.h>
 #include <FDM/LaRCsim/ls_constants.h>
 #include <FDM/LaRCsim/ls_geodesy.h>
-#include <math.h>
-#include <iostream>
 
 LaRCsimIC::LaRCsimIC(void) {
   vt=vtg=vw=vc=ve=0;
