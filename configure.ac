@@ -412,7 +412,7 @@ if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for simgear 0.2.0 or newer])
+AC_MSG_CHECKING([for simgear 0.3.0 or newer])
 AC_TRY_RUN([
 #include <stdio.h>
 
@@ -422,7 +422,7 @@ AC_TRY_RUN([
 #define XSTRINGIFY(X) #X
 
 #define MIN_MAJOR 0
-#define MIN_MINOR 2
+#define MIN_MINOR 3
 #define MIN_MICRO 0
 
 int main() {
@@ -493,7 +493,8 @@ Install metakit 2.4.3 or later first.
 
 Or, the compiler may not be finding your libmk4.so library.
 Please check the config.log file for specific details of the
-failure if you believe you have the correct metakit version.])],
+failure if you believe you have the correct metakit version.
+Also, look up this issue in the FlightGear FAQ.])],
   AC_MSG_RESULT(yes)
 )
 LIBS="$saved_LIBS"

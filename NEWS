@@ -1,3 +1,61 @@
+New in 0.9.0
+* December 3, 2002
+
+* Support for fully animated, fully clickable 3d instrument panels.
+* Support for runway, approach, and taxiway lighting.  Lighting is
+  directional and intensity varies smoothly with relative view
+  direction.
+* Many new and updated aircraft.
+* Improved runway textures.
+* Some improved terrain textures.
+* Added a util called terrasync to runtime fetch just the scenery you
+  need from the master scenery server as you fly.  No need to
+  pre-download large chunks of data.
+* Add a vacuum system and support for it's failure.
+* Add a pitot system and support for it's failure.
+* Model gyro spin for various instruments.
+* Added support for modeling complex aircraft electrical system.  Sample
+  implimentation for a C172, simplistic electrical model provided for
+  other aircraft until their specific system is modeled.
+* Added a "presets" section to the GUI.
+* Localization support for GUI and for command line option help, including
+  the ability to specify a custom per language font.
+* Support for specifying an initial startup runway.
+* Splash screen now slowly fades out revealing the ready to run sim.
+* Support additional joysticks: Logitech WingMan Force,
+   Logitech WingMan Extreme Digital 3D (USB), and Saitek Cyborg Gold 3D USB,
+   CH Virtual Pilot USB/USB CH Pedals, 
+
+* Many updates to External/Network FDM interface.
+* Many updates to the JSBSim FDM model code.
+* Many updates from the UIUC folk to their FDM package.
+* Many updates to the YASim FDM model code (fuel usage, tunable
+  induced drag parameter, better gear tuning, fix a ground effect bug,
+  and a standalone config file compiler.
+* Make rotational rate FDM values available in the property tree.
+* Fix a subtle bug in the ssg partial tree deleter code.
+* Started a new XML configurable GUI subsystem.
+* Some preliminary support for AI driven aircraft.
+* Fix ILS back course needle deflection.
+* Fix for ATI driver "issue" causing instrument panels to be all gray.
+* Support for toggling 3d instrument hotspot visibility (debugging/learning
+  tool.)
+* Tweaks to instrument panel night lighting.
+* Added a per engine fuel pump switch.
+
+* NOMINMAX fix for cygwin/gcc-3.2
+* Renamed External FDM to NullFDM
+* New module/submodule system.
+* IRIX build fixes
+* Restructured some of the initialization code to facilitate reseting the sim
+  to alternate presets (airport, runway, offset distance, altitude, speed, etc.)
+* Fixed DG heading bug hold to work with new instrumentation updates.
+* Updates to autopilot to let it work with perfect values as a compile time
+  option.
+* Split Nav/Com units, and DME out into their own source files.
+* Fixes to support newer versions of plib/cvs
+
+
 New in 0.8.0
 * September 7, 2002
 
