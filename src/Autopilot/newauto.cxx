@@ -375,10 +375,11 @@ int FGAutopilot::run() {
 		// localizers radials are "true"
 		tgt_radial = current_radiostack->get_nav1_radial();
 	    } else {
-		tgt_radial = current_radiostack->get_nav1_radial() 
-		    + FGBFI::getMagVar();
+		tgt_radial = current_radiostack->get_nav1_radial() +
+		    current_radiostack->get_nav1_magvar(); 
 	    }
-	    cur_radial = current_radiostack->get_nav1_heading();
+	    cur_radial = current_radiostack->get_nav1_heading() +
+		    current_radiostack->get_nav1_magvar();
 	    // cout << "target rad (true) = " << tgt_radial 
 	    //      << "  current rad (true) = " << cur_radial
 	    //      << endl;
@@ -394,6 +395,7 @@ int FGAutopilot::run() {
 	    TargetHeading = cur_radial - diff;
 	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
 	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
+	    MakeTargetHeadingStr( TargetHeading );
 	    // cout << "target course (true) = " << TargetHeading << endl;
 	} else if ( heading_mode == FG_HEADING_WAYPOINT ) {
 	    // update target heading to waypoint

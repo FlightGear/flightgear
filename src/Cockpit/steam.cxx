@@ -130,9 +130,6 @@ void FGSteam::update ( int timesteps )
 	_UpdatesPending += timesteps;
 }
 
-#undef DF1
-#undef DF2
-
 
 /* tc should be (elapsed_time_between_updates / desired_smoothing_time) */
 void FGSteam::set_lowpass ( double *outthe, double inthe, double tc )
@@ -169,14 +166,28 @@ void FGSteam::set_lowpass ( double *outthe, double inthe, double tc )
 double pressInHgToAltFt(double p_inhg)
 {
     // Ref. Aviation Formulary, Ed Williams, www.best.com/~williams/avform.htm
-    const double P_0 = 29.92126;  // Std. MSL pressure, inHg. (=10135.25 mb)
+    const double P_0 = 29.92126;  // Std. MSL pressure, inHg. (=1013.25 mb)
     const double p_Tr = 0.2233609 * P_0;  // Pressure at tropopause, same units.
     const double h_Tr = 36089.24;  // Alt of tropopause, ft. (=11.0 km)
 
-    // return (P_0 - p_inhg) * 1000.0;  // ### crude approx. for low alt's
     if (p_inhg > p_Tr)  // 0.0 to 11.0 km
 	return (1.0 - pow((p_inhg / P_0), 1.0 / 5.2558797)) / 6.8755856e-6;
     return h_Tr + log10(p_inhg / p_Tr) / -4.806346e-5;  // 11.0 to 20.0 km
+    // We could put more code for higher altitudes here.
+}
+
+
+// Convert altitude to air pressure by ICAO Standard Atmosphere
+double altFtToPressInHg(double alt_ft)
+{
+    // Ref. Aviation Formulary, Ed Williams, www.best.com/~williams/avform.htm
+    const double P_0 = 29.92126;  // Std. MSL pressure, inHg. (=1013.25 mb)
+    const double p_Tr = 0.2233609 * P_0;  // Pressure at tropopause, same units.
+    const double h_Tr = 36089.24;  // Alt of tropopause, ft. (=11.0 km)
+
+    if (alt_ft < h_Tr)  // 0.0 to 11.0 km
+	return P_0 * pow(1.0 - 6.8755856e-6 * alt_ft, 5.2558797);
+    return p_Tr * exp(-4.806346e-5 * (alt_ft - h_Tr));  // 11.0 to 20.0 km
     // We could put more code for higher altitudes here.
 }
 
@@ -322,13 +333,7 @@ void FGSteam::_CatchUp()
 	We filter the actual value by one second to
 	account for the line impedance of the plumbing.
 	*/
-	double static_inhg = 29.92; 
-	i = (int) FGBFI::getAltitude();
-	while ( i > 9000 )
-	{	static_inhg *= 0.707;
-		i -= 9000;
-	}
-	static_inhg *= ( 1.0 - 0.293 * i / 9000.0 );
+	double static_inhg = altFtToPressInHg(FGBFI::getAltitude());
 	set_lowpass ( & the_STATIC_inhg, static_inhg, dt ); 
 
 	/*
@@ -429,9 +434,9 @@ double FGSteam::get_HackVOR1_deg () {
     if ( current_radiostack->get_nav1_inrange() ) {
         r = current_radiostack->get_nav1_heading()
 	    - current_radiostack->get_nav1_radial();
-	cout << "Radial = " << current_radiostack->get_nav1_radial() 
-	     << "  Bearing = " << current_radiostack->get_nav1_heading()
-	     << endl;
+	// cout << "Radial = " << current_radiostack->get_nav1_radial() 
+	//      << "  Bearing = " << current_radiostack->get_nav1_heading()
+	//      << endl;
     
 	if (r> 180.0) r-=360.0; else
 	    if (r<-180.0) r+=360.0;

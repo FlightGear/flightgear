@@ -202,6 +202,7 @@ public:
     inline double get_nav1_heading() const { return nav1_heading; }
     inline double get_nav1_radial() const { return nav1_radial; }
     inline double get_nav1_target_gs() const { return nav1_target_gs; }
+    inline double get_nav1_magvar() const { return nav1_magvar; }
 
     inline bool get_nav2_inrange() const { return nav2_inrange; }
     bool get_nav2_to_flag () const;
@@ -225,6 +226,7 @@ public:
     inline double get_nav2_heading() const { return nav2_heading; }
     inline double get_nav2_radial() const { return nav2_radial; }
     inline double get_nav2_target_gs() const { return nav2_target_gs; }
+    inline double get_nav2_magvar() const { return nav2_magvar; }
 
     inline bool get_adf_inrange() const { return adf_inrange; }
     inline double get_adf_lon() const { return adf_lon; }

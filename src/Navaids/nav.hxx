@@ -30,6 +30,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/fgstream.hxx>
 #include <simgear/magvar/magvar.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #ifdef FG_HAVE_STD_INCLUDES
 #  include <istream>
@@ -95,7 +96,16 @@ operator >> ( istream& in, FGNav& n )
     double f;
     char c /* , magvar_dir */ ;
     string magvar_s;
-    
+
+    static SGTime time_params;
+    static bool first_time = true;
+    static double julian_date = 0;
+    if ( first_time ) {
+	time_params.update( 0.0, 0.0, 0 );
+	julian_date = time_params.getJD();
+	first_time = false;
+    }
+
     in >> n.type >> n.lat >> n.lon >> n.elev >> f >> n.range 
        >> c >> n.ident >> magvar_s;
 
@@ -110,9 +120,12 @@ operator >> ( istream& in, FGNav& n )
     // cout << "Calculating magvar for navaid " << n.ident << endl;
     if (magvar_s == "XXX") {
 	// default to mag var as of 1990-01-01 (Julian 2447892.5)
-	n.magvar = -sgGetMagVar(n.lon * DEG_TO_RAD, n.lat * DEG_TO_RAD,
+	// cout << "lat = " << n.lat << " lon = " << n.lon << " elev = " 
+	//      << n.elev << " JD = " 
+	//      << julian_date << endl;
+	n.magvar = sgGetMagVar(n.lon * DEG_TO_RAD, n.lat * DEG_TO_RAD,
 				n.elev * FEET_TO_METER,
-				2447892.5) * RAD_TO_DEG;
+				julian_date) * RAD_TO_DEG;
 	// cout << "Default variation at " << n.lon << ',' << n.lat
 	// 	<< " is " << var << endl;
 #if 0
@@ -134,7 +147,7 @@ operator >> ( istream& in, FGNav& n )
 	    n.magvar = 0 - n.magvar;
 	// cout << "Explicit magvar of " << n.magvar << endl;
     }
-    cout << n.ident << " " << n.magvar << endl;
+    // cout << n.ident << " " << n.magvar << endl;
 
     // generate cartesian coordinates
     Point3D geod( n.lon * DEG_TO_RAD, n.lat * DEG_TO_RAD, n.elev );

@@ -209,7 +209,7 @@ FGRadioStack::update()
 	    geo_inverse_wgs_84( elev, lat * RAD_TO_DEG, lon * RAD_TO_DEG, 
 				nav1_loclat, nav1_loclon,
 				&az1, &az2, &s );
-	    cout << "az1 = " << az1 << " magvar = " << nav1_magvar << endl;
+	    // cout << "az1 = " << az1 << " magvar = " << nav1_magvar << endl;
 	    nav1_heading = az1 - nav1_magvar;
 	    // Alex: nav1_heading = - (az1 - FGBFI::getMagVar() / RAD_TO_DEG);
 

@@ -45,9 +45,6 @@ FGNavList::~FGNavList( void ) {
 bool FGNavList::init( FGPath path ) {
     FGNav n;
 
-    SGTime time_params;
-    time_params.update( 0.0, 0.0, 0 );
-
     navaids.erase( navaids.begin(), navaids.end() );
 
     fg_gzifstream in( path.str() );
