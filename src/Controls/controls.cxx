@@ -46,6 +46,7 @@ void FGControls::reset_all()
     set_rudder(0.0);
     set_throttle(FGControls::ALL_ENGINES, 0.0);
     throttle_idle = true;
+    gear_down = true;
 }
 
 
@@ -112,6 +113,9 @@ FGControls::bind ()
 	 &FGControls::get_brake, &FGControls::set_brake);
     fgSetArchivable(name);
   }
+  fgTie("/controls/gear-down", this,
+	&FGControls::get_gear_down, &FGControls::set_gear_down);
+  fgSetArchivable("/controls/gear-down");
 }
 
 
@@ -139,6 +143,7 @@ FGControls::unbind ()
     sprintf(name, "/controls/brakes[%d]", index);
     fgUntie(name);
   }
+  fgUntie("/controls/gear-down");
 }
 
 
