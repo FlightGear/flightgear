@@ -30,7 +30,6 @@
 #include <Debug/fg_debug.h>
 #include <Main/options.hxx>
 #include <Misc/fgstream.hxx>
-#include <Misc/stopwatch.hxx>
 
 #include "simple.hxx"
 
@@ -49,7 +48,6 @@ int fgAIRPORTS::load( const string& file ) {
 
     // build the path name to the airport file
     string path = current_options.get_fg_root() + "/Airports/" + file;
-    StopWatch t;
 
     airports.erase( airports.begin(), airports.end() );
 
@@ -57,8 +55,6 @@ int fgAIRPORTS::load( const string& file ) {
     if ( !in )
 	fgPrintf( FG_GENERAL, FG_EXIT, "Cannot open file: %s\n", 
 		  path.c_str());
-
-    t.start();
 
     /*
     // We can use the STL copy algorithm because the input
@@ -72,44 +68,23 @@ int fgAIRPORTS::load( const string& file ) {
     in.eat_comments();
     while ( ! in.eof() )
     {
-	in.stream() >> a.id >> a.longitude >> a.latitude >> a.elevation;
+	in.stream() >> a;
 	airports.insert(a);
 	in.eat_comments();
     }
 
-    t.stop();
-
-    fgPrintf( FG_GENERAL, FG_INFO, "Loaded %d airports in %f seconds\n",
-	      airports.size(), t.elapsedSeconds() );
-
     return 1;
 }
 
-// class fgAIRPORT_eq : public unary_function<fgAIRPORT,bool>
-// {
-// public:
-//     explicit fgAIRPORT_eq( const string& id ) : _id(id) {}
-//     bool operator () ( const fgAIRPORT& a ) const { return a.id == _id; }
-// private:
-//     string _id;
-// };
 
 // search for the specified id
 bool
 fgAIRPORTS::search( const string& id, fgAIRPORT* a ) const
 {
-    StopWatch t;
-    t.start();
-//     const_iterator it = find_if( airports.begin(),
-// 				 airports.end(), fgAIRPORT_eq(id) );
-  
     const_iterator it = airports.find( fgAIRPORT(id) );
-    t.stop();
     if ( it != airports.end() )
     {
 	*a = *it;
-	cout << "Found " << id << " in " << t.elapsedSeconds()
-	     << " seconds" << endl;
 	return true;
     }
     else
@@ -134,6 +109,9 @@ fgAIRPORTS::~fgAIRPORTS( void ) {
 
 
 // $Log$
+// Revision 1.7  1998/09/08 21:38:41  curt
+// Changes by Bernie Bright.
+//
 // Revision 1.6  1998/09/03 21:25:02  curt
 // tweaked in data file comment handling.
 //

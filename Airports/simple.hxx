@@ -36,6 +36,7 @@
 
 #include <string>        // Standard C++ string library
 #include <set>
+#include "Include/fg_stl_config.h"
 
 #ifdef NEEDNAMESPACESTD
 using namespace std;
@@ -69,7 +70,11 @@ operator >> ( istream& in, fgAIRPORT& a )
 
 class fgAIRPORTS {
 public:
+#ifdef _FG_NO_DEFAULT_TEMPLATE_ARGS
+    typedef set< fgAIRPORT, less< fgAIRPORT > > container;
+#else
     typedef set< fgAIRPORT > container;
+#endif
     typedef container::iterator iterator;
     typedef container::const_iterator const_iterator;
 
@@ -100,6 +105,9 @@ public:
 
 
 // $Log$
+// Revision 1.4  1998/09/08 21:38:43  curt
+// Changes by Bernie Bright.
+//
 // Revision 1.3  1998/09/01 19:02:54  curt
 // Changes contributed by Bernie Bright <bbright@c031.aone.net.au>
 //  - The new classes in libmisc.tgz define a stream interface into zlib.
