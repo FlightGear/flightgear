@@ -16,7 +16,7 @@
 # error This library requires C++
 #endif                                   
 
-const int FG_NET_CTRLS_VERSION = 20;
+const int FG_NET_CTRLS_VERSION = 21;
 
 
 // Define a structure containing the control parameters
@@ -90,6 +90,11 @@ public:
     // other information about environment
     double hground;		         // ground elevation (meters)
     double magvar;		         // local magnetic variation in degs.
+
+    // hazards
+    bool icing;                          // icing status could me much
+                                         // more complex but I'm
+                                         // starting simple here.
 
     // simulation control
     int speedup;		         // integer speedup multiplier

@@ -210,6 +210,9 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
     // the user is switching views.
     net->hground = cur_fdm_state->get_ground_elev_ft() * SG_FEET_TO_METER;
     net->magvar = fgGetDouble("/environment/magnetic-variation-deg");
+
+    net->icing = fgGetDouble("/hazards/icing/wing");
+
     net->speedup = fgGetInt("/sim/speed-up");
     net->freeze = 0;
     if ( honor_freezes ) {
@@ -267,6 +270,7 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         htond(net->press_inhg);
 	htond(net->hground);
         htond(net->magvar);
+        net->icing = htonl(net->icing);
         net->speedup = htonl(net->speedup);
         net->freeze = htonl(net->freeze);
     }
@@ -324,6 +328,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         htond(net->press_inhg);
         htond(net->hground);
         htond(net->magvar);
+        net->icing = htonl(net->icing);
         net->speedup = htonl(net->speedup);
         net->freeze = htonl(net->freeze);
     }
@@ -403,6 +408,8 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
 			  net->press_inhg );
 
     // ground elevation ???
+
+    fgSetDouble("/hazards/icing/wing", net->icing);
 
     fgSetInt( "/sim/speed-up", net->speedup );
 
