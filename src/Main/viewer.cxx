@@ -78,7 +78,8 @@ FGViewer::unbind ()
 void
 FGViewer::update (int dt)
 {
-  for ( int i = 0; i < dt; i++ ) {
+  int i;
+  for ( i = 0; i < dt; i++ ) {
     if ( fabs(get_goal_view_offset() - get_view_offset()) < 0.05 ) {
       set_view_offset( get_goal_view_offset() );
       break;
@@ -107,7 +108,7 @@ FGViewer::update (int dt)
     }
   }
 
-  for ( int i = 0; i < dt; i++ ) {
+  for ( i = 0; i < dt; i++ ) {
     if ( fabs(get_goal_view_tilt() - get_view_tilt()) < 0.05 ) {
       set_view_tilt( get_goal_view_tilt() );
       break;
