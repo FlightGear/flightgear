@@ -52,7 +52,7 @@
 // The number of polygon-offset "units" to place between layers.  In
 // principle, one is supposed to be enough.  In practice, I find that
 // my hardware/driver requires many more.
-#define POFF_UNITS 40
+#define POFF_UNITS 4
 
 
 ////////////////////////////////////////////////////////////////////////
