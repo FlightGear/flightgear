@@ -9,7 +9,15 @@
 #include <FDM/LaRCsim/ls_generic.h>
 #include <FDM/LaRCsim/ls_constants.h>   /* RAD_TO_DEG, DEG_TO_RAD*/
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern double Simtime;
+
+#ifdef __cplusplus
+}
+#endif
 
 void uiuc_auto_pilot(double dt);
 
