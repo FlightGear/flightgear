@@ -63,7 +63,7 @@ HISTORY
 #  include <windows.h>
 #endif
 
-#include <iostream>
+#include STL_IOSTREAM
 #include <vector>
 #include <map>
 

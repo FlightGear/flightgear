@@ -1,6 +1,8 @@
 // do some test relating to the concept of "up"
 
-#include <iostream>
+#include <simgear/compiler.h>
+
+#include STL_IOSTREAM
 
 #include <plib/sg.h>
 

@@ -27,13 +27,14 @@
 #endif
 
 #include <simgear/compiler.h>
+
 #include <simgear/misc/fgpath.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/props.hxx>
 
-#include <iostream>
-#include <fstream>
-#include <string>
+#include STL_IOSTREAM
+#include STL_FSTREAM
+#include STL_STRING
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -42,8 +43,10 @@
 #include "steam.hxx"
 #include "panel_io.hxx"
 
+#if !defined (FG_HAVE_NATIVE_SGI_COMPILERS)
 FG_USING_STD(istream);
 FG_USING_STD(ifstream);
+#endif
 FG_USING_STD(string);
 
 
@@ -353,7 +356,7 @@ readTransformation (const SGPropertyNode * node, float hscale, float vscale)
     type = "rotation";
   }
 
-  if (propName != "") {
+  if (propName != (string)"") {
     value = fgGetValue(propName, true);
   }
 

@@ -29,11 +29,15 @@
 #  include <windows.h>
 #endif
 
-#include <iostream>
+#include <simgear/compiler.h>
+
+#include STL_IOSTREAM
 
 #include "panel.hxx"
 
-using std::istream;
+#if !defined (FG_HAVE_NATIVE_SGI_COMPILERS)
+FG_USING_STD(istream);
+#endif
 
 extern FGPanel * fgReadPanel (istream &input);
 extern FGPanel * fgReadPanel (const string &relative_path);
