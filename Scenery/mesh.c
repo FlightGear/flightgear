@@ -38,6 +38,7 @@
 
 #include <GL/glut.h>
 
+#include "../constants.h"
 #include "scenery.h"
 #include "mesh.h"
 #include "common.h"
@@ -196,7 +197,7 @@ double mesh_altitude(double lon, double lat) {
 
     if ( dx > dy ) {
 	/* lower triangle */
-	/* printf("  Lower triangle\n"); */
+	printf("  Lower triangle\n");
 
 	x1 = xindex; 
 	y1 = yindex; 
@@ -210,20 +211,24 @@ double mesh_altitude(double lon, double lat) {
 	y3 = yindex + skip; 
 	z3 = eg.mesh_data[y3 * eg.cols + x3];
 
-	/* printf("  dx = %.2f  dy = %.2f\n", dx, dy);
+	printf("  dx = %.2f  dy = %.2f\n", dx, dy);
 	printf("  (x1,y1,z1) = (%d,%d,%d)\n", x1, y1, z1);
 	printf("  (x2,y2,z2) = (%d,%d,%d)\n", x2, y2, z2);
-	printf("  (x3,y3,z3) = (%d,%d,%d)\n", x3, y3, z3); */
+	printf("  (x3,y3,z3) = (%d,%d,%d)\n", x3, y3, z3);
 
 	zA = dx * (z2 - z1) / skip + z1;
 	zB = dx * (z3 - z1) / skip + z1;
 	
-	/* printf("  zA = %.2f  zB = %.2f\n", zA, zB); */
+	printf("  zA = %.2f  zB = %.2f\n", zA, zB);
 
-	elev = dy * (zB - zA) / dx + zA;
+	if ( dx > EPSILON ) {
+	    elev = dy * (zB - zA) / dx + zA;
+	} else {
+	    elev = zA;
+	}
     } else {
 	/* upper triangle */
-	/* printf("  Upper triangle\n"); */
+	printf("  Upper triangle\n");
 
 	x1 = xindex; 
 	y1 = yindex; 
@@ -237,18 +242,22 @@ double mesh_altitude(double lon, double lat) {
 	y3 = yindex + skip; 
 	z3 = eg.mesh_data[y3 * eg.cols + x3];
 
-	/* printf("  dx = %.2f  dy = %.2f\n", dx, dy);
+	printf("  dx = %.2f  dy = %.2f\n", dx, dy);
 	printf("  (x1,y1,z1) = (%d,%d,%d)\n", x1, y1, z1);
 	printf("  (x2,y2,z2) = (%d,%d,%d)\n", x2, y2, z2);
-	printf("  (x3,y3,z3) = (%d,%d,%d)\n", x3, y3, z3); */
+	printf("  (x3,y3,z3) = (%d,%d,%d)\n", x3, y3, z3);
  
 	zA = dy * (z2 - z1) / skip + z1;
 	zB = dy * (z3 - z1) / skip + z1;
 	
-	/* printf("  zA = %.2f  zB = %.2f\n", zA, zB );
-	printf("  xB - xA = %.2f\n", eg.col_step * dy / eg.row_step); */
+	printf("  zA = %.2f  zB = %.2f\n", zA, zB );
+	printf("  xB - xA = %.2f\n", eg.col_step * dy / eg.row_step);
 
-	elev = dx * (zB - zA) / dy    + zA;
+	if ( dy > EPSILON ) {
+	    elev = dx * (zB - zA) / dy    + zA;
+	} else {
+	    elev = zA;
+	}
     }
 
     return(elev);
@@ -256,9 +265,12 @@ double mesh_altitude(double lon, double lat) {
 
 
 /* $Log$
-/* Revision 1.14  1997/07/12 04:01:14  curt
-/* Added #include <Windows32/Base.h> to help Win32 compiling.
+/* Revision 1.15  1997/07/14 16:26:04  curt
+/* Testing/playing -- placed objects randomly across the entire terrain.
 /*
+ * Revision 1.14  1997/07/12 04:01:14  curt
+ * Added #include <Windows32/Base.h> to help Win32 compiling.
+ *
  * Revision 1.13  1997/07/12 02:27:11  curt
  * Looking at potential scenery transformation/coordinate system problems.
  *

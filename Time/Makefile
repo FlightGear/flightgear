@@ -58,11 +58,14 @@ clean:
 include depend
 
 fg_timer.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c fg_timer.c
+	$(CC) $(CFLAGS) -c fg_timer.c
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.8  1997/07/14 16:26:05  curt
+# Testing/playing -- placed objects randomly across the entire terrain.
+#
 # Revision 1.7  1997/07/12 02:24:48  curt
 # Added ranlib.
 #

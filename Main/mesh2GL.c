@@ -30,6 +30,8 @@
 
 #include <GL/glut.h>
 
+#include <stdlib.h>         /* for random(), srandom() */
+
 #include "../constants.h"
 #include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
@@ -59,15 +61,23 @@ void mesh_make_test_object(double lon, double lat) {
     origin = fgRotateCartesianPoint(origin);
     printf("Center of structure is:  (%.4f, %.4f\n", origin.y, origin.z);
 
-    glBegin(GL_TRIANGLE_STRIP);
-    glVertex3d(origin.y + b, origin.z-b, elev);
-    glVertex3d(origin.y - b, origin.z-b, elev);
+    glBegin(GL_TRIANGLES);
+    glVertex3d(origin.y - b, origin.z - b, elev);
+    glVertex3d(origin.y + b, origin.z - b, elev);
     glVertex3d(origin.y, origin.z, elev+h);
-    glVertex3d(origin.y - b, origin.z+b, elev);
-    glVertex3d(origin.y + b, origin.z+b, elev);
-    glVertex3d(origin.y + b, origin.z-b, elev);
-    glEnd();
 
+    glVertex3d(origin.y + b, origin.z - b, elev);
+    glVertex3d(origin.y + b, origin.z + b, elev);
+    glVertex3d(origin.y, origin.z, elev+h);
+
+    glVertex3d(origin.y + b, origin.z + b, elev);
+    glVertex3d(origin.y - b, origin.z + b, elev);
+    glVertex3d(origin.y, origin.z, elev+h);
+
+    glVertex3d(origin.y - b, origin.z + b, elev);
+    glVertex3d(origin.y - b, origin.z - b, elev);
+    glVertex3d(origin.y, origin.z, elev+h);
+    glEnd();
 }
 
 /* walk through mesh and make ogl calls */
@@ -166,7 +176,19 @@ GLint mesh2GL(struct mesh *m) {
     }
 
     /* this will go, it's only here for testing/debugging */
-    mesh_make_test_object(-398391.28, 120070.41);
+
+    /*
+    for ( i = m->originy; i < m->originy + (m->row_step * iend); i += 120 ) {
+	for ( j = m->originx; j < m->originx + (m->col_step * jend); j += 120) {
+	    mesh_make_test_object(j, i);
+	}
+    }
+    */
+
+    for ( i = 0; i < 800; i++ ) {
+	mesh_make_test_object(m->originx + (random() * 3600.0 / RAND_MAX) ,
+			      m->originy + (random() * 3600.0 / RAND_MAX) );
+    }
 
     glEndList();
 
@@ -176,9 +198,12 @@ GLint mesh2GL(struct mesh *m) {
 
 
 /* $Log$
-/* Revision 1.32  1997/07/12 03:50:21  curt
-/* Added an #include <Windows32/Base.h> to help compiling for Win32
+/* Revision 1.33  1997/07/14 16:26:04  curt
+/* Testing/playing -- placed objects randomly across the entire terrain.
 /*
+ * Revision 1.32  1997/07/12 03:50:21  curt
+ * Added an #include <Windows32/Base.h> to help compiling for Win32
+ *
  * Revision 1.31  1997/07/12 02:27:07  curt
  * Looking at potential scenery transformation/coordinate system problems.
  *

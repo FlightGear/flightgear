@@ -49,13 +49,20 @@
 #define METER_TO_FEET    3.28083989501312335958  
 
 
+/* For divide by zero avoidance, this will be close enough to zero */
+#define EPSILON 0.000001
+
+
 #endif CONSTANTS_H
 
 
 /* $Log$
-/* Revision 1.2  1997/07/08 18:20:11  curt
-/* Working on establishing a hard ground.
+/* Revision 1.3  1997/07/14 16:26:03  curt
+/* Testing/playing -- placed objects randomly across the entire terrain.
 /*
+ * Revision 1.2  1997/07/08 18:20:11  curt
+ * Working on establishing a hard ground.
+ *
  * Revision 1.1  1997/07/07 21:02:36  curt
  * Initial revision.
  * */
