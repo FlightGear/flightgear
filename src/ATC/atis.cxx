@@ -180,15 +180,20 @@ void FGATIS::UpdateTransmission() {
 	}
 	
 	// Get the pressure / altimeter
-	double pressure_inches = fgGetDouble("/environment/pressure-sea-level-inhg");
+	double P = fgGetDouble("/environment/pressure-sea-level-inhg");
+	if(ident.substr(0,2) == "EG") {
+		// Convert to millibars for the UK!
+		P *= 33.864;
+		sprintf(buf, "%.1f", P);
+	} else {
+		sprintf(buf, "%.2f", P);
+	}		
 	transmission += " / Altimeter ";
-	sprintf(buf, "%.2f", pressure_inches);
 	tempstr1 = buf;
 	transmission += ConvertNumToSpokenDigits(tempstr1);
 	
 	// Based on the airport-id and wind get the active runway
 	//FGRunway *r;
-
 	double speed = stationweather.get_wind_speed_kt();
 	double hdg = stationweather.get_wind_from_heading_deg();
 	if (speed == 0) {
