@@ -798,6 +798,10 @@ parse_option (const string& arg)
 	add_channel( "native_ctrls", arg.substr(15) );
     } else if ( arg.find( "--native-fdm=" ) == 0 ) {
 	add_channel( "native_fdm", arg.substr(13) );
+    } else if ( arg.find( "--opengc=" ) == 0 ) {
+	// char stop;
+	// cout << "Adding channel for OpenGC Display" << endl; cin >> stop;
+	add_channel( "opengc", arg.substr(10) );
     } else if ( arg.find( "--garmin=" ) == 0 ) {
 	add_channel( "garmin", arg.substr(9) );
     } else if ( arg.find( "--nmea=" ) == 0 ) {

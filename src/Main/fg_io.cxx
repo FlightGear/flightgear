@@ -44,6 +44,7 @@
 #include <Network/native.hxx>
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
+#include <Network/opengc.hxx>
 #include <Network/nmea.hxx>
 #include <Network/props.hxx>
 #include <Network/pve.hxx>
@@ -84,6 +85,11 @@ static FGProtocol *parse_port_config( const string& config )
     if ( protocol == "atlas" ) {
 	FGAtlas *atlas = new FGAtlas;
 	io = atlas;
+    } else if ( protocol == "opengc" ) {
+	// char wait;
+	// printf("Parsed opengc\n"); cin >> wait;
+	FGOpenGC *opengc = new FGOpenGC;
+	io = opengc;
     } else if ( protocol == "garmin" ) {
 	FGGarmin *garmin = new FGGarmin;
 	io = garmin;
