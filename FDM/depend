@@ -1,2 +1,1 @@
-flight.o: flight.c flight.h Slew/slew.h LaRCsim/ls_interface.h \
- LaRCsim/../flight.h
+flight.o: flight.c

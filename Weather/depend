@@ -1,6 +1,1 @@
-weather.o: weather.c weather.h ../Aircraft/aircraft.h \
- ../Aircraft/../Flight/flight.h ../Aircraft/../Flight/Slew/slew.h \
- ../Aircraft/../Flight/LaRCsim/ls_interface.h \
- ../Aircraft/../Flight/LaRCsim/../flight.h \
- ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../Include/limits.h ../Math/fg_random.h
+weather.o: weather.c

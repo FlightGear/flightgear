@@ -26,7 +26,7 @@
 ARLIBRARY = libTime.a
 TARGETS = $(ARLIBRARY)
 
-CFILES = event.c fg_time.c fg_timer.c scheduler.c sidereal.c sunpos.c test_event.c ttest.c
+CFILES = event.c fg_time.c fg_timer.c scheduler.c sunpos.c
 CXXFILES = 
 
 LDIRT = $(FG_ROOT_LIB)/$(ARLIBRARY)

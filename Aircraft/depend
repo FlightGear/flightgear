@@ -1,4 +1,1 @@
-aircraft.o: aircraft.c aircraft.h ../Flight/flight.h \
- ../Flight/Slew/slew.h ../Flight/LaRCsim/ls_interface.h \
- ../Flight/LaRCsim/../flight.h ../Controls/controls.h \
- ../Controls/../Include/limits.h ../Include/constants.h
+aircraft.o: aircraft.c

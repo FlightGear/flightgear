@@ -1,46 +1,5 @@
-GLUTkey.o: GLUTkey.c ../XGL/xgl.h GLUTkey.h views.h ../Include/types.h \
- ../Flight/flight.h ../Flight/Slew/slew.h \
- ../Flight/LaRCsim/ls_interface.h ../Flight/LaRCsim/../flight.h \
- ../Math/mat3.h ../Time/fg_time.h ../Time/../Include/types.h \
- ../Time/../Flight/flight.h ../Include/constants.h \
- ../Aircraft/aircraft.h ../Aircraft/../Flight/flight.h \
- ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../Include/limits.h ../Weather/weather.h
-GLUTmain.o: GLUTmain.c ../XGL/xgl.h GLUTkey.h fg_init.h views.h \
- ../Include/types.h ../Flight/flight.h ../Flight/Slew/slew.h \
- ../Flight/LaRCsim/ls_interface.h ../Flight/LaRCsim/../flight.h \
- ../Math/mat3.h ../Time/fg_time.h ../Time/../Include/types.h \
- ../Time/../Flight/flight.h ../Include/constants.h \
- ../Include/general.h ../Aircraft/aircraft.h \
- ../Aircraft/../Flight/flight.h ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../Include/limits.h ../Astro/moon.h \
- ../Astro/orbits.h ../Astro/../Time/fg_time.h ../Astro/sky.h \
- ../Astro/stars.h ../Astro/sun.h ../Cockpit/cockpit.h ../Cockpit/hud.h \
- ../Cockpit/../Aircraft/aircraft.h ../Cockpit/../Flight/flight.h \
- ../Cockpit/../Controls/controls.h ../Joystick/joystick.h \
- ../Math/fg_geodesy.h ../Math/polar.h ../Math/../Include/types.h \
- ../Scenery/mesh.h ../Scenery/scenery.h ../Scenery/../Include/types.h \
- ../Scenery/tilemgr.h ../Time/event.h ../Time/fg_timer.h \
- ../Time/sunpos.h ../Weather/weather.h
-fg_init.o: fg_init.c fg_init.h views.h ../Include/types.h \
- ../Flight/flight.h ../Flight/Slew/slew.h \
- ../Flight/LaRCsim/ls_interface.h ../Flight/LaRCsim/../flight.h \
- ../Math/mat3.h ../Time/fg_time.h ../Time/../Include/types.h \
- ../Time/../Flight/flight.h ../Include/constants.h \
- ../Include/general.h ../Aircraft/aircraft.h \
- ../Aircraft/../Flight/flight.h ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../Include/limits.h ../Astro/moon.h \
- ../Astro/orbits.h ../Astro/../Time/fg_time.h ../Astro/sky.h \
- ../Astro/stars.h ../Astro/sun.h ../Cockpit/cockpit.h ../Cockpit/hud.h \
- ../Cockpit/../Aircraft/aircraft.h ../Cockpit/../Flight/flight.h \
- ../Cockpit/../Controls/controls.h ../Joystick/joystick.h \
- ../Math/fg_random.h ../Scenery/mesh.h ../Scenery/scenery.h \
- ../Scenery/../Include/types.h ../Scenery/tilemgr.h ../Time/event.h \
- ../Time/sunpos.h ../Weather/weather.h
-views.o: views.c views.h ../Include/types.h ../Flight/flight.h \
- ../Flight/Slew/slew.h ../Flight/LaRCsim/ls_interface.h \
- ../Flight/LaRCsim/../flight.h ../Math/mat3.h ../Time/fg_time.h \
- ../Time/../Include/types.h ../Time/../Flight/flight.h \
- ../Include/constants.h ../Math/polar.h ../Math/../Include/types.h \
- ../Math/vector.h ../Math/../Math/mat3.h ../Scenery/scenery.h \
- ../Scenery/../Include/types.h
+GLUTkey.o: GLUTkey.c
+GLUTmain.o: GLUTmain.c
+fg_init.o: fg_init.c
+probdemo.o: probdemo.c
+views.o: views.c

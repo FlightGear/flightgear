@@ -39,7 +39,7 @@ all:
 depend:
 	for dir in $(ORDEREDDIRS); do \
 	    ( echo "Making depend in $$dir"; \
-	      cd $$dir; $(CC) -MM *.c > depend ) ; \
+	      cd $$dir; $(CC) $(CFLAGS) -MM *.c > depend ) ; \
 	done
 
 Makefile-os2:
@@ -100,6 +100,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.37  1998/01/19 19:42:58  curt
+# More misc. tweaks for rpk make merge.
+#
 # Revision 1.36  1998/01/19 19:26:51  curt
 # Merged in make system changes from Bob Kuehne <rpk@sgi.com>
 # This should simplify things tremendously.

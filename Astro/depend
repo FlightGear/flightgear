@@ -1,56 +1,6 @@
-moon.o: moon.c ../XGL/xgl.h orbits.h ../Time/fg_time.h \
- ../Time/../Include/types.h ../Time/../Flight/flight.h \
- ../Time/../Flight/Slew/slew.h \
- ../Time/../Flight/LaRCsim/ls_interface.h \
- ../Time/../Flight/LaRCsim/../flight.h moon.h ../Aircraft/aircraft.h \
- ../Aircraft/../Flight/flight.h ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../Include/limits.h ../Include/constants.h \
- ../Include/general.h ../Main/views.h ../Main/../Include/types.h \
- ../Main/../Flight/flight.h ../Main/../Math/mat3.h \
- ../Main/../Time/fg_time.h
-old_astro.o: old_astro.c ../XGL/xgl.h old_astro.h stars.h moon.h \
- orbits.h ../Time/fg_time.h ../Time/../Include/types.h \
- ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
- ../Time/../Flight/LaRCsim/ls_interface.h \
- ../Time/../Flight/LaRCsim/../flight.h planets.h sun.h \
- ../Include/constants.h ../Include/general.h ../Main/views.h \
- ../Main/../Include/types.h ../Main/../Flight/flight.h \
- ../Main/../Math/mat3.h ../Main/../Time/fg_time.h \
- ../Aircraft/aircraft.h ../Aircraft/../Flight/flight.h \
- ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../Include/limits.h
-orbits.o: orbits.c orbits.h ../Time/fg_time.h \
- ../Time/../Include/types.h ../Time/../Flight/flight.h \
- ../Time/../Flight/Slew/slew.h \
- ../Time/../Flight/LaRCsim/ls_interface.h \
- ../Time/../Flight/LaRCsim/../flight.h ../Include/general.h
-planets.o: planets.c ../Time/fg_time.h ../Time/../Include/types.h \
- ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
- ../Time/../Flight/LaRCsim/ls_interface.h \
- ../Time/../Flight/LaRCsim/../flight.h orbits.h planets.h sun.h
-sky.o: sky.c ../XGL/xgl.h sky.h ../Time/event.h ../Time/fg_time.h \
- ../Time/../Include/types.h ../Time/../Flight/flight.h \
- ../Time/../Flight/Slew/slew.h \
- ../Time/../Flight/LaRCsim/ls_interface.h \
- ../Time/../Flight/LaRCsim/../flight.h ../Aircraft/aircraft.h \
- ../Aircraft/../Flight/flight.h ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../Include/limits.h ../Flight/flight.h \
- ../Include/constants.h ../Main/views.h ../Main/../Include/types.h \
- ../Main/../Flight/flight.h ../Main/../Math/mat3.h \
- ../Main/../Time/fg_time.h ../Math/fg_random.h
-stars.o: stars.c ../XGL/xgl.h orbits.h ../Time/fg_time.h \
- ../Time/../Include/types.h ../Time/../Flight/flight.h \
- ../Time/../Flight/Slew/slew.h \
- ../Time/../Flight/LaRCsim/ls_interface.h \
- ../Time/../Flight/LaRCsim/../flight.h planets.h stars.h \
- ../Include/constants.h ../Include/general.h ../Aircraft/aircraft.h \
- ../Aircraft/../Flight/flight.h ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../Include/limits.h ../Main/views.h \
- ../Main/../Include/types.h ../Main/../Flight/flight.h \
- ../Main/../Math/mat3.h ../Main/../Time/fg_time.h
-sun.o: sun.c ../XGL/xgl.h ../Time/fg_time.h ../Time/../Include/types.h \
- ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
- ../Time/../Flight/LaRCsim/ls_interface.h \
- ../Time/../Flight/LaRCsim/../flight.h ../Main/views.h \
- ../Main/../Include/types.h ../Main/../Flight/flight.h \
- ../Main/../Math/mat3.h ../Main/../Time/fg_time.h orbits.h sun.h
+moon.o: moon.c
+orbits.o: orbits.c
+planets.o: planets.c
+sky.o: sky.c
+stars.o: stars.c
+sun.o: sun.c
