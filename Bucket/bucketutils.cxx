@@ -265,6 +265,9 @@ int main() {
 
 
 // $Log$
+// Revision 1.1  1999/02/17 20:52:05  curt
+// Renamed bucketutils.c -> bucketutils.cxx
+//
 // Revision 1.5  1998/12/09 18:48:08  curt
 // Use C++ style comments.
 //

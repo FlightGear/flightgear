@@ -1,6 +1,6 @@
 noinst_LIBRARIES = libBucket.a
 
-libBucket_a_SOURCES = bucketutils.c bucketutils.h bucketutils.hxx \
+libBucket_a_SOURCES = bucketutils.cxx bucketutils.h bucketutils.hxx \
 	newbucket.cxx newbucket.hxx
 
 bin_PROGRAMS = testbucket
