@@ -213,10 +213,7 @@ readTexture (const SGPropertyNode * node)
 static FGPanelAction *
 readAction (const SGPropertyNode * node, float w_scale, float h_scale)
 {
-  FGPanelAction * action = 0;
-
   string name = node->getStringValue("name");
-  string type = node->getStringValue("type");
 
   int button = node->getIntValue("button");
   int x = int(node->getIntValue("x") * w_scale);
@@ -224,47 +221,13 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
   int w = int(node->getIntValue("w") * w_scale);
   int h = int(node->getIntValue("h") * h_scale);
 
-  if (type == "") {
-    SG_LOG(SG_COCKPIT, SG_ALERT,
-	   "No type supplied for action " << name << " assuming \"adjust\"");
-    type = "adjust";
-  }
+  FGPanelAction * action = new FGPanelAction(button, x, y, w, h);
 
-				// Adjust a property value
-  if (type == "adjust") {
-    string propName = node->getStringValue("property");
-    SGPropertyNode * target = fgGetNode(propName, true);
-    float increment = node->getFloatValue("increment", 1.0);
-    float min = node->getFloatValue("min", 0.0);
-    float max = node->getFloatValue("max", 0.0);
-    bool wrap = node->getBoolValue("wrap", false);
-    if (min == max)
-      SG_LOG(SG_COCKPIT, SG_ALERT, "Action " << node->getName()
-	     << " has same min and max value");
-    action = new FGAdjustAction(button, x, y, w, h, target,
-				increment, min, max, wrap);
-  } 
-
-				// Swap two property values
-  else if (type == "swap") {
-    string propName1 = node->getStringValue("property1");
-    string propName2 = node->getStringValue("property2");
-    SGPropertyNode * target1 = fgGetNode(propName1, true);
-    SGPropertyNode * target2 = fgGetNode(propName2, true);
-    action = new FGSwapAction(button, x, y, w, h, target1, target2);
-  } 
-
-				// Toggle a boolean value
-  else if (type == "toggle") {
-    string propName = node->getStringValue("property");
-    SGPropertyNode * target = fgGetNode(propName, true);
-    action = new FGToggleAction(button, x, y, w, h, target);
-  } 
-
-				// Unrecognized type
-  else {
-    SG_LOG( SG_COCKPIT, SG_ALERT, "Unrecognized action type " << type );
-    return 0;
+  vector<const SGPropertyNode *>bindings = node->getChildren("binding");
+  for (int i = 0; i < bindings.size(); i++) {
+    SG_LOG(SG_INPUT, SG_INFO, "Reading binding "
+	   << bindings[i]->getStringValue("command"));
+    action->addBinding(FGBinding(bindings[i])); // TODO: allow modifiers
   }
 
   return action;
