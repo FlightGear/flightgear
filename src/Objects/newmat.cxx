@@ -202,6 +202,15 @@ FGNewMat::build_ssg_state (bool defer_tex_load)
     textured->enable( GL_TEXTURE_2D );
     textured->disable( GL_BLEND );
     textured->disable( GL_ALPHA_TEST );
+#if 0
+#  ifdef GL_EXT_texture_filter_anisotropic
+    float max_anisotropy;
+    glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
+		     max_anisotropy );
+    cout << "Max anisotropy = " << max_anisotropy << endl;
+#  endif
+#endif
     if ( !defer_tex_load ) {
 	textured->setTexture( (char *)texture_path.c_str(), wrapu, wrapv );
 	texture_loaded = true;

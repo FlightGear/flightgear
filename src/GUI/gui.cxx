@@ -493,9 +493,13 @@ void fgHiResDump()
     char *filename = new char [24];
     static int count = 1;
 
-    int freeze = globals->get_freeze();
-    if(!freeze)
-        globals->set_freeze( true );
+    static const SGPropertyNode *master_freeze
+	= fgGetNode("/sim/freeze/master");
+
+    bool freeze = master_freeze->getBoolValue();
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", true);
+    }
 
     if(gui_menu_on) {
         show_menu = true;
@@ -668,8 +672,9 @@ void fgHiResDump()
         puShowCursor();
     }
 
-    if(!freeze)
-        globals->set_freeze( false );
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", false);
+    }
 }
 #endif // #if defined( TR_HIRES_SNAP)
 
@@ -760,9 +765,13 @@ void fgDumpSnapShot () {
     string message;
     static int count = 1;
 
-    int freeze = globals->get_freeze();
-    if(!freeze)
-        globals->set_freeze( true );
+    static const SGPropertyNode *master_freeze
+	= fgGetNode("/sim/freeze/master");
+
+    bool freeze = master_freeze->getBoolValue();
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", true);
+    }
 
     mainMenuBar->hide();
     TurnCursorOff();
@@ -812,8 +821,9 @@ void fgDumpSnapShot () {
 	mainMenuBar->reveal();
     }
 
-    if(!freeze)
-        globals->set_freeze( false );
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", false);
+    }
 }
 
 #ifdef FG_NETWORK_OLK

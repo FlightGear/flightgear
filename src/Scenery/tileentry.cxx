@@ -868,6 +868,32 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, float vis) {
 }
 
 
+// Set up lights rendering call backs
+static int fgLightsPredraw( ssgEntity *e ) {
+#ifdef GL_EXT_point_parameters
+    if (glutExtensionSupported("GL_EXT_point_parameters")) {
+	static float quadratic[3] = {1.0, 0.01, 0.0001};
+	glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, quadratic);
+	glPointParameterfEXT(GL_POINT_SIZE_MIN_EXT, 1.0); 
+	glPointSize(4.0);
+    }
+#endif
+    return true;
+}
+
+static int fgLightsPostdraw( ssgEntity *e ) {
+#ifdef GL_EXT_point_parameters
+    if (glutExtensionSupported("GL_EXT_point_parameters")) {
+	static float default_attenuation[3] = {1.0, 0.0, 0.0};
+	glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT,
+			      default_attenuation);
+	glPointSize(1.0);
+    }
+#endif
+    return true;
+}
+
+
 ssgLeaf* FGTileEntry::gen_lights( ssgVertexArray *lights, int inc, float bright ) {
     // generate a repeatable random seed
     float *p1 = lights->get( 0 );
@@ -920,6 +946,8 @@ ssgLeaf* FGTileEntry::gen_lights( ssgVertexArray *lights, int inc, float bright 
     // assign state
     FGNewMat *newmat = material_lib.find( "LIGHTS" );
     leaf->setState( newmat->get_state() );
+    leaf->setCallback( SSG_CALLBACK_PREDRAW, fgLightsPredraw );
+    leaf->setCallback( SSG_CALLBACK_POSTDRAW, fgLightsPostdraw );
 
     return leaf;
 }

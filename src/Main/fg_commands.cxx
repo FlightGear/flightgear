@@ -267,24 +267,28 @@ do_screen_capture (const SGPropertyNode * arg, SGCommandState ** state)
 static bool
 do_tile_cache_reload (const SGPropertyNode * arg, SGCommandState ** state)
 {
-  bool freeze = globals->get_freeze();
-  SG_LOG(SG_INPUT, SG_INFO, "ReIniting TileCache");
-  if ( !freeze ) 
-    globals->set_freeze( true );
-  // BusyCursor(0);
-  if ( global_tile_mgr.init() ) {
-    // Load the local scenery data
-    global_tile_mgr.update(fgGetDouble("/position/longitude-deg"),
-			   fgGetDouble("/position/latitude-deg"));
-  } else {
-    SG_LOG( SG_GENERAL, SG_ALERT, 
-	    "Error in Tile Manager initialization!" );
-    exit(-1);
-  }
-  // BusyCursor(1);
-  if ( !freeze )
-    globals->set_freeze( false );
-  return true;
+    static const SGPropertyNode *master_freeze
+	= fgGetNode("/sim/freeze/master");
+    bool freeze = master_freeze->getBoolValue();
+    SG_LOG(SG_INPUT, SG_INFO, "ReIniting TileCache");
+    if ( !freeze ) {
+	fgSetBool("/sim/freeze/master", true);
+    }
+    // BusyCursor(0);
+    if ( global_tile_mgr.init() ) {
+	// Load the local scenery data
+	global_tile_mgr.update(fgGetDouble("/position/longitude-deg"),
+			       fgGetDouble("/position/latitude-deg"));
+    } else {
+	SG_LOG( SG_GENERAL, SG_ALERT, 
+		"Error in Tile Manager initialization!" );
+	exit(-1);
+    }
+    // BusyCursor(1);
+    if ( !freeze ) {
+	fgSetBool("/sim/freeze/master", false);
+    }
+    return true;
 }
 
 

@@ -55,6 +55,8 @@ void AptDialog_OK (puObject *)
 	= fgGetNode("/position/longitude-deg");
     static const SGPropertyNode *latitude
 	= fgGetNode("/position/latitude-deg");
+    static const SGPropertyNode *master_freeze
+	= fgGetNode("/sim/freeze/master");
 
     SGPath path( globals->get_fg_root() );
     path.append( "Airports" );
@@ -63,9 +65,10 @@ void AptDialog_OK (puObject *)
 
     FGAirport a;
 
-    int freeze = globals->get_freeze();
-    if(!freeze)
-        globals->set_freeze( true );
+    bool freeze = master_freeze->getBoolValue();
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", true);
+    }
 
     char *s;
     AptDialogInput->getValue(&s);
@@ -97,15 +100,8 @@ void AptDialog_OK (puObject *)
                                          SGD_RADIANS_TO_DEGREES);
             // BusyCursor(0);
             fgReInitSubsystems();
-            // if ( global_tile_mgr.init() ) {
-            // Load the local scenery data
             global_tile_mgr.update( longitude->getDoubleValue(),
                                     latitude->getDoubleValue() );
-            // } else {
-            // SG_LOG( SG_GENERAL, SG_ALERT, 
-            // "Error in Tile Manager initialization!" );
-            // exit(-1);
-            // }
             // BusyCursor(1);
         } else {
             AptId  += " not in database.";
@@ -113,7 +109,7 @@ void AptDialog_OK (puObject *)
         }
     }
     if ( !freeze ) {
-        globals->set_freeze( false );
+        fgSetBool("/sim/freeze/master", false);
     }
 }
 

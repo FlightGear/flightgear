@@ -916,13 +916,15 @@ void fgReInitSubsystems( void )
 	= fgGetNode("/position/latitude-deg");
     static const SGPropertyNode *altitude
 	= fgGetNode("/position/altitude-ft");
+    static const SGPropertyNode *master_freeze
+	= fgGetNode("/sim/freeze/master");
 
     SG_LOG( SG_GENERAL, SG_INFO,
 	    "/position/altitude = " << altitude->getDoubleValue() );
 
-    bool freeze = globals->get_freeze();
-    if( !freeze ) {
-        globals->set_freeze( true );
+    bool freeze = master_freeze->getBoolValue();
+    if ( !freeze ) {
+	fgSetBool("/sim/freeze/master", true);
     }
     
     // Initialize the Scenery Management subsystem
@@ -1002,6 +1004,7 @@ void fgReInitSubsystems( void )
     cur_light_params.Update();
     fgUpdateLocalTime();
 
-    if( !freeze )
-        globals->set_freeze( false );
+    if ( !freeze ) {
+	fgSetBool("/sim/freeze/master", false);
+    }
 }

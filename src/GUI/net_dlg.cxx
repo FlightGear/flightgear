@@ -67,27 +67,33 @@ void NetIdDialog_Cancel(puObject *)
 
 void NetIdDialog_OK (puObject *)
 {
-	string NetId;
+    string NetId;
 
-	bool freeze = globals->get_freeze();
-	if(!freeze)
-		globals->set_freeze( true );
+    static const SGPropertyNode *master_freeze
+	= fgGetNode("/sim/freeze/master");
+
+    bool freeze = master_freeze->getBoolValue();
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", true);
+    }
+
 /*  
    The following needs some cleanup because 
    "string options.NetId" and "char *net_callsign" 
 */
-	NetIdDialogInput->getValue(&net_callsign);
-	NetId = net_callsign;
+    NetIdDialogInput->getValue(&net_callsign);
+    NetId = net_callsign;
 
-	NetIdDialog_Cancel( NULL );
-	fgSetString("/networking/call-sign", NetId.c_str() );
-	strcpy( fgd_callsign, net_callsign);
+    NetIdDialog_Cancel( NULL );
+    fgSetString("/networking/call-sign", NetId.c_str() );
+    strcpy( fgd_callsign, net_callsign);
 //    strcpy( fgd_callsign, fgGetString("/sim/networking/call-sign").c_str());
 /* Entering a callsign indicates : user wants Net HUD Info */
-	net_hud_display = 1;
+    net_hud_display = 1;
 
-	if(!freeze)
-		globals->set_freeze( false );
+    if ( !freeze ) {
+	fgSetBool("/sim/freeze/master", false);
+    }
 }
 
 void NewCallSign(puObject *cb)
@@ -164,57 +170,72 @@ void NetFGDDialog_Cancel(puObject *)
 
 void NetFGDDialog_OK (puObject *)
 {
-	char *NetFGD;    
+    char *NetFGD;    
 
-	bool freeze = globals->get_freeze();
-	if(!freeze)
-		globals->set_freeze( true );
-	NetFGDHostDialogInput->getValue( &NetFGD );
-	strcpy( fgd_host, NetFGD);
-	NetFGDPortLoDialogInput->getValue( (int *) &base_port );
-	NetFGDPortHiDialogInput->getValue( (int *) &end_port );
-	NetFGDDialog_Cancel( NULL );
-	if(!freeze)
-		globals->set_freeze( false );
+    static const SGPropertyNode *master_freeze
+	= fgGetNode("/sim/freeze/master");
+
+    bool freeze = master_freeze->getBoolValue();
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", true);
+    }
+
+    NetFGDHostDialogInput->getValue( &NetFGD );
+    strcpy( fgd_host, NetFGD);
+    NetFGDPortLoDialogInput->getValue( (int *) &base_port );
+    NetFGDPortHiDialogInput->getValue( (int *) &end_port );
+    NetFGDDialog_Cancel( NULL );
+
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", false);
+    }
 }
 
 void NetFGDDialog_SCAN (puObject *)
 {
-	char *NetFGD;
-	int fgd_port;
+    char *NetFGD;
+    int fgd_port;
 
-	bool freeze = globals->get_freeze();
-	if(!freeze)
-		globals->set_freeze( true );
+    static const SGPropertyNode *master_freeze
+	= fgGetNode("/sim/freeze/master");
+
+    bool freeze = master_freeze->getBoolValue();
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", true);
+    }
+
 //    printf("Vor getvalue %s\n");
-	NetFGDHostDialogInput->getValue( &NetFGD );
+    NetFGDHostDialogInput->getValue( &NetFGD );
 //    printf("Vor strcpy %s\n", (char *) NetFGD);
-	strcpy( fgd_host, NetFGD);
-	NetFGDPortLoDialogInput->getValue( (int *) &base_port );
-	NetFGDPortHiDialogInput->getValue( (int *) &end_port );
-	printf("FGD: %s  Port-Start: %d Port-End: %d\n", fgd_host, 
-		   base_port, end_port);
-	net_resolv_fgd(fgd_host);
-	printf("Resolve : %d\n", net_r);
-	if(!freeze)
-		globals->set_freeze( false );
-	if ( net_r == 0 ) {
-		fgd_port = 10000;
-		strcpy( fgd_name, "");
-		for( current_port = base_port; ( current_port <= end_port); current_port++) {
-			fgd_send_com("0" , FGFS_host);
-			sprintf( NewNetFGDLabel , "Scanning for deamon Port: %d", current_port); 
-			printf("FGD: searching %s\n", fgd_name);
-			if ( strcmp( fgd_name, "") != 0 ) {
-				sprintf( NewNetFGDLabel , "Found %s at Port: %d", 
-						 fgd_name, current_port);
-				fgd_port = current_port;
-				current_port = end_port+1;
-			}
-		}
-		current_port = end_port = base_port = fgd_port;
+    strcpy( fgd_host, NetFGD);
+    NetFGDPortLoDialogInput->getValue( (int *) &base_port );
+    NetFGDPortHiDialogInput->getValue( (int *) &end_port );
+    printf("FGD: %s  Port-Start: %d Port-End: %d\n", fgd_host, 
+	   base_port, end_port);
+    net_resolv_fgd(fgd_host);
+    printf("Resolve : %d\n", net_r);
+
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", false);
+    }
+
+    if ( net_r == 0 ) {
+	fgd_port = 10000;
+	strcpy( fgd_name, "");
+	for( current_port = base_port; ( current_port <= end_port); current_port++) {
+	    fgd_send_com("0" , FGFS_host);
+	    sprintf( NewNetFGDLabel , "Scanning for deamon Port: %d", current_port); 
+	    printf("FGD: searching %s\n", fgd_name);
+	    if ( strcmp( fgd_name, "") != 0 ) {
+		sprintf( NewNetFGDLabel , "Found %s at Port: %d", 
+			 fgd_name, current_port);
+		fgd_port = current_port;
+		current_port = end_port+1;
+	    }
 	}
-	NetFGDDialog_Cancel( NULL );
+	current_port = end_port = base_port = fgd_port;
+    }
+    NetFGDDialog_Cancel( NULL );
 }
 
 

@@ -264,6 +264,7 @@ setLoggingPriority (string priority)
 }
 
 
+#if 0
 /**
  * Get the pause state of the sim.
  */
@@ -290,6 +291,7 @@ setFreeze (bool freeze)
         current_atcdisplay->CancelRepeatingMessage();
     }
 }
+#endif
 
 /**
  * Return the current aircraft directory (UIUC) as a string.
@@ -1088,7 +1090,7 @@ fgInitProps ()
 				// Simulation
   fgTie("/sim/logging/priority", getLoggingPriority, setLoggingPriority);
   fgTie("/sim/logging/classes", getLoggingClasses, setLoggingClasses);
-  fgTie("/sim/freeze", getFreeze, setFreeze);
+  // fgTie("/sim/freeze", getFreeze, setFreeze);
   fgTie("/sim/aircraft-dir", getAircraftDir, setAircraftDir);
   fgTie("/sim/view/offset-deg", getViewOffset, setViewOffset, false);
   fgSetArchivable("/sim/view/offset-deg");

@@ -54,9 +54,13 @@ void reInit(puObject *cb)
     // BusyCursor(0);
     Quat0();
 
-    int freeze = globals->get_freeze();
-    if(!freeze)
-        globals->set_freeze( true );
+    static const SGPropertyNode *master_freeze
+	= fgGetNode("/sim/freeze/master");
+
+    bool freeze = master_freeze->getBoolValue();
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", true);
+    }
 
     cur_fdm_state->unbind();
 
@@ -89,7 +93,7 @@ void reInit(puObject *cb)
     // BusyCursor(1);
     
     if ( !freeze ) {
-        globals->set_freeze( false );
+        fgSetBool("/sim/freeze/master", false);
     }
 }
 

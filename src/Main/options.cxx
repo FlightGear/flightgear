@@ -187,6 +187,12 @@ fgSetDefaults ()
 
     fgSetBool("/sim/networking/network-olk", false);
     fgSetString("/sim/networking/call-sign", "Johnny");
+
+                                // Freeze options
+    fgSetBool("/sim/freeze/master", false);
+    fgSetBool("/sim/freeze/position", false);
+    fgSetBool("/sim/freeze/fuel", false);
+    fgSetBool("/sim/freeze/time-of-day", false);
 }
 
 
@@ -548,9 +554,9 @@ parse_option (const string& arg)
     } else if ( arg == "--enable-mouse-pointer" ) {
 	fgSetString("/sim/startup/mouse-pointer", "enabled");
     } else if ( arg == "--disable-freeze" ) {
-        fgSetBool("/sim/freeze", false);
+        fgSetBool("/sim/freeze/master", false);
     } else if ( arg == "--enable-freeze" ) {
-        fgSetBool("/sim/freeze", true);
+        fgSetBool("/sim/freeze/master", true);
     } else if ( arg == "--disable-anti-alias-hud" ) {
 	fgSetBool("/sim/hud/antialiased", false);
     } else if ( arg == "--enable-anti-alias-hud" ) {

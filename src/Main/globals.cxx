@@ -36,7 +36,6 @@ FGGlobals *globals;
 
 // Constructor
 FGGlobals::FGGlobals() :
-    freeze( false ),
 #if defined(FX) && defined(XMESA)
     fullscreen( true ),
 #endif

@@ -60,8 +60,10 @@ private:
     // Root of FlightGear scenery tree
     string fg_scenery;
 
+#if 0
     // Freeze sim
     bool freeze;
+#endif
 
     // Fullscreen mode for old 3DFX cards.
 #if defined(FX) && defined(XMESA)
@@ -123,8 +125,10 @@ public:
       fg_scenery = scenery;
     }
 
+#if 0
     inline bool get_freeze() const { return freeze; }
     inline void set_freeze( bool f ) { freeze = f; }
+#endif
 
 #if defined(FX) && defined(XMESA)
     inline bool get_fullscreen() const { return fullscreen; }

@@ -899,6 +899,8 @@ void fgRenderFrame( void ) {
 // Update internal time dependent calculations (i.e. flight model)
 void fgUpdateTimeDepCalcs() {
     static bool inited = false;
+    static const SGPropertyNode *master_freeze
+	= fgGetNode("/sim/freeze/master");
 
     // cout << "Updating time dep calcs()" << endl;
 
@@ -926,7 +928,7 @@ void fgUpdateTimeDepCalcs() {
     // instance ...
     if ( !cur_fdm_state->get_inited() ) {
 	// do nothing, fdm isn't inited yet
-    } else if ( globals->get_freeze() ) {
+    } else if ( master_freeze->getBoolValue() ) {
 	// we are frozen, run the fdm's with 0 time slices in case
 	// they want to do something with that.
 
@@ -1514,16 +1516,6 @@ int mainLoop( int argc, char **argv ) {
 
 #ifdef GL_EXT_texture_lod_bias
     glTexEnvf( GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, -0.5 ) ;
-#endif
-
-#if 0
-#ifdef GL_EXT_texture_filter_anisotropic
-    float max_anisotropy;
-    glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
-                     max_anisotropy );
-    cout << "Max anisotropy = " << max_anisotropy << endl;
-#endif
 #endif
 
     // set current_options lon/lat if an airport id is specified
