@@ -35,7 +35,7 @@
 bool poly_index_init( string path );
 
 // increment the persistant counter and return the next poly_index
-int poly_index_next();
+long int poly_index_next();
 
 
 
@@ -43,6 +43,9 @@ int poly_index_next();
 
 
 // $Log$
+// Revision 1.2  1999/03/19 00:27:31  curt
+// Use long int for index instead of just int.
+//
 // Revision 1.1  1999/02/25 21:30:24  curt
 // Initial revision.
 //

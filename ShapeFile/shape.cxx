@@ -44,7 +44,7 @@ public:
 };
 
 
-static void clip_and_write_poly( string root, int p_index, AreaType area, 
+static void clip_and_write_poly( string root, long int p_index, AreaType area, 
 				 FGBucket b, gpc_polygon *shape ) {
     point2d c, min, max;
     c.x = b.get_center_lon();
@@ -115,7 +115,7 @@ static void clip_and_write_poly( string root, int p_index, AreaType area,
 	sprintf( tile_name, "%ld", t_index );
 	string polyfile = path + "/" + tile_name;
 
-	sprintf( poly_index, "%d", p_index );
+	sprintf( poly_index, "%ld", p_index );
 	polyfile += ".";
 	polyfile += poly_index;
 
@@ -168,7 +168,7 @@ void add_to_shape(int count, double *coords, gpc_polygon *shape) {
 // process shape (write polygon to all intersecting tiles)
 void process_shape(string path, AreaType area, gpc_polygon *gpc_shape) {
     point2d min, max;
-    int index;
+    long int index;
     int i, j;
 
     min.x = min.y = 200.0;
@@ -244,6 +244,9 @@ void free_shape(gpc_polygon *shape) {
 
 
 // $Log$
+// Revision 1.3  1999/03/19 00:27:41  curt
+// Use long int for index instead of just int.
+//
 // Revision 1.2  1999/02/25 21:31:08  curt
 // First working version???
 //

@@ -49,7 +49,7 @@
 
 
 // write out airport data
-void write_airport( int p_index, list_container hull_list, FGBucket b, 
+void write_airport( long int p_index, list_container hull_list, FGBucket b, 
 		    const string& root, const bool cut_and_keep ) {
     char tile_name[256], poly_index[256];
 
@@ -62,7 +62,7 @@ void write_airport( int p_index, list_container hull_list, FGBucket b,
     sprintf(tile_name, "%ld", b_index);
     string aptfile = path + "/" + tile_name;
 
-    sprintf( poly_index, "%d", p_index );
+    sprintf( poly_index, "%ld", p_index );
     aptfile += ".";
     aptfile += poly_index;
     cout << "apt file = " << aptfile << endl;
@@ -153,8 +153,8 @@ void process_airport( string airport, list < string > & runway_list,
 	string rwy_width = rwy_str.substr(43, 4);
 	sscanf( rwy_width.c_str(), "%d", &width);
 	string rwy_sfc = rwy_str.substr(47, 4);
-	string rwy_end1 = rwy_str.substr(52, 6);
-	string rwy_end2 = rwy_str.substr(59, 6);
+	string rwy_end1 = rwy_str.substr(52, 8);
+	string rwy_end2 = rwy_str.substr(61, 8);
 
 	/*
 	cout << "  no    = " << rwy_no << endl;
@@ -167,7 +167,7 @@ void process_airport( string airport, list < string > & runway_list,
 	cout << "  end1  = " << rwy_end1 << endl;
 	cout << "  end2  = " << rwy_end2 << endl;
 	*/
-	
+
 	rwy_list = gen_runway_area( lon, lat, hdg * DEG_TO_RAD, 
 				    (double)len * FEET_TO_METER,
 				    (double)width * FEET_TO_METER );
@@ -197,7 +197,7 @@ void process_airport( string airport, list < string > & runway_list,
     hull_list = convex_hull(apt_list);
 
     // get next polygon index
-    int index = poly_index_next();
+    long int index = poly_index_next();
 
     // find average center, min, and max point of convex hull
     point2d average, min, max;
@@ -241,7 +241,7 @@ void process_airport( string airport, list < string > & runway_list,
 	cout << "airport spans tile boundaries" << endl;
 	cout << "  dx = " << dx << "  dy = " << dy << endl;
 
-	if ( (dx > 1) || (dy > 1) ) {
+	if ( (dx > 2) || (dy > 2) ) {
 	    cout << "somethings really wrong!!!!" << endl;
 	    exit(-1);
 	}
@@ -324,7 +324,7 @@ int main( int argc, char **argv ) {
 	} else if ( line[0] == 'R' ) {
 	    // runway entry
 	    runway_list.push_back(line);
-	} else if ( line == "99" ) {
+	} else if ( line == "[End]" ) {
 	    // end of file
 	    break;
 	} else {
@@ -344,6 +344,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.11  1999/03/19 00:27:38  curt
+// Use long int for index instead of just int.
+//
 // Revision 1.10  1999/03/17 23:51:25  curt
 // Changed polygon index counter file.
 //

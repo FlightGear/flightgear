@@ -30,7 +30,7 @@
 #include "index.hxx"
 
 
-static int poly_index;
+static long int poly_index;
 static string poly_path;
 
 
@@ -46,14 +46,14 @@ bool poly_index_init( string path ) {
 	return false;
     }
 
-    fscanf( fp, "%d", &poly_index );
+    fscanf( fp, "%ld", &poly_index );
 
     fclose( fp );
 }
 
 
 // increment the persistant counter and return the next poly_index
-int poly_index_next() {
+long int poly_index_next() {
     ++poly_index;
 
     FILE *fp = fopen( poly_path.c_str(), "w" );
@@ -62,7 +62,7 @@ int poly_index_next() {
 	cout << "Error cannot open " << poly_path << " for writing" << endl;
     }
 
-    fprintf( fp, "%d\n", poly_index );
+    fprintf( fp, "%ld\n", poly_index );
 
     fclose( fp );
 
@@ -71,6 +71,9 @@ int poly_index_next() {
 
 
 // $Log$
+// Revision 1.2  1999/03/19 00:27:30  curt
+// Use long int for index instead of just int.
+//
 // Revision 1.1  1999/02/25 21:30:24  curt
 // Initial revision.
 //
