@@ -110,48 +110,33 @@ class FlightGear:
         Where possible the value is converted to the equivalent Python type.
         """
         s = self.telnet.get(key)[0]
-        (name,x,value,type) = s.split()
+        match = re.compile( '[^=]*=\s*\'([^\']*)\'\s*([^\r]*)\r').match( s )
+        if not match:
+            return None
+        value,type = match.groups()
+        #value = match.group(1)
+        #type = match.group(2)
         if value == '':
             return None
-        else:
-            value = value[1:-1] # strip quote characters
-            #print "name=%s,value=%s,type=%s" % (name,value,type)
-            if type == '(double)':
-                return float(value)
-            elif type == '(int)':
-                return int(value)
-            elif type == '(bool)':
-                if value == 'true':
-                    return 1
-                else:
-                    return 0
+
+        if type == '(double)':
+            return float(value)
+        elif type == '(int)':
+            return int(value)
+        elif type == '(bool)':
+            if value == 'true':
+                return 1
             else:
-                return value
+                return 0
+        else:
+            return value
         
     def __setitem__(self, key, value):
-        """Set a FlightGear property value.
-        """
+        """Set a FlightGear property value."""
         self.telnet.set( key, value )
 
     def quit(self):
-        """Close the telnet connection to FlightGear.
-        """
+        """Close the telnet connection to FlightGear."""
         if self.telnet:
             self.telnet.quit()
             self.telnet = None
-
-    def view_next(self):
-        """
-        """
-        self.telnet._putcmd('view next')
-        self.telnet._getresp()
-
-    def view_prev(self):
-        """
-        """
-        self.telnet._putcmd('view prev')
-        self.telnet._getresp()
-
-    def wait_for_prop_eq(self, prop, value, interval = 0.5):
-        while self.__getitem__(prop) != value:
-            time.sleep(interval)
