@@ -39,6 +39,7 @@ public:
 private:
 
   FG3DModel * _aircraft;
+  ssgSelector * _selector;
   ssgRoot * _scene;
   float _nearplane;
   float _farplane;

@@ -36,8 +36,6 @@
 
 #include "AIEntity.hxx"
 
-extern ssgRoot* scene;	// The global Flightgear scene graph
-
 FGAIEntity::~FGAIEntity() {
 }
 
@@ -55,7 +53,7 @@ void FGAIEntity::Transform() {
     sgCoord shippos;
     FastWorldCoordinate(&shippos, sc);
     position->setTransform( &shippos );
-    scene->addKid(position);
+    globals->get_scene_graph()->addKid(position);
     //cout << "Transform called\n";
 }
 

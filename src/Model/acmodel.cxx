@@ -30,6 +30,7 @@
 
 FGAircraftModel::FGAircraftModel ()
   : _aircraft(0),
+    _selector(new ssgSelector),
     _scene(new ssgRoot),
     _nearplane(0.01f),
     _farplane(100.0f)
@@ -40,6 +41,8 @@ FGAircraftModel::~FGAircraftModel ()
 {
   delete _aircraft;
   delete _scene;
+				// SSG will delete it
+  globals->get_aircraft_branch()->removeKid(_selector);
 }
 
 void 
@@ -48,6 +51,8 @@ FGAircraftModel::init ()
   _aircraft = new FG3DModel;
   _aircraft->init(fgGetString("/sim/model/path", "Models/Geometry/glider.ac"));
   _scene->addKid(_aircraft->getSceneGraph());
+  _selector->addKid(_aircraft->getSceneGraph());
+  globals->get_aircraft_branch()->addKid(_selector);
 }
 
 void 
@@ -90,13 +95,14 @@ FGAircraftModel::draw ()
 				// FIXME: view number shouldn't be 
 				// hard-coded.
   int view_number = globals->get_viewmgr()->get_current();
-  if (_aircraft->getVisible()) {
-    if (view_number == 0) {
-      glClearDepth(1);
-      glClear(GL_DEPTH_BUFFER_BIT);
-      ssgSetNearFar(_nearplane, _farplane);
-    }
+  if (_aircraft->getVisible() && view_number == 0) {
+    glClearDepth(1);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    ssgSetNearFar(_nearplane, _farplane);
     ssgCullAndDraw(_scene);
+    _selector->select(0);
+  } else {
+    _selector->select(1);
   }
 
 }

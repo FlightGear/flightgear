@@ -57,9 +57,7 @@ private:
 
   vector<Instance *> _instances;
 
-  ssgRoot * _scene;
-  float _nearplane;
-  float _farplane;
+  ssgSelector * _selector;
 
 };
 

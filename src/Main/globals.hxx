@@ -67,6 +67,9 @@ class FGAIMgr;
 class FGAircraftModel;
 class FGModelMgr;
 
+class ssgRoot;
+class ssgBranch;
+
 
 /**
  * Bucket for subsystem pointers representing the sim's state.
@@ -157,6 +160,14 @@ private:
 
     // list of serial port-like configurations
     string_list *channel_options_list;
+
+    // SSG scene graph
+    ssgRoot * scene_graph;
+    ssgBranch * terrain_branch;
+    ssgBranch * gnd_lights_branch;
+    ssgBranch * rwy_lights_branch;
+    ssgBranch * models_branch;
+    ssgBranch * aircraft_branch;
 
 public:
 
@@ -266,6 +277,40 @@ public:
     }
     inline void set_channel_options_list( string_list *l ) {
 	channel_options_list = l;
+    }
+
+    inline ssgRoot * get_scene_graph () const { return scene_graph; }
+    inline void set_scene_graph (ssgRoot * s) { scene_graph = s; }
+
+    inline ssgBranch * get_terrain_branch () const { return terrain_branch; }
+    inline void set_terrain_branch (ssgBranch * t) { terrain_branch = t; }
+
+    inline ssgBranch * get_gnd_lights_branch () const {
+      return gnd_lights_branch;
+    }
+    inline void set_gnd_lights_branch (ssgBranch * t) {
+      gnd_lights_branch = t;
+    }
+
+    inline ssgBranch * get_rwy_lights_branch () const {
+      return rwy_lights_branch;
+    }
+    inline void set_rwy_lights_branch (ssgBranch * t) {
+      rwy_lights_branch = t;
+    }
+
+    inline ssgBranch * get_models_branch () const {
+      return models_branch;
+    }
+    inline void set_models_branch (ssgBranch * t) {
+      models_branch = t;
+    }
+
+    inline ssgBranch * get_aircraft_branch () const {
+      return aircraft_branch;
+    }
+    inline void set_aircraft_branch (ssgBranch * t) {
+      aircraft_branch = t;
     }
 
 

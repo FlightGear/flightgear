@@ -9,18 +9,17 @@
 
 
 FGModelMgr::FGModelMgr ()
-  : _scene(new ssgRoot),
-    _nearplane(0.5f),
-    _farplane(120000.0f)
+  : _selector(new ssgSelector)
 {
 }
 
 FGModelMgr::~FGModelMgr ()
 {
   for (int i = 0; i < _instances.size(); i++) {
+    globals->get_models_branch()
+      ->removeKid(_instances[i]->model->getSceneGraph());
     delete _instances[i];
   }
-  delete _scene;
 }
 
 void
@@ -76,8 +75,8 @@ FGModelMgr::init ()
     else
       model->setHeadingDeg(node->getDoubleValue("heading-deg"));
 
-				// Add this model to the scene graph
-    _scene->addKid(model->getSceneGraph());
+				// Add this model to the global scene graph
+    globals->get_scene_graph()->addKid(model->getSceneGraph());
 
 				// Save this instance for updating
     _instances.push_back(instance);
@@ -124,8 +123,8 @@ FGModelMgr::update (int dt)
 void
 FGModelMgr::draw ()
 {
-  ssgSetNearFar(_nearplane, _farplane);
-  ssgCullAndDraw(_scene);
+//   ssgSetNearFar(_nearplane, _farplane);
+//   ssgCullAndDraw(_scene);
 }
 
 

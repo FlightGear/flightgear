@@ -20,8 +20,6 @@
 
 #include "hitlist.hxx"
 
-extern ssgBranch *terrain_branch;
-
 // forward declaration of our helper/convenience functions
 static void sgMultMat4(sgdMat4 dst, sgdMat4 m1, sgMat4 m2);
 static void ssgGetEntityTransform(ssgEntity *entity, sgMat4 m );
@@ -509,8 +507,7 @@ bool fgCurrentElev( sgdVec3 abs_view_pos, sgdVec3 scenery_center,
     sgdCopyVec3(orig, view_pos );
     sgdCopyVec3(dir, abs_view_pos );
 
-    // !! why is terrain not globals->get_terrain()
-    hit_list->Intersect( terrain_branch, orig, dir );
+    hit_list->Intersect( globals->get_terrain_branch(), orig, dir );
 
     int this_hit=0;
     Point3D geoc;
