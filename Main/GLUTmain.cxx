@@ -62,6 +62,7 @@
 #  include <Audio/src/sm.h>
 #endif
 
+#include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
 #include <GUI/gui.h>
@@ -391,6 +392,9 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
     }
 
     if ( !t->pause ) {
+	// run Autopilot system
+	fgAPRun();
+
 	// printf("updating flight model x %d\n", multi_loop);
 	fgFlightModelUpdate(current_options.get_flight_model(), f, multi_loop);
     } else {
@@ -890,6 +894,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.54  1998/09/29 02:03:38  curt
+// Autopilot mods.
+//
 // Revision 1.53  1998/09/26 13:18:35  curt
 // Check if audio "working()" before doing audio manipulations.
 //

@@ -38,7 +38,7 @@
 #include <Aircraft/aircraft.h>
 #include <Astro/solarsystem.hxx>
 #include <Astro/sky.hxx>
-#include <Autopilot/autopilot.h> // Added autopilot.h to list, Jeff Goeke-Smith
+#include <Autopilot/autopilot.hxx>
 #include <Cockpit/hud.hxx>
 #include <Debug/fg_debug.h>
 #include <GUI/gui.h>
@@ -88,6 +88,12 @@ void GLUTkey(unsigned char k, int x, int y) {
     if ( GLUT_ACTIVE_ALT && glutGetModifiers() ) {
 	fgPrintf( FG_INPUT, FG_DEBUG, " SHIFTED\n");
 	switch (k) {
+	case 1: // Ctrl-A key
+	    fgAPToggleAltitude();
+	    return;
+	case 8: // Ctrl-H key
+	    fgAPToggleHeading();
+	    return;
 	case 49: // numeric keypad 1
 	    v->goal_view_offset = FG_PI * 0.75;
 	    return;
@@ -151,16 +157,6 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    tmp /= 1.10;
 	    fgWeatherSetVisibility( tmp );
 	    return;
-	// autopilot additions
-	case 65: // A key
-		fgAPSetMode(1);
-		return;
-	case 83: // S key
-		fgAPSetMode(0);
-		return;
-	case 68: // D key
-		fgAPSetHeading(AP_CURRENT_HEADING);
-		return;
 	}
     } else {
 	fgPrintf( FG_INPUT, FG_DEBUG, "\n");
@@ -199,6 +195,13 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 51: // numeric keypad 3 (Pg Dn)
 	    fgThrottleMove(0, -0.01);
+	    return;
+	case 98: // b key
+	    int b_ret;
+	    double b_set;
+	    b_ret = int( fgBrakeGet() );
+	    b_set = double(!b_ret);
+	    fgBrakeSet(b_set);
 	    return;
 	case 104: // h key
 	    HUD_brightkey( false );
@@ -372,6 +375,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.25  1998/09/29 02:03:36  curt
+// Autopilot mods.
+//
 // Revision 1.24  1998/09/26 13:16:44  curt
 // C++-ified the comments.
 //

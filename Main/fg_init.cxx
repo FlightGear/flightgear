@@ -50,7 +50,7 @@
 #include <Astro/stars.hxx>
 // #include <Astro/sun.hxx>
 #include <Astro/solarsystem.hxx>
-#include <Autopilot/autopilot.h>
+#include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
 #include <Joystick/joystick.h>
@@ -398,6 +398,9 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.39  1998/09/29 02:03:39  curt
+// Autopilot mods.
+//
 // Revision 1.38  1998/09/15 04:27:30  curt
 // Changes for new Astro code.
 //
