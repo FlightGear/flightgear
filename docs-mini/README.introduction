@@ -45,6 +45,40 @@ Property I/O code allows one to easily read the tree from, or write the tree to
 an XML file.
 
 
+Subsystems
+----------
+
+To add a new subsystem you would have to create a derived class from
+SGSubsystem and define at least a small set of functions:
+
+    class FGFX : public SGSubsystem
+    {
+    public:
+
+      FGFX ();
+      virtual ~FGFX ();
+
+      virtual void init ();
+      virtual void reinit ();
+      virtual void bind ();
+      virtual void unbind ();
+      virtual void update (double dt);
+    }
+
+The init() functions should make sure everything is set and ready so the
+update() function can be run by the main loop. The reinit() function handles
+everything in case of a reset by the user.
+
+The bind() and unbind() functions can be used to tie and untie properties.
+
+After that you can register this class at the subsystem manager:
+
+    globals->add_subsystem("fx", new FGFX);
+
+Now the subsystem manager calls the update() function of this class every
+frame. dt is the time (in seconds) elapsed since the last call.
+
+
 Scripting
 ---------
 
