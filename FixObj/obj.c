@@ -214,7 +214,7 @@ void obj_fix(char *infile, char *outfile) {
 	    }
 
 	    dot_prod = check_cur_face(n1, n2, n3);
-	    if ( dot_prod < -0.5 ) {
+	    if ( dot_prod < 0.0 ) {
 		/* this stripe is backwards (CW) */
 		is_ccw = 0;
 		printf(" -> Starting a backwards stripe\n");
@@ -288,9 +288,12 @@ void obj_fix(char *infile, char *outfile) {
 
 
 /* $Log$
-/* Revision 1.4  1998/01/31 00:41:25  curt
-/* Made a few changes converting floats to doubles.
+/* Revision 1.5  1998/03/03 03:37:03  curt
+/* Cumulative tweaks.
 /*
+ * Revision 1.4  1998/01/31 00:41:25  curt
+ * Made a few changes converting floats to doubles.
+ *
  * Revision 1.3  1998/01/19 19:51:07  curt
  * A couple final pre-release tweaks.
  *

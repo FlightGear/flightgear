@@ -40,16 +40,6 @@ $do_strips =     1;
 $do_fixobj =     1;
 
 
-# return the file name root (ending at last ".")
-sub file_root {
-    my($file) = @_;
-    my($pos);
-
-    $pos = rindex($file, ".");
-    return substr($file, 0, $pos);
-}
-
-
 # set the FG_ROOT environment variable if it hasn't already been set.
 if ( $ENV{FG_ROOT} eq "" ) {
     # look for a file called fgtop as a place marker
@@ -61,26 +51,64 @@ if ( $ENV{FG_ROOT} eq "" ) {
 }
 
 
-# 1.  Start with file.dem
+if ( $#ARGV < 1 ) {
+    die "Usage: $0 <error^2> dem-file1 [ dem-file2 dem-file3 ... ]\n";
+}
 
-$dem_file = shift(@ARGV);
+# Start with file.dem
+
 $error = shift(@ARGV);
 $error += 0.0;
 
-print "Source file = $dem_file  Error tolerance = $error\n";
+while ( $dem_file = shift(@ARGV) ) {
+    print "Source file = $dem_file  Error tolerance = $error\n";
 
-if ( $error < 0.5 ) {
-    die "I doubt you'll be happy with an error tolerance as low as $error.\n";
+    if ( $error < 0.5 ) {
+	die "I doubt you'll be happy with an error tolerance as " . 
+	    "low as $error.\n";
+    }
+
+
+    if ( $do_demfit ) {
+	demfit() ;
+    } else {
+	$subdir = "../Scenery/w100n040/w093n045";
+	print "WARNING:  Hardcoding subdir = $subdir\n";
+    }
+    
+    triangle_1() if ( $do_triangle_1 );
+    fixnode() if ( $do_fixnode );
+    splittris() if ( $do_splittris );
+    assemtris() if ( $do_assemtris );
+    triangle_2() if ( $do_triangle_2);
+    tri2obj() if ( $do_tri2obj );
+    strips() if ( $do_strips );
+    fixobj() if ( $do_fixobj );
 }
 
-# 2.  dem2node $FG_ROOT dem_file tolerance^2 (meters)
+
+# exit normally
+exit(0);
+
+
+# return the file name root (ending at last ".")
+sub file_root {
+    my($file) = @_;
+    my($pos);
+
+    $pos = rindex($file, ".");
+    return substr($file, 0, $pos);
+}
+
+
+# 1.  dem2node $FG_ROOT dem_file tolerance^2 (meters)
 # 
 #     - dem2node .. dem_file 160000
 #
 #     splits dem file into 64 file.node's which contain the
 #     irregularly fitted vertices
 
-if ( $do_demfit ) {
+sub demfit {
     if ( $dem_file =~ m/.gz$/ ) {
 	$command = "gzip -dc $dem_file | ./Dem2node/demfit $ENV{FG_ROOT} - $error";
     } else {
@@ -99,17 +127,15 @@ if ( $do_demfit ) {
 	}
     }
     close(OUT);
-} else {
-    $subdir = "../Scenery/w100n040/w093n045";
-    print "WARNING:  Hardcoding subdir = $subdir\n";
-}
+} 
 
-# 3.  triangle -q file (Takes file.node and produces file.1.node and
+
+# 2.  triangle -q file (Takes file.node and produces file.1.node and
 #                      file.1.ele)
 
 print "Subdirectory for this dem file is $subdir\n";
 
-if ( $do_triangle_1 ) {
+sub triangle_1 {
     @FILES = `ls $subdir`;
     foreach $file ( @FILES ) {
 	print $file;
@@ -129,13 +155,14 @@ if ( $do_triangle_1 ) {
     }
 }
 
-# 4.  fixnode file.dem subdir
+
+# 3.  fixnode file.dem subdir
 #
 #     Take the original .dem file (for interpolating Z values) and the
 #     subdirecotry containing all the file.1.node's and replace with
 #     fixed file.1.node
 
-if ( $do_fixnode ) {
+sub fixnode {
     if ( $dem_file =~ m/.gz$/ ) {
 	$command = "gzip -dc $dem_file | ./FixNode/fixnode - $subdir";
     } else {
@@ -165,7 +192,7 @@ if ( $do_fixnode ) {
 #     gets to define the edge verticies and normals.  All the other
 #     adjacent tiles must use these.
 
-if ( $do_splittris ) {
+sub splittris {
     @FILES = `ls $subdir`;
     foreach $file ( @FILES ) {
 	chop($file);
@@ -192,7 +219,7 @@ if ( $do_splittris ) {
 #     using the proper shared corners and edges.  Save as a node file
 #     so we can retriangulate.
 
-if ( $do_assemtris ) {
+sub assemtris {
     @FILES = `ls $subdir`;
     foreach $file ( @FILES ) {
 	chop($file);
@@ -215,7 +242,7 @@ if ( $do_assemtris ) {
 # 4.3 Retriangulate reassembled files (without -q option) so no new
 #     nodes are generated.
 
-if ( $do_triangle_2 ) {
+sub triangle_2 {
     @FILES = `ls $subdir`;
     foreach $file ( @FILES ) {
 	print $file;
@@ -246,7 +273,7 @@ if ( $do_triangle_2 ) {
 #     the gaps between tiles eliminated, but the colors and lighting
 #     transition smoothly across tile boundaries.
 
-if ( $do_tri2obj ) {
+sub tri2obj {
     @FILES = `ls $subdir`;
     foreach $file ( @FILES ) {
 	chop($file);
@@ -278,7 +305,7 @@ if ( $do_tri2obj ) {
 #
 #     strips produces a file called "bands.d" ... copy this to file.2.obj
 
-if ( $do_strips ) {
+sub strips {
     @FILES = `ls $subdir`;
     foreach $file ( @FILES ) {
 	chop($file);
@@ -313,7 +340,7 @@ if ( $do_strips ) {
 #
 #     Sort file.2.obj by strip winding
 
-if ( $do_fixobj ) {
+sub fixobj {
     @FILES = `ls $subdir`;
     foreach $file ( @FILES ) {
 	chop($file);
@@ -337,6 +364,9 @@ if ( $do_fixobj ) {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.11  1998/03/03 03:36:57  curt
+# Cumulative tweaks.
+#
 # Revision 1.10  1998/02/01 03:42:26  curt
 # Modifications to handle compressed dem files.
 #

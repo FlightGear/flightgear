@@ -456,8 +456,11 @@ void dump_obj(char *basename, char *basepath) {
 	} else {
 	    fp = body;
 	}
-	fprintf(fp, "gdn %.2f %.2f %.2f\n", 
-		nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
+
+	if ( fp != NULL ) {
+	    fprintf(fp, "gdn %.2f %.2f %.2f\n", 
+		    nodes_orig[i][0], nodes_orig[i][1], nodes_orig[i][2]);
+	}
     }
 
     printf("  calculating and writing normals\n");
@@ -541,17 +544,17 @@ void dump_obj(char *basename, char *basepath) {
 	}
     }
 
-    fclose(sw);
-    fclose(se);
-    fclose(ne);
-    fclose(nw);
+    if ( sw ) { fclose(sw); }
+    if ( se ) { fclose(se); }
+    if ( ne ) { fclose(ne); }
+    if ( nw ) { fclose(nw); }
 
-    fclose(north);
-    fclose(south);
-    fclose(east);
-    fclose(west);
+    if ( north ) { fclose(north); }
+    if ( south ) { fclose(south); }
+    if ( east ) { fclose(east); }
+    if ( west ) { fclose(west); }
 
-    fclose(body);
+    if ( body ) { fclose(body); }
 }
 
 
@@ -609,9 +612,12 @@ int main(int argc, char **argv) {
 
 
 /* $Log$
-/* Revision 1.4  1998/01/31 00:41:26  curt
-/* Made a few changes converting floats to doubles.
+/* Revision 1.5  1998/03/03 03:37:04  curt
+/* Cumulative tweaks.
 /*
+ * Revision 1.4  1998/01/31 00:41:26  curt
+ * Made a few changes converting floats to doubles.
+ *
  * Revision 1.3  1998/01/27 18:37:04  curt
  * Lots of updates to get back in sync with changes made over in .../Src/
  *

@@ -1,4 +1,23 @@
-tri2obj.o: tri2obj.c tri2obj.h ../../Src/Include/constants.h \
- ../../Src/Include/types.h ../../Src/Math/fg_geodesy.h \
- ../../Src/Math/mat3.h ../../Src/Math/polar.h \
- ../../Src/Math/../Include/types.h ../../Src/Scenery/tileutils.h
+tri2obj.o: tri2obj.c /usr/include/stdio.h /usr/include/features.h \
+ /usr/include/sys/cdefs.h /usr/include/libio.h \
+ /usr/include/_G_config.h /usr/include/stdlib.h \
+ /usr/lib/gcc-lib/i486-linux/2.7.2.1/include/stddef.h \
+ /usr/include/errno.h /usr/include/linux/errno.h \
+ /usr/include/asm/errno.h /usr/include/alloca.h /usr/include/string.h \
+ /usr/include/sys/stat.h /usr/include/sys/types.h \
+ /usr/include/linux/types.h /usr/include/linux/posix_types.h \
+ /usr/include/asm/posix_types.h /usr/include/asm/types.h \
+ /usr/include/sys/bitypes.h /usr/include/linux/stat.h \
+ /usr/include/unistd.h /usr/include/posix_opt.h \
+ /usr/include/gnu/types.h /usr/include/confname.h tri2obj.h \
+ /home/home17/curt/projects/FlightGear/Src/Include/fg_constants.h \
+ /usr/include/math.h /usr/include/huge_val.h /usr/include/endian.h \
+ /usr/include/bytesex.h /usr/include/nan.h \
+ /usr/lib/gcc-lib/i486-linux/2.7.2.1/include/float.h \
+ /usr/include/values.h /usr/include/ieee754.h \
+ /usr/include/i386/ieeefp.h /usr/include/ieee854.h \
+ /home/home17/curt/projects/FlightGear/Src/Include/fg_types.h \
+ /home/home17/curt/projects/FlightGear/Src/Math/fg_geodesy.h \
+ /home/home17/curt/projects/FlightGear/Src/Math/mat3.h \
+ /home/home17/curt/projects/FlightGear/Src/Math/polar.h \
+ /home/home17/curt/projects/FlightGear/Src/Scenery/bucketutils.h

@@ -1,3 +1,27 @@
-showme.o: showme.c
-triangle.o: triangle.c
-tricall.o: tricall.c triangle.h
+showme.o: showme.c /usr/include/stdio.h /usr/include/features.h \
+ /usr/include/sys/cdefs.h /usr/include/libio.h \
+ /usr/include/_G_config.h /usr/include/string.h \
+ /usr/lib/gcc-lib/i486-linux/2.7.2.1/include/stddef.h \
+ /usr/include/X11/Xlib.h /usr/include/sys/types.h \
+ /usr/include/linux/types.h /usr/include/linux/posix_types.h \
+ /usr/include/asm/posix_types.h /usr/include/asm/types.h \
+ /usr/include/sys/bitypes.h /usr/include/X11/X.h \
+ /usr/include/X11/Xfuncproto.h /usr/include/X11/Xosdefs.h \
+ /usr/include/X11/Xutil.h /usr/include/X11/Xatom.h
+triangle.o: triangle.c /usr/include/stdio.h /usr/include/features.h \
+ /usr/include/sys/cdefs.h /usr/include/libio.h \
+ /usr/include/_G_config.h /usr/include/string.h \
+ /usr/lib/gcc-lib/i486-linux/2.7.2.1/include/stddef.h \
+ /usr/include/math.h /usr/include/huge_val.h /usr/include/endian.h \
+ /usr/include/bytesex.h /usr/include/nan.h \
+ /usr/lib/gcc-lib/i486-linux/2.7.2.1/include/float.h \
+ /usr/include/values.h /usr/include/ieee754.h \
+ /usr/include/i386/ieeefp.h /usr/include/ieee854.h \
+ /usr/include/sys/time.h /usr/include/linux/types.h \
+ /usr/include/linux/posix_types.h /usr/include/asm/posix_types.h \
+ /usr/include/asm/types.h /usr/include/linux/time.h \
+ /usr/include/time.h /usr/include/sys/types.h \
+ /usr/include/sys/bitypes.h
+tricall.o: tricall.c /usr/include/stdio.h /usr/include/features.h \
+ /usr/include/sys/cdefs.h /usr/include/libio.h \
+ /usr/include/_G_config.h triangle.h
