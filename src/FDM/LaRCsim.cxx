@@ -48,34 +48,17 @@ FGLaRCsim::FGLaRCsim( double dt ) {
 
     lsic=new LaRCsimIC; //this needs to be brought up after LaRCsim is
     copy_to_LaRCsim(); // initialize all of LaRCsim's vars
+
     //this should go away someday -- formerly done in fg_init.cxx
     Mass = 8.547270E+01;
     I_xx = 1.048000E+03;
     I_yy = 3.000000E+03;
     I_zz = 3.530000E+03;
     I_xz = 0.000000E+00;
-    //current_aircraft.fdm_state->set_Tank1Fuel(15.0);
-    //current_aircraft.fdm_state->set_Tank2Fuel(15.0);
-    //Tank1Fuel = 15.0;
-    //Tank2Fuel = 15.0;
-}
-
-FGLaRCsim::~FGLaRCsim(void) {
-    if(lsic != NULL) {
-	delete lsic;
-    }
-}    
-
-// Initialize the LaRCsim flight model, dt is the time increment for
-// each subsequent iteration through the EOM
-void FGLaRCsim::init() {
-
-				// Explicitly call the superclass's
-				// init method first.
-    FGInterface::init();
-
+    
     ls_set_model_dt( get_delta_t() );
-    // Initialize our little engine that hopefully might
+    
+    		// Initialize our little engine that hopefully might
     eng.init( get_delta_t() );
     // dcl - in passing dt to init rather than update I am assuming
     // that the LaRCsim dt is fixed at one value (yes it is 120hz CLO)
@@ -91,31 +74,22 @@ void FGLaRCsim::init() {
     set_Tank1Fuel(28.0);
     set_Tank2Fuel(28.0);  
 
-    // SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::init()"  );
 
-    double save_alt = 0.0;
+}
 
-    if ( get_Altitude() < -9000.0 ) {
-	save_alt = get_Altitude();
-	set_Altitude( 0.0 );
+FGLaRCsim::~FGLaRCsim(void) {
+    if(lsic != NULL) {
+	delete lsic;
     }
+}    
 
-    // translate FG to LaRCsim structure
-    copy_to_LaRCsim();
+// Initialize the LaRCsim flight model, dt is the time increment for
+// each subsequent iteration through the EOM
+void FGLaRCsim::init() {
 
-    // actual LaRCsim top level init
-    // ls_toplevel_init( dt, (char *)fgGetString("/sim/aircraft").c_str() );
-
-    SG_LOG( SG_FLIGHT, SG_INFO, "FG pos = " << 
-	    get_Latitude() );
-
-    // translate LaRCsim back to FG structure
-    copy_from_LaRCsim();
-
-    // but lets restore our original bogus altitude when we are done
-    if ( save_alt < -9000.0 ) {
-	set_Altitude( save_alt );
-    }
+    		// Explicitly call the superclass's
+				// init method first.
+    FGInterface::init();
 }
 
 

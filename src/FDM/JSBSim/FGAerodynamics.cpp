@@ -137,12 +137,12 @@ bool FGAerodynamics::LoadAerodynamics(FGConfigFile* AC_cfg)
 
   AC_cfg->GetNextConfigLine();
 
-  while ((token = AC_cfg->GetValue()) != string("/AERODYNAMICS")) {
+  while ((token = AC_cfg->GetValue()) != "/AERODYNAMICS") {
     if (token == "AXIS") {
       CoeffArray ca;
       axis = AC_cfg->GetValue("NAME");
       AC_cfg->GetNextConfigLine();
-      while ((token = AC_cfg->GetValue()) != string("/AXIS")) {
+      while ((token = AC_cfg->GetValue()) != "/AXIS") {
         ca.push_back(new FGCoefficient(FDMExec, AC_cfg));
         if (debug_lvl > 0) DisplayCoeffFactors(ca.back()->Getmultipliers());
       }

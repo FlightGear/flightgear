@@ -77,7 +77,9 @@ FGJSBsim::FGJSBsim( double dt )
     Position     = fdmex->GetPosition();
     Auxiliary    = fdmex->GetAuxiliary();
     Aerodynamics = fdmex->GetAerodynamics();
-
+    
+    Atmosphere->UseInternal();
+    
     fgic=new FGInitialCondition(fdmex);
     needTrim=true;
   
@@ -130,15 +132,12 @@ FGJSBsim::~FGJSBsim(void) {
 // each subsequent iteration through the EOM
 
 void FGJSBsim::init() {
-                // Explicitly call the superclass's
-                // init method first.
-    FGInterface::init();
-
-    bool result;
-
+    
     SG_LOG( SG_FLIGHT, SG_INFO, "Starting and initializing JSBsim" );
-
-    Atmosphere->UseInternal();
+   
+    // Explicitly call the superclass's
+    // init method first.
+    FGInterface::init();
 
     SG_LOG( SG_FLIGHT, SG_INFO, "  Initializing JSBSim with:" );
 

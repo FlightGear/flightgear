@@ -38,6 +38,7 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include "FGDefs.h"
 #include "FGPiston.h"
 
 static const char *IdSrc = "$Id$";

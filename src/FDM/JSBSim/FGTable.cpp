@@ -37,7 +37,12 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGTable.h"
+
+#if defined ( sgi ) && !defined( __GNUC__ )
+#include <iomanip.h>
+#else
 #include <iomanip>
+#endif
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_TABLE;

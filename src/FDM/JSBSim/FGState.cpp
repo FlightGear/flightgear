@@ -344,7 +344,11 @@ bool FGState::Reset(string path, string acname, string fname) {
 
   resetDef = path + "/" + acname + "/" + fname + ".xml";
 
+#if defined ( sgi ) && !defined( __GNUC__ )
+  ifstream resetfile(resetDef.c_str(), ios::in );
+#else
   ifstream resetfile(resetDef.c_str(), ios::in | ios::binary );
+#endif
 
   if (resetfile) {
     resetfile >> U;

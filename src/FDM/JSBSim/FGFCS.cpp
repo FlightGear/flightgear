@@ -37,6 +37,8 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include "FGDefs.h"
+
 #include "FGFCS.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
