@@ -41,11 +41,6 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#if defined ( __sun__ )
-extern "C" void *memmove(void *, const void *, size_t);
-extern "C" void *memset(void *, int, size_t);
-#endif
-
 #include <vector>
 
 #include <Bucket/bucketutils.h>
@@ -54,10 +49,9 @@ extern "C" void *memset(void *, int, size_t);
 #include <Math/mat3.h>
 #include <Math/point3d.hxx>
 
-#ifdef NEEDNAMESPACESTD
-using namespace std;
-#endif
-
+#include <Include/compiler.h>
+//FG_USING_NAMESPACE(std);
+FG_USING_STD(vector);
 
 // Maximum nodes per tile
 #define MAX_NODES 2000
@@ -79,6 +73,10 @@ private:
 
 	fgFACE( const fgFACE & image )
 	    : n1(image.n1), n2(image.n2), n3(image.n3) {}
+
+	fgFACE& operator= ( const fgFACE & image ) {
+	    n1 = image.n1; n2 = image.n2; n3 = image.n3; return *this;
+	}
 
 	~fgFACE() {}
     };
@@ -113,6 +111,8 @@ public:
     typedef container::const_iterator const_iterator;
 
     container faces;
+
+public:
 
     // number of faces in this fragment
     int num_faces() {
@@ -153,14 +153,18 @@ public:
 	faces.erase( faces.begin(), faces.end() );
     }
 
-    int deleteDisplayList() {
+    int deleteDisplayList() const {
 	xglDeleteLists( display_list, 1 ); return 0;
     }
+
+    friend bool operator== ( const fgFRAGMENT::fgFACE & lhs,
+			     const fgFRAGMENT::fgFACE & rhs );
+    friend bool operator== ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs );
 };
 
 inline bool
-operator == ( const fgFRAGMENT::fgFACE& lhs,
-	      const fgFRAGMENT::fgFACE& rhs )
+operator== ( const fgFRAGMENT::fgFACE& lhs,
+	     const fgFRAGMENT::fgFACE& rhs )
 {
     return (lhs.n1 == rhs.n1) && (lhs.n2 == rhs.n2) && (lhs.n3 == rhs.n3);
 }
@@ -175,6 +179,9 @@ operator == ( const fgFRAGMENT & lhs, const fgFRAGMENT & rhs ) {
 
 
 // $Log$
+// Revision 1.7  1998/11/02 18:29:00  curt
+// Portability changes for the Borland compiler.
+//
 // Revision 1.6  1998/10/16 00:54:38  curt
 // Converted to Point3D class.
 //
