@@ -598,9 +598,11 @@ void fgRenderFrame() {
             static double cur_lat = 9999.0;
             static double cur_long = 9999.0;
             static double cur_alt = -9999.0;
+            static float view_heading = 9999.0;
 
             if ((fabs(sun_pos_rotation - cur_light_params.sun_rotation) > 5e-3)
                 || (fabs(sun_pos_angle - cur_light_params.sun_angle) > 5e-3)
+                || (fabs(view_heading - current__view->getHeading_deg()) > 5e-3)
                 || (init != 0))
             {
                 if (init > 0)
@@ -608,6 +610,7 @@ void fgRenderFrame() {
 
                 sun_pos_angle = cur_light_params.sun_angle;
                 sun_pos_rotation = cur_light_params.sun_rotation;
+                view_heading = current__view->getHeading_deg ();
 
                 thesky->repaint( cur_light_params.sky_color,
                              cur_light_params.adj_fog_color,
