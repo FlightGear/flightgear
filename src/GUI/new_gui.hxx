@@ -19,24 +19,20 @@ SG_USING_STD(map);
 #include <Main/fgfs.hxx>
 
 
-class NewGUI : public FGSubsystem
+class GUIWidget
 {
 public:
-
-    NewGUI ();
-    virtual ~NewGUI ();
-    virtual void init ();
-    virtual void update (double delta_time_sec);
-
-    virtual void display (const string &name);
+    GUIWidget (SGPropertyNode_ptr props);
+    virtual ~GUIWidget ();
 
     virtual void updateProperties ();
     virtual void applyProperties ();
-    virtual void closeActiveObject ();
 
 private:
 
-    void readDir (const char * path);
+    void display (SGPropertyNode_ptr props);
+
+    GUIWidget (const GUIWidget &); // just for safety
 
     puObject * makeObject (SGPropertyNode * props,
                            int parentWidth, int parentHeight);
@@ -46,8 +42,7 @@ private:
     void setupGroup (puGroup * group, SGPropertyNode * props,
                      int width, int height, bool makeFrame = false);
 
-    map<string,SGPropertyNode_ptr> _objects;
-    puObject * _activeObject;
+    puObject * _object;
 
     struct PropertyObject {
         PropertyObject (puObject * object, SGPropertyNode_ptr node);
@@ -56,6 +51,25 @@ private:
     };
 
     vector<PropertyObject> _propertyObjects;
+
+};
+
+
+class NewGUI : public FGSubsystem
+{
+public:
+
+    NewGUI ();
+    virtual ~NewGUI ();
+    virtual void init ();
+    virtual void update (double delta_time_sec);
+    virtual void display (const string &name);
+
+private:
+
+    void readDir (const char * path);
+
+    map<string,SGPropertyNode_ptr> _widgets;
 
 };
 

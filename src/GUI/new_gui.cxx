@@ -12,13 +12,19 @@ SG_USING_STD(vector);
 #include <Main/fg_props.hxx>
 
 
+
+////////////////////////////////////////////////////////////////////////
+// Callbacks.
+////////////////////////////////////////////////////////////////////////
+
+
 /**
  * Callback to update all property values.
  */
 static void
 update_callback (puObject * object)
 {
-    ((NewGUI *)object->getUserData())->updateProperties();
+    ((GUIWidget *)object->getUserData())->updateProperties();
 }
 
 
@@ -28,7 +34,7 @@ update_callback (puObject * object)
 static void
 close_callback (puObject * object)
 {
-    ((NewGUI *)object->getUserData())->closeActiveObject();
+    delete ((GUIWidget *)object->getUserData());
 }
 
 
@@ -38,7 +44,7 @@ close_callback (puObject * object)
 static void
 apply_callback (puObject * object)
 {
-    ((NewGUI *)object->getUserData())->applyProperties();
+    ((GUIWidget *)object->getUserData())->applyProperties();
     update_callback(object);
 }
 
@@ -54,58 +60,44 @@ close_apply_callback (puObject * object)
 }
 
 
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of GUIWidget.
+////////////////////////////////////////////////////////////////////////
 
-NewGUI::NewGUI ()
-    : _activeObject(0)
+GUIWidget::GUIWidget (SGPropertyNode_ptr props)
+    : _object(0)
 {
+    display(props);
 }
 
-NewGUI::~NewGUI ()
+GUIWidget::~GUIWidget ()
 {
-}
-
-void
-NewGUI::init ()
-{
-    char path[1024];
-    ulMakePath(path, getenv("FG_ROOT"), "gui");
-    std::cerr << "Reading from " << path << std::endl;
-    readDir(path);
-    std::cerr << "Done reading from " << path << std::endl;
+    delete _object;
 }
 
 void
-NewGUI::update (double delta_time_sec)
+GUIWidget::display (SGPropertyNode_ptr props)
 {
-    // NO OP
-}
-
-void
-NewGUI::display (const string &name)
-{
-    if (_activeObject != 0) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Another GUI object is still active");
+    if (_object != 0) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "This widget is already active");
         return;
     }
 
-    if (_objects.find(name) == _objects.end()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Dialog " << name << " not defined");
-        return;
-    }
-    SGPropertyNode_ptr props = _objects[name];
-    
-    _activeObject = makeObject(props, 1024, 768);
+    _object = makeObject(props, 1024, 768);
 
-    if (_activeObject != 0) {
-        _activeObject->reveal();
+    if (_object != 0) {
+        _object->reveal();
     } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Dialog " << name
+        SG_LOG(SG_GENERAL, SG_ALERT, "Widget "
+               << props->getStringValue("name", "[unnamed]")
                << " does not contain a proper GUI definition");
     }
 }
 
+
 void
-NewGUI::applyProperties ()
+GUIWidget::applyProperties ()
 {
     for (int i = 0; i < _propertyObjects.size(); i++) {
         puObject * object = _propertyObjects[i].object;
@@ -115,7 +107,7 @@ NewGUI::applyProperties ()
 }
 
 void
-NewGUI::updateProperties ()
+GUIWidget::updateProperties ()
 {
     for (int i = 0; i < _propertyObjects.size(); i++) {
         puObject * object = _propertyObjects[i].object;
@@ -124,59 +116,8 @@ NewGUI::updateProperties ()
     }
 }
 
-void
-NewGUI::closeActiveObject ()
-{
-    delete _activeObject;
-    _activeObject = 0;
-    _propertyObjects.clear();
-}
-
-void
-NewGUI::readDir (const char * path)
-{
-    ulDir * dir = ulOpenDir(path);
-    std::cerr << "Directory opened successfully" << std::endl;
-
-    if (dir == 0) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Failed to read GUI files from "
-               << path);
-        return;
-    }
-
-    ulDirEnt * dirEnt = ulReadDir(dir);
-    while (dirEnt != 0) {
-        char subpath[1024];
-
-        ulMakePath(subpath, path, dirEnt->d_name);
-
-        std::cerr << "Subpath is " << subpath << std::endl;
-        if (dirEnt->d_isdir && dirEnt->d_name[0] != '.') {
-            readDir(subpath);
-        } else {
-            SGPropertyNode_ptr props = new SGPropertyNode;
-            try {
-                readProperties(subpath, props);
-            } catch (const sg_exception &ex) {
-                SG_LOG(SG_INPUT, SG_ALERT, "Error parsing GUI file "
-                       << subpath);
-            }
-            if (!props->hasValue("name")) {
-                SG_LOG(SG_INPUT, SG_WARN, "GUI file " << subpath
-                   << " has no name; skipping.");
-            } else {
-                string name = props->getStringValue("name");
-                SG_LOG(SG_INPUT, SG_BULK, "Saving GUI node " << name);
-                _objects[name] = props;
-            }
-        }
-        dirEnt = ulReadDir(dir);
-    }
-    ulCloseDir(dir);
-}
-
 puObject *
-NewGUI::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
+GUIWidget::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 {
     int width = props->getIntValue("width", parentWidth);
     int height = props->getIntValue("height", parentHeight);
@@ -227,7 +168,7 @@ NewGUI::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 }
 
 void
-NewGUI::setupObject (puObject * object, SGPropertyNode * props)
+GUIWidget::setupObject (puObject * object, SGPropertyNode * props)
 {
     object->setUserData(this);
 
@@ -262,7 +203,7 @@ NewGUI::setupObject (puObject * object, SGPropertyNode * props)
 }
 
 void
-NewGUI::setupGroup (puGroup * group, SGPropertyNode * props,
+GUIWidget::setupGroup (puGroup * group, SGPropertyNode * props,
                     int width, int height, bool makeFrame)
 {
     setupObject(group, props);
@@ -276,10 +217,89 @@ NewGUI::setupGroup (puGroup * group, SGPropertyNode * props,
     group->close();
 }
 
-NewGUI::PropertyObject::PropertyObject (puObject * o, SGPropertyNode_ptr n)
+GUIWidget::PropertyObject::PropertyObject (puObject * o, SGPropertyNode_ptr n)
     : object(o),
       node(n)
 {
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of NewGUI.
+////////////////////////////////////////////////////////////////////////
+
+
+NewGUI::NewGUI ()
+{
+}
+
+NewGUI::~NewGUI ()
+{
+}
+
+void
+NewGUI::init ()
+{
+    char path[1024];
+    ulMakePath(path, getenv("FG_ROOT"), "gui");
+    readDir(path);
+}
+
+void
+NewGUI::update (double delta_time_sec)
+{
+    // NO OP
+}
+
+void
+NewGUI::display (const string &name)
+{
+    if (_widgets.find(name) == _widgets.end())
+        SG_LOG(SG_GENERAL, SG_ALERT, "Dialog " << name << " not defined");
+    else
+        new GUIWidget(_widgets[name]); // PUI will delete it
+}
+
+void
+NewGUI::readDir (const char * path)
+{
+    ulDir * dir = ulOpenDir(path);
+
+    if (dir == 0) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Failed to read GUI files from "
+               << path);
+        return;
+    }
+
+    ulDirEnt * dirEnt = ulReadDir(dir);
+    while (dirEnt != 0) {
+        char subpath[1024];
+
+        ulMakePath(subpath, path, dirEnt->d_name);
+
+        if (dirEnt->d_isdir && dirEnt->d_name[0] != '.') {
+            readDir(subpath);
+        } else {
+            SGPropertyNode_ptr props = new SGPropertyNode;
+            try {
+                readProperties(subpath, props);
+            } catch (const sg_exception &ex) {
+                SG_LOG(SG_INPUT, SG_ALERT, "Error parsing GUI file "
+                       << subpath);
+            }
+            if (!props->hasValue("name")) {
+                SG_LOG(SG_INPUT, SG_WARN, "GUI file " << subpath
+                   << " has no name; skipping.");
+            } else {
+                string name = props->getStringValue("name");
+                SG_LOG(SG_INPUT, SG_BULK, "Saving GUI node " << name);
+                _widgets[name] = props;
+            }
+        }
+        dirEnt = ulReadDir(dir);
+    }
+    ulCloseDir(dir);
 }
 
 // end of new_gui.cxx
