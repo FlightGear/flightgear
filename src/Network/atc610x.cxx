@@ -397,6 +397,8 @@ bool FGATC610x::open() {
 	= fgGetNode( "/radios/nav[1]/frequencies/standby-mhz", true );
 
     adf_on_off_vol = fgGetNode( "/radios/adf/on-off-volume", true );
+    adf_adf_btn = fgGetNode( "/radios/adf/adf-btn", true );
+    adf_bfo_btn = fgGetNode( "/radios/adf/bfo-btn", true );
     adf_freq = fgGetNode( "/radios/adf/frequencies/selected-khz", true );
     adf_stby_freq = fgGetNode( "/radios/adf/frequencies/standby-khz", true );
     adf_stby_mode = fgGetNode( "/radios/adf/stby-mode", true );
@@ -489,11 +491,45 @@ bool FGATC610x::do_analog_in() {
 // Write the lights
 /////////////////////////////////////////////////////////////////////
 
-bool FGATC610x::do_lights() {
+bool FGATC610x::do_lights( double dt ) {
 
+    // Marker beacons
     ATC610xSetLamp( lamps_fd, 4, inner->getBoolValue() );
     ATC610xSetLamp( lamps_fd, 5, middle->getBoolValue() );
     ATC610xSetLamp( lamps_fd, 3, outer->getBoolValue() );
+
+    // ADF annunciators
+    if ( adf_on_off_vol->getDoubleValue() >= 0.01 ) {
+        ATC610xSetLamp( lamps_fd, 11, !adf_adf_btn->getBoolValue() ); // ANT
+        ATC610xSetLamp( lamps_fd, 12, adf_adf_btn->getBoolValue() ); // ADF
+        ATC610xSetLamp( lamps_fd, 13, adf_bfo_btn->getBoolValue() ); // BFO
+        ATC610xSetLamp( lamps_fd, 14, !adf_stby_mode->getBoolValue() ); // FRQ
+        ATC610xSetLamp( lamps_fd, 15, adf_stby_mode->getBoolValue() &&
+                        !adf_timer_mode->getBoolValue() ); // FLT
+
+        // ET needs to blink when we are in ET set countdown time
+        if ( adf_count_mode->getIntValue() < 2 ) {
+            ATC610xSetLamp( lamps_fd, 16, adf_stby_mode->getBoolValue() &&
+                            adf_timer_mode->getBoolValue() ); // ET
+        } else {
+            et_flash_time += dt;
+            if ( et_flash && et_flash_time > 0.5 ) {
+                et_flash = false;
+                et_flash_time -= 0.5;
+            } else if ( !et_flash && et_flash_time > 0.2 ) {
+                et_flash = true;
+                et_flash_time -= 0.2;
+            }
+            ATC610xSetLamp( lamps_fd, 16, et_flash ); // ET
+        }
+    } else {
+        ATC610xSetLamp( lamps_fd, 11, false ); // ANT
+        ATC610xSetLamp( lamps_fd, 12, false ); // ADF
+        ATC610xSetLamp( lamps_fd, 13, false ); // BFO
+        ATC610xSetLamp( lamps_fd, 14, false ); // FRQ
+        ATC610xSetLamp( lamps_fd, 15, false ); // FLT
+        ATC610xSetLamp( lamps_fd, 16, false ); // ET
+    }
 
     return true;
 }
@@ -1232,12 +1268,17 @@ bool FGATC610x::do_switches() {
 
 
 bool FGATC610x::process() {
+    SGTimeStamp current;
+    current.stamp();
+
+    double dt = (double)(current - last_time_stamp) / 1000000;
+    last_time_stamp.stamp();
 
     // Lock the hardware, skip if it's not ready yet
     if ( ATC610xLock( lock_fd ) > 0 ) {
 
 	do_analog_in();
-	do_lights();
+	do_lights( dt );
 	do_radio_switches();
 	do_radio_display();
 	do_steppers();

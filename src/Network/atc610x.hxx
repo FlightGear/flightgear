@@ -30,6 +30,8 @@
 
 #include <plib/netChat.h>
 
+#include <simgear/timing/timestamp.hxx>
+
 #include <Main/fg_props.hxx>
 
 #include "protocol.hxx"
@@ -76,15 +78,21 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *com2_freq, *com2_stby_freq;
     SGPropertyNode *nav1_freq, *nav1_stby_freq;
     SGPropertyNode *nav2_freq, *nav2_stby_freq;
+    SGPropertyNode *adf_adf_btn, *adf_bfo_btn;
     SGPropertyNode *adf_on_off_vol;
-    SGPropertyNode *adf_freq, *adf_stby_freq, *adf_stby_mode, *adf_timer_mode;
+    SGPropertyNode *adf_freq, *adf_stby_freq;
+    SGPropertyNode *adf_stby_mode, *adf_timer_mode;
     SGPropertyNode *adf_count_mode, *adf_flight_timer, *adf_elapsed_timer;
     SGPropertyNode *inner, *middle, *outer;
 
     int dme_switch;
 
+    SGTimeStamp last_time_stamp;
+    double et_flash_time;
+    bool et_flash; 
+
     bool do_analog_in();
-    bool do_lights();
+    bool do_lights( double dt );
     bool do_radio_switches();
     bool do_radio_display();
     bool do_steppers();
@@ -92,7 +100,10 @@ class FGATC610x : public FGProtocol {
 
 public:
 
-    FGATC610x() { }
+    FGATC610x():
+        et_flash_time(0.0)
+    {
+    }
 
     ~FGATC610x() { }
 

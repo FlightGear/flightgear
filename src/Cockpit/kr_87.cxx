@@ -258,15 +258,19 @@ FGKR_87::update(double dt)
             // button depressed and was last iteration too
             tmp_timer += dt;
             cout << "tmp_timer = " << tmp_timer << endl;
-        }
-        if ( set_rst_btn == 0 && set_rst_btn != last_set_rst_btn ) {
-            // button released
             if ( tmp_timer > 2.0 ) {
                 // button held depressed for 2 seconds
                 cout << "entering elapsed count down mode" << endl;
                 timer_mode = 1;
                 count_mode = 2;
                 elapsed_timer = 0.0;
+            }    
+        }
+        if ( set_rst_btn == 0 && set_rst_btn != last_set_rst_btn ) {
+            // button released
+            if ( tmp_timer > 2.0 ) {
+                // button held depressed for 2 seconds, don't adjust
+                // mode, just exit                
             } else if ( count_mode == 2 ) {
                 count_mode = 1;
             } else {
