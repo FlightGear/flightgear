@@ -279,14 +279,7 @@ FGPanel::update (double dt)
         return;
     }
 
-				// If the mouse is down, do something
-    if (_mouseDown) {
-        _mouseDelay--;
-        if (_mouseDelay < 0) {
-            _mouseInstrument->doMouseAction(_mouseButton, _mouseX, _mouseY);
-            _mouseDelay = 2;
-        }
-    }
+    updateMouseDelay();
 
 				// Now, draw the panel
     float aspect_adjust = get_aspect_adjust(_xsize_node->getIntValue(),
@@ -295,6 +288,22 @@ FGPanel::update (double dt)
         update(WIN_X, int(WIN_W * aspect_adjust), WIN_Y, WIN_H);
     else
         update(WIN_X, WIN_W, WIN_Y, int(WIN_H / aspect_adjust));
+}
+
+/**
+ * Handle repeatable mouse events.  Called from update() and from
+ * fgUpdate3DPanels().  This functionality needs to move into the
+ * input subsystem.  Counting a tick every two frames is clumsy...
+ */
+void FGPanel::updateMouseDelay()
+{
+    if (_mouseDown) {
+        _mouseDelay--;
+        if (_mouseDelay < 0) {
+            _mouseInstrument->doMouseAction(_mouseButton, _mouseX, _mouseY);
+            _mouseDelay = 2;
+        }
+    }
 }
 
 
@@ -494,6 +503,42 @@ FGPanel::setYOffset (int offset)
 }
 
 /**
+ * Handle a mouse action in panel-local (not screen) coordinates.
+ * Used by the 3D panel code in Model/panelnode.cxx, in situations
+ * where the panel doesn't control its own screen location.
+ */
+bool
+FGPanel::doLocalMouseAction(int button, int updown, int x, int y)
+{
+  // Note a released button and return
+  if (updown == 1) {
+    _mouseDown = false;
+    _mouseInstrument = 0;
+    return false;
+  }
+
+  // Search for a matching instrument.
+  for (int i = 0; i < (int)_instruments.size(); i++) {
+    FGPanelInstrument *inst = _instruments[i];
+    int ix = inst->getXPos();
+    int iy = inst->getYPos();
+    int iw = inst->getWidth() / 2;
+    int ih = inst->getHeight() / 2;
+    if (x >= ix - iw && x < ix + iw && y >= iy - ih && y < iy + ih) {
+      _mouseDown = true;
+      _mouseDelay = 20;
+      _mouseInstrument = inst;
+      _mouseButton = button;
+      _mouseX = x - ix;
+      _mouseY = y - iy;
+      // Always do the action once.
+      return _mouseInstrument->doMouseAction(_mouseButton, _mouseX, _mouseY);
+    }
+  }
+  return false;
+}
+
+/**
  * Perform a mouse action.
  */
 bool
@@ -503,14 +548,6 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
   int xsize = _xsize_node->getIntValue();
   int ysize = _ysize_node->getIntValue();
   float aspect_adjust = get_aspect_adjust(xsize, ysize);
-
-				// Note a released button and return
-  // cerr << "Doing mouse action\n";
-  if (updown == 1) {
-    _mouseDown = false;
-    _mouseInstrument = 0;
-    return false;
-  }
 
 				// Scale for the real window size.
   if (aspect_adjust < 1.0) {
@@ -525,26 +562,10 @@ FGPanel::doMouseAction (int button, int updown, int x, int y)
   x -= _x_offset;
   y -= _y_offset;
 
-				// Search for a matching instrument.
-  for (int i = 0; i < (int)_instruments.size(); i++) {
-    FGPanelInstrument *inst = _instruments[i];
-    int ix = inst->getXPos();
-    int iy = inst->getYPos();
-    int iw = inst->getWidth() / 2;
-    int ih = inst->getHeight() / 2;
-    if (x >= ix - iw && x < ix + iw && y >= iy - ih && y < iy + ih) {
-      _mouseDown = true;
-      _mouseDelay = 20;
-      _mouseInstrument = inst;
-      _mouseButton = button;
-      _mouseX = x - ix;
-      _mouseY = y - iy;
-				// Always do the action once.
-      return _mouseInstrument->doMouseAction(_mouseButton, _mouseX, _mouseY);
-    }
-  }
-  return false;
-}
+  // Having fixed up the coordinates, fall through to the local
+  // coordinate handler.
+  doLocalMouseAction(button, updown, x, y);
+} 
 
 
 

@@ -107,6 +107,7 @@ SG_USING_STD(endl);
 #include <Model/model.hxx>
 #include <Model/modelmgr.hxx>
 #include <Main/location.hxx>
+#include <Model/panelnode.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
@@ -133,6 +134,7 @@ SG_USING_STD(endl);
 #include <FDM/ADA.hxx>
 #include <Scenery/tileentry.hxx>
 
+#include "fg_commands.hxx"
 
 // #define FG_EXPERIMENTAL_LIGHTING
 #ifdef FG_EXPERIMENTAL_LIGHTING
@@ -840,6 +842,7 @@ void fgRenderFrame() {
 	if ( current_panel != NULL ) {
 	    current_panel->update(delta_time_sec);
 	}
+        fgUpdate3DPanels();
 
 	// We can do translucent menus, so why not. :-)
 	menus->apply();
@@ -1636,6 +1639,11 @@ int mainLoop( int argc, char **argv ) {
     globals->set_scenery( new FGScenery );
     globals->get_scenery()->init();
     globals->get_scenery()->bind();
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the property-based built-in commands
+    ////////////////////////////////////////////////////////////////////
+    fgInitCommands();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the general model subsystem.

@@ -2,17 +2,50 @@
 #  include <config.h>
 #endif
 
+#include <vector>
+
+#include <GL/gl.h>
+#include <plib/sg.h>
+
 #include <Main/fg_props.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
-#include <GL/gl.h>
 #include "panelnode.hxx"
+
+// Static (!) handling for all 3D panels in the program.  Very
+// clumsy.  Replace with per-aircraft handling.
+vector<FGPanelNode*> all_3d_panels;
+bool fgHandle3DPanelMouseEvent(int button, int updown, int x, int y)
+{
+    for(int i=0; i<all_3d_panels.size(); i++)
+        if(all_3d_panels[i]->doMouseAction(button, updown, x, y))
+            return true;
+    return false;
+}
+
+void fgUpdate3DPanels()
+{
+    for(int i=0; i<all_3d_panels.size(); i++)
+        all_3d_panels[i]->getPanel()->updateMouseDelay();
+}
 
 FGPanelNode::FGPanelNode(SGPropertyNode* props)
 {
     // Make an FGPanel object.  But *don't* call init() or bind() on
     // it -- those methods touch static state.
     _panel = fgReadPanel(props->getStringValue("path"));
+
+    // Never mind.  We *have* to call init to make sure the static
+    // state is initialized (it's not, if there aren't any 2D
+    // panels).  This is a memory leak and should be fixed!`
+    _panel->init();
+
+    // Initialize the matrices to the identity.  PLib prints warnings
+    // when trying to invert singular matrices (e.g. when not using a
+    // 3D panel).
+    for(int i=0; i<4; i++)
+        for(int j=0; j<4; j++)
+            _lastModelview[4*i+j] = _lastProjection[4*i+j] = i==j ? 1 : 0;
 
     // Read out the pixel-space info
     _xmax = _panel->getWidth();
@@ -34,7 +67,7 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props)
     _bottomRight[1] = pt->getFloatValue("y-m");
     _bottomRight[2] = pt->getFloatValue("z-m");
 
-    // Now generate out transformation matrix.  For shorthand, use
+    // Now generate our transformation matrix.  For shorthand, use
     // "a", "b", and "c" as our corners and "m" as the matrix. The
     // vector u goes from a to b, v from a to c, and w is a
     // perpendicular cross product.
@@ -74,6 +107,9 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props)
                    (cz-a[2])*(cz-a[2]));
     bsphere.setCenter(cx, cy, cz);
     bsphere.setRadius(r);
+
+    // All done.  Add us to the list
+    all_3d_panels.push_back(this);
 }
 
 FGPanelNode::~FGPanelNode()
@@ -92,13 +128,60 @@ void FGPanelNode::draw_geometry()
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glMultMatrixf(_xform);
+
+    // Grab the matrix state, so that we can get back from screen
+    // coordinates to panel coordinates when the user clicks the
+    // mouse.
+    glGetFloatv(GL_MODELVIEW_MATRIX, _lastModelview);
+    glGetFloatv(GL_PROJECTION_MATRIX, _lastProjection);
+    glGetIntegerv(GL_VIEWPORT, _lastViewport);
+
     _panel->draw();
+
+
     glPopMatrix();
+}
+
+bool FGPanelNode::doMouseAction(int button, int updown, int x, int y)
+{
+    // Covert the screen coordinates to viewport coordinates in the
+    // range [0:1], then transform to OpenGL "post projection" coords
+    // in [-1:1].  Remember the difference in Y direction!
+    float vx = (x + 0.5 - _lastViewport[0]) / _lastViewport[2];
+    float vy = (y + 0.5 - _lastViewport[1]) / _lastViewport[3];
+    vx = 2*vx - 1;
+    vy = 1 - 2*vy;
+
+    // Make two vectors in post-projection coordinates at the given
+    // screen, one in the near field and one in the far field.
+    sgVec3 a, b;
+    a[0] = b[0] = vx;
+    a[1] = b[1] = vy;
+    a[2] =  0.75; // "Near" Z value
+    b[2] = -0.75; // "Far" Z value
+
+    // Run both vectors "backwards" through the OpenGL matrix
+    // transformation.  Remember to w-normalize the vectors!
+    sgMat4 m;
+    sgMultMat4(m, *(sgMat4*)_lastProjection, *(sgMat4*)_lastModelview);
+    sgInvertMat4(m);
+
+    sgFullXformPnt3(a, m);
+    sgFullXformPnt3(b, m);
+
+    // And find their intersection on the z=0 plane.  The resulting X
+    // and Y coordinates are the hit location in panel coordinates.
+    float dxdz = (b[0] - a[0]) / (b[2] - a[2]);
+    float dydz = (b[1] - a[1]) / (b[2] - a[2]);
+    int panelX = (int)(a[0] - a[2]*dxdz + 0.5);
+    int panelY = (int)(a[1] - a[2]*dydz + 0.5);
+
+    return _panel->doLocalMouseAction(button, updown, panelX, panelY);
 }
 
 void FGPanelNode::die()
 {
     SG_LOG(SG_ALL,SG_ALERT,"Unimplemented function called on FGPanelNode");
-    *(int*)0=0;
+    exit(1);
 }
 

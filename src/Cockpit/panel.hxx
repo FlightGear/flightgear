@@ -145,6 +145,8 @@ public:
   virtual void update (double dt);
   virtual void update (GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh);
 
+  virtual void updateMouseDelay();
+
 				// transfer pointer ownership!!!
   virtual void addInstrument (FGPanelInstrument * instrument);
 
@@ -180,6 +182,7 @@ public:
 
 				// Handle a mouse click.
   virtual bool doMouseAction (int button, int updown, int x, int y);
+  virtual bool doLocalMouseAction(int button, int updown, int x, int y);
 
 private:
   void setupVirtualCockpit();

@@ -8,6 +8,12 @@ class SGPropertyNode;
 // many methods, mostly involved with modelling and runtime
 // inspection, are unimplemented.
 
+// Static mouse handler for all FGPanelNodes.  Very clumsy; this
+// should really be done through our container (an aircraft model,
+// typically).
+bool fgHandle3DPanelMouseEvent(int button, int updown, int x, int y);
+void fgUpdate3DPanels();
+
 class FGPanelNode : public ssgLeaf 
 {
 protected:
@@ -18,7 +24,9 @@ public:
     virtual ~FGPanelNode();
 
     virtual void draw();
-    void mouseEvent(int button, int updown, int x, int y);
+    bool doMouseAction(int button, int updown, int x, int y);
+
+    FGPanel* getPanel() { return _panel; }
 
     virtual void recalcBSphere() { bsphere_is_invalid = 0; }
 

@@ -886,10 +886,16 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         sgVec3 lift_vec;
         sgCopyVec3( lift_vec, up );
 
+        // we fudge agl by 30 meters so that the lifting function
+        // doesn't phase in until we are > 30m agl.
         double agl;
         agl = globals->get_current_view()->getAltitudeASL_ft()
-            * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev();
-
+            * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev()
+            - 30.0;
+        if ( agl < 30.0 ) {
+            agl = 0.0;
+        }
+        
         // sgTrans just happens to be the
         // vector from scenery center to the center of this tile which
         // is what we want to calculate the distance of

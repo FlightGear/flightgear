@@ -54,6 +54,7 @@
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 #include <GUI/gui.h>
+#include <Model/panelnode.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -378,7 +379,9 @@ FGInput::doMouseClick (int b, int updown, int x, int y)
     if (puMouse(b, updown, x, y))
       return;
     else if ((current_panel != 0) &&
-	     current_panel->doMouseAction(b, updown, x, y))
+             current_panel->doMouseAction(b, updown, x, y))
+      return;
+    else if (fgHandle3DPanelMouseEvent(b, updown, x, y))
       return;
   }
 
