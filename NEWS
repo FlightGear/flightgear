@@ -1,21 +1,31 @@
 New in 0.7.3
-* April 27, 2000
-* Simple radio stack added to the instrument panel.  The frequencies are
-  currently hardwired to default values until the UI for changing them
-  is finished.  But, this is enough to fly a compile time selected ILS
-  instrument approach.  You can adjust the radial by clicking the knob on
-  the panel. 
+* May 18, 2000
+* Added a radio stack 2 VOR/ILS and an ADF to the instrument panel.
+  You can change the frequencies by clicking on the knobs on the
+  instrument panels.  You can now navigate with VOR/ADF/DME and fly
+  ILS approaches.
 * Added a chronometer to the instrument panel.
+* Added a "wet" compass to the top of the instrument panel.
 * Compass, vsi, and altitute instruments and vacuum system are more
   accurately modeled.
 * Added a magnetic variation model.
+* Added navaid database management and query code.
+* Added magvar offset to VOR radials.
+* Heading bug now display magnetic heading rather than true heading.
+* Autopilot now has modes to track a VOR and GS.
 * Added custom joystick client support so sim can be flown from a
   remote joystick connected to another machine.  This is in support of
   some custom hardware located in the human factors research lab of the
   university of minnesota.
-* Added navaid database management and query code.
+* HUD controls are a bit different "h" toggles through day/night/off
+  modes and "H" cycles through brightness levels.
+* Norman Vine contributed code to optionally do antialiased hud lines
+  on hardware that supports this.  Norman also contributed additional
+  hud cleanups and updates.
 * Updates to JSBsim flight dynamics code that includes a generic
-  reconfigurable flight control system.
+  reconfigurable flight control system, a initial state trimming routine,
+  support for wind and weather, support for flaps, independent trim control,
+  config files changes
 * Updates to LaRCsim flight dynamcis code contributed by UIUC that
   allows loading aircraft specifications at runtime from config files.
   UIUC is using flightgear as a platform to do icing research.  The UIUC
@@ -31,6 +41,8 @@ New in 0.7.3
 * Converted ssgVTable's to ssgVtxTables which do proper memory
   management and should facilitate use of compiled vertex arrays once
   ssg add support for these.
+* Overhauled autopilot internals, separated out the gui controls from
+  the actual autopilot code.
 * Cygwin32 build fixes
 * MSVC++ build fixes
 * Mac build fixes
