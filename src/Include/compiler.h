@@ -211,6 +211,7 @@
 
 
 #if defined ( sun )
+#  include <strings.h>
 #  include <memory.h>
 #  if defined ( __cplusplus )
      // typedef unsigned int size_t;
