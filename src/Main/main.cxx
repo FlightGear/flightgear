@@ -1355,9 +1355,9 @@ int main( int argc, char **argv ) {
 		   ephem->getPlanets(), 60000.0,
 		   ephem->getNumStars(),
 		   ephem->getStars(), 60000.0 );
-    thesky->add_cloud_layer( 1000.0, 200.0, 50.0 );
-    thesky->add_cloud_layer( 1800.0, 400.0, 100.0 );
-    thesky->add_cloud_layer( 4000.0, 20.0, 10.0 );
+    thesky->add_cloud_layer( 1000.0, 200.0, 50.0, SG_CLOUD_MOSTLY_SUNNY );
+    thesky->add_cloud_layer( 1800.0, 400.0, 100.0, SG_CLOUD_OVERCAST );
+    thesky->add_cloud_layer( 5000.0, 20.0, 10.0, SG_CLOUD_CIRRUS );
 
     // Terrain branch
     terrain = new ssgBranch;

@@ -112,7 +112,9 @@ public:
     bool load( const string& mpath );
 
     // Add the named texture with default properties
-    bool add_item( const string &name );
+    bool add_item( const string &tex_path );
+    bool add_item( const string &mat_name, const string &tex_path );
+    bool add_item( const string &mat_name, ssgSimpleState *state );
 
     // find a material record by material name
     FGNewMat *find( const string& material );

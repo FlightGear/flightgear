@@ -125,19 +125,27 @@ bool FGMaterialLib::load( const string& mpath ) {
 
 
 // Load a library of material properties
-bool FGMaterialLib::add_item ( const string &path )
+bool FGMaterialLib::add_item ( const string &tex_path )
 {
-    string material_name = path;
-    int pos = path.rfind( "/" );
+    string material_name = tex_path;
+    int pos = tex_path.rfind( "/" );
     material_name = material_name.substr( pos + 1 );
 
-    FGNewMat m( material_name );
+    return add_item( material_name, tex_path );
+}
 
-    // build the ssgSimpleState
-    FGPath tex_file( path );
+
+// Load a library of material properties
+bool FGMaterialLib::add_item ( const string &mat_name, const string &full_path )
+{
+    int pos = full_path.rfind( "/" );
+    string tex_name = full_path.substr( pos + 1 );
+    string tex_path = full_path.substr( 0, pos );
+
+    FGNewMat m( mat_name, tex_name );
 
     FG_LOG( FG_TERRAIN, FG_INFO, "  Loading material " 
-	    << material_name << " (" << tex_file.c_str() << ")");
+	    << mat_name << " (" << tex_path << ")");
 
 #if EXTRA_DEBUG
     m.dump_info();
@@ -150,9 +158,28 @@ bool FGMaterialLib::add_item ( const string &path )
 	shade_model = GL_FLAT;
     }
 
-    m.build_ssg_state( path, shade_model, current_options.get_textures() );
+    m.build_ssg_state( tex_path, shade_model, current_options.get_textures() );
 
-    material_lib.matlib[material_name] = m;
+    material_lib.matlib[mat_name] = m;
+
+    return true;
+}
+
+
+// Load a library of material properties
+bool FGMaterialLib::add_item ( const string &mat_name, ssgSimpleState *state )
+{
+    FGNewMat m( mat_name );
+    m.set_ssg_state( state );
+
+    FG_LOG( FG_TERRAIN, FG_INFO, "  Loading material given a premade "
+	    << "ssgSimpleState = " << mat_name );
+
+#if EXTRA_DEBUG
+    m.dump_info();
+#endif
+
+    material_lib.matlib[mat_name] = m;
 
     return true;
 }

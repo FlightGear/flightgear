@@ -81,6 +81,7 @@ public:
     // Constructor
     FGNewMat ( void );
     FGNewMat ( const string& name );
+    FGNewMat ( const string &mat_name, const string &tex_name );
 
     // Destructor
     ~FGNewMat ( void );
@@ -90,6 +91,7 @@ public:
     // void load_texture( const string& root );
     void build_ssg_state( const string& path, 
 			  GLenum shade_model, bool texture_default );
+    void set_ssg_state( ssgSimpleState *s );
 
     inline string get_material_name() const { return material_name; }
     inline void set_material_name( const string& n ) { material_name = n; }

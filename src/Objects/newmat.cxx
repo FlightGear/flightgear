@@ -46,8 +46,15 @@ FGNewMat::FGNewMat ( void ) {
 // Constructor
 FGNewMat::FGNewMat ( const string &name )
 {
-    material_name = name;
-    texture_name = name;
+    FGNewMat( name, name );
+}
+
+
+// Constructor
+FGNewMat::FGNewMat ( const string &mat_name, const string &tex_name )
+{
+    material_name = mat_name;
+    texture_name = tex_name;
     xsize = ysize = 0;
     alpha = 0; 
     ambient[0]  = ambient[1]  = ambient[2]  = ambient[3]  = 1.0;
@@ -112,6 +119,43 @@ void FGNewMat::build_ssg_state( const string& path,
     } else {
 	state->selectStep(1);
     }
+}
+
+
+void FGNewMat::set_ssg_state( ssgSimpleState *s ) {
+    state = new ssgStateSelector(2);
+    textured = s;
+    nontextured = new ssgSimpleState();
+
+    // Set up the coloured state
+    nontextured->enable( GL_LIGHTING );
+    nontextured->setShadeModel( GL_FLAT );
+    nontextured->enable ( GL_CULL_FACE      ) ;
+    nontextured->disable( GL_TEXTURE_2D );
+    nontextured->disable( GL_BLEND );
+    nontextured->disable( GL_ALPHA_TEST );
+    nontextured->disable( GL_COLOR_MATERIAL );
+
+    /* cout << "ambient = " << ambient[0] << "," << ambient[1] 
+       << "," << ambient[2] << endl; */
+    nontextured->setMaterial ( GL_AMBIENT, 
+			       ambient[0], ambient[1], 
+			       ambient[2], ambient[3] ) ;
+    nontextured->setMaterial ( GL_DIFFUSE, 
+			       diffuse[0], diffuse[1], 
+			       diffuse[2], diffuse[3] ) ;
+    nontextured->setMaterial ( GL_SPECULAR, 
+			       specular[0], specular[1], 
+			       specular[2], specular[3] ) ;
+    nontextured->setMaterial ( GL_EMISSION, 
+			       emission[0], emission[1], 
+			       emission[2], emission[3] ) ;
+
+    state->setStep( 0, textured );    // textured
+    state->setStep( 1, nontextured ); // untextured
+
+    // Choose the appropriate starting state.
+    state->selectStep(0);
 }
 
 
