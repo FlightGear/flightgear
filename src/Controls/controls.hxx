@@ -25,8 +25,8 @@
 #define _CONTROLS_HXX
 
 #include <simgear/props/props.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
-#include <Main/fgfs.hxx>
 #include <Main/globals.hxx>
 
 #ifndef __cplusplus                                                          
@@ -36,7 +36,7 @@
 
 // Define a structure containing the control parameters
 
-class FGControls : public FGSubsystem
+class FGControls : public SGSubsystem
 {
 
 public:
@@ -240,7 +240,7 @@ public:
     FGControls();
     ~FGControls();
 
-    // Implementation of FGSubsystem.
+    // Implementation of SGSubsystem.
     void init ();
     void bind ();
     void unbind ();

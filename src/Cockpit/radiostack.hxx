@@ -25,11 +25,10 @@
 #define _FG_RADIOSTACK_HXX
 
 
-#include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 
 #include <simgear/compiler.h>
-
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
@@ -45,7 +44,7 @@
 #include "navcom.hxx"
 
 
-class FGRadioStack : public FGSubsystem
+class FGRadioStack : public SGSubsystem
 {
     FGDME dme;
     FGKR_87 adf;                // King KR 87 Digital ADF model

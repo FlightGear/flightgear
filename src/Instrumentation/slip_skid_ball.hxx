@@ -12,8 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 #include "gyro.hxx"
 
@@ -31,7 +30,7 @@
  *
  * /instrumentation/slip-skid-ball/indicated-slip-skid
  */
-class SlipSkidBall : public FGSubsystem
+class SlipSkidBall : public SGSubsystem
 {
 
 public:

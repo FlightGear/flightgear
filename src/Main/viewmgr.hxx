@@ -31,6 +31,7 @@
 
 
 #include <simgear/compiler.h>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -38,14 +39,13 @@
 
 #include <vector>
 
-#include "fgfs.hxx"
 #include "viewer.hxx"
 
 SG_USING_STD(vector);
 
 
 // Define a structure containing view information
-class FGViewMgr : public FGSubsystem
+class FGViewMgr : public SGSubsystem
 {
 
 public:

@@ -25,11 +25,10 @@
 #define _FG_KT_70_HXX
 
 
-#include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 
 #include <simgear/compiler.h>
-
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
@@ -38,7 +37,7 @@
 #include <Sound/morse.hxx>
 
 
-class FGKT_70 : public FGSubsystem
+class FGKT_70 : public SGSubsystem
 {
     SGPropertyNode *lon_node;
     SGPropertyNode *lat_node;

@@ -33,13 +33,12 @@
 #include <plib/sg.h>
 #include <plib/ssg.h>
 
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/point3d.hxx>
-
-#include <Main/fgfs.hxx>
 
 
 // Define a structure containing global scenery parameters
-class FGScenery : public FGSubsystem {
+class FGScenery : public SGSubsystem {
     // center of current scenery chunk
     Point3D center;
 
@@ -74,7 +73,7 @@ public:
     FGScenery();
     ~FGScenery();
 
-    // Implementation of FGSubsystem.
+    // Implementation of SGSubsystem.
     void init ();
     void bind ();
     void unbind ();

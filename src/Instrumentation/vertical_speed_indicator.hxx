@@ -12,8 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
@@ -28,7 +27,7 @@
  *
  * /instrumentation/vertical-speed-indicator/indicated-speed-fpm
  */
-class VerticalSpeedIndicator : public FGSubsystem
+class VerticalSpeedIndicator : public SGSubsystem
 {
 
 public:

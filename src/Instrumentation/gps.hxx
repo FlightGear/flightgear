@@ -12,8 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
@@ -37,7 +36,7 @@
  * /instrumentation/gps/indicated-track-magnetic-deg
  * /instrumentation/gps/indicated-ground-speed-kt
  */
-class GPS : public FGSubsystem
+class GPS : public SGSubsystem
 {
 
 public:

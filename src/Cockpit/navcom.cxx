@@ -34,7 +34,6 @@
 #include <Aircraft/aircraft.hxx>
 #include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
-#include <Time/FGEventMgr.hxx>
 
 #include "navcom.hxx"
 

@@ -13,8 +13,7 @@
 #include <vector>
 
 #include <simgear/compiler.h>	// for SG_USING_STD
-
-#include <Main/fgfs.hxx>	// for FGSubsystem
+#include <simgear/structure/subsystem_mgr.hxx>
 
 SG_USING_STD(vector);
 
@@ -27,7 +26,7 @@ class SGModelPlacement;
 /**
  * Manage a list of user-specified models.
  */
-class FGModelMgr : public FGSubsystem
+class FGModelMgr : public SGSubsystem
 {
 public:
 

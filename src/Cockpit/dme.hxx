@@ -25,11 +25,10 @@
 #define _FG_DME_HXX
 
 
-#include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 
 #include <simgear/compiler.h>
-
+#include <simgear/structure/subsystem_mgr.hxx>
 // #include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
@@ -42,7 +41,7 @@
 // #include "kt_70.hxx"            // Transponder
 // #include "navcom.hxx"
 
-class FGDME : public FGSubsystem
+class FGDME : public SGSubsystem
 {
     SGPropertyNode *lon_node;
     SGPropertyNode *lat_node;

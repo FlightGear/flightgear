@@ -31,7 +31,7 @@
 #  include <windows.h>
 #endif
 
-#include <simgear/misc/commands.hxx>
+#include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #include <Main/fg_props.hxx>

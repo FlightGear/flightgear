@@ -11,6 +11,7 @@
 
 #include <simgear/compiler.h>	// for SG_USING_STD
 #include <simgear/props/props.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 #include <vector>
 SG_USING_STD(vector);
@@ -18,7 +19,6 @@ SG_USING_STD(vector);
 #include <map>
 SG_USING_STD(map);
 
-#include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 
 class FGMenuBar;
@@ -35,7 +35,7 @@ class FGBinding;
  * for XML-configured dialog boxes found in $FG_ROOT/gui/dialogs/.  It
  * can show or hide the menubar, and can display any dialog by name.
  */
-class NewGUI : public FGSubsystem
+class NewGUI : public SGSubsystem
 {
 public:
 

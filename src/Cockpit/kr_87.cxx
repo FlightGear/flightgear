@@ -32,7 +32,6 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Navaids/navlist.hxx>
-#include <Time/FGEventMgr.hxx>
 
 #include "kr_87.hxx"
 

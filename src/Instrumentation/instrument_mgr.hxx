@@ -16,8 +16,7 @@
 #endif
 
 #include <simgear/compiler.h>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
@@ -26,7 +25,7 @@
  * In the initial draft, the instruments present are hard-coded, but they
  * will soon be configurable for individual aircraft.
  */
-class FGInstrumentMgr : public FGSubsystemGroup
+class FGInstrumentMgr : public SGSubsystemGroup
 {
 public:
 

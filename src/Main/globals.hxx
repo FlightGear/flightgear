@@ -24,13 +24,17 @@
 #ifndef _GLOBALS_HXX
 #define _GLOBALS_HXX
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <simgear/compiler.h>
+#include <simgear/structure/callback.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/structure/event_mgr.hxx>
 
 #include <vector>
 #include STL_STRING
-
-#include "fgfs.hxx"
-
 
 SG_USING_STD( vector );
 SG_USING_STD( string );
@@ -84,12 +88,14 @@ class FGViewer;
 /**
  * Bucket for subsystem pointers representing the sim's state.
  */
+
 class FGGlobals
 {
 
 private:
 
-    FGSubsystemMgr * subsystem_mgr;
+    SGSubsystemMgr * subsystem_mgr;
+    SGEventMgr * event_mgr;
 
     // Number of milliseconds elapsed since the start of the program.
     double sim_time_sec;
@@ -185,9 +191,6 @@ private:
     // Input/Ouput subsystem
     FGIO *io;
 
-    // light parameters
-    FGLight *cur_light_params;
-
 #ifdef FG_MPLAYER_AS
     //Mulitplayer managers
     FGMultiplayTxMgr *multiplayer_tx_mgr;
@@ -200,15 +203,46 @@ public:
     FGGlobals();
     virtual ~FGGlobals();
 
-    virtual FGSubsystemMgr * get_subsystem_mgr () const;
+    virtual SGSubsystemMgr * get_subsystem_mgr () const;
 
-    virtual FGSubsystem * get_subsystem (const char * name);
+    virtual SGSubsystem * get_subsystem (const char * name);
 
     virtual void add_subsystem (const char * name,
-                                FGSubsystem * subsystem,
-                                FGSubsystemMgr::GroupType
-                                  type = FGSubsystemMgr::GENERAL,
+                                SGSubsystem * subsystem,
+                                SGSubsystemMgr::GroupType
+                                type = SGSubsystemMgr::GENERAL,
                                 double min_time_sec = 0);
+
+    virtual SGEventMgr * get_event_mgr () const;
+
+    virtual void add_event (const char * name,
+                            int repeat_value,
+                            int initial_value = -1 );
+
+    virtual void add_event (const char * name,
+                            const SGSubsystem * subsystem,
+                            int repeat_value,
+                            int initial_value = -1 );
+
+    template< typename Fun >
+    inline void add_event( const char * name,
+                           const Fun& func,
+                           SGEvent::interval_type repeat_value,
+                           SGEvent::interval_type initial_value = -1 )
+    {
+        event_mgr->add( name, get_subsystem( name ), func,
+                        repeat_value, initial_value);
+    }
+
+    template< typename Fun >
+    inline void add_event( const char * name,
+                           const SGSubsystem * subsystem,
+                           const Fun& func,
+                           SGEvent::interval_type repeat_value,
+                           SGEvent::interval_type initial_value = -1 )
+    {
+        event_mgr->add( name, subsystem, func, repeat_value, initial_value);
+    }
 
     inline double get_sim_time_sec () const { return sim_time_sec; }
     inline void inc_sim_time_sec (double dt) { sim_time_sec += dt; }

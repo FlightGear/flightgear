@@ -19,26 +19,25 @@
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/exception.hxx>
+#include <simgear/structure/exception.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
 
 SG_USING_STD(ostream);
 SG_USING_STD(vector);
 
-#include "fgfs.hxx"
-
 
 /**
  * Log any property values to any number of CSV files.
  */
-class FGLogger : public FGSubsystem
+class FGLogger : public SGSubsystem
 {
 public:
 
   FGLogger ();
   virtual ~FGLogger ();
 
-				// Implementation of FGSubsystem
+				// Implementation of SGSubsystem
   virtual void init ();
   virtual void reinit ();
   virtual void bind ();

@@ -12,8 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 #include "gyro.hxx"
 
@@ -35,7 +34,7 @@
  *
  * /instrumentation/heading-indicator/indicated-heading-deg
  */
-class HeadingIndicator : public FGSubsystem
+class HeadingIndicator : public SGSubsystem
 {
 
 public:

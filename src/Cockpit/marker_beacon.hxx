@@ -25,11 +25,10 @@
 #define _FG_MARKER_BEACON_HXX
 
 
-#include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 
 #include <simgear/compiler.h>
-
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
@@ -37,7 +36,7 @@
 #include <Sound/morse.hxx>
 
 
-class FGMarkerBeacon : public FGSubsystem
+class FGMarkerBeacon : public SGSubsystem
 {
     FGBeacon beacon;
     FGMorse morse;

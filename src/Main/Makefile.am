@@ -54,7 +54,6 @@ libMain_a_SOURCES = \
 	fg_init.cxx fg_init.hxx \
 	fg_io.cxx fg_io.hxx \
 	fg_props.cxx fg_props.hxx \
-        fgfs.cxx fgfs.hxx \
 	globals.cxx globals.hxx \
         logger.cxx logger.hxx \
 	options.cxx options.hxx \
@@ -102,7 +101,7 @@ fgfs_LDADD = \
 	$(CLOUD3D_LIBS) \
 	-lsgroute -lsgsky -lsgsound -lsgephem -lsgmaterial -lsgtgdb -lsgmodel \
 	-lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket -lsgprops -lsgdebug \
-	-lsgmagvar -lsgmisc -lsgxml -lsgsound -lsgserial \
+	-lsgmagvar -lsgmisc -lsgxml -lsgsound -lsgserial -lsgstructure \
 	$(THREAD_LIBS) \
 	-lplibpu -lplibfnt -lplibjs -lplibnet -lplibssg -lplibsg -lplibul \
 	$(network_LIBS) \

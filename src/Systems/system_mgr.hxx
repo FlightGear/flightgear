@@ -16,8 +16,7 @@
 #endif
 
 #include <simgear/compiler.h>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
@@ -26,7 +25,7 @@
  * In the initial draft, the systems present are hard-coded, but they
  * will soon be configurable for individual aircraft.
  */
-class FGSystemMgr : public FGSubsystemGroup
+class FGSystemMgr : public SGSubsystemGroup
 {
 public:
 

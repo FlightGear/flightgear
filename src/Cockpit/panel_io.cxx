@@ -29,8 +29,7 @@
 #include <string.h>		// for strcmp()
 
 #include <simgear/compiler.h>
-#include <simgear/misc/exception.hxx>
-
+#include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>

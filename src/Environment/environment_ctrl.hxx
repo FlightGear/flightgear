@@ -24,6 +24,7 @@
 #define _ENVIRONMENT_CTRL_HXX
 
 #include <simgear/compiler.h>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>
@@ -37,8 +38,6 @@ SG_USING_STD(vector);
 
 class SGPropertyNode;
 
-#include <Main/fgfs.hxx>
-
 #include "environment.hxx"
 
 
@@ -46,7 +45,7 @@ class SGPropertyNode;
 /**
  * Interface to control environment information for a specific location.
  */
-class FGEnvironmentCtrl : public FGSubsystem
+class FGEnvironmentCtrl : public SGSubsystem
 {
 
 public:

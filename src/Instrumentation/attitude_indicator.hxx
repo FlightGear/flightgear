@@ -12,8 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 #include "gyro.hxx"
 
@@ -39,7 +38,7 @@
  * /instrumentation/attitude-indicator/indicated-roll-deg
  * /instrumentation/attitude-indicator/tumble-norm
  */
-class AttitudeIndicator : public FGSubsystem
+class AttitudeIndicator : public SGSubsystem
 {
 
 public:

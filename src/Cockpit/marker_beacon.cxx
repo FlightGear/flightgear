@@ -32,7 +32,6 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Navaids/mkrbeacons.hxx>
-#include <Time/FGEventMgr.hxx>
 
 #include "marker_beacon.hxx"
 

@@ -12,8 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
@@ -34,7 +33,7 @@
  *
  * /instrumentation/magnetic-compass/indicated-heading-deg
  */
-class MagCompass : public FGSubsystem
+class MagCompass : public SGSubsystem
 {
 
 public:

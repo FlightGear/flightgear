@@ -26,17 +26,17 @@
 
 
 #include <simgear/compiler.h>
+#include <simgear/structure/subsystem_mgr.hxx>
+
 #include <vector>
 #include STL_STRING
-
-#include "fgfs.hxx"
 
 SG_USING_STD(vector);
 SG_USING_STD(string);
 
 class FGProtocol;
 
-class FGIO : public FGSubsystem
+class FGIO : public SGSubsystem
 {
 public:
     FGIO();

@@ -3,7 +3,6 @@
 #include <string.h>		// strcmp()
 
 #include <simgear/compiler.h>
-#include <simgear/misc/exception.hxx>
 
 #include STL_STRING
 #include STL_FSTREAM
@@ -11,7 +10,8 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_random.h>
-#include <simgear/misc/commands.hxx>
+#include <simgear/structure/exception.hxx>
+#include <simgear/structure/commands.hxx>
 #include <simgear/props/props.hxx>
 
 #include <Cockpit/panel.hxx>
@@ -202,7 +202,7 @@ do_reinit (const SGPropertyNode * arg)
     } else {
         for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
             const char * name = subsystems[i]->getStringValue();
-            FGSubsystem * subsystem = globals->get_subsystem(name);
+            SGSubsystem * subsystem = globals->get_subsystem(name);
             if (subsystem == 0) {
                 result = false;
                 SG_LOG( SG_GENERAL, SG_ALERT,
@@ -212,6 +212,8 @@ do_reinit (const SGPropertyNode * arg)
             }
         }
     }
+
+    globals->get_event_mgr()->reinit();
 
     return result;
 }
@@ -229,7 +231,7 @@ do_suspend (const SGPropertyNode * arg)
     vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
     for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
         const char * name = subsystems[i]->getStringValue();
-        FGSubsystem * subsystem = globals->get_subsystem(name);
+        SGSubsystem * subsystem = globals->get_subsystem(name);
         if (subsystem == 0) {
             result = false;
             SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << "not found");
@@ -253,7 +255,7 @@ do_resume (const SGPropertyNode * arg)
     vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
     for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
         const char * name = subsystems[i]->getStringValue();
-        FGSubsystem * subsystem = globals->get_subsystem(name);
+        SGSubsystem * subsystem = globals->get_subsystem(name);
         if (subsystem == 0) {
             result = false;
             SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << "not found");

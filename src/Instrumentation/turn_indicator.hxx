@@ -12,8 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 #include "gyro.hxx"
 
@@ -36,7 +35,7 @@
  *
  * /instrumentation/turn-indicator/indicated-turn-rate
  */
-class TurnIndicator : public FGSubsystem
+class TurnIndicator : public SGSubsystem
 {
 
 public:

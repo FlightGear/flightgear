@@ -34,10 +34,10 @@
 
 #include <simgear/math/sg_types.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 #include <Network/net_ctrls.hxx>
 #include <Network/net_fdm.hxx>
-#include <Main/fgfs.hxx>
 
 SG_USING_STD(deque);
 
@@ -60,7 +60,7 @@ typedef deque < FGReplayData > replay_list_type;
  * 
  */
 
-class FGReplay : public FGSubsystem
+class FGReplay : public SGSubsystem
 {
 
 public:

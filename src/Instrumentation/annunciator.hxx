@@ -10,8 +10,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
@@ -28,7 +27,7 @@
  *
  * /instrumentation/airspeed-indicator/indicated-speed-kt
  */
-class Annunciator : public FGSubsystem
+class Annunciator : public SGSubsystem
 {
 
     // timers

@@ -16,7 +16,7 @@
 #  include <windows.h>                     
 #endif
 
-#include <simgear/misc/commands.hxx>
+#include <simgear/structure/commands.hxx>
 #include <simgear/props/props.hxx>
 
 /**

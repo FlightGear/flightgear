@@ -12,8 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
@@ -31,7 +30,7 @@
  * TODO: support multiple static ports and specific locations
  * TODO: support alternate air with errors
  */
-class StaticSystem : public FGSubsystem
+class StaticSystem : public SGSubsystem
 {
 
 public:

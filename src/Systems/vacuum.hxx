@@ -12,8 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
@@ -31,7 +30,7 @@
  *
  * /systems/vacuum[n]/suction-inhg
  */
-class VacuumSystem : public FGSubsystem
+class VacuumSystem : public SGSubsystem
 {
 
 public:

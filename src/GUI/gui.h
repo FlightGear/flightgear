@@ -37,7 +37,7 @@
 
 #include <plib/pu.h>		// plib include
 
-#include <simgear/misc/exception.hxx>
+#include <simgear/structure/exception.hxx>
 
 #define TR_HIRES_SNAP   1
 

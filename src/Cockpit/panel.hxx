@@ -30,26 +30,24 @@
 #  include <config.h>
 #endif
 
-#include <simgear/compiler.h>
-
-#ifdef HAVE_WINDOWS_H          
+#ifdef HAVE_WINDOWS_H
 #  include <windows.h>
 #endif
 
 #include <plib/ssg.h>
+#include <plib/fnt.h>
 
-#include <simgear/math/interpolater.hxx>
+#include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <cmath>
 #include <vector>
 #include <map>
-#include <plib/fnt.h>
 
-#include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
-
 #include <Input/input.hxx>
 
 SG_USING_STD(vector);
@@ -130,7 +128,7 @@ private:
  * redraw themselves when necessary, and will pass mouse clicks on to
  * the appropriate instruments for processing.
  */
-class FGPanel : public FGSubsystem
+class FGPanel : public SGSubsystem
 {
 public:
 

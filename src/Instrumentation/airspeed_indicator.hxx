@@ -12,8 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
@@ -30,7 +29,7 @@
  *
  * /instrumentation/airspeed-indicator/indicated-speed-kt
  */
-class AirspeedIndicator : public FGSubsystem
+class AirspeedIndicator : public SGSubsystem
 {
 
 public:

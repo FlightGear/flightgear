@@ -32,11 +32,11 @@
 
 #include <simgear/compiler.h>
 
-#include <simgear/misc/commands.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/structure/commands.hxx>
 #include <simgear/props/condition.hxx>
 #include <simgear/props/props.hxx>
 
-#include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
@@ -166,7 +166,7 @@ private:
  * keyboard, joystick, mouse, or even panel switches -- in a consistent
  * way, and to allow users to rebind any of the actions at runtime.</p>
  */
-class FGInput : public FGSubsystem
+class FGInput : public SGSubsystem
 {
 public:
 
@@ -192,7 +192,7 @@ public:
   virtual ~FGInput();
 
   //
-  // Implementation of FGSubsystem.
+  // Implementation of SGSubsystem.
   //
   virtual void init ();
   virtual void update (double dt);

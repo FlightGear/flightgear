@@ -39,8 +39,7 @@ SG_USING_STD(string);
 SG_USING_STD(vector);
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 // Forward declaration
@@ -184,7 +183,7 @@ public:
  * 
  */
 
-class FGElectricalSystem : public FGSubsystem
+class FGElectricalSystem : public SGSubsystem
 {
 
 public:

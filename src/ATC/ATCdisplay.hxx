@@ -27,7 +27,7 @@
 #  include <config.h>
 #endif
 
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 #include <vector>
 #include <string>
@@ -49,7 +49,7 @@ struct atcMessage {
 typedef vector<atcMessage> atcMessageList;
 typedef atcMessageList::iterator atcMessageListIterator;
 
-class FGATCDisplay : public FGSubsystem 
+class FGATCDisplay : public SGSubsystem 
 {
 
 private:

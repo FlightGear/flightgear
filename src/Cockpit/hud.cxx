@@ -21,7 +21,7 @@
 // $Id$
 
 #include <simgear/compiler.h>
-#include <simgear/misc/exception.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include STL_STRING
 #include STL_FSTREAM

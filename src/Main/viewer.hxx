@@ -34,11 +34,10 @@
 
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/scene/model/location.hxx>
 
 #include <plib/sg.h>		// plib include
-
-#include "fgfs.hxx"
 
 #define FG_FOV_MIN 0.1
 #define FG_FOV_MAX 179.9
@@ -49,7 +48,7 @@ enum fgViewType {
 };
 
 // Define a structure containing view information
-class FGViewer : public FGSubsystem {
+class FGViewer : public SGSubsystem {
 
 public:
 
@@ -74,7 +73,7 @@ public:
     virtual ~FGViewer( void );
 
     //////////////////////////////////////////////////////////////////////
-    // Part 1: standard FGSubsystem implementation.
+    // Part 1: standard SGSubsystem implementation.
     //////////////////////////////////////////////////////////////////////
 
     virtual void init ();

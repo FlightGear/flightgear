@@ -25,18 +25,17 @@
 #define _FG_KR_87_HXX
 
 
-#include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 
 #include <simgear/compiler.h>
-
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <Navaids/navlist.hxx>
 #include <Sound/morse.hxx>
 
 
-class FGKR_87 : public FGSubsystem
+class FGKR_87 : public SGSubsystem
 {
     FGMorse morse;
 

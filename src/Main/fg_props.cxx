@@ -24,7 +24,7 @@
 #  include <simgear/compiler.h>
 #endif
 
-#include <simgear/misc/exception.hxx>
+#include <simgear/structure/exception.hxx>
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -46,7 +46,6 @@
 #include <GUI/gui.h>
 
 #include "globals.hxx"
-#include "fgfs.hxx"
 #include "fg_props.hxx"
 
 SG_USING_STD(istream);

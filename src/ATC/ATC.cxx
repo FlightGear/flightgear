@@ -24,7 +24,6 @@
 
 #include <simgear/sound/soundmgr.hxx>
 
-#include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 
 #include "ATC.hxx"

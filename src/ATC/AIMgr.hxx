@@ -22,7 +22,8 @@
 #ifndef _FG_AIMGR_HXX
 #define _FG_AIMGR_HXX
 
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
+
 #include <Main/fg_props.hxx>
 
 #include <list>
@@ -33,7 +34,7 @@
 SG_USING_STD(list);
 
 
-class FGAIMgr : public FGSubsystem
+class FGAIMgr : public SGSubsystem
 {
 
 private:

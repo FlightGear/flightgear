@@ -18,10 +18,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+#include <simgear/structure/commands.hxx>
+
 #include <Main/globals.hxx>
-#include <Main/fgfs.hxx>
 #include <GUI/gui.h>
-#include <simgear/misc/commands.hxx>
 
 #include "ATCDialog.hxx"
 #include "ATC.hxx"

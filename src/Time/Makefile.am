@@ -1,7 +1,6 @@
 noinst_LIBRARIES = libTime.a
 
 libTime_a_SOURCES = \
-	FGEventMgr.cxx FGEventMgr.hxx \
 	fg_timer.cxx fg_timer.hxx \
 	light.cxx light.hxx \
 	moonpos.cxx moonpos.hxx \

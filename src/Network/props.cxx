@@ -29,7 +29,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/commands.hxx>
+#include <simgear/structure/commands.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>

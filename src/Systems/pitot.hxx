@@ -12,8 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
@@ -33,7 +32,7 @@
  *
  * /systems/pitot[0]/total-pressure-inhg
  */
-class PitotSystem : public FGSubsystem
+class PitotSystem : public SGSubsystem
 {
 
 public:

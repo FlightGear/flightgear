@@ -34,7 +34,6 @@
 #include <Navaids/ilslist.hxx>
 #include <Navaids/mkrbeacons.hxx>
 #include <Navaids/navlist.hxx>
-#include <Time/FGEventMgr.hxx>
 
 #include "radiostack.hxx"
 
@@ -78,9 +77,8 @@ FGRadioStack::init ()
     update(0);			// FIXME: use dt
 
     // Search radio database once per second
-    global_events.Register( "fgRadioSearch()",
-			    current_radiostack, &FGRadioStack::search,
-			    1000 );
+    globals->get_event_mgr()->add( "fgRadioSearch()", current_radiostack,
+                                   &FGRadioStack::search, 1000 );
 }
 
 

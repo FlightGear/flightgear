@@ -21,7 +21,7 @@
 // $Id$
 
 
-#include <simgear/misc/commands.hxx>
+#include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #include "globals.hxx"
@@ -41,7 +41,8 @@ FGGlobals *globals;
 
 // Constructor
 FGGlobals::FGGlobals() :
-    subsystem_mgr( new FGSubsystemMgr ),
+    subsystem_mgr( new SGSubsystemMgr ),
+    event_mgr( new SGEventMgr ),
     sim_time_sec( 0.0 ),
     fg_root( "" ),
     fg_scenery( "" ),
@@ -73,8 +74,7 @@ FGGlobals::FGGlobals() :
     channel_options_list( NULL ),
     scenery( NULL ),
     tile_mgr( NULL ),
-    io( new FGIO ),
-    cur_light_params( NULL )
+    io( new FGIO )
 {
 }
 
@@ -83,6 +83,7 @@ FGGlobals::FGGlobals() :
 FGGlobals::~FGGlobals() 
 {
   delete subsystem_mgr;
+  delete event_mgr;
   delete initial_state;
   delete props;
   delete commands;
@@ -104,13 +105,13 @@ void FGGlobals::set_fg_root (const string &root) {
 }
 
 
-FGSubsystemMgr *
+SGSubsystemMgr *
 FGGlobals::get_subsystem_mgr () const
 {
     return subsystem_mgr;
 }
 
-FGSubsystem *
+SGSubsystem *
 FGGlobals::get_subsystem (const char * name)
 {
     return subsystem_mgr->get_subsystem(name);
@@ -118,12 +119,39 @@ FGGlobals::get_subsystem (const char * name)
 
 void
 FGGlobals::add_subsystem (const char * name,
-                          FGSubsystem * subsystem,
-                          FGSubsystemMgr::GroupType type,
+                          SGSubsystem * subsystem,
+                          SGSubsystemMgr::GroupType type,
                           double min_time_sec)
 {
     subsystem_mgr->add(name, subsystem, type, min_time_sec);
 }
+
+
+SGEventMgr *
+FGGlobals::get_event_mgr () const
+{
+    return event_mgr;
+}
+
+
+void
+FGGlobals::add_event (const char * name,
+                      int repeat_value,
+                      int initial_value)
+{
+    event_mgr->add(name, subsystem_mgr->get_subsystem(name),
+                   repeat_value, initial_value);
+}
+
+void
+FGGlobals::add_event (const char * name,
+                      const SGSubsystem * subsystem,
+                      int repeat_value,
+                      int initial_value)
+{
+    event_mgr->add(name, subsystem, repeat_value, initial_value);
+}
+
 
 
 // Save the current state as the initial state.
@@ -132,6 +160,7 @@ FGGlobals::saveInitialState ()
 {
   delete initial_state;
   initial_state = new SGPropertyNode();
+
   if (!copyProperties(props, initial_state))
     SG_LOG(SG_GENERAL, SG_ALERT, "Error saving initial state");
 }

@@ -34,7 +34,6 @@
 #include <Navaids/ilslist.hxx>
 #include <Navaids/mkrbeacons.hxx>
 #include <Navaids/navlist.hxx>
-#include <Time/FGEventMgr.hxx>
 
 #include "dme.hxx"
 

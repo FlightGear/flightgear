@@ -22,7 +22,8 @@
 #ifndef _FG_ATCMGR_HXX
 #define _FG_ATCMGR_HXX
 
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
+
 #include <Main/fg_props.hxx>
 #include <GUI/gui.h>
 
@@ -72,7 +73,7 @@ struct AirportATC {
     bool set_by_comm[2];	// true when the relevant comm_freq has activated this station
 };
 
-class FGATCMgr : public FGSubsystem
+class FGATCMgr : public SGSubsystem
 {
 
 private:

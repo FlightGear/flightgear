@@ -47,12 +47,13 @@
 #endif
 
 #include <simgear/compiler.h>
-#include <simgear/misc/exception.hxx>
 
 #include STL_STRING
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/structure/exception.hxx>
+#include <simgear/structure/event_mgr.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -106,7 +107,6 @@
 #endif
 #include <Sound/fg_fx.hxx>
 #include <Systems/system_mgr.hxx>
-#include <Time/FGEventMgr.hxx>
 #include <Time/light.hxx>
 #include <Time/moonpos.hxx>
 #include <Time/sunpos.hxx>
@@ -1410,6 +1410,18 @@ bool fgInitSubsystems() {
     SG_LOG( SG_GENERAL, SG_INFO, "Initialize Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
 
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the event manager subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+     globals->get_event_mgr()->bind();
+     globals->get_event_mgr()->init();
+
+     // Output event stats every 60 seconds
+     globals->get_event_mgr()->add( "SGEventMgr::print_stats()",
+                                    globals->get_event_mgr(),
+                                    &SGEventMgr::print_stats,
+                                    60000 );
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the material property subsystem.
@@ -1421,17 +1433,6 @@ bool fgInitSubsystems() {
         SG_LOG( SG_GENERAL, SG_ALERT, "Error loading material lib!" );
         exit(-1);
     }
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the event manager subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    global_events.init();
-
-    // Output event stats every 60 seconds
-    global_events.Register( "FGEventMgr::print_stats()",
-                            &global_events, &FGEventMgr::print_stats,
-                            60000 );
 
 
     ////////////////////////////////////////////////////////////////////
@@ -1449,10 +1450,10 @@ bool fgInitSubsystems() {
     }
 
     // cause refresh of viewer scenery timestamps every 15 seconds...
-    global_events.Register( "FGTileMgr::refresh_view_timestamps()",
-                            globals->get_tile_mgr(),
-                            &FGTileMgr::refresh_view_timestamps,
-                            15000 );
+    globals->get_event_mgr()->add( "FGTileMgr::refresh_view_timestamps()",
+                                   globals->get_tile_mgr(),
+                                   &FGTileMgr::refresh_view_timestamps,
+                                   15000 );
 
     SG_LOG( SG_GENERAL, SG_DEBUG,
             "Current terrain elevation after tile mgr init " <<
@@ -1478,12 +1479,6 @@ bool fgInitSubsystems() {
 
 
     ////////////////////////////////////////////////////////////////////
-    // Initialize the lighting subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    globals->add_subsystem("lighting", new FGLight);
-
-    ////////////////////////////////////////////////////////////////////
     // Create and register the logger.
     ////////////////////////////////////////////////////////////////////
     
@@ -1503,7 +1498,7 @@ bool fgInitSubsystems() {
     // Create and register the XML GUI.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("gui", new NewGUI, FGSubsystemMgr::INIT);
+    globals->add_subsystem("gui", new NewGUI, SGSubsystemMgr::INIT);
 
 
     ////////////////////////////////////////////////////////////////////
@@ -1511,8 +1506,8 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
 
     // update the current timezone each 30 minutes
-    global_events.Register( "fgUpdateLocalTime()", &fgUpdateLocalTime,
-                            30*60*1000 );
+    globals->get_event_mgr()->add( "fgUpdateLocalTime()",
+                                   &fgUpdateLocalTime, 30*60*1000 );
 
 
     ////////////////////////////////////////////////////////////////////
@@ -1558,11 +1553,19 @@ bool fgInitSubsystems() {
     WeatherDatabase = FGLocalWeatherDatabase::theFGLocalWeatherDatabase;
 
     // register the periodic update of the weather
-    global_events.Register( "weather update", &fgUpdateWeatherDatabase,
-                            30000);
+    globals->get_event_mgr()->add( "weather update",
+                                   &fgUpdateWeatherDatabase, 30000);
 #else
     globals->add_subsystem("environment", new FGEnvironmentMgr);
 #endif
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the lighting subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->add_subsystem("lighting", new FGLight);
+
 
 #ifdef FG_USE_CLOUDS_3D
     ////////////////////////////////////////////////////////////////////
@@ -1739,7 +1742,6 @@ bool fgInitSubsystems() {
 
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
-
 
 #ifdef FG_MPLAYER_AS
     ////////////////////////////////////////////////////////////////////

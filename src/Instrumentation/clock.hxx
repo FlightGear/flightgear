@@ -14,8 +14,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
@@ -31,7 +30,7 @@
  * /instrumentation/clock/indicated-sec
  * /instrumentation/clock/indicated-string
  */
-class Clock : public FGSubsystem
+class Clock : public SGSubsystem
 {
 
 public:

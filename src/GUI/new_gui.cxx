@@ -6,7 +6,8 @@
 #include <plib/ul.h>
 
 #include <simgear/compiler.h>
-#include <simgear/misc/exception.hxx>
+#include <simgear/structure/exception.hxx>
+
 #include <Main/fg_props.hxx>
 
 #include "menubar.hxx"

@@ -12,7 +12,7 @@
 #endif
 
 #include <simgear/props/props.hxx>
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 class SGInterpTable;
@@ -31,7 +31,7 @@ class SGInterpTable;
  *
  * /instrumentation/altimeter/indicated-altitude-ft
  */
-class Altimeter : public FGSubsystem
+class Altimeter : public SGSubsystem
 {
 
 public:

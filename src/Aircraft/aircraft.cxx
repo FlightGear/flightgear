@@ -30,8 +30,8 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/misc/commands.hxx>
-#include <simgear/misc/exception.hxx>
+#include <simgear/structure/commands.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -41,7 +41,6 @@
 #include <Cockpit/panel_io.hxx>
 #include <Model/acmodel.hxx>
 #include <Autopilot/newauto.hxx>
-#include <Main/fgfs.hxx>
 
 #include "aircraft.hxx"
 

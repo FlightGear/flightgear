@@ -13,8 +13,7 @@
 
 #include <simgear/math/point3d.hxx>
 #include <simgear/props/props.hxx>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 
 /**
@@ -37,7 +36,7 @@
  * /instrumentation/dme/indicated-ground-speed-kt
  * /instrumentation/dme/indicated-time-kt
  */
-class DME : public FGSubsystem
+class DME : public SGSubsystem
 {
 
 public:

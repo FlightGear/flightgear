@@ -14,7 +14,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/exception.hxx>
+#include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/placement.hxx>
 

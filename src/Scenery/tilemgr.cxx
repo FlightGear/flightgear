@@ -33,7 +33,7 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/vector.hxx>
-#include <simgear/misc/exception.hxx>
+#include <simgear/structure/exception.hxx>
 #include <simgear/scene/model/modellib.hxx>
 
 #include <Main/globals.hxx>

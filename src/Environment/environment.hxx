@@ -26,8 +26,6 @@
 
 #include <simgear/compiler.h>
 
-#include <Main/fgfs.hxx>
-
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>
 #else

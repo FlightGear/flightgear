@@ -24,8 +24,7 @@
 #define _ENVIRONMENT_MGR_HXX
 
 #include <simgear/compiler.h>
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>
@@ -40,7 +39,7 @@ class FGEnvironmentCtrl;
 /**
  * Manage environment information.
  */
-class FGEnvironmentMgr : public FGSubsystemGroup
+class FGEnvironmentMgr : public SGSubsystemGroup
 {
 
 public:

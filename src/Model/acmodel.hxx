@@ -15,7 +15,7 @@
 SG_USING_STD(string);
 SG_USING_STD(vector);
 
-#include <Main/fgfs.hxx>	// for FGSubsystem
+#include <simgear/structure/subsystem_mgr.hxx>	// for SGSubsystem
 
 
 // Don't pull in the headers, since we don't need them here.
@@ -24,7 +24,7 @@ class ssgSelector;
 class SGModelPlacement;
 
 
-class FGAircraftModel : public FGSubsystem
+class FGAircraftModel : public SGSubsystem
 {
 public:
 

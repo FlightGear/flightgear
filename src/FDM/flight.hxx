@@ -81,16 +81,15 @@
  */
 
 
-#include <simgear/compiler.h>
-
 #include <math.h>
 
 #include <list>
 #include <vector>
 #include <string>
 
+#include <simgear/compiler.h>
 #include <simgear/constants.h>
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 SG_USING_STD(list);
 SG_USING_STD(vector);
@@ -102,7 +101,7 @@ class FGAircraftModel;
 typedef double FG_VECTOR_3[3];
 
 // This is based heavily on LaRCsim/ls_generic.h
-class FGInterface : public FGSubsystem {
+class FGInterface : public SGSubsystem {
 
 private:
   

@@ -24,7 +24,7 @@
 #ifndef __FGFX_HXX
 #define __FGFX_HXX 1
 
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 class SGSound;
 
@@ -35,7 +35,7 @@ class SGSound;
  * on current flight conditions.  The sound manager must be initialized
  * before this object is.
  */
-class FGFX : public FGSubsystem
+class FGFX : public SGSubsystem
 {
 
 public:

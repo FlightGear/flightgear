@@ -50,7 +50,7 @@ void
 FGEnvironmentMgr::init ()
 {
   SG_LOG( SG_GENERAL, SG_INFO, "Initializing environment subsystem");
-  FGSubsystemGroup::init();
+  SGSubsystemGroup::init();
   _update_fdm();
 }
 
@@ -58,7 +58,7 @@ void
 FGEnvironmentMgr::reinit ()
 {
   SG_LOG( SG_GENERAL, SG_INFO, "Reinitializing environment subsystem");
-  FGSubsystemGroup::reinit();
+  SGSubsystemGroup::reinit();
   _update_fdm();
 }
 
@@ -176,7 +176,7 @@ FGEnvironmentMgr::unbind ()
 void
 FGEnvironmentMgr::update (double dt)
 {
-  FGSubsystemGroup::update(dt);
+  SGSubsystemGroup::update(dt);
 
 				// FIXME: the FDMs should update themselves
   current_aircraft.fdm_state

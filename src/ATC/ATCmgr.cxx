@@ -18,8 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-//#include <Time/event.hxx>
-
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <Airports/simple.hxx>
@@ -36,6 +34,7 @@ static void fgATCSearch( void ) {
 	globals->get_ATC_mgr()->Search();
 }
 */ //This wouldn't compile - including Time/event.hxx breaks it :-(
+   // Is this still true?? -EMH-
 
 AirportATC::AirportATC() :
     lon(0.0),
@@ -90,9 +89,12 @@ void FGATCMgr::init() {
 	atc_list_itr = atc_list.begin();
 	
 	// Search for connected ATC stations once per 0.8 seconds or so
-	// global_events.Register( "fgATCSearch()", fgATCSearch,
-	//		    fgEVENT::FG_EVENT_READY, 800);
+	// globals->get_event_mgr()->add( "fgATCSearch()", fgATCSearch,
+        //                                 FGEvent::FG_EVENT_READY, 800);
+        //  
 	// For some reason the above doesn't compile - including Time/event.hxx stops compilation.
+        // Is this still true after the reorganization of the event managar??
+        // -EMH-
 	
 	// Initialise the frequency search map
     current_commlist = new FGCommList;

@@ -11,8 +11,7 @@
 #endif
 
 #include <simgear/compiler.h>	// for SG_USING_STD
-
-#include <Main/fgfs.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 class pslExtension;
 
@@ -32,7 +31,7 @@ class pslExtension;
  * get_property(name) - get a property value
  * set_property(name, value) - set a property value
  */
-class FGScriptMgr : public FGSubsystem
+class FGScriptMgr : public SGSubsystem
 {
 public:
 

@@ -64,7 +64,6 @@
 
 #include <Include/general.hxx>
 #include <Scenery/tileentry.hxx>
-#include <Time/FGEventMgr.hxx>
 #include <Time/light.hxx>
 #include <Time/light.hxx>
 #include <Aircraft/aircraft.hxx>
@@ -132,8 +131,6 @@ bool glPointParameterIsSupported = false;
 #ifdef macintosh
 #  include <console.h>		// -dw- for command line dialog
 #endif
-
-FGEventMgr global_events;
 
 // This is a record containing a bit of global housekeeping information
 FGGeneral general;
@@ -374,9 +371,6 @@ void fgRenderFrame() {
     GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
-    // Process/manage pending events
-    global_events.update( delta_time_sec );
-
     // static const SGPropertyNode *longitude
     //     = fgGetNode("/position/longitude-deg");
     // static const SGPropertyNode *latitude
@@ -510,18 +504,18 @@ void fgRenderFrame() {
         if ( skyblend ) {
             /*
              SG_LOG( SG_GENERAL, SG_BULK, "thesky->repaint() sky_color = "
-             << cur_light_params.sky_color[0] << " "
-             << cur_light_params.sky_color[1] << " "
-             << cur_light_params.sky_color[2] << " "
-             << cur_light_params.sky_color[3] );
+             << l->sky_color()[0] << " "
+             << l->sky_color()[1] << " "
+             << l->sky_color()[2] << " "
+             << l->sky_color()[3] );
             SG_LOG( SG_GENERAL, SG_BULK, "    fog = "
-             << cur_light_params.fog_color[0] << " "
-             << cur_light_params.fog_color[1] << " "
-             << cur_light_params.fog_color[2] << " "
-             << cur_light_params.fog_color[3] ); 
+             << l->fog_color()[0] << " "
+             << l->fog_color()[1] << " "
+             << l->fog_color()[2] << " "
+             << l->fog_color()[3] ); 
             SG_LOG( SG_GENERAL, SG_BULK,
-                    "    sun_angle = " << cur_light_params.sun_angle
-             << "    moon_angle = " << cur_light_params.moon_angle );
+                    "    sun_angle = " << l->sun_angle
+             << "    moon_angle = " << l->moon_angle );
             */
 
             static SGSkyColor scolor;
@@ -549,7 +543,7 @@ void fgRenderFrame() {
              << " lon = " << cur_fdm_state->get_Longitude()
              << " lat = " << cur_fdm_state->get_Latitude() );
             SG_LOG( SG_GENERAL, SG_BULK,
-                    "    sun_rot = " << cur_light_params.sun_rotation
+                    "    sun_rot = " << l->get_sun_rotation
              << " gst = " << SGTime::cur_time_params->getGst() );
             SG_LOG( SG_GENERAL, SG_BULK,
                  "    sun ra = " << globals->get_ephem()->getSunRightAscension()
@@ -1018,6 +1012,8 @@ static void fgMainLoop( void ) {
 #endif // FANCY_FRAME_COUNTER
 
     SGTime *t = globals->get_time_params();
+
+    globals->get_event_mgr()->update(delta_time_sec);
 
     SGLocation * acmodel_location = 0;
     if(cur_fdm_state->getACModel() != 0) {

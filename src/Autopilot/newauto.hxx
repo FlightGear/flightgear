@@ -28,13 +28,13 @@
 
 
 #include <simgear/props/props.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/route/waypoint.hxx>
 
-#include <Main/fgfs.hxx>
 #include <Main/fg_props.hxx>
 
 // Structures
-class FGAutopilot : public FGSubsystem
+class FGAutopilot : public SGSubsystem
 {
 
 public:
@@ -165,7 +165,7 @@ public:
 
 
     ////////////////////////////////////////////////////////////////////
-    // Implementation of FGSubsystem.
+    // Implementation of SGSubsystem.
     ////////////////////////////////////////////////////////////////////
 
     void init ();

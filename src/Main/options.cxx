@@ -26,7 +26,7 @@
 #endif
 
 #include <simgear/compiler.h>
-#include <simgear/misc/exception.hxx>
+#include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
 
 #include <math.h>		// rint()

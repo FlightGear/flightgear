@@ -26,7 +26,7 @@
 #endif
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/exception.hxx>
+#include <simgear/structure/exception.hxx>
 #ifdef __BORLANDC__
 #  define exception c_exception
 #endif
