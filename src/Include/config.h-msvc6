@@ -1,8 +1,10 @@
 
-/* Special single config.h for MSVC6 build - Geoff McLane - 22 Jan, 2002  */
+/* Special single config.h for MSVC6 build - Geoff McLane - 23 July, 2003  */
 
 /* Define to enable plib joystick support */
+#ifndef  ENABLE_PLIB_JOYSTICK
 #define ENABLE_PLIB_JOYSTICK
+#endif   // #ifndef  ENABLE_PLIB_JOYSTICK
 
 /* Define to enable threaded tile paging */
 #undef ENABLE_THREADS
@@ -44,7 +46,7 @@
 #define PACKAGE "FlightGear"
 
 /* Define to package version - use in main.cxx */
-#define FLIGHTGEAR_VERSION "MSVC6-WIN32-0.9.0"
+#define FLIGHTGEAR_VERSION "MSVC6-WIN32-0.9.1"
 
 /* Define as the return type of signal handlers (int or void).  */
 #define RETSIGTYPE void
@@ -62,7 +64,7 @@
 #define TM_IN_SYS_TIME 1
 
 /* Define to version number */
-#define VERSION "0.9.0"
+#define VERSION "0.9.1"
 
 /* Define if compiling on a Winbloze (95, NT, etc.) platform */
 #define WIN32 1
@@ -187,5 +189,8 @@
 #define  ENABLE_AUDIO_SUPPORT
 #endif
 
+#ifndef  GLUT_H
+#define  GLUT_H   <GL/glut.h>
+#endif   // #ifndef GLUT_H
 
 // eof - config.h-msvc6 - single flightgear config.h file
