@@ -733,18 +733,22 @@ bool FGATC610x::do_analog_in() {
     fgSetFloat( "/controls/engines/engine[1]/throttle", tmp );
     // cout << "throttle = " << tmp << endl;
 
-    // rudder
-    tmp = scale( rudder_center->getIntValue(), rudder_min->getIntValue(),
-                 rudder_max->getIntValue(), analog_in_data[10] );
-    fgSetFloat( "/controls/flight/rudder", -tmp );
+    if ( use_rudder ) {
+        // rudder
+        tmp = scale( rudder_center->getIntValue(), rudder_min->getIntValue(),
+                     rudder_max->getIntValue(), analog_in_data[10] );
+        fgSetFloat( "/controls/flight/rudder", -tmp );
 
-    // toe brakes
-    tmp = scale( brake_left_min->getIntValue(), brake_left_max->getIntValue(),
-                 analog_in_data[20] );
-    fgSetFloat( "/controls/gear/wheel[0]/brake", tmp );
-    tmp = scale( brake_right_min->getIntValue(), brake_right_max->getIntValue(),
-                 analog_in_data[21] );
-    fgSetFloat( "/controls/gear/wheel[1]/brake", tmp );
+        // toe brakes
+        tmp = scale( brake_left_min->getIntValue(),
+                     brake_left_max->getIntValue(),
+                     analog_in_data[20] );
+        fgSetFloat( "/controls/gear/wheel[0]/brake", tmp );
+        tmp = scale( brake_right_min->getIntValue(),
+                     brake_right_max->getIntValue(),
+                     analog_in_data[21] );
+        fgSetFloat( "/controls/gear/wheel[1]/brake", tmp );
+    }
 
     // nav1 volume
     tmp = (float)analog_in_data[25] / 1024.0f;
@@ -1767,7 +1771,7 @@ bool FGATC610x::do_switches() {
     mag2 = mag1;
     mag1 = magnetos;
     if ( mag1 == mag2 && mag2 == mag3 ) {
-        fgSetInt( "/controls/engines/engine[0]/magneto", magnetos );
+        fgSetInt( "/controls/engines/engine[0]/magnetos", magnetos );
     }
     static bool start1, start2, start3;
     start3 = start2;

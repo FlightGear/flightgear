@@ -47,6 +47,8 @@
 
 class FGATC610x : public FGProtocol {
 
+    bool use_rudder;
+
     int board;
 
     int lock_fd;
@@ -97,7 +99,7 @@ class FGATC610x : public FGProtocol {
     SGPropertyNode *xpdr_func_knob, *xpdr_id_code, *xpdr_flight_level;
     SGPropertyNode *xpdr_fl_ann, *xpdr_alt_ann, *xpdr_gnd_ann, *xpdr_on_ann;
     SGPropertyNode *xpdr_sby_ann, *xpdr_reply_ann;
-  SGPropertyNode *ati_bird, *alt_press;
+    SGPropertyNode *ati_bird, *alt_press;
 
     // Faults
     SGPropertyNode *comm1_servicable, *comm2_servicable;
@@ -149,7 +151,7 @@ class FGATC610x : public FGProtocol {
 
 public:
 
-    FGATC610x() { }
+    FGATC610x() : use_rudder(true) { }
     ~FGATC610x() { }
 
     bool open();
@@ -158,6 +160,8 @@ public:
     bool process();
 
     bool close();
+
+    inline void set_use_rudder( bool value ) { use_rudder = value; }
 };
 
 
