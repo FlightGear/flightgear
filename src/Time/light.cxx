@@ -166,6 +166,22 @@ void fgLIGHT::UpdateAdjFog( void ) {
     // set fog color (we'll try to match the sunset color in the
     // direction we are looking
 
+    // Do some sanity checking ...
+    if ( sun_rotation < -2.0 * SGD_2PI || sun_rotation > 2.0 * SGD_2PI ) {
+	SG_LOG( SG_EVENT, SG_ALERT, "Sun rotation bad = " << sun_rotation );
+	exit(-1);
+    }
+    if ( f->get_Psi() < -2.0 * SGD_2PI || f->get_Psi() > 2.0 * SGD_2PI ) {
+	SG_LOG( SG_EVENT, SG_ALERT, "Psi rotation bad = " << f->get_Psi() );
+	exit(-1);
+    }
+    if ( globals->get_current_view()->get_view_offset() < -2.0 * SGD_2PI ||
+	 globals->get_current_view()->get_view_offset() > 2.0 * SGD_2PI ) {
+	SG_LOG( SG_EVENT, SG_ALERT, "Psi rotation bad = " 
+		<< globals->get_current_view()->get_view_offset() );
+	exit(-1);
+    }
+
     // first determine the difference between our view angle and local
     // direction to the sun
     rotation = -(sun_rotation + SGD_PI) 
