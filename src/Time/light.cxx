@@ -176,7 +176,7 @@ void fgLIGHT::Update( void ) {
 
     // update the cloud colors for sunrise/sunset effects (darken them)
     if (sun_angle > 1.0) {
-       float sun2 = pow(sun_angle, 1.4);
+       float sun2 = sqrt(sun_angle);
        cloud_color[0] /= sun2;
        cloud_color[1] /= sun2;
        cloud_color[2] /= sun2;
@@ -270,16 +270,16 @@ void fgLIGHT::UpdateAdjFog( void ) {
 
 #else
 
-    float rf1 = 0.1 + fabs((rotation - SG_PI) / SG_PI) * 0.8;	// 0.1 .. 0.9
+    float rf1 = fabs((rotation - SG_PI) / SG_PI);		// 0.0 .. 1.0
     float rf2 = rf1 * rf1;
     float rf3 = 1.0 - rf1;
 
     float *sun_color = thesky->get_sun_color();
-    float s_red =   fog_color[0] * (1.26 - sun_color[0]/4.0);	// 100% red
-    float s_green = fog_color[1] * (0.45 + sun_color[1]/2.0);	//  40% green
+    float s_red =   fog_color[0] * (1.25 - sun_color[0]/4.0);	// 100% red
+    float s_green = fog_color[1] * (0.48 + sun_color[1]/1.923);	//  40% green
     float s_blue =  fog_color[2] * sun_color[2];		//   0% blue
 
-    float f_brightness = (sun_angle > 1.0) ? sun_angle : 1.0;
+    float f_brightness = (sun_angle > 1.0) ? sqrt(sun_angle) : 1.0;
     float f_red =   fog_color[0] / f_brightness;
     float f_green = fog_color[1] / f_brightness;
     float f_blue =  (fog_color[2] / f_brightness) * pow(sun_color[2], 1/3);
@@ -296,7 +296,5 @@ void fgLIGHT::UpdateAdjFog( void ) {
 // Destructor
 fgLIGHT::~fgLIGHT( void ) {
 }
-
-
 
 
