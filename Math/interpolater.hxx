@@ -33,6 +33,9 @@
 #endif                                   
 
 
+#include <string>
+
+
 #define MAX_TABLE_SIZE 32
 
 
@@ -44,7 +47,7 @@ public:
 
     // Constructor -- loads the interpolation table from the specified
     // file
-    fgINTERPTABLE( char *file );
+    fgINTERPTABLE( const string& file );
 
     // Given an x value, linearly interpolate the y value from the table
     double interpolate(double x);
@@ -58,6 +61,11 @@ public:
 
 
 // $Log$
+// Revision 1.3  1998/11/06 21:17:28  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.2  1998/04/22 13:18:10  curt
 // C++ - ified comments.  Make file open errors fatal.
 //

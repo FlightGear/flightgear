@@ -23,6 +23,7 @@
  * (Log is kept at end of this file)
  **************************************************************************/
 
+#error "use logstream"
 
 #ifndef _FG_DEBUG_H
 #define _FG_DEBUG_H

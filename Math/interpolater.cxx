@@ -24,45 +24,41 @@
 // (Log is kept at end of this file)
 
 
-#include <string.h>
+#include <string>
 
-#include <Debug/fg_debug.h>
+#include <Debug/logstream.hxx>
 #include <Include/fg_zlib.h>
+#include <Misc/fgstream.hxx>
 
 #include "interpolater.hxx"
 
 
 // Constructor -- loads the interpolation table from the specified
 // file
-fgINTERPTABLE::fgINTERPTABLE( char *file ) {
-    char fgfile[256], line[256];
-    fgFile fd;
+fgINTERPTABLE::fgINTERPTABLE( const string& file ) {
+    string fgfile, line;
 
-    fgPrintf( FG_MATH, FG_INFO, "Initializing Interpolator for %s\n", file);
+    FG_LOG( FG_MATH, FG_INFO, "Initializing Interpolator for " << file );
 
-    // First try "file.gz"
-    strcpy(fgfile, file);
-    strcat(fgfile, ".gz");
-    if ( (fd = fgopen(fgfile, "rb")) == NULL ) {
-        // Next try "path"
-        if ( (fd = fgopen(file, "rb")) == NULL ) {
-            fgPrintf(FG_MATH, FG_EXIT, "Cannot open file: %s\n", file);
-        }
+    fg_gzifstream in( file );
+    if ( !in ) {
+        FG_LOG( FG_GENERAL, FG_ALERT, "Cannot open file: " << file );
+	exit(-1);
     }
 
     size = 0;
-    while ( fggets(fd, line, 250) != NULL ) {
+    in >> skipcomment;
+    while ( ! in.eof() ){
 	if ( size < MAX_TABLE_SIZE ) {
-	    sscanf(line, "%lf %lf\n", &(table[size][0]), &(table[size][1]));
+	    in >> table[size][0] >> table[size][1];
 	    size++;
 	} else {
-            fgPrintf( FG_MATH, FG_EXIT, 
-		      "fgInterpolateInit(): Exceed max table size = %d\n",
-		      MAX_TABLE_SIZE );
+            FG_LOG( FG_MATH, FG_ALERT,
+		    "fgInterpolateInit(): Exceed max table size = "
+		    << MAX_TABLE_SIZE );
+	    exit(-1);
 	}
     }
-
-    fgclose(fd);
 }
 
 
@@ -80,14 +76,14 @@ double fgINTERPTABLE::interpolate(double x) {
     // printf ("i = %d ", i);
 
     if ( (i == 0) && (x < table[0][0]) ) {
-	fgPrintf( FG_MATH, FG_ALERT, 
-		  "fgInterpolateInit(): lookup error, x to small = %.2f\n", x);
+	FG_LOG( FG_MATH, FG_ALERT, 
+		"fgInterpolateInit(): lookup error, x to small = " << x );
 	return(0.0);
     }
 
     if ( x > table[i][0] ) {
-	fgPrintf( FG_MATH, FG_ALERT, 
-		  "fgInterpolateInit(): lookup error, x to big = %.2f\n",  x);
+	FG_LOG( FG_MATH, FG_ALERT, 
+		"fgInterpolateInit(): lookup error, x to big = " << x );
 	return(0.0);
     }
 
@@ -107,6 +103,11 @@ fgINTERPTABLE::~fgINTERPTABLE( void ) {
 
 
 // $Log$
+// Revision 1.5  1998/11/06 21:17:27  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.4  1998/05/13 18:24:25  curt
 // Wrapped zlib calls so zlib can be optionally disabled.
 //

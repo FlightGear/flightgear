@@ -65,19 +65,7 @@
 #  define ios_badbit   ios::badbit
 #  define ios_failbit  ios::failbit
 
-// Dummy up some char traits for now.
-template<class charT> struct char_traits{};
-
-FG_TEMPLATE_NULL
-struct char_traits<char>
-{
-    typedef char      char_type;
-    typedef int       int_type;
-    typedef streampos pos_type;
-    typedef streamoff off_type;
-
-    static int_type eof() { return EOF; }
-};
+#  include "Include/fg_traits.hxx"
 
 #endif // FG_HAVE_STD_INCLUDES
 
@@ -154,6 +142,11 @@ struct gzifstream_base
 #endif // _zfstream_hxx
 
 // $Log$
+// Revision 1.5  1998/11/06 21:17:29  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
 // Revision 1.4  1998/11/06 14:05:16  curt
 // More portability improvements by Bernie Bright.
 //
