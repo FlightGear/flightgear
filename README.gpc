@@ -12,7 +12,7 @@ distribution.
 
 This library comes as a single source file and header with no build
 directions.  So, here are some directions contributed by Riley Rainey
-<riley.rainey@websimulations.com>:
+<riley.rainey@websimulations.com> with additional notes by Curt Olson:
 
 
 1. Download the GPC library source code from URL:
@@ -21,20 +21,31 @@ directions.  So, here are some directions contributed by Riley Rainey
 
 2. Unpack it; the current version seems to be 2.30:
 
-	$ zcat gpc230.tar.Z | tar xvf -
+	$ zcat gpc231.tar.Z | tar xvf -
 
-3. Copy in the Makefile attached to this message:
+3. ***IMPORTANT STEP*** ***DO NOT SKIP***
 
-	$ cp Makefile ./gpc230
+   This is important step if you want to use gpc to generate quality
+   scenery!
 
-4. Check install paths.  Edit the Makefile and make sure the install
+   Before building the library, edit the gpc.h file and change
+   GPC_EPSILON to something bigger.  You may experiment with this
+   value, but the following seems to work well for me:
+
+       #define GPC_EPSILON (0.000001)
+
+4. Copy in the Makefile attached to this message:
+
+	$ cp Makefile ./gpc231
+
+5. Check install paths.  Edit the Makefile and make sure the install
    paths are satisfactory.  Also make sure that all the make commands
    have leading tabs (i.e. that the tabs aren't expanded out into 8
    spaces) otherwise the make will fail.
 
-5. Build and install it:
+6. Build and install it:
 
-	$ cd ./gpc230
+	$ cd ./gpc231
 	$ make
 	$ su
 	Password:
@@ -43,7 +54,7 @@ directions.  So, here are some directions contributed by Riley Rainey
 
 -------------------------- snip ------------------------------
 
-# Unix/Linux makefile for GPC 2.30
+# Unix/Linux makefile for GPC 2.31
 #
 # Riley Rainey  (riley.rainey@websimulations.com)
 
