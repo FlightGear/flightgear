@@ -48,12 +48,18 @@ extern "C" {
 #include STL_STRING
 #include <vector>
 
-typedef vector < gpc_polygon * > polylist;
-typedef polylist::iterator polylist_iterator;
+FG_USING_STD(string);
+FG_USING_STD(vector);
+
+
+typedef vector < gpc_polygon * > gpcpoly_container;
+typedef gpcpoly_container::iterator gpcpoly_iterator;
+
 
 #define FG_MAX_AREAS 20
 #define EXTRA_SAFETY_CLIP
 #define FG_MAX_VERTICES 100000
+
 
 class point2d {
 public:
@@ -61,9 +67,9 @@ public:
 };
 
 
-class FGPolyList {
+class FGgpcPolyList {
 public:
-    polylist polys[FG_MAX_AREAS];
+    gpcpoly_container polys[FG_MAX_AREAS];
     gpc_polygon safety_base;
 };
 
@@ -74,7 +80,7 @@ private:
 
     gpc_vertex_list v_list;
     // static gpc_polygon poly;
-    FGPolyList polys_in, polys_out;
+    FGgpcPolyList polys_in, polys_clipped;
 
 public:
 
@@ -92,6 +98,9 @@ public:
 
     // Do actually clipping work
     bool clip_all(const point2d& min, const point2d& max);
+
+    // return output poly list
+    inline FGgpcPolyList get_polys_clipped() const { return polys_clipped; }
 };
 
 
@@ -99,6 +108,9 @@ public:
 
 
 // $Log$
+// Revision 1.3  1999/03/17 23:48:59  curt
+// minor renaming and a bit of rearranging.
+//
 // Revision 1.2  1999/03/13 23:51:34  curt
 // Renamed main.cxx to testclipper.cxx
 // Converted clipper routines to a class FGClipper.

@@ -144,7 +144,7 @@ bool FGClipper::load_polys(const string& path) {
 // Do actually clipping work
 bool FGClipper::clip_all(const point2d& min, const point2d& max) {
     gpc_polygon accum, result_diff, result_union, tmp;
-    polylist_iterator current, last;
+    gpcpoly_iterator current, last;
 
     FG_LOG( FG_CLIPPER, FG_INFO, "Running master clipper" );
 
@@ -198,7 +198,7 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 		gpc_polygon_clip(GPC_UNION, &accum, &tmp, &result_union);
 	    }
 	    
-	    polys_out.polys[i].push_back(&result_diff);
+	    polys_clipped.polys[i].push_back(&result_diff);
 	    accum = result_union;
 	}
     }
@@ -207,7 +207,7 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
     // clip to accum against original base tile
     gpc_polygon_clip(GPC_DIFF, &polys_in.safety_base, &accum, 
-		     &polys_out.safety_base);
+		     &polys_clipped.safety_base);
 
     // tmp output accum
     FILE *ofp= fopen("accum", "w");
@@ -215,13 +215,16 @@ bool FGClipper::clip_all(const point2d& min, const point2d& max) {
 
     // tmp output safety_base
     ofp= fopen("safety_base", "w");
-    gpc_write_polygon(ofp, &polys_out.safety_base);
+    gpc_write_polygon(ofp, &polys_clipped.safety_base);
 
     return true;
 }
 
 
 // $Log$
+// Revision 1.3  1999/03/17 23:48:58  curt
+// minor renaming and a bit of rearranging.
+//
 // Revision 1.2  1999/03/13 23:51:33  curt
 // Renamed main.cxx to testclipper.cxx
 // Converted clipper routines to a class FGClipper.
