@@ -66,6 +66,22 @@ FGLaRCsim::FGLaRCsim( double dt ) {
         I_xz = 0.000000E+00;
     }
 
+    if ( !strcmp(aero->getStringValue(), "basic") ) {
+        copy_to_LaRCsim(); // initialize all of LaRCsim's vars
+
+        //this should go away someday -- formerly done in fg_init.cxx
+  	Mass = 2./32.174;
+  	I_xx   = 0.0454;
+  	I_yy   = 0.0191;
+  	I_zz   = 0.0721;
+  	I_xz   = 0;
+//  	Mass = 8.547270E+01;
+//  	I_xx = 1.048000E+03;
+//  	I_yy = 3.000000E+03;
+//  	I_zz = 3.530000E+03;
+//  	I_xz = 0.000000E+00;
+    }
+
     ls_set_model_dt(dt);
     
     // Initialize our little engine that hopefully might
@@ -161,13 +177,84 @@ void FGLaRCsim::update( double dt ) {
 			* dt);
 	}
 
+	// Apparently the IO360 thrust model is not working.  
+	// F_X_engine is zero here.
 	F_X_engine = eng.get_prop_thrust_lbs();
-	// cout << "F_X_engine = " << F_X_engine << '\n';
-	// end c172 if block
 
 	Flap_handle = 30.0 * globals->get_controls()->get_flaps();
     }
     // done with c172-larcsim if-block
+
+    if ( !strcmp(aero->getStringValue(), "basic") ) {
+        // set control inputs
+        // cout << "V_calibrated_kts = " << V_calibrated_kts << '\n';
+	eng.set_IAS( V_calibrated_kts );
+	eng.set_Throttle_Lever_Pos( globals->get_controls()->get_throttle( 0 )
+				    * 100.0 );
+	eng.set_Propeller_Lever_Pos( 100 );
+        eng.set_Mixture_Lever_Pos( globals->get_controls()->get_mixture( 0 )
+				   * 100.0 );
+	eng.set_Magneto_Switch_Pos( globals->get_controls()->get_magnetos(0) );
+    	eng.setStarterFlag( globals->get_controls()->get_starter(0) );
+	eng.set_p_amb( Static_pressure );
+	eng.set_T_amb( Static_temperature );
+
+	// update engine model
+	eng.update();
+
+	// Fake control-surface positions
+	fgSetDouble("/surface-positions/flap-pos-norm",
+		    fgGetDouble("/controls/flight/flaps"));
+				// FIXME: ignoring trim
+	fgSetDouble("/surface-positions/elevator-pos-norm",
+		    fgGetDouble("/controls/flight/elevator"));
+				// FIXME: ignoring trim
+	fgSetDouble("/surface-positions/left-aileron-pos-norm",
+		    fgGetDouble("/controls/flight/aileron"));
+				// FIXME: ignoring trim
+	fgSetDouble("/surface-positions/right-aileron-pos-norm",
+		    -1 * fgGetDouble("/controls/flight/aileron"));
+				// FIXME: ignoring trim
+	fgSetDouble("/surface-positions/rudder-pos-norm",
+		    fgGetDouble("/controls/flight/rudder"));
+
+	// copy engine state values onto "bus"
+	fgSetDouble("/engines/engine/rpm", eng.get_RPM());
+	fgSetDouble("/engines/engine/mp-osi", eng.get_Manifold_Pressure());
+	fgSetDouble("/engines/engine/max-hp", eng.get_MaxHP());
+	fgSetDouble("/engines/engine/power-pct", eng.get_Percentage_Power());
+	fgSetDouble("/engines/engine/egt-degf", eng.get_EGT());
+	fgSetDouble("/engines/engine/cht-degf", eng.get_CHT());
+	fgSetDouble("/engines/engine/prop-thrust", eng.get_prop_thrust_SI());
+	fgSetDouble("/engines/engine/fuel-flow-gph",
+		    eng.get_fuel_flow_gals_hr());
+	fgSetDouble("/engines/engine/oil-temperature-degf",
+		    eng.get_oil_temp());
+	fgSetDouble("/engines/engine/running", eng.getRunningFlag());
+	fgSetDouble("/engines/engine/cranking", eng.getCrankingFlag());
+
+	static const SGPropertyNode *fuel_freeze
+	    = fgGetNode("/sim/freeze/fuel");
+
+	if ( ! fuel_freeze->getBoolValue() ) {
+	    //Assume we are using both tanks equally for now
+	    fgSetDouble("/consumables/fuel/tank[0]/level-gal_us",
+			fgGetDouble("/consumables/fuel/tank[0]/level-gal_us")
+			- (eng.get_fuel_flow_gals_hr() / (2 * 3600))
+			* dt);
+	    fgSetDouble("/consumables/fuel/tank[1]/level-gal_us",
+			fgGetDouble("/consumables/fuel/tank[1]/level-gal_us")
+			- (eng.get_fuel_flow_gals_hr() / (2 * 3600))
+			* dt);
+	}
+
+	// Apparently the IO360 thrust model is not working.  
+	// F_X_engine is zero here.
+	F_X_engine = eng.get_prop_thrust_lbs();
+
+	Flap_handle = 30.0 * globals->get_controls()->get_flaps();
+    }
+    // done with basic-larcsim if-block
 
     double save_alt = 0.0;
 
@@ -183,11 +270,14 @@ void FGLaRCsim::update( double dt ) {
     Long_trim = globals->get_controls()->get_elevator_trim();
     Rudder_pedal = globals->get_controls()->get_rudder() / speed_up->getIntValue();
 
-    if ( !strcmp(aero->getStringValue(), "c172") ) {
-        Use_External_Engine = 1;
-    } else {
-        Use_External_Engine = 0;
-    }
+    // IO360.cxx for the C172 thrust is broken (not sure why).  
+    // So force C172 to use engine model in c172_engine.c instead of the IO360.cxx.
+    //      if ( !strcmp(aero->getStringValue(), "c172") ) {
+    //          Use_External_Engine = 1;
+    //      } else {
+    //          Use_External_Engine = 0;
+    //      }
+    Use_External_Engine = 0;
 
     Throttle_pct = globals->get_controls()->get_throttle( 0 ) * 1.0;
 
