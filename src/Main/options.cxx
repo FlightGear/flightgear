@@ -199,6 +199,32 @@ fgSetDefaults ()
 }
 
 
+static bool
+parse_wind (const string &wind, double * min_hdg, double * max_hdg,
+	    double * speed, double * gust)
+{
+  unsigned int pos = wind.find('@');
+  if (pos == string::npos)
+    return false;
+  string dir = wind.substr(0, pos);
+  string spd = wind.substr(pos+1);
+  pos = dir.find(':');
+  if (pos == string::npos) {
+    *min_hdg = *max_hdg = atof(dir.c_str());
+  } else {
+    *min_hdg = atof(dir.substr(0,pos).c_str());
+    *max_hdg = atof(dir.substr(pos+1).c_str());
+  }
+  pos = spd.find(':');
+  if (pos == string::npos) {
+    *speed = *gust = atof(spd.c_str());
+  } else {
+    *speed = atof(spd.substr(0,pos).c_str());
+    *gust = atof(spd.substr(pos+1).c_str());
+  }
+  return true;
+}
+
 // parse a time string ([+/-]%f[:%f[:%f]]) into hours
 static double
 parse_time(const string& time_in) {
@@ -887,32 +913,39 @@ parse_option (const string& arg)
         double visibility = atof(arg.substr(19)) * 5280.0 * SG_FEET_TO_METER;
 	fgSetDouble("/environment/visibility-m", visibility);
     } else if ( arg.find( "--wind=" ) == 0 ) {
+        double min_hdg, max_hdg, speed, gust;
+        if (!parse_wind(arg.substr(7), &min_hdg, &max_hdg, &speed, &gust)) {
+	  SG_LOG( SG_GENERAL, SG_ALERT, "bad wind value " << arg.substr(7) );
+	  return FG_OPTIONS_ERROR;
+	}
+	fgSetDouble("/environment/wind-from-heading-deg", min_hdg);
+	fgSetDouble("/environment/params/min-wind-from-heading-deg", min_hdg);
+	fgSetDouble("/environment/params/max-wind-from-heading-deg", max_hdg);
+	fgSetDouble("/environment/wind-speed-kt", speed);
+	fgSetDouble("/environment/params/base-wind-speed-kt", speed);
+	fgSetDouble("/environment/params/gust-wind-speed-kt", gust);
+
         string val = arg.substr(7);
 	unsigned int pos = val.find('@');
 	if ( pos == string::npos ) {
 	  SG_LOG( SG_GENERAL, SG_ALERT, "bad wind value " << val );
 	  return FG_OPTIONS_ERROR;
 	}
-	double dir = atof(val.substr(0,pos).c_str());
-	double speed = atof(val.substr(pos+1).c_str());
-	SG_LOG(SG_GENERAL, SG_INFO, "WIND: " << dir << '@' << 
+	SG_LOG(SG_GENERAL, SG_INFO, "WIND: " << min_hdg << '@' << 
 	       speed << " knots" << endl);
-	fgSetDouble("/environment/wind-from-heading-deg", dir);
-	fgSetDouble("/environment/wind-speed-kt", speed);
 
 #ifdef FG_WEATHERCM
         // convert to fps
 	speed *= SG_NM_TO_METER * SG_METER_TO_FEET * (1.0/3600);
-	while (dir > 360)
-	  dir -= 360;
-	while (dir <= 0)
-	  dir += 360;
-	dir *= SGD_DEGREES_TO_RADIANS;
-	fgSetDouble("/environment/wind-from-north-fps",
-		    speed * cos(dir));
-	fgSetDouble("/environment/wind-from-east-fps",
-		    speed * sin(dir));
+	while (min_hdg > 360)
+	  min_hdg -= 360;
+	while (min_hdg <= 0)
+	  min_hdg += 360;
+	min_hdg *= SGD_DEGREES_TO_RADIANS;
+	fgSetDouble("/environment/wind-from-north-fps", speed * cos(dir));
+	fgSetDouble("/environment/wind-from-east-fps", speed * sin(dir));
 #endif // FG_WEATHERCM
+
     } else if ( arg.find( "--wp=" ) == 0 ) {
 	parse_wp( arg.substr( 5 ) );
     } else if ( arg.find( "--flight-plan=") == 0) {
@@ -1155,7 +1188,8 @@ fgUsage ()
          << "    --on-ground                   Start at ground level (default)" << endl
          << "    --in-air                      Start in air (implied when using --altitude)" << endl
          << "    --wind=DIR@SPEED              Specify wind coming from DIR (degrees) at" << endl
-         << "                                  SPEED (knots)" << endl
+         << "                                  SPEED (knots); both DIR and SPEED can" << endl
+	 << "                                  optionally contain a colon-separated range." << endl
          << endl
 
          << "Aircraft model directory (UIUC FDM ONLY):" << endl
