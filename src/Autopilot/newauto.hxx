@@ -27,6 +27,9 @@
 #define _NEWAUTO_HXX
 
 
+#include <simgear/route/waypoint.hxx>
+
+
 // Structures
 class FGAutopilot {
 
@@ -55,8 +58,10 @@ private:
     fgAutoHeadingMode heading_mode;
     fgAutoAltitudeMode altitude_mode;
 
-    double TargetLatitude;	// the latitude the AP should steer to.
-    double TargetLongitude;	// the longitude the AP should steer to.
+    SGWayPoint waypoint;	// the waypoint the AP should steer to.
+
+    // double TargetLatitude;	// the latitude the AP should steer to.
+    // double TargetLongitude;	// the longitude the AP should steer to.
     double TargetDistance;	// the distance to Target.
     double TargetHeading;	// the heading the AP should steer to.
     double TargetAltitude;	// altitude to hold
@@ -130,11 +135,19 @@ public:
     inline bool get_AutoThrottleEnabled() const { return auto_throttle; }
     void set_AutoThrottleEnabled( bool value );
 
-    inline double get_TargetLatitude() const { return TargetLatitude; }
-    inline void set_TargetLatitude( double val ) { TargetLatitude = val; }
+    inline void set_WayPoint( const double lon, const double lat,
+			      const string s ) {
+	waypoint = SGWayPoint( lon, lat, SGWayPoint::WGS84, "Current WP" );
+    }
+    inline double get_TargetLatitude() const {
+	return waypoint.get_target_lat();
+    }
+    inline double get_TargetLongitude() const {
+	return waypoint.get_target_lon();
+    }
+    // inline void set_TargetLatitude( double val ) { TargetLatitude = val; }
+    // inline void set_TargetLongitude( double val ) { TargetLongitude = val; }
     inline void set_old_lat( double val ) { old_lat = val; }
-    inline double get_TargetLongitude() const { return TargetLongitude; }
-    inline void set_TargetLongitude( double val ) { TargetLongitude = val; }
     inline void set_old_lon( double val ) { old_lon = val; }
     inline double get_TargetHeading() const { return TargetHeading; }
     inline void set_TargetHeading( double val ) { TargetHeading = val; }

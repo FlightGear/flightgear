@@ -67,8 +67,8 @@ extern char *coord_format_lon(float);
 			
 
 void FGAutopilot::MakeTargetLatLonStr( double lat, double lon ) {
-    sprintf( TargetLatitudeStr , "%s", coord_format_lat(TargetLatitude) );
-    sprintf( TargetLongitudeStr, "%s", coord_format_lon(TargetLongitude) );
+    sprintf( TargetLatitudeStr , "%s", coord_format_lat(get_TargetLatitude()));
+    sprintf( TargetLongitudeStr, "%s", coord_format_lon(get_TargetLongitude()));
     sprintf( TargetLatLonStr, "%s  %s", TargetLatitudeStr, TargetLongitudeStr );
 }
 
@@ -144,10 +144,11 @@ void FGAutopilot::init() {
     auto_throttle = false ;	// turn the auto throttle off
 
     // Initialize target location to startup location
-    old_lat = TargetLatitude = FGBFI::getLatitude();
-    old_lon = TargetLongitude = FGBFI::getLongitude();
+    old_lat = FGBFI::getLatitude();
+    old_lon = FGBFI::getLongitude();
+    set_WayPoint( old_lon, old_lat, "default" );
 
-    MakeTargetLatLonStr( TargetLatitude, TargetLongitude);
+    MakeTargetLatLonStr( get_TargetLatitude(), get_TargetLongitude() );
 	
     TargetHeading = 0.0;	// default direction, due north
     TargetAltitude = 3000;	// default altitude in meters
@@ -212,9 +213,11 @@ void FGAutopilot::reset() {
 
     sprintf( NewTgtAirportId, "%s", current_options.get_airport_id().c_str() );
 	
-    TargetLatitude = FGBFI::getLatitude();
-    TargetLongitude = FGBFI::getLongitude();
-    MakeTargetLatLonStr( TargetLatitude, TargetLongitude );
+    // TargetLatitude = FGBFI::getLatitude();
+    // TargetLongitude = FGBFI::getLongitude();
+    set_WayPoint( FGBFI::getLongitude(), FGBFI::getLatitude(), "reset" );
+
+    MakeTargetLatLonStr( get_TargetLatitude(), get_TargetLongitude() );
 }
 
 
@@ -330,7 +333,7 @@ int FGAutopilot::run() {
 	} else if ( heading_mode == FG_HEADING_WAYPOINT ) {
 	    // update target heading to waypoint
 
-	    double wp_course, wp_reverse, wp_distance;
+	    double wp_course, /*wp_reverse,*/ wp_distance;
 
 #ifdef DO_fgAP_CORRECTED_COURSE
 	    // compute course made good
@@ -349,39 +352,31 @@ int FGAutopilot::run() {
 
 	    // compute course to way_point
 	    // need to test for iter
-	    if( ! geo_inverse_wgs_84( 0, //fgAPget_altitude(),
-				      lat,
-				      lon,
-				      TargetLatitude,
-				      TargetLongitude,
-				      &wp_course,
-				      &wp_reverse,
-				      &wp_distance ) ) {
-		
+	    waypoint.CourseAndDistance( lon, lat, &wp_course, &wp_distance );
+
 #ifdef DO_fgAP_CORRECTED_COURSE
-		corrected_course = course - wp_course;
-		if( fabs(corrected_course) > 0.1 )
-		    printf("fgAP: course %f  wp_course %f  %f  %f\n",
-			   course, wp_course, fabs(corrected_course),
-			   distance );
+	    corrected_course = course - wp_course;
+	    if( fabs(corrected_course) > 0.1 )
+		printf("fgAP: course %f  wp_course %f  %f  %f\n",
+		       course, wp_course, fabs(corrected_course),
+		       distance );
 #endif // DO_fgAP_CORRECTED_COURSE
 		
-		if ( wp_distance > 100 ) {
-		    // corrected_course = course - wp_course;
-		    TargetHeading = NormalizeDegrees(wp_course);
-		} else {
-		    printf("distance(%f) to close\n", wp_distance);
-		    // Real Close -- set heading hold to current heading
-		    // and Ring the arival bell !!
-		    heading_mode = FG_HEADING_LOCK;
-		    // use current heading
-		    TargetHeading = FGBFI::getHeading();
-		}
-		MakeTargetHeadingStr( TargetHeading );
-		// Force this just in case
-		TargetDistance = wp_distance;
-		MakeTargetDistanceStr( wp_distance );
+	    if ( wp_distance > 100 ) {
+		// corrected_course = course - wp_course;
+		TargetHeading = NormalizeDegrees(wp_course);
+	    } else {
+		printf("distance(%f) to close\n", wp_distance);
+		// Real Close -- set heading hold to current heading
+		// and Ring the arival bell !!
+		heading_mode = FG_HEADING_LOCK;
+		// use current heading
+		TargetHeading = FGBFI::getHeading();
 	    }
+	    MakeTargetHeadingStr( TargetHeading );
+	    // Force this just in case
+	    TargetDistance = wp_distance;
+	    MakeTargetDistanceStr( wp_distance );
 	}
 
 	double RelHeading;
@@ -628,29 +623,21 @@ void FGAutopilot::set_HeadingMode( fgAutoHeadingMode mode ) {
 	// set heading hold to current heading
 	TargetHeading = FGBFI::getHeading();
     } else if ( heading_mode == FG_HEADING_WAYPOINT ) {
-	double course, reverse, distance;
+	double course, /*reverse,*/ distance;
 	// turn on location hold
 	// turn on heading hold
 	old_lat = FGBFI::getLatitude();
 	old_lon = FGBFI::getLongitude();
 			
-	// need to test for iter
-	if( !geo_inverse_wgs_84( FGBFI::getAltitude() * FEET_TO_METER,
-				 FGBFI::getLatitude(),
-				 FGBFI::getLongitude(),
-				 TargetLatitude,
-				 TargetLongitude,
-				 &course,
-				 &reverse,
-				 &distance ) ) {
-	    TargetHeading = course;
-	    TargetDistance = distance;
-	    MakeTargetDistanceStr( distance );
-	}
+	waypoint.CourseAndDistance( FGBFI::getLongitude(), FGBFI::getLatitude(),
+				    &course, &distance );
+	TargetHeading = course;
+	TargetDistance = distance;
+	MakeTargetDistanceStr( distance );
 
 	FG_LOG( FG_COCKPIT, FG_INFO, " fgAPSetLocation: ( "
-		<< TargetLatitude  << " "
-		<< TargetLongitude << " ) "
+		<< get_TargetLatitude()  << " "
+		<< get_TargetLongitude() << " ) "
 		);
     }
 	

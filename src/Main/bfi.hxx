@@ -197,8 +197,9 @@ public:
 
   static void setTargetAirport (const string &targetAirport);
   static void setGPSLock (bool lock);
-  static void setGPSTargetLatitude (double latitude);
-  static void setGPSTargetLongitude (double longitude);
+  // static void setGPSTargetLatitude (double latitude);
+  // static void setGPSTargetLongitude (double longitude);
+  static void setGPSTargetWayPoint (double latitude, double longitude);
 
 
 				// Weather

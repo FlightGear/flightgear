@@ -609,8 +609,10 @@ void TgtAptDialog_OK (puObject *)
 		current_options.set_airport_id( TgtAptId.c_str() );
 		sprintf( NewTgtAirportId, "%s", TgtAptId.c_str() );
 			
-		current_autopilot->set_TargetLatitude( a.latitude );
-		current_autopilot->set_TargetLongitude( a.longitude );
+		current_autopilot->set_WayPoint( a.longitude, a.latitude,
+						 TgtAptId );
+		// current_autopilot->set_TargetLatitude( a.latitude );
+		// current_autopilot->set_TargetLongitude( a.longitude );
 		current_autopilot->MakeTargetLatLonStr(
 				     current_autopilot->get_TargetLatitude(),
 				     current_autopilot->get_TargetLongitude() );
