@@ -150,23 +150,25 @@ if test "$have_timezone" = yes; then
 fi
 
 dnl add correct audio libs and configure for audio support
-audio_LIBS="-lplibsl -lplibsm"
+LIBS="-lplibsl -lplibsm"
 
 dnl search for FreeBSD library
 AC_SEARCH_LIBS(hid_init, usbhid)
 
 case "${host}" in
 *-*-cygwin* | *-*-mingw32*)
-    audio_LIBS="$audio_LIBS -lwinmm"
+    LIBS="$LIBS -lwinmm"
     ;;
 *-apple-darwin*)
-    audio_LIBS="$audio_LIBS -framework IOKit -framework CoreFoundation"
+    LIBS="$LIBS -framework IOKit -framework CoreFoundation"
     ;;
 *-*-irix* )
-    audio_LIBS="$audio_LIBS -laudio"
+    LIBS="$LIBS -laudio"
     ;;
 
 esac
+audio_LIBS="$LIBS"
+LIBS=""
 AC_SUBST(audio_LIBS)
 
 dnl ENABLE_AUDIO_SUPPORT could be depricated at any time in favor of
