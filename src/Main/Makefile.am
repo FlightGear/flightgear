@@ -32,11 +32,11 @@ bin_PROGRAMS = fgfs
 bin_SCRIPTS = runfgfs runfgfs.bat
 
 fgfs_SOURCES = \
+	main.cxx \
 	bfi.cxx bfi.hxx \
 	fg_init.cxx fg_init.hxx \
 	fg_io.cxx fg_io.hxx \
 	keyboard.cxx keyboard.hxx \
-	main.cxx \
 	options.cxx options.hxx \
 	save.cxx save.hxx \
 	splash.cxx splash.hxx \
@@ -53,9 +53,11 @@ fgfs_LDADD = \
 	$(top_builddir)/src/FDM/libFlight.a \
 	$(top_builddir)/src/FDM/Balloon/libBalloon.a \
 	$(top_builddir)/src/FDM/JSBsim/libJSBsim.a \
+	$(top_builddir)/src/FDM/JSBsim/filtersjb/libfiltersjb.a \
 	$(top_builddir)/src/FDM/LaRCsim/libLaRCsim.a \
 	$(top_builddir)/src/FDM/UIUCModel/libUIUCModel.a \
 	$(top_builddir)/src/GUI/libGUI.a \
+	$(top_builddir)/src/Navaids/libNavaids.a \
 	$(top_builddir)/src/Scenery/libScenery.a \
 	$(top_builddir)/src/Airports/libAirports.a \
         $(NETWORK_LIBS) \

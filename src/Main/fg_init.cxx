@@ -66,6 +66,9 @@
 #include <FDM/MagicCarpet.hxx>
 #include <Include/general.hxx>
 #include <Joystick/joystick.hxx>
+#include <Navaids/fixlist.hxx>
+#include <Navaids/ilslist.hxx>
+#include <Navaids/navlist.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
@@ -449,6 +452,22 @@ bool fgInitSubsystems( void ) {
 #else
     current_weather.Init();
 #endif
+
+    // Initialize vor/ndb/ils/fix list management and query systems
+    current_navlist = new FGNavList;
+    FGPath p_nav( current_options.get_fg_root() );
+    p_nav.append( "Navaids/default.nav" );
+    current_navlist->init( p_nav );
+
+    current_ilslist = new FGILSList;
+    FGPath p_ils( current_options.get_fg_root() );
+    p_ils.append( "Navaids/default.ils" );
+    current_ilslist->init( p_ils );
+
+    current_fixlist = new FGFixList;
+    FGPath p_fix( current_options.get_fg_root() );
+    p_fix.append( "Navaids/default.fix" );
+    current_fixlist->init( p_fix );
 
     // Initialize the Cockpit subsystem
     if( fgCockpitInit( &current_aircraft )) {
