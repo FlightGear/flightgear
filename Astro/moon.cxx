@@ -187,8 +187,9 @@ void Moon::updatePosition(fgTIME *t, Star *ourSun)
   // First calculates the moon's parrallax, that is, the apparent size of the 
   // (equatorial) radius of the earth, as seen from the moon 
   mpar = asin ( 1 / r);
-  gclat = FG_Latitude - 0.003358 * sin (2 * DEG_TO_RAD * FG_Latitude);
-  rho = 0.99883 + 0.00167 * cos(2 * DEG_TO_RAD * FG_Latitude);
+  gclat = f->get_Latitude() - 0.003358 * 
+      sin (2 * DEG_TO_RAD * f->get_Latitude() );
+  rho = 0.99883 + 0.00167 * cos(2 * DEG_TO_RAD * f->get_Latitude());
   if (geoRa < 0)
     geoRa += (2*FG_PI);
   

@@ -295,8 +295,8 @@ void fgSkyRender( void ) {
     // Rotate to proper orientation
     // printf("  lon = %.2f  lat = %.2f\n", FG_Longitude * RAD_TO_DEG,
     //        FG_Latitude * RAD_TO_DEG);
-    xglRotatef( FG_Longitude * RAD_TO_DEG, 0.0, 0.0, 1.0 );
-    xglRotatef( 90.0 - FG_Latitude * RAD_TO_DEG, 0.0, 1.0, 0.0 );
+    xglRotatef( f->get_Longitude() * RAD_TO_DEG, 0.0, 0.0, 1.0 );
+    xglRotatef( 90.0 - f->get_Latitude() * RAD_TO_DEG, 0.0, 1.0, 0.0 );
     xglRotatef( l->sun_rotation * RAD_TO_DEG, 0.0, 0.0, 1.0 );
 
     // Draw inner/center section of sky*/
@@ -365,6 +365,10 @@ void fgSkyRender( void ) {
 
 
 // $Log$
+// Revision 1.15  1998/12/03 01:15:36  curt
+// Converted fgFLIGHT to a class.
+// Tweaks for Sun portability.
+//
 // Revision 1.14  1998/11/06 21:17:39  curt
 // Converted to new logstream debugging facility.  This allows release
 // builds with no messages at all (and no performance impact) by using
