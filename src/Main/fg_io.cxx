@@ -210,7 +210,8 @@ void fgIOInit() {
 	    p->open();
 	    global_io_list.push_back( p );
 	    if ( !p->is_enabled() ) {
-		FG_LOG( FG_IO, FG_INFO, "I/O Channel config failed." );
+		FG_LOG( FG_IO, FG_ALERT, "I/O Channel config failed." );
+		exit(-1);
 	    }
 	} else {
 	    FG_LOG( FG_IO, FG_INFO, "I/O Channel parse failed." );
@@ -250,6 +251,23 @@ void fgIOProcess() {
 		p->process();
 		p->dec_count_down( -1000000.0 / p->get_hz() );
 	    }
+	}
+    }
+}
+
+
+// shutdown all I/O connections
+void fgIOShutdownAll() {
+    FGProtocol *p;
+
+    // cout << "processing I/O channels" << endl;
+
+    for ( int i = 0; i < (int)global_io_list.size(); ++i ) {
+	// cout << "  channel = " << i << endl;
+	p = global_io_list[i];
+
+	if ( p->is_enabled() ) {
+	    p->close();
 	}
     }
 }

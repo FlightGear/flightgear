@@ -962,7 +962,8 @@ static void fgMainLoop( void ) {
 
 	    double rpm_factor = cur_fdm_state->get_engine(0)->get_RPM() /
 		2500.0;
-	    cout << "rpm = " << cur_fdm_state->get_engine(0)->get_RPM() << endl;
+	    // cout << "rpm = " << cur_fdm_state->get_engine(0)->get_RPM()
+	    //      << endl;
 
 	    double pitch = 0.3 + rpm_factor * 3.0;
 	
@@ -970,19 +971,19 @@ static void fgMainLoop( void ) {
 	    // and sounds bad to boot.  :-)
 	    if (pitch < 0.7) { pitch = 0.7; }
 	    if (pitch > 5.0) { pitch = 5.0; }
-	    cout << "pitch = " << pitch << endl;
+	    // cout << "pitch = " << pitch << endl;
 
 	    double mp_factor =
 		cur_fdm_state->get_engine(0)->get_Manifold_Pressure() / 28;
-	    cout << "mp = " 
-		 << cur_fdm_state->get_engine(0)->get_Manifold_Pressure()
-		 << endl;
+	    // cout << "mp = " 
+	    //      << cur_fdm_state->get_engine(0)->get_Manifold_Pressure()
+	    //      << endl;
 
 	    double volume = mp_factor;
 
 	    if ( volume < 0.3 ) { volume = 0.3; }
 	    if ( volume > 2.0 ) { volume = 2.0; }
-	    cout << "volume = " << volume << endl;
+	    // cout << "volume = " << volume << endl;
 
 	    pitch_envelope.setStep  ( 0, 0.01, pitch );
 	    volume_envelope.setStep ( 0, 0.01, volume );

@@ -399,7 +399,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    //   fclose( fg_DebugOutput );
 	    // }
 	    FG_LOG( FG_INPUT, FG_ALERT, 
-		    "Program exiting normally at user request." );
+		    "Program exit requested." );
 	    ConfirmExitDialog();
 	    return;
 	}

@@ -36,4 +36,8 @@ void fgIOInit();
 void fgIOProcess();
 
 
+// shutdown all I/O connections
+void fgIOShutdownAll();
+
+
 #endif // _FG_IO_HXX
