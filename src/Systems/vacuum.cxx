@@ -55,7 +55,7 @@ VacuumSystem::update (double dt)
 
         // simple regulator model that clamps smoothly to about 5 inhg
         // over a normal rpm range
-        double max = 5.39 - 1.0 / ( rpm * 0.00111 );
+        double max = (rpm > 0 ? 5.39 - 1.0 / ( rpm * 0.00111 ) : 0);
         if ( suction < 0.0 ) suction = 0.0;
         if ( suction > max ) suction = max;
     }
