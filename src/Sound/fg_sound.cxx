@@ -83,6 +83,9 @@ FGSound::~FGSound()
    if (_condition)
       delete _condition;
 
+   _volume.clear();
+   _pitch.clear();
+
    delete _sample;
 }
 

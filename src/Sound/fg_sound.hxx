@@ -33,7 +33,7 @@
 
 #include "soundmgr.hxx"
 
-static const double MAX_TRANSIT_TIME = 0.1;	// 10 ms.
+static const double MAX_TRANSIT_TIME = 0.1;	// 100 ms.
 
 
 /**
