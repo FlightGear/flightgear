@@ -57,7 +57,6 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Airports/simple.hxx>
-#include <Astro/stars.hxx>
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <FDM/Balloon.h>

@@ -14,11 +14,11 @@ SUBDIRS = \
 	Include \
         Aircraft \
         Airports \
-        Astro \
         Autopilot \
         Clouds \
         Cockpit \
         Controls \
+        Ephemeris \
         FDM \
         GUI \
         Joystick \

@@ -74,7 +74,7 @@
 #include <Include/general.hxx>
 
 #include <Aircraft/aircraft.hxx>
-#include <Astro/ephemeris.hxx>
+#include <Ephemeris/ephemeris.hxx>
 
 #include <Autopilot/autopilot.hxx>
 #include <Cockpit/cockpit.hxx>

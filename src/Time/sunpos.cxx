@@ -57,7 +57,7 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/vector.hxx>
 
-#include <Astro/ephemeris.hxx>
+#include <Ephemeris/ephemeris.hxx>
 #include <Main/views.hxx>
 #include <Scenery/scenery.hxx>
 
