@@ -1,4 +1,4 @@
-/* Simulator/Include/config.h.in.  Generated automatically from configure.in by autoheader.  */
+/* Include/config.h.in.  Generated automatically from configure.in by autoheader.  */
 
 /* Define to empty if the keyword does not work.  */
 #undef const
@@ -132,11 +132,17 @@
 /* Define if you have the GLcore library (-lGLcore).  */
 #undef HAVE_LIBGLCORE
 
+/* Define if you have the ICE library (-lICE).  */
+#undef HAVE_LIBICE
+
 /* Define if you have the MesaGL library (-lMesaGL).  */
 #undef HAVE_LIBMESAGL
 
 /* Define if you have the MesaGLU library (-lMesaGLU).  */
 #undef HAVE_LIBMESAGLU
+
+/* Define if you have the SM library (-lSM).  */
+#undef HAVE_LIBSM
 
 /* Define if you have the X11 library (-lX11).  */
 #undef HAVE_LIBX11
@@ -149,6 +155,9 @@
 
 /* Define if you have the Xmu library (-lXmu).  */
 #undef HAVE_LIBXMU
+
+/* Define if you have the Xt library (-lXt).  */
+#undef HAVE_LIBXT
 
 /* Define if you have the glut library (-lglut).  */
 #undef HAVE_LIBGLUT
