@@ -395,20 +395,17 @@ createNAV1 (int x, int y)
 			  FGSteam::get_HackOBS1_deg,
 			  -360.0, 360.0, -1.0, 0.0);
 				// Layer 1: long needle
-  inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
+  inst->addLayer(1, createTexture("Textures/Panel/nav-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::XSHIFT,
 			  FGSteam::get_HackVOR1_deg,
 			  -10.0, 10.0, SIX_W / 40.0, 0.0);
-  inst->addTransformation(1, FGInstrumentLayer::YSHIFT,
-			  -SIX_W / 4.4 );
-  inst->addLayer(2, createTexture("Textures/Panel/long-needle.rgb"));
+  inst->addLayer(2, createTexture("Textures/Panel/nav-needle.rgb"));
   inst->addTransformation(2, FGInstrumentLayer::YSHIFT,
 			  FGSteam::get_HackGS_deg,
 			  -1.0, 1.0, SIX_W / 5.0, 0.0);
-  inst->addTransformation(2, FGInstrumentLayer::XSHIFT,
-			  -SIX_W / 4.4 );
   inst->addTransformation(2, FGInstrumentLayer::ROTATION,
 			  90 );
+  inst->addLayer(3, createTexture("Textures/Panel/nav-face.rgb"));
 
   return inst;
 }
@@ -427,12 +424,13 @@ createNAV2 (int x, int y)
   inst->addTransformation(0, FGInstrumentLayer::ROTATION,
 			  FGSteam::get_HackOBS2_deg,
 			  -360.0, 360.0, -1.0, 0.0);
-  inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
+  inst->addLayer(1, createTexture("Textures/Panel/nav-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::XSHIFT,
 			  FGSteam::get_HackVOR2_deg,
 			  -10.0, 10.0, SIX_W / 40.0, 0.0);
-  inst->addTransformation(1, FGInstrumentLayer::YSHIFT,
-			  -SIX_W / 4.4 );
+//   inst->addTransformation(1, FGInstrumentLayer::YSHIFT,
+// 			  -SIX_W / 4.4 );
+  inst->addLayer(2, createTexture("Textures/Panel/nav-face.rgb"));
 
   return inst;
 }
