@@ -52,7 +52,8 @@ FGGlobals::FGGlobals() :
     props(new SGPropertyNode),
     initial_state(0),
     commands(new SGCommandMgr),
-    io(new FGIO)
+    io(new FGIO),
+    locale(NULL)
 {
 }
 
