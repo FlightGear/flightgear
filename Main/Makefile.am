@@ -8,8 +8,8 @@ fg_SOURCES = \
 	GLUTkey.cxx GLUTkey.hxx \
 	GLUTmain.cxx \
 	fg_config.h \
-	fg_getopt.c fg_getopt.h \
 	fg_init.cxx fg_init.hxx \
+	options.cxx options.hxx \
 	views.cxx views.hxx
 
 fg_LDADD = \

@@ -24,8 +24,8 @@
  **************************************************************************/
 
 
-#ifndef _VIEWS_H
-#define _VIEWS_H
+#ifndef _VIEWS_HXX
+#define _VIEWS_HXX
 
 
 #ifndef __cplusplus                                                          
@@ -36,7 +36,7 @@
 #include <Include/fg_types.h>
 #include <Flight/flight.h>
 #include <Math/mat3.h>
-#include <Time/fg_time.h>
+#include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 
 
@@ -98,10 +98,15 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l);
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:25:46  curt
-/* C++ - ifing the code.
-/* Starting a bit of reorganization of lighting code.
+/* Revision 1.2  1998/04/24 00:49:22  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Trying out some different option parsing code.
+/* Some code reorganization.
 /*
+ * Revision 1.1  1998/04/22 13:25:46  curt
+ * C++ - ifing the code.
+ * Starting a bit of reorganization of lighting code.
+ *
  * Revision 1.11  1998/04/21 17:02:42  curt
  * Prepairing for C++ integration.
  *

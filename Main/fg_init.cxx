@@ -26,12 +26,13 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <Include/cmdargs.h>
 #include <Include/fg_constants.h>
 #include <Include/general.h>
 
@@ -42,14 +43,14 @@
 #include <Astro/stars.hxx>
 #include <Astro/sun.hxx>
 #include <Autopilot/autopilot.h>
-#include <Cockpit/cockpit.h>
+#include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
 #include <Joystick/joystick.h>
 #include <Math/fg_random.h>
 #include <Scenery/scenery.h>
 #include <Scenery/tilemgr.hxx>
-#include <Time/event.h>
-#include <Time/fg_time.h>
+#include <Time/event.hxx>
+#include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 #include <Time/sunpos.hxx>
 #include <Weather/weather.h>
@@ -68,31 +69,27 @@ int fgInitGeneral( void ) {
 
     g = &general;
 
-    fgInitDebug();
-
-    fgPrintf( FG_GENERAL, FG_INFO, "General Initialization\n" );
-    fgPrintf( FG_GENERAL, FG_INFO, "======= ==============\n" );
-
-    /* seed the random number generater */
-    fg_srandom();
-
-    // determine the fg root path. The command line parser getargs() will
-    // fill in a root directory if the option was used.
-
+    // determine the fg root path.  
     if( !(g->root_dir) ) { 
 	// If not set by command line test for environmental var..
 	g->root_dir = getenv("FG_ROOT");
 	if ( !g->root_dir ) { 
 	    // No root path set? Then assume, we will exit if this is
 	    // wrong when looking for support files.
-	    g->root_dir = (char *)DefaultRootDir;
+	    fgPrintf( FG_GENERAL, FG_EXIT, "%s %s\n",
+                      "Cannot continue without environment variable FG_ROOT",
+		      "being defined.");
 	}
     }
     fgPrintf( FG_GENERAL, FG_INFO, "FG_ROOT = %s\n\n", g->root_dir);
 
-    // Dummy value can be changed if future initializations
-    // fail a critical task.
-    return ( 0 /* FALSE */ ); 
+    fgPrintf( FG_GENERAL, FG_INFO, "General Initialization\n" );
+    fgPrintf( FG_GENERAL, FG_INFO, "======= ==============\n" );
+
+    // seed the random number generater
+    fg_srandom();
+
+    return ( 1 ); 
 }
 
 
@@ -103,9 +100,6 @@ int fgInitGeneral( void ) {
 
 int fgInitSubsystems( void ) {
     double cur_elev;
-
-    // Ok will be flagged only if we get EVERYTHING done.
-    int ret_val = 1  /* TRUE */;
 
     fgFLIGHT *f;
     struct fgLIGHT *l;
@@ -397,24 +391,28 @@ int fgInitSubsystems( void ) {
     	fgPrintf( FG_GENERAL, FG_EXIT, "Error in Joystick initialization!\n" );
     }
 
-    	// Autopilot init added here, by Jeff Goeke-Smith
-    	fgAPInit(&current_aircraft);
-    	// end added section;
+    // Autopilot init added here, by Jeff Goeke-Smith
+    fgAPInit(&current_aircraft);
     
     // One more try here to get the sky synced up
     fgSkyColorsInit();
-    ret_val = 0;
 
     fgPrintf(FG_GENERAL, FG_INFO,"\n");
-    return ret_val;
+
+    return(1);
 }
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:25:44  curt
-/* C++ - ifing the code.
-/* Starting a bit of reorganization of lighting code.
+/* Revision 1.2  1998/04/24 00:49:20  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Trying out some different option parsing code.
+/* Some code reorganization.
 /*
+ * Revision 1.1  1998/04/22 13:25:44  curt
+ * C++ - ifing the code.
+ * Starting a bit of reorganization of lighting code.
+ *
  * Revision 1.56  1998/04/18 04:11:28  curt
  * Moved fg_debug to it's own library, added zlib support.
  *

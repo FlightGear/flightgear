@@ -23,7 +23,9 @@
 // (Log is kept at end of this file)
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>                     
@@ -36,11 +38,7 @@
 #ifdef HAVE_STDLIB_H
 #   include <stdlib.h>
 #endif
-#ifdef HAVE_GETOPT_H
-#   include <getopt.h>
-#endif
 
-#include <Include/cmdargs.h>       // Line to command line arguments
 #include <Include/fg_constants.h>  // for VERSION
 #include <Include/general.h>
 
@@ -50,7 +48,7 @@
 #include <Astro/sky.hxx>
 #include <Astro/stars.hxx>
 #include <Astro/sun.hxx>
-#include <Cockpit/cockpit.h>
+#include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
 #include <Joystick/joystick.h>
 #include <Math/fg_geodesy.h>
@@ -58,15 +56,15 @@
 #include <Math/polar.h>
 #include <Scenery/scenery.h>
 #include <Scenery/tilemgr.hxx>
-#include <Time/event.h>
-#include <Time/fg_time.h>
-#include <Time/fg_timer.h>
+#include <Time/event.hxx>
+#include <Time/fg_time.hxx>
+#include <Time/fg_timer.hxx>
 #include <Time/sunpos.hxx>
 #include <Weather/weather.h>
 
 #include "GLUTkey.hxx"
 #include "fg_init.hxx"
-#include "fg_getopt.h"
+#include "options.hxx"
 #include "views.hxx"
 
 
@@ -80,12 +78,10 @@ static GLint winWidth, winHeight;
 // Another hack
 int use_signals = 0;
 
-// Yet another hack. This one used by the HUD code. Michele
-int show_hud;
-
 // Yet another other hack. Used for my prototype instrument code. (Durk)
 int displayInstruments; 
 
+/*
 // The following defines flight gear options. Because glutlib will also
 // want to parse its own options, those options must not be included here
 // or they will get parsed by the main program option parser. Hence case
@@ -181,6 +177,7 @@ const char *DefaultRootDir  = "\\Flightgear";
 const char *DefaultAircraft = "Navion.acf";
 const char *DefaultDebuglog = "fgdebug.log";
 const int   DefaultViewMode = HUD_VIEW;
+*/
 
 // Debug defaults handled in fg_debug.c
 
@@ -203,7 +200,7 @@ static void fgInitVisuals( void ) {
     xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
     xglFogi (GL_FOG_MODE, GL_LINEAR);
-    xglFogf (GL_FOG_START, 10.0);
+    xglFogf (GL_FOG_START, w->visibility / 10000000.0 );
     xglFogf (GL_FOG_END, w->visibility);
     // xglFogf (GL_FOG_DENSITY, w->visibility);
     xglHint (GL_FOG_HINT, GL_NICEST /* GL_FASTEST */ );
@@ -320,6 +317,7 @@ static void fgUpdateInstrViewParams( void ) {
 // Update all Visuals (redraws anything graphics related)
 static void fgRenderFrame( void ) {
     struct fgLIGHT *l;
+    fgOPTIONS *o;
     struct fgTIME *t;
     struct fgVIEW *v;
     double angle;
@@ -327,6 +325,7 @@ static void fgRenderFrame( void ) {
     GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
 
     l = &cur_light_params;
+    o = &current_options;
     t = &cur_time_params;
     v = &current_view;
 
@@ -396,14 +395,15 @@ static void fgRenderFrame( void ) {
     xglTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
     xglHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
     // set base color (I don't think this is doing anything here)
-    xglColor4fv(white);
+    xglMaterialfv (GL_FRONT, GL_AMBIENT, white);
+    xglMaterialfv (GL_FRONT, GL_DIFFUSE, white);
 
     fgTileMgrRender();
 
     xglDisable( GL_TEXTURE_2D );
 
     // display HUD
-    if( show_hud ) {
+    if( o->hud_status ) {
      	fgCockpitUpdate();
     }
 
@@ -475,91 +475,8 @@ void fgInitTimeDepCalcs( void ) {
 }
 
 
-// Scenery management routines
-
-/* static void fgSceneryInit_OLD() { */
-    /* make scenery */
-/*     scenery = fgSceneryCompile_OLD();
-    runway = fgRunwayHack_OLD(0.69, 53.07);
-} */
-
-
-/* create the scenery */
-/* GLint fgSceneryCompile_OLD() {
-    GLint scenery;
-
-    scenery = mesh2GL(mesh_ptr_OLD);
-
-    return(scenery);
-}
-*/
-
-/* hack in a runway */
-/* GLint fgRunwayHack_OLD(double width, double length) {
-    static GLfloat concrete[4] = { 0.5, 0.5, 0.5, 1.0 };
-    static GLfloat line[4]     = { 0.9, 0.9, 0.9, 1.0 };
-    int i;
-    int num_lines = 16;
-    float line_len, line_width_2, cur_pos;
-
-    runway = xglGenLists(1);
-    xglNewList(runway, GL_COMPILE);
-    */
-    /* draw concrete */
-/*    xglBegin(GL_POLYGON);
-    xglMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, concrete );
-    xglNormal3f(0.0, 0.0, 1.0);
-
-    xglVertex3d( 0.0,   -width/2.0, 0.0);
-    xglVertex3d( 0.0,    width/2.0, 0.0);
-    xglVertex3d(length,  width/2.0, 0.0);
-    xglVertex3d(length, -width/2.0, 0.0);
-    xglEnd();
-    */
-    /* draw center line */
-/*    xglMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, line );
-    line_len = length / ( 2 * num_lines + 1);
-    printf("line_len = %.3f\n", line_len);
-    line_width_2 = 0.02;
-    cur_pos = line_len;
-    for ( i = 0; i < num_lines; i++ ) {
-	xglBegin(GL_POLYGON);
-	xglVertex3d( cur_pos, -line_width_2, 0.005);
-	xglVertex3d( cur_pos,  line_width_2, 0.005);
-	cur_pos += line_len;
-	xglVertex3d( cur_pos,  line_width_2, 0.005);
-	xglVertex3d( cur_pos, -line_width_2, 0.005);
-	cur_pos += line_len;
-	xglEnd();
-    }
-
-    xglEndList();
-
-    return(runway);
-}
-*/
-
-/* draw the scenery */
-/*static void fgSceneryDraw_OLD() {
-    static float z = 32.35;
-
-    xglPushMatrix();
-
-    xglCallList(scenery);
-
-    printf("*** Drawing runway at %.2f\n", z);
-
-    xglTranslatef( -398391.28, 120070.41, 32.35);
-    xglRotatef(170.0, 0.0, 0.0, 1.0);
-    xglCallList(runway);
-
-    xglPopMatrix();
-}
-*/
-
-
-// What should we do when we have nothing else to do?  How about get
-// ready for the next move and update the display?
+// What should we do when we have nothing else to do?  Let's get ready
+// for the next move and update the display?
 static void fgMainLoop( void ) {
     static int remainder = 0;
     int elapsed, multi_loop;
@@ -664,19 +581,10 @@ static void fgReshape( int width, int height ) {
 }
 
 
-// Main ...
-int main( int argc, char *argv[] ) {
-    fgFLIGHT *f;
-    int parse_result;  // Used in command line argument.
-
-    f = current_aircraft.flight;
-    //  First things first... We must have startup options dealt with.
-
-    printf("Flight Gear:  Version %s\n\n", VERSION);
-
-    // Initialize the Window/Graphics environment.
-
-    // initialize GLUT
+// Initialize GLUT and define a main window
+int fgGlutInit( int argc, char **argv ) {
+    // GLUT will extract all glut specific options so later on we only
+    // need wory about our own.
     xglutInit(&argc, argv);
 
     // Define Display Parameters
@@ -688,82 +596,92 @@ int main( int argc, char *argv[] ) {
     // Initialize windows
     xglutCreateWindow("Flight Gear");
 
-    // xglutInit above will extract all non-general program command line.
-    // We only need wory about our own.
+    return(1);
+}
 
-    parse_result = getargs( argc, argv, OptsDefined, CmdLineOptions, NULL);
 
-    switch( parse_result ) {
-    case ALLDONE:
-	break;
+// Initialize GLUT event handlers
+int fgGlutInitEvents( void ) {
+    // call fgReshape() on window resizes
+    xglutReshapeFunc( fgReshape );
 
-    case HELP:
-        print_desc( OptsDefined, CmdLineOptions );
-        exit(0);
+    // call GLUTkey() on keyboard event
+    xglutKeyboardFunc( GLUTkey );
+    glutSpecialFunc( GLUTspecialkey );
 
-    case INVALID:
-    default:
-        printf( "Flight Gear: Command line invalid.");
-        exit(0);
+    // call fgMainLoop() whenever there is
+    // nothing else to do
+    xglutIdleFunc( fgMainLoop );
+
+    // draw the scene
+    xglutDisplayFunc( fgRenderFrame );
+
+    return(1);
+}
+
+
+// Main ...
+int main( int argc, char **argv ) {
+    fgFLIGHT *f;
+    int result;  // Used in command line argument.
+
+    f = current_aircraft.flight;
+
+    // Initialize the debugging output system
+    fgInitDebug();
+
+    fgPrintf(FG_GENERAL, FG_INFO, "Flight Gear:  Version %s\n\n", VERSION);
+
+    // Initialize the Window/Graphics environment.
+    if( !fgGlutInit(argc, argv) ) {
+	fgPrintf( FG_GENERAL, FG_EXIT, "GLUT initialization failed ...\n" );
     }
 
-    // Deal with the effects of options no set by manipulating the command
-    // line, or possibly set to invalid states.
+    // Parse remaining command line options
+    result = current_options.parse(argc, argv);
 
-    if(( viewArg >= 0) && (viewArg <= 1)) {
-	show_hud = viewArg; // For now view_mode TRUE - no HUD, else show_hud.
-    } else {
-	show_hud = DefaultViewMode;
+    if ( result != FG_OPTIONS_OK ) {
+	// Something must have gone horribly wrong with the command
+	// line parsing or maybe the user just requested help ... :-)
+	current_options.usage();
+	fgPrintf( FG_GENERAL, FG_EXIT, "\nShutting down ...\n");
     }
-
-    // All other command line option responses are handled in the various
-    // initialization routines (or ignored if not implemented.
 
     // This is the general house keeping init routine. It initializes the
     // debug trail scheme and then any other stuff.
 
     if( !fgInitGeneral()) {
-
-	// This is the top level init routine which calls all the other
-	// subsystem initialization routines.  If you are adding a
-	// subsystem to flight gear, its initialization call should
-	// located in this routine.
-	if( !fgInitSubsystems()) {
-
-	    // setup view parameters, only makes GL calls
-	    fgInitVisuals();
-
-	    if ( use_signals ) {
-		// init timer routines, signals, etc.  Arrange for an
-		// alarm signal to be generated, etc.
-		fgInitTimeDepCalcs();
-	    }
-
-	    // Initialize the GLUT Event Handlers.
-
-	    // call fgReshape() on window resizes
-	    xglutReshapeFunc( fgReshape );
-
-	    // call key() on keyboard event
-	    xglutKeyboardFunc( GLUTkey );
-	    glutSpecialFunc( GLUTspecialkey );
-
-	    // call fgMainLoop() whenever there is
-	    // nothing else to do
-	    xglutIdleFunc( fgMainLoop );
-
-	    // draw the scene
-	    xglutDisplayFunc( fgRenderFrame );
-
-	    // pass control off to the GLUT event handler
-	    glutMainLoop();
-
-        }  // End if subsystems initialize ok
-    } // End if general initializations went ok
-
-    if( fg_DebugOutput ) {
-	fclose( fg_DebugOutput );
+	fgPrintf( FG_GENERAL, FG_EXIT, "General initializations failed ...\n" );
     }
+
+    // This is the top level init routine which calls all the other
+    // subsystem initialization routines.  If you are adding a
+    // subsystem to flight gear, its initialization call should
+    // located in this routine.
+    if( !fgInitSubsystems()) {
+	fgPrintf( FG_GENERAL, FG_EXIT,
+		  "Subsystem initializations failed ...\n" );
+    }
+
+    // setup view parameters, only makes GL calls
+    fgInitVisuals();
+
+    if ( use_signals ) {
+	// init timer routines, signals, etc.  Arrange for an
+	// alarm signal to be generated, etc.
+	fgInitTimeDepCalcs();
+    }
+
+    // Initialize the GLUT Event Handlers.
+    if( !fgGlutInitEvents() ) {
+	fgPrintf( FG_GENERAL, FG_EXIT, 
+		  "GLUT event handler initialization failed ...\n" );
+    }
+
+    // pass control off to the GLUT event handler
+    glutMainLoop();
+
+    // we never actually get here ... but just in case ... :-)
     return(0);
 }
 
@@ -777,6 +695,11 @@ extern "C" {
 
 
 // $Log$
+// Revision 1.3  1998/04/24 00:49:18  curt
+// Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+// Trying out some different option parsing code.
+// Some code reorganization.
+//
 // Revision 1.2  1998/04/22 13:25:41  curt
 // C++ - ifing the code.
 // Starting a bit of reorganization of lighting code.
@@ -998,7 +921,7 @@ extern "C" {
 // Changes due to changing sunpos interface.
 //
 // Revision 1.5  1997/08/06 21:08:32  curt
-// Sun position now//really* works (I think) ... I still have sun time warping
+// Sun position now really* works (I think) ... I still have sun time warping
 // code in place, probably should remove it soon.
 //
 // Revision 1.4  1997/08/06 15:41:26  curt

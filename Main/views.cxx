@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include <Debug/fg_debug.h>
 #include <Flight/flight.h>
@@ -33,7 +35,7 @@
 #include <Math/polar.h>
 #include <Math/vector.h>
 #include <Scenery/scenery.h>
-#include <Time/fg_time.h>
+#include <Time/fg_time.hxx>
 
 #include "views.hxx"
 
@@ -190,10 +192,15 @@ void fgViewUpdate(fgFLIGHT *f, struct fgVIEW *v, fgLIGHT *l) {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:25:45  curt
-/* C++ - ifing the code.
-/* Starting a bit of reorganization of lighting code.
+/* Revision 1.2  1998/04/24 00:49:22  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Trying out some different option parsing code.
+/* Some code reorganization.
 /*
+ * Revision 1.1  1998/04/22 13:25:45  curt
+ * C++ - ifing the code.
+ * Starting a bit of reorganization of lighting code.
+ *
  * Revision 1.16  1998/04/18 04:11:29  curt
  * Moved fg_debug to it's own library, added zlib support.
  *

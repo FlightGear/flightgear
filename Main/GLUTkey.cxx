@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>                     
@@ -42,21 +44,23 @@
 #include <Weather/weather.h>
 
 #include "GLUTkey.hxx"
+#include "options.hxx"
 #include "views.hxx"
 
 
-extern int show_hud;             /* HUD state */
 extern int displayInstruments;
 
 
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
     fgCONTROLS *c;
+    fgOPTIONS *o;
     struct fgTIME *t;
     struct fgVIEW *v;
     struct fgWEATHER *w;
 
     c = current_aircraft.controls;
+    o = &current_options;
     t = &cur_time_params;
     v = &current_view;
     w = &current_weather;
@@ -91,7 +95,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->goal_view_offset = FG_PI * 1.75;
 	    return;
 	case 72: /* H key */
-	    show_hud = !show_hud;
+	    o->hud_status = !(o->hud_status);
 	    return;
 	case 77: /* M key */
 	    t->warp -= 60;
@@ -104,6 +108,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 90: /* Z key */
 	    w->visibility /= 1.10;
+	    xglFogf (GL_FOG_START, w->visibility / 10000000.0 );
 	    xglFogf(GL_FOG_END, w->visibility);
 	    fgPrintf( FG_INPUT, FG_DEBUG, 
 		      "Fog density = %.4f\n", w->visibility );
@@ -163,10 +168,15 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 122: /* z key */
 	    w->visibility *= 1.10;
+	    xglFogf (GL_FOG_START, w->visibility / 10000000.0 );
 	    xglFogf(GL_FOG_END, w->visibility);
-	    fgPrintf( FG_INPUT, FG_DEBUG, "Fog density = %.4f\n", w->visibility);
+	    fgPrintf( FG_INPUT, FG_DEBUG, 
+		      "Fog density = %.4f\n", w->visibility);
 	    return;
 	case 27: /* ESC */
+	    if( fg_DebugOutput ) {
+		fclose( fg_DebugOutput );
+	    }
 	    exit(0);
 	}
     }
@@ -256,10 +266,15 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:25:40  curt
-/* C++ - ifing the code.
-/* Starting a bit of reorganization of lighting code.
+/* Revision 1.2  1998/04/24 00:49:17  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Trying out some different option parsing code.
+/* Some code reorganization.
 /*
+ * Revision 1.1  1998/04/22 13:25:40  curt
+ * C++ - ifing the code.
+ * Starting a bit of reorganization of lighting code.
+ *
  * Revision 1.33  1998/04/18 04:11:25  curt
  * Moved fg_debug to it's own library, added zlib support.
  *
@@ -362,7 +377,8 @@ void GLUTspecialkey(int k, int x, int y) {
  *
  * Revision 1.4  1997/05/27 17:44:31  curt
  * Renamed & rearranged variables and routines.   Added some initial simple
- * timer/alarm routines so the flight model can be updated on a regular interval.
+ * timer/alarm routines so the flight model can be updated on a regular 
+ * interval.
  *
  * Revision 1.3  1997/05/23 15:40:25  curt
  * Added GNU copyright headers.

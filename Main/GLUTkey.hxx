@@ -33,7 +33,9 @@
 #endif                                   
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>                     
@@ -52,10 +54,15 @@ void GLUTspecialkey(int k, int x, int y);
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:25:41  curt
-/* C++ - ifing the code.
-/* Starting a bit of reorganization of lighting code.
+/* Revision 1.2  1998/04/24 00:49:18  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Trying out some different option parsing code.
+/* Some code reorganization.
 /*
+ * Revision 1.1  1998/04/22 13:25:41  curt
+ * C++ - ifing the code.
+ * Starting a bit of reorganization of lighting code.
+ *
  * Revision 1.9  1998/04/21 17:02:36  curt
  * Prepairing for C++ integration.
  *
