@@ -232,8 +232,6 @@ public:
     void Update(double dt);
 	
 	inline string get_trans_ident() { return trans_ident; }
-    inline void SetDisplay() {display = true;}
-    inline void SetNoDisplay() {display = false;}
 
     // Contact ground control on arrival, assumed to request any gate
     //void NewArrival(plane_rec plane);
@@ -313,8 +311,6 @@ private:
 	SGPropertyNode* wind_from_hdg;	//degrees
 	SGPropertyNode* wind_speed_knots;		//knots
 	
-	bool display;		// Flag to indicate whether we should be outputting to the ATC display.
-	bool displaying;		// Flag to indicate whether we are outputting to the ATC display.
 	// for failure modeling
 	string trans_ident;		// transmitted ident
 	bool ground_failed;		// ground failed?

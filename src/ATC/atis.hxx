@@ -53,8 +53,6 @@ SG_USING_STD(string);
 class FGATIS : public FGATC {
 	
 	//atc_type type;
-	bool display;		// Flag to indicate whether we should be outputting to the ATC display.
-	bool displaying;		// Flag to indicate whether we are outputting to the ATC display.
 	string transmission;	// The actual ATIS transmission
 	// This is not stored in default.atis but is generated
 	// from the prevailing conditions when required.
@@ -79,12 +77,6 @@ class FGATIS : public FGATC {
 	
 	//run the ATIS instance
 	void Update(double dt);
-	
-	//Indicate that this instance should be outputting to the ATC display
-	inline void SetDisplay(void) {display = true;}
-	
-	//Indicate that this instance should not be outputting to the ATC display
-	inline void SetNoDisplay(void) {display = false;}
 	
 	//inline void set_type(const atc_type tp) {type = tp;}
 	inline string get_trans_ident() { return trans_ident; }

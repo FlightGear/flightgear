@@ -117,8 +117,6 @@ class FGApproach : public FGATC {
   double active_rw_lat;
   double active_rw_len;
 
-  bool     display;		// Flag to indicate whether we should be outputting to the display.
-  bool     displaying;	        // Flag to indicate whether we are outputting to the display.
   int      num_planes;          // number of planes on the stack
   PlaneApp planes[max_planes];  // Array of planes
   string   transmission;
@@ -159,12 +157,6 @@ public:
 
   // Remove plane from stack if out of range
   int RemovePlane();
-  
-  //Indicate that this instance should be outputting to the ATC display
-  inline void SetDisplay(void) {display = true;}
-  
-  //Indicate that this instance should not be outputting to the ATC display
-  inline void SetNoDisplay(void) {display = false;}
   
   inline double get_bucket() const { return bucket; }
   inline int get_pnum() const { return num_planes; }

@@ -77,7 +77,6 @@ FGApproach::~FGApproach(){
 }
 
 void FGApproach::Init() {
-  display = false;
 }
 
 

@@ -54,7 +54,6 @@ a_path::a_path() {
 FGGround::FGGround() {
 	ATCmgr = globals->get_ATC_mgr();
 	_type = GROUND;
-	display = false;
 	networkLoadOK = false;
 	ground_traffic.erase(ground_traffic.begin(), ground_traffic.end());
 	ground_traffic_itr = ground_traffic.begin();
@@ -69,7 +68,6 @@ FGGround::FGGround() {
 
 FGGround::FGGround(string id) {
 	ATCmgr = globals->get_ATC_mgr();
-	display = false;
 	networkLoadOK = false;
 	ground_traffic.erase(ground_traffic.begin(), ground_traffic.end());
 	ground_traffic_itr = ground_traffic.begin();
@@ -274,7 +272,6 @@ bool FGGround::LoadNetwork() {
 }
 
 void FGGround::Init() {
-	display = false;
 	untowered = false;
 	
 	// Figure out which is the active runway - TODO - it would be better to have ground call tower
@@ -318,7 +315,7 @@ void FGGround::Update(double dt) {
 				trns += " taxi holding point runway ";	// TODO - add the holding point name
 				// eg " taxi holding point G2 runway "
 				trns += ConvertRwyNumToSpokenString(activeRwy);
-				if(display) {
+				if(_display) {
 					globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 				}
 				g->planePtr->RegisterTransmission(1);	// cleared to taxi
@@ -336,7 +333,7 @@ void FGGround::Update(double dt) {
 			char buf[10];
 			sprintf(buf, "%.2f", f);
 			trns += buf;
-			if(display) {
+			if(_display) {
 				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 			}
 			g->planePtr->RegisterTransmission(2);	// contact tower

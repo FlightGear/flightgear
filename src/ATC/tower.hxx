@@ -168,9 +168,6 @@ public:
 	// Get the pattern direction of the active rwy.
 	inline int GetPatternDirection() { return rwy.patternDirection; }
 	
-	inline void SetDisplay() { display = true; }
-	inline void SetNoDisplay() { display = false; }
-	
 	inline string get_trans_ident() { return trans_ident; }
 	
 	inline FGGround* GetGroundPtr() { return ground; }
@@ -246,9 +243,6 @@ private:
 	
 	unsigned int update_count;	// Convienince counter for speading computational load over several updates
 	unsigned int update_count_max;	// ditto.
-	
-	bool display;		// Flag to indicate whether we should be outputting to the ATC display.
-	bool displaying;		// Flag to indicate whether we are outputting to the ATC display.
 	
 	double timeSinceLastDeparture;	// Time in seconds since last departure from active rwy.
 	bool departed;	// set true when the above needs incrementing with time, false when it doesn't.

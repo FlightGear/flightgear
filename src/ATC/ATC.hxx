@@ -123,10 +123,10 @@ public:
 	virtual int RemovePlane();
 	
 	// Indicate that this instance should output to the display if appropriate 
-	virtual void SetDisplay();
+	inline void SetDisplay() { _display = true; }
 	
 	// Indicate that this instance should not output to the display
-	virtual void SetNoDisplay();
+	inline void SetNoDisplay() { _display = false; }
 	
 	// Generate the text of a message from its parameters and the current context.
 	virtual string GenText(const string& m, int c);
@@ -186,6 +186,17 @@ protected:
 	// Requires the sound manager refname if audio, else "".
 	void NoRender(string refname);
 	
+	// Transmit a message when channel becomes free of other dialog
+    void Transmit(int callback_code = 0);
+	
+	// Transmit a message if channel becomes free within timeout (seconds). timeout of zero implies no limit
+	void ConditionalTransmit(double timeout, int callback_code = 0);
+	
+	// Transmit regardless of other dialog on the channel eg emergency
+	void ImmediateTransmit(int callback_code = 0);
+	
+	virtual void ProcessCallback(int code);
+	
 	double lon, lat, elev;
 	double x, y, z;
 	int freq;
@@ -199,7 +210,8 @@ protected:
 	bool playing;		// Indicates a message in progress	
 	bool voiceOK;		// Flag - true if at least one voice has loaded OK
 	FGATCVoice* vPtr;
-	
+
+	string pending_transmission;	// derived classes set this string before calling Transmit(...)	
 	bool freqClear;		// Flag to indicate if the frequency is clear of ongoing dialog
 	bool receiving;		// Flag to indicate we are receiving a transmission
 	bool responseReqd;	// Flag to indicate we should be responding to a request/report 
@@ -213,6 +225,20 @@ protected:
 	bool _runReleaseCounter;	// A timer for releasing the frequency after giving the message enough time to display
 	double _releaseTime;
 	double _releaseCounter;
+	
+	bool _display;		// Flag to indicate whether we should be outputting to the ATC display.
+	bool _displaying;		// Flag to indicate whether we are outputting to the ATC display.
+	
+private:
+	// Transmission timing stuff.
+	bool _pending;
+	double _timeout;
+	int _callback_code;	// A callback code to be notified and processed by the derived classes
+						// A value of zero indicates no callback required
+	bool _transmit;		// we are to transmit
+	bool _transmitting;	// we are transmitting
+	double _counter;
+	double _max_count;
 };
 
 inline istream&

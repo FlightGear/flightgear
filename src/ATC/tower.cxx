@@ -231,7 +231,6 @@ FGTower::~FGTower() {
 
 void FGTower::Init() {
 	//cout << "Initialising tower " << ident << '\n';
-    display = false;
 	
 	// Pointers to user's position
 	user_lon_node = fgGetNode("/position/longitude-deg", true);
@@ -256,7 +255,7 @@ void FGTower::Init() {
 				ground = new FGGround(ident);
 				separateGround = false;
 				ground->Init();
-				if(display) {
+				if(_display) {
 					ground->SetDisplay();
 				} else {
 					ground->SetNoDisplay();
@@ -268,7 +267,7 @@ void FGTower::Init() {
 			ground = new FGGround(ident);
 			separateGround = false;
 			ground->Init();
-			if(display) {
+			if(_display) {
 				ground->SetDisplay();
 			} else {
 				ground->SetNoDisplay();
@@ -280,7 +279,7 @@ void FGTower::Init() {
 		ground = new FGGround(ident);
 		separateGround = false;
 		ground->Init();
-		if(display) {
+		if(_display) {
 			ground->SetDisplay();
 		} else {
 			ground->SetNoDisplay();
@@ -407,7 +406,8 @@ void FGTower::Update(double dt) {
 		// The display stuff might have to get more clever than this when not separate 
 		// since the tower and ground might try communicating simultaneously even though
 		// they're mean't to be the same contoller/frequency!!
-		if(display) {
+		// We could also get rid of this by overloading FGATC's Set(No)Display() functions.
+		if(_display) {
 			ground->SetDisplay();
 		} else {
 			ground->SetNoDisplay();
@@ -503,7 +503,7 @@ void FGTower::Respond() {
 				}
 			}
 			trns += ConvertRwyNumToSpokenString(activeRwy);
-			if(display) {
+			if(_display) {
 				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 			} else {
 				//cout << "Not displaying, trns was " << trns << '\n';
@@ -526,7 +526,7 @@ void FGTower::Respond() {
 				t->clearedToLand = true;
 				if(!t->isUser) t->planePtr->RegisterTransmission(7);
 			}
-			if(display) {
+			if(_display) {
 				globals->get_ATC_display()->RegisterSingleMessage(trns);
 			}
 			if(t->isUser) {
@@ -562,7 +562,7 @@ void FGTower::Respond() {
 				// Not currently sure under which circumstances we do or don't bother transmitting this.
 				string trns = t->plane.callsign;
 				trns += " hold position";
-				if(display) {
+				if(_display) {
 					globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 				}
 				// TODO - add some idea of what traffic is blocking him.
@@ -600,7 +600,7 @@ void FGTower::Respond() {
 				trns += " continue approach";
 				t->clearedToLand = false;
 			}
-			if(display && disp) {
+			if(_display && disp) {
 				globals->get_ATC_display()->RegisterSingleMessage(trns);
 			}
 			t->finalAcknowledged = true;
@@ -634,7 +634,7 @@ void FGTower::ProcessRunwayVacatedReport(TowerPlaneRec* t) {
 		if(!t->isUser) t->planePtr->RegisterTransmission(6);	// TODO - this is a mega-hack!!
 	}
 	//cout << "trns = " << trns << '\n';
-	if(display) {
+	if(_display) {
 		globals->get_ATC_display()->RegisterSingleMessage(trns);
 	}
 	// Maybe we should check that the plane really *has* vacated the runway!
@@ -741,7 +741,7 @@ void FGTower::ClearHoldingPlane(TowerPlaneRec* t) {
 		departed = false;
 		timeSinceLastDeparture = 0.0;
 	}
-	if(display) {
+	if(_display) {
 		globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 	}
 	//cout << "Done ClearHoldingPlane " << endl;
@@ -961,9 +961,8 @@ void FGTower::CheckCircuitList(double dt) {
 					// For now this should stop the AI plane landing on top of the user.
 					string trns = t->plane.callsign;
 					trns += " GO AROUND TRAFFIC ON RUNWAY I REPEAT GO AROUND";
-					if(display) {
-						globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
-					}
+					pending_transmission = trns;
+					ImmediateTransmit();
 					t->instructedToGoAround = true;
 					t->clearedToLand = false;
 					// Assume it complies!!!
@@ -1082,9 +1081,8 @@ void FGTower::CheckApproachList(double dt) {
 			// For now this should stop the AI plane landing on top of the user.
 			string trns = t->plane.callsign;
 			trns += " GO AROUND TRAFFIC ON RUNWAY I REPEAT GO AROUND";
-			if(display) {
-				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
-			}
+			pending_transmission = trns;
+			ImmediateTransmit();
 			t->instructedToGoAround = true;
 			t->clearedToLand = false;
 			t->nextOnRwy = false;	// But note this is recalculated so don't rely on it
@@ -1159,9 +1157,8 @@ void FGTower::CheckDepartureList(double dt) {
 		if(distout > 10000) {
 			string trns = t->plane.callsign;
 			trns += " You are now clear of my airspace, good day";
-			if(display) {
-				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
-			}
+			pending_transmission = trns;
+			Transmit();
 			if(t->isUser) {
 				// Change the communication options
 				RemoveAllUserDialogOptions();

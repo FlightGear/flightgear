@@ -54,8 +54,6 @@ SG_USING_STD(cout);
 #include "ATCmgr.hxx"
 
 FGATIS::FGATIS() :
-	display(false),
-	displaying(false),
 	transmission(""),
 	trans_ident(""),
 	atis_failed(false),
@@ -72,8 +70,8 @@ FGATIS::~FGATIS() {
 
 // Main update function - checks whether we are displaying or not the correct message.
 void FGATIS::Update(double dt) {
-	if(display) {
-		if(displaying) {
+	if(_display) {
+		if(_displaying) {
 			// Check if we need to update the message
 			// - basically every hour and if the weather changes significantly at the station
 			//globals->get_ATC_display()->ChangeRepeatingMessage(transmission);
@@ -82,14 +80,14 @@ void FGATIS::Update(double dt) {
 			UpdateTransmission();
 			//cout << "ATIS.CXX - calling ATCMgr to render transmission..." << endl;
 			Render(transmission, refname, true);
-			displaying = true;
+			_displaying = true;
 		}
 	} else {
 		// We shouldn't be displaying
-		if(displaying) {
+		if(_displaying) {
 			//cout << "ATIS.CXX - calling NoRender()..." << endl;
 			NoRender(refname);
-			displaying = false;
+			_displaying = false;
 		}
 	}
 }
