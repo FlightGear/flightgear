@@ -55,34 +55,42 @@ FGGeneric::FGGeneric(string& config) {
 
     SGPropertyNode *output = root.getNode("generic/output");
 
-	/* These variables specified in the fgfsbase/Properties/xxxx.xml file for each format
-	 * var_sep_string = the string/charachter to place between variables
-	 * line_sep_string = the string/charachter to place at the end of each lot of variables
-	 */
+        /* These variables specified in the fgfsbase/Properties/xxxx.xml file for each format
+         * var_sep_string = the string/charachter to place between variables
+         * line_sep_string = the string/charachter to place at the end of each lot of variables
+         */
     var_sep_string = output->getStringValue("var_separator");
     line_sep_string = output->getStringValue("line_separator");
 
-	if ( var_separator == "newline" )
-		var_separator = '\n';
-	else if ( var_separator == "formfeed" )
-		var_separator = '\f';
-	else if ( var_separator == "carriagereturn" )
-		var_separator = '\r';
-	else if ( var_separator == "verticaltab" )
-		var_separator = '\v';
-	else
-		var_separator = var_sep_string;
+        if ( var_sep_string == "newline" )
+                var_separator = '\n';
+        else if ( var_sep_string == "tab" )
+                var_separator = '\t';
+        else if ( var_sep_string == "space" )
+                var_separator = ' ';
+        else if ( var_sep_string == "formfeed" )
+                var_separator = '\f';
+        else if ( var_sep_string == "carriagereturn" )
+                var_sep_string = '\r';
+        else if ( var_sep_string == "verticaltab" )
+                var_separator = '\v';
+        else
+                var_separator = var_sep_string;
 
-	if ( line_sep_string == "newline" )
-		line_separator = '\n';
-	else if ( line_sep_string == "formfeed" )
-		line_separator = '\f';
-	else if ( line_sep_string == "carriagereturn" )
-		line_separator = '\r';
-	else if ( line_sep_string == "verticaltab" )
-		line_separator = '\v';
-	else
-		line_separator = line_sep_string;
+        if ( line_sep_string == "newline" )
+                line_separator = '\n';
+        if ( line_sep_string == "tab" )
+                line_separator = '\t';
+        if ( line_sep_string == "space" )
+                line_separator = ' ';
+        else if ( line_sep_string == "formfeed" )
+                line_separator = '\f';
+        else if ( line_sep_string == "carriagereturn" )
+                line_separator = '\r';
+        else if ( line_sep_string == "verticaltab" )
+                line_separator = '\v';
+        else
+                line_separator = line_sep_string;
 
 
     vector<SGPropertyNode_ptr> chunks = output->getChildren("chunk");
@@ -131,7 +139,7 @@ bool FGGeneric::gen_message() {
     for (unsigned int i = 0; i < _message.size(); i++) {
 
         if (i > 0)
-           generic_sentence += line_separator;
+           generic_sentence += var_separator;
 
         switch (_message[i].type) {
         case FG_INT:
@@ -170,7 +178,7 @@ bool FGGeneric::gen_message() {
 }
 
 bool FGGeneric::parse_message() {
-	return true;
+        return true;
 }
 
 
@@ -178,16 +186,16 @@ bool FGGeneric::parse_message() {
 // open hailing frequencies
 bool FGGeneric::open() {
     if ( is_enabled() ) {
-	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
-		<< "is already in use, ignoring" );
-	return false;
+        SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
+                << "is already in use, ignoring" );
+        return false;
     }
 
     SGIOChannel *io = get_io_channel();
 
     if ( ! io->open( get_direction() ) ) {
-	SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
-	return false;
+        SG_LOG( SG_IO, SG_ALERT, "Error opening channel communication layer." );
+        return false;
     }
 
     set_enabled( true );
@@ -201,19 +209,19 @@ bool FGGeneric::process() {
     SGIOChannel *io = get_io_channel();
 
     if ( get_direction() == SG_IO_OUT ) {
-	gen_message();
-	if ( ! io->write( buf, length ) ) {
-	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
-	    return false;
-	}
+        gen_message();
+        if ( ! io->write( buf, length ) ) {
+            SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
+            return false;
+        }
     } else if ( get_direction() == SG_IO_IN ) {
-	// Temporarliy disable this as output only!
-	//if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
-	//    parse_message();
-	//} else {
-	//    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
-	//    return false;
-	//}
+        // Temporarliy disable this as output only!
+        //if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
+        //    parse_message();
+        //} else {
+        //    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
+        //    return false;
+        //}
     }
 
     return true;
@@ -227,7 +235,7 @@ bool FGGeneric::close() {
     set_enabled( false );
 
     if ( ! io->close() ) {
-	return false;
+        return false;
     }
 
     return true;
