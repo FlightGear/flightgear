@@ -65,7 +65,11 @@ INCLUDES
 #else
 #  if defined(sgi) && !defined(__GNUC__)
 #    include <math.h>
-#    include <iomanip.h>
+#    if (_COMPILER_VERSION < 740)
+#      include <iomanip.h>
+#    else
+#      include <iomanip>
+#    endif
 #  else
 #    include <cmath>
 #    include <iomanip>
@@ -104,13 +108,16 @@ FGPosition::FGPosition(FGFDMExec* fdmex) : FGModel(fdmex)
   Name = "FGPosition";
   LongitudeDot = LatitudeDot = RadiusDot = 0.0;
   
-  for (int i=0;i<3;i++) {
+  for (int i=0;i<4;i++) {
     LatitudeDot_prev[i]  = 0.0;
     LongitudeDot_prev[i] = 0.0;
     RadiusDot_prev[i]    = 0.0;
   }
-  
+
+  vVRPoffset.InitMatrix();
+
   Longitude = Latitude = 0.0;
+  LongitudeVRP = LatitudeVRP = 0.0;
   gamma = Vt = Vground = 0.0;
   hoverbmac = hoverbcg = 0.0;
   psigt = 0.0;
@@ -155,7 +162,6 @@ bool FGPosition::Run(void)
 {
   double cosLat;
   double hdot_Vt;
-  FGColumnVector3 vMac;
 
   if (!FGModel::Run()) {
     GetState();
@@ -178,6 +184,23 @@ bool FGPosition::Run(void)
 
     h = Radius - SeaLevelRadius;           // Geocentric
 
+    vVRPoffset = State->GetTb2l() * (vVRP - MassBalance->GetXYZcg());
+    vVRPoffset /= 12.0; // converted to feet
+
+    // vVRP  - the vector to the Visual Reference Point - now contains the 
+    // offset from the CG to the VRP, in units of feet, in the Local coordinate
+    // frame, where X points north, Y points East, and Z points down. This needs
+    // to be converted to Lat/Lon/Alt, now.
+
+    if (cosLat != 0)
+      LongitudeVRP = vVRPoffset(eEast) / (Radius * cosLat) + Longitude;
+
+    LatitudeVRP = vVRPoffset(eNorth) / Radius + Latitude;
+    hVRP = vVRPoffset(eDown) + h;
+/*
+cout << "Lat/Lon/Alt : " << Latitude << " / " << Longitude << " / " << h << endl;
+cout << "Lat/Lon/Alt VRP: " << LatitudeVRP << " / " << LongitudeVRP << " / " << hVRP << endl << endl;
+*/
     DistanceAGL = Radius - RunwayRadius;   // Geocentric
     
     hoverbcg = DistanceAGL/b;

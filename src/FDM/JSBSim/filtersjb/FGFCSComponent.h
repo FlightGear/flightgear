@@ -46,7 +46,6 @@ INCLUDES
 #include "../FGJSBBase.h"
 #include "../FGPropertyManager.h"
 
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -64,10 +63,6 @@ namespace JSBSim {
 class FGFCS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -75,15 +70,15 @@ CLASS DOCUMENTATION
     The Flight Control System (FCS) for JSBSim consists of the FCS container
     class (see \URL[FGFCS]{FGFCS.html}), the FGFCSComponent base class, and the
     component classes from which can be constructed a string, or channel. See:
-    <ul>
-    <li>\URL[Switch Component]{FGSwitch.html}</li>
-    <li>\URL[Gain Component]{FGGain.html}</li>
-    <li>\URL[Flaps Component]{FGFlaps.html}</li>
-    <li>\URL[Filter Component]{FGFilter.html}</li>
-    <li>\URL[Deadband Component]{FGDeadBand.html}</li>
-    <li>\URL[Summer Component]{FGSummer.html}</li>
-    <li>\URL[Gradient Component]{FGGradient.html}</li>
-    </ul>
+
+    - FGSwitch
+    - FGGain
+    - FGKinemat
+    - FGFilter
+    - FGDeadBand
+    - FGSummer
+    - FGGradient
+    
     @author Jon S. Berndt
     @version $Id$
     @see Documentation for the FGFCS class, and for the configuration file class

@@ -54,10 +54,6 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -70,9 +66,9 @@ CLASS DOCUMENTATION
         <li>Variance (in percent, from 0 to 1.0, nominally 0.05)</li>
     </ul>
     Additionally, the following control inputs, operating characteristics, and
-    location are required, as with all other engine types:</font>
+    location are required, as with all other engine types:
     <ul>
-        <li>Throttle setting (in percent, from 0 to 1.0)</font></li>
+        <li>Throttle setting (in percent, from 0 to 1.0)</li>
         <li>Maximum allowable throttle setting</li>
         <li>Minimum working throttle setting</li>
         <li>Sea level fuel flow at maximum thrust</li>
@@ -89,17 +85,13 @@ CLASS DOCUMENTATION
     determined.
 
     @author Jon S. Berndt
-    @version $Id$
-    @see FGNozzle
-    @see FGThruster
-    @see FGForce
-    @see FGEngine
-    @see FGPropulsion
-    @see FGTank
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGRocket.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGRocket.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
+    $Id$
+    @see FGNozzle,
+    FGThruster,
+    FGForce,
+    FGEngine,
+    FGPropulsion,
+    FGTank
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -115,7 +107,7 @@ public:
   FGRocket(FGFDMExec* exec, FGConfigFile* Eng_cfg);
 
   /** Destructor */
-  ~FGRocket();
+  ~FGRocket(void);
 
   /** Determines the thrust coefficient.
       This routine takes the nozzle exit pressure and calculates the thrust
@@ -128,6 +120,12 @@ public:
       @return chamber pressure in psf. */
   double GetChamberPressure(void) {return PC;}
 
+  /** Gets the flame-out status.
+      The engine will "flame out" if the throttle is set below the minimum 
+      sustainable setting.
+      @return true if engine has flamed out. */
+  bool GetFlameout(void) {return Flameout;}
+
 private:
   double SHR;
   double maxPC;
@@ -135,6 +133,8 @@ private:
   double kFactor;
   double Variance;
   double PC;
+  bool Flameout;
+
   void Debug(int from);
 };
 }

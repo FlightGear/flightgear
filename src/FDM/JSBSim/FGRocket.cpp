@@ -73,6 +73,7 @@ FGRocket::FGRocket(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec)
 
   EngineNumber = 0;
   Type = etRocket;
+  Flameout = false;
 
   PC = 0.0;
   kFactor = (2.0*SHR*SHR/(SHR-1.0))*pow(2.0/(SHR+1), (SHR+1)/(SHR-1));
@@ -80,7 +81,7 @@ FGRocket::FGRocket(FGFDMExec* exec, FGConfigFile* Eng_cfg) : FGEngine(exec)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGRocket::~FGRocket()
+FGRocket::~FGRocket(void)
 {
   Debug(1);
 }
@@ -91,7 +92,7 @@ double FGRocket::Calculate(double pe)
 {
   double Cf=0;
 
-  ConsumeFuel();
+  if (!Flameout && !Starved) ConsumeFuel();
 
   Throttle = FCS->GetThrottlePos(EngineNumber);
 

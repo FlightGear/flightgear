@@ -76,7 +76,6 @@ INCLUDES
 #include "FGGroundReactions.h"
 #include "FGPropulsion.h"
 
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -90,20 +89,12 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Encapsulates the calculation of aircraft state.
     @author Jon S. Berndt
     @version $Id$
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGState.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGState.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -214,7 +205,7 @@ public:
   
   // ======================================= General Purpose INTEGRATOR
 
-  enum iType {AB4, AB3, AB2, AM3, EULER, TRAPZ};
+  enum iType {AB4, AB3, AB2, AM3, AM4, EULER, TRAPZ};
   
   /** Multi-method integrator.
       @param type Type of intergation scheme to use. Can be one of:
@@ -223,6 +214,7 @@ public:
              <li>AB3 - Adams-Bashforth, third order</li>
              <li>AB2 - Adams-Bashforth, second order</li>
              <li>AM3 - Adams Moulton, third order</li>
+             <li>AM4 - Adams Moulton, fourth order</li>
              <li>EULER - Euler</li>
              <li>TRAPZ - Trapezoidal</li>
              </ul>
@@ -243,23 +235,35 @@ public:
 
     switch (type) {
     case AB4:
-      vResult = (delta_t/24.0)*(  55.0 * vTDeriv
-                                - 59.0 * vLastArray[0]
-                                + 37.0 * vLastArray[1]
-                                -  9.0 * vLastArray[2] );
+      vResult = (delta_t/24.0)*(  55.0 * vLastArray[0]
+                                - 59.0 * vLastArray[1]
+                                + 37.0 * vLastArray[2]
+                                -  9.0 * vLastArray[3] );
+      vLastArray[3] = vLastArray[2];
       vLastArray[2] = vLastArray[1];
       vLastArray[1] = vLastArray[0];
       vLastArray[0] = vTDeriv;
       break;
     case AB3:
-      vResult = (delta_t/12.0)*(  23.0 * vTDeriv
-                                - 16.0 * vLastArray[0]
-                                +  5.0 * vLastArray[1] );
+      vResult = (delta_t/12.0)*(  23.0 * vLastArray[0]
+                                - 16.0 * vLastArray[1]
+                                +  5.0 * vLastArray[2] );
+      vLastArray[2] = vLastArray[1];
       vLastArray[1] = vLastArray[0];
       vLastArray[0] = vTDeriv;
       break;
     case AB2:
-      vResult = (delta_t/2.0)*( 3.0 * vTDeriv - vLastArray[0] );
+      vResult = (delta_t/2.0)*( 3.0 * vLastArray[0] - vLastArray[1] );
+      vLastArray[1] = vLastArray[0];
+      vLastArray[0] = vTDeriv;
+      break;
+    case AM4:
+      vResult = (delta_t/24.0)*(   9.0 * vTDeriv
+                                + 19.0 * vLastArray[0]
+                                -  5.0 * vLastArray[1]
+                                +  1.0 * vLastArray[2] );
+      vLastArray[2] = vLastArray[1];
+      vLastArray[1] = vLastArray[0];
       vLastArray[0] = vTDeriv;
       break;
     case AM3:
@@ -341,7 +345,7 @@ private:
   FGMatrix33 mTs2b;
   FGMatrix33 mTb2s;
   FGColumnVector4 vQtrn;
-  FGColumnVector4 vQdot_prev[3];
+  FGColumnVector4 vQdot_prev[4];
   FGColumnVector4 vQdot;
   FGColumnVector3 vUVW;
   FGColumnVector3 vLocalVelNED;

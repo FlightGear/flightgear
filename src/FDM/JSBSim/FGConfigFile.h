@@ -53,7 +53,7 @@ INCLUDES
    SG_USING_STD(cout);
 #else
 #  include <string>
-#  if defined(sgi) && !defined(__GNUC__)
+#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
 #    include <fstream.h>
 #    include <iostream.h>
 #  else
@@ -61,11 +61,11 @@ INCLUDES
 #    include <iostream>
      using std::ostream;
      using std::istream;
-     using std::ifstream;
      using std::ios;
      using std::cerr;
-     using std::endl;
      using std::cout;
+     using std::ifstream;
+     using std::endl;
 #  endif
     using std::string;
 #endif
@@ -85,10 +85,6 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -96,10 +92,6 @@ CLASS DOCUMENTATION
     JSBSim config files are in XML format.
     @author Jon S. Berndt
     @version $Id$
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGConfigFile.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGConfigFile.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -124,9 +116,10 @@ public:
   string GetCurrentLine(void) { return CurrentLine; }
 
   /** Returns the value of the tag supplied.
-      @param 
-      @return */
-  string GetValue(string);
+      @param tag the tag for the value that is desired.
+      @return tthe value of the tag supplied.*/
+  string GetValue(string tag);
+
   string GetValue(void);
   string GetCommentString(void) {return CommentString;}
   string GetLineComment(void) {return LineComment;}

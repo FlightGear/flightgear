@@ -38,7 +38,7 @@ INCLUDES
 
 #include "FGTable.h"
 
-#if defined ( sgi ) && !defined( __GNUC__ )
+#if defined ( sgi ) && !defined( __GNUC__ ) && (_COMPILER_VERSION < 740)
 #include <iomanip.h>
 #else
 #include <iomanip>
@@ -249,7 +249,7 @@ void FGTable::Print(void)
   if (Type == tt1D) startRow = 1;
   else startRow = 0;
 
-#if defined (sgi) && !defined(__GNUC__)
+#if defined (sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
   unsigned long flags = cout.setf(ios::fixed);
 #else
   ios::fmtflags flags = cout.setf(ios::fixed); // set up output stream

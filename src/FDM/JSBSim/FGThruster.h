@@ -28,10 +28,6 @@ HISTORY
 08/24/00  JSB  Created
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES,  and NOTES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -45,13 +41,17 @@ INCLUDES
 #include "FGForce.h"
 #include "FGConfigFile.h"
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DEFINITIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 #define ID_THRUSTER "$Id$"
 
-namespace JSBSim {
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
+FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -75,9 +75,9 @@ public:
   /// Destructor
   virtual ~FGThruster();
 
-  enum eType {ttNozzle, ttRotor, ttPropeller};
+  enum eType {ttNozzle, ttRotor, ttPropeller, ttDirect};
 
-  virtual double Calculate(double Thrust) { vFn(1)=Thrust; return 0.0; }
+  virtual double Calculate(double tt) { Thrust = tt; vFn(1) = Thrust; return 0.0; }
   void SetName(string name) {Name = name;}
   void SetThrusterNumber(int nn) {ThrusterNumber = nn;}
   virtual void SetRPM(double rpm) {};
@@ -88,6 +88,7 @@ public:
   string GetName(void) {return Name;}
   int GetThrusterNumber(void) {return ThrusterNumber;}
   virtual double GetRPM(void) { return 0.0; };
+  double GetGearRatio(void) {return GearRatio; } 
 
 protected:
   eType Type;
@@ -96,6 +97,7 @@ protected:
   double Thrust;
   double PowerRequired;
   double deltaT;
+  double GearRatio;
   virtual void Debug(int from);
 };
 }

@@ -107,7 +107,7 @@ bool FGAerodynamics::Run(void)
   if (!FGModel::Run()) {
 
     twovel = 2*Translation->GetVt();
-    if (twovel > 0) {
+    if (twovel != 0) {
       bi2vel = Aircraft->GetWingSpan() / twovel;
       ci2vel = Aircraft->Getcbar() / twovel;
     }  

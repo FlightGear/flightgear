@@ -232,6 +232,10 @@ bool FGAircraft::Load(FGConfigFile* AC_cfg)
     } else if (parameter == "AC_AERORP") {
       *AC_cfg >> vXYZrp(eX) >> vXYZrp(eY) >> vXYZrp(eZ);
       if (debug_lvl > 0) cout << "    Ref Pt (x, y, z): " << vXYZrp << endl;
+    } else if (parameter == "AC_VRP") {
+      *AC_cfg >> vXYZvrp(eX) >> vXYZvrp(eY) >> vXYZvrp(eZ);
+      if (debug_lvl > 0) cout << "    Visual Ref Pt (x, y, z): " << vXYZvrp << endl;
+      Position->SetVRP(vXYZvrp);
     } else if (parameter == "AC_POINTMASS") {
       *AC_cfg >> pmWt >> pmX >> pmY >> pmZ;
       MassBalance->AddPointMass(pmWt, pmX, pmY, pmZ);
@@ -306,6 +310,12 @@ void FGAircraft::bind(void)
                        (PMF)&FGAircraft::GetXYZep);
   PropertyManager->Tie("metrics/eyepoint-z-ft", this,3,
                        (PMF)&FGAircraft::GetXYZep);
+  PropertyManager->Tie("metrics/visualrefpoint-x-in", this,1,
+                       (PMF)&FGAircraft::GetXYZvrp);
+  PropertyManager->Tie("metrics/visualrefpoint-y-in", this,2,
+                       (PMF)&FGAircraft::GetXYZvrp);
+  PropertyManager->Tie("metrics/visualrefpoint-z-in", this,3,
+                       (PMF)&FGAircraft::GetXYZvrp);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -336,6 +346,9 @@ void FGAircraft::unbind(void)
   PropertyManager->Untie("metrics/eyepoint-x-ft");
   PropertyManager->Untie("metrics/eyepoint-y-ft");
   PropertyManager->Untie("metrics/eyepoint-z-ft");
+  PropertyManager->Untie("metrics/visualrefpoint-x-in");
+  PropertyManager->Untie("metrics/visualrefpoint-y-in");
+  PropertyManager->Untie("metrics/visualrefpoint-z-in");
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

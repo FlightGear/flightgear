@@ -75,26 +75,32 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Propulsion management class.
-    FGPropulsion manages all aspects of propulsive force generation, including
-    containment of engines, tanks, and thruster class instances in STL vectors,
-    and the interaction and communication between them.
+    The Propulsion class is the container for the entire propulsion system, which is
+    comprised of engines, tanks, and "thrusters" (the device that transforms the
+    engine power into a force that acts on the aircraft, such as a nozzle or
+    propeller). Once the Propulsion class gets the config file, it reads in
+    information which is specific to a type of engine. Then:
+
+    -# The appropriate engine type instance is created
+    -# A thruster object is instantiated, and is linked to the engine
+    -# At least one tank object is created, and is linked to an engine.
+
+    At Run time each engines Calculate() method is called to return the excess power
+    generated during that iteration. The drag from the previous iteration is sub-
+    tracted to give the excess power available for thrust this pass. That quantity
+    is passed to the thrusters associated with a particular engine - perhaps with a
+    scaling mechanism (gearing?) to allow the engine to give its associated thrust-
+    ers specific distributed portions of the excess power.
     @author Jon S. Berndt
     @version $Id$
-    @see FGEngine
-    @see FGTank
-    @see FGThruster
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGPropulsion.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGPropulsion.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
+    @see
+    FGEngine
+    FGTank
+    FGThruster
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -144,7 +150,7 @@ public:
                       if (index <= Engines.size()-1) return Engines[index];
                       else                           return 0L;      }
 
-  // Retrieves the number of tanks defined for the aircraft.
+  /// Retrieves the number of tanks defined for the aircraft.
   inline unsigned int GetNumTanks(void) const {return Tanks.size();}
 
   /** Retrieves a tank object pointer from the list of tanks.
@@ -192,9 +198,17 @@ public:
   double GetTanksIzz(const FGColumnVector3& vXYZcg);
   double GetTanksIxz(const FGColumnVector3& vXYZcg);
   double GetTanksIxy(const FGColumnVector3& vXYZcg);
-  
+
+  inline int GetActiveEngine(void) const
+  {
+    return ActiveEngine;
+  }
+
+  inline int GetActiveEngine(void);
+
   void SetMagnetos(int setting);
   void SetStarter(int setting);
+  void SetCutoff(int setting=0);
   void SetActiveEngine(int engine);
   
   void bind();

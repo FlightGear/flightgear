@@ -79,8 +79,8 @@ using std::max;
 
 static char *gcvt(double number, size_t ndigit, char *buf)
 {
-     sprintf(buf, "%f", number);
-     return buf;
+  sprintf(buf, "%f", number);
+  return buf;
 }
 #endif
 
@@ -95,10 +95,6 @@ FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 namespace JSBSim {
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -216,6 +212,13 @@ public:
   void disableHighLighting(void);
 
   static short debug_lvl;
+  double KelvinToFahrenheit (double kelvin) {
+    return 1.8*kelvin - 459.4;
+  }
+
+  double RankineToCelsius (double rankine) {
+    return (rankine - 491.67)/1.8;
+  }
 
 protected:
   static Message localMsg;

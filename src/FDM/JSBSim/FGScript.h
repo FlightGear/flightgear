@@ -55,26 +55,15 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Encapsulates the JSBSim scripting capability.
-    @author Jon S. Berndt
-    @version $Id$
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGScript.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGScript.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
-
     <h4>Scripting support provided via FGScript.</h4>
 
     <p>There is simple scripting support provided in the FGScript
-    class. Commands are specified using the <u>Simple Scripting
-    Directives for JSBSim</u> (SSDJ). The script file is in XML
+    class. Commands are specified using the <em>Simple Scripting
+    Directives for JSBSim</em> (SSDJ). The script file is in XML
     format. A test condition (or conditions) can be set up in the
     script and when the condition evaluates to true, the specified
     action[s] is/are taken. A test condition can be <em>persistent</em>,
@@ -128,6 +117,8 @@ CLASS DOCUMENTATION
     to be used are specified in the &quot;use&quot; lines. Next,
     comes the &quot;run&quot; section, where the conditions are
     described in &quot;when&quot; clauses.</p>
+    @author Jon S. Berndt
+    @version "$Id$"
 
 */
 

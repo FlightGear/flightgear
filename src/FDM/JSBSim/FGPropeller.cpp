@@ -58,6 +58,7 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
   int rows, cols;
 
   MaxPitch = MinPitch = P_Factor = Sense = Pitch = 0.0;
+  GearRatio = 1.0;
 
   Name = Prop_cfg->GetValue("NAME");
   Prop_cfg->GetNextConfigLine();
@@ -70,6 +71,8 @@ FGPropeller::FGPropeller(FGFDMExec* exec, FGConfigFile* Prop_cfg) : FGThruster(e
       Diameter /= 12.0;
     } else if (token == "NUMBLADES") {
       *Prop_cfg >> numBlades;
+    } else if (token == "GEARRATIO") {
+      *Prop_cfg >> GearRatio;
     } else if (token == "MINPITCH") {
       *Prop_cfg >> MinPitch;
     } else if (token == "MAXPITCH") {
@@ -176,7 +179,7 @@ double FGPropeller::Calculate(double PowerAvailable)
 
   if (omega <= 5) omega = 1.0;
 
-  ExcessTorque = PowerAvailable / omega;
+  ExcessTorque = PowerAvailable / omega * GearRatio;
   RPM = (RPS + ((ExcessTorque / Ixx) / (2.0 * M_PI)) * deltaT) * 60.0;
 
 				// The friction from the engine should
@@ -217,7 +220,7 @@ double FGPropeller::GetPowerRequired(void)
       else if (Pitch > MaxPitch)  Pitch = MaxPitch;
 
     } else {
-      Pitch = MaxPitch - (MaxPitch - MinPitch) * advance;
+      Pitch = MinPitch + (MaxPitch - MinPitch) * advance;
     }
     cPReq = cPower->GetValue(J, Pitch);
   }

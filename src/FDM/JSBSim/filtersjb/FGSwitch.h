@@ -47,11 +47,11 @@ DEFINITIONS
 
 #define ID_SWITCH "$Id$"
 
-namespace JSBSim {
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
+FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -85,20 +85,20 @@ complex groupings of logical comparisons. Each CONDITION_GROUP contains
 additional conditions, as well as possibly additional CONDITION_GROUPs.
 
 <pre>
-\<COMPONENT NAME="switch1" TYPE="SWITCH"\><BR>
-  \<TEST LOGIC="{AND|OR|DEFAULT}" OUTPUT="{property|value}"\><BR>
-    {property} {conditional} {property|value}<BR>
-    \<CONDITION_GROUP LOGIC="{AND|OR}"\><BR>
-      {property} {conditional} {property|value}<BR>
-      ...<BR>
-    \</CONDITION_GROUP\><BR>
-    ...<BR>
-  \</TEST><BR>
-  \<TEST LOGIC="{AND|OR}" OUTPUT="{property|value}"\><BR>
-    {property} {conditional} {property|value}<BR>
-    ...<BR>
-  \</TEST\><BR>
-  ...<BR>
+\<COMPONENT NAME="switch1" TYPE="SWITCH"\>
+  \<TEST LOGIC="{AND|OR|DEFAULT}" OUTPUT="{property|value}"\>
+    {property} {conditional} {property|value}
+    \<CONDITION_GROUP LOGIC="{AND|OR}"\>
+      {property} {conditional} {property|value}
+      ...
+    \</CONDITION_GROUP\>
+    ...
+  \</TEST>
+  \<TEST LOGIC="{AND|OR}" OUTPUT="{property|value}"\>
+    {property} {conditional} {property|value}
+    ...
+  \</TEST\>
+  ...
 \</COMPONENT\>
 </pre>
 */

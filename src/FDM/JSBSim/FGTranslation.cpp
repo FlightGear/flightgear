@@ -95,6 +95,7 @@ FGTranslation::FGTranslation(FGFDMExec* fdmex) : FGModel(fdmex)
   vUVWdot_prev[0].InitMatrix();
   vUVWdot_prev[1].InitMatrix();
   vUVWdot_prev[2].InitMatrix();
+  vUVWdot_prev[3].InitMatrix();
 
   bind();
   Debug(0);
@@ -160,6 +161,9 @@ bool FGTranslation::Run(void)
     qbarUW = 0.5*Atmosphere->GetDensity()*(vAeroUVW(eU)*vAeroUVW(eU) + vAeroUVW(eW)*vAeroUVW(eW));
     qbarUV = 0.5*Atmosphere->GetDensity()*(vAeroUVW(eU)*vAeroUVW(eU) + vAeroUVW(eV)*vAeroUVW(eV));
     Mach = Vt / State->Geta();
+    vMachUVW(eU) = vAeroUVW(eU) / State->Geta();
+    vMachUVW(eV) = vAeroUVW(eV) / State->Geta();
+    vMachUVW(eW) = vAeroUVW(eW) / State->Geta();
 
     if (debug_lvl > 1) Debug(1);
 

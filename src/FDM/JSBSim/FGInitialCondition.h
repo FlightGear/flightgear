@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
  Header:       FGInitialCondition.h
  Author:       Tony Peden
@@ -36,16 +36,16 @@ angles, and altitude.  This class does not attempt to trim the model i.e.
 the sim will most likely start in a very dynamic state (unless, of course,
 you have chosen your IC's wisely) even after setting it up with this class.
  
-********************************************************************************
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifndef FGINITIALCONDITION_H
 #define FGINITIALCONDITION_H
 
-/*******************************************************************************
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
-*******************************************************************************/
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFDMExec.h"
 #include "FGJSBBase.h"
@@ -60,18 +60,14 @@ DEFINITIONS
 
 #define ID_INITIALCONDITION "$Id$"
 
-namespace JSBSim {
-
-typedef enum { setvt, setvc, setve, setmach, setuvw, setned, setvg } speedset;
-typedef enum { setwned, setwmd, setwhc } windset; 
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+namespace JSBSim {
+
+typedef enum { setvt, setvc, setve, setmach, setuvw, setned, setvg } speedset;
+typedef enum { setwned, setwmd, setwhc } windset; 
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -89,9 +85,7 @@ CLASS DOCUMENTATION
    FGInitialCondition fgic=new FGInitialCondition(FDMExec);
    fgic->SetVcalibratedKtsIC()
    fgic->SetAltitudeFtIC();
-   .
-   .
-   .
+
    //to directly into Run
    FDMExec->GetState()->Initialize(fgic)
    delete fgic;
@@ -102,36 +96,32 @@ CLASS DOCUMENTATION
    
    Speed:
    
-	 Since vc, ve, vt, and mach all represent speed, the remaining
-	 three are recalculated each time one of them is set (using the
-	 current altitude).  The most recent speed set is remembered so 
-	 that if and when altitude is reset, the last set speed is used 
-	 to recalculate the remaining three. Setting any of the body 
-	 components forces a recalculation of vt and vt then becomes the
-	 most recent speed set.
+   Since vc, ve, vt, and mach all represent speed, the remaining
+   three are recalculated each time one of them is set (using the
+   current altitude).  The most recent speed set is remembered so 
+   that if and when altitude is reset, the last set speed is used 
+   to recalculate the remaining three. Setting any of the body 
+   components forces a recalculation of vt and vt then becomes the
+   most recent speed set.
    
    Alpha,Gamma, and Theta:
    
    This class assumes that it will be used to set up the sim for a
-	 steady, zero pitch rate condition. Since any two of those angles 
+   steady, zero pitch rate condition. Since any two of those angles 
    specifies the third gamma (flight path angle) is favored when setting
    alpha and theta and alpha is favored when setting gamma. i.e.
    
-    	set alpha : recalculate theta using gamma as currently set
-		  set theta : recalculate alpha using gamma as currently set
-		  set gamma : recalculate theta using alpha as currently set
+   - set alpha : recalculate theta using gamma as currently set
+   - set theta : recalculate alpha using gamma as currently set
+   - set gamma : recalculate theta using alpha as currently set
  
-	 The idea being that gamma is most interesting to pilots (since it 
-	 is indicative of climb rate). 
-	 
-	 Setting climb rate is, for the purpose of this discussion, 
-	 considered equivalent to setting gamma.
-   @author Anthony K. Peden
-   @version $Id$
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGInitialCondition.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGInitialCondition.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
+   The idea being that gamma is most interesting to pilots (since it 
+   is indicative of climb rate). 
+   
+   Setting climb rate is, for the purpose of this discussion, 
+   considered equivalent to setting gamma.
+   @author Tony Peden
+   @version "$Id$"
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

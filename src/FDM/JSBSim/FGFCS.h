@@ -71,17 +71,11 @@ typedef enum { iDe=0, iDaL, iDaR, iDr, iDsb, iDsp, iDf, NNorm } FcIdx;
 typedef enum { ofRad=0, ofNorm, ofMag , NForms} OutputForm;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Encapsulates the Flight Control System (FCS) functionality.
-    <ul><li>\URL[Source Code]{FGFCS.cpp.html}</li>
-    <li>\URL[Header File]{FGFCS.h.html}</li></ul>
-    This class owns and contains the list of \URL[components]{FGFCSComponent.html}
+    This class owns and contains the list of FGFCSComponents
     that define the control system for this aircraft. The config file for the
     aircraft contains a description of the control path that starts at an input
     or command and ends at an effector, e.g. an aerosurface. The FCS components
@@ -152,10 +146,6 @@ CLASS DOCUMENTATION
     @see FGGradient
     @see FGFilter
     @see FGDeadBand
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGFCS.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGFCS.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -32,7 +32,7 @@ CLASS IMPLEMENTATION
 
 FGConfigFile::FGConfigFile(string cfgFileName)
 {
-#if defined ( sgi ) && !defined( __GNUC__ )
+#if defined ( sgi ) && !defined( __GNUC__ ) && (_COMPILER_VERSION < 740)
   cfgfile.open(cfgFileName.c_str(), ios::in );
 #else
   cfgfile.open(cfgFileName.c_str(), ios::in | ios::binary );
@@ -40,7 +40,7 @@ FGConfigFile::FGConfigFile(string cfgFileName)
   CommentsOn = false;
   CurrentIndex = 0;
   Opened = true;
-#if defined ( sgi ) && !defined( __GNUC__ )
+#if defined ( sgi ) && !defined( __GNUC__ ) && (_COMPILER_VERSION < 740)
    if (!cfgfile.fail() && !cfgfile.eof())  GetNextConfigLine();
 #else
   if (cfgfile.is_open()) GetNextConfigLine();
@@ -214,7 +214,7 @@ string FGConfigFile::GetLine(void)
       }
     } else {
       if ((test = cfgfile.get()) != EOF) { // get *next* character
-#if defined ( sgi ) && !defined( __GNUC__ )
+#if defined ( sgi ) && !defined( __GNUC__ ) && (_COMPILER_VERSION < 740)
         if (test >= 0x20 || test == 0x09) cfgfile.putback(test);
 #else
         if (test >= 0x20 || test == 0x09) cfgfile.unget();

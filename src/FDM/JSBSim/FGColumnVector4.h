@@ -33,13 +33,17 @@ INCLUDES
    SG_USING_STD(endl);
 #else
 #  include <string>
-#  if defined (sgi) && !defined(__GNUC__)
+#  if defined (sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
 #    include <fstream.h>
-#    include <math.h>
 #    include <iostream.h>
+#    include <math.h>
 #  else
 #    include <fstream>
+#  if defined (sgi) && !defined(__GNUC__)
+#    include <math.h>
+#  else
 #    include <cmath>
+#  endif
 #    include <iostream>
      using std::ostream;
      using std::istream;
@@ -65,7 +69,16 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DECLARATION: FGColumnVector4
+CLASS DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/** This class implements a 4 dimensional vector.
+    @author Jon S. Berndt, Tony Peden, et. al.
+    @version $Id$
+*/
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 class FGColumnVector4 : public FGJSBBase

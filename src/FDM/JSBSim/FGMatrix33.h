@@ -35,13 +35,18 @@ INCLUDES
    SG_USING_STD(endl);
 #else
 #  include <string>
-#  if defined(sgi) && !defined(__GNUC__)
-#    include <fstream.h>
+#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
+     include <fstream.h>
+     include <iostream.h>
 #    include <math.h>
-#    include <iostream.h>
 #  else
 #    include <fstream>
-#    include <cmath>
+#    include <iostream>
+#    if defined(sgi) && !defined(__GNUC__)
+#      include <math.h>
+#    else
+#      include <cmath>
+#    endif
 #    include <iostream>
      using std::ostream;
      using std::istream;
@@ -70,6 +75,13 @@ namespace JSBSim {
 class FGColumnVector3;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/** Exception convenience class.
+  */
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DECLARATION: MatrixException
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -78,6 +90,13 @@ class MatrixException : public FGJSBBase
 public:
   string Message;
 };
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS DOCUMENTATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+/** Handles matrix math operations.
+  */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DECLARATION: FGMatrix33

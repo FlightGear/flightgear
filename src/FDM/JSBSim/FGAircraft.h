@@ -73,10 +73,6 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -85,26 +81,20 @@ CLASS DOCUMENTATION
     the Engines, Tanks, Propellers, Nozzles, Aerodynamic and Mass properties,
     landing gear, etc. These constituent parts may actually run as separate
     JSBSim models themselves, but the responsibility for initializing them and
-    for retrieving their force and moment contributions falls to FGAircraft.<br>
-    
+    for retrieving their force and moment contributions falls to FGAircraft.
     @author Jon S. Berndt
     @version $Id$
-    @see
-     <ol><li>Cooke, Zyda, Pratt, and McGhee, "NPSNET: Flight Simulation Dynamic Modeling
+    @see Cooke, Zyda, Pratt, and McGhee, "NPSNET: Flight Simulation Dynamic Modeling
 	   Using Quaternions", Presence, Vol. 1, No. 4, pp. 404-420  Naval Postgraduate
-	   School, January 1994</li>
-     <li>D. M. Henderson, "Euler Angles, Quaternions, and Transformation Matrices",
-     JSC 12960, July 1977</li>
-     <li>Richard E. McFarland, "A Standard Kinematic Model for Flight Simulation at
-     NASA-Ames", NASA CR-2497, January 1975</li>
-     <li>Barnes W. McCormick, "Aerodynamics, Aeronautics, and Flight Mechanics",
-     Wiley & Sons, 1979 ISBN 0-471-03032-5</li>
-     <li>Bernard Etkin, "Dynamics of Flight, Stability and Control", Wiley & Sons,
-     1982 ISBN 0-471-08936-2</li></ol>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGAircraft.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGAircraft.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
+	   School, January 1994
+    @see D. M. Henderson, "Euler Angles, Quaternions, and Transformation Matrices",
+     JSC 12960, July 1977
+    @see Richard E. McFarland, "A Standard Kinematic Model for Flight Simulation at
+     NASA-Ames", NASA CR-2497, January 1975
+    @see Barnes W. McCormick, "Aerodynamics, Aeronautics, and Flight Mechanics",
+     Wiley & Sons, 1979 ISBN 0-471-03032-5
+    @see Bernard Etkin, "Dynamics of Flight, Stability and Control", Wiley & Sons,
+     1982 ISBN 0-471-08936-2
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -155,10 +145,14 @@ public:
   inline FGColumnVector3& GetForces(void) { return vForces; }
   inline double GetForces(int idx) const { return vForces(idx); }
   inline FGColumnVector3& GetBodyAccel(void) { return vBodyAccel; }
+  inline double GetBodyAccel(int idx) { return vBodyAccel(idx); }
   inline FGColumnVector3& GetNcg   (void)  { return vNcg; }
+  inline double GetNcg(int idx)  { return vNcg(idx); }
   inline FGColumnVector3& GetXYZrp(void) { return vXYZrp; }
+  inline FGColumnVector3& GetXYZvrp(void) { return vXYZvrp; }
   inline FGColumnVector3& GetXYZep(void) { return vXYZep; }
   inline double GetXYZrp(int idx) const { return vXYZrp(idx); }
+  inline double GetXYZvrp(int idx) const { return vXYZvrp(idx); }
   inline double GetXYZep(int idx) const { return vXYZep(idx); }
   inline void SetAircraftName(string name) {AircraftName = name;}
 
@@ -173,6 +167,7 @@ private:
   FGColumnVector3 vMoments;
   FGColumnVector3 vForces;
   FGColumnVector3 vXYZrp;
+  FGColumnVector3 vXYZvrp;
   FGColumnVector3 vXYZep;
   FGColumnVector3 vEuler;
   FGColumnVector3 vDXYZcg;

@@ -66,19 +66,15 @@ DEFINITIONS
   #define snprintf _snprintf
 #endif
 
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+FORWARD DECLARATIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 namespace JSBSim {
 
 typedef enum { tLongitudinal, tFull, tGround, tPullup, 
                tCustom, tNone, tTurn 
              } TrimMode;
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-FORWARD DECLARATIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -97,30 +93,25 @@ CLASS DOCUMENTATION
     last three are used for on-ground trimming. The state-control pairs used in
     a given trim are completely user configurable and several pre-defined modes
     are provided as well. They are:
-    <ul>
-    <li> tLongitudinal: Trim wdot with alpha, udot with thrust, qdot with elevator</li>
-    <li> tFull: tLongitudinal + vdot with phi, pdot with aileron, rdot with rudder
-                and heading minus ground track (hmgt) with beta</li>
-    <li> tPullup: tLongitudinal but adjust alpha to achieve load factor input
-         with SetTargetNlf()
-
-    <li> tGround: wdot with altitude, qdot with theta, and pdot with phi</li>
+    - tLongitudinal: Trim wdot with alpha, udot with thrust, qdot with elevator
+    - tFull: tLongitudinal + vdot with phi, pdot with aileron, rdot with rudder
+             and heading minus ground track (hmgt) with beta
+    - tPullup: tLongitudinal but adjust alpha to achieve load factor input
+               with SetTargetNlf()
+    - tGround: wdot with altitude, qdot with theta, and pdot with phi
     
     The remaining modes include <b>tCustom</b>, which is completely user defined and
     <b>tNone</b>.
-    </ul>
-    
+
     Note that trims can (and do) fail for reasons that are completely outside
     the control of the trimming routine itself. The most common problem is the 
     initial conditions: is the model capable of steady state flight
     at those conditions?  Check the speed, altitude, configuration (flaps,
     gear, etc.), weight, cg, and anything else that may be relevant.
     
-    Example usage:
+    Example usage:<pre>
     FGFDMExec* FDMExec = new FGFDMExec();
-    .
-    .
-    .
+
     FGInitialCondition* fgic = new FGInitialCondition(FDMExec);
     FGTrim *fgt(FDMExec,fgic,tFull);
     fgic->SetVcaibratedKtsIC(100);
@@ -129,13 +120,9 @@ CLASS DOCUMENTATION
     if( !fgt->DoTrim() ) {
       cout << "Trim Failed" << endl;
     }
-    fgt->ReportState();  
+    fgt->ReportState(); </pre>  
     @author Tony Peden
-    @version $Id$
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGTrim.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGTrim.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
+    @version "$Id$"
 */       
   
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -197,11 +184,11 @@ private:
 public:
   /** Initializes the trimming class
       @param FDMExec pointer to a JSBSim executive object.
-      @param FGIC pointer to a FGInitialCondition object
+      @param tm trim mode
   */
-  FGTrim(FGFDMExec *FDMExec, TrimMode tt=tGround );
+  FGTrim(FGFDMExec *FDMExec, TrimMode tm=tGround );
 
-    ~FGTrim(void);
+  ~FGTrim(void);
 
   /** Execute the trim
   */
@@ -219,10 +206,10 @@ public:
   void TrimStats();
   
   /** Clear all state-control pairs and set a predefined trim mode
-      @param TrimMode the set of axes to trim. Can be:
+      @param tm the set of axes to trim. Can be:
              tLongitudinal, tFull, tGround, tCustom, or tNone
   */
-  void SetMode(TrimMode tt);
+  void SetMode(TrimMode tm);
 
   /** Clear all state-control pairs from the current configuration.
       The trimming routine must have at least one state-control pair
@@ -247,14 +234,14 @@ public:
   
   /** Change the control used to zero a state previously configured
       @param state the accel or other condition to zero 
-      @param control the control used to zero the state
+      @param new_control the control used to zero the state
   */
   bool EditState( State state, Control new_control );
 
   /** automatically switch to trimming longitudinal acceleration with
       flight path angle (gamma) once it becomes apparent that there
       is not enough/too much thrust.
-      @param gamma_fallback true to enable fallback
+      @param bb true to enable fallback
   */     
   inline void SetGammaFallback(bool bb) { gamma_fallback=bb; }
   

@@ -156,9 +156,9 @@ bool FGAtmosphere::Run(void)
 
     Debug(2);
 
-	return false;
+    return false;
   } else {                               // skip Run() execution this time
-	return true;
+    return true;
   }
 }
 

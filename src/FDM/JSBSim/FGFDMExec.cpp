@@ -46,7 +46,7 @@ INCLUDES
 #  include STL_IOSTREAM
 #  include STL_ITERATOR
 #else
-#  if defined(sgi) && !defined(__GNUC__)
+#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
 #    include <iostream.h>
 #  else
 #    include <iostream>
@@ -500,6 +500,7 @@ bool FGFDMExec::ReadPrologue(FGConfigFile* AC_cfg)
   scratch = AC_cfg->GetValue("VERSION").c_str();
 
   CFGVersion = AC_cfg->GetValue("VERSION");
+  Release    = AC_cfg->GetValue("RELEASE");
 
   if (debug_lvl > 0)
     cout << "                            Version: " << highint << CFGVersion
@@ -510,6 +511,25 @@ bool FGFDMExec::ReadPrologue(FGConfigFile* AC_cfg)
     cerr << "Current version needed is: " << needed_cfg_version << endl;
     cerr << "         You have version: " << CFGVersion << endl << fgdef << endl;
     return false;
+  }
+  
+  if (Release == "ALPHA") {
+    system("banner ALPHA");
+    cout << endl << endl
+         << highint << "This aircraft model is an " << fgred << Release
+         << reset << highint << " release!!!" << endl << endl << reset
+         << "This aircraft model may not even properly load, and probably"
+         << " will not fly as expected." << endl << endl
+         << fgred << highint << "Use this model for development purposes ONLY!!!"
+         << normint << endl << endl;
+  } else if (Release == "BETA") {
+    system("banner BETA");
+    cout << endl << endl
+         << highint << "This aircraft model is a " << fgred << Release
+         << reset << highint << " release!!!" << endl << endl << reset
+         << "This aircraft model probably will not fly as expected." << endl << endl
+         << fgblue << highint << "Use this model for development purposes ONLY!!!"
+         << normint << reset << endl << endl;
   }
 
   return true;

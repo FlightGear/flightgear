@@ -57,20 +57,12 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Encapsulates various uncategorized scheduled functions.
     @author Tony Peden, Jon Berndt
     @version $Id$
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGAuxiliary.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGAuxiliary.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -81,7 +73,7 @@ class FGAuxiliary : public FGModel {
 public:
   /** Constructor
       @param Executive a pointer to the parent executive object */
-  FGAuxiliary(FGFDMExec*);
+  FGAuxiliary(FGFDMExec* Executive);
   /// Destructor
   ~FGAuxiliary();
 
@@ -94,8 +86,10 @@ public:
   inline double GetVcalibratedKTS(void) const { return vcas*fpstokts; }
   inline double GetVequivalentFPS(void) const { return veas; }
   inline double GetVequivalentKTS(void) const { return veas*fpstokts; }
+  inline double GetMachU(void) const { return machU; }
   
   inline double GetTotalTemperature(void) const { return tat; }
+  inline double GetTAT_C(void) const { return tatc; }
 
   // total pressure above is freestream total pressure for subsonic only
   // for supersonic it is the 1D total pressure behind a normal shock
@@ -118,7 +112,8 @@ private:
   double vcas;
   double veas;
   double mach;
-  double qbar,rhosl,rho,p,psl,pt,tat,sat;
+  double machU;
+  double qbar,rhosl,rho,p,psl,pt,tat,sat,tatc;
 
   // Don't add a getter for pt!
 

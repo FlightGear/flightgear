@@ -53,7 +53,7 @@ FGfdmSocket::FGfdmSocket(string address, int port)
   size = 0;
   connected = false;
 
-#if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
+  #if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
     WSADATA wsaData;
     int wsaReturnCode;
     wsaReturnCode = WSAStartup(MAKEWORD(1,1), &wsaData);

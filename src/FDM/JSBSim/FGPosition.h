@@ -56,20 +56,12 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES,  and NOTES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DOCUMENTATION
+CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Models the lateral and longitudinal translational EOM.
     @author Jon S. Berndt
     @version $Id$
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGPosition.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGPosition.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -80,7 +72,7 @@ class FGPosition : public FGModel {
 public:
   /** Constructor
       @param Executive a pointer to the parent executive object */
-  FGPosition(FGFDMExec*);
+  FGPosition(FGFDMExec* Executive);
 
   /// Destructor
   ~FGPosition();
@@ -100,10 +92,13 @@ public:
   inline double GetVground(void) const { return Vground; }
   inline double GetGroundTrack(void) const { return psigt; }
   inline double Geth(void)  const { return h; }
+  inline double GethVRP(void)  const { return hVRP; }
   inline double Gethdot(void) const { return RadiusDot; }
   inline double GetLatitude(void) const { return Latitude; }
+  inline double GetLatitudeVRP(void) const { return LatitudeVRP; }
   inline double GetLatitudeDot(void) const { return LatitudeDot; }
   inline double GetLongitude(void) const { return Longitude; }
+  inline double GetLongitudeVRP(void) const { return LongitudeVRP; }
   inline double GetLongitudeDot(void) const { return LongitudeDot; }
   inline double GetRunwayRadius(void) const { return RunwayRadius; }
   inline double GetDistanceAGL(void)  const { return DistanceAGL; }
@@ -124,6 +119,7 @@ public:
   inline void SetRunwayNormal(double fgx, double fgy, double fgz ) {
       vRunwayNormal << fgx << fgy << fgz;
   }
+  void SetVRP(FGColumnVector3& vrp) {vVRP = vrp;}
   
   void bind(void);
   void unbind(void);
@@ -132,11 +128,15 @@ private:
   FGColumnVector3 vVel;
   FGColumnVector3 vVelDot;
   FGColumnVector3 vRunwayNormal;
+  FGColumnVector3 vVRP;
+  FGColumnVector3 vVRPoffset;
+  FGColumnVector3 vMac;
   
-  double Radius, h;
+  double Radius, h, hVRP;
   double LatitudeDot, LongitudeDot, RadiusDot;
-  double LatitudeDot_prev[3], LongitudeDot_prev[3], RadiusDot_prev[3];
+  double LatitudeDot_prev[4], LongitudeDot_prev[4], RadiusDot_prev[4];
   double Longitude, Latitude;
+  double LongitudeVRP, LatitudeVRP;
   double dt;
   double RunwayRadius;
   double DistanceAGL;

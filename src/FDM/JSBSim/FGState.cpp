@@ -86,7 +86,7 @@ FGState::FGState(FGFDMExec* fdex)
   Propulsion      = FDMExec->GetPropulsion();
   PropertyManager = FDMExec->GetPropertyManager();
 
-  for(int i=0;i<3;i++) vQdot_prev[i].InitMatrix();
+  for(int i=0;i<4;i++) vQdot_prev[i].InitMatrix();
 
   bind();
   

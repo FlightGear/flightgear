@@ -46,8 +46,8 @@ INCLUDES
 #include "FGJSBBase.h"
 #include "FGPropertyManager.h"
 
-
 #include <vector>
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -61,22 +61,11 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Encapsulates the JSBSim simulation executive.
-    @author Jon S. Berndt
-    @version $Id$
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGFDMExec.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGFDMExec.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
-
-    @doc This class is the interface class through which all other simulation classes
+    This class is the interface class through which all other simulation classes
     are instantiated, initialized, and run. When integrated with FlightGear (or
     other flight simulator) this class is typically instantiated by an interface
     class on the simulator side.
@@ -109,6 +98,8 @@ CLASS DOCUMENTATION
        a message is printed out when they go out of bounds</li>
     </ol>
 
+    @author Jon S. Berndt
+    @version $Id$
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -178,20 +169,20 @@ public:
   
 
   /** Sets the path to the engine config file directories.
-      @param EnginePath path to the directory under which engine config
+      @param path path to the directory under which engine config
       files are kept, for instance "engine"
   */
   bool SetEnginePath(string path)   { EnginePath = path; return true; }
 
   /** Sets the path to the aircraft config file directories.
-      @param AircraftPath path to the aircraft directory. For instance:
+      @param path path to the aircraft directory. For instance:
       "aircraft". Under aircraft, then, would be directories for various
       modeled aircraft such as C172/, x15/, etc.
   */
   bool SetAircraftPath(string path) { AircraftPath = path; return true; }
   
   /** Sets the path to the autopilot config file directories.
-      @param ControlPath path to the control directory. For instance:
+      @param path path to the control directory. For instance:
       "control".
   */
   bool SetControlPath(string path) { ControlPath = path; return true; }
@@ -285,6 +276,7 @@ private:
   string ControlPath;
   
   string CFGVersion;
+  string Release;
 
   FGState*           State;
   FGAtmosphere*      Atmosphere;

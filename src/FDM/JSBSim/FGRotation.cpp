@@ -89,6 +89,7 @@ FGRotation::FGRotation(FGFDMExec* fdmex) : FGModel(fdmex)
   vPQRdot_prev[0].InitMatrix();
   vPQRdot_prev[1].InitMatrix();
   vPQRdot_prev[2].InitMatrix();
+  vPQRdot_prev[3].InitMatrix();
 
   bind();
   

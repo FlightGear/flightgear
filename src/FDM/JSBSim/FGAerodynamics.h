@@ -80,9 +80,17 @@ CLASS DOCUMENTATION
     This class owns and contains the list of coefficients that define the
     aerodynamic properties of this aircraft. Here also, such unique phenomena
     as ground effect and maximum lift curve tailoff are handled.
-    @author Jon S. Berndt
-    @author Tony Peden
-    @version $Id$
+    @config
+    <pre>
+    \<AERODYNAMICS>
+       \<AXIS NAME="{LIFT|DRAG|SIDE|ROLL|PITCH|YAW}">
+         {Coefficient definitions}
+       \</AXIS>
+       {Additional axis definitions}
+    \</AERODYNAMICS> </pre>
+    
+    @author Jon S. Berndt, Tony Peden
+    $Id$
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

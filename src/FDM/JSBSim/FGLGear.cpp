@@ -39,7 +39,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGLGear.h"
-#include <algorithm>
+//#include <algorithm>
 
 namespace JSBSim {
 
@@ -208,7 +208,9 @@ FGColumnVector3& FGLGear::Force(void)
 {
   double SteerGain = 0;
   double SinWheel, CosWheel;
-  double deltaT;
+  double deltaSlip;
+  double deltaT = State->Getdt()*Aircraft->GetRate();
+  double maxdeltaSlip = 0.5*deltaT;
 
   vForce.InitMatrix();
   vMoment.InitMatrix();
@@ -250,7 +252,7 @@ FGColumnVector3& FGLGear::Force(void)
 
     if (compressLength > 0.00) {
 
-      WOW = true;// Weight-On-Wheels is true
+      WOW = true; // Weight-On-Wheels is true
 
 // The next equation should really use the vector to the contact patch of the tire
 // including the strut compression and not vWhlBodyVec.  Will fix this later.
@@ -300,30 +302,26 @@ FGColumnVector3& FGLGear::Force(void)
 
       switch (eBrakeGrp) {
       case bgLeft:
-        SteerGain = 0.10;
-        BrakeFCoeff = ( rollingFCoeff*(1.0 - FCS->GetBrake(bgLeft)) +
+         BrakeFCoeff = ( rollingFCoeff*(1.0 - FCS->GetBrake(bgLeft)) +
                         staticFCoeff*FCS->GetBrake(bgLeft) );
         break;
       case bgRight:
-        SteerGain = 0.10;
         BrakeFCoeff =  ( rollingFCoeff*(1.0 - FCS->GetBrake(bgRight)) +
                          staticFCoeff*FCS->GetBrake(bgRight) );
         break;
       case bgCenter:
-        SteerGain = 0.10;
         BrakeFCoeff =  ( rollingFCoeff*(1.0 - FCS->GetBrake(bgCenter)) +
                          staticFCoeff*FCS->GetBrake(bgCenter) );
         break;
       case bgNose:
-        SteerGain = -0.50;
-        BrakeFCoeff =  rollingFCoeff;
+        BrakeFCoeff =  ( rollingFCoeff*(1.0 - FCS->GetBrake(bgCenter)) +
+                         staticFCoeff*FCS->GetBrake(bgCenter) );
         break;
       case bgTail:
-        SteerGain = -0.10;
-        BrakeFCoeff =  rollingFCoeff;
+        BrakeFCoeff =  ( rollingFCoeff*(1.0 - FCS->GetBrake(bgCenter)) +
+                         staticFCoeff*FCS->GetBrake(bgCenter) );
         break;
       case bgNone:
-        SteerGain = 0.0;
         BrakeFCoeff =  rollingFCoeff;
         break;
       default:
@@ -333,7 +331,7 @@ FGColumnVector3& FGLGear::Force(void)
 
       switch (eSteerType) {
       case stSteer:
-        SteerAngle = SteerGain*FCS->GetDrCmd()*0.349; // 20 deg
+        SteerAngle = -maxSteerAngle * FCS->GetDrCmd() * 0.01745; 
         break;
       case stFixed:
         SteerAngle = 0.0;
@@ -360,8 +358,24 @@ FGColumnVector3& FGLGear::Force(void)
 
       if (RollingWhlVel == 0.0 && SideWhlVel == 0.0) {
         WheelSlip = 0.0;
-      } else if (fabs(RollingWhlVel) < 0.10) {
+      } else if (fabs(RollingWhlVel) < 1.0) {
         WheelSlip = 0.05*radtodeg*atan2(SideWhlVel, RollingWhlVel) + 0.95*WheelSlip;
+      } else {
+        WheelSlip = radtodeg*atan2(SideWhlVel, RollingWhlVel);
+      }
+/*
+      if (RollingWhlVel == 0.0 && SideWhlVel == 0.0) {
+        WheelSlip = 0.0;
+      } else if (RollingWhlVel < 1.0) {
+        WheelSlip = radtodeg*atan2(SideWhlVel, RollingWhlVel);
+        deltaSlip = WheelSlip - lastWheelSlip;
+        if (fabs(deltaSlip) > maxdeltaSlip) {
+          if (WheelSlip > lastWheelSlip) {
+            WheelSlip = lastWheelSlip + maxdeltaSlip;
+          } else if (WheelSlip < lastWheelSlip) {
+            WheelSlip = lastWheelSlip - maxdeltaSlip;
+          }
+        }
       } else {
         WheelSlip = radtodeg*atan2(SideWhlVel, RollingWhlVel);
       }
@@ -371,7 +385,7 @@ FGColumnVector3& FGLGear::Force(void)
       {
         WheelSlip = 0.0;
       }
-      
+*/    
       lastWheelSlip = WheelSlip;
 
 // Compute the sideforce coefficients using similar assumptions to LaRCSim for now.
@@ -433,7 +447,7 @@ FGColumnVector3& FGLGear::Force(void)
       vForce  = State->GetTl2b() * vLocalForce;
       vMoment = vWhlBodyVec * vForce;
 
-    } else {
+    } else { // Gear is NOT compressed
 
       WOW = false;
 
@@ -447,8 +461,6 @@ FGColumnVector3& FGLGear::Force(void)
 
       compressLength = 0.0; // reset compressLength to zero for data output validity
     }
-
-    deltaT = State->Getdt()*Aircraft->GetRate();
 
     if (FirstContact) LandingDistanceTraveled += Position->GetVground()*deltaT;
   

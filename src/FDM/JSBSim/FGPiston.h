@@ -29,10 +29,6 @@ HISTORY
 10/01/2001  DPM  Modified to use equations from Dave Luff's piston model.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES,  and NOTES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
@@ -60,22 +56,14 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-COMMENTS, REFERENCES,  and NOTES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DOCUMENTATION
+CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Models Dave Luff's engine model as ported into JSBSim by David Megginson.
     @author Jon S. Berndt (Engine framework code and framework-related mods)
     @author Dave Luff (engine operational code)
     @author David Megginson (porting and additional code)
-    @version $Id$
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGPiston.h?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Header File </a>
-    @see <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/jsbsim/JSBSim/FGPiston.cpp?rev=HEAD&content-type=text/vnd.viewcvs-markup">
-         Source File </a>
+    @version "$Id$"
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -93,6 +81,18 @@ public:
   double Calculate(double PowerRequired);
   double GetPowerAvailable(void) {return PowerAvailable;}
   double CalcFuelNeed(void);
+
+  void SetMagnetos(int magnetos) {Magnetos = magnetos;}
+
+  double  GetEGT(void) { return EGT_degC; }
+  int     GetMagnetos(void) {return Magnetos;}
+
+  double getExhaustGasTemp_degF(void) {return KelvinToFahrenheit(ExhaustGasTemp_degK);}
+  double getManifoldPressure_inHg(void) const {return ManifoldPressure_inHg;}
+  double getCylinderHeadTemp_degF(void) {return KelvinToFahrenheit(CylinderHeadTemp_degK);}
+  double getOilPressure_psi(void) const {return OilPressure_psi;}
+  double getOilTemp_degF (void) {return KelvinToFahrenheit(OilTemp_degK);}
+  double getRPM(void) {return RPM;} 
 
 private:
   int crank_counter;
@@ -147,12 +147,13 @@ private:
   double T_amb;              // degrees Kelvin
   double RPM;                // revolutions per minute
   double IAS;                // knots
+  bool Magneto_Left;
+  bool Magneto_Right;
+  int Magnetos;
 
   //
   // Outputs (in addition to those in FGEngine).
   //
-  bool Magneto_Left;
-  bool Magneto_Right;
   double rho_air;
   double volumetric_efficiency;
   double m_dot_air;
@@ -161,6 +162,12 @@ private:
   double Percentage_Power;
   double HP;
   double combustion_efficiency;
+  double ExhaustGasTemp_degK;
+  double EGT_degC;
+  double ManifoldPressure_inHg;
+  double CylinderHeadTemp_degK;
+  double OilPressure_psi;
+  double OilTemp_degK;
 
   void Debug(int from);
 };
