@@ -53,6 +53,47 @@ extern "C" {
 #include "shape.hxx"
 
 
+// return the type of the shapefile record
+AreaType get_shapefile_type(GDBFile *dbf, int rec) {
+    // GDBFieldDesc *fdesc[128];	// 128 is an arbitrary number here
+    GDBFValue *fields;		//an array of field values
+    char* dbf_rec;		//a record containing all the fields
+
+    // grab the meta-information for all the fields
+    // this applies to all the records in the DBF file.
+    // for ( int i = 0; i < dbf->numFields(); i++ ) {
+    //   fdesc[i] = dbf->getFieldDesc(i);
+    //   cout << i << ") " << fdesc[i]->name << endl;
+    // }
+
+    // this is the whole name record
+    dbf_rec = dbf->getRecord( rec );
+
+    // parse it into individual fields
+    if ( dbf_rec ) {
+	fields = dbf->recordDeform( dbf_rec );
+    } else {
+	return UnknownArea;
+    }
+
+    string area = fields[4].str_v;
+    // strip leading spaces
+    while ( area[0] == ' ' ) {
+	area = area.substr(1, area.length() - 1);
+    }
+    // strip trailing spaces
+    while ( area[area.length() - 1] == ' ' ) {
+	area = area.substr(0, area.length() - 1);
+    }
+    // strip other junk encountered
+    while ( (int)area[area.length() - 1] == 9 ) {
+	area = area.substr(0, area.length() - 1);
+    }
+
+    return get_area_type( area );
+}
+
+
 int main( int argc, char **argv ) {
     gpc_polygon gpc_shape;
     int i, j;
@@ -265,6 +306,10 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.8  1999/03/22 23:49:36  curt
+// Moved AreaType get_shapefile_type(GDBFile *dbf, int rec) to where it
+// belongs in ShapeFile/
+//
 // Revision 1.7  1999/03/17 23:51:29  curt
 // Changed polygon index counter file.
 //

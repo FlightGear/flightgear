@@ -26,17 +26,6 @@
 #define _NAMES_HXX
 
 
-// libgfc.a includes need this bit o' strangeness
-#if defined ( linux )
-#  define _LINUX_
-#endif
-#include <gfc/gadt_polygon.h>
-#include <gfc/gdbf.h>
-#undef E
-#undef DEG_TO_RAD
-#undef RAD_TO_DEG
-
-
 // Posible shape file types.  Note the order of these is important and
 // defines the priority of these shapes if they should intersect.  The
 // smaller the number, the higher the priority.
@@ -59,9 +48,6 @@ enum AreaType {
 };
 
 
-// return the type of the shapefile record
-AreaType get_shapefile_type(GDBFile *dbf, int rec);
-
 // return area type from text name
 AreaType get_area_type( string area );
 
@@ -73,6 +59,10 @@ string get_area_name( AreaType area );
 
 
 // $Log$
+// Revision 1.4  1999/03/22 23:49:30  curt
+// Moved AreaType get_shapefile_type(GDBFile *dbf, int rec) to where it
+// belongs in ShapeFile/
+//
 // Revision 1.3  1999/03/01 15:35:53  curt
 // Generalized the routines a bit to make them more useful.
 //
