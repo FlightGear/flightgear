@@ -1038,7 +1038,7 @@ static void fgMainLoop( void ) {
     globals->get_ATC_mgr()->update(1);	// FIXME - use real dt.
 
     // Run the AI subsystem
-    globals->get_AI_mgr()->update(1);	// FIXME - use real dt.
+    // globals->get_AI_mgr()->update(1);	// FIXME - use real dt.
 
     // Run flight model
 

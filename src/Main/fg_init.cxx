@@ -953,8 +953,8 @@ bool fgInitSubsystems( void ) {
     ////////////////////////////////////////////////////////////////////
 
     SG_LOG(SG_GENERAL, SG_INFO, "  AI Manager");
-    globals->set_AI_mgr(new FGAIMgr);
-    globals->get_AI_mgr()->init();     
+    // globals->set_AI_mgr(new FGAIMgr);
+    // globals->get_AI_mgr()->init();     
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the built-in commands.
