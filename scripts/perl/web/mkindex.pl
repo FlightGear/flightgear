@@ -78,7 +78,7 @@ sub is_newer {
 # Make images (both large and small)
 #
 
-@FILES = `ls $src/*.jpg $src/*.JPG $src/*.gif`;
+@FILES = `ls $src/*.jpg $src/*.JPG $src/*.png`;
 
 foreach $file ( @FILES ) {
     chop $file;
@@ -87,15 +87,15 @@ foreach $file ( @FILES ) {
     if ( is_newer( "$src/$file", "$ldir/$file" ) || ! -e "$ldir/$file" ) {
 	print "Updating $ldir/$file\n";
 	system("cp -f $src/$file $ldir");
-	system("mogrify -geometry $lwidth" . "X" .
-	       "$lheight -interlace LINE -quality 80 $ldir/$file");
+	system("mogrify -geometry \'$lwidth" . "X" .
+	       "$lheight>\' -interlace LINE -quality 80 $ldir/$file");
     }
 
     if ( is_newer( "$ldir/$file", "$sdir/$file" ) || ! -e "$sdir/$file" ) {
 	print "Updating $sdir/$file\n";
 	system("cp -f $ldir/$file $sdir");
-	system("mogrify -geometry $swidth" . "X" . 
-	       "$sheight -interlace LINE -quality 80 $sdir/$file");
+	system("mogrify -geometry \'$swidth" . "X" . 
+	       "$sheight>\' -interlace LINE -quality 80 $sdir/$file");
     }
 }
 
@@ -134,7 +134,7 @@ open( MASTER, "<master.idx" );
 
 while ( <MASTER> ) {
     chop;
-    if ( m/\.jpg$/ || m/\.JPG$/ || m/\.gif$/ ) {
+    if ( m/\.jpg$/ || m/\.JPG$/ || m/\.png$/ ) {
 	push @imagelist, $_;
     } else {
 	# just ignore everything else
@@ -190,7 +190,7 @@ while ( <MASTER> ) {
 	print OUT "<P>\n";
 	$j = 1;
 	$in_table = 0;
-    } elsif ( m/\.jpg$/ || m/\.JPG$/ || m/\.gif$/ ) {
+    } elsif ( m/\.jpg$/ || m/\.JPG$/ || m/\.png$/ ) {
 	# insert image in 3 wide tables
 
 	$in_table = 1;
@@ -209,8 +209,8 @@ while ( <MASTER> ) {
 	    $linkname = `basename $i .jpg`;
         } elsif ( $i =~ m/\.JPG$/ ) {
 	    $linkname = `basename $i .JPG`;
-        } else {
-	    $linkname = `basename $i .gif`;
+        } elsif ($i =~ m/\.png$/ ) {
+	    $linkname = `basename $i .png`;
         }
 	chop($linkname);
 	# print OUT "<TD WIDTH=220 HEIGHT=160>\n";
@@ -334,7 +334,7 @@ while ( <MASTER> ) {
 # Generate Links
 #
 
-# @FILES = `ls $src/*.jpg $src/*.JPG $src/*.gif`;
+# @FILES = `ls $src/*.jpg $src/*.JPG $src/*.png`;
 
 $first = $imagelist[0];
 if ( $first =~ m/\.jpg$/ ) {
@@ -344,8 +344,8 @@ if ( $first =~ m/\.jpg$/ ) {
     # print "  ext = JPG\n";
     $firstname = `basename $first .JPG`;
 } else {
-    # print "  ext = gif\n";
-    $firstname = `basename $first .gif`;
+    # print "  ext = png\n";
+    $firstname = `basename $first .png`;
 }
 chop($firstname);
 
@@ -357,8 +357,8 @@ if ( $last =~ m/\.jpg$/ ) {
     # print "  ext = JPG\n";
     $lastname = `basename $last .JPG`;
 } else {
-    # print "  ext = gif\n";
-    $lastname = `basename $last .gif`;
+    # print "  ext = png\n";
+    $lastname = `basename $last .png`;
 }
 chop($lastname);
 
@@ -385,8 +385,8 @@ for ($i = 0; $i <= $#imagelist; $i++) {
         $linkname = `basename $file .JPG`;
         $ext = "JPG";
     } else {
-        $linkname = `basename $file .gif`;
-        $ext = "gif";
+        $linkname = `basename $file .png`;
+        $ext = "png";
     }
     chop($linkname);
     $nice_name = $linkname;
@@ -399,8 +399,8 @@ for ($i = 0; $i <= $#imagelist; $i++) {
 	# print "  ext = JPG\n";
         $prevname = `basename $prev .JPG`;
     } else {
-	# print "  ext = gif\n";
-        $prevname = `basename $prev .gif`;
+	# print "  ext = png\n";
+        $prevname = `basename $prev .png`;
     }
     chop($prevname);
     
@@ -409,7 +409,7 @@ for ($i = 0; $i <= $#imagelist; $i++) {
     } elsif ( $next =~ m/\.JPG$/ ) {
         $nextname = `basename $next .JPG`;
     } else {
-        $nextname = `basename $next .gif`;
+        $nextname = `basename $next .png`;
     }
     chop($nextname);
     
