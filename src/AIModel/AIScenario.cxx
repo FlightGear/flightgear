@@ -67,8 +67,8 @@ FGAIScenario::FGAIScenario(string filename)
      en->azimuth        = entry_node->getDoubleValue("azimuth", 0.0); 
      en->elevation      = entry_node->getDoubleValue("elevation", 0.0); 
      en->rudder         = entry_node->getDoubleValue("rudder", 0.0);
-     en->strength       = entry_node->getDoubleValue("strength", 0.0);
-     en->diameter       = entry_node->getDoubleValue("diameter", 0.0);
+     en->strength       = entry_node->getDoubleValue("strength-fps", 0.0);
+     en->diameter       = entry_node->getDoubleValue("diameter-ft", 0.0);
    }
 
   entry_iterator = entries.begin();

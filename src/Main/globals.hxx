@@ -62,6 +62,7 @@ class SGPropertyNode;
 class SGTime;
 class SGSoundMgr;
 
+
 class FGAirportList;
 class FGRunwayList;
 class FGAIMgr;
@@ -69,6 +70,7 @@ class FGATCMgr;
 class FGATCDisplay;
 class FGAircraftModel;
 class FGControls;
+class FGFlightPlanDispatcher;
 class FGIO;
 class FGNavList;
 class FGFixList;
@@ -172,6 +174,8 @@ private:
     SGCommandMgr *commands;
 
     SGModelLib *model_lib;
+
+  //FGFlightPlanDispatcher *fpDispatcher;
 
     FGAircraftModel *acmodel;
 

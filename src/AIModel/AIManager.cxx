@@ -123,7 +123,7 @@ int FGAIManager::assignID() {
   int maxint = 30000;
   int x; 
   bool used;
-  for (x=0; x<maxint; x++) {
+  for (x=1; x<maxint; x++) {
      used = false;
      id_itr = ids.begin();
      while( id_itr != ids.end() ) {

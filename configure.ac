@@ -120,7 +120,7 @@ case "${host}" in
     if test -d /opt/X11R6 ; then
         EXTRA_DIR2="/opt/X11R6"
     fi
-    EXTRA_DIRS="${EXTRA_DIRS} $EXTRA_DIR1 $EXTRA_DIR2"
+    EXTRA_DIRS="${EXTRA_DIRS} $EXTRA_DIR1 $EXTRA_DIR2 /usr/local/"
     ;;
 
 esac
@@ -564,6 +564,7 @@ AC_CONFIG_FILES([ \
 	src/Sound/Makefile \
 	src/Systems/Makefile \
 	src/Time/Makefile \
+	src/Traffic/Makefile \
 	tests/Makefile \
 	utils/Makefile \
 	utils/TerraSync/Makefile \

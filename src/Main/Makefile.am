@@ -83,6 +83,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Replay/libReplay.a \
 	$(top_builddir)/src/Systems/libSystems.a \
 	$(top_builddir)/src/Time/libTime.a \
+	$(top_builddir)/src/Traffic/libTraffic.a \
 	$(top_builddir)/src/Environment/libEnvironment.a \
 	$(CLOUD3D_LIBS) \
 	-lsgroute -lsgsky -lsgsound -lsgephem -lsgmaterial -lsgtgdb -lsgmodel \

@@ -44,6 +44,12 @@ public:
   } waypoint;
 
    FGAIFlightPlan(string filename);
+  FGAIFlightPlan(string filename, 
+		 double lat, 
+		 double lon, 
+		 double alt, 
+		 double speed, 
+		 double course);
    ~FGAIFlightPlan();
 
    waypoint* getPreviousWaypoint( void );

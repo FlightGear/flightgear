@@ -20,6 +20,7 @@
 #include "AIFlightPlan.hxx"
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/route/waypoint.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/constants.h>
 #ifdef __BORLANDC__
@@ -70,6 +71,124 @@ FGAIFlightPlan::FGAIFlightPlan(string filename)
   wpt_iterator = waypoints.begin();
   //cout << waypoints.size() << " waypoints read." << endl;
 }
+
+
+// This is a modified version of the constructor,
+// Which not only reads the waypoints from a 
+// Flight plan file, but also adds the current
+// Position computed by the traffic manager, as well
+// as setting speeds and altitude computed by the
+// traffic manager. 
+FGAIFlightPlan::FGAIFlightPlan(string filename, 
+			       double lat, 
+			       double lon,
+			       double alt,
+			       double speed,
+			       double course)
+{
+  int i;
+  bool useInitialWayPoint = true;
+  SGPath path( globals->get_fg_root() );
+  path.append( ("/Data/AI/FlightPlans/" + filename).c_str() );
+  SGPropertyNode root;
+
+  try {
+      readProperties(path.str(), &root);
+  } catch (const sg_exception &e) {
+      SG_LOG(SG_GENERAL, SG_ALERT,
+       "Error reading AI flight plan: ");
+       cout << path.str() << endl;
+      return;
+  }
+
+  SGPropertyNode * node = root.getNode("flightplan");
+  // First waypoint is current position of the aircraft as
+  // dictated by the traffic manager. 
+  waypoint* init_waypoint   = new waypoint;
+  init_waypoint->name       = string("initial position");
+  init_waypoint->latitude   = lat;
+  init_waypoint->longitude  = lon;
+  init_waypoint->altitude   = alt;
+  init_waypoint->speed      = speed;
+  init_waypoint->crossat    = - 10000;
+  init_waypoint->gear_down  = false;
+  init_waypoint->flaps_down = false;
+  waypoints.push_back( init_waypoint );
+  for (i = 0; i < node->nChildren(); i++) { 
+     //cout << "Reading waypoint " << i << endl;
+     waypoint* wpt = new waypoint;
+     SGPropertyNode * wpt_node = node->getChild(i);
+     wpt->name      = wpt_node->getStringValue("name", "END");
+     wpt->latitude  = wpt_node->getDoubleValue("lat", 0);
+     wpt->longitude = wpt_node->getDoubleValue("lon", 0);
+     wpt->altitude  = wpt_node->getDoubleValue("alt", 0);
+     wpt->speed     = wpt_node->getDoubleValue("ktas", 0);
+     //wpt->speed     = speed;
+     wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
+     wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
+     wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
+
+     if (wpt->name == "END") wpt->finished = true;
+     else wpt->finished = false;
+     // discard this waypoint if it's bearing differs more than
+     // 90 degrees from the course we should fly according to the
+     // Traffic manager. Those are considered "behind" us.
+     SGWayPoint first(init_waypoint->longitude, 
+		      init_waypoint->latitude, 
+		      init_waypoint->altitude);
+     SGWayPoint curr (wpt->longitude, 
+		      wpt->latitude, 
+		      wpt->altitude);
+     double crse, crsDiff;
+     double dist;
+     first.CourseAndDistance(curr, &crse, &dist);
+
+     dist *= SG_METER_TO_NM;
+
+     // We're only interested in the absolute value of crsDiff
+     // wich should fall in the 0-180 deg range.
+     crsDiff = fabs(crse-course);
+     if (crsDiff > 180)
+       crsDiff -= 180;
+     // These are the threee conditions that we consder including
+     // in our flight plan:
+     // 1) current waypoint is less then 100 miles away OR
+     // 2) curren waypoint is ahead of us, at any distance
+     bool useWpt = false;
+     if ((dist > 100.0) && (crsDiff > 90.0) && (wpt->name != string ("EOF")))
+       {
+	 //useWpt = false;
+	 // Once we start including waypoints, we have to continue, even though
+	 // one of the following way point would suffice. 
+	 // so once is the useWpt flag is set to true, we cannot reset it to false.
+	 // cerr << "Discarding waypoint: " << wpt->name 
+	 //    << ": Course difference = " << crsDiff << endl;
+       }
+     else
+       useWpt = true;
+     
+     if (useWpt)
+       {
+	 if ((dist > 100.0) && (useInitialWayPoint))
+	   {
+	     waypoints.push_back(init_waypoint);
+	     //cerr << "Using waypoint : " << init_waypoint->name <<  endl;
+	   }
+	 waypoints.push_back( wpt );
+	 //cerr << "Using waypoint : " << wpt->name 
+	 //    << ": course diff : " << crsDiff 
+	 //      << "distance      : " << dist << endl;
+	 useInitialWayPoint = false;
+       }
+     else 
+       delete wpt;
+  }
+  
+  wpt_iterator = waypoints.begin();
+  //cout << waypoints.size() << " waypoints read." << endl;
+}
+
+
 
 
 FGAIFlightPlan::~FGAIFlightPlan()
@@ -144,32 +263,41 @@ double FGAIFlightPlan::getBearing(waypoint* first, waypoint* second){
 
 
 double FGAIFlightPlan::getBearing(double lat, double lon, waypoint* wp){
-  double latd = lat;
-  double lond = lon;
-  double latt = wp->latitude;
-  double lont = wp->longitude;
-  double ft_per_deg_lat = 366468.96 - 3717.12 * cos(lat/SG_RADIANS_TO_DEGREES);
-  double ft_per_deg_lon = 365228.16 * cos(lat/SG_RADIANS_TO_DEGREES);
+  double course, distance;
+ //  double latd = lat;
+//   double lond = lon;
+//   double latt = wp->latitude;
+//   double lont = wp->longitude;
+//   double ft_per_deg_lat = 366468.96 - 3717.12 * cos(lat/SG_RADIANS_TO_DEGREES);
+//   double ft_per_deg_lon = 365228.16 * cos(lat/SG_RADIANS_TO_DEGREES);
 
-  if (lond < 0.0) lond+=360.0;
-  if (lont < 0.0) lont+=360.0;
-  latd+=90.0;
-  latt+=90.0;
+//   if (lond < 0.0) {
+//     lond+=360.0;
+//     lont+=360;
+//   }
+//   if (lont < 0.0) {
+//     lond+=360.0;
+//     lont+=360.0;
+//   }
+//   latd+=90.0;
+//   latt+=90.0;
 
-  double lat_diff = (latt - latd) * ft_per_deg_lat;
-  double lon_diff = (lont - lond) * ft_per_deg_lon;
-  double angle = atan(fabs(lat_diff / lon_diff)) * SG_RADIANS_TO_DEGREES;
+//   double lat_diff = (latt - latd) * ft_per_deg_lat;
+//   double lon_diff = (lont - lond) * ft_per_deg_lon;
+//   double angle = atan(fabs(lat_diff / lon_diff)) * SG_RADIANS_TO_DEGREES;
 
-  bool southerly = true;
-  if (latt > latd) southerly = false;
-  bool easterly = false;
-  if (lont > lond) easterly = true;
-  if (southerly && easterly) return 90.0 + angle;
-  if (!southerly && easterly) return 90.0 - angle;
-  if (southerly && !easterly) return 270.0 - angle;
-  if (!southerly && !easterly) return 270.0 + angle; 
-
+//   bool southerly = true;
+//   if (latt > latd) southerly = false;
+//   bool easterly = false;
+//   if (lont > lond) easterly = true;
+//   if (southerly && easterly) return 90.0 + angle;
+//   if (!southerly && easterly) return 90.0 - angle;
+//   if (southerly && !easterly) return 270.0 - angle;
+//   if (!southerly && !easterly) return 270.0 + angle; 
+  SGWayPoint sgWp(wp->longitude,wp->latitude, wp->altitude, SGWayPoint::WGS84, string("temp"));
+  sgWp.CourseAndDistance(lon, lat, wp->altitude, &course, &distance);
+  return course;
   // Omit a compiler warning.
-  return 0;
+ 
 }
 

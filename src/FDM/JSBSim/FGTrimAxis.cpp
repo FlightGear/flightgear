@@ -290,7 +290,8 @@ void FGTrimAxis::SetThetaOnGround(double ff) {
 
 bool FGTrimAxis::initTheta(void) {
   int i,N,iAft, iForward;
-  double zAft,zForward,zDiff,theta;
+  double zAft,zForward,zDiff,theta; 
+  double xAft,xForward,xDiff;
   bool level;  
   double saveAlt;
   
@@ -317,17 +318,25 @@ bool FGTrimAxis::initTheta(void) {
   }
   	  
   // now adjust theta till the wheels are the same distance from the ground
-  zAft=fdmex->GetGroundReactions()->GetGearUnit(1)->GetLocalGear(3);
-  zForward=fdmex->GetGroundReactions()->GetGearUnit(0)->GetLocalGear(3);
-  zDiff = zForward - zAft;
-  level=false;
-  theta=fgic->GetPitchAngleDegIC(); 
-  while(!level && (i < 100)) {
-	  theta+=2.0*zDiff;
-	  fgic->SetPitchAngleDegIC(theta);   
-	  fdmex->RunIC();
-	  zAft=fdmex->GetGroundReactions()->GetGearUnit(iAft)->GetLocalGear(3);
-    zForward=fdmex->GetGroundReactions()->GetGearUnit(iForward)->GetLocalGear(3);
+   xAft=fdmex->GetGroundReactions()->GetGearUnit(iAft)->GetLocalGear(1);
+   xForward=fdmex->GetGroundReactions()->GetGearUnit(iForward)->GetLocalGear(1);
+   xDiff = xForward - xAft;
+   zAft=fdmex->GetGroundReactions()->GetGearUnit(iAft)->GetLocalGear(3);
+   zForward=fdmex->GetGroundReactions()->GetGearUnit(iForward)->GetLocalGear(3);
+   zDiff = zForward - zAft;
+   level=false;
+   theta=fgic->GetPitchAngleDegIC();
+   while(!level && (i < 100)) {
+     theta+=180.0/M_PI*zDiff/fabs(xDiff);
+     fgic->SetPitchAngleDegIC(theta);
+     fdmex->RunIC();
+     xAft=fdmex->GetGroundReactions()->GetGearUnit(iAft)->GetLocalGear(1);
+     xForward=fdmex->GetGroundReactions()->GetGearUnit(iForward)->GetLocalGear(1);
+     xDiff = xForward - xAft;
+     zAft=fdmex->GetGroundReactions()->GetGearUnit(iAft)->GetLocalGear(3);
+     zForward=fdmex->GetGroundReactions()->GetGearUnit(iForward)->GetLocalGear(3);
+     zDiff = zForward - zAft;
+
     zDiff = zForward - zAft;
 	  //cout << endl << theta << "  " << zDiff << endl;
 	  //cout << "0: " << fdmex->GetGroundReactions()->GetGearUnit(0)->GetLocalGear() << endl;

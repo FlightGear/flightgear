@@ -163,6 +163,7 @@ inline void FGAIBase::setAltitude( double altitude_ft ) {
 
 inline void FGAIBase::setBank( double bank ) {
   roll = tgt_roll = bank;
+  no_roll = false;
 }
 
 inline void FGAIBase::setLongitude( double longitude ) {

@@ -111,6 +111,7 @@
 #include <Time/sunpos.hxx>
 #include <Time/sunsolver.hxx>
 #include <Time/tmp.hxx>
+#include <Traffic/TrafficMgr.hxx>
 
 #ifdef FG_MPLAYER_AS
 #include <MultiPlayer/multiplaytxmgr.hxx>
@@ -1684,13 +1685,25 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     // Initialise the AI Model Manager
     ////////////////////////////////////////////////////////////////////
-
     SG_LOG(SG_GENERAL, SG_INFO, "  AI Model Manager");
     globals->add_subsystem("ai_model", new FGAIManager);
 
 
+     // It's probably a good idea to initialize the top level traffic manager
+     // After the AI and ATC systems have been initialized properly.
+     // AI Traffic manager
+     globals->add_subsystem("Traffic Manager", new FGTrafficManager);
+	     FGTrafficManager *dispatcher = 
+	     (FGTrafficManager*) globals->get_subsystem("Traffic Manager");
+
+     readXML(string(globals->get_fg_root() + string("/Traffic/fgtraffic.xml")),
+	     *dispatcher);
+     globals->get_subsystem("Traffic Manager")->init();
+
     globals->add_subsystem("instrumentation", new FGInstrumentMgr);
     globals->add_subsystem("systems", new FGSystemMgr);
+
+
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the radio stack subsystem.
