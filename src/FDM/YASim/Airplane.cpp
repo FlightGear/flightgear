@@ -698,6 +698,7 @@ void Airplane::runCruise()
     updateGearState();
 
     // Precompute thrust in the model, and calculate aerodynamic forces
+    _model.getBody()->recalc();
     _model.getBody()->reset();
     _model.initIteration();
     _model.calcForces(&_cruiseState);
@@ -738,6 +739,7 @@ void Airplane::runApproach()
     updateGearState();
 
     // Precompute thrust in the model, and calculate aerodynamic forces
+    _model.getBody()->recalc();
     _model.getBody()->reset();
     _model.initIteration();
     _model.calcForces(&_approachState);
@@ -817,19 +819,23 @@ void Airplane::solve()
 	float thrust = tmp[0];
 
 	_model.getBody()->getAccel(tmp);
+        Math::tmul33(_cruiseState.orient, tmp, tmp);
 	float xforce = _cruiseWeight * tmp[0];
 	float clift0 = _cruiseWeight * tmp[2];
 
 	_model.getBody()->getAngularAccel(tmp);
+        Math::tmul33(_cruiseState.orient, tmp, tmp);
 	float pitch0 = tmp[1];
 
 	// Run an approach iteration, and do likewise
 	runApproach();
 
 	_model.getBody()->getAngularAccel(tmp);
+        Math::tmul33(_approachState.orient, tmp, tmp);
 	double apitch0 = tmp[1];
 
 	_model.getBody()->getAccel(tmp);
+        Math::tmul33(_approachState.orient, tmp, tmp);
 	float alift = _approachWeight * tmp[2];
 
 	// Modify the cruise AoA a bit to get a derivative
@@ -838,6 +844,7 @@ void Airplane::solve()
 	_cruiseAoA -= ARCMIN;
 
 	_model.getBody()->getAccel(tmp);
+        Math::tmul33(_cruiseState.orient, tmp, tmp);
 	float clift1 = _cruiseWeight * tmp[2];
 
 	// Do the same with the tail incidence
@@ -846,6 +853,7 @@ void Airplane::solve()
 	_tail->setIncidence(_tailIncidence);
 
 	_model.getBody()->getAngularAccel(tmp);
+        Math::tmul33(_cruiseState.orient, tmp, tmp);
 	float pitch1 = tmp[1];
 
 	// Now calculate:
@@ -870,6 +878,7 @@ void Airplane::solve()
         _approachElevator.val -= ELEVDIDDLE;
 
 	_model.getBody()->getAngularAccel(tmp);
+        Math::tmul33(_approachState.orient, tmp, tmp);
 	double apitch1 = tmp[1];
         float elevDelta = -apitch0 * (ELEVDIDDLE/(apitch1-apitch0));
 
@@ -894,8 +903,8 @@ void Airplane::solve()
 	_cruiseAoA = clamp(_cruiseAoA, -0.175f, 0.175f);
 	_tailIncidence = clamp(_tailIncidence, -0.175f, 0.175f);
 
-        if(norm(dragFactor) < 1.00001 &&
-           norm(liftFactor) < 1.00001 &&
+        if(abs(xforce/_cruiseWeight) < 0.0001 &&
+           abs(alift/_approachWeight) < 0.0001 &&
            abs(aoaDelta) < .000017 &&
            abs(tailDelta) < .000017)
         {

@@ -21,6 +21,7 @@ static const float DEG2RAD = 0.0174532925199;
 static const float RPM2RAD = 0.10471975512;
 static const float LBS2N = 4.44822;
 static const float LBS2KG = 0.45359237;
+static const float KG2LBS = 2.2046225;
 static const float CM2GALS = 264.172037284;
 static const float HP2W = 745.700;
 static const float INHG2PA = 3386.389;
@@ -308,6 +309,9 @@ void FGFDM::setOutputProperties()
 {
     char buf[256];
     int i;
+
+    float grossWgt = _airplane.getModel()->getBody()->getTotalMass() * KG2LBS;
+    fgSetFloat("/yasim/gross-weight-lbs", grossWgt);
 
     ControlMap* cm = _airplane.getControlMap();
     for(i=0; i<_controlProps.size(); i++) {
