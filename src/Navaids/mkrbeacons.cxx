@@ -200,7 +200,7 @@ FGBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
     }
 
     // cout << "lon = " << lon << " lat = " << lat
-	 << "  closest beacon = " << sqrt( min_dist ) << endl;
+    //      << "  closest beacon = " << sqrt( min_dist ) << endl;
 
     return FGBeacon::NOBEACON;
 }
