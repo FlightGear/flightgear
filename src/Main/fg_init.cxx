@@ -856,7 +856,7 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy ) {
 
 
 static void fgSetDistOrAltFromGlideSlope() {
-  cout << "fgSetDistOrAltFromGlideSlope()" << endl;
+    // cout << "fgSetDistOrAltFromGlideSlope()" << endl;
     string apt_id = fgGetString("/sim/presets/airport-id");
     double gs = fgGetDouble("/sim/presets/glideslope-deg")
         * SG_DEGREES_TO_RADIANS ;
@@ -1044,7 +1044,7 @@ fgInitNav ()
 
 // Set the initial position based on presets (or defaults)
 bool fgInitPosition() {
-  cout << "fgInitPosition()" << endl;
+    // cout << "fgInitPosition()" << endl;
     double gs = fgGetDouble("/sim/presets/glideslope-deg")
         * SG_DEGREES_TO_RADIANS ;
     double od = fgGetDouble("/sim/presets/offset-distance");
