@@ -41,7 +41,8 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-// #include <Include/fg_types.h>
+#include <sg.h>			// plib include
+
 #include <Math/interpolater.hxx>
 #include <Math/point3d.hxx>
 
@@ -66,10 +67,10 @@ public:
     Point3D fg_sunpos;
 
     // (in view coordinates)
-    GLfloat sun_vec[4];
+    sgVec4 sun_vec;
 
     // inverse (in view coordinates)
-    GLfloat sun_vec_inv[4];
+    sgVec4 sun_vec_inv;
 
     // the angle between the sun and the local horizontal (in radians)
     double sun_angle;

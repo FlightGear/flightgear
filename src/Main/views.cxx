@@ -160,9 +160,10 @@ static void MAT3mat_To_sgMat4( MAT3mat &in, sgMat4 &out ) {
 // Update the view parameters
 void FGView::UpdateViewMath( const FGInterface& f ) {
     Point3D p;
-    MAT3vec vec, forward, v0, minus_z;
+    sgVec3 v0, minus_z;
+    MAT3vec vec, forward;
     MAT3mat R, TMP, UP, LOCAL, VIEW;
-    double ntmp;
+    sgMat4 sgTMP;
 
     if ( update_fov ) {
 	ssgSetFOV( current_options.get_fov(), 
@@ -282,11 +283,10 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     MAT3print( print, stdout);
     */
 
-    MAT3_SET_VEC(local_up, 1.0, 0.0, 0.0);
-    MAT3mult_vec(local_up, local_up, UP);
-
-    // printf( "Local Up = (%.4f, %.4f, %.4f)\n",
-    //         local_up[0], local_up[1], local_up[2]);
+    sgSetVec3( local_up, 1.0, 0.0, 0.0 );
+    sgXformVec3( local_up, sgUP );
+    // cout << "Local Up = " << local_up[0] << "," << local_up[1] << ","
+    //      << local_up[2] << endl;
     
     // Alternative method to Derive local up vector based on
     // *geodetic* coordinates
@@ -299,7 +299,7 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     // cout << "VIEW matrix" << endl;;
     // MAT3print(VIEW, stdout);
 
-    sgMat4 sgTMP, sgTMP2;
+    sgMat4 sgTMP2;
     sgMultMat4( sgTMP, sgLOCAL, sgUP );
 
     // generate the sg view up vector
@@ -349,24 +349,27 @@ void FGView::UpdateViewMath( const FGInterface& f ) {
     MAT3mult_vec(view_forward, forward, TMP);
 
     // make a vector to the current view position
-    MAT3_SET_VEC(v0, view_pos.x(), view_pos.y(), view_pos.z());
+    sgSetVec3( v0, view_pos.x(), view_pos.y(), view_pos.z() );
 
     // Given a vector pointing straight down (-Z), map into onto the
     // local plane representing "horizontal".  This should give us the
     // local direction for moving "south".
-    MAT3_SET_VEC(minus_z, 0.0, 0.0, -1.0);
-    map_vec_onto_cur_surface_plane(local_up, v0, minus_z, surface_south);
-    MAT3_NORMALIZE_VEC(surface_south, ntmp);
-    // printf( "Surface direction directly south %.2f %.2f %.2f\n",
-    //         surface_south[0], surface_south[1], surface_south[2]);
+    sgSetVec3( minus_z, 0.0, 0.0, -1.0 );
+
+    sgmap_vec_onto_cur_surface_plane(local_up, v0, minus_z, surface_south);
+    sgNormalizeVec3(surface_south);
+    // cout << "Surface direction directly south " << surface_south[0] << ","
+    //      << surface_south[1] << "," << surface_south[2] << endl;
 
     // now calculate the surface east vector
-    MAT3rotate(TMP, view_up, FG_PI_2);
-    MAT3mult_vec(surface_east, surface_south, TMP);
-    // printf( "Surface direction directly east %.2f %.2f %.2f\n",
-    //         surface_east[0], surface_east[1], surface_east[2]);
-    // printf( "Should be close to zero = %.2f\n", 
-    //         MAT3_DOT_PRODUCT(surface_south, surface_east));
+    sgMakeRotMat4( sgTMP, FG_PI_2 * RAD_TO_DEG, sgview_up );
+    // cout << "sgMat4 sgTMP" << endl;
+    // print_sgMat4( sgTMP );
+    sgXformVec3(surface_east, surface_south, sgTMP);
+    // cout << "Surface direction directly east" << surface_east[0] << ","
+    //      << surface_east[1] << "," << surface_east[2] << endl;
+    // cout << "Should be close to zero = "
+    //      << sgScalarProductVec3(surface_south, surface_east) << endl;
 }
 
 

@@ -244,11 +244,10 @@ void fgUpdateSunPos( void ) {
     fgLIGHT *l;
     FGTime *t;
     FGView *v;
-    MAT3vec nup, nsun, v0, surface_to_sun;
+    sgVec3 nup, nsun, v0, surface_to_sun;
     Point3D p, rel_sunpos;
     double dot, east_dot;
     double sun_gd_lat, sl_radius;
-    double ntmp;
 
     l = &cur_light_params;
     t = FGTime::cur_time_params;
@@ -256,8 +255,6 @@ void fgUpdateSunPos( void ) {
 
     FG_LOG( FG_EVENT, FG_INFO, "  Updating Sun position" );
 
-    // (not sure why there was two)
-    // fgSunPosition(t->cur_time, &l->sun_lon, &sun_gd_lat);
     fgSunPositionGST(t->getGst(), &l->sun_lon, &sun_gd_lat);
 
     fgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &l->sun_gc_lat);
@@ -270,31 +267,30 @@ void fgUpdateSunPos( void ) {
 	    "    Sun Geodetic lat = " << sun_gd_lat
 	    << " Geocentric lat = " << l->sun_gc_lat );
 
-    // I think this will work better for generating the sun light vector
-    l->sun_vec[0] = l->fg_sunpos.x();
-    l->sun_vec[1] = l->fg_sunpos.y();
-    l->sun_vec[2] = l->fg_sunpos.z();
-    MAT3_NORMALIZE_VEC(l->sun_vec, ntmp);
-    MAT3_SCALE_VEC(l->sun_vec_inv, l->sun_vec, -1.0);
+    // update the sun light vector
+    sgSetVec4( l->sun_vec, 
+	       l->fg_sunpos.x(), l->fg_sunpos.y(), l->fg_sunpos.z(), 0.0 );
+    sgNormalizeVec4( l->sun_vec );
+    sgCopyVec4( l->sun_vec_inv, l->sun_vec );
+    sgNegateVec4( l->sun_vec_inv );
 
     // make sure these are directional light sources only
-    l->sun_vec[3] = 0.0;
-    l->sun_vec_inv[3] = 0.0;
-
-    // printf("  l->sun_vec = %.2f %.2f %.2f\n", l->sun_vec[0], l->sun_vec[1],
-    //        l->sun_vec[2]);
+    l->sun_vec[3] = l->sun_vec_inv[3] = 0.0;
+    // cout << "  l->sun_vec = " << l->sun_vec[0] << "," << l->sun_vec[1]
+    //      << ","<< l->sun_vec[2] << endl;
 
     // calculate the sun's relative angle to local up
-    MAT3_COPY_VEC(nup, v->get_local_up());
-    nsun[0] = l->fg_sunpos.x(); 
-    nsun[1] = l->fg_sunpos.y();
-    nsun[2] = l->fg_sunpos.z();
-    MAT3_NORMALIZE_VEC(nup, ntmp);
-    MAT3_NORMALIZE_VEC(nsun, ntmp);
+    sgCopyVec3( nup, v->get_local_up() );
+    sgSetVec3( nsun, l->fg_sunpos.x(), l->fg_sunpos.y(), l->fg_sunpos.z() );
+    sgNormalizeVec3(nup);
+    sgNormalizeVec3(nsun);
+    // cout << "nup = " << nup[0] << "," << nup[1] << "," 
+    //      << nup[2] << endl;
+    // cout << "nsun = " << nsun[0] << "," << nsun[1] << "," 
+    //      << nsun[2] << endl;
 
-    l->sun_angle = acos(MAT3_DOT_PRODUCT(nup, nsun));
-    // printf("  SUN ANGLE relative to current location = %.3f rads.\n", 
-    //        l->sun_angle);
+    l->sun_angle = acos( sgScalarProductVec3 ( nup, nsun ) );
+    cout << "sun angle relative to current location = " << l->sun_angle << endl;
     
     // calculate vector to sun's position on the earth's surface
     rel_sunpos = l->fg_sunpos - (v->get_view_pos() + scenery.center);
@@ -304,39 +300,43 @@ void fgUpdateSunPos( void ) {
 
     // make a vector to the current view position
     Point3D view_pos = v->get_view_pos();
-    MAT3_SET_VEC(v0, view_pos.x(), view_pos.y(), view_pos.z());
+    sgSetVec3( v0, view_pos.x(), view_pos.y(), view_pos.z() );
 
     // Given a vector from the view position to the point on the
     // earth's surface the sun is directly over, map into onto the
     // local plane representing "horizontal".
-    map_vec_onto_cur_surface_plane( v->get_local_up(), v0, v->get_to_sun(), 
-				    surface_to_sun );
-    MAT3_NORMALIZE_VEC(surface_to_sun, ntmp);
+
+    sgmap_vec_onto_cur_surface_plane( v->get_local_up(), v0, v->get_to_sun(), 
+				      surface_to_sun );
+    sgNormalizeVec3(surface_to_sun);
     v->set_surface_to_sun( surface_to_sun[0], surface_to_sun[1], 
 			   surface_to_sun[2] );
-    // printf("Surface direction to sun is %.2f %.2f %.2f\n",
-    //        v->surface_to_sun[0], v->surface_to_sun[1], v->surface_to_sun[2]);
-    // printf("Should be close to zero = %.2f\n", 
-    //        MAT3_DOT_PRODUCT(v->local_up, v->surface_to_sun));
+    // cout << "(sg) Surface direction to sun is "
+    //   << surface_to_sun[0] << "," 
+    //   << surface_to_sun[1] << ","
+    //   << surface_to_sun[2] << endl;
+    // cout << "Should be close to zero = " 
+    //   << sgScalarProductVec3(nup, surface_to_sun) << endl;
 
     // calculate the angle between v->surface_to_sun and
     // v->surface_east.  We do this so we can sort out the acos()
     // ambiguity.  I wish I could think of a more efficient way ... :-(
-    east_dot = MAT3_DOT_PRODUCT( surface_to_sun, v->get_surface_east() );
-    // printf("  East dot product = %.2f\n", east_dot);
+    east_dot = sgScalarProductVec3( surface_to_sun, v->get_surface_east() );
+    // cout << "  East dot product = " << east_dot << endl;
 
     // calculate the angle between v->surface_to_sun and
     // v->surface_south.  this is how much we have to rotate the sky
     // for it to align with the sun
-    dot = MAT3_DOT_PRODUCT( surface_to_sun, v->get_surface_south() );
-    // printf("  Dot product = %.2f\n", dot);
+    dot = sgScalarProductVec3( surface_to_sun, v->get_surface_south() );
+    // cout << "  Dot product = " << dot << endl;
+
     if ( east_dot >= 0 ) {
 	l->sun_rotation = acos(dot);
     } else {
 	l->sun_rotation = -acos(dot);
     }
-    // printf("  Sky needs to rotate = %.3f rads = %.1f degrees.\n", 
-    //        angle, angle * RAD_TO_DEG); */
+    // cout << "  Sky needs to rotate = " << angle << " rads = "
+    //      << angle * RAD_TO_DEG << " degrees." << endl;
 }
 
 

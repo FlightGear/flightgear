@@ -339,11 +339,10 @@ void fgUpdateMoonPos( void ) {
     fgLIGHT *l;
     FGTime *t;
     FGView *v;
-    MAT3vec nup, nmoon, v0, surface_to_moon;
+    sgVec3 nup, nmoon, v0, surface_to_moon;
     Point3D p, rel_moonpos;
     double dot, east_dot;
     double moon_gd_lat, sl_radius;
-    double ntmp;
 
     l = &cur_light_params;
     t = FGTime::cur_time_params;
@@ -365,31 +364,31 @@ void fgUpdateMoonPos( void ) {
 	    "    Moon Geodetic lat = " << moon_gd_lat
 	    << " Geocentric lat = " << l->moon_gc_lat );
 
-    // I think this will work better for generating the moon light vector
-    l->moon_vec[0] = l->fg_moonpos.x();
-    l->moon_vec[1] = l->fg_moonpos.y();
-    l->moon_vec[2] = l->fg_moonpos.z();
-    MAT3_NORMALIZE_VEC(l->moon_vec, ntmp);
-    MAT3_SCALE_VEC(l->moon_vec_inv, l->moon_vec, -1.0);
+    // update the sun light vector
+    sgSetVec4( l->moon_vec,
+	       l->fg_moonpos.x(), l->fg_moonpos.y(), l->fg_moonpos.z(), 0.0 );
+    sgNormalizeVec4( l->moon_vec );
+    sgCopyVec4( l->moon_vec_inv, l->moon_vec );
+    sgNegateVec4( l->moon_vec_inv );
 
     // make sure these are directional light sources only
-    l->moon_vec[3] = 0.0;
-    l->moon_vec_inv[3] = 0.0;
-
-    // printf("  l->moon_vec = %.2f %.2f %.2f\n", l->moon_vec[0], l->moon_vec[1],
-    //        l->moon_vec[2]);
+    l->moon_vec[3] = l->moon_vec_inv[3] = 0.0;
+    // cout << "  l->moon_vec = " << l->moon_vec[0] << "," << l->moon_vec[1]
+    //      << ","<< l->moon_vec[2] << endl;
 
     // calculate the moon's relative angle to local up
-    MAT3_COPY_VEC(nup, v->get_local_up());
-    nmoon[0] = l->fg_moonpos.x(); 
-    nmoon[1] = l->fg_moonpos.y();
-    nmoon[2] = l->fg_moonpos.z();
-    MAT3_NORMALIZE_VEC(nup, ntmp);
-    MAT3_NORMALIZE_VEC(nmoon, ntmp);
+    sgCopyVec3( nup, v->get_local_up() );
+    sgSetVec3( nmoon, l->fg_moonpos.x(), l->fg_moonpos.y(), l->fg_moonpos.z() );
+    sgNormalizeVec3(nup);
+    sgNormalizeVec3(nmoon);
+    // cout << "nup = " << nup[0] << "," << nup[1] << "," 
+    //      << nup[2] << endl;
+    // cout << "nmoon = " << nmoon[0] << "," << nmoon[1] << "," 
+    //      << nmoon[2] << endl;
 
-    l->moon_angle = acos(MAT3_DOT_PRODUCT(nup, nmoon));
-    // printf("  MOON ANGLE relative to current location = %.3f rads.\n", 
-    //        l->moon_angle);
+    l->moon_angle = acos( sgScalarProductVec3( nup, nmoon ) );
+    cout << "moon angle relative to current location = " 
+	 << l->moon_angle << endl;
     
     // calculate vector to moon's position on the earth's surface
     rel_moonpos = l->fg_moonpos - (v->get_view_pos() + scenery.center);
@@ -399,39 +398,43 @@ void fgUpdateMoonPos( void ) {
 
     // make a vector to the current view position
     Point3D view_pos = v->get_view_pos();
-    MAT3_SET_VEC(v0, view_pos.x(), view_pos.y(), view_pos.z());
+    sgSetVec3( v0, view_pos.x(), view_pos.y(), view_pos.z() );
 
     // Given a vector from the view position to the point on the
     // earth's surface the moon is directly over, map into onto the
     // local plane representing "horizontal".
-    map_vec_onto_cur_surface_plane( v->get_local_up(), v0, v->get_to_moon(), 
-				    surface_to_moon );
-    MAT3_NORMALIZE_VEC(surface_to_moon, ntmp);
+
+    sgmap_vec_onto_cur_surface_plane( v->get_local_up(), v0, 
+				      v->get_to_moon(), surface_to_moon );
+    sgNormalizeVec3(surface_to_moon);
     v->set_surface_to_moon( surface_to_moon[0], surface_to_moon[1], 
-			   surface_to_moon[2] );
-    // printf("Surface direction to moon is %.2f %.2f %.2f\n",
-    //        v->surface_to_moon[0], v->surface_to_moon[1], v->surface_to_moon[2]);
-    // printf("Should be close to zero = %.2f\n", 
-    //        MAT3_DOT_PRODUCT(v->local_up, v->surface_to_moon));
+			    surface_to_moon[2] );
+    // cout << "(sg) Surface direction to moon is "
+    //   << surface_to_moon[0] << "," 
+    //   << surface_to_moon[1] << ","
+    //   << surface_to_moon[2] << endl;
+    // cout << "Should be close to zero = " 
+    //   << sgScalarProductVec3(nup, surface_to_moon) << endl;
 
     // calculate the angle between v->surface_to_moon and
     // v->surface_east.  We do this so we can sort out the acos()
     // ambiguity.  I wish I could think of a more efficient way ... :-(
-    east_dot = MAT3_DOT_PRODUCT( surface_to_moon, v->get_surface_east() );
-    // printf("  East dot product = %.2f\n", east_dot);
+    east_dot = sgScalarProductVec3( surface_to_moon, v->get_surface_east() );
+   // cout << "  East dot product = " << east_dot << endl;
 
     // calculate the angle between v->surface_to_moon and
     // v->surface_south.  this is how much we have to rotate the sky
     // for it to align with the moon
-    dot = MAT3_DOT_PRODUCT( surface_to_moon, v->get_surface_south() );
-    // printf("  Dot product = %.2f\n", dot);
+    dot = sgScalarProductVec3( surface_to_moon, v->get_surface_south() );
+    // cout << "  Dot product = " << dot << endl;
+
     if ( east_dot >= 0 ) {
 	l->moon_rotation = acos(dot);
     } else {
 	l->moon_rotation = -acos(dot);
     }
-    // printf("  Sky needs to rotate = %.3f rads = %.1f degrees.\n", 
-    //        angle, angle * RAD_TO_DEG); */
+    // cout << "  Sky needs to rotate = " << angle << " rads = "
+    //      << angle * RAD_TO_DEG << " degrees." << endl;
 }
 
 

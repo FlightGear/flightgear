@@ -118,28 +118,28 @@ public:
 
     // vector in cartesian coordinates from current position to the
     // postion on the earth's surface the sun is directly over
-    MAT3vec to_sun;
-    
+    sgVec3 to_sun;
+
     // surface direction to go to head towards sun
-    MAT3vec surface_to_sun;
+    sgVec3 surface_to_sun;
 
     // vector in cartesian coordinates from current position to the
     // postion on the earth's surface the moon is directly over
-    MAT3vec to_moon;
+    sgVec3 to_moon;
   
     // surface direction to go to head towards moon
-    MAT3vec surface_to_moon;
+    sgVec3 surface_to_moon;
 
     // surface vector heading south
-    MAT3vec surface_south;
+    sgVec3 surface_south;
 
     // surface vector heading east (used to unambiguously align sky
     // with sun)
-    MAT3vec surface_east;
+    sgVec3 surface_east;
 
     // local up vector (normal to the plane tangent to the earth's
     // surface at the spot we are directly above
-    MAT3vec local_up;
+    sgVec3 local_up;
 
     // up vector for the view (usually point straight up through the
     // top of the aircraft
@@ -217,33 +217,25 @@ public:
     inline Point3D get_abs_view_pos() const { return abs_view_pos; }
     inline Point3D get_view_pos() const { return view_pos; }
     inline Point3D get_cur_zero_elev() const { return cur_zero_elev; }
-    inline double *get_to_sun() { return to_sun; }
-    inline void set_to_sun( double x, double y, double z) {
-	to_sun[0] = x;
-	to_sun[1] = y;
-	to_sun[2] = z;
+    inline float *get_to_sun() { return to_sun; }
+    inline void set_to_sun( float x, float y, float z) {
+	sgSetVec3( to_sun, x, y, z );
     }
-    inline double *get_surface_to_sun() { return surface_to_sun; }
-    inline void set_surface_to_sun( double x, double y, double z) {
-	surface_to_sun[0] = x;
-	surface_to_sun[1] = y;
-	surface_to_sun[2] = z;
+    inline float *get_surface_to_sun() { return surface_to_sun; }
+    inline void set_surface_to_sun( float x, float y, float z) {
+	sgSetVec3( surface_to_sun, x, y, z );
     }
-    inline double *get_to_moon() { return to_moon; }
-    inline void set_to_moon( double x, double y, double z) {
-	to_moon[0] = x;
-	to_moon[1] = y;
-	to_moon[2] = z;
+    inline float *get_to_moon() { return to_moon; }
+    inline void set_to_moon( float x, float y, float z) {
+	sgSetVec3( to_moon, x, y, z );
     }
-    inline double *get_surface_to_moon() { return surface_to_moon; }
-    inline void set_surface_to_moon( double x, double y, double z) {
-	surface_to_moon[0] = x;
-	surface_to_moon[1] = y;
-	surface_to_moon[2] = z;
+    inline float *get_surface_to_moon() { return surface_to_moon; }
+    inline void set_surface_to_moon( float x, float y, float z) {
+	sgSetVec3( surface_to_moon, x, y, z );
     }
-    inline double *get_surface_south() { return surface_south; }
-    inline double *get_surface_east() { return surface_east; }
-    inline double *get_local_up() { return local_up; }
+    inline float *get_surface_south() { return surface_south; }
+    inline float *get_surface_east() { return surface_east; }
+    inline float *get_local_up() { return local_up; }
     inline double *get_view_forward() { return view_forward; }
     inline GLfloat *get_MODEL_VIEW() { return MODEL_VIEW; }
 };
