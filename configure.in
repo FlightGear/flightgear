@@ -137,7 +137,8 @@ fi
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS( fcntl.h getopt.h malloc.h stdlib.h sys/time.h sys/timeb.h \
+AC_CHECK_HEADERS( \
+	fcntl.h getopt.h malloc.h stdlib.h sys/time.h sys/timeb.h \
 	unistd.h windows.h winbase.h values.h )
 
 dnl Checks for typedefs, structures, and compiler characteristics.
