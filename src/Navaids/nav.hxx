@@ -67,14 +67,14 @@ public:
     inline bool get_dme() const { return dme; }
     inline char *get_ident() { return ident; }
 
-    inline void set_type( char t ) { type = t; }
+    /* inline void set_type( char t ) { type = t; }
     inline void set_lon( double l ) { lon = l; }
     inline void set_lat( double l ) { lat = l; }
     inline void set_elev( double e ) { elev = e; }
     inline void set_freq( int f ) { freq = f; }
     inline void set_range( int r ) { range = r; }
     inline void set_dme( bool b ) { dme = b; }
-    inline void set_ident( char *i ) { strncpy( ident, i, 5 ); }
+    inline void set_ident( char *i ) { strncpy( ident, i, 5 ); } */
 
     friend istream& operator>> ( istream&, FGNav& );
 };
