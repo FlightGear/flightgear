@@ -239,7 +239,6 @@ void fgPropPicker::handle_select ( puObject* list_box )
       return ;
     } 
 
-    printf("select got here 2\n");
     if ( strcmp ( src, ".." ) == 0 )
     {
       /* Do back up one level - so refresh. */
@@ -333,7 +332,7 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
   num_files = 0 ;
 
   strcpy ( startDir, dir ) ;
-  printf ( "StartDirLEN=%i", strlen(startDir));
+  // printf ( "StartDirLEN=%i", strlen(startDir));
   if ( arrows > 2 ) arrows = 2 ;
   if ( arrows < 0 ) arrows = 0 ;
   arrow_count = arrows ;
@@ -359,14 +358,6 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
   list_box -> setCallback ( handle_select ) ;
   list_box -> setValue ( 0 ) ;
 
-  find_props () ;
-
-//  printf("after Props files[1]=%s\n",files[1]);
-//  printf("num items %i", list_box -> getNumItems ());
-
-  slider -> setUserData ( list_box ) ;
-  slider -> setCallback ( fgPropPickerHandleSlider ) ;
-
   ok_button = new puOneShot ( 10, 10, (w<170)?(w/2-5):80, 30 ) ;
   ok_button -> setLegend ( "Ok" ) ;
   ok_button -> setUserData ( this ) ;
@@ -374,25 +365,34 @@ fgPropPicker::fgPropPicker ( int x, int y, int w, int h, int arrows,
 
   if ( arrows > 0 )
   {
-    puArrowButton *down_arrow = new puArrowButton ( w-30, 20+20*arrows, w-10, 40+20*arrows, PUARROW_DOWN ) ;
+    down_arrow = new puArrowButton ( w-30, 20+20*arrows, w-10, 40+20*arrows, PUARROW_DOWN ) ;
     down_arrow->setUserData ( slider ) ;
     down_arrow->setCallback ( fgPropPickerHandleArrow ) ;
 
-    puArrowButton *up_arrow = new puArrowButton ( w-30, h-30-20*arrows, w-10, h-10-20*arrows, PUARROW_UP ) ;
+    up_arrow = new puArrowButton ( w-30, h-60-20*arrows, w-10, h-40-20*arrows, PUARROW_UP ) ;
     up_arrow->setUserData ( slider ) ;
     up_arrow->setCallback ( fgPropPickerHandleArrow ) ;
   }
 
   if ( arrows == 2 )
   {
-    puArrowButton *down_arrow = new puArrowButton ( w-30, 40, w-10, 60, PUARROW_FASTDOWN ) ;
+    down_arrow = new puArrowButton ( w-30, 40, w-10, 60, PUARROW_FASTDOWN ) ;
     down_arrow->setUserData ( slider ) ;
     down_arrow->setCallback ( fgPropPickerHandleArrow ) ;
 
-    puArrowButton *up_arrow = new puArrowButton ( w-30, h-50, w-10, h-30, PUARROW_FASTUP ) ;
+    up_arrow = new puArrowButton ( w-30, h-80, w-10, h-60, PUARROW_FASTUP ) ;
     up_arrow->setUserData ( slider ) ;
     up_arrow->setCallback ( fgPropPickerHandleArrow ) ;
   }
+
+  // after picker is built, load the list box with data...
+  find_props () ;
+
+//  printf("after Props files[1]=%s\n",files[1]);
+//  printf("num items %i", list_box -> getNumItems ());
+
+  slider -> setUserData ( list_box ) ;
+  slider -> setCallback ( fgPropPickerHandleSlider ) ;
 
   FG_FINALIZE_PUI_DIALOG( this );
   printf("fgPropPicker - End of Init\n");
@@ -432,11 +432,7 @@ void fgPropPicker::find_props ()
 //  printf("len of dir=%i",strlen(dir));
   SGPropertyNode * node = globals->get_props()->getNode(dir);
 
-  printf("find_props: allocation of node\n");
   num_files = (int)node->nChildren();
-
-  // take off one for the trailing "null" in each SGProperty list
-  num_files = num_files -1;
 
   // instantiate string objects and add [.] and [..] for subdirs
   if (strcmp(dir,"/") == 0) {
@@ -471,7 +467,7 @@ void fgPropPicker::find_props ()
   };
 
 
-  for (i = 0; i < (int)node->nChildren()-1; i++) {
+  for (i = 0; i < (int)node->nChildren(); i++) {
 	    SGPropertyNode * child = node->getChild(i);
 	    name = child->getName();
 	    line = name;
@@ -498,15 +494,33 @@ void fgPropPicker::find_props ()
                 files[ pi ] = new char[ strlen(line.c_str())+2 ] ;
 	        strcpy ( files [ pi ], line.c_str() ) ;
 	    }
-            printf("files->%i %s\n",pi, files [pi]);
+            // printf("files->%i of %i %s\n",pi, node->nChildren(), files [pi]);
             ++pi;
   }
 
   files [ num_files ] = NULL ;
 
-  printf("files pointer=%p\n", files);
+  // printf("files pointer=%i/%i\n", files, num_files);
+
   proppath ->    setLabel          (startDir);
+
   list_box -> newList ( files ) ;
+
+  // if non-empty list, adjust the size of the slider...
+  if (num_files > 1) {
+    if ((11.0f/(num_files-1)) < 1) {
+      slider->setSliderFraction (11.0f/(num_files-1)) ;
+      slider->reveal();
+      up_arrow->reveal();
+      down_arrow->reveal();
+      }
+    else {
+      slider->setSliderFraction (0.9999f) ;
+      slider->hide();
+      up_arrow->hide();
+      down_arrow->hide();      
+      }
+  }
   
 }
 
@@ -571,5 +585,3 @@ fgPropEdit::fgPropEdit ( char *name, char *value, char *proppath ) : puDialogBox
         
     FG_FINALIZE_PUI_DIALOG( this );
 }
-
-

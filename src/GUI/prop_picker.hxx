@@ -43,7 +43,8 @@ protected:
   puSlider  *slider        ;
   puOneShot *cancel_button ;
   puOneShot *ok_button     ;
-
+  puArrowButton *down_arrow ;
+  puArrowButton *up_arrow ;
 
 public:
   puText    *proppath      ;
@@ -83,4 +84,3 @@ public:
   static void chop_file ( char *fname ) ;
 
 } ;
-
