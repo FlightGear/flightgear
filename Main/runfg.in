@@ -32,10 +32,10 @@ $prefix = "@prefix@";
 # potential names of Flight Gear executable to try
 @files = ( "fg", "fg.exe" );
 
+# search for the executable
 # potential paths where the executable may be found
 @paths = ( ".", "Simulator/Main", $prefix );
 
-# search for the executable
 $savepath = "";
 $savefile = "";
 
@@ -46,9 +46,11 @@ foreach $path (@paths) {
 	    # don't search again if we've already found one
 	    # print "checking $path" . "bin/$file and $path" . "$file\n";
 	    if ( -x "$path/bin/$file" ) {
+		$saveprefix = $path;
 		$savepath = "$path/bin";
 		$savefile = "$file";
 	    } elsif ( -x "$path/$file" ) {
+		$saveprefix = $path;
 		$savepath = "$path";
 		$savefile = "$file";
 	    }
@@ -61,31 +63,35 @@ foreach $path (@paths) {
 die "Cannot locate program.\n" if ( $savepath eq "" );
 
 
-# set the FG_ROOT environment variable if it hasn't already been set.
-if ( $ENV{FG_ROOT} eq "" ) {
-    $ENV{FG_ROOT} = $prefix;
+# search for the "FlightGear" root directory
+@paths = ( $saveprefix, $ENV{HOME} );
+
+$fg_root = "";
+
+foreach $path (@paths) {
+    # print "trying $path\n";
+
+    if ( $fg_root eq "" ) {
+	if ( -d "$path/FlightGear" ) {
+	    $fg_root = "$path/FlightGear";
+	} elsif ( -d "$path/lib/FlightGear" ) {
+	    $fg_root = "$path/lib/FlightGear";
+	}
+    }
 }
 
-# set the LD_LIBRARY_PATH environment variable if running the
-# installed version
-if ( $savepath eq "@prefix@/bin" ) {
-    print "(installed version)\n";
-    if ( $ENV{LD_LIBRARY_PATH} eq "" ) {
-	$ENV{LD_LIBRARY_PATH} = "$prefix/lib";
-    } else {
-	$ENV{LD_LIBRARY_PATH} = "$prefix/lib:$ENV{LD_LIBRARY_PATH}";
-    }
-} else {
-    print "(development version)\n";
-}
+die "Cannot locate FG root directory (data)\n" if ( $fg_root eq "" );
 
 # run Flight Gear
-print "Running $savepath/$savefile @ARGV\n";
-exec("$savepath/$savefile @ARGV");
+print "Running $savepath/$savefile --fg-root=$fg_root @ARGV\n";
+exec("$savepath/$savefile --fg-root=$fg_root @ARGV");
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.3  1998/08/03 22:16:42  curt
+# Updated to be smarter about finding $FG_ROOT.
+#
 # Revision 1.2  1998/04/25 22:06:31  curt
 # Edited cvs log messages in source files ... bad bad bad!
 #
