@@ -337,6 +337,7 @@ AC_OUTPUT( \
 	Tools/Construct/Match/Makefile \
 	Tools/Construct/Triangulate/Makefile \
 	Tools/Construct/Main/Makefile \
+	Tools/Construct/Parallel/Makefile \
 	Tools/Lib/Makefile \
 	Tools/Lib/DEM/Makefile \
 	Tools/Lib/Polygon/Makefile \
