@@ -1183,26 +1183,6 @@ static void fgIdleFunction ( void ) {
 
 	    system ( command.c_str() );
 	}
-
-        // This is an 'easter egg' which is kind of a hard thing to
-        // hide in an open source project -- so I won't try very hard
-        // to hide it.  If you are looking at this now, please, you
-        // don't want to ruin the surprise. :-) Just forget about it
-        // and don't look any further; unless it is causing an actual
-        // problem for you, which it shouldn't, and I hope it doesn't!
-        // :-)
-        if ( globals->get_time_params()->getGmt()->tm_mon == 4 
-             && globals->get_time_params()->getGmt()->tm_mday == 19 )
-        {
-            string url = "http://www.flightgear.org/Music/invasion.mp3";
-#if defined( __CYGWIN__ ) || defined( WIN32 )
-            string command = "start /m " + url;
-#else
-            string command = "mpg123 " + url + "> /dev/null 2>&1";
-#endif
-            system( command.c_str() );
-        }
-
 #endif
 
 	idle_state++;
