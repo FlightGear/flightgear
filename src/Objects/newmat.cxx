@@ -40,6 +40,7 @@
 
 // Constructor
 FGNewMat::FGNewMat ( void ) {
+    wrapu = wrapv = 1;
 }
 
 
@@ -56,6 +57,7 @@ FGNewMat::FGNewMat ( const string &mat_name, const string &tex_name )
     material_name = mat_name;
     texture_name = tex_name;
     xsize = ysize = 0;
+    wrapu = wrapv = 1;
     alpha = 0; 
     ambient[0]  = ambient[1]  = ambient[2]  = ambient[3]  = 1.0;
     diffuse[0]  = diffuse[1]  = diffuse[2]  = diffuse[3]  = 1.0;
@@ -80,7 +82,8 @@ void FGNewMat::build_ssg_state( const string& path,
     textured->enable( GL_TEXTURE_2D );
     textured->disable( GL_BLEND );
     textured->disable( GL_ALPHA_TEST );
-    textured->setTexture( (char *)tex_file.c_str() );
+    textured->setTexture( (char *)tex_file.c_str(), wrapu, wrapv );
+    cout << "wrap u = " << wrapu << " wrapv = " << wrapv << endl;
     textured->enable( GL_COLOR_MATERIAL );
     textured->setColourMaterial( GL_AMBIENT_AND_DIFFUSE );
     textured->setMaterial( GL_EMISSION, 0, 0, 0, 1 );
@@ -195,6 +198,10 @@ operator >> ( istream& in, FGNewMat& m )
 	    in >> token >> m.xsize;
 	} else if ( token == "ysize" ) {
 	    in >> token >> m.ysize;
+	} else if ( token == "wrapu" ) {
+	    in >> token >> m.wrapu;
+	} else if ( token == "wrapv" ) {
+	    in >> token >> m.wrapv;
 	} else if ( token == "ambient" ) {
 	    in >> token >> m.ambient[0] >> m.ambient[1]
 	       >> m.ambient[2] >> m.ambient[3];

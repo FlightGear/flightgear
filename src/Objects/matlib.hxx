@@ -57,40 +57,6 @@ FG_USING_STD(vector);
 FG_USING_STD(less);
 
 
-#if 0
-// Material property class
-class FGMaterialSlotold {
-
-private:
-
-    FGMaterial m;
-
-    // ssg stage structure
-    ssgStateSelector *state;
-    bool state_valid;
-
-public:
-
-    // Constructor
-    FGMaterialSlotold ( void );
-
-    // Destructor
-    ~FGMaterialSlotold ( void );
-
-    // friend istream& operator >> ( istream& in, FGMaterialSlot& m );
-
-    inline FGMaterial get_m() const { return m; }
-    inline void set_m( FGMaterial new_m ) { m = new_m; }
-
-    // ssg state
-    inline ssgStateSelector *get_state() { return state; }
-    inline void set_state( ssgStateSelector *s ) { state = s; }
-    inline bool get_state_valid() const { return state_valid; }
-    inline void set_state_valid( bool flag ) { state_valid = flag; }
-};
-#endif
-
-
 // Material management class
 class FGMaterialLib {
 

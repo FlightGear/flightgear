@@ -73,6 +73,9 @@ private:
     // texture size
     double xsize, ysize;
 
+    // wrap texture?
+    int wrapu, wrapv;
+
     // material properties
     sgVec4 ambient, diffuse, specular, emission;
 
