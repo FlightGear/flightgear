@@ -839,11 +839,14 @@ int fgGlutInit( int *argc, char **argv ) {
 	xglutCreateWindow("Flight Gear");
     } else {
 	// Open the cool new 'game mode' window
-	string game_mode_params = "width=" + current_options.get_xsize();
-	game_mode_params += "height=" + current_options.get_ysize();
-	game_mode_params += " bpp=16";
-	cout << "game mode params = " << game_mode_params;
-	glutGameModeString( game_mode_params.c_str() );
+	char game_mode_str[256];
+	sprintf( game_mode_str, "width=%d height=%d bpp=16",
+		 current_options.get_xsize(),
+		 current_options.get_ysize() );
+
+	FG_LOG( FG_GENERAL, FG_INFO, 
+		"game mode params = " << game_mode_str );
+	glutGameModeString( game_mode_str );
 	glutEnterGameMode();
     }
 
@@ -1003,6 +1006,11 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.83  1999/01/27 04:49:17  curt
+// Game mode fixes from Norman Vine.
+// Initial altitude setting tweaks and fixes (especially for when starting
+// below sea level.)
+//
 // Revision 1.82  1999/01/20 13:42:24  curt
 // Tweaked FDM interface.
 // Testing check sum support for NMEA serial output.

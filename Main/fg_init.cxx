@@ -189,30 +189,41 @@ int fgInitSubsystems( void )
 	exit(-1);
     }
 
+    FG_LOG( FG_GENERAL, FG_DEBUG, 
+    	    "Current terrain elevation after tile mgr init " << 
+	    scenery.cur_elev );
+
     // Calculate ground elevation at starting point (we didn't have
     // tmp_abs_view_pos calculated when fgTileMgrUpdate() was called above
-
+    //
     // calculalate a cartesian point somewhere along the line between
     // the center of the earth and our view position.  Doesn't have to
     // be the exact elevation (this is good because we don't know it
     // yet :-)
+
+    // now handled inside of the fgTileMgrUpdate()
+
+    /*
     geod_pos = Point3D( f->get_Longitude(), f->get_Latitude(), 0.0);
     tmp_abs_view_pos = fgGeodToCart(geod_pos);
 
     FG_LOG( FG_GENERAL, FG_DEBUG, 
-    	    "Altitude before update " << scenery.cur_elev );
-    FG_LOG( FG_GENERAL, FG_DEBUG, 
     	    "Initial abs_view_pos = " << tmp_abs_view_pos );
     scenery.cur_elev = 
-	fgTileMgrCurElevOLD( f->get_Longitude(), 
-			     f->get_Latitude(),
-			     tmp_abs_view_pos );
+	fgTileMgrCurElev( f->get_Longitude(), f->get_Latitude(), 
+			  tmp_abs_view_pos );
     FG_LOG( FG_GENERAL, FG_DEBUG, 
 	    "Altitude after update " << scenery.cur_elev );
+    */
+
     fgFDMSetGroundElevation( current_options.get_flight_model(), 
 			     scenery.cur_elev );
 
     // Reset our altitude if we are below ground
+    FG_LOG( FG_GENERAL, FG_DEBUG, "Current altitude = " << f->get_Altitude() );
+    FG_LOG( FG_GENERAL, FG_DEBUG, "Current runway altitude = " << 
+	    f->get_Runway_altitude() );
+
     if ( f->get_Altitude() < f->get_Runway_altitude() + 3.758099) {
 	f->set_Altitude( f->get_Runway_altitude() + 3.758099 );
     }
@@ -381,6 +392,11 @@ int fgInitSubsystems( void )
 
 
 // $Log$
+// Revision 1.63  1999/01/27 04:49:19  curt
+// Game mode fixes from Norman Vine.
+// Initial altitude setting tweaks and fixes (especially for when starting
+// below sea level.)
+//
 // Revision 1.62  1999/01/20 13:42:25  curt
 // Tweaked FDM interface.
 // Testing check sum support for NMEA serial output.
