@@ -53,6 +53,7 @@ class fgOPTIONS {
     // Features
     int hud_status;    // HUD on/off
     int panel_status;  // Panel on/off
+    int sound;         // play sound effects
 
     // Rendering options
     int fog;           // Fog enabled/disabled
@@ -99,6 +100,7 @@ public:
     int get_mouse_pointer( void );
     int get_hud_status( void );
     int get_panel_status( void );
+    int get_sound( void );
     int get_fog( void );
     double get_fov( void );
     int get_fullscreen( void );
@@ -127,6 +129,11 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.12  1998/07/27 18:41:26  curt
+// Added a pause command "p"
+// Fixed some initialization order problems between pui and glut.
+// Added an --enable/disable-sound option.
+//
 // Revision 1.11  1998/07/13 21:01:39  curt
 // Wrote access functions for current fgOPTIONS.
 //

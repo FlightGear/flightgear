@@ -464,8 +464,12 @@ void fgUpdateTimeDepCalcs(int multi_loop) {
 	multi_loop = DEFAULT_MULTILOOP;
     }
 
-    // printf("updating flight model x %d\n", multi_loop);
-    fgFlightModelUpdate(FG_LARCSIM, f, multi_loop);
+    if ( !t->pause ) {
+	// printf("updating flight model x %d\n", multi_loop);
+	fgFlightModelUpdate(FG_LARCSIM, f, multi_loop);
+    } else {
+	fgFlightModelUpdate(FG_LARCSIM, f, 0);
+    }
 
     // update the view angle
     for ( i = 0; i < multi_loop; i++ ) {
@@ -639,7 +643,9 @@ static void fgMainLoop( void ) {
 
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
-    audio_sched -> update();
+    if ( current_options.get_sound() ) {
+	audio_sched -> update();
+    }
 #endif
 
     // redraw display
@@ -694,10 +700,7 @@ static void fgIdleFunction ( void ) {
     } else if ( idle_state == 2 ) {
 	// These are a few miscellaneous things that aren't really
 	// "subsystems" but still need to be initialized.
-	if( !fgInitGeneral()) {
-	    fgPrintf( FG_GENERAL, FG_EXIT, 
-		      "General initializations failed ...\n" );
-	}
+
 #ifdef USE_GLIDE
 	if ( strstr ( g->glRenderer, "Glide" ) ) {
 	    grTexLodBiasValue ( GR_TMU0, 1.0 ) ;
@@ -728,8 +731,6 @@ static void fgIdleFunction ( void ) {
 
 	idle_state++;
     } else if ( idle_state == 5 ) {
-	//Init the user interface
-	guiInit();
 
 	idle_state++;
     } else if ( idle_state == 6 ) {
@@ -762,8 +763,6 @@ static void fgIdleFunction ( void ) {
 	strcat(slfile, "wasp.wav");
 
 	s1 = new slSample ( slfile );
-	// s1 = new slSample ( "/dos/X-System-HSR/sounds/xp_recip.wav", 
-	//   		       audio_sched );
 	printf("Rate = %d  Bps = %d  Stereo = %d\n", 
 	       s1 -> getRate(), s1 -> getBps(), s1 -> getStereo());
 	audio_sched -> loopSample ( s1 );
@@ -775,7 +774,7 @@ static void fgIdleFunction ( void ) {
 	// audio_sched -> playSample ( s2 );
 #endif
 
-	sleep(1);
+	// sleep(1);
 	idle_state = 1000;
     } 
 
@@ -914,6 +913,16 @@ int main( int argc, char **argv ) {
 	current_options.usage();
 	fgPrintf( FG_GENERAL, FG_EXIT, "\nExiting ...\n");
     }
+    
+    // First do some quick general initializations
+    if( !fgInitGeneral()) {
+	fgPrintf( FG_GENERAL, FG_EXIT, 
+		  "General initializations failed ...\n" );
+    }
+
+    // Init the user interface (we need to do this before passing off
+    // control to glut
+    guiInit();
 
     // pass control off to the master GLUT event handler
     glutMainLoop();
@@ -924,6 +933,11 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.41  1998/07/27 18:41:24  curt
+// Added a pause command "p"
+// Fixed some initialization order problems between pui and glut.
+// Added an --enable/disable-sound option.
+//
 // Revision 1.40  1998/07/24 21:56:59  curt
 // Set near clip plane to 0.5 meters when close to the ground.  Also, let the view get a bit closer to the ground before hitting the hard limit.
 //

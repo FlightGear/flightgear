@@ -297,6 +297,10 @@ int fgOPTIONS::parse_option( char *arg ) {
 	panel_status = 0;
     } else if ( strcmp(arg, "--enable-panel") == 0 ) {
 	panel_status = 1;
+    } else if ( strcmp(arg, "--disable-sound") == 0 ) {
+	sound = 0;
+    } else if ( strcmp(arg, "--enable-sound") == 0 ) {
+	sound = 1;
     } else if ( strncmp(arg, "--airport-id=", 13) == 0 ) {
 	arg += 13;
 	strncpy(airport_id, arg, 4);
@@ -432,6 +436,8 @@ void fgOPTIONS::usage ( void ) {
     printf("\t--enable-hud:  enable heads up display\n");
     printf("\t--disable-panel:  disable instrument panel\n");
     printf("\t--enable-panel:  enable instrumetn panel\n");
+    printf("\t--disable-sound:  disable sound effects\n");
+    printf("\t--enable-sound:  enable sound effects\n");
     printf("\n");
  
     printf("Initial Position:\n");
@@ -472,6 +478,7 @@ int fgOPTIONS::get_intro_music( void ) { return(intro_music); }
 int fgOPTIONS::get_mouse_pointer( void ) { return(mouse_pointer); }
 int fgOPTIONS::get_hud_status( void ) { return(hud_status); }
 int fgOPTIONS::get_panel_status( void ) { return(panel_status); }
+int fgOPTIONS::get_sound( void ) { return(sound); }
 int fgOPTIONS::get_fog( void ) { return(fog); }
 double fgOPTIONS::get_fov( void ) { return(fov); }
 int fgOPTIONS::get_fullscreen( void ) { return(fullscreen); }
@@ -494,6 +501,11 @@ fgOPTIONS::~fgOPTIONS( void ) {
 
 
 // $Log$
+// Revision 1.19  1998/07/27 18:41:25  curt
+// Added a pause command "p"
+// Fixed some initialization order problems between pui and glut.
+// Added an --enable/disable-sound option.
+//
 // Revision 1.18  1998/07/22 01:27:03  curt
 // Strip out \r when parsing config file in case we are on a windoze system.
 //

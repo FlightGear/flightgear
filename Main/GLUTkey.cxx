@@ -187,6 +187,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 109: /* m key */
 	    t->warp += 60;
 	    return;
+	case 112: /* p key */
+	    t->pause = !t->pause;
+	    return;
 	case 116: /* t key */
 	    t->warp_delta += 30;
 	    return;
@@ -305,16 +308,21 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.16  1998/07/16 17:33:34  curt
-/* "H" / "h" now control hud brightness as well with off being one of the
-/*   states.
-/* Better checking for xmesa/fx 3dfx fullscreen/window support for deciding
-/*   whether or not to build in the feature.
-/* Translucent menu support.
-/* HAVE_AUDIO_SUPPORT -> ENABLE_AUDIO_SUPPORT
-/* Use fork() / wait() for playing mp3 init music in background under unix.
-/* Changed default tile diameter to 5.
+/* Revision 1.17  1998/07/27 18:41:23  curt
+/* Added a pause command "p"
+/* Fixed some initialization order problems between pui and glut.
+/* Added an --enable/disable-sound option.
 /*
+ * Revision 1.16  1998/07/16 17:33:34  curt
+ * "H" / "h" now control hud brightness as well with off being one of the
+ *   states.
+ * Better checking for xmesa/fx 3dfx fullscreen/window support for deciding
+ *   whether or not to build in the feature.
+ * Translucent menu support.
+ * HAVE_AUDIO_SUPPORT -> ENABLE_AUDIO_SUPPORT
+ * Use fork() / wait() for playing mp3 init music in background under unix.
+ * Changed default tile diameter to 5.
+ *
  * Revision 1.15  1998/07/13 21:01:34  curt
  * Wrote access functions for current fgOPTIONS.
  *

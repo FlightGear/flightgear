@@ -127,8 +127,11 @@ int fgInitPosition( void ) {
     // FG_Runway_altitude = 920.0;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
-    // probably interesting for european team members
-    // That is: If I can get the scenery to work -;) (Durk)
+    // Initial Position: Huaras, Peru (S09d 31.871'  W077d 31.498')
+    // FG_Longitude = ( -77.5249667 ) * DEG_TO_RAD;
+    // FG_Latitude  = (  -9.5311833 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 0.0;
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
  
     // Eclipse Watching w73.5 n10 (approx) 18:00 UT
     // FG_Longitude = ( -73.5 ) * DEG_TO_RAD;
@@ -401,6 +404,11 @@ int fgInitSubsystems( void ) {
 
 
 // $Log$
+// Revision 1.28  1998/07/27 18:41:25  curt
+// Added a pause command "p"
+// Fixed some initialization order problems between pui and glut.
+// Added an --enable/disable-sound option.
+//
 // Revision 1.27  1998/07/24 21:39:10  curt
 // Debugging output tweaks.
 // Cast glGetString to (char *) to avoid compiler errors.
