@@ -1,2 +1,0 @@
-xgl.o: xgl.c xgl.h
-xglUtils.o: xglUtils.c xgl.h

@@ -1,9 +1,0 @@
-MAT3geom.o: MAT3geom.c
-MAT3inv.o: MAT3inv.c
-MAT3mat.o: MAT3mat.c
-MAT3vec.o: MAT3vec.c
-fg_geodesy.o: fg_geodesy.c
-fg_random.o: fg_random.c fg_random.h
-geotest.o: geotest.c
-polar.o: polar.c
-vector.o: vector.c
