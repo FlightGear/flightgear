@@ -164,9 +164,9 @@ sgVec3Slider::sgVec3Slider ( int x, int y, sgVec3 vec, const char *title,
 	int slider_y = 55;
 	int slider_width = 240;
 
-	int horiz_slider_height = puGetStringHeight    (&LabelFont) +
-							  puGetStringDescender (&LabelFont) +
-							  PUSTR_TGAP + PUSTR_BGAP + 5;
+	int horiz_slider_height = LabelFont.getStringHeight()
+            + LabelFont.getStringDescender()
+            + PUSTR_TGAP + PUSTR_BGAP + 5;
 
 	// HACKS
 	setUserData( this );

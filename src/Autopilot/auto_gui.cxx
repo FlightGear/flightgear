@@ -220,7 +220,7 @@ void NewHeadingInit(void)
 
     float heading = fgGetDouble("/orientation/heading-deg");
     int len = 260/2 -
-	(puGetStringWidth( puGetDefaultLabelFont(), NewHeadingLabel ) /2 );
+	(puGetDefaultLabelFont().getStringWidth( NewHeadingLabel ) / 2 );
 
     ApHeadingDialog = new puDialogBox (150, 50);
     {
@@ -297,7 +297,7 @@ void NewAltitudeInit(void)
     }
 
     int len = 260/2 -
-	(puGetStringWidth( puGetDefaultLabelFont(), NewAltitudeLabel )/2);
+	(puGetDefaultLabelFont().getStringWidth( NewAltitudeLabel ) / 2);
 
     //	ApAltitudeDialog = new puDialogBox (150, 50);
     ApAltitudeDialog = new puDialogBox (150, 200);
@@ -439,7 +439,7 @@ void fgAPAdjustInit( void ) {
     char *s;
 
     int labelX = (DialogWidth / 2) -
-	(puGetStringWidth( puGetDefaultLabelFont(), Label ) / 2);
+	(puGetDefaultLabelFont().getStringWidth( Label ) / 2);
     labelX -= 30;  // KLUDGEY
 
     int nSliders = 4;
@@ -468,8 +468,8 @@ void fgAPAdjustInit( void ) {
 
     puGetDefaultFonts (  &APAdjustLegendFont,  &APAdjustLabelFont );
     APAdjustDialog = new puDialogBox ( DialogX, DialogY ); {
-	int horiz_slider_height = puGetStringHeight (APAdjustLabelFont) +
-	    puGetStringDescender (APAdjustLabelFont) +
+	int horiz_slider_height = APAdjustLabelFont.getStringHeight() +
+	    APAdjustLabelFont.getStringDescender() +
 	    PUSTR_TGAP + PUSTR_BGAP + 5;
 
 	APAdjustFrame = new puFrame ( 0, 0,
@@ -677,8 +677,8 @@ void NewTgtAirportInit(void)
     sprintf( NewTgtAirportId, "%s",
              fgGetString("/sim/startup/airport-id").c_str() );
     SG_LOG( SG_AUTOPILOT, SG_INFO, " NewTgtAirportId " << NewTgtAirportId );
-    int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),
-                                      NewTgtAirportLabel ) / 2;
+    int len = 150
+        - puGetDefaultLabelFont().getStringWidth( NewTgtAirportLabel ) / 2;
     
     TgtAptDialog = new puDialogBox (150, 50);
     {

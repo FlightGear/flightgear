@@ -931,7 +931,7 @@ void fgHUDalphaInit( void ) {
     char *s;
 
     int labelX = (DialogWidth / 2) -
-        (puGetStringWidth( puGetDefaultLabelFont(), Label ) / 2);
+        ( puGetDefaultLabelFont().getStringWidth( Label ) / 2);
 	
     int nSliders = 1;
     int slider_x = 10;
@@ -946,8 +946,8 @@ void fgHUDalphaInit( void ) {
     puGetDefaultFonts ( &HUDalphaLegendFont, &HUDalphaLabelFont );
 	
     HUDalphaDialog = new puDialogBox ( DialogX, DialogY ); {
-        int horiz_slider_height = puGetStringHeight (HUDalphaLabelFont) +
-            puGetStringDescender (HUDalphaLabelFont) +
+        int horiz_slider_height = HUDalphaLabelFont.getStringHeight() +
+            HUDalphaLabelFont.getStringDescender() +
             PUSTR_TGAP + PUSTR_BGAP + 5;
 
         /* puFrame *

@@ -249,8 +249,8 @@ static void saveFlight(puObject *cv) {
     SaveDialog = new puDialogBox (150, 50);
     {
         SaveDialogFrame   = new puFrame           (0,0,350, 150);
-        SaveDialogMessage = new puText            (
-			(150 - puGetStringWidth( puGetDefaultLabelFont(), "File Name:" ) / 2), 110);
+        SaveDialogMessage
+            = new puText( (150 - puGetDefaultLabelFont().getStringWidth( "File Name:" ) / 2), 110 );
         SaveDialogMessage ->    setLabel          ("File Name:");
 
         SaveDialogInput   = new puInput           (50, 70, 300, 100);
@@ -314,8 +314,8 @@ static void loadFlight(puObject *cb)
     LoadDialog = new puDialogBox (150, 50);
     {
         LoadDialogFrame   = new puFrame           (0,0,350, 150);
-        LoadDialogMessage = new puText            (
-			(150 - puGetStringWidth( puGetDefaultLabelFont(), "File Name:" ) / 2), 110);
+        LoadDialogMessage
+            = new puText( (150 - puGetDefaultLabelFont().getStringWidth( "File Name:" ) / 2), 110 );
         LoadDialogMessage ->    setLabel          ("File Name:");
 
         LoadDialogInput   = new puInput           (50, 70, 300, 100);
@@ -412,7 +412,7 @@ void ConfirmExitDialogInit(void)
     char *s;
 
     //  printf("ConfirmExitDialogInit\n");
-    int len = 200 - puGetStringWidth( puGetDefaultLabelFont(), msg )/2;
+    int len = 200 - puGetDefaultLabelFont().getStringWidth ( msg ) / 2;
 
     int x = (fgGetInt("/sim/startup/xsize")/2 - 400/2);
     int y = (fgGetInt("/sim/startup/ysize")/2 - 100/2);

@@ -358,7 +358,7 @@ public:
                 fnt->puts(tmp1);
 
                 fnt->setPointSize(12);
-                char tmp2[p1+1];
+                char tmp2[64];
                 strncpy(tmp2,msg,p1);
                 tmp2[p1]='\0';
 			 
@@ -380,7 +380,7 @@ public:
 
     void Draw()
     {
-        puDrawString ( guiFnt, msg, FloatToInt(x), FloatToInt(y) );
+        guiFnt.drawString( msg, FloatToInt(x), FloatToInt(y) );
     }
 };
 
@@ -566,8 +566,8 @@ public:
     {
         glBegin(GL_LINE_LOOP);  // Use polygon to approximate a circle 
         for(int count=0; count<25; count++) {             
-            float cosine = r * cos(count * 2 * M_PI/10.0); 
-            float sine =   r * sin(count * 2 * M_PI/10.0); 
+            float cosine = r * cos(count * 2 * SG_PI/10.0); 
+            float sine =   r * sin(count * 2 * SG_PI/10.0); 
             glVertex2f(cosine+x1, sine+y1);
         }     
         glEnd(); 

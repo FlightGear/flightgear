@@ -131,8 +131,8 @@ void NewAirport(puObject *cb)
 void NewAirportInit(void)
 {
     sprintf( NewAirportId, "%s", fgGetString("/sim/startup/airport-id").c_str() );
-    int len = 150 - puGetStringWidth( puGetDefaultLabelFont(),
-                                      NewAirportLabel ) / 2;
+    int len = 150
+        - puGetDefaultLabelFont().getStringWidth( NewAirportLabel ) / 2;
 
     AptDialog = new puDialogBox (150, 50);
     {
