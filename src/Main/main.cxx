@@ -1321,8 +1321,8 @@ int main( int argc, char **argv ) {
     // Initialize time
     FGPath zone( current_options.get_fg_root() );
     zone.append( "Timezone" );
-    SGTime *t = new SGTime( current_options.get_lon(),
-			    current_options.get_lat(),
+    SGTime *t = new SGTime( current_options.get_lon() * DEG_TO_RAD,
+			    current_options.get_lat() * DEG_TO_RAD,
 			    zone.str() );
 
     // Handle potential user specified time offsets
