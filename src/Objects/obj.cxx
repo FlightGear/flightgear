@@ -373,8 +373,9 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 ssgBranch *fgObjLoad( const string& path, FGTileEntry *t,
 		      ssgVertexArray *lights, const bool is_base)
 {
-    FGNewMat *newmat;
+    FGNewMat *newmat = NULL;
     string material;
+    float coverage = -1;
     Point3D pp;
     // sgVec3 approx_normal;
     // double normal[3], scale = 0.0;
@@ -560,11 +561,14 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t,
 		    tex_width = newmat->get_xsize();
 		    tex_height = newmat->get_ysize();
 		    state = newmat->get_state();
+		    coverage = newmat->get_light_coverage();
 		    // cout << "(w) = " << tex_width << " (h) = " 
 		    //      << tex_width << endl;
+		} else {
+		    coverage = -1;
 		}
 	    } else {
-		// unknown comment, just gobble the input untill the
+		// unknown comment, just gobble the input until the
 		// end of line
 
 		in >> skipeol;
@@ -773,39 +777,49 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t,
 		tile->addKid( leaf );
 
 		if ( is_base ) {
-		    // generate lighting
-		    if ( material == "Urban" || material == "BuiltUpCover" ) {
-			gen_random_surface_points( leaf, lights, 100000.0 );
-		    } else if ( material == "EvergreenBroadCover" ||
-				material == "Default" || material == "Island" ||
-				material == "SomeSort" ||
-				material == "DeciduousBroadCover" ||
-				material == "EvergreenNeedleCover" ||
-				material == "DeciduousNeedleCover" ) {
-			gen_random_surface_points( leaf, lights, 10000000.0 );
-		    } else if ( material == "MixedForestCover" ) {
-			gen_random_surface_points( leaf, lights, 5000000.0 );
-		    } else if ( material == "WoodedTundraCover" ||
-				material == "BareTundraCover" ||
-				material == "HerbTundraCover" ||
-				material == "MixedTundraCover" ||
-				material == "Marsh" ||
-				material == "HerbWetlandCover" ||
-				material == "WoodedWetlandCover" ) {
-			gen_random_surface_points( leaf, lights, 20000000.0 );
-		    } else if ( material == "ShrubCover" ||
-				material == "ShrubGrassCover" ) {
-			gen_random_surface_points( leaf, lights, 4000000.0 );
-		    } else if ( material == "GrassCover" ||
-				material == "SavannaCover" ) {
-			gen_random_surface_points( leaf, lights, 4000000.0 );
-		    } else if ( material == "MixedCropPastureCover" ||
-				material == "IrrCropPastureCover" ||
-				material == "DryCropPastureCover" ||
-				material == "CropGrassCover" ||
-				material == "CropWoodCover" ) {
-			gen_random_surface_points( leaf, lights, 2000000.0 );
+		    if ( coverage > 0.0 ) {
+			if ( coverage < 10000.0 ) {
+			    FG_LOG(FG_INPUT, FG_ALERT, "Light coverage is "
+				   << coverage << ", pushing up to 10000");
+			    coverage = 10000;
+			}
+			gen_random_surface_points(leaf, lights, coverage);
 		    }
+// 		    // generate lighting
+// 		    if ( material == "Urban" || material == "BuiltUpCover" ) {
+// 			gen_random_surface_points( leaf, lights, 100000.0 );
+// 		    } else if ( material == "EvergreenBroadCover" ||
+// 				material == "Default" || material == "Island" ||
+// 				material == "SomeSort" ||
+// 				material == "DeciduousBroadCover" ||
+// 				material == "EvergreenNeedleCover" ||
+// 				material == "DeciduousNeedleCover" ) {
+// 			gen_random_surface_points( leaf, lights, 10000000.0 );
+// 		    } else if ( material == "Road") {
+// 		        gen_random_surface_points( leaf, lights,  10000.0);
+// 		    } else if ( material == "MixedForestCover" ) {
+// 			gen_random_surface_points( leaf, lights, 5000000.0 );
+// 		    } else if ( material == "WoodedTundraCover" ||
+// 				material == "BareTundraCover" ||
+// 				material == "HerbTundraCover" ||
+// 				material == "MixedTundraCover" ||
+// 				material == "Marsh" ||
+// 				material == "HerbWetlandCover" ||
+// 				material == "WoodedWetlandCover" ) {
+// 			gen_random_surface_points( leaf, lights, 20000000.0 );
+// 		    } else if ( material == "ShrubCover" ||
+// 				material == "ShrubGrassCover" ) {
+// 			gen_random_surface_points( leaf, lights, 4000000.0 );
+// 		    } else if ( material == "GrassCover" ||
+// 				material == "SavannaCover" ) {
+// 			gen_random_surface_points( leaf, lights, 4000000.0 );
+// 		    } else if ( material == "MixedCropPastureCover" ||
+// 				material == "IrrCropPastureCover" ||
+// 				material == "DryCropPastureCover" ||
+// 				material == "CropGrassCover" ||
+// 				material == "CropWoodCover" ) {
+// 			gen_random_surface_points( leaf, lights, 2000000.0 );
+// 		    }
 		}
 	    } else {
 		FG_LOG( FG_TERRAIN, FG_WARN, "Unknown token in " 

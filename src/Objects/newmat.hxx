@@ -79,6 +79,13 @@ private:
     // use mipmapping?
     int mipmap;
 
+    // coverage of night lighting.  This number is specifically the
+    // amount of area coverage we give a single light.  The size of a
+    // triangle is divided by this number and that is the number of
+    // lights assigned to that triangle.  Lower numbers mean more
+    // dense light ocverage.
+    double light_coverage;
+
     // material properties
     sgVec4 ambient, diffuse, specular, emission;
 
@@ -118,6 +125,11 @@ public:
     inline void set_diffuse( sgVec4 d ) { sgCopyVec4( diffuse, d ); }
     inline void set_specular( sgVec4 s ) { sgCopyVec4( specular, s ); }
     inline void set_emission( sgVec4 e ) { sgCopyVec4( emission, e ); }
+
+    inline double get_light_coverage () const { return light_coverage; }
+    inline void set_light_coverage (double coverage) {
+	light_coverage = coverage;
+    }
 
     inline ssgStateSelector *get_state() const { return state; }
 

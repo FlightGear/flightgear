@@ -42,6 +42,7 @@
 FGNewMat::FGNewMat ( void ) {
     wrapu = wrapv = 1;
     mipmap = 1;
+    light_coverage = -1.0;
 }
 
 
@@ -65,6 +66,7 @@ FGNewMat::FGNewMat ( const string &mat_name, const string &tex_name )
     diffuse[0]  = diffuse[1]  = diffuse[2]  = diffuse[3]  = 1.0;
     specular[0] = specular[1] = specular[2] = specular[3] = 1.0;
     emission[0] = emission[1] = emission[2] = emission[3] = 1.0;
+    light_coverage = -1.0;
 }
 
 
@@ -237,6 +239,8 @@ operator >> ( istream& in, FGNewMat& m )
 	    } else {
 		FG_LOG( FG_TERRAIN, FG_INFO, "Bad alpha value " << token );
 	    }
+	} else if ( token == "light-coverage" ) {
+	    in >> token >> m.light_coverage;
 	} else if ( token[0] == '}' ) {
 	    break;
 	}
