@@ -30,12 +30,24 @@
 #include "electrical.hxx"
 
 
-FGElectricalSupplier::FGElectricalSupplier ( string _name, string _model,
+FGElectricalComponent::FGElectricalComponent() :
+    kind(-1),
+    name(""),
+    prop(""),
+    value(0.0)
+{
+}
+
+
+FGElectricalSupplier::FGElectricalSupplier ( string _name, string _prop,
+                                             string _model,
                                              double _volts, double _amps )
 {
     kind = FG_SUPPLIER;
 
     name = _name;
+    prop = _prop;
+    // cout << "_model = " << _model << endl;
     if ( _model == "battery" ) {
         model = FG_BATTERY;
     } else if ( _model == "alternator" ) {
@@ -47,29 +59,77 @@ FGElectricalSupplier::FGElectricalSupplier ( string _name, string _model,
     }
     volts = _volts;
     amps = _amps;
+
+    fgSetDouble( prop.c_str(), amps );
+
+    _rpm_node = fgGetNode("/engines/engine[0]/rpm", true);
 }  
 
 
-FGElectricalBus::FGElectricalBus ( string _name )
+double FGElectricalSupplier::get_output() {
+    if ( model == FG_BATTERY ) {
+        // cout << "battery amps = " << amps << endl;
+        return amps;
+    } else if ( model == FG_ALTERNATOR ) {
+        // scale alternator output for rpms < 600.  For rpms >= 600
+        // give full output.  This is just a WAG, but I'm keeping
+        // things simple to start.
+        double rpm = _rpm_node->getDoubleValue();
+        double factor = rpm / 600.0;
+        if ( factor > 1.0 ) {
+            factor = 1.0;
+        }
+        // cout << "alternator amps = " << amps * factor << endl;
+        return amps * factor;
+    } else if ( model == FG_EXTERNAL ) {
+        // cout << "external amps = " << 0.0 << endl;
+        return 0.0;
+    } else {
+        cout << "unknown supplier type" << endl;
+    }
+
+    return 0.0;
+}
+
+
+FGElectricalBus::FGElectricalBus ( string _name, string _prop )
 {
     kind = FG_BUS;
 
     name = _name;
+    prop = _prop;
 }  
 
 
-FGElectricalOutput::FGElectricalOutput ( string _name )
+FGElectricalOutput::FGElectricalOutput ( string _name, string _prop )
 {
     kind = FG_OUTPUT;
 
     name = _name;
+    prop = _prop;
 }  
 
 
 FGElectricalConnector::FGElectricalConnector ()
 {
     kind = FG_CONNECTOR;
+    name = "connector";
 }  
+
+
+// return true if all switches are true, false otherwise.  A connector
+// could have multiple switches, but they all need to be true(closed)
+// for current to get through.
+bool FGElectricalConnector::get_state() {
+    unsigned int i;
+    for ( i = 0; i < switches.size(); ++i ) {
+        if ( ! switches[i]->getBoolValue() ) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 
 FGElectricalSystem::FGElectricalSystem () :
@@ -122,6 +182,34 @@ void FGElectricalSystem::unbind () {
 
 
 void FGElectricalSystem::update (double dt) {
+    if ( !enabled ) {
+        return;
+    }
+
+    // cout << "Updating electrical system" << endl;
+
+    unsigned int i;
+
+    // zero everything out before we start
+    for ( i = 0; i < suppliers.size(); ++i ) {
+        suppliers[i]->set_value( 0.0 );
+    }
+    for ( i = 0; i < buses.size(); ++i ) {
+        buses[i]->set_value( 0.0 );
+    }
+    for ( i = 0; i < outputs.size(); ++i ) {
+        outputs[i]->set_value( 0.0 );
+    }
+    for ( i = 0; i < connectors.size(); ++i ) {
+        connectors[i]->set_value( 0.0 );
+    }
+
+    // for each supplier, propogate the electrical current
+    for ( i = 0; i < suppliers.size(); ++i ) {
+        // cout << " Updating: " << suppliers[i]->get_name() << endl;
+        propogate( suppliers[i], 0.0, " " );
+    }
+
 }
 
 
@@ -137,17 +225,20 @@ bool FGElectricalSystem::build () {
         if ( name == "supplier" ) {
             FGElectricalSupplier *s =
                 new FGElectricalSupplier( node->getStringValue("name"),
+                                          node->getStringValue("prop"),
                                           node->getStringValue("kind"),
                                           node->getDoubleValue("volts"),
                                           node->getDoubleValue("amps") );
             suppliers.push_back( s );
         } else if ( name == "bus" ) {
             FGElectricalBus *b =
-                new FGElectricalBus( node->getStringValue("name") );
+                new FGElectricalBus( node->getStringValue("name"),
+                                     node->getStringValue("prop") );
             buses.push_back( b );
         } else if ( name == "output" ) {
             FGElectricalOutput *o =
-                new FGElectricalOutput( node->getStringValue("name") );
+                new FGElectricalOutput( node->getStringValue("name"),
+                                        node->getStringValue("prop") );
             outputs.push_back( o );
         } else if ( name == "connector" ) {
             FGElectricalConnector *c =
@@ -165,9 +256,9 @@ bool FGElectricalSystem::build () {
                     if ( s != NULL ) {
                         c->add_input( s );
                         if ( s->get_kind() == FG_SUPPLIER ) {
-                            ((FGElectricalSupplier *)s)->add_output( c );
+                            s->add_output( c );
                         } else if ( s->get_kind() == FG_BUS ) {
-                            ((FGElectricalBus *)s)->add_output( c );
+                            s->add_output( c );
                         } else {
                             SG_LOG( SG_ALL, SG_ALERT,
                                     "Attempt to connect to something that can't provide an output: " 
@@ -185,9 +276,9 @@ bool FGElectricalSystem::build () {
                     if ( s != NULL ) {
                         c->add_output( s );
                         if ( s->get_kind() == FG_BUS ) {
-                            ((FGElectricalBus *)s)->add_input( c );
+                            s->add_input( c );
                         } else if ( s->get_kind() == FG_OUTPUT ) {
-                            ((FGElectricalOutput *)s)->add_input( c );
+                            s->add_input( c );
                         } else {
                             SG_LOG( SG_ALL, SG_ALERT,
                                     "Attempt to connect to something that can't provide an input: " 
@@ -201,7 +292,10 @@ bool FGElectricalSystem::build () {
                         return false;
                     }
                 } else if ( cname == "switch" ) {
-                    c->add_switch( child->getStringValue() );
+                    // set default value of switch to true
+                    // cout << "Switch = " << child->getStringValue() << endl;
+                    fgSetBool( child->getStringValue(), true );
+                    c->add_switch( fgGetNode( child->getStringValue(), true ) );
                 }
             }
         } else {
@@ -215,6 +309,51 @@ bool FGElectricalSystem::build () {
 }
 
 
+// propogate the electrical current through the network
+void FGElectricalSystem::propogate( FGElectricalComponent *node, double val,
+                                    string s ) {
+    s += " ";
+
+    // determine the current to carry forward
+    double current = 0.0;
+    if ( node->get_kind() == FG_SUPPLIER ) {
+        // cout << s << " is a supplier" << endl;
+        current = ((FGElectricalSupplier *)node)->get_output();
+    } else if ( node->get_kind() == FG_BUS ) {
+        // cout << s << " is a bus" << endl;
+        current = val;
+    } else if ( node->get_kind() == FG_OUTPUT ) {
+        // cout << s << " is an output" << endl;
+        current = val;
+    } else if ( node->get_kind() == FG_CONNECTOR ) {
+        // cout << s << " is a connector" << endl;
+        if ( ((FGElectricalConnector *)node)->get_state() ) {
+            current = val;
+        } else {
+            current = 0.0;
+        }
+        // cout << s << "  val = " << current << endl;
+    } else {
+        cout << "unkown node type" << endl;
+    }
+
+    if ( current > node->get_value() ) {
+        node->set_value( current );
+    }
+
+    if ( ! node->get_prop().empty() ) {
+        fgSetDouble( node->get_prop().c_str(), node->get_value() );
+    }
+    // cout << s << node->get_name() << " -> " << node->get_value() << endl;
+
+    // propogate to all children
+    int i;
+    for ( i = 0; i < node->get_num_outputs(); ++i ) {
+        propogate( node->get_output(i), current, s );
+    }
+}
+
+
 // search for the named component and return a pointer to it, NULL otherwise
 FGElectricalComponent *FGElectricalSystem::find ( const string &name ) {
     unsigned int i;
@@ -222,7 +361,7 @@ FGElectricalComponent *FGElectricalSystem::find ( const string &name ) {
 
     // search suppliers
     for ( i = 0; i < suppliers.size(); ++i ) {
-        s = ((FGElectricalSupplier *)suppliers[i])->get_name();
+        s = suppliers[i]->get_name();
         // cout <<  "    " << s << endl;
         if ( s == name ) {
             return suppliers[i];
@@ -231,7 +370,7 @@ FGElectricalComponent *FGElectricalSystem::find ( const string &name ) {
 
     // then search buses
     for ( i = 0; i < buses.size(); ++i ) {
-        s = ((FGElectricalBus *)buses[i])->get_name();
+        s = buses[i]->get_name();
         // cout <<  "    " << s << endl;
         if ( s == name ) {
             return buses[i];
@@ -240,7 +379,7 @@ FGElectricalComponent *FGElectricalSystem::find ( const string &name ) {
 
     // then search outputs
     for ( i = 0; i < outputs.size(); ++i ) {
-        s = ((FGElectricalOutput *)outputs[i])->get_name();
+        s = outputs[i]->get_name();
         // cout <<  "    " << s << endl;
         if ( s == name ) {
             return outputs[i];

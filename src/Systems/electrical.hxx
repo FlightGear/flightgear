@@ -51,23 +51,53 @@ SG_USING_STD(vector);
 // Base class for other electrical components
 class FGElectricalComponent {
 
+protected:
+
     typedef vector<FGElectricalComponent *> comp_list;
     typedef vector<string> string_list;
 
+    int kind;
+    string name;
+    string prop;
+    double value;
+
+    comp_list inputs;
+    comp_list outputs;
+
 public:
 
-    FGElectricalComponent() {}
+    FGElectricalComponent();
     virtual ~FGElectricalComponent() {}
 
-    virtual string get_name() { return ""; }
+    inline string get_name() { return name; }
+    inline string get_prop() { return prop; }
 
-    int kind;
-    inline int get_kind() { return kind; }
+    inline int get_kind() const { return kind; }
+    inline double get_value() const { return value; }
+    inline void set_value( double val ) { value = val; }
+
+    inline int get_num_outputs() const { return outputs.size(); }
+    inline FGElectricalComponent *get_output( const int i ) {
+        return outputs[i];
+    }
+    inline void add_output( FGElectricalComponent *c ) {
+        outputs.push_back( c );
+    }
+
+    inline int get_num_inputs() const { return outputs.size(); }
+    inline FGElectricalComponent *get_input( const int i ) {
+        return inputs[i];
+    }
+    inline void add_input( FGElectricalComponent *c ) {
+        inputs.push_back( c );
+    }
 };
 
 
 // Electrical supplier
 class FGElectricalSupplier : public FGElectricalComponent {
+
+    SGPropertyNode_ptr _rpm_node;
 
     enum FGSupplierType {
         FG_BATTERY = 0,
@@ -75,24 +105,17 @@ class FGElectricalSupplier : public FGElectricalComponent {
         FG_EXTERNAL = 2
     };
 
-    string name;
     int model;
     double volts;
     double amps;
 
-    comp_list outputs;
-
 public:
 
-    FGElectricalSupplier ( string _name, string _model,
+    FGElectricalSupplier ( string _name, string _prop, string _model,
                            double _volts, double _amps );
     ~FGElectricalSupplier () {}
 
-    void add_output( FGElectricalComponent *c ) {
-        outputs.push_back( c );
-    }
-
-    string get_name() const { return name; }
+    double get_output();
 };
 
 
@@ -100,24 +123,10 @@ public:
 // outputs)
 class FGElectricalBus : public FGElectricalComponent {
 
-    string name;
-    comp_list inputs;
-    comp_list outputs;
-
 public:
 
-    FGElectricalBus ( string _name );
+    FGElectricalBus ( string _name, string _prop );
     ~FGElectricalBus () {}
-
-    void add_input( FGElectricalComponent *c ) {
-        inputs.push_back( c );
-    }
-
-    void add_output( FGElectricalComponent *c ) {
-        outputs.push_back( c );
-    }
-
-    string get_name() const { return name; }
 };
 
 
@@ -125,19 +134,10 @@ public:
 // flexibility
 class FGElectricalOutput : public FGElectricalComponent {
 
-    string name;
-    comp_list inputs;
-
 public:
 
-    FGElectricalOutput ( string _name );
+    FGElectricalOutput ( string _name, string _prop );
     ~FGElectricalOutput () {}
-
-    void add_input( FGElectricalComponent *c ) {
-        inputs.push_back( c );
-    }
-
-    string get_name() const { return name; }
 };
 
 
@@ -147,26 +147,19 @@ class FGElectricalConnector : public FGElectricalComponent {
 
     comp_list inputs;
     comp_list outputs;
-    string_list switches;
+    typedef vector<SGPropertyNode *> switch_list;
+    switch_list switches;
 
 public:
 
     FGElectricalConnector ();
     ~FGElectricalConnector () {}
 
-    void add_input( FGElectricalComponent *c ) {
-        inputs.push_back( c );
+    void add_switch( SGPropertyNode *node ) {
+        switches.push_back( node );
     }
 
-    void add_output( FGElectricalComponent *c ) {
-        outputs.push_back( c );
-    }
-
-    void add_switch( const string &s ) {
-        switches.push_back( s );
-    }
-
-    string get_name() const { return ""; }
+    bool get_state();
 };
 
 
@@ -197,16 +190,18 @@ public:
     virtual void update (double dt);
 
     bool build ();
+    void propogate( FGElectricalComponent *node, double val, string s = "" );
     FGElectricalComponent *find ( const string &name );
+
+protected:
+
+    typedef vector<FGElectricalComponent *> comp_list;
 
 private:
 
     SGPropertyNode *config_props;
-    // SGPropertyNode_ptr _serviceable_node;
 
     bool enabled;
-
-    typedef vector<FGElectricalComponent *> comp_list;
 
     comp_list suppliers;
     comp_list buses;
