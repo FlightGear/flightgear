@@ -28,17 +28,17 @@ int main() {
 	Point3D pc = sgGeodToCart( pgd );
 	cout << "  cartesian = " << pc << endl;
 
-	sgMat4 GEOD_UP;
-	sgVec3 geod_up;
-	sgMakeRotMat4( GEOD_UP, lon, 0.0, -lat );
-	sgSetVec3( geod_up, GEOD_UP[0][0], GEOD_UP[0][1], GEOD_UP[0][2] );
+	sgdMat4 GEOD_UP;
+	sgdVec3 geod_up;
+	sgdMakeRotMat4( GEOD_UP, lon, 0.0, -lat );
+	sgdSetVec3( geod_up, GEOD_UP[0][0], GEOD_UP[0][1], GEOD_UP[0][2] );
 	cout << "  geod up = " << geod_up[0] << ", " << geod_up[1] << ", "
 	     << geod_up[2] << endl;
 
-	sgMat4 GEOC_UP;
-	sgVec3 geoc_up;
-	sgMakeRotMat4( GEOC_UP, lon, 0.0, -lat_geoc * RAD_TO_DEG );
-	sgSetVec3( geoc_up, GEOC_UP[0][0], GEOC_UP[0][1], GEOC_UP[0][2] );
+	sgdMat4 GEOC_UP;
+	sgdVec3 geoc_up;
+	sgdMakeRotMat4( GEOC_UP, lon, 0.0, -lat_geoc * RAD_TO_DEG );
+	sgdSetVec3( geoc_up, GEOC_UP[0][0], GEOC_UP[0][1], GEOC_UP[0][2] );
 	cout << "  geoc up = " << geoc_up[0] << ", " << geoc_up[1] << ", "
 	     << geoc_up[2] << endl;
 
