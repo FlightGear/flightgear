@@ -109,19 +109,17 @@ int fgObjLoad(char *path, fgTILE *tile) {
 
     o = &current_options;
 
-    // First try "path.obz" (compressed format)
+    // First try "path.gz" (compressed format)
     strcpy(fgpath, path);
-    strcat(fgpath, ".obz");
+    strcat(fgpath, ".gz");
     if ( (f = fgopen(fgpath, "rb")) == NULL ) {
-	// Next try "path.obj" (uncompressed format)
+	// Next try "path" (uncompressed format)
 	strcpy(fgpath, path);
-	strcat(fgpath, ".obj");
 	if ( (f = fgopen(fgpath, "rb")) == NULL ) {
-	    // Next try "path.obj.gz" (compressed format)
+	    // Next try "path.obj" (uncompressed format)
 	    strcat(fgpath, ".gz");
 	    if ( (f = fgopen(fgpath, "rb")) == NULL ) {
 		strcpy(fgpath, path);
-		strcat(fgpath, ".obj");
 		fgPrintf( FG_TERRAIN, FG_ALERT, 
 			  "Cannot open file: %s\n", fgpath );
 		return(0);
@@ -408,6 +406,9 @@ int fgObjLoad(char *path, fgTILE *tile) {
 
 
 // $Log$
+// Revision 1.8  1998/06/05 18:19:18  curt
+// Recognize file, file.gz, and file.obj as scenery object files.
+//
 // Revision 1.7  1998/05/24 02:49:09  curt
 // Implimented fragment level view frustum culling.
 //
