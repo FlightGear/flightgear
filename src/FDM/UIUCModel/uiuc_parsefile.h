@@ -1,11 +1,11 @@
 #ifndef _PARSE_FILE_H_
 #define _PARSE_FILE_H_
 
+#include <simgear/compiler.h>
+
 #include <string>
 #include <list>
 #include <fstream>
-
-#include <simgear/compiler.h>
 
 FG_USING_STD(list);
 FG_USING_STD(string);

@@ -3,8 +3,15 @@
 
 #include "uiuc_aircraft.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern double Simtime;
 
+#ifdef __cplusplus
+}
+#endif
 
 void uiuc_ice_eta();
 

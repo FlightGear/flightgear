@@ -1,7 +1,10 @@
 #ifndef _2D_DATA_FILE_READER_H_
 #define _2D_DATA_FILE_READER_H_
 
-#include <strstream.h>
+#include <simgear/compiler.h>
+
+#include <strstream>
+
 #include "uiuc_parsefile.h"
 #include "uiuc_aircraft.h"
 

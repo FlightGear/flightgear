@@ -638,7 +638,8 @@ readInstrument (SGPropertyNode node, int x, int y, int real_w, int real_h)
   //
   SGPropertyNode action_group = node.getSubNode("actions");
   int nActions = action_group.size();
-  for (int j = 0; j < nActions; j++) {
+  int j;
+  for (j = 0; j < nActions; j++) {
     FGPanelAction * action = readAction(action_group.getChild(j),
 					hscale, vscale);
     if (action == 0) {
@@ -653,7 +654,7 @@ readInstrument (SGPropertyNode node, int x, int y, int real_w, int real_h)
   //
   SGPropertyNode layer_group = node.getSubNode("layers");
   int nLayers = layer_group.size();
-  for (int j = 0; j < nLayers; j++) {
+  for (j = 0; j < nLayers; j++) {
     FGInstrumentLayer * layer = readLayer(layer_group.getChild(j),
 					  hscale, vscale);
     if (layer == 0) {

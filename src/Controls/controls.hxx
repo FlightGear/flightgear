@@ -57,6 +57,8 @@ private:
     double rudder;
     double flaps;
     double throttle[MAX_ENGINES];
+    double mixture[MAX_ENGINES];
+    double prop_advance[MAX_ENGINES];
     double brake[MAX_WHEELS];
     bool throttle_idle;
 
@@ -80,6 +82,10 @@ public:
     inline double get_rudder() const { return rudder; }
     inline double get_flaps() const { return flaps; }
     inline double get_throttle(int engine) const { return throttle[engine]; }
+    inline double get_mixture(int engine) const { return mixture[engine]; }
+    inline double get_prop_advance(int engine) const {
+	return prop_advance[engine];
+    }
     inline double get_brake(int wheel) const { return brake[wheel]; }
 
     // Update functions
@@ -160,6 +166,58 @@ public:
 	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
 		throttle[engine] += amt;
 		CLAMP( &throttle[engine], 0.0, 1.0 );
+	    }
+	}
+    }
+    inline void set_mixture( int engine, double pos ) {
+	if ( engine == ALL_ENGINES ) {
+	    for ( int i = 0; i < MAX_ENGINES; i++ ) {
+		mixture[i] = pos;
+		CLAMP( &mixture[i], 0.0, 1.0 );
+	    }
+	} else {
+	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+		mixture[engine] = pos;
+		CLAMP( &mixture[engine], 0.0, 1.0 );
+	    }
+	}
+    }
+    inline void move_mixture( int engine, double amt ) {
+	if ( engine == ALL_ENGINES ) {
+	    for ( int i = 0; i < MAX_ENGINES; i++ ) {
+		mixture[i] += amt;
+		CLAMP( &mixture[i], 0.0, 1.0 );
+	    }
+	} else {
+	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+		mixture[engine] += amt;
+		CLAMP( &mixture[engine], 0.0, 1.0 );
+	    }
+	}
+    }
+    inline void set_prop_advance( int engine, double pos ) {
+	if ( engine == ALL_ENGINES ) {
+	    for ( int i = 0; i < MAX_ENGINES; i++ ) {
+		prop_advance[i] = pos;
+		CLAMP( &prop_advance[i], 0.0, 1.0 );
+	    }
+	} else {
+	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+		prop_advance[engine] = pos;
+		CLAMP( &prop_advance[engine], 0.0, 1.0 );
+	    }
+	}
+    }
+    inline void move_prop_advance( int engine, double amt ) {
+	if ( engine == ALL_ENGINES ) {
+	    for ( int i = 0; i < MAX_ENGINES; i++ ) {
+		prop_advance[i] += amt;
+		CLAMP( &prop_advance[i], 0.0, 1.0 );
+	    }
+	} else {
+	    if ( (engine >= 0) && (engine < MAX_ENGINES) ) {
+		prop_advance[engine] += amt;
+		CLAMP( &prop_advance[engine], 0.0, 1.0 );
 	    }
 	}
     }

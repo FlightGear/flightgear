@@ -21,6 +21,7 @@
 //
 // $Id$
 
+#include <simgear/compiler.h>
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -39,7 +40,8 @@
 #include <plib/js.h>
 #include "joystick.hxx"
 
-using std::string;
+FG_USING_STD(string);
+FG_USING_STD(cout);
 
 #ifdef WIN32
 static const int MAX_JOYSTICKS = 2;

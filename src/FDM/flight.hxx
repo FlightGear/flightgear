@@ -949,7 +949,7 @@ public:
     }
 
     inline void add_engine( FGEngInterface e ) {
-	return engines.push_back( e );
+	engines.push_back( e );
     }
 };
 

@@ -51,7 +51,7 @@
 #define _10520D_HXX_
 
 
-#include <iostream.h>
+#include <iostream>
 #include <math.h>
 
 

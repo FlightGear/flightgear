@@ -56,11 +56,13 @@
 #define PHILS_PROP_MODEL
 #endif 
 
+#include <simgear/compiler.h>
 
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 #include <math.h>
 
+FG_USING_STD(ofstream);
 
 class FGEngine {
 

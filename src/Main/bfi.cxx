@@ -124,7 +124,7 @@ FGBFI::init ()
 			       getRoll, setRoll);
 
 				// Engine
-  current_properties.tieDouble("/engine0/rpm",
+  current_properties.tieDouble("/engines/engine0/rpm",
 			       getRPM, setRPM);
 
 				// Velocities

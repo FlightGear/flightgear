@@ -89,8 +89,14 @@
 
 **********************************************************************/
 
+#include <simgear/compiler.h>
+
 #include "uiuc_menu.h"
-#include <iostream.h>
+#include <iostream>
+
+FG_USING_STD(cerr);
+FG_USING_STD(cout);
+FG_USING_STD(endl);
 
 bool check_float(string  &token)
 {

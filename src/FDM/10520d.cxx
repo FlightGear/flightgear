@@ -47,11 +47,15 @@
 // INCLUDES
 // ------------------------------------------------------------------------
 
-#include <iostream.h>
+#include <simgear/compiler.h>
+
+#include <iostream>
 #include <math.h>
 
 #include "10520d.hxx"
 
+FG_USING_STD(cout);
+FG_USING_STD(endl);
 
 // ------------------------------------------------------------------------
 // CODE

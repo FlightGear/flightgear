@@ -72,12 +72,15 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include <iostream.h>
-#include <fstream.h>
+#include <simgear/compiler.h>
+
+#include <iostream>
+#include <fstream>
 #include <math.h>
 
 #include "IO360.hxx"
 
+FG_USING_STD(cout);
 
 // ------------------------------------------------------------------------
 // CODE

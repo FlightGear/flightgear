@@ -194,7 +194,7 @@ bool FGAirportsUtil::dump_mk4( const string& file ) {
 
     c4_Row row;
 
-    iterator current = airports.begin();
+    const_iterator current = airports.begin();
     const_iterator end = airports.end();
     while ( current != end ) {
 	// add each airport record

@@ -66,7 +66,7 @@
 **********************************************************************/
 
 #include "uiuc_controlInput.h"
-#include <iostream.h>
+#include <iostream>
 
 void uiuc_controlInput()
 {

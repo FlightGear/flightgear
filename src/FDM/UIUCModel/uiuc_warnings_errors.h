@@ -1,10 +1,12 @@
 #ifndef _WARNINGS_ERRORS_H_
 #define _WARNINGS_ERRORS_H_
 
+#include <simgear/compiler.h>
+
 #include <string>
 #include <iostream>
 
-using std::string;
+FG_USING_STD(string);
 
 void uiuc_warnings_errors(int errorCode, string line);
 

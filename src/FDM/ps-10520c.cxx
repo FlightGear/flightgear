@@ -49,10 +49,13 @@
 // INCLUDES
 // ------------------------------------------------------------------------
 
-#include <iostream.h>
-// #include <stdio.h>
+#include <simgear/compiler.h>
+
+#include <iostream>
 #include <math.h>
-// #include "10520c.h"
+
+FG_USING_STD(cout);
+FG_USING_STD(endl);
 
 // ------------------------------------------------------------------------
 // CODE

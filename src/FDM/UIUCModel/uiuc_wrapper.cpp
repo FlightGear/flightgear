@@ -63,6 +63,8 @@
  
 **********************************************************************/
 
+#include <simgear/compiler.h>
+
 #include "uiuc_aircraft.h"
 #include "uiuc_aircraftdir.h"
 #include "uiuc_coefficients.h"
@@ -72,6 +74,9 @@
 #include "uiuc_menu.h"
 #include "uiuc_betaprobe.h"
 #include <FDM/LaRCsim/ls_generic.h>
+
+FG_USING_STD(cout);
+FG_USING_STD(endl);
 
 extern "C" void uiuc_init_aeromodel ();
 extern "C" void uiuc_force_moment(double dt);

@@ -26,10 +26,12 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/math/sg_types.hxx>
 
-#include <strstream.h>
+#include <strstream>
 
 #include "props.hxx"
 
+FG_USING_STD(cout);
+FG_USING_STD(istrstream);
 
 FGProps::FGProps() {
 }

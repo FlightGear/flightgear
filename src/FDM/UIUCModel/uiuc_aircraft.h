@@ -94,8 +94,11 @@
 #define _AIRCRAFT_H_
 
 #include <simgear/compiler.h>
+
 #include <map>
 #include <iostream>
+#include <math.h>
+
 #include "uiuc_parsefile.h"
 
 FG_USING_STD(map);
