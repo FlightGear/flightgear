@@ -27,13 +27,14 @@
 
 
 $max_area = 10000;            # maximum triangle area
+$remove_tmps = 0;
 
 $| = 1;                         # flush buffers after every write
 
-$do_dem2node =   1;
-$do_triangle_1 = 1;
-$do_fixnode =    1;
-$do_splittris =  1;
+$do_dem2node =   0;
+$do_triangle_1 = 0;
+$do_fixnode =    0;
+$do_splittris =  0;
 $do_assemtris =  1;
 $do_triangle_2 = 1;
 
@@ -67,7 +68,7 @@ while ( $dem_file = shift(@ARGV) ) {
     if ( $do_dem2node ) {
 	dem2node() ;
     } else {
-	$subdir = "./work/Scenery/w100n040/w093n045/";
+	$subdir = "./work/Scenery/w100n040/w094n045";
 	print "WARNING:  Hardcoding subdir = $subdir\n";
     }
 
@@ -75,6 +76,7 @@ while ( $dem_file = shift(@ARGV) ) {
     fixnode() if ( $do_fixnode );
     splittris() if ( $do_splittris );
     assemtris() if ( $do_assemtris );
+    exit;
     triangle_2() if ( $do_triangle_2);
     tri2obj() if ( $do_tri2obj );
     strips() if ( $do_strips );
@@ -145,10 +147,18 @@ print "Subdirectory for this dem file is $subdir\n";
 sub triangle_1 {
     @FILES = `ls $subdir`;
     foreach $file ( @FILES ) {
-	print $file;
+	# print $file;
 	chop($file);
 	if ( ($file =~ m/\.node$/) && ($file !~ m/\.\d\.node$/) ) {
-	    $command = "Triangle/triangle -a$max_area -q $subdir/$file";
+	    # special handling is needed if .poly file exists
+	    $fileroot = $file;
+	    $fileroot =~ s/\.node$//;
+	    print "$subdir/$fileroot\n";
+	    if ( -r "$subdir/$fileroot.poly" ) {
+		$command = "Triangle/triangle -pc -a$max_area -q5 $subdir/$fileroot";
+	    } else {
+		$command = "Triangle/triangle -c -a$max_area -q5 $subdir/$file";
+	    }
 	    $command = fix_command($command);
 	    print "Running '$command'\n";
 	    open(OUT, "$command |");
@@ -158,7 +168,9 @@ sub triangle_1 {
 	    close(OUT);
 
 	    # remove input file.node
-	    unlink("$subdir/$file");
+	    if ( $remove_tmps ) {
+		unlink("$subdir/$file");
+	    }
 	}
     }
 }
@@ -213,9 +225,11 @@ sub splittris {
 	    }
 	    close(OUT);
 
-	    unlink("$subdir/$file.node");
-	    unlink("$subdir/$file.node.orig");
-	    unlink("$subdir/$file.ele");
+	    if ( $remove_tmps ) {
+		unlink("$subdir/$file.node");
+		unlink("$subdir/$file.node.orig");
+		unlink("$subdir/$file.ele");
+	    }
 	}
     }
 }
@@ -241,7 +255,9 @@ sub assemtris {
 	    }
 	    close(OUT);
 	}
-	unlink("$subdir/$file.body");
+	if ( $remove_tmps ) {
+	    unlink("$subdir/$file.body");
+	}
     }
 }
 
@@ -278,7 +294,9 @@ sub triangle_2 {
 	    close(OUT);
 
 	    # remove input file.node
-	    unlink("$subdir/$file");
+	    if ( $remove_tmps ) {
+		unlink("$subdir/$file");
+	    }
 	}
     }
 }
@@ -310,9 +328,11 @@ sub tri2obj {
 	    }
 	    close(OUT);
 	    
-	    unlink("$subdir/$file.node");
-	    unlink("$subdir/$file.node.orig");
-	    unlink("$subdir/$file.ele");
+	    if ( $remove_tmps ) {
+		unlink("$subdir/$file.node");
+		unlink("$subdir/$file.node.orig");
+		unlink("$subdir/$file.ele");
+	    }
 	}
     }
 }
@@ -355,7 +375,9 @@ sub strips {
 	    close(IN);
 	    close(OUT);
 	    
-	    unlink("$subdir/$file");
+	    if ( $remove_tmps ) {
+		unlink("$subdir/$file");
+	    }
 	}
     }
 }
@@ -382,7 +404,9 @@ sub fixobj {
 	    }
 	    close(OUT);
 
-	    unlink("$subdir/$file");
+	    if ( $remove_tmps ) {
+		unlink("$subdir/$file");
+	    }
 	}
     }
 }
@@ -415,7 +439,9 @@ sub install {
 	    }
 	    close(OUT);
 
-	    unlink("$subdir/$file");
+	    if ( $remove_tmps ) {
+		unlink("$subdir/$file");
+	    }
 	}
     }
 }
@@ -423,6 +449,9 @@ sub install {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.23  1998/07/20 12:55:35  curt
+# Several tweaks to start incorporating area cutouts into the pipeline.
+#
 # Revision 1.22  1998/07/08 14:49:13  curt
 # tweaks.
 #
