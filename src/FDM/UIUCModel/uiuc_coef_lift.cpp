@@ -119,7 +119,7 @@ void uiuc_coef_lift()
                   }
               }
 	    CLo_save = CLo;
-            CL += CLo;
+            CL += CLo_save;
             break;
           }
         case CL_a_flag:
@@ -136,7 +136,7 @@ void uiuc_coef_lift()
                   }
               }
 	    CL_a_save = CL_a * Alpha;
-            CL += CL_a * Alpha;
+            CL += CL_a_save;
             break;
           }
         case CL_adot_flag:
@@ -155,7 +155,7 @@ void uiuc_coef_lift()
             /* CL_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    CL_adot_save = CL_adot * Alpha_dot * cbar_2U;
-            CL += CL_adot * Alpha_dot * cbar_2U;
+            CL += CL_adot_save;
             break;
           }
         case CL_q_flag:
@@ -177,13 +177,13 @@ void uiuc_coef_lift()
                that is what is done in c172_aero.c; assume it 
                has something to do with axes systems */
 	    CL_q_save = CL_q * Theta_dot * cbar_2U;
-            CL += CL_q * Theta_dot * cbar_2U;
+            CL += CL_q_save;
             break;
           }
         case CL_ih_flag:
           {
 	    CL_ih_save = CL_ih * ih;
-            CL += CL_ih * ih;
+            CL += CL_ih_save;
             break;
           }
         case CL_de_flag:
@@ -200,7 +200,25 @@ void uiuc_coef_lift()
                   }
               }
 	    CL_de_save = CL_de * elevator;
-            CL += CL_de * elevator;
+            CL += CL_de_save;
+            break;
+          }
+        case CL_df_flag:
+          {
+	    CL_df_save = CL_df * flap_pos;
+            CL += CL_df_save;
+            break;
+          }
+        case CL_ds_flag:
+          {
+	    CL_ds_save = CL_ds * spoiler_pos;
+            CL += CL_ds_save;
+            break;
+          }
+        case CL_dg_flag:
+          {
+	    CL_dg_save = CL_dg * gear_pos_norm;
+            CL += CL_dg_save;
             break;
           }
         case CLfa_flag:
@@ -259,7 +277,7 @@ void uiuc_coef_lift()
                   }
               }
 	    CZo_save = CZo;
-            CZ += CZo;
+            CZ += CZo_save;
             break;
           }
         case CZ_a_flag:
@@ -276,7 +294,7 @@ void uiuc_coef_lift()
                   }
               }
 	    CZ_a_save = CZ_a * Alpha;
-            CZ += CZ_a * Alpha;
+            CZ += CZ_a_save;
             break;
           }
         case CZ_a2_flag:
@@ -293,7 +311,7 @@ void uiuc_coef_lift()
                   }
               }
 	    CZ_a2_save = CZ_a2 * Alpha * Alpha;
-            CZ += CZ_a2 * Alpha * Alpha;
+            CZ += CZ_a2_save;
             break;
           }
         case CZ_a3_flag:
@@ -310,7 +328,7 @@ void uiuc_coef_lift()
                   }
               }
 	    CZ_a3_save = CZ_a3 * Alpha * Alpha * Alpha;
-            CZ += CZ_a3 * Alpha * Alpha * Alpha;
+            CZ += CZ_a3_save;
             break;
           }
         case CZ_adot_flag:
@@ -329,7 +347,7 @@ void uiuc_coef_lift()
             /* CZ_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    CZ_adot_save = CZ_adot * Alpha_dot * cbar_2U;
-            CZ += CZ_adot * Alpha_dot * cbar_2U;
+            CZ += CZ_adot_save;
             break;
           }
         case CZ_q_flag:
@@ -348,7 +366,7 @@ void uiuc_coef_lift()
             /* CZ_q must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    CZ_q_save = CZ_q * Q_body * cbar_2U;
-            CZ += CZ_q * Q_body * cbar_2U;
+            CZ += CZ_q_save;
             break;
           }
         case CZ_de_flag:
@@ -365,7 +383,7 @@ void uiuc_coef_lift()
                   }
               }
 	    CZ_de_save = CZ_de * elevator;
-            CZ += CZ_de * elevator;
+            CZ += CZ_de_save;
             break;
           }
         case CZ_deb2_flag:
@@ -382,7 +400,7 @@ void uiuc_coef_lift()
                   }
               }
 	    CZ_deb2_save = CZ_deb2 * elevator * Beta * Beta;
-            CZ += CZ_deb2 * elevator * Beta * Beta;
+            CZ += CZ_deb2_save;
             break;
           }
         case CZ_df_flag:
@@ -392,14 +410,14 @@ void uiuc_coef_lift()
                 CZ_df = uiuc_ice_filter(CZ_df_clean,kCZ_df);
                 if (beta_model)
                   {
-                    CZclean_wing += CZ_df_clean * flap;
-                    CZclean_tail += CZ_df_clean * flap;
-                    CZiced_wing += CZ_df * flap;
-                    CZiced_tail += CZ_df * flap;
+                    CZclean_wing += CZ_df_clean * flap_pos;
+                    CZclean_tail += CZ_df_clean * flap_pos;
+                    CZiced_wing += CZ_df * flap_pos;
+                    CZiced_tail += CZ_df * flap_pos;
                   }
               }
-	    CZ_df_save = CZ_df * flap;
-            CZ += CZ_df * flap;
+	    CZ_df_save = CZ_df * flap_pos;
+            CZ += CZ_df_save;
             break;
           }
         case CZ_adf_flag:
@@ -409,14 +427,14 @@ void uiuc_coef_lift()
                 CZ_adf = uiuc_ice_filter(CZ_adf_clean,kCZ_adf);
                 if (beta_model)
                   {
-                    CZclean_wing += CZ_adf_clean * Alpha * flap;
-                    CZclean_tail += CZ_adf_clean * Alpha * flap;
-                    CZiced_wing += CZ_adf * Alpha * flap;
-                    CZiced_tail += CZ_adf * Alpha * flap;
+                    CZclean_wing += CZ_adf_clean * Alpha * flap_pos;
+                    CZclean_tail += CZ_adf_clean * Alpha * flap_pos;
+                    CZiced_wing += CZ_adf * Alpha * flap_pos;
+                    CZiced_tail += CZ_adf * Alpha * flap_pos;
                   }
               }
-	    CZ_adf_save = CZ_adf * Alpha * flap;
-            CZ += CZ_adf * Alpha * flap;
+	    CZ_adf_save = CZ_adf * Alpha * flap_pos;
+            CZ += CZ_adf_save;
             break;
           }
         case CZfa_flag:

@@ -37,13 +37,32 @@
 	CURRENT RCS HEADER INFO:
 $Header$
 $Log$
-Revision 1.2  2002/11/08 17:03:50  curt
+Revision 1.3  2003/05/13 18:45:06  curt
 Robert Deters:
 
-Latest revisions of the UIUC code.
+  I have attached some revisions for the UIUCModel and some LaRCsim.
+  The only thing you should need to check is LaRCsim.cxx.  The file
+  I attached is a revised version of 1.5 and the latest is 1.7.  Also,
+  uiuc_getwind.c and uiuc_getwind.h are no longer in the LaRCsim
+  directory.  They have been moved over to UIUCModel.
 
-Revision 1.1.1.1  2002/09/10 01:14:02  curt
-Initial revision of FlightGear-0.9.0
+Revision 1.2  2003/03/31 03:05:41  m-selig
+uiuc wind changes, MSS
+
+Revision 1.1.1.1  2003/02/28 01:33:39  rob
+uiuc version of FlightGear v0.9.0
+
+Revision 1.3  2002/12/12 00:01:04  rob
+*** empty log message ***
+
+Revision 1.2  2002/10/22 21:06:49  rob
+*** empty log message ***
+
+Revision 1.2  2002/08/29 18:56:37  rob
+*** empty log message ***
+
+Revision 1.1.1.1  2002/04/24 17:08:23  rob
+UIUC version of FlightGear-0.7.pre11
 
 Revision 1.5  2002/04/01 19:37:34  curt
 I have attached revisions to the UIUC code.  The revisions include the
@@ -166,10 +185,13 @@ void ls_model( SCALAR dt, int Initialize ) {
     case UIUC:
       inertias( dt, Initialize );
       subsystems( dt, Initialize );
+      uiuc_init_2_wrapper();
+      uiuc_network_recv_2_wrapper();
       uiuc_engine_2_wrapper( dt, Initialize );
+      uiuc_wind_2_wrapper( dt, Initialize );
       uiuc_aero_2_wrapper( dt, Initialize );
       uiuc_gear_2_wrapper( dt, Initialize );
-      //uiuc_network_2_wrapper();
+      uiuc_network_send_2_wrapper();
       uiuc_record_2_wrapper(dt);
       break;
     }

@@ -139,6 +139,7 @@ void uiuc_engine()
 	      if (eta_q_Cm_q_fac)    {eta_q_Cm_q    *= eta_q * eta_q_Cm_q_fac;}
 	      if (eta_q_Cm_adot_fac) {eta_q_Cm_adot *= eta_q * eta_q_Cm_adot_fac;}
 	      if (eta_q_Cmfade_fac)  {eta_q_Cmfade  *= eta_q * eta_q_Cmfade_fac;}
+	      if (eta_q_Cm_de_fac)   {eta_q_Cm_de   *= eta_q * eta_q_Cm_de_fac;}
 	      if (eta_q_Cl_beta_fac) {eta_q_Cl_beta *= eta_q * eta_q_Cl_beta_fac;}
 	      if (eta_q_Cl_p_fac)    {eta_q_Cl_p    *= eta_q * eta_q_Cl_p_fac;}
 	      if (eta_q_Cl_r_fac)    {eta_q_Cl_r    *= eta_q * eta_q_Cl_r_fac;}

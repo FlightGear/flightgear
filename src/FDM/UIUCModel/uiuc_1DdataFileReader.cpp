@@ -71,7 +71,7 @@
 
 int 
 uiuc_1DdataFileReader( string file_name,  
-                         double x[100], double y[100], int &xmax ) 
+                         double x[], double y[], int &xmax ) 
 {
 
   ParseFile *matrix;
@@ -81,6 +81,7 @@ uiuc_1DdataFileReader( string file_name,
   string linetoken1; 
   string linetoken2; 
   stack command_list;
+  static string uiuc_1DdataFileReader_error = " (from uiuc_1DdataFileReader.cpp) ";
 
   /* Read the file and get the list of commands */
   matrix = new ParseFile(file_name);
@@ -101,6 +102,11 @@ uiuc_1DdataFileReader( string file_name,
       y[counter] = token_value2 * convert_y;
       xmax = counter;
       counter++;
+      //(RD) will create error check later, we can have more than 100
+      //if (counter > 100)
+      //{      
+      //  uiuc_warnings_errors(6, uiuc_1DdataFileReader_error);
+      //};
       data = 1;
     }
   return data;

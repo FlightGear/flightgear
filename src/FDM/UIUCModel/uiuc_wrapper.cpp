@@ -27,7 +27,11 @@
 	       02/24/2002   (GD) Added uiuc_network_routine()
 	       03/27/2002   (RD) Changed how forces are calculated when
 	                    body-axis is used
- 
+               12/11/2002   (RD) Divided uiuc_network_routine into
+                            uiuc_network_recv_routine and
+                            uiuc_network_send_routine
+               03/16/2003   (RD) Added trigger lines in recorder area
+
 ----------------------------------------------------------------------
  
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
@@ -87,6 +91,7 @@
 #include "uiuc_aircraft.h"
 #include "uiuc_aircraftdir.h"
 #include "uiuc_coefficients.h"
+#include "uiuc_getwind.h"
 #include "uiuc_engine.h"
 #include "uiuc_gear.h"
 #include "uiuc_aerodeflections.h"
@@ -97,19 +102,21 @@
 //#include "Main/simple_udp.h"
 #include "uiuc_fog.h" //321654
 //#include "uiuc_network.h"
-//#include "uiuc_get_flapper.h"
+#include "uiuc_get_flapper.h"
 
 SG_USING_STD(cout);
 SG_USING_STD(endl);
 
+extern "C" void uiuc_initial_init ();
+extern "C" void uiuc_vel_init ();
 extern "C" void uiuc_init_aeromodel ();
 extern "C" void uiuc_force_moment(double dt);
 extern "C" void uiuc_engine_routine();
+extern "C" void uiuc_wind_routine();
 extern "C" void uiuc_gear_routine();
 extern "C" void uiuc_record_routine(double dt);
-//extern "C" void uiuc_network_routine();
-extern "C" void uiuc_vel_init ();
-extern "C" void uiuc_initial_init ();
+extern "C" void uiuc_network_recv_routine();
+extern "C" void uiuc_network_send_routine();
 
 AIRCRAFT *aircraft_ = new AIRCRAFT;
 AIRCRAFTDIR *aircraftdir_ = new AIRCRAFTDIR;
@@ -192,10 +199,6 @@ void uiuc_force_moment(double dt)
 
   uiuc_aerodeflections(dt);
   uiuc_coefficients(dt);
-  //if (flapper_model)
-  //  {
-  //    uiuc_get_flapper(dt);
-  //  }
 
   /* Calculate the forces */
   if (CX && CZ)
@@ -258,12 +261,13 @@ void uiuc_force_moment(double dt)
     M_m_aero += -polarInertia * engineOmega * R_body;
 
   // ornithopter support
-  //if (flapper_model)
-  //  {
-  //    F_X_aero += F_X_aero_flapper;
-  //    F_Z_aero += F_Z_aero_flapper;
-  //    M_m_aero += flapper_Moment;
-  //  }
+  if (flapper_model)
+    {
+      uiuc_get_flapper(dt);
+      F_X_aero += F_X_aero_flapper;
+      F_Z_aero += F_Z_aero_flapper;
+      M_m_aero += flapper_Moment;
+    }
 
   // fog field update
    Fog = 0;
@@ -304,6 +308,11 @@ void uiuc_force_moment(double dt)
 
 }
 
+void uiuc_wind_routine()
+{
+  uiuc_getwind();
+}
+
 void uiuc_engine_routine()
 {
   uiuc_engine();
@@ -316,13 +325,31 @@ void uiuc_gear_routine ()
 
 void uiuc_record_routine(double dt)
 {
+  if (trigger_last_time_step == 0 && trigger_on == 1) {
+    if (trigger_toggle == 0)
+      trigger_toggle = 1;
+    else
+      trigger_toggle = 0;
+    trigger_num++;
+    if (trigger_num % 2 != 0)
+      trigger_counter++;
+  }
+
   if (Simtime >= recordStartTime)
     uiuc_recorder(dt);
+
+  trigger_last_time_step = trigger_on;
 }
 
-//void uiuc_network_routine()
-//{
-//  if (use_uiuc_network)
-//    uiuc_network(2);  //send data
-//}
+void uiuc_network_recv_routine()
+{
+  //if (use_uiuc_network)
+    //uiuc_network(1);
+}
+
+void uiuc_network_send_routine()
+{
+  //if (use_uiuc_network)
+    //uiuc_network(2);
+}
 //end uiuc_wrapper.cpp

@@ -11,9 +11,9 @@ Prints to screen the follow:
 - Error Code (errorCode)
 
 - Message indicating the problem. This message should be preceded by
-"Warning", "Error" or "Note".  Warnings are non-fatal and the code
-will pause.  Errors are fatal and will stop the code.  Notes are only
-for information.
+  "Warning", "Error" or "Note".  Warnings are non-fatal and the code
+  will pause.  Errors are fatal and will stop the code.  Notes are
+  only for information.
  
 
 ----------------------------------------------------------------------
@@ -74,9 +74,6 @@ for information.
  USA or view http://www.gnu.org/copyleft/gpl.html.
 
 **********************************************************************/
-#include <stdlib.h>
-#include <string.h>
-#include <cstdlib>		// exit
 
 #include "uiuc_warnings_errors.h"
 
@@ -96,7 +93,7 @@ void uiuc_warnings_errors(int errorCode, string line)
       exit(-1);
       break;
     case 2:
-      cerr << "UIUC ERROR 2: Unknown identifier in \"" << line << "\" (check uiuc_maps_*.cpp)" << endl;
+      cerr << "UIUC ERROR 2: Unknown identifier in \"" << line << "\" (check uiuc_map_*.cpp)" << endl;
       exit(-1);
       break;
     case 3:
@@ -109,6 +106,14 @@ void uiuc_warnings_errors(int errorCode, string line)
       break;
     case 5:
       cerr << "UIUC ERROR 5: Must use dyn_on_speed not equal to zero: \"" << line << endl;
+      exit(-1);
+      break;
+    case 6:
+      cerr << "UIUC ERROR 6: Table lookup data exceeds 99 point limit: \"" << endl;
+      exit(-1);
+      break;
+    case 7:
+      cerr << "UIUC ERROR 7: Need to download data file for the ornithopter.  Go to http://www.aae.uiuc.edu/m-selig/apasim/Aircraft-uiuc.html " << endl;
       exit(-1);
       break;
     }

@@ -42,6 +42,7 @@ private:
     double time_step;
     SGPropertyNode *speed_up;
     SGPropertyNode *aero;
+    SGPropertyNode *uiuc_type;
     
 public:
 

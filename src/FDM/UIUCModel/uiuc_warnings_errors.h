@@ -4,6 +4,7 @@
 #include <simgear/compiler.h>
 
 #include <string>
+#include <cstdlib>
 #include STL_IOSTREAM
 
 SG_USING_STD(string);

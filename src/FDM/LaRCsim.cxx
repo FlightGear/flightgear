@@ -20,6 +20,7 @@
 //
 // $Id$
 
+#include <math.h>
 #include <string.h>		// strcmp()
 
 #include <simgear/constants.h>
@@ -33,6 +34,7 @@
 #include <FDM/LaRCsim/ls_cockpit.h>
 #include <FDM/LaRCsim/ls_generic.h>
 #include <FDM/LaRCsim/ls_interface.h>
+#include <FDM/LaRCsim/ls_constants.h>
 #include <FDM/LaRCsimIC.hxx>
 #include <FDM/UIUCModel/uiuc_aircraft.h>
 #include <Main/fg_props.hxx>
@@ -47,6 +49,7 @@ FGLaRCsim::FGLaRCsim( double dt ) {
 
     speed_up = fgGetNode("/sim/speed-up", true);
     aero = fgGetNode("/sim/aero", true);
+    uiuc_type = fgGetNode("/sim/uiuc-type", true);
 
     ls_toplevel_init( 0.0, (char *)(aero->getStringValue()) );
 
@@ -63,8 +66,8 @@ FGLaRCsim::FGLaRCsim( double dt ) {
     }
 
     ls_set_model_dt(dt);
-
-            // Initialize our little engine that hopefully might
+    
+    // Initialize our little engine that hopefully might
     eng.init(dt);
     // dcl - in passing dt to init rather than update I am assuming
     // that the LaRCsim dt is fixed at one value (yes it is 120hz CLO)
@@ -93,9 +96,10 @@ void FGLaRCsim::update( double dt ) {
 
     int multiloop = _calc_multiloop(dt);
 
+    // if flying c172-larcsim, do the following
     if ( !strcmp(aero->getStringValue(), "c172") ) {
-	// set control inputs
-	// cout << "V_calibrated_kts = " << V_calibrated_kts << '\n';
+        // set control inputs
+        // cout << "V_calibrated_kts = " << V_calibrated_kts << '\n';
 	eng.set_IAS( V_calibrated_kts );
 	eng.set_Throttle_Lever_Pos( globals->get_controls()->get_throttle( 0 )
 				    * 100.0 );
@@ -156,9 +160,13 @@ void FGLaRCsim::update( double dt ) {
 			* dt);
 	}
 
-        F_X_engine = eng.get_prop_thrust_lbs();
+	F_X_engine = eng.get_prop_thrust_lbs();
 	// cout << "F_X_engine = " << F_X_engine << '\n';
+	// end c172 if block
+
+	Flap_handle = 30.0 * globals->get_controls()->get_flaps();
     }
+    // done with c172-larcsim if-block
 
     double save_alt = 0.0;
 
@@ -169,18 +177,15 @@ void FGLaRCsim::update( double dt ) {
     }
 
     // copy control positions into the LaRCsim structure
-    Lat_control = globals->get_controls()->get_aileron() /
-    speed_up->getIntValue();
+    Lat_control = globals->get_controls()->get_aileron() / speed_up->getIntValue();
     Long_control = globals->get_controls()->get_elevator();
     Long_trim = globals->get_controls()->get_elevator_trim();
-    Rudder_pedal = globals->get_controls()->get_rudder() /
-        speed_up->getIntValue();
-    Flap_handle = 30.0 * globals->get_controls()->get_flaps();
+    Rudder_pedal = globals->get_controls()->get_rudder() / speed_up->getIntValue();
 
     if ( !strcmp(aero->getStringValue(), "c172") ) {
         Use_External_Engine = 1;
     } else {
-	Use_External_Engine = 0;
+        Use_External_Engine = 0;
     }
 
     Throttle_pct = globals->get_controls()->get_throttle( 0 ) * 1.0;
@@ -213,6 +218,110 @@ void FGLaRCsim::update( double dt ) {
     fgSetDouble("/engines/engine/cranking", 1);
     fgSetDouble("/engines/engine/running", 1);
 
+    // if flying uiuc, set some properties and over-ride some previous ones
+    if ( !strcmp(aero->getStringValue(), "uiuc")) {
+
+      // surface positions
+      fgSetDouble("/surface-positions/rudder-pos-norm",             fgGetDouble("/controls/flight/rudder"));
+      fgSetDouble("/surface-positions/elevator-pos-norm",           fgGetDouble("/controls/flight/elevator")); // FIXME: ignoring trim
+      fgSetDouble("/surface-positions/right-aileron-pos-norm", -1 * fgGetDouble("/controls/flight/aileron")); // FIXME: ignoring trim
+      fgSetDouble("/surface-positions/left-aileron-pos-norm",       fgGetDouble("/controls/flight/aileron")); // FIXME: ignoring trim
+
+      Flap_handle = flap_max * globals->get_controls()->get_flaps();
+
+      // flaps with transition occuring in uiuc_aerodeflections.cpp
+      if (use_flaps) {
+      fgSetDouble("/surface-positions/flight/flap-pos-norm",               flap_pos_pct);
+      }
+
+      // spoilers with transition occurring in uiuc_aerodeflections.cpp
+      if(use_spoilers) {
+	Spoiler_handle = spoiler_max * fgGetDouble("/controls/spoilers");
+      }
+      // gear with transition occurring here in LaRCsim.cxx
+      if (use_gear) {
+	if(fgGetBool("/controls/gear-down")) {
+	  Gear_handle = 1.0;
+	}
+	else {
+	  Gear_handle = 0.;
+	}
+	// commanded gear is 0 or 1
+	gear_cmd_norm = Gear_handle;
+	// amount gear moves per time step [relative to 1]
+	gear_increment_per_timestep = gear_rate * dt; 
+	// determine gear position with respect to gear command
+	if (gear_pos_norm < gear_cmd_norm) {
+	  gear_pos_norm += gear_increment_per_timestep;
+	  if (gear_pos_norm > gear_cmd_norm) 
+	    gear_pos_norm = gear_cmd_norm;
+	} else if (gear_pos_norm > gear_cmd_norm) {
+	  gear_pos_norm -= gear_increment_per_timestep;
+	  if (gear_pos_norm < gear_cmd_norm)
+	    gear_pos_norm = gear_cmd_norm;
+	} 
+	// set the gear position
+	fgSetDouble("/gear/gear[0]/position-norm", gear_pos_norm);
+	fgSetDouble("/gear/gear[1]/position-norm", gear_pos_norm);
+	fgSetDouble("/gear/gear[2]/position-norm", gear_pos_norm);
+      }
+
+
+      // engine functions (sounds and instruments)
+      // drive the rpm gauge
+      fgSetDouble("/engines/engine/rpm", (globals->get_controls()->get_throttle( 0 ) * 100.0 * 25 ));
+      // manifold air pressure
+      fgSetDouble("/engines/engine/mp-osi", (globals->get_controls()->get_throttle( 0 ) * 100.0 ));
+      // make the engine cranking and running sounds when fgfs starts up
+      fgSetDouble("/engines/engine/cranking", 1);
+      fgSetDouble("/engines/engine/running", 1);
+      if ( !strcmp(uiuc_type->getStringValue(), "uiuc-prop")) {
+	// uiuc prop driven airplane, e.g. Wright Flyer
+      }
+      else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-jet")) {
+	// uiuc jet aircraft, e.g. a4d
+	fgSetDouble("/engines/engine/n1", (75 + (globals->get_controls()->get_throttle( 0 ) * 100.0 )/400));
+	fgSetDouble("/engines/engine/prop-thrust", (4000 + F_X_engine/2));
+      }
+      else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-sailplane")) {
+	// uiuc sailplane, e.g. asw20
+	fgSetDouble("/engines/engine/cranking", 0);
+	// set the wind speed for use in setting wind sound level
+	fgSetDouble("/velocities/V_rel_wind_kts", (V_rel_wind * 1.274));
+      }
+      else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-hangglider")) {
+	// uiuc sailplane, e.g. asw20
+	fgSetDouble("/engines/engine/cranking", 0);
+      }
+      else if ( !strcmp(uiuc_type->getStringValue(), "uiuc-ornithopter")) {
+	// mechanical flapping wings
+	// flapping wings (using seahawk for now)
+	fgSetDouble("/canopy/position-norm", 0);
+	fgSetDouble("/wing-phase/position-norm", sin(flapper_phi - 3 * LS_PI / 2));
+	//	fgSetDouble("/wing-phase/position-norm", fgGetDouble("/controls/rudder"));
+	fgSetDouble("/wing-phase/position-deg", flapper_phi*RAD_TO_DEG);
+	fgSetDouble("/wing-phase/position-one", 1);
+	fgSetDouble("/thorax/volume", 0);
+	fgSetDouble("/thorax/rpm",    0);
+	//	fgSetDouble("/wing-phase/position-norm", ((1+cos(flapper_phi - LS_PI/2))/2 -.36 ));
+	//	fgSetDouble("/thorax/volume", ((1+sin(2*(flapper_phi+LS_PI)))/2));
+	//	fgSetDouble("/thorax/rpm",    ((1+sin(2*(flapper_phi+LS_PI)))/2));
+      }
+    }
+
+
+    // add Gamma_horiz_deg to properties, mss 021213
+    if (use_gamma_horiz_on_speed) {
+      if (V_rel_wind > gamma_horiz_on_speed) {
+	fgSetDouble("/orientation/Gamma_horiz_deg", (Gamma_horiz_rad * RAD_TO_DEG));
+      }
+      else {
+	fgSetDouble("/orientation/Gamma_horiz_deg",  fgGetDouble("/orientation/heading-deg"));
+      }
+    }
+    else {
+      fgSetDouble("/orientation/Gamma_horiz_deg",  fgGetDouble("/orientation/heading-deg"));
+    }
     ls_update(multiloop);
 
     // printf("%d FG_Altitude = %.2f\n", i, FG_Altitude * 0.3048);
@@ -433,7 +542,7 @@ bool FGLaRCsim::copy_from_LaRCsim() {
     _set_Accels_Body( U_dot_body, V_dot_body, W_dot_body );
     _set_Accels_CG_Body( A_X_cg, A_Y_cg, A_Z_cg );
     _set_Accels_Pilot_Body( A_X_pilot, A_Y_pilot, A_Z_pilot );
-    // set_Accels_CG_Body_N( N_X_cg, N_Y_cg, N_Z_cg );
+    _set_Accels_CG_Body_N( N_X_cg, N_Y_cg, -N_Z_cg );
     // set_Accels_Pilot_Body_N( N_X_pilot, N_Y_pilot, N_Z_pilot );
     // set_Accels_Omega( P_dot_body, Q_dot_body, R_dot_body );
 

@@ -71,6 +71,8 @@
                             scale factors.
                08/29/2002   (MSS) Added simpleSingleModel
 	       09/18/2002   (MSS) Added downwash options
+               03/03/2003   (RD) Changed flap_cmd_deg to flap_cmd (rad)
+               03/16/2003   (RD) Added trigger variables
 
 ----------------------------------------------------------------------
 
@@ -137,10 +139,10 @@
 
 #include <map>
 #include STL_IOSTREAM
-#include <math.h>
+#include <cmath>
 
 #include "uiuc_parsefile.h"
-//#include "uiuc_flapdata.h"
+#include "uiuc_flapdata.h"
 
 SG_USING_STD(map);
 SG_USING_STD(iostream);
@@ -155,6 +157,7 @@ enum {init_flag = 1000, geometry_flag, controlSurface_flag, controlsMixer_flag,
       Cn_flag, gear_flag, ice_flag, record_flag, misc_flag, fog_flag};
 
 // init ======= Initial values for equation of motion
+// added to uiuc_map_init.cpp
 enum {Dx_pilot_flag = 2000, 
       Dy_pilot_flag,
       Dz_pilot_flag,
@@ -181,6 +184,8 @@ enum {Dx_pilot_flag = 2000,
       dyn_on_speed_zero_flag, 
       use_dyn_on_speed_curve1_flag,
       use_Alpha_dot_on_speed_flag, 
+      use_gamma_horiz_on_speed_flag, 
+      gamma_horiz_on_speed,
       downwashMode_flag,
       downwashCoef_flag,
       Alpha_flag, 
@@ -188,7 +193,7 @@ enum {Dx_pilot_flag = 2000,
       U_body_flag,
       V_body_flag,
       W_body_flag,
-      ignore_unknown_flag,
+      ignore_unknown_keywords_flag,
       trim_case_2_flag,
       use_uiuc_network_flag,
       old_flap_routine_flag,
@@ -196,20 +201,37 @@ enum {Dx_pilot_flag = 2000,
       outside_control_flag};
 
 // geometry === Aircraft-specific geometric quantities
+// added to uiuc_map_geometry.cpp
 enum {bw_flag = 3000, cbar_flag, Sw_flag, ih_flag, bh_flag, ch_flag, Sh_flag};
 
 // controlSurface = Control surface deflections and properties
+// added to uiuc_map_controlSurface.cpp
 enum {de_flag = 4000, da_flag, dr_flag, 
       set_Long_trim_flag, set_Long_trim_deg_flag, zero_Long_trim_flag, 
       elevator_step_flag, elevator_singlet_flag, elevator_doublet_flag,
-      elevator_input_flag, aileron_input_flag, rudder_input_flag,
-      flap_pos_input_flag, pilot_elev_no_flag, pilot_ail_no_flag,
-      pilot_rud_no_flag, flap_max_flag, flap_rate_flag};
+      elevator_input_flag, aileron_input_flag, rudder_input_flag, flap_pos_input_flag, 
+      pilot_elev_no_flag, pilot_ail_no_flag, pilot_rud_no_flag, 
+      flap_max_flag, flap_rate_flag, use_flaps_flag, 
+      spoiler_max_flag, spoiler_rate_flag, use_spoilers_flag, 
+      aileron_sas_KP_flag, 
+      aileron_sas_max_flag, 
+      aileron_stick_gain_flag,
+      elevator_sas_KQ_flag, 
+      elevator_sas_max_flag, 
+      elevator_sas_min_flag, 
+      elevator_stick_gain_flag,
+      rudder_sas_KR_flag, 
+      rudder_sas_max_flag, 
+      rudder_stick_gain_flag,
+      use_elevator_sas_type1_flag, 
+      use_aileron_sas_type1_flag, 
+      use_rudder_sas_type1_flag};
 
 // controlsMixer == Controls mixer
 enum {nomix_flag = 5000};
 
 //mass ======== Aircraft-specific mass properties
+// added to uiuc_map_mass.cpp
 enum {Weight_flag = 6000, 
       Mass_flag, I_xx_flag, I_yy_flag, I_zz_flag, I_xz_flag,
       Mass_appMass_ratio_flag, I_xx_appMass_ratio_flag, 
@@ -218,6 +240,7 @@ enum {Weight_flag = 6000,
       I_yy_appMass_flag,       I_zz_appMass_flag};
 
 // engine ===== Propulsion data
+// added to uiuc_map_engine.cpp
 enum {simpleSingle_flag = 7000, simpleSingleModel_flag,
       c172_flag, cherokee_flag, gyroForce_Q_body_flag, gyroForce_R_body_flag, 
       omega_flag, omegaRPM_flag, polarInertia_flag,
@@ -225,6 +248,7 @@ enum {simpleSingle_flag = 7000, simpleSingleModel_flag,
       eta_q_Cm_q_flag,
       eta_q_Cm_adot_flag,
       eta_q_Cmfade_flag,
+      eta_q_Cm_de_flag,
       eta_q_Cl_beta_flag,
       eta_q_Cl_p_flag,
       eta_q_Cl_r_flag,
@@ -240,45 +264,64 @@ enum {simpleSingle_flag = 7000, simpleSingleModel_flag,
       Throttle_pct_input_flag, forcemom_flag, Xp_input_flag, Zp_input_flag, Mp_input_flag};
 
 // CD ========= Aerodynamic x-force quantities (longitudinal)
-enum {CDo_flag = 8000, CDK_flag, CD_a_flag, CD_adot_flag, CD_q_flag, CD_ih_flag, CD_de_flag, 
+// added to uiuc_map_CD.cpp
+enum {CDo_flag = 8000, CDK_flag, CLK_flag, CD_a_flag, CD_adot_flag, CD_q_flag, CD_ih_flag, 
+      CD_de_flag, CD_dr_flag, CD_da_flag, CD_beta_flag,
+      CD_df_flag,
+      CD_ds_flag,
+      CD_dg_flag,
       CDfa_flag, CDfCL_flag, CDfade_flag, CDfdf_flag, CDfadf_flag, 
       CXo_flag, CXK_flag, CX_a_flag, CX_a2_flag, CX_a3_flag, CX_adot_flag, 
       CX_q_flag, CX_de_flag, CX_dr_flag, CX_df_flag, CX_adf_flag, 
       CXfabetaf_flag, CXfadef_flag, CXfaqf_flag};
 
 // CL ========= Aerodynamic z-force quantities (longitudinal)
+// added to uiuc_map_CL.cpp
 enum {CLo_flag = 9000, CL_a_flag, CL_adot_flag, CL_q_flag, CL_ih_flag, CL_de_flag, 
+      CL_df_flag,
+      CL_ds_flag,
+      CL_dg_flag,
       CLfa_flag, CLfade_flag, CLfdf_flag, CLfadf_flag, 
       CZo_flag, CZ_a_flag, CZ_a2_flag, CZ_a3_flag, CZ_adot_flag, 
       CZ_q_flag, CZ_de_flag, CZ_deb2_flag, CZ_df_flag, CZ_adf_flag, 
       CZfa_flag, CZfabetaf_flag, CZfadef_flag, CZfaqf_flag};
 
 // Cm ========= Aerodynamic m-moment quantities (longitudinal)
+// added to uiuc_map_Cm.cpp
 enum {Cmo_flag = 10000, Cm_a_flag, Cm_a2_flag, Cm_adot_flag, Cm_q_flag, 
-      Cm_ih_flag, Cm_de_flag, Cm_b2_flag, Cm_r_flag, Cm_df_flag, 
+      Cm_ih_flag, Cm_de_flag, Cm_b2_flag, Cm_r_flag,
+      Cm_df_flag,
+      Cm_ds_flag,
+      Cm_dg_flag,
       Cmfa_flag, Cmfade_flag, Cmfdf_flag, Cmfadf_flag, 
       Cmfabetaf_flag, Cmfadef_flag, Cmfaqf_flag};
 
 // CY ========= Aerodynamic y-force quantities (lateral)
+// added to uiuc_map_CY.cpp
 enum {CYo_flag = 11000, CY_beta_flag, CY_p_flag, CY_r_flag, CY_da_flag, 
       CY_dr_flag, CY_dra_flag, CY_bdot_flag, CYfada_flag, CYfbetadr_flag, 
       CYfabetaf_flag, CYfadaf_flag, CYfadrf_flag, CYfapf_flag, CYfarf_flag};
 
 // Cl ========= Aerodynamic l-moment quantities (lateral)
+// added to uiuc_map_Cl.cpp
 enum {Clo_flag = 12000, Cl_beta_flag, Cl_p_flag, Cl_r_flag, Cl_da_flag, 
       Cl_dr_flag, Cl_daa_flag, Clfada_flag, Clfbetadr_flag, Clfabetaf_flag,
       Clfadaf_flag, Clfadrf_flag, Clfapf_flag, Clfarf_flag};
 
 // Cn ========= Aerodynamic n-moment quantities (lateral)
+// added to uiuc_map_Cn.cpp
 enum {Cno_flag = 13000, Cn_beta_flag, Cn_p_flag, Cn_r_flag, Cn_da_flag, 
       Cn_dr_flag, Cn_q_flag, Cn_b3_flag, Cnfada_flag, Cnfbetadr_flag, 
       Cnfabetaf_flag, Cnfadaf_flag, Cnfadrf_flag, Cnfapf_flag, Cnfarf_flag};
 
 // gear ======= Landing gear model quantities
+// added to uiuc_map_gear.cpp
 enum {Dx_gear_flag = 14000, Dy_gear_flag, Dz_gear_flag, cgear_flag,
-      kgear_flag, muGear_flag, strutLength_flag};
+      kgear_flag, muGear_flag, strutLength_flag,
+      gear_max_flag, gear_rate_flag, use_gear_flag};
 
 // ice ======== Ice model quantities
+// added to uiuc_map_ice.cpp
 enum {iceTime_flag = 15000, transientTime_flag, eta_ice_final_flag, 
       beta_probe_wing_flag, beta_probe_tail_flag, 
       kCDo_flag, kCDK_flag, kCD_a_flag, kCD_adot_flag, kCD_q_flag, kCD_de_flag, 
@@ -315,18 +358,21 @@ enum {Simtime_record = 16000, dt_record,
 
       cbar_2U_record, b_2U_record, ch_2U_record,
 
+      // added to uiuc_map_record1.cpp
       Weight_record, Mass_record, I_xx_record, I_yy_record, I_zz_record, I_xz_record, 
       Mass_appMass_ratio_record, I_xx_appMass_ratio_record, 
       I_yy_appMass_ratio_record, I_zz_appMass_ratio_record, 
       Mass_appMass_record,       I_xx_appMass_record,      
       I_yy_appMass_record,       I_zz_appMass_record,
 
+      // added to uiuc_map_record1.cpp
       Dx_pilot_record, Dy_pilot_record, Dz_pilot_record, 
       Dx_cg_record, Dy_cg_record, Dz_cg_record,
       Lat_geocentric_record, Lon_geocentric_record, Radius_to_vehicle_record, 
       Latitude_record, Longitude_record, Altitude_record, 
       Phi_record, Theta_record, Psi_record, 
 
+      // added to uiuc_map_record1.cpp
       V_dot_north_record, V_dot_east_record, V_dot_down_record, 
       U_dot_body_record, V_dot_body_record, W_dot_body_record, 
       A_X_pilot_record, A_Y_pilot_record, A_Z_pilot_record, 
@@ -335,6 +381,7 @@ enum {Simtime_record = 16000, dt_record,
       N_X_cg_record, N_Y_cg_record, N_Z_cg_record, 
       P_dot_body_record, Q_dot_body_record, R_dot_body_record, 
 
+      // added to uiuc_map_record2.cpp
       V_north_record, V_east_record, V_down_record, 
       V_north_rel_ground_record, V_east_rel_ground_record, V_down_rel_ground_record, 
       V_north_airmass_record, V_east_airmass_record, V_down_airmass_record, 
@@ -350,15 +397,18 @@ enum {Simtime_record = 16000, dt_record,
       Phi_dot_record, Theta_dot_record, Psi_dot_record, 
       Latitude_dot_record, Longitude_dot_record, Radius_dot_record, 
 
+      // added to uiuc_map_record2.cpp
       Alpha_record, Alpha_deg_record, Alpha_dot_record, Alpha_dot_deg_record, 
       Beta_record, Beta_deg_record, Beta_dot_record, Beta_dot_deg_record, 
       Gamma_vert_record, Gamma_vert_deg_record, Gamma_horiz_record, Gamma_horiz_deg_record,
 
+      // added to uiuc_map_record3.cpp
       Density_record, V_sound_record, Mach_number_record, 
       Static_pressure_record, Total_pressure_record, Impact_pressure_record, 
       Dynamic_pressure_record, 
       Static_temperature_record, Total_temperature_record, 
 
+      // added to uiuc_map_record3.cpp
       Gravity_record, Sea_level_radius_record, Earth_position_angle_record, 
       Runway_altitude_record, Runway_latitude_record, Runway_longitude_record, 
       Runway_heading_record, Radius_to_rwy_record, 
@@ -367,20 +417,30 @@ enum {Simtime_record = 16000, dt_record,
       D_cg_north_of_rwy_record, D_cg_east_of_rwy_record, D_cg_above_rwy_record, 
       X_cg_rwy_record, Y_cg_rwy_record, H_cg_rwy_record, 
 
+      // added to uiuc_map_record3.cpp
       Throttle_3_record, Throttle_pct_record, 
 
+      // added to uiuc_map_record3.cpp
       Long_control_record, Long_trim_record, Long_trim_deg_record, 
       elevator_record, elevator_deg_record, 
       Lat_control_record, aileron_record, aileron_deg_record, 
       Rudder_pedal_record, rudder_record, rudder_deg_record, 
-      Flap_handle_record, flap_record, flap_deg_record, flap_goal_record,
-      flap_pos_record,
+      Flap_handle_record, flap_record, flap_cmd_record, flap_cmd_deg_record,
+      flap_pos_record, flap_pos_deg_record,
+      Spoiler_handle_record, spoiler_cmd_deg_record, 
+      spoiler_pos_deg_record, spoiler_pos_norm_record, spoiler_pos_record,
 
+      // added to uiuc_map_record4.cpp
       CD_record, CDfaI_record, CDfCLI_record, CDfadeI_record, CDfdfI_record, 
       CDfadfI_record, CX_record, CXfabetafI_record, CXfadefI_record, 
       CXfaqfI_record,
-      CDo_save_record, CDK_save_record, CD_a_save_record, CD_adot_save_record,
-      CD_q_save_record, CD_ih_save_record, CD_de_save_record, CXo_save_record,
+      CDo_save_record, CDK_save_record, CLK_save_record, CD_a_save_record, CD_adot_save_record,
+      CD_q_save_record, CD_ih_save_record, 
+      CD_de_save_record, CD_dr_save_record, CD_da_save_record, CD_beta_save_record, 
+      CD_df_save_record,
+      CD_ds_save_record,
+      CD_dg_save_record,
+      CXo_save_record,
       CXK_save_record, CX_a_save_record, CX_a2_save_record, CX_a3_save_record,
       CX_adot_save_record, CX_q_save_record, CX_de_save_record,
       CX_dr_save_record, CX_df_save_record, CX_adf_save_record,
@@ -388,7 +448,11 @@ enum {Simtime_record = 16000, dt_record,
       CZ_record, CZfaI_record, CZfabetafI_record, CZfadefI_record, 
       CZfaqfI_record, 
       CLo_save_record, CL_a_save_record, CL_adot_save_record, CL_q_save_record,
-      CL_ih_save_record, CL_de_save_record, CZo_save_record, CZ_a_save_record,
+      CL_ih_save_record, CL_de_save_record, 
+      CL_df_save_record,
+      CL_ds_save_record,
+      CL_dg_save_record,
+      CZo_save_record, CZ_a_save_record,
       CZ_a2_save_record, CZ_a3_save_record, CZ_adot_save_record,
       CZ_q_save_record, CZ_de_save_record, CZ_deb2_save_record,
       CZ_df_save_record, CZ_adf_save_record,
@@ -398,6 +462,8 @@ enum {Simtime_record = 16000, dt_record,
       Cm_adot_save_record, Cm_q_save_record, Cm_ih_save_record,
       Cm_de_save_record, Cm_b2_save_record, Cm_r_save_record, 
       Cm_df_save_record,
+      Cm_ds_save_record,
+      Cm_dg_save_record,
       CY_record, CYfadaI_record, CYfbetadrI_record, CYfabetafI_record, 
       CYfadafI_record, CYfadrfI_record, CYfapfI_record, CYfarfI_record, 
       CYo_save_record, CY_beta_save_record, CY_p_save_record,
@@ -413,18 +479,53 @@ enum {Simtime_record = 16000, dt_record,
       Cn_da_save_record, Cn_dr_save_record, Cn_q_save_record,
       Cn_b3_save_record,
       
+      // added to uiuc_map_record5.cpp
       F_X_wind_record, F_Y_wind_record, F_Z_wind_record, 
       F_X_aero_record, F_Y_aero_record, F_Z_aero_record,
       F_X_engine_record, F_Y_engine_record, F_Z_engine_record, 
       F_X_gear_record, F_Y_gear_record, F_Z_gear_record, 
       F_X_record, F_Y_record, F_Z_record, 
       F_north_record, F_east_record, F_down_record, 
-
+      
+      // added to uiuc_map_record5.cpp
       M_l_aero_record, M_m_aero_record, M_n_aero_record, 
       M_l_engine_record, M_m_engine_record, M_n_engine_record, 
       M_l_gear_record, M_m_gear_record, M_n_gear_record, 
       M_l_rp_record, M_m_rp_record, M_n_rp_record,
 
+      // added to uiuc_map_record5.cpp
+      flapper_freq_record, flapper_phi_record,
+      flapper_phi_deg_record, flapper_Lift_record, flapper_Thrust_record,
+      flapper_Inertia_record, flapper_Moment_record,
+
+      // added to uiuc_map_record5.cpp
+      debug1_record, 
+      debug2_record, 
+      debug3_record,
+      V_down_fpm_record,
+      eta_q_record,
+      rpm_record,
+      elevator_sas_deg_record,
+      aileron_sas_deg_record,
+      rudder_sas_deg_record,
+      w_induced_record,
+      downwashAngle_deg_record,
+      alphaTail_deg_record,
+      gammaWing_record,
+      LD_record,
+      gload_record,
+      gyroMomentQ_record,
+      gyroMomentR_record,
+
+      // added to uiuc_map_record5.cpp
+      Gear_handle_record, gear_cmd_norm_record, gear_pos_norm_record,
+
+      // added to uiuc_map_record5.cpp
+      debug4_record, 
+      debug5_record, 
+      debug6_record,
+
+      // added to uiuc_map_record6.cpp
       CL_clean_record, CL_iced_record,
       CD_clean_record, CD_iced_record,
       Cm_clean_record, Cm_iced_record,
@@ -452,10 +553,7 @@ enum {Simtime_record = 16000, dt_record,
       delta_CL_record, delta_CD_record, delta_Cm_record, delta_Cl_record,
       delta_Cn_record,
 
-      flapper_freq_record, flapper_phi_record,
-      flapper_phi_deg_record, flapper_Lift_record, flapper_Thrust_record,
-      flapper_Inertia_record, flapper_Moment_record,
-
+      // added to uiuc_map_record6.cpp
       boot_cycle_tail_record, boot_cycle_wing_left_record,
       boot_cycle_wing_right_record, autoIPS_tail_record, 
       autoIPS_wing_left_record, autoIPS_wing_right_record,
@@ -464,11 +562,13 @@ enum {Simtime_record = 16000, dt_record,
       eps_flap_max_record, eps_airspeed_max_record, eps_airspeed_min_record,
       tactilefadefI_record,
 
-      ap_Theta_ref_deg_record, ap_pah_on_record,
+      // added to uiuc_map_record6.cpp
+      ap_Theta_ref_deg_record, ap_pah_on_record, trigger_on_record,
+      trigger_num_record, trigger_toggle_record, trigger_counter_record};
 
-      debug1_record, debug2_record, debug3_record};
 
 // misc ======= Miscellaneous inputs
+// added to uiuc_map_misc.cpp
 enum {simpleHingeMomentCoef_flag = 17000, dfTimefdf_flag, flapper_flag,
       flapper_phi_init_flag};
 
@@ -567,6 +667,12 @@ struct AIRCRAFT
 #define use_Alpha_dot_on_speed  aircraft_->use_Alpha_dot_on_speed
   double Alpha_dot_on_speed;
 #define Alpha_dot_on_speed      aircraft_->Alpha_dot_on_speed
+
+  bool use_gamma_horiz_on_speed;
+#define use_gamma_horiz_on_speed aircraft_->use_gamma_horiz_on_speed
+  double gamma_horiz_on_speed;
+#define gamma_horiz_on_speed     aircraft_->gamma_horiz_on_speed
+
 
   bool b_downwashMode;
 #define b_downwashMode          aircraft_->b_downwashMode
@@ -767,6 +873,15 @@ struct AIRCRAFT
   double flap_max, flap_rate;
 #define flap_max                 aircraft_->flap_max
 #define flap_rate                aircraft_->flap_rate
+  bool use_flaps;
+#define use_flaps                aircraft_->use_flaps
+
+  double spoiler_max, spoiler_rate;
+#define spoiler_max                 aircraft_->spoiler_max
+#define spoiler_rate                aircraft_->spoiler_rate
+  bool use_spoilers;
+#define use_spoilers                aircraft_->use_spoilers
+
 
   bool flap_pos_input;
   string flap_pos_input_file;
@@ -780,6 +895,61 @@ struct AIRCRAFT
 #define flap_pos_input_dfArray     aircraft_->flap_pos_input_dfArray
 #define flap_pos_input_ntime       aircraft_->flap_pos_input_ntime
 #define flap_pos_input_startTime   aircraft_->flap_pos_input_startTime
+
+
+  // SAS system: pitch, roll and yaw damping  MSS
+  double elevator_sas_KQ;
+  double elevator_sas_max;
+  double elevator_sas_min;
+  double elevator_stick_gain;
+  double aileron_sas_KP;
+  double aileron_sas_max;
+  double aileron_stick_gain;
+  double rudder_sas_KR;
+  double rudder_sas_max;
+  double rudder_stick_gain;
+
+
+
+#define elevator_sas_KQ             aircraft_->elevator_sas_KQ
+#define elevator_sas_max            aircraft_->elevator_sas_max
+#define elevator_sas_min            aircraft_->elevator_sas_min
+#define elevator_stick_gain         aircraft_->elevator_stick_gain
+#define aileron_sas_KP              aircraft_->aileron_sas_KP
+#define aileron_sas_max             aircraft_->aileron_sas_max
+#define aileron_stick_gain          aircraft_->aileron_stick_gain
+#define rudder_sas_KR               aircraft_->rudder_sas_KR
+#define rudder_sas_max              aircraft_->rudder_sas_max
+#define rudder_stick_gain           aircraft_->rudder_stick_gain
+
+  double elevator_sas;
+#define elevator_sas                aircraft_->elevator_sas
+  double aileron_sas;
+#define aileron_sas                 aircraft_->aileron_sas
+  double rudder_sas;
+#define rudder_sas                  aircraft_->rudder_sas
+
+  bool use_elevator_sas_type1;
+#define use_elevator_sas_type1      aircraft_->use_elevator_sas_type1
+  bool use_elevator_sas_max;
+#define use_elevator_sas_max        aircraft_->use_elevator_sas_max
+  bool use_elevator_sas_min;
+#define use_elevator_sas_min        aircraft_->use_elevator_sas_min
+  bool use_elevator_stick_gain;
+#define use_elevator_stick_gain     aircraft_->use_elevator_stick_gain
+  bool use_aileron_sas_type1;
+#define use_aileron_sas_type1       aircraft_->use_aileron_sas_type1
+  bool use_aileron_sas_max;
+#define use_aileron_sas_max         aircraft_->use_aileron_sas_max
+  bool use_aileron_stick_gain;
+#define use_aileron_stick_gain      aircraft_->use_aileron_stick_gain
+  bool use_rudder_sas_type1;
+#define use_rudder_sas_type1        aircraft_->use_rudder_sas_type1
+  bool use_rudder_sas_max;
+#define use_rudder_sas_max          aircraft_->use_rudder_sas_max
+  bool use_rudder_stick_gain;
+#define use_rudder_stick_gain       aircraft_->use_rudder_stick_gain
+
 
 
   /* Variables (token2) ===========================================*/
@@ -872,6 +1042,7 @@ struct AIRCRAFT
   double eta_q_Cm_q, eta_q_Cm_q_fac;
   double eta_q_Cm_adot, eta_q_Cm_adot_fac;
   double eta_q_Cmfade, eta_q_Cmfade_fac;
+  double eta_q_Cm_de, eta_q_Cm_de_fac;
   double eta_q_Cl_beta, eta_q_Cl_beta_fac;
   double eta_q_Cl_p, eta_q_Cl_p_fac;
   double eta_q_Cl_r, eta_q_Cl_r_fac;
@@ -893,6 +1064,8 @@ struct AIRCRAFT
 #define eta_q_Cm_adot_fac    aircraft_->eta_q_Cm_adot_fac
 #define eta_q_Cmfade         aircraft_->eta_q_Cmfade
 #define eta_q_Cmfade_fac     aircraft_->eta_q_Cmfade_fac
+#define eta_q_Cm_de          aircraft_->eta_q_Cm_de
+#define eta_q_Cm_de_fac      aircraft_->eta_q_Cm_de_fac
 #define eta_q_Cl_beta        aircraft_->eta_q_Cl_beta
 #define eta_q_Cl_beta_fac    aircraft_->eta_q_Cl_beta_fac
 #define eta_q_Cl_p           aircraft_->eta_q_Cl_p
@@ -963,14 +1136,24 @@ struct AIRCRAFT
   map <string,int> CD_map;
 #define      CD_map              aircraft_->CD_map            
   
-  double CDo, CDK, CD_a, CD_adot, CD_q, CD_ih, CD_de;
+  double CDo, CDK, CLK, CD_a, CD_adot, CD_q, CD_ih, CD_de, CD_dr, CD_da, CD_beta;
+  double CD_df, CD_ds, CD_dg;
 #define CDo      aircraft_->CDo
 #define CDK      aircraft_->CDK
+#define CLK      aircraft_->CLK
 #define CD_a     aircraft_->CD_a
 #define CD_adot  aircraft_->CD_adot
 #define CD_q     aircraft_->CD_q
 #define CD_ih    aircraft_->CD_ih
 #define CD_de    aircraft_->CD_de
+#define CD_dr    aircraft_->CD_dr
+#define CD_da    aircraft_->CD_da
+#define CD_beta  aircraft_->CD_beta
+#define CD_df    aircraft_->CD_df
+#define CD_ds    aircraft_->CD_ds
+#define CD_dg    aircraft_->CD_dg
+  bool b_CLK;
+#define b_CLK      aircraft_->b_CLK
   string CDfa;
   double CDfa_aArray[100];
   double CDfa_CDArray[100];
@@ -1114,17 +1297,26 @@ struct AIRCRAFT
 #define CXfaqf_nq_nice       aircraft_->CXfaqf_nq_nice
 #define CXfaqf_qArray_nice   aircraft_->CXfaqf_qArray_nice
 #define CXfaqf_aArray_nice   aircraft_->CXfaqf_aArray_nice
-  double CDo_save, CDK_save, CD_a_save, CD_adot_save, CD_q_save, CD_ih_save;
-  double CD_de_save, CXo_save, CXK_save, CX_a_save, CX_a2_save, CX_a3_save;
+  double CDo_save, CDK_save, CLK_save, CD_a_save, CD_adot_save, CD_q_save, CD_ih_save;
+  double CD_de_save, CD_dr_save, CD_da_save, CD_beta_save;
+  double CD_df_save, CD_ds_save, CD_dg_save;
+  double CXo_save, CXK_save, CX_a_save, CX_a2_save, CX_a3_save;
   double CX_adot_save, CX_q_save, CX_de_save;
   double CX_dr_save, CX_df_save, CX_adf_save;
 #define CDo_save             aircraft_->CDo_save  
 #define CDK_save             aircraft_->CDK_save  
+#define CLK_save             aircraft_->CLK_save  
 #define CD_a_save            aircraft_->CD_a_save  
 #define CD_adot_save         aircraft_->CD_adot_save  
 #define CD_q_save            aircraft_->CD_q_save  
 #define CD_ih_save           aircraft_->CD_ih_save  
 #define CD_de_save           aircraft_->CD_de_save  
+#define CD_dr_save           aircraft_->CD_dr_save  
+#define CD_da_save           aircraft_->CD_da_save  
+#define CD_beta_save         aircraft_->CD_beta_save  
+#define CD_df_save           aircraft_->CD_df_save  
+#define CD_ds_save           aircraft_->CD_ds_save  
+#define CD_dg_save           aircraft_->CD_dg_save  
 #define CXo_save             aircraft_->CXo_save  
 #define CXK_save             aircraft_->CXK_save  
 #define CX_a_save            aircraft_->CX_a_save  
@@ -1145,12 +1337,16 @@ struct AIRCRAFT
 #define      CL_map              aircraft_->CL_map            
   
   double CLo, CL_a, CL_adot, CL_q, CL_ih, CL_de;
+  double CL_df, CL_ds, CL_dg;
 #define CLo      aircraft_->CLo
 #define CL_a     aircraft_->CL_a
 #define CL_adot  aircraft_->CL_adot
 #define CL_q     aircraft_->CL_q
 #define CL_ih    aircraft_->CL_ih
 #define CL_de    aircraft_->CL_de
+#define CL_df    aircraft_->CL_df
+#define CL_ds    aircraft_->CL_ds
+#define CL_dg    aircraft_->CL_dg
   string CLfa;
   double CLfa_aArray[100];
   double CLfa_CLArray[100];
@@ -1295,6 +1491,7 @@ struct AIRCRAFT
 #define CZfaqf_aArray_nice    aircraft_->CZfaqf_aArray_nice
   double CLo_save, CL_a_save, CL_adot_save; 
   double CL_q_save, CL_ih_save, CL_de_save;
+  double CL_df_save, CL_ds_save, CL_dg_save;
   double CZo_save, CZ_a_save, CZ_a2_save;
   double CZ_a3_save, CZ_adot_save, CZ_q_save;
   double CZ_de_save, CZ_deb2_save, CZ_df_save;
@@ -1305,6 +1502,9 @@ struct AIRCRAFT
 #define CL_q_save             aircraft_->CL_q_save
 #define CL_ih_save            aircraft_->CL_ih_save
 #define CL_de_save            aircraft_->CL_de_save
+#define CL_df_save            aircraft_->CL_df_save
+#define CL_ds_save            aircraft_->CL_ds_save
+#define CL_dg_save            aircraft_->CL_dg_save
 #define CZo_save              aircraft_->CZo_save
 #define CZ_a_save             aircraft_->CZ_a_save
 #define CZ_a2_save            aircraft_->CZ_a2_save
@@ -1324,7 +1524,8 @@ struct AIRCRAFT
 #define      Cm_map              aircraft_->Cm_map            
   
   double Cmo, Cm_a, Cm_a2, Cm_adot, Cm_q;
-  double Cm_ih, Cm_de, Cm_b2, Cm_r, Cm_df;
+  double Cm_ih, Cm_de, Cm_b2, Cm_r;
+  double Cm_df, Cm_ds, Cm_dg;
 #define Cmo      aircraft_->Cmo
 #define Cm_a     aircraft_->Cm_a
 #define Cm_a2    aircraft_->Cm_a2
@@ -1335,6 +1536,8 @@ struct AIRCRAFT
 #define Cm_b2    aircraft_->Cm_b2
 #define Cm_r     aircraft_->Cm_r
 #define Cm_df    aircraft_->Cm_df
+#define Cm_ds    aircraft_->Cm_ds
+#define Cm_dg    aircraft_->Cm_dg
   string Cmfa;
   double Cmfa_aArray[100];
   double Cmfa_CmArray[100];
@@ -1462,7 +1665,8 @@ struct AIRCRAFT
 #define Cmfaqf_qArray_nice   aircraft_->Cmfaqf_qArray_nice
 #define Cmfaqf_aArray_nice   aircraft_->Cmfaqf_aArray_nice
   double Cmo_save, Cm_a_save, Cm_a2_save, Cm_adot_save, Cm_q_save, Cm_ih_save;
-  double Cm_de_save, Cm_b2_save, Cm_r_save, Cm_df_save;
+  double Cm_de_save, Cm_b2_save, Cm_r_save;
+  double Cm_df_save, Cm_ds_save, Cm_dg_save;
 #define Cmo_save             aircraft_->Cmo_save
 #define Cm_a_save            aircraft_->Cm_a_save
 #define Cm_a2_save           aircraft_->Cm_a2_save
@@ -1473,6 +1677,8 @@ struct AIRCRAFT
 #define Cm_b2_save           aircraft_->Cm_b2_save
 #define Cm_r_save            aircraft_->Cm_r_save
 #define Cm_df_save           aircraft_->Cm_df_save
+#define Cm_ds_save           aircraft_->Cm_ds_save
+#define Cm_dg_save           aircraft_->Cm_dg_save
   
 
   /* Variables (token2) ===========================================*/
@@ -2017,6 +2223,11 @@ struct AIRCRAFT
 #define kgear aircraft_->kgear
 #define muGear aircraft_->muGear
 #define strutLength aircraft_->strutLength
+  double gear_max, gear_rate;
+#define gear_max                 aircraft_->gear_max
+#define gear_rate                aircraft_->gear_rate
+  bool use_gear;
+#define use_gear                 aircraft_->use_gear
   
 
   /* Variables (token2) ===========================================*/
@@ -2500,7 +2711,7 @@ struct AIRCRAFT
   
   AIRCRAFT()
   {
-    fog_field = false;
+    fog_field;
     fog_segments = 0;
     fog_point_index = -1;
     fog_time = NULL;
@@ -2545,8 +2756,8 @@ struct AIRCRAFT
 #define elevator_deg    aircraft_->elevator_deg
 #define aileron_deg     aircraft_->aileron_deg
 #define rudder_deg      aircraft_->rudder_deg
-  double flap_deg;
-#define flap_deg        aircraft_->flap_deg
+  //  double flap_pos_deg;
+  //#define flap_pos_deg        aircraft_->flap_pos_deg
 
   /***** Forces ******/
   double F_X_wind, F_Y_wind, F_Z_wind;
@@ -2617,22 +2828,22 @@ struct AIRCRAFT
 #define dfTimefdf_TimeArray    aircraft_->dfTimefdf_TimeArray
 #define dfTimefdf_ndf          aircraft_->dfTimefdf_ndf
 
-//  FlapData *flapper_data;
-//#define flapper_data           aircraft_->flapper_data
-//  bool flapper_model;
-//#define flapper_model          aircraft_->flapper_model
-//  double flapper_phi_init;
-//#define flapper_phi_init       aircraft_->flapper_phi_init
-//  double flapper_freq, flapper_cycle_pct, flapper_phi;
-//  double flapper_Lift, flapper_Thrust, flapper_Inertia;
-//  double flapper_Moment;
-//#define flapper_freq           aircraft_->flapper_freq
-//#define flapper_cycle_pct      aircraft_->flapper_cycle_pct
-//#define flapper_phi            aircraft_->flapper_phi
-//#define flapper_Lift           aircraft_->flapper_Lift
-//#define flapper_Thrust         aircraft_->flapper_Thrust
-//#define flapper_Inertia        aircraft_->flapper_Inertia
-//#define flapper_Moment         aircraft_->flapper_Moment
+  FlapData *flapper_data;
+#define flapper_data           aircraft_->flapper_data
+  bool flapper_model;
+#define flapper_model          aircraft_->flapper_model
+  double flapper_phi_init;
+#define flapper_phi_init       aircraft_->flapper_phi_init
+  double flapper_freq, flapper_cycle_pct, flapper_phi;
+  double flapper_Lift, flapper_Thrust, flapper_Inertia;
+  double flapper_Moment;
+#define flapper_freq           aircraft_->flapper_freq
+#define flapper_cycle_pct      aircraft_->flapper_cycle_pct
+#define flapper_phi            aircraft_->flapper_phi
+#define flapper_Lift           aircraft_->flapper_Lift
+#define flapper_Thrust         aircraft_->flapper_Thrust
+#define flapper_Inertia        aircraft_->flapper_Inertia
+#define flapper_Moment         aircraft_->flapper_Moment
   double F_X_aero_flapper, F_Z_aero_flapper;
 #define F_X_aero_flapper       aircraft_->F_X_aero_flapper
 #define F_Z_aero_flapper       aircraft_->F_Z_aero_flapper
@@ -2656,11 +2867,29 @@ struct AIRCRAFT
 #define dfArray   aircraft_->dfArray
 #define TimeArray aircraft_->TimeArray
 
-  double flap_percent, flap_goal, flap_moving_rate, flap_pos;
-#define flap_percent     aircraft_->flap_percent
-#define flap_goal        aircraft_->flap_goal
-#define flap_moving_rate aircraft_->flap_moving_rate
-#define flap_pos         aircraft_->flap_pos
+  double flap_percent, flap_increment_per_timestep, flap_cmd, flap_pos, flap_pos_pct;
+#define flap_percent                  aircraft_->flap_percent
+#define flap_increment_per_timestep   aircraft_->flap_increment_per_timestep
+#define flap_cmd                      aircraft_->flap_cmd
+  //#define flap_cmd_deg                  aircraft_->flap_cmd_deg
+#define flap_pos                      aircraft_->flap_pos
+  //#define flap_pos_deg                  aircraft_->flap_pos_deg
+#define flap_pos_pct                  aircraft_->flap_pos_pct
+
+  double Spoiler_handle, spoiler_increment_per_timestep, spoiler_cmd_deg;
+  double spoiler_pos_norm, spoiler_pos_deg, spoiler_pos;
+#define Spoiler_handle                 aircraft_->Spoiler_handle
+#define spoiler_increment_per_timestep aircraft_->spoiler_increment_per_timestep
+#define spoiler_cmd_deg                aircraft_->spoiler_cmd_deg
+#define spoiler_pos_deg                aircraft_->spoiler_pos_deg
+#define spoiler_pos_norm               aircraft_->spoiler_pos_norm
+#define spoiler_pos                    aircraft_->spoiler_pos
+
+  double Gear_handle, gear_increment_per_timestep, gear_cmd_norm, gear_pos_norm;
+#define Gear_handle                   aircraft_->Gear_handle
+#define gear_increment_per_timestep   aircraft_->gear_increment_per_timestep
+#define gear_cmd_norm                 aircraft_->gear_cmd_norm
+#define gear_pos_norm                 aircraft_->gear_pos_norm
 
   double delta_CL, delta_CD, delta_Cm, delta_Ch, delta_Cl, delta_Cn;
 #define delta_CL         aircraft_->delta_CL
@@ -2729,14 +2958,20 @@ struct AIRCRAFT
   
 #define fout aircraft_->fout
   
-  bool dont_ignore;
-#define dont_ignore            aircraft_->dont_ignore
+  bool ignore_unknown_keywords;
+#define ignore_unknown_keywords           aircraft_->ignore_unknown_keywords
   
   int ap_pah_on;
 #define ap_pah_on              aircraft_->ap_pah_on
   double ap_Theta_ref_deg, ap_Theta_ref_rad;
 #define ap_Theta_ref_deg       aircraft_->ap_Theta_ref_deg
 #define ap_Theta_ref_rad       aircraft_->ap_Theta_ref_rad
+
+  int ap_alh_on;
+#define ap_alh_on              aircraft_->ap_alh_on
+  double ap_alt_ref_ft, ap_alt_ref_m;
+#define ap_alt_ref_ft          aircraft_->ap_alt_ref_ft
+#define ap_alt_ref_m           aircraft_->ap_alt_ref_m
 
   int pitch_trim_up, pitch_trim_down;
 #define pitch_trim_up          aircraft_->pitch_trim_up
@@ -2750,6 +2985,14 @@ struct AIRCRAFT
 #define ice_left               aircraft_->ice_left
 #define ice_right              aircraft_->ice_right
 
+  // Variables for the trigger command
+  int trigger_on, trigger_last_time_step, trigger_num;
+  int trigger_toggle, trigger_counter;
+#define trigger_on             aircraft_->trigger_on
+#define trigger_last_time_step aircraft_->trigger_last_time_step
+#define trigger_num            aircraft_->trigger_num
+#define trigger_toggle         aircraft_->trigger_toggle
+#define trigger_counter        aircraft_->trigger_counter
 };
 
 extern AIRCRAFT *aircraft_;    // usually defined in the first program that includes uiuc_aircraft.h

@@ -91,11 +91,18 @@ void uiuc_map_record4()
   record_map["CXfaqfI"]           =      CXfaqfI_record             ;
   record_map["CDo_save"]          =      CDo_save_record            ;
   record_map["CDK_save"]          =      CDK_save_record            ;
+  record_map["CLK_save"]          =      CLK_save_record            ;
   record_map["CD_a_save"]         =      CD_a_save_record           ;
   record_map["CD_adot_save"]      =      CD_adot_save_record        ;
   record_map["CD_q_save"]         =      CD_q_save_record           ;
   record_map["CD_ih_save"]        =      CD_ih_save_record          ;
   record_map["CD_de_save"]        =      CD_de_save_record          ;
+  record_map["CD_dr_save"]        =      CD_dr_save_record          ;
+  record_map["CD_da_save"]        =      CD_da_save_record          ;
+  record_map["CD_beta_save"]      =      CD_beta_save_record        ;
+  record_map["CD_df_save"]        =      CD_df_save_record          ;
+  record_map["CD_ds_save"]        =      CD_ds_save_record          ;
+  record_map["CD_dg_save"]        =      CD_dg_save_record          ;
   record_map["CXo_save"]          =      CXo_save_record            ;
   record_map["CXK_save"]          =      CXK_save_record            ;
   record_map["CX_a_save"]         =      CX_a_save_record           ;
@@ -123,6 +130,9 @@ void uiuc_map_record4()
   record_map["CL_q_save"]         =      CL_q_save_record           ;
   record_map["CL_ih_save"]        =      CL_ih_save_record          ;
   record_map["CL_de_save"]        =      CL_de_save_record          ;
+  record_map["CL_df_save"]        =      CL_df_save_record          ;
+  record_map["CL_ds_save"]        =      CL_ds_save_record          ;
+  record_map["CL_dg_save"]        =      CL_dg_save_record          ;
   record_map["CZo_save"]          =      CZo_save_record            ;
   record_map["CZ_a_save"]         =      CZ_a_save_record           ;
   record_map["CZ_a2_save"]        =      CZ_a2_save_record          ;
@@ -151,6 +161,8 @@ void uiuc_map_record4()
   record_map["Cm_b2_save"]        =      Cm_b2_save_record          ;
   record_map["Cm_r_save"]         =      Cm_r_save_record           ;
   record_map["Cm_df_save"]        =      Cm_df_save_record          ;
+  record_map["Cm_ds_save"]        =      Cm_ds_save_record          ;
+  record_map["Cm_dg_save"]        =      Cm_dg_save_record          ;
   record_map["CY"]                =      CY_record                  ;
   record_map["CYfadaI"]           =      CYfadaI_record             ;
   record_map["CYfbetadrI"]        =      CYfbetadrI_record          ;

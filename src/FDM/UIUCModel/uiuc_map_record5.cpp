@@ -73,7 +73,7 @@ void uiuc_map_record5()
   record_map["F_X_wind"]          =      F_X_wind_record            ;
   record_map["F_Y_wind"]          =      F_Y_wind_record            ;
   record_map["F_Z_wind"]          =      F_Z_wind_record            ;
-
+  
   // aero forces in body axis
   record_map["F_X_aero"]          =      F_X_aero_record            ;
   record_map["F_Y_aero"]          =      F_Y_aero_record            ;
@@ -120,21 +120,47 @@ void uiuc_map_record5()
   record_map["M_l_rp"]            =      M_l_rp_record              ;
   record_map["M_m_rp"]            =      M_m_rp_record              ;
   record_map["M_n_rp"]            =      M_n_rp_record              ;
-
+  
   /***********************Flapper Data********************/
- record_map["flapper_freq"]       =      flapper_freq_record        ;
- record_map["flapper_phi"]        =      flapper_phi_record         ;
- record_map["flapper_phi_deg"]    =      flapper_phi_deg_record     ;
- record_map["flapper_Lift"]       =      flapper_Lift_record        ;
- record_map["flapper_Thrust"]     =      flapper_Thrust_record      ;
- record_map["flapper_Inertia"]    =      flapper_Inertia_record     ;
- record_map["flapper_Moment"]     =      flapper_Moment_record      ;
+  record_map["flapper_freq"]       =      flapper_freq_record        ;
+  record_map["flapper_phi"]        =      flapper_phi_record         ;
+  record_map["flapper_phi_deg"]    =      flapper_phi_deg_record     ;
+  record_map["flapper_Lift"]       =      flapper_Lift_record        ;
+  record_map["flapper_Thrust"]     =      flapper_Thrust_record      ;
+  record_map["flapper_Inertia"]    =      flapper_Inertia_record     ;
+  record_map["flapper_Moment"]     =      flapper_Moment_record      ;
+  
+  
+  /******************** MSS debug **********************************/
+  record_map["debug1"]             =       debug1_record              ;
+  record_map["debug2"]             =       debug2_record              ;
+  record_map["debug3"]             =       debug3_record              ;
+  /******************** RD debug ***********************************/
+  record_map["debug4"]             =       debug4_record              ;
+  record_map["debug5"]             =       debug5_record              ;
+  record_map["debug6"]             =       debug6_record              ;
 
-  /**************************Debug************************/
- record_map["debug1"]             =      debug1_record              ;
- record_map["debug2"]             =      debug2_record              ;
- record_map["debug3"]             =      debug3_record              ;
+  /******************** Misc data **********************************/
+  record_map["V_down_fpm"]         =       V_down_fpm_record          ;
+  record_map["eta_q"]              =       eta_q_record               ;
+  record_map["rpm"]                =       rpm_record                 ;
+  record_map["elevator_sas_deg"]   =       elevator_sas_deg_record    ;
+  record_map["aileron_sas_deg"]    =       aileron_sas_deg_record     ;
+  record_map["rudder_sas_deg"]     =       rudder_sas_deg_record      ;
+  record_map["w_induced"]          =       w_induced_record           ;
+  record_map["downwashAngle_deg"]  =       downwashAngle_deg_record   ;
+  record_map["alphaTail_deg"]      =       alphaTail_deg_record       ;
+  record_map["gammaWing"]          =       gammaWing_record           ;
+  record_map["LD"]                 =       LD_record                  ;
+  record_map["gload"]              =       gload_record               ;
+  record_map["gyroMomentQ"]        =       gyroMomentQ_record         ;
+  record_map["gyroMomentR"]        =       gyroMomentR_record         ;
 
+  /******************** Gear ************************************/
+  record_map["Gear_handle"]       =      Gear_handle_record         ;
+  record_map["gear_cmd_norm"]     =      gear_cmd_norm_record       ;
+  record_map["gear_pos_norm"]     =      gear_pos_norm_record       ;
+  
 }
 
 // end uiuc_map_record5.cpp

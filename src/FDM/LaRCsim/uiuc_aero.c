@@ -32,6 +32,8 @@
   6/18/01   Added call out to UIUC record routine (RD)
   11/12/01  Changed from uiuc_init_aeromodel() to uiuc_initial_init(). (RD)
   2/24/02   Added uiuc_network_routine() (GD)
+  12/11/02  Divided uiuc_network_routine into uiuc_network_recv_routine and
+            uiuc_network_send_routine (RD)
 
 ----------------------------------------------------------------------------
 
@@ -60,13 +62,7 @@
 #include <FDM/UIUCModel/uiuc_wrapper.h>
 
 
-void uiuc_aero_2_wrapper( SCALAR dt, int Initialize ) 
-{
-    uiuc_force_moment(dt);
-}
-
-
-void uiuc_engine_2_wrapper( SCALAR dt, int Initialize ) 
+void uiuc_init_2_wrapper()
 {
     static int init = 0;
 
@@ -76,6 +72,21 @@ void uiuc_engine_2_wrapper( SCALAR dt, int Initialize )
       uiuc_initial_init();
       //      uiuc_init_aeromodel();
     }
+}
+
+void uiuc_aero_2_wrapper( SCALAR dt, int Initialize ) 
+{
+    uiuc_force_moment(dt);
+}
+
+
+void uiuc_wind_2_wrapper( SCALAR dt, int Initialize ) 
+{
+    uiuc_wind_routine(dt);
+}
+
+void uiuc_engine_2_wrapper( SCALAR dt, int Initialize ) 
+{
 
     uiuc_engine_routine();
 }
@@ -91,7 +102,12 @@ void uiuc_record_2_wrapper(SCALAR dt)
   uiuc_record_routine(dt);
 }
 
-//void uiuc_network_2_wrapper()
-//{
-//  uiuc_network_routine();
-//}
+void uiuc_network_recv_2_wrapper()
+{
+    uiuc_network_recv_routine();
+}
+
+void uiuc_network_send_2_wrapper()
+{
+    uiuc_network_send_routine();
+}

@@ -33,15 +33,17 @@
                11/12/2001   (RD) Added new variables needed for the non-
 	                    linear Twin Otter model at zero flaps
 			    (CxfxxfI).  Removed zero flap variables.
-			    Added flap_pos and flap_goal.
+			    Added flap_pos and flap_cmd_deg.
 	       02/13/2002   (RD) Added variables so linear aero model
 	                    values can be recorded
+               03/03/2003   (RD) Added flap_cmd_record
+               03/16/2003   (RD) Added trigger record variables
 
 ----------------------------------------------------------------------
 
- AUTHOR(S):    Jeff Scott         <jscott@mail.com>
+ AUTHOR(S):    Jeff Scott         http://www.jeffscott.net/
                Robert Deters      <rdeters@uiuc.edu>
-
+	       Michael Selig      <m-selig@uiuc.edu>
 ----------------------------------------------------------------------
 
  VARIABLES:
@@ -81,6 +83,11 @@
  USA or view http://www.gnu.org/copyleft/gpl.html.
 
 **********************************************************************/
+
+#include <simgear/compiler.h>
+#include <simgear/misc/sg_path.hxx>
+#include <Aircraft/aircraft.hxx>
+#include <Main/fg_props.hxx>
 
 #include "uiuc_recorder.h"
 
@@ -777,7 +784,7 @@ void uiuc_recorder( double dt )
                 break;
               }
 
-              /******************** Control Inputs *******************/
+              /************************ Controls ***********************/
             case Long_control_record:
               {
                 fout << Long_control << " ";
@@ -843,19 +850,49 @@ void uiuc_recorder( double dt )
                 fout << flap << " ";
                 break;
               }
-            case flap_deg_record:
+            case flap_cmd_record:
               {
-                fout << flap * RAD_TO_DEG << " ";
+                fout << flap_cmd << " ";
                 break;
               }
-            case flap_goal_record:
+            case flap_cmd_deg_record:
               {
-                fout << flap_goal << " ";
+                fout << flap_cmd * RAD_TO_DEG << " ";
                 break;
               }
             case flap_pos_record:
               {
                 fout << flap_pos << " ";
+                break;
+              }
+            case flap_pos_deg_record:
+              {
+                fout << flap_pos * RAD_TO_DEG << " ";
+                break;
+              }
+            case Spoiler_handle_record:
+              {
+                fout << Spoiler_handle << " ";
+                break;
+              }
+            case spoiler_cmd_deg_record:
+              {
+                fout << spoiler_cmd_deg << " ";
+                break;
+              }
+            case spoiler_pos_deg_record:
+              {
+                fout << spoiler_pos_deg << " ";
+                break;
+              }
+            case spoiler_pos_norm_record:
+              {
+                fout << spoiler_pos_norm << " ";
+                break;
+              }
+            case spoiler_pos_record:
+              {
+                fout << spoiler_pos << " ";
                 break;
               }
 
@@ -920,6 +957,11 @@ void uiuc_recorder( double dt )
                 fout << CDK_save << " ";
                 break;
               }
+            case CLK_save_record:
+              {
+                fout << CLK_save << " ";
+                break;
+              }
             case CD_a_save_record:
               {
                 fout << CD_a_save << " ";
@@ -943,6 +985,36 @@ void uiuc_recorder( double dt )
             case CD_de_save_record:
               {
                 fout << CD_de_save << " ";
+                break;
+              }
+            case CD_dr_save_record:
+              {
+                fout << CD_dr_save << " ";
+                break;
+              }
+            case CD_da_save_record:
+              {
+                fout << CD_da_save << " ";
+                break;
+              }
+            case CD_beta_save_record:
+              {
+                fout << CD_beta_save << " ";
+                break;
+              }
+            case CD_df_save_record:
+              {
+                fout << CD_df_save << " ";
+                break;
+              }
+            case CD_ds_save_record:
+              {
+                fout << CD_ds_save << " ";
+                break;
+              }
+            case CD_dg_save_record:
+              {
+                fout << CD_dg_save << " ";
                 break;
               }
             case CXo_save_record:
@@ -1078,6 +1150,21 @@ void uiuc_recorder( double dt )
             case CL_de_save_record:
               {
                 fout << CL_de_save << " ";
+                break;
+              }
+            case CL_df_save_record:
+              {
+                fout << CL_df_save << " ";
+                break;
+              }
+            case CL_ds_save_record:
+              {
+                fout << CL_ds_save << " ";
+                break;
+              }
+            case CL_dg_save_record:
+              {
+                fout << CL_dg_save << " ";
                 break;
               }
             case CZo_save_record:
@@ -1218,6 +1305,16 @@ void uiuc_recorder( double dt )
             case Cm_df_save_record:
               {
                 fout << Cm_df_save << " ";
+                break;
+              }
+            case Cm_ds_save_record:
+              {
+                fout << Cm_ds_save << " ";
+                break;
+              }
+            case Cm_dg_save_record:
+              {
+                fout << Cm_dg_save << " ";
                 break;
               }
             case CY_record:
@@ -1969,43 +2066,43 @@ void uiuc_recorder( double dt )
                 break;
               }
 
-              /*********************** Moments ***********************/
-	    //case flapper_freq_record:
-	    //  {
-		//fout << flapper_freq << " ";
-		//break;
-	    //  }
-	    //case flapper_phi_record:
-	    //  {
-		//fout << flapper_phi << " ";
-		//break;
-	    //  }
-	    //case flapper_phi_deg_record:
-	    //  {
-		//fout << flapper_phi*RAD_TO_DEG << " ";
-		//break;
-	    //  }
-	    //case flapper_Lift_record:
-	    //  {
-		//fout << flapper_Lift << " ";
-		//break;
-	    //  }
-	    //case flapper_Thrust_record:
-	    //  {
-		//fout << flapper_Thrust << " ";
-		//break;
-	    //  }
-	    //case flapper_Inertia_record:
-	    //  {
-		//fout << flapper_Inertia << " ";
-		//break;
-	    //  }
-	    //case flapper_Moment_record:
-	    //  {
-		//fout << flapper_Moment << " ";
-		//break;
-	    //  }
-              /*********************** debug  ***********************/
+              /********************* flapper variables *********************/
+	    case flapper_freq_record:
+	      {
+		fout << flapper_freq << " ";
+		break;
+	      }
+	    case flapper_phi_record:
+	      {
+		fout << flapper_phi << " ";
+		break;
+	      }
+	    case flapper_phi_deg_record:
+	      {
+		fout << flapper_phi*RAD_TO_DEG << " ";
+		break;
+	      }
+	    case flapper_Lift_record:
+	      {
+		fout << flapper_Lift << " ";
+		break;
+	      }
+	    case flapper_Thrust_record:
+	      {
+		fout << flapper_Thrust << " ";
+		break;
+	      }
+	    case flapper_Inertia_record:
+	      {
+		fout << flapper_Inertia << " ";
+		break;
+	      }
+	    case flapper_Moment_record:
+	      {
+		fout << flapper_Moment << " ";
+		break;
+	      }
+              /********* MSS debug and other data *******************/
               /* debug variables for use in probing data            */
               /* comment out old lines, and add new                 */
               /* only remove code that you have written             */
@@ -2016,30 +2113,34 @@ void uiuc_recorder( double dt )
 		// fout << eta_q_Cm_adot_fac << " ";
 		// fout << eta_q_Cmfade_fac << " ";
 		// fout << eta_q_Cl_dr_fac << " ";
+		// fout << eta_q_Cm_de_fac << " ";
 		// eta on tail
-		// fout << tc << " ";
+		// fout << eta_q  << " ";
 		// engine RPM
 		// fout << engineOmega * 60 / (2 * LS_PI)<< " ";
 		// vertical climb rate in fpm
-		// fout << V_down * 60 << " ";
+		fout << V_down * 60 << " ";
+		// vertical climb rate in fps
+		// fout << V_down << " ";
 		// w_induced downwash at tail due to wing
-		//fout << w_induced   << " ";
-		// w_induced downwash at tail due to wing
-		fout << gammaWing   << " ";
+		// fout << gammaWing   << " ";
+		//fout << outside_control << " ";
 		break;
 	      }
 	    case debug2_record:
 	      {
-		//Lift to drag ratio 
-		// fout << V_north/V_down << " ";
+		// Lift to drag ratio 
+		// fout <<  V_ground_speed/V_down_rel_ground << " ";
  		// g's through the c.g. of the aircraft
-		// fout << (-A_Z_cg/32.174) << " ";
+		fout << (-A_Z_cg/32.174) << " ";
+		// L/D via forces (used in 201 class for L/D)
+		// fout << (F_Z_wind/F_X_wind) << " ";
 		// gyroscopic moment (see uiuc_wrapper.cpp)
 		// fout << (polarInertia * engineOmega * Q_body) << " ";
 		// downwashAngle at tail
-		fout << downwashAngle * 57.29 << " ";
+		// fout << downwashAngle * 57.29 << " ";
 		// w_induced from engine
-		// fout << w_i << " ";
+		// fout << w_induced << " ";
 		break;
 	      }
 	    case debug3_record:
@@ -2048,15 +2149,143 @@ void uiuc_recorder( double dt )
 		// fout << (Cos_alpha * Cos_alpha)       << " ";
 		// gyroscopic moment (see uiuc_wrapper.cpp)
 		// fout << (-polarInertia * engineOmega * R_body) << " ";
-		// AlphaTail 
-		// fout << AlphaTail * 57.29  << " ";
-		// fout << Alpha     * 57.29  << " ";
 		// eta on tail
+		// fout << eta_q << " ";
+		// flapper cycle percentage
+		fout << (sin(flapper_phi - 3 * LS_PI / 2)) << " ";
+		break;
+	      }
+              /********* RD debug and other data *******************/
+              /* debug variables for use in probing data            */
+              /* comment out old lines, and add new                 */
+              /* only remove code that you have written             */
+	    case debug4_record:
+	      {
+		// flapper F_X_aero_flapper
+		fout << F_X_aero_flapper << " ";
+		break;
+	      }
+	    case debug5_record:
+	      {
+		// flapper F_Z_aero_flapper
+		//fout << F_Z_aero_flapper << " ";
+		// gear_rate
+		fout << gear_rate << " ";
+		break;
+	      }
+	    case debug6_record:
+	      {
+		//gear_max
+		fout << gear_max << " ";
+		break;
+	      }
+	    case V_down_fpm_record:
+	      {
+		fout << V_down * 60 << " ";
+		break;
+	      }
+	    case eta_q_record:
+	      {
 		fout << eta_q << " ";
 		break;
 	      }
-
-            };
+	    case rpm_record:
+	      {
+		fout << (engineOmega * 60 / (2 * LS_PI)) << " ";
+		break;
+	      }
+	    case elevator_sas_deg_record:
+	      {
+		fout << elevator_sas * RAD_TO_DEG << " ";
+		break;
+	      }
+	    case aileron_sas_deg_record:
+	      {
+		fout << aileron_sas * RAD_TO_DEG << " ";
+		break;
+	      }
+	    case rudder_sas_deg_record:
+	      {
+		fout << rudder_sas * RAD_TO_DEG << " ";
+		break;
+	      }
+	    case w_induced_record:
+	      {
+		fout << w_induced << " ";
+		break;
+	      }
+	    case downwashAngle_deg_record:
+	      {
+		fout << downwashAngle * RAD_TO_DEG << " ";
+		break;
+	      }
+	    case alphaTail_deg_record:
+	      {
+		fout << alphaTail * RAD_TO_DEG << " ";
+		break;
+	      }
+	    case gammaWing_record:
+	      {
+		fout << gammaWing << " ";
+		break;
+	      }
+	    case LD_record:
+	      {
+		fout << V_ground_speed/V_down_rel_ground  << " ";
+		break;
+	      }
+	    case gload_record:
+	      {
+		fout << -A_Z_cg/32.174 << " ";
+		break;
+	      }
+	    case gyroMomentQ_record:
+	      {
+		fout << polarInertia * engineOmega * Q_body << " ";
+		break;
+	      }
+	    case gyroMomentR_record:
+	      {
+		fout << -polarInertia * engineOmega * R_body << " ";
+		break;
+	      }
+            case Gear_handle_record:
+              {
+                fout << Gear_handle << " ";
+                break;
+              }
+            case gear_cmd_norm_record:
+              {
+                fout << gear_cmd_norm << " ";
+                break;
+              }
+            case gear_pos_norm_record:
+              {
+                fout << gear_pos_norm << " ";
+                break;
+              }
+	      /****************Trigger Variables*******************/
+	    case trigger_on_record:
+	      {
+		fout << trigger_on << " ";
+		break;
+	      }
+	    case trigger_num_record:
+	      {
+		fout << trigger_num << " ";
+		break;
+	      }
+	    case trigger_toggle_record:
+	      {
+		fout << trigger_toggle << " ";
+		break;
+	      }
+	    case trigger_counter_record:
+	      {
+		fout << trigger_counter << " ";
+		break;
+	      }
+	    };
         } // end record map
     }
   recordStep++;

@@ -114,7 +114,7 @@ void uiuc_coef_yaw()
                 Cno = uiuc_ice_filter(Cno_clean,kCno);
               }
 	    Cno_save = Cno;
-            Cn += Cno;
+            Cn += Cno_save;
             break;
           }
         case Cn_beta_flag:
@@ -124,7 +124,6 @@ void uiuc_coef_yaw()
                 Cn_beta = uiuc_ice_filter(Cn_beta_clean,kCn_beta);
               }
 	    Cn_beta_save = Cn_beta * Beta;
-	    //       Cn += Cn_beta * Beta;
 	    if (eta_q_Cn_beta_fac)
 	      {
 		Cn += Cn_beta_save * eta_q_Cn_beta_fac;
@@ -144,7 +143,6 @@ void uiuc_coef_yaw()
             /* Cn_p must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    Cn_p_save = Cn_p * P_body * b_2U;
-	    //    Cn += Cn_p * P_body * b_2U;
 	    if (eta_q_Cn_p_fac)
 	      {
 		Cn += Cn_p_save * eta_q_Cn_p_fac;
@@ -164,7 +162,6 @@ void uiuc_coef_yaw()
             /* Cn_r must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    Cn_r_save = Cn_r * R_body * b_2U;
-	    //    Cn += Cn_r * R_body * b_2U;
 	    if (eta_q_Cn_r_fac)
 	      {
 		Cn += Cn_r_save * eta_q_Cn_r_fac;
@@ -182,7 +179,7 @@ void uiuc_coef_yaw()
                 Cn_da = uiuc_ice_filter(Cn_da_clean,kCn_da);
               }
 	    Cn_da_save = Cn_da * aileron;
-            Cn += Cn_da * aileron;
+            Cn += Cn_da_save;
             break;
           }
         case Cn_dr_flag:
@@ -192,7 +189,6 @@ void uiuc_coef_yaw()
                 Cn_dr = uiuc_ice_filter(Cn_dr_clean,kCn_dr);
               }
 	    Cn_dr_save = Cn_dr * rudder;
-	    //     Cn += Cn_dr * rudder;
 	    if (eta_q_Cn_dr_fac)
 	      {
 		Cn += Cn_dr_save * eta_q_Cn_dr_fac;
@@ -210,7 +206,7 @@ void uiuc_coef_yaw()
                 Cn_q = uiuc_ice_filter(Cn_q_clean,kCn_q);
               }
 	    Cn_q_save = Cn_q * Q_body * cbar_2U;
-            Cn += Cn_q * Q_body * cbar_2U;
+            Cn += Cn_q_save;
             break;
           }
         case Cn_b3_flag:
@@ -220,7 +216,7 @@ void uiuc_coef_yaw()
                 Cn_b3 = uiuc_ice_filter(Cn_b3_clean,kCn_b3);
               }
 	    Cn_b3_save = Cn_b3 * Beta * Beta * Beta;
-            Cn += Cn_b3 * Beta * Beta * Beta;
+            Cn += Cn_b3_save;
             break;
           }
         case Cnfada_flag:

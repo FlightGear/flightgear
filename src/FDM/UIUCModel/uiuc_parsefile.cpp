@@ -18,7 +18,7 @@
 ----------------------------------------------------------------------
 
  HISTORY:      01/30/2000   (BS) initial release
-               09/19/2002   (MSS) appended zeros to lines w/ comments 
+               09/19/2002   (MSS) appended zeros to lines w/ comments
 
 ----------------------------------------------------------------------
 
@@ -109,7 +109,7 @@ string ParseFile :: getToken(string inputLine, int tokenNo)
 
   while (tokencounter < tokenNo)
   {
-        if ((pos1 == inputLine.npos) || (pos1 == -1) || (pos == -1) )
+    if ((pos1 == inputLine.npos) || (pos1 == -1) || (pos == -1) )
           return ""; //return an empty string if tokenNo exceeds the No of tokens in the line
         
         inputLine = inputLine.substr(pos1 , MAXLINE);
@@ -119,7 +119,7 @@ string ParseFile :: getToken(string inputLine, int tokenNo)
   }
 
   if (pos1== -1 || pos == -1)
-      return "";
+    return "";
   else
       return inputLine.substr(pos , pos1-pos); // return the desired token 
 }

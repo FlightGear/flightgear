@@ -77,11 +77,18 @@ void uiuc_map_CD()
 {
   CD_map["CDo"]                   =      CDo_flag                   ;
   CD_map["CDK"]                   =      CDK_flag                   ;
+  CD_map["CLK"]                   =      CLK_flag                   ;
   CD_map["CD_a"]                  =      CD_a_flag                  ;
   CD_map["CD_adot"]               =      CD_adot_flag               ;
   CD_map["CD_q"]                  =      CD_q_flag                  ;
   CD_map["CD_ih"]                 =      CD_ih_flag                 ;
   CD_map["CD_de"]                 =      CD_de_flag                 ;
+  CD_map["CD_dr"]                 =      CD_dr_flag                 ;
+  CD_map["CD_da"]                 =      CD_da_flag                 ;
+  CD_map["CD_beta"]               =      CD_beta_flag               ;
+  CD_map["CD_df"]                 =      CD_df_flag                 ;
+  CD_map["CD_ds"]                 =      CD_ds_flag                 ;
+  CD_map["CD_dg"]                 =      CD_dg_flag                 ;
   CD_map["CDfa"]                  =      CDfa_flag                  ;
   CD_map["CDfCL"]                 =      CDfCL_flag                 ;
   CD_map["CDfade"]                =      CDfade_flag                ;

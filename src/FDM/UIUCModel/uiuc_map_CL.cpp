@@ -82,6 +82,9 @@ void uiuc_map_CL()
   CL_map["CL_q"]                  =      CL_q_flag                  ;
   CL_map["CL_ih"]                 =      CL_ih_flag                 ;
   CL_map["CL_de"]                 =      CL_de_flag                 ;
+  CL_map["CL_df"]                 =      CL_df_flag                 ;
+  CL_map["CL_ds"]                 =      CL_ds_flag                 ;
+  CL_map["CL_dg"]                 =      CL_dg_flag                 ;
   CL_map["CLfa"]                  =      CLfa_flag                  ;
   CL_map["CLfade"]                =      CLfade_flag                ; 
   CL_map["CLfdf"]                 =      CLfdf_flag                 ;

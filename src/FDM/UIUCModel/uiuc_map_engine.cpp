@@ -86,6 +86,7 @@ void uiuc_map_engine()
   engine_map["eta_q_Cm_q"]         = eta_q_Cm_q_flag               ;
   engine_map["eta_q_Cm_adot"]      = eta_q_Cm_adot_flag            ;
   engine_map["eta_q_Cmfade"]       = eta_q_Cmfade_flag             ;
+  engine_map["eta_q_Cm_de"]        = eta_q_Cm_de_flag              ;
   engine_map["eta_q_Cl_beta"]      = eta_q_Cl_beta_flag            ;
   engine_map["eta_q_Cl_p"]         = eta_q_Cl_p_flag               ;
   engine_map["eta_q_Cl_r"]         = eta_q_Cl_r_flag               ;

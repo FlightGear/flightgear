@@ -45,18 +45,16 @@
 #include "uiuc_pah_ap.h"
 
 double pah_ap(double pitch, double pitchrate, double pitch_ref, double V,
-	      double sample_t)
+	      double sample_t, int init)
 {
   // changes by RD so function keeps previous values
   static double u2prev;
   static double x1prev;
   static double x2prev;
   static double x3prev;
-  static int init = 0;
 
-  if (init==0)
+  if (init == 0)
     {
-      init = -1;
       u2prev = 0;
       x1prev = 0;
       x2prev = 0;

@@ -10,6 +10,7 @@ libUIUCModel_a_SOURCES = \
 			uiuc_3Dinterpolation.cpp uiuc_3Dinterpolation.h \
                         uiuc_aerodeflections.cpp uiuc_aerodeflections.h \
 			uiuc_aircraftdir.h uiuc_aircraft.h \
+			uiuc_alh_ap.cpp uiuc_alh_ap.h \
                         uiuc_betaprobe.cpp uiuc_betaprobe.h \
                         uiuc_coef_drag.cpp uiuc_coef_drag.h \
                         uiuc_coef_lift.cpp uiuc_coef_lift.h \
@@ -21,11 +22,16 @@ libUIUCModel_a_SOURCES = \
 			uiuc_controlInput.cpp uiuc_controlInput.h \
                         uiuc_convert.cpp uiuc_convert.h \
                         uiuc_engine.cpp uiuc_engine.h \
+			uiuc_flapdata.cpp uiuc_flapdata.h \
+			uiuc_find_position.cpp uiuc_find_position.h \
 			uiuc_fog.cpp uiuc_fog.h \
 			uiuc_gear.cpp uiuc_gear.h\
-			uiuc_ice.cpp uiuc_ice.h \
+			uiuc_get_flapper.cpp uiuc_get_flapper.h \
+			uiuc_getwind.cpp uiuc_getwind.h \
+                        uiuc_ice.cpp uiuc_ice.h \
 			uiuc_iceboot.cpp uiuc_iceboot.h \
 			uiuc_iced_nonlin.cpp uiuc_iced_nonlin.h \
+			uiuc_icing_demo.cpp uiuc_icing_demo.h \
                         uiuc_initializemaps.cpp uiuc_initializemaps.h \
 			uiuc_map_CD.cpp uiuc_map_CD.h \
 			uiuc_map_CL.cpp uiuc_map_CL.h \
@@ -50,7 +56,24 @@ libUIUCModel_a_SOURCES = \
 			uiuc_map_record5.cpp uiuc_map_record5.h \
 			uiuc_map_record6.cpp uiuc_map_record6.h \
                         uiuc_menu.cpp uiuc_menu.h \
-                        uiuc_pah_ap.cpp uiuc_pah_ap.h \
+			uiuc_menu_init.cpp uiuc_menu_init.h \
+			uiuc_menu_geometry.cpp uiuc_menu_geometry.h \
+			uiuc_menu_controlSurface.cpp uiuc_menu_controlSurface.h \
+			uiuc_menu_mass.cpp uiuc_menu_mass.h \
+			uiuc_menu_engine.cpp uiuc_menu_engine.h \
+			uiuc_menu_CD.cpp uiuc_menu_CD.h \
+			uiuc_menu_CL.cpp uiuc_menu_CL.h \
+			uiuc_menu_Cm.cpp uiuc_menu_Cm.h \
+			uiuc_menu_CY.cpp uiuc_menu_CY.h \
+			uiuc_menu_Croll.cpp uiuc_menu_Croll.h \
+			uiuc_menu_Cn.cpp uiuc_menu_Cn.h \
+			uiuc_menu_gear.cpp uiuc_menu_gear.h \
+			uiuc_menu_ice.cpp uiuc_menu_ice.h \
+			uiuc_menu_fog.cpp uiuc_menu_fog.h \
+			uiuc_menu_record.cpp uiuc_menu_record.h \
+			uiuc_menu_misc.cpp uiuc_menu_misc.h \
+			uiuc_menu_functions.cpp uiuc_menu_functions.h \
+			uiuc_pah_ap.cpp uiuc_pah_ap.h \
                         uiuc_parsefile.cpp uiuc_parsefile.h \
                         uiuc_recorder.cpp uiuc_recorder.h \
                         uiuc_warnings_errors.cpp uiuc_warnings_errors.h \

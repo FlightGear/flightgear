@@ -112,7 +112,7 @@ void uiuc_coef_pitch()
                 Cmo = uiuc_ice_filter(Cmo_clean,kCmo);
               }
 	    Cmo_save = Cmo;
-            Cm += Cmo;
+            Cm += Cmo_save;
             break;
           }
         case Cm_a_flag:
@@ -122,7 +122,7 @@ void uiuc_coef_pitch()
                 Cm_a = uiuc_ice_filter(Cm_a_clean,kCm_a);
               }
 	    Cm_a_save = Cm_a * Alpha;
-            Cm += Cm_a * Alpha;
+            Cm += Cm_a_save;
             break;
           }
         case Cm_a2_flag:
@@ -132,7 +132,7 @@ void uiuc_coef_pitch()
                 Cm_a2 = uiuc_ice_filter(Cm_a2_clean,kCm_a2);
               }
 	    Cm_a2_save = Cm_a2 * Alpha * Alpha;
-            Cm += Cm_a2 * Alpha * Alpha;
+            Cm += Cm_a2_save;
             break;
           }
         case Cm_adot_flag:
@@ -144,7 +144,6 @@ void uiuc_coef_pitch()
             /* Cm_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    Cm_adot_save = Cm_adot * Alpha_dot * cbar_2U;
-            //Cm        += Cm_adot * Alpha_dot * cbar_2U;
 	    if (eta_q_Cm_adot_fac)
 	      {
 		Cm += Cm_adot_save * eta_q_Cm_adot_fac;
@@ -164,7 +163,6 @@ void uiuc_coef_pitch()
             /* Cm_q must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    Cm_q_save = Cm_q * Q_body * cbar_2U;
-            // Cm    += Cm_q * Q_body * cbar_2U;
 	    if (eta_q_Cm_q_fac)
 	      {
 		Cm += Cm_q_save * eta_q_Cm_q_fac;
@@ -178,7 +176,7 @@ void uiuc_coef_pitch()
         case Cm_ih_flag:
           {
 	    Cm_ih_save = Cm_ih * ih;
-            Cm += Cm_ih * ih;
+            Cm += Cm_ih_save;
             break;
           }
         case Cm_de_flag:
@@ -188,7 +186,14 @@ void uiuc_coef_pitch()
                 Cm_de = uiuc_ice_filter(Cm_de_clean,kCm_de);
               }
 	    Cm_de_save = Cm_de * elevator;
-            Cm += Cm_de * elevator;
+	    if (eta_q_Cm_de_fac)
+	      {
+		Cm += Cm_de_save * eta_q_Cm_de_fac;
+	      }
+	    else
+	      {
+		Cm += Cm_de_save;
+	      }
             break;
           }
         case Cm_b2_flag:
@@ -198,7 +203,7 @@ void uiuc_coef_pitch()
                 Cm_b2 = uiuc_ice_filter(Cm_b2_clean,kCm_b2);
               }
 	    Cm_b2_save = Cm_b2 * Beta * Beta;
-            Cm += Cm_b2 * Beta * Beta;
+            Cm += Cm_b2_save;
             break;
           }
         case Cm_r_flag:
@@ -208,7 +213,7 @@ void uiuc_coef_pitch()
                 Cm_r = uiuc_ice_filter(Cm_r_clean,kCm_r);
               }
 	    Cm_r_save = Cm_r * R_body * b_2U;
-            Cm += Cm_r * R_body * b_2U;
+            Cm += Cm_r_save;
             break;
           }
         case Cm_df_flag:
@@ -217,8 +222,20 @@ void uiuc_coef_pitch()
               {
                 Cm_df = uiuc_ice_filter(Cm_df_clean,kCm_df);
               }
-	    Cm_df_save = Cm_df * flap;
-            Cm += Cm_df * flap;
+	    Cm_df_save = Cm_df * flap_pos;
+            Cm += Cm_df_save;
+            break;
+          }
+        case Cm_ds_flag:
+          {
+	    Cm_ds_save = Cm_ds * spoiler_pos;
+            Cm += Cm_ds_save;
+            break;
+          }
+        case Cm_dg_flag:
+          {
+	    Cm_dg_save = Cm_dg * gear_pos_norm;
+            Cm += Cm_dg_save;
             break;
           }
         case Cmfa_flag:
@@ -285,7 +302,7 @@ void uiuc_coef_pitch()
             CmfdfI = uiuc_1Dinterpolation(Cmfdf_dfArray,
                                           Cmfdf_CmArray,
                                           Cmfdf_ndf,
-                                          flap);
+                                          flap_pos);
             Cm += CmfdfI;
             break;
           }
@@ -297,7 +314,7 @@ void uiuc_coef_pitch()
                                            Cmfadf_nAlphaArray,
                                            Cmfadf_ndf,
                                            Alpha,
-                                           flap);
+                                           flap_pos);
             Cm += CmfadfI;
             break;
           }

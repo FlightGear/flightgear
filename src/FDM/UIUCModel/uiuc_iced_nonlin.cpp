@@ -2,6 +2,9 @@
 //     Version 020409
 //     read readme_020212.doc for information
 
+// 11-21-2002 (RD) Added e code from Kishwar to fix negative lift problem at
+//            high etas
+
 #include "uiuc_iced_nonlin.h"
 
 void Calc_Iced_Forces()
@@ -12,6 +15,7 @@ void Calc_Iced_Forces()
 	double eta_ref_wing = 0.08;			 // eta of iced data used for curve fit
 	double eta_ref_tail = 0.20; //changed from 0.12 10-23-2002
 	double eta_wing;
+	double e;
 	//double delta_CL;				// CL_clean - CL_iced;
 	//double delta_CD;				// CD_clean - CD_iced;
 	//double delta_Cm;				// CM_clean - CM_iced;
@@ -44,7 +48,15 @@ void Calc_Iced_Forces()
 		}
 	KCL = -delta_CL/eta_ref_wing;
 	eta_wing = 0.5*(eta_wing_left + eta_wing_right);
-	delta_CL = eta_wing*KCL;
+	if (eta_wing <= 0.1)
+	  {
+	    e = eta_wing;
+	  }
+	else
+	  {
+	    e = -0.3297*exp(-5*eta_wing)+0.3;
+	  }
+	delta_CL = e*KCL;
 	
 		
 	// drag fit

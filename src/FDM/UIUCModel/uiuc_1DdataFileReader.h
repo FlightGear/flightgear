@@ -7,12 +7,13 @@
 
 #include "uiuc_parsefile.h"
 #include "uiuc_aircraft.h"
+#include "uiuc_warnings_errors.h"
 
 SG_USING_STD(istrstream);
 
 int uiuc_1DdataFileReader( string file_name, 
-                            double x[100], 
-                            double y[100], 
+                            double x[], 
+                            double y[], 
                             int &xmax );
 int uiuc_1DdataFileReader( string file_name, 
 			   double x[], 

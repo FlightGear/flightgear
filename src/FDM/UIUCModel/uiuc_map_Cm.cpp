@@ -85,6 +85,8 @@ void uiuc_map_Cm()
   Cm_map["Cm_b2"]                 =      Cm_b2_flag                 ;
   Cm_map["Cm_r"]                  =      Cm_r_flag                  ;
   Cm_map["Cm_df"]                 =      Cm_df_flag                 ;
+  Cm_map["Cm_ds"]                 =      Cm_ds_flag                 ;
+  Cm_map["Cm_dg"]                 =      Cm_dg_flag                 ;
   Cm_map["Cmfa"]                  =      Cmfa_flag                  ;
   Cm_map["Cmfade"]                =      Cmfade_flag                ;
   Cm_map["Cmfdf"]                 =      Cmfdf_flag                 ;

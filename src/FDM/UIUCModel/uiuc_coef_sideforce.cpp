@@ -114,7 +114,7 @@ void uiuc_coef_sideforce()
                 CYo = uiuc_ice_filter(CYo_clean,kCYo);
               }
 	    CYo_save = CYo;
-            CY += CYo;
+            CY += CYo_save;
             break;
           }
         case CY_beta_flag:
@@ -124,7 +124,6 @@ void uiuc_coef_sideforce()
                 CY_beta = uiuc_ice_filter(CY_beta_clean,kCY_beta);
               }
 	    CY_beta_save = CY_beta * Beta;
-	    //       CY += CY_beta * Beta;
 	    if (eta_q_CY_beta_fac)
 	      {
 		CY += CY_beta_save * eta_q_CY_beta_fac;
@@ -144,7 +143,6 @@ void uiuc_coef_sideforce()
             /* CY_p must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    CY_p_save = CY_p * P_body * b_2U;
-	    //    CY += CY_p * P_body * b_2U;
 	    if (eta_q_CY_p_fac)
 	      {
 		CY += CY_p_save * eta_q_CY_p_fac;
@@ -164,7 +162,6 @@ void uiuc_coef_sideforce()
             /* CY_r must be mulitplied by b/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    CY_r_save = CY_r * R_body * b_2U;
-	    //    CY += CY_r * R_body * b_2U;
 	    if (eta_q_CY_r_fac)
 	      {
 		CY += CY_r_save * eta_q_CY_r_fac;
@@ -182,7 +179,7 @@ void uiuc_coef_sideforce()
                 CY_da = uiuc_ice_filter(CY_da_clean,kCY_da);
               }
 	    CY_da_save = CY_da * aileron;
-            CY += CY_da * aileron;
+            CY += CY_da_save;
             break;
           }
         case CY_dr_flag:
@@ -192,7 +189,6 @@ void uiuc_coef_sideforce()
                 CY_dr = uiuc_ice_filter(CY_dr_clean,kCY_dr);
               }
 	    CY_dr_save = CY_dr * rudder;
-	    //     CY += CY_dr * rudder;
 	    if (eta_q_CY_dr_fac)
 	      {
 		CY += CY_dr_save * eta_q_CY_dr_fac;
@@ -210,7 +206,7 @@ void uiuc_coef_sideforce()
                 CY_dra = uiuc_ice_filter(CY_dra_clean,kCY_dra);
               }
 	    CY_dra_save = CY_dra * rudder * Alpha;
-            CY += CY_dra * rudder * Alpha;
+            CY += CY_dra_save;
             break;
           }
         case CY_bdot_flag:
@@ -220,7 +216,7 @@ void uiuc_coef_sideforce()
                 CY_bdot = uiuc_ice_filter(CY_bdot_clean,kCY_bdot);
               }
 	    CY_bdot_save = CY_bdot * Beta_dot * b_2U;
-            CY += CY_bdot * Beta_dot * b_2U;
+            CY += CY_bdot_save;
             break;
           }
         case CYfada_flag:

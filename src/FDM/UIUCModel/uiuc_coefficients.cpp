@@ -34,6 +34,8 @@
 			    pilot_rud_no.
 	       07/05/2001   (RD) Added pilot_(elev,ail,rud)_no=false
 	       01/11/2002   (AP) Added call to uiuc_bootTime()
+               12/02/2002   (RD) Moved icing demo interpolations to its
+                            own function
 	       
 ----------------------------------------------------------------------
 
@@ -96,15 +98,16 @@
 **********************************************************************/
 
 #include "uiuc_coefficients.h"
-#include "uiuc_warnings_errors.h"
-#include <string.h>
-
 
 void uiuc_coefficients(double dt)
 {
   static string uiuc_coefficients_error = " (from uiuc_coefficients.cpp) ";
   double l_trim, l_defl;
   double V_rel_wind_dum, U_body_dum;
+  static bool ap_pah_on_prev = false;
+  int ap_pah_init = 1;
+  static bool ap_alh_on_prev = false;
+  int ap_alh_init = 1;
 
   if (Alpha_init_true && Simtime==0)
     Alpha = Alpha_init;
@@ -220,29 +223,33 @@ void uiuc_coefficients(double dt)
       uiuc_controlInput();
     }
 
-  if (icing_demo)
-    {
-      if (demo_ap_pah_on){
-	double time = Simtime - demo_ap_pah_on_startTime;
-	ap_pah_on = uiuc_1Dinterpolation(demo_ap_pah_on_timeArray,
-					 demo_ap_pah_on_daArray,
-					 demo_ap_pah_on_ntime,
-					 time);
-      }
-      if (demo_ap_Theta_ref_deg){
-	double time = Simtime - demo_ap_Theta_ref_deg_startTime;
-	ap_Theta_ref_deg = uiuc_1Dinterpolation(demo_ap_Theta_ref_deg_timeArray,
-						demo_ap_Theta_ref_deg_daArray,
-						demo_ap_Theta_ref_deg_ntime,
-						time);
-      }
-    }
-  if (ap_pah_on)
+  if (ap_pah_on && icing_demo==false)
     {
       double V_rel_wind_ms;
       V_rel_wind_ms = V_rel_wind * 0.3048;
       ap_Theta_ref_rad = ap_Theta_ref_deg * DEG_TO_RAD;
-      elevator = pah_ap(Theta, Theta_dot, ap_Theta_ref_rad, V_rel_wind_ms, dt);
+      if (ap_pah_on_prev == false)
+	ap_pah_init = 0;
+      elevator = pah_ap(Theta, Theta_dot, ap_Theta_ref_rad, V_rel_wind_ms, dt, 
+			ap_pah_init);
+      if (elevator*RAD_TO_DEG <= -1*demax)
+	elevator = -1*demax * DEG_TO_RAD;
+      if (elevator*RAD_TO_DEG >= demin)
+	elevator = demin * DEG_TO_RAD;
+      pilot_elev_no=true;
+    }
+
+  if (ap_alh_on && icing_demo==false)
+    {
+      double V_rel_wind_ms;
+      double Altitude_m;
+      V_rel_wind_ms = V_rel_wind * 0.3048;
+      ap_alt_ref_m = ap_alt_ref_ft * 0.3048;
+      Altitude_m = Altitude * 0.3048;
+      if (ap_alh_on_prev == false)
+	ap_alh_init = 0;
+      elevator = alh_ap(Theta, Theta_dot, ap_alt_ref_m, Altitude_m, 
+			V_rel_wind_ms, dt, ap_alh_init);
       if (elevator*RAD_TO_DEG <= -1*demax)
 	elevator = -1*demax * DEG_TO_RAD;
       if (elevator*RAD_TO_DEG >= demin)
@@ -336,113 +343,7 @@ void uiuc_coefficients(double dt)
 					       time);
 	}
       if (icing_demo)
-	{
-	  if (demo_eps_alpha_max) {
-	    double time = Simtime - demo_eps_alpha_max_startTime;
-	    eps_alpha_max = uiuc_1Dinterpolation(demo_eps_alpha_max_timeArray,
-						 demo_eps_alpha_max_daArray,
-						 demo_eps_alpha_max_ntime,
-						 time);
-	  }
-	  if (demo_eps_pitch_max) {
-	    double time = Simtime - demo_eps_pitch_max_startTime;
-	    eps_pitch_max = uiuc_1Dinterpolation(demo_eps_pitch_max_timeArray,
-						  demo_eps_pitch_max_daArray,
-						  demo_eps_pitch_max_ntime,
-						  time);
-	  }
-	  if (demo_eps_pitch_min) {
-	    double time = Simtime - demo_eps_pitch_min_startTime;
-	    eps_pitch_min = uiuc_1Dinterpolation(demo_eps_pitch_min_timeArray,
-						 demo_eps_pitch_min_daArray,
-						 demo_eps_pitch_min_ntime,
-						 time);
-	  }
-	  if (demo_eps_roll_max) {
-	    double time = Simtime - demo_eps_roll_max_startTime;
-	    eps_roll_max = uiuc_1Dinterpolation(demo_eps_roll_max_timeArray,
-						demo_eps_roll_max_daArray,
-						demo_eps_roll_max_ntime,
-						time);
-	  }
-	  if (demo_eps_thrust_min) {
-	    double time = Simtime - demo_eps_thrust_min_startTime;
-	    eps_thrust_min = uiuc_1Dinterpolation(demo_eps_thrust_min_timeArray,
-						  demo_eps_thrust_min_daArray,
-						  demo_eps_thrust_min_ntime,
-						  time);
-	  }
-	  if (demo_eps_airspeed_max) {
-	    double time = Simtime - demo_eps_airspeed_max_startTime;
-	    eps_airspeed_max = uiuc_1Dinterpolation(demo_eps_airspeed_max_timeArray,
-						 demo_eps_airspeed_max_daArray,
-						 demo_eps_airspeed_max_ntime,
-						 time);
-	  }
-	  if (demo_eps_airspeed_min) {
-	    double time = Simtime - demo_eps_airspeed_min_startTime;
-	    eps_airspeed_min = uiuc_1Dinterpolation(demo_eps_airspeed_min_timeArray,
-						 demo_eps_airspeed_min_daArray,
-						 demo_eps_airspeed_min_ntime,
-						 time);
-	  }
-	  if (demo_eps_flap_max) {
-	    double time = Simtime - demo_eps_flap_max_startTime;
-	    eps_flap_max = uiuc_1Dinterpolation(demo_eps_flap_max_timeArray,
-						demo_eps_flap_max_daArray,
-						demo_eps_flap_max_ntime,
-						time);
-	  }
-	  if (demo_boot_cycle_tail) {
-	    double time = Simtime - demo_boot_cycle_tail_startTime;
-	    boot_cycle_tail = uiuc_1Dinterpolation(demo_boot_cycle_tail_timeArray,
-						  demo_boot_cycle_tail_daArray,
-						  demo_boot_cycle_tail_ntime,
-						  time);
-	  }
-	  if (demo_boot_cycle_wing_left) {
-	    double time = Simtime - demo_boot_cycle_wing_left_startTime;
-	    boot_cycle_wing_left = uiuc_1Dinterpolation(demo_boot_cycle_wing_left_timeArray,
-					     demo_boot_cycle_wing_left_daArray,
-					     demo_boot_cycle_wing_left_ntime,
-					     time);
-	  }
-	  if (demo_boot_cycle_wing_right) {
-	    double time = Simtime - demo_boot_cycle_wing_right_startTime;
-	    boot_cycle_wing_right = uiuc_1Dinterpolation(demo_boot_cycle_wing_right_timeArray,
-					    demo_boot_cycle_wing_right_daArray,
-					    demo_boot_cycle_wing_right_ntime,
-					    time);
-	  }
-	  if (demo_eps_pitch_input) {
-	    double time = Simtime - demo_eps_pitch_input_startTime;
-	    eps_pitch_input = uiuc_1Dinterpolation(demo_eps_pitch_input_timeArray,
-						  demo_eps_pitch_input_daArray,
-						  demo_eps_pitch_input_ntime,
-						  time);
-	  }
-	  if (demo_ice_tail) {
-	    double time = Simtime - demo_ice_tail_startTime;
-	    ice_tail = uiuc_1Dinterpolation(demo_ice_tail_timeArray,
-					    demo_ice_tail_daArray,
-					    demo_ice_tail_ntime,
-					    time);
-	  }
-	  if (demo_ice_left) {
-	    double time = Simtime - demo_ice_left_startTime;
-	    ice_left = uiuc_1Dinterpolation(demo_ice_left_timeArray,
-					    demo_ice_left_daArray,
-					    demo_ice_left_ntime,
-					    time);
-	  }
-	  if (demo_ice_right) {
-	    double time = Simtime - demo_ice_right_startTime;
-	    ice_right = uiuc_1Dinterpolation(demo_ice_right_timeArray,
-					     demo_ice_right_daArray,
-					     demo_ice_right_ntime,
-					     time);
-	  }
-	}
+	uiuc_icing_demo();
     }
 
   if (pilot_ail_no)

@@ -75,6 +75,9 @@ void uiuc_map_gear()
   gear_map["kgear"]               =      kgear_flag                 ;
   gear_map["muGear"]              =      muGear_flag                ;
   gear_map["strutLength"]         =      strutLength_flag           ;
+  gear_map["gear_max"]            =      gear_max_flag              ;
+  gear_map["gear_rate"]           =      gear_rate_flag             ;
+  gear_map["use_gear"]            =      use_gear_flag              ;
 }
 
 // end uiuc_map_gear.cpp

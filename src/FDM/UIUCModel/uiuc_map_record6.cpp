@@ -78,6 +78,11 @@ void uiuc_map_record6()
   /******************************autopilot****************************/
   record_map["ap_Theta_ref_deg"]        = ap_Theta_ref_deg_record        ;
   record_map["ap_pah_on"]               = ap_pah_on_record               ;
+  /***********************trigger variables**************************/
+  record_map["trigger_on"]              = trigger_on_record              ;
+  record_map["trigger_num"]             = trigger_num_record             ;
+  record_map["trigger_toggle"]          = trigger_toggle_record          ;
+  record_map["trigger_counter"]         = trigger_counter_record         ;
 }
 
 // end uiuc_map_record6.cpp

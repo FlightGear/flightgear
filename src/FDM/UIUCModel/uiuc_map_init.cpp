@@ -97,6 +97,7 @@ void uiuc_map_init()
   init_map["dyn_on_speed_zero"]   =      dyn_on_speed_zero_flag     ;
   init_map["use_dyn_on_speed_curve1"] =  use_dyn_on_speed_curve1_flag;
   init_map["use_Alpha_dot_on_speed"]  =  use_Alpha_dot_on_speed_flag;
+  init_map["use_gamma_horiz_on_speed"]  =  use_gamma_horiz_on_speed_flag;
   init_map["downwashMode"]        =      downwashMode_flag          ;
   init_map["downwashCoef"]        =      downwashCoef_flag          ;
   init_map["Alpha"]               =      Alpha_flag                 ;
@@ -104,7 +105,7 @@ void uiuc_map_init()
   init_map["U_body"]              =      U_body_flag                ;
   init_map["V_body"]              =      V_body_flag                ;
   init_map["W_body"]              =      W_body_flag                ;
-  init_map["ignore_unknown"]      =      ignore_unknown_flag        ;
+  init_map["ignore_unknown_keywords"] = ignore_unknown_keywords_flag;
   init_map["trim_case_2"]         =      trim_case_2_flag           ;
   init_map["use_uiuc_network"]    =      use_uiuc_network_flag      ;
   init_map["old_flap_routine"]    =      old_flap_routine_flag      ;

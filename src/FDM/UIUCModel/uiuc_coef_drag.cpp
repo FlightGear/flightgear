@@ -34,7 +34,7 @@
 ----------------------------------------------------------------------
 
  AUTHOR(S):    Bipin Sehgal       <bsehgal@uiuc.edu>
-               Jeff Scott         <jscott@mail.com>
+               Jeff Scott         http://www.jeffscott.net/
 	       Robert Deters      <rdeters@uiuc.edu>
 
 ----------------------------------------------------------------------
@@ -111,7 +111,7 @@ void uiuc_coef_drag()
                 CDo = uiuc_ice_filter(CDo_clean,kCDo);
               }
 	    CDo_save = CDo;
-            CD += CDo;
+            CD += CDo_save;
             break;
           }
         case CDK_flag:
@@ -120,8 +120,15 @@ void uiuc_coef_drag()
               {
                 CDK = uiuc_ice_filter(CDK_clean,kCDK);
               }
-	    CDK_save = CDK * CL * CL;
-            CD += CDK * CL * CL;
+	    if (b_CLK)
+	      {
+		CDK_save = CDK * (CL - CLK) * (CL - CLK);
+	      }
+	    else
+	      {
+		CDK_save = CDK * CL * CL;
+	      }
+            CD += CDK_save;
             break;
           }
         case CD_a_flag:
@@ -131,7 +138,7 @@ void uiuc_coef_drag()
                 CD_a = uiuc_ice_filter(CD_a_clean,kCD_a);
               }
 	    CD_a_save = CD_a * Alpha;
-            CD += CD_a * Alpha;
+            CD += CD_a_save;
             break;
           }
         case CD_adot_flag:
@@ -143,7 +150,7 @@ void uiuc_coef_drag()
             /* CD_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    CD_adot_save = CD_adot * Alpha_dot * cbar_2U;
-            CD += CD_adot * Alpha_dot * cbar_2U;
+            CD += CD_adot_save;
             break;
           }
         case CD_q_flag:
@@ -157,13 +164,13 @@ void uiuc_coef_drag()
             /* why multiply by Theta_dot instead of Q_body? 
                see note in coef_lift.cpp */
 	    CD_q_save = CD_q * Theta_dot * cbar_2U;
-            CD += CD_q * Theta_dot * cbar_2U;
+            CD += CD_q_save;
             break;
           }
         case CD_ih_flag:
           {
 	    CD_ih_save = fabs(CD_ih * ih);
-            CD += fabs(CD_ih * ih);
+            CD += CD_ih_save;
             break;
           }
         case CD_de_flag:
@@ -173,7 +180,43 @@ void uiuc_coef_drag()
                 CD_de = uiuc_ice_filter(CD_de_clean,kCD_de);
               }
 	    CD_de_save = fabs(CD_de * elevator);
-            CD += fabs(CD_de * elevator);
+            CD += CD_de_save;
+            break;
+          }
+        case CD_dr_flag:
+          {
+	    CD_dr_save = fabs(CD_dr * rudder);
+	    CD += CD_dr_save;
+            break;
+          }
+        case CD_da_flag:
+          {
+	    CD_da_save = fabs(CD_da * aileron);
+            CD += CD_da_save;
+            break;
+          }
+        case CD_beta_flag:
+          {
+	    CD_beta_save = fabs(CD_beta * Beta);
+            CD += CD_beta_save;
+            break;
+          }
+        case CD_df_flag:
+          {
+	    CD_df_save = fabs(CD_df * flap_pos);
+            CD += CD_df_save;
+            break;
+          }
+        case CD_ds_flag:
+          {
+	    CD_ds_save = fabs(CD_ds * spoiler_pos);
+            CD += CD_ds_save;
+            break;
+          }
+        case CD_dg_flag:
+          {
+	    CD_dg_save = fabs(CD_dg * gear_pos_norm);
+            CD += CD_dg_save;
             break;
           }
         case CDfa_flag:
@@ -199,7 +242,7 @@ void uiuc_coef_drag()
             CDfdfI = uiuc_1Dinterpolation(CDfdf_dfArray,
                                           CDfdf_CDArray,
                                           CDfdf_ndf,
-                                          flap);
+                                          flap_pos);
             CD += CDfdfI;
             break;
           }
@@ -223,7 +266,7 @@ void uiuc_coef_drag()
                                            CDfadf_nAlphaArray,
                                            CDfadf_ndf,
                                            Alpha,
-                                           flap);
+                                           flap_pos);
             CD += CDfadfI;
             break;
           }
@@ -241,7 +284,7 @@ void uiuc_coef_drag()
                   }
               }
 	    CXo_save = CXo;
-            CX += CXo;
+            CX += CXo_save;
             break;
           }
         case CXK_flag:
@@ -258,7 +301,7 @@ void uiuc_coef_drag()
                   }
               }
 	    CXK_save = CXK * CZ * CZ;
-            CX += CXK * CZ * CZ;
+            CX += CXK_save;
             break;
           }
         case CX_a_flag:
@@ -275,7 +318,7 @@ void uiuc_coef_drag()
                   }
               }
 	    CX_a_save = CX_a * Alpha;
-            CX += CX_a * Alpha;
+            CX += CX_a_save;
             break;
           }
         case CX_a2_flag:
@@ -292,7 +335,7 @@ void uiuc_coef_drag()
                   }
               }
 	    CX_a2_save = CX_a2 * Alpha * Alpha;
-            CX += CX_a2 * Alpha * Alpha;
+            CX += CX_a2_save;
             break;
           }
         case CX_a3_flag:
@@ -309,7 +352,7 @@ void uiuc_coef_drag()
                   }
               }
 	    CX_a3_save = CX_a3 * Alpha * Alpha * Alpha;
-            CX += CX_a3 * Alpha * Alpha * Alpha;
+            CX += CX_a3_save;
             break;
           }
         case CX_adot_flag:
@@ -328,7 +371,7 @@ void uiuc_coef_drag()
             /* CX_adot must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    CX_adot_save = CX_adot * Alpha_dot * cbar_2U;
-            CX += CX_adot * Alpha_dot * cbar_2U;
+            CX += CX_adot_save;
             break;
           }
         case CX_q_flag:
@@ -347,7 +390,7 @@ void uiuc_coef_drag()
             /* CX_q must be mulitplied by cbar/2U 
                (see Roskam Control book, Part 1, pg. 147) */
 	    CX_q_save = CX_q * Q_body * cbar_2U;
-            CX += CX_q * Q_body * cbar_2U;
+            CX += CX_q_save;
             break;
           }
         case CX_de_flag:
@@ -364,7 +407,7 @@ void uiuc_coef_drag()
                   }
               }
 	    CX_de_save = CX_de * elevator;
-            CX += CX_de * elevator;
+            CX += CX_de_save;
             break;
           }
         case CX_dr_flag:
@@ -381,7 +424,7 @@ void uiuc_coef_drag()
                   }
               }
 	    CX_dr_save = CX_dr * rudder;
-            CX += CX_dr * rudder;
+            CX += CX_dr_save;
             break;
           }
         case CX_df_flag:
@@ -391,14 +434,14 @@ void uiuc_coef_drag()
                 CX_df = uiuc_ice_filter(CX_df_clean,kCX_df);
                 if (beta_model)
                   {
-                    CXclean_wing += CX_df_clean * flap;
-                    CXclean_tail += CX_df_clean * flap;
-                    CXiced_wing += CX * flap;
-                    CXiced_tail += CX * flap;
+                    CXclean_wing += CX_df_clean * flap_pos;
+                    CXclean_tail += CX_df_clean * flap_pos;
+                    CXiced_wing += CX * flap_pos;
+                    CXiced_tail += CX * flap_pos;
                   }
               }
-	    CX_df_save = CX_df * flap;
-            CX += CX_df * flap;
+	    CX_df_save = CX_df * flap_pos;
+            CX += CX_df_save;
             break;
           }
         case CX_adf_flag:
@@ -408,14 +451,14 @@ void uiuc_coef_drag()
                 CX_adf = uiuc_ice_filter(CX_adf_clean,kCX_adf);
                 if (beta_model)
                   {
-                    CXclean_wing += CX_adf_clean * Alpha * flap;
-                    CXclean_tail += CX_adf_clean * Alpha * flap;
-                    CXiced_wing += CX_adf * Alpha * flap;
-                    CXiced_tail += CX_adf * Alpha * flap;
+                    CXclean_wing += CX_adf_clean * Alpha * flap_pos;
+                    CXclean_tail += CX_adf_clean * Alpha * flap_pos;
+                    CXiced_wing += CX_adf * Alpha * flap_pos;
+                    CXiced_tail += CX_adf * Alpha * flap_pos;
                   }
               }
-	    CX_adf_save = CX_adf * Alpha * flap;
-            CX += CX_adf * Alpha * flap;
+	    CX_adf_save = CX_adf * Alpha * flap_pos;
+            CX += CX_adf_save;
             break;
           }
         case CXfabetaf_flag:
