@@ -115,6 +115,8 @@ string FGATIS::get_transmission() {
 
 	// Start with the transmitted station name.
 	transmission += name;
+	// Add "Information"
+	transmission += " Information";
 
 	//cout << "In atis.cxx, time_str = " << time_str << '\n';
 	// Add the recording identifier
@@ -133,7 +135,9 @@ string FGATIS::get_transmission() {
 	transmission = transmission + "  Weather " + time_str.substr(0,3) + "00 hours Zulu";
 
 	// Get the temperature
-	temperature = fgGetDouble("/environment/weather/temperature-K");
+	// (Hardwire it for now since the global property returns the temperature at the current altitude
+	//temperature = fgGetDouble("/environment/weather/temperature-K");
+	temperature = 15 + 273.15;
 	sprintf(buf, "%i", int(temperature - 273.15));
 	transmission += "  Temperature ";
 	transmission += buf;
