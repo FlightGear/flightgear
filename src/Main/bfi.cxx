@@ -125,7 +125,9 @@ FGBFI::init ()
 
 				// Engine
   current_properties.tieDouble("/engines/engine0/rpm",
-			       getRPM, setRPM);
+			       getRPM, 0);
+  current_properties.tieDouble("/engines/engine0/egt",
+			       getEGT, 0);
 
 				// Velocities
   current_properties.tieDouble("/velocities/airspeed",
@@ -144,6 +146,10 @@ FGBFI::init ()
 				// Controls
   current_properties.tieDouble("/controls/throttle",
 			       getThrottle, setThrottle);
+  current_properties.tieDouble("/controls/mixture",
+			       getMixture, setMixture);
+  current_properties.tieDouble("/controls/propellor-pitch",
+			       getPropAdvance, setPropAdvance);
   current_properties.tieDouble("/controls/flaps",
 			       getFlaps, setFlaps);
   current_properties.tieDouble("/controls/aileron",
@@ -259,16 +265,6 @@ FGBFI::reinit ()
 
   cout << "BFI: start reinit\n";
 
-//   setHeading(getHeading());
-//   setPitch(getPitch());
-//   setRoll(getRoll());
-//   setSpeedNorth(getSpeedNorth());
-//   setSpeedEast(getSpeedEast());
-//   setSpeedDown(getSpeedDown());
-//   setLatitude(getLatitude());
-//   setLongitude(getLongitude());
-//   setAltitude(getAltitude());
-
 				// TODO: add more AP stuff
   double elevator = getElevator();
   double aileron = getAileron();
@@ -371,8 +367,10 @@ FGBFI::getAircraftDir ()
 void
 FGBFI::setFlightModel (int model)
 {
-  current_options.set_flight_model(model);
-  needReinit();
+  if (getFlightModel() != model) {
+    current_options.set_flight_model(model);
+    needReinit();
+  }
 }
 
 
@@ -382,8 +380,10 @@ FGBFI::setFlightModel (int model)
 void
 FGBFI::setAircraft (const string &aircraft)
 {
-  current_options.set_aircraft(aircraft);
-  needReinit();
+  if (getAircraft() != aircraft) {
+    current_options.set_aircraft(aircraft);
+    needReinit();
+  }
 }
 
 
@@ -393,8 +393,10 @@ FGBFI::setAircraft (const string &aircraft)
 void
 FGBFI::setAircraftDir (const string &dir)
 {
-  aircraft_dir = dir;
-  needReinit();
+  if (getAircraftDir() != dir) {
+    aircraft_dir = dir;
+    needReinit();
+  }
 }
 
 
@@ -414,14 +416,16 @@ FGBFI::getTimeGMT ()
 void
 FGBFI::setTimeGMT (time_t time)
 {
+  if (getTimeGMT() != time) {
 				// FIXME: need to update lighting
 				// and solar system
-  current_options.set_time_offset(time);
-  current_options.set_time_offset_type(fgOPTIONS::FG_TIME_GMT_ABSOLUTE);
-  globals->get_time_params()->update( cur_fdm_state->get_Longitude(),
-				      cur_fdm_state->get_Latitude(),
-				      globals->get_warp() );
-  needReinit();
+    current_options.set_time_offset(time);
+    current_options.set_time_offset_type(fgOPTIONS::FG_TIME_GMT_ABSOLUTE);
+    globals->get_time_params()->update( cur_fdm_state->get_Longitude(),
+					cur_fdm_state->get_Latitude(),
+					globals->get_warp() );
+    needReinit();
+  }
 }
 
 
@@ -505,9 +509,11 @@ FGBFI::getLatitude ()
 void
 FGBFI::setLatitude (double latitude)
 {
-  current_options.set_lat(latitude);
-  current_aircraft.fdm_state->set_Latitude(latitude * DEG_TO_RAD);
-  needReinit();
+  if (getLatitude() != latitude) {
+    current_options.set_lat(latitude);
+    current_aircraft.fdm_state->set_Latitude(latitude * DEG_TO_RAD);
+    needReinit();
+  }
 }
 
 
@@ -527,9 +533,11 @@ FGBFI::getLongitude ()
 void
 FGBFI::setLongitude (double longitude)
 {
-  current_options.set_lon(longitude);
-  current_aircraft.fdm_state->set_Longitude(longitude * DEG_TO_RAD);
-  needReinit();
+  if (getLongitude() != longitude) {
+    current_options.set_lon(longitude);
+    current_aircraft.fdm_state->set_Longitude(longitude * DEG_TO_RAD);
+    needReinit();
+  }
 }
 
 
@@ -561,10 +569,11 @@ FGBFI::getAGL ()
 void
 FGBFI::setAltitude (double altitude)
 {
-  fgFDMForceAltitude(getFlightModel(), altitude * FEET_TO_METER);
-  current_options.set_altitude(altitude * FEET_TO_METER);
-  current_aircraft.fdm_state->set_Altitude(altitude);
-//   needReinit();
+  if (getAltitude() != altitude) {
+    fgFDMForceAltitude(getFlightModel(), altitude * FEET_TO_METER);
+    current_options.set_altitude(altitude * FEET_TO_METER);
+    current_aircraft.fdm_state->set_Altitude(altitude);
+  }
 }
 
 
@@ -600,11 +609,13 @@ FGBFI::getHeadingMag ()
 void
 FGBFI::setHeading (double heading)
 {
-  current_options.set_heading(heading);
-  current_aircraft.fdm_state->set_Euler_Angles(getRoll() * DEG_TO_RAD,
-					       getPitch() * DEG_TO_RAD,
-					       heading * DEG_TO_RAD);
-  needReinit();
+  if (getHeading() != heading) {
+    current_options.set_heading(heading);
+    current_aircraft.fdm_state->set_Euler_Angles(getRoll() * DEG_TO_RAD,
+						 getPitch() * DEG_TO_RAD,
+						 heading * DEG_TO_RAD);
+    needReinit();
+  }
 }
 
 
@@ -624,12 +635,13 @@ FGBFI::getPitch ()
 void
 FGBFI::setPitch (double pitch)
 {
-
-  current_options.set_pitch(pitch);
-  current_aircraft.fdm_state->set_Euler_Angles(getRoll() * DEG_TO_RAD,
-					       pitch * DEG_TO_RAD,
-					       getHeading() * DEG_TO_RAD);
-  needReinit();
+  if (getPitch() != pitch) {
+    current_options.set_pitch(pitch);
+    current_aircraft.fdm_state->set_Euler_Angles(getRoll() * DEG_TO_RAD,
+						 pitch * DEG_TO_RAD,
+						 getHeading() * DEG_TO_RAD);
+    needReinit();
+  }
 }
 
 
@@ -649,11 +661,13 @@ FGBFI::getRoll ()
 void
 FGBFI::setRoll (double roll)
 {
-  current_options.set_roll(roll);
-  current_aircraft.fdm_state->set_Euler_Angles(roll * DEG_TO_RAD,
-					       getPitch() * DEG_TO_RAD,
-					       getHeading() * DEG_TO_RAD);
-  needReinit();
+  if (getRoll() != roll) {
+    current_options.set_roll(roll);
+    current_aircraft.fdm_state->set_Euler_Angles(roll * DEG_TO_RAD,
+						 getPitch() * DEG_TO_RAD,
+						 getHeading() * DEG_TO_RAD);
+    needReinit();
+  }
 }
 
 
@@ -677,9 +691,18 @@ FGBFI::getRPM ()
 void
 FGBFI::setRPM (double rpm)
 {
-  if ( current_aircraft.fdm_state->get_engine(0) != NULL ) {
-      current_aircraft.fdm_state->get_engine(0)->set_RPM( rpm );
-  }
+  if (getRPM() != rpm)
+    current_aircraft.fdm_state->get_engine(0)->set_RPM( rpm );
+}
+
+
+/**
+ * Return the current engine0 EGT.
+ */
+double
+FGBFI::getEGT ()
+{
+  return current_aircraft.fdm_state->get_engine(0)->get_EGT();
 }
 
 
@@ -737,11 +760,13 @@ FGBFI::getSpeedNorth ()
 void
 FGBFI::setSpeedNorth (double speed)
 {
-  current_options.set_uBody(speed);
-  current_aircraft.fdm_state->set_Velocities_Local(speed,
-						   getSpeedEast(),
-						   getSpeedDown());
-  needReinit();
+  if (getSpeedNorth() != speed) {
+    current_options.set_uBody(speed);
+    current_aircraft.fdm_state->set_Velocities_Local(speed,
+						     getSpeedEast(),
+						     getSpeedDown());
+    needReinit();
+  }
 }
 
 
@@ -761,11 +786,13 @@ FGBFI::getSpeedEast ()
 void
 FGBFI::setSpeedEast (double speed)
 {
-  current_options.set_vBody(speed);
-  current_aircraft.fdm_state->set_Velocities_Local(getSpeedNorth(),
-						   speed,
-						   getSpeedDown());
-  needReinit();
+  if (getSpeedEast() != speed) {
+    current_options.set_vBody(speed);
+    current_aircraft.fdm_state->set_Velocities_Local(getSpeedNorth(),
+						     speed,
+						     getSpeedDown());
+    needReinit();
+  }
 }
 
 
@@ -785,11 +812,13 @@ FGBFI::getSpeedDown ()
 void
 FGBFI::setSpeedDown (double speed)
 {
-  current_options.set_wBody(speed);
-  current_aircraft.fdm_state->set_Velocities_Local(getSpeedNorth(),
-						   getSpeedEast(),
-						   speed);
-  needReinit();
+  if (getSpeedDown() != speed) {
+    current_options.set_wBody(speed);
+    current_aircraft.fdm_state->set_Velocities_Local(getSpeedNorth(),
+						     getSpeedEast(),
+						     speed);
+    needReinit();
+  }
 }
 
 
@@ -805,7 +834,7 @@ FGBFI::setSpeedDown (double speed)
 double
 FGBFI::getThrottle ()
 {
-				// FIXME: add throttle selector
+				// FIXME: add engine selector
   return controls.get_throttle(0);
 }
 
@@ -816,9 +845,52 @@ FGBFI::getThrottle ()
 void
 FGBFI::setThrottle (double throttle)
 {
-				// FIXME: allow throttle selection
-				// FIXME: clamp?
+				// FIXME: allow engine selection
   controls.set_throttle(0, throttle);
+}
+
+
+/**
+ * Get the fuel mixture setting, from 0.0 (none) to 1.0 (full).
+ */
+double
+FGBFI::getMixture ()
+{
+				// FIXME: add engine selector
+  return controls.get_mixture(0);
+}
+
+
+/**
+ * Set the fuel mixture, from 0.0 (none) to 1.0 (full).
+ */
+void
+FGBFI::setMixture (double mixture)
+{
+				// FIXME: allow engine selection
+  controls.set_mixture(0, mixture);
+}
+
+
+/**
+ * Get the propellor pitch setting, from 0.0 (none) to 1.0 (full).
+ */
+double
+FGBFI::getPropAdvance ()
+{
+				// FIXME: add engine selector
+  return controls.get_prop_advance(0);
+}
+
+
+/**
+ * Set the propellor pitch, from 0.0 (none) to 1.0 (full).
+ */
+void
+FGBFI::setPropAdvance (double pitch)
+{
+				// FIXME: allow engine selection
+  controls.set_prop_advance(0, pitch);
 }
 
 
@@ -1562,9 +1634,11 @@ FGBFI::setVisibility (double visibility)
 void
 FGBFI::setClouds (bool clouds)
 {
-  cout << "Set clouds to " << clouds << endl;
-  current_options.set_clouds(clouds);
-  needReinit();
+  if (getClouds() != clouds) {
+    cout << "Set clouds to " << clouds << endl;
+    current_options.set_clouds(clouds);
+    needReinit();
+  }
 }
 
 
@@ -1574,8 +1648,10 @@ FGBFI::setClouds (bool clouds)
 void
 FGBFI::setCloudsASL (double cloudsASL)
 {
-  current_options.set_clouds_asl(cloudsASL);
-  needReinit();
+  if (getCloudsASL() != cloudsASL) {
+    current_options.set_clouds_asl(cloudsASL);
+    needReinit();
+  }
 }
 
 

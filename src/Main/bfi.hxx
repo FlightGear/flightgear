@@ -93,6 +93,7 @@ public:
 				// Engine
   static double getRPM ();
   static void setRPM ( double rpm );
+  static double getEGT ();
 
 				// Velocities
   static double getAirspeed ();
@@ -109,6 +110,8 @@ public:
 
 				// Controls
   static double getThrottle ();
+  static double getMixture ();
+  static double getPropAdvance ();
   static double getFlaps ();
   static double getAileron ();
   static double getRudder ();
@@ -120,6 +123,8 @@ public:
   static double getCenterBrake ();
 
   static void setThrottle (double throttle);
+  static void setMixture (double mixture);
+  static void setPropAdvance (double pitch);
   static void setFlaps (double flaps);
   static void setAileron (double aileron);
   static void setRudder (double rudder);
