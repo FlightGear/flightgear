@@ -261,6 +261,15 @@ void FGTileMgr::initialize_queue()
 #endif
 }
 
+/**
+ * return current status of queues
+ *
+ */
+
+bool FGTileMgr::all_queues_empty() {
+	return attach_queue.empty() && model_queue.empty();
+}
+
 
 /**
  * Update the various queues maintained by the tilemagr (private

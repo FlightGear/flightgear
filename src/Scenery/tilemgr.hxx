@@ -159,6 +159,9 @@ public:
     // internal function, do not call directly.)
     void update_queues();
 
+    // get state of all the scenery loading queues
+    bool all_queues_empty();
+
     // given the current lon/lat (in degrees), fill in the array of
     // local chunks.  If the chunk isn't already in the cache, then
     // read it from disk.

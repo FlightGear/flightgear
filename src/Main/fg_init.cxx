@@ -1875,5 +1875,6 @@ void fgReInitSubsystems()
         fgSetBool("/sim/freeze/master", false);
     }
     fgSetBool("/sim/initialised", true);
+    fgSetBool("/sim/sceneryloaded",false);
 }
 

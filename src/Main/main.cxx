@@ -84,6 +84,7 @@
 #include <Time/tmp.hxx>
 #include <Time/fg_timer.hxx>
 #include <Environment/environment_mgr.hxx>
+#include <GUI/new_gui.hxx>
 
 #ifdef FG_MPLAYER_AS
 #include <MultiPlayer/multiplaytxmgr.hxx>
@@ -1205,8 +1206,16 @@ static void fgMainLoop( void ) {
     }
 
     // flight model
-    if ( global_multi_loop > 0 ) {
-        fgUpdateTimeDepCalcs();
+    if ( global_multi_loop > 0) {
+        // first run the flight model each frame until it is intialized
+        // then continue running each frame only after initial scenery load is complete.
+        if (!cur_fdm_state->get_inited() or fgGetBool("sim/sceneryloaded")) {
+            fgUpdateTimeDepCalcs();
+        } else {
+            // only during scenery load
+            NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+            gui->showDialog("scenery_loading");
+        }
     } else {
         SG_LOG( SG_ALL, SG_DEBUG, 
             "Elapsed time is zero ... we're zinging" );
@@ -1330,6 +1339,13 @@ static void fgMainLoop( void ) {
 
     // END Tile Manager udpates
 
+    if (!fgGetBool("sim/sceneryloaded") and globals->get_tile_mgr()->all_queues_empty() and cur_fdm_state->get_inited()) {
+        fgSetBool("sim/sceneryloaded",true);
+        // probably not efficient way to popup msg,  but is done only during scenery load
+        NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+        gui->closeDialog("scenery_loading");
+    }
+
     if (fgGetBool("/sim/rendering/specular-highlight")) {
         glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
 	// glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
@@ -1441,6 +1457,7 @@ static void fgIdleFunction ( void ) {
         // We've finished all our initialization steps, from now on we
         // run the main loop.
         fgSetBool("sim/initialised",true);
+        fgSetBool("sim/sceneryloaded",false);
 
         fgRegisterIdleHandler(fgMainLoop);
     } else {
