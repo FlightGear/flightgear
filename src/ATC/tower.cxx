@@ -351,6 +351,7 @@ void FGTower::DoRwyDetails() {
     	double tshlon, tshlat, tshr;
 		double tolon, tolat, tor;
 		rwy.length = runway.length * SG_FEET_TO_METER;
+		rwy.width = runway.width * SG_FEET_TO_METER;
     	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), other_way, 
         	                rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
     	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), runway.heading, 
@@ -376,22 +377,24 @@ void FGTower::DoRwyDetails() {
 // Figure out if a given position lies on the active runway
 // Might have to change when we consider more than one active rwy.
 bool FGTower::OnActiveRunway(Point3D pt) {
-	SGPath path( globals->get_fg_root() );
-	path.append( "Airports" );
-	path.append( "runways.mk4" );
-	FGRunways runways( path.c_str() );
+	// TODO - check that the centre calculation below isn't confused by displaced thesholds etc.
+	Point3D xyc((rwy.end1ortho.x() + rwy.end2ortho.x())/2.0, (rwy.end1ortho.y() + rwy.end2ortho.y())/2.0, 0.0);
+	Point3D xyp = ortho.ConvertToLocal(pt);
 	
-	FGRunway runway;
-	bool rwyGood = runways.search(ident, activeRwy, &runway);
-	if(!rwyGood) {
-		SG_LOG(SG_ATC, SG_WARN, "Unable to find runway " << activeRwy << " for airport ID " << ident << " in FGTower");
-	}
-	return false;	// TODO - this is an emergency patch to correct a framerate problem - FIXME properly!!!
-	//return(OnRunway(pt, &runway) ? true : false);
+	//cout << "Length offset = " << fabs(xyp.y() - xyc.y()) << '\n';
+	//cout << "Width offset = " << fabs(xyp.x() - xyc.x()) << '\n';
+
+	double rlen = rwy.length/2.0 + 5.0;
+	double rwidth = rwy.width/2.0;
+	double ldiff = fabs(xyp.y() - xyc.y());
+	double wdiff = fabs(xyp.x() - xyc.x());
+
+	return((ldiff < rlen) && (wdiff < rwidth));
 }	
 
 
 // Figure out if a given position lies on any runway or not
+// Only call this at startup - reading the runways database is expensive and needs to be fixed!
 bool FGTower::OnAnyRunway(Point3D pt) {
 	ATCData ad;
 	double dist = current_commlist->FindClosest(lon, lat, elev, ad, TOWER, 10.0);
@@ -414,7 +417,7 @@ bool FGTower::OnAnyRunway(Point3D pt) {
 	}
 	bool on = false;
 	while(runway.id == ad.ident) {		
-		on = OnRunway(pt, &runway);
+		on = OnRunway(pt, runway);
 		//cout << "Runway " << runway.rwy_no << ": On = " << (on ? "true\n" : "false\n");
 		if(on) return(true);
 		runways.next(&runway);		
