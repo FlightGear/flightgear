@@ -10,12 +10,6 @@ else
 MPLAYER_LIBS = 
 endif
 
-if ENABLE_MSERVER_AS
-MSERVER_LIBS = $(top_builddir)/src/Server/libServer.a
-else
-MSERVER_LIBS = 
-endif
-
 if ENABLE_NETWORK_OLK
 NETWORK_LIBS = $(top_builddir)/src/NetworkOLK/libNetworkOLK.a
 else
@@ -98,7 +92,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Sound/libSound.a \
 	$(top_builddir)/src/Airports/libAirports.a \
 	$(MPLAYER_LIBS) \
-	$(MSERVER_LIBS) \
         $(NETWORK_LIBS) \
 	$(top_builddir)/src/Objects/libObjects.a \
 	$(top_builddir)/src/Replay/libReplay.a \
