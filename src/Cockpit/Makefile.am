@@ -8,7 +8,6 @@ libCockpit_a_SOURCES = \
 	hud_labl.cxx hud_ladr.cxx \
 	hud_lat.cxx hud_lon.cxx \
 	hud_scal.cxx hud_tbi.cxx \
-	kr_87.cxx kr_87.hxx \
 	kt_70.cxx kt_70.hxx \
 	marker_beacon.cxx marker_beacon.hxx \
 	navcom.cxx navcom.hxx \

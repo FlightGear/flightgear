@@ -37,7 +37,6 @@
 #include <Sound/morse.hxx>
 
 #include "dme.hxx"
-#include "kr_87.hxx"            // ADF
 #include "kt_70.hxx"            // Transponder
 #include "marker_beacon.hxx"
 #include "navcom.hxx"
