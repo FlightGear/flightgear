@@ -212,7 +212,9 @@ void FGJSBsim::init() {
                   9.0/5.0*(temperature->getDoubleValue()+273.15) );
       Atmosphere->SetExPressure(pressure->getDoubleValue()*70.726566);
       Atmosphere->SetExDensity(density->getDoubleValue());
-      Atmosphere->SetTurbGain(turbulence->getDoubleValue()*100.0);
+      Atmosphere->SetTurbGain(turbulence->getDoubleValue() *
+                              turbulence->getDoubleValue() *
+                              100.0);
     } else {
       Atmosphere->UseInternal();
     }
@@ -400,7 +402,9 @@ bool FGJSBsim::copy_to_JSBsim() {
                   9.0/5.0*(temperature->getDoubleValue()+273.15) );
     Atmosphere->SetExPressure(pressure->getDoubleValue()*70.726566);
     Atmosphere->SetExDensity(density->getDoubleValue());
-    Atmosphere->SetTurbGain(turbulence->getDoubleValue()*100.0);
+    Atmosphere->SetTurbGain(turbulence->getDoubleValue() *
+                            turbulence->getDoubleValue() *
+                            100.0);
 
     Atmosphere->SetWindNED( wind_from_north->getDoubleValue(),
                             wind_from_east->getDoubleValue(),
