@@ -229,9 +229,9 @@ void fgPresetAirspeed(puObject *cb)
 void fgPresetCommit(puObject *)
 {
     SGPropertyNode args;
-    if ( !globals->get_commands()->execute("presets_commit", &args) )
+    if ( !globals->get_commands()->execute("presets-commit", &args) )
     {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Command: presets_commit failed.");
+        SG_LOG( SG_GENERAL, SG_ALERT, "Command: presets-commit failed.");
     }
 }
 
