@@ -920,5 +920,125 @@ FGRenderer::resize( int width, int height ) {
 
 }
 
+// For HiRes screen Dumps using Brian Pauls TR Library
+void trRenderFrame( void ) {
+#ifdef FG_ENABLE_MULTIPASS_CLOUDS
+    bool multi_pass_clouds = fgGetBool("/sim/rendering/multi-pass-clouds") &&
+                            !SGCloudLayer::enable_bump_mapping; // ugly artefact now
+#else
+    bool multi_pass_clouds = false;
+#endif
+    bool draw_clouds = fgGetBool("/environment/clouds/status");
+
+    if ( fgPanelVisible() ) {
+        GLfloat height = fgGetInt("/sim/startup/ysize");
+        GLfloat view_h =
+            (globals->get_current_panel()->getViewHeight() - globals->get_current_panel()->getYOffset())
+            * (height / 768.0) + 1;
+        glTranslatef( 0.0, view_h, 0.0 );
+    }
+
+    static GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
+    static GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
+
+    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
+
+    glClearColor(l->adj_fog_color()[0], l->adj_fog_color()[1], 
+                 l->adj_fog_color()[2], l->adj_fog_color()[3]);
+
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+    // set the opengl state to known default values
+    default_state->force();
+
+    glEnable( GL_FOG );
+    glFogf  ( GL_FOG_DENSITY, fog_exp2_density);
+    glFogi  ( GL_FOG_MODE,    GL_EXP2 );
+    glFogfv ( GL_FOG_COLOR,   l->adj_fog_color() );
+
+    // GL_LIGHT_MODEL_AMBIENT has a default non-zero value so if
+    // we only update GL_AMBIENT for our lights we will never get
+    // a completely dark scene.  So, we set GL_LIGHT_MODEL_AMBIENT
+    // explicitely to black.
+    glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
+    glLightModeli( GL_LIGHT_MODEL_LOCAL_VIEWER, GL_FALSE );
+
+    ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient() );
+
+    // texture parameters
+    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
+    glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST ) ;
+
+    // we need a white diffuse light for the phase of the moon
+    ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, white );
+    thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
+                     fog_exp2_density );
+
+    // draw the ssg scene
+    // return to the desired diffuse color
+    ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse() );
+    glEnable( GL_DEPTH_TEST );
+    ssgSetNearFar( scene_nearplane, scene_farplane );
+    if ( draw_clouds ) {
+        // Draw the terrain
+        FGTileMgr::set_tile_filter( true );
+        sgSetModelFilter( false );
+        globals->get_aircraft_model()->select( false );
+        ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+        // Disable depth buffer update, draw the clouds
+        glDepthMask( GL_FALSE );
+        thesky->drawUpperClouds();
+        if ( multi_pass_clouds ) {
+            thesky->drawLowerClouds();
+        }
+        glDepthMask( GL_TRUE );
+        if ( multi_pass_clouds ) {
+            // Draw the objects except the aircraft
+            //  and update the stencil buffer with 1
+            glEnable( GL_STENCIL_TEST );
+            glStencilFunc( GL_ALWAYS, 1, 1 );
+            glStencilOp( GL_KEEP, GL_KEEP, GL_REPLACE );
+        }
+        FGTileMgr::set_tile_filter( false );
+        sgSetModelFilter( true );
+        ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+    } else {
+        FGTileMgr::set_tile_filter( true );
+        sgSetModelFilter( true );
+        globals->get_aircraft_model()->select( false );
+        ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+    }
+
+    // draw the lights
+    glFogf (GL_FOG_DENSITY, rwy_exp2_punch_through);
+    ssgSetNearFar( scene_nearplane, scene_farplane );
+    ssgCullAndDraw( globals->get_scenery()->get_vasi_lights_root() );
+    ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
+
+    ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
+
+    if ( draw_clouds ) {
+        if ( multi_pass_clouds ) {
+            // Disable depth buffer update, draw the clouds where the
+            //  objects overwrite the already drawn clouds, by testing
+            //  the stencil buffer against 1
+            glDepthMask( GL_FALSE );
+            glStencilFunc( GL_EQUAL, 1, 1 );
+            glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );
+            thesky->drawUpperClouds();
+            thesky->drawLowerClouds();
+            glDepthMask( GL_TRUE );
+            glDisable( GL_STENCIL_TEST );
+        } else {
+            glDepthMask( GL_FALSE );
+            thesky->drawLowerClouds();
+            glDepthMask( GL_TRUE );
+        }
+    }
+
+    globals->get_aircraft_model()->select( true );
+    globals->get_model_mgr()->draw();
+    globals->get_aircraft_model()->draw();
+}
 
 // end of renderer.cxx
