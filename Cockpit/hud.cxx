@@ -51,13 +51,14 @@
 #include <Time/fg_timer.hxx>
 #include <Weather/weather.h>
 
-#include "hud.hxx"
-
-#ifdef __sun__
+#if defined ( __sun__ ) || defined ( __sgi )
 extern "C" {
   extern void *memmove(void *, const void *, size_t);
 }
 #endif
+
+#include "hud.hxx"
+
 
 
 // The following routines obtain information concerntin the aircraft's
@@ -695,11 +696,14 @@ void fgUpdateHUD( void ) {
 }
 
 /* $Log$
-/* Revision 1.18  1998/07/20 12:47:55  curt
-/* Replace the hud rendering for loop (which linearly searches the the hud
-/* list to find the entry with the proper position) with a simple linear
-/* traversal using an "iterator."
+/* Revision 1.19  1998/07/30 23:44:05  curt
+/* Tweaks for sgi building.
 /*
+ * Revision 1.18  1998/07/20 12:47:55  curt
+ * Replace the hud rendering for loop (which linearly searches the the hud
+ * list to find the entry with the proper position) with a simple linear
+ * traversal using an "iterator."
+ *
  * Revision 1.17  1998/07/13 21:28:02  curt
  * Converted the aoa scale to a radio altimeter.
  *
