@@ -30,8 +30,7 @@ New in 0.7.9
 * Modified FGSubsystem::update() to take an int parameter for delta time.
 * Many internal fixes and enhancements to the core code that manages
   instrument panel modeling and rendering.
-* Fixed a bug preventing the LaRCsim engine from starting.
-* EGT doesn't show 'running' values while cranking.
+* LaRCsim EGT doesn't show 'running' values while cranking.
 * Fixes to JSBSim so that the slip/skid ball is much more realistically modelled
 * Added support for an unlimited number of fuel tanks.
 * Multi-engine throttle fixes.
@@ -53,6 +52,9 @@ New in 0.7.9
 * Make the tile cache system more tolerant of situations where the tile
   cache is full, but no entry qualifies for removal.
 
+* Switch to JSBSim (jsbsim.sf.net) as our default flight model.
+* Added additional aircraft: Cessna 182, Cessna 172 (ifr panel),
+  and a Cessna 310 (twin prop).
 * Added an entirely new set of flight dynamics modeling code by Andy Ross.
   Includes several aircraft such as a 747, A4, and DC-3.
   This is (Y)et (A)nother Flight Dynamics (Sim)ulator.  It is a first cut
