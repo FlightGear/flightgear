@@ -1,4 +1,3 @@
-//
 // options.hxx -- class to handle command line options
 //
 // Written by Curtis Olson, started April 1998.
@@ -48,8 +47,11 @@
 using namespace std;
 #endif
 
+
 class fgOPTIONS {
+
 public:
+
     enum
     {
 	FG_OPTIONS_OK = 0,
@@ -137,41 +139,41 @@ public:
     void usage ( void );
 
     // Query functions
-    string get_fg_root() const { return fg_root; }
-    string get_airport_id() const { return airport_id; }
-    double get_lon() const { return lon; }
-    double get_lat() const { return lat; }
-    double get_altitude() const { return altitude; }
-    double get_heading() const { return heading; }
-    double get_roll() const { return roll; }
-    double get_pitch() const { return pitch; }
-    bool get_game_mode() const { return game_mode; }
-    bool get_splash_screen() const { return splash_screen; }
-    bool get_intro_music() const { return intro_music; }
-    int get_mouse_pointer() const { return mouse_pointer; }
-    bool get_pause() const { return pause; }
-    bool get_hud_status() const { return hud_status; }
-    bool get_panel_status() const { return panel_status; }
-    bool get_sound() const { return sound; }
-    int get_flight_model() const { return flight_model; }
-    bool fog_enabled() const { return fog != FG_FOG_DISABLED; }
-    fgFogKind get_fog() const { return fog; }
-    double get_fov() const { return fov; }
-    bool get_fullscreen() const { return fullscreen; }
-    int get_shading() const { return shading; }
-    bool get_skyblend() const { return skyblend; }
-    bool get_textures() const { return textures; }
-    bool get_wireframe() const { return wireframe; }
-    int get_tile_radius() const { return tile_radius; }
-    int get_tile_diameter() const { return tile_diameter; }
-    int get_time_offset() const { return time_offset; }
-    int get_tris_or_culled() const { return tris_or_culled; }
+    inline string get_fg_root() const { return fg_root; }
+    inline string get_airport_id() const { return airport_id; }
+    inline double get_lon() const { return lon; }
+    inline double get_lat() const { return lat; }
+    inline double get_altitude() const { return altitude; }
+    inline double get_heading() const { return heading; }
+    inline double get_roll() const { return roll; }
+    inline double get_pitch() const { return pitch; }
+    inline bool get_game_mode() const { return game_mode; }
+    inline bool get_splash_screen() const { return splash_screen; }
+    inline bool get_intro_music() const { return intro_music; }
+    inline int get_mouse_pointer() const { return mouse_pointer; }
+    inline bool get_pause() const { return pause; }
+    inline bool get_hud_status() const { return hud_status; }
+    inline bool get_panel_status() const { return panel_status; }
+    inline bool get_sound() const { return sound; }
+    inline int get_flight_model() const { return flight_model; }
+    inline bool fog_enabled() const { return fog != FG_FOG_DISABLED; }
+    inline fgFogKind get_fog() const { return fog; }
+    inline double get_fov() const { return fov; }
+    inline bool get_fullscreen() const { return fullscreen; }
+    inline int get_shading() const { return shading; }
+    inline bool get_skyblend() const { return skyblend; }
+    inline bool get_textures() const { return textures; }
+    inline bool get_wireframe() const { return wireframe; }
+    inline int get_tile_radius() const { return tile_radius; }
+    inline int get_tile_diameter() const { return tile_diameter; }
+    inline int get_time_offset() const { return time_offset; }
+    inline int get_tris_or_culled() const { return tris_or_culled; }
 
     // Update functions
-    void set_hud_status( bool status ) { hud_status = status; }
-    void set_fov( double amount ) { fov = amount; }
-    void set_textures( bool status ) { textures = status; }
-    void cycle_fog( void ) { 
+    inline void set_hud_status( bool status ) { hud_status = status; }
+    inline void set_fov( double amount ) { fov = amount; }
+    inline void set_textures( bool status ) { textures = status; }
+    inline void cycle_fog( void ) { 
 	if ( fog == FG_FOG_DISABLED ) {
 	    fog = FG_FOG_FASTEST;
 	} else if ( fog == FG_FOG_FASTEST ) {
@@ -201,6 +203,9 @@ extern fgOPTIONS current_options;
 
 
 // $Log$
+// Revision 1.19  1998/10/25 14:08:49  curt
+// Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
+//
 // Revision 1.18  1998/09/17 18:35:31  curt
 // Added F8 to toggle fog and F9 to toggle texturing.
 //

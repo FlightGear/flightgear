@@ -460,7 +460,6 @@ static const double alt_adjust_m = alt_adjust_ft * FEET_TO_METER;
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
-    fgCONTROLS *c;
     fgFLIGHT *f;
     fgGENERAL *g;
     fgTIME *t;
@@ -469,7 +468,6 @@ static void fgMainLoop( void ) {
     int i;
     double accum;
 
-    c = &cur_control_params;
     f = current_aircraft.flight;
     g = &general;
     t = &cur_time_params;
@@ -577,7 +575,7 @@ static void fgMainLoop( void ) {
     // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
     if ( current_options.get_sound() && audio_sched->working() ) {
-	double param = c->throttle[0] * 2.0 + 1.0;
+	double param = controls.get_throttle( 0 ) * 2.0 + 1.0;
 
 	pitch_envelope.setStep  ( 0, 0.01, param );
 	volume_envelope.setStep ( 0, 0.01, param );
@@ -894,6 +892,9 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.61  1998/10/25 14:08:47  curt
+// Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
+//
 // Revision 1.60  1998/10/25 10:57:18  curt
 // Changes to use the new joystick library if it is available.
 //

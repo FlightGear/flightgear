@@ -113,42 +113,27 @@ double get_long_min( void )
 
 double get_throttleval( void )
 {
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->throttle[0];     // Hack limiting to one engine
+    return controls.get_throttle( 0 );     // Hack limiting to one engine
 }
 
 double get_aileronval( void )
 {
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->aileron;
+    return controls.get_aileron();
 }
 
 double get_elevatorval( void )
 {
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->elevator;
+    return controls.get_elevator();
 }
 
 double get_elev_trimval( void )
 {
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->elevator_trim;
+    return controls.get_elevator_trim();
 }
 
 double get_rudderval( void )
 {
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->rudder;
+    return controls.get_rudder();
 }
 
 double get_speed( void )
@@ -315,6 +300,9 @@ void fgCockpitUpdate( void ) {
 
 
 // $Log$
+// Revision 1.20  1998/10/25 14:08:40  curt
+// Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
+//
 // Revision 1.19  1998/10/17 01:33:56  curt
 // C++ ifying ...
 //

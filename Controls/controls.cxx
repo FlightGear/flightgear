@@ -22,169 +22,38 @@
 // (Log is kept at end of this file)
 
 
-#include <Controls/controls.hxx>
-#include <Aircraft/aircraft.hxx>
+#include "controls.hxx"
 
 
-fgCONTROLS cur_control_params;
+fgCONTROLS controls;
 
 
-void fgControlsInit( void ) {
-    int i;
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    FG_Elevator = 0.0;
-    FG_Elev_Trim = 1.969572E-03;
-    FG_Aileron  = 0.0;
-    FG_Rudder   = 0.0;
-
-    for ( i = 0; i < FG_MAX_ENGINES; i++ ) {
-	FG_Throttle[i] = 0.0;
+// Constructor
+fgCONTROLS::fgCONTROLS() :
+    aileron( 0.0 ),
+    elevator( 0.0 ),
+    elevator_trim( 1.969572E-03 ),
+    rudder( 0.0 )
+{
+    for ( int engine = 0; engine < FG_MAX_ENGINES; engine++ ) {
+	throttle[engine] = 0.0;
     }
 
-    FG_Brake_Amt = 0.0;
-}
-
-
-void fgElevMove(double amt) {
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    FG_Elevator += amt;
-
-    if ( FG_Elevator < -1.0 ) FG_Elevator = -1.0;
-    if ( FG_Elevator >  1.0 ) FG_Elevator =  1.0;
-}
-
-void fgElevSet(double pos) {
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    FG_Elevator = pos;
-
-    if ( FG_Elevator < -1.0 ) FG_Elevator = -1.0;
-    if ( FG_Elevator >  1.0 ) FG_Elevator =  1.0;
-}
-
-void fgElevTrimMove(double amt) {
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    FG_Elev_Trim += amt;
-
-    if ( FG_Elev_Trim < -1.0 ) FG_Elev_Trim = -1.0;
-    if ( FG_Elev_Trim >  1.0 ) FG_Elev_Trim =  1.0;
-}
-
-void fgElevTrimSet(double pos) {
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    FG_Elev_Trim = pos;
-
-    if ( FG_Elev_Trim < -1.0 ) FG_Elev_Trim = -1.0;
-    if ( FG_Elev_Trim >  1.0 ) FG_Elev_Trim =  1.0;
-}
-
-void fgAileronMove(double amt) {
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    FG_Aileron += amt;
-
-    if ( FG_Aileron < -1.0 ) FG_Aileron = -1.0;
-    if ( FG_Aileron >  1.0 ) FG_Aileron =  1.0;
-}
-
-void fgAileronSet(double pos) {
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    FG_Aileron = pos;
-
-    if ( FG_Aileron < -1.0 ) FG_Aileron = -1.0;
-    if ( FG_Aileron >  1.0 ) FG_Aileron =  1.0;
-}
-
-void fgRudderMove(double amt) {
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    FG_Rudder += amt;
-
-    if ( FG_Rudder < -1.0 ) FG_Rudder = -1.0;
-    if ( FG_Rudder >  1.0 ) FG_Rudder =  1.0;
-}
-
-void fgRudderSet(double pos) {
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    FG_Rudder = pos;
-
-    if ( FG_Rudder < -1.0 ) FG_Rudder = -1.0;
-    if ( FG_Rudder >  1.0 ) FG_Rudder =  1.0;
-}
-
-void fgThrottleMove(int engine, double amt) {
-    int i;
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    if ( engine == FG_Throttle_All ) {
-	for ( i = 0; i < FG_MAX_ENGINES; i++ ) {
-	    FG_Throttle[i] += amt;
-	    if ( FG_Throttle[i] < 0.0 ) FG_Throttle[i] = 0.0;
-	    if ( FG_Throttle[i] > 1.0 ) FG_Throttle[i] = 1.0;
-	}
-    } else {
-	if ( (engine >= 0) && (engine < FG_MAX_ENGINES) ) {
-	    FG_Throttle[engine] += amt;
-	    if ( FG_Throttle[engine] < 0.0 ) FG_Throttle[engine] = 0.0;
-	    if ( FG_Throttle[engine] > 1.0 ) FG_Throttle[engine] = 1.0;
-	}
-    }
-}
-
-void fgThrottleSet(int engine, double pos) {
-    int i;
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    if ( engine == FG_Throttle_All ) {
-	for ( i = 0; i < FG_MAX_ENGINES; i++ ) {
-	    FG_Throttle[i] = pos;
-	    if ( FG_Throttle[i] < 0.0 ) FG_Throttle[i] = 0.0;
-	    if ( FG_Throttle[i] > 1.0 ) FG_Throttle[i] = 1.0;
-	}
-    } else {
-	if ( (engine >= 0) && (engine < FG_MAX_ENGINES) ) {
-	    FG_Throttle[engine] = pos;
-	    if ( FG_Throttle[engine] < 0.0 ) FG_Throttle[engine] = 0.0;
-	    if ( FG_Throttle[engine] > 1.0 ) FG_Throttle[engine] = 1.0;
-	}
+    for ( int wheel = 0; wheel < FG_MAX_WHEELS; wheel++ ) {
+        brake[wheel] = 0.0;
     }
 }
 
 
-double fgBrakeGet( void ) {
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    return FG_Brake_Amt;
-}
-
-
-void fgBrakeSet( double brake_amt ) {
-    fgCONTROLS *c;
-    c = current_aircraft.controls;
-
-    FG_Brake_Amt = brake_amt;
+// Destructor
+fgCONTROLS::~fgCONTROLS() {
 }
 
 
 // $Log$
+// Revision 1.2  1998/10/25 14:08:41  curt
+// Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
+//
 // Revision 1.1  1998/10/18 01:51:05  curt
 // c++-ifying ...
 //

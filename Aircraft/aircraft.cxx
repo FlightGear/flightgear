@@ -38,30 +38,37 @@ void fgAircraftInit( void ) {
     fgPrintf( FG_AIRCRAFT, FG_INFO, "Initializing Aircraft structure\n" );
 
     current_aircraft.flight   = &cur_flight_params;
-    current_aircraft.controls = &cur_control_params;
+    current_aircraft.controls = &controls;
 }
 
 
 // Display various parameters to stdout
 void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
     fgFLIGHT *f;
-    fgCONTROLS *c;
 
     f = a->flight;
-    c = a->controls;
 
     fgPrintf( FG_FLIGHT, FG_DEBUG,
 	      "Pos = (%.2f,%.2f,%.2f)  (Phi,Theta,Psi)=(%.2f,%.2f,%.2f)\n",
 	      FG_Longitude * 3600.0 * RAD_TO_DEG, 
 	      FG_Latitude  * 3600.0 * RAD_TO_DEG,
 	      FG_Altitude, FG_Phi, FG_Theta, FG_Psi);
+
+    double elevator = controls.get_elevator();
+    double aileron = controls.get_aileron();
+    double rudder = controls.get_rudder();
+    double throttle = controls.get_throttle( 0 );
+
     fgPrintf( FG_FLIGHT, FG_DEBUG,
 	      "Kts = %.0f  Elev = %.2f, Aileron = %.2f, Rudder = %.2f  Power = %.2f\n", 
-	      FG_V_equiv_kts, FG_Elevator, FG_Aileron, FG_Rudder, FG_Throttle[0]);
+	      FG_V_equiv_kts, elevator, aileron,rudder, throttle );
 }
 
 
 // $Log$
+// Revision 1.3  1998/10/25 14:08:37  curt
+// Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
+//
 // Revision 1.2  1998/10/17 01:33:52  curt
 // C++ ifying ...
 //

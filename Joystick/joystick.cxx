@@ -86,21 +86,18 @@ int fgJoystickInit( void ) {
 
 // update the control parameters based on joystick intput
 int fgJoystickRead( void ) {
-    fgCONTROLS *c;
     int b;
-
-    c = current_aircraft.controls;
 
     if ( ! js0->notWorking() ) {
 	js0->read( &b, js_ax0 ) ;
-	fgAileronSet( js_ax0[0] );
-	fgElevSet( -js_ax0[1] );
+	controls.set_aileron( js_ax0[0] );
+	controls.set_elevator( -js_ax0[1] );
     }
 
     if ( ! js1->notWorking() ) {
 	js1->read( &b, js_ax1 ) ;
-	fgRudderSet( js_ax1[0] );
-	fgThrottleSet(FG_Throttle_All, -js_ax1[1] * 1.05 );
+	controls.set_rudder( js_ax1[0] );
+	controls.set_throttle( fgCONTROLS::FG_ALL_ENGINES, -js_ax1[1] * 1.05 );
     }
 
     return 1;
@@ -108,6 +105,9 @@ int fgJoystickRead( void ) {
 
 
 // $Log$
+// Revision 1.3  1998/10/25 14:08:44  curt
+// Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
+//
 // Revision 1.2  1998/10/25 10:56:25  curt
 // Completely rewritten to use Steve Baker's joystick interface class.
 //

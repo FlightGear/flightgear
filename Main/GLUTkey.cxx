@@ -69,7 +69,6 @@ static void local_update_sky_and_lighting_params( void ) {
 
 // Handle keyboard events
 void GLUTkey(unsigned char k, int x, int y) {
-    fgCONTROLS *c;
     fgFLIGHT *f;
     fgTIME *t;
     fgVIEW *v;
@@ -77,7 +76,6 @@ void GLUTkey(unsigned char k, int x, int y) {
     float fov, tmp;
     static bool winding_ccw = true;
 
-    c = current_aircraft.controls;
     f = current_aircraft.flight;
     t = &cur_time_params;
     v = &current_view;
@@ -178,46 +176,46 @@ void GLUTkey(unsigned char k, int x, int y) {
 	fgPrintf( FG_INPUT, FG_DEBUG, "\n");
 	switch (k) {
 	case 50: // numeric keypad 2
-	    fgElevMove(-0.05);
+	    controls.move_elevator(-0.05);
 	    return;
 	case 56: // numeric keypad 8
-	    fgElevMove(0.05);
+	    controls.move_elevator(0.05);
 	    return;
 	case 49: // numeric keypad 1
-	    fgElevTrimMove(-0.001);
+	    controls.move_elevator_trim(-0.001);
 	    return;
 	case 55: // numeric keypad 7
-	    fgElevTrimMove(0.001);
+	    controls.move_elevator_trim(0.001);
 	    return;
 	case 52: // numeric keypad 4
-	    fgAileronMove(-0.05);
+	    controls.move_aileron(-0.05);
 	    return;
 	case 54: // numeric keypad 6
-	    fgAileronMove(0.05);
+	    controls.move_aileron(0.05);
 	    return;
 	case 48: // numeric keypad Ins
-	    fgRudderMove(-0.05);
+	    controls.move_rudder(-0.05);
 	    return;
 	case 13: // numeric keypad Enter
-	    fgRudderMove(0.05);
+	    controls.move_rudder(0.05);
 	    return;
 	case 53: // numeric keypad 5
-	    fgAileronSet(0.0);
-	    fgElevSet(0.0);
-	    fgRudderSet(0.0);
+	    controls.set_aileron(0.0);
+	    controls.set_elevator(0.0);
+	    controls.set_rudder(0.0);
 	    return;
 	case 57: // numeric keypad 9 (Pg Up)
-	    fgThrottleMove(0, 0.01);
+	    controls.move_throttle( fgCONTROLS::FG_ALL_ENGINES, 0.01 );
 	    return;
 	case 51: // numeric keypad 3 (Pg Dn)
-	    fgThrottleMove(0, -0.01);
+	    controls.move_throttle( fgCONTROLS::FG_ALL_ENGINES, -0.01 );
 	    return;
 	case 98: // b key
 	    int b_ret;
 	    double b_set;
-	    b_ret = int( fgBrakeGet() );
+	    b_ret = int( controls.get_brake( 0 ) );
 	    b_set = double(!b_ret);
-	    fgBrakeSet(b_set);
+	    controls.set_brake( fgCONTROLS::FG_ALL_WHEELS, b_set);
 	    return;
 	case 104: // h key
 	    HUD_brightkey( false );
@@ -351,39 +349,39 @@ void GLUTspecialkey(int k, int x, int y) {
 	    //exit(1);
 	    return;
 	case GLUT_KEY_UP:
-	    fgElevMove(0.05);
+	    controls.move_elevator(0.05);
 	    return;
 	case GLUT_KEY_DOWN:
-	    fgElevMove(-0.05);
+	    controls.move_elevator(-0.05);
 	    return;
 	case GLUT_KEY_LEFT:
-	    fgAileronMove(-0.05);
+	    controls.move_aileron(-0.05);
 	    return;
 	case GLUT_KEY_RIGHT:
-	    fgAileronMove(0.05);
+	    controls.move_aileron(0.05);
 	    return;
 	case GLUT_KEY_HOME: // numeric keypad 1
-	    fgElevTrimMove(0.001);
+	    controls.move_elevator_trim(0.001);
 	    return;
 	case GLUT_KEY_END: // numeric keypad 7
-	    fgElevTrimMove(-0.001);
+	    controls.move_elevator_trim(-0.001);
 	    return;
 	case GLUT_KEY_INSERT: // numeric keypad Ins
-	    fgRudderMove(-0.05);
+	    controls.move_rudder(-0.05);
 	    return;
 	case 13: // numeric keypad Enter
-	    fgRudderMove(0.05);
+	    controls.move_rudder(0.05);
 	    return;
 	case 53: // numeric keypad 5
-	    fgAileronSet(0.0);
-	    fgElevSet(0.0);
-	    fgRudderSet(0.0);
+	    controls.set_aileron(0.0);
+	    controls.set_elevator(0.0);
+	    controls.set_rudder(0.0);
 	    return;
 	case GLUT_KEY_PAGE_UP: // numeric keypad 9 (Pg Up)
-	    fgThrottleMove(0, 0.01);
+	    controls.move_throttle( fgCONTROLS::FG_ALL_ENGINES, 0.01 );
 	    return;
 	case GLUT_KEY_PAGE_DOWN: // numeric keypad 3 (Pg Dn)
-	    fgThrottleMove(0, -0.01);
+	    controls.move_throttle( fgCONTROLS::FG_ALL_ENGINES, -0.01 );
 	    return;
 	}
     }
@@ -391,6 +389,9 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 // $Log$
+// Revision 1.30  1998/10/25 14:08:46  curt
+// Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
+//
 // Revision 1.29  1998/10/20 14:58:57  curt
 // Ctrl-R now reverses default polygon winding so I can see if a hole in the
 // terrain is a result of improper winding, or if it is just an empty hole.

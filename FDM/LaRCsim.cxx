@@ -78,16 +78,13 @@ int fgLaRCsimUpdate(fgFLIGHT *f, int multiloop) {
 
 // Convert from the fgFLIGHT struct to the LaRCsim generic_ struct
 int fgFlight_2_LaRCsim (fgFLIGHT *f) {
-    fgCONTROLS *c;
 
-    c = current_aircraft.controls;
-
-    Lat_control = FG_Aileron;
-    Long_control = FG_Elevator;
-    Long_trim = FG_Elev_Trim;
-    Rudder_pedal = FG_Rudder;
-    Throttle_pct = FG_Throttle[0];
-    Brake_pct = FG_Brake_Amt;
+    Lat_control = controls.get_aileron();
+    Long_control = controls.get_elevator();
+    Long_trim = controls.get_elevator_trim();
+    Rudder_pedal = controls.get_rudder();
+    Throttle_pct = controls.get_throttle( 0 );
+    Brake_pct = controls.get_brake( 0 );
 
     Mass =      FG_Mass;
     I_xx =      FG_I_xx;
@@ -440,6 +437,9 @@ int fgLaRCsim_2_Flight (fgFLIGHT *f) {
 
 
 // $Log$
+// Revision 1.3  1998/10/25 14:08:43  curt
+// Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
+//
 // Revision 1.2  1998/10/17 01:34:11  curt
 // C++ ifying ...
 //

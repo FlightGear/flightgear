@@ -57,45 +57,6 @@
 // They should eventually be member functions of the aircraft.
 //
 
-static double get_throttleval( void )
-{
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->throttle[0];     // Hack limiting to one engine
-}
-
-static double get_aileronval( void )
-{
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->aileron;
-}
-
-static double get_elevatorval( void )
-{
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->elevator;
-}
-
-static double get_elev_trimval( void )
-{
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->elevator_trim;
-}
-
-static double get_rudderval( void )
-{
-	fgCONTROLS *pcontrols;
-
-  pcontrols = current_aircraft.controls;
-  return pcontrols->rudder;
-}
 
 static double get_speed( void )
 {
@@ -290,8 +251,8 @@ int fgAPRun( void )
 					    APData->MaxAileron );
 	}
 		
-	fgAileronSet(AileronSet);
-	fgRudderSet(0.0);
+	controls.set_aileron( AileronSet );
+	controls.set_rudder( 0.0 );
     }
 
     // altitude hold or terrain follow enabled?
@@ -350,7 +311,7 @@ int fgAPRun( void )
 	if ( total_adj >  0.6 ) { total_adj =  0.6; }
 	if ( total_adj < -0.2 ) { total_adj = -0.2; }
 
-	fgElevSet( total_adj );
+	controls.set_elevator( total_adj );
     }
 
     // auto throttle enabled?
@@ -385,7 +346,7 @@ int fgAPRun( void )
 	if ( total_adj > 1.0 ) { total_adj = 1.0; }
 	if ( total_adj < 0.0 ) { total_adj = 0.0; }
 
-	fgThrottleSet( 0, total_adj );
+	controls.set_throttle( fgCONTROLS::FG_ALL_ENGINES, total_adj );
     }
 
      /*
