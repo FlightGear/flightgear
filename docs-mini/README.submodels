@@ -33,11 +33,6 @@
                      aircraft'snose.   Right is positive.
       <pitch-offset> Submodel's initial elevation, in degrees, relative to user
                      aircraft's pitch.    Up is positive.
-      <eda>          Equivalent Drag Area in ft squared.  The object is assumed
-                     to have a  mass of 0.03 slugs and a drag coefficient of
-                     0.295, and sea-level air density is assumed.  Adjust the
-                     EDA to give the model the ballistics you need.
-                     The default value is 0.007.
       <life>         Life span in seconds.  Default is 900.0.
       <buoyancy>     In ft/sec/sec.  Works opposite acceleration of gravity.
                      For example, if set to 32 the submodel will feel no 
@@ -45,6 +40,11 @@
                      Default is 0.
       <wind>         Set to true if you want the submodel to react to the wind.
                      Default is "false". 
+	  <cd>           The Coeffient of Drag. Varies with sabmodel shape - 0.295 for a bullet, 
+	                 0.045 for an airfoil. Enter an appropriate value. Defaults to 0.295.
+	  <eda>          Effective drag area (sq ft). Usually the cross-sectional area of the
+	                 submodel normal to the airflow.
+      <weight>       The weight of the submodel (lbs). Defaults to 0.25	 			 
 -->  
  
 <PropertyList>
