@@ -103,6 +103,9 @@ class FGKR_87 : public SGSubsystem
     bool flt_ann;
     bool et_ann;
 
+    // internal periodic station search timer
+    double _time_before_search_sec;
+
 public:
 
     FGKR_87( SGPropertyNode *node );
@@ -111,7 +114,7 @@ public:
     void init ();
     void bind ();
     void unbind ();
-    void update (double dt);
+    void update (double dt_sec);
 
     // Update nav/adf radios based on current postition
     void search ();

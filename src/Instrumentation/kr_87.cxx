@@ -102,7 +102,8 @@ FGKR_87::FGKR_87( SGPropertyNode *node ) :
     needle_deg(0.0),
     flight_timer(0.0),
     elapsed_timer(0.0),
-    tmp_timer(0.0)
+    tmp_timer(0.0),
+    _time_before_search_sec(0)
 {
 }
 
@@ -233,7 +234,7 @@ void FGKR_87::unbind () {
 
 
 // Update the various nav values based on position and valid tuned in navs
-void FGKR_87::update( double dt ) {
+void FGKR_87::update( double dt_sec ) {
     double acft_lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double acft_lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
     double acft_elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
@@ -243,6 +244,12 @@ void FGKR_87::update( double dt ) {
     Point3D aircraft = sgGeodToCart( Point3D( acft_lon, acft_lat, acft_elev ) );
     Point3D station;
     double az1, az2, s;
+
+    // On timeout, scan again
+    _time_before_search_sec -= dt_sec;
+    if ( _time_before_search_sec < 0 ) {
+        search();
+    }
 
     ////////////////////////////////////////////////////////////////////////
     // Radio
@@ -283,7 +290,7 @@ void FGKR_87::update( double dt ) {
         }
         if ( set_rst_btn == 1 && set_rst_btn == last_set_rst_btn ) {
             // button depressed and was last iteration too
-            tmp_timer += dt;
+            tmp_timer += dt_sec;
             // cout << "tmp_timer = " << tmp_timer << endl;
             if ( tmp_timer > 2.0 ) {
                 // button held depressed for 2 seconds
@@ -308,14 +315,14 @@ void FGKR_87::update( double dt ) {
         last_set_rst_btn = set_rst_btn;
 
         // timers
-        flight_timer += dt;
+        flight_timer += dt_sec;
 
         if ( set_rst_btn == 0 ) {
             // only count if set/rst button not depressed
             if ( count_mode == 0 ) {
-                elapsed_timer += dt;
+                elapsed_timer += dt_sec;
             } else if ( count_mode == 1 ) {
-                elapsed_timer -= dt;
+                elapsed_timer -= dt_sec;
                 if ( elapsed_timer < 1.0 ) {
                     count_mode = 0;
                     elapsed_timer = 0.0;
@@ -332,7 +339,7 @@ void FGKR_87::update( double dt ) {
         if ( count_mode < 2 ) {
             et_ann = stby_mode && timer_mode;
         } else {
-            et_flash_time += dt;
+            et_flash_time += dt_sec;
             if ( et_ann && et_flash_time > 0.5 ) {
                 et_ann = false;
                 et_flash_time -= 0.5;
@@ -435,7 +442,7 @@ void FGKR_87::update( double dt ) {
     while ( diff < -180.0 ) { diff += 360.0; }
     while ( diff > 180.0 ) { diff -= 360.0; }
 
-    needle_deg += diff * dt * 4;
+    needle_deg += diff * dt_sec * 4;
     while ( needle_deg < 0.0 ) { needle_deg += 360.0; }
     while ( needle_deg >= 360.0 ) { needle_deg -= 360.0; }
 
@@ -486,6 +493,9 @@ void FGKR_87::search() {
 
 				// FIXME: the panel should handle this
     static string last_ident = "";
+
+    // reset search time
+    _time_before_search_sec = 1.0;
 
     ////////////////////////////////////////////////////////////////////////
     // ADF.

@@ -13,10 +13,10 @@ New in 0.9.6
 * Updated aircraft: A320, Bo-105, Comper Swift, Concorde, F16,
   Fokker-50, Fokker-100, Hunter, MD11, PC7, Spitfire, adjust
   C172 cockpit sound levels, and Sgs-233.
-
 * Updated joystick configs: CH pro yoke usb, Cyborg Evo, Thrustmaster FCS.
 * Fix a bug in the nasal fuel tank management code.
 * Return Canadian ILS's to nav data.
+* Cleaned up some of the 3d models around the bay area.
 * Add support for display list based rendering which yields
   substantial performance gains for many systems.
 * Synced with latest JSBSim code.
