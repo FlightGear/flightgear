@@ -41,6 +41,8 @@
 #include "../general.h"
 
 #include "../Aircraft/aircraft.h"
+#include "../Cockpit/cockpit.h"
+#include "../Joystick/joystick.h"
 #include "../Math/fg_geodesy.h"
 #include "../Math/mat3.h"
 #include "../Math/polar.h"
@@ -91,6 +93,9 @@ double Simtime;
 
 /* Another hack */
 int use_signals = 0;
+
+/* Yet another hack. This one used by the HUD code. Michele */
+int show_hud;
 
 
 /**************************************************************************
@@ -308,6 +313,12 @@ static void fgUpdateVisuals( void ) {
     /* draw scenery */
     fgSceneryRender();
 
+    /* display HUD */
+    if( show_hud ) {
+     	fgCockpitUpdate();
+	/* fgUpdateHUD(); */
+    }
+
     #ifdef GLUT
       glutSwapBuffers();
     #endif
@@ -474,10 +485,25 @@ static void fgMainLoop( void ) {
     static int remainder = 0;
     int elapsed, multi_loop;
     double cur_elev;
+    double joy_x, joy_y;
+    int joy_b1, joy_b2;
     struct flight_params *f;
 
     f = &current_aircraft.flight;
 
+    /* Read joystick */
+    /* fgJoystickRead( &joy_x, &joy_y, &joy_b1, &joy_b2 ); */
+    /* printf( "Joystick X %f  Y %f  B1 %d  B2 %d\n",  
+	    joy_x, joy_y, joy_b1, joy_b2 );
+    fgElevSet( -joy_y );
+    fgAileronSet( joy_x ); */
+
+    /* update the weather for our current position */
+    fgWeatherUpdate(FG_Longitude * RAD_TO_ARCSEC, 
+		    FG_Latitude * RAD_TO_ARCSEC, 
+		    FG_Altitude * FEET_TO_METER);
+
+    /* Calculate model iterations needed */
     elapsed = fgGetTimeInterval();
     printf("Time interval is = %d, previous remainder is = %d\n", elapsed, 
 	   remainder);
@@ -488,9 +514,6 @@ static void fgMainLoop( void ) {
     remainder = elapsed - ((multi_loop*1000) / DEFAULT_MODEL_HZ);
     printf("Model iterations needed = %d, new remainder = %d\n", multi_loop, 
 	   remainder);
-
-    aircraft_debug(1);
-    fgUpdateVisuals();
 
     if ( ! use_signals ) {
 	/* flight model */
@@ -515,10 +538,10 @@ static void fgMainLoop( void ) {
 	       FG_Altitude * FEET_TO_METER);
     }
 
-    /* update the weather for our current position */
-    fgWeatherUpdate(FG_Longitude * RAD_TO_ARCSEC, 
-		    FG_Latitude * RAD_TO_ARCSEC, 
-		    FG_Altitude * FEET_TO_METER);
+    aircraft_debug(1);
+
+    /* redraw display */
+    fgUpdateVisuals();
 }
 
 
@@ -623,9 +646,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.9  1997/08/22 21:34:39  curt
-/* Doing a bit of reorganizing and house cleaning.
+/* Revision 1.10  1997/08/25 20:27:22  curt
+/* Merged in initial HUD and Joystick code.
 /*
+ * Revision 1.9  1997/08/22 21:34:39  curt
+ * Doing a bit of reorganizing and house cleaning.
+ *
  * Revision 1.8  1997/08/19 23:55:03  curt
  * Worked on better simulating real lighting.
  *

@@ -40,6 +40,8 @@
 #include "../Weather/weather.h"
 
 extern double goal_view_offset;
+extern int show_hud;             /* HUD state */
+
 
 /* Handle keyboard events */
 void GLUTkey(unsigned char k, int x, int y) {
@@ -78,7 +80,10 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 57: /* numeric keypad 9 */
 	    goal_view_offset = FG_PI * 1.75;
 	    return;
-	case 90: /* Z */
+	case 72: /* H key */
+	    show_hud = !show_hud;
+	    return;
+	case 90: /* Z key */
 	    w->visibility /= 1.10;
 	    glFogf(GL_FOG_END, w->visibility);
 	    printf("Fog density = %.4f\n", w->visibility);
@@ -122,7 +127,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	case 51: /* numeric keypad 3 (Pg Dn) */
 	    fgThrottleMove(0, -0.01);
 	    return;
-	case 122: /* z */
+	case 122: /* z key */
 	    w->visibility *= 1.10;
 	    glFogf(GL_FOG_END, w->visibility);
 	    printf("Fog density = %.4f\n", w->visibility);
@@ -215,9 +220,12 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.18  1997/08/22 21:34:38  curt
-/* Doing a bit of reorganizing and house cleaning.
+/* Revision 1.19  1997/08/25 20:27:21  curt
+/* Merged in initial HUD and Joystick code.
 /*
+ * Revision 1.18  1997/08/22 21:34:38  curt
+ * Doing a bit of reorganizing and house cleaning.
+ *
  * Revision 1.17  1997/07/19 22:34:02  curt
  * Moved PI definitions to ../constants.h
  * Moved random() stuff to ../Utils/ and renamed fg_random()

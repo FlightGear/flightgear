@@ -25,7 +25,7 @@
 #---------------------------------------------------------------------------
 
 
-VERSION = 0.09
+VERSION = 0.10
 
 #---------------------------------------------------------------------------
 # Choose your weapons
@@ -120,6 +120,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.12  1997/08/25 20:27:21  curt
+# Merged in initial HUD and Joystick code.
+#
 # Revision 1.11  1997/08/22 21:34:33  curt
 # Doing a bit of reorganizing and house cleaning.
 #

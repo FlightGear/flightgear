@@ -28,7 +28,7 @@ include make.inc
 
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew
-SUBDIRS = Aircraft Controls Flight Math Scenery Time Weather
+SUBDIRS = Aircraft Cockpit Controls Flight Joystick Math Scenery Time Weather
 MAIN = GLUT
 
 
@@ -71,6 +71,9 @@ zip: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.25  1997/08/25 20:27:21  curt
+# Merged in initial HUD and Joystick code.
+#
 # Revision 1.24  1997/08/16 12:22:17  curt
 # Tweaks for new version.
 #

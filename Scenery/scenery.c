@@ -48,7 +48,7 @@ struct scenery_params scenery;
 /* Initialize the Scenery Management system */
 void fgSceneryInit() {
     /* set the default terrain detail level */
-    scenery.terrain_skip = 10;
+    scenery.terrain_skip = 4;
 }
 
 
@@ -81,9 +81,12 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.13  1997/08/22 21:34:41  curt
-/* Doing a bit of reorganizing and house cleaning.
+/* Revision 1.14  1997/08/25 20:27:24  curt
+/* Merged in initial HUD and Joystick code.
 /*
+ * Revision 1.13  1997/08/22 21:34:41  curt
+ * Doing a bit of reorganizing and house cleaning.
+ *
  * Revision 1.12  1997/08/19 23:55:08  curt
  * Worked on better simulating real lighting.
  *

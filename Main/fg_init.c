@@ -33,11 +33,16 @@
 #include "../general.h"
 
 #include "../Aircraft/aircraft.h"
+#include "../Cockpit/cockpit.h"
+#include "../Joystick/joystick.h"
 #include "../Math/fg_random.h"
 #include "../Scenery/mesh.h"
 #include "../Scenery/scenery.h"
 #include "../Time/sunpos.h"
 #include "../Weather/weather.h"
+
+
+extern int show_hud;             /* HUD state */
 
 
 /* General house keeping initializations */
@@ -137,6 +142,9 @@ void fgInitSubsystems( void ) {
     /* Initialize the weather modeling subsystem */
     fgWeatherInit();
 
+    /* Initialize the Cockpit subsystem */
+    fgCockpitInit( current_aircraft );
+
     /* Initialize the Scenery Management subsystem */
     fgSceneryInit();
 
@@ -166,11 +174,20 @@ void fgInitSubsystems( void ) {
     /* Initialize the flight model subsystem data structures base on
      * above values */
     fgFlightModelInit( FG_LARCSIM, f, 1.0 / DEFAULT_MODEL_HZ );
+
+    /* To HUD or not to HUD */
+    show_hud = 1;
+
+    /* Joystick support */
+    fgJoystickInit( 0 );
 }
 
 
 /* $Log$
-/* Revision 1.1  1997/08/23 01:46:20  curt
-/* Initial revision.
+/* Revision 1.2  1997/08/25 20:27:23  curt
+/* Merged in initial HUD and Joystick code.
 /*
+ * Revision 1.1  1997/08/23 01:46:20  curt
+ * Initial revision.
+ *
  */
