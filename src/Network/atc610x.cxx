@@ -398,6 +398,7 @@ bool FGATC610x::open() {
     dme_kt = fgGetNode( "/radios/dme/speed-kt", true );
     dme_nm = fgGetNode( "/radios/dme/distance-nm", true );
 
+    dme_bus_power = fgGetNode( "/systems/electrical/outputs/dme", true );
     navcom1_bus_power = fgGetNode( "/systems/electrical/outputs/navcomm[0]",
                                    true );
     navcom2_bus_power = fgGetNode( "/systems/electrical/outputs/navcomm[1]",
@@ -1112,7 +1113,7 @@ bool FGATC610x::do_radio_display() {
     char digits[10];
     int i;
 
-    if ( dme_switch != 0 ) {
+    if ( dme_has_power() ) {
 	// DME minutes
 	float minutes = dme_min->getFloatValue();
 	if ( minutes > 999 ) {

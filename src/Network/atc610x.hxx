@@ -71,9 +71,11 @@ class FGATC610x : public FGProtocol {
 
     float compass_position;
 
+    SGPropertyNode *dme_bus_power;
+    SGPropertyNode *navcom1_bus_power, *navcom2_bus_power;
+
     SGPropertyNode *mag_compass;
     SGPropertyNode *dme_min, *dme_kt, *dme_nm;
-    SGPropertyNode *navcom1_bus_power, *navcom2_bus_power;
     SGPropertyNode *navcom1_power_btn, *navcom2_power_btn;
     SGPropertyNode *com1_freq, *com1_stby_freq;
     SGPropertyNode *com2_freq, *com2_stby_freq;
@@ -113,6 +115,10 @@ class FGATC610x : public FGProtocol {
     bool do_switches();
 
     // convenience
+    inline bool dme_has_power() const {
+        return (dme_bus_power->getDoubleValue() > 1.0)
+            && dme_switch;
+    }
     inline bool navcom1_has_power() const {
         return (navcom1_bus_power->getDoubleValue() > 1.0)
             && navcom1_power_btn->getBoolValue();

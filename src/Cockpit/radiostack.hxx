@@ -54,10 +54,12 @@ class FGRadioStack : public FGSubsystem
     SGPropertyNode *lon_node;
     SGPropertyNode *lat_node;
     SGPropertyNode *alt_node;
+    SGPropertyNode *dme_bus_power;
 
     bool need_update;
 
     bool dme_valid;
+    int dme_switch_pos;
     bool dme_inrange;
     double dme_freq;
     double dme_lon;
@@ -111,6 +113,10 @@ public:
 
 
     // DME Accessors
+    inline bool dme_has_power() const {
+        return (dme_switch_pos == 1 || dme_switch_pos == 3)
+            && (dme_bus_power->getDoubleValue() > 1.0);
+    }
     inline double get_dme_freq () const { return dme_freq; }
 
     // Marker Beacon Accessors

@@ -75,6 +75,7 @@ FGRadioStack::FGRadioStack() :
     lon_node(fgGetNode("/position/longitude-deg", true)),
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
+    dme_bus_power(fgGetNode("/systems/electrical/outputs/dme", true)),
     need_update(true),
     dme_freq(0.0),
     dme_dist(0.0),
@@ -225,7 +226,7 @@ FGRadioStack::update(double dt)
     // DME.
     ////////////////////////////////////////////////////////////////////////
 
-    if ( dme_valid ) {
+    if ( dme_valid && dme_has_power() ) {
 	station = Point3D( dme_x, dme_y, dme_z );
 	dme_dist = aircraft.distance3D( station ) * SG_METER_TO_NM;
 	dme_effective_range = kludgeRange(dme_elev, elev, dme_range);
@@ -319,13 +320,13 @@ void FGRadioStack::search()
 				// FIXME: the panel should handle this
 				// don't worry about overhead for now,
 				// since this is handled only periodically
-    int dme_switch_pos = fgGetInt("/radios/dme/switch-position");
-    if ( dme_switch_pos == 1 && navcom1.has_power() ) {
+    dme_switch_pos = fgGetInt("/radios/dme/switch-position", 2);
+    if ( dme_switch_pos == 1 && dme_has_power() && navcom1.has_power() ) {
         if ( dme_freq != navcom1.get_nav_freq() ) {
             dme_freq = navcom1.get_nav_freq();
             need_update = true;
         }
-    } else if ( dme_switch_pos == 3 && navcom2.has_power() ) {
+    } else if ( dme_switch_pos == 3 && dme_has_power() && navcom2.has_power() ){
         if ( dme_freq != navcom2.get_nav_freq() ) {
             dme_freq = navcom2.get_nav_freq();
             need_update = true;
