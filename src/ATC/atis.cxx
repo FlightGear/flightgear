@@ -201,8 +201,11 @@ void FGATIS::UpdateTransmission() {
 	transmission += " miles";
 
 	// Get the cloudbase
-	if(fgGetBool("/environment/clouds/status")) {
-	    double cloudbase = fgGetDouble("/environment/clouds/altitude-ft");
+	// FIXME: kludge for now
+	if (!strcmp(fgGetString("/environment/clouds/layer[0]/type"),
+		    "clear")) {
+	    double cloudbase =
+	      fgGetDouble("/environment/clouds/layer[0]/elevation-ft");
 	    // For some reason the altitude returned doesn't seem to correspond to the actual cloud altitude.
 	    char buf3[10];
 	    // cout << "cloudbase = " << cloudbase << endl;
