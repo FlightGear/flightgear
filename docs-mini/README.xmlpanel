@@ -1,22 +1,21 @@
 Users Guide to FlightGear panel configuration
-First Draft
+Version 0.3, October 5 2000
 Author: John Check <j4strngs@rockfish.net>  
 
-This document is an attempt to describe the configuration via
-XML of FlightGear flight simulator's aircraft panel display.
-The information was culled from the fgfs-devel@flightgear.org
-mailing list. I'd like to say thanks to all the developers who 
-make FGFS happen and forgive me for any errors with regards to 
-who did what. I'd like to reguest that anybody who should be
-mentioned give me a heads up so I can credit them properly.
+This document is an attempt to describe the configuration of 
+FlightGear flight simulator's aircraft panel display via XML. 
+The information was culled from the fgfs-devel@flightgear.org 
+mailing list and my experiences making alternate panels. I'd 
+like  to say thanks to all the developers who  make FGFS happen.
 Corrections and additions are encouraged.
 
-History:
-Older versions of FGFS had a hardcoded display of instruments.
+Some History:
+
+Older versions of FGFS had a hard coded display of instruments.
 This was a less than ideal state of affairs due to FGFS ability
 to use different aircraft models. Being primarily developed on
 UNIX type systems, a modular approach is taken towards the
-aircraft modeling. To date, most alternatatives to the default 
+aircraft modeling. To date, most alternatives to the default 
 Cessna 172 aircraft are the product of research institutions
 interested in the flight characteristics and not cosmetics.
 The result of this was that one could fly the X-15 or a Boeing 747
@@ -26,67 +25,111 @@ A rewrite of the panel display code was done around v0.7.5 by
 developer David Megginson allowing for configuration of the panel
 via XML to address this limitation.
 
-The Basics:
 
-David Megginson wrote:
+Using Custom Panels:
 
-> To get started, here's a basic, mostly-architectural outline:
->
-> 1. All configuration files are XML-encoded property lists.  The root
-> element is always named <PropertyList>.  None of the properties is
-> mixed in with the main FlightGear properties (they're all separate
-> lists).
->
-> 2. There is a single, top-level configuration file for each panel.
-> There is also a top-level configuration file for each instrument (I
-> may also add configuration files for cropped textures, to enabled
-> better reuse of common textures like needles and knobs).
->
-> 3. A panel is composed of a background texture and zero or more
-> instruments.  The panel sets the position of each instrument and may
-> also override the instrument's preferred size (the default panel does
-> not do so, but if you want an altimeter covering a quarter of the
-> screen, go for it!).
->
-> 4. An instrument consists of a preferred width and height, one or more
-> stacked layers, and zero or more actions.  It is defined in a separate
-> file.
->
-> 5. A layer can be a texture (with alpha areas so that lower textures
-> show through), text (static, generated, or both), or a switch between
-> two other layers based on a boolean property.  Each layer contains
-> zero or more transformations.  
->
-> NOTE: There is one built-in layer -- for the mag compass ribbon --
-> and all other layers are defined in the XML files.  In the future,
-> there may also be built-in layers for special things like a
-> weather-radar display or a GPS (though the GPS could be handled with
-> text properties).
->
-> 6. A transformation is a rotation, an x-shift, or a y-shift.
-> Transformations can be static (rotate 90 degrees) or they can be based
-> on properties (rotate the number of degrees equal to the airspeed
-> times something plus something else, etc.).
->
-> 7. An action is a hotspot on an instrument where something will happen
-> when the user clicks the left or centre mouse button.  Actions are
-> always tied to properties: they can toggle a boolean property, adjust
-> the value of a numeric property, or swap the values of two properties.
->
-> 8. You can find panel configuration files under $FG_ROOT/Panels/ and
-> instrument configuration files under $FG_ROOT/Instruments/.
->
-> 9. If there are *any* XML parsing errors, the panel will fail to load
-> (them's the XML rules), so it's worth downloading a parser like Expat
-> (http://www.jclark.com/xml/) so that you can check your XML.
-> FlightGear will print the location of errors, but the messages are a
-> little cryptic right now.
->
-> 10. You can set the relative location of the top-level XML panel file
-> (under $FG_ROOT) using the "/sim/panel" property.  The default is
-> $FG_ROOT/Panels/Default/default.xml.
+The default panel location is $FG_ROOT/Panels/Default/default.xml.
+$FG_ROOT is the place on your filesystem where you installed FG
+data files. Alternate panels can be specified on the command line 
+or set as the default in the $HOME/.fgfsrc or $FG_ROOT/system.fgfsrc 
+using a property specification. The format is as follows:
 
-To do:
+--prop:/sim/panel/path=Panels/Default/default.xml
 
-Add some examples.
-Integrate additonal questions and answers from the list.
+The path description shown is relative to $FG_ROOT. An absolute
+path may also be used for locations outside $FG_ROOT. I would 
+recommend copying Panels/Default to Panels/Custom as a starting point
+for experimentation. When editing a panel configuration, pressing
+Shift +F3 will reload the panel. If your changes don't seem to be taking 
+effect, check the console output. It will report the success or failure
+of the panel reload*. Editing textures requires restarting FGFS so the
+new textures can be loaded.
+
+
+Panel Architecture:
+
+All of the panel configuration files are XML-encoded* property lists. 
+The root element of each file is always named <PropertyList>. Tags are
+always found in pairs, with the closing tag having a slash prefixing
+the tag name, i.e </PropertyList>. The top level panel configuration 
+file is composed of a <name>, a <background> texture and zero or more 
+<instruments>. Instruments are used by including a <"unique_name">, a
+<path> to the instruments configuration file, <x> and <y> placement
+coordinates, and optional <w> and <h> size specifications.
+Comments are bracketed with <!-- -->.
+
+    Example Top Level Panel Config
+
+<PropertyList>
+ <name>Example Panel</name>
+ <background>Panels/Default/Textures/panel-bg.rgb</background>
+ <instruments>
+  <clock>         <!-- the "unique_name" -->
+   <path>Instruments/Default/clock.xml</path>
+   <x>110</x>
+   <y>320</y>
+   <w>72</w>      <!-- optional width specification -->
+   <h>72</h>      <!-- optional height specification -->
+  </clock>
+ </instruments>
+</PropertyList>
+  
+The default location for instrument files is $FG_ROOT/Instruments/Default/.
+Alternate locations may be specified in the panel configuration, paths
+must be absolute to use files outside $FG_ROOT.
+
+About Instrument Placement:
+
+For the sake of simplicity the FGFS window is always considered to be 1024x768
+so all x/y values for instrument placement should fall within these bounds.
+Being an OpenGL program, 0,0 represents the lower left hand corner of the
+screen. It is possible to place items to overlap the 3D viewport.
+
+Instrument Architecture:
+
+Instruments are defined in separate configuration files. An instrument
+consists of a preferred width and height, one or more stacked layers, 
+and zero or more actions.
+
+A layer** can be a <texture>, or be of <type> text or switch. A text layer
+may be static, as in a label, or generated (if it needs to be dynamic, as 
+in an LED display), or a combination of both. 
+A switch layer is composed of two or more nested layers and will display
+one of the nested layers based on a boolean property. For a simple example 
+of a switch see $FG_ROOT/Instruments/Default/brake.xml. Textures used in a 
+switch context *must* have width and height specified to be visible.
+Each layer may contain zero or more transformations.  
+
+A transformation is a rotation, an x-shift, or a y-shift. Transformations 
+can be static  or they can be based on properties. Static rotations are 
+useful for flipping textures horizontally or vertically. Transformations
+based on properties are useful for driving instrument needles. I.E. rotate the
+number of degrees equal to the airspeed. X and y shifts are relative to the
+center of the instrument. Each specified transformation type takes an <offset>
+
+An action is a hotspot on an instrument where something will happen
+when the user clicks the left or center mouse button.  Actions are
+always tied to properties: they can toggle a boolean property, adjust
+the value of a numeric property, or swap the values of two properties.
+
+About Textures:
+
+The texture files used to create the panel instruments are maximum 256x256
+pixels, red/green/blue/alpha format. When calling a section of a texture file
+the 0,0 lower left convention is used. There is a pair of x /y coordinates
+defining which section of the texture to use. 
+
+
+
+*  If there are *any* XML parsing errors, the panel will fail to load, 
+   so it's worth downloading a parser like Expat (http://www.jclark.com/xml/)
+   for checking your XML. FlightGear will print the location of errors, but
+   the messages are a little cryptic right now. 
+
+** NOTE: There is one built-in layer -- for the mag compass ribbon --
+   and all other layers are defined in the XML files.  In the future,
+   there may also be built-in layers for special things like a
+   weather-radar display or a GPS (though the GPS could be handled with
+   text properties).
+
+

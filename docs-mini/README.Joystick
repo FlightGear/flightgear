@@ -1,5 +1,5 @@
 Users Guide to Joystick Usage Under FlightGear Flight Simulator
-version 0.2 9/23/2000 
+version 0.3 10/06/2000 
 Author John Check <j4strngs@rockfish.net>
 
 This document is written with versions of FlightGear 0.7.5 and greater
@@ -29,7 +29,8 @@ Among these was the ability to use a runtime configuration file (.fgfsrc)
 to control the default operation. The .fgfsrc file is not created at runtime
 and must be created manually. Fortunately, the format of the file is
 straightforward. All one need do is place the commandline options one would
-like in a plain ASCII text file in the users home directory.
+like in a plain ASCII text file in the users home directory. System wide
+defaults can be place in $FG_ROOT/system.fgfsrc.
 
 With the advent of the property manager it became possible to add a number
 of additional runtime options to the .fgfsrc file including joystick channel
@@ -67,7 +68,9 @@ look like this: 0001. It should be noted that this is a hexadecimal (base16)
 number +1. Hex numbers start at 0, so this number is incremented by one for
 hopefully obvious reasons. 
 
+
 Default Joystick properties:
+
 
 Axis 0   = Aileron
 Axis 1   = Elevator
@@ -82,51 +85,84 @@ Button 5 = Flaps (down)
 Button 6 = Flaps (up)
 
 
-In addition to the channel assignments there are other parameters
-that can be passed to FGFS.
+In addition to the channel assignments there are other properties
+for tuning the joystick. These values work together in a particular order.
+They should always be written as a 'float', or decimal number.
 
-Axis properties
+The full order of precedence for axis properties is
 
-        dead-band
+1. The raw axis value ...
+2. is adjusted to dead-band, ...
+3. then adjusted to offset, ...
+4. then multiplied by factor, which ...
+5. is assigned to the FlightGear control property.
+
+Put another way....
+
+	cooked_value = (( raw_value > dead-band ) + offset) * factor
+
+
+Axis properties:
+
+	dead-band
+
+-1          0          1
+ .......................
+-1         | |         1
+            ^
+        dead-band   
+
 
 This is an area where signals are ignored. It is used to compensate
 for noise or potentiometers of dubious quality by creating a threshold
-below which any signal is ignored. It it written as a decimal number or "float"
-with a typical value of 0.1 for elevators and ailerons, 0.0 for throttle
+below which any signal is ignored. 
 
-        factor
+The default of 0.1 for elevators and ailerons is very forgiving. A lower 
+number results in a tighter feel. Throttle defaults to 0.0
 
-This number, also written as a float, will control sensitivity of an axis.
-Negating the number will result in the control moving counter to the default.
-A typical value is 1.0. In my case, throttle behaviour was inverted from what
-I preferred. I set this value to -1.0 and everything was groovy.
+ 
+	offset
 
-        offset
+-1  0                  1
+ .......................
+-1  ^                  1
+ offset
 
-Also a float. Used to maximize a controls use of it's axis, as in the case of a
+Used to maximize a controls use of it's axis, as in the case of a
 throttle where zero would be a minimum and not a center point like in the case
 of a rudder. Typical value -1.0. 
 
 
+	factor
+
+Controls sensitivity of an axis. If the factor is too low it results in
+control not reaching its maximum possible limit. Negating the number will result in
+the control moving counter to the default. The default value is 1.0, think unity gain. 
+
+In my case, throttle behaviour was inverted from what I preferred. 
+I set this value to -1.0 and everything was groovy.
+
+
+
 Button properties
 
-        switch
+	switch
 A button designated a switch is either on or off. While the button is
 held in the switch is engaged. Brakes are described as a switch and take
 additional parameters [ step, repeatable ]
 
-        adjust
+	adjust
 A button designated adjust is for controls that have a range
 of settings, for example elevator trim and flaps. These are found
 in pairs having opposing values for the parameter 'step'.
 The 'repeatable' parameter should be appropriate to the type of control.
 
-        step
+	step
 This defines how much adjustment is applied when the button is activated
 Default values are 1.0 for brakes (full on), 0.001 / -0.001 for
 elevator trim and -0.34 / 0.34 for flaps
 
-        repeatable
+	repeatable
 In this case repeatable means when the button is held down the value continues
 to increment. repeatable is a true / false value. The default for brakes is
 false. This is appropriate since by default brakes are a switch that are full
@@ -203,42 +239,8 @@ In my case I had to make entries to put the throttle on axis2.
 --prop:/input/js0/button6/step=0.34       
 --prop:/input/js0/button6/repeatable=false
 
-Determining approriate values for axes:
 
-FlightGear uses the PLIB library to handle the joystick input.
-PLIB applies the values for deadband then hands the result over to FGFS,
-where offset and factor are applied, the result is passed to the FG control
-property.
 
-It's important to understand how the dead-band, offset and factor properties
-work together for axes in order to determine apropriate values.
 
-The full order of precedence for axis properties is
 
-1. The raw PLIB axis value ...
-2. is adjusted to dead-band, then passed to FGFS, which ...
-3. applies the offset, then the result...
-4. is multiplied by factor, which ...
-5. is assigned to the FlightGear control property.
-
-Put another way....
-PLIB    lightly_toasted_value = ( raw_value > dead-band )       
-FGFS    cooked_value = ( lightly_toasted_value + offset) * factor
-
-Well, kind of. The dead-band value is applied +/- 0. Which is to say
-when we assign it a value of 0.1 the effective value is -0.1 to 0.1
-If the raw value is less than the dead-band then the raw_value is 0.
-
-Here's a visual aid.
-
--1          0          1
- .......................
--1         | |         1
-            ^
-         deadband   
-
-This diagram represents a dead-band value of 0.1. Let's say we
-have an el cheapo joystick with noisy pots. The noise level is +/-0.09.
-With the raw signal our control would constantly be moving slightly.
-A deadband value of 0.1 acts as a filter suppressing the noise.
 
