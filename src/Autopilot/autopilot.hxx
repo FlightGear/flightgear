@@ -73,23 +73,23 @@ typedef struct {
     double old_elevator_trim;
     double old_rudder;
 	
-	// manual controls override beyond this value
-	double disengage_threshold; 
+    // manual controls override beyond this value
+    double disengage_threshold; 
 
-	// For future cross track error adjust
-	double old_lat;
-	double old_lon;
+    // For future cross track error adjust
+    double old_lat;
+    double old_lon;
 
-	// keeping these locally to save work inside main loop
-	char TargetLatitudeStr[32];
-	char TargetLongitudeStr[32];
-    char TargetLatLonStr[32];
-	char TargetDistanceStr[32];
-    char TargetHeadingStr[32];
-    char TargetAltitudeStr[32];
-//	char jnk[32];
-	// using current_options.airport_id for now
-//	string tgt_airport_id;  // ID of initial starting airport    
+    // keeping these locally to save work inside main loop
+    char TargetLatitudeStr[64];
+    char TargetLongitudeStr[64];
+    char TargetLatLonStr[64];
+    char TargetDistanceStr[64];
+    char TargetHeadingStr[64];
+    char TargetAltitudeStr[64];
+    //	char jnk[32];
+    // using current_options.airport_id for now
+    //	string tgt_airport_id;  // ID of initial starting airport    
 } fgAPData, *fgAPDataPtr ;
 		
 

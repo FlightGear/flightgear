@@ -140,6 +140,14 @@ extern char *coord_format_lat(float);
 extern char *coord_format_lon(float);
 			
 
+static inline double get_ground_speed( void ) {
+    // starts in ft/s so we convert to kts
+    double ft_s = current_aircraft.fdm_state->get_V_ground_speed() 
+	* current_options.get_speed_up();;
+    double kts = ft_s * FEET_TO_METER * 3600 * METER_TO_NM;
+    return kts;
+}
+
 // The below routines were copied right from hud.c ( I hate reinventing
 // the wheel more than necessary)
 
@@ -165,7 +173,23 @@ static void MakeTargetHeadingStr( fgAPDataPtr APData, double bearing ) {
 }
 
 static inline void MakeTargetDistanceStr( fgAPDataPtr APData, double distance ) {
-    sprintf(APData->TargetDistanceStr, "APDistance %.2f NM", distance*METER_TO_NM);
+    double eta = distance*METER_TO_NM / get_ground_speed();
+    if ( eta >= 100.0 ) { eta = 99.999; }
+    int major, minor;
+    if ( eta < (1.0/6.0) ) {
+	// within 10 minutes, bump up to min/secs
+	eta *= 60.0;
+    }
+    major = (int)eta;
+    minor = (int)((eta - (int)eta) * 60.0);
+    sprintf(APData->TargetDistanceStr, "APDistance %.2f NM  ETA %d:%02d",
+	    distance*METER_TO_NM, major, minor);
+    // cout << "distance = " << distance*METER_TO_NM
+    //      << "  gndsp = " << get_ground_speed() 
+    //      << "  time = " << eta
+    //      << "  major = " << major
+    //      << "  minor = " << minor
+    //      << endl;
 }
 
 static inline void MakeTargetAltitudeStr( fgAPDataPtr APData, double altitude ) {
