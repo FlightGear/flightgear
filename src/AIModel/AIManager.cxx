@@ -288,26 +288,25 @@ void FGAIManager::processThermal( FGAIThermal* thermal ) {
 }
 
 
-void FGAIManager::processScenario( string filename ) {
+void FGAIManager::processScenario( string &filename ) {
   FGAIScenario* s = new FGAIScenario( filename );
   for (int i=0;i<s->nEntries();i++) {
     FGAIModelEntity* en = s->getNextEntry();
 
     if (en) {
- 
-      if (en->m_type == "aircraft") {
+      if ( !strcmp(en->m_type, "aircraft")) {
          createAircraft( en );
 
-      } else if (en->m_type == "ship") {
+      } else if ( !strcmp(en->m_type, "ship")) {
            createShip( en );
 
-      } else if (en->m_type == "storm") {
+      } else if ( !strcmp(en->m_type, "thunderstorm")) {
         createStorm( en );
 
-      } else if (en->m_type == "thermal") {
+      } else if ( !strcmp(en->m_type, "thermal")) {
         createThermal( en );
 
-      } else if (en->m_type == "ballistic") {
+      } else if ( !strcmp(en->m_type, "ballistic")) {
         createBallistic( en );
       }      
     }

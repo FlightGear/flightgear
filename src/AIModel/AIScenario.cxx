@@ -34,7 +34,7 @@
 
 
 
-FGAIScenario::FGAIScenario(string filename)
+FGAIScenario::FGAIScenario(string &filename)
 {
   int i;
   SGPath path( globals->get_fg_root() );

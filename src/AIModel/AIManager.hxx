@@ -82,7 +82,7 @@ public:
       return (0 < ot && ot < FGAIBase::MAX_OBJECTS) ? numObjects[ot] : numObjects[0];
     }
 
-    void processScenario( string filename );
+    void processScenario( string &filename );
 
 private:
 

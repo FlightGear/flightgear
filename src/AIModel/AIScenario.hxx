@@ -34,7 +34,7 @@ class FGAIScenario {
 
 public:
 
-   FGAIScenario(string filename);
+   FGAIScenario(string &filename);
    ~FGAIScenario();
 
    FGAIModelEntity* getNextEntry( void );
