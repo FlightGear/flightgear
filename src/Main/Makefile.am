@@ -5,20 +5,20 @@ WEATHER_LIBS = $(top_builddir)/src/Environment/libEnvironment.a
 endif
 
 if ENABLE_MPLAYER_AS
-MPLAYER_LIBS = $(top_builddir)/src/MultiPlayer/libMultiPlayer.a
+MPLAYER_LIBS = $(top_builddir)/src/MultiPlayer/libMultiPlayer.a $(network_LIBS)
 else
 MPLAYER_LIBS = 
 endif
 
 if ENABLE_NETWORK_OLK
-NETWORK_LIBS = $(top_builddir)/src/NetworkOLK/libNetworkOLK.a
+NETWORK_LIBS = $(top_builddir)/src/NetworkOLK/libNetworkOLK.a $(network_LIBS)
 else
 NETWORK_LIBS =
 endif
 
 
 if WITH_THREADS
-THREAD_LIBS = -lsgthreads
+THREAD_LIBS = -lsgthreads $(thread_LIBS)
 else
 THREAD_LIBS =
 endif

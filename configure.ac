@@ -198,8 +198,6 @@ esac
 
 dnl Checks for libraries.
 
-AC_SEARCH_LIBS(cos, m)
-
 dnl Thread related checks
 AC_CHECK_LIB(pthread, pthread_exit)
 if test "x$ac_cv_lib_pthread_pthread_exit" != "xyes" \
@@ -210,7 +208,7 @@ if test "x$ac_cv_lib_pthread_pthread_exit" != "xyes" \
     save_CXXFLAGS="$CXXFLAGS"
     save_CFLAGS="$CFLAGS"
     CXXFLAGS="-pthread $CXXFLAGS"
-    CFLAGS="-pthread $FLAGS"
+    CFLAGS="-pthread $CFLAGS"
     save_LIBS=$LIBS
     AC_CHECK_LIB(c_r, pthread_exit)
     if test "x$ac_cv_lib_c_r_pthread_exit" != "xyes"; then
@@ -220,13 +218,23 @@ if test "x$ac_cv_lib_pthread_pthread_exit" != "xyes" \
     LIBS=$save_LIBS
 fi
 
+thread_LIBS="$LIBS"
+LIBS=""
+
+dnl search for network related libraries
 AC_SEARCH_LIBS(inet_addr, xnet)
 AC_SEARCH_LIBS(socket, socket)
 AC_SEARCH_LIBS(main, nsl)
+
+network_LIBS="$LIBS"
+LIBS=""
+
+dnl check for some default libraries
+AC_SEARCH_LIBS(cos, m)
 AC_SEARCH_LIBS(dlclose, dl)
 
 base_LIBS="$LIBS"
-opengl_LIBS=""
+LIBS=""
 
 dnl check for glut location
 AC_CHECK_HEADER(GL/glut.h)
@@ -312,6 +320,8 @@ LIBS="$base_LIBS"
 
 AC_SUBST(base_LIBS)
 AC_SUBST(opengl_LIBS)
+AC_SUBST(thread_LIBS)
+AC_SUBST(network_LIBS)
 
 # The following are C++ items that need to be tested for with the c++
 # compiler
