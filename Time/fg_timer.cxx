@@ -31,6 +31,10 @@
 #include <signal.h>    /* for timer routines */
 #include <stdio.h>     /* for printf() */
 
+#ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+#endif
+
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>  /* for get/setitimer, gettimeofday, struct timeval */
 #endif
@@ -117,11 +121,14 @@ int fgGetTimeInterval( void ) {
 
 
 /* $Log$
-/* Revision 1.2  1998/04/25 20:24:03  curt
-/* Cleaned up initialization sequence to eliminate interdependencies
-/* between sun position, lighting, and view position.  This creates a
-/* valid single pass initialization path.
+/* Revision 1.3  1998/04/28 01:22:18  curt
+/* Type-ified fgTIME and fgVIEW.
 /*
+ * Revision 1.2  1998/04/25 20:24:03  curt
+ * Cleaned up initialization sequence to eliminate interdependencies
+ * between sun position, lighting, and view position.  This creates a
+ * valid single pass initialization path.
+ *
  * Revision 1.1  1998/04/24 00:52:29  curt
  * Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
  * Fog color fixes.

@@ -273,8 +273,8 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
 // update the cur_time_params structure with the current sun position
 void fgUpdateSunPos( void ) {
     fgLIGHT *l;
-    struct fgTIME *t;
-    struct fgVIEW *v;
+    fgTIME *t;
+    fgVIEW *v;
     MAT3vec nup, nsun, v0;
     double sun_gd_lat, sl_radius;
     double ntmp;
@@ -346,6 +346,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.6  1998/04/28 01:22:18  curt
+// Type-ified fgTIME and fgVIEW.
+//
 // Revision 1.5  1998/04/26 05:10:05  curt
 // "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
 //

@@ -95,8 +95,8 @@ void fgLightInit( void ) {
 // update lighting parameters based on current sun position
 void fgLightUpdate( void ) {
     fgLIGHT *l;
-    struct fgTIME *t;
-    struct fgVIEW *v;
+    fgTIME *t;
+    fgVIEW *v;
     /* if the 4th field is 0.0, this specifies a direction ... */
     GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
     /* base sky color */
@@ -158,6 +158,9 @@ void fgLightUpdate( void ) {
 
 
 // $Log$
+// Revision 1.4  1998/04/28 01:22:18  curt
+// Type-ified fgTIME and fgVIEW.
+//
 // Revision 1.3  1998/04/26 05:10:04  curt
 // "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
 //

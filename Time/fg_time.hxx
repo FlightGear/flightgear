@@ -48,7 +48,7 @@
 
 
 // Define a structure containing global time parameters
-struct fgTIME {
+typedef struct {
     // the date/time in various forms
     // Unix "calendar" time in seconds
     time_t cur_time;
@@ -80,9 +80,9 @@ struct fgTIME {
     // How much to change the value of warp each iteration.  Allows us
     // to make time progress faster than normal.
     long int warp_delta; 
-};
+} fgTIME;
 
-extern struct fgTIME cur_time_params;
+extern fgTIME cur_time_params;
 
 
 typedef struct fg_timestamp_t {
@@ -104,17 +104,20 @@ void timesum(fg_timestamp *res, fg_timestamp *start, long millis);
 
 
 // Update time variables such as gmt, julian date, and sidereal time
-void fgTimeInit(struct fgTIME *t);
+void fgTimeInit(fgTIME *t);
 
 
 // Update the time dependent variables
-void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t);
+void fgTimeUpdate(fgFLIGHT *f, fgTIME *t);
 
 
 #endif // _FG_TIME_HXX
 
 
 // $Log$
+// Revision 1.4  1998/04/28 01:22:17  curt
+// Type-ified fgTIME and fgVIEW.
+//
 // Revision 1.3  1998/04/25 22:06:34  curt
 // Edited cvs log messages in source files ... bad bad bad!
 //

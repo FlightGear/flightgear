@@ -54,12 +54,12 @@
 #define RADHR(x)        DEGHR(x*RAD_TO_DEG)
 
 
-struct fgTIME cur_time_params;
+fgTIME cur_time_params;
 
 
 // Initialize the time dependent variables
 
-void fgTimeInit(struct fgTIME *t) {
+void fgTimeInit(fgTIME *t) {
     fgOPTIONS *o;
 
     o = &current_options;
@@ -312,7 +312,7 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 
 
 // Update time variables such as gmt, julian date, and sidereal time
-void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t) {
+void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
     double gst_precise, gst_course;
 
     fgPrintf( FG_EVENT, FG_BULK, "Updating time\n");
@@ -375,6 +375,9 @@ void fgTimeUpdate(fgFLIGHT *f, struct fgTIME *t) {
 
 
 // $Log$
+// Revision 1.4  1998/04/28 01:22:16  curt
+// Type-ified fgTIME and fgVIEW.
+//
 // Revision 1.3  1998/04/25 22:06:33  curt
 // Edited cvs log messages in source files ... bad bad bad!
 //
