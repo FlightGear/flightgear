@@ -23,7 +23,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -34,7 +36,7 @@
 
 #include <Debug/fg_debug.h>
 #include <Include/fg_constants.h>
-#include <Time/fg_time.h>
+#include <Time/fg_time.hxx>
 #include <Time/light.hxx>
 
 #include "orbits.hxx"
@@ -208,9 +210,13 @@ void fgPlanetsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:21:31  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.2  1998/04/24 00:45:02  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Fixed a bug when generating sky colors.
 /*
+ * Revision 1.1  1998/04/22 13:21:31  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.9  1998/04/18 04:13:57  curt
  * Moved fg_debug.c to it's own library.
  *

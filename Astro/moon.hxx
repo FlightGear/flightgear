@@ -33,7 +33,7 @@
 
 #include <math.h>
 
-#include <Time/fg_time.h>
+#include <Time/fg_time.hxx>
 
 #include "orbits.hxx"
 
@@ -55,9 +55,13 @@ extern struct OrbElements pltOrbElements[9];
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:21:28  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.2  1998/04/24 00:45:00  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Fixed a bug when generating sky colors.
 /*
+ * Revision 1.1  1998/04/22 13:21:28  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.7  1998/04/21 17:02:30  curt
  * Prepairing for C++ integration.
  *

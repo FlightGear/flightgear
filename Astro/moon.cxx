@@ -21,7 +21,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -36,7 +38,7 @@
 #include <Include/fg_constants.h>
 #include <Include/general.h>
 #include <Main/views.hxx>
-#include <Time/fg_time.h>
+#include <Time/fg_time.hxx>
 
 #include "orbits.hxx"
 #include "moon.hxx"
@@ -214,9 +216,13 @@ void fgMoonRender( void ) {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:21:28  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.2  1998/04/24 00:45:00  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Fixed a bug when generating sky colors.
 /*
+ * Revision 1.1  1998/04/22 13:21:28  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.9  1998/04/18 04:13:56  curt
  * Moved fg_debug.c to it's own library.
  *

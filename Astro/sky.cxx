@@ -24,7 +24,9 @@
  **************************************************************************/
 
 
-#include <config.h>
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
@@ -36,12 +38,13 @@
 #include <XGL/xgl.h>
 
 #include <Aircraft/aircraft.h>
+#include <Debug/fg_debug.h>
 #include <Flight/flight.h>
 #include <Include/fg_constants.h>
 #include <Main/views.hxx>
 #include <Math/fg_random.h>
-#include <Time/event.h>
-#include <Time/fg_time.h>
+#include <Time/event.hxx>
+#include <Time/fg_time.hxx>
 
 #include "sky.hxx"
 
@@ -81,7 +84,7 @@ void fgSkyVerticesInit( void ) {
     float theta;
     int i;
 
-    printf("  Generating the sky dome vertices.\n");
+    fgPrintf(FG_ASTRO, FG_INFO, "  Generating the sky dome vertices.\n");
 
     for ( i = 0; i < 12; i++ ) {
 	theta = (i * 30.0) * DEG_TO_RAD;
@@ -118,11 +121,12 @@ void fgSkyColorsInit( void ) {
 
     l = &cur_light_params;
 
-    printf("  Generating the sky colors for each vertex.\n");
+    fgPrintf( FG_ASTRO, FG_INFO, 
+	      "  Generating the sky colors for each vertex.\n" );
 
     /* setup for the possibility of sunset effects */
     sun_angle = l->sun_angle * RAD_TO_DEG;
-    printf("  Sun angle in degrees = %.2f\n", sun_angle);
+    fgPrintf( FG_ASTRO, FG_INFO, "  Sun angle in degrees = %.2f\n", sun_angle);
 
     if ( (sun_angle > 80.0) && (sun_angle < 100.0) ) {
 	/* 0.0 - 0.4 */
@@ -161,10 +165,15 @@ void fgSkyColorsInit( void ) {
 	for ( j = 0; j < 3; j++ ) {
 	    diff = l->sky_color[j] - l->fog_color[j];
 
+	    /* printf("sky = %.2f  fog = %.2f  diff = %.2f\n", 
+		   l->sky_color[j], l->fog_color[j], diff); */
+
 	    inner_color[i][j] = l->sky_color[j] - diff * 0.3;
 	    middle_color[i][j] = l->sky_color[j] - diff * 0.9 + middle_amt[j];
 	    outer_color[i][j] = l->fog_color[j] + outer_amt[j];
 
+	    if ( inner_color[i][j] > 1.00 ) { inner_color[i][j] = 1.00; }
+	    if ( inner_color[i][j] < 0.10 ) { inner_color[i][j] = 0.10; }
 	    if ( middle_color[i][j] > 1.00 ) { middle_color[i][j] = 1.00; }
 	    if ( middle_color[i][j] < 0.10 ) { middle_color[i][j] = 0.10; }
 	    if ( outer_color[i][j] > 1.00 ) { outer_color[i][j] = 1.00; }
@@ -200,10 +209,15 @@ void fgSkyColorsInit( void ) {
 	for ( j = 0; j < 3; j++ ) {
 	    diff = l->sky_color[j] - l->fog_color[j];
 
+	    /* printf("sky = %.2f  fog = %.2f  diff = %.2f\n", 
+		   l->sky_color[j], l->fog_color[j], diff); */
+
 	    inner_color[i][j] = l->sky_color[j] - diff * 0.3;
 	    middle_color[i][j] = l->sky_color[j] - diff * 0.9 + middle_amt[j];
 	    outer_color[i][j] = l->fog_color[j] + outer_amt[j];
 
+	    if ( inner_color[i][j] > 1.00 ) { inner_color[i][j] = 1.00; }
+	    if ( inner_color[i][j] < 0.10 ) { inner_color[i][j] = 0.10; }
 	    if ( middle_color[i][j] > 1.00 ) { middle_color[i][j] = 1.00; }
 	    if ( middle_color[i][j] < 0.10 ) { middle_color[i][j] = 0.10; }
 	    if ( outer_color[i][j] > 1.00 ) { outer_color[i][j] = 1.00; }
@@ -233,7 +247,7 @@ void fgSkyColorsInit( void ) {
 
 /* Initialize the sky structure and colors */
 void fgSkyInit( void ) {
-    printf("Initializing the sky\n");
+    fgPrintf(FG_ASTRO, FG_INFO, "Initializing the sky\n");
 
     fgSkyVerticesInit();
 
@@ -275,7 +289,7 @@ void fgSkyRender( void ) {
     } else {
 	angle = -acos(dot);
     }
-    /*printf("  Sky needs to rotate = %.3f rads = %.1f degrees.\n", 
+    /* printf("  Sky needs to rotate = %.3f rads = %.1f degrees.\n", 
 	   angle, angle * RAD_TO_DEG); */
 
     /* Translate to view position */
@@ -302,19 +316,27 @@ void fgSkyRender( void ) {
     xglVertex3fv( inner_vertex[0] );
     xglEnd();
 
-    /* Draw the middle ring */
+    // Draw the middle ring
     xglBegin( GL_TRIANGLE_STRIP );
     for ( i = 0; i < 12; i++ ) {
 	xglColor4fv( middle_color[i] );
+	/* printf("middle_color[%d] = %.2f %.2f %.2f %.2f\n", i, 
+	       middle_color[i][0], middle_color[i][1], middle_color[i][2], 
+	       middle_color[i][3]); */
+	// xglColor4f(1.0, 0.0, 0.0, 1.0);
 	xglVertex3fv( middle_vertex[i] );
 	xglColor4fv( inner_color[i] );
+	/* printf("inner_color[%d] = %.2f %.2f %.2f %.2f\n", i, 
+	       inner_color[i][0], inner_color[i][1], inner_color[i][2], 
+	       inner_color[i][3]); */
+	// xglColor4f(0.0, 0.0, 1.0, 1.0);
 	xglVertex3fv( inner_vertex[i] );
     }
     xglColor4fv( middle_color[0] );
-    /* xglColor4f(1.0, 0.0, 0.0, 1.0); */
+    // xglColor4f(1.0, 0.0, 0.0, 1.0);
     xglVertex3fv( middle_vertex[0] );
     xglColor4fv( inner_color[0] );
-    /* xglColor4f(1.0, 0.0, 0.0, 1.0); */
+    // xglColor4f(0.0, 0.0, 1.0, 1.0);
     xglVertex3fv( inner_vertex[0] );
     xglEnd();
 
@@ -351,9 +373,13 @@ void fgSkyRender( void ) {
 
 
 /* $Log$
-/* Revision 1.1  1998/04/22 13:21:32  curt
-/* C++ - ifing the code a bit.
+/* Revision 1.2  1998/04/24 00:45:03  curt
+/* Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+/* Fixed a bug when generating sky colors.
 /*
+ * Revision 1.1  1998/04/22 13:21:32  curt
+ * C++ - ifing the code a bit.
+ *
  * Revision 1.9  1998/04/03 21:52:50  curt
  * Converting to Gnu autoconf system.
  *
