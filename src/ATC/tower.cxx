@@ -119,6 +119,25 @@ isUser(false)
 
 // FGTower
 
+/*******************************************
+               TODO List
+			   
+Currently user is assumed to have taken off again when leaving the runway - check speed/elev for taxiing-in.
+
+AI plane lands even when user on rwy - make it go-around instead.
+
+Tell AI plane to contact ground when taxiing in.
+
+Use track instead of heading to determine what leg of the circuit the user is flying.
+
+Use altitude as well as position to try to determine if the user has left the circuit.
+
+Currently HoldShortReported code assumes there will be only one plane holding for the runway at once and 
+will break when planes start queueing.
+
+Implement ReportRunwayVacated
+*******************************************/
+
 FGTower::FGTower() {
 	ATCmgr = globals->get_ATC_mgr();
 	
@@ -1225,7 +1244,6 @@ void FGTower::ContactAtHoldShort(PlaneRec plane, FGAIPlane* requestee, tower_tra
 	t->plane = plane;
 	t->planePtr = requestee;
 	t->holdShortReported = true;
-	t->clearanceCounter = 0;
 	t->clearedToLineUp = false;
 	t->clearedToTakeOff = false;
 	t->opType = operation;

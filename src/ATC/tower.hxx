@@ -85,8 +85,6 @@ public:
 	bool onRwy;		// is physically on the runway
 	bool nextOnRwy;		// currently projected by tower to be the next on the runway
 
-	double clearanceCounter;		// Hack for communication timing - counter since clearance requested in seconds 
-	
 	// Type of operation the plane is doing
 	tower_traffic_type opType;
 	
