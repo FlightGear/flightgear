@@ -96,8 +96,9 @@ int fgJoystickInit( int joy_num ) {
 		if( js.y < joy_y_dead_min )
 			joy_y_dead_min = js.y;
 		
-		// printf( "Xmin %d Xmax %d Ymin %d Ymax %d", joy_x_dead_min, joy_x_dead_max, \
-		// 		joy_y_dead_min, joy_y_dead_max );
+		/* printf( "Xmin %d Xmax %d Ymin %d Ymax %d", 
+			   joy_x_dead_min, joy_x_dead_max,
+			   joy_y_dead_min, joy_y_dead_max ); */
 	}
 	status = read(joystick_fd, &js, JS_RETURN);
 	if (status != JS_RETURN) {
@@ -206,6 +207,8 @@ int fgJoystickInit( int joy_num ) {
 	// printf("Joystick calibration: X_ctr = %d, Y_ctr = %d\n", joy_x_ctr, joy_y_ctr );
 	
 	return( joystick_fd );
+#else
+	return( 0 );
 #endif
 }
 
@@ -247,16 +250,22 @@ int fgJoystickRead( double *joy_x, double *joy_y, int *joy_b1, int *joy_b2 )
 	*joy_b1 = js.buttons & 1;
 	*joy_b2 = js.buttons & 2;
 
-	return( 0 );
 #endif
+	return( 0 );
 }
 
 
 /* $Log$
-/* Revision 1.3  1998/01/27 00:47:54  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.4  1998/02/03 23:20:20  curt
+/* Lots of little tweaks to fix various consistency problems discovered by
+/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+/* passed arguments along to the real printf().  Also incorporated HUD changes
+/* by Michele America.
 /*
+ * Revision 1.3  1998/01/27 00:47:54  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.2  1997/12/30 20:47:40  curt
  * Integrated new event manager with subsystem initializations.
  *

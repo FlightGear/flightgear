@@ -639,10 +639,23 @@ int main( int argc, char *argv[] ) {
 }
 
 
+#ifdef __SUNPRO_CC
+    extern "C" {
+	void __eprintf( void ) {
+	}
+    }
+#endif
+
 /* $Log$
-/* Revision 1.55  1998/02/02 20:53:58  curt
-/* Incorporated Durk's changes.
+/* Revision 1.56  1998/02/03 23:20:23  curt
+/* Lots of little tweaks to fix various consistency problems discovered by
+/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+/* passed arguments along to the real printf().  Also incorporated HUD changes
+/* by Michele America.
 /*
+ * Revision 1.55  1998/02/02 20:53:58  curt
+ * Incorporated Durk's changes.
+ *
  * Revision 1.54  1998/01/31 00:43:10  curt
  * Added MetroWorks patches from Carmen Volpe.
  *

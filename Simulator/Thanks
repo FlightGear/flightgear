@@ -7,6 +7,10 @@ possible only by the help and hard work of others.  I want to properly
 credit everyone who has contributed to this project.
 
 
+Michele America <nomimarketing@mail.telepac.pt>
+  Contributed the HUD code.
+
+
 Steve Baker <sbaker@link.com>
   Steve has provided an immense amount of coaching and tutelage, both
   on the subjects of flight simulation and OpenGL.  It has been his
@@ -62,6 +66,12 @@ Jonathan R Shewchuk <Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu>
 
 U.S. Geological Survey - http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html
   Provided geographic data used by this project
+
+
+Durk Talsma <pn_talsma@macmail.psy.uva.nl>
+  Accurate Sun, Moon, and Planets.  Sun changes color based on
+  position in sky.  Moon has correct phase and blends well into the
+  sky.  Planets are correctly positioned and have proper magnitude.
 
 
 Carmelo Volpe <carmelo.volpe@csb.ki.se>

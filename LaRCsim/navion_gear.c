@@ -36,6 +36,12 @@
 
 $Header$
 $Log$
+Revision 1.3  1998/02/03 23:20:18  curt
+Lots of little tweaks to fix various consistency problems discovered by
+Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+passed arguments along to the real printf().  Also incorporated HUD changes
+by Michele America.
+
 Revision 1.2  1998/01/19 18:40:29  curt
 Tons of little changes to clean up the code and to remove fatal errors
 when building with the c++ compiler.
@@ -72,42 +78,42 @@ Initial Flight Gear revision.
 #include "ls_cockpit.h"
 
 
-sub3( DATA v1[],  DATA v2[], DATA result[] )
+void sub3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[0] - v2[0];
     result[1] = v1[1] - v2[1];
     result[2] = v1[2] - v2[2];
 }
 
-add3( DATA v1[],  DATA v2[], DATA result[] )
+void add3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[0] + v2[0];
     result[1] = v1[1] + v2[1];
     result[2] = v1[2] + v2[2];
 }
 
-cross3( DATA v1[],  DATA v2[], DATA result[] )
+void cross3( DATA v1[],  DATA v2[], DATA result[] )
 {
     result[0] = v1[1]*v2[2] - v1[2]*v2[1];
     result[1] = v1[2]*v2[0] - v1[0]*v2[2];
     result[2] = v1[0]*v2[1] - v1[1]*v2[0];
 }
 
-multtrans3x3by3( DATA m[][3], DATA v[], DATA result[] )
+void multtrans3x3by3( DATA m[][3], DATA v[], DATA result[] )
 {
     result[0] = m[0][0]*v[0] + m[1][0]*v[1] + m[2][0]*v[2];
     result[1] = m[0][1]*v[0] + m[1][1]*v[1] + m[2][1]*v[2];
     result[2] = m[0][2]*v[0] + m[1][2]*v[1] + m[2][2]*v[2];
 }
 
-mult3x3by3( DATA m[][3], DATA v[], DATA result[] )
+void mult3x3by3( DATA m[][3], DATA v[], DATA result[] )
 {
     result[0] = m[0][0]*v[0] + m[0][1]*v[1] + m[0][2]*v[2];
     result[1] = m[1][0]*v[0] + m[1][1]*v[1] + m[1][2]*v[2];
     result[2] = m[2][0]*v[0] + m[2][1]*v[1] + m[2][2]*v[2];
 }
 
-clear3( DATA v[] )
+void clear3( DATA v[] )
 {
     v[0] = 0.; v[1] = 0.; v[2] = 0.;
 }

@@ -45,12 +45,19 @@ include $(FG_ROOT_SRC)/commondefs
 
 $(TARGET)$(EXT): $(OBJECTS) $(FG_ROOT_LIB)/stamp_libs
 	$(CC) -o $(TARGET)$(EXT) $(OBJECTS) $(LDFLAGS) $(LDLIBS)
+	$(RM) fg$(FG_VERSION_MAJOR)$(EXT)
 	$(LN) $(TARGET)$(EXT) fg$(FG_VERSION_MAJOR)$(EXT)
 
 include $(COMMONRULES)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.46  1998/02/03 23:20:24  curt
+# Lots of little tweaks to fix various consistency problems discovered by
+# Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+# passed arguments along to the real printf().  Also incorporated HUD changes
+# by Michele America.
+#
 # Revision 1.45  1998/01/27 00:47:57  curt
 # Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
 # system and commandline/config file processing code.

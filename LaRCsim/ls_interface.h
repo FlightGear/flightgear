@@ -29,6 +29,7 @@
 
 
 #include <Flight/flight.h>
+#include "ls_types.h"
 
 
 /* reset flight params to a specific position */ 
@@ -43,15 +44,23 @@ int fgFlight_2_LaRCsim (struct fgFLIGHT *f);
 /* Convert from the LaRCsim generic_ struct to the fgFLIGHT struct */
 int fgLaRCsim_2_Flight (struct fgFLIGHT *f);
 
+void ls_loop( SCALAR dt, int initialize );
+
 
 #endif /* _LS_INTERFACE_H */
 
 
 /* $Log$
-/* Revision 1.5  1998/01/19 19:27:05  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.6  1998/02/03 23:20:17  curt
+/* Lots of little tweaks to fix various consistency problems discovered by
+/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+/* passed arguments along to the real printf().  Also incorporated HUD changes
+/* by Michele America.
 /*
+ * Revision 1.5  1998/01/19 19:27:05  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.4  1998/01/19 18:40:27  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

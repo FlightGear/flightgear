@@ -153,7 +153,7 @@ void fgInitSubsystems( void ) {
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
     
     /* Initial Position north of the city of Globe */
-    /* FGto do the install_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
+    /* FG_Longitude = ( -398673.28 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Latitude  = (  120625.64 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Longitude = ( -397867.44 / 3600.0 ) * DEG_TO_RAD; */
     /* FG_Latitude  = (  119548.21 / 3600.0 ) * DEG_TO_RAD; */
@@ -169,6 +169,12 @@ void fgInitSubsystems( void ) {
     /* FG_Longitude = ( -93.15 ) * DEG_TO_RAD; */
     /* FG_Latitude  = (  45.15 ) * DEG_TO_RAD; */
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+
+    /* Initial Position: Somewhere near the Grand Canyon */
+    FG_Longitude = ( -112.5 ) * DEG_TO_RAD;
+    FG_Latitude  = (  36.5 ) * DEG_TO_RAD;
+    FG_Runway_altitude = 5000.0;
+    FG_Altitude = FG_Runway_altitude + 3.758099;
 
     /* A random test position */
     /* FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD; */
@@ -318,9 +324,15 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.38  1998/02/02 20:53:58  curt
-/* Incorporated Durk's changes.
+/* Revision 1.39  1998/02/03 23:20:25  curt
+/* Lots of little tweaks to fix various consistency problems discovered by
+/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+/* passed arguments along to the real printf().  Also incorporated HUD changes
+/* by Michele America.
 /*
+ * Revision 1.38  1998/02/02 20:53:58  curt
+ * Incorporated Durk's changes.
+ *
  * Revision 1.37  1998/02/01 03:39:54  curt
  * Minor tweaks.
  *

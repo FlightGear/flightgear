@@ -22,11 +22,11 @@
  * (Log is kept at end of this file)
  **************************************************************************/
 
+#include <string.h>
 #include <Main/fg_debug.h>
-#include <varargs.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
-#include <strings.h> /* probably not portable */
 
 static int fg_DebugSem = 1;
 static fgDebugClass fg_DebugClass = FG_ALL;
@@ -191,6 +191,7 @@ fgDebugCallback fgRegisterDebugCallback( fgDebugCallback callback )
 int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... )
 {
   char szOut[1024+1];
+  va_list ap;
   int ret = 0;
 
   FG_GRABDEBUGSEM;
@@ -199,7 +200,11 @@ int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... )
     FG_RELEASEDEBUGSEM;
     return 0;
   } 
-  ret = vsprintf( szOut, fmt, (&fmt+1));
+
+  /* ret = vsprintf( szOut, fmt, (&fmt+1)); (but it didn't work, thus ... */
+  va_start (ap, fmt);
+  ret = vsprintf( szOut, fmt, ap);
+  va_end (ap);
 
   if( fg_DebugCallback!=NULL && fg_DebugCallback(dbg_class, prio, szOut) ) {
     FG_RELEASEDEBUGSEM;

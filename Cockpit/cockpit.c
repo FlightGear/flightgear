@@ -57,7 +57,7 @@ struct fgCOCKPIT *fgCockpitInit( struct fgAIRCRAFT cur_aircraft )
 	if( cockpit == NULL )
 		return( NULL );
 		
-	cockpit->code = 1234;
+	cockpit->code = 1;	/* It will be aircraft dependent */
 	cockpit->status = 0;
 	
 	/* If aircraft has HUD */
@@ -94,9 +94,15 @@ void fgCockpitUpdate( void )
 
 
 /* $Log$
-/* Revision 1.8  1998/01/31 00:43:03  curt
-/* Added MetroWorks patches from Carmen Volpe.
+/* Revision 1.9  1998/02/03 23:20:14  curt
+/* Lots of little tweaks to fix various consistency problems discovered by
+/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+/* passed arguments along to the real printf().  Also incorporated HUD changes
+/* by Michele America.
 /*
+ * Revision 1.8  1998/01/31 00:43:03  curt
+ * Added MetroWorks patches from Carmen Volpe.
+ *
  * Revision 1.7  1998/01/27 00:47:51  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

@@ -24,22 +24,28 @@
  **************************************************************************/
  
 
+#ifdef WIN32
+#  include <windows.h>
+#endif
+
 #include <GL/glut.h>
 #include <stdlib.h>
+#include <string.h>
+
 #ifndef WIN32
 #  include <values.h>  /* for MAXINT */
 #endif /* not WIN32 */
+
 #include "hud.h"
 
-#include <Include/fg_constants.h>
-
 #include <Aircraft/aircraft.h>
-/* #include <Scenery/mesh.h> */
-#include <Scenery/scenery.h>
+#include <Include/fg_constants.h>
+#include <Main/fg_debug.h>
+#include <Math/fg_random.h>
 #include <Math/mat3.h>
 #include <Math/polar.h>
+#include <Scenery/scenery.h>
 #include <Time/fg_timer.h>
-#include <Math/fg_random.h>
 #include <Weather/weather.h>
 
 // #define DEBUG
@@ -335,7 +341,7 @@ static void drawladder( struct HUD_ladder ladder )
            			new_x_ini = ladder.x_pos+(x_ini-ladder.x_pos)*cos(roll_value)-\
            				(y_ini-ladder.y_pos)*sin(roll_value);
            			new_y_ini = ladder.y_pos+(x_ini-ladder.x_pos)*sin(roll_value)+\
-				    (y_ini-ladder.y_pos)*cos(roll_value);
+           				(y_ini-ladder.y_pos)*cos(roll_value);
            			new_x_end = ladder.x_pos+(x_end-ladder.x_pos)*cos(roll_value)-\
            				(y_end-ladder.y_pos)*sin(roll_value);
            			new_y_end = ladder.y_pos+(x_end-ladder.x_pos)*sin(roll_value)+\
@@ -418,6 +424,110 @@ static void drawhorizon( struct HUD_horizon horizon )
 
 /*
 
+	Draws a representation of the control surfaces in their current state
+		anywhere in the HUD
+	
+	Needs: struct HUD_control_surfaces
+
+*/
+static void drawcontrolsurfaces( struct HUD_control_surfaces ctrl_surf )
+{
+	int x_ini, y_ini;
+	int x_end, y_end;
+	/* int x_1, y_1; */
+	/* int x_2, y_2; */
+	struct fgCONTROLS *c;
+	
+	x_ini = ctrl_surf.x_pos;
+	y_ini = ctrl_surf.y_pos;
+	x_end = x_ini+150;
+	y_end = y_ini+60;
+	
+	drawOneLine( x_ini, y_ini, x_end, y_ini );
+	drawOneLine( x_ini, y_ini, x_ini, y_end );
+	drawOneLine( x_ini, y_end, x_end, y_end );
+	drawOneLine( x_end, y_end, x_end, y_ini );
+	drawOneLine( x_ini+30, y_ini, x_ini+30, y_end );
+	drawOneLine( x_ini+30, y_ini+30, x_ini+90, y_ini+30 );
+	drawOneLine( x_ini+90, y_ini, x_ini+90, y_end );
+	drawOneLine( x_ini+120, y_ini, x_ini+120, y_end );
+              
+	c = &current_aircraft.controls;
+	
+	/* Draw elevator diagram */
+	textString( x_ini+1, y_end-11, "E", GLUT_BITMAP_8_BY_13 );	
+	drawOneLine( x_ini+15, y_ini+5, x_ini+15, y_ini+55 );
+	drawOneLine( x_ini+14, y_ini+30, x_ini+16, y_ini+30 );
+	if( FG_Elevator <= -0.01 || FG_Elevator >= 0.01 )
+	{
+		drawOneLine( x_ini+10, y_ini+5+(int)(((FG_Elevator+1.0)/2)*50.0), \
+				x_ini+20, y_ini+5+(int)(((FG_Elevator+1.0)/2)*50.0) );
+	}
+	else
+	{
+		drawOneLine( x_ini+7, y_ini+5+(int)(((FG_Elevator+1.0)/2)*50.0), \
+				x_ini+23, y_ini+5+(int)(((FG_Elevator+1.0)/2)*50.0) );
+	}
+	
+	/* Draw aileron diagram */
+	textString( x_ini+30+1, y_end-11, "A", GLUT_BITMAP_8_BY_13 );	
+	drawOneLine( x_ini+35, y_end-15, x_ini+85, y_end-15 );
+	drawOneLine( x_ini+60, y_end-14, x_ini+60, y_end-16 );
+	if( FG_Aileron <= -0.01 || FG_Aileron >= 0.01 )
+	{
+		drawOneLine( x_ini+35+(int)(((FG_Aileron+1.0)/2)*50.0), y_end-20, \
+				x_ini+35+(int)(((FG_Aileron+1.0)/2)*50.0), y_end-10 );
+	}
+	else
+	{
+		drawOneLine( x_ini+35+(int)(((FG_Aileron+1.0)/2)*50.0), y_end-25, \
+				x_ini+35+(int)(((FG_Aileron+1.0)/2)*50.0), y_end-5 );
+	}
+	
+	/* Draw rudder diagram */
+	textString( x_ini+30+1, y_ini+21, "R", GLUT_BITMAP_8_BY_13 );	
+	drawOneLine( x_ini+35, y_ini+15, x_ini+85, y_ini+15 );
+	drawOneLine( x_ini+60, y_ini+14, x_ini+60, y_ini+16 );
+	if( FG_Rudder <= -0.01 || FG_Rudder >= 0.01 )
+	{
+		drawOneLine( x_ini+35+(int)(((FG_Rudder+1.0)/2)*50.0), y_ini+20, \
+				x_ini+35+(int)(((FG_Rudder+1.0)/2)*50.0), y_ini+10 );
+	}
+	else
+	{
+		drawOneLine( x_ini+35+(int)(((FG_Rudder+1.0)/2)*50.0), y_ini+25, \
+				x_ini+35+(int)(((FG_Rudder+1.0)/2)*50.0), y_ini+5 );
+	}
+	
+	
+	/* Draw throttle diagram */
+	textString( x_ini+90+1, y_end-11, "T", GLUT_BITMAP_8_BY_13 );	
+	textString( x_ini+90+1, y_end-21, "r", GLUT_BITMAP_8_BY_13 );	
+	drawOneLine( x_ini+105, y_ini+5, x_ini+105, y_ini+55 );
+	drawOneLine( x_ini+100, y_ini+5+(int)(FG_Throttle[0]*50.0), \
+			x_ini+110, y_ini+5+(int)(FG_Throttle[0]*50.0) );
+	
+	
+	/* Draw elevator trim diagram */
+	textString( x_ini+121, y_end-11, "T", GLUT_BITMAP_8_BY_13 );	
+	textString( x_ini+121, y_end-22, "m", GLUT_BITMAP_8_BY_13 );	
+	drawOneLine( x_ini+135, y_ini+5, x_ini+135, y_ini+55 );
+	drawOneLine( x_ini+134, y_ini+30, x_ini+136, y_ini+30 );
+	if( FG_Elev_Trim <= -0.01 || FG_Elev_Trim >= 0.01 )
+	{
+		drawOneLine( x_ini+130, y_ini+5+(int)(((FG_Elev_Trim+1)/2)*50.0), \
+				x_ini+140, y_ini+5+(int)(((FG_Elev_Trim+1.0)/2)*50.0) );
+	}
+	else
+	{
+		drawOneLine( x_ini+127, y_ini+5+(int)(((FG_Elev_Trim+1.0)/2)*50.0), \
+				x_ini+143, y_ini+5+(int)(((FG_Elev_Trim+1.0)/2)*50.0) );
+	}
+	
+}
+
+/*
+
 	Draws a label anywhere in the HUD
 	
 	Needs: HUD_label struct
@@ -439,12 +549,10 @@ static void drawlabel( struct HUD_label label )
 
 	sprintf( string, buffer, (*label.load_value)() );
 
-#ifdef DEBUG	
 	fgPrintf( FG_COCKPIT, FG_DEBUG,  buffer );
 	fgPrintf( FG_COCKPIT, FG_DEBUG,  "\n" );
 	fgPrintf( FG_COCKPIT, FG_DEBUG, string );
 	fgPrintf( FG_COCKPIT, FG_DEBUG, "\n" );
-#endif
 
 	lenstr = strlen( string );
 	if( label.justify == LEFT_JUST )
@@ -498,7 +606,7 @@ double get_heading( void )
 	struct fgFLIGHT *f;
               
 	f = &current_aircraft.flight;
-	return( FG_Psi*RAD_TO_DEG ); 
+	return( FG_Psi*RAD_TO_DEG );
 }
 
 double get_altitude( void )
@@ -510,7 +618,7 @@ double get_altitude( void )
 	/* rough_elev = mesh_altitude(FG_Longitude * RAD_TO_ARCSEC,
 			                   FG_Latitude  * RAD_TO_ARCSEC); */
                                                    
-	return( FG_Altitude * FEET_TO_METER /* - rough_elev */ );
+	return( FG_Altitude * FEET_TO_METER /* -rough_elev */ );
 }
 
 void add_instrument( Hptr hud, HIptr instrument )
@@ -529,7 +637,7 @@ Hptr fgHUDInit( struct fgAIRCRAFT current_aircraft, int color )
 	if( hud == NULL )
 		return( NULL );
 		
-	hud->code = 123;
+	hud->code = 1;		/* It will be aircraft dependent */
 	hud->status = 0;
 	
 	// For now lets just hardcode a hud here .
@@ -543,6 +651,7 @@ Hptr fgHUDInit( struct fgAIRCRAFT current_aircraft, int color )
 	fgHUDAddLabel( hud, 180, 85, SMALL, NOBLINK, RIGHT_JUST, NULL, " Kts", "%5.0f", get_speed );
 	fgHUDAddLabel( hud, 180, 73, SMALL, NOBLINK, RIGHT_JUST, NULL, " m", "%5.0f", get_altitude );
 	fgHUDAddLadder( hud, 330, 190, 90, 180, 70, 10, NONE, 45, get_roll, get_pitch );
+	fgHUDAddControlSurfaces( hud, 10, 10, get_heading );
 	
 	return( hud );
 }
@@ -704,6 +813,38 @@ Hptr fgHUDAddLadder( Hptr hud, int x_pos, int y_pos, int scr_width, int scr_heig
 	return( hud );
 }
 
+Hptr fgHUDAddControlSurfaces( Hptr hud, int x_pos, int y_pos, double (*load_value)() )
+{
+	struct HUD_control_surfaces *ctrl_surf;
+	struct HUD_instr *instrument;
+	HIptr tmp_first, tmp_next;
+	
+	tmp_first = hud->instruments;
+	if( tmp_first != NULL )
+		tmp_next = tmp_first->next;
+	else
+		tmp_next = NULL;
+	
+	instrument = (HIptr)calloc(sizeof(struct HUD_instr),1);
+	if( instrument == NULL )
+		return( NULL );
+		
+	ctrl_surf = (struct HUD_control_surfaces *)calloc(sizeof(struct HUD_control_surfaces),1);
+	if( ctrl_surf == NULL )
+		return( NULL );
+	
+	instrument->type = CONTROL_SURFACES;
+	instrument->instr.control_surfaces = *ctrl_surf;
+	instrument->instr.control_surfaces.x_pos = x_pos;
+	instrument->instr.control_surfaces.y_pos = y_pos;
+	instrument->instr.horizon.load_value = load_value;
+	instrument->next = tmp_first;
+
+	hud->instruments = instrument;
+
+	return( hud );
+}
+
 /*
 Hptr fgHUDAddMovingHorizon( Hptr hud, int x_pos, int y_pos, int length, int hole_len, \
 						int color )
@@ -747,19 +888,15 @@ void fgUpdateHUD( Hptr hud )
 	glLineWidth(1);
 	glColor3f (0.1, 0.9, 0.1);
                       
-#ifdef DEBUG    
     fgPrintf( FG_COCKPIT, FG_DEBUG,  "HUD Code %d  Status %d\n", 
 	      hud->code, hud->status ); 
-#endif
     hud_instr = hud->instruments;
 	while( hud_instr != NULL )
 	{
 		instr_data = hud_instr->instr;
-#ifdef DEBUG
 		fgPrintf( FG_COCKPIT, FG_DEBUG, 
 			  "Instr Type %d   SubType %d  Orient %d\n", 
 			  hud_instr->type, hud_instr->sub_type, hud_instr->orientation );
-#endif
 		if( hud_instr->type == ARTIFICIAL_HORIZON )
 		{
 			drawhorizon( instr_data.horizon );
@@ -774,6 +911,10 @@ void fgUpdateHUD( Hptr hud )
     				instr_data.scale.scr_max, instr_data.scale.width_units, \
     				instr_data.scale.div_min, instr_data.scale.div_max, \
 					(*instr_data.scale.load_value)() );     				
+    	}
+    	else if( hud_instr->type == CONTROL_SURFACES )
+    	{
+    		drawcontrolsurfaces( instr_data.control_surfaces );
     	}
     	else if( hud_instr->type == LABEL )
     	{
@@ -801,9 +942,15 @@ void fgUpdateHUD( Hptr hud )
 
 
 /* $Log$
-/* Revision 1.9  1998/01/31 00:43:04  curt
-/* Added MetroWorks patches from Carmen Volpe.
+/* Revision 1.10  1998/02/03 23:20:14  curt
+/* Lots of little tweaks to fix various consistency problems discovered by
+/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+/* passed arguments along to the real printf().  Also incorporated HUD changes
+/* by Michele America.
 /*
+ * Revision 1.9  1998/01/31 00:43:04  curt
+ * Added MetroWorks patches from Carmen Volpe.
+ *
  * Revision 1.8  1998/01/27 00:47:51  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

@@ -31,6 +31,7 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <Main/GLUTkey.h>
 #include <Main/fg_debug.h>
@@ -244,10 +245,16 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.27  1998/01/27 00:47:55  curt
-/* Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
-/* system and commandline/config file processing code.
+/* Revision 1.28  1998/02/03 23:20:23  curt
+/* Lots of little tweaks to fix various consistency problems discovered by
+/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+/* passed arguments along to the real printf().  Also incorporated HUD changes
+/* by Michele America.
 /*
+ * Revision 1.27  1998/01/27 00:47:55  curt
+ * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
+ * system and commandline/config file processing code.
+ *
  * Revision 1.26  1998/01/19 19:27:07  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

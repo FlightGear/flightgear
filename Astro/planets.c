@@ -118,7 +118,7 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 	Nr = 2.9585076 + 6.6672E-7*actTime;
 	
 	B = asin ( sin (result.Declination) * cos(ir) - cos(result.Declination) * sin (ir) * sin (result.RightAscension - Nr));
-	ring_magn = -2.6 * sin (abs(B)) + 1.2 * pow(sin(B),2);
+	ring_magn = -2.6 * sin (fabs(B)) + 1.2 * pow(sin(B),2);
 	result.magnitude = -9.0 + 5*log10( r*R ) + 0.044 * FV + ring_magn;
 	break;
       case 7: /* Uranus */
@@ -204,9 +204,15 @@ void fgPlanetsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.4  1998/02/02 20:53:23  curt
-/* To version 0.29
+/* Revision 1.5  1998/02/03 23:20:12  curt
+/* Lots of little tweaks to fix various consistency problems discovered by
+/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+/* passed arguments along to the real printf().  Also incorporated HUD changes
+/* by Michele America.
 /*
+ * Revision 1.4  1998/02/02 20:53:23  curt
+ * To version 0.29
+ *
  * Revision 1.3  1998/01/27 00:47:47  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

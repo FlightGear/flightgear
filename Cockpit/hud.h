@@ -38,6 +38,7 @@
 #define SCALE				2
 #define LADDER				3
 #define LABEL				4
+#define CONTROL_SURFACES		5
 
 /* Scale constants */
 #define HORIZONTAL			1
@@ -162,6 +163,13 @@ struct HUD_horizon {
 	double (*load_value)( void );
 };
 
+struct HUD_control_surfaces {
+	int type;
+	int x_pos;
+	int y_pos;
+	double (*load_value)();
+};
+
 #define LABEL_COUNTER	1
 #define LABEL_WARNING	2
 
@@ -185,6 +193,7 @@ union HUD_instr_data {
 	struct HUD_circular_ladder circ_ladder;
 	struct HUD_horizon horizon;
 	struct HUD_label label;
+	struct HUD_control_surfaces control_surfaces;
 };
 
 typedef struct HUD_instr *HIptr;
@@ -216,7 +225,7 @@ Hptr fgHUDAddLabel( Hptr hud, int x_pos, int y_pos, int size, int blink, int jus
 Hptr fgHUDAddLadder( Hptr hud, int x_pos, int y_pos, int scr_width, int scr_height, \
 					int hole_len, int div_units, int label_pos, int max_value, \
 					double (*load_roll)( void ), double (*load_pitch)( void ) );
-					
+Hptr fgHUDAddControlSurfaces( Hptr hud, int x_pos, int y_pos, double (*get_heading)() );					
 					
 					
 /* struct HUD *fgHUDAddLadder( Hptr hud, int scr_min, int scr_max, int div_min, int div_max, \
@@ -233,9 +242,15 @@ void fgUpdateHUD2( struct HUD *hud );
 
 
 /* $Log$
-/* Revision 1.6  1998/01/22 02:59:30  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.7  1998/02/03 23:20:15  curt
+/* Lots of little tweaks to fix various consistency problems discovered by
+/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+/* passed arguments along to the real printf().  Also incorporated HUD changes
+/* by Michele America.
 /*
+ * Revision 1.6  1998/01/22 02:59:30  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.5  1998/01/19 19:27:01  curt
  * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
  * This should simplify things tremendously.

@@ -5,7 +5,7 @@
 #---------------------------------------------------------------------------
 
 FG_VERSION_MAJOR = 0
-FG_VERSION_MINOR = 29
+FG_VERSION_MINOR = 31
 FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 
 
@@ -43,7 +43,7 @@ TAR = tar
 #
 #---------------------------------------------------------------------------
 
-GLOBAL_CFLAGS = -Wall -DVERSION=\"$(FG_VERSION)\"
+GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(FG_VERSION)\"
 
 
 #---------------------------------------------------------------------------

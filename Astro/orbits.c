@@ -150,6 +150,7 @@ void fgSolarSystemInit(struct fgTIME t)
 		      "Cannot open data file: '%s'\n", path);
 	    return;
    }
+   /* printf("  reading datafile %s\n", path); */
    fgPrintf( FG_ASTRO, FG_INFO, "  reading datafile %s\n", path);
 
    /* for all the objects... */
@@ -182,9 +183,15 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
 
 
 /* $Log$
-/* Revision 1.5  1998/02/02 20:53:22  curt
-/* To version 0.29
+/* Revision 1.6  1998/02/03 23:20:11  curt
+/* Lots of little tweaks to fix various consistency problems discovered by
+/* Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+/* passed arguments along to the real printf().  Also incorporated HUD changes
+/* by Michele America.
 /*
+ * Revision 1.5  1998/02/02 20:53:22  curt
+ * To version 0.29
+ *
  * Revision 1.4  1998/01/27 00:47:47  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.
