@@ -38,10 +38,10 @@
 #include <Scenery/bucketutils.h>
 #include <Include/fg_types.h>
 
-/* For best results ...
+/* For best results ... i.e. to avoid tile load problems and blank areas
  *
- * FG_TILE_CACHE_SIZE >= FG_LOCAL_X_Y + max(FG_LOCAL_X, FG_LOCAL_Y) */
-#define FG_TILE_CACHE_SIZE 12   
+ * FG_TILE_CACHE_SIZE >= FG_LOCAL_X_Y + max(FG_LOCAL_X, FG_LOCAL_Y) + 1 */
+#define FG_TILE_CACHE_SIZE 36
 
 
 /* Tile cache record */
@@ -79,9 +79,13 @@ void fgTileCacheEntryInfo( int index, GLint *display_list,
 
 
 /* $Log$
-/* Revision 1.4  1998/01/31 00:43:27  curt
-/* Added MetroWorks patches from Carmen Volpe.
+/* Revision 1.5  1998/02/16 13:39:45  curt
+/* Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
+/* tiles to occasionally be missing.
 /*
+ * Revision 1.4  1998/01/31 00:43:27  curt
+ * Added MetroWorks patches from Carmen Volpe.
+ *
  * Revision 1.3  1998/01/29 00:51:40  curt
  * First pass at tile cache, dynamic tile loading and tile unloading now works.
  *

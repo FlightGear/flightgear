@@ -1,4 +1,5 @@
-/**************************************************************************
+/* -*- Mode: C++ -*-
+ *
  * fg_init.c -- Flight Gear top level initialization routines
  *
  * Written by Curtis Olson, started August 1997.
@@ -18,6 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
  *
  * $Id$
  * (Log is kept at end of this file)
@@ -142,11 +144,11 @@ int fgInitSubsystems( void ) {
     /* FG_Runway_altitude = (2646 + 1000); */
     /* FG_Altitude = FG_Runway_altitude + 3.758099; */
 
-    /* Initial Position at (TUS) Tucson, AZ */
-    /* FG_Longitude = ( -110.9412597 ) * DEG_TO_RAD; */
-    /* FG_Latitude  = (  32.1162439 ) * DEG_TO_RAD; */
-    /* FG_Runway_altitude = (2641 + 0); */
-    /* FG_Altitude = FG_Runway_altitude + 3.758099; */
+    // Initial Position at (TUS) Tucson, AZ
+    FG_Longitude = ( -110.9412597 ) * DEG_TO_RAD;
+    FG_Latitude  = (  32.1162439 ) * DEG_TO_RAD;
+    FG_Runway_altitude = (2641 + 0);
+    FG_Altitude = FG_Runway_altitude + 3.758099;
 
     /* Initial Position at near Anchoraze, AK */
     /* FG_Longitude = ( -150.00 ) * DEG_TO_RAD; */
@@ -208,9 +210,15 @@ int fgInitSubsystems( void ) {
     // FG_Runway_altitude = 920.0;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
-    /* A random test position */
-    /* FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD; */
-    /* FG_Latitude  = ( 93312.00 / 3600.0 ) * DEG_TO_RAD; */
+    // Test Position
+    FG_Longitude = ( -111.18 ) * DEG_TO_RAD;
+    FG_Latitude  = (   33.70 ) * DEG_TO_RAD;
+    FG_Runway_altitude = 5000.0;
+    FG_Altitude = FG_Runway_altitude + 3.758099;
+
+    // A random test position
+    // FG_Longitude = ( 88128.00 / 3600.0 ) * DEG_TO_RAD;
+    // FG_Latitude  = ( 93312.00 / 3600.0 ) * DEG_TO_RAD;
 
     fgPrintf( FG_GENERAL, FG_INFO, 
 	      "Initial position is: (%.4f, %.4f, %.2f)\n", 
@@ -372,10 +380,14 @@ int fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.44  1998/02/12 21:59:50  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.45  1998/02/16 13:39:43  curt
+/* Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
+/* tiles to occasionally be missing.
 /*
+ * Revision 1.44  1998/02/12 21:59:50  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.43  1998/02/11 02:50:40  curt
  * Minor changes.
  *

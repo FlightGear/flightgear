@@ -19,6 +19,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
+ * $Id$
  * (Log is kept at end of this file)
  **************************************************************************/
 
@@ -258,6 +259,10 @@ int fgPrintf( fgDebugClass dbg_class, fgDebugPriority prio, char *fmt, ... )
   return ret;  
 } 
 
-// Revision history?
-//
 
+/* $Log$
+/* Revision 1.7  1998/02/16 13:39:43  curt
+/* Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
+/* tiles to occasionally be missing.
+/*
+ */

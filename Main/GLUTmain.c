@@ -154,10 +154,13 @@ Option rootOption     = { 'r',
                           "Root directory for execution"
                         };
 Option hudOption      = { 'v',
-                          OPT_SWITCH,
+                          OPT_INTEGER,
                           &viewArg,
-                          "View mode start" // HUD,Panel,Chase,Tower
+                          "View mode start" // Naked,HUD,Panel,Chase,Tower...
                         };
+//
+// Only naked view and HUD are implemented at this time
+//
 Option logfileOption  = { 'x',
                           OPT_STRING,
                           logArgbuf,
@@ -717,7 +720,7 @@ int main( int argc, char *argv[] ) {
     // Deal with the effects of options no set by manipulating the command
     // line, or possibly set to invalid states.
 
-    if(( viewArg >= 0) && (viewArg < 1)) {
+    if(( viewArg >= 0) && (viewArg <= 1)) {
 	show_hud = viewArg; // For now view_mode TRUE - no HUD, else show_hud.
     } else {
 	show_hud = DefaultViewMode;
@@ -785,10 +788,14 @@ extern "C" {
 #endif
 
 /* $Log$
-/* Revision 1.61  1998/02/12 21:59:46  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.62  1998/02/16 13:39:42  curt
+/* Miscellaneous weekend tweaks.  Fixed? a cache problem that caused whole
+/* tiles to occasionally be missing.
 /*
+ * Revision 1.61  1998/02/12 21:59:46  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.60  1998/02/11 02:50:40  curt
  * Minor changes.
  *
