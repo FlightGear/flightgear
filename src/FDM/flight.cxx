@@ -209,7 +209,7 @@ FGInterface::init ()
 
 				// Set initial velocities
   SG_LOG(SG_FLIGHT, SG_INFO, "...initializing velocities...");
-  if (!fgHasValue("/sim/startup/speed-set")) {
+  if (!fgHasNode("/sim/startup/speed-set")) {
     set_V_calibrated_kts(0.0);
   } else {
     const string speedset = fgGetString("/sim/startup/speed-set");

@@ -84,8 +84,8 @@ void waitForButton(jsSuper *jss, int wait_ms) {
 
 void writeAxisProperties(fstream &fs, int control,int joystick, int axis) {
      
-     char jsDesc[25];
-     snprintf(jsDesc,25,"--prop:/input/joysticks/js[%d]/axis[%d]",joystick,axis);
+     char jsDesc[40];
+     snprintf(jsDesc,40,"--prop:/input/joysticks/js[%d]/axis[%d]",joystick,axis);
      fs << jsDesc  << "/control=" << axes_propnames[control] << endl; 
      
      fs << jsDesc << "/dead-band=0.02"  << endl; 
@@ -102,8 +102,8 @@ void writeAxisProperties(fstream &fs, int control,int joystick, int axis) {
 
 void writeButtonProperties(fstream &fs, int property,int joystick, int button) {
      
-     char jsDesc[25];
-     snprintf(jsDesc,25,"--prop:/input/joysticks/js%d/button[%d]",joystick,button);
+     char jsDesc[40];
+     snprintf(jsDesc,40,"--prop:/input/joysticks/js[%d]/button[%d]",joystick,button);
      
      fs << jsDesc << "/action=adjust" << endl; 
      fs << jsDesc << "/control=" << button_propnames[property] << endl;

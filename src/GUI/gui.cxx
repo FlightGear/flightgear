@@ -763,7 +763,7 @@ void guiInit()
     puSetDefaultFonts( GuiFont, GuiFont ) ;
     guiFnt = puGetDefaultLabelFont();
   
-    if (!fgHasValue("/sim/startup/mouse-pointer")) {
+    if (!fgHasNode("/sim/startup/mouse-pointer")) {
         // no preference specified for mouse pointer, attempt to autodetect...
         // Determine if we need to render the cursor, or if the windowing
         // system will do it.  First test if we are rendering with glide.
