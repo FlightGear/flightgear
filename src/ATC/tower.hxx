@@ -67,8 +67,8 @@ class TowerPlaneRec {
 };
 
 typedef list < TowerPlaneRec* > tower_plane_rec_list_type;
-typedef list < TowerPlaneRec* >::iterator tower_plane_rec_list_iterator;
-typedef list < TowerPlaneRec* >::const_iterator tower_plane_rec_list_const_iterator;
+typedef tower_plane_rec_list_type::iterator tower_plane_rec_list_iterator;
+typedef tower_plane_rec_list_type::const_iterator tower_plane_rec_list_const_iterator;
 
 
 class FGTower : public FGATC {

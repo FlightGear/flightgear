@@ -96,6 +96,9 @@ bool FGATCVoice::LoadVoice(string voice) {
 }
 
 
+typedef list < string > tokenList_type;
+typedef tokenList_type::iterator tokenList_iterator;
+
 // Given a desired message, return a pointer to the data buffer and write the buffer length into len.
 unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
 	
@@ -103,8 +106,8 @@ unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
 	// First - parse the message into a list of tokens.
 	// Sort the tokens into those we understand and those we don't.
 	// Add all the raw lengths of the token sound data, allocate enough space, and fill it with the rqd data.
-	list < string > tokenList;
-	list < string >::iterator tokenListItr;
+	tokenList_type tokenList;
+	tokenList_iterator tokenListItr;
 
 	// TODO - at the moment we're effectively taking 3 passes through the data.
 	// There is no need for this - 2 should be sufficient - we can probably ditch the tokenList.
