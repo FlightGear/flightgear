@@ -42,9 +42,10 @@
 #  include <sys/time.h>  // for get/setitimer, gettimeofday, struct timeval
 #endif
 
-#include <Astro/orbits.hxx>
-#include <Astro/sun.hxx>
+//#include <Astro/orbits.hxx>
+//#include <Astro/sun.hxx>
 #include <Astro/sky.hxx>
+#include <Astro/solarsystem.hxx>
 #include <Debug/fg_debug.h>
 #include <Flight/flight.h>
 #include <Include/fg_constants.h>
@@ -66,7 +67,8 @@ fgTIME cur_time_params;
 
 // Force an update of the sky and lighting parameters
 static void local_update_sky_and_lighting_params( void ) {
-    fgSunInit();
+    // fgSunInit();
+    SolarSystem::theSolarSystem->rebuild();
     cur_light_params.Update();
     fgSkyColorsInit();
 }
@@ -425,6 +427,9 @@ void fgTimeUpdate(fgFLIGHT *f, fgTIME *t) {
 
 
 // $Log$
+// Revision 1.17  1998/09/15 04:27:49  curt
+// Changes for new astro code.
+//
 // Revision 1.16  1998/08/29 13:11:32  curt
 // Bernie Bright writes:
 //   I've created some new classes to enable pointers-to-functions and

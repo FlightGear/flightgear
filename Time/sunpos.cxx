@@ -43,7 +43,8 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <Astro/orbits.hxx>
+//#include <Astro/orbits.hxx>
+#include <Astro/solarsystem.hxx>
 #include <Include/fg_constants.h>
 #include <Main/views.hxx>
 #include <Math/fg_geodesy.h>
@@ -55,6 +56,7 @@
 #include "fg_time.hxx"
 #include "sunpos.hxx"
 
+extern SolarSystem *solarSystem;
 
 #undef E
 
@@ -255,8 +257,23 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
 
     /* lambda = sun_ecliptic_longitude(ssue); */
     /* ecliptic_to_equatorial(lambda, 0.0, &alpha, &delta); */
-    ecliptic_to_equatorial (solarPosition.lonSun, 0.0, &alpha, &delta);
+    //ecliptic_to_equatorial (solarPosition.lonSun, 0.0, &alpha, &delta);
+    
+    /* ********************************************************************** 
+     * NOTE: in the next function, each time the sun's position is updated, the
+     * the sun's longitude is returned from solarSystem->sun. Note that the 
+     * sun's position is updated at a much higher frequency than the rate at 
+     * which the solar system's rebuilds occur. This is not a problem, however,
+     * because the fgSunPosition we're talking about here concerns the changing
+     * position of the sun due to the daily rotation of the earth.
+     * The ecliptic longitude, however, represents the position of the sun with
+     * respect to the stars, and completes just one cycle over the course of a 
+     * year. Its therefore pretty safe to update the sun's longitude only once
+     * every ten minutes. (Comment added by Durk Talsma).
+     ************************************************************************/
 
+    ecliptic_to_equatorial( SolarSystem::theSolarSystem->getSun()->getLon(),
+			    0.0, &alpha, &delta );
     tmp = alpha - (FG_2PI/24)*GST(ssue);
     if (tmp < -FG_PI) {
 	do tmp += FG_2PI;
@@ -286,7 +303,9 @@ static void fgSunPositionGST(double gst, double *lon, double *lat) {
 
     /* lambda = sun_ecliptic_longitude(ssue); */
     /* ecliptic_to_equatorial(lambda, 0.0, &alpha, &delta); */
-    ecliptic_to_equatorial (solarPosition.lonSun, 0.0, &alpha, &delta);
+    //ecliptic_to_equatorial (solarPosition.lonSun, 0.0, &alpha, &delta);
+    ecliptic_to_equatorial( SolarSystem::theSolarSystem->getSun()->getLon(),
+			    0.0, &alpha,  &delta );
 
 //    tmp = alpha - (FG_2PI/24)*GST(ssue);
     tmp = alpha - (FG_2PI/24)*gst;	
@@ -404,6 +423,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.12  1998/09/15 04:27:50  curt
+// Changes for new astro code.
+//
 // Revision 1.11  1998/08/12 21:13:22  curt
 // Optimizations by Norman Vine.
 //
