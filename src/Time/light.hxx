@@ -38,7 +38,7 @@
 #  include <windows.h>
 #endif
 
-#include FG_GLUT_H
+#include <GL/gl.h>
 
 #include <plib/sg.h>			// plib include
 
@@ -47,114 +47,132 @@
 
 
 // Define a structure containing the global lighting parameters
-class fgLIGHT {
+class FGLight : public FGSubsystem
+{
 
-    // Lighting look up tables (based on sun angle with local horizon)
-    SGInterpTable *ambient_tbl;
-    SGInterpTable *diffuse_tbl;
-    SGInterpTable *specular_tbl;
-    SGInterpTable *sky_tbl;
+private:
 
-public:
+    /*
+     * Lighting look up tables (based on sun angle with local horizon)
+     */
+    SGInterpTable *_ambient_tbl, *_diffuse_tbl, *_specular_tbl;
+    SGInterpTable *_sky_tbl;
 
-    ///////////////////////////////////////////////////////////
-    // position of the sun in various forms
+    /**
+     * position of the sun and moon in various forms
+     */
 
     // in geocentric coordinates
-    double sun_lon, sun_gc_lat;
+    double _sun_lon, _sun_gc_lat;
+    double _moon_lon, _moon_gc_lat;
 
     // in cartesian coordiantes
-    Point3D fg_sunpos;
+    Point3D _sunpos, _moonpos;
 
     // (in view coordinates)
-    sgVec4 sun_vec;
+    sgVec4 _sun_vec, _moon_vec;
 
     // inverse (in view coordinates)
-    sgVec4 sun_vec_inv;
+    sgVec4 _sun_vec_inv, _moon_vec_inv;
 
-    // the angle between the sun and the local horizontal (in radians)
-    double sun_angle;
+    // the angle between the celestial object and the local horizontal
+    // (in radians)
+    double _sun_angle, _moon_angle;
+    double _prev_sun_angle;
 
     // the rotation around our vertical axis of the sun (relative to
     // due south with positive numbers going in the counter clockwise
     // direction.)  This is the direction we'd need to face if we
-    // wanted to travel towards the sun.
-    double sun_rotation;
+    // wanted to travel towards celestial object.
+    double _sun_rotation, _moon_rotation;
 
-    ///////////////////////////////////////////////////////////
-    // Have the same for the moon. Useful for having some light at night
-    // and stuff. I (Durk) also want to use this for adding similar 
-    // coloring effects to the moon as I did to the sun. 
-    ///////////////////////////////////////////////////////////
-    // position of the moon in various forms
+    /**
+     * Derived lighting values
+     */
 
-    // in geocentric coordinates
-    double moon_lon, moon_gc_lat;
+    // ambient, diffuse and specular component
+    GLfloat _scene_ambient[4];
+    GLfloat _scene_diffuse[4];
+    GLfloat _scene_specular[4];
 
-    // in cartesian coordiantes
-    Point3D fg_moonpos;
+    // clear sky, fog and cloud color
+    GLfloat _sky_color[4];
+    GLfloat _fog_color[4];
+    GLfloat _cloud_color[4];
 
-    // (in view coordinates)
-    GLfloat moon_vec[4];
+    // clear sky and fog color adjusted for sunset effects
+    GLfloat _adj_fog_color[4];
+    GLfloat _adj_sky_color[4];
 
-    // inverse (in view coordinates)
-    GLfloat moon_vec_inv[4];
+    double _dt_total;
 
-    // the angle between the moon and the local horizontal (in radians)
-    double moon_angle;
+    void update_sky_color ();
+    void update_adj_fog_color ();
 
-    // the rotation around our vertical axis of the moon (relative to
-    // due south with positive numbers going in the counter clockwise
-    // direction.)  This is the direction we'd need to face if we
-    // wanted to travel towards the sun.
-    double moon_rotation;
+public:
 
-    ///////////////////////////////////////////////////////////
-    // Derived lighting values
+    FGLight ();
+    virtual ~FGLight ();
 
-    // ambient component
-    GLfloat scene_ambient[4];
+    virtual void init ();
+    virtual void reinit ();
+    virtual void bind ();
+    virtual void unbind ();
+    virtual void update ( double dt );
 
-    // diffuse component
-    GLfloat scene_diffuse[4];
 
-    // diffuse component
-    GLfloat scene_specular[4];
+    // Color related functions
 
-    // fog color
-    GLfloat fog_color[4];
+    inline float *scene_ambient () const { return (float *)_scene_ambient; }
+    inline float *scene_diffuse () const { return (float *)_scene_diffuse; }
+    inline float *scene_specular () const { return (float *)_scene_specular; }
 
-    // fog color adjusted for sunset effects
-    GLfloat adj_fog_color[4];
+    inline float *sky_color () const { return (float *)_sky_color; }
+    inline float *cloud_color () const { return (float *)_cloud_color; }
+    inline float *adj_fog_color () const { return (float *)_adj_fog_color; }
 
-    // cloud color
-    GLfloat cloud_color[4];
 
-    // clear screen color
-    GLfloat sky_color[4];
+    // Sun related functions
 
-    // screen color adjusted for sunset effects
-    GLfloat adj_sky_color[4];
+    inline double get_sun_angle () const { return _sun_angle; }
+    inline void set_sun_angle (double a) { _sun_angle = a; }
 
-    // Constructor
-    fgLIGHT( void );
+    inline double get_sun_rotation () const { return _sun_rotation; }
+    inline void set_sun_rotation (double r) { _sun_rotation = r; }
 
-    // initialize lighting tables
-    void Init( void );
+    inline double get_sun_lon () const { return _sun_lon; }
+    inline void set_sun_lon (double l) { _sun_lon = l; }
 
-    // update lighting parameters based on current sun position
-    void Update( void);
+    inline double get_sun_gc_lat () const { return _sun_gc_lat; }
+    inline void set_sun_gc_lat (double l) { _sun_gc_lat = l; }
 
-    // calculate fog color adjusted for sunrise/sunset effects
-    void UpdateAdjFog( void );
+    inline Point3D get_sunpos () const { return _sunpos; }
+    inline void set_sunpos (Point3D p) { _sunpos = p; }
 
-    // Destructor
-    ~fgLIGHT( void );
+    inline float *sun_vec () const { return (float *)_sun_vec; }
+    inline float *sun_vec_inv () const { return (float *)_sun_vec_inv; }
+
+
+    // Moon related functions
+
+    inline double get_moon_angle () const { return _moon_angle; }
+    inline void set_moon_angle (double a) { _moon_angle = a; }
+
+    inline double get_moon_rotation () const { return _moon_rotation; }
+    inline void set_moon_rotation (double r) { _moon_rotation = r; }
+
+    inline double get_moon_lon () const { return _moon_lon; }
+    inline void set_moon_lon (double l) { _moon_lon = l; }
+
+    inline double get_moon_gc_lat () const { return _moon_gc_lat; }
+    inline void set_moon_gc_lat (double l) { _moon_gc_lat = l; }
+
+    inline Point3D get_moonpos () const { return _moonpos; }
+    inline void set_moonpos (Point3D p) { _moonpos = p; }
+
+    inline float *moon_vec () const { return (float *)_moon_vec; }
+    inline float *moon_vec_inv () const { return (float *)_moon_vec_inv; }
 };
 
-
-// Global shared light parameter structure
-extern fgLIGHT cur_light_params;
-
-
 #endif // _LIGHT_HXX
+

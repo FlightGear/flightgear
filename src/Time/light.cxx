@@ -63,66 +63,102 @@ SG_USING_STD(string);
 #include "light.hxx"
 #include "sunpos.hxx"
 
-fgLIGHT cur_light_params;
-
 
 // Constructor
-fgLIGHT::fgLIGHT( void ) {
+FGLight::FGLight ()
+    : _prev_sun_angle(-9999.0),
+      _dt_total( 0.0 )
+{
+}
+
+// Destructor
+FGLight::~FGLight ()
+{
 }
 
 
 // initialize lighting tables
-void fgLIGHT::Init( void ) {
+void FGLight::init () {
     SG_LOG( SG_EVENT, SG_INFO, 
 	    "Initializing Lighting interpolation tables." );
 
-    // build the path name to the ambient lookup table
+    // build the path names of the lookup tables
     SGPath path( globals->get_fg_root() );
-    SGPath ambient = path;
-    ambient.append( "Lighting/ambient" );
-    SGPath diffuse = path;
-    diffuse.append( "Lighting/diffuse" );
-    SGPath specular = path;
-    specular.append( "Lighting/specular" );
-    SGPath sky = path;
-    sky.append( "Lighting/sky" );
 
-    // initialize ambient table
-    ambient_tbl = new SGInterpTable( ambient.str() );
+    // initialize ambient, diffuse and specular tables
+    SGPath ambient_path = path;
+    ambient_path.append( "Lighting/ambient" );
+    _ambient_tbl = new SGInterpTable( ambient_path.str() );
 
-    // initialize diffuse table
-    diffuse_tbl = new SGInterpTable( diffuse.str() );
-    
-    // initialize diffuse table
-    specular_tbl = new SGInterpTable( specular.str() );
+    SGPath diffuse_path = path;
+    diffuse_path.append( "Lighting/diffuse" );
+    _diffuse_tbl = new SGInterpTable( diffuse_path.str() );
+
+    SGPath specular_path = path;
+    specular_path.append( "Lighting/specular" );
+    _specular_tbl = new SGInterpTable( specular_path.str() );
     
     // initialize sky table
-    sky_tbl = new SGInterpTable( sky.str() );
+    SGPath sky_path = path;
+    sky_path.append( "Lighting/sky" );
+    _sky_tbl = new SGInterpTable( sky_path.str() );
+}
+
+
+void FGLight::reinit () {
+    _prev_sun_angle = -9999.0;
+    _dt_total = 0;
+
+    fgUpdateSunPos();
+    fgUpdateMoonPos();
+
+    update_sky_color();
+    update_adj_fog_color();
+}
+
+void FGLight::bind () {
+}
+
+void FGLight::unbind () {
 }
 
 
 // update lighting parameters based on current sun position
-void fgLIGHT::Update( void ) {
+void FGLight::update( double dt ) {
+
+    update_adj_fog_color();
+
+    _dt_total += dt;
+    if (_dt_total > 0.5) {
+        _dt_total -= 0.5;
+        fgUpdateSunPos();
+        fgUpdateMoonPos();
+    }
+
+    if (_prev_sun_angle != _sun_angle) {
+        update_sky_color();
+        _prev_sun_angle = _sun_angle;
+    }
+}
+
+void FGLight::update_sky_color () {
     // if the 4th field is 0.0, this specifies a direction ...
-    const GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
-    // base sky color
+    const GLfloat white[4]          = { 1.0,  1.0,  1.0,  1.0 };
     const GLfloat base_sky_color[4] = { 0.39, 0.50, 0.74, 1.0 };
-    // base fog color
-    const GLfloat base_fog_color[4] = { 0.84, 0.87, 1.0, 1.0 };
-    float deg, ambient, diffuse, specular, sky_brightness;
+    const GLfloat base_fog_color[4] = { 0.84, 0.87, 1.0,  1.0 };
 
     SG_LOG( SG_EVENT, SG_INFO, "Updating light parameters." );
 
     // calculate lighting parameters based on sun's relative angle to
     // local up
 
-    deg = sun_angle * SGD_RADIANS_TO_DEGREES;
+    float deg = _sun_angle * SGD_RADIANS_TO_DEGREES;
     SG_LOG( SG_EVENT, SG_INFO, "  Sun angle = " << deg );
 
-    ambient = ambient_tbl->interpolate( deg );
-    diffuse = diffuse_tbl->interpolate( deg );
-    specular = specular_tbl->interpolate( deg );
-    sky_brightness = sky_tbl->interpolate( deg );
+    float ambient = _ambient_tbl->interpolate( deg );
+    float diffuse = _diffuse_tbl->interpolate( deg );
+    float specular = _specular_tbl->interpolate( deg );
+    float sky_brightness = _sky_tbl->interpolate( deg );
 
     SG_LOG( SG_EVENT, SG_INFO, 
 	    "  ambient = " << ambient << "  diffuse = " << diffuse 
@@ -135,49 +171,49 @@ void fgLIGHT::Update( void ) {
     // if ( sky_brightness < 0.1 ) { sky_brightness = 0.1; }
 
     // set sky color
-    sky_color[0] = base_sky_color[0] * sky_brightness;
-    sky_color[1] = base_sky_color[1] * sky_brightness;
-    sky_color[2] = base_sky_color[2] * sky_brightness;
-    sky_color[3] = base_sky_color[3];
-    gamma_correct_rgb( sky_color );
+    _sky_color[0] = base_sky_color[0] * sky_brightness;
+    _sky_color[1] = base_sky_color[1] * sky_brightness;
+    _sky_color[2] = base_sky_color[2] * sky_brightness;
+    _sky_color[3] = base_sky_color[3];
+    gamma_correct_rgb( _sky_color );
 
     // set cloud and fog color
-    cloud_color[0] = fog_color[0] = base_fog_color[0] * sky_brightness;
-    cloud_color[1] = fog_color[1] = base_fog_color[1] * sky_brightness;
-    cloud_color[2] = fog_color[2] = base_fog_color[2] * sky_brightness;
-    cloud_color[3] = fog_color[3] = base_fog_color[3];
-    gamma_correct_rgb( fog_color );
+    _cloud_color[0] = _fog_color[0] = base_fog_color[0] * sky_brightness;
+    _cloud_color[1] = _fog_color[1] = base_fog_color[1] * sky_brightness;
+    _cloud_color[2] = _fog_color[2] = base_fog_color[2] * sky_brightness;
+    _cloud_color[3] = _fog_color[3] = base_fog_color[3];
+    gamma_correct_rgb( _fog_color );
 
     // adjust the cloud colors for sunrise/sunset effects (darken them)
-    if (sun_angle > 1.0) {
-       float sun2 = sqrt(sun_angle);
-       cloud_color[0] /= sun2;
-       cloud_color[1] /= sun2;
-       cloud_color[2] /= sun2;
+    if (_sun_angle > 1.0) {
+       float sun2 = sqrt(_sun_angle);
+       _cloud_color[0] /= sun2;
+       _cloud_color[1] /= sun2;
+       _cloud_color[2] /= sun2;
     }
-    gamma_correct_rgb( cloud_color );
+    gamma_correct_rgb( _cloud_color );
 
     float *sun_color = thesky->get_sun_color();
 
-    scene_ambient[0] = ((sun_color[0]*0.25 + cloud_color[0]*0.75) + ambient) / 2;
-    scene_ambient[1] = ((sun_color[1]*0.25 + cloud_color[1]*0.75) + ambient) / 2;
-    scene_ambient[2] = ((sun_color[2]*0.25 + cloud_color[2]*0.75) + ambient) / 2;
-    scene_ambient[3] = 1.0;
+    _scene_ambient[0] = ((sun_color[0]*0.25 + _cloud_color[0]*0.75) + ambient) / 2;
+    _scene_ambient[1] = ((sun_color[1]*0.25 + _cloud_color[1]*0.75) + ambient) / 2;
+    _scene_ambient[2] = ((sun_color[2]*0.25 + _cloud_color[2]*0.75) + ambient) / 2;
+    _scene_ambient[3] = 1.0;
 
-    scene_diffuse[0] = (sun_color[0]*0.25 + fog_color[0]*0.75) * diffuse;
-    scene_diffuse[1] = (sun_color[1]*0.25 + fog_color[1]*0.75) * diffuse;
-    scene_diffuse[2] = (sun_color[2]*0.25 + fog_color[2]*0.75) * diffuse;
-    scene_diffuse[3] = 1.0;
+    _scene_diffuse[0] = (sun_color[0]*0.25 + _fog_color[0]*0.75) * diffuse;
+    _scene_diffuse[1] = (sun_color[1]*0.25 + _fog_color[1]*0.75) * diffuse;
+    _scene_diffuse[2] = (sun_color[2]*0.25 + _fog_color[2]*0.75) * diffuse;
+    _scene_diffuse[3] = 1.0;
 
-    scene_specular[0] = sun_color[0] * specular;
-    scene_specular[1] = sun_color[1] * specular;
-    scene_specular[2] = sun_color[2] * specular;
-    scene_specular[3] = 1.0;
+    _scene_specular[0] = sun_color[0] * specular;
+    _scene_specular[1] = sun_color[1] * specular;
+    _scene_specular[2] = sun_color[2] * specular;
+    _scene_specular[3] = 1.0;
 }
 
 
 // calculate fog color adjusted for sunrise/sunset effects
-void fgLIGHT::UpdateAdjFog( void ) {
+void FGLight::update_adj_fog_color () {
 
     double heading = globals->get_current_view()->getHeading_deg()
                      * SGD_DEGREES_TO_RADIANS;
@@ -190,8 +226,8 @@ void fgLIGHT::UpdateAdjFog( void ) {
     // direction we are looking
 
     // Do some sanity checking ...
-    if ( sun_rotation < -2.0 * SGD_2PI || sun_rotation > 2.0 * SGD_2PI ) {
-	SG_LOG( SG_EVENT, SG_ALERT, "Sun rotation bad = " << sun_rotation );
+    if ( _sun_rotation < -2.0 * SGD_2PI || _sun_rotation > 2.0 * SGD_2PI ) {
+	SG_LOG( SG_EVENT, SG_ALERT, "Sun rotation bad = " << _sun_rotation );
 	exit(-1);
     }
 
@@ -209,7 +245,7 @@ void fgLIGHT::UpdateAdjFog( void ) {
 
     // first determine the difference between our view angle and local
     // direction to the sun
-    rotation = -(sun_rotation + SGD_PI) - heading + heading_offset;
+    rotation = -(_sun_rotation + SGD_PI) - heading + heading_offset;
     while ( rotation < 0 ) {
 	rotation += SGD_2PI;
     }
@@ -221,14 +257,14 @@ void fgLIGHT::UpdateAdjFog( void ) {
     //
     float *sun_color = thesky->get_sun_color();
 
-    gamma_restore_rgb( fog_color );
+    gamma_restore_rgb( _fog_color );
 
     // Calculate the fog color in the direction of the sun for
     // sunrise/sunset effects.
     //
-    float s_red =   (fog_color[0] + 2 * sun_color[0]*sun_color[0]) / 3;
-    float s_green = (fog_color[1] + 2 * sun_color[1]*sun_color[1]) / 3;
-    float s_blue =  (fog_color[2] + 2 * sun_color[2]) / 3;
+    float s_red =   (_fog_color[0] + 2 * sun_color[0]*sun_color[0]) / 3;
+    float s_green = (_fog_color[1] + 2 * sun_color[1]*sun_color[1]) / 3;
+    float s_blue =  (_fog_color[2] + 2 * sun_color[2]) / 3;
 
     // interpolate beween the sunrise/sunset color and the color
     // at the opposite direction of this effect. Take in account
@@ -239,26 +275,20 @@ void fgLIGHT::UpdateAdjFog( void ) {
        av = 45000;
 
     float avf = 0.87 - (45000 - av) / 83333.33;
-    float sif = 0.5 - cos(sun_angle*2)/2;
+    float sif = 0.5 - cos(_sun_angle*2)/2;
 
     float rf1 = fabs((rotation - SGD_PI) / SGD_PI);             // 0.0 .. 1.0
     float rf2 = avf * pow(rf1 * rf1, 1/sif);
     float rf3 = 0.94 - rf2;
 
-    adj_fog_color[0] = rf3 * fog_color[0] + rf2 * s_red;
-    adj_fog_color[1] = rf3 * fog_color[1] + rf2 * s_green;
-    adj_fog_color[2] = rf3 * fog_color[2] + rf2 * s_blue;
-    gamma_correct_rgb( adj_fog_color );
+    _adj_fog_color[0] = rf3 * _fog_color[0] + rf2 * s_red;
+    _adj_fog_color[1] = rf3 * _fog_color[1] + rf2 * s_green;
+    _adj_fog_color[2] = rf3 * _fog_color[2] + rf2 * s_blue;
+    gamma_correct_rgb( _adj_fog_color );
 
     // make sure the colors have their original value before they are being
     // used by the rest of the program.
     //
-    gamma_correct_rgb( fog_color );
+    gamma_correct_rgb( _fog_color );
 }
-
-
-// Destructor
-fgLIGHT::~fgLIGHT( void ) {
-}
-
 

@@ -472,17 +472,6 @@ do_tile_cache_reload (const SGPropertyNode * arg)
  * Update the lighting manually.
  */
 static bool
-do_lighting_update (const SGPropertyNode * arg)
-{
-  fgUpdateSkyAndLightingParams();
-  return true;
-}
-
-
-/**
- * Update the lighting manually.
- */
-static bool
 do_timeofday (const SGPropertyNode * arg)
 {
     const string &offset_type = arg->getStringValue("timeofday", "noon");
@@ -560,8 +549,6 @@ do_timeofday (const SGPropertyNode * arg)
                latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
                cur_time_override->getLongValue(),
                globals->get_warp() );
-
-    fgUpdateSkyAndLightingParams();
 
     return true;
 }
@@ -994,7 +981,6 @@ static struct {
     { "view-cycle", do_view_cycle },
     { "screen-capture", do_screen_capture },
     { "tile-cache-reload", do_tile_cache_reload },
-    { "lighting-update", do_lighting_update },
     { "timeofday", do_timeofday },
     { "property-toggle", do_property_toggle },
     { "property-assign", do_property_assign },

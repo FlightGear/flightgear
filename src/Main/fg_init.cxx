@@ -1391,8 +1391,6 @@ void fgInitTimeOffset() {
 
     SG_LOG( SG_GENERAL, SG_INFO, "After fgInitTimeOffset(): warp = " 
             << globals->get_warp() );
-
-    fgUpdateSkyAndLightingParams();
 }
 
 // This is the top level init routine which calls all the other
@@ -1407,7 +1405,7 @@ bool fgInitSubsystems() {
     // static const SGPropertyNode *altitude
     //     = fgGetNode("/sim/presets/altitude-ft");
 
-    fgLIGHT *l = &cur_light_params;
+    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
 
     SG_LOG( SG_GENERAL, SG_INFO, "Initialize Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
@@ -1483,26 +1481,7 @@ bool fgInitSubsystems() {
     // Initialize the lighting subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    // fgUpdateSunPos() needs a few position and view parameters set
-    // so it can calculate local relative sun angle and a few other
-    // things for correctly orienting the sky.
-    fgUpdateSunPos();
-    fgUpdateMoonPos();
-    global_events.Register( "fgUpdateSunPos()", &fgUpdateSunPos,
-                            60000);
-    global_events.Register( "fgUpdateMoonPos()", &fgUpdateMoonPos,
-                            60000);
-
-    // Initialize Lighting interpolation tables
-    l->Init();
-
-    // force one lighting update to make it right to start with...
-    l->Update();
-    // update the lighting parameters (based on sun angle)
-    global_events.Register( "fgLight::Update()",
-                            &cur_light_params, &fgLIGHT::Update,
-                            30000 );
-
+    globals->add_subsystem("lighting", new FGLight);
 
     ////////////////////////////////////////////////////////////////////
     // Create and register the logger.
@@ -1823,9 +1802,6 @@ void fgReInitSubsystems()
     globals->get_controls()->reset_all();
     globals->get_autopilot()->reset();
 
-    fgUpdateSunPos();
-    fgUpdateMoonPos();
-    cur_light_params.Update();
     fgUpdateLocalTime();
 
     if ( !freeze ) {

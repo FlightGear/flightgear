@@ -81,8 +81,6 @@ void reInit(puObject *cb)
     fgReInitSubsystems();
 
     globals->get_tile_mgr()->update( fgGetDouble("/environment/visibility-m") );
-    
-    cur_light_params.Update();
 
     fgReshape( xsize, ysize );
 

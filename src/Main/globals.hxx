@@ -68,6 +68,7 @@ class FGAircraftModel;
 class FGAutopilot;
 class FGControls;
 class FGIO;
+class FGLight;
 class FGModelMgr;
 class FGScenery;
 #ifdef FG_MPLAYER_AS
@@ -181,7 +182,11 @@ private:
     // Tile manager
     FGTileMgr *tile_mgr;
 
-    FGIO* io;
+    // Input/Ouput subsystem
+    FGIO *io;
+
+    // light parameters
+    FGLight *cur_light_params;
 
 #ifdef FG_MPLAYER_AS
     //Mulitplayer managers
@@ -333,8 +338,7 @@ public:
     inline FGTileMgr * get_tile_mgr () const { return tile_mgr; }
     inline void set_tile_mgr ( FGTileMgr *t ) { tile_mgr = t; }
 
-    FGIO* get_io() const { return io; }
-
+    inline FGIO* get_io() const { return io; }
 
     /**
      * Save the current state as the initial state.

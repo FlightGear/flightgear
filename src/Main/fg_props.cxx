@@ -334,7 +334,6 @@ setDateString (const char * date_string)
   double lat = current_aircraft.fdm_state->get_Latitude();
   globals->set_warp(warp);
   st->update(lon, lat, cur_time_override->getLongValue(), warp);
-  fgUpdateSkyAndLightingParams();
 }
 
 /**

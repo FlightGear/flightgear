@@ -61,10 +61,3 @@ void fgUpdateLocalTime() {
 					     zone.str() );
 }
 
-
-// update sky and lighting parameters
-void fgUpdateSkyAndLightingParams() {
-    fgUpdateSunPos();
-    fgUpdateMoonPos();
-    cur_light_params.Update();
-}

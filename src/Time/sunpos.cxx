@@ -244,10 +244,8 @@ void fgSunPositionGST(double gst, double *lon, double *lat) {
 
 // update the cur_time_params structure with the current sun position
 void fgUpdateSunPos( void ) {
-    fgLIGHT *l;
-    FGViewer *v;
     sgVec3 nup, nsun;
-    Point3D p, rel_sunpos;
+    Point3D rel_sunpos;
     double dot, east_dot;
     double sun_gd_lat, sl_radius;
 
@@ -258,40 +256,44 @@ void fgUpdateSunPos( void ) {
     // surface direction to go to head towards sun
     sgVec3 surface_to_sun;
 
-    l = &cur_light_params;
+    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
     SGTime *t = globals->get_time_params();
-    v = globals->get_current_view();
+    FGViewer *v = globals->get_current_view();
 
     SG_LOG( SG_EVENT, SG_INFO, "  Updating Sun position" );
     SG_LOG( SG_EVENT, SG_INFO, "  Gst = " << t->getGst() );
 
-    fgSunPositionGST(t->getGst(), &l->sun_lon, &sun_gd_lat);
+    double sun_l;
+    fgSunPositionGST(t->getGst(), &sun_l, &sun_gd_lat);
+    l->set_sun_lon(sun_l);
 
-    sgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &l->sun_gc_lat);
+    sgGeodToGeoc(sun_gd_lat, 0.0, &sl_radius, &sun_l);
+    l->set_sun_gc_lat(sun_l);
 
-    p = Point3D( l->sun_lon, l->sun_gc_lat, sl_radius );
-    l->fg_sunpos = sgPolarToCart3d(p);
+    Point3D p = Point3D( l->get_sun_lon(), l->get_sun_gc_lat(), sl_radius );
+    l->set_sunpos( sgPolarToCart3d(p) );
 
     SG_LOG( SG_EVENT, SG_INFO, "    t->cur_time = " << t->get_cur_time() );
     SG_LOG( SG_EVENT, SG_INFO, 
 	    "    Sun Geodetic lat = " << sun_gd_lat
-	    << " Geocentric lat = " << l->sun_gc_lat );
+	    << " Geocentric lat = " << l->get_sun_gc_lat() );
 
     // update the sun light vector
-    sgSetVec4( l->sun_vec, 
-	       l->fg_sunpos.x(), l->fg_sunpos.y(), l->fg_sunpos.z(), 0.0 );
-    sgNormalizeVec4( l->sun_vec );
-    sgCopyVec4( l->sun_vec_inv, l->sun_vec );
-    sgNegateVec4( l->sun_vec_inv );
+    sgSetVec4( l->sun_vec(), l->get_sunpos().x(),
+	       l->get_sunpos().y(), l->get_sunpos().z(), 0.0 );
+    sgNormalizeVec4( l->sun_vec() );
+    sgCopyVec4( l->sun_vec_inv(), l->sun_vec() );
+    sgNegateVec4( l->sun_vec_inv() );
 
     // make sure these are directional light sources only
-    l->sun_vec[3] = l->sun_vec_inv[3] = 0.0;
+    l->sun_vec()[3] = l->sun_vec_inv()[3] = 0.0;
     // cout << "  l->sun_vec = " << l->sun_vec[0] << "," << l->sun_vec[1]
     //      << ","<< l->sun_vec[2] << endl;
 
     // calculate the sun's relative angle to local up
     sgCopyVec3( nup, v->get_world_up() );
-    sgSetVec3( nsun, l->fg_sunpos.x(), l->fg_sunpos.y(), l->fg_sunpos.z() );
+    sgSetVec3( nsun, l->get_sunpos().x(),
+               l->get_sunpos().y(), l->get_sunpos().z() );
     sgNormalizeVec3(nup);
     sgNormalizeVec3(nsun);
     // cout << "nup = " << nup[0] << "," << nup[1] << "," 
@@ -299,15 +301,15 @@ void fgUpdateSunPos( void ) {
     // cout << "nsun = " << nsun[0] << "," << nsun[1] << "," 
     //      << nsun[2] << endl;
 
-    l->sun_angle = acos( sgScalarProductVec3 ( nup, nsun ) );
+    l->set_sun_angle( acos( sgScalarProductVec3 ( nup, nsun ) ) );
     SG_LOG( SG_EVENT, SG_INFO, "sun angle relative to current location = "
-	    << l->sun_angle );
+	    << l->get_sun_angle() );
     
     // calculate vector to sun's position on the earth's surface
     Point3D vp( v->get_view_pos()[0],
 		v->get_view_pos()[1],
 		v->get_view_pos()[2] );
-    rel_sunpos = l->fg_sunpos - ( vp + globals->get_scenery()->get_center() );
+    rel_sunpos = l->get_sunpos() - (vp + globals->get_scenery()->get_center());
     sgSetVec3( to_sun, rel_sunpos.x(), rel_sunpos.y(), rel_sunpos.z() );
     // printf( "Vector to sun = %.2f %.2f %.2f\n",
     //         v->to_sun[0], v->to_sun[1], v->to_sun[2]);
@@ -340,9 +342,9 @@ void fgUpdateSunPos( void ) {
     // cout << "  Dot product = " << dot << endl;
 
     if ( east_dot >= 0 ) {
-	l->sun_rotation = acos(dot);
+	l->set_sun_rotation( acos(dot) );
     } else {
-	l->sun_rotation = -acos(dot);
+	l->set_sun_rotation( -acos(dot) );
     }
     // cout << "  Sky needs to rotate = " << angle << " rads = "
     //      << angle * SGD_RADIANS_TO_DEGREES << " degrees." << endl;

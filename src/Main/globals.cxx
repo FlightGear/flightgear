@@ -73,7 +73,8 @@ FGGlobals::FGGlobals() :
     channel_options_list( NULL ),
     scenery( NULL ),
     tile_mgr( NULL ),
-    io( new FGIO )
+    io( new FGIO ),
+    cur_light_params( NULL )
 {
 }
 

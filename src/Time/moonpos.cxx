@@ -336,10 +336,8 @@ static void fgMoonPositionGST(double gst, double *lon, double *lat) {
 
 // update the cur_time_params structure with the current moon position
 void fgUpdateMoonPos( void ) {
-    fgLIGHT *l;
-    FGViewer *v;
     sgVec3 nup, nmoon;
-    Point3D p, rel_moonpos;
+    Point3D rel_moonpos;
     double dot, east_dot;
     double moon_gd_lat, sl_radius;
 
@@ -350,41 +348,43 @@ void fgUpdateMoonPos( void ) {
     // surface direction to go to head towards moon
     sgVec3 surface_to_moon;
 
-    l = &cur_light_params;
+    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
     SGTime *t = globals->get_time_params();
-    v = globals->get_current_view();
+    FGViewer *v = globals->get_current_view();
 
     SG_LOG( SG_EVENT, SG_INFO, "  Updating Moon position" );
 
-    // (not sure why there was two)
-    // fgMoonPosition(t->cur_time, &l->moon_lon, &moon_gd_lat);
-    fgMoonPositionGST(t->getGst(), &l->moon_lon, &moon_gd_lat);
+    double moon_l;
+    fgMoonPositionGST(t->getGst(), &moon_l, &moon_gd_lat);
+    l->set_moon_lon(moon_l);
 
-    sgGeodToGeoc(moon_gd_lat, 0.0, &sl_radius, &l->moon_gc_lat);
+    sgGeodToGeoc(moon_gd_lat, 0.0, &sl_radius, &moon_l);
+    l->set_moon_gc_lat(moon_l);
 
-    p = Point3D( l->moon_lon, l->moon_gc_lat, sl_radius );
-    l->fg_moonpos = sgPolarToCart3d(p);
+    Point3D p = Point3D( l->get_moon_lon(), l->get_moon_gc_lat(), sl_radius );
+    l->set_moonpos( sgPolarToCart3d(p) );
 
     SG_LOG( SG_EVENT, SG_INFO, "    t->cur_time = " << t->get_cur_time() );
     SG_LOG( SG_EVENT, SG_INFO, 
 	    "    Moon Geodetic lat = " << moon_gd_lat
-	    << " Geocentric lat = " << l->moon_gc_lat );
+	    << " Geocentric lat = " << l->get_moon_gc_lat() );
 
     // update the sun light vector
-    sgSetVec4( l->moon_vec,
-	       l->fg_moonpos.x(), l->fg_moonpos.y(), l->fg_moonpos.z(), 0.0 );
-    sgNormalizeVec4( l->moon_vec );
-    sgCopyVec4( l->moon_vec_inv, l->moon_vec );
-    sgNegateVec4( l->moon_vec_inv );
+    sgSetVec4( l->moon_vec(), l->get_moonpos().x(),
+	       l->get_moonpos().y(), l->get_moonpos().z(), 0.0 );
+    sgNormalizeVec4( l->moon_vec() );
+    sgCopyVec4( l->moon_vec_inv(), l->moon_vec() );
+    sgNegateVec4( l->moon_vec_inv() );
 
     // make sure these are directional light sources only
-    l->moon_vec[3] = l->moon_vec_inv[3] = 0.0;
+    l->moon_vec()[3] = l->moon_vec_inv()[3] = 0.0;
     // cout << "  l->moon_vec = " << l->moon_vec[0] << "," << l->moon_vec[1]
     //      << ","<< l->moon_vec[2] << endl;
 
     // calculate the moon's relative angle to local up
     sgCopyVec3( nup, v->get_world_up() );
-    sgSetVec3( nmoon, l->fg_moonpos.x(), l->fg_moonpos.y(), l->fg_moonpos.z() );
+    sgSetVec3( nmoon, l->get_moonpos().x(),
+               l->get_moonpos().y(), l->get_moonpos().z() );
     sgNormalizeVec3(nup);
     sgNormalizeVec3(nmoon);
     // cout << "nup = " << nup[0] << "," << nup[1] << "," 
@@ -392,15 +392,15 @@ void fgUpdateMoonPos( void ) {
     // cout << "nmoon = " << nmoon[0] << "," << nmoon[1] << "," 
     //      << nmoon[2] << endl;
 
-    l->moon_angle = acos( sgScalarProductVec3( nup, nmoon ) );
+    l->set_moon_angle( acos( sgScalarProductVec3( nup, nmoon ) ) );
     SG_LOG( SG_EVENT, SG_INFO, "moon angle relative to current location = " 
-	    << l->moon_angle );
+	    << l->get_moon_angle() );
     
     // calculate vector to moon's position on the earth's surface
     Point3D vp( v->get_view_pos()[0],
 		v->get_view_pos()[1],
 		v->get_view_pos()[2] );
-    rel_moonpos = l->fg_moonpos - ( vp + globals->get_scenery()->get_center() );
+    rel_moonpos = l->get_moonpos()-(vp + globals->get_scenery()->get_center());
     sgSetVec3( to_moon, rel_moonpos.x(), rel_moonpos.y(), rel_moonpos.z() );
     // printf( "Vector to moon = %.2f %.2f %.2f\n",
     //         to_moon[0], to_moon[1], to_moon[2]);
@@ -432,9 +432,9 @@ void fgUpdateMoonPos( void ) {
     // cout << "  Dot product = " << dot << endl;
 
     if ( east_dot >= 0 ) {
-	l->moon_rotation = acos(dot);
+	l->set_moon_rotation( acos(dot) );
     } else {
-	l->moon_rotation = -acos(dot);
+	l->set_moon_rotation( -acos(dot) );
     }
     // cout << "  Sky needs to rotate = " << angle << " rads = "
     //      << angle * SGD_RADIANS_TO_DEGREES << " degrees." << endl;

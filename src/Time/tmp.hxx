@@ -38,8 +38,6 @@
 // periodic time updater
 void fgUpdateLocalTime();
 
-// update sky and lighting parameters
-void fgUpdateSkyAndLightingParams();
-
 
 #endif // _LIGHT_HXX
+

@@ -319,6 +319,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
     sgSetVec3( sgTrans, offset.x(), offset.y(), offset.z() );
     terra_transform->setTransform( sgTrans );
 
+    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
     if ( gnd_lights_transform ) {
         // we need to lift the lights above the terrain to avoid
         // z-buffer fighting.  We do this based on our altitude and
@@ -354,7 +355,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         gnd_lights_transform->setTransform( lt_trans );
 
         // select which set of lights based on sun angle
-        float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
+        float sun_angle = l->get_sun_angle() * SGD_RADIANS_TO_DEGREES;
         if ( sun_angle > 95 ) {
             gnd_lights_brightness->select(0x04);
         } else if ( sun_angle > 92 ) {
@@ -397,7 +398,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         rwy_lights_transform->setTransform( lt_trans );
 
         // turn runway lights on/off based on sun angle and visibility
-        float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
+        float sun_angle = l->get_sun_angle() * SGD_RADIANS_TO_DEGREES;
         if ( sun_angle > 85 ||
              (fgGetDouble("/environment/visibility-m") < 5000.0) ) {
             rwy_lights_selector->select(0x01);
@@ -437,7 +438,7 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
         taxi_lights_transform->setTransform( lt_trans );
 
         // turn taxi lights on/off based on sun angle and visibility
-        float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
+        float sun_angle = l->get_sun_angle() * SGD_RADIANS_TO_DEGREES;
         if ( sun_angle > 85 ||
              (fgGetDouble("/environment/visibility-m") < 5000.0) ) {
             taxi_lights_selector->select(0x01);

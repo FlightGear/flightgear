@@ -250,9 +250,8 @@ void fgBuildRenderStates( void ) {
 
 // fgInitVisuals() -- Initialize various GL/view parameters
 void fgInitVisuals( void ) {
-    fgLIGHT *l;
 
-    l = &cur_light_params;
+    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
 
 #ifndef GLUT_WRONG_VERSION
     // Go full screen if requested ...
@@ -271,7 +270,7 @@ void fgInitVisuals( void ) {
     // glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );  // done later with ssg
 
     sgVec3 sunpos;
-    sgSetVec3( sunpos, l->sun_vec[0], l->sun_vec[1], l->sun_vec[2] );
+    sgSetVec3( sunpos, l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2] );
     ssgGetLight( 0 ) -> setPosition( sunpos );
 
     glFogi (GL_FOG_MODE, GL_EXP2);
@@ -311,10 +310,10 @@ void trRenderFrame( void ) {
     static GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
     static GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
-    fgLIGHT *l = &cur_light_params;
+    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
 
-    glClearColor(l->adj_fog_color[0], l->adj_fog_color[1], 
-                 l->adj_fog_color[2], l->adj_fog_color[3]);
+    glClearColor(l->adj_fog_color()[0], l->adj_fog_color()[1], 
+                 l->adj_fog_color()[2], l->adj_fog_color()[3]);
 
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -324,7 +323,7 @@ void trRenderFrame( void ) {
     glEnable( GL_FOG );
     glFogf  ( GL_FOG_DENSITY, fog_exp2_density);
     glFogi  ( GL_FOG_MODE,    GL_EXP2 );
-    glFogfv ( GL_FOG_COLOR,   l->adj_fog_color );
+    glFogfv ( GL_FOG_COLOR,   l->adj_fog_color() );
 
     // GL_LIGHT_MODEL_AMBIENT has a default non-zero value so if
     // we only update GL_AMBIENT for our lights we will never get
@@ -333,7 +332,7 @@ void trRenderFrame( void ) {
     glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
     glLightModeli( GL_LIGHT_MODEL_LOCAL_VIEWER, GL_FALSE );
 
-    ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient );
+    ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient() );
 
     // texture parameters
     glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE ) ;
@@ -345,7 +344,7 @@ void trRenderFrame( void ) {
 
     // draw the ssg scene
     // return to the desired diffuse color
-    ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
+    ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse() );
     glEnable( GL_DEPTH_TEST );
     ssgSetNearFar( scene_nearplane, scene_farplane );
     ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
@@ -392,7 +391,7 @@ void fgRenderFrame() {
 
     FGViewer *current__view = globals->get_current_view();
 
-    fgLIGHT *l = &cur_light_params;
+    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
     static double last_visibility = -9999;
 
     // update fog params
@@ -472,13 +471,13 @@ void fgRenderFrame() {
         if ( skyblend ) {
             if ( fgGetBool("/sim/rendering/textures") ) {
             // glClearColor(black[0], black[1], black[2], black[3]);
-            glClearColor(l->adj_fog_color[0], l->adj_fog_color[1],
-                         l->adj_fog_color[2], l->adj_fog_color[3]);
+            glClearColor(l->adj_fog_color()[0], l->adj_fog_color()[1],
+                         l->adj_fog_color()[2], l->adj_fog_color()[3]);
             clear_mask |= GL_COLOR_BUFFER_BIT;
             }
         } else {
-            glClearColor(l->sky_color[0], l->sky_color[1],
-                     l->sky_color[2], l->sky_color[3]);
+            glClearColor(l->sky_color()[0], l->sky_color()[1],
+                         l->sky_color()[2], l->sky_color()[3]);
             clear_mask |= GL_COLOR_BUFFER_BIT;
         }
         glClear( clear_mask );
@@ -526,12 +525,13 @@ void fgRenderFrame() {
             */
 
             static SGSkyColor scolor;
+            FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
 
-            scolor.sky_color   = cur_light_params.sky_color;
-            scolor.fog_color   = cur_light_params.adj_fog_color;
-            scolor.cloud_color = cur_light_params.cloud_color;
-            scolor.sun_angle   = cur_light_params.sun_angle;
-            scolor.moon_angle  = cur_light_params.moon_angle;
+            scolor.sky_color   = l->sky_color();
+            scolor.fog_color   = l->adj_fog_color();
+            scolor.cloud_color = l->cloud_color();
+            scolor.sun_angle   = l->get_sun_angle();
+            scolor.moon_angle  = l->get_moon_angle();
             scolor.nplanets    = globals->get_ephem()->getNumPlanets();
             scolor.nstars      = globals->get_ephem()->getNumStars();
             scolor.planet_data = globals->get_ephem()->getPlanets();
@@ -565,8 +565,8 @@ void fgRenderFrame() {
             // Sun distance: 150,000,000 kilometers
             double sun_horiz_eff, moon_horiz_eff;
             if (fgGetBool("/sim/rendering/horizon-effect")) {
-            sun_horiz_eff = 0.67+pow(0.5+cos(cur_light_params.sun_angle*2)/2,0.33)/3;
-            moon_horiz_eff = 0.67+pow(0.5+cos(cur_light_params.moon_angle*2)/2,0.33)/3;
+            sun_horiz_eff = 0.67+pow(0.5+cos(l->get_sun_angle())*2/2, 0.33)/3;
+            moon_horiz_eff = 0.67+pow(0.5+cos(l->get_moon_angle())*2/2, 0.33)/3;
             } else {
                sun_horiz_eff = moon_horiz_eff = 1.0;
             }
@@ -582,7 +582,7 @@ void fgRenderFrame() {
                                 * SGD_DEGREES_TO_RADIANS;
             sstate.alt       = current__view->getAltitudeASL_ft()
                                 * SG_FEET_TO_METER;
-            sstate.spin      = cur_light_params.sun_rotation;
+            sstate.spin      = l->get_sun_rotation();
             sstate.gst       = globals->get_time_params()->getGst();
             sstate.sun_ra    = globals->get_ephem()->getSunRightAscension();
             sstate.sun_dec   = globals->get_ephem()->getSunDeclination();
@@ -598,11 +598,11 @@ void fgRenderFrame() {
         if ( strcmp(fgGetString("/sim/rendering/fog"), "disabled") ) {
             glEnable( GL_FOG );
             glFogi( GL_FOG_MODE, GL_EXP2 );
-            glFogfv( GL_FOG_COLOR, l->adj_fog_color );
+            glFogfv( GL_FOG_COLOR, l->adj_fog_color() );
         }
 
         // set sun/lighting parameters
-        ssgGetLight( 0 ) -> setPosition( l->sun_vec );
+        ssgGetLight( 0 ) -> setPosition( l->sun_vec() );
 
         // GL_LIGHT_MODEL_AMBIENT has a default non-zero value so if
         // we only update GL_AMBIENT for our lights we will never get
@@ -610,9 +610,9 @@ void fgRenderFrame() {
         // explicitely to black.
         glLightModelfv( GL_LIGHT_MODEL_AMBIENT, black );
 
-        ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient );
-        ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
-        ssgGetLight( 0 ) -> setColour( GL_SPECULAR, l->scene_specular );
+        ssgGetLight( 0 ) -> setColour( GL_AMBIENT, l->scene_ambient() );
+        ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse() );
+        ssgGetLight( 0 ) -> setColour( GL_SPECULAR, l->scene_specular() );
 
         // texture parameters
         // glEnable( GL_TEXTURE_2D );
@@ -679,7 +679,7 @@ void fgRenderFrame() {
             thesky->preDraw( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 
             // return to the desired diffuse color
-            ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse );
+            ssgGetLight( 0 ) -> setColour( GL_DIFFUSE, l->scene_diffuse() );
 
             // FIXME: This should not be needed, but at this time (08/15/2003)
             //        certain NVidia drivers don't seem to implement
@@ -902,8 +902,6 @@ void fgUpdateTimeDepCalcs() {
 
     //SG_LOG(SG_FLIGHT,SG_INFO, "Updating time dep calcs()");
 
-    fgLIGHT *l = &cur_light_params;
-
     // Initialize the FDM here if it hasn't been and if we have a
     // scenery elevation hit.
 
@@ -949,8 +947,6 @@ void fgUpdateTimeDepCalcs() {
 
     // update the view angle
     globals->get_viewmgr()->update(delta_time_sec);
-
-    l->UpdateAdjFog();
 
     // Update solar system
     globals->get_ephem()->update( globals->get_time_params()->getMjd(),
@@ -1030,7 +1026,6 @@ static void fgMainLoop( void ) {
     SGTime *t = globals->get_time_params();
 
     sglog().setLogLevels( SG_ALL, (sgDebugPriority)fgGetInt("/sim/log-level") );
-    sglog().setLogLevels( SG_ALL, SG_INFO );
 
     SGLocation * acmodel_location = 0;
     if(cur_fdm_state->getACModel() != 0) {
@@ -1107,10 +1102,6 @@ static void fgMainLoop( void ) {
                latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
                cur_time_override->getLongValue(),
                globals->get_warp() );
-
-    if ( globals->get_warp_delta() != 0 ) {
-        fgUpdateSkyAndLightingParams();
-    }
 
     // update magvar model
     globals->get_mag()->update( longitude->getDoubleValue()
@@ -1365,7 +1356,6 @@ static void fgIdleFunction ( void ) {
         fgReshape( fgGetInt("/sim/startup/xsize"),
                fgGetInt("/sim/startup/ysize") );
 
-        fgUpdateSkyAndLightingParams();
     } 
 
     if ( idle_state == 1000 ) {
@@ -2042,13 +2032,14 @@ void fgUpdateDCS (void) {
         // temporary hack for deck lights - ultimately should move to PLib (when ??)
         if (m == 1) {
             if (lightpoints_transform) {
-                    lightpoints_transform->setTransform( &shippos );
-                    float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
-                    if ( sun_angle > 89 ) {
-                            lightpoints_brightness->select(0x01);
-                    } else {
-                            lightpoints_brightness->select(0x00);
-                    }
+                lightpoints_transform->setTransform( &shippos );
+                FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
+                float sun_angle = l->get_sun_angle() * SGD_RADIANS_TO_DEGREES;
+                if ( sun_angle > 89 ) {
+                        lightpoints_brightness->select(0x01);
+                } else {
+                        lightpoints_brightness->select(0x00);
+                }
             }
 
             float elev;

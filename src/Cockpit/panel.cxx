@@ -381,7 +381,9 @@ FGPanel::draw()
   glCullFace(GL_BACK);
   glDisable(GL_DEPTH_TEST);
   sgVec4 panel_color;
-  sgCopyVec4( panel_color, cur_light_params.scene_diffuse );
+
+  FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
+  sgCopyVec4( panel_color, l->scene_diffuse());
   if ( fgGetDouble("/systems/electrical/outputs/instrument-lights") > 1.0 ) {
       if ( panel_color[0] < 0.7 ) panel_color[0] = 0.7;
       if ( panel_color[1] < 0.2 ) panel_color[1] = 0.2;
@@ -943,7 +945,9 @@ FGTexturedLayer::draw ()
 				// From Curt: turn on the panel
 				// lights after sundown.
     sgVec4 panel_color;
-    sgCopyVec4( panel_color, cur_light_params.scene_diffuse );
+
+    FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
+    sgCopyVec4( panel_color, l->scene_diffuse());
     if ( fgGetDouble("/systems/electrical/outputs/instrument-lights") > 1.0 ) {
         if ( panel_color[0] < 0.7 ) panel_color[0] = 0.7;
         if ( panel_color[1] < 0.2 ) panel_color[1] = 0.2;
