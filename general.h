@@ -30,10 +30,17 @@
 #define _GENERAL_H
 
 
+#define FG_FRAME_RATE_HISTORY 20
+
+
 /* the general house keeping structure definition */
 typedef struct {
     /* The flight gear "root" directory */
     char *root_dir;
+
+    /* Last frame rate measurement */
+    double frame_rate;
+    double frames[FG_FRAME_RATE_HISTORY];
 } fgGENERAL;
 
 /* general contains all the general house keeping parameters. */
@@ -43,9 +50,12 @@ extern fgGENERAL general;
 
 
 /* $Log$
-/* Revision 1.3  1998/03/14 00:27:58  curt
-/* Promoted fgGENERAL to a "type" of struct.
+/* Revision 1.4  1998/05/06 03:14:30  curt
+/* Added a shared frame rate counter.
 /*
+ * Revision 1.3  1998/03/14 00:27:58  curt
+ * Promoted fgGENERAL to a "type" of struct.
+ *
  * Revision 1.2  1998/01/22 02:59:35  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *
