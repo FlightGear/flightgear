@@ -1,8 +1,13 @@
-#include <ctype.h>    // isspace()
-#include <stdlib.h>   // atoi()
-#include <math.h>     // rint()
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+
 #include <stdio.h>
-#include <string.h>
 #include <sys/stat.h> // stat()
 #include <unistd.h>   // stat()
 
@@ -10,98 +15,82 @@
 
 #include <Bucket/bucketutils.h>
 
-#ifdef __CYGWIN32__
-#  define MKDIR(a) mkdir(a,S_IRWXU)     // I am just guessing at this flag (NHV)
-#endif // __CYGWIN32__
-
-#ifdef __CYGWIN32__
-
-// return the file path name ( foo/bar/file.ext = foo/bar )
-static void extract_path (char *in, char *base) {
-    int len, i;
-
-    len = strlen (in);
-    strcpy (base, in);
-
-    i = len - 1;
-    while ( (i >= 0) && (in[i] != '/') ) {
-	i--;
-    }
-
-    base[i] = '\0';
-}
 
 
-// Make a subdirectory
-static int my_mkdir (char *dir) {
-    struct stat stat_buf;
-    int result;
-
-    printf ("mk_dir() ");
-
-    result = stat (dir, &stat_buf);
-
-    if (result != 0) {
-	MKDIR (dir);
-	result = stat (dir, &stat_buf);
-	if (result != 0) {
-	    printf ("problem creating %s\n", dir);
-	} else {
-	    printf ("%s created\n", dir);
-	}
-    } else {
-	printf ("%s already exists\n", dir);
-    }
-
-    return (result);
-}
-
-#endif // __CYGWIN32__
-
-
-void scenery_dir( const string& dir ) {
-    struct stat stat_buf;
-    char base_path[256], file[256], exfile[256];
-#ifdef __CYGWIN32__
-    char tmp_path[256];
+#ifdef WIN32
+#ifndef TRUE
+ #define FALSE 0
+ #define TRUE 1
 #endif
-    string command;
-    FILE *fd;
-	fgBUCKET p;
-	int result;
 
-    cout << "Dir = " + dir + "\n";
+char* PathDivider()
+{
+	return "\\";
+} // PathDivider
 
-    // stat() directory and create if needed
-    result = stat(dir.c_str(), &stat_buf);
-    if ( result != 0 ) {
-	cout << "Stat error need to create directory\n";
+void ReplaceDivider( char* path )
+{
+	char	div = PathDivider()[0];
+	int		i;
 
-#ifndef __CYGWIN32__
+	if ( ! path )
+		return;
+	if ( div == '/' )
+		return;
 
-	command = "mkdir -p " + dir + "\n";
-	system( command.c_str() );
+	for ( i = 0; path[i]; i++ )
+		if ( path[i] == '/' )
+			path[i] = div;
 
-#else // __CYGWIN32__
+} // ReplaceDivider
 
-	// Cygwin crashes when trying to output to node file
-	// explicitly making directory structure seems OK on Win95
+int	Exists( char* path )
+{
+    struct stat statbuff;
 
-	extract_path (base_path, tmp_path);
+	ReplaceDivider( path );
+	if ( path[strlen( path ) - 1] == ':' )
+		return TRUE;
+	if ( _stat( path, &statbuff ) != 0 )
+		return FALSE;
+	return TRUE;
+} // Exists
 
-	dir = tmp_path;
-	if (my_mkdir ( dir.c_str() )) {	exit (-1); }
 
-	dir = base_path;
-	if (my_mkdir ( dir.c_str() )) {	exit (-1); }
+void CreateDir( char* path )
+{
+	if ( ! path  ||  ! strlen( path ) )
+		return;
+	ReplaceDivider( path );
+								// see if the parent exists yet
+	int		i;	// looping index
+	string	parent;	// path to parent
 
-#endif // __CYGWIN32__
+	parent =  path;
+	for ( i = strlen( parent.c_str() )-1; i >= 0; i-- )
+		if ( parent[i] == PathDivider()[0] )
+		{
+			parent[i] = '\0';
+			break;
+		}
+	
+	if ( ! Exists( parent.c_str() ) )
+	{
+		CreateDir( parent.c_str() );
+	}
 
-    } else {
-	// assume directory exists
-		cout << "  Allready Exists !\n";
-    }
-}
+	if ( ! Exists( path ) )
+	{
+		if (mkdir(path, S_IRWXU) != 0 )
+		{
+			cout << "Could not create directory " << path << endl;
+		}else{
+			cout << "CreateDir: " << path << endl;
+		}
+	}
+	
+} // CreateDir
+
 
 int main(int argc, char **argv)
 {
@@ -109,11 +98,14 @@ int main(int argc, char **argv)
 
 	if(argc != 2)
 	{
-		cout << "Makedir failed\n";
+		cout << "Makedir failed needs one argument\n";
 		return(10);
 	}
 	root = argv[1];
-	scenery_dir(root);
-
+	
+	CreateDir(root.c_str());
+	
 	return(0);
 }
+#endif // WIN32
+
