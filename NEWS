@@ -1,5 +1,10 @@
 New in 0.44:
 * command line option to set starting position by airport ID
+* Cleaned up initialization sequence to eliminate interdependencies
+  between sun position, lighting, and view position.  This creates a
+  valid single pass initialization path.  
+* use already calculated LaRCsim values to create the roll/pitch/yaw
+  transformation matrix
 
 New in 0.43:
 * material properties bug fixed when rendering terrain.
