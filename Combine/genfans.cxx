@@ -202,12 +202,12 @@ fan_list FGGenFans::greedy_build( triele_list tris ) {
 	counter = 0;
 	while ( t_current != t_last ) {
 	    if ( in_fan(counter, best_fan) ) {
-		cout << "erasing " 
-		     << t_current->get_n1() << ","
-		     << t_current->get_n2() << ","
-		     << t_current->get_n3()
-		     << " from master tri pool"
-		     << endl;
+		// cout << "erasing " 
+		//      << t_current->get_n1() << ","
+		//      << t_current->get_n2() << ","
+		//      << t_current->get_n3()
+		//      << " from master tri pool"
+		//      << endl;
 		tris.erase( t_current );
 	    } else {
 		++t_current;
@@ -238,6 +238,9 @@ double FGGenFans::ave_size() {
 
 
 // $Log$
+// Revision 1.4  1999/03/31 13:26:39  curt
+// Debugging output tweeaks.
+//
 // Revision 1.3  1999/03/31 05:35:04  curt
 // Fixed bug in genfans (deleting the wrong triangles from the available pool.)
 //

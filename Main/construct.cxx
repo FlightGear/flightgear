@@ -199,10 +199,10 @@ main(int argc, char **argv) {
     // lon = -146.248360; lat = 61.133950;     // PAVD (Valdez, AK)
     // lon = -110.664244; lat = 33.352890;     // P13
     // lon = -93.211389; lat = 45.145000;      // KANE
-    // lon = -92.486188; lat = 44.590190;      // KRGK
+    lon = -92.486188; lat = 44.590190;      // KRGK
     // lon = -89.744682312011719; lat= 29.314495086669922;
     // lon = -122.488090; lat = 42.743183;     // 64S
-    lon = -114.861097; lat = 35.947480;     // 61B
+    // lon = -114.861097; lat = 35.947480;     // 61B
     // lon = -112.012175; lat = 41.195944;     // KOGD
     // lon = -90.757128; lat = 46.790212;      // WI32
 
@@ -241,6 +241,9 @@ main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.14  1999/03/31 13:26:41  curt
+// Debugging output tweeaks.
+//
 // Revision 1.13  1999/03/31 05:35:06  curt
 // Fixed bug in genfans (deleting the wrong triangles from the available pool.)
 //

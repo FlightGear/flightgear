@@ -256,7 +256,7 @@ void FGGenOutput::calc_group_bounding_sphere( const fan_list& fans,
     // find average of point list
     Point3D c( 0.0 );
     point_list points = nodes.get_node_list();
-    cout << "found " << points.size() << " unique nodes" << endl;
+    // cout << "found " << points.size() << " unique nodes" << endl;
     point_list_iterator p_current = points.begin();
     point_list_iterator p_last = points.end();
     for ( ; p_current != p_last; ++p_current ) {
@@ -393,6 +393,7 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
 	    fan_list_iterator f_last = fans[i].end();
 	    for ( ; f_current != f_last; ++f_current ) {
 		fprintf( fp, "tf" );
+		total_tris += f_current->size() - 2;
 		int_list_iterator i_current = f_current->begin();
 		int_list_iterator i_last = f_current->end();
 		for ( ; i_current != i_last; ++i_current ) {
@@ -411,7 +412,6 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
 		    for ( ; i_current != i_last; ++i_current ) {
 			int n3 = *i_current;
 			fprintf( fp, "f %d %d %d\n", center, n2, n3 );
-			++total_tris;
 			n2 = n3;
 		    }
 		}
@@ -433,6 +433,9 @@ int FGGenOutput::write( const string& base, const FGBucket& b ) {
 
 
 // $Log$
+// Revision 1.9  1999/03/31 13:26:40  curt
+// Debugging output tweeaks.
+//
 // Revision 1.8  1999/03/31 05:35:05  curt
 // Fixed bug in genfans (deleting the wrong triangles from the available pool.)
 //
