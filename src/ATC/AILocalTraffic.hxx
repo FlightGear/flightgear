@@ -223,6 +223,9 @@ private:
 	void GetNextTaxiNode();
 	
 	void DoGroundElev();
+	
+	// Set when the plane should be invisible *regardless of distance from user*.
+	bool _invisible;
 };
 
 #endif  // _FG_AILocalTraffic_HXX

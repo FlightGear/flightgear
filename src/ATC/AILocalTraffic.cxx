@@ -119,6 +119,8 @@ FGAILocalTraffic::FGAILocalTraffic() {
 	_savedSlope = 0.0;
 	
 	_controlled = false;
+	
+	_invisible = false;
 }
 
 FGAILocalTraffic::~FGAILocalTraffic() {
@@ -468,6 +470,16 @@ void FGAILocalTraffic::FlyCircuits(int numCircuits, bool tag) {
 // Run the internal calculations
 void FGAILocalTraffic::Update(double dt) {
 	//cout << "U" << flush;
+	
+	// we shouldn't really need this since there's a LOD of 10K on the whole plane anyway I think.
+	// At the moment though I need to to avoid DList overflows - the whole plane LOD obviously isn't getting picked up.
+	if(!_invisible) {
+		if(dclGetHorizontalSeparation(_pos, Point3D(fgGetDouble("/position/longitude-deg"), fgGetDouble("/position/latitude-deg"), 0.0)) > 8000) _aip.setVisible(false);
+		else _aip.setVisible(true);
+	} else {
+		_aip.setVisible(false);
+	}
+	
 	//double responseTime = 10.0;		// seconds - this should get more sophisticated at some point
 	responseCounter += dt;
 	if((contactTower) && (responseCounter >= 8.0)) {
@@ -1360,9 +1372,10 @@ void FGAILocalTraffic::ExitRunway(Point3D orthopos) {
 	} else {
 		// Something must have gone wrong with the ground network file - or there is only a rwy here and no exits defined
 		SG_LOG(SG_ATC, SG_INFO, "No exits found by FGAILocalTraffic from runway " << rwy.rwyID << " at " << airportID << '\n');
-		//cout << "No exits found by " << plane.callsign << " from runway " << rwy.rwyID << " at " << airportID << '\n';
+		//if(airportID == "KRHV") cout << "No exits found by " << plane.callsign << " from runway " << rwy.rwyID << " at " << airportID << '\n';
 		// What shall we do - just remove the plane from sight?
 		_aip.setVisible(false);
+		_invisible = true;
 		//cout << "Setting visible false\n";
 		//tower->ReportRunwayVacated(plane.callsign);
 		string trns = "Clear of the runway ";
