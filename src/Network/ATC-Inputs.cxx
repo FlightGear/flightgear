@@ -136,11 +136,14 @@ bool FGATCInput::open() {
     init_config();
 
     SG_LOG( SG_IO, SG_ALERT,
-	    "Initializing ATC hardware, please wait ..." );
+	    "Initializing ATC input hardware, please wait ..." );
 
-    snprintf( analog_in_file, 256, "/proc/atc610x/board%d/analog_in", board );
-    snprintf( radios_file, 256, "/proc/atc610x/board%d/radios", board );
-    snprintf( switches_file, 256, "/proc/atc610x/board%d/switches", board );
+    snprintf( analog_in_file, 256,
+              "/proc/atcflightsim/board%d/analog_in", board );
+    snprintf( radios_file, 256,
+              "/proc/atcflightsim/board%d/radios", board );
+    snprintf( switches_file, 256,
+              "/proc/atcflightsim/board%d/switches", board );
 
 #if defined( unix ) || defined( __CYGWIN__ )
 
@@ -182,7 +185,7 @@ bool FGATCInput::open() {
     /////////////////////////////////////////////////////////////////////
 
     SG_LOG( SG_IO, SG_ALERT,
-	    "Done initializing ATC hardware." );
+	    "Done initializing ATC input hardware." );
 
     is_open = true;
 
@@ -858,6 +861,10 @@ bool FGATCInput::process() {
 bool FGATCInput::close() {
 
 #if defined( unix ) || defined( __CYGWIN__ )
+
+    if ( !is_open ) {
+        return true;
+    }
 
     int result;
 

@@ -118,8 +118,8 @@ bool FGATCMain::open() {
     // Open the /proc files
     /////////////////////////////////////////////////////////////////////
 
-    string lock0_file = "/proc/atc610x/board0/lock";
-    string lock1_file = "/proc/atc610x/board1/lock";
+    string lock0_file = "/proc/atcflightsim/board0/lock";
+    string lock1_file = "/proc/atcflightsim/board1/lock";
 
     lock0_fd = ::open( lock0_file.c_str(), O_RDWR );
     if ( lock0_fd == -1 ) {
@@ -171,21 +171,35 @@ bool FGATCMain::open() {
 
 
 bool FGATCMain::process() {
-    // Lock the hardware, skip if it's not ready yet
-    if ( fgATCMainLock( lock0_fd ) <= 0 ) {
-        return false;
-    }
-    if ( fgATCMainLock( lock1_fd ) <= 0 ) {
-        // lock0 will be locked here, so release before we return
-	fgATCMainRelease( lock0_fd );
-        return false;
+    // cout << "Main::process()\n";
+
+    bool board0_locked = false;
+    bool board1_locked = false;
+
+    if ( input0 != NULL || output0 != NULL ) {
+        // Lock board0 if we have a configuration for it
+        if ( fgATCMainLock( lock0_fd ) > 0 ) {
+            board0_locked = true;
+        }
     }
 
+    if ( input1 != NULL || output1 != NULL ) {
+        // Lock board1 if we have a configuration for it
+        if ( fgATCMainLock( lock1_fd ) > 0 ) {
+            board1_locked = true;
+        }
+    }
+
+    // cout << "  locks: ";
+    // if ( board0_locked ) { cout << "board0 "; }
+    // if ( board1_locked ) { cout << "board1 "; }
+    // cout << endl;
+
     // process the ATC inputs
-    if ( input0 != NULL ) {
+    if ( input0 != NULL && board0_locked ) {
         input0->process();
     }
-    if ( input1 != NULL ) {
+    if ( input1 != NULL && board1_locked ) {
         input1->process();
     }
 
@@ -204,22 +218,41 @@ bool FGATCMain::process() {
     }
 
     // process the ATC outputs
-    if ( output0 != NULL ) {
+    if ( output0 != NULL && board0_locked ) {
         output0->process();
     }
-    if ( output1 != NULL ) {
+    if ( output1 != NULL && board1_locked ) {
         output1->process();
     }
 
-    fgATCMainRelease( lock0_fd );
-    fgATCMainRelease( lock1_fd );
+    if ( board0_locked ) {
+        fgATCMainRelease( lock0_fd );
+    }
+    if ( board1_locked ) {
+        fgATCMainRelease( lock1_fd );
+    }
 
     return true;
 }
 
 
 bool FGATCMain::close() {
+    cout << "FGATCMain::close()" << endl;
+
     int result;
+
+    if ( input0 != NULL ) {
+        input0->close();
+    }
+    if ( input1 != NULL ) {
+        input1->close();
+    }
+    if ( output0 != NULL ) {
+        output0->close();
+    }
+    if ( output1 != NULL ) {
+        output1->close();
+    }
 
     result = ::close( lock0_fd );
     if ( result == -1 ) {

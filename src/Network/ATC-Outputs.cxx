@@ -201,11 +201,14 @@ bool FGATCOutput::open( int lock_fd ) {
     init_config();
 
     SG_LOG( SG_IO, SG_ALERT,
-	    "Initializing ATC hardware, please wait ..." );
+	    "Initializing ATC output hardware, please wait ..." );
 
-    snprintf( lamps_file, 256, "/proc/atc610x/board%d/lamps", board );
-    snprintf( radio_display_file, 256, "/proc/atc610x/board%d/radios", board );
-    snprintf( stepper_file, 256, "/proc/atc610x/board%d/steppers", board );
+    snprintf( lamps_file, 256,
+              "/proc/atcflightsim/board%d/lamps", board );
+    snprintf( radio_display_file, 256,
+              "/proc/atcflightsim/board%d/radios", board );
+    snprintf( stepper_file, 256,
+              "/proc/atcflightsim/board%d/steppers", board );
 
 #if defined( unix ) || defined( __CYGWIN__ )
 
@@ -327,7 +330,7 @@ bool FGATCOutput::open( int lock_fd ) {
     /////////////////////////////////////////////////////////////////////
 
     SG_LOG( SG_IO, SG_ALERT,
-	    "Done initializing ATC hardware." );
+	    "Done initializing ATC output hardware." );
 
     is_open = true;
 
@@ -402,7 +405,7 @@ static bool navcom1_has_power() {
     static SGPropertyNode *navcom1_bus_power
         = fgGetNode( "/systems/electrical/outputs/nav[0]", true );
     static SGPropertyNode *navcom1_power_btn
-        = fgGetNode( "/instrumentation/comm[0]/inputs/power-btn", true );
+        = fgGetNode( "/instrumentation/nav[0]/power-btn", true );
 
     return (navcom1_bus_power->getDoubleValue() > 1.0)
         && navcom1_power_btn->getBoolValue();
@@ -412,7 +415,7 @@ static bool navcom2_has_power() {
     static SGPropertyNode *navcom2_bus_power
         = fgGetNode( "/systems/electrical/outputs/nav[1]", true );
     static SGPropertyNode *navcom2_power_btn
-        = fgGetNode( "/instrumentation/comm[1]/inputs/power-btn", true );
+        = fgGetNode( "/instrumentation/nav[1]/power-btn", true );
 
     return (navcom2_bus_power->getDoubleValue() > 1.0)
         && navcom2_power_btn->getBoolValue();
@@ -914,6 +917,10 @@ bool FGATCOutput::process() {
 bool FGATCOutput::close() {
 
 #if defined( unix ) || defined( __CYGWIN__ )
+
+    if ( !is_open ) {
+        return true;
+    }
 
     int result;
 
