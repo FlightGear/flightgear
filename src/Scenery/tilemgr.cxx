@@ -192,6 +192,8 @@ FGTileMgr::current_elev_ssg( const Point3D& abs_view_pos,
 	scenery.cur_radius = geoc.radius();
 	sgVec3 tmp;
 	sgSetVec3(tmp, hit_list.get_normal(this_hit));
+	ssgState *IntersectedLeafState =
+	    ((ssgLeaf*)hit_list.get_entity(this_hit))->getState();
 	current_view.CurrentNormalInLocalPlane(tmp, tmp);
 	sgdSetVec3( scenery.cur_normal, tmp );
 	// cout << "NED: " << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl;
