@@ -1,1 +1,1 @@
-SUBDIRS = TerraSync js_server 3dconvert
+SUBDIRS = TerraSync Modeller js_server
