@@ -211,7 +211,8 @@ int FGMaterialLib::get_step ()
 void FGMaterialLib::load_next_deferred() {
     // container::iterator it = begin();
     for ( material_map_iterator it = begin(); it != end(); it++ ) {
-	const string &key = it->first;
+	/* we don't need the key, but here's how we'd get it if we wanted it. */
+        // const string &key = it->first;
 	FGNewMat *slot = it->second;
 	if (slot->load_texture())
 	  return;
