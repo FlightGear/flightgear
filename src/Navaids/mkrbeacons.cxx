@@ -172,7 +172,7 @@ FGBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
 	// cout << "    aircraft = " << aircraft << " station = " << station 
 	//      << endl;
 
-	double d = aircraft.distance3Dsquared( station );
+	double d = aircraft.distance3Dsquared( station ); // meters^2
 	// cout << "  distance = " << d << " (" 
 	//      << FG_ILS_DEFAULT_RANGE * NM_TO_METER 
 	//         * FG_ILS_DEFAULT_RANGE * NM_TO_METER
@@ -187,20 +187,31 @@ FGBeacon::fgMkrBeacType FGMarkerBeacons::query( double lon, double lat,
 	// cout << "elev = " << elev * METER_TO_FEET
 	//      << " current->get_elev() = " << current->get_elev() << endl;
 	double delev = elev * METER_TO_FEET - current->get_elev();
-	double maxrange = 4200 * delev / 1000;
+
+	// max range is the area under r = 2.4 * alt or r^2 = 4000^2 - alt^2
+	// whichever is smaller.  The intersection point is 1538 ...
+	double maxrange2;	// feet^2
+	if ( delev < 1538.0 ) {
+	    maxrange2 = 2.4 * 2.4 * delev * delev;
+	} else if ( delev < 4000.0 ) {
+	    maxrange2 = 4000 * 4000 - delev * delev;
+	} else {
+	    maxrange2 = 0.0;
+	}
+	maxrange2 *= FEET_TO_METER * FEET_TO_METER; // convert to meter^2
 	// cout << "delev = " << delev << " maxrange = " << maxrange << endl;
 
 	// match up to twice the published range so we can model
 	// reduced signal strength
-	if ( d < maxrange * maxrange ) {
-	    // cout << "lon = " << lon << " lat = " << lat
-	    //      << "  closest beacon = " << sqrt( min_dist ) << endl;
+	if ( d < maxrange2 ) {
+	    cout << "lon = " << lon << " lat = " << lat
+	         << "  closest beacon = " << sqrt( min_dist ) << endl;
 	    return current->get_type();
 	}
     }
 
-    // cout << "lon = " << lon << " lat = " << lat
-    //      << "  closest beacon = " << sqrt( min_dist ) << endl;
+    cout << "lon = " << lon << " lat = " << lat
+         << "  closest beacon = " << sqrt( min_dist ) << endl;
 
     return FGBeacon::NOBEACON;
 }

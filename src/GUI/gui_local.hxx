@@ -1,3 +1,9 @@
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <simgear/compiler.h>
+
 #include "trackball.h"
 
 #if defined(WIN32) || defined(__CYGWIN32__)
