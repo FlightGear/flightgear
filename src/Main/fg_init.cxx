@@ -1523,11 +1523,9 @@ bool fgInitSubsystems() {
     // Initialise the AI Manager 
     ////////////////////////////////////////////////////////////////////
 
-    if (fgGetBool("/sim/ai-traffic/enabled")) {
-        SG_LOG(SG_GENERAL, SG_INFO, "  AI Manager");
-        globals->set_AI_mgr(new FGAIMgr);
-        globals->get_AI_mgr()->init();
-    }
+    SG_LOG(SG_GENERAL, SG_INFO, "  AI Manager");
+    globals->set_AI_mgr(new FGAIMgr);
+    globals->get_AI_mgr()->init();
 
 
 #ifdef ENABLE_AUDIO_SUPPORT

@@ -892,7 +892,8 @@ void fgRenderFrame() {
 
 	// Use the hud_and_panel ssgSimpleState for rendering the ATC output
 	// This only works properly if called before the panel call
-	globals->get_ATC_display()->update(delta_time_sec);
+	if((fgGetBool("/sim/ATC/enabled")) || (fgGetBool("/sim/ai-traffic/enabled")))
+	    globals->get_ATC_display()->update(delta_time_sec);
 
 	// update the panel subsystem
 	if ( globals->get_current_panel() != NULL ) {
@@ -1184,7 +1185,8 @@ static void fgMainLoop( void ) {
 #endif
 
     // Run ATC subsystem
-    globals->get_ATC_mgr()->update(delta_time_sec);
+    if (fgGetBool("/sim/ATC/enabled"))
+        globals->get_ATC_mgr()->update(delta_time_sec);
 
     // Run the AI subsystem
     if (fgGetBool("/sim/ai-traffic/enabled"))
