@@ -55,6 +55,11 @@ public:
     virtual void init ();
 
     /**
+     * Reinitialize the GUI subsystem.
+     */
+    virtual void reinit ();
+
+    /**
      * Bind properties for the GUI subsystem.
      *
      * Currently, this method binds the properties for showing and

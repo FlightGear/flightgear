@@ -43,6 +43,21 @@ NewGUI::init ()
 }
 
 void
+NewGUI::reinit ()
+{
+    unbind();
+
+#if !defined(FG_OLD_MENUBAR)
+    delete _menubar;
+    _menubar = new FGMenuBar;
+#endif
+    _dialog_props.clear();
+
+    init();
+    bind();
+}
+
+void
 NewGUI::bind ()
 {
     fgTie("/sim/menubar/visibility", this,
