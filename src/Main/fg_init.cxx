@@ -1825,6 +1825,9 @@ void fgReInitSubsystems()
 
     fgUpdateLocalTime();
 
+    // re-init to proper time of day setting
+    fgInitTimeOffset();
+
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);
     }
