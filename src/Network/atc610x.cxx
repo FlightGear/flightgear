@@ -1309,10 +1309,10 @@ bool FGATC610x::do_radio_switches() {
                     // roll over
                     if ( digit_tuner[i] < last_digit_tuner[i] ) {
                         // going up
-                        diff = 15 - last_digit_tuner[i] + digit_tuner[i];
+                        diff = 16 - last_digit_tuner[i] + digit_tuner[i];
                     } else {
                         // going down
-                        diff = digit_tuner[i] - 15 - last_digit_tuner[i];
+                        diff = digit_tuner[i] - 16 - last_digit_tuner[i];
                     }
                 }
                 digit[i] += diff;
@@ -1863,11 +1863,20 @@ bool FGATC610x::do_switches() {
         fuel = 0;
     }
 
-    static int fuel1, fuel2, fuel3;
-    fuel3 = fuel2;
-    fuel2 = fuel1;
-    fuel1 = fuel;
-    if ( fuel1 == fuel2 && fuel2 == fuel3 ) {
+    const int max_fuel = 60;
+    static int fuel_list[max_fuel];
+    int i;
+    for ( i = max_fuel - 1; i >= 0; --i ) {
+      fuel_list[i+1] = fuel_list[i];
+    }
+    fuel_list[0] = fuel;
+    bool all_same = true;
+    for ( i = 0; i < max_fuel - 1; ++i ) {
+      if ( fuel_list[i] != fuel_list[i+1] ) {
+	all_same = false;
+      }
+    }
+    if ( all_same ) {
         fgSetBool( "/controls/fuel/tank[0]/fuel_selector", (fuel & 0x01) > 0 );
         fgSetBool( "/controls/fuel/tank[1]/fuel_selector", (fuel & 0x02) > 0 );
     }

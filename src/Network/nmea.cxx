@@ -88,7 +88,7 @@ bool FGNMEA::gen_message() {
     }
     deg = (int)(latd);
     min = (latd - (double)deg) * 60.0;
-    sprintf( gga_lat, "%02d%06.3f,%c", abs(deg), min, dir);
+    sprintf( gga_lat, "%02d%07.4f,%c", abs(deg), min, dir);
     sprintf( rmc_lat, "%02d%07.4f,%c", abs(deg), min, dir);
 
     char gga_lon[20], rmc_lon[20];
@@ -101,18 +101,27 @@ bool FGNMEA::gen_message() {
     }
     deg = (int)(lond);
     min = (lond - (double)deg) * 60.0;
-    sprintf( gga_lon, "%03d%06.3f,%c", abs(deg), min, dir);
+    sprintf( gga_lon, "%03d%07.4f,%c", abs(deg), min, dir);
     sprintf( rmc_lon, "%03d%07.4f,%c", abs(deg), min, dir);
 
+    double vn = fgGetDouble( "/velocities/speed-north-fps" );
+    double ve = fgGetDouble( "/velocities/speed-east-fps" );
+    double fps = sqrt( vn*vn + ve*ve );
+    double mps = fps * SG_FEET_TO_METER;
+    double kts = mps * SG_METER_TO_NM * 3600;
     char speed[10];
-    sprintf( speed, "%05.1f", cur_fdm_state->get_V_equiv_kts() );
+    sprintf( speed, "%.1f", kts );
 
+    double hdg_true = atan2( ve, vn ) * SGD_RADIANS_TO_DEGREES;
+    if ( hdg_true < 0 ) {
+      hdg_true += 360.0;
+    }
     char heading[10];
-    sprintf( heading, "%05.1f", cur_fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES );
+    sprintf( heading, "%.1f", hdg_true );
 
     char altitude_m[10];
-    sprintf( altitude_m, "%02d", 
-	     (int)(cur_fdm_state->get_Altitude() * SG_FEET_TO_METER) );
+    sprintf( altitude_m, "%.1f", 
+	     cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
 
     char date[10];
     int year = t->getGmt()->tm_year;
@@ -128,14 +137,15 @@ bool FGNMEA::gen_message() {
     } else {
 	dir = 'E';
     }
-    sprintf( magvar, "%05.1f,%c", magdeg, dir );
+    sprintf( magvar, "%.1f,%c", magdeg, dir );
  
-    // $GPRMC,HHMMSS,A,DDMM.MMMM,N,DDDMM.MMMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E*XX
-    sprintf( rmc, "GPRMC,%s,A,%s,%s,%s,%s,%s,%s",
+    // $GPRMC,HHMMSS,A,DDMM.MMMM,N,DDDMM.MMMM,W,XXX.X,XXX.X,DDMMYY,XXX.X,E,A*XX
+    sprintf( rmc, "GPRMC,%s,A,%s,%s,%s,%s,%s,%s,A",
 	     utc, rmc_lat, rmc_lon, speed, heading, date, magvar );
     sprintf( rmc_sum, "%02X", calc_nmea_cksum(rmc) );
 
-    sprintf( gga, "GPGGA,%s,%s,%s,1,08,0.9,%s,M, , ",
+    // $GPGGA,HHMMSS,DDMM.MMMM,N,DDDMM.MMMM,W,1,NN,H.H,AAAA.A,M,GG.G,M,,*XX
+    sprintf( gga, "GPGGA,%s,%s,%s,1,08,0.9,%s,M,0.0,M,,",
 	     utc, gga_lat, gga_lon, altitude_m );
     sprintf( gga_sum, "%02X", calc_nmea_cksum(gga) );
     sprintf( gsa, "%s",
@@ -152,20 +162,20 @@ bool FGNMEA::gen_message() {
     nmea_sentence += rmc;
     nmea_sentence += "*";
     nmea_sentence += rmc_sum;
-    nmea_sentence += "\r\n";
+    nmea_sentence += "\n";
 
     // GGA sentence
     nmea_sentence += "$";
     nmea_sentence += gga;
     nmea_sentence += "*";
     nmea_sentence += gga_sum;
-    nmea_sentence += "\r\n";
+    nmea_sentence += "\n";
 
     // GSA sentence (totally faked)
     nmea_sentence += gsa;
-    nmea_sentence += "\r\n";
+    nmea_sentence += "\n";
 
-//     cout << nmea_sentence;
+    // cout << nmea_sentence;
 
     length = nmea_sentence.length();
     strncpy( buf, nmea_sentence.c_str(), length );
