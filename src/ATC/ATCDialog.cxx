@@ -30,6 +30,10 @@
 #include "ATCutils.hxx"
 #include <Airports/simple.hxx>
 
+#include <sstream>
+
+SG_USING_STD(ostringstream);
+
 FGATCDialog *current_atcdialog;
 
 // For the command manager - maybe eventually this should go in the built in command list
@@ -496,23 +500,6 @@ static void atcUppercase(string &s)
 
 void FGATCDialog::FreqDisplay(string ident) {
 
-	// Find the ATC stations within a reasonable range (about 40 miles?)
-	//comm_list_type atc_stations;
-	//comm_list_iterator atc_stat_itr;
-	
-	//double lon = fgGetDouble("/position/longitude-deg");
-	//double lat = fgGetDouble("/position/latitude-deg");
-	//double elev = fgGetDouble("/position/altitude-ft");
-	
-	/*
-	// search stations in range
-	int num_stat = current_commlist->FindByPos(lon, lat, elev, 40.0, &atc_stations);
-	if (num_stat != 0) {
-	} else {
-		// Make up a message saying no things in range
-	}
-	*/
-	
 	atcUppercase(ident);
 	
 	//char defaultATCLabel[] = "Enter desired option to communicate with ATC:";
@@ -530,72 +517,20 @@ void FGATCDialog::FreqDisplay(string ident) {
 		comm_list_type stations;
 		int found = current_commlist->FindByPos(a.longitude, a.latitude, a.elevation, 20.0, &stations);
 		if(found) {
+			ostringstream ostr;
 			comm_list_iterator itr = stations.begin();
 			while(itr != stations.end()) {
 				if((*itr).ident == ident) {
-					switch((*itr).type) {
-					case ATIS:
-						freqs[n] = "ATIS     -     ";
+					if((*itr).type != INVALID) {
+						ostr << (*itr).type;
+						freqs[n] = ostr.str() + "     -     ";
 						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
 						// Hack alert!
 						if(buf[5] == '3') buf[5] = '2';
 						if(buf[5] == '8') buf[5] = '7';
 						freqs[n] += buf;
+						ostr.seekp(0);
 						n++;
-						//cout << "ATIS\n";
-						break;
-					case TOWER:
-						freqs[n] = "TOWER    -     ";
-						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
-						// Hack alert!
-						if(buf[5] == '3') buf[5] = '2';
-						if(buf[5] == '8') buf[5] = '7';
-						freqs[n] += buf;
-						n++;
-						//cout << "TOWER\n";
-						break;
-					case GROUND:
-						freqs[n] = "GROUND   -     ";
-						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
-						// Hack alert!
-						if(buf[5] == '3') buf[5] = '2';
-						if(buf[5] == '8') buf[5] = '7';
-						freqs[n] += buf;
-						n++;
-						//cout << "GROUND\n";
-						break;
-					case APPROACH:
-						freqs[n] = "APPROACH  -     ";
-						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
-						// Hack alert!
-						if(buf[5] == '3') buf[5] = '2';
-						if(buf[5] == '8') buf[5] = '7';
-						freqs[n] += buf;
-						n++;
-						//cout << "APPROACH\n";
-						break;
-					case DEPARTURE:
-						freqs[n] = "DEPARTURE  -     ";
-						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
-						// Hack alert!
-						if(buf[5] == '3') buf[5] = '2';
-						if(buf[5] == '8') buf[5] = '7';
-						freqs[n] += buf;
-						n++;
-						//cout << "DEPARTURE\n";
-						break;
-					case ENROUTE:	// not really associated with an airport possibly.
-						freqs[n] = "ENROUTE  -     ";
-						sprintf(buf, "%.2f", ((*itr).freq / 100.0));	// Convert from KHz to MHz
-						// Hack alert!
-						if(buf[5] == '3') buf[5] = '2';
-						if(buf[5] == '8') buf[5] = '7';
-						freqs[n] += buf;
-						n++;
-						//cout << "ENROUTE\n";
-						break;
-					case INVALID:	// need to include this to stop the compiler complaining.
-						break;
 					}
 				}
 				++itr;
