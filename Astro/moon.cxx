@@ -175,9 +175,6 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
 
 
 void fgMoonInit( void ) {
-    GLfloat moonColor[4] = {0.85, 0.75, 0.35, 1.0};
-    GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
-
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing the Moon\n");
     fgSolarSystemUpdate(&(pltOrbElements[1]), cur_time_params);
     moonPos = fgCalculateMoon(pltOrbElements[1], pltOrbElements[0], 
@@ -197,13 +194,12 @@ void fgMoonInit( void ) {
     moon = xglGenLists (1);
     xglNewList (moon, GL_COMPILE);
   
-    xglMaterialfv (GL_FRONT, GL_AMBIENT, black);
-    xglMaterialfv (GL_FRONT, GL_DIFFUSE, moonColor);
     xglPushMatrix ();
     xglTranslatef (xMoon, yMoon, zMoon);
-    xglScalef (1400, 1400, 1400);
+    // xglScalef (1400, 1400, 1400);
   
-    glutSolidSphere (1.0, 10, 10);
+    // glutSolidSphere (1.0, 10, 10);
+    glutSolidSphere (1200.0, 10, 10);
     xglPopMatrix ();
     xglEndList ();
 }
@@ -211,14 +207,24 @@ void fgMoonInit( void ) {
 
 /* Draw the moon */
 void fgMoonRender( void ) {
+    GLfloat moonColor[4] = {0.85, 0.75, 0.35, 1.0};
+    GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
+
+    xglMaterialfv (GL_FRONT, GL_AMBIENT, black);
+    xglMaterialfv (GL_FRONT, GL_DIFFUSE, moonColor);
+
     xglCallList(moon);
 }
 
 
 /* $Log$
-/* Revision 1.4  1998/04/28 01:18:59  curt
-/* Type-ified fgTIME and fgVIEW
+/* Revision 1.5  1998/07/30 23:43:30  curt
+/* Eliminated glScale call so that glutSolidSphere normals are preserved
+/* correctly.  Also made the sun & moon a bit smaller.
 /*
+ * Revision 1.4  1998/04/28 01:18:59  curt
+ * Type-ified fgTIME and fgVIEW
+ *
  * Revision 1.3  1998/04/25 22:06:24  curt
  * Edited cvs log messages in source files ... bad bad bad!
  *

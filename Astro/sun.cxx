@@ -177,9 +177,8 @@ void fgSunInit( void ) {
 
     xglPushMatrix();
     xglTranslatef(xSun, ySun, zSun);
-    xglScalef(1400, 1400, 1400);
     xglColor3f(amb[0], amb[1], amb[2]); 
-    glutSolidSphere(1.0, 10, 10);
+    glutSolidSphere(1200.0, 10, 10);
     xglPopMatrix();
     xglEndList();
 }
@@ -192,9 +191,13 @@ void fgSunRender( void ) {
 
 
 /* $Log$
-/* Revision 1.5  1998/04/28 01:19:04  curt
-/* Type-ified fgTIME and fgVIEW
+/* Revision 1.6  1998/07/30 23:43:31  curt
+/* Eliminated glScale call so that glutSolidSphere normals are preserved
+/* correctly.  Also made the sun & moon a bit smaller.
 /*
+ * Revision 1.5  1998/04/28 01:19:04  curt
+ * Type-ified fgTIME and fgVIEW
+ *
  * Revision 1.4  1998/04/26 05:10:02  curt
  * "struct fgLIGHT" -> "fgLIGHT" because fgLIGHT is typedef'd.
  *
