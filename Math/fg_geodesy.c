@@ -14,7 +14,7 @@
 #include <math.h>
 
 #include "fg_geodesy.h"
-#include "../constants.h"
+#include "../Include/constants.h"
 
 
 /* ONE_SECOND is pi/180/60/60, or about 100 feet at earths' equator */
@@ -140,6 +140,10 @@ void fgGeodToGeoc( double lat_geod, double alt, double *sl_radius,
 
 $Header$
 $Log$
+Revision 1.2  1997/12/15 23:54:54  curt
+Add xgl wrappers for debugging.
+Generate terrain normals on the fly.
+
 Revision 1.1  1997/07/31 23:13:14  curt
 Initial revision.
 
@@ -193,7 +197,11 @@ Initial Flight Gear revision.
 
 
 /* $Log$
-/* Revision 1.1  1997/07/31 23:13:14  curt
-/* Initial revision.
+/* Revision 1.2  1997/12/15 23:54:54  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.1  1997/07/31 23:13:14  curt
+ * Initial revision.
+ *
  */
