@@ -131,6 +131,8 @@ public:
     // Load a library of material properties
     int load_lib ( void );
 
+    bool get_textures_loaded() { return textures_loaded; }
+
     // Initialize the transient list of fragments for each material property
     void init_transient_material_lists( void );
 
@@ -142,6 +144,9 @@ public:
     ~fgMATERIAL_MGR ( void );
 
 private:
+
+    // Have textures been loaded
+    bool textures_loaded;
 
     container material_map;
 };
@@ -155,6 +160,9 @@ extern fgMATERIAL_MGR material_mgr;
 
 
 // $Log$
+// Revision 1.4  1998/09/17 18:35:53  curt
+// Tweaks and optimizations by Norman Vine.
+//
 // Revision 1.3  1998/09/10 19:07:12  curt
 // /Simulator/Objects/fragment.hxx
 //   Nested fgFACE inside fgFRAGMENT since its not used anywhere else.

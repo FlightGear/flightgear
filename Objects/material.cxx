@@ -65,14 +65,13 @@ fgMATERIAL::fgMATERIAL ( void )
 }
 
 
-int fgMATERIAL::append_sort_list( fgFRAGMENT *object ) {
-    if ( list_size < FG_MAX_MATERIAL_FRAGS )
-    {
+int
+fgMATERIAL::append_sort_list( fgFRAGMENT *object )
+{
+    if ( list_size < FG_MAX_MATERIAL_FRAGS ) {
 	list[ list_size++ ] = object;
 	return 1;
-    }
-    else
-    {
+    } else {
 	return 0;
     }
 }
@@ -82,8 +81,7 @@ operator >> ( istream& in, fgMATERIAL& m )
 {
     string token;
 
-    for (;;)
-    {
+    for (;;) {
 	in >> token;
 	if ( token == "texture" )
 	{
@@ -134,8 +132,6 @@ operator >> ( istream& in, fgMATERIAL& m )
 void
 fgMATERIAL::load_texture()
 {
-    if ( current_options.get_textures() )
-    {
 	GLubyte *texbuf;
 	int width, height;
 
@@ -215,7 +211,6 @@ fgMATERIAL::load_texture()
 	    xglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
 			  GL_RGBA, GL_UNSIGNED_BYTE, texbuf);
 	}
-    }
 }
 
 
@@ -226,6 +221,7 @@ fgMATERIAL::~fgMATERIAL ( void ) {
 
 // Constructor
 fgMATERIAL_MGR::fgMATERIAL_MGR ( void ) {
+    textures_loaded = false;
 }
 
 
@@ -271,7 +267,9 @@ fgMATERIAL::render_fragments()
 
 
 // Load a library of material properties
-int fgMATERIAL_MGR::load_lib ( void ) {
+int
+fgMATERIAL_MGR::load_lib ( void )
+{
     string material_name;
 
     // build the path name to the material db
@@ -297,29 +295,34 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 	    printf( "  Loading material %s\n", material_name.c_str() );
 	    fgMATERIAL m;
 	    in.stream() >> m;
-	    m.load_texture();
+
+	    if ( current_options.get_textures() ) {
+		m.load_texture();
+	    }
+
 	    material_mgr.material_map[material_name] = m;
 	}
     }
 
-//     iterator last = end();
-//     for ( iterator it = begin(); it != last; ++it )
-//     {
-// 	(*it).second.load_texture();
-//     }
+    if ( current_options.get_textures() ) {
+	textures_loaded = true;
+    }
 
     return(1);
 }
 
 
 // Initialize the transient list of fragments for each material property
-void fgMATERIAL_MGR::init_transient_material_lists( void ) {
+void
+fgMATERIAL_MGR::init_transient_material_lists( void )
+{
     iterator last = end();
     for ( iterator it = begin(); it != last; ++it )
     {
 	(*it).second.init_sort_list();
     }
 }
+
 
 bool
 fgMATERIAL_MGR::find( const string& material, fgMATERIAL*& mtl_ptr )
@@ -351,6 +354,9 @@ fgMATERIAL_MGR::render_fragments()
 
 
 // $Log$
+// Revision 1.7  1998/09/17 18:35:52  curt
+// Tweaks and optimizations by Norman Vine.
+//
 // Revision 1.6  1998/09/15 01:35:05  curt
 // cleaned up my fragment.num_faces hack :-) to use the STL (no need in
 // duplicating work.)

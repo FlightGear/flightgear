@@ -50,6 +50,7 @@
 #include <Weather/weather.h>
 
 #include "scenery.hxx"
+#include "tile.hxx"
 #include "tilecache.hxx"
 
 
@@ -415,9 +416,9 @@ double fgTileMgrCurElev( double lon, double lat, fgPoint3d *abs_view_pos ) {
     MAT3vec local_up;
     list < fgFRAGMENT > :: iterator current;
     list < fgFRAGMENT > :: iterator last;
-    double dist, min_dist, lat_geod, alt, sea_level_r;
+    double dist, lat_geod, alt, sea_level_r;
     // double x, y, z;
-    int index, tile_diameter, i;
+    int index;
 
     c = &global_tile_cache;
     // v = &current_view;
@@ -431,9 +432,9 @@ double fgTileMgrCurElev( double lon, double lat, fgPoint3d *abs_view_pos ) {
     index = c->exists(&p);
     t = c->get_tile(index);
 
-    // scenery.next_center.x = t->center.x;
-    // scenery.next_center.y = t->center.y;
-    // scenery.next_center.z = t->center.z;
+    scenery.next_center.x = t->center.x;
+    scenery.next_center.y = t->center.y;
+    scenery.next_center.z = t->center.z;
     
     earth_center.x = 0.0;
     earth_center.y = 0.0;
@@ -527,59 +528,33 @@ update_tile_geometry( fgTILE *t, GLdouble *MODEL_VIEW)
 
 // Render the local tiles
 void fgTileMgrRender( void ) {
-    fgTILECACHE *c;
     fgFLIGHT *f;
-    fgTILE *t, *last_tile_ptr;
+    fgTILECACHE *c;
+    fgTILE *t;
     fgVIEW *v;
-    fgBUCKET p;
-    fgPoint3d frag_offset, pp;
-    fgPoint3d earth_center, result;
+    fgPoint3d frag_offset;
     fgFRAGMENT *frag_ptr;
     fgMATERIAL *mtl_ptr;
-    GLdouble *m;
-    double dist, min_dist, lat_geod, alt, sea_level_r;
-    double x, y, z;
     list < fgFRAGMENT > :: iterator current;
     list < fgFRAGMENT > :: iterator last;
-    int i, j, size;
-    int tile_diameter, textures;
+    int i;
+    int tile_diameter;
     int index;
     int culled = 0;
     int drawn = 0;
-    int total_faces = 0;
 
     c = &global_tile_cache;
     f = current_aircraft.flight;
     v = &current_view;
 
     tile_diameter = current_options.get_tile_diameter();
-    textures = current_options.get_textures();
-
-    // Find current translation offset
-    fgBucketFind(FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG, &p);
-    index = c->exists(&p);
-    t = c->get_tile(index);
-
-    scenery.next_center.x = t->center.x;
-    scenery.next_center.y = t->center.y;
-    scenery.next_center.z = t->center.z;
-
-    earth_center.x = 0.0;
-    earth_center.y = 0.0;
-    earth_center.z = 0.0;
-
-    fgPrintf( FG_TERRAIN, FG_DEBUG, 
-	      "Pos = (%.2f, %.2f) Current bucket = %d %d %d %d  Index = %ld\n", 
-	      FG_Longitude * RAD_TO_DEG, FG_Latitude * RAD_TO_DEG,
-	      p.lon, p.lat, p.x, p.y, fgBucketGenIndex(&p) );
-
-    // initialize the transient per-material fragment lists
-    material_mgr.init_transient_material_lists();
-    min_dist = 100000.0;
 
     scenery.cur_elev = fgTileMgrCurElev( FG_Longitude, FG_Latitude, 
 					 &(v->abs_view_pos) );
-    
+ 
+    // initialize the transient per-material fragment lists
+    material_mgr.init_transient_material_lists();
+   
     // Pass 1
     // traverse the potentially viewable tile list
     for ( i = 0; i < (tile_diameter * tile_diameter); i++ ) {
@@ -588,34 +563,15 @@ void fgTileMgrRender( void ) {
 	t = c->get_tile(index);
 
 	// calculate tile offset
-	x = (t->offset.x = t->center.x - scenery.center.x);
-	y = (t->offset.y = t->center.y - scenery.center.y);
-	z = (t->offset.z = t->center.z - scenery.center.z);
-
-#if defined( TEST_FOV_CLIP )
-	if( viewable(&(t->offset), t->bounding_radius) !=
-	    viewable2(&(t->offset), t->bounding_radius) )
-	{
-	    printf("FOV PROBLEM\n");
-	    exit(10);
-	}
-#endif // defined( TEST_FOV_CLIP )
+	t->SetOffset( &(scenery.center) );
 
 	// Course (tile based) culling
 	if ( viewable(&(t->offset), t->bounding_radius) ) {
 	    // at least a portion of this tile could be viewable
 	    
-	    m = t->model_view;
-	    for ( j = 0; j < 16; j++ ) {
-		m[j] = v->MODEL_VIEW[j];
-	    }
-	    
 	    // Calculate the model_view transformation matrix for this tile
 	    // This is equivalent to doing a glTranslatef(x, y, z);
-	    m[12] = m[0] * x + m[4] * y + m[8]  * z + m[12];
-	    m[13] = m[1] * x + m[5] * y + m[9]  * z + m[13];
-	    m[14] = m[2] * x + m[6] * y + m[10] * z + m[14];
-	    m[15] = m[3] * x + m[7] * y + m[11] * z + m[15];
+	    t->UpdateViewMatrix( v->MODEL_VIEW );
 
 	    // xglPushMatrix();
 	    // xglTranslatef(t->offset.x, t->offset.y, t->offset.z);
@@ -632,15 +588,6 @@ void fgTileMgrRender( void ) {
 		    frag_offset.x = frag_ptr->center.x - scenery.center.x;
 		    frag_offset.y = frag_ptr->center.y - scenery.center.y;
 		    frag_offset.z = frag_ptr->center.z - scenery.center.z;
-
-#if defined( TEST_FOV_CLIP )
-		    radius = frag_ptr->bounding_radius*2;
-		    if ( viewable(&frag_offset, radius) !=
-			 viewable2(&frag_offset, radius) ) {
-			printf("FOV PROBLEM\n");
-			exit(10);
-		    }
-#endif // defined( TEST_FOV_CLIP )
 
 		    if ( viewable(&frag_offset, frag_ptr->bounding_radius*2) ) {
 			// add to transient per-material property fragment list
@@ -690,6 +637,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.38  1998/09/17 18:36:18  curt
+// Tweaks and optimizations by Norman Vine.
+//
 // Revision 1.37  1998/09/15 01:36:45  curt
 // cleaned up my fragment.num_faces hack :-) to use the STL (no need in
 // duplicating work.)

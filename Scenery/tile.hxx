@@ -86,6 +86,40 @@ public:
 
     // Destructor
     ~fgTILE ( void );
+
+    // Calculate this tile's offset
+    void
+    fgTILE::SetOffset( fgPoint3d *off)
+    {
+	offset.x = center.x - off->x;
+	offset.y = center.y - off->y;
+	offset.z = center.z - off->z;
+    }
+
+
+    // Calculate the model_view transformation matrix for this tile
+    inline void
+    fgTILE::UpdateViewMatrix(GLdouble *MODEL_VIEW)
+    {
+
+#ifdef WIN32
+	memcpy( model_view, MODEL_VIEW, 16*sizeof(GLdouble) );
+#else
+	bcopy( MODEL_VIEW, model_view, 16*sizeof(GLdouble) );
+#endif
+	
+	// This is equivalent to doing a glTranslatef(x, y, z);
+	model_view[12] += (model_view[0]*offset.x + model_view[4]*offset.y +
+			   model_view[8]*offset.z);
+	model_view[13] += (model_view[1]*offset.x + model_view[5]*offset.y +
+			   model_view[9]*offset.z);
+	model_view[14] += (model_view[2]*offset.x + model_view[6]*offset.y +
+			   model_view[10]*offset.z);
+	// m[15] += (m[3]*x + m[7]*y + m[11]*z);
+	// m[3] m7[] m[11] are 0.0 see LookAt() in views.cxx
+	// so m[15] is unchanged
+    }
+
 };
 
 
@@ -93,6 +127,9 @@ public:
 
 
 // $Log$
+// Revision 1.19  1998/09/17 18:36:17  curt
+// Tweaks and optimizations by Norman Vine.
+//
 // Revision 1.18  1998/08/25 16:52:42  curt
 // material.cxx material.hxx obj.cxx obj.hxx texload.c texload.h moved to
 //   ../Objects
