@@ -54,9 +54,9 @@ FGAIScenario::FGAIScenario(string filename)
   SGPropertyNode * node = root.getNode("scenario");
   for (i = 0; i < node->nChildren(); i++) { 
      //cout << "Reading entry " << i << endl;        
-     FGAIModelEntity* en = new FGAIModelEntity;
-     entries.push_back( en );
      SGPropertyNode * entry_node = node->getChild(i);
+
+     FGAIModelEntity* en = new FGAIModelEntity;
      en->callsign       = entry_node->getStringValue("callsign", "none");
      en->m_type         = entry_node->getStringValue("type", "aircraft");
      en->m_class        = entry_node->getStringValue("class", "jet_transport");
@@ -87,6 +87,7 @@ FGAIScenario::FGAIScenario(string filename)
      if (en->flightplan != ""){
         en->fp = new FGAIFlightPlan( en->flightplan );
      }
+     entries.push_back( en );
    }
 
   entry_iterator = entries.begin();

@@ -64,8 +64,8 @@ void FGAIManager::init() {
   wind_from_down_node = fgGetNode("/environment/wind-from-down-fps", true);
  
   scenario_filename = root->getNode("scenario", true)->getStringValue();
-
   if (scenario_filename != "") processScenario( scenario_filename );
+
   initDone = true;
 }
 
@@ -291,21 +291,20 @@ void FGAIManager::processScenario( string filename ) {
     FGAIModelEntity* en = s->getNextEntry();
 
     if (en) {
-
  
-      if (en->m_class == "aircraft") {
+      if (en->m_type == "aircraft") {
          createAircraft( en );
 
-      } else if (en->m_class == "ship") {
+      } else if (en->m_type == "ship") {
            createShip( en );
 
-      } else if (en->m_class == "storm") {
+      } else if (en->m_type == "storm") {
         createStorm( en );
 
-      } else if (en->m_class == "thermal") {
+      } else if (en->m_type == "thermal") {
         createThermal( en );
 
-      } else if (en->m_class == "ballistic") {
+      } else if (en->m_type == "ballistic") {
         createBallistic( en );
       }      
     }
