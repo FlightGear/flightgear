@@ -409,10 +409,7 @@ fgFRAGMENT::~fgFRAGMENT ( void ) {
 
     // printf("destructing a fragment with %d faces\n", faces.size());
 
-    while ( faces.size() ) {
-	//  printf("emptying face list\n");
-	faces.pop_front();
-    }
+    faces.erase( faces.begin(), faces.end() );
 }
 
 
@@ -452,6 +449,9 @@ fgTILE::~fgTILE ( void ) {
 
 
 // $Log$
+// Revision 1.11  1998/09/02 14:37:08  curt
+// Use erase() instead of while ( size() ) pop_front();
+//
 // Revision 1.10  1998/08/25 16:52:42  curt
 // material.cxx material.hxx obj.cxx obj.hxx texload.c texload.h moved to
 //   ../Objects
