@@ -182,8 +182,9 @@ FGNavRecord *FGNavList::findNavFromList( const Point3D &aircraft,
 {
     FGNavRecord *nav = NULL;
     Point3D station;
-    double dist;
-    double min_dist = FG_NAV_MAX_RANGE * SG_NM_TO_METER;
+    double d2;                  // in meters squared
+    double min_dist
+        = FG_NAV_MAX_RANGE*SG_NM_TO_METER*FG_NAV_MAX_RANGE*SG_NM_TO_METER;
 
     // find the closest station within a sensible range (FG_NAV_MAX_RANGE)
     for ( unsigned int i = 0; i < stations.size(); ++i ) {
@@ -192,14 +193,60 @@ FGNavRecord *FGNavList::findNavFromList( const Point3D &aircraft,
                            stations[i]->get_y(),
                            stations[i]->get_z() );
 
-	dist = aircraft.distance3D( station );
+	d2 = aircraft.distance3Dsquared( station );
 
 	// cout << "  dist = " << sqrt(d)
 	//      << "  range = " << current->get_range() * SG_NM_TO_METER
         //      << endl;
 
-        if ( dist < min_dist ) {
-            min_dist = dist;
+        // LOC, ILS, GS, and DME antenna's could potentially be
+        // installed at the opposite end of the runway.  So it's not
+        // enough to simply find the closest antenna with the right
+        // frequency.  We need the closest antenna with the right
+        // frequency that is most oriented towards us.  (We penalize
+        // stations that are facing away from us by adding 5000 meters
+        // which is further than matching stations would ever be
+        // placed from each other.  (Do the expensive check only for
+        // directional atennas and only when there is a chance it is
+        // the closest station.)
+	if ( d2 < min_dist &&
+             (stations[i]->get_type() == 4 || stations[i]->get_type() == 5 ||
+              stations[i]->get_type() == 6 || stations[i]->get_type() == 12) )
+        {
+            double hdg_deg = 0.0;
+            if ( stations[i]->get_type() == 4 || stations[i]->get_type() == 5 ){
+                hdg_deg = stations[i]->get_multiuse();
+            } else if ( stations[i]->get_type() == 6 ) {
+                int tmp = (int)(stations[i]->get_multiuse() / 1000.0);
+                hdg_deg = stations[i]->get_multiuse() - (tmp * 1000);
+            } else if ( stations[i]->get_type() == 12 ) {
+                // oops, Robin's data format doesn't give us the
+                // needed information to compute a heading for a DME
+                // transmitter.  FIXME Robin!
+            }
+
+            double az1 = 0.0, az2 = 0.0, s = 0.0;
+            double elev_m = 0.0, lat_rad = 0.0, lon_rad = 0.0;
+            double xyz[3] = { aircraft.x(), aircraft.y(), aircraft.z() };
+            sgCartToGeod( xyz, &lat_rad, &lon_rad, &elev_m );
+            geo_inverse_wgs_84( elev_m,
+                                lat_rad * SG_RADIANS_TO_DEGREES,
+                                lon_rad * SG_RADIANS_TO_DEGREES,
+                                stations[i]->get_lat(), stations[i]->get_lon(),
+                                &az1, &az2, &s);
+            az1 = az1 - stations[i]->get_multiuse();
+            if ( az1 >  180.0) az1 -= 360.0;
+            if ( az1 < -180.0) az1 += 360.0;
+            // penalize opposite facing stations by adding 5000 meters
+            // (squared) which is further than matching stations would
+            // ever be placed from each other.
+            if ( fabs(az1) > 90.0 ) {
+                d2 += 5000*5000;
+            }
+        }
+
+        if ( d2 < min_dist ) {
+            min_dist = d2;
             nav = stations[i];
         }
     }
