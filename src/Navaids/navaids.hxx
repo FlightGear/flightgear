@@ -1,0 +1,66 @@
+// navaids.hxx -- navaids management class
+//
+// Written by Curtis Olson, started April 2000.
+//
+// Copyright (C) 2000  Curtis L. Olson - curt@flightgear.org
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+
+
+#ifndef _FG_NAVAIDS_HXX
+#define _FG_NAVAIDS_HXX
+
+
+#include <simgear/compiler.h>
+#include <simgear/misc/fgpath.hxx>
+
+#include <map>
+#include <vector>
+
+#include "navaid.hxx"
+
+FG_USING_STD(map);
+FG_USING_STD(vector);
+
+
+// convenience types
+typedef vector < FGNavAid > nav_list_type;
+typedef nav_list_type::iterator nav_list_iterator;
+typedef nav_list_type::const_iterator nav_list_const_iterator;
+
+typedef map < int, nav_list_type, less<int> > nav_map_type;
+typedef nav_map_type::iterator nav_map_iterator;
+typedef nav_map_type::const_iterator nav_map_const_iterator;
+
+class FGNavAids {
+
+    nav_map_type navaids;
+
+public:
+
+    FGNavAids();
+    ~FGNavAids();
+
+    // load the navaids and build the map
+    bool init( FGPath path );
+
+    // query the database for the specified frequency
+    FGNavAid query( double lon, double lat, int freq );
+};
+
+
+#endif // _FG_NAVAIDS_HXX
