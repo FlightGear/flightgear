@@ -21,7 +21,7 @@ SG_USING_STD(vector);
 // Don't pull in headers, since we don't need them here.
 class ssgSelector;
 class SGPropertyNode;
-class FG3DModel;
+class FGModelPlacement;
 
 
 /**
@@ -46,7 +46,7 @@ private:
   {
     Instance ();
     virtual ~Instance ();
-    FG3DModel * model;
+    FGModelPlacement * model;
     SGPropertyNode * lon_deg_node;
     SGPropertyNode * lat_deg_node;
     SGPropertyNode * elev_ft_node;

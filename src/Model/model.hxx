@@ -39,6 +39,7 @@ class FGLocation;
 #undef max
 #endif
 
+
 class FG3DModel
 {
 public:
@@ -49,57 +50,21 @@ public:
   virtual void init (const string &path);
   virtual void update (double dt);
 
-  virtual bool getVisible () const;
-  virtual void setVisible (bool visible);
-
-  virtual double getLongitudeDeg () const { return _lon_deg; }
-  virtual double getLatitudeDeg () const { return _lat_deg; }
-  virtual double getElevationFt () const { return _elev_ft; }
-
-  virtual void setLongitudeDeg (double lon_deg);
-  virtual void setLatitudeDeg (double lat_deg);
-  virtual void setElevationFt (double elev_ft);
-  virtual void setPosition (double lon_deg, double lat_deg, double elev_ft);
-
-  virtual double getRollDeg () const { return _roll_deg; }
-  virtual double getPitchDeg () const { return _pitch_deg; }
-  virtual double getHeadingDeg () const { return _heading_deg; }
-
-  virtual void setRollDeg (double roll_deg);
-  virtual void setPitchDeg (double pitch_deg);
-  virtual void setHeadingDeg (double heading_deg);
-  virtual void setOrientation (double roll_deg, double pitch_deg,
-			       double heading_deg);
-
-  virtual ssgEntity * getSceneGraph () const { return (ssgEntity *)_selector; }
-
-  virtual FGLocation * getFGLocation () const { return _location; }
+  virtual ssgEntity * getSceneGraph () const { return (ssgEntity *)_model; }
 
 private:
 
   class Animation;
   Animation * make_animation (const char * object_name, SGPropertyNode * node);
 
-				// Geodetic position
-  double _lon_deg;
-  double _lat_deg;
-  double _elev_ft;
-
-				// Orientation
-  double _roll_deg;
-  double _pitch_deg;
-  double _heading_deg;
+				// Child models.
+  vector<FG3DModel *> _children;
 
 				// Animations
   vector <Animation *> _animations;
 
 				// Scene graph
   ssgBranch * _model;
-  ssgSelector * _selector;
-  ssgTransform * _position;
-
-				// Location
-  FGLocation * _location;
 
 
   
@@ -275,6 +240,65 @@ private:
     ssgTransform * _transform;
   };
 
+
+};
+
+
+class FGModelPlacement
+{
+public:
+
+  FGModelPlacement ();
+  virtual ~FGModelPlacement ();
+
+  virtual void init (const string &path);
+  virtual void update (double dt);
+
+  virtual ssgEntity * getSceneGraph () { return (ssgEntity *)_selector; }
+
+  virtual FGLocation * getFGLocation () { return _location; }
+
+  virtual bool getVisible () const;
+  virtual void setVisible (bool visible);
+
+  virtual double getLongitudeDeg () const { return _lon_deg; }
+  virtual double getLatitudeDeg () const { return _lat_deg; }
+  virtual double getElevationFt () const { return _elev_ft; }
+
+  virtual void setLongitudeDeg (double lon_deg);
+  virtual void setLatitudeDeg (double lat_deg);
+  virtual void setElevationFt (double elev_ft);
+  virtual void setPosition (double lon_deg, double lat_deg, double elev_ft);
+
+  virtual double getRollDeg () const { return _roll_deg; }
+  virtual double getPitchDeg () const { return _pitch_deg; }
+  virtual double getHeadingDeg () const { return _heading_deg; }
+
+  virtual void setRollDeg (double roll_deg);
+  virtual void setPitchDeg (double pitch_deg);
+  virtual void setHeadingDeg (double heading_deg);
+  virtual void setOrientation (double roll_deg, double pitch_deg,
+			       double heading_deg);
+
+private:
+  
+  FG3DModel * _model;
+
+				// Geodetic position
+  double _lon_deg;
+  double _lat_deg;
+  double _elev_ft;
+
+				// Orientation
+  double _roll_deg;
+  double _pitch_deg;
+  double _heading_deg;
+
+  ssgSelector * _selector;
+  ssgTransform * _position;
+
+				// Location
+  FGLocation * _location;
 
 };
 

@@ -51,7 +51,7 @@ FGAircraftModel::~FGAircraftModel ()
 void 
 FGAircraftModel::init ()
 {
-  _aircraft = new FG3DModel;
+  _aircraft = new FGModelPlacement;
   string path = fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
   try {
     _aircraft->init(path);

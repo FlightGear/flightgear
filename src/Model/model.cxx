@@ -126,6 +126,21 @@ set_translation (sgMat4 &matrix, double position_m, sgVec3 &axis)
 
 
 /**
+ * Make an offset matrix from rotations and position offset.
+ */
+static void
+make_offsets_matrix (sgMat4 * result, double h_rot, double p_rot, double r_rot,
+		     double x_off, double y_off, double z_off)
+{
+  sgMat4 rot_matrix;
+  sgMat4 pos_matrix;
+  sgMakeRotMat4(rot_matrix, h_rot, p_rot, r_rot);
+  sgMakeTransMat4(pos_matrix, x_off, y_off, z_off);
+  sgMultMat4(*result, pos_matrix, rot_matrix);
+}
+
+
+/**
  * Read an interpolation table from properties.
  */
 static SGInterpTable *
@@ -151,9 +166,7 @@ read_interpolation_table (const SGPropertyNode * props)
 ////////////////////////////////////////////////////////////////////////
 
 FG3DModel::FG3DModel ()
-  : _model(0),
-    _selector(new ssgSelector),
-    _position(new ssgTransform)
+  : _model(0)
 {
 }
 
@@ -198,29 +211,15 @@ FG3DModel::init (const string &path)
                                 // Set up the alignment node
   ssgTransform * align = new ssgTransform;
   align->addKid(_model);
-  sgMat4 rot_matrix;
-  sgMat4 off_matrix;
   sgMat4 res_matrix;
-  float h_rot = props.getFloatValue("/offsets/heading-deg", 0.0);
-  float p_rot = props.getFloatValue("/offsets/roll-deg", 0.0);
-  float r_rot = props.getFloatValue("/offsets/pitch-deg", 0.0);
-  float x_off = props.getFloatValue("/offsets/x-m", 0.0);
-  float y_off = props.getFloatValue("/offsets/y-m", 0.0);
-  float z_off = props.getFloatValue("/offsets/z-m", 0.0);
-  sgMakeRotMat4(rot_matrix, h_rot, p_rot, r_rot);
-  sgMakeTransMat4(off_matrix, x_off, y_off, z_off);
-  sgMultMat4(res_matrix, off_matrix, rot_matrix);
+  make_offsets_matrix(&res_matrix,
+		      props.getFloatValue("/offsets/heading-deg", 0.0),
+		      props.getFloatValue("/offsets/roll-deg", 0.0),
+		      props.getFloatValue("/offsets/pitch-deg", 0.0),
+		      props.getFloatValue("/offsets/x-m", 0.0),
+		      props.getFloatValue("/offsets/y-m", 0.0),
+		      props.getFloatValue("/offsets/z-m", 0.0));
   align->setTransform(res_matrix);
-
-                                // Set up the position node
-  _position->addKid(align);
-
-                                // Set up the selector node
-  _selector->addKid(_position);
-  _selector->clrTraversalMaskBits(SSGTRAV_HOT);
-
-                                // Set up a location class
-  _location = (FGLocation *) new FGLocation;
 
                                 // Load animations
   vector<SGPropertyNode_ptr> animation_nodes = props.getChildren("animation");
@@ -239,6 +238,27 @@ FG3DModel::init (const string &path)
       }
     }
   }
+
+				// Load sub-models
+  vector<SGPropertyNode_ptr> model_nodes = props.getChildren("model");
+  for (i = 0; i < model_nodes.size(); i++) {
+    SGPropertyNode_ptr node = model_nodes[i];
+    ssgTransform * align = new ssgTransform;
+    sgMat4 res_matrix;
+    make_offsets_matrix(&res_matrix,
+			node->getFloatValue("offsets/heading-deg", 0.0),
+			node->getFloatValue("offsets/roll-deg", 0.0),
+			node->getFloatValue("offsets/pitch-deg", 0.0),
+			node->getFloatValue("offsets/x-m", 0.0),
+			node->getFloatValue("offsets/y-m", 0.0),
+			node->getFloatValue("offsets/z-m", 0.0));
+    align->setTransform(res_matrix);
+    FG3DModel * kid = new FG3DModel;
+    kid->init(node->getStringValue("path"));
+    align->addKid(kid->getSceneGraph());
+    _model->addKid(align);
+    _children.push_back(kid);
+  }
 }
 
 void
@@ -246,90 +266,10 @@ FG3DModel::update (double dt)
 {
   unsigned int i;
 
+  for (i = 0; i < _children.size(); i++)
+    _children[i]->update(dt);
   for (i = 0; i < _animations.size(); i++)
     _animations[i]->update(dt);
-
-  _location->setPosition( _lon_deg, _lat_deg, _elev_ft );
-  _location->setOrientation( _roll_deg, _pitch_deg, _heading_deg );
-
-  sgMat4 POS;
-  sgCopyMat4(POS, _location->getTransformMatrix());
-  
-  sgVec3 trans;
-  sgCopyVec3(trans, _location->get_view_pos());
-
-  for(i = 0; i < 4; i++) {
-    float tmp = POS[i][3];
-    for( int j=0; j<3; j++ ) {
-      POS[i][j] += (tmp * trans[j]);
-    }
-  }
-  _position->setTransform(POS);
-}
-
-bool
-FG3DModel::getVisible () const
-{
-  return (_selector->getSelect() != 0);
-}
-
-void
-FG3DModel::setVisible (bool visible)
-{
-  _selector->select(visible);
-}
-
-void
-FG3DModel::setLongitudeDeg (double lon_deg)
-{
-  _lon_deg = lon_deg;
-}
-
-void
-FG3DModel::setLatitudeDeg (double lat_deg)
-{
-  _lat_deg = lat_deg;
-}
-
-void
-FG3DModel::setElevationFt (double elev_ft)
-{
-  _elev_ft = elev_ft;
-}
-
-void
-FG3DModel::setPosition (double lon_deg, double lat_deg, double elev_ft)
-{
-  _lon_deg = lon_deg;
-  _lat_deg = lat_deg;
-  _elev_ft = elev_ft;
-}
-
-void
-FG3DModel::setRollDeg (double roll_deg)
-{
-  _roll_deg = roll_deg;
-}
-
-void
-FG3DModel::setPitchDeg (double pitch_deg)
-{
-  _pitch_deg = pitch_deg;
-}
-
-void
-FG3DModel::setHeadingDeg (double heading_deg)
-{
-  _heading_deg = heading_deg;
-}
-
-void
-FG3DModel::setOrientation (double roll_deg, double pitch_deg,
-                           double heading_deg)
-{
-  _roll_deg = roll_deg;
-  _pitch_deg = pitch_deg;
-  _heading_deg = heading_deg;
 }
 
 FG3DModel::Animation *
@@ -710,5 +650,127 @@ FG3DModel::TranslateAnimation::update (double dt)
   _transform->setTransform(_matrix);
 }
 
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGModelPlacement.
+////////////////////////////////////////////////////////////////////////
+
+FGModelPlacement::FGModelPlacement ()
+  : _model(new FG3DModel),
+    _lon_deg(0),
+    _lat_deg(0),
+    _elev_ft(0),
+    _roll_deg(0),
+    _pitch_deg(0),
+    _heading_deg(0),
+    _selector(new ssgSelector),
+    _position(new ssgTransform),
+    _location(new FGLocation)
+{
+}
+
+FGModelPlacement::~FGModelPlacement ()
+{
+  delete _model;
+  delete _selector;
+}
+
+void
+FGModelPlacement::init (const string &path)
+{
+  _model->init(path);
+  _position->addKid(_model->getSceneGraph());
+  _selector->addKid(_position);
+  _selector->clrTraversalMaskBits(SSGTRAV_HOT);
+}
+
+void
+FGModelPlacement::update (double dt)
+{
+  _model->update(dt);
+
+  _location->setPosition( _lon_deg, _lat_deg, _elev_ft );
+  _location->setOrientation( _roll_deg, _pitch_deg, _heading_deg );
+
+  sgMat4 POS;
+  sgCopyMat4(POS, _location->getTransformMatrix());
+  
+  sgVec3 trans;
+  sgCopyVec3(trans, _location->get_view_pos());
+
+  for(int i = 0; i < 4; i++) {
+    float tmp = POS[i][3];
+    for( int j=0; j<3; j++ ) {
+      POS[i][j] += (tmp * trans[j]);
+    }
+  }
+  _position->setTransform(POS);
+}
+
+bool
+FGModelPlacement::getVisible () const
+{
+  return (_selector->getSelect() != 0);
+}
+
+void
+FGModelPlacement::setVisible (bool visible)
+{
+  _selector->select(visible);
+}
+
+void
+FGModelPlacement::setLongitudeDeg (double lon_deg)
+{
+  _lon_deg = lon_deg;
+}
+
+void
+FGModelPlacement::setLatitudeDeg (double lat_deg)
+{
+  _lat_deg = lat_deg;
+}
+
+void
+FGModelPlacement::setElevationFt (double elev_ft)
+{
+  _elev_ft = elev_ft;
+}
+
+void
+FGModelPlacement::setPosition (double lon_deg, double lat_deg, double elev_ft)
+{
+  _lon_deg = lon_deg;
+  _lat_deg = lat_deg;
+  _elev_ft = elev_ft;
+}
+
+void
+FGModelPlacement::setRollDeg (double roll_deg)
+{
+  _roll_deg = roll_deg;
+}
+
+void
+FGModelPlacement::setPitchDeg (double pitch_deg)
+{
+  _pitch_deg = pitch_deg;
+}
+
+void
+FGModelPlacement::setHeadingDeg (double heading_deg)
+{
+  _heading_deg = heading_deg;
+}
+
+void
+FGModelPlacement::setOrientation (double roll_deg, double pitch_deg,
+				  double heading_deg)
+{
+  _roll_deg = roll_deg;
+  _pitch_deg = pitch_deg;
+  _heading_deg = heading_deg;
+}
 
 // end of model.cxx
