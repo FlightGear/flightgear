@@ -218,11 +218,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 
     string type = props->getName();
     if (type == "")
-        type = props->getStringValue("type");
-    if (type == "") {
-        SG_LOG(SG_GENERAL, SG_ALERT, "No type specified for GUI object");
-        return 0;
-    }
+        type = "dialog";
 
     if (type == "dialog") {
         puPopup * dialog;
