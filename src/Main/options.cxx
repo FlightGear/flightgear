@@ -666,6 +666,11 @@ parse_option (const string& arg)
 	fgSetDouble("/orientation/roll-deg", atof(arg.substr(7)));
     } else if ( arg.find( "--pitch=" ) == 0 ) {
 	fgSetDouble("/orientation/pitch-deg", atof(arg.substr(8)));
+    } else if ( arg.find( "--glideslope=" ) == 0 ) {
+	fgSetDouble("/velocities/glideslope", atof(arg.substr(13))
+                                          *SG_DEGREES_TO_RADIANS);
+    }  else if ( arg.find( "--roc=" ) == 0 ) {
+	fgSetDouble("/velocities/vertical-speed-fps", atof(arg.substr(6))/60);
     } else if ( arg.find( "--fg-root=" ) == 0 ) {
 	globals->set_fg_root(arg.substr( 10 ));
     } else if ( arg.find( "--fg-scenery=" ) == 0 ) {
@@ -1181,6 +1186,8 @@ fgUsage ()
          << "                                  (in feet unless --units-meters specified)" << endl
          << "    --vc=knots                    Specify initial airspeed" << endl
          << "    --mach=num                    Specify initial mach number" << endl
+         << "    --glideslope=degreees         Specify flight path angle (can be positive)" << endl
+         << "    --roc=fpm                     Specify initial climb rate (can be negative)" << endl
          << endl
 
          << "Rendering Options:" << endl

@@ -612,7 +612,12 @@ void FGJSBsim::set_Climb_Rate( double roc) {
     SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Climb_Rate: " << roc );
     
     update_ic();
-    fgic->SetClimbRateFpsIC(roc);
+    //since both climb rate and flight path angle are set in the FG
+    //startup sequence, something is needed to keep one from cancelling
+    //out the other.
+    if( !(fabs(roc) > 1 && fabs(fgic->GetFlightPathAngleRadIC()) < 0.01) ) {
+      fgic->SetClimbRateFpsIC(roc);
+    }  
     needTrim=true;
 }
 
@@ -620,7 +625,9 @@ void FGJSBsim::set_Gamma_vert_rad( double gamma) {
     SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Gamma_vert_rad: " << gamma );
     
     update_ic();
-    fgic->SetFlightPathAngleRadIC(gamma);
+    if( !(fabs(gamma) < 0.01 && fabs(fgic->GetClimbRateFpsIC()) > 1) ) {
+      fgic->SetFlightPathAngleRadIC(gamma);
+    }  
     needTrim=true;
 }
 

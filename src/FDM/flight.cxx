@@ -351,7 +351,11 @@ FGInterface::bind ()
 
 				// Climb and slip (read-only)
   fgTie("/velocities/vertical-speed-fps", this,
-	&FGInterface::get_Climb_Rate); // read-only
+	&FGInterface::get_Climb_Rate,
+  &FGInterface::set_Climb_Rate ); 
+  fgTie("/velocities/glideslope", this,
+  &FGInterface::get_Gamma_vert_rad,
+  &FGInterface::set_Gamma_vert_rad );
   fgTie("/velocities/side-slip-rad", this,
 	&FGInterface::get_Beta); // read-only
   fgTie("/velocities/side-slip-deg", this,
@@ -360,8 +364,6 @@ FGInterface::bind ()
   &FGInterface::get_Alpha_deg); // read-only
   fgTie("/accelerations/nlf", this,
   &FGInterface::get_Nlf); // read-only
-  
-  
 }
 
 
@@ -395,6 +397,7 @@ FGInterface::unbind ()
   fgUntie("/velocities/vBody-fps");
   fgUntie("/velocities/wBody-fps");
   fgUntie("/velocities/vertical-speed-fps");
+  fgUntie("/velocities/glideslope");
   fgUntie("/velocities/side-slip-rad");
   fgUntie("/velocities/side-slip-deg");
   fgUntie("/velocities/alpha-deg");
