@@ -85,6 +85,9 @@ void write_airport( long int p_index, list_container hull_list, FGBucket b,
     // size of first contour
     fprintf( fd, "%d\n", hull_list.size() );
 
+    // hole flag
+    fprintf( fd, "%d\n", 0 );  // not a hole
+
     // write contour (polygon) points
     list_iterator current = hull_list.begin();
     list_iterator last = hull_list.end();
@@ -128,6 +131,11 @@ void process_airport( string airport, list < string > & runway_list,
     cout << "  bldg = " << apt_bldg << endl;
     cout << "  name = " << apt_name << endl;
     */
+
+    // Ignore any seaplane bases
+    if ( apt_type == "S" ) {
+	return;
+    }
 
     // parse runways and generate the vertex list
     string rwy_str;
@@ -251,7 +259,7 @@ void process_airport( string airport, list < string > & runway_list,
 		if ( b_cur == b ) {
 		    write_airport( index, hull_list, b_cur, root, true );
 		} else {
-		    write_airport( index, hull_list, b_cur, root, false );
+		    write_airport( index, hull_list, b_cur, root, true );
 		}
 	    }
 	}
