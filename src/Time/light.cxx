@@ -173,10 +173,10 @@ void fgLIGHT::UpdateAdjFog( void ) {
 	rotation += SGD_PI;
     }
     while ( rotation < 0 ) {
-	rotation += SG_2PI;
+	rotation += SGD_2PI;
     }
-    while ( rotation > SG_2PI ) {
-	rotation -= SG_2PI;
+    while ( rotation > SGD_2PI ) {
+	rotation -= SGD_2PI;
     }
     rotation *= RAD_TO_DEG;
     // fgPrintf( FG_EVENT, FG_INFO, 

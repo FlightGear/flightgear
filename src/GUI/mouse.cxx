@@ -378,12 +378,12 @@ void guiMotionFunc ( int x, int y )
                 // this could be done in above quat
                 // but requires redoing view pipeline
                 offset = globals->get_current_view()->get_goal_view_offset();
-                offset += ((_mX - x) * SG_2PI / W );
+                offset += ((_mX - x) * SGD_2PI / W );
                 while (offset < 0.0) {
-                    offset += SG_2PI;
+                    offset += SGD_2PI;
                 }
-                while (offset > SG_2PI) {
-                    offset -= SG_2PI;
+                while (offset > SGD_2PI) {
+                    offset -= SGD_2PI;
                 }
                 globals->get_current_view()->set_goal_view_offset(offset);
 #ifdef NO_SMOOTH_MOUSE_VIEW

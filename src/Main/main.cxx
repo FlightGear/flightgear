@@ -814,10 +814,10 @@ void fgUpdateTimeDepCalcs() {
 		    v->inc_view_offset( 0.01 );
 		}
 	    }
-	    if ( v->get_view_offset() > SG_2PI ) {
-		v->inc_view_offset( -SG_2PI );
+	    if ( v->get_view_offset() > SGD_2PI ) {
+		v->inc_view_offset( -SGD_2PI );
 	    } else if ( v->get_view_offset() < 0 ) {
-		v->inc_view_offset( SG_2PI );
+		v->inc_view_offset( SGD_2PI );
 	    }
 	}
     }
@@ -826,10 +826,10 @@ void fgUpdateTimeDepCalcs() {
 	- (cur_fdm_state->get_Psi() -
 	   globals->get_current_view()->get_view_offset() );
     while ( tmp < 0.0 ) {
-	tmp += SG_2PI;
+	tmp += SGD_2PI;
     }
-    while ( tmp > SG_2PI ) {
-	tmp -= SG_2PI;
+    while ( tmp > SGD_2PI ) {
+	tmp -= SGD_2PI;
     }
     /* printf("Psi = %.2f, viewoffset = %.2f sunrot = %.2f rottosun = %.2f\n",
 	   FG_Psi * RAD_TO_DEG, current_view.view_offset * RAD_TO_DEG, 

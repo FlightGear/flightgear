@@ -99,8 +99,8 @@
  * Eccentricity (eccentricity of orbit)                0.016713
  */
 
-#define Epsilon_g    (279.403303*(SG_2PI/360))
-#define OmegaBar_g   (282.768422*(SG_2PI/360))
+#define Epsilon_g    (279.403303*(SGD_2PI/360))
+#define OmegaBar_g   (282.768422*(SGD_2PI/360))
 #define Eccentricity (0.016713)
 
 /*
@@ -108,7 +108,7 @@
  * 1990.0 (computed as 23.440592 degrees according to the method given
  * in duffett-smith, section 27)
  */
-#define MeanObliquity (23.440592*(SG_2PI/360))
+#define MeanObliquity (23.440592*(SGD_2PI/360))
 
 /* static double solve_keplers_equation(double); */
 /* static double moon_ecliptic_longitude(time_t); */
@@ -283,12 +283,12 @@ void fgMoonPosition(time_t ssue, double *lon, double *lat) {
 
     ecliptic_to_equatorial( globals->get_ephem()->get_moon()->getLon(),
 			    0.0, &alpha, &delta );
-    tmp = alpha - (SG_2PI/24)*GST(ssue);
+    tmp = alpha - (SGD_2PI/24)*GST(ssue);
     if (tmp < -SGD_PI) {
-	do tmp += SG_2PI;
+	do tmp += SGD_2PI;
 	while (tmp < -SGD_PI);
     } else if (tmp > SGD_PI) {
-	do tmp -= SG_2PI;
+	do tmp -= SGD_2PI;
 	while (tmp < -SGD_PI);
     }
 
@@ -318,12 +318,12 @@ static void fgMoonPositionGST(double gst, double *lon, double *lat) {
 			    &alpha,  &delta );
 
 //    tmp = alpha - (SG_2PI/24)*GST(ssue);
-    tmp = alpha - (SG_2PI/24)*gst;	
+    tmp = alpha - (SGD_2PI/24)*gst;	
     if (tmp < -SGD_PI) {
-	do tmp += SG_2PI;
+	do tmp += SGD_2PI;
 	while (tmp < -SGD_PI);
     } else if (tmp > SGD_PI) {
-	do tmp -= SG_2PI;
+	do tmp -= SGD_2PI;
 	while (tmp < -SGD_PI);
     }
 
