@@ -457,7 +457,7 @@ readLabel(const SGPropertyNode * node)
 {
     instr_item *p;
 
-    int font_size = (fgGetInt("/sim/startup/xsize") > 1000) ? LARGE : SMALL;
+    int font_size = (fgGetInt("/sim/startup/xsize") > 1000) ? HUD_FONT_LARGE : HUD_FONT_SMALL;
 
     name		= node->getStringValue("name");
     x                   = node->getIntValue("x");
@@ -813,19 +813,19 @@ int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
 }
 //$$$ End - added, Neetha, 28 Nov 2k  
 
-static int global_day_night_switch = DAY;
+static int global_day_night_switch = HUD_DAY;
 
 void HUD_masterswitch( bool incr )
 {
     if ( fgGetBool("/sim/hud/visibility") ) {
-	if ( global_day_night_switch == DAY ) {
-	    global_day_night_switch = NIGHT;
+	if ( global_day_night_switch == HUD_DAY ) {
+	    global_day_night_switch = HUD_NIGHT;
 	} else {
 	    fgSetBool("/sim/hud/visibility", false);
 	}
     } else {
         fgSetBool("/sim/hud/visibility", true);
-	global_day_night_switch = DAY;
+	global_day_night_switch = HUD_DAY;
     }	
 }
 
@@ -838,42 +838,42 @@ void HUD_brightkey( bool incr_bright )
 	if( incr_bright ) {
 	    switch (brightness)
 		{
-		case BRT_LIGHT:
-		    brightness = BRT_BLACK;
+		case HUD_BRT_LIGHT:
+		    brightness = HUD_BRT_BLACK;
 		    break;
 
-		case BRT_MEDIUM:
-		    brightness = BRT_LIGHT;
+		case HUD_BRT_MEDIUM:
+		    brightness = HUD_BRT_LIGHT;
 		    break;
 
-		case BRT_DARK:
-		    brightness = BRT_MEDIUM;
+		case HUD_BRT_DARK:
+		    brightness = HUD_BRT_MEDIUM;
 		    break;
 
-		case BRT_BLACK:
-		    brightness = BRT_DARK;
+		case HUD_BRT_BLACK:
+		    brightness = HUD_BRT_DARK;
 		    break;
 
 		default:
-		    brightness = BRT_BLACK;
+		    brightness = HUD_BRT_BLACK;
 		}
 	} else {
 	    switch (brightness)
 		{
-		case BRT_LIGHT:
-		    brightness = BRT_MEDIUM;
+		case HUD_BRT_LIGHT:
+		    brightness = HUD_BRT_MEDIUM;
 		    break;
 
-		case BRT_MEDIUM:
-		    brightness = BRT_DARK;
+		case HUD_BRT_MEDIUM:
+		    brightness = HUD_BRT_DARK;
 		    break;
 
-		case BRT_DARK:
-		    brightness = BRT_BLACK;
+		case HUD_BRT_DARK:
+		    brightness = HUD_BRT_BLACK;
 		    break;
 
-		case BRT_BLACK:
-		    brightness = BRT_LIGHT;
+		case HUD_BRT_BLACK:
+		    brightness = HUD_BRT_LIGHT;
 		    break;
 
 		default:
@@ -1100,22 +1100,22 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
         glLineWidth(1.0);
     }
 
-    if( day_night_sw == DAY) {
+    if( day_night_sw == HUD_DAY) {
         switch (brightness)
             {
-            case BRT_LIGHT:
+            case HUD_BRT_LIGHT:
                 set_hud_color (0.1f, 0.9f, 0.1f);
                 break;
 
-            case BRT_MEDIUM:
+            case HUD_BRT_MEDIUM:
                 set_hud_color (0.1f, 0.7f, 0.0f);
                 break;
 
-            case BRT_DARK:
+            case HUD_BRT_DARK:
                 set_hud_color (0.0f, 0.6f, 0.0f);
                 break;
 
-            case BRT_BLACK:
+            case HUD_BRT_BLACK:
                 set_hud_color( 0.0f, 0.0f, 0.0f);
                 break;
 
@@ -1123,22 +1123,22 @@ void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
                 set_hud_color (0.1f, 0.9f, 0.1f);
             }
     } else {
-        if( day_night_sw == NIGHT) {
+        if( day_night_sw == HUD_NIGHT) {
             switch (brightness)
                 {
-                case BRT_LIGHT:
+                case HUD_BRT_LIGHT:
                     set_hud_color (0.9f, 0.1f, 0.1f);
                     break;
 
-                case BRT_MEDIUM:
+                case HUD_BRT_MEDIUM:
                     set_hud_color (0.7f, 0.0f, 0.1f);
                     break;
 
-                case BRT_DARK:
+                case HUD_BRT_DARK:
                     set_hud_color (0.6f, 0.0f, 0.0f);
                     break;
 
-                case BRT_BLACK:
+                case HUD_BRT_BLACK:
                     set_hud_color( 0.0f, 0.0f, 0.0f);
                     break;
 

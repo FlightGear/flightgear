@@ -139,12 +139,12 @@ draw( void )       // Required method in base class
       posincr = 0;
   }
   
-  if( fontSize == SMALL ) {
+  if( fontSize == HUD_FONT_SMALL ) {
     textString( scrn_rect.left + posincr, scrn_rect.top,
                 label_buffer, GLUT_BITMAP_8_BY_13, get_digits()); //suma
     }
   else  {
-    if( fontSize == LARGE ) {
+    if( fontSize == HUD_FONT_LARGE ) {
       textString( scrn_rect.left + posincr, scrn_rect.top,
                   label_buffer, GLUT_BITMAP_9_BY_15, get_digits()); //suma
       }
