@@ -12,7 +12,7 @@
 #include <GL/glut.h>
 
 #include <simgear/constants.h>
-#include <simgear/inlines.h>
+#include <simgear/sg_inlines.h>
 #include <simgear/math/vector.hxx>
 #include <simgear/xgl/xgl.h>
 
