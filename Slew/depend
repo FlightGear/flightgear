@@ -2,5 +2,5 @@ slew.o: slew.c slew.h ../flight.h ../Slew/slew.h \
  ../LaRCsim/ls_interface.h ../LaRCsim/../flight.h \
  ../../Aircraft/aircraft.h ../../Aircraft/../Flight/flight.h \
  ../../Aircraft/../Controls/controls.h \
- ../../Aircraft/../Controls/../limits.h ../../Controls/controls.h \
- ../../constants.h
+ ../../Aircraft/../Controls/../Include/limits.h \
+ ../../Controls/controls.h ../../Include/constants.h

@@ -28,7 +28,7 @@
 #define SCENERY_H
 
 
-#include "../types.h"
+#include "../Include/types.h"
 
 
 /* Define a structure containing global scenery parameters */
@@ -63,10 +63,14 @@ void fgSceneryRender();
 
 
 /* $Log$
-/* Revision 1.11  1997/12/10 22:37:52  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.12  1997/12/15 23:55:03  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.11  1997/12/10 22:37:52  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.10  1997/09/04 02:17:37  curt
  * Shufflin' stuff.
  *

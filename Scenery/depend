@@ -1,46 +1,48 @@
 astro.o: astro.c astro.h stars.h moon.h orbits.h ../Time/fg_time.h \
- ../Time/../types.h ../Time/../Flight/flight.h \
+ ../Time/../Include/types.h ../Time/../Flight/flight.h \
  ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \
- ../Time/../Flight/LaRCsim/../flight.h planets.h sun.h ../constants.h \
- ../general.h ../Main/views.h ../Main/../types.h \
- ../Main/../Flight/flight.h ../Main/../Math/mat3.h \
- ../Aircraft/aircraft.h ../Aircraft/../Flight/flight.h \
- ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../limits.h
+ ../Time/../Flight/LaRCsim/../flight.h planets.h sun.h \
+ ../Include/constants.h ../Include/general.h ../Main/views.h \
+ ../Main/../Include/types.h ../Main/../Flight/flight.h \
+ ../Main/../Math/mat3.h ../Aircraft/aircraft.h \
+ ../Aircraft/../Flight/flight.h ../Aircraft/../Controls/controls.h \
+ ../Aircraft/../Controls/../Include/limits.h
 common.o: common.c common.h
 geometry.o: geometry.c geometry.h mesh.h
-mesh.o: mesh.c ../constants.h ../types.h ../Math/fg_geodesy.h \
- ../Math/fg_random.h ../Math/mat3.h ../Math/polar.h ../Math/../types.h \
- mesh.h common.h scenery.h
-moon.o: moon.c orbits.h ../Time/fg_time.h ../Time/../types.h \
+mesh.o: mesh.c ../Include/constants.h ../Include/types.h \
+ ../Math/fg_geodesy.h ../Math/fg_random.h ../Math/mat3.h \
+ ../Math/polar.h ../Math/../Include/types.h mesh.h common.h scenery.h
+moon.o: moon.c orbits.h ../Time/fg_time.h ../Time/../Include/types.h \
  ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \
- ../Time/../Flight/LaRCsim/../flight.h moon.h ../general.h \
- ../Main/views.h ../Main/../types.h ../Main/../Flight/flight.h \
+ ../Time/../Flight/LaRCsim/../flight.h moon.h ../Include/general.h \
+ ../Main/views.h ../Main/../Include/types.h ../Main/../Flight/flight.h \
  ../Main/../Math/mat3.h
-obj.o: obj.c obj.h scenery.h ../types.h ../Math/mat3.h
-orbits.o: orbits.c orbits.h ../Time/fg_time.h ../Time/../types.h \
- ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
+obj.o: obj.c obj.h scenery.h ../Include/types.h ../Math/mat3.h
+orbits.o: orbits.c orbits.h ../Time/fg_time.h \
+ ../Time/../Include/types.h ../Time/../Flight/flight.h \
+ ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \
- ../Time/../Flight/LaRCsim/../flight.h ../general.h
-planets.o: planets.c ../Time/fg_time.h ../Time/../types.h \
+ ../Time/../Flight/LaRCsim/../flight.h ../Include/general.h
+planets.o: planets.c ../Time/fg_time.h ../Time/../Include/types.h \
  ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \
  ../Time/../Flight/LaRCsim/../flight.h orbits.h planets.h sun.h
-scenery.o: scenery.c ../general.h astro.h stars.h obj.h scenery.h \
- ../types.h
-stars.o: stars.c orbits.h ../Time/fg_time.h ../Time/../types.h \
+scenery.o: scenery.c ../Include/general.h astro.h stars.h obj.h \
+ scenery.h ../Include/types.h
+stars.o: stars.c orbits.h ../Time/fg_time.h ../Time/../Include/types.h \
  ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \
  ../Time/../Flight/LaRCsim/../flight.h planets.h stars.h \
- ../constants.h ../general.h ../Aircraft/aircraft.h \
+ ../Include/constants.h ../Include/general.h ../Aircraft/aircraft.h \
  ../Aircraft/../Flight/flight.h ../Aircraft/../Controls/controls.h \
- ../Aircraft/../Controls/../limits.h ../Main/views.h \
- ../Main/../types.h ../Main/../Flight/flight.h ../Main/../Math/mat3.h
-sun.o: sun.c ../Time/fg_time.h ../Time/../types.h \
+ ../Aircraft/../Controls/../Include/limits.h ../Main/views.h \
+ ../Main/../Include/types.h ../Main/../Flight/flight.h \
+ ../Main/../Math/mat3.h
+sun.o: sun.c ../Time/fg_time.h ../Time/../Include/types.h \
  ../Time/../Flight/flight.h ../Time/../Flight/Slew/slew.h \
  ../Time/../Flight/LaRCsim/ls_interface.h \
  ../Time/../Flight/LaRCsim/../flight.h ../Main/views.h \
- ../Main/../types.h ../Main/../Flight/flight.h ../Main/../Math/mat3.h \
- orbits.h sun.h
+ ../Main/../Include/types.h ../Main/../Flight/flight.h \
+ ../Main/../Math/mat3.h orbits.h sun.h

@@ -27,7 +27,7 @@
 
 #include "orbits.h"
 
-#include "../general.h"
+#include "../Include/general.h"
 #include "../Time/fg_time.h"
 
 
@@ -170,10 +170,14 @@ void fgSolarSystemUpdate(struct OrbElements *planet, struct fgTIME t)
 
 
 /* $Log$
-/* Revision 1.4  1997/12/10 22:37:51  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.5  1997/12/15 23:55:02  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.4  1997/12/10 22:37:51  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.3  1997/11/25 23:20:44  curt
  * Changed planets.dat Planets.dat
  *

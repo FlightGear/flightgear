@@ -34,13 +34,14 @@
 #include <time.h>
 
 #include <GL/glut.h>
+#include "../XGL/xgl.h"
 
 #include "orbits.h"
 #include "planets.h"
 #include "stars.h"
 
-#include "../constants.h"
-#include "../general.h"
+#include "../Include/constants.h"
+#include "../Include/general.h"
 #include "../Aircraft/aircraft.h"
 #include "../Main/views.h"
 #include "../Time/fg_time.h"
@@ -85,9 +86,9 @@ void fgStarsInit() {
 	    return;
 	}
 	
-	stars[i] = glGenLists(1);
-	glNewList( stars[i], GL_COMPILE );
-	glBegin( GL_POINTS );
+	stars[i] = xglGenLists(1);
+	xglNewList( stars[i], GL_COMPILE );
+	xglBegin( GL_POINTS );
 
 	/* read in each line of the file */
 	count = 0;
@@ -150,11 +151,11 @@ void fgStarsInit() {
 		/* printf("Found star: %d %s, %.3f %.3f %.3f\n", count,
 		       name, right_ascension, declination, magnitude); */
 
-		glColor3f( magnitude, magnitude, magnitude );
-		/*glColor3f(0,0,0);*/
-		glVertex3f( 190000.0 * cos(right_ascension) * cos(declination),
-			    190000.0 * sin(right_ascension) * cos(declination),
-			    190000.0 * sin(declination) );
+		xglColor3f( magnitude, magnitude, magnitude );
+		/*xglColor3f(0,0,0);*/
+		xglVertex3f( 190000.0 * cos(right_ascension) * cos(declination),
+			     190000.0 * sin(right_ascension) * cos(declination),
+			     190000.0 * sin(declination) );
 		
 		count++;
 	    } /* if valid line */
@@ -170,52 +171,52 @@ void fgStarsInit() {
 	    printf("Planet found at %f (ra), %f (dec)\n", 
 		   pltPos.RightAscension, pltPos.Declination);
 	    /* give the planets a temporary color, for testing purposes */
-	    glColor3f( 1.0, 0.0, 0.0);
-	    glVertex3f( 190000.0 * cos(pltPos.RightAscension) * 
-			cos(pltPos.Declination),
-			190000.0 * sin(pltPos.RightAscension) * 
-			cos(pltPos.Declination),
-			190000.0 * sin(pltPos.Declination) );
+	    xglColor3f( 1.0, 0.0, 0.0);
+	    xglVertex3f( 190000.0 * cos(pltPos.RightAscension) * 
+			 cos(pltPos.Declination),
+			 190000.0 * sin(pltPos.RightAscension) * 
+			 cos(pltPos.Declination),
+			 190000.0 * sin(pltPos.Declination) );
 	}
-	glEnd();
+	xglEnd();
 
 	/*
-	glBegin(GL_LINE_LOOP);
-        glColor3f(1.0, 0.0, 0.0);
-	glVertex3f( 190000.0 * cos(ra_save-0.2) * cos(decl_save-0.2),
+	xglBegin(GL_LINE_LOOP);
+        xglColor3f(1.0, 0.0, 0.0);
+	xglVertex3f( 190000.0 * cos(ra_save-0.2) * cos(decl_save-0.2),
 		    190000.0 * sin(ra_save-0.2) * cos(decl_save-0.2),
 		    190000.0 * sin(decl_save-0.2) );
-	glVertex3f( 190000.0 * cos(ra_save+0.2) * cos(decl_save-0.2),
+	xglVertex3f( 190000.0 * cos(ra_save+0.2) * cos(decl_save-0.2),
 		    190000.0 * sin(ra_save+0.2) * cos(decl_save-0.2),
 		    190000.0 * sin(decl_save-0.2) );
- 	glVertex3f( 190000.0 * cos(ra_save+0.2) * cos(decl_save+0.2),
+ 	xglVertex3f( 190000.0 * cos(ra_save+0.2) * cos(decl_save+0.2),
 		    190000.0 * sin(ra_save+0.2) * cos(decl_save+0.2),
 		    190000.0 * sin(decl_save+0.2) );
- 	glVertex3f( 190000.0 * cos(ra_save-0.2) * cos(decl_save+0.2),
+ 	xglVertex3f( 190000.0 * cos(ra_save-0.2) * cos(decl_save+0.2),
 		    190000.0 * sin(ra_save-0.2) * cos(decl_save+0.2),
 		    190000.0 * sin(decl_save+0.2) );
-	glEnd();
+	xglEnd();
 	*/
 
 	/*
-	glBegin(GL_LINE_LOOP);
-        glColor3f(0.0, 1.0, 0.0);
-	glVertex3f( 190000.0 * cos(ra_save1-0.2) * cos(decl_save1-0.2),
+	xglBegin(GL_LINE_LOOP);
+        xglColor3f(0.0, 1.0, 0.0);
+	xglVertex3f( 190000.0 * cos(ra_save1-0.2) * cos(decl_save1-0.2),
 		    190000.0 * sin(ra_save1-0.2) * cos(decl_save1-0.2),
 		    190000.0 * sin(decl_save1-0.2) );
-	glVertex3f( 190000.0 * cos(ra_save1+0.2) * cos(decl_save1-0.2),
+	xglVertex3f( 190000.0 * cos(ra_save1+0.2) * cos(decl_save1-0.2),
 		    190000.0 * sin(ra_save1+0.2) * cos(decl_save1-0.2),
 		    190000.0 * sin(decl_save1-0.2) );
- 	glVertex3f( 190000.0 * cos(ra_save1+0.2) * cos(decl_save1+0.2),
+ 	xglVertex3f( 190000.0 * cos(ra_save1+0.2) * cos(decl_save1+0.2),
 		    190000.0 * sin(ra_save1+0.2) * cos(decl_save1+0.2),
 		    190000.0 * sin(decl_save1+0.2) );
- 	glVertex3f( 190000.0 * cos(ra_save1-0.2) * cos(decl_save1+0.2),
+ 	xglVertex3f( 190000.0 * cos(ra_save1-0.2) * cos(decl_save1+0.2),
 		    190000.0 * sin(ra_save1-0.2) * cos(decl_save1+0.2),
 		    190000.0 * sin(decl_save1+0.2) );
-	glEnd();
+	xglEnd();
 	*/
        
-	glEndList();
+	xglEndList();
 
 	max_stars /= 2;
     }
@@ -254,9 +255,9 @@ void fgStarsRender() {
 
 	printf("RENDERING STARS = %d (night)\n", i);
 
-	glDisable( GL_LIGHTING );
-	glCallList(stars[i]);
-	glEnable( GL_LIGHTING );
+	xglDisable( GL_LIGHTING );
+	xglCallList(stars[i]);
+	xglEnable( GL_LIGHTING );
     } else {
 	printf("not RENDERING STARS (day)\n");
     }
@@ -264,9 +265,13 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.19  1997/12/12 19:53:00  curt
-/* Working on lightling and material properties.
+/* Revision 1.20  1997/12/15 23:55:03  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.19  1997/12/12  19:53:00  curt
+ * Working on lightling and material properties.
+ *
  * Revision 1.18  1997/12/10 22:37:52  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

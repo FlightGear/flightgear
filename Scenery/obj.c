@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <GL/glut.h>
+#include "../XGL/xgl.h"
 
 #include "obj.h"
 #include "scenery.h"
@@ -45,23 +46,40 @@ float nodes[MAXNODES][3];
 float normals[MAXNODES][3];
 
 
+/* given three points defining a triangle, calculate the normal */
+void calc_normal(float p1[3], float p2[3], float p3[3], double normal[3])
+{
+    double v1[3], v2[3];
+    float temp;
+
+    v1[0] = p2[0] - p1[0]; v1[1] = p2[1] - p1[1]; v1[2] = p2[2] - p1[2];
+    v2[0] = p3[0] - p1[0]; v2[1] = p3[1] - p1[1]; v2[2] = p3[2] - p1[2];
+
+    MAT3cross_product(normal, v1, v2);
+    MAT3_NORMALIZE_VEC(normal,temp);
+
+    printf("  Normal = %.2f %.2f %.2f\n", normal[0], normal[1], normal[2]);
+}
+
+
 /* Load a .obj file and generate the GL call list */
 GLint fgObjLoad(char *path) {
-    char line[256], winding[256];
+    char line[256], winding_str[256];
     double v1[3], v2[3], approx_normal[3], dot_prod, temp;
     struct fgCartesianPoint ref;
     GLint area;
     FILE *f;
     int first, ncount, vncount, n1, n2, n3, n4;
-    int i;
+    int i, winding;
+    int last1, last2, odd;
 
     if ( (f = fopen(path, "r")) == NULL ) {
 	printf("Cannot open file: %s\n", path);
 	exit(-1);
     }
 
-    area = glGenLists(1);
-    glNewList(area, GL_COMPILE);
+    area = xglGenLists(1);
+    xglNewList(area, GL_COMPILE);
 
     first = 1;
     ncount = 1;
@@ -101,17 +119,19 @@ GLint fgObjLoad(char *path) {
 		exit(-1);
 	    }
 	} else if ( strncmp(line, "winding ", 8) == 0 ) {
-	    sscanf(line+8, "%s", winding);
-	    printf("WINDING = %s\n", winding);
+	    sscanf(line+8, "%s", winding_str);
+	    printf("WINDING = %s\n", winding_str);
 
-	    /* can't call glFrontFace() between glBegin() & glEnd() */
-	    glEnd();
+	    /* can't call xglFrontFace() between xglBegin() & xglEnd() */
+	    xglEnd();
 	    first = 1;
 
-	    if ( strcmp(winding, "cw") == 0 ) {
-		glFrontFace( GL_CW );
+	    if ( strcmp(winding_str, "cw") == 0 ) {
+		xglFrontFace( GL_CW );
+		winding = 0;
 	    } else {
-		glFrontFace ( GL_CCW );
+		xglFrontFace ( GL_CCW );
+		winding = 1;
 	    }
 	} else if ( line[0] == 't' ) {
 	    /* start a new triangle strip */
@@ -120,12 +140,12 @@ GLint fgObjLoad(char *path) {
 
 	    if ( !first ) {
 		/* close out the previous structure and start the next */
-		glEnd();
+		xglEnd();
 	    } else {
 		first = 0;
 	    }
 
-	    /* printf("new tri strip = %s", line); */
+	    printf("new tri strip = %s", line);
 	    sscanf(line, "t %d %d %d %d\n", &n1, &n2, &n3, &n4);
 
 	    /* printf("(t) = "); */
@@ -133,7 +153,7 @@ GLint fgObjLoad(char *path) {
 	    /* try to get the proper rotation by calculating an
              * approximate normal and seeing if it is close to the
 	     * precalculated normal */
-	    /*v1[0] = nodes[n2][0] - nodes[n1][0];
+	    /* v1[0] = nodes[n2][0] - nodes[n1][0];
 	    v1[1] = nodes[n2][1] - nodes[n1][1];
 	    v1[2] = nodes[n2][2] - nodes[n1][2];
 	    v2[0] = nodes[n3][0] - nodes[n1][0];
@@ -149,56 +169,87 @@ GLint fgObjLoad(char *path) {
 	    /* printf("Normal ANGLE = %.3f rads.\n", angle); */
 
 	    /* if ( dot_prod < -0.5 ) {
-		glFrontFace( GL_CW );
+		xglFrontFace( GL_CW );
 	    } else {
-		glFrontFace( GL_CCW );
+		xglFrontFace( GL_CCW );
 	    } */
 
-	    glBegin(GL_TRIANGLE_STRIP);
+	    xglBegin(GL_TRIANGLE_STRIP);
 
-            glNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
-	    glVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
-		       nodes[n1][2] - ref.z);
+	    if ( winding ) {
+		odd = 1; 
+	    } else {
+		odd = 0;
+	    }
 
-	    glNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
-	    glVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
-		       nodes[n2][2] - ref.z);
+	    if ( odd ) {
+		calc_normal(nodes[n1], nodes[n2], nodes[n3], approx_normal);
+	    } else {
+		calc_normal(nodes[n2], nodes[n1], nodes[n3], approx_normal);
+	    }
+	    xglNormal3dv(approx_normal);
 
-	    glNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
-	    glVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
-		       nodes[n3][2] - ref.z);
+            /* xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]); */
+	    xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
+			nodes[n1][2] - ref.z);
+
+	    /* xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]); */
+	    xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
+			nodes[n2][2] - ref.z);
+
+	    /* xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]); */
+	    xglVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
+			nodes[n3][2] - ref.z);
+
+	    odd = 1 - odd;
+	    last1 = n2;
+	    last2 = n3;
 
 	    if ( n4 > 0 ) {
-		glNormal3d(normals[n4][0], normals[n4][1], normals[n4][2]);
-		glVertex3d(nodes[n4][0] - ref.x, nodes[n4][1] - ref.y, 
-			   nodes[n4][2] - ref.z);
+		if ( odd ) {
+		    calc_normal(nodes[last1], nodes[last2], nodes[n4], 
+				approx_normal);
+		} else {
+		    calc_normal(nodes[last2], nodes[last1], nodes[n4], 
+				approx_normal);
+		}
+		calc_normal(nodes[n3], nodes[n2], nodes[n4], approx_normal);
+		xglNormal3dv(approx_normal);
+
+		/*xglNormal3d(normals[n4][0], normals[n4][1], normals[n4][2]);*/
+		xglVertex3d(nodes[n4][0] - ref.x, nodes[n4][1] - ref.y, 
+			    nodes[n4][2] - ref.z);
+
+		odd = 1 - odd;
+		last1 = n3;
+		last2 = n4;
 	    }
 	} else if ( line[0] == 'f' ) {
 	    /* unoptimized face */
 
 	    if ( !first ) {
 		/* close out the previous structure and start the next */
-		glEnd();
+		xglEnd();
 	    } else {
 		first = 0;
 	    }
 
-	    glBegin(GL_TRIANGLES);
+	    xglBegin(GL_TRIANGLES);
 
 	    /* printf("new triangle = %s", line);*/
 	    sscanf(line, "f %d %d %d\n", &n1, &n2, &n3);
 
-            glNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
-	    glVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
-		       nodes[n1][2] - ref.z);
+            xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
+	    xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
+			nodes[n1][2] - ref.z);
 
-            glNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
-	    glVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
-		       nodes[n2][2] - ref.z);
+            xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
+	    xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
+			nodes[n2][2] - ref.z);
 
-            glNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
-	    glVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
-		       nodes[n3][2] - ref.z);
+            xglNormal3d(normals[n3][0], normals[n3][1], normals[n3][2]);
+	    xglVertex3d(nodes[n3][0] - ref.x, nodes[n3][1] - ref.y, 
+			nodes[n3][2] - ref.z);
 	} else if ( line[0] == 'q' ) {
 	    /* continue a triangle strip */
 	    n1 = n2 = 0;
@@ -207,39 +258,65 @@ GLint fgObjLoad(char *path) {
 	    sscanf(line, "q %d %d\n", &n1, &n2);
 	    /* printf("read %d %d\n", n1, n2); */
 
-            glNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]);
-	    glVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
-		       nodes[n1][2] - ref.z);
+	    if ( odd ) {
+		calc_normal(nodes[last1], nodes[last2], nodes[n1], 
+			    approx_normal);
+	    } else {
+		calc_normal(nodes[last2], nodes[last1], nodes[n1], 
+			    approx_normal);
+	    }
+	    xglNormal3dv(approx_normal);
+
+            /* xglNormal3d(normals[n1][0], normals[n1][1], normals[n1][2]); */
+	    xglVertex3d(nodes[n1][0] - ref.x, nodes[n1][1] - ref.y, 
+			nodes[n1][2] - ref.z);
+	    
+	    odd = 1 - odd;
+	    last1 = last2;
+	    last2 = n1;
 
 	    if ( n2 > 0 ) {
 		/* printf(" (cont)\n"); */
-		glNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);
-		glVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
-			   nodes[n2][2] - ref.z);
+		if ( odd ) {
+		    calc_normal(nodes[last1], nodes[last2], nodes[n2], 
+				approx_normal);
+		} else {
+		    calc_normal(nodes[last2], nodes[last1], nodes[n2], 
+				approx_normal);
+		}
+		xglNormal3dv(approx_normal);
+
+		/*xglNormal3d(normals[n2][0], normals[n2][1], normals[n2][2]);*/
+		xglVertex3d(nodes[n2][0] - ref.x, nodes[n2][1] - ref.y, 
+			    nodes[n2][2] - ref.z);
+
+		odd = 1 -odd;
+		last1 = last2;
+		last2 = n2;
 	    }
 	} else {
 	    printf("Unknown line in %s = %s\n", path, line);
 	}
     }
 
-    glEnd();
+    xglEnd();
 
     /* Draw normal vectors (for visually verifying normals)*/
     /*
-    glBegin(GL_LINES);
-    glColor3f(0.0, 0.0, 0.0);
+    xglBegin(GL_LINES);
+    xglColor3f(0.0, 0.0, 0.0);
     for ( i = 0; i < ncount; i++ ) {
- 	glVertex3d(nodes[i][0] - ref.x,
- 		   nodes[i][1] - ref.y,
- 		   nodes[i][2] - ref.z);
- 	glVertex3d(nodes[i][0] - ref.x + 500*normals[i][0],
- 		   nodes[i][1] - ref.y + 500*normals[i][1],
- 		   nodes[i][2] - ref.z + 500*normals[i][2]);
+        xglVertex3d(nodes[i][0] - ref.x,
+ 		    nodes[i][1] - ref.y,
+ 		    nodes[i][2] - ref.z);
+ 	xglVertex3d(nodes[i][0] - ref.x + 500*normals[i][0],
+ 		    nodes[i][1] - ref.y + 500*normals[i][1],
+ 		    nodes[i][2] - ref.z + 500*normals[i][2]);
     } 
-    glEnd();
+    xglEnd();
     */
 
-    glEndList();
+    xglEndList();
 
     fclose(f);
 
@@ -248,9 +325,13 @@ GLint fgObjLoad(char *path) {
 
 
 /* $Log$
-/* Revision 1.10  1997/12/12 21:41:28  curt
-/* More light/material property tweaking ... still a ways off.
+/* Revision 1.11  1997/12/15 23:55:01  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.10  1997/12/12 21:41:28  curt
+ * More light/material property tweaking ... still a ways off.
+ *
  * Revision 1.9  1997/12/12 19:52:57  curt
  * Working on lightling and material properties.
  *

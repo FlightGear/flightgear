@@ -28,7 +28,7 @@
 #define CONTROLS_H
 
 
-#include "../limits.h"
+#include "../Include/limits.h"
 
 
 /* Define a structure containing the control parameters */
@@ -81,10 +81,14 @@ void fgThrottleSet(int engine, double pos);
 
 
 /* $Log$
-/* Revision 1.6  1997/12/10 22:37:41  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.7  1997/12/15 23:54:36  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.6  1997/12/10 22:37:41  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.5  1997/08/27 03:30:02  curt
  * Changed naming scheme of basic shared structures.
  *

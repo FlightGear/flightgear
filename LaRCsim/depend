@@ -12,7 +12,7 @@ ls_interface.o: ls_interface.c ls_types.h ls_constants.h ls_generic.h \
  ../Slew/slew.h ../LaRCsim/ls_interface.h ../../Aircraft/aircraft.h \
  ../../Aircraft/../Flight/flight.h \
  ../../Aircraft/../Controls/controls.h \
- ../../Aircraft/../Controls/../limits.h
+ ../../Aircraft/../Controls/../Include/limits.h
 ls_model.o: ls_model.c ls_types.h
 ls_step.o: ls_step.c ls_types.h ls_constants.h ls_generic.h
 ls_sync.o: ls_sync.c ls_types.h ls_sim_control.h

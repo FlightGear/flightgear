@@ -28,7 +28,8 @@ include make.inc
 
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew
-SUBDIRS = Aircraft Cockpit Controls Flight Joystick Math Scenery Time Weather
+SUBDIRS = Aircraft Cockpit Controls Flight Joystick Math Scenery Time Weather \
+	  XGL
 MAIN = Main
 
 
@@ -95,6 +96,10 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.32  1997/12/15 23:54:25  curt
+# Add xgl wrappers for debugging.
+# Generate terrain normals on the fly.
+#
 # Revision 1.31  1997/12/15 20:59:08  curt
 # Misc. tweaks.
 #

@@ -23,11 +23,12 @@
 
 #include <math.h>
 #include <GL/glut.h>
+#include "../XGL/xgl.h"
 
 #include "orbits.h"
 #include "moon.h"
 
-#include "../general.h"
+#include "../Include/general.h"
 #include "../Main/views.h"
 #include "../Time/fg_time.h"
 
@@ -72,15 +73,15 @@ void NormalizeVector(float v[3])
 
 void drawTriangle(float *v1, float *v2, float *v3)
 {
-   glBegin(GL_POLYGON);
-   //glBegin(GL_POINTS);
-      glNormal3fv(v1);
-      glVertex3fv(v1);
-      glNormal3fv(v2);
-      glVertex3fv(v2);
-      glNormal3fv(v3);
-      glVertex3fv(v3);
-   glEnd();
+   xglBegin(GL_POLYGON);
+   //xglBegin(GL_POINTS);
+      xglNormal3fv(v1);
+      xglVertex3fv(v1);
+      xglNormal3fv(v2);
+      xglVertex3fv(v2);
+      xglNormal3fv(v3);
+      xglVertex3fv(v3);
+   xglEnd();
 }
 
 void subdivide(float *v1, float *v2, float *v3, long depth)
@@ -112,17 +113,17 @@ void subdivide(float *v1, float *v2, float *v3, long depth)
 void display(void)
 {
    int i;
-   glClear(GL_COLOR_BUFFER_BIT);
-   glPushMatrix();
-   glRotatef(spin, 0.0, 0.0, 0.0);
-   glColor3f(1.0, 1.0, 0.0);
-//   glBegin(GL_LINE_LOOP);
+   xglClear(GL_COLOR_BUFFER_BIT);
+   xglPushMatrix();
+   xglRotatef(spin, 0.0, 0.0, 0.0);
+   xglColor3f(1.0, 1.0, 0.0);
+//   xglBegin(GL_LINE_LOOP);
    for (i = 0; i < 20; i++)
    {
 
-       //glVertex3fv(&vdata[tindices[i][0]][0]);
-       //glVertex3fv(&vdata[tindices[i][1]][0]);
-       //glVertex3fv(&vdata[tindices[i][2]][0]);
+       //xglVertex3fv(&vdata[tindices[i][0]][0]);
+       //xglVertex3fv(&vdata[tindices[i][1]][0]);
+       //xglVertex3fv(&vdata[tindices[i][2]][0]);
 
        subdivide(&vdata[tindices[i][0]][0],
                  &vdata[tindices[i][1]][0],
@@ -130,9 +131,9 @@ void display(void)
 
 
    }
-//   glEnd();
-  // glFlush();
-  glPopMatrix();
+//   xglEnd();
+  // xglFlush();
+  xglPopMatrix();
   glutSwapBuffers();
 } */
 
@@ -230,11 +231,11 @@ void fgMoonInit() {
 
     l = &cur_light_params;
 
-    moon = glGenLists(1);
-    glNewList(moon, GL_COMPILE );
+    moon = xglGenLists(1);
+    xglNewList(moon, GL_COMPILE );
 
-    /* glMaterialfv(GL_FRONT, GL_AMBIENT, l->scene_clear);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color); */
+    /* xglMaterialfv(GL_FRONT, GL_AMBIENT, l->scene_clear);
+    xglMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color); */
 
     fgSolarSystemUpdate(&(pltOrbElements[1]), cur_time_params);
     moonPos = fgCalculateMoon(pltOrbElements[1], pltOrbElements[0], 
@@ -254,7 +255,7 @@ void fgMoonInit() {
 
     glutSolidSphere(1.0, 15, 15);
 
-    glEndList();
+    xglEndList();
 }
 
 
@@ -267,21 +268,21 @@ void fgMoonRender() {
     l = &cur_light_params;
 
     /* set lighting parameters */
-    glLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_clear );
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, moon_color );
+    xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_clear );
+    xglLightfv(GL_LIGHT0, GL_DIFFUSE, moon_color );
 
-    glMaterialfv(GL_FRONT, GL_AMBIENT, l->scene_clear );
-    glMaterialfv(GL_FRONT, GL_AMBIENT, moon_color );
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color);
+    xglMaterialfv(GL_FRONT, GL_AMBIENT, l->scene_clear );
+    xglMaterialfv(GL_FRONT, GL_AMBIENT, moon_color );
+    xglMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color);
 
-    glPushMatrix();
-    glTranslatef(xMoon, yMoon, zMoon);
-    glScalef(1400, 1400, 1400);
+    xglPushMatrix();
+    xglTranslatef(xMoon, yMoon, zMoon);
+    xglScalef(1400, 1400, 1400);
 
-    glColor3fv(moon_color);
+    xglColor3fv(moon_color);
     /* glutSolidSphere(1.0, 25, 25); */
-    glCallList(moon);
+    xglCallList(moon);
 
-    glPopMatrix();
+    xglPopMatrix();
 }
 

@@ -29,6 +29,7 @@
 #include <time.h>
 
 #include <GL/glut.h>
+#include "../XGL/xgl.h"
 
 #include "astro.h"
 #include "moon.h"
@@ -37,8 +38,8 @@
 #include "stars.h"
 #include "sun.h"
 
-#include "../constants.h"
-#include "../general.h"
+#include "../Include/constants.h"
+#include "../Include/general.h"
 
 #include "../Main/views.h"
 #include "../Aircraft/aircraft.h"
@@ -87,22 +88,22 @@ void fgAstroRender() {
     }
 
     /* Disable fog effects */
-    glDisable( GL_FOG );
+    xglDisable( GL_FOG );
 
     /* set the sun position */
-    glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec_inv );
+    xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec_inv );
 
-    glPushMatrix();
+    xglPushMatrix();
 
     /* Translate to view position */
-    glTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
+    xglTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
 
     /* Rotate based on gst (side real time) */
     angle = t->gst * 15.041085; /* should be 15.041085, Curt thought it was 15*/
 #ifdef DEBUG
     printf("Rotating astro objects by %.2f degrees\n",angle);
 #endif
-    glRotatef( angle, 0.0, 0.0, -1.0 );
+    xglRotatef( angle, 0.0, 0.0, -1.0 );
 
     /* render the moon */
     fgMoonRender();
@@ -113,17 +114,21 @@ void fgAstroRender() {
     /* render the sun */
     fgSunRender();
 
-    glPopMatrix();
+    xglPopMatrix();
 
     /* reenable fog effects */
-    glEnable( GL_FOG );
+    xglEnable( GL_FOG );
 }
 
 
 /* $Log$
-/* Revision 1.7  1997/12/15 20:59:09  curt
-/* Misc. tweaks.
+/* Revision 1.8  1997/12/15 23:54:57  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.7  1997/12/15 20:59:09  curt
+ * Misc. tweaks.
+ *
  * Revision 1.6  1997/12/12 21:41:27  curt
  * More light/material property tweaking ... still a ways off.
  *

@@ -35,7 +35,7 @@
 #include <GL/glut.h>
 #include <time.h>
 
-#include "../types.h"
+#include "../Include/types.h"
 #include "../Flight/flight.h"
 
 
@@ -92,10 +92,14 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t);
 
 
 /* $Log$
-/* Revision 1.9  1997/12/10 22:37:55  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.10  1997/12/15 23:55:07  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.9  1997/12/10 22:37:55  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.8  1997/12/09 04:25:38  curt
  * Working on adding a global lighting params structure.
  *

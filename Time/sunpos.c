@@ -45,7 +45,7 @@
 
 #include "sunpos.h"
 #include "fg_time.h"
-#include "../constants.h"
+#include "../Include/constants.h"
 #include "../Main/views.h"
 #include "../Math/fg_geodesy.h"
 #include "../Math/mat3.h"
@@ -316,10 +316,14 @@ void fgUpdateSunPos(struct fgCartesianPoint scenery_center) {
 
 
 /* $Log$
-/* Revision 1.16  1997/12/11 04:43:57  curt
-/* Fixed sun vector and lighting problems.  I thing the moon is now lit
-/* correctly.
+/* Revision 1.17  1997/12/15 23:55:08  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.16  1997/12/11 04:43:57  curt
+ * Fixed sun vector and lighting problems.  I thing the moon is now lit
+ * correctly.
+ *
  * Revision 1.15  1997/12/10 22:37:55  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

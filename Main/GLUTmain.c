@@ -29,14 +29,15 @@
 #endif
 
 #include <GL/glut.h>
+#include "../XGL/xgl.h"
 #include <stdio.h>
 
 #include "GLUTkey.h"
 #include "fg_init.h"
 #include "views.h"
 
-#include "../constants.h"
-#include "../general.h"
+#include "../Include/constants.h"
+#include "../Include/general.h"
 
 #include "../Aircraft/aircraft.h"
 #include "../Cockpit/cockpit.h"
@@ -87,32 +88,32 @@ static void fgInitVisuals() {
     t = &cur_time_params;
     w = &current_weather;
 
-    glEnable( GL_DEPTH_TEST );
-    /* glFrontFace(GL_CW); */
-    glEnable( GL_CULL_FACE );
+    xglEnable( GL_DEPTH_TEST );
+    /* xglFrontFace(GL_CW); */
+    xglEnable( GL_CULL_FACE );
     
-    /* glDisable( GL_DITHER ); */
+    /* xglDisable( GL_DITHER ); */
 
     /* If enabled, normal vectors specified with glNormal are scaled
        to unit length after transformation.  See glNormal. */
-    glEnable( GL_NORMALIZE );
+    xglEnable( GL_NORMALIZE );
 
-    glEnable( GL_LIGHTING );
-    glEnable( GL_LIGHT0 );
-    glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
+    xglEnable( GL_LIGHTING );
+    xglEnable( GL_LIGHT0 );
+    xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
-    glShadeModel( GL_FLAT ); /* glShadeModel( GL_SMOOTH ); */
+    xglShadeModel( GL_FLAT ); /* xglShadeModel( GL_SMOOTH ); */
 
-    glEnable( GL_FOG );
-    glFogi (GL_FOG_MODE, GL_LINEAR);
-    /* glFogf (GL_FOG_START, 1.0); */
-    glFogf (GL_FOG_END, w->visibility);
-    glFogfv (GL_FOG_COLOR, fgFogColor);
-    /* glFogf (GL_FOG_DENSITY, w->visibility); */
-    /* glHint (GL_FOG_HINT, GL_FASTEST); */
+    xglEnable( GL_FOG );
+    xglFogi (GL_FOG_MODE, GL_LINEAR);
+    /* xglFogf (GL_FOG_START, 1.0); */
+    xglFogf (GL_FOG_END, w->visibility);
+    xglFogfv (GL_FOG_COLOR, fgFogColor);
+    /* xglFogf (GL_FOG_DENSITY, w->visibility); */
+    /* xglHint (GL_FOG_HINT, GL_FASTEST); */
 
     /* initial screen color */
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    xglClearColor(0.0, 0.0, 0.0, 1.0);
 }
 
 
@@ -141,22 +142,22 @@ static void fgUpdateViewParams() {
     fgViewUpdate(f, v);
 
     /* Tell GL we are about to modify the projection parameters */
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
+    xglMatrixMode(GL_PROJECTION);
+    xglLoadIdentity();
     gluPerspective(55.0, 1.0/win_ratio, 1.0, 200000.0);
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    xglMatrixMode(GL_MODELVIEW);
+    xglLoadIdentity();
     
     /* set up our view volume */
     gluLookAt(v->view_pos.x, v->view_pos.y, v->view_pos.z,
-	      v->view_pos.x + v->view_forward[0], 
-	      v->view_pos.y + v->view_forward[1], 
-	      v->view_pos.z + v->view_forward[2],
-	      v->view_up[0], v->view_up[1], v->view_up[2]);
+	       v->view_pos.x + v->view_forward[0], 
+	       v->view_pos.y + v->view_forward[1], 
+	       v->view_pos.z + v->view_forward[2],
+	       v->view_up[0], v->view_up[1], v->view_up[2]);
 
     /* set the sun position */
-    glLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
+    xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
     /* calculate lighting parameters based on sun's relative angle to
      * local up */
@@ -190,15 +191,15 @@ static void fgUpdateViewParams() {
     l->scene_diffuse[2] = white[2] * diffuse;
 
     /* set lighting parameters */
-    glLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
+    xglLightfv(GL_LIGHT0, GL_AMBIENT, l->scene_ambient );
+    xglLightfv(GL_LIGHT0, GL_DIFFUSE, l->scene_diffuse );
 
     /* set fog color */
     l->scene_fog[0] = fgFogColor[0] * (ambient + diffuse);
     l->scene_fog[1] = fgFogColor[1] * (ambient + diffuse);
     l->scene_fog[2] = fgFogColor[2] * (ambient + diffuse);
     l->scene_fog[3] = fgFogColor[3];
-    glFogfv (GL_FOG_COLOR, l->scene_fog);
+    xglFogfv (GL_FOG_COLOR, l->scene_fog);
 
     /* set sky color */
     l->scene_clear[0] = sky_color[0] * sky_brightness;
@@ -206,8 +207,8 @@ static void fgUpdateViewParams() {
     l->scene_clear[2] = sky_color[2] * sky_brightness;
     l->scene_clear[3] = sky_color[3];
 
-    glClearColor(l->scene_clear[0], l->scene_clear[1], 
-		 l->scene_clear[2], l->scene_clear[3]);
+    xglClearColor(l->scene_clear[0], l->scene_clear[1], 
+		  l->scene_clear[2], l->scene_clear[3]);
 }
 
 
@@ -219,11 +220,11 @@ static void fgUpdateVisuals( void ) {
     /* update view volume parameters */
     fgUpdateViewParams();
 
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    xglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     /* Tell GL we are switching to model view parameters */
-    glMatrixMode(GL_MODELVIEW);
-    /* glLoadIdentity(); */
+    xglMatrixMode(GL_MODELVIEW);
+    /* xglLoadIdentity(); */
 
     /* draw scenery */
     fgSceneryRender();
@@ -236,7 +237,7 @@ static void fgUpdateVisuals( void ) {
      	fgCockpitUpdate();
 
     #ifdef GLUT
-      glutSwapBuffers();
+      xglutSwapBuffers();
     #endif
 }
 
@@ -335,38 +336,38 @@ void fgInitTimeDepCalcs() {
     int num_lines = 16;
     float line_len, line_width_2, cur_pos;
 
-    runway = glGenLists(1);
-    glNewList(runway, GL_COMPILE);
+    runway = xglGenLists(1);
+    xglNewList(runway, GL_COMPILE);
     */
     /* draw concrete */
-/*    glBegin(GL_POLYGON);
-    glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, concrete );
-    glNormal3f(0.0, 0.0, 1.0);
+/*    xglBegin(GL_POLYGON);
+    xglMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, concrete );
+    xglNormal3f(0.0, 0.0, 1.0);
 
-    glVertex3d( 0.0,   -width/2.0, 0.0);
-    glVertex3d( 0.0,    width/2.0, 0.0);
-    glVertex3d(length,  width/2.0, 0.0);
-    glVertex3d(length, -width/2.0, 0.0);
-    glEnd();
+    xglVertex3d( 0.0,   -width/2.0, 0.0);
+    xglVertex3d( 0.0,    width/2.0, 0.0);
+    xglVertex3d(length,  width/2.0, 0.0);
+    xglVertex3d(length, -width/2.0, 0.0);
+    xglEnd();
     */
     /* draw center line */
-/*    glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, line );
+/*    xglMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, line );
     line_len = length / ( 2 * num_lines + 1);
     printf("line_len = %.3f\n", line_len);
     line_width_2 = 0.02;
     cur_pos = line_len;
     for ( i = 0; i < num_lines; i++ ) {
-	glBegin(GL_POLYGON);
-	glVertex3d( cur_pos, -line_width_2, 0.005);
-	glVertex3d( cur_pos,  line_width_2, 0.005);
+	xglBegin(GL_POLYGON);
+	xglVertex3d( cur_pos, -line_width_2, 0.005);
+	xglVertex3d( cur_pos,  line_width_2, 0.005);
 	cur_pos += line_len;
-	glVertex3d( cur_pos,  line_width_2, 0.005);
-	glVertex3d( cur_pos, -line_width_2, 0.005);
+	xglVertex3d( cur_pos,  line_width_2, 0.005);
+	xglVertex3d( cur_pos, -line_width_2, 0.005);
 	cur_pos += line_len;
-	glEnd();
+	xglEnd();
     }
 
-    glEndList();
+    xglEndList();
 
     return(runway);
 }
@@ -376,17 +377,17 @@ void fgInitTimeDepCalcs() {
 /*static void fgSceneryDraw_OLD() {
     static float z = 32.35;
 
-    glPushMatrix();
+    xglPushMatrix();
 
-    glCallList(scenery);
+    xglCallList(scenery);
 
     printf("*** Drawing runway at %.2f\n", z);
 
-    glTranslatef( -398391.28, 120070.41, 32.35);
-    glRotatef(170.0, 0.0, 0.0, 1.0);
-    glCallList(runway);
+    xglTranslatef( -398391.28, 120070.41, 32.35);
+    xglRotatef(170.0, 0.0, 0.0, 1.0);
+    xglCallList(runway);
 
-    glPopMatrix();
+    xglPopMatrix();
 }
 */
 
@@ -475,11 +476,11 @@ static void fgReshape( int width, int height ) {
     }
 
     /* Inform gl of our view window size */
-    glViewport(0, 0, (GLint)width, (GLint)height);
+    xglViewport(0, 0, (GLint)width, (GLint)height);
 
     fgUpdateViewParams();
     
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    xglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 }
 
 
@@ -500,16 +501,16 @@ int main( int argc, char *argv[] ) {
 
     #ifdef GLUT
       /* initialize GLUT */
-      glutInit(&argc, argv);
+      xglutInit(&argc, argv);
 
       /* Define Display Parameters */
-      glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
+      xglutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE );
 
       /* Define initial window size */
-      glutInitWindowSize(640, 480);
+      xglutInitWindowSize(640, 480);
 
       /* Initialize windows */
-      glutCreateWindow("Flight Gear");
+      xglutCreateWindow("Flight Gear");
     #endif
 
     /* This is the general house keeping init routine */
@@ -536,17 +537,17 @@ int main( int argc, char *argv[] ) {
 
     #ifdef GLUT
       /* call fgReshape() on window resizes */
-      glutReshapeFunc( fgReshape );
+      xglutReshapeFunc( fgReshape );
 
       /* call key() on keyboard event */
-      glutKeyboardFunc( GLUTkey );
+      xglutKeyboardFunc( GLUTkey );
       glutSpecialFunc( GLUTspecialkey );
 
       /* call fgMainLoop() whenever there is nothing else to do */
-      glutIdleFunc( fgMainLoop );
+      xglutIdleFunc( fgMainLoop );
 
       /* draw the scene */
-      glutDisplayFunc( fgUpdateVisuals );
+      xglutDisplayFunc( fgUpdateVisuals );
 
       /* pass control off to the GLUT event handler */
       glutMainLoop();
@@ -564,9 +565,13 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.32  1997/12/15 20:59:08  curt
-/* Misc. tweaks.
+/* Revision 1.33  1997/12/15 23:54:45  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.32  1997/12/15 20:59:08  curt
+ * Misc. tweaks.
+ *
  * Revision 1.31  1997/12/12 21:41:25  curt
  * More light/material property tweaking ... still a ways off.
  *

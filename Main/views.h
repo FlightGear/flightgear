@@ -28,7 +28,7 @@
 #define VIEWS_H
 
 
-#include "../types.h"
+#include "../Include/types.h"
 #include "../Flight/flight.h"
 #include "../Math/mat3.h"
 
@@ -55,10 +55,14 @@ void fgViewUpdate(struct fgFLIGHT *f, struct fgVIEW *v);
 
 
 /* $Log$
-/* Revision 1.2  1997/12/10 22:37:48  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.3  1997/12/15 23:54:51  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.2  1997/12/10 22:37:48  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.1  1997/08/27 21:31:18  curt
  * Initial revision.
  *

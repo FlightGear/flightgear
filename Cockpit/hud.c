@@ -31,7 +31,7 @@
 #endif /* not WIN32 */
 #include "hud.h"
 
-#include "../constants.h"
+#include "../Include/constants.h"
 
 #include "../Aircraft/aircraft.h"
 #include "../Scenery/mesh.h"
@@ -807,10 +807,14 @@ void fgUpdateHUD( Hptr hud )
 
 
 /* $Log$
-/* Revision 1.5  1997/12/10 22:37:39  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.6  1997/12/15 23:54:34  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.5  1997/12/10 22:37:39  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.4  1997/09/23 00:29:32  curt
  * Tweaks to get things to compile with gcc-win32.
  *

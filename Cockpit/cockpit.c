@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include "cockpit.h"
 
-#include "../constants.h"
+#include "../Include/constants.h"
 
 #include "../Aircraft/aircraft.h"
 #include "../Scenery/mesh.h"
@@ -87,10 +87,14 @@ void fgCockpitUpdate()
 
 
 /* $Log$
-/* Revision 1.2  1997/12/10 22:37:38  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.3  1997/12/15 23:54:33  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.2  1997/12/10 22:37:38  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.1  1997/08/29 18:03:20  curt
  * Initial revision.
  *

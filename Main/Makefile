@@ -30,14 +30,14 @@ AFILES = ../Aircraft/libAircraft.a ../Cockpit/libCockpit.a \
 	../Controls/libControls.a ../Flight/libFlight.a \
 	../Joystick/libJoystick.a ../Flight/LaRCsim/libLaRCsim.a \
 	../Flight/Slew/libSlew.a ../Scenery/libScenery.a \
-	../Time/libTime.a ../Weather/libWeather.a ../Math/libMath.a
+	../Time/libTime.a ../Weather/libWeather.a ../Math/libMath.a \
 
 
 include ../make.inc
 
 
 CFLAGS = $(FG_CFLAGS) $(INTERFACE_FLAGS)
-LIBS =  $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
+LIBS =  $(FG_DEBUG_LIBS) $(INTERFACE_LIBS) $(GRAPHICS_LIBS) -lm -lfl
 
 
 TARGET=fg-$(FG_VERSION)
@@ -83,6 +83,10 @@ views.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.38  1997/12/15 23:54:47  curt
+# Add xgl wrappers for debugging.
+# Generate terrain normals on the fly.
+#
 # Revision 1.37  1997/12/12 21:41:26  curt
 # More light/material property tweaking ... still a ways off.
 #

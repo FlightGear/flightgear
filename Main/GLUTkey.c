@@ -29,12 +29,13 @@
 #endif
 
 #include <GL/glut.h>
+#include "../XGL/xgl.h"
 #include <stdio.h>
 
 #include "GLUTkey.h"
 #include "views.h"
 
-#include "../constants.h"
+#include "../Include/constants.h"
 
 #include "../Aircraft/aircraft.h"
 #include "../Weather/weather.h"
@@ -87,7 +88,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 90: /* Z key */
 	    w->visibility /= 1.10;
-	    glFogf(GL_FOG_END, w->visibility);
+	    xglFogf(GL_FOG_END, w->visibility);
 	    printf("Fog density = %.4f\n", w->visibility);
 	    return;
 	}
@@ -131,7 +132,7 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    return;
 	case 122: /* z key */
 	    w->visibility *= 1.10;
-	    glFogf(GL_FOG_END, w->visibility);
+	    xglFogf(GL_FOG_END, w->visibility);
 	    printf("Fog density = %.4f\n", w->visibility);
 	    return;
 	case 27: /* ESC */
@@ -224,10 +225,14 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.22  1997/12/10 22:37:45  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.23  1997/12/15 23:54:44  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.22  1997/12/10 22:37:45  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.21  1997/08/27 21:32:23  curt
  * Restructured view calculation code.  Added stars.
  *

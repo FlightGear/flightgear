@@ -35,7 +35,7 @@
 #endif
 
 #include "fg_time.h"
-#include "../constants.h"
+#include "../Include/constants.h"
 #include "../Flight/flight.h"
 #include "../Time/fg_time.h"
 
@@ -285,9 +285,13 @@ void fgTimeUpdate(struct fgFLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.19  1997/12/15 20:59:10  curt
-/* Misc. tweaks.
+/* Revision 1.20  1997/12/15 23:55:06  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.19  1997/12/15 20:59:10  curt
+ * Misc. tweaks.
+ *
  * Revision 1.18  1997/12/12 21:41:31  curt
  * More light/material property tweaking ... still a ways off.
  *

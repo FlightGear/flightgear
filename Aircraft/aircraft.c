@@ -27,7 +27,7 @@
 #include <stdio.h>
 
 #include "aircraft.h"
-#include "../constants.h"
+#include "../Include/constants.h"
 
 
 /* This is a record containing all the info for the aircraft currently
@@ -53,10 +53,14 @@ void fgAircraftOutputCurrent(struct fgAIRCRAFT *a) {
 
 
 /* $Log$
-/* Revision 1.12  1997/12/10 22:37:37  curt
-/* Prepended "fg" on the name of all global structures that didn't have it yet.
-/* i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+/* Revision 1.13  1997/12/15 23:54:30  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.12  1997/12/10 22:37:37  curt
+ * Prepended "fg" on the name of all global structures that didn't have it yet.
+ * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"
+ *
  * Revision 1.11  1997/09/13 02:00:05  curt
  * Mostly working on stars and generating sidereal time for accurate star
  * placement.

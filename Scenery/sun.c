@@ -23,6 +23,8 @@
  **************************************************************************/
 
 #include <GL/glut.h>
+#include "../XGL/xgl.h"
+
 #include "../Time/fg_time.h"
 #include "../Main/views.h"
 #include "orbits.h"
@@ -95,10 +97,10 @@ void fgSunInit()
 {
 //   int i;
 
-    sun_obj = glGenLists(1);
-    glNewList(sun_obj, GL_COMPILE );
+    sun_obj = xglGenLists(1);
+    xglNewList(sun_obj, GL_COMPILE );
 
-//	glBegin( GL_POINTS );
+//	xglBegin( GL_POINTS );
 
     fgSolarSystemUpdate(&(pltOrbElements[0]), cur_time_params);
     sunPos = fgCalculateSun(pltOrbElements[0], cur_time_params);
@@ -108,13 +110,13 @@ void fgSunInit()
 #endif
 
     /* give the moon a temporary color, for testing purposes */
-//   glColor3f( 0.0, 1.0, 0.0);
-//   glVertex3f( 190000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination),
+//   xglColor3f( 0.0, 1.0, 0.0);
+//   xglVertex3f( 190000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination),
  //              190000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination),
 //   	           190000.0 * sin(moonPos.Declination) );
-   //glVertex3f(0.0, 0.0, 0.0);
-//   glEnd();
-//   glColor3f(1.0, 1.0, 1.0);
+   //xglVertex3f(0.0, 0.0, 0.0);
+//   xglEnd();
+//   xglColor3f(1.0, 1.0, 1.0);
    //xMoon = 190000.0 * cos(moonPos.RightAscension) * cos(moonPos.Declination);
    //yMoon = 190000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
    //zMoon = 190000.0 * sin(moonPos.Declination);
@@ -123,22 +125,22 @@ void fgSunInit()
    ySun = 60000.0 * sin(sunPos.RightAscension) * cos(sunPos.Declination);
    zSun = 60000.0 * sin(sunPos.Declination);
 
-//   glPushMatrix();
-//   glTranslatef(x, y, z);
-//   glScalef(16622.8, 16622.8, 16622.8);
-//     glBegin(GL_TRIANGLES);
+//   xglPushMatrix();
+//   xglTranslatef(x, y, z);
+//   xglScalef(16622.8, 16622.8, 16622.8);
+//     xglBegin(GL_TRIANGLES);
 //   for (i = 0; i < 20; i++)
 //      subdivide(&vdata[tindices[i][0]][0],
 //                &vdata[tindices[i][1]][0],
 //                &vdata[tindices[i][2]][0], 3);
 //     glutSolidSphere(1.0, 25, 25);
 
-//     glEnd();
-    //glPopMatrix();
+//     xglEnd();
+    //xglPopMatrix();
 
     glutSolidSphere(1.0, 10, 10);
 
-    glEndList();
+    xglEndList();
 }
 
 
@@ -178,33 +180,37 @@ void fgSunRender() {
     diff[3] = 0.0; */
 
     /* set lighting parameters */
-    /* glLightfv(GL_LIGHT0, GL_AMBIENT, color );
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, color );
-    glMaterialfv(GL_FRONT, GL_AMBIENT, amb);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, diff); */
+    /* xglLightfv(GL_LIGHT0, GL_AMBIENT, color );
+    xglLightfv(GL_LIGHT0, GL_DIFFUSE, color );
+    xglMaterialfv(GL_FRONT, GL_AMBIENT, amb);
+    xglMaterialfv(GL_FRONT, GL_DIFFUSE, diff); */
 
-    glDisable( GL_LIGHTING );
+    xglDisable( GL_LIGHTING );
 
-    glPushMatrix();
-    glTranslatef(xSun, ySun, zSun);
-    glScalef(1400, 1400, 1400);
+    xglPushMatrix();
+    xglTranslatef(xSun, ySun, zSun);
+    xglScalef(1400, 1400, 1400);
 
-    glColor3f(0.85, 0.65, 0.05);
+    xglColor3f(0.85, 0.65, 0.05);
 
-    /* glColor3fv( color ); */
-    /* glutSolidSphere(1.0, 25, 25); */
-    glCallList(sun_obj);
+    /* xglColor3fv( color ); */
+    /* xglutSolidSphere(1.0, 25, 25); */
+    xglCallList(sun_obj);
 
-    glPopMatrix();
+    xglPopMatrix();
 
-    glEnable( GL_LIGHTING );
+    xglEnable( GL_LIGHTING );
 }
 
 
 /* $Log$
-/* Revision 1.5  1997/12/12 21:41:31  curt
-/* More light/material property tweaking ... still a ways off.
+/* Revision 1.6  1997/12/15 23:55:04  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.5  1997/12/12 21:41:31  curt
+ * More light/material property tweaking ... still a ways off.
+ *
  * Revision 1.4  1997/12/10 22:37:53  curt
  * Prepended "fg" on the name of all global structures that didn't have it yet.
  * i.e. "struct WEATHER {}" became "struct fgWEATHER {}"

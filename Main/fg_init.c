@@ -30,8 +30,8 @@
 #include "fg_init.h"
 #include "views.h"
 
-#include "../constants.h"
-#include "../general.h"
+#include "../Include/constants.h"
+#include "../Include/general.h"
 
 #include "../Aircraft/aircraft.h"
 #include "../Cockpit/cockpit.h"
@@ -218,9 +218,13 @@ void fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.17  1997/12/15 20:59:09  curt
-/* Misc. tweaks.
+/* Revision 1.18  1997/12/15 23:54:49  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.17  1997/12/15 20:59:09  curt
+ * Misc. tweaks.
+ *
  * Revision 1.16  1997/12/12 19:52:48  curt
  * Working on lightling and material properties.
  *

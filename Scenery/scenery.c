@@ -29,10 +29,12 @@
 #endif
 
 #include <GL/glut.h>
+#include "../XGL/xgl.h"
+
 #include <stdio.h>
 #include <string.h>
 
-#include "../general.h"
+#include "../Include/general.h"
 
 #include "astro.h"
 #include "obj.h"
@@ -80,27 +82,31 @@ void fgSceneryUpdate(double lon, double lat, double elev) {
 
 /* Render out the current scene */
 void fgSceneryRender() {
-    static GLfloat terrain_color[4] = { 0.4, 0.8, 0.3, 1.0 };
+    static GLfloat terrain_color[4] = { 0.6, 0.8, 0.4, 1.0 };
     static GLfloat terrain_ambient[4];
     static GLfloat terrain_diffuse[4];
     int i;
 
     for ( i = 0; i < 4; i++ ) {
-	terrain_ambient[i] = terrain_color[i];
+	terrain_ambient[i] = terrain_color[i] * 0.5;
 	terrain_diffuse[i] = terrain_color[i];
     }
 
-    glMaterialfv(GL_FRONT, GL_AMBIENT, terrain_ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, terrain_diffuse);
+    xglMaterialfv(GL_FRONT, GL_AMBIENT, terrain_ambient);
+    xglMaterialfv(GL_FRONT, GL_DIFFUSE, terrain_diffuse);
 
-    glCallList(area_terrain);
+    xglCallList(area_terrain);
 }
 
 
 /* $Log$
-/* Revision 1.27  1997/12/12 21:41:30  curt
-/* More light/material property tweaking ... still a ways off.
+/* Revision 1.28  1997/12/15 23:55:02  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.27  1997/12/12 21:41:30  curt
+ * More light/material property tweaking ... still a ways off.
+ *
  * Revision 1.26  1997/12/12 19:52:58  curt
  * Working on lightling and material properties.
  *

@@ -38,8 +38,8 @@
 
 #include <GL/glut.h>
 
-#include "../constants.h"
-#include "../types.h"
+#include "../Include/constants.h"
+#include "../Include/types.h"
 #include "../Math/fg_geodesy.h"
 #include "../Math/fg_random.h"
 #include "../Math/mat3.h"
@@ -396,9 +396,13 @@ GLint mesh_to_OpenGL(struct MESH *m) {
 
 
 /* $Log$
-/* Revision 1.23  1997/10/30 12:38:44  curt
-/* Working on new scenery subsystem.
+/* Revision 1.24  1997/12/15 23:54:59  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.23  1997/10/30 12:38:44  curt
+ * Working on new scenery subsystem.
+ *
  * Revision 1.22  1997/10/28 21:00:21  curt
  * Changing to new terrain format.
  *

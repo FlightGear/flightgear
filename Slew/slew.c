@@ -30,7 +30,7 @@
 #include "../flight.h"
 #include "../../Aircraft/aircraft.h"
 #include "../../Controls/controls.h"
-#include "../../constants.h"
+#include "../../Include/constants.h"
 
 
 #ifndef M_PI                                    
@@ -91,9 +91,13 @@ void fgSlewUpdate() {
 
 
 /* $Log$
-/* Revision 1.6  1997/08/27 03:30:11  curt
-/* Changed naming scheme of basic shared structures.
+/* Revision 1.7  1997/12/15 23:54:42  curt
+/* Add xgl wrappers for debugging.
+/* Generate terrain normals on the fly.
 /*
+ * Revision 1.6  1997/08/27 03:30:11  curt
+ * Changed naming scheme of basic shared structures.
+ *
  * Revision 1.5  1997/07/19 22:35:06  curt
  * Moved fiddled with PI to avoid compiler warnings.
  *

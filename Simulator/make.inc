@@ -30,7 +30,7 @@
 #---------------------------------------------------------------------------
 
 FG_VERSION_MAJOR = 0
-FG_VERSION_MINOR = 17
+FG_VERSION_MINOR = 18
 FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 
 
@@ -60,6 +60,8 @@ LN = ln -sf
 #
 # -O3 -fomit-frame-pointer -funroll-all-loops -ffast-math
 #              - Other potential compiler optimization flags
+#
+# -
 #---------------------------------------------------------------------------
 
 GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(FG_VERSION)\"
@@ -87,6 +89,17 @@ GLOBAL_CFLAGS = -g -Wall -DVERSION=\"$(FG_VERSION)\"
 
 
 #---------------------------------------------------------------------------
+# Debugging options.
+#
+# Uncomment the following two lines to enable OpenGL function call tracing.
+# This mechanism is provided courtesy of Steve Baker <sbaker@link.com>
+#---------------------------------------------------------------------------
+
+# FG_DEBUG_FLAGS = -DXGL_TRACE
+# FG_DEBUG_LIBS = ../XGL/libXGL.a
+
+
+#---------------------------------------------------------------------------
 # Uncomment one of the following sections depending on your system
 #
 # You may set FG_GRAPHICS to include any of the following options depending
@@ -102,7 +115,7 @@ INTERFACE_FILES = GLUTmain.c GLUTkey.c
 MESA_LIBS = -L/usr/lib/mesa -lMesatk -lMesaaux -lMesaGLU -lMesaGL
 X11_LIBS =  -L/usr/X11R6/lib -lXext -lXmu -lXi -lX11
 GRAPHICS_LIBS = $(MESA_LIBS) $(X11_LIBS)
-FG_CFLAGS = $(GLOBAL_CFLAGS)
+FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
@@ -114,7 +127,7 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 # INTERFACE_LIBS = -lglut
 # INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
-# FG_CFLAGS = $(GLOBAL_CFLAGS)
+# FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
@@ -125,7 +138,7 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 # INTERFACE_LIBS = -lglut
 # INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS =  -lGLU -lGL -lXext -lXmu -lXi -lX11
-# FG_CFLAGS = $(GLOBAL_CFLAGS)
+# FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
@@ -135,13 +148,17 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 # INTERFACE_LIBS = ../Win32/libglut.a
 # INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS = -lglu32 -lopengl32 -luser32 -lgdi32
-# FG_CFLAGS = $(GLOBAL_CFLAGS) -DWIN32 -DUSE_RAND
+# FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS) -DWIN32 -DUSE_RAND
 # LN = copy
 #---------------------------------------------------------------------------
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.25  1997/12/15 23:54:26  curt
+# Add xgl wrappers for debugging.
+# Generate terrain normals on the fly.
+#
 # Revision 1.24  1997/12/12 21:41:24  curt
 # More light/material property tweaking ... still a ways off.
 #
