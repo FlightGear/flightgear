@@ -82,8 +82,8 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, ifstream& coeffDefFile)
   coeffdef["FG_RUDDER"]    = 8192;
   coeffdef["FG_MACH"]      = 16384;
   coeffdef["FG_ALTITUDE"]  = 32768L;
-  coeffdef["FG_I2VEL"]     = 65536L;
-  coeffdef["FG_HALF"]      = 131072L;
+  coeffdef["FG_BI2VEL"]    = 65536L;
+  coeffdef["FG_CI2VEL"]    = 131072L;
 
   FDMExec     = fdex;
   State       = FDMExec->GetState();
@@ -245,10 +245,15 @@ FGCoefficient::FGCoefficient(FGFDMExec* fdex, ifstream& coeffDefFile)
         mult_count++;
         cout << "h ";
       }
-      if (multipliers & FG_I2VEL) {
-        mult_idx[mult_count] = FG_I2VEL;
+      if (multipliers & FG_BI2VEL) {
+        mult_idx[mult_count] = FG_BI2VEL;
         mult_count++;
-        cout << "1 /(2*Vt) ";
+        cout << "b /(2*Vt) ";
+      }
+      if (multipliers & FG_CI2VEL) {
+        mult_idx[mult_count] = FG_CI2VEL;
+        mult_count++;
+        cout << "c /(2*Vt) ";
       }
 			cout << endl;
 
@@ -450,8 +455,10 @@ float FGCoefficient::GetCoeffVal(int val_idx)
     return State->GetMach();
   case FG_ALTITUDE:
     return State->Geth();
-  case FG_I2VEL:
-    return 1.0/(0.5 * State->GetVt());
+  case FG_BI2VEL:
+    return Aircraft->GetWingSpan()/(2.0 * State->GetVt());
+  case FG_CI2VEL:
+    return Aircraft->Getcbar()/(2.0 * State->GetVt());
   }
   return 0;
 }

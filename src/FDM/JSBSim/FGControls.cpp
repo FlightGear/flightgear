@@ -51,8 +51,8 @@ FGControls::~FGControls() {
 
 
 // $Log$
-// Revision 1.2  1999/06/21 03:01:38  curt
-// Updated for both JSBsim and Tony Peden's c172 flight model.
+// Revision 1.3  1999/06/28 15:39:23  curt
+// Updates contributed by Jon Berndt.
 //
 // Revision 1.1  1999/02/13 01:12:03  curt
 // Initial Revision.

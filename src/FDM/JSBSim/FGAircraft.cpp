@@ -385,9 +385,14 @@ void FGAircraft::FAero(void)
     for (int ctr=0; ctr < coeff_ctr[axis_ctr]; ctr++)
       F[axis_ctr] += Coeff[axis_ctr][ctr]->TotalValue();
 
-  Forces[0] +=  F[DragCoeff]*cos(alpha)*cos(beta) - F[SideCoeff]*cos(alpha)*sin(beta) - F[LiftCoeff]*sin(alpha);
-  Forces[1] +=  F[DragCoeff]*sin(beta)            + F[SideCoeff]*cos(beta);
-  Forces[2] +=  F[DragCoeff]*sin(alpha)*cos(beta) - F[SideCoeff]*sin(alpha)*sin(beta) + F[LiftCoeff]*cos(alpha);
+  Forces[0] += - F[DragCoeff]*cos(alpha)*cos(beta)
+               - F[SideCoeff]*cos(alpha)*sin(beta)
+               + F[LiftCoeff]*sin(alpha);
+  Forces[1] +=   F[DragCoeff]*sin(beta)
+               + F[SideCoeff]*cos(beta);
+  Forces[2] += - F[DragCoeff]*sin(alpha)*cos(beta)
+               - F[SideCoeff]*sin(alpha)*sin(beta)
+               - F[LiftCoeff]*cos(alpha);
 }
 
 
