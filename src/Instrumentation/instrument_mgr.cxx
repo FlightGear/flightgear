@@ -9,6 +9,7 @@
 #include "attitude_indicator.hxx"
 #include "altimeter.hxx"
 #include "turn_indicator.hxx"
+#include "slip_skid_ball.hxx"
 #include "heading_indicator.hxx"
 #include "vertical_speed_indicator.hxx"
 
@@ -19,6 +20,7 @@ FGInstrumentMgr::FGInstrumentMgr ()
     set_subsystem("ai", new AttitudeIndicator);
     set_subsystem("alt", new Altimeter);
     set_subsystem("ti", new TurnIndicator);
+    set_subsystem("ball", new SlipSkidBall);
     set_subsystem("hi", new HeadingIndicator);
     set_subsystem("vsi", new VerticalSpeedIndicator);
 }
