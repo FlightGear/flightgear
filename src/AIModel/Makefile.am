@@ -5,6 +5,8 @@ libAIModel_a_SOURCES = \
 	AIBase.hxx AIBase.cxx \
 	AIAircraft.hxx AIAircraft.cxx \
         AIShip.hxx AIShip.cxx \
-        AIBallistic.hxx AIBallistic.cxx
+        AIBallistic.hxx AIBallistic.cxx \
+	AIStorm.hxx AIStorm.cxx \
+	AIThermal.hxx AIThermal.cxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
