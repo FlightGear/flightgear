@@ -42,7 +42,7 @@ TransPar FGTransmission::Parse() {
   TransPar   tpar;
   string     tokens[20];
   int        msglen,toklen;
-  char       dum;
+  //char       dum;
   int        i,j,k;
   const char *capl = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
