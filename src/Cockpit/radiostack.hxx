@@ -67,6 +67,7 @@ public:
     // Update nav/adf radios based on current postition
     void search ();
 
+    inline FGDME *get_dme() { return &dme; }
     inline FGNavCom *get_navcom1() { return &navcom1; }
     inline FGNavCom *get_navcom2() { return &navcom2; }
 };

@@ -31,7 +31,7 @@
 #endif                                   
 
 
-const int FG_NET_GUI_VERSION = 1;
+const int FG_NET_GUI_VERSION = 2;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -56,23 +56,28 @@ public:
     // Positions
     double longitude;		// geodetic (radians)
     double latitude;		// geodetic (radians)
-    double altitude;		// above sea level (meters)
-    double agl;			// above ground level (meters)
-    double phi;			// roll (radians)
-    double theta;		// pitch (radians)
-    double psi;			// yaw or true heading (radians)
+    float altitude;		// above sea level (meters)
+    float agl;			// above ground level (meters)
+    float phi;			// roll (radians)
+    float theta;		// pitch (radians)
+    float psi;			// yaw or true heading (radians)
 
     // Velocities
-    double vcas;
-    double climb_rate;		// feet per second
+    float vcas;
+    float climb_rate;		// feet per second
 
     // Consumables
     int num_tanks;		// Max number of fuel tanks
-    double fuel_quantity[FG_MAX_TANKS];
+    float fuel_quantity[FG_MAX_TANKS];
 
     // Environment
     time_t cur_time;            // current unix time
     long int warp;              // offset in seconds to unix time
+
+    // Approach
+    float dist_nm;              // distance to tuned navaid in nautical miles
+    float course_deviation_deg; // degrees off target course
+    float gs_deviation_deg;     // degrees off target glide slope
 };
 
 

@@ -30,6 +30,7 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/timing/sg_time.hxx>
 
+#include <Cockpit/radiostack.hxx>
 #include <FDM/flight.hxx>
 #include <Time/tmp.hxx>
 #include <Main/fg_props.hxx>
@@ -65,6 +66,20 @@ static void htond (double &x)
     
         Double_Overlay [0] = htonl (Double_Overlay [1]);
         Double_Overlay [1] = htonl (Holding_Buffer);
+    } else {
+        return;
+    }
+}
+static void htonf (float &x)	
+{
+    if ( sgIsLittleEndian() ) {
+        int    *Float_Overlay;
+        int     Holding_Buffer;
+    
+        Float_Overlay = (int *) &x;
+        Holding_Buffer = Float_Overlay [0];
+    
+        Float_Overlay [0] = htonl (Holding_Buffer);
     } else {
         return;
     }
@@ -129,25 +144,49 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     net->cur_time = globals->get_time_params()->get_cur_time();
     net->warp = globals->get_warp();
 
+    // Approach
+    net->dist_nm = current_radiostack->get_dme()->get_dist();
+    net->course_deviation_deg
+        = current_radiostack->get_navcom1()->get_nav_heading()
+        - current_radiostack->get_navcom1()->get_nav_radial();
+    while ( net->course_deviation_deg >  180.0 ) {
+        net->course_deviation_deg -= 360.0;
+    }
+    while ( net->course_deviation_deg < -180.0 ) {
+        net->course_deviation_deg += 360.0;
+    }
+    if ( fabs(net->course_deviation_deg) > 90.0 )
+        net->course_deviation_deg
+            = ( net->course_deviation_deg<0.0
+                ? -net->course_deviation_deg - 180.0
+                : -net->course_deviation_deg + 180.0 );
+    net->gs_deviation_deg
+        = current_radiostack->get_navcom1()->get_nav_gs_needle_deflection()
+        / 5.0;
+
     // Convert the net buffer to network format
     net->version = htonl(net->version);
 
     htond(net->longitude);
     htond(net->latitude);
-    htond(net->altitude);
-    htond(net->phi);
-    htond(net->theta);
-    htond(net->psi);
-    htond(net->vcas);
-    htond(net->climb_rate);
+    htonf(net->altitude);
+    htonf(net->phi);
+    htonf(net->theta);
+    htonf(net->psi);
+    htonf(net->vcas);
+    htonf(net->climb_rate);
 
     for ( i = 0; i < net->num_tanks; ++i ) {
-        htond(net->fuel_quantity[i]);
+        htonf(net->fuel_quantity[i]);
     }
     net->num_tanks = htonl(net->num_tanks);
 
     net->cur_time = htonl( net->cur_time );
     net->warp = htonl( net->warp );
+
+    htonf(net->dist_nm);
+    htonf(net->course_deviation_deg);
+    htonf(net->gs_deviation_deg);
 }
 
 
@@ -159,20 +198,24 @@ void FGNetGUI2Props( FGNetGUI *net ) {
 
     htond(net->longitude);
     htond(net->latitude);
-    htond(net->altitude);
-    htond(net->phi);
-    htond(net->theta);
-    htond(net->psi);
-    htond(net->vcas);
-    htond(net->climb_rate);
+    htonf(net->altitude);
+    htonf(net->phi);
+    htonf(net->theta);
+    htonf(net->psi);
+    htonf(net->vcas);
+    htonf(net->climb_rate);
 
     net->num_tanks = htonl(net->num_tanks);
     for ( i = 0; i < net->num_tanks; ++i ) {
-	htond(net->fuel_quantity[i]);
+	htonf(net->fuel_quantity[i]);
     }
 
     net->cur_time = ntohl(net->cur_time);
     net->warp = ntohl(net->warp);
+
+    htonf(net->dist_nm);
+    htonf(net->course_deviation_deg);
+    htonf(net->gs_deviation_deg);
 
     if ( net->version == FG_NET_GUI_VERSION ) {
         // cout << "pos = " << net->longitude << " " << net->latitude << endl;
@@ -200,6 +243,13 @@ void FGNetGUI2Props( FGNetGUI *net ) {
 	}
 
         globals->set_warp( net->warp );
+
+        // Approach
+        fgSetDouble( "/radios/dme/distance-nm", net->dist_nm );
+        fgSetDouble( "/radios/nav[0]/heading-needle-deflection",
+                     net->course_deviation_deg );
+        fgSetDouble( "/radios/nav[0]/gs-needle-deflection",
+                     net->gs_deviation_deg );
     } else {
 	SG_LOG( SG_IO, SG_ALERT,
                 "Error: version mismatch in FGNetNativeGUI2Props()" );
