@@ -83,7 +83,9 @@ void GLUTkey(unsigned char k, int x, int y) {
     w = &current_weather;
 
     FG_LOG( FG_INPUT, FG_DEBUG, "Key hit = " << k );
-    puKeyboard(k, PU_DOWN );
+    if ( puKeyboard(k, PU_DOWN) ) {
+	return;
+    }
 
     if ( GLUT_ACTIVE_ALT && glutGetModifiers() ) {
 	FG_LOG( FG_INPUT, FG_DEBUG, " SHIFTED" );
@@ -306,7 +308,10 @@ void GLUTspecialkey(int k, int x, int y) {
     v = &current_view;
 
     FG_LOG( FG_INPUT, FG_DEBUG, "Special key hit = " << k );
-    puKeyboard(k + PU_KEY_GLUT_SPECIAL_OFFSET, PU_DOWN);
+
+    if ( puKeyboard(k + PU_KEY_GLUT_SPECIAL_OFFSET, PU_DOWN) ) {
+	return;
+    }
 
     if ( GLUT_ACTIVE_SHIFT && glutGetModifiers() ) {
 	FG_LOG( FG_INPUT, FG_DEBUG, " SHIFTED" );
