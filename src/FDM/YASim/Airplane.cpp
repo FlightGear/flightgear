@@ -86,6 +86,12 @@ void Airplane::consumeFuel(float dt)
     if(outOfFuel)
         for(int i=0; i<_thrusters.size(); i++)
             ((ThrustRec*)_thrusters.get(i))->thruster->setFuelState(false);
+
+    // Set the tank masses on the RigidBody
+    for(i=0; i<_tanks.size(); i++) {
+        Tank* t = (Tank*)_tanks.get(i);
+        _model.getBody()->setMass(t->handle, t->fill);
+    }
 }
 
 ControlMap* Airplane::getControlMap()
