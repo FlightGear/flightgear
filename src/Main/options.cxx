@@ -1208,10 +1208,6 @@ fgUsage ()
 	 << endl;
     cout << endl;
 
-    cout << "Scenery Options:" << endl;
-    cout << "\t--tile-radius=n:  specify tile radius, must be 1 - 4" << endl;
-    cout << endl;
-
     cout << "Hud Options:" << endl;
     cout << "\t--units-feet:  Hud displays units in feet" << endl;
     cout << "\t--units-meters:  Hud displays units in meters" << endl;

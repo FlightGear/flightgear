@@ -3,8 +3,6 @@
 OSTYPE=`uname -s`
 MACHINE=`uname -m`
 AUTO_MAKE_VERSION=`automake --version | head -1 | awk '{print $4}' | sed -e 's/\-p[0-9]$//' | sed -e 's/\.//'`
-# AM_CONDITIONAL(ANCIENT_AUTOMAKE, test $AUTO_MAKE_VERSION -lt 14)
-# AM_CONDITIONAL(OLD_AUTOMAKE, test $AUTO_MAKE_VERSION -lt 15)
 
 echo "Host info: $OSTYPE $MACHINE"
 echo -n " automake: `automake --version | head -1 | awk '{print $4}'`"
