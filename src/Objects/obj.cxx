@@ -469,6 +469,16 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t,
 		// read scenery versions number
 		in >> scenery_version;
 		// cout << "scenery_version = " << scenery_version << endl;
+		if ( scenery_version > 0.4 ) {
+		    FG_LOG( FG_TERRAIN, FG_ALERT, 
+			    "\nYou are attempting to load a tile format that\n"
+			    << "is newer than this version of flightgear can\n"
+			    << "handle.  You should upgrade your copy of\n"
+			    << "FlightGear to the newest version.  For\n"
+			    << "details, please see:\n"
+			    << "\n    http://www.flightgear.org\n" );
+		    exit(-1);
+		}
 	    } else if ( token == "gbs" ) {
 		// reference point (center offset)
 		if ( is_base ) {
