@@ -25,8 +25,7 @@
 #  include <config.h>
 #endif
 
-// #include <sys/types.h>		// for gdbm open flags
-// #include <sys/stat.h>		// for gdbm open flags
+#include <stdio.h>              // sprintf()
 
 #include <simgear/compiler.h>
 
@@ -204,6 +203,133 @@ bool FGRunways::next( FGRunway* r ) {
     r->end2_flags =    (const char *) pEnd2(row);
 
     return true;
+}
+
+
+// Return the runway closest to a given heading
+bool FGRunways::search( const string& aptid, const int tgt_hdg,
+                        FGRunway* runway )
+{
+    FGRunway r;
+    double found_dir = 0.0;  
+ 
+    if ( !search( aptid, &r ) ) {
+	SG_LOG( SG_GENERAL, SG_ALERT,
+                "Failed to find " << aptid << " in database." );
+	return false;
+    }
+    
+    double diff;
+    double min_diff = 360.0;
+    
+    while ( r.id == aptid ) {
+	// forward direction
+	diff = tgt_hdg - r.heading;
+	while ( diff < -180.0 ) { diff += 360.0; }
+	while ( diff >  180.0 ) { diff -= 360.0; }
+	diff = fabs(diff);
+        // SG_LOG( SG_GENERAL, SG_INFO,
+        //	   "Runway " << r.rwy_no << " heading = " << r.heading <<
+        //	   " diff = " << diff );
+	if ( diff < min_diff ) {
+	    min_diff = diff;
+	    runway = &r;
+	    found_dir = 0;
+	}
+	
+	// reverse direction
+	diff = tgt_hdg - r.heading - 180.0;
+	while ( diff < -180.0 ) { diff += 360.0; }
+	while ( diff >  180.0 ) { diff -= 360.0; }
+	diff = fabs(diff);
+        // SG_LOG( SG_GENERAL, SG_INFO,
+        //	   "Runway -" << r.rwy_no << " heading = " <<
+        //	   r.heading + 180.0 <<
+        //	   " diff = " << diff );
+	if ( diff < min_diff ) {
+	    min_diff = diff;
+	    runway = &r;
+	    found_dir = 180.0;
+	}
+	
+	next( &r );
+    }
+    
+    // SG_LOG( SG_GENERAL, SG_INFO, "closest runway = " << runway->rwy_no
+    //	       << " + " << found_dir );
+    
+    double heading = runway->heading + found_dir;
+    while ( heading >= 360.0 ) { heading -= 360.0; }
+    runway->heading = heading;
+
+    return true;
+}
+
+
+// Return the runway number of the runway closest to a given heading
+string FGRunways::search( const string& aptid, const int tgt_hdg ) {
+    FGRunway r;
+    string rn;
+    double found_dir = 0.0;  
+ 
+    if ( !search( aptid, &r ) ) {
+	SG_LOG( SG_GENERAL, SG_ALERT,
+                "Failed to find " << aptid << " in database." );
+	return "NN";
+    }
+    
+    double diff;
+    double min_diff = 360.0;
+    
+    while ( r.id == aptid ) {
+	// forward direction
+	diff = tgt_hdg - r.heading;
+	while ( diff < -180.0 ) { diff += 360.0; }
+	while ( diff >  180.0 ) { diff -= 360.0; }
+	diff = fabs(diff);
+        // SG_LOG( SG_GENERAL, SG_INFO,
+        //	   "Runway " << r.rwy_no << " heading = " << r.heading <<
+        //	   " diff = " << diff );
+	if ( diff < min_diff ) {
+	    min_diff = diff;
+	    rn = r.rwy_no;
+	    found_dir = 0;
+	}
+	
+	// reverse direction
+	diff = tgt_hdg - r.heading - 180.0;
+	while ( diff < -180.0 ) { diff += 360.0; }
+	while ( diff >  180.0 ) { diff -= 360.0; }
+	diff = fabs(diff);
+        // SG_LOG( SG_GENERAL, SG_INFO,
+        //	   "Runway -" << r.rwy_no << " heading = " <<
+        //	   r.heading + 180.0 <<
+        //	   " diff = " << diff );
+	if ( diff < min_diff ) {
+	    min_diff = diff;
+	    rn = r.rwy_no;
+	    found_dir = 180.0;
+	}
+	
+	next( &r );
+    }
+    
+    // SG_LOG( SG_GENERAL, SG_INFO, "closest runway = " << r.rwy_no
+    //	       << " + " << found_dir );
+    // rn = r.rwy_no;
+    // cout << "In search, rn = " << rn << endl;
+    if ( found_dir == 180 ) {
+	int irn = atoi(rn.c_str());
+	irn += 18;
+	if ( irn > 36 ) {
+	    irn -= 36;
+	}
+	char buf[4];            // 2 chars + string terminator + 1 for safety
+	sprintf(buf, "%i", irn);
+	rn = buf;
+    }	
+    
+    return rn;
 }
 
 

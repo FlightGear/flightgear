@@ -871,7 +871,10 @@ parse_option (const string& arg)
 	double speed = atof(val.substr(pos+1).c_str());
 	SG_LOG(SG_GENERAL, SG_INFO, "WIND: " << dir << '@' << 
 	       speed << " knots" << endl);
-				// convert to fps
+	fgSetDouble("/environment/wind-from-heading-deg", dir);
+	fgSetDouble("/environment/wind-speed-knots", speed);
+
+        // convert to fps
 	speed *= SG_NM_TO_METER * SG_METER_TO_FEET * (1.0/3600);
 	dir += 180;
 	if (dir >= 360)

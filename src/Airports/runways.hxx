@@ -125,6 +125,13 @@ public:
     // "runway" is not changed if "apt" is not found.
     bool search( const string& aptid, FGRunway* runway );
     bool search( const string& aptid, const string& rwyno, FGRunway* runway );
+
+    // DCL - search for runway closest to desired heading in degrees
+    bool search( const string& aptid, const int hdg, FGRunway* runway );
+
+    // Return the runway number of the runway closest to a given heading
+    string FGRunways::search( const string& aptid, const int tgt_hdg );
+
     FGRunway search( const string& aptid );
     bool next( FGRunway* runway );
     FGRunway next();

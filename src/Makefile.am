@@ -14,6 +14,7 @@ SUBDIRS = \
 	Include \
         Aircraft \
         Airports \
+        ATC \
         Autopilot \
         Cockpit \
         Controls \

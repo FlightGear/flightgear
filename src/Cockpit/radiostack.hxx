@@ -35,6 +35,7 @@
 
 #include <Navaids/ilslist.hxx>
 #include <Navaids/navlist.hxx>
+#include <ATC/atislist.hxx>
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 
@@ -53,6 +54,38 @@ class FGRadioStack : public FGSubsystem
     SGPropertyNode *alt_node;
 
     bool need_update;
+
+    FGATIS atis;
+
+    string comm1_ident;
+    bool comm1_valid;
+    bool comm1_inrange;
+    double comm1_freq;
+    double comm1_alt_freq;
+    double comm1_vol_btn;
+    bool comm1_ident_btn;
+    double comm1_x;
+    double comm1_y;
+    double comm1_z;
+    double comm1_dist;
+    double comm1_elev;
+    double comm1_range;
+    double comm1_effective_range;
+
+    string comm2_ident;
+    bool comm2_valid;
+    bool comm2_inrange;
+    double comm2_freq;
+    double comm2_alt_freq;
+    double comm2_vol_btn;
+    bool comm2_ident_btn;
+    double comm2_x;
+    double comm2_y;
+    double comm2_z;
+    double comm2_dist;
+    double comm2_elev;
+    double comm2_range;
+    double comm2_effective_range;
 
     string nav1_ident;
     string nav1_trans_ident;
@@ -187,6 +220,30 @@ public:
     // Update nav/adf radios based on current postition
     void search ();
 
+    // COMM1 Setters
+    inline void set_comm1_freq( double freq ) {
+	comm1_freq = freq; need_update = true;
+    }
+    inline void set_comm1_alt_freq( double freq ) { comm1_alt_freq = freq; }
+    inline void set_comm1_vol_btn( double val ) {
+	if ( val < 0.0 ) val = 0.0;
+	if ( val > 1.0 ) val = 1.0;
+	comm1_vol_btn = val;
+    }
+    inline void set_comm1_ident_btn( bool val ) { comm1_ident_btn = val; }
+
+    // COMM2 Setters
+    inline void set_comm2_freq( double freq ) {
+	comm2_freq = freq; need_update = true;
+    }
+    inline void set_comm2_alt_freq( double freq ) { comm2_alt_freq = freq; }
+    inline void set_comm2_vol_btn( double val ) {
+	if ( val < 0.0 ) val = 0.0;
+	if ( val > 1.0 ) val = 1.0;
+	comm2_vol_btn = val;
+    }
+    inline void set_comm2_ident_btn( bool val ) { comm2_ident_btn = val; }
+
     // NAV1 Setters
     inline void set_nav1_freq( double freq ) {
 	nav1_freq = freq; need_update = true;
@@ -235,6 +292,13 @@ public:
     }
     inline void set_adf_ident_btn( bool val ) { adf_ident_btn = val; }
 
+    // COMM1 Accessors
+    inline double get_comm1_freq () const { return comm1_freq; }
+    inline double get_comm1_alt_freq () const { return comm1_alt_freq; }
+
+    // COMM2 Accessors
+    inline double get_comm2_freq () const { return comm2_freq; }
+    inline double get_comm2_alt_freq () const { return comm2_alt_freq; }
 
     // NAV1 Accessors
     inline double get_nav1_freq () const { return nav1_freq; }
@@ -260,6 +324,14 @@ public:
     inline bool get_outer_blink () const { return outer_blink; }
 
     // Calculated values.
+    inline bool get_comm1_inrange() const { return comm1_inrange; }
+    inline double get_comm1_vol_btn() const { return comm1_vol_btn; }
+    inline bool get_comm1_ident_btn() const { return comm1_ident_btn; }
+
+    inline bool get_comm2_inrange() const { return comm2_inrange; }
+    inline double get_comm2_vol_btn() const { return comm2_vol_btn; }
+    inline bool get_comm2_ident_btn() const { return comm2_ident_btn; }
+
     inline bool get_nav1_inrange() const { return nav1_inrange; }
     bool get_nav1_to_flag () const;
     bool get_nav1_from_flag () const;

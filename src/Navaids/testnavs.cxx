@@ -11,7 +11,10 @@ int main() {
     SGPath p_nav( "/home/curt/FlightGear/Navaids/default.nav" );
     current_navlist->init( p_nav );
     FGNav n;
-    if ( current_navlist->query( -93.2, 45.14, 3000, 117.30, &n) ) {
+    if ( current_navlist->query( -93.2 * SG_DEGREES_TO_RADIANS,
+                                 45.14 * SG_DEGREES_TO_RADIANS,
+                                 3000, 117.30, &n) )
+    {
 	cout << "Found a vor station in range" << endl;
 	cout << " id = " << n.get_ident() << endl;
     } else {
@@ -22,7 +25,10 @@ int main() {
     SGPath p_ils( "/home/curt/FlightGear/Navaids/default.ils" );
     current_ilslist->init( p_ils );
     FGILS i;
-    if ( current_ilslist->query( -93.1, 45.24, 3000, 110.30, &i) ) {
+    if ( current_ilslist->query( -93.1 * SG_DEGREES_TO_RADIANS,
+                                 45.24 * SG_DEGREES_TO_RADIANS,
+                                 3000, 110.30, &i) )
+    {
 	cout << "Found an ils station in range" << endl;
 	cout << " apt = " << i.get_aptcode() << endl;
 	cout << " rwy = " << i.get_rwyno() << endl;
@@ -34,8 +40,10 @@ int main() {
     SGPath p_fix( "/home/curt/FlightGear/Navaids/default.fix" );
     current_fixlist->init( p_fix );
     FGFix fix;
-    if ( current_fixlist->query( "SHELL", -82, 41, 3000,
-				 &fix, &heading, &dist) ) {
+    if ( current_fixlist->query( "SHELL", -82 * SG_DEGREES_TO_RADIANS,
+                                 41 * SG_DEGREES_TO_RADIANS, 3000,
+				 &fix, &heading, &dist) )
+    {
 	cout << "Found a matching fix" << endl;
 	cout << " id = " << fix.get_ident() << endl;
 	cout << " heading = " << heading << " dist = " << dist << endl;

@@ -56,6 +56,7 @@ fgfs_SOURCES = \
 
 fgfs_LDADD = \
 	$(top_builddir)/src/Aircraft/libAircraft.a \
+	$(top_builddir)/src/ATC/libATC.a \
 	$(top_builddir)/src/Autopilot/libAutopilot.a \
 	$(top_builddir)/src/Cockpit/libCockpit.a \
 	$(top_builddir)/src/Controls/libControls.a \

@@ -68,6 +68,7 @@
 #include <FDM/UIUCModel/uiuc_aircraftdir.h>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
+#include <ATC/ATCdisplay.hxx>
 #include <Autopilot/auto_gui.hxx>
 #include <Autopilot/newauto.hxx>
 #include <Cockpit/cockpit.hxx>
@@ -732,6 +733,25 @@ bool fgInitSubsystems( void ) {
     p_fix.append( "Navaids/default.fix" );
     current_fixlist->init( p_fix );
 
+    ////////////////////////////////////////////////////////////////////
+    // Initialize ATC list management and query systems
+    ////////////////////////////////////////////////////////////////////
+
+    //DCL
+    SG_LOG(SG_GENERAL, SG_INFO, "  ATIS");
+    current_atislist = new FGATISList;
+    SGPath p_atis( globals->get_fg_root() );
+    p_atis.append( "ATC/default.atis" );
+    current_atislist->init( p_atis );
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialise ATC display system
+    ////////////////////////////////////////////////////////////////////
+
+    //DCL
+    SG_LOG(SG_GENERAL, SG_INFO, "  ATC Display");
+    current_atcdisplay = new FGATCDisplay;
+    current_atcdisplay->init();   
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the built-in commands.

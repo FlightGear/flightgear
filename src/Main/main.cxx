@@ -73,7 +73,9 @@
 
 #include <Aircraft/aircraft.hxx>
 
+#include <ATC/ATCdisplay.hxx>
 #include <Autopilot/newauto.hxx>
+
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/radiostack.hxx>
 #include <Cockpit/steam.hxx>
@@ -866,6 +868,10 @@ void fgRenderFrame( void ) {
 
 	hud_and_panel->apply();
 	fgCockpitUpdate();
+
+	// Use the hud_and_panel ssgSimpleState for rendering the ATC output
+	// This only works properly if called before the panel call
+	current_atcdisplay->update();
 
 	// update the panel subsystem
 	if ( current_panel != NULL ) {
