@@ -167,7 +167,7 @@ sub triangle_1 {
 	    print "$subdir/$fileroot\n";
 	    $command = "Triangle/triangle";
 	    if ( -r "$subdir/$fileroot.poly" ) {
-		$command = " -pc";
+		$command .= " -pc";
 	    }
 	    $command .= " -a$max_area -q10 $subdir/$file";
 	    $command = fix_command($command);
@@ -471,6 +471,15 @@ sub install {
 	    if ( $remove_tmps ) {
 		unlink("$subdir/$file");
 	    }
+	} elsif ( $file =~ m/\d\d.apt$/ ) {
+	    $command = "cp $subdir/$file $install_dir/$file";
+	    # $command = fix_command($command);
+	    print "Running '$command'\n";
+	    open(OUT, "$command |");
+	    while ( <OUT> ) {
+		print $_;
+	    }
+	    close(OUT);
 	}
     }
 }
@@ -478,6 +487,9 @@ sub install {
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.27  1998/09/09 20:58:35  curt
+# Fixes and tweaks to handle area cutouts for airports.
+#
 # Revision 1.26  1998/08/26 22:31:29  curt
 # Write out version and "meta" info into each dem's subdirectory containing
 # all the tiles.
