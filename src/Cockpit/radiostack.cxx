@@ -379,6 +379,7 @@ FGRadioStack::update()
 	// cout << "not picking up vor. :-(" << endl;
     }
 
+#ifdef ENABLE_AUDIO_SUPPORT
     if ( nav1_valid && nav1_inrange ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
@@ -412,6 +413,7 @@ FGRadioStack::update()
 	    globals->get_soundmgr()->stop( "nav1-dme-ident" );
 	}
     }
+#endif
 
     if ( nav2_valid ) {
 	station = Point3D( nav2_x, nav2_y, nav2_z );
@@ -472,6 +474,7 @@ FGRadioStack::update()
 	// cout << "not picking up vor. :-(" << endl;
     }
 
+#ifdef ENABLE_AUDIO_SUPPORT
     if ( nav2_valid && nav2_inrange ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
@@ -505,6 +508,7 @@ FGRadioStack::update()
 	    globals->get_soundmgr()->stop( "nav2-dme-ident" );
 	}
     }
+#endif
 
     // adf
     if ( adf_valid ) {
@@ -534,6 +538,7 @@ FGRadioStack::update()
 	adf_inrange = false;
     }
 
+#ifdef ENABLE_AUDIO_SUPPORT
     if ( adf_valid && adf_inrange ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
@@ -557,6 +562,7 @@ FGRadioStack::update()
 	    globals->get_soundmgr()->stop( "adf-ident" );
 	}
     }
+#endif
 
     // marker beacon blinking
     bool light_on = ( outer_blink || middle_blink || inner_blink );
@@ -646,6 +652,7 @@ void FGRadioStack::search()
 	    nav1_dme_y = ils.get_dme_y();
 	    nav1_dme_z = ils.get_dme_z();
 
+#ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( "nav1-vor-ident" ) ) {
 		globals->get_soundmgr()->remove( "nav1-vor-ident" );
 	    }
@@ -670,6 +677,7 @@ void FGRadioStack::search()
 	    //      << " nav1_last_time = " << nav1_last_time
 	    //      << " current time = "
 	    //      << globals->get_time_params()->get_cur_time() << endl;
+#endif
 
 	    // cout << "Found an ils station in range" << endl;
 	    // cout << " id = " << ils.get_locident() << endl;
@@ -696,6 +704,7 @@ void FGRadioStack::search()
 	    nav1_y = nav1_dme_y = nav.get_y();
 	    nav1_z = nav1_dme_z = nav.get_z();
 
+#ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( "nav1-vor-ident" ) ) {
 		globals->get_soundmgr()->remove( "nav1-vor-ident" );
 	    }
@@ -719,6 +728,7 @@ void FGRadioStack::search()
 	    //      << nav1_play_count << " nav1_last_time = "
 	    //      << nav1_last_time << " current time = "
 	    //      << globals->get_time_params()->get_cur_time() << endl;
+#endif
 
 	    // cout << "Found a vor station in range" << endl;
 	    // cout << " id = " << nav.get_ident() << endl;
@@ -730,8 +740,10 @@ void FGRadioStack::search()
 	nav1_dme_dist = 0;
 	nav1_trans_ident = "";
 	last_nav1_ident = "";
+#ifdef ENABLE_AUDIO_SUPPORT
 	globals->get_soundmgr()->remove( "nav1-vor-ident" );
 	globals->get_soundmgr()->remove( "nav1-dme-ident" );
+#endif
 	// cout << "not picking up vor1. :-(" << endl;
     }
 
@@ -766,6 +778,7 @@ void FGRadioStack::search()
 	    nav2_dme_y = ils.get_dme_y();
 	    nav2_dme_z = ils.get_dme_z();
 
+#ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( "nav2-vor-ident" ) ) {
 		globals->get_soundmgr()->remove( "nav2-vor-ident" );
 	    }
@@ -789,6 +802,7 @@ void FGRadioStack::search()
 	    //      << nav2_play_count << " nav2_last_time = "
 	    //      << nav2_last_time << " current time = "
 	    //      << globals->get_time_params()->get_cur_time() << endl;
+#endif
 
 	    // cout << "Found an ils station in range" << endl;
 	    // cout << " id = " << ils.get_locident() << endl;
@@ -815,6 +829,7 @@ void FGRadioStack::search()
 	    nav2_y = nav2_dme_y = nav.get_y();
 	    nav2_z = nav2_dme_z = nav.get_z();
 
+#ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( "nav2-vor-ident" ) ) {
 		globals->get_soundmgr()->remove( "nav2-vor-ident" );
 	    }
@@ -838,6 +853,7 @@ void FGRadioStack::search()
 	    //      << nav2_play_count << " nav2_last_time = "
 	    //      << nav2_last_time << " current time = "
 	    //      << globals->get_time_params()->get_cur_time() << endl;
+#endif
 
 	    // cout << "Found a vor station in range" << endl;
 	    // cout << " id = " << nav.get_ident() << endl;
@@ -849,8 +865,10 @@ void FGRadioStack::search()
 	nav2_dme_dist = 0;
 	nav2_trans_ident = "";
 	last_nav2_ident = "";
+#ifdef ENABLE_AUDIO_SUPPORT
 	globals->get_soundmgr()->remove( "nav2-vor-ident" );
 	globals->get_soundmgr()->remove( "nav2-dme-ident" );
+#endif
 	// cout << "not picking up vor1. :-(" << endl;
     }
 
@@ -863,6 +881,7 @@ void FGRadioStack::search()
     if ( beacon_type == FGMkrBeacon::OUTER ) {
 	outer_marker = true;
 	// cout << "OUTER MARKER" << endl;
+#ifdef ENABLE_AUDIO_SUPPORT
 	if ( last_beacon != FGMkrBeacon::OUTER ) {
 	    if ( ! globals->get_soundmgr()->exists( "outer-marker" ) ) {
 		FGSimpleSound *sound = beacon.get_outer();
@@ -873,9 +892,11 @@ void FGRadioStack::search()
 		globals->get_soundmgr()->play_looped( "outer-marker" );
 	    }
 	}
+#endif
     } else if ( beacon_type == FGMkrBeacon::MIDDLE ) {
 	middle_marker = true;
 	// cout << "MIDDLE MARKER" << endl;
+#ifdef ENABLE_AUDIO_SUPPORT
 	if ( last_beacon != FGMkrBeacon::MIDDLE ) {
 	    if ( ! globals->get_soundmgr()->exists( "middle-marker" ) ) {
 		FGSimpleSound *sound = beacon.get_middle();
@@ -886,9 +907,11 @@ void FGRadioStack::search()
 		globals->get_soundmgr()->play_looped( "middle-marker" );
 	    }
 	}
+#endif
     } else if ( beacon_type == FGMkrBeacon::INNER ) {
 	inner_marker = true;
 	// cout << "INNER MARKER" << endl;
+#ifdef ENABLE_AUDIO_SUPPORT
 	if ( last_beacon != FGMkrBeacon::INNER ) {
 	    if ( ! globals->get_soundmgr()->exists( "inner-marker" ) ) {
 		FGSimpleSound *sound = beacon.get_inner();
@@ -899,11 +922,14 @@ void FGRadioStack::search()
 		globals->get_soundmgr()->play_looped( "inner-marker" );
 	    }
 	}
+#endif
     } else {
 	// cout << "no marker" << endl;
+#ifdef ENABLE_AUDIO_SUPPORT
 	globals->get_soundmgr()->stop( "outer-marker" );
 	globals->get_soundmgr()->stop( "middle-marker" );
 	globals->get_soundmgr()->stop( "inner-marker" );
+#endif
     }
     last_beacon = beacon_type;
 
@@ -932,6 +958,7 @@ void FGRadioStack::search()
 	    adf_y = nav.get_y();
 	    adf_z = nav.get_z();
 
+#ifdef ENABLE_AUDIO_SUPPORT
 	    if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
 		globals->get_soundmgr()->remove( "adf-ident" );
 	    }
@@ -948,6 +975,7 @@ void FGRadioStack::search()
 	    //      << adf_play_count << " adf_last_time = "
 	    //      << adf_last_time << " current time = "
 	    //      << globals->get_time_params()->get_cur_time() << endl;
+#endif
 
 	    // cout << "Found an adf station in range" << endl;
 	    // cout << " id = " << nav.get_ident() << endl;
@@ -956,7 +984,9 @@ void FGRadioStack::search()
 	adf_valid = false;
 	adf_ident = "";
 	adf_trans_ident = "";
+#ifdef ENABLE_AUDIO_SUPPORT
 	globals->get_soundmgr()->remove( "adf-ident" );
+#endif
 	last_adf_ident = "";
 	// cout << "not picking up adf. :-(" << endl;
     }
