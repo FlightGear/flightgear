@@ -28,7 +28,7 @@ include make.inc
 
 
 SUBSUBDIRS = Flight/LaRCsim Flight/Slew
-SUBDIRS = Aircraft Controls Flight Math Scenery Timer
+SUBDIRS = Aircraft Controls Flight Math Scenery Timer Utils
 MAIN = OpenGL
 
 
@@ -63,6 +63,9 @@ zip: clean
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.18  1997/07/19 22:36:28  curt
+# Added Utils/ subdirectory
+#
 # Revision 1.17  1997/07/18 23:41:20  curt
 # Tweaks for building with Cygnus Win32 compiler.
 #
