@@ -30,6 +30,10 @@
 /* Define to empty if the keyword does not work.  */
 #undef const
 
+/* Define to eliminate all trace of debugging messages such as for a 
+   release build */
+#undef FG_NDEBUG
+
 /* Define if you don't have vprintf but do have _doprnt.  */
 #undef HAVE_DOPRNT
 
