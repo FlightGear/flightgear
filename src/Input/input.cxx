@@ -692,13 +692,19 @@ FGInput::_update_keyboard (double dt)
 void
 FGInput::_update_joystick (double dt)
 {
+#ifdef REMOVE_ME_AFTER_FLIGHTGEAR_0_9_2_RELEASE
+  static double _last_dt = 1.0;
+#else
   static double _last_dt = 0.0;
+#endif
   int modifiers = FG_MOD_NONE;  // FIXME: any way to get the real ones?
   int i, j, buttons;
   // float js_val, diff;
   float axis_values[MAX_JOYSTICK_AXES];
 
+#ifdef REMOVE_ME_AFTER_FLIGHTGEAR_0_9_2_RELEASE
   _last_dt += dt;
+#endif
 
   for ( i = 0; i < MAX_JOYSTICKS; i++) {
 
@@ -753,10 +759,12 @@ FGInput::_update_joystick (double dt)
     }
   }
 
+#if REMOVE_ME_AFTER_FLIGHTGEAR_0_9_2_RELEASE
   if (_last_dt > 0.05) {
     while(_last_dt >= 0.05)
       _last_dt -= 0.05;
   }
+#endif
 }
 
 void
