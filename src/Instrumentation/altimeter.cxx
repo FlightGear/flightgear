@@ -51,11 +51,10 @@ Altimeter::Altimeter ( SGPropertyNode *node )
       num(0),
       static_port("/systems/static")
 {
-
-    for (int i = 0; altitude_data[i][0] != -1; i++)
+    int i;
+    for (i = 0; altitude_data[i][0] != -1; i++)
         _altitude_table->addEntry(altitude_data[i][0], altitude_data[i][1]);
 
-    int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         string cname = child->getName();
