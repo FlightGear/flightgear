@@ -173,7 +173,7 @@ fgOPTIONS::fgOPTIONS() :
 
     // Rendering options
     fog(FG_FOG_NICEST),  // nicest
-    clouds(true),
+    clouds(false),
     clouds_asl(5000*FEET_TO_METER),
     fov(55.0),
     fullscreen(0),
