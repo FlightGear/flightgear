@@ -40,7 +40,9 @@
 #include <Aircraft/aircraft.h>
 #include <Autopilot/autopilot.h> // Added autopilot.h to list, Jeff Goeke-Smith
 #include <Debug/fg_debug.h>
+#include <Gui/gui.h>
 #include <Include/fg_constants.h>
+#include <Pui/pu.h>
 #include <Weather/weather.h>
 
 #include "GLUTkey.hxx"
@@ -58,6 +60,7 @@ void GLUTkey(unsigned char k, int x, int y) {
     fgTIME *t;
     fgVIEW *v;
     struct fgWEATHER *w;
+    float tmp;
 
     c = current_aircraft.controls;
     o = &current_options;
@@ -66,6 +69,7 @@ void GLUTkey(unsigned char k, int x, int y) {
     w = &current_weather;
 
     fgPrintf( FG_INPUT, FG_DEBUG, "Key hit = %d", k);
+    puKeyboard(k, PU_DOWN );
 
     if ( GLUT_ACTIVE_ALT && glutGetModifiers() ) {
 	fgPrintf( FG_INPUT, FG_DEBUG, " SHIFTED\n");
@@ -114,11 +118,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->update_fov = TRUE;
 	    return;
 	case 90: /* Z key */
-	    w->visibility /= 1.10;
-	    xglFogf (GL_FOG_START, w->visibility / 1000000.0 );
-	    xglFogf(GL_FOG_END, w->visibility);
-	    fgPrintf( FG_INPUT, FG_DEBUG, 
-		      "Fog density = %.4f\n", w->visibility );
+	    tmp = fgWeatherGetVisibility();   /* in meters */
+	    tmp /= 1.10;
+	    fgWeatherSetVisibility( tmp );
 	    return;
 	// autopilot additions
 	case 65: /* A key */
@@ -183,11 +185,9 @@ void GLUTkey(unsigned char k, int x, int y) {
 	    v->update_fov = TRUE;
 	    return;
 	case 122: /* z key */
-	    w->visibility *= 1.10;
-	    xglFogf (GL_FOG_START, w->visibility / 1000000.0 );
-	    xglFogf(GL_FOG_END, w->visibility);
-	    fgPrintf( FG_INPUT, FG_DEBUG, 
-		      "Fog density = %.4f\n", w->visibility);
+	    tmp = fgWeatherGetVisibility();   /* in meters */
+	    tmp *= 1.10;
+	    fgWeatherSetVisibility( tmp );
 	    return;
 	case 27: /* ESC */
 	    // if( fg_DebugOutput ) {
@@ -209,6 +209,7 @@ void GLUTspecialkey(int k, int x, int y) {
     v = &current_view;
 
     fgPrintf( FG_INPUT, FG_DEBUG, "Special key hit = %d", k);
+    puKeyboard(k + PU_KEY_GLUT_SPECIAL_OFFSET, PU_DOWN);
 
     if ( GLUT_ACTIVE_SHIFT && glutGetModifiers() ) {
 	fgPrintf( FG_INPUT, FG_DEBUG, " SHIFTED\n");
@@ -241,6 +242,13 @@ void GLUTspecialkey(int k, int x, int y) {
     } else {
         fgPrintf( FG_INPUT, FG_DEBUG, "\n");
 	switch (k) {
+	case GLUT_KEY_F10: /* F10 toggles menu on and off... */
+	    printf("Invoking call back function");
+	    hideMenuButton -> 
+		setValue ((int) !(hideMenuButton -> getValue() ) );
+	    hideMenuButton -> invokeCallback();
+	    //exit(1);
+	    return;
 	case GLUT_KEY_UP:
 	    fgElevMove(0.05);
 	    return;
@@ -282,9 +290,15 @@ void GLUTspecialkey(int k, int x, int y) {
 
 
 /* $Log$
-/* Revision 1.10  1998/05/27 02:24:05  curt
-/* View optimizations by Norman Vine.
+/* Revision 1.11  1998/06/12 00:57:38  curt
+/* Added support for Pui/Gui.
+/* Converted fog to GL_FOG_EXP2.
+/* Link to static simulator parts.
+/* Update runfg.bat to try to be a little smarter.
 /*
+ * Revision 1.10  1998/05/27 02:24:05  curt
+ * View optimizations by Norman Vine.
+ *
  * Revision 1.9  1998/05/16 13:05:21  curt
  * Added limits to fov.
  *

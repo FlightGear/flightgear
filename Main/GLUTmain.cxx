@@ -58,10 +58,12 @@
 
 #include <Cockpit/cockpit.hxx>
 #include <Debug/fg_debug.h>
+#include <Gui/gui.h>
 #include <Joystick/joystick.h>
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
 #include <Math/polar3d.h>
+#include <Pui/pu.h>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Time/event.hxx>
@@ -138,10 +140,10 @@ static void fgInitVisuals( void ) {
     xglEnable( GL_LIGHT0 );
     xglLightfv( GL_LIGHT0, GL_POSITION, l->sun_vec );
 
-    xglFogi (GL_FOG_MODE, GL_LINEAR);
-    xglFogf (GL_FOG_START, w->visibility / 1000000.0 );
-    xglFogf (GL_FOG_END, w->visibility);
-    // xglFogf (GL_FOG_DENSITY, w->visibility);
+    // xglFogi (GL_FOG_MODE, GL_LINEAR);
+    xglFogi (GL_FOG_MODE, GL_EXP);
+    // Fog density is now set when the weather system is initialized
+    // xglFogf (GL_FOG_DENSITY, w->fog_density);
     if ( o->shading ) {
 	xglHint (GL_FOG_HINT, GL_NICEST );
     } else {
@@ -282,6 +284,10 @@ static void fgRenderFrame( void ) {
     t = &cur_time_params;
     v = &current_view;
 
+    // this is just a temporary hack, to make me understand Pui
+    timerText -> setLabel (ctime (&t->cur_time));
+    // end of hack
+
     // update view volume parameters
     fgUpdateViewParams();
 
@@ -388,7 +394,7 @@ static void fgRenderFrame( void ) {
     if (displayInstruments) {
 	fgUpdateInstrViewParams();
     }
-
+    puDisplay();
     xglutSwapBuffers();
 }
 
@@ -616,6 +622,11 @@ int fgGlutInitEvents( void ) {
     xglutKeyboardFunc( GLUTkey );
     glutSpecialFunc( GLUTspecialkey );
 
+    // call guiMouseFunc() whenever our little rodent is used
+    glutMouseFunc ( guiMouseFunc );
+    glutMotionFunc (guiMotionFunc );
+    glutPassiveMotionFunc (guiMotionFunc );
+
     // call fgMainLoop() whenever there is
     // nothing else to do
     xglutIdleFunc( fgMainLoop );
@@ -705,6 +716,9 @@ int main( int argc, char **argv ) {
 		  "GLUT event handler initialization failed ...\n" );
     }
 
+    //Init the user interface
+    guiInit();
+
     // Initialize audio support
 #ifdef HAVE_OSS_AUDIO
     audio_mixer . setMasterVolume ( 30 ) ;  /* 50% of max volume. */
@@ -736,6 +750,12 @@ int main( int argc, char **argv ) {
 
 
 // $Log$
+// Revision 1.24  1998/06/12 00:57:39  curt
+// Added support for Pui/Gui.
+// Converted fog to GL_FOG_EXP2.
+// Link to static simulator parts.
+// Update runfg.bat to try to be a little smarter.
+//
 // Revision 1.23  1998/06/08 17:57:04  curt
 // Minor sound/startup position tweaks.
 //
