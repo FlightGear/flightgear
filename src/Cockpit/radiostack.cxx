@@ -21,6 +21,11 @@
 // $Id$
 
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <simgear/compiler.h>
 #include <simgear/math/sg_random.h>
 
 #include <Aircraft/aircraft.hxx>
@@ -820,7 +825,11 @@ void FGRadioStack::search()
     // adf
     if ( current_navlist->query( lon, lat, elev, adf_freq, &nav ) ) {
 	char freq[128];
+#if defined( _MSC_VER )
+	_snprintf( freq, 10, "%.0f", adf_freq );
+#else
 	snprintf( freq, 10, "%.0f", adf_freq );
+#endif
 	adf_ident = freq;
 	adf_ident += nav.get_ident();
 	// cout << "adf ident = " << adf_ident << endl;
