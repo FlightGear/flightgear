@@ -378,6 +378,30 @@ int FGTileMgr::update( double lon, double lat ) {
 	delete dm;
     }
 
+    // cout << "current elevation (ssg) == " << scenery.cur_elev << endl;
+
+    previous_bucket = current_bucket;
+    last_longitude = longitude;
+    last_latitude  = latitude;
+
+    // activate loader thread one out of every 5 frames
+    if ( counter_hack == 0 ) {
+        // Notify the tile loader that it can load another tile
+        // loader.update();
+
+	if ( !attach_queue.empty() ) {
+#ifdef ENABLE_THREADS
+	    FGTileEntry* e = attach_queue.pop();
+#else
+	    FGTileEntry* e = attach_queue.front();
+            attach_queue.pop();
+#endif
+	    e->add_ssg_nodes( terrain, ground );
+	    // cout << "Adding ssg nodes for "
+	}
+    }
+    counter_hack = (counter_hack + 1) % 5;
+
     if ( scenery.center == Point3D(0.0) ) {
 	// initializing
 	cout << "initializing scenery current elevation  ... " << endl;
@@ -412,30 +436,6 @@ int FGTileMgr::update( double lon, double lat ) {
 	} else {
 	    scenery.cur_elev = 0.0;
 	}  
-    }
-
-    // cout << "current elevation (ssg) == " << scenery.cur_elev << endl;
-
-    previous_bucket = current_bucket;
-    last_longitude = longitude;
-    last_latitude  = latitude;
-
-    // activate loader thread one out of every 5 frames
-    counter_hack = (counter_hack + 1) % 5;
-    if ( !counter_hack ) {
-        // Notify the tile loader that it can load another tile
-        // loader.update();
-
-	if ( !attach_queue.empty() ) {
-#ifdef ENABLE_THREADS
-	    FGTileEntry* e = attach_queue.pop();
-#else
-	    FGTileEntry* e = attach_queue.front();
-            attach_queue.pop();
-#endif
-	    e->add_ssg_nodes( terrain, ground );
-	    // cout << "Adding ssg nodes for "
-	}
     }
 
     return 1;
