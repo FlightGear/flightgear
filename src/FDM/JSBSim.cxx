@@ -60,6 +60,10 @@
 // Initialize the JSBsim flight model, dt is the time increment for
 // each subsequent iteration through the EOM
 
+static bool trimmed = false;
+static bool trim_elev = false;
+static bool trim_throttle = false;
+
 int FGJSBsim::init( double dt ) {
 
   bool result;
@@ -73,12 +77,13 @@ int FGJSBsim::init( double dt ) {
   FGPath engine_path( current_options.get_fg_root() );
   engine_path.append( "Engine" );
 
-  FDMExec.GetState()->Setdt( dt );
+  //FDMExec.GetState()->Setdt( dt );
 
   result = FDMExec.LoadModel( aircraft_path.str(),
                                        engine_path.str(),
                                        current_options.get_aircraft() );
-
+  FDMExec.GetState()->Setdt( dt );
+  
   if (result) {
     FG_LOG( FG_FLIGHT, FG_INFO, "  loaded aircraft " << current_options.get_aircraft() );
   } else {
@@ -160,9 +165,12 @@ int FGJSBsim::init( double dt ) {
 
     controls.set_elevator_trim(FDMExec.GetFCS()->GetPitchTrimCmd());
     controls.set_throttle(FGControls::ALL_ENGINES,FDMExec.GetFCS()->GetThrottleCmd(0)/100);
+    trimmed=true;
+    trim_elev=FDMExec.GetFCS()->GetPitchTrimCmd();
+    trim_throttle=FDMExec.GetFCS()->GetThrottleCmd(0)/100;
     //the trimming routine only knows how to get 1 value for throttle
     
-//    delete fgtrim;
+    delete fgtrim;
     FG_LOG( FG_FLIGHT, FG_INFO, "  Trim complete." );
   } else {
     FG_LOG( FG_FLIGHT, FG_INFO, "  Initializing without trim" );
@@ -198,7 +206,19 @@ int FGJSBsim::update( int multiloop ) {
     save_alt = get_Altitude();
     set_Altitude( 0.0 );
   }
-
+  
+  if(trimmed) {
+    
+    controls.set_elevator_trim(trim_elev);
+    controls.set_throttle(FGControls::ALL_ENGINES,trim_throttle);
+    
+    controls.set_elevator(0.0);
+    controls.set_aileron(0.0);
+    controls.set_rudder(0.0);
+    trimmed=false;
+    
+  } 
+  
   copy_to_JSBsim();
 
   for ( int i = 0; i < multiloop; i++ ) {
