@@ -62,6 +62,10 @@ bool fgInitConfig ( int argc, char **argv );
 SGPropertyNode *fgInitLocale(const char *language);
 
 
+// Init navaids and waypoints
+bool fgInitNav ();
+
+
 // General house keeping initializations
 bool fgInitGeneral ();
 
