@@ -44,6 +44,7 @@ longFinalReported(false),
 longFinalAcknowledged(false),
 finalReported(false),
 finalAcknowledged(false),
+instructedToGoAround(false),
 onRwy(false),
 nextOnRwy(false),
 opType(TTT_UNKNOWN),
@@ -64,6 +65,7 @@ longFinalReported(false),
 longFinalAcknowledged(false),
 finalReported(false),
 finalAcknowledged(false),
+instructedToGoAround(false),
 onRwy(false),
 nextOnRwy(false),
 opType(TTT_UNKNOWN),
@@ -84,6 +86,7 @@ longFinalReported(false),
 longFinalAcknowledged(false),
 finalReported(false),
 finalAcknowledged(false),
+instructedToGoAround(false),
 onRwy(false),
 nextOnRwy(false),
 opType(TTT_UNKNOWN),
@@ -105,6 +108,7 @@ longFinalReported(false),
 longFinalAcknowledged(false),
 finalReported(false),
 finalAcknowledged(false),
+instructedToGoAround(false),
 onRwy(false),
 nextOnRwy(false),
 opType(TTT_UNKNOWN),
@@ -273,6 +277,7 @@ void FGTower::Update(double dt) {
 		//	cout << "  dt = " << dt << "  timeSinceLastDeparture = " << timeSinceLastDeparture << '\n';
 	}
 	
+	//cout << ident << " respond = " << respond << " responseReqd = " << responseReqd << '\n'; 
 	if(respond) {
 		if(!responseReqd) SG_LOG(SG_ATC, SG_ALERT, "ERROR - respond is true and responseReqd is false in FGTower::Update(...)");
 		Respond();
@@ -411,6 +416,7 @@ void FGTower::Respond() {
 			}
 			t->holdShortReported = false;
 		} else if(t->finalReported && !(t->finalAcknowledged)) {
+			bool disp = true;
 			string trns = t->plane.callsign;
 			if(t->nextOnRwy && !rwyOccupied) {
 				if(t->landingType == FULL_STOP) {
@@ -420,11 +426,15 @@ void FGTower::Respond() {
 				}
 				// TODO - add winds
 				t->clearedToLand = true;
+			} else if(t->eta < 20) {
+				// Do nothing - we'll be telling it to go around in less than 10 seconds if the
+				// runway doesn't clear so no point in calling "continue approach".
+				disp = false;
 			} else {
 				trns += " continue approach";
 				t->clearedToLand = false;
 			}
-			if(display) {
+			if(display && disp) {
 				globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
 			}
 			t->finalAcknowledged = true;
@@ -714,6 +724,7 @@ void FGTower::CheckCircuitList(double dt) {
 			case CROSSWIND:
 				crosswind_leg_pos = tortho.y();
 				//cout << "crosswind_leg_pos = " << crosswind_leg_pos << '\n';
+				t->instructedToGoAround = false;
 				break;
 			case TURN1:
 				// Fall through to climbout
@@ -735,6 +746,22 @@ void FGTower::CheckCircuitList(double dt) {
 		
 		if(t->leg == FINAL) {
 			if(t->landingType == FULL_STOP) t->opType = INBOUND;
+			if(t->eta < 12 && rwyList.size() && !(t->instructedToGoAround)) {
+				// TODO - need to make this more sophisticated 
+				// eg. is the plane accelerating down the runway taking off [OK],
+				// or stationary near the start [V. BAD!!].
+				// For now this should stop the AI plane landing on top of the user.
+				string trns = t->plane.callsign;
+				trns += " GO AROUND TRAFFIC ON RUNWAY I REPEAT GO AROUND";
+				if(display) {
+					globals->get_ATC_display()->RegisterSingleMessage(trns, 0);
+				}
+				t->instructedToGoAround = true;
+				if(t->planePtr) {
+					cout << "Registering Go-around transmission with AI plane\n";
+					t->planePtr->RegisterTransmission(13);
+				}
+			}
 		} else if(t->leg == LANDING_ROLL) {
 			rwyList.push_front(t);
 			// TODO - if(!clearedToLand) shout something!!
@@ -1053,6 +1080,37 @@ bool FGTower::AddToTrafficList(TowerPlaneRec* t, bool holding) {
 	return(holding ? firstTime : conflict);
 }
 
+// Add a tower plane rec with ETA to the circuit list in the correct position ETA-wise
+// Returns true if this might cause a separation conflict (based on ETA) with other traffic, false otherwise.
+bool FGTower::AddToCircuitList(TowerPlaneRec* t) {
+	//cout << "ADD: " << circuitList.size();
+	//cout << "AddToCircuitList called, currently size = " << circuitList.size() << endl;
+	double separation_time = 60.0;	// seconds - this is currently a guess for light plane separation, and includes a few seconds for a holding plane to taxi onto the rwy.
+	bool conflict = false;
+	tower_plane_rec_list_iterator twrItr;
+	for(twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
+			TowerPlaneRec* tpr = *twrItr;
+				
+				if(t->eta < tpr->eta) {
+					// Ugg - this one's tricky.
+					// It depends on what the two planes are doing and whether there's a conflict what we do.
+					if(tpr->eta - t->eta > separation_time) {	// No probs, plane 2 can squeeze in before plane 1 with no apparent conflict
+						circuitList.insert(twrItr, t);
+					} else {	// Ooops - this ones tricky - we have a potential conflict!
+						conflict = true;
+						// HACK - just add anyway for now and flag conflict.
+						circuitList.insert(twrItr, t);
+					}
+					//cout << "\tC\t" << circuitList.size() << '\n';
+					return(conflict);
+				}
+	}
+	// If we get here we must be at the end of the list, or maybe the list is empty.
+	circuitList.push_back(t);	// TODO - check the separation with the preceding plane for the conflict flag.
+	//cout << "\tE\t" << circuitList.size() << endl;
+	return(conflict);
+}
+
 
 // Calculate the eta of a plane to the threshold.
 // For ground traffic this is the fastest they can get there.
@@ -1267,8 +1325,10 @@ void FGTower::ContactAtHoldShort(PlaneRec plane, FGAIPlane* requestee, tower_tra
 	t->clearedToLineUp = false;
 	t->clearedToTakeOff = false;
 	t->opType = operation;
+	t->pos = requestee->GetPos();
 	
 	//cout << "Hold Short reported by " << plane.callsign << '\n';
+	SG_LOG(SG_ATC, SG_BULK, "Hold Short reported by " << plane.callsign);
 
 /*	
 	bool next = AddToTrafficList(t, true);
@@ -1286,6 +1346,28 @@ void FGTower::ContactAtHoldShort(PlaneRec plane, FGAIPlane* requestee, tower_tra
 	holdList.push_back(t);
 	
 	responseReqd = true;
+}
+
+// Register the presence of an AI plane at a point where contact would already have been made in real life
+// CAUTION - currently it is assumed that this plane's callsign is unique - it is up to AIMgr to generate unique callsigns.
+void FGTower::RegisterAIPlane(PlaneRec plane, FGAIPlane* ai, tower_traffic_type op, PatternLeg lg) {
+	// At the moment this is only going to be tested with inserting an AI plane on downwind
+	TowerPlaneRec* t = new TowerPlaneRec;
+	t->plane = plane;
+	t->planePtr = ai;
+	t->opType = op;
+	t->leg = lg;
+	t->pos = ai->GetPos();
+	
+	CalcETA(t);
+	
+	if(op == CIRCUIT && lg != LEG_UNKNOWN) {
+		AddToCircuitList(t);
+	} else {
+		// FLAG A WARNING
+	}
+	
+	doThresholdUseOrder();
 }
 
 void FGTower::RequestLandingClearance(string ID) {

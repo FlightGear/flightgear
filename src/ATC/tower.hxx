@@ -82,6 +82,7 @@ public:
 	bool longFinalAcknowledged;
 	bool finalReported;
 	bool finalAcknowledged;
+	bool instructedToGoAround;	// set true if told by tower to go around
 	bool onRwy;		// is physically on the runway
 	bool nextOnRwy;		// currently projected by tower to be the next on the runway
 
@@ -127,6 +128,10 @@ public:
 	
 	// Contact tower when at a hold short for departure - for now we'll assume plane - maybe vehicles might want to cross runway eventually?
 	void ContactAtHoldShort(PlaneRec plane, FGAIPlane* requestee, tower_traffic_type operation);
+	
+	// Register the presence of an AI plane at a point where contact would already have been made in real life
+	// CAUTION - currently it is assumed that this plane's callsign is unique - it is up to AIMgr to generate unique callsigns.
+	void RegisterAIPlane(PlaneRec plane, FGAIPlane* ai, tower_traffic_type op, PatternLeg lg = LEG_UNKNOWN);
 	
 	// Public interface to the active runway - this will get more complex 
 	// in the future and consider multi-runway use, airplane weight etc.
@@ -272,6 +277,8 @@ private:
 	// Add a tower plane rec with ETA to the traffic list in the correct position ETA-wise.
 	// Returns true if this could cause a threshold ETA conflict with other traffic, false otherwise.
 	bool AddToTrafficList(TowerPlaneRec* t, bool holding = false);
+	
+	bool AddToCircuitList(TowerPlaneRec* t);
 
 	// Ground can be separate or handled by tower in real life.
 	// In the program we will always use a separate FGGround class, but we need to know

@@ -176,6 +176,8 @@ private:
 	bool clearedToLineUp;
 	bool clearedToTakeOff;
 	bool liningUp;	// Set true when the turn onto the runway heading is commenced when taxiing out
+	bool goAround;	// Set true if need to go-around
+	bool goAroundCalled;	// Set true during go-around only after we have called our go-around on the radio
 	bool contactTower;	// we have been told to contact tower
 	bool contactGround;	// we have been told to contact ground
 	bool changeFreq;	// true when we need to change frequency

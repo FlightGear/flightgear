@@ -85,6 +85,8 @@ FGAILocalTraffic::FGAILocalTraffic() {
 	
 	descending = false;
 	targetDescentRate = 0.0;
+	goAround = false;
+	goAroundCalled = false;
 }
 
 FGAILocalTraffic::~FGAILocalTraffic() {
@@ -189,6 +191,9 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 	} else {
 		//cout << "Unable to find airport details in FGAILocalTraffic::Init()\n";
 	}
+	
+		// Get the active runway details (and copy them into rwy)
+		GetRwyDetails();
 
 	// Get the airport elevation
 	aptElev = dclGetAirportElev(airportID.c_str()) * SG_FEET_TO_METER;
@@ -233,28 +238,11 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 		// since we've got the implementation for this case already.
 		// TODO - implement proper generic in_pattern startup.
 		
+		// 18/10/03 - adding the ability to start on downwind (mainly to speed testing of the go-around code!!)
+		
+		//cout << "Starting in pattern...\n";
+		
 		tuned_station = tower;
-		
-		// Get the active runway details (and copy them into rwy)
-		GetRwyDetails();
-
-		// Initial position on threshold for now
-		pos.setlat(rwy.threshold_pos.lat());
-		pos.setlon(rwy.threshold_pos.lon());
-		pos.setelev(rwy.threshold_pos.elev());
-		hdg = rwy.hdg;
-		
-		// Now we've set the position we can do the ground elev
-		// This might not always be necessary if we implement in-air start
-		elevInitGood = false;
-		inAir = false;
-		DoGroundElev();
-		
-		pitch = 0.0;
-		roll = 0.0;
-		leg = TAKEOFF_ROLL;
-		vel = 0.0;
-		slope = 0.0;
 		
 		circuitsToFly = 0;		// ie just fly this circuit and then stop
 		touchAndGo = false;
@@ -264,7 +252,42 @@ bool FGAILocalTraffic::Init(string ICAO, OperatingState initialState, PatternLeg
 		if(rwy.rwyID.size() == 3) {
 			patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
 		}
-		
+
+		if(initialLeg == DOWNWIND) {
+			pos = ortho.ConvertFromLocal(Point3D(1000*patternDirection, 800, 0.0));
+			pos.setelev(rwy.threshold_pos.elev() + 1000 * SG_FEET_TO_METER);
+			hdg = rwy.hdg + 180.0;
+			leg = DOWNWIND;
+			elevInitGood = false;
+			inAir = true;
+			track = rwy.hdg - (180 * patternDirection);	//should tend to bring track back into the 0->360 range
+			slope = 0.0;
+			pitch = 0.0;
+			roll = 0.0;
+			IAS = 90.0;
+			descending = false;
+			aip.setVisible(true);
+			tower->RegisterAIPlane(plane, this, CIRCUIT, DOWNWIND);
+		} else {			
+			// Default to initial position on threshold for now
+			pos.setlat(rwy.threshold_pos.lat());
+			pos.setlon(rwy.threshold_pos.lon());
+			pos.setelev(rwy.threshold_pos.elev());
+			hdg = rwy.hdg;
+			
+			// Now we've set the position we can do the ground elev
+			// This might not always be necessary if we implement in-air start
+			elevInitGood = false;
+			inAir = false;
+			DoGroundElev();
+			
+			pitch = 0.0;
+			roll = 0.0;
+			leg = TAKEOFF_ROLL;
+			vel = 0.0;
+			slope = 0.0;
+		}
+	
 		operatingState = IN_PATTERN;
 		
 		Transform();
@@ -370,15 +393,17 @@ void FGAILocalTraffic::Update(double dt) {
 	switch(operatingState) {
 	case IN_PATTERN:
 		//cout << "In IN_PATTERN\n";
-		if(!inAir) DoGroundElev();
-		if(!elevInitGood) {
-			if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-				pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
-				//cout << "TAKEOFF_ROLL, POS = " << pos.lon() << ", " << pos.lat() << ", " << pos.elev() << '\n';
-				//Transform();
-				aip.setVisible(true);
-				//cout << "Making plane visible!\n";
-				elevInitGood = true;
+		if(!inAir) {
+			DoGroundElev();
+			if(!elevInitGood) {
+				if(aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
+					pos.setelev(aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+					//cout << "TAKEOFF_ROLL, POS = " << pos.lon() << ", " << pos.lat() << ", " << pos.elev() << '\n';
+					//Transform();
+					aip.setVisible(true);
+					//cout << "Making plane visible!\n";
+					elevInitGood = true;
+				}
 			}
 		}
 		FlyTrafficPattern(dt);
@@ -451,7 +476,7 @@ void FGAILocalTraffic::Update(double dt) {
 		if(circuitsToFly) {
 			if((taxiRequestPending) && (taxiRequestCleared)) {
 				//cout << "&" << flush;
-				// Get the active runway details (and copy them into rwy)
+				// Get the active runway details (in case they've changed since init)
 				GetRwyDetails();
 				
 				// Get the takeoff node for the active runway, get a path to it and start taxiing
@@ -544,11 +569,11 @@ void FGAILocalTraffic::RegisterTransmission(int code) {
 		clearedToTakeOff = true;
 		SG_LOG(SG_ATC, SG_INFO, "AI local traffic " << plane.callsign << " cleared to take-off...");
 		break;
-//	case 13: // Go around!
-//		responseCounter = 0;
-//		goAround = true;
-//		SG_LOG(SG_ATC, SG_INFO, "AI local traffic " << plane.callsign << " told to go-around!!");
-//		break;
+	case 13: // Go around!
+		responseCounter = 0;
+		goAround = true;
+		SG_LOG(SG_ATC, SG_INFO, "AI local traffic " << plane.callsign << " told to go-around!!");
+		break;
 	default:
 		break;
 	}
@@ -612,9 +637,11 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		break;
 	case CLIMBOUT:
 		track = rwy.hdg;
-		// Turn to crosswind if above 600ft AND if other traffic allows
+		// Turn to crosswind if above 700ft AND if other traffic allows
 		// (decided in FGTower and accessed through GetCrosswindConstraint(...)).
-		if((pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 600) {
+		// According to AIM, traffic should climb to within 300ft of pattern altitude before commencing crosswind turn.
+		// TODO - At hot 'n high airports this may be 500ft AGL though - need to make this a variable.
+		if((pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 700) {
 			double cc = 0.0;
 			if(tower->GetCrosswindConstraint(cc)) {
 				if(orthopos.y() > cc) {
@@ -622,6 +649,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 					leg = TURN1;
 				}
 			} else if(orthopos.y() > 1500.0) {   // Added this constraint as a hack to prevent turning too early when going around.
+				// TODO - We should be doing it as a distance from takeoff end, not theshold end though.
 				cout << "Turning to crosswind, distance from threshold = " << orthopos.y() << '\n'; 
 				leg = TURN1;
 			}
@@ -633,6 +661,14 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			pitch = 0.0;
 			IAS = 80.0;		// FIXME - use smooth transistion to new speed and attitude.
 		}
+		if(goAround && !goAroundCalled) {
+			if(responseCounter > 5.5) {
+				pending_transmission = plane.callsign;
+				pending_transmission += " going around";
+				Transmit();
+				goAroundCalled = true;
+			}
+		}		
 		break;
 	case TURN1:
 		track += (360.0 / turn_time) * dt * patternDirection;
@@ -642,6 +678,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		}
 		break;
 	case CROSSWIND:
+		goAround = false;
 		LevelWings();
 		track = rwy.hdg + (90.0 * patternDirection);
 		if((pos.elev() - rwy.threshold_pos.elev()) * SG_METER_TO_FEET > 1000) {
@@ -783,6 +820,15 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		}
 		break;
 	case FINAL:
+		if(goAround && responseCounter > 2.0) {
+			leg = CLIMBOUT;
+			pitch = 8.0;
+			IAS = best_rate_of_climb_speed;
+			slope = 5.0;	// A bit less steep than the initial climbout.
+			inAir = true;
+			goAroundCalled = false;
+			break;
+		}
 		LevelWings();
 		if(!transmitted) {
 			TransmitPatternPositionReport();
