@@ -1,10 +1,12 @@
 
-//// opengc.cxx - Network interface program to send sim data onto a LAN
+//// opengc.hxx - Network interface program to send sim data onto a LAN
 //
 // Created by: 	J. Wojnaroski  -- castle@mminternet.com
 // Date:		21 Nov 2001 
 //
-
+// 
+// Adapted from original network code developed by C. Olson
+//
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
 // published by the Free Software Foundation; either version 2 of the

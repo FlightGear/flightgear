@@ -1,9 +1,12 @@
-// opengc.hxx -- Define structure of OpenGC/FG interface parameters
+// opengc_data.hxx -- Define structure of OpenGC/FG interface parameters
 //
 //  Version by J. Wojnaroski for interface to Open Glass Displays
 //
 //  Modified 02/12/01 - Update engine structure for multi-engine models
-//		      - Added data preamble to id msg types
+//		          - Added data preamble to id msg types
+//
+//  Modified 01/23/02 - Converted portions of the Engine and Gear accesssors to properties
+//			    - Removed data from navigation functions. OpenGC provides own
 //
 // This file defines the class/structure of the UDP packet that sends
 // the simulation data created by FlightGear to the glass displays. It
@@ -37,12 +40,18 @@ class ogcFGData {
 
 public:
 
-    // defines msg types and contents. typedefs & classes are TBS
+    // defines msg types and contents. The msg_content is used as a 'pointer' to
+    // a predefined set of msg strings
+ 
     unsigned int	version_id;
-    unsigned int	msg_id;
+    unsigned int	msg_type;
     unsigned int	msg_content;
-    unsigned short	autopilot_mode;
-    unsigned short	afds_armed_mode;
+
+    // position
+
+    double	latitude;
+    double	longitude;
+    double	magvar;
 
     // flight parameters
 	
@@ -54,48 +63,58 @@ public:
     double 	v_kcas;
     double	groundspeed;
     double	vvi;
-    double  	mach;
+    double  mach;
+    double	v_tas;  // true airspeed in knots
 
-    // position
+  // Data used by the FMC and autopilots
 
-    double	latitude;
-    double	longitude;
-    double	magvar;
+    double	phi_dot;
+    double	theta_dot;
+    double	psi_dot;
+
+    double	alpha;
+    double	alpha_dot;
+    double	beta;
+    double	beta_dot;
+
+  // Control surface positions
+
+    double	aileron;
+    double	aileron_trim;
+    double	elevator;
+    double	elevator_trim;
+    double	rudder;
+    double	rudder_trim;
+    double	flaps;
+
+  // Gear positions 0 = UP and 1 = DOWN
+
+    double	gear_nose;
+    double	gear_left;
+    double	gear_right;
 
     // engine data
 
-    double	rpm[4];
+    double	rpm[4];  // this is for pistons, jets see below
+    double 	n1_turbine[4];
     double	epr[4];
     double	egt[4];
+    double 	n2_turbine[4];
     double	fuel_flow[4];
+    double  man_pressure[4];
     double	oil_pressure[4];
+    double	throttle[4];
+    double	mixture[4];
+    double	prop_advance[4];
+   
+    // Pressures and temperatures
 
-    double n1_turbine[4];
-    double n2_turbine[4];
+    double	static_temperature;
+    double	total_temperature;
+    double	static_pressure;
+    double	total_pressure;
+    double	dynamic_pressure;
 	
-    // navigation data
-    // This will require a lot of related work to build the nav
-    // database for the ND and some msg traffic both ways to display
-    // and configure nav aids, freqs, courses, etc etc.  OpenGC will
-    // most likely define an FMC to hold the database and do nav stuff
-    double	nav1_freq;
-    double	nav1_radial;
-    double	nav1_course_dev;
-    double	nav1_gs_dev;
-    double	nav1_dme;
-
-    double	nav2_freq;
-    double	nav2_radial;
-    double	nav2_course_dev;
-    double 	nav2_gs_dev;
-    double	nav2_dme;
-
-    // some other locations serving as place holders for user defined
-    // variables reduces the need to update FG or OpenGC code
- 
-    double d_ogcdata[16];
-    float  f_ogcdata[16];
-    int    i_ogcdata[16];
 };
 
 #endif // _OPENGC_HXX
