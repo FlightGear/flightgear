@@ -714,7 +714,9 @@ void fgRenderFrame() {
         globals->get_multiplayer_rx_mgr()->Update();
 #endif
 
-	if ( fgGetBool("/sim/rendering/skyblend") ) {
+        if ( fgGetBool("/sim/rendering/skyblend") &&
+             fgGetBool("/sim/rendering/draw-otw") )
+        {
 	    // draw the sky backdrop
 
             // we need a white diffuse light for the phase of the moon
@@ -735,7 +737,9 @@ void fgRenderFrame() {
             // draw wire frame
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
         }
-	ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+        if ( fgGetBool("/sim/rendering/draw-otw") ) {
+            ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
+        }
 
 	// This is a bit kludgy.  Every 200 frames, do an extra
 	// traversal of the scene graph without drawing anything, but
@@ -788,14 +792,18 @@ void fgRenderFrame() {
         glPolygonMode(GL_FRONT, GL_POINT);
 
         // draw runway lighting
-	ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
+        if ( fgGetBool("/sim/rendering/draw-otw") ) {
+            ssgCullAndDraw( globals->get_scenery()->get_rwy_lights_root() );
+        }
 
         // change punch through and then draw taxi lighting
 	glFogf ( GL_FOG_DENSITY, fog_exp2_density );
         // sgVec3 taxi_fog;
         // sgSetVec3( taxi_fog, 0.0, 0.0, 0.0 );
         // glFogfv ( GL_FOG_COLOR, taxi_fog );
-	ssgCullAndDraw( globals->get_scenery()->get_taxi_lights_root() );
+        if ( fgGetBool("/sim/rendering/draw-otw") ) {
+            ssgCullAndDraw( globals->get_scenery()->get_taxi_lights_root() );
+        }
 
         // clean up lighting
         glPolygonMode(GL_FRONT, GL_FILL);
@@ -826,17 +834,23 @@ void fgRenderFrame() {
 
         // draw ground lighting
 	glFogf (GL_FOG_DENSITY, ground_exp2_punch_through);
-	ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
+        if ( fgGetBool("/sim/rendering/draw-otw") ) {
+            ssgCullAndDraw( globals->get_scenery()->get_gnd_lights_root() );
+        }
 
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    // draw the sky cloud layers
-            if (fgGetBool("/environment/clouds/status")) {
+            if ( fgGetBool("/environment/clouds/status") &&
+                 fgGetBool("/sim/rendering/draw-otw") )
+            {
                 thesky->postDraw( cur_fdm_state->get_Altitude()
                                   * SG_FEET_TO_METER );
             }
 	}
 
-        if ( fgGetBool("/sim/rendering/clouds3d") ) {
+        if ( fgGetBool("/sim/rendering/clouds3d") &&
+             fgGetBool("/sim/rendering/draw-otw") )
+        {
             glDisable( GL_FOG );
             glDisable( GL_LIGHTING );
             // cout << "drawing new clouds" << endl;
@@ -862,8 +876,10 @@ void fgRenderFrame() {
             glBlendFunc ( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA ) ;
         }
 
-	globals->get_model_mgr()->draw();
-	globals->get_aircraft_model()->draw();
+        if ( fgGetBool("/sim/rendering/draw-otw") ) {
+            globals->get_model_mgr()->draw();
+            globals->get_aircraft_model()->draw();
+        }
 
 	// display HUD && Panel
 	glDisable( GL_FOG );
@@ -1161,6 +1177,7 @@ static void fgMainLoop( void ) {
 #else
     if ( (t->get_cur_time() != last_time) && (last_time > 0) ) {
 	general.set_frame_rate( frames );
+        fgSetInt("/sim/frame-rate", frames);
 	SG_LOG( SG_ALL, SG_DEBUG, 
 		"--> Frame rate is = " << general.get_frame_rate() );
 	frames = 0;
