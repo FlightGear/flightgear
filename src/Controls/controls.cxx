@@ -21,10 +21,11 @@
 // $Id$
 
 
-#include "controls.hxx"
-
+#include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
 #include <Main/fg_props.hxx>
+
+#include "controls.hxx"
 
 
 static const int MAX_NAME_LEN = 128;
@@ -276,97 +277,105 @@ FGControls::bind ()
 
   for (index = 0; index < MAX_ENGINES; index++) {
     char name[MAX_NAME_LEN];
-    sprintf(name, "/controls/engines/engine[%d]/throttle", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/throttle", index);
     fgTie(name, this, index,
 	  &FGControls::get_throttle, &FGControls::set_throttle);
     fgSetArchivable(name);
 
-    sprintf(name, "/controls/engines/engine[%d]/starter", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/engines/engine[%d]/starter", index);
     fgTie(name, this, index,
 	 &FGControls::get_starter, &FGControls::set_starter);
     fgSetArchivable(name);
 
-    sprintf(name, "/controls/engines/engine[%d]/fuel-pump", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/fuel-pump", index);
     fgTie(name, this, index,
 	 &FGControls::get_fuel_pump, &FGControls::set_fuel_pump);
     fgSetArchivable(name);
 
-    sprintf(name, "/controls/engines/engine[%d]/fire-switch", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/fire-switch", index);
     fgTie(name, this, index,
 	 &FGControls::get_fire_switch, &FGControls::set_fire_switch);
     fgSetArchivable(name);
 
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/engines/engine[%d]/fire-bottle-discharge", index);
     fgTie(name, this, index,
 	 &FGControls::get_fire_bottle_discharge,
          &FGControls::set_fire_bottle_discharge);
     fgSetArchivable(name);
 
-    sprintf(name, "/controls/engines/engine[%d]/cutoff", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/engines/engine[%d]/cutoff", index);
     fgTie(name, this, index,
 	 &FGControls::get_cutoff, &FGControls::set_cutoff);
     fgSetArchivable(name);
 
-    sprintf(name, "/controls/engines/engine[%d]/mixture", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/engines/engine[%d]/mixture", index);
     fgTie(name, this, index,
 	 &FGControls::get_mixture, &FGControls::set_mixture);
     fgSetArchivable(name);
 
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/engines/engine[%d]/propeller-pitch", index);
     fgTie(name, this, index,
 	 &FGControls::get_prop_advance, 
          &FGControls::set_prop_advance);
     fgSetArchivable(name);
 
-    sprintf(name, "/controls/engines/engine[%d]/magnetos", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/magnetos", index);
     fgTie(name, this, index,
 	 &FGControls::get_magnetos, &FGControls::set_magnetos);
     fgSetArchivable(name);
 
-    sprintf(name, "/controls/engines/engine[%d]/WEP", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/engines/engine[%d]/WEP", index);
     fgTie(name, this, index,
 	 &FGControls::get_nitrous_injection,
          &FGControls::set_nitrous_injection);
     fgSetArchivable(name);
 
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/engines/engine[%d]/cowl-flaps-norm", index);
     fgTie(name, this, index,
 	 &FGControls::get_cowl_flaps_norm, 
          &FGControls::set_cowl_flaps_norm);
     fgSetArchivable(name);
 
-    sprintf(name, "/controls/engines/engine[%d]/feather", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/engines/engine[%d]/feather", index);
     fgTie(name, this, index,
 	 &FGControls::get_feather, &FGControls::set_feather);
     fgSetArchivable(name);
 
-    sprintf(name, "/controls/engines/engine[%d]/ignition", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/ignition", index);
     fgTie(name, this, index,
 	 &FGControls::get_ignition, &FGControls::set_ignition);
     fgSetArchivable(name);
 
-    sprintf(name, "/controls/engines/engine[%d]/augmentation", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/augmentation", index);
     fgTie(name, this, index,
 	 &FGControls::get_augmentation, 
          &FGControls::set_augmentation);
     fgSetArchivable(name);
 
-    sprintf(name, "/controls/engines/engine[%d]/reverser", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/reverser", index);
     fgTie(name, this, index,
 	 &FGControls::get_reverser, &FGControls::set_reverser);
     fgSetArchivable(name);
 
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/engines/engine[%d]/water-injection", index);
     fgTie(name, this, index,
 	 &FGControls::get_water_injection,
          &FGControls::set_water_injection);
     fgSetArchivable(name);
 
-    sprintf(name, "/controls/engines/engine[%d]/condition", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/condition", index);
     fgTie(name, this, index,
 	 &FGControls::get_condition, &FGControls::set_condition);
     fgSetArchivable(name);
@@ -379,25 +388,26 @@ FGControls::bind ()
 
   for (index = 0; index < MAX_TANKS; index++) {
     char name[MAX_NAME_LEN];
-    sprintf(name, "/controls/fuel/tank[%d]/fuel_selector", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/fuel/tank[%d]/fuel_selector", index);
     fgTie(name, this, index,
 	  &FGControls::get_fuel_selector, 
           &FGControls::set_fuel_selector);
     fgSetArchivable(name);  
 
-    sprintf(name, "/controls/fuel/tank[%d]/to_engine", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/fuel/tank[%d]/to_engine", index);
     fgTie(name, this, index,
 	  &FGControls::get_to_engine, &FGControls::set_to_engine);
     fgSetArchivable(name);  
 
-    sprintf(name, "/controls/fuel/tank[%d]/to_tank", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/fuel/tank[%d]/to_tank", index);
     fgTie(name, this, index,
 	  &FGControls::get_to_tank, &FGControls::set_to_tank);
     fgSetArchivable(name);  
 
     for (i = 0; i < MAX_BOOSTPUMPS; i++) {
       char name[MAX_NAME_LEN];
-      sprintf(name, 
+      snprintf(name, MAX_NAME_LEN, 
          "/controls/fuel/tank[%d]/boost-pump[%d]", index, i);
       fgTie(name, this, index * 2 + i,
 	    &FGControls::get_boost_pump, 
@@ -435,12 +445,13 @@ FGControls::bind ()
 
   for (index = 0; index < MAX_WHEELS; index++) {
       char name[MAX_NAME_LEN];
-      sprintf(name, "/controls/gear/wheel[%d]/brake", index);
+      snprintf(name, MAX_NAME_LEN, "/controls/gear/wheel[%d]/brake", index);
       fgTie(name, this, index,
             &FGControls::get_brake, &FGControls::set_brake);
       fgSetArchivable(name);
 
-      sprintf(name, "/controls/gear/wheel[%d]/alternate-extension", index);
+      snprintf(name, MAX_NAME_LEN,
+               "/controls/gear/wheel[%d]/alternate-extension", index);
       fgTie(name, this, index,
             &FGControls::get_alternate_extension, 
             &FGControls::set_alternate_extension);
@@ -466,12 +477,14 @@ FGControls::bind ()
 
   for (index = 0; index < MAX_ENGINES; index++) {
       char name[MAX_NAME_LEN];
-      sprintf(name, "/controls/anti-ice/engine[%d]/carb-heat", index);  
+      snprintf(name, MAX_NAME_LEN,
+               "/controls/anti-ice/engine[%d]/carb-heat", index);  
       fgTie(name, this, index,
 	&FGControls::get_carb_heat, &FGControls::set_carb_heat);
       fgSetArchivable(name);
 
-      sprintf(name, "/controls/anti-ice/engine[%d]/inlet-heat", index);  
+      snprintf(name, MAX_NAME_LEN,
+               "/controls/anti-ice/engine[%d]/inlet-heat", index);  
       fgTie(name, this, index,
 	&FGControls::get_inlet_heat, &FGControls::set_inlet_heat);
       fgSetArchivable(name);
@@ -480,13 +493,13 @@ FGControls::bind ()
   // hydraulics
   for (index = 0; index < MAX_HYD_SYSTEMS; index++) {
       char name[MAX_NAME_LEN];
-      sprintf(name, 
+      snprintf(name, MAX_NAME_LEN, 
          "/controls/hydraulic/system[%d]/engine-pump", index);  
       fgTie(name, this, index,
 	&FGControls::get_engine_pump, &FGControls::set_engine_pump);
       fgSetArchivable(name);
 
-      sprintf(name, 
+      snprintf(name, MAX_NAME_LEN, 
          "/controls/hydraulic/system[%d]/electric-pump", index);  
       fgTie(name, this, index,
 	&FGControls::get_electric_pump, 
@@ -512,14 +525,15 @@ FGControls::bind ()
 
   for (index = 0; index < MAX_ENGINES; index++) {
       char name[MAX_NAME_LEN];
-      sprintf(name, 
+      snprintf(name, MAX_NAME_LEN, 
          "/controls/electric/engine[%d]/generator", index);  
       fgTie(name, this, index,
 	&FGControls::get_generator_breaker, 
         &FGControls::set_generator_breaker);
       fgSetArchivable(name);
 
-      sprintf(name, "/controls/electric/engine[%d]/bus-tie", index);  
+      snprintf(name, MAX_NAME_LEN,
+               "/controls/electric/engine[%d]/bus-tie", index);  
       fgTie(name, this, index,
 	&FGControls::get_bus_tie, 
         &FGControls::set_bus_tie);
@@ -534,7 +548,7 @@ FGControls::bind ()
 
   for (index = 0; index < MAX_ENGINES; index++) {
       char name[MAX_NAME_LEN];
-      sprintf(name, 
+      snprintf(name, MAX_NAME_LEN, 
          "/controls/pneumatic/engine[%d]/bleed", index);  
       fgTie(name, this, index,
 	&FGControls::get_engine_bleed, 
@@ -558,7 +572,8 @@ FGControls::bind ()
 
   for (index = 0; index < MAX_PACKS; index++) {
       char name[MAX_NAME_LEN];
-      sprintf(name, "/controls/pressurization/pack[%d]/pack-on", index);  
+      snprintf(name, MAX_NAME_LEN,
+               "/controls/pressurization/pack[%d]/pack-on", index);  
       fgTie(name, this, index,
 	&FGControls::get_pack_on, &FGControls::set_pack_on);
       fgSetArchivable(name);
@@ -626,23 +641,26 @@ FGControls::bind ()
 
   for (index = 0; index < MAX_STATIONS; index++) {
       char name[MAX_NAME_LEN];
-      sprintf(name, "/controls/armament/station[%d]/stick-size", index);  
+      snprintf(name, MAX_NAME_LEN,
+               "/controls/armament/station[%d]/stick-size", index);  
       fgTie(name, this, index,
 	&FGControls::get_stick_size, &FGControls::set_stick_size);
       fgSetArchivable(name);
 
-      sprintf(name, 
+      snprintf(name, MAX_NAME_LEN, 
           "/controls/armament/station[%d]/release-stick", index);  
       fgTie(name, this, index,
 	&FGControls::get_release_stick, &FGControls::set_release_stick);
       fgSetArchivable(name);
 
-      sprintf(name, "/controls/armament/station[%d]/release-all", index);  
+      snprintf(name, MAX_NAME_LEN,
+               "/controls/armament/station[%d]/release-all", index);  
       fgTie(name, this, index,
 	&FGControls::get_release_all, &FGControls::set_release_all);
       fgSetArchivable(name);
 
-      sprintf(name, "/controls/armament/station[%d]/jettison-all", index);  
+      snprintf(name, MAX_NAME_LEN,
+               "/controls/armament/station[%d]/jettison-all", index);  
       fgTie(name, this, index,
 	&FGControls::get_jettison_all, &FGControls::set_jettison_all);
       fgSetArchivable(name);
@@ -679,7 +697,7 @@ FGControls::bind ()
   // autoflight
   for (index = 0; index < MAX_AUTOPILOTS; index++) {
       char name[MAX_NAME_LEN];
-      sprintf(name, 
+      snprintf(name, MAX_NAME_LEN, 
          "/controls/autoflight/autopilot[%d]/engage", index);  
       fgTie(name, this, index,
 	&FGControls::get_autopilot_engage, 
@@ -759,56 +777,70 @@ void FGControls::unbind ()
   fgUntie("/controls/flight/drag-chute");
   for (index = 0; index < MAX_ENGINES; index++) {
     char name[MAX_NAME_LEN];
-    sprintf(name, "/controls/engines/engine[%d]/throttle", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/throttle", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/starter", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/starter", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/fuel_pump", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/fuel_pump", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/fire-switch", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/fire-switch", index);
     fgUntie(name);
-    sprintf(name, 
-       "/controls/engines/engine[%d]/fire-bottle-discharge", index);
+    snprintf(name, MAX_NAME_LEN, 
+             "/controls/engines/engine[%d]/fire-bottle-discharge", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/throttle_idle", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/throttle_idle", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/cutoff", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/engines/engine[%d]/cutoff", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/mixture", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/engines/engine[%d]/mixture", index);
     fgUntie(name);
-    sprintf(name, 
-       "/controls/engines/engine[%d]/propeller-pitch", index);
+    snprintf(name, MAX_NAME_LEN, 
+             "/controls/engines/engine[%d]/propeller-pitch", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/magnetos", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/magnetos", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/WEP", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/engines/engine[%d]/WEP", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/cowl-flaps-norm", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/cowl-flaps-norm", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/feather", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/engines/engine[%d]/feather", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/ignition", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/ignition", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/augmentation", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/augmentation", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/reverser", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/reverser", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/water-injection", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/water-injection", index);
     fgUntie(name);
-    sprintf(name, "/controls/engines/engine[%d]/condition", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/engines/engine[%d]/condition", index);
     fgUntie(name);
   }
   fgUntie("/controls/fuel/dump-valve");
   for (index = 0; index < MAX_TANKS; index++) {
     char name[MAX_NAME_LEN];
-    sprintf(name, "/controls/fuel/tank[%d]/fuel_selector", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/fuel/tank[%d]/fuel_selector", index);
     fgUntie(name);
-    sprintf(name, "/controls/fuel/tank[%d]/to_engine", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/fuel/tank[%d]/to_engine", index);
     fgUntie(name);
-    sprintf(name, "/controls/fuel/tank[%d]/to_tank", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/fuel/tank[%d]/to_tank", index);
     fgUntie(name);
     for (i = 0; index < MAX_BOOSTPUMPS; i++) {
-      sprintf(name, "/controls/fuel/tank[%d]/boost-pump[%d]", index, i);
+      snprintf(name, MAX_NAME_LEN,
+               "/controls/fuel/tank[%d]/boost-pump[%d]", index, i);
       fgUntie(name);
     }
   }
@@ -820,9 +852,9 @@ void FGControls::unbind ()
   fgUntie("/controls/gear/tailwheel-lock");
   for (index = 0; index < MAX_WHEELS; index++) {
     char name[MAX_NAME_LEN];
-    sprintf(name, "/controls/gear/wheel[%d]/brakes", index);
+    snprintf(name, MAX_NAME_LEN, "/controls/gear/wheel[%d]/brakes", index);
     fgUntie(name);
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/gear/wheel[%d]/alternate-extension", index);
     fgUntie(name);
   }
@@ -832,17 +864,19 @@ void FGControls::unbind ()
   fgUntie("/controls/anti-ice/window-heat");
   for (index = 0; index < MAX_ENGINES; index++) {
     char name[MAX_NAME_LEN];
-    sprintf(name, "/controls/anti-ice/engine[%d]/carb-heat", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/anti-ice/engine[%d]/carb-heat", index);
     fgUntie(name);
-    sprintf(name, "/controls/anti-ice/engine[%d]/inlet-heat", index);
+    snprintf(name, MAX_NAME_LEN,
+             "/controls/anti-ice/engine[%d]/inlet-heat", index);
     fgUntie(name);
   }
   for (index = 0; index < MAX_HYD_SYSTEMS; index++) {
     char name[MAX_NAME_LEN];
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/hydraulic/system[%d]/engine-pump", index);
     fgUntie(name);
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/hydraulic/system[%d]/electric-pump", index);
     fgUntie(name);
   }
@@ -851,17 +885,17 @@ void FGControls::unbind ()
   fgUntie("/controls/electric/APU-generator");    
   for (index = 0; index < MAX_ENGINES; index++) {
     char name[MAX_NAME_LEN];
-     sprintf(name, 
+     snprintf(name, MAX_NAME_LEN, 
        "/controls/electric/engine[%d]/generator", index);
     fgUntie(name);
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/electric/engine[%d]/bus-tie", index);
     fgUntie(name);
   }
   fgUntie("/controls/pneumatic/APU-bleed");
   for (index = 0; index < MAX_ENGINES; index++) {
     char name[MAX_NAME_LEN];
-     sprintf(name, 
+     snprintf(name, MAX_NAME_LEN, 
        "/controls/pneumatic/engine[%d]/bleed", index);
     fgUntie(name);
   }
@@ -869,7 +903,7 @@ void FGControls::unbind ()
   fgUntie("/controls/pressurization/dump");
   for (index = 0; index < MAX_PACKS; index++) {
     char name[MAX_NAME_LEN];
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/pressurization/pack[%d]/pack-on", index);
     fgUntie(name);
   }
@@ -890,16 +924,16 @@ void FGControls::unbind ()
   fgUntie("/controls/armament/release-all");  
   for (index = 0; index < MAX_STATIONS; index++) {
     char name[MAX_NAME_LEN];
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/armament/station[%d]/stick-size", index);
     fgUntie(name);
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/armament/station[%d]/release-stick", index);
     fgUntie(name);
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/armament/station[%d]/release-all", index);
     fgUntie(name);
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN, 
        "/controls/armament/station[%d]/jettison-all", index);
     fgUntie(name);
   }
@@ -911,7 +945,7 @@ void FGControls::unbind ()
   fgUntie("/controls/APU/fire-switch");  
   for (index = 0; index < MAX_AUTOPILOTS; index++) {
     char name[MAX_NAME_LEN];
-    sprintf(name, 
+    snprintf(name, MAX_NAME_LEN,
        "/controls/autoflight/autopilot[%d]/engage", index);
     fgUntie(name);
   }
