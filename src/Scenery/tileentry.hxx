@@ -260,6 +260,11 @@ public:
     inline SGBucket get_tile_bucket() const { return tile_bucket; }
 
     /**
+     * Apply ssgLeaf::makeDList to all leaf of a branch
+     */
+    void makeDList( ssgBranch *b );
+
+    /**
      * Add terrain mesh and ground lighting to scene graph.
      */
     void add_ssg_nodes( ssgBranch *terrain_branch,

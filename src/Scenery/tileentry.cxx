@@ -982,6 +982,19 @@ FGTileEntry::load( const string_list &path_list, bool is_base )
     }
 }
 
+void
+FGTileEntry::makeDList( ssgBranch *b )
+{
+    int nb = b->getNumKids();
+    for (int i = 0; i<nb; i++) {
+        ssgEntity *e = b->getKid(i);
+        if (e->isAKindOf(ssgTypeLeaf())) {
+            ((ssgLeaf*)e)->makeDList();
+        } else if (e->isAKindOf(ssgTypeBranch())) {
+            makeDList( (ssgBranch*)e );
+        }
+    }
+}
 
 void
 FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
@@ -992,6 +1005,8 @@ FGTileEntry::add_ssg_nodes( ssgBranch *terrain_branch,
 {
     // bump up the ref count so we can remove this later without
     // having ssg try to free the memory.
+    makeDList( terra_transform );
+
     terra_transform->ref();
     terrain_branch->addKid( terra_transform );
 
