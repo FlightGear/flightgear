@@ -38,7 +38,7 @@ SG_USING_STD(cout);
 SG_USING_STD(endl);
 
 static string server = "scenery.flightgear.org";
-static string source_module = "scenery-0.9.2";
+static string source_module = "Scenery-0.9.4";
 static string source_base = server + (string)"::" + source_module;
 static string dest_base = "/dest/scenery/dir";
 
