@@ -61,7 +61,8 @@ class FGNavRecord {
                                 // (degrees) or dme bias (nm)
 
     string ident;		// navaid ident
-    string name;                // "given" name
+    string name;                // verbose name in nav database
+    string apt_id;              // corresponding airport id
 
 
     bool serviceable;		// for failure modeling
@@ -78,6 +79,7 @@ public:
     inline double get_lat() const { return lat; }
     inline void set_lat( double l ) { lat = l; }
     inline double get_elev_ft() const { return elev_ft; }
+    inline void set_elev_ft( double e ) { elev_ft = e; }
     inline double get_x() const { return x; }
     inline double get_y() const { return y; }
     inline double get_z() const { return z; }
@@ -87,6 +89,7 @@ public:
     inline void set_multiuse( double m ) { multiuse = m; }
     inline const char *get_ident() { return ident.c_str(); }
     inline string get_name() { return name; }
+    inline string get_apt_id() { return apt_id; }
     inline bool get_serviceable() { return serviceable; }
     inline const char *get_trans_ident() { return trans_ident.c_str(); }
 
@@ -105,6 +108,7 @@ FGNavRecord::FGNavRecord(void) :
     multiuse(0.0),
     ident(""),
     name(""),
+    apt_id(""),
     serviceable(true),
     trans_ident("")
 {
@@ -133,6 +137,12 @@ operator >> ( istream& in, FGNavRecord& n )
     // Remove any leading spaces before the name
     while ( n.name.substr(0,1) == " " ) {
         n.name = n.name.erase(0,1);
+    }
+
+    if ( n.type >= 4 && n.type <= 9 ) {
+        // these types are always associated with an airport id
+        string::size_type pos = n.name.find(" ");
+        n.apt_id = n.name.substr(0, pos);
     }
 
     // assign default ranges

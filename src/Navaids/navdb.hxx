@@ -41,7 +41,8 @@
 
 
 // load and initialize the navigational databases
-bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
+bool fgNavDBInit( FGAirportList *airports,
+                  FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
                   FGNavList *dmelist, FGNavList *mkrbeacons );
 
 

@@ -105,6 +105,7 @@ class FGNavCom : public SGSubsystem
     double nav_loc_dist;
     double nav_gslon;
     double nav_gslat;
+    double nav_elev;            // use gs elev if available
     double nav_gs_x;
     double nav_gs_y;
     double nav_gs_z;
@@ -114,7 +115,6 @@ class FGNavCom : public SGSubsystem
     double nav_gs_rate_of_climb;
     SGTimeStamp prev_time;
     SGTimeStamp curr_time;
-    double nav_elev;
     double nav_range;
     double nav_effective_range;
     double nav_target_gs;

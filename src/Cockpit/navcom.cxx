@@ -627,6 +627,7 @@ void FGNavCom::search()
             if ( nav_has_gs ) {
                 nav_gslon = gs->get_lon();
                 nav_gslat = gs->get_lat();
+                nav_elev = gs->get_elev_ft();
                 int tmp = (int)(gs->get_multiuse() / 1000.0);
                 nav_target_gs = (double)tmp / 100.0;
                 nav_gs_x = gs->get_x();
@@ -643,7 +644,8 @@ void FGNavCom::search()
                 //      << endl;
                 Point3D p1 = sgGeodToCart( Point3D(tlon*SGD_DEGREES_TO_RADIANS,
                                                    tlat*SGD_DEGREES_TO_RADIANS,
-                                                   nav_elev*SG_FEET_TO_METER) );
+                                                   nav_elev*SG_FEET_TO_METER)
+                                           );
                 // cout << nav_gs_x << "," << nav_gs_y << "," << nav_gs_z
                 //      << endl;
                 // cout << p1 << endl;
@@ -651,10 +653,11 @@ void FGNavCom::search()
                             p1.x()-nav_gs_x, p1.y()-nav_gs_y, p1.z()-nav_gs_z );
                 // cout << gs_base_vec[0] << "," << gs_base_vec[1] << ","
                 //      << gs_base_vec[2] << endl;
+            } else {
+                nav_elev = loc->get_elev_ft();
             }
 	    nav_loclon = loc->get_lon();
 	    nav_loclat = loc->get_lat();
-	    nav_elev = loc->get_elev_ft();
 	    nav_twist = 0;
 	    nav_range = FG_LOC_DEFAULT_RANGE;
 	    nav_effective_range = nav_range;

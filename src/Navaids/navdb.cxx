@@ -28,6 +28,7 @@
 #include <simgear/debug/logstream.hxx>
 
 #include <Airports/runways.hxx>
+#include <Airports/simple.hxx>
 #include <Main/globals.hxx>
 
 #include "navrecord.hxx"
@@ -37,7 +38,8 @@ SG_USING_STD( string );
 
 
 // load and initialize the navigational databases
-bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
+bool fgNavDBInit( FGAirportList *airports,
+                  FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
                   FGNavList *dmelist, FGNavList *mkrlist )
 {
     SG_LOG(SG_GENERAL, SG_INFO, "Loading Navaid Databases");
@@ -88,6 +90,17 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
 	cout << " elev = " << n.get_elev() << endl;
 	cout << " freq = " << n.get_freq() << endl;
  	cout << " range = " << n.get_range() << endl << endl; */
+
+        // fudge elevation to the field elevation if it's not specified
+        if ( fabs(r->get_elev_ft()) < 0.01 && r->get_apt_id().length() ) {
+            // cout << r->get_type() << " " << r->get_apt_id() << " zero elev"
+            //      << endl;
+            FGAirport a = airports->search( r->get_apt_id() );
+            if ( a.id == r->get_apt_id() ) {
+                r->set_elev_ft( a.elevation );
+                // cout << "  setting to " << a.elevation << endl;
+            }
+        }
 
         if ( r->get_type() == 2 || r->get_type() == 3 ) {
             // NDB=2, VOR=3

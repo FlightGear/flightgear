@@ -48,7 +48,6 @@ SG_USING_STD(vector);
 
 
 struct FGAirport {
-
     string id;
     double longitude;
     double latitude;

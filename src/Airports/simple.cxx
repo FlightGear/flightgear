@@ -122,7 +122,6 @@ FGAirportList::FGAirportList( const string &airport_file,
 
 // search for the specified id
 FGAirport FGAirportList::search( const string& id) {
-    
     return airports_by_id[id];
 }
 

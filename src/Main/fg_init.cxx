@@ -1058,7 +1058,7 @@ fgInitNav ()
     globals->set_dmelist( dmelist );
     globals->set_mkrlist( mkrlist );
 
-    if ( !fgNavDBInit( navlist, loclist, gslist, dmelist, mkrlist ) ) {
+    if ( !fgNavDBInit(airports, navlist, loclist, gslist, dmelist, mkrlist) ) {
         SG_LOG( SG_GENERAL, SG_ALERT,
                 "Problems loading one or more navigational database" );
     }
