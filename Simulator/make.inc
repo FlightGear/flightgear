@@ -30,7 +30,7 @@
 #---------------------------------------------------------------------------
 
 FG_VERSION_MAJOR = 0
-FG_VERSION_MINOR = 18
+FG_VERSION_MINOR = 19
 FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 
 
@@ -43,7 +43,9 @@ FLEX = flex -f -L
 BISON = bison -v --no-lines
 AR = ar
 RANLIB = ranlib
+RM = rm
 LN = ln -sf
+TAR = tar
 
 
 #---------------------------------------------------------------------------
@@ -128,6 +130,7 @@ FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 # INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS = -lGLU -lGL -lXmu -lX11
 # FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
+# TAR = gtar
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
@@ -137,8 +140,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 # INTERFACE_FLAGS = -DGLUT
 # INTERFACE_LIBS = -lglut
 # INTERFACE_FILES = GLUTmain.c GLUTkey.c
-# GRAPHICS_LIBS =  -lGLU -lGL -lXext -lXmu -lXi -lX11
+# GRAPHICS_LIBS =  -L/opt/X11R6/lib -lGLU -lGL -lXext -lXmu -lXi -lX11 -lsocket
 # FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
+# TAR = gtar
 #---------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------
@@ -149,12 +153,15 @@ FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS)
 # INTERFACE_FILES = GLUTmain.c GLUTkey.c
 # GRAPHICS_LIBS = -lglu32 -lopengl32 -luser32 -lgdi32
 # FG_CFLAGS = $(GLOBAL_CFLAGS) $(FG_DEBUG_FLAGS) -DWIN32 -DUSE_RAND
-# LN = copy
+# LN = ren
 #---------------------------------------------------------------------------
 
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.26  1997/12/17 23:13:18  curt
+# Changes and tweaks to go to version 0.19 (Plus tweaks to Solaris support)
+#
 # Revision 1.25  1997/12/15 23:54:26  curt
 # Add xgl wrappers for debugging.
 # Generate terrain normals on the fly.

@@ -61,17 +61,17 @@ clean:
 
 source-tar: clean
 	(cd ../..; \
-	tar cvzf source-$(FG_VERSION).tar.gz FlightGear/fgtop \
+	$(TAR) cvzf source-$(FG_VERSION).tar.gz FlightGear/fgtop \
 	FlightGear/COPYING FlightGear/Docs FlightGear/Src FlightGear/Thanks)
 
 source-zip: clean
 	(cd ../..; \
-	zip -r source-$(FG_VERSION).zip FlightGear/fgtop 
+	zip -r source-$(FG_VERSION).zip FlightGear/fgtop \
 	FlightGear/COPYING FlightGear/Docs FlightGear/Src FlightGear/Thanks)
 
 scenery-tar:
 	(cd ../..; \
-	tar cvzf scenery-$(FG_VERSION).tar.gz FlightGear/Scenery)
+	$(TAR) cvzf scenery-$(FG_VERSION).tar.gz FlightGear/Scenery)
 
 scenery-zip:
 	(cd ../..; \
@@ -79,9 +79,10 @@ scenery-zip:
 
 bin-tar: all
 	cp Main/fg-$(FG_VERSION) runfg ..
+	$(RM) -f ../fg$(FG_VERSION_MAJOR)
 	$(LN) ../fg-$(FG_VERSION) ../fg$(FG_VERSION_MAJOR)
 	(cd ../..; \
-	tar cvzf bin-$(FG_VERSION).tar.gz FlightGear/fgtop \
+	$(TAR) cvzf bin-$(FG_VERSION).tar.gz FlightGear/fgtop \
 	FlightGear/fg-$(FG_VERSION) FlightGear/fg$(FG_VERSION_MAJOR) \
 	FlightGear/runfg FlightGear/COPYING FlightGear/Docs FlightGear/Thanks)
 
@@ -96,6 +97,9 @@ bin-zip:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.33  1997/12/17 23:13:17  curt
+# Changes and tweaks to go to version 0.19 (Plus tweaks to Solaris support)
+#
 # Revision 1.32  1997/12/15 23:54:25  curt
 # Add xgl wrappers for debugging.
 # Generate terrain normals on the fly.
