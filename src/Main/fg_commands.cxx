@@ -29,6 +29,7 @@
 
 #include "fg_init.hxx"
 #include "fg_commands.hxx"
+#include "fg_props.hxx"
 
 SG_USING_STD(string);
 SG_USING_STD(ifstream);
@@ -845,7 +846,25 @@ do_replay (const SGPropertyNode * arg)
 
 
 
-
+static bool
+do_decrease_visability (const SGPropertyNode * arg)
+{
+    double new_value = fgGetDouble("/environment/visibility-m") * 0.9;
+    fgSetDouble("/environment/visibility-m", new_value);
+    fgDefaultWeatherValue("visibility-m", new_value);
+    globals->get_subsystem("environment")->reinit();
+}
+ 
+static bool
+do_increase_visability (const SGPropertyNode * arg)
+{
+    double new_value = fgGetDouble("/environment/visibility-m") * 1.1;
+    fgSetDouble("/environment/visibility-m", new_value);
+    fgDefaultWeatherValue("visibility-m", new_value);
+    globals->get_subsystem("environment")->reinit();
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // Command setup.
 ////////////////////////////////////////////////////////////////////////
@@ -894,6 +913,8 @@ static struct {
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
     { "replay", do_replay },
+    { "decrease-visibility", do_decrease_visability },
+    { "increase-visibility", do_increase_visability },
     { 0, 0 }			// zero-terminated
 };
 
