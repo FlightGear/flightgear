@@ -221,9 +221,9 @@ void sgVec3Slider::cancel(puObject *p_obj)
         sgVec3 vec;
         sgVec3 *pvec = me -> getStashVec();
         sgCopyVec3( vec, *pvec );
-        me->HS0->init(vec[0]);
+        me->HS0->init(vec[2]);
         me->HS1->init(vec[1]);
-        me->HS2->init(vec[2]);
+        me->HS2->init(vec[0]);
         FG_POP_PUI_DIALOG( me );
 };
 
