@@ -436,10 +436,10 @@ FGInterface::unbind ()
 {
   bound = false;
 
-  fgUntie("/fdm/time/delta_t");
-  fgUntie("/fdm/time/elapsed");
-  fgUntie("/fdm/time/remainder");
-  fgUntie("/fdm/time/multi_loop");
+  // fgUntie("/fdm/time/delta_t");
+  // fgUntie("/fdm/time/elapsed");
+  // fgUntie("/fdm/time/remainder");
+  // fgUntie("/fdm/time/multi_loop");
   fgUntie("/position/latitude-deg");
   fgUntie("/position/longitude-deg");
   fgUntie("/position/altitude-ft");
@@ -447,6 +447,12 @@ FGInterface::unbind ()
   fgUntie("/orientation/roll-deg");
   fgUntie("/orientation/pitch-deg");
   fgUntie("/orientation/heading-deg");
+  fgUntie("/orientation/roll-rate-degps");
+  fgUntie("/orientation/pitch-rate-degps");
+  fgUntie("/orientation/yaw-rate-degps");
+  fgUntie("/orientation/side-slip-rad");
+  fgUntie("/orientation/side-slip-deg");
+  fgUntie("/orientation/alpha-deg");
   fgUntie("/velocities/airspeed-kt");
   fgUntie("/velocities/mach");
   fgUntie("/velocities/speed-north-fps");
@@ -457,13 +463,13 @@ FGInterface::unbind ()
   fgUntie("/velocities/wBody-fps");
   fgUntie("/velocities/vertical-speed-fps");
   fgUntie("/velocities/glideslope");
-  fgUntie("/velocities/side-slip-rad");
-  fgUntie("/velocities/side-slip-deg");
-  fgUntie("/velocities/alpha-deg");
   fgUntie("/accelerations/nlf");
   fgUntie("/accelerations/pilot/x-accel-fps_sec");
   fgUntie("/accelerations/pilot/y-accel-fps_sec");
   fgUntie("/accelerations/pilot/z-accel-fps_sec");
+  fgUntie("/accelerations/ned/north-accel-fps_sec");
+  fgUntie("/accelerations/ned/east-accel-fps_sec");
+  fgUntie("/accelerations/ned/down-accel-fps_sec");
 }
 
 /**
