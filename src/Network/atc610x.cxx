@@ -583,7 +583,7 @@ bool FGATC610x::do_analog_in() {
 
     // mixture
     tmp = scale( mixture_min->getIntValue(), mixture_max->getIntValue(),
-                 analog_in_data[7] );
+                 analog_in_data[6] );
     fgSetFloat( "/controls/mixture[0]", tmp );
     fgSetFloat( "/controls/mixture[1]", tmp );
 
