@@ -37,6 +37,8 @@
 #  include <istream>
 #elif defined ( FG_HAVE_NATIVE_SGI_COMPILERS )
 #  include <CC/stream.h>
+#elif defined ( __BORLANDC__ )
+#  include <iostream>
 #else
 #  include <istream.h>
 #endif
