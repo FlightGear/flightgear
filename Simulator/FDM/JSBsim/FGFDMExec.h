@@ -59,8 +59,8 @@ class FGOutput;
 class FGFDMExec
 {
 public:
-  FGFDMExec::FGFDMExec(void);
-  FGFDMExec::~FGFDMExec(void);
+  FGFDMExec(void);
+  ~FGFDMExec(void);
 
   FGModel* FirstModel;
 

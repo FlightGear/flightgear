@@ -201,8 +201,8 @@ bool FGAircraft::LoadAircraftEx(string aircraft_path, string engine_path, string
   while (!aircraftfile.fail()) {
   	holding_string.erase();
     aircraftfile >> holding_string;
-    if (holding_string.compare("//",0,2) != 0) {
-//    if (holding_string.compare(0, 2, "//") != 0) {
+    // if (holding_string.compare("//",0,2) != 0) {
+    if ( !(holding_string.substr(0, 2) == "//") ) {
 
       if (holding_string == "AIRCRAFT") {
       	cout << "Reading in Aircraft parameters ..." << endl;
@@ -273,7 +273,7 @@ bool FGAircraft::LoadAircraftEx(string aircraft_path, string engine_path, string
         aircraftfile >> tag;
         streampos gpos = aircraftfile.tellg();
 				aircraftfile >> tag;
-				if (tag != "}" ) {
+				if ( !(tag == "}") ) {
 					aircraftfile.seekg(gpos);
 	        Coeff[LiftCoeff][coeff_ctr[LiftCoeff]] = new FGCoefficient(FDMExec, aircraftfile);
   	      coeff_ctr[LiftCoeff]++;
@@ -287,7 +287,7 @@ bool FGAircraft::LoadAircraftEx(string aircraft_path, string engine_path, string
         aircraftfile >> tag;
         streampos gpos = aircraftfile.tellg();
 				aircraftfile >> tag;
-				if (tag != "}" ) {
+				if ( !(tag == "}") ) {
 					aircraftfile.seekg(gpos);
 	        Coeff[DragCoeff][coeff_ctr[DragCoeff]] = new FGCoefficient(FDMExec, aircraftfile);
   	      coeff_ctr[DragCoeff]++;
@@ -301,7 +301,7 @@ bool FGAircraft::LoadAircraftEx(string aircraft_path, string engine_path, string
         aircraftfile >> tag;
         streampos gpos = aircraftfile.tellg();
 				aircraftfile >> tag;
-				if (tag != "}" ) {
+				if ( !(tag == "}") ) {
 					aircraftfile.seekg(gpos);
 	        Coeff[SideCoeff][coeff_ctr[SideCoeff]] = new FGCoefficient(FDMExec, aircraftfile);
   	      coeff_ctr[SideCoeff]++;
@@ -315,7 +315,7 @@ bool FGAircraft::LoadAircraftEx(string aircraft_path, string engine_path, string
         aircraftfile >> tag;
         streampos gpos = aircraftfile.tellg();
 				aircraftfile >> tag;
-				if (tag != "}" ) {
+				if ( !(tag == "}") ) {
 					aircraftfile.seekg(gpos);
 	        Coeff[RollCoeff][coeff_ctr[RollCoeff]] = new FGCoefficient(FDMExec, aircraftfile);
   	      coeff_ctr[RollCoeff]++;
@@ -329,7 +329,7 @@ bool FGAircraft::LoadAircraftEx(string aircraft_path, string engine_path, string
         aircraftfile >> tag;
         streampos gpos = aircraftfile.tellg();
 				aircraftfile >> tag;
-				if (tag != "}" ) {
+				if ( !(tag == "}") ) {
 					aircraftfile.seekg(gpos);
 	        Coeff[PitchCoeff][coeff_ctr[PitchCoeff]] = new FGCoefficient(FDMExec, aircraftfile);
   	      coeff_ctr[PitchCoeff]++;
@@ -343,7 +343,7 @@ bool FGAircraft::LoadAircraftEx(string aircraft_path, string engine_path, string
         aircraftfile >> tag;
         streampos gpos = aircraftfile.tellg();
 				aircraftfile >> tag;
-				if (tag != "}" ) {
+				if ( !(tag == "}") ) {
 					aircraftfile.seekg(gpos);
 	        Coeff[YawCoeff][coeff_ctr[YawCoeff]] = new FGCoefficient(FDMExec, aircraftfile);
   	      coeff_ctr[YawCoeff]++;
@@ -359,6 +359,7 @@ bool FGAircraft::LoadAircraftEx(string aircraft_path, string engine_path, string
     }
   }
 	cout << "End of Configuration File Parsing." << endl;
+	return true;
 }
 
 
