@@ -9,6 +9,7 @@
 
 FG_USING_STD(list);
 FG_USING_STD(string);
+FG_USING_STD(getline);
 FG_USING_STD(ifstream);
 
 #define DELIMITERS " \t"

@@ -105,7 +105,10 @@
 FG_USING_STD(cerr);
 FG_USING_STD(cout);
 FG_USING_STD(endl);
+
+#ifndef _MSC_VER
 FG_USING_STD(exit);
+#endif
 
 bool check_float(string  &token)
 {

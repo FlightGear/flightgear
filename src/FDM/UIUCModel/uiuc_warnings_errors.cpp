@@ -80,7 +80,10 @@ for information.
 
 FG_USING_STD (cerr);
 FG_USING_STD (endl);
+
+#ifndef _MSC_VER
 FG_USING_STD (exit);
+#endif
 
 void uiuc_warnings_errors(int errorCode, string line)
 {
