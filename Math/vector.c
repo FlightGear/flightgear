@@ -77,11 +77,15 @@ void map_vec_onto_cur_surface_plane(MAT3vec normal, MAT3vec v0, MAT3vec vec,
        result[0], result[1], result[2]); */
 }
 
+
 /* $Log$
-/* Revision 1.2  1998/01/19 19:27:13  curt
-/* Merged in make system changes from Bob Kuehne <rpk@sgi.com>
-/* This should simplify things tremendously.
+/* Revision 1.3  1998/05/07 23:04:28  curt
+/* Added a blank formating line!
 /*
+ * Revision 1.2  1998/01/19 19:27:13  curt
+ * Merged in make system changes from Bob Kuehne <rpk@sgi.com>
+ * This should simplify things tremendously.
+ *
  * Revision 1.1  1997/12/22 04:13:17  curt
  * Initial revision.
  *
