@@ -185,7 +185,6 @@ string FGAerodynamics::GetCoefficientStrings(void)
       CoeffStrings += Coeff[axis][sd]->Getname();
     }
   }
-
   return CoeffStrings;
 }
 
