@@ -145,7 +145,7 @@ static void
 gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
 {
     GLint display_list;
-    fgPoint3d ave_cart, cart, cart_trans, tex;
+    fgPoint3d cart, cart_trans, tex;
     MAT3vec normal;
     double dist, max_dist, temp;
     int center_num, i;
@@ -166,20 +166,17 @@ gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
 		  APT_BASE_MATERIAL );
     }
 
-    ave_cart = geod_to_cart( average );
     printf(" tile center = %.2f %.2f %.2f\n", 
 	   t->center.x, t->center.y, t->center.z);
     printf(" airport center = %.2f %.2f %.2f\n", 
 	   average.x, average.y, average.z);
-    printf(" airport center = %.2f %.2f %.2f\n", 
-	   ave_cart.x, ave_cart.y, ave_cart.z);
-    fragment.center.x = ave_cart.x;
-    fragment.center.y = ave_cart.y;
-    fragment.center.z = ave_cart.z;
+    fragment.center.x = average.x;
+    fragment.center.y = average.y;
+    fragment.center.z = average.z;
 
-    normal[0] = ave_cart.x;
-    normal[1] = ave_cart.y;
-    normal[2] = ave_cart.z;
+    normal[0] = average.x;
+    normal[1] = average.y;
+    normal[2] = average.z;
     MAT3_NORMALIZE_VEC(normal, temp);
     
     display_list = xglGenLists(1);
@@ -187,9 +184,9 @@ gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
     xglBegin(GL_TRIANGLE_FAN);
 
     // first point center of fan
-    cart_trans.x = ave_cart.x - t->center.x;
-    cart_trans.y = ave_cart.y - t->center.y;
-    cart_trans.z = ave_cart.z - t->center.z;
+    cart_trans.x = average.x - t->center.x;
+    cart_trans.y = average.y - t->center.y;
+    cart_trans.z = average.z - t->center.z;
     t->nodes[t->ncount][0] = cart_trans.x;
     t->nodes[t->ncount][1] = cart_trans.y;
     t->nodes[t->ncount][2] = cart_trans.z;
@@ -214,7 +211,7 @@ gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
 
     i = 1;
     tex = calc_tex_coords( t->nodes[i], &(t->center) );
-    dist = calc_dist(ave_cart, cart);
+    dist = calc_dist(average, cart);
     if ( dist > max_dist ) {
 	max_dist = dist;
     }
@@ -236,7 +233,7 @@ gen_base( const fgPoint3d& average, const container& perimeter, fgTILE *t)
 	fragment.add_face(center_num, i - 1, i);
 
 	tex = calc_tex_coords( t->nodes[i], &(t->center) );
-	dist = calc_dist(ave_cart, cart);
+	dist = calc_dist(average, cart);
 	if ( dist > max_dist ) {
 	    max_dist = dist;
 	}
@@ -275,6 +272,7 @@ fgAptGenerate(const string& path, fgTILE *tile)
     string token;
     string apt_id, apt_name;
     char c;
+    int i = 1;
 
     // face list (this indexes into the master tile vertex list)
     container perimeter;
@@ -311,6 +309,7 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	    cout << "Reading airport record\n";
 	    in.stream() >> apt_id;
 	    apt_name = "";
+	    i = 1;
 	    average.lon = average.lat = average.radius = 0.0;
 	    perimeter.erase( perimeter.begin(), perimeter.end() );
 	    // skip to end of line.
@@ -325,10 +324,11 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	    // counter clockwise order and are specified in lon/lat
 	    // degrees.
 	    in.stream() >> p.lon >> p.lat >> p.radius;
-	    average.lon += p.lon;
-	    average.lat += p.lat;
-	    average.radius += p.radius;
+	    average.x += tile->nodes[i][0];
+	    average.y += tile->nodes[i][1];
+	    average.z += tile->nodes[i][2];
 	    perimeter.push_back(p);
+	    ++i;
 	} else if ( token == "r" ) {
 	    // runway record
 	    // skip for now
@@ -343,9 +343,9 @@ fgAptGenerate(const string& path, fgTILE *tile)
 	// we have just finished reading and airport record.
 	// process the info
 	size = perimeter.size();
-	average.lon /= (double)size;
-	average.lat /= (double)size;
-	average.radius /= (double)size;
+	average.x = average.x / (double)size + tile->center.x;
+	average.y = average.y / (double)size + tile->center.y;
+	average.z = average.z / (double)size + tile->center.z;
 
 	gen_base(average, perimeter, tile);
     }
@@ -355,6 +355,10 @@ fgAptGenerate(const string& path, fgTILE *tile)
 
 
 // $Log$
+// Revision 1.3  1998/09/21 20:55:00  curt
+// Used the cartesian form of the airport area coordinates to determine the
+// center.
+//
 // Revision 1.2  1998/09/14 12:44:30  curt
 // Don't recalculate perimeter points since it is not likely that they will match
 // exactly with the previously calculated points, which will leave an ugly gap
