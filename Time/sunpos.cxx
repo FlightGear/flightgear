@@ -194,7 +194,7 @@ static double julian_date(int y, int m, int d) {
 
     /* lazy test to ensure gregorian calendar */
     if (y < 1583) {
-	FG_LOG( FG_TIME, FG_ALERT, 
+	FG_LOG( FG_EVENT, FG_ALERT, 
 		"WHOOPS! Julian dates only valid for 1582 oct 15 or later" );
     }
 
@@ -340,7 +340,7 @@ void fgUpdateSunPos( void ) {
     t = &cur_time_params;
     v = &current_view;
 
-    FG_LOG( FG_TIME, FG_INFO, "  Updating Sun position" );
+    FG_LOG( FG_EVENT, FG_INFO, "  Updating Sun position" );
 
     // (not sure why there was two)
     // fgSunPosition(t->cur_time, &l->sun_lon, &sun_gd_lat);
@@ -351,8 +351,8 @@ void fgUpdateSunPos( void ) {
     p = Point3D( l->sun_lon, l->sun_gc_lat, sl_radius );
     l->fg_sunpos = fgPolarToCart3d(p);
 
-    FG_LOG( FG_TIME, FG_INFO, "    t->cur_time = " << t->cur_time );
-    FG_LOG( FG_TIME, FG_INFO, 
+    FG_LOG( FG_EVENT, FG_INFO, "    t->cur_time = " << t->cur_time );
+    FG_LOG( FG_EVENT, FG_INFO, 
 	    "    Sun Geodetic lat = " << sun_gd_lat
 	    << " Geocentric lat = " << l->sun_gc_lat );
 
@@ -426,6 +426,9 @@ void fgUpdateSunPos( void ) {
 
 
 // $Log$
+// Revision 1.17  1998/11/09 23:41:53  curt
+// Log message clean ups.
+//
 // Revision 1.16  1998/11/07 19:07:14  curt
 // Enable release builds using the --without-logging option to the configure
 // script.  Also a couple log message cleanups, plus some C to C++ comment

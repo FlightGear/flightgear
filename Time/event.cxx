@@ -94,7 +94,7 @@ fgEVENT::~fgEVENT()
 void
 fgEVENT::run()
 {
-    FG_LOG(FG_TIME, FG_INFO, "Running " << description );
+    FG_LOG(FG_EVENT, FG_INFO, "Running " << description );
 
     // record starting time
     timestamp( &last_run );
@@ -131,7 +131,7 @@ fgEVENT::run()
 int
 fgEVENT::PrintStats() const
 {
-    FG_LOG( FG_TIME, FG_INFO, 
+    FG_LOG( FG_EVENT, FG_INFO, 
 	    "  " << description 
 	    << " int=" << interval / 1000.0
 	    << " cum=" << cum_time
@@ -149,7 +149,7 @@ fgEVENT_MGR::fgEVENT_MGR( void ) {
 
 // Initialize the scheduling subsystem
 void fgEVENT_MGR::Init( void ) {
-    FG_LOG(FG_TIME, FG_INFO, "Initializing event manager" );
+    FG_LOG(FG_EVENT, FG_INFO, "Initializing event manager" );
 
     run_queue.erase( run_queue.begin(), run_queue.end() );
     event_table.erase( event_table.begin(), event_table.end() );
@@ -165,7 +165,7 @@ fgEVENT_MGR::Register( const string& desc,
 {
     fgEVENT e( desc, cb, status, interval );
 
-    FG_LOG( FG_TIME, FG_INFO, "Registering event: " << desc );
+    FG_LOG( FG_EVENT, FG_INFO, "Registering event: " << desc );
 
     // Actually run the event
     e.run();
@@ -198,15 +198,15 @@ void fgEVENT_MGR::Resume( void ) {
 void
 fgEVENT_MGR::PrintStats()
 {
-    FG_LOG( FG_TIME, FG_INFO, "" );
-    FG_LOG( FG_TIME, FG_INFO, "Event Stats" );
-    FG_LOG( FG_TIME, FG_INFO, "-----------" );
+    FG_LOG( FG_EVENT, FG_INFO, "" );
+    FG_LOG( FG_EVENT, FG_INFO, "Event Stats" );
+    FG_LOG( FG_EVENT, FG_INFO, "-----------" );
 
     for_each( event_table.begin(),
 	      event_table.end(),
 	      mem_fun_ref( &fgEVENT::PrintStats ));
 
-    FG_LOG( FG_TIME, FG_INFO, "");
+    FG_LOG( FG_EVENT, FG_INFO, "");
 }
 
 
@@ -261,6 +261,9 @@ fgEVENT_MGR::~fgEVENT_MGR( void ) {
 
 
 // $Log$
+// Revision 1.11  1998/11/09 23:41:51  curt
+// Log message clean ups.
+//
 // Revision 1.10  1998/11/07 19:07:13  curt
 // Enable release builds using the --without-logging option to the configure
 // script.  Also a couple log message cleanups, plus some C to C++ comment
