@@ -39,7 +39,7 @@ FGLogger::init ()
   if (logging == 0)
     return;
 
-  vector<SGPropertyNode *> children = logging->getChildren("log");
+  vector<SGPropertyNode_ptr> children = logging->getChildren("log");
   for (unsigned int i = 0; i < children.size(); i++) {
     _logs.push_back(Log());
     Log &log = _logs[_logs.size()-1];
@@ -52,7 +52,7 @@ FGLogger::init ()
       SG_LOG(SG_INPUT, SG_ALERT, "Cannot write log to " << filename);
       continue;
     }
-    vector<SGPropertyNode *> entries = child->getChildren("entry");
+    vector<SGPropertyNode_ptr> entries = child->getChildren("entry");
     (*log.output) << "Time";
     for (unsigned int j = 0; j < entries.size(); j++) {
       SGPropertyNode * entry = entries[j];

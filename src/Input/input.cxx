@@ -451,7 +451,7 @@ FGInput::_init_keyboard ()
     key_nodes = fgGetNode("/input/keyboard", true);
   }
   
-  vector<SGPropertyNode *> keys = key_nodes->getChildren("key");
+  vector<SGPropertyNode_ptr> keys = key_nodes->getChildren("key");
   for (unsigned int i = 0; i < keys.size(); i++) {
     int index = keys[i]->getIndex();
     SG_LOG(SG_INPUT, SG_DEBUG, "Binding key " << index);
@@ -810,7 +810,7 @@ FGInput::_read_bindings (const SGPropertyNode * node,
 			 int modifiers)
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Reading all bindings");
-  vector<const SGPropertyNode *> bindings = node->getChildren("binding");
+  vector<SGPropertyNode_ptr> bindings = node->getChildren("binding");
   for (unsigned int i = 0; i < bindings.size(); i++) {
     SG_LOG(SG_INPUT, SG_DEBUG, "Reading binding "
 	   << bindings[i]->getStringValue("command"));

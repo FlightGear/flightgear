@@ -134,7 +134,7 @@ read_interpolation_table (const SGPropertyNode * props)
   const SGPropertyNode * table_node = props->getNode("interpolation");
   if (table_node != 0) {
     SGInterpTable * table = new SGInterpTable();
-    vector<const SGPropertyNode *> entries = table_node->getChildren("entry");
+    vector<SGPropertyNode_ptr> entries = table_node->getChildren("entry");
     for (int i = 0; i < entries.size(); i++)
       table->addEntry(entries[i]->getDoubleValue("ind", 0.0),
 		      entries[i]->getDoubleValue("dep", 0.0));
@@ -223,10 +223,10 @@ FG3DModel::init (const string &path)
   _location = (FGLocation *) new FGLocation;
 
                                 // Load animations
-  vector<SGPropertyNode *> animation_nodes = props.getChildren("animation");
+  vector<SGPropertyNode_ptr> animation_nodes = props.getChildren("animation");
   unsigned int i;
   for (i = 0; i < animation_nodes.size(); i++) {
-    vector<SGPropertyNode *> name_nodes =
+    vector<SGPropertyNode_ptr> name_nodes =
       animation_nodes[i]->getChildren("object-name");
     if (name_nodes.size() < 1) {
       Animation * animation = make_animation(0, animation_nodes[i]);

@@ -86,7 +86,7 @@ bool FGMaterialLib::load( const string& mpath ) {
     if (!strcmp(node->getName(), "material")) {
       FGNewMat * m = new FGNewMat(node);
 
-      vector<const SGPropertyNode *>names = node->getChildren("name");
+      vector<SGPropertyNode_ptr>names = node->getChildren("name");
       for (unsigned int j = 0; j < names.size(); j++) {
 	string name = names[j]->getStringValue();
 	m->ref();

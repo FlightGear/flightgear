@@ -116,7 +116,7 @@ FGSound::init(SGPropertyNode *node)
    //
    unsigned int i;
    float v = 0.0;
-   vector<SGPropertyNode *> kids = node->getChildren("volume");
+   vector<SGPropertyNode_ptr> kids = node->getChildren("volume");
    for (i = 0; (i < kids.size()) && (i < FGSound::MAXPROP); i++) {
       _snd_prop volume;
 

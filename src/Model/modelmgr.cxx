@@ -28,7 +28,7 @@ FGModelMgr::~FGModelMgr ()
 void
 FGModelMgr::init ()
 {
-  vector<SGPropertyNode *> model_nodes =
+  vector<SGPropertyNode_ptr> model_nodes =
     fgGetNode("/models", true)->getChildren("model");
   for (int i = 0; i < model_nodes.size(); i++) {
     SGPropertyNode * node = model_nodes[i];
