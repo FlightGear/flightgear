@@ -439,6 +439,11 @@ Ed Williams <Ed_Williams@compuserve.com>
   http://www.best.com/~williams/index.html
 
 
+Jim Wilson <jimw@kelcomaine.com>
+  Wrote a major overhaul of the viewer code to make it more flexible 
+  and modular.  Contributed many small fixes and bug reports.
+
+
 Jean-Claude Wippler <jcw@equi4.com>
   Author of MetaKit - a portable, embeddible database with a portable
   data file format.  This software is not GPL'd but the author is kindly
