@@ -479,10 +479,12 @@ bool FGATC610x::do_analog_in() {
     // mixture
     tmp = (float)analog_in_data[7] / 680.0f;
     fgSetFloat( "/controls/mixture[0]", tmp );
+    fgSetFloat( "/controls/mixture[1]", tmp );
 
     // throttle
     tmp = (float)analog_in_data[8] / 690.0f;
     fgSetFloat( "/controls/throttle[0]", tmp );
+    fgSetFloat( "/controls/throttle[1]", tmp );
 
     // nav1 volume
     tmp = (float)analog_in_data[25] / 1024.0f;
@@ -1360,13 +1362,13 @@ bool FGATC610x::do_switches() {
 
     // flaps
     float flaps = 0.0;
-    if ( switch_matrix[board][6][3] == 1 ) {
+    if ( switch_matrix[board][6][3] ) {
 	flaps = 1.0;
-    } else if ( switch_matrix[board][5][3] == 1 ) {
+    } else if ( switch_matrix[board][5][3] ) {
 	flaps = 2.0 / 3.0;
-    } else if ( switch_matrix[board][4][3] == 1 ) {
+    } else if ( switch_matrix[board][4][3] ) {
 	flaps = 1.0 / 3.0;
-    } else if ( switch_matrix[board][4][3] == 0 ) {
+    } else if ( !switch_matrix[board][4][3] ) {
 	flaps = 0.0;
     }
 
@@ -1380,23 +1382,23 @@ bool FGATC610x::do_switches() {
         fgSetFloat( "/controls/flaps", flaps );
     }
 
-    // fuel selector (not finished)
-    if ( true ) {
+    // fuel selector
+    if ( switch_matrix[board][2][3] ) {
         // both
-        fgSetFloat( "/controls/fuel-selector[0]", true );
-        fgSetFloat( "/controls/fuel-selector[1]", true );
-    } else if ( true ) {
+        fgSetBool( "/controls/fuel-selector[0]", true );
+        fgSetBool( "/controls/fuel-selector[1]", true );
+    } else if ( switch_matrix[board][1][3] ) {
         // left
-        fgSetFloat( "/controls/fuel-selector[0]", true );
-        fgSetFloat( "/controls/fuel-selector[1]", false );
-    } else if ( true ) {
+        fgSetBool( "/controls/fuel-selector[0]", true );
+        fgSetBool( "/controls/fuel-selector[1]", false );
+    } else if ( switch_matrix[board][3][3] ) {
         // right
-        fgSetFloat( "/controls/fuel-selector[0]", false );
-        fgSetFloat( "/controls/fuel-selector[1]", true );
+        fgSetBool( "/controls/fuel-selector[0]", false );
+        fgSetBool( "/controls/fuel-selector[1]", true );
     } else {
         // fuel cutoff
-        fgSetFloat( "/controls/fuel-selector[0]", false );
-        fgSetFloat( "/controls/fuel-selector[1]", false );
+        fgSetBool( "/controls/fuel-selector[0]", false );
+        fgSetBool( "/controls/fuel-selector[1]", false );
     }
 
     return true;
