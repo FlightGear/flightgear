@@ -102,7 +102,7 @@ public:
     /**
      * Return a specific airport, by position.
      */
-    const FGAirport getAirport( int index ) const;
+    const FGAirport *getAirport( int index ) const;
 
 
     /**

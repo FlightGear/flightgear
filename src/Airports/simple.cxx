@@ -27,6 +27,8 @@
 #  include <config.h>
 #endif
 
+#include <math.h>
+
 #include <simgear/compiler.h>
 
 #include <simgear/debug/logstream.hxx>
@@ -52,7 +54,10 @@ operator >> ( istream& in, FGAirport& a )
     in.getline( name, 256 );
     a.name = name;
 
-    a.has_metar = true;         // assume true
+    // a.has_metar = true;         // assume true
+    // only airports with four-letter codes can have metar stations
+    a.has_metar = (isalpha(a.id[0]) && isalpha(a.id[1]) && isalpha(a.id[2])
+        && isalpha(a.id[3]) && !a.id[4]);
 
     return in;
 }
@@ -121,9 +126,9 @@ FGAirportList::size () const
     return airports_array.size();
 }
 
-const FGAirport FGAirportList::getAirport( int index ) const
+const FGAirport *FGAirportList::getAirport( int index ) const
 {
-    return *airports_array[index];
+    return airports_array[index];
 }
 
 
