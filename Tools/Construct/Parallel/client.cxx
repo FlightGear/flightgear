@@ -53,7 +53,7 @@ int make_socket (char *host, unsigned short int port) {
 
 
 // connect to the server and get the next task
-long int get_next_task( const string& host, int port ) {
+long int get_next_task( const string& host, int port, long int last_tile ) {
     long int tile;
     int sock, len;
     fd_set ready;
@@ -65,29 +65,29 @@ long int get_next_task( const string& host, int port ) {
     }
 
     // build a command string from the argv[]'s
-    strcpy(message, "hello world!\n");
+    sprintf(message, "%ld", last_tile);
 
     // send command and arguments to remote server
-    // if ( write(sock, message, sizeof(message)) < 0 ) {
-    //    perror("Cannot write to stream socket");
-    // }
+    if ( write(sock, message, sizeof(message)) < 0 ) {
+        perror("Cannot write to stream socket");
+    }
 
     // loop until remote program finishes
-    cout << "looping ..." << endl;
+    cout << "querying server for next task ..." << endl;
 
     FD_ZERO(&ready);
     FD_SET(sock, &ready);
 
     // block until input from sock
     select(32, &ready, 0, 0, NULL);
-    cout << "unblocking ... " << endl;
+    cout << " received reply" << endl;
 
     if ( FD_ISSET(sock, &ready) ) {
 	/* input coming from socket */
 	if ( (len = read(sock, message, 1024)) > 0 ) {
 	    message[len] = '\0';
 	    tile = atoi(message);
-	    cout << "tile to construct = " << tile << endl;
+	    cout << "  tile to construct = " << tile << endl;
 	    close(sock);
 	    return tile;
 	} else {
@@ -101,13 +101,16 @@ long int get_next_task( const string& host, int port ) {
 }
 
 
-// build the specified tile
-void run_task( long int tile ) {
+// build the specified tile, return true if contruction completed
+// successfully
+bool construct_tile( long int tile ) {
+    return true;
 }
 
 
 main(int argc, char *argv[]) {
-    long int tile;
+    long int tile, last_tile;
+    bool result;
 
     // Check usage
     if ( argc < 3 ) {
@@ -118,10 +121,15 @@ main(int argc, char *argv[]) {
     string host = argv[1];
     int port = atoi( argv[2] );
 
-    while ( 
-	   (tile = get_next_task( host, port )) >= 0
-	   )
-    {
-	run_task( tile );
+    last_tile = 0;
+
+    while ( (tile = get_next_task( host, port, last_tile )) >= 0 ) {
+	result = construct_tile( tile );
+
+	if ( result ) {
+	    last_tile = tile;
+	} else {
+	    last_tile = -tile;
+	}
     }
 }

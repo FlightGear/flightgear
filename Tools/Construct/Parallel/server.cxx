@@ -59,7 +59,6 @@ int make_socket (unsigned short int* port) {
 }
 
 
-#if 0 // better move this to client
 // return true if file exists
 static bool file_exists( const string& file ) {
     struct stat buf;
@@ -87,7 +86,7 @@ static bool has_data( const string& path, const FGBucket& b ) {
 
     return false;
 }
-#endif
+
 
 // initialize the tile counting system
 void init_tile_count() {
@@ -131,7 +130,8 @@ long int get_next_tile( const string& work_base, const string& output_base )
 	}
 
 	// reset lat
-	lat = -89.0 + (shift_up*dy) - (dy*0.5);
+	// lat = -89.0 + (shift_up*dy) - (dy*0.5);
+	lat = 0.0 + (shift_up*dy) + (dy*0.5);
 
 	// reset lon
 	FGBucket tmp( 0.0, lat );
@@ -216,7 +216,11 @@ int main( int argc, char **argv ) {
 	    // printf("%d %d Incomming message --> ", getpid(), pid);
 
 	    // get the next tile to work on
-	    next_tile = get_next_tile(work_base, output_base);
+	    next_tile = get_next_tile( work_base, output_base );
+	    while ( ! has_data( work_base, FGBucket(next_tile) ) ) {
+		next_tile = get_next_tile( work_base, output_base );
+	    }
+
 	    // cout << "next tile = " << next_tile << endl;;
 
 	    msgsock = accept(sock, 0, 0);
@@ -236,13 +240,25 @@ int main( int argc, char **argv ) {
 		// clean up all of our zombie children
 		int status;
 		while ( (pid = waitpid( WAIT_ANY, &status, WNOHANG )) > 0 ) {
-		    // cout << "waitpid() returned " << pid << endl;
+		    cout << "waitpid(): pid = " << pid 
+			 << " status = " << status << endl;
 		}
 	    } else {
 		// This is the child
 
 		// cout << "new process started to handle new connection for "
 		//      << next_tile << endl;
+
+                // Read client's command
+		char buf[MAXBUF];
+                if ( (length = read(msgsock, buf, MAXBUF)) < 0) {
+                    perror("Cannot read command");
+                    exit(-1);
+                }
+
+		buf[length] = '\0';
+		long int returned_tile = atoi(buf);
+		cout << "client replied with " << returned_tile << endl;
 
 		// reply to the client
 		char message[MAXBUF];
@@ -254,7 +270,7 @@ int main( int argc, char **argv ) {
 		close(msgsock);
 		// cout << "process for " << next_tile << " ended" << endl;
 
-		exit(0);
+		exit(returned_tile);
 	    }
 	}
     }
