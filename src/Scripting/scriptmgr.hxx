@@ -65,12 +65,28 @@ public:
      *
      * Any included files are referenced relative to $FG_ROOT.  This
      * is not very efficient right now, since it recompiles the script
-     * every time it runs.
+     * every time it runs.  The script must have a main() function.
      *
      * @param script A string containing the script.
      * @return true if the script compiled properly, false otherwise.
+     * @see #run_inline
      */
-    virtual bool run (const char * script);
+    virtual bool run (const char * script) const;
+
+
+    /**
+     * Run an inline in-memory user script.
+     *
+     * The script is executed as if it were surrounded by a main()
+     * function, so it cannot contain any top-level constructions like
+     * #include statements or function declarations.  This is useful
+     * for quick one-liners.
+     *
+     * @param script A string containing the inline script.
+     * @return true if the script compiled properly, false otherwise.
+     * @see #run
+     */
+    virtual bool run_inline (const char * script) const;
     
 };
 

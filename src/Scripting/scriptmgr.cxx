@@ -135,7 +135,7 @@ FGScriptMgr::update (double delta_time_sec)
 }
 
 bool
-FGScriptMgr::run (const char * script)
+FGScriptMgr::run (const char * script) const
 {
 #if defined(FG_PSL_STRING_COMPILE)
                                 // FIXME: detect and report errors
@@ -149,6 +149,15 @@ FGScriptMgr::run (const char * script)
     SG_LOG(SG_INPUT, SG_ALERT, "Input-binding scripts not supported");
     return false;
 #endif
+}
+
+bool
+FGScriptMgr::run_inline (const char * script) const
+{
+    string s = "int main () {\n";
+    s += script;
+    s += "\n  return 0;\n}\n";
+    return run(s.c_str());
 }
 
 
