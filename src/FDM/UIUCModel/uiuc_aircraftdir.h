@@ -70,8 +70,8 @@
 
 typedef struct 
 {
-    string aircraft_dir;
-    #define aircraft_dir aircraftdir_->aircraft_dir
+    string real_aircraft_dir;
+    #define aircraft_dir aircraftdir_->real_aircraft_dir
   
 } AIRCRAFTDIR;
 

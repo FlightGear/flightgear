@@ -132,7 +132,12 @@ FGPanel::update () const
   glEnable(GL_BLEND);
   glEnable(GL_ALPHA_TEST);
   glEnable(GL_COLOR_MATERIAL);
-  glColor4f(1.0, 1.0, 1.0, 1.0);
+  // glColor4f(1.0, 1.0, 1.0, 1.0);
+  if ( cur_light_params.sun_angle * RAD_TO_DEG < 95.0 ) {
+      glColor4fv( cur_light_params.scene_diffuse );
+  } else {
+      glColor4f(0.7, 0.2, 0.2, 1.0);
+  }
   glBindTexture(GL_TEXTURE_2D, _bg->getHandle());
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -558,7 +563,11 @@ FGTexturedLayer::draw () const
   transform();
   glBindTexture(GL_TEXTURE_2D, _texture->getHandle());
   glBegin(GL_POLYGON);
-
+  if ( cur_light_params.sun_angle * RAD_TO_DEG < 95.0 ) {
+      glColor4fv( cur_light_params.scene_diffuse );
+  } else {
+      glColor4f(0.7, 0.2, 0.2, 1.0);
+  }
   glTexCoord2f(_texX1, _texY1); glVertex2f(-w2, -h2);
   glTexCoord2f(_texX2, _texY1); glVertex2f(w2, -h2);
   glTexCoord2f(_texX2, _texY2); glVertex2f(w2, h2);

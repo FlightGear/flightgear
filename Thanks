@@ -107,6 +107,10 @@ Oscar Everitt <bigoc@premier.net>
   them to our little project.
 
 
+Bruce Finney <bfinney@gte.net>
+  MSVC5 compatibility.
+
+
 Jean-loup Gailly and Mark Adler <zlib@gzip.org>
   Authors of the zlib library.  Used for on-the-fly compression and
   decompression routines.

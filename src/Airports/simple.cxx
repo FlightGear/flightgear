@@ -56,7 +56,10 @@ FGAirports::FGAirports( const string& file ) {
     // open the specified database readonly
     storage = new c4_Storage( file.c_str(), false );
 
-    // need to do something about error handling here!
+    if ( !storage->Strategy().IsValid() ) {
+	FG_LOG( FG_GENERAL, FG_ALERT, "Cannot open file: " << file );
+	exit(-1);
+    }
 
     vAirport = new c4_View;
     *vAirport = 

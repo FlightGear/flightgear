@@ -137,10 +137,12 @@ void fgLIGHT::Update( void ) {
     scene_ambient[0] = white[0] * ambient;
     scene_ambient[1] = white[1] * ambient;
     scene_ambient[2] = white[2] * ambient;
+    scene_ambient[3] = 1.0;
 
     scene_diffuse[0] = white[0] * diffuse;
     scene_diffuse[1] = white[1] * diffuse;
     scene_diffuse[2] = white[2] * diffuse;
+    scene_diffuse[3] = 1.0;
 
     // set sky color
     sky_color[0] = base_sky_color[0] * sky_brightness;

@@ -113,10 +113,10 @@ public:
     // Derived lighting values
 
     // ambient component
-    GLfloat scene_ambient[3];
+    GLfloat scene_ambient[4];
 
     // diffuse component
-    GLfloat scene_diffuse[3];
+    GLfloat scene_diffuse[4];
 
     // fog color
     GLfloat fog_color[4];
