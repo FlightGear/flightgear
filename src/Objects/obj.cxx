@@ -52,8 +52,10 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Time/light.hxx>
 #include <Scenery/tileentry.hxx>
 
+#include "newmat.hxx"
 #include "matlib.hxx"
 #include "obj.hxx"
 
@@ -68,6 +70,14 @@ typedef int_list::const_iterator int_point_list_iterator;
 
 static double normals[FG_MAX_NODES][3];
 static double tex_coords[FG_MAX_NODES*3][3];
+
+static int
+runway_lights_predraw (ssgEntity * e)
+{
+				// Turn on lights only at night
+    float sun_angle = cur_light_params.sun_angle * SGD_RADIANS_TO_DEGREES;
+    return int(sun_angle > 90.0);
+}
 
 
 #define FG_TEX_CONSTANT 69.0
@@ -297,6 +307,112 @@ static void gen_random_surface_points( ssgLeaf *leaf, ssgVertexArray *lights,
 		    random_pt_inside_tri( result, p1, p2, p3 );
 		    lights->add( result );
 		}
+	    }
+	}
+    }
+}
+
+
+static void
+gen_random_surface_objects (ssgLeaf *leaf,
+			    ssgBranch *branch,
+			    float lon_deg,
+			    float lat_deg,
+			    const string &material_name)
+{
+    FGNewMat * mat = material_lib.find(material_name);
+    if (mat == 0) {
+      SG_LOG(SG_INPUT, SG_ALERT, "Unknown material " << material_name);
+      return;
+    }
+
+    int num = leaf->getNumTriangles();
+    float hdg_deg = 0.0;	// do something here later
+
+
+    // The object will be aligned for the north pole.  This code
+    // calculates a matrix to rotate it to for the surface of the
+    // earth in the current location.
+    sgVec3 obj_right, obj_up;
+    sgSetVec3(obj_right, 0.0, 1.0, 0.0); // Y axis
+    sgSetVec3(obj_up, 0.0, 0.0, 1.0); // Z axis
+    sgMat4 ROT_lon, ROT_lat, ROT_hdg;
+    sgMakeRotMat4(ROT_lon, lon_deg, obj_up);
+    sgMakeRotMat4(ROT_lat, 90 - lat_deg, obj_right);
+    sgMakeRotMat4(ROT_hdg, hdg_deg, obj_up);
+    sgMat4 ROT;
+    sgCopyMat4(ROT, ROT_hdg);
+    sgPostMultMat4(ROT, ROT_lat);
+    sgPostMultMat4(ROT, ROT_lon);
+
+    if ( num > 0 ) {
+	short int n1, n2, n3;
+	float *p1, *p2, *p3;
+	sgVec3 result;
+
+	// generate a repeatable random seed
+	p1 = leaf->getVertex( 0 );
+	unsigned int seed = (unsigned int)p1[0];
+	sg_srandom( seed );
+
+	int num_objects = mat->get_object_count();
+	for ( int i = 0; i < num; ++i ) {
+	    leaf->getTriangle( i, &n1, &n2, &n3 );
+	    p1 = leaf->getVertex(n1);
+	    p2 = leaf->getVertex(n2);
+	    p3 = leaf->getVertex(n3);
+	    double area = sgTriArea( p1, p2, p3 );
+				// Set up a single center point for LOD
+	    sgVec3 center;
+	    sgSetVec3(center,
+		      (p1[0] + p2[0] + p3[0]) / 3.0,
+		      (p1[1] + p2[1] + p3[1]) / 3.0,
+		      (p1[2] + p2[2] + p3[2]) / 3.0);
+	    ssgTransform * location = new ssgTransform;
+	    sgMat4 TRANS;
+	    sgMakeTransMat4(TRANS, center);
+	    location->setTransform(TRANS);
+
+	    for (int j = 0; j < num_objects; j++) {
+	      double num = area / mat->get_object_coverage(j);
+	      float ranges[] = {0, mat->get_object_group_lod(j)};
+	      ssgRangeSelector * lod = new ssgRangeSelector;
+	      lod->setRanges(ranges, 2);
+	      lod->addKid(location);
+	      branch->addKid(lod);
+	      
+	      // place an object each unit of area
+	      while ( num > 1.0 ) {
+		random_pt_inside_tri( result, p1, p2, p3 );
+		sgSubVec3(result, center);
+		sgMat4 OBJ_pos, OBJ;
+		sgMakeTransMat4(OBJ_pos, result);
+		sgCopyMat4(OBJ, ROT);
+		sgPostMultMat4(OBJ, OBJ_pos);
+		ssgTransform * pos = new ssgTransform;
+		pos->setTransform(OBJ);
+		pos->addKid(mat->get_object(j));
+		location->addKid(pos);
+		num -= 1.0;
+	      }
+	      // for partial units of area, use a zombie door method to
+	      // create the proper random chance of an object being created
+	      // for this triangle
+	      if ( num > 0.0 ) {
+		if ( sg_random() <= num ) {
+		  // a zombie made it through our door
+		  random_pt_inside_tri( result, p1, p2, p3 );
+		  sgSubVec3(result, center);
+		  sgMat4 OBJ_pos, OBJ;
+		  sgMakeTransMat4(OBJ_pos, result);
+		  sgCopyMat4(OBJ, ROT);
+		  sgPostMultMat4(OBJ, OBJ_pos);
+		  ssgTransform * pos = new ssgTransform;
+		  pos->setTransform(OBJ);
+		  pos->addKid(mat->get_object(j));
+		  location->addKid(pos);
+		}
+	      }
 	    }
 	}
     }
@@ -902,6 +1018,8 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 		   ssgVertexArray *ground_lights )
 {
     SGBinObject obj;
+    bool use_dynamic_objects =
+      fgGetBool("/sim/rendering/dynamic-objects", false);
 
     if ( ! obj.read_bin( path ) ) {
 	return false;
@@ -909,10 +1027,22 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 
     geometry->setName( (char *)path.c_str() );
    
+    double geod_lon = 0.0, geod_lat = 0.0, geod_alt = 0.0,
+      geod_sl_radius = 0.0;
     if ( is_base ) {
 	// reference point (center offset/bounding sphere)
 	*center = obj.get_gbs_center();
 	*bounding_radius = obj.get_gbs_radius();
+
+				// Calculate the geodetic centre of
+				// the tile, for aligning automatic
+				// objects.
+	Point3D geoc = sgCartToPolar3d(*center);
+	geod_lon = geoc.lon();
+	sgGeocToGeod(geoc.lat(), geoc.radius(),
+		     &geod_lat, &geod_alt, &geod_sl_radius);
+	geod_lon *= SGD_RADIANS_TO_DEGREES;
+	geod_lat *= SGD_RADIANS_TO_DEGREES;
     }
 
     point_list nodes = obj.get_wgs84_nodes();
@@ -950,7 +1080,12 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  false, ground_lights );
 
 	if ( is_lighting ) {
-	    rwy_lights->addKid( leaf );
+	    float ranges[] = { 0, 12000 };
+	    leaf->setCallback(SSG_CALLBACK_PREDRAW, runway_lights_predraw);
+	    ssgRangeSelector * lod = new ssgRangeSelector;
+	    lod->setRanges(ranges, 2);
+	    lod->addKid(leaf);
+	    rwy_lights->addKid(lod);
 	} else {
 	    geometry->addKid( leaf );
 	}
@@ -971,6 +1106,9 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  vertex_index, normal_index, tex_index,
 				  is_base, ground_lights );
 
+	if (use_dynamic_objects)
+	  gen_random_surface_objects(leaf, geometry, geod_lon, geod_lat,
+				     material);
 	geometry->addKid( leaf );
     }
 
@@ -989,6 +1127,9 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  vertex_index, normal_index, tex_index,
 				  is_base, ground_lights );
 
+	if (use_dynamic_objects)
+	  gen_random_surface_objects(leaf, geometry, geod_lon, geod_lat,
+				     material);
 	geometry->addKid( leaf );
     }
 
@@ -1006,7 +1147,9 @@ bool fgBinObjLoad( const string& path, const bool is_base,
 				  nodes, normals, texcoords,
 				  vertex_index, normal_index, tex_index,
 				  is_base, ground_lights );
-
+	if (use_dynamic_objects)
+	  gen_random_surface_objects(leaf, geometry, geod_lon, geod_lat,
+				     material);
 	geometry->addKid( leaf );
     }
 

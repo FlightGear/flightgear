@@ -48,8 +48,8 @@
 
 #include <plib/ssg.h>		// plib include
 
-#include "newmat.hxx"
 
+class FGNewMat;
 
 SG_USING_STD(string);
 SG_USING_STD(map);

@@ -148,6 +148,34 @@ public:
 
 
   /**
+   * Get the number of dynamic objects defined for this material.
+   */
+  virtual int get_object_count () const { return objects.size(); }
+
+
+  /**
+   * Get a dynamic object for this material.
+   */
+  virtual ssgEntity * get_object (int i) const { return objects[i].model; }
+
+
+  /**
+   * Get the average space for a dynamic object for this material.
+   */
+  virtual double get_object_coverage (int i) const {
+    return objects[i].coverage;
+  }
+
+
+  /**
+   * Get the group LOD range for a dynamic object for this material.
+   */
+  virtual double get_object_group_lod (int i) const {
+    return objects[i].group_lod;
+  }
+
+
+  /**
    * Get the current state.
    */
   virtual inline ssgStateSelector *get_state () const { return state; }
@@ -220,6 +248,15 @@ private:
 
   // true if texture loading deferred, and not yet loaded
   bool texture_loaded;
+
+  struct Object
+  {
+    ssgEntity * model;
+    double coverage;
+    double group_lod;
+  };
+
+  vector<Object> objects;
 
   // ref count so we can properly delete if we have multiple
   // pointers to this record

@@ -51,6 +51,7 @@
 #include <Main/fg_props.hxx>
 #include <Scenery/tileentry.hxx>
 
+#include "newmat.hxx"
 #include "matlib.hxx"
 
 SG_USING_NAMESPACE(std);
