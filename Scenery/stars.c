@@ -203,33 +203,42 @@ void fgStarsRender() {
     t = &cur_time_params;
     v = &current_view;
 
-    printf("RENDERING STARS\n");
+    /* FG_PI_2 + 0.1 is about 6 degrees after sundown and before sunrise */
 
-    glDisable( GL_FOG );
-    glDisable( GL_LIGHTING );
-    glPushMatrix();
+    if ( t->sun_angle > (FG_PI_2 + 0.1 ) ) {
+	printf("RENDERING STARS (night)\n");
 
-    glTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
+	glDisable( GL_FOG );
+	glDisable( GL_LIGHTING );
+	glPushMatrix();
 
-    angle = FG_2PI * t->lst / 24.0;
-    /* warp += 1.0 * DEG_TO_RAD; */
-    warp = 15.0 * DEG_TO_RAD;
-    glRotatef( -(angle+warp) * RAD_TO_DEG, 0.0, 0.0, 1.0 );
-    printf("Rotating stars by %.2f + %.2f\n", -angle * RAD_TO_DEG,
-	-warp * RAD_TO_DEG);
+	glTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
 
-    glCallList(stars);
+	angle = FG_2PI * t->lst / 24.0;
+	/* warp += 1.0 * DEG_TO_RAD; */
+	warp = 15.0 * DEG_TO_RAD;
+	glRotatef( -(angle+warp) * RAD_TO_DEG, 0.0, 0.0, 1.0 );
+	printf("Rotating stars by %.2f + %.2f\n", -angle * RAD_TO_DEG,
+	       -warp * RAD_TO_DEG);
 
-    glPopMatrix();
-    glEnable( GL_LIGHTING );
-    glEnable( GL_FOG );
+	glCallList(stars);
+
+	glPopMatrix();
+	glEnable( GL_LIGHTING );
+	glEnable( GL_FOG );
+    } else {
+	printf("not RENDERING STARS (day)\n");
+    }
 }
 
 
 /* $Log$
-/* Revision 1.7  1997/09/16 15:50:31  curt
-/* Working on star alignment and time issues.
+/* Revision 1.8  1997/09/16 22:14:52  curt
+/* Tweaked time of day lighting equations.  Don't draw stars during the day.
 /*
+ * Revision 1.7  1997/09/16 15:50:31  curt
+ * Working on star alignment and time issues.
+ *
  * Revision 1.6  1997/09/05 14:17:31  curt
  * More tweaking with stars.
  *

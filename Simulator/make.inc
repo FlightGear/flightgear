@@ -25,7 +25,7 @@
 #---------------------------------------------------------------------------
 
 
-VERSION = 0.11
+VERSION = 0.12
 
 #---------------------------------------------------------------------------
 # Choose your weapons
@@ -120,6 +120,9 @@ FG_CFLAGS = $(GLOBAL_CFLAGS)
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.14  1997/09/16 22:14:47  curt
+# Tweaked time of day lighting equations.  Don't draw stars during the day.
+#
 # Revision 1.13  1997/09/04 02:17:19  curt
 # Shufflin' stuff.
 #

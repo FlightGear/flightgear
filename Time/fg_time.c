@@ -149,7 +149,6 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
     struct tm mt;
     long int offset;
     double diff, part, days, hours, lst;
-    int i;
 
     printf("COURSE: GMT = %d/%d/%2d %d:%02d:%02d\n", 
            gmt->tm_mon, gmt->tm_mday, gmt->tm_year,
@@ -201,10 +200,14 @@ double sidereal_course(struct tm *gmt, time_t now, double lng) {
 
 void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
     double lst_precise, lst_course;
+    static long int warp = 0;
 
     /* get current Unix calendar time (in seconds) */
+    /* warp += 120; */
+    warp = 0;
     t->cur_time = time(NULL);
-    printf("Current Unix calendar time = %ld\n", t->cur_time);
+    t->cur_time += warp;
+    printf("Current Unix calendar time = %ld  warp = %ld\n", t->cur_time, warp);
 
     /* get GMT break down for current time */
     t->gmt = gmtime(&t->cur_time);
@@ -249,9 +252,12 @@ void fgTimeUpdate(struct FLIGHT *f, struct fgTIME *t) {
 
 
 /* $Log$
-/* Revision 1.4  1997/09/16 15:50:31  curt
-/* Working on star alignment and time issues.
+/* Revision 1.5  1997/09/16 22:14:52  curt
+/* Tweaked time of day lighting equations.  Don't draw stars during the day.
 /*
+ * Revision 1.4  1997/09/16 15:50:31  curt
+ * Working on star alignment and time issues.
+ *
  * Revision 1.3  1997/09/13 02:00:08  curt
  * Mostly working on stars and generating sidereal time for accurate star
  * placement.

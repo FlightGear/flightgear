@@ -141,7 +141,7 @@ static void fgUpdateViewParams() {
     struct FLIGHT *f;
     struct fgTIME *t;
     struct VIEW *v;
-    double x_2, x_4, x_8;
+    double x_2, x_4, x_8, x_10;
     double ambient, diffuse, sky;
     GLfloat color[4] = { 1.0, 1.0, 0.50, 1.0 };
     GLfloat amb[3], diff[3], fog[4], clear[4];
@@ -178,10 +178,19 @@ static void fgUpdateViewParams() {
     x_2 = t->sun_angle * t->sun_angle;
     x_4 = x_2 * x_2;
     x_8 = x_4 * x_4;
+    x_10 = x_8 * x_2;
 
-    ambient = 0.4 * pow(1.5, -x_8 / 20.0);
-    diffuse = 0.4 * cos(0.55 * x_2);
-    sky = 0.85 * pow(1.6, -x_4 / 2.0) + 0.15;
+    ambient = 0.4 * pow(1.2, -x_10 / 30.0);
+
+    /* diffuse = 0.4 * cos(0.3 * x_2);
+    if ( t->sun_angle > FG_PI_2 + 0.05 ) {
+	diffuse = 0.0;
+    }
+    */
+
+    diffuse = ambient;
+
+    sky = 0.85 * pow(1.2, -x_8 / 20.0) + 0.15;
 
     if ( ambient < 0.1 ) { ambient = 0.1; }
     if ( diffuse < 0.0 ) { diffuse = 0.0; }
@@ -566,9 +575,12 @@ int main( int argc, char *argv[] ) {
 
 
 /* $Log$
-/* Revision 1.17  1997/09/16 15:50:29  curt
-/* Working on star alignment and time issues.
+/* Revision 1.18  1997/09/16 22:14:51  curt
+/* Tweaked time of day lighting equations.  Don't draw stars during the day.
 /*
+ * Revision 1.17  1997/09/16 15:50:29  curt
+ * Working on star alignment and time issues.
+ *
  * Revision 1.16  1997/09/13 02:00:06  curt
  * Mostly working on stars and generating sidereal time for accurate star
  * placement.
