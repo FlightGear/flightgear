@@ -404,8 +404,14 @@ do_property_assign (const SGPropertyNode * arg)
 /**
  * Built-in command: increment or decrement a property value.
  *
+ * If the 'step' argument is present, it will be used; otherwise,
+ * the command uses 'offset' and 'factor', usually from the mouse.
+ *
  * property: the name of the property to increment or decrement.
  * step: the amount of the increment or decrement (default: 0).
+ * offset: offset from the current setting (used for the mouse; multiplied 
+ *         by factor)
+ * factor: scaling amount for the offset (defaults to 1).
  * min: the minimum allowed value (default: no minimum).
  * max: the maximum allowed value (default: no maximum).
  * mask: 'integer' to apply only to the left of the decimal point, 
@@ -419,12 +425,18 @@ static bool
 do_property_adjust (const SGPropertyNode * arg)
 {
   SGPropertyNode * prop = get_prop(arg);
-  double step = arg->getDoubleValue("step");
 
+  double amount = 0;
+  if (arg->hasValue("step"))
+      amount = arg->getDoubleValue("step");
+  else
+      amount = (arg->getDoubleValue("factor", 1)
+                * arg->getDoubleValue("offset"));
+          
   double unmodifiable, modifiable;
   split_value(prop->getDoubleValue(), arg->getStringValue("mask", "all"),
               &unmodifiable, &modifiable);
-  modifiable += step;
+  modifiable += amount;
   limit_value(&modifiable, arg);
 
   prop->setDoubleValue(unmodifiable + modifiable);
