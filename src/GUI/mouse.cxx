@@ -107,6 +107,11 @@ static int glut_active_alt = 0;
 static int MOUSE_XSIZE = 0;
 static int MOUSE_YSIZE = 0;
 
+// uncomment this for view to exactly follow mouse in MOUSE_VIEW mode
+// else smooth out the view panning to .01 radian per frame
+// see view_offset smoothing mechanism in main.cxx
+#define NO_SMOOTH_MOUSE_VIEW
+
 // uncomment following to
 #define RESET_VIEW_ON_LEAVING_MOUSE_VIEW
 
@@ -184,20 +189,6 @@ static inline float get_view_offset() {
 
 static inline float get_goal_view_offset() {
 	return globals->get_current_view()->get_goal_view_offset();
-}
-
-static inline void set_goal_view_tilt( float tilt )
-{
-	globals->get_current_view()->set_goal_view_tilt(tilt);
-}
-
-static inline void set_view_tilt( float tilt )
-{
-	globals->get_current_view()->set_view_tilt(tilt);
-}
-
-static inline float get_view_tilt() {
-	return globals->get_current_view()->get_view_tilt();
 }
 
 static inline void move_brake(float offset) {
@@ -425,10 +416,19 @@ void guiMotionFunc ( int x, int y )
                 
             case MOUSE_VIEW:
                 if( y <= 0 ) {
+#define CONTRAINED_MOUSE_VIEW_Y
+#ifdef CONTRAINED_MOUSE_VIEW_Y
                     y = 1;
+#else
+                    y = wh-2;
+#endif // CONTRAINED_MOUSE_VIEW_Y
                     need_warp = 1;
                 } else if( y >= wh-1) {
+#ifdef CONTRAINED_MOUSE_VIEW_Y
                     y = wh-2;
+#else
+                    y = 1;
+#endif // CONTRAINED_MOUSE_VIEW_Y
                     need_warp = 1;
                 }
                 // wrap MOUSE_VIEW mode cursor x position
@@ -439,20 +439,49 @@ void guiMotionFunc ( int x, int y )
                     need_warp = 1;
                     x = 1;
                 }
-
-		{
-		    float scale = SGD_PI / MOUSE_XSIZE;
-		    float dx = (_mX - x) * scale;
-		    float dy = (_mY - y) * scale;
-		    
-		    float newOffset = get_view_offset() + dx;
-		    set_goal_view_offset(newOffset);
-		    set_view_offset(newOffset);
-		    
-		    float newTilt = get_view_tilt() + dy;
-		    set_goal_view_tilt(newTilt);
-		    set_view_tilt(newTilt);
-		}
+                // try to get SGD_PI movement in each half of screen
+                // do spherical pan
+                W = ww;
+                H = wh;
+                if( middle_button() ) {
+                    trackball(lastGuiQuat,
+                              (2.0f * _mX - W) / W,
+                              0, //(H - 2.0f * y) / H,         // 3
+                              (2.0f * x - W) / W,
+                              0 //(H - 2.0f * _mY) / H       // 1
+                             );
+                    x = _mX;
+                    y = _mY;
+                    need_warp = 1;
+                } else {
+                    trackball(lastGuiQuat,
+                              0, //(2.0f * _mX - W) / W,  // 0
+                              (H - 2.0f * y) / H,         // 3
+                              0, //(2.0f * x - W) / W,    // 2
+                              (H - 2.0f * _mY) / H        // 1 
+                             );
+                }
+                add_quats(lastGuiQuat, curGuiQuat, curGuiQuat);
+                build_rotmatrix(GuiQuat_mat, curGuiQuat);
+                
+                // do horizontal pan
+                // this could be done in above quat
+                // but requires redoing view pipeline
+                offset = get_goal_view_offset();
+                offset += ((_mX - x) * SGD_2PI / W );
+                while (offset < 0.0) {
+                    offset += SGD_2PI;
+                }
+                while (offset > SGD_2PI) {
+                    offset -= SGD_2PI;
+                }
+                set_goal_view_offset(offset);
+#ifdef NO_SMOOTH_MOUSE_VIEW
+                set_view_offset(offset);
+#endif
+                break;
+            
+            default:
                 break;
         }
     }
