@@ -103,6 +103,9 @@ FGRadioStack::FGRadioStack() :
     dme_prev_dist(0.0),
     dme_spd(0.0),
     dme_ete(0.0),
+    outer_blink(false),
+    middle_blink(false),
+    inner_blink(false),
     adf_freq(0.0),
     adf_alt_freq(0.0)
 {
