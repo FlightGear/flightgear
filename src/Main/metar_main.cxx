@@ -27,7 +27,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/environment/metar.hxx>
 
-using std::ostringstream;
+using namespace std;
 
 // text color
 #if defined(__linux__) || defined( __sun__ ) ||defined(__CYGWIN__) || defined( __FreeBSD__ )
@@ -50,12 +50,6 @@ using std::ostringstream;
 #	define N ""
 #endif
 
-
-const char *azimuthName(double d);
-double rnd(double number, int digits);
-void printReport(SGMetar *m);
-void printVisibility(SGMetarVisibility *v);
-void printArgs(SGMetar *m, double airport_elevation);
 
 
 const char *azimuthName(double d)
@@ -142,7 +136,7 @@ void printReport(SGMetar *m)
 	if (year != -1 && month != -1)
 		cout << year << '/' << month << '/' << m->getDay();
 	cout << ' ' << m->getHour() << ':';
-	cout << std::setw(2) << std::setfill('0') << m->getMinute() << " UTC" << endl;
+	cout << setw(2) << setfill('0') << m->getMinute() << " UTC" << endl;
 
 
 	// visibility
@@ -422,7 +416,7 @@ void printArgs(SGMetar *m, double airport_elevation)
 	
 
 	// output everything
-	cout << "fgfs" << endl;
+	//cout << "fgfs" << endl;
 	vector<string>::iterator arg;
 	for (i = 0, arg = args.begin(); arg != args.end(); i++, arg++) {
 		cout << "\t" << *arg << endl;
@@ -432,32 +426,74 @@ void printArgs(SGMetar *m, double airport_elevation)
 }
 
 
+void help()
+{
+	printf(
+		"Usage:    metar [-v] [-e elevation] [-r|-c] <list of ICAO airport ids or METAR strings>\n"
+		"          -h|--help            show this help\n"
+		"          -v|--verbose         verbose output\n"
+		"          -r|--report          print report (default)\n"
+		"          -c|--command-line    print command line\n"
+		"          -e E|--elevation E   set airport elevation to E meters\n"
+		"                               (added to cloud bases in command line mode)\n"
+		"\n"
+		"Examples: metar ksfo koak\n"
+		"          metar -c ksfo -r ksfo\n"
+		"          metar \"LOWL 161500Z 19004KT 160V240 9999 FEW035 SCT300 29/23 Q1006 NOSIG\"\n"
+		"          fgfs  `metar -e 183 -c loww`\n"
+		"\n"
+	);
+}
+
+
 int main(int argc, char *argv[])
 {
+	bool report = true;
+	bool verbose = false;
+	double elevation = 0.0;
+
 	if (argc <= 1) {
-		fprintf(stderr,
-			"Usage:   metar <list of ICAO airport ids>\n"
-			"Example: metar ksfo koak\n"
-		);
+		help();
 		return 0;
 	}
 
 	for (int i = 1; i < argc; i++) {
-		try {
-			SGMetar *m = new SGMetar(argv[i]);
-			//SGMetar *m = new SGMetar("2004/01/11 01:20\nLOWG 110120Z AUTO VRB01KT 0050 1600N R35/0600 FG M06/M06 Q1019 88//////\n");
+		if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help"))
+			help();
+		else if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "--verbose"))
+			verbose = true;
+		else if (!strcmp(argv[i], "-r") || !strcmp(argv[i], "--report"))
+			report = true;
+		else if (!strcmp(argv[i], "-c") || !strcmp(argv[i], "--command-line"))
+			report = false;
+		else if (!strcmp(argv[i], "-e") || !strcmp(argv[i], "--elevation")) {
+			if (++i >= argc) {
+				cerr << "-e options used without elevation" << endl;
+				return 1;
+			}
+			elevation = strtod(argv[i], 0);
+		} else {
+			try {
+				SGMetar *m = new SGMetar(argv[i]);
+				//SGMetar *m = new SGMetar("2004/01/11 01:20\nLOWG 110120Z AUTO VRB01KT 0050 1600N R35/0600 FG M06/M06 Q1019 88//////\n");
 
-			printf(G"INPUT: %s\n"N, m->getData());
-			const char *unused = m->getUnusedData();
-			if (*unused)
-				printf(R"UNUSED: %s\n"N, unused);
+				if (verbose) {
+					cerr << G"INPUT: " << m->getData() << ""N << endl;
 
-			printReport(m);
-			//printArgs(m, 0.0);
+					const char *unused = m->getUnusedData();
+					if (*unused)
+						cerr << R"UNUSED: " << unused << ""N << endl;
+				}
 
-			delete m;
-		} catch (const sg_io_exception& e) {
-			fprintf(stderr, R"ERROR: %s\n\n"N, e.getFormattedMessage().c_str());
+				if (report)
+					printReport(m);
+				else
+					printArgs(m, elevation);
+
+				delete m;
+			} catch (const sg_io_exception& e) {
+				cerr << R"ERROR: " << e.getFormattedMessage().c_str() << ""N << endl << endl;
+			}
 		}
 	}
 	return 0;
