@@ -84,9 +84,11 @@ public:
     void set_Static_temperature(double T); 
     void set_Density(double rho); 
 
+/*
     void set_Velocities_Local_Airmass (double wnorth, 
 				       double weast, 
 				       double wdown );
+*/
 };
 
 

@@ -886,8 +886,7 @@ parse_option (const string& arg)
 	}
 	FGViewer *pilot_view =
 	    (FGViewer *)globals->get_viewmgr()->get_view( 0 );
-	pilot_view->setHeadingOffset_deg( default_view_offset * SGD_RADIANS_TO_DEGREES );
-	pilot_view->setGoalHeadingOffset_deg( default_view_offset * SGD_RADIANS_TO_DEGREES );
+        // this will work without calls to the viewer...
 	fgSetDouble( "/sim/current-view/heading-offset-deg",
                      default_view_offset  * SGD_RADIANS_TO_DEGREES );
     // $$$ end - added VS Renganathan, 14 Oct 2K

@@ -78,7 +78,7 @@ private:
     void sched_tile( const SGBucket& b );
 
     // schedule a needed buckets for loading
-    void schedule_needed(double visibility_meters);
+    void schedule_needed(double visibility_meters, SGBucket curr_bucket);
 
     // see comment at prep_ssg_nodes()
     void prep_ssg_node( int idx );
@@ -163,6 +163,9 @@ public:
     // local chunks.  If the chunk isn't already in the cache, then
     // read it from disk.
     int update( double lon, double lat, double visibility_meters );
+    int update( double lon, double lat, double visibility_meters, sgdVec3 abs_pos_vector, SGBucket p_current, SGBucket p_previous );
+    void setCurrentTile( double longitude, double latitude );
+    void updateCurrentElevAtPos(sgdVec3 abs_pos_vector);
 
     // Determine scenery altitude.  Normally this just happens when we
     // render the scene, but we'd also like to be able to do this
@@ -179,6 +182,14 @@ public:
     // transform and update it's range selector based on current
     // visibilty
     void prep_ssg_nodes(float visibility_meters);
+
+    //
+    // Set flag with event manager so that non-moving view refreshes tiles...
+    //
+    void refresh_view_timestamps();
+
+    inline SGBucket get_current_bucket () { return current_bucket; }
+    inline SGBucket get_previous_bucket () { return previous_bucket; }
 };
 
 

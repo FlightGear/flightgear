@@ -25,8 +25,6 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 
-#include <Scenery/scenery.hxx>
-
 #include <Main/fg_props.hxx>
 #include <Aircraft/aircraft.hxx>
 #include <Controls/controls.hxx>
@@ -188,8 +186,7 @@ void FGLaRCsim::update( double dt ) {
 
     // Inform LaRCsim of the local terrain altitude
     // Runway_altitude = get_Runway_altitude();
-    Runway_altitude = globals->get_scenery()->get_cur_elev() * SG_METER_TO_FEET;
-
+    Runway_altitude = getACModel()->get3DModel()->getFGLocation()->get_cur_elev_m() * SG_METER_TO_FEET;
     // Weather
     /* V_north_airmass = get_V_north_airmass();
        V_east_airmass =  get_V_east_airmass();
@@ -616,8 +613,6 @@ void FGLaRCsim::snap_shot(void) {
 void FGLaRCsim::set_Latitude(double lat) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Latitude: " << lat  );
     snap_shot();
-    _set_Runway_altitude( globals->get_scenery()->get_cur_elev()
-                          * SG_METER_TO_FEET );
     lsic->SetLatitudeGDRadIC(lat);
     set_ls();
     copy_from_LaRCsim(); //update the bus
@@ -626,9 +621,6 @@ void FGLaRCsim::set_Latitude(double lat) {
 void FGLaRCsim::set_Longitude(double lon) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Longitude: " << lon  );
     snap_shot();
-    
-    _set_Runway_altitude( globals->get_scenery()->get_cur_elev()
-                          * SG_METER_TO_FEET );
     lsic->SetLongitudeRadIC(lon);
     set_ls();
     copy_from_LaRCsim(); //update the bus
@@ -637,8 +629,6 @@ void FGLaRCsim::set_Longitude(double lon) {
 void FGLaRCsim::set_Altitude(double alt) {
     SG_LOG( SG_FLIGHT, SG_INFO, "FGLaRCsim::set_Altitude: " << alt  );
     snap_shot();
-    _set_Runway_altitude( globals->get_scenery()->get_cur_elev()
-                          * SG_METER_TO_FEET );
     lsic->SetAltitudeFtIC(alt);
     set_ls();
     copy_from_LaRCsim(); //update the bus
@@ -717,6 +707,7 @@ void FGLaRCsim::set_AltitudeAGL(double altagl) {
     copy_from_LaRCsim();
 }
 
+/*  getting a namespace conflict...
 void FGLaRCsim::set_Velocities_Local_Airmass (double wnorth, 
 					      double weast, 
 					      double wdown ) {
@@ -727,6 +718,7 @@ void FGLaRCsim::set_Velocities_Local_Airmass (double wnorth,
     set_ls();
     copy_from_LaRCsim();
 }
+*/
 
 void FGLaRCsim::set_Static_pressure(double p) { 
     SG_LOG( SG_FLIGHT, SG_INFO, 

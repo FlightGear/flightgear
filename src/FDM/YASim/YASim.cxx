@@ -3,7 +3,6 @@
 #include <simgear/xml/easyxml.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <Scenery/scenery.hxx>
 
 #include "FGFDM.hpp"
 #include "Atmosphere.hpp"
@@ -161,8 +160,7 @@ void YASim::init()
 
     // Are we at ground level?  If so, lift the plane up so the gear
     // clear the ground.
-    double runway_altitude =
-      fgGetDouble("/environment/ground-elevation-m") * SG_METER_TO_FEET;
+    double runway_altitude = get_Runway_altitude();
     fgSetBool("/controls/gear-down", false);
     if(get_Altitude() - runway_altitude < 50) {
 	float minGearZ = 1e18;
@@ -232,10 +230,9 @@ void YASim::copyToYASim(bool copyState)
     wind[1] = get_V_east_airmass() * FT2M * -1.0;
     wind[2] = get_V_down_airmass() * FT2M * -1.0;
 
-    // The ground elevation doesn't come from FGInterface; query it
-    // from the scenery and set it for others to find.
-    double ground = globals->get_scenery()->get_cur_elev();
-    _set_Runway_altitude(ground * FT2M);
+    // Get ground elevation from the FGinterface's FGlocation data
+    double ground = getACModel()->get3DModel()->getFGLocation()->get_cur_elev_m();
+    // cout << "YASIM: ground = " << ground << endl;
 
     float pressure = fgGetDouble("/environment/pressure-inhg") * INHG2PA;
     float temp = fgGetDouble("/environment/temperature-degC") + 273.15;

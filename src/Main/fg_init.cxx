@@ -740,6 +740,17 @@ bool fgInitSubsystems( void ) {
 	exit(-1);
     }
 
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the event manager subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    global_events.init();
+
+    // Output event stats every 60 seconds
+    global_events.Register( "FGEventMgr::print_stats()",
+			    &global_events, &FGEventMgr::print_stats,
+			    60000 );
+
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the scenery management subsystem.
@@ -756,6 +767,11 @@ bool fgInitSubsystems( void ) {
     	SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
 	exit(-1);
     }
+
+    // cause refresh of viewer scenery timestamps every 15 seconds...
+    global_events.Register( "FGTileMgr::refresh_view_timestamps()",
+			    &global_tile_mgr, &FGTileMgr::refresh_view_timestamps,
+			    15000 );
 
     SG_LOG( SG_GENERAL, SG_DEBUG,
     	    "Current terrain elevation after tile mgr init " <<
@@ -781,19 +797,7 @@ bool fgInitSubsystems( void ) {
 
 
     ////////////////////////////////////////////////////////////////////
-    // Initialize the event manager subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    global_events.init();
-
-    // Output event stats every 60 seconds
-    global_events.Register( "FGEventMgr::print_stats()",
-			    &global_events, &FGEventMgr::print_stats,
-			    60000 );
-
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the lightingsubsystem.
+    // Initialize the lighting subsystem.
     ////////////////////////////////////////////////////////////////////
 
     // fgUpdateSunPos() needs a few position and view parameters set

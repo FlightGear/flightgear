@@ -51,7 +51,7 @@ SG_USING_NAMESPACE(std);
 
 // Constructor
 FGNewCache::FGNewCache( void ) :
-    max_cache_size(50)
+    max_cache_size(100)
 {
     tile_cache.clear();
 }
@@ -105,6 +105,116 @@ bool FGNewCache::exists( const SGBucket& b ) const {
 }
 
 
+// Ensure at least one entry is free in the cache
+bool FGNewCache::make_space() {
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "Make space in cache" );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "cache entries = " << tile_cache.size() );
+    SG_LOG( SG_TERRAIN, SG_DEBUG, "max size = " << max_cache_size );
+
+    if ( (int)tile_cache.size() < max_cache_size ) {
+	// space in the cache, return
+	return true;
+    }
+
+    while ( (int)tile_cache.size() >= max_cache_size ) {
+	sgdVec3 abs_view_pos;
+	float dist;
+        double timestamp = 0.0;
+	int max_index = -1;
+        double min_time = 2419200000.0f;  // one month should be enough
+        double max_time = 0;
+
+	// we need to free the furthest entry
+	tile_map_iterator current = tile_cache.begin();
+	tile_map_iterator end = tile_cache.end();
+    
+	for ( ; current != end; ++current ) {
+	    long index = current->first;
+	    FGTileEntry *e = current->second;
+	    if ( e->is_loaded() && (e->get_pending_models() == 0) ) {
+
+                timestamp = e->get_timestamp();
+                if ( timestamp < min_time ) {
+                    max_index = index;
+                    min_time = timestamp;
+                }
+                if ( timestamp > max_time ) {
+                    max_time = timestamp;
+                }
+
+	    } else {
+                SG_LOG( SG_TERRAIN, SG_INFO, "loaded = " << e->is_loaded()
+                        << " pending models = " << e->get_pending_models()
+                        << " time stamp = " << e->get_timestamp() );
+            }
+	}
+
+	// If we made it this far, then there were no open cache entries.
+	// We will instead free the oldest cache entry and return true
+        
+        SG_LOG( SG_TERRAIN, SG_INFO, "    min_time = " << min_time );
+        SG_LOG( SG_TERRAIN, SG_INFO, "    index = " << max_index );
+        SG_LOG( SG_TERRAIN, SG_INFO, "    max_time = " << max_time );
+	if ( max_index >= 0 ) {
+	    entry_free( max_index );
+	    return true;
+	} else {
+	    SG_LOG( SG_TERRAIN, SG_ALERT, "WHOOPS!!! can't make_space(), tile "
+                    "cache is full, but no entries available for removal." );
+	    return false;
+	}
+    }
+
+    SG_LOG( SG_TERRAIN, SG_ALERT, "WHOOPS!!! Hit an unhandled condition in  "
+            "FGNewCache::make_space()." );
+    return false;
+}
+
+
+// Clear all completely loaded tiles (ignores partially loaded tiles)
+void FGNewCache::clear_cache() {
+
+    tile_map_iterator current = tile_cache.begin();
+    tile_map_iterator end = tile_cache.end();
+    
+    for ( ; current != end; ++current ) {
+	long index = current->first;
+	SG_LOG( SG_TERRAIN, SG_DEBUG, "clearing " << index );
+	FGTileEntry *e = current->second;
+        if ( e->is_loaded() && (e->get_pending_models() == 0) ) {
+            e->tile_bucket.make_bad();
+            entry_free(index);
+        }
+    }
+
+    // and ... just in case we missed something ... 
+    globals->get_scenery()->get_terrain_branch()->removeAllKids();
+}
+
+
+/**
+ * Create a new tile and schedule it for loading.
+ */
+bool FGNewCache::insert_tile( FGTileEntry *e ) {
+    // set time of insertion for tracking age of tiles...
+    e->set_timestamp(globals->get_sim_time_sec());
+    // clear out a distant entry in the cache if needed.
+    if ( make_space() ) {
+        // register it in the cache
+        long tile_index = e->get_tile_bucket().gen_index();
+        tile_cache[tile_index] = e;
+
+        return true;
+    } else {
+        // failed to find cache space
+
+        return false;
+    }
+}
+
+// Note this is the old version of FGNewCache::make_space(), currently disabled
+// It uses distance from a center point to determine tiles to be discarded...
+#ifdef 0
 // Ensure at least one entry is free in the cache
 bool FGNewCache::make_space() {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "Make space in cache" );
@@ -178,44 +288,6 @@ bool FGNewCache::make_space() {
             "FGNewCache::make_space()." );
     return false;
 }
+#endif
 
-
-// Clear all completely loaded tiles (ignores partially loaded tiles)
-void FGNewCache::clear_cache() {
-
-    tile_map_iterator current = tile_cache.begin();
-    tile_map_iterator end = tile_cache.end();
-    
-    for ( ; current != end; ++current ) {
-	long index = current->first;
-	SG_LOG( SG_TERRAIN, SG_DEBUG, "clearing " << index );
-	FGTileEntry *e = current->second;
-        if ( e->is_loaded() && (e->get_pending_models() == 0) ) {
-            e->tile_bucket.make_bad();
-            entry_free(index);
-        }
-    }
-
-    // and ... just in case we missed something ... 
-    globals->get_scenery()->get_terrain_branch()->removeAllKids();
-}
-
-
-/**
- * Create a new tile and schedule it for loading.
- */
-bool FGNewCache::insert_tile( FGTileEntry *e ) {
-    // clear out a distant entry in the cache if needed.
-    if ( make_space() ) {
-        // register it in the cache
-        long tile_index = e->get_tile_bucket().gen_index();
-        tile_cache[tile_index] = e;
-
-        return true;
-    } else {
-        // failed to find cache space
-
-        return false;
-    }
-}
 

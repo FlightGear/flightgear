@@ -190,6 +190,8 @@ private:
 
     ssgLeaf* gen_lights( ssgVertexArray *lights, int inc, float bright );
 
+    double timestamp;
+
 public:
 
     // ADA --->
@@ -272,6 +274,11 @@ public:
      * return the SSG Transform node for the terrain
      */
     inline ssgTransform *get_terra_transform() { return terra_transform; }
+
+    void set_timestamp(double time_ms) { timestamp = time_ms; }
+
+    inline double get_timestamp() const { return timestamp; }
+
 };
 
 

@@ -95,6 +95,7 @@ public:
     inline FGTileEntry *get_tile( const long tile_index ) {
 	tile_map_iterator it = tile_cache.find( tile_index );
 	if ( it != tile_cache.end() ) {
+	    it->second->set_timestamp(globals->get_sim_time_sec());
 	    return it->second;
 	} else {
 	    return NULL;

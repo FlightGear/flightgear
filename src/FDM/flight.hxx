@@ -93,6 +93,9 @@
 // #include <simgear/timing/timestamp.hxx>
 
 #include <Main/fgfs.hxx>
+#include <Model/acmodel.hxx>
+#include <Model/model.hxx>
+#include <Main/location.hxx>
 
 SG_USING_STD(list);
 SG_USING_STD(vector);
@@ -223,6 +226,9 @@ private:
 
     // SGTimeStamp valid_stamp;          // time this record is valid
     // SGTimeStamp next_stamp;           // time this record is valid
+
+    // Model tied to FDM
+    FGAircraftModel * _acmodel;
 
 protected:
 
@@ -1070,6 +1076,12 @@ public:
     inline double get_daux( int n ) const { return daux[n]; }
     inline float  get_faux( int n ) const { return faux[n]; }
     inline int    get_iaux( int n ) const { return iaux[n]; }
+
+    // Model tied to FDM
+    FGAircraftModel * getACModel() const { return _acmodel; }
+
+    // Note that currently this is the "same" value runway altitude...
+    inline double get_ground_elev_ft() const { return runway_altitude; }
 
 };
 

@@ -797,12 +797,8 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 	sgCopyVec3( lift_vec, up );
 
 	double agl;
-	if ( current_aircraft.fdm_state ) {
-	    agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
-		- globals->get_scenery()->get_cur_elev();
-	} else {
-	    agl = 0.0;
-	}
+        agl = globals->get_current_view()->getAltitudeASL_ft()
+            * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev();
 
 	// sgTrans just happens to be the
 	// vector from scenery center to the center of this tile which
@@ -845,12 +841,8 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
 	sgCopyVec3( lift_vec, up );
 
 	double agl;
-	if ( current_aircraft.fdm_state ) {
-	    agl = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
-		- globals->get_scenery()->get_cur_elev();
-	} else {
-	    agl = 0.0;
-	}
+        agl = globals->get_current_view()->getAltitudeASL_ft()
+            * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev();
 
 	// sgTrans just happens to be the
 	// vector from scenery center to the center of this tile which
@@ -900,12 +892,8 @@ void FGTileEntry::prep_ssg_node( const Point3D& p, sgVec3 up, float vis) {
             sgCopyVec3( lift_vec, up );
             
             double agl1;
-            if ( current_aircraft.fdm_state ) {
-                agl1 = current_aircraft.fdm_state->get_Altitude() * SG_FEET_TO_METER
-                    - globals->get_scenery()->get_cur_elev();
-            } else {
-                agl1 = 0.0;
-            }
+            agl1 = globals->get_current_view()->getAltitudeASL_ft()
+                * SG_FEET_TO_METER - globals->get_scenery()->get_cur_elev();
 
             // sgTrans just happens to be the
             // vector from scenery center to the center of this tile which

@@ -31,6 +31,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
+#include <simgear/bucket/newbucket.hxx>
 
 #include <plib/sg.h>		// plib include
 
@@ -106,6 +107,14 @@ public:
     virtual float *get_surface_east() {	return _surface_east; }
     // Get surface south vector
     virtual float *get_surface_south() { return _surface_south; }
+    // Elevation of ground under location (based on scenery output)...
+    void set_cur_elev_m ( double elev ) { _cur_elev_m = elev; }
+    inline double get_cur_elev_m () { return _cur_elev_m; }
+    // Interface to current buckets for use with tilemgr...
+    void set_current_bucket ( SGBucket current_bucket ) { _current_bucket = current_bucket; }
+    inline SGBucket get_current_bucket () { return _current_bucket; }
+    void set_previous_bucket ( SGBucket previous_bucket ) { _previous_bucket = previous_bucket; }
+    inline SGBucket get_previous_bucket () { return _previous_bucket; }
 
     // Matrices...
     virtual const sgVec4 * getTransformMatrix() { if ( _dirty ) { recalc(); }	return TRANS; }
@@ -135,6 +144,13 @@ private:
     double _pitch_deg;
     double _heading_deg;
 
+    // elevation of ground under this location...
+    double _cur_elev_m;
+    // current and previous scenery buckets to be saved for use in
+    // getting current elevation from tilemgr.
+    SGBucket _previous_bucket;
+    SGBucket _current_bucket;
+
     // surface vector heading south
     sgVec3 _surface_south;
 
@@ -163,17 +179,3 @@ private:
 
 
 #endif // _LOCATION_HXX
-
-
-
-
-
-
-
-
-
-
-
-
-
-

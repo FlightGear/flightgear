@@ -244,6 +244,9 @@ public:
 
     inline void set_dirty() { _dirty = true; }
     inline void set_clean() { _dirty = false; }
+    
+    // return eye location...
+    virtual FGLocation * getFGLocation () const { return _location; }
 
 
 private:
@@ -349,9 +352,11 @@ private:
     //////////////////////////////////////////////////////////////////
 
     void recalc ();
-    void recalcPositionVectors (double lon_deg, double lat_deg, double alt_ft) const;
+    void recalcLookFrom();
+    void recalcLookAt();
+    void copyLocationData();
     void updateFromModelLocation (FGLocation * location);
-    void recalcOurOwnLocation (double lon_deg, double lat_deg, double alt_ft,
+    void recalcOurOwnLocation (FGLocation * location, double lon_deg, double lat_deg, double alt_ft,
                  double roll_deg, double pitch_deg, double heading_deg);
 
     // add to _heading_offset_deg

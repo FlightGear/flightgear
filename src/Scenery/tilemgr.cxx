@@ -145,7 +145,7 @@ void FGTileMgr::sched_tile( const SGBucket& b ) {
 
 
 // schedule a needed buckets for loading
-void FGTileMgr::schedule_needed( double vis) {
+void FGTileMgr::schedule_needed( double vis, SGBucket curr_bucket) {
     // sanity check (unfortunately needed!)
     if ( longitude < -180.0 || longitude > 180.0 
          || latitude < -90.0 || latitude > 90.0 )
@@ -162,8 +162,8 @@ void FGTileMgr::schedule_needed( double vis) {
 
 //   vis = fgGetDouble("/environment/visibility-m");
 
-    double tile_width = current_bucket.get_width_m();
-    double tile_height = current_bucket.get_height_m();
+    double tile_width = curr_bucket.get_width_m();
+    double tile_height = curr_bucket.get_height_m();
     // cout << "tile width = " << tile_width << "  tile_height = "
     //      << tile_height !<< endl;
 
@@ -173,7 +173,8 @@ void FGTileMgr::schedule_needed( double vis) {
     if ( yrange < 1 ) { yrange = 1; }
     // cout << "xrange = " << xrange << "  yrange = " << yrange << endl;
 
-    tile_cache.set_max_cache_size( (2*xrange + 2) * (2*yrange + 2) );
+    // note * 2 at end doubles cache size (for fdm and viewer)
+    tile_cache.set_max_cache_size( (2*xrange + 2) * (2*yrange + 2) * 2 );
 
     SGBucket b;
 
@@ -223,7 +224,7 @@ void FGTileMgr::initialize_queue()
     // "rings"
 
     double visibility_meters = fgGetDouble("/environment/visibility-m");
-    schedule_needed(visibility_meters);
+    schedule_needed(visibility_meters, current_bucket);
 
     // do we really want to lose this? CLO
 #if 0
@@ -248,32 +249,36 @@ void FGTileMgr::initialize_queue()
 // chunks.  If the chunk isn't already in the cache, then read it from
 // disk.
 int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
+	sgdVec3 abs_pos_vector;
+        sgdCopyVec3(abs_pos_vector , globals->get_current_view()->get_absolute_view_pos());
+        return update( lon, lat, visibility_meters, abs_pos_vector, current_bucket, previous_bucket );
+}
+
+int FGTileMgr::update( double lon, double lat, double visibility_meters, sgdVec3 abs_pos_vector, SGBucket p_current, SGBucket p_previous ) {
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
     //         << lon << " " << lat );
 
     longitude = lon;
     latitude = lat;
+    current_bucket = p_current;
+    previous_bucket = p_previous;
+
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "lon "<< lonlat[LON] <<
     //      " lat " << lonlat[LAT] );
 
-    current_bucket.set_bucket( longitude, latitude );
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "Updating Tile list for " << current_bucket );
 
-    if ( tile_cache.exists( current_bucket ) ) {
-        current_tile = tile_cache.get_tile( current_bucket );
-        globals->get_scenery()->set_next_center( current_tile->center );
-    } else {
-        SG_LOG( SG_TERRAIN, SG_WARN, "Tile not found (Ok if initializing)" );
-        globals->get_scenery()->set_next_center( Point3D(0.0) );
-    }
+    setCurrentTile( longitude, latitude);
 
+    // do tile load scheduling. 
+    // Note that we need keep track of both viewer buckets and fdm buckets.
     if ( state == Running ) {
-	SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Running" );
-	if ( !(current_bucket == previous_bucket) ) {
-	    // We've moved to a new bucket, we need to schedule any
-	    // needed tiles for loading.
-	    schedule_needed(visibility_meters);
-	}
+       SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Running" );
+       if (!(current_bucket == previous_bucket )) {
+	 // We've moved to a new bucket, we need to schedule any
+	 // needed tiles for loading.
+	 schedule_needed(visibility_meters, current_bucket);
+       }
     } else if ( state == Start || state == Inited ) {
 	SG_LOG( SG_TERRAIN, SG_INFO, "State == Start || Inited" );
 	initialize_queue();
@@ -284,11 +289,12 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
 	loader.update();
     }
 
+    
     // load the next model in the load queue.  Currently this must
     // happen in the render thread because model loading can trigger
     // texture loading which involves use of the opengl api.
     if ( !model_queue.empty() ) {
-        // cout << "loading next model ..." << endl;
+	// cout << "loading next model ..." << endl;
 	// load the next tile in the queue
 #ifdef ENABLE_THREADS
 	FGDeferredModel* dm = model_queue.pop();
@@ -307,21 +313,20 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
 
 	delete dm;
     }
-
+    
     // cout << "current elevation (ssg) == " << scenery.get_cur_elev() << endl;
 
+
+    // save bucket...
     previous_bucket = current_bucket;
-    last_longitude = longitude;
-    last_latitude  = latitude;
 
     // activate loader thread one out of every 5 frames
     if ( counter_hack == 0 ) {
-        // Notify the tile loader that it can load another tile
-
-        loader.update();
-
+      // Notify the tile loader that it can load another tile
+      loader.update();
+    } else {
+      counter_hack = (counter_hack + 1) % 5;
     }
-    counter_hack = (counter_hack + 1) % 5;
 
     if ( !attach_queue.empty() ) {
 #ifdef ENABLE_THREADS
@@ -336,60 +341,14 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
 	// cout << "Adding ssg nodes for "
     }
 
-    sgdVec3 sc;
-    sgdSetVec3( sc,
-                globals->get_scenery()->get_center()[0],
-                globals->get_scenery()->get_center()[1],
-                globals->get_scenery()->get_center()[2] );
+    // no reason to update this if we haven't moved...
+    if ( longitude != last_longitude || latitude == last_latitude ) {
+      // update current elevation... 
+      updateCurrentElevAtPos(abs_pos_vector);
+    }
 
-         /*
-         cout << "abs view pos = "
-              << globals->get_current_view()->get_abs_view_pos()[0] << ","
-              << globals->get_current_view()->get_abs_view_pos()[1] << ","
-              << globals->get_current_view()->get_abs_view_pos()[2]
-            << " view pos = "
-              << globals->get_current_view()->get_view_pos()[0] << ","
-              << globals->get_current_view()->get_view_pos()[1] << ","
-              << globals->get_current_view()->get_view_pos()[2]
-              << endl;
-         cout << "current_tile = " << current_tile << endl;
-         cout << "Scenery center = " << sc[0] << "," << sc[1] << "," << sc[2]
-              << endl;
-         */
-
-        // overridden with actual values if a terrain intersection is
-        // found
-	double hit_elev = -9999.0;
-	double hit_radius = 0.0;
-	sgdVec3 hit_normal = { 0.0, 0.0, 0.0 };
-
-        bool hit = false;
-        if ( fabs(sc[0]) > 1.0 || fabs(sc[1]) > 1.0 || fabs(sc[2]) > 1.0 ) {
-            // scenery center has been properly defined so any hit
-            // should be valid (and not just luck)
-	    sgdSetVec3( sc,
-			globals->get_scenery()->get_center()[0],
-			globals->get_scenery()->get_center()[1],
-			globals->get_scenery()->get_center()[2] );
-	    hit = fgCurrentElev(globals->get_current_view()->get_absolute_view_pos(),
-				sc,
-				current_tile->get_terra_transform(),
-				&hit_list,
-				&hit_elev,
-				&hit_radius,
-				hit_normal);
-        }
-
-        if ( hit ) {
-            globals->get_scenery()->set_cur_elev( hit_elev );
-            globals->get_scenery()->set_cur_radius( hit_radius );
-            globals->get_scenery()->set_cur_normal( hit_normal );
-        } else {
-            globals->get_scenery()->set_cur_elev( -9999.0 );
-            globals->get_scenery()->set_cur_radius( 0.0 );
-            globals->get_scenery()->set_cur_normal( hit_normal );
-        }
-	// cout << "Current elevation = " << scenery.get_cur_elev() << endl;
+    last_longitude = longitude;
+    last_latitude = latitude;
 
 #if 0
     }
@@ -398,6 +357,69 @@ int FGTileMgr::update( double lon, double lat, double visibility_meters ) {
     return 1;
 }
 
+// timer event driven call to scheduler for the purpose of refreshing the tile timestamps
+void FGTileMgr::refresh_view_timestamps() {
+  SG_LOG( SG_TERRAIN, SG_INFO,
+      "Refreshing timestamps for " << current_bucket.get_center_lon() << " " << current_bucket.get_center_lat() );
+  schedule_needed(fgGetDouble("/environment/visibility-m"), current_bucket);
+}
+
+// check and set current tile and scenery center...
+void FGTileMgr::setCurrentTile(double longitude, double latitude) {
+
+    // check tile cache entry...
+    current_bucket.set_bucket( longitude, latitude );
+    if ( tile_cache.exists( current_bucket ) ) {
+        current_tile = tile_cache.get_tile( current_bucket );
+        globals->get_scenery()->set_next_center( current_tile->center );
+    } else {
+        SG_LOG( SG_TERRAIN, SG_WARN, "Tile not found (Ok if initializing)" );
+        globals->get_scenery()->set_next_center( Point3D(0.0) );
+    }
+}
+
+void FGTileMgr::updateCurrentElevAtPos(sgdVec3 abs_pos_vector) {
+
+  sgdVec3 sc;
+  sgdSetVec3( sc,
+    globals->get_scenery()->get_center()[0],
+    globals->get_scenery()->get_center()[1],
+    globals->get_scenery()->get_center()[2] );
+
+    // overridden with actual values if a terrain intersection is
+    // found
+    double hit_elev = -9999.0;
+    double hit_radius = 0.0;
+    sgdVec3 hit_normal = { 0.0, 0.0, 0.0 };
+
+    bool hit = false;
+    if ( fabs(sc[0]) > 1.0 || fabs(sc[1]) > 1.0 || fabs(sc[2]) > 1.0 ) {
+       // scenery center has been properly defined so any hit
+       // should be valid (and not just luck)
+       sgdSetVec3( sc,
+	  globals->get_scenery()->get_center()[0],
+	  globals->get_scenery()->get_center()[1],
+	  globals->get_scenery()->get_center()[2] );
+       hit = fgCurrentElev(abs_pos_vector,
+	  sc,
+	  current_tile->get_terra_transform(),
+	  &hit_list,
+	  &hit_elev,
+	  &hit_radius,
+          hit_normal);
+    }
+
+    if ( hit ) {
+          globals->get_scenery()->set_cur_elev( hit_elev );
+          globals->get_scenery()->set_cur_radius( hit_radius );
+          globals->get_scenery()->set_cur_normal( hit_normal );
+    } else {
+          globals->get_scenery()->set_cur_elev( -9999.0 );
+          globals->get_scenery()->set_cur_radius( 0.0 );
+          globals->get_scenery()->set_cur_normal( hit_normal );
+    }
+
+}
 
 void FGTileMgr::prep_ssg_nodes(float vis) {
 //    float vis = 0.0;

@@ -100,6 +100,8 @@ SG_USING_STD(endl);
 #include <GUI/gui.h>
 #include <Model/acmodel.hxx>
 #include <Model/modelmgr.hxx>
+#include <Model/model.hxx>
+#include <Main/location.hxx>
 #ifdef FG_NETWORK_OLK
 #include <NetworkOLK/network.h>
 #endif
@@ -534,11 +536,11 @@ void fgRenderFrame() {
 	    thesky->reposition( current__view->get_view_pos(),
 				current__view->get_zero_elev(),
 				current__view->get_world_up(),
-				longitude->getDoubleValue()
+				current__view->getLongitude_deg()
 				  * SGD_DEGREES_TO_RADIANS,
-				latitude->getDoubleValue()
+				current__view->getLatitude_deg()
 				  * SGD_DEGREES_TO_RADIANS,
-				altitude->getDoubleValue() * SG_FEET_TO_METER,
+				current__view->getAltitudeASL_ft() * SG_FEET_TO_METER,
 				cur_light_params.sun_rotation,
 				globals->get_time_params()->getGst(),
 				globals->get_ephem()->getSunRightAscension(),
@@ -860,6 +862,11 @@ static void fgMainLoop( void ) {
 
     SGTime *t = globals->get_time_params();
 
+    FGLocation * acmodel_location = 0;
+    if(cur_fdm_state->getACModel() != 0) {
+      acmodel_location = (FGLocation *)  cur_fdm_state->getACModel()->get3DModel()->getFGLocation();
+    }
+
     SG_LOG( SG_ALL, SG_DEBUG, "Running Main Loop");
     SG_LOG( SG_ALL, SG_DEBUG, "======= ==== ====");
 
@@ -897,25 +904,26 @@ static void fgMainLoop( void ) {
 	   cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
 	   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
-    if ( globals->get_scenery()->get_cur_elev() > -9990
-         && cur_fdm_state->get_inited() )
-    {
-	if ( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER < 
-	     (globals->get_scenery()->get_cur_elev() + alt_adjust_m - 3.0) ) {
+// Curt is this code used?  I don't see any problems when I comment it out.
+    if ( acmodel_location != 0 ) {
+      if ( acmodel_location->get_cur_elev_m() > -9990 && cur_fdm_state->get_inited() ) {
+ 	if ( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER < 
+	     (acmodel_location->get_cur_elev_m() + alt_adjust_m - 3.0) ) {
 	    // now set aircraft altitude above ground
 	    printf("(*) Current Altitude = %.2f < %.2f forcing to %.2f\n", 
 		   cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
-		   globals->get_scenery()->get_cur_elev() + alt_adjust_m - 3.0,
-		   globals->get_scenery()->get_cur_elev() + alt_adjust_m );
-	    cur_fdm_state->set_Altitude( globals->get_scenery()->get_cur_elev() 
-                                         + alt_adjust_m );
-
+		   acmodel_location->get_cur_elev_m() + alt_adjust_m - 3.0,
+		   acmodel_location->get_cur_elev_m() + alt_adjust_m );
+	    cur_fdm_state->set_Altitude( (acmodel_location->get_cur_elev_m() 
+                                                + alt_adjust_m) * SG_METER_TO_FEET );
 	    SG_LOG( SG_ALL, SG_DEBUG, 
 		    "<*> resetting altitude to " 
 		    << cur_fdm_state->get_Altitude() * SG_FEET_TO_METER
 		    << " meters" );
 	}
+      }
     }
+// End of code in question. (see Curt is this code used? above)
 
     /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
 	   scenery.get_cur_elev(),
@@ -1057,10 +1065,67 @@ static void fgMainLoop( void ) {
     // redraw display
     fgRenderFrame();
 
-    // see if we need to load any new scenery tiles
+
+    //
+    // Tile Manager updates - see if we need to load any new scenery tiles.
+    //   this code ties together the fdm, viewer and scenery classes...
+    //   we may want to move this to it's own class at some point
+    //
     double visibility_meters = fgGetDouble("/environment/visibility-m");
-    global_tile_mgr.update( longitude->getDoubleValue(),
-			    latitude->getDoubleValue(), visibility_meters );
+    FGViewer *current_view = globals->get_current_view();
+
+    // update tile manager for FDM...
+    // ...only if location is different than the viewer (to avoid duplicating effort)
+    if( acmodel_location != current_view->getFGLocation() ) {
+      if( acmodel_location != 0 ) {
+        global_tile_mgr.update( acmodel_location->getLongitude_deg(),
+ 			    acmodel_location->getLatitude_deg(),
+                            visibility_meters,
+                            acmodel_location->get_absolute_view_pos(),
+                            acmodel_location->get_current_bucket(),
+                            acmodel_location->get_previous_bucket()
+                            );
+        // save results of update in FGLocation for fdm...
+        if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
+          acmodel_location->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
+        }
+        acmodel_location->set_current_bucket( global_tile_mgr.get_current_bucket() );
+        acmodel_location->set_previous_bucket( global_tile_mgr.get_previous_bucket() );
+      }
+    }
+
+    // update tile manager for view...
+    // IMPORTANT!!! the tilemgr update for view location _must_ be done last 
+    // after the FDM's until all of Flight Gear code references the viewer's location
+    // for elevation instead of the "scenery's" current elevation.
+    global_tile_mgr.update( current_view->getLongitude_deg(),
+			    current_view->getLatitude_deg(),
+                            visibility_meters,
+                            current_view->get_absolute_view_pos(),
+                            current_view->getFGLocation()->get_current_bucket(),
+                            current_view->getFGLocation()->get_previous_bucket()
+                            );
+    // save results of update in FGLocation for fdm...
+    if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
+      current_view->getFGLocation()->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
+    }
+    current_view->getFGLocation()->set_current_bucket( global_tile_mgr.get_current_bucket() );
+    current_view->getFGLocation()->set_previous_bucket( global_tile_mgr.get_previous_bucket() );
+
+    // If fdm location is same as viewer's then we didn't do the update for fdm location 
+    //   above so we need to save the viewer results in the fdm FGLocation as well...
+    if( acmodel_location == current_view->getFGLocation() ) {
+      if( acmodel_location != 0 ) {
+        if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
+          acmodel_location->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
+        }
+        acmodel_location->set_current_bucket( global_tile_mgr.get_current_bucket() );
+        acmodel_location->set_previous_bucket( global_tile_mgr.get_previous_bucket() );
+      }
+    }
+
+    // END Tile Manager udpates
+
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );
 }
