@@ -179,14 +179,15 @@ bool FGADA::update( int multiloop ) {
     char Buffer[numberofbytes];
 
     // Read FGExternal structure from socket
-    int result = fdmsock->read(Buffer, numberofbytes);
-    // Loop to read from top of socket buffer - Last in first out
-    while (result == numberofbytes) {
-	result = fdmsock->read(Buffer, numberofbytes);
+    while (1) {
+      int result = fdmsock->read(Buffer, numberofbytes);
+      if (result == numberofbytes) {
+         // Copy buffer into FGExternal structure
+         memcpy (&sixdof_to_visuals, &Buffer, sizeof (Buffer));
+      } else {
+         break;
+      }
     }
-
-    // Copy buffer into FGExternal structure
-    memcpy (&sixdof_to_visuals, &Buffer, sizeof (Buffer));
 
     //cout << endl << sixdof_to_visuals.aux18 << endl;
     // Close Visuals through message/flag from Flight model
