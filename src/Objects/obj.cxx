@@ -34,8 +34,6 @@
 #include <string.h>
 
 #include <simgear/compiler.h>
-#include <simgear/sg_inlines.h>
-#include <simgear/io/sg_binobj.hxx>
 
 #include STL_STRING
 #include <map>                  // STL
@@ -43,7 +41,9 @@
 #include <ctype.h>              // isdigit()
 
 #include <simgear/constants.h>
+#include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/io/sg_binobj.hxx>
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -58,7 +58,6 @@
 #include <simgear/scene/tgdb/pt_lights.hxx>
 
 #include <Main/globals.hxx>
-#include <Main/fg_props.hxx>
 
 #include "obj.hxx"
 
@@ -249,13 +248,13 @@ public:
   float * p3;
     sgVec3 center;
     double area;
-  SGMaterial::ObjectGroup * object_group;
+  SGMatObjectGroup * object_group;
   ssgBranch * branch;
     LeafUserData * leafData;
   unsigned int seed;
 
     void fill_in_triangle();
-    void add_object_to_triangle(SGMaterial::Object * object);
+    void add_object_to_triangle(SGMatObject * object);
     void makeWorldMatrix (sgMat4 ROT, double hdg_deg );
 };
 
@@ -276,7 +275,7 @@ void TriUserData::fill_in_triangle ()
     int nObjects = object_group->get_object_count();
 
     for (int i = 0; i < nObjects; i++) {
-      SGMaterial::Object * object = object_group->get_object(i);
+      SGMatObject * object = object_group->get_object(i);
       double num = area / object->get_coverage_m2();
 
       // place an object each unit of area
@@ -296,11 +295,11 @@ void TriUserData::fill_in_triangle ()
     }
 }
 
-void TriUserData::add_object_to_triangle (SGMaterial::Object * object)
+void TriUserData::add_object_to_triangle (SGMatObject * object)
 {
     // Set up the random heading if required.
     double hdg_deg = 0;
-    if (object->get_heading_type() == SGMaterial::Object::HEADING_RANDOM)
+    if (object->get_heading_type() == SGMatObject::HEADING_RANDOM)
         hdg_deg = sg_random() * 360;
 
     sgMat4 mat;
@@ -311,8 +310,7 @@ void TriUserData::add_object_to_triangle (SGMaterial::Object * object)
     pos->addKid( object->get_random_model( globals->get_model_loader(),
                                            globals->get_fg_root(),
                                            globals->get_props(),
-                                           globals->get_sim_time_sec() )
-                 );
+                                           globals->get_sim_time_sec() ) );
     branch->addKid(pos);
 }
 
@@ -482,7 +480,7 @@ void LeafUserData::setup_triangle (int i )
     int num_groups = mat->get_object_group_count();
     for (int j = 0; j < num_groups; j++) {
                                 // Look up the random object.
-        SGMaterial::ObjectGroup * group = mat->get_object_group(j);
+        SGMatObjectGroup * group = mat->get_object_group(j);
 
                                 // Set up the range selector for the entire
                                 // triangle; note that we use the object

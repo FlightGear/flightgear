@@ -12,8 +12,6 @@ else
 MPLAYER_AS =
 endif
 
-EXTRA_DIST = net_gui.hxx
-
 libNetwork_a_SOURCES = \
 	protocol.cxx protocol.hxx \
 	atc610x.cxx atc610x.hxx \
@@ -26,7 +24,7 @@ libNetwork_a_SOURCES = \
 	native_ctrls.cxx native_ctrls.hxx \
 	native_fdm.cxx native_fdm.hxx \
 	native_gui.cxx native_gui.hxx \
-	net_ctrls.hxx net_fdm.hxx net_fdm_mini.hxx \
+	net_ctrls.hxx net_fdm.hxx net_fdm_mini.hxx net_gui.hxx \
         nmea.cxx nmea.hxx \
         opengc.cxx opengc.hxx opengc_data.hxx \
 	$(MPLAYER_AS) \

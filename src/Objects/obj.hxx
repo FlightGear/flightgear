@@ -37,15 +37,12 @@
 
 #include <plib/ssg.h>           // plib include
 
-#include <simgear/bucket/newbucket.hxx>
 #include <simgear/math/sg_types.hxx>
-#include <simgear/scene/material/matlib.hxx>
 
 SG_USING_STD(string);
 
-
-// duplicated from the TerraGear tools
-#define FG_MAX_NODES 4000
+class SGBucket;
+class SGMaterialLib;
 
 
 // Load a Binary obj file
