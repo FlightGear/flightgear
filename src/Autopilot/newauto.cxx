@@ -377,6 +377,22 @@ int FGAutopilot::run() {
 	} else if ( heading_mode == FG_HEADING_LOCK ) {
 	    // leave target heading alone
 	} else if ( heading_mode == FG_HEADING_NAV1 ) {
+	    // track the NAV1 heading needle deflection
+	    double cur_radial = current_radiostack->get_nav1_heading() +
+		current_radiostack->get_nav1_magvar();
+	    if ( current_radiostack->get_nav1_from_flag() ) {
+		cur_radial += 180.0;
+		while ( cur_radial >= 360.0 ) { cur_radial -= 360.0; }
+	    }
+	    double adjustment = 
+		current_radiostack->get_nav1_heading_needle_deflection()
+		* (current_radiostack->get_nav1_loc_dist() * METER_TO_NM);
+	    if ( adjustment < -30.0 ) { adjustment = -30.0; }
+	    if ( adjustment >  30.0 ) { adjustment =  30.0; }
+	    TargetHeading = cur_radial + adjustment; 
+	    while ( TargetHeading <   0.0 ) { TargetHeading += 360.0; }
+	    while ( TargetHeading > 360.0 ) { TargetHeading -= 360.0; }
+#if 0
 	    if ( current_radiostack->get_nav1_to_flag() ||
 		 current_radiostack->get_nav1_from_flag() ) {
 		// We have an appropriate radial selected that the
@@ -419,6 +435,7 @@ int FGAutopilot::run() {
 		// neither TO, or FROM, maintain current heading.
 		TargetHeading = FGBFI::getHeading();
 	    }
+#endif
 	    MakeTargetHeadingStr( TargetHeading );
 	    // cout << "target course (true) = " << TargetHeading << endl;
 	} else if ( heading_mode == FG_HEADING_WAYPOINT ) {
