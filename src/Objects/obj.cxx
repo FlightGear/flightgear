@@ -270,6 +270,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
     point_list nodes;
     Point3D node;
     Point3D center;
+    double scenery_version = 0.0;
     double tex_width = 1000.0, tex_height = 1000.0;
     bool shared_done = false;
     int_list fan_vertices;
@@ -329,7 +330,11 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 
 	    in >> token;
 
-	    if ( token == "gbs" ) {
+	    if ( token == "version" ) {
+		// read scenery versions number
+		in >> scenery_version;
+		// cout << "scenery_version = " << scenery_version << endl;
+	    } else if ( token == "gbs" ) {
 		// reference point (center offset)
 		in >> t->center >> t->bounding_radius;
 		center = t->center;
@@ -373,7 +378,8 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    }
 		    for ( i = 0; i < vtcount; ++i ) {
 			sgSetVec2( t->tclist[i],
-				   tex_coords[i][0], tex_coords[i][1] );
+				   tex_coords[i][0],
+				   tex_coords[i][1] );
 		    }
 		}
 
@@ -576,7 +582,7 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 
 		if ( n4 > 0 ) {
 		    fragment.add_face(n3, n2, n4);
-
+		    
 		    if ( shading ) {
 			// Shading model is "GL_SMOOTH"
 			// MAT3_SCALE_VEC(normal, normals[n4], scale);
@@ -611,6 +617,10 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		if ( in.get( c ) && c == '/' ) {
 		    in >> tex;
 		    fan_tex_coords.push_back( tex );
+		    if ( scenery_version >= 0.4 ) {
+			t->tclist[tex][0] *= (1000.0 / tex_width);
+			t->tclist[tex][1] *= (1000.0 / tex_height);
+		    }
 		    pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
 		    pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
 		} else {
@@ -626,6 +636,10 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		if ( in.get( c ) && c == '/' ) {
 		    in >> tex;
 		    fan_tex_coords.push_back( tex );
+		    if ( scenery_version >= 0.4 ) {
+			t->tclist[tex][0] *= (1000.0 / tex_width);
+			t->tclist[tex][1] *= (1000.0 / tex_height);
+		    }
 		    pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
 		    pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
 		} else {
@@ -659,6 +673,10 @@ ssgBranch *fgObjLoad( const string& path, FGTileEntry *t) {
 		    if ( in.get( c ) && c == '/' ) {
 			in >> tex;
 			fan_tex_coords.push_back( tex );
+			if ( scenery_version >= 0.4 ) {
+			    t->tclist[tex][0] *= (1000.0 / tex_width);
+			    t->tclist[tex][1] *= (1000.0 / tex_height);
+			}
 			pp.setx( tex_coords[tex][0] * (1000.0 / tex_width) );
 			pp.sety( tex_coords[tex][1] * (1000.0 / tex_height) );
 		    } else {
