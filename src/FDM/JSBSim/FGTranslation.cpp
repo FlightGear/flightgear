@@ -116,7 +116,8 @@ bool FGTranslation::Run(void)
 
     vUVWdot = mVel*Rotation->GetPQR() + Aircraft->GetBodyAccel();
 
-    vUVW += Tc * (vlastUVWdot + vUVWdot);
+    vUVW += Tc*(vUVWdot + vlastUVWdot);
+
     vAeroUVW = vUVW + State->GetTl2b()*Atmosphere->GetWindNED();
 
     Vt = vAeroUVW.Magnitude();

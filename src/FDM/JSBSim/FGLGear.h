@@ -232,9 +232,14 @@ public:
   inline int GetBrakeGroup(void) { return (int)eBrakeGrp; }
   inline int GetSteerType(void)  { return (int)eSteerType; }
   
-  inline bool GetRetractable(void)  { return isRetractable; }
-  inline bool GetGearUnitUp(void)   { return GearUp; }
-  inline bool GetGearUnitDown(void) { return GearDown; }
+  inline bool GetRetractable(void)         { return isRetractable;   }
+  inline bool GetGearUnitUp(void)          { return GearUp;          }
+  inline bool GetGearUnitDown(void)        { return GearDown;        }
+  inline double GetWheelSideForce(void)    { return SideForce;       }
+  inline double GetWheelRollForce(void)    { return RollingForce;    }
+  inline double GetBodyXForce(void)        { return vLocalForce(eX); }
+  inline double GetBodyYForce(void)        { return vLocalForce(eY); }
+  inline double GetWheelSlipAngle(void)    { return WheelSlip;       }
   
 private:
   FGColumnVector3 vXYZ;
@@ -258,6 +263,9 @@ private:
   double DistanceTraveled;
   double MaximumStrutForce;
   double MaximumStrutTravel;
+  double SideWhlVel, RollingWhlVel;
+  double RollingForce, SideForce, FCoeff;
+  double WheelSlip;
   bool WOW;
   bool lastWOW;
   bool FirstContact;

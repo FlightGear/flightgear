@@ -211,7 +211,12 @@ void FGTable::Print(void)
   if (Type == tt1D) startRow = 1;
   else startRow = 0;
 
+#if defined (sgi) && !defined(__GNUC__)
+  unsigned long flags = cout.setf(ios::fixed);
+#else
   ios::fmtflags flags = cout.setf(ios::fixed); // set up output stream
+#endif
+
   cout.precision(4);
 
   for (int r=startRow; r<=nRows; r++) {

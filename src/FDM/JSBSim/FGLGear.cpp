@@ -181,6 +181,9 @@ FGLGear::~FGLGear()
 
 FGColumnVector3& FGLGear::Force(void)
 {
+  double SteerGain = 0;
+  double SinWheel, CosWheel;
+
   vForce.InitMatrix();
   vMoment.InitMatrix();
 
@@ -201,10 +204,6 @@ FGColumnVector3& FGLGear::Force(void)
   }         
       
   if (GearDown) {
-    double SteerGain = 0;
-    double SinWheel, CosWheel, SideWhlVel, RollingWhlVel;
-    double RollingForce, SideForce, FCoeff;
-    double WheelSlip;
 
     vWhlBodyVec     = (vXYZ - MassBalance->GetXYZcg()) / 12.0;
     vWhlBodyVec(eX) = -vWhlBodyVec(eX);

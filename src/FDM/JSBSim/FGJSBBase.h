@@ -256,6 +256,7 @@ public:
       @return pointer to a Message structure (or NULL if no mesage) */
   Message* ProcessMessage(void);
   //@}
+  string GetVersion(void) {return JSBSim_version;}
 
 protected:
   static Message localMsg;
