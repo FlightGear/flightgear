@@ -143,7 +143,7 @@ int fgMATERIAL_MGR::load_lib ( void ) {
 		fgPrintf( FG_TERRAIN, FG_INFO, "Bad alpha value '%s'\n", line );
 	    }
 	} else if ( (strncmp(line_ptr, "texture", 7) == 0) &&
-		    current_options.get_textures() ) {
+		    !current_options.get_textures() ) {
 	    // do nothing
 	} else if ( strncmp(line_ptr, "texture", 7) == 0 ) {
 	    line_ptr += 7;
@@ -300,6 +300,10 @@ fgMATERIAL_MGR::~fgMATERIAL_MGR ( void ) {
 
 
 // $Log$
+// Revision 1.12  1998/08/12 21:41:27  curt
+// Need to negate the test for textures so that textures aren't loaded when
+// they are disabled rather than visa versa ... :-)
+//
 // Revision 1.11  1998/08/12 21:13:03  curt
 // material.cxx: don't load textures if they are disabled
 // obj.cxx: optimizations from Norman Vine
