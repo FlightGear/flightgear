@@ -29,6 +29,61 @@ New in 0.53
     fgLIGHT::Update().
   - Modified fg_init.cxx to register two method callbacks in place of the
     old wrapper functions.
+  - The new classes in libmisc.tgz define a stream interface into zlib.       
+    I've put these in a new directory, Lib/Misc.  Feel free to rename it      
+    to something more appropriate.  However you'll have to change the         
+    include directives in all the other files.  Additionally you'll have      
+    add the library to Lib/Makefile.am and Simulator/Main/Makefile.am.        
+                                                                              
+    The StopWatch class in Lib/Misc requires a HAVE_GETRUSAGE autoconf        
+    test so I've included the required changes in config.tgz.                 
+                                                                              
+    There are a fair few changes to Simulator/Objects as I've moved           
+    things around.  Loading tiles is quicker but thats not where the delay    
+    is.  Tile loading takes a few tenths of a second per file on a P200       
+    but it seems to be the post-processing that leads to a noticeable         
+    blip in framerate.  I suppose its time to start profiling to see where    
+    the delays are.                                                           
+                                                                              
+    I've included a brief description of each archives contents.              
+                                                                              
+    Lib/Misc/
+      zfstream.cxx
+      zfstream.hxx
+        C++ stream interface into zlib.
+        Taken from zlib-1.1.3/contrib/iostream/.
+        Minor mods for STL compatibility.
+        There's no copyright associated with these so I assume they're
+        covered by zlib's.
+
+      fgstream.cxx
+      fgstream.hxx
+        FlightGear input stream using gz_ifstream.  Tries to open the
+        given filename.  If that fails then filename is examined and a
+        ".gz" suffix is removed or appended and that file is opened.
+
+      stopwatch.hxx
+        A simple timer for benchmarking.  Not used in production code.
+        Taken from the Blitz++ project.  Covered by GPL.
+
+      strutils.cxx
+      strutils.hxx
+        Some simple string manipulation routines.
+
+    Simulator/Airports/
+      Load airports database using fgstream.
+      Changed fgAIRPORTS to use set<> instead of map<>.
+      Added bool fgAIRPORTS::search() as a neater way doing the lookup.
+      Returns true if found.
+
+    Simulator/Astro/
+      Modified fgStarsInit() to load stars database using fgstream.
+
+    Simulator/Objects/
+      Modified fgObjLoad() to use fgstream.
+      Modified fgMATERIAL_MGR::load_lib() to use fgstream.
+      Many changes to fgMATERIAL.
+      Some changes to fgFRAGMENT but I forget what!
 
 New in 0.52
 * Stars added in 8 stages as sky gets darker for a smoother more realistic
@@ -139,7 +194,7 @@ New in 0.44:
 * command line option to set starting position by airport ID
 * Cleaned up initialization sequence to eliminate interdependencies
   between sun position, lighting, and view position.  This creates a
-  valid single pass initialization path.  
+  valid single pass initialization path.
 * use already calculated LaRCsim values to create the roll/pitch/yaw
   transformation matrix
 
