@@ -266,22 +266,22 @@ double GetAngleDiff_deg( const double &a1, const double &a2) {
 // in fg_init.cxx, and are just here temporarily until some rationalisation occurs.
 // find basic airport location info from airport database
 bool dclFindAirportID( const string& id, FGAirport *a ) {
-    if ( id.length() ) {
-        SGPath path( globals->get_fg_root() );
-        path.append( "Airports" );
-        path.append( "simple.mk4" );
-        FGAirports airports( path.c_str() );
+    FGAirport result;
 
+    if ( id.length() ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Searching for airport code = " << id );
 
-        if ( ! airports.search( id, a ) ) {
+        result = globals->get_airports()->search( id );
+        if ( result.id.empty() ) {
             SG_LOG( SG_GENERAL, SG_ALERT,
-                    "Failed to find " << id << " in " << path.str() );
+                    "Failed to find " << id << " in simple.apt.gz" );
             return false;
         }
     } else {
         return false;
     }
+
+    *a = result;
 
     SG_LOG( SG_GENERAL, SG_INFO,
             "Position for " << id << " is ("

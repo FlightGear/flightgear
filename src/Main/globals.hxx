@@ -59,6 +59,7 @@ class SGRoute;
 class SGTime;
 class SGSoundMgr;
 
+class FGAirportList;
 class FGAIMgr;
 class FGATCMgr;
 class FGATCDisplay;
@@ -133,6 +134,9 @@ private:
 
     // sound manager
     SGSoundMgr *soundmgr;
+
+    // Simple Airport List
+    FGAirportList *airports;
 
     // ATC manager
     FGATCMgr *ATC_mgr;
@@ -239,6 +243,9 @@ public:
 
     inline SGRoute *get_route() const { return route; }
     inline void set_route( SGRoute *r ) { route = r; }
+
+    inline FGAirportList *get_airports() const { return airports; }
+    inline void set_airports( FGAirportList *a ) {airports = a; }
 
     inline FGATCMgr *get_ATC_mgr() const { return ATC_mgr; }
     inline void set_ATC_mgr( FGATCMgr *a ) {ATC_mgr = a; }

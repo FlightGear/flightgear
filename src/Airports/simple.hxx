@@ -23,8 +23,8 @@
 // $Id$
 
 
-#ifndef _SIMPLE_HXX
-#define _SIMPLE_HXX
+#ifndef _FG_SIMPLE_HXX
+#define _FG_SIMPLE_HXX
 
 
 #ifndef __cplusplus                                                          
@@ -39,16 +39,22 @@
 #include <simgear/compiler.h>
 
 #include STL_STRING
-#include <set>
-
-// Forward declarations.
-class c4_Storage;
-class c4_View;
+#include <map>
 
 SG_USING_STD(string);
-SG_USING_STD(set);
+SG_USING_STD(map);
+
 
 class FGAirport {
+
+public:
+
+    string id;
+    double longitude;
+    double latitude;
+    double elevation;
+    string code;
+    string name;
 
 public:
 
@@ -62,76 +68,35 @@ public:
 	return id < a.id;
     }
 
-public:
-
-    string id;
-    double longitude;
-    double latitude;
-    double elevation;
-
 };
 
+typedef map < string, FGAirport > airport_map;
+typedef airport_map::iterator airport_map_iterator;
+typedef airport_map::const_iterator const_airport_map_iterator;
 
-class FGAirports {
+
+class FGAirportList {
 
 private:
 
-    c4_Storage *storage;
-    c4_View *vAirport;
+    airport_map airports;
 
 public:
 
     // Constructor
-    FGAirports( const string& file );
+    FGAirportList( const string& file );
 
     // Destructor
-    ~FGAirports();
+    ~FGAirportList();
 
     // search for the specified id.
     // Returns true if successful, otherwise returns false.
     // On success, airport data is returned thru "airport" pointer.
     // "airport" is not changed if "apt" is not found.
-    bool search( const string& id, FGAirport* airport ) const;
-    FGAirport search( const string& id ) const;
+    FGAirport search( const string& id );
 };
 
 
-class FGAirportsUtil {
-public:
-#ifdef SG_NO_DEFAULT_TEMPLATE_ARGS
-    typedef set< FGAirport, less< FGAirport > > container;
-#else
-    typedef set< FGAirport > container;
-#endif
-    typedef container::iterator iterator;
-    typedef container::const_iterator const_iterator;
-
-private:
-    container airports;
-
-public:
-
-    // Constructor
-    FGAirportsUtil();
-
-    // Destructor
-    ~FGAirportsUtil();
-
-    // load the data
-    int load( const string& file );
-
-    // save the data in metakit format
-    bool dump_mk4( const string& file );
-
-    // search for the specified id.
-    // Returns true if successful, otherwise returns false.
-    // On success, airport data is returned thru "airport" pointer.
-    // "airport" is not changed if "id" is not found.
-    bool search( const string& id, FGAirport* airport ) const;
-    FGAirport search( const string& id ) const;
-};
-
-
-#endif // _SIMPLE_HXX
+#endif // _FG_SIMPLE_HXX
 
 

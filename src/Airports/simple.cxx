@@ -1,7 +1,7 @@
 //
 // simple.cxx -- a really simplistic class to manage airport ID,
-//                 lat, lon of the center of one of it's runways, and 
-//                 elevation in feet.
+//               lat, lon of the center of one of it's runways, and 
+//               elevation in feet.
 //
 // Written by Curtis Olson, started April 1998.
 //
@@ -35,230 +35,56 @@
 #include STL_STRING
 #include STL_FUNCTIONAL
 #include STL_ALGORITHM
+#include STL_IOSTREAM
 
 #include "simple.hxx"
 
 SG_USING_NAMESPACE(std);
-
-#ifndef _MSC_VER
-#   define NDEBUG			// she don't work without it.
-#endif
-#include <mk4.h>
-#include <mk4str.h>
-#ifndef _MSC_VER
-#  undef NDEBUG
-#endif
-
-#ifdef SG_HAVE_STD_INCLUDES
-#  include <istream>
-#elif defined( __BORLANDC__ ) || defined (__APPLE__)
-#  include <iostream>
-#else
-#  include <istream.h>
-#endif
 SG_USING_STD(istream);
 
 
 inline istream&
 operator >> ( istream& in, FGAirport& a )
 {
-    return in >> a.id >> a.latitude >> a.longitude >> a.elevation;
+    string junk;
+    in >> junk >> a.id >> a.latitude >> a.longitude >> a.elevation
+       >> a.code;
+
+    char name[256];             // should never be longer than this, right? :-)
+    in.getline( name, 256 );
+    a.name = name;
+
+    return in;
 }
 
 
-FGAirports::FGAirports( const string& file ) {
-    // open the specified database readonly
-    storage = new c4_Storage( file.c_str(), false );
+FGAirportList::FGAirportList( const string& file ) {
+    SG_LOG( SG_GENERAL, SG_DEBUG, "Reading simple airport list: " << file );
 
-    if ( !storage->Strategy().IsValid() ) {
-	SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << file );
-	exit(-1);
-    }
-
-    vAirport = new c4_View;
-    *vAirport = 
-	storage->GetAs("airport[ID:S,Longitude:F,Latitude:F,Elevation:F]");
-}
-
-
-// search for the specified id
-bool
-FGAirports::search( const string& id, FGAirport* a ) const
-{
-    c4_StringProp pID ("ID");
-    c4_FloatProp pLon ("Longitude");
-    c4_FloatProp pLat ("Latitude");
-    c4_FloatProp pElev ("Elevation");
-
-    int idx = vAirport->Find(pID[id.c_str()]);
-    SG_LOG( SG_TERRAIN, SG_INFO, "idx = " << idx );
-
-    if ( idx == -1 ) {
-	return false;
-    }
-
-    c4_RowRef r  = vAirport->GetAt(idx);
-    a->id        = (const char *) pID(r); /// NHV fix wrong case crash
-    a->longitude = (double) pLon(r);
-    a->latitude  =  (double) pLat(r);
-    a->elevation = (double) pElev(r);
-
-    return true;
-}
-
-
-FGAirport
-FGAirports::search( const string& id ) const
-{
-    FGAirport a;
-    search( id, &a );
-    return a;
-}
-
-
-// Destructor
-FGAirports::~FGAirports( void ) {
-    delete storage;
-}
-
-
-// Constructor
-FGAirportsUtil::FGAirportsUtil() {
-}
-
-
-// load the data
-int FGAirportsUtil::load( const string& file ) {
-    FGAirport a;
-
-    airports.erase( airports.begin(), airports.end() );
-
+    // open the specified file for reading
     sg_gzifstream in( file );
     if ( !in.is_open() ) {
-	SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << file );
+        SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << file );
 	exit(-1);
-    } else {
-	SG_LOG( SG_GENERAL, SG_ALERT, "opened: " << file );
     }
 
-    // skip first line of file
-    char tmp[2048];
-    in.getline( tmp, 2048 );
+    // skip header line
+    in >> skipeol;
 
-    // read in each line of the file
-
-#ifdef __MWERKS__
-
-    in >> ::skipws;
-    char c = 0;
-    while ( in.get(c) && c != '\0' ) {
-	if ( c == 'A' ) {
-	    in >> a;
-            SG_LOG( SG_GENERAL, SG_INFO, a.id );
-	    in >> skipeol;
-	    airports.insert(a);
-	} else if ( c == 'R' ) {
-	    in >> skipeol;
-	} else {
-	    in >> skipeol;
-	}
-	in >> ::skipws;
+    while ( in ) {
+        FGAirport a;
+        in >> a;
+        airports[a.id] = a;
     }
-
-#else
-
-    in >> ::skipws;
-    string token;
-    while ( ! in.eof() ) {
- 	in >> token;
-	if ( token == "A" ) {
-	    in >> a;
-            SG_LOG( SG_GENERAL, SG_INFO, "in <- " << a.id );
-	    in >> skipeol;
-	    airports.insert(a);
-	} else if ( token == "R" ) {
-	    in >> skipeol;
-	} else {
-	    in >> skipeol;
-	}
-	in >> ::skipws;
-    }
-
-#endif
-
-    return 1;
-}
-
-
-// save the data in gdbm format
-bool FGAirportsUtil::dump_mk4( const string& file ) {
-
-    // open database for writing
-    c4_Storage storage( file.c_str(), true );
-
-    // need to do something about error handling here!
-
-    // define the properties
-    c4_StringProp pID ("ID");
-    c4_FloatProp pLon ("Longitude");
-    c4_FloatProp pLat ("Latitude");
-    c4_FloatProp pElev ("Elevation");
-
-    // Start with an empty view of the proper structure.
-    c4_View vAirport =
-	storage.GetAs("airport[ID:S,Longitude:F,Latitude:F,Elevation:F]");
-
-    c4_Row row;
-
-    const_iterator current = airports.begin();
-    const_iterator end = airports.end();
-    while ( current != end ) {
-	// add each airport record
-	SG_LOG( SG_TERRAIN, SG_BULK, "out -> " << current->id );
-	pID (row) = current->id.c_str();
-	pLon (row) = current->longitude;
-	pLat (row) = current->latitude;
-	pElev (row) = current->elevation;
-	vAirport.Add(row);
-
-	++current;
-    }
-
-    // commit our changes
-    storage.Commit();
-
-    return true;
 }
 
 
 // search for the specified id
-bool
-FGAirportsUtil::search( const string& id, FGAirport* a ) const
-{
-    const_iterator it = airports.find( FGAirport(id) );
-    if ( it != airports.end() )
-    {
-	*a = *it;
-	return true;
-    }
-    else
-    {
-	return false;
-    }
-}
-
-
-FGAirport
-FGAirportsUtil::search( const string& id ) const
-{
-    FGAirport a;
-    this->search( id, &a );
-    return a;
+FGAirport FGAirportList::search( const string& id) {
+    return airports[id];
 }
 
 
 // Destructor
-FGAirportsUtil::~FGAirportsUtil( void ) {
+FGAirportList::~FGAirportList( void ) {
 }
-
-

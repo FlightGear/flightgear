@@ -57,6 +57,7 @@ FGGlobals::FGGlobals() :
     route( NULL ),
     current_panel( NULL ),
     soundmgr( NULL ),
+    airports( NULL ),
     ATC_mgr( NULL ),
     ATC_display( NULL ),
     AI_mgr( NULL ),

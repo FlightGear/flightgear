@@ -556,22 +556,22 @@ bool fgInitConfig ( int argc, char **argv ) {
 
 // find basic airport location info from airport database
 bool fgFindAirportID( const string& id, FGAirport *a ) {
+    FGAirport result;
     if ( id.length() ) {
-        SGPath path( globals->get_fg_root() );
-        path.append( "Airports" );
-        path.append( "simple.mk4" );
-        FGAirports airports( path.c_str() );
-
         SG_LOG( SG_GENERAL, SG_INFO, "Searching for airport code = " << id );
 
-        if ( ! airports.search( id, a ) ) {
+        result = globals->get_airports()->search( id );
+
+        if ( result.id.empty() ) {
             SG_LOG( SG_GENERAL, SG_ALERT,
-                    "Failed to find " << id << " in " << path.str() );
+                    "Failed to find " << id << " in simple.apt.gz" );
             return false;
         }
     } else {
         return false;
     }
+
+    *a = result;
 
     SG_LOG( SG_GENERAL, SG_INFO,
             "Position for " << id << " is ("
@@ -943,11 +943,18 @@ static bool fgSetPosFromFix( const string& id ) {
 
 
 /**
- * Initialize vor/ndb/ils/fix list management and query systems
+ * Initialize vor/ndb/ils/fix list management and query systems (as
+ * well as simple airport db list)
  */
 bool
 fgInitNav ()
 {
+    SG_LOG(SG_GENERAL, SG_INFO, "Loading Simple Airport List");
+    SGPath p_simple( globals->get_fg_root() );
+    p_simple.append( "Airports/simple.apt" );
+    FGAirportList *airports = new FGAirportList( p_simple.str() );
+    globals->set_airports( airports );
+
     SG_LOG(SG_GENERAL, SG_INFO, "Loading Navaids");
 
     SG_LOG(SG_GENERAL, SG_INFO, "  VOR/NDB");
