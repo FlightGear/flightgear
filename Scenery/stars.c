@@ -31,14 +31,21 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include <GL/glut.h>
 
 #include "stars.h"
 
+#include "../constants.h"
 #include "../general.h"
 
 #include "../GLUT/views.h"
+#include "../Aircraft/aircraft.h"
+
+
+#define EpochStart           (631065600)
+#define DaysSinceEpoch(secs) (((secs)-EpochStart)*(1.0/(24*3600)))
 
 
 static GLint stars;
@@ -97,7 +104,7 @@ void fgStarsInit() {
 	    count++;
 	    magnitude = magnitude * 0.8 + 0.2;
 	    mag[0] = mag[1] = mag[2] = magnitude;
-	    glColor3f( magnitude, magnitude, magnitude );
+	    glColor3f( mag[0], mag[1], mag[2] );
 	    glVertex3f( 190000.0 * sin(right_ascension) * cos(declination),
 			190000.0 * cos(right_ascension) * cos(declination),
 			190000.0 * sin(declination) );
@@ -113,9 +120,11 @@ void fgStarsInit() {
 
 /* Draw the Stars */
 void fgStarsRender() {
+    struct FLIGHT *f;
     struct VIEW *v;
-    GLfloat amb[3], diff[3];
+    double angle;
 
+    f = &current_aircraft.flight;
     v = &current_view;
 
     printf("RENDERING STARS\n");
@@ -130,7 +139,11 @@ void fgStarsRender() {
     glLightfv(GL_LIGHT0, GL_AMBIENT, amb );
     glLightfv(GL_LIGHT0, GL_DIFFUSE, diff ); */
 
-    glTranslatef(v->view_pos.x, v->view_pos.y, v->view_pos.z);
+    glTranslatef( v->view_pos.x, v->view_pos.y, v->view_pos.z );
+
+    angle = FG_2PI * fmod(DaysSinceEpoch(time(NULL)), 1.0);
+    glRotatef( -angle * RAD_TO_DEG, 0.0, 0.0, 1.0 );
+    printf("Rotating stars by %.2f\n", -angle * RAD_TO_DEG);
 
     glCallList(stars);
 
@@ -141,10 +154,13 @@ void fgStarsRender() {
 
 
 /* $Log$
-/* Revision 1.2  1997/08/27 21:32:30  curt
-/* Restructured view calculation code.  Added stars.
+/* Revision 1.3  1997/08/29 17:55:28  curt
+/* Worked on properly aligning the stars.
 /*
+ * Revision 1.2  1997/08/27 21:32:30  curt
+ * Restructured view calculation code.  Added stars.
+ *
  * Revision 1.1  1997/08/27 03:34:48  curt
- * Initial revisio.
+ * Initial revision.
  *
  */

@@ -31,14 +31,6 @@
 #define FG_MAX_STARS 1000
 
 
-/* Define a structure containing star information */
-/* struct STAR {
-    double right_ascension;
-    double declination;
-    double magnitude;
-}; */
-
-
 /* Initialize the Star Management Subsystem */
 void fgStarsInit();
 
@@ -50,10 +42,13 @@ void fgStarsRender();
 
 
 /* $Log$
-/* Revision 1.2  1997/08/27 21:32:30  curt
-/* Restructured view calculation code.  Added stars.
+/* Revision 1.3  1997/08/29 17:55:28  curt
+/* Worked on properly aligning the stars.
 /*
+ * Revision 1.2  1997/08/27 21:32:30  curt
+ * Restructured view calculation code.  Added stars.
+ *
  * Revision 1.1  1997/08/27 03:34:50  curt
- * Initial revisio.
+ * Initial revision.
  *
  */

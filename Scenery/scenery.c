@@ -50,7 +50,7 @@ struct SCENERY scenery;
 /* Initialize the Scenery Management system */
 void fgSceneryInit() {
     /* set the default terrain detail level */
-    scenery.terrain_skip = 2;
+    scenery.terrain_skip = 6;
 }
 
 
@@ -88,9 +88,12 @@ void fgSceneryRender() {
 
 
 /* $Log$
-/* Revision 1.16  1997/08/27 21:32:29  curt
-/* Restructured view calculation code.  Added stars.
+/* Revision 1.17  1997/08/29 17:55:27  curt
+/* Worked on properly aligning the stars.
 /*
+ * Revision 1.16  1997/08/27 21:32:29  curt
+ * Restructured view calculation code.  Added stars.
+ *
  * Revision 1.15  1997/08/27 03:30:32  curt
  * Changed naming scheme of basic shared structures.
  *
