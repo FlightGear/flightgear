@@ -35,7 +35,7 @@
 #include "fg_commands.hxx"
 #include "fg_props.hxx"
 #include "globals.hxx"
-#include "logger.cxx"
+#include "logger.hxx"
 #include "util.hxx"
 #include "viewmgr.hxx"
 
