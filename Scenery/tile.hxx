@@ -58,6 +58,9 @@ public:
     // variable offset data for this object fragment for this frame
     fgCartesianPoint3d tile_offset;
 
+    // saved transformation matrix for this fragment (used by renderer)
+    // GLfloat matrix[16];
+
     // material property pointer
     void *material_ptr;
 
@@ -102,6 +105,9 @@ public:
 
 
 // $Log$
+// Revision 1.6  1998/06/08 17:57:54  curt
+// Working first pass at material proporty sorting.
+//
 // Revision 1.5  1998/06/06 01:09:32  curt
 // I goofed on the log message in the last commit ... now fixed.
 //

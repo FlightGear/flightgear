@@ -110,6 +110,7 @@ int fgObjLoad(char *path, fgTILE *tile) {
     fgFile f;
     int in_fragment, in_faces, ncount, vncount, n1, n2, n3, n4;
     int last1, last2, odd;
+    int i;
 
     o = &current_options;
 
@@ -212,6 +213,14 @@ int fgObjLoad(char *path, fgTILE *tile) {
 		(fgMATERIAL *)fragment.material_ptr = &(*myfind).second;
 	    }
 
+	    // initialize the fragment transformation matrix
+	    /*
+	    for ( i = 0; i < 16; i++ ) {
+		fragment.matrix[i] = 0.0;
+	    }
+	    fragment.matrix[0] = fragment.matrix[5] =
+		fragment.matrix[10] = fragment.matrix[15] = 1.0;
+	    */
 	} else if ( line[0] == 't' ) {
 	    // start a new triangle strip
 
@@ -422,6 +431,9 @@ int fgObjLoad(char *path, fgTILE *tile) {
 
 
 // $Log$
+// Revision 1.12  1998/06/08 17:57:54  curt
+// Working first pass at material proporty sorting.
+//
 // Revision 1.11  1998/06/06 01:09:31  curt
 // I goofed on the log message in the last commit ... now fixed.
 //

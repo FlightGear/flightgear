@@ -305,7 +305,7 @@ void fgTileMgrRender( void ) {
     fgMATERIAL *mtl_ptr;
     list < fgFRAGMENT > :: iterator current;
     list < fgFRAGMENT > :: iterator last;
-    int i, size;
+    int i, j, size;
     int index;
     int culled = 0;
     int drawn = 0;
@@ -367,6 +367,17 @@ void fgTileMgrRender( void ) {
 			frag_ptr->tile_offset.y = t->offset.y;
 			frag_ptr->tile_offset.z = t->offset.z;
 
+			/*
+			frag_ptr->matrix[12] = t->offset.x;
+			frag_ptr->matrix[13] = t->offset.y;
+			frag_ptr->matrix[14] = t->offset.z;
+
+			xglGetFloatv(GL_MODELVIEW_MATRIX, frag_ptr->matrix);
+			for ( j = 1; j < 16; j++ ) {
+			    printf(" a%d = %f\n", j, frag_ptr->matrix[j]);
+			}
+			*/
+
 			mtl_ptr = (fgMATERIAL *)(frag_ptr->material_ptr);
 			// printf(" lookup = %s\n", mtl_ptr->texture_name);
 			if ( mtl_ptr->list_size < FG_MAX_MATERIAL_FRAGS ) {
@@ -410,13 +421,14 @@ void fgTileMgrRender( void ) {
     map < string, fgMATERIAL, less<string> > :: iterator maplast = 
 	material_mgr.material_map.end();
 
+    xglPushMatrix();
+
     while ( mapcurrent != maplast ) {
         // (char *)key = (*mapcurrent).first;
         // (fgMATERIAL)value = (*mapcurrent).second;
 	mtl_ptr = &(*mapcurrent).second;
 
 	last_offset.x = last_offset.y = last_offset.z = -99999999.0;
-	xglPushMatrix();
 
 	size = mtl_ptr->list_size;
 	if ( size > 0 ) {
@@ -436,9 +448,10 @@ void fgTileMgrRender( void ) {
 		    // same tile as last time, no transform necessary
 		} else {
 		    // new tile, new translate
+		    // xglLoadMatrixf( frag_ptr->matrix );
 		    xglPopMatrix();
 		    xglPushMatrix();
-		    xglTranslatef( frag_ptr->tile_offset.x, 
+		    xglTranslatef( frag_ptr->tile_offset.x,  
 				   frag_ptr->tile_offset.y, 
 				   frag_ptr->tile_offset.z ); 
 		}
@@ -459,6 +472,9 @@ void fgTileMgrRender( void ) {
 
 
 // $Log$
+// Revision 1.19  1998/06/08 17:57:54  curt
+// Working first pass at material proporty sorting.
+//
 // Revision 1.18  1998/06/06 01:09:32  curt
 // I goofed on the log message in the last commit ... now fixed.
 //
