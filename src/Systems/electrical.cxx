@@ -201,7 +201,7 @@ FGElectricalConnector::FGElectricalConnector ( SGPropertyNode *node,
 
 // set all switches to the specified state
 void FGElectricalConnector::set_switches( bool state ) {
-    cout << "setting switch state to " << state << endl;
+    // cout << "setting switch state to " << state << endl;
     for ( unsigned int i = 0; i < switches.size(); ++i ) {
         switches[i]->setBoolValue( state );
     }
