@@ -138,11 +138,12 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // turbocharging and reduced by the throttle setting.  According
     // to Dave Luff, minimum throttle at sea level corresponds to 6"
     // manifold pressure.  Assume that this means that minimum MP is
-    // always 20% of ambient pressure.  But we need to produce _zero_
+    // always 20% of ambient pressure. (But that's too much idle
+    // power, so use 10% instead!) But we need to produce _zero_
     // thrust at that setting, so hold onto the "output" value
     // separately.  Ick.
     _mp = pressure * (1 + _boost*(_turbo-1)); // turbocharger
-    float mp = _mp * (0.2 + 0.8 * _throttle); // throttle
+    float mp = _mp * (0.1 + 0.9 * _throttle); // throttle
     _mp *= _throttle;
     if(mp > _maxMP) mp = _maxMP;              // wastegate
 
