@@ -139,6 +139,10 @@ FGBFI::init ()
 			       getThrottle, setThrottle);
   current_properties.tieDouble("/controls/flaps",
 			       getFlaps, setFlaps);
+  current_properties.tieBool  ("/controls/flaps/raise",
+ 			       0, setFlapsRaise);
+  current_properties.tieBool  ("/controls/flaps/lower",
+ 			       0, setFlapsLower);
   current_properties.tieDouble("/controls/aileron",
 			       getAileron, setAileron);
   current_properties.tieDouble("/controls/rudder",
@@ -776,6 +780,24 @@ FGBFI::setFlaps (double flaps)
 {
 				// FIXME: clamp?
   controls.set_flaps(flaps);
+}
+
+
+void
+FGBFI::setFlapsRaise (bool step)
+{
+    if (step)
+	controls.set_flaps(controls.get_flaps() - 0.26);
+    printf ( "Raise: %i\n", step );
+}
+
+
+void
+FGBFI::setFlapsLower (bool step)
+{
+    if (step)
+	controls.set_flaps(controls.get_flaps() + 0.26);
+    printf ( "Lower: %i\n", step );
 }
 
 

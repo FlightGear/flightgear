@@ -116,6 +116,8 @@ public:
 
   static void setThrottle (double throttle);
   static void setFlaps (double flaps);
+  static void setFlapsRaise (bool step);
+  static void setFlapsLower (bool step);
   static void setAileron (double aileron);
   static void setRudder (double rudder);
   static void setElevator (double elevator);

@@ -85,10 +85,10 @@ int FGLaRCsim::update( int multiloop ) {
     }
 
     // copy control positions into the LaRCsim structure
-    Lat_control = controls.get_aileron();
+    Lat_control = controls.get_aileron() / current_options.get_speed_up();
     Long_control = controls.get_elevator();
     Long_trim = controls.get_elevator_trim();
-    Rudder_pedal = controls.get_rudder();
+    Rudder_pedal = controls.get_rudder() / current_options.get_speed_up();
     Flap_handle = 30.0 * controls.get_flaps();
     Throttle_pct = controls.get_throttle( 0 ) * 1.0;
     Brake_pct[0] = controls.get_brake( 1 );

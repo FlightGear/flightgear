@@ -45,11 +45,14 @@ FGRAY::~FGRAY() {
 }
 
 
-// Ray Woodworth's motion chair has between 3 and 5 axes installed.
+// Ray Woodworth (949) 262-9118 has a three axis motion chair.
+//
 // It expects +/- 5V signals for full scale.  In channel order, axes are:
 //	roll, pitch, yaw, sway, surge, heave
 // The drivers are capable of generating (in the same order)
-//	+/- 30deg, 30deg, 15deg, 12in, 12in, 12in
+//	+/- 30deg, 30deg, 30deg, 12in, 12in, 12in
+// The signs of the motion are such that positive volts gives
+//	head right, head back, feet right, body right, body back, body up
 //
 // In this code implementation, the voltage outputs are generated
 // using a ComputerBoards DDA06/Jr card and the associated Linux driver.
@@ -62,7 +65,7 @@ bool FGRAY::gen_message() {
     // cout << "generating RayWoodworth message" << endl;
     FGInterface *f = cur_fdm_state;
     int axis, subaxis;
-    const double fullscale[6] = { -0.8, -0.8, -0.25, /* radians */
+    const double fullscale[6] = { -0.5, -0.5, -0.5, /* radians */
 				  -0.3, -0.3, -0.15  /* meters */ };
 
     /* Figure out how big our timesteps are */
@@ -99,10 +102,12 @@ bool FGRAY::gen_message() {
 	}
 
 	/* Make sure the angles are reasonable onscale */
-	while ( ang_pos < -M_PI ) {
+ 	/* We use an asymmetric mapping so that the chair behaves
+ 	   reasonably when upside down.  Otherwise it oscillates. */
+ 	while ( ang_pos < -2*M_PI/3 ) {
 		ang_pos += 2 * M_PI;
 	}
-	while ( ang_pos > M_PI ) {
+ 	while ( ang_pos >  4*M_PI/3 ) {
 		ang_pos -= 2 * M_PI;
 	}
 
@@ -136,7 +141,7 @@ bool FGRAY::gen_message() {
 		ang_pos -= chair_heading;
 		/* Wash out the error at 5 sec timeconstant because
 		   a standard rate turn is 3 deg/sec and the chair
-		   can represent 15 degrees full scale.  */
+ 		   can just about represent 30 degrees full scale.  */
 		chair_heading += ang_pos * dt * 0.2;
 		/* If they turn fast, at 90 deg error subtract 30 deg */
 		if ( fabs(ang_pos) > M_PI / 2 )

@@ -58,6 +58,7 @@ private:
     double flaps;
     double throttle[MAX_ENGINES];
     double brake[MAX_WHEELS];
+    bool throttle_idle;
 
     inline void CLAMP(double *x, double min, double max ) {
 	if ( *x < min ) { *x = min; }

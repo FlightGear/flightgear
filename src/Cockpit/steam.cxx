@@ -90,7 +90,7 @@ double FGSteam::get_TC_std () { _CatchUp(); return the_TC_std; }
 ////////////////////////////////////////////////////////////////////////
 
 
-int FGSteam::_UpdatesPending = 999;  /* Forces filter to reset */
+int FGSteam::_UpdatesPending = 1000000;  /* Forces filter to reset */
 
 
 void FGSteam::update ( int timesteps )
@@ -147,7 +147,7 @@ void FGSteam::_CatchUp()
 	just to be on the safe side.  Doing it more than once will
 	waste CPU time but doesn't hurt anything really.
 	*/
-	if ( _UpdatesPending == 999 )
+	if ( _UpdatesPending > 999999 )
 	{ FGFeature::register_int (    "Avionics/NAV1/Localizer", &NAV1_LOC );
 	  FGFeature::register_double ( "Avionics/NAV1/Latitude",  &NAV1_Lat );
 	  FGFeature::register_double ( "Avionics/NAV1/Longitude", &NAV1_Lon );
@@ -321,10 +321,8 @@ void FGSteam::_CatchUp()
 > have it tumble when you exceed the usual pitch or bank limits,
 > put in those insidious turning errors ... for now anyway.
 */
-	// cout << "Updates pending = " << _UpdatesPending << endl;
- 	if ( _UpdatesPending > 999 ) {
+ 	if ( _UpdatesPending > 999999 )
 	    the_DG_err = FGBFI::getMagVar();
-	}
  	the_DG_degps = 0.0; /* HACK! */
  	if (dt<1.0) the_DG_err += dt * the_DG_degps;
  	the_DG_deg = FGBFI::getHeading () - the_DG_err;

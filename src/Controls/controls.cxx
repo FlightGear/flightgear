@@ -32,7 +32,8 @@ FGControls::FGControls() :
     aileron( 0.0 ),
     elevator( 0.0 ),
     elevator_trim( 1.969572E-03 ),
-    rudder( 0.0 )
+    rudder( 0.0 ),
+    throttle_idle( true )
 {
     for ( int engine = 0; engine < MAX_ENGINES; engine++ ) {
 	throttle[engine] = 0.0;
@@ -46,11 +47,12 @@ FGControls::FGControls() :
 
 void FGControls::reset_all()
 {
-    controls.set_aileron(0.0);
-    controls.set_elevator(0.0);
-    controls.set_elevator_trim(0.0);
-    controls.set_rudder(0.0);
-    controls.set_throttle(FGControls::ALL_ENGINES, 0.0);
+    set_aileron(0.0);
+    set_elevator(0.0);
+    set_elevator_trim(0.0);
+    set_rudder(0.0);
+    set_throttle(FGControls::ALL_ENGINES, 0.0);
+    throttle_idle = true;
 }
 
 
