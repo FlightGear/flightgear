@@ -128,7 +128,7 @@ enum VIEW_MODES { HUD_VIEW, PANEL_VIEW, CHASE_VIEW, TOWER_VIEW };
 typedef struct  {
   int x;
   int y;
-} POINT;
+} FG_POINT;
 
 // CLO 2/21/98 - added to fix compile error
 typedef struct  {
@@ -136,7 +136,7 @@ typedef struct  {
   int right;
   int top;
   int bottom;
-} RECT;
+} FG_RECT;
 
 typedef struct  {
        // Parametric defined members
@@ -155,7 +155,7 @@ typedef struct  {
   // Pre-calculated members.
   int scr_span;
   int mid_scr;
-  RECT scrn_pos; // Screen rectangle for inicator
+  FG_RECT scrn_pos; // Screen rectangle for inicator
                  //  Replaces previous parameters as:
                  //  scr_pos -> left,bottom
                  //  scr_max -> top, right
@@ -166,7 +166,7 @@ typedef struct  {
 
 typedef struct  {
 	int type;
-  RECT  position;
+  FG_RECT  position;
 	int div_min;
 	int div_max;
 	int orientation;
@@ -178,7 +178,7 @@ typedef struct  {
 
 typedef struct  {
 	int type;
-  POINT scrn_pos;
+  FG_POINT scrn_pos;
 	int scr_width;
 	int scr_height;
 	int scr_hole;
@@ -205,7 +205,7 @@ typedef struct {
 
 typedef struct{
 	int type;
-  POINT scrn_pos;
+  FG_POINT scrn_pos;
 	int scr_width;
 	int scr_hole;
 	int tee_height;
@@ -214,12 +214,12 @@ typedef struct{
 } HUD_horizon, *pHUDhorizon;
 
 typedef struct {
-  POINT scrn_pos;
+  FG_POINT scrn_pos;
   double(*load_value)(void);
 } HUD_control_surfaces, *pHUDControlSurfaces;
 
 typedef struct {
-  POINT scrn_pos;    // ctrl_x, ctrl_y
+  FG_POINT scrn_pos;    // ctrl_x, ctrl_y
   int ctrl_length;
   int orientation;
   int alignment;
@@ -233,7 +233,7 @@ typedef struct {
 
 typedef struct {
 	int type;
-  POINT scrn_pos;
+  FG_POINT scrn_pos;
 	int size;
 	int blink;
 	int justify;
@@ -377,9 +377,14 @@ void fgUpdateHUD2( Hptr hud ); // Future use?
 #endif // _HUD_H  
 
 /* $Log$
-/* Revision 1.14  1998/02/21 14:53:14  curt
-/* Added Charlie's HUD changes.
+/* Revision 1.15  1998/02/23 19:07:57  curt
+/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+/* calculation code between sun display, and other FG sections that use this
+/* for things like lighting.
 /*
+ * Revision 1.14  1998/02/21 14:53:14  curt
+ * Added Charlie's HUD changes.
+ *
  * Revision 1.13  1998/02/20 00:16:22  curt
  * Thursday's tweaks.
  *

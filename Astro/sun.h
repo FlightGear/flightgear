@@ -27,7 +27,10 @@
 #define _SUN_H
 
 
-struct SunPos fgCalcSunPos(struct OrbElements sunParams);
+extern struct fgSUNPOS solarPosition;
+
+
+void fgCalcSunPos (struct OrbElements sunParams);
 extern struct OrbElements pltOrbElements[9];
 
 /* Initialize the Sun */
@@ -41,9 +44,14 @@ void fgSunRender( void );
 
 
 /* $Log$
-/* Revision 1.3  1998/01/22 02:59:29  curt
-/* Changed #ifdef FILE_H to #ifdef _FILE_H
+/* Revision 1.4  1998/02/23 19:07:57  curt
+/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+/* calculation code between sun display, and other FG sections that use this
+/* for things like lighting.
 /*
+ * Revision 1.3  1998/01/22 02:59:29  curt
+ * Changed #ifdef FILE_H to #ifdef _FILE_H
+ *
  * Revision 1.2  1998/01/19 18:40:19  curt
  * Tons of little changes to clean up the code and to remove fatal errors
  * when building with the c++ compiler.

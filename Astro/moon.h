@@ -31,11 +31,8 @@
 #include <Time/fg_time.h>
 #include <math.h>
 
-/* #define X .525731112119133606 */
-/* #define Z .850650808352039932 */
 
-
- /* Initialize the Moon Display management Subsystem */
+/* Initialize the Moon Display management Subsystem */
 void fgMoonInit( void );
 
 /* Draw the Moon */
@@ -51,9 +48,14 @@ extern struct OrbElements pltOrbElements[9];
 
 
 /* $Log$
-/* Revision 1.5  1998/02/02 20:53:21  curt
-/* To version 0.29
+/* Revision 1.6  1998/02/23 19:07:54  curt
+/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+/* calculation code between sun display, and other FG sections that use this
+/* for things like lighting.
 /*
+ * Revision 1.5  1998/02/02 20:53:21  curt
+ * To version 0.29
+ *
  * Revision 1.4  1998/01/22 02:59:27  curt
  * Changed #ifdef FILE_H to #ifdef _FILE_H
  *

@@ -252,7 +252,6 @@ COCKPIT         cockpit_;
 
 SCALAR 		Simtime;
 
-/* #define DEFAULT_TERM_UPDATE_HZ 20 */ /* original value */
 #define DEFAULT_TERM_UPDATE_HZ 20
 #define DEFAULT_MODEL_HZ 120
 #define DEFAULT_END_TIME 3600.
@@ -915,6 +914,11 @@ int fgLaRCsim_2_Flight (fgFLIGHT *f) {
 /* Flight Gear Modification Log
  *
  * $Log$
+ * Revision 1.17  1998/02/23 19:07:58  curt
+ * Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+ * calculation code between sun display, and other FG sections that use this
+ * for things like lighting.
+ *
  * Revision 1.16  1998/02/07 15:29:38  curt
  * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
  * <chotchkiss@namg.us.anritsu.com>

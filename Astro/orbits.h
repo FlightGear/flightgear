@@ -34,14 +34,17 @@
 
 
 
-#define STANDARDEPOCH 2000
-#define PIOVER180	1.74532925199433E-002
+//#define STANDARDEPOCH 2000
 
-struct SunPos {
+typedef struct {
     double xs;
     double ys;
     double dist;
-};
+    double lonSun;
+} fgSUNPOS;
+
+extern fgSUNPOS solarPosition;
+
 
 struct OrbElements {
     double NFirst;		/* longitude of the ascending node first part */
@@ -68,11 +71,10 @@ struct CelestialCoord {
 };
 
 
-/* double fgDegToRad(double angle); */
 double fgCalcEccAnom(double M, double e);
 double fgCalcActTime(struct fgTIME t);
 
-void fgReadOrbElements(struct OrbElements *dest, FILE *src);
+int fgReadOrbElements (struct OrbElements *dest, FILE * src);
 int  fgSolarSystemInit(struct fgTIME t);
 void fgSolarSystemUpdate(struct OrbElements *planets, struct fgTIME t);
 
@@ -81,10 +83,15 @@ void fgSolarSystemUpdate(struct OrbElements *planets, struct fgTIME t);
 
 
 /* $Log$
-/* Revision 1.5  1998/02/12 21:59:35  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.6  1998/02/23 19:07:55  curt
+/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+/* calculation code between sun display, and other FG sections that use this
+/* for things like lighting.
 /*
+ * Revision 1.5  1998/02/12 21:59:35  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.4  1998/02/02 20:53:22  curt
  * To version 0.29
  *

@@ -43,13 +43,14 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <Time/sunpos.h>
-#include <Time/fg_time.h>
+#include <Astro/orbits.h>
 #include <Include/fg_constants.h>
 #include <Main/views.h>
 #include <Math/fg_geodesy.h>
 #include <Math/mat3.h>
 #include <Math/polar.h>
+#include <Time/fg_time.h>
+#include <Time/sunpos.h>
 
 
 #undef E
@@ -96,8 +97,8 @@
  */
 #define MeanObliquity (23.440592*(FG_2PI/360))
 
-static double solve_keplers_equation(double);
-static double sun_ecliptic_longitude(time_t);
+/* static double solve_keplers_equation(double); */
+/* static double sun_ecliptic_longitude(time_t); */
 static void   ecliptic_to_equatorial(double, double, double *, double *);
 static double julian_date(int, int, int);
 static double GST(time_t);
@@ -106,6 +107,7 @@ static double GST(time_t);
  * solve Kepler's equation via Newton's method
  * (after duffett-smith, section 47)
  */
+/*
 static double solve_keplers_equation(double M) {
     double E;
     double delta;
@@ -119,13 +121,14 @@ static double solve_keplers_equation(double M) {
 
     return E;
 }
+*/
 
 
 /* compute ecliptic longitude of sun (in radians) (after
  * duffett-smith, section 47) */
-
+/*
 static double sun_ecliptic_longitude(time_t ssue) {
-    /* time_t ssue;              seconds since unix epoch */
+    // time_t ssue;              //  seconds since unix epoch
     double D, N;
     double M_sun, E;
     double v;
@@ -144,6 +147,7 @@ static double sun_ecliptic_longitude(time_t ssue) {
 
     return (v + OmegaBar_g);
 }
+*/
 
 
 /* convert from ecliptic to equatorial coordinates (after
@@ -239,12 +243,13 @@ void fgSunPosition(time_t ssue, double *lon, double *lat) {
     /* double *lat;            (return) latitude        */
     /* double *lon;            (return) longitude       */
 
-    double lambda;
+    /* double lambda; */
     double alpha, delta;
     double tmp;
 
-    lambda = sun_ecliptic_longitude(ssue);
-    ecliptic_to_equatorial(lambda, 0.0, &alpha, &delta);
+    /* lambda = sun_ecliptic_longitude(ssue); */
+    /* ecliptic_to_equatorial(lambda, 0.0, &alpha, &delta); */
+    ecliptic_to_equatorial (solarPosition.lonSun, 0.0, &alpha, &delta);
 
     tmp = alpha - (FG_2PI/24)*GST(ssue);
     if (tmp < -FG_PI) {
@@ -373,9 +378,14 @@ void fgUpdateSunPos( void ) {
 
 
 /* $Log$
-/* Revision 1.25  1998/02/09 15:07:53  curt
-/* Minor tweaks.
+/* Revision 1.26  1998/02/23 19:08:00  curt
+/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+/* calculation code between sun display, and other FG sections that use this
+/* for things like lighting.
 /*
+ * Revision 1.25  1998/02/09 15:07:53  curt
+ * Minor tweaks.
+ *
  * Revision 1.24  1998/01/27 00:48:07  curt
  * Incorporated Paul Bleisch's <bleisch@chromatic.com> new debug message
  * system and commandline/config file processing code.

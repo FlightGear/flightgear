@@ -38,7 +38,7 @@
 struct CelestialCoord moonPos;
 
 static float xMoon, yMoon, zMoon;
-static GLint moon;
+static GLint moon = 0;
 
 
 
@@ -67,8 +67,8 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
   /* calculate the angle between ecliptic and equatorial coordinate
    * system, in Radians */
   actTime = fgCalcActTime(t);
-  /* ecl = DEG_TO_RAD * (23.4393 - 3.563E-7 * actTime);*/
-  ecl = 0.409093 - 6.2186E-9 * actTime;
+  ecl = ((DEG_TO_RAD * 23.4393) - (DEG_TO_RAD * 3.563E-7) * actTime);
+  /*ecl = 0.409093 - 6.2186E-9 * actTime; */
 							
   /* calculate the eccentric anomaly */
   eccAnom = fgCalcEccAnom(params.M, params.e);
@@ -80,8 +80,10 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
   r = sqrt(xv*xv + yv*yv);
   
   /* estimate the geocentric rectangular coordinates here */
-  xh = r * (cos(params.N) * cos(v + params.w) - sin(params.N) * sin(v + params.w) * cos(params.i));
-  yh = r * (sin(params.N) * cos(v + params.w) + cos(params.N) * sin(v + params.w) * cos(params.i));
+  xh = r * (cos (params.N) * cos (v + params.w) -
+	    sin (params.N) * sin (v + params.w) * cos (params.i));
+  yh = r * (sin (params.N) * cos (v + params.w) +
+	    cos (params.N) * sin (v + params.w) * cos (params.i));
   zh = r * (sin(v + params.w) * sin(params.i));
   
   /* calculate the ecliptic latitude and longitude here */
@@ -90,7 +92,7 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
 
   /* calculate a number of perturbations, i.e. disturbances caused by
    * the gravitational influence of the sun and the other mayor
-   * planets, the largest even have their own names */
+   * planets. The largest of these even have their own names */
   Ls = sunParams.M + sunParams.w;
   Lm =    params.M +    params.w + params.N;
   D = Lm - Ls;
@@ -155,24 +157,19 @@ struct CelestialCoord fgCalculateMoon(struct OrbElements params,
 
      
 
-  topocCoord.RightAscension = geocCoord.RightAscension - mpar * rho * cos(gclat) * sin(HA) / cos(geocCoord.Declination);
-  topocCoord.Declination = geocCoord.Declination - mpar * rho * sin(gclat) * sin(g - geocCoord.Declination) / sin(g);
+  topocCoord.RightAscension = geocCoord.RightAscension -
+      mpar * rho * cos (gclat) * sin (HA) / cos (geocCoord.Declination);
+  topocCoord.Declination = geocCoord.Declination -
+      mpar * rho * sin (gclat) * sin (g - geocCoord.Declination) / sin (g);
   return topocCoord;
 }
 
 
 void fgMoonInit( void ) {
-    /* struct fgLIGHT *l; */
-    static int dl_exists = 0;
-    /* GLfloat white[4] = { 1.0, 1.0, 1.0, 1.0 }; */
-    GLfloat moonColor[4] = {0.85, 0.65, 0.05, 1.0};
+    GLfloat moonColor[4] = {0.85, 0.75, 0.35, 1.0};
     GLfloat black[4] = { 0.0, 0.0, 0.0, 1.0 };
 
     fgPrintf( FG_ASTRO, FG_INFO, "Initializing the Moon\n");
-
-    /* l = &cur_light_params; */
-
-    /* position the moon */
     fgSolarSystemUpdate(&(pltOrbElements[1]), cur_time_params);
     moonPos = fgCalculateMoon(pltOrbElements[1], pltOrbElements[0], 
 			      cur_time_params);
@@ -184,52 +181,41 @@ void fgMoonInit( void ) {
     yMoon = 60000.0 * sin(moonPos.RightAscension) * cos(moonPos.Declination);
     zMoon = 60000.0 * sin(moonPos.Declination);
 
-    if ( !dl_exists ) {
-	dl_exists = 1;
-
-	/* printf("First time through, creating moon display list\n"); */
-
-	moon = xglGenLists(1);
-	xglNewList(moon, GL_COMPILE );
-
-	/* xglMaterialfv(GL_FRONT, GL_AMBIENT, l->scene_clear);
-	   xglMaterialfv(GL_FRONT, GL_DIFFUSE, moon_color); */
-	xglMaterialfv(GL_FRONT, GL_AMBIENT, black);
-	xglMaterialfv(GL_FRONT, GL_DIFFUSE, moonColor);
-
-	glutSolidSphere(1.0, 10, 10);
-
-	xglEndList();
+    if (moon) {
+ 	xglDeleteLists (moon, 1);
     }
+
+    moon = xglGenLists (1);
+    xglNewList (moon, GL_COMPILE);
+  
+    xglMaterialfv (GL_FRONT, GL_AMBIENT, black);
+    xglMaterialfv (GL_FRONT, GL_DIFFUSE, moonColor);
+    xglPushMatrix ();
+    xglTranslatef (xMoon, yMoon, zMoon);
+    xglScalef (1400, 1400, 1400);
+  
+    glutSolidSphere (1.0, 10, 10);
+    xglPopMatrix ();
+    xglEndList ();
 }
 
 
 /* Draw the moon */
 void fgMoonRender( void ) {
-    /* struct fgLIGHT *l; */
-
-    /* printf("Rendering moon\n"); */
-
-    /* l = &cur_light_params; */
-
-    /* xglMaterialfv(GL_FRONT, GL_AMBIENT, l->sky_color ); */
-    /* xglMaterialfv(GL_FRONT, GL_DIFFUSE, white); */
-
-    xglPushMatrix();
-    xglTranslatef(xMoon, yMoon, zMoon);
-    xglScalef(1400, 1400, 1400);
-
     xglCallList(moon);
-
-    xglPopMatrix();
 }
 
 
 /* $Log$
-/* Revision 1.6  1998/02/07 15:29:32  curt
-/* Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.7  1998/02/23 19:07:54  curt
+/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+/* calculation code between sun display, and other FG sections that use this
+/* for things like lighting.
 /*
+ * Revision 1.6  1998/02/07 15:29:32  curt
+ * Incorporated HUD changes and struct/typedef changes from Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.5  1998/02/02 20:53:21  curt
  * To version 0.29
  *

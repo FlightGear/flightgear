@@ -25,26 +25,23 @@
 #include <GL/glut.h>
 #include <XGL/xgl.h>
 
-#include <Time/fg_time.h>
-#include <Main/views.h>
 #include <Astro/orbits.h>
 #include <Astro/sun.h>
-#include <Main/fg_debug.h>
 #include <Include/fg_constants.h>
+#include <Main/fg_debug.h>
+#include <Main/views.h>
+#include <Time/fg_time.h>
+#include <Time/sunpos.h>
 
 GLint sun_obj = 0;
 
 static struct CelestialCoord sunPos;
 
-float xSun, ySun, zSun;
+fgSUNPOS solarPosition;
 
-struct SunPos fgCalcSunPos(struct OrbElements params)
+void fgCalcSunPos(struct OrbElements params)
 {
-    double
-    	EccAnom, lonSun,
-        xv, yv, v, r;
-    struct SunPos
-    	solarPosition;
+    double EccAnom, xv, yv, v, r;
 
     /* calculate the eccentric anomaly */
     EccAnom = fgCalcEccAnom(params.M, params.e);
@@ -56,37 +53,31 @@ struct SunPos fgCalcSunPos(struct OrbElements params)
     r = sqrt(xv*xv + yv*yv);
 
     /* calculate the the Sun's true longitude (lonsun) */
-    lonSun = v + params.w;
+    solarPosition.lonSun = v + params.w;
 
-	/* convert true longitude and distance to ecliptic rectangular geocentric
-      coordinates (xs, ys) */
-    solarPosition.xs = r * cos(lonSun);
-    solarPosition.ys = r * sin(lonSun);
+    /* convert true longitude and distance to ecliptic rectangular
+      geocentric coordinates (xs, ys) */
+    solarPosition.xs = r * cos (solarPosition.lonSun);
+    solarPosition.ys = r * sin (solarPosition.lonSun);
     solarPosition.dist = r;
-    return solarPosition;
+    /* return solarPosition; */
 }
 
 
 struct CelestialCoord fgCalculateSun(struct OrbElements params, struct fgTIME t)
 {
-	struct CelestialCoord
-		result;
-    struct SunPos
-    	SolarPosition;
-    double
-    	xe, ye, ze, ecl, actTime;
+    struct CelestialCoord result;
+    double xe, ye, ze, ecl, actTime;
 
     /* calculate the angle between ecliptic and equatorial coordinate system */
     actTime = fgCalcActTime(t);
-    ecl = DEG_TO_RAD * (23.4393 - 3.563E-7 * actTime);			// Angle now in Rads
+    ecl = DEG_TO_RAD * (23.4393 - 3.563E-7 * actTime);	// Angle now in Rads
 
-    /* calculate the sun's ecliptic position */
-    SolarPosition = fgCalcSunPos(params);
-
-	/* convert ecliptic coordinates to equatorial rectangular geocentric coordinates */
-    xe = SolarPosition.xs;
-    ye = SolarPosition.ys * cos(ecl);
-    ze = SolarPosition.ys * sin(ecl);
+    /* convert ecliptic coordinates to equatorial rectangular
+       geocentric coordinates */
+    xe = solarPosition.xs;
+    ye = solarPosition.ys * cos (ecl);
+    ze = solarPosition.ys * sin (ecl);
 
     /* and finally... Calulate Right Ascention and Declination */
     result.RightAscension = atan2( ye, xe);
@@ -100,6 +91,7 @@ void fgSunInit( void ) {
     struct fgLIGHT *l;
     struct fgTIME *t;
     struct fgVIEW *v;  
+    float xSun, ySun, zSun;
 
     /* GLfloat color[4] = { 1.00, 1.00, 1.00, 1.00 }; */
     double x_2, x_4, x_8, x_10;
@@ -112,8 +104,13 @@ void fgSunInit( void ) {
 
     fgPrintf( FG_ASTRO, FG_INFO, "  Initializing the Sun\n");
 
+    // Calculate basic sun position
     fgSolarSystemUpdate(&(pltOrbElements[0]), cur_time_params);
     sunPos = fgCalculateSun(pltOrbElements[0], cur_time_params);
+
+    // Calculate additional sun position parameters based on the above
+    // position that are needed by other parts of FG
+    fgUpdateSunPos();
 
     fgPrintf( FG_ASTRO, FG_INFO,
 	      "Sun found at %f (ra), %f (dec)\n",
@@ -162,29 +159,12 @@ void fgSunInit( void ) {
               "Sun Angle       : %f\n" ,
               amb[0], amb[1], amb[2], ambient, l->sun_angle);
 
-    /* set lighting parameters */
-    /*xglLightfv(GL_LIGHT0, GL_AMBIENT, color );
-      xglLightfv(GL_LIGHT0, GL_DIFFUSE, color );
-      xglMaterialfv(GL_FRONT, GL_AMBIENT, amb);
-      xglMaterialfv(GL_FRONT, GL_DIFFUSE, diff); 
-      xglMaterialfv(GL_FRONT, GL_SHININESS, diff);
-      xglMaterialfv(GL_FRONT, GL_EMISSION, diff);
-      xglMaterialfv(GL_FRONT, GL_SPECULAR, diff); */
-
-    /* xglDisable( GL_LIGHTING ); */
-
     xglPushMatrix();
     xglTranslatef(xSun, ySun, zSun);
     xglScalef(1400, 1400, 1400);
-
-    /*xglColor3f(0.85, 0.65, 0.05);*/
     xglColor3f(amb[0], amb[1], amb[2]); 
     glutSolidSphere(1.0, 10, 10);
-
     xglPopMatrix();
-
-    /* xglEnable( GL_LIGHTING ); */
-
     xglEndList();
 }
 
@@ -196,10 +176,15 @@ void fgSunRender( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/02/12 21:59:39  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.7  1998/02/23 19:07:56  curt
+/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+/* calculation code between sun display, and other FG sections that use this
+/* for things like lighting.
 /*
+ * Revision 1.6  1998/02/12 21:59:39  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.5  1998/02/02 20:53:24  curt
  * To version 0.29
  *

@@ -5,7 +5,7 @@
 #---------------------------------------------------------------------------
 
 FG_VERSION_MAJOR = 0
-FG_VERSION_MINOR = 35
+FG_VERSION_MINOR = 36
 FG_VERSION = $(FG_VERSION_MAJOR).$(FG_VERSION_MINOR)
 
 
@@ -38,8 +38,12 @@ TAR = tar
 # -g           - Compile with debugging symbols
 # -Wall        - Enable full compiler warnings
 # -O2          - Enable compiler optimization
-# -O3 -fomit-frame-pointer -funroll-all-loops -ffast-math
-#              - Other potential compiler optimization flags
+#
+# Other potential compiler optimization flags:
+#
+# -O3 -fPIC -funroll-loops -mpentium -malign-loops=2
+# -malign-jumps=2 -malign-functions=2 -fexpensive-optimizations
+# -pedantic -ffast-math
 #
 #---------------------------------------------------------------------------
 

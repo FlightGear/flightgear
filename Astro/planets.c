@@ -43,46 +43,37 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
                                         struct OrbElements theSun,
                                         struct fgTIME t, int idx)
 {
-   struct CelestialCoord
-		result;
+    struct CelestialCoord result;
 
-    struct SunPos
-    	SolarPosition;
+    fgSUNPOS SolarPosition;
 
-	double
-        eccAnom, r, v, ecl, actTime, R, s, ir, Nr, B, FV, ring_magn,
+    double eccAnom, r, v, ecl, actTime, R, s, ir, Nr, B, FV, ring_magn,
         xv, yv, xh, yh, zh, xg, yg, zg, xe, ye, ze;
 
-      actTime = fgCalcActTime(t);
-      /* calculate the angle between ecliptic and equatorial coordinate system */
-      /* ecl = DEG_TO_RAD * (23.4393 - 3.563E-7 * actTime); */
-      ecl = 0.409093 - 6.2186E-9 * actTime;
+    actTime = fgCalcActTime(t);
+    /*calculate the angle between ecliptic and equatorial coordinate system */
+    ecl = DEG_TO_RAD * (23.4393 - 3.563E-7 * actTime);
 
     /* calculate the eccentric anomaly */
-	eccAnom  = fgCalcEccAnom(planet.M, planet.e);
+    eccAnom  = fgCalcEccAnom(planet.M, planet.e);
 
     /* calculate the planets distance (r) and true anomaly (v) */
     xv = planet.a * (cos(eccAnom) - planet.e);
     yv = planet.a * (sqrt(1.0 - planet.e*planet.e) * sin(eccAnom));
     v = atan2(yv, xv);
     r = sqrt ( xv*xv + yv*yv);
-
+    
     /* calculate the planets position in 3-dimensional space */
-    xh = r * ( cos(planet.N) * cos(v+planet.w) - sin(planet.N) * sin(v+planet.w) * cos(planet.i));
-    yh = r * ( sin(planet.N) * cos(v+planet.w) + cos(planet.N) * sin(v+planet.w) * cos(planet.i));
+    xh = r * (cos (planet.N) * cos (v + planet.w) -
+ 	      sin (planet.N) * sin (v + planet.w) * cos (planet.i));
+    yh = r * (sin (planet.N) * cos (v + planet.w) +
+ 	      cos (planet.N) * sin (v + planet.w) * cos (planet.i));
     zh = r * ( sin(v+planet.w) * sin(planet.i));
 
     /* calculate the ecliptic longitude and latitude */
 
-    /*
-    lonecl = atan2(yh, xh);
-    latecl = atan2(zh, sqrt ( xh*xh + yh*yh));
-    */
-    /* calculate the solar position */
-
-    SolarPosition = fgCalcSunPos(theSun);
-    xg = xh + SolarPosition.xs;
-    yg = yh + SolarPosition.ys;
+    xg = xh + solarPosition.xs;
+    yg = yh + solarPosition.ys;
     zg = zh;
 
     xe = xg;
@@ -91,7 +82,6 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 
     result.RightAscension = atan2(ye,xe);
     result.Declination = atan2(ze, sqrt(xe*xe + ye*ye));
-
 	 
     /* Let's calculate the brightness of the planet */
     R = sqrt ( xg*xg + yg*yg + zg*zg);
@@ -117,7 +107,9 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 	ir = 0.4897394;
 	Nr = 2.9585076 + 6.6672E-7*actTime;
 	
-	B = asin ( sin (result.Declination) * cos(ir) - cos(result.Declination) * sin (ir) * sin (result.RightAscension - Nr));
+	B = asin (sin (result.Declination) * cos (ir) -
+		  cos (result.Declination) * sin (ir) *
+		  sin (result.RightAscension - Nr));
 	ring_magn = -2.6 * sin (fabs(B)) + 1.2 * pow(sin(B),2);
 	result.magnitude = -9.0 + 5*log10( r*R ) + 0.044 * FV + ring_magn;
 	break;
@@ -145,15 +137,18 @@ struct CelestialCoord fgCalculatePlanet(struct OrbElements planet,
 
 void fgPlanetsInit( void )
 {
+  struct fgLIGHT *l;
   int i;
   struct CelestialCoord pltPos;
   double magnitude;
 
+  l = &cur_light_params;
   /* if the display list was already built during a previous init,
-     recycle it */
+     then recycle it */
 
-  if (planets)
+  if (planets) {
       xglDeleteLists(planets, 1);
+  }
 
   planets = xglGenLists(1);
   xglNewList( planets, GL_COMPILE );
@@ -165,10 +160,6 @@ void fgPlanetsInit( void )
     fgSolarSystemUpdate(&(pltOrbElements[i]), cur_time_params);
     pltPos = fgCalculatePlanet(pltOrbElements[i], 
 			       pltOrbElements[0], cur_time_params, i);
-    
-    /* give the planets a temporary color, for testing purposes */
-    /* xglColor3f( 1.0, 0.0, 0.0); */
-    /* scale magnitudes to (0.0 - 1.0) */
     
     magnitude = (0.0 - pltPos.magnitude) / 5.0 + 1.0;
     
@@ -182,15 +173,24 @@ void fgPlanetsInit( void )
     if ( magnitude > 1.0 ) { magnitude = 1.0; }
     if ( magnitude < 0.0 ) { magnitude = 0.0; }
     
-    
-    xglColor3f(magnitude, magnitude, magnitude);
-    /* xglColor3f(1.0, 1.0,1.0); */
-    
-    xglVertex3f( 50000.0 * cos(pltPos.RightAscension) * 
-		           cos(pltPos.Declination),
-		 50000.0 * sin(pltPos.RightAscension) *
-		           cos(pltPos.Declination),
-		 50000.0 * sin(pltPos.Declination) );
+    /* Add planets to the display list, based on sun_angle and current
+       magnitude It's pretty experimental... */
+
+    if ((double) (l->sun_angle - FG_PI_2) > 
+	((magnitude - 1.0) * -20 * DEG_TO_RAD))
+ 	{
+ 	    xglColor3f (magnitude, magnitude, magnitude);
+ 	    printf ("Sun Angle to Horizon (in Rads) = %f\n", 
+		    (double) (l->sun_angle - FG_PI_2));
+ 	    printf ("Transformed Magnitude is :%f  %f\n", 
+		    magnitude, (magnitude - 1.0) * -20 * DEG_TO_RAD);
+ 
+ 	    xglVertex3f (50000.0 * cos (pltPos.RightAscension) *
+ 			 cos (pltPos.Declination),
+ 			 50000.0 * sin (pltPos.RightAscension) *
+ 			 cos (pltPos.Declination),
+ 			 50000.0 * sin (pltPos.Declination));
+ 	}
   }
   xglEnd();
   xglEndList();
@@ -204,10 +204,15 @@ void fgPlanetsRender( void ) {
 
 
 /* $Log$
-/* Revision 1.6  1998/02/12 21:59:36  curt
-/* Incorporated code changes contributed by Charlie Hotchkiss
-/* <chotchkiss@namg.us.anritsu.com>
+/* Revision 1.7  1998/02/23 19:07:55  curt
+/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+/* calculation code between sun display, and other FG sections that use this
+/* for things like lighting.
 /*
+ * Revision 1.6  1998/02/12 21:59:36  curt
+ * Incorporated code changes contributed by Charlie Hotchkiss
+ * <chotchkiss@namg.us.anritsu.com>
+ *
  * Revision 1.5  1998/02/03 23:20:12  curt
  * Lots of little tweaks to fix various consistency problems discovered by
  * Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper

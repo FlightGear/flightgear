@@ -211,6 +211,21 @@ int fgInitSubsystems( void ) {
     // FG_Runway_altitude = 920.0 + 100;
     // FG_Altitude = FG_Runway_altitude + 3.758099;
 
+    // probably interesting for european team members
+    // That is: If I can get the scenery to work -;) (Durk)
+ 
+    // Initial Position: Groningen Airport Eelde, the netherlands
+    // FG_Longitude = ( 6.583333 ) * DEG_TO_RAD;
+    // FG_Latitude  = (   53.125 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 920.0;
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
+ 
+    // Initial Position: Schiphol Amsterdam Airport, the netherlands
+    // FG_Longitude = ( -4.7641667 ) * DEG_TO_RAD;
+    // FG_Latitude  = (   52.308056 ) * DEG_TO_RAD;
+    // FG_Runway_altitude = 920.0;
+    // FG_Altitude = FG_Runway_altitude + 3.758099;
+
     // Test Position
     // FG_Longitude = ( -111.18 ) * DEG_TO_RAD;
     // FG_Latitude  = (   33.70 ) * DEG_TO_RAD;
@@ -281,9 +296,6 @@ int fgInitSubsystems( void ) {
     fgViewInit(v);
     fgViewUpdate(f, v, l);
 
-    /* Initialize shared sun position and sun_vec */
-    fgEventRegister( "fgUpdateSunPos()", fgUpdateSunPos, FG_EVENT_READY, 1000 );
-
     /* Initialize the weather modeling subsystem */
     fgWeatherInit();
 
@@ -312,7 +324,7 @@ int fgInitSubsystems( void ) {
     fgEventRegister("fgPlanetsInit()", fgPlanetsInit, FG_EVENT_READY, 600000);
 
     // Initialize the sun's position 
-    fgEventRegister("fgSunInit()", fgSunInit, FG_EVENT_READY, 60000 );
+    fgEventRegister("fgSunInit()", fgSunInit, FG_EVENT_READY, 30000 );
 
     // Intialize the moon's position
     fgEventRegister( "fgMoonInit()", fgMoonInit, FG_EVENT_READY, 600000 );
@@ -381,9 +393,14 @@ int fgInitSubsystems( void ) {
 
 
 /* $Log$
-/* Revision 1.48  1998/02/21 14:53:15  curt
-/* Added Charlie's HUD changes.
+/* Revision 1.49  1998/02/23 19:07:59  curt
+/* Incorporated Durk's Astro/ tweaks.  Includes unifying the sun position
+/* calculation code between sun display, and other FG sections that use this
+/* for things like lighting.
 /*
+ * Revision 1.48  1998/02/21 14:53:15  curt
+ * Added Charlie's HUD changes.
+ *
  * Revision 1.47  1998/02/19 13:05:53  curt
  * Incorporated some HUD tweaks from Michelle America.
  * Tweaked the sky's sunset/rise colors.
