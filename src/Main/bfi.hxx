@@ -111,6 +111,8 @@ public:
   static double getElevator ();
   static double getElevatorTrim ();
   static double getBrake ();
+  static double getLeftBrake ();
+  static double getRightBrake ();
 
   static void setThrottle (double throttle);
   static void setFlaps (double flaps);
@@ -119,6 +121,8 @@ public:
   static void setElevator (double elevator);
   static void setElevatorTrim (double trim);
   static void setBrake (double brake);
+  static void setLeftBrake (double brake);
+  static void setRightBrake (double brake);
 
 
 				// Autopilot

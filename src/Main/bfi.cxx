@@ -149,6 +149,10 @@ FGBFI::init ()
 			       getElevatorTrim, setElevatorTrim);
   current_properties.tieDouble("/controls/brake",
 			       getBrake, setBrake);
+  current_properties.tieDouble("/controls/left-brake",
+			       getLeftBrake, setLeftBrake);
+  current_properties.tieDouble("/controls/right-brake",
+			       getRightBrake, setRightBrake);
 
 				// Autopilot
   current_properties.tieBool("/autopilot/locks/altitude",
@@ -509,7 +513,7 @@ double
 FGBFI::getAGL ()
 {
   return current_aircraft.fdm_state->get_Altitude()
-	 - scenery.cur_elev * METER_TO_FEET;
+	 - (scenery.cur_elev * METER_TO_FEET);
 }
 
 
@@ -866,7 +870,7 @@ double
 FGBFI::getBrake ()
 {
 				// FIXME: add brake selector
-  return controls.get_brake(0);
+  return controls.get_brake(2);
 }
 
 
@@ -876,10 +880,50 @@ FGBFI::getBrake ()
 void
 FGBFI::setBrake (double brake)
 {
-				// FIXME: clamp?
-				// FIXME: allow brake selection
+  controls.set_brake(FGControls::ALL_WHEELS, brake);
+}
+
+
+/**
+ * Get the left brake, from 0.0 (none) to 1.0 (full).
+ */
+double
+FGBFI::getLeftBrake ()
+{
+  return controls.get_brake(0);
+}
+
+
+/**
+ * Set the left brake, from 0.0 (none) to 1.0 (full).
+ */
+void
+FGBFI::setLeftBrake (double brake)
+{
   controls.set_brake(0, brake);
 }
+
+
+/**
+ * Get the right brake, from 0.0 (none) to 1.0 (full).
+ */
+double
+FGBFI::getRightBrake ()
+{
+  return controls.get_brake(1);
+}
+
+
+/**
+ * Set the right brake, from 0.0 (none) to 1.0 (full).
+ */
+void
+FGBFI::setRightBrake (double brake)
+{
+  controls.set_brake(1, brake);
+}
+
+
 
 
 
