@@ -64,6 +64,7 @@ FGNavCom::FGNavCom() :
     nav_target_radial(0.0),
     nav_target_radial_true(0.0),
     nav_target_auto_hdg(0.0),
+    nav_gs_rate_of_climb(0.0),
     nav_vol_btn(0.0),
     nav_ident_btn(true),
     horiz_vel(0.0),
@@ -210,6 +211,9 @@ FGNavCom::bind ()
 
     snprintf(propname, 256, "/radios/nav[%d]/heading-needle-deflection", index);
     fgTie( propname, this, &FGNavCom::get_nav_cdi_deflection );
+
+    snprintf(propname, 256, "/radios/nav[%d]/crosstrack-error-m", index);
+    fgTie( propname, this, &FGNavCom::get_nav_cdi_xtrack_error );
 
     snprintf(propname, 256, "/radios/nav[%d]/has-gs", index);
     fgTie( propname, this, &FGNavCom::get_nav_has_gs );
@@ -475,22 +479,19 @@ FGNavCom::update(double dt)
         }
 
         // determine the heading adjustment needed.
-        double adjustment = get_nav_cdi_deflection()
-            * (nav_loc_dist * SG_METER_TO_NM);
-        SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
-
-#if 0
-        // CLO - 01/24/2004 - This #ifdef'd out code makes no sense to
-        // me.  Someone please justify it and explain why it should be
-        // here if they want this reenabled.
-
-        // clamp closer when inside cone when beyond 5km...
-        if ( nav_loc_dist > 5000 ) {
-            double clamp_angle = fabs(get_nav_cdi_deflection()) * 3;
-            if (clamp_angle < 30)
-                SG_CLAMP_RANGE( adjustment, -clamp_angle, clamp_angle);
+        // over 8km scale by 3.0 
+        //    (3 is chosen because max deflection is 10
+        //    and 30 is clamped angle to radial)
+        // under 8km scale by 10.0
+        //    because the overstated error helps drive it to the radial in a 
+        //    moderate cross wind.
+        double adjustment = 0.0;
+        if (nav_loc_dist > 8000) {
+            adjustment = get_nav_cdi_deflection() * 3.0;
+        } else {
+            adjustment = get_nav_cdi_deflection() * 10.0;
         }
-#endif
+        SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
         
         // determine the target heading to fly to intercept the
         // tgt_radial
@@ -516,16 +517,19 @@ FGNavCom::update(double dt)
         // estimate horizontal speed towards ILS in meters per minute
         double dist = last_x - x;
         last_x = x;
-        double new_vel = ( dist / dt );
+        if ( dt > 0.0 ) {
+            // avoid nan
+            double new_vel = ( dist / dt );
  
-        horiz_vel = 0.75 * horiz_vel + 0.25 * new_vel;
-        // double horiz_vel = cur_fdm_state->get_V_ground_speed()
-        //    * SG_FEET_TO_METER * 60.0;
-        // double horiz_vel = airspeed_node->getFloatValue()
-        //    * SG_FEET_TO_METER * 60.0;
+            horiz_vel = 0.75 * horiz_vel + 0.25 * new_vel;
+            // double horiz_vel = cur_fdm_state->get_V_ground_speed()
+            //    * SG_FEET_TO_METER * 60.0;
+            // double horiz_vel = airspeed_node->getFloatValue()
+            //    * SG_FEET_TO_METER * 60.0;
 
-        nav_gs_rate_of_climb = -sin( des_angle * SGD_DEGREES_TO_RADIANS )
-            * horiz_vel * SG_METER_TO_FEET;
+            nav_gs_rate_of_climb = -sin( des_angle * SGD_DEGREES_TO_RADIANS )
+                * horiz_vel * SG_METER_TO_FEET;
+        }
     } else {
 	nav_inrange = false;
 	// cout << "not picking up vor. :-(" << endl;
@@ -771,6 +775,33 @@ double FGNavCom::get_nav_cdi_deflection() const {
     return r;
 }
 
+// return the amount of cross track distance error, returns a meters
+double FGNavCom::get_nav_cdi_xtrack_error() const {
+    double r, m;
+
+    if ( nav_inrange
+         && nav_serviceable->getBoolValue() && cdi_serviceable->getBoolValue() )
+    {
+        r = nav_radial - nav_target_radial;
+	// cout << "Target radial = " << nav_target_radial 
+	//     << "  Actual radial = " << nav_radial
+        //     << "  r = " << r << endl;
+    
+	while ( r >  180.0 ) { r -= 360.0;}
+	while ( r < -180.0 ) { r += 360.0;}
+	if ( fabs(r) > 90.0 )
+	    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+
+        r = -r;                 // reverse, since radial is outbound
+
+        m = nav_loc_dist * sin(r * SGD_DEGREES_TO_RADIANS);
+
+    } else {
+	m = 0.0;
+    }
+
+    return m;
+}
 
 // return the amount of glide slope needle deflection (.i.e. the
 // number of degrees we are off the glide slope * 5.0

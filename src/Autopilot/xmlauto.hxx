@@ -176,6 +176,35 @@ public:
 
 
 /**
+ * Predictor - calculates value in x seconds future.
+ */
+
+class FGPredictor : public FGXMLAutoComponent {
+
+private:
+
+    // proportional component data
+    double last_value;
+    double average;
+    double seconds;
+    double filter_gain;
+
+    // debug flag
+    bool debug;
+
+    // Input values
+    double ivalue;                 // input value
+    
+public:
+
+    FGPredictor( SGPropertyNode *node );
+    ~FGPredictor() {}
+
+    void update( double dt );
+};
+
+
+/**
  * Model an autopilot system.
  * 
  */

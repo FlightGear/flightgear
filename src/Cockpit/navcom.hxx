@@ -237,6 +237,7 @@ public:
     inline double get_nav_target_gs() const { return nav_target_gs; }
     inline double get_nav_twist() const { return nav_twist; }
     double get_nav_cdi_deflection() const;
+    double get_nav_cdi_xtrack_error() const;
     double get_nav_gs_deflection() const;
     inline double get_nav_vol_btn() const { return nav_vol_btn; }
     inline bool get_nav_ident_btn() const { return nav_ident_btn; }

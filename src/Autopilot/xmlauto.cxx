@@ -491,6 +491,86 @@ void FGPISimpleController::update( double dt ) {
 }
 
 
+FGPredictor::FGPredictor ( SGPropertyNode *node ):
+    debug( false ),
+    ivalue( 0.0 ),
+    last_value ( 999999999.9 ),
+    average ( 0.0 ),
+    seconds( 0.0 ),
+    filter_gain( 0.0 )
+{
+    int i;
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+        } else if ( cname == "debug" ) {
+            debug = child->getBoolValue();
+        } else if ( cname == "input" ) {
+            input_prop = fgGetNode( child->getStringValue(), true );
+        } else if ( cname == "seconds" ) {
+            seconds = child->getDoubleValue();
+        } else if ( cname == "filter-gain" ) {
+            filter_gain = child->getDoubleValue();
+        } else if ( cname == "output" ) {
+            SGPropertyNode *tmp = fgGetNode( child->getStringValue(), true );
+            output_list.push_back( tmp );
+        }
+    }   
+}
+
+void FGPredictor::update( double dt ) {
+    /*
+       Simple moving average filter converts input value to predicted value "seconds".
+
+       Smoothing as described by Curt Olson:
+         gain would be valid in the range of 0 - 1.0
+         1.0 would mean no filtering.
+         0.0 would mean no input.
+         0.5 would mean (1 part past value + 1 part current value) / 2
+         0.1 would mean (9 parts past value + 1 part current value) / 10
+         0.25 would mean (3 parts past value + 1 part current value) / 4
+
+    */
+
+    if ( input_prop != NULL ) {
+        ivalue = input_prop->getDoubleValue();
+        // no sense if there isn't an input :-)
+        enabled = true;
+    } else {
+        enabled = false;
+    }
+
+    if ( enabled ) {
+
+        // first time initialize average
+        if (last_value >= 999999999.0) {
+           last_value = ivalue;
+        }
+
+        if ( dt > 0.0 ) {
+            double current = (ivalue - last_value)/dt; // calculate current error change (per second)
+            if ( dt < 1.0 ) {
+                average = (1.0 - dt) * average + current * dt;
+            } else {
+                average = current;
+            }
+
+            // calculate output with filter gain adjustment
+            double output = ivalue + (1.0 - filter_gain) * (average * seconds) + filter_gain * (current * seconds);
+
+            unsigned int i;
+            for ( i = 0; i < output_list.size(); ++i ) {
+                output_list[i]->setDoubleValue( output );
+            }
+        }
+        last_value = ivalue;
+    }
+}
+
+
 FGXMLAutopilot::FGXMLAutopilot() {
 }
 
@@ -561,6 +641,9 @@ bool FGXMLAutopilot::build() {
             components.push_back( c );
         } else if ( name == "pi-simple-controller" ) {
             FGXMLAutoComponent *c = new FGPISimpleController( node );
+            components.push_back( c );
+        } else if ( name == "predict-simple" ) {
+            FGXMLAutoComponent *c = new FGPredictor( node );
             components.push_back( c );
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
@@ -636,6 +719,8 @@ static void update_helper( double dt ) {
         = fgGetNode( "/autopilot/settings/true-heading-deg", true );
     static SGPropertyNode *true_hdg
         = fgGetNode( "/orientation/heading-deg", true );
+    static SGPropertyNode *true_track
+        = fgGetNode( "/instrumentation/gps/indicated-track-true-deg", true );
     static SGPropertyNode *true_error
         = fgGetNode( "/autopilot/internal/true-heading-error-deg", true );
 
@@ -649,11 +734,18 @@ static void update_helper( double dt ) {
         = fgGetNode( "/radios/nav[0]/radials/target-auto-hdg-deg", true );
     static SGPropertyNode *true_nav1
         = fgGetNode( "/autopilot/internal/nav1-heading-error-deg", true );
+    static SGPropertyNode *true_track_nav1
+        = fgGetNode( "/autopilot/internal/nav1-track-error-deg", true );
 
     diff = target_nav1->getDoubleValue() - true_hdg->getDoubleValue();
     if ( diff < -180.0 ) { diff += 360.0; }
     if ( diff > 180.0 ) { diff -= 360.0; }
     true_nav1->setDoubleValue( diff );
+
+    diff = target_nav1->getDoubleValue() - true_track->getDoubleValue();
+    if ( diff < -180.0 ) { diff += 360.0; }
+    if ( diff > 180.0 ) { diff -= 360.0; }
+    true_track_nav1->setDoubleValue( diff );
 
     // Calculate vertical speed in fpm
     static SGPropertyNode *vs_fps
