@@ -63,6 +63,9 @@ INCLUDES
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 
+static const char *IdSrc = "$Header$";
+static const char *IdHdr = ID_STATE;
+
 /*******************************************************************************
 MACROS
 *******************************************************************************/

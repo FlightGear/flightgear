@@ -45,6 +45,8 @@ INCLUDES
 #include "FGModel.h"
 #include "FGMatrix.h"
 
+#define ID_ATMOSPHERE "$Header$"
+
 /*******************************************************************************
 COMMENTS, REFERENCES,  and NOTES
 ********************************************************************************

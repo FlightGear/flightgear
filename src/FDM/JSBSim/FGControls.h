@@ -25,10 +25,11 @@
 #ifndef _CONTROLS_HXX
 #define _CONTROLS_HXX
 
-
 #ifndef __cplusplus                                                          
 # error This library requires C++
 #endif                                   
+
+#define ID_CONTROLS "$Header"
 
 // Define a structure containing the control parameters
 
@@ -177,10 +178,11 @@ extern FGControls controls;
 
 
 // $Log$
-// Revision 1.17  2000/10/13 21:34:58  curt
-// Panel tweaks to support "shaped" panels.
-// Additional HUD support for waypoints.
-// JSBSim updates.
+// Revision 1.18  2000/10/14 00:10:12  curt
+// Friday the 13th JSBSim update ... :-0  !!!
+//
+// Revision 1.7  2000/10/13 19:21:02  jsb
+// ** JSB ** Added version identifiers for all files
 //
 // Revision 1.6  2000/06/03 13:59:52  jsb
 // Changes for compatibility with MSVC

@@ -55,6 +55,9 @@ INCLUDES
 #include "FGOutput.h"
 #include "FGDefs.h"
 
+static const char *IdSrc = "$Header$";
+static const char *IdHdr = ID_INITIALCONDITION;
+
 FGInitialCondition::FGInitialCondition(FGFDMExec *FDMExec) {
   vt=vc=ve=0;
   mach=0;

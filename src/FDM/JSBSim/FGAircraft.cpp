@@ -128,8 +128,8 @@ INCLUDES
 #include "FGAuxiliary.h"
 #include "FGOutput.h"
 
-const char *IdSrc = "$Header$";
-const char *IdHdr = ID_AIRCRAFT;
+static const char *IdSrc = "$Header$";
+static const char *IdHdr = ID_AIRCRAFT;
 
 /*******************************************************************************
 ************************************ CODE **************************************

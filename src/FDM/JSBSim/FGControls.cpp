@@ -24,6 +24,8 @@
 
 #include "FGControls.h"
 
+static const char *IdSrc = "$Header$";
+static const char *IdHdr = "ID_CONTROLS";
 
 FGControls controls;
 
@@ -51,10 +53,11 @@ FGControls::~FGControls() {
 
 
 // $Log$
-// Revision 1.18  2000/10/13 21:34:57  curt
-// Panel tweaks to support "shaped" panels.
-// Additional HUD support for waypoints.
-// JSBSim updates.
+// Revision 1.19  2000/10/14 00:10:12  curt
+// Friday the 13th JSBSim update ... :-0  !!!
+//
+// Revision 1.4  2000/10/13 19:21:02  jsb
+// ** JSB ** Added version identifiers for all files
 //
 // Revision 1.3  2000/04/26 10:55:57  jsb
 // Made changes as required by Curt to install JSBSim into FGFS

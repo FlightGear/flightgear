@@ -115,6 +115,8 @@ USEUNIT("FGAerodynamics.cpp");
 #include <ctime>
 #endif
 
+static const char *IdSrc = "$Header$";
+
 int main(int argc, char** argv)
 {
   FGFDMExec* FDMExec;

@@ -45,6 +45,17 @@ INCLUDES
 #include "FGModel.h"
 #include "FGMatrix.h"
 
+#define ID_POSITION "$Header$"
+
+
+/*******************************************************************************
+DEFINITIONS
+*******************************************************************************/
+
+/** Models the lateral and longitudinal translational EOM.
+    @author Jon S. Berndt
+    @version $Id$
+  */
 /*******************************************************************************
 CLASS DECLARATION
 *******************************************************************************/

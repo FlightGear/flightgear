@@ -47,6 +47,8 @@ and the cg.
 #include "FGDefs.h"
 #include "FGForce.h"
 
+static const char *IdSrc = "$Header$";
+static const char *IdHdr = "ID_FORCE";
 
 FGForce::FGForce(FGFDMExec *FDMExec) :
     vFn(3),

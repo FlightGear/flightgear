@@ -52,6 +52,9 @@ INCLUDES
 #include "FGTrim.h"
 #include "FGAircraft.h"
 
+static const char *IdSrc = "$Header$";
+static const char *IdHdr = ID_TRIM;
+
 /*******************************************************************************/
 
 FGTrim::FGTrim(FGFDMExec *FDMExec,FGInitialCondition *FGIC, TrimMode tt ) {
