@@ -156,11 +156,11 @@ void triload(const string& basename) {
     nodes_cart.push_back(node1);
     tri_list.push_back(tri);
 
-    node_in.stream() >> nodecount >> dim >> junk1 >> junk2;
+    node_in >> nodecount >> dim >> junk1 >> junk2;
     cout << "    Expecting " << nodecount << " nodes\n";
 
     for ( i = 1; i <= nodecount; i++ ) {
-	node_in.stream() >> junk1 >> node1 >> junk2;
+	node_in >> junk1 >> node1 >> junk2;
 	nodes_orig.push_back(node1);
 	// printf("%d %.2f %.2f %.2f\n", junk1, node1.x, node1.y, node1.z);
 	
@@ -199,13 +199,13 @@ void triload(const string& basename) {
 	exit(-1);
     }
 
-    ele_in.stream() >> tricount >> junk1 >> junk2;
+    ele_in >> tricount >> junk1 >> junk2;
     cout << "    Expecting " << tricount << " elements\n";
 
     for ( i = 1; i <= tricount; i++ ) {
 	// fscanf(ele_file, "%d %d %d %d\n", &junk1, 
 	//        &(tri.n1), &(tri.n2), &(tri.n3));
-	ele_in.stream() >> junk1 >> tri.n1 >> tri.n2 >> tri.n3;
+	ele_in >> junk1 >> tri.n1 >> tri.n2 >> tri.n3;
 	// printf("%d %d %d %d\n", junk1, tri.n1, tri.n2, tri.n3);
 	tri_list.push_back(tri);
     }
@@ -616,6 +616,9 @@ int main(int argc, char **argv) {
 
 
 // $Log$
+// Revision 1.7  1998/11/06 21:33:57  curt
+// Updates to go along with changes in fgstream.
+//
 // Revision 1.6  1998/10/21 14:56:20  curt
 // Fixed a units conversion bug.
 //

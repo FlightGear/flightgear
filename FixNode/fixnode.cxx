@@ -60,16 +60,16 @@ void load_nodes(const string& filename, container& node_list) {
     }
 
     // Read header line
-    in.stream() >> nodecount >> dim >> junk1 >> junk2;
+    in >> nodecount >> dim >> junk1 >> junk2;
     cout << "    Expecting " << nodecount << " nodes\n";
 
     // start with an empty list :-)
     node_list.erase( node_list.begin(), node_list.end() );
 
-    in.eat_comments();
+    in >> skipcomment;
     while ( ! in.eof() ) {
-	in.stream() >> junk1 >> node >> junk2;
-	in.eat_comments();
+	in >> junk1 >> node >> junk2;
+	in >> skipcomment;
 	node_list.push_back(node);
     }
 }
@@ -121,6 +121,9 @@ void fix_nodes( const string& filename, fgDEM& dem, container& node_list )
 
 
 // $Log$
+// Revision 1.7  1998/11/06 21:33:55  curt
+// Updates to go along with changes in fgstream.
+//
 // Revision 1.6  1998/10/20 15:49:22  curt
 // Converted to Point3D class.
 //
