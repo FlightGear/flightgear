@@ -359,6 +359,10 @@ FGPanel::draw()
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(0, -POFF_UNITS);
 
+  // save some state
+  glPushAttrib( GL_COLOR_BUFFER_BIT | GL_ENABLE_BIT | GL_LIGHTING_BIT
+                | GL_TEXTURE_BIT | GL_PIXEL_MODE_BIT );
+
   // Draw the background
   glEnable(GL_TEXTURE_2D);
   glDisable(GL_LIGHTING);
@@ -417,6 +421,8 @@ FGPanel::draw()
     glPopMatrix();
   }
 
+  // restore some original state
+  glPopAttrib();
   glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
