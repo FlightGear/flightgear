@@ -77,8 +77,7 @@ private:
 public:
 
     // Constructor
-    FGExternalNet( double dt,
-                                  string host, int dop, int dip, int cp );
+    FGExternalNet( double dt, string host, int dop, int dip, int cp );
 
     // Destructor
     ~FGExternalNet();
