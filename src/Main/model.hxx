@@ -36,6 +36,8 @@ private:
 
   struct Animation
   {
+    Animation ();
+    virtual ~Animation ();
     enum Type {
       None,
       Spin,
@@ -58,8 +60,9 @@ private:
     void setRotation ();
   };
 
-  Animation read_animation (const string &object_name,
-			    const SGPropertyNode * node);
+  void read_animation (Animation &animation,
+		       const string &object_name,
+		       const SGPropertyNode * node);
   void do_animation (Animation &animation, long elapsed_ms);
 
   ssgEntity * _model;
