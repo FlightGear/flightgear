@@ -1317,7 +1317,9 @@ int main( int argc, char **argv ) {
 
     // set current_options lon/lat if an airport id is specified
     if ( current_options.get_airport_id().length() ) {
-	fgSetPosFromAirportID( current_options.get_airport_id() );
+	// fgSetPosFromAirportID( current_options.get_airport_id() );
+	fgSetPosFromAirportIDandHdg( current_options.get_airport_id(),
+				     current_options.get_heading() );
     }
 
     // Initialize time

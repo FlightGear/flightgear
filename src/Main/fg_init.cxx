@@ -56,6 +56,7 @@
 #include <simgear/timing/sg_time.hxx>
 
 #include <Aircraft/aircraft.hxx>
+#include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
 #include <Autopilot/auto_gui.hxx>
 #include <Autopilot/newauto.hxx>
@@ -182,6 +183,110 @@ bool fgSetPosFromAirportID( const string& id ) {
 
     return true;
 }
+
+
+// Set current_options lon/lat given an airport id and heading (degrees)
+bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
+    FGRunway r;
+    FGRunway found_r;
+    double found_dir;
+
+    if ( id.length() ) {
+	// set initial position from runway and heading
+
+	FGPath path( current_options.get_fg_root() );
+	path.append( "Airports" );
+	path.append( "runways.mk4" );
+	FGRunways runways( path.c_str() );
+
+	FG_LOG( FG_GENERAL, FG_INFO,
+		"Attempting to set starting position from runway code "
+		<< id << " heading " << tgt_hdg );
+
+	// FGPath inpath( current_options.get_fg_root() );
+	// inpath.append( "Airports" );
+	// inpath.append( "apt_simple" );
+	// airports.load( inpath.c_str() );
+
+	// FGPath outpath( current_options.get_fg_root() );
+	// outpath.append( "Airports" );
+	// outpath.append( "simple.gdbm" );
+	// airports.dump_gdbm( outpath.c_str() );
+
+	if ( ! runways.search( id, &r ) ) {
+	    FG_LOG( FG_GENERAL, FG_ALERT,
+		    "Failed to find " << id << " in database." );
+	    return false;
+	}
+
+	double diff;
+	double min_diff = 360.0;
+
+	while ( r.id == id ) {
+	    // forward direction
+	    diff = tgt_hdg - r.heading;
+	    while ( diff < -180.0 ) { diff += 360.0; }
+	    diff = fabs(diff);
+	    FG_LOG( FG_GENERAL, FG_INFO,
+		    "Runway " << r.rwy_no << " heading = " << r.heading <<
+		    " diff = " << diff );
+	    if ( diff < min_diff ) {
+		min_diff = diff;
+		found_r = r;
+		found_dir = 0;
+	    }
+
+	    // reverse direction
+	    diff = tgt_hdg - r.heading - 180.0;
+	    while ( diff < -180.0 ) { diff += 360.0; }
+	    diff = fabs(diff);
+	    FG_LOG( FG_GENERAL, FG_INFO,
+		    "Runway -" << r.rwy_no << " heading = " <<
+		    r.heading + 180.0 <<
+		    " diff = " << diff );
+	    if ( diff < min_diff ) {
+		min_diff = diff;
+		found_r = r;
+		found_dir = 180.0;
+	    }
+
+	    runways.next( &r );
+	}
+
+	FG_LOG( FG_GENERAL, FG_INFO, "closest runway = " << found_r.rwy_no
+		<< " + " << found_dir );
+
+    } else {
+	return false;
+    }
+
+    double heading = found_r.heading + found_dir;
+    while ( heading >= 360.0 ) { heading -= 360.0; }
+
+    double lat2, lon2, az2;
+    double azimuth = found_r.heading + found_dir + 180.0;
+    while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
+
+    FG_LOG( FG_GENERAL, FG_INFO,
+	    "runway =  " << found_r.lon << ", " << found_r.lat
+	    << " length = " << found_r.length * FEET_TO_METER * 0.5 
+	    << " heading = " << azimuth );
+    geo_direct_wgs_84 ( 0, found_r.lat, found_r.lon, 
+			azimuth, found_r.length * FEET_TO_METER * 0.5 - 5.0,
+			&lat2, &lon2, &az2 );
+    current_options.set_lon( lon2 );
+    current_options.set_lat( lat2 );
+    current_options.set_heading( heading );
+
+    FG_LOG( FG_GENERAL, FG_INFO,
+	    "Position for " << id << " is ("
+	    << lon2 << ", "
+	    << lat2 << ") new heading is "
+	    << heading );
+
+    return true;
+}
+
 
 // Set initial position and orientation
 bool fgInitPosition( void ) {
