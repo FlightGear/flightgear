@@ -435,7 +435,11 @@ void fgRenderFrame() {
     static double last_visibility = -9999;
 
     // update fog params
-    double actual_visibility       = thesky->get_visibility();
+    double actual_visibility;
+    if (fgGetBool("/environment/clouds/status"))
+        actual_visibility = thesky->get_visibility();
+    else
+        actual_visibility = fgGetDouble("/environment/visibility-m");
     if ( actual_visibility != last_visibility ) {
         last_visibility = actual_visibility;
 
