@@ -504,7 +504,7 @@ tri_out_of_range_callback (ssgEntity * entity, int mask)
  * it works and seems fairly efficient (since branches can still
  * be culled when they're out of the view frustum).
  */
-class DummyBSphereEntity : public ssgEntity
+class DummyBSphereEntity : public ssgBranch
 {
 public:
   DummyBSphereEntity (float radius)
@@ -514,10 +514,6 @@ public:
   }
   virtual ~DummyBSphereEntity () {}
   virtual void recalcBSphere () { bsphere_is_invalid = false; }
-  virtual void cull (sgFrustum *f, sgMat4 m, int test_needed) {}
-  virtual void isect (sgSphere *s, sgMat4 m, int test_needed) {}
-  virtual void hot (sgVec3 s, sgMat4 m, int test_needed) {}
-  virtual void los (sgVec3 s, sgMat4 m, int test_needed) {}
 };
 
 
