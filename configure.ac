@@ -115,7 +115,7 @@ AM_CONDITIONAL(ENABLE_JPEG_SERVER, test "x$ac_cv_header_simgear_screen_jpgfactor
 
 # Specify if we want to use WeatherCM instead of FGEnvironment.
 # default to with_weathercm=no
-AC_ARG_WITH(new-environment, [  --with-weathercm  Use WeatherCM instead of FGEnvironment])
+AC_ARG_WITH(new-environment, [  --with-weathercm        Use WeatherCM instead of FGEnvironment])
 if test "x$with_weathercm" = "xyes" ; then
     echo "Building with WeatherCM"
     AC_DEFINE([FG_WEATHERCM], 1,
@@ -140,7 +140,7 @@ fi
 AM_CONDITIONAL(WITH_THREADS, test "x$with_threads" = "xyes")
 
 # specify the plib location
-AC_ARG_WITH(plib, [  --with-plib=prefix      Specify the prefix path to plib])
+AC_ARG_WITH(plib, [  --with-plib=PREFIX      Specify the prefix path to plib])
 
 if test "x$with_plib" != "x" ; then
     echo "plib prefix is $with_plib"
@@ -148,7 +148,7 @@ if test "x$with_plib" != "x" ; then
 fi
 
 # specify the metakit location
-AC_ARG_WITH(metakit, [  --with-metakit=prefix   Specify the prefix path to metakit])
+AC_ARG_WITH(metakit, [  --with-metakit=PREFIX   Specify the prefix path to metakit])
 
 if test "x$with_metakit" != "x" ; then
     echo "metakit prefix is $with_metakit"
@@ -156,7 +156,7 @@ if test "x$with_metakit" != "x" ; then
 fi
 
 # specify the simgear location
-AC_ARG_WITH(simgear, [  --with-simgear=prefix   Specify the prefix path to simgear])
+AC_ARG_WITH(simgear, [  --with-simgear=PREFIX   Specify the prefix path to simgear])
 
 if test "x$with_simgear" != "x" ; then
     echo "SimGear prefix path is $with_simgear"
@@ -322,9 +322,6 @@ else
     echo Win32 specific hacks...
     AC_DEFINE([WIN32], 1, [Define if building on a Win32 platform])
 
-    # force a failed check since we will be building under windoze
-    AM_CONDITIONAL(ENABLE_XMESA_FX, test "no" = "yes")
-
     # just define these to true and hope for the best
     ac_cv_lib_glut_glutGetModifiers="yes"
     ac_cv_lib_glut_glutGameModeString="yes"
@@ -374,8 +371,7 @@ AM_CONDITIONAL(HAVE_XWINDOWS, test "x$ac_cv_lib_X11_XCreateWindow" = "xyes" )
 # The following are C++ items that need to be tested for with the c++
 # compiler
 
-AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
+AC_LANG_PUSH(C++)
 
 # Check for "plib" without which we cannot go on
 AC_CHECK_HEADER(plib/pu.h)
@@ -426,8 +422,7 @@ if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING(for proper simgear version)
-
+AC_MSG_CHECKING([for proper simgear version])
 AC_TRY_RUN([
 #include <stdio.h>
 
@@ -438,7 +433,7 @@ AC_TRY_RUN([
 
 #define MIN_MAJOR 0
 #define MIN_MINOR 0
-#define MIN_MICRO 18
+#define MIN_MICRO 19
 
 int main() {
     int major, minor, micro;
@@ -481,6 +476,7 @@ if test "x$ac_cv_header_mk4_h" != "xyes"; then
     exit
 fi
 
+AC_MSG_CHECKING([for proper metakit version])
 AC_TRY_RUN([
 #include <mk4.h>
 
@@ -503,7 +499,7 @@ int main() {
   AC_MSG_RESULT(yes)
 )
 
-AC_LANG_RESTORE
+AC_LANG_POP
 
 # Check for system installed zlib
 AC_CHECK_HEADER(zlib.h)
@@ -539,7 +535,7 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS( ftime gettimeofday timegm memcpy bcopy mktime strstr rand \
 	random setitimer getitimer signal GetLocalTime rint getrusage )
 
-AM_CONFIG_HEADER([src/Include/config.h])
+AM_CONFIG_HEADER(src/Include/config.h)
 
 AC_CONFIG_FILES([ \
 	Makefile \
