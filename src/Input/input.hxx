@@ -297,6 +297,8 @@ private:
     float high_threshold;
     struct button low;
     struct button high;
+    float interval_sec;
+    double last_dt;
   };
 
 
@@ -381,7 +383,7 @@ private:
   /**
    * Update the joystick.
    */
-  void _update_joystick ();
+  void _update_joystick (double dt);
 
 
   /**

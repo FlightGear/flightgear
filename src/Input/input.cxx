@@ -195,7 +195,7 @@ void
 FGInput::update (double dt)
 {
   _update_keyboard();
-  _update_joystick();
+  _update_joystick(dt);
   _update_mouse();
 }
 
@@ -537,6 +537,8 @@ FGInput::_init_joystick ()
       
       _init_button(axis_node->getChild("high"), a.high, "high");
       a.high_threshold = axis_node->getDoubleValue("high-threshold", 0.9);
+      a.interval_sec = axis_node->getDoubleValue("interval-sec",0.0);
+      a.last_dt = 0.0;
     }
 
     //
@@ -690,7 +692,7 @@ FGInput::_update_keyboard ()
 
 
 void
-FGInput::_update_joystick ()
+FGInput::_update_joystick (double dt)
 {
   int modifiers = FG_MOD_NONE;  // FIXME: any way to get the real ones?
   int buttons;
@@ -727,17 +729,21 @@ FGInput::_update_joystick ()
       }
      
                                 // do we have to emulate axis buttons?
-      if (a.low.bindings[modifiers].size())
-        _update_button(_joystick_bindings[i].axes[j].low,
-                       modifiers,
-                       axis_values[j] < a.low_threshold,
-                       -1, -1);
+      a.last_dt += dt;
+      if(a.last_dt >= a.interval_sec) {
+        if (a.low.bindings[modifiers].size())
+          _update_button(_joystick_bindings[i].axes[j].low,
+                         modifiers,
+                         axis_values[j] < a.low_threshold,
+                         -1, -1);
       
-      if (a.high.bindings[modifiers].size())
-        _update_button(_joystick_bindings[i].axes[j].high,
-                       modifiers,
-                       axis_values[j] > a.high_threshold,
-                       -1, -1);
+        if (a.high.bindings[modifiers].size())
+          _update_button(_joystick_bindings[i].axes[j].high,
+                         modifiers,
+                         axis_values[j] > a.high_threshold,
+                         -1, -1);
+         a.last_dt -= a.interval_sec;
+      }
     }
 
                                 // Fire bindings for the buttons.
