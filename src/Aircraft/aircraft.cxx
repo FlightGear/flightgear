@@ -49,7 +49,7 @@ void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
     f = a->fdm_state;
 
     SG_LOG( SG_FLIGHT, SG_DEBUG,
-	    "Pos = ("
+            "Pos = ("
 	    << (f->get_Longitude() * 3600.0 * SGD_RADIANS_TO_DEGREES) << "," 
 	    << (f->get_Latitude()  * 3600.0 * SGD_RADIANS_TO_DEGREES) << ","
 	    << f->get_Altitude() 
