@@ -1,8 +1,8 @@
-// slew.cxx -- the "slew" flight model
+// external.cxx -- externally driven flight model
 //
-// Written by Curtis Olson, started May 1997.
+// Written by Curtis Olson, started January 1998.
 //
-// Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+// Copyright (C) 1998  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -31,8 +31,7 @@
 
 
 // reset flight params to a specific position
-void fgExternalInit( FGState &f, double dt ) {
-
+void fgExternalInit( FGState &f ) {
 }
 
 
@@ -43,6 +42,10 @@ void fgExternalUpdate( FGState& f, int multiloop ) {
 
 
 // $Log$
+// Revision 1.3  1999/01/19 17:52:11  curt
+// Working on being able to extrapolate a new position and orientation
+// based on a position, orientation, and time offset.
+//
 // Revision 1.2  1998/12/05 15:54:13  curt
 // Renamed class fgFLIGHT to class FGState as per request by JSB.
 //

@@ -36,6 +36,7 @@
 #include <Time/timestamp.hxx>
 
 
+/*
 class fgFDM_EXTERNAL {
 
 public:
@@ -61,42 +62,31 @@ public:
 
     // Velocities
 
-    // velocity relative to the local aircraft's coordinate system
-    double V_north;
-    double V_east;
-    double V_down;
+    // velocities in geodetic coordinates
+    double Latitude_dot;   // rad/sec
+    double Longitude_dot;  // rad/sec
+    double Altitude_dot;   // feet/sec
 
-    // rotational rates relative to the coordinate system the body lives in
-    double P_body;
-    double Q_body;
-    double R_body;
-
-    // Accelerations
-    
-    // acceleration relative to the local aircraft's coordinate system
-    double V_dot_north;
-    double V_dot_east;
-    double V_dot_down;
-
-    // rotational acceleration relative to the coordinate system the
-    // body lives in
-    double P_dot_body;
-    double Q_dot_body;
-    double R_dot_body;
+    // rotational rates
+    double Phi_dot;
+    double Theta_dot;
+    double Psi_dot;
 };
+*/
 
 
 // reset flight params to a specific position 
-void fgExternalInit( FGState& f, double dt );
-
-// update position based on inputs, positions, velocities, etc.
-void fgExternalUpdate( FGState& f, int multiloop );
+void fgExternalInit( FGState& f );
 
 
 #endif // _EXTERNAL_HXX
 
 
 // $Log$
+// Revision 1.5  1999/01/19 17:52:12  curt
+// Working on being able to extrapolate a new position and orientation
+// based on a position, orientation, and time offset.
+//
 // Revision 1.4  1999/01/09 13:37:37  curt
 // Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
 //

@@ -32,6 +32,7 @@
 #include <Flight/LaRCsim/ls_interface.h>
 #include <Include/fg_constants.h>
 #include <Math/fg_geodesy.hxx>
+#include <Time/timestamp.hxx>
 
 
 // base_fdm_state is the internal state that is updated in integer
@@ -41,6 +42,31 @@
 
 FGState cur_fdm_state;
 FGState base_fdm_state;
+
+
+// Extrapolate fdm based on time_offset (in usec)
+void FGState::extrapolate( int time_offset ) {
+    double dt = time_offset / 1000000.0;
+    cout << "extrapolating FDM by dt = " << dt << endl;
+
+    double lat = geodetic_position_v[0] + geocentric_rates_v[0] * dt;
+    double lat_geoc = geocentric_position_v[0] + geocentric_rates_v[0] * dt;
+
+    double lon = geodetic_position_v[1] + geocentric_rates_v[1] * dt;
+    double lon_geoc = geocentric_position_v[1] + geocentric_rates_v[1] * dt;
+
+    double alt = geodetic_position_v[2] + geocentric_rates_v[2] * dt;
+    double radius = geocentric_position_v[2] + geocentric_rates_v[2] * dt;
+
+    geodetic_position_v[0] = lat;
+    geocentric_position_v[0] = lat_geoc;
+
+    geodetic_position_v[1] = lon;
+    geocentric_position_v[1] = lon_geoc;
+
+    geodetic_position_v[2] = alt;
+    geocentric_position_v[2] = radius;
+}
 
 
 // Initialize the flight model parameters
@@ -78,62 +104,29 @@ int fgFlightModelInit(int model, FGState& f, double dt) {
 	    base_fdm_state.set_Altitude( save_alt );
 	}
     } else if ( model == FGState::FG_EXTERNAL ) {
-	fgExternalInit(base_fdm_state, dt);
+	fgExternalInit(base_fdm_state);
     } else {
 	FG_LOG( FG_FLIGHT, FG_WARN,
 		  "Unimplemented flight model == " << model );
     }
 
+    // set valid time for this record
+    base_fdm_state.stamp_time();
+	
     f = base_fdm_state;
 
     return 1;
 }
 
 
-// Extrapolate fdm based on jitter time (in milliseconds)
-static FGState extrapolate_fdm( FGState &base, int jitter ) {
-    FGState result;
-
-    double dt = jitter / 1000000.0;
-    // cout << "dt = " << dt << endl;
-
-    // start by making a straight up copy
-    result = base;
-
-    double lon = base.get_Longitude() + base.get_Longitude_dot() * dt;
-    double lon_geoc = base.get_Lon_geocentric() + base.get_Longitude_dot() * dt;
-
-    double lat = base.get_Latitude() + base.get_Latitude_dot() * dt;
-    double lat_geoc = base.get_Lat_geocentric() + base.get_Latitude_dot() * dt;
-
-    /*
-    cout << "( " << base.get_Longitude() << ", " << 
-	base.get_Latitude() << " )" << endl;
-    cout << "( " << lon << ", " << lat << " )" << endl;
-    cout << "( " << base.get_Longitude_dot() * dt << ", " << 
-	base.get_Latitude_dot() * dt << ", " << 
-	base.get_Radius_dot() * dt << " )" << endl;
-	*/
-
-    double alt = base.get_Altitude() + base.get_Radius_dot() * dt;
-    double radius = base.get_Radius_to_vehicle() + base.get_Radius_dot() * dt;
-
-    // result.set_Longitude( lon );
-    // result.set_Latitude( lat );
-    // result.set_Altitude( alt );
-    // result.set_Geocentric_Position( lon_geoc, lat_geoc, radius );
-
-    return result;
-}
-
-
 // Run multiloop iterations of the flight model
-int fgFlightModelUpdate(int model, FGState& f, int multiloop, int jitter) {
+int fgFlightModelUpdate(int model, FGState& f, int multiloop, int time_offset) {
     double time_step, start_elev, end_elev;
 
     // printf("Altitude = %.2f\n", FG_Altitude * 0.3048);
 
-    // base_fdm_state = f;
+    // set valid time for this record
+    base_fdm_state.stamp_time();
 
     time_step = (1.0 / DEFAULT_MODEL_HZ) * multiloop;
     start_elev = base_fdm_state.get_Altitude();
@@ -142,8 +135,15 @@ int fgFlightModelUpdate(int model, FGState& f, int multiloop, int jitter) {
 	// fgSlewUpdate(f, multiloop);
     } else if ( model == FGState::FG_LARCSIM ) {
 	fgLaRCsimUpdate(base_fdm_state, multiloop);
+	// extrapolate position based on actual time
+	// f = extrapolate_fdm( base_fdm_state, time_offset );
+	f = base_fdm_state;
     } else if ( model == FGState::FG_EXTERNAL ) {
 	// fgExternalUpdate(f, multiloop);
+	FGTimeStamp current;
+	current.stamp();
+	f = base_fdm_state;
+	f.extrapolate( current - base_fdm_state.get_time_stamp() );
     } else {
 	FG_LOG( FG_FLIGHT, FG_WARN,
 		"Unimplemented flight model == " <<  model );
@@ -155,8 +155,6 @@ int fgFlightModelUpdate(int model, FGState& f, int multiloop, int jitter) {
 	// feet per second
 	base_fdm_state.set_Climb_Rate( (end_elev - start_elev) / time_step );
     }
-
-    f = extrapolate_fdm( base_fdm_state, jitter );
 
     return 1;
 }
@@ -184,6 +182,10 @@ void fgFlightModelSetAltitude(int model, double alt_meters) {
 
 
 // $Log$
+// Revision 1.11  1999/01/19 17:52:06  curt
+// Working on being able to extrapolate a new position and orientation
+// based on a position, orientation, and time offset.
+//
 // Revision 1.10  1999/01/09 13:37:32  curt
 // Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
 //

@@ -26,6 +26,11 @@
 #define _FLIGHT_HXX
 
 
+#ifndef __cplusplus                                                          
+# error This library requires C++
+#endif                                   
+
+
 /* Required get_()
 
    `FGState::get_Longitude ()'
@@ -76,13 +81,8 @@
 
  */
 
-#include <Flight/Slew/slew.hxx>
 
-
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif                                   
-
+#include <Time/timestamp.hxx>
 
 typedef double FG_VECTOR_3[3];
 
@@ -775,6 +775,15 @@ public:
     double        climb_rate;           // in feet per second
     inline double get_Climb_Rate() const { return climb_rate; }
     inline void set_Climb_Rate(double rate) { climb_rate = rate; }
+
+    FGTimeStamp valid_stamp;       // time this record is valid
+    FGTimeStamp next_stamp;       // time this record is valid
+    inline FGTimeStamp get_time_stamp() const { return valid_stamp; }
+    inline void stamp_time() { valid_stamp = next_stamp; next_stamp.stamp(); }
+
+    // Extrapolate FDM based on time_offset (in usec)
+    void extrapolate( int time_offset );
+
 };
 
 
@@ -797,6 +806,10 @@ void fgFlightModelSetAltitude(int model, double alt_meters);
 
 
 // $Log$
+// Revision 1.11  1999/01/19 17:52:07  curt
+// Working on being able to extrapolate a new position and orientation
+// based on a position, orientation, and time offset.
+//
 // Revision 1.10  1999/01/09 13:37:33  curt
 // Convert fgTIMESTAMP to FGTimeStamp which holds usec instead of ms.
 //
