@@ -633,6 +633,7 @@ void fgRenderFrame() {
                 // Draw the terrain
                 FGTileMgr::set_tile_filter( true );
                 sgSetModelFilter( false );
+                globals->get_aircraft_model()->select( false );
                 ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
 
                 // Disable depth buffer update, draw the clouds
@@ -652,7 +653,6 @@ void fgRenderFrame() {
                 }
                 FGTileMgr::set_tile_filter( false );
                 sgSetModelFilter( true );
-                globals->get_aircraft_model()->select( false );
                 ssgCullAndDraw( globals->get_scenery()->get_scene_graph() );
 
                 if ( multi_pass_clouds ) {
