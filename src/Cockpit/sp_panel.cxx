@@ -1020,11 +1020,12 @@ fgCreateSmallSinglePropPanel (int xpos, int ypos, int finx, int finy)
     FGLayeredInstrument * inst =
       new FGLayeredInstrument(gauge.x, gauge.y, gauge.w, gauge.h);
 
-    for (int j = 0; gauge.actions[j]; j++) {
+    int j;
+    for (j = 0; gauge.actions[j]; j++) {
       inst->addAction(gauge.actions[j]);
     }
 
-    for (int j = 0; gauge.layers[j].layer; j++) {
+    for (j = 0; gauge.layers[j].layer; j++) {
       LayerData &layer = gauge.layers[j];
 //       inst->addLayer(tex[layer.textureName], layer.w, layer.h);
       inst->addLayer(layer.layer);

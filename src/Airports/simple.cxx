@@ -151,7 +151,7 @@ int FGAirportsUtil::load( const string& file ) {
 
 #else
 
-    in >> skipws;
+    in >> ::skipws;
     while ( ! in.eof() ) {
 	char c = 0;
  	in.get(c);
@@ -165,7 +165,7 @@ int FGAirportsUtil::load( const string& file ) {
 	} else {
 	    in >> skipeol;
 	}
-	in >> skipws;
+	in >> ::skipws;
     }
 
 #endif

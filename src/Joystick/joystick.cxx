@@ -275,7 +275,8 @@ fgJoystickInit()
 	//
 	// Initialize the axes.
 	//
-	for (int j = 0; j < naxes; j++) {
+	int j;
+	for (j = 0; j < naxes; j++) {
 	    axis &a = joysticks[i].axes[j];
 
 	    string base = "/input/";
@@ -368,7 +369,7 @@ fgJoystickInit()
 	//
 	// Initialize the buttons.
 	//
-	for (int j = 0; j < nbuttons; j++) {
+	for (j = 0; j < nbuttons; j++) {
 	    button &b = joysticks[i].buttons[j];
       
 	    string base = "/input/";
@@ -472,7 +473,8 @@ fgJoystickRead()
 	//
 	// Axes
 	//
-	for (int j = 0; j < joysticks[i].naxes; j++) {
+	int j;
+	for (j = 0; j < joysticks[i].naxes; j++) {
 	    bool flag = true;
 	    axis &a = joysticks[i].axes[j];
 
@@ -494,7 +496,7 @@ fgJoystickRead()
 	//
 	// Buttons
 	//
-	for (int j = 0; j < joysticks[i].nbuttons; j++) {
+	for (j = 0; j < joysticks[i].nbuttons; j++) {
 	    bool flag;
 	    button &b = joysticks[i].buttons[j];
 	    if (b.value == 0)

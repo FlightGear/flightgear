@@ -945,8 +945,10 @@ static void fgMainLoop( void ) {
 	// }
 	// fprintf(stderr, "pitch4: %f\n", pitch);
 
-	double volume = controls.get_throttle(0) * 1.15 + 0.3 +
+	double volume = controls.get_throttle(0) * 0.1 + 0.3 +
 	    log(cur_fdm_state->get_V_calibrated_kts() * kts_to_fts + 1.0)/14.0;
+	if ( volume > 1.0 ) { volume = 1.0; }
+
 	// fprintf(stderr, "volume: %f\n", volume);
 
 	pitch_envelope.setStep  ( 0, 0.01, pitch );

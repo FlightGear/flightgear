@@ -21,6 +21,7 @@
 // $Id$
 
 
+#include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 #include <simgear/math/fg_geodesy.hxx>
@@ -104,11 +105,11 @@ bool FGRAY::gen_message() {
 	/* Make sure the angles are reasonable onscale */
  	/* We use an asymmetric mapping so that the chair behaves
  	   reasonably when upside down.  Otherwise it oscillates. */
- 	while ( ang_pos < -2*M_PI/3 ) {
-		ang_pos += 2 * M_PI;
+ 	while ( ang_pos < -2*FG_PI/3 ) {
+		ang_pos += 2 * FG_PI;
 	}
- 	while ( ang_pos >  4*M_PI/3 ) {
-		ang_pos -= 2 * M_PI;
+ 	while ( ang_pos >  4*FG_PI/3 ) {
+		ang_pos -= 2 * FG_PI;
 	}
 
 	/* Tell interested parties what the situation is */
@@ -131,11 +132,11 @@ bool FGRAY::gen_message() {
 
 	/* yaw */
 		/* Make sure that we walk through North cleanly */
-		if ( fabs ( ang_pos - chair_heading ) > M_PI )
+		if ( fabs ( ang_pos - chair_heading ) > FG_PI )
 		{	/* Need to swing chair by 360 degrees */
 			if ( ang_pos < chair_heading )
-				chair_heading -= 2 * M_PI;
-			else	chair_heading += 2 * M_PI;
+				chair_heading -= 2 * FG_PI;
+			else	chair_heading += 2 * FG_PI;
 		}
 		/* Remove the chair heading from the true heading */
 		ang_pos -= chair_heading;
@@ -144,7 +145,7 @@ bool FGRAY::gen_message() {
  		   can just about represent 30 degrees full scale.  */
 		chair_heading += ang_pos * dt * 0.2;
 		/* If they turn fast, at 90 deg error subtract 30 deg */
-		if ( fabs(ang_pos) > M_PI / 2 )
+		if ( fabs(ang_pos) > FG_PI / 2 )
 			chair_heading += ang_pos / 3;
 
 	} else
@@ -178,8 +179,8 @@ bool FGRAY::gen_message() {
 		/* Scale to the hardware's full scale range */
 		propose /= fullscale [ subaxis ];
 		/* Use a sine shaped washout on all axes */
-		if ( propose < -M_PI / 2 ) *dac = 0x0000; else
-		if ( propose >  M_PI / 2 ) *dac = 0xFFFF; else
+		if ( propose < -FG_PI / 2 ) *dac = 0x0000; else
+		if ( propose >  FG_PI / 2 ) *dac = 0xFFFF; else
 		   *dac = (unsigned short) ( 32767 * 
 				( 1.0 + sin ( propose ) ) );
 	}

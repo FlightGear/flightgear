@@ -87,11 +87,12 @@ void uiuc_recorder( double dt )
       command_list = recordParts->getCommands();
       fout << endl;
 
-      for (LIST command_line = command_list.begin(); command_line!=command_list.end(); ++command_line)
+      LIST command_line;
+      for (command_line = command_list.begin(); command_line!=command_list.end(); ++command_line)
         record_variables += recordParts->getToken(*command_line,2) + "  ";
 
       fout << record_variables << endl; 
-      for (LIST command_line = command_list.begin(); command_line!=command_list.end(); ++command_line)
+      for (command_line = command_list.begin(); command_line!=command_list.end(); ++command_line)
         {
           linetoken = recordParts->getToken(*command_line, 2); 
 

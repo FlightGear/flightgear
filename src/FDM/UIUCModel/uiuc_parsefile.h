@@ -5,6 +5,12 @@
 #include <list>
 #include <fstream>
 
+#include <simgear/compiler.h>
+
+FG_USING_STD(list);
+FG_USING_STD(string);
+FG_USING_STD(ifstream);
+
 #define DELIMITERS " \t"
 #define COMMENT "#"
 
