@@ -323,9 +323,11 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
       fetch_elapsed( 9999.0 ),
       proxy_host( fgGetNode("/sim/presets/proxy/host", true) ),
       proxy_port( fgGetNode("/sim/presets/proxy/port", true) ),
-      proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) ),
-      _error_dt( 0.0 ),
+      proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) )
+#if defined(ENABLE_THREADS) && ENABLE_THREADS
+      ,_error_dt( 0.0 ),
       _error_count( 0 )
+#endif
 {
 #if defined(ENABLE_THREADS) && ENABLE_THREADS
     thread = new MetarThread(this);
