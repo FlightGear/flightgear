@@ -1,4 +1,3 @@
-chunkmgr.o: chunkmgr.c chunkmgr.h mesh.h
 common.o: common.c common.h
 geometry.o: geometry.c geometry.h mesh.h
 mesh.o: mesh.c ../constants.h scenery.h mesh.h common.h

@@ -39,9 +39,15 @@
 #include <GL/glut.h>
 
 #include "../constants.h"
-#include "scenery.h"
+#include "../types.h"
+#include "../Math/fg_geodesy.h"
+#include "../Math/fg_random.h"
+#include "../Math/mat3.h"
+#include "../Math/polar.h"
+
 #include "mesh.h"
 #include "common.h"
+#include "scenery.h"
 
 
 /* Temporary hack until we get the scenery management system running */
@@ -155,7 +161,7 @@ void mesh_set_option_value(struct mesh *m, char *value) {
 /* do whatever needs to be done with the mesh now that it's been
    loaded, such as generating the OpenGL call list. */
 void mesh_do_it(struct mesh *m) {
-    mesh_hack = mesh2GL(m);
+    mesh_hack = mesh_to_OpenGL(m);
 }
 
 
@@ -264,10 +270,129 @@ double mesh_altitude(double lon, double lat) {
 }
 
 
+/* walk through mesh and make opengl calls */
+GLint mesh_to_OpenGL(struct mesh *m) {
+    GLint mesh;
+    /* static GLfloat color[4] = { 0.5, 0.4, 0.25, 1.0 }; */ /* dark desert */
+    static GLfloat color[4] = { 0.5, 0.5, 0.25, 1.0 };
+    double randx, randy;
+
+    float x1, y1, x2, y2, z11, z12, z21, z22;
+    struct fgCartesianPoint p11, p12, p21, p22;
+    double gc_lon, gc_lat, sl_radius;
+
+    MAT3vec v1, v2, normal; 
+    int i, j, istep, jstep, iend, jend;
+    float temp;
+
+    printf("In mesh2GL(), generating GL call list.\n");
+
+    /* Detail level.  This is how big a step we take as we walk
+     * through the DEM data set.  This value is initialized in
+     * .../Scenery/scenery.c:fgSceneryInit() */
+    istep = jstep = cur_scenery_params.terrain_skip ;
+
+    mesh = glGenLists(1);
+    glNewList(mesh, GL_COMPILE);
+
+    glMaterialfv( GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color );
+
+    iend = m->cols - 1;
+    jend = m->rows - 1;
+    
+    y1 = m->originy;
+    y2 = y1 + (m->col_step * istep);
+    
+    for ( i = 0; i < iend; i += istep ) {
+        x1 = m->originx;
+        x2 = x1 + (m->row_step * jstep);
+
+        glBegin(GL_TRIANGLE_STRIP);
+
+        for ( j = 0; j < jend; j += jstep ) {
+            z11 = m->mesh_data[i         * m->cols + j        ];
+            z12 = m->mesh_data[(i+istep) * m->cols + j        ];
+            z21 = m->mesh_data[i         * m->cols + (j+jstep)];
+            z22 = m->mesh_data[(i+istep) * m->cols + (j+jstep)];
+
+            /* printf("A geodetic point is (%.2f, %.2f, %.2f)\n", 
+               x1, y1, z11); */
+            gc_lon = x1*ARCSEC_TO_RAD;
+            fgGeodToGeoc(y1*ARCSEC_TO_RAD, z11, &sl_radius, &gc_lat);
+            /* printf("A geocentric point is (%.2f, %.2f, %.2f)\n", gc_lon, 
+               gc_lat, sl_radius+z11); */
+            p11 = fgPolarToCart(gc_lon, gc_lat, sl_radius+z11);
+            /* printf("A cart point is (%.8f, %.8f, %.8f)\n", 
+               p11.x, p11.y, p11.z); */
+
+            gc_lon = x1*ARCSEC_TO_RAD;
+            fgGeodToGeoc(y2*ARCSEC_TO_RAD, z12, &sl_radius, &gc_lat);
+            p12 = fgPolarToCart(gc_lon, gc_lat, sl_radius+z12);
+
+            gc_lon = x2*ARCSEC_TO_RAD;
+            fgGeodToGeoc(y1*ARCSEC_TO_RAD, z21, &sl_radius, &gc_lat);
+            p21 = fgPolarToCart(gc_lon, gc_lat, sl_radius+z21);
+
+            gc_lon = x2*ARCSEC_TO_RAD;
+            fgGeodToGeoc(y2*ARCSEC_TO_RAD, z22, &sl_radius, &gc_lat);
+            p22 = fgPolarToCart(gc_lon, gc_lat, sl_radius+z22);
+
+            v1[0] = p22.y - p11.y; v1[1] = p22.z - p11.z; v1[2] = z22 - z11;
+            v2[0] = p12.y - p11.y; v2[1] = p12.z - p11.z; v2[2] = z12 - z11;
+            MAT3cross_product(normal, v1, v2);
+            MAT3_NORMALIZE_VEC(normal,temp);
+            glNormal3d(normal[0], normal[1], normal[2]);
+            /* printf("normal 1 = (%.2f %.2f %.2f\n", normal[0], normal[1], 
+                   normal[2]); */
+            
+            if ( j == 0 ) {
+                /* first time through */
+                glVertex3d(p12.x, p12.y, p12.z);
+                glVertex3d(p11.x, p11.y, p11.z);
+            }
+            
+            glVertex3d(p22.x, p22.y, p22.z);
+    
+            v2[0] = p21.y - p11.y; v2[1] = p21.z - p11.z; v2[2] = z21 - z11;
+            MAT3cross_product(normal, v2, v1);
+            MAT3_NORMALIZE_VEC(normal,temp);
+            glNormal3d(normal[0], normal[1], normal[2]);
+            /* printf("normal 2 = (%.2f %.2f %.2f\n", normal[0], normal[1], 
+                   normal[2]); */
+
+            glVertex3d(p21.x, p21.y, p21.z);
+
+            x1 += m->row_step * jstep;
+            x2 += m->row_step * jstep;
+        }
+        glEnd();
+
+        y1 += m->col_step * istep;
+        y2 += m->col_step * istep;
+    }
+
+    /* this will go, it's only here for testing/debugging */
+
+    for ( i = 0; i < 200; i++ ) {
+        randx = fg_random() * 3600.0;
+        randy = fg_random() * 3600.0;
+
+        /* mesh_make_test_object(m->originx + randx, m->originy + randy); */
+    }
+
+    glEndList();
+
+    return(mesh);
+}
+
+
 /* $Log$
-/* Revision 1.17  1997/07/18 23:41:26  curt
-/* Tweaks for building with Cygnus Win32 compiler.
+/* Revision 1.18  1997/08/02 19:10:14  curt
+/* Incorporated mesh2GL.c into mesh.c
 /*
+ * Revision 1.17  1997/07/18 23:41:26  curt
+ * Tweaks for building with Cygnus Win32 compiler.
+ *
  * Revision 1.16  1997/07/16 20:04:51  curt
  * Minor tweaks to aid Win32 port.
  *

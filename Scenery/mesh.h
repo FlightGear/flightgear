@@ -28,6 +28,9 @@
 #define MESH_H
 
 
+#include <GL/glut.h>
+
+
 struct mesh {
     /* start coordinates (in arc seconds) */
     double originx, originy;
@@ -71,14 +74,20 @@ void mesh_do_it(struct mesh *m);
  * this to interpolate exact values, but for now this is good enough */
 double mesh_altitude(double lon, double lat);
 
+/* walk through mesh and make opengl calls */
+GLint mesh_to_OpenGL(struct mesh *m);
+
 
 #endif /* MESH_H */
 
 
 /* $Log$
-/* Revision 1.5  1997/07/23 21:52:25  curt
-/* Put comments around the text after an #endif for increased portability.
+/* Revision 1.6  1997/08/02 19:10:15  curt
+/* Incorporated mesh2GL.c into mesh.c
 /*
+ * Revision 1.5  1997/07/23 21:52:25  curt
+ * Put comments around the text after an #endif for increased portability.
+ *
  * Revision 1.4  1997/07/08 18:20:14  curt
  * Working on establishing a hard ground.
  *

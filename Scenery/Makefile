@@ -27,7 +27,6 @@
 TARGET = libScenery.a
 
 CFILES = chunkmgr.c common.c mesh.c scenery.c scanner.c parser.c geometry.c
-HFILES = 
 OFILES = $(CFILES:.c=.o)
 
 
@@ -84,6 +83,9 @@ common.o:
 mesh.o:
 	$(CC) $(CFLAGS) -c mesh.c -o $@
 
+mesh2GL.o:
+	$(CC) $(CFLAGS) -c mesh2GL.c -o $@
+
 scenery.o:
 	$(CC) $(CFLAGS) -c scenery.c -o $@
 
@@ -92,6 +94,9 @@ geometry.o:
 
 #---------------------------------------------------------------------------
 # $Log$
+# Revision 1.18  1997/08/02 19:10:12  curt
+# Incorporated mesh2GL.c into mesh.c
+#
 # Revision 1.17  1997/07/23 21:52:23  curt
 # Put comments around the text after an #endif for increased portability.
 #
