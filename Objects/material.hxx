@@ -48,6 +48,7 @@ extern "C" void *memset(void *, int, size_t);
 
 #include <string>        // Standard C++ string library
 #include <map>           // STL associative "array"
+#include <vector>        // STL "array"
 
 #ifdef NEEDNAMESPACESTD
 using namespace std;
@@ -57,7 +58,13 @@ using namespace std;
 class fgFRAGMENT;
 
 
-#define FG_MAX_MATERIAL_FRAGS 800
+// convenience types
+typedef vector < fgFRAGMENT * > frag_list_type;
+typedef frag_list_type::iterator frag_list_iterator;
+typedef frag_list_type::const_iterator frag_list_const_iterator;
+
+
+// #define FG_MAX_MATERIAL_FRAGS 800
 
 
 // Material property class
@@ -79,23 +86,26 @@ private:
 
     // transient list of objects with this material type (used for sorting
     // by material to reduce GL state changes when rendering the scene
-    fgFRAGMENT * list[FG_MAX_MATERIAL_FRAGS];
-    size_t list_size;
+    frag_list_type list;
+    // size_t list_size;
 
 public:
 
     // Constructor
     fgMATERIAL ( void );
 
-    size_t size() const { return list_size; }
-    bool empty() const { return list_size == 0; }
+    int size() const { return list.size(); }
+    bool empty() const { return list.size() == 0; }
 
     // Sorting routines
     void init_sort_list( void ) {
-	list_size = 0;
+	list.erase( list.begin(), list.end() );
     }
 
-    int append_sort_list( fgFRAGMENT *object );
+    bool append_sort_list( fgFRAGMENT *object ) {
+	list.push_back( object );
+	return true;
+    }
 
     void render_fragments();
 
@@ -160,6 +170,9 @@ extern fgMATERIAL_MGR material_mgr;
 
 
 // $Log$
+// Revision 1.5  1998/10/12 23:49:18  curt
+// Changes from NHV to make the code more dynamic with fewer hard coded limits.
+//
 // Revision 1.4  1998/09/17 18:35:53  curt
 // Tweaks and optimizations by Norman Vine.
 //

@@ -55,8 +55,8 @@ fgMATERIAL_MGR material_mgr;
 // Constructor
 fgMATERIAL::fgMATERIAL ( void )
     : texture_name(""),
-      alpha(0),
-      list_size(0)
+      alpha(0)
+      // , list_size(0)
 {
     ambient[0]  = ambient[1]  = ambient[2]  = ambient[3]  = 0.0;
     diffuse[0]  = diffuse[1]  = diffuse[2]  = diffuse[3]  = 0.0;
@@ -64,7 +64,7 @@ fgMATERIAL::fgMATERIAL ( void )
     emissive[0] = emissive[1] = emissive[2] = emissive[3] = 0.0;
 }
 
-
+/*
 int
 fgMATERIAL::append_sort_list( fgFRAGMENT *object )
 {
@@ -75,6 +75,7 @@ fgMATERIAL::append_sort_list( fgFRAGMENT *object )
 	return 0;
     }
 }
+*/
 
 istream&
 operator >> ( istream& in, fgMATERIAL& m )
@@ -248,9 +249,11 @@ fgMATERIAL::render_fragments()
     }
 
     fgTILE* last_tile_ptr = NULL;
-    for ( size_t i = 0; i < list_size; ++i )
-    {
-	fgFRAGMENT* frag_ptr = list[i];
+    frag_list_iterator current = list.begin();
+    frag_list_iterator last = list.end();
+
+    for ( ; current != last; ++current ) {
+	fgFRAGMENT* frag_ptr = *current;
 	current_view.tris_rendered += frag_ptr->num_faces();
 	if ( frag_ptr->tile_ptr != last_tile_ptr )
 	{
@@ -354,6 +357,9 @@ fgMATERIAL_MGR::render_fragments()
 
 
 // $Log$
+// Revision 1.8  1998/10/12 23:49:17  curt
+// Changes from NHV to make the code more dynamic with fewer hard coded limits.
+//
 // Revision 1.7  1998/09/17 18:35:52  curt
 // Tweaks and optimizations by Norman Vine.
 //
