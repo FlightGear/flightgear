@@ -143,7 +143,11 @@ fgSetDefaults ()
     // fgSetString("/sim/startup/mouse-pointer", "disabled");
     fgSetString("/sim/control-mode", "joystick");
     fgSetBool("/sim/auto-coordination", false);
-
+#if !defined(WIN32)
+    fgSetString("/sim/startup/browser-app", "netscape");
+#else
+    fgSetString("/sim/startup/browser-app", "webrun.bat");
+#endif
 				// Features
     fgSetBool("/sim/hud/visibility", false);
     fgSetBool("/sim/panel/visibility", true);
@@ -558,6 +562,8 @@ parse_option (const string& arg)
         fgSetBool("/sim/auto-coordination", false);
     } else if ( arg == "--enable-auto-coordination" ) {
 	fgSetBool("/sim/auto-coordination", true);
+    } else if ( arg.find( "--browser-app=") == 0 ) {
+	fgSetString("/sim/startup/browser-app", arg.substr(14));
     } else if ( arg == "--disable-hud" ) {
 	fgSetBool("/sim/hud/visibility", false);
     } else if ( arg == "--enable-hud" ) {
@@ -1044,6 +1050,9 @@ fgUsage ()
     cout << "\t--enable-freeze:  start out in a frozen state" << endl;
     cout << "\t--control=mode:  primary control mode " 
 	 << "(joystick, keyboard, mouse)" << endl;
+    cout << "\t--enable-auto-coordination:  enable auto coordination" << endl;
+    cout << "\t--disable-auto-coordination:  disable auto coordination" << endl;
+    cout << "\t--browser-app=/path/to/app:  specify location of your web browser" << endl;
     cout << "\t--prop:name=value:  set property <name> to <value>" << endl;
     cout << "\t--config=path:  load additional properties from path" << endl;
     cout << endl;
