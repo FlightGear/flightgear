@@ -226,11 +226,11 @@ private:
 	string trans_ident;		// transmitted ident
 	bool tower_failed;		// tower failed?
 	
-    // Pointers to current users position and orientation
-    SGPropertyNode* user_lon_node;
-    SGPropertyNode* user_lat_node;
-    SGPropertyNode* user_elev_node;
-    SGPropertyNode* user_hdg_node;
+	// Pointers to current users position and orientation
+	SGPropertyNode* user_lon_node;
+	SGPropertyNode* user_lat_node;
+	SGPropertyNode* user_elev_node;
+	SGPropertyNode* user_hdg_node;
 	
 	// Details of the general traffic flow etc in the circuit
 	double crosswind_leg_pos;	// Distance from threshold crosswind leg is being turned to in meters (actual operation - *not* ideal circuit)
