@@ -641,7 +641,9 @@ void guiMouseFunc(int button, int updown, int x, int y)
     // If we're in pointer mode, let PUI
     // know what's going on.
     if (mouse_mode == MOUSE_POINTER) {
-        puMouse (button, updown, x,y);
+      if (!puMouse (button, updown, x,y)) {
+	current_panel.doMouseAction(button, updown, x, y);
+      }
     }
     
     // Register the new position (if it
@@ -679,11 +681,6 @@ void guiFixPanel( void )
 
         if( (toggle_pause = !t->getPause()) )
             t->togglePauseMode();
-
-        // this seems to be the only way to do this :-(
-        // problem is the viewport has been mucked with
-        xglViewport(0, 0 , (GLint)(v->winWidth), (GLint)(v->winHeight) );
-        FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
 
         if(toggle_pause)
             t->togglePauseMode();

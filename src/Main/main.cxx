@@ -1168,9 +1168,6 @@ void fgReshape( int width, int height ) {
 	// the main loop, so this will now work without seg faulting
 	// the system.
 	current_view.UpdateViewParams(cur_view_fdm);
-	if ( current_options.get_panel_status() ) {
-	    FGPanel::OurPanel->ReInit(0, 0, 1024, 768);
-	}
     }
 }
 

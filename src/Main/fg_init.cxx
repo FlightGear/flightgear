@@ -476,10 +476,10 @@ bool fgInitSubsystems( void ) {
     current_radiostack = new FGRadioStack;
 
     current_radiostack->set_nav1_freq( 110.30 );
-    current_radiostack->set_nav1_radial( 299.0 );
+    current_radiostack->set_nav1_sel_radial( 299.0 );
 
     current_radiostack->set_nav2_freq( 115.70 );
-    current_radiostack->set_nav2_radial( 45.0 );
+    current_radiostack->set_nav2_sel_radial( 45.0 );
 
     current_radiostack->set_adf_freq( 266.0 );
 
@@ -494,6 +494,9 @@ bool fgInitSubsystems( void ) {
     	FG_LOG( FG_GENERAL, FG_ALERT, "Error in Cockpit initialization!" );
 	exit(-1);
     }
+
+    // Initialize the 2D panel.
+    current_panel.init(0, 0, 1024, 768);
 
     // Initialize the flight model subsystem data structures base on
     // above values

@@ -45,6 +45,10 @@ FGRadioStack::~FGRadioStack() {
 void FGRadioStack::update( double lon, double lat, double elev ) {
     need_update = false;
 
+    // Start with the selected radials.
+    nav1_radial = nav1_selected_radial;
+    nav2_radial = nav2_selected_radial;
+
     // nav1
     FGILS ils;
     if ( current_ilslist->query( lon, lat, elev, nav1_freq,

@@ -533,11 +533,7 @@ void fgCockpitUpdate( void ) {
     }
 #endif // #ifdef DISPLAY_COUNTER
     
-    if( current_options.get_panel_status() && 
-         (fabs( current_view.get_view_offset() ) < 0.2) )
-    {
-        xglViewport( 0, 0, iwidth, iheight );
+    xglViewport( 0, 0, iwidth, iheight );
 
-        FGPanel::OurPanel->Update();
-    }
+    current_panel.update();
 }

@@ -35,6 +35,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/fgpath.hxx>
 #include <Main/options.hxx>
+#include <Main/views.hxx>
 #include <Main/bfi.hxx>
 #include <Objects/texload.h>
 #include <Autopilot/autopilot.hxx>
@@ -80,12 +81,8 @@ static char * panelGetTime (char * buf)
 // they're hard-coded.
 ////////////////////////////////////////////////////////////////////////
 
-static ssgTexture *
-createTexture (const char * relativePath)
-{
-  return FGPanel::OurPanel->createTexture(relativePath);
-}
 
+#define createTexture(a) FGTextureManager::createTexture(a)
 
 /**
  * Construct an airspeed indicator for a single-engine prop.
@@ -221,6 +218,18 @@ createGyroCompass (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
+				// Action: move bug counter-clockwise
+  inst->addAction(SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5,
+		  new FGAdjustAction(FGBFI::getAPHeading,
+				     FGBFI::setAPHeading,
+				     -1.0, 0.0, 360.0, true));
+
+				// Action: move bug clockwise
+  inst->addAction(SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
+		  new FGAdjustAction(FGBFI::getAPHeading,
+				     FGBFI::setAPHeading,
+				     1.0, 0.0, 360.0, true));
+
 				// Layer 0: compass background
 				// rotates with heading
   inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
@@ -240,6 +249,15 @@ createGyroCompass (int x, int y)
 
 				// Layer 2: fixed center
   inst->addLayer(2, createTexture("Textures/Panel/gyro-fg.rgb"));
+
+				// Layer 3: heading knob
+				// rotates with AP heading
+  inst->addLayer(3, createTexture("Textures/Panel/heading-knob.rgb"));
+  inst->addTransformation(3, FGInstrumentLayer::XSHIFT, SIX_W/2 - 10); 
+  inst->addTransformation(3, FGInstrumentLayer::YSHIFT, -SIX_W/2 + 10); 
+  inst->addTransformation(3, FGInstrumentLayer::ROTATION,
+			  FGBFI::getAPHeading,
+			  -360.0, 360.0, 1.0, 0.0);
 
   return inst;
 }
@@ -389,48 +407,99 @@ createNAV1 (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
+				// Action: increase selected radial
+  inst->addAction(SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5,
+		  new FGAdjustAction(FGBFI::getNAV1SelRadial,
+				     FGBFI::setNAV1SelRadial,
+				     1.0, 0.0, 360.0, true));
+
+				// Action: decrease selected radial
+  inst->addAction(SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
+		  new FGAdjustAction(FGBFI::getNAV1SelRadial,
+				     FGBFI::setNAV1SelRadial,
+				     -1.0, 0.0, 360.0, true));
+
 				// Layer 0: background
   inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
   inst->addTransformation(0, FGInstrumentLayer::ROTATION,
-			  FGSteam::get_HackOBS1_deg,
+			  FGBFI::getNAV1SelRadial,
 			  -360.0, 360.0, -1.0, 0.0);
-				// Layer 1: long needle
+
+				// Layer 1: left-right needle.
   inst->addLayer(1, createTexture("Textures/Panel/nav-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::XSHIFT,
 			  FGSteam::get_HackVOR1_deg,
 			  -10.0, 10.0, SIX_W / 40.0, 0.0);
+
+				// Layer 2: glidescope needle
   inst->addLayer(2, createTexture("Textures/Panel/nav-needle.rgb"));
   inst->addTransformation(2, FGInstrumentLayer::YSHIFT,
 			  FGSteam::get_HackGS_deg,
 			  -1.0, 1.0, SIX_W / 5.0, 0.0);
   inst->addTransformation(2, FGInstrumentLayer::ROTATION,
 			  90 );
+
+				// Layer 3: face with markings
   inst->addLayer(3, createTexture("Textures/Panel/nav-face.rgb"));
+
+				// Layer 4: heading knob
+				// rotates with selected radial
+  inst->addLayer(4, createTexture("Textures/Panel/heading-knob.rgb"));
+  inst->addTransformation(4, FGInstrumentLayer::XSHIFT, SIX_W/2 - 10); 
+  inst->addTransformation(4, FGInstrumentLayer::YSHIFT, -SIX_W/2 + 10); 
+  inst->addTransformation(4, FGInstrumentLayer::ROTATION,
+			  FGBFI::getNAV1SelRadial,
+			  -360.0, 360.0, -1.0, 0.0);
 
   return inst;
 }
 
 
 /**
- * Construct a NAV2 gauge (hardwired).
+ * Construct a NAV2 gauge.
  */
 static FGPanelInstrument *
 createNAV2 (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
+				// Action: increase selected radial
+  inst->addAction(SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5,
+		  new FGAdjustAction(FGBFI::getNAV2SelRadial,
+				     FGBFI::setNAV2SelRadial,
+				     1.0, 0.0, 360.0, true));
+
+				// Action: decrease selected radial
+  inst->addAction(SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
+		  new FGAdjustAction(FGBFI::getNAV2SelRadial,
+				     FGBFI::setNAV2SelRadial,
+				     -1.0, 0.0, 360.0, true));
+
 				// Layer 0: background
   inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
   inst->addTransformation(0, FGInstrumentLayer::ROTATION,
-			  FGSteam::get_HackOBS2_deg,
+			  FGBFI::getNAV2SelRadial,
 			  -360.0, 360.0, -1.0, 0.0);
+
+				// Layer 1: left-right needle.
   inst->addLayer(1, createTexture("Textures/Panel/nav-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::XSHIFT,
 			  FGSteam::get_HackVOR2_deg,
 			  -10.0, 10.0, SIX_W / 40.0, 0.0);
 //   inst->addTransformation(1, FGInstrumentLayer::YSHIFT,
 // 			  -SIX_W / 4.4 );
+
+				// Layer 2: face with markings.
   inst->addLayer(2, createTexture("Textures/Panel/nav-face.rgb"));
+
+				// Layer 3: heading knob
+				// rotates with selected radial
+  inst->addLayer(3, createTexture("Textures/Panel/heading-knob.rgb"));
+  inst->addTransformation(3, FGInstrumentLayer::XSHIFT, SIX_W/2 - 10); 
+  inst->addTransformation(3, FGInstrumentLayer::YSHIFT, -SIX_W/2 + 10); 
+  inst->addTransformation(3, FGInstrumentLayer::ROTATION,
+			  FGBFI::getNAV2SelRadial,
+			  -360.0, 360.0, -1.0, 0.0);
 
   return inst;
 }
@@ -444,14 +513,65 @@ createADF (int x, int y)
 {
   FGLayeredInstrument * inst = new FGLayeredInstrument(x, y, SIX_W, SIX_W);
 
+				// Action: increase selected rotation
+  inst->addAction(SIX_W/2 - SIX_W/5, -SIX_W/2, SIX_W/10, SIX_W/5,
+		  new FGAdjustAction(FGBFI::getADFRotation,
+				     FGBFI::setADFRotation,
+				     1.0, 0.0, 360.0, true));
+
+				// Action: decrease selected rotation
+  inst->addAction(SIX_W/2 - SIX_W/10, -SIX_W/2, SIX_W/10, SIX_W/5,
+		  new FGAdjustAction(FGBFI::getADFRotation,
+				     FGBFI::setADFRotation,
+				     -1.0, 0.0, 360.0, true));
+
 				// Layer 0: background
   inst->addLayer(0, createTexture("Textures/Panel/gyro-bg.rgb"));
+  inst->addTransformation(0, FGInstrumentLayer::ROTATION,
+			  FGBFI::getADFRotation,
+			  0.0, 360.0, 1.0, 0.0);
+
+				// Layer 1: Direction needle.
   inst->addLayer(1, createTexture("Textures/Panel/long-needle.rgb"));
   inst->addTransformation(1, FGInstrumentLayer::ROTATION,
 			  FGSteam::get_HackADF_deg,
 			  -720.0, 720.0, 1.0, 0.0);
 
+				// Layer 2: heading knob
+				// rotates with selected radial
+  inst->addLayer(2, createTexture("Textures/Panel/heading-knob.rgb"));
+  inst->addTransformation(2, FGInstrumentLayer::XSHIFT, SIX_W/2 - 10); 
+  inst->addTransformation(2, FGInstrumentLayer::YSHIFT, -SIX_W/2 + 10); 
+  inst->addTransformation(2, FGInstrumentLayer::ROTATION,
+			  FGBFI::getADFRotation,
+			  -360.0, 360.0, -1.0, 0.0);
   return inst;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGTextureManager.
+////////////////////////////////////////////////////////////////////////
+
+map<const char *,ssgTexture *> FGTextureManager::_textureMap;
+
+ssgTexture *
+FGTextureManager::createTexture (const char * relativePath)
+{
+  ssgTexture *texture;
+
+  texture = _textureMap[relativePath];
+  if (texture == 0) {
+    FGPath tpath(current_options.get_fg_root());
+    tpath.append(relativePath);
+    texture = new ssgTexture((char *)tpath.c_str(), false, false);
+    _textureMap[relativePath] = texture;
+    cerr << "Created texture " << relativePath
+	 << " handle=" << texture->getHandle() << endl;
+  }
+
+  return texture;
 }
 
 
@@ -460,64 +580,16 @@ createADF (int x, int y)
 // Implementation of FGPanel.
 ////////////////////////////////////////////////////////////////////////
 
-FGPanel * FGPanel::OurPanel = 0;
+FGPanel current_panel;
 
 FGPanel::FGPanel ()
+  : _initialized(false),
+    _visibility(false)
 {
-  if (OurPanel == 0) {
-    OurPanel = this;
-  } else {
-    FG_LOG(FG_GENERAL, FG_ALERT, "Multiple panels");
-    exit(-1);
-  }
-
-  int x = SIX_X;
-  int y = SIX_Y;
-
-  _bg = createTexture("Textures/Panel/panel-bg.rgb");
-
-				// Chronometer alone at side
-  x = SIX_X - SIX_SPACING - 8;
-  _instruments.push_back(createChronometer(x, y));
-
-				// Top row
-  x = SIX_X;
-  _instruments.push_back(createAirspeedIndicator(x, y));
-  x += SIX_SPACING;
-  _instruments.push_back(createHorizon(x, y));
-  x += SIX_SPACING;
-  _instruments.push_back(createAltimeter(x, y));
-  x += SIX_SPACING + 20;
-  _instruments.push_back(createNAV1(x, y));
-
-				// Middle row
-  x = SIX_X;
-  y -= SIX_SPACING;
-  _instruments.push_back(createTurnCoordinator(x, y));
-  x += SIX_SPACING;
-  _instruments.push_back(createGyroCompass(x, y));
-  x += SIX_SPACING;
-  _instruments.push_back(createVerticalVelocity(x, y));
-  x += SIX_SPACING + 20;
-  _instruments.push_back(createNAV2(x, y));
-
-				// Bottom row
-  x = SIX_X;
-  y -= SIX_SPACING + 10;
-  _instruments.push_back(createControls(x, y));
-  x += SIX_SPACING;
-  _instruments.push_back(createFlapIndicator(x, y));
-  x += SIX_SPACING;
-  _instruments.push_back(createRPMGauge(x, y));
-  x += SIX_SPACING + 20;
-  y += 10;
-  _instruments.push_back(createADF(x, y));
 }
 
 FGPanel::~FGPanel ()
 {
-  OurPanel = 0;
-
   instrument_list_type::iterator current = _instruments.begin();
   instrument_list_type::iterator last = _instruments.end();
   
@@ -527,25 +599,76 @@ FGPanel::~FGPanel ()
   }
 }
 
-float
-FGPanel::get_height () const
+void
+FGPanel::addInstrument (FGPanelInstrument * instrument)
 {
-  return _panel_h;
+  _instruments.push_back(instrument);
 }
 
 void
-FGPanel::ReInit (int x, int y, int finx, int finy)
+FGPanel::init (int x, int y, int finx, int finy)
 {
   _x = x;
   _y = y;
   _w = finx - x;
   _h = finy - y;
   _panel_h = (int)((finy - y) * 0.5768 + 1);
+
+				// Don't reconstruct all of the
+				// instruments.
+  if (_initialized)
+    return;
+
+  x = SIX_X;
+  y = SIX_Y;
+
+  _bg = createTexture("Textures/Panel/panel-bg.rgb");
+
+				// Chronometer alone at side
+  x = SIX_X - SIX_SPACING - 8;
+  addInstrument(createChronometer(x, y));
+
+				// Top row
+  x = SIX_X;
+  addInstrument(createAirspeedIndicator(x, y));
+  x += SIX_SPACING;
+  addInstrument(createHorizon(x, y));
+  x += SIX_SPACING;
+  addInstrument(createAltimeter(x, y));
+  x += SIX_SPACING + 20;
+  addInstrument(createNAV1(x, y));
+
+				// Middle row
+  x = SIX_X;
+  y -= SIX_SPACING;
+  addInstrument(createTurnCoordinator(x, y));
+  x += SIX_SPACING;
+  addInstrument(createGyroCompass(x, y));
+  x += SIX_SPACING;
+  addInstrument(createVerticalVelocity(x, y));
+  x += SIX_SPACING + 20;
+  addInstrument(createNAV2(x, y));
+
+				// Bottom row
+  x = SIX_X;
+  y -= SIX_SPACING + 10;
+  addInstrument(createControls(x, y));
+  x += SIX_SPACING;
+  addInstrument(createFlapIndicator(x, y));
+  x += SIX_SPACING;
+  addInstrument(createRPMGauge(x, y));
+  x += SIX_SPACING + 20;
+  y += 10;
+  addInstrument(createADF(x, y));
 }
 
 void
-FGPanel::Update () const
+FGPanel::update () const
 {
+				// Do nothing if the panel isn't visible.
+  if (!_visibility)
+    return;
+
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
@@ -592,22 +715,74 @@ FGPanel::Update () const
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }
 
-ssgTexture *
-FGPanel::createTexture (const char * relativePath)
+void
+FGPanel::setVisibility (bool visibility)
 {
-  ssgTexture *texture;
+  _visibility = visibility;
+}
 
-  texture = _textureMap[relativePath];
-  if (texture == 0) {
-    FGPath tpath(current_options.get_fg_root());
-    tpath.append(relativePath);
-    texture = new ssgTexture((char *)tpath.c_str(), false, false);
-    _textureMap[relativePath] = texture;
-    cerr << "Created texture " << relativePath
-	 << " handle=" << texture->getHandle() << endl;
+bool
+FGPanel::getVisibility () const
+{
+  return _visibility;
+}
+
+bool
+FGPanel::doMouseAction (int button, int updown, int x, int y)
+{
+				// For now, ignore the release
+  if (updown == 1) 
+    return true;
+
+  x = (int)(((float)x / current_view.get_winWidth()) * _w);
+  y = (int)(_h - (((float)y / current_view.get_winHeight()) * _h));
+
+  for (int i = 0; i < _instruments.size(); i++) {
+    FGPanelInstrument *inst = _instruments[i];
+    int ix = inst->getXPos();
+    int iy = inst->getYPos();
+    int iw = inst->getWidth() / 2;
+    int ih = inst->getHeight() / 2;
+    if (x >= ix - iw && x < ix + iw && y >= iy - ih && y < iy + ih) {
+      cout << "Do mouse action for component " << i << '\n';
+      return inst->doMouseAction(button, updown, x - ix, y - iy);
+    }
   }
+  cout << "Did not click on an instrument\n";
+  return false;
+}
 
-  return texture;
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation of FGAdjustAction.
+////////////////////////////////////////////////////////////////////////
+
+FGAdjustAction::FGAdjustAction (getter_type getter, setter_type setter,
+				double increment, double min, double max,
+				bool wrap=false)
+  : _getter(getter), _setter(setter), _increment(increment),
+    _min(min), _max(max), _wrap(wrap)
+{
+}
+
+FGAdjustAction::~FGAdjustAction ()
+{
+}
+
+void
+FGAdjustAction::doAction ()
+{
+  double value = (*_getter)();
+  cout << "Do action; value=" << value << '\n';
+  value += _increment;
+  if (value < _min) {
+    value = (_wrap ? _max : _min);
+  } else if (value > _max) {
+    value = (_wrap ? _min : _max);
+  }
+  cout << "New value is " << value << '\n';
+  (*_setter)(value);
 }
 
 
@@ -631,6 +806,11 @@ FGPanelInstrument::FGPanelInstrument (int x, int y, int w, int h)
 
 FGPanelInstrument::~FGPanelInstrument ()
 {
+  action_list_type::iterator it = _actions.begin();
+  action_list_type::iterator last = _actions.end();
+  for ( ; it != last; it++) {
+    delete it->action;
+  }
 }
 
 void
@@ -657,6 +837,49 @@ int
 FGPanelInstrument::getYPos () const
 {
   return _y;
+}
+
+int
+FGPanelInstrument::getWidth () const
+{
+  return _w;
+}
+
+int
+FGPanelInstrument::getHeight () const
+{
+  return _h;
+}
+
+void
+FGPanelInstrument::addAction (int x, int y, int w, int h,
+			      FGPanelAction * action)
+{
+  FGPanelInstrument::inst_action act;
+  act.x = x;
+  act.y = y;
+  act.w = w;
+  act.h = h;
+  act.action = action;
+  _actions.push_back(act);
+}
+
+				// Coordinates relative to centre.
+bool
+FGPanelInstrument::doMouseAction (int button, int updown, int x, int y)
+{
+  action_list_type::iterator it = _actions.begin();
+  action_list_type::iterator last = _actions.end();
+  cout << "Mouse action at " << x << ',' << y << '\n';
+  for ( ; it != last; it++) {
+    cout << "Trying action at " << it->x << ',' << it->y << ','
+	 << it->w <<',' << it->h << '\n';
+    if (x >= it->x && x < it->x + it->w && y >= it->y && y < it->y + it->h) {
+      it->action->doAction();
+      return true;
+    }
+  }
+  return false;
 }
 
 

@@ -35,6 +35,8 @@ class FGRadioStack {
     bool nav1_inrange;
     bool nav1_loc;
     double nav1_freq;
+    double nav1_alt_freq;
+    double nav1_selected_radial;
     double nav1_radial;
     double nav1_lon;
     double nav1_lat;
@@ -46,6 +48,8 @@ class FGRadioStack {
     bool nav2_inrange;
     bool nav2_loc;
     double nav2_freq;
+    double nav2_alt_freq;
+    double nav2_selected_radial;
     double nav2_radial;
     double nav2_lon;
     double nav2_lat;
@@ -56,6 +60,8 @@ class FGRadioStack {
 
     bool adf_inrange;
     double adf_freq;
+    double adf_alt_freq;
+    double adf_rotation;
     double adf_lon;
     double adf_lat;
     double adf_elev;
@@ -69,25 +75,48 @@ public:
     // Update nav/adf radios based on current postition
     void update( double lon, double lat, double elev );
 
+    // NAV1 Setters
     inline void set_nav1_freq( double freq ) {
 	nav1_freq = freq; need_update = true;
     }
-    inline void set_nav1_radial( double radial ) {
-	nav1_radial = radial; need_update = true;
+    inline void set_nav1_alt_freq( double freq ) { nav1_alt_freq = freq; }
+    inline void set_nav1_sel_radial( double radial ) {
+	nav1_selected_radial = radial; need_update = true;
     }
 
+    // NAV2 Setters
     inline void set_nav2_freq( double freq ) {
 	nav2_freq = freq; need_update = true;
     }
-
-    inline void set_nav2_radial( double radial ) {
-	nav2_radial = radial; need_update = true;
+    inline void set_nav2_alt_freq( double freq ) { nav2_alt_freq = freq; }
+    inline void set_nav2_sel_radial( double radial ) {
+	nav2_selected_radial = radial; need_update = true;
     }
 
+    // ADF Setters
     inline void set_adf_freq( double freq ) {
 	adf_freq = freq; need_update = true;
     }
+    inline void set_adf_alt_freq( double freq ) { adf_alt_freq = freq; }
+    inline void set_adf_rotation( double rot ) { adf_rotation = rot; }
 
+
+    // NAV1 Accessors
+    inline double get_nav1_freq () { return nav1_freq; }
+    inline double get_nav1_alt_freq () { return nav1_alt_freq; }
+    inline double get_nav1_sel_radial () { return nav1_selected_radial; }
+
+    // NAV2 Accessors
+    inline double get_nav2_freq () { return nav2_freq; }
+    inline double get_nav2_alt_freq () { return nav2_alt_freq; }
+    inline double get_nav2_sel_radial () { return nav2_selected_radial; }
+
+    // ADF Accessors
+    inline double get_adf_freq () { return adf_freq; }
+    inline double get_adf_alt_freq () { return adf_alt_freq; }
+    inline double get_adf_rotation () { return adf_rotation; }
+
+    // Calculated values.
     inline bool get_nav1_inrange() const { return nav1_inrange; }
     inline bool get_nav1_loc() const { return nav1_loc; }
     inline double get_nav1_radial() const { return nav1_radial; }

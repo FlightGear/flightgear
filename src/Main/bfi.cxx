@@ -39,6 +39,7 @@
 #include <Autopilot/autopilot.hxx>
 #include <Time/fg_time.hxx>
 #include <Time/light.hxx>
+#include <Cockpit/radiostack.hxx>
 #ifndef FG_OLD_WEATHER
 #  include <WeatherCM/FGLocalWeatherDatabase.h>
 #else
@@ -728,6 +729,132 @@ void
 FGBFI::setAPHeading (double heading)
 {
   fgAPHeadingSet(heading);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Radio navigation.
+////////////////////////////////////////////////////////////////////////
+
+double
+FGBFI::getNAV1Freq ()
+{
+  return current_radiostack->get_nav1_freq();
+}
+
+double
+FGBFI::getNAV1AltFreq ()
+{
+  return current_radiostack->get_nav1_alt_freq();
+}
+
+double
+FGBFI::getNAV1SelRadial ()
+{
+  return current_radiostack->get_nav1_sel_radial();
+}
+
+double
+FGBFI::getNAV1Radial ()
+{
+  return current_radiostack->get_nav1_radial();
+}
+
+double
+FGBFI::getNAV2Freq ()
+{
+  return current_radiostack->get_nav2_freq();
+}
+
+double
+FGBFI::getNAV2AltFreq ()
+{
+  return current_radiostack->get_nav2_alt_freq();
+}
+
+double
+FGBFI::getNAV2SelRadial ()
+{
+  return current_radiostack->get_nav2_sel_radial();
+}
+
+double
+FGBFI::getNAV2Radial ()
+{
+  return current_radiostack->get_nav2_radial();
+}
+
+double
+FGBFI::getADFFreq ()
+{
+  return current_radiostack->get_adf_freq();
+}
+
+double
+FGBFI::getADFAltFreq ()
+{
+  return current_radiostack->get_adf_alt_freq();
+}
+
+double
+FGBFI::getADFRotation ()
+{
+  return current_radiostack->get_adf_rotation();
+}
+
+void
+FGBFI::setNAV1Freq (double freq)
+{
+  current_radiostack->set_nav1_freq(freq);
+}
+
+void
+FGBFI::setNAV1AltFreq (double freq)
+{
+  current_radiostack->set_nav1_alt_freq(freq);
+}
+
+void
+FGBFI::setNAV1SelRadial (double radial)
+{
+  current_radiostack->set_nav1_sel_radial(radial);
+}
+
+void
+FGBFI::setNAV2Freq (double freq)
+{
+  current_radiostack->set_nav2_freq(freq);
+}
+
+void
+FGBFI::setNAV2AltFreq (double freq)
+{
+  current_radiostack->set_nav2_alt_freq(freq);
+}
+
+void
+FGBFI::setNAV2SelRadial (double radial)
+{
+  current_radiostack->set_nav2_sel_radial(radial);
+}
+
+void
+FGBFI::setADFFreq (double freq)
+{
+  current_radiostack->set_adf_freq(freq);
+}
+
+void
+FGBFI::setADFAltFreq (double freq)
+{
+  current_radiostack->set_adf_alt_freq(freq);
+}
+
+void
+FGBFI::setADFRotation (double rot)
+{
+  current_radiostack->set_adf_rotation(rot);
 }
 
 

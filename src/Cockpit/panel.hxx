@@ -46,6 +46,20 @@ FG_USING_STD(map);
 
 class FGPanelInstrument;
 
+
+
+////////////////////////////////////////////////////////////////////////
+// Texture manager (should migrate out into FGFS).
+////////////////////////////////////////////////////////////////////////
+
+class FGTextureManager
+{
+public:
+  static ssgTexture * createTexture(const char * relativePath);
+private:
+  static map<const char *,ssgTexture *>_textureMap;
+};
+
 
 ////////////////////////////////////////////////////////////////////////
 // Instrument panel class.
@@ -58,28 +72,62 @@ public:
   FGPanel ();
   virtual ~FGPanel ();
 
-  virtual ssgTexture * createTexture (const char * relativePath);
+				// transfer pointer ownership!!!
+  virtual void addInstrument (FGPanelInstrument * instrument);
+  virtual void init (int x, int y, int finx, int finy);
+  virtual void update () const;
+  
+  virtual bool getVisibility () const;
+  virtual void setVisibility (bool visibility);
 
-				// Legacy interface from old panel.
-  static FGPanel * OurPanel;
-  virtual float get_height () const;
-  virtual void ReInit (int x, int y, int finx, int finy);
-  virtual void Update () const;
+  virtual bool doMouseAction (int button, int updown, int x, int y);
 
 private:
-
+  bool _initialized;
+  bool _visibility;
   typedef vector<FGPanelInstrument *> instrument_list_type;
-
   int _x, _y, _w, _h;
   int _panel_h;
-
   ssgTexture * _bg;
-
-				// Internalization table.
-  map<const char *,ssgTexture *> _textureMap;
-
 				// List of instruments in panel.
   instrument_list_type _instruments;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Base class for user action types.
+////////////////////////////////////////////////////////////////////////
+
+class FGPanelAction
+{
+public:
+  virtual void doAction () = 0;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Adjustment action.
+////////////////////////////////////////////////////////////////////////
+
+class FGAdjustAction : public FGPanelAction
+{
+public:
+  typedef double (*getter_type)();
+  typedef void (*setter_type)(double);
+
+  FGAdjustAction (getter_type getter, setter_type setter, double increment,
+		  double min, double max, bool wrap=false);
+  virtual ~FGAdjustAction ();
+  virtual void doAction ();
+private:
+  getter_type _getter;
+  setter_type _setter;
+  double _increment;
+  double _min;
+  double _max;
+  bool _wrap;
 };
 
 
@@ -102,9 +150,28 @@ public:
 
   virtual int getXPos () const;
   virtual int getYPos () const;
+  virtual int getWidth () const;
+  virtual int getHeight () const;
+
+				// Coordinates relative to centre.
+				// Transfer pointer ownership!!
+  virtual void addAction (int x, int y, int w, int h,
+			  FGPanelAction * action);
+
+				// Coordinates relative to centre.
+  virtual bool doMouseAction (int button, int updown, int x, int y);
 
 protected:
   int _x, _y, _w, _h;
+  typedef struct {
+    int x;
+    int y;
+    int w;
+    int h;
+    FGPanelAction * action;
+  } inst_action;
+  typedef vector<inst_action> action_list_type;
+  action_list_type _actions;
 };
 
 
@@ -180,6 +247,7 @@ public:
 
   virtual void draw () const;
 
+				// Transfer pointer ownership!!
   virtual void addLayer (FGInstrumentLayer *layer);
   virtual void addLayer (int i, ssgTexture * texture);
   virtual void addTransformation (int layer,
@@ -251,6 +319,14 @@ private:
   mutable fntRenderer _renderer;
   mutable char _buf[1024];
 };
+
+
+
+////////////////////////////////////////////////////////////////////////
+// The current panel, if any.
+////////////////////////////////////////////////////////////////////////
+
+extern FGPanel current_panel;
 
 
 

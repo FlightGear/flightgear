@@ -107,11 +107,6 @@ void FGView::Init( void ) {
 void FGView::UpdateViewParams( const FGInterface& f ) {
     UpdateViewMath(f);
     
-    if ((current_options.get_panel_status() != panel_hist) &&                          (current_options.get_panel_status()))
-    {
-	FGPanel::OurPanel->ReInit( 0, 0, 1024, 768);
-    }
-
     if ( ! current_options.get_panel_status() ) {
 	xglViewport(0, 0 , (GLint)(winWidth), (GLint)(winHeight) );
     } else {
