@@ -192,7 +192,8 @@ AC_CHECK_FUNCS( ftime gettimeofday mktime strstr rand random \
 
 if test "x$ac_cv_lib_glut_glutGetModifiers" = "xno"; then
     echo 
-    echo "Unable to find the necessary GL libraries."
+    echo "Unable to find the necessary OpenGL or GLUT libraries."
+    echo "See config.log for automated test details and results ..."
     exit 1
 fi
 
