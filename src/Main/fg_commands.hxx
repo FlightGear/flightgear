@@ -1,0 +1,29 @@
+// fg_commands.hxx - built-in commands for FlightGear.
+
+#ifndef __FG_COMMANDS_HXX
+#define __FG_COMMANDS_HXX
+
+#ifndef __cplusplus                                                          
+# error This library requires C++
+#endif                                   
+
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>                     
+#endif
+
+#include <simgear/misc/commands.hxx>
+#include <simgear/misc/props.hxx>
+
+/**
+ * Initialize the built-in commands.
+ */
+void fgInitCommands ();
+
+#endif
+
+// end of fg_commands.hxx
