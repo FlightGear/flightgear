@@ -34,18 +34,14 @@ SG_USING_STD(string);
 #include "AIStorm.hxx"
 
 
-FGAIStorm *FGAIStorm::_self = NULL;
-
 FGAIStorm::FGAIStorm(FGAIManager* mgr) {
    manager = mgr;   
-   _self = this;
    _type_str = "thunderstorm";
    _otype = otStorm;
 }
 
 
 FGAIStorm::~FGAIStorm() {
-    _self = NULL;
 }
 
 

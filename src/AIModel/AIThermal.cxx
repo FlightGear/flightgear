@@ -34,11 +34,8 @@ SG_USING_STD(string);
 #include "AIThermal.hxx"
 
 
-FGAIThermal *FGAIThermal::_self = NULL;
-
 FGAIThermal::FGAIThermal(FGAIManager* mgr) {
    manager = mgr;   
-   _self = this;
    _type_str = "thermal";
    _otype = otThermal;
    max_strength = 6.0;
@@ -48,7 +45,6 @@ FGAIThermal::FGAIThermal(FGAIManager* mgr) {
 
 
 FGAIThermal::~FGAIThermal() {
-    _self = NULL;
 }
 
 

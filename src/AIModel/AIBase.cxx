@@ -43,10 +43,7 @@
 #include "AIBase.hxx"
 #include "AIManager.hxx"
 
-FGAIBase *FGAIBase::_self = NULL;
-
 FGAIBase::FGAIBase() {
-    _self = this;
     _type_str = "model";
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
     bearing = elevation = range = rdot = 0.0;
@@ -61,10 +58,9 @@ FGAIBase::FGAIBase() {
 
 FGAIBase::~FGAIBase() {
     globals->get_scenery()->get_scene_graph()->removeKid(aip.getSceneGraph());
-    unbind();
+    // unbind();
     SGPropertyNode *root = globals->get_props()->getNode("ai/models", true);
     root->removeChild(_type_str.c_str(), index);
-    _self = NULL;
 }
 
 void FGAIBase::update(double dt) {
@@ -122,30 +118,30 @@ void FGAIBase::bind() {
    props->tie("velocities/true-airspeed-kt",  SGRawValuePointer<double>(&speed));
    props->tie("velocities/vertical-speed-fps",
                SGRawValueFunctions<double>(FGAIBase::_getVS_fps,
-                                           FGAIBase::_setVS_fps));
+                                           FGAIBase::_setVS_fps, this));
 
    props->tie("position/altitude-ft",
                SGRawValueFunctions<double>(FGAIBase::_getAltitude,
-                                           FGAIBase::_setAltitude));
+                                           FGAIBase::_setAltitude, this));
    props->tie("position/latitude-deg",
                SGRawValueFunctions<double>(FGAIBase::_getLatitude,
-                                           FGAIBase::_setLatitude));
+                                           FGAIBase::_setLatitude, this));
    props->tie("position/longitude-deg",
                SGRawValueFunctions<double>(FGAIBase::_getLongitude,
-                                           FGAIBase::_setLongitude));
+                                           FGAIBase::_setLongitude, this));
 
    props->tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
    props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
    props->tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
 
-   props->tie("radar/bearing-deg",   SGRawValueFunctions<double>(FGAIBase::_getBearing));
-   props->tie("radar/elevation-deg", SGRawValueFunctions<double>(FGAIBase::_getElevation));
-   props->tie("radar/range-nm",      SGRawValueFunctions<double>(FGAIBase::_getRange));
-   props->tie("radar/h-offset", SGRawValueFunctions<double>(FGAIBase::_getH_offset));
-   props->tie("radar/v-offset", SGRawValueFunctions<double>(FGAIBase::_getV_offset)); 
-   props->tie("radar/x-shift", SGRawValueFunctions<double>(FGAIBase::_getX_shift));
-   props->tie("radar/y-shift", SGRawValueFunctions<double>(FGAIBase::_getY_shift));
-   props->tie("radar/rotation", SGRawValueFunctions<double>(FGAIBase::_getRotation));
+   props->tie("radar/bearing-deg",   SGRawValuePointer<double>(&bearing));
+   props->tie("radar/elevation-deg", SGRawValuePointer<double>(&elevation));
+   props->tie("radar/range-nm", SGRawValuePointer<double>(&range));
+   props->tie("radar/h-offset", SGRawValuePointer<double>(&horiz_offset));
+   props->tie("radar/v-offset", SGRawValuePointer<double>(&vert_offset)); 
+   props->tie("radar/x-shift", SGRawValuePointer<double>(&x_shift));
+   props->tie("radar/y-shift", SGRawValuePointer<double>(&y_shift));
+   props->tie("radar/rotation", SGRawValuePointer<double>(&rotation));
 
    props->tie("controls/lighting/nav-lights",
                SGRawValueFunctions<bool>(FGAIBase::_isNight));
@@ -182,59 +178,43 @@ void FGAIBase::unbind() {
 /*
  * getters and Setters
  */
-void FGAIBase::_setLongitude( double longitude ) {
-    if (_self) _self->pos.setlon(longitude);
+void FGAIBase::_setLongitude( double longitude, void *p ) {
+    FGAIBase *self = (FGAIBase *)p;
+    self->pos.setlon(longitude);
 }
-void FGAIBase::_setLatitude ( double latitude )  {
-    if (_self) _self->pos.setlat(latitude);
-}
-
-double FGAIBase::_getLongitude() {
-    return (!_self) ? 0.0 :_self->pos.lon();
-}
-double FGAIBase::_getLatitude () {
-    return (!_self) ? 0.0 :_self->pos.lat();
-}
-double FGAIBase::_getBearing()   {
-    return (!_self) ? 0.0 :_self->bearing;
-}
-double FGAIBase::_getElevation() {
-    return (!_self) ? 0.0 :_self->elevation;
-}
-double FGAIBase::_getRange()     {
-    return (!_self) ? 0.0 :_self->range;
-}
-double FGAIBase::_getRdot()      {
-    return (!_self) ? 0.0 :_self->rdot;
-}
-double FGAIBase::_getH_offset()  {
-    return (!_self) ? 0.0 :_self->horiz_offset;
-}
-double FGAIBase::_getV_offset()  {
-    return (!_self) ? 0.0 :_self->vert_offset;
-}
-double FGAIBase::_getX_shift()   {
-    return (!_self) ? 0.0 :_self->x_shift;
-}
-double FGAIBase::_getY_shift()   {
-    return (!_self) ? 0.0 :_self->y_shift;
-}
-double FGAIBase::_getRotation()  {
-    return (!_self) ? 0.0 :_self->rotation;
+void FGAIBase::_setLatitude ( double latitude, void *p )  {
+    FGAIBase *self = (FGAIBase *)p;
+    self->pos.setlat(latitude);
 }
 
-double FGAIBase::_getVS_fps() {
-    return (!_self) ? 0.0 :_self->vs*60.0;
+double FGAIBase::_getLongitude(void *p) {
+    FGAIBase *self = (FGAIBase *)p;
+    return self->pos.lon();
 }
-void FGAIBase::_setVS_fps( double _vs ) {
-    if (_self) _self->vs = _vs/60.0;
+double FGAIBase::_getLatitude (void *p) {
+    FGAIBase *self = (FGAIBase *)p;
+    return self->pos.lat();
+}
+double FGAIBase::_getRdot(void *p)      {
+    FGAIBase *self = (FGAIBase *)p;
+    return self->rdot;
+}
+double FGAIBase::_getVS_fps(void *p) {
+    FGAIBase *self = (FGAIBase *)p;
+    return self->vs*60.0;
+}
+void FGAIBase::_setVS_fps( double _vs, void *p ) {
+    FGAIBase *self = (FGAIBase *)p;
+    self->vs = _vs/60.0;
 }
 
-double FGAIBase::_getAltitude() {
-    return (!_self) ? 0.0 :_self->altitude;
+double FGAIBase::_getAltitude(void *p) {
+    FGAIBase *self = (FGAIBase *)p;
+    return self->altitude;
 }
-void FGAIBase::_setAltitude( double _alt ) {
-    if (_self) _self->setAltitude( _alt );
+void FGAIBase::_setAltitude( double _alt, void *p ) {
+    FGAIBase *self = (FGAIBase *)p;
+    self->setAltitude( _alt );
 }
 
 bool FGAIBase::_isNight() {

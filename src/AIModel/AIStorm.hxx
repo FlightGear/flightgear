@@ -40,9 +40,6 @@ public:
         virtual void unbind();
 	void update(double dt);
 
-protected:
-        static FGAIStorm *_self;
-	
 private:
 
         double dt; 

@@ -217,6 +217,7 @@ int FGAIManager::createAircraft( string model_class, string path,
               double heading, double speed, double pitch, double roll ) {
      
         FGAIAircraft* ai_plane = new FGAIAircraft(this);
+cout << "ai_plane: " << ai_plane << endl;
         ai_list.push_back(ai_plane);
         ai_plane->setID( assignID() );
         ++numObjects;
@@ -248,6 +249,7 @@ int FGAIManager::createAircraft( string model_class, string path,
               FGAIFlightPlan* flightplan ) {
      
         FGAIAircraft* ai_plane = new FGAIAircraft(this);
+cout << "ai_plane1: " << ai_plane << endl;
         ai_list.push_back(ai_plane);
         ai_plane->setID( assignID() );
         ++numObjects;

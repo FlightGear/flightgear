@@ -69,9 +69,6 @@ public:
         void ProcessFlightPlan( double dt );
         //double getHeading(double lat1, double lon1, double lat2, double lon2);
 
-protected:
-        static FGAIAircraft *_self;
-	
 private:
 
         bool hdg_lock;
@@ -85,16 +82,7 @@ private:
 
 	void Run(double dt);
         double sign(double x);	
-
-        static bool _getGearDown();
 };
-
-inline bool FGAIAircraft::_getGearDown() {
-    return (!_self) ? false
-                    : ((fgGetFloat("/position/altitude-agl-ft") < 150.0)
-                       && (fgGetFloat("/velocities/airspeed-kt")
-                           < _self->performance->land_speed*1.5));
-}
 
 
 #endif  // _FG_AIAircraft_HXX

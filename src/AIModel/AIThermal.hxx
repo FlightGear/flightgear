@@ -45,9 +45,6 @@ public:
         inline double getStrength() const { return strength; };
         inline double getDiameter() const { return diameter; };
 
-protected:
-        static FGAIThermal *_self;
-	
 private:
 
         double dt; 

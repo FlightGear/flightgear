@@ -48,8 +48,6 @@ public:
     virtual void bind();
     virtual void unbind();
 
-    inline bool isValid() { return (_self != 0); }
-
     void setPath( const char* model );
     void setSpeed( double speed_KTAS );
     void setAltitude( double altitude_ft );
@@ -108,7 +106,6 @@ protected:
 
     void Transform();
 
-    static FGAIBase *_self;
     string _type_str;
     object_type _otype;
     int index;
@@ -118,29 +115,32 @@ public:
     object_type getType();
     bool isa( object_type otype );
 
-    static double _getVS_fps();
-    static void _setVS_fps( double _vs );
+    static double _getVS_fps(void *p);
+    static void _setVS_fps( double _vs, void *p );
 
-    static double _getAltitude();
-    static void _setAltitude( double _alt );
+    static double _getAltitude(void *p);
+    static void _setAltitude( double _alt, void *p );
 
-    static void _setLongitude( double longitude );
-    static void _setLatitude ( double latitude );
+    static void _setLongitude( double longitude, void *p );
+    static void _setLatitude ( double latitude, void *p );
 
-    static double _getLongitude();
-    static double _getLatitude ();
+    static double _getLongitude(void *p);
+    static double _getLatitude (void *p);
 
-    static double _getBearing();
-    static double _getElevation();
-    static double _getRange();
-    static double _getRdot();
-    static double _getH_offset();
-    static double _getV_offset();
-    static double _getX_shift();
-    static double _getY_shift();
-    static double _getRotation();
+    static double _getBearing(void *p);
+    static double _getElevation(void *p);
+    inline double _getRange() { return range; };
+    static double _getRdot(void *p);
+    static double _getH_offset(void *p);
+    static double _getV_offset(void *p);
+    static double _getX_shift(void *p);
+    static double _getY_shift(void *p);
+    static double _getRotation(void *p);
 
     static bool _isNight();
+
+private:
+    FGAIBase *self;
 };
 
 

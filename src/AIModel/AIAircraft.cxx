@@ -49,10 +49,7 @@ const FGAIAircraft::PERF_STRUCT FGAIAircraft::settings[] = {
 };
 
 
-FGAIAircraft *FGAIAircraft::_self = NULL;
-
 FGAIAircraft::FGAIAircraft(FGAIManager* mgr) {
-   _self = this;	// This needs to be the first entry.
    manager = mgr;   
    _type_str = "aircraft";
    _otype = otAircraft;
@@ -68,7 +65,6 @@ FGAIAircraft::FGAIAircraft(FGAIManager* mgr) {
 
 FGAIAircraft::~FGAIAircraft() {
     if (fp) delete fp;
-    _self = NULL;
 }
 
 
@@ -79,10 +75,10 @@ bool FGAIAircraft::init() {
 void FGAIAircraft::bind() {
     FGAIBase::bind();
 
+/*
     props->tie("controls/gear/gear-down",
                SGRawValueFunctions<bool>(FGAIAircraft::_getGearDown));
 
-/*
     props->getNode("controls/lighting/landing-lights", true)
            ->alias("controls/gear/gear-down");
 */
@@ -91,7 +87,7 @@ void FGAIAircraft::bind() {
 void FGAIAircraft::unbind() {
     FGAIBase::unbind();
 
-    props->untie("controls/gear/gear-down");
+//    props->untie("controls/gear/gear-down");
 //    props->getNode("controls/lighting/landing-lights")->unalias();
 }
 
