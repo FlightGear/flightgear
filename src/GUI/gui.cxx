@@ -644,7 +644,7 @@ void guiMouseFunc(int button, int updown, int x, int y)
     // know what's going on.
     if (mouse_mode == MOUSE_POINTER) {
       if (!puMouse (button, updown, x,y)) {
-	current_panel.doMouseAction(button, updown, x, y);
+	current_panel->doMouseAction(button, updown, x, y);
       }
     }
     

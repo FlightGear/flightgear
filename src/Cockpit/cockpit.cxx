@@ -459,10 +459,6 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
     fgHUDInit( cur_aircraft );
     ac_cockpit = new fg_Cockpit();
     
-    if ( current_options.get_panel_status() ) {
-        new FGPanel;
-    }
-
     // Have to set the LatLon display type
     fgLatLonFormat = toDM;
     
@@ -535,5 +531,5 @@ void fgCockpitUpdate( void ) {
     
     xglViewport( 0, 0, iwidth, iheight );
 
-    current_panel.update();
+    current_panel->update();
 }

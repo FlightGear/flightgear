@@ -37,6 +37,7 @@ class FGRadioStack {
     double nav1_freq;
     double nav1_alt_freq;
     double nav1_radial;
+    double nav1_sel_radial;
     double nav1_lon;
     double nav1_lat;
     double nav1_elev;
@@ -49,6 +50,7 @@ class FGRadioStack {
     double nav2_freq;
     double nav2_alt_freq;
     double nav2_radial;
+    double nav2_sel_radial;
     double nav2_lon;
     double nav2_lat;
     double nav2_elev;
@@ -78,8 +80,8 @@ public:
 	nav1_freq = freq; need_update = true;
     }
     inline void set_nav1_alt_freq( double freq ) { nav1_alt_freq = freq; }
-    inline void set_nav1_radial( double radial ) {
-	nav1_radial = radial; need_update = true;
+    inline void set_nav1_sel_radial( double radial ) {
+	nav1_sel_radial = radial; need_update = true;
     }
 
     // NAV2 Setters
@@ -87,8 +89,8 @@ public:
 	nav2_freq = freq; need_update = true;
     }
     inline void set_nav2_alt_freq( double freq ) { nav2_alt_freq = freq; }
-    inline void set_nav2_radial( double radial ) {
-	nav2_radial = radial; need_update = true;
+    inline void set_nav2_sel_radial( double radial ) {
+	nav2_sel_radial = radial; need_update = true;
     }
 
     // ADF Setters
@@ -100,19 +102,19 @@ public:
 
 
     // NAV1 Accessors
-    inline double get_nav1_freq () { return nav1_freq; }
-    inline double get_nav1_alt_freq () { return nav1_alt_freq; }
-    inline double get_nav1_radial() const { return nav1_radial; }
+    inline double get_nav1_freq () const { return nav1_freq; }
+    inline double get_nav1_alt_freq () const { return nav1_alt_freq; }
+    inline double get_nav1_sel_radial() const { return nav1_sel_radial; }
 
     // NAV2 Accessors
-    inline double get_nav2_freq () { return nav2_freq; }
-    inline double get_nav2_alt_freq () { return nav2_alt_freq; }
-    inline double get_nav2_radial() const { return nav2_radial; }
+    inline double get_nav2_freq () const { return nav2_freq; }
+    inline double get_nav2_alt_freq () const { return nav2_alt_freq; }
+    inline double get_nav2_sel_radial() const { return nav2_sel_radial; }
 
     // ADF Accessors
-    inline double get_adf_freq () { return adf_freq; }
-    inline double get_adf_alt_freq () { return adf_alt_freq; }
-    inline double get_adf_rotation () { return adf_rotation; }
+    inline double get_adf_freq () const { return adf_freq; }
+    inline double get_adf_alt_freq () const { return adf_alt_freq; }
+    inline double get_adf_rotation () const { return adf_rotation; }
 
     // Calculated values.
     inline bool get_nav1_inrange() const { return nav1_inrange; }
@@ -122,6 +124,7 @@ public:
     inline double get_nav1_elev() const { return nav1_elev; }
     inline double get_nav1_dist() const { return nav1_dist; }
     inline double get_nav1_heading() const { return nav1_heading; }
+    inline double get_nav1_radial() const { return nav1_radial; }
     inline double get_nav1_target_gs() const { return nav1_target_gs; }
 
     inline bool get_nav2_inrange() const { return nav2_inrange; }
@@ -131,6 +134,7 @@ public:
     inline double get_nav2_elev() const { return nav2_elev; }
     inline double get_nav2_dist() const { return nav2_dist; }
     inline double get_nav2_heading() const { return nav2_heading; }
+    inline double get_nav2_radial() const { return nav2_radial; }
     inline double get_nav2_target_gs() const { return nav2_target_gs; }
 
     inline bool get_adf_inrange() const { return adf_inrange; }

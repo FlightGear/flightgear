@@ -229,7 +229,9 @@ double FGSteam::get_HackGS_deg () {
     return 3.0 - (y/x) * 60.0 / 6000.0;
 #endif
 
-    if ( current_radiostack->get_nav1_inrange() ) {
+    if ( current_radiostack->get_nav1_inrange() && 
+	 current_radiostack->get_nav1_loc() )
+    {
 	double x = current_radiostack->get_nav1_dist();
 	double y = (FGBFI::getAltitude() - current_radiostack->get_nav1_elev())
 	    * FEET_TO_METER;

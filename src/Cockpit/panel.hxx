@@ -50,6 +50,8 @@ class FGPanelInstrument;
 
 ////////////////////////////////////////////////////////////////////////
 // Texture manager (should migrate out into FGFS).
+//
+// This class ensures that no texture is loaded more than once.
 ////////////////////////////////////////////////////////////////////////
 
 class FGTextureManager
@@ -63,28 +65,42 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 // Instrument panel class.
+//
+// The panel is a container that has a background texture and holds
+// zero or more instruments.  The panel will order the instruments to
+// redraw themselves when necessary, and will pass mouse clicks on to
+// the appropriate instruments for processing.
 ////////////////////////////////////////////////////////////////////////
 
 class FGPanel
 {
 public:
 
-  FGPanel ();
+  FGPanel (int x, int y, int w, int h);
   virtual ~FGPanel ();
 
 				// transfer pointer ownership!!!
   virtual void addInstrument (FGPanelInstrument * instrument);
-  virtual void init (int x, int y, int finx, int finy);
+
+				// Update the panel (every frame).
   virtual void update () const;
-  
+
+				// Background texture.
+  virtual void setBackground (ssgTexture * texture);
+
+				// Make the panel visible or invisible.
   virtual bool getVisibility () const;
   virtual void setVisibility (bool visibility);
 
+				// Handle a mouse click.
   virtual bool doMouseAction (int button, int updown, int x, int y);
 
 private:
-  bool _initialized;
   bool _visibility;
+  bool _mouseDown;
+  int _mouseButton, _mouseX, _mouseY;
+  mutable int _mouseDelay;
+  FGPanelInstrument * _mouseInstrument;
   typedef vector<FGPanelInstrument *> instrument_list_type;
   int _x, _y, _w, _h;
   int _panel_h;
@@ -97,6 +113,10 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 // Base class for user action types.
+//
+// Individual instruments can have actions associated with a mouse
+// click in a rectangular area.  Current concrete classes are
+// FGAdjustAction and FGSwapAction.
 ////////////////////////////////////////////////////////////////////////
 
 class FGPanelAction
@@ -109,6 +129,11 @@ public:
 
 ////////////////////////////////////////////////////////////////////////
 // Adjustment action.
+//
+// This is an action to increase or decrease an FGFS value by a certain
+// increment within a certain range.  If the wrap flag is true, the
+// value will wrap around if it goes below min or above max; otherwise,
+// it will simply stop at min or max.
 ////////////////////////////////////////////////////////////////////////
 
 class FGAdjustAction : public FGPanelAction
@@ -121,6 +146,7 @@ public:
 		  double min, double max, bool wrap=false);
   virtual ~FGAdjustAction ();
   virtual void doAction ();
+
 private:
   getter_type _getter;
   setter_type _setter;
@@ -133,7 +159,61 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////
-// Instrument base class.
+// Swap action.
+//
+// This is an action to swap two values.  It's currently used in the
+// navigation radios.
+////////////////////////////////////////////////////////////////////////
+
+class FGSwapAction : public FGPanelAction
+{
+public:
+  typedef double (*getter_type)();
+  typedef void (*setter_type)(double);
+
+  FGSwapAction (getter_type getter1, setter_type setter1,
+		getter_type getter2, setter_type setter2);
+  virtual ~FGSwapAction ();
+  virtual void doAction ();
+
+private:
+  getter_type _getter1, _getter2;
+  setter_type _setter1, _setter2;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Toggle action.
+//
+// This is an action to toggle a boolean value.
+////////////////////////////////////////////////////////////////////////
+
+class FGToggleAction : public FGPanelAction
+{
+public:
+  typedef bool (*getter_type)();
+  typedef void (*setter_type)(bool);
+
+  FGToggleAction (getter_type getter, setter_type setter);
+  virtual ~FGToggleAction ();
+  virtual void doAction ();
+
+private:
+  getter_type _getter;
+  setter_type _setter;
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Abstract base class for a panel instrument.
+//
+// A panel instrument consists of zero or more actions, associated
+// with mouse clicks in rectangular areas.  Currently, the only
+// concrete class derived from this is FGLayeredInstrument, but others
+// may show up in the future (some complex instruments could be 
+// entirely hand-coded, for example).
 ////////////////////////////////////////////////////////////////////////
 
 class FGPanelInstrument
@@ -155,15 +235,16 @@ public:
 
 				// Coordinates relative to centre.
 				// Transfer pointer ownership!!
-  virtual void addAction (int x, int y, int w, int h,
+  virtual void addAction (int button, int x, int y, int w, int h,
 			  FGPanelAction * action);
 
 				// Coordinates relative to centre.
-  virtual bool doMouseAction (int button, int updown, int x, int y);
+  virtual bool doMouseAction (int button, int x, int y);
 
 protected:
   int _x, _y, _w, _h;
   typedef struct {
+    int button;
     int x;
     int y;
     int w;
@@ -177,7 +258,12 @@ protected:
 
 
 ////////////////////////////////////////////////////////////////////////
-// A single layer of an instrument.
+// Abstract base class for an instrument layer.
+//
+// The FGLayeredInstrument class builds up instruments by using layers
+// of textures or text.  Each layer can have zero or more
+// transformations applied to it: for example, a needle layer can
+// rotate to show the altitude or airspeed.
 ////////////////////////////////////////////////////////////////////////
 
 /**
@@ -200,7 +286,7 @@ public:
 
 
   FGInstrumentLayer ();
-  FGInstrumentLayer (int w, int h, int z);
+  FGInstrumentLayer (int w, int h);
   virtual ~FGInstrumentLayer ();
 
   virtual void draw () const = 0;
@@ -211,7 +297,7 @@ public:
 				  double factor = 1.0, double offset = 0.0);
 
 protected:
-  int _w, _h, _z;
+  int _w, _h;
 
   typedef struct {
     transform_type type;
@@ -228,7 +314,13 @@ protected:
 
 
 ////////////////////////////////////////////////////////////////////////
-// An instrument composed of layered textures.
+// An instrument composed of layers.
+//
+// This class represents an instrument which is simply a series of
+// layers piled one on top of the other, each one undergoing its own
+// set of transformations.  For example, one layer can represent
+// the instrument's face (which doesn't move), while the next layer
+// can represent a needle that rotates depending on an FGFS variable.
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -248,18 +340,14 @@ public:
   virtual void draw () const;
 
 				// Transfer pointer ownership!!
-  virtual void addLayer (FGInstrumentLayer *layer);
-  virtual void addLayer (int i, ssgTexture * texture);
-  virtual void addTransformation (int layer,
-				  FGInstrumentLayer::transform_type type,
+  virtual int addLayer (FGInstrumentLayer *layer);
+  virtual int addLayer (ssgTexture * texture);
+  virtual void addTransformation (FGInstrumentLayer::transform_type type,
 				  FGInstrumentLayer::transform_func func,
 				  double min, double max,
 				  double factor = 1.0, double offset = 0.0);
-  virtual void addTransformation (int layer,
-				  FGInstrumentLayer::transform_type type,
-				  double offset) {
-    addTransformation(layer, type, 0, 0.0, 0.0, 1.0, offset);
-  }
+  virtual void addTransformation (FGInstrumentLayer::transform_type type,
+				  double offset);
 
 protected:
   layer_list _layers;
@@ -269,21 +357,19 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////
 // A textured layer of an instrument.
+//
+// This is a layer holding a single texture.  Normally, the texture's
+// backgound should be transparent so that lower layers and the panel
+// background can show through.
 ////////////////////////////////////////////////////////////////////////
 
-/**
- * A textured layer of an instrument.
- *
- * This is a type of layer designed to hold a texture; normally,
- * the texture's background should be transparent so that
- * other layers or the panel background show through.
- */
-class FGTexturedInstrumentLayer : public FGInstrumentLayer
+class FGTexturedLayer : public FGInstrumentLayer
 {
 public:
-  FGTexturedInstrumentLayer (ssgTexture * texture,
-			     int w, int h, int z);
-  virtual ~FGTexturedInstrumentLayer ();
+  FGTexturedLayer (ssgTexture * texture, int w, int h,
+		   double texX1 = 0.0, double texY1 = 0.0,
+		   double texX2 = 1.0, double texY2 = 1.0);
+  virtual ~FGTexturedLayer ();
 
   virtual void draw () const;
 
@@ -291,33 +377,90 @@ public:
 
 private:
   ssgTexture * _texture;
+  double _texX1, _texY1, _texX2, _texY2;
 };
 
 
 
 ////////////////////////////////////////////////////////////////////////
 // A text layer of an instrument.
+//
+// This is a layer holding a string of static and/or generated text.
+// It is useful for instruments that have text displays, such as
+// a chronometer, GPS, or NavCom radio.
 ////////////////////////////////////////////////////////////////////////
 
-class FGCharInstrumentLayer : public FGInstrumentLayer
+class FGTextLayer : public FGInstrumentLayer
 {
 public:
-  typedef char * (*text_func)(char *);
-  FGCharInstrumentLayer (text_func func,
-			 int w, int h, int z);
-  virtual ~FGCharInstrumentLayer ();
+  typedef char * (*text_func)();
+  typedef double (*double_func)();
+  typedef enum ChunkType {
+    TEXT,
+    TEXT_FUNC,
+    DOUBLE_FUNC
+  };
+
+  class Chunk {
+  public:
+    Chunk (char * text, char * fmt = "%s");
+    Chunk (text_func func, char * fmt = "%s");
+    Chunk (double_func func, char * fmt = "%.2f", double mult = 1.0);
+
+    char * getValue () const;
+  private:
+    ChunkType _type;
+    union {
+      char * _text;
+      text_func _tfunc;
+      double_func _dfunc;
+    } _value;
+    char * _fmt;
+    double _mult;
+    mutable char _buf[1024];
+  };
+
+  FGTextLayer (int w, int h);
+  virtual ~FGTextLayer ();
 
   virtual void draw () const;
+
+				// Transfer pointer!!
+  virtual void addChunk (Chunk * chunk);
   virtual void setColor (float r, float g, float b);
   virtual void setPointSize (float size);
   virtual void setFont (fntFont * font);
 
 private:
-  text_func _func;
+  typedef vector<Chunk *> chunk_list;
+  chunk_list _chunks;
   float _color[4];
 				// FIXME: need only one globally
   mutable fntRenderer _renderer;
-  mutable char _buf[1024];
+};
+
+
+
+////////////////////////////////////////////////////////////////////////
+// A layer that switches between two other layers.
+////////////////////////////////////////////////////////////////////////
+
+class FGSwitchLayer : public FGInstrumentLayer
+{
+public:
+  typedef bool (*switch_func)();
+
+				// Transfer pointers!!
+  FGSwitchLayer (int w, int h, switch_func func,
+		 FGInstrumentLayer * layer1,
+		 FGInstrumentLayer * layer2);
+  virtual ~FGSwitchLayer ();
+
+  virtual void draw () const;
+
+private:
+  switch_func _func;
+  FGInstrumentLayer * _layer1, * _layer2;
 };
 
 
@@ -326,7 +469,7 @@ private:
 // The current panel, if any.
 ////////////////////////////////////////////////////////////////////////
 
-extern FGPanel current_panel;
+extern FGPanel * current_panel;
 
 
 

@@ -47,6 +47,8 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 
     // nav1
     FGILS ils;
+    FGNav nav;
+
     if ( current_ilslist->query( lon, lat, elev, nav1_freq,
 				 &ils, &nav1_heading, &nav1_dist) ) {
 	nav1_inrange = true;
@@ -62,13 +64,22 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	// cout << " id = " << ils.get_locident() << endl;
 	// cout << " heading = " << nav1_heading
 	//      << " dist = " << nav1_dist << endl;
+    } else if ( current_navlist->query( lon, lat, elev, nav1_freq,
+				 &nav, &nav1_heading, &nav1_dist) ) {
+				// not ILS
+	nav1_inrange = true;
+	nav1_loc = false;
+	nav1_lon = nav.get_lon();
+	nav1_lat = nav.get_lat();
+	nav1_elev = nav.get_elev();
+	nav1_target_gs = 0.0;
+	nav1_radial = nav1_sel_radial;
     } else {
 	nav1_inrange = false;
 	// cout << "not picking up vor. :-(" << endl;
     }
 
     // nav2
-    FGNav nav;
     if ( current_navlist->query( lon, lat, elev, nav2_freq,
 				 &nav, &nav2_heading, &nav2_dist) ) {
 	nav2_inrange = true;
@@ -76,13 +87,7 @@ void FGRadioStack::update( double lon, double lat, double elev ) {
 	nav2_lon = nav.get_lon();
 	nav2_lat = nav.get_lat();
 	nav2_elev = nav.get_elev();
-	nav2_radial = nav2_heading + 180.0;
-	while ( nav2_radial <   0.0 ) { nav2_radial += 360.0; }
-	while ( nav2_radial > 360.0 ) { nav2_radial -= 360.0; }
-	// cout << "Found a vor station in range" << endl;
-	// cout << " id = " << nav.get_ident() << endl;
-	// cout << " heading = " << nav2_heading
-	//      << " dist = " << nav2_dist << endl;
+	nav2_radial = nav2_sel_radial;
     } else {
 	nav2_inrange = false;
 	// cout << "not picking up vor. :-(" << endl;

@@ -429,7 +429,7 @@ FGBFI::getSideSlip ()
 
 
 /**
- * Return the current climb rate in feet/second (FIXME: verify).
+ * Return the current climb rate in feet/minute
  */
 double
 FGBFI::getVerticalSpeed ()
@@ -681,8 +681,8 @@ FGBFI::getAPAltitudeLock ()
 void
 FGBFI::setAPAltitudeLock (bool lock)
 {
-    current_autopilot->set_AltitudeEnabled( true );
-    current_autopilot->set_AltitudeMode( FGAutopilot::FG_ALTITUDE_LOCK );
+  current_autopilot->set_AltitudeMode(FGAutopilot::FG_ALTITUDE_LOCK);
+  current_autopilot->set_AltitudeEnabled(lock);
 }
 
 
@@ -712,7 +712,9 @@ FGBFI::setAPAltitude (double altitude)
 bool
 FGBFI::getAPHeadingLock ()
 {
-    return current_autopilot->get_HeadingEnabled();
+    return
+      (current_autopilot->get_HeadingEnabled() &&
+       current_autopilot->get_HeadingMode() == FGAutopilot::FG_HEADING_LOCK);
 }
 
 
@@ -722,8 +724,10 @@ FGBFI::getAPHeadingLock ()
 void
 FGBFI::setAPHeadingLock (bool lock)
 {
-    current_autopilot->set_HeadingEnabled( true );
-    current_autopilot->set_HeadingMode( FGAutopilot::FG_HEADING_LOCK );
+  double heading = getAPHeading();
+  current_autopilot->set_HeadingMode(FGAutopilot::FG_HEADING_LOCK);
+  current_autopilot->set_HeadingEnabled(lock);
+  setAPHeading(heading);
 }
 
 
@@ -744,6 +748,29 @@ void
 FGBFI::setAPHeading (double heading)
 {
   current_autopilot->set_TargetHeading( heading );
+}
+
+
+/**
+ * Return true if the autopilot is locked to NAV1.
+ */
+bool
+FGBFI::getAPNAV1Lock ()
+{
+  return
+    (current_autopilot->get_HeadingEnabled() &&
+     current_autopilot->get_HeadingMode() == FGAutopilot::FG_HEADING_NAV1);
+}
+
+
+/**
+ * Set the autopilot NAV1 lock.
+ */
+void
+FGBFI::setAPNAV1Lock (bool lock)
+{
+  current_autopilot->set_HeadingMode(FGAutopilot::FG_HEADING_NAV1);
+  current_autopilot->set_HeadingEnabled(lock);
 }
 
 
@@ -771,6 +798,18 @@ FGBFI::getNAV1Radial ()
 }
 
 double
+FGBFI::getNAV1SelRadial ()
+{
+  return current_radiostack->get_nav1_sel_radial();
+}
+
+double
+FGBFI::getNAV1Dist ()
+{
+  return current_radiostack->get_nav1_dist();
+}
+
+double
 FGBFI::getNAV2Freq ()
 {
   return current_radiostack->get_nav2_freq();
@@ -786,6 +825,18 @@ double
 FGBFI::getNAV2Radial ()
 {
   return current_radiostack->get_nav2_radial();
+}
+
+double
+FGBFI::getNAV2SelRadial ()
+{
+  return current_radiostack->get_nav2_sel_radial();
+}
+
+double
+FGBFI::getNAV2Dist ()
+{
+  return current_radiostack->get_nav1_dist();
 }
 
 double
@@ -819,9 +870,9 @@ FGBFI::setNAV1AltFreq (double freq)
 }
 
 void
-FGBFI::setNAV1Radial (double radial)
+FGBFI::setNAV1SelRadial (double radial)
 {
-  current_radiostack->set_nav1_radial(radial);
+  current_radiostack->set_nav1_sel_radial(radial);
 }
 
 void
@@ -837,9 +888,9 @@ FGBFI::setNAV2AltFreq (double freq)
 }
 
 void
-FGBFI::setNAV2Radial (double radial)
+FGBFI::setNAV2SelRadial (double radial)
 {
-  current_radiostack->set_nav2_radial(radial);
+  current_radiostack->set_nav2_sel_radial(radial);
 }
 
 void

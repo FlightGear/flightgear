@@ -236,10 +236,12 @@ fgOPTIONS::toggle_panel() {
     
     if( panel_status ) {
 	panel_status = false;
-	current_panel.setVisibility(false);
+	if ( current_panel != NULL )
+	  current_panel->setVisibility(false);
     } else {
 	panel_status = true;
-	current_panel.setVisibility(true);
+	if ( current_panel != NULL )
+	  current_panel->setVisibility(true);
     }
     if ( panel_status ) {
 	fov *= 0.4232;
@@ -610,10 +612,12 @@ int fgOPTIONS::parse_option( const string& arg ) {
 	hud_status = true;	
     } else if ( arg == "--disable-panel" ) {
 	panel_status = false;
-	current_panel.setVisibility(false);
+	if ( current_panel != NULL )
+	  current_panel->setVisibility(false);
     } else if ( arg == "--enable-panel" ) {
 	panel_status = true;
-	current_panel.setVisibility(true);
+	if ( current_panel != NULL )
+	  current_panel->setVisibility(true);
 	fov *= 0.4232;
     } else if ( arg == "--disable-sound" ) {
 	sound = false;
