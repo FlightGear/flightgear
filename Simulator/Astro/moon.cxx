@@ -267,6 +267,11 @@ void Moon::updatePosition(FGTime *t, Star *ourSun)
   geoRa  = atan2(ye, xe);
   geoDec = atan2(ze, sqrt(xe*xe + ye*ye));
 
+  /* FG_LOG( FG_GENERAL, FG_INFO, 
+	  "(geocentric) geoRa = (" << (RAD_TO_DEG * geoRa) 
+	  << "), geoDec= (" << (RAD_TO_DEG * geoDec) << ")" ); */
+
+
   // Given the moon's geocentric ra and dec, calculate its 
   // topocentric ra and dec. i.e. the position as seen from the
   // surface of the earth, instead of the center of the earth
@@ -274,16 +279,32 @@ void Moon::updatePosition(FGTime *t, Star *ourSun)
   // First calculate the moon's parrallax, that is, the apparent size of the 
   // (equatorial) radius of the earth, as seen from the moon 
   mpar = asin ( 1 / r);
+  // FG_LOG( FG_GENERAL, FG_INFO, "r = " << r << " mpar = " << mpar );
+  // FG_LOG( FG_GENERAL, FG_INFO, "lat = " << f->get_Latitude() );
+
   gclat = f->get_Latitude() - 0.003358 * 
       sin (2 * DEG_TO_RAD * f->get_Latitude() );
+  // FG_LOG( FG_GENERAL, FG_INFO, "gclat = " << gclat );
+
   rho = 0.99883 + 0.00167 * cos(2 * DEG_TO_RAD * f->get_Latitude());
+  // FG_LOG( FG_GENERAL, FG_INFO, "rho = " << rho );
+  
   if (geoRa < 0)
     geoRa += (2*FG_PI);
   
   HA = t->getLst() - (3.8197186 * geoRa);
+  /* FG_LOG( FG_GENERAL, FG_INFO, "t->getLst() = " << t->getLst() 
+	  << " HA = " << HA ); */
+
   g = atan (tan(gclat) / cos ((HA / 3.8197186)));
+  // FG_LOG( FG_GENERAL, FG_INFO, "g = " << g );
+
   rightAscension = geoRa - mpar * rho * cos(gclat) * sin(HA) / cos (geoDec);
   declination = geoDec - mpar * rho * sin (gclat) * sin (g - geoDec) / sin(g);
+
+  /* FG_LOG( FG_GENERAL, FG_INFO, 
+	  "Ra = (" << (RAD_TO_DEG *rightAscension) 
+	  << "), Dec= (" << (RAD_TO_DEG *declination) << ")" ); */
 }
 
 
@@ -313,6 +334,8 @@ void Moon::newImage()
   
   if( moon_angle*RAD_TO_DEG < 100 ) 
     {
+      FG_LOG( FG_ASTRO, FG_INFO, "Generating Moon Image" );
+
       /*
       x_2 = moon_angle * moon_angle;
       x_4 = x_2 * x_2;

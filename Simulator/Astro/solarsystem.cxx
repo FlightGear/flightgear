@@ -105,9 +105,7 @@ void SolarSystem::rebuild()
   //GLfloat ambient;
   //GLfloat amb[4];
   
-  
   glDisable(GL_LIGHTING);
-
 
   // Step 1: update all the positions
   ourSun->updatePosition(t);
@@ -128,6 +126,8 @@ void SolarSystem::rebuild()
     xglDeleteLists(displayList, 1);
 
   displayList = xglGenLists(1);
+
+  FG_LOG( FG_ASTRO, FG_INFO, "Rebuilding astro display list" );
 
   // Step 2: rebuild the display list
   xglNewList( displayList, GL_COMPILE);
