@@ -38,7 +38,9 @@
 FGViewer::FGViewer( void ):
     fov(55.0),
     view_offset(0.0),
-    goal_view_offset(0.0)
+    goal_view_offset(0.0),
+    view_tilt(0.0),
+    goal_view_tilt(0.0)
 {
     sgSetVec3( pilot_offset, 0.0, 0.0, 0.0 );
     sgdZeroVec3(geod_view_pos);
@@ -101,6 +103,35 @@ FGViewer::update (int dt)
 	inc_view_offset( -SGD_2PI );
       } else if ( get_view_offset() < 0 ) {
 	inc_view_offset( SGD_2PI );
+      }
+    }
+  }
+
+  for ( int i = 0; i < dt; i++ ) {
+    if ( fabs(get_goal_view_tilt() - get_view_tilt()) < 0.05 ) {
+      set_view_tilt( get_goal_view_tilt() );
+      break;
+    } else {
+      // move current_view.view_tilt towards
+      // current_view.goal_view_tilt
+      if ( get_goal_view_tilt() > get_view_tilt() )
+	{
+	  if ( get_goal_view_tilt() - get_view_tilt() < SGD_PI ){
+	    inc_view_tilt( 0.01 );
+	  } else {
+	    inc_view_tilt( -0.01 );
+	  }
+	} else {
+	  if ( get_view_tilt() - get_goal_view_tilt() < SGD_PI ){
+	    inc_view_tilt( -0.01 );
+	  } else {
+	    inc_view_tilt( 0.01 );
+	  }
+	}
+      if ( get_view_tilt() > SGD_2PI ) {
+	inc_view_tilt( -SGD_2PI );
+      } else if ( get_view_tilt() < 0 ) {
+	inc_view_tilt( SGD_2PI );
       }
     }
   }

@@ -78,6 +78,10 @@ protected:
     // the goal view offset angle  (used for smooth view changes)
     double goal_view_offset;
 
+    // the view tilt angles
+    double view_tilt;
+    double goal_view_tilt;
+
     // geodetic view position
     sgdVec3 geod_view_pos;
 
@@ -168,6 +172,24 @@ public:
     inline void set_reverse_view_offset( bool val ) {
 	reverse_view_offset = val;
     }
+    inline void set_view_tilt( double a ) {
+	set_dirty();
+	view_tilt = a;
+    }
+    inline void inc_view_tilt( double amt ) {
+	set_dirty();
+	view_tilt += amt;
+    }
+    inline void set_goal_view_tilt( double a) {
+	set_dirty();
+	goal_view_tilt = a;
+	while ( goal_view_tilt < 0 ) {
+	    goal_view_tilt += 360.0;
+	}
+	while ( goal_view_tilt > 360.0 ) {
+	    goal_view_tilt -= 360.0;
+	}
+    }
     inline void set_geod_view_pos( double lon, double lat, double alt ) {
 	// data should be in radians and meters asl
 	set_dirty();
@@ -197,6 +219,8 @@ public:
     inline double get_view_offset() const { return view_offset; }
     inline bool get_reverse_view_offset() const { return reverse_view_offset; }
     inline double get_goal_view_offset() const { return goal_view_offset; }
+    inline double get_view_tilt() const { return view_tilt; }
+    inline double get_goal_view_tilt() const { return goal_view_tilt; }
     inline double *get_geod_view_pos() { return geod_view_pos; }
     inline float *get_pilot_offset() { return pilot_offset; }
     inline double get_sea_level_radius() const { return sea_level_radius; }

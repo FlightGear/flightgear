@@ -356,6 +356,48 @@ setGoalViewOffset (double offset)
 	->set_goal_view_offset(offset * SGD_DEGREES_TO_RADIANS);
 }
 
+/**
+ * Get the current view tilt in degrees.
+ */
+static double
+getViewTilt ()
+{
+  return (globals->get_current_view()
+	  ->get_view_tilt() * SGD_RADIANS_TO_DEGREES);
+}
+
+
+static void
+setViewTilt (double tilt)
+{
+  globals->get_current_view()->set_view_tilt(tilt * SGD_DEGREES_TO_RADIANS);
+}
+
+static double
+getGoalViewTilt ()
+{
+  return (globals->get_current_view()
+	  ->get_goal_view_tilt() * SGD_RADIANS_TO_DEGREES);
+}
+
+static void
+setGoalViewTilt (double tilt)
+{
+    while ( tilt < 0 ) {
+	tilt += 360.0;
+    }
+    while ( tilt > 360.0 ) {
+	tilt -= 360.0;
+    }
+    // Snap to center if we are close
+    if ( fabs(tilt) < 1.0 ||  fabs(tilt) > 359.0 ) {
+	tilt = 0.0;
+    }
+
+    globals->get_current_view()
+	->set_goal_view_tilt(tilt * SGD_DEGREES_TO_RADIANS);
+}
+
 
 /**
  * Pilot position offset from CG.
@@ -1051,6 +1093,9 @@ fgInitProps ()
   fgTie("/sim/view/offset-deg", getViewOffset, setViewOffset, false);
   fgSetArchivable("/sim/view/offset-deg");
   fgTie("/sim/view/goal-offset-deg", getGoalViewOffset, setGoalViewOffset, false);
+  fgTie("/sim/view/tilt-deg", getViewTilt, setViewTilt, false);
+  fgSetArchivable("/sim/view/tilt-deg");
+  fgTie("/sim/view/goal-tilt-deg", getGoalViewTilt, setGoalViewTilt, false);
   fgSetArchivable("/sim/view/goal-offset-deg");
   fgTie("/sim/view/pilot/x-offset-m",
 	getPilotPositionXOffset, setPilotPositionXOffset);
