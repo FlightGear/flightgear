@@ -413,9 +413,10 @@ int FGTriangle::run_triangulate( int pass ) {
     if ( pass == 1 ) {
 	// use a quality value of 10 (q10) meaning no interior
 	// triangle angles less than 10 degrees
+	// tri_options = "pczAen";
 	tri_options = "pczq10Aen";
-	// string tri_options = "pzAen";
-	// string tri_options = "pczq15S400Aen";
+	// // string tri_options = "pzAen";
+	// // string tri_options = "pczq15S400Aen";
     } else if ( pass == 2 ) {
 	// no new points on boundary (Y), no internal segment
 	// splitting (YY), no quality refinement ()

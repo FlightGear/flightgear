@@ -117,10 +117,10 @@ main(int argc, char **argv) {
     FGBucket tmp1( 0.0, 0.0 );
 
     double dy = tmp1.get_height();
-    lat = 44.25 + dy * 0.5;
+    lat = 68.75 + dy * 0.5;
 
     bool start_lon = true;
-    lon = -85.75 + (1.0/16.0);
+    lon = -152.9 /* + (1.0/16.0) */;
 
     while ( lat <= 90.0 ) {
 	FGBucket tmp2( 0.0, lat );

@@ -48,6 +48,10 @@ FG_USING_STD(string);
 FG_USING_STD(vector);
 
 
+typedef vector < int_list > tex_list;
+typedef tex_list::iterator tex_list_iterator;
+typedef tex_list::const_iterator const_tex_list_iterator;
+
 class FGGenOutput {
 
 private:
@@ -58,8 +62,14 @@ private:
     // triangles (by index into point list)
     triele_list tri_elements;
 
+    // texture coordinates
+    FGTriNodes tex_coords;
+
     // fan list
     fan_list fans[FG_MAX_AREA_TYPES];
+
+    // textures pointer list
+    tex_list textures[FG_MAX_AREA_TYPES];
 
     // global bounding sphere
     Point3D gbs_center;
@@ -76,6 +86,10 @@ private:
     // caclulate the bounding sphere for the specified triangle face
     void calc_bounding_sphere( FGConstruct& c, const FGTriEle& t, 
 			       Point3D *center, double *radius );
+
+    // traverse the specified fan and attempt to calculate "none
+    // stretching" texture coordinates
+    int_list calc_tex_coords( point_list geod_nodes, int_list fan );
 
 public:
 

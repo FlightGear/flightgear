@@ -341,6 +341,9 @@ void construct_tile( FGConstruct& c ) {
     // arbitrarily complex tiles.
 
     bool acceptable = false;
+    bool growing = false;
+    bool shrinking = false;
+
     double error = 200.0;
     int count = 0;
 
@@ -371,8 +374,14 @@ void construct_tile( FGConstruct& c ) {
 	    cout << "produced too few nodes ..." << endl;
 
 	    acceptable = false;
+	    growing = true;
 
-	    error /= 1.5;
+	    if ( shrinking ) {
+		error /= 1.25;
+		shrinking = false;
+	    } else {
+		error /= 1.5;
+	    }
 	    cout << "Setting error to " << error << " and retrying fit." 
 		 << endl;
 	}
@@ -383,8 +392,15 @@ void construct_tile( FGConstruct& c ) {
 	    cout << "produced too many nodes ..." << endl;
 	    
 	    acceptable = false;
+	    shrinking = true;
 
-	    error *= 1.5;
+	    if ( growing ) {
+		error *= 1.25;
+		growing = false;
+	    } else {
+		error *= 1.5;
+	    }
+
 	    cout << "Setting error to " << error << " and retrying fit." 
 		 << endl;
 	}

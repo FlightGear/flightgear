@@ -60,6 +60,70 @@ void FGGenOutput::calc_gbs( FGConstruct& c ) {
 }
 
 
+#define FG_TEX_CONSTANT 69.0
+
+// traverse the specified fan and attempt to calculate "none
+// stretching" texture coordinates
+int_list FGGenOutput::calc_tex_coords( point_list geod_nodes, int_list fan ) {
+    // cout << "calculating texture coordinates for a specific fan of size = "
+    //      << fan.size() << endl;
+
+    // find min/max of fan
+    Point3D min, max, p, t;
+    bool first = true;
+
+    for ( int i = 0; i < (int)fan.size(); ++i ) {
+	p = geod_nodes[ fan[i] ];
+	t.setx( p.x() * FG_TEX_CONSTANT );
+	t.sety( p.y() * FG_TEX_CONSTANT );
+
+	if ( first ) {
+	    min = max = t;
+	    first = false;
+	} else {
+	    if ( t.x() < min.x() ) {
+		min.setx( t.x() );
+	    }
+	    if ( t.y() < min.y() ) {
+		min.sety( t.y() );
+	    }
+	    if ( t.x() > max.x() ) {
+		max.setx( t.x() );
+	    }
+	    if ( t.y() > max.y() ) {
+		max.sety( t.y() );
+	    }
+	}
+    }
+    min.setx( (double)( (int)min.x() - 1 ) );
+    min.sety( (double)( (int)min.y() - 1 ) );
+    // cout << "found min = " << min << endl;
+
+    // generate tex_list
+    Point3D shifted_t;
+    int index;
+    int_list tex;
+    tex.clear();
+    for ( int i = 0; i < (int)fan.size(); ++i ) {
+	p = geod_nodes[ fan[i] ];
+	t.setx( p.x() * FG_TEX_CONSTANT );
+	t.sety( p.y() * FG_TEX_CONSTANT );
+	shifted_t = t - min;
+	if ( shifted_t.x() < FG_EPSILON ) {
+	    shifted_t.setx( 0.0 );
+	}
+	if ( shifted_t.y() < FG_EPSILON ) {
+	    shifted_t.sety( 0.0 );
+	}
+	shifted_t.setz( 0.0 );
+	index = tex_coords.unique_add( shifted_t );
+	tex.push_back( index );
+    }
+
+    return tex;
+}
+
+
 // build the necessary output structures based on the triangulation
 // data
 int FGGenOutput::build( FGConstruct& c ) {
@@ -89,6 +153,20 @@ int FGGenOutput::build( FGConstruct& c ) {
 	if ( (int)area_tris.size() > 0 ) {
 	    cout << "generating fans for area = " << i << endl;
 	    fans[i] = f.greedy_build( area_tris );
+	}
+    }
+
+    // build the texture coordinate list and make a parallel structure
+    // to the fan list for pointers into the texture list
+    cout << "calculating texture coordinates" << endl;
+    tex_coords.clear();
+
+    for ( int i = 0; i < FG_MAX_AREA_TYPES; ++i ) {
+	for ( int j = 0; j < (int)fans[i].size(); ++j ) {
+	    int_list t_list = calc_tex_coords( geod_nodes, fans[i][j] );
+	    // cout << fans[i][j].size() << " === " 
+	    //      << t_list.size() << endl; 
+	    textures[i].push_back( t_list );
 	}
     }
 
@@ -247,6 +325,14 @@ int FGGenOutput::write( FGConstruct &c ) {
     }
     fprintf(fp, "\n");
 
+    // write texture coordinates
+    point_list tex_coord_list = tex_coords.get_node_list();
+    for ( int i = 0; i < (int)tex_coord_list.size(); ++i ) {
+	p = tex_coord_list[i];
+	fprintf(fp, "vt %.5f %.5f\n", p.x(), p.y());
+    }
+    fprintf(fp, "\n");
+
     // write triangles (grouped by type for now)
     Point3D center;
     double radius;
@@ -265,33 +351,13 @@ int FGGenOutput::write( FGConstruct &c ) {
 	    fprintf(fp, "# bs %.4f %.4f %.4f %.2f\n", 
 		    center.x(), center.y(), center.z(), radius);
 
-	    fan_list_iterator f_current = fans[i].begin();
-	    fan_list_iterator f_last = fans[i].end();
-	    for ( ; f_current != f_last; ++f_current ) {
+	    for ( int j = 0; j < (int)fans[i].size(); ++j ) {
 		fprintf( fp, "tf" );
-		total_tris += f_current->size() - 2;
-		int_list_iterator i_current = f_current->begin();
-		int_list_iterator i_last = f_current->end();
-		for ( ; i_current != i_last; ++i_current ) {
-		    fprintf( fp, " %d", *i_current );
+		total_tris += fans[i][j].size() - 2;
+		for ( int k = 0; k < (int)fans[i][j].size(); ++k ) {
+		    fprintf( fp, " %d/%d", fans[i][j][k], textures[i][j][k] );
 		}
 		fprintf( fp, "\n" );
-
-#if 0
-		{
-		    int_list_iterator i_current = f_current->begin();
-		    int_list_iterator i_last = f_current->end();
-		    int center = *i_current;
-		    ++i_current;
-		    int n2 = *i_current;
-		    ++i_current;
-		    for ( ; i_current != i_last; ++i_current ) {
-			int n3 = *i_current;
-			fprintf( fp, "f %d %d %d\n", center, n2, n3 );
-			n2 = n3;
-		    }
-		}
-#endif
 	    }
 
 	    fprintf( fp, "\n" );
