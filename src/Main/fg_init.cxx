@@ -1264,11 +1264,11 @@ bool fgInitSubsystems() {
     // Initialize the scenery management subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    if ( global_tile_mgr.init() ) {
+    if ( globals->get_tile_mgr()->init() ) {
         // Load the local scenery data
         double visibility_meters = fgGetDouble("/environment/visibility-m");
                 
-        global_tile_mgr.update( visibility_meters );
+        globals->get_tile_mgr()->update( visibility_meters );
     } else {
         SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
         exit(-1);
@@ -1276,7 +1276,8 @@ bool fgInitSubsystems() {
 
     // cause refresh of viewer scenery timestamps every 15 seconds...
     global_events.Register( "FGTileMgr::refresh_view_timestamps()",
-                            &global_tile_mgr, &FGTileMgr::refresh_view_timestamps,
+                            globals->get_tile_mgr(),
+                            &FGTileMgr::refresh_view_timestamps,
                             15000 );
 
     SG_LOG( SG_GENERAL, SG_DEBUG,

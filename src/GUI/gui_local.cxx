@@ -83,7 +83,7 @@ void reInit(puObject *cb)
 
     fgReInitSubsystems();
 
-    global_tile_mgr.update( fgGetDouble("/environment/visibility-m") );
+    globals->get_tile_mgr()->update( fgGetDouble("/environment/visibility-m") );
     
     cur_light_params.Update();
 

@@ -53,10 +53,6 @@
 
 #define TEST_LAST_HIT_CACHE
 
-// the tile manager
-FGTileMgr global_tile_mgr;
-
-
 #ifdef ENABLE_THREADS
 SGLockedQueue<FGTileEntry *> FGTileMgr::attach_queue;
 SGLockedQueue<FGDeferredModel *> FGTileMgr::model_queue;
@@ -364,30 +360,30 @@ int FGTileMgr::update( double visibility_meters )
     sgdVec3 abs_pos_vector;
     sgdCopyVec3( abs_pos_vector,
                  globals->get_current_view()->get_absolute_view_pos() );
-    return update( location, visibility_meters, abs_pos_vector,
-                   current_bucket, previous_bucket,
-                   globals->get_scenery()->get_center() );
+    return update( location, visibility_meters, abs_pos_vector );
 }
 
 
 int FGTileMgr::update( FGLocation *location, double visibility_meters,
-                       sgdVec3 abs_pos_vector, SGBucket p_current,
-                       SGBucket p_previous, Point3D center )
+                       sgdVec3 abs_pos_vector )
 {
-    // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
-    //         << lon << " " << lat );
-
     longitude = location->getLongitude_deg();
     latitude = location->getLatitude_deg();
-    current_bucket = p_current;
-    previous_bucket = p_previous;
+    // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
+    //         << longitude << " " << latatitude );
 
-    // SG_LOG( SG_TERRAIN, SG_DEBUG, "lon "<< lonlat[LON] <<
-    //      " lat " << lonlat[LAT] );
+    current_bucket.set_bucket( longitude, latitude );
+    // SG_LOG( SG_TERRAIN, SG_DEBUG, "Updating tile list for "
+    //         << current_bucket );
 
-    // SG_LOG( SG_TERRAIN, SG_DEBUG, "Updating Tile list for " << current_bucket );
-
-    setCurrentTile( longitude, latitude);
+    // set global scenery center from current tile center
+    current_tile = tile_cache.get_tile( current_bucket );
+    if ( current_tile != NULL ) {
+        globals->get_scenery()->set_next_center( current_tile->center );
+    } else {
+        SG_LOG( SG_TERRAIN, SG_WARN, "Tile not found (Ok if initializing)" );
+        globals->get_scenery()->set_next_center( Point3D(0.0) );
+    }
 
     // do tile load scheduling. 
     // Note that we need keep track of both viewer buckets and fdm buckets.
@@ -416,7 +412,9 @@ int FGTileMgr::update( FGLocation *location, double visibility_meters,
     // no reason to update this if we haven't moved...
     if ( longitude != last_longitude || latitude != last_latitude ) {
         // update current elevation... 
-        if ( updateCurrentElevAtPos( abs_pos_vector, center ) ) {
+        if ( updateCurrentElevAtPos( abs_pos_vector,
+                                     globals->get_scenery()->get_center() ) )
+        {
             last_longitude = longitude;
             last_latitude = latitude;
         }
@@ -425,27 +423,13 @@ int FGTileMgr::update( FGLocation *location, double visibility_meters,
     return 1;
 }
 
+
 // timer event driven call to scheduler for the purpose of refreshing the tile timestamps
 void FGTileMgr::refresh_view_timestamps() {
     SG_LOG( SG_TERRAIN, SG_INFO,
         "Refreshing timestamps for " << current_bucket.get_center_lon()
         << " " << current_bucket.get_center_lat() );
     schedule_needed(fgGetDouble("/environment/visibility-m"), current_bucket);
-}
-
-
-// check and set current tile and scenery center...
-void FGTileMgr::setCurrentTile(double longitude, double latitude) {
-
-    // check tile cache entry...
-    current_bucket.set_bucket( longitude, latitude );
-    if ( tile_cache.exists( current_bucket ) ) {
-        current_tile = tile_cache.get_tile( current_bucket );
-        globals->get_scenery()->set_next_center( current_tile->center );
-    } else {
-        SG_LOG( SG_TERRAIN, SG_WARN, "Tile not found (Ok if initializing)" );
-        globals->get_scenery()->set_next_center( Point3D(0.0) );
-    }
 }
 
 

@@ -31,7 +31,6 @@
 
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
-#include <simgear/bucket/newbucket.hxx>
 #include <simgear/math/point3d.hxx>
 
 #include <plib/sg.h>		// plib include
@@ -112,10 +111,6 @@ public:
     void set_cur_elev_m ( double elev ) { _cur_elev_m = elev; }
     inline double get_cur_elev_m () { return _cur_elev_m; }
     // Interface to current buckets for use with tilemgr...
-    void set_current_bucket ( SGBucket current_bucket ) { _current_bucket = current_bucket; }
-    inline SGBucket get_current_bucket () { return _current_bucket; }
-    void set_previous_bucket ( SGBucket previous_bucket ) { _previous_bucket = previous_bucket; }
-    inline SGBucket get_previous_bucket () { return _previous_bucket; }
     void set_tile_center ( Point3D tile_center ) { _tile_center = tile_center; }
     inline Point3D get_tile_center () { return _tile_center; }
 
@@ -149,10 +144,6 @@ private:
 
     // elevation of ground under this location...
     double _cur_elev_m;
-    // current and previous scenery buckets to be saved for use in
-    // getting current elevation from tilemgr.
-    SGBucket _previous_bucket;
-    SGBucket _current_bucket;
     Point3D _tile_center;
 
     // surface vector heading south

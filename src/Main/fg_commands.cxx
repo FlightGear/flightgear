@@ -237,7 +237,7 @@ do_view_next( bool )
     globals->get_current_view()->setHeadingOffset_deg(0.0);
     globals->get_viewmgr()->next_view();
     fix_hud_visibility();
-  global_tile_mgr.refresh_view_timestamps();
+    globals->get_tile_mgr()->refresh_view_timestamps();
 }
 
 void
@@ -246,7 +246,7 @@ do_view_prev( bool )
     globals->get_current_view()->setHeadingOffset_deg(0.0);
     globals->get_viewmgr()->prev_view();
     fix_hud_visibility();
-  global_tile_mgr.refresh_view_timestamps();
+    globals->get_tile_mgr()->refresh_view_timestamps();
 }
 
 /**
@@ -258,7 +258,7 @@ do_view_cycle (const SGPropertyNode * arg)
   globals->get_current_view()->setHeadingOffset_deg(0.0);
   globals->get_viewmgr()->next_view();
   fix_hud_visibility();
-  global_tile_mgr.refresh_view_timestamps();
+  globals->get_tile_mgr()->refresh_view_timestamps();
 //   fgReshape(fgGetInt("/sim/startup/xsize"), fgGetInt("/sim/startup/ysize"));
   return true;
 }
@@ -288,10 +288,10 @@ do_tile_cache_reload (const SGPropertyNode * arg)
 	fgSetBool("/sim/freeze/master", true);
     }
     // BusyCursor(0);
-    if ( global_tile_mgr.init() ) {
+    if ( globals->get_tile_mgr()->init() ) {
 	// Load the local scenery data
         double visibility_meters = fgGetDouble("/environment/visibility-m");
-	global_tile_mgr.update( visibility_meters );
+	globals->get_tile_mgr()->update( visibility_meters );
     } else {
 	SG_LOG( SG_GENERAL, SG_ALERT, 
 		"Error in Tile Manager initialization!" );
@@ -607,7 +607,7 @@ do_presets_commit (const SGPropertyNode * arg)
     // BusyCursor(0);
     fgReInitSubsystems();
 
-    global_tile_mgr.update( fgGetDouble("/environment/visibility-m") );
+    globals->get_tile_mgr()->update( fgGetDouble("/environment/visibility-m") );
 
     if ( ! fgGetBool("/sim/presets/onground") ) {
         fgSetBool( "/sim/freeze/master", true );

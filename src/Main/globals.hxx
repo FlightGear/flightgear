@@ -47,30 +47,32 @@ typedef vector<string> string_list;
 
 class SGEphemeris;
 
+class SGCommandMgr;
 class SGMagVar;
+class SGPropertyNode;
 class SGRoute;
 class SGTime;
-class SGPropertyNode;
-class SGCommandMgr;
 
-class FGSubsystemMgr;
-class FGEnvironmentMgr;
-class FGEnvironment;
-class FGControls;
-class FGSteam;
-class FGSoundMgr;
-class FGAutopilot;
-class FGViewMgr;
-class FGViewer;
+class FGAIMgr;
 class FGATCMgr;
 class FGATCDisplay;
-class FGAIMgr;
-class FGModelLoader;
-class FGTextureLoader;
 class FGAircraftModel;
+class FGAutopilot;
+class FGControls;
+class FGEnvironment;
+class FGEnvironmentMgr;
+class FGIO;
+class FGModelLoader;
 class FGModelMgr;
 class FGScenery;
-class FGIO;
+class FGSoundMgr;
+class FGSteam;
+class FGSubsystemMgr;
+class FGTextureLoader;
+class FGTileMgr;
+class FGViewMgr;
+class FGViewer;
+
 
 /**
  * Bucket for subsystem pointers representing the sim's state.
@@ -165,6 +167,9 @@ private:
 
     // FlightGear scenery manager
     FGScenery *scenery;
+
+    // Tile manager
+    FGTileMgr *tile_mgr;
 
     FGIO* io;
 
@@ -289,6 +294,9 @@ public:
 
     inline FGScenery * get_scenery () const { return scenery; }
     inline void set_scenery ( FGScenery *s ) { scenery = s; }
+
+    inline FGTileMgr * get_tile_mgr () const { return tile_mgr; }
+    inline void set_tile_mgr ( FGTileMgr *t ) { tile_mgr = t; }
 
     FGIO* get_io() const { return io; }
 

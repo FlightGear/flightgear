@@ -165,9 +165,8 @@ public:
     // read it from disk.
     int update( double visibility_meters );
     int update( FGLocation *location, double visibility_meters,
-                sgdVec3 abs_pos_vector, SGBucket p_current,
-                SGBucket p_previous, Point3D center );
-    void setCurrentTile( double longitude, double latitude );
+                sgdVec3 abs_pos_vector );
+
     int updateCurrentElevAtPos(sgdVec3 abs_pos_vector, Point3D center );
 
     // Determine scenery altitude.  Normally this just happens when we
@@ -194,10 +193,6 @@ public:
     inline SGBucket get_current_bucket () { return current_bucket; }
     inline SGBucket get_previous_bucket () { return previous_bucket; }
 };
-
-
-// the tile manager
-extern FGTileMgr global_tile_mgr;
 
 
 #endif // _TILEMGR_HXX

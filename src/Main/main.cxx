@@ -699,11 +699,6 @@ void fgRenderFrame() {
 	}
 # endif
 
-	// position tile nodes and update range selectors
-
-        // this is done in the main loop now...
-        // global_tile_mgr.prep_ssg_nodes(visibility_meters);
-
 	if ( fgGetBool("/sim/rendering/skyblend") ) {
 	    // draw the sky backdrop
 
@@ -1208,42 +1203,34 @@ static void fgMainLoop( void ) {
     // ...only if location is different than the viewer (to avoid duplicating effort)
     if( acmodel_location != current_view->getFGLocation() ) {
       if( acmodel_location != 0 ) {
-        global_tile_mgr.prep_ssg_nodes( acmodel_location, visibility_meters );
-        global_tile_mgr.update( acmodel_location, visibility_meters,
-                                acmodel_location->get_absolute_view_pos(),
-                                acmodel_location->get_current_bucket(),
-                                acmodel_location->get_previous_bucket(),
-                                globals->get_scenery()->get_center()
-                                );
+        globals->get_tile_mgr()->prep_ssg_nodes( acmodel_location,
+                                                 visibility_meters );
+        globals->get_tile_mgr()->
+            update( acmodel_location, visibility_meters,
+                    acmodel_location->get_absolute_view_pos() );
         // save results of update in FGLocation for fdm...
         if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
-          acmodel_location->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
+          acmodel_location->
+              set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
         }
-        acmodel_location->set_current_bucket( global_tile_mgr.get_current_bucket() );
-        acmodel_location->set_previous_bucket( global_tile_mgr.get_previous_bucket() );
-        acmodel_location->set_tile_center( globals->get_scenery()->get_next_center() );
+        acmodel_location->
+            set_tile_center( globals->get_scenery()->get_next_center() );
       }
     }
 
-    global_tile_mgr.prep_ssg_nodes( current_view->getFGLocation(),
-                                    visibility_meters );
+    globals->get_tile_mgr()->prep_ssg_nodes( current_view->getFGLocation(),
+                                             visibility_meters );
     // update tile manager for view...
     // IMPORTANT!!! the tilemgr update for view location _must_ be done last 
     // after the FDM's until all of Flight Gear code references the viewer's location
     // for elevation instead of the "scenery's" current elevation.
     FGLocation *view_location = globals->get_current_view()->getFGLocation();
-    global_tile_mgr.update( view_location, visibility_meters,
-                            current_view->get_absolute_view_pos(),
-                            current_view->getFGLocation()->get_current_bucket(),
-                            current_view->getFGLocation()->get_previous_bucket(),
-                            globals->get_scenery()->get_center()
-                            );
+    globals->get_tile_mgr()->update( view_location, visibility_meters,
+                                     current_view->get_absolute_view_pos() );
     // save results of update in FGLocation for fdm...
     if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
       current_view->getFGLocation()->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
     }
-    current_view->getFGLocation()->set_current_bucket( global_tile_mgr.get_current_bucket() );
-    current_view->getFGLocation()->set_previous_bucket( global_tile_mgr.get_previous_bucket() );
     current_view->getFGLocation()->set_tile_center( globals->get_scenery()->get_next_center() );
 
     // If fdm location is same as viewer's then we didn't do the update for fdm location 
@@ -1253,8 +1240,6 @@ static void fgMainLoop( void ) {
         if ( globals->get_scenery()->get_cur_elev() > -9990 ) {
           acmodel_location->set_cur_elev_m( globals->get_scenery()->get_cur_elev() );
         }
-        acmodel_location->set_current_bucket( global_tile_mgr.get_current_bucket() );
-        acmodel_location->set_previous_bucket( global_tile_mgr.get_previous_bucket() );
         acmodel_location->set_tile_center( globals->get_scenery()->get_next_center() );
       }
     }
@@ -1639,6 +1624,9 @@ static bool fgMainInit( int argc, char **argv ) {
     globals->set_scenery( new FGScenery );
     globals->get_scenery()->init();
     globals->get_scenery()->bind();
+
+    // Initialize the global tile manager
+    globals->set_tile_mgr( new FGTileMgr );
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the property-based built-in commands
