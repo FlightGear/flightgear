@@ -111,7 +111,15 @@ static naRef f_setValue(naContext c, naRef args)
 static naRef f_setIntValue(naContext c, naRef args)
 {
     NODEARG();
-    int iv = (int)naNumValue(naVec_get(args, 0)).num;
+    // Original code:
+    //   int iv = (int)naNumValue(naVec_get(args, 0)).num;
+
+    // Junk to pacify the gcc-2.95.3 optimizer:
+    naRef tmp0 = naVec_get(args, 0);
+    naRef tmp1 = naNumValue(tmp0);
+    double tmp2 = tmp1.num;
+    int iv = (int)tmp2;
+
     (*node)->setIntValue(iv);
     return naNil();
 }
