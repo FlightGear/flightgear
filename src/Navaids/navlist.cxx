@@ -79,8 +79,13 @@ bool FGNavList::init( SGPath path ) {
     double min = 100000;
     double max = 0;
 
-    while ( ! in.eof() && n.get_type() != '[' ) {
+    while ( ! in.eof() ) {
         in >> n;
+
+        if ( n.get_type() == '[' ) {
+            break;
+        }
+
 	/* cout << "id = " << n.get_ident() << endl;
 	cout << " type = " << n.get_type() << endl;
 	cout << " lon = " << n.get_lon() << endl;
@@ -88,9 +93,8 @@ bool FGNavList::init( SGPath path ) {
 	cout << " elev = " << n.get_elev() << endl;
 	cout << " freq = " << n.get_freq() << endl;
  	cout << " range = " << n.get_range() << endl; */
-	if ( n.get_type() != '[' ) {
-	    navaids[n.get_freq()].push_back(n);
-	}
+
+        navaids[n.get_freq()].push_back(n);
         in >> skipcomment;
 
 	if ( n.get_type() != 'N' ) {

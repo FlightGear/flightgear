@@ -80,8 +80,13 @@ bool FGILSList::init( SGPath path ) {
     double min = 1000000.0;
     double max = 0.0;
 
-    while ( ! in.eof() && ils.get_ilstype() != '[' ) {
+    while ( ! in.eof() ) {
         in >> ils;
+
+        if ( ils.get_ilstype() == '[' ) {
+            break;
+        }
+
 	/* cout << "id = " << n.get_ident() << endl;
 	cout << " type = " << n.get_type() << endl;
 	cout << " lon = " << n.get_lon() << endl;
@@ -89,9 +94,8 @@ bool FGILSList::init( SGPath path ) {
 	cout << " elev = " << n.get_elev() << endl;
 	cout << " freq = " << n.get_freq() << endl;
  	cout << " range = " << n.get_range() << endl; */
-	if ( ils.get_ilstype() != '[' ) {
-	    ilslist[ils.get_locfreq()].push_back(ils);
-	}
+
+        ilslist[ils.get_locfreq()].push_back(ils);
         in >> skipcomment;
 
 	if ( ils.get_locfreq() < min ) {
